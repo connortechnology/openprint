@@ -215,7 +215,8 @@ sub set {
 	} # end foreach
 	$self->{imposition} = $$self{rows} * $$self{columns} + $$self{dutch_rows} * $$self{dutch_columns};
 	if ( $$self{image_orientation} eq 'Vertical' ) {
-		$$self{layout_width} = $$self{columns} * $$self{image_width} + ( $$self{perfecting_wheel_space} - $$self{bleed_size} );
+		$$self{layout_width} = $$self{columns} * $$self{image_width};
+		$$self{layout_width} += ( $$self{perfecting_wheel_space} - $$self{bleed_size} ) if $$self{perfecting_wheel_space};
 		$$self{layout_height} = $$self{rows} * $$self{image_height};
 		if ( $$self{dutch_orientation} eq 'width' ) {
 			$$self{layout_width} += $$self{dutch_columns} * $$self{image_height};
@@ -228,7 +229,9 @@ sub set {
 		} # end if
 
 	} elsif ( $$self{image_orientation} eq 'Horizontal' ) {
-		$$self{layout_width} = $$self{columns} * $$self{image_height} + ( $$self{perfecting_wheel_space} - $$self{bleed_size} );
+		$$self{layout_width} = $$self{columns} * $$self{image_height};
+		$$self{layout_width} += ( $$self{perfecting_wheel_space} - $$self{bleed_size} ) if $$self{perfecting_wheel_space};
+
 		$$self{layout_height} = $$self{rows} * $$self{image_width};
 		if ( $$self{dutch_orientation} eq 'width' ) {
 			$$self{layout_width} += $$self{dutch_columns} * $$self{image_width};
@@ -476,6 +479,7 @@ sub used_width {
 			} # end if
 		} # end if
 	} # end if
+$openprint::log->debug("Setting used_width using layout:$$self{layout_width} + gutters:$$self{gutters} + cropleft:$$self{cropmark_left} + crop_right:$$self{cropmark_right} + cb: ( $$self{colour_bar_orientation} eq 'Length' ? $$self{colour_bar_size} : 0 )");
 	return $width;
 }
 sub used_height {
