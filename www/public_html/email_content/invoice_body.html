@@ -1,8 +1,8 @@
 <html>
 	<body>
-Thank you for using <? echo ( $$variable{'Invoice'}->Invoicer()->name() ) ?>.  Your current invoice (#<? echo ( $$variable{'Invoice'}->id() ) ?>) is attached.  <br/>
+Thank you for using <? echo ( $$variable{'Invoice'}->Invoicer()->business_name() ) ?>.  Your current invoice (#<? echo ( $$variable{'Invoice'}->id() ) ?>) is attached.  <br/>
  <br/>
-This invoice has been sent to the following contacts at <? echo ( $$variable{'Invoice'}->Invoicee()->name() ) ?>:<br/>
+This invoice has been sent to the following contacts at <? echo ( $$variable{'Invoice'}->Invoicee()->business_name() ) ?>:<br/>
 <? echo (
 	my $html = '';
 	foreach my $C ( $$variable{'Invoice'}->Invoicee()->AccountingContacts() ) {
