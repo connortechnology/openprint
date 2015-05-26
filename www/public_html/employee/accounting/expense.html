@@ -75,6 +75,9 @@ function update_total( form ) {
 
     $('total').value = do_decimals( total, 2 );
 } // end function update_total
+function select_category( recipient_id ) {
+	new Ajax.Request( '_select_category.json', { parameters: { recipient_id: recipient_id } } );
+}
 </script>
 <?include(/includes/error_reporting.html)?>
 <form name="f1" id="f1" action="expense.html" method="post">
@@ -85,7 +88,7 @@ function update_total( form ) {
 			<ul>
 				<li><label onclick="toggle_input( $('recipient_id'), $('recipient') );">Recipient</label>
 					<input type="text" name="recipient" id="recipient" style="display:none;" onkeyup="$('recipient_id').selectedIndex=0;" />
-					<select name="recipient_id" id="recipient_id" onchange="$('recipient').value='';">
+					<select name="recipient_id" id="recipient_id" onchange="$('recipient').value='';select_category(this.value);">
 						<option value="">select</option>
 						<? echo ( 
 							openprint::Company::get_dropdown( $$variable{'Expense'}->recipient_id() );

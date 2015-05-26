@@ -669,5 +669,8 @@ sub _delete_order_invoice {
 	$variable{OI} = openprint::Order_Invoice->find_one( { order_id=>$param{order_id}, invoice_id=>$param{invoice_id} } );
 } # end sub _delete_order_invoice
 
+sub _select_category {
+}
+
 1;
 __END__
