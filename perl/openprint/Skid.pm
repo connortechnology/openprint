@@ -17,7 +17,7 @@ require openprint::SkidContent;
 require openprint::InventoryCondition;
 require openprint::PaperAllocation;
 
-$debug = 0;
+$debug = 1;
 
 $table = 'Skids';
 $serial = 'skid_id_seq';
@@ -120,7 +120,7 @@ sub find {
 			push @values, $params{paper_id};
 		} # end if
 	} elsif ( $params{'quantity >='} ) {
-		$sql .= ' AND id IN (SELECT skid_id FROM skid_contents WHERE quantity >= ?)';
+		$sql .= ' AND ((SELECT quantity FROM skid_contents where skid_id=skids.id) >= ?)';
 		push @values, $params{'quantity >='};
 	} # end if
 
@@ -521,7 +521,7 @@ sub Contents {
 
 	if ( @_ ) {
 		if ( ! defined $_[0] ) {
-			$$self{Contents} = [ openprint::SkidContent->find( 'skid_id'=>$$self{id}, 'deleted in'=>[0,1] ) ];
+			$$self{Contents} = [ openprint::SkidContent->find( skid_id=>$$self{id}, 'deleted in'=>[0,1] ) ];
 		} elsif ( ref $_[0] eq 'ARRAY' ) {
 			$$self{Contents} = $_[0];
 		} else {
@@ -877,6 +877,16 @@ sub description {
 sub link_to {
 	return sprintf('<a href="/employee/inventory/skid_details.html?skid_id=%1$d">%2$s %1$d</a>', $_[0]{id}, $_[0]->type() eq 'Roll' ? 'Roll':'Skid' );
 } # end sub link_to
+
+sub units {
+	if ( ! $_[0]{units} ) {
+		my @Contents = $_[0]->Contents();
+		if ( @Contents ) {
+			$_[0]{units} = $Contents[0]->Paper()->units();
+		} # end if
+	} # end if
+	return $_[0]{units};
+}
 
 1;
 __END__

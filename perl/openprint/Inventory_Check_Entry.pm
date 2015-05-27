@@ -2,6 +2,8 @@ use strict;
 package openprint::Inventory_Check_Entry;
 our @ISA = qw(openprint::Object);
 
+require openprint::Location;
+
 use vars qw( $debug $table $serial %fields %transforms %defaults );
 
 $debug = 0;
@@ -18,6 +20,7 @@ $serial= 'inventory_check_entries_id_seq';
 	dimension1	=>	'dimension1',
 	dimension2	=>	'dimension2',
 	notes		=>	'notes',	
+	location_id	=>	'location_id',
 );
 %transforms = (
 	notes	=> [ 's/^\s+//', 's/\s+$//', 's/\s\s+/ /g' ],
@@ -30,6 +33,7 @@ $serial= 'inventory_check_entries_id_seq';
 	dimension1	=>	undef,
 	dimension2	=>	undef,
 	quantity	=>	undef,
+	location_id	=>	undef,
 );
 
 sub skid_id {
@@ -110,6 +114,10 @@ sub quantity {
 		} # skid was found
 	}
 	return $_[0]{quantity};
+}
+
+sub Location {
+	return new openprint::Location( $_[0]{location_id} );
 }
 
 1;
