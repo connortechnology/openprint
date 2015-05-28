@@ -51,10 +51,18 @@
 					</td><td class="RFID">
 						<? echo ( input( type=>'text', name=>'rfidtag_id',  onkeypress=>'return input_handler(this,event);', onkeyup=>q`this.value=this.value.replace(/\s/g,'');`, onkeydown=>qq`if(event.keyCode==13){new Ajax.Updater( 'StockCheckout', '/employee/project/_stock_checkout.html', { parameters: \$('checkout_form').serialize()} );};` ); ) ?>
 					</td><td colspan="2">
-						<? echo ( button( 'CheckOut', { onclick=> qq`new Ajax.Updater('StockCheckout','/employee/project/_stock_checkout.html', { parameters: \$('checkout_form').serialize() } );`,text=>'Submit' } ); ) ?>
+						<? echo ( button( 'CheckOut', { onclick=> qq`new Ajax.Updater('StockCheckout','/employee/project/_stock_checkout.html', { parameters: \$('checkout_form').serialize(), evalScripts:true } );`,text=>'Submit' } ); ) ?>
 					</td>
 				</tr>
 		</table>
 	</fieldset>
 </form>
 <?include(/includes/error_reporting.html)?>
+<? echo (
+	if ( $param{rfidtag_id} ) {
+		return q`<script type="text/javascript">$('checkout_form').rfidtag_id.focus();</script>`;
+	} elsif ( $param{skid_id} ) {
+		return q`<script type="text/javascript">$('checkout_form').skid_id.focus();</script>`;
+	}
+	return '';
+) ?>

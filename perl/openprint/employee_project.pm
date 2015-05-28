@@ -803,7 +803,7 @@ sub _stock_checkout {
 		$param{rfidtag_id} = openprint::RFIDTag->transform( 'id', $param{rfidtag_id} );
 		my $Skid;
 		if ( $param{skid_id} ) {
-			$Skid = new openprint::Skid( $param{skid_id} );
+			$Skid = openprint::Skid->find( id=>$param{skid_id} );
 		} elsif ( $param{rfidtag_id} ) {
 			my $RFIDTag = openprint::RFIDTag::from_id( $param{rfidtag_id} );
 			if ( ! $RFIDTag ) {
