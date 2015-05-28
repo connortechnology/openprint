@@ -2603,6 +2603,11 @@ $log->debug("No duplicate fuond for $$ICE{rfidtag_id}, previous rags: " . $rfidt
 
 } # end sub check
 
+sub _check_entries {
+	ssi::save_params( '/employee/inventory/check.html', ( 'has_skid' 
+	) );
+	$variable{Check} = new openprint::Inventory_Check( $param{check_id} );
+}
 sub _check_entry_actions {
 }
 

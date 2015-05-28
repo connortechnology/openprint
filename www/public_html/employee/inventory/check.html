@@ -3,6 +3,9 @@
 function del_entry( id ) {
 	new Ajax.Request( '_check_entry_actions.json', { parameters: { id: id, action: 'delete' } } );
 }
+function load_entries() {
+	new Ajax.Updater( 'Entries', '_check_entries.html?check_id=<?echo($$variable{Check}->id())?>', { parameters: $('f1').serialize() } );
+}
 </script>
 <form id="f1" name="f1" method="post" enctype="multipart/form-data" action="check.html?check_id=<?echo($$variable{Check}->id())?>">
 	<input type="hidden" name="action"/>
@@ -37,12 +40,17 @@ function del_entry( id ) {
 			) ?>
 		</div>
 	</fieldset>
-</form>
 <? if ( $$variable{Check}{id} ) ?>
 <fieldset><legend>Contents</legend>
+	<fieldset><legend>Filter</legend>
+		<ul>
+			<li><label>Has Skid/Roll?</label><?echo(radio('has_skid', ['1','Yes','0','No','','Both'], $session{$r->uri().'?has_skid'}, { onclick=>'load_entries();' } );)?></li>
+		</ul>
+	</fieldset>
 	<div id="Entries"><?include(_check_entries.html)?></div>
 </fieldset>
 <fieldset><legend>System Contents not in Check</legend>
 	<div id="SystemContents"><?include(_check_system_contents.html)?></div>
 </fieldset>
 <? endif ( $$variable{Check}{id} ) ?>
+</form>

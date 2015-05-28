@@ -10,6 +10,7 @@
 		<th class="buttons"></th>
 	</tr>
 <? echo ( 
+	my $uri = '/employee/inventory/check.html';
 	my $html;
 	my $rowclass;
 	my $total_weight;
@@ -34,6 +35,12 @@
 	my @RFIDTags = openprint::RFIDTag->find( id=>[ map { $$_{rfidtag_id} } @Contents ] );
 
 	foreach my $ICE ( @Contents ) {
+		if ( $session{$uri.'?has_skid'} eq '1' and ! $ICE->skid_id() ) {
+			next;
+		} elsif ( $session{$uri.'?has_skid'} eq '0' and $ICE->skid_id() ) {
+			next;
+		}
+		
 		my $Skid = $ICE->Skid();
 
 		$html .= sprintf('
