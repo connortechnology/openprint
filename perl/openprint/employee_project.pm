@@ -803,7 +803,7 @@ sub _stock_checkout {
 		$param{rfidtag_id} = openprint::RFIDTag->transform( 'id', $param{rfidtag_id} );
 		my $Skid;
 		if ( $param{skid_id} ) {
-			$Skid = openprint::Skid->find( id=>$param{skid_id} );
+			$Skid = openprint::Skid->find_one( id=>$param{skid_id} );
 		} elsif ( $param{rfidtag_id} ) {
 			my $RFIDTag = openprint::RFIDTag::from_id( $param{rfidtag_id} );
 			if ( ! $RFIDTag ) {
@@ -820,6 +820,11 @@ sub _stock_checkout {
 		} # end if
 
 		my $add_entry = 1;
+
+		if ( openprint::PaperInventory->find_one( docket => $Order->docket(), skid_id     =>  $Skid->id() ) ) {
+			$variable{error} .= 'Skid/Roll has already been checked out for this docket.';
+			return;
+		}
 
 		if ( $Skid->is_empty() ) {
 			my @PI = openprint::PaperInventory->find( skid_id=>$Skid->id(), 'comment like'=>'Checked out%', order=>'updated_on desc');
