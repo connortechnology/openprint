@@ -106,7 +106,7 @@
 				<select id="location_id" name="location_id">
 					<option value="">select</option>
 					<? echo ( 
-						make_drop_down( openprint::Location->dropdown( order=>'parent_id NULLS FIRST,lower(name)'), $$variable{'RFIDTag'} ? $$variable{RFIDTag}->location_id() : $param{location_id} );
+						make_drop_down( openprint::Location->dropdown( type=>'place', company_id=>$config{owner_id}, order=>'parent_id NULLS FIRST,lower(name)'), $$variable{'RFIDTag'} ? $$variable{RFIDTag}->location_id() : $param{location_id} );
 						) ?>
 				</select>
 			</li>

@@ -839,6 +839,7 @@ sub _stock_checkout {
 			foreach my $PI ( @PI ) {
 				if ( ! $PI->docket() ) {
 					$PI->save({docket=>$Order->docket()});
+					$add_entry = 0;
 					# only update the most recent entry
 					last;
 				} else {
@@ -853,6 +854,9 @@ sub _stock_checkout {
 		if ( $add_entry ) {
 			my @C = $Skid->Contents();
 			if ( @C ) {
+				if ( @C>1 ) {
+					$log->error("More than 1 content on skid $$Skid{id}");
+				}
 				foreach my $C ( $Skid->Contents() ) {
 					my $PI = new openprint::PaperInventory();
 					$PI->save({
@@ -874,6 +878,7 @@ sub _stock_checkout {
 						} # end if
 					} # end foreach
 					$Order->add_log( join('', 'Checked out ' , $C->quantity() , $C->units() , ' of ' , $C->Paper->to_string() ) );
+#FIXME: detect allocations to other dockets
 # Update totals
 					$C->Paper()->save();
 				} # end foreach C
