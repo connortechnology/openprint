@@ -103,14 +103,17 @@ sub quantity {
 			my @C = $Skid->Contents();
 			if ( @C ==1 ) {
 				if ( $_[0]{dimension2} and $_[0]{dimension1} ) {
-				my $Paper = $C[0]->Paper();
-				if ( $Paper->type() eq 'Roll' ) {
-					$_[0]{quantity} = $_[0]{dimension2} * $_[0]{dimension2} - 9 * $_[0]{dimension1} * 0.37;
-				} # end if
+					my $Paper = $C[0]->Paper();
+					if ( $Paper->type() ne 'Sheet' ) {
+						$_[0]{quantity} = $_[0]{dimension2} * $_[0]{dimension2} - 9 * $_[0]{dimension1} * 0.37;
+					} # end if
 				} else {
 					$_[0]{quantity} = $C[0]{quantity};
 				}
 			} # end if only 1 stock
+		} else {
+			$_[0]{quantity} = $_[0]{dimension2} * $_[0]{dimension2} - 9 * $_[0]{dimension1} * 0.37;
+
 		} # skid was found
 	}
 	return $_[0]{quantity};
