@@ -894,7 +894,7 @@ sub upload_log {
 		'company_id','type',
 	) );
 
-	ssi::setup_date_select( '/administrator/managerial/upload_log.html', 'uploaded_on_start', -7 );
+	ssi::setup_date_select( '/administrator/managerial/upload_log.html', 'uploaded_on_start', -1 );
 	ssi::setup_date_select( '/administrator/managerial/upload_log.html', 'uploaded_on_end', '' );
 } # end sub upload_log
 
