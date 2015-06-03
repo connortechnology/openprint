@@ -803,7 +803,7 @@ sub _stock_checkout {
 		$param{rfidtag_id} = openprint::RFIDTag->transform( 'id', $param{rfidtag_id} );
 		my $Skid;
 		if ( $param{skid_id} ) {
-			$Skid = new openprint::Skid( $param{skid_id} );
+			$Skid = openprint::Skid->find_one( id=>$param{skid_id} );
 		} elsif ( $param{rfidtag_id} ) {
 			my $RFIDTag = openprint::RFIDTag::from_id( $param{rfidtag_id} );
 			if ( ! $RFIDTag ) {
@@ -821,6 +821,11 @@ sub _stock_checkout {
 
 		my $add_entry = 1;
 
+		if ( openprint::PaperInventory->find_one( docket => $Order->docket(), skid_id     =>  $Skid->id() ) ) {
+			$variable{error} .= 'Skid/Roll has already been checked out for this docket.';
+			return;
+		}
+
 		if ( $Skid->is_empty() ) {
 			my @PI = openprint::PaperInventory->find( skid_id=>$Skid->id(), 'comment like'=>'Checked out%', order=>'updated_on desc');
 			if ( @PI ) {
@@ -834,6 +839,7 @@ sub _stock_checkout {
 			foreach my $PI ( @PI ) {
 				if ( ! $PI->docket() ) {
 					$PI->save({docket=>$Order->docket()});
+					$add_entry = 0;
 					# only update the most recent entry
 					last;
 				} else {
@@ -848,6 +854,9 @@ sub _stock_checkout {
 		if ( $add_entry ) {
 			my @C = $Skid->Contents();
 			if ( @C ) {
+				if ( @C>1 ) {
+					$log->error("More than 1 content on skid $$Skid{id}");
+				}
 				foreach my $C ( $Skid->Contents() ) {
 					my $PI = new openprint::PaperInventory();
 					$PI->save({
@@ -869,6 +878,7 @@ sub _stock_checkout {
 						} # end if
 					} # end foreach
 					$Order->add_log( join('', 'Checked out ' , $C->quantity() , $C->units() , ' of ' , $C->Paper->to_string() ) );
+#FIXME: detect allocations to other dockets
 # Update totals
 					$C->Paper()->save();
 				} # end foreach C

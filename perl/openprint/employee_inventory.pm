@@ -28,6 +28,8 @@ require openprint::Skid;
 require openprint::SkidContent;
 require openprint::Claim_Content;
 require openprint::Log;
+require openprint::Inventory_Check;
+require openprint::Inventory_Check_Entry;
 
 use vars qw( $r $log $dbh %variable %param %session %config );
 *r = \$openprint::r;
@@ -2548,6 +2550,24 @@ sub check {
 			($param{started_on} ? ( started_on	=>	$param{started_on} ) : () ),
 			($param{ended_on} ? ( started_on	=>	$param{ended_on} ) : () ),
 		});
+	} elsif ( $param{action} eq 'Delete Duplicates' ) {
+		my %skid_ids;
+		my %rfidtag_ids;
+		my %paper_ids;
+
+		foreach my $ICE ( openprint::Inventory_Check_Entry->find( ic_id=>$$Check{id}, order=>'skid_id,rfidtag_id' ) ) {
+			if ( $$ICE{rfidtag_id} and $rfidtag_ids{$ICE->rfidtag_id()} and $ICE->skid_id() and $skid_ids{$ICE->skid_id()} ) {
+				$variable{information} .= "Deleting duplicate $$ICE{id} RFID: $$ICE{rfidtag_id} ID: " . $ICE->skid_id() . ".<br/>";
+				$variable{error} .= $ICE->destroy();
+			} else {
+$log->debug("No duplicate fuond for $$ICE{rfidtag_id}, previous rags: " . $rfidtag_ids{$ICE->rfidtag_id()} . ' skid_id: ' . $ICE->skid_id() . ' previous: ' . $skid_ids{$ICE->skid_id()} );
+				$rfidtag_ids{$$ICE{rfidtag_id}} = $ICE;
+				$skid_ids{$ICE->skid_id()} = $ICE;
+			}
+		}
+		if ( ! $variable{information} ) {
+			$variable{information} = 'No duplicates were found.<br/>';
+		}
 	} elsif ( $param{action} eq 'Import' ) {
 		if ( ! $$Check{id} ) {
 			$variable{error} .= 'No inventory check selected.<br/>';
@@ -2582,6 +2602,14 @@ sub check {
 	} # end if
 
 } # end sub check
+
+sub _check_entries {
+	ssi::save_params( '/employee/inventory/check.html', ( 'has_skid' 
+	) );
+	$variable{Check} = new openprint::Inventory_Check( $param{check_id} );
+}
+sub _check_entry_actions {
+}
 
 1;
 __END__
