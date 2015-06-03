@@ -1151,7 +1151,7 @@ sub Comments {
 
 sub Privacy {
 	if ( ! exists $_[0]{Privacy} ) {
-		$_[0]{Privacy} = openprint::Privacy->find_one(object_type=>ref $_[0], object_id=>$_[0]{id} );
+		$_[0]{Privacy} = openprint::Privacy->find_one(object_type=>ref $_[0], object_id=>$_[0]{id} ) if $_[0]{id};
 		if ( ! $_[0]{Privacy} ) {
 			$_[0]{Privacy} = new openprint::Privacy();
 			$_[0]{Privacy}->object_type( ref $_[0] );
