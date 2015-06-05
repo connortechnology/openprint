@@ -93,24 +93,6 @@ sub add_service {
 	} # end foreach
 } # end sub add_service
 
-sub create_edit_display {
-	my $project_index = $param{'ProjectIndex'};
-
-	my $Project = $variable{Project} = new openprint::Project( $project_index );
-
-	@{$variable{'ProjectTypes'}} = map { $_->name(), $_->description() } openprint::ProjectType->find( 'order'=>'sorting, lower(name)' );
-	# Check the appropriate button for project type
-	$variable{'SelectedProjectType'} = $Project->Type()->name();
-
-	@variable{'txtProjectReference','ddmDesign','txtComments','txtQuantity1','txtQuantity2','txtQuantity3','rdbMode','chkPrograms','txtOtherPrograms'} = (
-		$Project->reference(), $Project->design(), $Project->comments(), $Project->quantity1(), $Project->quantity2(), $Project->quantity3(), $Project->mode(), $Project->programs(), $Project->other_programs() 
-	);
-
-	my $services = $Project->services();
-	@{$variable{'SelectedServices'}} = keys %{$services};
-
-	$variable{'ProjectIndex'} = $project_index;
-} # end sub edit_stage1_display
 
 sub get_incomplete_services_in_category {
 	my ( $log, $dbh, $project_index, $category ) = @_;
