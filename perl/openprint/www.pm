@@ -538,16 +538,27 @@ $log->debug("Service: " . $Service->to_string() );
 						openprint::Estimating::UPS::display( $log, $dbh, \%variable, $project_index, $service_index );
 					} # end if
 				} # end if main:proj:$third
-			} # end if defined third
+			} else {
+				if ( -e $ENV{'DOCUMENT_ROOT'}.$uri ) {
+					my ( $proc ) = $filename =~ /^(.*)\.(html|json)$/;
+					if ( $proc ) {
+						my $module = join('_', ($first, $second));
+						require "openprint/$module.pm"; 
+						if ( my $function = ('openprint::'.$module)->can($proc) ) {
+	$log->debug("Running openprint::$module->$proc") if Debug;
+							$function->();
+						} else {
+							$log->error( "No function def for $module :: $proc!" );
+						}
+					} # end if
+				} # end if -e $ENV{'DOCUMENT_ROOT'}.$uri 
 
-			openprint::print_project::create_edit_display( $r, $log, $dbh, \%variable )		if $filename eq 'create_edit.html';
-			openprint::main_project::history()			if $filename eq 'history.html';
-			openprint::main_project::_history()			if $filename eq '_history.html';
-			openprint::print::view_services( $r, $log, $dbh, \%variable )					if $filename eq 'view.html';
-			openprint::print_project::view_pdfs( $r, $log, $dbh, \%variable )				if $filename eq 'proj_view_pdf.html';
-			openprint::print_project::summary( $r, $log, $dbh, \%variable )					if $filename eq 'summary.html';
-			openprint::print_project::summary( $r, $log, $dbh, \%variable )					if $filename eq 'docket_sheet.html';
-			openprint::print_project::display_reuse_project( $r, $log, $dbh, \%variable ) 	if $filename eq 'reuse.html';
+				openprint::print::view_services( $r, $log, $dbh, \%variable )					if $filename eq 'view.html';
+				openprint::print_project::view_pdfs( $r, $log, $dbh, \%variable )				if $filename eq 'proj_view_pdf.html';
+				openprint::print_project::summary( $r, $log, $dbh, \%variable )					if $filename eq 'summary.html';
+				openprint::print_project::summary( $r, $log, $dbh, \%variable )					if $filename eq 'docket_sheet.html';
+				openprint::print_project::display_reuse_project( $r, $log, $dbh, \%variable ) 	if $filename eq 'reuse.html';
+			} # end if defined third
 		} elsif ( -e $ENV{'DOCUMENT_ROOT'}.$uri ) {
 			my ( $proc ) = $filename =~ /^(.*)\.(html|json|xml|rss)$/;
 			if ( $proc ) {
