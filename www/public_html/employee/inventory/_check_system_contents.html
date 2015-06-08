@@ -16,19 +16,32 @@
 
 	if ( ! $$variable{skid_ids} ) {
 		my @Contents = openprint::Inventory_Check_Entry->find( ic_id=>$$variable{Check}->id(), order=>'skid_id,rfidtag_id' );
-		my @skid_ids = map { $_->skid_id() } @Contents;
+		my @skid_ids = map { $_->skid_id() ? $_->skid_id() : () } @Contents;
 		my @RFIDTags = openprint::RFIDTag->find( id=>[ map { $$_{rfidtag_id} } @Contents ] );
 		push @skid_ids, map { $_->id() } openprint::Skid->find( rfidtag_id=>[ map { $_->id() } @RFIDTags ] );
+		@skid_ids = sets::union( @skid_ids );
+$log->debug("SKids to not be in " . @skid_ids );
 		$$variable{skid_ids} = \@skid_ids;
 	}
 
+my @Good_Skids = ();
 	my @Skids = openprint::Skid->find(
+		'rfidtag_id is null'=>0,
+		'location_id is null'=>0,
 		'quantity >=' => 1, 
-		#'updated_on <=' => $$variable{Check}->started_on(),
+		'updated_on <=' => $$variable{Check}->started_on(),
 		'id not in'	=> $$variable{skid_ids},
 		);
+$log->debug("SYstem Skid list: " . @Skids );
 	
 	foreach my $Skid ( @Skids ) {
+	my @SC = $Skid->Contents();
+	next if ! $Skid->location_id();
+
+	next if ! @SC;
+		my $SC = $SC[0] if @SC;
+	next if $SC->Paper()->type() ne 'Roll';
+push @Good_Skids, $Skid;
 		$html .= sprintf('
 <tr%1$s id="skid-%11$d" title="skid %11$d">
 		<td class="Skid">%2$s</td>
@@ -43,10 +56,10 @@
 		$rowclass,
 		$Skid->link_to(),
 		$Skid->RFIDTag()->link_to(),
-		$Skid->quantity(),
-		$Skid->dimension1(),
-		$Skid->dimension2(),
-		$Skid->notes(),
+		$SC->quantity(),
+		$SC->Paper()->width(),
+		$SC->Paper()->height(),
+		'',
 		join('<br/>', map { $_->Paper()->to_string() } $Skid->Contents() ),
 		join('',
 			#button( 'x'.$$Skid{id}, { onclick=>"del_entry($$Skid{id});", title=>'Delete', text=>'X' } ),
@@ -60,7 +73,7 @@
 		
 		$rowclass = $rowclass?'':' class="colRow"';
 	} # end foreach ICE
-	$html .= '<tr class="totals"><td colspan="2"># of items not in check: ' . scalar @Skids . '</td><td class="Quantity">'.Number::Format::format_number(int($total_weight)).'lbs</td><td></td><td></td><td></td><td></td></tr>';
+	$html .= '<tr class="totals"><td colspan="2"># of items not in check: ' . scalar @Good_Skids . '</td><td class="Quantity">'.Number::Format::format_number(int($total_weight)).'lbs</td><td></td><td></td><td></td><td></td></tr>';
 	return $html;
 ) ?>
 
