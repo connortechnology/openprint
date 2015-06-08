@@ -155,7 +155,7 @@ button( 'merge'.$C->id(), { href=>'/administrator/managerial/company_profiles.ht
 					<? echo ( make_drop_down( openprint::Currency->dropdown( order=>'lower(name)' ), $$variable{Company}->currency_id() ); ) ?>
 				</select>
 			</li>
-			<li> 
+			<li class="discount"> 
 				<label>Pricing Discount</label>
 				<? echo ( input( type=>'float', name=>'discount', value=>$$variable{Company}->discount() ); ) ?> %
 			</li>
