@@ -44,14 +44,19 @@ sub Purpose {
 } # end sub Purpose
 
 sub Paper {
-	my $self = shift;
-	my $Paper = new openprint::Paper( $$self{'paper_id'} );
-	return $Paper;
+	if ( ! $_[0]{Paper} ) {
+		$_[0]{Paper} = new openprint::Paper( $_[0]{paper_id} );
+	} # end if
+	return $_[0]{Paper};
 } # end sub Paper
 
 sub Skid {
-	return new openprint::Skid( $_[0]{'skid_id'} );
+	if ( ! $_[0]{Skid} ) {
+		$_[0]{Skid} = new openprint::Skid( $_[0]{skid_id} );
+	} # end if
+	return $_[0]{Skid};
 } # end sub Skid
+
 sub delete {
 	my $self = $_[0];
 	my $error = $self->SUPER::delete();
@@ -60,6 +65,7 @@ sub delete {
 		$self->Paper()->save();
 	} # end if
 } # end sub delete
+
 sub allocateable {
 	if ( ! exists $_[0]{'allocateable'} ) {
 		$_[0]{'allocateable'} = $_[0]->quantity() - $_[0]->allocated();
