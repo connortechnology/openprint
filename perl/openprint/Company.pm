@@ -11,7 +11,7 @@ require sql;
 require openprint::Object;
 require openprint::User;
 
-$debug = 0;
+$debug = 1;
 $default_sort = 'lower(name)';
 $table = 'companies';
 $serial = 'companies_id_seq';
@@ -452,6 +452,10 @@ sub tax_code {
 	return '0';
 } # end if
 
+sub admin_link_to {
+	return sprintf('<a href="/administrator/managerial/company_profiles.html?ddmCustomer=%d">%s</a>', $_[0]{id}, ( @_ > 1 ? $_[1] : $_[0]{name} ) );
+} # end sub link_to
+
 sub link_to {
 	return sprintf('<a href="/account/company_profile.html?ddmCustomer=%d">%s</a>', $_[0]{id}, $_[0]{name} );
 } # end sub link_to
@@ -476,5 +480,17 @@ sub last_online {
 	}
 	return $_[0]{last_online};
 }  # end sub last_online
+
+sub Country {
+	if ( ! $_[0]{Country} ) {
+		$_[0]{Country} = openprint::Location->find_one( type=>'country', short=>$_[0]->country() );
+		if ( ! $_[0]{Country} ) {
+			 $_[0]{Country} = new openprint::Location();
+			 $_[0]{Country}->set( type=>'country' );
+		}
+	}
+	return $_[0]{Country};
+} # end sub Country
+
 1;
 __END__
