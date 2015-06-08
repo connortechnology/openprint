@@ -40,6 +40,11 @@
 		} elsif ( $session{$uri.'?has_skid'} eq '0' and $ICE->skid_id() ) {
 			next;
 		}
+		if ( $session{$uri.'?has_quantity'} eq '1' and ! $ICE->Skid()->quantity() ) {
+			next;
+		} elsif ( $session{$uri.'?has_quantity'} eq '0' and $ICE->Skid()->quantity() ) {
+			next;
+		}
 		
 		my $Skid = $ICE->Skid();
 
