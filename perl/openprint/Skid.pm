@@ -577,6 +577,7 @@ sub checkout {
 		} # end if
 		return 1;
 	} # end if
+	$self->lock();
 
 	foreach my $C ( @contents ) {
 		if ( ! openprint::PaperInventory->find( skid_id=>$$self{id}, 'comment like'=>'Checked out%' ) ) {
@@ -598,9 +599,11 @@ sub checkout {
 			$e .=   $C->save();
 			$e .= $C->Paper()->save(); # Must update in_stock
 			$log->error( $e ) if $e;
+			$self->unlock();
 			return 1;
 		} # end if not already checked out
 	} # end foreach Content
+	$self->unlock();
 	return 0;
 } # end sub checkout
 
