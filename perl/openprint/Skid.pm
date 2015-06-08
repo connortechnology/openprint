@@ -577,34 +577,38 @@ sub checkout {
 		} # end if
 		return 1;
 	} # end if
-	$self->lock();
 
+
+	my $rc = 0;
 	foreach my $C ( @contents ) {
 		if ( ! openprint::PaperInventory->find( skid_id=>$$self{id}, 'comment like'=>'Checked out%' ) ) {
 			my $PA = openprint::PaperAllocation->find_one( 'skid_ids any'=>$$self{id}, paper_id=>$C->paper_id());
 			my $desc = 'Checked out';
 			$desc .= ($PA->docket() ? ' for docket ' . $PA->docket() : '') if $PA;
+
+			my $Paper = $C->Paper();
+# This is neccessary because different skids can be doing the checkout
+			$Paper->lock();
 			my $PI = new openprint::PaperInventory();
 			my $e = $PI->save({
-					'paper_id'  =>  $C->paper_id(),
-					'user_id'   =>  $session{user_id},
-					'instock'   =>  $C->Paper()->in_stock() - $C->quantity(),
-					'delta'     =>  -1*$C->quantity(),
-					'comment'   =>  $desc.$c,
-					'skid_id'   =>  $$self{id},
-					'units'     =>  $C->units(),
+					paper_id  =>  $C->paper_id(),
+					user_id   =>  $session{user_id},
+					instock   =>  $Paper->in_stock() - $C->quantity(),
+					delta     =>  -1*$C->quantity(),
+					comment   =>  $desc.$c,
+					skid_id   =>  $$self{id},
+					units     =>  $C->units(),
 					( ($PA and $PA->docket() ) ? ( docket		=>	$PA->docket() ) : () ),
 					} );
 			$C->quantity( 0 );
-			$e .=   $C->save();
-			$e .= $C->Paper()->save(); # Must update in_stock
+			$e .= $C->save();
+			$e .= $Paper->save(); # Must update in_stock
 			$log->error( $e ) if $e;
-			$self->unlock();
-			return 1;
+			$Paper->unlock();
+			$rc = 1;
 		} # end if not already checked out
 	} # end foreach Content
-	$self->unlock();
-	return 0;
+	return $rc;
 } # end sub checkout
 
 sub previous {
