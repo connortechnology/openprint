@@ -80,12 +80,14 @@ sub Project {
 sub comment_html {
 	my ( $self ) = @_;
 
-	if ( $$self{'comment'} =~ /^Checked out for docket (\d+) by (.*)$/ ) {
+	if ( $$self{comment} =~ /^Checked out for docket (\d+) by (.*)$/ ) {
 		return qq`Checked out for docket <a href="/employee/project/view.html?docket=$1">$1</a> by $2`;
-	} elsif ( $$self{'comment'} =~ /^Inventory adjusted from manifest (.+)\.$/ ) { 
+	} elsif ( $$self{comment} =~ /^Allocated (\d+)lbs to docket (\d+)$/ ) {
+		return qq`Allocated ${1}lbs to docket <a href="/employee/project/view.html?docket=$2">$2</a>`;
+	} elsif ( $$self{comment} =~ /^Inventory adjusted from manifest (.+)\.$/ ) { 
 		return qq`Inventory adjusted from manifest <a href="/employee/inventory/manifests.html?manifest_name=$1">$1</a>`;
 	} # end if
-	return $$self{'comment'};
+	return $$self{comment};
 } # end comment_html
 
 sub instock {
