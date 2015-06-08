@@ -211,22 +211,7 @@ Please investigate.",
 							foreach my $k ( keys %$headers ) {
 								$log->debug("Header $k => $$headers{$k}");
 							}  # end foreach
-							$response = $browser->get('http://'.$Host->hostname().'/admin/reboot.cgi?type=0');
-							$log->debug($response->is_success);
-							(new openprint::Log())->save({ action_id=>102, ip_address=>$Host->ip(), note=>sprintf('<a href="/employee/it/host.html?host_id=%d">%s</a> has been rebooted.', @$Host{'id','hostname'})});
-							my @To = map { $_->User() } $Host->Notifications();
-							if ( @To and ( @To < 10 ) ) {
-								$log->debug("Emailing: " . join(',', map { $_->email() } @To ) );
-								my $results = (new openprint::Email())->send(
-										'TO'	=>	\@To,
-										'SUBJECT'	=>	'Camera rebooted ' . $Host->hostname(),
-										'FROM'		=>	$config{'TechSupportEmail'},
-										'BODY'		=>	"
-										IP: $$HI{ip}
-Description: $$Host{'description'}
-",
-);
-							} # end if
+							$Host->reboot();
 						} # end if
 					} else {
 						$log->debug("Got content from host. Size: " . $response->content_type );
