@@ -1,5 +1,22 @@
+<script type="text/javascript">
+	function set_conversion( from_id ) {
+		var form = $('f1');
+		var to_id = get_ddm_value(form.elements['to-'+from_id]);
+
+		new Ajax.Updater( 'Conversions'+from_id, '_currency_conversions.html', { 
+				parameters: { 	
+					currency_id: from_id, 
+					to_id: to_id, 
+					amount: form.elements['amount-'+from_id].value, 
+					btnFunction: 'Add'
+				}, onSuccess: function(){ 
+						new Ajax.Updater( 'Conversions'+to_id, '_currency_conversions.html', { parameters: { currency_id: to_id } } );
+					} 
+			});
+	} // end function set_conversion
+</script>
 <form id="f1" name="f1" method="post" action="currency.html">
-	To set a currency conversion, select the destination currency and the rate, and click Set Conversion.  Existing conversions will be overwritten.
+	To set a currency conversion, select the destination currency and the rate, and click Set Conversion. The opposite conversion will be automatically calculated.
 	<table class="List">
 		<tr>
 			<th class="name">Long Name</th>
@@ -18,7 +35,7 @@
 			<td class="symbol"><input type="text" name="symbol-%2$d" value="%5$s" /></td>
 			<td class="conversions" id="Conversions%2$d">%6$s</td>
 		</tr>`, $rowclass, @$Currency{'id','name','short','symbol'},
-				ssi::include($ENV{DOCUMENT_ROOT}.'/administrator/managerial/_currency_conversions.html', { Currency=>$Currency } ),
+				include('/administrator/managerial/_currency_conversions.html', { Currency=>$Currency } ),
 				);
 			} # end foreach
 			return $html
@@ -34,9 +51,9 @@
 		</tr>
 	</table>
 	<p class="buttons">
-			<? echo ( join( '',
-				ssi::button( 'Submit', { 'onclick'=>"f1.btnFunction.value='Save';f1.submit();"} ),
-				ssi::button( 'Reset', { 'onclick'=>"f1.reset();" } ),
+			<? echo ( join( "\n",
+				button( 'Submit', { 'onclick'=>"f1.btnFunction.value='Save';f1.submit();"} ),
+				button( 'Reset', { 'onclick'=>"f1.reset();" } ),
 			); ) ?>
 	</p>
 	<input type="hidden" name="btnFunction"/>

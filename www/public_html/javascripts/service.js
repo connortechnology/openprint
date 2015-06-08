@@ -139,6 +139,8 @@ function cbFillResults( results ) {
 					alert( value );
 				} // end if
 			} // end if
+			var div = $('alert');
+			if ( div ) { div.value = value };
 			continue;
 		} else if ( key == 'popup') {
 			alert( value );

@@ -49,7 +49,7 @@ function calc_from_gsm( form ) {
 				<label>ID #</label>
 				<a href="/employee/inventory/paper_details.html?paper_id=<?paper_id?>"><?paper_id?></a>
 			</p>
-<? if ( openprint::usergroup::is_user_in( ['Inventory'], $session{'user_id'} ) ) ?>
+<? if ( openprint::usergroup::is_user_in( ['Inventory'], $session{user_id} ) ) ?>
 			<p>
 				<label for="txtGroup" onclick="f1.Group.toggle();f1.txtGroup.toggle();">Group</label>
 				<select id="Group" name="Group" size="1">
@@ -65,7 +65,7 @@ function calc_from_gsm( form ) {
 				<select id="Manufacturer" name="Manufacturer" size="1">
 					<option value="">select</option>
 				<? echo (
-						make_drop_down( openprint::Manufacturer->dropdown( order=>'lower(name)'), $$variable{'Paper'}->manufacturer_id() );
+						make_drop_down( openprint::Manufacturer->dropdown( order=>'lower(name)'), $$variable{Paper}->manufacturer_id() );
 						) ?>
 				</select>
 				<input style="display: none;" type="text" id="txtManufacturer" name="txtManufacturer" />
@@ -85,7 +85,7 @@ function calc_from_gsm( form ) {
 				<select id="Brand" name="Brand" size="1" onchange="f1.txtBrand.value='';">
 					<option value="">select</option>
 					<? echo (
-						make_drop_down( openprint::StockBrand->dropdown( order=>'lower(name)'), $$variable{'Paper'}->brand_id() );
+						make_drop_down( openprint::StockBrand->dropdown( order=>'lower(name)'), $$variable{Paper}->brand_id() );
 					) ?>
 				</select>
 				<input style="display: none;" type="text" id="txtBrand" name="txtBrand" onfocus="ddm_select_by_index( f1.Brand, 0 );" />
@@ -95,7 +95,7 @@ function calc_from_gsm( form ) {
 				<select id="Finish" name="Finish" size="1" onchange="f1.txtFinish.value='';">
 					<option value="">select</option>
 				<? echo (
-					make_drop_down( openprint::StockFinish->dropdown( order=>'lower(name)'), $$variable{'Paper'}->finish_id() );
+					make_drop_down( openprint::StockFinish->dropdown( order=>'lower(name)'), $$variable{Paper}->finish_id() );
 				) ?>
 				</select>
 				<input style="display: none;" type="text" id="txtFinish" name="txtFinish" onfocus="ddm_select_by_index( f1.Finish, 0 );" />
@@ -105,7 +105,7 @@ function calc_from_gsm( form ) {
 				<select id="Colour" name="Colour" size="1" onchange="f1.txtColour.value='';">
 					<option value="">select</option>
 				<? echo (
-					make_drop_down( openprint::StockColour->dropdown( order=>'lower(name)'), $$variable{'Paper'}->colour_id() );
+					make_drop_down( openprint::StockColour->dropdown( order=>'lower(name)'), $$variable{Paper}->colour_id() );
 					) ?>
 				</select>
 				<input style="display: none;" type="text" id="txtColour" name="txtColour" onfocus="ddm_select_by_index( f1.Colour, 0 );" />
@@ -115,7 +115,7 @@ function calc_from_gsm( form ) {
 				<select id="Weight" name="Weight" size="1" onchange="f1.txtWeight.value='';">
 					<option value="">select</option>
 				<? echo (
-					make_drop_down( openprint::StockWeight->dropdown( order=>'lower(name)'), $$variable{'Paper'}->weight_id() );
+					make_drop_down( openprint::StockWeight->dropdown( order=>'lower(name)'), $$variable{Paper}->weight_id() );
 						) ?>
 				</select>
 				<input style="display: none;" type="text" id="txtWeight" name="txtWeight" onfocus="ddm_select_by_index( f1.Weight, 0 );" />
@@ -125,26 +125,26 @@ function calc_from_gsm( form ) {
 				<select id="Quality" name="Quality" size="1">
 					<option value="">select</option>
 				<? echo (
-					make_drop_down( openprint::StockQuality->dropdown( order=>'lower(name)'), $$variable{'Paper'}->quality_id() );
+					make_drop_down( openprint::StockQuality->dropdown( order=>'lower(name)'), $$variable{Paper}->quality_id() );
 				) ?>
 				</select>
 				<input style="display: none;" type="text" id="txtQuality" name="txtQuality" onfocus="ddm_select_by_index( f1.Weight, 0 );" />
 			</p>
 			<p><label>Type</label>
-				<input type="radio" id="typeSheet" name="type" value="Sheet" onclick="$('PaperHeight').show();" <? echo ( 'checked="checked"' if $$variable{'Paper'}->type() ne 'Roll'; ) ?> />
+				<input type="radio" id="typeSheet" name="type" value="Sheet" onclick="$('PaperHeight').show();" <? echo ( 'checked="checked"' if $$variable{Paper}->type() ne 'Roll'; ) ?> />
 				<label class="radio" for="typeSheet">Sheet</label>
-				<input type="radio" id="typeRoll" name="type" value="Roll" onclick="$('PaperHeight').hide();" <? echo ( 'checked="checked"' if $$variable{'Paper'}->type() eq 'Roll'; ) ?> />
+				<input type="radio" id="typeRoll" name="type" value="Roll" onclick="$('PaperHeight').hide();" <? echo ( 'checked="checked"' if $$variable{Paper}->type() eq 'Roll'; ) ?> />
 				<label class="radio" for="typeRoll">Roll</label>
 			</p>
 			<p>
 				<label for="width">Size</label>
 				<? echo ( input( type=>'float', id=>'width', name=>'width', value=>$$variable{Paper}->width(), onkeyup=>'gsm_to_mweight(this.form);' ); ) ?>
-				<span id="PaperHeight"<? echo ( $$variable{'Paper'}->type() eq 'Roll' ? ' style="display:none;"' : '' ) ?>>
+				<span id="PaperHeight"<? echo ( $$variable{Paper}->type() eq 'Roll' ? ' style="display:none;"' : '' ) ?>>
 				x
 				<? echo ( input( type=>'float', id=>'height', name=>'height', value=>$$variable{Paper}->height(), onkeyup=>'gsm_to_mweight(this.form);' ); ) ?>
 				</span>
 			</p>
-			<p id="MWeight" <? echo ( 'style="display:none;"' if $$variable{'Paper'}->type() eq 'Roll' ) ?>>
+			<p id="MWeight" <? echo ( 'style="display:none;"' if $$variable{Paper}->type() eq 'Roll' ) ?>>
 				<label>MWeight</label>
 				<? echo ( input( type=>'float', id=>'mweight', name=>'mweight', value=>$$variable{Paper}->mweight(), onkeyup=>'calc_from_mweight(this.form);' ); )?>M
 			</p>
@@ -168,82 +168,88 @@ x
 			</p>
 			<p>
 				<label>FSC Code</label>
-				<input type="text" id="fsc_code" name="fsc_code" value="<? echo ( $$variable{'Paper'}->fsc_code(); ) ?>" />
+				<input type="text" id="fsc_code" name="fsc_code" value="<? echo ( $$variable{Paper}->fsc_code(); ) ?>" />
 			</p>
 			<p>
 				<label>Manufacturers Name</label>
-				<input type="text" id="manufacturers_name" name="manufacturers_name" value="<? echo ( $$variable{'Paper'}->manufacturers_name(); ) ?>" />
+				<input type="text" id="manufacturers_name" name="manufacturers_name" value="<? echo ( $$variable{Paper}->manufacturers_name(); ) ?>" />
 			</p>
 			<p>
 				<label for="Owner">Owner</label>
-				<select id="Owner" name="Owner"><? echo ( openprint::Company::get_dropdown( $$variable{'Paper'}->owner_id() || $session{'company_id'} ); ) ?></select>
+			<input name="company_filter" class="filter" type="text" oninput="filter_companies(Owner', { name: this.value,selected_id: get_ddm_value($('Owner'))} );" />
+				<select id="Owner" name="Owner">
+					<option value="">select</option>
+					<? echo ( 
+						make_drop_down( openprint::Company->dropdown('last_ordered_on is null'=>0), $$variable{Paper}->owner_id() ? $$variable{Paper}->owner_id() : $session{company_id} ); 
+					) ?>
+				</select>
 			</p>
-<? else ( openprint::usergroup::is_user_in( ['Inventory'], $session{'user_id'} ) ) ?>
+<? else ( openprint::usergroup::is_user_in( ['Inventory'], $session{user_id} ) ) ?>
 <p>
-<label>Description</label><? echo ( $$variable{'Paper'}->to_string(); ) ?>
+<label>Description</label><? echo ( $$variable{Paper}->to_string(); ) ?>
 </p>
-<? if ( $$variable{'Paper'}->type() ne 'Roll' ) ?>
+<? if ( $$variable{Paper}->type() ne 'Roll' ) ?>
 			<p>
 				<label>MWeight</label>
-				<? echo ( $$variable{'Paper'}->mweight(); ) ?>M
+				<? echo ( $$variable{Paper}->mweight(); ) ?>M
 			</p>
-<? endif ( $$variable{'Paper'}->type() ne 'Roll' ) ?>
-<? if ( $$variable{'Paper'}->gsm() ) ?>
+<? endif ( $$variable{Paper}->type() ne 'Roll' ) ?>
+<? if ( $$variable{Paper}->gsm() ) ?>
 			<p>
 				<label>GSM</label>
-				<? echo ( $$variable{'Paper'}->gsm(); ) ?>
+				<? echo ( $$variable{Paper}->gsm(); ) ?>
 			</p>
-<? endif ( $$variable{'Paper'}->gsm() ) ?>
-<? if ( $$variable{'Paper'}->calliper() ) ?>
+<? endif ( $$variable{Paper}->gsm() ) ?>
+<? if ( $$variable{Paper}->calliper() ) ?>
 			<p>
 				<label>Calliper</label>
-				<? echo ( $$variable{'Paper'}->calliper(); ) ?>inches
+				<? echo ( $$variable{Paper}->calliper(); ) ?>inches
 			</p>
-<? endif ( $$variable{'Paper'}->calliper() ) ?>
-<? if ( $$variable{'Paper'}->fsc_code() ) ?>
-			<p>
+<? endif ( $$variable{Paper}->calliper() ) ?>
+<? if ( $$variable{Paper}->fsc_code() ) ?>
+<p>
 				<label>FSC Code</label>
-				<? echo ( $$variable{'Paper'}->fsc_code(); ) ?>
+				<? echo ( $$variable{Paper}->fsc_code(); ) ?>
 			</p>
-<? endif ( $$variable{'Paper'}->fsc_code() ) ?>
+<? endif ( $$variable{Paper}->fsc_code() ) ?>
 			<p>
 				<label for="Owner">Owner</label>
-<? echo ( $$variable{'Paper'}->Owner()->name(); ) ?>
+<? echo ( $$variable{Paper}->Owner()->name(); ) ?>
 			</p>
-<? endif ( openprint::usergroup::is_user_in( ['Inventory'], $session{'user_id'} ) ) ?>
+<? endif ( openprint::usergroup::is_user_in( ['Inventory'], $session{user_id} ) ) ?>
 		</div>
 		<div class="rightColumn">
 			<p>
 				<label>Entered</label>
-				<? echo ( format_date( $$variable{'Paper'}->created_on() ); ) ?>
+				<? echo ( format_date( $$variable{Paper}->created_on() ); ) ?>
 			</p>
 			<p>
 				<label>In Stock</label>
-				<? echo ( $$variable{'Paper'}->in_stock() . ( $$variable{'Paper'}->type() eq 'Roll' ? 'lbs' : 'sheets' );  ) ?>
+				<? echo ( Number::Format::format_number($$variable{Paper}->in_stock()) . $$variable{Paper}->units() ) ?>
 			</p>
 			<p>
 				<label>Allocated</label><span id="Allocated">
-				<? echo ( int $$variable{'Paper'}->allocated() . ( $$variable{'Paper'}->type() eq 'Roll' ? 'lbs' : 'sheets' ); ) ?>
+				<? echo ( Number::Format::format_number($$variable{Paper}->allocated()) . $$variable{Paper}->units() ) ?>
 				</span>
 			</p>
 			<p>
 				<label>Available</label><span id="Available">
-				<? echo ( $$variable{'Paper'}->available().( $$variable{'Paper'}->type() eq 'Roll' ? 'lbs' : 'sheets' ); ) ?>
+				<? echo ( Number::Format::format_number($$variable{Paper}->available()). $$variable{Paper}->units() ) ?>
 				</span>
 			</p>
 			<p>
 				<label>Ordered</label>
-				<? echo ( int($$variable{'Paper'}->back_ordered()). ( $$variable{'Paper'}->type() eq 'Roll' ? 'lbs' : 'sheets' ); ) ?>
+				<? echo ( Number::Format::format_number(int($$variable{Paper}->back_ordered())). $$variable{Paper}->units() ) ?>
 			</p>
 		</div>
 		<div style="float: right;">
 			<? echo (
 					my $html = '';
-					if ( ( $session{'user_type'} eq 'A' ) or openprint::usergroup::is_user_in( ['Inventory'], $session{'user_id'} ) ) {
+					if ( ( $session{user_type} eq 'A' ) or openprint::usergroup::is_user_in( ['Inventory'], $session{user_id} ) ) {
 							$html .= button( 'CheckOutButton', { onclick=>sprintf(q`popup_window('_check_out_popup.html?referer=paper_details.html&amp;paper_id=%d');`,$$variable{Paper}->id()), text=>'Check Out' } );
 							$html .= button( 'AllocateButton', { onclick=>sprintf(q`popup_window( '_allocate_popup.html?referer=paper_details.html&amp;paper_id=%d');`,$$variable{Paper}->id()), text=>'Allocate' } );
 							$html .= button( 'save', { onclick=>"f1.btnFunction.value='Save';f1.submit();", text=>'Save' } );
-							$html .= button( 'delete', { onclick=>"f1.btnFunction.value='Delete';f1.submit();", text=>'Delete' } ) if ! $$variable{'Paper'}->in_stock();
+							$html .= button( 'delete', { onclick=>"f1.btnFunction.value='Delete';f1.submit();", text=>'Delete' } ) if ! $$variable{Paper}->in_stock();
 							$html .= button( 'reset', { onclick=>'f1.reset();', href=>'', text=>'Reset' } );
 					} # end if
 					return $html;
@@ -272,7 +278,7 @@ x
 	<? echo (
 		my $html = '';
 		my $rowclass;
-		while ( my $Duplicate = shift @{$$variable{'Duplicates'}} ) {
+		while ( my $Duplicate = shift @{$$variable{Duplicates}} ) {
 			next if $Duplicate->id() == $$variable{Paper}->id();
 			$html .= sprintf('<tr%1$s><td><a href="/employee/inventory/paper_details.html?paper_id=%2$d">%2$d</a></td><td><a href="/employee/inventory/paper_details.html?paper_id=%2$d">%3$s</a></td></tr>', $rowclass, $Duplicate->id(), $Duplicate->to_string() );
 			$rowclass = $rowclass ? '' : ' class="colRow"';
@@ -285,14 +291,14 @@ x
 <? endif ( @{$$variable{Duplicates}} > 1 ) ?>
 <? endif ( $$variable{Paper}->id() ) ?>
 </form>
-<? if ( $$variable{'paper_id'} ) ?>
+<? if ( $$variable{paper_id} ) ?>
 	<fieldset><legend onclick="toggleContent( 'CurrentInventory', '/employee/inventory/_paper_inventory_entries.html', new Array('paper_id',<?paper_id?>) );">Current Inventory<span class="unprintable"> - click to hide/show</span></legend>
-		<div id="CurrentInventory"><? echo ( include('/employee/inventory/_paper_inventory_entries.html'); ) ?></div>
+		<div id="CurrentInventory"><?include('/employee/inventory/_paper_inventory_entries.html')?></div>
 	</fieldset>
 	<fieldset><legend onclick="toggleContent( 'Allocations', '/employee/inventory/_paper_allocations.html', new Array('paper_id',<?paper_id?>) );">Allocations<span class="unprintable"> - click to hide/show</span></legend>
-		<div id="Allocations"><? echo ( include('/employee/inventory/_paper_allocations.html'); ) ?></div>
+		<div id="Allocations"><?include('/employee/inventory/_paper_allocations.html')?></div>
 	</fieldset>
 	<fieldset><legend onclick="toggleContent( 'Log', '/employee/inventory/_paper_log.html', new Array('paper_id',<?paper_id?>) );">Inventory Log<span class="unprintable"> - click to hide/show</span></legend>
-		<div id="Log"><? echo ( include('/employee/inventory/_paper_log.html'); ) ?></div>
+		<div id="Log"><?include('/employee/inventory/_paper_log.html') ?></div>
 	</fieldset>
-<? endif ( $$variable{'paper_id'} ) ?>
+<? endif ( $$variable{paper_id} ) ?>

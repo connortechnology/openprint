@@ -114,7 +114,20 @@ sub host {
 	} elsif ( $param{action} eq 'Wake' ) {
 		foreach my $I ( $Host->Interfaces() ) {
 			next if ! $I->mac();
-			`wakeonlan $$I{mac}`;
+			if ( $I->ip() ) {
+				$_ = `wakeonlan -i $$I{ip} $$I{mac} 2>&1`;
+				if ( defined $_ ) {
+					$variable{information} .= "running wakeonlan -i $$I{ip} $$I{mac}<br/>Output: $_<br/>";
+				} else {
+					$variable{error} .= "Error running wakeonlan -i $$I{ip} $$I{mac}<br/>";
+				}
+			} # end if ip
+			$_ = `wakeonlan $$I{mac} 2>&1`;
+			if ( defined $_ ) {
+				$variable{information} .= "running wakeonlan -i $$I{ip} $$I{mac}<br/>Output: $_<br/>";
+			} else {
+				$variable{error} .= "Error running wakeonlan -i $$I{ip} $$I{mac}<br/>";
+			}
 		} # end foraech
 	} elsif ( $param{action} eq 'GEOLookup' ) {
 		foreach my $I ( $Host->interfaces() ) {
@@ -437,7 +450,7 @@ sub _licenses {
 	( map { 'purchased_on_end_' . $_ } ( 'year', 'month', 'day' ) ),
 	( map { 'expires_on_start_' . $_ } ( 'year', 'month', 'day' ) ),
 	( map { 'expires_on_end_' . $_ } ( 'year', 'month', 'day' ) ),
-			'ip','hostname','mac','software_id','serialkey',
+			'ip', 'hostname', 'mac', 'software_id', 'serialkey',
 			'order',
 			);
 } # end sub _licenses
@@ -500,6 +513,13 @@ sub _license_allocations {
 		
 		my $LH = new openprint::License_Host();
 		$variable{error} .= $LH->save({license_id=>$param{license_id}, host_id=>$param{host_id}});
+	} elsif ( $param{action} eq 'delete' ) {
+		my $LH = openprint::License_Host->find_one( license_id=>$param{license_id}, host_id=>$param{host_id} );
+		if ( ! $LH ) {
+			$variable{error} .= 'Allocation not found.';
+			return;
+		} 
+		$variable{error} .= $LH->delete();
 	} # end if	
 } # end sub _license_alliations
 

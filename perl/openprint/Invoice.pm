@@ -83,10 +83,10 @@ sub save {
 	my ( $self, $param ) = @_;
 	
 	# none of these should be set by param
-	$$self{'total'} = $self->total();
+	$$self{total} = $self->total();
 
 	my $rc = $self->SUPER::save( $param );
-	if ( ! $rc and $$self{'posted_on'} ) {
+	if ( ! $rc and $$self{posted_on} ) {
 		foreach my $T ( $self->Taxes(undef) ) {
 			$rc .= $T->save();
 		} # end foreach
@@ -97,9 +97,13 @@ sub save {
 
 sub is_paid {
 	my ( $self ) = @_;
-	if ( ! $$self{'posted'} ) {
+	if ( ! $$self{posted} ) {
+		$openprint::log->debug("Invoice $$self{id} ! is_paid because ! posted") if $debug;
 		return 0;
 	} # end if
+	if ( $debug ) {
+		$openprint::log->debug("Invoice $$self{id} owing is " . $self->owing() );
+	}
 	return $self->owing() > 0 ? 0 : 1;
 } # end sub is_paid
 
@@ -132,76 +136,80 @@ sub Invoicer {
 sub subtotal {
 	my ( $self ) = @_;
 
-	if ( ! $$self{'id'} ) {
+	if ( ! $$self{id} ) {
 		$log->error('Invoice:subtotal no id! ref:' . (ref $self) . ' self:' . $self);
 #cluck('Invoice:subtotal no id! ref:' . (ref $self) . ' self:' . $self);
 		return;
 	} # end if
 
-	if ( (!$$self{'posted'}) or ( ! defined $$self{'subtotal'} ) ) {
+	if ( (!$$self{posted}) or ( ! defined $$self{subtotal} ) ) {
 #$log->debug("Recalculating subtotal");
-		$$self{'subtotal'} = 0;
+		$$self{subtotal} = 0;
 		foreach my $T ( openprint::Timetrack->find('invoice_id'=>$$self{id}) ) {
-			$$self{'subtotal'} += $T->value();
+			$$self{subtotal} += $T->value();
 		} # end foreach
 		foreach my $P ( openprint::Invoiced_Product->find('invoice_id'=>$$self{id}) ) {
-			$$self{'subtotal'} += $P->total();
+			$$self{subtotal} += $P->total();
 		}# end foreach P
 	} # end if
-	return Math::Round::nearest( .01, $$self{'subtotal'} );
+	return Math::Round::nearest( .01, $$self{subtotal} );
 } # end sub subtotal
 
 sub total {
 	my ( $self ) = @_;
 
-	if ( ! $$self{'id'} ) {
+	if ( ! $$self{id} ) {
 		return;
 	} # end if
 
-	if ( (!$$self{'posted'}) or ( ! defined $$self{'total'} ) ) {
-		$$self{'total'} = $self->subtotal();
+	if ( (!$$self{posted}) or ( ! defined $$self{total} ) ) {
+		$$self{total} = $self->subtotal();
 		foreach my $Tax ( $self->Taxes() ) {
-			$$self{'total'} += $Tax->amount();
+			$$self{total} += $Tax->amount();
 		} # end foreach Tax
 	} # end if
-	return Math::Round::nearest( .01, $$self{'total'} );
+	return Math::Round::nearest( .01, $$self{total} );
 } # end sub total
 
 sub interest {
 	my ( $self ) = @_;
 	if ( @_ == 2 ) {
-		$$self{'interest'} = $_[1];
+		$$self{interest} = $_[1];
 	} # end if
 
-	if ( (!$$self{'posted'}) or ( ! defined $$self{'interest'} ) ) {
-		$$self{'interest'} = misc::sum( map { $_->amount() } openprint::Invoice_Interest->find('invoice_id'=>$$self{'id'}) );
+	if ( (!$$self{posted}) or ( ! defined $$self{interest} ) ) {
+		$$self{interest} = misc::sum( map { $_->amount() } openprint::Invoice_Interest->find('invoice_id'=>$$self{id}) );
 	} # end if
-	return $$self{'interest'};
+	return $$self{interest};
 } # end sub interest
 
 sub paid {
 	my $self = shift;
 	if ( @_ ) {
-		$$self{'paid'} = $_[0];
+		$$self{paid} = $_[0];
 	} # end if
-	if ( (!$$self{'posted'}) or ( ! defined $$self{'paid'} ) ) {
-		$$self{'paid'} = misc::sum( map { $_->amount() } openprint::Invoice_Payment->find('invoice_id'=>$$self{'id'}) );
+	if ( (!$$self{posted}) or ( ! defined $$self{paid} ) ) {
+		$$self{paid} = misc::sum( map { $_->amount() } openprint::Invoice_Payment->find('invoice_id'=>$$self{id}) );
 	} # end if
-	return $$self{'paid'};
+	return $$self{paid};
 } # end sub paid
 
 sub add_Payment {
 	my ( $self, $Payment ) = @_;
-	if ( $Payment->remaining() and $self->owing() ) {
+	if ( $Payment->remaining() ) {
+		if ( $self->owing() ) {
 		my $error;
 		my $amount = $Payment->remaining() > $self->owing() ? $self->owing() : $Payment->remaining();	
 		my $IP = new openprint::Invoice_Payment();
-		$error .= $IP->save({'payment_id'=>$Payment->id(),'invoice_id'=>$$self{'id'}, 'amount'=>$amount});
+		$error .= $IP->save({ payment_id=>$Payment->id(), invoice_id=>$$self{id}, amount=>$amount });
 		$Payment->remaining( undef ); # force update
 		$error .= $Payment->save();
 		$self->paid( undef );
 		$error .= $self->save();
 		return $error;
+		} else {
+			return 'Invoice is already paid.';
+		} # end if
 	} elsif ( ! $Payment->remaining() ) {
 		return 'No money left in payment.';
 	} elsif ( ! $self->owing() ) {
@@ -212,7 +220,7 @@ sub add_Payment {
 sub del_Payment {
 	my ( $self, $Payment ) = @_;
 
-	foreach my $IP ( openprint::Invoice_Payment->find('invoice_id'=>$$self{'id'},'payment_id'=>$$Payment{'id'})) {
+	foreach my $IP ( openprint::Invoice_Payment->find('invoice_id'=>$$self{id},'payment_id'=>$$Payment{id})) {
 		$IP->delete();
 	} # endforeach$IP
 	$Payment->remaining( undef );
@@ -223,7 +231,7 @@ sub del_Payment {
 
 sub Payments {
 	my ( $self ) = @_;
-	return openprint::Invoice_Payment->find('invoice_id'=>$$self{'id'} );
+	return openprint::Invoice_Payment->find('invoice_id'=>$$self{id} );
 } # end sub Payments
 
 sub Logs {
@@ -254,9 +262,9 @@ sub send {
 	my $email_template = ssi::slurp_content('/email_template.html');
 	my $invoice_template = ssi::slurp_content('/invoice_template.html');
 	my @attachments;
-	$data{'ReplacementText'} = ssi::include( '/email_content/invoice_body.html', \%data );
+	$data{ReplacementText} = ssi::include( '/email_content/invoice_body.html', \%data );
 	push @attachments, '', MIME::QuotedPrint::encode_qp( Encode::encode('utf-8', ssi::variable_substitution( \$email_template, \%data ) ) ), 'text/html', 'quoted-printable';
-	$data{'ReplacementText'} = ssi::include( '/email_content/invoice.html', \%data );
+	$data{ReplacementText} = ssi::include( '/email_content/invoice.html', \%data );
 	my $invoice_html = Encode::encode('utf-8',ssi::variable_substitution( \$invoice_template, \%data ) );
 
 	my $file_base = 'Invoice'.$$self{id};
@@ -280,10 +288,10 @@ sub send {
 
 	my $Email = new openprint::Email();
 	$results = $Email->send(
-		BCC			=>	new openprint::User( $session{'user_id'} ),
-		#'TO'			=>	new openprint::User( $session{'user_id'} ),
+		BCC			=>	new openprint::User( $session{user_id} ),
+		#'TO'			=>	new openprint::User( $session{user_id} ),
 		TO			=>	( $To ? $To : [$self->Invoicee()->AccountingContacts()] ),
-		FROM		=>	$config{'AccountingEmail'},
+		FROM		=>	$config{AccountingEmail},
 		ATTACHMENTS	=>	\@attachments,
 		SUBJECT		=>	sprintf('Your Invoice (%1$d) is now available.', $$self{id} ),
 	);
@@ -292,10 +300,10 @@ sub send {
 } # end sub send
 
 sub Products {
-	return openprint::Invoiced_Product->find('invoice_id'=>$_[0]{'id'},'order'=>'id');
+	return openprint::Invoiced_Product->find('invoice_id'=>$_[0]{id},'order'=>'id');
 } # end sub Products
 sub Projects {
-	return openprint::Invoiced_Project->find('invoice_id'=>$_[0]{'id'},'order'=>'id');
+	return openprint::Invoiced_Project->find('invoice_id'=>$_[0]{id},'order'=>'id');
 } # end sub Projects
 sub Orders {
 	return openprint::Order_Invoice->find(invoice_id=>$_[0]{id}, order=>'order_id');
@@ -304,8 +312,8 @@ sub Orders {
 sub Interests {
 	my $self = shift;
 	my %args = @_;
-	$args{'invoice_id'} = $$self{'id'};
-	$args{'order'} = 'compounded_on' if ! $args{'order'};
+	$args{invoice_id} = $$self{id};
+	$args{order} = 'compounded_on' if ! $args{order};
 	return openprint::Invoice_Interest->find(%args);
 } # end sub Interests
 
@@ -317,33 +325,33 @@ sub Taxes {
 	my ( $self ) = @_;
 
 	if ( @_ > 1 and ! defined $_[1] ) {
-		foreach ( openprint::Invoice_Tax->find('invoice_id'=>$$self{'id'}) ) {
+		foreach ( openprint::Invoice_Tax->find('invoice_id'=>$$self{id}) ) {
 			$_->destroy();
 		} # end foreach	 Tax
-		@{$$self{'Taxes'}} = ();
+		@{$$self{Taxes}} = ();
 	} # end if
 
-	if ( ( ! $$self{'Taxes'} ) and $$self{'posted'} ) {
-		@{$$self{'Taxes'}} = openprint::Invoice_Tax->find('invoice_id'=>$$self{'id'});
+	if ( ( ! $$self{Taxes} ) and $$self{posted} ) {
+		@{$$self{Taxes}} = openprint::Invoice_Tax->find('invoice_id'=>$$self{id});
 	} # end if
-	if ( ! ( $$self{'Taxes'} and @{$$self{'Taxes'}} ) ) {
-		$$self{'Taxes'} = [];
+	if ( ! ( $$self{Taxes} and @{$$self{Taxes}} ) ) {
+		$$self{Taxes} = [];
 		foreach my $Tax ( openprint::Tax->find(
-					'period_start null_or_<='	=>	$$self{'created_on'},
-					'period_end null_or_>='		=>	$$self{'created_on'},
+					'period_start null_or_<='	=>	$$self{created_on},
+					'period_end null_or_>='		=>	$$self{created_on},
 					'country'	=>	$self->Invoicee()->country(),
 					'state'		=>	$self->Invoicee()->state()),
 				) {
 			my $T = new openprint::Invoice_Tax();
 			$T->save({
-				'invoice_id'=>	$$self{'id'},
-				'tax_id'	=>	$$Tax{'id'},
-				'rate'		=>	$$Tax{'rate'},
+				'invoice_id'=>	$$self{id},
+				'tax_id'	=>	$$Tax{id},
+				'rate'		=>	$$Tax{rate},
 			});
-			push @{$$self{'Taxes'}}, $T;
+			push @{$$self{Taxes}}, $T;
 		} # end foreach Tax
 	} # end if
-	return @{$$self{'Taxes'}};
+	return @{$$self{Taxes}};
 } # end sub Taxes
 
 sub Tax {

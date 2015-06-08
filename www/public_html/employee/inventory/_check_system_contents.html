@@ -1,0 +1,66 @@
+<table class="List">
+	<tr>
+		<th class="Skid">Skid/Roll</th>
+		<th class="RFIDTag">RFIDTag</th>
+		<th class="Width">Width</th>
+		<th class="Diameter">Diameter</th>
+		<th class="Quantity">Weight(lbs)</th>
+		<th class="Location">Location</th>
+		<th class="Notes">Notes</th>
+		<th class="buttons"></th>
+	</tr>
+<? echo ( 
+	my $html;
+	my $rowclass;
+	my $total_weight;
+
+	if ( ! $$variable{skid_ids} ) {
+		my @Contents = openprint::Inventory_Check_Entry->find( ic_id=>$$variable{Check}->id(), order=>'skid_id,rfidtag_id' );
+		my @skid_ids = map { $_->skid_id() } @Contents;
+		my @RFIDTags = openprint::RFIDTag->find( id=>[ map { $$_{rfidtag_id} } @Contents ] );
+		push @skid_ids, map { $_->id() } openprint::Skid->find( rfidtag_id=>[ map { $_->id() } @RFIDTags ] );
+		$$variable{skid_ids} = \@skid_ids;
+	}
+
+	my @Skids = openprint::Skid->find(
+		'quantity >=' => 1, 
+		#'updated_on <=' => $$variable{Check}->started_on(),
+		'id not in'	=> $$variable{skid_ids},
+		);
+	
+	foreach my $Skid ( @Skids ) {
+		$html .= sprintf('
+<tr%1$s id="skid-%11$d" title="skid %11$d">
+		<td class="Skid">%2$s</td>
+		<td class="RFIDTag">%3$s</td>
+		<td class="Width">%5$s</td>
+		<td class="Diameter">%6$s</td>
+		<td class="Quantity">%4$s</td>
+		<td class="Location" rowspan="2">%10$s</td>
+		<td class="Notes" rowspan="2">%7$s</td>
+		<td class="buttons" rowspan="2">%9$s</td>
+	</tr><tr%1$s><td colspan="5">%8$s</td></tr>',
+		$rowclass,
+		$Skid->link_to(),
+		$Skid->RFIDTag()->link_to(),
+		$Skid->quantity(),
+		$Skid->dimension1(),
+		$Skid->dimension2(),
+		$Skid->notes(),
+		join('<br/>', map { $_->Paper()->to_string() } $Skid->Contents() ),
+		join('',
+			#button( 'x'.$$Skid{id}, { onclick=>"del_entry($$Skid{id});", title=>'Delete', text=>'X' } ),
+		),
+
+		( $Skid->Location()->name() ),
+		$Skid->id(),
+		);
+
+		$total_weight += $Skid->quantity();
+		
+		$rowclass = $rowclass?'':' class="colRow"';
+	} # end foreach ICE
+	$html .= '<tr class="totals"><td colspan="2"># of items not in check: ' . scalar @Skids . '</td><td class="Quantity">'.Number::Format::format_number(int($total_weight)).'lbs</td><td></td><td></td><td></td><td></td></tr>';
+	return $html;
+) ?>
+

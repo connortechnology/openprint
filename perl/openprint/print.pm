@@ -105,6 +105,7 @@ sub view_services {
 					if ( $openprint::param{ServiceType} eq 'Printing' or ! $openprint::param{ServiceType} ) {
 					} else {
 						openprint::Estimating::MultiPage::calculate_signatures( $Project );
+						# Shouldn't we do this befiore that?
 						openprint::service::internal_calc( $log, $dbh, $variable, $project_index, $$services{''}[0], $Project->Type()->type() );
 					} # end if
 				} # end if
@@ -134,9 +135,14 @@ sub view_services {
 					if ( $$services{Cutting} and @{$$services{Cutting}} ) {	
 						openprint::service::internal_calc( $log, $dbh, $variable, $project_index, $$services{Cutting}[0], 'Cutting' );
 					} # end if
+					if ( $$services{Scoring} and @{$$services{Scoring}} ) {	
+						openprint::service::internal_calc( $log, $dbh, $variable, $project_index, $$services{Scoring}[0], 'Scoring' );
+					} # end if
 					if ( $$services{SaddleStitching} and @{$$services{SaddleStitching}} ) {	
 						openprint::service::internal_calc( $log, $dbh, $variable, $project_index, $$services{SaddleStitching}[0], 'Stitching' );
 					} # end if
+				} elsif ( $openprint::param{ServiceType} eq 'Paper' ) {
+					openprint::service::internal_calc( $log, $dbh, $variable, $project_index,  $service_index, 'Paper' );
 				} # end if
 				openprint::service::auto_calculate( $Project, $service_index ) if $recalc;
 				$Project->update_status();
@@ -210,7 +216,6 @@ sub view_services {
 					next;
 				} # end if
 				my $specs = $PS->specs();
-				$Project->add_to_log( @openprint::session{'company_id','user_id'}, $ServiceType->name().' ' . $$specs{ServiceName}.' service deleted.' );
 				$$variable{error} .= $PS->delete();
 				if ( $ServiceType->name() eq 'Signature' ) {
 					openprint::service::internal_calc( $log, $dbh, $variable, $project_index, $$services{''}[0], $Project->Type()->type() );
@@ -443,7 +448,7 @@ $log->debug("group $group_id");
 				'rdbSuppliedStock','rdbSpecificStock','StockType',
 				'CustomSheetDoubleSided', 'CustomStockPrice','txtCustomMWeight','txtStockGSM','CustomStockPriceUnits',
 				'basis_width','basis_height','basis_mweight','StockGrade',
-				'minimum_order', 'sheets_per_package', 'full_packages',
+				'minimum_order', 'sheets_per_package',
 
 				'CyanSpotSideOneCoverage', 'MagentaSpotSideOneCoverage', 'YellowSpotSideOneCoverage', 'BlackSpotSideOneCoverage',
 				'CyanSideOneCoverage', 'MagentaSideOneCoverage', 'YellowSideOneCoverage', 'BlackSideOneCoverage',
@@ -468,7 +473,7 @@ $log->debug("group $group_id");
 				'ColourCoatingType7SideTwo', 'ColourCoatingColour7SideTwo','ColourCoatingCoverage7SideTwo',
 				'ColourCoatingType8SideTwo', 'ColourCoatingColour8SideTwo','ColourCoatingCoverage8SideTwo',
 				'ColourCoatingType9SideTwo', 'ColourCoatingColour9SideTwo','ColourCoatingCoverage9SideTwo',
-				'BleedLeft','BleedRight','BleedTop','BleedBottom','rdbColourBar','txtCropMarkSpace',
+				'rdbColourBar','txtCropMarkSpace',
 				'GroupPageQuantity','OverrideGroupPageQuantity','txtServiceDescription','rdbTemplateType',
 				'rdbPanels','PocketSize','chkPocketLeft','chkPocketCenter','chkPocketRight',
 				'txtWidth','txtHeight','txtFinalWidth','txtFinalHeight','chkOverrideDimensions','txtQuantity1','txtQuantity2','txtQuantity3',
@@ -482,6 +487,9 @@ $log->debug("group $group_id");
 				( map { 'chkColourCoating'.$_.'SideOne' } ( 1 .. 9 ) ),
 				'chkCyanSideTwo','chkMagentaSideTwo','chkYellowSideTwo','chkBlackSideTwo', 'chkProcessColourSideTwo',
 				( map { 'chkColourCoating'.$_.'SideTwo' } ( 1 .. 9 ) ),
+				'BleedLeft','BleedRight','BleedTop','BleedBottom',
+				'full_packages',
+				'sides_the_same',
 		) {
 			openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $ss_id, $spec, $$param{$spec.$group_id} );
 		} # end foreach spec
@@ -586,6 +594,7 @@ $log->error("No Group!") if ! $type;
 				'txtSignatureType','rdbTemplateType','pages_supplied','supplied_format',
 				'rdbPanels','PocketSize','chkPocketLeft','chkPocketCenter','chkPocketRight',
 				'txtWidth','txtHeight','chkOverrideDimensions','txtQuantity1','txtQuantity2','txtQuantity3',
+	'sides_the_same',
 				) {
 			$$variable{$spec.$type} = $$sig_specs{$spec} if $$sig_specs{$spec} and ! $$variable{$spec.$type};
 #$openprint::log->debug("$spec . $type = $$variable{$spec.$type}");

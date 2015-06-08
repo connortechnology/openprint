@@ -26,7 +26,7 @@ require openprint::Paper;
 require openprint::Estimating::Folding;
 require openprint::Equipment;
 
-use constant DEBUG => 1;
+use constant DEBUG => 0;
 
 my @variables = (
 	'txtQuantity',
@@ -90,6 +90,7 @@ sub signature_needs {
 
 	my $form = $$sig_specs{SignatureIndex} * 1;
 	if ( $specs ) {
+ 
 	# This is because for non-books, the specs hash doesn't have the SignatureIndex filledin.
 # WHAT?S!  ARE YOU SMOKING?
 #$openprint::log->debug("Scoring::need $form : " .$$specs{"chkOverrideQty-$form"}) if DEBUG;
@@ -152,6 +153,11 @@ sub calc {
 
 	my $Project = new openprint::Project( $project_index );
 	my $services = $Project->services();
+
+	if ( $$services{DieCutting} and @{$$services{DieCutting}} ) {
+		$$specs{alert} .= 'Assuming that scoring is done as part of DieCutting. Not calculating. Remove DieCutting to calculate Scoring.<br/>';
+		return $$specs{Status} = 'uncalculated';
+	} # en dif
 
     my $calc_hash = {};
     if ( $$services{SaddleStitching} ) {
@@ -408,8 +414,8 @@ sub signature_calc($$$$$$) {
 				next;
 			} 
 			if ( $$calc_hash{FoldingSpecs}{"ddmEquipment-$form-$qty_index"} != $Equipment->id() ) {
-				my $Folder = new openprint::Equipment{ $$calc_hash{FoldingSpecs}{"ddmEquipment-$form-$qty_index"} };
-				$Results{Breakdown} .= "Form $form not being folded on $$Equipment{strid}. Is being folded on $$Folder{strid}.<br/>";
+				my $Folder = new openprint::Equipment( $$calc_hash{FoldingSpecs}{"ddmEquipment-$form-$qty_index"} );
+				$Results{Breakdown} .= "Form $form qty $qty_index not being folded on $$Equipment{strid}. Is being folded on $$Folder{strid}.<br/>";
 				if ( $$specs{"chkOverrideEquipment-$form-$qty_index"} eq 'Y' ) {
 					$Results{alert} .= 'Not being folded on this.<br/>';
 				} # end if
@@ -495,7 +501,7 @@ sub signature_calc($$$$$$) {
 
 					$Results{Breakdown} .= '<br/>';
 
-					my $Price = get_price( $Equipment, $$specs{"txtVerticalQty-$form"}, $$specs{"txtHorizontalQty-$form"}, $qty, $I );
+					my $Price = get_price( $Equipment, $$specs{"txtVerticalQty-$form"}, $$specs{"txtHorizontalQty-$form"}, $qty/$I->imposition(), $I );
 
 					$totalPrice += $$Price{setup} + $$Price{Vertical}{Total} + $$Price{Horizontal}{Total} + $$Price{Service}{Total};
 					$Results{Breakdown} .= $$Price{Breakdown};

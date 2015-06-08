@@ -82,10 +82,10 @@
 				$Paper->id(),
 				$Paper->to_string(),
 				$PI->delta,
-				join('<br/>', map { sprintf('%d%s to %d', $_->quantity(),$_->units(),new openprint::Project( $_->project_id() )->docket() ) } openprint::PaperAllocation->find('skid_id'=>$PI->skid_id,'paper_id'=>$PI->paper_id)),
+				join('<br/>', map { sprintf('%d%s to %d', $_->quantity(),$_->units(),$_->docket() ) } openprint::PaperAllocation->find('skid_ids any'=>$PI->skid_id, paper_id=>$PI->paper_id)),
 				$PI->instock,
 				$Skid->Location()->name(),
-				$PI->docket(),
+				sprintf('<a href="/employee/project/view.html?docket=%1$d">%1$d</a>', $PI->docket() ),
 				$PI->comment_html(),
 				);
 			$total += $PI->delta;

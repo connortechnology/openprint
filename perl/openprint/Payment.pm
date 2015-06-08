@@ -46,6 +46,7 @@ $serial = 'payments_id_seq';
 	deleted		=>	0,
 	owner_id	=>	q`$openprint::config{owner_id}`,
 	amount		=>	undef,
+	remaining	=>	undef,
 );
 
 sub destroy {

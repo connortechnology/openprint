@@ -23,14 +23,16 @@
 		<li><label>Company</label>
 			<select name="company_id" onchange="load_page('f1');">
 				<option value="">All</option>
-				<? echo ( openprint::Company::get_dropdown( $session{'/employee/assets/history.html?company_id'} ); ) ?>
+				<? echo ( 
+my @company_ids = sql::execute( undef, undef, 'SELECT DISTINCT company_id FROM ASSETS' );
+make_drop_down( openprint::Company->dropdown(id=>\@company_ids), $session{'/employee/assets/history.html?company_id'} ); ) ?>
 			</select>
 		</li>
 		<li><label>Created By</label>
 			<select name="created_by" onchange="load_page('f1');">
 				<option value="">All</option>
 				<? echo ( 
-					make_drop_down( openprint::User->dropdown( order=>'lower(firstname),lower(lastname)', type=>['A','E'] ), $session{'/employee/assets/history.html?created_by'} ); ) ?>
+					make_drop_down( openprint::User->dropdown( type=>['A','E'] ), $session{'/employee/assets/history.html?created_by'} ); ) ?>
 			</select>
 		</li>
 		<li><label>Type</label>

@@ -1,10 +1,17 @@
 <? eval (
+	$$variable{PurchaseOrders} = [];
 	if ( $param{po_id} ) {
-		$$variable{PurchaseOrders} = [ openprint::PurchaseOrder->find( 
-			id			=>	$param{po_id}, 
-			company_id	=>	new openprint::User( $session{user_id} )->company_id(),
-			deleted		=>	[1,0],
-			order		=>	'id desc') ];
+		my $po_id = openprint::PurchaseOrder->transform('id',$param{po_id});
+
+		if ( $param{po_id} ne $po_id ) {
+			$$variable{warning} .= "$param{po_id} does not look like a valid PO #<br/>";
+		} else {
+			$$variable{PurchaseOrders} = [ openprint::PurchaseOrder->find( 
+				id			=>	$po_id, 
+				company_id	=>	new openprint::User( $session{user_id} )->company_id(),
+				deleted		=>	[1,0],
+				order		=>	'id desc') ];
+		}
 	} elsif ( $param{manifest_id} ) {
 		$$variable{PurchaseOrders} = [ openprint::PurchaseOrder->find( 
 			manifest_id	=>	$param{manifest_id}, 
@@ -141,6 +148,7 @@
 		sql::end_transaction( $dbh, $ac );
 	} # end if
 ) ?>
+<?include(/includes/error_reporting.html)?>
 	<? if ( @{$$variable{'PurchaseOrders'}} == 0 ) ?>
 	There are no purchase orders matching your search criteria.
 	<? else ( @{$$variable{'PurchaseOrders'}} == 0 ) ?>

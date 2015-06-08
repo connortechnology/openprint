@@ -37,6 +37,9 @@
 				next if $Condition->message();
 				my $condition_id = $Condition->id();
 
+				# So allocations are either per specific skids, in which case the condition is taken from the skid,
+				# Or are a general allocation, and the allocation has the condition
+
 				my @SkidContents = openprint::SkidContent->find(
 					condition_id	=>	$condition_id,
 					paper_id		=>	$$variable{Paper}{id}, 
@@ -44,13 +47,19 @@
 					( $param{skid_id} ? ( skid_id=>[ split(',', $param{skid_id} ) ] ) : () ),
 					);
 				next if ! @SkidContents;
+				my @skid_ids = map { $_->skid_id() } @SkidContents;
+
 				my @Allocations = openprint::PaperAllocation->find(
-					condition_id	=>	$Condition->id(),
+					#condition_id	=>	$Condition->id(),
 					paper_id		=>	$$variable{Paper}{id}, 
-					( $param{skid_id} ? ( skid_id=>[ split(',', $param{skid_id} ) ] ) : () ),
+					'skid_ids &&'=> ( $param{skid_id} ? [ split(',', $param{skid_id} ) ] : \@skid_ids ),
 				);
 
-				my $available = misc::sum(map { $_->quantity() } @SkidContents) - misc::sum(map { $_->quantity() } @Allocations );
+				my $in_stock = misc::sum(map { $_->quantity() } @SkidContents);
+				my $allocated = misc::sum(map { $_->quantity() } @Allocations);
+
+				my $available = $in_stock - $allocated;
+				$log->debug("In_stock: $in_stock, allocated: $allocated, available: $available");
 				next if $available <= 0;
 
 				my @ClaimContents = openprint::Claim_Content->find('skid_id in'=>[ map { $$_{id} } @SkidContents ] );
@@ -62,7 +71,7 @@
 						);
 				} # end if
 					
-				$html .= '<hr/>Stock in ' . $Condition->name() . ' condition.';
+				$html .= '<hr/>Stock in ' . $Condition->name() . ' condition: In Stock: ' . Number::Format::format_number($in_stock) . ' Allocated: ' . Number::Format::format_number($allocated) . '<br/>';
 
 				$html .= sprintf(q` 
 			<ul><li>

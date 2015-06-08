@@ -1,0 +1,3 @@
+check process ip_monitor with pidfile /run/ip_monitor.pid
+    start program  "/etc/init.d	ip_monitor.pl start"
+    start program  "/etc/init.d	ip_monitor.pl stop"

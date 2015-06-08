@@ -4,10 +4,11 @@
 </div>
 Please review the quote below to ensure accuracy.  When ready, click "Submit Quote" to save it and send a copy via email to the addresses listed.<br/>
 <br/>
+<?include(/includes/error_reporting.html)?>
 <form id="f1" name="f1" method="post" action="/main/quote/confirmation.html">
 	<div class="Quote"><div class="Submit">
 	<p class="buttons">
-		<? echo ( join('',
+		<? echo ( join("\n",
 					button( 'Back', { href=>'/main/quote/information.html?quote_id='.$$variable{'Quote'}->id(), text=>'Back' } ),
 					button( 'SubmitQuote', { onclick=>"f1.btnFunction.value='Submit Quote';f1.submit();", href=>'', text=>'Submit Quote' } ),
 					); ) ?>
@@ -26,7 +27,7 @@ Please review the quote below to ensure accuracy.  When ready, click "Submit Quo
 				</p>
 				<p>
 					<label>Administrator Comments</label>
-					<textarea name="AdministratorComments" rows="<? echo ( ssi::count_lines( $$variable{'AdministratorComments'}); ) ?>" onkeyup="textarea_resize(this);"><?AdministratorComments?></textarea>
+					<textarea name="AdministratorComments" rows="<? echo ( count_lines( $$variable{'AdministratorComments'}); ) ?>" onkeyup="textarea_resize(this);"><?AdministratorComments?></textarea>
 				</p>
 			</fieldset>
 		<? endif ( sets::isin( $session{'user_type'}, ['A', 'E'] ) ) ?>

@@ -1,4 +1,4 @@
-<? eval (         
+<? eval (
 	if ( $param{QuoteID} ) {
 		$$variable{Quotes} = [ openprint::Quote->find( 
 			( sets::isin($session{user_type}, ['E','A'] ) ? () : ( company_id	=>	$session{company_id} ) ),
@@ -7,16 +7,21 @@
 		) ];
 	} else {
 		$$variable{Quotes} = [ openprint::Quote->find( 
-			( sets::isin($session{user_type}, ['E','A'] ) ? (company_id=>$session{'/main/quote/history.html?company_id'}) : ( company_id =>	$session{company_id} ) ),
+			( sets::isin($session{user_type}, ['E','A'] ) ? (
+				( $session{'/main/quote/history.html?company_id'} ? ( company_id=>$session{'/main/quote/history.html?company_id'}) : () ) ) : ( company_id =>	$session{company_id} ) ),
 			( $session{'/main/quote/history.html?QuotedFor'} ? ( 'for_name ilike'			=> '%'.$session{'/main/quote/history.html?QuotedFor'}.'%' ) : () ),
 			date_filter( '/main/quote/history.html?created_on_end', 'created_on <=' ),
 			date_filter( '/main/quote/history.html?created_on_start', 'created_on >=' ),
 			( $session{'/main/quote/history.html?deleted'} eq '' ? () : ( deleted=>$session{'/main/quote/history.html?deleted'} ) ),
 			order				=> $openprint::Quote::fields{'created_on'}.' DESC',
+			limit				=>	 1000,
 			) ];
 	} # end if
 
-	if ( @{$$variable{Quotes}} >= 20 ) {
+	if ( @{$$variable{Quotes}} >= 1000 ) {
+		@{$$variable{Quotes}} = splice( @{$$variable{Quotes}}, 0, 1000 );
+		$$variable{error} .= 'Too many results.  Only showing the first 1000';
+	} elsif ( @{$$variable{Quotes}} >= 20 ) {
 		my %Projects;
 		foreach my $QP ( openprint::QuotedProject->find( quote_id=>[ map { $$_{id} } @{$$variable{Quotes}} ] ) ) {
 			push @{$Projects{$$QP{quote_id}}}, $QP;
@@ -27,6 +32,7 @@
 	} # end if
 	$$variable{Currency} = new openprint::Currency( $session{Currency_id} );
 ) ?>
+<?include(/includes/error_reporting.html)?>
 <? if ( @{$$variable{'Quotes'}} == 0 ) ?>
 
 	<? 	if ( sets::isin( $session{'user_type'}, ['A','E'] ) and $param{'QuoteID'} ) ?>
@@ -63,9 +69,9 @@
 <tr%1$s>
 	<td>&nbsp;</td>
 	<td colspan="6">%10$s</td>
-</tr>`, $rowclass, $Quote->id(), $Quote->company_id(), ssi::html_escape( $Quote->Company()->name() ),
-					ssi::html_escape( $Quote->for_name() ), 
-					Date::Format::time2str($config{'DateFormat'}, Date::Parse::str2time($Quote->created_on() ) ),
+</tr>`, $rowclass, $Quote->id(), $Quote->company_id(), html_escape( $Quote->Company()->name() ),
+					html_escape( $Quote->for_name() ), 
+					format_date( $Quote->created_on() ),
 					openprint::Currency::format( $Quote->Currency()->convert_from( $Quote->total1() ) ),
 					openprint::Currency::format( $Quote->Currency()->convert_from( $Quote->total2() ) ),
 					openprint::Currency::format( $Quote->Currency()->convert_from( $Quote->total3() ) ),

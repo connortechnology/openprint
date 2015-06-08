@@ -1,61 +1,13 @@
-<script type="text/javascript" src="<? echo ( hash_link('/javascripts/service.js') ) ?>"></script>
-<script type="text/javascript">
-	function calc( formName, force, options ) {
-
-		if ( gettingNewPrice && ! force ) {
-			// This prevents concurrent price getting
-			if ( options ) {
-				timeout = setTimeout("calc('f1', 0, " + Object.toJSON( options ) + ");", 1000 );
-			} else {
-				timeout = setTimeout("calc('f1' );", 1000 );
-			} // end if
-			return;
-		} // end if
-		if ( timeout ) clearTimeout( timeout );
-
-		remove_div('AlertDiv');
-		gettingNewPrice = true;
-		var form = getFormObj( formName );
-		var h = $H(form.serialize(true));
-		h.set('callback', 'cbShippingResults' );
-;
-		if ( options ) {
-			$H(options).each(function(pair) {
-					h.set(pair.key, pair.value);
-					} );
-		} // end if options
-		new Ajax.Request( '/main/project/_calc.json', { method: 'post', parameters: h, evalScripts: true } );
-	} // end calc()
-
-	function cbShippingResults( results ) {
-		cbFillResults( results );
-		var form = getFormObj( 'f1' );
-		if ( ( form.elements['NeedPlainCartons'].value > 0 ) && confirm('Your project must be packed in cartons in order to be shipped.  Would you like to add Plain Cartons to your project?' ) ) {
-			calc( 'f1', 1, {  action: 'add_service', service_name: 'PlainCartons' } );
-		} // end if
-	}
-	function validate_data(formName) {
-		var form = getFormObj( formName );
-		var text = '';
-		return true;
-	} // end function
--->
-</script>
-<? eval (
-    if ( $$variable{'Project'}->quantity1() and $$variable{'Project'}->quantity2() and $$variable{'Project'}->quantity3() ) {
-    $$variable{'Columns'} = 'Three';
-    } else {
-    $$variable{'Columns'} = 'Two';
-    } # end if
-) ?>
+<script type="text/javascript" src="<?hash_link('/javascripts/service.js')?>"></script>
+<script type="text/javascript" src="<?hash_link('shipping.js')?>"></script>
 <div class="Service">
 	<form id="f1" name="f1" method="post" action="/main/project/view.html">
 		<fieldset><legend>Shipping Services</legend>
-			<div class="leftColumn">
-			<?include(/includes/main/proj/shipping_from_address.html)?>
+			<div class="leftColumn address">
+			<?include(_shipping_from_address.html)?>
 			</div>
-			<div class="rightColumn">
-			<?include(/includes/main/proj/shipping_to_address.html)?>
+			<div class="rightColumn address">
+			<?include(_shipping_to_address.html)?>
 			</div>
 			<br class="spacer"/>
 			<fieldset>
@@ -63,32 +15,32 @@
 				<li><label># of items to ship</label>
 					<? echo (
 						my $html = '';
-						foreach my $qty_index ( $$variable{'Project'}->quantity_indexes() ) {
-							$html .= '<span class="'.$$variable{'Columns'}.'Columns">';
+						foreach my $qty_index ( $$variable{Project}->quantity_indexes() ) {
+							$html .= '<span class="'.$$variable{Columns}.'Columns">';
 							$html .= input(
 								name	=>	'txtQuantity'.$qty_index,
 								value	=>	$$variable{"txtQuantity$qty_index"},
 								type	=>	'cardinal',
-								onkeyup	=>	'calc(this.form.name);' );
+								oninput	=>	'calc(this.form.name);' );
 								$html .= '</span>';
 						} # end foreach qty_index
 						return $html;
 					) ?>
 				</li>
-				<?include(/includes/main/proj/shipping_packages.html)?>
+				<?include(_shipping_packages.html)?>
 				<?include(/includes/main/proj/_service_price.html)?>
+				<?include('/includes/main/proj/_breakdown.html') ?>
 			</ul>
 			</fieldset>
 			<p><label>More Shipping?</label>
-				<input type="radio" id="AdditionalY" name="Additional" value="Y" /><label class="radio" for="AdditionalY">Yes</label>
-				<input type="radio" id="AdditionalN" name="Additional" value="N" checked="checked" /><label class="radio" for="AdditionalN">No</label>
+				<? echo ( radio( 'Additional', ['Y','Yes','N','No'], 'N' ); ) ?>
 			</p>
 			
 		</fieldset>
 		<?include(/includes/main/proj/add_to_project.html)?>
 		<input type="hidden" name="ProjectIndex" value="<?ProjectIndex?>"/>
 		<input type="hidden" name="ServiceIndex" value="<?ServiceIndex?>"/>
-		<input type="hidden" name="ServiceType" value="<?ServiceTypeID?>"/>
+		<input type="hidden" name="ServiceType" value="<?ServiceTypeType?>"/>
 		<input type="hidden" name="btnFunction" value="Save Service"/>
 		<input type="hidden" name="ContinueProject" value="Y" />
 		<input type="hidden" name="NeedPlainCartons" />

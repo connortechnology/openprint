@@ -232,7 +232,7 @@ $RFIDTag->id(),
 				foreach my $PA ( @Allocations ) {
 					$html .= sprintf( '<a href="/employee/inventory/skid_details.html?skid_id=%d">%d - %d%s</a><br/>',
 					$$Skid{'id'},
-					$PA->Project()->docket(),
+					$PA->docket(),
 					$PA->quantity(),
 					$PA->Paper()->units(),	
 					);

@@ -94,6 +94,8 @@ $serial = 'expenses_id_seq';
 	'category_id'	=>	undef,
 	'attention'		=>	0,
 	deleted			=>	0,
+	amount			=>	undef,
+	total			=>	undef,
 );
 
 

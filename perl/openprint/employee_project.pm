@@ -688,8 +688,7 @@ sub send_proofs_approved_email {
 	my $Order = new openprint::Order( $order_id );
 	@info{'CustomerFirstName','CustomerLastName','CustomerEmail'} = ( $Order->firstname(), $Order->lastname(), $Order->email() );
 
-	my $Me = new openprint::User( $session{user_id} );
-	@info{'EmployeeFirstName','EmployeeLastName','EmployeeEmail','EmployeeExtension'} = $Me->get(qw(firstname lastname email extension) );
+	@info{'EmployeeFirstName','EmployeeLastName','EmployeeEmail','EmployeeExtension'} = $openprint::User->get(qw(firstname lastname email extension) );
 
 	$info{CompletionDate} = Date::Format::time2str( $config{DateTimeFormat}, time );
 
@@ -700,7 +699,7 @@ sub send_proofs_approved_email {
 
 	my $CSR = new openprint::User( $Order->salesrep_id() );
 	my @Users = map { $_->User() } openprint::User_Notification->find( type =>'Proofs Approval Notifications', value =>'Yes',
-			company_id=>[$Project->company_id(), $Me->company_id(), ( $CSR->id() ? $CSR->company_id() : () ) ] );
+			company_id=>[$Project->company_id(), $openprint::User->company_id(), ( $CSR->id() ? $CSR->company_id() : () ) ] );
 
 	if ( ! sets::isin( $CSR->id(), [ map { $_->id() } @Users ] ) ) {
 		my $Notification = $CSR->notification('Proofs Approval Notifications');
@@ -711,7 +710,7 @@ sub send_proofs_approved_email {
 		next if $User->id() == $session{user_id};
 		
 		$Email->send(
-				FROM    => $Me,
+				FROM    => $openprint::User,
 				TO      => $User,
 				SUBJECT => "Docket $info{DocketNumber} $$Order{company_name} - Proofs Approved",
 				ATTACHMENTS	=>	\@body,
@@ -784,12 +783,15 @@ sub summary {
 
 sub _stock_checkout {
 	my $Order;
+	$variable{Project} = new openprint::Project( $param{project_id} ) if $param{project_id};
+
 	if ( $param{docket} ) {
 		$Order = openprint::Order->find_one( docket=>$param{docket} );
 		if ( ! $Order ) {
 			$variable{error} .= 'No docket found for ' . $param{docket} . '<br/>';
 			return;
 		} # end if
+		$variable{Project} = openprint::Project->find_one( docket=>$param{docket} ) if ! $variable{Project};
 	} else {
 		$log->error("NO docket in _stock_checkout");
 		return;
@@ -801,7 +803,7 @@ sub _stock_checkout {
 		$param{rfidtag_id} = openprint::RFIDTag->transform( 'id', $param{rfidtag_id} );
 		my $Skid;
 		if ( $param{skid_id} ) {
-			$Skid = new openprint::Skid( $param{skid_id} );
+			$Skid = openprint::Skid->find_one( id=>$param{skid_id} );
 		} elsif ( $param{rfidtag_id} ) {
 			my $RFIDTag = openprint::RFIDTag::from_id( $param{rfidtag_id} );
 			if ( ! $RFIDTag ) {
@@ -819,6 +821,11 @@ sub _stock_checkout {
 
 		my $add_entry = 1;
 
+		if ( openprint::PaperInventory->find_one( docket => $Order->docket(), skid_id     =>  $Skid->id() ) ) {
+			$variable{error} .= 'Skid/Roll has already been checked out for this docket.';
+			return;
+		}
+
 		if ( $Skid->is_empty() ) {
 			my @PI = openprint::PaperInventory->find( skid_id=>$Skid->id(), 'comment like'=>'Checked out%', order=>'updated_on desc');
 			if ( @PI ) {
@@ -832,6 +839,7 @@ sub _stock_checkout {
 			foreach my $PI ( @PI ) {
 				if ( ! $PI->docket() ) {
 					$PI->save({docket=>$Order->docket()});
+					$add_entry = 0;
 					# only update the most recent entry
 					last;
 				} else {
@@ -846,6 +854,9 @@ sub _stock_checkout {
 		if ( $add_entry ) {
 			my @C = $Skid->Contents();
 			if ( @C ) {
+				if ( @C>1 ) {
+					$log->error("More than 1 content on skid $$Skid{id}");
+				}
 				foreach my $C ( $Skid->Contents() ) {
 					my $PI = new openprint::PaperInventory();
 					$PI->save({
@@ -853,36 +864,40 @@ sub _stock_checkout {
 							paper_id	=>	$C->paper_id(),
 							user_id		=>	$session{user_id},
 							delta		=>	-1*$C->quantity(),
-							comment		=>	sprintf('Checked out for docket <a href="/employee/project/view.html?docket=%1$d">%1$d</a> by %2$s', $Order->docket(), new openprint::User( $session{user_id} )->name() ),
+							comment		=>	sprintf('Checked out for docket <a href="/employee/project/view.html?docket=%1$d">%1$d</a> by %2$s', $Order->docket(), $openprint::User->name() ),
 							skid_id		=>	$Skid->id(),
 							units		=>	$C->units(),
 							});
 					$C->quantity( 0 );
 					$C->save();
 					#Remove any allocations
-					foreach my $PA ( openprint::PaperAllocation->find('skid_ids any'=>$Skid->id(),paper_id=>$C->paper_id(), docket=>$Order->docket() ) ) {
-						$PA->save({'skid_ids'=>[ sets::exclude( [ $Skid->id() ], $PA->skid_ids() ) ] });
+					foreach my $PA ( openprint::PaperAllocation->find('skid_ids any'=>$Skid->id(), paper_id=>$C->paper_id(), docket=>$Order->docket() ) ) {
+						$PA->save({skid_ids=>[ sets::exclude( [ $Skid->id() ], $PA->skid_ids() ) ] });
 						if ( ! $PA->Skids() ) {
 							$PA->delete();
 						} # end if
 					} # end foreach
 					$Order->add_log( join('', 'Checked out ' , $C->quantity() , $C->units() , ' of ' , $C->Paper->to_string() ) );
+#FIXME: detect allocations to other dockets
+# Update totals
+					$C->Paper()->save();
 				} # end foreach C
 			} else {
 				my $PI = new openprint::PaperInventory();
 				$PI->save({
 						docket		=>	$Order->docket(),
-						paper_id	=>	undef,,
+						paper_id	=>	undef,
 						user_id		=>	$session{user_id},
 						delta		=>	0,
-						comment		=>	sprintf('Checked out for docket <a href="/employee/project/view.html?docket=%1$d">%1$d</a> by %2$s', $Order->docket(), new openprint::User( $session{user_id} )->name() ),
+						comment		=>	sprintf('Checked out for docket <a href="/employee/project/view.html?docket=%1$d">%1$d</a> by %2$s', $Order->docket(), $openprint::User->name() ),
 						skid_id		=>	$Skid->id(),
 						units		=>	undef,
 						});
 				$Order->add_log( 'Checked out something unknown.' );
 			} # end if skid has contents
+
 		} # end if add_entry
-	} # end if
+	} # end if action eq Add
 } # end sub _stock_checkout
 
 sub _production_feedback {
@@ -990,8 +1005,24 @@ sub _status_dropdown {
 } # end sub _status_dropdown
 
 sub _modification_history {
-	my $Project = $variable{Project} = new openprint::Project($param{project_id});
+	if ( $param{project_id} ) {
+		my $Project = $variable{Project} = new openprint::Project($param{project_id});
+	} else {
+		ssi::save_params('/employee/project/modification_log.html', 'project_id', 'operator_id', 'salesrep_id',
+			( map { 'action_date_start_'.$_ } ( 'year', 'month', 'day' ) ),
+			( map { 'action_date_end_'.$_ } ( 'year', 'month', 'day' ) ),
+				);
+	} # end if
 } # end sub _modification_history
+
+sub modification_log {
+	_modification_history();
+	ssi::setup_date_select( '/employee/project/modification_log.html', 'action_date_start', -7 );
+	ssi::setup_date_select( '/employee/projcet/modification_log.html', 'action_date_end', '' );
+} # end sub modification_log
+
+sub production_log {
+} # end sub production_log
 
 sub _production_log {
 	my $Project = $variable{Project} = new openprint::Project($param{project_id});

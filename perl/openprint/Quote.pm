@@ -334,11 +334,9 @@ sub send {
 		push @project_summaries, sprintf('Project%d.html',$Project->project_id()), MIME::QuotedPrint::encode_qp( Encode::encode('utf-8', ssi::variable_substitution( \$email_template, \%variable ))), 'text/html', 'quoted-printable';
 	} # for each Project
 	
-	my $Me = new openprint::User( $session{'user_id'} );
-
 	if ( $self->Company()->reseller() eq 'Y' or sets::isin( $session{'user_type'}, ['A', 'E']) ) {
 
-		if ( $Me->email_quotes_to_myself() ) {
+		if ( $openprint::User->email_quotes_to_myself() ) {
 			my @attachments = ();
 			$quote{'ReplacementText'} = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'}.'/email_content/quote_reseller_by_body.html' );
 			$quote{'ReplacementText'} = ssi::variable_substitution( \$quote{'ReplacementText'}, \%quote );

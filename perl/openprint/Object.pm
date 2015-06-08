@@ -52,15 +52,42 @@ sub debug {
 	} # end foreach
 } # end sub debug
 
-sub new {
+sub new_scalar_id {
 	my ( $parent, $id, $data ) = @_;
+	my $self = $data;
+	bless $self, $parent;
+
+#$log->debug("loading $parent $id") if $debug or DEBUG_ALL;
+	no strict 'refs';
+	my $fields = \%{$parent.'::fields'};
+		my @keys = map { ( (defined $$fields{$_} or exists $$data{$_} ) and $$fields{$_} ne $_ ) ? $_ : () } keys %$fields;
+		@$self{@keys} = @$self{@$fields{@keys}};
+	if ( ! $no_cache ) {
+		$log->debug("Caching $config{db_name} $parent $id = $self") if $debug;
+		$cache{$config{db_name}}{$parent}{$id} = $self;
+	} else {
+		$log->debug("NOT Caching $config{db_name} $parent $id = $self") if $debug;
+	} # end if
+	return $self;
+}
+
+sub new {
+	my ( $parent, $id, $data, $dont_cache ) = @_;
 
 	my $ref = ref $id;
 	if ( ! $ref ) {
-		if ( $id and (!$data) and $cache{$config{db_name}}{$parent} and $cache{$config{db_name}}{$parent}{$id} ) {
+		if ( $id and (!$dont_cache) and $cache{$config{db_name}}{$parent} and $cache{$config{db_name}}{$parent}{$id} ) {
+			if ( $data ) {
+if ( 1 ) {
+				my $self = $cache{$config{db_name}}{$parent}{$id};
+				$self->load( $data );
+				return $self;
+}
+			} else {
 #$log->debug("Loading from cache $parent $id");
 			# If the object is cached
 			return $openprint::Object::cache{$config{db_name}}{$parent}{$id};
+			}
 		} # end if
 #$log->debug("Not Loading from cache $parent $id") if $id and ! $data;
 		my $self = {};
@@ -70,7 +97,7 @@ sub new {
 #$log->debug("loading $parent $id") if $debug or DEBUG_ALL;
 			$self->load( $data );
 		} # end if
-		if ( ! $no_cache ) {
+		if ( ! ( $no_cache or $dont_cache ) ) {
 			if ( $id ) {
 				# Using $id instead of $$self{od} means that we cache non existent entries
 			#if ( $$self{id} ) {
@@ -261,7 +288,12 @@ $log->debug("No serial") if $debug;
 			if ( $need_serial ) {
 				if ( $serial ) {
 					@$self{@identified_by} = @sql{@$fields{@identified_by}} = $local_dbh->selectrow_array( q{SELECT nextval('} . $serial . q{')} );
-					$log->debug("SQL statement execution SELECT nextval('$serial') returned ".join(',',@$self{@identified_by})) if $debug or DEBUG_ALL;
+					if ( $local_dbh->errstr() )  {
+						$log->error("Error getting next id. " . $local_dbh->errstr() );
+						$log->error("SQL statement execution SELECT nextval('$serial') returned ".join(',',@$self{@identified_by}));
+					} elsif ( $debug or DEBUG_ALL ) {
+						$log->debug("SQL statement execution SELECT nextval('$serial') returned ".join(',',@$self{@identified_by}));
+					} # end if
 				} # end if
 			} # end if
 			my @keys = keys %sql;
@@ -316,6 +348,28 @@ sub get {
 	my $self = shift;
 	return map { $self->$_() } @_;
 } # end sub get
+
+sub changes {
+	my ( $self, $params ) = @_;
+
+	my $type = ref $self;
+	my $fields = eval ('\%'.$type.'::fields');
+	if ( ! $fields ) {
+$log->warn('Object::set called on an object with no fields');
+		return;
+	} # end if
+	#my %defaults = eval('%'.$type.'::defaults');
+	my @results;
+
+	foreach my $field ( keys %$fields ) {
+		next if ! exists $$params{$field};
+
+		if ( $$self{$field} ne $$params{$field} ) {
+			push @results, "$field changed from $$self{$field} to $$params{$field}";
+		} # end if
+	} # end foreachf ield
+	return @results;
+} # end sub changes
 
 sub set {
 	my ( $self, $params ) = @_;
@@ -568,6 +622,7 @@ sub find {
 	my @where;
 	my $sql = 'SELECT';
 	
+	my $do_cache = 1;
 	if ( exists $$params{distinct} ) {
 		$sql .= ' DISTINCT';
 		delete $$params{distinct};
@@ -575,6 +630,7 @@ sub find {
 	if ( $$params{columns} ) {
 		$sql .= ' ' . $$params{columns};
 		delete $$params{columns};
+		$do_cache = 0;
 	} else {
 		$sql .= ' *';
 	} # end if
@@ -599,10 +655,8 @@ sub find {
 	}
 	delete $$params{dbh};
 
-	my $do_cache = 0;
-	my $cache_field = ${$object_type.'::cache_field'};
+	my $cache_field = ${$object_type.'::cache_field'} if $do_cache;
 	if ( $cache_field and $$params{$cache_field} and ( ( 1 == keys %$params ) or ( 2 == keys %$params and exists $$params{limit} ) ) ) {
-		$do_cache = 1;
 
 #$log->debug("have cache field $cache_field for $$params{$cache_field}") if DEBUG_ALL;
 		if ( exists $name_cache{$object_type} and exists $name_cache{$object_type}{$$params{$cache_field}} ) {
@@ -623,7 +677,8 @@ $log->debug("ALl cached $object_type $cache_field $$params{$cache_field}") if DE
 			return ();
 		} # end if
 	} else {
-		$log->debug("Not doing caching using $cache_field with params $$params{$cache_field} ") if DEBUG_ALL;
+		$do_cache = 0;
+		$log->debug("Not doing caching for $object_type using $cache_field with params $$params{$cache_field} ") if DEBUG_ALL;
 	} # end if
 
 	# no operators, just which fields are being searched on. Mostly just useful for detetion of the deleted field.
@@ -731,13 +786,21 @@ $log->debug("ALl cached $object_type $cache_field $$params{$cache_field}") if DE
 		push @values, 0;
 	} # end if
 
-	$sql .= ' WHERE ' . join(' AND ', @where ) if @where;
 	if ( $$params{or} ) {
-		$sql .= ' WHERE' if ! @where;
-		$sql .= " OR $$params{or}";
+		if ( @where ) {
+			$sql .= ' WHERE ( ' . join(' AND ', @where ) . ' ) OR ( ' . $$params{or} . ')';
+		} else {
+			$sql .= " WHERE $$params{or}";
+		} # end if
+	} else {
+		$sql .= ' WHERE ' . join(' AND ', @where ) if @where;
 	} # end if
-	if ( $$params{order} ) {
+	if ( exists $$params{order} ) {
 		$sql .= " ORDER BY $$params{order}";
+	} else {
+		my $order = eval '$'.$object_type.'::default_sort';
+#$log->debug("default sort: $object_type :: default_sort = $order") if DEBUG_ALL;
+		$sql .= " ORDER BY $order" if $order;
 	} # end if
 	if ( $$params{'group by'} ) {
 		$sql .= " GROUP BY $$params{group}";
@@ -752,6 +815,8 @@ $log->debug("ALl cached $object_type $cache_field $$params{$cache_field}") if DE
 		$log->error("Extra parameters in $object_type ::find $k => $search{$k}");
 		Carp::cluck("Extra parameters in $object_type ::find $k => $search{$k}");
 	} # end foreach
+
+	$log->debug("Loading Debug:$debug $object_type ($sql) (".join(',', map { ref $_ eq 'ARRAY' ? join(',', @{$_}) : $_ } @values).')' ) if $debug;
 	
 #$log->debug( 'find prepare: ' . sprintf('%.4f', tv_interval($starttime)*1000) ." useconds") if $debug;
 	my $data = $local_dbh->selectall_arrayref( $sql, { Slice => {} }, @values );
@@ -761,7 +826,7 @@ $log->debug("ALl cached $object_type $cache_field $$params{$cache_field}") if DE
 	#} elsif ( ( ! @$data ) and $debug ) {
 		#$log->debug("No $type ($sql) (@values) " );
 	} elsif ( $debug ) {
-		$log->debug("Loading Debug:$debug $object_type ($sql) (@values) # of results:" . @$data . ' in ' . sprintf('%.4f', tv_interval($starttime)*1000) .' useconds' );
+		$log->debug("Loading Debug:$debug $object_type ($sql) (".join(',', map { ref $_ eq 'ARRAY' ? join(',', @{$_}) : $_ } @values).') # of results:' . @$data . ' in ' . sprintf('%.4f', tv_interval($starttime)*1000) .' useconds' );
 	} # end if
 	if ( $$fields{id} ) {
 		if ( $cache_field ) {
@@ -771,13 +836,14 @@ $log->debug("ALl cached $object_type $cache_field $$params{$cache_field}") if DE
 			} 
 			return @results;
 		} # end if
-		return map { $object_type->new( $_->{$$fields{id}}, $_ ) } @$data;
+		#return map { $object_type->new_scalar_id( $_->{$$fields{id}}, $_ ) } @$data;
+		return map { $object_type->new( $_->{$$fields{id}}, $_, !$do_cache ) } @$data;
 	} else {
 		my @identified_by = eval '@'.$object_type.'::identified_by';
 		if ( ! @identified_by ) {
 			$log->debug("Multi key object $object_type but no identified by") if $debug;
 		} # end if
-		return map { $object_type->new( \@identified_by, $_ ) } @$data;
+		return map { $object_type->new( \@identified_by, $_, !$do_cache ) } @$data;
 #$log->debug("Objs: "  . scalar @objs );
 		#return @objs;
 	} # end if
@@ -852,7 +918,21 @@ sub to_string {
 
 sub dropdown {
 	my $self = shift;
-	return [ map { $$_{id}, $_->name() } $self->find(@_) ];
+	my %params = @_;
+	if ( ! $params{order} ) {
+		my $type = ref($self);
+		$type = $self if ! $type;
+		my $order = eval '$'.$type.'::default_sort';
+#$log->debug("default sort: $self $type :: default_sort = $order") if DEBUG_ALL;
+		$params{order} = $order if $order;
+	}
+
+	# User has firstname,lastname
+	#if ( ( ! $params{columns} ) {
+		#$params{columns} = 'id,name';
+	#}
+
+	return [ map { $$_{id}, $_->name() } $self->find(%params) ];
 } # end sub dropdown
 
 sub sort_value {
@@ -870,34 +950,37 @@ sub transform {
 	my $type = ref $_[0];
 	$type = $_[0] if ! $type;
 	my $fields = eval '\%'.$type.'::fields';
+	my $value = $_[2];
 
 	if ( defined $$fields{$_[1]} ) {
 		my @transforms = eval('@{$'.$type.'::transforms{$_[1]}}');
 		$openprint::log->debug("Transforms for $_[1] before $_[2]: @transforms") if $debug;
-
-		foreach my $transform ( @transforms ) {
-			if ( $transform =~ /^s\// or $transform =~ /^tr\// ) {
-				eval '$_[2] =~ ' . $transform;
-			} elsif ( $transform =~ /^<(\d+)/ ) {
-				if ( $_[2] > $1 ) {
-					$_[2] = undef;
-				} # end if
-			} else {
-$openprint::log->debug("evalling $_[2] ".$transform . " Now value is $_[2]" );
-				eval '$_[2] '.$transform;
-$openprint::log->error("Eval error $@") if $@;
-			}
-$openprint::log->debug("After $transform: $_[2]") if $debug;
-		} # end foreach
+		if ( @transforms ) {
+			foreach my $transform ( @transforms ) {
+				if ( $transform =~ /^s\// or $transform =~ /^tr\// ) {
+					eval '$value =~ ' . $transform;
+				} elsif ( $transform =~ /^<(\d+)/ ) {
+					if ( $value > $1 ) {
+						$value = undef;
+					} # end if
+				} else {
+	$openprint::log->debug("evalling $value ".$transform . " Now value is $value" );
+					eval '$value '.$transform;
+	$openprint::log->error("Eval error $@") if $@;
+				}
+	$openprint::log->debug("After $transform: $value") if $debug;
+			} # end foreach
+		} # end if 
 	} else {
 		$openprint::log->error("Object::transform ($_[1]) not in fields for $type");
 	} # end if
-	return $_[2];
+	return $value;
 
 } # end sub transform
 
 sub opinions {
 	my $type = ref $_[0];
+	return '' if ! openprint::Opinion_Type->find_one();
 	my $html;
 	my @Opinions = openprint::Opinion->find('object_type'=> $type, 'object_id'=>$_[0]->id() );
 	my %Opinions;
@@ -1068,7 +1151,7 @@ sub Comments {
 
 sub Privacy {
 	if ( ! exists $_[0]{Privacy} ) {
-		$_[0]{Privacy} = openprint::Privacy->find_one(object_type=>ref $_[0], object_id=>$_[0]{id} );
+		$_[0]{Privacy} = openprint::Privacy->find_one(object_type=>ref $_[0], object_id=>$_[0]{id} ) if $_[0]{id};
 		if ( ! $_[0]{Privacy} ) {
 			$_[0]{Privacy} = new openprint::Privacy();
 			$_[0]{Privacy}->object_type( ref $_[0] );
@@ -1111,11 +1194,11 @@ sub lock {
 	my $type = ref $_[0];
 	if ( $_[0]{ac} ) {
 		#already locked
-		$openprint::log->debug("ALREADY LOCKED $type for $_[0]{id} ac: $_[0]{ac} caller: $caller line: $line project ref:" . $_[0]);
+		$openprint::log->debug("ALREADY LOCKED $type for $_[0]{id} ac: $_[0]{ac} caller: $caller line: $line object ref:" . $_[0]);
 		$_[0]{ac} += 1;
 	} else {
 		$_[0]{ac} = sql::start_transaction( $openprint::dbh );
-		$openprint::log->debug("LOCKING Projects for project $_[0]{id} ac: $_[0]{ac} caller: $caller line: $line project ref:" . $_[0]);
+		$openprint::log->debug("LOCKING $type for $_[0]{id} ac: $_[0]{ac} caller: $caller line: $line object ref:" . $_[0]);
 		my $table = ${$type.'::table'};
 		$dbh->do( "LOCK TABLE $table IN EXCLUSIVE MODE" ) or $log->error( DBI->errstr );
 	} # end if

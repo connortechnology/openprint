@@ -1,18 +1,22 @@
 <? eval (
+	my $uri = '/employee/inventory/allocations.html';
+
 	if ( $session{'/employee/inventory/allocations.html?Docket'} ) {
-		@{$$variable{'Allocations'}} = openprint::PaperAllocation->find( 
+		@{$$variable{Allocations}} = openprint::PaperAllocation->find( 
 			docket	=>	$session{'/employee/inventory/allocations.html?Docket'},
 			order	=>	'id',
 			);
 	} else {
-		$$variable{'Allocations'} = [ openprint::PaperAllocation->find( 
+		$$variable{Allocations} = [ openprint::PaperAllocation->find( 
 			date_filter( '/employee/inventory/allocations.html?created_on_end', 'created_on <=' ),
 			date_filter( '/employee/inventory/allocations.html?created_on_start', 'created_on >=' ),
+( $session{$uri.'?company_id'} ? ( company_id=>$session{$uri.'?company_id'} ) : () ),
+( $session{$uri.'?salesrep_id'} ? ( company_id=>[ map { $$_{id} } openprint::Company->find(salesrep_id=>$session{$uri.'?salesrep_id'} ) ] ) : () ),
 			order		=>	'id',
 			) ];
 	} # end if
 ) ?>
-<? if ( @{$$variable{'Allocations'}} ) ?>
+<? if ( @{$$variable{Allocations}} ) ?>
 <form id="PaperAllocationResults" name="PaperAllocationResults" action="allocations.html" method="post">
 	<table class="List">
 		<tr>
@@ -21,6 +25,7 @@
 			<th class="Company">Company</th>
 			<th class="Stock">Stock</th>
 			<th class="Quantity">Quantity</th>
+			<th class="Quantity">Available</th>
 			<th class="Date">Max Age</th>
 			<th class="Date">Allocated On</th>
 		</tr>
@@ -33,7 +38,7 @@
 			my $total_sheets;
 
 			my %allocations;
-			foreach my $Allocation ( @{$$variable{'Allocations'}} ) {
+			foreach my $Allocation ( @{$$variable{Allocations}} ) {
 				push @{$allocations{"$$Allocation{docket}-$$Allocation{paper_id}"}},  $Allocation;
 			} # end foreach Allocation
 			
@@ -85,8 +90,15 @@ $log->debug("Max end: $max_age_end Max Age $max_age");
 					} # end if
 				} # end if
 
-				$html .= "<tr$rowclass>";
-				$html .= qq`<td class="checkbox"><input type="checkbox" name="allocations" value="$$Allocation{'id'}"/></td>`;
+				my $Stock = $Allocation->Paper();
+
+				my $error = '';
+				if ( $quantity > $Stock->available() ) {
+					$error = 'error';
+				} # end if
+
+				$html .= "<tr class=\"$rowclass $error\">";
+				$html .= qq`<td class="checkbox"><input type="checkbox" name="allocations" value="$$Allocation{id}"/></td>`;
 				$html .= sprintf( '<td class="Docket"><a href="/employee/project/view.html?docket=%1$d">%1$s</a></td>', $$Allocation{docket} );
 				$html .= sprintf( '<td class="Company"><a href="allocation.html?allocation_id=%d">%s</a></td>', $$Allocation{id}, $Allocation->Order()->Company()->name() );
 				$html .= sprintf( '<td class="Stock"><a href="paper_details.html?paper_id=%d">%s</a></td>', $$Allocation{paper_id}, $Allocation->Paper()->to_string() );
@@ -95,10 +107,11 @@ $log->debug("Max end: $max_age_end Max Age $max_age");
 						scalar @{$$Allocation{skid_ids}}. ( $Allocation->Paper()->type() eq 'Roll' ? ' roll' : ' skid' ) . ( @{$$Allocation{skid_ids}} == 1 ? '' : 's' )
  : '' ),
 					Number::Format::format_number($quantity), $Allocation->Paper()->type() eq 'Roll' ? 'lbs' : 'sheets' );
+				$html .= sprintf( '<td class="Available">%s %s</td>', $Stock->available() . $Stock->units() );
 				$html .= sprintf( '<td class="Date"><a href="allocation.html?allocation_id=%d">%s</a></td>', $$Allocation{id}, misc::seconds_to_pretty_interval( $max_age ) );
 				$html .= sprintf( '<td class="Date"><a href="allocation.html?allocation_id=%d">%s</a></td>', $$Allocation{id}, format_datetime($Allocation->created_on()) );
 				$html .= '</tr>';
-				$rowclass = $rowclass ? '' : ' class="colRow"';
+				$rowclass = $rowclass ? '' : 'colRow';
 			} # end foreach key "docket-paper_id"
 			$html .= '<tr class="totals"><td colspan="4">Totals</td><td class="Quantity">';
 			$html .= Number::Format::format_number($total_allocations) . 'allocations ' . Number::Format::format_number($total_sheets) . 'sheets<br/>' if $total_allocations;
@@ -108,9 +121,7 @@ $log->debug("Max end: $max_age_end Max Age $max_age");
 		) ?>
 	</table>
 	<input type="hidden" name="btnFunction"/>
-	<span style="float: right;">
-	</span>
 </form>
-<? else ( @{$$variable{'Allocations'}} ) ?>
+<? else ( @{$$variable{Allocations}} ) ?>
 There were no allocations matching your search criteria.
-<? endif ( @{$$variable{'Allocations'}} ) ?>
+<? endif ( @{$$variable{Allocations}} ) ?>

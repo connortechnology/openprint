@@ -161,7 +161,7 @@ $openprint::log->warn("Deleting Service from " . $Project->to_string() );
 				} );
 	} # end foreach Job
 
-	$Project->add_to_log( @openprint::session{'company_id','user_id'}, "Deleted service ".$self->ServiceType()->type() . " $$specs{ServiceName}." );
+	$Project->add_to_log( @openprint::session{'company_id','user_id'}, "Deleted service ".$self->ServiceType()->type() . " $$specs{ServiceName} ($$self{service_id})." );
 	sql::end_transaction( $openprint::dbh, $ac );
 	return;
 } # end sub delete
@@ -183,7 +183,7 @@ sub overrides {
 		my @o = $function->( $self->Project(), $$self{'service_id'}, $specs, $qty_index );
 		return @o;
 	} else {
-		$openprint::log->warn("No has_overrides for " . $_[0]->ServiceType()->name() );
+		$openprint::log->warn("No has_overrides for " . $_[0]->ServiceType()->type() );
 	} # end if
 	return ();
 } # end sub overrides

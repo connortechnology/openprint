@@ -18,6 +18,8 @@ $serial = 'timetracks_id_seq';
 	id				=> 'id',
 	starting		=>	'starting',
 	ending			=>	'ending',
+	duration		=>	'duration',
+	duration_override	=>	'duration_override',
 	company_id		=>	'company_id',
 	project_id		=>	'project_id',
 	description		=>	'description',
@@ -60,16 +62,30 @@ $serial = 'timetracks_id_seq';
 	travel_associated	=>	0,
 	distance			=>	undef,
 	billable			=>	q`1`,
+	duration_override	=>	0,
 );
+
+sub duration {
+	if ( @_ > 1 ) {
+		$_[0]{duration} = $_[1];
+	}
+	if ( ( ! $_[0]{duration} ) and ( ! $_[0]{duration_override} ) ) {
+		$_[0]{duration} = misc::seconds2hms( $_[0]->elapsed() );
+	} # end if
+	return $_[0]{duration};
+} # end sub duration
 
 sub elapsed {
 	my ( $self ) = @_;
 
-	if ( $$self{'time_associated'} ) {
-		return Date::Parse::str2time( $$self{'ending'} ) - Date::Parse::str2time( $$self{'starting'} );
+	if ( $$self{duration_override} ) {
+		return misc::hms2time( $_[0]{duration} );
+
+	} elsif ( $$self{time_associated} ) {
+		return Date::Parse::str2time( $$self{ending} ) - Date::Parse::str2time( $$self{starting} );
 	} else {
-		my ($start) = $$self{'starting'} =~ /(\d\d\d\d-\d\d-\d\d)/;
-		my ($end) = $$self{'ending'} =~ /(\d\d\d\d-\d\d-\d\d)/;
+		my ($start) = $$self{starting} =~ /(\d\d\d\d-\d\d-\d\d)/;
+		my ($end) = $$self{ending} =~ /(\d\d\d\d-\d\d-\d\d)/;
 		return Date::Parse::str2time( $end ) - Date::Parse::str2time( $start );
 	} # end if
 } # end sub elapsed
@@ -78,16 +94,16 @@ sub rate {
 	my ( $self ) = @_;
 	my $Service = $self->Service();
 	my %Price = $Service->get_price( undef, undef, $self->Company()->Pricelist() );
-	if ( $$self{'rate'} ) {
-		$Price{'Cost'} = $Price{'Price'} = $$self{'rate'};
+	if ( $$self{rate} ) {
+		$Price{Cost} = $Price{Price} = $$self{rate};
 	} # end if
-	return $Price{'Price'};
+	return $Price{Price};
 }
 sub units {
 	my ( $self ) = @_;
 	my $Service = $self->Service();
 	my %Price = $Service->get_price( undef, undef, $self->Company()->Pricelist() );
-	return $Price{'units'};
+	return $Price{units};
 } # end sub units
 
 sub Price {
@@ -95,23 +111,23 @@ sub Price {
 	my $elapsed = $self->elapsed();
 	my $Service = $self->Service();
 	my %Price = $Service->get_price( undef, undef, $self->Company()->Pricelist(), $self->starting() );
-	if ( $$self{'rate'} ) {
-		$Price{'Cost'} = $Price{'Price'} = $$self{'rate'};
+	if ( $$self{rate} ) {
+		$Price{Cost} = $Price{Price} = $$self{rate};
 	} # end if
 
-	if ( lc $Price{'units'} eq '/year' ) {
+	if ( lc $Price{units} eq '/year' ) {
 		$elapsed = Math::Round::nearest(1,$elapsed/(60*60*24*365));
 		#$openprint::log->debug('Month pricing ' . $elapsed );
-		$Price{'Total'} = $Price{'Price'} * $elapsed;
-	} elsif ( lc $Price{'units'} eq '/month' ) {
+		$Price{Total} = $Price{Price} * $elapsed;
+	} elsif ( lc $Price{units} eq '/month' ) {
 		$elapsed = Math::Round::nearest(1,$elapsed/(60*60*24*30));
 		#$openprint::log->debug('Month pricing ' . $elapsed );
-		$Price{'Total'} = $Price{'Price'} * $elapsed;
-	} elsif ( lc $Price{'units'} eq '/hr.' ) {
-		$Price{'Total'} = $Price{'Price'} * $elapsed / 3600;
+		$Price{Total} = $Price{Price} * $elapsed;
+	} elsif ( lc $Price{units} eq '/hr.' ) {
+		$Price{Total} = $Price{Price} * $elapsed / 3600;
 	} else {
-		$openprint::log->warn('Unknown units in Timetrack Service ('.$Service->name().') ('.$Price{'units'}.') assuming Hrs');
-		$Price{'Total'} = $Price{'Price'} * $elapsed / 3600;
+		$openprint::log->warn('Unknown units in Timetrack Service ('.$Service->name().') ('.$Price{units}.') assuming Hrs');
+		$Price{Total} = $Price{Price} * $elapsed / 3600;
 	} # end if
 	return \%Price;
 } # end sub Price
@@ -119,7 +135,7 @@ sub Price {
 sub value {
 	my ( $self ) = @_;
 	my $Price = $self->Price();
-	return $$Price{'Total'};
+	return $$Price{Total};
 } # end sub value 
 
 sub wage {
@@ -133,14 +149,16 @@ sub Employee {
 } # end sub Employee
 
 sub Paycheques {
-	if ( ! exists $_[0]{'Paycheques'} ) {
-		$_[0]{'Paycheques'} = [ map { $_->Paycheque() } openprint::Paycheque_Timetrack->find('timetrack_id'=>$_[0]{'id'}) ];
+	if ( ( ! exists $_[0]{Paycheques} ) and $_[0]{id} ) {
+		$_[0]{Paycheques} = [ map { $_->Paycheque() } openprint::Paycheque_Timetrack->find( timetrack_id=>$_[0]{id}) ];
 	} # end if
-	return @{$_[0]{'Paycheques'}};
+	return @{$_[0]{Paycheques}} if $_[0]{Paycheques};
+	return ();
 } # end sub Paycheques
+
 sub paycheque_id {
-	my $PT = openprint::Paycheque_Timetrack->find_one('timetrack_id'=>$_[0]{'id'});
-	return $$PT{'paycheque_id'} if $PT;
+	my $PT = openprint::Paycheque_Timetrack->find_one('timetrack_id'=>$_[0]{id});
+	return $$PT{paycheque_id} if $PT;
 	return;
 } # end sub paycheque_id
 
@@ -154,7 +172,7 @@ sub invoiced {
 
 sub copy {
 	my $New = $_[0]->SUPER::copy();
-	delete $$New{'invoice_id'};
+	delete $$New{invoice_id};
 	return $New;
 } # end sub copy
 

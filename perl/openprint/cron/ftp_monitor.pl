@@ -280,7 +280,8 @@ $log->debug("data: $client $remote_user $user_name $curr_time $xfer_type $path $
 						complete	=> 1,
 					};
 				} # end if send email
-			} elsif ($line =~ /^(\S+)\s+(\S+)\s+(\S+)\s+\[([^\]]+)\]\s+"([^"]+)"\s+(\d+)\s+([\-\d]+)$/o) {
+			} elsif ($line =~ /^(\S+)\s+(\S+)\s+(\S+)\s+\[([^\]]+)\]\s+"([^"]+)"\s+(\d+)\s+([\-\d]+)\s+([\.\d]+)$/o) {
+#LogFormat IQFormat "%h %l %u %t \"%f\" %s %b %T"
 
 				my $client = $1;
 				my $remote_user = $2;
@@ -288,13 +289,17 @@ $log->debug("data: $client $remote_user $user_name $curr_time $xfer_type $path $
 				my $curr_time = $4;
 				my $path = $5;
 
-				my $xfer_nsecs = $6;
+				my $response_code = $6;
 				my $nbytes = $7;
+				my $xfer_nsecs = $8;
 $log->debug("Got IQFormat extended line: $line");
-$log->debug("data: $client $remote_user $user_name $curr_time $path $xfer_nsecs $nbytes");
+$log->debug("data: $client $remote_user $user_name $curr_time $path $response_code $nbytes");
 if ( $nbytes eq '-' ) {
 $log->debug("Not an upload, ignoring");
 next;
+} elsif ( $response_code != 226 ) {
+	$log->debug("Not an upload, response_code: $response_code");
+	next;
 }
 
 				# Note that any spaces or control characters will be replaced in this
@@ -341,18 +346,29 @@ next;
 				} # end if send email
 
 				if ($send_email) {
-					push @{$uploads{$user_name}}, {
-						timestamp => $curr_time,
-						duration => $xfer_nsecs,
-						client => $client,
-						size => $nbytes,
-						file => $path,
-						transfer_type => 'STOR',
-						#auth_mode => $access_mode,
-						user => $user_name,
-						status => 'c',
-						complete	=> 1,
-					};
+					my $already_uploading = 0;
+					foreach my $U ( @{$uploads{$user_name}} ) {
+						if ( $$U{file} eq $path ) {
+							$$U{size} += $nbytes;
+							$$U{duration} += $xfer_nsecs;
+							$already_uploading = 1;
+							last;
+						} 
+					}	
+					if ( ! $already_uploading ) {
+						push @{$uploads{$user_name}}, {
+							timestamp => $curr_time,
+							duration => $xfer_nsecs,
+							client => $client,
+							size => $nbytes,
+							file => $path,
+							transfer_type => 'STOR',
+							#auth_mode => $access_mode,
+							user => $user_name,
+							status => 'c',
+							complete	=> 1,
+						};
+					} # end if
 				} # end if send email
 			} else {
 				$log->error("Unparsed line $line");
@@ -562,8 +578,12 @@ $log->debug("regexp: $regexp");
 			@to = ( $User );
 		} else {
 			if ( $Company->salesrep_id() ) {
-				if ( $Company->CSR()->notification('CSR Client File Uploads') ne 'No' ) {
-					@to = ( $Company->CSR() );
+				my $CSR = $Company->CSR();
+				if ( $CSR->notification('CSR Client File Uploads') ne 'No' ) {
+					@to = ( $CSR );
+					$log->debug("Adding CSR $$CSR{email}");
+				} else {
+					$log->debug("Not Adding CSR $$CSR{email} : notifications etting:" . $CSR->notification('CSR Client File Uploads') );
 				} # end if
 			} # end if
 			push @to, map { $_->User() } openprint::User_Notification->find( type=>'Client File Uploads',value=>'Yes', company_id=>[ $config{Owner}, $Company->id() ] );
@@ -585,7 +605,7 @@ $log->debug("regexp: $regexp");
 					FROM    => ( $config{AdministratorEmail} ? $config{AdministratorEmail} : $from ),
 					'Reply-To'	=>	$from,
 					TO      => \@to,
-BCC		=>	'iconnor@point-one.com',
+#BCC		=>	'iconnor@point-one.com',
 					SUBJECT => $subject,
 					ATTACHMENTS => [ '', MIME::QuotedPrint::encode_qp(Encode::encode('utf-8',$body)), 'text/html', 'quoted-printable' ]
 				);

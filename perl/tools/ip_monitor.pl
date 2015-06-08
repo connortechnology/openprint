@@ -137,6 +137,8 @@ while(1) {
 			if ( $Host->online() != $ping ) {
 
 # Have a change, so it should get logged, only email notifications should use the offline seconds
+				
+				$Host->load();
 				if ( $_ = $Host->save({online=>$ping,state_changed_on=>time,notified=>0}) ) {
 					$log->error($_);
 					next;
@@ -165,6 +167,7 @@ Please investigate.",
 			} elsif ( $Host->offline_seconds() and ( ! $ping ) and ( ! $$Host{notified} ) ) {
 				if ( $since > $$Host{offline_seconds} ) {
 					$log->warn("$ping $$Host{offline_seconds} $$Host{notified}");
+					$Host->load();
 					$Host->save({'notified'=>1});
 					my @To = map { $_->User() } $Host->Notifications();
 					if ( @To and ( @To < 10 ) ) {

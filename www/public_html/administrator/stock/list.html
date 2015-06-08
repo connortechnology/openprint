@@ -12,13 +12,21 @@
 <script type="text/javascript">
 	var popupWin;
 	function popup_window( form ) {
-		var stock_ids = $A(form.chkStock).filter(function(e){return e.checked});
+		var stock_ids;
+		if ( form.chkStock ) {
+			if ( ! form.chkStock.length ) {
+				stock_ids = new Array();
+				stock_ids[0] = form.chkStock;
+			} else {
+				stock_ids = $A(form.chkStock).filter(function(e){return e.checked});
+			}
+		} // end if form.chkStock
 		if ( ! stock_ids.length ) {
 			alert('Please select stocks to apply changes to.');
 			return;
 		} // end if
 		if ( ! popupWin ) {
-			popupWin = new Window({maximizable: false, resizable: true, hideEffect:Element.hide, showEffect:Element.show, destroyOnClose: true, className:"alphacube", width:700} );
+			popupWin = new Window({maximizable: false, resizable: true, hideEffect:Element.hide, showEffect:Element.show, destroyOnClose: true, className:"alphacube", width:700, height: 350} );
 			// Set up a windows observer, check ou debug window to get messages
 			myObserver = {
 				onDestroy: function(eventName, win) {
@@ -97,7 +105,7 @@
 			</select>
 		</li>
 <? echo ( 
-	my @stock_supplier_ids = sql::execute( undef, undef, 'SELECT DISTINCT supplier_id FROM Papers WHERE supplier_id IS NOT NULL' );
+	my @stock_supplier_ids = @{$$variable{supplier_ids}} = sql::execute( undef, undef, 'SELECT DISTINCT supplier_id FROM Papers WHERE supplier_id IS NOT NULL' );
 	if ( @stock_supplier_ids ) {
 	return join("\n",
 		'<li><label>Supplier</label>
@@ -194,6 +202,10 @@ checkboxes( 'OrLarger', [1,'Or Larger'], $session{'/administrator/stock/list.htm
 		<li>
 			<label>Digital</label>
 			<? echo ( radio( 'digital', [ '1','Yes','0','No', '', 'All' ], $session{'/administrator/stock/list.html?digital'}, { onclick=>'calc(this.form.name);' } ); ) ?>
+		</li>
+		<li>
+			<label>Requires Scoring</label>
+			<? echo ( radio( 'scoring', [ '1','Yes','0','No', '', 'All' ], $session{'/administrator/stock/list.html?scoring'}, { onclick=>'calc(this.form.name);' } ); ) ?>
 		</li>
 		<li>
 			<label>Has Setup Prices</label>

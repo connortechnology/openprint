@@ -287,17 +287,20 @@ sub reboot {
 	my $Host = $_[0];
 	require LWP;
 	my $browser = LWP::UserAgent->new();
-	my $response = $browser->get('http://'.$Host->hostname().'/index.php');
-					$openprint::log->error( $response->status_line );
-					$openprint::log->error( $response->content );
-					my $headers = $response->headers();
-					foreach my $k ( keys %$headers ) {
-						$openprint::log->error("Header $k => $$headers{$k}");
-					}  # end foreach
-	$browser->credentials( $Host->hostname().':80', 'Netcam', $Host->info('username'), $Host->info('password') );
+	my $response = $browser->get('http://'.$Host->hostname().'/');
+	$openprint::log->error( $response->status_line );
+	$openprint::log->error( $response->content );
+	my $headers = $response->headers();
+	foreach my $k ( keys %$headers ) {
+		$openprint::log->error("Header $k => $$headers{$k}");
+	}  # end foreach
+	my ( $auth, $tokens ) = $$headers{'www-authenticate'} =~ /(\w+)\s+(.*)/;
+	$tokens =~ s/"//g;	
+	my %tokens = map { split('=', $_ ) } split(/\s/, $tokens);
+	$browser->credentials( $Host->hostname().':80', $tokens{realm}, $Host->info('username'), $Host->info('password') );
 	my $url;
 	if ( sets::isin( $_[0]->type(), [ 'AIC500', 'AIC500W', 'AIC777W', 'AIC747W' ] ) ) {
-		$url = 'http://'.$Host->hostname().'/cgi/jpg/image.cgi';
+		$url = 'http://'.$Host->hostname().'/admin/reboot.cgi?type=0';
 	} elsif( $_[0]->type() eq 'D-Link DAP1522' ) {
 		$url = 'http://'.$Host->hostname().'/sys_cfg_valid.xgi?&exeshell=submit REBOOT';
 	} else {
@@ -352,6 +355,10 @@ Description: $$Host{description}
 		} # end if TO
 	} # end if url
 } # end sub reboot
+
+sub link_to {
+	return sprintf('<a href="/employee/it/host.html?host_id=%d">%s</a>', $_[0]->id(), $_[0]->hostname() );
+}
 
 1;
 __END__

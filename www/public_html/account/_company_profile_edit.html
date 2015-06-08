@@ -1,57 +1,21 @@
-<? if ( @{$$variable{'Fields'}} = openprint::Company_Profile_Field->find('order'=>'sort,name') ) ?>
+<? if ( @{$$variable{Fields}} = openprint::Company_Profile_Field->find( order=>'sort,name') ) ?>
 <div id="CompanyProfile">
 	<fieldset><legend>Profile</legend>
 		<div class="content">
 			<ul>
 <? echo ( 
 	my $html;
-	my $Profile = $$variable{'Company'}->Profile();
+	my $Profile = $$variable{Company}->Profile();
 
-	foreach my $Field ( @{$$variable{'Fields'}} ) {
+	foreach my $Field ( @{$$variable{Fields}} ) {
 		my $Entry = $Profile->Field( $Field->name() );
 		$html .= $Entry->html();
 	} # end foreach Field
 	
-if ( 0 ) {
-	foreach my $Field ( @{$$variable{'Fields'}} ) {
-		$html .= '<li><label>'.$Field->description().'</label><span id="field-'.$Field->id().'_container">';
-		my $value = $Profile->value( $Field->name() );
-
-		if ( $Field->type() eq 'checkbox' ) {
-			$html .= checkboxes( 'field-'.$Field->id(), $Field->values(), [ split(',', $value ? $value : $Field->default() ) ] );
-		} elsif ( $Field->type() eq 'date' ) {
-			my ( $start, $end ) = @{$Field->values()} if $Field->values();
-			$html .= date_select( 'field-'.$Field->id(), ( $value ? $value : $Field->default() ), { 'start'=>$start, 'end'=>$end } );
-		} elsif ( $Field->type() eq 'country' ) {
-			my $StateField = openprint::Company_Profile_Field->find_one( type=>'state');
-			if ( $StateField ) {
-				$html .= sprintf(q`<select id="field-%1$d" name="field-%1$d" onchange="Country_onchange( this, this.form.elements['field-%2$d'] );"><option value=""> </option>`, $Field->id(), $StateField->id() );
-			} else {
-				$html .= sprintf(q`<select id="field-%1$d" name="field-%1$d"><option value=""> </option>`, $Field->id() );
-			} # end if
-			$html .= make_drop_down( \@countries::countries, $value ? $value : $Field->default() );
-			$html .= '</select>';
-		} elsif ( $Field->type() eq 'state' ) {
-			$html .= sprintf( q`<select id="field-%1$d" name="field-%1$d"><option value=""> </option>`, $Field->id() );
-			$html .= make_drop_down( \@states::states, $value ? $value : $Field->default() );
-			$html .= make_drop_down( \@provinces::provinces, $value ? $value : $Field->default() );
-			$html .= '</select>';
-		} elsif ( $Field->type() eq 'select-one' ) {
-			$html .= sprintf( q`<select name="field-%1$d" id="field-%1$d"><option value=""> </option>`, $Field->id() );
-			$html .= make_drop_down( [ map { $_, $_ } @{$Field->values()} ], $value ? $value : $Field->default() );
-			$html .= '</select>';
-		} elsif ( $Field->type() eq 'text' ) {
-			$html .= sprintf( q`<input type="text" name="field-%1$d" id="field-%1$d" value="%2$s" />`, $Field->id(), $value ? $value : $Field->default() );
-		} elsif ( $Field->type() eq 'radio' ) {
-			$html .= radio( 'field-'.$Field->id(), $Field->values(), $value ? $value : $Field->default() );
-		} # end if
-		$html .= "</span></li>\n";
-	} # end foreach Field
-}
 	return $html;
 ) ?>
 			</ul>
 		</div>
 	</fieldset>
 </div>
-<? endif ( @{$$variable{'Fields'}} = openprint::Company_Profile_Field->find('order'=>'sort,name') ) ?>
+<? endif ( @{$$variable{Fields}} = openprint::Company_Profile_Field->find( order=>'sort,name') ) ?>

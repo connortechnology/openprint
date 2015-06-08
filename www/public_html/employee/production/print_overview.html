@@ -106,6 +106,10 @@
 	function up_job( job_id ) {
 		new Ajax.Request( '/employee/production/_li_change.json', {parameters: { schedule_id:job_id, action: 'Up' }, evalScripts: true } );
 	} // end function up_job
+
+	function update_runtime( ddm ) {
+		ddm.form.runtime.value = ddm.form.runtime_hours.value + ':' + ddm.form.runtime_minutes.value + ':' + ddm.form.runtime_seconds.value;
+	}
 -->
 </script>
 <? eval (
@@ -289,11 +293,10 @@
 		$html .= '</tr></thead><tbody><tr>';
 		@{$$variable{'drops'}} = ();
 
-		my $TZ = DateTime::TimeZone->new( name => $config{'Timezone'} );
 		my $parser = 'DateTime::Format::Pg';
 
-		my $start_dt = new DateTime( time_zone=>$TZ, map { $_ => $session{'/employee/production/print_overview.html?schedule_start_'.$_} } ( 'year', 'month', 'day' ) );
-		my $end_dt = new DateTime( time_zone=>$TZ, map { $_ => $session{'/employee/production/print_overview.html?schedule_end_'.$_} } ( 'year', 'month', 'day' ) );
+		my $start_dt = new DateTime( time_zone=>$openprint::TZ, map { $_ => $session{'/employee/production/print_overview.html?schedule_start_'.$_} } ( 'year', 'month', 'day' ) );
+		my $end_dt = new DateTime( time_zone=>$openprint::TZ, map { $_ => $session{'/employee/production/print_overview.html?schedule_end_'.$_} } ( 'year', 'month', 'day' ) );
 
 		my $ac = sql::start_transaction( $dbh );
 
@@ -302,14 +305,16 @@
 			'starttime <='	=> $parser->format_datetime( $end_dt ),
 			'starttime >='	=> $parser->format_datetime( $start_dt ),
 		);
+#$log->debug("# of jobs: " . @Jobs );
 
-		my @Projects = openprint::Project->find( id=>[ sets::union( map { $$_{project_id} ? $$_{project_id} : () } @Jobs ) ] );
-		my @Companies = openprint::Company->find( id=>[ sets::union( map { $$_{company_id} ? $$_{company_id} : () } @Projects ) ] );
+		my @Projects = openprint::Project->find( id=>[ sets::union( map { $$_{project_id} ? $$_{project_id} : () } @Jobs ) ] ) if @Jobs;
+		my @Companies = openprint::Company->find( id=>[ sets::union( map { $$_{company_id} ? $$_{company_id} : () } @Projects ) ] ) if @Projects;
 
 		# WHy does this need to be ACCESS exclusive?  SOmething that changes it should be.... perhaps the idea is that i any canges are in progress, we want to wait for them to finish, but if changes are happening, then any lock we try to get will hol... so this just prevent concurrent views
 		# However, the problem is that this can implement shifts.. perhaps we should wait until we need to implement shifts...
 		# Ok, but we actually only create shifts, not adjust jobs... so only need to lock the shifts	
 		$dbh->do( 'LOCK TABLE Shifts IN ACCESS EXCLUSIVE MODE' ) or $log->error( DBI->errstr );
+#$log->debug("Have lock");
 
 		foreach my $E ( @{$$variable{'Equipment'}} ) {
 			$html .= '<td class="PressColumn ' . join(' ', $E->categories() ). '">';
@@ -330,12 +335,15 @@
 
 			# When its time to add shifts, we add in sets, until we find an already-implemented shift.
 			my @Equipment_Shifts = $E->Equipment_Shifts();
+#foreach my $ES ( @Equipment_Shifts ) {
+#$log->debug( "Available ES: " . $ES->to_string() );
+#}
 
 			# Showing over 100 days makes the browser crawl forever. So limit it.
 			$end = 100 if $end > 100;
 			# Get the shifts on this day.
-			my $st = new DateTime( 'year'=>$year, 'month'=>$month, 'day'=>$day, 'time_zone'=>$TZ );
-			my $et = $st + DateTime::Duration->new( 'days'=>$end );
+			my $st = new DateTime( year=>$year, month=>$month, day=>$day, time_zone=>$openprint::TZ );
+			my $et = $st + DateTime::Duration->new( days=>$end );
 
 			my @Shifts = openprint::Shift->find( 
 				equipment_id 		=>	$E->id(),
@@ -347,6 +355,7 @@
 			if ( ! @Shifts ) {
 				@Shifts = openprint::Shift::get_Shifts( $E, $st, $et, @Equipment_Shifts );
 			} # end if
+#$log->debug("# of Shifts: " . @Shifts );
 			if ( ! @Shifts ) {
 				$html .= 'No Shifts defined.</div>';
 				next;
@@ -355,13 +364,42 @@
 			# First, need to find the first Equipment Shift to show.  Easy, will be given by the first shift in our list of shifts
 			my $ES = $Shifts[0]->Equipment_Shift();
 
-			#$log->debug("Setp 2" . $ES->to_string());
 			# Step two: Make sure all the shifts are there. We do this by running through them, comparing the shift_id to the expected ES
 			# We start at 1 because we already looked for 0 and found it.  Micro-optimisation
+					#foreach my $S ( @Shifts ) {
+#$log->debug("Shifts are: " . $S->to_string());
+					#}
 			for ( my $shift_index = 1; $shift_index < @Shifts; $shift_index += 1 ) {
+				#$log->debug( $Shifts[$shift_index]->shift_id() . ' == ' . $ES->Next()->id() );
+				#$log->debug( "This ES: " . $ES->to_string() );
+				#$log->debug( "Next ES: " . $ES->Next()->to_string() );
+
+				
+				# By putting emanantise here....
+				# emanantise will figure out what the next shift should loook like, and add it if neccessary.
+				my $NextShift = $ES->Next()->emanantise( $Shifts[$shift_index-1]->starttime_seconds() + 1 );
+
+				if ( $NextShift->id() != $Shifts[$shift_index]->id() ) {
+#$log->debug("Adding new shift; previous: " . $Shifts[$shift_index-1]->to_string() );
+#$log->debug("Adding new shift; current: " . $Shifts[$shift_index]->to_string() );
+#$log->debug("Adding new shift; next: " . $NextShift->to_string() );
+					splice @Shifts, $shift_index, 0, $NextShift;
+					#foreach my $S ( @Shifts ) {
+#$log->debug("Shifts are: " . $S->to_string());
+					#}
+				} 
+				next if $NextShift->starttime_dt() > $Shifts[$shift_index]->starttime_dt();
+				last if $NextShift->starttime_dt() > $et;
+
+
+if ( 0 ) {
 				if ( $Shifts[$shift_index]->shift_id() == $ES->Next()->id() ) {
+
+					# There is only 1 ES, then this wil always be true... even if a shift is skipped.
 	
-				} elsif ( $Shifts[$shift_index]->starttime_seconds() > $Shifts[$shift_index-1]->starttime_seconds() + $ES->distance() ) {
+				} elsif ( $Shifts[$shift_index]->starttime_dt() > ( $Shifts[$shift_index-1]->endtime_dt() + $ES->Next()->Duration() ) ) {
+#$log->debug("Need another shift");
+				#} elsif ( $Shifts[$shift_index]->starttime_seconds() > $Shifts[$shift_index-1]->starttime_seconds() + $ES->distance() ) {
 					my $NewShift = $ES->Next()->emanantise( $Shifts[$shift_index-1]->starttime_seconds() + 1 );
 					# emanantise may pass back an existing shift... in which case it SHOULD be the one we are looking at!
 					if ( $NewShift->id() == $Shifts[$shift_index]->id() ) {
@@ -374,8 +412,9 @@
 					$openprint::log->error( $ES->Next()->to_string() );
 
 				} # end if need shiftsadded
+}
 				$ES = $ES->Next();
-			} # end for
+			} # end for each Shift
 			
 			my $LastShift = $Shifts[@Shifts-1];
 			while ( $LastShift->starttime_seconds() < $et->epoch() ) {

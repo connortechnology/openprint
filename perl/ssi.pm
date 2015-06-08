@@ -307,7 +307,7 @@ sub return_countries {
 
 sub return_years {
 	my ( $start, $end, $selected ) = @_;
-	$start = $openprint::config{'startYear'} if ! $start;
+	$start = $openprint::config{startYear} if ! $start;
 	$end = (localtime(time))[5] + 1901 if ! $end;
 	#$selected = (localtime(time))[5] + 1900 if ! defined $selected;
 #$log->debug("sub return_years $start .. $end $selected");
@@ -423,7 +423,7 @@ sub get_dates {
 
 	( $year, $month, $day ) = fix_date( int $year, int $month, int $day );
 
-	my ( $startYear ) = $openprint::config{'startYear'};
+	my ( $startYear ) = $openprint::config{startYear};
 	$startYear = 2002 if ! $startYear;
 
 	return (
@@ -438,7 +438,7 @@ sub get_start_end_dates {
 	my ( $log, $dbh, $variable, $startYear, $startMonth, $startDay, $endYear, $endMonth, $endDay ) = @_;
 
 	my $start;
-	( $start ) = $openprint::config{'startYear'};
+	( $start ) = $openprint::config{startYear};
 	$start = 2002 if ! $start;
 	if ( ! $startYear ) {
 		$startYear = (localtime(time))[5]+1900;
@@ -455,15 +455,15 @@ sub get_start_end_dates {
 		$endDay = Date::Calc::Days_in_Month( $endYear, $endMonth );
 	} # end if
 
-	$$variable{'ddmStartYear'} = $$variable{'startyears'} = getyears( $start, (localtime(time))[5]-100, $startYear );
-	$$variable{'ddmEndYear'} = $$variable{'endyears'} = getyears( $start, (localtime(time))[5]-100, $endYear );
-	$$variable{'ddmStartMonth'} = $$variable{'startmonths'} = getmonths($startMonth);
-	$$variable{'ddmEndMonth'} = $$variable{'endmonths'} = getmonths($endMonth);
-	$$variable{'ddmStartDay'} = $$variable{'startdays'} = getdays($startDay);
-	$$variable{'ddmEndDay'} = $$variable{'enddays'} = getdays($endDay ? $endDay : (localtime(time))[3]);
+	$$variable{ddmStartYear} = $$variable{startyears} = getyears( $start, (localtime(time))[5]-100, $startYear );
+	$$variable{ddmEndYear} = $$variable{endyears} = getyears( $start, (localtime(time))[5]-100, $endYear );
+	$$variable{ddmStartMonth} = $$variable{startmonths} = getmonths($startMonth);
+	$$variable{ddmEndMonth} = $$variable{endmonths} = getmonths($endMonth);
+	$$variable{ddmStartDay} = $$variable{startdays} = getdays($startDay);
+	$$variable{ddmEndDay} = $$variable{enddays} = getdays($endDay ? $endDay : (localtime(time))[3]);
 
-	$$variable{'StartDate'} = join( '-', $startYear, $startMonth, ( $startDay ? $startDay : 1 ) );
-	$$variable{'EndDate'} = join( '-', $endYear, $endMonth, ( $endDay ? $endDay : (localtime(time))[3] ) );
+	$$variable{StartDate} = join( '-', $startYear, $startMonth, ( $startDay ? $startDay : 1 ) );
+	$$variable{EndDate} = join( '-', $endYear, $endMonth, ( $endDay ? $endDay : (localtime(time))[3] ) );
 
 } # end sub get_start_end_dates
 
@@ -483,39 +483,39 @@ sub button {
 	} else {
 		$$options{href} = '#';
 	} # end if
-	$$options{'text'} = $name if ! exists $$options{'text'};
+	$$options{text} = $name if ! exists $$options{text};
 
 	my $html = qq`<a id="Button$name" href="$$options{href}" class="button $$options{class}" `;
-	$html .= qq`title="$$options{title}" ` if $$options{'title'};
-	$html .= 'target="$$options{target}" ' if $$options{'target'};
-	if ( $$options{'onclick'} ) {
+	$html .= qq`title="$$options{title}" ` if $$options{title};
+	$html .= 'target="$$options{target}" ' if $$options{target};
+	if ( $$options{onclick} ) {
 		$html .= 'onclick="';
-		$html .= $$options{'onclick'}."return false;\" ";
+		$html .= $$options{onclick}."return false;\" ";
 	} # end if
-	if ( $$options{'ontouch'} ) {
-		$html .= 'ontouch="'.$$options{'ontouch'}.'" ';
+	if ( $$options{ontouch} ) {
+		$html .= 'ontouch="'.$$options{ontouch}.'" ';
 	} # end if
 	#$html .= "onmouseover=\"if ( typeof(btnOn) == 'function' ) { btnOn('Button$name');}\" onmouseout=\"if ( typeof(btnOff) == 'function' ) { btnOff('Button$name');}\"";
 	$html .= '>';
 	if ( $$options{image} ) {
-		if ( $openprint::config{'ButtonsUseImages'} and ($openprint::config{'ButtonsUseImages'} eq 'true') ) {
+		if ( $openprint::config{ButtonsUseImages} and ($openprint::config{ButtonsUseImages} eq 'true') ) {
 			$html .= "<img src=\"/images/buttons/off/$$options{image}\" id=\"ButtonImage$name\"";
 		} else {
 			$html .= "<img src=\"$$options{image}\" id=\"ButtonImage$name\"";
 		} # end if
-		if ( $$options{'title'} ) {
+		if ( $$options{title} ) {
 			$html .= " alt=\"$$options{title}\"";
 		} # end if
 		$html .= '/>';
 		if ( $$options{text} ) {
 			$html .= $$options{text};
 		} # end if
-	} elsif ( $openprint::config{'SimpleButtons'} eq 'Y' ) {
-		$html .= $$options{'text'};
+	} elsif ( $openprint::config{SimpleButtons} eq 'Y' ) {
+		$html .= $$options{text};
 	} else {
-		$html .= '<span class="l"></span><span class="c" id="'.$name.'c"' . ( $$options{title} ? ' title="'.$$options{title}.'"' : '' ) .'>' . $$options{'text'} .'</span><span class="r"></span>';
+		$html .= '<span class="l"></span><span class="c" id="'.$name.'c"' . ( $$options{title} ? ' title="'.$$options{title}.'"' : '' ) .'>' . $$options{text} .'</span><span class="r"></span>';
 	}
-	$html .= "</a>\n";
+	$html .= "</a>";
 	return $html;
 } # end sub button
 
@@ -527,14 +527,14 @@ sub writeButton {
 	my $html = qq`<a id="Button$name" href="$href" class="button $$options{class}" `;
 	if ( $onclick ne '' ) {
 		$html .= 'onclick="';
-		if ( ( $openprint::config{'ButtonsUseImages'} and ($openprint::config{'ButtonsUseImages'} eq 'true') ) and $gif ) {
+		if ( ( $openprint::config{ButtonsUseImages} and ($openprint::config{ButtonsUseImages} eq 'true') ) and $gif ) {
 			$html .= "btnOff('$name');";
 		} # end if
 		$html .= $onclick."return false;\" ";
 	} # end if
 	#$html .= "onmouseover=\"if ( typeof(btnOn) == 'function' ) { btnOn('Button$name');}\" onmouseout=\"if ( typeof(btnOff) == 'function' ) { btnOff('Button$name');}\"";
 	$html .= '>';
-	if ( ( $openprint::config{'ButtonsUseImages'} and ($openprint::config{'ButtonsUseImages'} eq 'true') ) and $gif ) {
+	if ( ( $openprint::config{ButtonsUseImages} and ($openprint::config{ButtonsUseImages} eq 'true') ) and $gif ) {
 		$html .= "<img src=\"/images/buttons/off/$gif\" name=\"Button$name\"";
 		if ( $text ne '' ) {
 			$html .= "alt=\"$text\"";
@@ -595,14 +595,14 @@ sub date_select {
 		$options = {'onchange'=>$options};
 	} # end if
 #$openprint::log->debug(" date_select: $value : ($year,$month,$day), order: $$options{order}");
-	$$options{'order'} = 'y,m,d' if ! $$options{'order'};
+	$$options{order} = 'y,m,d' if ! $$options{order};
 	my @fields;
-	if ( $$options{'fields'} ) {
-		@fields = split(',', $$options{'fields'} );
+	if ( $$options{fields} ) {
+		@fields = split(',', $$options{fields} );
 	} 
 	
-	my ( $start_year, $start_month, $start_day ) = split( '-', $$options{'start'} ) if $$options{'start'};
-	my ( $end_year, $end_month, $end_day ) = split( '-', $$options{'end'} ) if $$options{'end'};
+	my ( $start_year, $start_month, $start_day ) = split( '-', $$options{start} ) if $$options{start};
+	my ( $end_year, $end_month, $end_day ) = split( '-', $$options{end} ) if $$options{end};
 
 	my $class = 'DateSelector';
 	$class .= 'C' if $$options{with_clear};
@@ -610,29 +610,29 @@ sub date_select {
 
 	my $html = '<span class="'.$class.'">';
 	$html .= sprintf('<span id="%1$s_date">', $prefix );
-	foreach my $o ( split(',', $$options{'order'} ) ) {
+	foreach my $o ( split(',', $$options{order} ) ) {
 		if ( ( $o eq 'y' ) and ( (!@fields) or sets::isin( 'year', \@fields ) ) ) {
-			$html .= sprintf(q`<select id="%1$s_year" name="%1$s_year" onchange="setDaysDropDown(this.value,this.form.elements['%1$s_month'].value,this.form.elements['%1$s_day'],this.form.elements['%1$s_day'].value);%2$s"><option value=""> </option>`, $prefix, $$options{'onchange'} );
+			$html .= sprintf(q`<select id="%1$s_year" name="%1$s_year" onchange="setDaysDropDown(this.value,this.form.elements['%1$s_month'].value,this.form.elements['%1$s_day'],this.form.elements['%1$s_day'].value);%2$s"><option value=""> </option>`, $prefix, $$options{onchange} );
 			$html .= return_years( $start_year, $end_year, $year );
 			$html .= '</select>';
 #$log->debug($html);
 		} elsif ( ( $o eq 'm' ) and ( (!@fields) or sets::isin( 'month', \@fields ) ) ) {
-			$html .= sprintf(q`<select id="%1$s_month" name="%1$s_month" onfocus="this.previousValue=this.value" onchange="setDaysDropDown(this.form.elements['%1$s_year'].value,this.value,this.form.elements['%1$s_day'],this.form.elements['%1$s_day'].value, this.previousValue);%2$s;this.previousValue=this.value;"><option value=""> </option>`, $prefix, $$options{'onchange'} );
+			$html .= sprintf(q`<select id="%1$s_month" name="%1$s_month" onfocus="this.previousValue=this.value" onchange="setDaysDropDown(this.form.elements['%1$s_year'].value,this.value,this.form.elements['%1$s_day'],this.form.elements['%1$s_day'].value, this.previousValue);%2$s;this.previousValue=this.value;"><option value=""> </option>`, $prefix, $$options{onchange} );
 			$html .= getmonths( $month );
 			$html .= '</select>';
 #$log->debug($html);
 		} elsif ( ( $o eq 'd' ) and ( (!@fields) or sets::isin( 'day', \@fields ) ) ) {
-			$html .= sprintf('<select id="%1$s_day" name="%1$s_day" onchange="%2$s"><option value=""> </option>', $prefix, $$options{'onchange'} );
+			$html .= sprintf('<select id="%1$s_day" name="%1$s_day" onchange="%2$s"><option value=""> </option>', $prefix, $$options{onchange} );
 			$html .= getdays( $day, int($year), int($month) );
 			$html .= '</select>';
 #$log->debug($html);
 		} # endif
 	} # end foreach o
-	if ( $$options{'with_clear'} ) {
-		$html .= button( $prefix.'_clear', { 'onclick'=>q`date_clear( $('`.$prefix.q`_year'), $('`.$prefix.q`_month'), $('`.$prefix.q`_day') );`.$$options{'onchange'}, text=>'C', title=>'Clear', class=>'Clear'} );
+	if ( $$options{with_clear} ) {
+		$html .= button( $prefix.'_clear', { 'onclick'=>q`date_clear( $('`.$prefix.q`_year'), $('`.$prefix.q`_month'), $('`.$prefix.q`_day') );`.$$options{onchange}, text=>'C', title=>'Clear', class=>'Clear'} );
 	} # end if
-	if ( $$options{'with_today'} ) {
-		$html .= button( $prefix.'_today', { 'onclick'=>q`set_today( $('`.$prefix.q`_year'), $('`.$prefix.q`_month'), $('`.$prefix.q`_day') );`.$$options{'onchange'}, text=>'T', title=>'Today', class=>'Today'} );
+	if ( $$options{with_today} ) {
+		$html .= button( $prefix.'_today', { 'onclick'=>q`set_today( $('`.$prefix.q`_year'), $('`.$prefix.q`_month'), $('`.$prefix.q`_day') );`.$$options{onchange}, text=>'T', title=>'Today', class=>'Today'} );
 	} # end if
 	$html .= '<span id="'.$prefix.'_alert"></span>';
 	$html .= '</span></span>';
@@ -677,10 +677,10 @@ $openprint::log->error("No date from $value");
 	} elsif ( $options ) {
 		$_ = $options;
 		$options = {};
-		$$options{'onchange'} = $_;
+		$$options{onchange} = $_;
 	} # end if
 #$openprint::log->debug(" date_select: $value : ($year,$month,$day), order: $$options{order}");
-	$$options{'order'} = 'y,m,d' if ! $$options{'order'};
+	$$options{order} = 'y,m,d' if ! $$options{order};
 
 	my $class = 'DateTimeSelector';
 	$class .= 'C' if $$options{with_clear};
@@ -688,17 +688,17 @@ $openprint::log->error("No date from $value");
 
 	my $html = '<span class="'.$class.'">';
 	$html .= sprintf(q`<span id="%1$s_date"><select id="%1$s_year" name="%1$s_year" onchange="setDaysDropDown(this.value,this.form.elements['%1$s_month'].value,this.form.elements['%1$s_day'],this.form.elements['%1$s_day'].value);%2$s">
-`, $prefix, $$options{'onchange'} );
+`, $prefix, $$options{onchange} );
 	$html .= '<option value=""> </option>';
 	$html .= return_years( undef, undef, $year );
 	$html .= '</select>
 ';
-	$html .= sprintf(q`<select id="%1$s_month" name="%1$s_month" onfocus="this.previousValue=this.value;" onchange="setDaysDropDown(this.form.elements['%1$s_year'].value,this.value,this.form.elements['%1$s_day'],this.form.elements['%1$s_day'].value,this.previousValue);this.previousValue=this.value;%2$s">`, $prefix, $$options{'onchange'} );
+	$html .= sprintf(q`<select id="%1$s_month" name="%1$s_month" onfocus="this.previousValue=this.value;" onchange="setDaysDropDown(this.form.elements['%1$s_year'].value,this.value,this.form.elements['%1$s_day'],this.form.elements['%1$s_day'].value,this.previousValue);this.previousValue=this.value;%2$s">`, $prefix, $$options{onchange} );
 	$html .= '<option value=""> </option>';
 	$html .= getmonths( $month );
 	$html .= '</select>
 ';
-	$html .= sprintf('<select id="%1$s_day" name="%1$s_day" onchange="%2$s">', $prefix, $$options{'onchange'} );
+	$html .= sprintf('<select id="%1$s_day" name="%1$s_day" onchange="%2$s">', $prefix, $$options{onchange} );
 	$html .= '<option value=""> </option>';
 	$html .= getdays( $day, $year, $month );
 	$html .= '</select></span>
@@ -707,16 +707,16 @@ $openprint::log->error("No date from $value");
 <select id="%1$s_hour" name="%1$s_hour" onchange="%2$s"><option value=""></option>%4$s</select> :
 	<select id="%1$s_minute" name="%1$s_minute" onchange="%2$s">
 	<option value=""> </option>%5$s
-	</select></span>', $prefix, $$options{'onchange'}, 
-		( ( exists $$options{'with_time'} and ! $$options{'with_time'} ) ? ' style="display: none;"' : '' ),
+	</select></span>', $prefix, $$options{onchange}, 
+		( ( exists $$options{with_time} and ! $$options{with_time} ) ? ' style="display: none;"' : '' ),
 		make_drop_down( [ map { $_, $_ } ( 0 .. 23 ) ], $hour ),
 		make_drop_down( [ map { $_, sprintf('%.2d', $_ ) } ( 0 .. 59 ) ], $min ),
 	);
-	if ( $$options{'with_clear'} ) {
-		$html .= button( $prefix.'_clear', { 'onclick'=>q`date_clear( $('`.$prefix.q`_year'), $('`.$prefix.q`_month'), $('`.$prefix.q`_day') );`.$$options{'onchange'}, 'text'=>'C' } );
+	if ( $$options{with_clear} ) {
+		$html .= button( $prefix.'_clear', { 'onclick'=>q`date_clear( $('`.$prefix.q`_year'), $('`.$prefix.q`_month'), $('`.$prefix.q`_day') );`.$$options{onchange}, 'text'=>'C' } );
 	} # end if
-	if ( $$options{'with_today'} ) {
-		$html .= button( $prefix.'_today', { 'onclick'=>sprintf(q`set_today( $('%1$s_year'), $('%1$s_month'), $('%1$s_day'), $('%1$s_hour'), $('%1$s_minute') );`, $prefix ).$$options{'onchange'}, 'text'=>'T' } );
+	if ( $$options{with_today} ) {
+		$html .= button( $prefix.'_today', { 'onclick'=>sprintf(q`set_today( $('%1$s_year'), $('%1$s_month'), $('%1$s_day'), $('%1$s_hour'), $('%1$s_minute') );`, $prefix ).$$options{onchange}, 'text'=>'T' } );
 	} # end if
 	$html .= '<span id="'.$prefix.'_alert"></span></span>';
 	return $html;
@@ -775,7 +775,7 @@ sub count_lines {
 sub radio {
 	my ( $name, $values, $selected, $options ) = @_;
 
-	my $onclick = $$options{'onclick'} if $options;
+	my $onclick = $$options{onclick} if $options;
 	my $html;
 	if ( $$options{default} and ! defined $selected ) {
 $log->debug("Selecting default $$options{default} for radio $name");
@@ -798,7 +798,7 @@ $log->debug("Selecting default $$options{default} for radio $name");
 sub checkboxes {
 	my ( $name, $values, $selected, $options ) = @_;
 
-	my $onclick = $$options{'onclick'} if $options;
+	my $onclick = $$options{onclick} if $options;
 	my $html;
 	my @container = @{$$options{container}} if $$options{container};
 	$values = ['on', '' ] if ! $values;
@@ -868,72 +868,67 @@ sub input {
 			$options{pattern} = '[0-9]*' if ! $options{pattern};
 		} elsif ( $ENV{HTTP_USER_AGENT} =~ /Firefox/ ) {
 			$options{type} = 'text';
-			$options{'pattern'} = '[0-9]*' if ! $options{'pattern'};
+			$options{pattern} = '[0-9]*' if ! $options{pattern};
 			delete $options{step};
 		} else {
 			$options{type} = 'number';
 		} # end if
 		$options{filter} = 'cardinalize(this);' if ! $options{filter};
-		$options{onkeyup} = $options{filter}.$options{onkeyup};
-		$options{oninput} = 'this.onkeyup.call(this);' if ! $options{oninput};
+		$options{oninput} = $options{filter}.$options{oninput};
+		#$options{oninput} = 'this.onkeyup.call(this);' if ! $options{oninput};
 	} elsif ( $options{type} eq 'integer' ) {
 		if ( $ENV{HTTP_USER_AGENT} =~ /ip(ad|od|hone)/i ) {
 			$options{type} = 'text';
-			$options{'pattern'} = '[0-9]*' if ! $options{'pattern'};
+			$options{pattern} = '\-?[0-9]*' if ! $options{pattern};
 		} elsif ( $ENV{HTTP_USER_AGENT} =~ /Firefox/ ) {
 			$options{type} = 'text';
-			$options{'pattern'} = '[0-9]*' if ! $options{'pattern'};
+			$options{pattern} = '\-?[0-9]*' if ! $options{pattern};
 			delete $options{step};
 		} else {
 			$options{type} = 'number';
 		} # end if
-		$options{'onkeyup'} = 'integerize(this);'.$options{'onkeyup'};
-		$options{oninput} = 'this.onkeyup.call(this);' if ! $options{oninput};
+		$options{oninput} = 'integerize(this);'.$options{oninput};
 	} elsif ( $options{type} eq 'float' ) {
 #$log->debug("USer agent: $ENV{HTTP_USER_AGENT}");
 		$options{step} = 'any' if ! exists $options{step};
 		if ( $ENV{HTTP_USER_AGENT} =~ /ip(ad|od|hone)/i ) {
 			$options{type} = 'text';
-			$options{'pattern'} = '[.0-9]*' if ! $options{'pattern'};
+			$options{pattern} = '[\-.0-9]*' if ! $options{pattern};
 		} elsif ( $ENV{HTTP_USER_AGENT} =~ /Firefox/ ) {
 			$options{type} = 'text';
-			$options{'pattern'} = '[.0-9]*' if ! $options{'pattern'};
+			$options{pattern} = '[\-.0-9]*' if ! $options{pattern};
 			delete $options{step};
 		} else {
 			$options{type} = 'number';
 		} # end if
-		$options{'onkeyup'} = 'floatize(this);'.$options{'onkeyup'};
-		$options{oninput} = 'this.onkeyup.call(this);' if ! $options{oninput};
+		$options{oninput} = 'floatize(this);'.$options{oninput};
     } elsif ( $options{type} eq 'positivefloat' ) {
 #$log->debug("USer agent: $ENV{HTTP_USER_AGENT}");
         $options{step} = 'any' if ! exists $options{step};
         if ( $ENV{HTTP_USER_AGENT} =~ /ip(ad|od|hone)/i ) {
             $options{type} = 'text';
-            $options{'pattern'} = '[.0-9]*' if ! $options{'pattern'};
+            $options{pattern} = '[.0-9]*' if ! $options{pattern};
         } elsif ( $ENV{HTTP_USER_AGENT} =~ /Firefox/ ) {
             $options{type} = 'text';
-            $options{'pattern'} = '[.0-9]*' if ! $options{'pattern'};
+            $options{pattern} = '[.0-9]*' if ! $options{pattern};
             delete $options{step};
         } else {
             $options{type} = 'number';
         } # end if
-        $options{'onkeyup'} = 'positive_floatize(this);'.$options{'onkeyup'};
-
-		$options{oninput} = 'this.onkeyup.call(this);' if ! $options{oninput};
+        $options{oninput} = 'positive_floatize(this);'.$options{oninput};
 	} elsif ( $options{type} eq 'float_calculator' ) {
 		if ( $ENV{HTTP_USER_AGENT} =~ /ip(ad|od|hone)/i ) {
 			$options{type} = 'text';
-			$options{'pattern'} = '[0-9\*\+=\/\.\-]*' if ! $options{'pattern'};
+			$options{pattern} = '[0-9\*\+=\/\.\-]*' if ! $options{pattern};
         } elsif ( $ENV{HTTP_USER_AGENT} =~ /Firefox/ ) {
             $options{type} = 'text';
-			$options{'pattern'} = '[0-9\*\+=\/\.\-]*' if ! $options{'pattern'};
+			$options{pattern} = '[0-9\*\+=\/\.\-]*' if ! $options{pattern};
             delete $options{step};
 		} else {
 			$options{type} = 'number';
 		} # end if
 		$options{step} = 'any' if ! exists $options{step};
-		$options{onkeyup} = 'floatize_calculator(this);'.$options{'onkeyup'};
-		$options{oninput} = 'this.onkeyup.call(this);' if ! $options{oninput};
+		$options{oninput} = 'floatize_calculator(this);'.$options{oninput};
 	} # end if
 	$html .= ' value="'.html_escape($options{value}).'"' if $options{value} ne '';
 

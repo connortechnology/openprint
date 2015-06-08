@@ -1,7 +1,7 @@
 use strict;
 package openprint::www;
 
-use constant Debug => 0;
+use constant Debug => 1;
 
 #use Benchmark;
 #use diagnostics;
@@ -48,8 +48,6 @@ sub cleanup {
 		openprint::pricing::clear_cache();
 		openprint::service::init_cache();
 		openprint::Object::init_cache();
-		openprint::StockBrand->find();
-		openprint::StockFinish->find();
 		$session{lastupdated} = time;
 		untie %session;
 		if ( ! $dbh->{AutoCommit} ) {
@@ -241,19 +239,23 @@ $log->debug("PageContent is $variable{PageContent}");
 			} # end while
 			} # end if
 		} # end if _
-		#$log->debug( "After finding template: ($page) Elapsed time: " . sprintf('%.4f', tv_interval([$starttime])*1000).' usecs' );
+		$log->debug( "After finding template: ($page) Elapsed time: " . sprintf('%.4f', tv_interval([$starttime])*1000).' usecs' ) if Debug;
 		local $|=1;
-		if ( $template ) {
-			#$log->debug("parsing template! $template");
-			$r->print( ssi::variable_substitution( \$template, \%variable ) );
-		} else {
+		if ( ! $r->connection()->aborted() ) {
+			if ( $template ) {
+#$log->debug("parsing template! $template");
+				$r->print( ssi::variable_substitution( \$template, \%variable ) );
+			} else {
 
-			#$log->warn("No template!" . $r->content_type());
-			$variable{PageContent} = ssi::variable_substitution( \$variable{'PageContent'}, \%variable ) if $variable{'PageContent'} ne '';
-			$log->warn($variable{PageContent}) if Debug;
-			#$log->debug( "Before printing: ($page) Elapsed time: " . sprintf('%.4f', tv_interval([$starttime])*1000).' usecs' . length( $variable{PageContent} ) );
-			$r->print( $variable{PageContent} );
-	#$log->debug( "After printing: ($page) Elapsed time: " . sprintf('%.4f', tv_interval([$starttime])*1000).' usecs' );
+#$log->warn("No template!" . $r->content_type());
+				$variable{PageContent} = ssi::variable_substitution( \$variable{'PageContent'}, \%variable ) if $variable{'PageContent'} ne '';
+				$log->warn($variable{PageContent}) if Debug;
+$log->debug( "Before printing: ($page) Elapsed time: " . sprintf('%.4f', tv_interval([$starttime])*1000).' usecs' . length( $variable{PageContent} ) ) if Debug;
+				$r->print( $variable{PageContent} );
+$log->debug( "After printing: ($page) Elapsed time: " . sprintf('%.4f', tv_interval([$starttime])*1000).' usecs' ) if Debug;
+			} # end if
+		} else {
+			$log->debug("Aborted");
 		} # end if
 	} # end if
 
@@ -384,6 +386,7 @@ $log->error("Unable to load equipment.	No PPF for you for signature $$PPF{'signa
 				my $module = join('_',@path);
 				require "openprint/$module.pm";
 				if ( my $function = ('openprint::'.$module)->can($proc) ) {
+$log->debug("Running openprint::$module->$proc") if Debug;
 					$function->($r, $log, $dbh, \%variable );
 				} else {
 					$log->error( "Eval error of require $module :: $proc, Reason: " );
@@ -394,11 +397,12 @@ $log->error("Unable to load equipment.	No PPF for you for signature $$PPF{'signa
 		my ( $proc ) = $filename =~ /(.*)\.\w*$/;
 		if ( $proc ) {
 			my $module = join('_',@path);
+			require "openprint/$module.pm";
 			$log->debug("Calling $module :: $proc");
 			if ( my $function = ('openprint::'.$module)->can($proc) ) {
 				$function->($r, $log, $dbh, \%variable );
 			} else {
-				$log->error( "Eval error of require $module :: $proc, Reason: " );
+				$log->error( "Eval error: $module cant $proc, Reason: " );
 			}
 		} # end if
 	} elsif ( $first eq 'main' ) { # main
@@ -454,7 +458,7 @@ $log->debug("Service: " . $Service->to_string() );
 						$status = openprint::print::publication_pages( $r, $log, $dbh, \%variable );
 					} elsif ( $filename eq 'ScratchPads.html' ) {
 						$status = openprint::print::publication_pages( $r, $log, $dbh, \%variable );
-					} elsif ( $filename =~ /^(_.*)\.html$/ ) {
+					} elsif ( $filename =~ /^(_.*)\.(html|json)$/ ) {
 						my $proc = $1;
 						my $module = join('_',@path);
 						require 'openprint/'.$module.'.pm';
@@ -504,7 +508,7 @@ $log->debug("Service: " . $Service->to_string() );
 						if ( my $function = ('openprint::Estimating::'.$module)->can('display') ) {
 							$function->($log, $dbh, \%variable, $project_index, $service_index );
 						} else {
-							$log->error( "Eval error of require $module :: Reason: $?" );
+							$log->error( "Eval error of require(bind) openprint::Estimating::$module display() :: Reason: $?" );
 						}
 					} # end if
 				} elsif ($third eq 'spec') {

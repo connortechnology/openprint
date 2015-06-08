@@ -6,7 +6,7 @@ package openprint::Photo_Album;
 our @ISA = qw( openprint::Object );
 
 use vars qw( $debug $table $serial %fields %find_fields %transforms %defaults );
-$debug = 1;
+$debug = 0;
 $serial = 'photo_albums_id_seq';
 $table = 'photo_albums';
 
@@ -90,7 +90,7 @@ $openprint::log->debug("Photo no asset"  );
 
 sub Photos {
 	if ( @_ > 1 or ! $_[0]{'Photos'} ) {
-		@{$_[0]{'Photos'}} = openprint::Photo_in_Album->find('album_id'=>$_[0]{'id'},'order'=>'asset_id') if $_[0]{'id'};
+		@{$_[0]{'Photos'}} = openprint::Photo_in_Album->find( album_id=>$_[0]{id}, order=>'asset_id') if $_[0]{id};
 	} # end if
 	return $_[0]{'Photos'} ? @{$_[0]{'Photos'}} : ();
 } # end sub Photos

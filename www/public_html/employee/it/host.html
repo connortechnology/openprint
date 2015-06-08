@@ -128,7 +128,7 @@ my @macs = map { $_->mac() ? () : '' } $$variable{Host}->Interfaces();
 	<td class="mac">%2$s</td>
 	<td class="ip">%3$s</td>
 	<td class="dhcp">%4$s</td>
-	<td class="comment"><textarea name="comment-%1$d">%5$s</textarea></td>
+	<td class="comment"><textarea name="comment-%1$s">%5$s</textarea></td>
 `, 
 	$$Interface{id},
 	input( type=>'text', name=>'mac-'.$$Interface{id}, value=>$$Interface{mac} ),

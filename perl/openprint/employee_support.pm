@@ -42,11 +42,10 @@ sub helpdesk {
 		my ($name, $email) = sql::execute( $log, $dbh, $_, $index);
 
 		my %info;
-		$_ = "SELECT to_char(dtmRequestDate,'MM/DD/YYYY'), strDescription,blbResponse FROM HelpDesk WHERE Id=?";
-		$info{'RequestDate','Question', 'Response'} = sql::execute( $log, $dbh, $_, $index );
+		$_ = "SELECT to_char(dtmRequestDate,'MM/DD/YYYY'), blbDescription,blbQuestion,blbResponse FROM HelpDesk WHERE Id=?";
+		$info{'RequestDate','Description','Question', 'Response'} = sql::execute( $log, $dbh, $_, $index );
 
-		$info{'ReplacementText'} = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/email_content/helpdesk_response.html' );
-		$info{'ReplacementText'} = ssi::variable_substitution( \$info{'ReplacementText'}, \%info );
+		$info{'ReplacementText'} = ssi::include('/email_content/helpdesk_response.html', \%info );
 		$_ = misc::load_file( $log, $config{'SkinPath'}. '/email_template.html' );
 
 		my $Email = new openprint::Email();
@@ -59,11 +58,11 @@ sub helpdesk {
 	} # end if
 
 	$_ = "SELECT strCompanyName, strTitle, strFirstName, strLastName, strAddress, strAddress2, strCity,
-		 strStateProv, strPostalCode, strCountry, strPhone, strExtension, strEmail, blbQuestion, chrMethod,
+		 strStateProv, strPostalCode, strCountry, strPhone, strExtension, strEmail, blbDescription, blbQuestion, chrMethod,
 		 ysnReviewed, blbResponse, to_char(dtmRequestDate,'MM/DD/YYYY')
 		 FROM HelpDesk WHERE Id=?";
 	@variable{'company_name', 'title', 'firstname', 'lastname', 'address_one', 'address_two',
-			'city', 'state', 'postal_code', 'country', 'phone', 'extension', 'email', 'question',
+			'city', 'state', 'postal_code', 'country', 'phone', 'extension', 'email', 'description', 'question',
 			'method', 'rdbReviewed', 'response', 'sub_date' } = sql::execute( $log, $dbh, $_, $index );
 
 	$variable{'response_type'} = "Email" if $variable{'method'} eq 'E';

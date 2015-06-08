@@ -144,7 +144,7 @@ Please select a Paper to view/edit.<br>
 			<input type="text" id="fsc_code" name="fsc_code" value="<? echo ( $session{'/employee/inventory/paper.html?fsc_code'} ) ?>" />
 		</li>
 		<li>
-			<label>In Stock/Out of Stock</label>
+			<label>In/Out of Stock</label>
 			<? echo ( radio( 'instock', [ 'Y', 'In Stock', 'N', 'Out of Stock', 'B', 'Both' ], $session{'/employee/inventory/paper.html?instock'} ); ) ?>
 		</li>
 		<li><label>Allocated</label>

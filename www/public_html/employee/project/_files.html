@@ -10,7 +10,7 @@
 				if ( -f $config{ProjectFilesPath}.$File->filename() ) {
 					$html .= sprintf('<tr><td class="filename">%2$s</td><td class="buttons"></td></tr>', $$File{id}, $File->filename() );
 				} else {
-					$File->delete();
+					#$File->delete();
 				} # end if
 			} elsif ( -f $File->archive().$File->filename() ) {
 				$html .= sprintf('<tr><td class="filename">%2$s</td><td class="buttons">%3$s</td></tr><tr><td colspan="2" id="action-%1$d"></td></tr>',

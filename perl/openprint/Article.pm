@@ -16,27 +16,27 @@ $table = 'articles';
 $serial = 'articles_id_seq';
 
 %fields = (
-	'id'				=>	'id',
+	id				=>	'id',
 	#'extended'			=>	'extended',
 	#'excerpt'			=>	'exerpt',
 	#'keywords'			=>	'keywords',
-	'created_by'		=>	'created_by',
-	'created_on'		=>	'created_on',
-	'updated_on'		=>	'updated_on',
-	'company_id'		=>	'company_id',
+	created_by		=>	'created_by',
+	created_on		=>	'created_on',
+	updated_on		=>	'updated_on',
+	company_id		=>	'company_id',
 	#'permalink'			=>	'permalink',
 	#'text_filter_id'	=>	'text_filter_id',
 	#'whiteboard'		=>	'whiteboard',
-	'deleted'			=> 'deleted',
+	deleted			=> 'deleted',
 	#'type'				=>	'type',
 	#'name'				=>	'name',
 	#'allow_pings'		=>	'allow_pings',
 	#'allow_comments'	=>	'allow_comments',
-	'published_on'		=>	'published_on',
-	'published'			=>	'published',
-	'title'				=>	'title',
+	published_on		=>	'published_on',
+	published			=>	'published',
+	title				=>	'title',
 	#'author'			=>	'author',
-	'body'				=>	'body',
+	body				=>	'body',
 	#'state'				=>	'state',
 	'category_id'		=>	'category_id',
 	'category'			=>	undef,
@@ -46,6 +46,7 @@ $serial = 'articles_id_seq';
 	'user_type'			=>	'user_type',
 	'keywords'			=>	'keywords',
 	anonymous			=>	'anonymous',
+	commenting			=>	'commenting',
 );
 %find_fields = (
 	category		=>	'(SELECT name FROM article_categories WHERE id=category_id)',
@@ -65,6 +66,7 @@ $serial = 'articles_id_seq';
 	created_by		=>	undef,
 	anonymous		=>	0,
 	published		=>	0,
+	commenting		=>	0,
 );
 
 sub name {
@@ -177,7 +179,6 @@ sub can_edit {
 
 sub html {
 	my $Article = $_[0];
-	my @Comments = $Article->Comments();
 	my @Assets = $Article->Assets();
 	my $html = sprintf(q`
 			<div class="Article">
@@ -188,11 +189,13 @@ sub html {
 			($Article->anonymous() ? '' : $Article->Author()->thumbnail_html() ),
 			ssi::format_datetime( $Article->published_on() ),
 			);
+if ( 0 ) {
 			if ( $Article->anonymous() ) {
 				$html .= ' by an Anonymous Contributor';
 			} elsif ( $Article->created_by() ) {
 				$html .= ' by ' . $Article->Author()->link();
 			} # end if
+} # end if
 	$html .= sprintf(q`<br/><div class="source_content">%1$s</div><div class="summary">%2$s</div>`,
 			$Article->source_content(),
 			($Article->summary() ? $Article->summary() : $Article->body() ),
@@ -203,7 +206,10 @@ sub html {
 	if ( $Article->summary() and $Article->summary() ne $Article->body() ) {
 		$html .= sprintf('<a class="readmore" href="/article/view.html?article_id=%1$d">Read more...</a><br/>', $Article->id() );
 	} # end if
-	$html .= sprintf(q`<div class="comments">This article has %s.</div>`, ( @Comments == 1 ? '1 comment' : @Comments . ' comments' ) );
+	if ( $Article->commenting() ) {
+		my @Comments = $Article->Comments();
+		$html .= sprintf(q`<div class="comments">This article has %s.</div>`, ( @Comments == 1 ? '1 comment' : @Comments . ' comments' ) );
+	} # end if
 	$html .= '</div>';
 	return $html;
 } # end  sub html

@@ -1,6 +1,6 @@
 <ul class="menubar">
 	<li id="HomeMenu"><a href="/employee/index.html">Home</a></li>
-	<li id="AccountMenu"><a href="#" onclick="$('AccountMenu').toggleClassName('on');return false;">Account</a>
+	<li id="EmployeeAccountMenu"><a href="#" onclick="$('EmployeeAccountMenu').toggleClassName('on');return false;">Account</a>
 		<ul>
 <? if ( $session{'user_id'} ) ?>
 			<li><a href="/employee/account/logout.html">Logout</a></li>
@@ -44,6 +44,7 @@
 			<li><a href="/marketing/categories.html;NOSSL">Marketing Categories</a></li>
 			<li><a href="/marketing/email_templates.html;NOSSL">Email Templates</a></li>
 			<li><a href="/marketing/email_campaigns.html;NOSSL">Email Campaigns</a></li>
+			<li><a href="/marketing/sales_log.html;NOSSL">Sales Log</a></li>
 			<li><a href="/survey/history.html;NOSSL">Surveys</a></li>
 		</ul>
 	</li>

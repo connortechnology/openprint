@@ -1,3 +1,4 @@
+<div class="Quote"><div class="History">
 <div class="PageTitle">
 	<h1>QUOTE</h1>
 	<h2>View Quote <? echo ( $$variable{'Quote'}->id(); ) ?></h2>
@@ -35,11 +36,10 @@ function delete_confirm(form) {
 					} # end if
 				} # end if
 				if ( sets::isin( $session{user_type}, [ 'E', 'A' ] ) ) {
-					$html .= button( 'Reuse', { onclick=>"f1.action='/main/quote/information.html';f1.btnFunction.value='Process New Quote';f1.submit();", text=>'Copy to' } );
+					$html .= button( 'Copy', { onclick=>"f1.action='/main/quote/information.html';f1.btnFunction.value='Process New Quote';f1.submit();", text=>'Copy to' } );
 					$html .= button( 'Move', { onclick=>"f1.action='/main/quote/history_details.html';f1.btnFunction.value='Move To';f1.submit();", text=>'Move to' } );
-					$html .= '<select name="company_id" id="company_id">';
-					$html .= openprint::Company::get_dropdown( $session{'company_id'} );
-					$html .= '</select>';
+				$html .= q`<input type="text" onkeyup="filter_companies('company_id', {name:this.value,selected_id:get_ddm_value($('company_id'))});" class="filter" />`;
+					$html .= ssi::select( openprint::Company->dropdown( or=>'id='.$$variable{Quote}->company_id(), salesrep_id=>[ $session{user_id}, $openprint::User->csr_ids() ] ), $session{'company_id'}, { name=>'company_id', id=>'company_id', onchange=>'stop_filter_companies();' } );
 				} else {
 					$html .= button( 'Reuse', { onclick=>"f1.action='/main/quote/information.html';f1.btnFunction.value='Process New Quote';f1.submit();", text=>'Copy' } );
 				} # end if
@@ -92,3 +92,4 @@ To save, process a new quote or process an order from this quotation, please cli
 	</table>
 <? endif ( $$variable{Quote}->can_view() ) ?>
 </div><!--Quote-->
+</div></div>

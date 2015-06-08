@@ -17,6 +17,11 @@
 		value	=>	$$variable{'FoldQty-'.$blah},
 		onkeyup	=>	$onkeyup,
 		);
+	$html .= input(
+		type	=>	'hidden',
+		name	=>	'FoldPageQty-'.$blah,
+		value	=>	$$variable{'FoldPageQty-'.$blah},
+		);
 	$html .= '</td><td class="Imp">';
 	$html .= input(
 		type	=>	'cardinal',

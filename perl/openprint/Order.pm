@@ -76,8 +76,8 @@ $serial = 'orders_id_seq';
 	project_id	=>	'(SELECT lngprojectindex FROM Order_Contents WHERE OrderIndex=Orders.id)',
 	status		=>	'(SELECT name FROM Order_Statuses WHERE order_statuses.id=status_id)',
 	#invoice_id	=>	'(SELECT invoice_id FROM order_invoices WHERE order_id=orders.id)',
-invoice_id => 'id = (SELECT order_id FROM order_invoices WHERE invoice_id=?)',
-invoice_num => 'id = (SELECT order_id FROM order_invoices WHERE invoice_id=(SELECT invoices.id FROM Invoices WHERE num=?))',
+invoice_id => 'id IN (SELECT order_id FROM order_invoices WHERE invoice_id=?)',
+invoice_num => 'id IN (SELECT order_id FROM order_invoices WHERE invoice_id=(SELECT invoices.id FROM Invoices WHERE num=?))',
 );
 
 %defaults = (
@@ -798,9 +798,18 @@ sub can_see_pricing {
 	return 1 if $openprint::session{user_type} eq 'A';
 	return 1 if $_[0]{user_id} == $openprint::session{user_id};
 	return 1 if $_[0]{salesrep_id} == $openprint::session{user_id};
-	return 1 if openprint::usergroup::is_user_in( ['Accounting'], $openprint::session{user_id} );
+	return 1 if openprint::usergroup::is_user_in( ['Accounting','PrepressManager'], $openprint::session{user_id} );
 	return 0;
 } # end sub can_see_pricing
+
+sub can_edit {
+	return 1 if $openprint::session{user_type} eq 'A';
+	return 1 if $_[0]{user_id} == $openprint::session{user_id};
+	return 1 if $_[0]{company_id} == $openprint::session{company_id};
+	return 1 if $_[0]{salesrep_id} == $openprint::session{user_id};
+	return 1 if openprint::usergroup::is_user_in( ['Prepress','Sales Admin','PrepressManager'], $openprint::session{user_id} );
+	return 0;
+}
 
 sub due_date {
 	if ( ! $_[0]{due_date} ) {

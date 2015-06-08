@@ -24,16 +24,6 @@
 				<label>President/CEO/Owner</label>
 				<? hecho ( $$variable{'Company'}->president_owner() ) ?>
 			</li>
-			<li class="employees"> 
-				<label>Number of Employees</label>
-			<? echo ( ssi::get_range_text( sql::execute( undef, undef, 'SELECT Min,Max FROM EmployeeNumbers WHERE id=?', $$variable{Company}->employees() ) ); ) ?>
-			</li>
-			<li class="annual_sales"> 
-				<label>Annual Sales</label>
-				<? echo ( 
-			ssi::get_range_text( sql::execute( undef, undef, 'SELECT Min,Max FROM AnnualSales WHERE id=?', $$variable{Company}->annual_sales() ) );
-		) ?>
-			</li>
 			<li class="gst_number"> 
 				<label>
 					<? if ( $session{'Country'} eq 'US' ) ?>Federal ID #/SSN #<? endif ( $session{'Country'} eq 'US' ) ?>

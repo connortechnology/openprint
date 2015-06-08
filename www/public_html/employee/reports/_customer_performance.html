@@ -22,9 +22,10 @@
 					company_id	=> $Company->id(),
 					date_filter( '/employee/reports/customer_performance.html?ordered_on_end', 'created_on <=' ),
 					date_filter( '/employee/reports/customer_performance.html?ordered_on_start', 'created_on >=' ),
-					'status' => ['Complete','Picked Up', 'Shipped','Waiting For QA Approval', 'Waiting For Customer Approval','Order Submitted','In Production','Waiting For Pickup','Re-Opened','Pending Deposit','Paid','Complete' ],
+					status => ['Complete','Picked Up', 'Shipped','Waiting For QA Approval', 'Waiting For Customer Approval','Order Submitted','In Production','Waiting For Pickup','Re-Opened','Pending Deposit','Paid','Complete' ],
 					);
 			last if $dbh->errstr();
+
 			next if ! @Orders and Date::Calc::check_date( @session{
                         '/employee/reports/customer_performance.html?ordered_on_start_year',
                         '/employee/reports/customer_performance.html?ordered_on_start_month',

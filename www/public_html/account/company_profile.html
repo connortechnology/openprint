@@ -5,12 +5,12 @@
 Your company profile can be modified using the fields below. Use the <b>Save</b> button when finished.<br/>
 <br/>
 <?include(/includes/error_reporting.html)?>
-<form name="f1" method="post" onsubmit="return fmCheck();" action="/account/company_profile.html">
+<form name="f1" method="post" onsubmit="return fmCheck();" action="/account/company_profile.html?company_id=<?echo($$variable{Company}->id())?>">
 	<div class="CompanyProfile">
 		<fieldset>
 			<p class="buttons">
-				<? echo ( ssi::button( 'SaveTop', { onclick=>"f1.btnFunction.value='Save';fmChange=3;f1.submit();", text=>'Save' } ); ) ?>
-				<? echo ( ssi::button( 'ResetTop', { onclick=>'f1.reset();', text=>'Reset' } ); ) ?>
+				<? echo ( button( 'SaveTop', { onclick=>"f1.btnFunction.value='Save';fmChange=3;f1.submit();", text=>'Save' } ); ) ?>
+				<? echo ( button( 'ResetTop', { onclick=>'f1.reset();', text=>'Reset' } ); ) ?>
 			</p>
 		</fieldset>
 		<div class="CompanyInformation">
@@ -48,7 +48,7 @@ Your company profile can be modified using the fields below. Use the <b>Save</b>
 						) ?></label>
 						<select id="state" name="state">
 							<option value=""> Select </option>
-							<? echo ( join('',
+							<? echo ( join("\n",
 								make_drop_down( \@states::states, $$variable{'Company'}->state() ),
 								make_drop_down( \@provinces::provinces, $$variable{'Company'}->state() ),
 );) ?>
@@ -72,7 +72,8 @@ Your company profile can be modified using the fields below. Use the <b>Save</b>
 					</li>
 					<li> 
 						<label for="phone">Phone</label>
-						<input type="tel" id="phone" name="phone" value="<? hecho ( $$variable{'Company'}->phone() ) ?>" />
+						<input type="tel" id="phone" name="phone" value="<? hecho ( $$variable{'Company'}->phone() ) ?>" /> x
+						<input type="tel" id="extension" name="extension" value="<? hecho ( $$variable{'Company'}->extension() ) ?>" />
 					</li>
 					<li> 
 						<label for="fax">Fax</label>
@@ -82,9 +83,11 @@ Your company profile can be modified using the fields below. Use the <b>Save</b>
 			</fieldset>
 		</div>
 		<?include(/account/_business_information.html)?>
+		<?include(/account/_company_account_information.html)?>
 		<?include(/includes/_credit_view.html)?>
+<?include(_company_profile_edit.html)?>
 	<? if ( sets::isin( $session{'user_type'}, ['A','E'] ) ) ?>
-		<?include(_sales_view.html)?>
+		<?include(_sales_edit.html)?>
 	<? endif ( sets::isin( $session{'user_type'}, ['A','E'] ) ) ?>
 		<?include(/account/_bank_information.html)?>
 		<?include(/account/_trade_references.html)?>
@@ -95,7 +98,7 @@ Your company profile can be modified using the fields below. Use the <b>Save</b>
 					<label for="currency_id">Preferred Currency</label>
 					<select id="currency_id" name="currency_id">
 						<option value=""> Please select a Currency </option>
-						<? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::Currency->find( 'order'=>'lower(name)' ) ], $$variable{'Company'}->currency_id() ); ) ?>
+						<? echo ( make_drop_down( openprint::Currency->dropdown( order=>'lower(name)' ), $$variable{Company}->currency_id() ); ) ?>
 					</select>
 				</li>
 	<? if ( sets::isin( $session{'user_type'}, ['A','E'] ) ) ?>

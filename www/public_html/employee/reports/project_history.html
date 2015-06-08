@@ -10,15 +10,16 @@
 </div>
 <form id="f1" name="f1" method="post" action="/employee/reports/project_history.html">
 	<fieldset class="filters"><legend>Report Criteria</legend>
+<div class="leftColumn">
 <ul>
 		<? if ( $session{user_type} eq 'A' or openprint::usergroup::is_user_in( ['Sales Admin','Reports'], $session{user_id} ) ) ?>
 		<li>
 			<label>CSR</label>
-			<select name="CSR" size="1" onchange="new Ajax.Updater('company_id', '/includes/_company_ddm.html', { parameters: { salesrep_id: get_ddm_value(this), selected_id: get_ddm_value($('company_id')) } } );">
+			<select name="CSR" size="1" onchange="filter_companies('company_id', { name: this.form.company_filter.value,selected_id: get_ddm_value($('company_id')),salesrep_id: get_ddm_value(this) } );">
 			<? echo (
 					my @options = ( '', 'All' );
 					push @options, map { $_->id(), $_->name() } openprint::User->find('type'=>['E','A'], 'usergroup any'=>'Sales', 'order'=>'lower(firstname),lower(lastname)');
-					return ssi::make_drop_down( \@options, $session{'/employee/reports/project_history.html?CSR'} );
+					make_drop_down( \@options, $session{'/employee/reports/project_history.html?CSR'} );
 					) ?>
 
 			 </select>
@@ -26,10 +27,10 @@
 		<? endif ( $session{user_type} eq 'A' or openprint::usergroup::is_user_in( ['Sales Admin','Reports'], $session{user_id} ) ) ?>
 		<li>
 			<label>Company</label>
-			<input type="text" onkeyup="filterDDM(this, f1.company_id);" class="filter" />
-			<select name="company_id" id="company_id">
+			<input name="company_filter" class="filter" type="text" oninput="filter_companies('company_id', { name: this.value,selected_id: get_ddm_value($('company_id')),salesrep_id: get_ddm_value(this.form.CSR) } );" />
+			<select name="company_id" id="company_id" onchange="stop_filter_companies();">
 				<option value="">All</option>
-				<? echo ( openprint::Company::get_dropdown( $session{'/employee/reports/project_history.html?company_id'} ); ) ?>
+				<? echo ( make_drop_down( openprint::Company->dropdown( 'last_project_id is null'=>0), $session{'/employee/reports/project_history.html?company_id'} ); ) ?>
 			</select>
 		</li>
 		<li>
@@ -63,9 +64,13 @@
 			) ?>
 			</select>
 		</li>
+		</ul>
+		</div>
+		<div class="leftColumn">
+		<ul>
 		<li><label>Status Change On</label>
-			<? echo ( date_select_session('/employee/reports/project_history.html', 'status_on_start', { 'with_today'=>1,'with_clear'=>1 } ); ) ?> to
-			<? echo ( date_select_session('/employee/reports/project_history.html', 'status_on_end', { 'with_today'=>1,'with_clear'=>1 } ); ) ?>
+			<? echo ( date_select_session('/employee/reports/project_history.html', 'status_on_start', { 'with_today'=>1,'with_clear'=>1, with_time=>1 } ); ) ?> to
+			<? echo ( date_select_session('/employee/reports/project_history.html', 'status_on_end', { 'with_today'=>1,'with_clear'=>1, with_time=>1 } ); ) ?>
 		</li>
 		<li>
 			<label>Created On</label>
@@ -92,10 +97,17 @@
 		</li>
 		<li><label>Reprint</label>
 			<? echo (
-				return ssi::radio( 'reprint', [ 'Y', 'Yes', 'N', 'No', '', 'Both' ], $session{'/employee/reports/project_history.html?reprint'} );
+				radio( 'reprint', [ 'Y', 'Yes', 'N', 'No', '', 'Both' ], $session{'/employee/reports/project_history.html?reprint'} );
 			) ?>
 		</li>
+		<li><label>Type</label>
+				<select id="type_id" name="type_id">
+					<option value="">All</option>
+					<? echo ( make_drop_down( openprint::ProjectType->dropdown( order=>'lower(name)' ), $session{$r->uri().'?type_id'} ); ) ?>
+				</select>
+		</li>
 		</ul>
+		</div>
 		 <p class="buttons">
 			 <? echo ( button( 'Go', { onclick=>'load_contents(f1);', text=>'Show Results' } ); ) ?>
 		 </p>
