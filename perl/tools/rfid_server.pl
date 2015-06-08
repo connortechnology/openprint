@@ -46,7 +46,7 @@ sub Checkout_Skid {
 		$changed = 1;	
 		$Skid->location_id( $Scanner->location_id() );
 	} # end if
-	my $error = $Skid->save() if ! $changed;
+	my $error = $Skid->save() if $changed;
 	if ( $error ) {
 		$context->log(1, sprintf('%s : %s : error saving skid: %s', $date, $context->{server}->{peeraddr}, $error ));
 	} else {
