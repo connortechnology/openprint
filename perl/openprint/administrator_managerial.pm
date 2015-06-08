@@ -966,7 +966,8 @@ sub companies {
 	_companies();
 } # end sub companies
 sub _companies {
-	ssi::save_params( '/administrator/managerial/companies.html', ( 'salesrep_id', 'marketing_category_id',
+	ssi::save_params( '/administrator/managerial/companies.html', ( 
+				'salesrep_id', 'marketing_category_id', 'company_name',
 				( map { 'created_on_start_' . $_ } ( 'year','month','day' ) ),
 				) );
 	$session{$r->uri().'?salesrep_id_exclude'} = $param{salesrep_id_exclude};
