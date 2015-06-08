@@ -26,7 +26,7 @@ my $program = basename($0);
 
 my $opts = {};
 GetOptions($opts, 'help',
-    'db_name=s', 'db_host=s', 'db_user=s', 'db_pass=s','table=s', 'debug=s', 'version=s',
+    'db_name=s', 'db_host=s', 'db_user=s', 'db_pass=s','table=s', 'debug=s', 'version=s', 'limit=s',
  );
 
 if ($opts->{help}) {
@@ -105,7 +105,7 @@ foreach my $table ( $$opts{table} ? split(',',$$opts{table} ) : @tables ) {
 			} # end if
 			push @values, $value;
 		}
-print sprintf( $format_string, @values );
+#print sprintf( $format_string, @values );
 		print FH sprintf( $format_string, @values );
 	} # end foreach Cmompany
 	close( FH );

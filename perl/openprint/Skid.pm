@@ -17,7 +17,7 @@ require openprint::SkidContent;
 require openprint::InventoryCondition;
 require openprint::PaperAllocation;
 
-$debug = 1;
+$debug = 0;
 
 $table = 'Skids';
 $serial = 'skid_id_seq';
@@ -120,7 +120,7 @@ sub find {
 			push @values, $params{paper_id};
 		} # end if
 	} elsif ( $params{'quantity >='} ) {
-		$sql .= ' AND ((SELECT quantity FROM skid_contents where skid_id=skids.id) >= ?)';
+		$sql .= ' AND ((SELECT MAX(quantity) FROM skid_contents where skid_id=skids.id) >= ?)';
 		push @values, $params{'quantity >='};
 	} # end if
 
@@ -313,7 +313,7 @@ sub find {
 
 	my $data = $openprint::dbh->selectall_arrayref( $sql, { Slice => {} }, @values );
 	if ( ! $data ) {
-		$log->debug("Error loading skids SQL($sql)" . DBI->errstr );
+		$log->error("Error loading skids SQL($sql)" . $openprint::dbh->errstr );
 	} elsif ( $debug ) {
 		$log->debug("Debug loaded skids ($sql) (@values) # of results: " . @$data );
 	} # end if
@@ -577,6 +577,7 @@ sub checkout {
 		} # end if
 		return 1;
 	} # end if
+	$self->lock();
 
 	foreach my $C ( @contents ) {
 		if ( ! openprint::PaperInventory->find( skid_id=>$$self{id}, 'comment like'=>'Checked out%' ) ) {
@@ -598,9 +599,11 @@ sub checkout {
 			$e .=   $C->save();
 			$e .= $C->Paper()->save(); # Must update in_stock
 			$log->error( $e ) if $e;
+			$self->unlock();
 			return 1;
 		} # end if not already checked out
 	} # end foreach Content
+	$self->unlock();
 	return 0;
 } # end sub checkout
 
@@ -886,6 +889,16 @@ sub units {
 		} # end if
 	} # end if
 	return $_[0]{units};
+}
+
+sub quantity {
+	if ( ! $_[0]{quantity} ) {
+		my @Contents = $_[0]->Contents();
+		if ( @Contents ) {
+			$_[0]{quantity} = $Contents[0]->quantity();
+		} # end if
+	} # end if
+	return $_[0]{quantity};
 }
 
 1;

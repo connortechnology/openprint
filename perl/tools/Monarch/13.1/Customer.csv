@@ -7,13 +7,13 @@
 "City","$Object->city","Text",169,40,208,"Customer City",,,,
 "State","$Object->state()","Text",209,3,211,"Customer State","Yes*",,,"Validated if automated taxes function is activated."
 "Zip","$Object->postalcode()","Text",212,10,221,"Customer Zip Code","Yes*","Yes*",,"Validated and required if automated taxes function is activated."
-"Country","$Object->country()","Text",222,40,261,"Customer Country","Yes*","Yes*",,"Validated and required if ILS is active for Outbound Shipping or FG"
+"Country","$Object->Country()->three_letter()","Text",222,40,261,"Customer Country","Yes*","Yes*",,"Validated and required if ILS is active for Outbound Shipping or FG"
 "Phone","$Object->phone()","Text",262,20,281,"Customer Phone Number",,,,
 "FAX","$Object->fax()","Text",282,20,301,"Customer Fax Number",,,,
 "E-Mail-Address","$Object->email()","Text",302,80,381,"Customer Email Address",,,,
 "AR-Tax-Code","$Object->tax_code()","Text",382,10,391,"AR Tax Code","Yes","Yes",,
 "Terms-Code","$Object->Credit(6)->code()","Text",392,20,411,"Terms Code","Yes",,,
-"Sales-agent-id","$Object->salesrep_id() ? $Object->CSR()->code() : 'DL'","Text",412,8,419,"Salesperson Code","Yes","Yes",,
+"Sales-agent-id","sets::isin( $Object->salesrep_id(), [undef, '', 9684, 9683, 4324 ] )  ? '999999' : $Object->CSR()->code()","Text",412,8,419,"Salesperson Code","Yes","Yes",,
 "CSR-ID","$Object->salesrep_id() ? $Object->CSR()->code() : 'DL'","Text",420,3,422,"Customer Service Representative","Yes",,,
 "territory-id",,"Text",423,12,434,"Sales Region ID","Yes",,,
 "Cust-ID-Bill-to",,"Text",435,8,442,"Master Billing Customer Code (see Tip)","Yes",,,"Leave blank if not used. If used, must be a valid customer ID."

@@ -89,7 +89,8 @@ $openprint::log->error("use of deprecated method Location parent");
 	return new openprint::Location( $_[0]{parent_id}) if $_[0]{parent_id};
 } # end sub parent
 sub Parent {
-	return new openprint::Location( $_[0]{parent_id}) if $_[0]{parent_id};
+	return new openprint::Location( $_[0]{parent_id}); # if $_[0]{parent_id};
+	return;
 } # end sub parent
 sub Root {
 	my $P = shift;
@@ -812,5 +813,18 @@ sub html {
 			);
 	return $html;
 } # end  sub html
+
+sub three_letter {
+	if ( ! $_[0]{three_letter} ) {
+		if ( $_[0]->type() eq 'country' ) {
+			require Locale::Country;
+			$_[0]{three_letter} = uc Locale::Country::country2code( $_[0]{name}, 'alpha-3' );
+			if ( ! $_[0]{three_letter} ) {
+				$openprint::log->warn("No code found for $_[0]{name}");
+			}
+		} # end if
+	} # end if
+	return $_[0]{three_letter};
+} # end sub three_letter
 1;
 __END__
