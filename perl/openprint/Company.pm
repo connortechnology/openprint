@@ -435,7 +435,7 @@ sub Profile {
 } # end sub Profile
 
 sub tax_code {
-	if ( $_[0]{gst_exempt} ) {
+	if ( $_[0]{gst_exempt} eq 'Y' ) {
 		return '1';
 	} else {
 		require openprint::Tax;
