@@ -603,6 +603,9 @@ sub checkout {
 			$C->quantity( 0 );
 			$e .= $C->save();
 			$e .= $Paper->save(); # Must update in_stock
+			if ( $Paper->in_stock() != $PI->instock ) {
+				$log->error("What just happened?! $$Paper{in_stock} != $$PI{instock}");
+			} # end if
 			$log->error( $e ) if $e;
 			$Paper->unlock();
 			$rc = 1;
