@@ -1846,7 +1846,7 @@ sub signature_summary {
 		my @folds;
 		if ( ( defined $$specs{"chkOverrideEquipment-$form-$qty_index"} ) and ( $$specs{"chkOverrideEquipment-$form-$qty_index"} eq 'Y' ) and ! $$specs{"ddmEquipment-$form-$qty_index"} ) {
 			return 'not folded';
-		} else {
+		} elsif ( $$specs{"ddmEquipment-$form-$qty_index"} ) {
 		my $Equipment = new openprint::Equipment( $$specs{"ddmEquipment-$form-$qty_index"} );
 		foreach my $fold_index ( 1 .. 4 ) {
 			next if ! $$specs{"FoldQty-$form-$qty_index-$fold_index"};
@@ -2288,74 +2288,76 @@ foreach my $k ( sort { $a cmp $b } keys %$folding_specs ) {
 	$openprint::log->debug("$k=>$$folding_specs{$k}");
 }
 }
+	if ( ! $$folding_specs{"ddmEquipment-$form-$qty_index"} ) {
+$openprint::log->debug("Has no equipment_id");
+		return ();
+	} # end if has equipment
+
 	foreach my $fold_index ( 1 .. 4 ) {
 		next if ! $$folding_specs{"FoldQty-$form-$qty_index-$fold_index"};
 		next if ! $$folding_specs{"FoldType-$form-$qty_index-$fold_index"};
-		if ( $$folding_specs{"ddmEquipment-$form-$qty_index"} ) {
-			my $Imposition = $Source_Imposition->copy();
-			$Imposition->dutch_columns( 0 ); # CDan't have dutch
-			$Imposition->dutch_rows( 0 ); # CDan't have dutch
-			$Imposition->columns( $$folding_specs{"FoldColumns-$form-$qty_index-$fold_index"} );
-			$Imposition->rows( $$folding_specs{"FoldRows-$form-$qty_index-$fold_index"} );
-			$Imposition->quantity( $$folding_specs{"FoldQty-$form-$qty_index-$fold_index"} );
-			
-			$$Imposition{impressions} = $$folding_specs{"FoldImpressions-$form-$qty_index-$fold_index"};
-			$$Imposition{impressions} = ( $$folding_specs{"txtQuantity$qty_index"} / $Source_Imposition->imposition() ) * ( $Imposition->quantity() ) if ! $$Imposition{impressions};
-			my $Folder = new openprint::Equipment( $$folding_specs{"ddmEquipment-$form-$qty_index"} );
-			$$Imposition{Folder} = $Folder;
-			$Imposition->Press( $Folder );
 
-			my $Paper = $Imposition->Paper();
+		my $Imposition = $Source_Imposition->copy();
+		$Imposition->dutch_columns( 0 ); # CDan't have dutch
+		$Imposition->dutch_rows( 0 ); # CDan't have dutch
+		$Imposition->columns( $$folding_specs{"FoldColumns-$form-$qty_index-$fold_index"} );
+		$Imposition->rows( $$folding_specs{"FoldRows-$form-$qty_index-$fold_index"} );
+		$Imposition->quantity( $$folding_specs{"FoldQty-$form-$qty_index-$fold_index"} );
+
+		$$Imposition{impressions} = $$folding_specs{"FoldImpressions-$form-$qty_index-$fold_index"};
+		$$Imposition{impressions} = ( $$folding_specs{"txtQuantity$qty_index"} / $Source_Imposition->imposition() ) * ( $Imposition->quantity() ) if ! $$Imposition{impressions};
+		my $Folder = new openprint::Equipment( $$folding_specs{"ddmEquipment-$form-$qty_index"} );
+		$$Imposition{Folder} = $Folder;
+		$Imposition->Press( $Folder );
+
+		my $Paper = $Imposition->Paper();
 #$Imposition->display();
-			my $find = {
-								type 			=>	$$folding_specs{"FoldType-$form-$qty_index-$fold_index"},
-								#pages			=>	$Imposition->pages(),
-								#page_columns	=>	$Imposition->page_columns(),
-								#page_rows		=>	$Imposition->page_rows(),
-								page_width		=>	$Imposition->page_width(),
-								page_height		=>	$Imposition->page_height(),
-								spine_direction =>	$$Imposition{image_orientation},
-								gsm				=>	$Paper->gsm(),
-								imposition		=>	$$Imposition{imposition},
-								columns			=>	$$Imposition{columns},
-								rows			=>	$$Imposition{rows},
-								calliper		=>	$$Paper{calliper},
-								#printing_type	=>	$ppt,
-								};
-			my $Fold = $Folder->Fold( $find );
-			if ( ! $Fold ) {
-				if ( $$folding_specs{"chkOverrideFold-$form-$qty_index"} eq 'Y' ) {
-					$openprint::log->debug("Was overriden");
-				} else {
-					$_ = Data::Dumper::Dumper($find);
-					$openprint::log->error("CAnt get fold! on " . $Folder->to_string() . $_);
-					$_ = Data::Dumper::Dumper($folding_specs);
-					$openprint::log->error("CAnt get fold! on " . $Folder->to_string() . $_);
-					#Carp::cluck( "CAnt get fold! $form-$qty_index-$fold_index on " . $Folder->to_string() ."\n". $_ . join("\n", map { $_ . '=>' . $openprint::param{$_} } sort keys %openprint::param ));
-				} # end if
+		my $find = {
+			type 			=>	$$folding_specs{"FoldType-$form-$qty_index-$fold_index"},
+#pages			=>	$Imposition->pages(),
+#page_columns	=>	$Imposition->page_columns(),
+#page_rows		=>	$Imposition->page_rows(),
+			page_width		=>	$Imposition->page_width(),
+			page_height		=>	$Imposition->page_height(),
+			spine_direction =>	$$Imposition{image_orientation},
+			gsm				=>	$Paper->gsm(),
+			imposition		=>	$$Imposition{imposition},
+			columns			=>	$$Imposition{columns},
+			rows			=>	$$Imposition{rows},
+			calliper		=>	$$Paper{calliper},
+#printing_type	=>	$ppt,
+		};
+		my $Fold = $Folder->Fold( $find );
+		if ( ! $Fold ) {
+			if ( $$folding_specs{"chkOverrideFold-$form-$qty_index"} eq 'Y' ) {
+				$openprint::log->debug("Was overriden");
 			} else {
-				$openprint::log->debug("Got FOld: " . $Fold->to_string() ) if DEBUG;
-				$Imposition->Fold( $Fold );
-				if ( $Imposition->image_orientation() eq 'Vertical' ) {
-					$Imposition->page_rows( $Fold->page_rows() );
-					$Imposition->page_columns( $Fold->page_columns() );
-				} else {
-					$Imposition->page_rows( $Fold->page_columns() );
-					$Imposition->page_columns( $Fold->page_rows() );
-				} # end if
-				if ( $Fold->pages() ) {
-					$$Imposition{pages} = $Fold->pages();
-					$Imposition->page_quantity( $$folding_specs{"FoldPageQty-$form-$qty_index-$fold_index"} );
-					if ( ! $$Imposition{page_quantity} ) {
-						$$Imposition{page_quantity} = $Source_Imposition->pages() / $Fold->pages();
-					} # end if
-				} # end if
-
-				push @folds, $Imposition;
-			} # end if Found fold
+				$_ = Data::Dumper::Dumper($find);
+				$openprint::log->error("CAnt get fold! on form $form qty $qty_index dmEquiment was " . $$folding_specs{"ddmEquipment-$form-$qty_index"}." " . $Folder->to_string() . $_);
+				#$_ = Data::Dumper::Dumper($folding_specs);
+				#$openprint::log->error("CAnt get fold! on " . $Folder->to_string() . $_);
+#Carp::cluck( "CAnt get fold! $form-$qty_index-$fold_index on " . $Folder->to_string() ."\n". $_ . join("\n", map { $_ . '=>' . $openprint::param{$_} } sort keys %openprint::param ));
+			} # end if
 		} else {
-$openprint::log->debug("Has no equipment_id");
-		} # end if has equipment
+			$openprint::log->debug("Got FOld: " . $Fold->to_string() ) if DEBUG;
+			$Imposition->Fold( $Fold );
+			if ( $Imposition->image_orientation() eq 'Vertical' ) {
+				$Imposition->page_rows( $Fold->page_rows() );
+				$Imposition->page_columns( $Fold->page_columns() );
+			} else {
+				$Imposition->page_rows( $Fold->page_columns() );
+				$Imposition->page_columns( $Fold->page_rows() );
+			} # end if
+			if ( $Fold->pages() ) {
+				$$Imposition{pages} = $Fold->pages();
+				$Imposition->page_quantity( $$folding_specs{"FoldPageQty-$form-$qty_index-$fold_index"} );
+				if ( ! $$Imposition{page_quantity} ) {
+					$$Imposition{page_quantity} = $Source_Imposition->pages() / $Fold->pages();
+				} # end if
+			} # end if
+
+			push @folds, $Imposition;
+		} # end if Found fold
 #$folding_imposition->display('Fold ' . $$folding_specs{"FoldType-$form-$qty_index-$fold_index"} ) if DEBUG;
 	} # end foreach fold_index
 if ( ! @folds ) {
@@ -2370,15 +2372,15 @@ sub compare_folds {
 	my @FoldsA = get_Folds( $specs, $sig_specsA, $qty_index );
 	my @FoldsB = get_Folds( $specs, $sig_specsB, $qty_index );
 	if ( @FoldsA != @FoldsB ) {
-	$openprint::log->debug("Fold count different");
-	return 0 
+		$openprint::log->debug("Fold count different");
+		return 0 
 	}
 		
 	if ( $FoldsA[0]{Folder}{id} != $FoldsB[0]{Folder}{id} ) {
-	$openprint::log->debug("Folder different");
+		$openprint::log->debug("Folder different");
 		return 0 ;
 	} else {
-	$openprint::log->debug("Folder same $FoldsA[0]{Folder}{id} = $FoldsB[0]{Folder}{id}");
+		$openprint::log->debug("Folder same $FoldsA[0]{Folder}{id} = $FoldsB[0]{Folder}{id}");
 	}
 	return 1;
 }
