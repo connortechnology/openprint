@@ -12,6 +12,7 @@ $serial= 'inventory_checks_id_seq';
 	name	=>	'name',
 	created_on	=>	'created_on',
 	started_on	=>	'started_on',
+	contains	=>	'contains', # 'sheets','rolls', etc'
 	ended_on	=>	'ended_on',
 );
 %transforms = (
