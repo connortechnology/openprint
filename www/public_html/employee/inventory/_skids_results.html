@@ -89,9 +89,14 @@
 			my @types = split(',',$session{'/employee/inventory/skids.html?type'} );
 			if ( @types ) {
 				if ( sets::isin( 'Unknown', \@types ) ) {
-			$sql{'type is null or in'}		= [ map { $_ ne 'Unknown' ? $_ : () } @types ];
+					my @others = sets::exclude( [ 'Unknown' ], \@types ) ;
+					if ( @others ) {
+						$sql{'type is null or in'}		= [ map { $_ ne 'Unknown' ? $_ : () } @types ];
+					} else {
+						$sql{'type is null'}		= 1;
+					}
 				} else {
-			$sql{type}		= \@types;
+					$sql{type}		= \@types;
 				} # end if
 			} # end if
 		}
