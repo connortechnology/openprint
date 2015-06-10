@@ -75,13 +75,13 @@
 			order		=>	'id',
 			( $session{'/employee/inventory/skids.html?deleted'} ? ( deleted => [ split(',', $session{'/employee/inventory/skids.html?deleted'} ) ] ) : () ),
 		);
-		$sql{'has_manifest_id'} = 1 if $session{'/employee/inventory/skids.html?hasmanifest'} eq 'Y';
-		$sql{'has_manifest_id'} = 0 if $session{'/employee/inventory/skids.html?hasmanifest'} eq 'N';
+		$sql{'manifest_id exists'} = 1 if $session{'/employee/inventory/skids.html?hasmanifest'} eq 'Y';
+		$sql{'manifest_id exists'} = 0 if $session{'/employee/inventory/skids.html?hasmanifest'} eq 'N';
 		if ( $session{'/employee/inventory/skids.html?hasmanufacturers'} eq 'N' ) {
-			$sql{'has manufacturers_id'} = 0;
+			$sql{'manufacturers_id is null'} = 1;
 		}
 		if ( $session{'/employee/inventory/skids.html?hasmanufacturers'} eq 'Y' ) {
-			$sql{'has manufacturers_id'} = 1;
+			$sql{'manufacturers_id is null'} = 0;
 		}
 
 		
@@ -100,7 +100,7 @@
 				} # end if
 			} # end if
 		}
-		$sql{condition_id} = $session{'/employee/inventory/skids.html?condition_id'} if $session{'/employee/inventory/skids.html?condition_id'};
+		$sql{'condition_id any'} = $session{'/employee/inventory/skids.html?condition_id'} if $session{'/employee/inventory/skids.html?condition_id'};
 
 		if ( $session{'/employee/inventory/skids.html?location_id'} ) {
 			if ( $session{'/employee/inventory/skids.html?location_id'} eq 'None' ) {
@@ -110,11 +110,17 @@
 				$sql{'location_id'} = [ map { $_->id() } ( $Location, $Location->get_all_children() ) ];
 			} # end if
 		} # end if
+		if ( $session{'/employee/inventory/skids.html?empty'} eq 'Y' ) {
+			$sql{'quantity is null or ='} = 0;
+		} elsif ( $session{'/employee/inventory/skids.html?empty'} eq 'N' ) {
+			$sql{'quantity >='} = 1;
+		}
+
 		$$variable{Skids} = [ openprint::Skid->find( %sql ) ];
 
 	} # end if
 	if ( @{$$variable{'Skids'}} > 100 ) {
-		openprint::Location->find();
+		openprint::Location->find( type=>'place' );
 		openprint::Manufacturer->find();
 		openprint::StockBrand->find();
 		openprint::StockFinish->find();
@@ -160,21 +166,14 @@
 			} # end foreach
 			my @skid_ids = map { $$_{id} } @{$$variable{'Skids'}};
 			my %SkidContents;
-			my %empty;
+$log->debug("Loading SkidContent" );
 			foreach my $SC ( openprint::SkidContent->find( skid_id => \@skid_ids ) ) {
 				push @{$SkidContents{$$SC{skid_id}}}, $SC;
-				$empty{$$SC{skid_id}} += $$SC{quantity};
 			} # end foreach SC
+$log->debug("Done Loading SkidContent" );
 
 			foreach my $Skid ( @{$$variable{'Skids'}} ) {
 				$Skid->Contents( $SkidContents{$$Skid{id}} ? $SkidContents{$$Skid{id}} : [] );
-				my $empty = $empty{$$Skid{id}};
-				if ( $session{'/employee/inventory/skids.html?empty'} eq 'Y' ) {
-                    next if $empty;
-                } # end if
-                if ( $session{'/employee/inventory/skids.html?empty'} eq 'N' ) {
-                    next if ! $empty;
-                } # end if
 				if ( $session{'/employee/inventory/skids.html?contents'} eq 'Y' ) {
                     next if ! $Skid->Contents();
                 } # end if
@@ -210,6 +209,7 @@
 						next if ! $session{'/employee/inventory/skids.html?rfid_valid'} eq 'Y';
 					} # end if
 				} # end if
+$log->debug("Done Getting RFIDTAG");
 				
 
 				$html .= sprintf('<tr%1$s>

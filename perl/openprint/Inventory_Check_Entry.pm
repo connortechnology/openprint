@@ -6,7 +6,7 @@ require openprint::Location;
 
 use vars qw( $debug $table $serial %fields %transforms %defaults );
 
-$debug = 0;
+$debug = 1;
 $table = 'inventory_check_entries';
 $serial= 'inventory_check_entries_id_seq';
 %fields = (
@@ -89,7 +89,7 @@ sub rfidtag_id {
 	}
 
 	if ( $_[0]{rfidtag_id} and ( length $_[0]{rfidtag_id} < 15 ) ) {
-$openprint::log->debug("Formatting: $_[0]{rfidtag_id} to 2" . sprintf('%014d', $_[0]{rfidtag_id} ) );
+#$openprint::log->debug("Formatting: $_[0]{rfidtag_id} to 2" . sprintf('%014d', $_[0]{rfidtag_id} ) );
 		$_[0]{rfidtag_id} = '2'.sprintf('%014d', $_[0]{rfidtag_id} );
 	}
 	
@@ -101,18 +101,18 @@ sub quantity {
 		my $Skid = $_[0]->Skid();
 		if ( $$Skid{id} ) {
 			my @C = $Skid->Contents();
-			if ( @C ==1 ) {
+			if ( @C == 1 ) {
 				if ( $_[0]{dimension2} and $_[0]{dimension1} ) {
 					my $Paper = $C[0]->Paper();
 					if ( $Paper->type() ne 'Sheet' ) {
-						$_[0]{quantity} = $_[0]{dimension2} * $_[0]{dimension2} - 9 * $_[0]{dimension1} * 0.37;
+						$_[0]{quantity} = Math::Round::nearest(1, $_[0]{dimension2} * $_[0]{dimension2} - 9 * $_[0]{dimension1} * 0.37 );
 					} # end if
 				} else {
 					$_[0]{quantity} = $C[0]{quantity};
 				}
 			} # end if only 1 stock
 		} else {
-			$_[0]{quantity} = $_[0]{dimension2} * $_[0]{dimension2} - 9 * $_[0]{dimension1} * 0.37;
+			$_[0]{quantity} = Math::Round::nearest( 1, $_[0]{dimension2} * $_[0]{dimension2} - 9 * $_[0]{dimension1} * 0.37 );
 
 		} # skid was found
 	}
@@ -121,6 +121,12 @@ sub quantity {
 
 sub Location {
 	return new openprint::Location( $_[0]{location_id} );
+}
+
+sub check {
+	return 'No Skid.' if ! $_[0]->Skid()->id();
+	return 'Quantity not the same: Check has ' . $_[0]->quantity() . ' Skid has ' . $_[0]->Skid()->quantity() if $_[0]->quantity() != $_[0]->Skid()->quantity();
+	return '';
 }
 
 1;

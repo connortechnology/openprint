@@ -21,6 +21,18 @@
 	openprint::Location->find( type=>'place' );
 
 	my @Contents = openprint::Inventory_Check_Entry->find( ic_id=>$$variable{Check}->id(), order=>'skid_id,rfidtag_id' );
+	foreach my $ICE ( @Contents ) {
+		if ( $$ICE{rfidtag_id} ne $ICE->rfidtag_id() ) {
+			$ICE->save();
+		}
+
+		if ( $$ICE{skid_id} and ! $$ICE{rfidtag_id} and $ICE->rfidtag_id() ) {
+			$ICE->save();
+		} elsif ( $$ICE{rfidtag_id} and ( ! $$ICE{skid_id} ) and $ICE->Skid() and $ICE->Skid()->id() ) {
+			$ICE->save( { skid_id => $ICE->Skid()->id() } );
+		}
+	}
+
 	my @skid_ids = map { $$_{skid_id} } @Contents;
 	my %SkidContents;
 	foreach my $SC ( openprint::SkidContent->find( skid_id => \@skid_ids ) ) {
@@ -47,18 +59,19 @@
 		}
 		
 		my $Skid = $ICE->Skid();
+	my $check = $ICE->check();
 
 		$html .= sprintf('
-<tr%1$s id="entry-%12$d" title="entry %12$d">
+<tr class="%13$s%1$s" id="entry-%12$d" title="entry %12$d">
 		<td class="Skid">%2$s</td>
 		<td class="RFIDTag">%3$s</td>
 		<td class="Width">%5$s</td>
 		<td class="Diameter">%6$s</td>
 		<td class="Quantity">%4$s</td>
 		<td class="Location" rowspan="2">%11$s</td>
-		<td class="Notes" rowspan="2">%7$s</td>
+		<td class="Notes" rowspan="2">%7$s<br/>%14$s</td>
 		<td class="buttons" rowspan="2">%10$s</td>
-	</tr><tr%1$s><td colspan="4">%8$s</td><td class="Quantity">%9$s</td></tr>',
+	</tr><tr class="%13$s%1$s"><td colspan="4">%8$s</td><td class="Quantity">%9$s</td></tr>',
 		$rowclass,
 		$Skid->link_to(),
 		$ICE->RFIDTag()->link_to(),
@@ -74,11 +87,13 @@
 
 		( $ICE->Location()->name() . ' was ' . $ICE->Skid()->Location()->name() ),
 		$ICE->id(),
+		($check ? 'warning' : '' ),
+		$check,
 		);
 
 		$total_weight += $ICE->quantity();
 		
-		$rowclass = $rowclass?'':' class="colRow"';
+		$rowclass = $rowclass?'':' colRow';
 	} # end foreach ICE
 	$html .= '<tr class="totals"><td colspan="2"># of items in check: ' . scalar @Contents . '</td><td class="Quantity">'.Number::Format::format_number(int($total_weight)).'lbs</td><td></td><td></td><td></td><td></td></tr>';
 	return $html;

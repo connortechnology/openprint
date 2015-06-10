@@ -14,7 +14,7 @@ use constant PI => atan2(1,1)*4;
 # 3.14159265358979;
 
 use vars qw( $debug $table $serial %fields %find_fields %transforms %defaults $default_sort $cache_field $cached );
-$debug = 1;
+$debug = 0;
 $cached = 0;
 $cache_field='short';
 $default_sort = 'lower(name)';
@@ -91,7 +91,8 @@ $openprint::log->error("use of deprecated method Location parent");
 	return new openprint::Location( $_[0]{parent_id}) if $_[0]{parent_id};
 } # end sub parent
 sub Parent {
-	return new openprint::Location( $_[0]{parent_id}); # if $_[0]{parent_id};
+	# _map has code that does while ( $_->Parent() = ) 
+	return new openprint::Location( $_[0]{parent_id}) if $_[0]{parent_id};
 	return;
 } # end sub parent
 sub Root {

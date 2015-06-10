@@ -165,12 +165,22 @@ sub value {
     return $$self{'value'};
 } # end sub value
 
+sub Manifest_Contents {
+	require openprint::ManifestContent;
+    my @MCS = openprint::ManifestContent->find( skid_id=>$_[0]{skid_id}, order=>'id' );
+	return @MCS;
+}
+
 sub checked_out {
 	if ( ! exists $_[0]{checked_out} ) {
-		$_[0]{checked_out} = openprint::PaperInventory->find( skid_id=>$_[0]{skid_id}, paper_id=>$_[0]{paper_id}, 'comment like'=>'Checked out%' ) ? 1 : 0; 
+		$_[0]{checked_out} = openprint::PaperInventory->find_one( skid_id=>$_[0]{skid_id}, paper_id=>$_[0]{paper_id}, 'comment like'=>'Checked out%' ); 
 	} 
 	return $_[0]{checked_out};
 } # end sub checked_out
+
+sub to_string {
+	return sprintf('%s%s of %s', Number::Format::format_number( $_[0]{quantity} ), $_[0]->units(), $_[0]->Paper()->to_string() );
+}
 
 1;
 __END__

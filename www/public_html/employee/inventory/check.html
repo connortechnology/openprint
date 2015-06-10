@@ -51,7 +51,7 @@ function load_entries() {
 			<li><label>Has Quantity?</label><?echo(radio('has_quantity', ['1','Yes','0','No','','Both'], $session{$r->uri().'?has_quantity'}, { onclick=>'load_entries();' } );)?></li>
 		</ul>
 	</fieldset>
-	<div id="Entries"><?include(_check_entries.html)?></div>
+	<div id="Entries"><? echo ( include('_check_entries.html') ) ?></div>
 </fieldset>
 <fieldset><legend>System Contents not in Check</legend>
 	<div id="SystemContents"><?include(_check_system_contents.html)?></div>

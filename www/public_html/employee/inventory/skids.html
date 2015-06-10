@@ -191,6 +191,9 @@ Please select a Skid to view/edit.<br/>
     openprint::StockQuality->find();
     openprint::StockMaterial->find();
     my @Papers = openprint::Paper->find( %find );
+	if ( ! @Papers ) {
+		$log->error("No papers in skids find was %find");
+	}
     my %filter_validations;
 
 	# contains a mapping from Brand to PointOne Coated to brand_id for POintONe Coated?

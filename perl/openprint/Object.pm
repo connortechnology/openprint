@@ -1194,12 +1194,12 @@ sub lock {
 	my $type = ref $_[0];
 	if ( $_[0]{ac} ) {
 		#already locked
-		$openprint::log->debug("ALREADY LOCKED $type for $_[0]{id} ac: $_[0]{ac} caller: $caller line: $line object ref:" . $_[0]);
+		$openprint::log->debug("ALREADY LOCKED $type for $_[0]{id} ac: $_[0]{ac} caller: $caller line: $line object ref:" . $_[0]) if DEBUG_ALL;
 		$_[0]{ac} += 1;
 	} else {
 		$_[0]{ac} = sql::start_transaction( $openprint::dbh );
-		$openprint::log->debug("LOCKING $type for $_[0]{id} ac: $_[0]{ac} caller: $caller line: $line object ref:" . $_[0]);
-		my $table = ${$type.'::table'};
+		$openprint::log->debug("LOCKING $type for $_[0]{id} ac: $_[0]{ac} caller: $caller line: $line object ref:" . $_[0]) if DEBUG_ALL;
+		my $table = eval '$'.$type.'::table';
 		$dbh->do( "LOCK TABLE $table IN EXCLUSIVE MODE" ) or $log->error( DBI->errstr );
 	} # end if
 
@@ -1208,12 +1208,12 @@ sub lock {
 sub unlock {
 	my ( $caller, undef, $line ) = caller;
 	my $type = ref $_[0];
-	$openprint::log->debug("UNLOCKING $type for $_[0]{id} ac: $_[0]{ac} caller: $caller line: $line" . $_[0]);
+	$openprint::log->debug("UNLOCKING $type for $_[0]{id} ac: $_[0]{ac} caller: $caller line: $line" . $_[0]) if DEBUG_ALL;
 	if ( ! exists $_[0]{ac} ) {
 		$_[0]{ac} = $openprint::dbh->{AutoCommit};
 	} # end if
 	if ( ! $_[0]{ac} ) {
-		$openprint::log->debug("unlock with no AC!");
+		$openprint::log->debug("unlock with no AC! $caller:$line object $type $_[0]{id}");
 		return;
 	} # end if
 	if ( $_[0]{ac} == 1 ) {
