@@ -110,7 +110,7 @@ foreach my $table ( $$opts{table} ? split(',',$$opts{table} ) : @tables ) {
 			push @data, @values;
 		} # end foreach Object
 		my @contents = misc::data_to_csv( \@fields, \@data );
-		misc::save_to_file( $log, "$table.csv", join("", @contents ) );
+		misc::save_file( $log, "$table.csv", join("", @contents ) );
 		
 	} else {
 
