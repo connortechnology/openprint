@@ -26,8 +26,9 @@ $log->debug("SKids to not be in " . @skid_ids );
 
 my @Good_Skids = ();
 	my @Skids = openprint::Skid->find(
-		'rfidtag_id is null'=>0,
-		'location_id is null'=>0,
+		'type in' => [ split(',', $$variable{Check}->contains() ) ],
+		#'rfidtag_id is null'=>0,
+		#'location_id is null'=>0,
 		'quantity >=' => 1, 
 		'updated_on <=' => $$variable{Check}->started_on(),
 		'id not in'	=> $$variable{skid_ids},
