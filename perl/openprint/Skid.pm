@@ -17,7 +17,7 @@ require openprint::SkidContent;
 require openprint::InventoryCondition;
 require openprint::PaperAllocation;
 
-$debug = 0;
+$debug = 1;
 
 $table = 'Skids';
 $serial = 'skid_id_seq';
@@ -290,6 +290,12 @@ sub find {
 		} else {
 			$sql .= ' AND type IS NULL';
 		} # en dif
+	} elsif ( exists $params{'type is null'} ) {
+	if ( $params{'type is null'} ) {
+			$sql .= ' AND type IS NULL';
+		} else {
+			$sql .= ' AND type IS NOT NULL';
+		}	
 	} # end if
 	if ( exists $params{location_id} ) {
 		if ( ref $params{location_id} eq 'ARRAY' ) {
@@ -697,6 +703,9 @@ sub RFIDTag {
 
 sub type {
 	my $self = shift;
+	if ( @_ ) {
+		$$self{type} = $_[1];
+	}
 	if ( ! $$self{type} ) {
 		my @Contents = $self->Contents();
 		foreach my $C ( @Contents ) {
