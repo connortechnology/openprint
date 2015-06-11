@@ -557,7 +557,6 @@ $log->debug("Service: " . $Service->to_string() );
 				openprint::print_project::view_pdfs( $r, $log, $dbh, \%variable )				if $filename eq 'proj_view_pdf.html';
 				openprint::print_project::summary( $r, $log, $dbh, \%variable )					if $filename eq 'summary.html';
 				openprint::print_project::summary( $r, $log, $dbh, \%variable )					if $filename eq 'docket_sheet.html';
-				openprint::print_project::display_reuse_project( $r, $log, $dbh, \%variable ) 	if $filename eq 'reuse.html';
 			} # end if defined third
 		} elsif ( -e $ENV{'DOCUMENT_ROOT'}.$uri ) {
 			my ( $proc ) = $filename =~ /^(.*)\.(html|json|xml|rss)$/;

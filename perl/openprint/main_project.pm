@@ -233,5 +233,16 @@ sub calc {
 	return %specs;
 } # end sub calc
 
+sub reuse {
+
+	$variable{'Project'} = new openprint::Project( $param{'ProjectIndex'} );
+	$variable{'ProjectIndex'} = $variable{'Project'}->id();
+	if ( $variable{'Project'}->reference() ) {
+		$variable{'Project'}->reference( 'Copy of ' . $variable{'Project'}->reference() );
+	} else {
+		$variable{'Project'}->reference( 'Copy of project # ' . $param{'ProjectIndex'} );
+	} # end if
+	
+} # end sub
 1;
 __END__

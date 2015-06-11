@@ -713,17 +713,6 @@ sub delete_service {
 	return $Service->delete();
 } # end sub delete_service
 
-sub display_reuse_project {
-
-	$variable{'Project'} = new openprint::Project( $param{'ProjectIndex'} );
-	$variable{'ProjectIndex'} = $variable{'Project'}->id();
-	if ( $variable{'Project'}->reference() ) {
-		$variable{'Project'}->reference( 'Copy of ' . $variable{'Project'}->reference() );
-	} else {
-		$variable{'Project'}->reference( 'Copy of project # ' . $param{'ProjectIndex'} );
-	} # end if
-	
-} # end sub
 
 sub reuse_project {
 	my ( $project_index ) = @_;
