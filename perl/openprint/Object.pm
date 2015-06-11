@@ -25,6 +25,7 @@ use vars qw( $log $dbh $AUTOLOAD %cache %name_cache %fields %defaults %transform
 
 my $debug = 0;
 use constant DEBUG_ALL => 0;
+use constant DEBUG_CACHE => 0;
 $no_cache = 0;
 
 sub init_cache {
@@ -60,8 +61,8 @@ sub new_scalar_id {
 #$log->debug("loading $parent $id") if $debug or DEBUG_ALL;
 	no strict 'refs';
 	my $fields = \%{$parent.'::fields'};
-		my @keys = map { ( (defined $$fields{$_} or exists $$data{$_} ) and $$fields{$_} ne $_ ) ? $_ : () } keys %$fields;
-		@$self{@keys} = @$self{@$fields{@keys}};
+	my @keys = map { ( (defined $$fields{$_} or exists $$data{$_} ) and $$fields{$_} ne $_ ) ? $_ : () } keys %$fields;
+	@$self{@keys} = @$self{@$fields{@keys}};
 	if ( ! $no_cache ) {
 		$log->debug("Caching $config{db_name} $parent $id = $self") if $debug;
 		$cache{$config{db_name}}{$parent}{$id} = $self;
@@ -75,19 +76,30 @@ sub new {
 	my ( $parent, $id, $data, $dont_cache ) = @_;
 
 	my $ref = ref $id;
+
+	my $sub_cache = $cache{$config{db_name}}{$parent};
 	if ( ! $ref ) {
-		if ( $id and (!$dont_cache) and $cache{$config{db_name}}{$parent} and $cache{$config{db_name}}{$parent}{$id} ) {
+		if ( $id and (!$dont_cache) and $sub_cache and $$sub_cache{$id} ) {
 			if ( $data ) {
-if ( 1 ) {
-				my $self = $cache{$config{db_name}}{$parent}{$id};
+				my $self = $$sub_cache{$id};
+				# The reason to use load is if we have overriden it in the object, like in Paper
 				$self->load( $data );
+$log->debug("Loading object $parent $id from cache and populating with data new objcet is $self old cache is " . $$sub_cache{$id}) if DEBUG_CACHE;
 				return $self;
-}
 			} else {
-#$log->debug("Loading from cache $parent $id");
-			# If the object is cached
-			return $openprint::Object::cache{$config{db_name}}{$parent}{$id};
+				$log->debug("Loading from cache $parent $id = ". $$sub_cache{$id}) if DEBUG_CACHE;
+# If the object is cached
+				return $$sub_cache{$id};
 			}
+		} elsif ( DEBUG_CACHE ) {
+			my ( $caller, undef, $line ) = caller;
+			my $self = {};
+			bless $self, $parent;
+			if ( ( $$self{id} = $id ) or $data ) {
+#$log->debug("loading $parent $id") if $debug or DEBUG_ALL;
+				$self->load( $data );
+			} # end if
+			$log->debug("from $caller:$line no ref, $parent id: $id, dont_cache: $dont_cache sub $sub_cache $$sub_cache{$id} $$self{name}");
 		} # end if
 #$log->debug("Not Loading from cache $parent $id") if $id and ! $data;
 		my $self = {};
@@ -102,7 +114,7 @@ if ( 1 ) {
 				# Using $id instead of $$self{od} means that we cache non existent entries
 			#if ( $$self{id} ) {
 $log->debug("Caching $config{db_name} $parent $id = $self") if $debug;
-				$cache{$config{db_name}}{$parent}{$id} = $self;
+				$$sub_cache{$id} = $self;
 			} # end if
 		} else {
 $log->debug("NOT Caching $config{db_name} $parent $id = $self") if $debug;
@@ -630,6 +642,8 @@ sub find {
 	if ( $$params{columns} ) {
 		$sql .= ' ' . $$params{columns};
 		delete $$params{columns};
+		# We may not have the full list, so don't cache this Object. Although, if we had a cached copy, if we just updated it, that would be ok...
+		$log->debug("Turning off caching due to columns on $object_type.") if DEBUG_ALL or DEBUG_CACHE;
 		$do_cache = 0;
 	} else {
 		$sql .= ' *';
@@ -669,16 +683,16 @@ sub find {
 				return ();
 			} # end if
 		} else {
-$log->debug("Undefing $object_type $cache_field $$params{$cache_field}") if DEBUG_ALL;
+$log->debug("Undefing $object_type $cache_field $$params{$cache_field}") if DEBUG_ALL or DEBUG_CACHE;
 			$name_cache{$object_type}{$$params{$cache_field}} = undef;
 		} # end if
 		if ( 0 and ${$object_type.'::cached'} ) {
-$log->debug("ALl cached $object_type $cache_field $$params{$cache_field}") if DEBUG_ALL;
+$log->debug("ALl cached $object_type $cache_field $$params{$cache_field}") if DEBUG_ALL or DEBUG_CACHE;
 			return ();
 		} # end if
 	} else {
 		$do_cache = 0;
-		$log->debug("Not doing caching for $object_type using $cache_field with params $$params{$cache_field} ") if DEBUG_ALL;
+		$log->debug("Not doing caching for $object_type using $cache_field with params $$params{$cache_field} ") if DEBUG_ALL or DEBUG_CACHE;
 	} # end if
 
 	# no operators, just which fields are being searched on. Mostly just useful for detetion of the deleted field.
@@ -829,15 +843,17 @@ $log->debug("ALl cached $object_type $cache_field $$params{$cache_field}") if DE
 		$log->debug("Loading Debug:$debug $object_type ($sql) (".join(',', map { ref $_ eq 'ARRAY' ? join(',', @{$_}) : $_ } @values).') # of results:' . @$data . ' in ' . sprintf('%.4f', tv_interval($starttime)*1000) .' useconds' );
 	} # end if
 	if ( $$fields{id} ) {
-		if ( $cache_field ) {
+		if ( $cache_field and $do_cache ) {
 			my @results = map { $object_type->new( $_->{$$fields{id}}, $_ ) } @$data;
+			my $cache_ref = $name_cache{$object_type};
+
 			foreach my $O ( @results ) {
-				$name_cache{$object_type}{$$O{$cache_field}} = $O;
+				$$cache_ref{$$O{$cache_field}} = $O;
 			} 
 			return @results;
 		} # end if
 		#return map { $object_type->new_scalar_id( $_->{$$fields{id}}, $_ ) } @$data;
-		return map { $object_type->new( $_->{$$fields{id}}, $_, !$do_cache ) } @$data;
+		return map { $object_type->new( $_->{$$fields{id}}, $_ ) } @$data;
 	} else {
 		my @identified_by = eval '@'.$object_type.'::identified_by';
 		if ( ! @identified_by ) {
