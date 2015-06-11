@@ -76,7 +76,7 @@
 				<input type="text" onkeyup="filter_companies('company_id', {name:this.value,selected_id:get_ddm_value($('company_id'))});" class="filter" />
 				<select id="company_id" name="company_id" onchange="stop_filter_companies();">
 					<option value="">Select a Customer</option>
-					<? echo ( make_drop_down( openprint::Company->dropdown('last_project_on is null'=>0), $session{company_id});) ?>
+					<? echo ( make_drop_down( openprint::Company->dropdown('last_project_id is null'=>0), $session{company_id});) ?>
 				</select>
 			</li>
 		</ul>
