@@ -68,8 +68,7 @@ $serial = 'companies_id_seq';
 		);
 %find_fields = (
 	last_online	=>	'(SELECT MAX(date_time) FROM Logs WHERE company_id=companies.id)',
-	last_order	=>	'(SELECT MAX(created_on) FROM Orders WHERE company_id=companies.id)',
-	last_ordered_on	=>	'(SELECT MAX(created_on) FROM Orders WHERE company_id=companies.id)',
+	last_ordered_on	=>	'(SELECT created_on FROM Orders WHERE orders.id=last_order_id)',
 	last_project_on	=>	'(SELECT dtmcreationdate FROM Projects WHERE projects.id=last_project_id)',
 	last_quoted_on	=>	'(SELECT MAX(dtmquotedate) FROM Quotes WHERE companyindex=companies.id)',
 	last_called_on	=>	'(SELECT MAX(date_time) FROM sales_logs WHERE company_id=companies.id)',
