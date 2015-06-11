@@ -64,6 +64,7 @@ $serial = 'companies_id_seq';
 		'category_id'				=>	'category_id',
 		'offers_credit'				=>	'offers_credit',
 		'last_project_id'			=>	'last_project_id',
+		'last_order_id'				=>	'last_order_id',
 		);
 %find_fields = (
 	last_online	=>	'(SELECT MAX(date_time) FROM Logs WHERE company_id=companies.id)',
@@ -100,6 +101,8 @@ $serial = 'companies_id_seq';
 	'category_id'	=>	undef,
 	'offers_credit'	=>	0,
 	supplier		=>	q`'N'`,
+	last_order_id	=>	undef,
+	last_project_id	=>	undef,
 );
 
 sub Currency {
