@@ -77,9 +77,10 @@ sub new {
 
 	my $ref = ref $id;
 
+	$cache{$config{db_name}}{$parent} = {} if ! $cache{$config{db_name}}{$parent};
 	my $sub_cache = $cache{$config{db_name}}{$parent};
 	if ( ! $ref ) {
-		if ( $id and (!$dont_cache) and $sub_cache and $$sub_cache{$id} ) {
+		if ( $id and (!$dont_cache) and $$sub_cache{$id} ) {
 			if ( $data ) {
 				my $self = $$sub_cache{$id};
 				# The reason to use load is if we have overriden it in the object, like in Paper
@@ -113,7 +114,8 @@ $log->debug("Loading object $parent $id from cache and populating with data new 
 			if ( $id ) {
 				# Using $id instead of $$self{od} means that we cache non existent entries
 			#if ( $$self{id} ) {
-$log->debug("Caching $config{db_name} $parent $id = $self") if $debug;
+$log->debug("Caching $config{db_name} $parent $id = $self") if DEBUG_CACHE or $debug;
+				
 				$$sub_cache{$id} = $self;
 			} # end if
 		} else {
