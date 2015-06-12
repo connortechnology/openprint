@@ -822,6 +822,7 @@ sub _stock_checkout {
 		my $add_entry = 1;
 
 		if ( openprint::PaperInventory->find_one( docket => $Order->docket(), skid_id     =>  $Skid->id() ) ) {
+# What about if it was added back in?
 			$variable{error} .= 'Skid/Roll has already been checked out for this docket.';
 			return;
 		}
@@ -829,9 +830,9 @@ sub _stock_checkout {
 		if ( $Skid->is_empty() ) {
 			my @PI = openprint::PaperInventory->find( skid_id=>$Skid->id(), 'comment like'=>'Checked out%', order=>'updated_on desc');
 			if ( @PI ) {
-				$variable{error} .= sprintf( '%1$s %2$d has already been checked out', ($PI[0]->Paper()->type() eq 'Roll' ? 'Roll' : 'Skid'), $Skid->id() );
+				$variable{error} .= sprintf( '%1$s %2$d has already been checked out', $PI[0]->Skid()->type(), $Skid->id() );
 				if ( $PI[0]->docket() ) {
-					$variable{error} .= sprintf(' to docket <a href="/employee/project/view.html?docket=%1$d">%1$d</a>', $PI[0]->docket() );
+					$variable{error} .= sprintf(' for docket <a href="/employee/project/view.html?docket=%1$d">%1$d</a>', $PI[0]->docket() );
 				} # end if
 				$variable{error} .= '.<br/>';
 			} # end if
@@ -852,50 +853,7 @@ sub _stock_checkout {
 		} # end if
 
 		if ( $add_entry ) {
-			my @C = $Skid->Contents();
-			if ( @C ) {
-				if ( @C>1 ) {
-					$log->error("More than 1 content on skid $$Skid{id}");
-				}
-				foreach my $C ( $Skid->Contents() ) {
-					my $PI = new openprint::PaperInventory();
-					$PI->save({
-							docket		=>	$Order->docket(),
-							paper_id	=>	$C->paper_id(),
-							user_id		=>	$session{user_id},
-							delta		=>	-1*$C->quantity(),
-							comment		=>	sprintf('Checked out for docket <a href="/employee/project/view.html?docket=%1$d">%1$d</a> by %2$s', $Order->docket(), $openprint::User->name() ),
-							skid_id		=>	$Skid->id(),
-							units		=>	$C->units(),
-							});
-					$C->quantity( 0 );
-					$C->save();
-					#Remove any allocations
-					foreach my $PA ( openprint::PaperAllocation->find('skid_ids any'=>$Skid->id(), paper_id=>$C->paper_id(), docket=>$Order->docket() ) ) {
-						$PA->save({skid_ids=>[ sets::exclude( [ $Skid->id() ], $PA->skid_ids() ) ] });
-						if ( ! $PA->Skids() ) {
-							$PA->delete();
-						} # end if
-					} # end foreach
-					$Order->add_log( join('', 'Checked out ' , $C->quantity() , $C->units() , ' of ' , $C->Paper->to_string() ) );
-#FIXME: detect allocations to other dockets
-# Update totals
-					$C->Paper()->save();
-				} # end foreach C
-			} else {
-				my $PI = new openprint::PaperInventory();
-				$PI->save({
-						docket		=>	$Order->docket(),
-						paper_id	=>	undef,
-						user_id		=>	$session{user_id},
-						delta		=>	0,
-						comment		=>	sprintf('Checked out for docket <a href="/employee/project/view.html?docket=%1$d">%1$d</a> by %2$s', $Order->docket(), $openprint::User->name() ),
-						skid_id		=>	$Skid->id(),
-						units		=>	undef,
-						});
-				$Order->add_log( 'Checked out something unknown.' );
-			} # end if skid has contents
-
+			$Skid->checkout( $Order->docket() );
 		} # end if add_entry
 	} # end if action eq Add
 } # end sub _stock_checkout

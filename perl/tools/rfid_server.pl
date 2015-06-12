@@ -51,7 +51,7 @@ sub Checkout_Skid {
 		$context->log(1, sprintf('%s : %s : error saving skid: %s', $date, $context->{server}->{peeraddr}, $error ));
 	} else {
 		return if $CheckedOutSkids{$Skid->id()};
-		$Skid->checkout( ' by ' . $Scanner->name() );
+		$Skid->checkout( undef, ' by ' . $Scanner->name() );
 		$CheckedOutSkids{$Skid->id()} = 1;
 		$context->log(1, sprintf('%s : %s : success Skid is in checkout location skidid: %s', $date, $context->{server}->{peeraddr}, $Skid->id() ));
 

@@ -2676,7 +2676,7 @@ $log->debug("Have skid not in check: " . $Skid->to_string() );
 			if ( $param{action} eq 'Test' ) {
 				$variable{information} .= 'Would check out skid ' . $Skid->link_to( $Skid->to_string() ) . '<br/>';
 			} else {
-				$Skid->checkout('Checked out by Inventory Check ' . $Check->link_to() . '<br/>', 1 );
+				$Skid->checkout(undef,' by Inventory Check ' . $Check->link_to() . '<br/>', 1 );
 				$variable{information} .= 'Checked out ' . $Skid->link_to( $Skid->to_string() ) . '<br/>';
 			}
 			last if $dbh->errstr();

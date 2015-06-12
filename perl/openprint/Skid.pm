@@ -301,8 +301,11 @@ sub allocateable {
 } # end sub allocateable
 
 # Checkout all paper on the skid
+# Shoudl take comment, docket, force
+# If docket isn't passed, try to find it by allocation.
+
 sub checkout {
-	my ( $self, $c, $force ) = @_;
+	my ( $self, $docket, $c, $force ) = @_;
 	require openprint::PaperInventory;
 	my @contents = openprint::SkidContent->find( skid_id=>$$self{id} );
 	if ( ! @contents ) {
@@ -318,52 +321,75 @@ sub checkout {
 					'comment'	=>	'Checked out' . $c,
 					'skid_id'	=>	$$self{id},
 					'units'		=>	'unknown',
+					docket		=>	$docket,
 					});
 			$log->error($e);
+		} else {
+$log->error("No contents foudn, but inventory log entries found for skid $$self{id}");
 		} # end if
 $log->debug("No contents found for skid $$self{id} Checking out anyways");
 		return 1;
 	} # end if
 
+	if ( 0 and ! $docket ) {
+		# DOn't do this because we might be using it on another docket.
+		# We might eb able to look at what job is being run but for now, just don't
+		my $PA = openprint::PaperAllocation->find_one( 'skid_ids any'=>$$self{id} );
+		if ( $PA ) {
+			$docket = $PA->docket();
+		}
+	} # end if
 
 	my $rc = 0;
 	foreach my $C ( @contents ) {
 		next if ! $C->quantity();
-		if ( $force or ! openprint::PaperInventory->find( skid_id=>$$self{id}, 'comment like'=>'Checked out%' ) ) {
+
+		if ( 0 ) {
+			# DOn't do this.  Just because it is allocated doesn't mean it is being used for this docket
 			my $PA = openprint::PaperAllocation->find_one( 'skid_ids any'=>$$self{id}, paper_id=>$C->paper_id());
-			my $desc = 'Checked out';
-			$desc .= ($PA->docket() ? ' for docket ' . $PA->docket() : '') if $PA;
+		}
 
-			my $Paper = $C->Paper();
+		my $desc = 'Checked out' . ( $docket ? ' for docket ' .$docket : '' );
+			
+		my $Paper = $C->Paper();
 # This is neccessary because different skids can be doing the checkout
-			$Paper->lock();
+		$Paper->lock();
 
-			# SHouldn't have to..
-			$Paper->SkidContents(undef);
-			my $e = $Paper->save(); # Must update in_stock
-			my $PI = new openprint::PaperInventory();
-			$e .= $PI->save({
-					paper_id  =>  $C->paper_id(),
-					user_id   =>  $session{user_id},
-					instock   =>  $Paper->in_stock() - $C->quantity(),
-					delta     =>  -1*$C->quantity(),
-					comment   =>  $desc.$c,
-					skid_id   =>  $$self{id},
-					units     =>  $C->units(),
-					( ($PA and $PA->docket() ) ? ( docket		=>	$PA->docket() ) : () ),
-					} );
-			$C->quantity( 0 );
-			$e .= $C->save();
-			$Paper->SkidContents(undef);
-			$e .= $Paper->save(); # Must update in_stock
-			if ( $Paper->in_stock() != $PI->instock ) {
-				$log->error("What just happened?! $$Paper{in_stock} != $$PI{instock}");
-			} # end if
-			$log->error( $e ) if $e;
-			$Paper->unlock();
-			$rc = 1;
-		} # end if not already checked out
+		# SHouldn't have to..
+		$Paper->SkidContents(undef);
+		my $e = $Paper->save(); # Must update in_stock
+		my $PI = new openprint::PaperInventory();
+		$e .= $PI->save({
+				paper_id  =>  $C->paper_id(),
+				user_id   =>  $session{user_id},
+				instock   =>  $Paper->in_stock() - $C->quantity(),
+				delta     =>  -1*$C->quantity(),
+				comment   =>  $desc.$c,
+				skid_id   =>  $$self{id},
+				units     =>  $C->units(),
+				( $docket ? (docket=>$docket) : () ),
+				} );
+		$e .= $C->save( { quantity => 0 } );
+		$Paper->SkidContents(undef);
+		$e .= $Paper->save(); # Must update in_stock
+		if ( $Paper->in_stock() != $PI->instock ) {
+			$log->error("What just happened?! $$Paper{in_stock} != $$PI{instock}");
+		} # end if
+		$log->error( $e ) if $e;
+		$Paper->unlock();
+		$rc = 1;
 	} # end foreach Content
+
+	#Update any PAs
+	foreach my $PA ( openprint::PaperAllocation->find( 'skid_ids any' => $$self{id} ) ) {
+		if ( $PA->docket() != $docket ) {
+			# FIXME Send alerta
+		}
+		$PA->save({skid_ids=>[ sets::exclude( [ $self->id() ], $PA->skid_ids() ) ] });
+		if ( ! $PA->Skids() ) {
+			$PA->delete();
+		} # end if
+	} # end foreach PA
 	return $rc;
 } # end sub checkout
 
