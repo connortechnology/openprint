@@ -49,7 +49,7 @@ $serial = 'skid_id_seq';
 );
 
 %transforms = (
-	id			=>	[ 's/\D//g' ],
+	id			=>	[ 's/\D//g', '<2147483647' ],
 	deleted	=>	[ 's/[^01]//g' ],
 	manufacturers_id	=>	[ 'tr/[a-z]/[A-Z]/' ],
 );
