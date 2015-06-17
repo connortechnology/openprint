@@ -568,6 +568,8 @@ sub save_Paper {
 			( $param{'Weight'.$id} ? ( 'weight_id' =>	$param{'Weight'.$id} ) : () ),
 			( $weight ? ( weight	=>	$weight ) : () ),
 # We might 
+			( $param{'material_id'.$id} ? ( material_id =>	$param{'material_id'.$id} ) : () ),
+			( $param{'material'.$id} ? ( material	=>	$param{'material'.$id} ) : () ),
 			( $param{'width'.$id} ? ( 'width'		=> $param{'width'.$id} ) : () ),
 			( $param{'height'.$id} ? ( 'height'	=>	$param{'type'.$id} ne 'Roll' ? $param{'height'.$id} : undef ) : () ),
 			( $param{'type'.$id} ? ( 'type'		=>	$param{'type'.$id} ) : () ),
