@@ -44,14 +44,19 @@ sub Purpose {
 } # end sub Purpose
 
 sub Paper {
-	my $self = shift;
-	my $Paper = new openprint::Paper( $$self{'paper_id'} );
-	return $Paper;
+	if ( ! $_[0]{Paper} ) {
+		$_[0]{Paper} = new openprint::Paper( $_[0]{paper_id} );
+	} # end if
+	return $_[0]{Paper};
 } # end sub Paper
 
 sub Skid {
-	return new openprint::Skid( $_[0]{'skid_id'} );
+	if ( ! $_[0]{Skid} ) {
+		$_[0]{Skid} = new openprint::Skid( $_[0]{skid_id} );
+	} # end if
+	return $_[0]{Skid};
 } # end sub Skid
+
 sub delete {
 	my $self = $_[0];
 	my $error = $self->SUPER::delete();
@@ -60,6 +65,7 @@ sub delete {
 		$self->Paper()->save();
 	} # end if
 } # end sub delete
+
 sub allocateable {
 	if ( ! exists $_[0]{'allocateable'} ) {
 		$_[0]{'allocateable'} = $_[0]->quantity() - $_[0]->allocated();
@@ -159,12 +165,22 @@ sub value {
     return $$self{'value'};
 } # end sub value
 
+sub Manifest_Contents {
+	require openprint::ManifestContent;
+    my @MCS = openprint::ManifestContent->find( skid_id=>$_[0]{skid_id}, order=>'id' );
+	return @MCS;
+}
+
 sub checked_out {
 	if ( ! exists $_[0]{checked_out} ) {
-		$_[0]{checked_out} = openprint::PaperInventory->find( skid_id=>$_[0]{skid_id}, paper_id=>$_[0]{paper_id}, 'comment like'=>'Checked out%' ) ? 1 : 0; 
+		$_[0]{checked_out} = openprint::PaperInventory->find_one( skid_id=>$_[0]{skid_id}, paper_id=>$_[0]{paper_id}, 'comment like'=>'Checked out%' ); 
 	} 
 	return $_[0]{checked_out};
 } # end sub checked_out
+
+sub to_string {
+	return sprintf('%s%s of %s', Number::Format::format_number( $_[0]{quantity} ), $_[0]->units(), $_[0]->Paper()->to_string() );
+}
 
 1;
 __END__

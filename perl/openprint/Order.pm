@@ -112,6 +112,7 @@ sub save {
 			sql::end_transaction( $dbh, $ac );
 			return $error;
 		} # end if	
+		$openprint::Company->save({last_order_id=>$$self{id}}) if $openprint::Company and $openprint::Company->id() and $$self{id};
 	} elsif ( $$params{'force_insert'} ) {
 		if ( ( my $error = sql::insert( $log, $dbh, 'Orders', \%sql ) ) ) {
 			sql::end_transaction( $dbh, $ac );

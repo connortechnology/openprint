@@ -13,8 +13,10 @@ our @ISA = qw( openprint::Object );
 use constant PI => atan2(1,1)*4;
 # 3.14159265358979;
 
-use vars qw( $debug $table $serial %fields %find_fields %transforms %defaults $default_sort );
-$debug = 1;
+use vars qw( $debug $table $serial %fields %find_fields %transforms %defaults $default_sort $cache_field $cached );
+$debug = 0;
+$cached = 0;
+$cache_field='short';
 $default_sort = 'lower(name)';
 $table = 'locations';
 $serial = 'locations_id_seq';
@@ -89,7 +91,9 @@ $openprint::log->error("use of deprecated method Location parent");
 	return new openprint::Location( $_[0]{parent_id}) if $_[0]{parent_id};
 } # end sub parent
 sub Parent {
+	# _map has code that does while ( $_->Parent() = ) 
 	return new openprint::Location( $_[0]{parent_id}) if $_[0]{parent_id};
+	return;
 } # end sub parent
 sub Root {
 	my $P = shift;
@@ -812,5 +816,18 @@ sub html {
 			);
 	return $html;
 } # end  sub html
+
+sub three_letter {
+	if ( ! $_[0]{three_letter} ) {
+		if ( $_[0]->type() eq 'country' ) {
+			require Locale::Country;
+			$_[0]{three_letter} = uc Locale::Country::country2code( $_[0]{name}, 'alpha-3' );
+			if ( ! $_[0]{three_letter} ) {
+				$openprint::log->warn("No code found for $_[0]{name}");
+			}
+		} # end if
+	} # end if
+	return $_[0]{three_letter};
+} # end sub three_letter
 1;
 __END__

@@ -19,19 +19,22 @@ function load_entries() {
 			<? echo ( date_select( 'ended_on', $$variable{Check}->ended_on() ? $$variable{Check}->ended_on() : [ Date::Calc::Today() ] ); ) ?>
 			</li>
 			<li><label>Name</label><input type="text" name="name" value="<?echo($$variable{Check}->name())?>"/></li>
+			<li><label>Contains</label><? echo ( checkboxes( 'contains', [ map { $_, $_.'s' } ( 'Roll', 'Sheet' ) ], [split(',',$$variable{Check}->contains())] ); ) ?>
 			</ul>
 		</div><!-- column -->
 		<div style="float: right;">
 			<? echo ( 
 				my $html;
-				$html .= button( 'save', { onclick=>"f1.elements['action'].value='Save';f1.submit();", text=>'Save' } );
+				$html .= button( 'Save', { onclick=>"f1.elements['action'].value='Save';f1.submit();" } );
 				if ( $$variable{Check}->id() ) {
-					if ( $$variable{Check}->deleted() ) {
-						$html .= button( 'Destroy', { onclick=>"f1.elements['action'].value='Destroy';f1.submit();" } );
-						$html .= button( 'Undelete', { onclick=>"f1.elements['action'].value='Undelete';f1.submit();" } );
-					} else {
+				$html .= button( 'Apply', { onclick=>"f1.elements['action'].value='Apply';f1.submit();" } );
+				$html .= button( 'Test', { onclick=>"f1.elements['action'].value='Test';f1.submit();" } );
+					#if ( $$variable{Check}->deleted() ) {
+						#$html .= button( 'Destroy', { onclick=>"f1.elements['action'].value='Destroy';f1.submit();" } );
+						#$html .= button( 'Undelete', { onclick=>"f1.elements['action'].value='Undelete';f1.submit();" } );
+					#} else {
 						$html .= button( 'delete', { onclick=>"if(confirm('You should never do this. You should just check out the contents of the skid.  Are you sure?')){f1.action='skids.html?skid_id=$$variable{Check}{id}';f1.elements['action'].value='Delete';f1.submit();}", text=>'Delete' } );
-					} # end if
+					#} # end if
 					$html .= input( type=>'file', name=>'import' );
 					$html .= button( 'Import', { onclick=>q`f1.elements['action'].value='Import';f1.submit();` } );
 					$html .= button( 'DelDupes', { onclick=>q`f1.elements['action'].value='Delete Duplicates';f1.submit();`, text=>'Delete Duplicates'} );
@@ -45,9 +48,10 @@ function load_entries() {
 	<fieldset><legend>Filter</legend>
 		<ul>
 			<li><label>Has Skid/Roll?</label><?echo(radio('has_skid', ['1','Yes','0','No','','Both'], $session{$r->uri().'?has_skid'}, { onclick=>'load_entries();' } );)?></li>
+			<li><label>Has Quantity?</label><?echo(radio('has_quantity', ['1','Yes','0','No','','Both'], $session{$r->uri().'?has_quantity'}, { onclick=>'load_entries();' } );)?></li>
 		</ul>
 	</fieldset>
-	<div id="Entries"><?include(_check_entries.html)?></div>
+	<div id="Entries"><? echo ( include('_check_entries.html') ) ?></div>
 </fieldset>
 <fieldset><legend>System Contents not in Check</legend>
 	<div id="SystemContents"><?include(_check_system_contents.html)?></div>

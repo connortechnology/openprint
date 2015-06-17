@@ -97,30 +97,30 @@ sub save_contents {
 	$dbh->do( "LOCK TABLE $openprint::PurchaseOrder_Department::table IN EXCLUSIVE MODE" ) or $log->error( DBI->errstr );
 	$dbh->do( "LOCK TABLE $openprint::PurchaseOrder_Content::table IN EXCLUSIVE MODE" ) or $log->error( DBI->errstr );
 
-	foreach my $content_id ( ( map { $_->id() } $PO->Contents() ), 'new' ) {
-		next if ( $content_id eq 'new' ) and ! $param{'qty-'.$content_id};
+	foreach my $C ( $PO->Contents() ) {
 		my $Item;
+		my $content_id = $$C{id};
 		if ( $$p{'item-'.$content_id} ) {
 			$Item = new openprint::PurchaseOrder_Item( $$p{'item_id-'.$content_id} );
 			if ( $$p{supplier_id} ) {
 				if ( ( ! $Item->id() ) or ( lc $Item->name() ne lc openprint::PurchaseOrder_Item->transform('name', $$p{'item-'.$content_id}) ) ) {
 					$log->debug("Looking up (" . $$p{'item-'.$content_id}.') (' . $Item->name() );
 					$Item = openprint::PurchaseOrder_Item->find_one(
-							'company_id'	=>	$PO->company_id(),
-							'vendor_id'		=>	$$p{'supplier_id'},
-							'type_id'		=>	$$p{'type_id-'.$content_id},
+							company_id		=>	$PO->company_id(),
+							vendor_id		=>	$$p{'supplier_id'},
+							type_id			=>	$$p{'type_id-'.$content_id},
 							'name lc'		=>	lc openprint::PurchaseOrder_Item->transform('name',$$p{'item-'.$content_id}),
 							'product lc'	=>	lc openprint::PurchaseOrder_Item->transform('product',$$p{'product-'.$content_id}),
 							);
 					if ( ! $Item ) {
 						$Item = new openprint::PurchaseOrder_Item();
 						$Item->save({
-								'company_id'	=>	$PO->company_id(),
-								'vendor_id'		=>	$$p{'supplier_id'},
-								'type_id'		=>	$$p{'type_id-'.$content_id},
-								'name'			=>	$$p{'item-'.$content_id}, 
-								'price'			=>	$$p{'price-'.$content_id},
-								'product'		=>	$$p{'product-'.$content_id},
+								company_id	=>	$PO->company_id(),
+								vendor_id	=>	$$p{'supplier_id'},
+								type_id		=>	$$p{'type_id-'.$content_id},
+								name		=>	$$p{'item-'.$content_id}, 
+								price		=>	$$p{'price-'.$content_id},
+								product		=>	$$p{'product-'.$content_id},
 								});
 					} # end if
 				} else {
@@ -148,8 +148,6 @@ sub save_contents {
 			$Dept = new openprint::PurchaseOrder_Department( $$p{'dept_id-'.$content_id} );
 		} # end if
 
-		my $C = new openprint::PurchaseOrder_Content( $content_id );
-
 		$variable{'error'} .= $C->save( {
 				po_id		=>	$PO->id(),
 				qty			=>	$$p{'qty-'.$content_id},
@@ -160,12 +158,12 @@ sub save_contents {
 				price		=>	$$p{'price-'.$content_id},
 				total		=>	$$p{'total-'.$content_id},
 				type_id		=>	$$p{'type_id-'.$content_id},
-				( $Dept ? ( 'department_id'	=>	$Dept->id() ) : ( ) ),
+				( $Dept ? ( department_id	=>	$Dept->id() ) : ( ) ),
 				});
 
 		$types{$C->Type()->name()} = 1;
 		if ( $C->docket() and ! ( $C->docket() =~ /\D/ ) ) {
-			foreach my $P ( openprint::Project->find('docket'=>$C->docket()) ) {
+			foreach my $P ( openprint::Project->find( docket=>$C->docket()) ) {
 				$P->add_to_log( @session{'company_id','user_id'}, 
 						sprintf('<a href="/employee/purchase_order/view.html?po_id=%1$d">%2$s%3$s %4$s ordered on PO%1$d</a>',
 							$PO->id(), $C->qty(), $C->units(), $C->description() ) );
@@ -412,7 +410,8 @@ $log->debug("Creating PO $$PO{id} from label $variable{error}");
 
 		$param{supplier_id} = save_supplier( \%param ) if ( ! $param{supplier_id} ) and $param{vendor_name};
 		if ( $param{supplier_id} and $param{vendor_name} ) {
-			my $Supplier = openprint::Company->find_one( id=>$param{supplier_id} );
+			# Using new here instead of find because save_supplier uses find and so should not return a deleted supplier.
+			my $Supplier = new openprint::Company( $param{supplier_id} );
 			if ( ! $Supplier ) {
 				$log->error("SUpplier not found!");
 			} else {
@@ -466,9 +465,9 @@ $log->debug("Creating PO $$PO{id} from label $variable{error}");
 		if ( ( ! $variable{'error'} ) and $param{'reason'} ) {
 			my $L = new openprint::PurchaseOrder_Log();
 			$L->save({
-				'user_id'	=>	$session{user_id},
-				'po_id'		=>	$PO->id(),
-				'reason'	=>	$param{reason},
+				user_id	=>	$session{user_id},
+				po_id	=>	$PO->id(),
+				reason	=>	$param{reason},
 				});
 		} # end if
 		my @companies = ( $PO->company_id(), $PO->supplier_id() );

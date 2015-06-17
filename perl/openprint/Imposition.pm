@@ -479,7 +479,7 @@ sub used_width {
 			} # end if
 		} # end if
 	} # end if
-$openprint::log->debug("Setting used_width using layout:$$self{layout_width} + gutters:$$self{gutters} + cropleft:$$self{cropmark_left} + crop_right:$$self{cropmark_right} + cb: ( $$self{colour_bar_orientation} eq 'Length' ? $$self{colour_bar_size} : 0 )");
+$openprint::log->debug("Setting used_width using layout:$$self{layout_width} + gutters:$$self{gutters} + cropleft:$$self{cropmark_left} + crop_right:$$self{cropmark_right} + cb: ( $$self{colour_bar_orientation} eq 'Length' ? $$self{colour_bar_size} : 0 )") if DEBUG;
 	return $width;
 }
 sub used_height {

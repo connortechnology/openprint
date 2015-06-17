@@ -9,6 +9,7 @@
 			<label>Prices for pricelist <? echo ( $$variable{'Pricelist'}->name() ) ?></label>
 			<table class="List" id="Prices">
 				<tr>
+					<th class="Service">Service</th>
 					<th class="Range">Quantity Range</th>
 					<th class="Cost">Cost CWT</th>
 					<th class="Markup">Mark up</th>
@@ -29,9 +30,9 @@
 			<table>
 				<tr>
 					<td>Add Amount</td>
-					<td class="Price">$<? echo ( input( id=>'amount', type=>'float', name=>'amount', onkeyup=>q`$('modemodify').checked=true;` ) ) ?></td>
+					<td class="Price">$<? echo ( input( id=>'amount', type=>'float', name=>'amount', oninput=>q`$('modemodify').checked=true;` ) ) ?></td>
 					<td>Markup</td>
-					<td class="Markup"><? echo ( input( id=>'markup', type=>'float', name=>'markup', onkeyup=>q`$('modemodify').checked=true;` ) ) ?>%</td>
+					<td class="Markup"><? echo ( input( id=>'markup', type=>'float', name=>'markup', oninput=>q`$('modemodify').checked=true;` ) ) ?>%</td>
 				</tr>
 			</table>
 		</p>

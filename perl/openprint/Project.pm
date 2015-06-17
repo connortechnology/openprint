@@ -1208,13 +1208,12 @@ sub Ordered_Product {
 
 sub Ordered_Project {
 	if ( ! exists $_[0]{'Ordered_Project'} ) {
-		$_[0]{'Ordered_Project'} = openprint::OrderedProject->find_one('order_id'=>$_[0]{'order_id'}, 'project_id'=>$_[0]{'id'} );
+		$_[0]{'Ordered_Project'} = openprint::OrderedProject->find_one('order_id'=>$_[0]{'order_id'}, 'project_id'=>$_[0]{'id'} ) if $_[0]{'order_id'};
 	} # end if
 
 	if ( ! $_[0]{'Ordered_Project'} ) {
 		$_[0]{'Ordered_Project'} = new openprint::OrderedProject();
 		$_[0]{'Ordered_Project'}->project_id( $_[0]{'id'} );
-		$_[0]{'Ordered_Project'} = $_[0]{'Ordered_Project'};
 	} # end if
 
 	return $_[0]{'Ordered_Project'};

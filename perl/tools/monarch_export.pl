@@ -26,7 +26,7 @@ my $program = basename($0);
 
 my $opts = {};
 GetOptions($opts, 'help',
-    'db_name=s', 'db_host=s', 'db_user=s', 'db_pass=s','table=s', 'debug=s', 'version=s',
+    'db_name=s', 'db_host=s', 'db_user=s', 'db_pass=s','table=s', 'debug=s', 'version=s', 'limit=s','csv=s',
  );
 
 if ($opts->{help}) {
@@ -92,23 +92,46 @@ foreach my $table ( $$opts{table} ? split(',',$$opts{table} ) : @tables ) {
 #print Dumper(\%fields);
 #die;
 
-	open( FH, ">$table.txt" ) or die "Can't open $table.txt $!";
-	foreach my $Object ( ('openprint::'.$tables{$table}{object})->find( @{$tables{$table}{find}} ) ) {
-		my $format_string = join('', map { '%-'.$fields{$_}{size}.'s' } @fields ) . "\n";
-		my @values;
-		foreach my $field ( @fields ) {
-			my $value = $fields{$field}{default};
-			if ( my $iq_field = $fields{$field}->{iq_field} ) {
-				$value = eval $iq_field;
-				$log->error( "Eval error $@" ) if $@;
-				$value = substr($value, 0,$fields{$field}{size});
-			} # end if
-			push @values, $value;
-		}
-print sprintf( $format_string, @values );
-		print FH sprintf( $format_string, @values );
-	} # end foreach Cmompany
-	close( FH );
+	if ( $$opts{csv} ) {
+		
+		my @data;
+		foreach my $Object ( ('openprint::'.$tables{$table}{object})->find( @{$tables{$table}{find}} ) ) {
+			my $format_string = join('', map { '%-'.$fields{$_}{size}.'s' } @fields ) . "\n";
+			my @values;
+			foreach my $field ( @fields ) {
+				my $value = $fields{$field}{default};
+				if ( my $iq_field = $fields{$field}->{iq_field} ) {
+					$value = eval $iq_field;
+					$log->error( "Eval error $@" ) if $@;
+					$value = substr($value, 0,$fields{$field}{size});
+				} # end if
+				push @values, $value;
+			}
+			push @data, @values;
+		} # end foreach Object
+		my @contents = misc::data_to_csv( \@fields, \@data );
+		misc::save_file( $log, "$table.csv", join("", @contents ) );
+		
+	} else {
+
+		open( FH, ">$table.txt" ) or die "Can't open $table.txt $!";
+		foreach my $Object ( ('openprint::'.$tables{$table}{object})->find( @{$tables{$table}{find}} ) ) {
+			my $format_string = join('', map { '%-'.$fields{$_}{size}.'s' } @fields ) . "\n";
+			my @values;
+			foreach my $field ( @fields ) {
+				my $value = $fields{$field}{default};
+				if ( my $iq_field = $fields{$field}->{iq_field} ) {
+					$value = eval $iq_field;
+					$log->error( "Eval error $@" ) if $@;
+					$value = substr($value, 0,$fields{$field}{size});
+				} # end if
+				push @values, $value;
+			}
+	#print sprintf( $format_string, @values );
+			print FH sprintf( $format_string, @values );
+		} # end foreach Cmompany
+		close( FH );
+	}
 } # end foreach
 
 $dbh->disconnect();

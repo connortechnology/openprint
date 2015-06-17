@@ -117,5 +117,132 @@ sub view {
 sub _copy_popup {
 } # end sub _copy_popup
 
+sub create_edit {
+	my $project_index = $param{'ProjectIndex'};
+
+	my $Project = $variable{Project} = new openprint::Project( $project_index );
+
+	@{$variable{'ProjectTypes'}} = map { $_->name(), $_->description() } openprint::ProjectType->find( 'order'=>'sorting, lower(name)' );
+	# Check the appropriate button for project type
+	$variable{'SelectedProjectType'} = $Project->Type()->name();
+
+	@variable{'txtProjectReference','ddmDesign','txtComments','txtQuantity1','txtQuantity2','txtQuantity3','rdbMode','chkPrograms','txtOtherPrograms'} = (
+		$Project->reference(), $Project->design(), $Project->comments(), $Project->quantity1(), $Project->quantity2(), $Project->quantity3(), $Project->mode(), $Project->programs(), $Project->other_programs() 
+	);
+
+	my $services = $Project->services();
+	@{$variable{'SelectedServices'}} = keys %{$services};
+
+	$variable{'ProjectIndex'} = $project_index;
+} # end sub create_edit
+
+sub _calc {
+	my $Project = new openprint::Project( $param{ProjectIndex} );
+    if ( $param{action} eq 'add_service' ) {
+        my $services = $Project->services();
+        foreach my $service_name ( ref $param{service_name} eq 'ARRAY' ? @{$param{service_name}} : $param{service_name} ) {
+
+            next if $$services{$service_name};
+            $Project->add_service( $service_name );
+        } # end foreach service_name
+    } elsif ( $param{action} eq 'del service' ) {
+        my $services = $Project->services();
+        foreach my $service_name ( ref $param{service_name} eq 'ARRAY' ? @{$param{service_name}} : $param{service_name} ) {
+            next if ! $$services{$service_name};
+            foreach ( @{$$services{$service_name}} ) {
+                my $Service = new openprint::Project_Service( { project_id=>$$Project{id}, service_id=>$_ } );
+                $Service->delete();
+            } # end foreach service_id
+        } # end foreach service_name
+    } # end if
+} # end sub _calc
+
+sub calc {
+	my $debug = 0;
+	my $Project = new openprint::Project( $param{ProjectIndex} );
+	my $module = 'openprint::Estimating::'.( $param{ServiceTypeType} ? $param{ServiceTypeType} : $param{ServiceType} );
+	eval "require $module";
+	$log->error("Error requiring $module: $@") if $@;
+
+	$param{method} = 'calc' if ! $param{method};
+# Not sure this is a good idea, but its neccessary for printing... why is it neccessary?
+	$openprint::service::specs_cache{$param{ServiceIndex}} = \%param;
+	my %specs = %param;
+	if ( my $function = $module->can( $param{method} ) ) {
+		$specs{Status} = $function->( $log, $dbh, \%variable, @param{'ProjectIndex','ServiceIndex'}, \%specs );
+	} else {
+		$log->error("Cant do $param{method} for $module");
+	} # end if
+
+	my @vars;
+	if ( my $function = $module->can( 'outputs' ) ) {
+		@vars = sort $function->( @param{'ProjectIndex', 'ServiceIndex'}, \%specs );
+		$log->debug("outputs @vars") if $debug;
+	} # end if
+	if ( ! @vars ) {
+		@vars = keys %specs;
+		$log->debug("no outputs, so using keys @vars") if $debug;
+	} # end if
+	if ( my $function = $module->can( 'no_outputs' ) ) {
+		my @no_outputs = sort $function->( @param{'ProjectIndex','ServiceIndex'}, \%specs , \%param );
+		$log->debug("$module ::no_outputs: @no_outputs)") if $debug;
+		@vars = sets::exclude( \@no_outputs, \@vars );
+
+		foreach my $key ( @no_outputs ) {
+			$log->debug("Deleting key $key in no_outputs ") if $debug;
+			delete $specs{$key};
+		} # end foreach
+	} # end if
+	foreach my $key ( 'method', 'ContinueProject' ) {
+		$log->debug("Deleting key $key in standard no_outputs ") if $debug;
+		delete $specs{$key};
+	} # end foreach
+	if ( $debug ) {
+		foreach my $key ( sort keys %specs ) {
+			$log->debug("$key => $specs{$key}");
+		} # end foreach
+	} # end if debug
+	if ( $debug ) {
+		foreach my $key ( sort { $a cmp $b } keys %specs ) {
+			if ( (exists $param{$key}) and ($specs{$key} eq $param{$key}) ) {
+				$log->debug("Deleting $key cuz it's the same $key = $param{$key}");
+				delete $specs{$key};
+			} elsif ( ( ! exists $param{$key}) and ! $specs{$key} ) {
+				$log->debug("Deleting $key cuz it's not in params and its empty");
+				delete $specs{$key};
+			} elsif ( ref $specs{$key} ) {
+				$log->error("Got a non-scalar in specs! $key => $specs{$key}");
+				delete $specs{$key};
+			} # end if
+		} # end foreach
+		foreach my $key ( sort { $a cmp $b } keys %specs ) {
+			$log->debug("Outputting $key = $specs{$key}");
+		} # end foreach
+	} else {
+		foreach my $key ( keys %specs ) {
+			if ( (exists $param{$key}) and ($specs{$key} eq $param{$key}) ) {
+				delete $specs{$key};
+			} elsif ( ( ! exists $param{$key}) and ! $specs{$key} ) {
+				delete $specs{$key};
+			} elsif ( ref $specs{$key} ) {
+				$log->error("Got a non-scalar in specs! $key => $specs{$key}");
+				delete $specs{$key};
+			} # end if
+		} # end foreach
+	} # end if debug
+	return %specs;
+} # end sub calc
+
+sub reuse {
+
+	$variable{'Project'} = new openprint::Project( $param{'ProjectIndex'} );
+	$variable{'ProjectIndex'} = $variable{'Project'}->id();
+	if ( $variable{'Project'}->reference() ) {
+		$variable{'Project'}->reference( 'Copy of ' . $variable{'Project'}->reference() );
+	} else {
+		$variable{'Project'}->reference( 'Copy of project # ' . $param{'ProjectIndex'} );
+	} # end if
+	
+} # end sub
 1;
 __END__

@@ -382,16 +382,16 @@ sub summary {
 sub from {
 	my ( $specs ) = @_;
 	return join("\n", 
-			join(', ', $$specs{FromCompanyName} ) ,
-			join(', ', $$specs{FromAddress1} , $$specs{FromAddress2},
+			( $$specs{FromCompanyName} ? $$specs{FromCompanyName} : () ),
+			join(', ', map { $_ ? $_ : () } ( $$specs{FromAddress1} , $$specs{FromAddress2},
 				@$specs{'FromCity','FromStateProvince','FromCountry'},
-				@$specs{FromPostalCode} ),
+				@$specs{FromPostalCode} ) ),
 			);
 } # end sub from
 sub to {
 	my ( $specs ) = @_;
 	return join("\n", 
-			( $$specs{ToCompanyName} ? ( $$specs{ToCompanyName} ) : () ),
+			( $$specs{ToCompanyName} ? $$specs{ToCompanyName} : () ),
 			join(', ', map { $_ ? $_ : () } ( $$specs{ToAddress1}, $$specs{ToAddress2},
 				@$specs{'ToCity','ToStateProvince','ToCountry'},
 				@$specs{ToPostalCode} ) ),

@@ -877,6 +877,7 @@ sub in_stock {
 	return 0 if ! $_[0]{id};
 
 	if ( @_ > 1 ) {
+$openprint::log->debug("Setting paper in_stock to $_[1]");
 		if ( ref $_[1] eq 'openprint::InventoryCondition' ) {
 			my $in_stock = 0;
 			foreach my $C ( openprint::SkidContent->find(deleted=>0,paper_id=>$_[0]{id}, condition_id=>$_[1]->id() ) ) {
@@ -892,6 +893,7 @@ sub in_stock {
 		foreach my $SkidContent ( $_[0]->SkidContents() ) {
 			$_[0]{in_stock} += $SkidContent->quantity();
 		} # end foreach SkidContent
+$openprint::log->debug("Loading paper in_stock to $_[0]{in_stock}");
 	} # end if
 	return $_[0]{in_stock};
 } # end sub in_stock

@@ -6,7 +6,8 @@
 		<th class="Diameter">Diameter</th>
 		<th class="Quantity">Weight(lbs)</th>
 		<th class="Location">Location</th>
-		<th class="Notes">Notes</th>
+		<th class="CreatedOn DateTime">Created On</th>
+		<th class="UpdatedOn DateTime">Updated On</th>
 		<th class="buttons"></th>
 	</tr>
 <? echo ( 
@@ -16,51 +17,66 @@
 
 	if ( ! $$variable{skid_ids} ) {
 		my @Contents = openprint::Inventory_Check_Entry->find( ic_id=>$$variable{Check}->id(), order=>'skid_id,rfidtag_id' );
-		my @skid_ids = map { $_->skid_id() } @Contents;
+		my @skid_ids = map { $_->skid_id() ? $_->skid_id() : () } @Contents;
 		my @RFIDTags = openprint::RFIDTag->find( id=>[ map { $$_{rfidtag_id} } @Contents ] );
 		push @skid_ids, map { $_->id() } openprint::Skid->find( rfidtag_id=>[ map { $_->id() } @RFIDTags ] );
+		@skid_ids = sets::union( @skid_ids );
+$log->debug("SKids to not be in " . @skid_ids );
 		$$variable{skid_ids} = \@skid_ids;
 	}
 
+my @Good_Skids = ();
 	my @Skids = openprint::Skid->find(
+		'type in' => [ split(',', $$variable{Check}->contains() ) ],
+		#'rfidtag_id is null'=>0,
+		#'location_id is null'=>0,
 		'quantity >=' => 1, 
-		#'updated_on <=' => $$variable{Check}->started_on(),
+		'updated_on <' => $$variable{Check}->started_on(),
 		'id not in'	=> $$variable{skid_ids},
 		);
 	
 	foreach my $Skid ( @Skids ) {
+		my @SC = $Skid->Contents();
+		next if ! $Skid->location_id();
+
+		next if ! @SC;
+		my $SC = $SC[0] if @SC;
+		next if $SC->Paper()->type() ne 'Roll';
+		push @Good_Skids, $Skid;
 		$html .= sprintf('
-<tr%1$s id="skid-%11$d" title="skid %11$d">
-		<td class="Skid">%2$s</td>
-		<td class="RFIDTag">%3$s</td>
-		<td class="Width">%5$s</td>
-		<td class="Diameter">%6$s</td>
-		<td class="Quantity">%4$s</td>
-		<td class="Location" rowspan="2">%10$s</td>
-		<td class="Notes" rowspan="2">%7$s</td>
-		<td class="buttons" rowspan="2">%9$s</td>
-	</tr><tr%1$s><td colspan="5">%8$s</td></tr>',
+<tr%1$s id="skid-%2$d" title="skid %2$d">
+		<td class="Skid">%3$s</td>
+		<td class="RFIDTag">%4$s</td>
+		<td class="Width">%6$s</td>
+		<td class="Diameter">%7$s</td>
+		<td class="Quantity">%5$s</td>
+		<td class="Location">%8$s</td>
+		<td class="LastSeen DateTime">%9$s</td>
+		<td class="UpdatedOn DateTime">%10$s</td>
+		<td class="buttons" rowspan="2">%11$s</td>
+	</tr><tr%1$s><td colspan="8">%12$s</td></tr>',
 		$rowclass,
+		$Skid->id(),
 		$Skid->link_to(),
 		$Skid->RFIDTag()->link_to(),
-		$Skid->quantity(),
-		$Skid->dimension1(),
-		$Skid->dimension2(),
-		$Skid->notes(),
-		join('<br/>', map { $_->Paper()->to_string() } $Skid->Contents() ),
+		$SC->quantity(),
+		$SC->Paper()->width(),
+		$SC->Paper()->height(),
+		( $Skid->Location()->name() ),
+		format_datetime( $Skid->last_seen() ),
+		format_datetime( $Skid->updated_on() ),
 		join('',
 			#button( 'x'.$$Skid{id}, { onclick=>"del_entry($$Skid{id});", title=>'Delete', text=>'X' } ),
 		),
+		join('<br/>', map { $_->Paper()->to_string() } $Skid->Contents() ),
 
-		( $Skid->Location()->name() ),
-		$Skid->id(),
 		);
 
 		$total_weight += $Skid->quantity();
 		
 		$rowclass = $rowclass?'':' class="colRow"';
 	} # end foreach ICE
-	$html .= '<tr class="totals"><td colspan="2"># of items not in check: ' . scalar @Skids . '</td><td class="Quantity">'.Number::Format::format_number(int($total_weight)).'lbs</td><td></td><td></td><td></td><td></td></tr>';
+	$html .= '<tr class="totals"><td colspan="2"># of items not in check: ' . scalar @Good_Skids . '</td><td class="Quantity">'.Number::Format::format_number(int($total_weight)).'lbs</td><td></td><td></td><td></td><td></td><td></td><td></td></tr>';
 	return $html;
 ) ?>
 
