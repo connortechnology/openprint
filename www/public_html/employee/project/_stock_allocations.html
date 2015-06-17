@@ -26,14 +26,13 @@
 			} # end foreach
 
 			if ( @{$Allocations{$paper_id}} == 1 ) {
-				$html .= sprintf('<tr%1$s><td class="Stock"><a href="/employee/inventory/paper_details.html?paper_id=%3$d">%4$s</a></td>', $rowclass, 
-					1+($param{'allocation_details_'.$paper_id} ? scalar  @{$Allocations{$paper_id}} : 0 ), 
+				$html .= sprintf('<tr%1$s><td class="Stock"><a href="/employee/inventory/paper_details.html?paper_id=%2$d">%3$s</a></td>', $rowclass, 
 					$Paper->id(), $Paper->to_string() );
 				my $Allocation = $Allocations{$paper_id}[0];
 				$html .= '<td class="Skid">'.join('<br/>', map { sprintf('<a href="/employee/inventory/skid_details.html?skid_id=%1$d">%1$d</a>', $_->id() ); } $Allocation->Skids() ).'</td>';
 				$html .= '<td class="RFID">'.join('<br/>', map { sprintf('<a href="/employee/inventory/rfidtag_details.html?rfidtag_id=%1$s">%2$s</a>', $_->rfidtag_id(), $_->RFIDTag()->id_short() ); } $Allocation->Skids() ).'</td>';
 				$html .= '<td class="Location">'.join('<br/>', map { $_->Location()->name() } $Allocation->Skids() ).'</td>';
-				$html .= sprintf('<td class="quantity">%1$s%2$s</td></tr>', Number::Format::format_number($Allocation->quantity()), $Allocation->units() );
+				$html .= sprintf('<td class="quantity">%s</td></tr>', $Allocation->link_to( Number::Format::format_number($Allocation->quantity()).$Allocation->units() ) );
 			} else {
 				$html .= sprintf('<tr%1$s><td rowspan="%2$d"><a href="/employee/inventory/paper_details.html?paper_id=%3$d">%4$s</a></td>', $rowclass, 
 					1+($param{'allocation_details_'.$paper_id} ? scalar  @{$Allocations{$paper_id}} : 0 ), 
@@ -58,7 +57,7 @@
 						$html .= '<td class="Skid">'.join('<br/>', map { sprintf('<a href="/employee/inventory/skid_details.html?skid_id=%1$d">%1$d</a>', $_->id() ); } $Allocation->Skids() ).'</td>';
 						$html .= '<td class="RFID">'.join('<br/>', map { sprintf('<a href="/employee/inventory/rfidtag_details.html?rfidtag_id=%1$s">%2$s</a>', $_->rfidtag_id(), $_->RFIDTag()->id_short() ); } $Allocation->Skids() ).'</td>';
 						$html .= '<td class="Location">'.join('<br/>', map { $_->Location()->name() } $Allocation->Skids() ).'</td>';
-						$html .= sprintf('<td class="quantity">%2$s</td></tr>', Number::Format::format_number($Allocation->quantity()).$Allocation->units() );
+						$html .= sprintf('<td class="quantity">%s</td></tr>', $Allocation->link_to( Number::Format::format_number($Allocation->quantity()).$Allocation->units() ) );
 					} # end foreach
 				} # end if
 			} # end if
