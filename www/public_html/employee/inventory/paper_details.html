@@ -130,6 +130,14 @@ function calc_from_gsm( form ) {
 				</select>
 				<input style="display: none;" type="text" id="txtQuality" name="txtQuality" onfocus="ddm_select_by_index( f1.Weight, 0 );" />
 			</p>
+				<p>
+					<label for="material" onclick="$('material').toggle();$('material_id').toggle();">Material</label>
+					<select id="material_id" name="material_id" size="1" onchange="f1.material.value='';">
+						<option value="">select</option>
+					<? echo ( make_drop_down( openprint::StockMaterial->dropdown(order=>'lower(name)'), $$variable{Paper}->material_id() );) ?>
+					</select>
+					<input style="display: none;" type="text" id="material" name="material" onfocus="ddm_select_by_index( f1.material_id, 0 );" />
+				</p>
 			<p><label>Type</label>
 				<input type="radio" id="typeSheet" name="type" value="Sheet" onclick="$('PaperHeight').show();" <? echo ( 'checked="checked"' if $$variable{Paper}->type() ne 'Roll'; ) ?> />
 				<label class="radio" for="typeSheet">Sheet</label>
