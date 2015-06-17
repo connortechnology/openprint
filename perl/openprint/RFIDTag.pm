@@ -232,7 +232,7 @@ sub from_id {
 } # end sub from_id
 
 sub link_to {
-	return sprintf('<a href="/employee/inventory/rfidtag_details.html?rfidtag_id=%1$s">%2$s</a>', $_[0]->id(), $_[0]->id_short() );
+	return sprintf('<a href="/employee/inventory/rfidtag_details.html?rfidtag_id=%1$s">%2$s</a>', $_[0]->id(), @_ > 1 ? $_[1] : $_[0]->id_short() );
 } # end sub link_to
 
 1;
