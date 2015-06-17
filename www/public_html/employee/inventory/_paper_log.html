@@ -85,7 +85,7 @@
 				$html .= sprintf( '
 <tr%1$s>
 	<td class="Skid"><a href="/employee/inventory/skid_details.html?skid_id=%4$d">%4$d</a></td>
-	<td class="RFID"><a href="/employee/inventory/rfidtag_details.html?rfidtag_id=%5$s">%5$s</a></td>
+	<td class="RFID">%5$s</td>
 	<td class="ManufacturersID"><a href="/employee/inventory/skid_details.html?skid_id=%4$d">%10$s</a></td>
 	<td class="DateTime">%2$s</td>
 	<td class="Employee">%3$s</td>
@@ -97,7 +97,7 @@
 					Date::Format::time2str($config{'DateTimeFormat'}, Date::Parse::str2time($PI->updated_on()) ),
 					$PI->User()->name(),
 					$PI->skid_id(),
-					$PI->Skid()->rfidtag_id() ? sprintf('%d (%2$x)', $PI->Skid()->RFIDTag()->id_short(),substr($PI->Skid()->rfidtag_id(),1,15)) : '',
+					( $PI->Skid()->rfidtag_id() ? $PI->Skid()->RFIDTag()->link_to( sprintf('%d (%2$x)', $PI->Skid()->RFIDTag()->id_short(),substr($PI->Skid()->rfidtag_id(),1,15)) ) : '' ),
 					( defined $PI->delta() ? Number::Format::format_number( $PI->delta() ) : 0 ),
 					( defined $PI->instock() ? Number::Format::format_number( $PI->instock() ) : 0 ),
 					$PI->units(),
