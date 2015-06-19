@@ -1464,7 +1464,7 @@ $openprint::log->debug("Runspeed: $$Fold{type}(".$Fold->name().") : " . $Equipme
 # Add in stitching estimate, based on if the folder is this piece of equipment
 					$fold_specs{"ddmEquipment-$form-$qty_index"} = $Equipment->id();
 					$fold_specs{"Price-$form-$qty_index"} = $totalPrice;
-$Breakdown .= '<tr><td>Signatures:'.(@$Signature_Impositions+1).'</td></tr>';
+					#$Breakdown .= '<tr><td>Signatures:'.(@$Signature_Impositions+1).'</td></tr>';
 					$$calc_hash{FoldingSpecs} = \%fold_specs;
 					my $results = openprint::Estimating::Stitching::signature_calc( $Project, @$calc_hash{'HasStitching','StitchingSpecs'}, $qty_index, [ @$Signature_Impositions, $SignatureImposition ], $calc_hash );
 					if ( ! $$results{Equipment} ) {
@@ -1482,7 +1482,7 @@ $Breakdown .= '<tr><td>Signatures:'.(@$Signature_Impositions+1).'</td></tr>';
 						my $Price = $$results{Price};
 						$stitching_part = $$Price{Price};
 						$Breakdown .= '<tr><td>'.$$results{Breakdown}.'</td></tr>' if DEBUG;
-						$Breakdown .= "<tr><td>Stitching cost on $$results{Equipment}{name}</td><td class=\"Price\">$stitching_part</td></tr>";
+						$Breakdown .= "<tr><td>Stitching cost on $$results{Equipment}{name}</td><td class=\"Price\">".sprintf('%.2f',$stitching_part)."</td></tr>";
 					} # end if
 					#$Breakdown .= $$results{Breakdown}.'<br/>';
 				} elsif ( $$specs{StitchingEquipment}->id() != $Equipment->id() and $Equipment->specification('Folding Capable') eq 'When Stitching' ) {
