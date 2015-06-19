@@ -1500,7 +1500,7 @@ $openprint::log->debug("Runspeed: $$Fold{type}(".$Fold->name().") : " . $Equipme
 					$fold_specs{"Price-$form-$qty_index"} = $totalPrice;
 $Breakdown .= '<tr><td>Signatures:'.(@$Signature_Impositions+1).'</td></tr>';
 					my $stitching_specs;
-					if ( $capable eq 'When Stitching' ) {
+					if ( $capable eq 'When Stitching' and $$calc_hash{StitchingSpecs}{"chkOverrideEquipment$qty_index"} ne 'Y' ) {
 						my %stitching_specs = %{$$calc_hash{StitchingSpecs}};
 						$stitching_specs{"chkOverrideEquipment$qty_index"} = 'Y';
 						$stitching_specs{"ddmEquipment$qty_index"} = $Equipment->id();

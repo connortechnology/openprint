@@ -341,7 +341,9 @@ $openprint::log->debug("Fold pq($$FI{page_quantity}) pages($$FI{pages}) ($$Fold{
 				$results{alert} .= 'Your selected equipment was not found. Please select another.<br/>';
 			} # end if
 		} # end if
+#$openprint::log->debug("Using " . $equipment[0]->name() . " as overriden stitcher" );
 	} else {
+#$openprint::log->debug("Not Using overriden stitcher" . $$specs{"chkOverrideEquipment$qty_index"} );
 		if ( $$calc_hash{'Stitching::signature_calc::equipment'} ) {
 #$results{Breakdown} .= 'Using cached equipment';
 			@equipment = @{$$calc_hash{'Stitching::signature_calc::equipment'}};
