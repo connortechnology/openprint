@@ -185,5 +185,8 @@ sub send_notification {
 
 } # end sub stock_allocation_notification
 
+sub link_to {
+    return sprintf('<a href="/employee/inventory/allocation.html?allocation_id=%1$d">%2$s</a>', $_[0]{id}, @_ > 1 ? $_[1] : $_[0]->quantity().$_[0]->units() . ' of ' . $_[0]->Paper()->to_string() );
+} # end sub link_to
 1;
 __END__
