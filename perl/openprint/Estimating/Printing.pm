@@ -1094,6 +1094,8 @@ $openprint::log->debug("get_impositions: Presses to consider: " . join(',', map 
 			if ( $$specs{"ddmPress$qty_index"} ne $Press->strid() ) {
 $openprint::log->debug("Skipping cuz ddmPress$qty_index ne $$Press{strid}");
 				next;
+			} else {
+$openprint::log->debug("not Skipping cuz ddmPress$qty_index eq $$Press{strid}");
 			} 
 		} # end if
 		my $printing_type = $Press->specification('Printing Type');
@@ -1198,7 +1200,7 @@ $openprint::log->debug("Skipping cuz ddmPress$qty_index ne $$Press{strid}");
 # not all of the presses have a gutter spec so we will continue to use Grip for Width and Height
 		if ( ! sets::isin( $ProjectTypeName, [ 'Envelopes', 'NCR' ] ) ) {
 			$$project{Grip} = $Press->specification('Grip') if ! $$specs{OverrideAddGrip};
-			$$project{Gutter} = $Press->specification('Gutter');
+			$$project{Gutter} = $Press->specification('Gutter') if ! $$specs{OverrideAddGrip};
 			if ( $$specs{'chkOverrideBleedSize'.$qty_index} eq 'Y' ) {
 				$$project{BleedSize} = $$specs{'ddmBleedSize'.$qty_index};
 				$variables{'ddmBleedSize'.$qty_index} = [ sets::exclude( ['output'], $variables{'ddmBleedSize'.$qty_index} ) ];
@@ -1509,14 +1511,21 @@ if ( DEBUG_INITIAL_FILTERING ) {
 						and
 						( $P->width() > $maximum_sheet_length or $P->height() > $maximum_sheet_width )
 				   ) {
-					next if ! $P->cuttable();
-					next if ! $use_cut_stocks;
+					if ( ! $P->cuttable() ) {
+						$openprint::log->debug("Stock no good, can't be cut." . $P->to_string() );
+						next;
+					}
+					if ( ! $use_cut_stocks ) {
+						$openprint::log->debug("Stock no good, not using cut stocks." . $P->to_string() );
+						next;
+					} # en dif
 					while (
 							( $P->width() > $maximum_sheet_width or $P->height() > $maximum_sheet_length )
 							and
 							( $P->width() > $maximum_sheet_length or $P->height() > $maximum_sheet_width )
 						  ) {
 						$P->cut();
+$openprint::log->debug("Cutting to " . $P->to_string() ) if DEBUG;
 					} # end while
 				} # end if
 
@@ -1531,7 +1540,7 @@ if ( DEBUG_INITIAL_FILTERING ) {
 								( $P->width() >= $$specs{txtWidth} and $P->height() >= $$specs{txtHeight} ) 
 								or ( $P->height() >= $$specs{txtWidth} and $P->width() >= $$specs{txtHeight} ) 
 						   ) ) {
-#$openprint::log->debug("Next paper because it's too small for the item" . $P->width() . 'x' . $P->height() . ' => ' . $$specs{txtWidth} . 'x' . $$specs{txtHeight} ) if DEBUG;
+$openprint::log->debug("Next paper because it's too small for the item" . $P->width() . 'x' . $P->height() . ' => ' . $$specs{txtWidth} . 'x' . $$specs{txtHeight} ) if DEBUG;
 						last;
 					} # end if
 
@@ -6676,6 +6685,12 @@ $openprint::log->debug("$1 is !- $$specs{txtSpecificStockCalliper} ");
 				( $$specs{chkPocketRight} ? ' right ' : () ),
 			);
 		} # end if
+		$string .= '<br/>'	. join(', ',
+		
+				( $$specs{OverrideAddGrip} ? ' no image in grip or sides' : () ),
+				( $$specs{rdbColourBar} eq 'N' ? ' no colour bar' : () ),
+				( ( $$specs{BleedLeft} and $$specs{BleedRight} and $$specs{BleedTop} and $$specs{BleedBottom} ) ? '' : 'no bleed on ' . join(', ', map { $$specs{"Bleed$_"} ? '': $_ } ( 'Top','Bottom','Left','Right' ) ) ),
+		);
 		return $string;
 	} # end if qty_index
 } # end sub summary
