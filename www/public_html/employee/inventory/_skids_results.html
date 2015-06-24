@@ -6,6 +6,12 @@
 			order		=>	'id',
 			) ];
 	} elsif ( $session{'/employee/inventory/skids.html?skid_id'} ) {
+		my $skid_id = $session{'/employee/inventory/skids.html?skid_id'};
+		if ( openprint::Skid->transform( id=>$skid_id ) ne $skid_id ) {
+			$variable{error} .= 'Invalid skid/roll id<br/>';
+			$variable{Skids} = [];
+			return;
+		}
 		$$variable{Skids} = [ openprint::Skid->find( 
 			( $session{'/employee/inventory/skids.html?skid_id'} =~ /%/ ? 
 			( 'id ilike'	=>	$session{'/employee/inventory/skids.html?skid_id'} ) :
@@ -128,6 +134,7 @@
 		openprint::StockWeight->find();
 	} # end if
 ) ?>
+<?include(/includes/error_reporting.html)?>
 <? if ( @{$$variable{'Skids'}} ) ?>
 <form id="SkidResults" name="SkidResults" action="skids.html" method="post">
 	<table class="List">

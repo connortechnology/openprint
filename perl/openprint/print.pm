@@ -446,7 +446,7 @@ $log->debug("group $group_id");
 				'txtSpecificStockBrand','txtSpecificStockFinish','txtSpecificStockColour','txtSpecificStockWeight',
 				'txtSpecificStockWidth','txtSpecificStockHeight','txtSpecificStockCalliper',
 				'rdbSuppliedStock','rdbSpecificStock','StockType',
-				'CustomSheetDoubleSided', 'CustomStockPrice','txtCustomMWeight','txtStockGSM','CustomStockPriceUnits',
+				'CustomSheetDoubleSided', 'CustomStockPrice','txtCustomMWeight','txtStockGSM','CustomStockPriceUnits','StockPricePerM',
 				'basis_width','basis_height','basis_mweight','StockGrade',
 				'minimum_order', 'sheets_per_package',
 
@@ -562,7 +562,7 @@ $log->error("No Group!") if ! $type;
 				'txtSpecificStockBrand','txtSpecificStockFinish','txtSpecificStockColour','txtSpecificStockWeight',
 				'txtSpecificStockWidth','txtSpecificStockHeight','txtSpecificStockCalliper',
 				'rdbSuppliedStock','rdbSpecificStock','StockType',
-				'CustomSheetDoubleSided', 'CustomStockPrice','txtCustomMWeight','txtStockGSM','CustomStockPriceUnits',
+				'CustomSheetDoubleSided', 'CustomStockPrice','txtCustomMWeight','txtStockGSM','CustomStockPriceUnits','StockPricePerM',
 				'basis_width','basis_height','basis_mweight','StockGrade',
 				'minimum_order', 'sheets_per_package', 'full_packages',
 				'chkCyanSideOne','chkMagentaSideOne','chkYellowSideOne','chkBlackSideOne', 'chkProcessColourSideOne',

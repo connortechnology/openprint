@@ -244,5 +244,9 @@ sub reuse {
 	} # end if
 	
 } # end sub
+
+sub docket_sheet {
+	openprint::print_project::summary( $r, $log, $dbh, \%variable );
+} # end sub docket_sheet
 1;
 __END__

@@ -9,8 +9,11 @@
 		} else {
 			push @options, 'You';
 		} # end if
-		push @options, ( 'N', $openprint::Company->name() );
-		return radio( 'rdbSuppliedDie-'.$$variable{SignatureIndex}, \@options, ( $$variable{rdbSuppliedDie} or $$variable{'rdbSuppliedDie-'.$$variable{SignatureIndex}}), { onclick=>qq`if(this.checked){\$('CustomDie$$variable{SignatureIndex}' ).hide();} calc(this.form.name);` } );
+		push @options, ( 'N', new openprint::Company( $config{owner_id} )->name() );
+		return radio( 'rdbSuppliedDie-'.$$variable{SignatureIndex}, \@options, 
+			( $$variable{'rdbSuppliedDie-'.$$variable{SignatureIndex}} or $$variable{rdbSuppliedDie} ), 
+			{
+				onclick=>qq`if(this.value=='Y'){\$('CustomDie$$variable{SignatureIndex}').hide();}else{\$('CustomDie$$variable{SignatureIndex}').show();} calc(this.form.name);` } );
 	) ?>	
 </li>
 </ul>

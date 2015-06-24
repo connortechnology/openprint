@@ -341,7 +341,9 @@ $openprint::log->debug("Fold pq($$FI{page_quantity}) pages($$FI{pages}) ($$Fold{
 				$results{alert} .= 'Your selected equipment was not found. Please select another.<br/>';
 			} # end if
 		} # end if
+#$openprint::log->debug("Using " . $equipment[0]->name() . " as overriden stitcher" );
 	} else {
+#$openprint::log->debug("Not Using overriden stitcher" . $$specs{"chkOverrideEquipment$qty_index"} );
 		if ( $$calc_hash{'Stitching::signature_calc::equipment'} ) {
 #$results{Breakdown} .= 'Using cached equipment';
 			@equipment = @{$$calc_hash{'Stitching::signature_calc::equipment'}};
@@ -421,21 +423,28 @@ EQUIPMENT:foreach my $Equipment ( @equipment ) {
 				$results{Breakdown} .= sprintf('Face Trim too width. %s, Maximum: %s<br/>', $$specs{Width}, $max_face_trim );
 				next;
 			} # end if
-			if ( $Equipment->specification('Stitching Capable') eq 'When Digital' and $Press->specification('Printing Type') ne 'Digital' ) {
-				$results{Breakdown} .= sprintf('Not printed digital.<br/>' );
+
+			my $capable = $Equipment->specification('Stitching Capable');
+
+			if ( $capable eq 'When Digital' and $Press->specification('Printing Type') ne 'Digital' ) {
+				$results{Breakdown} .= 'Not printed digital.<br/>';
 				next;
 			} # end if
-			if ( $$I{Folder} and ( $_ = $$I{Folder}->specification('Folding Capable') ) and ( $_ eq 'When Stitching' ) ) {
-				if ( $$I{Folder}->id() != $Equipment->id() ) {
+			if ( $$I{Folder} and ( $$I{Folder}->id() != $Equipment->id() ) ) {
+				if ( ( $_ = $$I{Folder}->specification('Folding Capable') ) and ( $_ eq 'When Stitching' ) ) {
 					$results{Breakdown} .= $Equipment->strid() . ' is not the folding equipment<br/>';
 					next;
 				} 
+				if ( $capable eq 'When Folding' ) {
+					$results{Breakdown} .= 'Not being folded on ' . $$I{Folder}->name() . '<br/>';
+					next;
+				} # end if
 			} # end if
 			$$specs{"txtPockets$qty_index"} = $pockets;
 			my $price = get_price( $Project, $ServiceType, $Equipment, $specs, $plusCover, $qty_index );
 			$$price{ComparisonPrice} = $$price{Price};
 			if ( $folding_specs and ( defined $$folding_specs{"Price-$form-$qty_index"} ) ) {
-				$$price{ComparisonPrice} = $$price{Price} + $$folding_specs{"Price-$form-$qty_index"};
+				$$price{ComparisonPrice} += $$folding_specs{"Price-$form-$qty_index"};
 			} # end if
 #$results{Breakdown} .= $Equipment->strid() . ' ' . $$price{Price} . ' ' . $$folding_specs{"Price-$form-$qty_index"};
 			if ( ( ! $bestPrice ) or $$price{ComparisonPrice} < $$bestPrice{ComparisonPrice} ) {
