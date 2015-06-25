@@ -6690,6 +6690,7 @@ $openprint::log->debug("$1 is !- $$specs{txtSpecificStockCalliper} ");
 				( $$specs{OverrideAddGrip} ? ' no image in grip or sides' : () ),
 				( $$specs{rdbColourBar} eq 'N' ? ' no colour bar' : () ),
 				( ( $$specs{BleedLeft} and $$specs{BleedRight} and $$specs{BleedTop} and $$specs{BleedBottom} ) ? '' : 'no bleed on ' . join(', ', map { $$specs{"Bleed$_"} ? '': $_ } ( 'Top','Bottom','Left','Right' ) ) ),
+				( $$specs{txtCropMarkSpace} ? () : 'no crop marks' ),
 		);
 		return $string;
 	} # end if qty_index
