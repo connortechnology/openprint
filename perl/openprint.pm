@@ -1,6 +1,6 @@
 use strict;
 package openprint;
-use vars qw( $r %variable %session %param %config $log $dbh $User $Company $TZ );
+use vars qw( $r %variable %session %param %config $log $dbh $User $Company $TZ $Owner );
 
 
 sub session_init {
@@ -71,6 +71,7 @@ sub session_init {
 
 		$User = new openprint::User( $session{user_id} );
 		$Company = new openprint::Company( $session{company_id} );
+		$Owner = new openprint::Company( $config{owner_id} );
 
 	# Now set some defaults right away, if we can, FIXME namespace colision
 		if ( $r->param('Country') ) {
