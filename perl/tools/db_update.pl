@@ -215,6 +215,11 @@ if ( ! sets::isin( 'companies', \@tables ) ) {
 		$dbh->do('ALTER TABLE companies ADD FOREIGN KEY (last_project_id) REFERENCES Projects (id)');
 		die $dbh->errstr() if $dbh->errstr();
 	} # end if
+	if ( ! exists $$data{$openprint::Company::fields{last_order_id}} ) {
+		$dbh->do('ALTER TABLE companies ADD last_order_id INTEGER');
+		$dbh->do('ALTER TABLE companies ADD FOREIGN KEY (last_order_id) REFERENCES Orders (id)');
+		die $dbh->errstr() if $dbh->errstr();
+	} # end if
 
 } # end if
 
