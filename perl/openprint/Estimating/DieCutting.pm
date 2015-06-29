@@ -492,6 +492,7 @@ sub signature_calc {
 			my @Impositions = openprint::imposition::sort( @{$Set_of_Impositions} );
 
 			my %price;
+			$price{Prices} = [];
 			my $complete = 1;
 			for( my $impo_index = 0; $impo_index < @Impositions; $impo_index += 1 ) {
 				my $imposition = $Impositions[$impo_index];
@@ -517,12 +518,7 @@ sub signature_calc {
 
 			if ( (! $results{Total} ) or ( $price{Total} < $results{Total} ) ) {
 				$results{Equipment} = $Equipment;
-				if ( $price{Prices} ) {
-					@{$results{Prices}} = @{$price{Prices}};
-				} else {
-					$openprint::log->error("No prices in DieCutting?");
-					$results{Prices} = [];
-				}
+				@{$results{Prices}} = @{$price{Prices}};
 				$results{Overs} = $price{Overs};
 				$results{Total} = $price{Total};
 			} # end if
