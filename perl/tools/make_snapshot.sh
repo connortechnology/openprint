@@ -49,7 +49,7 @@ while getopts hvn:c:t:T OPT; do
 			TYPE=$OPTARG
 			;;
 		T)
-			TIME="time "
+			TIME="/usr/bin/time "
 			;;
 		\?)
 			# getopts issues an error message
