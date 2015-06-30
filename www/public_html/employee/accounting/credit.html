@@ -153,7 +153,7 @@ There are no unpaid orders.
 	<table class="List">
 		<tr><th class="DateTime">When</th><th class="User">Who</th><th class="note">Note</th></tr>
 <? echo ( my $html;
-	foreach my $Log ( openprint::Log->find('action_id'=>[104,105], object_id=>$$variable{CompanyIndex}, order=>'id desc','limit'=>5 ) ) {
+	foreach my $Log ( openprint::Log->find(action_id=>[104,105], object_type=>'openprint::Company', object_id=>$$variable{CompanyIndex}, order=>'id desc',limit=>5 ) ) {
 		$html .= sprintf(q`<tr><td class="DateTime">%s</td><td class="User">%s</td><td class="note">%s</td></tr>`,
 			 format_datetime( $Log->date_time() ),
 			$Log->User()->name(), $Log->note(),
