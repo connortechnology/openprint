@@ -1,5 +1,10 @@
 <? eval (
-	if ( $param{order_id} ) {
+	if ( $param{StartDocket} ) {
+		$$variable{Orders} = [ openprint::Order->find(
+			docket		=>	$param{StartDocket},
+			order	=> 'created_on',
+			) ];
+	} elsif ( $param{order_id} ) {
 		$$variable{Orders} = [ openprint::Order->find(
 			id		=>	$param{order_id},
 			order	=> 'created_on',
@@ -8,9 +13,17 @@
 		s/^\s+//, s/\s+$// for $param{invoice_id};
 		
 		$$variable{Orders} = [ openprint::Order->find(
-			invoice_id	=>	$param{'invoice_id'},
+			'invoice_id'	=>	$param{invoice_id},
 			order		=> 'created_on',
 			) ];
+	} elsif ( $param{invoice_num} ) {
+        s/^\s+//, s/\s+$// for $param{invoice_num};
+
+        $$variable{Orders} = [ openprint::Order->find(
+            invoice_num    =>  $param{invoice_num},
+            order       => 'created_on',
+            ) ];
+
 	} else {
 	$$variable{Orders} = [ openprint::Order->find(
 		date_filter( '/employee/accounting/search.html?ordered_on_end', 'created_on <=' ),
@@ -45,11 +58,12 @@
 		$$variable{'ReportTotal'} = $$variable{'ReportBalance'} = 0;
 		my $html;
 		my $rowclass;
+		my $ac = sql::start_transaction( $dbh );
 		foreach my $Order ( @{$$variable{'Orders'}} ) {
 			$html .= sprintf(q`
 <tr%1$s> 
-	<td class="order_id"><a href="/main/order/history_details.html?order_id=%2$d">%2$d</a></td>
-	<td class="Docket"><a href="/main/order/history_details.html?order_id=%2$d">%3$d</a></td>
+	<td class="order_id"><a href="/employee/accounting/details.html?order_id=%2$d">%2$d</a></td>
+	<td class="Docket"><a href="/employee/accounting/details.html?order_id=%2$d">%3$d</a></td>
 	<td class="Date">%4$s</td>
 	<td class="Company"><a href="/employee/accounting/credit.html?ddmCustomer=%5$d">%6$s</a></td>
 	<td class="status">%7$s</td>
@@ -73,6 +87,7 @@
 			$$variable{'ReportTotal'} += $Order->total();
 			$$variable{'ReportBalance'} += $Order->owing();
 		} # end foreach Order
+		sql::end_transaction( $dbh, $ac );
 		return $html;
 	) ?>
 	<tr class="totals"> 

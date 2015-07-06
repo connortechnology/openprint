@@ -68,8 +68,7 @@
 							<? echo ( $$variable{'Asset'}->license() ) ?>
 							</li>
 							<li><label>Used in</label>
-							<? echo ( join(',', map { sprintf('<a href="/employee/claim/view.html?claim_id=%1$d">Claim %1$d</a>', $_->object_id() ); } openprint::Object_Asset->find('asset_id'=>$$variable{'Asset'}->id()) ); ) ?>
-							<? echo ( join(',', map { sprintf('<a href="/employee/claim/view.html?claim_id=%1$d">Claim %1$d</a>', $_->claim_id() ); } openprint::Claim_Asset->find('asset_id'=>$$variable{'Asset'}->id()) ); ) ?>
+							<? echo ( join(',', map { $_->Object()->link_to() } openprint::Object_Asset->find('asset_id'=>$$variable{'Asset'}->id()) ); ) ?>
 							<? echo ( join(',', map { sprintf('<a href="/article/view.html?article_id=%1$d">Article %1$d</a>', $_->article_id() ); } openprint::Article_Asset->find('asset_id'=>$$variable{'Asset'}->id()) ); ) ?>
 							</li>
 						</ul>

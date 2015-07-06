@@ -4,9 +4,10 @@ our @ISA = qw(openprint::Object);
 
 require openprint::User;
 
-use vars qw( $debug $table $serial %fields %find_fields %transforms %defaults );
+use vars qw( $debug $table $serial %fields %find_fields %transforms %defaults $default_sort );
 $debug = 0;
 
+$default_sort = 'lower(name)';
 $table = 'usergroups';
 $serial= 'usergroups_id_seq';
 %fields = (

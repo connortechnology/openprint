@@ -19,7 +19,10 @@
 		<? echo ( 
 			my $html = '';
 			my $rowclass;
-			foreach my $Default ( openprint::ProjectType_Default->find('order'=>'projecttype_id NULLS FIRST,name') ) {
+
+			my $dropdown_contents = openprint::ProjectType->dropdown( order=>'lower(name)' );
+
+			foreach my $Default ( openprint::ProjectType_Default->find( order=>'projecttype_id NULLS FIRST,name' ) ) {
 				$html .= sprintf(q`
 <tr%1$s> 
 	<td>&nbsp;</td>
@@ -28,7 +31,7 @@
 	<td><input type="text" name="value-%2$d" value="%5$s"></td>
 </tr>
 					`, $rowclass, $Default->id(), 
-					ssi::make_drop_down( openprint::ProjectType->dropdown('order'=>'lower(name)'), $Default->projecttype_id() ),
+					make_drop_down( $dropdown_contents, $Default->projecttype_id() ),
 					$Default->name(), $Default->value() );
 				$rowclass = $rowclass ? '' : ' class="colRow"';
 			} # end foreach Default

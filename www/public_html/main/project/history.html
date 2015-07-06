@@ -65,7 +65,7 @@
 			</li>
 			<li>
 				<label>Type</label>
-				<select id="type_id" name="type_id" onchange="load_projects( this.form );">
+				<select id="type_id" name="type_id" onchange="load_projects();">
 					<option value="">All</option>
 					<? echo ( make_drop_down( openprint::ProjectType->dropdown( order=>'lower(name)' ), $session{'/main/project/history.html?type_id'} ); ) ?>
 				</select>
@@ -88,26 +88,23 @@
 			</li>
 <? if ( sets::isin( $session{user_type},[ 'E', 'A' ] ) ) ?>
 			<li><label>Company</label>
-				<select name="company_id" id="company_id" onchange="load_projects();">
+				<input type="text" onkeyup="filter_companies('company_id', {name:this.value,selected_id:get_ddm_value($('company_id'))});" class="filter" />
+				<select id="company_id" name="company_id" onchange="stop_filter_companies();load_projects();">
 					<option value="">All</option>
 					<? echo ( $session{'/main/project/history.html?company_id'} ? sprintf('<option value="%d" selected="selected">%s</option>', $session{'/main/project/history.html?company_id'}, new openprint::Company( $session{'/main/project/history.html?company_id'} )->name() ) : '';  ) ?>
-					<option value="">Please wait, loading the rest</option>
+					<option value="">Use the filter to populate this dropdown with other options</option>
 				</select>
 			</li>
 	<? if ( openprint::Product->find_one() ) ?>
 			<li><label>Predefined</label>
-				<input type="radio" name="predefined" id="predefined1" value="1" <? echo ( checked( $session{'/main/project/history.html?predefined'} eq '1' ) ) ?> onclick="load_projects();" />
-				<label class="radio" for="predefined1">Yes</label>
-				<input type="radio" name="predefined" id="predefined0" value="0" <? echo ( checked( $session{'/main/project/history.html?predefined'} eq '0' ) ) ?> onclick="load_projects();" />
-				<label class="radio" for="predefined0">No</label>
-				<input type="radio" name="predefined" id="predefined" value="" <? echo ( checked( $session{'/main/project/history.html?predefined'} eq '' ) ) ?> onclick="load_projects();" />
-				<label class="radio" for="predefined">Both</label>
+				<? echo ( radio( 'predefined', [ '1','Yes','0','No','','Both'], $session{'/main/project/history.html?predefined'}, { onclick=>'load_projects();' } ); ) ?>
 			</li>
 	<? endif ( openprint::Product->find_one() ) ?>
 <? endif ( sets::isin( $session{user_type},[ 'E', 'A' ] ) ) ?>
 <? eval ( 
 	$$variable{Users} = [ openprint::User->find(
-		company_id => ( $session{'/main/project/history.html?company_id'} ? $session{'/main/project/history.html?company_id'} : $session{company_id} ),
+		# Defaults to currently logged in company
+		( $session{'/main/project/history.html?company_id'} ? ( company_id=>$session{'/main/project/history.html?company_id'} ) : () ),
 		order=>'lower(firstname),lower(lastname)' ) ] ) ?>
 <? if ( @{$$variable{Users}} > 1 ) ?>
 			<li><label>Created By</label>
@@ -126,7 +123,7 @@
 			</div>
 			</div>
 			<p class="buttons">
-				<? echo ( join( '',
+				<? echo ( join( "\n",
 					button( 'ShowResults', { onclick=>'f1.submit();', text=>'Show Results' } ),
 					button( 'Create', { href=>'create_edit.html', text=>'Create New' } ),
 					button( 'Reset', { onclick=>q`f1.btnFunction.value='Reset';f1.submit();`, text=>'Reset' } ),
@@ -139,9 +136,6 @@
 	</div>
 	<input type="hidden" name="btnFunction" />
 </form>
-<? if ( sets::isin( $session{user_type},[ 'E', 'A' ] ) ) ?>
-<script type="text/javascript">new Ajax.Updater( 'company_id', '/includes/_company_ddm.html', { parameters: { selected_id: <?echo($session{'/main/project/history.html?company_id'})?> } } );</script>
-<? endif ( sets::isin( $session{user_type},[ 'E', 'A' ] ) ) ?>
 <? else ( $session{'user_id'} ) ?>
-	Only logged in customers have a project history.
+Only logged in customers have a project history.
 <? endif ( $session{'user_id'} ) ?>

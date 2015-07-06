@@ -7,7 +7,7 @@ require openprint::Project;
 require openprint::User;
 require openprint::ServiceType;
 
-use vars qw( $debug %fields %find_fields %transforms %defaults $table $serial @identified_by );
+use vars qw( $debug %fields %find_fields %transforms %defaults $table %serial @identified_by );
 
 $debug = 0;
 %fields = (
@@ -32,8 +32,8 @@ $debug = 0;
 	created_on	=>	q`'NOW()'`,
 );
 $table = 'tbl_project_contents';
-$serial = 'ContentsServiceIndex_seq';
-@identified_by = ( 'service_id' );
+%serial = ( service_id=>'ContentsServiceIndex_seq' );
+@identified_by = ( 'project_id', 'service_id' );
 
 sub Project {
 	return new openprint::Project( $_[0]{project_id} );
@@ -138,6 +138,7 @@ if ( ! $$self{project_id} ) {
 } # end if
 	my $ac = sql::start_transaction( $openprint::dbh );
 	my $Project = $self->Project();
+	$Project->lock();
 	my $specs = $self->specs();
 $openprint::log->warn("Deleting " . $self->to_string() );
 	sql::execute( undef, $openprint::dbh, q{DELETE FROM tbl_Service_Specifications WHERE lngProjectIndex=? AND lngServiceIndex=?}, @$self{'project_id','service_id'} );
@@ -147,6 +148,7 @@ $openprint::log->warn("Deleting Service from " . $Project->to_string() );
 	delete $$Project{'signatures'};
 	delete $$Project{'Signature'};
 	delete $$Project{'service_types'};
+	$Project->unlock();
 	foreach my $Job ( openprint::ScheduledJob->find( project_id=>$$self{project_id}, 'service_id any'=>$$self{service_id} ) ) {
 		$Job->save( { 
 				service_id => [ sets::exclude( [ $$self{service_id} ], $Job->service_id() ) ],
@@ -159,7 +161,7 @@ $openprint::log->warn("Deleting Service from " . $Project->to_string() );
 				} );
 	} # end foreach Job
 
-	$Project->add_to_log( @openprint::session{'company_id','user_id'}, "Deleted service ".$self->ServiceType()->type() . " $$specs{ServiceName}." );
+	$Project->add_to_log( @openprint::session{'company_id','user_id'}, "Deleted service ".$self->ServiceType()->type() . " $$specs{ServiceName} ($$self{service_id})." );
 	sql::end_transaction( $openprint::dbh, $ac );
 	return;
 } # end sub delete
@@ -181,7 +183,7 @@ sub overrides {
 		my @o = $function->( $self->Project(), $$self{'service_id'}, $specs, $qty_index );
 		return @o;
 	} else {
-		$openprint::log->warn("No has_overrides for " . $_[0]->ServiceType()->name() );
+		$openprint::log->warn("No has_overrides for " . $_[0]->ServiceType()->type() );
 	} # end if
 	return ();
 } # end sub overrides

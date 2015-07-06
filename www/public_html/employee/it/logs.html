@@ -1,104 +1,56 @@
-<form name="searchLog" action="logs.html" method="post">
+<script type="text/javascript">
+function load_page() {
+	new Ajax.Updater( 'Results', '_logs.html', { parameters: $('searchLog').serialize() } );
+}
+</script>
+<form id="searchLog" name="searchLog" action="logs.html" method="post">
 	<fieldset class="filters"><legend>Search</legend>
-		<p><label>Actions:<br/>
-			<a href="javascript:void(0);" onclick="select_all( searchLog, 'log_actions', true );return false;">Select All</a> | <a href="javascript:void(0);" onclick="select_all( searchLog, 'log_actions', false );return false;">Clear All</a></label>
-			<ul class="Actions">
-			<? echo(
-				my $html;
-				foreach my $Action ( openprint::Log_Action->find('order'=>'lower(name)') ) {
-					$html .= sprintf('<li><input type="checkbox" name="log_actions" id="log_action-%1$s" value="%1$s" %3$s /><label class="radio" for="log_action-%1$s">%2$s</label></li>', 
-						$Action->id(), $Action->name(), ssi::checked( sets::isin( $Action->id(), $param{'log_actions'} ) ) 
-						);
+		<ul>
+			<li><label>Actions:<br/>
+				<a href="javascript:void(0);" onclick="select_all( searchLog, 'log_actions', true );return false;">Select All</a> | <a href="javascript:void(0);" onclick="select_all( searchLog, 'log_actions', false );return false;">Clear All</a></label>
+				<ul class="Actions">
+				<? echo(
+					my $html;
+					foreach my $Action ( openprint::Log_Action->find(order=>'lower(name)') ) {
+						$html .= sprintf('<li><input type="checkbox" name="log_actions" id="log_action-%1$s" value="%1$s" %3$s /><label class="radio" for="log_action-%1$s">%2$s</label></li>', 
+							$Action->id(), $Action->name(), checked( sets::isin( $Action->id(), $param{log_actions} ) ) 
+							);
 
-				} # end foreach Action
-				return $html;
-			) ?>
-			</ul>
-		</p>
-		<p>
-			<label>Company</label>
-			<input type="text" onkeyup="filterDDM(this, this.form.company_id);" class="filter" />
-			<select name="company_id">
-			<option value="">All</option>
-			<? echo ( openprint::Company::get_dropdown( exists $param{'company_id'} ? $param{'company_id'} : $session{'company_id'} ); ) ?>
-			</select>
-		</p>			
-		<p>
-			<label>User</label>
-			<select name="user_id">
-			<option value="">All</option>
-			<? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::User->find( 'company_id'=>$param{'company_id'} ? $param{'company_id'} : $session{'company_id'},'order'=>'lower(firstname),lower(lastname)') ], $param{'user_id'} ); ) ?>
-			</select>
-		</p>			
-	<? eval (
-		if ( $param{'datetime_start_year'} ) {
-			@openprint::session{$r->uri().'?datetime_start_year',$r->uri().'?datetime_start_month',$r->uri().'?datetime_start_day'} =
-				@param{'datetime_start_year','datetime_start_month','datetime_start_day'};
-			@openprint::session{$r->uri().'?datetime_end_year',$r->uri().'?datetime_end_month',$r->uri().'?datetime_end_day'} =
-				@param{'datetime_end_year','datetime_end_month','datetime_end_day'};
-		} else {
-			@openprint::session{$r->uri().'?datetime_start_year',$r->uri().'?datetime_start_month',$r->uri().'?datetime_start_day'} = Date::Calc::Today();
-			@openprint::session{$r->uri().'?datetime_end_year',$r->uri().'?datetime_end_month',$r->uri().'?datetime_end_day'} = Date::Calc::Today();
-		} # end if
-	) ?>
-		<p>
-			<label>Date</label>
-			<? echo ( ssi::date_select_session( '/employee/it/logs.html', 'datetime_start', { 'with_today' => 1, 'with_clear'=>1 } ); ) ?>
-			to
-			<? echo ( ssi::date_select_session( '/employee/it/logs.html', 'datetime_end', { 'with_today' => 1, 'with_clear'=>1 } ); ) ?>
-		</p>
+					} # end foreach Action
+					return $html;
+				) ?>
+				</ul>
+			</li>
+			<li>
+				<label>Company</label>
+				<input type="text" onkeyup="filterDDM(this, this.form.company_id);" class="filter" />
+				<select name="company_id">
+				<option value="">All</option>
+				<? echo ( openprint::Company::get_dropdown( exists $param{company_id} ? $param{company_id} : $session{company_id} ); ) ?>
+				</select>
+			</li>			
+			<li>
+				<label>User</label>
+				<select name="user_id">
+				<option value="">All</option>
+				<? echo ( make_drop_down( openprint::User->dropdown( company_id=>$param{company_id} ? $param{company_id} : $session{company_id}, order=>'lower(firstname),lower(lastname)'), $param{user_id} ); ) ?>
+				</select>
+			</li>			
+			<li>
+				<label>Date</label>
+				<? echo ( datetime_select_session( '/employee/it/logs.html', 'date_time_start', { with_today=>1, with_clear=>1 } ); ) ?>
+				to
+				<? echo ( datetime_select_session( '/employee/it/logs.html', 'date_time_end', { with_today=>1, with_clear=>1 } ); ) ?>
+			</li>
+		</ul>
 		<p class="buttons">
-		<? echo ( ssi::writeButton( $log, $dbh, 'Search','',"document.searchLog.submit();", '', 'Search' ); ) ?>
+		<? echo ( button( 'Search', { onclick=>'load_page();' } ); ) ?>
 		</p>
 	</fieldset>
 </form>
 <fieldset>
-	<legend>Last Events</legend>
-		<table class="List sortable" style="table-layout: auto; overflow: hidden;">
-			<tr>
-				<th align="left">Action</th>
-				<th class="DateTime">When</th>
-				<th align="left">IP Address</th>
-				<th align="left">Note</th>
-				<th align="left">Email</th>
-				<th align="left">Name</th>
-				<th>Company</th>
-			</tr>
-			<? echo (
-				my $html = '';
-				@{$$variable{'Results'}} = openprint::Log->find(
-					( Date::Calc::check_date( @session{$r->uri().'?datetime_start_year',$r->uri().'?datetime_start_month', $r->uri().'?datetime_start_day'} ) ? (
-					'date_time >='	=>	sprintf('%.4d-%.2d-%.2d 00:00:00', @session{$r->uri().'?datetime_start_year',$r->uri().'?datetime_start_month', $r->uri().'?datetime_start_day'} ) ) : () ),
-					( Date::Calc::check_date( @session{$r->uri().'?datetime_end_year',$r->uri().'?datetime_end_month', $r->uri().'?datetime_end_day'} ) ? (
-					'date_time <='		=>	sprintf('%.4d-%.2d-%.2d 23:59:59', @session{$r->uri().'?datetime_end_year',$r->uri().'?datetime_end_month', $r->uri().'?datetime_end_day'} ) ) : () ),
-					( $param{'company_id'} ? ( 'company_id'	=>	$param{'company_id'} ) : () ),
-					( $param{'user_id'} ? ( 'user_id'		=>	$param{'user_id'} ) : () ),
-					'action_id'	=>	$param{'log_actions'},
-					);
+	<legend>Events</legend>
+	<div id="Results">
 
-				foreach my $Log ( @{$$variable{'Results'}} ) {
-					my $User = $Log->User();
-					$html .= sprintf('<tr>
-							<td>%s</td>
-							<td>%s</td>
-							<td><a href="/employee/it/host.html?host_id=%d">%s</a></td>
-							<td>%s</td>
-							<td>%s</td>
-							<td>%s</td>
-							<td>%s</td>
-						</tr>',
-						$Log->Action()->name(),
-						Date::Format::time2str($config{'DateTimeFormat'}, Date::Parse::str2time($Log->date_time() ) ),
-						$Log->Host()->id(),
-						$Log->hostname() ? $Log->hostname() : $Log->ip_address(),
-						$Log->note(),
-						$User->email(),
-						$User->name(),
-						$Log->Company()->name(),
-						);
-				} # end foreach
-				return $html;
-			) ?>
-		</table>
 	</div>
 </fieldset>

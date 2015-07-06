@@ -12,20 +12,17 @@
 		$$variable{Expenses} = [ openprint::Expense->find( id=>$param{expense_id} ) ];
 	} else {
 	$$variable{Expenses} = [ openprint::Expense->find( 
-			( $session{'/employee/accounting/expenses.html?category_id'} ? ( 'category_id' => $session{'/employee/accounting/expenses.html?category_id'} ) : () ),
-			( $session{'/employee/accounting/expenses.html?recipient_id'} ? ( 'recipient_id' => $session{'/employee/accounting/expenses.html?recipient_id'} ) : () ),
-			( $session{'/employee/accounting/expenses.html?account_id'} ? ( 'account_id' => $session{'/employee/accounting/expenses.html?account_id'} ) : () ),
-			( $session{'/employee/accounting/expenses.html?attention'} ne '' ? ( 'attention' => $session{'/employee/accounting/expenses.html?attention'} ) : () ),
-			ssi::date_filter( '/employee/accounting/expenses.html?invoiced_on_end', 'invoiced_on <=' ),
-			ssi::date_filter( '/employee/accounting/expenses.html?invoiced_on_start', 'invoiced_on >=' ),
-			ssi::date_filter( '/employee/accounting/expenses.html?due_on_end', 'due_on <=' ),
-			ssi::date_filter( '/employee/accounting/expenses.html?due_on_start', 'due_on >=' ),
-			ssi::date_filter( '/employee/accounting/expenses.html?paid_on_end', 'paid_on <=' ),
-			ssi::date_filter( '/employee/accounting/expenses.html?paid_on_start', 'paid_on >=' ),
-			ssi::date_filter( '/employee/accounting/expenses.html?entered_on_end', 'created_on <=' ),
-			ssi::date_filter( '/employee/accounting/expenses.html?entered_on_start', 'created_on >=' ),
-			'owner_id'		=> $session{'company_id'},
-			'order'				=> 'paid_on,due_on',
+			( map { $session{'/employee/accounting/expenses.html?'.$_} ? ( $_ => $session{'/employee/accounting/expenses.html?'.$_} ) : () } ( 'category_id', 'recipient_id', 'account_id','attention','amount','total' ) ),
+			date_filter( '/employee/accounting/expenses.html?invoiced_on_end', 'invoiced_on <=' ),
+			date_filter( '/employee/accounting/expenses.html?invoiced_on_start', 'invoiced_on >=' ),
+			date_filter( '/employee/accounting/expenses.html?due_on_end', 'due_on <=' ),
+			date_filter( '/employee/accounting/expenses.html?due_on_start', 'due_on >=' ),
+			date_filter( '/employee/accounting/expenses.html?paid_on_end', 'paid_on <=' ),
+			date_filter( '/employee/accounting/expenses.html?paid_on_start', 'paid_on >=' ),
+			date_filter( '/employee/accounting/expenses.html?entered_on_end', 'created_on <=' ),
+			date_filter( '/employee/accounting/expenses.html?entered_on_start', 'created_on >=' ),
+			owner_id		=> $session{company_id},
+			order			=> 'paid_on,due_on',
 			) ];
 	} # end if
 	foreach my $Expense ( @{$$variable{'Expenses'}} ) {

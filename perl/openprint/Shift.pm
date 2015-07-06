@@ -3,6 +3,7 @@ package openprint::Shift;
 our @ISA = qw(openprint::Object);
 require openprint::Object;
 
+use Carp;
 use openprint ();
 use vars qw(%variable $log $dbh %config %session $debug $table $serial %fields %find_fields %transforms %defaults );
 *variable = \%openprint::variable;
@@ -49,12 +50,22 @@ $serial = 'shifts_id_seq';
 	'updated_on'		=>	q`'NOW()'`,
 );
 
+my $parser = 'DateTime::Format::Pg';
+
+sub starttime_dt {
+	if ( $_[0]{starttime} ) {
+		return $parser->parse_datetime( $_[0]{starttime} );
+	} else {
+		$openprint::log->error("tried to get a dt for " . $_[0]{starttime} );
+Carp::cluck("Loadi?! ");
+		return;
+	}
+}
 sub starttime_seconds {
-	my $parser = 'DateTime::Format::Pg';
 	if ( @_ == 2 ) {
-		$_[0]{'starttime'} = $parser->format_datetime( DateTime->from_epoch( 'epoch'=>$_[1], 'time_zone'=>$_[0]->TZ() ) );
+		$_[0]{starttime} = $parser->format_datetime( DateTime->from_epoch( 'epoch'=>$_[1], time_zone=>$openprint::TZ ) );
 	} # end if
-	return $parser->parse_datetime( $_[0]{'starttime'} )->epoch();
+	return $parser->parse_datetime( $_[0]{starttime} )->epoch();
 } # endsub
 
 sub startdate_seconds {
@@ -63,54 +74,57 @@ sub startdate_seconds {
 	return Date::Parse::str2time( Date::Format::time2str( '%Y-%m-%d', $time ) );
 } # end sub startdate_seconds
 
+sub endtime_dt {
+	return $parser->parse_datetime( $_[0]{endtime} );
+}
 sub endtime_seconds {
 	if ( @_ == 2 ) {
-		$_[0]{'endtime'} = Date::Format::time2str( '%Y-%m-%d %H:%M:%S', $_[1] );
+		$_[0]{endtime} = Date::Format::time2str( '%Y-%m-%d %H:%M:%S', $_[1] );
 	} # end if
-	return Date::Parse::str2time( $_[0]{'endtime'} );
+	return Date::Parse::str2time( $_[0]{endtime} );
 } # endsub
 
 sub Operator {
-	return new openprint::User( $_[0]{'operator_id'} );
+	return new openprint::User( $_[0]{operator_id} );
 } # end sub Operator
 
 sub Equipment_Shift {
-	return new openprint::Equipment_Shift( $_[0]{'shift_id'} );
+	return new openprint::Equipment_Shift( $_[0]{shift_id} );
 } # end sub Equipment_Shift
 
 # We have this here so that changing the shift_id will cause reloading of the shift name
 sub shift_id {
 	if ( @_ > 1 ) {
-		$_[0]{'shift_id'} = $_[1];
-		delete $_[0]{'name'};
+		$_[0]{shift_id} = $_[1];
+		delete $_[0]{name};
 	} # end if
-	return $_[0]{'shift_id'};
+	return $_[0]{shift_id};
 } # end sub shift_id
 
 sub name {
 	my ( $self, $new_name ) = @_;
 	if ( defined $new_name ) {
-		$$self{'name'} = $new_name;
-	} elsif ( ! $$self{'name'} ) {
-		$$self{'name'} = $self->Equipment_Shift()->name();
+		$$self{name} = $new_name;
+	} elsif ( ! $$self{name} ) {
+		$$self{name} = $self->Equipment_Shift()->name();
 	} # end if
-	return $$self{'name'};
+	return $$self{name};
 } # end sub name
 
 sub schedule {
-	return openprint::press_schedule->find( 'starttime >='=>$_[0]{'starttime'}, 'starttime <='=>$_[0]{'endtime'}, 'equipment_id'=>$_[0]{'equipment_id'} );
+	return openprint::press_schedule->find( 'starttime >='=>$_[0]{starttime}, 'starttime <='=>$_[0]{endtime}, 'equipment_id'=>$_[0]{equipment_id} );
 } # end sub schedule
 
 sub Schedule {
 	return openprint::ScheduledJob->find( 
-		( $_[0]{'starttime'} ? 
+		( $_[0]{starttime} ? 
 			( 
-			'starttime >='		=>	$_[0]{'starttime'}, 
-			'starttime <'		=>	$_[0]{'endtime'}, 
+			'starttime >='		=>	$_[0]{starttime}, 
+			'starttime <'		=>	$_[0]{endtime}, 
 			) : (
-			'starttime is null'	=>	$_[0]{'starttime'} ? 0 : 1,
+			'starttime is null'	=>	$_[0]{starttime} ? 0 : 1,
 			) ),
-			'equipment_id'		=>	$_[0]{'equipment_id'},
+			'equipment_id'		=>	$_[0]{equipment_id},
 			'order'				=>	'starttime,projectindex,service_id',
 			);
 } # end sub Schedule
@@ -119,33 +133,36 @@ sub operator_id {
 	my $self = shift;
 
 	if ( @_ ) {
-		if ( $$self{'id'} ) {
+		if ( $$self{id} ) {
 			foreach my $Job ( $self->Schedule() ) {
 				$Job->save({'operator_id'=>$_[0]});	
 			} # end foreach
-$openprint::log->debug("Setting operator from $$self{'operator_id'} to $_[0]");
-			if ( $$self{'operator_id'} != $_[0] ) {
+$openprint::log->debug("Setting operator from $$self{operator_id} to $_[0]");
+			if ( $$self{operator_id} != $_[0] ) {
 $openprint::log->debug("Setting operator to $_[0]");
-				$$self{'operator_id'} = $_[0];
+				$$self{operator_id} = $_[0];
 				$self->save();
 			} # end if
 		} # end if
 	} # end if
-	return $$self{'operator_id'};
+	return $$self{operator_id};
 } # end sub operator_id
 
 sub Equipment {
-	return new openprint::Equipment( $_[0]{'equipment_id'} );
+	return new openprint::Equipment( $_[0]{equipment_id} );
 } # end sub Equipment
 
 sub to_string {
 	my ( $self ) = @_;
-	if ( ! exists $$self{'to_string'} ) {
-		$$self{'to_string'} = sprintf('%s %s %s to %s %s', $self->Equipment()->name(), $self->name(), 
-			Date::Format::time2str( $config{'DateTimeFormat'}, Date::Parse::str2time( $$self{'starttime'} ) ),
-			Date::Format::time2str( $config{'DateTimeFormat'}, Date::Parse::str2time( $$self{'endtime'} ) ), $self->Operator()->name() );
+	if ( ! exists $$self{to_string} ) {
+$openprint::log->debug("Getting to_string");
+		$$self{to_string} = sprintf('%s %s %s to %s op:(%s)', $self->Equipment()->name(), $self->name(), 
+			$self->starttime() ? $parser->format_datetime( $self->starttime_dt ) : '',
+			$self->endtime() ? $parser->format_datetime( $self->endtime_dt ) : '',
+			$self->Operator()->name() );
+$openprint::log->debug("Getting to_string");
 	} # end if
-	return $$self{'to_string'};
+	return $$self{to_string};
 } # end sub to_string
 
 sub get_lis {
@@ -154,14 +171,16 @@ sub get_lis {
 	my @Jobs = $Shift->Schedule();
 	if ( ( ! @Jobs ) and ! $Shift->starttime() ) {
 		return 'empty';
+	} elsif ( $debug ) {
+		$openprint::log->debug( @Jobs . " jobs loaded" );
 	} # end if
 	my $html;
 	my $ul_id = $Shift->ul_id();
 
 	foreach my $Job ( @Jobs ) {
 		if ( $filters ) {
-			if ( $$filters{'Status'} ) {
-				next if ! sets::isin( $Job->Project()->status(), $$filters{'Status'} );
+			if ( $$filters{Status} ) {
+				next if ! sets::isin( $Job->Project()->status(), $$filters{Status} );
 			} # end if
 		} # end if
 		
@@ -174,9 +193,9 @@ sub get_lis {
 sub ul_id {
 	my ( $self ) = @_;
 	if ( $self->starttime() ) {
-		return sprintf('ul%d-%s-%s', $$self{'equipment_id'}, Date::Format::time2str('%Y-%m-%d', $self->starttime_seconds() ), $self->name() );
+		return sprintf('ul%d-%s-%s', $$self{equipment_id}, Date::Format::time2str('%Y-%m-%d', $self->starttime_seconds() ), $self->name() );
 	} else {
-		return sprintf('ul%d-%s', $$self{'equipment_id'}, $self->name() );
+		return sprintf('ul%d-%s', $$self{equipment_id}, $self->name() );
 	} # end if
 } # end sub ul_id
 
@@ -188,11 +207,11 @@ sub get_from_ul_id {
 
 	my $Shift;
 	if ( $shift_name and $date ) {
-		$Shift = openprint::Shift->find_one( 'equipment_id'=>$equipment_id, 'name'=>$shift_name, 'startdate'=>$date );
+		$Shift = openprint::Shift->find_one( equipment_id=>$equipment_id, name=>$shift_name, startdate=>$date );
 		return if ! $Shift;
 	} else {
 		$Shift = new openprint::Shift();
-		$Shift->set({ 'equipment_id'	=>	$equipment_id, });
+		$Shift->set({ equipment_id	=>	$equipment_id });
 		$Shift->name( $shift_name );
 	} # end if Shift
 	return $Shift;
@@ -209,7 +228,7 @@ sub get_ul {
 	foreach my $Job ( @Jobs ) {
 		if ( $filters ) {
 			if ( $$filters{Status} ) {
-				next if ! sets::isin( $Job->Project()->status(), $$filters{'Status'} );
+				next if ! sets::isin( $Job->Project()->status(), $$filters{Status} );
 			} # end if
 		} # end if
 		$total_impressions += $Job->impressions();
@@ -225,7 +244,7 @@ sub get_ul {
 		if ( Date::Calc::check_date( $year, $month, $day ) ) {
 			my $Operator = $Shift->Operator();
 
-			if ( openprint::usergroup::is_user_in( ['PressManager','Scheduling'], $session{'user_id'} ) ) {
+			if ( openprint::usergroup::is_user_in( ['PressManager','Scheduling'], $session{user_id} ) ) {
 				$html .= sprintf( q`<div class="When" onclick="popup_window('_shift_popup.html','shift_id=%d', {width:475});"><span class="Interval">%s %d %.3s %s %s to %s</span><span class="TotalImpressions">(%d)</span><span class="%s">%s</span></div>`, 
 						$Shift->id(), 
 						Date::Calc::Day_of_Week_Abbreviation( Date::Calc::Day_of_Week($year, $month, $day)), $day, Date::Calc::Month_to_Text( $month ), $Shift->name(), 
@@ -255,29 +274,29 @@ sub get {
 
 sub Previous {
 	my ( $self ) = @_;
-	if ( ! $$self{'Previous'} ) {
-		my $Previous = openprint::Shift->find_one('starttime <' => $self->starttime(), 'equipment_id'=>$$self{'equipment_id'}, 'order'=>'starttime DESC' );
+	if ( ! $$self{Previous} ) {
+		my $Previous = openprint::Shift->find_one('starttime <' => $self->starttime(), 'equipment_id'=>$$self{equipment_id}, 'order'=>'starttime DESC' );
 		$log->debug( 'Previous: ' . $Previous->to_string() );
-		$$self{'Previous'} = $Previous;
+		$$self{Previous} = $Previous;
 	} # end if
-	return $$self{'Previous'};
+	return $$self{Previous};
 } # end sub Previous
 sub Next {
 	my ( $self ) = @_;
-	if ( ! $$self{'Next'} ) {
-		my $Next = openprint::Shift->find_one('starttime >=' => $self->endtime(), 'equipment_id'=>$$self{'equipment_id'}, 'order'=>'starttime' );
+	if ( ! $$self{Next} ) {
+		my $Next = openprint::Shift->find_one('starttime >=' => $self->endtime(), 'equipment_id'=>$$self{equipment_id}, 'order'=>'starttime' );
 		$log->debug( 'Next: ' . $Next->to_string() );
 		if ( ! $Next ) {
 			my $ES = openprint::Equipment_Shift->find_one(
-					'equipment_id'		=>	$$self{'equipment_id'},
+					'equipment_id'		=>	$$self{equipment_id},
 					'starttime_seconds >='	=>	$self->Shift()->Equipment_Shift()->endtime_seconds(),
 					'order'			 =>	'starttime_seconds',
 					);
 			$Next = $ES->emanantise( $self->endtime_seconds() );
 		} # end if
-		$$self{'Next'} = $Next;
+		$$self{Next} = $Next;
 	} # end if
-	return $$self{'Next'};
+	return $$self{Next};
 } # end sub Next
 
 sub delete {
@@ -289,10 +308,10 @@ sub delete {
 } # end sub delete
 
 sub TZ {
-	if ( ! $_[0]{'TZ'} ) {
-		$_[0]{'TZ'} = DateTime::TimeZone->new( name => $openprint::config{'Timezone'} );
+	if ( ! $_[0]{TZ} ) {
+		$_[0]{TZ} = DateTime::TimeZone->new( name => $openprint::config{Timezone} );
 	} # end if
-	return $_[0]{'TZ'};
+	return $_[0]{TZ};
 } # end sub TZ
 
 sub get_Shifts {

@@ -20,7 +20,7 @@ require openprint::Payment;
 require openprint::Tax;
 require openprint::Order_Notification;
 
-$debug = 1;
+$debug = 0;
 
 $table = 'orders';
 $serial = 'orders_id_seq';
@@ -75,7 +75,9 @@ $serial = 'orders_id_seq';
 %find_fields = (
 	project_id	=>	'(SELECT lngprojectindex FROM Order_Contents WHERE OrderIndex=Orders.id)',
 	status		=>	'(SELECT name FROM Order_Statuses WHERE order_statuses.id=status_id)',
-	invoice_id	=>	'(SELECT invoice_id FROM order_invoices WHERE order_id=orders.id)',
+	#invoice_id	=>	'(SELECT invoice_id FROM order_invoices WHERE order_id=orders.id)',
+invoice_id => 'id IN (SELECT order_id FROM order_invoices WHERE invoice_id=?)',
+invoice_num => 'id IN (SELECT order_id FROM order_invoices WHERE invoice_id=(SELECT invoices.id FROM Invoices WHERE num=?))',
 );
 
 %defaults = (
@@ -110,6 +112,7 @@ sub save {
 			sql::end_transaction( $dbh, $ac );
 			return $error;
 		} # end if	
+		$openprint::Company->save({last_order_id=>$$self{id}}) if $openprint::Company and $openprint::Company->id() and $$self{id};
 	} elsif ( $$params{'force_insert'} ) {
 		if ( ( my $error = sql::insert( $log, $dbh, 'Orders', \%sql ) ) ) {
 			sql::end_transaction( $dbh, $ac );
@@ -331,14 +334,13 @@ require openprint::OrderedProject;
 
 sub Products {
 	my $self = shift;
-	if ( ! $$self{'id'} ) {
-		Carp::cluck("openrpint::Order->Products called with no id");
-		$openprint::log->error("openrpint::Order->Products called with no id");
+	if ( ! $$self{id} ) {
+		$openprint::log->warn("openrpint::Order->Products called with no id");
 		return ();
 	} # end if
-require openprint::OrderedProduct;
-	@{$$self{'Products'}} = openprint::OrderedProduct->find( 'order_id'=>$$self{id} );
-	return @{$$self{'Products'}};
+	require openprint::OrderedProduct;
+	@{$$self{Products}} = openprint::OrderedProduct->find( order_id=>$$self{id} );
+	return @{$$self{Products}};
 } # end sub Products
 
 sub User {
@@ -797,9 +799,18 @@ sub can_see_pricing {
 	return 1 if $openprint::session{user_type} eq 'A';
 	return 1 if $_[0]{user_id} == $openprint::session{user_id};
 	return 1 if $_[0]{salesrep_id} == $openprint::session{user_id};
-	return 1 if openprint::usergroup::is_user_in( ['Accounting'], $openprint::session{user_id} );
+	return 1 if openprint::usergroup::is_user_in( ['Accounting','PrepressManager'], $openprint::session{user_id} );
 	return 0;
 } # end sub can_see_pricing
+
+sub can_edit {
+	return 1 if $openprint::session{user_type} eq 'A';
+	return 1 if $_[0]{user_id} == $openprint::session{user_id};
+	return 1 if $_[0]{company_id} == $openprint::session{company_id};
+	return 1 if $_[0]{salesrep_id} == $openprint::session{user_id};
+	return 1 if openprint::usergroup::is_user_in( ['Prepress','Sales Admin','PrepressManager'], $openprint::session{user_id} );
+	return 0;
+}
 
 sub due_date {
 	if ( ! $_[0]{due_date} ) {

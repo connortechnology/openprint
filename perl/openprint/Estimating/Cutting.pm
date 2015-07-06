@@ -15,7 +15,7 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA
 
 use strict;
-use warnings;
+#use warnings;
 package openprint::Estimating::Cutting;
 use POSIX qw{ ceil };
 
@@ -458,16 +458,15 @@ sub signature_calc_folding_cutting {
 sub signature_calc {
 	my ( $Project, $sig_specs, $specs, $qty_index, $Paper, $Imposition, $folding_specs, $calc_hash ) = @_;
 
-	if ( ! $Paper->cuttable() ) {
-		$$specs{alert} = $Paper->to_string() . ': Stock is not cuttable.';
-		$$specs{Status} = 'calculated';
-		return;
-	} # end if
 
 	my %results = (
 			Status	=> 'calculated',
 			Breakdown	=>	'<b>Post press:</b><br/>',
 			);
+	if ( ! $Paper->cuttable() ) {
+		$results{alert} = $Paper->to_string() . ': Stock is not cuttable.';
+		return %results;
+	} # end if
 	my $services = $Project->services();
 	my $printing_specs = openprint::service::get_specs_ref( $Project, $$services{''}[0] ) if $$services{''} and @{$$services{''}};
 
@@ -534,7 +533,7 @@ sub signature_calc {
 
 	my @folding_impositions;
 
-	my $Folder;
+	my $Folder = undef;
 	if ( $$services{Folding} and @{$$services{Folding}} ) {
 		$folding_specs = openprint::service::get_specs_ref( $Project, $$services{Folding}[0] ) if ! $folding_specs;
 		$Folder = new openprint::Equipment( $$folding_specs{"ddmEquipment-$form-$qty_index"} ) if $$folding_specs{"ddmEquipment-$form-$qty_index"};
@@ -542,17 +541,7 @@ sub signature_calc {
 		if ( $$Imposition{Folds} ) {
 			@folding_impositions = @{$$Imposition{Folds}};
 		} else {
-			foreach my $fold_index ( 1 .. 4 ) {
-				next if ! $$folding_specs{"FoldQty-$form-$qty_index-$fold_index"};
-				next if ! $$folding_specs{"FoldType-$form-$qty_index-$fold_index"};
-				my $folding_imposition = new openprint::Imposition();
-				$folding_imposition->Paper( $Paper );
-				$folding_imposition->columns( $$folding_specs{"FoldColumns-$form-$qty_index-$fold_index"} );
-				$folding_imposition->rows( $$folding_specs{"FoldRows-$form-$qty_index-$fold_index"} );
-				$folding_imposition->quantity( $$folding_specs{"FoldQty-$form-$qty_index-$fold_index"} );
-				push @folding_impositions, $folding_imposition;
-				$folding_imposition->display('Fold ' . $$folding_specs{"FoldType-$form-$qty_index-$fold_index"} ) if DEBUG;
-			} # end if
+			@folding_impositions = openprint::Estimating::Folding::get_Folds( $folding_specs, $Imposition, $qty_index );
 		} # end foreach fold_index
 	} # end if
 
@@ -577,7 +566,7 @@ sub signature_calc {
 	my $trim_before_folding = 0;
 
 		# Take care of cutting before folding
-	if ( @folding_impositions ) {
+	if ( @folding_impositions and $Folder and ( $$Folder{id} != $$Press{id} ) ) {
 
 $openprint::log->debug("Folding impositions: " . @folding_impositions ) if DEBUG;
 
@@ -585,14 +574,25 @@ $openprint::log->debug("Folding impositions: " . @folding_impositions ) if DEBUG
 		if ( ( defined $$specs{"OverrideFoldingCuts-$form-$qty_index"} ) and ( $$specs{"OverrideFoldingCuts-$form-$qty_index"} eq 'Y' ) ) {
 			$folding_cuts = $$specs{"FoldingCuts-$form-$qty_index"};
 		} else {
-			if ( ( @folding_impositions == 1 ) and ( $folding_impositions[0]->imposition() == 1 ) and ( ! $stitching_imposition ) and ( $folding_impositions[0]->quantity() == 1 ) and ( (!$Folder) or ( $Folder->id() != $Press->id() ) ) ) {
+			if ( ( @folding_impositions == 1 ) 
+					and ( $folding_impositions[0]->imposition() == 1 )
+					and ( ! $stitching_imposition )
+
+# Why about the quanitty? Basically if it's 1out, we pre-trim.  Otherwise let the folder do it.  So if er have 2@1out, then we might as well pre-trim
+					#and ( $folding_impositions[0]->quantity() == 1 )
+					and ( (!$Folder) or ( $Folder->id() != $Press->id() ) ) ) {
 				$trim_before_folding = 1;
 			} else {
-				$openprint::log->debug("Folds: " .@folding_impositions ) if DEBUG;
-				foreach my $folding_imposition ( @folding_impositions ) {
-					$folding_cuts += $$folding_imposition{quantity}-1 if $$folding_imposition{quantity};
-				} # end foreach
-				$folding_cuts += @folding_impositions - 1;
+
+				if ( @folding_impositions > 1 or $folding_impositions[0]{quantity} > 1 ) {
+					# So according to Brendan, anyone doing the cutting would first make the 4 outer edge trims.  
+					$openprint::log->debug("Folds: " .@folding_impositions ) if DEBUG;
+					$folding_cuts += 4; # outside cuts
+					$folding_cuts += @folding_impositions - 1;
+					foreach my $folding_imposition ( @folding_impositions ) {
+						$folding_cuts += $$folding_imposition{quantity}-1 if $$folding_imposition{quantity};
+					} # end foreach
+				} # end if
 			} # end if
 		} # end if
 
@@ -663,8 +663,7 @@ $openprint::log->debug("Folding impositions: " . @folding_impositions ) if DEBUG
 				$results{Breakdown} .= 'Unknown folding equipment<br/>';
 				next;
 			} elsif( $$folding_specs{"ddmEquipment-$form-$qty_index"} ne $Equipment->id() ) {
-				my $Folder = new openprint::Equipment( $$folding_specs{"ddmEquipment-$form-$qty_index"} );
-				$results{Breakdown} .= 'Not folding on ' . $Equipment->strid(). ' Folder is ' . $Folder->strid() . '<br/>';
+				$results{Breakdown} .= 'Not folding on ' . $Equipment->strid(). ' Folder is ' . ( $Folder ? $$Folder{strid} : '' ). '<br/>';
 				next;
 			} # end if
 		} elsif ( ( $cutting_capable eq 'When Printing' ) and ( $$sig_specs{'ddmPress'.$qty_index} ne $Equipment->strid() ) ) {
@@ -729,10 +728,10 @@ $openprint::log->debug("Folding impositions: " . @folding_impositions ) if DEBUG
 		my $dutch_horizontal_cuts = 0;
 
 		if ( (defined $$specs{'chkOverrideCalculatedCuts-'.$form.'-'.$qty_index}) and ( $$specs{'chkOverrideCalculatedCuts-'.$form.'-'.$qty_index} eq 'Y' ) ) {
-			$vertical_cuts = $$specs{"txtVerticalCuts-$form-$qty_index"};
-			$horizontal_cuts = $$specs{"txtHorizontalCuts-$form-$qty_index"};
-			$dutch_vertical_cuts = $$specs{"txtDVerticalCuts-$form-$qty_index"};
-			$dutch_horizontal_cuts = $$specs{"txtDHorizontalCuts-$form-$qty_index"};
+			$vertical_cuts = int($$specs{"txtVerticalCuts-$form-$qty_index"}) if $$specs{"txtVerticalCuts-$form-$qty_index"};
+			$horizontal_cuts = int($$specs{"txtHorizontalCuts-$form-$qty_index"}) if $$specs{"txtHorizontalCuts-$form-$qty_index"};
+			$dutch_vertical_cuts = int($$specs{"txtDVerticalCuts-$form-$qty_index"}) if $$specs{"txtDVerticalCuts-$form-$qty_index"};
+			$dutch_horizontal_cuts = int($$specs{"txtDHorizontalCuts-$form-$qty_index"}) if $$specs{"txtDHorizontalCuts-$form-$qty_index"};
 		} else {
 # Regular book signatures will be trimmed by the stitcher, so we only need 1 cut per imposition
 # Most stitchers do 3knife trim, but some do not. Most need a Head Trim, some need Head & Foot
@@ -742,15 +741,51 @@ $openprint::log->debug("Folding impositions: " . @folding_impositions ) if DEBUG
 	# but if we are cutting into smaller signatures, then we need more cutting
 	#$openprint::log->debug("Sitching $stitching_imposition out printing $$sig_specs{'txtImposition'.$qty_index}out");
 	#$openprint::log->debug("have signaturetype $$sig_specs{txtSignatureType} ");
-				if ( $I->pages() and ( ( ! $folding_specs ) or ( ! ( $Folder and $Folder->specification('Cutting Capable') ) ) ) ) {
-#$openprint::log->debug("Cutting because not folding or can't cut on folder $folding_specs $$Folder{strid} " . $Folder->specification('Cutting Capable') );
+#$openprint::log->debug("What is folder?: ($Folder)" . ($Folder ? join(',', map { $_ . ' => ' . $$Folder{$_} } keys %{$Folder} ) : '' ) );
+				if ( ($cutting_capable ne 'When Stitching') and $I->pages() and ! ( $folding_specs and $Folder and $Folder->specification('Cutting Capable') ) ) {
+$openprint::log->debug("Cutting because not folding or can't cut on folder $folding_specs " . ( $Folder ? $$Folder{strid} : '' ) ) if DEBUG;
 	# Have to cut the pages out
 					$vertical_cuts += int ( ($I->page_columns()-1)*$I->columns()*2 ) + 2;
 					$horizontal_cuts += int( ($I->page_rows()-1)*$I->rows() * 2 ) + 2;
-			
-				} elsif ( $stitching_imposition and ! @folding_impositions ) {
-					$vertical_cuts += int ($$I{columns} / $stitching_imposition)-1;
-					$horizontal_cuts += int ($$I{rows} / $stitching_imposition)-1; 
+											
+				} elsif ( $stitching_imposition ) {
+					if ( ! @folding_impositions ) {
+					# Are stitching but don't have folded impositions... 
+						$vertical_cuts += int ($$I{columns} / $stitching_imposition)-1;
+						$horizontal_cuts += int ($$I{rows} / $stitching_imposition)-1; 
+					} elsif ( $trim_before_folding ) {
+					} elsif ( $cutting_capable eq 'When Stitching' ) {
+						# trimming either happened on the folder or we have to do it.
+						# Going to fold it first.
+						# assumptions: 
+						foreach my $folding_imposition ( @folding_impositions ) {
+							$folding_imposition->display('getting stitching cuts from') if DEBUG;
+							if ( $$I{image_orientation} eq 'Vertical' ) {
+								if ( $$folding_imposition{columns} > 1 ) {
+									$openprint::log->error("Can't do that on the stitcher");
+								}
+								$vertical_cuts += 1; # Face trim
+								$horizontal_cuts += 1 + $$folding_imposition{rows};
+								if ( $$sig_specs{'ddmBleedSize'.$qty_index} and  
+											( $$I{image_orientation} eq 'Vertical' ) and ( $$sig_specs{BleedTop} or $$sig_specs{BleedBottom} ) 
+								   ) {
+									$horizontal_cuts += $$folding_imposition{rows}-1;
+								} # end if
+							} elsif ( $$I{image_orientation} eq 'Horizontal' ) {
+								if ( $$folding_imposition{rows} > 1 ) {
+									$openprint::log->error("Can't do that on the stitcher");
+								}
+								$horizontal_cuts += 1; # Face trim
+								$vertical_cuts += 1 + $$folding_imposition{columns};
+
+								if ( $$sig_specs{'ddmBleedSize'.$qty_index} and  
+										( $$I{image_orientation} eq 'Horizontal' ) and ( $$sig_specs{BleedTop} or $$sig_specs{BleedBottom} ) 
+								   ) {
+									$vertical_cuts += $$folding_imposition{columns}-1;
+								} # end if
+							} # end if
+						} # end foreach
+ 					} # end if
 				} elsif ( $$printing_specs{rdbTemplateType} eq 'PlasticCoil' ) {
 					# This is special... something about if it's plasticCoil... you have to cut it into 8's...
 
@@ -886,10 +921,10 @@ $openprint::log->debug("Not a book") if DEBUG;
 				} # end if
 				if ( $ServicePrice{units} eq 'per inch' ) {
 					$price = ( $runs * $horizontal_cuts *$ServicePrice{Price} * $I->image_width() );
-					$results{Breakdown} .= sprintf("\t\t%d Horizontal cuts on %d sheets in %d runs * %.2f inches: %.2f%s=%.2f<br/>", $horizontal_cuts, $sheets, $runs, $I->image_width(), @ServicePrice{'Price','units'}, $price );
+					$results{Breakdown} .= sprintf("%d Horizontal cuts on %d sheets in %d runs * %.2f inches: %.2f%s=%.2f<br/>", $horizontal_cuts, $sheets, $runs, $I->image_width(), @ServicePrice{'Price','units'}, $price );
 				} else {
 					$price = ( $runs * $horizontal_cuts * $ServicePrice{Price} );
-					$results{Breakdown} .= sprintf("\t\t%d Horizontal cuts on %d sheets in %d runs: %.2f%s=%.2f<br/>", $horizontal_cuts, $sheets, $runs, @ServicePrice{'Price','units'}, $price );
+					$results{Breakdown} .= sprintf("%d Horizontal cuts on %d sheets in %d runs: %.2f%s=%.2f<br/>", $horizontal_cuts, $sheets, $runs, @ServicePrice{'Price','units'}, $price );
 				} # end if
 				$totalPrice += $price;
 			} else {
@@ -1008,18 +1043,19 @@ $openprint::log->debug("Not a book") if DEBUG;
 			$bestEquipment = $Equipment;
 		} # end if
 	} # end for each equipment
-		if ( $stitching_specs ) {
-			# Need final trim?
-			my @remaining_sides = sets::exclude( [ keys %pretrim_sides ], [ 'Head','Foot','Face' ] );
-			$log->debug("Final trim @remaining_sides") if DEBUG;
-			if ( @remaining_sides ) {
-				
-			}	
-		} # end if
 
-	$results{Status}		= $bestEquipment ? 'calculated' : 'uncalculated';
+	if ( $stitching_specs ) {
+# Need final trim?
+		my @remaining_sides = sets::exclude( [ keys %pretrim_sides ], [ 'Head','Foot','Face' ] );
+		$log->debug("Final trim @remaining_sides") if DEBUG;
+		if ( @remaining_sides ) {
+
+		}	
+	} # end if
+
+	$results{Status}	= $bestEquipment ? 'calculated' : 'uncalculated';
 	$results{Price}		= $bestPrice;
-	$results{MPrice}		= ($bestM/$$specs{'txtQuantity'.$qty_index})*1000;
+	$results{MPrice}	= ($bestM/$$specs{'txtQuantity'.$qty_index})*1000;
 	$results{Equipment}	= $bestEquipment;
 	if ( $bestEquipment and ( my $Spec = $bestEquipment->Specification('Cutting Overs') ) ) {
 		if ( $$Spec{units} eq 'Sheets' ) {

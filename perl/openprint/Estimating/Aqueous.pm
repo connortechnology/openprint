@@ -175,13 +175,13 @@ sub calc {
 		my $GrandTotal = 0;
 		foreach my $signature_service_index ( $Project->signatures( { sort=>1 } ) ) {
 			my $sig_specs = openprint::service::get_specs_ref( $Project, $signature_service_index );
-	my $form = $$sig_specs{SignatureIndex};
-			$$specs{'hdnBreakdown'.$qty_index} .= "<br/>Signature: $$sig_specs{'txtServiceDescription'},<br/>" if $$sig_specs{'txtServiceDescription'};
 # If any of the signatures doesn't have an imposition, then we are in an incomplete state.
 			if ( ! $$sig_specs{'txtImposition'.$qty_index} ) {
 				$$specs{'hdnBreakdown'.$qty_index} .= 'No imposition was found for printing.<br/>';
 				next;
 			} # end if
+			my $form = $$sig_specs{SignatureIndex};
+			$$specs{'hdnBreakdown'.$qty_index} .= "<br/>Signature: $$sig_specs{'txtServiceDescription'},<br/>" if $$sig_specs{'txtServiceDescription'};
 			my $Imposition = new openprint::Imposition();
 			$Imposition->load( $sig_specs, $qty_index );
 			my %results = signature_calc( $Project, $service_index, $specs, $signature_service_index, $sig_specs, $qty_index, $Imposition, \%MakeReadies );
@@ -311,7 +311,8 @@ if ( 1 ) {
 	if ( $imposition->runstyle() eq 'Perfecting' ) {
 		# We know that it is printing 2 sided, but may be only AQ 1 sided.
 		# Sheets = impressions / 2
-		$impressions = int($impressions/2);
+		# I'm not sure this is true anymore.
+		#$impressions = int($impressions/2);
 	} elsif ( $$imposition{runstyle} eq 'Sheet Work' ) {
 		if ( @{$$sig_specs{SideOneColours}} and @{$$sig_specs{SideTwoColours}} ) {
 # 20140417 : so... since the AQs are added together, done in sequence, we do front first, then back, using the impression count... so it should always be halved

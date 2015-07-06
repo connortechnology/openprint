@@ -12,37 +12,40 @@ $table = 'paper_prices';
 $serial = 'paper_prices_id_seq';
 
 %fields = (
-	'id'			=>	'id',
-	'pricelist_id'	=>	'lnglistindex',
-	'paper_id'		=>	'lngpaperindex',	
-	'min'			=>	'lngmin',
-	'max'			=>	'lngmax',
-	'units'			=>	'strunits',
-	'cost'			=>	'dblcost',
-	'markup'		=>	'dblmarkup',
-	'price'			=>	'dblprice',
-	'discountable'	=>	'ysndiscountable',
-	'service'		=>	'service',
-	'equipment_id'	=>	'equipment_id',
-	'stock_id'		=>	undef,
+	id			=>	'id',
+	pricelist_id	=>	'lnglistindex',
+	paper_id		=>	'lngpaperindex',	
+	min			=>	'lngmin',
+	max			=>	'lngmax',
+	units			=>	'strunits',
+	cost			=>	'dblcost',
+	markup		=>	'dblmarkup',
+	price			=>	'dblprice',
+	discountable	=>	'ysndiscountable',
+	interpolate	=>	'interpolate',
+	service		=>	'service',
+	equipment_id	=>	'equipment_id',
+	stock_id		=>	undef,
 );
 %find_fields = (
-	'stock_id'	=>	'lngpaperindex',
+	stock_id	=>	'lngpaperindex',
 );
 %transforms = (
-	'min' => [ 's/,//g', 's/(\d*)/$1/g' ],
-	'max' => [ 's/,//g', 's/(\d*)/$1/g' ],
-	'cost' => [ 's/[^\d\.]//g' ],
-	'price' => [ 's/[^\d\.]//g' ],
-	'markup' => [ 's/[^\d\.]//g' ],
+	min => [ 's/,//g', 's/(\d*)/$1/g' ],
+	max => [ 's/,//g', 's/(\d*)/$1/g' ],
+	cost => [ 's/[^\d\.]//g' ],
+	price => [ 's/[^\d\.]//g' ],
+	markup => [ 's/[^\d\.]//g' ],
 );
 %defaults = (
-	'equipment_id'	=>	undef,
-	'min' => undef,
-	'max' => undef,
-	'cost' => 0,
-	'price' => 0,
-	'markup' => 0,
+	equipment_id	=>	undef,
+	min => undef,
+	max => undef,
+	cost => 0,
+	price => 0,
+	markup => 0,
+	interpolate	=>	'1',
+	discountable	=>	q`'Y'`,
 );
 
 sub Pricelist {

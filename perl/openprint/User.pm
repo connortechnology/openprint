@@ -6,16 +6,16 @@ require openprint::Object;
 require openprint::User_in_UserGroup;
 
 use openprint ();
-use vars qw( $log $dbh %config %variable %param $debug %fields %find_fields %transforms %defaults $table $serial $AUTOLOAD );
+use vars qw( $log $dbh %config $debug %fields %find_fields %transforms %defaults $table $serial $AUTOLOAD $default_sort );
 *log = \$openprint::log;
 *dbh = \$openprint::dbh;
 *config = \%openprint::config;
-*param = \%openprint::param;
-*variable = \%openprint::variable;
 $table = 'users';
 $serial = 'users_id_seq';
 
 $debug = 0;
+
+$default_sort	=	'lower(firstname),lower(lastname)';
 
 %fields = (
 	'id'				=>	'id',
@@ -261,7 +261,7 @@ sub alias {
 	#if ( $_[0]{'company_id'} == $openprint::session{'company_id'} ) {
 		#return $_[0]{'firstname'};
 	#} elsif ( $_[0]->Company()->name() ne ($_[0]{'firstname'} . ' ' . $_[0]{'lastname'}) ) {
-	if ( $_[0]{company_id} and ( $Company->name() ne ($_[0]{'firstname'} . ( $_[0]{lastname} ? ( ' ' . $_[0]{'lastname'} ) : () ) ) ) ) {
+	if ( $_[0]{company_id} and ( $_[0]{company_id} != $openprint::session{company_id} ) and ( $Company->name() ne ($_[0]{'firstname'} . ( $_[0]{lastname} ? ( ' ' . $_[0]{'lastname'} ) : () ) ) ) ) {
 		return $Company->name() . ($_[0]{'firstname'} ? ' (' . $_[0]{'firstname'} . ')' : '' );
 	} elsif ( $_[0]->firstname() or $_[0]->lastname() ) {
 		return $_[0]->name();
@@ -446,8 +446,12 @@ if ( 0 ) {
 }
 
 sub link {
-	return sprintf('<a href="/account/view.html?user=%1$d">%2$s</a>', $_[0]{id}, $_[0]->name() );
+	return sprintf('<a href="/account/view.html?user_id=%1$d">%2$s</a>', $_[0]{id}, $_[0]->name() );
 } # end sub link
+
+sub link_to {
+    return sprintf('<a href="/account/view.html?user_id=%1$d">%2$s</a>', $_[0]{id}, @_ > 1 ? $_[1] : $_[0]->name() );
+} # end sub link_to
 
 sub html {
 	if ( ! $_[0]{'id'} ) {
@@ -541,10 +545,9 @@ sub can_edit {
 	return 1 if ! $_[0]{id};
 	return 1 if $openprint::session{user_id} == $_[0]{id};
 	return 1 if $openprint::session{user_type} eq 'A';
-	my $Me = new openprint::User( $openprint::session{user_id} );
-	return 1 if ( $Me->administrator() eq 'Y' ) and ( $_[0]{company_id} == $openprint::session{company_id} );
+	return 1 if ( $openprint::User->administrator() eq 'Y' ) and ( $_[0]{company_id} == $openprint::session{company_id} );
 	my $Company = new openprint::Company( $_[0]{company_id} );
-	return 1 if $Company->salesrep_id() and sets::isin( $Company->salesrep_id(), [ $openprint::session{user_id}, $Me->csr_ids(), $Me->assistant_ids() ] );
+	return 1 if $Company->salesrep_id() and sets::isin( $Company->salesrep_id(), [ $openprint::session{user_id}, $openprint::User->csr_ids(), $openprint::User->assistant_ids() ] );
 	return 1 if openprint::usergroup::exists('UserManagement') and openprint::usergroup::is_user_in( ['UserManagement'], $openprint::session{user_id} );
 	return 0;
 } # end sub can_edit
@@ -552,10 +555,9 @@ sub can_edit {
 sub can_view {
 	return 1 if $openprint::session{'user_id'} == $_[0]{id};
 	return 1 if $openprint::session{'user_type'} eq 'A';
-	my $Me = new openprint::User( $openprint::session{'user_id'} );
-	return 1 if ( $Me->administrator() eq 'Y' ) and ( $_[0]{'company_id'} == $openprint::session{'company_id'} );
+	return 1 if ( $openprint::User->administrator() eq 'Y' ) and ( $_[0]{'company_id'} == $openprint::session{'company_id'} );
 	my $Company = new openprint::Company( $_[0]{'company_id'} );
-	return 1 if $Company->salesrep_id() and sets::isin( $Company->salesrep_id(), [ $openprint::session{'user_id'}, $Me->csr_ids(), $Me->assistant_ids() ] );
+	return 1 if $Company->salesrep_id() and sets::isin( $Company->salesrep_id(), [ $openprint::session{'user_id'}, $openprint::User->csr_ids(), $openprint::User->assistant_ids() ] );
 	require openprint::Blocklist;
 	return 0 if openprint::Blocklist::is_blocked( $openprint::session{user_id},$_[0]{id});
 	return 1;

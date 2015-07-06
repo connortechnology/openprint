@@ -49,7 +49,7 @@ while getopts hvn:c:t:T OPT; do
 			TYPE=$OPTARG
 			;;
 		T)
-			TIME="time "
+			TIME="/usr/bin/time "
 			;;
 		\?)
 			# getopts issues an error message
@@ -93,7 +93,7 @@ if [ -d "$DEST$TYPE.new" ] ; then
 	fi
 fi;
 
-if [ -d "$DEST$TYPE.0" ] ; then \
+if [ -d "$DEST$TYPE.0" ] ; then 
 	$CP -al "$DEST$TYPE.0" "$DEST$TYPE.new"
 else
 	echo "Making $DEST$TYPE.new"
@@ -104,7 +104,11 @@ fi;
 # is unlinked first.  If it were not so, this would copy over the other
 # snapshot(s) too!
 #echo "$RSYNC \"$1\" \"$DEST\""
+if [ -e "$DEST$TYPE.0.du" ] ; then
+OLDDU=$(<"$DEST$TYPE.0.du")
+else
 OLDDU=`$DU -b -sh "$DEST$TYPE.new" |$AWK '{print $1}'`
+fi
 echo $OLDDU
 $TIME$RSYNC -a --delete-delay --delete-excluded $@ "$SOURCE" "$DEST$TYPE.new"
 if [ $? != 0 -a $? != 24 ]; then
@@ -136,8 +140,14 @@ while (( "$BACKUPS" > "0" )) ; do
 		echo "$MV $DEST$TYPE.$DEC $DEST$TYPE.$BACKUPS"
 		$MV "$DEST$TYPE.$DEC" "$DEST$TYPE.$BACKUPS" ;
 	fi ;
+	if [ -e "$DEST$TYPE.$DEC.du" ] ; then
+        echo "$MV $DEST$TYPE.$DEC.du $DEST$TYPE.$BACKUPS.du"
+        $MV "$DEST$TYPE.$DEC.du" "$DEST$TYPE.$BACKUPS.du" ;
+    fi ;
+
 	let BACKUPS=DEC;
 done
 
 $MV "$DEST$TYPE.new" "$DEST$TYPE.0";
+echo $NEWDU > "$DEST$TYPE.0.du"
 $FIND "$DEST$TYPE.0" -type d -executable -exec chmod u+wx {} \;

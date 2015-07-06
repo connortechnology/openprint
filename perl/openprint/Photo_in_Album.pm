@@ -12,9 +12,11 @@ $serial = 'photos_in_albums_id_seq';
 	id			=>	'id',
 	album_id	=>	'album_id',
 	asset_id	=>	'asset_id',
+	sort		=>	'sort',
 	keywords	=>	undef,
 );
 %defaults = (
+	sort		=>	undef,
 	album_id	=>	undef,
 	asset_id	=>	undef,
 );

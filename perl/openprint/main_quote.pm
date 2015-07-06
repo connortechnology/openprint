@@ -381,7 +381,7 @@ sub submit {
 			} # end foreach
 		} # end if
 
-		$Quote->save({'reference'=>$param{'reference'},'comments'=>$param{'comments'}});
+		$Quote->save({'reference'=>$param{'reference'},'comments'=>$param{'comments'},status=>'Incomplete'});
 		$Quote->store_user_by_info( \%by );
 		$Quote->store_user_for_info( \%for );
 # store fields from recalculate, we only store the markup, the NewPrices will calculate on the fly
@@ -419,7 +419,14 @@ sub confirmation {
 	$quote_id = $session{quote_id} if ! $quote_id;
 	my $Quote = new openprint::Quote( $quote_id );
 	$variable{'Quote'} = $Quote;
-	return if ! $quote_id;
+	if ( ! $$Quote{id} ) {
+		if ( $quote_id ) {
+			$variable{error} .= 'Quote ' . $quote_id . ' not found.<br/>';
+		} else {
+			$variable{error} .= 'No incomplete quote to send.<br/>';
+		} # en dif
+		return;
+	} # end if
 
 	if ( $Quote->status() ne 'Complete' ) {
 
@@ -446,6 +453,8 @@ sub confirmation {
 		$Quote->save();
 		$Quote->send();
 		$Quote->add_log( 'Submitted' );
+	} else {
+		$variable{error} .= 'This quote has already been sent.  Not sending again.<br/>';
 	} # end if ! Complete
 	delete $session{'quote_id'};
 } # end sub finalise_quote

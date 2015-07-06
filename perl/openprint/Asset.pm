@@ -22,40 +22,40 @@ use vars qw( $debug %fields %transforms %defaults $table $serial );
 $debug = 0;
 
 %fields = (
-	'id'			=>	'id',
-	'company_id'	=>	'company_id',
-	'created_by'	=>	'created_by',
-	'type_id'		=>	'type_id',
-	'name'			=>	'name',
-	'description'	=>	'description',
-	'filename'		=>	'filename',
-	'data'			=>	'data',
-	'created_on'	=>	'created_on',
-	'updated_on'	=>	'updated_on',
-	'deleted'		=>	'deleted',
-	'md5'			=>	'md5',
-	'attribution'	=>	'attribution',
-	'license'		=>	'license',
-	'keywords'		=>	undef,
-	'optimised'		=>	'optimised',
-	'layout'		=>	'layout',
-	'width'			=>	'width',
-	'height'		=>	'height',
-	source			=>	'source',
+	id			=>	'id',
+	company_id	=>	'company_id',
+	created_by	=>	'created_by',
+	type_id		=>	'type_id',
+	name		=>	'name',
+	description	=>	'description',
+	filename	=>	'filename',
+	data		=>	'data',
+	created_on	=>	'created_on',
+	updated_on	=>	'updated_on',
+	deleted		=>	'deleted',
+	md5			=>	'md5',
+	attribution	=>	'attribution',
+	license		=>	'license',
+	keywords	=>	undef,
+	optimised	=>	'optimised',
+	layout		=>	'layout',
+	width		=>	'width',
+	height		=>	'height',
+	source		=>	'source',
 );
 %defaults = (
-	'data'		=>	undef,
-	'type_id'	=>	undef,
-	'created_on'	=>	q`'NOW()'`,
-	'updated_on'	=>	q`'NOW()'`,
-	'created_by'	=>	q`$openprint::session{'user_id'}`,
-	'company_id'	=>	q`$openprint::session{'company_id'}`,
-	'md5'		=>	undef,
-	'deleted'	=>	0,
-	'optimised'	=>	0,
-	'layout'	=>	'',
-	'width'		=>	undef,
-	'height'	=>	undef,
+	data		=>	undef,
+	type_id		=>	undef,
+	created_on	=>	q`'NOW()'`,
+	updated_on	=>	q`'NOW()'`,
+	created_by	=>	q`$openprint::session{'user_id'}`,
+	company_id	=>	q`$openprint::session{'company_id'}`,
+	md5			=>	undef,
+	deleted		=>	0,
+	optimised	=>	0,
+	layout		=>	'',
+	width		=>	undef,
+	height		=>	undef,
 );
 %transforms = (
 	id			=>	[ 's/\D//g', '<2147483647' ],
@@ -108,15 +108,21 @@ sub is_photo {
 	} else {
 		$extension = $_[0];
 	} # end if
-	return sets::isin( lc $extension, [ 'jpg','jpeg','png','gif','bmp' ] );
+	return sets::isin( lc $extension, [ 'jpg','jpeg','png','gif','bmp','pdf' ] );
 } # end sub is_photo
 
 sub sized_url {
 	my $size = $_[1];
+	if ( ! $_[0]{id} ) {
+		return;
+	} # end if
 
 	my $src = $_[0]->on_disk_path();
 	my $path = $openprint::config{AssetPath}.'/'.$size.'/';
 	if ( $openprint::config{AssetPath} ) {
+
+		# should nt be readable by anyone else
+		umask 077;
 		if ( ! -e $path ) {
 			mkdir $path;
 			$openprint::log->error("Unable to create path $path: $!" );
@@ -132,8 +138,9 @@ sub sized_url {
 
 	my ( $blah, $extension ) = $filename =~ /(.+)\.([^\.]+)$/;
 	if ( is_photo( $extension ) ) {
+		my $dest_filename = $blah.'.jpg';
 		if ( $openprint::config{'AssetPath'} ) {
-			my $dest = $path.$filename;
+			my $dest = $path.$dest_filename;
 			if ( ! -e $dest ) {
 				my ( $width, $height );
 				if ( $_[0]->layout() eq 'Landscape' ) {
@@ -176,21 +183,35 @@ sub sized_url {
 				} # end if
 				my ( $stderr, $stdout );
 				require IPC::Run3;
-				IPC::Run3::run3(qq`convert -adaptive-resize ${width}x${height} "$src" "$dest"`, undef, $stdout, $stderr );
+
+				
+				my $command;
+				if ( $extension eq 'pdf' ) {
+					$command  = qq`convert -thumbnail ${width}x${height} -alpha remove "${src}\[0\]" "$dest"`;
+				} else {
+					$command  = qq`convert -adaptive-resize ${width}x${height} "$src" "$dest"`;
+				} # end fi
+
+				IPC::Run3::run3($command, undef, $stdout, $stderr );
 				if ( $? ) {
-					$openprint::log->error("ERror creating sized image. Reason: ($?) stdout($stdout) stderr($stderr)");
+					$openprint::log->error("ERror creating sized image. Reason: ($?) cmd:($command) stdout($stdout) stderr($stderr)");
 					return '/assets/'.$filename;
 				} # end if convert
+				if ( ! -e $dest ) {
+					$openprint::log->error("Unable to create $dest cmd($command) stdout($stdout) stderr($stderr)");
+				} # end if
 				if ( $extension =~ /jpe?g/i ) {
 					IPC::Run3::run3(qq`jpegtran -optimize -copy none -outfile "$dest" "$dest"`, undef, $stdout, $stderr );
 					if ( $? ) {
 						$openprint::log->error("ERror optimising sized image. Reason: ($?) stdout($stdout) stderr($stderr)");
 					} # end if convert
 				} # end if
-			} # end if
-		} # end if
+			} # end if -e dest
+		} else {
+			$openprint::log->error("NO assetpath specified");
+		} # end if Asset Path
 #$openprint::log->debug("Return /thumbnails/$filename");
-		return '/assets/'.$size.'/'.$filename;
+		return '/assets/'.$size.'/'.$dest_filename;
 	} elsif ( is_video( $extension ) ) {
 		my $fallback = '/images/icons/'. lc $extension. '.png';
 		if ( ! -e $openprint::config{SkinPath}.$fallback ) {
@@ -217,11 +238,12 @@ sub sized_url {
 					$size = 'full';
 				} # end if
 				if ( ! $width ) {
-					$openprint::log->error("No asset size in config for $size");
+					$openprint::log->error("No asset size in config for video $size");
 				} # end if	
 				$openprint::log->debug("Creating $size at ${width}x $src $dest");
 				if ( ! -d "/tmp/$filename" ) {
-					if ( ! mkdir "/tmp/$filename" ) {
+					$openprint::log->debug("Going to create tmp directory at /tmp/$filename/ to hold medium thumbnail:" );
+					if ( ! mkdir("/tmp/$filename",0777) ) {
 						$openprint::log->error("Unable to create tmp directory at /tmp/$filename/ to hold medium thumbnail: $!" );
 						return $fallback;
 					} # end if
@@ -229,22 +251,43 @@ sub sized_url {
 					$openprint::log->debug("Strange, tmp dir /tmp/$filename shouldnt already exist, but it does.");
 				} # end if
 
-				$openprint::log->debug("about to mplayer -frames 1 -nosound -quiet -zoom -vf scale=$width:-3 -vo jpeg:outdir=/tmp/$filename/ -ss 60 $src :");
+				$openprint::log->debug("avprobe -show_format  $src");
+				my $probe = `avprobe -show_format  $src`;
+				$openprint::log->debug("Probe: $probe");
+				my ( $length ) = $probe =~ /duration=(\d+)\.\d*/m;
+				$openprint::log->debug("Length of video: $length");
+
+				if ( $length > 10 ) {
+					$length -= 10;
+				}
+				if ( $length > 5 and $length < 60 ) {
+					$length = 5;
+				} # end if
+				my $command;
+
+if ( 0 ) {
 				if ( $width ) {
-					$_ = `mplayer -frames 1 -nosound -quiet -zoom -vf scale=$width:-3 -vo jpeg:outdir="/tmp/$filename/" -ss 60 "$src"`;
+					$command = qq`mplayer -frames 1 -nosound -quiet -zoom -vf scale=$width:-3 -vo jpeg:outdir="/tmp/$filename/" -ss $length "$src"`;
 				} else {
-					$_ = `mplayer -frames 1 -nosound -quiet -zoom -vo jpeg:outdir="/tmp/$filename/" -ss 60 "$src"`;
+					$command = qq`mplayer -frames 1 -nosound -quiet -zoom -vo jpeg:outdir="/tmp/$filename/" -ss $length "$src"`;
 				} # end if
-				#$_ = `ffmpeg  -itsoffset -4  -i $src -vcodec mjpeg -vframes 1 -an -f rawvideo -s 320x240 /tmp/$filename/00000001.jpg`;
+} else {
+				if ( $width ) {
+					$command = qq`avconv -i "$src" -vf scale=$width:-1 -vframes 1 -ss $length "/tmp/$filename/$size.jpg"`;
+				} else {
+					$command = qq`avconv -i "$src" -vframes 1 -ss $length "/tmp/$filename/$size.jpg"`;
+				} # end if
+}
+				$openprint::log->debug("about to $command");
+				$_ = `$command`;
 				if ( $! ) {
-					$openprint::log->error("Unable to create medium thumbnail at /tmp/$filename/: $!" );
+					$openprint::log->error("Unable to create $size thumbnail at /tmp/$filename/$size.jpg: $! : $_" );
 					return $fallback;
-				} else {
-					$openprint::log->debug("command was mplayer -frames 1 -nosound -quiet -zoom -vf scale=$width:-3 -vo jpeg:outdir=/tmp/$filename/ -ss 60 $src : $_ ");
 				} # end if
-				if ( -e "/tmp/$filename/00000001.jpg" ) {
-					$openprint::log->debug("Moving /tmp/$filename/0000001.jpg to $dest");
-					`mv "/tmp/$filename/00000001.jpg" $dest`;
+				if ( -e "/tmp/$filename/$size.jpg" ) {
+					$openprint::log->debug("Moving /tmp/$filename/$size.jpg to $dest");
+					# We use mv because perl's rename doesn't work across filesystem boundaries
+					`mv "/tmp/$filename/$size.jpg" $dest`;
 					if ( $! ) {
 						$openprint::log->error("Unable to mv image  $dest: $!" );
 						return $fallback;
@@ -259,7 +302,7 @@ sub sized_url {
 					} # end if convert
 				} else {
 					$openprint::log->error("Unable to create medium thumbnail at /tmp/$filename/: Wasn't there! $!" );
-					$openprint::log->debug("command was mplayer -frames 1 -nosound -quiet -zoom -vf scale=$width:-3 -vo jpeg:outdir=/tmp -ss 60 $src : $_ ");
+					$openprint::log->debug("command was $command");
 					return $fallback;
 				} # end if
 			} # end if

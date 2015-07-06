@@ -32,8 +32,10 @@
 			( $session{'/employee/inventory/manifests.html?deleted'} ? ( deleted => [ split(',', $session{'/employee/inventory/manifests.html?deleted'} ) ] ) : () ),
 			) ];
 	} elsif ( $param{rfidtag_id} ) {
+		my @RFIDs = openprint::RFIDTag->find( 'id like' => '%'.$param{rfidtag_id}.'%' );
+
 		$$variable{Manifests} = [ openprint::Manifest->find( 
-			rfidtag_id	=>	$param{rfidtag_id},
+			'rfidtag_id &&' =>	[ map { $_->id() } @RFIDs ],
 			order	=>	'received_on DESC',
 			limit	=>	100,
 			( $session{'/employee/inventory/manifests.html?deleted'} ? ( deleted => [ split(',', $session{'/employee/inventory/manifests.html?deleted'} ) ] ) : () ),
@@ -64,7 +66,7 @@
 			order		=>	'received_on DESC',
 			( $session{'/employee/inventory/manifests.html?deleted'} ? ( deleted => [ split(',', $session{'/employee/inventory/manifests.html?deleted'} ) ] ) : () ),
 		);
-if ( $session{'/employee/inventory/manifests.html?type'} ) {
+		if ( $session{'/employee/inventory/manifests.html?type'} ) {
             my @types = split(',',$session{'/employee/inventory/manifests.html?type'} );
             if ( @types ) {
                 if ( sets::isin( 'Unknown', \@types ) ) {

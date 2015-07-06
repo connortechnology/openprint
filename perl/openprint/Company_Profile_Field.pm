@@ -54,7 +54,7 @@ sub html {
 	
 	my $Field = $_[0];
 
-	$html .= '<li class="'.$Field->type().'"><label>'.$Field->description().'</label><span id="field-'.$Field->id().'_container">';
+	$html .= '<li class="'.$Field->type(). ( $Field->required() ? ' required' : '' ) . '"><label>'.$Field->description().'</label><span id="field-'.$Field->id().'_container">';
 	my $value = $_[1] ? $_[1] : ( $_[0]->defaults() ? join(',',@{$_[0]->defaults()}) : '' );
 
 	if ( $Field->type() eq 'checkbox' ) {
@@ -67,10 +67,10 @@ sub html {
 	} elsif ( $Field->type() eq 'date' ) {
 		my ( $start, $end ) = @{$Field->values()} if $Field->values();
 #$openprint::log->debug("Adding date start $start end $end value $value ");
-		$html .= '<span class="DateSelector">'.ssi::date_select( 'field-'.$Field->id(), $value, { 'start'=>$start, 'end'=>$end } ) . '</span>';
+		$html .= ssi::date_select( 'field-'.$Field->id(), $value, { start=>$start, end=>$end } );
 #$openprint::log->debug("Done");
 	} elsif ( $Field->type() eq 'country' ) {
-		my $StateField = openprint::Company_Profile_Field->find_one('type'=>'state');
+		my $StateField = openprint::Company_Profile_Field->find_one(type=>'state');
 		if ( $StateField ) {
 
 			$html .= sprintf( q`<select id="field-%1$d" name="field-%1$d" onchange="Location_onchange( this, this.form.elements['field-%3$d'], 'state' );$('field-%1$d_name').value='';"><option value=""> </option>%2$s</select>
@@ -85,7 +85,7 @@ sub html {
 			);
 		} # end if
 	} elsif ( $Field->type() eq 'state' ) {
-		my $CityField = openprint::Company_Profile_Field->find_one('type'=>'city');
+		my $CityField = openprint::Company_Profile_Field->find_one(type=>'city');
 		if ( $CityField ) {
 			$html .= sprintf( q`<select id="field-%1$d" name="field-%1$d" onchange="Location_onchange( this, this.form.elements['field-%3$d'], 'city' );$('field-%1$d_name').value='';"><option value=""> </option>%2$s</select>
 					or other <input type="text" name="field-%1$d_name" id="field-%1$d_name" onkeyup="if(this.value){ddm_select_by_text_case_insensitive( $('field-%1$d'), this.value, 0 );}" />
@@ -104,7 +104,7 @@ sub html {
 		$html .= sprintf( q`<select id="field-%1$d" name="field-%1$d" onchange="$('field-%1$d_name').value='';"><option value=""> </option>%2$s</select>
 				or other <input type="text" name="field-%1$d_name" id="field-%1$d_name" onkeyup="if(this.value){ddm_select_by_text_case_insensitive( $('field-%1$d'), this.value, 0 );}" />
 				`, $Field->id(),
-				ssi::make_drop_down( openprint::Location->dropdown('order'=>'lower(name)','type'=>'city'), $value ),
+				ssi::make_drop_down( openprint::Location->dropdown( order=>'lower(name)', type=>'city'), $value ),
 				);
 	} elsif ( $Field->type() eq 'place' ) {
 
@@ -126,9 +126,18 @@ new Ajax.Autocompleter('field-%1$d','field-%1$d_autocomplete', '_locations.html?
 }
 
 	} elsif ( $Field->type() eq 'select-one' ) {
-		$html .= sprintf( q`<select name="field-%1$d" id="field-%1$d"><option value=""> </option>`, $Field->id() );
-		$html .= ssi::make_drop_down( [ map { $_, $_ } @{$Field->values()} ], $value );
-		$html .= '</select>';
+		my @values;
+		if ( $value and ! sets::isin( $value, $Field->values() ) ) {
+			@values = ($value, @{$Field->values()});
+$openprint::log->debug("value not in values: $value NOT IN (@values)");
+		} else {
+			@values = @{$Field->values()};
+$openprint::log->debug("value in values: $value IN (@values)");
+			#*values = $Field->values();
+		}
+
+		$html .= ssi::select( [ map { $_, $_ } @values ], $value, { name=>'field-'.$$Field{id}, id=>'field-'.$$Field{id}, prepend=>['',' '] } );
+
 	} elsif ( $Field->type() eq 'text' ) {
 		$html .= sprintf( q`<input type="text" name="field-%1$d" id="field-%1$d" value="%2$s" />`, $Field->id(), $value );
 	} elsif ( $Field->type() eq 'email' ) {

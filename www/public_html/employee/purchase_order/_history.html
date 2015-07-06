@@ -1,10 +1,17 @@
 <? eval (
+	$$variable{PurchaseOrders} = [];
 	if ( $param{po_id} ) {
-		$$variable{PurchaseOrders} = [ openprint::PurchaseOrder->find( 
-			id			=>	$param{po_id}, 
-			company_id	=>	new openprint::User( $session{user_id} )->company_id(),
-			deleted		=>	[1,0],
-			order		=>	'id desc') ];
+		my $po_id = openprint::PurchaseOrder->transform('id',$param{po_id});
+
+		if ( $param{po_id} ne $po_id ) {
+			$$variable{warning} .= "$param{po_id} does not look like a valid PO #<br/>";
+		} else {
+			$$variable{PurchaseOrders} = [ openprint::PurchaseOrder->find( 
+				id			=>	$po_id, 
+				company_id	=>	new openprint::User( $session{user_id} )->company_id(),
+				deleted		=>	[1,0],
+				order		=>	'id desc') ];
+		}
 	} elsif ( $param{manifest_id} ) {
 		$$variable{PurchaseOrders} = [ openprint::PurchaseOrder->find( 
 			manifest_id	=>	$param{manifest_id}, 
@@ -39,15 +46,18 @@
 		my @POs = openprint::PurchaseOrder->find( %search );
 		my %POs = map { $$_{id}, $_ } @POs;
 
-		my @po_ids = map { $$_{id} } @POs;
-		foreach my $PC ( openprint::PurchaseOrder_Content->find( po_id=>\@po_ids ) ) {
-			my $PO = $POs{$$PC{po_id}};
-			$$PO{Contents} = [] if ! $$PO{Contents};
-			push $$PO{Contents}, $PC;
-		} 
-		foreach my $PO ( @POs ) {
-			$$PO{Contents} = [] if ! $$PO{Contents};
-		}
+		if ( @POs ) {
+			my @po_ids = map { $$_{id} } @POs;
+			foreach my $PC ( openprint::PurchaseOrder_Content->find( po_id=>\@po_ids ) ) {
+				my $PO = $POs{$$PC{po_id}};
+				$$PO{Contents} = [] if ! $$PO{Contents};
+				push $$PO{Contents}, $PC;
+			} 
+			foreach my $PO ( @POs ) {
+				$$PO{Contents} = [] if ! $$PO{Contents};
+			}
+		} # end if POs
+		
 
 		foreach my $PO ( @POs ) {
 
@@ -141,6 +151,7 @@
 		sql::end_transaction( $dbh, $ac );
 	} # end if
 ) ?>
+<?include(/includes/error_reporting.html)?>
 	<? if ( @{$$variable{'PurchaseOrders'}} == 0 ) ?>
 	There are no purchase orders matching your search criteria.
 	<? else ( @{$$variable{'PurchaseOrders'}} == 0 ) ?>
@@ -168,7 +179,11 @@
 		my $Currency = openprint::Currency::get_current();
 		my $ac = sql::start_transaction( $dbh );
 		foreach my $PO ( @{$$variable{'PurchaseOrders'}} ) {
-			$html .= sprintf(q`<tr id="tr-%1$d" class="%2$s">`, $PO->id(), ( ( ! $PO->authorized ) and $PO->can_authorize() ) ? 'unauthorized' : 'authorized' );
+			$html .= sprintf(q`<tr id="tr-%1$d" class="%2$s" title="%3$s">`, 
+				$PO->id(), 
+				( ( ( ! $PO->authorized ) and $PO->can_authorize() ) ? 'unauthorized' : 'authorized' ),
+				html_escape( $PO->summary() ),
+				);
 			if ( $session{'user_type'} eq 'A' ) {
 				$html .= '<td class="checkbox"><input type="checkbox" name="po_id" value="'.$PO->id().'"/></td>';
 			} # end if

@@ -11,9 +11,9 @@
 `, text=>'X' } );
 		$html .= '<br/>';
 	} # end foreach
-	$html .= '<br/>' if ! @Users;
+	#$html .= '<br/>' if ! @Users;
 	my $company_id = $param{accounting_contact_company_id} ? $param{accounting_contact_company_id} : $$variable{Company}->id();
-	if ( $session{user_type} eq 'A' ) {
+	if ( 0 and $session{user_type} eq 'A' ) {
 		$html .= qq`<select name="accounting_contact_company_id" id="accounting_contact_company_id" onchange="new Ajax.Updater('AccountingContacts','_company_accounting_contacts.html', { parameters: { company_id: '$$variable{Company}{id}', accounting_contact_company_id: this.value } } );"><option value="">select</option>`;
 		$html .= make_drop_down( [ map { $_->id(), $_->name() } openprint::Company->find( order=>'lower(name)' ) ], $company_id );
 		$html .= '</select>';
@@ -21,9 +21,7 @@
 
 	my @Users = openprint::User->find( company_id=>$company_id, order=>'lower(firstname),lower(lastname)') if $company_id;
 	if ( @Users ) {
-		$html .= '<select name="new_accounting_contact_id" id="new_accounting_contact_id">';
-		$html .= make_drop_down( [ map { $_->id(), $_->name() } @Users ] );
-		$html .= '</select>';
+		$html .= ssi::select( [ map { $_->id(), $_->name() } @Users ], undef, { name=>'new_accounting_contact_id', id=>'new_accounting_contact_id', prepend=>['','select'] } );
 		$html .= button( 'AddAccountingContact', { onclick=>qq`new Ajax.Updater('AccountingContacts','_company_accounting_contacts.html', { parameters: { company_id: $$variable{Company}{id}, new_accounting_contact_id: \$('new_accounting_contact_id').value, action: 'add' } } );`, text=>'Add' } );
 	} # end if
 	return $html;

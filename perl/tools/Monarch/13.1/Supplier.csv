@@ -1,25 +1,25 @@
 "Field Name","IQ Field","Type","Beg","Size","End","Description","Validated","Required","Default Value","Notes"
-"Supplier-Code","$Company->id()","Text",1,8,8,"Supplier ID","Yes","Yes",,"No duplicates allowed"
-"Supplier-Name","$Company->name()","Text",9,40,48,"Supplier Name",,"Yes",,"Duplicates allowed depending on how AP options are set."
-"Address-1","$Company->address1()","Text",49,40,88,"Supplier Address Line 1",,,,
-"Address-2","$Company->address2()","Text",89,40,128,"Supplier Address Line 2",,,,
+"Supplier-Code","$Object->id()","Text",1,8,8,"Supplier ID","Yes","Yes",,"No duplicates allowed"
+"Supplier-Name","$Object->name()","Text",9,40,48,"Supplier Name",,"Yes",,"Duplicates allowed depending on how AP options are set."
+"Address-1","$Object->address1()","Text",49,40,88,"Supplier Address Line 1",,,,
+"Address-2","$Object->address2()","Text",89,40,128,"Supplier Address Line 2",,,,
 "Address-3",,"Text",129,40,168,"Supplier Address Line 3",,,,
-"City","$Company->city()","Text",169,40,208,"Supplier City",,,,
-"State","$Company->state()","Text",209,3,211,"Supplier State",,,,
-"Zip","$Company->postalcode()","Text",212,10,221,"Supplier Zip Code",,,,
-"Country","$Company->country()","Text",222,40,261,"Supplier Country",,,,
-"Phone","$Company->phone()","Text",262,20,281,"Supplier Phone",,,,
-"FAX","$Company->fax()","Text",282,20,301,"Supplier Fax",,,,
-"E-Mail-Address","$Company->email()","Text",302,80,381,"Supplier Email Address",,,,
+"City","$Object->city()","Text",169,40,208,"Supplier City",,,,
+"State","$Object->state()","Text",209,3,211,"Supplier State",,,,
+"Zip","$Object->postalcode()","Text",212,10,221,"Supplier Zip Code",,,,
+"Country","$Object->country()","Text",222,40,261,"Supplier Country",,,,
+"Phone","$Object->phone()","Text",262,20,281,"Supplier Phone",,,,
+"FAX","$Object->fax()","Text",282,20,301,"Supplier Fax",,,,
+"E-Mail-Address","$Object->email()","Text",302,80,381,"Supplier Email Address",,,,
 "Inter-company","return ""0"";","Text",382,1,382,"Flag - Inter-Company",,,,"0=No, 1=Yes***"
 "System-ID-Inter-company",,"Text",383,12,394,"Inter-Company System ID","Yes","Yes*",,"Required if inter-company flag set to yes."
 "Requires-1099","return ""0"";","Text",395,1,395,"Flag - 1099 Recipient",,,,"0=No, 1=Yes"
-"Legal-Name-1099","$Company->business_name()","Text",396,40,435,"Legal Name for 1099",,,,
+"Legal-Name-1099","$Object->business_name()","Text",396,40,435,"Legal Name for 1099",,,,
 "Legal-ID-1099",,"Text",436,15,450,"Legal ID for 1099",,,,
 "Tax-ID",,"Text",451,20,470,"Tax Form ID for 1099",,,,
-"Group-ID","$Company->Category()->short()","Text",471,12,482,"Supplier Group ID","Yes",,,
-"Terms-Code","$Company->Credit(6)->code()","Text",483,20,502,"Default Terms Code","Yes",,,
-"Credit-Limit","1*$Company->Credit(6)->limit()","Text",503,14,516,"Credit Limit",,,,
+"Group-ID","$Object->Category()->short()","Text",471,12,482,"Supplier Group ID","Yes",,,
+"Terms-Code","$Object->Credit(6)->code()","Text",483,20,502,"Default Terms Code","Yes",,,
+"Credit-Limit","1*$Object->Credit(6)->limit()","Text",503,14,516,"Credit Limit",,,,
 "Minimum-Order","return ""0"";","Text",517,14,530,"Minimum Order",,,,
 "Remit-To-Name",,"Text",531,40,570,"Remit To Name",,,,
 "Remit-To-Address-1",,"Text",571,40,610,"Remit To Address Line 1",,,,
@@ -33,7 +33,7 @@
 "Remit-To-FAX",,"Text",804,20,823,"Remit To Fax",,,,
 "Tax-Code",,"Text",824,10,833,"Tax Code","Yes",,,
 "Tax-Number",,"Text",834,20,853,"Tax Number",,,,
-"Default-Payment-Method","my $Profile = $Company->Profile(); return $Profile->value('default_payment_method') ? $Profile->value('default_payment_method') : join(',',@{$Profile->default('default_payment_method')});","Text",854,8,861,"Default Payment Method","Yes","Yes",,"Valid values are Cash, Check, Exchange, Manual, Other, Pre-Paid, Transfer and Wire."
+"Default-Payment-Method","my $Profile = $Object->Profile(); return $Profile->value('default_payment_method') ? $Profile->value('default_payment_method') : join(',',@{$Profile->default('default_payment_method')});","Text",854,8,861,"Default Payment Method","Yes","Yes",,"Valid values are Cash, Check, Exchange, Manual, Other, Pre-Paid, Transfer and Wire."
 "Prograph-Paper",,"Text",862,1,862,"Flag - Planner Paper",,,,"0=No, 1=Yes"
 "Prograph-Tape-Label",,"Text",863,1,863,"Flag - Planner Tape-Label",,,,"0=No, 1=Yes"
 "Prograph-Insert",,"Text",864,1,864,"Flag - Planner Insert",,,,"0=No, 1=Yes"

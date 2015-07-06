@@ -25,6 +25,7 @@ use vars qw( $log $dbh $AUTOLOAD %cache %name_cache %fields %defaults %transform
 
 my $debug = 0;
 use constant DEBUG_ALL => 0;
+use constant DEBUG_CACHE => 0;
 $no_cache = 0;
 
 sub init_cache {
@@ -52,30 +53,70 @@ sub debug {
 	} # end foreach
 } # end sub debug
 
-sub new {
+sub new_scalar_id {
 	my ( $parent, $id, $data ) = @_;
+	my $self = $data;
+	bless $self, $parent;
+
+#$log->debug("loading $parent $id") if $debug or DEBUG_ALL;
+	no strict 'refs';
+	my $fields = \%{$parent.'::fields'};
+	my @keys = map { ( (defined $$fields{$_} or exists $$data{$_} ) and $$fields{$_} ne $_ ) ? $_ : () } keys %$fields;
+	@$self{@keys} = @$self{@$fields{@keys}};
+	if ( ! $no_cache ) {
+		$log->debug("Caching $config{db_name} $parent $id = $self") if $debug;
+		$cache{$config{db_name}}{$parent}{$id} = $self;
+	} else {
+		$log->debug("NOT Caching $config{db_name} $parent $id = $self") if $debug;
+	} # end if
+	return $self;
+}
+
+sub new {
+	my ( $parent, $id, $data, $dont_cache ) = @_;
 
 	my $ref = ref $id;
+
+	$cache{$config{db_name}}{$parent} = {} if ! $cache{$config{db_name}}{$parent};
+	my $sub_cache = $cache{$config{db_name}}{$parent};
 	if ( ! $ref ) {
-		if ( $id and (!$data) and $cache{$config{db_name}}{$parent} and $cache{$config{db_name}}{$parent}{$id} ) {
-#$log->debug("Loading from cache $parent $id");
-			# If the object is cached
-			return $openprint::Object::cache{$config{'db_name'}}{$parent}{$id};
+		if ( $id and (!$dont_cache) and $$sub_cache{$id} ) {
+			if ( $data ) {
+				my $self = $$sub_cache{$id};
+				# The reason to use load is if we have overriden it in the object, like in Paper
+				$self->load( $data );
+$log->debug("Loading object $parent $id from cache and populating with data new objcet is $self old cache is " . $$sub_cache{$id}) if DEBUG_CACHE;
+				return $self;
+			} else {
+				$log->debug("Loading from cache $parent $id = ". $$sub_cache{$id}) if DEBUG_CACHE;
+# If the object is cached
+				return $$sub_cache{$id};
+			}
+		} elsif ( DEBUG_CACHE ) {
+			my ( $caller, undef, $line ) = caller;
+			my $self = {};
+			bless $self, $parent;
+			if ( ( $$self{id} = $id ) or $data ) {
+#$log->debug("loading $parent $id") if $debug or DEBUG_ALL;
+				$self->load( $data );
+			} # end if
+			$log->debug("from $caller:$line no ref, $parent id: $id, dont_cache: $dont_cache sub $sub_cache $$sub_cache{$id} $$self{name}");
 		} # end if
 #$log->debug("Not Loading from cache $parent $id") if $id and ! $data;
 		my $self = {};
 		bless $self, $parent;
 
-		if ( ( $$self{'id'} = $id ) or $data ) {
+		if ( ( $$self{id} = $id ) or $data ) {
 #$log->debug("loading $parent $id") if $debug or DEBUG_ALL;
 			$self->load( $data );
 		} # end if
-		if ( ! $no_cache ) {
+		if ( ! ( $no_cache or $dont_cache ) ) {
 			if ( $id ) {
 				# Using $id instead of $$self{od} means that we cache non existent entries
-			#if ( $$self{'id'} ) {
-$log->debug("Caching $config{db_name} $parent $id = $self") if $debug;
-				$cache{$config{db_name}}{$parent}{$id} = $self;
+			#if ( $$self{id} ) {
+$log->debug("Caching $config{db_name} $parent $id = $self") if DEBUG_CACHE or $debug;
+				
+				$$sub_cache{$id} = $self;
 			} # end if
 		} else {
 $log->debug("NOT Caching $config{db_name} $parent $id = $self") if $debug;
@@ -136,6 +177,9 @@ sub load {
 				$log->error( 'Failure to load ' . $type . " $$self{id}: Reason: " . $d->errstr );
 				Carp::cluck( 'Failure to load ' . $type . " $$self{id}: Reason: " . $d->errstr );
 			} # end if
+			if ( @identified_by ) {
+				delete @$self{@identified_by};
+			} # end if
 		#} elsif ( $debug ) {
 			#$log->debug("Got $type: " . join(',', map { $_ . '=>' . $$data{$_} } keys %$data ) . ' in ' . sprintf('%.4f', tv_interval($starttime)*1000) .' useconds' );
 		} # end if
@@ -153,15 +197,15 @@ sub save {
 	my $local_dbh = eval '$'.$type.'::dbh';
 	$local_dbh = $openprint::dbh if ! $local_dbh;
 	$self->set( $data ? $data : {} );
-if ( $debug or DEBUG_ALL ) {
-	if ( $data ) {
-	foreach my $k ( keys %$data ) {
-	$log->debug("Object::save after set $k => $$data{$k} $$self{$k}");
+	if ( $debug or DEBUG_ALL ) {
+		if ( $data ) {
+			foreach my $k ( keys %$data ) {
+				$log->debug("Object::save after set $k => $$data{$k} $$self{$k}");
+			}
+		} else {
+			$log->debug("No data after set");
+		}
 	}
-	} else {
-	$log->debug("No data after set");
-	}
-}
 #$debug = 0;
 
 	my $table = eval '$'.$type.'::table';
@@ -179,6 +223,7 @@ if ( $debug or DEBUG_ALL ) {
 	} # end if
 	my $serial = eval '$'.$type.'::serial';
 	my @identified_by = eval '@'.$type.'::identified_by';
+
 	my $ac = sql::start_transaction( $local_dbh );
 	if ( ! $serial ) {
 		my $insert = $force_insert;
@@ -215,7 +260,8 @@ $log->debug("No serial") if $debug;
 					$insert = 1;
 				} # end if
 			} # end foreach
-		} # end if
+		} # end if ! %serial
+
 		if ( $insert ) {
 			my @keys = keys %sql;
 			my $command = "INSERT INTO $table (" . join(',', @keys ) . ') VALUES (' . join(',', map { '?' } @sql{@keys} ) . ')';
@@ -234,17 +280,17 @@ $log->debug("No serial") if $debug;
 		} else {
 			my @keys = keys %sql;
 			my $command = "UPDATE $table SET " . join(',', map { $_ . ' = ?' } @keys ) . ' WHERE ' . join(' AND ', map { $_ . ' = ?' } @$fields{@identified_by} );
-			if ( ! ( $_ = $local_dbh->prepare($command) and $_->execute( @sql{@keys,@identified_by} ) ) ) {
+			if ( ! ( $_ = $local_dbh->prepare($command) and $_->execute( @sql{@keys,@$fields{@identified_by}} ) ) ) {
 				my $error = $local_dbh->errstr;
 				$command =~ s/\?/\%s/g;
-				$log->error('SQL failed: ('.sprintf($command, , map { defined $_ ? $_ : 'undef' } ( @sql{@keys, @identified_by}) ).'):' . $local_dbh->errstr);
+				$log->error('SQL failed: ('.sprintf($command, , map { defined $_ ? $_ : 'undef' } ( @sql{@keys, @$fields{@identified_by}}) ).'):' . $local_dbh->errstr);
 				$local_dbh->rollback();
 				sql::end_transaction( $local_dbh, $ac );
 				return $error;
 			} # end if
 			if ( $debug or DEBUG_ALL ) {
 				$command =~ s/\?/\%s/g;
-				$log->debug('SQL DEBUG: ('.sprintf($command, map { defined $_ ? $_ : 'undef' } ( @sql{@keys,@identified_by} ) ).'):' );
+				$log->debug('SQL DEBUG: ('.sprintf($command, map { defined $_ ? $_ : 'undef' } ( @sql{@keys,@$fields{@identified_by}} ) ).'):' );
 			} # end if
 		} # end if
 	} else { # not identified_by
@@ -256,7 +302,12 @@ $log->debug("No serial") if $debug;
 			if ( $need_serial ) {
 				if ( $serial ) {
 					@$self{@identified_by} = @sql{@$fields{@identified_by}} = $local_dbh->selectrow_array( q{SELECT nextval('} . $serial . q{')} );
-					$log->debug("SQL statement execution SELECT nextval('$serial') returned ".join(',',@$self{@identified_by})) if $debug or DEBUG_ALL;
+					if ( $local_dbh->errstr() )  {
+						$log->error("Error getting next id. " . $local_dbh->errstr() );
+						$log->error("SQL statement execution SELECT nextval('$serial') returned ".join(',',@$self{@identified_by}));
+					} elsif ( $debug or DEBUG_ALL ) {
+						$log->debug("SQL statement execution SELECT nextval('$serial') returned ".join(',',@$self{@identified_by}));
+					} # end if
 				} # end if
 			} # end if
 			my @keys = keys %sql;
@@ -274,7 +325,7 @@ $log->debug("No serial") if $debug;
 				$log->debug('SQL DEBUG: ('.sprintf($command, map { defined $_ ? $_ : 'undef' } ( @sql{@keys} ) ).'):' );
 			} # end if
 		} else {
-			delete $sql{'created_on'};
+			delete $sql{created_on};
 			my @keys = keys %sql;
 			@keys = sets::exclude( [ @$fields{@identified_by} ], \@keys );
 			my $command = "UPDATE $table SET " . join(',', map { $_ . ' = ?' } @keys ) . ' WHERE ' . join(' AND ', map { $$fields{$_} .'= ?' } @identified_by );
@@ -296,10 +347,10 @@ $log->debug("No serial") if $debug;
 	$self->load();
 #$log->debug("Got here");
 	if ( $$fields{id} ) {
-		if ( ! $openprint::Object::cache{$config{'db_name'}}{$type}{$$self{id}} ) {
-			$openprint::Object::cache{$config{'db_name'}}{$type}{$$self{id}} = $self;
+		if ( ! $openprint::Object::cache{$config{db_name}}{$type}{$$self{id}} ) {
+			$openprint::Object::cache{$config{db_name}}{$type}{$$self{id}} = $self;
 		} # end if
-	#delete $openprint::Object::cache{$config{'db_name'}}{$type}{$$self{id}};
+	#delete $openprint::Object::cache{$config{db_name}}{$type}{$$self{id}};
 	} # end if
 #$log->debug("after delete");
 	eval 'if ( %'.$type.'::find_cache ) { %'.$type.'::find_cache = (); }';
@@ -311,6 +362,28 @@ sub get {
 	my $self = shift;
 	return map { $self->$_() } @_;
 } # end sub get
+
+sub changes {
+	my ( $self, $params ) = @_;
+
+	my $type = ref $self;
+	my $fields = eval ('\%'.$type.'::fields');
+	if ( ! $fields ) {
+$log->warn('Object::set called on an object with no fields');
+		return;
+	} # end if
+	#my %defaults = eval('%'.$type.'::defaults');
+	my @results;
+
+	foreach my $field ( keys %$fields ) {
+		next if ! exists $$params{$field};
+
+		if ( $$self{$field} ne $$params{$field} ) {
+			push @results, "$field changed from $$self{$field} to $$params{$field}";
+		} # end if
+	} # end foreachf ield
+	return @results;
+} # end sub changes
 
 sub set {
 	my ( $self, $params ) = @_;
@@ -403,17 +476,17 @@ sub delete {
 	$local_dbh = $openprint::dbh if ! $local_dbh;
 
 	my $where = join(' AND ', map { $fields{$_}.'=?' } @identified_by );
-	if ( exists $fields{'deleted'} ) {
+	if ( exists $fields{deleted} ) {
 		sql::update( undef, $local_dbh, $table, [$where, @$self{@identified_by}], 'deleted', 1 );
 		return $local_dbh->errstr if $local_dbh->errstr;
-		$$self{'deleted'}=1;
+		$$self{deleted}=1;
 	} else {
 		my $rows = $local_dbh->do( 'DELETE FROM '.$table.' WHERE '.$where, undef, @$self{@identified_by} );
 		$log->warn("No rows deleted for 'DELETE FROM $table WHERE $where, @$self{@identified_by}") if ! $rows;
 		$log->debug("DELETE FROM $table WHERE $where, @$self{@identified_by}") if $debug;
 	
 		return $local_dbh->errstr if $local_dbh->errstr;
-		delete $openprint::Object::cache{$config{'db_name'}}{$type}{join('-',@$self{@identified_by})};
+		delete $openprint::Object::cache{$config{db_name}}{$type}{join('-',@$self{@identified_by})};
 	} # end if
 	eval 'if ( %'.$type.'::find_cache ) { %'.$type.'::find_cache = (); }';
 	return;
@@ -424,11 +497,11 @@ sub undelete {
 	my $type = ref $self;
 	my $table = eval '$'.$type.'::table';
 	my %fields = eval '%'.$type.'::fields';
-	sql::update( undef, undef, $table, [$fields{'id'}.'=?', $$self{'id'}], 'deleted', 0 );
-	$$self{'deleted'} = 0;
+	sql::update( undef, undef, $table, [$fields{id}.'=?', $$self{id}], 'deleted', 0 );
+	$$self{deleted} = 0;
 	my %find_cache = eval '%'.$type.'::find_cache';
 	%find_cache = () if %find_cache;
-	delete $openprint::Object::cache{$config{'db_name'}}{$type}{$$self{id}};
+	delete $openprint::Object::cache{$config{db_name}}{$type}{$$self{id}};
 	return;
 } # end sub undelete
 
@@ -448,14 +521,14 @@ sub destroy {
 	my $where = join(' AND ', map { $$fields{$_}.'=?' } @identified_by );
 	sql::execute( undef, $local_dbh, 'DELETE FROM '.$table.' WHERE '.$where, @$self{@identified_by} );
 	return $local_dbh->errstr if $local_dbh->errstr;
-	delete $openprint::Object::cache{$config{'db_name'}}{$type}{join('-',@$self{@identified_by})};
+	delete $openprint::Object::cache{$config{db_name}}{$type}{join('-',@$self{@identified_by})};
 	eval 'if ( %'.$type.'::find_cache ) { %'.$type.'::find_cache = (); }';
 	return;
 } # end sub destroy
 
 sub Creator {
 	require openprint::User;
-	return new openprint::User( $_[0]{'created_by'} );
+	return new openprint::User( $_[0]{created_by} );
 } # end sub Creator
 
 my @sql_functions = (
@@ -563,20 +636,24 @@ sub find {
 	my @where;
 	my $sql = 'SELECT';
 	
+	my $do_cache = 1;
 	if ( exists $$params{distinct} ) {
 		$sql .= ' DISTINCT';
 		delete $$params{distinct};
 	} # end if
-	if ( $$params{'columns'} ) {
-		$sql .= ' ' . $$params{'columns'};
-		delete $$params{'columns'};
+	if ( $$params{columns} ) {
+		$sql .= ' ' . $$params{columns};
+		delete $$params{columns};
+		# We may not have the full list, so don't cache this Object. Although, if we had a cached copy, if we just updated it, that would be ok...
+		$log->debug("Turning off caching due to columns on $object_type.") if DEBUG_ALL or DEBUG_CACHE;
+		$do_cache = 0;
 	} else {
 		$sql .= ' *';
 	} # end if
 	$sql .= ' FROM ';
-	if ( $$params{'table'} ) {
-		$sql .= $$params{'table'};
-		delete $$params{'table'};
+	if ( $$params{table} ) {
+		$sql .= $$params{table};
+		delete $$params{table};
 	} else {
 		$sql .= ${$object_type.'::table'};
 	} # end if
@@ -584,20 +661,18 @@ sub find {
 	my @values;
 	my $local_dbh = ${$object_type.'::dbh'};
 	$local_dbh = $openprint::dbh if ! $local_dbh;
-	if ( $$params{'dbh'} ) {
-		$local_dbh = $$params{'dbh'};
-		delete $$params{'dbh'};
+	if ( $$params{dbh} ) {
+		$local_dbh = $$params{dbh};
+		delete $$params{dbh};
 	} # end if
 	if ( ! $local_dbh ) {
 		$log->error("No local_dbh");
 		return ();
 	}
-	delete $$params{'dbh'};
+	delete $$params{dbh};
 
-	my $do_cache = 0;
-	my $cache_field = ${$object_type.'::cache_field'};
-	if ( $cache_field and $$params{$cache_field} and ( ( 1 == keys %$params ) or ( 2 == keys %$params and exists $$params{'limit'} ) ) ) {
-		$do_cache = 1;
+	my $cache_field = ${$object_type.'::cache_field'} if $do_cache;
+	if ( $cache_field and $$params{$cache_field} and ( ( 1 == keys %$params ) or ( 2 == keys %$params and exists $$params{limit} ) ) ) {
 
 #$log->debug("have cache field $cache_field for $$params{$cache_field}") if DEBUG_ALL;
 		if ( exists $name_cache{$object_type} and exists $name_cache{$object_type}{$$params{$cache_field}} ) {
@@ -610,15 +685,16 @@ sub find {
 				return ();
 			} # end if
 		} else {
-$log->debug("Undefing $object_type $cache_field $$params{$cache_field}") if DEBUG_ALL;
+$log->debug("Undefing $object_type $cache_field $$params{$cache_field}") if DEBUG_ALL or DEBUG_CACHE;
 			$name_cache{$object_type}{$$params{$cache_field}} = undef;
 		} # end if
 		if ( 0 and ${$object_type.'::cached'} ) {
-$log->debug("ALl cached $object_type $cache_field $$params{$cache_field}") if DEBUG_ALL;
+$log->debug("ALl cached $object_type $cache_field $$params{$cache_field}") if DEBUG_ALL or DEBUG_CACHE;
 			return ();
 		} # end if
 	} else {
-		$log->debug("Not doing caching using $cache_field with params $$params{$cache_field} ") if DEBUG_ALL;
+		$do_cache = 0;
+		$log->debug("Not doing caching for $object_type using $cache_field with params $$params{$cache_field} ") if DEBUG_ALL or DEBUG_CACHE;
 	} # end if
 
 	# no operators, just which fields are being searched on. Mostly just useful for detetion of the deleted field.
@@ -715,38 +791,48 @@ $log->debug("ALl cached $object_type $cache_field $$params{$cache_field}") if DE
 			} # end if
 		} # end foreach
 	} # end if
-	if ( $search{'custom'} ) {
-		push @where, '(' . (shift @{$search{'custom'}}) . ')';
-		push @values, @{$search{'custom'}};
-		delete $search{'custom'};
+	if ( $search{custom} ) {
+		push @where, '(' . (shift @{$search{custom}}) . ')';
+		push @values, @{$search{custom}};
+		delete $search{custom};
 	} # end if
 
-	if ( $$fields{'deleted'} and ! sets::isin( 'deleted', \@used_fields ) ) {
+	if ( $$fields{deleted} and ! sets::isin( 'deleted', \@used_fields ) ) {
 		push @where, 'deleted=?';
 		push @values, 0;
 	} # end if
 
-	$sql .= ' WHERE ' . join(' AND ', @where ) if @where;
-	if ( $$params{'or'} ) {
-		$sql .= ' WHERE' if ! @where;
-		$sql .= " OR $$params{'or'}";
+	if ( $$params{or} ) {
+		if ( @where ) {
+			$sql .= ' WHERE ( ' . join(' AND ', @where ) . ' ) OR ( ' . $$params{or} . ')';
+		} else {
+			$sql .= " WHERE $$params{or}";
+		} # end if
+	} else {
+		$sql .= ' WHERE ' . join(' AND ', @where ) if @where;
 	} # end if
-	if ( $$params{'order'} ) {
-		$sql .= " ORDER BY $$params{'order'}";
+	if ( exists $$params{order} ) {
+		$sql .= " ORDER BY $$params{order}";
+	} else {
+		my $order = eval '$'.$object_type.'::default_sort';
+#$log->debug("default sort: $object_type :: default_sort = $order") if DEBUG_ALL;
+		$sql .= " ORDER BY $order" if $order;
 	} # end if
 	if ( $$params{'group by'} ) {
-		$sql .= " GROUP BY $$params{'group'}";
+		$sql .= " GROUP BY $$params{group}";
 	} # end if
-	if ( exists $$params{'limit'} ) {
-		$sql .= " LIMIT $$params{'limit'}" if $$params{'limit'};
+	if ( exists $$params{limit} ) {
+		$sql .= " LIMIT $$params{limit}" if $$params{limit};
 	} # end if
-	if ( exists $$params{'offset'} ) {
-		$sql .= " OFFSET $$params{'offset'}" if $$params{'offset'};
+	if ( exists $$params{offset} ) {
+		$sql .= " OFFSET $$params{offset}" if $$params{offset};
 	} # end if
 	foreach my $k ( keys %search ) {
 		$log->error("Extra parameters in $object_type ::find $k => $search{$k}");
 		Carp::cluck("Extra parameters in $object_type ::find $k => $search{$k}");
 	} # end foreach
+
+	$log->debug("Loading Debug:$debug $object_type ($sql) (".join(',', map { ref $_ eq 'ARRAY' ? join(',', @{$_}) : $_ } @values).')' ) if $debug;
 	
 #$log->debug( 'find prepare: ' . sprintf('%.4f', tv_interval($starttime)*1000) ." useconds") if $debug;
 	my $data = $local_dbh->selectall_arrayref( $sql, { Slice => {} }, @values );
@@ -756,23 +842,26 @@ $log->debug("ALl cached $object_type $cache_field $$params{$cache_field}") if DE
 	#} elsif ( ( ! @$data ) and $debug ) {
 		#$log->debug("No $type ($sql) (@values) " );
 	} elsif ( $debug ) {
-		$log->debug("Loading Debug:$debug $object_type ($sql) (@values) # of results:" . @$data . ' in ' . sprintf('%.4f', tv_interval($starttime)*1000) .' useconds' );
+		$log->debug("Loading Debug:$debug $object_type ($sql) (".join(',', map { ref $_ eq 'ARRAY' ? join(',', @{$_}) : $_ } @values).') # of results:' . @$data . ' in ' . sprintf('%.4f', tv_interval($starttime)*1000) .' useconds' );
 	} # end if
-	if ( $$fields{'id'} ) {
-		if ( $cache_field ) {
+	if ( $$fields{id} ) {
+		if ( $cache_field and $do_cache ) {
 			my @results = map { $object_type->new( $_->{$$fields{id}}, $_ ) } @$data;
+			my $cache_ref = $name_cache{$object_type};
+
 			foreach my $O ( @results ) {
-				$name_cache{$object_type}{$$O{$cache_field}} = $O;
+				$$cache_ref{$$O{$cache_field}} = $O;
 			} 
 			return @results;
 		} # end if
-		return map { $object_type->new( $_->{$$fields{'id'}}, $_ ) } @$data;
+		#return map { $object_type->new_scalar_id( $_->{$$fields{id}}, $_ ) } @$data;
+		return map { $object_type->new( $_->{$$fields{id}}, $_ ) } @$data;
 	} else {
 		my @identified_by = eval '@'.$object_type.'::identified_by';
 		if ( ! @identified_by ) {
 			$log->debug("Multi key object $object_type but no identified by") if $debug;
 		} # end if
-		return map { $object_type->new( \@identified_by, $_ ) } @$data;
+		return map { $object_type->new( \@identified_by, $_, !$do_cache ) } @$data;
 #$log->debug("Objs: "  . scalar @objs );
 		#return @objs;
 	} # end if
@@ -847,7 +936,21 @@ sub to_string {
 
 sub dropdown {
 	my $self = shift;
-	return [ map { $$_{'id'}, $_->name() } $self->find(@_) ];
+	my %params = @_;
+	if ( ! $params{order} ) {
+		my $type = ref($self);
+		$type = $self if ! $type;
+		my $order = eval '$'.$type.'::default_sort';
+#$log->debug("default sort: $self $type :: default_sort = $order") if DEBUG_ALL;
+		$params{order} = $order if $order;
+	}
+
+	# User has firstname,lastname
+	#if ( ( ! $params{columns} ) {
+		#$params{columns} = 'id,name';
+	#}
+
+	return [ map { $$_{id}, $_->name() } $self->find(%params) ];
 } # end sub dropdown
 
 sub sort_value {
@@ -856,7 +959,7 @@ sub sort_value {
 
 sub sort {
 	my $type = shift;
-	my @results = sort { $$a{'name'} cmp $$b{'name'} } @_;
+	my @results = sort { $$a{name} cmp $$b{name} } @_;
 	return @results;
 } # end sub sort
 
@@ -865,50 +968,53 @@ sub transform {
 	my $type = ref $_[0];
 	$type = $_[0] if ! $type;
 	my $fields = eval '\%'.$type.'::fields';
+	my $value = $_[2];
 
 	if ( defined $$fields{$_[1]} ) {
 		my @transforms = eval('@{$'.$type.'::transforms{$_[1]}}');
 		$openprint::log->debug("Transforms for $_[1] before $_[2]: @transforms") if $debug;
-
-		foreach my $transform ( @transforms ) {
-			if ( $transform =~ /^s\// or $transform =~ /^tr\// ) {
-				eval '$_[2] =~ ' . $transform;
-			} elsif ( $transform =~ /^<(\d+)/ ) {
-				if ( $_[2] > $1 ) {
-					$_[2] = undef;
-				} # end if
-			} else {
-$openprint::log->debug("evalling $_[2] ".$transform . " Now value is $_[2]" );
-				eval '$_[2] '.$transform;
-$openprint::log->error("Eval error $@") if $@;
-			}
-$openprint::log->debug("After $transform: $_[2]") if $debug;
-		} # end foreach
+		if ( @transforms ) {
+			foreach my $transform ( @transforms ) {
+				if ( $transform =~ /^s\// or $transform =~ /^tr\// ) {
+					eval '$value =~ ' . $transform;
+				} elsif ( $transform =~ /^<(\d+)/ ) {
+					if ( $value > $1 ) {
+						$value = undef;
+					} # end if
+				} else {
+	$openprint::log->debug("evalling $value ".$transform . " Now value is $value" );
+					eval '$value '.$transform;
+	$openprint::log->error("Eval error $@") if $@;
+				}
+	$openprint::log->debug("After $transform: $value") if $debug;
+			} # end foreach
+		} # end if 
 	} else {
 		$openprint::log->error("Object::transform ($_[1]) not in fields for $type");
 	} # end if
-	return $_[2];
+	return $value;
 
 } # end sub transform
 
 sub opinions {
 	my $type = ref $_[0];
+	return '' if ! openprint::Opinion_Type->find_one();
 	my $html;
 	my @Opinions = openprint::Opinion->find('object_type'=> $type, 'object_id'=>$_[0]->id() );
 	my %Opinions;
 	foreach my $Opinion ( @Opinions ) {
-		push @{$Opinions{$$Opinion{'opinion_type_id'}}}, $Opinion;
+		push @{$Opinions{$$Opinion{opinion_type_id}}}, $Opinion;
 	} # end foreach
 
 	if ( ! @Opinions ) {
 		$html = 'No one has an opinion on this yet.';
-		$html .= '  Be the first!' if $session{'user_id'};
+		$html .= '  Be the first!' if $session{user_id};
 	} else {
 		require Lingua::EN::Inflect;
 		foreach my $opinion_type_id ( keys %Opinions ) {
 			my $Opinion_Type = new openprint::Opinion_Type( $opinion_type_id );
 			if ( @{$Opinions{$opinion_type_id}} == 1 ) {
-				if ( $Opinions{$opinion_type_id}[0]->user_id() == $session{'user_id'} ) {
+				if ( $Opinions{$opinion_type_id}[0]->user_id() == $session{user_id} ) {
 					$html .= 'You ' . $Opinion_Type->name() . ' this.';
 				} else {
 					$html = '1 person ' . Lingua::EN::Inflect::PL( $Opinion_Type->name(), @{$Opinions{$opinion_type_id}} ) . ' this.';
@@ -918,7 +1024,7 @@ sub opinions {
 			} # end if
 		} # end foreach opinion
 	} # end if
-	$html .= $_[0]->opinion_button( ( $_[1] ? $_[1] : 'Opinions' ), '/includes/_opinions.html' ) if $session{'user_id'};
+	$html .= $_[0]->opinion_button( ( $_[1] ? $_[1] : 'Opinions' ), '/includes/_opinions.html' ) if $session{user_id};
 	return $html;
 } # end sub opinions
 
@@ -926,7 +1032,7 @@ sub opinion_button {
 	my $type = ref $_[0];
 
 	my %Opinions;
-	foreach my $Opinion ( openprint::Opinion->find('object_type'=> $type, 'object_id'=>$_[0]{'id'}, 'user_id'=>$session{'user_id'} ) ) {
+	foreach my $Opinion ( openprint::Opinion->find('object_type'=> $type, 'object_id'=>$_[0]{id}, 'user_id'=>$session{user_id} ) ) {
 		push @{$Opinions{$$Opinion{opinion_type_id}}}, $Opinion;
 	} # end foreach
 	my $html;
@@ -941,9 +1047,9 @@ sub opinion_button {
 	foreach my $Type ( @Types ) {
 		# Only need 1 button becuse it's a toggle
 		if ( $Opinions{$$Type{opinion_type_id}} ) {
-			$html .= ssi::button( $Type->Opinion_Type()->name(), { onclick=>sprintf( q`new Ajax.Updater( '%s', '%s', { parameters: { object_type: '%s', object_id: %d, opinion_type_id: %d } } );`, $div, $url, $type, $_[0]{'id'}, $Type->opinion_type_id() ), text=>'Remove Opinion' } );
+			$html .= ssi::button( $Type->Opinion_Type()->name(), { onclick=>sprintf( q`new Ajax.Updater( '%s', '%s', { parameters: { object_type: '%s', object_id: %d, opinion_type_id: %d } } );`, $div, $url, $type, $_[0]{id}, $Type->opinion_type_id() ), text=>'Remove Opinion' } );
 		} else {
-			$html .= ssi::button( $Type->Opinion_Type()->name(), { onclick=>sprintf( q`new Ajax.Updater( '%s', '%s', { parameters: { object_type: '%s', object_id: %d, opinion_type_id: %d } } );`, $div, $url, $type, $_[0]{'id'}, $Type->opinion_type_id() ) } );
+			$html .= ssi::button( $Type->Opinion_Type()->name(), { onclick=>sprintf( q`new Ajax.Updater( '%s', '%s', { parameters: { object_type: '%s', object_id: %d, opinion_type_id: %d } } );`, $div, $url, $type, $_[0]{id}, $Type->opinion_type_id() ) } );
 		} # end if
 	} # end foreach
 	if ( ! $_[1] ) {
@@ -958,10 +1064,10 @@ sub toggle_Opinion {
 	my $Opinion = $_[0]->Opinion( $_[1] );
 	if ( $Opinion ) {
 		$Opinion->delete();
-		delete $_[0]{'Opinions'}{$_[1]};
+		delete $_[0]{Opinions}{$_[1]};
 	} else {
 		$Opinion = new openprint::Opinion();
-		$Opinion->save({'user_id'=>$session{'user_id'}, 'object_type'=>ref $_[0], 'object_id'=>$_[0]{'id'},'opinion_type_id'=>$_[1]});
+		$Opinion->save({'user_id'=>$session{user_id}, 'object_type'=>ref $_[0], 'object_id'=>$_[0]{id},'opinion_type_id'=>$_[1]});
 	} # end if
 	sql::end_transaction( $dbh, $ac );
 } # end sub toggle_Opinion
@@ -970,68 +1076,69 @@ sub toggle_Opinion {
 # second param could be for setting it, so should be an Opinion Object
 sub Opinion {
 	if ( @_ > 2 ) {
-		$_[0]{'Opinions'}{$_[1]} = $_[2];
+		$_[0]{Opinions}{$_[1]} = $_[2];
 	} # end if
-	$_[0]{'Opinions'} = {} if ! $_[0]{'Opinions'};
+	$_[0]{Opinions} = {} if ! $_[0]{Opinions};
 	my $type = ref $_[0];
-	if ( ! defined $_[0]{'Opinions'}{$_[1]} ) {
-		$_[0]{'Opinions'}{$_[1]} = openprint::Opinion->find_one( 'user_id'=>$session{'user_id'}, 'object_type'=>$type, 'opinion_type_id'=>$_[1], 'object_id'=>$_[0]{'id'});
+	if ( ! defined $_[0]{Opinions}{$_[1]} ) {
+		$_[0]{Opinions}{$_[1]} = openprint::Opinion->find_one( 'user_id'=>$session{user_id}, 'object_type'=>$type, 'opinion_type_id'=>$_[1], 'object_id'=>$_[0]{id});
 	} # end if
-	return $_[0]{'Opinions'}{$_[1]};
+	return $_[0]{Opinions}{$_[1]};
 } # end sub Opinion
 
 sub Object_Type {
-	if ( $_[0]{'object_type_id'} ) {
-		$_[0]{'Object_Type'} = new openprint::Object_Type( $_[0]{'object_type_id'} );
+	if ( $_[0]{object_type_id} ) {
+		$_[0]{Object_Type} = new openprint::Object_Type( $_[0]{object_type_id} );
 	} else {
-		$_[0]{'Object_Type'} = openprint::Object_Type->find_one('name'=>ref $_[0] );
-		$_[0]{'Object_Type'} = new openprint::Object_Type() if ! $_[0]{'Object_Type'};
+		$_[0]{Object_Type} = openprint::Object_Type->find_one('name'=>ref $_[0] );
+		$_[0]{Object_Type} = new openprint::Object_Type() if ! $_[0]{Object_Type};
 	} # end if
-	return $_[0]{'Object_Type'};
+	return $_[0]{Object_Type};
 } # end sub Object_Type
 
 sub object_type {
 	if ( @_ > 1 ) {
-		my $Type = openprint::Object_Type->find_one('name'=> $_[1] );
+		my $Type = openprint::Object_Type->find_one( name => $_[1] );
 		if ( ! $Type ) {
 			$Type = new openprint::Object_Type();
-			$Type->save({'name'=>$_[1], 'human'=>$_[1]});
+			$Type->save({ name=>$_[1], human=>$_[1] });
 		} # end if
-		$_[0]{'object_type'} = $Type->name();
-		$_[0]{'object_type_id'} = $Type->id();
+		$_[0]{object_type} = $Type->name();
+		$_[0]{object_type_id} = $Type->id();
 	} # end if
-	if ( ! $_[0]{'object_type'} ) {
-		$_[0]{'object_type'} = new openprint::Object_Type( $_[0]{'object_type_id'} )->name();
+	if ( ! $_[0]{object_type} ) {
+		$_[0]{object_type} = new openprint::Object_Type( $_[0]{object_type_id} )->name();
 	} # end if
-	return $_[0]{'object_type'};
+	return $_[0]{object_type};
 } # end sub object_type
+
 sub Object {
 	if ( @_ > 1 ) {
 		$_[0]->object_type( ref $_[1] );
-		$_[0]{'object_id'} = $_[1]{'id'};
+		$_[0]{object_id} = $_[1]{id};
 	} # end if
 	my $type =  $_[0]->object_type();
 	if ( ! $type ) {
 		$log->error("No type in Object::Object". $_[0]->to_string());
 		return undef;
 	} # end if
-	$_ = $type->new( $_[0]{'object_id'} );
+	$_ = $type->new( $_[0]{object_id} );
 	$openprint::log->debug( "Returning object of type " . ref $_ );
 	return $_;
 } # end sub Object
 
 sub date_format {
-	return Date::Format::time2str( $config{'DateFormat'}, Date::Parse::str2time( $_[0]{$_[1]} ) );
+	return Date::Format::time2str( $config{DateFormat}, Date::Parse::str2time( $_[0]{$_[1]} ) );
 } # end sub date_format 
 sub datetime_format {
-	return Date::Format::time2str( $config{'DateTimeFormat'}, Date::Parse::str2time( $_[0]{$_[1]} ) );
+	return Date::Format::time2str( $config{DateTimeFormat}, Date::Parse::str2time( $_[0]{$_[1]} ) );
 } # end sub datetime_format 
 
 sub Views {
 	if ( $_[1] ) {
-		$_[1]{'object_id'} = $_[0]{'id'};
-		$_[1]{'object_type'} = ref $_[0],
-		$_[1]{'order'} = 'created_on' if ! $_[1]{'order'};
+		$_[1]{object_id} = $_[0]{id};
+		$_[1]{object_type} = ref $_[0],
+		$_[1]{order} = 'created_on' if ! $_[1]{order};
 		return openprint::View->find($_[1]);
 	} # end if
 
@@ -1047,29 +1154,29 @@ sub Views {
 
 sub Comments {
 	if ( $_[1] ) {
-		$_[1]{'object_id'} = $_[0]{'id'};
-		$_[1]{'object_type'} = ref $_[0],
-		$_[1]{'order'} = 'created_on' if ! $_[1]{'order'};
+		$_[1]{object_id} = $_[0]{id};
+		$_[1]{object_type} = ref $_[0],
+		$_[1]{order} = 'created_on' if ! $_[1]{order};
 
 		return openprint::Comment->find(%{$_[1]});
 	} # end if
 
-	if ( ! defined $_[0]{'Comments'} ) {
-		@{$_[0]{'Comments'}} = openprint::Comment->find({'object_type'=>ref $_[0], 'object_id'=>$_[0]{'id'}, 'order'=>'created_on'});
+	if ( ! defined $_[0]{Comments} ) {
+		@{$_[0]{Comments}} = openprint::Comment->find({'object_type'=>ref $_[0], 'object_id'=>$_[0]{id}, 'order'=>'created_on'});
 	} # end if
-	return @{$_[0]{'Comments'}};
+	return @{$_[0]{Comments}};
 } # end sub Comments
 
 sub Privacy {
 	if ( ! exists $_[0]{Privacy} ) {
-		$_[0]{Privacy} = openprint::Privacy->find_one(object_type=>ref $_[0], object_id=>$_[0]{id} );
+		$_[0]{Privacy} = openprint::Privacy->find_one(object_type=>ref $_[0], object_id=>$_[0]{id} ) if $_[0]{id};
 		if ( ! $_[0]{Privacy} ) {
 			$_[0]{Privacy} = new openprint::Privacy();
 			$_[0]{Privacy}->object_type( ref $_[0] );
 			$_[0]{Privacy}{object_id} = $_[0]{id};
 		} # end if
 	} # end if
-	return $_[0]{'Privacy'};
+	return $_[0]{Privacy};
 } # end sub Privacy
 
 sub can_view {
@@ -1077,11 +1184,11 @@ sub can_view {
 } # end sub can_view
 
 sub Assets {
-	return () if ! $_[0]{'id'};
+	return () if ! $_[0]{id};
 	my ( $self, %param ) = @_;
-	$param{'object_id'} = $_[0]{'id'};
-	$param{'order'}	= 'asset_id' if ! $param{'order'};
-	$param{'object_type'} = ref $_[0];
+	$param{object_id} = $_[0]{id};
+	$param{order}	= 'asset_id' if ! $param{order};
+	$param{object_type} = ref $_[0];
 	my @Assets = openprint::Object_Asset->find(%param);	
 $openprint::log->debug("# of Assets: " . scalar @Assets );
 	return @Assets;
@@ -1105,12 +1212,12 @@ sub lock {
 	my $type = ref $_[0];
 	if ( $_[0]{ac} ) {
 		#already locked
-		$openprint::log->debug("ALREADY LOCKED $type for $_[0]{id} ac: $_[0]{ac} caller: $caller line: $line project ref:" . $_[0]);
+		$openprint::log->debug("ALREADY LOCKED $type for $_[0]{id} ac: $_[0]{ac} caller: $caller line: $line object ref:" . $_[0]) if DEBUG_ALL;
 		$_[0]{ac} += 1;
 	} else {
 		$_[0]{ac} = sql::start_transaction( $openprint::dbh );
-		$openprint::log->debug("LOCKING Projects for project $_[0]{id} ac: $_[0]{ac} caller: $caller line: $line project ref:" . $_[0]);
-		my $table = ${$type.'::table'};
+		$openprint::log->debug("LOCKING $type for $_[0]{id} ac: $_[0]{ac} caller: $caller line: $line object ref:" . $_[0]) if DEBUG_ALL;
+		my $table = eval '$'.$type.'::table';
 		$dbh->do( "LOCK TABLE $table IN EXCLUSIVE MODE" ) or $log->error( DBI->errstr );
 	} # end if
 
@@ -1119,12 +1226,12 @@ sub lock {
 sub unlock {
 	my ( $caller, undef, $line ) = caller;
 	my $type = ref $_[0];
-	$openprint::log->debug("UNLOCKING $type for $_[0]{id} ac: $_[0]{ac} caller: $caller line: $line" . $_[0]);
+	$openprint::log->debug("UNLOCKING $type for $_[0]{id} ac: $_[0]{ac} caller: $caller line: $line" . $_[0]) if DEBUG_ALL;
 	if ( ! exists $_[0]{ac} ) {
 		$_[0]{ac} = $openprint::dbh->{AutoCommit};
 	} # end if
 	if ( ! $_[0]{ac} ) {
-		$openprint::log->debug("unlock with no AC!");
+		$openprint::log->debug("unlock with no AC! $caller:$line object $type $_[0]{id}");
 		return;
 	} # end if
 	if ( $_[0]{ac} == 1 ) {
@@ -1185,5 +1292,10 @@ sub keywords {
 	} # end if
 	return $_[0]{keywords};
 } # end sub keywords
+
+sub upload {
+	return openprint::Object_Asset::upload(@_);
+} # end sub upload
+
 1;
 __END__

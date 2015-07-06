@@ -86,7 +86,11 @@
 			<div class="leftColumn">
 				<p>
 					<label for="ddmOwner">Owner</label>
-					<select id="ddmOwner" name="ddmOwner"><option value=""> select </option><? echo ( openprint::Company::get_dropdown( $$variable{'Stock'}->owner_id() ); ) ?></select>
+					<input type="text" oninput="filter_companies('ddmOwner', { name: this.value,selected_id: get_ddm_value($('ddmOwner')) } );" class="filter" />
+					<select id="ddmOwner" name="ddmOwner"><option value=""> select </option><? echo ( 
+							my @owner_ids = sql::execute(undef,undef,q`SELECT DISTINCT owner_id FROM Papers`);
+							make_drop_down( openprint::Company->dropdown( id=>\@owner_ids ), $$variable{Stock}->owner_id() );
+					) ?></select>
 				</p>
 				<p>
 					<label for="txtGroup" onclick="$('Group').toggle();$('txtGroup').toggle();">Group</label>
@@ -371,6 +375,10 @@
 					<label>Ordered</label>
 					<? echo ( $$variable{Stock}->back_ordered() . $$variable{Stock}->units(); ) ?>
 				</p>
+				<p>
+					<label>Created</label>
+					<? echo ( format_datetime( $$variable{Stock}->created_on() ) ) ?>
+				</p>
 			</div><!-- right-->
 		</fieldset>
 	</div>
@@ -399,6 +407,26 @@
 			<div id="Prices"><?include(_prices.html)?></div>
 		</fieldset>
 	</div>
+<fieldset><legend>Logs</legend>
+        <ul>
+            <li><label>Date</label>
+                <? echo ( join( ' to ',
+                        datetime_select_session( $r->uri(),'log_created_on_start', {
+                            onchange    =>q`new Ajax.Updater( 'Logs', '_stock_logs.html', { parameters: $('f1').serialize() } );`,
+                            with_today=>1,
+                            with_clear=>1,
+                            } ),
+                        datetime_select_session( '/employee/it/host.html','log_created_on_end', {
+                            onchange    =>q`new Ajax.Updater( 'Logs', '_stock_logs.html', { parameters: $('f1').serialize() } );`,
+                            with_today=>1,
+                            with_clear=>1,
+                            } ),
+					); ) ?>
+                <? echo ( button( 'LoadLog', { onclick=>q`new Ajax.Updater( 'Logs', '_stock_logs.html', { parameters: $('f1').serialize() } );`, text=>'Load' } ); ) ?>
+            </li>
+        </ul>
+        <div id="Logs"><?include('_stock_logs.html')?></div>
+    </fieldset>
 	<? endif ( $$variable{'stock_id'} ) ?>
 </form>
 </div><!--Stock-->

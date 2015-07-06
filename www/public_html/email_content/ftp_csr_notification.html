@@ -3,63 +3,57 @@
 	<div id="contactInformation">
 		<div class="leftColumn" style="float: left; width: 50%;">
 			<div class="fieldContainer">
-				<p>
-					<label>Company Name</label>
-					<? echo ( $$variable{'Company'}->name() ) ?>
-				</p>
-				<p>
-					<label>Address</label>
+				<ul>
+				<li><label>Company Name</label><? echo ( $$variable{'Company'}->name() ) ?></li>
+				<li><label>Address</label>
 					<? echo ( $$variable{'Company'}->address1() ) ?><br/>
 <? if ( $$variable{'Company'}->address2() ) ?>
 					<? echo ( $$variable{'Company'}->address2() ) ?><br/>
 <? endif ( $$variable{'Company'}->address2() ) ?>
-				</p>
+				</li>
 <? if ( $$variable{'Company'}->postalcode() ) ?>
-				<p>
-					<label>Postal Code</label>
-					<? echo ( $$variable{'Company'}->postalcode() ) ?>
-				</p>
+				<li><label>Postal/ZIP Code</label><? echo ( $$variable{'Company'}->postalcode() ) ?></li>
 <? endif ( $$variable{'Company'}->postalcode() ) ?>
+				</ul>
 			</div>
 		</div>
 		<div class="rightColumn" style="float: left; width: 50%;">
 			<div class="fieldContainer">
-				<p>
-					<label>CSR</label>
-					<? echo ( $$variable{'Company'}->CSR()->name() ) ?>
-				</p>
-				<p>
-					<label>Contact Name</label>
-					<? echo ( $$variable{'User'}->name() ) ?>
-				</p>
-				<p>
-					<label>Email Address</label>
-					<a href="mailto<? echo ( $$variable{'User'}->email() ) ?>"><? echo ( $$variable{'User'}->email() ) ?></a>
-				</p>
-				<p>
-					<label>Phone Number</label>
+				<ul>
+				<li><label>CSR</label><? echo ( $$variable{'Company'}->CSR()->name() ) ?></li>
+				<li><label>Contact Name</label><? echo ( $$variable{'User'}->name() ) ?></li>
+				<li><label>Email Address</label><a href="mailto<? echo ( $$variable{'User'}->email() ) ?>"><? echo ( $$variable{'User'}->email() ) ?></a></li>
+				<? if ( $$variable{'User'}->phone() ) ?>
+				<li><label>Phone Number</label>
 					<? echo ( $$variable{'User'}->phone() ) ?>
 					<? if ( $$variable{'User'}->extension() ) ?>x<? echo ( $$variable{'User'}->extension() ) ?><? endif ( $$variable{'User'}->extension() ) ?>
-				</p>
+				</li>
+				<? endif ( $$variable{'User'}->phone() ) ?>
+				</ul>
 			</div>
 		</div>
 	</div>
 </fieldset>
-
 <fieldset>
 	<legend>File<? echo ( @{$$variable{'Uploads'}} == 1 ? '' : 's' ) ?></legend>
 	<table border="0" cellpadding="1" cellspacing="0" width="100%">
 		<thead>
 		 <tr>
 			<th align="left">Filename</th>
-			<th align="right">Size</th>
+			<th style="text-align:right; width: 100px;">Size</th>
+			<th style="text-align:right; width: 100px;" class="Status">Status</th>
 		 </tr>
 		</thead>
 		<tbody>
 			<? echo ( 
 				my $html;
-				foreach my $Upload ( @{$$variable{'Uploads'}} ) {
-					$html .= sprintf('<tr><td nowrap="nowrap">%s</td><td align="right">%s</td></tr>', $$Upload{proper_file_path}, misc::format_bytes($$Upload{size}) ); 
+				foreach my $Upload ( @{$$variable{Uploads}} ) {
+					$html .= sprintf('<tr><td nowrap="nowrap">%s%s</td><td align="right">%s</td><td align="right">%s</td></tr>', 
+						$$Upload{file_path}, 
+						( -e $Upload->path() ? '' : '<br/><span class="error">File does not exist in FTP area.</span>' ),
+						misc::format_bytes($$Upload{size}), 
+						( $$Upload{complete} ? 'Complete' : '<span class="error">Incomplete</span>' ),
+						); 
 				} # end foreach Upload
 				return $html;
 			) ?>

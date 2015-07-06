@@ -3,6 +3,7 @@
 	<fieldset>
 		<div class="leftColumn">
 		<ul>
+			<li><label>ID</label><?HelpdeskIndex?></li>
 			<li> 
 				<label>Submission Date</label>
 				<?sub_date?>
@@ -66,24 +67,28 @@
 		<br class="spacer"/>
 		<ul>
 		<li> 
-		<label><b>Question or Comment</b></label>
+		<label>Description</label>
+			<?description?>
+		</li>
+		<li> 
+		<label>Question or Comment</label>
 			<?question?>
 		</li>
 		<li> 
-			<label><b>Response Type</b></label>
+			<label>Response Type</label>
 			<?response_type?>
 		</li>
 		<li> 
-			<label><b>Customer Service Response</b></label>
+			<label>ustomer Service Response</label>
 			<textarea name="txtQuestion-Quote" rows="2" onkeyup="textarea_resize(this);"><?response?></textarea>
 		</li>
 		<li> 
 			<label>Mark as reviewed</label>
-			<? echo ( ssi::radio( 'rdbReviewed', ['Y','Yes','N','No'], $$variable{'rdbReviewed'} ? $$variable{'rdbReviewed'} : 'Y' ); ) ?>
+			<? echo ( radio( 'rdbReviewed', ['Y','Yes','N','No'], $$variable{'rdbReviewed'} ? $$variable{'rdbReviewed'} : 'Y' ); ) ?>
 		</li>
 		</ul>
 	<p class="buttons">
-		<? echo ( join('',
+		<? echo ( join("\n",
 			button('Submit', { 'onclick'=>"f1.btnFunction.value='Submit';f1.submit();" } ),
 			button('Reset', { 'onclick'=>'f1.reset();' } ),
 		); ) ?>

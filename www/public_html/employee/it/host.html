@@ -1,4 +1,7 @@
 <script type="text/javascript">
+	function delete_interface( id ) {
+		new Ajax.Request( '_host_actions.json', { parameters: { interface_id: id, action: 'delete interface' } } );
+	}
 	function check_inputs( form ) {
 		return true;
 	} //  end function check_inputs
@@ -19,7 +22,7 @@
 					<input type="text" id="type" name="type" style="display:none;" onkeyup="ddm_select_by_text( $('type_id'), this.value, 0 );" />
 					<select name="type_id" id="type_id" onchange="$('type').value='';">
 						<option value="">select</option>
-						<? echo ( ssi::make_drop_down( openprint::Host_Type->dropdown(), $$variable{Host}->type_id() ); ) ?>
+						<? echo ( make_drop_down( openprint::Host_Type->dropdown(order=>'lower(name)'), $$variable{Host}->type_id() ); ) ?>
 					</select>
 				</li>
 				<li>
@@ -44,10 +47,10 @@
 					<label>Online</label><? echo ( $$variable{Host}->online() ? 'Yes' : 'No' ) ?>
 				</li>
 				<li><label>Description</label>
-					<textarea id="description" name="description" rows="<? echo (ssi::count_lines($$variable{Host}->description() ); ) ?>" onkeyup="textarea_resize(this);"><? echo ( $$variable{Host}->description() ) ?></textarea>
+					<textarea id="description" name="description" rows="<? echo (count_lines($$variable{Host}->description()) ) ?>" onkeyup="textarea_resize(this);"><? echo ( $$variable{Host}->description() ) ?></textarea>
 				</li>
-				<li><label>Created On</label><? echo ( Date::Format::time2str( $config{'DateTimeFormat'}, Date::Parse::str2time( $$variable{Host}->created_on() ) ); ) ?></li>
-				<li><label>Updated On</label><? echo ( Date::Format::time2str( $config{'DateTimeFormat'}, Date::Parse::str2time( $$variable{Host}->created_on() ) ); ) ?></li>
+				<li><label>Created On</label><? echo ( format_datetime( $$variable{Host}->created_on() ); ) ?></li>
+				<li><label>Updated On</label><? echo ( format_datetime( $$variable{Host}->created_on() ); ) ?></li>
 				<li class="buttons">
 					<? echo ( 
 						my $html;
@@ -59,6 +62,7 @@
 						$html .= button( 'Resolve', { onclick=>"f1.elements['action'].value='Resolve';f1.action='/employee/it/host.html';f1.submit();" } );
 						$html .= button( 'Ping', { onclick=>"f1.elements['action'].value='ping';f1.action='/employee/it/host.html';f1.submit();" } );
 						$html .= button( 'Wake', { onclick=>"f1.elements['action'].value='Wake';f1.action='/employee/it/host.html';f1.submit();" } );
+						$html .= button( 'Reboot', { onclick=>"f1.elements['action'].value='reboot';f1.action='/employee/it/host.html';f1.submit();" } );
 						$html .= button( 'GEOLookup', { onclick=>"f1.elements['action'].value='GEOLookup';f1.action='/employee/it/host.html';f1.submit();" } );
 						#$html .= ssi::writeButton( $log, $dbh, 'clear', 'clear.gif', 'clearForm(f1);', '', 'Clear' );
 						return $html;
@@ -99,6 +103,7 @@
 <? if ( $config{'RADIUS Support'} eq 'Y' ) ?>
 	<th class="radius">RADIUS</th>
 <? endif ( $config{'RADIUS Support'} eq 'Y' ) ?>
+			<th class="buttons">&nbsp;</th>
 		</tr>
 <? echo (
 	my $html;
@@ -118,22 +123,22 @@
 	my $radius_fragment = slurp_content( '/employee/it/_radius_mac_line.html' );
 my @macs = map { $_->mac() ? () : '' } $$variable{Host}->Interfaces();
 	foreach my $Interface ( $$variable{Host}->Interfaces(), ( @macs ? () : new openprint::Host_Interface() ) ) {
-		my $mac = $Interface->mac();
 		$html .= sprintf(q`
-<tr>
+<tr id="hi-%1$d">
 	<td class="mac">%2$s</td>
 	<td class="ip">%3$s</td>
 	<td class="dhcp">%4$s</td>
 	<td class="comment"><textarea name="comment-%1$s">%5$s</textarea></td>
 `, 
-$mac,
-input( type=>'text', name=>'mac-'.$mac, value=>$mac ),
-input( type=>'text', name=>'ip-'.$mac, value=>$Interface->ip() ),
-checkboxes( 'dhcp-'.$mac, [ 1, '' ], $Interface->dhcp() ),
- $Interface->comment() );
+	$$Interface{id},
+	input( type=>'text', name=>'mac-'.$$Interface{id}, value=>$$Interface{mac} ),
+	input( type=>'text', name=>'ip-'.$$Interface{id}, value=>$Interface->ip() ),
+	checkboxes( 'dhcp-'.$$Interface{id}, [ 1, '' ], $Interface->dhcp() ),
+	$Interface->comment(),
+);
 	
 		if ( $openprint::RADIUS_Check::dbh ) {
-		
+			my $mac = $$Interface{mac};	
 			if ( $mac =~ /^([[:xdigit:]]{2})[\:\-]?([[:xdigit:]]{2})[\:\-]?([[:xdigit:]]{2})[\:\-]?([[:xdigit:]]{2})[\:\-]?([[:xdigit:]]{2})[\:\-]?([[:xdigit:]]{2})$/ ) {
 				$mac = "$1-$2-$3-$4-$5-$6";
 			} # end if
@@ -144,6 +149,11 @@ checkboxes( 'dhcp-'.$mac, [ 1, '' ], $Interface->dhcp() ),
 				$html .= variable_substitution( \$radius_fragment, $variable ) if $mac;
 				$html .= '</td>';
 		} # end if RADIUS
+		$html .= '<td class="buttons">';
+		if ( $$Interface{id} ) {
+			$html .= button( 'DI'.$Interface->id(), { onclick=>qq`delete_interface('$$Interface{id}');`, text=>'X', title=>'Delete Interface' } ),
+		} # end if
+		$html .= '</td></tr>';
 	} # end foreach Interface
 	return $html;
 ) ?>

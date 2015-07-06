@@ -73,7 +73,7 @@ if ( 0 ) {
 	} // end function
 	function add_group() {
 		var form = $('f1');
-	   new Ajax.Updater( 'alert', '/main/project/prin/_signature.html', {
+	   new Ajax.Request( '/main/project/prin/_signature.html', {
 			parameters: { project_id : form.ProjectIndex.value, action: 'add_group' },
 			onSuccess: function(response){new Insertion.Bottom($('SignatureGroups'), response.responseText);calc('f1');}
 			//onSuccess: function(response){new Insertion.Bottom($('SignatureGroups'), response.responseText);calc('f1');}}
@@ -82,7 +82,7 @@ if ( 0 ) {
 	}
 	function copy_group( group_id ) {
 		var form = $('f1');
-		new Ajax.Updater( 'alert', '/main/project/prin/_signature.html', {
+		new Ajax.Request( '/main/project/prin/_signature.html', {
 			parameters: { project_id : form.ProjectIndex.value, action: 'copy_group', group_id: group_id },
 			onSuccess: function(response){new Insertion.Bottom($('SignatureGroups'), response.responseText);calc('f1');}
 			});
@@ -91,7 +91,7 @@ if ( 0 ) {
 	}
 	function remove_group( group_id ) {
 		var form = $('f1');
-		new Ajax.Updater( 'alert', '/main/project/prin/_signature.html', {
+		new Ajax.Request( '/main/project/prin/_signature.json', {
 			parameters: { project_id : form.ProjectIndex.value, action: 'remove_group', group_id: group_id },
 			onSuccess: function(response){$('SignatureGroups'+group_id).remove();calc('f1');},
 			evalScripts: true
@@ -123,9 +123,9 @@ if ( 0 ) {
 				</p>
 				<p><label>Finished</label>
             <? echo ( join( "\n",
-                input( type=>'float', id=>'txtFinalWidth', name=>'txtFinalWidth', value=>$$variable{txtFinalWidth}, onkeyup=>'dimensions_onChange(this.form);', min=>0, title=>'Final Width in inches' ),
+                input( type=>'float', id=>'txtFinalWidth', name=>'txtFinalWidth', value=>$$variable{txtFinalWidth}, oninput=>'dimensions_onChange(this.form);', min=>0, title=>'Final Width in inches' ),
                 ' x ',
-                input( type=>'float', id=>'txtFinalHeight', name=>'txtFinalHeight', value=>$$variable{txtFinalHeight}, onkeyup=>'dimensions_onChange(this.form);', min=>0, title=>'Final Height in inches' ),
+                input( type=>'float', id=>'txtFinalHeight', name=>'txtFinalHeight', value=>$$variable{txtFinalHeight}, oninput=>'dimensions_onChange(this.form);', min=>0, title=>'Final Height in inches' ),
 				); ) ?>
 				</p>
 				<p><label>Spine</label>
@@ -136,16 +136,16 @@ radio('spine', [ map { $_, $_ } 'height', 'width' ], $$variable{spine}, { defaul
 				<p><label>Spread</label>
                 <? echo ( join( "\n",
 				
-                input( type=>'float', id=>'txtWidth', name=>'txtWidth', value=>$$variable{txtWidth}, onkeyup=>'dimensions_onChange(this.form);', min=>0, title=>'Flat Width in inches' ),
+                input( type=>'float', id=>'txtWidth', name=>'txtWidth', value=>$$variable{txtWidth}, oninput=>'dimensions_onChange(this.form);', min=>0, title=>'Flat Width in inches' ),
                 ' x ',
-                input( type=>'float', id=>'txtHeight', name=>'txtHeight', value=>$$variable{txtHeight}, onkeyup=>'dimensions_onChange(this.form);', min=>0, title=>'Flat Height in inches' ),
+                input( type=>'float', id=>'txtHeight', name=>'txtHeight', value=>$$variable{txtHeight}, oninput=>'dimensions_onChange(this.form);', min=>0, title=>'Flat Height in inches' ),
                 );
             ) ?>
 				</p>
 				<div id="PagesCover">
 				<p>
 					<label>Total pages</label>
-					<? echo ( input( name=>'txtTotalPageQuantity', value=>$$variable{txtTotalPageQuantity},  type=>'cardinal', onkeyup=>'calc(this.form.name);' ); ) ?>
+					<? echo ( input( name=>'txtTotalPageQuantity', value=>$$variable{txtTotalPageQuantity}, type=>'cardinal', oninput=>'calc(this.form.name);' ); ) ?>
 				</p>
 				<p>
 					<label>Cover</label>
@@ -158,7 +158,7 @@ radio('spine', [ map { $_, $_ } 'height', 'width' ], $$variable{spine}, { defaul
 				<div id="GateInsert">
 				<p>
 					<label><? echo ( writeTip( 'Gate Folded' ); ) ?> pages</label>
-					<? echo ( input( name=>'txtGateFoldedSpreadQuantity', value=>$$variable{txtGateFoldedSpreadQuantity},  type=>'cardinal', onkeyup=>'calc(this.form.name);', min=>0 ); ) ?>
+					<? echo ( input( name=>'txtGateFoldedSpreadQuantity', value=>$$variable{txtGateFoldedSpreadQuantity},  type=>'cardinal', oninput=>'calc(this.form.name);', min=>0 ); ) ?>
 				</p>
 				<p>
 					<label>Supplied Inserts</label>
@@ -196,7 +196,7 @@ radio('spine', [ map { $_, $_ } 'height', 'width' ], $$variable{spine}, { defaul
 					unshift @Groups, 1;
 					# Load Defaults
 					if ( $ServiceType ) {
-						foreach my $Default ( openprint::ServiceType_Default->find( servicetype_id=>$ServiceType->id() ) ) {
+						foreach my $Default ( openprint::ServiceType_Default->find( servicetype_id=>$ServiceType->id(), projecttype_id=>undef ) ) {
 							$$variable{$Default->name().'1'} = $Default->value();
 						} # end while
 						foreach my $Default ( openprint::ServiceType_Default->find( servicetype_id=>$ServiceType->id(), projecttype_id=>$$variable{Project}->type_id() ) ) {
@@ -212,7 +212,7 @@ radio('spine', [ map { $_, $_ } 'height', 'width' ], $$variable{spine}, { defaul
 					push @Groups, 2;
 					# Load Defaults
 					if ( $ServiceType ) {
-						foreach my $Default ( openprint::ServiceType_Default->find( servicetype_id=>$ServiceType->id() ) ) {
+						foreach my $Default ( openprint::ServiceType_Default->find( servicetype_id=>$ServiceType->id(), projecttype_id=>undef ) ) {
 							$$variable{$Default->name().'2'} = $Default->value();
 						} # end while
 						foreach my $Default ( openprint::ServiceType_Default->find( servicetype_id=>$ServiceType->id(), projecttype_id=>$$variable{Project}->type_id() ) ) {
@@ -223,7 +223,7 @@ radio('spine', [ map { $_, $_ } 'height', 'width' ], $$variable{spine}, { defaul
 					$$variable{'txtSignatureType2'} = 'Interior Pages';
 				} # end if
 				my $html = '';
-				my $h = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/main/project/prin/_signature.html' );
+				my $h = slurp_content( '/main/project/prin/_signature.html' );
 				foreach my $Group ( @Groups ) {
 					$$variable{'Group'} = $$variable{'Signature'} = $Group;
 					$html .= variable_substitution( \$h, $variable );

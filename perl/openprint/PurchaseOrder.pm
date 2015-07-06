@@ -30,15 +30,15 @@ require MIME::Base64;
 require openprint::Object_Asset;
 require openprint::Asset;
 
-$debug = 0;
+$debug = 1;
 
 $table = 'purchaseorders';
 $serial = 'purchaseorders_id_seq';
 
 %fields = (
-	'id'				=>	'id',
+	id				=>	'id',
 	num					=>	'num',
-	'company_id'		=>	'company_id',
+	company_id		=>	'company_id',
 	contact_id			=>	'contact_id',
 	'currency_id'		=>	'currency_id',
 	'created_on'		=>	'created_on',
@@ -91,13 +91,14 @@ $serial = 'purchaseorders_id_seq';
 );
 
 %transforms = (
+	id			=>	[ 's/\D//g', '<2147483647' ],
 );
 
 %defaults = (
 	created_on	=> q`'NOW()'`,
 	updated_on	=> q`'NOW()'`,
 	deleted		=>	0,
-	currency_id	=> q`$session{'Currency_id'}`,
+	currency_id	=> q`$session{Currency_id}`,
 	total			=>	0,
 	subtotal		=>	0,
 	manifest_id	=>	undef,
@@ -115,14 +116,17 @@ sub save {
 	$dbh->do( "LOCK TABLE $openprint::PurchaseOrder_Tax::table IN EXCLUSIVE MODE" ) or $log->error( DBI->errstr );
 	# force recalculation
 	$self->subtotal(undef);
+$log->debug("After recalc, subtoatal is: $$self{subtotal}");
 	foreach my $Tax ( $self->Taxes(1) ) {
 		$Tax->PurchaseOrder( $self );
 		$Tax->amount(undef);
+$log->debug("After recalc, Tax $$Tax{name} is: $$Tax{amount}");
 	} # end foreach Tax
 	$self->total(undef);
-	if ( ! $$self{'currency_id'} ) {
+$log->debug("After recalc, toatal is: $$self{total}");
+	if ( ! $$self{currency_id} ) {
 		my $Currency = openprint::Currency::get_current();
-		$$self{'currency_id'} = $Currency->id() if $Currency;
+		$$self{currency_id} = $Currency->id() if $Currency;
 	} # end if
 	my $error = $self->SUPER::save({}, $force_insert );
 
@@ -140,8 +144,8 @@ sub save {
 
 sub Currency {
 	my ( $self ) = @_;
-	if ( ! $$self{'currency_id'} ) {
-		$$self{'currency_id'} = openprint::Currency::get_current()->id();
+	if ( ! $$self{currency_id} ) {
+		$$self{currency_id} = openprint::Currency::get_current()->id();
 	} # end if
 	return new openprint::Currency( $_[0]{currency_id} );
 } # end sub Currency
@@ -157,22 +161,21 @@ sub Authorized_By {
 } # end sub Authorized_By
 
 sub Contents {
-	if ( $_[0]{'id'} and ! $_[0]{'Contents'} ) {
-		$_[0]{'Contents'} = [openprint::PurchaseOrder_Content->find('po_id'=>$_[0]{'id'},'order'=>'id')];
+	if ( $_[0]{id} and ! $_[0]{Contents} ) {
+		$_[0]{Contents} = [openprint::PurchaseOrder_Content->find('po_id'=>$_[0]{id},'order'=>'id')];
 	} # end if
-	return @{$_[0]{'Contents'}} if $_[0]{'Contents'};
+	return @{$_[0]{Contents}} if $_[0]{Contents};
 	return ();
 } # end sub Contents
 
 sub send_approval_required_notification {
 	my ( $self ) = @_;
 
-	my $Me = new openprint::User( $session{'user_id'} );
-	my $email_template = misc::load_file( $log, $config{'SkinPath'} . '/email_template.html' );
+	my $email_template = misc::load_file( $log, $config{SkinPath} . '/email_template.html' );
 	my %info;
-	$info{'From'} = $Me;
-	$info{'PurchaseOrder'} = $self;
-	$info{'ReplacementText'} = ssi::include( '/email_content/purchase_order_notification.html', \%info );
+	$info{From} = $openprint::User;
+	$info{PurchaseOrder} = $self;
+	$info{ReplacementText} = ssi::include( '/email_content/purchase_order_notification.html', \%info );
 
 	my @notification_types = map { 'PO ' . (new openprint::PurchaseOrder_ContentType( $_ )->name()) . ' Approvals' } sets::union( map { $_->type_id() } $self->Contents() );
 	$_ = MIME::QuotedPrint::encode_qp( Encode::encode('utf-8', ssi::variable_substitution( \$email_template, \%info ) ) );
@@ -181,7 +184,7 @@ sub send_approval_required_notification {
 
 	my $results;
 	foreach my $U ( map { $_->User() } openprint::User_Notification->find(type=>\@notification_types,'value'=>'Yes' ) ) {
-		if ( $U->id() == $Me->id() ) {
+		if ( $U->id() == $openprint::User->id() ) {
 			$openprint::log->debug( $U->email() . ' Not mailing me.' );
 			next;
 		} # end if
@@ -200,7 +203,7 @@ sub send_approval_required_notification {
 		} # end if
 
 		$results .= $mail->send(
-				FROM		=>	$Me,
+				FROM		=>	$openprint::User,
 				TO			=>	$U,
 				SUBJECT		=>	'Purchase Order requiring approval: ' . $self->id(),
 				ATTACHMENTS	=>	\@body,
@@ -221,29 +224,17 @@ sub send_to_vendor {
 	my @attachments = ();
 	my $results;
 
-	my $email_template = misc::load_file( $log, $config{'SkinPath'} . '/email_template.html' );
+	my $Email = new openprint::Email();
+
 	$info{ReplacementText} = ssi::include("/email_content/purchase_order_body.html", \%info );
-	$_ = MIME::QuotedPrint::encode_qp( Encode::encode( 'utf-8', ssi::variable_substitution( \$email_template, \%info ) ) );
-	push @attachments, ('', $_, 'text/html', 'quoted-printable');
+
+	my $html_body = ssi::include( '/email_template.html', \%info );
 
 	my $purchase_order = Encode::encode( 'utf-8', ssi::include('/email_content/purchase_order.html', \%info ) );
 
 	my $file_base = $From->Company()->name().'-PO'.$$self{id};
-	if ( File::Slurp::write_file('/tmp/'.$file_base.'.html', { atomic => 1, err_mode=>'carp' }, \$purchase_order ) ) {
-		`wkhtmltopdf "/tmp/$file_base.html" "/tmp/$file_base.pdf"`;
-		my $pdf_purchase_order = File::Slurp::read_file( "/tmp/$file_base.pdf", err_mode => 'carp' );
-		unlink "/tmp/$file_base.html";
-		unlink "/tmp/$file_base.pdf";
-		if ( $pdf_purchase_order ) {
-			push @attachments, ($file_base.'.pdf', MIME::Base64::encode_base64($pdf_purchase_order), 'application/octet-stream', 'base64');
-		} else {
-			$openprint::log->debug("Error making pdf");
-		} # end if has pdf contents
-	} # end if successfully wrote html content
-	if ( scalar @attachments == 4 ) {
-		$results .= 'Unable to make a pdf of this PO.  Using HTML version.<br/>';
-		push @attachments, ($file_base.'.html', MIME::QuotedPrint::encode_qp($purchase_order), 'text/html', 'quoted-printable');
-	} # end if
+	$Email->add_pdf_attachment_from_html( $file_base, $purchase_order );
+	
 	foreach my $OA ( $self->Assets() ) {
 		my $Asset = $OA->Asset();
 		$_ = File::Slurp::read_file( $Asset->on_disk_path(), err_mode => 'carp' );
@@ -254,14 +245,12 @@ sub send_to_vendor {
 		} # end if
 	} # end foreach Asset
 
-	my $Email = new openprint::Email();
-
-	$results .= 'PO ' . $$self{'id'} . ' emailed to the following recipients:<br/>';
+	$results .= 'PO ' . $$self{id} . ' emailed to the following recipients:<br/>';
 	$results .= $Email->send(
 			FROM	=> $From,
 			SUBJECT => 'Purchase Order ' . $self->id() . ' from ' . $From->Company()->name(),
 			TO		=> $self->vendor_email(), # Email will split by ,
-			BODY	=>	'',
+			HTML_BODY	=>	$html_body,
 			ATTACHMENTS	=>	\@attachments,
 			);
 	if ( $self->shipto_email() and ( $self->vendor_email() ne $self->shipto_email() ) ) {
@@ -273,13 +262,11 @@ sub send_to_vendor {
 				);
 	} # end if
 	if ( $self->notifications() ) {
-		$info{'ReplacementText'} = ssi::include('/email_content/purchase_order_notification.html', \%info );
-		$_ = MIME::QuotedPrint::encode_qp( Encode::encode( 'utf-8', ssi::variable_substitution( \$email_template, \%info ) ) );
-		@attachments = ('', $_, 'text/html', 'quoted-printable');
+		$info{ReplacementText} = ssi::include('/email_content/purchase_order_notification.html', \%info );
 		$results .= 'Notifications: <br/>' . $Email->send( 
 				TO	=>	[ map { new openprint::User( $_ ) } $self->notifications() ],
 				SUBJECT	=>	'Purchase Order '. $self->id() . ' for ' . $self->vendor_name(),
-				BODY	=>	'',
+				HTML_BODY	=>	ssi::include( '/email_template.html', \%info ),
 				ATTACHMENTS =>	\@attachments,
 				);
 	} # end if
@@ -296,32 +283,24 @@ sub send_to_vendor {
 } # end sub send_to_vendor
 
 sub send_to_me {
-	my $From = new openprint::User( $session{'user_id'} );
+	my $From = new openprint::User( $session{user_id} );
 	my %info = (
 			PurchaseOrder	=>	$_[0],
 			From			=>	$From,
 			);
 	my @attachments = ();
 
+	my $Email = new openprint::Email();
+
 	$info{ReplacementText} = ssi::include('/email_content/purchase_order_body.html', \%info );
-	$_ = MIME::QuotedPrint::encode_qp( Encode::encode( 'utf-8', ssi::include( '/email_template.html', \%info ) ) );
-	push @attachments, ('', $_, 'text/html', 'quoted-printable');
+	$$Email{HTML_BODY} = ssi::include( '/email_template.html', \%info );
 
 	my $purchase_order = Encode::encode( 'utf-8', ssi::include('/email_content/purchase_order.html', \%info ) );
 
 	my $file_base = $From->Company()->name().'-PO'.$_[0]{id};
-	if ( File::Slurp::write_file('/tmp/'.$file_base.'.html', { atomic => 1, err_mode=>'carp' }, \$purchase_order ) ) {
-		`wkhtmltopdf "/tmp/$file_base.html" "/tmp/$file_base.pdf"`;
-		my $pdf_purchase_order = File::Slurp::read_file( "/tmp/$file_base.pdf", err_mode => 'carp' );
-		#unlink "/tmp/$file_base.html";
-		unlink "/tmp/$file_base.pdf";
-		push @attachments, ($file_base.'.pdf', MIME::Base64::encode_base64($pdf_purchase_order), 'application/octet-stream', 'base64') if $pdf_purchase_order;
-	} # end if
-	my $results;
-	if ( @attachments == 4 ) {
-		$results .= 'Unable to make a pdf of this PO.  Using HTML version.<br/>';
-		push @attachments, ($file_base.'.html', MIME::QuotedPrint::encode_qp($purchase_order), 'text/html', 'quoted-printable');
-	} # end if
+
+	my $results = $Email->add_pdf_attachment_from_html( $file_base, $purchase_order );
+
     foreach my $OA ( $_[0]->Assets() ) {
         my $Asset = $OA->Asset();
         $_ = File::Slurp::read_file( $Asset->on_disk_path(), err_mode => 'carp' );
@@ -332,14 +311,14 @@ sub send_to_me {
         } # end if
     } # end foreach Asset
 
-	my $receipt = (new openprint::Email())->send(
+	my $receipt = $Email->send(
 			FROM	=> sprintf( '"%s" <%s>', $From->name(), $From->email() ),
 			SUBJECT => 'Purchase Order ' . $_[0]->id() . ' from ' . $_[0]->vendor_name(),
 			TO		=> $From,
 			ATTACHMENTS	=>	\@attachments,
 			);
 
-	$results = 'PO ' . $_[0]{'id'} . ' emailed to the following recipients:<br/>' . $receipt;
+	$results = 'PO ' . $_[0]{id} . ' emailed to the following recipients:<br/>' . $receipt;
 	return $results;
 } # end sub send_to_me
 
@@ -374,28 +353,28 @@ sub total {
 
 sub authorize {
 	my ( $self ) = @_;
-	$$self{'authorized'} = 1;
-	$$self{'authorized_by'} = $session{'user_id'};
-	$$self{'authorized_on'} = 'NOW()';
+	$$self{authorized} = 1;
+	$$self{authorized_by} = $session{user_id};
+	$$self{authorized_on} = 'NOW()';
 	my $L = new openprint::PurchaseOrder_Log();
 	$L->save({
-			'po_id'		=> $$self{'id'},
-			'user_id'	=> $session{'user_id'},
-			'reason'	=> 'Authorized by ' . new openprint::User( $session{'user_id'} )->name(),
+			'po_id'		=> $$self{id},
+			'user_id'	=> $session{user_id},
+			'reason'	=> 'Authorized by ' . new openprint::User( $session{user_id} )->name(),
 			});
 	return $self->save();
 } # end sub authorize
 
 sub decline {
 	my ( $self, $reason ) = @_;
-	$$self{'authorized'} = 0;
-	$$self{'authorized_by'} = $session{'user_id'};
-	$$self{'authorized_on'} = 'NOW()';
+	$$self{authorized} = 0;
+	$$self{authorized_by} = $session{user_id};
+	$$self{authorized_on} = 'NOW()';
 	my $L = new openprint::PurchaseOrder_Log();
 	$L->save({
-			'po_id'		=> $$self{'id'},
-			'user_id'	=> $session{'user_id'},
-			'reason'	=> 'Declined by ' . new openprint::User( $session{'user_id'} )->name() . ': ' . $reason,
+			'po_id'		=> $$self{id},
+			'user_id'	=> $session{user_id},
+			'reason'	=> 'Declined by ' . new openprint::User( $session{user_id} )->name() . ': ' . $reason,
 			});
 	return $self->save();
 } # end sub decline
@@ -403,27 +382,27 @@ sub decline {
 sub notifications {
 	my ( $self, $new ) = @_;
 	if ( $new ) {
-		@{$$self{'notifications'}} = @{$new};
-		if ( $$self{'id'} ) {
+		@{$$self{notifications}} = @{$new};
+		if ( $$self{id} ) {
 			my $ac = sql::start_transaction( $openprint::dbh );
 			$dbh->do( 'LOCK TABLE PurchaseOrder_Notifications IN ACCESS EXCLUSIVE MODE' ) or $openprint::log->error( DBI->errstr );
-			sql::execute( undef, undef, 'DELETE FROM PurchaseOrder_Notifications WHERE po_id=?', $$self{'id'} );
-			foreach ( @{$$self{'notifications'}} ) {
-				sql::insert( undef, undef, 'PurchaseOrder_Notifications', ['po_id', $$self{'id'}, 'user_id', $_ ] );
+			sql::execute( undef, undef, 'DELETE FROM PurchaseOrder_Notifications WHERE po_id=?', $$self{id} );
+			foreach ( @{$$self{notifications}} ) {
+				sql::insert( undef, undef, 'PurchaseOrder_Notifications', ['po_id', $$self{id}, 'user_id', $_ ] );
 			} # end foreach
 			sql::end_transaction( $openprint::dbh, $ac );
 		} # end if
 	} # end if
-	if ( $$self{'id'} and ! exists $$self{'notifications'} ) {
-		@{$$self{'notifications'}} = sql::execute( undef, undef, 'SELECT user_id FROM PurchaseOrder_Notifications WHERE po_id=?', $$self{'id'} );
+	if ( $$self{id} and ! exists $$self{notifications} ) {
+		@{$$self{notifications}} = sql::execute( undef, undef, 'SELECT user_id FROM PurchaseOrder_Notifications WHERE po_id=?', $$self{id} );
 	} # end if
-	return $$self{'notifications'} ? @{$$self{'notifications'}} : ();
+	return $$self{notifications} ? @{$$self{notifications}} : ();
 } # end sub notifications
 
 sub Logs {
 	my ( $self ) = @_;
 
-	return openprint::PurchaseOrder_Log->find( 'po_id'=>$$self{'id'}, 'order'=>'created_on DESC' );
+	return openprint::PurchaseOrder_Log->find( 'po_id'=>$$self{id}, 'order'=>'created_on DESC' );
 } # end sub Logs
 
 sub is_FSC {
@@ -443,10 +422,10 @@ sub copy {
 	my $self = shift;
 	my $New = new openprint::PurchaseOrder();
 	@$New{keys %fields} = @$self{keys %fields};
-	foreach ( 'id', 'authorized', 'authorized_by', 'authorized_on', 'delivered_on', 'created_on', 'cancelled' ) {
+	foreach ( 'id', 'authorized', 'authorized_by', 'authorized_on', 'delivered_on', 'created_on', 'cancelled', 'manifest_id' ) {
 		delete $$New{$_};
 	} # end foreach
-	$$New{'created_by'} = $session{'user_id'};
+	$$New{created_by} = $session{user_id};
 	return $New;
 } # end sub copy
 
@@ -462,7 +441,7 @@ sub Taxes {
 	my $Supplier = $self->Supplier();
 	my $country = $Supplier->country() ? $Supplier->country() : $$self{vendor_country};
 	my $state = $Supplier->state() ? $Supplier->state() : $$self{vendor_state};
-	my $created_on = $$self{'created_on'} ? $$self{'created_on'} : 'NOW()';
+	my $created_on = $$self{created_on} ? $$self{created_on} : 'NOW()';
 
 	if ( $country and $state and ! ( $$self{Taxes} and @{$$self{Taxes}} ) ) {
 		foreach my $Tax ( openprint::Tax->find(
@@ -477,13 +456,13 @@ sub Taxes {
 				tax_id			=>	$$Tax{id},
 				rate			=>	$$Tax{rate},
 			});
-			#if ( $$self{'id'} ) {
-				#$T->save({'purchaseorder_id'	=>	$$self{'id'}});
+			#if ( $$self{id} ) {
+				#$T->save({'purchaseorder_id'	=>	$$self{id}});
 			#} # end if
-			push @{$$self{'Taxes'}}, $T;
+			push @{$$self{Taxes}}, $T;
 		} # end foreach Tax
 	} # end if
-	if ( @_ > 1 and $$self{'id'} ) {
+	if ( @_ > 1 and $$self{id} ) {
 		my @new_taxes = openprint::Tax->find(
 				'period_start null_or_<='	=>	$created_on,
 				'period_end null_or_>='	 	=>	$created_on,
@@ -500,7 +479,7 @@ sub Taxes {
 				splice @{$$self{Taxes}}, $i, 1; $i -= 1;
 			} # end if
 		} # end foreach old Tax
-		#@{$$self{'Taxes'}} = openprint::PurchaseOrder_Tax->find('purchaseorder_id'=>$$self{'id'});
+		#@{$$self{Taxes}} = openprint::PurchaseOrder_Tax->find('purchaseorder_id'=>$$self{id});
 		if ( @new_taxes != @{$$self{Taxes}} ) {
 			my @tax_ids = map { $_->tax_id() } @{$$self{Taxes}};
 			foreach my $Tax ( @new_taxes ) {
@@ -516,7 +495,7 @@ sub Taxes {
 			} # end foreach Tax	
 		} # end if have new taxes
 	} # end if recalculate
-	return $$self{'Taxes'} ? @{$$self{'Taxes'}} : ();
+	return $$self{Taxes} ? @{$$self{Taxes}} : ();
 } # end sub Taxes
 
 sub old_Taxes {
@@ -534,7 +513,7 @@ sub old_Taxes {
 } # end sub old_Taxes
 
 sub Tax {
-    my $result = openprint::PurchaseOrder_Tax->find_one('purchaseorder_id'=>$_[0]{'id'}, 'tax_id'=>$_[1]->id() ) if $_[0]{'id'};
+    my $result = openprint::PurchaseOrder_Tax->find_one('purchaseorder_id'=>$_[0]{id}, 'tax_id'=>$_[1]->id() ) if $_[0]{id};
     if ( ! $result ) {
         return new openprint::PurchaseOrder_Tax();
     } # end if
@@ -542,14 +521,14 @@ sub Tax {
 } # end sub Tax
 
 sub can_edit {
-	return 1 if ! $_[0]{'id'};
+	return 1 if ! $_[0]{id};
 	my $User = $_[1] ? $_[1] : new openprint::User( $openprint::session{user_id} );
 
 	if ( $$User{type} eq 'A' ) {
 		$log->debug("$$User{firstname} Is administrator") if $debug;
 		return 1;
 	} # end if
-	if ( sets::isin( $_[0]{'created_by'}, [ $$User{id}, $User->assistant_ids(), $User->csr_ids() ] ) ) {
+	if ( sets::isin( $_[0]{created_by}, [ $$User{id}, $User->assistant_ids(), $User->csr_ids() ] ) ) {
 		$log->debug("$$User{firstname} Either created it or is an assistant") if $debug;
 		return 1;
 	} # end if
@@ -570,14 +549,14 @@ sub can_edit {
 } # end sub can_edit
 
 sub can_view {
-	return 1 if ! $_[0]{'id'};
-	my $User = $_[1] ? $_[1] : new openprint::User( $openprint::session{user_id} );
+	return 1 if ! $_[0]{id};
+	my $User = $_[1] ? $_[1] : $openprint::User;
 
 	if ( $$User{type} eq 'A' ) {
 		$log->debug("$$User{firstname} Is administrator") if $debug;
 		return 1;
 	} # end if
-	if ( sets::isin( $_[0]{'created_by'}, [ $$User{id}, $User->assistant_ids(), $User->csr_ids() ] ) ) {
+	if ( sets::isin( $_[0]{created_by}, [ $$User{id}, $User->assistant_ids(), $User->csr_ids() ] ) ) {
 		$log->debug("$$User{firstname} Either created it or is an assistant") if $debug;
 		return 1;
 	} # end if
@@ -611,8 +590,15 @@ sub num {
 	return $_[0]{id} if ! $_[0]{num};
 	return $_[0]{num};
 } # end sub num
+
+sub can_send {
+	my $User = @_ > 1 ? $_[1] : $openprint::User;
+	return 1 if $$User{id} == $_[0]{created_by};
+	return $_[0]->can_authorize();
+} # end sub can_send
+
 sub can_authorize {
-	my $User = @_ > 1 ? $_[1] : new openprint::User( $openprint::session{user_id} );
+	my $User = @_ > 1 ? $_[1] : $openprint::User;
 
 	return 1 if ! $_[0]->total();
 	return 1 if $User->purchasing_limit() and ( $_[0]->total() < $User->purchasing_limit() );
@@ -698,8 +684,19 @@ sub Payments {
 } # end sub Payments
 
 sub link_to {
+	if ( $_[0]{created_on} ) {
 	return join( '', '<a href="/employee/purchase_order/view.html?po_id=', $_[0]{id}, '">' , $_[0]{id}, '</a>' );
+	} else {
+	return join( '', '<a href="/employee/purchase_order/view.html?po_id=', $_[0]{id}, '"><span class="error">' , $_[0]{id}, ' does not exist</span></a>' );
+	} # end if
 } # end sub link_to
+
+sub summary {
+	if ( ! $_[0]{summary} ) {
+		$_[0]{summary} = join('<br/>', map { sprintf('%d %s%s ', $_->qty(), $_->item(), $_->description() ) } $_[0]->Contents() );
+	} 
+	return $_[0]{summary};
+} # end sub summary
 
 1;
 __END__

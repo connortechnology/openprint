@@ -22,6 +22,7 @@ $table = 'photo_albums';
 );
 %find_fields = (
 	asset_id	=>	'(SELECT asset_id FROM Photos_in_Albums WHERE album_id=photo_albums.id)',
+	company_id	=>	'(SELECT company_id FROM Users WHERE users.id=user_id)',
 );
 
 %defaults = (
@@ -89,7 +90,7 @@ $openprint::log->debug("Photo no asset"  );
 
 sub Photos {
 	if ( @_ > 1 or ! $_[0]{'Photos'} ) {
-		@{$_[0]{'Photos'}} = openprint::Photo_in_Album->find('album_id'=>$_[0]{'id'},'order'=>'asset_id') if $_[0]{'id'};
+		@{$_[0]{'Photos'}} = openprint::Photo_in_Album->find( album_id=>$_[0]{id}, order=>'asset_id') if $_[0]{id};
 	} # end if
 	return $_[0]{'Photos'} ? @{$_[0]{'Photos'}} : ();
 } # end sub Photos

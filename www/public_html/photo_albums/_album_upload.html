@@ -2,14 +2,14 @@
 <? if ( $$variable{'Album'}->can_edit() ) ?>
 	<div id="assets" class="qq-uploader">
 		<div class="droparea qq-upload-drop-area">
-		<div id="Photos"><? include('/photo_albums/_album_photos.html') ?></div>
+		<div id="Photos"><?include('/photo_albums/_album_photos.html') ?></div>
 		<div id="uploadinstructions">
 			To upload files to this album,
 			<span id="dragndropuploadmessage" style="display:none;">
 			simply drag and drop them here. Or </span>
 			<span id="formuploadmessage"> click on the Upload button. There is a 1GB file size limit.</span>
 		</div>
-		<? echo ( ssi::button( 'Upload', { class=>'qq-upload-button' } ); ) ?>
+		<? echo ( button( 'Upload', { class=>'qq-upload-button' } ); ) ?>
 		<span class="qq-drop-processing"><span></span><span class="qq-drop-processing-spinner"></span></span>
 		<ul id="upload_list" class="qq-upload-list"></ul>
 	</div>

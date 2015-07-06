@@ -25,17 +25,22 @@ OR:
 	<div id="contactInformation">
 		<div style="float: left; width: 50%;">
 			<div class="fieldContainer">
-				<p><label>Company Name</label><?txtCompanyName?></p>
-				<p><label>Address</label><?txtAddress1?></p>
-				<? if ( $$variable{'txtAddress2'} ) ?><p><label>&nbsp;</label><?txtAddress2?></p><? endif ( $$variable{'txtAddress2'} ) ?>
-				<? if ( $$variable{'txtPostalCode'} ) ?><p><label>Postal Code</label><?txtPostalCode?></p><? endif ( $$variable{'txtPostalCode'} ) ?>
+				<ul>
+				<li><label>Company Name</label><?txtCompanyName?></li>
+				<li><label>Address</label><?txtAddress1?>
+				<? if ( $$variable{'txtAddress2'} ) ?><br/><?txtAddress2?><? endif ( $$variable{'txtAddress2'} ) ?>
+				</li>
+				<? if ( $$variable{'txtPostalCode'} ) ?><li><label>Postal/ZIP Code</label><?txtPostalCode?></li><? endif ( $$variable{'txtPostalCode'} ) ?>
+				</ul>
 			</div>
 		</div>
 		<div style="float: left; width: 50%;">
 			<div class="fieldContainer">
-				<p><label>Contact Name</label><?txtContactName?></p>
-				<p><label>Email Address</label><a href="mailto<?txtEmailAddress?>"><?txtEmailAddress?></a></p>
-				<p><label>Phone Number</label><?txtPhoneNumber?></p>
+				<ul>
+				<li><label>Contact Name</label><?txtContactName?></li>
+				<li><label>Email Address</label><a href="mailto<?txtEmailAddress?>"><?txtEmailAddress?></a></li>
+				<? if ( $$variable{txtPhoneNumber} ) ?><li><label>Phone Number</label><?txtPhoneNumber?></li><? endif ( $$variable{txtPhoneNumber} ) ?>
+				</ul>
 			</div>
 		</div>
 	</div>
@@ -114,9 +119,9 @@ OR:
 		<tbody>
 <? echo (
 	my $html;
-	foreach my $File ( openprint::File->find('upload_id'=>$param{'serial'} ) ) {
+	foreach my $File ( openprint::File->find(upload_id=>$param{serial} ) ) {
 		$html .= sprintf('<tr>
-			<td nowrap="nowrap"><a href="/project_files/%1$s">%1$s</td>
+			<td nowrap="nowrap"><a href="/project_files/%1$s">%1$s</a></td>
 			<td style="width:200px; text-align: left;">%2$s</td>
 			<td style="width:100px; text-align: right;">%3$s</td></tr>', $File->filename(), $File->description(), $File->size_text() );
 	} # end foreach File

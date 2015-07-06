@@ -51,9 +51,10 @@
 				<ul>
 <? if ( sets::isin( $session{user_type}, ['E','A'] ) ) ?>
 					<li><label for="company_id"><? translate(company) ?></label>
-						<select id="company_id" name="company_id" onchange="new Ajax.Updater('created_by', '/includes/_users.html', { parameters: { company_id: this.value } } );">
+						<input name="company_filter" class="filter" type="text" oninput="filter_companies('company_id', { name: this.value,selected_id: get_ddm_value($('company_id')) } );" />
+						<select id="company_id" name="company_id" onchange="new Ajax.Updater('created_by', '/includes/_users.html', { parameters: { company_id: get_ddm_value(this) } } );">
 							<option value=""> select </option>
-							<? echo ( openprint::Company::get_dropdown( $$variable{Article}->company_id() ? $$variable{Article}->company_id() : $session{'company_id'} ); ) ?>
+							<? echo ( make_drop_down( openprint::Company->dropdown( 'last_article_id is null'=>0 ), $$variable{Article}->company_id() ? $$variable{Article}->company_id() : $session{company_id} ); ) ?>
 						</select>
 					</li>
 <? else ( sets::isin( $session{user_type}, ['E','A'] ) ) ?>
@@ -72,9 +73,9 @@
 					<li><label for="created_by">Author</label>
 						<select id="created_by" name="created_by">
 							<option value=""> select </option>
-							<? echo ( make_drop_down( [ map { $_->id(), $_->name() } openprint::User->find(
-								( 'company_id'=> $$variable{Article}->company_id() ? $$variable{Article}->company_id() : $session{'company_id'} ),
-								'order'=>'lower(firstname),lower(lastname)') ], $$variable{Article}->created_by() ? $$variable{Article}->created_by() : $session{'user_id'} ); ) ?>
+							<? echo ( make_drop_down( openprint::User->dropdown(
+								( company_id=> $$variable{Article}->company_id() ? $$variable{Article}->company_id() : $session{company_id} ),
+								), $$variable{Article}->created_by() ? $$variable{Article}->created_by() : $session{user_id} ); ) ?>
 						</select>
 					</li>
 <? else ( sets::isin( $session{user_type}, ['E','A'] ) ) ?>
@@ -82,10 +83,10 @@
 <? endif ( sets::isin( $session{user_type}, ['E','A'] ) ) ?>
 					<li>
 						<label>Published</label>
-						<? echo ( ssi::radio( 'published', [1,'Yes',0,'No'], $$variable{Article}->published() ); ) ?>
+						<? echo ( radio( 'published', [1,'Yes',0,'No'], $$variable{Article}->published() ); ) ?>
 					</li>
 					<li><label>Published at</label>
-						<span class="DateTimeSelector"><? echo ( datetime_select( 'published_on', $$variable{Article}->published_on(), {'with_today'=>1} ); ) ?></span>
+						<? echo ( datetime_select( 'published_on', $$variable{Article}->published_on(), {'with_today'=>1} ); ) ?>
 					</li>
 					<li><label>Anonymous</label>
 						<? echo ( radio( 'anonymous', ['1', 'Yes', '0', 'No' ], 1*$$variable{Article}->anonymous() ); ) ?>
@@ -101,19 +102,20 @@
 					</li>
 					<li>
 						<label for="summary">Summary</label>
-						<textarea class="mce" id="summary" name="summary" rows="<? echo ( ssi::count_lines( $variable{Article}->summary() ); ) ?>" onkeyup="textarea_resize(this);"><? echo ( ssi::html_escape( $$variable{Article}->summary() ); ) ?></textarea>
+						<textarea class="mce" id="summary" name="summary" rows="<? echo ( ssi::count_lines( $variable{Article}->summary() ); ) ?>" onkeyup="textarea_resize(this);"><? echo ( html_escape( $$variable{Article}->summary() ); ) ?></textarea>
 					</li>
 					<li>
 						<label for="body">Body</label>
 						<textarea class="mce" id="body" name="body" rows="<? echo ( ssi::count_lines( $$variable{Article}->body() ); ) ?>" onkeyup="textarea_resize(this);"><? echo ( 
 								my $body = $$variable{Article}->body_escaped();
-								return ssi::html_escape($body);
+								return html_escape($body);
 								) ?></textarea>
 					</li>
 <? echo (
 	$$variable{Privacy} = $$variable{Article}->Privacy();
 	return ssi::include( '/includes/_privacy_widget.html' );
 ) ?>
+					<li><label>Commenting</label><? echo ( radio( 'commenting', [ '1', 'Yes', '0', 'No' ], $variable{Article}->commenting() ); ) ?></li>
 				</ul>
 			<p class="buttons">
 				<? echo (

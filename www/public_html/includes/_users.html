@@ -1,9 +1,9 @@
 <? echo (
 	my @Users = openprint::User->find(
-		( $param{type} ? ( 'type'=>$param{'type'} ) : () ),
-		( $param{'company_id'} ? ( 'company_id'=>$param{'company_id'} ) : () ),
+		( $param{type} ? ( type=>$param{type} ) : () ),
+		( exists $param{company_id} ? ( company_id=>$param{company_id} ) : () ),
 		( $param{usergroup} ? ( 'usergroup' => $param{'usergroup'} ) : () ),
 		'order'	=>	'lower(firstname),lower(lastname)',
 	);
-	return ssi::make_drop_down( [ '', 'no one', map { $_->id(), $_->name() } @Users ], @Users == 1 ? $Users[0]{'id'} : $param{'selected_id'} );
+	return make_drop_down( [ '', 'no one', map { $_->id(), $_->name() } @Users ], @Users == 1 ? $Users[0]{'id'} : $param{'selected_id'} );
 ) ?>

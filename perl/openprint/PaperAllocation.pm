@@ -42,6 +42,7 @@ $serial = 'paper_allocation_id_seq';
 %find_fields = (
 	project_id	=>	'(SELECT id FROM Projects WHERE lngdocketnumber=docket)',
 	order_id	=>	'(SELECT id FROM Orders WHERE docket=paper_allocations.docket)',
+	company_id	=>	'(SELECT company_id FROM orders WHERE docket=paper_allocations.docket)',
 );
 
 %transforms = (
@@ -132,8 +133,6 @@ sub old_Skids {
 sub send_notification {
 	my ( $self ) = @_;
 
-	my $Me = new openprint::User( $session{user_id} );
-
 	my %info;
 	$info{Allocation} = $self;
 	my $Order = $info{Order} = $self->Order();
@@ -180,11 +179,14 @@ sub send_notification {
 	$Email->send( 
 			TO			=>	\@recipients, 
 			SUBJECT 	=> 'Stock allocated for docket ' . $Order->docket(),
-			FROM		=>	$Me,
+			FROM		=>	$openprint::User,
 			ATTACHMENTS	=>	\@body,
 			);
 
 } # end sub stock_allocation_notification
 
+sub link_to {
+    return sprintf('<a href="/employee/inventory/allocation.html?allocation_id=%1$d">%2$s</a>', $_[0]{id}, @_ > 1 ? $_[1] : $_[0]->quantity().$_[0]->units() . ' of ' . $_[0]->Paper()->to_string() );
+} # end sub link_to
 1;
 __END__

@@ -606,7 +606,13 @@ sub save {
 	$$self{'status'} = 'uncalculated' if ! $$self{'status'};
 	$$self{'predefined'} = '0' if $$self{'predefined'} != 1;
 
-	my $rc = $self->SUPER::save( $hash );
+	my $rc;
+	if ( $$self{id} ) {
+		$rc  = $self->SUPER::save( $hash );
+	} else {
+		$rc  = $self->SUPER::save( $hash );
+		$openprint::Company->save({last_project_id=>$$self{id}}) if $openprint::Company and $openprint::Company->id() and $$self{id} and ! $rc;
+	} # end if
 
 	# I'm not sure we should be doing this.
 	if ( (!$rc) and $$self{'order_id'} ) {
@@ -779,7 +785,7 @@ sub servicetype_id {
 
 sub ServiceType {
 	my ( $self, $s_id ) = @_;
-$openprint::log->error("No s_id passed to ServiceType") if ! $s_id;
+$openprint::log->error("No s_id passed to ServiceType for project $$self{id}") if ! $s_id;
 	return new openprint::ServiceType( $self->servicetype_id( $s_id ) );
 } # end sub ServiceType
 
@@ -864,8 +870,9 @@ sub summary {
 				my $sig_specs = openprint::service::get_specs_ref( $self, $sigs[0] );
 				$summary .= openprint::Estimating::Printing::summary( $self, $sigs[0], $sig_specs );
 				if ( $$printing_specs{"PrintingType-$group_id"} ) { 
-					$summary .= ', '. '<span class="Sheetfed">Printed '.$$printing_specs{"PrintingType-$group_id"}.'</span>,<br/>';
+					$summary .= ', '. '<span class="Sheetfed">Printed '.$$printing_specs{"PrintingType-$group_id"}.'</span>,';
 				} #endif Web
+				$summary .= '</br>';
 			} # end foreach Group
 		} # end if
 
@@ -1201,13 +1208,12 @@ sub Ordered_Product {
 
 sub Ordered_Project {
 	if ( ! exists $_[0]{'Ordered_Project'} ) {
-		$_[0]{'Ordered_Project'} = openprint::OrderedProject->find_one('order_id'=>$_[0]{'order_id'}, 'project_id'=>$_[0]{'id'} );
+		$_[0]{'Ordered_Project'} = openprint::OrderedProject->find_one('order_id'=>$_[0]{'order_id'}, 'project_id'=>$_[0]{'id'} ) if $_[0]{'order_id'};
 	} # end if
 
 	if ( ! $_[0]{'Ordered_Project'} ) {
 		$_[0]{'Ordered_Project'} = new openprint::OrderedProject();
 		$_[0]{'Ordered_Project'}->project_id( $_[0]{'id'} );
-		$_[0]{'Ordered_Project'} = $_[0]{'Ordered_Project'};
 	} # end if
 
 	return $_[0]{'Ordered_Project'};
@@ -1253,12 +1259,25 @@ foreach my $k ( keys %{$$self{Services}} ) {
 	#while ( my ( $n, $v ) = splice @defaults, 0, 2 ) {
 		my $v = $defaults{$n};
 		if ( $data and exists $$data{$n} ) {
-			openprint::service::insert_service_spec( $log, $dbh, $$self{'id'}, $service_index, $n, $$data{$n}, 1 );
-			delete $$data{$n};
 		} else {
 			openprint::service::insert_service_spec( $log, $dbh, $$self{'id'}, $service_index, $n, $v, 1 );
 		} # end if
 	} # end while
+
+	
+	my $module = 'openprint::Estimating::'.$ServiceType->type();
+	if ( my $function = $module->can( 'setup_defaults' ) ) {
+		%defaults = $function->( $self );
+		foreach my $n ( keys %defaults ) {
+			my $v = $defaults{$n};
+			if ( $data and exists $$data{$n} ) {
+			} else {
+				openprint::service::insert_service_spec( $log, $dbh, $$self{'id'}, $service_index, $n, $v, 1 );
+			} # end if
+		} # end while
+
+	} # end if
+
 	foreach my $qty_index ( $self->quantity_indexes() ) {
 		openprint::service::insert_service_spec( $log, $dbh, $$self{'id'}, $service_index, "txtQuantity$qty_index", 
 		( ( $data and exists $$data{"txtQuantity$qty_index"} ) ? $$data{"txtQuantity$qty_index"} : $self->quantity($qty_index) ), 1 );
@@ -1468,7 +1487,7 @@ sub production_cost {
 sub Service {
 	my ( $self, $service_id ) = @_;
 	if ( ! $service_id ) {
-		$openprint::log->error("No service_id passed to ServiceType");
+		$openprint::log->error("No service_id passed to ServiceType for project $$self{id}");
 		Carp::cluck("No service_id passwrod to ServiceType");
 	} # end if
 	return new openprint::Project_Service( {project_id=>$$self{id}, service_id=>$service_id} );

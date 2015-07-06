@@ -60,7 +60,7 @@
 		)];
 	} # end if serialkey
 ) ?>
-<table class="List">
+<table class="List sortable">
 	<thead>
 		<tr>
 			<th class="checkbox">&nbsp;</th>
@@ -97,5 +97,5 @@
 	</tbody>
 </table>
 <p class="buttons">
-<? echo ( ssi::button( 'delete', { onclick=> "new Ajax.Updater( 'Results','/employee/it/_licenses.html?action=Delete', { parameters: { license_id: get_checkbox_values(\$('f1').elements['license_id'] ) } } );", 'text'=>'Delete Checked' } ); ) ?>
+<? echo ( button( 'delete', { onclick=> "new Ajax.Updater( 'Results','/employee/it/_licenses.html?action=Delete', { parameters: { license_id: get_checkbox_values(\$('f1').elements['license_id'] ) } } );", text=>'Delete Checked' } ); ) ?>
 </p>

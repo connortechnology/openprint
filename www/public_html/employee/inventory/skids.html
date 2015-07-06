@@ -17,7 +17,9 @@ Please select a Skid to view/edit.<br/>
 			<label for="skid_id">Skid ID</label>
 			<? echo ( join("\n",
 						input( type=>'cardinal', id=>'skid_id', name=>'skid_id', onchange=>'change_handler(this);', 
-							onkeypress=>'return input_handler(this,event);', onkeydown=>'if(event.keyCode==13){submit_handler(f1);}' ),
+							onkeypress=>'return input_handler(this,event);', onkeydown=>'if(event.keyCode==13){submit_handler(f1);}',
+							max=>2147483647,
+						 ),
 						button( 'GoSkid', { onclick=>'calc();',text=>'Go' } ),
 						); ) ?>
 		</li>
@@ -191,6 +193,9 @@ Please select a Skid to view/edit.<br/>
     openprint::StockQuality->find();
     openprint::StockMaterial->find();
     my @Papers = openprint::Paper->find( %find );
+	if ( ! @Papers ) {
+		$log->error("No papers in skids find was %find");
+	}
     my %filter_validations;
 
 	# contains a mapping from Brand to PointOne Coated to brand_id for POintONe Coated?

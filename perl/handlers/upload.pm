@@ -103,9 +103,9 @@ sub handler {
 
 #<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 		my $output = qq`<response>
-<completedsize>$$data{'size'}</completedsize>
-<totalsize>$$data{'total'}</totalsize>
-<elapsedtime>$$data{'elapsed'}</elapsedtime>
+<completedsize>$$data{size}</completedsize>
+<totalsize>$$data{total}</totalsize>
+<elapsedtime>$$data{elapsed}</elapsedtime>
 <serial>`.$r->param('serial').q{</serial></response>};
 		#$log->debug($output);
 		$request->content_type('text/xml');
@@ -119,19 +119,19 @@ sub handler {
 		configuration::init( $r->dir_config() );
 		openprint::session_init();
 		if ( $serial ) {
-			sql::update( undef, undef, 'uploads', ['id=?', $serial], [ 'finished', 'NOW()', 'user_id', $session{'user_id'}, 'company_id', $session{'company_id'}, 'size', $uploaded ] );
+			sql::update( undef, undef, 'uploads', ['id=?', $serial], [ 'finished', 'NOW()', 'user_id', $session{user_id}, 'company_id', $session{company_id}, 'size', $uploaded ] );
 		#} else {
 			#$log->error("No serial in upload, dumping session");
 			#foreach my $k ( keys %session ) {
 				#$log->error( "$k -> $session{$k}" );
 			#} # end foreach
 		} # end if
-		if ( $param{'UploadType'} ) {
+		if ( $param{UploadType} ) {
 			my $error;
-			require "openprint/$param{'UploadType'}.pm";
+			require "openprint/$param{UploadType}.pm";
 			my $uploads = $r->upload;
 			if ( $uploads and %$uploads ) {
-				my $Object = ('openprint::'.$param{'UploadType'})->new( $param{'id'} );
+				my $Object = ('openprint::'.$param{UploadType})->new( $param{id} );
 				while ( my ( $field, $upload ) = each %$uploads ) {
 					$error .= $Object->upload( $field );
 				} # end while
@@ -140,7 +140,7 @@ sub handler {
 			}
 
 			$r->content_type('application/json');
-			if ( $error and ref $error ne 'openprint::'.$param{'UploadType'} ) {
+			if ( $error and ref $error ne 'openprint::'.$param{UploadType} ) {
 				$log->debug("Printing success:false $error");
 				$r->print( qq|{ "success": false, "error": "$error" }| );
 			} else {
@@ -153,7 +153,7 @@ $log->debug("Doing standrad upload");
 			upload_files();
 			my $page = '/upload/_upload_complete.html';
 			my @page_path = split('/', $page );
-			$variable{'PageContent'} = ssi::include( $page );
+			$variable{PageContent} = ssi::include( $page );
 			my $filename = pop @page_path;
 			my $template;
 
@@ -168,13 +168,13 @@ $log->debug("Doing standrad upload");
 					$template = misc::load_file( $log, $file );
 					last;
 				} # end if
-				$file = join( '/', $ENV{'DOCUMENT_ROOT'}, 'layouts', @page_path, $filename );
+				$file = join( '/', $ENV{DOCUMENT_ROOT}, 'layouts', @page_path, $filename );
 				if ( -e $file ) {
 					$template = misc::load_file( $log, $file );
 					last;
 				} # end if
 
-				$file = join( '/', $ENV{'DOCUMENT_ROOT'}, 'layouts', @page_path, 'default.html' );
+				$file = join( '/', $ENV{DOCUMENT_ROOT}, 'layouts', @page_path, 'default.html' );
 				if ( -e $file ) {
 					$template = misc::load_file( $log, $file );
 					last;
@@ -187,7 +187,7 @@ $log->debug("Doing standrad upload");
 $log->debug("content: $_");
 				$r->print( $_ );
 			} else {
-				$r->print( $variable{'PageContent'} );
+				$r->print( $variable{PageContent} );
 			} # end if
 		} # end if
 	} # end if
@@ -220,47 +220,47 @@ sub create_dir {
 sub get_destdir {
 	my $destdir = '/';
 	# First off, determine if we are logged in.
-	if ( $session{'company_id'} ) {
+	if ( $session{company_id} ) {
 		( $destdir ) = new openprint::Company( $session{company_id} )->name();
 		$destdir = '/'.$destdir.'/';
-		return '' if ! create_dir( $config{'ProjectFilesPath'}.$destdir );
+		return '' if ! create_dir( $config{ProjectFilesPath}.$destdir );
 	} else {
 # This ends up prefixing the file with the company's name
-		$param{'txtCompanyName'} = openprint::Company->transform('name', $param{'txtCompanyName'});
-		$destdir .= $param{'txtCompanyName'} . '_';
+		$param{txtCompanyName} = openprint::Company->transform('name', $param{txtCompanyName});
+		$destdir .= $param{txtCompanyName} . '_';
 	} # end if
 
-	if ( $param{'docket'} ) {
-		$destdir .= $param{'docket'} . '/';
-		return '' if ! create_dir( $config{'ProjectFilesPath'}.$destdir );
-	} elsif ( $param{'project_id'} ) {
-		my $Project = new openprint::Project( $param{'project_id'} );
+	if ( $param{docket} ) {
+		$destdir .= $param{docket} . '/';
+		return '' if ! create_dir( $config{ProjectFilesPath}.$destdir );
+	} elsif ( $param{project_id} ) {
+		my $Project = new openprint::Project( $param{project_id} );
 		if ( my $docket = $Project->docket() ) {
 			$destdir .= $docket . '/';
-			return '' if ! create_dir( $config{'ProjectFilesPath'}.$destdir );
+			return '' if ! create_dir( $config{ProjectFilesPath}.$destdir );
 		} # end if
 	} # end if
 	return $destdir;
 } # end sub get_destdir
 
 sub upload_files {
-	if ( $param{'project_id'} ) {
-		$param{'project_id'} =~ s/\D//g;
-		$param{'docket'} = new openprint::Project( $param{'project_id'} )->docket();
-	} elsif ( $param{'docket'} and ! $param{'project_id'} ) {
-		$param{'docket'} =~ s/\D//g;
-		my @Projects = openprint::Project->find('docket'=>$param{'docket'}) if $param{'docket'};
-		$param{'project_id'} = $Projects[0]->id() if @Projects;
+	if ( $param{project_id} ) {
+		$param{project_id} =~ s/\D//g;
+		$param{docket} = new openprint::Project( $param{project_id} )->docket();
+	} elsif ( $param{docket} and ! $param{project_id} ) {
+		$param{docket} =~ s/\D//g;
+		my @Projects = openprint::Project->find('docket'=>$param{docket}) if $param{docket};
+		$param{project_id} = $Projects[0]->id() if @Projects;
 	} # end if
 
 	my $destdir = get_destdir();
 	if ( ! $destdir ) {
-		$variable{'error'} .= 'There was an error saving your upload!<br/>';
+		$variable{error} .= 'There was an error saving your upload!<br/>';
 $log->error("No destdir");
 		return;
 	} # end if
 	
-	if ( $param{'btnFunction'} eq 'Upload Files' ) {
+	if ( $param{btnFunction} eq 'Upload Files' ) {
 
 		my $files = 0;
 		foreach my $index ( 1 .. 5 ) {
@@ -271,47 +271,47 @@ $log->error("No destdir");
 				$filename =~ s/ /_/g;
 
 				my $upload = $r->upload( 'fileUpload'.$index );
-				if ( ! $upload->link( "$config{'ProjectFilesPath'}$destdir$filename" ) ) {
-					$log->error("There was an error saving file $param{'fileUpload'.$index}: to $config{'ProjectFilesPath'}$destdir$filename : $!");
-					$variable{'error'} .= "There was an error saving file $param{'fileUpload'.$index}: $!<br/>";
+				if ( ! $upload->link( "$config{ProjectFilesPath}$destdir$filename" ) ) {
+					$log->error("There was an error saving file $param{'fileUpload'.$index}: to $config{ProjectFilesPath}$destdir$filename : $!");
+					$variable{error} .= "There was an error saving file $param{'fileUpload'.$index}: $!<br/>";
 					next;
 				} else {
-					$variable{'information'} .= "File $param{'fileUpload'.$index} was uploaded successfully.<br/>";
+					$variable{information} .= "File $param{'fileUpload'.$index} was uploaded successfully.<br/>";
 				} # end if
 
-                foreach my $File ( openprint::File->find('project_id'=>$param{'project_id'} ? $param{'project_id'} : undef, 'filename'=>$destdir.$filename) ) {
+                foreach my $File ( openprint::File->find('project_id'=>$param{project_id} ? $param{project_id} : undef, 'filename'=>$destdir.$filename) ) {
                     $File->delete();
                 } # end foreach
                 my $File = new openprint::File();
-                $variable{'error'} .= $File->save({
-                        'project_id'    =>  ( $param{'project_id'} ? $param{'project_id'} : undef ),
+                $variable{error} .= $File->save({
+                        'project_id'    =>  ( $param{project_id} ? $param{project_id} : undef ),
                         'filename'      =>  $destdir.$filename,
                         'description'   =>  $param{'txtDescription'.$index},
-                        'upload_id'     =>  $param{'serial'},
+                        'upload_id'     =>  $param{serial},
                         'size'          =>  $upload->size(),
                         } );
 			} # end if
 		} # end foreach file
 		if ( $files ) {
 # Notify CSR, and Customer of upload
-			my $email_template = misc::load_file( $log, $config{'SkinPath'}. '/email_template.html' );
-			$variable{'ReplacementText'} = ssi::include( '/email_content/uploadfiles_csr_notification.html', \%variable );
+			my $email_template = misc::load_file( $log, $config{SkinPath}. '/email_template.html' );
+			$variable{ReplacementText} = ssi::include( '/email_content/uploadfiles_csr_notification.html', \%variable );
 			my $body = ssi::variable_substitution( \$email_template, \%variable );
 			my $Mail = new openprint::Email();
 			my @to;
 			my $from;
-			if ( $session{'user_id'} ) {
-				$from = new openprint::User( $session{'user_id'} );
+			if ( $session{user_id} ) {
+				$from = new openprint::User( $session{user_id} );
 			} else {
-				$from = $param{'txtEmailAddress'};
-				$from = Email::Valid->address( $param{'txtEmailAddress'} );
+				$from = $param{txtEmailAddress};
+				$from = Email::Valid->address( $param{txtEmailAddress} );
 				if ( ! $from ) {
-					$from = $config{'OrderingEmail'};
+					$from = $config{OrderingEmail};
 				} # end if
 			} # end if
 			my $Company;
-			if ( $session{'company_id'} ) {
-				my $Company = new openprint::Company( $session{'company_id'} );
+			if ( $session{company_id} ) {
+				my $Company = new openprint::Company( $session{company_id} );
 				if ( $Company->salesrep_id() and ( $Company->CSR()->notification('CSR Client File Uploads') ne 'No' ) ) {
 					push @to, $Company->CSR();
 				} # end if
@@ -331,36 +331,36 @@ $log->error("No destdir");
 						);
 
 				# Send transcript to uploader
-				$variable{'ReplacementText'} = ssi::include( '/email_content/uploadfiles_client_notification.html', \%variable );
+				$variable{ReplacementText} = ssi::include( '/email_content/uploadfiles_client_notification.html', \%variable );
 			} # end if
 
 			if ( @to == 1 ) {
 				$from = $to[0];
 			} else {
-				$from = $config{'OrderingEmail'};
+				$from = $config{OrderingEmail};
 			} # end if
 
-			if ( $session{'user_id'} ) {
-				my $User = new openprint::User( $session{'user_id'} );
+			if ( $session{user_id} ) {
+				my $User = new openprint::User( $session{user_id} );
 				@to = ( $User );
 			} else {
-				@to = ( $param{'txtEmailAddress'} );
+				@to = ( $param{txtEmailAddress} );
 			} # end if
 			my $body = ssi::variable_substitution( \$email_template, \%variable );
 			$_ = $Mail->send(
 					FROM    => $from,
 					TO      => \@to,
-					SUBJECT => $param{'docket'} ? "Files uploaded for docket: $param{'docket'}" : 'Files Uploaded',
+					SUBJECT => $param{docket} ? "Files uploaded for docket: $param{docket}" : 'Files Uploaded',
 					ATTACHMENTS => [ '', MIME::QuotedPrint::encode_qp(Encode::encode('utf-8',$body)), 'text/html', 'quoted-printable' ],
 					);
 		} else {
-			$variable{'error'} .= 'No files were uploaded.';
+			$variable{error} .= 'No files were uploaded.';
 		} # end if files
 	} # end if btnfunction eq Upload Files
 } # end sub upload_files
 
 sub get_files {
-	my $destdir = $config{'ProjectFilesPath'} . get_destdir();
+	my $destdir = $config{ProjectFilesPath} . get_destdir();
 	my $company_name;
 	my $company_dir;
 	my $docket;
@@ -370,7 +370,7 @@ sub get_files {
 		@filenames = readdir DIRHANDLE;
 		closedir DIRHANDLE;
 	} # end if
-	@{$variable{'PROJECT_FILES'}} = ();
+	@{$variable{PROJECT_FILES}} = ();
 	foreach my $file ( @filenames ) {
 		next if substr($file,0,1) eq '.';
 		my $description;
@@ -378,9 +378,9 @@ sub get_files {
 			$_ = q{SELECT description FROM project_files WHERE project_id=? AND filename =?};
 			( $description ) = sql::execute( $log, $dbh, $_, $r->param('project_id'), $file );
 		} # end if project_id
-		push @{$variable{'PROJECT_FILES'}}, "$company_name/$docket", $file, $description;
+		push @{$variable{PROJECT_FILES}}, "$company_name/$docket", $file, $description;
 	} # end foreach
-	return @{$variable{'PROJECT_FILES'}};
+	return @{$variable{PROJECT_FILES}};
 } # end sub get_Files
 
 1;

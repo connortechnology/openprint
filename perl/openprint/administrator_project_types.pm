@@ -28,7 +28,10 @@ sub edit {
 		$ProjectType = $ProjectType->next();
 	} elsif ( $param{'btnFunction'} eq 'Delete' ) {
 		$variable{error} .= $ProjectType->delete();
-		$ProjectType = $ProjectType->next() if ! $variable{error};
+		if ( ! $variable{error} ) {
+			$ProjectType = $ProjectType->next();
+			$variable{ExternalRedirect} = '/administrator/project_types/edit.html?ddmProjectType='.$ProjectType->id();
+		} # end if
 	} elsif ( $param{'btnFunction'} eq 'Copy' ) {
 		my @recommendations = sql::execute(undef,undef,'SELECT lngPaperIndex FROM Paper_Recommendations WHERE lngProjectTypeIndex=?', $ProjectType->id() );
 

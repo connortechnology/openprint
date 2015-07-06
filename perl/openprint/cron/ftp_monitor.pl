@@ -2,7 +2,7 @@
 use utf8;
 use lib '/etc/apache2/lib/perl';
 use strict;
-use warnings;
+#use warnings;
 
 require configuration;
 require sql;
@@ -31,6 +31,7 @@ use MIME::QuotedPrint qw(encode_qp);
 use MIME::Base64 qw(encode_base64);
 use Encode ();
 use Data::Dumper;
+use Date::Parse;
 
 my @banned_files = ( 'ftpchk3.txt' );
 my $program = basename($0);
@@ -61,30 +62,26 @@ $log = new logger(level=>'debug',program=>$program);
 if (my $err = configuration::from_file($$opts{config})) {
     die $err;
 }
-
+configuration::merge( $opts );
 foreach my $param ( 'db_name','db_user','db_pass','fifo','from','recipient','smtp-server' ) {
-	$config{$param} = $$opts{$param} if $$opts{$param};
 	if ( ! $config{$param} ) {
 		die "$program: missing required --$param parameter";
 	}
 } # end foreach required-param
-foreach my $param ( 'pid_file', 'db_host', 'log_file', 'log_level', 'sleep', 'scoreboard', 'file_path','skin_path','document_root','watch-users','ignore-users','site_title','site_url', 'max_files' ) {
-	$config{$param} = $$opts{$param} if exists $$opts{$param};
-} # end foreach non-required param
 
-if ( $config{'site_url'} ) {
-	$config{'siteURL'} = $config{'site_url'};
-	$config{'ExternalSiteURL'} = $config{'site_url'};
+if ( $config{site_url} ) {
+	$config{siteURL} = $config{site_url};
+	$config{ExternalSiteURL} = $config{site_url};
 } # end if
 
-$config{'SiteTitle'} = $config{'site_title'};
-$config{'SkinPath'} = $config{'skin_path'};
-$config{'log_level'} = 'debug' if ! $config{'log_level'};
-$config{'sleep'} = 1.0 if ! $config{'sleep'};
+$config{SiteTitle} = $config{site_title};
+$config{SkinPath} = $config{skin_path};
+$config{log_level} = 'debug' if ! $config{log_level};
+$config{sleep} = 1.0 if ! $config{sleep};
 
-if ( $config{'pid_file'} ) {
+if ( $config{pid_file} ) {
 	my $pidh;
-	if (open($pidh, '> '.$config{'pid_file'} ) ) {
+	if (open($pidh, '> '.$config{pid_file} ) ) {
 		print $pidh $$."\n"; 
 		close($pidh);
 	} else {
@@ -92,8 +89,8 @@ if ( $config{'pid_file'} ) {
 	} # end if
 } # end if
 
-$log = logger->new( {'file'=>$config{'log_file'}, 'level'=>$config{'log_level'}} );
-$log->info("Opening SQL connection");
+$log = logger->new( { file=>$config{log_file}, level=>$config{log_level}} );
+$log->info("Opening SQL connection $config{db_host} $config{db_name}");
 $openprint::dbh = sql::open_sql( $log, 
 	host		=> $config{db_host},
 	database	=> $config{db_name},
@@ -109,9 +106,11 @@ configuration::from_file($$opts{config});
 my %uploads;
 my %Users; # Cache of User Objects keyed by user/email address
 
-#my $scoreboard = get_scoreboard( $config{'scoreboard'} );
+#my $scoreboard = get_scoreboard( $config{scoreboard} );
 my $fifoh;
+$log->debug("Opening fifo at $config{fifo}");
 if (open($fifoh, "< $config{fifo}")) {
+$log->debug("Opened fifo at $config{fifo}");
 	while (1) {
 		my $line;
 		eval {
@@ -128,6 +127,7 @@ if (open($fifoh, "< $config{fifo}")) {
 		} elsif ($line) {
 			chomp($line);
 
+			#xferlog format
 			if ($line =~ /^(\S+\s+\S+\s+\d+\s+\d+:\d+:\d+\s+\d+)\s+(\d+)\s+(.*?)\s+(\d+)\s+(.*?)\s+(\S+)\s+(\S+)\s+(\S+)\s+(\S+)\s+(.*?)\s+.*?(\S+)$/o) {
 				my $curr_time = $1;
 				my $xfer_nsecs = $2;
@@ -206,7 +206,169 @@ if (open($fifoh, "< $config{fifo}")) {
 						auth_mode => $access_mode,
 						user => $user_name,
 						status => $completion_status,
+						complete	=> ( $completion_status eq 'c' ? 1 : 0 ),
 					};
+				} # end if send email
+			} elsif (0 and $line =~ /^(\S+)\s+(\S+)\s+(\S+)\s+\[([^\]]+)\]\s+"(\S+)\s+([^"]+)"\s+(\d+)\s+(\d+)$/o) {
+
+				my $client = $1;
+				my $remote_user = $2;
+				my $user_name = $3;
+				my $curr_time = $4;
+				my $xfer_type = $5;
+				my $path = $6;
+
+				my $xfer_nsecs = $7;
+				my $nbytes = $8;
+$log->debug("Gotextended line: $line");
+$log->debug("data: $client $remote_user $user_name $curr_time $xfer_type $path $xfer_nsecs $nbytes");
+
+				# Note that any spaces or control characters will be replaced in this
+				# path with underscores.	This can make finding the actual file, as for
+				# attachments, rather difficult; we have to test to find the difference
+				# between a real underscore in the name, and a substituted underscore.
+				#my $action_flag = $7;
+				#my $xfer_direction = $8;
+				#my $access_mode = $9;
+				#my $completion_status = $11;
+
+				my $bad = 0;
+				foreach my $banned_re ( @banned_files ) {
+					if ( $path =~ /$banned_re/ ) {
+						# Detected bad file
+						$bad = 1;	
+						last;
+					} # end if
+				} # end foreach banned_re
+				if ( $bad ) {
+					# Take evasive action
+					take_evasive_action($user_name, $client);
+					next;
+				} # end if
+
+				my $send_email = $xfer_type eq 'STOR' ? 1 : 0;
+
+				if ($send_email) {
+
+					# First, check for any specific --watch-users filter.	If configured,
+					# and if the user name does NOT match the --watch-users filter, then
+					# don't send email.	Otherwise, check for an --ignore-users filter,
+					# and see if the user matches that ignore filter.
+
+					if ($config{'watch-users'}) {
+						if ($user_name !~ /$config{'watch-users'}/) {
+							$send_email = 0;
+						}
+					} elsif ($config{'ignore-users'}) {
+						if ($user_name =~ /$config{'ignore-users'}/) {
+							$send_email = 0;
+						}
+					}
+				} # end if send email
+
+				if ($send_email) {
+					push @{$uploads{$user_name}}, {
+						timestamp => $curr_time,
+						duration => $xfer_nsecs,
+						client => $client,
+						size => $nbytes,
+						file => $path,
+						transfer_type => $xfer_type,
+						#auth_mode => $access_mode,
+						user => $user_name,
+						status => 'c',
+						complete	=> 1,
+					};
+				} # end if send email
+			} elsif ($line =~ /^(\S+)\s+(\S+)\s+(\S+)\s+\[([^\]]+)\]\s+"([^"]+)"\s+(\d+)\s+([\-\d]+)\s+([\.\d]+)$/o) {
+#LogFormat IQFormat "%h %l %u %t \"%f\" %s %b %T"
+
+				my $client = $1;
+				my $remote_user = $2;
+				my $user_name = $3;
+				my $curr_time = $4;
+				my $path = $5;
+
+				my $response_code = $6;
+				my $nbytes = $7;
+				my $xfer_nsecs = $8;
+$log->debug("Got IQFormat extended line: $line");
+$log->debug("data: $client $remote_user $user_name $curr_time $path $response_code $nbytes");
+if ( $nbytes eq '-' ) {
+$log->debug("Not an upload, ignoring");
+next;
+} elsif ( $response_code != 226 ) {
+	$log->debug("Not an upload, response_code: $response_code");
+	next;
+}
+
+				# Note that any spaces or control characters will be replaced in this
+				# path with underscores.	This can make finding the actual file, as for
+				# attachments, rather difficult; we have to test to find the difference
+				# between a real underscore in the name, and a substituted underscore.
+				#my $action_flag = $7;
+				#my $xfer_direction = $8;
+				#my $access_mode = $9;
+				#my $completion_status = $11;
+
+				my $bad = 0;
+				foreach my $banned_re ( @banned_files ) {
+					if ( $path =~ /$banned_re/ ) {
+						# Detected bad file
+						$bad = 1;	
+						last;
+					} # end if
+				} # end foreach banned_re
+				if ( $bad ) {
+					# Take evasive action
+					take_evasive_action($user_name, $client);
+					next;
+				} # end if
+
+				my $send_email = 1;
+
+				if ($send_email) {
+
+					# First, check for any specific --watch-users filter.	If configured,
+					# and if the user name does NOT match the --watch-users filter, then
+					# don't send email.	Otherwise, check for an --ignore-users filter,
+					# and see if the user matches that ignore filter.
+
+					if ($config{'watch-users'}) {
+						if ($user_name !~ /$config{'watch-users'}/) {
+							$send_email = 0;
+						}
+					} elsif ($config{'ignore-users'}) {
+						if ($user_name =~ /$config{'ignore-users'}/) {
+							$send_email = 0;
+						}
+					}
+				} # end if send email
+
+				if ($send_email) {
+					my $already_uploading = 0;
+					foreach my $U ( @{$uploads{$user_name}} ) {
+						if ( $$U{file} eq $path ) {
+							$$U{size} += $nbytes;
+							$$U{duration} += $xfer_nsecs;
+							$already_uploading = 1;
+							last;
+						} 
+					}	
+					if ( ! $already_uploading ) {
+						push @{$uploads{$user_name}}, {
+							timestamp => $curr_time,
+							duration => $xfer_nsecs,
+							client => $client,
+							size => $nbytes,
+							file => $path,
+							transfer_type => 'STOR',
+							#auth_mode => $access_mode,
+							user => $user_name,
+							status => 'c',
+							complete	=> 1,
+						};
+					} # end if
 				} # end if send email
 			} else {
 				$log->error("Unparsed line $line");
@@ -218,7 +380,7 @@ if (open($fifoh, "< $config{fifo}")) {
 			# No input at this time. Sleep for half a second (or less) and check again.
 #$log->debug( "No input\n" );
 			check_scoreboard();
-			sleep($config{'sleep'}?$config{'sleep'}:10);
+			sleep($config{sleep}?$config{sleep}:10);
 		} # End if $line
 
 		if ( ! $dbh->ping() ) {
@@ -241,8 +403,8 @@ if (open($fifoh, "< $config{fifo}")) {
 } else {
 	die "$program: unable to read FIFO '$config{fifo}': $!\n";
 }
-if ( $config{'pid_file'} ) {
-	unlink $config{'pid_file'};
+if ( $config{pid_file} ) {
+	unlink $config{pid_file};
 } # end if
 
 sub check_scoreboard {
@@ -259,7 +421,26 @@ sub check_scoreboard {
 			} # end if
 		} # end if
 
-		if ( ( ! sets::isin( $username, \@users ) ) or ( $config{'max_files'} and ( @{$uploads{$username}} > $config{'max_files'} ) ) ) {
+		if ( ( ! sets::isin( $username, \@users ) ) or ( $config{max_files} and ( @{$uploads{$username}} > $config{max_files} ) ) ) {
+
+$log->debug("Max_files: $config{max_files}");
+			
+			if ( $config{wait_before_emailing} ) {
+				# Assume the last file is the most recent
+				my $Upload = $uploads{$username}[@{$uploads{$username}}-1];
+				my $timestamp = Date::Parse::str2time($$Upload{timestamp});
+				my $time = time;
+				my $diff = $time - $timestamp;
+				$log->debug("Timestamp: $timestamp < $time diff: $diff" );
+				if ( $diff < $config{wait_before_emailing} ) {
+					$log->debug("waiting before emailing for more uploads");
+					next;
+				} else {
+					$log->debug("Not waiting before emailing for more uploads $config{wait_before_emailing}");
+				} # end if
+			} else {
+				$log->debug("No wait_before_emailing set");
+			} # end if wait_before_emailing
 			$log->debug( "Sending mail for $username\n" );
 # No longer logged in, so we can process and send emails.
 			send_email( @{$uploads{$username}} );
@@ -276,33 +457,60 @@ sub send_email {
 		$log->error("No uploads!");
 		return;
 	} # end if
+	my $upload = $uploads[0];
+	# Try to get User first.  It's going to be the fastest lookup
+	
+	my $Company;
+	my $User;
+	my @Users = openprint::User->find(email=>lc $upload->{user},ftp_active=>1);
+	if ( ! @Users ) {
+		$log->error("OH NO! No user found for $$upload{user}");
+	} elsif ( @Users > 1 ) {
+		$log->error("OH NO! More than one user found for $$upload{user}");
+		$User = $Users[0];
+	} else {
+		$User = $Users[0];
+		$Company = $User->Company();
+	}
+	my $company_name;
+	if ( $Company ) {
+		$company_name = $Company->name();
+		#$company_name =~ s/ /_/g;
+	} # end if
+
+	my $project_files_path = $config{file_path};
+	#$project_files_path =~ s/ /_/g;
 
 	foreach my $upload ( @uploads ) {
 		my $file = $upload->{file};
 # File should be the full path, relative to filesystem root.
 # Problem is, spaces have been replaced by underscores
+$log->debug("Processing upload $file");
 		my $file_str = basename($file);
 		$$upload{file_str} = $file_str;
-		my $regexp = $config{file_path}.'/(.+)/'.$file_str;
-		my ( $company_name ) = $file =~ /^$regexp$/;
-$log->warn("Trying to match ( $regexp in $file, got $company_name");
-		if ( ! $company_name ) {
-			my $new_file_path = $config{file_path};
-			$new_file_path =~ s/ /_/g;
-			$regexp = $new_file_path.'/(.+)/'.$file_str;
-			( $company_name ) = $file =~ /^$regexp$/;
-			$log->warn("Trying to match ( $regexp in $file, got $company_name");
-		} # end if
+		$$upload{company_name} = $company_name;
 
-		if ( $company_name ) {
-			$company_name =~ s/^\/*//g;
-		   my @parts = split('/', $company_name);
-		   $$upload{'company_name'} = shift @parts if @parts;
-		} # end if
-	   $$upload{'proper_file_path'} = '/'.$$upload{'company_name'}.'/'.$file_str;
+		my $regexp = $project_files_path.'/'.$company_name.'/(.+)';
+$log->debug("regexp: $regexp");
+		@$upload{proper_file_path} = $file =~ /^$regexp$/;
+		$$upload{proper_file_path} = $$upload{file_str} if ! $$upload{proper_file_path};
+
+		#if ( ! $company_name ) {
+			#my $new_file_path = $config{file_path};
+			#$new_file_path =~ s/ /_/g;
+			#$regexp = $new_file_path.'/(.+)/'.$file_str;
+			#( $company_name ) = $file =~ /^$regexp$/;
+			#$log->warn("Trying to match ( $regexp in $file, got $company_name");
+		#} # end if
+
+		#if ( $company_name ) {
+			#$company_name =~ s/^\/*//g;
+		   #my @parts = split('/', $company_name);
+		   #$$upload{company_name} = shift @parts if @parts;
+		#} # end if
+	   #$$upload{proper_file_path} = '/'.$$upload{company_name}.'/'.$file_str;
 	} # end foreach upload
 
-	my $upload = $uploads[0];
 	my $subject;
 	if ($config{subject}) {
 		$subject = $config{subject};
@@ -315,66 +523,43 @@ $log->warn("Trying to match ( $regexp in $file, got $company_name");
 	my $dbh_count = 1;
 	while ( ! ( $openprint::dbh and $openprint::dbh->ping() ) ) {
 		$openprint::dbh = sql::open_sql( $log, 
-			host		=> $config{'db_host'},
-			database	=> $config{'db_name'},
+			host		=> $config{db_host},
+			database	=> $config{db_name},
 			driver		=> 'Pg',
-			login		=> $config{'db_user'},
-			password	=> $config{'db_pass'},
+			login		=> $config{db_user},
+			password	=> $config{db_pass},
 		);
 		$log->error("Unable to connect to database, try $dbh_count. sleeping.");
 		$dbh_count += 1;
 		sleep(1);
 	} # end while no db connection
 
-	my $Company;
-	my $User;
-
-	if ( $$upload{company_name} ) {
-# Try to figure out the company
-		if ( ! ( $Company = openprint::Company->find_one( name=>$$upload{company_name} ) ) ) {
-$log->debug("Didn't Found company $$upload{company_name}");
-		} else {
-$log->debug("Found company $$upload{company_name}");
-		} # end if
-	} # end if
-	if ( $Company ) {
-		# If we hae the company, then narrow the user search
-		if ( $User = openprint::User->find_one( company_id=>$Company->id(), email=>lc $$upload{user}) ) {
-$log->debug("Found user $$upload{user} with company");
-		} # end if
-	} # end if
-	if ( ! $User ) {
-		if ( $User = openprint::User->find_one('email'=>lc $upload->{user}) ) {
-			$Company = $User->Company();
-			foreach my $upload ( @uploads ) {
-				$$upload{'company_name'} = $Company->name();
-				$$upload{'proper_file_path'} = '/'.$$upload{'company_name'}.'/'.$$upload{'file_str'};
-			} # end foreach upload
-$log->debug("Found user $$upload{user} with out company.  Company is $$Company{name}");
-		} # end if
-	} # end if
+	my @Uploads = ();
 
 	foreach my $upload ( @uploads ) {
 		my $Upload = new openprint::Upload();
 		my $error = $Upload->save({
-			('company_id'	=>	$Company ? $Company->id() : undef),
-			('user_id'		=>	$User ? $User->id() : undef ),
-			'company'		=>	$$upload{'company_name'},
-			'size'			=>	$upload->{size},
-			'total'			=>	$upload->{size},
-			'finished'		=>	$upload->{timestamp},
-			'start'			=>	$upload->{timestamp},
-			'file_path'		=>	$$upload{proper_file_path},
-			'type'			=>	'FTP',
+			(company_id	=>	$Company ? $Company->id() : undef),
+			(user_id		=>	$User ? $User->id() : undef ),
+			company		=>	$$upload{company_name},
+			size			=>	$upload->{size},
+			total			=>	$upload->{size},
+			finished		=>	$upload->{timestamp},
+			start			=>	$upload->{timestamp},
+			file_path		=>	$$upload{proper_file_path},
+			type			=>	'FTP',
+			complete		=>	$$upload{complete},
 		});
+		$log->debug("UPload status: ($$upload{status})");
 		if ( $error ) {
 			$log->error( $error );
 		} else {
+		push @Uploads, $Upload;
 			my $File = new openprint::File();
 			$error = $File->save({
-				'size'		=>	$upload->{size},
-				'filename'	=>	$$upload{proper_file_path},
-				'upload_id'	=>	$Upload->id(),
+				size		=>	$upload->{size},
+				filename	=>	$$upload{proper_file_path},
+				upload_id	=>	$Upload->id(),
 			});
 			$log->error( $error ) if $error;
 		} # end if
@@ -383,7 +568,7 @@ $log->debug("Found user $$upload{user} with out company.  Company is $$Company{n
 	if ( $Company and $User ) {
 		my $from;
 		if ( ! Email::Valid->address( $User->email() ) ) {
-			$from = $config{'OrderingEmail'};
+			$from = $config{OrderingEmail};
 		} else {
 			$from = sprintf('"%s" <%s>', $User->name(), $User->email() );
 		} # end if
@@ -393,30 +578,34 @@ $log->debug("Found user $$upload{user} with out company.  Company is $$Company{n
 			@to = ( $User );
 		} else {
 			if ( $Company->salesrep_id() ) {
-				if ( $Company->CSR()->notification('CSR Client File Uploads') ne 'No' ) {
-					@to = ( $Company->CSR() );
+				my $CSR = $Company->CSR();
+				if ( $CSR->notification('CSR Client File Uploads') ne 'No' ) {
+					@to = ( $CSR );
+					$log->debug("Adding CSR $$CSR{email}");
+				} else {
+					$log->debug("Not Adding CSR $$CSR{email} : notifications etting:" . $CSR->notification('CSR Client File Uploads') );
 				} # end if
 			} # end if
-			push @to, map { $_->User() } openprint::User_Notification->find('type'=>'Client File Uploads','value'=>'Yes', company_id=>[ $config{Owner}, $Company->id() ] );
+			push @to, map { $_->User() } openprint::User_Notification->find( type=>'Client File Uploads',value=>'Yes', company_id=>[ $config{Owner}, $Company->id() ] );
 		} # end if
 		
 		if ( ! @to ) {
-			@to = ( $config{'OrderingEmail'} );
+			@to = ( $config{OrderingEmail} );
 		} # end if
 		if ( @to ) {
 			my %variable;
-			$variable{'Company'} = $Company;
-			$variable{'User'} = $User;
-			$variable{'Uploads'} = \@uploads;
+			$variable{Company} = $Company;
+			$variable{User} = $User;
+			$variable{Uploads} = \@Uploads;
 
-			$variable{'ReplacementText'} = ssi::include( '/email_content/ftp_csr_notification.html', \%variable );
+			$variable{ReplacementText} = ssi::include( '/email_content/ftp_csr_notification.html', \%variable );
 			my $body = ssi::include( '/email_template.html', \%variable );
 			my $Mail = new openprint::Email();
 			$Mail->send(
 					FROM    => ( $config{AdministratorEmail} ? $config{AdministratorEmail} : $from ),
 					'Reply-To'	=>	$from,
 					TO      => \@to,
-BCC		=>	'iconnor@point-one.com',
+#BCC		=>	'iconnor@point-one.com',
 					SUBJECT => $subject,
 					ATTACHMENTS => [ '', MIME::QuotedPrint::encode_qp(Encode::encode('utf-8',$body)), 'text/html', 'quoted-printable' ]
 				);
@@ -447,9 +636,9 @@ Cheers,
 
 EOT
 		my $email_info = {
-			smtp => $config{'smtp_server'},
-			From => $config{'from'},
-			To => $config{'recipient'},
+			smtp => $config{smtp_server},
+			From => $config{from},
+			To => $config{recipient},
 			BCC	=>	'iconnor@point-one.com',
 			Subject => $subject,
 		};
@@ -623,7 +812,7 @@ sub get_scoreboard {
 			@score{'sce_pid','sce_uid','sce_gid','sce_user','sce_server_port','sce_server_addr',
 				'sce_server_label','sce_client_addr','sce_client_name','sce_class','sce_cwd','sce_cmd','sce_cmd_arg','sce_begin_idle','sce_begin_session',
 				'sce_xfer_size','sce_xfer_done','sce_xfer_len','sce_xfer_elapsed'} = unpack($template,$record);
-			if ($score{'sce_pid'} != 0) {
+			if ($score{sce_pid} != 0) {
 				push @scoreboard, \%score;
 			} # end if
 		} # end while
@@ -671,7 +860,7 @@ sub take_evasive_action {
 
 	$variable{ReplacementText} = ssi::include( '/email_content/ftp_account_compromised.html', \%variable );
 	if ( $variable{ReplacementText} ) {
-		my $email_template = misc::load_file( $log, $config{'skin_path'} . '/email_template.html' );
+		my $email_template = misc::load_file( $log, $config{skin_path} . '/email_template.html' );
 		my $body = ssi::variable_substitution( undef, $log, $dbh, \$email_template, \%variable );
 		my $Mail = new openprint::Email();
 		$Mail->send(

@@ -58,22 +58,22 @@ $serial = 'manifest_content_types_id_seq';
 
 sub Paper {
 require openprint::Paper;
-	return new openprint::Paper( $_[0]{'paper_id'} );
+	return new openprint::Paper( $_[0]{paper_id} );
 } # end sub Paper
 
 sub Manifest {
-	return new openprint::Manifest( $_[0]{'manifest_id'} );
+	return new openprint::Manifest( $_[0]{manifest_id} );
 } # end sub Manifest
 
 sub PurchaseOrder {
-	return new openprint::PurchaseOrder( $_[0]{'po_id'} );
+	return new openprint::PurchaseOrder( $_[0]{po_id} );
 } # end sub PurchaseOrder
 
 sub PurchaseOrder_Content {
-	if ( ! exists $_[0]{'PurchaseOrder_Content'} ) {
+	if ( ! exists $_[0]{PurchaseOrder_Content} ) {
 		require openprint::PurchaseOrder_Content;
-		if ( ! $_[0]{'po_content_id'} ) {
-			my $PO = new openprint::PurchaseOrder( $_[0]{'po_id'} );
+		if ( ! $_[0]{po_content_id} ) {
+			my $PO = new openprint::PurchaseOrder( $_[0]{po_id} );
 			my $Paper = $_[0]->Paper();
 			foreach my $POC ( $PO->Contents() ) {
 				$openprint::log->debug('POC desc: ' . $POC->item()) if $debug;
@@ -105,15 +105,15 @@ sub PurchaseOrder_Content {
 					$openprint::log->debug("FSC Mismatch") if $debug;
 					next;
 				} # end if
-				$_[0]{'PurchaseOrder_Content'} = $POC;
+				$_[0]{PurchaseOrder_Content} = $POC;
 				last;
 			} # end foreach POC
-			$_[0]{'PurchaseOrder_Content'} = new openprint::PurchaseOrder_Content() if ! $_[0]{'PurchaseOrder_Content'};
+			$_[0]{PurchaseOrder_Content} = new openprint::PurchaseOrder_Content() if ! $_[0]{PurchaseOrder_Content};
 		} else {
-			$_[0]{'PurchaseOrder_Content'} = new openprint::PurchaseOrder_Content($_[0]{'po_content_id'});
+			$_[0]{PurchaseOrder_Content} = new openprint::PurchaseOrder_Content($_[0]{po_content_id});
 		} # end if
 	} # end if
-	return $_[0]{'PurchaseOrder_Content'}; 
+	return $_[0]{PurchaseOrder_Content}; 
 } # end sub PurchaseOrder_Content
 
 sub type {

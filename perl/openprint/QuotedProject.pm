@@ -10,7 +10,7 @@ require openprint::Quote;
 require openprint::Project;
 require Math::Round;
 
-$debug = 1;
+$debug = 0;
 
 $table = 'tbl_quote_details';
 $serial = 'tbl_quote_details_id_seq';

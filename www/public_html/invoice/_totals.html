@@ -4,11 +4,11 @@
 			<ul>
 				<li class="subtotal">
 					<label>Sub Total</label>
-					<span id="subtotal"><? echo ( openprint::Currency::format( $$variable{'Invoice'}->subtotal() ); ) ?></span>
+					<span id="subtotal"><? echo ( openprint::Currency::format( $$variable{Invoice}->subtotal() ); ) ?></span>
 				</li>
 				<? echo ( 
 					my $html;
-					foreach my $Tax ( $$variable{'Invoice'}->Taxes() ) {
+					foreach my $Tax ( $$variable{Invoice}->Taxes() ) {
 						$html .= sprintf('<li class="tax"><label>%s (%d%)</label>%s</li>', 
 							$Tax->name(), $Tax->rate(), openprint::Currency::format( $Tax->amount() ),
 							);
@@ -17,17 +17,17 @@
 				) ?>
 				<li class="total">
 					<label>Total</label>
-					<span id="total"><? echo ( openprint::Currency::format( $$variable{'Invoice'}->total() ); ) ?></span>
+					<span id="total"><? echo ( openprint::Currency::format( $$variable{Invoice}->total() ); ) ?></span>
 				</li>
-				<? if ( $$variable{'Invoice'}->interest() ne '' ) ?>
+				<? if ( $$variable{Invoice}->interest() ne '' ) ?>
 				<li class="interest">
 					<label>Interest</label>
-					<span id="interest"><? echo ( openprint::Currency::format( $$variable{'Invoice'}->interest() ); ) ?></span>
+					<span id="interest"><? echo ( openprint::Currency::format( $$variable{Invoice}->interest() ); ) ?></span>
 				</li>
-				<? endif ( $$variable{'Invoice'}->interest() ne '' ) ?>
+				<? endif ( $$variable{Invoice}->interest() ne '' ) ?>
 				<li class="paid">
 					<label>Amount Paid</label>
-					<? echo ( openprint::Currency::format( $$variable{'Invoice'}->paid() ); ) ?>
+					<? echo ( openprint::Currency::format( $$variable{Invoice}->paid() ); ) ?>
 				</li>
 				<li class="owing">
 					<label>Amount Owing</label>

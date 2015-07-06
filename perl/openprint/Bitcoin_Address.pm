@@ -36,8 +36,10 @@ sub generate {
 	$openprint::dbh->do( "LOCK TABLE $table IN ACCESS EXCLUSIVE MODE" ) or $openprint::log->error( DBI->errstr );
 	if ( $_[1] ) {
 		my $Old = openprint::Bitcoin_Address->find_one( object_id=>$_[1]{id}, object_type=>ref $_[1]);
-		sql::end_transaction( $openprint::dbh, $ac );
-		return $Old if $Old;
+		if ( $Old ) {
+			sql::end_transaction( $openprint::dbh, $ac );
+			return $Old 
+		} # end if
 	} # end if
 	my $New = openprint::Bitcoin_Address->find_one('object_id is null'=>1);
 	if ( ! $New ) {

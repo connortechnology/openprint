@@ -3,7 +3,7 @@
 	my $stock_id = join( '-', @$variable{'form', 'stock_index'} );
 	my $stock_string = $$variable{Stock}->id_string();
 
-	$html .= '<li><label>'.$$variable{Stock}->to_string().'</label>';
+	$html .= '<li><label style="width: auto;">'.$$variable{Stock}->to_string().'</label><br/>';
 	$html .= sprintf('<input type="hidden" id="id-%1$d-%2$d" name="id-%1$d-%2$d" value="%3$s" />', @$variable{'form','stock_index','paper_id'} );;
 	foreach my $qty_index ( $$variable{Project}->quantity_indexes() ) {
 		my $key = join('-',$stock_id,$qty_index );

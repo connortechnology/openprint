@@ -25,6 +25,8 @@ require sets;
 
 use constant DEBUG => 0;
 
+use vars qw{ @signature_variables };
+
 my %variables = (
 	'ddmProjectSize'=>['save','output'],
 	'txtFinalWidth'=>['save'],'txtFinalHeight'=>['save'], 
@@ -44,7 +46,7 @@ my %variables = (
 
 	);
 
-my @signature_variables = (
+@signature_variables = (
 'chkCyanSideOne','chkMagentaSideOne','chkYellowSideOne','chkBlackSideOne', 'chkProcessColourSideOne',
                 'chkColourCoating1SideOne', 'ColourCoatingType1SideOne', 'ColourCoatingColour1SideOne','ColourCoatingCoverage1SideOne',
                 'chkColourCoating2SideOne', 'ColourCoatingType2SideOne', 'ColourCoatingColour2SideOne','ColourCoatingCoverage2SideOne',
@@ -72,7 +74,7 @@ my @signature_variables = (
                 'BleedLeft','BleedRight','BleedTop','BleedBottom','rdbColourBar','txtCropMarkSpace',
 		'ddmRunStyle-', 'ddmPress-', 'PrintingType-', 'StockType-', 'txtPlateChangeQuantity-', 'PageQuantity-',
 		'Pages', 'OverrideGroupPageQuantity', 'GroupPageQuantity', 'txtSignatureType',
-		'txtFinalHeight', 'txtFinalWidth', 'txtHeight', 'txtWidth',
+		'chkOverrideDimensions', 'txtFinalHeight', 'txtFinalWidth', 'txtHeight', 'txtWidth',
 		'rdbSpecificStock', 'rdbSuppliedStock',
 		'ddmStockBrand', 'txtSpecificStockBrand',
 		'ddmStockGroup', 'ddmStockQuality',
@@ -82,8 +84,9 @@ my @signature_variables = (
 		'txtSpecificStockCalliper', 'StockType',
 		'txtSpecificStockWidth', 'txtSpecificStockHeight', 
 		'txtCustomMWeight', 'basis_mweight', 'basis_width', 'basis_height', 
-		'CustomStockPrice', 'txtStockGSM','CustomSheetDoubleSided',
-		'cuttable', 'perfecting', 'StockGrade', 'minimum_order','sheets_per_package',
+		'CustomStockPrice', 'StockPricePerM', 'txtStockGSM','CustomSheetDoubleSided',
+		'cuttable', 'perfecting', 'StockGrade', 'minimum_order','sheets_per_package','full_packages',
+		'sides_the_same',
 		);
 
 sub variables {
@@ -127,6 +130,9 @@ sub outputs {
 	my @outputs = openprint::Estimating::Printing::outputs( $project_index, $service_index, $specs );
 	foreach my $Group ( groups( $project_index, $specs ) ) {
 		push @v, map { $_.$Group } @outputs;
+		if ( ! $$specs{"chkOverrideDimensions$Group"} ) {
+		push @v, map { $_.$Group } ( 'txtFinalWidth','txtFinalHeight' );
+		}
 	} # end foreach Group
     return @v;
 }
@@ -160,12 +166,29 @@ sub calc {
 		$$specs{alert} .= 'Please select how this project will be bound.<br/>';
 	} # end if
 
+	if ( ! ( $$specs{txtFinalWidth} or $$specs{txtFinalHeight} ) ) {
+		$$specs{alert} = 'Please select the dimensions.<br/>';
+		$$specs{Status} = 'uncalculated';
+	} # end if
+	if ( ! $$specs{spine} ) {
+		$$specs{spine} = 'height';
+		$variables{spine} = ['save','output'];
+	} # end if
+	if ( $$specs{spine} eq 'width' ) {
+		@$specs{'txtWidth','txtHeight'} = ( $$specs{txtFinalWidth}, 2*$$specs{txtFinalHeight} );
+	} else {
+		@$specs{'txtWidth','txtHeight'} = ( 2*$$specs{txtFinalWidth},$$specs{txtFinalHeight} );
+	} # end if
+
 	if ( $$specs{rdbTemplateType} eq 'PerfectBound' and $$specs{rdbCover} ne 'Different' ) {
 		$variables{rdbCover} = [sets::union('output', @{$variables{rdbCover}})];
 		$$specs{rdbCover} = 'Different';
 	} elsif ( $$specs{rdbTemplateType} eq 'SpinePaste' and $$specs{rdbCover} ne 'Self' ) {
 		$variables{rdbCover} = [sets::union('output', @{$variables{rdbCover}})];
 		$$specs{rdbCover} = 'Self';
+	} elsif ( ! $$specs{rdbCover} ) {
+		$$specs{alert} .= "Please select self or different cover.<br/>";
+		$$specs{Status} = 'uncalculated';
 	} # end if
 
 	my @Groups = sql::execute( undef, undef, 'SELECT DISTINCT strvalue FROM tbl_Service_Specifications WHERE lngProjectIndex=? AND strName=?', $project_index, 'Group' );
@@ -187,7 +210,7 @@ sub calc {
 	my $Project = new openprint::Project( $project_index );
 	if ( ! $$Project{id} ) {
 		$$specs{alert} = 'Project not found.';
-		return $$specs{Status} = 'uncalculated';
+		$$specs{Status} = 'uncalculated';
 	} # end if
 
 	my $remaining_pages = $$specs{txtTotalPageQuantity};
@@ -246,6 +269,44 @@ $openprint::log->warn("FIXM E");
 	} # end if
 	$remaining_pages = 0 if $remaining_pages < 0;
 
+	if ( ! $$specs{txtTotalPageQuantity} ) {
+		$$specs{alert} = 'Please enter the # of pages<br/>';
+		$$specs{Status} = 'uncalculated';
+	} elsif ( $$specs{txtTotalPageQuantity} > 2000 ) {
+		$$specs{alert} .= 'The maximum # of pages is 2000.<br/>';
+		$$specs{Status} = 'uncalculated';
+	} # end if
+
+	if ( $$specs{remaining_pages} ) {
+		$$specs{alert} .= 'There are ' . $$specs{remaining_pages} . ' unspecified pages.<br/>';
+		$$specs{Status} = 'uncalculated';
+	} # end if
+
+	if ( ! $$specs{rdbCover} ) {
+		$$specs{alert} = 'Please select the cover type.<br/>';
+		$$specs{Status} = 'uncalculated';
+	} # end if
+
+	if ( $$specs{rdbCover} eq 'Different') {
+		if ( sets::isin($$specs{rdbTemplateType1}, ['2Panel1Pocket','2Panel2Pocket','TriFoldDoublePocket'] ) ) {
+			if ( $$specs{rdbPocketSize1} and ( $$specs{rdbPocketSize1} ne 'Other' ) ) {
+				$$specs{PocketSize1} = $$specs{rdbPocketSize1};	
+			} else {
+				delete $$specs{PocketSize1};
+			} # end if
+			if ( ! $$specs{rdbPanels1} ) {
+				$$specs{alert} .= 'Please select the number of panels.<br/>';
+				$$specs{Status} = 'uncalculated';
+			} elsif ( ! $$specs{rdbPocketSize1} ) {
+				$$specs{alert} .= 'Please select the size of the pockets.<br/>';
+				$$specs{Status} = 'uncalculated';
+			} elsif ( ! ( $$specs{chkPocketCenter1} or $$specs{chkPocketLeft1} or $$specs{chkPocketRight1} ) ) {
+				$$specs{alert} .= 'Please select where you would like the pockets.<br/>';
+				$$specs{Status} = 'uncalculated';
+			} # end if
+		} # end if
+	} # end if
+
 	foreach my $group_id ( @Groups ) {
 		$openprint::log->debug("Group: $group_id, remaining: $remaining_pages, override: $override_pages{$group_id}") if DEBUG;
 		my %sig_specs =  map { $_, $$specs{$_.$group_id } } @signature_variables;
@@ -254,7 +315,8 @@ $openprint::log->warn("FIXM E");
 		openprint::Estimating::Printing::get_colours( $specs, 'SideTwo', \%variables, $group_id );
 		openprint::Estimating::Printing::get_inkcoverage( $Project, $specs, \%variables, $group_id );
 		openprint::Estimating::Printing::get_Stocks( $Project, \%sig_specs, \%variables );
-		$$specs{alert} .= $sig_specs{alert};
+		openprint::Estimating::Printing::set_size( $Project, \%sig_specs, $specs );
+		$$specs{alert} .= $sig_specs{alert} .' for group ' . $group_id . ' ' . $$specs{'txtServiceDescription'.$group_id}. '<br/>' if $sig_specs{alert};
 		@$specs{map { $_.$group_id} @signature_variables} = @sig_specs{@signature_variables};
 		if ( ! exists $override_pages{$group_id} ) {
 			$override_pages{$group_id} = $remaining_pages;
@@ -286,67 +348,7 @@ $openprint::log->warn("FIXM E");
 	} # end if
 	$$specs{groups} = join(',', @Groups );
 
-	if ( ! ( $$specs{txtFinalWidth} or $$specs{txtFinalHeight} ) ) {
-		$$specs{alert} = 'Please select the dimensions.';
-		return $$specs{Status} = 'uncalculated';
-	} # end if
-	if ( ! $$specs{spine} ) {
-		$$specs{spine} = 'height';
-		$variables{spine} = ['save','output'];
-	} # end if
-	if ( $$specs{spine} eq 'width' ) {
-		@$specs{'txtWidth','txtHeight'} = ( $$specs{txtFinalWidth}, 2*$$specs{txtFinalHeight} );
-	} else {
-		@$specs{'txtWidth','txtHeight'} = ( 2*$$specs{txtFinalWidth},$$specs{txtFinalHeight} );
-	} # end if
 
-	if ( ! $$specs{txtTotalPageQuantity} ) {
-		$$specs{alert} = 'Please enter the # of pages';
-		return $$specs{Status} = 'uncalculated';
-	} elsif ( $$specs{txtTotalPageQuantity} > 2000 ) {
-		$$specs{alert} .= 'The maximum # of pages is 2000.<br/>';
-		$$specs{Status} = 'uncalculated';
-	} # end if
-
-	if ( $$specs{remaining_pages} ) {
-		$$specs{alert} .= 'There are ' . $$specs{remaining_pages} . ' unspecified pages.';
-		$$specs{Status} = 'uncalculated';
-	} # end if
-
-	if ( ! $$specs{rdbCover} ) {
-		$$specs{alert} = 'Please select the cover type.';
-		return $$specs{Status} = 'uncalculated';
-	} # end if
-
-	if ( $$specs{rdbCover} eq 'Different') {
-		if ( sets::isin($$specs{rdbTemplateType1}, ['2Panel1Pocket','2Panel2Pocket','TriFoldDoublePocket'] ) ) {
-			if ( $$specs{rdbPocketSize1} and ( $$specs{rdbPocketSize1} ne 'Other' ) ) {
-				$$specs{PocketSize1} = $$specs{rdbPocketSize1};	
-			} else {
-				delete $$specs{PocketSize1};
-			} # end if
-			if ( ! $$specs{rdbPanels1} ) {
-				$$specs{alert} .= 'Please select the number of panels.';
-				return $$specs{Status} = 'uncalculated';
-			} elsif ( ! $$specs{rdbPocketSize1} ) {
-				$$specs{alert} .= 'Please select the size of the pockets.';
-				return $$specs{Status} = 'uncalculated';
-			} elsif ( ! ( $$specs{chkPocketCenter1} or $$specs{chkPocketLeft1} or $$specs{chkPocketRight1} ) ) {
-				$$specs{alert} .= 'Please select where you would like the pockets.';
-				return $$specs{Status} = 'uncalculated';
-			} # end if
-		} # end if
-	} # end if
-
-	foreach my $sig_id ( $Project->signatures() ) {
-		my $sig_specs = openprint::service::get_specs_ref( $Project, $sig_id );
-		my %new_specs = %{$sig_specs};
-		openprint::Estimating::Printing::set_size( $Project, \%new_specs, $specs );
-		# I think the idea here is to only update the sizes.... if they change...
-		foreach my $k ( 'txtWidth','txtHeight','txtFinalWidth','txtFinalHeight' ) {
-			openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $sig_id, $k, $new_specs{$k} );
-		} # end foreach k
-	} # end foreach
 
 	return $$specs{Status};
 } # end sub calc
@@ -652,8 +654,9 @@ sub summary {
 			my $group_html = join(' ',
 					( $$specs{"ddmRunStyle-$group_id"} ? $$specs{"ddmRunStyle-$group_id"} : () ),
 					( $$specs{"ddmPress-$group_id"} ? ' on ' . $$specs{"ddmPress-$group_id"} : () ),
-					($$specs{"PrintingType-$group_id"} ? $$specs{"PrintingType-$group_id"} : () ),
-					( $$specs{"PageQuantity-$group_id"} ? 'as ' . $$specs{"PageQuantity-$group_id"} . 'page signatures.' : () ),
+					( $$specs{"PrintingType-$group_id"} ? $$specs{"PrintingType-$group_id"} : () ),
+					( $$specs{"PageQuantity-$group_id"} ? 'as ' . $$specs{"PageQuantity-$group_id"} . 'page signatures' : () ),
+					( $$specs{"StockType-$group_id"} ? 'on ' . $$specs{"StockType-$group_id"} . ' stock' : () ),
 					);
 			if ( $group_html ) {
 				$html .= 'Group ' . $group_id . ' is overriden to run ' . $group_html. '<br/>';

@@ -4,7 +4,7 @@
 	<form name="f1" id="f1" method="post" action="manifest_view.html?manifest_id=<? echo ( $$variable{Manifest}->id() ) ?>">
 		<input type="hidden" name="btnFunction" />
 		<p class="buttons">
-			<? echo ( join('',
+			<? echo ( join( "\n",
 				button( 'Back', { href=>'/employee/inventory/manifests.html' } ),
 				$$variable{Manifest}->can_edit() ? (
 					button( 'Verify', { href=>'/employee/inventory/manifest_view.html?action=Verify&amp;manifest_id='.$$variable{Manifest}->id() } ),
@@ -172,6 +172,6 @@
 		</div><!--Type-->
 	</form>
 	<?eval($$variable{Object} = $$variable{Manifest};)?>
-	<?include(/includes/_assets_upload.html)?>
+	<?include(/employee/assets/_asset_upload.html)?>
 	<?include(_manifest_log.html)?>
 </div>

@@ -3,7 +3,7 @@
     <table class="List">
         <tr>
             <th class="DateTime">When</th>
-            <th class="ip">From</th>
+            <th class="hostname">From</th>
             <th class="Company">Company</th>
             <th class="Result">Result</th>
         </tr>
@@ -16,7 +16,7 @@
 
 		my $ips = join('<br/>', map { $_->ip() } $Host->Interfaces() );
 
-        $html .= sprintf('<tr><td class="DateTime">%s</td><td class="ip" title="%s">%s</td><td class="Company">%s</td><td class="Result">%s</td></tr>',
+        $html .= sprintf('<tr><td class="DateTime">%s</td><td class="hostname" title="%s">%s</td><td class="Company">%s</td><td class="Result">%s</td></tr>',
             format_datetime( $Log->date_time() ),
             $ips,
             sprintf('<a href="/employee/it/host.html?host_id=%d">%s</a>', $$Host{id}, ( $Host->hostname() ? $Host->hostname() : $ips ) ),

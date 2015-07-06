@@ -27,10 +27,10 @@
 	} else {
 
 		my %param = (
-			ssi::date_filter( '/account/search.html?created_on_end', 'created_on <=' ),
-			ssi::date_filter( '/account/search.html?created_on_start', 'created_on >=' ),
-			ssi::date_filter( '/account/search.html?last_online_start', 'last_online >=' ),
-			ssi::date_filter( '/account/search.html?last_online_end', 'last_online <=' ),
+			date_filter( '/account/search.html?created_on_end', 'created_on <=' ),
+			date_filter( '/account/search.html?created_on_start', 'created_on >=' ),
+			date_filter( '/account/search.html?last_online_start', 'last_online >=' ),
+			date_filter( '/account/search.html?last_online_end', 'last_online <=' ),
 			order	=>	'(SELECT name FROM companies WHERE companies.id=company_id),lower(firstname),lower(lastname)',
 			( @blocked_user_ids ? ( 'id not in'	=>	\@blocked_user_ids ) : () ),
 		);

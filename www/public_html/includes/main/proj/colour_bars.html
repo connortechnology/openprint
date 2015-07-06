@@ -4,7 +4,7 @@
 	} else {
 		my @values = ( 'Y','Yes','N','No','','Auto' );
 		my %values = @values;
-		my $html .= '<p class="ColourBars" ' . ( ( $$variable{PrintingType} eq 'Digital' ) ? 'style="display:none"' : '' ) . '><label>';
+		my $html .= '<li class="ColourBars" ' . ( ( $$variable{PrintingType} eq 'Digital' ) ? 'style="display:none"' : '' ) . '><label>';
 		$html .= writeTip('Colour bar').'</label>';
 		my $Auth = openprint::Authorization->find_one( object_type=>'openprint::ServiceType', setting=>'rdbColourBar' );
 		if ( $Auth and ! $Auth->can_do() ) {
@@ -13,7 +13,7 @@
 			$html .= radio( 'rdbColourBar'.$$variable{Signature}, \@values, $$variable{'rdbColourBar'.$$variable{'Signature'}}, 
 				{ onclick=>'calc(this.form.name);' } );
 		} # end if
-		$html .= '</p>';
+		$html .= '</li>';
 		return $html;
 	} # end if
 ) ?>

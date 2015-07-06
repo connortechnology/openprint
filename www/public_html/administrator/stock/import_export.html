@@ -24,11 +24,12 @@
 			</li>
 		</ul>
 		<p class="buttons">
-			<? echo (join('',
-				ssi::button( 'Import', { 'onclick'=>"f1.action='import_export.html?Import';f1.btnFunction.value='Import Stock';f1.submit();" } ),
-				ssi::button( 'Export', { 'onclick'=>"f1.action='import_export.html?Export';f1.btnFunction.value='Export Stock';f1.submit();" }),
+			<? echo (join("\n",
+				button( 'Import', { 'onclick'=>"f1.action='import_export.html?Import';f1.btnFunction.value='Import Stock';f1.submit();" } ),
+				button( 'Export', { 'onclick'=>"f1.action='import_export.html?Export';f1.btnFunction.value='Export Stock';f1.submit();" }),
 			); ) ?>
 		</p>
 	</fieldset>
 	<input type="hidden" name="btnFunction"/>
 </form>
+<?include(/includes/error_reporting.html)?>

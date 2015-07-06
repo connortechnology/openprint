@@ -14,36 +14,44 @@
         timeout = null;
         gettingNewPrice = true;
 
-		var h = form.serialize(true);
-		h.ServiceType = 'Folding';
-		h.callback = 'cbFoldingResults';
+		var h = $H(form.serialize(true));
+		h.set('callback', 'cbFoldingResults' );
+		h.set('ServiceType', 'Folding');
+
+		h.each(function(pair) {
+			if ( pair.value == '' )
+				h.unset(pair.key);
+			if ( pair.key == 'btnFunction' )
+				h.unset(pair.key);
+		});
+
 		new Ajax.Request( '/main/project/_calc.json', { method: 'post', parameters: h, evalScripts: true } );
     }
     function cbFoldingResults( results ) {
 		
         var form = getFormObj('f1');
 
-		var re = /FoldQty-(\d+)-(\d+)-(\d+)/;
-		var keys = results.keys();
-		for ( var index = 0, len = keys.length; index < len; index += 1 ) {
-			var key = keys[index];
-			var value = results.get(keys[index]);
+        cbFillResults(results);
+		var re = /FoldQty\-(\d+)\-(\d+)\-(\d+)/;
+		for ( var index = 0, len = form.elements.length; index < len; index += 1 ) {
+			var key = form.elements[index].id;
 
 			var matches = re.exec( key );
 			if ( matches ) {
 				var f = $('Fold-'+matches[1]+'-'+matches[2]+'-'+matches[3]);
 				if ( f ) {
+					var value = form.elements[index].value;
+					// always leave the first or any witha value
 					if ( matches[3] == 1 || value > 0 ) {
 						f.show();
-					} else {
-						f.hide();
+					//} else {
+						//f.hide();
 					} // end if
 				} else {
 					alert('debug mesage: No html for fold ' + matches[1]+'-'+matches[2]+'-'+matches[3] );
 				} // end if f
 			} // end if matches
 		} // end foreach pair
-        cbFillResults(results);
 
 	} // end function cbFoldingResults
 
@@ -94,25 +102,24 @@ if ( 0 ) {
 			my $Project = $$variable{Project};
 			my $services = $Project->services();
 			my $fragment = slurp_content( '/main/project/bind/_fold.html' );
-			@{$$variable{fold_options}} = sort { my ( $pagesa ) = $a =~ /(\d*)/; my ( $pagesb ) = $b =~ /(\d*)/; $pagesa <=> $pagesb; } ( map { $_, $openprint::Estimating::Folding::fold_types{$_} } sql::execute( undef, undef, 'SELECT DISTINCT type FROM folds') );
 
-			foreach my $ss_id ( $$variable{Project}->signatures({sort=>1}) ) {
-				my $sig_specs = openprint::service::get_specs_ref( $$variable{'Project'}, $ss_id );
+			foreach my $ss_id ( $Project->signatures({sort=>1}) ) {
+				my $sig_specs = openprint::service::get_specs_ref( $Project, $ss_id );
 				$html .= "<fieldset><legend>For Signature $$sig_specs{'SignatureIndex'}:";
-				$html .= openprint::service::summary( $$variable{'Project'}, $ss_id );
+				$html .= openprint::service::summary( $Project, $ss_id );
 				$html .= '</legend><ul><li><label>Printed</label>';
 
-				foreach my $qty_index ( $$variable{'Project'}->quantity_indexes() ) {
+				foreach my $qty_index ( $Project->quantity_indexes() ) {
 					$html .= '<div class="'.$$variable{Columns}.'Columns">';
 					if ( $$sig_specs{"txtImposition$qty_index"} ) {
-					$html .= openprint::service::summary( $$variable{Project}, $ss_id, $qty_index );
+					$html .= openprint::service::summary( $Project, $ss_id, $qty_index );
 					} else { $html .= '&nbsp;';
 					} # end if
 					$html .= '</div>';
 				} # end foreach qty_index
 				$html .= '</li>';
 				$html .= '<li><label>Equipment</label>';
-				foreach my $qty_index ( $$variable{'Project'}->quantity_indexes() ) {
+				foreach my $qty_index ( $Project->quantity_indexes() ) {
 					$html .= '<span class="'.$$variable{Columns}.'Columns">';
 					if ( $$sig_specs{"txtImposition$qty_index"} ) {
 						$html .= sprintf('<select name="ddmEquipment-%1$d-%2$d" onchange="calc(this.form.name);">', $$sig_specs{'SignatureIndex'}, $qty_index );
@@ -161,22 +168,10 @@ if ( 0 ) {
 			) ?>
 			<hr/>
 			<ul>
-<? echo ( include('/includes/main/proj/_quantities.html'); ) ?>
-<? echo ( include('/includes/main/proj/_service_price.html'); ) ?>
-<? echo ( include('/includes/main/proj/_additional_service.html'); ) ?>
-<? if ( sets::isin( $session{'user_type'}, ['A','E'] ) ) ?>
-			<li>
-<? echo ( 
-	my $html = '';
-	foreach my $qty_index ( $$variable{'Project'}->quantity_indexes() ) {
-		$html .= sprintf('<span class="%sColumns">', $$variable{'Columns'} );
-		$html .= ssi::button( 'Breakdown'.$qty_index, { onclick=>"show_breakdown($qty_index);", text=>'Breakdown' } );
-		$html .= '</span>';
-	} # end foreach qty_index
-	return $html;
-) ?>
-			</li>
-<? endif ( sets::isin( $session{'user_type'}, ['A','E'] ) ) ?>
+<?include('/includes/main/proj/_quantities.html') ?>
+<?include('/includes/main/proj/_service_price.html') ?>
+<?include('/includes/main/proj/_additional_service.html') ?>
+<?include('/includes/main/proj/_breakdown.html') ?>
 			</ul>
 		</fieldset>
 		<br class="spacer"/>
@@ -186,9 +181,6 @@ if ( 0 ) {
 		<input type="hidden" name="ServiceIndex" value="<?ServiceIndex?>"/>
 		<input type="hidden" name="ServiceType" value="<?ServiceTypeID?>"/>
 		<input type="hidden" name="ContinueProject" value="Y" />
-		<div id="hdnBreakdown1" style="display: none;"></div>
-		<div id="hdnBreakdown2" style="display: none;"></div>
-		<div id="hdnBreakdown3" style="display: none;"></div>
 		<input type="hidden" name="Status" value="<?Status?>" />
 	</form>
 </div>

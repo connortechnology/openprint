@@ -5,9 +5,9 @@
 				<label for="businessname">Legal Name</label>
 				<input type="text" id="businessname" name="business_name" value="<? hecho ( $param{'business_name'} ? $param{'business_name'} : $$variable{'Company'}->business_name() ) ?>" />
 			</li>
-			<li class="required"> 
+			<li class="required legal_form"> 
 				<label>Legal Form</label>
-				<? echo ( ssi::radio( 'business_form', [ 'Corporation','Corporation', 'SoleProprietor', 'Sole Proprietor', 'Partnership', 'Partnership' ], $param{'business_form'} ? $param{'business_form'} : $$variable{'Company'}->business_form() ); ) ?>
+				<? echo ( radio( 'business_form', [ 'Corporation','Corporation', 'SoleProprietor', 'Sole Proprietor', 'Partnership', 'Partnership' ], $param{'business_form'} ? $param{'business_form'} : $$variable{'Company'}->business_form() ); ) ?>
 			</li>
 			<li class="required"> 
 				<label for="business_type">Business Type</label>
@@ -26,20 +26,6 @@
 			<li class="required"> 
 				<label for="president_owner">President/CEO/Owner</label>
 				<input type="text" id="president_owner" name="president_owner" value="<? hecho ( $param{'president_owner'} ? $param{'president_owner'} : $$variable{'Company'}->president_owner() ) ?>" />
-			</li>
-			<li class="required"> 
-				<label for="employees">Number of Employees</label>
-				<select size="1" id="employees" name="employees">
-					<option value="input"> Select </option>
-					<? echo ( ssi::getemployee_numbers( $r, $log, $dbh, $param{'employees'} ? $param{'employees'} : $$variable{'Company'}->employees() ); ) ?>
-				 </select>
-			</li>
-			<li class="required"> 
-				<label for="annual_sales">Annual Sales</label>
-				<select size="1" id="annual_sales" name="annual_sales">
-					<option value=""> Select </option>
-					<? echo ( ssi::getannual_sales( $r, $log, $dbh, $param{'annual_sales'} ? $param{'annual_sales'} : $$variable{'Company'}->annual_sales() ); ) ?>
-				</select>
 			</li>
 			<li class="required"> 
 				<label for="gst_number">

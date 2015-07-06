@@ -78,14 +78,16 @@ function calc_weight_from_sheets(e) {
 			my $key = $stock_id.'-'.$qty_index;
 			$html .= '<span class="'.$$variable{Columns}.'Columns">';
 			$html .= '<span class="quantity">';
-			$html .= input( type=>'float', id=>'qty-'.$key, name=>'qty-'.$key, value=>$$variable{'qty-'.$key}, onkeyup=>'calc(this.form.name);' );
+			$html .= qq`<span id="qty-$key">$$variable{"qty-$key"}</span>`;
+			#$html .= input( type=>'float', id=>'qty-'.$key, name=>'qty-'.$key, value=>$$variable{'qty-'.$key}, onkeyup=>'calc(this.form.name);' );
 			$html .= 'lbs';
 			if ( $Stock->type() ne 'Roll' ) {
-				$html .= ' ' . input( type=>'cardinal', id=>'sheets-'.$key, name=>'sheets-'.$key, value=>$$variable{'sheets-'.$key}, onkeyup=>q`calc_weight_from_sheets(this);calc(this.form.name);` );
-				$html .= 'sheets';
+			$html .= qq`(<span id="sheets-$key">$$variable{"sheets-$key"}</span>`;
+				#$html .= ' ' . input( type=>'cardinal', id=>'sheets-'.$key, name=>'sheets-'.$key, value=>$$variable{'sheets-'.$key}, onkeyup=>q`calc_weight_from_sheets(this);calc(this.form.name);` );
+				$html .= 'sheets)';
 			} # end if
 
-			$html .= '</span>';
+			$html .= '</span><br/>';
 			if ( ! $Stock->supplied() ) {
 				$html .= '<span class="pricing"> @ '.$$variable{Currency}->symbol();
 				$html .= input( type=>'float', id=>"cost-$key", name=>"cost-$key", value=>$$variable{"cost-$key"}, onkeyup=>'calc(this.form.name);' );
@@ -100,16 +102,8 @@ function calc_weight_from_sheets(e) {
 		$html .= "</li>\n";
 	} # end foreach stock
 	$html .= include( '/includes/main/proj/_service_price.html' );
-	if ( sets::isin( $session{user_type}, ['A','E'] ) ) {
-		$html .= '<li>';
-		foreach my $qty_index ( $$variable{'Project'}->quantity_indexes() ) {
-			$html .= sprintf('<span class="%sColumns">', $$variable{Columns} );
-			$html .= button( 'Breakdown'.$qty_index, { onclick=>"show_breakdown($qty_index);", text=>'Breakdown' } );
-			$html .= '</span>';
-		} # end foreach qty_index
-		$html .= '</li>';
-	} # end if
-
+	$html .= include( '/includes/main/proj/_breakdown.html' );
+	
 	$html .= '</ul></fieldset>';
 	return $html;
 ) ?>
@@ -123,9 +117,6 @@ function calc_weight_from_sheets(e) {
 		<input type="hidden" name="ServiceType" value="<?ServiceType?>">
 		<input type="hidden" name="ContinueProject" value="Y" />
 		<input type="hidden" name="Status" />
-		<div id="hdnBreakdown1" style="display: none;"></div>
-		<div id="hdnBreakdown2" style="display: none;"></div>
-		<div id="hdnBreakdown3" style="display: none;"></div>
 	</form>
 </div>
 

@@ -98,13 +98,13 @@ sub neccessary {
 } # end sub neccessary
 
 sub signature_needs {
-	my ( $Project, $specs ) = @_;
+	my ( $Project, $sig_specs ) = @_;
 
-	foreach ( get_uv_colours( $specs, 'SideOne' ) ) {
+	foreach ( get_uv_colours( $sig_specs, 'SideOne' ) ) {
 		return 1 if $_ =~ /UV/;
 	} # end foreach colour
 
-	foreach ( get_uv_colours( $specs, 'SideTwo' ) ) {
+	foreach ( get_uv_colours( $sig_specs, 'SideTwo' ) ) {
 		return 1 if $_ =~ /UV/;
 	} # end foreach colour
 } # end sub signature_needs
@@ -115,6 +115,7 @@ sub calc {
 	my $status = 'calculated';
 
 	my $Project = new openprint::Project( $project_index );
+	my $services = $Project->services();
 
 	@all_equipment = load_equipment();
 	if ( ! @all_equipment ) {
@@ -186,7 +187,12 @@ sub calc {
 					$$specs{alert} = 'The selected equipment can not handle your project.  This may be because the stock is too heavy, or too large.';
 				} else {
 					$$specs{alert} = $results{alert};
-					$$specs{alert} .= 'No suitable equipment could be found for your project.  This may be because the stock is too heavy, or too large.' if ! $results{alert};
+					if ( ! $$specs{alert} ) {
+						$$specs{alert} .= 'No suitable equipment could be found for your project.  This may be because the stock is too heavy, or too large.';
+						if ( ! $$services{Cutting} ) {
+							$$specs{alert} .= '<br/>You do not have cutting in your project.  Without it, we cannot cut the sheets down to fit on our equipment.';
+						} # end if
+					} # end if
 				} # end if
 			} else {
 				if ( $results{Equipment} ) {
@@ -345,10 +351,10 @@ sub signature_calc {
 		return %BestPrice;
 	} # end if
 	$BestPrice{Status} = 'uncalculated';
-	if ( $Project->Type()->name() eq 'Labels' ) {
-		@BestPrice{'Status','alert'} = ('uncalculated','We cannot UVCoat labels at this time.');
-		return %BestPrice;
-	} # end if
+	#if ( $Project->Type()->name() eq 'Labels' ) {
+		#@BestPrice{'Status','alert'} = ('uncalculated','We cannot UVCoat labels at this time.');
+		#return %BestPrice;
+	#} # end if
 
 	my $qty = $$specs{"txtQuantity$qty_index"};
 	if ( $$specs{txtPressSheetComboItems} ) {
@@ -648,6 +654,32 @@ sub summary {
 sub load_equipment {
 	@all_equipment = openprint::Equipment->find( Specifications => {'UVCoating Capable'=>'Y'}, useinestimating=>1, order=>'lower(strName)');
 } # end sub load_equipment
+
+sub has_overrides {
+    my ( $Project, $service_id, $specs, $qty_index ) = @_;
+    $specs = openprint::service::get_specs_ref( $Project, $service_id ) if ! $specs;
+
+    my @v;
+    if ( $qty_index ) {
+        foreach my $s_s_id ( $Project->signatures() ) {
+            my $sig_specs = openprint::service::get_specs_ref( $Project, $s_s_id );
+            my $form = $$sig_specs{SignatureIndex};
+            push @v, map { $$specs{$_} ? $_ : () } (
+                    "chkOverrideEquipment-$form-$qty_index",
+                    "chkOverrideImposition-$form-$qty_index",
+                    "OverrideMakeReadyPrice-$form-$qty_index",
+                    "OverrideBlanketPrice-$form-$qty_index",
+                    "OverrideServicePrice-$form-$qty_index",
+                    "OverrideMaterialPrice-$form-$qty_index",
+                    "OverrideSignaturePrice-$form-$qty_index",
+                    );
+        } # end foreach sig
+    } # end if
+
+    return @v;
+
+} # end sub has_overrides
+
 
 1;
 __END__

@@ -7,15 +7,17 @@ require openprint::EquipmentSpecification;
 require openprint::Fold;
 require openprint::Location;
 require openprint::Equipment_Stock_Setting;
+require openprint::Equipment_Operator;
 require sql;
 
 use Memoize;
 memoize('fits');
 #memoize('Specification');
 
-use vars qw( $debug $log $dbh $table $serial %fields %find_fields %transforms %defaults $cache_field );
+use vars qw( $debug $log $dbh $table $serial %fields %find_fields %transforms %defaults $cache_field $default_sort );
 *log = \$openprint::log;
 *dbh = \$openprint::dbh;
+$default_sort = 'lower(strid)';
 $table = 'tbl_Equipment';
 $serial = 'Equipment_Index_seq';
 $cache_field = 'strid';
@@ -510,5 +512,14 @@ sub Equipment_Shifts {
 sub categories {
 	return map { new openprint::Equipment_Category($_)->name() } ( $_[0]->category_id() ? @{$_[0]->category_id()} : () );
 } # end sub categories
+
+sub Operators {
+	if ( ! $_[0]{Operators} ) {
+		my @user_ids = map { $$_{user_id} } openprint::Equipment_Operator->find( equipment_id=>$_[0]{id} );
+		@{$_[0]{Operators}} = @user_ids ? openprint::User->find( id=>\@user_ids, order=>'lower(firstname),lower(lastname)' ) : ();
+	} # end if
+	return @{$_[0]{Operators}};
+} # end sub Operators
+
 1;
 __END__

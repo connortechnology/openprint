@@ -39,7 +39,6 @@ $dbh = sql::open_sql( $log, ('database'=>$ARGV[0], 'driver'=>'Pg','login'=>$ARGV
 my @tables = sql::execute( undef, undef, q`SELECT table_name FROM information_schema.tables where table_schema='public'`);
 my @sequences = sql::execute( undef, undef, q`SELECT sequence_name FROM information_schema.sequences where sequence_schema='public'`);
 
-
 if ( ! sets::isin( 'database_info', \@tables ) ) {
 	$dbh->do( misc::load_file( $log, q{../openprint/sql/database_info.sql}) );
 	die $dbh->errstr() if $dbh->errstr();
@@ -53,10 +52,12 @@ if ( ! $data ) {
 } 
 
 if ( ! sets::isin( 'configuration', \@tables ) ) {
+	$log->debug("Adding Configuration table");
 	$dbh->do( misc::load_file( $log, q{../openprint/sql/Configuration.sql}) );
 }
 
 if ( ! sets::isin( 'object_types', \@tables ) ) {
+	$log->debug("Adding object_types table");
     $dbh->do( misc::load_file( $log, '../openprint/sql/Object_Types.sql' ) );
     die $dbh->errstr() if $dbh->errstr();
 	$dbh->do(q`INSERT INTO object_types (name,human) values ('openprint::Comment', 'comment')`);
@@ -155,8 +156,8 @@ if ( ! sets::isin( 'companies', \@tables ) ) {
 		$dbh->do('ALTER TABLE companies ADD asset_id INTEGER');
 	} # end if
 	foreach my $field ( 'name', 'address1', 'address2', 'city','country','state', 'postalcode', 'gst_number', 'pst_number',
-			'accountnumber','phone','extension','fax','url','greeting','business_type','business_name','business_form','president_owner',
-			'bank_name','bank_branch','bank_account','bank_manager','bank_phone','bank_fax','bank_email','notes', 'employees','annual_sales' ) {
+			'accountnumber','phone','extension','fax','greeting','business_type','business_name','business_form','president_owner',
+			'bank_name','bank_branch','bank_account','bank_manager','bank_phone','bank_fax','bank_email','notes' ) {
 		if ( ! $openprint::Company::fields{$field} ) {
 			die "Want to add $field to Company but it's not in fields";
 		} # end if
@@ -207,6 +208,16 @@ if ( ! sets::isin( 'companies', \@tables ) ) {
 	} # end if
 	if ( ! exists $$data{$openprint::Company::fields{discount}} ) {
 		$dbh->do('ALTER TABLE companies ADD '.$openprint::Company::fields{discount}.q` numeric(16,4) DEFAULT '0.0000' NOT NULL`);
+		die $dbh->errstr() if $dbh->errstr();
+	} # end if
+	if ( ! exists $$data{$openprint::Company::fields{last_project_id}} ) {
+		$dbh->do('ALTER TABLE companies ADD last_project_id INTEGER');
+		$dbh->do('ALTER TABLE companies ADD FOREIGN KEY (last_project_id) REFERENCES Projects (id)');
+		die $dbh->errstr() if $dbh->errstr();
+	} # end if
+	if ( ! exists $$data{$openprint::Company::fields{last_order_id}} ) {
+		$dbh->do('ALTER TABLE companies ADD last_order_id INTEGER');
+		$dbh->do('ALTER TABLE companies ADD FOREIGN KEY (last_order_id) REFERENCES Orders (id)');
 		die $dbh->errstr() if $dbh->errstr();
 	} # end if
 
@@ -379,6 +390,10 @@ if ( ! sets::isin('articles',\@tables ) ) {
 	$dbh->do('ALTER TABLE articles ADD anonymous BOOLEAN NOT NULL default false');
 	} # end if
 	$dbh->do('ALTER TABLE articles ALTER company_id DROP NOT NULL');
+	if ( ! exists $$data{commenting} ) {
+	$dbh->do('ALTER TABLE articles ADD commenting BOOLEAN NOT NULL default false');
+	print "Adding commenting to articles\n";
+	} # end if
 } # end if
 if ( sets::isin( 'article_assets', \@tables ) ) {
 	my $data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='article_assets'", 'column_name');
@@ -698,7 +713,8 @@ if ( ! sets::isin( 'orders', \@tables ) ) {
 			}
 		}
 	} # end foreach
-	if ( ! exists $$data{invoice_id} ) {
+	if ( 0 and ! exists $$data{invoice_id} ) {
+#Deprecated
 		$dbh->do('ALTER TABLE orders ADD invoice_id INTEGER');
 		$dbh->do('ALTER TABLE orders ADD FOREIGN KEY (invoice_id) REFERENCES Invoices (id)');
 		if ( exists $$data{oinvoice} ) {
@@ -957,6 +973,10 @@ if ( ! sets::isin( 'uploads', \@tables ) ) {
 	if ( ! exists $$data{'type'} ) {
 		$dbh->do(q`ALTER TABLE uploads add type text`);
 	} # end if
+	if ( ! exists $$data{complete} ) {
+		$log->debug("Add complete BOOLEAN to uploads");
+		$dbh->do(q`ALTER TABLE uploads add complete BOOLEAN`);
+	} # end if
 }
 if ( ! sets::isin( 'pressactivities', \@tables ) ) {
 	$dbh->do( misc::load_file( $log, '../openprint/sql/PressActivities.sql' ) ) or die;
@@ -1146,6 +1166,11 @@ if ( ! sets::isin( 'tbl_equipment_specifications', \@tables ) ) {
 	} # end if
 } # end if
 
+if ( ! sets::isin( 'equipment_operators', \@tables ) ) {
+	print "Adding Equipment Operators\n";
+	$dbh->do( misc::load_file( $log, '../openprint/sql/Equipment_Operators.sql' ) ) or die $dbh->errstr();
+	die $dbh->errstr() if $dbh->errstr();
+} # end if
 	
 if ( ! sets::isin( 'stockbrands', \@tables ) ) {
 	$dbh->do(misc::load_file( $log, '../openprint/sql/StockBrands.sql') );
@@ -1686,23 +1711,20 @@ foreach my $E ( openprint::Equipment->find('category any'=>'Printing') ) {
 	} # end foreach
 } # end foreach
 
-if ( sets::isin( 'skid_verifications', \@tables ) ) {
-	my $data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM skid_verifications LIMIT 1', {} );
-	if ( ! $data ) {
-		my $ac = sql::start_transaction( $dbh );
-		$dbh->do('DROP TABLE IF EXISTS skid_verifications');
-		$dbh->do('
-				CREATE TABLE skid_verifications (
-					id SERIAL NOT NULL,
-					skid_id INTEGER NOT NULL, FOREIGN KEY (skid_id) REFERENCES skids (id),
-					code    TEXT,
-					created_on  TIMESTAMP WITH TIME ZONE NOT NULL default NOW(),
-					PRIMARY KEY (id)
-					);' );
-		$dbh->do('CREATE INDEX skid_verifications_skid_id_idx ON skid_verifications (skid_id);');
-		$dbh->do('CREATE INDEX skid_verifications_code_idx ON skid_verifications (code);');
-		sql::end_transaction( $dbh, $ac );
-	} # end if
+if ( ! sets::isin( 'skid_verifications', \@tables ) ) {
+	my $ac = sql::start_transaction( $dbh );
+	$dbh->do('DROP TABLE IF EXISTS skid_verifications');
+	$dbh->do('
+			CREATE TABLE skid_verifications (
+				id SERIAL NOT NULL,
+				skid_id INTEGER NOT NULL, FOREIGN KEY (skid_id) REFERENCES skids (id),
+				code    TEXT,
+				created_on  TIMESTAMP WITH TIME ZONE NOT NULL default NOW(),
+				PRIMARY KEY (id)
+				);' );
+	$dbh->do('CREATE INDEX skid_verifications_skid_id_idx ON skid_verifications (skid_id);');
+	$dbh->do('CREATE INDEX skid_verifications_code_idx ON skid_verifications (code);');
+	sql::end_transaction( $dbh, $ac );
 } # end if
 
 if ( ! sets::isin( 'purchaseorders', \@tables ) ) {
@@ -3086,11 +3108,21 @@ if ( ! sets::isin( 'hosts', \@tables ) ) {
 
 if ( ! sets::isin( 'host_interfaces', \@tables ) ) {
 	$dbh->do( misc::load_file( $log, q{../openprint/sql/Host_Interfaces.sql}) );
-	$dbh->do( 'INSERT INTO host_interfaces (host_id, mac,ip) SELECT id,unnest(mac),ip FROM hosts');
-	$dbh->do('insert into host_interfaces (host_id, mac,ip) SELECT id,NULL,ip from hosts where mac IS NULL');
+	$dbh->do('INSERT INTO host_interfaces (host_id, mac,ip, dhcp) SELECT id,unnest(mac),ip, dhcp FROM hosts');
+	$dbh->do('INSERT INTO host_interfaces (host_id, mac,ip, dhcp) SELECT id,NULL,ip, dhcp from hosts where mac IS NULL');
 	$dbh->do('ALTER TABLE Hosts drop mac');
 	$dbh->do('ALTER TABLE Hosts drop ip');
-
+	$dbh->do('ALTER TABLE Hosts drop dhcp');
+} else {
+	my $data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='host_interfaces'", 'column_name');
+	if ( ! exists $$data{id} ) {
+		$dbh->do('ALTER TABLE host_interfaces ADD id serial');
+		$dbh->do('ALTER TABLE host_interfaces ADD PRIMARY KEY (id)');
+	}
+	my $data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='hosts'", 'column_name');
+	if ( exists $$data{'dhcp'} ) {
+		$dbh->do('ALTER TABLE hosts DROP dhcp');
+	} # end if
 }
 if ( ! sets::isin( 'host_info', \@tables ) ) {
 	$dbh->do( misc::load_file( $log, q{../openprint/sql/Host_Info.sql}) );
@@ -3173,6 +3205,11 @@ foreach my $S ( openprint::Service->find('name'=>'Aqueous '.$aq) ) {
 	} # end if
 } # end foreach
 }
+if ( ! sets::isin( 'mars', \@tables ) ) {
+	$dbh->do( misc::load_file( $log, q{../openprint/sql/mars.sql}) );
+	die $dbh->errstr() if $dbh->errstr();
+}
+
 if ( ! sets::isin( 'car', \@tables ) ) {
 	$dbh->do( misc::load_file( $log, q{../openprint/sql/CAR.sql}) );
 	die $dbh->errstr() if $dbh->errstr();

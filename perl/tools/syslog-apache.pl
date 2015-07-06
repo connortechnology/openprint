@@ -199,6 +199,10 @@ print ( $buf);
 		$log->debug( "No ip for $source" ) if $config{debug};
 		next;
 	} # end if
+	if ( $ip eq '127.0.0.1' ) {
+		$log->debug( "Not localhost for $source" ) if $config{debug};
+		next;
+	} # end if
 	if ( $server_response == 404 ) {
 
 		if ( ! $host_counts{$ip} ) {

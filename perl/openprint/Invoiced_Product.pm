@@ -51,7 +51,7 @@ sub price {
 	} # end if
 	if ( ( ! defined $$self{price} ) and $$self{product_id} ) {
 		my %Price = $self->Product()->get_price( $$self{quantity}, { pricelist_id=>$self->Invoice()->Pricelist()->id() } );
-$openprint::log->debug("Got price: %Price: " . join(',', map { $_.'=>'.$Price{$_} } keys %Price ) );
+$openprint::log->debug("Got price: %Price: " . join(',', map { $_.'=>'.$Price{$_} } keys %Price ) ) if $debug;
 		$$self{price} = $Price{Price};
 	} # end if
 	return $$self{price};

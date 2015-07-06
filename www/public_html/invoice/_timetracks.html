@@ -10,7 +10,7 @@
 			<th class="Interval">Interval</th>
 			<th class="Rate">Rate</th>	
 			<th class="Price">Price</th>
-			<th class="buttons">&nbsp;</th>
+			<th class="buttons"><?echo(button('ReloadTimetracks',{onclick=>'reload_timetracks();', text=>'R', title=>'Refresh' });)?></th>
 		</tr>
 	<? echo (
 		my $html = '';
@@ -32,8 +32,8 @@
     <td class="Price">%11$s</td>
     <td class="buttons">%12$s</td>
 </tr>
-`, $Timetrack->id(), $$variable{Invoice}->id(), ( $Timetrack->user_id() ? ssi::htmlize( $Timetrack->Employee()->name() ) : '&nbsp;' ),
-ssi::htmlize( $Timetrack->Service()->name() ),
+`, $Timetrack->id(), $$variable{Invoice}->id(), ( $Timetrack->user_id() ? htmlize( $Timetrack->Employee()->name() ) : '&nbsp;' ),
+htmlize( $Timetrack->Service()->name() ),
 $Timetrack->po(),
 Date::Format::time2str( $Timetrack->time_associated() ? $config{DateTimeFormat} : '%Y-%m-%d', Date::Parse::str2time( $Timetrack->starting() ) ),
 Date::Format::time2str( $Timetrack->time_associated() ? $config{DateTimeFormat} : '%Y-%m-%d', Date::Parse::str2time( $Timetrack->ending() ) ),
