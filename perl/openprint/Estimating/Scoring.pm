@@ -182,8 +182,8 @@ sub calc {
     } # end foreach
 
 	foreach my $qty_index ( $Project->quantity_indexes() ) {
-		$$specs{'txtPrice'.$qty_index} =~ s/[^\d\.]//g;
-		$$specs{'Markup'.$qty_index} =~ s/[^\d\.\-]//g;
+		$$specs{'txtPrice'.$qty_index} =~ s/[^\d\.]//g if $$specs{'txtPrice'.$qty_index};
+		$$specs{'Markup'.$qty_index} =~ s/[^\d\.\-]//g if $$specs{'Markup'.$qty_index};
 		$$specs{"txtQuantity$qty_index"} =~ s/[^\d\.\-]//g if $$specs{"txtQuantity$qty_index"};
 		$$specs{"txtQuantity$qty_index"} = $Project->quantity($qty_index) if ! $$specs{"txtQuantity$qty_index"};
 		if ( ! ( $$specs{"txtQuantity$qty_index"} > 0 ) ) {
@@ -488,7 +488,6 @@ sub signature_calc($$$$$$) {
 			} # eneid
 
 			foreach my $Fold ( @Folds ) {
-
 				# $qty / imposition gives us the # of sheets, so * qty gives us the # of impressions
 				$$Fold{impressions} = ( $qty / $SignatureImposition->imposition() ) * ( $Fold->quantity() ) if ! $$Fold{impressions};
 				#$$Fold{impressions} /= $Fold->imposition();
@@ -496,7 +495,6 @@ sub signature_calc($$$$$$) {
                 $totalPrice += $$Price{setup} + $$Price{Vertical}{Total} + $$Price{Horizontal}{Total} + $$Price{Service}{Total};
                 $Results{Breakdown} .= $$Price{Breakdown};
 			} # end foreach my $Fold
-#$Results{Imposition} = $Fold;
 			$Results{Breakdown} .= sprintf('Total: $%.2f<br/>', $totalPrice );
 
 			if ( $totalPrice < $Results{Price} or ! exists $Results{Price} ) {
@@ -539,6 +537,9 @@ sub signature_calc($$$$$$) {
 						} # end for
 					} # end foreach set
 				} # end if
+			} else {
+				$openprint::log->debug("Unknown equipment type $$Equipment{name}");
+				@My_All_Impositions = @All_Impositions;
 			} # end if equipment type
 			$openprint::log->debug("Impositions sets before filtering: " . @My_All_Impositions );
 
