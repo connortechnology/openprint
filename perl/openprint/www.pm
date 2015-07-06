@@ -1,7 +1,7 @@
 use strict;
 package openprint::www;
 
-use constant Debug => 0;
+use constant Debug => 1;
 
 #use Benchmark;
 #use diagnostics;
@@ -239,19 +239,23 @@ $log->debug("PageContent is $variable{PageContent}");
 			} # end while
 			} # end if
 		} # end if _
-		#$log->debug( "After finding template: ($page) Elapsed time: " . sprintf('%.4f', tv_interval([$starttime])*1000).' usecs' );
+		$log->debug( "After finding template: ($page) Elapsed time: " . sprintf('%.4f', tv_interval([$starttime])*1000).' usecs' ) if Debug;
 		local $|=1;
-		if ( $template ) {
-			#$log->debug("parsing template! $template");
-			$r->print( ssi::variable_substitution( \$template, \%variable ) );
-		} else {
+		if ( ! $r->connection()->aborted() ) {
+			if ( $template ) {
+#$log->debug("parsing template! $template");
+				$r->print( ssi::variable_substitution( \$template, \%variable ) );
+			} else {
 
-			#$log->warn("No template!" . $r->content_type());
-			$variable{PageContent} = ssi::variable_substitution( \$variable{'PageContent'}, \%variable ) if $variable{'PageContent'} ne '';
-			$log->warn($variable{PageContent}) if Debug;
-			#$log->debug( "Before printing: ($page) Elapsed time: " . sprintf('%.4f', tv_interval([$starttime])*1000).' usecs' . length( $variable{PageContent} ) );
-			$r->print( $variable{PageContent} );
-	#$log->debug( "After printing: ($page) Elapsed time: " . sprintf('%.4f', tv_interval([$starttime])*1000).' usecs' );
+#$log->warn("No template!" . $r->content_type());
+				$variable{PageContent} = ssi::variable_substitution( \$variable{'PageContent'}, \%variable ) if $variable{'PageContent'} ne '';
+				$log->warn($variable{PageContent}) if Debug;
+$log->debug( "Before printing: ($page) Elapsed time: " . sprintf('%.4f', tv_interval([$starttime])*1000).' usecs' . length( $variable{PageContent} ) ) if Debug;
+				$r->print( $variable{PageContent} );
+$log->debug( "After printing: ($page) Elapsed time: " . sprintf('%.4f', tv_interval([$starttime])*1000).' usecs' ) if Debug;
+			} # end if
+		} else {
+			$log->debug("Aborted");
 		} # end if
 	} # end if
 
@@ -382,6 +386,7 @@ $log->error("Unable to load equipment.	No PPF for you for signature $$PPF{'signa
 				my $module = join('_',@path);
 				require "openprint/$module.pm";
 				if ( my $function = ('openprint::'.$module)->can($proc) ) {
+$log->debug("Running openprint::$module->$proc") if Debug;
 					$function->($r, $log, $dbh, \%variable );
 				} else {
 					$log->error( "Eval error of require $module :: $proc, Reason: " );
@@ -392,11 +397,12 @@ $log->error("Unable to load equipment.	No PPF for you for signature $$PPF{'signa
 		my ( $proc ) = $filename =~ /(.*)\.\w*$/;
 		if ( $proc ) {
 			my $module = join('_',@path);
+			require "openprint/$module.pm";
 			$log->debug("Calling $module :: $proc");
 			if ( my $function = ('openprint::'.$module)->can($proc) ) {
 				$function->($r, $log, $dbh, \%variable );
 			} else {
-				$log->error( "Eval error of require $module :: $proc, Reason: " );
+				$log->error( "Eval error: $module cant $proc, Reason: " );
 			}
 		} # end if
 	} elsif ( $first eq 'main' ) { # main
@@ -452,7 +458,7 @@ $log->debug("Service: " . $Service->to_string() );
 						$status = openprint::print::publication_pages( $r, $log, $dbh, \%variable );
 					} elsif ( $filename eq 'ScratchPads.html' ) {
 						$status = openprint::print::publication_pages( $r, $log, $dbh, \%variable );
-					} elsif ( $filename =~ /^(_.*)\.html$/ ) {
+					} elsif ( $filename =~ /^(_.*)\.(html|json)$/ ) {
 						my $proc = $1;
 						my $module = join('_',@path);
 						require 'openprint/'.$module.'.pm';
@@ -502,7 +508,7 @@ $log->debug("Service: " . $Service->to_string() );
 						if ( my $function = ('openprint::Estimating::'.$module)->can('display') ) {
 							$function->($log, $dbh, \%variable, $project_index, $service_index );
 						} else {
-							$log->error( "Eval error of require $module :: Reason: $?" );
+							$log->error( "Eval error of require(bind) openprint::Estimating::$module display() :: Reason: $?" );
 						}
 					} # end if
 				} elsif ($third eq 'spec') {
@@ -532,16 +538,26 @@ $log->debug("Service: " . $Service->to_string() );
 						openprint::Estimating::UPS::display( $log, $dbh, \%variable, $project_index, $service_index );
 					} # end if
 				} # end if main:proj:$third
-			} # end if defined third
+			} else {
+				if ( -e $ENV{'DOCUMENT_ROOT'}.$uri ) {
+					my ( $proc ) = $filename =~ /^(.*)\.(html|json)$/;
+					if ( $proc ) {
+						my $module = join('_', ($first, $second));
+						require "openprint/$module.pm"; 
+						if ( my $function = ('openprint::'.$module)->can($proc) ) {
+	$log->debug("Running openprint::$module->$proc") if Debug;
+							$function->();
+						} else {
+							$log->error( "No function def for $module :: $proc!" );
+						}
+					} # end if
+				} # end if -e $ENV{'DOCUMENT_ROOT'}.$uri 
 
-			openprint::print_project::create_edit_display( $r, $log, $dbh, \%variable )		if $filename eq 'create_edit.html';
-			openprint::main_project::history()			if $filename eq 'history.html';
-			openprint::main_project::_history()			if $filename eq '_history.html';
-			openprint::print::view_services( $r, $log, $dbh, \%variable )					if $filename eq 'view.html';
-			openprint::print_project::view_pdfs( $r, $log, $dbh, \%variable )				if $filename eq 'proj_view_pdf.html';
-			openprint::print_project::summary( $r, $log, $dbh, \%variable )					if $filename eq 'summary.html';
-			openprint::print_project::summary( $r, $log, $dbh, \%variable )					if $filename eq 'docket_sheet.html';
-			openprint::print_project::display_reuse_project( $r, $log, $dbh, \%variable ) 	if $filename eq 'reuse.html';
+				openprint::print::view_services( $r, $log, $dbh, \%variable )					if $filename eq 'view.html';
+				openprint::print_project::view_pdfs( $r, $log, $dbh, \%variable )				if $filename eq 'proj_view_pdf.html';
+				openprint::print_project::summary( $r, $log, $dbh, \%variable )					if $filename eq 'summary.html';
+				openprint::print_project::summary( $r, $log, $dbh, \%variable )					if $filename eq 'docket_sheet.html';
+			} # end if defined third
 		} elsif ( -e $ENV{'DOCUMENT_ROOT'}.$uri ) {
 			my ( $proc ) = $filename =~ /^(.*)\.(html|json|xml|rss)$/;
 			if ( $proc ) {

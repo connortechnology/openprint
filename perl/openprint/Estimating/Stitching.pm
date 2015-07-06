@@ -18,7 +18,7 @@ package openprint::Estimating::Stitching;
 use strict;
 #use warnings;
 
-use constant DEBUG => 1;
+use constant DEBUG => 0;
 
 require openprint::Equipment;
 require openprint::service;
@@ -249,20 +249,20 @@ $I->display('In Stitching:') if DEBUG;
 # This doesn't really make sense.  If we are doing printing estimation, then the folding probably isn't going to match.  
 		} else {
 			foreach my $FI ( @{$$I{Folds}} ) {
-						$FI->display() if DEBUG;
+				$FI->display() if DEBUG;
 				my $Fold = $FI->Fold();
 $openprint::log->debug("Fold pq($$FI{page_quantity}) pages($$FI{pages}) ($$Fold{name}) Pockets: $pockets") if DEBUG;
 				if ( $FI->imposition() < $imposition ) {
 					$results{Breakdown} .= "Setting stitching imposition to $$FI{imposition} out because Folding imposition is $$FI{imposition}out<br/>";
 					$imposition = $FI->imposition();
 				}
-if ( ! $$I{Folder} ) {
-				$$I{Folder} = $Fold->Equipment();
-#$openprint::log->debug("Setting folder to " . $$I{Folder}->strid() );
-#} else {
-				#$openprint::log->debug('Folder is ' . $$I{Folder}->strid() );
-}
-#$openprint::log->debug("Adding " . $Fold->pages() . 'x'.$Fold->quantity() );
+				if ( ! $$I{Folder} ) {
+					$$I{Folder} = $Fold->Equipment();
+					#$openprint::log->debug("Setting folder to " . $$I{Folder}->strid() );
+					#} else {
+					#$openprint::log->debug('Folder is ' . $$I{Folder}->strid() );
+				}
+				#$openprint::log->debug("Adding " . $Fold->pages() . 'x'.$Fold->quantity() );
 				$$specs{'txtSignatureQty'.$Fold->pages().'Page-'.$qty_index} += $FI->page_quantity();
 				$pockets += $FI->page_quantity();
 			} # end foreach Fold
@@ -341,9 +341,9 @@ if ( ! $$I{Folder} ) {
 				$results{alert} .= 'Your selected equipment was not found. Please select another.<br/>';
 			} # end if
 		} # end if
-$openprint::log->debug("Using " . $equipment[0]->name() . " as overriden stitcher" );
+#$openprint::log->debug("Using " . $equipment[0]->name() . " as overriden stitcher" );
 	} else {
-$openprint::log->debug("Not Using overriden stitcher" . $$specs{"chkOverrideEquipment$qty_index"} );
+#$openprint::log->debug("Not Using overriden stitcher" . $$specs{"chkOverrideEquipment$qty_index"} );
 		if ( $$calc_hash{'Stitching::signature_calc::equipment'} ) {
 #$results{Breakdown} .= 'Using cached equipment';
 			@equipment = @{$$calc_hash{'Stitching::signature_calc::equipment'}};
@@ -423,28 +423,37 @@ EQUIPMENT:foreach my $Equipment ( @equipment ) {
 				$results{Breakdown} .= sprintf('Face Trim too width. %s, Maximum: %s<br/>', $$specs{Width}, $max_face_trim );
 				next;
 			} # end if
-			if ( $Equipment->specification('Stitching Capable') eq 'When Digital' and $Press->specification('Printing Type') ne 'Digital' ) {
-				$results{Breakdown} .= sprintf('Not printed digital.<br/>' );
+
+			my $capable = $Equipment->specification('Stitching Capable');
+
+			if ( $capable eq 'When Digital' and $Press->specification('Printing Type') ne 'Digital' ) {
+				$results{Breakdown} .= 'Not printed digital.<br/>';
 				next;
 			} # end if
-			if ( $$I{Folder} and ( $_ = $$I{Folder}->specification('Folding Capable') ) and ( $_ eq 'When Stitching' ) ) {
-				if ( $$I{Folder}->id() != $Equipment->id() ) {
+			if ( $$I{Folder} and ( $$I{Folder}->id() != $Equipment->id() ) ) {
+				if ( ( $_ = $$I{Folder}->specification('Folding Capable') ) and ( $_ eq 'When Stitching' ) ) {
 					$results{Breakdown} .= $Equipment->strid() . ' is not the folding equipment<br/>';
 					next;
 				} 
+				if ( $capable eq 'When Folding' ) {
+					$results{Breakdown} .= 'Not being folded on ' . $$I{Folder}->name() . '<br/>';
+					next;
+				} # end if
 			} # end if
 			$$specs{"txtPockets$qty_index"} = $pockets;
 			my $price = get_price( $Project, $ServiceType, $Equipment, $specs, $plusCover, $qty_index );
 			$$price{ComparisonPrice} = $$price{Price};
 			if ( $folding_specs and ( defined $$folding_specs{"Price-$form-$qty_index"} ) ) {
-				$$price{ComparisonPrice} = $$price{Price} + $$folding_specs{"Price-$form-$qty_index"};
+				$$price{ComparisonPrice} += $$folding_specs{"Price-$form-$qty_index"};
 			} # end if
 #$results{Breakdown} .= $Equipment->strid() . ' ' . $$price{Price} . ' ' . $$folding_specs{"Price-$form-$qty_index"};
 			if ( ( ! $bestPrice ) or $$price{ComparisonPrice} < $$bestPrice{ComparisonPrice} ) {
 				$bestEquipment = $Equipment;
 				$bestPrice = $price;
 			} # end if
-		  } # end foreach Equipment
+			$results{Breakdown} .= $$price{Price} . ' comparison: ' . $$price{ComparisonPrice} . '<br/>' if DEBUG;
+ 		  } # end foreach Equipment
+
 		  if ( $imposition > 1 and ! $bestPrice ) {
 			  if ( ( defined $$specs{'OverrideImposition'.$qty_index} ) and ( $$specs{'OverrideImposition'.$qty_index} eq 'Y' ) ) {
 				  last;

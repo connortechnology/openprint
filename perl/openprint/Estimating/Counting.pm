@@ -112,5 +112,8 @@ sub summary {
 sub save {
 } # end sub save
 
+sub display {
+} # end sub display
+
 1;
 __END__

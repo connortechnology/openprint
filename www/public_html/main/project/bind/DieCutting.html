@@ -82,30 +82,28 @@ function Imposition_onchange( element, signature, qty_index, index ) {
         calc(element.form.name);
 } // end function
 </script>
-<div class="Service">
+<div class="Service <?ServiceTypeID?>">
 	<form id="f1" name="f1" method="post" action="/main/project/view.html">
 		<fieldset><legend>Die Cutting</legend>
+			<div class="Signatures">
 			<? echo ( 
 				my $html;
 
 				my $fragment = slurp_content( '/main/project/bind/_imposition.html' );
 
-				foreach my $sig_id ( $$variable{'Project'}->signatures({sort=>1}) ) {
-					$$variable{'SignatureServiceIndex'} = $sig_id;
-					
+				foreach my $sig_id ( $$variable{Project}->signatures({sort=>1}) ) {
+					$$variable{SignatureServiceIndex} = $sig_id;
 
 					my $sig_specs = openprint::service::get_specs_ref( $$variable{Project}, $sig_id );
 					@$variable{'SignatureIndex','Reference'} = @$sig_specs{'SignatureIndex','txtServiceDescription'};
 					my $form = $$variable{form} = $$sig_specs{SignatureIndex};
-					$html .= '<fieldset>';
-					if ( $$sig_specs{txtServiceDescription} ) {
-						$html .= '<legend>'.$$sig_specs{txtServiceDescription}.'</legend><p>'. openprint::service::summary( $$variable{ProjectIndex}, $sig_id ) . '</p>';
-					} # end if
+					$html .= '<fieldset class="Signature">';
+					$html .= '<legend>Form '. $form . ' '.$$sig_specs{txtServiceDescription}.'</legend><p>'. openprint::service::summary( $$variable{ProjectIndex}, $sig_id ) . '</p>';
 					$html .= '<ul>
 						<li>
 							<label>Die Cutting Needed</label>';
 
-					$html .= radio( 'Needed-'.$form, [ 'Y', 'Yes', 'N', 'No' ], $$variable{'Needed-'.$form}, { onchange=>qq`\$('DieCutting-$form').show();calc(this.form.name);` } );
+					$html .= radio( 'Needed-'.$form, [ 'Y', 'Yes', 'N', 'No' ], $$variable{'Needed-'.$form}, { onclick=>qq`if(get_rdb_value(f1.elements['Needed-$form']) == 'Y' ) { \$('DieCutting-$form').show();}else{\$('DieCutting-$form').hide();};calc(this.form.name);` } );
 					$html .= qq`</li>
 				</ul>
 				<div id="DieCutting-$form" `. ( $$variable{'Needed-'.$form} ne 'Y' ? 'style="display:none;"' : '' ). '><ul>';
@@ -126,7 +124,7 @@ if ( 1 ) {
 }
                         $$variable{qty_index} = $qty_index;
 
-                        $html .= '<table><tr><th class="Qty">Qty</th><th class="Imp">Imposition</th></tr>';
+                        $html .= '<table class="Impositions"><tr><th class="Qty">Qty</th><th class="Imp">Columns x Rows = Imposition</th></tr>';
                         foreach my $index ( 1 .. 4 ) {
                             $$variable{index} = $index;
                             $html .= variable_substitution( \$fragment, $variable );
@@ -145,14 +143,15 @@ if ( 1 ) {
 			} # end foreach sig_id
 			return $html;
 			) ?>
+			</div><!--Signatures-->
 		<ul>
 <li id="DiePrice">
 	<label>Die Price (<?CurrencySymbol?>)</label>
 <? echo (
 	my $html;
-	foreach my $qty_index ( $$variable{'Project'}->quantity_indexes() ) {
-		$html .= qq`<span class="$$variable{'Columns'}Columns">`;
-		if ( sets::isin( $session{'user_type'}, ['A','E'] ) ) {
+	foreach my $qty_index ( $$variable{Project}->quantity_indexes() ) {
+		$html .= qq`<span class="$$variable{Columns}Columns">`;
+		if ( sets::isin( $session{user_type}, ['A','E'] ) ) {
 			$html .= input( type=>'float', name=>'DiePrice'.$qty_index, value=>$$variable{'DiePrice'.$qty_index}, onkeyup=>'calc(this.form.name);' );
 			$html .= write_override( 'OverrideDiePrice'.$qty_index, $$variable{'OverrideDiePrice'.$qty_index}, '', 'calc(this.form.name);' );
 		} else {
@@ -163,51 +162,19 @@ if ( 1 ) {
 	return $html;
 ) ?>
 </li>
-<li id="StrippingPrice">
-	<label>Stripping Price (<?CurrencySymbol?>)</label>
-<? echo (
-	my $html;
-	foreach my $qty_index ( $$variable{'Project'}->quantity_indexes() ) {
-		$html .= qq`<span class="$$variable{'Columns'}Columns">`;
-		if ( sets::isin( $session{'user_type'}, ['A','E'] ) ) {
-			$html .= input( type=>'float', name=>'StrippingPrice'.$qty_index, value=>$$variable{'StrippingPrice'.$qty_index}, onkeyup=>'calc(this.form.name);' );
-			$html .= write_override( 'OverrideStrippingPrice'.$qty_index, $$variable{'OverrideStrippingPrice'.$qty_index}, '', 'calc(this.form.name);' );
-		} else {
-			$html .= $$variable{'StrippingPrice'.$qty_index};
-		} # end if
-		$html .= '</span>';
-	} # end foreach
-	return $html;
-) ?>
-</li>
-			<? echo ( include('/includes/main/proj/_quantities.html'); ) ?>
-			<? echo ( include('/includes/main/proj/_unit_price.html'); ) ?>
-			<? echo ( include('/includes/main/proj/_service_price.html'); ) ?>
-<? if ( sets::isin( $session{'user_type'}, ['A','E'] ) ) ?>
-<li><label>&nbsp;</label>
-	<? eval ( $$variable{'QTYIndex'} = 1 ) ?>
-	<? while ( $$variable{'QTYIndex'} <= 3 ) ?>
-	<? if ( $$variable{'Project'}->{'quantity'.$$variable{'QTYIndex'}} ) ?>
-	<span class="<?Columns?>Columns">
-<? echo ( button( 'Breakdown'.$$variable{'QTYIndex'}, { onclick=>"show_breakdown('$$variable{'QTYIndex'}');", href=>'', text=>'Breakdown' } ); ) ?>
-    </span>
-	<? endif ( $$variable{'Project'}->{'quantity'.$$variable{'QTYIndex'}} ) ?>
-	<? eval ( $$variable{'QTYIndex'} += 1 ) ?>
-	<? endwhile ( $$variable{'QTYIndex'} <= 3 ) ?>
-</li>
-<? endif ( sets::isin( $session{'user_type'}, ['A','E'] ) ) ?>
+			<?include('/includes/main/proj/_quantities.html') ?>
+			<?include('/includes/main/proj/_unit_price.html') ?>
+			<?include('/includes/main/proj/_service_price.html') ?>
+			<?include('/includes/main/proj/_breakdown.html') ?>
 			</ul>
 		</fieldset>
 		<hr/>
-        <? echo ( include('/includes/main/proj/add_to_project.html'); ) ?>
+        <?include('/includes/main/proj/add_to_project.html')?>
         <input type="hidden" name="btnFunction" value="Save Service"/>
         <input type="hidden" name="ProjectIndex" value="<?ProjectIndex?>" />
         <input type="hidden" name="ServiceIndex" value="<?ServiceIndex?>" />
         <input type="hidden" name="ContinueProject" value="Y" />
         <input type="hidden" name="ServiceType" value="<?ServiceType?>" />
-		<div id="hdnBreakdown1" style="display: none;"></div>
-		<div id="hdnBreakdown2" style="display: none;"></div>
-		<div id="hdnBreakdown3" style="display: none;"></div>
 		<input type="hidden" name="Status" value="<?Status?>" />
 	</form>
 </div>

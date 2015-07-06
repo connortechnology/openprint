@@ -157,7 +157,7 @@ if ( ! sets::isin( 'companies', \@tables ) ) {
 	} # end if
 	foreach my $field ( 'name', 'address1', 'address2', 'city','country','state', 'postalcode', 'gst_number', 'pst_number',
 			'accountnumber','phone','extension','fax','greeting','business_type','business_name','business_form','president_owner',
-			'bank_name','bank_branch','bank_account','bank_manager','bank_phone','bank_fax','bank_email','notes', 'employees','annual_sales' ) {
+			'bank_name','bank_branch','bank_account','bank_manager','bank_phone','bank_fax','bank_email','notes' ) {
 		if ( ! $openprint::Company::fields{$field} ) {
 			die "Want to add $field to Company but it's not in fields";
 		} # end if
@@ -208,6 +208,16 @@ if ( ! sets::isin( 'companies', \@tables ) ) {
 	} # end if
 	if ( ! exists $$data{$openprint::Company::fields{discount}} ) {
 		$dbh->do('ALTER TABLE companies ADD '.$openprint::Company::fields{discount}.q` numeric(16,4) DEFAULT '0.0000' NOT NULL`);
+		die $dbh->errstr() if $dbh->errstr();
+	} # end if
+	if ( ! exists $$data{$openprint::Company::fields{last_project_id}} ) {
+		$dbh->do('ALTER TABLE companies ADD last_project_id INTEGER');
+		$dbh->do('ALTER TABLE companies ADD FOREIGN KEY (last_project_id) REFERENCES Projects (id)');
+		die $dbh->errstr() if $dbh->errstr();
+	} # end if
+	if ( ! exists $$data{$openprint::Company::fields{last_order_id}} ) {
+		$dbh->do('ALTER TABLE companies ADD last_order_id INTEGER');
+		$dbh->do('ALTER TABLE companies ADD FOREIGN KEY (last_order_id) REFERENCES Orders (id)');
 		die $dbh->errstr() if $dbh->errstr();
 	} # end if
 

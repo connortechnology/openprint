@@ -190,6 +190,7 @@ sub copy {
 	$$New{id} = '';
 	$$New{Prices} = [ $_[0]->Prices() ];
 	$$New{recommendations} = [ $_[0]->recommendations() ];
+	delete $$New{created_on};
 	return $New;
 } # end sub copy
 
@@ -783,6 +784,7 @@ sub add_inventory {
 		project_id	=>	$$Project{id},
 		});
 	# Updates in_stock and allocated
+	delete $$self{SkidContents};
 	$self->save();
 } # end sub add_inventory
 
@@ -821,6 +823,24 @@ sub allocate {
 			} );
 	if ( $Order ) {
 		$Order->add_log( qq`Allocated $quantity$$PA{units} of <a href="/employee/inventory/paper_details.html?paper_id=$$self{id}">` . $self->to_string().'</a>');
+			my $PI = new openprint::PaperInventory();
+			$PI->save({	
+				paper_id	=>	$$self{id},
+				user_id		=>	$openprint::session{user_id},
+				docket		=>	$Order->docket(),
+				delta		=>	0,
+				comment		=>	qq`Allocated $quantity$$PA{units} to docket $$Order{docket}`,
+				instock		=>	$self->in_stock(),
+			});
+	} else {
+			my $PI = new openprint::PaperInventory();
+			$PI->save({	
+				paper_id	=>	$$self{id},
+				user_id		=>	$openprint::session{user_id},
+				delta		=>	0,
+				comment		=>	qq`Allocated $quantity$$PA{units}`,
+				instock		=>	$self->in_stock(),
+			});
 	} # end if
 	if ( $$self{available_to_order} > 1 ) {
 		$$self{available_to_order} -= $quantity;
@@ -857,6 +877,7 @@ sub in_stock {
 	return 0 if ! $_[0]{id};
 
 	if ( @_ > 1 ) {
+$openprint::log->debug("Setting paper in_stock to $_[1]");
 		if ( ref $_[1] eq 'openprint::InventoryCondition' ) {
 			my $in_stock = 0;
 			foreach my $C ( openprint::SkidContent->find(deleted=>0,paper_id=>$_[0]{id}, condition_id=>$_[1]->id() ) ) {
@@ -872,6 +893,7 @@ sub in_stock {
 		foreach my $SkidContent ( $_[0]->SkidContents() ) {
 			$_[0]{in_stock} += $SkidContent->quantity();
 		} # end foreach SkidContent
+$openprint::log->debug("Loading paper in_stock to $_[0]{in_stock}");
 	} # end if
 	return $_[0]{in_stock};
 } # end sub in_stock
@@ -1272,15 +1294,15 @@ sub load_from_signature {
 		$Paper->calliper( $$specs{txtSpecificStockCalliper} );
 		$Paper->start_width( $$specs{txtSpecificStockWidth} );
 		$Paper->start_height( $$specs{txtSpecificStockHeight} );
+		$Paper->type( $$specs{StockType} );
 		if ( $qty_index ) {
 			$Paper->width( $$specs{'StockWidth'.$qty_index} );
-			$Paper->height( $$specs{'StockHeight'.$qty_index} );
+			$Paper->height( $$specs{'StockHeight'.$qty_index} ) if $Paper->type() ne 'Roll';
 		} else {
 			$Paper->width( $$specs{txtSpecificStockWidth} );
-			$Paper->height( $$specs{txtSpecificStockHeight} );
+			$Paper->height( $$specs{txtSpecificStockHeight} ) if $Paper->type() ne 'Roll';
 		} # end if
 		$Paper->gsm( $$specs{txtStockGSM} );
-		$Paper->type( $$specs{StockType} );
 
 		$Paper->minimum_order( $$specs{minimum_order} );
 		$Paper->sheets_per_package( $$specs{sheets_per_package} );
@@ -1318,7 +1340,8 @@ sub load_from_signature {
 				$Paper = undef;
 				$openprint::log->warn("Loading by paper id but not found: " . $$specs{'paper_id'.$qty_index} );
 			} # end if
-		} elsif ( ! ( $$specs{ddmStockBrand} and $$specs{ddmStockFinish} and $$specs{ddmStockColour} and $$specs{ddmStockWeight} ) ) {
+		}
+		if ( ! ( $$specs{ddmStockBrand} and $$specs{ddmStockFinish} and $$specs{ddmStockColour} and $$specs{ddmStockWeight} ) ) {
 			return new openprint::Paper();
 		} # end if
 

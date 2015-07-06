@@ -77,7 +77,7 @@ my @re = (
 		'^(\w{3} [ :0-9]{11}) [\._a-zA-Z0-9\-]+ sshd\[[0-9]+\]: Failed password for [\._a-zA-Z0-9\-]+ from (?<IP>[\._a-zA-Z0-9\-]+) port [0-9]+ ssh2$',
 		'^(\w{3} [ :0-9]{11}) [\._a-zA-Z0-9\-]+ sshd\[[0-9]+\]: Failed password for (invalid|illegal) user [\._a-zA-Z0-9\-]+ from (?<IP>[\._a-zA-Z0-9\-]+) port [0-9]+ ssh2$',
 		'^(\w{3} [ :0-9]{11}) [\._a-zA-Z0-9\-]+ sshd\[[0-9]+\]: error: PAM: Authentication failure for (illegal user root|[\._a-zA-Z0-9\-]+) from (?<IP>[\._a-zA-Z0-9\-]+)$',
-		'^(\w{3} [ :0-9]{11}) [\._a-zA-Z0-9\-]+ sshd\[[0-9]+\]: error: PAM: 1 more authentication failure; logname= uid=0 euid=0 tty=ssh ruser= rhost=(?<IP>[\._a-zA-Z0-9\-]+)\s+user\=\w+$',
+		'^(\w{3} [ :0-9]{11}) [\._a-zA-Z0-9\-]+ sshd\[[0-9]+\]: (error: )?PAM: [[:digit:]]+ more authentication failures?; logname= uid=0 euid=0 tty=ssh ruser= rhost=(?<IP>[\._a-zA-Z0-9\-]+)(\s+user\=\w+)?$',
 		'^(\w{3} [ :0-9]{11}) [\._a-zA-Z0-9\-]+ sshd\[[0-9]+\]: Disconnecting: Too many authentication failures for (invalid user )?[^[:space:]]* from (?<IP>[.[:digit:]]+) port [[:digit:]]+ ssh2 \[preauth\]$',
 		'^(\w{3} [ :0-9]{11}) [\._a-zA-Z0-9\-]+ sshd\[[0-9]+\]: Invalid user \w+ from (?<IP>[0-9.]+)$',
 		'^(\w{3} [ :0-9]{11}) [\._a-zA-Z0-9\-]+ sshd\[[0-9]+\]: Connection closed by (?<IP>[0-9.]+):? \[preauth\]$',
@@ -234,7 +234,13 @@ $log->debug("# of entries in Object_name_cache: " . keys %{$openprint::Object::n
 						$log->debug( "Got $ip for $source" ) if $config{debug};
 					} # end if
 				} # end if
-				next if $ip eq '172.0.0.1';
+				if ( $ip eq '127.0.0.1' ) {
+					$log->debug("No more testing for localhost");
+					next;
+				} else {
+					$log->debug("IP is $ip");
+				} # end if
+
 				if ( ! $ip ) {
 					$log->debug( "No ip for $source" ) if $config{debug};
 					next;
@@ -280,6 +286,10 @@ $log->debug("# of entries in Object_name_cache: " . keys %{$openprint::Object::n
 			foreach my $ip ( sort keys %host_counts ) {
 				next if ! $host_counts{$ip}{update};
 				next if $host_counts{$ip}{whitelist};
+				if ( $ip eq '127.0.0.1' ) {
+					$log->warn("WTF blacklistint localhost?!");
+					next;
+				} # end if
 				if ( ! defined $host_counts{$ip}{count} ) {
 					$host_counts{$ip}{count} = 0;
 				}
@@ -293,7 +303,7 @@ $log->debug("# of entries in Object_name_cache: " . keys %{$openprint::Object::n
 					} # end if
 					$host_counts{$ip}{updated_on_seconds} = time;
 				} # end if
-				$log->debug( "$ip $host_counts{$ip}{ip} $host_counts{$ip}{count}" ) if $config{debug};
+				#$log->debug( "$ip $host_counts{$ip}{ip} $host_counts{$ip}{count}" ) if $config{debug};
 				`shorewall drop $ip` if $host_counts{$ip}{blacklist};
 			} # end foreach ip
 			$changed = 0;

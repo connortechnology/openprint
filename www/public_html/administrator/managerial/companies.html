@@ -16,10 +16,15 @@ function load_page() {
 			<? echo ( button( 'Go1',{ onclick=>"f1.action='company_profiles.html';f1.submit();", text=> 'Go' } ); ) ?>	
 		</li>
 		<li>
+			<label>Name</label>
+			<? echo ( input( type=>'text', name=>'company_name', onkeydown=>'if(event.keyCode==13){f1.submit();}', oninput=>'load_page();' ); ) ?>
+			<? echo ( button( 'Go2',{ onclick=>"f1.action='company_profiles.html';f1.submit();", text=> 'Go' } ); ) ?>	
+		</li>
+		<li>
 			<label>Sales Rep</label>
 			<select name="salesrep_id" size="1" onchange="load_page();"> 
 				<option value="">All</option>
-				<? echo ( make_drop_down( openprint::User->dropdown( type=>['E','A'], order=>'lower(firstname),lower(lastname)', 'usergroup any'=>'Sales' ), $session{$r->uri().'?salesrep_id'} ); ) ?>
+				<? echo ( make_drop_down( openprint::User->dropdown( type=>['E','A'], 'usergroup any'=>'Sales' ), $session{$r->uri().'?salesrep_id'} ); ) ?>
 			</select>
 			<? echo ( checkboxes( 'salesrep_id_exclude', [ 1, 'Not in this list' ], $session{$r->uri().'?salesrep_id_exclude'}, { onclick=>'load_page();' } ); ) ?>
 		</li>

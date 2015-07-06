@@ -8,6 +8,14 @@
 		<? else ( $openprint::Company->salesrep_id() ) ?>
 		There is no CSR assigned for <? echo ( $openprint::Company->link_to() ) ?>.<br/>
 		<? endif ( $openprint::Company->salesrep_id() ) ?>
+		<? echo (
+			if ( $openprint::Company->notes() ) {
+				return '<br/>Notes on account: '.$openprint::Company->notes() . '<br/>';
+			}
+			return;
+		) ?>
+		
+		<? endif ( $openprint::Company->notes() ) ?>
 		<br/>
 		Prices will be displayed in <? echo ( new openprint::Currency( $session{Currency_id} )->name() ) ?>.<br/>
 		<br/>

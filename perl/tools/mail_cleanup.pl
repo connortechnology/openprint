@@ -4,9 +4,9 @@ use sets;
 use strict;
 use Date::Calc ();
 
-use constant DAYS_TO_KEEP_JUNK => 60*60*24*7;
-use constant DAYS_TO_KEEP_TRASH => 60*60*24*365*1;
+use constant DAYS_TO_KEEP_TRASH => 60*60*24*90*1;
 use constant DEBUG => 0;
+
 
 my $domain = $ARGV[0] ? $ARGV[0] : '';
 my @users;
@@ -64,6 +64,7 @@ foreach my $user ( @users ) {
 
 	} # end foreach folder
 	foreach my $folder ( '.Trash', '.Deleted Messages' ) {
+		next if $user eq 'matt';
 		if ( ! -e "$spool_path$user/$folder" ) {
 			next;
 		}

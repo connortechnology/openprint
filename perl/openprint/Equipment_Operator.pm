@@ -6,7 +6,7 @@ require openprint::Equipment;
 our @ISA = qw(openprint::Object);
 
 use vars qw( $debug $table %fields %transforms %defaults @identified_by );
-$debug = 1;
+$debug = 0;
 $table = 'equipment_operators';
 @identified_by = ( 'user_id','equipment_id' );
 %fields = (

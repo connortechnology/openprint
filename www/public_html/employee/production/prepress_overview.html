@@ -37,8 +37,8 @@
 					<select name="operator_id" id="operator_id" onchange="this.form.submit();">
 						<option value=""> select </option>
 						<? echo (
-							ssi::make_drop_down(
-								[ map { $_->id(), $_->name() } openprint::User->find( 'type'=>'E', 'usergroup any'=>'Prepress','order'=>'lower(firstname),lower(lastname)') ], $session{'/employee/production/prepress_overview.html?operator_id'}
+							make_drop_down(
+								openprint::User->dropdown( type=>'E', 'usergroup any'=>'Prepress'), $session{'/employee/production/prepress_overview.html?operator_id'}
 							);
 						) ?>
 					</select>
@@ -71,10 +71,13 @@
 		foreach my $status ( @{$$variable{'Statuses'}} ) {
 			$html .= '<td class="PressColumn">';
 			$html .= '<ul>';
-			foreach my $Project ( openprint::Project->find('status'=>$status, 'order'=>'lngdocketnumber',
+			my @Projects = openprint::Project->find('status'=>$status, 'order'=>'lngdocketnumber',
 				( $param{'operator_id'} ? ( 'operator_id any' => $param{'operator_id'} ) : () ),
 				'docket is null'	=>	0,
-					) ) {
+					);
+			openprint::Company->find(id=>[ map { $$_{company_id} } @Projects ]);
+			openprint::OrderedProject->find(project_id=>[ map { $$_{id} } @Projects ]);
+			foreach my $Project ( @Projects) {
 				my $services = $Project->services();
 
 				my $impressions = 0;

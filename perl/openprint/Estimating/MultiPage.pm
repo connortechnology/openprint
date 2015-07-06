@@ -84,8 +84,9 @@ my %variables = (
 		'txtSpecificStockCalliper', 'StockType',
 		'txtSpecificStockWidth', 'txtSpecificStockHeight', 
 		'txtCustomMWeight', 'basis_mweight', 'basis_width', 'basis_height', 
-		'CustomStockPrice', 'txtStockGSM','CustomSheetDoubleSided',
-		'cuttable', 'perfecting', 'StockGrade', 'minimum_order','sheets_per_package',
+		'CustomStockPrice', 'StockPricePerM', 'txtStockGSM','CustomSheetDoubleSided',
+		'cuttable', 'perfecting', 'StockGrade', 'minimum_order','sheets_per_package','full_packages',
+		'sides_the_same',
 		);
 
 sub variables {
@@ -653,8 +654,9 @@ sub summary {
 			my $group_html = join(' ',
 					( $$specs{"ddmRunStyle-$group_id"} ? $$specs{"ddmRunStyle-$group_id"} : () ),
 					( $$specs{"ddmPress-$group_id"} ? ' on ' . $$specs{"ddmPress-$group_id"} : () ),
-					($$specs{"PrintingType-$group_id"} ? $$specs{"PrintingType-$group_id"} : () ),
-					( $$specs{"PageQuantity-$group_id"} ? 'as ' . $$specs{"PageQuantity-$group_id"} . 'page signatures.' : () ),
+					( $$specs{"PrintingType-$group_id"} ? $$specs{"PrintingType-$group_id"} : () ),
+					( $$specs{"PageQuantity-$group_id"} ? 'as ' . $$specs{"PageQuantity-$group_id"} . 'page signatures' : () ),
+					( $$specs{"StockType-$group_id"} ? 'on ' . $$specs{"StockType-$group_id"} . ' stock' : () ),
 					);
 			if ( $group_html ) {
 				$html .= 'Group ' . $group_id . ' is overriden to run ' . $group_html. '<br/>';

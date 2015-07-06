@@ -13,7 +13,7 @@ use vars qw( %config %param %variable $log $dbh %session );
 *log = \$openprint::log;
 *dbh = \$openprint::dbh;
 
-use constant DEBUG => 1;
+use constant DEBUG => 0;
 
 require sql;
 require openprint::Currency;
@@ -210,6 +210,8 @@ $openprint::log->debug("Initial price for " . $Product->quantity() . ' is : ' . 
 			$session{error} = $variable{error};
 			$variable{ExternalRedirect} = '/main/order/information.html';
 			return;
+		} else {
+			$variable{ExternalRedirect} = '/main/order/submit.html?order_id='.$Order->id();
 		} # end if
 	} elsif ( $param{'btnFunction'} eq 'Save Service' ) {
 		my $Project = new openprint::Project( $param{'ProjectIndex'} );
@@ -250,109 +252,112 @@ sub confirmation {
 
 	my $Order = new openprint::Order( $order_id );
 
-	if ( $Order->id() and ( sets::isin( $Order->status(), ['Incomplete','Re-Opened'] ) ) ) {
-		if ( ( $Order->company_id() == $session{'company_id'} ) and ( $session{'company_id'} == new openprint::User( $session{'user_id'})->company_id() ) ) {
-			if ( ! $param{accept_terms} ) {
-				$variable{error} = 'Terms not accepted';
-				$variable{information} = 'You must check the box to indicate your acceptance of the terms and conditions.';
+	if ( $param{btnFunction} eq 'Close' or $param{btnFunction} eq 'Complete' ) {
+	
+		if ( $Order->id() and ( sets::isin( $Order->status(), ['Incomplete','Re-Opened'] ) ) ) {
+			if ( ( $Order->company_id() == $session{'company_id'} ) and ( $session{'company_id'} == new openprint::User( $session{'user_id'})->company_id() ) ) {
+				if ( ! $param{accept_terms} ) {
+					$variable{error} = 'Terms not accepted';
+					$variable{information} = 'You must check the box to indicate your acceptance of the terms and conditions.';
+					$variable{ExternalRedirect} = '/main/order/submit.html';
+					return;
+				} else {
+					$Order->add_log( 'User accepted the terms and conditions.' );
+					$Order->save({'terms_accepted'=>1});
+				} # end if
+			} # end if employee or admin
+
+			# Commit Project Information
+			foreach my $OP ( $Order->Ordered_Projects() ) {
+				$variable{error} .= $OP->save({
+					reference	=> $OP->Project()->reference(),
+					price		=> undef,
+					quantity	=> undef,
+				});
+				my $Project = $OP->Project();
+				$variable{error} .= $Project->check_for_order( $OP );
+			} # end foreach Project
+			$variable{error} = check_for_errors( $Order ) if ! $variable{error};
+
+			if ( $variable{error} ) {
 				$variable{ExternalRedirect} = '/main/order/submit.html';
 				return;
-			} else {
-				$Order->add_log( 'User accepted the terms and conditions.' );
-				$Order->save({'terms_accepted'=>1});
 			} # end if
-		} # end if employee or admin
 
-		# Commit Project Information
-		foreach my $OP ( $Order->Ordered_Projects() ) {
-			$variable{error} .= $OP->save({
-				reference	=> $OP->Project()->reference(),
-				price		=> undef,
-				quantity	=> undef,
-			});
-			my $Project = $OP->Project();
-			$variable{error} .= $Project->check_for_order( $OP );
-		} # end foreach Project
-		$variable{error} = check_for_errors( $Order ) if ! $variable{error};
+			my $sub_total = $Order->subtotal(undef);
+			foreach my $Tax ( $Order->Taxes() ) {
+				$Tax->save({'amount'=>undef});
+			} # end foreach Tax
+			my $total = $Order->total(undef);
 
-		if ( $variable{error} ) {
-			$variable{ExternalRedirect} = '/main/order/submit.html';
-			return;
+			#my $customer_credit = new openprint::customer_credit( $session{'company_id'} );
+			my $downpayment;
+			#my ( $downpayment ) = $customer_credit->get( 'Downpayment' );
+			#if ( $downpayment eq '' ) {
+				#$downpayment = $config{'DefaultDownpayment'};
+			#} # end if
+			#$downpayment = $total * ( $downpayment / 100 );
+			#$downpayment = Math::Round::nearest( 0.01, $downpayment );
+
+			my $status = ( ( $downpayment - $Order->paid() ) > 0 ) ? 'Pending Deposit': 'In Production';
+			# Get Docket #
+			my $docket_number = $Order->docket();
+			if ( ! $docket_number ) {
+				( $docket_number ) = sql::execute( $log, $dbh, q{SELECT nextval('DocketNumber_seq')} );
+			} # end if
+			# This is messed up.  I think an order should never switch companies unless it doesn't have a company assigned.  I don't see how it could work any other way.
+			$Order->company_id( $session{'company_id'} ) if ! $Order->company_id();
+			$Order->salesrep_id( new openprint::Company( $session{'company_id'} )->salesrep_id() );
+			$Order->downpayment( $downpayment );
+			$Order->status( $status );
+			$Order->administrator_name( $param{'AdministratorName'} );
+			$Order->administrator_comments( $param{'AdministratorComments'} );
+			$Order->docket( $docket_number );
+			$Order->currency_id( $session{Currency_id} );
+			$Order->save();
+
+			$Order->add_log( $param{btnFunction} eq 'Close' ? 'Close Order' : 'Submit Order' );
+
+			foreach my $OP ( $Order->Ordered_Projects() ) {
+				my $Project = $OP->Project();
+				sql::update( $log, $dbh, 'tbl_Project_Contents', ["lngProjectIndex=? AND strStatus NOT IN ( 'Complete', 'Approved', 'Proofs Out', 'Waiting For Customer Approval','Waiting For QA Approval','')", $Project->id()], 'strStatus', 'Ordered' );
+				$Project->docket( $docket_number );
+				$Project->order_id( $Order->id() );
+				$Project->status( $status eq 'Pending Deposit' ? $status : 'In Prepress' );
+				$Project->save();	
+				$Project->update_status();
+				$Project->allocate_for_order( $OP );
+				openprint::press_schedule::add_project_to_press_schedule( $Project );
+			} # end foreach Project
+			foreach my $Product ( $Order->Products() ) {
+				my $Project = $Product->Project();
+				sql::update( $log, $dbh, 'tbl_Project_Contents', ["lngProjectIndex=? AND strStatus NOT IN ( 'Complete', 'Approved', 'Proofs Out', 'Waiting For Client Approval','Waiting For QA Approval','')", $Project->id()], 'strStatus', 'Ordered' );
+				$Project->docket( $docket_number );
+				$Project->order_id( $Order->id() );
+				$Project->status( $status eq 'Pending Deposit' ? $status : 'In Prepress' );
+				$Project->save();	
+				$Project->update_status();
+
+				openprint::press_schedule::add_project_to_press_schedule( $Project );
+			} # end foreach Product
+
+			
+			$variable{'Downpayment'} = $downpayment - $Order->paid();
+			$variable{'Downpayment'} = 0 if $variable{'Downpayment'} < 0;
+			$variable{'Downpayment'} = Math::Round::nearest( 0.01, $variable{'Downpayment'} );
+
+			$Order->update_status();
+	# send out email notifications
+			$Order->send_sales_order( ) if $param{btnFunction} eq 'Complete';
+
+	# *************************** WE are going to manually invoice for now *******************
+			if ( $variable{'Downpayment'} > 0 ) {
+			#	send_invoice( $r, $log, $dbh, $order_id );
+			} # end if
+		} else {
+			$log->debug("Already complete");
 		} # end if
-
-		my $sub_total = $Order->subtotal(undef);
-		foreach my $Tax ( $Order->Taxes() ) {
-			$Tax->save({'amount'=>undef});
-		} # end foreach Tax
-		my $total = $Order->total(undef);
-
-		#my $customer_credit = new openprint::customer_credit( $session{'company_id'} );
-		my $downpayment;
-		#my ( $downpayment ) = $customer_credit->get( 'Downpayment' );
-		#if ( $downpayment eq '' ) {
-			#$downpayment = $config{'DefaultDownpayment'};
-		#} # end if
-		#$downpayment = $total * ( $downpayment / 100 );
-		#$downpayment = Math::Round::nearest( 0.01, $downpayment );
-
-		my $status = ( ( $downpayment - $Order->paid() ) > 0 ) ? 'Pending Deposit': 'In Production';
-		# Get Docket #
-		my $docket_number = $Order->docket();
-		if ( ! $docket_number ) {
-			( $docket_number ) = sql::execute( $log, $dbh, q{SELECT nextval('DocketNumber_seq')} );
-		} # end if
-		# This is messed up.  I think an order should never switch companies unless it doesn't have a company assigned.  I don't see how it could work any other way.
-		$Order->company_id( $session{'company_id'} ) if ! $Order->company_id();
-		$Order->salesrep_id( new openprint::Company( $session{'company_id'} )->salesrep_id() );
-		$Order->downpayment( $downpayment );
-		$Order->status( $status );
-		$Order->administrator_name( $param{'AdministratorName'} );
-		$Order->administrator_comments( $param{'AdministratorComments'} );
-		$Order->docket( $docket_number );
-		$Order->currency_id( $session{Currency_id} );
-		$Order->save();
-
-		$Order->add_log( 'Submit Order' );
-
-		foreach my $OP ( $Order->Ordered_Projects() ) {
-			my $Project = $OP->Project();
-			sql::update( $log, $dbh, 'tbl_Project_Contents', ["lngProjectIndex=? AND strStatus NOT IN ( 'Complete', 'Approved', 'Proofs Out', 'Waiting For Customer Approval','Waiting For QA Approval','')", $Project->id()], 'strStatus', 'Ordered' );
-			$Project->docket( $docket_number );
-			$Project->order_id( $Order->id() );
-			$Project->status( $status eq 'Pending Deposit' ? $status : 'In Prepress' );
-			$Project->save();	
-			$Project->update_status();
-			$Project->allocate_for_order( $OP );
-			openprint::press_schedule::add_project_to_press_schedule( $Project );
-		} # end foreach Project
-		foreach my $Product ( $Order->Products() ) {
-			my $Project = $Product->Project();
-			sql::update( $log, $dbh, 'tbl_Project_Contents', ["lngProjectIndex=? AND strStatus NOT IN ( 'Complete', 'Approved', 'Proofs Out', 'Waiting For Client Approval','Waiting For QA Approval','')", $Project->id()], 'strStatus', 'Ordered' );
-			$Project->docket( $docket_number );
-			$Project->order_id( $Order->id() );
-			$Project->status( $status eq 'Pending Deposit' ? $status : 'In Prepress' );
-			$Project->save();	
-			$Project->update_status();
-
-			openprint::press_schedule::add_project_to_press_schedule( $Project );
-		} # end foreach Product
-
-		
-		$variable{'Downpayment'} = $downpayment - $Order->paid();
-		$variable{'Downpayment'} = 0 if $variable{'Downpayment'} < 0;
-		$variable{'Downpayment'} = Math::Round::nearest( 0.01, $variable{'Downpayment'} );
-
-		$Order->update_status();
-# send out email notifications
-		$Order->send_sales_order( );
-
-# *************************** WE are going to manually invoice for now *******************
-		if ( $variable{'Downpayment'} > 0 ) {
-		#	send_invoice( $r, $log, $dbh, $order_id );
-		} # end if
-	} else {
-		$log->debug("Already complete");
-	} # end if
+	} # end if btnFunction eq 'Close or Complete
 
 	$variable{'order_id'} = $order_id;
 	$variable{'Order'} = $Order;

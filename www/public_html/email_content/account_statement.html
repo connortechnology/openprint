@@ -10,11 +10,11 @@ Thank you for using <? echo ( new openprint::User( $session{'user_id'} )->Compan
 	my $period_end;
 
 	my @Invoices = openprint::Invoice->find( 
-		ssi::date_filter('/invoice/history.html?created_on_start', 'created_on >=' ),
-		ssi::date_filter('/invoice/history.html?created_on_end', 'created_on >=' ),
-		'invoicee_id'		=> $session{'/invoice/history.html?company_id'},
-		'invoicer_id'		=> $session{'company_id'},
-		'order'				=> 'id',
+		date_filter('/invoice/history.html?created_on_start', 'created_on >=' ),
+		date_filter('/invoice/history.html?created_on_end', 'created_on >=' ),
+		invoicee_id		=> $session{'/invoice/history.html?company_id'},
+		invoicer_id		=> $session{'company_id'},
+		order				=> 'id',
 		);
 	foreach my $Invoice ( @Invoices ) {
 		next if $Invoice->is_paid();
@@ -98,5 +98,6 @@ Payments received after <? echo ( Date::Format::time2str( $config{'DateFormat'},
 <? if ( $$variable{'3monthwarning'} ) ?>
 <b>
 Please note that at least one of these Invoices is 3 months overdue. No further service will be given until the account is brought up to date.<br/> 
+You expect prompt service from us, and we expect prompt payment from you.  Please take care of this matter immediately.
 </b>
 <? endif ( $$variable{'3monthwarning'} ) ?>

@@ -1,27 +1,13 @@
-<script type="text/javascript" src="<? echo ( hash_link('/javascripts/service.js') ) ?>"></script>
-<? eval (
-    if ( $$variable{'Project'}->quantity1() and $$variable{'Project'}->quantity2() and $$variable{'Project'}->quantity3() ) {
-    $$variable{'Columns'} = 'Three';
-    } else {
-    $$variable{'Columns'} = 'Two';
-    } # end if
-) ?>
+<script type="text/javascript" src="<?hash_link('/javascripts/service.js')?>"></script>
 <div class="Service">
 	<form id="f1" name="f1" method="post" action="/main/project/view.html">
 		<fieldset><legend><?ServiceTypeName?></legend>
 		<ul>
-		<li>
-			<label>Pages per pad</label>
-			<input type="number" name="PageQuantity" value="<?PageQuantity?>" onkeyup="calc(this.form.name);" />
+		<li><label>Pages per pad</label>
+			<? echo ( input( type=>'cardinal', name=>'PageQuantity', value=>$$variable{PageQuantity}, oninput=>'calc(this.form.name);' ); ) ?>
 		</li>
-		<li>
-			<label>Backing</label>
-			<input type="radio" id="BackingCardboard" name="Backing" value="Cardboard" onclick="calc(this.form.name);" <? echo ( ssi::checked( $$variable{'Backing'} eq 'Cardboard' ); ) ?> />
-			<label class="radio" for="BackingCardboard">Cardboard</label>
-			<input type="radio" id="BackingPrinted" name="Backing" value="Printed" onclick="calc(this.form.name);" <? echo ( ssi::checked( $$variable{'Backing'} eq 'Printed' ); ) ?> />
-			<label class="radio" for="BackingPrinted">Printed</label>
-			<input type="radio" id="BackingNone" name="Backing" value="None" onclick="calc(this.form.name);" <? echo ( ssi::checked( $$variable{'Backing'} eq 'None' ); ) ?> />
-			<label class="radio" for="BackingNone">None</label>
+		<li><label>Backing</label>
+			<? echo ( radio( 'Backing', [ map { $_, $_ } ( 'Cardboard','Printed','None' ) ], $$variable{Backing} ); ) ?>
 		</li>
 		<?include(/includes/main/proj/padding.html) ?>
 <? eval ( 
@@ -31,7 +17,7 @@
 		<li>
 			<label>Glue Type</label>
 			<select id="glue_id" name="glue_id" onchange="calc(this.form.name);">
-<? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } @{$$variable{'GlueTypes'}} ], $$variable{'glue_id'} ); ) ?>
+<? echo ( make_drop_down( [ map { $_->id(), $_->name() } @{$$variable{'GlueTypes'}} ], $$variable{'glue_id'} ); ) ?>
 			</select>
 			<input type="checkbox" id="override_glue_id" name="override_glue_id" value="Y" onclick="if(!this.checked)calc(this.form.name);" <? echo ( $$variable{'override_glue_id'} eq 'Y' ? 'checked="checked"' : '' ) ?> />
 			<label class="radio" for="override_glue_id">Override</label>

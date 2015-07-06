@@ -105,5 +105,9 @@ sub copy {
 	return $new;
 } # end sub copy
 
+sub link_to {
+	return sprintf('<a href="/employee/production/labels/label.html?id=%d&docket=%d">%s</a>', $_[0]{id}, $_[0]{docket}, @_ > 1 ? $_[1] :  join(' ', $_[0]->Type()->name(), $_[0]{reference} ) );
+} # end sub link_to
+
 1;
 __END__

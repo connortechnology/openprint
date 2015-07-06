@@ -93,6 +93,9 @@ __ADMIN_EMAIL__
 sub send_email {
 	my ($self, $replacements) = @_;
 
+	# Setup the mail message
+	my $Email = new openprint::Email();
+	$$replacements{Email} = $Email;
 
 	# Do the appropriate variable substitutions
 	# - The first substitution replaces the 'ReplacementText' field
@@ -116,8 +119,6 @@ sub send_email {
 	}
 	$text_body = ssi::variable_substitution( \$$self{email_text}, $replacements ) if $$self{email_text};
 
-	# Setup the mail message
-	my $Email = new openprint::Email();
 
 	my @attachments = eval $self->{attachments};
 	$openprint::log->warn( "Eval error Reason: " . $@ ) if $@;
@@ -145,6 +146,7 @@ sub send {
 	my $results = '';
 
 	my %replacements;
+	$replacements{Campaign} = $self;
 
 	# Find the email and company name for all accounts that match
 	# this campaign
@@ -181,6 +183,9 @@ sub send {
 	# If an email is sent, update the row in emailcampaigsent for this
 	# campaign/user, or add one as necessary
 	#
+	my $email_text = $$self{email_text};
+	my $email_html = $$self{email_html};
+
 	foreach my $user_id ( @mail_user_ids ) {
 		# de we need to send this email?
 
@@ -208,6 +213,8 @@ sub send {
 		$results .= sprintf('Sending Email to: %s %s at %s<br/>',$replacements{User}->get('firstname','lastname','email') );
 		$self->send_email( \%replacements );
 	} # for all mail user ids
+	$$self{email_text} = $email_text;
+	$$self{email_html} = $email_html;
 	return $results;
 } # end sub send
 

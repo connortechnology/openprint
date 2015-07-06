@@ -45,6 +45,7 @@
 		<? echo ( 
 			return join('',
 				button( 'Back', { href=>'/main/order/information.html?order_id='.$variable{Order}->id(), class=>'Back' } ),
+				( $session{user_type} eq 'A' ? button( 'Close', { onclick=>q`f1.btnFunction.value='Close';f1.submit();`, text=>'Close', class=>'Close' } ) : () ),
 				button( 'Complete', { onclick=>'f1.submit();', text=>'Complete Order', class=>'Complete' } ),
 			);	
 		) ?>

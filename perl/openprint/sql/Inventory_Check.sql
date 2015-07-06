@@ -1,22 +1,27 @@
-DROP SEQUENCE InventoryCheck_id_seq;
-CREATE SEQUENCE InventoryCheck_id_seq;
 
-DROP TABLE InventoryChecks;
+DROP TABLE Inventory_Checks;
 
-CREATE TABLE InventoryChecks (
-	id	INTEGER NOT NULL default nextval('InventoryCheck_id_seq'),
+CREATE TABLE Inventory_Checks (
+	id	SERIAL,
 	created_on	timestamp with time zone NOT NULL default NOW(),
+	name		TEXT,
+	started_on	date,
+	ended_on	date,
 	PRIMARY KEY (id)
 );
 
-DROP TABLE InventoryCheckEntries;
-CREATE TABLE InventoryCheckEntries (
+DROP TABLE Inventory_Check_Entries;
+CREATE TABLE Inventory_Check_Entries (
 	ic_id	INTEGER NOT NULL, FOREIGN KEY (ic_id) REFERENCES InventoryChecks (id),
 	skid_id	INTEGER NOT NULL, FOREIGN KEY (skid_id) REFERENCES Skids (id),
-	paper_id	INTEGER NOT NULL, FOREIGN KEY (paper_id) REFERENCES Papers (id),
-	quantity	INTEGER NOT NULL,
-	location	TEXT NOT NULL,
+	rfidtag_id	TEXT,
+	paper_id	INTEGER, FOREIGN KEY (paper_id) REFERENCES Papers (id),
+	quantity	INTEGER,
+	dimension1	float,
+	dimension2	float,
+	notes		TEXT,
+	location_id	INTEGER NOT NULL, FOREIGN KEY (location_id) REFERENCES Locations (id),
 	created_on	timestamp with time zone NOT NULL default NOW(),
-	operator_id	INTEGER NOT NULL, FOREIGN KEY (operator_id) REFERENCES tbl_Customer_Users (lngUserID)
+	operator_id	INTEGER NOT NULL, FOREIGN KEY (operator_id) REFERENCES Users (id)
 );
 

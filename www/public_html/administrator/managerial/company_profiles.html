@@ -1,3 +1,15 @@
+<script type="text/javascript">
+function load_customers( ) {
+	var form = $('f1');
+	new Ajax.Updater( 'ddmCustomer', '/includes/_company_ddm.html', { parameters: { 
+		salesrep_id: get_ddm_value( form.search_salesrep_id ),
+		name: f1.search_company_filter.value,
+		type: get_value( form.search_type ),
+		deleted: get_value( form.deleted ),
+		selected_id: get_ddm_value( form.ddmCustomer )
+		} } );
+}
+</script>
 <div class="CompanyProfiles">
 <?include(/includes/error_reporting.html)?>
 <form id="f1" name="f1" method="post" action="/administrator/managerial/company_profiles.html">
@@ -7,52 +19,56 @@
 		<li>
 			<label>Account #</label>
 			<input type="text" name="txtSearchAccountNum" />
-			<? echo ( button( 'Go', { 'onlick'=>"f1.btnFunction.value='Go';fmCheck(f1);" } ); ) ?>
+			<? echo ( button( 'Go', { onclick=>"f1.btnFunction.value='Go';fmCheck(f1);" } ); ) ?>
 		</li>
 		<li>
 			<label>Type</label>
-			<select name="search_type" onchange="f1.btnFunction.value='Go';this.form.submit();">
+			<select name="search_type" onchange="load_customers();">
 				<? echo ( 
 					my @options = ('All','Suppliers', 'Resellers', 'Customers');
-					return make_drop_down( [ map { $_, $_ } @options ], $param{'search_type'} );	
+					return make_drop_down( [ map { $_, $_ } @options ], $param{search_type} );	
 				) ?>
 			</select>
 		</li>
-<? if ( @{$$variable{'SalesReps'}} = openprint::User->find('id'=>[sql::execute( undef, undef, 'SELECT DISTINCT salesrep_id FROM companies')],'deleted'=>[0,1],'order'=>'lower(firstname),lower(lastname)') ) ?>
+<? if ( @{$$variable{SalesReps}} = openprint::User->find( id=>[sql::execute( undef, undef, 'SELECT DISTINCT salesrep_id FROM companies')], deleted=>[0,1], order=>'lower(firstname),lower(lastname)') ) ?>
 		<li>
 			<label>Sales Rep</label>
-			<select name="search_salesrep_id" onchange="f1.btnFunction.value='Go';this.form.submit();">
+			<select name="search_salesrep_id" onchange="load_customers();">
 				<option value=""> All </option>
-				<? echo ( make_drop_down( [ map { $_->id(),$_->name() } @{$$variable{'SalesReps'}} ], $param{'search_salesrep_id'} ); ) ?>
+				<? echo ( make_drop_down( [ map { $_->id(),$_->name() } @{$$variable{SalesReps}} ], $param{search_salesrep_id} ); ) ?>
 			</select>
 		</li>
-<? endif ( @{$$variable{'SalesReps'}} = openprint::User->find('id'=>[sql::execute( undef, undef, 'SELECT DISTINCT salesrep_id FROM companies')],'deleted'=>[0,1],'order'=>'lower(firstname),lower(lastname)') ) ?>
-		<li><label>Deleted?</label><? echo ( radio( 'deleted', [ '1','Yes', '0', 'No', '', 'Both' ], $param{'deleted'}, {onclick=>"f1.ddmCustomer.selectedIndex=-1;f1.btnFunction.value='Go';f1.submit();"} ); ) ?></li>
+<? endif ( @{$$variable{SalesReps}} = openprint::User->find( id=>[sql::execute( undef, undef, 'SELECT DISTINCT salesrep_id FROM companies')], deleted=>[0,1], order=>'lower(firstname),lower(lastname)') ) ?>
+		<li><label>Deleted?</label><? echo ( radio( 'deleted', [ '1','Yes', '0', 'No', '', 'Both' ], $param{deleted}, {onclick=>"f1.ddmCustomer.selectedIndex=-1;load_customers();"} ); ) ?></li>
 		<li> 
 			<label>Company</label>
-			<input type="text" onkeyup="filterDDM(this, this.form.ddmCustomer);" onkeydown="if(event.keyCode == 13){f1.btnFunction.value='Go';this.form.submit();}" class="filter" />
-			<select name="ddmCustomer" onchange="if(this.options[this.selectedIndex].value != '') { f1.btnFunction.value='Go'; $('ButtonsTop').hide();$('ButtonsBottom').hide();f1.submit();}">
+			<input type="text" id="search_company_filter" oninput="load_customers();" onkeydown="if(event.keyCode == 13){f1.btnFunction.value='Go';this.form.submit();}" class="filter" />
+			<select id="ddmCustomer" name="ddmCustomer" onchange="if(this.options[this.selectedIndex].value != '') { f1.btnFunction.value='Go'; $('ButtonsTop').hide();$('ButtonsBottom').hide();f1.submit();}">
 				<option value=""> select </option>
 				<? echo ( 
+if ( 0 ) {
 					my %params = (
-							( $param{'search_salesrep_id'} ? ( 'salesrep_id'=>$param{'search_salesrep_id'} ) : () ),
-							( $param{'deleted'} ne '' ? ( 'deleted'=>$param{'deleted'} ) : () ),
+							( $param{search_salesrep_id} ? ( 'salesrep_id'=>$param{search_salesrep_id} ) : () ),
+							( $param{deleted} ne '' ? ( 'deleted'=>$param{deleted} ) : () ),
 							'order'=>'lower(name)',
 					);
-					if ( $param{'search_type'} eq 'Suppliers' ) {
-						$params{'supplier'} ='Y';
-					} elsif ( $param{'search_type'} eq 'Resellers' ) {
-						$params{'reseller'} = 'Y';
-					} elsif ( $param{'search_type'} eq 'Customers' ) {
-						$params{'supplier'} = 'N';
-						$params{'reseller'} = 'N';
+					if ( $param{search_type} eq 'Suppliers' ) {
+						$params{supplier} ='Y';
+					} elsif ( $param{search_type} eq 'Resellers' ) {
+						$params{reseller} = 'Y';
+					} elsif ( $param{search_type} eq 'Customers' ) {
+						$params{supplier} = 'N';
+						$params{reseller} = 'N';
 					} # end if
 					my @Companies = @{$$variable{Companies}} = openprint::Company->find( %params );
-					if ( ! sets::isin( $param{'ddmCustomer'}, map { $_->id() } @Companies ) ) {
-						unshift @Companies, new openprint::Company( $param{'ddmCustomer'} );
+					if ( ! sets::isin( $param{ddmCustomer}, map { $_->id() } @Companies ) ) {
+						unshift @Companies, new openprint::Company( $param{ddmCustomer} );
 					} # end if
 
-					return make_drop_down( [ map { $_->id(), $_->name() } openprint::Company->find( %params ) ], $$variable{'CustomerIndex'} );
+					return make_drop_down( [ map { $_->id(), $_->name() } openprint::Company->find( %params ) ], $$variable{CustomerIndex} );
+} else {
+	return make_drop_down( [ map { $_->id(), $_->name() } ( $$variable{Company} ) ], $$variable{CustomerIndex} );
+}
 				) ?>
 			</select>
 			<? echo ( button( 'Go2', { onclick=>"f1.btnFunction.value='Go';fmCheck(f1);", text=>'Go' } ); ) ?>
@@ -62,20 +78,14 @@
 	<input type="hidden" name="company_id" id="company_id" value="<?CustomerIndex?>" />
 	<fieldset id="ButtonsTop">
 		<p> 
-			<label><? echo ( 
-
-if ( $$variable{CustomerIndex} ) {
-	return button( 'Users', { href=>"user_profiles.html?ddmCustomer=$$variable{CustomerIndex}" } );
-}
-return;
-) ?></label>
+			<label><? echo ( $$variable{CustomerIndex} ? button( 'Users', { href=>'user_profiles.html?ddmCustomer='.$$variable{CustomerIndex} } ) : '' ) ?></label>
 		
 			<? echo (
 				my $html = '';
 				$html .= button( 'Prev1', { onclick=>q`f1.btnFunction.value='&lt;&lt;';fmCheck(f1);`,text=>'&lt;&lt;' } );
 				$html .= button( 'Next1', { onclick=>q`f1.btnFunction.value='&gt;&gt;';fmCheck(f1);`,text=>'&gt;&gt;' } );
 				$html .= button( 'New1', { onclick=>'addCheck(f1);',text=>'New' } );
-				if ( $$variable{'Company'}->deleted() ) {
+				if ( $$variable{Company}->deleted() ) {
 					$html .= button( 'Undelete1', { onclick=>"f1.btnFunction.value='Undelete';fmCheck(f1);",text=>'Undelete' } );
 					$html .= button( 'Destroy1',{ onclick=>"f1.btnFunction.value='Destroy';fmCheck(f1);",text=>'Destroy' } );
 				} else {
@@ -83,13 +93,7 @@ return;
 				} # end if
 				$html .= button( 'Save1',{ onclick=>"f1.btnFunction.value='Save';fmChange=3;fmCheck(f1);",text => 'Save' } );
 				$html .= button( 'Reset1', { onclick=>'f1.reset();',text=>'Reset' } );
-				if ( (new openprint::User( $session{user_id} ))->email() =~ /^iconnor/ ) {
-					$html .= '<br/>';
-					$html .= button( 'Merge', { onclick=>"f1.btnFunction.value='merge';f1.submit();" } );
-					$html .= '<select name="merge_company_id"><option value=""> none </option>';
-					$html .= make_drop_down( [ map { $_->id(), $_->name() } map { $_->id() == $$variable{CustomerIndex} ? () : $_ } @{$$variable{'Companies'}} ], $$variable{'CustomerIndex'} );
-					$html .= '</select>';
-				} # end if
+				$html .= button( 'Merge', { onclick=>qq`popup_window('_merge_popup.html','company_id=$$variable{CustomerIndex}');` } );
 				return $html;
 			) ?>
 		</p>
@@ -99,7 +103,7 @@ return;
 				if ( @Companies > 1 ) {
 					my $html = '<div class="warning">There are duplicate companies!<br/>';
 					foreach my $C ( @Companies ) {
-						next if $C->id() == $$variable{'Company'}->id();	
+						next if $C->id() == $$variable{Company}->id();
 						$html .= sprintf(q`<p><a href="/administrator/managerial/company_profiles.html?ddmCustomer=%1$d">%1$d : %2$s</a><br/>
 %3$s<br/>%4$d Users %5$d Projects %6$d Quotes %7$d Orders<br/>%8$s</p>`, $C->id(), $C->name(), join(' ', $C->get('address1','address2','city','state','country','postalcode')),
 scalar openprint::User->find( company_id=>$C->id()),
@@ -108,7 +112,8 @@ scalar openprint::Quote->find( company_id=>$C->id()),
 scalar openprint::Order->find( company_id=>$C->id()),
 button( 'merge'.$C->id(), { href=>'/administrator/managerial/company_profiles.html?ddmCustomer='.$$variable{Company}->id().'&amp;merge_company_id='.$C->id().'&amp;btnFunction=merge', text=>'Merge' } ) );
 					} # end foreach C
-					return '</div>'.$html;
+					$html .= '</div>';
+					return $html;
 				} # end if have dups
 			} # end if
 			return '';
@@ -116,33 +121,24 @@ button( 'merge'.$C->id(), { href=>'/administrator/managerial/company_profiles.ht
 	</fieldset>
 	<div class="SalesInformation">
 		<fieldset><legend>Sales Information</legend>
-		<? if ( $$variable{'Company'}->deleted() ) ?>
+		<? if ( $$variable{Company}->deleted() ) ?>
 		<div class="error">This company has been deleted.</div>
-		<? endif ( $$variable{'Company'}->deleted() ) ?>
+		<? endif ( $$variable{Company}->deleted() ) ?>
 		<b><?notes?></b>
 	<div class="leftColumn">
 		<ul>
 			<? if ( $$variable{Company}->id() ) ?>
 			<li><label>ID #</label><?CustomerIndex?></li>
 			<? endif ( $$variable{Company}->id() ) ?>
-			<li> 
-				<label><b>Account Activated</b></label>
-				<input type="radio" name="activation" value="Y" id="activationY" <? echo ( ssi::checked( $$variable{'Company'}->activation() eq 'Y' ); ) ?> />
-				<label class="radio" for="activationY">Yes</label>
-				<input type="radio" name="activation" value="N" id="activationN" <? echo ( ssi::checked( $$variable{'Company'}->activation() ne 'Y' ); ) ?> />
-				<label class="radio" for="activationN">No</label>
+			<li class="activation"> 
+				<label>Account Activated</label>
+				<? echo ( radio( 'activation', ['Y','Yes','N','No'], $$variable{Company}->activation(), {default=>'N'} ); ) ?>
 			</li><li>
 				<label>Is this a Supplier?</label>
-				<input type="radio" name="supplier" value="Y" id="supplierY" <? echo ( ssi::checked( $$variable{'Company'}->supplier() eq 'Y' ); ) ?> />
-				<label class="radio" for="supplierY">Yes</label>
-				<input type="radio" name="supplier" value="N" id="supplierN" <? echo ( ssi::checked( $$variable{'Company'}->supplier() ne 'Y' ); ) ?> />
-				<label class="radio" for="supplierN">No</label>
+				<? echo ( radio( 'supplier', ['Y','Yes','N','No'], $$variable{Company}->supplier(), {default=>'N'} ); ) ?>
 			</li><li>
 				<label>Is this a Reseller?</label>
-				<input type="radio" name="reseller" value="Y" id="resellerY" <? echo ( ssi::checked( $$variable{'Company'}->reseller() eq 'Y' ); ) ?> />
-				<label class="radio" for="resellerY">Yes</label>
-				<input type="radio" name="reseller" value="N" id="resellerN" <? echo ( ssi::checked( $$variable{'Company'}->reseller() ne 'Y' ); ) ?> />
-				<label class="radio" for="resellerN">No</label>
+				<? echo ( radio( 'reseller', ['Y','Yes','N','No'], $$variable{Company}->reseller(), {default=>'N'} ); ) ?>
 			</li>
 			<li><label>Offers Credit</label>
 			<? echo ( radio( 'offers_credit', ['1','Yes','0','No'], $$variable{Company}->offers_credit() ); ) ?>
@@ -159,7 +155,7 @@ button( 'merge'.$C->id(), { href=>'/administrator/managerial/company_profiles.ht
 					<? echo ( make_drop_down( openprint::Currency->dropdown( order=>'lower(name)' ), $$variable{Company}->currency_id() ); ) ?>
 				</select>
 			</li>
-			<li> 
+			<li class="discount"> 
 				<label>Pricing Discount</label>
 				<? echo ( input( type=>'float', name=>'discount', value=>$$variable{Company}->discount() ); ) ?> %
 			</li>
@@ -174,7 +170,7 @@ button( 'merge'.$C->id(), { href=>'/administrator/managerial/company_profiles.ht
 	</div>
 	<div class="rightColumn">
 		<ul>
-		<? if ( $$variable{'Company'}->id() ) ?>
+		<? if ( $$variable{Company}->id() ) ?>
 		<li>
 			<label>Created On</label>
 			<? echo ( format_datetime( $$variable{Company}->created_on() ); ) ?>
@@ -193,29 +189,29 @@ button( 'merge'.$C->id(), { href=>'/administrator/managerial/company_profiles.ht
 				return format_datetime( $_->date_time() );
 			 ) ?>
 		</li>
-		<? endif ( $$variable{'Company'}->id() ) ?>
+		<? endif ( $$variable{Company}->id() ) ?>
 		<li>
 			<label>Notes</label>
 			<textarea id="notes" name="notes" rows="<? echo ( count_lines( $$variable{notes} ); ) ?>" onkeyup="textarea_resize(this);"><?notes?></textarea>
 		</li>
 		<? if ( $$variable{Company}->id() ) ?>
 			<? eval (
-				@{$$variable{'Orders'}} = openprint::Order->find('company_id'=>$$variable{'CustomerIndex'},'order'=>'id DESC');
+				@{$$variable{Orders}} = openprint::Order->find('company_id'=>$$variable{CustomerIndex},'order'=>'id DESC');
 			) ?>
 			<li><label># of Orders</label>
-				<a href="/administrator/reports/orders.html?ddmCustomer=<?CustomerIndex?>"><? echo ( @{$$variable{'Orders'}} ) ?></a>
-				<? if ( @{$$variable{'Orders'}} ) ?>
+				<a href="/administrator/reports/orders.html?ddmCustomer=<?CustomerIndex?>"><? echo ( @{$$variable{Orders}} ) ?></a>
+				<? if ( @{$$variable{Orders}} ) ?>
 				Last on
-				<a href="/administrator/reports/orders.html?ddmCustomer=<?CustomerIndex?>"><? echo ( Date::Format::time2str( $config{'DateFormat'}, Date::Parse::str2time( $$variable{'Orders'}[0]->created_on() ) ); ) ?></a>
-				<? endif ( @{$$variable{'Orders'}} ) ?>
+				<a href="/administrator/reports/orders.html?ddmCustomer=<?CustomerIndex?>"><? echo ( Date::Format::time2str( $config{DateFormat}, Date::Parse::str2time( $$variable{Orders}[0]->created_on() ) ); ) ?></a>
+				<? endif ( @{$$variable{Orders}} ) ?>
 			</li>
-			<? eval ( @{$$variable{'Projects'}} = openprint::Project->find('company_id'=>$$variable{'CustomerIndex'},'order'=>'id DESC'); ) ?>
+			<? eval ( @{$$variable{Projects}} = openprint::Project->find('company_id'=>$$variable{CustomerIndex},'order'=>'id DESC'); ) ?>
 			<li><label># of Projects</label>
-				<a href="/administrator/reports/projects.html?ddmCustomer=<?CustomerIndex?>"><? echo ( @{$$variable{'Projects'}} ) ?></a>
-				<? if ( @{$$variable{'Projects'}} ) ?>
+				<a href="/administrator/reports/projects.html?ddmCustomer=<?CustomerIndex?>"><? echo ( @{$$variable{Projects}} ) ?></a>
+				<? if ( @{$$variable{Projects}} ) ?>
 				Last on
-				<a href="/administrator/reports/projects.html?ddmCustomer=<?CustomerIndex?>"><? echo ( Date::Format::time2str( $config{'DateFormat'}, Date::Parse::str2time( $$variable{'Projects'}[0]->created_on() ) ); ) ?></a>
-				<? endif ( @{$$variable{'Projects'}} ) ?>
+				<a href="/administrator/reports/projects.html?ddmCustomer=<?CustomerIndex?>"><? echo ( Date::Format::time2str( $config{DateFormat}, Date::Parse::str2time( $$variable{Projects}[0]->created_on() ) ); ) ?></a>
+				<? endif ( @{$$variable{Projects}} ) ?>
 			</li>
 			<li>
 				<label>Accounting Contacts</label>
@@ -231,7 +227,7 @@ button( 'merge'.$C->id(), { href=>'/administrator/managerial/company_profiles.ht
 		<ul>
 			<li> 
 				<label>Account #</label>
-				<input type="text" name="accountnumber" value="<? echo ( $$variable{'Company'}->accountnumber() ) ?>" />
+				<input type="text" name="accountnumber" value="<? echo ( $$variable{Company}->accountnumber() ) ?>" />
 			</li>
 			<li><label>Company Category</label>
 				<select name="category_id" id="category_id">
@@ -241,53 +237,53 @@ button( 'merge'.$C->id(), { href=>'/administrator/managerial/company_profiles.ht
 			</li>
 			<li> 
 				<label>Internal Name</label>
-				<input type="text" name="name" value="<? echo ( $$variable{'Company'}->name() ) ?>" />
+				<input type="text" name="name" value="<? echo ( $$variable{Company}->name() ) ?>" />
 			</li>
 			<li> 
 				<label>Legal Name</label>
-				<input type="text" name="business_name" value="<? echo ( $$variable{'Company'}->business_name() ) ?>" />
+				<input type="text" name="business_name" value="<? echo ( $$variable{Company}->business_name() ) ?>" />
 			</li>
 			<li> 
 				<label>Address</label>
-				<input type="text" name="address1" value="<? echo ( $$variable{'Company'}->address1() ) ?>" />
+				<input type="text" name="address1" value="<? echo ( $$variable{Company}->address1() ) ?>" />
 			</li>
 			<li class="address2"> 
 				<label>&nbsp;</label>
-				<input type="text" name="address2" value="<? echo ( $$variable{'Company'}->address2() ) ?>" />
+				<input type="text" name="address2" value="<? echo ( $$variable{Company}->address2() ) ?>" />
 			</li>
 			<li> 
 				<label>Country</label>
-				<select name="country" onchange="Country_onchange(this, this.form.state );">
+				<select name="country" onchange="Country_onchange(this,this.form.state);">
 					<option value=""> select </option>
-					<? echo ( ssi::return_countries($$variable{'Company'}->country() ); ) ?>
+					<? echo ( return_countries($$variable{Company}->country() ); ) ?>
 				</select>
 			</li>
 			<li> 
 				<label><span id="country_state">State/Province</span></label>
 				<select name="state">
 					<option value=""> select </option>
-					<? echo ( ssi::return_states_and_provinces($$variable{'Company'}->state() ); ) ?> 
+					<? echo ( return_states_and_provinces($$variable{Company}->state() ); ) ?> 
 				</select>
 			</li>
 			<li> 
 				<label>City</label>
-				<input type="text" name="city" value="<? echo ( $$variable{'Company'}->city() ) ?>" />
+				<input type="text" name="city" value="<? echo ( $$variable{Company}->city() ) ?>" />
 			</li>
 			<li> 
 				<label><span id="country_postal">Zip/Postal Code</span></label>
-				<input type="text" name="postalcode" value="<? echo ( $$variable{'Company'}->postalcode() ) ?>" />
+				<input type="text" name="postalcode" value="<? echo ( $$variable{Company}->postalcode() ) ?>" />
 			</li>
 			<li> 
 				<label>Phone</label>
-				<input type="tel" name="phone" value="<? echo ( $$variable{'Company'}->phone() ) ?>" />
+				<input type="tel" name="phone" value="<? echo ( $$variable{Company}->phone() ) ?>" />
 			</li>
 			<li> 
 				<label>Extension</label>
-				<input type="text" name="extension" value="<? echo ( $$variable{'Company'}->extension() ) ?>" />
+				<input type="tel" name="extension" value="<? echo ( $$variable{Company}->extension() ) ?>" />
 			</li>
 			<li> 
 				<label>Fax</label>
-				<input type="tel" name="fax" value="<? echo ( $$variable{'Company'}->fax() ) ?>" />
+				<input type="tel" name="fax" value="<? echo ( $$variable{Company}->fax() ) ?>" />
 			</li>
 		</ul>
 	</fieldset>
@@ -298,63 +294,44 @@ button( 'merge'.$C->id(), { href=>'/administrator/managerial/company_profiles.ht
 		<ul>
 			<li> 
 				<label>Legal Form</label>
-				<input type="radio" id="business_formCorporation" name="business_form" value="Corporation" <? echo ( ssi::checked( $$variable{'Company'}->business_form() eq 'Corporation' ); ) ?> />
-				<label class="radio" for="business_formCorporation">Corporation</label>
-				<input type="radio" id="business_formSoleProprietor" name="business_form" value="SoleProprietor" <? echo ( ssi::checked( $$variable{'Company'}->business_form() eq 'SoleProprietor' ); ) ?> />
-				<label class="radio" for="business_formSoleProprietor">SoleProprietor</label>
-				<input type="radio" id="business_formPartnership" name="business_form" value="Partnership" <? echo ( ssi::checked( $$variable{'Company'}->business_form() eq 'Partnership' ); ) ?> />
-				<label class="radio" for="business_formPartnership">Partnership</label>
+				<? echo ( radio( 'business_form', [ 'Corporation', 'Corporation', 'SoleProprietor', 'Sole Proprietor', 'Partnership', 'Partnership' ], $$variable{Company}->business_form() ); ) ?>
 			</li>
 			<li> 
 				<label>Business Type</label>
-				<input type="text" name="business_type" value="<? echo ( $$variable{'Company'}->business_type() ) ?>" />
+				<input type="text" name="business_type" value="<? echo ( $$variable{Company}->business_type() ) ?>" />
 			</li>
 			<li> 
 				<label>Date Established</label>
 				<select name="start_month" id="start_month">
 					<option value=""> Select </option>
-					<? echo ( ssi::getmonths( $$variable{'Company'}->start_month() ); ) ?>
+					<? echo ( getmonths( $$variable{Company}->start_month() ); ) ?>
 				</select>
 				<? echo ( input( type=>'cardinal', name=>'start_year', id=>'start_year', value=>$$variable{Company}->start_year() ); ) ?>
 			</li>
 			<li> 
 				<label>President/Owner/CEO</label>
-				<input type="text" name="president_owner" value="<? echo ( $$variable{'Company'}->president_owner() ) ?>" />
-			</li>
-			<li> 
-				<label># of Employees</label>
-				<select name="employees">
-					<option value=""> Select </option>
-					<? echo ( ssi::getemployee_numbers( $r, $log, $dbh, $$variable{'Company'}->employees() ); ) ?>
-				</select>
-			</li>
-			<li> 
-				<label>Annual Sales</label>
-				<select name="annual_sales">
-					<option value=""> Select </option>
-					<? echo ( ssi::getannual_sales( $r, $log, $dbh, $$variable{'Company'}->annual_sales() ); ) ?>
-				</select>
+				<input type="text" name="president_owner" value="<? echo ( $$variable{Company}->president_owner() ) ?>" />
 			</li>
 			<li> 
 				<label>Federal/GST #</label>
-				<input type="text" name="gst_number" value="<? echo ( $$variable{'Company'}->gst_number() ) ?>" />
+				<input type="text" name="gst_number" value="<? echo ( $$variable{Company}->gst_number() ) ?>" />
 			</li>
 			<li> 
 				<label>Federal/GST Tax Exempt?</label>
-				<input type="radio"	name="gst_exempt" id="gst_exemptY" value="Y" <? echo ( ssi::checked( $$variable{'Company'}->gst_exempt() eq 'Y' ); ) ?> />
+				<input type="radio"	name="gst_exempt" id="gst_exemptY" value="Y" <? echo ( ssi::checked( $$variable{Company}->gst_exempt() eq 'Y' ); ) ?> />
 				<label class="radio" for="gst_exemptY">Yes</label>
-				<input type="radio"	name="gst_exempt" id="gst_exemptN" value="N" <? echo ( ssi::checked( $$variable{'Company'}->gst_exempt() ne 'Y' ); ) ?> />
+				<input type="radio"	name="gst_exempt" id="gst_exemptN" value="N" <? echo ( ssi::checked( $$variable{Company}->gst_exempt() ne 'Y' ); ) ?> />
 				<label class="radio" for="gst_exemptN">No</label>
 			</li>
 			<li> 
 				<label>Prov/State #</label>
-				<input type="text" name="pst_number" value="<? echo ( $$variable{'Company'}->pst_number() ) ?>" />
+				<input type="text" name="pst_number" value="<? echo ( $$variable{Company}->pst_number() ) ?>" />
 			</li>
 			<li> 
 				<label>State/Provincial Tax Exempt?</label>
-				<input type="radio"	name="pst_exempt" id="pst_exemptY" value="Y" <? echo ( ssi::checked( $$variable{'Company'}->pst_exempt() eq 'Y' ); ) ?> />
+				<input type="radio"	name="pst_exempt" id="pst_exemptY" value="Y" <? echo ( ssi::checked( $$variable{Company}->pst_exempt() eq 'Y' ); ) ?> />
 				<label class="radio" for="pst_exemptY">Yes</label>
-				<input type="radio"	name="pst_exempt" id="pst_exemptN" value="N" <? echo ( ssi::checked( $$variable{'Company'}->pst_exempt() ne 'Y' ); ) ?> />
+				<input type="radio"	name="pst_exempt" id="pst_exemptN" value="N" <? echo ( ssi::checked( $$variable{Company}->pst_exempt() ne 'Y' ); ) ?> />
 				<label class="radio" for="pst_exemptN">No</label>
 			</li>
 		</ul>
@@ -363,15 +340,15 @@ button( 'merge'.$C->id(), { href=>'/administrator/managerial/company_profiles.ht
 <div class="MarketingInformation">
 	<fieldset><legend>Marketing Information</legend>
 		<ul>
-			<? if ( $$variable{'selectCustomerCategories'} ) ?>
+			<? if ( $$variable{selectCustomerCategories} ) ?>
 			<li> 
 				<label>Marketing Category</label>
 				<select name="selectCustomerCategories" size="4" multiple="multiple"><?selectCustomerCategories?></select>
 			</li>
-			<? endif ( $$variable{'selectCustomerCategories'} ) ?>
+			<? endif ( $$variable{selectCustomerCategories} ) ?>
 			<li> 
 				<label>Greeting Message</label>
-				<textarea name="greeting" rows="<? echo ( count_lines( $$variable{Company}->greeting() ); ) ?>" onkeyup="textarea_resize(this);"><? echo ( $$variable{'Company'}->greeting() ) ?></textarea>
+				<textarea name="greeting" rows="<? echo ( count_lines( $$variable{Company}->greeting() ); ) ?>" onkeyup="textarea_resize(this);"><? echo ( $$variable{Company}->greeting() ) ?></textarea>
 			</li>
 		</ul>
 	</fieldset>
@@ -385,10 +362,10 @@ button( 'merge'.$C->id(), { href=>'/administrator/managerial/company_profiles.ht
 			</li>
 			<li>
 				<label>Salutation</label>
-				<input type="radio" name="rdbShippingSalutation" id="rdbShippingSalutationMr." value="Mr." <? echo ( ssi::checked( $$variable{'rdbShippingSalutation'} eq 'Mr.' ); ) ?> /><label class="radio" for="rdbShippingSalutationMr.">Mr.</label>
-				<input type="radio" name="rdbShippingSalutation" id="rdbShippingSalutationMrs." value="Mrs." <? echo ( ssi::checked( $$variable{'rdbShippingSalutation'} eq 'Mrs.' ); ) ?> /><label class="radio" for="rdbShippingSalutationMrs.">Mrs.</label>
-				<input type="radio" name="rdbShippingSalutation" id="rdbShippingSalutationMs." value="Ms." <? echo ( ssi::checked( $$variable{'rdbShippingSalutation'} eq 'Ms.' ); ) ?> /><label class="radio" for="rdbShippingSalutationMs.">Ms.</label>
-				<input type="radio" name="rdbShippingSalutation" id="rdbShippingSalutationMiss" value="Miss" <? echo ( ssi::checked( $$variable{'rdbShippingSalutation'} eq 'Miss' ); ) ?> /><label class="radio" for="rdbShippingSalutationMiss">Miss</label>
+				<input type="radio" name="rdbShippingSalutation" id="rdbShippingSalutationMr." value="Mr." <? echo ( ssi::checked( $$variable{rdbShippingSalutation} eq 'Mr.' ); ) ?> /><label class="radio" for="rdbShippingSalutationMr.">Mr.</label>
+				<input type="radio" name="rdbShippingSalutation" id="rdbShippingSalutationMrs." value="Mrs." <? echo ( ssi::checked( $$variable{rdbShippingSalutation} eq 'Mrs.' ); ) ?> /><label class="radio" for="rdbShippingSalutationMrs.">Mrs.</label>
+				<input type="radio" name="rdbShippingSalutation" id="rdbShippingSalutationMs." value="Ms." <? echo ( ssi::checked( $$variable{rdbShippingSalutation} eq 'Ms.' ); ) ?> /><label class="radio" for="rdbShippingSalutationMs.">Ms.</label>
+				<input type="radio" name="rdbShippingSalutation" id="rdbShippingSalutationMiss" value="Miss" <? echo ( ssi::checked( $$variable{rdbShippingSalutation} eq 'Miss' ); ) ?> /><label class="radio" for="rdbShippingSalutationMiss">Miss</label>
 			</li>
 			<li> 
 				<label>First Name</label>
@@ -410,14 +387,14 @@ button( 'merge'.$C->id(), { href=>'/administrator/managerial/company_profiles.ht
 				<label>Country</label>
 				<select name="ddmShippingCountry" onchange="Country_onchange(this, this.form.ddmShippingStateProvince );">
 					<option value=""> Select </option>
-					<? echo ( return_countries($variable{'ddmShippingCountry'}); ) ?>
+					<? echo ( return_countries($variable{ddmShippingCountry}); ) ?>
 				</select>
 			</li>
 			<li> 
 				<label><span id="ddmShippingCountry_state">Province/State</span></label>
 				<select name="ddmShippingStateProvince">
 					<option value=""> Select </option>
-					<? echo ( return_states_and_provinces($variable{'ddmShippingStateProvince'}); ) ?>
+					<? echo ( return_states_and_provinces($variable{ddmShippingStateProvince}); ) ?>
 				</select>
 			</li>
 			<li> 
@@ -430,15 +407,15 @@ button( 'merge'.$C->id(), { href=>'/administrator/managerial/company_profiles.ht
 			</li>
 			<li> 
 				<label>Phone</label>
-				<input type="text" name="txtShippingPhone" value="<?txtShippingPhone?>" />
+				<input type="tel" name="txtShippingPhone" value="<?txtShippingPhone?>" />
 			</li>
 			<li> 
 				<label>Fax</label>
-				<input type="text" name="txtShippingFax" value="<?txtShippingFax?>" />
+				<input type="tel" name="txtShippingFax" value="<?txtShippingFax?>" />
 			</li>
 			<li> 
 				<label>Email</label>
-				<input type="text" name="txtShippingEmail" value="<?txtShippingEmail?>" />
+				<input type="email" name="txtShippingEmail" value="<?txtShippingEmail?>" />
 			</li>
 		</ul>
 	</fieldset>
@@ -467,101 +444,20 @@ button( 'merge'.$C->id(), { href=>'/administrator/managerial/company_profiles.ht
 		</li>
 		<li> 
 			<label>Bank Phone</label>
-			<input type="text" name="txtBankPhone" value="<?txtBankPhone?>" />
+			<input type="tel" name="txtBankPhone" value="<?txtBankPhone?>" />
 		</li>
 		<li> 
 			<label>Bank Fax</label>
-			<input type="text" name="txtBankFax" value="<?txtBankFax?>" />
+			<input type="tel" name="txtBankFax" value="<?txtBankFax?>" />
 		</li>
 		<li> 
 			<label>Bank E-mail</label>
-			<input type="text" name="txtBankEmail" value="<?txtBankEmail?>" />
+			<input type="email" name="txtBankEmail" value="<?txtBankEmail?>" />
 		</li>
 		</ul>
 	</fieldset>
 </div>
-<div class="TradeReferences">
-	<fieldset><legend>Trade References</legend>
-		<ul>
-			<li> 
-				<label>Company Name</label>
-				<input type="text" name="txtTradeReferenceCompanyName1" value="<?txtTradeReferenceCompanyName1?>" />
-			</li>
-			<li> 
-				<label>Contact</label>
-				<input type="text" name="txtTradeReferenceContact1" value="<?txtTradeReferenceContact1?>" />
-			</li>
-			<li> 
-				<label>Phone</label>
-				<input type="text" name="txtTradeReferencePhone1" value="<?txtTradeReferencePhone1?>" />
-			</li>
-			<li> 
-				<label>Extension</label>
-				<input type="text" name="txtTradeReferenceExt1" value="<?txtTradeReferenceExt1?>" />
-			</li>
-			<li> 
-				<label>Fax</label>
-				<input type="text" name="txtTradeReferenceFax1" value="<?txtTradeReferenceFax1?>" />
-			</li>
-			<li> 
-				<label>E-mail Address</label>
-				<input type="text" name="txtTradeReferenceEmail1" value="<?txtTradeReferenceEmail1?>" />
-			</li>
-		</ul>
-		<ul>
-			<li> 
-				<label>Company Name</label>
-				<input type="text" name="txtTradeReferenceCompanyName2" value="<?txtTradeReferenceCompanyName2?>" />
-			</li>
-			<li> 
-				<label>Contact</label>
-				<input type="text" name="txtTradeReferenceContact2" value="<?txtTradeReferenceContact2?>" />
-			</li>
-			<li> 
-				<label>Phone</label>
-				<input type="text" name="txtTradeReferencePhone2" value="<?txtTradeReferencePhone2?>" />
-			</li>
-			<li> 
-				<label>Extension</label>
-				<input type="text" name="txtTradeReferenceExt2" value="<?txtTradeReferenceExt2?>" />
-			</li>
-			<li> 
-				<label>Fax</label>
-				<input type="text" name="txtTradeReferenceFax2" value="<?txtTradeReferenceFax2?>" />
-			</li>
-			<li> 
-				<label>E-mail Address</label>
-				<input type="text" name="txtTradeReferenceEmail2" value="<?txtTradeReferenceEmail2?>" />
-			</li>
-		</ul>
-		<ul>
-			<li> 
-				<label>Company Name</label>
-				<input type="text" name="txtTradeReferenceCompanyName3" value="<?txtTradeReferenceCompanyName3?>" />
-			</li>
-			<li> 
-				<label>Contact</label>
-				<input type="text" name="txtTradeReferenceContact3" value="<?txtTradeReferenceContact3?>" />
-			</li>
-			<li> 
-				<label>Phone</label>
-				<input type="text" name="txtTradeReferencePhone3" value="<?txtTradeReferencePhone3?>" />
-			</li>
-			<li> 
-				<label>Extension</label>
-				<input type="text" name="txtTradeReferenceExt3" value="<?txtTradeReferenceExt3?>" />
-			</li>
-			<li> 
-				<label>Fax</label>
-				<input type="text" name="txtTradeReferenceFax3" value="<?txtTradeReferenceFax3?>" />
-			</li>
-			<li> 
-				<label>E-mail Address</label>
-				<input type="text" name="txtTradeReferenceEmail3" value="<?txtTradeReferenceEmail3?>" />
-			</li>
-		</ul>
-	</fieldset>
-</div>
+<?include(/account/_trade_references.html)?>
 	<fieldset id="ButtonsBottom">
 		<p> 
 			<label><? if ( $$variable{CustomerIndex} ) ?><a href="user_profiles.html?ddmCustomer=<?CustomerIndex?>">Link to Users</a><? endif ( $$variable{CustomerIndex} ) ?>&nbsp;</label>
@@ -571,7 +467,7 @@ button( 'merge'.$C->id(), { href=>'/administrator/managerial/company_profiles.ht
 				$html .= button( 'Prev2', { onclick=>q`f1.btnFunction.value='&lt;&lt;';fmCheck(f1);`,text=>'&lt;&lt;' } );
 				$html .= button( 'Next2',{ onclick=>q`f1.btnFunction.value='&gt;&gt;';fmCheck(f1);`,text=>'&gt;&gt;' } );
 				$html .= button( 'New2',{ onclick=>'addCheck(f1);',text=>'New' } );
-				if ( $$variable{'Company'}->deleted() ) {
+				if ( $$variable{Company}->deleted() ) {
 					$html .= button( 'Undelete2', { onclick=>q`f1.btnFunction.value='Undelete';fmCheck(f1);`,text=>'Undelete' } );
 					$html .= button( 'Destroy2', { onclick=>q`f1.btnFunction.value='Destroy';fmCheck(f1);`,text=>'Destroy' } );
 				} else {
@@ -585,3 +481,4 @@ button( 'merge'.$C->id(), { href=>'/administrator/managerial/company_profiles.ht
 	</fieldset>
 </form>
 </div>
+<script type="text/javascript">load_customers();</script>

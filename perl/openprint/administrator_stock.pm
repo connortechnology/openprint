@@ -29,7 +29,11 @@ use vars qw( %variable %session %param %config $log $dbh $r );
 
 sub _stocks {
 	if ( %param and ! $param{'btnFunction'} ) {
-		ssi::save_params('/administrator/stock/list.html', 'group_id','owner_id','manufacturer_id','supplier_id', 'brand_id','finish_id','colour_id','weight_id','fsc_code','material_id', 'Types', 'recommendations','grain_direction', 'digital', 'width','height', 'scoring', 'setup_prices', 'material_prices' );
+		ssi::save_params('/administrator/stock/list.html', 
+			'group_id','owner_id','manufacturer_id','supplier_id', 'brand_id','finish_id',
+			'colour_id','weight_id','fsc_code','material_id', 'Types', 'recommendations',
+			'grain_direction', 'digital', 'width','height', 'scoring', 'setup_prices', 
+			'material_prices', 'customer_supplied' );
 		$session{'/administrator/stock/list.html?OrLarger'} = $param{OrLarger};
 	} # end if
 } # end sub _stocks
@@ -149,7 +153,8 @@ sub list {
 $openprint::log->debug("Setting: $param{'amount'} " );
 							$Price->cost( $param{'amount'} );
 						} # end if
-					} elsif ( $param{'markup'} ne '' ) {
+					}
+					if ( $param{'markup'} ne '' ) {
 						if ( $param{'markup'} =~ /^\+(.*)/ ) {
 							$Price->markup( $Price->markup() + $1 );
 						} elsif ( $param{'markup'} =~ /^\-(.*)/ ) {
@@ -158,7 +163,7 @@ $openprint::log->debug("Setting: $param{'amount'} " );
 							$Price->markup( $param{'markup'} );
 						} # end if
 					} # end if
-					$Price->price( $Price->cost() * ( 1+($Price->markup()/100) ) );
+					$Price->price( Math::Round::nearest( 0.01, $Price->cost() * ( 1+($Price->markup()/100) ) ) );
 					$variable{'error'} .= $Price->save();
 				} # end foreach Price
 			} elsif ( $param{'mode'} eq 'new' ) {
@@ -167,19 +172,23 @@ $openprint::log->debug("Setting: $param{'amount'} " );
 				} # end foreach Price
 				foreach my $key ( keys %param ) {
 					if ( my ( $pricelist_id, $id ) = $key =~ /min-(\d*)-(\d*)/ ) {
-						next if ! $param{"pricecwt-$pricelist_id-$id"};
+						if ( ! ( $param{"cost-$pricelist_id-$id"} or $param{"price-$pricelist_id-$id"} ) ) {
+							$variable{error} .= "Skipping price $id because no cost or price entered.<br/>";
+							next;
+						} # en dif
 
 						my $Price = new openprint::PaperPrice( );
 						$variable{'error'} .= $Price->save( {
-								'pricelist_id'	=>	$pricelist_id,
-								'paper_id'	=> $Paper->id(),
-								'min'	=>	$param{"min-$pricelist_id-$id"},
-								'max'	=>	$param{"max-$pricelist_id-$id"},
-								'units'	=>	$param{"units-$pricelist_id-$id"},
-								'cost'	=>	$param{"cost-$pricelist_id-$id"},
-								'markup'	=>	$param{"markup-$pricelist_id-$id"},
-								'price'	=>	$param{"price-$pricelist_id-$id"},
-								'discountable'	=>	$param{"discount-$pricelist_id-$id"},
+								pricelist_id	=>	$pricelist_id,
+								paper_id		=> $Paper->id(),
+								min				=>	$param{"min-$pricelist_id-$id"},
+								max				=>	$param{"max-$pricelist_id-$id"},
+								units			=>	$param{"units-$pricelist_id-$id"},
+								cost			=>	$param{"cost-$pricelist_id-$id"},
+								markup			=>	$param{"markup-$pricelist_id-$id"},
+								price			=>	$param{"price-$pricelist_id-$id"},
+								discountable	=>	$param{"discount-$pricelist_id-$id"},
+								service			=>	$param{"service-$pricelist_id-$id"},
 								} );
 						
 						# Force reload
@@ -285,16 +294,28 @@ sub stock {
 			push @{$$Paper{'recommendations'}}, $Type->id() if $param{'chkPRF'.$Type->id()};
 		} # end foreach
 
+		my $message = '';
 # Save prices
 		foreach my $Price ( $Paper->Prices() ) {
 			if (
 					( $Price->price() != $param{"price-$$Price{id}"} ) 
+					or ( $Price->cost() != $param{"cost-$$Price{id}"} ) 
+					or ( $Price->markup() != $param{"markup-$$Price{id}"} ) 
 					or ( $Price->min() != $param{"min-$$Price{id}"} )
 					or ( $Price->max() != $param{"max-$$Price{id}"} )
 					or ( $Price->units() ne $param{"units-$$Price{id}"} )
 					or ( $Price->discountable() ne $param{"discountable-$$Price{id}"} )
-					or ( $Price->equipment_id() ne $param{"equipment_id-$$Price{id}"} )
+					or ( $Price->equipment_id() != $param{"equipment_id-$$Price{id}"} )
 			   ) {
+			$message .= "Price changed: " . join( ', ', (
+						( $Price->min() != $param{"min-$$Price{id}"} ? 'min: ' . $$Price{min} .' => ' . $param{"min-$$Price{id}"} : () ),
+						( $Price->max() != $param{"max-$$Price{id}"} ? 'max: '. $$Price{max} .' => ' . $param{"max-$$Price{id}"} : () ),
+						( $Price->cost() != $param{"cost-$$Price{id}"} ? 'cost: '. $$Price{cost} . ' => '. $param{"cost-$$Price{id}"} : () ),
+						( $Price->markup() != $param{"markup-$$Price{id}"} ? 'markup: '.$$Price{markup} . ' => '. $param{"markup-$$Price{id}"} : () ),
+						( $Price->price() != $param{"price-$$Price{id}"} ? 'price: '.$$Price{price} . ' => '. $param{"price-$$Price{id}"} : () ),
+						( $Price->units() ne $param{"units-$$Price{id}"} ? 'units: '.$$Price{units} . ' => '. $param{"units-$$Price{id}"} : () ),
+						( $Price->discountable() ne $param{"discountable-$$Price{id}"} ? 'discounted: ' .$$Price{discountable} . ' => '. $param{"discountable-$$Price{id}"} : () ),
+				) );
 			$variable{error} .= $Price->save({
 					equipment_id	=> $param{"equipment_id-$$Price{id}"},
 					min				=> $param{"min-$$Price{id}"},
@@ -309,7 +330,11 @@ sub stock {
 		} # end foreach Price
 
 		$variable{'error'} .= $Paper->save();
-		$variable{'information'} .= 'Stock ' . $Paper->id() . ' has been saved.' if ! $variable{'error'};
+		(new openprint::Log())->save({ object_type=>(ref $Paper), object_id=>$$Paper{id}, action=>($param{stock_id}?'Edited stock':'Saved stock'), note=>$message });
+		if ( ! $variable{'error'} ) {
+			$variable{'information'} .= 'Stock ' . $Paper->id() . ' has been saved.';
+			$variable{ExternalRedirect} = '/administrator/stock/stock.html?stock_id='.$$Paper{id};
+		} # end if
 	} elsif ( $param{'btnFunction'} eq 'Prev' ) {
 		$Paper = $Paper->previous();
 		$param{'stock_id'} = $Paper->id();

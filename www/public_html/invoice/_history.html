@@ -1,11 +1,11 @@
 <? eval (
-	$$variable{subtotal} = $$variable{'total'} = $$variable{'interest_total'} = $$variable{'owing_total'} = 0;
+	$$variable{subtotal} = $$variable{total} = $$variable{interest_total} = $$variable{owing_total} = 0;
 	$$variable{Taxes} = [ openprint::Tax->find(
 		date_filter( '/invoice/history.html?created_on_end', 'period_start null_or_<=' ),
 		date_filter( '/invoice/history.html?created_on_start', 'period_end null_or_>=' ),
 		order		=>	'period_start,name',
 	) ];
-	my @Invoices = @{$$variable{'Invoices'}} = ();
+	my @Invoices = @{$$variable{Invoices}} = ();
 	if ( $param{invoice_id} ) {
 		@Invoices = openprint::Invoice->find( id => $param{invoice_id},
 			( sets::isin( $session{user_type}, ['E','A'] ) ?  () : ( invoicee_id=>$session{company_id} ) ),
@@ -13,7 +13,7 @@
 			);
 	} elsif ( $param{invoice_num} ) {
 		@Invoices = openprint::Invoice->find( 'num ilike' => ( $param{invoice_num} =~ /%/ ? $param{invoice_num} : '%'.$param{invoice_num}.'%' ),
-			( sets::isin( $session{'user_type'}, ['E','A'] ) ?  () : ( invoicee_id=>$session{company_id} ) ),
+			( sets::isin( $session{user_type}, ['E','A'] ) ?  () : ( invoicee_id=>$session{company_id} ) ),
 			order	=>	'num,id',
 			);
 	} elsif ( $param{po_id} ) {
@@ -28,13 +28,13 @@
 			date_filter( '/invoice/history.html?due_on_end', 'due_on <=' ),
 			date_filter( '/invoice/history.html?due_on_start', 'due_on >=' ),
 
-			( sets::isin( $session{'user_type'}, ['E','A'] ) ? (
-				( $session{'/invoice/history.html?company_id'} ? ( 'invoicee_id' => $session{'/invoice/history.html?company_id'} ) : () ),
-				invoicer_id		=> $session{'company_id'},
+			( sets::isin( $session{user_type}, ['E','A'] ) ? (
+				( $session{'/invoice/history.html?company_id'} ? ( invoicee_id => $session{'/invoice/history.html?company_id'} ) : () ),
+				invoicer_id		=> $openprint::User->company_id(),
 			) : (
-				( invoicee_id	=>	$session{'company_id'} ),
+				( invoicee_id	=>	$session{company_id} ),
 			) ),
-			order				=> 'num NULLS FIRST,id',
+			order				=> 'created_on',
 			) ) {
 			if ( $session{'/invoice/history.html?paid'} ne '' ) {
 				if ( $Invoice->is_paid() ) {
@@ -68,9 +68,9 @@
 	$$variable{Currency} = openprint::Currency::get_current() if ! $$variable{Currency};
 ) ?>
 
-<? if ( @{$$variable{'Invoices'}} == 0 ) ?>
+<? if ( @{$$variable{Invoices}} == 0 ) ?>
 	There are no invoices which match your search criteria. 
-<? else ( @{$$variable{'Invoices'}} == 0 ) ?>
+<? else ( @{$$variable{Invoices}} == 0 ) ?>
 	<div class="unprintable">
 		Please click on a <b>Invoice ID #</b> to view invoice details.<br/>
 		To delete invoices from history check the appropriate invoice(s) and click delete.<br/>
@@ -84,7 +84,7 @@
 			<th class="Company">Company</th>
 			<th class="Price">SubTotal</th>
 			<? echo ( 
-				return join('', map { sprintf('<th class="Price">%s (%d%)</th>', $_->name(), $_->rate() ) } @{$$variable{'Taxes'}} );
+				return join('', map { sprintf('<th class="Price">%s (%d%)</th>', $_->name(), $_->rate() ) } @{$$variable{Taxes}} );
 			) ?>
 			<th class="Price">Total</th>
 			<th class="Interest Price">Interest</th>
@@ -110,7 +110,7 @@
 				format_date( $Invoice->due_on() ),
 				ssi::htmlize( $Invoice->Invoicee()->name() ),
 				openprint::Currency::format( $Invoice->subtotal() ),
-				join('', map { sprintf('<td class="Price">%s</td>', openprint::Currency::format( $Invoice->Tax( $_ )->amount() ) ) } @{$$variable{'Taxes'}} ),
+				join('', map { sprintf('<td class="Price">%s</td>', openprint::Currency::format( $Invoice->Tax( $_ )->amount() ) ) } @{$$variable{Taxes}} ),
 				openprint::Currency::format( $Invoice->total() ),
 				openprint::Currency::format( $Invoice->interest() ),
 				openprint::Currency::format( $Invoice->owing() ),
@@ -121,18 +121,18 @@
 		) ?>
 			<tr class="totals">
 			<td colspan="5">Totals</td>
-			<td class="Price"><? echo ( openprint::Currency::format( $$variable{'subtotal'} ); ) ?></td>	
+			<td class="Price"><? echo ( openprint::Currency::format( $$variable{subtotal} ); ) ?></td>	
 			<? echo (
-				return join('', map { sprintf('<td class="Price">%s</td>', openprint::Currency::format( $$variable{'tax_totals'}{$_->id()} ) ) } @{$$variable{'Taxes'}} );
+				return join('', map { sprintf('<td class="Price">%s</td>', openprint::Currency::format( $$variable{tax_totals}{$_->id()} ) ) } @{$$variable{Taxes}} );
 			) ?>
-			<td class="Price"><? echo ( openprint::Currency::format( $$variable{'total'} ); ) ?></td>	
-			<td class="Interest Price"><? echo ( openprint::Currency::format( $$variable{'interest_total'} ); ) ?></td>	
-			<td class="Owing Price"><? echo ( openprint::Currency::format( $$variable{'owing_total'} ); ) ?></td>	
+			<td class="Price"><? echo ( openprint::Currency::format( $$variable{total} ); ) ?></td>	
+			<td class="Interest Price"><? echo ( openprint::Currency::format( $$variable{interest_total} ); ) ?></td>	
+			<td class="Owing Price"><? echo ( openprint::Currency::format( $$variable{owing_total} ); ) ?></td>	
 		</tr>
 	</table>
-	<span class="Currency">All prices listed in <? hecho ( new openprint::Currency( $session{'Currency_id'} )->name(); ) ?></span>
+	<span class="Currency">All prices listed in <? hecho ( new openprint::Currency( $session{Currency_id} )->name(); ) ?></span>
 	<br class="spacer"/>
 <p class="buttons">
 <? echo ( ssi::button( 'Delete',{ onclick=>'delete_confirm(document.f1);' } ); ) ?>
 </p>
-<? endif ( @{$$variable{'Invoices'}} == 0 ) ?>
+<? endif ( @{$$variable{Invoices}} == 0 ) ?>

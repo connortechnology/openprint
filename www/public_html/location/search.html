@@ -5,10 +5,10 @@
 <script type="text/javascript">
 	function load_locations( form ) {
 		$('Results').innerHTML = 'Please wait...';
-		new Ajax.Updater('Results','_search.html', {parameters:Form.serialize(form)});
+		new Ajax.Updater('Results','/location/_search.html', {parameters:Form.serialize(form)});
 	} // end function
 </script>	 
-<? echo ( include('/includes/error_reporting.html'); ) ?>
+<?include('/includes/error_reporting.html')?>
 <div class="Location"><div class="Search">
 	<form id="f1" name="f1" method="post" action="/location/search.html">
 		<fieldset class="filters unprintable"><legend>Select Search Criteria</legend>
@@ -19,7 +19,7 @@
 					<li><label>Type</label>
 						<select name="type_id" id="type_id">
 							<option value=""> All </option>
-					<? echo ( ssi::make_drop_down( openprint::Location_Type->dropdown(), $session{'/location/search.html?type_id'} ); ) ?>
+					<? echo ( make_drop_down( openprint::Location_Type->dropdown(), $session{'/location/search.html?type_id'} ); ) ?>
 						</select>
 					</li>
 <? else ( $session{user_type} eq 'A' ) ?>
@@ -40,14 +40,13 @@
 			</div>
 			</div>
 			<p class="buttons">
-				<? echo ( join('',
-					ssi::button( 'ShowResults', { 'onclick'=> 'load_locations(f1);', 'text'=>'Show Results' } ),
-					#ssi::writeButton( $log, $dbh, 'Reset', 'reset.gif', 'f1.reset();', '', 'Reset' ),
-					ssi::button( 'New', { 'href'=> '/location/edit.html', 'text'=>'New Location' } ),
+				<? echo ( join("\n",
+					button( 'ShowResults', { onclick=> 'load_locations(f1);', text=>'Show Results' } ),
+					button( 'New', { href=> '/location/edit.html', text=>'New Location' } ),
 					); ) ?>
 			</p>
 		</fieldset>
-		<div id="Results"><? echo ( include('_search.html'); ) ?></div>
+		<div id="Results"><?include('_search.html')?></div>
 	</form>
 	</div>
 </div>

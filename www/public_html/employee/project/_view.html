@@ -282,8 +282,7 @@ $html .= '</tr>';
     #} # end if $$services{Paper}
     return $html;
 ) ?>
-		<? if ( $session{'user_type'} eq 'A' or openprint::usergroup::is_user_in( ['Prepress'], $session{'user_id'} ) ) ?>
-		<? if ( openprint::usergroup::is_user_in( ['Prepress','Sales Admin','PrepressManager'], $session{'user_id'} ) ) ?>
+		<? if ( $$variable{Order}->can_edit() ) ?>
 		<tr class="unprintable">
 			<? if ( $$variable{checkboxes} ) ?>
 			<td class="checkbox">&nbsp;</td>
@@ -293,7 +292,6 @@ $html .= '</tr>';
 			<td class="status">
 			<? echo ( button( 'AddServiceType'.$$variable{Project}{id}, { onclick=>qq`form_submit('$$variable{formname}','Add Service' );`, text=>'Add Service' } ); ) ?></td>
 		</tr>
-		<? endif ( openprint::usergroup::is_user_in( ['Prepress','Sales Admin','PrepressManager'], $session{'user_id'} ) ) ?>
 		<tr class="unprintable">
 			<? if ( $$variable{checkboxes} ) ?>
 			<td class="checkbox">&nbsp;</td>
@@ -304,8 +302,8 @@ $html .= '</tr>';
 			<? echo ( button( 'AddToProject'.$$variable{Project}{id}, { onclick=>qq`form_submit('$$variable{formname}','Add Service');`, text=>'Add Custom Service' } ); ) ?>
 			</td>
 		</tr>
-		<? endif ( $session{'user_type'} eq 'A' or openprint::usergroup::is_user_in( ['Prepress'], $session{'user_id'} ) ) ?>
-		<? if ( $session{'user_type'} eq 'A' or openprint::usergroup::is_user_in( ['Accounting','PrepressManager'], $session{'user_id'} ) ) ?>
+		<? endif ( $$variable{Order}->can_edit() ) ?>
+		<? if ( $$variable{canseepricing} ) ?>
 		<tr class="totals subtotal">
 			<? if ( $$variable{checkboxes} ) ?>
 			<td class="checkbox">&nbsp;</td>
@@ -314,7 +312,6 @@ $html .= '</tr>';
 			<td class="Price"><? echo ( openprint::Currency::format( $$variable{Project}->price($$variable{'Project'}->ordered_quantity_index()) ); ) ?></td>
 			<td class="status"></td>
 		</tr>
-		<? if ( openprint::usergroup::is_user_in( ['Sales Admin','Scheduling','PrepressManager'], $session{'user_id'} ) ) ?>
 		<? echo ( 
 			my $html;
 			foreach my $Tax ( $$variable{Order}->Taxes() ) {
@@ -325,7 +322,6 @@ $html .= '</tr>';
 			} # end foreach Tax
 			return $html;
 		) ?>
-		<? endif ( openprint::usergroup::is_user_in( ['Sales Admin','Scheduling','PrepressManager'], $session{'user_id'} ) ) ?>
 		<tr class="total">
 			<? if ( $$variable{checkboxes} ) ?>
 			<td class="checkbox">&nbsp;</td>
@@ -378,7 +374,7 @@ $html .= '</tr>';
 			<td class="status"></td>
 		</tr>
 <? endif ( $$variable{'Project'}->ordered_price() != $$variable{'Project'}->price($$variable{'Project'}->ordered_quantity_index()) ) ?>
-		<? else ( $session{'user_type'} eq 'A' or openprint::usergroup::is_user_in( ['Accounting','PrepressManager'], $session{'user_id'} ) ) ?>
+		<? else ( $$variable{canseepricing} ) ?>
 		<? if ( openprint::usergroup::is_user_in( ['Shipping'], $session{'user_id'} ) ) ?>
 		<tr>
 			<? if ( $$variable{checkboxes} ) ?>
@@ -395,20 +391,17 @@ $html .= '</tr>';
 				} # end if
 				) ?>
 			</td>
-<?if($$variable{canseepricing})?>
 			<td class="status"></td>
-<?endif($$variable{canseepricing})?>
 		</tr>
 		<? endif ( openprint::usergroup::is_user_in( ['Shipping'], $session{'user_id'} ) ) ?>
-		<? endif ( $session{'user_type'} eq 'A' or openprint::usergroup::is_user_in( ['Accounting','PrepressManager'], $session{'user_id'} ) ) ?>
-		
+		<? endif ( $$variable{canseepricing} ) ?>
 	</table>
-<? if ( openprint::usergroup::is_user_in( ['Accounting'], $session{'user_id'} ) ) ?>
+	<? if ( $$variable{canseepricing} ) ?>
 	<? if ( $$variable{'Project'}->currency_id() != $session{'Currency_id'} ) ?>
 	<span class="Currency">Project originally quoted in <? echo ( $$variable{'Project'}->Currency()->name() ) ?>.</span>
 	<? endif ( $$variable{'Project'}->currency_id() != $session{'Currency_id'} ) ?>
 	<span class="Currency">All prices in <? echo ( new openprint::Currency( $session{Currency_id} )->name() ) ?>.&nbsp;</span>
-<? endif ( openprint::usergroup::is_user_in( ['Accounting'], $session{'user_id'} ) ) ?>
+	<? endif ( $$variable{canseepricing} ) ?>
 	<br/>
 	<span style="float: left;">
 		<? echo ( join("\n",

@@ -31,7 +31,11 @@ $log->debug("Not adding filter");
 		if ( $param{name} =~ /%/ ) {
 			$sql{'name ilike'} = $param{name};
 		} else {
-			$sql{'name ilike'} = '%'.$param{name}.'%';
+			if ( length $param{name} < 3 ) {
+				$sql{'name ilike'} = $param{name}.'%';
+			} else {
+				$sql{'name ilike'} = '%'.$param{name}.'%';
+			} # end if
 		}
 	}
 	my $time = time;

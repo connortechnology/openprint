@@ -37,10 +37,19 @@ $serial = 'skid_id_seq';
 	received_on		=>	'received_on',
 );
 %find_fields = (
+	verification_code => '(? IN (SELECT code FROM skid_verifications WHERE skid_id=skids.id))',
+	manifest_id			=>	'(SELECT manifest_id FROM ManifestContents WHERE skid_id=skids.id)',
+	paper_id			=>	'(SELECT paper_id FROM skid_contents where skid_id=skids.id)',
+	quantity			=>	'(SELECT MAX(quantity) FROM skid_contents WHERE skid_id=skids.id)',
+	last_seen			=>	'(SELECT updated_on FROM rfidtags WHERE rfidtags.id=skids.rfidtag_id)',
+	allocated_to_docket =>	'(id IN ( SELECT skid_id FROM paper_allocations WHERE docket=?))',
+	fsc_code			=>	'id IN ( SELECT skid_id FROM skid_contents WHERE paper_id=(SELECT id FROM papers WHERE fsc_code=?))',
+	purpose_id 			=>	'id IN ( SELECT skid_id FROM skid_contents WHERE purpose_id=?)',
+	condition_id 		=>	'(SELECT condition_id FROM skid_contents WHERE skid_contents.skid_id=skids.id )',
 );
 
 %transforms = (
-	id			=>	[ 's/\D//g' ],
+	id			=>	[ 's/\D//g', '<2147483647' ],
 	deleted	=>	[ 's/[^01]//g' ],
 	manufacturers_id	=>	[ 'tr/[a-z]/[A-Z]/' ],
 );
@@ -55,274 +64,7 @@ $serial = 'skid_id_seq';
 	manufacturers_id	=>	undef,
 );
 
-sub find {
-	shift @_ if $_[0] eq 'openprint::Skid';
-	shift @_ if ref $_[0] eq 'openprint::Skid';
 
-	my %params = @_;
-	my @values;
-
-	my $sql = 'SELECT * FROM Skids WHERE 1>0';
-	if ( $params{id} ) {
-        if ( ref $params{id} eq 'ARRAY' ) {
-            $sql .= ' AND id IN (' . join(',', map { '?' } @{$params{id}} ) . ')';
-            push @values, @{$params{id}};
-        } else {
-            $sql .= ' and id=?';
-            push @values, $params{id};
-        } # end if
-    } # end if
-	if ( $params{'id >='} ) {
-		$sql .= ' AND id >= ?';
-		push @values, $params{'id >='};
-	}  # end if
-	if ( $params{'id <='} ) {
-		$sql .= ' AND id <= ?';
-		push @values, $params{'id <='};
-	} # end if
-	if ( ref $params{'id not in'} eq 'ARRAY' ) {
-		$sql .= ' AND id NOT IN (' . join(',', map { '?' } @{$params{'id not in'}} ) . ')';
-		push @values, @{$params{'id not in'}};
-	} # end if
-	if ( $params{'id ilike'} ) {
-		$sql .= ' AND id ilike ?';
-		push @values, $params{'id ilike'};
-	} # end if
-
-	if ( $params{verification_code} ) {
-		$sql .= ' AND id IN (SELECT skid_id FROM skid_verifications WHERE code=?)';
-		push @values, $params{verification_code};
-	} # end if
-
-	if ( exists $params{has_manifest_id} ) {
-		if ( $params{has_manifest_id} ) {
-			$sql .= ' AND id IN (SELECT skid_id FROM ManifestContents)';
-		} else {
-			$sql .= ' AND id NOT IN (SELECT skid_id FROM ManifestContents)';
-		} # end if
-	} # end if
-
-	if ( $params{paper_id} and $params{'quantity >='} ) {
-		$sql .= ' AND id IN (SELECT skid_id FROM skid_contents WHERE quantity >= ?';
-		if ( ref $params{paper_id} eq 'ARRAY' ) {
-			$sql .= ' AND paper_id IN (' . join(',', map { '?' } @{$params{paper_id}} ) . ') )';
-			push @values, $params{'quantity >='}, @{$params{paper_id}};
-		} else {
-			$sql .= ' AND paper_id=?)';
-			push @values, $params{'quantity >='}, $params{paper_id};
-		} # en dif
-	} elsif ( $params{paper_id} ) {
-		if ( ref $params{paper_id} eq 'ARRAY' ) {
-			$sql .= ' AND id IN (SELECT skid_id FROM skid_contents WHERE paper_id IN (' . join(',', map { '?' } @{$params{paper_id}} ) . ') )';
-			push @values, @{$params{paper_id}};
-		} else {
-			$sql .= ' AND id IN (SELECT skid_id FROM skid_contents WHERE paper_id=?)';
-			push @values, $params{paper_id};
-		} # end if
-	} elsif ( $params{'quantity >='} ) {
-		$sql .= ' AND id IN (SELECT skid_id FROM skid_contents WHERE quantity >= ?)';
-		push @values, $params{'quantity >='};
-	} # end if
-
-	if ( $params{owner_id} ) {
-		$sql .= ' AND owner_id=?';
-		push @values, $params{owner_id};
-	} # end if
-	if ( $params{rfidtag_id} ) {
-		$sql .= ' AND rfidtag_id=?';
-		push @values, $params{rfidtag_id};
-	} # end if
-	if ( $params{'rfidtag_id ilike'} ) {
-		$sql .= ' AND rfidtag_id ilike ?';
-		push @values, $params{'rfidtag_id ilike'};
-	} # end if
-	if ( exists $params{manufacturers_id} ) {
-        if ( ref $params{manufacturers_id} eq 'ARRAY' ) {
-            $sql .= ' AND manufacturers_id IN (' . join(',', map { '?' } @{$params{manufacturers_id}} ) . ')';
-            push @values, @{$params{manufacturers_id}};
-        } else {
-            $sql .= ' AND manufacturers_id=?';
-            push @values, $params{manufacturers_id};
-        } # end if
-	} # end if
-	if ( $params{'manufacturers_id ilike'} ) {
-		$sql .= ' AND manufacturers_id ilike ?';
-		push @values, $params{'manufacturers_id ilike'};
-	} # end if
-	if ( exists $params{'has manufacturers_id'} ) {
-		if ( $params{'has manufacturers_id'} ) {
-			$sql .= q` AND NOT (manufacturers_id IS NULL OR manufacturers_id='')`;
-		} else {
-			$sql .= q` AND (manufacturers_id IS NULL OR manufacturers_id='')`;
-		} # end if
-	} # end if
-	if ( $params{created_on_start} and $params{created_on_end} ) {
-		$sql .= ' AND ( created_on BETWEEN ? AND ? )';
-		push @values, @params{'created_on_start','created_on_end'};
-	} elsif ( $params{created_on_start} ) {
-		$sql .= ' AND created_on >= ?';
-		push @values, $params{created_on_start};
-	} elsif ( $params{created_on_end} ) {
-		$sql .= ' AND created_on <= ?';
-		push @values, $params{created_on_end};
-	} # end if
-
-	if ( $params{'created_on >='} ) {
-		$sql .= ' AND created_on >= ?';
-		push @values, $params{'created_on >='};
-	} 
-	if ( $params{'created_on <='} ) {
-		$sql .= ' AND created_on <= ?';
-		push @values, $params{'created_on <='};
-	} # end if
-	if ( $params{updated_on_start} and $params{updated_on_end} ) {
-		$sql .= ' AND ( updated_on BETWEEN ? AND ? )';
-		push @values, @params{'updated_on_start','updated_on_end'};
-	} elsif ( $params{updated_on_start} ) {
-		$sql .= ' AND updated_on >= ?';
-		push @values, $params{updated_on_start};
-	} elsif ( $params{updated_on_end} ) {
-		$sql .= ' AND updated_on <= ?';
-		push @values, $params{updated_on_end};
-	} # end if
-
-	if ( $params{'updated_on >='} ) {
-		$sql .= ' AND updated_on >= ?';
-		push @values, $params{'updated_on >='};
-	} # end if
-	if ( $params{'updated_on <='} ) {
-		$sql .= ' AND updated_on <= ?';
-		push @values, $params{'updated_on <='};
-	} # end if
-	if ( $params{received_on_start} and $params{received_on_end} ) {
-		$sql .= ' AND ( received_on BETWEEN ? AND ? )';
-		push @values, @params{'received_on_start','received_on_end'};
-	} elsif ( $params{received_on_start} ) {
-		$sql .= ' AND received_on >= ?';
-		push @values, $params{received_on_start};
-	} elsif ( $params{received_on_end} ) {
-		$sql .= ' AND received_on <= ?';
-		push @values, $params{received_on_end};
-	} # end if
-
-	if ( $params{'received_on >='} ) {
-		$sql .= ' AND received_on >= ?';
-		push @values, $params{'received_on >='};
-	} # end if
-	if ( $params{'received_on <='} ) {
-		$sql .= ' AND received_on <= ?';
-		push @values, $params{'received_on <='};
-	} # end if
-
-	if ( $params{last_seen_start} and $params{last_seen_end} ) {
-		$sql .= ' AND ( (SELECT updated_on FROM Rfidtags where rfidtags.id=skids.rfidtag_id) BETWEEN ? AND ? )';
-		push @values, @params{'last_seen_start','last_seen_end'};
-	} elsif ( $params{last_seen_start} ) {
-		$sql .= ' AND (SELECT updated_on FROM Rfidtags where rfidtags.id=skids.rfidtag_id) >= ?';
-		push @values, $params{last_seen_start};
-	} elsif ( $params{last_seen_end} ) {
-		$sql .= ' AND ( (SELECT updated_on FROM Rfidtags where rfidtags.id=skids.rfidtag_id) <= ? OR (SELECT updated_on FROM Rfidtags where rfidtags.id=skids.rfidtag_id) IS NULL)';
-		push @values, $params{updated_on_end};
-	} # end if
-	if ( $params{'last_seen >='} ) {
-		$sql .= ' AND (SELECT updated_on FROM Rfidtags where rfidtags.id=skids.rfidtag_id) >= ?';
-		push @values, $params{'last_seen >='};
-	} # end if
-	if ( $params{'last_seen <='} ) {
-		$sql .= ' AND ( (SELECT updated_on FROM Rfidtags where rfidtags.id=skids.rfidtag_id) <= ? OR (SELECT updated_on FROM Rfidtags where rfidtags.id=skids.rfidtag_id) IS NULL)';
-		push @values, $params{'updated_on <='};
-	} # end if
-	if ( $params{allocated_to_docket} ) {
-# FIXME
-		$sql .= ' AND id IN ( SELECT skid_id FROM paper_allocations WHERE project_id=(SELECT id FROM Projects WHERE lngDocketNumber=?))';
-		push @values, $params{allocated_to_docket};
-	} # end if
-	if ( $params{fsc_code} ) {
-		$sql .= ' AND id IN ( SELECT skid_id FROM skid_contents WHERE paper_id=(SELECT id FROM papers WHERE fsc_code=?))';
-		push @values, $params{fsc_code};
-	} # end if
-	if ( $params{purpose_id} ) {
-		$sql .= ' AND id IN ( SELECT skid_id FROM skid_contents WHERE purpose_id=?)';
-		push @values, $params{purpose_id};
-	} # end if
-	if ( $params{created_on} ) {
-		$log->debug("Find: Created: $params{created_on}");
-	} # end if
-	if ( $params{condition_id} ) {
-		$sql .= ' AND exists ( SELECT skid_id FROM skid_contents WHERE condition_id=? and skid_contents.skid_id=skids.id )';
-		push @values, $params{condition_id};
-	} # end if
-	if ( exists $params{deleted} ) {
-		if ( ref $params{deleted} eq 'ARRAY' ) {
-			$sql .= ' AND deleted IN (' . join(',', map {'?'} @{$params{deleted}}) . ')';
-			push @values, @{$params{deleted}};
-		} else {
-			$sql .= ' AND deleted=?';
-			push @values, $params{deleted};
-		} # end if
-	} else {
-		$sql .= ' AND deleted=?';
-		push @values, 0;
-	} # end if
-
-	if ( exists $params{type} ) {
-		if ( ref $params{type} eq 'ARRAY' ) {
-			if ( @{$params{type}} ) {
-				$sql .= ' AND type IN (' . join(',', map {'?'} @{$params{type}}) . ')';
-				push @values, @{$params{type}};
-			} else {
-				$sql .= ' AND type IS NULL';
-			} # en dif
-		} else {
-			$sql .= ' AND type=?';
-			push @values, $params{type};
-		} # end if
-	} elsif ( exists $params{'type !='} ) {
-			$sql .= ' AND (type IS NULL OR type!=?)';
-			push @values, $params{'type !='};
-	} elsif ( exists $params{'type is null or in'} ) {
-		if ( ref $params{'type is null or in'} eq 'ARRAY' ) {
-			$sql .= ' AND ( type IS NULL OR type IN (' . join(',', map {'?'} @{$params{'type is null or in'}}) . '))';
-			push @values, @{$params{'type is null or in'}};
-		} elsif ( $params{'type is null or in'} ) {
-			$sql .= ' AND (type IS NULL OR type = ?)';
-			push @values, $params{'type is null or in'};
-		} else {
-			$sql .= ' AND type IS NULL';
-		} # en dif
-	} # end if
-	if ( exists $params{location_id} ) {
-		if ( ref $params{location_id} eq 'ARRAY' ) {
-			if ( @{$params{location_id}} ) {
-				$sql .= ' AND location_id IN (' . join(',', map {'?'} @{$params{location_id}}) . ')';
-				push @values, @{$params{location_id}};
-			} else {
-				$sql .= ' AND location_id IS NULL';
-			} # en dif
-		} else {
-			$sql .= ' AND location_id=?';
-			push @values, $params{location_id};
-		} # end if
-	} # end if
-	
-	$sql .= " ORDER BY $params{order}" if $params{order};
-	if ( @values == 1) {
-		$log->warn("Loading all skids!");
-		#Carp::cluck("Loading all skids?! $sql");
-	} # end if
-
-	my $data = $openprint::dbh->selectall_arrayref( $sql, { Slice => {} }, @values );
-	if ( ! $data ) {
-		$log->debug("Error loading skids SQL($sql)" . DBI->errstr );
-	} elsif ( $debug ) {
-		$log->debug("Debug loaded skids ($sql) (@values) # of results: " . @$data );
-	} # end if
-	#if ( $data and @$data >= 100 ) {
-		#Carp::cluck("Loading a lot of skids?! $sql : #". @$data );
-	#} # end if
-	return map { new openprint::Skid( $_->{id}, $_ ) } @$data;
-
-} # end sub find
 
 sub copy {
 	my $self = shift;
@@ -372,10 +114,14 @@ sub destroy {
 	return $error;
 } # end sub delete
 
-#sub to_string {
-	#my $self = shift;
-	#return 
-#} # end sub
+sub to_string {
+	my $self = shift;
+	return sprintf('%s %d containing %s', 
+		( $self->type() eq 'Roll' ? 'Roll' : 'Skid' ),
+		$$self{id},
+		join('<br/>', map { $_->to_string() } $self->Contents() ),
+	);
+} # end sub
 
 sub add {
 	my ( $self, $Paper, $quantity, $condition, $Purpose ) = @_;
@@ -521,7 +267,7 @@ sub Contents {
 
 	if ( @_ ) {
 		if ( ! defined $_[0] ) {
-			$$self{Contents} = [ openprint::SkidContent->find( 'skid_id'=>$$self{id}, 'deleted in'=>[0,1] ) ];
+			$$self{Contents} = [ openprint::SkidContent->find( skid_id=>$$self{id}, 'deleted in'=>[0,1] ) ];
 		} elsif ( ref $_[0] eq 'ARRAY' ) {
 			$$self{Contents} = $_[0];
 		} else {
@@ -555,11 +301,16 @@ sub allocateable {
 } # end sub allocateable
 
 # Checkout all paper on the skid
+# Shoudl take comment, docket, force
+# If docket isn't passed, try to find it by allocation.
+
 sub checkout {
-	my ( $self, $c ) = @_;
+	my ( $self, $docket, $c, $force ) = @_;
 	require openprint::PaperInventory;
 	my @contents = openprint::SkidContent->find( skid_id=>$$self{id} );
 	if ( ! @contents ) {
+		
+		# When there is no content... this basically means the stock is used before it is entered in the system.
 		if ( ! openprint::PaperInventory->find( skid_id=>$$self{id}, 'comment like'=>'Checked out%' ) ) {
 			my $PI = new openprint::PaperInventory();
 			my $e = $PI->save({
@@ -570,35 +321,76 @@ sub checkout {
 					'comment'	=>	'Checked out' . $c,
 					'skid_id'	=>	$$self{id},
 					'units'		=>	'unknown',
+					docket		=>	$docket,
 					});
 			$log->error($e);
+		} else {
+$log->error("No contents foudn, but inventory log entries found for skid $$self{id}");
 		} # end if
+$log->debug("No contents found for skid $$self{id} Checking out anyways");
 		return 1;
 	} # end if
 
+	if ( 0 and ! $docket ) {
+		# DOn't do this because we might be using it on another docket.
+		# We might eb able to look at what job is being run but for now, just don't
+		my $PA = openprint::PaperAllocation->find_one( 'skid_ids any'=>$$self{id} );
+		if ( $PA ) {
+			$docket = $PA->docket();
+		}
+	} # end if
+
+	my $rc = 0;
 	foreach my $C ( @contents ) {
-		if ( ! openprint::PaperInventory->find( skid_id=>$$self{id}, 'comment like'=>'Checked out%' ) ) {
+		next if ! $C->quantity();
+
+		if ( 0 ) {
+			# DOn't do this.  Just because it is allocated doesn't mean it is being used for this docket
 			my $PA = openprint::PaperAllocation->find_one( 'skid_ids any'=>$$self{id}, paper_id=>$C->paper_id());
-			my $desc = 'Checked out';
-			$desc .= ($PA->docket() ? ' for docket ' . $PA->docket() : '') if $PA;
-			my $PI = new openprint::PaperInventory();
-			my $e = $PI->save({
-					'paper_id'  =>  $C->paper_id(),
-					'user_id'   =>  $session{user_id},
-					'instock'   =>  $C->Paper()->in_stock() - $C->quantity(),
-					'delta'     =>  -1*$C->quantity(),
-					'comment'   =>  $desc.$c,
-					'skid_id'   =>  $$self{id},
-					'units'     =>  $C->units(),
-					( ($PA and $PA->docket() ) ? ( docket		=>	$PA->docket() ) : () ),
-					} );
-			$C->quantity( 0 );
-			$e .=   $C->save();
-			$log->error( $e ) if $e;
-			return 1;
-		} # end if not already checked out
+		}
+
+		my $desc = 'Checked out' . ( $docket ? ' for docket ' .$docket : '' );
+			
+		my $Paper = $C->Paper();
+# This is neccessary because different skids can be doing the checkout
+		$Paper->lock();
+
+		# SHouldn't have to..
+		$Paper->SkidContents(undef);
+		my $e = $Paper->save(); # Must update in_stock
+		my $PI = new openprint::PaperInventory();
+		$e .= $PI->save({
+				paper_id  =>  $C->paper_id(),
+				user_id   =>  $session{user_id},
+				instock   =>  $Paper->in_stock() - $C->quantity(),
+				delta     =>  -1*$C->quantity(),
+				comment   =>  $desc.$c,
+				skid_id   =>  $$self{id},
+				units     =>  $C->units(),
+				( $docket ? (docket=>$docket) : () ),
+				} );
+		$e .= $C->save( { quantity => 0 } );
+		$Paper->SkidContents(undef);
+		$e .= $Paper->save(); # Must update in_stock
+		if ( $Paper->in_stock() != $PI->instock ) {
+			$log->error("What just happened?! $$Paper{in_stock} != $$PI{instock}");
+		} # end if
+		$log->error( $e ) if $e;
+		$Paper->unlock();
+		$rc = 1;
 	} # end foreach Content
-	return 0;
+
+	#Update any PAs
+	foreach my $PA ( openprint::PaperAllocation->find( 'skid_ids any' => $$self{id} ) ) {
+		if ( $PA->docket() != $docket ) {
+			# FIXME Send alerta
+		}
+		$PA->save({skid_ids=>[ sets::exclude( [ $self->id() ], $PA->skid_ids() ) ] });
+		if ( ! $PA->Skids() ) {
+			$PA->delete();
+		} # end if
+	} # end foreach PA
+	return $rc;
 } # end sub checkout
 
 sub previous {
@@ -684,6 +476,9 @@ sub RFIDTag {
 
 sub type {
 	my $self = shift;
+	if ( @_ ) {
+		$$self{type} = $_[1];
+	}
 	if ( ! $$self{type} ) {
 		my @Contents = $self->Contents();
 		foreach my $C ( @Contents ) {
@@ -853,7 +648,7 @@ sub checked_out {
 	if ( ! exists $_[0]{checked_out} ) {
 		foreach my $SC ( $_[0]->Contents() ) {
 			if ( $SC->checked_out() ) {
-				$_[0]{checked_out} = 1;
+				$_[0]{checked_out} = $SC->checked_out();
 				last;
 			} # end if
 		} # end foreach SC
@@ -872,8 +667,44 @@ sub description {
 } # end sub description
 
 sub link_to {
-	return sprintf('<a href="/employee/inventory/skid_details.html?skid_id=%1$d">%2$s %1$d</a>', $_[0]{id}, $_[0]->type() eq 'Roll' ? 'Roll':'Skid' );
+	return sprintf('<a href="/employee/inventory/skid_details.html?skid_id=%1$d">%2$s %1$d</a>', $_[0]{id}, 
+		( @_ > 1 ? $_[1] : $_[0]->type() eq 'Roll' ? 'Roll':'Skid' ) );
 } # end sub link_to
+
+sub units {
+	if ( ! $_[0]{units} ) {
+		my @Contents = $_[0]->Contents();
+		if ( @Contents ) {
+			$_[0]{units} = $Contents[0]->Paper()->units();
+		} # end if
+	} # end if
+	return $_[0]{units};
+}
+
+sub quantity {
+	if ( ! $_[0]{quantity} ) {
+		foreach my $C ( openprint::SkidContent->find( skid_id=>$_[0]{id}, order=>'paper_id' ) ) {
+			$_[0]{quantity} = $C->quantity();
+			last;
+		} # end foreach
+	} # end if
+	return $_[0]{quantity};
+}
+
+sub last_seen {
+	if ( @_ > 1 ) {
+		$_[0]{last_seen} = $_[1];
+	}
+	if ( ! $_[0]{last_seen} ) {
+		if ( $_[0]{rfidtag_id} ) {
+			my $RFID = $_[0]->RFIDTag();
+			$_[0]{last_seen} = $RFID->updated_on();
+		} else {
+			$_[0]{last_seen} = $_[0]{updated_on};
+		}
+	} # end if
+	return $_[0]{last_seen};
+}
 
 1;
 __END__

@@ -183,7 +183,7 @@ sub overrides {
 		my @o = $function->( $self->Project(), $$self{'service_id'}, $specs, $qty_index );
 		return @o;
 	} else {
-		$openprint::log->warn("No has_overrides for " . $_[0]->ServiceType()->name() );
+		$openprint::log->warn("No has_overrides for " . $_[0]->ServiceType()->type() );
 	} # end if
 	return ();
 } # end sub overrides

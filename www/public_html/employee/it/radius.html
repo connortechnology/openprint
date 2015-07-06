@@ -35,7 +35,10 @@ Please select a host to view/edit.<br>
 				<li><label>Attribute</label>
 					<select name="attribute" id="attribute">
 						<option value="">All</option>
-					<? echo ( make_drop_down( [ map { $_, $openprint::RADIUS_Check::attributes{$_} } keys %openprint::RADIUS_Check::attributes ], $session{'/employee/it/radius.html?attribute'} ); ) ?>
+					<? echo ( make_drop_down( [ 
+						( map { $_, $openprint::RADIUS_Check::attributes{$_} } sort keys %openprint::RADIUS_Check::attributes),
+						( map { $_, $openprint::RADIUS_Reply::attributes{$_} } sort keys %openprint::RADIUS_Reply::attributes),
+						], $session{'/employee/it/radius.html?attribute'} ); ) ?>
 					</select>
 				</li>
 			<? endif ( $config{'RADIUS Support'} ) ?>

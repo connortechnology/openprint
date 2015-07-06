@@ -29,7 +29,7 @@
 			input( type=>'float', name=>'txtSpecificationMin'.$$Spec{id}, value=>$$Spec{min} ),
 			input( type=>'float', name=>'txtSpecificationMax'.$$Spec{id}, value=>$$Spec{max} ),
 			HTML::Entities::encode_entities($$Spec{value}), $$Spec{units},
-			radio( 'interpolate'.$$Spec{id}, [ 'true','Yes', 'false', 'No' ], $$Spec{interpolate} ),
+			radio( 'interpolate'.$$Spec{id}, [ '1','Yes', '0', 'No' ], $$Spec{interpolate}, { default=>$openprint::MaterialSpecification::defaults{interpolate} } ),
 			);
 				$rowclass = $rowclass ? '' : ' class="colRow"';
 			} # end foreach Spec
