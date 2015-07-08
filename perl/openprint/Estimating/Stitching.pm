@@ -436,7 +436,7 @@ EQUIPMENT:foreach my $Equipment ( @equipment ) {
 					next;
 				} 
 				if ( $capable eq 'When Folding' ) {
-					$results{Breakdown} .= 'Not being folded on ' . $$I{Folder}->name() . '<br/>';
+					$results{Breakdown} .= 'Not being folded on ' .$Equipment->name(). ' is on '. $$I{Folder}->name() . '<br/>';
 					next;
 				} # end if
 			} # end if

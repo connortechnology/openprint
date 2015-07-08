@@ -1251,6 +1251,7 @@ $openprint::log->debug("not Skipping cuz ddmPress$qty_index eq $$Press{strid}");
 		} else {
 			delete $$project{dutch};
 		} # end if
+		$$project{PerfectingDutchByDefault} = $Press->specification('PerfectingDutchByDefault');
 
 		my @impositions;
 

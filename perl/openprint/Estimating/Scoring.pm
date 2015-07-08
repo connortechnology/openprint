@@ -409,7 +409,7 @@ sub signature_calc($$$$$$) {
 			if ( ! $$calc_hash{FoldingSpecs} ) {
 				$Results{Breakdown} .= 'Not being folded.<br/>';
 				if ( $$specs{"chkOverrideEquipment-$form-$qty_index"} eq 'Y' ) {
-					$Results{alert} .= 'Not being folded.<br/>';;
+					$Results{alert} .= 'Not being folded.<br/>';
 				} # end if
 				next;
 			} 
