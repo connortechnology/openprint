@@ -134,7 +134,7 @@ sub calc {
 		$$specs{alert} .= 'Unable to calculate the calliper of the project.  Please recalculate printing services.';
 		return $$specs{Status} = 'uncalculated';
 	} # end if
-	$$specs{txtFinishedWeight} = 1 * openprint::print::get_finished_weight( $project_index, 1 );
+	$$specs{txtFinishedWeight} = $Project->finished_weight( 1 );
 	if ( ! $$specs{txtFinishedWeight} ) {
 		$$specs{alert} .= 'Unable to calculate the weight of the project.  Please recalculate printing services.';
 		return $$specs{Status} = 'uncalculated';
