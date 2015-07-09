@@ -123,7 +123,11 @@
 
 	my $radius_fragment = slurp_content( '/employee/it/_radius_mac_line.html' );
 	my @macs = map { $_->mac() ? () : '' } $$variable{Host}->Interfaces();
-	foreach my $Interface ( $$variable{Host}->Interfaces(), ( @macs ? () : new openprint::Host_Interface() ) ) {
+
+	my $NewHI = new openprint::Host_Interface();
+	$NewHI->mac( $param{mac} ) if ! $$variable{Host}->id();
+
+	foreach my $Interface ( $$variable{Host}->Interfaces(), ( @macs ? () : $NewHI ) ) {
 		$html .= sprintf(q`
 <tr id="hi-%1$d">
 	<td class="mac">%2$s</td>
