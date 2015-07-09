@@ -93,6 +93,7 @@
 			</fieldset>
 		</div>
 	</fieldset>
+<? endif ( $$variable{Host}->id() ) ?>
 <fieldset><legend>Interfaces</legend>
 	<table class="List">
 		<tr>
@@ -121,7 +122,7 @@
 	} # end if RADIUS
 
 	my $radius_fragment = slurp_content( '/employee/it/_radius_mac_line.html' );
-my @macs = map { $_->mac() ? () : '' } $$variable{Host}->Interfaces();
+	my @macs = map { $_->mac() ? () : '' } $$variable{Host}->Interfaces();
 	foreach my $Interface ( $$variable{Host}->Interfaces(), ( @macs ? () : new openprint::Host_Interface() ) ) {
 		$html .= sprintf(q`
 <tr id="hi-%1$d">
@@ -159,6 +160,7 @@ my @macs = map { $_->mac() ? () : '' } $$variable{Host}->Interfaces();
 ) ?>
 	</table>
 </fieldset>
+<? if ( $$variable{Host}->id() ) ?>
             <fieldset><legend>Where</legend>
 <? echo ( 
     $$variable{'Location'} = $$variable{Host}->Location();
