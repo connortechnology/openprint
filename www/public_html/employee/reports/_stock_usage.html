@@ -149,7 +149,7 @@ or ( $Stock->basis_mweight() >( $session{'/employee/reports/stock_usage.html?bas
 					} # end if
 				} # end if
 				my $qty = $$sig_specs{'txtPressSheetQty'.$qty_index};
-				$log->debug(" Got $qty in project $$Project{id}");
+				#$log->debug(" Got $qty in project $$Project{id}");
 				$qty =~ s/[^\d\.]//g;
 				if ( ! $qty ) {
 					$log->error("No Ordered QTY in $$Order{id} $$Project{id}!");
@@ -184,8 +184,6 @@ or ( $Stock->basis_mweight() >( $session{'/employee/reports/stock_usage.html?bas
 			my $quantity = $totals{$paper_string}{quantity};
 			my @unique_order_ids = sets::union( map { $$_{id} } @{$totals{$paper_string}{Orders}} );
 			my @unique_project_ids = sets::union( map { $$_{id} } @{$totals{$paper_string}{Projects}} );
-$log->debug("Order_ids: @unique_order_ids");
-$log->debug("Project ids: @unique_project_ids");
 
 			$html .= sprintf('
 <tr>

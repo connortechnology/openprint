@@ -41,7 +41,7 @@ function load() {
     ) ?>
             </li>
 			<li><label>Customer Supplied</label>
-				<? echo ( radio( 'customer_supplier', ['Y','Yes','N','No','','Both'], $session{$r->uri().'?customer_supplied'} ); ) ?>
+				<? echo ( radio( 'customer_supplied', ['Y','Yes','N','No','','Both'], $session{$r->uri().'?customer_supplied'} ); ) ?>
 			</li>
 <? echo (
     my $html;
