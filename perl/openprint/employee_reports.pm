@@ -404,6 +404,9 @@ sub stock_usage {
 	if ( ! exists $session{'/employee/reports/stock_usage.html?projects_orders'} ) {
 		$session{'/employee/reports/stock_usage.html?projects_orders'} = 'Orders';
 	} # end if
+	if ( ! exists $session{'/employee/reports/stock_usage.html?customer_supplied'} ) {
+		$session{'/employee/reports/stock_usage.html?customer_supplied'} = 'N';
+	} # end if
 } # end sub stock_usage
 
 sub _stock_usage {

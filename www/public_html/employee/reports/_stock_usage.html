@@ -82,7 +82,6 @@
 				my $Stock = openprint::Paper::load_from_signature( $Project, $sig_specs, $qty_index );
 				$Stock = $Stock->Supplied();
 
-$log->debug("cs: " . $session{'/employee/reports/stock_usage.html?customer_supplied'} . ' supplied: ' . $Stock->supplied() );
 				if ( 
 					( ( $session{'/employee/reports/stock_usage.html?customer_supplied'} eq 'Y' ) and ! $Stock->supplied() )
 					or
