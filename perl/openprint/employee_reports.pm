@@ -412,7 +412,7 @@ sub _stock_usage {
 			( map { 'ordered_on_end_'.$_ } ( 'year','month','day' ) ),
 			'manufacturer_id', 'brand_id', 'finish_id', 'colour_id', 'weight_id',
 			'type', 'fsc', 'fsc_code', 'width','height','OrLarger', 'basis_weight','mweight',
-			'projects_orders',
+			'projects_orders','customer_supplied',
 	 );
 } # end sub _stock_usage
 
