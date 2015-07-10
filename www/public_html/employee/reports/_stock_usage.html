@@ -50,12 +50,16 @@
 			} # end if
 			foreach my $service_id ( $Project->signatures() ) {
 				my $sig_specs = openprint::service::get_specs_ref( $Project, $service_id );
+				if ( ! $$sig_specs{'txtImposition'.$qty_index} ) {
+						next;
+				}
 
 				if ( ! $$sig_specs{'StockType'.$qty_index} ) {
 					if ( $$sig_specs{'StockType'} ) {
 						openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $service_id, 'StockType'.$qty_index, $$sig_specs{'StockType'} );
 					} else {
 						$log->error("Unknown stock type: " . $$sig_specs{'StockType'.$qty_index} );
+						next;
 					} # end if
 				} # end if
 
@@ -131,7 +135,8 @@ or ( $Stock->basis_mweight() >( $session{'/employee/reports/stock_usage.html?bas
 					} # end if
 				} # end if
 				my $qty = $$sig_specs{'txtPressSheetQty'.$qty_index};
-				$qty =~ s/\D//g;
+				$log->debug(" Got $qty in project $$Project{id}");
+				$qty =~ s/[^\d\.]//g;
 				if ( ! $qty ) {
 					$log->error("No Ordered QTY in $$Order{id} $$Project{id}!");
 				}
