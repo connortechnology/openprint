@@ -1,7 +1,12 @@
 <script type="text/javascript" src="<?hash_link(/javascripts/paper.js)?>"></script>
 <script type="text/javascript">
 function load() {
-	LoadContent( 'Results', '/employee/reports/_stock_usage.html', document.forms.f1.serialize() );
+        new Ajax.Updater('Results','/employee/reports/_stock_usage.html', {
+                onLoading:function(){ $('Results').innerHTML='Loading...'; },
+                //onSuccess:function(){ TableKit.Sortable.reload('ResultsTable'); },
+                parameters:Form.serialize($('f1')),
+                evalScripts:true, 
+});
 }
 </script>
 <div class="PageTitle">

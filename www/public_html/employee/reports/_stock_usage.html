@@ -166,7 +166,7 @@ or ( $Stock->basis_mweight() >( $session{'/employee/reports/stock_usage.html?bas
 		} # end foreach Project
 	} # end foreach Order
 
-		$html .= '<table class="List sortable">
+		$html .= '<table id="ResultsTable" class="List sortable">
 	<tr>
 		<th class="Stock">Stock</th>
 		<th class="QTY Projects">Projects</th>
@@ -213,3 +213,6 @@ $log->debug("Project_Ids @project_ids");
 	return $html;
 ) ?>
 </table>
+<script type="text/javascript">
+TableKit.Sortable.init('ResultsTable');
+</script>
