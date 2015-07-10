@@ -36,10 +36,13 @@ function load() {
 			<ul>
             <li><label>Type</label>
     <? echo (
-        $session{'/employee/reports/stock_usage.html?Type'} = 'Roll' if ! $session{'/employee/reports/stock_usage.html?Type'};
+        $session{'/employee/reports/stock_usage.html?type'} = 'Roll,Sheet' if ! $session{'/employee/reports/stock_usage.html?type'};
 		checkboxes( 'type', [ 'Sheet', 'Sheet', 'Roll', 'Roll' ], [split( ',', $session{'/employee/reports/stock_usage.html?type'} )], { onclick=>'f1.submit();' } );
     ) ?>
             </li>
+			<li><label>Customer Supplied</label>
+				<? echo ( radio( 'customer_supplier', ['Y','Yes','N','No','','Both'], $session{$r->uri().'?customer_supplied'} ); ) ?>
+			</li>
 <? echo (
     my $html;
     my %find = (

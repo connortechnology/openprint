@@ -82,6 +82,14 @@
 				my $Stock = openprint::Paper::load_from_signature( $Project, $sig_specs, $qty_index );
 				$Stock = $Stock->Supplied();
 
+				if ( 
+					( ( $session{'/employee/reports/stock_usage.html?customer_supplied'} eq 'Y' ) and ! $Stock->supplied() )
+					or
+					( ( $session{'/employee/reports/stock_usage.html?customer_supplied'} eq 'N' ) and $Stock->supplied() )
+				) {
+						next;
+				} # end if
+
 				if ( $session{'/employee/reports/stock_usage.html?width'} and $session{'/employee/reports/stock_usage.html?height'} ) {
 					next if $Stock->area() < $session{'/employee/reports/stock_usage.html?width'} * $session{'/employee/reports/stock_usage.html?height'};
 					if ( ! $session{'/employee/reports/stock_usage.html?OrLarger'} ) {
@@ -91,6 +99,11 @@
 					next if $Stock->width() < $session{'/employee/reports/stock_usage.html?width'};
 					if ( ! $session{'/employee/reports/stock_usage.html?OrLarger'} ) {
 						next if $Stock->width() != $session{'/employee/reports/stock_usage.html?width'};
+					} # end if
+				} elsif ( $session{'/employee/reports/stock_usage.html?height'} ) {
+					next if $Stock->height() < $session{'/employee/reports/stock_usage.html?height'};
+					if ( ! $session{'/employee/reports/stock_usage.html?OrLarger'} ) {
+						next if $Stock->height() != $session{'/employee/reports/stock_usage.html?height'};
 					} # end if
 				} # end if
 
