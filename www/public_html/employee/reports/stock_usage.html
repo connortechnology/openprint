@@ -1,7 +1,12 @@
 <script type="text/javascript" src="<?hash_link(/javascripts/paper.js)?>"></script>
 <script type="text/javascript">
 function load() {
-	LoadContent( 'Results', '/employee/reports/_stock_usage.html', document.forms.f1.serialize() );
+        new Ajax.Updater('Results','/employee/reports/_stock_usage.html', {
+                onLoading:function(){ $('Results').innerHTML='Loading...'; },
+                //onSuccess:function(){ TableKit.Sortable.reload('ResultsTable'); },
+                parameters:Form.serialize($('f1')),
+                evalScripts:true, 
+});
 }
 </script>
 <div class="PageTitle">
@@ -36,10 +41,13 @@ function load() {
 			<ul>
             <li><label>Type</label>
     <? echo (
-        $session{'/employee/reports/stock_usage.html?Type'} = 'Roll' if ! $session{'/employee/reports/stock_usage.html?Type'};
+        $session{'/employee/reports/stock_usage.html?type'} = 'Roll,Sheet' if ! $session{'/employee/reports/stock_usage.html?type'};
 		checkboxes( 'type', [ 'Sheet', 'Sheet', 'Roll', 'Roll' ], [split( ',', $session{'/employee/reports/stock_usage.html?type'} )], { onclick=>'f1.submit();' } );
     ) ?>
             </li>
+			<li><label>Customer Supplied</label>
+				<? echo ( radio( 'customer_supplied', ['Y','Yes','N','No','','Both'], $session{$r->uri().'?customer_supplied'} ); ) ?>
+			</li>
 <? echo (
     my $html;
     my %find = (

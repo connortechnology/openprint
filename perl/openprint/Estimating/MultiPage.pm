@@ -310,7 +310,11 @@ $openprint::log->warn("FIXM E");
 	foreach my $group_id ( @Groups ) {
 		$openprint::log->debug("Group: $group_id, remaining: $remaining_pages, override: $override_pages{$group_id}") if DEBUG;
 		my %sig_specs =  map { $_, $$specs{$_.$group_id } } @signature_variables;
-		
+		if ( ! exists $override_pages{$group_id} ) {
+			$override_pages{$group_id} = $remaining_pages;
+			$remaining_pages = 0;
+		} # end if
+		$sig_specs{GroupPageQuantity} = $$specs{'GroupPageQuantity'.$group_id} = $override_pages{$group_id};
 		openprint::Estimating::Printing::get_colours( $specs, 'SideOne', \%variables, $group_id );
 		openprint::Estimating::Printing::get_colours( $specs, 'SideTwo', \%variables, $group_id );
 		openprint::Estimating::Printing::get_inkcoverage( $Project, $specs, \%variables, $group_id );
@@ -318,11 +322,6 @@ $openprint::log->warn("FIXM E");
 		openprint::Estimating::Printing::set_size( $Project, \%sig_specs, $specs );
 		$$specs{alert} .= $sig_specs{alert} .' for group ' . $group_id . ' ' . $$specs{'txtServiceDescription'.$group_id}. '<br/>' if $sig_specs{alert};
 		@$specs{map { $_.$group_id} @signature_variables} = @sig_specs{@signature_variables};
-		if ( ! exists $override_pages{$group_id} ) {
-			$override_pages{$group_id} = $remaining_pages;
-			$remaining_pages = 0;
-		} # end if
-		$$specs{'GroupPageQuantity'.$group_id} = $override_pages{$group_id};
 		if ( ! ( $variables{'GroupPageQuantity'.$group_id} and @{$variables{'GroupPageQuantity'.$group_id}} ) ) {
 			$openprint::log->debug("Setting output on GroupPageQuantity$group_id") if DEBUG;
 			$variables{'GroupPageQuantity'.$group_id} = [sets::union('output', @{$variables{'GroupPageQuantity'.$group_id}})];

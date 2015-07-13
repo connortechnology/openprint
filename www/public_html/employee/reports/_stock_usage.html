@@ -50,12 +50,16 @@
 			} # end if
 			foreach my $service_id ( $Project->signatures() ) {
 				my $sig_specs = openprint::service::get_specs_ref( $Project, $service_id );
+				if ( ! $$sig_specs{'txtImposition'.$qty_index} ) {
+						next;
+				}
 
 				if ( ! $$sig_specs{'StockType'.$qty_index} ) {
 					if ( $$sig_specs{'StockType'} ) {
 						openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $service_id, 'StockType'.$qty_index, $$sig_specs{'StockType'} );
 					} else {
 						$log->error("Unknown stock type: " . $$sig_specs{'StockType'.$qty_index} );
+						next;
 					} # end if
 				} # end if
 
@@ -78,6 +82,14 @@
 				my $Stock = openprint::Paper::load_from_signature( $Project, $sig_specs, $qty_index );
 				$Stock = $Stock->Supplied();
 
+				if ( 
+					( ( $session{'/employee/reports/stock_usage.html?customer_supplied'} eq 'Y' ) and ! $Stock->supplied() )
+					or
+					( ( $session{'/employee/reports/stock_usage.html?customer_supplied'} eq 'N' ) and $Stock->supplied() )
+				) {
+						next;
+				} # end if
+
 				if ( $session{'/employee/reports/stock_usage.html?width'} and $session{'/employee/reports/stock_usage.html?height'} ) {
 					next if $Stock->area() < $session{'/employee/reports/stock_usage.html?width'} * $session{'/employee/reports/stock_usage.html?height'};
 					if ( ! $session{'/employee/reports/stock_usage.html?OrLarger'} ) {
@@ -87,6 +99,11 @@
 					next if $Stock->width() < $session{'/employee/reports/stock_usage.html?width'};
 					if ( ! $session{'/employee/reports/stock_usage.html?OrLarger'} ) {
 						next if $Stock->width() != $session{'/employee/reports/stock_usage.html?width'};
+					} # end if
+				} elsif ( $session{'/employee/reports/stock_usage.html?height'} ) {
+					next if $Stock->height() < $session{'/employee/reports/stock_usage.html?height'};
+					if ( ! $session{'/employee/reports/stock_usage.html?OrLarger'} ) {
+						next if $Stock->height() != $session{'/employee/reports/stock_usage.html?height'};
 					} # end if
 				} # end if
 
@@ -131,7 +148,8 @@ or ( $Stock->basis_mweight() >( $session{'/employee/reports/stock_usage.html?bas
 					} # end if
 				} # end if
 				my $qty = $$sig_specs{'txtPressSheetQty'.$qty_index};
-				$qty =~ s/\D//g;
+				#$log->debug(" Got $qty in project $$Project{id}");
+				$qty =~ s/[^\d\.]//g;
 				if ( ! $qty ) {
 					$log->error("No Ordered QTY in $$Order{id} $$Project{id}!");
 				}
@@ -148,7 +166,7 @@ or ( $Stock->basis_mweight() >( $session{'/employee/reports/stock_usage.html?bas
 		} # end foreach Project
 	} # end foreach Order
 
-		$html .= '<table class="List sortable">
+		$html .= '<table id="ResultsTable" class="List sortable">
 	<tr>
 		<th class="Stock">Stock</th>
 		<th class="QTY Projects">Projects</th>
@@ -165,8 +183,6 @@ or ( $Stock->basis_mweight() >( $session{'/employee/reports/stock_usage.html?bas
 			my $quantity = $totals{$paper_string}{quantity};
 			my @unique_order_ids = sets::union( map { $$_{id} } @{$totals{$paper_string}{Orders}} );
 			my @unique_project_ids = sets::union( map { $$_{id} } @{$totals{$paper_string}{Projects}} );
-$log->debug("Order_ids: @unique_order_ids");
-$log->debug("Project ids: @unique_project_ids");
 
 			$html .= sprintf('
 <tr>
@@ -197,3 +213,6 @@ $log->debug("Project_Ids @project_ids");
 	return $html;
 ) ?>
 </table>
+<script type="text/javascript">
+TableKit.Sortable.init('ResultsTable');
+</script>

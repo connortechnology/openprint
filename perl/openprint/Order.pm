@@ -73,7 +73,7 @@ $serial = 'orders_id_seq';
 );
 
 %find_fields = (
-	project_id	=>	'(SELECT lngprojectindex FROM Order_Contents WHERE OrderIndex=Orders.id)',
+	project_id	=>	'id IN (SELECT orderindex FROM Order_Contents WHERE lngprojectindex=?)',
 	status		=>	'(SELECT name FROM Order_Statuses WHERE order_statuses.id=status_id)',
 	#invoice_id	=>	'(SELECT invoice_id FROM order_invoices WHERE order_id=orders.id)',
 invoice_id => 'id IN (SELECT order_id FROM order_invoices WHERE invoice_id=?)',

@@ -1813,5 +1813,37 @@ sub allocate_for_order {
     return $error;
 } # end sub allocate_for_order
 
+sub finished_weight {
+    my $project_weight;
+
+    my $Project = $_[0];
+    # We do a weird thing with qty_index here, becasue all quantities should have the same weight, but may be calculated diferent ways, so we run through them until we get a valid weight.
+
+# calculate project weight
+    foreach my $qty_index ( $Project->quantity_indexes() ) {
+
+        foreach my $signature_service_index ( $Project->signatures() ) {
+            my $sig_specs = openprint::service::get_specs_ref( $Project, $signature_service_index );
+            next if $$sig_specs{txtSignatureType} and ! $$sig_specs{'PageQuantity'.$qty_index};
+            next if ! $$sig_specs{'txtImposition'.$qty_index};
+            my $sig_weight = openprint::Estimating::Printing::get_weight( $Project, $sig_specs, $qty_index );
+            if ( ! $sig_weight ) {
+                # unable to get weight for a sig, must recalc printing service
+$openprint::log->error("Unable to get sig_weight for signature $$sig_specs{SignatureIndex}");
+                return 0;
+			} elsif ( $debug ) {
+				$openprint::log->debug("Sig weight for sig $$sig_specs{SignatureIndex} $sig_weight");
+            } # end if
+            $project_weight += $sig_weight;
+        } # end foreach signature_service_index
+        last;
+    } # end foreach qty_index
+    #$openprint::log->debug("Project Weight: $project_weight : Marked Up: ". $project_weight * (1+$openprint::config{WeightMarkup}/100));
+
+    # This 1.1 was actually requested by Amin.  So it was pretty random, but then I thought abotu it, and our weight calculations don't take into account the weight of the ink, etc... so it may actually be not too off.... would love to see some real figures on it.
+    return $project_weight * (1+$openprint::config{WeightMarkup}/100);
+} # end sub get_finished_weight
+
+
 1;
 __END__

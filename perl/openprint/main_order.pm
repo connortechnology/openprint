@@ -79,7 +79,7 @@ sub information {
 		if ( $param{'quote_id'} ) {
 			( $order_id, $error ) = openprint::order::make_order_from_quote( $param{'quote_id'} );
 		} else {
-			if ( openprint::Order->find('project_id any'=>$param{ProjectIndex},status=>['Pending Deposit', 'In Production', 'Complete', 'Shipped', 'Waiting For Pickup', 'Picked Up']) ) {
+			if ( openprint::Order->find('project_id'=>$param{ProjectIndex},status=>['Pending Deposit', 'In Production', 'Complete', 'Shipped', 'Waiting For Pickup', 'Picked Up']) ) {
 				return misc::error($log, $dbh, \%variable, q{Can't order project.}, "Project $param{ProjectIndex} has already been ordered." );
 			} # end if
 
