@@ -1,0 +1,13 @@
+Field Name,IQ Field,Type,Beg,Size,End,Description,Validated,Required,Default Value,Notes
+Item-ID,$$Object{id},Text,1,15,15,Item ID,Yes,Yes,,
+PO-Number,'99999',Text,16,12,27,PO Number,,Yes*,,"Cannot be null.  If PO number used is not a valid OA purchase order, the flag to Allow Receipt for PO Not on File must be activated in Inventory Options."
+Supplier-ID,'999999',Text,28,8,35,Supplier ID,Yes,Yes,,
+Employee-ID,'999999',Text,36,12,47,Employee ID,Yes,Yes,,
+Qty-Received,$Object->in_stock(),Text,48,16,63,Quantity Received,,,0,
+Qty-Unit-Measure,$Object->Unit_Of_Measure_Costing(),Text,64,4,67,Quantity Unit of Measure,Yes,Yes,,Based on Purchase Unit of Measure
+Warehouse-ID,,Text,68,3,70,Warehouse ID,Yes*,Yes*,,Validated and required if item is tracked by Warehouse.
+Bin,,Text,71,10,80,Bin Location,Yes*,Yes*,,Validated and required if item is tracked by Bin.
+Unit-Cost,"my %p = $Object->get_price( service=>'Material', weight=>1 ); return $p{'100lb Cost'};",Text,81,16,96,Unit Cost,,,,
+Date-Received,'07132015',Text,97,10,106,Date Received,Yes,Yes,,Based on date format in company setup (US = mm/dd/yyyy)
+Lot-Number,,Text,107,10,116,Lot Number,,Yes*,,Required if item is tracked by Lot
+Tag-Number,,Text,117,24,No line,Tag Number,,Yes*,,Required if item is tracked by Tag
