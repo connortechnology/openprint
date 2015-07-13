@@ -6,11 +6,11 @@
 			);
 	} else {
 		@{$$variable{'Labels'}} = openprint::Label->find( 
-			ssi::date_filter( '/employee/inventory/packingslips.html?created_on_end', 'created_on <=' ),
-			ssi::date_filter( '/employee/inventory/packingslips.html?created_on_start', 'created_on >=' ),
-			( $session{'/employee/inventory/packingslips.html?company_id'} ? ( 'company_id'=>$session{'/employee/inventory/packingslips.html?company_id'}):()),
-			( $session{'/employee/inventory/packingslips.html?type_id'} ? ( 'type_id'=>$session{'/employee/inventory/packingslips.html?type_id'}):()),
-			'order'		=>	'id',
+			date_filter( '/employee/inventory/packingslips.html?created_on_end', 'created_on <=' ),
+			date_filter( '/employee/inventory/packingslips.html?created_on_start', 'created_on >=' ),
+			( $session{'/employee/inventory/packingslips.html?company_id'} ? ( company_id=>$session{'/employee/inventory/packingslips.html?company_id'}):()),
+			( $session{'/employee/inventory/packingslips.html?type_id'} ? ( type_id=>$session{'/employee/inventory/packingslips.html?type_id'}):()),
+			order		=>	'id',
 			);
 	} # end if
 ) ?>
