@@ -404,6 +404,9 @@ sub stock_usage {
 	if ( ! exists $session{'/employee/reports/stock_usage.html?projects_orders'} ) {
 		$session{'/employee/reports/stock_usage.html?projects_orders'} = 'Orders';
 	} # end if
+	if ( ! exists $session{'/employee/reports/stock_usage.html?customer_supplied'} ) {
+		$session{'/employee/reports/stock_usage.html?customer_supplied'} = 'N';
+	} # end if
 } # end sub stock_usage
 
 sub _stock_usage {
@@ -412,7 +415,7 @@ sub _stock_usage {
 			( map { 'ordered_on_end_'.$_ } ( 'year','month','day' ) ),
 			'manufacturer_id', 'brand_id', 'finish_id', 'colour_id', 'weight_id',
 			'type', 'fsc', 'fsc_code', 'width','height','OrLarger', 'basis_weight','mweight',
-			'projects_orders',
+			'projects_orders','customer_supplied',
 	 );
 } # end sub _stock_usage
 
