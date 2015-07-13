@@ -23,7 +23,7 @@ $serial = 'labels_id_seq';
 	'created_on'	=>	'created_on',
 );
 %find_fields = (
-	'company_id'	=>	'(SELECT DISTINCT companyindex FROM tbl_Projects WHERE tbl_Projects.lngDocketNumber=labels.docket)',
+	company_id	=>	'(SELECT DISTINCT company_id FROM Projects WHERE Projects.lngDocketNumber=labels.docket)',
 );
 
 %transforms = (
