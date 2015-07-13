@@ -213,11 +213,19 @@ if ( ! sets::isin( 'companies', \@tables ) ) {
 	if ( ! exists $$data{$openprint::Company::fields{last_project_id}} ) {
 		$dbh->do('ALTER TABLE companies ADD last_project_id INTEGER');
 		$dbh->do('ALTER TABLE companies ADD FOREIGN KEY (last_project_id) REFERENCES Projects (id)');
+		$dbh->do('UPDATE companies SET last_project_id = (SELECT MAX(id) FROM projects WHERE company_id=companies.id)');
 		die $dbh->errstr() if $dbh->errstr();
 	} # end if
 	if ( ! exists $$data{$openprint::Company::fields{last_order_id}} ) {
 		$dbh->do('ALTER TABLE companies ADD last_order_id INTEGER');
 		$dbh->do('ALTER TABLE companies ADD FOREIGN KEY (last_order_id) REFERENCES Orders (id)');
+		$dbh->do('UPDATE companies SET last_order_id = (SELECT MAX(id) FROM Orders WHERE company_id=companies.id)');
+		die $dbh->errstr() if $dbh->errstr();
+	} # end if
+	if ( ! exists $$data{$openprint::Company::fields{last_quote_id}} ) {
+		$dbh->do('ALTER TABLE companies ADD last_quote_id INTEGER');
+		$dbh->do('ALTER TABLE companies ADD FOREIGN KEY (last_quote_id) REFERENCES Quotes (id)');
+		$dbh->do('UPDATE companies SET last_quote_id = (SELECT MAX(id) FROM Quotes WHERE companyindex=companies.id)');
 		die $dbh->errstr() if $dbh->errstr();
 	} # end if
 
