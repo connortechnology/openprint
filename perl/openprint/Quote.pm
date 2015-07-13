@@ -133,6 +133,7 @@ sub save {
 			sql::end_transaction( $dbh, $ac );
 			return $error;
 		} # end if
+		$openprint::Company->save({last_quote_id=>$$self{id}}) if $openprint::Company and $openprint::Company->id() and $$self{id};
 	} else {
 		my $error = sql::update( undef, undef, $table, ['id=?', $$self{'id'}], \%sql );
 		if ( $error ) {
