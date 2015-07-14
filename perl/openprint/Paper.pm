@@ -996,7 +996,7 @@ sub get_price {
 	} elsif ( $$self{id} ) {
 		my @Prices = $self->Prices( );
 		if ( (! $$self{supplied} ) and ! @Prices ) {
-			$openprint::log->warn( 'No prices for paper ' );
+			$openprint::log->warn( "No prices for paper for paper " . $self->to_string() );
 			return;
 		} # end if
 		my $list_id = openprint::pricing::get_pricelist_id( );
@@ -1718,6 +1718,22 @@ sub waste {
 	$area_factor =~ s/.*\.//;
 	return $area_factor;
 }
+
+sub Unit_Cost {
+	my $self = shift;
+	my $Price = $self->get_price( service=>'Material',weight=>1);
+	if( ! $Price ) {
+		my @SC = openprint::SkidContent->find(paper_id=>$$self{id});
+		foreach my $SC ( @SC ) {
+			if ( $SC->cost() ) {
+			
+				return $SC->cost();
+			} # en dif
+		} # end foreach
+	} # end if Price
+	return $$Price{'100lb Cost'};
+}
+	
 
 1;
 __END__
