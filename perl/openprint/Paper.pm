@@ -667,7 +667,7 @@ sub mweight {
 			} elsif ( $$self{width} and $$self{height} ) {
 				$$self{mweight} = Math::Round::round( $wpsi * $$self{width} * $$self{height} * 1000 );
 			} # end if
-		} elsif ( ($self->weight() =~ /(\d+)lb/) or ($self->weight() =~ /(\d+)lbs/) ) {
+		} elsif ( ($self->weight() =~ /(\d+)lb/) or ($self->weight() =~ /(\d+)#/) ) {
 			$$self{mweight} = Math::Round::round(($1*$$self{width}*$$self{height})/(25*38));
 		} elsif ( ! $self->weight() =~ /\D/ ) {
 			# weigiht of 500sheets of 25x38
@@ -686,6 +686,19 @@ sub calliper {
 		$c =~ s/[^\d\.]//g;
 		$$self{calliper} = $c;
 	} # end if
+	if ( ! $$self{calliper} ) {
+		if ( $self->finish() =~ /offset/i ) {
+			if ( Math::Round::nearest(10,$self->basis_mweight()) == 70 ) {
+				$$self{calliper} = 0.005;
+			}
+		} elsif ( $self->finish() =~ /gloss/i ) {
+			if ( $self->finish() =~ /cover/i ) {
+				$$self{calliper} = Math::Round::nearest(10,$self->basis_mweight()) / 10000;
+			} else {
+				$$self{calliper} = Math::Round::nearest(10,$self->basis_mweight()) / 20000;
+			}
+		}
+	}
 	return $$self{calliper};
 } # end sub calliper
 sub sheetsize {
@@ -1572,7 +1585,7 @@ sub basis_mweight {
 			$$self{basis_mweight} = sprintf('%.2f', $wpsi * $self->basis_width() * $self->basis_height() * 1000 );
 		} elsif ( $$self{wpsi} ) {
 			$$self{basis_mweight} = sprintf('%.2f', $$self{wpsi} * $self->basis_width() * $self->basis_height() * 1000 );
-		} elsif ( ( $$self{weight} =~ /^(\d+)lb$/i ) or ( $$self{weight} =~ /^(\d+)lbs$/i ) or ( $$self{weight} =~ /^(\d+)#$/i ) ) {
+		} elsif ( ( $$self{weight} =~ /^(\d+)lb/i ) or ( $$self{weight} =~ /^(\d+)#/i ) ) {
 			$$self{basis_mweight} = 2*$1;
 		} # end if
 	} # end if
