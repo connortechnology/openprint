@@ -1175,7 +1175,7 @@ sub wpsi {
 #$openprint::log->debug("Calcing wpsi");
 		if ( $$self{gsm} ) {
 			$$self{wpsi} = $$self{gsm} / 703064.5;
-		} elsif ( ( $$self{type} eq 'Sheet' ) and $$self{width} and $$self{height} ) {
+		} elsif ( $$self{mweight} and ( $$self{type} eq 'Sheet' ) and $$self{width} and $$self{height} ) {
 			$$self{wpsi} = ($$self{mweight} / 1000)/($$self{width}*$$self{height});
 		} elsif ( $self->basis_mweight() ) {
 			$$self{wpsi} = ($$self{basis_mweight}/1000)/($self->basis_width()*$self->basis_height());
@@ -1569,9 +1569,9 @@ sub basis_mweight {
 	if ( ! $$self{basis_mweight} ) {
 		if ( $$self{gsm} ) {
 			my $wpsi = $$self{gsm}/703064.5;
-			$$self{basis_mweight} = sprintf('%.2f', $wpsi * $$self{basis_width} * $$self{basis_height} * 1000 );
+			$$self{basis_mweight} = sprintf('%.2f', $wpsi * $self->basis_width() * $self->basis_height() * 1000 );
 		} elsif ( $$self{wpsi} ) {
-			$$self{basis_mweight} = sprintf('%.2f', $$self{wpsi} * $$self{basis_width} * $$self{basis_height} * 1000 );
+			$$self{basis_mweight} = sprintf('%.2f', $$self{wpsi} * $self->basis_width() * $self->basis_height() * 1000 );
 		} elsif ( ( $$self{weight} =~ /^(\d+)lb$/i ) or ( $$self{weight} =~ /^(\d+)lbs$/i ) or ( $$self{weight} =~ /^(\d+)#$/i ) ) {
 			$$self{basis_mweight} = 2*$1;
 		} # end if

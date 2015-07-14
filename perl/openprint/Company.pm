@@ -65,6 +65,7 @@ $serial = 'companies_id_seq';
 		'offers_credit'				=>	'offers_credit',
 		'last_project_id'			=>	'last_project_id',
 		'last_order_id'				=>	'last_order_id',
+		'last_quote_id'				=>	'last_quote_id',
 		);
 %find_fields = (
 	last_online	=>	'(SELECT MAX(date_time) FROM Logs WHERE company_id=companies.id)',
@@ -101,6 +102,7 @@ $serial = 'companies_id_seq';
 	'offers_credit'	=>	0,
 	supplier		=>	q`'N'`,
 	last_order_id	=>	undef,
+	last_quote_id	=>	undef,
 	last_project_id	=>	undef,
 );
 

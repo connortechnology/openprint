@@ -18,7 +18,7 @@ Please select an allocation to view/edit.<br>
 			<input type="text" oninput="filter_companies( 'company_id', { name: this.value,selected_id: get_ddm_value($('company_id')) } );" class="filter" />
 			<select name="company_id" id="company_id">
 				<option value="">All</option>
-				<? echo ( make_drop_down( openprint::Company->dropdown('last_ordered_on is null'=>0), $session{'/employee/inventory/packingslips.html?company_id'} ); ) ?>
+				<? echo ( make_drop_down( openprint::Company->dropdown('last_ordered_id is null'=>0), $session{'/employee/inventory/packingslips.html?company_id'} ); ) ?>
 			</select>
 		</li>
 		<li><label>Type</label>

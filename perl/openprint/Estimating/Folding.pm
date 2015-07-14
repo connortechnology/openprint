@@ -1492,14 +1492,14 @@ $openprint::log->debug("Runspeed: $$Fold{type}(".$Fold->name().") : " . $Equipme
 			if ( $$calc_hash{HasCutting} ) {
 				#%cutting_results = openprint::Estimating::Cutting::signature_calc_folding_cutting( $Project, $sig_specs, $$calc_hash{cutting_specs}, $qty_index, $Paper, $SignatureImposition, \%fold_specs, $calc_hash );
 			} # end if
-			$Breakdown .= '<tr><td>Total:</td><td>$' . sprintf($openprint::config{ProjectMoneyFormat}, $totalPrice ) . '</td></tr>'  ;
+			$Breakdown .= '<tr><td>Folding total:</td><td>$' . sprintf($openprint::config{ProjectMoneyFormat}, $totalPrice ) . '</td></tr>'  ;
 			my $stitching_part;
 			$$SignatureImposition{Folds} = \@Used_Impositions;
 			if ( $$calc_hash{HasStitching} ) {
 				if ( ! exists $$specs{StitchingCost} ) {
 # Add in stitching estimate, based on if the folder is this piece of equipment
 					$fold_specs{"Price-$form-$qty_index"} = $totalPrice;
-$Breakdown .= '<tr><td>Signatures:'.(@$Signature_Impositions+1).'</td></tr>';
+					#$Breakdown .= '<tr><td>Signatures:'.(@$Signature_Impositions+1).'</td></tr>';
 					my $stitching_specs;
 					if ( $capable eq 'When Stitching' and $$calc_hash{StitchingSpecs}{"chkOverrideEquipment$qty_index"} ne 'Y' ) {
 						my %stitching_specs = %{$$calc_hash{StitchingSpecs}};
@@ -1552,7 +1552,7 @@ $Breakdown .= '<tr><td>Signatures:'.(@$Signature_Impositions+1).'</td></tr>';
 			} # end if
 
 			$Breakdown .= '<tr><td>comparison :</td><td class="Price">' . Math::Round::nearest(0.01,$comparison_cost) . ' </td></tr>';
-			$Breakdown .= '</table>';
+			$Breakdown .= '</table><br/>';
 
 			if ( ( $comparison_cost < $bestComparison ) or ( ! defined $bestComparison ) ) {
 #$openprint::log->debug("Got better prrice $totalPrice < $bestPrice " . $Equipment->name() ) if DEBUG;
