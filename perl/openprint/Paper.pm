@@ -697,6 +697,8 @@ sub calliper {
 			} else {
 				$$self{calliper} = Math::Round::nearest(10,$self->basis_mweight()) / 20000;
 			}
+		} elsif ( $self->finish() =~ /silk/i ) {
+				$$self{calliper} = Math::Round::nearest(10,$self->basis_mweight()) / 20000;
 		}
 	}
 	return $$self{calliper};
