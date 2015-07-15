@@ -226,12 +226,15 @@ $openprint::log->debug("QTY $qty_index ($paper_string) => " . $totals{$$Stock_En
 		my $total = $totals{$stock_index};
 
 		my $Stock = $$Stock_Entry{Stock};
-$openprint::log->debug($Stock->id_string() . ' full packages ' . $Stock->full_packages() . ' per ' . $Stock->sheets_per_package() . ' available to order: ' . $$Stock{available_to_order} ) if DEBUG;
+		foreach my $qty_index ( $Project->quantity_indexes() ) {
+			$$specs{"hdnBreakdown$qty_index"} .= $Stock->to_string() . '<br/>';
+		}
 		if ( $Stock->full_packages() ) {
 			my $qty_per_package = $Stock->sheets_per_package();
 			if ( $qty_per_package ) {
 				foreach my $qty_index ( $Project->quantity_indexes() ) {
 					next if ! $$total{"qty_$qty_index"};
+					$$specs{"hdnBreakdown$qty_index"} .= " requires full packages $qty_per_package sheets per package<br/>";
 					$$total{"qty_$qty_index"} = $qty_per_package * ceil( $$total{"qty_$qty_index"} / $qty_per_package );
 				} # end foreah qty_index
 			} # end if sheets_per_package
@@ -241,6 +244,7 @@ $openprint::log->debug($Stock->id_string() . ' full packages ' . $Stock->full_pa
 			foreach my $qty_index ( $Project->quantity_indexes() ) {
 				next if ! $$total{"qty_$qty_index"};
 				if ( $$Stock{'minimum_order'} > $$total{"qty_$qty_index"} ) {
+					$$specs{"hdnBreakdown$qty_index"} .= " adjusting to minimum order $$Stock{'minimum_order'}".$Stock->units()."<br/>";
 					$$total{"qty_$qty_index"} = $$Stock{'minimum_order'};
 				} # end if
 			} # end foreach qty_index

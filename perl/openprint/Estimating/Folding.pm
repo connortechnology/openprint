@@ -558,7 +558,7 @@ $SigImpo->display();
 	if ( DEBUG ) {
 		foreach my $k ( keys %makereadies ) {
 			my @mrs = @{$makereadies{$k}};
-			$openprint::log->debug("Makereadies for $k : @mrs");
+			$openprint::log->debug("Makereadies for equpiment-id:$k : @mrs FoldTypes");
 		}
 	}
 
@@ -1294,7 +1294,8 @@ $openprint::log->debug(qq`Wrong imposition: $$specs{"FoldImposition-$form-$qty_i
 				@Used_Impositions = @new_folded_impositions;	
 			} else {
 				# I don't see why we need to be copying
-				@Used_Impositions = @{$Set_Of_Impositions};
+				# Because the next equi[pment will override the folds array
+				@Used_Impositions = map { $_->copy() } @{$Set_Of_Impositions};
 			} # end if override
 			my $totalTime = $Equipment->specification('Station Make Ready') * 60;
 
@@ -1555,7 +1556,7 @@ $openprint::log->debug("Runspeed: $$Fold{type}(".$Fold->name().") : " . $Equipme
 			$Breakdown .= '</table><br/>';
 
 			if ( ( $comparison_cost < $bestComparison ) or ( ! defined $bestComparison ) ) {
-#$openprint::log->debug("Got better prrice $totalPrice < $bestPrice " . $Equipment->name() ) if DEBUG;
+$openprint::log->debug("Got better prrice $totalPrice < $bestPrice comparison $comparison_cost < $bestComparison" . $Equipment->name() ) if DEBUG;
 				$bestM = $mprice;
 				$bestComparison = $comparison_cost;
 				$bestPrice = $totalPrice;
@@ -1606,8 +1607,12 @@ $openprint::log->debug("Quitting, all:found: $all_found, undesired: $undesired")
 
 	foreach my $FI ( @{$bestImpositions} ) {
 		my $Fold = $FI->Fold;
-		$$Fold{equipment_id} = $$bestEquipment{id} if ! $$Fold{equipment_id};
+	 if ( ! $$Fold{equipment_id} ) {
+		$$Fold{equipment_id} = $$bestEquipment{id};
+		$openprint::log->warn("Fold didn't have equipment");
+		}
 		$FI->Equipment( $Fold->Equipment() );
+$openprint::log->debug("Setting FI equipmnet to " . $Fold->Equipment()->strid() );
 		my $printed_sheets = (($$specs{'txtQuantity'.$qty_index}/$FI->imposition())/$SignatureImposition->imposition());
 
 		$results{MakeReadyTime} = $Fold->makeready_time() if $results{MakeReadyTime} < $Fold->makeready_time();
