@@ -213,7 +213,7 @@
 					<label>MWeight</label>
 					<? echo ( input(type=>'float', id=>'mweight', name=>'mweight', value=>$$variable{Stock}->mweight(),  onkeyup=>'mweight_to_gsm( this.form );' ); ) ?>
 				</p>
-				<p id="BasisSize" <? echo ( 'style="display: none;"' if $$variable{Stock}->type() ne 'Roll' ) ?>>
+				<p id="BasisSize">
 					<label>Basis MWeight</label>
 					<? echo ( input(type=>'float', id=>'basis_mweight', name=>'basis_mweight', value=>$$variable{Stock}->basis_mweight(),  onkeyup=>'mweight_to_gsm( this.form );' ); ) ?>
 					<br/>

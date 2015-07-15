@@ -113,6 +113,10 @@ echo $OLDDU
 $TIME$RSYNC -a --delete-delay --delete-excluded $@ "$SOURCE" "$DEST$TYPE.new"
 if [ $? != 0 -a $? != 24 ]; then
     echo "rsync return non-zero code. ($?)  Storing this backup as bad."
+	if [ -e "$DEST$TYPE.bad" ] ; then
+		echo "Removing old $DEST$TYPE.bad";
+		$RM -rf "$DEST$TYPE.bad";
+	fi
 $MV "$DEST$TYPE.new" "$DEST$TYPE.bad";
 	exit $?
 fi;

@@ -667,7 +667,7 @@ sub mweight {
 			} elsif ( $$self{width} and $$self{height} ) {
 				$$self{mweight} = Math::Round::round( $wpsi * $$self{width} * $$self{height} * 1000 );
 			} # end if
-		} elsif ( ($self->weight() =~ /(\d+)lb/) or ($self->weight() =~ /(\d+)lbs/) ) {
+		} elsif ( ($self->weight() =~ /(\d+)lb/) or ($self->weight() =~ /(\d+)#/) ) {
 			$$self{mweight} = Math::Round::round(($1*$$self{width}*$$self{height})/(25*38));
 		} elsif ( ! $self->weight() =~ /\D/ ) {
 			# weigiht of 500sheets of 25x38
@@ -686,6 +686,21 @@ sub calliper {
 		$c =~ s/[^\d\.]//g;
 		$$self{calliper} = $c;
 	} # end if
+	if ( ! $$self{calliper} ) {
+		if ( $self->finish() =~ /offset/i ) {
+			if ( Math::Round::nearest(10,$self->basis_mweight()) == 70 ) {
+				$$self{calliper} = 0.005;
+			}
+		} elsif ( $self->finish() =~ /gloss/i ) {
+			if ( $self->finish() =~ /cover/i ) {
+				$$self{calliper} = Math::Round::nearest(10,$self->basis_mweight()) / 10000;
+			} else {
+				$$self{calliper} = Math::Round::nearest(10,$self->basis_mweight()) / 20000;
+			}
+		} elsif ( $self->finish() =~ /silk/i ) {
+				$$self{calliper} = Math::Round::nearest(10,$self->basis_mweight()) / 20000;
+		}
+	}
 	return $$self{calliper};
 } # end sub calliper
 sub sheetsize {
@@ -996,7 +1011,7 @@ sub get_price {
 	} elsif ( $$self{id} ) {
 		my @Prices = $self->Prices( );
 		if ( (! $$self{supplied} ) and ! @Prices ) {
-			$openprint::log->warn( 'No prices for paper ' );
+			$openprint::log->warn( "No prices for paper for paper " . $self->to_string() );
 			return;
 		} # end if
 		my $list_id = openprint::pricing::get_pricelist_id( );
@@ -1175,7 +1190,7 @@ sub wpsi {
 #$openprint::log->debug("Calcing wpsi");
 		if ( $$self{gsm} ) {
 			$$self{wpsi} = $$self{gsm} / 703064.5;
-		} elsif ( ( $$self{type} eq 'Sheet' ) and $$self{width} and $$self{height} ) {
+		} elsif ( $$self{mweight} and ( $$self{type} eq 'Sheet' ) and $$self{width} and $$self{height} ) {
 			$$self{wpsi} = ($$self{mweight} / 1000)/($$self{width}*$$self{height});
 		} elsif ( $self->basis_mweight() ) {
 			$$self{wpsi} = ($$self{basis_mweight}/1000)/($self->basis_width()*$self->basis_height());
@@ -1569,10 +1584,10 @@ sub basis_mweight {
 	if ( ! $$self{basis_mweight} ) {
 		if ( $$self{gsm} ) {
 			my $wpsi = $$self{gsm}/703064.5;
-			$$self{basis_mweight} = sprintf('%.2f', $wpsi * $$self{basis_width} * $$self{basis_height} * 1000 );
+			$$self{basis_mweight} = sprintf('%.2f', $wpsi * $self->basis_width() * $self->basis_height() * 1000 );
 		} elsif ( $$self{wpsi} ) {
-			$$self{basis_mweight} = sprintf('%.2f', $$self{wpsi} * $$self{basis_width} * $$self{basis_height} * 1000 );
-		} elsif ( ( $$self{weight} =~ /^(\d+)lb$/i ) or ( $$self{weight} =~ /^(\d+)lbs$/i ) or ( $$self{weight} =~ /^(\d+)#$/i ) ) {
+			$$self{basis_mweight} = sprintf('%.2f', $$self{wpsi} * $self->basis_width() * $self->basis_height() * 1000 );
+		} elsif ( ( $$self{weight} =~ /^(\d+)lb/i ) or ( $$self{weight} =~ /^(\d+)#/i ) ) {
 			$$self{basis_mweight} = 2*$1;
 		} # end if
 	} # end if
@@ -1718,6 +1733,22 @@ sub waste {
 	$area_factor =~ s/.*\.//;
 	return $area_factor;
 }
+
+sub Unit_Cost {
+	my $self = shift;
+	my $Price = $self->get_price( service=>'Material',weight=>1);
+	if( ! $Price ) {
+		my @SC = openprint::SkidContent->find(paper_id=>$$self{id});
+		foreach my $SC ( @SC ) {
+			if ( $SC->cost() ) {
+			
+				return $SC->cost();
+			} # en dif
+		} # end foreach
+	} # end if Price
+	return $$Price{'100lb Cost'};
+}
+	
 
 1;
 __END__

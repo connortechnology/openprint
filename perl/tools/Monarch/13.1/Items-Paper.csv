@@ -21,7 +21,7 @@
 "Require-Lot-Count",,"Text",450,1,450,"Flag - Require Lot Count",,,0,"0=No, 1=Yes"
 "Direct-Post-Job-Receipts",,"Text",451,1,451,"Flag - Direct Post Job Receipts",,,0,"0=No, 1=Yes"
 "Require-Work-Center",,"Text",452,1,452,"Flag - Require Work Center",,,0,"0=No, 1=Yes"
-"Roll-Stock","$Object->type() eq 'Roll' ? 1 : 0","Text",453,1,453,"Flag - Roll Stock",,,0,"0=No, 1=Yes"
+"Roll-Stock","$Object->type() eq 'Roll' ? '1' : '0'","Text",453,1,453,"Flag - Roll Stock",,,0,"0=No, 1=Yes"
 "Allow-Matl-Trans",,"Text",454,1,454,"Flag - Allow Material Transactions",,"Yes*",0,"0=No, 1=Yes (Required if used as a Planner item)"
 "Allow-FG-Orders-Flag",,"Text",455,1,455,"Flag - Allow FG Orders",,,0,"0=No, 1=Yes  Finished Goods item types only"
 "Taxable-Flag",,"Text",456,1,456,"Flag - Taxable Item",,,0,"0=No, 1=Yes  Finished Goods item types only"
@@ -39,7 +39,7 @@
 "Print-Default-Warehouse",,"Text",486,1,486,"Print Default Warehouse",,,0,"0=No, 1=Yes Finished Goods item types only"
 "Print-Default-Bin",,"Text",487,1,487,"Print Default Bin",,,0,"0=No, 1=Yes Finished Goods item types only"
 "Print-Receipt-Detail",,"Text",488,1,488,"Print Receipt Detail",,,0,"0=No, 1=Yes Finished Goods item types only"
-"Qty-Per-Package",,"Text",489,10,498,"Quantity per Package",,,,"Finished Goods item types only"
+"Qty-Per-Package","$Object->sheets_per_package()","Text",489,10,498,"Quantity per Package",,,,"Finished Goods item types only"
 "Qty-Per-Carton",,"Text",499,10,508,"Quantity per Carton",,,,"Finished Goods item types only"
 "Qty-Per-Skid",,"Text",509,10,518,"Quantity per Skid",,,,"Finished Goods item types only"
 "Allow-Partial-Pkg-Flag",,"Text",519,1,519,"Flag - Allow Partial Packages",,,1,"0=No, 1=Yes  Finished Goods item types only"
@@ -84,7 +84,7 @@
 "Type",,"Text",1029,30,1058,"Type",,,,
 "Material-Color","$Object->colour()","Text",1059,30,1088,"Color",,,,
 "Finish","$Object->finish()","Text",1089,30,1118,"Finish",,,,
-"Brand-ID",,"Text",1119,5,1123,"Brand ID","Yes",,,"Only applicable if Material Type is Paper"
+"Brand-ID","$Object->brand()","Text",1119,5,1123,"Brand ID","Yes",,,"Only applicable if Material Type is Paper"
 "Basis-Weight","$Object->basis_mweight()","Text",1124,19,1142,"Basis Weight",,,,"Format = >,>>>,>>>,>>9.99999999"
 "Sheet-Stock","$Object->type() eq 'Sheet' ? 1 : 0","Text",1143,1,1143,"Flag - Sheet Stock",,,0,"0=No, 1=Yes"
 "Gauge",,"Text",1144,19,1162,"Gauge",,,,"Format = >,>>>,>>>,>>9.99999999"
@@ -120,7 +120,7 @@
 "Core-Included-In-Gross",,"Text",1568,1,1568,"Flag - Core Included in Gross",,,0,"0=No, 1=Yes"
 "Wrapper-Weight",,"Text",1569,19,1587,"Wrapper Weight",,,,"Format = >,>>>,>>>,>>9.99999999"
 "Wrappe-rIncluded-In-Gross",,"Text",1588,1,1588,"Flag - Wrapper Included in Gross",,,0,"0=No, 1=Yes"
-"Prograph-Item",,"Text",1589,1,1589,"Flag - Planner Item"," "," ",0,"0=No, 1=Yes"
+"Prograph-Item","'1'","Text",1589,1,1589,"Flag - Planner Item"," "," ",0,"0=No, 1=Yes"
 "Prograph-Cost-Source",,"Text",1590,22,1611,"Planner Cost Source","Yes","Yes*",,"Required if the Planner Item flag is set to 1 (Yes). Last Receipt, Standard Costing, Default Purchase Order"
 "Prograph-Create-Reserves",,"Text",1612,1,1612,"Flag - Planner Create Reserves",,,0,"0=No, 1=Yes"
 "Prograph-Create-Requisitions",,"Text",1613,1,1613,"Flag - Planner Create Requisitions",,,0,"0=No, 1=Yes"
