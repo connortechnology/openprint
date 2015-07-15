@@ -399,14 +399,6 @@ sub _stock {
 sub stock_usage {
 	_stock_usage();
 
-	ssi::setup_date_select( '/employee/reports/stock_usage.html', 'ordered_on_start', -31 );
-	ssi::setup_date_select( '/employee/reports/stock_usage.html', 'ordered_on_end', '' );
-	if ( ! exists $session{'/employee/reports/stock_usage.html?projects_orders'} ) {
-		$session{'/employee/reports/stock_usage.html?projects_orders'} = 'Orders';
-	} # end if
-	if ( ! exists $session{'/employee/reports/stock_usage.html?customer_supplied'} ) {
-		$session{'/employee/reports/stock_usage.html?customer_supplied'} = 'N';
-	} # end if
 	if ( $param{'action'} eq 'download' ) {
 		my @Header = ( 'Manufacturer','Brand','Finish','Colour','Weight','Quality','Material','Group','Width','Height','Type','Calliper','GSM','FSC','Projects','Orders','Sheets','Weight' );
 		my @Data = ();
@@ -440,7 +432,7 @@ sub stock_usage {
                 Number::Format::format_number($Stock->type() eq 'Roll' ? $quantity : $quantity * $Stock->sheet_weight() ),
             );
 		}
-		misc::export_csv( $r, $log, \%variable, 'order_history_report.csv', \@Header,\@Data );	
+		misc::export_csv( $r, $log, \%variable, 'stock_usage.csv', \@Header,\@Data );	
 	} # end if
 } # end sub stock_usage
 
@@ -452,7 +444,15 @@ sub _stock_usage {
 			'type', 'fsc', 'fsc_code', 'width','height','OrLarger', 'basis_weight','mweight',
 			'projects_orders','customer_supplied',
 	 );
-
+	ssi::setup_date_select( '/employee/reports/stock_usage.html', 'ordered_on_start', -31 );
+	ssi::setup_date_select( '/employee/reports/stock_usage.html', 'ordered_on_end', '' );
+	if ( ! exists $session{'/employee/reports/stock_usage.html?projects_orders'} ) {
+		$session{'/employee/reports/stock_usage.html?projects_orders'} = 'Orders';
+	} # end if
+	if ( ! exists $session{'/employee/reports/stock_usage.html?customer_supplied'} ) {
+		$session{'/employee/reports/stock_usage.html?customer_supplied'} = 'N';
+	} # end if
+$log->debug("done saving params");
     my @company_ids = ( $session{'/employee/reports/stock_usage.html?company_id'} ) if $session{'/employee/reports/stock_usage.html?company_id'};
 
     my @Orders;
@@ -471,6 +471,7 @@ sub _stock_usage {
 		}
 
 	} else {
+$log->debug("Loading projects");
 		foreach my $Project ( openprint::Project->find(
 					( @company_ids ? ( 'company_id' => \@company_ids ) : () ),
 					ssi::date_filter( '/employee/reports/stock_usage.html?ordered_on_end', 'created_on <=' ),
@@ -484,6 +485,7 @@ sub _stock_usage {
 
 	my %totals;
 	my %Stocks;
+$openprint::log->debug("orders: " . @Orders );
 
 	foreach my $Order ( @Orders, ( $session{'/employee/reports/stock_usage.html?projects_orders'} eq 'Projects' ? new openprint::Order() : () ) ) {
 
