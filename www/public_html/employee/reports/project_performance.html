@@ -10,36 +10,36 @@
 </div>
 <form id="f1" name="f1" method="post" action="/employee/reports/project_performance.html">
 	<fieldset class="filters"><legend>Report Criteria</legend>
-<ul>
-		<? if ( $session{'user_type'} eq 'A' or openprint::usergroup::is_user_in( ['Sales Admin','Reporting'], $session{'user_id'} ) ) ?>
+		<ul>
+		<? if ( $session{user_type} eq 'A' or openprint::usergroup::is_user_in( ['Sales Admin','Reporting'], $session{user_id} ) ) ?>
 		<li>
 			<label>CSR</label>
-			<select name="CSR" size="1" onchange="new Ajax.Updater('company_id', '/includes/_company_ddm.html', { parameters: { salesrep_id: get_ddm_value(this), selected_id: get_ddm_value($('company_id')) } } );">
+			<select id="CSR" name="CSR" size="1" onchange="filter_companies( f1.company_id, {name:$('company_id').value,salesrep_id:get_ddm_value(this)} );">
 			<? echo (
 					my @options = ( '', 'All' );
-					push @options, map { $_->id(), $_->name() } openprint::User->find( type=>['E','A'], 'usergroup any'=>'Sales', order=>'lower(firstname),lower(lastname)');
-					return ssi::make_drop_down( \@options, $session{'/employee/reports/project_performance.html?CSR'} );
+					push @options, map { $_->id(), $_->name() } openprint::User->find( type=>['E','A'], 'usergroup any'=>'Sales', company_id=>$config{owner_id} );
+					make_drop_down( \@options, $session{'/employee/reports/project_performance.html?CSR'} );
 					) ?>
 
 			 </select>
 		</li>
-		<? endif ( $session{'user_type'} eq 'A' or openprint::usergroup::is_user_in( ['Sales Admin','Reporting'], $session{'user_id'} ) ) ?>
+		<? endif ( $session{user_type} eq 'A' or openprint::usergroup::is_user_in( ['Sales Admin','Reporting'], $session{user_id} ) ) ?>
 		<li>
 			<label>Company</label>
-			<input type="text" onkeyup="filterDDM(this, f1.company_id);" class="filter" />
+			<input type="text" oninput="filter_companies( f1.company_id, {name:this.value,salesrep_id:get_ddm_value($('CSR'))} );" class="filter" />
 			<select name="company_id" id="company_id">
 				<option value="">All</option>
-				<? echo ( openprint::Company::get_dropdown( $session{'/employee/reports/project_performance.html?company_id'} ); ) ?>
+				<? echo ( make_drop_down( openprint::Company->dropdown( 'last_project_id is null'=>0 ), $session{$r->uri().'?company_id'} ); ) ?>
 			</select>
 		</li>
-		<? if ( $session{'user_type'} eq 'A' or openprint::usergroup::is_user_in( ['Sales Admin','Reporting'], $session{'user_id'} ) ) ?>
+		<? if ( $session{user_type} eq 'A' or openprint::usergroup::is_user_in( ['Sales Admin','Reporting'], $session{user_id} ) ) ?>
 		<li class="estimator">
 			<label>Estimator</label>
 			<select name="estimator">
 			<? echo (
 					my @options = ( '', 'All', 'All Employee', 'All Employee', 'Non Employee', 'Non Employee' );
-					push @options, map { $_->id(), $_->name() } openprint::User->find( type=>['E','A'], 'usergroup any'=>'Sales', order=>'lower(firstname),lower(lastname)');
-					return ssi::make_drop_down( \@options, $session{'/employee/reports/project_performance.html?Estimator'} );
+					push @options, map { $_->id(), $_->name() } openprint::User->find( type=>['E','A'], company_id=>$config{owner_id} );
+					make_drop_down( \@options, $session{'/employee/reports/project_performance.html?Estimator'} );
 					) ?>
 			</select>
 		</li>
@@ -48,23 +48,23 @@
 			<select name="estimator_exclude" multiple="multiple">
 			<? echo (
 					my @options = ( '', 'None' );
-					push @options, map { $_->id(), $_->name() } openprint::User->find( type=>['E','A'], 'usergroup any'=>'Sales', order=>'lower(firstname),lower(lastname)');
-					return ssi::make_drop_down( \@options, $session{'/employee/reports/project_performance.html?estimator_exclude'} );
+					push @options, map { $_->id(), $_->name() } openprint::User->find( type=>['E','A'], 'usergroup any'=>'Sales', company_id=>$config{owner_id}, order=>'lower(firstname),lower(lastname)');
+					make_drop_down( \@options, $session{'/employee/reports/project_performance.html?estimator_exclude'} );
 					) ?>
 			</select>
 		</li>
-		<? endif ( $session{'user_type'} eq 'A' or openprint::usergroup::is_user_in( ['Sales Admin','Reporting'], $session{'user_id'} ) ) ?>
+		<? endif ( $session{user_type} eq 'A' or openprint::usergroup::is_user_in( ['Sales Admin','Reporting'], $session{user_id} ) ) ?>
 		<li>
 			<label>Created On</label>
-			<? echo ( ssi::date_select_session('/employee/reports/project_performance.html', 'created_on_start', { 'with_today'=>1,'with_clear'=>1 } ); ) ?> to
-			<? echo ( ssi::date_select_session('/employee/reports/project_performance.html', 'created_on_end', { 'with_today'=>1,'with_clear'=>1 } ); ) ?>
+			<? echo ( date_select_session('/employee/reports/project_performance.html', 'created_on_start', { with_today=>1, with_clear=>1 } ); ) ?> to
+			<? echo ( date_select_session('/employee/reports/project_performance.html', 'created_on_end', { with_today=>1, with_clear=>1 } ); ) ?>
 		</li>
 		</ul>
 		 <p class="buttons">
-			 <? echo ( ssi::button( 'Go', { onclick=>'load_contents(f1);', text=>'Show Results' } ); ) ?>
+			 <? echo ( button( 'Go', { onclick=>'load_contents(f1);', text=>'Show Results' } ); ) ?>
 		 </p>
 	</fieldset>
 </form>
 <div id="Results">
-<? echo ( include('/employee/reports/_project_performance.html'); ) ?>
+<?include('/employee/reports/_project_performance.html')?>
 </div>

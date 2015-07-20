@@ -41,7 +41,7 @@
 			<select name="salesrep_id" size="1">
 			<? echo (
 					my @options = ( '', 'All' );
-					push @options, map { $_->id(), $_->name() } openprint::User->find('type'=>['E','A'], 'usergroup any'=>'Sales', 'order'=>'lower(firstname),lower(lastname)');
+					push @options, map { $_->id(), $_->name() } openprint::User->find( type=>['E','A'], 'usergroup any'=>'Sales', company_id=>$config{owner_id} );
 					return make_drop_down( \@options, $session{'/employee/reports/customer_performance.html?salesrep_id'} );
 					) ?>
 

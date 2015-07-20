@@ -461,7 +461,7 @@ sub admin_link_to {
 } # end sub link_to
 
 sub link_to {
-	return sprintf('<a href="/account/company_profile.html?ddmCustomer=%d">%s</a>', $_[0]{id}, $_[0]{name} );
+	return sprintf('<a href="/account/company_profile.html?company_id=%d">%s</a>', $_[0]{id}, $_[0]{name} );
 } # end sub link_to
 
 sub last_ordered_on {

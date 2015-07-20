@@ -25,7 +25,7 @@
 				</li>
                 <li>
                     <label>Supplier</label>
-                    <select id="search_supplier_id" name="search_supplier_id" size="1">
+                    <select id="search_supplier_id" name="search_supplier_id" size="1" onchange="form.btnFunction.value='';f1.submit();">
                         <option value="">select</option>
                     <? echo (
                             make_drop_down( openprint::Company->dropdown(order=>'lower(name)', supplier=>'Y'), $param{search_supplier_id} );

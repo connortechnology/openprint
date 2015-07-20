@@ -630,8 +630,15 @@ sub delivery {
 sub efficiency {
 } # end sub efficiency
 sub prepress_overview {
+	_prepress_project_list();
+	ssi::setup_date_select( '/employee/reports/prepress_overview.html', 'takeover_on_start', -31 );
+	ssi::setup_date_select( '/employee/reports/prepress_overview.html', 'takeover_on_end', '' );
 } # end sub prepress_overview
 sub _prepress_project_list {
+	ssi::save_params('/employee/reports/prepress_overview.html', 
+			( map { 'takeover_on_start_'.$_ } ( 'year','month','day' ) ),
+			( map { 'takeover_on_end_'.$_ } ( 'year','month','day' ) ),
+	);
 } # end sub _prepress_project_list
 
 sub _delivery_results {
@@ -869,6 +876,8 @@ sub prepress_productivity {
 
 sub project_log {
 	_project_log();
+	ssi::setup_date_select( '/employee/reports/project_log.html', 'created_on_start', -7 );
+	ssi::setup_date_select( '/employee/reports/project_log.html', 'created_on_end', '' );
 } # end sub project_log
 sub _project_log {
 	ssi::save_params('/employee/reports/project_log.html',
