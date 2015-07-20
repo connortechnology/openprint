@@ -263,19 +263,8 @@ sub print_overview {
 
 sub bindery_overview {
 
-	my @time = localtime(time);
-	my ( $start_year, $start_month, $start_day ) = Date::Calc::Add_Delta_Days( $time[5], $time[4]+1, $time[3], -6 );
-	my ( $end_year, $end_month, $end_day ) = Date::Calc::Add_Delta_Days( $time[5], $time[4]+1, $time[3], 14 );
-	$variable{Today} = sprintf('%.4d-%.2d-%.2d', $time[5]+1900, $time[4]+1, $time[3] );
-	ssi::get_start_end_dates( $log, $dbh, \%variable,
-			( defined $r->param('ddmStartYear') ? $r->param('ddmStartYear') : $start_year+1900 ),
-			( defined $r->param('ddmStartMonth') ? $r->param('ddmStartMonth') : $start_month ),
-			( defined $r->param('ddmStartDay') ? $r->param('ddmStartDay') : $start_day ),
-			( defined $r->param('ddmEndYear') ? $r->param('ddmEndYear') : $end_year+1900 ),
-			( defined $r->param('ddmEndMonth') ? $r->param('ddmEndMonth') : $end_month ),
-			( defined $r->param('ddmEndDay') ?$r->param('ddmEndDay') : $end_day ),
-			);
-
+	ssi::setup_date_select( $r->uri(), 'due_date_start', -7 );
+	ssi::setup_date_select( $r->uri(), 'due_date_end', '' );
 	my @possible_statuses = ( 'Approved','Printed','Complete' );
 	my @statuses = $r->param('Status') ? sets::intersection( @possible_statuses , $r->param('Status') ) : ( 'Printed' );
 	$variable{Status} = ssi::make_drop_down( [ map { $_, $_ } @possible_statuses ], [@statuses] );
@@ -300,10 +289,10 @@ sub bindery_overview {
 
 	@{$variable{Projects}} = ();
 	my @Projects = openprint::Project->find(order=>'due_date',
-			'status'		=>	\@statuses,
-			'due_date >='	=>	$variable{StartDate},
-			'due_date <='	=>	$variable{EndDate},
-			( $param{ddmSalesRep} ? ( 'salesrep_id'		=>	$param{ddmSalesRep} ) : () ),
+			status		=>	\@statuses,
+			ssi::date_filter( 'due_date_end', 'due_date <=', \%param ),
+			ssi::date_filter( 'due_date_start', 'due_date >=', \%param ),
+			( $param{ddmSalesRep} ? ( salesrep_id => $param{ddmSalesRep} ) : () ),
 			);
 	foreach my $Project ( @Projects ) {
 		my $qty_index = $Project->ordered_quantity_index();
