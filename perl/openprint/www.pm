@@ -579,11 +579,13 @@ $log->debug("Service: " . $Service->to_string() );
 			if ( $proc ) {
 				my $module = lc $first;
 				$module .= '_'.$second if $second;
+				eval {
 				require "openprint/$module.pm"; 
 				if ( my $function = ('openprint::'.$module)->can($proc) ) {
 					$function->($r, $log, $dbh, \%variable );
 				} else {
 					$log->error( "Eval error of require $module :: $proc, Reason: " );
+				}
 				}
 			} # end if
 		} else {
