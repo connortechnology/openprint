@@ -35,7 +35,7 @@
 		<? echo (
 			my $Invoicee = $$variable{Invoice}->Invoicee();
 			my $html = '';
-			$html .= ($Invoicee->business_name() ? $Invoicee->business_name() : $Invoicee->name()).'<br/>';
+			$html .= $Invoicee->link_to( ($Invoicee->business_name() ? $Invoicee->business_name() : $Invoicee->name()) ).'<br/>';
 			$html .= $Invoicee->address1().'<br/>';
 			$html .= $Invoicee->address2().'<br/>' if $Invoicee->address2();
 			$html .= join(', ', $Invoicee->get('city','state','country') ).'<br/>';
