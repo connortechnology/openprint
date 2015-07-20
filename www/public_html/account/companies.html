@@ -19,7 +19,7 @@ function load_page() {
 			<label>Sales Rep</label>
 			<select name="salesrep_id" size="1" onchange="load_page();"> 
 				<option value="">All</option>
-				<? echo ( make_drop_down( openprint::User->dropdown( type=>['E','A'], ( $session{user_type}eq'A'?(): (id=>[$session{user_id},$openprint::User->csr_ids()])), 'usergroup any'=>'Sales' ), $session{$r->uri().'?salesrep_id'} ); ) ?>
+				<? echo ( make_drop_down( openprint::User->dropdown( company_id=>$config{owner_id}, type=>['E','A'], ( $session{user_type}eq'A'?(): (id=>[$session{user_id},$openprint::User->csr_ids()])), 'usergroup any'=>'Sales' ), $session{$r->uri().'?salesrep_id'} ); ) ?>
 			</select>
 			<? echo ( checkboxes( 'salesrep_id_exclude', [ 1, 'Not in this list' ], $session{$r->uri().'?salesrep_id_exclude'}, { onclick=>'load_page();' } ); ) ?>
 		</li>

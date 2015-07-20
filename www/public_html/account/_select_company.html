@@ -7,7 +7,7 @@ Any actions you perform will be recorded in the selected <? echo ( translate('co
 <? if ( $session{user_type} eq 'A' or $openprint::User->csr_ids() ) ?>
 	<? echo (
 		my $all = $session{user_type} eq 'A' or openprint::usergroup::is_user_in( ['Estimating','Prepress','Accounting','Shipping','Inventory'] );
-		my @csr_ids = $all ? map { $_->id() } openprint::User->find('usergroup any'=>'Sales') : ( $session{user_id}, $openprint::User->csr_ids() );
+		my @csr_ids = $all ? map { $_->id() } openprint::User->find('usergroup any'=>'Sales', company_id=>$config{owner_id}) : ( $session{user_id}, $openprint::User->csr_ids() );
 		
 		my $html;
 		if ( @csr_ids ) {
