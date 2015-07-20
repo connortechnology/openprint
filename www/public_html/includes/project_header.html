@@ -112,7 +112,7 @@
 		<fieldset><legend>Contact Information</legend>
 			<div class="content">
 				<ul>
-					<li><label>Company</label><? echo ( $$variable{Project}->Company()->name() ) ?></li>
+					<li><label>Company</label><? echo ( $$variable{Project}->Company()->link_to() ) ?></li>
 					<li><label>Name</label><? echo ( $$variable{Project}->User()->name() ) ?></li>
 					<li><label>Phone</label><? echo ( $$variable{Project}->User()->phone() ) ?></li>
 					<li><label>Email</label><a href="mailto:<? echo ( $$variable{Project}->User()->email() ) ?>"><? echo ( $$variable{Project}->User()->email() ) ?></a></li>

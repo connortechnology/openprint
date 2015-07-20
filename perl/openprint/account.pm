@@ -986,5 +986,9 @@ sub _companies {
                 ) );
 } # end sub _companies
 
+sub company_view {
+	$variable{Company} = new openprint::Company( $param{company_id} );
+}
+
 1;
 __END__
