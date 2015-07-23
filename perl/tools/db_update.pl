@@ -1108,6 +1108,12 @@ if ( ! sets::isin( 'locations', \@tables ) ) {
 		} # end if
 		$dbh->do('DROP SEQUENCE location_id_seq');
 	} # end if
+	if ( ! exists $$data{'company_id'} ) {
+		$dbh->do('ALTER TABLE Locations add company_id INTEGER');
+		$dbh->do('ALTER TABLE Locations ADD FOREIGN KEY (company_id) REFERENCES companies (id)');
+		print "Added company_id to Locations\n";
+		die $dbh->errstr() if $dbh->errstr();
+	} # end if
 } # end if
 if ( ! sets::isin( 'addresses', \@tables ) ) {
 	$dbh->do( misc::load_file( $log, q{../openprint/sql/Addresses.sql}) );
