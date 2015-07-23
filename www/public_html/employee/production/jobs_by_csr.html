@@ -165,7 +165,7 @@
 			<ul>
 				<li><label>CSR</label>
 <? echo ( 
-	my @Users = @{$$variable{CSRS}} = openprint::User->find('usergroup any'=>'Sales',order=>'lower(firstname),lower(lastname)');
+	my @Users = @{$$variable{CSRS}} = openprint::User->find('usergroup any'=>'Sales',order=>'lower(firstname),lower(lastname)',company_id=>$config{owner_id});
 	$session{'/employee/production/jobs_by_csr.html?salesrep_id'} = join(',', map { $_->id() } @Users ) if ! $session{'/employee/production/jobs_by_csr.html?salesrep_id'};
 	
 	return ssi::select( 

@@ -950,7 +950,7 @@ sub skids {
 	if ( $_[0]{SkidContents} ) {
 		return map { $_->Skid() } @{$_[0]{SkidContents}};
 	} else {
-		return openprint::Skid->find( paper_id=>$_[0]{id}, 'quantity >='=>1);
+		return openprint::Skid->find( 'paper_id any'=>$_[0]{id}, 'quantity >='=>1);
 	} # end if
 	#return map { new openprint::Skid( $_ ) } sql::execute( undef, undef, q{SELECT skid_id FROM skid_contents WHERE paper_id=? and quantity > 0}, $$self{id} );
 } # end sub skids
