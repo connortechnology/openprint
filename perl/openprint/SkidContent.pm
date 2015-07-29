@@ -4,7 +4,7 @@ our @ISA = qw(openprint::Object);
 
 use vars qw( $debug %fields %find_fields %transforms %defaults $table $serial );
 
-$debug = 0;
+$debug = 1;
 
 %fields = (
 	id				=>	'id',
@@ -21,6 +21,7 @@ $debug = 0;
 	deleted		=>	'(SELECT deleted FROM skids where skids.id=skid_id)',
 	condition	=>	'(SELECT name FROM InventoryConditions WHERE id=skid_contents.condition_id)',
 	location	=>	'(SELECT name from Locations WHERE id=(SELECT location_id FROM skids where skids.id=skid_id))',
+	type		=>	'(SELECT type FROM Skids WHERE skids.id=skid_id)',
 );
 %defaults = (
 	paper_id		=>	undef,
