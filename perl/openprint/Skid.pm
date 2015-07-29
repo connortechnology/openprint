@@ -691,6 +691,10 @@ sub quantity {
 	return $_[0]{quantity};
 }
 
+sub in_stock {
+	return quantity(@_);
+}
+
 sub last_seen {
 	if ( @_ > 1 ) {
 		$_[0]{last_seen} = $_[1];
@@ -704,6 +708,21 @@ sub last_seen {
 		}
 	} # end if
 	return $_[0]{last_seen};
+}
+
+sub Unit_Of_Measure_Costing {
+    if ( $_[0]->type() eq 'Sheet' ) {
+        return 'M';
+    } else {
+        return 'CWT';
+    } # end if
+} # end sub  Unit_Of_Measure_Costing
+
+sub Unit_Cost {
+	foreach my $C ( $_[0]->Contents() ) {
+		return $C->Paper()->Unit_Cost();
+	}
+	return ();
 }
 
 1;
