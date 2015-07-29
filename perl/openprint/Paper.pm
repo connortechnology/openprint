@@ -394,6 +394,7 @@ sub delete {
 	new openprint::Log()->save({action=>'Delete Paper', note=>'Stock ID: '.$$self{id}  . $self->to_string() });
 	sql::end_transaction( undef, $ac );
 	
+	return;
 } # end sub delete
 
 sub id_string {
