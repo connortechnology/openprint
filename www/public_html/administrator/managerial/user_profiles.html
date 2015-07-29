@@ -421,6 +421,30 @@ Please select a company or user to obtain login information.<br/>
 		</p>
 		</fieldset>
 		<input type="hidden" name="btnFunction"/>
-		<?include(/account/_user_login_log.html)?>
 	</form>
+<? if ( $$variable{User}->id() ) ?>
+	<form id="f2" name="f2" method="post" action="user_profiles.html">
+		<input type="hidden" name="user_id" value="<?echo ($variable{User}->id())?>"/>
+		<fieldset><legend>Logs</legend>
+			<ul>
+				<li><label>Date</label>
+					<? echo ( join( ' to ',
+							datetime_select_session( $r->uri(),'log_created_on_start', {
+								onchange    =>q`new Ajax.Updater( 'Logs', '_user_logs.html', { parameters: $('f2').serialize() } );`,
+								with_today=>1,
+								with_clear=>1,
+								} ),
+							datetime_select_session( $r->uri(),'log_created_on_end', {
+								onchange    =>q`new Ajax.Updater( 'Logs', '_user_logs.html', { parameters: $('f2').serialize() } );`,
+								with_today=>1,
+								with_clear=>1,
+								} ),
+						); ) ?>
+					<? echo ( button( 'LoadLog', { onclick=>q`new Ajax.Updater( 'Logs', '_user_logs.html', { parameters: $('f2').serialize() } );`, text=>'Load' } ); ) ?>
+				</li>
+			</ul>
+			<div id="Logs"><?include('_user_logs.html')?></div>
+		</fieldset>
+	</form>
+<? endif ( $$variable{User}->id() ) ?>
 </div>
