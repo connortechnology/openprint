@@ -2586,6 +2586,9 @@ $openprint::log->debug(Data::Dumper::Dumper( \%Overrides ) );
 			my $I = new openprint::Imposition();
 			$I->load( $sig_specs, $qty_index );
 			push @other_impositions, $I;					
+			if ( $$project{FoldingSpecs} ) {
+				$$I{Folds} = [ openprint::Estimating::Folding::get_Folds( $$project{FoldingSpecs}, $sig_specs, $qty_index ) ];
+			}
 		} # end foreach sig_id
 		if ( DEBUG ) {
 		foreach my $I ( @other_impositions ) {

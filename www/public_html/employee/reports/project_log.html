@@ -13,10 +13,10 @@
 <ul>
 		<li>
 			<label>Company</label>
-			<input type="text" onkeyup="filterDDM(this, f1.company_id);" class="filter" />
+			<input type="text" oninput="filter_companies( f1.company_id, {name:this.value} );" class="filter" />
 			<select name="company_id" id="company_id">
 				<option value="">All</option>
-				<? echo ( openprint::Company::get_dropdown( $session{'/employee/reports/project_log.html?company_id'} ); ) ?>
+				<? echo ( make_drop_down( openprint::Company->dropdown( 'last_project_id is null'=>0 ), $session{$r->uri().'?company_id'} ); ) ?>
 			</select>
 		</li>
 		<? if ( $session{'user_type'} eq 'A' or openprint::usergroup::is_user_in( ['Sales Admin'], $session{'user_id'} ) ) ?>
@@ -34,8 +34,8 @@
 		<? endif ( $session{'user_type'} eq 'A' or openprint::usergroup::is_user_in( ['Sales Admin'], $session{'user_id'} ) ) ?>
 		<li>
 			<label>Created On</label>
-			<span class="DateSelectorCT"><? echo ( date_select_session('/employee/reports/project_log.html', 'created_on_start', { with_today=>1, with_clear=>1 } ); ) ?></span> to
-			<span class="DateSelectorCT"><? echo ( date_select_session('/employee/reports/project_log.html', 'created_on_end', { with_today=>1, with_clear=>1 } ); ) ?></span>
+			<? echo ( date_select_session('/employee/reports/project_log.html', 'created_on_start', { with_today=>1, with_clear=>1 } ); ) ?> to
+			<? echo ( date_select_session('/employee/reports/project_log.html', 'created_on_end', { with_today=>1, with_clear=>1 } ); ) ?>
 		</li>
 		</ul>
 		 <p class="buttons">

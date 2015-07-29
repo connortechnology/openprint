@@ -112,6 +112,9 @@ sub save {
 		delete $$params{password};
 	} # end if
 
+	my @changes = $self->changes( $params );
+	(new openprint::Log())->save({action=>'Save User', Object=>$self, note=>join('<br/>', @changes ) } );
+
 	if ( $params and $$params{type} and $$self{type} and ( $$params{'type'} ne $$self{'type'} ) and ( $$params{'type'} ne 'C' ) ) {
 # Notify someone
 		my %info;

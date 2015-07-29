@@ -21,10 +21,10 @@ function load() {
 			<ul>
             <li>
                 <label>Company</label>
-			<input name="company_filter" class="filter" type="text" oninput="filter_companies('company_id', { name: this.value,selected_id: get_ddm_value($('company_id'))) } );" />
+				<input name="company_filter" class="filter" type="text" oninput="filter_companies('company_id', { name: this.value,selected_id: get_ddm_value($('company_id'))) } );" />
                 <select id="company_id" name="company_id" size="1" onchange="">
                 <option value=""> All </option>
-				<? echo ( make_drop_down( openprint::Company->dropdown('last_ordered_on is null'=>0), $session{'/employee/reports/stock_usage.html?company_id'} ); ) ?>
+				<? echo ( make_drop_down( openprint::Company->dropdown('last_order_id is null'=>0), $session{'/employee/reports/stock_usage.html?company_id'} ); ) ?>
                 </select>
             </li>
             <li>
@@ -154,4 +154,4 @@ function load() {
         </p>
     </fieldset>
 </form>
-<div id="Results">Please select your filters and click Show Results.</div>
+<div id="Results"><?include(_stock_usage.html)?></div>

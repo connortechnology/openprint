@@ -65,8 +65,7 @@
 	</fieldset>
 </div>
 <div class="InksBack">
-	<fieldset><legend>Back
-same as front?
+	<fieldset><legend>Back image same as front image?
 <? echo ( radio( 'sides_the_same'.$$variable{Signature}, [ 'Y','Yes','N','No' ], $$variable{"sides_the_same$$variable{Signature}"}, { default=>'N', onclick=>qq`if(this.value=='Y'){\$('InksOnBackQuestions$$variable{Signature}').hide();}else{\$('InksOnBackQuestions$$variable{Signature}').show();};calc(this.form.name);` } ); ) ?>
 </legend>
 		<div id="InksOnBackQuestions<?Signature?>" <? echo ( $$variable{'sides_the_same'.$$variable{'Signature'}} eq 'Y' ? ' style="display:none;"':'') ?>>

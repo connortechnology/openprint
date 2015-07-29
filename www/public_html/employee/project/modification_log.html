@@ -41,7 +41,7 @@
 		<select name="operator_id" size="1" onchange="load_projects();">
 			<option value="">All Employees</option>
 <? echo (
-	make_drop_down( openprint::User->dropdown( 'usergroup any'=>['Prepress'], type=>['E','A'] ),
+	make_drop_down( openprint::User->dropdown( 'usergroup any'=>['Prepress'], type=>['E','A'], company_id=>$config{owner_id} ),
 	$session{$r->uri().'?operator_id'} );
 )?>
 			</select>
@@ -52,7 +52,7 @@
 			<option value="">All Employees</option>
 <? echo (
 	$session{$r->uri().'?salesrep_id'} = $session{user_id} if ! $session{$r->uri().'?salesrep_id'};
-	my @Users = openprint::User->find( type=>['E','A'],'usergroup any'=>['Sales']);
+	my @Users = openprint::User->find( type=>['E','A'],'usergroup any'=>['Sales'], company_id=>$config{owner_id});
 	if ( ! sets::isin( $session{$r->uri().'?salesrep_id'}, [ map { $_->id() } @Users ] ) ) {
 		$session{$r->uri().'?salesrep_id'} = '';
 	} # end if

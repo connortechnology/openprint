@@ -3,6 +3,12 @@
 		var form = $('f1');
 		var to_id = get_ddm_value(form.elements['to-'+from_id]);
 
+		if ( ! form.elements['amount-'+from_id].value ) {
+			alert('Please enter an amount.');
+			form.elements['amount-'+from_id].focus();
+			return;
+		}
+
 		new Ajax.Updater( 'Conversions'+from_id, '_currency_conversions.html', { 
 				parameters: { 	
 					currency_id: from_id, 

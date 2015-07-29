@@ -140,7 +140,7 @@ oninput="filter_companies('company_id', {name:this.value,selected_id:get_ddm_val
 					<option value="">select</option>
 					<? echo ( 
 	my $Selected = openprint::Company->find_one( name =>$$variable{'Quote'}->for_companyname() ) if $$variable{Quote}->for_companyname();
-	make_drop_down( openprint::Company->dropdown('last_quoted_on is null'=>0), $Selected ? $Selected->id() : $session{'company_id'});
+	make_drop_down( openprint::Company->dropdown('last_quote_id is null'=>0), $Selected ? $Selected->id() : $session{'company_id'});
  ) ?>
 				</select>	
 			</li>
