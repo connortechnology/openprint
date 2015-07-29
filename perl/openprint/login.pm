@@ -71,7 +71,7 @@ sub verify_login {
 		if ( @Users = openprint::User->find(email=>$email,deleted=>1) ) {
 			foreach my $U ( @Users ) {
 				$$variable{'information'} = "\"$email\" Has been deleted.  Please contact us to have your account re-instated.";
-				(new openprint::Log())->save({'action'=>'Login Failed', 'note'=>'Account Deleted', 'user_id'=>$U->id(), 'company_id'=>$U->company_id() } );
+				(new openprint::Log())->save({Object=>$U, 'action'=>'Login Failed', 'note'=>'Account Deleted', 'user_id'=>$U->id(), 'company_id'=>$U->company_id() } );
 			} # end foreach U
 		} else {
 			$$variable{'information'} = "\"$email\" is not a valid account.	Please try again.";
@@ -101,7 +101,7 @@ sub verify_login {
 	if ( ! $User ) {
 		$$variable{'information'} = 'The password you entered was not correct.	Please try again.';
 		foreach my $U ( @Users ) {
-			(new openprint::Log())->save({action=>'Login Failed', note=>'Invalid Password', user_id=>$U->id(), company_id=>$U->company_id() } );
+			(new openprint::Log())->save({Object=>$U, action=>'Login Failed', note=>'Invalid Password', user_id=>$U->id(), company_id=>$U->company_id() } );
 		} # end foreach U
 		return;
 	} # end if
@@ -110,7 +110,7 @@ sub verify_login {
 	if ( $User->Company()->activation() eq 'N' ) {
 		$$variable{'error'} = 'Company not activated.';
 		$$variable{'information'} = 'Your company account has not been looked over and activated by an administrator yet. You will be notified when your application has been approved.';
-		(new openprint::Log())->save({'action'=>'Login Failed', 'note'=>'Company Account Not Activated', 'user_id'=>$User->id(), 'company_id'=>$User->company_id() } );
+		(new openprint::Log())->save({Object=>$User, action=>'Login Failed', note=>'Company Account Not Activated', user_id=>$User->id(), company_id=>$User->company_id() } );
 		return;
 	} elsif ( $User->Company()->activation() ne 'Y' ) {
 		$$variable{'error'} = 'Company Account activation status is unknown.('.$User->Company()->activation().')';
@@ -122,7 +122,7 @@ sub verify_login {
 	if ( $User->web_active() eq 'N' ) {
 		$$variable{'error'} = "User not activated.";
 		$$variable{'information'} = "Applications for existing corporate accounts must be approved by and administrator. You will be notified when you application had been approved.";
-		(new openprint::Log())->save({'action'=>'Login Failed', 'note'=>'User Account Not Activated', 'user_id'=>$User->id(), 'company_id'=>$User->company_id() } );
+		(new openprint::Log())->save({Object=>$User, action=>'Login Failed', note=>'User Account Not Activated', user_id=>$User->id(), company_id=>$User->company_id() } );
 		return;
 	} elsif ( $User->web_active() ne 'Y' ) {
 		$$variable{'error'} = "User Account activation status is unknown.";
@@ -133,12 +133,12 @@ sub verify_login {
 	if ( $site eq 'E' and ! sets::isin( $User->type(), ['E','A'] ) ) {
 		$$variable{'error'} = 'Not authorised.';
 		$$variable{'information'} = 'You are not an employee.	You do not have access to the employee site.';
-		(new openprint::Log())->save({action=>'Login Failed', note=>'User not an employee', user_id=>$User->id(), company_id=>$User->company_id() } );
+		(new openprint::Log())->save({Object=>$User, action=>'Login Failed', note=>'User not an employee', user_id=>$User->id(), company_id=>$User->company_id() } );
 		return;
 	} elsif ( $site eq 'A' and $User->type() ne 'A' ) {
 		$$variable{'error'} = "Not authorised.";
 		$$variable{'information'} = "You are not an administrator.	You do not have access to the administrator site.";
-		(new openprint::Log())->save({'action'=>'Login Failed', 'note'=>'User not an administrator', 'user_id'=>$User->id(), 'company_id'=>$User->company_id() } );
+		(new openprint::Log())->save({Object=>$User, action=>'Login Failed', note=>'User not an administrator', user_id=>$User->id(), company_id=>$User->company_id() } );
 		return;
 	} # end if
 
@@ -166,7 +166,7 @@ sub verify_login {
 
 	@session{'company_id','user_id','email','user_type'} = $User->get('company_id','id','email','type');
 	delete $session{'Pricelist_id'};
-	(new openprint::Log())->save({'action'=>'Login', 'note'=>'Successful Login' } );
+	(new openprint::Log())->save({Object=>$User, action=>'Login', note=>'Successful Login' } );
 
 	if ( $openprint::param{'rdbRememberMe'} eq 'Y' ) {
 		my $Cookie = Apache2::Cookie->new($r,
@@ -197,7 +197,7 @@ sub verify_login {
 } # sub verify_login
 
 sub logout {
-	(new openprint::Log())->save({action=>'Logout'});
+	(new openprint::Log())->save({Object=>$openprint::User, action=>'Logout'});
 	foreach my $k ( keys %session ) {
 		next if sets::isin( $k, [ 'Currency_id', '_session_id','Country' ] );
 		delete $session{$k};
@@ -232,6 +232,7 @@ sub email_password {
 					SUBJECT	=> 'Forgotten Password',
 					ATTACHMENTS	=> ['', $_, 'text/html', 'quoted-printable'],
 					);
+			(new openprint::Log())->save({Object=>$User, action=>'Forgotten Password sent.'});
 		} # end foreach $User
 	} else {
 		return misc::error( $log, $dbh, $variable, 'System Error.', 'We were unable to email your password to you.	Please contact support.' );
