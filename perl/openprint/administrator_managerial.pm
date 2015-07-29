@@ -390,6 +390,7 @@ sub user_profiles {
 		$User->notifications( \%notifications );
 
 		$variable{'information'} = 'Record saved successfully.';
+		$variable{ExternalRedirect} = '/administrator/managerial/user_profiles.html?ddmUser='.$User->id();
 	} # end if btnFunction
 
 	# if we don't have a selected user, pick the first one returned filtered by company and user type if specified
@@ -459,6 +460,8 @@ sub user_profiles {
 		@users_categories = sql::execute( $log, $dbh,'SELECT category_id FROM Users_in_Marketing_Categories WHERE user_id=?', $User->id() );
 	} # end if
 	$variable{'selectUserCategories'} = ssi::make_drop_down( \@available_categories, \@users_categories );
+
+	$session{$r->uri().'?company_id'} = $param{ddmCustomer};
 
 } # end sub user_profiles
 
@@ -989,5 +992,12 @@ sub _merge_popup {
 	$variable{Company} = new openprint::Company( $param{company_id} );
 }
 
+sub _user_logs {
+	$variable{User} = new openprint::User( $param{user_id} );
+	ssi::save_params( '/administrator/managerial/user_profiles.html',
+			( map { 'log_created_on_start_' . $_ } ( 'year','month','day','hour','minute' ) ),
+			( map { 'log_created_on_end_' . $_ } ( 'year','month','day','hour','minute' ) ),
+	);
+} # end sub _logs
 1;
 __END__
