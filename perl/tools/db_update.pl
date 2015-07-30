@@ -1119,6 +1119,11 @@ if ( ! sets::isin( 'addresses', \@tables ) ) {
 	$dbh->do( misc::load_file( $log, q{../openprint/sql/Addresses.sql}) );
 	die $dbh->errstr() if $dbh->errstr();
 }
+if ( ! sets::isin( 'tbl_Addresses', \@tables ) ) {
+	print "Adding tbl_Addresses\n";
+	$dbh->do( misc::load_file( $log, q{../openprint/sql/tbl_Addresses.sql}) );
+	die $dbh->errstr() if $dbh->errstr();
+}
 if ( ! sets::isin( 'equipment_categories', \@tables ) ) {
 	$dbh->do( misc::load_file( $log, '../openprint/sql/Equipment_Categories.sql' ) ) or die $dbh->errstr();
 	die $dbh->errstr() if $dbh->errstr();
