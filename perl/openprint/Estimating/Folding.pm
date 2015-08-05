@@ -1251,7 +1251,9 @@ $openprint::log->debug(qq`Wrong imposition: $$specs{"FoldImposition-$form-$qty_i
 						if ( $Fold ) {
 							$openprint::log->debug("found the fold trying generic") if DEBUG;
 						} else {
+							$openprint::log->debug("did not found the fold trying really generic");
 							$Fold = new openprint::Fold();
+							$$Fold{equipment_id} = $$Equipment{id};
 							$$Fold{pages} = $pages if $pages;
 							$$Fold{type} = $$specs{"FoldType-$form-$qty_index-$index"};
 							$$Fold{runspeed} = $$specs{"FoldRunspeed-$form-$qty_index-$index"} if $$specs{"FoldRunspeed-$form-$qty_index-$index"};
@@ -1607,12 +1609,11 @@ $openprint::log->debug("Quitting, all:found: $all_found, undesired: $undesired")
 
 	foreach my $FI ( @{$bestImpositions} ) {
 		my $Fold = $FI->Fold;
-	 if ( ! $$Fold{equipment_id} ) {
-		$$Fold{equipment_id} = $$bestEquipment{id};
-		$openprint::log->warn("Fold didn't have equipment");
+		if ( ! $$Fold{equipment_id} ) {
+			$$Fold{equipment_id} = $$bestEquipment{id};
+			$openprint::log->warn("Fold didn't have equipment");
 		}
 		$FI->Equipment( $Fold->Equipment() );
-$openprint::log->debug("Setting FI equipmnet to " . $Fold->Equipment()->strid() );
 		my $printed_sheets = (($$specs{'txtQuantity'.$qty_index}/$FI->imposition())/$SignatureImposition->imposition());
 
 		$results{MakeReadyTime} = $Fold->makeready_time() if $results{MakeReadyTime} < $Fold->makeready_time();
@@ -2235,9 +2236,11 @@ sub cut_spreads {
 			} 
 			$i1->quantity( $i1->quantity() * 2 );
 			$i1->page_quantity( $i1->page_quantity() * 2 );
-			$openprint::log->debug(sprintf('Cutting pages down from %d to %d by cutting spread columns %d to %d', $I->pages(), $i1->pages(), $I->spread_columns(), $i1->spread_columns() ) ) if DEBUG;
+			if ( DEBUG ) {
+			$openprint::log->debug(sprintf('Cutting pages down from %d to %d by cutting spread columns %d to %d', $I->pages(), $i1->pages(), $I->spread_columns(), $i1->spread_columns() ) );
 			$I->display();
 			$i1->display();
+			}
 			push @results, [ $i1 ];
 		} # end if
 	} # end if
