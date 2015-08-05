@@ -100,6 +100,8 @@ sub colorize_string($) {
 	return if $_[0] =~ /^debug\] mod_auth/;
 	return if $_[0] =~ /^debug\] mod_authz_core/;
 
+	$_[0] =~ s/\[perl:debug\] //;
+
 	if ($_[0] =~ m/$errors/) {
 		return color_message("ERROR: " . $_[0], $error_color);
 	}
