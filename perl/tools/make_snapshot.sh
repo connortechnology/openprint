@@ -111,7 +111,7 @@ OLDDU=`$DU -b -sh "$DEST$TYPE.new" |$AWK '{print $1}'`
 fi
 echo $OLDDU
 if [[ $SOURCE =~ : ]]; then
-$TIME$RSYNC -aHx --delete-delay --delete-excluded $@ -e "ssh -T -c arcfour -o Compression=no -x" "$SOURCE" "$DEST$TYPE.new"
+$TIME$RSYNC -aHx --delete-delay --delete-excluded $@ -e "ssh -T -c aes128-ctr -o Compression=no -x" "$SOURCE" "$DEST$TYPE.new"
 else
 $TIME$RSYNC -aHx --delete-delay --delete-excluded $@ "$SOURCE" "$DEST$TYPE.new"
 fi
