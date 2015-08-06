@@ -67,6 +67,28 @@ sub skids {
 				} # end foreach
 			} # end if
 		} # end if skid_id
+	} elsif ( $param{'btnFunction'} eq 'CheckOut' )   {
+        if ( $param{'skid_id'} ) {
+            $param{'skid_id'} =~ s/[^\d\-\,]//g;
+            my @skid_ids;
+            foreach my $range ( split ',', $param{'skid_id'} ) {
+                if ( $range =~ /(\d*)\-(\d*)/ ) {
+                    push @skid_ids, ( $1 .. $2 );
+                } else {
+                    push @skid_ids, $range;
+                } # end if
+            } # end foreach
+            foreach my $skid_id ( @skid_ids ) {
+                my $Skid = new openprint::Skid( $skid_id );
+                $Skid->checkout();
+            } # end foreach
+        } elsif ( $param{'skids'} ) {
+            foreach my $skid_id ( ref $param{'skids'} eq 'ARRAY' ? @{$param{'skids'}} : $param{'skids'} ) {
+                my $Skid = new openprint::Skid( $skid_id );
+                $Skid->checkout();
+            } # end foreach
+        } # end if
+
 	} elsif ( $param{'btnFunction'} eq 'Delete' )	{
 		if ( $param{'skid_id'} ) {
 			$param{'skid_id'} =~ s/[^\d\-\,]//g;
