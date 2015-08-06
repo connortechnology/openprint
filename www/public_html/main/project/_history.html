@@ -1,11 +1,19 @@
 <? eval (
 	if ( $param{ProjectID} ) {
-		$param{ProjectID} = openprint::Project->transform( 'id', $param{ProjectID} );
-		$$variable{Projects} = [ openprint::Project->find( 
-			company_id		=> $session{company_id},
-			id				=> $param{ProjectID},
-			order			=> 'id DESC',
-		) ] if $param{ProjectID};
+		if ( $param{ProjectID} =~ /\%/ ) {
+			$$variable{Projects} = [ openprint::Project->find(
+				company_id	  => $session{company_id},
+				'id like'	   => $param{ProjectID},
+				order		   => 'id DESC',
+			) ];
+		} else {
+			$param{ProjectID} = openprint::Project->transform( 'id', $param{ProjectID} );
+			$$variable{Projects} = [ openprint::Project->find( 
+				company_id		=> $session{company_id},
+				id				=> $param{ProjectID},
+				order			=> 'id DESC',
+			) ] if $param{ProjectID};
+		}
 	} else {
 		my %sql = (
 			date_filter( '/main/project/history.html?created_on_end', 'created_on <=' ),
@@ -35,12 +43,21 @@
 
 <? if ( @{$$variable{'Projects'}} == 0 ) ?>
 	<? if ( sets::isin( $session{user_type}, ['A','E'] ) and $param{'ProjectID'} ) ?>
-        <? eval (
-                @{$$variable{'Projects'}} = openprint::Project->find( id=>$param{ProjectID} );
-        ) ?>
+		<? eval (
+
+			if ( $param{ProjectID} =~ /\%/ ) {
+				$$variable{Projects} = [ openprint::Project->find(
+					'id like'     => $param{ProjectID},
+					order         => 'id DESC',
+				) ];
+			} else {
+
+				$$variable{Projects} = [ openprint::Project->find( id=>$param{ProjectID}, order=>'id DESC' ) ];
+			}
+		) ?>
 		There were no projects matching your search criteria for your currently selected Company.<br/>
-        <? if ( @{$$variable{'Projects'}} > 0 ) ?>
-            The following are results belonging to other companies:<br/>
+		<? if ( @{$$variable{'Projects'}} > 0 ) ?>
+			The following are results belonging to other companies:<br/>
 	<table class="List">
 		<thead>
 			<tr> 
@@ -87,7 +104,7 @@
 	</table>
 	<span class="Currency">All prices listed in <? echo ( new openprint::Currency( $session{'Currency_id'} )->name(); ) ?></span>
 	<br class="spacer"/>
-        <? endif ( @{$$variable{'Projects'}} > 0 ) ?>
+		<? endif ( @{$$variable{'Projects'}} > 0 ) ?>
 	<? else ( sets::isin( $session{user_type}, ['A','E'] ) and $param{'ProjectID'} ) ?>
 	There are no projects which match your search criteria. 
 	<? endif ( sets::isin( $session{user_type}, ['A','E'] ) and $param{'ProjectID'} ) ?>
