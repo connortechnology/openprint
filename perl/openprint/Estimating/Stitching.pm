@@ -785,7 +785,8 @@ sub get_price {
 		} # end if
 		$price{ServicePrice} = \%servicePrice;
 
-		$unitsPerHour = $Equipment->specification( 'Units Per Hour', $maxPockets );
+		$unitsPerHour = $Equipment->specification( 'Units Per Hour '.$price{Imposition}.' out', $maxPockets );
+		$unitsPerHour = $Equipment->specification( 'Units Per Hour', $maxPockets ) if ! $unitsPerHour;
 		$price{Runspeed} = $unitsPerHour;
 		my $runtime = $unitsPerHour ? $qty/$unitsPerHour : 0; # in seconds
 		$price{RunTime} += $runtime * 360;
@@ -818,7 +819,8 @@ sub get_price {
 			%servicePrice = openprint::service::get_price_object( $$ServiceType{name}, $neededPockets, $Equipment );
 		} # end if
 		$price{LastServicePrice} = \%servicePrice;
-		$unitsPerHour = $Equipment->specification( 'Units Per Hour', $neededPockets );
+		$unitsPerHour = $Equipment->specification( 'Units Per Hour ' . $price{Imposition} . ' out', $neededPockets );
+		$unitsPerHour = $Equipment->specification( 'Units Per Hour', $neededPockets ) if ! $unitsPerHour;
 		$price{Runspeed} = $unitsPerHour;
 		my $runtime = $unitsPerHour ? $qty/$unitsPerHour : 0; # in seconds
 			$price{RunTime} += $runtime * 360;
