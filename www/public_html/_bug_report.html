@@ -9,10 +9,11 @@
 
 		$param{comment} = htmlize($param{comment});
 			
+		$param{page} = 
 		my @body = ('', "
 			<fieldset><legend>Bug Report</legend>
 				<p><label>Server</label>$param{'server'}</p>
-				<p><label>Page</label>$param{'page'}</p>
+				<p><label>Page</label><a href="$param{'page'}">$param{page}</a></p>
 				<p><label>When</label> $param{'when'}</p>
 				<p><label>Name</label> $param{'user'}</p>
 				<p><label>Company</label> $param{'company'}</p>
@@ -41,7 +42,7 @@
 			</p>
 			<p>
 				<label>Page</label>
-				<input type="text" name="page" value="<? echo ( $ENV{'HTTP_REFERER'} ) ?>" />
+				<input type="url" name="page" value="<? echo ( $ENV{'HTTP_REFERER'} ) ?>" />
 			</p>
 			<p>
 				<label>When</label>
