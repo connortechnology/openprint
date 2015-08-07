@@ -246,7 +246,10 @@ $I->display('In Stitching:') if DEBUG;
 				$I->display("No Folds");
 			} # end if
 			$$specs{join('','txtSignatureQty',$I->pages(),'Page-',$qty_index)} += 1;
-			next if $$sig_specs{txtSignatureType} eq 'Cover Pages';
+			if ( $$sig_specs{Group} == 1 ) {
+				$openprint::log->debug("Not counting pocket due to it being cover. $form");
+				next;
+			}
 			$pockets += 1;
 # This doesn't really make sense.  If we are doing printing estimation, then the folding probably isn't going to match.  
 		} else {
@@ -266,7 +269,10 @@ $openprint::log->debug("Fold pq($$FI{page_quantity}) pages($$FI{pages}) ($$Fold{
 				}
 				#$openprint::log->debug("Adding " . $Fold->pages() . 'x'.$Fold->quantity() );
 				$$specs{join('','txtSignatureQty',$Fold->pages(),'Page-',$qty_index)} += $FI->page_quantity();
-				next if $$sig_specs{txtSignatureType} eq 'Cover Pages';
+			if ( $$sig_specs{Group} == 1 ) {
+				$openprint::log->debug("Not counting pocket due to it being cover. $form");
+				next;
+			}
 				$pockets += $FI->page_quantity();
 			} # end foreach Fold
 		}
@@ -630,9 +636,6 @@ sub calc {
 			$$specs{'hdnBreakdown'.$qty_index} .= 'Estimated Run Time: @'.$price{Runspeed}.'/Hr = '. Math::Round::nearest( 0.1, $price{RunTime} ) . ',<br/>';
 			$$specs{'hdnBreakdown'.$qty_index} .= "Number of Passes: $price{Passes}<br/>";
 			$$specs{'hdnBreakdown'.$qty_index} .= "Imposition: $price{Imposition}out<br/>";
-			$$specs{'hdnBreakdown'.$qty_index} .= 'Run Discount' . $price{'RunCost Discount'}.'%<br/>' if $price{'RunCost Discount'};
-			$$specs{'hdnBreakdown'.$qty_index} .= 'Imposition Discount: '. $price{'Imposition Discount'} .'%<br/>' if $price{'Imposition Discount'};
-			$$specs{'hdnBreakdown'.$qty_index} .= 'Spine Length Discount: ' . $price{'SpineLength Discount'} . '%<br/>' if $price{'SpineLength Discount'};
 			$$specs{'hdnBreakdown'.$qty_index} .= sprintf('Calliper Markup %d%<br/>', $price{'Calliper Markup'} ) if $price{'Calliper Markup'};
 			if ( my $MakeReadyPrice = $price{MakeReadyPrice} ) {
 			$$specs{'hdnBreakdown'.$qty_index} .= sprintf('%s for %d pockets %s = %.2f<br/>', $$MakeReadyPrice{Service}->description(), $price{Pockets}, ($price{cover}?' plus cover':''),$$MakeReadyPrice{Total} );
@@ -642,6 +645,9 @@ sub calc {
 			} # end if
 			my $servicePrice = $price{LastServicePrice};
 			$$specs{'hdnBreakdown'.$qty_index} .= sprintf('Service: 1 pass at $%.2f%s=$%.2f<br/>', @$servicePrice{'Price','units','Total'});
+			$$specs{'hdnBreakdown'.$qty_index} .= 'Run Discount' . $price{'RunCost Discount'}.'%<br/>' if $price{'RunCost Discount'};
+			$$specs{'hdnBreakdown'.$qty_index} .= 'Imposition Discount: '. $price{'Imposition Discount'} .'%<br/>' if $price{'Imposition Discount'};
+			$$specs{'hdnBreakdown'.$qty_index} .= 'Spine Length Discount: ' . $price{'SpineLength Discount'} . '%<br/>' if $price{'SpineLength Discount'};
 			$$specs{'hdnBreakdown'.$qty_index} .= 'Total: $'. sprintf('%.2f', Math::Round::nearest(0.01,$price{Price})).'<br/><br/>';
 			$$specs{'hdnBreakdown'.$qty_index} .= 'Comparison: $'. sprintf('%.2f', Math::Round::nearest(0.01,$price{ComparisonPrice})).'<br/><br/>';
 		} else {
