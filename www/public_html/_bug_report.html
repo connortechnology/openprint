@@ -10,7 +10,7 @@
 		$param{comment} = htmlize($param{comment});
 			
 		$param{page} = 
-		my @body = ('', "
+		my @body = ('',qq` 
 			<fieldset><legend>Bug Report</legend>
 				<p><label>Server</label>$param{'server'}</p>
 				<p><label>Page</label><a href="$param{'page'}">$param{page}</a></p>
@@ -19,7 +19,7 @@
 				<p><label>Company</label> $param{'company'}</p>
 				<p><label>Comment</label> $param{'comment'}</p>
 			</fieldset>
-		", 'text/html', 'quoted-printable');
+		`, 'text/html', 'quoted-printable');
 
 		my %mail = (
 			SMTP   => $config{'Mail Server'},
