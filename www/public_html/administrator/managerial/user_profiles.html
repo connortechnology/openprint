@@ -237,14 +237,14 @@ Please select a company or user to obtain login information.<br/>
 							'<li><label>Limit for ' . $_->name() . '</label>'.input( type=>'cardinal', name=>'po_limit-'.$_->id(), value=>$$variable{User}->po_limit( $_->id() ) ).'</li>' } openprint::PurchaseOrder_ContentType->find( order=>'lower(name)')
 							);
 					) ?>
-					<? if ( @{$$variable{'csr_ids'}} = openprint::User->find('id !='=>$$variable{User}->id(), 'type'=>['E','A'], 'usergroup any'=>'Sales', 'order'=>'lower(firstname),lower(lastname)' ) ) ?>
+					<? if ( @{$$variable{'csr_ids'}} = openprint::User->find('id !='=>$$variable{User}->id(), company_id=>$config{owner_id}, type=>['E','A'], 'usergroup any'=>'Sales' ) ) ?>
 					<li class="csr_ids">
 						<label>Assistant to</label>
 						<select name="csr_ids" size="4" multiple="multiple">
 							<? echo ( make_drop_down( [ map { $_->id(), $_->name() } @{$$variable{'csr_ids'}} ], [$$variable{User}->csr_ids()] ); ) ?>
 						</select>
 					</li>
-					<? endif ( @{$$variable{'csr_ids'}} = openprint::User->find('id !='=>$$variable{User}->id(), 'type'=>['E','A'], 'usergroup any'=>'Sales', 'order'=>'lower(firstname),lower(lastname)' ) ) ?>
+					<? endif ( @{$$variable{'csr_ids'}} = openprint::User->find('id !='=>$$variable{User}->id(), company_id=>$config{owner_id}, type=>['E','A'], 'usergroup any'=>'Sales' ) ) ?>
 					<? endif ( sets::isin( $$variable{User}->type(), ['E','A'] ) ) ?>
 				</ul>
 			</div>
