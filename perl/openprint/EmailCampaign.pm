@@ -36,6 +36,7 @@ $serial = 'emailcampaigns_id_seq';
 	'created_on'	=>	'created_on',
 	'updated_on'	=>	'updated_on',
 	'template_id'	=>	'template_id',
+	deleted			=>	'deleted',
 );
 
 %defaults = (
@@ -47,9 +48,10 @@ $serial = 'emailcampaigns_id_seq';
 	'updated_on'	=> q`'NOW()'`,
 	'timestosend'	=>	undef,
 	'template_id'	=>	undef,
+	deleted			=>	0,
 );
 
-sub delete {
+sub destroy {
 	my $self = shift;
 	my $ac = sql::start_transaction( $openprint::dbh );
 	sql::execute( undef, undef, q{DELETE FROM EmailCampaign_Log WHERE campaign_id=?},$self->{id} );
@@ -57,7 +59,7 @@ sub delete {
 	sql::execute( undef, undef, q{DELETE FROM EmailCampaigns WHERE id=?}, $self->{id} );
 	sql::end_transaction( $openprint::dbh, $ac );
 	
-	new openprint::Log()->save({'action'=>'Delete Email Campaign', 'note'=>"Campaign ID: " . $self->{id} . " Campaign Name: "  . $self->{name},});
+	new openprint::Log()->save({'action'=>'Delete Email Campaign', 'note'=>"Campaign ID: " . $self->{id} . " Campaign Name: "  . $self->{name}, Object=>$self});
 } # end sub delete
 
 sub send_admin_email {
