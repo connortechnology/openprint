@@ -455,47 +455,39 @@ sub projects {
 	my $project_index = $param{Project};
 	my $order_id = $param{OrderID};
 
-
-	if ( $param{btnFunction} eq 'Go' ) {
-		if ( $project_index ) {
-			@projects = ( new openprint::Project( $project_index ) );
-		} elsif ( $order_id ) {
-			my $Order = new openprint::Order( $order_id );
-			@projects = $Order->Projects();
-		} elsif ( $startdocket and $enddocket ) {
-			@projects = openprint::Project->find( 'docket >='=>$startdocket, 'docket <=' => $enddocket );
-		} elsif ( $startdocket ) {
-			@projects = openprint::Project->find( 'docket'=>$startdocket );
-			if ( ! @projects ) {
-				my $Order = openprint::Order->find_one( docket=>$startdocket );
-				if ( $Order ) {
-					$variable{ExternalRedirect} = '/employee/project/view.html?OrderID='.$$Order{id};
-					return;
-				} # end if
+	if ( $project_index ) {
+		@projects = ( new openprint::Project( $project_index ) );
+	} elsif ( $order_id ) {
+		my $Order = new openprint::Order( $order_id );
+		@projects = $Order->Projects();
+	} elsif ( $startdocket and $enddocket ) {
+		@projects = openprint::Project->find( 'docket >='=>$startdocket, 'docket <=' => $enddocket );
+	} elsif ( $startdocket ) {
+		@projects = openprint::Project->find( 'docket'=>$startdocket );
+		if ( ! @projects ) {
+			my $Order = openprint::Order->find_one( docket=>$startdocket );
+			if ( $Order ) {
+				$variable{ExternalRedirect} = '/employee/project/view.html?OrderID='.$$Order{id};
+				return;
 			} # end if
-		} elsif ( $enddocket ) {
-			@projects = openprint::Project->find( 'docket'=>$enddocket );
 		} # end if
-		if ( @projects == 1 ) {
-			$order_id = $projects[0]->order_id();
-			$variable{Redirect} = '/employee/project/view.html';
-			$param{OrderID} = $order_id;
-			$param{ProjectIndex} = $projects[0]->id();
-			return;
-		} # end if
+	} elsif ( $enddocket ) {
+		@projects = openprint::Project->find( 'docket'=>$enddocket );
 	} elsif ( $param{order_id} ) {
 		$param{order_id} =~ s/\D//g;
 		if ( $param{order_id} ) {
 			my $Order = new openprint::Order( $param{order_id} );
 			@projects = $Order->Projects();
 		} # end if
-		if ( @projects == 1 ) {
-			$order_id = $projects[0]->order_id();
-			$variable{Redirect} = '/employee/project/view.html';
-			$param{OrderID} = $order_id;
-			$param{ProjectIndex} = $projects[0]->id();
-			return;
-		} # end if
+	} # end if
+
+	if ( @projects == 1 ) {
+		if ( $projects[0]->docket() ) {
+		$variable{ExternalRedirect} = '/employee/project/view.html?docket='.$projects[0]->docket();
+		} else {
+		$variable{ExternalRedirect} = '/employee/project/view.html?project_id='.$projects[0]->id();
+		}
+		return;
 	} # end if
 
 	$variable{txtDocket} = $param{txtDocket};
