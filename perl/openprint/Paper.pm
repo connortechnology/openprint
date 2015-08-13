@@ -1730,9 +1730,12 @@ sub Supplier {
 } # end sub Supplier
 
 sub waste {
-	my $area_factor = $_[0]->start_area() / $_[0]->area();
-	$area_factor =~ s/.*\.//;
-	return $area_factor;
+	my $area_factor = int($_[0]->start_width() / $_[0]->width()) + int($_[0]->start_height()/$_[0]->height() );
+	return $_[0]->start_area() - ($area_factor*$_[0]->area());
+
+	# Remove the integer part
+	#$area_factor =~ s/.*\.//;
+	#return $area_factor;
 }
 
 sub Unit_Cost {
