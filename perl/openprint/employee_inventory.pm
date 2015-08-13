@@ -595,7 +595,7 @@ sub save_Paper {
 			( $param{'width'.$id} ? ( 'width'		=> $param{'width'.$id} ) : () ),
 			( $param{'height'.$id} ? ( 'height'	=>	$param{'type'.$id} ne 'Roll' ? $param{'height'.$id} : undef ) : () ),
 			( $param{'type'.$id} ? ( 'type'		=>	$param{'type'.$id} ) : () ),
-			( $param{'calliper'.$id} ? ( 'calliper'	=>	$param{'calliper'.$id} ) : () ),
+			( $param{'calliper'.$id} ? ( 'calliper is null or ='	=>	$param{'calliper'.$id} ) : () ),
 			( $param{'fsc_code'.$id} ? ( 'fsc_code'	=>	$param{'fsc_code'.$id} ) : ( 'fsc_code is null or =' => $param{'fsc_code'.$id} ) ),
 			);
 	my $Paper;
