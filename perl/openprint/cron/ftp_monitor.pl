@@ -280,7 +280,7 @@ $log->debug("data: $client $remote_user $user_name $curr_time $xfer_type $path $
 						complete	=> 1,
 					};
 				} # end if send email
-			} elsif ($line =~ /^(\S+)\s+(\S+)\s+(\S+)\s+\[([^\]]+)\]\s+"([^"]+)"\s+(\d+)\s+([\-\d]+)\s+([\.\d]+)$/o) {
+			} elsif ($line =~ /^(\S+)\s+(\S+)\s+(\S+)\s+\[([^\]]+)\]\s+"([^"]*)"\s+(\d+)\s+([\-\d]+)\s+([\.\d]+)$/o) {
 #LogFormat IQFormat "%h %l %u %t \"%f\" %s %b %T"
 
 				my $client = $1;
@@ -299,6 +299,9 @@ $log->debug("Not an upload, ignoring");
 next;
 } elsif ( $response_code != 226 ) {
 	$log->debug("Not an upload, response_code: $response_code");
+	next;
+} elsif ( $path eq '-' ) {
+	$log->debug("Not an upload, response_code: $response_code path was $path");
 	next;
 }
 
@@ -605,7 +608,7 @@ $log->debug("regexp: $regexp");
 					FROM    => ( $config{AdministratorEmail} ? $config{AdministratorEmail} : $from ),
 					'Reply-To'	=>	$from,
 					TO      => \@to,
-#BCC		=>	'iconnor@point-one.com',
+BCC		=>	'iconnor@point-one.com',
 					SUBJECT => $subject,
 					ATTACHMENTS => [ '', MIME::QuotedPrint::encode_qp(Encode::encode('utf-8',$body)), 'text/html', 'quoted-printable' ]
 				);
