@@ -190,6 +190,7 @@ sub copy {
 	$$New{id} = '';
 	$$New{Prices} = [ $_[0]->Prices() ];
 	$$New{recommendations} = [ $_[0]->recommendations() ];
+	delete $$New{created_on};
 	return $New;
 } # end sub copy
 
@@ -393,6 +394,7 @@ sub delete {
 	new openprint::Log()->save({action=>'Delete Paper', note=>'Stock ID: '.$$self{id}  . $self->to_string() });
 	sql::end_transaction( undef, $ac );
 	
+	return;
 } # end sub delete
 
 sub id_string {
@@ -666,7 +668,7 @@ sub mweight {
 			} elsif ( $$self{width} and $$self{height} ) {
 				$$self{mweight} = Math::Round::round( $wpsi * $$self{width} * $$self{height} * 1000 );
 			} # end if
-		} elsif ( ($self->weight() =~ /(\d+)lb/) or ($self->weight() =~ /(\d+)lbs/) ) {
+		} elsif ( ($self->weight() =~ /(\d+)lb/) or ($self->weight() =~ /(\d+)#/) ) {
 			$$self{mweight} = Math::Round::round(($1*$$self{width}*$$self{height})/(25*38));
 		} elsif ( ! $self->weight() =~ /\D/ ) {
 			# weigiht of 500sheets of 25x38
@@ -685,6 +687,21 @@ sub calliper {
 		$c =~ s/[^\d\.]//g;
 		$$self{calliper} = $c;
 	} # end if
+	if ( ! $$self{calliper} ) {
+		if ( $self->finish() =~ /offset/i ) {
+			if ( Math::Round::nearest(10,$self->basis_mweight()) == 70 ) {
+				$$self{calliper} = 0.005;
+			}
+		} elsif ( $self->finish() =~ /gloss/i ) {
+			if ( $self->finish() =~ /cover/i ) {
+				$$self{calliper} = Math::Round::nearest(10,$self->basis_mweight()) / 10000;
+			} else {
+				$$self{calliper} = Math::Round::nearest(10,$self->basis_mweight()) / 20000;
+			}
+		} elsif ( $self->finish() =~ /silk/i ) {
+				$$self{calliper} = Math::Round::nearest(10,$self->basis_mweight()) / 20000;
+		}
+	}
 	return $$self{calliper};
 } # end sub calliper
 sub sheetsize {
@@ -783,6 +800,7 @@ sub add_inventory {
 		project_id	=>	$$Project{id},
 		});
 	# Updates in_stock and allocated
+	delete $$self{SkidContents};
 	$self->save();
 } # end sub add_inventory
 
@@ -821,6 +839,24 @@ sub allocate {
 			} );
 	if ( $Order ) {
 		$Order->add_log( qq`Allocated $quantity$$PA{units} of <a href="/employee/inventory/paper_details.html?paper_id=$$self{id}">` . $self->to_string().'</a>');
+			my $PI = new openprint::PaperInventory();
+			$PI->save({	
+				paper_id	=>	$$self{id},
+				user_id		=>	$openprint::session{user_id},
+				docket		=>	$Order->docket(),
+				delta		=>	0,
+				comment		=>	qq`Allocated $quantity$$PA{units} to docket $$Order{docket}`,
+				instock		=>	$self->in_stock(),
+			});
+	} else {
+			my $PI = new openprint::PaperInventory();
+			$PI->save({	
+				paper_id	=>	$$self{id},
+				user_id		=>	$openprint::session{user_id},
+				delta		=>	0,
+				comment		=>	qq`Allocated $quantity$$PA{units}`,
+				instock		=>	$self->in_stock(),
+			});
 	} # end if
 	if ( $$self{available_to_order} > 1 ) {
 		$$self{available_to_order} -= $quantity;
@@ -857,6 +893,7 @@ sub in_stock {
 	return 0 if ! $_[0]{id};
 
 	if ( @_ > 1 ) {
+$openprint::log->debug("Setting paper in_stock to $_[1]");
 		if ( ref $_[1] eq 'openprint::InventoryCondition' ) {
 			my $in_stock = 0;
 			foreach my $C ( openprint::SkidContent->find(deleted=>0,paper_id=>$_[0]{id}, condition_id=>$_[1]->id() ) ) {
@@ -872,6 +909,7 @@ sub in_stock {
 		foreach my $SkidContent ( $_[0]->SkidContents() ) {
 			$_[0]{in_stock} += $SkidContent->quantity();
 		} # end foreach SkidContent
+$openprint::log->debug("Loading paper in_stock to $_[0]{in_stock}");
 	} # end if
 	return $_[0]{in_stock};
 } # end sub in_stock
@@ -913,7 +951,7 @@ sub skids {
 	if ( $_[0]{SkidContents} ) {
 		return map { $_->Skid() } @{$_[0]{SkidContents}};
 	} else {
-		return openprint::Skid->find( paper_id=>$_[0]{id}, 'quantity >='=>1);
+		return openprint::Skid->find( 'paper_id any'=>$_[0]{id}, 'quantity >='=>1);
 	} # end if
 	#return map { new openprint::Skid( $_ ) } sql::execute( undef, undef, q{SELECT skid_id FROM skid_contents WHERE paper_id=? and quantity > 0}, $$self{id} );
 } # end sub skids
@@ -974,7 +1012,7 @@ sub get_price {
 	} elsif ( $$self{id} ) {
 		my @Prices = $self->Prices( );
 		if ( (! $$self{supplied} ) and ! @Prices ) {
-			$openprint::log->warn( 'No prices for paper ' );
+			$openprint::log->warn( "No prices for paper for paper " . $self->to_string() );
 			return;
 		} # end if
 		my $list_id = openprint::pricing::get_pricelist_id( );
@@ -1153,7 +1191,7 @@ sub wpsi {
 #$openprint::log->debug("Calcing wpsi");
 		if ( $$self{gsm} ) {
 			$$self{wpsi} = $$self{gsm} / 703064.5;
-		} elsif ( ( $$self{type} eq 'Sheet' ) and $$self{width} and $$self{height} ) {
+		} elsif ( $$self{mweight} and ( $$self{type} eq 'Sheet' ) and $$self{width} and $$self{height} ) {
 			$$self{wpsi} = ($$self{mweight} / 1000)/($$self{width}*$$self{height});
 		} elsif ( $self->basis_mweight() ) {
 			$$self{wpsi} = ($$self{basis_mweight}/1000)/($self->basis_width()*$self->basis_height());
@@ -1272,15 +1310,15 @@ sub load_from_signature {
 		$Paper->calliper( $$specs{txtSpecificStockCalliper} );
 		$Paper->start_width( $$specs{txtSpecificStockWidth} );
 		$Paper->start_height( $$specs{txtSpecificStockHeight} );
+		$Paper->type( $$specs{StockType} );
 		if ( $qty_index ) {
 			$Paper->width( $$specs{'StockWidth'.$qty_index} );
-			$Paper->height( $$specs{'StockHeight'.$qty_index} );
+			$Paper->height( $$specs{'StockHeight'.$qty_index} ) if $Paper->type() ne 'Roll';
 		} else {
 			$Paper->width( $$specs{txtSpecificStockWidth} );
-			$Paper->height( $$specs{txtSpecificStockHeight} );
+			$Paper->height( $$specs{txtSpecificStockHeight} ) if $Paper->type() ne 'Roll';
 		} # end if
 		$Paper->gsm( $$specs{txtStockGSM} );
-		$Paper->type( $$specs{StockType} );
 
 		$Paper->minimum_order( $$specs{minimum_order} );
 		$Paper->sheets_per_package( $$specs{sheets_per_package} );
@@ -1318,7 +1356,8 @@ sub load_from_signature {
 				$Paper = undef;
 				$openprint::log->warn("Loading by paper id but not found: " . $$specs{'paper_id'.$qty_index} );
 			} # end if
-		} elsif ( ! ( $$specs{ddmStockBrand} and $$specs{ddmStockFinish} and $$specs{ddmStockColour} and $$specs{ddmStockWeight} ) ) {
+		}
+		if ( ! ( $$specs{ddmStockBrand} and $$specs{ddmStockFinish} and $$specs{ddmStockColour} and $$specs{ddmStockWeight} ) ) {
 			return new openprint::Paper();
 		} # end if
 
@@ -1546,10 +1585,10 @@ sub basis_mweight {
 	if ( ! $$self{basis_mweight} ) {
 		if ( $$self{gsm} ) {
 			my $wpsi = $$self{gsm}/703064.5;
-			$$self{basis_mweight} = sprintf('%.2f', $wpsi * $$self{basis_width} * $$self{basis_height} * 1000 );
+			$$self{basis_mweight} = sprintf('%.2f', $wpsi * $self->basis_width() * $self->basis_height() * 1000 );
 		} elsif ( $$self{wpsi} ) {
-			$$self{basis_mweight} = sprintf('%.2f', $$self{wpsi} * $$self{basis_width} * $$self{basis_height} * 1000 );
-		} elsif ( ( $$self{weight} =~ /^(\d+)lb$/i ) or ( $$self{weight} =~ /^(\d+)lbs$/i ) or ( $$self{weight} =~ /^(\d+)#$/i ) ) {
+			$$self{basis_mweight} = sprintf('%.2f', $$self{wpsi} * $self->basis_width() * $self->basis_height() * 1000 );
+		} elsif ( ( $$self{weight} =~ /^(\d+)lb/i ) or ( $$self{weight} =~ /^(\d+)#/i ) ) {
 			$$self{basis_mweight} = 2*$1;
 		} # end if
 	} # end if
@@ -1691,10 +1730,29 @@ sub Supplier {
 } # end sub Supplier
 
 sub waste {
-	my $area_factor = $_[0]->start_area() / $_[0]->area();
-	$area_factor =~ s/.*\.//;
-	return $area_factor;
+	my $area_factor = int($_[0]->start_width() / $_[0]->width()) + int($_[0]->start_height()/$_[0]->height() );
+	return $_[0]->start_area() - ($area_factor*$_[0]->area());
+
+	# Remove the integer part
+	#$area_factor =~ s/.*\.//;
+	#return $area_factor;
 }
+
+sub Unit_Cost {
+	my $self = shift;
+	my $Price = $self->get_price( service=>'Material',weight=>1);
+	if( ! $Price ) {
+		my @SC = openprint::SkidContent->find(paper_id=>$$self{id});
+		foreach my $SC ( @SC ) {
+			if ( $SC->cost() ) {
+			
+				return $SC->cost();
+			} # en dif
+		} # end foreach
+	} # end if Price
+	return $$Price{'100lb Cost'};
+}
+	
 
 1;
 __END__

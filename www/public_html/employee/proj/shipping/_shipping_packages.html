@@ -1,21 +1,21 @@
-<p>
+<li>
 	<label>Full Package Weight</label>
-	<span class="TwoColumns"><?txtPackageWeight?> lbs</span>
-	<span class="TwoColumns">
-	<input name="txtPackageWeightUsed" value="<? echo ( $$variable{'txtPackageWeightUsed'} ? $$variable{'txtPackageWeightUsed'} : $$variable{'txtPackageWeight'} ) ?>" type="text" size="9" onkeyup="this.value=this.value.replace(/[^\.\d]/g,'');" /> lbs
+	<span class="TwoColumns">Quoted: <span id="txtPackageWeight<?QTYIndex?>"><? echo ( $$variable{'txtPackageWeight'.$$variable{QTYIndex}} ) ?></span> lbs</span>
+	<span class="TwoColumns">Actual:
+	<? echo ( input( name=>'txtPackageWeightUsed', value=>$$variable{txtPackageWeightUsed} ? $$variable{txtPackageWeightUsed} : $$variable{'txtPackageWeight'.$$variable{QTYIndex}}, type=>'float' ); ) ?> lbs
 	</span>
-</p>
-<p>
+</li>
+<li>
 	<label>Package Quantity</label>
-	<span class="TwoColumns"><? echo ( $$variable{'txtPackageQuantity'.$$variable{'QTYIndex'}} ) ?></span>
-	<span class="TwoColumns">
-	<input name="txtPackageQuantityUsed" value="<? echo ( $$variable{"txtPackageQuantityUsed"} ? $$variable{"txtPackageQuantityUsed"} : $$variable{"txtPackageQuantity".$$variable{'QTYIndex'}} ) ?>" type="text" size="9" onkeyup="this.value=this.value.replace(/\D/g,'');" />
+	<span class="TwoColumns">Quoted: <span id="txtPackageQuantity<?QTYIndex?>"><? echo ( $$variable{'txtPackageQuantity'.$$variable{'QTYIndex'}} ) ?></span></span>
+	<span class="TwoColumns">Actual: 
+	<? echo ( input( name=>'txtPackageQuantityUsed', value=>$$variable{txtPackageQuantityUsed} ? $$variable{txtPackageQuantityUsed} : $$variable{"txtPackageQuantity".$$variable{QTYIndex}}, type=>'cardinal' ); ) ?>
 	</span>
-</p>
-<p>
+</li>
+<li>
 	<label>Total Weight</label>
-	<span class="TwoColumns"><? echo ( $$variable{"txtTotalWeight$$variable{'QTYIndex'}"} ) ?> lbs</span>
-	<span class="TwoColumns">
-	<input name="txtTotalWeightUsed" value="<? echo ( $$variable{"txtTotalWeightUsed"} ? $$variable{"txtTotalWeightUsed"} : $$variable{"txtTotalWeight".$$variable{'QTYIndex'}}) ?>" type="text" size="9" onkeyup="this.value=this.value.replace(/[^\.\d]/g,'');" /> lbs
+	<span class="TwoColumns">Quoted: <? echo ( $$variable{"txtTotalWeight$$variable{'QTYIndex'}"} ) ?> lbs</span>
+	<span class="TwoColumns">Actual:
+	<? echo ( input( name=>'txtTotalWeightUsed', value=>$$variable{txtTotalWeightUsed} ? $$variable{txtTotalWeightUsed} : $$variable{"txtTotalWeight".$$variable{QTYIndex}}, type=>'float' ); ) ?> lbs
 	</span>
-</p>
+</li>

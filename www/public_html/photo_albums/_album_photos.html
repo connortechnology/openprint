@@ -21,15 +21,15 @@
 			my $deletable = 1;
 			if ( $Photo->asset_id() != $$variable{Album}->thumbnail_id() ) {
 #$log->debug("Photo asset_id $$Photo{asset_id} != thumbnail_id: " . $$variable{Album}->thumbnail_id() . ' album type: ' . ref $$variable{Album});
-				$html .= ssi::button( 'SAT'.$Photo->asset_id(), { onclick=>
+				$html .= button( 'SAT'.$Photo->asset_id(), { onclick=>
 					sprintf( q`new Ajax.Updater('Photos', '/photo_albums/_album_photos.html', { parameters: { album_id: '%d', asset_id: %d, action: 'set as album thumbnail', album_type: '%s' } } );`, $$variable{Album}->id(), $Photo->asset_id(), ref $$variable{Album} ),
 					text=>'Set as album thumbnail' } );
 				$html .= '<br/>';
 			} else {
 				$deletable = 0;
 			} # end if
-			if ( new openprint::User( $session{user_id} )->asset_id() != $Photo->asset_id() ) {
-				$html .= ssi::button( 'SPP'.$Photo->asset_id(), { onclick=>
+			if ( $openprint::User->asset_id() != $Photo->asset_id() ) {
+				$html .= button( 'SPP'.$Photo->asset_id(), { onclick=>
 					sprintf( q`new Ajax.Updater('Photos', '/photo_albums/_album_photos.html', { parameters: { album_id: '%d', asset_id: %d, action: 'set as profile pic', album_type: '%s' } } );`, $$variable{Album}->id(), $Photo->asset_id(), ref $$variable{Album} ),
 	, text=>'Set as profile picture' } );
 				$html .= '<br/>';
@@ -37,7 +37,7 @@
 				$deletable = 0;
 			} # end if
 			if ( $deletable ) {
-				$html .= ssi::button( 'D'.$Photo->asset_id(), { onclick=>
+				$html .= button( 'D'.$Photo->asset_id(), { onclick=>
 					sprintf( q`new Ajax.Updater('Photos', '/photo_albums/_album_photos.html', { parameters: { album_id: '%d', asset_id: %d, action: 'delete', album_type: '%s' } } );`, $$variable{Album}->id(), $Photo->asset_id(), ref $$variable{Album} ),
 	, text=> 'Delete' } );
 				$html .= '<br/>';

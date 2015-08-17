@@ -51,8 +51,8 @@
                     <input type="text" oninput="filter_companies( add.company_id, { name:this.value,selected_id:get_ddm_value(add.company_id));" class="filter" />
                     <select name="company_id" onchange="load_users( this.form.elements['user_id'], get_ddm_value(this) );">
 <? echo ( 
-if ( $session{'/marketing/sales_logs.html?company_id'} ) {
-	my $Company = new openprint::Company( $session{'/marketing/sales_logs.html?company_id'} );
+if ( $session{'/marketing/sales_log.html?company_id'} ) {
+	my $Company = new openprint::Company( $session{'/marketing/sales_log.html?company_id'} );
 	return sprintf('<option value="%d" selected="selected">%s</option>', $Company->id(), $Company->name() );
 }
 return; 
@@ -103,7 +103,7 @@ return;
                     <input type="text" oninput="filter_companies(f1.company_id, {name:this.value,selected_id:get_ddm_value(f1.company_id)});" onkeydown="if(event.keyCode==13){f1.user_id.selectedIndex=-1;load_results();}" class="filter" />
                     <select name="company_id" onchange="load_users(this.form.elements['user_id'], get_ddm_value(this));">
                         <option value="">All Companies</option>
-					<? echo ( $session{'/marketing/sales_log.html?company_id'} ? sprintf('<option value="%d" selected="selected">%s</option>', $session{'/marketing.salesrep_logs.html?company_id'}, new openprint::Company( $session{'/marketing/sales_logs.html?company_id'} )->name() ) : '';  ) ?>
+					<? echo ( $session{'/marketing/sales_log.html?company_id'} ? sprintf('<option value="%d" selected="selected">%s</option>', $session{'/marketing/sales_log.html?company_id'}, new openprint::Company( $session{'/marketing/sales_log.html?company_id'} )->name() ) : '';  ) ?>
 						<option value="">Please wait, loading the rest</option>
                     </select>
                 </li>
@@ -111,7 +111,7 @@ return;
                     <label>User</label>
                     <select name="user_id" onchange="load_results();">
                         <option value="">All</option>
-					<? echo ( sprintf('<option value="%d" selected="selected">%s</option>', $session{'/marketing.salesrep_logs.html?user_id'}, new openprint::User( $session{'/marketing/sales_logs.html?user_id'} )->name() ); ) ?>
+					<? echo ( sprintf('<option value="%d" selected="selected">%s</option>', $session{'/marketing/sales_log.html?user_id'}, new openprint::User( $session{'/marketing/sales_log.html?user_id'} )->name() ); ) ?>
 						<option value="">Please wait, loading the rest</option>
                     </select>
                 </li>
@@ -127,14 +127,14 @@ return;
 	<div id="Results"><?include(_sales_log.html)?></div>
 </div>
 <script type="text/javascript">
-	new Ajax.Updater( $('f1').company_id, '/includes/_company_ddm.html', { parameters: { selected_id: '<?echo($session{'/marketing/sales_logs.html?company_id'})?>' } } );
-	new Ajax.Updater( $('add').company_id, '/includes/_company_ddm.html', { parameters: { selected_id: '<?echo($session{'/marketing/sales_logs.html?company_id'})?>' } } );
+	new Ajax.Updater( $('f1').company_id, '/includes/_company_ddm.html', { parameters: { selected_id: '<?echo($session{'/marketing/sales_log.html?company_id'})?>' } } );
+	new Ajax.Updater( $('add').company_id, '/includes/_company_ddm.html', { parameters: { selected_id: '<?echo($session{'/marketing/sales_log.html?company_id'})?>' } } );
 	new Ajax.Updater( $('f1').user_id, '/includes/_users.html', { parameters: { 
-			selected_id: '<?echo($session{'/marketing/sales_logs.html?user_id'})?>',
-			company_id: '<?echo($session{'/marketing/sales_logs.html?company_id'})?>',
+			selected_id: '<?echo($session{'/marketing/sales_log.html?user_id'})?>',
+			company_id: '<?echo($session{'/marketing/sales_log.html?company_id'})?>',
  } } );
 	new Ajax.Updater( $('add').user_id, '/includes/_users.html', { parameters: { 
-			selected_id: '<?echo($session{'/marketing/sales_logs.html?user_id'})?>',
-			company_id: '<?echo($session{'/marketing/sales_logs.html?company_id'})?>',
+			selected_id: '<?echo($session{'/marketing/sales_log.html?user_id'})?>',
+			company_id: '<?echo($session{'/marketing/sales_log.html?company_id'})?>',
  } } );
 </script>

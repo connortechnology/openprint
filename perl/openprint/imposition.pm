@@ -553,12 +553,16 @@ $openprint::log->debug("Using Single wheel space $$specs{'Perfecting Single Gutt
 		if ( check_setup( $setup1, $specs ) ) {
 			$openprint::log->debug(" CHECK 1 $run_style Using Paper $paper_width x $paper_height -> $adjusted_paper_width x $adjusted_paper_height Gutter: $gutters, Image: $$setup1{image_width} x $$setup1{image_height} Imposition: " . $setup1->imposition(). ":".$setup1->columns() . 'x' . $setup1->rows(). " $run_style " . $setup1->layout_width() . 'x' . $setup1->layout_height() ) if DEBUG;
 			push @results, $setup1;
-			if ( ( $$specs{dutch} ne 'N' ) and ( $run_style ne 'Perfecting' or $Paper->perfecting() or ( $$specs{OverrideRunStyle} and $$specs{OverrideImposition} ) ) ) {
+			if ( ( $$specs{dutch} ne 'N' ) and ( $run_style ne 'Perfecting' or $Paper->perfecting() or $$specs{PerfectingDutchByDefault} or ( $$specs{OverrideRunStyle} and $$specs{OverrideImposition} ) ) ) {
 				# Too hard to figure space for rollers
 				push @results, calc_dutch( $setup1, $adjusted_paper_width, $adjusted_paper_height, $specs );
 			} else {
 $openprint::log->debug("Not doing dutch because ($$specs{dutch}) or $run_style or $$Paper{perfecting}") if DEBUG;
 			} # end if
+			if ( ! $setup1->Paper()->width() ) {
+				$setup1->Paper()->width( $setup1->used_width() );
+			} # end if
+			$setup1->Paper()->height( $setup1->used_height() ) if ! $setup1->Paper()->height();
 		} # end if check_setup
 	} elsif ( $run_style eq 'Work & Turn' ) {
 		calc_setup( $setup1, $setup1->image_width(), $setup1->image_height(), $adjusted_paper_width/2, $adjusted_paper_height );
@@ -774,7 +778,7 @@ $openprint::log->debug("Using Single wheel space $$specs{'Perfecting Single Gutt
 
 #	Rotating sheet reverses the grain direction, so grain width + rotated sheet is the same as grain height + non rotated sheet.
 #	if no grain direction is specified, then use the larger imposition
-			if ( ( $$specs{dutch} ne 'N' ) and ( $run_style ne 'Perfecting' or $Paper->perfecting() or ( $$specs{OverrideRunStyle} and $$specs{OverrideImposition}  ) ) ) {
+			if ( ( $$specs{dutch} ne 'N' ) and ( $run_style ne 'Perfecting' or $Paper->perfecting() or $$specs{PerfectingDutchByDefault} or ( $$specs{OverrideRunStyle} and $$specs{OverrideImposition}  ) ) ) {
 				push @results, calc_dutch( $setup2, $adjusted_paper_width, $adjusted_paper_height, $specs );
 			} # end if
 			push @results, $setup2;
@@ -1079,6 +1083,14 @@ sub decrease_imposition {
 				if ( $imp1->imposition() ) {
 					push @results, $imp1;
 				} # end if
+				if ( $imposition->rows() % 2 ) {
+					my $imp2 = $imposition->copy();
+					$imp2->rows( $imp2->rows() - $imp1->rows() );
+					if ( $imp2->imposition() ) {
+						push @results, $imp2;
+					} # end if
+				} 
+
 				if ( $imp1->rows() != $imposition->rows() - 1 ) {
 					my $imp4 = $imposition->copy();
 					$imp4->rows( $imp4->rows()-1 );
@@ -1094,6 +1106,13 @@ sub decrease_imposition {
 				if ( $imp2->imposition() ) {
 					push @results, $imp2;
 				} # end if
+				if ( $imposition->columns() % 2 ) {
+					my $imp3 = $imposition->copy();
+					$imp3->columns( $imp3->columns() - $imp2->columns() );
+					if ( $imp3->imposition() ) {
+						push @results, $imp3;
+					} # end if
+				} 
 			
 				if ( $imp2->columns() != $imposition->columns() - 1 ) {
 					my $imp3 = $imposition->copy();

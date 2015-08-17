@@ -162,5 +162,25 @@ $openprint::log->debug("DIdn't find location, so adding it");
 	return $error;
 } # end sub save
 
+sub check {
+	my ( $self, $param ) = @_;
+	my @errors;
+$openprint::log->debug("checking profile");
+	foreach my $Field ( openprint::Company_Profile_Field->find( order=>'sort', required=>1 ) ) {
+		if ( $Field->type() eq 'date' ) {
+			if ( ! Date::Calc::check_date( @$param{map { "field-$$Field{id}_$_" } ( 'year','month','day' ) } ) ) {
+				push @errors, $$Field{name};
+			} # end if
+		} elsif ( sets::isin( $Field->type(), [ 'country','state','city' ] ) ) {
+			if ( ! ( $$param{'field-'.$$Field{id}.'_name'} and $$param{'field-'.$Field->id()} ) ) {
+				push @errors, $$Field{name};
+			} # end if
+		} elsif ( ! $$param{'field-'.$Field->id()} ) {
+			push @errors, $$Field{name};
+		} # end if 
+	} # end foreach
+	return @errors;
+} # end sub check
+
 1;
 __END__

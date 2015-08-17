@@ -93,24 +93,6 @@ sub add_service {
 	} # end foreach
 } # end sub add_service
 
-sub create_edit_display {
-	my $project_index = $param{'ProjectIndex'};
-
-	my $Project = $variable{Project} = new openprint::Project( $project_index );
-
-	@{$variable{'ProjectTypes'}} = map { $_->name(), $_->description() } openprint::ProjectType->find( 'order'=>'sorting, lower(name)' );
-	# Check the appropriate button for project type
-	$variable{'SelectedProjectType'} = $Project->Type()->name();
-
-	@variable{'txtProjectReference','ddmDesign','txtComments','txtQuantity1','txtQuantity2','txtQuantity3','rdbMode','chkPrograms','txtOtherPrograms'} = (
-		$Project->reference(), $Project->design(), $Project->comments(), $Project->quantity1(), $Project->quantity2(), $Project->quantity3(), $Project->mode(), $Project->programs(), $Project->other_programs() 
-	);
-
-	my $services = $Project->services();
-	@{$variable{'SelectedServices'}} = keys %{$services};
-
-	$variable{'ProjectIndex'} = $project_index;
-} # end sub edit_stage1_display
 
 sub get_incomplete_services_in_category {
 	my ( $log, $dbh, $project_index, $category ) = @_;
@@ -731,17 +713,6 @@ sub delete_service {
 	return $Service->delete();
 } # end sub delete_service
 
-sub display_reuse_project {
-
-	$variable{'Project'} = new openprint::Project( $param{'ProjectIndex'} );
-	$variable{'ProjectIndex'} = $variable{'Project'}->id();
-	if ( $variable{'Project'}->reference() ) {
-		$variable{'Project'}->reference( 'Copy of ' . $variable{'Project'}->reference() );
-	} else {
-		$variable{'Project'}->reference( 'Copy of project # ' . $param{'ProjectIndex'} );
-	} # end if
-	
-} # end sub
 
 sub reuse_project {
 	my ( $project_index ) = @_;
@@ -758,15 +729,15 @@ sub reuse_project {
 		due_date => undef,
 		user_id	=>	$session{user_id},
 		status	=> ( sets::isin( $Project->status(), [ 'Unordered', 'Pending Deposit', 'In Prepress', 'Proofs Out', 'Approved', 'Printed', 'Complete','Shipped','Picked Up' ] ) ? 'Unordered' : 'uncalculated' ),
-		( $param{'ddmCompany'} ? ( company_id => $param{'ddmCompany'} ) : () ),
+		( $param{company_id} ? ( company_id => $param{company_id} ) : () ),
 	} );
 
 	$session{project_id} = $NewProject->id();
 
 	$Project->add_to_log( @session{'company_id','user_id'}, 'Reused to project '.$NewProject->id() );
 
-	if ( $param{'ddmCompany'} and $param{'ddmCompany'} != $session{'company_id'} ) {
-		openprint::switch_company( new openprint::Company( $param{'ddmCompany'} ) ) if sets::isin( $session{'user_type'}, ['A','E'] );
+	if ( $param{company_id} and $param{company_id} != $session{company_id} ) {
+		openprint::switch_company( new openprint::Company( $param{company_id} ) ) if sets::isin( $session{user_type}, ['A','E'] );
 	} # end if
 	$NewProject->add_to_log( @session{'company_id','user_id'}, 'Reused from project '.$Project->id() );
 

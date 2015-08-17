@@ -1,6 +1,6 @@
 <? eval (
-	@{$$variable{'Timetracks'}} = ();
-	$$variable{'elapsed_total'} = $$variable{'value_total'} = $$variable{'wage_total'} = $$variable{'distance_total'} = 0;
+	@{$$variable{Timetracks}} = ();
+	$$variable{elapsed_total} = $$variable{value_total} = $$variable{wage_total} = $$variable{distance_total} = 0;
 	if ( $session{'/timetrack/history.html?contains'} and ( $session{'/timetrack/history.html?contains'} !~ /%/ ) ) {
 		$session{'/timetrack/history.html?contains'} = '%'.$session{'/timetrack/history.html?contains'}.'%';
 	} # end if
@@ -10,9 +10,9 @@
 		date_filter( '/timetrack/history.html?starting_start', 'starting >=' ),
 		( $session{'/timetrack/history.html?contains'} ? ( 'description ilike' => $session{'/timetrack/history.html?contains'} ) : () ),
 
-		( sets::isin( $session{'user_type'}, ['E', 'A'] ) ?
+		( sets::isin( $session{user_type}, ['E', 'A'] ) ?
 			( $session{'/timetrack/history.html?company_id'} ? ( 'company_id'	=> $session{'/timetrack/history.html?company_id'} ) : () ) :
-			( company_id	=> $session{'company_id'} ) ),
+			( company_id	=> $session{company_id} ) ),
 		( $session{'/timetrack/history.html?user_id'} ? ( 'user_id'	=> $session{'/timetrack/history.html?user_id'} ) : () ),
 		( $session{'/timetrack/history.html?service_id'} ? ( 'service_id'	=> $session{'/timetrack/history.html?service_id'} ) : () ),
 		( $session{'/timetrack/history.html?billable'} ne '' ? ( 'billable'=>$session{'/timetrack/history.html?billable'} ) : () ),
@@ -39,19 +39,19 @@
 			next if $bad;
 		}
 
-		push @{$$variable{'Timetracks'}}, $Timetrack;
-		$$variable{'elapsed_total'} += $Timetrack->elapsed();
-		$$variable{'value_total'} += $Timetrack->value();
-		$$variable{'wage_total'} += $Timetrack->wage();
-		$$variable{'distance_total'} += $Timetrack->distance();
+		push @{$$variable{Timetracks}}, $Timetrack;
+		$$variable{elapsed_total} += $Timetrack->elapsed();
+		$$variable{value_total} += $Timetrack->value();
+		$$variable{wage_total} += $Timetrack->wage();
+		$$variable{distance_total} += $Timetrack->distance();
 	} # end foreach Timetrack
 
-	$$variable{'Currency'} = openprint::Currency::get_current() if ! $$variable{'Currency'};
+	$$variable{Currency} = openprint::Currency::get_current() if ! $$variable{Currency};
 ) ?>
 
-<? if ( @{$$variable{'Timetracks'}} == 0 ) ?>
+<? if ( @{$$variable{Timetracks}} == 0 ) ?>
 	There are no timetracks which match your search criteria. 
-<? else ( @{$$variable{'Timetracks'}} == 0 ) ?>
+<? else ( @{$$variable{Timetracks}} == 0 ) ?>
 	<div class="unprintable">
 		Please click on a <b>Timetrack ID #</b> to view timetrack details.<br/>
 		To delete timetracks from history check the appropriate timetrack(s) and click delete.<br/>
@@ -74,7 +74,7 @@
 		<? echo ( 
 			my ( $html, $rowclass );
 			my $hs = HTML::Strip->new();
-			foreach my $T ( @{$$variable{'Timetracks'}} ) {
+			foreach my $T ( @{$$variable{Timetracks}} ) {
 				$html .= sprintf(q`
 <tr title="%2$s"%1$s>
 	<td class="EmployeeName"><a href="/timetrack/edit.html?timetrack_id=%3$d">%4$s</a></td>
@@ -92,8 +92,8 @@
 </tr>
 `, $rowclass, Encode::encode('utf8',$hs->parse($T->description())), $T->id(), html_escape( $T->User()->name() ),
 html_escape( $T->Company()->name() ),
-Date::Format::time2str(($T->time_associated() ? $config{'DateTimeFormat'} : $config{'DateFormat'}), Date::Parse::str2time($T->starting())),
-Date::Format::time2str(($T->time_associated() ? $config{'DateTimeFormat'} : $config{'DateFormat'}), Date::Parse::str2time($T->ending())),
+Date::Format::time2str(($T->time_associated() ? $config{DateTimeFormat} : $config{DateFormat}), Date::Parse::str2time($T->starting())),
+Date::Format::time2str(($T->time_associated() ? $config{DateTimeFormat} : $config{DateFormat}), Date::Parse::str2time($T->ending())),
 misc::seconds_to_pretty_interval( $T->elapsed() ),
 ( $T->invoiced() ? 'Y' : 'N' ),
 ( $T->paid() ? 'Y' : 'N' ),
@@ -110,14 +110,14 @@ openprint::Currency::format( $T->value() ),
 ) ?>
 		<tr class="totals">
 			<td colspan="4">Totals</td>
-			<td class="Time"><? echo ( misc::seconds_to_pretty_interval( $$variable{'elapsed_total'} ); ) ?></td>
+			<td class="Time"><? echo ( misc::seconds_to_pretty_interval( $$variable{elapsed_total} ); ) ?></td>
 			<td colspan="3">&nbsp;</td>
-			<td class="Distance"><? echo ( 1*$$variable{'distance_total'} ) ?>km</td>
+			<td class="Distance"><? echo ( 1*$$variable{distance_total} ) ?>km</td>
 			<td class="Rate">&nbsp;</td>
-			<td class="Price"><? echo ( openprint::Currency::format($$variable{'wage_total'}); ) ?></td>
-			<td class="Price"><? echo ( openprint::Currency::format($$variable{'value_total'}); ) ?></td>
+			<td class="Price"><? echo ( openprint::Currency::format($$variable{wage_total}); ) ?></td>
+			<td class="Price"><? echo ( openprint::Currency::format($$variable{value_total}); ) ?></td>
 		</tr>
 	</table>
-	<span class="Currency">All prices listed in <? hecho ( new openprint::Currency( $session{'Currency_id'} )->name(); ) ?></span>
+	<span class="Currency">All prices listed in <? hecho ( new openprint::Currency( $session{Currency_id} )->name(); ) ?></span>
 	<br class="spacer"/>
-<? endif ( @{$$variable{'Timetracks'}} == 0 ) ?>
+<? endif ( @{$$variable{Timetracks}} == 0 ) ?>

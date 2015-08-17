@@ -75,15 +75,6 @@ if ( sets::isin( 'hosts', \@tables ) ) {
 	$dbh->do('ALTER TABLE hosts add block boolean') if ! exists $$data{'block'};
 	$dbh->do('ALTER TABLE hosts add monitor boolean') if ! exists $$data{'monitor'};
 } # end if
-my $data = 0;
-if ( sets::isin( 'emailcampaigns', \@tables ) ) {
-	$data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM emailcampaigns LIMIT 1', {} );
-} else {
-	$_ = misc::load_file( $log, q{../openprint/sql/EmailCampaigns.sql});
-	foreach my $st ( split(';', $_ ) ) {
-		$dbh->do($st);
-	} # end foreach
-} # end if
 
 my $data = 0;
 if ( sets::isin( 'ordered_products', \@tables ) ) {
@@ -395,6 +386,12 @@ if ( ! sets::isin( 'timetracks', \@tables ) ) {
 	} # end if
 	if ( ! exists $$data{po} ) {
 		$dbh->do('ALTER TABLE timetracks ADD po TEXT');
+	} # end if
+	if ( ! exists $$data{duration} ) {
+		$dbh->do('ALTER TABLE timetracks ADD duration INTERVAL');
+	} # end if
+	if ( ! exists $$data{duration_override} ) {
+		$dbh->do('ALTER TABLE timetracks ADD duration_override BOOLEAN NOT NULL DEFAULT FALSE');
 	} # end if
 } # end if
 $dbh->disconnect();

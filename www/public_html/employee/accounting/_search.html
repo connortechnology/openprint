@@ -1,10 +1,12 @@
 <? eval (
 	if ( $param{StartDocket} ) {
+		$param{StartDocket} = openprint::Order->transform( docket => $param{StartDocket} );
 		$$variable{Orders} = [ openprint::Order->find(
 			docket		=>	$param{StartDocket},
 			order	=> 'created_on',
 			) ];
 	} elsif ( $param{order_id} ) {
+		$param{order_id} = openprint::Order->transform( id => $param{order_id} );
 		$$variable{Orders} = [ openprint::Order->find(
 			id		=>	$param{order_id},
 			order	=> 'created_on',
@@ -13,7 +15,7 @@
 		s/^\s+//, s/\s+$// for $param{invoice_id};
 		
 		$$variable{Orders} = [ openprint::Order->find(
-			'invoice_id'	=>	$param{invoice_id},
+			invoice_id	=>	$param{invoice_id},
 			order		=> 'created_on',
 			) ];
 	} elsif ( $param{invoice_num} ) {

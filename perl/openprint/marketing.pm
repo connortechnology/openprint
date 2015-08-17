@@ -44,7 +44,19 @@ sub email_campaigns {
 	} # end if
 
 	$variable{campaign_id} = $Campaign->id();
+	ssi::setup_date_select( $r->uri(), 'called_on_start', -30 );
+	ssi::setup_date_select( $r->uri(), 'called_on_end', '' );
+	$session{'/marketing/email_campaigns.html?deleted'} = '0' if ! $session{'/marketing/email_campaigns.html?deleted'};
 } # end sub email_campaigns
+
+sub _email_campaigns {
+
+	    ssi::save_params( '/marketing/email_campaigns.html', (
+                ( map { 'called_on_start_' . $_ } ( 'year','month','day' ) ),
+                ( map { 'called_on_end_' . $_ } ( 'year','month','day' ) ),
+				'user_id', 'deleted', 'active',
+		) );
+} # end sub _email_campaigns
 
 sub categories {
 

@@ -10,23 +10,25 @@ use Text::CSV_XS;
 use Data::Dumper;
 use Email::Valid;
 
-use vars qw( $log $dbh %config);
+use vars qw( $log $dbh %config %session);
 *log = \$openprint::log;
 *dbh = \$openprint::dbh;
 *config = \%openprint::config;
+*session = \%openprint::session;
 $log = logger->new();
 $log->{level} = 'debug';
+$openprint::session{'Currency_id'} =1;
 
 use Getopt::Long;
 use File::Basename qw(basename);
 
-my @tables = ( 'Customer', 'Supplier', 'Employee', 'Cust_Contacts', 'Job', 'Items' );
+my @tables = ( 'Customer', 'Supplier', 'Employee', 'Cust_Contacts', 'Job', 'Items', 'InventoryReceipts' );
 
 my $program = basename($0);
 
 my $opts = {};
 GetOptions($opts, 'help',
-    'db_name=s', 'db_host=s', 'db_user=s', 'db_pass=s','table=s', 'debug=s', 'version=s',
+    'db_name=s', 'db_host=s', 'db_user=s', 'db_pass=s','table=s', 'debug=s', 'version=s', 'limit=s','csv=s',
  );
 
 if ($opts->{help}) {
@@ -75,6 +77,7 @@ my %tables = (
 'Job'		=>	{ object => 'Project', find=>[ order=>'id', ( $$opts{limit} ? ( limit => $$opts{limit} ) : () ), 'order_id is null'=>0 ] },
 'Items-Paper'		=>	{ object => 'Paper', find=>[ order=>'id', ( $$opts{limit} ? ( limit => $$opts{limit} ) : () ), 'in_stock >'=>0 ] },
 'Items-Material'	=>	{ object => 'Material', find=>[ order=>'id', ( $$opts{limit} ? ( limit => $$opts{limit} ) : () ) ] },
+'InventoryReceipts'	=>	{ object => 'SkidContent', find=>[ order=>'id', ( $$opts{limit} ? ( limit => $$opts{limit} ) : () ), type=>'Roll', 'quantity >'=>0 ] },
 );
 foreach my $table ( $$opts{table} ? split(',',$$opts{table} ) : @tables ) {
 	my %fields;
@@ -85,30 +88,66 @@ foreach my $table ( $$opts{table} ? split(',',$$opts{table} ) : @tables ) {
 	while ( <FH> ) {
 		my $status = $csv->parse($_);
 		my ($field, $iq_field, $type, $start, $size, $end, $desc, $validated, $required, $default, $notes ) = misc::trim($csv->fields());
+$log->debug("Got $field $iq_field $size $default");
 		$fields{$field} = { size => $size, iq_field=>$iq_field, default=>$default };
 		push @fields, $field;
 	} # end while
 	close (FH);
 #print Dumper(\%fields);
 #die;
+			if ( ! @fields ) {
+				$log->error("No fields, result will be empty. Dieing.");
+				die;
+			}
 
-	open( FH, ">$table.txt" ) or die "Can't open $table.txt $!";
-	foreach my $Object ( ('openprint::'.$tables{$table}{object})->find( @{$tables{$table}{find}} ) ) {
-		my $format_string = join('', map { '%-'.$fields{$_}{size}.'s' } @fields ) . "\n";
-		my @values;
-		foreach my $field ( @fields ) {
-			my $value = $fields{$field}{default};
-			if ( my $iq_field = $fields{$field}->{iq_field} ) {
-				$value = eval $iq_field;
-				$log->error( "Eval error $@" ) if $@;
-				$value = substr($value, 0,$fields{$field}{size});
-			} # end if
-			push @values, $value;
-		}
-print sprintf( $format_string, @values );
-		print FH sprintf( $format_string, @values );
-	} # end foreach Cmompany
-	close( FH );
+	if ( $$opts{csv} ) {
+		
+		my @data;
+		foreach my $Object ( ('openprint::'.$tables{$table}{object})->find( @{$tables{$table}{find}} ) ) {
+$log->debug("Object:" . $Object->to_string() );
+			my @values;
+			foreach my $field ( @fields ) {
+				my $value = $fields{$field}{default};
+				if ( my $iq_field = $fields{$field}->{iq_field} ) {
+					$value = eval $iq_field;
+					$log->error( "Eval error $@" ) if $@;
+$log->debug("Value for $iq_field $value");
+					if ( $fields{$field}{size} ) {
+					$value = substr($value, 0,$fields{$field}{size});
+					} else {
+					$log->warn("No size for $field");
+					}
+				} else {
+					$log->warn("No iq field for $field");
+				} # end if
+				push @values, $value;
+			}
+			push @data, @values;
+$log->debug("Values: @values");
+		} # end foreach Object
+		my @contents = misc::data_to_csv( \@fields, \@data );
+		misc::save_file( $log, "$table.csv", join("", @contents ) );
+		
+	} else {
+
+		open( FH, ">$table.txt" ) or die "Can't open $table.txt $!";
+		foreach my $Object ( ('openprint::'.$tables{$table}{object})->find( @{$tables{$table}{find}} ) ) {
+			my $format_string = join('', map { '%-'.$fields{$_}{size}.'s' } @fields ) . "\n";
+			my @values;
+			foreach my $field ( @fields ) {
+				my $value = $fields{$field}{default};
+				if ( my $iq_field = $fields{$field}->{iq_field} ) {
+					$value = eval $iq_field;
+					$log->error( "Eval error $@" ) if $@;
+					$value = substr($value, 0,$fields{$field}{size});
+				} # end if
+				push @values, $value;
+			}
+	#print sprintf( $format_string, @values );
+			print FH sprintf( $format_string, @values );
+		} # end foreach Cmompany
+		close( FH );
+	}
 } # end foreach
 
 $dbh->disconnect();

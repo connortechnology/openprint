@@ -1,9 +1,10 @@
 <? eval (
 	@{$$variable{'Stocks'}} = ();
+	my $uri = '/administrator/stock/list.html';
 	my %suppliers;
 	foreach my $Stock ( openprint::Paper->find( 
 			columns	=>	'*,(select name from stockbrands where id=brand_id) AS brand, (select name from stockfinishes where id=finish_id) AS finish, (select name from stockcolours where id=colour_id) AS colour, (select name from stockweights where id=weight_id) AS weight',
-			( $session{'/administrator/stock/list.html?group_id'} ? ( 'group_id'		=> $session{'/administrator/stock/list.html?group_id'} ) : () ),
+			( $session{$uri.'?group_id'} ? ( group_id		=> $session{$uri.'?group_id'} ) : () ),
 			( $session{'/administrator/stock/list.html?owner_id'} ? ( 'owner_id'		=> $session{'/administrator/stock/list.html?owner_id'} ) : () ),
 			( $session{'/administrator/stock/list.html?manufacturer_id'} ? ( manufacturer_id	=> $session{'/administrator/stock/list.html?manufacturer_id'} ) : () ),
 			( $session{'/administrator/stock/list.html?supplier_id'} ? ( supplier_id		=> $session{'/administrator/stock/list.html?supplier_id'} ) : () ),
@@ -21,6 +22,7 @@
 			( $session{'/administrator/stock/list.html?grain_direction'} ? ( 'grain_direction' => $session{'/administrator/stock/list.html?grain_direction'} ) : () ),
 			( $session{'/administrator/stock/list.html?digital'} ne '' ? ( digital=>$session{'/administrator/stock/list.html?digital'} ) : () ),
 			( $session{'/administrator/stock/list.html?scoring'} ne '' ? ( score_required=>$session{'/administrator/stock/list.html?scoring'} ) : () ),
+			( $session{'/administrator/stock/list.html?customer_supplied'} ne '' ? ( supplied=>$session{'/administrator/stock/list.html?customer_supplied'} ) : () ),
 			'order'		=> 'brand,finish,colour,weight, width, height'
 		) ) {
 		next if $session{'/administrator/stock/list.html?recommendations'} eq '0' and $Stock->recommendations();
@@ -66,7 +68,7 @@
 				<th class="quality">Quality</th>
 				<th class="size">Size</th>
 				<th class="calliper">Calliper</th>
-				<th class="mweight">MWeight</th>
+				<th class="mweight">MWeight/Basis</th>
 				<th class="gsm">GSM</th>
 				<th class="spp_min">SPP/Min</th>
 				<th class="pricing">Pricing CWT</th>
@@ -93,7 +95,8 @@
 		<td class="quality"><a href="stock.html?stock_id=<? echo ( $$variable{Stock}{'id'} ) ?>"><? echo ( $$variable{Stock}->quality() ) ?></a></td>
 		<td class="size"><a href="stock.html?stock_id=<? echo ( $$variable{Stock}{'id'} ) ?>"><? echo ( $$variable{Stock}->size() ) ?></a></td>
 		<td class="calliper"><a href="stock.html?stock_id=<? echo ( $$variable{Stock}{'id'} ) ?>"><? echo ( $$variable{Stock}->calliper() ) ?></a></td>
-		<td class="mweight"><a href="stock.html?stock_id=<? echo ( $$variable{Stock}{'id'} ) ?>"><? echo ( sprintf('%.2f', Math::Round::nearest(0.01, $$variable{Stock}->type() eq 'Roll' ? $$variable{Stock}->basis_mweight() : $$variable{Stock}->mweight() ) ); ) ?></a></td>
+		<td class="mweight"><a href="stock.html?stock_id=<? echo ( $$variable{Stock}{'id'} ) ?>"><? echo ( 
+			$$variable{Stock}->type() eq 'Roll' ? Math::Round::nearest(1,$$variable{Stock}->basis_mweight()) : Math::Round::nearest(1,$$variable{Stock}->mweight()) . '/' .  Math::Round::nearest(1,$$variable{Stock}{basis_mweight} ); ) ?></a></td>
 		<td class="gsm"><a href="stock.html?stock_id=<? echo ( $$variable{Stock}{'id'} ) ?>"><? echo ( sprintf('%.2f', $$variable{Stock}->gsm() ); ) ?></a></td>
 		<td class="spp_min"><a href="stock.html?stock_id=<? echo ( $$variable{Stock}{'id'} ) ?>"><? echo ( $$variable{Stock}->sheets_per_package().'/'.$$variable{Stock}->minimum_order() ) ?></a></td>
 		<td class="pricing"><a href="stock.html?stock_id=<? echo ( $$variable{Stock}{'id'} ) ?>">

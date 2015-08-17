@@ -390,6 +390,7 @@ sub user_profiles {
 		$User->notifications( \%notifications );
 
 		$variable{'information'} = 'Record saved successfully.';
+		$variable{ExternalRedirect} = '/administrator/managerial/user_profiles.html?ddmUser='.$User->id();
 	} # end if btnFunction
 
 	# if we don't have a selected user, pick the first one returned filtered by company and user type if specified
@@ -460,6 +461,8 @@ sub user_profiles {
 	} # end if
 	$variable{'selectUserCategories'} = ssi::make_drop_down( \@available_categories, \@users_categories );
 
+	$session{$r->uri().'?company_id'} = $param{ddmCustomer};
+
 } # end sub user_profiles
 
 
@@ -468,7 +471,7 @@ sub company_profiles {
 # form field to db field mappings
 	my %shipping_fields = (
 			'txtShippingCompanyName'	=>	'CompanyName',
-			'rdbShippingSalutation'	 =>	'Salutation',
+			'rdbShippingSalutation'	 	=>	'Salutation',
 			'txtShippingFirstName'		=>	'FirstName',
 			'txtShippingLastName'		=>	'LastName',
 			'txtShippingAddress1'		=>	'Address1',
@@ -476,7 +479,7 @@ sub company_profiles {
 			'txtShippingCity'			=>	'City',
 			'ddmShippingStateProvince'	=>	'StateProvince',
 			'ddmShippingCountry'		=>	'Country',
-			'txtShippingPostalCode'	=> 'PostalCode',
+			'txtShippingPostalCode'		=> 'PostalCode',
 			'txtShippingPhone'			=>	'Phone',
 			'txtShippingExtension'		=>	'Extension',
 			'txtShippingFax'			=>	'Fax',
@@ -569,7 +572,7 @@ sub company_profiles {
 				} # end foreach
 				$Company->save_shipping( \%params );
 
-				$Company->save_tradereferences( \%params );
+				$Company->save_tradereferences( \%param );
 
 				$dbh->do( 'LOCK TABLE Company_Credit IN ACCESS EXCLUSIVE MODE' ) or $log->error( DBI->errstr );
 
@@ -633,9 +636,6 @@ sub company_profiles {
 
 	my @customers_categories;
 	if ( $index ) {
-		foreach ( 1 .. 3 ) {
-			$Company->load_tradereferences( $_, \%variable );
-		} 
 		my $shipping_address = $Company->get_shipping_address();
 		@variable{ keys %shipping_fields } = ssi::htmlize( $shipping_address->get( @shipping_fields{ keys %shipping_fields } ) );
 		$_ = q{SELECT category_id FROM Companies_in_Marketing_Categories WHERE Company_id =?};
@@ -892,12 +892,12 @@ sub user_relationships {
 } # end sub user_relationships
 sub upload_log {
 	ssi::save_params( '/administrator/managerial/upload_log.html', ( 
-		( map { 'uploaded_on_start_'.$_ } ( 'year', 'month', 'day' ) ),
-		( map { 'uploaded_on_end_'.$_ } ( 'year', 'month', 'day' ) ),
+		( map { 'uploaded_on_start_'.$_ } ( 'year', 'month', 'day', 'hour','minute' ) ),
+		( map { 'uploaded_on_end_'.$_ } ( 'year', 'month', 'day', 'hour','minute' ) ),
 		'company_id','type',
 	) );
 
-	ssi::setup_date_select( '/administrator/managerial/upload_log.html', 'uploaded_on_start', -7 );
+	ssi::setup_date_select( '/administrator/managerial/upload_log.html', 'uploaded_on_start', -1 );
 	ssi::setup_date_select( '/administrator/managerial/upload_log.html', 'uploaded_on_end', '' );
 } # end sub upload_log
 
@@ -969,7 +969,8 @@ sub companies {
 	_companies();
 } # end sub companies
 sub _companies {
-	ssi::save_params( '/administrator/managerial/companies.html', ( 'salesrep_id', 'marketing_category_id',
+	ssi::save_params( '/administrator/managerial/companies.html', ( 
+				'salesrep_id', 'marketing_category_id', 'company_name',
 				( map { 'created_on_start_' . $_ } ( 'year','month','day' ) ),
 				) );
 	$session{$r->uri().'?salesrep_id_exclude'} = $param{salesrep_id_exclude};
@@ -991,5 +992,12 @@ sub _merge_popup {
 	$variable{Company} = new openprint::Company( $param{company_id} );
 }
 
+sub _user_logs {
+	$variable{User} = new openprint::User( $param{user_id} );
+	ssi::save_params( '/administrator/managerial/user_profiles.html',
+			( map { 'log_created_on_start_' . $_ } ( 'year','month','day','hour','minute' ) ),
+			( map { 'log_created_on_end_' . $_ } ( 'year','month','day','hour','minute' ) ),
+	);
+} # end sub _logs
 1;
 __END__

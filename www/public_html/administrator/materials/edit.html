@@ -122,7 +122,7 @@
                             with_today=>1,
                             with_clear=>1,
                             } ),
-                        datetime_select_session( '/employee/it/host.html','log_created_on_end', {
+                        datetime_select_session( $r->uri(),'log_created_on_end', {
                             onchange    =>q`new Ajax.Updater( 'Logs', '_logs.html', { parameters: $('f1').serialize() } );`,
                             with_today=>1,
                             with_clear=>1,

@@ -175,8 +175,9 @@ Please select a Paper to view/edit.<br>
 						$session{'/employee/inventory/available_paper.html?location_id'} = undef if ! sets::isin( $session{'/employee/inventory/available_paper.html?location_id'}, \@options );
 						my @selected = split(',', $session{'/employee/inventory/available_paper.html?location_id'} );
 						if ( ! @selected ) {
-							foreach my $L ( openprint::Location->find( parent_id=>undef, order=>'lower(name)') ) {
+							foreach my $L ( openprint::Location->find( type=>'place' ) ) {
 								next if $L->name() eq 'Missing';
+								next if $L->parent_id() and $L->Parent()->type() eq 'place';
 								push @selected, $L->id();
 							} # end foreach $L
 						} # end if

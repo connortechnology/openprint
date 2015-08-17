@@ -1,12 +1,3 @@
-<? eval ( 
-	if ( $session{user_type} eq 'A' ) {
-		$$variable{company_dropdown} = openprint::Company->dropdown( or=>'id='.$openprint::User->company_id(), salesrep_id=>[ $session{user_id}, $openprint::User->csr_ids() ] );
-$log->debug( @{$$variable{company_dropdown}} );
-		$$variable{company_dropdown} = openprint::Company->dropdown( ) if @{$$variable{company_dropdown}} <= 2;
-	} else {
-		$$variable{company_dropdown} = openprint::Company->dropdown();
-	}
-)?>
 <br/>
 You are currently representing <? echo ( $openprint::Company->link_to(); ) ?>.<br/>
 To represent another <? echo ( translate('company') ) ?>, please select it from the dropdown and click submit. <br/>
@@ -14,50 +5,55 @@ Any actions you perform will be recorded in the selected <? echo ( translate('co
 <form id="f1" name="f1" action="select_company.html" method="post">
 	<fieldset class="SelectCompany">
 <? if ( $session{user_type} eq 'A' or $openprint::User->csr_ids() ) ?>
-			<? echo (
-				my $all = $session{user_type} eq 'A' or openprint::usergroup::is_user_in( ['Estimating','Prepress','Accounting','Shipping','Inventory'] );
-				my @csr_ids = $all ? map { $_->id() } openprint::User->find('usergroup any'=>'Sales') : ( $session{user_id}, $openprint::User->csr_ids() );
-				
-	my $html;
-				if ( @csr_ids ) {
-					$html .= '
+	<? echo (
+		my $all = $session{user_type} eq 'A' or openprint::usergroup::is_user_in( ['Estimating','Prepress','Accounting','Shipping','Inventory'] );
+		my @csr_ids = $all ? map { $_->id() } openprint::User->find('usergroup any'=>'Sales', company_id=>$config{owner_id}) : ( $session{user_id}, $openprint::User->csr_ids() );
+		
+		my $html;
+		if ( @csr_ids ) {
+			$html .= '
 <fieldset><legend>Filter dropdown contents</legend>
-		<ul>
+<ul>
 <li><label>Sales Rep</label>';
-				if ( @csr_ids > 4 ) {
-					$html .= ssi::select( 
-						openprint::User->dropdown(id=>\@csr_ids), 
-						[ split(',', $session{'/account/select_company.html?csr_ids'} ) ], 
-						{ 	
-							name=>'csr_ids',
-							prepend=>['','All', $all ? ( 'Unassigned', 'Unassigned' ) : () ],
-							onchange=>q`filter_companies( 'ddmCompany', {salesrep_id:get_ddm_value(this)});`,
-						} );
-				} else {
-					$html .= radio( 'csr_ids',
-						[ '', 'All', ( $all ? ( 'Unassigned', 'Unassigned' ) : () ), @{openprint::User->dropdown(id=>\@csr_ids)} ],
-						[ split(',', $session{'/account/select_company.html?csr_ids'} ) ],
-						{
-							onclick=>q`filter_companies( 'ddmCompany', {salesrep_id:this.value} );`,
-						}
-					 );
-				} # end if
-				$html .= '</li>
-	</ul>
+		if ( @csr_ids > 4 ) {
+			$html .= ssi::select( 
+				openprint::User->dropdown(id=>\@csr_ids), 
+				[ split(',', $session{'/account/select_company.html?csr_ids'} ) ], 
+				{
+					name=>'csr_ids',
+					prepend=>['','All', $all ? ( 'Unassigned', 'Unassigned' ) : () ],
+					onchange=>q`filter_companies( 'ddmCompany', {salesrep_id:get_ddm_value(this)});`,
+				} );
+		} else {
+			$html .= radio( 'csr_ids',
+				[ '', 'All', ( $all ? ( 'Unassigned', 'Unassigned' ) : () ), @{openprint::User->dropdown(id=>\@csr_ids)} ],
+				[ split(',', $session{'/account/select_company.html?csr_ids'} ) ],
+				{
+					onclick=>q`filter_companies( 'ddmCompany', {salesrep_id:this.value} );`,
+				}
+			 );
+		} # end if
+		$html .= '</li>
+</ul>
 </fieldset>
 ';
-				} # end if
-	return $html;
-			) ?>
+		} # end if
+return $html;
+	) ?>
 <? endif ( $session{user_type} eq 'A' or $openprint::User->csr_ids() ) ?>
 		<ul>
 		<li>
 			<label><? echo ( translate('company') ) ?></label>
 			<input class="filter" name="CompanyFilter" type="text" oninput="filter_companies('ddmCompany', {name:this.value, selected_id:get_ddm_value($('ddmCompany'))});" />
-			<select id="ddmCompany" name="ddmCompany" onchange="if(this.options[this.selectedIndex].value != '') f1.submit();">
+			<select id="ddmCompany" name="ddmCompany" onchange="stop_filter_companies();if(this.options[this.selectedIndex].value != '') f1.submit();">
 				<? echo ( 
+					$$variable{company_dropdown} = openprint::Company->dropdown(
+						or	=>'id IN ('.join(',',$openprint::User->company_id(), $session{company_id} ).')',
+						salesrep_id=>$session{'/account/select_company.html?csr_ids'} ? $session{'/account/select_company.html?csr_ids'} : [ $session{user_id}, $openprint::User->csr_ids() ],
+						);
+					#$$variable{company_dropdown} = openprint::Company->dropdown( ) if @{$$variable{company_dropdown}} <= 2;
 					if ( @{$$variable{company_dropdown}} > 2000 ) {
-						return '<option value="">loading...</option>';
+						return make_drop_down( [ map { $_->id(), $_->name() } ( $openprint::Company ) ], $session{company_id} );
 					} else {
 						make_drop_down( $$variable{company_dropdown}, $session{company_id} );
 					}
@@ -98,9 +94,4 @@ Any actions you perform will be recorded in the selected <? echo ( translate('co
 	</fieldset>
 	<input type="hidden" name="btnFunction" value="SelectCompany"/>
 </form>
-<script type="text/javascript">
-document.f1.CompanyFilter.focus();
-<? if ( @{$$variable{company_dropdown}} > 2000 ) ?>
-new Ajax.Updater( 'ddmCompany', '/includes/_company_ddm.html', { parameters: { selected_id: <?echo($session{company_id})?> } } );
-<? endif ( @{$$variable{company_dropdown}} > 2000 ) ?>
-</script>
+<script type="text/javascript">document.f1.CompanyFilter.focus();</script>

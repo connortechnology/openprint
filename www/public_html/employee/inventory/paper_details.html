@@ -130,6 +130,14 @@ function calc_from_gsm( form ) {
 				</select>
 				<input style="display: none;" type="text" id="txtQuality" name="txtQuality" onfocus="ddm_select_by_index( f1.Weight, 0 );" />
 			</p>
+				<p>
+					<label for="material" onclick="$('material').toggle();$('material_id').toggle();">Material</label>
+					<select id="material_id" name="material_id" size="1" onchange="f1.material.value='';">
+						<option value="">select</option>
+					<? echo ( make_drop_down( openprint::StockMaterial->dropdown(order=>'lower(name)'), $$variable{Paper}->material_id() );) ?>
+					</select>
+					<input style="display: none;" type="text" id="material" name="material" onfocus="ddm_select_by_index( f1.material_id, 0 );" />
+				</p>
 			<p><label>Type</label>
 				<input type="radio" id="typeSheet" name="type" value="Sheet" onclick="$('PaperHeight').show();" <? echo ( 'checked="checked"' if $$variable{Paper}->type() ne 'Roll'; ) ?> />
 				<label class="radio" for="typeSheet">Sheet</label>
@@ -293,12 +301,12 @@ x
 </form>
 <? if ( $$variable{paper_id} ) ?>
 	<fieldset><legend onclick="toggleContent( 'CurrentInventory', '/employee/inventory/_paper_inventory_entries.html', new Array('paper_id',<?paper_id?>) );">Current Inventory<span class="unprintable"> - click to hide/show</span></legend>
-		<div id="CurrentInventory"><? echo ( include('/employee/inventory/_paper_inventory_entries.html'); ) ?></div>
+		<div id="CurrentInventory"><?include('/employee/inventory/_paper_inventory_entries.html')?></div>
 	</fieldset>
 	<fieldset><legend onclick="toggleContent( 'Allocations', '/employee/inventory/_paper_allocations.html', new Array('paper_id',<?paper_id?>) );">Allocations<span class="unprintable"> - click to hide/show</span></legend>
-		<div id="Allocations"><? echo ( include('/employee/inventory/_paper_allocations.html'); ) ?></div>
+		<div id="Allocations"><?include('/employee/inventory/_paper_allocations.html')?></div>
 	</fieldset>
 	<fieldset><legend onclick="toggleContent( 'Log', '/employee/inventory/_paper_log.html', new Array('paper_id',<?paper_id?>) );">Inventory Log<span class="unprintable"> - click to hide/show</span></legend>
-		<div id="Log"><? echo ( include('/employee/inventory/_paper_log.html'); ) ?></div>
+		<div id="Log"><?include('/employee/inventory/_paper_log.html') ?></div>
 	</fieldset>
 <? endif ( $$variable{paper_id} ) ?>

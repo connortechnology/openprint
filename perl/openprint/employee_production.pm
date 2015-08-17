@@ -263,19 +263,8 @@ sub print_overview {
 
 sub bindery_overview {
 
-	my @time = localtime(time);
-	my ( $start_year, $start_month, $start_day ) = Date::Calc::Add_Delta_Days( $time[5], $time[4]+1, $time[3], -6 );
-	my ( $end_year, $end_month, $end_day ) = Date::Calc::Add_Delta_Days( $time[5], $time[4]+1, $time[3], 14 );
-	$variable{Today} = sprintf('%.4d-%.2d-%.2d', $time[5]+1900, $time[4]+1, $time[3] );
-	ssi::get_start_end_dates( $log, $dbh, \%variable,
-			( defined $r->param('ddmStartYear') ? $r->param('ddmStartYear') : $start_year+1900 ),
-			( defined $r->param('ddmStartMonth') ? $r->param('ddmStartMonth') : $start_month ),
-			( defined $r->param('ddmStartDay') ? $r->param('ddmStartDay') : $start_day ),
-			( defined $r->param('ddmEndYear') ? $r->param('ddmEndYear') : $end_year+1900 ),
-			( defined $r->param('ddmEndMonth') ? $r->param('ddmEndMonth') : $end_month ),
-			( defined $r->param('ddmEndDay') ?$r->param('ddmEndDay') : $end_day ),
-			);
-
+	ssi::setup_date_select( $r->uri(), 'due_date_start', -7 );
+	ssi::setup_date_select( $r->uri(), 'due_date_end', '' );
 	my @possible_statuses = ( 'Approved','Printed','Complete' );
 	my @statuses = $r->param('Status') ? sets::intersection( @possible_statuses , $r->param('Status') ) : ( 'Printed' );
 	$variable{Status} = ssi::make_drop_down( [ map { $_, $_ } @possible_statuses ], [@statuses] );
@@ -300,10 +289,10 @@ sub bindery_overview {
 
 	@{$variable{Projects}} = ();
 	my @Projects = openprint::Project->find(order=>'due_date',
-			'status'		=>	\@statuses,
-			'due_date >='	=>	$variable{StartDate},
-			'due_date <='	=>	$variable{EndDate},
-			( $param{ddmSalesRep} ? ( 'salesrep_id'		=>	$param{ddmSalesRep} ) : () ),
+			status		=>	\@statuses,
+			ssi::date_filter( 'due_date_end', 'due_date <=', \%param ),
+			ssi::date_filter( 'due_date_start', 'due_date >=', \%param ),
+			( $param{ddmSalesRep} ? ( salesrep_id => $param{ddmSalesRep} ) : () ),
 			);
 	foreach my $Project ( @Projects ) {
 		my $qty_index = $Project->ordered_quantity_index();
@@ -466,47 +455,39 @@ sub projects {
 	my $project_index = $param{Project};
 	my $order_id = $param{OrderID};
 
-
-	if ( $param{btnFunction} eq 'Go' ) {
-		if ( $project_index ) {
-			@projects = ( new openprint::Project( $project_index ) );
-		} elsif ( $order_id ) {
-			my $Order = new openprint::Order( $order_id );
-			@projects = $Order->Projects();
-		} elsif ( $startdocket and $enddocket ) {
-			@projects = openprint::Project->find( 'docket >='=>$startdocket, 'docket <=' => $enddocket );
-		} elsif ( $startdocket ) {
-			@projects = openprint::Project->find( 'docket'=>$startdocket );
-			if ( ! @projects ) {
-				my $Order = openprint::Order->find_one( docket=>$startdocket );
-				if ( $Order ) {
-					$variable{ExternalRedirect} = '/employee/project/view.html?OrderID='.$$Order{id};
-					return;
-				} # end if
+	if ( $project_index ) {
+		@projects = ( new openprint::Project( $project_index ) );
+	} elsif ( $order_id ) {
+		my $Order = new openprint::Order( $order_id );
+		@projects = $Order->Projects();
+	} elsif ( $startdocket and $enddocket ) {
+		@projects = openprint::Project->find( 'docket >='=>$startdocket, 'docket <=' => $enddocket );
+	} elsif ( $startdocket ) {
+		@projects = openprint::Project->find( 'docket'=>$startdocket );
+		if ( ! @projects ) {
+			my $Order = openprint::Order->find_one( docket=>$startdocket );
+			if ( $Order ) {
+				$variable{ExternalRedirect} = '/employee/project/view.html?OrderID='.$$Order{id};
+				return;
 			} # end if
-		} elsif ( $enddocket ) {
-			@projects = openprint::Project->find( 'docket'=>$enddocket );
 		} # end if
-		if ( @projects == 1 ) {
-			$order_id = $projects[0]->order_id();
-			$variable{Redirect} = '/employee/project/view.html';
-			$param{OrderID} = $order_id;
-			$param{ProjectIndex} = $projects[0]->id();
-			return;
-		} # end if
+	} elsif ( $enddocket ) {
+		@projects = openprint::Project->find( 'docket'=>$enddocket );
 	} elsif ( $param{order_id} ) {
 		$param{order_id} =~ s/\D//g;
 		if ( $param{order_id} ) {
 			my $Order = new openprint::Order( $param{order_id} );
 			@projects = $Order->Projects();
 		} # end if
-		if ( @projects == 1 ) {
-			$order_id = $projects[0]->order_id();
-			$variable{Redirect} = '/employee/project/view.html';
-			$param{OrderID} = $order_id;
-			$param{ProjectIndex} = $projects[0]->id();
-			return;
-		} # end if
+	} # end if
+
+	if ( @projects == 1 ) {
+		if ( $projects[0]->docket() ) {
+		$variable{ExternalRedirect} = '/employee/project/view.html?docket='.$projects[0]->docket();
+		} else {
+		$variable{ExternalRedirect} = '/employee/project/view.html?project_id='.$projects[0]->id();
+		}
+		return;
 	} # end if
 
 	$variable{txtDocket} = $param{txtDocket};
@@ -1189,22 +1170,29 @@ sub _drop {
 				next;
 			} # end if different servicetype
 #$log->debug("Order before coalesce: @order : " . join(',', map { new openprint::ScheduledJob($_)->Project()->docket() } @order ) );
-			if ( $previous and $previous->project_id() and $Job->project_id() and ( $previous->project_id() == $Job->project_id() ) ) {
-				my $sig_specs1 = openprint::service::get_specs_ref( $previous->Project(), $$previous{service_id}[0] );
-				my $sig_specs2 = openprint::service::get_specs_ref( $Job->Project(), $$Job{service_id}[0] );
-				if ( eval 'openprint::Estimating::'.$Job->ServiceType()->name().'::compare_signatures( $Job->Project(), $sig_specs1, $sig_specs2, $Job->Project()->ordered_quantity_index() )' ) {
-#$log->debug("Sigs are the same, coalescing ");
-					$_ = $previous->save({
-							'runtime'		=>	Date::Format::time2str( '%H:%M:%S', $previous->runtime_seconds() + $Job->runtime_seconds() ),
-							'service_id'	=>	[ @{$$previous{service_id}}, @{$$Job{service_id}} ],	
-							});
-					if ( $_ ) {
-						$log->error($_);
-					} else {
-						$Job->delete();
-						@order = sets::exclude( [ $row_id ], \@order );
-					} # end if
-				} # end if
+			if ( $previous and $previous->project_id() and $Job->project_id() and ( $previous->project_id() == $Job->project_id() ) and $$previous{service_id}[0] and $$Job{service_id}[0] ) {
+				my $module = 'openprint::Estimating::'.$Job->ServiceType()->type();
+				if ( my $function = $module->can('compare_signatures') ) {
+					my $JobProject = $Job->Project();
+					my $sig_specs1 = openprint::service::get_specs_ref( $previous->Project(), $$previous{service_id}[0] );
+					my $sig_specs2 = openprint::service::get_specs_ref( $JobProject, $$Job{service_id}[0] );
+
+					if ( $sig_specs1 and $sig_specs2 and $function->( $JobProject, $sig_specs1, $sig_specs2, $JobProject->ordered_quantity_index() ) ) {
+						#$log->debug("Sigs are the same, coalescing ");
+						$_ = $previous->save({
+								runtime		=>	Date::Format::time2str( '%H:%M:%S', $previous->runtime_seconds() + $Job->runtime_seconds() ),
+								service_id	=>	[ @{$$previous{service_id}}, @{$$Job{service_id}} ],	
+								});
+						if ( $_ ) {
+							$log->error($_);
+						} else {
+							$Job->delete();
+							@order = sets::exclude( [ $row_id ], \@order );
+						} # end if
+					} # end if equal signatures
+				} else {
+					$log->error("No compare_signatures function in $module");
+				} # end if has compare_signatures
 				$previous = undef;
 			} else {
 $log->debug("Sigs are the not same, " . $Job->Project()->ordered_quantity_index() );
@@ -1712,6 +1700,7 @@ sub _li_change {
 			$log->debug("Was first in list.");
 		} elsif ( $index == @Jobs ) {
 			$log->warn("Job not found.");
+			$index = 0;
 		} # end if
 
 		if ( $Job->Equipment()->smartscheduling() ) {
@@ -1734,21 +1723,23 @@ $log->debug("second job can't move");
 			} # end if
 			reorder_jobs( @Jobs );
 		} else {
-			if ( ( @Jobs > 1 ) and $index ) {
-				if ( $Jobs[$index]->Shift()->ul_id() ne $Jobs[$index-1]->Shift()->ul_id() ) {
-					if ( ! $Job->Shift()->Previous()->Jobs() ) {
-						push @{$variable{changed}}, $Job->ul_id();
-						$Job->starttime( $Jobs[$index-1]->Shift()->Next()->starttime() );
+			if ( @Jobs ) {
+				if ( $index > 1 ) {
+					if ( $Jobs[$index]->Shift()->ul_id() ne $Jobs[$index-1]->Shift()->ul_id() ) {
+						if ( ! $Job->Shift()->Previous()->Jobs() ) {
+							push @{$variable{changed}}, $Job->ul_id();
+							$Job->starttime( $Jobs[$index-1]->Shift()->Next()->starttime() );
+						} # end if
 					} # end if
-				} # end if
-				$_ = $Jobs[$index]{starttime};
-				$Jobs[$index]{starttime} = $Jobs[$index-1]{starttime};
-				$Jobs[$index-1]{starttime} = $_;
-				$Jobs[$index]->save();
-				$Jobs[$index-1]->save();
-				push @{$variable{changed}}, $Jobs[$index-1]->Shift()->ul_id();
+					$_ = $Jobs[$index]{starttime};
+					$Jobs[$index]{starttime} = $Jobs[$index-1]{starttime};
+					$Jobs[$index-1]{starttime} = $_;
+					$Jobs[$index]->save();
+					$Jobs[$index-1]->save();
+					push @{$variable{changed}}, $Jobs[$index-1]->Shift()->ul_id();
+				} # end if index
+				push @{$variable{changed}}, $Jobs[$index]->Shift()->ul_id();
 			} # end if can do anyhing
-			push @{$variable{changed}}, $Jobs[$index]->Shift()->ul_id();
 		} # end if
 	} elsif ( $param{action} eq 'RemoveJob' ) {
 		push @{$variable{changed}}, $Job->Shift()->ul_id();

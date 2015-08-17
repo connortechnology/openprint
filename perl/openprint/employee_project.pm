@@ -128,7 +128,7 @@ sub view {
 			} # end if
 
 			new openprint::Email()->send(
-					FROM    => $From,
+					FROM	=> $From,
 					TO	=> \@To,
 					SUBJECT => "Docket $info{Docket} Rushed!",
 					ATTACHMENTS=>\@body,
@@ -387,6 +387,17 @@ sub view {
 			} # end foreach
 		} # end if
 
+		if ( $param{signature} ) {
+$log->debug("Saving signature");
+			my $Signature = new openprint::SignatureCapture();
+			$variable{error} .= $Signature->save({
+					image_data	=>	URI::Escape::uri_unescape($param{signature}),
+					type		=>	'path',
+					project_id	=>	$Project->id(),
+					service_id	=>	$service_index,
+					});
+		} # end if
+
 		$Project->update_status();
 		$order_id = $Project->order_id() if ! $order_id;
 		if ( $order_id ) {
@@ -437,28 +448,28 @@ sub view {
 			sql::insert( $log, $dbh, 'tbl_Service_Specifications', [
 						'lngProjectIndex',  $project_index,
 						'lngServiceIndex',  $service_index,
-						'strName',          'ServiceType',
-						'strValue',         'CustomService' ]);
+						'strName',		  'ServiceType',
+						'strValue',		 'CustomService' ]);
 			sql::insert( $log, $dbh, 'tbl_Service_Specifications', [
 						'lngProjectIndex',  $project_index,
 						'lngServiceIndex',  $service_index,
-						'strName',          'txtPrice1',
-						'strValue',         misc::moneyfilter($param{txtPrice}) ]);
+						'strName',		  'txtPrice1',
+						'strValue',		 misc::moneyfilter($param{txtPrice}) ]);
 			sql::insert( $log, $dbh, 'tbl_Service_Specifications', [
 						'lngProjectIndex',  $project_index,
 						'lngServiceIndex',  $service_index,
-						'strName',          'txtPrice2',
-						'strValue',         misc::moneyfilter($param{txtPrice}) ]);
+						'strName',		  'txtPrice2',
+						'strValue',		 misc::moneyfilter($param{txtPrice}) ]);
 			sql::insert( $log, $dbh, 'tbl_Service_Specifications', [
 						'lngProjectIndex',  $project_index,
 						'lngServiceIndex',  $service_index,
-						'strName',          'txtPrice3',
-						'strValue',         misc::moneyfilter($param{txtPrice}) ]);
+						'strName',		  'txtPrice3',
+						'strValue',		 misc::moneyfilter($param{txtPrice}) ]);
 			sql::insert( $log, $dbh, 'tbl_Service_Specifications',[
 					'lngProjectIndex',  $project_index,
 					'lngServiceIndex',  $service_index,
-					'strName',          'ServiceName',
-					'strValue',         $param{txtServiceName}
+					'strName',		  'ServiceName',
+					'strValue',		 $param{txtServiceName}
 					] );
 
 			$Project->add_to_log( @session{'company_id','user_id'}, sprintf( 'Added Custom Line: %s, (%.2f)', @param{'txtServiceName','txtPrice'} ) );
@@ -476,7 +487,7 @@ sub view {
 		} else {
 		$variable{ExternalRedirect} = '/employee/project/view.html?ProjectIndex='.$Project->id();
 		} # end if
-#        # email CSR
+#		# email CSR
 	} elsif ( $param{btnFunction} eq 'AdditionalChargeNotify' ) {
 		send_additional_charges_notifications( @param{'OrderID','ProjectIndex'} );
 		$variable{information} = 'Additional Charges Email sent.';
@@ -534,11 +545,11 @@ sub send_additional_charges_notifications {
 	$_ = encode_qp( Encode::encode('utf-8', ssi::variable_substitution( \$email_template, \%info ) ) );
 	my @body = ('', $_, 'text/html', 'quoted-printable');
 	my $results = ( new openprint::Email() )->send(
-			FROM    => $Operator,
+			FROM	=> $Operator,
 			'Return-receipt-to' => sprintf( '"%s %s" <%s>', $Operator->get('firstname','lastname','email') ),
 			'Disposition-Notification-To' => sprintf( '"%s %s" <%s>', $Operator->get('firstname','lastname','email') ),
-			#CC      => sprintf( '"%s %s" <%s>', @info{'CSRFirstName','CSRLastName','CSREmail'}),
-			TO      => [ map { $_->User() } @Notifications ],
+			#CC	  => sprintf( '"%s %s" <%s>', @info{'CSRFirstName','CSRLastName','CSREmail'}),
+			TO	  => [ map { $_->User() } @Notifications ],
 			#TO		=>	'"Isaac Connor" <iconnor@point-one.com>',
 			SUBJECT => 'Additional Charges required',
 			ATTACHMENTS	=>	\@body,
@@ -605,7 +616,7 @@ sub upload_pdfs {
 				if ( ! sql::execute( $log, $dbh, 'SELECT * FROM tbl_Project_PDFs WHERE lngProjectIndex=? AND strFileName=?', $project_index, $filename ) ) {
 					sql::insert( $log, $dbh, 'tbl_Project_PDFs',[
 							'lngProjectIndex',  $project_index,
-							'strFileName',      $filename,
+							'strFileName',	  $filename,
 							'strDescription',   $r->param('txtDescription'.$index)
 							] );
 				} else {
@@ -648,9 +659,9 @@ sub send_proofs_complete_email {
 	$_ = encode_qp( Encode::encode('utf-8', ssi::include('/email_template.html', \%info ) ) );
 	my @body = ('', $_, 'text/html', 'quoted-printable');
 	my %mail = (
-			SMTP    => $config{'Mail Server'},
-			FROM    => sprintf( "%s %s <%s>", @info{'EmployeeFirstName','EmployeeLastName','EmployeeEmail'}),
-			TO      => sprintf( "%s %s <%s>", @info{'CustomerFirstName','CustomerLastName','CustomerEmail'}),
+			SMTP	=> $config{'Mail Server'},
+			FROM	=> sprintf( "%s %s <%s>", @info{'EmployeeFirstName','EmployeeLastName','EmployeeEmail'}),
+			TO	  => sprintf( "%s %s <%s>", @info{'CustomerFirstName','CustomerLastName','CustomerEmail'}),
 			SUBJECT => "Proofs Complete",
 			);
 
@@ -664,9 +675,9 @@ sub send_proofs_complete_email {
 #$_ = encode_qp( ssi::variable_substitution( \$email_template, \%info ) );
 #my @body = ('', $_, 'text/html', 'quoted-printable');
 #my %mail = (
-#SMTP    => $config{'Mail Server'},
-#FROM    => sprintf( "%s %s <%s>", @info{'EmployeeFirstName','EmployeeLastName','EmployeeEmail'}),
-#TO      => $sales_person_email,
+#SMTP	=> $config{'Mail Server'},
+#FROM	=> sprintf( "%s %s <%s>", @info{'EmployeeFirstName','EmployeeLastName','EmployeeEmail'}),
+#TO	  => $sales_person_email,
 #SUBJECT => "Docket $info{DocketNumber} Proofs Complete",
 #);
 #misc::send_email_with_attachment( $log, \%mail, @body );
@@ -710,8 +721,8 @@ sub send_proofs_approved_email {
 		next if $User->id() == $session{user_id};
 		
 		$Email->send(
-				FROM    => $openprint::User,
-				TO      => $User,
+				FROM	=> $openprint::User,
+				TO	  => $User,
 				SUBJECT => "Docket $info{DocketNumber} $$Order{company_name} - Proofs Approved",
 				ATTACHMENTS	=>	\@body,
 				);
@@ -740,8 +751,8 @@ sub send_duedate_change_notification {
 			my $email_template = ssi::slurp_content( '/email_template.html' );
 			$info{ReplacementText} = ssi::include( '/email_content/proofs_duedate_change-sales_rep.html', \%info );
 			new openprint::Email()->send(
-					FROM    => $User,
-					TO      => $CSR,
+					FROM	=> $User,
+					TO	  => $CSR,
 					SUBJECT => "Docket $info{DocketNumber} DueDate Changed",
 					ATTACHMENTS	=>	['', encode_qp( Encode::encode('utf-8', ssi::variable_substitution( \$email_template, \%info ) ) ), 'text/html', 'quoted-printable'],
 					);
@@ -803,7 +814,7 @@ sub _stock_checkout {
 		$param{rfidtag_id} = openprint::RFIDTag->transform( 'id', $param{rfidtag_id} );
 		my $Skid;
 		if ( $param{skid_id} ) {
-			$Skid = new openprint::Skid( $param{skid_id} );
+			$Skid = openprint::Skid->find_one( id=>$param{skid_id} );
 		} elsif ( $param{rfidtag_id} ) {
 			my $RFIDTag = openprint::RFIDTag::from_id( $param{rfidtag_id} );
 			if ( ! $RFIDTag ) {
@@ -821,12 +832,18 @@ sub _stock_checkout {
 
 		my $add_entry = 1;
 
+		if ( openprint::PaperInventory->find_one( docket => $Order->docket(), skid_id	 =>  $Skid->id() ) ) {
+# What about if it was added back in?
+			$variable{error} .= 'Skid/Roll has already been checked out for this docket.';
+			return;
+		}
+
 		if ( $Skid->is_empty() ) {
 			my @PI = openprint::PaperInventory->find( skid_id=>$Skid->id(), 'comment like'=>'Checked out%', order=>'updated_on desc');
 			if ( @PI ) {
-				$variable{error} .= sprintf( '%1$s %2$d has already been checked out', ($PI[0]->Paper()->type() eq 'Roll' ? 'Roll' : 'Skid'), $Skid->id() );
+				$variable{error} .= sprintf( '%1$s %2$d has already been checked out', $PI[0]->Skid()->type(), $Skid->id() );
 				if ( $PI[0]->docket() ) {
-					$variable{error} .= sprintf(' to docket <a href="/employee/project/view.html?docket=%1$d">%1$d</a>', $PI[0]->docket() );
+					$variable{error} .= sprintf(' for docket <a href="/employee/project/view.html?docket=%1$d">%1$d</a>', $PI[0]->docket() );
 				} # end if
 				$variable{error} .= '.<br/>';
 			} # end if
@@ -834,6 +851,7 @@ sub _stock_checkout {
 			foreach my $PI ( @PI ) {
 				if ( ! $PI->docket() ) {
 					$PI->save({docket=>$Order->docket()});
+					$add_entry = 0;
 					# only update the most recent entry
 					last;
 				} else {
@@ -846,43 +864,7 @@ sub _stock_checkout {
 		} # end if
 
 		if ( $add_entry ) {
-			my @C = $Skid->Contents();
-			if ( @C ) {
-				foreach my $C ( $Skid->Contents() ) {
-					my $PI = new openprint::PaperInventory();
-					$PI->save({
-							docket		=>	$Order->docket(),
-							paper_id	=>	$C->paper_id(),
-							user_id		=>	$session{user_id},
-							delta		=>	-1*$C->quantity(),
-							comment		=>	sprintf('Checked out for docket <a href="/employee/project/view.html?docket=%1$d">%1$d</a> by %2$s', $Order->docket(), $openprint::User->name() ),
-							skid_id		=>	$Skid->id(),
-							units		=>	$C->units(),
-							});
-					$C->quantity( 0 );
-					$C->save();
-					#Remove any allocations
-					foreach my $PA ( openprint::PaperAllocation->find('skid_ids any'=>$Skid->id(), paper_id=>$C->paper_id(), docket=>$Order->docket() ) ) {
-						$PA->save({skid_ids=>[ sets::exclude( [ $Skid->id() ], $PA->skid_ids() ) ] });
-						if ( ! $PA->Skids() ) {
-							$PA->delete();
-						} # end if
-					} # end foreach
-					$Order->add_log( join('', 'Checked out ' , $C->quantity() , $C->units() , ' of ' , $C->Paper->to_string() ) );
-				} # end foreach C
-			} else {
-				my $PI = new openprint::PaperInventory();
-				$PI->save({
-						docket		=>	$Order->docket(),
-						paper_id	=>	undef,,
-						user_id		=>	$session{user_id},
-						delta		=>	0,
-						comment		=>	sprintf('Checked out for docket <a href="/employee/project/view.html?docket=%1$d">%1$d</a> by %2$s', $Order->docket(), $openprint::User->name() ),
-						skid_id		=>	$Skid->id(),
-						units		=>	undef,
-						});
-				$Order->add_log( 'Checked out something unknown.' );
-			} # end if skid has contents
+			$Skid->checkout( $Order->docket() );
 		} # end if add_entry
 	} # end if action eq Add
 } # end sub _stock_checkout
@@ -891,18 +873,19 @@ sub _production_feedback {
 	if ( $param{action} eq 'add' ) {
 		my $PF= new openprint::ProductionFeedback();
 		$variable{error} .= $PF->save({
-				'project_id'	=>	$param{project_id},
-				'service_id'	=>	$param{service_id},
-				'user_id'		=>	$session{user_id},
-				'starting_on'	=>	$param{starting_on},
-				'ending_on'		=>	$param{ending_on},
-				'comment'		=>	$param{comment},
+				project_id	=>	$param{project_id},
+				service_id	=>	$param{service_id},
+				user_id		=>	$session{user_id},
+				starting_on	=>	$param{starting_on},
+				ending_on	=>	$param{ending_on},
+				comment		=>	$param{comment},
 			});
 	} # end if
 	$variable{project_id} = $param{project_id};
 	$variable{Project} = new openprint::Project( $param{project_id} );
 	$variable{service_id} = $param{service_id};
 } # end sub _production_feedback
+
 sub _stock_allocations {
 	$variable{Order} = openprint::Order->find_one( docket=>$param{docket} );
 }
@@ -949,11 +932,11 @@ sub _status {
 	} elsif ( $param{action} eq 'addtoschedule' ) {
 		my $Job = new openprint::ScheduledJob();
 		$_ = $Job->save({
-				'project_id'    =>  $param{project_id},
+				'project_id'	=>  $param{project_id},
 				'equipment_id'  =>  $param{equipment_id},
-				'starttime'     =>  undef,
-				'service_id'    =>  [ split(',',$param{service_id}) ],
-				'servicetype_id'    =>  $Service->ServiceType->id(),
+				'starttime'	 =>  undef,
+				'service_id'	=>  [ split(',',$param{service_id}) ],
+				'servicetype_id'	=>  $Service->ServiceType->id(),
 				});
 		if ( $_ ) {
 			$variable{error} .= 'Error adding to press schedule: ' . $_;
@@ -980,9 +963,9 @@ sub _add_to_schedule {
 			} );
 	my $Job = $variable{Job} = new openprint::ScheduledJob();
 	$Job->set({
-		'project_id'		=>$param{project_id},
-		'service_id'		=>\@service_ids,
-		'servicetype_id'    =>  $Service->ServiceType->id(),
+		project_id		=>	$param{project_id},
+		service_id		=>	\@service_ids,
+		servicetype_id	=>	$Service->ServiceType->id(),
 		});
 } # end sub _add_to_schedule
 
@@ -992,8 +975,24 @@ sub _status_dropdown {
 } # end sub _status_dropdown
 
 sub _modification_history {
-	my $Project = $variable{Project} = new openprint::Project($param{project_id});
+	if ( $param{project_id} ) {
+		my $Project = $variable{Project} = new openprint::Project($param{project_id});
+	} else {
+		ssi::save_params('/employee/project/modification_log.html', 'project_id', 'operator_id', 'salesrep_id',
+			( map { 'action_date_start_'.$_ } ( 'year', 'month', 'day' ) ),
+			( map { 'action_date_end_'.$_ } ( 'year', 'month', 'day' ) ),
+				);
+	} # end if
 } # end sub _modification_history
+
+sub modification_log {
+	_modification_history();
+	ssi::setup_date_select( '/employee/project/modification_log.html', 'action_date_start', -7 );
+	ssi::setup_date_select( '/employee/projcet/modification_log.html', 'action_date_end', '' );
+} # end sub modification_log
+
+sub production_log {
+} # end sub production_log
 
 sub _production_log {
 	my $Project = $variable{Project} = new openprint::Project($param{project_id});

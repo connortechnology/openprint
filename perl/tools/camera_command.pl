@@ -77,16 +77,18 @@ configuration::merge($opts);
 my $p = Net::Ping->new('icmp',10);
 
 my @Hosts = openprint::Host->find(
-	'monitored'=>1,
+	monitored=>1,
 	( $$opts{type} ? ( type=>[ split(',',$$opts{type})] ) : ( 'type in'=>[ 'AIC500', 'AIC500W', 'AIC777W', 'AIC747W','AIC250','AIC250W' ] ) ),
 	( $$opts{hostname} ? ( hostname=>$$opts{hostname} ) : () ),
 	);
 foreach my $Host ( @Hosts ) {
-	if ( ! $Host->ip() ) {
-		$log->debug( "Camera without ip: " . $Host->to_string() );
+	my @ips = map { $_->ip() ? $_->ip() : () } $Host->Interfaces();
+	if ( ! @ips ) {
+		$log->debug( "Camera without ips: " . $Host->to_string() );
 		next;
 	} # end if
-	my @ping = $p->ping($Host->ip());
+	my $ip = $ips[0];
+	my @ping = $p->ping($ip);
 	my $ping = $ping[0];
 #$openprint::log->debug("Ping1: @ping");
 	if ( ! @ping ) {
@@ -95,34 +97,21 @@ foreach my $Host ( @Hosts ) {
 	} # end if
 
 	if ( $Host->online() and $ping ) {
-
-		if ( sets::isin( $Host->type(), [ 'AIC500', 'AIC500W', 'AIC777W', 'AIC747W' ] ) ) {
-			my $browser = LWP::UserAgent->new();
-			$browser->credentials( $Host->hostname().':80', 'SkyIPCam', 'admin'=>'p1GraPHic' );
-			if ( $$opts{command} eq 'reboot' ) {
-				$log->debug('Sending reboot to ' . $Host->hostname());
-				my $response = $browser->get('http://'.$Host->hostname().'/admin/reboot.cgi?type=0');
-				$log->debug($response->is_success);
-			} elsif ( $$opts{command} eq 'move' ) {
+		my $browser = LWP::UserAgent->new();
+		$browser->credentials( $Host->hostname().':80', 'SkyIPCam', 'admin'=>'p1GraPHic' );
+		if ( $$opts{command} eq 'reboot' ) {
+			$log->debug('Sending reboot to ' . $Host->hostname());
+			$Host->reboot();
+		} elsif ( $$opts{command} eq 'move' ) {
+			if ( sets::isin( $Host->type(), [ 'AIC777W', 'AIC747W' ] ) ) {
 				$log->debug('Sending move to ' . $Host->hostname() . " position $$opts{position}");
 				my $response = $browser->get('http://'.$Host->hostname().'/admin/ptctl.cgi?move='.$$opts{position});
 				$log->debug('Success?'.$response->is_success);
 			} else {
-				$log->error("Unknown command $$opts{command}");
-			} # end if
-		} elsif ( sets::isin( $Host->type(), [ 'AIC250', 'AIC250W' ] ) ) {
-			if ( $$opts{command} eq 'reboot' ) {
-				$log->debug('Sending reboot to ' . $Host->hostname());
-				my $browser = LWP::UserAgent->new();
-				$browser->credentials( $Host->hostname().':80', 'Netcam', 'admin'=>'p1GraPHi' );
-				my $response = $browser->get('http://'.$Host->hostname().'/Reply.htm?Reset=Yes');
-				$log->debug($response->is_success);
-			} else {
-				$log->error("Unknown command $$opts{command}");
-			} # end if
-		
-		} elsif ( $Host->type() ) {
-			$log->warn("unsupported type: " . $Host->type() );
+				$log->error("Host doesn't support moving");
+			}
+		} else {
+			$log->error("Unknown command $$opts{command}");
 		} # end if
 	} elsif ( $Host->online() ) {
 		$log->debug("No ping for $$Host{hostname}");
@@ -137,9 +126,9 @@ exit 0;
 sub usage {
 	print <<EOH;
 
-usage: reboot_camera [--help] 
+usage: camera_command.pl [--help] 
 
-The purpose of this script is to monitor hosts for uptime
+The purpose of this script is to reboot or move cameras.
 
 Command-line options:
 

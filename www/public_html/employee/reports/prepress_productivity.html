@@ -2,20 +2,20 @@
 <fieldset class="filters"><legend>Report Criteria</legend>
 	Choose report criteria and click Show Results.<br/><br/>
 	<ul>
-	<li>
-		<label>Employee</label>
+		<li>
+			<label>Employee</label>
 			<select name="ddmEmployee" size="1">
 				<option value="Prepress">All Prepress Employees</option>
 				<option value="All" <? echo ( 'selected="selected"' if $param{ddmEmployee} eq 'All' ) ?>>All Employees</option>
-				<? echo ( make_drop_down( openprint::User->dropdown( type=>['E','A'], 'usergroup any'=>'Prepress' ), $param{ddmEmployee} ); ) ?>
+				<? echo ( make_drop_down( openprint::User->dropdown( type=>['E','A'], 'usergroup any'=>'Prepress', company_id=>$config{owner_id} ), $param{ddmEmployee} ); ) ?>
 			</select>
-	</li>
-	<li>
-		<label>Ordered Date</label>
-		<? echo ( date_select_session( '/employee/reports/prepress_productivity.html', 'ordered_on_start' ); ) ?>
-		to
-		<? echo ( date_select_session( '/employee/reports/prepress_productivity.html', 'ordered_on_end' ); ) ?>
-	</li>
+		</li>
+		<li>
+			<label>Ordered Date</label>
+			<? echo ( date_select_session( '/employee/reports/prepress_productivity.html', 'ordered_on_start', with_clear=>1,with_today=>1 ); ) ?>
+			to
+			<? echo ( date_select_session( '/employee/reports/prepress_productivity.html', 'ordered_on_end', with_clear=>1,with_today=>1 ); ) ?>
+		</li>
 	</ul>
 	<p class="buttons">
 		<? echo ( join("\n",
@@ -25,7 +25,7 @@
 	</p>
 </fieldset>
 <? eval ( 
-		my %sql = ( type=>['E','A'], order=>'lower(lastname),lower(firstname)' );
+		my %sql = ( type=>['E','A'], order=>'lower(lastname),lower(firstname)', company_id=>$config{owner_id} );
 		if ( $param{ddmEmployee} eq 'Prepress' or ! $param{ddmEmployee} ) {
 			$sql{'usergroup any'} = 'Prepress';
 		} elsif ( $param{ddmEmployee} ne 'All' ) {

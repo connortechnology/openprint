@@ -117,9 +117,9 @@
 		foreach my $C ( $$variable{PurchaseOrder}->Contents() ) {
 			$html .= '<div class="item">';
 			if ( $C->Type()->name() eq 'Roll Stock' ) {
-				$html .= sprintf('<div class="quantity">%slbs</div>', Number::Format::format_number($C->qty()) );
+				$html .= sprintf('<div class="quantity">%s lbs</div>', Number::Format::format_number($C->qty()) );
 			} elsif ( $C->Type()->name() eq 'Sheet Stock' ) {
-				$html .= sprintf('<div class="quantity">%ssheets</div>', Number::Format::format_number($C->qty()) );
+				$html .= sprintf('<div class="quantity">%s sheets</div>', Number::Format::format_number($C->qty()) );
 			} else {
 				$html .= sprintf('<div class="quantity">%s</div>', Number::Format::format_number($C->qty()) );
 			} # end if

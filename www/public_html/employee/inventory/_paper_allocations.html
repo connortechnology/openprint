@@ -22,6 +22,7 @@
 			<? endif ( $config{'RFID'} eq 'Y' ) ?>
 			<th class="ManufacturersID">Manufacturers ID</th>
 			<th class="Location">Location</th>
+			<th class="User">Who</th>
 			<th class="DateTime">When</th>
 			<th class="Docket">Docket</th>
 			<th class="Quantity">Amount</th>
@@ -54,6 +55,7 @@
 				$html .= '<td class="ManufacturersID">'.join('<br/>',map{ sprintf('<a href="/employee/inventory/skid_details.html?skid_id=%d">%s</a>', $_->id(), $_->manufacturers_id() ) } @Skids ).'</td>';
 	
 				$html .= '<td class="Location">'.join('<br/>',map{ $_->Location()->name() } @Skids ).'</td>';
+				$html .= sprintf( '<td class="User">%s</td>', $PA->User()->link_to() );
 				$html .= sprintf( '<td class="DateTime">%s</td>', format_datetime( $PA->created_on() ) );
 				$html .= sprintf('<td class="Docket"><a href="/employee/project/view.html?docket=%1$d">%1$s</a></td>
 <td class="Quantity">%2$s</td><td class="Quantity">%3$s</td><td class="Condition">%4$s</td><td class="buttons">',
@@ -75,7 +77,7 @@
 			<? if ( $config{'RFID'} eq 'Y' ) ?>
 			<td>&nbsp;</td>
 			<? endif ( $config{'RFID'} eq 'Y' ) ?>
-			<td colspan="4">Totals</td>
+			<td colspan="5">Totals</td>
 			<td class="Quantity"><? echo ( Number::Format::format_number($$variable{TotalAllocated}).$$variable{Paper}->units(); ) ?></td>
 			<td class="Quantity">&nbsp;</td>
 			<td class="Condition">&nbsp;</td>
@@ -86,6 +88,6 @@
 There are no allocations.
 <? endif ( $$variable{'Allocations'} and @{$$variable{'Allocations'}} ) ?>
 <script type="text/javascript">
-	$('Allocated').innerHTML = '<? echo ( int($$variable{'Paper'}->allocated()). ($$variable{'Paper'}->type() eq 'Roll' ? 'lbs' : 'sheets'); ) ?>';
-	$('Available').innerHTML = '<? echo ( int($$variable{'Paper'}->available()). ($$variable{'Paper'}->type() eq 'Roll' ? 'lbs' : 'sheets'); ) ?>';
+	$('Allocated').innerHTML = '<? echo ( Number::Format::format_number(int($$variable{'Paper'}->allocated())). ($$variable{'Paper'}->type() eq 'Roll' ? 'lbs' : 'sheets'); ) ?>';
+	$('Available').innerHTML = '<? echo ( Number::Format::format_number(int($$variable{'Paper'}->available())). ($$variable{'Paper'}->type() eq 'Roll' ? 'lbs' : 'sheets'); ) ?>';
 </script>

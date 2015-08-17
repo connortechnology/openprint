@@ -39,6 +39,7 @@ my @fields = (
 	'printing_type',
 	'Folds', 'Fold',
 	'runspeed',
+	'impressions',
 );
 
 # spread_cols and spread_rows are oriented identically to the imposition
@@ -214,7 +215,8 @@ sub set {
 	} # end foreach
 	$self->{imposition} = $$self{rows} * $$self{columns} + $$self{dutch_rows} * $$self{dutch_columns};
 	if ( $$self{image_orientation} eq 'Vertical' ) {
-		$$self{layout_width} = $$self{columns} * $$self{image_width} + ( $$self{perfecting_wheel_space} - $$self{bleed_size} );
+		$$self{layout_width} = $$self{columns} * $$self{image_width};
+		$$self{layout_width} += ( $$self{perfecting_wheel_space} - $$self{bleed_size} ) if $$self{perfecting_wheel_space};
 		$$self{layout_height} = $$self{rows} * $$self{image_height};
 		if ( $$self{dutch_orientation} eq 'width' ) {
 			$$self{layout_width} += $$self{dutch_columns} * $$self{image_height};
@@ -227,7 +229,9 @@ sub set {
 		} # end if
 
 	} elsif ( $$self{image_orientation} eq 'Horizontal' ) {
-		$$self{layout_width} = $$self{columns} * $$self{image_height} + ( $$self{perfecting_wheel_space} - $$self{bleed_size} );
+		$$self{layout_width} = $$self{columns} * $$self{image_height};
+		$$self{layout_width} += ( $$self{perfecting_wheel_space} - $$self{bleed_size} ) if $$self{perfecting_wheel_space};
+
 		$$self{layout_height} = $$self{rows} * $$self{image_width};
 		if ( $$self{dutch_orientation} eq 'width' ) {
 			$$self{layout_width} += $$self{dutch_columns} * $$self{image_width};
@@ -275,7 +279,7 @@ sub load_used {
 			$$self{Press} = openprint::Equipment->find_one( strid=>$$specs{UsePress}, deleted=>[0,1] );
 			if ( ! $$self{Press} ) {
 				# This can happen when a press is deleted
-				$openprint::log->debug("No Press found for $qty_index " . $$specs{UsePress} );
+				$openprint::log->debug("No Press found for UsePress $qty_index " . $$specs{UsePress} );
 			} # end if
 		} # end if
 		if ( ! $$self{Press} ) {
@@ -284,7 +288,7 @@ sub load_used {
 			} else {
 				$$self{Press} = openprint::Equipment->find_one( strid=>$$specs{'ddmPress'.$qty_index}, deleted=>[0,1]);
 				if ( ! $$self{Press} ) {
-					$openprint::log->error("No Press found for $qty_index " . $$specs{'ddmPress'.$qty_index} );
+					$openprint::log->error("No Press found for ddmPress$qty_index " . $$specs{'ddmPress'.$qty_index} );
 				} # end if
 			} # end if
 		} # end if
@@ -309,9 +313,9 @@ sub load {
 #Carp::cluck("No press in Imposition::load");
 		} else {
 #Carp::cluck("Loading press in Imposition::load");
-			$$self{Press} = openprint::Equipment->find_one('strid'=>$$specs{'ddmPress'.$qty_index});
+			$$self{Press} = openprint::Equipment->find_one( strid=>$$specs{'ddmPress'.$qty_index}, deleted=>[0,1]);
 			if ( ! $$self{Press} ) {
-				$openprint::log->error("No Press found for $qty_index " . $$specs{'ddmPress'.$qty_index} );
+				$openprint::log->error("load: No Press found for ddmPress$qty_index " . $$specs{'ddmPress'.$qty_index} );
 			} # end if
 		} # end if
 		$$self{Press} = new openprint::Equipment() if ! $$self{Press};
@@ -475,6 +479,7 @@ sub used_width {
 			} # end if
 		} # end if
 	} # end if
+$openprint::log->debug("Setting used_width using layout:$$self{layout_width} + gutters:$$self{gutters} + cropleft:$$self{cropmark_left} + crop_right:$$self{cropmark_right} + cb: ( $$self{colour_bar_orientation} eq 'Length' ? $$self{colour_bar_size} : 0 )") if DEBUG;
 	return $width;
 }
 sub used_height {
@@ -670,7 +675,11 @@ sub equals {
 
 sub to_string {
 	if ( ! $_[0]{to_string} ) {
+		if ( $_[0]{paper} ) {
 		$_[0]{to_string} = sprintf('%s %dx%d+%dx%d=%dout %s %dx%d=%dpages on %sx%s%s->%sx%s %s', ( $_[0]{Press} ? $_[0]->Press()->strid() : 'unknown equipment' ), $_[0]->get('columns','rows','dutch_columns','dutch_rows','imposition','runstyle','page_columns','page_rows','pages', 'paper_width','paper_height', 'paper_type','sheet_width','sheet_height', 'image_orientation') );
+		} else {
+			$_[0]{to_string} = sprintf('%s %dx%d+%dx%d=%dout %s %dx%d=%dpages %s', ( $_[0]{Press} ? $_[0]->Press()->strid() : 'unknown equipment' ), $_[0]->get('columns','rows','dutch_columns','dutch_rows','imposition','runstyle','page_columns','page_rows','pages', 'sheet_width','sheet_height', 'image_orientation') );
+		} # end if
 	}
 	return $_[0]{to_string};
 } # end sub to_string

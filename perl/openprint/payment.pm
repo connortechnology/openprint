@@ -44,15 +44,17 @@ sub _history {
 } # end sub _history
 
 sub edit {
+	$param{payment_id} = openprint::Payment->transform(id=>$param{payment_id});
 	my $Payment = $variable{Payment} = new openprint::Payment( $param{payment_id} );
 	if ( $param{btnFunction} eq 'Save' ) {
 		$param{recipient_id} = $session{company_id} if ! $param{recipient_id};
 		if ( Date::Calc::check_date( @param{'received_on_year','received_on_month','received_on_day'} ) ) {
 			$param{received_on} = sprintf('%.4d-%.2d-%.2d', @param{'received_on_year','received_on_month','received_on_day'} );
-			$Payment->remaining(undef);
 			$variable{error} .= $Payment->save(\%param);
 			if ( $param{payment_id} ) {
 				$variable{ExternalRedirect} = '/payment/history.html';
+			} else {
+				$variable{ExternalRedirect} = '/payment/edit.html?payment_id='.$Payment->id();
 			} # end if
 		} else {
 			$variable{error} .= 'Invalid received on date.<br/>';
@@ -66,6 +68,7 @@ sub edit {
 } # end sub edit
 
 sub _paid {
+	$param{payment_id} = openprint::Payment->transform(id=>$param{payment_id});
 	my $Payment = $variable{Payment} = new openprint::Payment( $param{payment_id} );
 	if ( ! $$Payment{id} ) {
 		$variable{error} .= "Payment $param{payment_id} not found.<br/>";
@@ -82,6 +85,7 @@ sub _paid {
 } # end sub _paid
 
 sub _unpaid {
+	$param{payment_id} = openprint::Payment->transform(id=>$param{payment_id});
 	my $Payment = new openprint::Payment( $param{payment_id} );
 	if ( $param{invoice_id} ) {
 		my $Invoice = new openprint::Invoice( $param{invoice_id} );

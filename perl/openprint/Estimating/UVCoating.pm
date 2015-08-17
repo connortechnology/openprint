@@ -351,10 +351,10 @@ sub signature_calc {
 		return %BestPrice;
 	} # end if
 	$BestPrice{Status} = 'uncalculated';
-	if ( $Project->Type()->name() eq 'Labels' ) {
-		@BestPrice{'Status','alert'} = ('uncalculated','We cannot UVCoat labels at this time.');
-		return %BestPrice;
-	} # end if
+	#if ( $Project->Type()->name() eq 'Labels' ) {
+		#@BestPrice{'Status','alert'} = ('uncalculated','We cannot UVCoat labels at this time.');
+		#return %BestPrice;
+	#} # end if
 
 	my $qty = $$specs{"txtQuantity$qty_index"};
 	if ( $$specs{txtPressSheetComboItems} ) {

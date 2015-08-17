@@ -87,8 +87,8 @@ function check_input( form, signature_index ) {
 			<p class="buttons">
 			<? echo (
 					my $html;
-					$html .= button( 'Save', { onclick=>"f1.submit();", href=>'', text=>'Save' } );
-					$html .= button( 'Reset', { onclick=>"f1.reset();", href=>'', text=>'Reset' } );
+					$html .= button( 'Save', { onclick=>'f1.submit();' } );
+					$html .= button( 'Reset', { onclick=>'f1.reset();' } );
 					my $body = include( '/email_content/sign-off.html' );
 					$body =~ s/([^A-Za-z0-9])/sprintf("%%%02X", ord($1))/seg;
 					$$variable{'body'} = $body;

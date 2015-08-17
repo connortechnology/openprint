@@ -73,20 +73,41 @@
 		<ul>
 			<li>
 				<label>Company</label>
-				<input type="text" onkeyup="filterDDM(this, this.form.ddmCompany);" class="filter" />
-				<select id="ddmCompany" name="ddmCompany">
+				<input type="text" onkeyup="filter_companies('company_id', {name:this.value,selected_id:get_ddm_value($('company_id'))});" class="filter" />
+				<select id="company_id" name="company_id" onchange="stop_filter_companies();">
 					<option value="">Select a Customer</option>
-					<? echo (
-							my $html ='<option value="'.$session{company_id}.'" selected="selected">'.new openprint::Company( $session{company_id} )->name() .'</option>';
-							my $User = new openprint::User($session{user_id} );
-							if ( $session{company_id} != $User->company_id() ) {
-								$html .= '<option value="'.$User->company_id().'">'.$User->Company()->name().'</option>';
-							}
-							return $html;
-							) ?>
-					<option value="">Please wait, loading the rest</option>
+					<? echo ( make_drop_down( openprint::Company->dropdown('last_project_id is null'=>0), $session{company_id});) ?>
 				</select>
 			</li>
+<li><label>Last 10</label>
+    <? echo ( 
+        my $html = '';
+
+        my $parser = 'DateTime::Format::Pg';
+        my $TZ = DateTime::TimeZone->new( name => $config{Timezone} );
+        my ( $year, $month, $day ) = Date::Calc::Add_Delta_Days( Date::Calc::Today(), -5 );
+
+        my $datetime = DateTime->new( time_zone => $TZ, ( year => $year, month=>$month, day=>$day, ));
+
+        my @Entries = openprint::Log->find( user_id=>$session{user_id}, action=>'Switch Company', order=>'date_time DESC','date_time >=' => $parser->format_datetime( $datetime ) );
+        my @Companies = openprint::Company->find( id=>[ map { $_->company_id() } @Entries ] );
+        my %companies;
+        foreach my $Log ( sort { $a->Company()->name() cmp $b->Company()->name() }@Entries ) {
+            next if $companies{$$Log{company_id}};
+            $companies{$$Log{company_id}} = $Log->company_id();
+            $html .= sprintf(q`<a onclick="ddm_select_by_value($('company_id'), %d);" href="#">%s</a><br/>`,
+                $Log->company_id(), $Log->Company()->name(),
+            );
+        } # end foreach
+        my $User = new openprint::User($session{user_id});
+        if ( ! $companies{$$User{company_id}} ) {
+            $html .= sprintf(q`<a onclick="ddm_select_by_value($('company_id'), %d);"href="#">%s</a><br/>`,
+                $User->company_id(), $User->Company()->name(),
+            );
+        } # end if
+        return $html;
+        ) ?>
+        </li>
 		</ul>
 	</fieldset>
 		<? endif ( sets::isin( $session{'user_type'}, [ 'E', 'A'] ) ) ?>
@@ -102,6 +123,3 @@
 	</form>
 </div>
 </div>
-		<? if ( sets::isin( $session{'user_type'}, [ 'E', 'A'] ) ) ?>
-<script type="text/javascript">new Ajax.Updater( 'ddmCompany', '/includes/_company_ddm.html', { parameters: { selected_id: <?echo($session{company_id})?> } } );</script>
-		<? endif ( sets::isin( $session{'user_type'}, [ 'E', 'A'] ) ) ?>

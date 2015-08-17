@@ -198,15 +198,14 @@ sub add_Payment {
 	my ( $self, $Payment ) = @_;
 	if ( $Payment->remaining() ) {
 		if ( $self->owing() ) {
-		my $error;
-		my $amount = $Payment->remaining() > $self->owing() ? $self->owing() : $Payment->remaining();	
-		my $IP = new openprint::Invoice_Payment();
-		$error .= $IP->save({ payment_id=>$Payment->id(), invoice_id=>$$self{id}, amount=>$amount });
-		$Payment->remaining( undef ); # force update
-		$error .= $Payment->save();
-		$self->paid( undef );
-		$error .= $self->save();
-		return $error;
+			my $error;
+			my $amount = $Payment->remaining() > $self->owing() ? $self->owing() : $Payment->remaining();	
+			my $IP = new openprint::Invoice_Payment();
+			$error .= $IP->save({ payment_id=>$Payment->id(), invoice_id=>$$self{id}, amount=>$amount });
+			$error .= $Payment->save( remaining => undef );
+			$self->paid( undef );
+			$error .= $self->save();
+			return $error;
 		} else {
 			return 'Invoice is already paid.';
 		} # end if

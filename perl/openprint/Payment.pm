@@ -16,22 +16,22 @@ $table = 'payments';
 $serial = 'payments_id_seq';
 
 %fields = (
-	'id'				=>	'id',
-	'order_id'			=>	'order_id',
-	'recipient_id'		=>	'owner_id',
-	'payor_id'			=>	'payor_id',
-	'amount'			=>	'amount',
-	'created_on'		=>	'created_on',
-	'updated_on'		=>	'updated_on',
-	'method'			=>	'method',
-	'currency_id'		=>	'currency_id',
-	'transaction_id'	=>	'transaction_id',
-	'memo'				=>	'memo',
-	'completed'			=>	'completed',
-	'received_on'		=>	'received_on',
-	'remaining'			=>	'remaining',
-	'deleted'			=>	'deleted',
-	'type_id'			=>	'type_id',
+	id				=>	'id',
+	order_id		=>	'order_id',
+	recipient_id	=>	'owner_id',
+	payor_id		=>	'payor_id',
+	amount			=>	'amount',
+	created_on		=>	'created_on',
+	updated_on		=>	'updated_on',
+	method			=>	'method',
+	currency_id		=>	'currency_id',
+	transaction_id	=>	'transaction_id',
+	memo			=>	'memo',
+	completed		=>	'completed',
+	received_on		=>	'received_on',
+	remaining		=>	'remaining',
+	deleted			=>	'deleted',
+	type_id			=>	'type_id',
 );
 
 %transforms = (
@@ -48,6 +48,12 @@ $serial = 'payments_id_seq';
 	amount		=>	undef,
 	remaining	=>	undef,
 );
+
+sub save {
+	$_[0]->set( $_[1] ) if $_[1];
+	$_[0]->remaining(undef);
+    return $_[0]->SUPER::save();
+}
 
 sub destroy {
 	my $self = shift;
@@ -77,6 +83,7 @@ sub remaining {
 	} # end if
 	if ( ! defined $$self{remaining} ) {
 		$$self{remaining} = $$self{amount} - misc::sum( map { $_->amount() } $self->Invoice_Payments() );
+		$$self{remaining} = 0 if $$self{remaining} < 0;
 	} # end if
 	return $$self{remaining};
 } # end sub remaining

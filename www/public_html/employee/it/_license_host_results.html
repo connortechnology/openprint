@@ -10,7 +10,7 @@
 	} else {
 		@Hosts = openprint::Host->find(
 			order => 'lower(hostname)',
-			( $param{ip} ? ( ( $param{ip} =~ /\// ) ? ( 'ip <<=' => $param{ip} ) : ( ip=> $param{ip} ) ) : () ),
+			( $param{ip} ? ( ( $param{ip} =~ /\// ) ? ( 'ip <<=' => $param{ip} ) : ( 'ip any'=> $param{ip} ) ) : () ),
 			( $param{hostname} ? ( 'hostname ilike' => ( $param{hostname} =~ /%/ ? $param{hostname} : $param{hostname}.'%' ) ) : () ),
 			limit	=>	100,
 			);

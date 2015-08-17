@@ -157,7 +157,7 @@ if ( ! sets::isin( 'companies', \@tables ) ) {
 	} # end if
 	foreach my $field ( 'name', 'address1', 'address2', 'city','country','state', 'postalcode', 'gst_number', 'pst_number',
 			'accountnumber','phone','extension','fax','greeting','business_type','business_name','business_form','president_owner',
-			'bank_name','bank_branch','bank_account','bank_manager','bank_phone','bank_fax','bank_email','notes', 'employees','annual_sales' ) {
+			'bank_name','bank_branch','bank_account','bank_manager','bank_phone','bank_fax','bank_email','notes' ) {
 		if ( ! $openprint::Company::fields{$field} ) {
 			die "Want to add $field to Company but it's not in fields";
 		} # end if
@@ -208,6 +208,24 @@ if ( ! sets::isin( 'companies', \@tables ) ) {
 	} # end if
 	if ( ! exists $$data{$openprint::Company::fields{discount}} ) {
 		$dbh->do('ALTER TABLE companies ADD '.$openprint::Company::fields{discount}.q` numeric(16,4) DEFAULT '0.0000' NOT NULL`);
+		die $dbh->errstr() if $dbh->errstr();
+	} # end if
+	if ( ! exists $$data{$openprint::Company::fields{last_project_id}} ) {
+		$dbh->do('ALTER TABLE companies ADD last_project_id INTEGER');
+		$dbh->do('ALTER TABLE companies ADD FOREIGN KEY (last_project_id) REFERENCES Projects (id)');
+		$dbh->do('UPDATE companies SET last_project_id = (SELECT MAX(id) FROM projects WHERE company_id=companies.id)');
+		die $dbh->errstr() if $dbh->errstr();
+	} # end if
+	if ( ! exists $$data{$openprint::Company::fields{last_order_id}} ) {
+		$dbh->do('ALTER TABLE companies ADD last_order_id INTEGER');
+		$dbh->do('ALTER TABLE companies ADD FOREIGN KEY (last_order_id) REFERENCES Orders (id)');
+		$dbh->do('UPDATE companies SET last_order_id = (SELECT MAX(id) FROM Orders WHERE company_id=companies.id)');
+		die $dbh->errstr() if $dbh->errstr();
+	} # end if
+	if ( ! exists $$data{$openprint::Company::fields{last_quote_id}} ) {
+		$dbh->do('ALTER TABLE companies ADD last_quote_id INTEGER');
+		$dbh->do('ALTER TABLE companies ADD FOREIGN KEY (last_quote_id) REFERENCES Quotes (id)');
+		$dbh->do('UPDATE companies SET last_quote_id = (SELECT MAX(id) FROM Quotes WHERE companyindex=companies.id)');
 		die $dbh->errstr() if $dbh->errstr();
 	} # end if
 
@@ -1089,6 +1107,12 @@ if ( ! sets::isin( 'locations', \@tables ) ) {
 			$dbh->do(q`SELECT setval('locations_id_seq', (SELECT MAX(id) FROM Locations ) )`);
 		} # end if
 		$dbh->do('DROP SEQUENCE location_id_seq');
+	} # end if
+	if ( ! exists $$data{'company_id'} ) {
+		$dbh->do('ALTER TABLE Locations add company_id INTEGER');
+		$dbh->do('ALTER TABLE Locations ADD FOREIGN KEY (company_id) REFERENCES companies (id)');
+		print "Added company_id to Locations\n";
+		die $dbh->errstr() if $dbh->errstr();
 	} # end if
 } # end if
 if ( ! sets::isin( 'addresses', \@tables ) ) {
@@ -3777,6 +3801,19 @@ if ( ! sets::isin( 'page_settings', \@tables ) ) {
 		$dbh->do('ALTER TABLE page_settings ADD message TEXT');
 	} # end if
 }
+my $data = 0;
+if ( sets::isin( 'emailcampaigns', \@tables ) ) {
+	my $data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='emailcampaigns'", 'column_name');
+	if ( ! exists $$data{deleted} ) {
+		print "Adding deleted to email_campaigns\n";
+		$dbh->do('ALTER TABLE emailcampaigns ADD deleted BOOLEAN NOT NULL default false');
+	} # end if
+} else {
+	$_ = misc::load_file( $log, q{../openprint/sql/EmailCampaigns.sql});
+	foreach my $st ( split(';', $_ ) ) {
+		$dbh->do($st);
+	} # end foreach
+} # end if
 print "Finished\n";
 1;
 __END__

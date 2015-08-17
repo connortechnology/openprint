@@ -43,10 +43,17 @@
 					<ul>
 						<li>
 							<label for="description">Description</label>
-							<textarea id="description" class="mce" name="description" rows="<? echo ( ssi::count_lines( $$variable{Location}->description() ); ) ?>" onkeyup="textarea_resize(this);"><? echo ( ssi::html_escape($$variable{Location}->description()); ) ?></textarea>
+							<textarea id="description" class="mce" name="description" rows="<? echo ( count_lines( $$variable{Location}->description() ); ) ?>" onkeyup="textarea_resize(this);"><? echo ( html_escape($$variable{Location}->description()); ) ?></textarea>
 						</li>
 						<li><label for="url">URL</label>
 							<input type="url" name="url" id="url" value="<? echo ( $$variable{Location}->url() ) ?>" />
+						</li>
+						<li><label>Owner</label>
+				<input type="text" onkeyup="filter_companies('company_id', {name:this.value,selected_id:get_ddm_value($('company_id'))});" class="filter" />
+				<select id="company_id" name="company_id">
+					<option value="">Select a Company</option>
+					<? echo ( make_drop_down( openprint::Company->dropdown(id=>$$variable{Location}->company_id()) );) ?>
+				</select>
 						</li>
 					</ul>
 				</div>

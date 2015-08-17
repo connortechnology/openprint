@@ -2,14 +2,20 @@
 <h1>Order</h1>
 <h2>Confirmed</h2>
 </div>
+<? if ( $param{btnFunction} eq 'Complete' ) ?>
 <b>
 Thank you. Your order and information have been received. You will receive a copy of the order via e-mail shortly.<br/>
 <br/>
 <? if ( $$variable{'Order'} ) ?>
-You now need to upload the file(s) pertaining to this order: <? echo ( ssi::writeButton( $log, $dbh, 'UploadFiles','upload.gif','','/upload/upload_center.html?docket='.$$variable{'Order'}->docket(), 'Upload Files' ); ) ?><br/>
+You may now upload the file(s) pertaining to this order: <? echo ( button( 'UploadFiles', { href=>'/upload/upload_center.html?docket='.$$variable{Order}->docket(), text=>'Upload Files' } ); ) ?><br/>
 <br/>
 <? endif ( $$variable{'Order'} ) ?>
 </b>
+<? endif ( $param{btnFunction} eq 'Complete' ) ?>
+<? if ( $param{btnFunction} eq 'Close' ) ?>
+Order has been closed.
+<? endif ( $param{btnFunction} eq 'Close' ) ?>
+
 
 <br/>
 <? if ( $$variable{'Downpayment'} > 0 ) ?>

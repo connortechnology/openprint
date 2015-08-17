@@ -84,8 +84,9 @@ my %variables = (
 		'txtSpecificStockCalliper', 'StockType',
 		'txtSpecificStockWidth', 'txtSpecificStockHeight', 
 		'txtCustomMWeight', 'basis_mweight', 'basis_width', 'basis_height', 
-		'CustomStockPrice', 'txtStockGSM','CustomSheetDoubleSided',
-		'cuttable', 'perfecting', 'StockGrade', 'minimum_order','sheets_per_package',
+		'CustomStockPrice', 'StockPricePerM', 'txtStockGSM','CustomSheetDoubleSided',
+		'cuttable', 'perfecting', 'StockGrade', 'minimum_order','sheets_per_package','full_packages',
+		'sides_the_same',
 		);
 
 sub variables {
@@ -309,7 +310,11 @@ $openprint::log->warn("FIXM E");
 	foreach my $group_id ( @Groups ) {
 		$openprint::log->debug("Group: $group_id, remaining: $remaining_pages, override: $override_pages{$group_id}") if DEBUG;
 		my %sig_specs =  map { $_, $$specs{$_.$group_id } } @signature_variables;
-		
+		if ( ! exists $override_pages{$group_id} ) {
+			$override_pages{$group_id} = $remaining_pages;
+			$remaining_pages = 0;
+		} # end if
+		$sig_specs{GroupPageQuantity} = $$specs{'GroupPageQuantity'.$group_id} = $override_pages{$group_id};
 		openprint::Estimating::Printing::get_colours( $specs, 'SideOne', \%variables, $group_id );
 		openprint::Estimating::Printing::get_colours( $specs, 'SideTwo', \%variables, $group_id );
 		openprint::Estimating::Printing::get_inkcoverage( $Project, $specs, \%variables, $group_id );
@@ -317,11 +322,6 @@ $openprint::log->warn("FIXM E");
 		openprint::Estimating::Printing::set_size( $Project, \%sig_specs, $specs );
 		$$specs{alert} .= $sig_specs{alert} .' for group ' . $group_id . ' ' . $$specs{'txtServiceDescription'.$group_id}. '<br/>' if $sig_specs{alert};
 		@$specs{map { $_.$group_id} @signature_variables} = @sig_specs{@signature_variables};
-		if ( ! exists $override_pages{$group_id} ) {
-			$override_pages{$group_id} = $remaining_pages;
-			$remaining_pages = 0;
-		} # end if
-		$$specs{'GroupPageQuantity'.$group_id} = $override_pages{$group_id};
 		if ( ! ( $variables{'GroupPageQuantity'.$group_id} and @{$variables{'GroupPageQuantity'.$group_id}} ) ) {
 			$openprint::log->debug("Setting output on GroupPageQuantity$group_id") if DEBUG;
 			$variables{'GroupPageQuantity'.$group_id} = [sets::union('output', @{$variables{'GroupPageQuantity'.$group_id}})];
@@ -653,8 +653,9 @@ sub summary {
 			my $group_html = join(' ',
 					( $$specs{"ddmRunStyle-$group_id"} ? $$specs{"ddmRunStyle-$group_id"} : () ),
 					( $$specs{"ddmPress-$group_id"} ? ' on ' . $$specs{"ddmPress-$group_id"} : () ),
-					($$specs{"PrintingType-$group_id"} ? $$specs{"PrintingType-$group_id"} : () ),
-					( $$specs{"PageQuantity-$group_id"} ? 'as ' . $$specs{"PageQuantity-$group_id"} . 'page signatures.' : () ),
+					( $$specs{"PrintingType-$group_id"} ? $$specs{"PrintingType-$group_id"} : () ),
+					( $$specs{"PageQuantity-$group_id"} ? 'as ' . $$specs{"PageQuantity-$group_id"} . 'page signatures' : () ),
+					( $$specs{"StockType-$group_id"} ? 'on ' . $$specs{"StockType-$group_id"} . ' stock' : () ),
 					);
 			if ( $group_html ) {
 				$html .= 'Group ' . $group_id . ' is overriden to run ' . $group_html. '<br/>';

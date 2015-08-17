@@ -155,7 +155,7 @@ button( 'merge'.$C->id(), { href=>'/administrator/managerial/company_profiles.ht
 					<? echo ( make_drop_down( openprint::Currency->dropdown( order=>'lower(name)' ), $$variable{Company}->currency_id() ); ) ?>
 				</select>
 			</li>
-			<li> 
+			<li class="discount"> 
 				<label>Pricing Discount</label>
 				<? echo ( input( type=>'float', name=>'discount', value=>$$variable{Company}->discount() ); ) ?> %
 			</li>
@@ -457,88 +457,7 @@ button( 'merge'.$C->id(), { href=>'/administrator/managerial/company_profiles.ht
 		</ul>
 	</fieldset>
 </div>
-<div class="TradeReferences">
-	<fieldset><legend>Trade References</legend>
-		<ul>
-			<li> 
-				<label>Company Name</label>
-				<input type="text" name="txtTradeReferenceCompanyName1" value="<?txtTradeReferenceCompanyName1?>" />
-			</li>
-			<li> 
-				<label>Contact</label>
-				<input type="text" name="txtTradeReferenceContact1" value="<?txtTradeReferenceContact1?>" />
-			</li>
-			<li> 
-				<label>Phone</label>
-				<input type="tel" name="txtTradeReferencePhone1" value="<?txtTradeReferencePhone1?>" />
-			</li>
-			<li> 
-				<label>Extension</label>
-				<input type="tel" name="txtTradeReferenceExt1" value="<?txtTradeReferenceExt1?>" />
-			</li>
-			<li> 
-				<label>Fax</label>
-				<input type="tel" name="txtTradeReferenceFax1" value="<?txtTradeReferenceFax1?>" />
-			</li>
-			<li> 
-				<label>E-mail Address</label>
-				<input type="email" name="txtTradeReferenceEmail1" value="<?txtTradeReferenceEmail1?>" />
-			</li>
-		</ul>
-		<ul>
-			<li> 
-				<label>Company Name</label>
-				<input type="text" name="txtTradeReferenceCompanyName2" value="<?txtTradeReferenceCompanyName2?>" />
-			</li>
-			<li> 
-				<label>Contact</label>
-				<input type="text" name="txtTradeReferenceContact2" value="<?txtTradeReferenceContact2?>" />
-			</li>
-			<li> 
-				<label>Phone</label>
-				<input type="tel" name="txtTradeReferencePhone2" value="<?txtTradeReferencePhone2?>" />
-			</li>
-			<li> 
-				<label>Extension</label>
-				<input type="tel" name="txtTradeReferenceExt2" value="<?txtTradeReferenceExt2?>" />
-			</li>
-			<li> 
-				<label>Fax</label>
-				<input type="tel" name="txtTradeReferenceFax2" value="<?txtTradeReferenceFax2?>" />
-			</li>
-			<li> 
-				<label>E-mail Address</label>
-				<input type="email" name="txtTradeReferenceEmail2" value="<?txtTradeReferenceEmail2?>" />
-			</li>
-		</ul>
-		<ul>
-			<li> 
-				<label>Company Name</label>
-				<input type="text" name="txtTradeReferenceCompanyName3" value="<?txtTradeReferenceCompanyName3?>" />
-			</li>
-			<li> 
-				<label>Contact</label>
-				<input type="text" name="txtTradeReferenceContact3" value="<?txtTradeReferenceContact3?>" />
-			</li>
-			<li> 
-				<label>Phone</label>
-				<input type="tel" name="txtTradeReferencePhone3" value="<?txtTradeReferencePhone3?>" />
-			</li>
-			<li> 
-				<label>Extension</label>
-				<input type="tel" name="txtTradeReferenceExt3" value="<?txtTradeReferenceExt3?>" />
-			</li>
-			<li> 
-				<label>Fax</label>
-				<input type="tel" name="txtTradeReferenceFax3" value="<?txtTradeReferenceFax3?>" />
-			</li>
-			<li> 
-				<label>E-mail Address</label>
-				<input type="email" name="txtTradeReferenceEmail3" value="<?txtTradeReferenceEmail3?>" />
-			</li>
-		</ul>
-	</fieldset>
-</div>
+<?include(/account/_trade_references.html)?>
 	<fieldset id="ButtonsBottom">
 		<p> 
 			<label><? if ( $$variable{CustomerIndex} ) ?><a href="user_profiles.html?ddmCustomer=<?CustomerIndex?>">Link to Users</a><? endif ( $$variable{CustomerIndex} ) ?>&nbsp;</label>

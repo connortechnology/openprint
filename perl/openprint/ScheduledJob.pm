@@ -707,7 +707,7 @@ sub speed {
 	if ( ! $$self{speed} ) {
 		if ( (!($$self{speed} = $self->Equipment()->specification('Default Scheduling Runspeed'))) and $$self{project_id} ) {
 			my $Project = $self->Project();
-			if ( $Project->ordered_quantity_index() ) {
+			if ( $Project->ordered_quantity_index() and $$self{service_id} ) {
 				my $Service = $Project->Service( $$self{service_id}[0] );
 				my $ServiceType = $Service->ServiceType();
 				my $specs = $Service->specs();

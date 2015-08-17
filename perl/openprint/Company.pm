@@ -11,7 +11,7 @@ require sql;
 require openprint::Object;
 require openprint::User;
 
-$debug = 0;
+$debug = 1;
 $default_sort = 'lower(name)';
 $table = 'companies';
 $serial = 'companies_id_seq';
@@ -64,11 +64,12 @@ $serial = 'companies_id_seq';
 		'category_id'				=>	'category_id',
 		'offers_credit'				=>	'offers_credit',
 		'last_project_id'			=>	'last_project_id',
+		'last_order_id'				=>	'last_order_id',
+		'last_quote_id'				=>	'last_quote_id',
 		);
 %find_fields = (
 	last_online	=>	'(SELECT MAX(date_time) FROM Logs WHERE company_id=companies.id)',
-	last_order	=>	'(SELECT MAX(created_on) FROM Orders WHERE company_id=companies.id)',
-	last_ordered_on	=>	'(SELECT MAX(created_on) FROM Orders WHERE company_id=companies.id)',
+	last_ordered_on	=>	'(SELECT created_on FROM Orders WHERE orders.id=last_order_id)',
 	last_project_on	=>	'(SELECT dtmcreationdate FROM Projects WHERE projects.id=last_project_id)',
 	last_quoted_on	=>	'(SELECT MAX(dtmquotedate) FROM Quotes WHERE companyindex=companies.id)',
 	last_called_on	=>	'(SELECT MAX(date_time) FROM sales_logs WHERE company_id=companies.id)',
@@ -100,6 +101,9 @@ $serial = 'companies_id_seq';
 	'category_id'	=>	undef,
 	'offers_credit'	=>	0,
 	supplier		=>	q`'N'`,
+	last_order_id	=>	undef,
+	last_quote_id	=>	undef,
+	last_project_id	=>	undef,
 );
 
 sub Currency {
@@ -355,16 +359,16 @@ sub can_view_all {
 
 sub find_filtered {
     return if ! $openprint::session{user_id};
-    return openprint::Company->find(order=>'lower(name)') if $openprint::session{user_type} eq 'A';
-
-    my $User = new openprint::User( $openprint::session{user_id} );
+	shift @_ if $_[0] eq 'openprint::Company';
+    return openprint::Company->find(order=>'lower(name)',@_) if $openprint::session{user_type} eq 'A';
 
     return openprint::Company->find(
-        ( ! openprint::usergroup::is_user_in( ['Estimating','Prepress','Accounting','Shipping','Inventory'], $openprint::session{user_id} ) ? (
-        salesrep_id => [ $openprint::session{user_id}, $User->csr_ids() ],
+			( ! openprint::usergroup::is_user_in( ['Estimating','Prepress','Accounting','Shipping','Inventory'], $openprint::session{user_id} ) ? (
+        salesrep_id => [ $openprint::session{user_id}, $openprint::User->csr_ids() ],
         ) : () ),
-        or		=> 'id='.$User->company_id(),
-        order	=>'lower(strname)',
+        (or		=> 'id='.$openprint::User->company_id()),
+        order	=>'lower(name)',
+		@_,
     );
 } # end sub find_filtered
 
@@ -435,7 +439,7 @@ sub Profile {
 } # end sub Profile
 
 sub tax_code {
-	if ( $_[0]{gst_exempt} ) {
+	if ( $_[0]{gst_exempt} eq 'Y' ) {
 		return '1';
 	} else {
 		require openprint::Tax;
@@ -452,8 +456,12 @@ sub tax_code {
 	return '0';
 } # end if
 
+sub admin_link_to {
+	return sprintf('<a href="/administrator/managerial/company_profiles.html?ddmCustomer=%d">%s</a>', $_[0]{id}, ( @_ > 1 ? $_[1] : $_[0]{name} ) );
+} # end sub link_to
+
 sub link_to {
-	return sprintf('<a href="/account/company_profile.html?ddmCustomer=%d">%s</a>', $_[0]{id}, $_[0]{name} );
+	return sprintf('<a href="/account/company_profile.html?company_id=%d">%s</a>', $_[0]{id}, $_[0]{name} );
 } # end sub link_to
 
 sub last_ordered_on {
@@ -476,5 +484,17 @@ sub last_online {
 	}
 	return $_[0]{last_online};
 }  # end sub last_online
+
+sub Country {
+	if ( ! $_[0]{Country} ) {
+		$_[0]{Country} = openprint::Location->find_one( type=>'country', short=>$_[0]->country() );
+		if ( ! $_[0]{Country} ) {
+			 $_[0]{Country} = new openprint::Location();
+			 $_[0]{Country}->set( type=>'country' );
+		}
+	}
+	return $_[0]{Country};
+} # end sub Country
+
 1;
 __END__

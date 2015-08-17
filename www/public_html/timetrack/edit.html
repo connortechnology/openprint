@@ -9,72 +9,75 @@
 <div class="Timetrack">
 <?include(/includes/error_reporting.html)?>
 <form name="f1" id="f1" action="edit.html" method="post">
-	<input type="hidden" name="referrer_invoice_id" value="<? echo ( $param{'invoice_id'} ) ?>" />
-	<fieldset><legend>Editing timetrack<? echo ( $$variable{'Timetrack'}->id() ? '('.$$variable{'Timetrack'}->id().')' : '' ) ?></legend>
+	<input type="hidden" name="referrer_invoice_id" value="<? echo ( $param{invoice_id} ) ?>" />
+	<fieldset><legend>Editing timetrack<? echo ( $$variable{Timetrack}->id() ? '('.$$variable{Timetrack}->id().')' : '' ) ?></legend>
 		<div class="content">
-		<? if ( $$variable{'Timetrack'}->deleted() ) ?>
+		<? if ( $$variable{Timetrack}->deleted() ) ?>
 		<span class="warning">This timetrack has been deleted</span>
-		<? endif ( $$variable{'Timetrack'}->deleted() ) ?>
+		<? endif ( $$variable{Timetrack}->deleted() ) ?>
 		
-		<input type="hidden" name="timetrack_id" value="<? echo ( $$variable{'Timetrack'}->id() ) ?>" />
+		<input type="hidden" name="timetrack_id" value="<? echo ( $$variable{Timetrack}->id() ) ?>" />
 		<div class="leftColumn">
 			<ul>
 			<li><label for="company_id">Company</label>
 				<select id="company_id" name="company_id">
 					<option value=""> select </option>
-					<? echo ( openprint::Company::get_dropdown( $$variable{Timetrack}->company_id() ? $$variable{Timetrack}->company_id() : $session{company_id} ); ) ?>
+					<? echo ( make_drop_down( openprint::Company->dropdown(), $$variable{Timetrack}->company_id() ? $$variable{Timetrack}->company_id() : $session{company_id} ); ) ?>
 				</select>
 			</li>
 			<li><label for="user_id">Employee</label>
 				<select id="user_id" name="user_id">
 					<option value=""> select </option>
-					<? echo ( make_drop_down( openprint::User->dropdown(company_id=>$session{company_id},order=>'lower(firstname),lower(lastname)'), $$variable{Timetrack}->id() ? $$variable{Timetrack}->user_id() : $session{user_id} ); ) ?>
+					<? echo ( make_drop_down( openprint::User->dropdown(company_id=>$session{company_id}), $$variable{Timetrack}->id() ? $$variable{Timetrack}->user_id() : $session{user_id} ); ) ?>
 				</select>
 			</li>
 			<li>
 				<label>Time Associated</label>
-				<input type="radio" name="time_associated" value="1" id="time_associated1" <? echo ( ssi::checked( sets::isin( $$variable{'Timetrack'}->time_associated(), [ '', 1 ] ) ); ) ?> onclick="if(this.checked) { $('starting_time').show();$('ending_time').show(); } else { $('starting_time').hide();$('ending_time').hide(); }update_duration(this.form,'starting','ending');" />
-				<label class="radio" for="time_associated1">Yes</label>
-				<input type="radio" name="time_associated" value="0" id="time_associated0" <? echo ( ssi::checked( $$variable{'Timetrack'}->time_associated() eq '0' ); ) ?> onclick="if(!this.checked) { $('starting_time').show();$('ending_time').show(); } else { $('starting_time').hide();$('ending_time').hide(); }update_duration(this.form,'starting','ending');" />
-				<label class="radio" for="time_associated0">No</label>
+				<? echo ( 
+					radio( 'time_associated', [ '1','Yes', '0', 'No' ], $$variable{Timetrack}->time_associated(), { 
+						default	=>	'1',
+						onclick=>"if(this.value=='1' && this.checked) { $('starting_time').show();$('ending_time').show(); } else { $('starting_time').hide();$('ending_time').hide(); }update_duration(this.form,'starting','ending');",
+				} ); ) ?>
 			</li>
 			<li><label>Start</label>
-			<? echo ( datetime_select( 'starting', $$variable{'Timetrack'}->starting(), 
+			<? echo ( datetime_select( 'starting', $$variable{Timetrack}->starting(), 
 						{
 						onchange	=>	q`check_time_starting($('f1'),'starting','ending'); update_duration($('f1'),'starting','ending');`,
-						showtime	=>	sets::isin( $$variable{'Timetrack'}->time_associated(), [ '', 1 ] ),
+						showtime	=>	sets::isin( $$variable{Timetrack}->time_associated(), [ '', 1 ] ),
 						with_today	=>	1,
 						} ); ) ?>
 			</li>
 			<li><label>End</label>
-			<? echo ( datetime_select( 'ending', $$variable{'Timetrack'}->ending(), 
+			<? echo ( datetime_select( 'ending', $$variable{Timetrack}->ending(), 
 						{
 						onchange	=>	q`update_duration(this.form,'starting','ending');`,
-						showtime	=>	sets::isin( $$variable{'Timetrack'}->time_associated(), [ '', 1 ] ),
+						showtime	=>	sets::isin( $$variable{Timetrack}->time_associated(), [ '', 1 ] ),
 						with_today	=>	1,
 						} ); ) ?>
 			</li>
 			<li><label>Duration</label>
-				<span id="duration">
-				</span>
+				<?echo($$variable{Timetrack}->duration())?>
+				<input type="text" name="duration" id="duration" value="<?echo($$variable{Timetrack}->duration())?>"/>
+				<? echo ( write_override( 'duration_override', $$variable{Timetrack}->duration_override() ); ) ?>
 				<script type="text/javascript">update_duration(document.forms['f1'],'starting','ending');</script>
 			</li>
 			<li><label>Service</label>
 				<select id="service_id" name="service_id">
 					<option value=""> select </option>
-					<? echo ( make_drop_down( openprint::Service->dropdown(order=>'lower(name)'), $$variable{'Timetrack'}->service_id() ); ) ?>
+					<? echo ( make_drop_down( openprint::Service->dropdown(order=>'lower(name)'), $$variable{Timetrack}->service_id() ); ) ?>
 				</select>
 			</li>
-			<li><label>Billable</label><? echo ( radio( 'billable', [1,'Yes',0,'No'], $$variable{'Timetrack'}->billable() ); ) ?></li>
+			<li><label>Billable</label><? echo ( radio( 'billable', [1,'Yes',0,'No'], $$variable{Timetrack}->billable() ); ) ?></li>
 			<li><label for="rate">Override Rate</label>
-				<? echo (input( type=>'float', name=>'rate', id=>'rate', value=>$$variable{'Timetrack'}->rate() ); ) ?>
+				<? echo (input( type=>'float', name=>'rate', id=>'rate', value=>$$variable{Timetrack}->rate() ); ) ?>
 			</li>
+			<li><label>Currency</label><? echo ( ssi::select( openprint::Currency->dropdown(), $$variable{Timetrack}->currency_id() ? $$variable{Timetrack}->currency_id() : $session{Currency_id}, { name=>'currency_id', id=>'currency_id', prepend=>['','select'] } ); ) ?></li>
 			<li>
 				<label>Travel Associated</label>
-				<? echo ( radio( 'travel_associated', [ '1', 'Yes', '0', 'No' ], $$variable{'Timetrack'}->travel_associated() ); ) ?>
+				<? echo ( radio( 'travel_associated', [ '1', 'Yes', '0', 'No' ], $$variable{Timetrack}->travel_associated() ); ) ?>
 			</li>
 			<li><label for="distance">Distance (km)</label>
-				<? echo ( input( type=>'float', name=>'distance', id=>'distance', value=>$$variable{'Timetrack'}->distance(), onkeyup=>q`if(this.value){set_rdb_value(this.form.elements['travel_associated'],1);};` ); ) ?>
+				<? echo ( input( type=>'float', name=>'distance', id=>'distance', value=>$$variable{Timetrack}->distance(), onkeyup=>q`if(this.value){set_rdb_value(this.form.elements['travel_associated'],1);};` ); ) ?>
 			</li>
 			</ul>
 		</div>
@@ -82,22 +85,22 @@
 			<ul>
 				<li>
 					<label for="description">Description</label>
-					<textarea id="description" name="description" rows="<? echo ( ssi::count_lines( $$variable{'Timetrack'}->description() ); ) ?>" onkeyup="textarea_resize(this);"><? echo ( $$variable{'Timetrack'}->description() ) ?></textarea>
+					<textarea id="description" name="description" rows="<? echo ( ssi::count_lines( $$variable{Timetrack}->description() ); ) ?>" onkeyup="textarea_resize(this);"><? echo ( $$variable{Timetrack}->description() ) ?></textarea>
 				</li>
 				<li><label>Keywords</label> <? echo ( input( type=>'text', name=>'keywords', value=>$$variable{Timetrack}->keywords() ); ) ?> </li>
 				<li><label for="po">Purchase Order #</label> <? echo ( input(type=>'text',name=>'po', value=>$$variable{Timetrack}->po() ); ) ?> </li>
-				<? if ( $$variable{'Timetrack'}->invoice_id() ) ?>
+				<? if ( $$variable{Timetrack}->invoice_id() ) ?>
 				<li>
 					<label>Invoice</label>
-					<a href="/invoice/view.html?invoice_id=<? echo ( $$variable{'Timetrack'}->invoice_id() ) ?>"><? echo ( $$variable{'Timetrack'}->invoice_id() ) ?></a>
+					<a href="/invoice/view.html?invoice_id=<? echo ( $$variable{Timetrack}->invoice_id() ) ?>"><? echo ( $$variable{Timetrack}->invoice_id() ) ?></a>
 				</li>
-				<? endif ( $$variable{'Timetrack'}->invoice_id() ) ?>
-				<? if ( $$variable{'Timetrack'}->Paycheques() ) ?>
+				<? endif ( $$variable{Timetrack}->invoice_id() ) ?>
+				<? if ( $$variable{Timetrack}->Paycheques() ) ?>
 				<li>
 					<label>Paycheque</label>
-					<? echo ( join('<br/>', map { sprintf('<a href="/paycheque/edit.html?paycheque_id=%1$d">%1$d</a>', $_ ); } $$variable{'Timetrack'}->Paycheques() ); ) ?>
+					<? echo ( join('<br/>', map { sprintf('<a href="/paycheque/edit.html?paycheque_id=%1$d">%1$d</a>', $_ ); } $$variable{Timetrack}->Paycheques() ); ) ?>
 				</li>
-				<? endif ( $$variable{'Timetrack'}->Paycheques() ) ?>
+				<? endif ( $$variable{Timetrack}->Paycheques() ) ?>
 			</ul>
 		</div>
 		</div>

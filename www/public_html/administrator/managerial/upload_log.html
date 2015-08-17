@@ -3,9 +3,9 @@
 		<ul>
 			<li>
 				<label>Date</label>
-				<? echo (date_select_session( '/administrator/managerial/upload_log.html', 'uploaded_on_start',  { with_today=>1 } ); ) ?>
+				<? echo (datetime_select_session( '/administrator/managerial/upload_log.html', 'uploaded_on_start',  { with_today=>1 } ); ) ?>
 				to
-				<? echo (date_select_session( '/administrator/managerial/upload_log.html', 'uploaded_on_end',  { with_today=>1 } ); ) ?>
+				<? echo (datetime_select_session( '/administrator/managerial/upload_log.html', 'uploaded_on_end',  { with_today=>1 } ); ) ?>
 			</li>
 			<li>
 				<label>Company</label>
@@ -43,12 +43,15 @@
 			my @Uploads = openprint::Upload->find(
 				date_filter( '/administrator/managerial/upload_log.html?uploaded_on_end', 'start <=' ),
 				date_filter( '/administrator/managerial/upload_log.html?uploaded_on_start', 'start >=' ),
-				( $session{'/administrator/managerial/upload_log.html?type'} ? ( 'type'=>$session{'/administrator/managerial/upload_log.html?type'} ) : () ),
-				( $session{'/administrator/managerial/upload_log.html?company_id'} ? ( 'company_id'=>$session{'/administrator/managerial/upload_log.html?company_id'} ) : () ),
+				( $session{'/administrator/managerial/upload_log.html?type'} ? ( type=>$session{'/administrator/managerial/upload_log.html?type'} ) : () ),
+				( $session{'/administrator/managerial/upload_log.html?company_id'} ? ( company_id=>$session{'/administrator/managerial/upload_log.html?company_id'} ) : () ),
 				limit	=>	1000,
 				order	=>	'start DESC',
 			);
 			my $total = 0;
+
+			my $average_speed = 0;
+			my $average_upload_count = 0;
 
 			foreach my $Upload ( @Uploads ) {
 
@@ -82,8 +85,14 @@
 					);
 				$rowclass = $rowclass ? '' : ' class="colRow"';
 				$total += $Upload->size();
+				my $duration = $Upload->duration();
+				my $seconds = $duration->in_units('seconds');
+				if ( $seconds ) {
+					$average_speed += int( $Upload->size() / $seconds );
+					$average_upload_count += 1;
+				} # end if
 			} # end foreach
-			$html .= '<tr class="totals"><td colspan="6">Totals</td><td class="Size">'.misc::format_bytes($total).'</td><td></td></tr>';
+			$html .= '<tr class="totals"><td colspan="5">Totals</td><td class="Size">'.misc::format_bytes($total).'</td><td class="Speed">'.misc::format_bytes($average_upload_count?$average_speed/$average_upload_count:0).'</td><td></td></tr>';
 			return $html;
 		) ?>
 	</table>

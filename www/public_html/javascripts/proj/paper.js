@@ -20,7 +20,7 @@ function paper_price_calc( element, group ) {
 			form.elements['CustomStockPrice'+group].value = do_decimals( costperm / (wpsi * area * 1000), 2);
 		} else {
 			if ( form.elements['txtCustomMWeight'+group].value ) {
-				form.elements['CustomStockPrice'+group].value = do_decimals( costperm / (form.elements['txtCustomMWeight'].value / 100), 2 );
+				form.elements['CustomStockPrice'+group].value = do_decimals( costperm / (form.elements['txtCustomMWeight'+group].value / 100), 2 );
 			} // end if
 		} // end if
 	} else {
