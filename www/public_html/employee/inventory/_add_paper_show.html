@@ -168,7 +168,9 @@ return input( type=>'float', id=>'weight', name=>'weight', value=> $weight );
 	</li>
 	<li>
 		<label for="Owner">Owner</label>
-		<select id="Owner" name="Owner"><? echo ( 
+		<select id="Owner" name="Owner">
+			<option value="">No one</option>
+			<? echo ( 
 			my @owner_ids = sql::execute( undef, undef, 'SELECT DISTINCT owner_id FROM papers' );
 			make_drop_down( openprint::Company->dropdown( id=>\@owner_ids ), $$variable{Paper}->owner_id() ? $$variable{Paper}->owner_id() : $session{company_id} ); ) ?></select>
 	</li>

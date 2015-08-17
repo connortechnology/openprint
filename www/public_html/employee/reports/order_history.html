@@ -12,9 +12,9 @@
 	<input type="hidden" name="action" />
 	<fieldset class="filters"><legend>Report Criteria</legend>
 		<ul>
-		<? if ( $session{'user_type'} eq 'A' or openprint::usergroup::is_user_in( ['Sales Admin','Reporting','Accounting'], $session{'user_id'} ) ) ?>
 		<li>
 			<label>CSR</label>
+		<? if ( $session{'user_type'} eq 'A' or openprint::usergroup::is_user_in( ['Sales Admin','Reporting','Accounting'], $session{'user_id'} ) ) ?>
 			<select id="CSR" name="CSR" size="1" onchange="filter_companies( f1.company_id, {name:$('company_id').value,salesrep_id:get_ddm_value(this)} );">
 			<? echo (
 					my @options = ( '', 'All' );
@@ -23,8 +23,11 @@
 					) ?>
 
 			 </select>
-		</li>
+		<? else ( $session{'user_type'} eq 'A' or openprint::usergroup::is_user_in( ['Sales Admin','Reporting','Accounting'], $session{'user_id'} ) ) ?>
+			<? echo ( input( name=>'CSR', type=>'hidden', value=>$session{'user_id'} ); ) ?>
+			<? echo ( $openprint::User->name() ) ?>
 		<? endif ( $session{'user_type'} eq 'A' or openprint::usergroup::is_user_in( ['Sales Admin','Reporting','Accounting'], $session{'user_id'} ) ) ?>
+		</li>
 		<li>
 			<label>Company</label>
 			<input type="text" oninput="filter_companies( f1.company_id, {name:this.value,salesrep_id:get_ddm_value($('CSR'))} );" class="filter" />

@@ -110,7 +110,11 @@ else
 OLDDU=`$DU -b -sh "$DEST$TYPE.new" |$AWK '{print $1}'`
 fi
 echo $OLDDU
-$TIME$RSYNC -a --delete-delay --delete-excluded $@ "$SOURCE" "$DEST$TYPE.new"
+if [[ $SOURCE =~ : ]]; then
+$TIME$RSYNC -aHx --delete-delay --delete-excluded $@ -e "ssh -T -c aes128-ctr -o Compression=no -x" "$SOURCE" "$DEST$TYPE.new"
+else
+$TIME$RSYNC -aHx --delete-delay --delete-excluded $@ "$SOURCE" "$DEST$TYPE.new"
+fi
 if [ $? != 0 -a $? != 24 ]; then
     echo "rsync return non-zero code. ($?)  Storing this backup as bad."
 	if [ -e "$DEST$TYPE.bad" ] ; then

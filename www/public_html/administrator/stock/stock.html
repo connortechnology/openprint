@@ -314,10 +314,7 @@
 				</p>
 				<p class="scoring">
 					<label>Does this stock require folder scoring before folding?</label>
-					<input type="radio" id="scoringY" name="scoring" value="1" <? echo ( checked( $$variable{'Stock'}->score_required() ); ) ?> />
-					<label class="radio" for="scoringY">Yes</label>
-					<input type="radio" id="scoringN" name="scoring" value="0" <? echo ( checked( ! $$variable{'Stock'}->score_required() ); ) ?> />
-					<label class="radio" for="scoringN">No</label>
+					<? echo ( radio( 'scoring', ['1','Yes','0','No', '', 'Auto' ], $$variable{'Stock'}->score_required(), { default=>'' } ); ) ?>
 				</p>
 				<p class="diescoring">
 					<label>Does this stock require die scoring before folding?</label>

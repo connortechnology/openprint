@@ -154,6 +154,7 @@ sub get_current {
 	if ( $openprint::session{'Currency_id'} ) {
 		return new openprint::Currency( $openprint::session{'Currency_id'} );
 	} # end if
+	return new openprint::Currency();
 
 } # end sub get_currency
 

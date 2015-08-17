@@ -17,7 +17,7 @@ require openprint::SkidContent;
 require openprint::InventoryCondition;
 require openprint::PaperAllocation;
 
-$debug = 0;
+$debug = 1;
 
 $table = 'Skids';
 $serial = 'skid_id_seq';
@@ -666,9 +666,15 @@ sub description {
 	return $_[0]{description};
 } # end sub description
 
+sub url_to {
+	return '/employee/inventory/skid_details.html?skid_id='.$_[0]{id};
+}
+
 sub link_to {
-	return sprintf('<a href="/employee/inventory/skid_details.html?skid_id=%1$d">%2$s %1$d</a>', $_[0]{id}, 
-		( @_ > 1 ? $_[1] : $_[0]->type() eq 'Roll' ? 'Roll':'Skid' ) );
+	return sprintf('<a href="%3$s">%2$s %1$d</a>', $_[0]{id}, 
+		( @_ > 1 ? $_[1] : $_[0]->type() eq 'Roll' ? 'Roll':'Skid' ),
+		$_[0]->url_to(),
+	);
 } # end sub link_to
 
 sub units {
@@ -691,6 +697,10 @@ sub quantity {
 	return $_[0]{quantity};
 }
 
+sub in_stock {
+	return quantity(@_);
+}
+
 sub last_seen {
 	if ( @_ > 1 ) {
 		$_[0]{last_seen} = $_[1];
@@ -704,6 +714,21 @@ sub last_seen {
 		}
 	} # end if
 	return $_[0]{last_seen};
+}
+
+sub Unit_Of_Measure_Costing {
+    if ( $_[0]->type() eq 'Sheet' ) {
+        return 'M';
+    } else {
+        return 'CWT';
+    } # end if
+} # end sub  Unit_Of_Measure_Costing
+
+sub Unit_Cost {
+	foreach my $C ( $_[0]->Contents() ) {
+		return $C->Paper()->Unit_Cost();
+	}
+	return ();
 }
 
 1;
