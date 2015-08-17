@@ -289,6 +289,9 @@ Manifest: <a href="/employee/inventory/manifest_view.html?manifest_id=<? echo ( 
 		</div>
 	</div><!--PO-->
 	<br class="spacer"/>
+<? if ( ! $$variable{PurchaseOrder}->authorized() ) ?>
+<div id="not_approved"><img src="/images/not_approved.png"/></div>
+<? endif ( ! $$variable{PurchaseOrder}->authorized() ) ?>
 <? else ( $$variable{PurchaseOrder}->can_view() ) ?>
 You do not have the rights to view this PO.
 <? endif ( $$variable{PurchaseOrder}->can_view() ) ?>
