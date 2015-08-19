@@ -237,6 +237,8 @@ sub calc {
 
 	my @signatures_needing = ();
 
+	$$specs{alert} = '';
+
 	foreach my $signature_service_index ( $Project->signatures( { sort=>1 }) ) {
 		my $sig_specs = openprint::service::get_specs_ref( $Project, $signature_service_index );
 		my $form = $$sig_specs{SignatureIndex};
@@ -473,7 +475,7 @@ sub signature_calc {
 		@Sets_of_Impositions = ( \@override_impos );
 		my $overriden_count = misc::sum( map { $_->quantity() * $_->imposition() } @override_impos );
 		if ( $overriden_count != $Imposition->quantity() * $Imposition->imposition() ) {
-			$results{alert} .= "Overriden imposition count does not match printed imposition count for form $form.<br/>";
+			$results{alert} .= "Overriden imposition count ($overriden_count) does not match printed imposition count (".$Imposition->quantity() * $Imposition->imposition().") for form $form quantity $qty_index (".$$specs{"txtQuantity$qty_index"}.").<br/>";
 		} else {
 			$openprint::log->debug(" override count: $overriden_count $$Imposition{quantity} * $$Imposition{imposition}");
 		} # end if
