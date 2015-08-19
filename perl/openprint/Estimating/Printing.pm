@@ -3371,12 +3371,12 @@ $log->warn("Getting all impos results: " . @results );
 		$bump_count = 0;
 		@results = map {@{$_}} values %imps;
 		%imps = ();
-	if ( DEBUG_FILTERING ) {
-		$openprint::log->debug("Afgter filtering by dutch");
-		foreach my $I ( @results ) {
-			$I->display("After filtering by dutch");
+		if ( DEBUG_FILTERING ) {
+			$openprint::log->debug("Afgter filtering by dutch");
+			foreach my $I ( @results ) {
+				$I->display("After filtering by dutch");
+			}
 		}
-	}
 	} # end if SpreadL
 
 	foreach my $imp ( @results ) {
@@ -3483,7 +3483,7 @@ $imp->display("qty: $qty unspec ". $$sig_specs{"txtUnspecifiedPageQuantity$qty_i
 					} elsif ( 10*$$BiggerPrice{'100lb Total'} < $$SmallerPrice{'100lb Total'} ) {
 							$add = 0;
 							if ( DEBUG_FILTERING ) {
-								$openprint::log->debug( "Dropping A on price $$BiggerPrice{'100lb Total'} " . $I->Paper()->minimum_order_weight() . " $$SmallerPrice{'100lb Total'}" . $Paper->minimum_order_weight() );
+								$openprint::log->debug( "Dropping A on price 100lb: $$BiggerPrice{'100lb Total'} minorderweight:" . $I->Paper()->minimum_order_weight() . " $$SmallerPrice{'100lb Total'}" . $Paper->minimum_order_weight() );
 								$I->display();
 								$imp->display();
 							} # end if
@@ -3498,9 +3498,9 @@ $imp->display("qty: $qty unspec ". $$sig_specs{"txtUnspecifiedPageQuantity$qty_i
 						splice @{$imps{$str}}, $j, 1;
 						$j -= 1;
 						if ( DEBUG_FILTERING ) {
-							$openprint::log->debug( "Dropping B $$BiggerPrice{'100lb Total'} " . $I->Paper()->minimum_order_weight() . " $$SmallerPrice{'100lb Total'}" . $Paper->minimum_order_weight() );
-							$I->display();
-							$imp->display();
+							$openprint::log->debug( "Dropping B price:$$BiggerPrice{'100lb Total'} lookupweight: $$I{lookup_stock_qty} minorderweight:" . $I->Paper()->minimum_order_weight() . " smaller price; $$SmallerPrice{'100lb Total'} lookupweight: $$imp{lookup_stock_qty} minorderweight:" . $Paper->minimum_order_weight() );
+							$I->display('B');
+							$imp->display('A');
 						} # end if
 					} elsif ( ( $P->area() < $Paper->area() )
 							and ( $P->factor() >= $Paper->factor() )
@@ -3510,9 +3510,9 @@ $imp->display("qty: $qty unspec ". $$sig_specs{"txtUnspecifiedPageQuantity$qty_i
 							) {
 							$add = 0;
 							if ( DEBUG_FILTERING ) {
-								$openprint::log->debug( "Dropping A $$BiggerPrice{'100lb Total'} " . $I->Paper()->minimum_order_weight() . " $$SmallerPrice{'100lb Total'}" . $Paper->minimum_order_weight() );
-								$I->display();
-								$imp->display();
+								$openprint::log->debug( "Dropping A 100lb:$$BiggerPrice{'100lb Total'} lookupweight: $$I{lookup_stock_qty} minorderweight:" . $I->Paper()->minimum_order_weight() . " $$SmallerPrice{'100lb Total'} lookupweight: $$imp{lookup_stock_qty} minorderweight:" . $Paper->minimum_order_weight() );
+								$I->display('B');
+								$imp->display('A');
 							} # end if
 							last;
 						} elsif ( DEBUG_FILTERING ) {
@@ -3808,6 +3808,7 @@ sub get_project_price {
 
 	my @Is = openprint::imposition::sort( calculate_impositions( $Project, $sig_specs, $qty_index, $qty, $PaperCounts, $versions, $project, $impositions ) );
 	if ( DEBUG or DEBUG_AFTER_FILTERING ) {
+		$openprint::log->debug("@ of impositions: " . @Is );
 		foreach my $I ( @Is ) {
 			$I->display( "Before calculation:" . @Is );
 		} # end while
