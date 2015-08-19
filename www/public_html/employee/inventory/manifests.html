@@ -88,7 +88,7 @@ function load_results( ) {
 			</li>
 			<li>
 				<label>Has Errors</label>
-				<? echo ( radio( 'has_errors', ['1','Yes','0','No','1,0','All'], $session{'/employee/inventory/manifests.html?has_errors'} ); ) ?>
+				<? echo ( radio( 'has_errors', ['1','Yes','0','No','1,0','All'], $session{'/employee/inventory/manifests.html?has_errors'}, { default=>'1,0' } ); ) ?>
 			</li>
 		<li><label>Type</label>
             <? echo ( checkboxes( 'type', [ 'Sheet','Sheet','Roll','Roll','Unknown','Unknown' ], [ split(',', $session{'/employee/inventory/manifests.html?type'} ) ] ); ) ?>

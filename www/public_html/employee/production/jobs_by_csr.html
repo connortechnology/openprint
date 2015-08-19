@@ -165,7 +165,7 @@
 			<ul>
 				<li><label>CSR</label>
 <? echo ( 
-	my @Users = @{$$variable{CSRS}} = openprint::User->find('usergroup any'=>'Sales',order=>'lower(firstname),lower(lastname)',company_id=>$config{owner_id});
+	my @Users = @{$$variable{CSRS}} = openprint::User->find('usergroup any'=>'Sales', company_id=>$config{owner_id});
 	$session{'/employee/production/jobs_by_csr.html?salesrep_id'} = join(',', map { $_->id() } @Users ) if ! $session{'/employee/production/jobs_by_csr.html?salesrep_id'};
 	
 	return ssi::select( 
@@ -210,8 +210,8 @@
 		</div>
 		<p class="buttons">
 			<? echo ( join("\n",
-					ssi::button( 'ShowResults', { onclick=>'calc();', text=>'Show Results' } ),
-					ssi::button( 'Reset', { onclick=>"f1.btnFunction.value='Reset';f1.submit();", text=>'Reset' } ), 
+					button( 'ShowResults', { onclick=>'calc();', text=>'Show Results' } ),
+					button( 'Reset', { onclick=>"f1.btnFunction.value='Reset';f1.submit();", text=>'Reset' } ), 
 			); ) ?>
 		</p>
 	</fieldset>

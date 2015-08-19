@@ -87,13 +87,13 @@
 			date_filter( '/employee/inventory/manifests.html?updated_on_start', 'updated_on >=' ),
 		);
 
-		$search{'supplier_id'} = $session{'/employee/inventory/manifests.html?supplier_id'} if $session{'/employee/inventory/manifests.html?supplier_id'};
+		$search{supplier_id} = $session{'/employee/inventory/manifests.html?supplier_id'} if $session{'/employee/inventory/manifests.html?supplier_id'};
 		$$variable{Manifests} = [ openprint::Manifest->find( %search ) ];
 	} # end if
 	$$variable{canseepricing} = openprint::usergroup::is_user_in( ['Accounting','InventoryManager'], $session{user_id} );
 ) ?>
 <?include(/includes/error_reporting.html)?>
-<? if ( @{$$variable{'Manifests'}} ) ?>
+<? if ( @{$$variable{Manifests}} ) ?>
 <form id="ManifestResults" name="ManifestResults" action="manifests.html" method="post">
 	<table class="List sortable">
 		<tr>
@@ -128,7 +128,7 @@
 				} # end foreach
 			} # end if
 
-			foreach my $Manifest ( @{$$variable{'Manifests'}} ) {
+			foreach my $Manifest ( @{$$variable{Manifests}} ) {
 				$Manifest->Contents( $MContents{$$Manifest{id}} ? $MContents{$$Manifest{id}} : [] );
 
 				if ( $session{'/employee/inventory/manifests.html?delivery'} ) {
@@ -199,7 +199,7 @@
 				<td class="Docket"><a href="manifest_view.html?manifest_id=%1$s">%4$s</a></td>
 				<td class="Company"><a href="manifest_view.html?manifest_id=%1$s">%5$s</a></td>
 				<td class="Date"><a href="manifest_view.html?manifest_id=%1$s">%6$s<br/><span title="Updated:%8$s">%7$s</span></a></td>`, 
-					$$Manifest{'id'}, $$Manifest{'name'},join('<br/>', $Manifest->po_ids() ), 
+					$$Manifest{id}, $$Manifest{name},join('<br/>', $Manifest->po_ids() ), 
 					join('<br/>', $Manifest->dockets() ), $Manifest->Vendor()->name(),
 					format_date( $Manifest->received_on() ),
 					format_date( $Manifest->updated_on() ),
@@ -212,7 +212,7 @@
 					my $Paper = new openprint::Paper( $paper_id );
 					$html .= sprintf('%s : %d%s : %d %s%s', $Paper->to_string(), $manifest_weight{$paper_id}, $Paper->units(), $manifest_skids{$paper_id},
   ( $Paper->type() eq 'Roll' ? 'roll' : 'skid' ), ( $manifest_skids{$paper_id} ==1 ? '' : 's' ) );
-					if ( openprint::usergroup::is_user_in( ['Accounting','InventoryManager'], $session{'user_id'} ) ) {
+					if ( openprint::usergroup::is_user_in( ['Accounting','InventoryManager'], $session{user_id} ) ) {
 						my $Type = openprint::Manifest_Content_Type->find_one('manifest_id'=>$Manifest->id(), 'paper_id'=>($paper_id?$paper_id:undef));
 						if ( $Type ) {
 							my $POC = $Type->PurchaseOrder_Content();
@@ -259,6 +259,6 @@
 			); ) ?>
 	</p>
 </form>
-<? else ( @{$$variable{'Manifests'}} ) ?>
+<? else ( @{$$variable{Manifests}} ) ?>
 There were no manifests matching your search criteria.
-<? endif ( @{$$variable{'Manifests'}} ) ?>
+<? endif ( @{$$variable{Manifests}} ) ?>

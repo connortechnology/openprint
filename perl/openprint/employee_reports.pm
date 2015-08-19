@@ -8,13 +8,14 @@ require openprint::Project_Log;
 require openprint::Order_Status;
 
 require openprint;
-use vars qw( $r $log $dbh %variable %session %param );
+use vars qw( $r $log $dbh %variable %session %param %config );
 *r = \$openprint::r;
 *log = \$openprint::log;
 *dbh = \$openprint::dbh;
 *session = \%openprint::session;
 *param = \%openprint::param;
 *variable = \%openprint::variable;
+*config = \%openprint::config;
 
 sub project_history {
 	my $page = '/employee/reports/project_history.html';
@@ -274,6 +275,7 @@ sub _order_history_results {
 	$variable{Orders} = [];
 	foreach my $Order ( openprint::Order->find(
 		company_id => ( ($session{$uri.'?company_id'} and ( ( ! %parameters ) or exists $companies{$session{$uri.'?company_id'}} ) ) ? $session{$uri.'?company_id'} : [ keys %companies ] ),
+		( $session{$uri.'?CSR'} ? ( salesrep_id	=> $session{$uri.'?CSR'} ) : () ),
 		ssi::date_filter( $uri.'?created_on_start', 'created_on >=' ),
 		ssi::date_filter( $uri.'?created_on_end', 'created_on <=' ),
 		( $session{$uri.'?status'} ? ( status_id => [ split(',', $session{$uri.'?status'} ) ] ) : () ),
@@ -798,7 +800,7 @@ sub customer_performance {
 		} elsif ( $param{'salesrep_id'} ) {
 			@csr_ids = ( $param{'salesrep_id'} );
 		} else {
-			@csr_ids = map { $_->id() } openprint::User->find('type'=>['E','A'], 'usergroup any'=>'Sales', 'order'=>'lower(firstname),lower(lastname)');
+			@csr_ids = map { $_->id() } openprint::User->find( company_id=>$config{owner_id}, type=>['E','A'], 'usergroup any'=>'Sales', order=>'lower(firstname),lower(lastname)');
 		} # end if
 		foreach my $csr_id ( @csr_ids ) {
 			my $CSR = new openprint::User( $csr_id );

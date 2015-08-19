@@ -248,5 +248,8 @@ sub reuse {
 sub docket_sheet {
 	openprint::print_project::summary( $r, $log, $dbh, \%variable );
 } # end sub docket_sheet
+
+sub _view_log {
+}
 1;
 __END__
