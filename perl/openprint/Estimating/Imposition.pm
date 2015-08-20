@@ -42,6 +42,7 @@ sub neccessary {
 } # end sub neccessary
 
 my $MRService;
+my $SigMRService;
 my $ServiceService;
 my $SteppingService;
 my $PageChargeService;
@@ -52,6 +53,9 @@ sub init {
 
 	$MRService = openprint::Service->find_one( name=>'ImpositionMakeReady'.$type_name );
 	$MRService = openprint::Service->find_one( name=>'ImpositionMakeReady' ) if ! $MRService;
+
+	$SigMRService = openprint::Service->find_one( name=>'SignatureImpositionMakeReady'.$type_name );
+	$SigMRService = openprint::Service->find_one( name=>'SignatureImpositionMakeReady' ) if ! $MRService;
 
 	$ServiceService = openprint::Service->find_one( name=>'Imposition'.$type_name );
 	$ServiceService = openprint::Service->find_one( name=>'Imposition' ) if ! $ServiceService;
@@ -71,17 +75,17 @@ sub signature_calc {
 	my $Press = $Imposition->Press();
 
 	my %ImpositionMakeReady;
-	if ( $MRService ) {
-		%ImpositionMakeReady = $MRService->get_price( undef, $Press );
+	if ( $SigMRService ) {
+		%ImpositionMakeReady = $SigMRService->get_price( undef, $Press );
 		if ( %ImpositionMakeReady ) {
 			if ( $ImpositionMakeReady{units} eq 'per form' ) {
 #$openprint::log->debug("Make Ready Per Form " . ($$specs{'PreviousForms'.$qty_index}+1) );
-				%ImpositionMakeReady = $MRService->get_price( scalar @{$previous_forms} + 1, $Press );
+				%ImpositionMakeReady = $SigMRService->get_price( scalar @{$previous_forms} + 1, $Press );
 			} else {
 
 			} # end if
 		} elsif(DEBUG) {
-			$openprint::log->error("No price found for " . $MRService->name() );
+			$openprint::log->error("No price found for " . $SigMRService->name() );
 		} # end if
 		if ( DEBUG ) {
 			$openprint::log->debug("MR Price is $ImpositionMakeReady{Price}");
@@ -145,7 +149,6 @@ $openprint::log->debug("Imposition calc: @_");
 	shift @_ if $_[0] eq 'openprint::Estimating::Imposition';
 
 	my ( $log, $dbh, $variable, $project_index, $service_index, $specs ) = @_;
-$openprint::log->debug("Imposition calc: @_");
 
 	my $status = 'calculated';
 
@@ -153,14 +156,23 @@ $openprint::log->debug("Imposition calc: @_");
 	#my $services = $Project->services();
 	init( $Project );
 	my @signatures = $Project->signatures();
-$openprint::log->debug("Signtures: @signatures");
 
 	foreach my $qty_index ( $Project->quantity_indexes() ) {
 		$$specs{"txtQuantity$qty_index"} = int( $$specs{"txtQuantity$qty_index"} );
 		$$specs{"txtQuantity$qty_index"} = $Project->quantity( $qty_index ) if ! $$specs{"txtQuantity$qty_index"};
+		$$specs{'hdnBreakdown'.$qty_index} = '';
+
+		my $total = 0;
+
+		my %TotalImpositionMakeReady;
+		if ( $MRService ) {
+			%TotalImpositionMakeReady = $MRService->get_price( );
+			$total += $TotalImpositionMakeReady{Price};
+
+			$$specs{'hdnBreakdown'.$qty_index} .= sprintf('Imposition Charge MR: $%1$.2f<br/>', $TotalImpositionMakeReady{Price} );
+		} # end if
 
 		my @Previous_Signatures;
-		my $total = 0;
 
 		foreach my $sig_id ( @signatures ) {
             my $sig_specs = openprint::service::get_specs_ref( $Project, $sig_id );
@@ -172,14 +184,11 @@ $openprint::log->debug("Signtures: @signatures");
 			push @Previous_Signatures, $sig_id;
 			my $Imposition = new openprint::Imposition();
 			$Imposition->load( $sig_specs, $qty_index );
-$Imposition->display("Signature calc for $sig_id");
 			my $price = signature_calc( $Project, $Imposition, scalar @Previous_Signatures, $qty_index );
 			$total += $$price{Total};
 
-			$$specs{'hdnBreakdown'.$qty_index} = '';
-			#$$specs{'hdnBreakdown'.$qty_index}  .= 'MinimumCharge: ' . sprintf( '%.2f', $minimumCharge ) . '<br/>';
+			$$specs{'hdnBreakdown'.$qty_index} .= signature_summary( $Imposition, $price );
 		} # end foreach signature
-$log->debug("$total: " . $$specs{"txtPrice$qty_index"} );
 		$$specs{"txtUnitPrice$qty_index"} = sprintf( $openprint::config{'UnitPriceFormat'}, $total * (1+$Project->markup()/100) );
 		$$specs{"txtPrice$qty_index"} = sprintf( $openprint::config{'ProjectMoneyFormat'}, $total * (1+$Project->markup()/100) );
 	} # end foreach qty_index
