@@ -635,6 +635,7 @@ $openprint::log->debug("Adding special colour for $colour");
 	} # end if
 
 	$project{ProjectSpecs} = openprint::service::get_specs_ref( $Project, $$services{''}[0] );
+	openprint::Estimating::Imposition::init( $Project );
 
 	return \%project;
 } # end sub setup_project

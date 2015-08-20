@@ -41,6 +41,28 @@ sub neccessary {
 	return 0;
 } # end sub neccessary
 
+my $MRService;
+my $ServiceService;
+my $SteppingService;
+my $PageChargeService;
+
+sub init {
+	my ( $Project ) = @_;
+	my $type_name = $Project->Type()->name();
+
+	$MRService = openprint::Service->find_one( name=>'ImpositionMakeReady'.$type_name );
+	$MRService = openprint::Service->find_one( name=>'ImpositionMakeReady' ) if ! $MRService;
+
+	$ServiceService = openprint::Service->find_one( name=>'Imposition'.$type_name );
+	$ServiceService = openprint::Service->find_one( name=>'Imposition' ) if ! $ServiceService;
+
+	$SteppingService = openprint::Service->find_one( name=>'Stepping Charge'.$type_name );
+	$SteppingService = openprint::Service->find_one( name=>'Stepping Charge' ) if ! $SteppingService;
+
+	$PageChargeService = openprint::Service->find_one( name=>'Page Charge'.$type_name );
+	$PageChargeService = openprint::Service->find_one( name=>'Page Charge' ) if ! $PageChargeService;
+}
+
 sub signature_calc {
 	my ( $Project, $Imposition, $previous_forms, $qty_index ) = @_;
 
@@ -49,65 +71,60 @@ sub signature_calc {
 	my $Press = $Imposition->Press();
 
 	my %ImpositionMakeReady;
-	my $Service = openprint::Service->find_one( name=>'ImpositionMakeReady'.$Project->Type()->name() );
-	$Service = openprint::Service->find_one( name=>'ImpositionMakeReady' ) if ! $Service;
-	if ( $Service ) {
-		%ImpositionMakeReady = $Service->get_price( undef, $Press );
-	} # end if
-	if ( %ImpositionMakeReady ) {
-		if ( $ImpositionMakeReady{units} eq 'per form' ) {
-	#$openprint::log->debug("Make Ready Per Form " . ($$specs{'PreviousForms'.$qty_index}+1) );
-			%ImpositionMakeReady = $Service->get_price( scalar @{$previous_forms} + 1, $Press );
-		} else {
-			
+	if ( $MRService ) {
+		%ImpositionMakeReady = $MRService->get_price( undef, $Press );
+		if ( %ImpositionMakeReady ) {
+			if ( $ImpositionMakeReady{units} eq 'per form' ) {
+#$openprint::log->debug("Make Ready Per Form " . ($$specs{'PreviousForms'.$qty_index}+1) );
+				%ImpositionMakeReady = $MRService->get_price( scalar @{$previous_forms} + 1, $Press );
+			} else {
+
+			} # end if
+		} elsif(DEBUG) {
+			$openprint::log->error("No price found for " . $MRService->name() );
 		} # end if
-	} elsif(DEBUG) {
-		$openprint::log->error("No price found for " . $Service->name() );
+		if ( DEBUG ) {
+			$openprint::log->debug("MR Price is $ImpositionMakeReady{Price}");
+		}
 	} # end if
-if ( DEBUG ) {
-	$openprint::log->debug("MR Price is $ImpositionMakeReady{Price}");
-}
 
 	$price{MakeReady} = \%ImpositionMakeReady;
 	$price{Total} = $ImpositionMakeReady{Price};
 
 	my %ImpositionCharge;
-	$Service = openprint::Service->find_one( name=>'Imposition'.$Project->Type()->name() );
-	$Service = openprint::Service->find_one( name=>'Imposition' ) if ! $Service;
 
-	%ImpositionCharge = $Service->get_price( undef, $Press);
-	if ( %ImpositionCharge ) {
-		if ( $ImpositionCharge{'units'} eq 'per page' ) {
-			%ImpositionCharge = $Service->get_price( $Imposition->pages(),$Press);
-			$price{Total} += $ImpositionCharge{Price} * $Imposition->pages();
-		} elsif ( $ImpositionCharge{'units'} eq 'per square inch of object' ) {
-			%ImpositionCharge = $Service->get_price( $Imposition->layout_area(),$Press);
-			$price{Total} += $ImpositionCharge{Price} * $Imposition->object_width() * $Imposition->object_height();
-		} elsif ( $ImpositionCharge{'units'} eq 'per square inch of layout' ) {
-			%ImpositionCharge = $Service->get_price( $Imposition->layout_area(),$Press);
-			$price{Total} += $ImpositionCharge{Price} * $Imposition->layout_area();
-		} else {
-			%ImpositionCharge = $Service->get_price( $Imposition->imposition(),$Press);
-			$price{Total} += $ImpositionCharge{Price} * $Imposition->imposition();
+	if ( $ServiceService ) {
+		%ImpositionCharge = $ServiceService->get_price( undef, $Press);
+		if ( %ImpositionCharge ) {
+			if ( $ImpositionCharge{'units'} eq 'per page' ) {
+				%ImpositionCharge = $ServiceService->get_price( $Imposition->pages(),$Press);
+				$price{Total} += $ImpositionCharge{Price} * $Imposition->pages();
+			} elsif ( $ImpositionCharge{'units'} eq 'per square inch of object' ) {
+				%ImpositionCharge = $ServiceService->get_price( $Imposition->layout_area(),$Press);
+				$price{Total} += $ImpositionCharge{Price} * $Imposition->object_width() * $Imposition->object_height();
+			} elsif ( $ImpositionCharge{'units'} eq 'per square inch of layout' ) {
+				%ImpositionCharge = $ServiceService->get_price( $Imposition->layout_area(),$Press);
+				$price{Total} += $ImpositionCharge{Price} * $Imposition->layout_area();
+			} else {
+				%ImpositionCharge = $ServiceService->get_price( $Imposition->imposition(),$Press);
+				$price{Total} += $ImpositionCharge{Price} * $Imposition->imposition();
+			} # end if
 		} # end if
-	} # end if
+	} # end if SErviceService
 	$price{Price} = \%ImpositionCharge;
 
 	my %SteppingCharge;
-	if ( ! (%SteppingCharge = openprint::service::get_price_object( 'Stepping Charge'.$Project->Type()->name(), undef, $Press) ) ) {
-		%SteppingCharge = openprint::service::get_price_object( 'Stepping Charge', undef, $Press);
-	} # end if
-	if ( %SteppingCharge ) {
-		$SteppingCharge{Total} = $SteppingCharge{Price} * $Imposition->imposition();
-		$price{'Stepping Charge'} = \%SteppingCharge;
-		$price{Total} += $SteppingCharge{Total};
+	if ( $SteppingService ) {
+		%SteppingCharge = $SteppingService->get_price( undef, $Press );
+		if ( %SteppingCharge ) {
+			$SteppingCharge{Total} = $SteppingCharge{Price} * $Imposition->imposition();
+			$price{'Stepping Charge'} = \%SteppingCharge;
+			$price{Total} += $SteppingCharge{Total};
+		} # end if
 	} # end if
 
-   if ( $Imposition->pages() ) {
-		my %PageCharge;
-		if ( ! ( %PageCharge = openprint::service::get_price_object( 'Page Charge'.$Project->Type()->name(), $Imposition->pages(), $Press) ) ) {
-			%PageCharge = openprint::service::get_price_object( 'Page Charge', $Imposition->pages(), $Press );
-		} # end if
+   if ( $Imposition->pages() and $PageChargeService ) {
+		my %PageCharge = $PageChargeService->get_price( $Imposition->pages(), $Press );
 		if ( %PageCharge ) {
 			if ( $PageCharge{units} eq 'per page' ) {
 				$PageCharge{Total} = $PageCharge{Price} * $Imposition->pages();
@@ -134,7 +151,7 @@ $openprint::log->debug("Imposition calc: @_");
 
 	my $Project = new openprint::Project( $project_index );
 	#my $services = $Project->services();
-
+	init( $Project );
 	my @signatures = $Project->signatures();
 $openprint::log->debug("Signtures: @signatures");
 
