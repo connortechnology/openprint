@@ -54,7 +54,12 @@
 						<input name="company_filter" class="filter" type="text" oninput="filter_companies('company_id', { name: this.value,selected_id: get_ddm_value($('company_id')) } );" />
 						<select id="company_id" name="company_id" onchange="new Ajax.Updater('created_by', '/includes/_users.html', { parameters: { company_id: get_ddm_value(this) } } );">
 							<option value=""> select </option>
-							<? echo ( make_drop_down( openprint::Company->dropdown( 'last_article_id is null'=>0 ), $$variable{Article}->company_id() ? $$variable{Article}->company_id() : $session{company_id} ); ) ?>
+							<? echo ( 
+my $companies = openprint::Company->dropdown( 'last_article_id is null'=>0 );
+if ( ! @{$companies} ) {
+	$companies = openprint::Company->dropdown( );
+}
+make_drop_down( $companies, $$variable{Article}->company_id() ? $$variable{Article}->company_id() : $session{company_id} ); ) ?>
 						</select>
 					</li>
 <? else ( sets::isin( $session{user_type}, ['E','A'] ) ) ?>
