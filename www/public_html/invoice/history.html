@@ -85,21 +85,12 @@
 		<div class="rightColumn">
 			<ul>
 			<li><label>Paid?</label>
-				<input type="radio" id="paid_1" name="paid" value="1" <? echo ( checked( $session{'/invoice/history.html?paid'} eq '1' ); ) ?> onclick="load_invoices(this.form);" />
-				<label class="radio" for="paid_1">Yes</label>
-				<input type="radio" id="paid_0" name="paid" value="0" <? echo ( checked( $session{'/invoice/history.html?paid'} eq '0' ); ) ?> onclick="load_invoices(this.form);" />
-				<label class="radio" for="paid_0">No</label>
-				<input type="radio" id="paid_2" name="paid" value="2" <? echo ( checked( $session{'/invoice/history.html?paid'} eq '2' ); ) ?> onclick="load_invoices(this.form);" />
-				<label class="radio" for="paid_2">Both</label>
+				<? echo ( radio( 'paid', [ '1','Yes','0','No','','Both'], $session{'/invoice/history.html?paid'}, { onclick="load_invoices(this.form);" } ); ) ?>
 			</li>
 			<li><label>Bad Debt?</label>
-				<input type="radio" id="bad_debt_1" name="bad_debt" value="1" <? echo ( checked( $session{'/invoice/history.html?bad_debt'} eq '1' ); ) ?> onclick="load_invoices(this.form);" />
-				<label class="radio" for="bad_debt_1">Yes</label>
-				<input type="radio" id="bad_debt_0" name="bad_debt" value="0" <? echo ( checked( $session{'/invoice/history.html?bad_debt'} eq '0' ); ) ?> onclick="load_invoices(this.form);" />
-				<label class="radio" for="bad_debt_0">No</label>
-				<input type="radio" id="bad_debt_2" name="bad_debt" value="2" <? echo ( checked( $session{'/invoice/history.html?bad_debt'} eq '2' ); ) ?> onclick="load_invoices(this.form);" />
-				<label class="radio" for="bad_debt_2">Both</label>
+				<? echo ( radio( 'bad_debt', [ '1','Yes','0','No','','Both'], $session{'/invoice/history.html?bad_debt'}, { onclick="load_invoices(this.form);" } ); ) ?>
 			</li>
+			<li><label>Contains Product</label><? echo ( ssi::select( openprint::Product->dropdown(order=>'lower(name)'), $session{$r->uri().'?product_id'}, { name=>'product_id', onchange=>'load_invoices(this.form);',prepend=>['','All'] } ); ) ?></li>
 			</ul>
 		</div>
 		<br class="spacer"/>
