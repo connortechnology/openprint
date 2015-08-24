@@ -1249,13 +1249,15 @@ $openprint::log->debug(qq`Wrong imposition: $$specs{"FoldImposition-$form-$qty_i
 									( $pages ? ( pages			=>	$pages ) : () ),
 									) if $$specs{"FoldType-$form-$qty_index-$index"};
 						if ( $Fold ) {
-							$openprint::log->debug("found the fold trying generic") if DEBUG;
+							$openprint::log->debug("found the fold trying generic runspeed is $$Fold{runspeed}") if DEBUG;
+							$$Fold{runspeed} = $$specs{"FoldRunspeed-$form-$qty_index-$index"} if $$specs{"FoldRunspeed-$form-$qty_index-$index"};
 						} else {
 							$openprint::log->debug("did not found the fold trying really generic");
 							$Fold = new openprint::Fold();
 							$$Fold{equipment_id} = $$Equipment{id};
 							$$Fold{pages} = $pages if $pages;
 							$$Fold{type} = $$specs{"FoldType-$form-$qty_index-$index"};
+
 							$$Fold{runspeed} = $$specs{"FoldRunspeed-$form-$qty_index-$index"} if $$specs{"FoldRunspeed-$form-$qty_index-$index"};
 						} # end if
 						my $FI = $SignatureImposition->copy();
@@ -1328,6 +1330,8 @@ $openprint::log->debug(qq`Wrong imposition: $$specs{"FoldImposition-$form-$qty_i
 				my $impo_qty = $Imposition->quantity();
 				my $imposition = $$Imposition{imposition};
 				my $runspeed = int($Fold->runspeed($$Paper{gsm}));
+$openprint::log->debug("Resulting fold: " . $Fold->to_string() );
+
 
 				if ( $$Fold{undesired} ) {
 					$comparison_cost += 1000;
