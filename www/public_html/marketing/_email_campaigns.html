@@ -1,0 +1,30 @@
+<?include('/includes/error_reporting.html')?>
+<table class="List sortable">
+	<tr>
+		<th class="name">Name</th><th class="DateTime">Last Run</th><th class="DateTime">Next Run</th><th class="active">Active</th>
+	</tr>
+	<? echo (
+		my $html;
+		my $rowclass;
+		foreach my $Campaign ( openprint::EmailCampaign->find(
+				( $session{'/marketing/email_campaigns.html?deleted'} ne '' ? (deleted=>$session{'/marketing/email_campaigns.html?deleted'}):(deleted=>[0,1]) ),
+				order => 'lower(name)' ) ) {
+			$html .= sprintf(q`
+			<tr%6$s>
+				<td class="name"><a href="email_campaign.html?campaign_id=%1$d">%2$s</a></td>
+				<td class="DateTime"><a href="email_campaign.html?campaign_id=%1$d">%3$s</a></td>
+				<td class="DateTime"><a href="email_campaign.html?campaign_id=%1$d">%4$s</a></td>
+				<td class="active"><a href="email_campaign.html?campaign_id=%1$d">%5$s</a></td>
+			</tr>
+`, $Campaign->id(), $Campaign->name(),
+$Campaign->lastrun() ? Date::Format::time2str( $config{'DateTimeFormat'}, Date::Parse::str2time( $Campaign->lastrun() ) ) : 'never',
+$Campaign->nextrun() ? Date::Format::time2str( $config{'DateTimeFormat'}, Date::Parse::str2time( $Campaign->nextrun() ) ) : 'never',
+$Campaign->active(), $rowclass );
+			$rowclass = $rowclass ? '' : ' class="colRow"';
+		} # end foreach Campaign
+		return $html;
+	) ?>
+</table>
+<p class="buttons">
+<? echo ( button( 'New', { href=>'email_campaign.html' } ); ) ?>
+</p>

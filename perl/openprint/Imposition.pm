@@ -40,6 +40,7 @@ my @fields = (
 	'Folds', 'Fold',
 	'runspeed',
 	'impressions',
+	'equipment_id', 'Equipment',
 );
 
 # spread_cols and spread_rows are oriented identically to the imposition
@@ -180,10 +181,10 @@ if ( 0 ) {
 				#$$self{layout_width} = $$self{spread_columns} * $$self{layout_width};
 				#$$self{layout_height} = $$self{spread_rows} * $$self{layout_height};
 			#} # end if
-	#} else {
-#$openprint::log->debug("optimise $name" . ( @_ > 1 ? 'set to ' . $_[1] : '' ) );
-		} # end if
-	} # end if
+	} elsif ( DEBUG ) {
+$openprint::log->debug("optimise $name" . ( @_ > 1 ? 'set to ' . $_[1] : '' ) );
+		} # end if isin whatever fields
+	} # end if @_ > 1
 	return $_[0]{$name};
 } # end sub AUTOLOAD
 
@@ -700,6 +701,20 @@ sub sides {
 	$_[0]{sides} = $_[1] if @_ > 1;
 	return $_[0]{sides};
 } # end sub sides
+
+sub Equipment {
+	if ( @_ > 1 ) {
+		$_[0]{Equipment} = $_[1];
+		$_[0]{equipment_id} = $_[0]{Equipment}{id};
+	}
+	if ( ! $_[0]{Equipment} ) {
+my ( $caller, undef, $line ) = caller;
+		$openprint::log->error("No Equipment in Imposition:Press from $caller : $line");
+		$_[0]{Equipment} = new openprint::Equipment();
+	} # end if
+	return $_[0]{Equipment};
+} # end sub Equipment
+
 sub Press { 
 	$_[0]{Press} = $_[1] if @_ > 1;
 	if ( ! $_[0]{Press} ) {

@@ -107,6 +107,8 @@ function calc( formName, force, options ) {
 			h.unset(pair.key);
 		if ( pair.key == 'btnFunction' ) 
 			h.unset(pair.key);
+		if ( pair.key == 'alert' ) 
+			h.unset(pair.key);
 	});
 			new Ajax.Request( '/main/project/_calc.json', { method: 'post', parameters: h, evalScripts: true } );
 		} // end if

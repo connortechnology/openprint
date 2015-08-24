@@ -46,7 +46,7 @@
 			<li>
 				<label>Project #</label>
 				<? echo ( join("\n",
-					input( type=>'cardinal', id=>'ProjectID', name=>'ProjectID', onkeydown=>'if(event.keyCode==13){load_projects();}', value=>$param{ProjectID} ),
+					input( type=>'text', id=>'ProjectID', name=>'ProjectID', onkeydown=>'if(event.keyCode==13){load_projects();};', value=>$param{ProjectID}, pattern=>'[0-9%]*' ),
 					button( 'Go1', { onclick=>q`load_projects();`, text=>'Go' } ), 
 				); ) ?>
 			</li>

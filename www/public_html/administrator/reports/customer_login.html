@@ -15,7 +15,7 @@ Choose report criteria and click show results. You may the download the the resu
 			<select name="salesrep_id" size="1">
 				<option value="">All Employees</option>
 <? echo (
-    make_drop_down( [ ( 'None','Not Assigned' ), map { $_->id(), $_->name() } openprint::User->find( type=>['E','A'], order=>'lower(firstname),lower(lastname)', 'usergroup any'=>'Sales' ) ], $session{'/administrator/reports/customer_login.html?salesrep_id'} );
+    make_drop_down( [ ( 'None','Not Assigned' ), map { $_->id(), $_->name() } openprint::User->find( type=>['E','A'], company_id=>$config{owner_id}, 'usergroup any'=>'Sales' ) ], $session{'/administrator/reports/customer_login.html?salesrep_id'} );
 ) ?>
 			</select>
 		</li>

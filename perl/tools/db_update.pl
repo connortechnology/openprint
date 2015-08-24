@@ -3806,6 +3806,19 @@ if ( ! sets::isin( 'page_settings', \@tables ) ) {
 		$dbh->do('ALTER TABLE page_settings ADD message TEXT');
 	} # end if
 }
+my $data = 0;
+if ( sets::isin( 'emailcampaigns', \@tables ) ) {
+	my $data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='emailcampaigns'", 'column_name');
+	if ( ! exists $$data{deleted} ) {
+		print "Adding deleted to email_campaigns\n";
+		$dbh->do('ALTER TABLE emailcampaigns ADD deleted BOOLEAN NOT NULL default false');
+	} # end if
+} else {
+	$_ = misc::load_file( $log, q{../openprint/sql/EmailCampaigns.sql});
+	foreach my $st ( split(';', $_ ) ) {
+		$dbh->do($st);
+	} # end foreach
+} # end if
 print "Finished\n";
 1;
 __END__

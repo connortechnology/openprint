@@ -204,7 +204,7 @@ sub _customer_login {
 				order   =>  'lower(name)',
 		);
 		if ( $session{'/administrator/reports/customer_login.html?salesrep_id'} eq 'None' ) {
-			$sql{'salesrep_id not in'} = [ map { $_->user_id() } openprint::User->find( type=>['E','A'], 'usergroup any'=>'Sales' ) ];
+			$sql{'salesrep_id not in'} = [ map { $_->user_id() } openprint::User->find( company_id=>$config{owner_id}, type=>['E','A'], 'usergroup any'=>'Sales' ) ];
 		} elsif ( $session{'/administrator/reports/customer_login.html?salesrep_id'} ) {
 			$sql{salesrep_id} = $session{'/administrator/reports/customer_login.html?salesrep_id'};
 		} # en dif
@@ -224,7 +224,7 @@ sub CustomerServiceReps {
 	my $date_start = sprintf('%.4d-%.2d-%.2d', @session{map { $r->uri().'?date_start_'.$_ } ( 'year','month','day' ) } ) if Date::Calc::check_date( @session{map { $r->uri().'?date_start_'.$_ } ( 'year','month','day' ) } );
 	my $date_end = sprintf('%.4d-%.2d-%.2d', @session{map { $r->uri().'?date_end_'.$_ } ( 'year','month','day' ) } ) if Date::Calc::check_date( @session{map { $r->uri().'?date_end_'.$_ } ( 'year','month','day' ) } );;
  
-	$variable{Employees} = openprint::User->dropdown(type=>['E','A'],order=>'lower(firstname),lower(lastname)', 'usergroup any'=>'Sales', web_active=>'Y' );
+	$variable{Employees} = openprint::User->dropdown(company_id=>$config{owner_id}, type=>['E','A'],order=>'lower(firstname),lower(lastname)', 'usergroup any'=>'Sales', web_active=>'Y' );
 	$variable{ddmEmployees} = ssi::make_drop_down( $variable{Employees}, $param{'ddmEmployees'} );
 
 	my $estimator = $param{ddmEstimator};
@@ -296,7 +296,7 @@ sub order_details {
 		
 		my $error = $Payment->save({
 				'order_id'		=>	$order_id,
-				'recipient_id'	=>	new openprint::User( $session{'user_id'} )->company_id(), 
+				'recipient_id'	=>	$openprint::User->company_id(), 
 				'payor_id'		=>	$Order->company_id(),
 				'amount'		=>	$param{'Amount'},
 				'method'		=>	'Manual',
@@ -364,7 +364,7 @@ sub yearly_sales {
 		} elsif ( $param{'salesrep_id'} ) {
 			@csr_ids = ( $param{'salesrep_id'} );
 		} else {
-			@csr_ids = map { $_->id() } openprint::User->find('type'=>['E','A'], 'usergroup'=>'Sales', 'order'=>'lower(firstname),lower(lastname)');
+			@csr_ids = map { $_->id() } openprint::User->find( company_id=>$config{owner_id}, type=>['E','A'], usergroup=>'Sales', order=>'lower(firstname),lower(lastname)');
 		} # end if
 
 		my ( $y, $m, $d ) = Date::Calc::Today();
@@ -385,7 +385,7 @@ sub yearly_sales {
 
 			my @Companies = openprint::Company->find('salesrep_id'=>$csr_id, 'order'=>'lower(name)');
 			foreach my $Company ( @Companies ) {
-				my $Contact = openprint::User->find_one('company_id'=>$Company->id(), 'administrator'=>1, 'web_active'=>1,'order'=>'id');
+				my $Contact = openprint::User->find_one( company_id=>$Company->id(), 'administrator'=>1, 'web_active'=>1,'order'=>'id');
 				$Contact = openprint::User->find_one('company_id'=>$Company->id(), 'web_active'=>1, 'order'=>'id') if ! $Contact;
 				$Contact = openprint::User->find_one('company_id'=>$Company->id(), 'order'=>'id') if ! $Contact;
 				$Contact = new openprint::User() if ! $Contact;

@@ -7,9 +7,9 @@
 	<fieldset class="filters"><legend>Report Criteria</legend>
 		 <p>
 			 <label>Ordered On</label>
-			<? echo ( date_select_session( '/administrator/reports/yearly_sales.html', 'ordered_on_start', { 'fields' => 'year' } ); ) ?>
+			<? echo ( date_select_session( '/administrator/reports/yearly_sales.html', 'ordered_on_start', { fields => 'year' } ); ) ?>
 			to 
-			<? echo ( date_select_session( '/administrator/reports/yearly_sales.html', 'ordered_on_end', { 'fields' => 'year' } ); ) ?>
+			<? echo ( date_select_session( '/administrator/reports/yearly_sales.html', 'ordered_on_end', { fields => 'year' } ); ) ?>
 		</p>
 		<? if ( $session{'user_type'} eq 'A' or openprint::usergroup::is_user_in( ['Sales Admin','Reporting'], $session{'user_id'} ) ) ?>
 		<p>
@@ -17,7 +17,7 @@
 			<select name="salesrep_id" size="1">
 			<? echo (
 				my @options = ( '', 'All' );
-				push @options, map { $_->id(), $_->name() } openprint::User->find( type=>['E','A'], 'usergroup any'=>'Sales', order=>'lower(firstname),lower(lastname)');
+				push @options, map { $_->id(), $_->name() } openprint::User->find( type=>['E','A'], company_id=>$config{owner_id}, 'usergroup any'=>'Sales' );
 				make_drop_down( \@options, $session{'/administrator/reports/yearly_sales.html?salesrep_id'} );
 			) ?>
 

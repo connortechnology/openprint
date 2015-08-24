@@ -326,7 +326,7 @@ $openprint::log->debug("Getfile");
 			$variable{'QTYIndex'} = $variable{'OrderedQuantityIndex'};
 			$variable{'DocketNumber'} = $variable{'Project'}->docket();
 
-			$variable{'Employee'} = new openprint::User( $openprint::session{'user_id'} )->name();
+			$variable{'Employee'} = $openprint::User->name();
 			
 			if ( $filename eq 'proofs.html' or $filename eq 'FilmStripping.html' ) {
 				foreach my $signature_service_index ( $variable{'Project'}->signatures() ) {
