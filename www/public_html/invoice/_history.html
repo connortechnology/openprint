@@ -34,6 +34,7 @@
 			) : (
 				( invoicee_id	=>	$session{company_id} ),
 			) ),
+			( $session{'/invoice/history.html?product_id'} ? ( 'product_id any' => $session{'/invoice/history.html?product_id'} ) : () ),
 			order				=> 'created_on',
 			) ) {
 			if ( $session{'/invoice/history.html?paid'} ne '' ) {

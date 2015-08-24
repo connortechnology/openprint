@@ -58,6 +58,7 @@ $serial = 'invoices_id_seq';
 %find_fields = (
 	po		=>	'(SELECT po FROM invoiced_products WHERE invoiced_products.invoice_id = invoices.id)',
 	sent_on	=>	'(SELECT created_on FROM invoice_logs WHERE invoice_id=invoices.id LIMIT 1)',
+	product_id	=>	'(SELECT product_id FROM invoiced_products WHERE invoice_id=invoices.id)',
 );
 
 %transforms = (

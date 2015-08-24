@@ -272,6 +272,10 @@ if ( ! sets::isin( 'photos_in_albums', \@tables ) ) {
 		$dbh->do( 'ALTER TABLE photos_in_albums DROP CONSTRAINT photos_in_albums_pkey');
 		$dbh->do( 'ALTER TABLE photos_in_albums ADD PRIMARY KEY (id)' );
 	} # end if
+	if ( ! exists $$data{sort} ) {
+		$dbh->do('ALTER TABLE photos_in_albums ADD sort INTEGER');
+		print "Adding sort to photos_in_albums\n";
+	}
 }
 if ( ! sets::isin( 'video_albums', \@tables ) ) {
     $dbh->do( misc::load_file( $log, '../openprint/sql/Video_Albums.sql' ) );

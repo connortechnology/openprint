@@ -149,7 +149,7 @@ sub _history {
 		( map { 'created_on_end_'.$_ } ( 'year','month','day' ) ),
 		( map { 'due_on_start_'.$_ } ( 'year','month','day' ) ),
 		( map { 'due_on_end_'.$_ } ( 'year','month','day' ) ),
-		'paid','company_id','bad_debt') );
+		'paid','company_id','bad_debt','product_id') );
 } # end sub _history
 
 sub edit {

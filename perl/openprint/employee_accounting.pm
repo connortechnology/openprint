@@ -500,7 +500,7 @@ $log->debug("Calcing amount: $param{amount}");
 		$variable{ExternalRedirect} = '/employee/accounting/expenses.html';
 
 		# Now update the session for expenses so that we always show the entry we just saved.
-		foreach my $key ( 'company_id', 'recipient_id', 'account_id' ) {
+		foreach my $key ( 'company_id', 'recipient_id', 'account_id', 'category_id' ) {
 			if ( $session{'/employee/accounting/expenses.html?'.$key} and ( $session{'/employee/accounting/expenses.html?'.$key} != $$Expense{$key} ) ) {
 				delete $session{'/employee/accounting/expenses.html?'.$key};
 			} # end if

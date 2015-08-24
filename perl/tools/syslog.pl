@@ -11,6 +11,8 @@ require logger;
 require openprint;
 require openprint::Host;
 require Date::Parse;
+require DateTime;
+require DateTime::Format::Pg;
 
 use vars qw( $log $dbh %config );
 *log = \$openprint::log;
@@ -70,7 +72,6 @@ configuration::from_file($$opts{config});
 configuration::merge($opts);
 
 @SIG{qw(HUP)} = \&sig_handler;
-
 my @re = (
 		'^(\w{3} [ :0-9]{11}) [\._a-zA-Z0-9\-]+ sshd\[[0-9]+\]: pam_\w+\(sshd:auth\): authentication failure; logname= uid=0 euid=0 tty=ssh ruser= rhost=(?<IP>[\._a-zA-Z0-9\-]+)\s*$',
 		'^(\w{3} [ :0-9]{11}) [\._a-zA-Z0-9\-]+ sshd\[[0-9]+\]: pam_\w+\(sshd:auth\): authentication failure; logname= uid=0 euid=0 tty=ssh ruser= rhost=(?<IP>[\._a-zA-Z0-9\-]+)\s+user\=\w+$',
@@ -93,7 +94,7 @@ my @re = (
 		'^(\w{3} [ :0-9]{11}) [\._a-zA-Z0-9\-]+ dovecot: pop3-login: Aborted Login \(auth failed, [0-9]+ attempts in [0-9]+ secs\): user=<[a-zA-Z@\.0-9]*>, method=PLAIN, rip=(?<IP>[\.0-9]+), lip=[\.0-9]+, session=<[^>]+$',
 		q`^(\w{3} [ :0-9]{11}) [\._a-zA-Z0-9\-]+ named\[[0-9]+\]: client (?<IP>[0-9.]+)#[0-9]+: (view [A-Za-z0-9]+: )?query \(cache\) '[./[:alnum:]]+' denied$`,
 		q`^(\w{3} [ :0-9]{11}) [\._a-zA-Z0-9\-]+ pam-abl\[[0-9]+\]: Blocking access from (?<IP>[0-9.]+) to service sshd, user root$`,
-		q`^(\w{3} [ :0-9]{11}) [\._a-zA-Z0-9\-]+ postfix\/smtpd\[[0-9]+\]: warning: unknown\[(?<IP>[0-9.]+)\]: SASL LOGIN authentication failed: authentication failure$`,
+		q`^(\w{3} [ :0-9]{11}) [\._a-zA-Z0-9\-]+ postfix\/smtpd\[[0-9]+\]: warning: [\.\-A-Za-z0-9]+\[(?<IP>[0-9.]+)\]: SASL LOGIN authentication failed: authentication failure$`,
 );
 
 
@@ -264,18 +265,21 @@ $log->debug("# of entries in Object_name_cache: " . keys %{$openprint::Object::n
 					} # end if      
 					$host_counts{$ip} = $Host;
 				} # end if
+						my $parser = 'DateTime::Format::Pg';
+						my $updated_on_dt = $parser->parse_datetime( $host_counts{$ip}{updated_on} );
+						my $now_dt = DateTime->now( time_zone=>$config{Timezone} );
+
 				if ( $host_counts{$ip}{updated_on} and ! $host_counts{$ip}{updated_on_seconds} ) {
-					$host_counts{$ip}{updated_on_seconds} = Date::Parse::str2time( $host_counts{$ip}{updated_on} );
+					$host_counts{$ip}{updated_on_seconds} = $updated_on_dt->epoch();
+					$log->debug("Covnerting  $host_counts{$ip}{updated_on} to $host_counts{$ip}{updated_on_seconds} seconds") if $config{debug};
 				}
-				my $last_seen = $host_counts{$ip}{updated_on_seconds};
-				my $occurrence = Date::Parse::str2time( $when );
 	#$log->warn("Last: $host_counts{$ip}{updated_on} => $last_seen, $when => $occurrence") if $host_counts{$ip};
-				if ( (!$last_seen) or ($last_seen < $occurrence) ) {
+				if ( DateTime->compare( $updated_on_dt, $now_dt ) <= 0 ) {
 					$host_counts{$ip}{count} += 1;
 					$host_counts{$ip}{update} = 1;
 					$changed = 1;
 				} else {
-					$log->debug( "Not counting because too old " . $host_counts{$ip}{updated_on} . " >= $when" ) if $config{debug};
+					$log->debug( "Not counting because too old " . $host_counts{$ip}{updated_on} . " >= $when " ) if $config{debug};
 				} # end if
 				last; # re
 			} # end if line matches re
