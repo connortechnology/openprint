@@ -159,7 +159,7 @@ sub calc {
 				or 
 				( $Equipment and $Equipment->specification('Require Press Proof') eq 'Y' ) 
 				or 
-				($Project->Company()->add_press_proofs()->value() eq 'Y' ) 
+				($_ = $Project->Company()->add_press_proofs() and $_->value() eq 'Y' ) 
 				) ) {
 				push @{$proof_indexes{$signature_index}}, 3;
 			} # end if
@@ -249,7 +249,7 @@ sub signature_calc {
 				or
 				( $openprint::config{'Add_Default_Press_Proof'} eq 'Y' ) 
 				or 
-				($Project->Company()->add_press_proofs()->value() eq 'Y' ) 
+				($_ = $Project->Company()->add_press_proofs() and $_->value() eq 'Y' ) 
 	   ) ) {
 		push @{$$indexes{$signature_index}}, 3;
 	} # end if
@@ -540,7 +540,7 @@ sub get_proof_specs {
 			if ( ( ! sets::isin( 3, $proof_indexes{$signature_index} )  ) and ( $$specs{RequirePressProofs} ne 'N' )  ) {
 				if ( ( $openprint::config{'Add_Default_Press_Proof'} eq 'Y' ) or ( $Equipment and $Equipment->specification('Require Press Proof') eq 'Y' ) 
 				or 
-				($Project->Company()->add_press_proofs()->value() eq 'Y' ) 
+				($_ = $Project->Company()->add_press_proofs() and $_->value() eq 'Y' ) 
 				) {
 					push @{$proof_indexes{$signature_index}}, 3;
 					$log->debug("Adding Press Proof");
