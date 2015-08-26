@@ -500,11 +500,14 @@ sub company_profiles {
 			( $index ) = sql::execute( $log, $dbh, 'SELECT id from Company WHERE strAccountNum=?',$param{'txtSearchAccountNum'}); 
 		} # end if 
 	} elsif ( $param{'btnFunction'} eq 'merge' ) {
-		if ( $openprint::param{'ddmCustomer'} == $openprint::param{'merge_company_id'} ) {
+		if ( ! $openprint::param{'ddmCustomer'} ) {
+			$variable{error} .= 'There must be a selected company to merge to.';
+		} elsif ( ! $openprint::param{'merge_company_id'} ) {
+			$variable{error} .= 'There must be a selected company to merge from.';
+		} elsif ( $openprint::param{'ddmCustomer'} == $openprint::param{'merge_company_id'} ) {
 			$variable{'error'} .= 'Choose a different company to merge into.';
 		} else {
 			my $ac = sql::start_transaction( $dbh );
-			my $Company = new openprint::Company( $index );
 			foreach my $type ( 'User','Order','Quote','Project', 'Claim', 'Log','Timetrack' ) {
 				require "openprint/$type.pm";
 				foreach ( "openprint::$type"->find( company_id=>$param{'merge_company_id'}) ) {
