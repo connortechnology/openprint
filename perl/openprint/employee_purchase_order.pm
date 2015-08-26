@@ -281,6 +281,7 @@ sub view {
 				$C->po_id( $New->id() );
 				$C->save();
 			} # end foreach
+			$New->update_notifications();
 			$New->save();
 			$variable{'information'} .= 'PO ' . $PO->id() . ' copied to PO ' . $New->id() .'<br/>';
 			my $L = new openprint::PurchaseOrder_Log();
@@ -296,21 +297,22 @@ sub view {
 					'reason'	=>	'Copied to PO '. $New->id(),
 					});
 			$PO = $New;
-		} # end if
-		if ( $PO->total() ) {
-			if ( $PO->can_authorize() ) {
-				$variable{error} .= $PO->save({
-						'authorized'	=> 1,
-						'authorized_on'	=> 'NOW()',
-						'authorized_by'	=> $session{user_id},
-						});
-			} else {
-				$variable{error} .= $PO->save({
-						'authorized'	=> 0,
-						'authorized_on'	=> undef,
-						'authorized_by'	=> undef,
-						});
-			} # end if 
+			if ( $PO->total() ) {
+				if ( $PO->can_authorize() ) {
+					$variable{error} .= $PO->save({
+							'authorized'	=> 1,
+							'authorized_on'	=> 'NOW()',
+							'authorized_by'	=> $session{user_id},
+							});
+				} else {
+					$variable{error} .= $PO->save({
+							'authorized'	=> 0,
+							'authorized_on'	=> undef,
+							'authorized_by'	=> undef,
+							});
+				} # end if 
+			} # end if
+			$variable{'ExternalRedirect'} = '/employee/purchase_order/view.html?po_id='.$PO->id();
 		} # end if
 	} elsif ( $param{'btnFunction'} eq 'AuthRequest' ) {
 		$variable{information} .= $PO->send_approval_required_notification();
@@ -470,18 +472,7 @@ $log->debug("Creating PO $$PO{id} from label $variable{error}");
 				reason	=>	$param{reason},
 				});
 		} # end if
-		my @companies = ( $PO->company_id(), $PO->supplier_id() );
-		my @notifications = $PO->notifications(); # returns user_ids
-		my @new_notifications = @notifications;
-		if ( $PO->is_FSC() or $PO->is_PEFC() ) {
-			@new_notifications = sets::union( @new_notifications, map { $PO->can_view( $_->User() ) ? $_->user_id() : () } openprint::User_Notification->find( type=>'FSC/PEFC Notifications', value=>'Yes', company_id=>\@companies ) );
-		} # end if
-		foreach my $type ( keys %types ) {
-			@new_notifications = sets::union( @new_notifications, map { $PO->can_view( $_->User() ) ? $_->user_id() : () } openprint::User_Notification->find( type=>'PO ' . $type . ' Notifications', value=>'Yes', company_id=>\@companies ) );
-		} # end foreach
-		if ( scalar @notifications != scalar @new_notifications ) {
-			$PO->notifications(\@new_notifications);
-		} # end if
+		$PO->update_notifications(\%types);
 		if ( ! $variable{error} ) {
 			if ( ! $param{po_id} ) {
 				$variable{ExternalRedirect} = '/employee/purchase_order/edit.html?po_id='.$PO->id();

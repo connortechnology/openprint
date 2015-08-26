@@ -245,7 +245,7 @@ sub send_to_vendor {
 		} # end if
 	} # end foreach Asset
 
-	$results .= 'PO ' . $$self{id} . ' emailed to the following recipients:<br/>';
+	$results .= 'PO ' . $$self{id} . ' emailed from ' . $From->email() . ' to the following recipients:<br/>';
 	$results .= $Email->send(
 			FROM	=> $From,
 			SUBJECT => 'Purchase Order ' . $self->id() . ' from ' . $From->Company()->name(),
@@ -398,6 +398,29 @@ sub notifications {
 	} # end if
 	return $$self{notifications} ? @{$$self{notifications}} : ();
 } # end sub notifications
+
+sub update_notifications {
+	my $PO = $_[0];
+	my $types;
+	if ( @_ > 1 ) {
+		$types = $_[1];
+	} else {
+		%{$types} = sets::union( map { $_->type() => 1 } $PO->Contents() );
+	}
+
+	my @companies = ( $PO->company_id(), $PO->supplier_id() );
+	my @notifications = $PO->notifications(); # returns user_ids
+		my @new_notifications = @notifications;
+	if ( $PO->is_FSC() or $PO->is_PEFC() ) {
+		@new_notifications = sets::union( @new_notifications, map { $PO->can_view( $_->User() ) ? $_->user_id() : () } openprint::User_Notification->find( type=>'FSC/PEFC Notifications', value=>'Yes', company_id=>\@companies ) );
+	} # end if
+	foreach my $type ( keys %{$types} ) {
+		@new_notifications = sets::union( @new_notifications, map { $PO->can_view( $_->User() ) ? $_->user_id() : () } openprint::User_Notification->find( type=>'PO ' . $type . ' Notifications', value=>'Yes', company_id=>\@companies ) );
+	} # end foreach
+	if ( scalar @notifications != scalar @new_notifications ) {
+		$PO->notifications(\@new_notifications);
+	} # end if
+} # end sub update_notifications
 
 sub Logs {
 	my ( $self ) = @_;
