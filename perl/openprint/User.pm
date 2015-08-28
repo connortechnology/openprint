@@ -113,7 +113,6 @@ sub save {
 	} # end if
 
 	my @changes = $self->changes( $params );
-	(new openprint::Log())->save({action=>'Save User', Object=>$self, note=>join('<br/>', @changes ) } );
 
 	if ( $params and $$params{type} and $$self{type} and ( $$params{'type'} ne $$self{'type'} ) and ( $$params{'type'} ne 'C' ) ) {
 # Notify someone
@@ -154,6 +153,7 @@ sub save {
 
 	my $error = $self->SUPER::save( $params );
 	return $error if $error;
+	(new openprint::Log())->save({action=>'Save User', Object=>$self, note=>join('<br/>', @changes ) } );
 
 	if ( exists $$params{'assistant_ids'} ) {
 		$self->assistant_ids( $$params{'assistant_ids'} );

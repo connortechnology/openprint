@@ -141,15 +141,17 @@ if ( 1 ) {
 					$html .= variable_substitution( \$fragment, $variable );
 				} # end foreach
 				$html .= '</table>';
-			} else { $html .= '&nbsp;';
+			} else { 
+				$html .= '&nbsp;';
 			} # end if imposition
 
-			$html .= '</div>';
+			$html .= '</div>'; # Column
 
 		} # end foreach qty_index
-	} # end foreach
 	$html .= '</li>';
-		$html .= '</ul>';
+	$html .= '</ul>';
+
+	} # end foreach sig
 	return $html;
 ) ?>
 			<ul>
