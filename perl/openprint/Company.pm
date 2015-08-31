@@ -74,6 +74,7 @@ $serial = 'companies_id_seq';
 	last_quoted_on	=>	'(SELECT MAX(dtmquotedate) FROM Quotes WHERE companyindex=companies.id)',
 	last_called_on	=>	'(SELECT MAX(date_time) FROM sales_logs WHERE company_id=companies.id)',
 	last_invoiced_on	=>	'(SELECT MAX(created_on) FROM invoices WHERE invoicee_id=companies.id)',
+	last_invoice_id	=>	'(SELECT MAX(id) FROM invoices WHERE invoicee_id=companies.id)',
 	credit_app_on	=>	'(SELECT MAX(dtmcreationdate) FROM creditapplications WHERE company_id=companies.id)',
 	marketing_category_id	=>	'(SELECT category_id FROM companies_in_marketing_categories WHERE company_id=companies.id)',
 	profile_field	=>	'(SELECT value FROM Company_Profiles WHERE company_id=companies.id AND field_id=?)',

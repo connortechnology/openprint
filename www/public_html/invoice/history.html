@@ -85,10 +85,10 @@
 		<div class="rightColumn">
 			<ul>
 			<li><label>Paid?</label>
-				<? echo ( radio( 'paid', [ '1','Yes','0','No','','Both'], $session{'/invoice/history.html?paid'}, { onclick="load_invoices(this.form);" } ); ) ?>
+				<? echo ( radio( 'paid', [ '1','Yes','0','No','','Both'], $session{'/invoice/history.html?paid'}, { onclick=>'load_invoices(this.form);' } ); ) ?>
 			</li>
 			<li><label>Bad Debt?</label>
-				<? echo ( radio( 'bad_debt', [ '1','Yes','0','No','','Both'], $session{'/invoice/history.html?bad_debt'}, { onclick="load_invoices(this.form);" } ); ) ?>
+				<? echo ( radio( 'bad_debt', [ '1','Yes','0','No','','Both'], $session{'/invoice/history.html?bad_debt'}, { onclick=>'load_invoices(this.form);' } ); ) ?>
 			</li>
 			<li><label>Contains Product</label><? echo ( ssi::select( openprint::Product->dropdown(order=>'lower(name)'), $session{$r->uri().'?product_id'}, { name=>'product_id', onchange=>'load_invoices(this.form);',prepend=>['','All'] } ); ) ?></li>
 			</ul>
