@@ -2181,7 +2181,7 @@ sub _available_paper {
 	ssi::save_params( '/employee/inventory/available_paper.html', 
 			'owner_id', 'manufacturer_id', 'brand_id', 'finish_id', 'colour_id', 'weight_id', 
 			'material_id','quality_id','group_id','condition_id',
-			'width','height','OrLarger', 'type', 'fsc_code', 'last_seen', 'location_id', 'unmatched' );
+			'width','height','OrLarger', 'type', 'fsc_code', 'last_seen', 'location_id', 'unmatched', 'exclude_press_feeds' );
 	$session{'/employee/inventory/available_paper.html?owner_id_exclude'} = $param{'owner_id_exclude'} if exists $param{'owner_id'};
 	$session{'/employee/inventory/available_paper.html?type'} = 'Roll' if ! $session{'/employee/inventory/available_paper.html?type'};
 	$session{'/employee/inventory/available_paper.html?OrLarger'} = $param{'OrLarger'};
