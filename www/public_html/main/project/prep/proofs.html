@@ -10,7 +10,7 @@
 			<? echo ( radio( 'RequireColourProofs', ['Y','Yes','N','No','A','Auto'], $$variable{'RequireColourProofs'}, { onclick=>'calc(this.form.name);', default=>'A' } ); ) ?>
 		</p>
 		<p><label>Do you require press proofs?</label>
-			<? echo ( radio( 'RequirePressProofs', ['Y','Yes','N','No','','Auto'], $$variable{'RequirePressProofs'}, { onclick=>'calc(this.form.name);', default=>($$variable{Project}->Company()->add_press_proofs()->value() : $$variable{Project}->Company()->add_press_proofs()->value() : '' ) } ); ) ?>
+			<? echo ( radio( 'RequirePressProofs', ['Y','Yes','N','No','','Auto'], $$variable{'RequirePressProofs'}, { onclick=>'calc(this.form.name);', default=>($$variable{Project}->Company()->add_press_proofs()->value() ? $$variable{Project}->Company()->add_press_proofs()->value() : '' ) } ); ) ?>
 		</p>
 		<!-- The rest is done for each qty -->
 		<? echo ( 
