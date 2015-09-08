@@ -1942,9 +1942,9 @@ sub _manifest_content {
 		my $MC = new openprint::ManifestContent();
 		if ( $$Skid{id} ) {
 # Now check for warnings
-			if ( my $otherMC = openprint::ManifestContent->find_one( skid_id=>$$Skid{id}) ) {
-				$variable{warning} .= 'Warning: Skid ' . $Skid->id(). ' is also on manifest '.$otherMC->Manifest()->name().'.';
-			} # end if
+			#if ( my $otherMC = openprint::ManifestContent->find_one( skid_id=>$$Skid{id}) ) {
+				#$variable{warning} .= 'Warning: Skid ' . $Skid->id(). ' is also on manifest '.$otherMC->Manifest()->name().'.';
+			#} # end if
 
 # Auto load data
 			my @SC = $Skid->Contents();
@@ -1965,6 +1965,7 @@ sub _manifest_content {
 				manufacturers_id	=>	$param{manufacturers_id},
 				docket		=>	$param{docket},
 				quantity	=>	Math::Round::nearest( 1, $param{quantity} ),
+				location_id	=>	$param{location_id},
 				} );
 		$variable{C} = $MC;
 		$variable{type_id} = $param{type_id};
@@ -2753,6 +2754,9 @@ sub _check_entries {
 	$variable{Check} = new openprint::Inventory_Check( $param{check_id} );
 }
 sub _check_entry_actions {
+}
+
+sub _select_stock {
 }
 
 1;
