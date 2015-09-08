@@ -162,6 +162,7 @@
 							$html .= '<td class="unprintable actions">';
 							if ( $openprint::User->email() =~ /iconnor/ ) {
 								$html .= sprintf('<a href="/main/project/view.html?ProjectIndex=%1$d&amp;calc=%2$d">Calc</a><br/>', $Project->id(), $ss_id );
+								$html .= sprintf(q`<a href="#" onclick="popup_window('/main/project/_service_dump.html', { project_id: %d, service_id: %d } );">Specs</a><br/>`, $Project->id(), $ss_id );
 							#} elsif ( $Project->Type()->url() ) {
 								#$html .= sprintf('<a href="/main/project/%3$s?ProjectIndex=%1$d&amp;ServiceIndex=%2$d">Edit</a><br/>', $Project->id(), $ss_id, $Project->Type()->url() );
 							} # end if
@@ -205,6 +206,7 @@
 					$html .= '<td class="unprintable actions">';
 					if ( $openprint::User->email() =~ /iconnor/ ) {
 						$html .= sprintf('<a href="/main/project/view.html?ProjectIndex=%1$d&amp;calc=%2$d">Calc</a><br/>', $Project->id(), $service_id );
+						$html .= sprintf(q`<a href="#" onclick="popup_window('/main/project/_service_dump.html', { project_id: %d, service_id: %d } );">Specs</a><br/>`, $Project->id(), $service_id );
 					} elsif ( $Project->Type()->url() ) {
 						$html .= sprintf('<a href="/main/project/%3$s?ProjectIndex=%1$d&amp;ServiceIndex=%2$d">Edit</a><br/>', $Project->id(), $service_id, $Project->Type()->url() );
 					} # end if
@@ -278,6 +280,7 @@
 						$html .= '<td class="unprintable actions">';
 						if ( $openprint::User->email() =~ /iconnor/ ) {
 							$html .= sprintf('<a href="/main/project/view.html?ProjectIndex=%1$d&amp;calc=%2$d">Calc</a><br/>', $Project->id(), $service_id );
+							$html .= sprintf(q`<a href="#" onclick="popup_window('/main/project/_service_dump.html', { project_id: %d, service_id: %d } );">Specs</a><br/>`, $Project->id(), $service_id );
 						} elsif ( $ServiceType->url() ) {
 							$html .= sprintf('<a href="/main/project/%3$s?ProjectIndex=%1$d&amp;ServiceIndex=%2$d">Edit</a><br/>', $Project->id(), $service_id, $ServiceType->url() );
 						} # end if

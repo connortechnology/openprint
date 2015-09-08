@@ -247,7 +247,7 @@ $I->display('In Stitching:') if DEBUG;
 			} # end if
 			$$specs{join('','txtSignatureQty',$I->pages(),'Page-',$qty_index)} += 1;
 			if ( $$sig_specs{Group} == 1 ) {
-				$openprint::log->debug("Not counting pocket due to it being cover. $form");
+				$openprint::log->debug("Not counting pocket due to it being cover. $form") if DEBUG;
 				next;
 			}
 			$pockets += 1;

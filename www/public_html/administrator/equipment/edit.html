@@ -87,7 +87,7 @@ function filter_onChange( element, id, selected ) {
 		</p>
 		<p class="buttons">
 			<input type="file" name="fileSpecifications"/>
-			<? echo ( join('',
+			<? echo ( join("\n",
 			button( 'Import', { onclick=>"f1.btnFunction.value='Import Specifications';f1.submit();", text=>'Import' } ),
 			button( 'Export', { onclick=>"f1.btnFunction.value='Export Specifications';f1.submit();", text=>'Export' } ),
 			); ) ?>
@@ -155,28 +155,19 @@ function filter_onChange( element, id, selected ) {
 			</p>
 			<p>
 				<label>Smart Scheduling</label>
-				<input type="radio" id="smartscheduling1" name="smartscheduling" value="1" <? echo ( ssi::checked( $$variable{'Equipment'}->smartscheduling() ); ) ?> />
-				<label class="radio" for="smartscheduling1">Yes</label>
-				<input type="radio" id="smartscheduling0" name="smartscheduling" value="0"  <? echo ( ssi::checked( ! $$variable{'Equipment'}->smartscheduling() ); ) ?> />
-				<label class="radio" for="smartscheduling0">No</label>
+				<? echo ( radio( 'smartscheduling', [ '1', 'Yes', '0', 'No' ], $$variable{'Equipment'}->smartscheduling() ); ) ?>
 			</p>
 	</div>
 	<? if ( $config{'JMFEnabled'} eq 'Y' ) ?>
 			<p>
 				<label>Use JMF</label>
-				<input type="radio" id="jmf_enabledtrue" name="jmf_enabled" value="true"  <? echo ( 'checked="checked"' if $$variable{'Equipment'}->jmf_enabled(); ) ?> />
-				<label class="radio" for="jmf_enabledtrue">Yes</label>
-				<input type="radio" id="jmf_enabledfalse" name="jmf_enabled" value="false"  <? echo ( 'checked="checked"' if ! $$variable{'Equipment'}->jmf_enabled(); ) ?> />
-				<label class="radio" for="jmf_enabledfalse">No</label>
+				<? echo ( radio( 'jmf_enabled', [ 'true', 'Yes', 'false', 'No' ], $$variable{'Equipment'}->jmf_enabled() ); ) ?>
 			</p>
 	<? endif ( $config{'JMFEnabled'} eq 'Y' ) ?>
 	<? if ( $config{'InstantGateEnabled'} eq 'Y' ) ?>
 			<p>
 				<label>Use InstantGate</label>
-				<input type="radio" id="instantgate_enabledtrue" name="instantgate_enabled" value="true"  <? echo ( 'checked="checked"' if $$variable{'Equipment'}->instantgate_enabled(); ) ?> onclick="$('CostCenter').show();" />
-				<label class="radio" for="instantgate_enabledtrue">Yes</label>
-				<input type="radio" id="instantgate_enabledfalse" name="instantgate_enabled" value="false"  <? echo ( 'checked="checked"' if ! $$variable{'Equipment'}->instantgate_enabled(); ) ?> onclick="$('CostCenter').hide();" />
-				<label class="radio" for="instantgate_enabledfalse">No</label>
+				<? echo ( radio( 'instantgate_enabled', [ 'true', 'Yes', 'false', 'No' ], $$variable{'Equipment'}->instantgate_enabled(), { onclick=>qq`if(this.value=='true'){$('CostCenter').show();}else{$('CostCenter').hide();};` } ); ) ?>
 			</p>
 	<? endif ( $config{'InstantGateEnabled'} eq 'Y' ) ?>
 	<? if ( $config{'InstantGateEnabled'} eq 'Y' or $config{'JDFEnabled'} eq 'Y' ) ?>
@@ -197,7 +188,7 @@ function filter_onChange( element, id, selected ) {
 				<label>Location</label>
 				<select id="location_id" name="location_id">
 					<option value="">select</option>
-					<? echo ( make_drop_down( openprint::Location->dropdown( order=>'lower(name)', type=>'place', 'parent_id is null'=>1), $$variable{'Equipment'}->location_id() ); ) ?>
+					<? echo ( make_drop_down( openprint::Location->dropdown( order=>'parent_id NULLS FIRST, lower(name)', type=>'place'), $$variable{'Equipment'}->location_id() ); ) ?>
 				</select>
 			</p>
 			<p>

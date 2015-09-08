@@ -60,23 +60,29 @@ sub configuration {
 		} # end if
 	} elsif ( $param{'btnFunction'} eq 'Save' ) {
 		foreach my $C ( Configuration->find() ) {
-			if ( ! exists $param{$$C{name}} ) {
+			my $name = $$C{name};
+			if ( $name =~ /%20/ ) {
+				$name =~ s/%20/ /g;
+				$C->save({name=>$name});
+			}
+			$name =~ s/ /%20/g;
+			if ( ! exists $param{$name} ) {
 				$log->error("No value in param for $$C{name}");
 				next;
 			} # end if
 
-			my $new_value = $param{$$C{name}};
+			my $new_value = $param{$name};
 			if ( $$C{type} eq 'list' ) {
 				$new_value = join(',', misc::trim( split(',', $new_value ) ) );
 			} # end if
 
-			my $name = $$C{name};
-			if ( $$C{name} ne Configuration->transform('name',$name) ) {
-$log->debug("Name change detected: $$C{name}");
-				$variable{error} .= $C->delete();
-				$C->description( $$C{name} ) if ! $C->description();
-				$variable{error} .= $C->save({value=>$new_value, name=>$$C{name},  });
-			} elsif ( $$C{value} ne $new_value ) {
+			#if ( $name ne Configuration->transform('name',$name) ) {
+#$log->debug("Name change detected: $$C{name} , wit");
+				#$variable{error} .= $C->delete();
+				#$C->description( $$C{name} ) if ! $C->description();
+				#$variable{error} .= $C->save({value=>$new_value, name=>$$C{name},  });
+			#} els
+			if ( $$C{value} ne $new_value ) {
 				$C->save({ value=>$new_value });
 			} else {
 				$log->debug("Value unchanged for $$C{name}: currnet: $$C{value} new: $param{$$C{name}}");
@@ -462,6 +468,10 @@ sub user_profiles {
 	$variable{'selectUserCategories'} = ssi::make_drop_down( \@available_categories, \@users_categories );
 
 	$session{$r->uri().'?company_id'} = $param{ddmCustomer};
+
+
+	ssi::setup_date_select( $r->uri, 'log_created_on_start', -31 );
+	ssi::setup_date_select( $r->uri, 'log_created_on_end', '' );
 
 } # end sub user_profiles
 

@@ -1330,7 +1330,7 @@ $openprint::log->debug(qq`Wrong imposition: $$specs{"FoldImposition-$form-$qty_i
 				my $impo_qty = $Imposition->quantity();
 				my $imposition = $$Imposition{imposition};
 				my $runspeed = int($Fold->runspeed($$Paper{gsm}));
-$openprint::log->debug("Resulting fold: " . $Fold->to_string() );
+$openprint::log->debug("Resulting fold: " . $Fold->to_string() ) if DEBUG;
 
 
 				if ( $$Fold{undesired} ) {
