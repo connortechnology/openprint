@@ -167,7 +167,7 @@ function apply_content( c_id ) {
 
 function manifest_onsubmit(form) {
 
-	var re = /^txtBrand-(\d+)$/;
+	var re = /^brand-(\d+)$/;
 	var fields_to_check = ['Manufacturer','Owner','Brand','Finish','Colour'];
 	for ( var i = 0, len = form.elements.length; i < len; i += 1 ) {
 		var matches = re.exec( form.elements[i].name );
@@ -176,14 +176,14 @@ function manifest_onsubmit(form) {
 			var type_id = matches[1];
 			for ( var field_index = 0; field_index < fields_to_check.length; field_index += 1 ) {
 				var field = fields_to_check[field_index];	
+				var field_lc = field.toLowerCase();
 			
-				var field_name = field+'-'+type_id;
 				if ( ! ( 
-					( form.elements['txt'+field_name] && ( form.elements['txt'+field_name].value != '' ) ) || 
-					( form.elements[field_name] && ( get_ddm_value( form.elements[field_name] ) != '' ) ) 
+					( form.elements[field_lc+'-'+type_id] && ( form.elements[field_lc+'-'+type_id].value != '' ) ) || 
+					( form.elements[field_lc+'_id-'+type_id] && ( get_ddm_value( form.elements[field_lc+'_id-'+type_id] ) != '' ) ) 
 				) ) {
 					alert( 'Please select the ' + field + ' of the stock.' );
-					var div = $(field_name+'_div');
+					var div = $(field+'-'+type_id+'_div');
 					if ( div ) div.className = 'error';
 					return false;
 				} // end if
@@ -212,3 +212,9 @@ function type_onclick( e ) {
 
 	new Ajax.Updater( 'ManifestContents'+type_id, '_manifest_contents.html', { parameters: values } );
 } // end func
+
+function select_stock( type_id, stock_id ) {
+	new Ajax.Request( '_select_stock.json', { parameters: { suffix: '-'+type_id, stock_id: stock_id },
+		evalScripts: true
+ } );
+}
