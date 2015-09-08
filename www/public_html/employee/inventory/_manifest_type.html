@@ -216,7 +216,7 @@ $log->debug(" C: " . $C->to_string() );
 			<? echo ( input( type=>'text', name=>'manufacturers_name-'.$$variable{type_id}, id=>'manufacturers_name-'.$$variable{type_id}, value=>$$variable{Type}->manufacturers_name() ); ) ?>
 		</p>
 		<p><label>Item Count</label>
-			<? echo ( input( type=>'cardinal', name=>'item_count-'.$$variable{type_id}, id=>'item_count-'.$$variable{type_id}, value=>defined $$variable{Type}->item_count() ? $$variable{Type}->item_count() : 1 ); ) ?>
+			<? echo ( input( type=>'cardinal', name=>'item_count-'.$$variable{type_id}, id=>'item_count-'.$$variable{type_id}, value=>$$variable{Type}->item_count() ? $$variable{Type}->item_count() : 1 ); ) ?>
 		</p>
 	</div>
 	<br class="spacer"/>
