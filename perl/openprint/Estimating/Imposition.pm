@@ -18,7 +18,7 @@ package openprint::Estimating::Imposition;
 use strict;
 #use Data::Dumper;
 
-use constant DEBUG => 0;
+use constant DEBUG => 1;
 
 require openprint::service;
 
@@ -26,6 +26,9 @@ my @variables = (
 	'txtQuantity1', 'txtQuantity2', 'txtQuantity3',
 	'txtUnitPrice1', 'txtUnitPrice2', 'txtUnitPrice3',
 	'txtPrice1', 'txtPrice2', 'txtPrice3',
+	'hdnBreakdown1',
+	'hdnBreakdown2',
+	'hdnBreakdown3',
 );
 
 sub variables {
@@ -184,9 +187,9 @@ $openprint::log->debug("Imposition calc: @_");
 
 		foreach my $sig_id ( @signatures ) {
             my $sig_specs = openprint::service::get_specs_ref( $Project, $sig_id );
-            $$specs{'hdnBreakdown'.$qty_index} .= "Signature: $$sig_specs{'txtServiceDescription'}, " if $$sig_specs{'txtServiceDescription'} ne '';
+            $$specs{'hdnBreakdown'.$qty_index} .= "For $$sig_specs{'txtServiceDescription'} form $$sig_specs{'SignatureIndex'}: ";
             if ( ! $$sig_specs{'txtImposition'.$qty_index} ) {
-                $$specs{'hdnBreakdown'.$qty_index} .= "No imposition for signature $$sig_specs{'SignatureIndex'}";
+                $$specs{'hdnBreakdown'.$qty_index} .= "No imposition<br/>";
                 next;
             } # end if
 			push @Previous_Signatures, $sig_id;
