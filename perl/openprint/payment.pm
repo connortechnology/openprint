@@ -107,7 +107,7 @@ sub make {
 		# Express CheckOut takes an Order
 		my $Order = new openprint::Order( $param{order_id} );
 		require PayPal;
-		my $PayPal = PayPal->new('api_USER'=>$config{'PayPal API Username'},'api_PWD'=>$config{'PayPal API Password'},'api_SIGNATURE'=>$config{'PayPal API Signature'} );
+		my $PayPal = PayPal->new('api_USER'=>$config{'PayPal_API_Username'},'api_PWD'=>$config{'PayPal_API_Password'},'api_SIGNATURE'=>$config{'PayPal_API_Signature'} );
 		my $result = $PayPal->Call_Service({
 					METHOD			=>	'SetExpressCheckout',
 					PAYMENTACTION	=>	'Sale',
@@ -133,7 +133,7 @@ sub make {
 	} elsif ( $param{btnFunction} eq 'DoExpressCheckOut' ) {
 		my $Order = new openprint::Order( $param{order_id} );
 		require PayPal;
-		my $PayPal=PayPal->new('api_USER'=>$config{'PayPal API Username'},'api_PWD'=>$config{'PayPal API Password'},'api_SIGNATURE'=>$config{'PayPal API Signature'} );
+		my $PayPal=PayPal->new('api_USER'=>$config{'PayPal_API_Username'},'api_PWD'=>$config{'PayPal_API_Password'},'api_SIGNATURE'=>$config{'PayPal_API_Signature'} );
 		my $result = $PayPal->Call_Service({
 				METHOD			=>	'DoExpressCheckout',
 				PAYMENTACTION	=>	'Sale',
@@ -182,7 +182,7 @@ sub make {
 		if ( $variable{Payment}->Type()->name() eq 'PayPal' ) {
 			require PayPal;
 
-			my $Paypal=PayPal->new('api_USER'=>$config{'PayPal API Username'},'api_PWD'=>$config{'PayPal API Password'},'api_SIGNATURE'=>$config{'PayPal API Signature'} );
+			my $Paypal=PayPal->new('api_USER'=>$config{'PayPal_API_Username'},'api_PWD'=>$config{'PayPal_API_Password'},'api_SIGNATURE'=>$config{'PayPal_API_Signature'} );
 
 			my $result = $Paypal->Call_Service({
 					#METHOD=>'GetBalance',
