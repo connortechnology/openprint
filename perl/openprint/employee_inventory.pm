@@ -576,25 +576,39 @@ sub save_Paper {
 	} # end if
 
 	my @Papers = openprint::Paper->find(
+			( $param{'owner_id'.$id} ? ( 'owner_id'	=>	$param{'owner_id'.$id} ) : () ),
 			( $param{'Owner'.$id} ? ( 'owner_id'	=>	$param{'Owner'.$id} ) : () ),
+			( $param{'group_id'.$id} ? ( group_id	=>	$param{'group_id'.$id} ) : () ),
 			( $param{'Group'.$id} ? ( group_id	=>	$param{'Group'.$id} ) : () ),
 			( $param{'txtGroup'.$id} ? ( group		=>	$param{'txtGroup'.$id} ) : () ),
-			( $param{'Manufacturer'.$id} ? ( 'manufacturer_id'	=>	$param{'Manufacturer'.$id} ) : () ),
-			( $param{'txtManufacturer'.$id} ? ( 'manufacturer'		=>	$param{'txtManufacturer'.$id} ) : () ),
+			( $param{'group'.$id} ? ( group		=>	$param{'group'.$id} ) : () ),
+			( $param{'manufacturer_id'.$id} ? ( manufacturer_id	=>	$param{'manufacturer_id'.$id} ) : () ),
+			( $param{'Manufacturer'.$id} ? ( manufacturer_id	=>	$param{'Manufacturer'.$id} ) : () ),
+			( $param{'txtManufacturer'.$id} ? ( manufacturer		=>	$param{'txtManufacturer'.$id} ) : () ),
+			( $param{'manufacturer'.$id} ? ( manufacturer		=>	$param{'manufacturer'.$id} ) : () ),
+			( $param{'brand_id'.$id} ? ( 'brand_id'	=>	$param{'brand_id'.$id} ) : () ),
 			( $param{'Brand'.$id} ? ( 'brand_id'	=>	$param{'Brand'.$id} ) : () ),
 			( $param{'txtBrand'.$id} ? ( 'brand'		=>	$param{'txtBrand'.$id} ) : () ),
+			( $param{'brand'.$id} ? ( brand		=>	$param{'brand'.$id} ) : () ),
 			( $param{'Finish'.$id} ? ( 'finish_id' =>	$param{'Finish'.$id} ) : () ),
+			( $param{'finish_id'.$id} ? ( finish_id =>	$param{'finish_id'.$id} ) : () ),
 			( $param{'txtFinish'.$id} ? ( 'finish'	=>	$param{'txtFinish'.$id} ) : () ),
+			( $param{'finish'.$id} ? ( finish	=>	$param{'finish'.$id} ) : () ),
+			( $param{'colour_id'.$id} ? ( colour_id =>	$param{'colour_id'.$id} ) : () ),
 			( $param{'Colour'.$id} ? ( 'colour_id' =>	$param{'Colour'.$id} ) : () ),
 			( $param{'txtColour'.$id} ? ( 'colour'	=>	$param{'txtColour'.$id} ) : () ),
+			( $param{'colour'.$id} ? ( colour	=>	$param{'colour'.$id} ) : () ),
+			( $param{'weight_id'.$id} ? ( weight_id =>	$param{'weight_id'.$id} ) : () ),
 			( $param{'Weight'.$id} ? ( 'weight_id' =>	$param{'Weight'.$id} ) : () ),
 			( $weight ? ( weight	=>	$weight ) : () ),
 # We might 
 			( $param{'material_id'.$id} ? ( material_id =>	$param{'material_id'.$id} ) : () ),
 			( $param{'material'.$id} ? ( material	=>	$param{'material'.$id} ) : () ),
-			( $param{'width'.$id} ? ( 'width'		=> $param{'width'.$id} ) : () ),
-			( $param{'height'.$id} ? ( 'height'	=>	$param{'type'.$id} ne 'Roll' ? $param{'height'.$id} : undef ) : () ),
-			( $param{'type'.$id} ? ( 'type'		=>	$param{'type'.$id} ) : () ),
+			( $param{'quality_id'.$id} ? ( quality_id =>	$param{'quality_id'.$id} ) : () ),
+			( $param{'quality'.$id} ? ( quality	=>	$param{'quality'.$id} ) : () ),
+			( $param{'width'.$id} ? ( width		=> $param{'width'.$id} ) : () ),
+			( $param{'height'.$id} ? ( height	=>	$param{'type'.$id} ne 'Roll' ? $param{'height'.$id} : undef ) : () ),
+			( $param{'type'.$id} ? ( type		=>	$param{'type'.$id} ) : () ),
 			( $param{'calliper'.$id} ? ( 'calliper is null or ='	=>	$param{'calliper'.$id} ) : () ),
 			( $param{'fsc_code'.$id} ? ( 'fsc_code'	=>	$param{'fsc_code'.$id} ) : ( 'fsc_code is null or =' => $param{'fsc_code'.$id} ) ),
 			);
@@ -603,21 +617,37 @@ sub save_Paper {
 # Paper not found, this is the first time we are adding it to the skid
 	if ( 0 == @Papers ) {
 		$Paper = new openprint::Paper( );
-		$Paper->owner_id( $param{'Owner'.$id} );
+		$Paper->owner_id( $param{'Owner'.$id} ) if $param{'Owner'.$id};
+		$Paper->owner_id( $param{'owner_id'.$id} ) if $param{'owner_id'.$id};
 		$Paper->group( $param{'txtGroup'.$id} ) if $param{'txtGroup'.$id};
+		$Paper->group( $param{'group'.$id} ) if $param{'group'.$id};
 		$Paper->group_id( $param{'Group'.$id} ) if $param{'Group'.$id};
+		$Paper->group_id( $param{'group_id'.$id} ) if $param{'group_id'.$id};
 		$Paper->manufacturer( $param{'txtManufacturer'.$id} ) if $param{'txtManufacturer'.$id};
+		$Paper->manufacturer( $param{'manufacturer'.$id} ) if $param{'manufacturer'.$id};
 		$Paper->manufacturer_id( $param{'Manufacturer'.$id} ) if $param{'Manufacturer'.$id};
+		$Paper->manufacturer_id( $param{'manufacturer_id'.$id} ) if $param{'manufacturer_id'.$id};
 		$Paper->brand( $param{'txtBrand'.$id} ) if $param{'txtBrand'.$id};
+		$Paper->brand( $param{'brand'.$id} ) if $param{'brand'.$id};
 		$Paper->brand_id( $param{'Brand'.$id} ) if $param{'Brand'.$id};
+		$Paper->brand_id( $param{'brand_id'.$id} ) if $param{'brand_id'.$id};
 		$Paper->finish( $param{'txtFinish'.$id} ) if $param{'txtFinish'.$id};
+		$Paper->finish( $param{'finish'.$id} ) if $param{'finish'.$id};
 		$Paper->finish_id( $param{'Finish'.$id} ) if $param{'Finish'.$id};
+		$Paper->finish_id( $param{'finish_id'.$id} ) if $param{'finish_id'.$id};
 		$Paper->colour( $param{'txtColour'.$id} ) if $param{'txtColour'.$id};
+		$Paper->colour( $param{'colour'.$id} ) if $param{'colour'.$id};
 		$Paper->colour_id( $param{'Colour'.$id} ) if $param{'Colour'.$id};
+		$Paper->colour_id( $param{'colour_id'.$id} ) if $param{'colour_id'.$id};
 		$Paper->weight( $weight ) if $weight;
 		$Paper->weight_id( $param{'Weight'.$id} ) if $param{'Weight'.$id};
+		$Paper->weight_id( $param{'weight_id'.$id} ) if $param{'weight_id'.$id};
 		$Paper->quality( $param{'txtQuality'.$id} ) if $param{'txtQuality'.$id};
+		$Paper->quality( $param{'quality'.$id} ) if $param{'quality'.$id};
 		$Paper->quality_id( $param{'Quality'.$id} ) if $param{'Quality'.$id};
+		$Paper->quality_id( $param{'quality_id'.$id} ) if $param{'quality_id'.$id};
+		$Paper->material( $param{'material'.$id} ) if $param{'material'.$id};
+		$Paper->material_id( $param{'material_id'.$id} ) if $param{'material_id'.$id};
 		$Paper->type( $param{'type'.$id} );
 		$Paper->fsc_code( $param{'fsc_code'.$id} );
 		if ( $param{'type'.$id} eq 'Roll' ) {
