@@ -218,3 +218,14 @@ function select_stock( type_id, stock_id ) {
 		evalScripts: true
  } );
 }
+
+function confirm_po_content(type_id,poc_id) {
+	new Ajax.Request('/employee/accounting/_stock.json', { 
+		parameters: { 
+				action: 'confirm_po_content', 
+				manifest_content_type_id: type_id,
+				po_content_id: poc_id 
+			}
+		}
+	);
+}
