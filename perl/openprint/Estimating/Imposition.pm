@@ -93,7 +93,7 @@ $openprint::log->error("Unknown units on ImpositionMakeready");
 
 			} # end if
 		} elsif(DEBUG) {
-			$openprint::log->error("No price found for " . $SigMRService->name() );
+			$openprint::log->error("No price found for " . $SigMRService->name() . " on $$Press{strid}" );
 		} # end if
 		if ( DEBUG ) {
 			$openprint::log->debug("MR Price is $ImpositionMakeReady{Price}");
