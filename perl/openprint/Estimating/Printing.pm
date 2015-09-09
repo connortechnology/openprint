@@ -6067,7 +6067,10 @@ sub get_run_price {
 		$impression_service = $$Imposition{runstyle}.'Impression'.$side_one_colours.'/'.$side_two_colours;
 		my %RunPrice;
 		if ( ! ( %RunPrice = openprint::service::get_price_object( $impression_service, $impressions, $Press ) ) ) {
-			%RunPrice = openprint::service::get_price_object( $$Imposition{runstyle}.'Impression', $impressions, $Press );
+			$impression_service = $$Imposition{runstyle}.'Impression'.$side_two_colours.'/'.$side_one_colours;
+			if ( ! ( %RunPrice = openprint::service::get_price_object( $impression_service, $impressions, $Press ) ) ) {
+				%RunPrice = openprint::service::get_price_object( $$Imposition{runstyle}.'Impression', $impressions, $Press );
+			} # end if
 		} # end if
 		$run_price{units} = $RunPrice{units};
 		$running_price = $RunPrice{Price};
