@@ -41,6 +41,7 @@ $serial = 'paperinventory_id_seq';
 	docket		=>	undef,
 	project_id	=>	undef,
 	instock		=>	undef,
+	paper_id	=>	undef,
 );
 
 sub Paper {
