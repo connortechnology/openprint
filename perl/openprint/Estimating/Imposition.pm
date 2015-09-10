@@ -18,7 +18,7 @@ package openprint::Estimating::Imposition;
 use strict;
 #use Data::Dumper;
 
-use constant DEBUG => 0;
+use constant DEBUG => 1;
 
 require openprint::service;
 
@@ -26,6 +26,9 @@ my @variables = (
 	'txtQuantity1', 'txtQuantity2', 'txtQuantity3',
 	'txtUnitPrice1', 'txtUnitPrice2', 'txtUnitPrice3',
 	'txtPrice1', 'txtPrice2', 'txtPrice3',
+	'hdnBreakdown1',
+	'hdnBreakdown2',
+	'hdnBreakdown3',
 );
 
 sub variables {
@@ -81,11 +84,16 @@ sub signature_calc {
 			if ( $ImpositionMakeReady{units} eq 'per form' ) {
 #$openprint::log->debug("Make Ready Per Form " . ($$specs{'PreviousForms'.$qty_index}+1) );
 				%ImpositionMakeReady = $SigMRService->get_price( scalar @{$previous_forms} + 1, $Press );
+				$ImpositionMakeReady{Total} = $ImpositionMakeReady{Price};
+			} elsif ( $ImpositionMakeReady{units} eq 'per side' ) {
+				$ImpositionMakeReady{Total} = $ImpositionMakeReady{Price} * $Imposition->sides();
+		
 			} else {
+$openprint::log->error("Unknown units on ImpositionMakeready");
 
 			} # end if
 		} elsif(DEBUG) {
-			$openprint::log->error("No price found for " . $SigMRService->name() );
+			$openprint::log->error("No price found for " . $SigMRService->name() . " on $$Press{strid}" );
 		} # end if
 		if ( DEBUG ) {
 			$openprint::log->debug("MR Price is $ImpositionMakeReady{Price}");
@@ -93,7 +101,7 @@ sub signature_calc {
 	} # end if
 
 	$price{MakeReady} = \%ImpositionMakeReady;
-	$price{Total} = $ImpositionMakeReady{Price};
+	$price{Total} = $ImpositionMakeReady{Total};
 
 	my %ImpositionCharge;
 
@@ -114,6 +122,9 @@ sub signature_calc {
 				$price{Total} += $ImpositionCharge{Price} * $Imposition->imposition();
 			} # end if
 		} # end if
+$openprint::log->debug("MakeReady is $ImpositionCharge{Price} $ImpositionCharge{units} $ImpositionCharge{Total}") if DEBUG;
+	} elsif ( DEBUG ) {
+$openprint::log->debug("NO MR service");
 	} # end if SErviceService
 	$price{Price} = \%ImpositionCharge;
 
@@ -176,9 +187,9 @@ $openprint::log->debug("Imposition calc: @_");
 
 		foreach my $sig_id ( @signatures ) {
             my $sig_specs = openprint::service::get_specs_ref( $Project, $sig_id );
-            $$specs{'hdnBreakdown'.$qty_index} .= "Signature: $$sig_specs{'txtServiceDescription'}, " if $$sig_specs{'txtServiceDescription'} ne '';
+            $$specs{'hdnBreakdown'.$qty_index} .= "For $$sig_specs{'txtServiceDescription'} form $$sig_specs{'SignatureIndex'}: ";
             if ( ! $$sig_specs{'txtImposition'.$qty_index} ) {
-                $$specs{'hdnBreakdown'.$qty_index} .= "No imposition for signature $$sig_specs{'SignatureIndex'}";
+                $$specs{'hdnBreakdown'.$qty_index} .= "No imposition<br/>";
                 next;
             } # end if
 			push @Previous_Signatures, $sig_id;
@@ -206,20 +217,28 @@ sub display {
 sub signature_summary {
 	my ( $Imposition, $Price ) = @_;
 
-	my $breakdown;
+	my $breakdown = 'Imposition Charge: ';
 	my $MakeReady = $$Price{MakeReady};
     my $Service = $$Price{Price};
 
+	if ( $$MakeReady{Price} ) {
+		if ( $$MakeReady{units} eq 'per side' ) {
+	
+        $breakdown .= sprintf('MR($%1$.2f%2$s = $%3$.2f) ', @$MakeReady{qw(Price units Total)} );
+		} else {
+        $breakdown .= sprintf('mR($%1$.2f) ', $$MakeReady{Price} );
+		} # end if
+    } # end if
+
+
     if ( $$Service{units} eq 'per page' ) {
-        $breakdown .= sprintf('Imposition Charge: $%1$.2f + $%2$.2f*%4$d pages = $%3$.2f<br/>', $$MakeReady{Price}, $$Service{Price}, $$Price{'Total'}, $Imposition->pages() );
+        $breakdown .= sprintf('+ $%1$.2f*%3$d pages = $%2$.2f<br/>', $$Service{Price}, $$Price{'Total'}, $Imposition->pages() );
     } elsif ( $$Service{units} eq 'per square inch of object' ) {
-        $breakdown .= sprintf('Imposition Charge: $%1$.2f + $%2$.2f*%4$s x %5$s = $%3$.2f<br/>', $$MakeReady{Price}, $$Service{Price}, $$Price{'Total'}, $Imposition->object_width(), $Imposition->object_height() );
+        $breakdown .= sprintf('+ $%1$.2f*%3$s x %4$s = $%2$.2f<br/>', $$Service{Price}, $$Price{'Total'}, $Imposition->object_width(), $Imposition->object_height() );
     } elsif ( $$Service{units} eq 'per square inch of layout' ) {
-        $breakdown .= sprintf('Imposition Charge: $%1$.2f + $%2$.2f*%4$s x %5$s = $%3$.2f<br/>', $$MakeReady{Price}, $$Service{Price}, @$Price{'Total'}, $Imposition->layout_width(), $Imposition->layout_height() );
+        $breakdown .= sprintf('+ $%1$.2f*%4$s x %4$s = $%2$.2f<br/>', $$Service{Price}, @$Price{'Total'}, $Imposition->layout_width(), $Imposition->layout_height() );
     } elsif ( $$Service{Price} ) {
-        $breakdown .= sprintf('Imposition Charge: $%1$.2f + $%2$.2f*%4$d out = $%3$.2f<br/>', $$MakeReady{Price}, $$Service{Price}, @$Price{'Total'}, $Imposition->imposition() );
-    } elsif ( $$MakeReady{Price} ) {
-        $breakdown .= sprintf('Imposition Charge: $%1$.2f<br/>', $$MakeReady{Price} );
+        $breakdown .= sprintf('+ $%1$.2f*%3$d out = $%2$.2f<br/>', $$Service{Price}, @$Price{'Total'}, $Imposition->imposition() );
     } # end if
 
     if ( my $PageCharge = $$Price{'page charge'} ) {

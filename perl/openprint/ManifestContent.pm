@@ -181,14 +181,14 @@ $openprint::log->debug("desired paper exists");
 		foreach my $paper_id ( keys %SkidContents ) {
 			next if $$Type{paper_id} == $paper_id;
 			my $SC = $SkidContents{$paper_id};
-			my $Paper = $SC->Paper();
-
-			my $PI = new openprint::PaperInventory();
-			$error .= $PI->save({ user_id=>$openprint::session{user_id}, skid_id=>$$SC{skid_id}, paper_id=>$paper_id, quantity=>-1*$SC->quantity(),
-					comment=>qq`Removed stock by manifest <a href="/employee/inventory/manifest_view.html?manifest_id=$$Manifest{id}">$$Manifest{name}</a>.`
-					});
+			if ( $$SC{paper_id} ) {
+				my $Paper = $SC->Paper();
+				my $PI = new openprint::PaperInventory();
+				$error .= $PI->save({ user_id=>$openprint::session{user_id}, skid_id=>$$SC{skid_id}, paper_id=>$paper_id, quantity=>-1*$SC->quantity(),
+						comment=>qq`Removed stock by manifest <a href="/employee/inventory/manifest_view.html?manifest_id=$$Manifest{id}">$$Manifest{name}</a>.`
+						});
+			} # en dif
 			$error .= $SC->delete();
-			$error .= $Paper->save();
 		} # end foreach paper_id
 	} else {
 $openprint::log->debug("desired paper does not exists");
@@ -293,7 +293,7 @@ sub check {
 	if ( $Skid->deleted() ) {
 		$error = qq`Skid <a href="/employee/inventory/skid_details.html?skid_id=$$Skid{id}">$$Skid{id}</a> is deleted.<br/>`;
 	} # end if
-	if ( ! $MC->location_id() ) {
+	if ( ( ! $MC->location_id() ) and $Skid->id() ) {
 		$error .= 'No location for ' . $Skid->link_to().'<br/>';
 	} # end if
 	if ( $MC->skid_id() ) {
@@ -306,9 +306,13 @@ sub check {
             } # end foreach
 		} elsif ( @SkidContents and ( $SkidContents[0]->paper_id() != $Type->paper_id() ) ) {
 			$error = 'Skid contents do not match manifest.<br/>';
-			$error .= 'Skid Contains <br/>';
+			$error .= 'Skid Contains ' . ( @SkidContents > 1 ? '<br/>' : '' );
             foreach my $SK ( @SkidContents ) {
-                $error .= '<a href="/employee/inventory/paper_details.html?paper_id='.$$SK{paper_id}.'">'.$SK->Paper()->to_string() . '</a><br/>';
+                $error .= '<a href="/employee/inventory/paper_details.html?paper_id='.$$SK{paper_id}.'">'.$SK->Paper()->to_string() . '</a>';
+				if ( $ENV{'HTTP_REFERER'} =~ /manifest.html/ or ( $openprint::r->uri() =~ /manifest.html/ ) ) {
+					$error .= ssi::button( 'paper'.$MC->id().$SK->paper_id(), { onclick=>"select_stock($$MC{type_id},$$SK{paper_id});", text=>'Click to select' } );
+				}
+				$error .= '<br/>';
             } # end foreach
 		} elsif ( $$Skid{id} and ! @SkidContents ) {
 			$error = 'Skid is empty.<br/>';

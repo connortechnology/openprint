@@ -35,7 +35,7 @@ use Time::HiRes qw{ time gettimeofday tv_interval };
 
 use vars qw( $debug $table $serial %fields %find_fields %defaults %transforms %grades );
 
-use constant DEBUG_PRICING => 1;
+use constant DEBUG_PRICING => 0;
 
 $debug = 0;
 $table = 'papers';

@@ -22,12 +22,15 @@ $table = 'Monitors';
 	'host'			=>	'Host',
 	'server_host'	=>	'ServerHost',
 	public			=>	'public',
+	protocol		=>	'Protocol',
+	method			=>	'Method',
+
 );
 
 sub source_stream_url {
-	return $_[0]{'type'} eq 'Remote' ? 'http://'.$_[0]{'host'}.$_[0]{'path'} :
+	return ($_[0]{'type'} eq 'Remote' and $_[0]{protocol} eq 'http' ) ? 'http://'.$_[0]{'host'}.$_[0]{'path'} :
                           sprintf('http://%2$s/cgi-bin/zms?mode=jpeg&amp;monitor=%1$d&amp;maxfps=%3$d&amp;user=all',
-                              $_[0]{'id'}, $_[0]{'server_host'}, $_[0]{'max_fps'} );
+                              $_[0]{'id'}, $_[0]{'server_host'}.'.internal.point-one.com', int($_[0]{'max_fps'}) ? $_[0]{'max_fps'} : 1 );
 } # end sub source_stream_url
 
 sub source_snapshot_url {

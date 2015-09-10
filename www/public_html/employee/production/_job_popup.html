@@ -48,12 +48,12 @@
 		<li class="runtime">
 			<label>Runtime</label>
 			<? echo (
-				my ( $h, $m, $s ) = $$variable{Job}->runtime() =~ /(\d+):(\d+):(\d+)/;
-				return join("\n",
+				my ( $h, $m, $s ) = $$variable{Job}->runtime() =~ /(\d+):(\d+):?(\d+)?/;
 ## goes to 99 because it can be more than a day.
-					ssi::select( [ map { $_, $_ } map { sprintf('%.2d', $_ ) } ( 0 .. 99 ) ], $h, { name=>'runtime_hours', onchange=>'update_runtime(this);' } ),
-					ssi::select( [ map { $_, $_ } map { sprintf('%.2d', $_ ) } ( 0 .. 59 ) ], $m, { name=>'runtime_minutes', onchange=>'update_runtime(this);' } ),
-					ssi::select( [ map { $_, $_ } map { sprintf('%.2d', $_ ) } ( 0 .. 59 ) ], $s, { name=>'runtime_seconds', onchange=>'update_runtime(this);' } ),
+				return join("\n",
+					ssi::select( [ map { $_, $_ } map { sprintf('%.2d', $_ ) } ( 0 .. 99 ) ], sprintf('%.2d', $h ), { name=>'runtime_hours', onchange=>'update_runtime(this);' } ),
+					ssi::select( [ map { $_, $_ } map { sprintf('%.2d', $_ ) } ( 0 .. 59 ) ], sprintf('%.2d', $m ), { name=>'runtime_minutes', onchange=>'update_runtime(this);' } ),
+					ssi::select( [ map { $_, $_ } map { sprintf('%.2d', $_ ) } ( 0 .. 59 ) ], sprintf('%.2d', $s ), { name=>'runtime_seconds', onchange=>'update_runtime(this);' } ),
 					input( type=>'text',readonly=>'readonly', name=>'runtime', value=>$$variable{Job}->runtime() ),
 					);
 			) ?>
