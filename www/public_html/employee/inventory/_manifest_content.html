@@ -39,12 +39,12 @@ if ( tr ) tr.remove();
 		my $id = $$variable{'type_id'}.'-'.$$C{id};
 		$html .= '<tr id="tr-'.$$C{id}.'" title="'.$$C{id}.'">';
 			
-		if ( (!$RFIDTag->created_on()) or ( $_ = $RFIDTag->is_invalid_id() ) ) {
-			$error .= $_ if $RFIDTag->id();
+		#if ( (!$RFIDTag->created_on()) or ( $_ = $RFIDTag->is_invalid_id() ) ) {
+			#$error .= $_ if $RFIDTag->id();
 			$html .= '<td class="RFID">'.input(type=>'text', name=>'rfidtag_id-'.$id, value=>$RFIDTag->id() ).'</td>';
-		} else {
-			$html .= sprintf('<td class="RFID"><a href="/employee/inventory/rfidtag_details.html?rfidtag_id=%1$s">%2$s</a></td>', $RFIDTag->id(), $RFIDTag->id_short() );
-		} # end if
+		#} else {
+			#$html .= sprintf('<td class="RFID"><a href="/employee/inventory/rfidtag_details.html?rfidtag_id=%1$s">%2$s</a></td>', $RFIDTag->id(), $RFIDTag->id_short() );
+		#} # end if
 
 		$html .= '<td class="Skid">';
 		$html .= sprintf('<a href="/employee/inventory/skid_details.html?skid_id=%1$d">S</a>', $C->skid_id() ) if $$C{skid_id};
