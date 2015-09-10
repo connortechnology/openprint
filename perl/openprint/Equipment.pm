@@ -336,8 +336,8 @@ sub copy {
 
 	my $ac = sql::start_transaction( $openprint::dbh );
 
-	foreach my $ES ( openprint::EquipmentSpecification->find('equipment_id'=>$$self{'id'} ) ) {
-		$ES->copy()->save({'equipment_id'=>$$new{id}});
+	foreach my $ES ( openprint::EquipmentSpecification->find( equipment_id=>$$self{id} ) ) {
+		$ES->copy()->save({ equipment_id=>$$new{id} });
 	} # end foreach
 
 # Now do pricing, start with Service Prices
