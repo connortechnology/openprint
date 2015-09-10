@@ -699,6 +699,43 @@ sub quantity {
 } # end subquantity
 sub sides {
 	$_[0]{sides} = $_[1] if @_ > 1;
+	if ( ! $_[0]{sides} ) {
+
+		my $specs = $_[0]->specs();
+		my @side_one = openprint::Estimating::Printing::get_colours( $specs, 'SideOne' );
+		my @side_two = openprint::Estimating::Printing::get_colours( $specs, 'SideTwo' );
+
+		my $CoatingsCategory = openprint::ServiceCategory->find_one( name => 'Coating' );
+		my %coatings = map { $_->name(), 1 } $CoatingsCategory->Services() if $CoatingsCategory;
+
+# Split out colours vs coatings, but Varnish is not a coating like AQ
+
+		my @side_one_colours;
+		my @side_one_coatings;
+		foreach my $c ( @side_one ) {
+			if ( $coatings{$$c{name}} and ! ( $$c{name} =~ /Varnish/i ) ) {
+#push @side_one_coatings, $c;
+			} else {
+				push @side_one_colours, $c;
+			} # end if
+		} # end foreach
+		my @side_two_colours = ();
+		my @side_two_coatings = ();
+		foreach my $c ( @side_two ) {
+			if ( $coatings{$$c{name}} and ! ( $$c{name} =~ /Varnish/i ) ) {
+#push @side_two_coatings, $c;
+			} else {
+				push @side_two_colours, $c;
+			} # end if
+		} # end foreach
+
+		if ( @side_one_colours > 0 ) {
+			$_[0]{sides} += 1;
+		} 
+		if ( @side_two_colours > 0 ) {
+			$_[0]{sides} += 1;
+		} # end if
+	} # end if ! $_[0]s{dies}
 	return $_[0]{sides};
 } # end sub sides
 
@@ -708,9 +745,9 @@ sub Equipment {
 		$_[0]{equipment_id} = $_[0]{Equipment}{id};
 	}
 	if ( ! $_[0]{Equipment} ) {
-my ( $caller, undef, $line ) = caller;
-		$openprint::log->error("No Equipment in Imposition:Press from $caller : $line");
+		my ( $caller, undef, $line ) = caller;
 		$_[0]{Equipment} = new openprint::Equipment();
+		$openprint::log->error("No Equipment in Imposition:Equipment from $caller : $line");
 	} # end if
 	return $_[0]{Equipment};
 } # end sub Equipment

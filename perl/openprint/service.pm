@@ -303,7 +303,7 @@ require openprint::Estimating::PerfectBound;
 	} # end if
 
 	foreach my $si ( @{$$services{'Proofs'}} ) {
-		if ( $openprint::config{'Insert Default Proofs'} eq 'Y' ) {
+		if ( $openprint::config{'Insert_Default_Proofs'} eq 'Y' ) {
 			openprint::Estimating::Proofs::insert_proof_defaults( $openprint::log, $openprint::dbh, $$Project{'id'}, $si );
 		} # end if
 	} # end foreach

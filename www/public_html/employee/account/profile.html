@@ -2,7 +2,7 @@
 <script type="text/javascript" src="<? hash_link(/javascripts/passwordmeter.js) ?>"></script>
 <div class="UserProfile">
 	<form id="f1" name="f1" method="post" action="profile.html">
-		<? if ( ($session{'user_type'} eq 'A' ) or ( openprint::usergroup::is_user_in( ['UserManagement'], $session{'user_id'} ) ) ) ?>
+		<? if ( ($session{user_type} eq 'A' ) or ( openprint::usergroup::is_user_in( ['UserManagement'], $session{user_id} ) ) ) ?>
 		<fieldset class="filters"><legend>Choose User</legend>
 			<ul>
 			<li>
@@ -20,11 +20,11 @@
 					<option value="">select</option>
 					<? echo ( 
 						my %params = (
-							company_id	=>	$param{'company_id'}, 
+							company_id	=>	$param{company_id}, 
 							order		=>	'lower(firstname),lower(lastname)'
 						);
-						if ( $session{'user_type'} ne 'A' ) {
-							$params{'type'} = ['C','E'];
+						if ( $session{user_type} ne 'A' ) {
+							$params{type} = ['C','E'];
 						} # end if
 						make_drop_down( openprint::User->dropdown( %params ), $param{user_id} ? $param{user_id} : $session{user_id} ); ) ?>
 				</select>
@@ -32,12 +32,12 @@
 			</li>
 			</ul>
 		</fieldset>
-		<? endif ( ($session{'user_type'} eq 'A' ) or ( openprint::usergroup::is_user_in( ['UserManagement'], $session{'user_id'} ) ) ) ?>
+		<? endif ( ($session{user_type} eq 'A' ) or ( openprint::usergroup::is_user_in( ['UserManagement'], $session{user_id} ) ) ) ?>
 		<fieldset>
 			<p class="buttons">
 				<? echo ( 
 					my $html;
-					if ( ($session{'user_type'} eq 'A' ) or ( openprint::usergroup::is_user_in( ['UserManagement'], $session{'user_id'} ) ) ) {
+					if ( ($session{user_type} eq 'A' ) or ( openprint::usergroup::is_user_in( ['UserManagement'], $session{user_id} ) ) ) {
 						$html .= button( 'New1', { onclick=>'addCheck(f1);', text=>'New' } ),
 					} # end if
 					$html .= button( 'Submit1', { onclick=>"f1.btnFunction.value='Save';f1.submit();", text=>'Save' } );
@@ -50,23 +50,23 @@
 	<div class="column">
 		<fieldset><legend>User Information for user #<? echo ( $$variable{User}->id() ) ?></legend>
 		<ul>
-			<? if ( $$variable{'User'}->Company()->notes() ) ?>
-			<li class="company_notes"><label>Company Notes</label><? echo ( $$variable{'User'}->Company()->notes() ) ?></li>
-			<? endif ( $$variable{'User'}->Company()->notes() ) ?>
-			<? if ( $$variable{'User'}->notes() ) ?>
-			<li class="user_notes"><label>User Notes</label><? echo ( $$variable{'User'}->notes() ) ?></li>
-			<? endif ( $$variable{'User'}->notes() ) ?>
+			<? if ( $$variable{User}->Company()->notes() ) ?>
+			<li class="company_notes"><label>Company Notes</label><? echo ( $$variable{User}->Company()->notes() ) ?></li>
+			<? endif ( $$variable{User}->Company()->notes() ) ?>
+			<? if ( $$variable{User}->notes() ) ?>
+			<li class="user_notes"><label>User Notes</label><? echo ( $$variable{User}->notes() ) ?></li>
+			<? endif ( $$variable{User}->notes() ) ?>
 			<li> 
 				<label for="title">Title</label>
-				<input type="text" id="title" name="title" value="<? hecho ( $$variable{'User'}->title() ) ?>" />
+				<input type="text" id="title" name="title" value="<? hecho ( $$variable{User}->title() ) ?>" />
 			</li>
 			<li class="required"> 
 				<label for="firstname">First Name</label>
-				<input type="text" id="firstname" name="firstname" value="<? hecho ( $$variable{'User'}->firstname() ) ?>" />
+				<input type="text" id="firstname" name="firstname" value="<? hecho ( $$variable{User}->firstname() ) ?>" />
 			</li>
 			<li class="required"> 
 				<label for="lastname">Last Name</label>
-				<input type="text" id="lastname" name="lastname" value="<? hecho ( $$variable{'User'}->lastname() ) ?>" />
+				<input type="text" id="lastname" name="lastname" value="<? hecho ( $$variable{User}->lastname() ) ?>" />
 			</li>
 			<li>
 				<label>Salutation</label>
@@ -74,26 +74,26 @@
 			</li>
 			<li class="required"> 
 				<label for="phone">Phone</label>
-				<input type="tel" id="phone" name="phone" value="<? hecho ( $$variable{'User'}->phone() ) ?>" > x
-				<input type="tel" id="extension" name="extension" value="<? hecho ( $$variable{'User'}->extension() ) ?>" />
+				<input type="tel" id="phone" name="phone" value="<? hecho ( $$variable{User}->phone() ) ?>" > x
+				<input type="tel" id="extension" name="extension" value="<? hecho ( $$variable{User}->extension() ) ?>" />
 			</li>
 			<li> 
 				<label for="mobile">Mobile</label>
-				<input type="tel" id="mobile" name="mobile" value="<? hecho ( $$variable{'User'}->mobile() ) ?>" />
+				<input type="tel" id="mobile" name="mobile" value="<? hecho ( $$variable{User}->mobile() ) ?>" />
 			</li>
 			<li> 
 				<label for="sms">SMS (email)</label>
-				<input type="email" id="sms" name="sms" value="<? hecho ( $$variable{'User'}->sms() ) ?>" />
+				<input type="email" id="sms" name="sms" value="<? hecho ( $$variable{User}->sms() ) ?>" />
 			</li>
 			<li> 
 				<label for="fax">Fax</label>
-				<input type="tel" id="fax" name="fax" value="<? hecho ( $$variable{'User'}->fax() ) ?>" />
+				<input type="tel" id="fax" name="fax" value="<? hecho ( $$variable{User}->fax() ) ?>" />
 			</li>
 			<li> 
 				<label>Mailing List</label>
 				<? echo ( radio( 'mailinglist', [ 'Y', 'Yes', 'N', 'No' ], $$variable{User}->mailinglist() ); ) ?>
 			</li>
-		<? if ( ($session{'user_type'} eq 'A' ) or ( openprint::usergroup::is_user_in( ['UserManagement'], $session{'user_id'} ) ) ) ?>
+		<? if ( ($session{user_type} eq 'A' ) or ( openprint::usergroup::is_user_in( ['UserManagement'], $session{user_id} ) ) ) ?>
 				<li>
 					<label>Company administrator?</label>
 					<? echo ( radio( 'administrator', [ 'Y', 'Yes', 'N', 'No' ], $$variable{User}->administrator() ); ) ?>
@@ -108,15 +108,15 @@
 				</li>
 				<li>
 					<label>Custom Greeting</label>
-					<input type="text" name="greeting" value="<? hecho ( $$variable{'User'}->greeting() ) ?>" />
+					<input type="text" name="greeting" value="<? hecho ( $$variable{User}->greeting() ) ?>" />
 				</li>
 				<li>
 					<label>User Type</label>
 					<select name="type">
-						<? echo ( make_drop_down( [ 'C', 'Customer', 'E', 'Employee','A', 'Administrator' ], $$variable{'User'}->type() ); ) ?>
+						<? echo ( make_drop_down( [ 'C', 'Customer', 'E', 'Employee','A', 'Administrator' ], $$variable{User}->type() ); ) ?>
 					</select>
 				</li>
-		<? endif ( ($session{'user_type'} eq 'A' ) or ( openprint::usergroup::is_user_in( ['UserManagement'], $session{'user_id'} ) ) ) ?>
+		<? endif ( ($session{user_type} eq 'A' ) or ( openprint::usergroup::is_user_in( ['UserManagement'], $session{user_id} ) ) ) ?>
 			</ul>
 		</fieldset>
 	</div>
@@ -125,7 +125,7 @@
 			<ul>
 				<li class="required"> 
 					<label for="email">E-mail Address</label>
-					<input type="email" id="email" name="email" value="<?  hecho ( $$variable{'User'}->email() ) ?>" />
+					<input type="email" id="email" name="email" value="<?  hecho ( $$variable{User}->email() ) ?>" />
 				</li>
 				<li>
 					<? include('/includes/password_requirements.html') ?>
@@ -141,7 +141,7 @@
 					<span id="password_alert"></span>
 				</li>
 				<li><label>Password Last Changed</label>
-					<? echo ( $$variable{'User'}->password_changed_on() ? Date::Format::time2str($config{'DateTimeFormat'}, Date::Parse::str2time( $$variable{'User'}->password_changed_on() ) ) : 'never' ) ?>
+					<? echo ( $$variable{User}->password_changed_on() ? Date::Format::time2str($config{DateTimeFormat}, Date::Parse::str2time( $$variable{User}->password_changed_on() ) ) : 'never' ) ?>
 				</li>
 			</ul>
 		</fieldset>
@@ -149,24 +149,24 @@
 		<? include('/account/_email_settings.html' ) ?>
 		<? endif ($variable{DoEmail}) ?> 
 
-<? if ( $config{'RADIUS Support'} and ( ($session{'user_type'} eq 'A') or openprint::usergroup::is_user_in( ['IT'], $session{'user_id'} ) ) ) ?>
+<? if ( $config{RADIUS_Support} and ( ($session{user_type} eq 'A') or openprint::usergroup::is_user_in( ['IT'], $session{user_id} ) ) ) ?>
     <fieldset><legend>RADIUS Auth</legend>
         <ul>
     <? echo ( 
 		require openprint::RADIUS_Check;
 		require openprint::RADIUS_Reply;
         $openprint::RADIUS_Reply::dbh = $openprint::RADIUS_Check::dbh = sql::open_sql( $log,
-            'database'  => $config{'RADIUS DB Name'},
-            'driver'    => $config{'RADIUS DB Driver'},
-            'host'      => $config{'RADIUS DB Server'},
-            'login'     => $config{'RADIUS DB Username'},
-            'password'  => $config{'RADIUS DB Password'},
+            'database'  => $config{RADIUS_DB_Name},
+            'driver'    => $config{RADIUS_DB_Driver},
+            'host'      => $config{RADIUS_DB_Server},
+            'login'     => $config{RADIUS_DB_Username},
+            'password'  => $config{RADIUS_DB_Password},
             );
         if ( ! $openprint::RADIUS_Check::dbh ) {
             return 'Unable to connect to RADIUS DB server.';
         } # end if
 
-		$$variable{'username'} = $$variable{'User'}->email();
+		$$variable{username} = $$variable{User}->email();
         my $html = '';
 		$html .= qq`<li id="mac_$$variable{username}">`;
 		$html .= include( '/employee/it/_radius_mac_line.html' );
@@ -175,11 +175,11 @@
     ) ?>
         </ul>
     </fieldset>
-<? endif ( $config{'RADIUS Support'} and ( ($session{'user_type'} eq 'A') or openprint::usergroup::is_user_in( ['IT'], $session{'user_id'} ) ) ) ?>
+<? endif ( $config{RADIUS_Support} and ( ($session{user_type} eq 'A') or openprint::usergroup::is_user_in( ['IT'], $session{user_id} ) ) ) ?>
 
 	</div><!--column-->
 	<br class="spacer"/>
-<? if ( ($session{'user_type'} eq 'A' ) or ( openprint::usergroup::is_user_in( ['UserManagement'], $session{'user_id'} ) ) ) ?>
+<? if ( ($session{user_type} eq 'A' ) or ( openprint::usergroup::is_user_in( ['UserManagement'], $session{user_id} ) ) ) ?>
 	<div class="PurchaseOrderLimits">
 		<fieldset><legend>Purchasing Limits</legend>
 			<ul>
@@ -194,14 +194,14 @@
 			<? echo (
 				my $html;
 				foreach my $PO_Type ( openprint::PurchaseOrder_ContentType->find('order'=>'lower(name)') ) {
-					$html .= '<li><label>Limit for '.$PO_Type->name().'</label>'.input(type=>'cardinal', name=>'po_limit-'.$PO_Type->id(), value=>$$variable{'User'}->po_limit( $PO_Type->id() ) ).'</li>';
+					$html .= '<li><label>Limit for '.$PO_Type->name().'</label>'.input(type=>'cardinal', name=>'po_limit-'.$PO_Type->id(), value=>$$variable{User}->po_limit( $PO_Type->id() ) ).'</li>';
 				} # end foreach PO_Type
 				return $html;
 			) ?>
 			</ul>
 		</fieldset>
 	</div>
-<? endif ( ($session{'user_type'} eq 'A' ) or ( openprint::usergroup::is_user_in( ['UserManagement'], $session{'user_id'} ) ) ) ?>
+<? endif ( ($session{user_type} eq 'A' ) or ( openprint::usergroup::is_user_in( ['UserManagement'], $session{user_id} ) ) ) ?>
 	<div class="Notifications">
 	   <fieldset><legend>Notifications</legend>
 		<? echo ( 
@@ -222,7 +222,7 @@
 				<ul>
 				<? echo ( 
 					my @csr_ids = $$variable{User}->csr_ids();
-					if ( $session{'user_type'} eq 'A' or $openprint::User->administrator() eq 'Y' ) {
+					if ( $session{user_type} eq 'A' or $openprint::User->administrator() eq 'Y' ) {
 						return checkboxes( 'csr_ids', openprint::User->dropdown(type=>['E','A'], 'usergroup any'=>'Sales' ), \@csr_ids, { container=>['<li>','</li>'] } );
 					} elsif ( @csr_ids ) {
 						return checkboxes( 'csr_ids', openprint::User->dropdown(type=>['E','A'], 'usergroup any'=>'Sales', id=>\@csr_ids ), \@csr_ids, { container=>['<li>','</li>'] } );
@@ -236,21 +236,21 @@
 	<div class="AdminOptions">
 		<fieldset>
 			<ul>
-			<? if ( ($session{'user_type'} eq 'A' ) or ( openprint::usergroup::is_user_in( ['UserManagement'], $session{'user_id'} ) ) ) ?>
-			<? if ( sets::isin( $$variable{'User'}->type(), ['E','A'] ) ) ?>
+			<? if ( ($session{user_type} eq 'A' ) or ( openprint::usergroup::is_user_in( ['UserManagement'], $session{user_id} ) ) ) ?>
+			<? if ( sets::isin( $$variable{User}->type(), ['E','A'] ) ) ?>
 			<li> 
 				<label>Commission Rate</label>
 				<? echo ( input( type=>'float', name=>'commission', value=>$$variable{User}->commission() ); ) ?>%
 			</li>
-			<? endif ( sets::isin( $$variable{'User'}->type(), ['E','A'] ) ) ?>
-			<? endif ( ($session{'user_type'} eq 'A' ) or ( openprint::usergroup::is_user_in( ['UserManagement'], $session{'user_id'} ) ) ) ?>
+			<? endif ( sets::isin( $$variable{User}->type(), ['E','A'] ) ) ?>
+			<? endif ( ($session{user_type} eq 'A' ) or ( openprint::usergroup::is_user_in( ['UserManagement'], $session{user_id} ) ) ) ?>
 			<li class="marketing_categories"> 
 				<label>User Category</label>
 				<ul>
 				<? echo (
 					my @users_categories;
-					if ( $$variable{'User'}->id() ) {
-						@users_categories = sql::execute( $log, $dbh,'SELECT category_id FROM Users_in_Marketing_Categories WHERE user_id=?', $$variable{'User'}->id() );
+					if ( $$variable{User}->id() ) {
+						@users_categories = sql::execute( $log, $dbh,'SELECT category_id FROM Users_in_Marketing_Categories WHERE user_id=?', $$variable{User}->id() );
 					} # end if
 					checkboxes( 'marketing_categories', [ map { $_->id(), $_->name() } openprint::MarketingCategory->find('order'=>'lower(name)') ], \@users_categories, { container=>['<li>','</li>'] } );
 				) ?>
@@ -261,7 +261,7 @@
 				<? echo (
 					require openprint::UserGroup;
 					my $html = '<ul class="UserGroups">';
-					my @usergroup_ids = map { $_->id() } $$variable{'User'}->Groups();
+					my @usergroup_ids = map { $_->id() } $$variable{User}->Groups();
 					foreach my $Group ( openprint::UserGroup->find( 'order'=>'lower(name)' ) ) {
 						$html .= sprintf('<li><input type="checkbox" id="UserGroups%1$d" name="UserGroups" value="%1$d" %3$s /><label for="UserGroups%1$d">%2$s</label></li>', $Group->id(), $Group->name(), checked( sets::isin( $Group->id(), \@usergroup_ids ) ) );
 					} # end foreach

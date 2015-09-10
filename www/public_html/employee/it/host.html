@@ -101,20 +101,20 @@
 			<th class="ip">IP Address</th>
 			<th class="dhcp">DHCP?</th>
 			<th class="comment">Comment</th>
-<? if ( $config{'RADIUS Support'} eq 'Y' ) ?>
+<? if ( $config{'RADIUS_Support'} eq 'Y' ) ?>
 	<th class="radius">RADIUS</th>
-<? endif ( $config{'RADIUS Support'} eq 'Y' ) ?>
+<? endif ( $config{'RADIUS_Support'} eq 'Y' ) ?>
 			<th class="buttons">&nbsp;</th>
 		</tr>
 <? echo (
 	my $html;
-	 if ( $config{'RADIUS Support'} eq 'Y' ) {
+	 if ( $config{'RADIUS_Support'} eq 'Y' ) {
 		$openprint::RADIUS_Check::dbh = sql::open_sql( $log,
-			database	=> $config{'RADIUS DB Name'},
-			driver		=> $config{'RADIUS DB Driver'},
-			host		=> $config{'RADIUS DB Server'},
-			login		=> $config{'RADIUS DB Username'},
-			password	=> $config{'RADIUS DB Password'},
+			database	=> $config{'RADIUS_DB_Name'},
+			driver		=> $config{'RADIUS_DB_Driver'},
+			host		=> $config{'RADIUS_DB_Server'},
+			login		=> $config{'RADIUS_DB_Username'},
+			password	=> $config{'RADIUS_DB_Password'},
 		);
 		if ( ! $openprint::RADIUS_Check::dbh ) {
 			$html .= 'Unable to connect to RADIUS DB server.';	
