@@ -1990,7 +1990,7 @@ sub _manifest_content {
 		$variable{error} .= $MC->save( {
 				type_id		=>	$param{type_id},
 				Skid		=>	$Skid,
-				RFIDTag		=>	$Tag,
+				rfidtag_id	=>	$Tag->id(),
 				manifest_id	=>	$Manifest->id(),
 				manufacturers_id	=>	$param{manufacturers_id},
 				docket		=>	$param{docket},
