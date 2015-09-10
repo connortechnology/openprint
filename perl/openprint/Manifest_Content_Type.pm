@@ -9,7 +9,7 @@ use vars qw( $debug $table $serial %fields %find_fields %transforms %defaults );
 require openprint::Manifest;
 require Math::Round;
 
-$debug = 0;
+$debug = 1;
 
 $table = 'manifest_content_types';
 $serial = 'manifest_content_types_id_seq';
@@ -109,11 +109,23 @@ sub PurchaseOrder_Content {
 					}
 				} # end if
 				my ( $width ) = $POC->item() =~ /([\.\d]+)in/i;
-				if ( $width and $Paper->width() and ( $Paper->width() != $width ) ) {
-					$openprint::log->debug("Wrong width: $width != " . $Paper->width() ) if $debug;
-					next;
+				if ( $width ) {
+					if ( $Paper->width() and ( $Paper->width() != $width ) ) {
+						$openprint::log->debug("Wrong width: $width != " . $Paper->width() ) if $debug;
+						next;
+					} else {
+						$openprint::log->debug("Right width: $width == " . $Paper->width() ) if $debug;
+					} # end if
 				} else {
-					$openprint::log->debug("Right width: $width == " . $Paper->width() ) if $debug;
+					my ( $width, $height ) = $POC->item() =~ /(\d+)x(\d+)/i;
+					if ( $width ) {
+						if ( $Paper->width() and ( $Paper->width() != $width ) ) {
+							$openprint::log->debug("Wrong width: $width != " . $Paper->width() ) if $debug;
+							next;
+						} else {
+							$openprint::log->debug("Right width: $width == " . $Paper->width() ) if $debug;
+						} # end if
+					}
 				} # end if
 				if ( $Paper->fsc_code() and ( $POC->item() !~ /FSC/ ) ) {
 					$openprint::log->debug("FSC Mismatch ") if $debug;
