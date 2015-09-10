@@ -110,7 +110,7 @@ if ( tr ) tr.remove();
 			$html .= '<td colspan="2">&nbsp;</td>';
 		} # end if
 		$html .= '<td class="Location">'.ssi::select( $variable{location_dropdown}, $C->location_id(), { name=>'location_id-'.$id, prepend=>['','select'] } ).'</td>';
-		my @otherMC = openprint::ManifestContent->find( skid_id=>$$Skid{id}, 'manifest_id !=' => $$variable{Manifest}->id() );
+		my @otherMC = openprint::ManifestContent->find( skid_id=>$$Skid{id}, 'manifest_id !=' => $$variable{Manifest}->id() ) if $$Skid{id};
 		$html .= '<td class="Manifest"> '.join('<br/>', map { $_->Manifest()->link_to() } @otherMC ).'</td>';
 
 		$html .= '<td class="buttons">' . join("\n",
