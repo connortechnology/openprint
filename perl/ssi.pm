@@ -1065,5 +1065,13 @@ sub link {
 	return '<link rel="stylesheet" type="text/css" href="'.hash_link($_[0]).'"/>';
 }
 
+sub include_logs {
+	my $Object = $_[0];
+	$variable{Object} = $Object;
+	setup_date_select( $r->uri, 'log_created_on_start', -31 );
+	setup_date_select( $r->uri, 'log_created_on_end', '' );
+	return include('/includes/_logs_container.html');
+}
+
 1;
 __END__
