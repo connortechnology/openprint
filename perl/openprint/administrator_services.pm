@@ -11,13 +11,16 @@ require openprint::ServicePrice;
 require openprint::logs;
 
 use openprint ();
-use vars qw( $log $dbh %param %variable );
+use vars qw( $r $log $dbh %param %variable );
+*r = \$openprint::r;
 *log = \$openprint::log;
 *dbh = \$openprint::dbh;
 *param = \%openprint::param;
 *variable = \%openprint::variable;
 
 sub edit {
+
+
 	my $Service = new openprint::Service( $param{ddmService} );
 
 	if ( $param{btnFunction} eq '<<' ) {
