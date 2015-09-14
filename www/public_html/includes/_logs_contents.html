@@ -1,9 +1,9 @@
 <? echo (
 	my $html='';
-	my $uri = '/administrator/stock/stock.html';
+	my $uri = $ENV{REFERER};
 	my @Logs = openprint::Log->find(
-		object_type	=>'openprint::Paper',
-		object_id		=>	$$variable{Service}->id(),
+		object_type_id	=>	$$variable{Object}->Object_Type()->id(),
+		object_id		=>	$$variable{Object}->id(),
 		date_filter( $uri.'?log_created_on_end', 'date_time <=' ),
 		date_filter( $uri.'?log_created_on_start', 'date_time >=' ),
 		order =>'date_time DESC',
