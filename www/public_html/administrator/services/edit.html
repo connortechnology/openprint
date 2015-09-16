@@ -89,26 +89,9 @@
 	<div id="Prices">
 		<?include(_prices.html)?>
 	</div>
-<fieldset><legend>Logs</legend>
-        <ul>
-            <li><label>Date</label>
-                <? echo ( join( ' to ',
-                        datetime_select_session( $r->uri(),'log_created_on_start', {
-                            onchange    =>q`new Ajax.Updater( 'Logs', '_logs.html', { parameters: $('f1').serialize() } );`,
-                            with_today=>1,
-                            with_clear=>1,
-                            } ),
-                        datetime_select_session( '/employee/it/host.html','log_created_on_end', {
-                            onchange    =>q`new Ajax.Updater( 'Logs', '_logs.html', { parameters: $('f1').serialize() } );`,
-                            with_today=>1,
-                            with_clear=>1,
-                            } ),
-                    ); ) ?>
-                <? echo ( button( 'LoadLog', { onclick=>q`new Ajax.Updater( 'Logs', '_logs.html', { parameters: $('f1').serialize() } );`, text=>'Load' } ); ) ?>
-            </li>
-        </ul>
-        <div id="Logs"><?include('_logs.html')?></div>
-    </fieldset>
 	<? endif ( $$variable{Service}->id() ) ?>
 	<input type="hidden" name="btnFunction"/>
 </form>
+	<? if ( $$variable{Service}->id() ) ?>
+	<? echo ( include_logs( $$variable{Service} ); ) ?>
+	<? endif ( $$variable{Service}->id() ) ?>

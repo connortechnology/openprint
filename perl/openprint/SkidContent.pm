@@ -63,7 +63,7 @@ sub delete {
 	my $error = $self->SUPER::delete();
 	if ( !$error ) {
 		$self->Skid()->Contents(undef);
-		$self->Paper()->save();
+		$self->Paper()->save() if $$self{paper_id};
 	} # end if
 } # end sub delete
 

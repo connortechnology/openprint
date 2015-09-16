@@ -915,7 +915,7 @@ $openprint::log->debug("Not a book") if DEBUG;
 					$results{Breakdown} .= sprintf('%d Vertical cuts on %d sheets in %d runs: %.2f%s=%.2f<br/>', $vertical_cuts, $sheets, $runs, @ServicePrice{'Price','units'}, $price );
 				} # end if
 				$totalPrice += $price;
-				if ( (!$config{'Dumb Cutting'}) or ( $config{'Dumb Cutting'} ne 'Y' ) ) {
+				if ( (!$config{'Dumb_Cutting'}) or ( $config{'Dumb_Cutting'} ne 'Y' ) ) {
 					$sheets *= $$I{columns};
 					$runs = $liftDepth ? ceil( $sheets*$calliper/$liftDepth ) : $sheets;
 				} # end if
@@ -936,7 +936,7 @@ $openprint::log->debug("Not a book") if DEBUG;
 					$results{Breakdown} .= sprintf("%d Horizontal cuts on %d sheets in %d runs: %.2f%s=%.2f<br/>", $horizontal_cuts, $sheets, $runs, @ServicePrice{'Price','units'}, $price );
 				}
 				$totalPrice += $price;
-				if ( (!$config{'Dumb Cutting'}) or ( $config{'Dumb Cutting'} ne 'Y' ) ) {
+				if ( (!$config{'Dumb_Cutting'}) or ( $config{'Dumb_Cutting'} ne 'Y' ) ) {
 					$sheets *= $$I{rows};
 					$runs = $liftDepth ? ceil( $sheets*$calliper/$liftDepth ) : $sheets;
 				} # end if
@@ -967,7 +967,7 @@ $openprint::log->debug("Not a book") if DEBUG;
 					$results{Breakdown} .= sprintf('%d Vertical cuts on %d sheets in %d runs: %.2f%s=%.2f<br/>', $dutch_vertical_cuts, $sheets, $runs, @ServicePrice{'Price','units'}, $price );
 				} # end if
 				$totalPrice += $price;
-				if ( (!$config{'Dumb Cutting'}) or ( $config{'Dumb Cutting'} ne 'Y' ) ) {
+				if ( (!$config{'Dumb_Cutting'}) or ( $config{'Dumb_Cutting'} ne 'Y' ) ) {
 					$sheets *= $$I{dutch_columns};
 					$runs = $liftDepth ? ceil( $sheets*$calliper/$liftDepth ) : $sheets;
 				} # end if
@@ -988,7 +988,7 @@ $openprint::log->debug("Not a book") if DEBUG;
 					$results{Breakdown} .= sprintf('%d Horizontal cuts on %d sheets in %d runs: %.2f<br/>', $dutch_horizontal_cuts, $sheets, $runs, $price );
 				} # end if
 				$totalPrice += $price;
-				if ( (!$config{'Dumb Cutting'}) or ( $config{'Dumb Cutting'} ne 'Y' ) ) {
+				if ( (!$config{'Dumb_Cutting'}) or ( $config{'Dumb_Cutting'} ne 'Y' ) ) {
 					$sheets *= $$I{dutch_rows};
 					$runs = $liftDepth ? ceil( $sheets*$calliper/$liftDepth ) : $sheets;
 				} # end if

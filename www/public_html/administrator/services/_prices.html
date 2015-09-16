@@ -15,6 +15,7 @@
 		my @equipment_ids = $param{equipment_id} ? ($param{equipment_id}) : sort( sets::union( map{ $_->equipment_id() } @Prices ) );
 		push @equipment_ids, undef if ! @equipment_ids;
 		foreach my $Equipment ( map{new openprint::Equipment($_)} @equipment_ids ) {
+			next if $Equipment->deleted();
 			$$variable{Equipment} = $Equipment;
 			$html .= variable_substitution( \$prices_per_equipment );
 		} # end foreach Equipment

@@ -1600,9 +1600,9 @@ if ( ! sets::isin( 'service_prices_id_seq',\@sequences ) ) {
 	} else {
 		$dbh->do('CREATE SEQUENCE service_prices_id_seq') or die $dbh->errstr();
 		$dbh->do(q`SELECT setval('service_prices_id_seq', (SELECT max(id) FROM service_prices))`) or die $dbh->errstr();
-		$dbh->do('ALTER TABLE service_prices alter id set default nextval(service_prices_id_seq)') or die $dbh->errstr();
 	} # end if
 } # end if
+$dbh->do(q`ALTER TABLE service_prices alter id set default nextval('service_prices_id_seq')`) or die $dbh->errstr();
 
 if ( sets::isin( 'pricelists', \@tables ) ) {
 	my $data = $dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='pricelists'", 'column_name' );

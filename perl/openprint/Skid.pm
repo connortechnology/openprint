@@ -563,9 +563,12 @@ sub PurchaseOrders {
 	if ( ! $_[0]{PurchaseOrders} ) {
 		require openprint::Manifest_Content_Type;
 		my @POs;
-		foreach my $MCT ( openprint::Manifest_Content_Type->find( 'skid_id any'=>$_[0]->id() ) ) {
-			push @POs, $MCT->PurchaseOrder() if $MCT->po_id();
-		} # end foreach MCT
+		my @manifest_type_ids = map { $_->type_id() } openprint::ManifestContent->find( skid_id=>$_[0]->id() );
+		if ( @manifest_type_ids ) {
+			foreach my $MCT ( openprint::Manifest_Content_Type->find( id=>\@manifest_type_ids ) ) {
+				push @POs, $MCT->PurchaseOrder() if $MCT->po_id();
+			} # end foreach MCT
+		}
 		$_[0]{PurchaseOrders} = \@POs;
 	} # end if
 	return @{$_[0]{PurchaseOrders}} if ref $_[0]{PurchaseOrders} eq 'ARRAY';

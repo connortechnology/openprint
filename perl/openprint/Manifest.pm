@@ -74,12 +74,14 @@ sub Types {
 	if ( %params ) {
 		if ( $$self{'id'} ) {
 			$params{'manifest_id'} = $$self{id};
+			$params{order} = 'id' if ! exists $params{order};
 			return openprint::Manifest_Content_Type->find(%params);
 		} # end if
 	} # end if
 	if ( ! $$self{'Types'} ) {
 		if ( $$self{'id'} ) {
 			$params{manifest_id} = $$self{id};
+			$params{order} = 'id' if ! exists $params{order};
 			@{$$self{'Types'}} = openprint::Manifest_Content_Type->find(%params);
 		} # end if
 	} # end if

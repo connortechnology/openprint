@@ -11,28 +11,31 @@ require openprint::ServicePrice;
 require openprint::logs;
 
 use openprint ();
-use vars qw( $log $dbh %param %variable );
+use vars qw( $r $log $dbh %param %variable );
+*r = \$openprint::r;
 *log = \$openprint::log;
 *dbh = \$openprint::dbh;
 *param = \%openprint::param;
 *variable = \%openprint::variable;
 
 sub edit {
+
+
 	my $Service = new openprint::Service( $param{ddmService} );
 
 	if ( $param{btnFunction} eq '<<' ) {
-		$Service = $Service->Previous( {'category_id'=>$param{ddmSearchCategory}} );
+		$Service = $Service->Previous( {category_id=>$param{ddmSearchCategory}} );
 	} elsif ( $param{btnFunction} eq '>>' ) {
-		$Service = $Service->Next( {'category_id'=>$param{ddmSearchCategory}} );
+		$Service = $Service->Next( {category_id=>$param{ddmSearchCategory}} );
 	} elsif ( $param{btnFunction} eq 'Delete' ) {
-		foreach my $T ( openprint::Timetrack->find('service_id'=>$Service->id() ) ) {
+		foreach my $T ( openprint::Timetrack->find(service_id=>$Service->id() ) ) {
 			$variable{error} .= sprintf('Service is used in <a href="/timetrack/edit.html?timetrack_id=%1$d">Timetrack %1$d</a><br/>', $T->id() );
 		} # end foreach T
 		$variable{error} .= $Service->delete() if ! $variable{error};
-		$Service = $Service->Next( {'category_id'=>$param{ddmSearchCategory}} ) if ! $variable{error};
+		$Service = $Service->Next( {category_id=>$param{ddmSearchCategory}} ) if ! $variable{error};
 	} elsif ( $param{btnFunction} eq 'Save' ) {
 		if ( $param{new_category} ) {
-			if ( my @Categories = openprint::ServiceCategory->find('name'=>$param{new_category} ) ) {
+			if ( my @Categories = openprint::ServiceCategory->find(name=>$param{new_category} ) ) {
 				$param{category_id} = $Categories[0]->id();
 			} else {
 				my $Category = new openprint::ServiceCategory();
@@ -46,19 +49,21 @@ sub edit {
 			} # end if
 		} # end if
 
+
 		my $ac = sql::start_transaction( $dbh );
-		$variable{error} .= $Service->save( \%param );
-		(new openprint::Log())->save({object_id=>$$Service{id},object_type=>ref$Service, action=>'Edit Service'});
+		my @changes = $Service->changes( \%param );
+		$variable{error} .= $Service->save( \%param ) if @changes;
 		if ( ! $variable{error} ) {
 
 			# Please note that we don't do any deleting here.  We mayonlyhave the prices for 1 piee of equipment on screen, so just update the ones that are on screen.
 
-			foreach my $Price ( openprint::ServicePrice->find( service_id=>$$Service{id},
-($param{equipment_id} ? ( equipment_id=>$param{equipment_id} ) : () ),
-						) ) {
+			@changes = ( join(', ', @changes) ) if @changes;
+			foreach my $Price ( openprint::ServicePrice->find( 
+						service_id=>$$Service{id}, 
+						($param{equipment_id} ? ( equipment_id=>$param{equipment_id} ) : () ),
+						order=>'pricelist_id, min NULLS FIRST,max NULLS FIRST' ) ) {
 				next if ! exists $param{"price-$$Price{id}"};
-
-				$variable{error} .= $Price->save( {
+				my $new_values = {
 						#equipment_id	=>	$param{"equipment_id-$$Price{id}"},
 						period_start	=>	( Date::Calc::check_date( map { $param{"period_start-$$Price{id}_$_"} } ( 'year','month','day' ) ) ? sprintf('%.4d-%.2d-%.2d 00:00:00', map { $param{"period_start-$$Price{id}_$_"} } ( 'year','month','day' ) ) : undef ),
 						period_end		=>	( Date::Calc::check_date( map { $param{"period_end-$$Price{id}_$_"} } ( 'year','month','day' ) ) ? sprintf('%.4d-%.2d-%.2d 23:59:59', map { $param{"period_end-$$Price{id}_$_"} } ( 'year','month','day' ) ) : undef ),
@@ -70,8 +75,26 @@ sub edit {
 						price			=>	$param{"price-$$Price{id}"},
 						discountable	=>	$param{"discount-$$Price{id}"},
 						supplier_id		=>	$param{"supplier_id-$$Price{id}"},
-						} );
+						};
+				my @price_changes = $Price->changes( $new_values );
+				if ( @price_changes ) {
+					$variable{error} .= $Price->save( $new_values );
+					my $price_desc = '';
+					if ( ! ( $Price->min() or $Price->max() ) ) {
+						'all quantities';
+					} else {
+						if ( $Price->min() ) {
+							$price_desc .= 1*$Price->min() . ' ';
+						}	
+						$price_desc .= 'up';
+						if ( $Price->max() ) {
+							$price_desc .= ' to ' . 1*$Price->max();
+						} 
+					} # end if
+					push @changes, ( 'Change price for ' .$Price->Pricelist()->name() . ' '. $price_desc . ' on ' . $Price->Equipment()->strid() . ': ' .  join(', ', map { $_ } @price_changes ) );
+				} # end if
 			} # end foreach 
+			(new openprint::Log())->save({object_id=>$$Service{id},object_type=>ref$Service, action=>'Edit Service', note=>join('<br/>', @changes) }) if @changes;
 		} # end if not error
 		sql::end_transaction( $dbh, $ac );
 		if ( ! $variable{error} ) {

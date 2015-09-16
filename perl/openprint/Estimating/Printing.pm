@@ -61,6 +61,8 @@ my %other_group_cache;
 
 my $PaperServiceType;
 
+my $GripperMakeReadyService;
+
 #use warnings;
 my $ImpositionServiceType;
 
@@ -2393,6 +2395,8 @@ $openprint::log->debug("after sorting presses: " . ( sprintf('%.4f', tv_interval
 $log->warn("There are no quantities!");
 	} # end if
 
+	$GripperMakeReadyService = openprint::Service->find_one( name=>'GripperMakeReady' );
+
 	foreach my $qty_index ( @quantity_indexes ) {
 		if ( $$specs{'OverridePrice'.$qty_index} ne 'Y' ) {
 			$$specs{"txtPrice$qty_index"} = 0;
@@ -2891,6 +2895,9 @@ sub breakdown {
 	$breakdown .= openprint::Estimating::Imposition::signature_summary( $Imposition, $$price{'Imposition Price'} ) if $$price{'Imposition Price'} and $ImpositionServiceType;
 	$breakdown .= sprintf('%s Colour Bar %s %s, Bleed: %s Orientation: %s<br/>', ( $Press ? $Press->strid() : '' ), $Imposition->colour_bar_size(), $Imposition->colour_bar_orientation(), @$Imposition{'bleed_size','image_orientation'} );
 	$breakdown .= '<b>Setups</b><br/>';
+	if ( $$price{GripperSetup} ) {
+		$breakdown .= sprintf('Gripper Setup: $%.2f<br/>', $$price{GripperSetup}{Price} );
+	}
 	$breakdown .= $$price{'Setup Breakdown'};
 	$breakdown .= sprintf('Roll2Sheet Charge: $%.2f<br/>', $$price{Roll2SheetMakeReady} ) if $$price{Roll2SheetMakeReady};
 	$breakdown .= sprintf('Stock Setup: $%1$.2f<br/>', $$price{StockSetup} ) if $$price{StockSetup};
@@ -5362,6 +5369,22 @@ $openprint::log->warn("No folding equipment");
 
 	my $press_setup = 0;
 
+	if ( $GripperMakeReadyService ) {
+		my $charge = 1;
+		foreach my $other_I ( @{$other_impositions} ) {
+			my $P = $other_I->Paper();
+			if ( $$P{calliper} == $$Paper{calliper} and $other_I->Press()->id() == $Press->id() ) {
+				$charge = 0;
+				last;
+			} # end if
+		} # end foreach other_I
+		if ( $charge ) {	
+			$price{GripperSetup} = $GripperMakeReadyService->get_Price( $$Paper{calliper}, $Press );
+			$press_setup += $price{GripperSetup}{Price};
+		} # end if
+	}
+
+
 	if ( $$Imposition{runstyle} eq 'Sheet Work' ) {
 		if ( @{$$project{side_one_colours}} and @{$$project{side_two_colours}} ) {
 			my $press_setup_front = press_setup_cost( $plate_changes, $plate_setup{'Plate Runs'}, $$project{side_one_colours}, $$Paper{calliper}, $qty_index, $Imposition, $other_impositions );
@@ -6067,7 +6090,10 @@ sub get_run_price {
 		$impression_service = $$Imposition{runstyle}.'Impression'.$side_one_colours.'/'.$side_two_colours;
 		my %RunPrice;
 		if ( ! ( %RunPrice = openprint::service::get_price_object( $impression_service, $impressions, $Press ) ) ) {
-			%RunPrice = openprint::service::get_price_object( $$Imposition{runstyle}.'Impression', $impressions, $Press );
+			$impression_service = $$Imposition{runstyle}.'Impression'.$side_two_colours.'/'.$side_one_colours;
+			if ( ! ( %RunPrice = openprint::service::get_price_object( $impression_service, $impressions, $Press ) ) ) {
+				%RunPrice = openprint::service::get_price_object( $$Imposition{runstyle}.'Impression', $impressions, $Press );
+			} # end if
 		} # end if
 		$run_price{units} = $RunPrice{units};
 		$running_price = $RunPrice{Price};
@@ -6228,6 +6254,7 @@ sub press_setup_cost {
 	my $setup_count = @$colours;
 
 	my %Price;
+
 	$Price{'Setup Count'} = $setup_count + ( $plate_change_qty ? $plate_change_qty : 0 );
 	if ( ! ( %Price = openprint::service::get_price_object( 'PressUnitMakeReady'.$$Imposition{runstyle}, undef, $Press ) ) ) {
 		%Price = openprint::service::get_price_object( 'PressUnitMakeReady', undef, $Press );
