@@ -578,7 +578,7 @@ $log->debug("regexp: $regexp");
 
 		my @to;
 		if ( $User->email() =~ /^iconnor/ ) {
-			@to = ( $User );
+			@to = ( 'iconnor@connortechnology.com' );
 		} else {
 			if ( $Company->salesrep_id() ) {
 				my $CSR = $Company->CSR();
@@ -602,7 +602,14 @@ $log->debug("regexp: $regexp");
 			$variable{Uploads} = \@Uploads;
 
 			$variable{ReplacementText} = ssi::include( '/email_content/ftp_csr_notification.html', \%variable );
+			if ( ! $variable{ReplacementText} ) {
+				$log->error("No CSR notification text");
+			}
 			my $body = ssi::include( '/email_template.html', \%variable );
+			if ( ! $body ) {
+				$log->error("No body notification text");
+			}
+
 			my $Mail = new openprint::Email();
 			$Mail->send(
 					FROM    => ( $config{AdministratorEmail} ? $config{AdministratorEmail} : $from ),
