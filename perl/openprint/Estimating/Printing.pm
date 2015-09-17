@@ -2359,8 +2359,8 @@ $openprint::log->debug("No printing");
 	} # end if
 
 	my $project = setup_project( $Project, $service_index, $services, $specs, \@side_one_colours, \@side_two_colours, \%inkCoverage, $Papers[0] );
-		openprint::Estimating::Folding::load_equipment( $Project );
-		openprint::Estimating::Cutting::load_equipment( $Project );
+	openprint::Estimating::Folding::load_equipment( $Project );
+	openprint::Estimating::Cutting::load_equipment( $Project );
 $openprint::log->debug("Before select presses: " . ( sprintf('%.4f', tv_interval( [$master_time])*1000) ) .' usecs' );
 	%Presses = map { $$_{strid}, $_ } openprint::Equipment->find( 'category any'=>'Printing', 'useinestimating'=>1 );
 	my %presses = select_presses( $Project, \@Papers, $specs, $project );
@@ -2441,7 +2441,7 @@ $log->warn("There are no quantities!");
 		# We have to match the stock type and grain direction of previous sigs
 		delete $$specs{PreviousStockType};
 		delete $$specs{PreviousGrainDirection};
-		foreach my $index ( $Project->signatures({ Group=>$$specs{Group}}) ) {
+		foreach my $index ( $Project->signatures({ Group=>$$specs{Group} }) ) {
 			next if $index >= $service_index;
 			my $sig_specs = openprint::service::get_specs_ref( $Project, $index );
 			$$specs{PreviousStockType} = $$sig_specs{'StockType'.$qty_index};
@@ -2464,11 +2464,21 @@ $log->warn("There are no quantities!");
 		my %previous_forms_cache;
 		my %PaperCounts;
 		my %PlateCounts;
-		foreach my $index ( sort { $a <=> $b } $Project->signatures() ) {
+		foreach my $index ( $Project->signatures( { sort=>1 } ) ) {
 # Get plates in each previous signature, so we can get qty discounts
-			last if ($index >= $service_index);
 			my $sig_specs = openprint::service::get_specs_ref( $Project, $index );
-			next if $$sig_specs{pages_supplied} eq 'Y';
+			if ( $$sig_specs{pages_supplied} eq 'Y' ) {
+				$openprint::log->debug("pages supplied");
+				next;
+			}
+			if ( $index >= $service_index and $$specs{Group} == $$sig_specs{Group} ) {
+				if ( DEBUG ) {
+					$openprint::log->debug("Next sug $index >= $service_index and $$specs{Group} == $$sig_specs{Group} $$sig_specs{txtSignatureType} ");
+				}
+				next;
+			} elsif ( DEBUG ) {
+					$openprint::log->debug("Not Next sug $index >= $service_index and $$specs{Group} == $$sig_specs{Group} $$sig_specs{txtSignatureType} ");
+			} # end if
 			$PlateCounts{$$sig_specs{'PlateID'.$qty_index}} += $$sig_specs{'txtPlateQuantity'.$qty_index};
 			$PlateCounts{'Blank'.$$sig_specs{'PlateID'.$qty_index}} += $$sig_specs{'BlankPlateQuantity'.$qty_index};
 			$$project{roll2sheetcharged} = 1 if $$sig_specs{'Roll2SheetCharge'.$qty_index};
@@ -2477,14 +2487,25 @@ $log->warn("There are no quantities!");
 			$previous_forms_cache{$hash_key} += 1;
 			if ( $$sig_specs{'StockQuantity'.$qty_index} ) {
 				my $Paper = openprint::Paper::load_from_signature( $Project, $sig_specs, $qty_index );
-				if ( $Paper->width() and $Paper->height() ) {
+				#if ( $Paper->width() and $Paper->height() ) {
+				if ( $Paper->width() ) {
 					$PaperCounts{$Paper->id_string()} += $$sig_specs{'StockQuantity'.$qty_index};
 					$Papers{$Paper->id_string()} = $Paper if ! $Papers{$Paper->id_string()};
 				} else {
 					$openprint::log->debug("Loaded paper with no width and height from sig $index " . $Paper->to_string() );
 				}
+			} else {
+$openprint::log->debug("No stock quantity for form $$sig_specs{SignatureIndex}");
 			} # end if
 		} # end foreach $index
+
+		if ( DEBUG ) {
+				$openprint::log->debug("Stock counts before calc: ");
+
+			foreach my $k ( sort keys %PaperCounts ) {
+				$openprint::log->debug("Stock counts before calc: $k $PaperCounts{$k}");
+			}
+		}
 		if ( ! $$project{stocksetupcharged} ) {
 			# Check to see if there even are any stock setup prices.	If not, don't both estimating them later
 			if ( ! openprint::PaperPrice->find('service'=>'Setup') ) {
