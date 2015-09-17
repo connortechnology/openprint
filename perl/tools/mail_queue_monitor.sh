@@ -27,7 +27,7 @@ MAILPORT=25
 MAILPROTO=smtp
 
 # Fully qualified domain name of local postfix installation
-DOMAIN=mail1.point-one.com
+DOMAIN=`cat /etc/mailname`
 
 # From address
 MAILFROM=mail1@point-one.com
