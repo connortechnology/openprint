@@ -18,7 +18,7 @@ package openprint::Estimating::Imposition;
 use strict;
 #use Data::Dumper;
 
-use constant DEBUG => 1;
+use constant DEBUG => 0;
 
 require openprint::service;
 
