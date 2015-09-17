@@ -25,7 +25,7 @@ sub session_init {
 			$cookie = $cookie->value if $cookie;
 		} else {
 			if ( $r->param('_session_id') ) {
-	$log->error("Since when is session_id in the params");
+				$log->error("Since when is session_id in the params");
 				$cookie = $r->param('_session_id');
 			} # end if
 		} # end if
@@ -68,10 +68,6 @@ sub session_init {
 		} # end if
 
 		$session{ip} = $ENV{REMOTE_ADDR} if $ENV{REMOTE_ADDR} and ! $session{ip};
-
-		$User = new openprint::User( $session{user_id} );
-		$Company = new openprint::Company( $session{company_id} );
-		$Owner = new openprint::Company( $config{owner_id} );
 
 	# Now set some defaults right away, if we can, FIXME namespace colision
 		if ( $r->param('Country') ) {
@@ -117,6 +113,10 @@ sub session_init {
 			$session{'Currency_id'} = $_->id() if $_;
 		} # end if
 	} # end if $r
+
+	$User = new openprint::User( $session{user_id} );
+	$Company = new openprint::Company( $session{company_id} );
+	$Owner = new openprint::Company( $config{owner_id} );
 
 	if ( $config{Pricelist} ) {
 		if ( ! $session{Pricelist_id} ) {
