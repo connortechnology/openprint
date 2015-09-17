@@ -2,7 +2,7 @@
 function load_customers( ) {
 	var form = $('f1');
 	new Ajax.Updater( 'ddmCustomer', '/includes/_company_ddm.html', { parameters: { 
-		salesrep_id: get_ddm_value( form.search_salesrep_id ),
+		salesrep_id: form.search_salesrep_id ? get_ddm_value( form.search_salesrep_id ) : null,
 		name: f1.search_company_filter.value,
 		type: get_value( form.search_type ),
 		deleted: get_value( form.deleted ),

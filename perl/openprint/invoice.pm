@@ -114,6 +114,7 @@ sub history {
 		foreach my $Invoice ( @Invoices ) {
 			next if $Invoice->is_paid();
 			next if $Invoice->bad_debt();
+			next if ! $Invoice->posted();
 
 			$data{uri} = 'invoice';
 			$data{Invoice} = $Invoice;
