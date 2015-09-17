@@ -101,6 +101,7 @@ $openprint::dbh = sql::open_sql( $log,
 die 'Error opening db' if ! $dbh;
 configuration::init( \%config );
 configuration::from_file($$opts{config});
+openprint::session_init();
 # Cache of recently completed uploads.  keys are username, value is array of upload hashes.  When the user is no longer logged in or
 # older than a certain age, the email notification should go out, and the hash entry cleared.
 my %uploads;
