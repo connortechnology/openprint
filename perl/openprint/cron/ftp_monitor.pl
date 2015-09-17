@@ -101,6 +101,7 @@ $openprint::dbh = sql::open_sql( $log,
 die 'Error opening db' if ! $dbh;
 configuration::init( \%config );
 configuration::from_file($$opts{config});
+openprint::session_init();
 # Cache of recently completed uploads.  keys are username, value is array of upload hashes.  When the user is no longer logged in or
 # older than a certain age, the email notification should go out, and the hash entry cleared.
 my %uploads;
@@ -578,7 +579,7 @@ $log->debug("regexp: $regexp");
 
 		my @to;
 		if ( $User->email() =~ /^iconnor/ ) {
-			@to = ( $User );
+			@to = ( 'iconnor@connortechnology.com' );
 		} else {
 			if ( $Company->salesrep_id() ) {
 				my $CSR = $Company->CSR();
@@ -589,7 +590,7 @@ $log->debug("regexp: $regexp");
 					$log->debug("Not Adding CSR $$CSR{email} : notifications etting:" . $CSR->notification('CSR Client File Uploads') );
 				} # end if
 			} # end if
-			push @to, map { $_->User() } openprint::User_Notification->find( type=>'Client File Uploads',value=>'Yes', company_id=>[ $config{Owner}, $Company->id() ] );
+			push @to, map { $_->User() } openprint::User_Notification->find( type=>'Client File Uploads',value=>'Yes', company_id=>[ $config{owner_id}, $Company->id() ] );
 		} # end if
 		
 		if ( ! @to ) {
@@ -602,7 +603,14 @@ $log->debug("regexp: $regexp");
 			$variable{Uploads} = \@Uploads;
 
 			$variable{ReplacementText} = ssi::include( '/email_content/ftp_csr_notification.html', \%variable );
+			if ( ! $variable{ReplacementText} ) {
+				$log->error("No CSR notification text");
+			}
 			my $body = ssi::include( '/email_template.html', \%variable );
+			if ( ! $body ) {
+				$log->error("No body notification text");
+			}
+
 			my $Mail = new openprint::Email();
 			$Mail->send(
 					FROM    => ( $config{AdministratorEmail} ? $config{AdministratorEmail} : $from ),

@@ -379,7 +379,12 @@ $log->warn('Object::set called on an object with no fields');
 		next if ! exists $$params{$field};
 
 		if ( $$self{$field} ne $$params{$field} ) {
-			push @results, "$field changed from $$self{$field} to $$params{$field}";
+			if ( $field eq 'password' ) {
+			
+				push @results, "$field changed";
+			} else {
+				push @results, "$field changed from $$self{$field} to $$params{$field}";
+			}
 		} # end if
 	} # end foreachf ield
 	return @results;

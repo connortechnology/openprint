@@ -14,6 +14,7 @@ Thank you for using <? echo ( new openprint::User( $session{'user_id'} )->Compan
 		date_filter('/invoice/history.html?created_on_end', 'created_on >=' ),
 		invoicee_id		=> $session{'/invoice/history.html?company_id'},
 		invoicer_id		=> $session{'company_id'},
+		posted			=>	1,
 		order				=> 'id',
 		);
 	foreach my $Invoice ( @Invoices ) {
@@ -69,8 +70,8 @@ Thank you for using <? echo ( new openprint::User( $session{'user_id'} )->Compan
 	) ?>
 	<tr<?rowclass?>> 
 		<td class="invoice_id"><a href="/invoice/view.html?invoice_id=<? echo ( $$variable{'Invoice'}->id(); ) ?>"><? echo ( $$variable{'Invoice'}->id(); ) ?></a></td>
-		<td class="Date"><? echo ( Date::Format::time2str( $config{'DateFormat'}, Date::Parse::str2time( $$variable{'Invoice'}->posted_on() ) ); ) ?></td>
-		<td class="Date"><? echo ( Date::Format::time2str( $config{'DateFormat'}, Date::Parse::str2time( $$variable{'Invoice'}->due_on() ) ); ) ?></td>
+		<td class="Date"><? echo ( format_date( $$variable{'Invoice'}->posted_on() ); ) ?></td>
+		<td class="Date"><? echo ( format_date( $$variable{'Invoice'}->due_on() ); ) ?></td>
 		<td class="Price"><? echo ( openprint::Currency::format( $$variable{'Invoice'}->subtotal() ); ) ?></td>
 			<? echo ( 
 				return join('', map { sprintf('<td class="Price">%s</td>', openprint::Currency::format( $$variable{'Invoice'}->Tax( $_ )->amount() ) ) } @{$$variable{'Taxes'}} );

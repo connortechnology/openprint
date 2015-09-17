@@ -114,5 +114,10 @@ sub _address_ddm {
 
 sub _company_ddm {
 } # end sub _company_ddm
+
+sub _logs_contents {
+	my $Object_Type = new openprint::Object_Type( $param{object_type_id} );
+	$variable{Object} = $Object_Type->Object( $param{object_id} );
+} # end sub _logs_contents
 1;
 __END__

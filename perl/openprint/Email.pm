@@ -84,9 +84,9 @@ sub send {
 
         $mail{"MIME-Version"} = "1.0";
 		if ( @attachments ) {
-        $mail{'content-type'} = "multipart/mixed;\n  boundary=\"$mail{BOUNDARY}\"\n";
+			$mail{'content-type'} = "multipart/mixed;\n  boundary=\"$mail{BOUNDARY}\"\n";
         } else {
-        $mail{'content-type'} = "multipart/alternative;\n  boundary=\"$mail{BOUNDARY}\"\n";
+			$mail{'content-type'} = "multipart/alternative;\n  boundary=\"$mail{BOUNDARY}\"\n";
         }
 
 		$mail{BODY} .= "\nThis is a message with multiple parts in MIME format.\n";
@@ -124,10 +124,10 @@ sub send {
             $mail{BODY} .= "\n$text\n";
         } # end while
 
-# Signal end of attachments
+		# Signal end of attachments
         $mail{BODY} .= "--$mail{BOUNDARY}--\n\n";
-		$openprint::log->debug($mail{BODY});
-    } # end if
+		$openprint::log->debug($mail{BODY}) if $debug;
+    } # end if attachments or HTML BODY
 
 	my @recipients = $self->to();
 #$openprint::log->debug("Email: Recipients @recipients");

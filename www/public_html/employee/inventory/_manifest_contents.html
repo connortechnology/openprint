@@ -49,13 +49,13 @@ input( type=>'cardinal', id=>'qty_sheets-'.$$variable{type_id}.'-', name=>'qty_s
 ) ?>
 		<td class="in_stock">&nbsp;</td>
 		<td class="last_seen">&nbsp;</td>
-		<td class="Location"><? echo ( ssi::select( $variable{'location_dropdown'}, $param{'location_id-'.$$variable{type_id}.'-'}, { name=>'location_id-'.$$variable{type_id}.'-', id=>'location_id-'.$$variable{type_id}.'-', prepend=>['','select'] } ))?></td>
+		<td class="Location"><? echo ( ssi::select( $variable{'location_dropdown'}, $variable{'location_id-'.$$variable{type_id}.'-'}, { name=>'location_id-'.$$variable{type_id}.'-', id=>'location_id-'.$$variable{type_id}.'-', prepend=>['','select'] } ))?></td>
 		<td colspan="2" class="buttons"><? echo ( button( 'Add'.$$variable{type_id}, { onclick=>"add_content( \$('f1'), $$variable{type_id} );", text=>'Add' } ); ) ?></td>
 	</tr>
 	<? echo (
 		my $html = '';
 		my $total = 0;
-		my $content = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'}.'/employee/inventory/_manifest_content.html' );
+		my $content = slurp_content( '/employee/inventory/_manifest_content.html' );
 		my @Contents = $$variable{Type}->Contents();
 		my @skid_ids = map { $$_{skid_id} ? $$_{skid_id} : () } @Contents;
 		%{$$variable{SkidContents}} = ();
