@@ -9,7 +9,7 @@ use vars qw( $debug $table $serial %fields %find_fields %transforms %defaults );
 require openprint::Manifest;
 require Math::Round;
 
-$debug = 1;
+$debug = 0;
 
 $table = 'manifest_content_types';
 $serial = 'manifest_content_types_id_seq';
