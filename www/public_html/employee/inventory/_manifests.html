@@ -65,6 +65,7 @@
 			date_filter( '/employee/inventory/manifests.html?updated_on_start', 'updated_on >=' ),
 			order		=>	'received_on DESC',
 			( $session{'/employee/inventory/manifests.html?deleted'} ? ( deleted => [ split(',', $session{'/employee/inventory/manifests.html?deleted'} ) ] ) : () ),
+			( $session{'/employee/inventory/manifests.html?po_confirmed'} ne '' ? ( 'po_unconfirmed_type_ids exists' => !$session{'/employee/inventory/manifests.html?po_confirmed'}) : () ),
 		);
 		if ( $session{'/employee/inventory/manifests.html?type'} ) {
             my @types = split(',',$session{'/employee/inventory/manifests.html?type'} );

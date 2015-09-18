@@ -2028,7 +2028,7 @@ sub _manifests {
 				( map { 'created_on_end_'.$_ } ( 'year','month','day' ) ),
 				( map { 'updated_on_start_'.$_ } ( 'year','month','day' ) ),
 				( map { 'updated_on_end_'.$_ } ( 'year','month','day' ) ),
-				'supplier_id', 'delivery','deleted','has_errors','type',
+				'supplier_id', 'delivery','deleted','has_errors','type','po_confirmed',
 				) );
 	if ( ! exists $param{type} ) {
 		delete $session{'/employee/inventory/manifests.html?type'};
