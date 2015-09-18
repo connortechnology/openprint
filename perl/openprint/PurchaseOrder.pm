@@ -30,7 +30,7 @@ require MIME::Base64;
 require openprint::Object_Asset;
 require openprint::Asset;
 
-$debug = 1;
+$debug = 0;
 
 $table = 'purchaseorders';
 $serial = 'purchaseorders_id_seq';
