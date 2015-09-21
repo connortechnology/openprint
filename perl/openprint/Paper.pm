@@ -1375,14 +1375,14 @@ sub load_from_signature {
 			if ( $qty_index and $$specs{'hdnSuppliedStockWidth'.$qty_index} ) {
 				$params{width} = $$specs{'hdnSuppliedStockWidth'.$qty_index};
 				$params{type}	= $$specs{'StockType'.$qty_index} if $$specs{'StockType'.$qty_index};
-				$params{type}	= $$specs{StockType} if $$specs{StockType};
+				#$params{type}	= $$specs{StockType} if $$specs{StockType};
 				if ( $params{type} ne 'Roll' ) {
 					$params{height} = $$specs{'hdnSuppliedStockHeight'.$qty_index};
 				} # end if
 			} # end if
 			my @Papers = openprint::Paper->find( %params );
 			if ( ! @Papers ) {
-$log->debug("Didn't find specific paper $params{width} x $params{height}");
+$log->debug("Didn't find specific paper $params{width} x $params{height} $$specs{StockType} type: " . $$specs{'StockType'.$qty_index});
 				delete $params{width};
 				delete $params{height};
 				@Papers = openprint::Paper->find( %params );
