@@ -3416,8 +3416,9 @@ $log->warn("Getting all impos results: " . @results );
 
 # My thoughts here:	have to base it purely on this sig. Need to look up price by total, but compare based just on this sig.
 		if ( ! $$imp{stock_qty} ) {
-			my $stock_qty = int( $qty/$$imp{imposition} ) * $Paper->factor();
-	#$openprint::log->debug("Before	stockqty: $stock_qty upq ". $$sig_specs{"txtUnspecifiedPageQuantity$qty_index"} ."pages $$imp{pages} spread: $SpreadLayout ");
+			my $stock_qty = POSIX::ceil( $qty/$$imp{imposition} ) * $Paper->factor();
+	#$openprint::log->debug("Before	stockqty: $stock_qty = int( $qty/$$imp{imposition} ) * $$Paper{factor}");
+	#$openprint::log->debug("Before	stockqty: $stock_qty upq ". $$sig_specs{"txtUnspecifiedPageQuantity$qty_index"} ."pages $$imp{pages} ");
 			if ( $needed_pages > 0 and $$sig_specs{"txtUnspecifiedPageQuantity$qty_index"} > $$imp{pages} ) {
 				$stock_qty *= int( $$sig_specs{"txtUnspecifiedPageQuantity$qty_index"} / $$imp{pages} );
 			} # end if
@@ -3456,7 +3457,7 @@ $log->warn("Getting all impos results: " . @results );
 
 		my $SmallerPrice;
 if ( ! int($$imp{stock_qty}) ) {
-$openprint::log->error("Noo stock qty: " . $Paper->to_string() );
+$openprint::log->error("Noo stock qty: ($$imp{stock_qty}) " . $Paper->to_string() );
 $imp->display("qty: $qty unspec ". $$sig_specs{"txtUnspecifiedPageQuantity$qty_index"} );
 }
 		#if ( $$imp{PaperPrice} ) {
