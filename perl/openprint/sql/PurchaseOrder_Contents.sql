@@ -8,6 +8,8 @@ CREATE TABLE PurchaseOrder_Contents (
 	item_id	INTEGER, FOREIGN KEY (item_id) REFERENCES PurchaseOrder_Items (id),
 	docket	text,
 	description	text,
+	object_type_id	INTEGER, FOREIGN KEY (object_type_id) REFERENCES Object_Types (id),
+	object_id	INTEGER,
 	PRIMARY KEY (id)
 );
 
