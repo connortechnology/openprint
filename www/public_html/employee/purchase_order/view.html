@@ -172,10 +172,13 @@ Manifest: <a href="/employee/inventory/manifest_view.html?manifest_id=<? echo ( 
 			
 		$html .= sprintf('
 			<div class="product">%1$s</div>
-			<div class="description">%2$s<br/>%3$s</div>
+			<div class="description">%2$s<br/>%3$s%6$s</div>
 			<div class="docket"><a href="/employee/production/projects.html?StartDocket=%4$s">%4$s</a></div>
 			<div class="dept">%5$s</div>
 			', $C->product(), $C->item(), ( $C->item() eq $C->description() ? '' : $C->description() ), $C->docket(), $C->department(), 
+				join('<br/>',
+					map { $_->to_string() } $C->Item()->Inventory_Items()
+				),
 			);
 
 		if ( $$variable{PurchaseOrder}->can_see_pricing($C) ) {

@@ -309,7 +309,7 @@ sub check {
 			$error .= 'Skid Contains ' . ( @SkidContents > 1 ? '<br/>' : '' );
             foreach my $SK ( @SkidContents ) {
                 $error .= '<a href="/employee/inventory/paper_details.html?paper_id='.$$SK{paper_id}.'">'.$SK->Paper()->to_string() . '</a>';
-				if ( $ENV{'HTTP_REFERER'} =~ /manifest.html/ or ( $openprint::r->uri() =~ /manifest.html/ ) ) {
+				if ( $ENV{'HTTP_REFERER'} =~ /manifest\.html/ or ( $openprint::r->uri() =~ /manifest\.html/ ) ) {
 					$error .= ssi::button( 'paper'.$MC->id().$SK->paper_id(), { onclick=>"select_stock($$MC{type_id},$$SK{paper_id});", text=>'Click to select' } );
 				}
 				$error .= '<br/>';

@@ -270,7 +270,7 @@ $openprint::log->debug("Fold pq($$FI{page_quantity}) pages($$FI{pages}) ($$Fold{
 				#$openprint::log->debug("Adding " . $Fold->pages() . 'x'.$Fold->quantity() );
 				$$specs{join('','txtSignatureQty',$Fold->pages(),'Page-',$qty_index)} += $FI->page_quantity();
 			if ( $$sig_specs{Group} == 1 ) {
-				$openprint::log->debug("Not counting pocket due to it being cover. $form");
+				$openprint::log->debug("Not counting pocket due to it being cover. $form") if DEBUG;
 				next;
 			}
 				$pockets += $FI->page_quantity();

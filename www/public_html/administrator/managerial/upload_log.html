@@ -3,9 +3,9 @@
 		<ul>
 			<li>
 				<label>Date</label>
-				<? echo (datetime_select_session( '/administrator/managerial/upload_log.html', 'uploaded_on_start',  { with_today=>1 } ); ) ?>
+				<? echo (datetime_select_session( '/administrator/managerial/upload_log.html', 'uploaded_on_start',  { with_today=>1, with_clear=>1 } ); ) ?>
 				to
-				<? echo (datetime_select_session( '/administrator/managerial/upload_log.html', 'uploaded_on_end',  { with_today=>1 } ); ) ?>
+				<? echo (datetime_select_session( '/administrator/managerial/upload_log.html', 'uploaded_on_end',  { with_today=>1, with_clear=>1 } ); ) ?>
 			</li>
 			<li>
 				<label>Company</label>

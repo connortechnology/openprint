@@ -149,9 +149,9 @@ sub calc {
 
 			my $Imposition = new openprint::Imposition();
 			$Imposition->load( $sig_specs, $qty_index );
-$$specs{'hdnBreakdown'.$qty_index} .= "Signature: $form " . ( $$sig_specs{txtServiceDescription} ? $$sig_specs{txtServiceDescription} : '' ) . '<br/>';
-$$specs{'hdnBreakdown'.$qty_index} .=  $Imposition->to_string() . '<br/>';
-$$specs{'hdnBreakdown'.$qty_index} .=  $Imposition->Paper()->to_string() . '<br/>';
+			$$specs{'hdnBreakdown'.$qty_index} .= "Signature: $form " . ( $$sig_specs{txtServiceDescription} ? $$sig_specs{txtServiceDescription} : '' ) . '<br/>';
+			$$specs{'hdnBreakdown'.$qty_index} .=  $Imposition->to_string() . '<br/>';
+			$$specs{'hdnBreakdown'.$qty_index} .=  $Imposition->Paper()->to_string() . '<br/>';
 
 			my %Price = signature_calc( $Project, $service_index, $specs, $signature_service_index, $sig_specs, $qty_index, $Imposition );
 			if ( ! ( $$specs{"txtVerticalQty-$form"} or $$specs{"txtHorizontalQty-$form"} ) ) {
@@ -211,14 +211,15 @@ $$specs{'hdnBreakdown'.$qty_index} .=  $Imposition->Paper()->to_string() . '<br/
 sub signature_calc {
     my ( $Project, $service_index, $specs, $signature_service_index, $sig_specs, $qty_index, $imposition ) = @_;
 
+    $specs = openprint::service::get_specs_ref( $Project, $service_index ) if ! $specs;
+    $sig_specs = openprint::service::get_specs_ref( $Project, $signature_service_index ) if ! $sig_specs;
+
 	my $qty = $$specs{"txtQuantity$qty_index"};
 	if ( $$sig_specs{PageQuantity} ) {
 		# Padding
 		$qty *= $$sig_specs{PageQuantity};
 	} # end if
 
-    $specs = openprint::service::get_specs_ref( $Project, $service_index ) if ! $specs;
-    $sig_specs = openprint::service::get_specs_ref( $Project, $signature_service_index ) if ! $sig_specs;
 	my $form = $$sig_specs{SignatureIndex};
 
     my %Results = (
@@ -269,10 +270,11 @@ sub signature_calc {
 
 
 	if ( ! $imposition ) {
-$openprint::log->error("Really shouldn't be lading imposition here, too slow");
+		$openprint::log->error("Really shouldn't be lading imposition here, too slow");
 		$imposition = new openprint::Imposition();
 		$imposition->load( $sig_specs, $qty_index );
 	} # end if
+
 	if ( (defined $$specs{"chkOverrideImposition-$form-$qty_index"}) and ( $$specs{"chkOverrideImposition-$form-$qty_index"} eq 'Y' ) ) {
 		if ( $$specs{"txtImposition-$form-$qty_index"} > $imposition->imposition() or $$specs{"txtImposition-$form-$qty_index"} <= 0 ) {
 			$$specs{alert} = 'The specified imposition is not possible.';
@@ -504,8 +506,8 @@ $openprint::log->debug("How many impositions do we get? " . @imps ) if DEBUG;
 			my %horizontal_price;
 			my $remaining_inches = 0;
 
-			if ( $I->image_orientation() eq 'Vertical' and $$specs{"txtHorizontalQty-$$sig_specs{SignatureIndex}"} ) {
-				$horizontal_rules = $$specs{"txtHorizontalQty-$$sig_specs{SignatureIndex}"} * $$I{rows};
+			if ( $I->image_orientation() eq 'Vertical' and $$specs{"txtHorizontalQty-$form"} ) {
+				$horizontal_rules = $$specs{"txtHorizontalQty-$form"} * $$I{rows};
 				$horizontal_length = $horizontal_rules * $width;
 				$horizontal_length *= $CylinderCount if $CylinderCount;
 

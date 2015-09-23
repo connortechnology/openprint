@@ -14,39 +14,43 @@ $table = 'PurchaseOrder_Contents';
 $serial = 'PurchaseOrder_Contents_id_seq';
 
 %fields = (
-	'id'			=>	'id',
-	'po_id'			=>	'po_id',
-	'created_on'	=>	'created_on',
-	'qty'			=>	'qty',
-	'price'			=>	'price',
-	'price_units'	=>	'price_units',
-	'total'			=>	'total',
-	'product'		=>	'product',
-	'item'			=>	'item',
-	'item_id'		=>	'item_id',
-	'docket'		=>	'docket',
-	'description'	=>	'description',
-	'type_id'		=>	'type_id',
-	'type'			=>	undef,
-	'department_id'	=>	'department_id',
-	'department'	=>	undef,
+	id				=>	'id',
+	po_id			=>	'po_id',
+	created_on		=>	'created_on',
+	qty				=>	'qty',
+	price			=>	'price',
+	price_units		=>	'price_units',
+	total			=>	'total',
+	product			=>	'product',
+	item			=>	'item',
+	item_id			=>	'item_id',
+	docket			=>	'docket',
+	description		=>	'description',
+	type_id			=>	'type_id',
+	type			=>	undef,
+	department_id	=>	'department_id',
+	department		=>	undef,
+	object_type_id	=>	undef,
+	object_id		=>	undef,
 );
 
 %transforms = (
-	'price'			=>	[ 's/[^\-\d\.]//g' ],
-	'total'			=>	[ 's/[^\-\d\.]//g' ],
-	'qty'			=>	[ 's/[^\-\d\.]//g' ],
+	price			=>	[ 's/[^\-\d\.]//g' ],
+	total			=>	[ 's/[^\-\d\.]//g' ],
+	qty				=>	[ 's/[^\-\d\.]//g' ],
 );
 
 %defaults = (
-	'po_id'			=>	undef,
-	'created_on'	=> q`'NOW()'`,
-	'price'			=>	undef,
-	'total'			=>	undef,
-	'qty'			=>	undef,
-	'type_id'		=>	undef,
-	'item_id'		=>	undef,
-	'department_id'	=>	undef,
+	po_id			=>	undef,
+	created_on		=>	q`'NOW()'`,
+	price			=>	undef,
+	total			=>	undef,
+	qty				=>	undef,
+	type_id			=>	undef,
+	item_id			=>	undef,
+	department_id	=>	undef,
+	object_type_id	=>	undef,
+	object_id		=>	undef,
 );
 
 sub PurchaseOrder {
@@ -167,5 +171,13 @@ sub mprice {
 	my ( $mweight, $type, $name ) = $_[0]->item() =~ /^([\d\.]+)M *([\w\/]*) *(.*)$/;
 	return Math::Round::nearest(0.01, $_[0]{price} * $mweight / 100 );
 } # end sub mprice
+
+sub Manifest_Content_Type {
+	if ( !  $_[0]{Manifest_Content_Type} ) {
+		$_[0]{Manifest_Content_Type} = openprint::Manifest_Content_Type->find_one( po_content_id=>$_[0]{id} );
+	} 
+	return $_[0]{Manifest_Content_Type};
+}
+
 1;
 __END__

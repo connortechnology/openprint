@@ -942,6 +942,9 @@ if ( ! sets::isin( 'service_types', \@tables ) ) {
 	if ( ! exists $$data{summary_visible} ) {
 		$dbh->do('ALTER TABLE service_types add summary_visible BOOLEAN NOT NULL default true');
 	} # end if
+	if ( ! exists $$data{allow_delete} ) {
+		$dbh->do('ALTER TABLE service_types add allow_delete BOOLEAN NOT NULL default true');
+	} # end if
 }# end if
 if ( ! sets::isin( 'service_categories_id_seq', \@sequences ) ) {
 	$dbh->do('create sequence service_categories_id_seq;');
@@ -1872,7 +1875,18 @@ if ( ! sets::isin( 'purchaseorder_items', \@tables ) ) {
 } # en dif
 if ( ! sets::isin( 'purchaseorder_contents', \@tables ) ) {
 	$dbh->do( misc::load_file( $log, q{../openprint/sql/PurchaseOrder_Contents.sql}) ) or die $dbh->errstr();
+} else {
+	my $data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='purchaseorder_contents'", 'column_name');
+	if ( ! exists $$data{object_type_id} ) {
+		$dbh->do('ALTER TABLE purchaseorder_contents ADD object_type_id INTEGER');
+		$dbh->do('ALTER TABLE purchaseorder_contents ADD FOREIGN KEY object_type_id REFERENCES Object_Types (id)');
+		$dbh->do('ALTER TABLE purchaseorder_contents ADD object_id INTEGER');
+	}
 } # en dif
+if ( ! sets::isin( 'purchaseorder_items_to_inventory_items', \@tables ) ) {
+	$dbh->do( misc::load_file( $log, q{../openprint/sql/PurchaseOrder_Items_to_Inventory_Items.sql}) ) or die $dbh->errstr();
+}
+
 if ( ! sets::isin( 'user_purchaseorder_limits', \@tables ) ) {
 	$dbh->do( misc::load_file( $log, q{../openprint/sql/User_PurchaseOrder_Limits.sql}) ) or die $dbh->errstr();
 	die 'user_purchaseorder_limits' if $dbh->errstr();

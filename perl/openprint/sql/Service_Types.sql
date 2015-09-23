@@ -10,6 +10,7 @@ CREATE TABLE Service_Types (
 	summary_visible	BOOLEAN NOT NULL default true,
 	sorting			INTEGER,
 	type			TEXT,
+	allow_delete BOOLEAN NOT NULL default true,
 	PRIMARY KEY (id)
 );
 
