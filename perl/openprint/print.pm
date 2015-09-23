@@ -214,7 +214,7 @@ sub view_services {
 				if ( sets::isin( $ServiceType->name(), ['Proofs'] ) and ( @{$$services{$ServiceType->name()}} == 1 ) ) {
 					$$variable{error} .= 'Proofs cannot be removed from the project.<br/>';
 					next;
-				} elsif ( $ServiceType->allow_delete() ) {
+				} elsif ( ! $ServiceType->allow_delete() ) {
 					$$variable{error} .= $ServiceType->name() . ' cannot be removed from the project.<br/>';
 					next;
 				} # end if
