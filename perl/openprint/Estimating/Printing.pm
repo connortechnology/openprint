@@ -7023,7 +7023,7 @@ sub has_overrides {
 	$specs = openprint::service::get_specs_ref( $Project, $service_id ) if ! $specs;
 
 	if ( $qty_index ) {
-		return () if $$specs{'txtUnspecifiedPageQuantity'.$qty_index} <= 0 and $$specs{txtImposition}.$qty_index == 0;
+		return () if $$specs{'txtUnspecifiedPageQuantity'.$qty_index} <= 0 and $$specs{"txtImposition$qty_index"} == 0;
 		return map { $$specs{$_.$qty_index} eq 'Y' ? $_ : () } (
 				'chkOverrideBleedSize',
 				'chkOverridePageQuantity',
