@@ -7028,6 +7028,7 @@ sub has_overrides {
 				'chkOverrideBleedSize',
 				'chkOverridePageQuantity',
 				'chkOverrideImposition',
+				'OverrideImpositionLayout',
 				'chkOverrideRunStyle',
 				'OverrideCutOff',
 				'chkOverrideSheetSize',
@@ -7036,10 +7037,15 @@ sub has_overrides {
 				'OverrideStockType',
 				'chkOverrideGrainDirection',
 				'OverrideVersions',
+				'OverridePrice',
+				'OverrideSetup',
+				'OverrideRun',
 				);
 	} else {
 		return map { $$specs{$_} eq 'Y' ? $_ : () } (
 				'chkOverrideDimensions',
+				'OverrideAddGrip',
+				'OverrideSpreadSize',
 				);
 	} # end if
 
