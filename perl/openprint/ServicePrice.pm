@@ -93,5 +93,22 @@ sub cost {
 	return $_[0]{'cost'};
 } # end sub cost
 
+sub id_string {
+	my $Price = $_[0];
+	my $price_desc = '';
+	if ( ! ( $Price->min() or $Price->max() ) ) {
+		'all quantities';
+	} else {
+		if ( $Price->min() ) {
+			$price_desc .= 1*$Price->min() . ' ';
+		}
+		$price_desc .= 'up';
+		if ( $Price->max() ) {
+			$price_desc .= ' to ' . 1*$Price->max();
+		}
+	} # end if
+	return $Price->Pricelist()->name() . ' '. $price_desc . ' on ' . $Price->Equipment()->strid();
+}
+
 1;
 __END__
