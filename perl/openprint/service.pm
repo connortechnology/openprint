@@ -27,7 +27,7 @@ sub get_price_object {
 	my ( $service, $range, $Equipment ) = @_;
 	my $Service = openprint::Service->find_one( name=>$service );
 	if ( ! $Service ) {
-		if ( Debug ) {
+		if ( 0 and Debug ) {
 			$openprint::log->debug("No Service for $service");
 		};
 		return;
@@ -488,7 +488,7 @@ $openprint::log->error("Doing internal calc without service_index or, not found"
 		$Service->save({status=>$status}) if $status ne $Service->status();
 
 		foreach my $key ( eval( 'openprint::Estimating::'.$service_type.'::variables( $project_index, $service_index, \%specs )') ) {
-			$log->debug("Internal Calc:: looking at $key $specs{$key} :". $specs_cache{$service_index}{$key}) if Debug;
+			$log->debug("Internal Calc:: looking at $key new $specs{$key} : old ". $$specs{$key}) if Debug;
 			openprint::service::insert_service_spec( $log, $dbh, $project_index, $service_index, $key, $specs{$key} );
 		} # end foreach
 	} else {
