@@ -5525,7 +5525,7 @@ $openprint::log->warn("No folding equipment");
 			'Net Sheet Count'			=>	$net_sheets,
 			'Initial Setup Count'		=> $plate_setup{'Setup Plate Count'},
 			'Initial Setup Rate'		=> $initial_setup_rate,
-			'Initial Setup Overs'		=> ceil( $plate_setup{'Setup Plate Count'} * $initial_setup_rate ),
+			'Initial Setup Overs'		=> $$specs{'OverrideSetup'.$qty_index} eq 'Y' ? $$specs{'OverSetup'.$qty_index} : ceil( $plate_setup{'Setup Plate Count'} * $initial_setup_rate ),
 			'Additional Setup Count'	=> $additional_setup_count,
 			'Additional Setup Rate'		=> $setup_rate,
 			'Additional Setup Overs'	=> $additional_setup_overs,
