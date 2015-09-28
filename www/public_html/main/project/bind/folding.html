@@ -105,7 +105,7 @@ if ( 0 ) {
 
 			foreach my $ss_id ( $Project->signatures({sort=>1}) ) {
 				my $sig_specs = openprint::service::get_specs_ref( $Project, $ss_id );
-				$html .= "<fieldset><legend>For Signature $$sig_specs{'SignatureIndex'}:";
+				$html .= "<fieldset><legend>For Form $$sig_specs{'SignatureIndex'}:";
 				$html .= openprint::service::summary( $Project, $ss_id );
 				$html .= '</legend><ul><li><label>Printed</label>';
 
@@ -170,7 +170,6 @@ if ( 0 ) {
 			<ul>
 <?include('/includes/main/proj/_quantities.html') ?>
 <?include('/includes/main/proj/_service_price.html') ?>
-<?include('/includes/main/proj/_additional_service.html') ?>
 <?include('/includes/main/proj/_breakdown.html') ?>
 			</ul>
 		</fieldset>
