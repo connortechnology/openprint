@@ -911,6 +911,7 @@ if ( 0 ) {
 						$openprint::log->debug(sprintf('Didnt find: %dx%d %s,%dout', $Imposition->page_columns(), $Imposition->page_rows(), $Imposition->image_orientation(), $Imposition->imposition() ) ) if DEBUG;
 						%folds = ();
 						# Last because it's on press, can't do any cut impos.	Not actually True.	Webs can slit it and do dual delivery, fold one, sheet the other. FIXME
+						$complete =0;
 						last;
 					} # end if
 				} else { # Not the press
@@ -1124,26 +1125,30 @@ $openprint::log->debug("No Fold") if DEBUG;
 
 								push @{$folds{$Fold->type().'-'.$$Imposition{imposition}.'out'}}, $Fold;
 								$openprint::log->debug(sprintf('Found: %dx%d %s,%dout', $Imposition->page_columns(), $Imposition->page_rows(),$Imposition->image_orientation(), $Imposition->imposition()) ) if DEBUG;
-								next;
-							} elsif( @my_equipment == 1 ) {
+								if ( $$specs{"chkOverrideFold-$form-$qty_index"} ne 'Y' ) { 
+									# Normally, give up as soon as it fits.... but if we have an override, it might be for a smaller cut
+									next;
+								}
+							} elsif ( @my_equipment == 1 ) {
 								$Imposition->display('Didnt find:' ) if DEBUG;
 								$Breakdown .= sprintf('Didnt find: %dx%d=%dpages %s,%dout<br/>', $Imposition->page_columns(), $Imposition->page_rows(), $Imposition->pages(), $Imposition->image_orientation(), $Imposition->imposition() );
+								$complete = 0;
 							} elsif ( DEBUG ) {
-								$Imposition->display('Didnt find fold:' ) if DEBUG;
+								$Imposition->display('Didnt find fold:' );
+								$complete = 0;
 							} # end if
 						} elsif ( DEBUG ) {
 							if ( @my_equipment == 1 ) {
-							$Breakdown .= "Doesn't fit $_.<br/>";
+								$Breakdown .= "Doesn't fit $_.<br/>";
 							} else {
 								$Imposition->display('Didnt fiit:'.$_ );
 							}
 						} # end if
 
 						# If we get here, then we couldn't find the fold
-						$complete = 0;
 						if ( $set_index < @All_Impositions-1 ) {
 							# if we aren't the last set, then do nothing because we assume that this set has already been cut down.
-#$openprint::log->debug("$set_index < " . ( @All_Impositions-1 ) );
+$openprint::log->debug("$set_index < " . ( @All_Impositions-1 ) );
 						} elsif ( $Imposition->imposition() > 1 ) {
 							my @new_impositions = @$Set_Of_Impositions;
 							splice @new_impositions, $imp_index, 1, cut_imposition( $Imposition );
@@ -1192,6 +1197,10 @@ $openprint::log->debug("No Fold") if DEBUG;
 							and $$specs{"FoldType-$form-$qty_index-$index"}
 							and $$specs{"FoldImposition-$form-$qty_index-$index"} );
 
+				if ( $$specs{"FoldImposition-$form-$qty_index-$index"} > $SignatureImposition->imposition() ) {
+					$$specs{alert} .= "You seem to be specifying a higher imposition for folding than was printed for form $form quantity $qty_index<br/>";
+				}
+
 					my $pages;
 					my $this_pages;
 					if ( $$sig_specs{txtSignatureType} ) {
@@ -1210,6 +1219,7 @@ $openprint::log->debug("No Fold") if DEBUG;
 						next if $$FI{found};
 						my $Fold = $FI->Fold();
 
+$FI->display();
 $openprint::log->debug(qq`Overriden $$specs{"FoldQty-$form-$qty_index-$index"} $$specs{"FoldImposition-$form-$qty_index-$index"}out $$specs{"FoldType-$form-$qty_index-$index"}`) if DEBUG;
 
 						if ( $$specs{"FoldType-$form-$qty_index-$index"} ne $Fold->type() ) {
@@ -1499,7 +1509,7 @@ $openprint::log->debug("Runspeed: $$Fold{type}(".$Fold->name().") : " . $Equipme
 			if ( $$calc_hash{HasCutting} ) {
 				#%cutting_results = openprint::Estimating::Cutting::signature_calc_folding_cutting( $Project, $sig_specs, $$calc_hash{cutting_specs}, $qty_index, $Paper, $SignatureImposition, \%fold_specs, $calc_hash );
 			} # end if
-			$Breakdown .= '<tr><td>Folding total:</td><td>$' . sprintf($openprint::config{ProjectMoneyFormat}, $totalPrice ) . '</td></tr>'  ;
+			$Breakdown .= '<tr><td>Folding total:</td><td class="Price">$' . sprintf($openprint::config{ProjectMoneyFormat}, $totalPrice ) . '</td></tr>'  ;
 			my $stitching_part;
 			$$SignatureImposition{Folds} = \@Used_Impositions;
 			if ( $$calc_hash{HasStitching} ) {
@@ -1533,20 +1543,21 @@ $openprint::log->debug("Runspeed: $$Fold{type}(".$Fold->name().") : " . $Equipme
 						my $Price = $$stitching_results{Price};
 						$stitching_part = $$Price{Price};
 						$Breakdown .= '<tr><td>'.$$stitching_results{Breakdown}.'</td></tr>' if DEBUG;
-						$Breakdown .= "<tr><td>Stitching cost on $$stitching_results{Equipment}{name}</td><td class=\"Price\">$stitching_part</td></tr>";
+						$Breakdown .= "<tr><td>Stitching cost on $$stitching_results{Equipment}{name}</td><td class=\"Price\">\$$stitching_part</td></tr>";
 					} # end if
 					#$Breakdown .= $$results{Breakdown}.'<br/>';
 				} elsif ( $$specs{StitchingEquipment}->id() != $Equipment->id() and $Equipment->specification('Folding Capable') eq 'When Stitching' ) {
 					$Breakdown .= '<tr><td>Not stitching on ' . $Equipment->strid().' stitching on '.$$specs{StitchingEquipment}->strid() .'.</td></tr>';
 				} else {
 					$stitching_part = $$specs{StitchingCost};
-					$Breakdown .= "<tr><td>Stitching cost on $$specs{StitchingEquipment}{name}</td><td>$stitching_part</td></tr>";
+					$Breakdown .= "<tr><td>Stitching cost on $$specs{StitchingEquipment}{name}</td><td class=\"Price\">\$$stitching_part</td></tr>";
 				} # end if
 			} # end if has sittiching
 			$comparison_cost += $totalPrice + $stitching_part + $cutting_results{Price};
-			if ( $$calc_hash{ScoringSpecs} ) {
+			if ( $$calc_hash{ScoringSpecs} and openprint::Estimating::Scoring::signature_needs( $Project, $$calc_hash{ScoringSpecs}, $sig_specs, $Paper ) ) {
 				$$calc_hash{FoldingSpecs} = \%fold_specs;
 				my %scoring_results = openprint::Estimating::Scoring::signature_calc( $Project, $$calc_hash{ScoringSpecs}, $sig_specs, $qty_index, $SignatureImposition, $calc_hash );
+				#$Breakdown .= "<tr><td>Scoring cost on $scoring_results{Equipment}{name}</td><td class=\"Price\">\$$scoring_results{Price}</a>";
 				$Breakdown .= "<tr><td>Scoring cost on $scoring_results{Equipment}{name}<br/>$scoring_results{Breakdown}</td><td class=\"Price\">\$$scoring_results{Price}</a>";
 				$comparison_cost += $scoring_results{Price};	
 			} # end if
@@ -1555,7 +1566,6 @@ $openprint::log->debug("Runspeed: $$Fold{type}(".$Fold->name().") : " . $Equipme
 				$Breakdown .= qq`<tr><td>Cutting on $cutting_results{Equipment}{name}</td><td class="Price">$cutting_results{Price}</td></tr>`;
 			} else { 
 				$Breakdown .= qq`<tr><td>No Cutting: $cutting_results{alert} $cutting_results{Breakdown}</td><td class="Price">$cutting_results{Price}</td></tr>`;
-
 			} # end if
 
 			$Breakdown .= '<tr><td>comparison :</td><td class="Price">' . Math::Round::nearest(0.01,$comparison_cost) . ' </td></tr>';
