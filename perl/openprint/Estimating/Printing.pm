@@ -5271,8 +5271,8 @@ $openprint::log->warn("No folding equipment");
 		} else {
 			$openprint::log->error("Scoring is not uncalculated but no Imposition");
 		} # end if
-	} else {
-			$openprint::log->error("Scoring is not being done");
+	#} else {
+			#$openprint::log->error("Scoring is not being done");
 	} # end if
 	if ( $$project{HasPerforating} ) {
 		my %perforating_results = openprint::Estimating::Perforating::signature_calc( $Project, @$project{'HasPerforating','PerforatingSpecs'}, $service_index, $specs, $qty_index, $Imposition );
