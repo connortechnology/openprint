@@ -1125,10 +1125,7 @@ $openprint::log->debug("No Fold") if DEBUG;
 
 								push @{$folds{$Fold->type().'-'.$$Imposition{imposition}.'out'}}, $Fold;
 								$openprint::log->debug(sprintf('Found: %dx%d %s,%dout', $Imposition->page_columns(), $Imposition->page_rows(),$Imposition->image_orientation(), $Imposition->imposition()) ) if DEBUG;
-								if ( $$specs{"chkOverrideFold-$form-$qty_index"} ne 'Y' ) { 
-									# Normally, give up as soon as it fits.... but if we have an override, it might be for a smaller cut
-									next;
-								}
+								next;
 							} elsif ( @my_equipment == 1 ) {
 								$Imposition->display('Didnt find:' ) if DEBUG;
 								$Breakdown .= sprintf('Didnt find: %dx%d=%dpages %s,%dout<br/>', $Imposition->page_columns(), $Imposition->page_rows(), $Imposition->pages(), $Imposition->image_orientation(), $Imposition->imposition() );
@@ -1143,8 +1140,10 @@ $openprint::log->debug("No Fold") if DEBUG;
 							} else {
 								$Imposition->display('Didnt fiit:'.$_ );
 							}
+							$complete =0;
 						} # end if
 
+						$complete = 0;
 						# If we get here, then we couldn't find the fold
 						if ( $set_index < @All_Impositions-1 ) {
 							# if we aren't the last set, then do nothing because we assume that this set has already been cut down.
