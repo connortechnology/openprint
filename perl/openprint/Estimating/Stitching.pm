@@ -408,7 +408,7 @@ EQUIPMENT:foreach my $Equipment ( @equipment ) {
 				} # end foreach I
 			} # end if Press
 			my $max_imp = $Equipment->specification("Maximum $$ServiceType{name} Imposition");
-			if ( $max_imp and ( $max_imp < $imposition ) ) {
+			if ( ( defined $max_imp ) and ( $max_imp < $imposition ) ) {
 				$results{Breakdown} .= sprintf('Imposition too big.  This press only does ' . $max_imp . 'out.<br/>');
 				if ( $Equipment->specification('Type') eq 'Press' ) {
 					next;

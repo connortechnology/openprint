@@ -1151,6 +1151,8 @@ $openprint::log->debug("not Skipping cuz ddmPress$qty_index eq $$Press{strid}");
 				push @side_one_colours, @side_one_varnishes;
 				push @side_two_colours, @side_two_varnishes;
 			} # end if
+		}
+		if ( 0 ) {
 			$openprint::log->debug("$$Press{strid} Side One varnihses @side_one_varnishes");
 			$openprint::log->debug("$$Press{strid} Side Two varnihses @side_two_varnishes");
 			$openprint::log->debug("$$Press{strid} Side One colours @side_one_colours");
@@ -1170,11 +1172,15 @@ $openprint::log->debug("not Skipping cuz ddmPress$qty_index eq $$Press{strid}");
 			$openprint::log->debug("** $$Press{strid} Can't Perfect - Perfecting not in runstyles ***") if DEBUG;
 			$do_perfecting = 0;
 		} elsif ( @side_one_colours > int($number_of_colours/2) or @side_two_colours > int($number_of_colours/2) ) {
+				$openprint::log->debug("** Too many colours to	Perfect	***") if DEBUG;
+				$do_perfecting = 0;
+		} elsif ( @side_one_varnishes or @side_two_varnishes  ) {
 			if ( ( $varnish_capable eq '1 Side' ) and (
+				( ! ( @side_one_varnishes and @side_two_varnishes ) ) and 
 				( ( @side_one_colours - @side_one_varnishes ) <= int($number_of_colours/2) ) and 
 				( ( @side_two_colours - @side_two_varnishes ) <= int($number_of_colours/2) ) ) 
 			) {
-				$openprint::log->debug("** Can do 1 sided varnish perfecting ***");
+				$openprint::log->debug("** Can do 1 sided varnish perfecting but @side_one_varnishes @side_two_varnishes ***");
 			} else {
 				#$openprint::log->debug(( @side_one_colours - @side_one_varnishes ) . ' <= ' . int($number_of_colours/2)) if DEBUG;
 				#$openprint::log->debug(( @side_two_colours - @side_two_varnishes ) . ' <= ' . int($number_of_colours/2)) if DEBUG;
@@ -2978,7 +2984,7 @@ sub breakdown {
 			( defined	$$price{'Numbering Breakdown'} ? $$price{'Numbering Breakdown'} : '' ),
 			( defined $$price{'DieCutting Breakdown'} ? $$price{'DieCutting Breakdown'}: '' ),
 			$$price{'Folding Breakdown'},
-			( defined $$price{'Scoring Breakdown'} ? $$price{'Scoring Breakdown'} : '' ),
+			( defined $$price{'Scoring Breakdown'} ? 'Scoring: '.$$price{'Scoring Breakdown'} : '' ),
 			( defined $$price{'Perforating Breakdown'} ? $$price{'Perforating Breakdown'} : '' ),
 			);
 
@@ -5251,6 +5257,7 @@ $openprint::log->warn("No folding equipment");
 			$price{'Comparison Cost'} += 1000000; 
 		} elsif ( $scoring_results{Imposition} ) {
 			$price{'Scoring Breakdown'} .= sprintf('Scoring Price: %dout $%.2f on %s<br/>', $scoring_results{Imposition}->imposition(), $scoring_results{Price}, $scoring_results{Equipment} ? $scoring_results{Equipment}->name() : '' );
+			$openprint::log->error("Scoring is calculated $price{'Scoring Breakdown'}");
 			$price{'Comparison Cost'} += $scoring_results{Price};
 			if ( $scoring_results{Equipment} and ( $scoring_results{Equipment}->id() == $Press->id() ) ) {
 				if ( $scoring_results{Runspeed} =~ /(.*)\%/ ) {
@@ -5261,7 +5268,11 @@ $openprint::log->warn("No folding equipment");
 				} # end if
 			} # end if
 			$scoring_results{Overs} = ceil( $scoring_results{Overs} / ( $$Imposition{imposition}/$scoring_results{Imposition}->imposition() ) ) if $scoring_results{Imposition}->imposition();
+		} else {
+			$openprint::log->error("Scoring is not uncalculated but no Imposition");
 		} # end if
+	#} else {
+			#$openprint::log->error("Scoring is not being done");
 	} # end if
 	if ( $$project{HasPerforating} ) {
 		my %perforating_results = openprint::Estimating::Perforating::signature_calc( $Project, @$project{'HasPerforating','PerforatingSpecs'}, $service_index, $specs, $qty_index, $Imposition );

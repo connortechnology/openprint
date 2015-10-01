@@ -355,6 +355,11 @@ require openprint::Estimating::PerfectBound;
 
 		foreach my $service_index ( @{$$services{$type}} ) {
 			my $ServiceType = $Project->ServiceType( $service_index );
+			if ( $ServiceType->deleted() ) {
+				my $PS = $Project->Service( $service_index );
+				$PS->delete();
+				next;
+			}
 			next if $ServiceType->category() eq 'Shipping';
 			my $service_type = $ServiceType->type();
 			next if sets::isin( $service_type, ['','Signature'] );
