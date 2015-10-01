@@ -28,3 +28,5 @@ CREATE TABLE skid_verifications (
 );
 CREATE INDEX skid_verifications_skid_id_idx ON skid_verifications (skid_id);
 CREATE INDEX skid_verifications_code_idx ON skid_verifications (code);
+
+create index skids_deleted_received_on_idx on skids (deleted,received_on);

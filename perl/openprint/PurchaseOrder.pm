@@ -161,6 +161,9 @@ sub Authorized_By {
 } # end sub Authorized_By
 
 sub Contents {
+	if ( @_ > 1 ) {
+		$_[0]{Contents} = $_[1];
+	}
 	if ( $_[0]{id} and ! $_[0]{Contents} ) {
 		$_[0]{Contents} = [openprint::PurchaseOrder_Content->find('po_id'=>$_[0]{id},'order'=>'id')];
 	} # end if

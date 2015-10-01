@@ -72,19 +72,18 @@ sub destroy {
 
 sub Types {
 	my ( $self, %params ) = @_;
+	if ( $$self{'id'} and ! $_[0]{Types} ) {
+		$_[0]{Types} = [ openprint::Manifest_Content_Type->find( manifest_id=>$$self{'id'}, order=>'id' ) ];
+	}
 	if ( %params ) {
-		if ( $$self{'id'} ) {
-			$params{'manifest_id'} = $$self{id};
-			$params{order} = 'id' if ! exists $params{order};
-			return openprint::Manifest_Content_Type->find(%params);
-		} # end if
-	} # end if
-	if ( ! $$self{'Types'} ) {
-		if ( $$self{'id'} ) {
-			$params{manifest_id} = $$self{id};
-			$params{order} = 'id' if ! exists $params{order};
-			@{$$self{'Types'}} = openprint::Manifest_Content_Type->find(%params);
-		} # end if
+		my @results;
+		TYPE: foreach my $Type ( @{$$self{'Types'}} ) {
+			foreach my $key ( keys %params ) {
+				next TYPE if $$Type{$key} ne $params{$key};
+			}
+			push @results, $Type;
+		}
+		return @results;
 	} # end if
 	return @{$$self{'Types'}} if $$self{'Types'};
 	return;

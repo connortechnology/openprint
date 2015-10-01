@@ -275,7 +275,8 @@ my %variables = (
 	'dutch_orientation3'	=>	['save'],
 	'txtQuantity1' => ['save'], 'txtQuantity2' => ['save'], 'txtQuantity3' => ['save'], 
 	'hdnImpressionQuantity1' => ['save','output'], 'hdnImpressionQuantity2' => ['save','output'], 'hdnImpressionQuantity3' => ['save','output'], 
-	'rdbPressProof' => ['save'], 
+	'rdbPressProof' => ['save'],
+	'PressApproval' => ['save'],
 	'txtMWeight1' => ['save','output'], 'txtMWeight2' => ['save','output'], 'txtMWeight3' => ['save','output'],
 	'paper_id1'	=>	['save','output'], 'paper_id2'	=>	['save','output'], 'paper_id3'	=> ['save','output'],
 	'hdnSuppliedStockWidth1' => ['save','output'], 'hdnSuppliedStockWidth2' => ['save','output'], 'hdnSuppliedStockWidth3' => ['save','output'],
@@ -6765,6 +6766,9 @@ $openprint::log->debug("$1 is !- $$specs{txtSpecificStockCalliper} ");
 				( ( $$specs{BleedLeft} and $$specs{BleedRight} and $$specs{BleedTop} and $$specs{BleedBottom} ) ? '' : 'no bleed on ' . join(', ', map { $$specs{"Bleed$_"} ? '': $_ } ( 'Top','Bottom','Left','Right' ) ) ),
 				( $$specs{txtCropMarkSpace} ? () : 'no crop marks' ),
 		);
+		if ( $$specs{PressApproval} eq 'Y' ) {
+			$string .= ' Customer wants press approval';
+		}
 		return $string;
 	} # end if qty_index
 } # end sub summary

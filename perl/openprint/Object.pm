@@ -24,7 +24,7 @@ use vars qw( $log $dbh $AUTOLOAD %cache %name_cache %fields %defaults %transform
 *config = \%openprint::config;
 
 my $debug = 0;
-use constant DEBUG_ALL => 0;
+use constant DEBUG_ALL => 1;
 use constant DEBUG_CACHE => 0;
 $no_cache = 0;
 

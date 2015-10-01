@@ -12,3 +12,8 @@ CREATE TABLE ManifestContents (
     manufacturers_id	TEXT,
 	PRIMARY KEY (id)
 );
+
+create  index manifestcontents_docket_idx on manifestcontents (docket);
+create  index manifestcontents_po_id_idx on manifestcontents (po_id);
+create  index manifestcontents_rfidtag_id_idx on manifestcontents (rfidtag_id);
+create  index manifestcontents_manifest_id_idx on manifestcontents (manifest_id);

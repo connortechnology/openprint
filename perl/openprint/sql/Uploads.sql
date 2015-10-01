@@ -13,3 +13,6 @@ CREATE TABLE Uploads (
 	complete	BOOLEAN,
 	PRIMARY KEY (id)
 );
+
+create index uploads_company_id_idx on uploads (company_id);
+create index uploads_start_idx on uploads (start);

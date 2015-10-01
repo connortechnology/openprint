@@ -65,27 +65,23 @@
 <? endif ( $$variable{Signature} == 1 or $$variable{Signature} == 2 ) ?>
 		<li>
 			<label>Customer supplied?</label>
-			<input type="radio" name="pages_supplied<?Signature?>" id="pages_supplied<?Signature?>Y" value="Y" <? echo ( ssi::checked( $$variable{'pages_supplied'.$$variable{'Signature'}} eq 'Y' ); ) ?> onclick="$('Inks<?Signature?>').hide();$('SuppliedFormat<?Signature?>').show();$('BleedsColourBars<?Signature?>').hide();" />
-			<label class="radio" for="pages_supplied<?Signature?>Y">Yes</label>
-			<input type="radio" name="pages_supplied<?Signature?>" id="pages_supplied<?Signature?>N" value="N" <? echo ( ssi::checked( $$variable{'pages_supplied'.$$variable{'Signature'}} ne 'Y' ); ) ?> onclick="$('Inks<?Signature?>').show();$('SuppliedFormat<?Signature?>').hide();$('BleedsColourBars<?Signature?>').show();" />
-			<label class="radio" for="pages_supplied<?Signature?>N">No</label>
+			<? echo ( radio( 'pages_supplied'.$$variable{Signature}, [ 'Y', 'Yes', 'N', 'No' ], $$variable{'pages_supplied'.$$variable{'Signature'}}, { default=>'N', 
+					onclick=>qq`if(this.value=='Y'){\$('Inks$$variable{Signature}').hide();\$('SuppliedFormat$$variable{Signature}').show();\$('BleedsColourBars$$variable{Signature}').hide();}else{\$('Inks$$variable{Signature}').show();\$('SuppliedFormat$$variable{Signature}').hide();\$('BleedsColourBars$$variable{Signature}').show();}` } ); ) ?>
 		</li>
 		<li id="SuppliedFormat<?Signature?>" <? echo ( $$variable{'pages_supplied'.$$variable{'Signature'}} eq 'Y' ? '' : 'style="display:none;"' ) ?>>
 			<label>Supplied format</label>
-			<input type="radio" name="supplied_format<?Signature?>" id="supplied_format<?Signature?>Sheets" value="Sheets" <? echo ( ssi::checked( $$variable{'supplied_format'.$$variable{'Signature'}} ne 'Folded' ); ) ?> />
-			<label class="radio" for="supplied_format<?Signature?>Sheets">Flat Sheets</label>
-			<input type="radio" name="supplied_format<?Signature?>" id="supplied_format<?Signature?>Folded" value="Folded" <? echo ( ssi::checked( $$variable{'supplied_format'.$$variable{'Signature'}} eq 'Folded' ); ) ?> />
-			<label class="radio" for="supplied_format<?Signature?>Folded">Folded Pages</label>
+			<? echo ( radio( 'supplied_format'.$$variable{Signature}, [ 'Sheets', 'Flat Sheets', 'Folded', 'Folded Pages' ], $$variable{'supplied_format'.$$variable{'Signature'}}, { default=>'Sheets' } ); ) ?>
 		</li>
+		<?include(_press_proof_approval.html)?>
 		</ul>
 	</div>
 	<br class="spacer"/>
 	<? echo (
-		my $html .= misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/includes/main/proj/colours_coatings.html' );
-		$html .= misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/includes/main/proj/bleeds_colourbars.html' );
-		$html .= misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/includes/main/proj/paper_dropdowns.html' );
+		my $html .= slurp_content( '/includes/main/proj/colours_coatings.html' );
+		$html .= slurp_content( '/includes/main/proj/bleeds_colourbars.html' );
+		$html .= slurp_content( '/includes/main/proj/paper_dropdowns.html' );
 		if ( sets::isin( $session{'user_type'}, ['A','E'] ) ) {
-			$html .= misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/main/project/prin/_overrides.html' );
+			$html .= slurp_content( '/main/project/prin/_overrides.html' );
 		} # end if
 
 		return variable_substitution( \$html, $variable );
