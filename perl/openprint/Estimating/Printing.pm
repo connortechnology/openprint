@@ -2774,7 +2774,7 @@ if ( 1 ) {
 			} # end if
 		} # end if
 		if ( $Paper->message() ) {
-			my $paper_message = ssi::variable_substitution( \$Paper->message(), { Project=>$Project } );
+			my $paper_message = ssi::variable_substitution( \$Paper->message(), { Project=>$Project, Stock=>$Paper, qty_index=>$qty_index } );
 			if ( ! ( $$project{HasAqueous} or $$specs{AqueousMessage} ) ) {
 				$$specs{AqueousMessage} = 1;
 				$$specs{popup} .= $paper_message;
@@ -5270,7 +5270,7 @@ $openprint::log->warn("No folding equipment");
 			} # end if
 			$scoring_results{Overs} = ceil( $scoring_results{Overs} / ( $$Imposition{imposition}/$scoring_results{Imposition}->imposition() ) ) if $scoring_results{Imposition}->imposition();
 		} else {
-			$openprint::log->error("Scoring is not uncalculated but no Imposition");
+			$openprint::log->error("Scoring is not uncalculated but no Imposition $scoring_results{Breakdown}");
 		} # end if
 	#} else {
 			#$openprint::log->error("Scoring is not being done");
