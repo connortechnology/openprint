@@ -165,6 +165,7 @@ $serial	= 'paper_id_seq';
 	minimum_order		=>	undef,
 	parts				=>	undef,
 	digital				=>	undef,
+	message				=>	undef,
 );
 
 %grades = (
