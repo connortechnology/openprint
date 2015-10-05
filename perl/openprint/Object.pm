@@ -609,6 +609,12 @@ my $add_placeholder = ( ! ( $field =~ /\?/ ) ) ?  1 : 0;
 		} else {
 			return $field.$type. ' is not null';
 		} # end if
+	} elsif ( $operator eq 'is not null' ) {
+		if ( $value ) {
+			return $field.$type. ' is not null';
+		} else {
+			return $field.$type. ' is null';
+		} # end if
 	} else {
 $log->warn("find_operators: op not found field($field) type($type) op($operator) value($value)");
 	} # end if
