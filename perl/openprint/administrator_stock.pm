@@ -33,7 +33,7 @@ sub _stocks {
 			'group_id','owner_id','manufacturer_id','supplier_id', 'brand_id','finish_id',
 			'colour_id','weight_id','fsc_code','material_id', 'Types', 'recommendations',
 			'grain_direction', 'digital', 'width','height', 'scoring', 'setup_prices', 
-			'material_prices', 'customer_supplied' );
+			'material_prices', 'customer_supplied', 'has_message' );
 		$session{'/administrator/stock/list.html?OrLarger'} = $param{OrLarger};
 	} # end if
 } # end sub _stocks
