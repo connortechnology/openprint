@@ -189,7 +189,7 @@ sub Quoted_Projects {
 		$_[0]{Quoted_Projects} = $_[1];
 	} 
 	if ( ! $_[0]{Quoted_Projects} ) {
-		$_[0]{Quoted_Projects} = [ openprint::QuotedProject->find(quote_id=>$_[0]{id}) ];
+		$_[0]{Quoted_Projects} = [ openprint::QuotedProject->find(quote_id=>$_[0]{id},order=>'project_id') ];
 	} # end if
 	return @{$_[0]{Quoted_Projects}};
 } # end sub Quoted_Projects
