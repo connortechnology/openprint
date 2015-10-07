@@ -852,6 +852,7 @@ sub page_settings {
 	require openprint::Page_Setting;
 	if ( $param{action} eq 'save' ) {
 		foreach my $PS ( openprint::Page_Setting->find(), new openprint::Page_Setting() ) {
+			next if ! exists $param{'url-'.$PS->id()};
 
 			my @usergroup_ids = ref $param{"usergroup_ids-$$PS{id}"} eq 'ARRAY' ? @{$param{"usergroup_ids-$$PS{id}"}} : ( $param{"usergroup_ids-$$PS{id}"} ) if $param{"usergroup_ids-$$PS{id}"};
 
@@ -880,6 +881,11 @@ sub page_settings {
 		} # end foreach PS
 	} # end if
 } # end sub page_settings
+
+sub _page_settings {
+	ssi::save_params( '/administrator/managerial/page_settings.html', ( 'url' ) );
+	
+} # end sub _page_Settings
 
 sub user_relationships {
 	require openprint::User_Relationship;
