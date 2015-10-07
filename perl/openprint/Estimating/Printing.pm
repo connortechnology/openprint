@@ -2960,7 +2960,7 @@ sub breakdown {
 	} # end if
 
 	if ( $stock_qty ) {
-		$breakdown .= sprintf( 'Overs: Base:%s Initial Setups: %d*%d=%d, Additional Setups: %d*%d=%d Run:%s FM:%s Additional Plate:%d * %d changes = %s Bindery: %d (FoldMakeReady: %d FoldRun: %d', @$stock_qty{'Net Sheet Count','Initial Setup Rate','Initial Setup Count','Initial Setup Overs','Additional Setup Rate','Additional Setup Count','Additional Setup Overs','Run Overs','FM Overs','Additional Plate Overs Rate','Plate Changes','Additional Plate Overs', 'BinderyOvers', 'FoldingMakeReadyOvers','FoldingRunOvers'} );
+		$breakdown .= sprintf( 'Overs: Base:%s Initial Setups: %d*%d=%d, Additional Setups: %d*%d=%d Run: %.2f% = %s FM:%s Additional Plate:%d * %d changes = %s Bindery: %d (FoldMakeReady: %d FoldRun: %d', @$stock_qty{'Net Sheet Count','Initial Setup Rate','Initial Setup Count','Initial Setup Overs','Additional Setup Rate','Additional Setup Count','Additional Setup Overs','Run Overs Rate', 'Run Overs','FM Overs','Additional Plate Overs Rate','Plate Changes','Additional Plate Overs', 'BinderyOvers', 'FoldingMakeReadyOvers','FoldingRunOvers'} );
 		$breakdown .= ' Cutting: ' . $$stock_qty{CuttingOvers} if $$stock_qty{CuttingOvers};
 		$breakdown .= $$stock_qty{ScoringOvers} if $$stock_qty{ScoringOvers};
 		$breakdown .= ' DieCutting: ' . $$stock_qty{DieCuttingOvers} if $$stock_qty{DieCuttingOvers};
@@ -5543,6 +5543,7 @@ $openprint::log->warn("No folding equipment");
 			'Additional Setup Rate'		=> $setup_rate,
 			'Additional Setup Overs'	=> $additional_setup_overs,
 			'Run Overs'					=>	$run_overs,
+			'Run Overs Rate'			=>	$price{'Overs Rate'},
 			'Additional Plate Overs'	=>	$additional_overs,
 			'Additional Plate Overs Rate'	=>	$additional_overs_rate,
 			'Total Overs'				=>	$total_overs,
