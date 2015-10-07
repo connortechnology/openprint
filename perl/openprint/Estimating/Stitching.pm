@@ -786,8 +786,13 @@ sub get_price {
 # Loaded here, so we don't do it in the loop many times
 		$openprint::log->debug("Need more pockets $neededPockets > $maxPockets") if DEBUG;
 		my %servicePrice;
-		if ( ! ( %servicePrice = openprint::service::get_price_object( $$ServiceType{name}.$maxPockets.'Pockets', $qty, $Equipment ) ) ) {
-			%servicePrice = openprint::service::get_price_object( $$ServiceType{name}, $maxPockets, $Equipment );
+		my $Service = openprint::Service->find_one( name=>$$ServiceType{name}.$maxPockets.'Pockets' );
+		if ( $Service ) {
+			%servicePrice = $Service->get_price( $qty, $Equipment );
+		} else {
+			$Service = openprint::Service->find_one( name=>$$ServiceType{name} );
+	
+			%servicePrice = $Service->get_price( $maxPockets, $Equipment ) if $Service;
 		} # end if
 		$price{ServicePrice} = \%servicePrice;
 
