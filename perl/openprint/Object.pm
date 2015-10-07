@@ -643,6 +643,7 @@ sub find {
 	} else {
 		$params = { @_ };
 	} # end if
+	my @param_keys = sets::exclude( [ 'order','limit','offset','or' ], [ keys %$params ] );
 
 	my @where;
 	my $sql = 'SELECT';
@@ -683,7 +684,7 @@ sub find {
 	delete $$params{dbh};
 
 	my $cache_field = ${$object_type.'::cache_field'} if $do_cache;
-	if ( $cache_field and $$params{$cache_field} and ( ( 1 == keys %$params ) or ( 2 == keys %$params and exists $$params{limit} ) ) ) {
+	if ( $cache_field and $$params{$cache_field} and ( 1 == @param_keys ) ) {
 
 #$log->debug("have cache field $cache_field for $$params{$cache_field}") if DEBUG_ALL;
 		if ( exists $name_cache{$object_type} and exists $name_cache{$object_type}{$$params{$cache_field}} ) {
@@ -696,12 +697,15 @@ sub find {
 				return ();
 			} # end if
 		} else {
-$log->debug("Undefing $object_type $cache_field $$params{$cache_field}") if DEBUG_ALL or DEBUG_CACHE;
+#$log->debug("Undefing $object_type $cache_field $$params{$cache_field} cache: $name_cache{$object_type}{$$params{$cache_field}} so that future lookups find an empty cache") if DEBUG_ALL or DEBUG_CACHE;
+#foreach my $k ( keys %{$name_cache{$object_type}} ) {
+#$log->debug("Cach contains $k => $name_cache{$object_type}{$k}");
+#}
 			$name_cache{$object_type}{$$params{$cache_field}} = undef;
-		} # end if
-		if ( 0 and ${$object_type.'::cached'} ) {
-$log->debug("ALl cached $object_type $cache_field $$params{$cache_field}") if DEBUG_ALL or DEBUG_CACHE;
+		if ( ${$object_type.'::cached'} ) {
+#$log->debug("ALl cached $object_type $cache_field $$params{$cache_field}") if DEBUG_ALL or DEBUG_CACHE;
 			return ();
+		} # end if
 		} # end if
 	} else {
 		$do_cache = 0;
@@ -710,8 +714,6 @@ $log->debug("ALl cached $object_type $cache_field $$params{$cache_field}") if DE
 
 	# no operators, just which fields are being searched on. Mostly just useful for detetion of the deleted field.
 	my @used_fields;
-
-	my @param_keys = sets::exclude( [ 'order','limit','offset','or' ], [ keys %$params ] );
 
 	# We use this search hash so that we can mash it up and leave the params hash alone
 	my %search;
@@ -856,7 +858,7 @@ $log->debug("ALl cached $object_type $cache_field $$params{$cache_field}") if DE
 		$log->debug("Loading Debug:$debug $object_type ($sql) (".join(',', map { ref $_ eq 'ARRAY' ? join(',', @{$_}) : $_ } @values).') # of results:' . @$data . ' in ' . sprintf('%.4f', tv_interval($starttime)*1000) .' useconds' );
 	} # end if
 	if ( $$fields{id} ) {
-		if ( $cache_field and $do_cache ) {
+		if ( $cache_field ) {
 			my @results = map { $object_type->new( $_->{$$fields{id}}, $_ ) } @$data;
 			my $cache_ref = $name_cache{$object_type};
 
