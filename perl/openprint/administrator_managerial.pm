@@ -1019,5 +1019,21 @@ sub _user_logs {
 			( map { 'log_created_on_end_' . $_ } ( 'year','month','day','hour','minute' ) ),
 	);
 } # end sub _logs
+
+sub _notification_popup {
+}
+
+sub _notifications {
+	if ( $param{action} eq 'add' ) {
+		my $N = new openprint::User_Notification();
+		$variable{error} .= $N->save({
+			user_id		=>	$param{user_id},
+			company_id	=>	$param{company_id},
+			type_id		=>	$param{type_id},
+			value		=>	$param{value},
+		});
+	} # end if
+	$variable{User} = new openprint::User( $param{user_id} );
+}
 1;
 __END__
