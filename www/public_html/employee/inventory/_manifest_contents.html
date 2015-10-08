@@ -28,7 +28,7 @@
 	<tr id="new-<?type_id?>">
 		<td class="RFID"><input type="text" id="rfidtag_id-<?type_id?>-" name="rfidtag_id-<?type_id?>-" onkeypress="return input_handler( this, event);" onkeydown="if(event.keyCode==13){add_content(this.form,'<?type_id?>');}" /></td>
 		<td class="Skid"><? echo ( input( type=>'cardinal', id=>join('-', 'skid_id', $$variable{type_id}, '' ), name=>join('-', 'skid_id', $$variable{type_id}, '' ), onkeypress=>'return input_handler(this,event);', onkeydown=>"if(event.keyCode==13){add_content(this.form,$$variable{type_id});}" ); ) ?></td>
-		<td class="ManufacturersID"><? echo ( input( type=>'text', id=>join('-','manufacturers_id',$$variable{type_id}, '' ), name=>join('-','manufacturers_id', $$variable{type_id}, '' ), onkeypress=>'return input_handler(this,event);', onkeydown=>"if(event.keyCode == 13){add_content(this.form, $$variable{type_id} );}" ); ) ?></td>
+		<td class="ManufacturersID"><? echo ( input( type=>'text', id=>join('-','manufacturers_id',$$variable{type_id}, '' ), name=>join('-','manufacturers_id', $$variable{type_id}, '' ), onkeydown=>"if(event.keyCode == 13){add_content(this.form, $$variable{type_id} );}" ); ) ?></td>
 		<td class="qty_lbs">
 <? echo ( input( type=>'cardinal', id=>'qty_lbs-'.$$variable{type_id}.'-', name=>'qty_lbs-'.$$variable{type_id}.'-', onkeyup=>"from_lbs(this,'$$variable{type_id}','');" ); ) ?>
 		</td>
