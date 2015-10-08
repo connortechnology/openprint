@@ -21,18 +21,22 @@ $table = 'user_notifications';
 @identified_by = ( 'user_id', 'type_id' );
 
 %fields = (
-	user_id	=>	'user_id',
-	type_id	=>	'type_id',
-	value	=>	'value',
+	company_id	=>	'company_id',
+	user_id		=>	'user_id',
+	type_id		=>	'type_id',
+	value		=>	'value',
 );
 %find_fields = (
 	type		=>	'(SELECT name from user_notification_types WHERE id=type_id)',
-	company_id	=>	'(SELECT company_id FROM Users WHERE users.id=user_notifications.user_id)',
 );
 
 sub User {
 	require openprint::User;
 	return new openprint::User( $_[0]{user_id} );
+}
+sub Company {
+	require openprint::Company;
+	return new openprint::Company( $_[0]{company_id} );
 }
 sub type {
 	if ( @_ > 1 ) {
