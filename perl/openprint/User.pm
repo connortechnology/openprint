@@ -331,11 +331,11 @@ sub notifications {
 	require openprint::User_Notification;
 	if ( $notifications_hash ) {
 		my $ac = sql::start_transaction( $dbh );
-		my %types = sql::execute( undef, undef, 'SELECT id, name FROM User_Notification_types' );
+		my %types = map { $_->id(), $_->name() } openprint::User_Notification_Type->find();
 		$dbh->do( 'LOCK TABLE User_Notifications IN ACCESS EXCLUSIVE MODE' );
 		sql::execute( undef, undef, 'DELETE FROM User_Notifications WHERE user_id=?', $$self{'id'} );
-		foreach my $k ( keys %types ) {
-			sql::insert( undef, undef, 'User_Notifications', { user_id=>$$self{id},type_id=>$k, value=>$$notifications_hash{$types{$k}} } ) if $$notifications_hash{$types{$k}};
+		foreach my $type_id ( keys %types ) {
+			sql::insert( undef, undef, 'User_Notifications', { user_id=>$$self{id},type_id=>$type_id, value=>$$notifications_hash{$types{$type_id}} } ) if $$notifications_hash{$types{$type_id}};
 		} # end foreach k
 		sql::end_transaction( $dbh, $ac );
 		$$self{notifications} = $notifications_hash;

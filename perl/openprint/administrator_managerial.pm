@@ -23,6 +23,7 @@ require openprint::Invoice;
 require openprint::Payment;
 require openprint::Timetrack;
 require openprint::User_Profile_Field;
+require openprint::User_Notification;
 require openprint::Company_Profile_Field;
 require openprint::Company_Category;
 require openprint::Company_Credit;
@@ -389,7 +390,7 @@ sub user_profiles {
 		} # end if
 
 		my %notifications;
-		my %types = sql::execute(undef,undef,'SELECT id,name FROM User_Notification_Types');
+		my %types = map { $_->id(), $_->name() } openprint::User_Notification_Type->find();
 		foreach my $k ( keys %types ) {
 			$notifications{$types{$k}} = $param{"notification_$k"};
 		} # end foreach
