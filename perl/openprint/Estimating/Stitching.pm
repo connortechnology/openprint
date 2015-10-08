@@ -298,6 +298,19 @@ $openprint::log->debug("Fold pq($$FI{page_quantity}) pages($$FI{pages}) ($$Fold{
 				$I->display("Setting imposition to 1 due to W&T impo not % 4 ") if DEBUG;
 				$imposition = 1;
 			} # end if
+			if ( $imposition > 1 ) {
+				if ( $$printing_specs{spine} eq 'height' ) {
+					if ( $$sig_specs{txtFinalHeight} < $$printing_specs{txtFinalHeight} ) {
+						$imposition = 1;
+						$results{Breakdown} .= "Setting imposition to 1 due to form $form having a smaller spine length<br/>";
+					}
+				} else {
+					if ( $$sig_specs{txtFinalWidth} < $$printing_specs{txtFinalWidth} ) {
+						$imposition = 1;
+						$results{Breakdown} .= "Setting imposition to 1 due to form $form having a smaller spine length<br/>";
+					}
+				}
+			}
 		} # end if
 		#if ( DEBUG ) {
 			#if ( ! $$I{Folder} ) {
