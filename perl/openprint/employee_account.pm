@@ -8,7 +8,7 @@ require misc;
 require sql;
 require openprint::MarketingCategory;
 require Authen::Passphrase::BlowfishCrypt;
-
+require openprint::User_Notification;
 
 require openprint;
 use vars qw( $r $log $dbh %variable %param %session %config);
@@ -121,13 +121,6 @@ sub profile {
 				} # end foreach
 			} # end if
 		} # end if
-
-		my %notifications;
-		my %types = sql::execute(undef,undef,'SELECT id,name FROM User_Notification_Types');
-		foreach my $k ( keys %types ) {
-			$notifications{$types{$k}} = $param{"notification_$k"};
-		} # end foreach
-		$User->notifications( \%notifications );
 
 		$variable{information} = 'Record saved successfully.<br/>';
 	} # end if

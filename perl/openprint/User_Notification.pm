@@ -15,12 +15,13 @@ $serial = 'user_notification_types_id_seq';
 package openprint::User_Notification;
 our @ISA = qw(openprint::Object);
 
-use vars qw( $debug $table @identified_by %fields %find_fields %defaults %transforms );
+use vars qw( $debug $table $serial %fields %find_fields %defaults %transforms );
 $debug = 0;
 $table = 'user_notifications';
-@identified_by = ( 'user_id', 'type_id' );
+$serial = 'user_notifications_id_seq';
 
 %fields = (
+	id			=>	'id',
 	company_id	=>	'company_id',
 	user_id		=>	'user_id',
 	type_id		=>	'type_id',
@@ -28,6 +29,7 @@ $table = 'user_notifications';
 );
 %find_fields = (
 	type		=>	'(SELECT name from user_notification_types WHERE id=type_id)',
+	user_company_id  =>  '(SELECT company_id FROM Users WHERE users.id=user_notifications.user_id)',
 );
 
 sub User {

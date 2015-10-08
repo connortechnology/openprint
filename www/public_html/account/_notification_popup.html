@@ -15,7 +15,7 @@
 		</ul>
 		<p class="buttons">
 			<? echo ( join("\n",
-						button('Submit', { onclick=>q`new Ajax.Updater( 'Notifications', '_notifications.html', { parameters: $('add_notification_form').serialize(), onSuccess: function() { popupWin.destroy(); } } );` } ),
+						button('Submit', { onclick=>q`new Ajax.Updater( 'Notifications', '/account/_notifications.html', { parameters: $('add_notification_form').serialize(), onSuccess: function() { popupWin.destroy(); } } );` } ),
 		button( 'CancelPopup', { onclick=>'popupWin.destroy();', text=>'Cancel' } ), 
 ); ) ?>
 		</p>

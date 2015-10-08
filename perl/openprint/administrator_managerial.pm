@@ -389,14 +389,7 @@ sub user_profiles {
 					} );
 		} # end if
 
-		my %notifications;
-		my %types = map { $_->id(), $_->name() } openprint::User_Notification_Type->find();
-		foreach my $k ( keys %types ) {
-			$notifications{$types{$k}} = $param{"notification_$k"};
-		} # end foreach
-		$User->notifications( \%notifications );
-
-		$variable{'information'} = 'Record saved successfully.';
+		$variable{information} = 'Record saved successfully.';
 		$variable{ExternalRedirect} = '/administrator/managerial/user_profiles.html?ddmUser='.$User->id();
 	} # end if btnFunction
 
@@ -1020,20 +1013,5 @@ sub _user_logs {
 	);
 } # end sub _logs
 
-sub _notification_popup {
-}
-
-sub _notifications {
-	if ( $param{action} eq 'add' ) {
-		my $N = new openprint::User_Notification();
-		$variable{error} .= $N->save({
-			user_id		=>	$param{user_id},
-			company_id	=>	$param{company_id},
-			type_id		=>	$param{type_id},
-			value		=>	$param{value},
-		});
-	} # end if
-	$variable{User} = new openprint::User( $param{user_id} );
-}
 1;
 __END__
