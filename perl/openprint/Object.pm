@@ -643,7 +643,6 @@ sub find {
 	} else {
 		$params = { @_ };
 	} # end if
-	my @param_keys = sets::exclude( [ 'order','limit','offset','or' ], [ keys %$params ] );
 
 	my @where;
 	my $sql = 'SELECT';
@@ -682,6 +681,7 @@ sub find {
 		return ();
 	}
 	delete $$params{dbh};
+	my @param_keys = sets::exclude( [ 'order','limit','offset','or' ], [ keys %$params ] );
 
 	my $cache_field = ${$object_type.'::cache_field'} if $do_cache;
 	if ( $cache_field and $$params{$cache_field} and ( 1 == @param_keys ) ) {
