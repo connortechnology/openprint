@@ -463,7 +463,7 @@ $html .= '</tr>';
 			if ( $$variable{Project}->shippingtype() eq 'CustomerPickUp' and $$variable{'Project'}->status() ne 'Picked Up' ) {
 				$html .= button( 'PickedUp'.$$variable{Project}{id}, { onclick=>qq`form_submit('$$variable{formname}','Picked Up');`, text=>'Picked Up' } );
 			} # end if
-			if ( $session{'user_type'} eq 'A' or openprint::usergroup::is_user_in( ['Sales Admin','Scheduling','PrepressManager'], $session{'user_id'} ) ) {
+			if ( $session{'user_type'} eq 'A' or $openprint::User->id() == $$variable{Order}->salesrep_id() or openprint::usergroup::is_user_in( ['Sales Admin','Scheduling','PrepressManager'], $session{'user_id'} ) ) {
 				$html .= button( 'Delete'.$$variable{Project}{id}, { onclick=>qq`form_submit( '$$variable{formname}', 'DeleteServices');`, text=>'Delete Checked Services' } );
 			} # end if
 
