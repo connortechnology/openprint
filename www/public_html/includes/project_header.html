@@ -103,6 +103,7 @@
 		</fieldset>
 	</div>
 	<? if ( $$variable{Project}->docket() ) ?>
+		<? eval ( $$variable{Order} = $$variable{Project}->Order() if ! $$variable{Order}; ) ?>
 	<div class="OrderInformation">
 		<fieldset><legend>Order Information</legend>
 			<div class="content">
