@@ -590,7 +590,7 @@ $log->debug("regexp: $regexp");
 					$log->debug("Not Adding CSR $$CSR{email} : notifications etting:" . $CSR->notification('CSR Client File Uploads') );
 				} # end if
 			} # end if
-			push @to, map { $_->User() } openprint::User_Notification->find( type=>'Client File Uploads',value=>'Yes', company_id=>[ $config{owner_id}, $Company->id() ] );
+			push @to, map { $_->User() } openprint::User_Notification->find( type=>'Client File Uploads',value=>'Yes', 'company_id is null or ='=>$Company->id() );
 		} # end if
 		
 		if ( ! @to ) {
