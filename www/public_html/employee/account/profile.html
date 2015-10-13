@@ -204,16 +204,7 @@
 <? endif ( ($session{user_type} eq 'A' ) or ( openprint::usergroup::is_user_in( ['UserManagement'], $session{user_id} ) ) ) ?>
 	<div class="Notifications">
 	   <fieldset><legend>Notifications</legend>
-		<? echo ( 
-			my $html;
-			my $n = $$variable{User}->notifications();
-			foreach my $Type ( openprint::User_Notification_Type->find( order=>'sort,lower(name)' ) ) {
-				$html .= '<p><label>'.$Type->name().'</label>';
-				$html .= radio( 'notification_'.$Type->id(), [ 'Yes', 'On', '', 'Off' ], $$n{$Type->name()} );
-				$html .= '</p>';
-			} # end foreach Type
-			return $html;
-		) ?>
+		<div id="Notifications"><?include('/account/_notifications.html')?></div>
 		</fieldset>
 	</div>
 	<br class="spacer"/>
@@ -227,12 +218,23 @@
 					} elsif ( @csr_ids ) {
 						return checkboxes( 'csr_ids', openprint::User->dropdown(type=>['E','A'], 'usergroup any'=>'Sales', id=>\@csr_ids ), \@csr_ids, { container=>['<li>','</li>'] } );
 					} 
-					return;
+					return 'No one';
  ) ?>
 				</ul>
 			
 		</fieldset>
 	</div>
+	<div class="Assistants">
+        <fieldset><legend>Assistants</legend>
+                <ul>
+                <? echo ( 
+                    my @assistant_ids = $$variable{User}->assistant_ids();
+                    return checkboxes( 'assistant_ids', openprint::User->dropdown(company_id=>$openprint::User->company_id(), type=>['E','A'], 'usergroup any'=>'Sales' ), \@assistant_ids, { container=>['<li>','</li>'] } );
+ ) ?>
+                </ul>
+
+        </fieldset>
+    </div>
 	<div class="AdminOptions">
 		<fieldset>
 			<ul>
@@ -240,7 +242,7 @@
 			<? if ( sets::isin( $$variable{User}->type(), ['E','A'] ) ) ?>
 			<li> 
 				<label>Commission Rate</label>
-				<? echo ( input( type=>'float', name=>'commission', value=>$$variable{User}->commission() ); ) ?>%
+				<? echo ( input( type=>'float', id=>'commission', name=>'commission', value=>$$variable{User}->commission() ); ) ?>%
 			</li>
 			<? endif ( sets::isin( $$variable{User}->type(), ['E','A'] ) ) ?>
 			<? endif ( ($session{user_type} eq 'A' ) or ( openprint::usergroup::is_user_in( ['UserManagement'], $session{user_id} ) ) ) ?>
@@ -252,19 +254,24 @@
 					if ( $$variable{User}->id() ) {
 						@users_categories = sql::execute( $log, $dbh,'SELECT category_id FROM Users_in_Marketing_Categories WHERE user_id=?', $$variable{User}->id() );
 					} # end if
-					checkboxes( 'marketing_categories', [ map { $_->id(), $_->name() } openprint::MarketingCategory->find('order'=>'lower(name)') ], \@users_categories, { container=>['<li>','</li>'] } );
+					if ( ($session{user_type} eq 'A' ) or ( openprint::usergroup::is_user_in( ['UserManagement'], $session{user_id} ) ) ) {
+						checkboxes( 'marketing_categories', openprint::MarketingCategory->dropdown( order=>'lower(name)'), \@users_categories, { container=>['<li>','</li>'] } );
+					} else {
+						return join("\n", map { '<li>'.$_->name().'</li>' } openprint::MarketingCategory->find( id=>\@users_categories, order=>'lower(name)' ) );
+					} # end if
 				) ?>
 				</ul>
 			</li>
-			<li>
-				<label>Groups</label>
+			<li><label>Groups</label>
 				<? echo (
 					require openprint::UserGroup;
 					my $html = '<ul class="UserGroups">';
 					my @usergroup_ids = map { $_->id() } $$variable{User}->Groups();
-					foreach my $Group ( openprint::UserGroup->find( 'order'=>'lower(name)' ) ) {
-						$html .= sprintf('<li><input type="checkbox" id="UserGroups%1$d" name="UserGroups" value="%1$d" %3$s /><label for="UserGroups%1$d">%2$s</label></li>', $Group->id(), $Group->name(), checked( sets::isin( $Group->id(), \@usergroup_ids ) ) );
-					} # end foreach
+					if ( ($session{user_type} eq 'A' ) or ( openprint::usergroup::is_user_in( ['UserManagement'], $session{user_id} ) ) ) {
+						$html .= checkboxes( 'UserGroups', openprint::UserGroup->dropdown( order=>'lower(name)'), \@usergroup_ids, { container=>['<li>','</li>'] } );
+					} else {
+						$html .= join("\n", map { '<li>'.$_->name().'</li>' } openprint::UserGroup->find( id=>\@usergroup_ids, order=>'lower(name)' ) );
+					} # end if
 					return $html . '</ul>';
 				) ?>
 			</li>

@@ -298,6 +298,19 @@ $openprint::log->debug("Fold pq($$FI{page_quantity}) pages($$FI{pages}) ($$Fold{
 				$I->display("Setting imposition to 1 due to W&T impo not % 4 ") if DEBUG;
 				$imposition = 1;
 			} # end if
+			if ( $imposition > 1 ) {
+				if ( $$printing_specs{spine} eq 'height' ) {
+					if ( $$sig_specs{txtFinalHeight} < $$printing_specs{txtFinalHeight} ) {
+						$imposition = 1;
+						$results{Breakdown} .= "Setting imposition to 1 due to form $form having a smaller spine length<br/>";
+					}
+				} else {
+					if ( $$sig_specs{txtFinalWidth} < $$printing_specs{txtFinalWidth} ) {
+						$imposition = 1;
+						$results{Breakdown} .= "Setting imposition to 1 due to form $form having a smaller spine length<br/>";
+					}
+				}
+			}
 		} # end if
 		#if ( DEBUG ) {
 			#if ( ! $$I{Folder} ) {
@@ -408,7 +421,7 @@ EQUIPMENT:foreach my $Equipment ( @equipment ) {
 				} # end foreach I
 			} # end if Press
 			my $max_imp = $Equipment->specification("Maximum $$ServiceType{name} Imposition");
-			if ( $max_imp and ( $max_imp < $imposition ) ) {
+			if ( ( defined $max_imp ) and ( $max_imp < $imposition ) ) {
 				$results{Breakdown} .= sprintf('Imposition too big.  This press only does ' . $max_imp . 'out.<br/>');
 				if ( $Equipment->specification('Type') eq 'Press' ) {
 					next;
@@ -786,8 +799,13 @@ sub get_price {
 # Loaded here, so we don't do it in the loop many times
 		$openprint::log->debug("Need more pockets $neededPockets > $maxPockets") if DEBUG;
 		my %servicePrice;
-		if ( ! ( %servicePrice = openprint::service::get_price_object( $$ServiceType{name}.$maxPockets.'Pockets', $qty, $Equipment ) ) ) {
-			%servicePrice = openprint::service::get_price_object( $$ServiceType{name}, $maxPockets, $Equipment );
+		my $Service = openprint::Service->find_one( name=>$$ServiceType{name}.$maxPockets.'Pockets' );
+		if ( $Service ) {
+			%servicePrice = $Service->get_price( $qty, $Equipment );
+		} else {
+			$Service = openprint::Service->find_one( name=>$$ServiceType{name} );
+	
+			%servicePrice = $Service->get_price( $maxPockets, $Equipment ) if $Service;
 		} # end if
 		$price{ServicePrice} = \%servicePrice;
 

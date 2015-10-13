@@ -68,8 +68,20 @@ sub _search {
 
 sub details {
 
-    my $order_id = $param{order_id};
-	my $Order = new openprint::Order( $order_id );
+	my $order_id;
+	my $Order;
+	
+	if ( $param{order_id} ) {
+		$order_id = openprint::Order->transform( id => $param{order_id} );
+		$Order = new openprint::Order( $order_id );
+	} elsif ( $param{docket} ) {
+		$Order = openprint::Order->find_one( docket=> openprint::Order->transform( docket => $param{docket} ) );
+		$order_id = $Order->id() if $Order;
+	}
+	if ( ! ( $Order and $Order->id() ) ) {
+		$variable{error} .= 'Please specify the order by order id or docket #.<br/>';
+		return;
+	}
 
 	if ( $param{btnFunction} eq 'Send' ) {
 		openprint::order::send_sales_order( $r, $log, $dbh, $order_id );

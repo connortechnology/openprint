@@ -988,6 +988,33 @@ sub _companies {
 
 sub company_view {
 	$variable{Company} = new openprint::Company( $param{company_id} );
+} # end sub company_view
+
+sub _notification_popup {
+} # en sub _notification_popup
+
+sub _notifications {
+	my $User = $variable{User} = new openprint::User( $param{user_id} );
+	if ( $User->can_edit() ) {
+		if ( $param{action} eq 'add' ) {
+			my $N = new openprint::User_Notification();
+			$variable{error} .= $N->save({
+					user_id		=>	$param{user_id},
+					company_id	=>	$param{company_id},
+					type_id		=>	$param{type_id},
+					value		=>	$param{value},
+					});
+		} elsif ( $param{action} eq 'delete' ) {
+			my $N = new openprint::User_Notification( $param{id} );
+			if ( $$N{user_id} != $param{user_id} ) {
+				$variable{error} .= 'Notification does not belong to this user.';
+			} else {
+				$variable{error} .= $N->delete();
+			}
+		} # end if
+	} else {
+		$variable{error} .= 'You do not have privilege to edit Notifications for this user.<br/>';
+	} # end if
 }
 
 1;

@@ -12,4 +12,6 @@ CREATE TABLE Manifest_Content_Types (
 );
 
 CREATE INDEX Manifest_Content_Types_manifest_id_idx on Manifest_Content_Types (manifest_id);
+create index manifest_content_types_po_id_idx on manifest_content_types (po_id);
+create index manifest_content_types_docket_idx on manifest_content_types (docket);
 

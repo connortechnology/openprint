@@ -13,6 +13,10 @@ function keepCompany( form ) {
 	form.ddmUserRole.selectedIndex= Role;
 	form.company_id.selectedIndex = Company;
 }
+function add_notification() {
+	popup_window('_user_notification_popup.html');
+	
+}
 </script>
 <?include('/includes/error_reporting.html')?>
 Please select a company or user to obtain login information.<br/>
@@ -367,25 +371,13 @@ Please select a company or user to obtain login information.<br/>
 		</div>
 		<div class="Notifications">
 		<fieldset><legend>Notifications</legend>
-			<ul>
-			<? echo ( 
-				my $html;
-				my $n = $$variable{User}->notifications();
-				foreach my $Type ( openprint::User_Notification_Type->find( order=>'sort,lower(name)' ) ) {
-					$html .= '<li><label>'.$Type->name().'</label>';
-					#$html .= radio( 'notification_'.$Type->id(), [ 'Yes', 'On', '', 'Off' ], $$n{$Type->name()} );
-					$html .= input( type=>'text', name=>'notification_'.$Type->id(), value=>$$n{$Type->name()} );
-					$html .= '</li>';
-				} # end foreach Type
-				return $html;
-			) ?>
-			</ul>
+			<div id="Notifications"><?include(/account/_notifications.html)?></div>
 		</fieldset>
 		</div>
 		<? if ( openprint::ServiceType->find_one() ) ?>
 		<div class="ServiceDefaults">
 		<fieldset><legend>Service Defaults</legend>
-			<? echo ( include('_service_defaults.html'); ) ?>
+			<?include('_service_defaults.html')?>
 		</fieldset>
 		</div>
 		<? endif ( openprint::ServiceType->find_one() ) ?>

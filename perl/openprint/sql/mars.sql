@@ -23,3 +23,5 @@ CREATE TABLE mars (
 	PRIMARY KEY (id)
 );
 
+create index mars_equipment_idx on mars (equipment_id);
+create index mars_deleted_issued_on_idx on mars (deleted,issued_on);

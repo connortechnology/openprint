@@ -8,6 +8,7 @@ use Apache2::ServerUtil ();
 use Apache2::RequestIO ();
 
 use Image::Magick;
+use Math::Round;
 
 use strict;
 use openprint;
@@ -68,7 +69,7 @@ sub handler {
 		my $path = join('/', @path );
 		my $location_id = $r->param('location_id');
 		my $Location = new openprint::Location( $location_id );
-$r->log->debug( "Location: " . $Location->name() . ':' . $Location->coordinates() );
+$log->debug( "Location: " . $Location->name() . ':' . $Location->coordinates() );
 
 		# Find root and how deep we are.
 		my $l_level = 0;
@@ -91,7 +92,9 @@ $r->log->debug( "Location: " . $Location->name() . ':' . $Location->coordinates(
 			$Root = $Root->Parent();
 			$level += 1;
 		} # end while
+		$r->log->debug("Place Root is $$Root{name} level is $level");
 		
+		# The ideo is to show the location on a map of the parent location
 		my $image = new Image::Magick;
 		if ( ! -e join('/', $path, $Root->name().'.gif') ) {
 			$r->log->debug("No template at " . join('/', $path, $Root->name().'.gif') );
@@ -109,6 +112,11 @@ $r->log->debug( "Location: " . $Location->name() . ':' . $Location->coordinates(
 
 			my $P = $L->Parent();
 
+			my $P_Parent = $P->Parent();
+			if ( ! $P_Parent ) {
+				last;
+			}
+
 			my $pi = new Image::Magick;
 			$pi->Read(join('/', $path, $P->Parent()->name().'.gif'));
 			$log->debug("Scaling from: " . $P->name() . ' to ' . $P->Parent()->name() );
@@ -123,12 +131,12 @@ $r->log->debug( "Location: " . $Location->name() . ':' . $Location->coordinates(
 
 			$log->debug(sprintf('Scaling box to (%d,%d)->(%d,%d)', $x1, $y1, $x1*$x_ratio, $y1*$y_ratio) );
 			$log->debug(sprintf('Scaling highlight to (%d,%d)x(%d,%d)->(%d,%d)x(%d,%d)', $lx1, $ly1, $lx2,$ly2, $lx1*$x_ratio, $ly1*$y_ratio, $lx2*$x_ratio, $ly2*$y_ratio) );
-			$lx1 = sprintf('%.0f', $lx1*$x_ratio );
-			$ly1 = sprintf('%.0f', $ly1*$y_ratio );
-			$lx2 = sprintf('%.0f', $lx2*$x_ratio );
-			$ly2 = sprintf('%.0f', $ly2*$y_ratio );
-			$x1 = sprintf('%.0f', $x1*$x_ratio );
-			$y1 = sprintf('%.0f', $y1*$y_ratio );
+			$lx1 = Math::Round::nearest( 1, $lx1*$x_ratio );
+			$ly1 = Math::Round::nearest( 1, $ly1*$y_ratio );
+			$lx2 = Math::Round::nearest( 1, $lx2*$x_ratio );
+			$ly2 = Math::Round::nearest( 1, $ly2*$y_ratio );
+			$x1 = Math::Round::nearest( 1, $x1*$x_ratio );
+			$y1 = Math::Round::nearest( 1, $y1*$y_ratio );
 
 			$lx1 += $x1;
 			$lx2 += $y1;
@@ -138,7 +146,7 @@ $r->log->debug( "Location: " . $Location->name() . ':' . $Location->coordinates(
 
 			$L =  $L->Parent();
 		} # end while
-			@coordinates = map { $_ < 1 ? 1 : $_ } ( $lx1, $ly1, $lx2, $ly2 );
+		@coordinates = map { $_ < 1 ? 1 : $_ } ( $lx1, $ly1, $lx2, $ly2 );
 #$r->log->debug("Drawing Coordinates: " . join(',', @coordinates ) );
 
 		$image->Draw(stroke=>'red', primitive=>'rectangle', points=>join(',', map{$_-1} @coordinates));

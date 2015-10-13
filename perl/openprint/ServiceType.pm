@@ -23,6 +23,7 @@ $serial = 'service_types_id_seq';
 	view_visible	=> 'view_visible',
 	summary_visible	=> 'summary_visible',
 	category		=> undef,
+	allow_delete	=> 'allow_delete',
 	deleted			=> 'deleted',
 );
 %find_fields = (
@@ -35,6 +36,7 @@ $serial = 'service_types_id_seq';
 	category_id		=>	undef,
 	sorting			=>	undef,
 	summary_visible	=>	1,
+	allow_delete	=>	1,
 );
 
 sub cache_field {

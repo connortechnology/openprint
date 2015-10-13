@@ -34,11 +34,11 @@
 		<ul>
 		<li> 
 			<label>Name</label>
-			<input type="text" name="name" value="<? echo ( $$variable{'ServiceType'}->name() ) ?>" onchange="if(!$('description').value){$('description').value=this.value;}" />
+			<input type="text" name="name" value="<? echo ( $$variable{ServiceType}->name() ) ?>" onchange="if(!$('description').value){$('description').value=this.value;}" />
 		</li>
 		<li> 
 			<label>Description</label>
-			<input type="text" id="description" name="description" value="<? echo ( $$variable{'ServiceType'}->description() ) ?>" /> 
+			<input type="text" id="description" name="description" value="<? echo ( $$variable{ServiceType}->description() ) ?>" /> 
 		</li>
 		<li> 
 			<label>Category</label>
@@ -47,27 +47,31 @@
 				<? echo ( make_drop_down( openprint::ServiceType_Category->dropdown( order=>'sorting,name'), $$variable{ServiceType}->category_id() ); ) ?>
 			</select>
 		</li>
-<? if ( new openprint::User( $session{'user_id'} )->email() =~ /iconnor/ ) ?>
+<? if ( new openprint::User( $session{user_id} )->email() =~ /iconnor/ ) ?>
 		<li> 
 			<label>Type</label>
-			<input type="text" name="type" value="<? echo ( $$variable{'ServiceType'}->type() ) ?>" /> 
+			<input type="text" name="type" value="<? echo ( $$variable{ServiceType}->type() ) ?>" /> 
 		</li>
 		<li> 
 			<label>URL</label>
-			<input type="url" name="url" value="<? echo ( $$variable{'ServiceType'}->url() ) ?>" /> 
+			<input type="url" name="url" value="<? echo ( $$variable{ServiceType}->url() ) ?>" /> 
 		</li>
-<? endif ( new openprint::User( $session{'user_id'} )->email() =~ /iconnor/ ) ?>
+<? endif ( new openprint::User( $session{user_id} )->email() =~ /iconnor/ ) ?>
 		<li>
 			<label>Visible in Project Create</label>
-			<? echo ( radio( 'create_visible', [ '1','Yes','0','No' ], $$variable{'ServiceType'}->create_visible() ); ) ?>
+			<? echo ( radio( 'create_visible', [ '1','Yes','0','No' ], $$variable{ServiceType}->create_visible() ); ) ?>
 		</li>
 		<li>
 			<label>Visible in Project View</label>
-			<? echo ( radio( 'view_visible', [ '1','Yes','0','No' ], $$variable{'ServiceType'}->view_visible() ); ) ?>
+			<? echo ( radio( 'view_visible', [ '1','Yes','0','No' ], $$variable{ServiceType}->view_visible() ); ) ?>
 		</li>
 		<li>
 			<label>Visible in Project Summary</label>
-			<? echo ( radio( 'summary_visible', [ '1','Yes','0','No' ], $$variable{'ServiceType'}->summary_visible() ); ) ?>
+			<? echo ( radio( 'summary_visible', [ '1','Yes','0','No' ], $$variable{ServiceType}->summary_visible() ); ) ?>
+		</li>
+		<li>
+			<label>Allow removal from Project</label>
+			<? echo ( radio( 'allow_delete', [ '1','Yes','0','No' ], $$variable{ServiceType}->allow_delete() ); ) ?>
 		</li>
 		<li> 
 			<label>Sort</label>

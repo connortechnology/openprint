@@ -325,40 +325,22 @@ sub Groups {
 	return ();
 } # end sub Groups
 
-sub notifications {
-	my ( $self, $notifications_hash ) = @_;
+sub Notifications {
+	my ( $self ) = @_;
 	
 	require openprint::User_Notification;
-	if ( $notifications_hash ) {
-		my $ac = sql::start_transaction( $dbh );
-		my %types = sql::execute( undef, undef, 'SELECT id, name FROM User_Notification_types' );
-		$dbh->do( 'LOCK TABLE User_Notifications IN ACCESS EXCLUSIVE MODE' );
-		sql::execute( undef, undef, 'DELETE FROM User_Notifications WHERE user_id=?', $$self{'id'} );
-		foreach my $k ( keys %types ) {
-			sql::insert( undef, undef, 'User_Notifications', { user_id=>$$self{id},type_id=>$k, value=>$$notifications_hash{$types{$k}} } ) if $$notifications_hash{$types{$k}};
-		} # end foreach k
-		sql::end_transaction( $dbh, $ac );
-		$$self{notifications} = $notifications_hash;
-	} elsif ( ! exists $$self{notifications} ) {
+	if ( ! exists $$self{Notifications} ) {
 		if ( ! $$self{id} ) {
-			$$self{notifications} = {};
+			$$self{Notifications} = [];
 		} else {
-		%{$$self{notifications}} = sql::execute( undef, undef, 'SELECT (SELECT name FROM User_Notification_Types WHERE id=type_id),value FROM User_Notifications WHERE user_id=?', $$self{id} );
+			$$self{Notifications} = [ openprint::User_Notification->find( user_id=>$$self{id} ) ];
 		} # end if
 	} else {
-	$openprint::log->debug("Have notifications");
+		$openprint::log->debug("Have notifications");
 	} # end if
 	
-	return $$self{notifications};
+	return @{$$self{Notifications}};
 } # end sub notifications
-
-sub notification {
-	my ( $self, $name ) = @_;
-
-	$self->notifications() if ( ! exists $$self{'notifications'} );
-	return $$self{'notifications'}{$name} if $$self{'notifications'} and $$self{'notifications'}{$name};
-	return '';
-} # end sub notification
 
 sub purchasing_total {
 	require openprint::PurchaseOrder;

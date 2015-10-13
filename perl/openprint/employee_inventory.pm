@@ -102,18 +102,27 @@ sub skids {
 			} # end foreach
 			foreach my $skid_id ( @skid_ids ) {
 				my $Skid = new openprint::Skid( $skid_id );
-				$Skid->delete();
-				$variable{information} .= sprintf('<a href="/employee/inventory/skid_details.html?skid_id=%1$d">Skid %1$d</a> has been deleted.<br/>', $$Skid{id} );
-				my $PI = new openprint::PaperInventory();
-				$PI->save({skid_id=>$skid_id, user_id=>$session{user_id}, comment=>'Skid Deleted.'});
+				if ( $Skid->id() ) {
+					$variable{error} .= $Skid->delete();
+					$variable{information} .= sprintf('<a href="/employee/inventory/skid_details.html?skid_id=%1$d">Skid %1$d</a> has been deleted.<br/>', $$Skid{id} );
+					my $PI = new openprint::PaperInventory();
+					$variable{error} .= $PI->save({skid_id=>$skid_id, user_id=>$session{user_id}, comment=>'Skid Deleted.'});
+				} else {
+					$variable{error} .= "Skid $skid_id does not exist in the database.<br/>";
+				}
 			} # end foreach
 		} elsif ( $param{skids} ) {
 			foreach my $skid_id ( ref $param{skids} eq 'ARRAY' ? @{$param{skids}} : $param{skids} ) {
 				my $Skid = new openprint::Skid( $skid_id );
-				$Skid->delete();
-				$variable{information} .= $Skid->link_to() . ' has been deleted.<br/>';
-				my $PI = new openprint::PaperInventory();
-				$PI->save({skid_id=>$skid_id, user_id=>$session{user_id}, comment=>'Skid Deleted.'});
+				if ( $Skid->id() ) {
+					$variable{error} .= $Skid->delete();
+					$variable{information} .= $Skid->link_to() . ' has been deleted.<br/>';
+					my $PI = new openprint::PaperInventory();
+					$variable{error} .= $PI->save({skid_id=>$skid_id, user_id=>$session{user_id}, comment=>'Skid Deleted.'});
+				} else {
+					$variable{error} .= "Skid $skid_id does not exist in the database.<br/>";
+				}
+				
 			} # end foreach
 		} # end if
 	} elsif ( $param{btnFunction} eq 'Destroy' )	{
@@ -2028,7 +2037,7 @@ sub _manifests {
 				( map { 'created_on_end_'.$_ } ( 'year','month','day' ) ),
 				( map { 'updated_on_start_'.$_ } ( 'year','month','day' ) ),
 				( map { 'updated_on_end_'.$_ } ( 'year','month','day' ) ),
-				'supplier_id', 'delivery','deleted','has_errors','type',
+				'supplier_id', 'delivery','deleted','has_errors','type','po_confirmed',
 				) );
 	if ( ! exists $param{type} ) {
 		delete $session{'/employee/inventory/manifests.html?type'};

@@ -254,6 +254,10 @@ sub information {
 
 	my $Quote = $variable{'Quote'} = new openprint::Quote( $quote_id );	
 	$session{'quote_id'} = $quote_id;
+	my $Currency = openprint::Currency::get_current();
+	if ( $Quote->currency_id() != $Currency->id() ) {
+		$variable{error} .= $Quote->save({currency_id=>$Currency->id()});
+	}
 
 	if ( $param{'remove'} ) {
 		sql::execute($log, $dbh, 'DELETE FROM tbl_Quote_Details WHERE quote_id=? AND project_id=?', @param{'quote_id','remove'} );
