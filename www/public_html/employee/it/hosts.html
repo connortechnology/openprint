@@ -72,6 +72,9 @@ Please select a host to view/edit.<br/>
 		<? echo ( radio( 'radius_auth', [ 1, 'Yes', 0, 'No', '', 'Both' ], $session{'/employee/it/hosts.html?radius_auth'} ); ) ?>
 	</li>
 <? endif ( $config{'RADIUS Support'} ) ?>
+	<li><label>Deleted</label>
+		<? echo ( radio( 'deleted', [ 1, 'Yes', 0, 'No', '', 'Both' ], $session{'/employee/it/hosts.html?deleted'} ); ) ?>
+	</li>
 		</ul>
 		<p class="buttons">
 			<? echo ( join('',
