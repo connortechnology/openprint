@@ -164,7 +164,7 @@
 
 <? echo ( 
 	my $html;
-	my @Equipment = openprint::Equipment->find('category'=>'Printing');
+	my @Equipment = openprint::Equipment->find('category any'=>'Printing');
 	%{$$variable{'EquipmentIDs'}} = map { $_->id(), $_->strid() } @Equipment;
 	%{$$variable{'EquipmentNames'}} = map { $_->id(), $_->name() } @Equipment;
 	foreach my $id ( keys %{$$variable{'EquipmentIDs'}} ) {

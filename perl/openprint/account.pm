@@ -131,15 +131,15 @@ $log->warn("registration errors $error");
 	if ( $param{email} ) {
 		# enforce unique email addresses.
 		$param{email} =~ tr/[A-Z]/[a-z]/;
-		if ( openprint::User->find_one('email lc'=>$param{email},'company_id is null'=>0 ) ) {
+		if ( openprint::User->find_one(email=>$param{email},'company_id is null'=>0 ) ) {
 			$variable{error} = $param{email} .' is already a user!';
 			return;
 		} # end if
-		if ( openprint::User->find_one('email lc'=>$param{email},'deleted'=>1 ) ) {
+		if ( openprint::User->find_one(email=>$param{email}, deleted=>1 ) ) {
 			$variable{error} = $param{email} .' is already a user, but has been deleted. Please contact us to re-activate your account.';
 			return;
 		} # end if
-		$User = openprint::User->find_one('email lc'=>$param{email},'company_id is null'=>1 );
+		$User = openprint::User->find_one(email=>$param{email},'company_id is null'=>1 );
 	} # end if
 
 	my @agents = split(',', $config{UserRegistrationEmail} );
@@ -468,7 +468,7 @@ sub user_profile {
 				return;
 			} # end if
 
-			if ( openprint::User->find_one( 'email lc'=>lc $param{email}, ( $User->id() ? ( 'id !='=>$User->id() ) : () ) ) ) {
+			if ( openprint::User->find_one( email=>lc $param{email}, ( $User->id() ? ( 'id !='=>$User->id() ) : () ) ) ) {
 				$variable{error} = 'User already exists.';
 				$variable{information} = $param{email} . ' is already a user.';
 				$variable{User} = $User;

@@ -60,15 +60,14 @@ $serial = 'par_id_seq';
 sub send_notifications {
 	my ( $self ) = @_;
 
-	my @Users = openprint::User->find( type=>['E','A'], 'usergroup @>'=>'Quality Control Notifications');
+	my @Users = openprint::User->find( company_id=>$openprint::config{owner_id}, type=>['E','A'], 'usergroup any'=>'Quality Control Notifications');
 
 	if ( @Users ) {
 		my $From = new openprint::User( $openprint::session{'user_id'} );
-		my $email_template = misc::load_file( $openprint::log, $openprint::config{'SkinPath'} . '/email_template.html' );
 
-		my %info = ( 'PAR'	=>	$self);
+		my %info = ( PAR	=>	$self );
 		$info{'ReplacementText'} = ssi::include( '/email_content/iso_par_notification.html', \%info );
-		my $body = ssi::variable_substitution( \$email_template, \%info );
+		my $body = ssi::include( '/email_template.html', \%info );
 		my $Mail = new openprint::Email();
 		$Mail->send( 
 				FROM	=>	$From,
