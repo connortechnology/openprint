@@ -255,40 +255,39 @@ $log->warn("Lookup up stock price, cuz it's not in the paper service: cost-$stoc
         } # end foreach signature
 	} # end if has Paper Service
 
-		my @keys = sort keys %totals;
+	my @keys = sort keys %totals;
 
-        if ( @keys ) {
-            $html .= '<tr class="totals">';
-            $html .= '<td class="checkboxes">&nbsp;</td>' if $$variable{checkboxes};
-            $html .= '<td class="Service"><b>Stock</b><br/>';
-			$html .= join('<br/>', map { $Stocks{$_}->to_string() } @keys );
-            $html .= '</td>';
-			$html .= '<td class="Price"><br/>';
-			if($$variable{canseepaperpricing}){
-				$html .= join('<br/>', map { $_ ? $_ : () } @prices{sort keys %totals} );
-			}
-			$html .= '</td><td class="status"><br/>';
-            foreach my $string ( sort keys %totals ) {
-                my $Stock = $Stocks{$string};
+	if ( @keys ) {
+		$html .= '<tr class="totals">';
+		$html .= '<td class="checkboxes">&nbsp;</td>' if $$variable{checkboxes};
+		$html .= '<td class="Service"><b>Stock</b><br/>';
+		$html .= join('<br/>', map { $Stocks{$_}->to_string() } @keys );
+		$html .= '</td>';
+		$html .= '<td class="Price"><br/>';
+		if($$variable{canseepaperpricing}){
+			$html .= join('<br/>', map { $_ ? $_ : () } @prices{sort keys %totals} );
+		}
+		$html .= '</td><td class="status"><br/>';
+		foreach my $string ( sort keys %totals ) {
+			my $Stock = $Stocks{$string};
 
-                if ( $totals{$string} ) {
-                    if ( $sheets{$string} ) {
-                        $html .= $sheets{$string}.'sheets '.$totals{$string}.'lbs';
-                    } else {
-                        $html .= $totals{$string}.'lbs';
-                        if ( $Stock->type() eq 'Roll' ) {
-                            $html .= ' '.int((($totals{$string}/$Stock->wpsi())/$Stock->width())/12).'feet';
-                        } # end if
-                    } # end if
-                } else {
-                    $html .= 'none';
-                } # end if
-                $html .= '<br/>';
-            } # end foreach key
-			$html .= '</td>';
-$html .= '</tr>';
-        } # end if
-    #} # end if $$services{Paper}
+			if ( $totals{$string} ) {
+				if ( $sheets{$string} ) {
+					$html .= $sheets{$string}.'sheets '.$totals{$string}.'lbs';
+				} else {
+					$html .= $totals{$string}.'lbs';
+					if ( $Stock->type() eq 'Roll' ) {
+						$html .= ' '.int((($totals{$string}/$Stock->wpsi())/$Stock->width())/12).'feet';
+					} # end if
+				} # end if
+			} else {
+				$html .= 'none';
+			} # end if
+			$html .= '<br/>';
+		} # end foreach key
+		$html .= '</td>';
+		$html .= '</tr>';
+	} # end if
     return $html;
 ) ?>
 		<? if ( $$variable{Order}->can_edit() ) ?>
@@ -379,7 +378,7 @@ $html .= '</tr>';
 			<td class="checkbox">&nbsp;</td>
 			<? endif ( $$variable{checkboxes} ) ?>
 			<td class="Service"><b>Originally Ordered Price</b></td>
-			<td class="Price"><? echo ( openprint::Currency::format( $$variable{Project}->ordered_price() ); ) ?></td>
+			<td class="Price"><? echo ( openprint::Currency::format( $$variable{Currency}->convert_from( $$variable{Project}->ordered_price() ) ); ) ?></td>
 			<td class="status"></td>
 		</tr>
 <? endif ( $$variable{Project}->ordered_price() != $$variable{Project}->price($$variable{Project}->ordered_quantity_index()) ) ?>
@@ -391,12 +390,12 @@ $html .= '</tr>';
 			<? endif ( $$variable{checkboxes} ) ?>
 			<td class="Service"><b>Value for shipping</b></td>
 			<td class="Price"><? echo ( 
-				my $price = $$variable{Project}->price($$variable{Project}->ordered_quantity_index());
+				my $price = $$variable{Currency}->convert_from( $$variable{Project}->price($$variable{Project}->ordered_quantity_index()) );
 				$price = 5000 * ( int( $price/5000 ) );
 				if ( ! $price ) {
 					return 'under $5,000.00';
 				} else {
-				return openprint::Currency::format( $price );
+					return openprint::Currency::format( $price );
 				} # end if
 				) ?>
 			</td>
@@ -407,7 +406,7 @@ $html .= '</tr>';
 	</table>
 	<? if ( $$variable{canseepricing} ) ?>
 	<? if ( $$variable{Project}->currency_id() != $session{Currency_id} ) ?>
-	<span class="Currency">Project originally quoted in <? echo ( $$variable{Project}->Currency()->name() ) ?>.</span>
+	<span class="Currency">Project originally quoted in <? echo ( $$variable{Currency}->name() ) ?>.</span>
 	<? endif ( $$variable{Project}->currency_id() != $session{Currency_id} ) ?>
 	<span class="Currency">All prices in <? echo ( new openprint::Currency( $session{Currency_id} )->name() ) ?>.&nbsp;</span>
 	<? endif ( $$variable{canseepricing} ) ?>
