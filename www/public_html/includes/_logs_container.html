@@ -1,25 +1,26 @@
 <form id="logs_form" name="logs_form">
 	<input type="hidden" name="object_id" value="<?echo($$variable{Object}->id())?>"/>
 	<input type="hidden" name="object_type_id" value="<?echo($$variable{Object}->Object_Type()->id())?>"/>
+	<input type="hidden" name="uri" value="<?echo($$variable{uri})?>"/>
 	
 	<fieldset><legend>Logs</legend>
-        <ul>
-            <li><label>Date</label>
-                <? echo ( join( ' to ',
-                        datetime_select_session( $r->uri(),'log_created_on_start', {
-                            onchange    =>q`new Ajax.Updater( 'Logs', '/includes/_log_contents.html', { parameters: $('logs_form').serialize() } );`,
-                            with_today=>1,
-                            with_clear=>1,
-                            } ),
-                        datetime_select_session( $r->uri(),'log_created_on_end', {
-                            onchange    =>q`new Ajax.Updater( 'Logs', '/includes/_log_contents.html', { parameters: $('logs_form').serialize() } );`,
-                            with_today=>1,
-                            with_clear=>1,
-                            } ),
-                    ); ) ?>
-                <? echo ( button( 'LoadLog', { onclick=>q`new Ajax.Updater( 'Logs', '_logs.html', { parameters: $('logs_form').serialize() } );`, text=>'Load' } ); ) ?>
-            </li>
-        </ul>
-        <div id="Logs"><?include('/includes/_logs_contents.html')?></div>
-    </fieldset>
+		<ul>
+			<li><label>Date</label>
+				<? echo ( join( ' to ',
+						datetime_select_session( $r->uri(),'log_created_on_start', {
+							onchange	=>q`new Ajax.Updater( 'Logs', '/includes/_logs_contents.html', { parameters: $('logs_form').serialize() } );`,
+							with_today=>1,
+							with_clear=>1,
+							} ),
+						datetime_select_session( $r->uri(),'log_created_on_end', {
+							onchange	=>q`new Ajax.Updater( 'Logs', '/includes/_logs_contents.html', { parameters: $('logs_form').serialize() } );`,
+							with_today=>1,
+							with_clear=>1,
+							} ),
+					); ) ?>
+				<? echo ( button( 'LoadLog', { onclick=>q`new Ajax.Updater( 'Logs', '/includes/_logs_contents.html', { parameters: $('logs_form').serialize() } );`, text=>'Load' } ); ) ?>
+			</li>
+		</ul>
+		<div id="Logs"><?include('/includes/_logs_contents.html')?></div>
+	</fieldset>
 </form>
