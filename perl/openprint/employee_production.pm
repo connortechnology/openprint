@@ -510,7 +510,7 @@ sub upload_pdfs {
 	$variable{CompanyName} = $Company->name();
 
 	$variable{Docket} = $Project->docket();
-	my $destdir = $config{'PDFS Path'} . "/$variable{CompanyName}";
+	my $destdir = $config{'PDFS_Path'} . "/$variable{CompanyName}";
 	if ( ! -e $destdir  ) {
 		if ( ! mkdir $destdir ) {
 			$log->error("Cannot create company PDFs dir $destdir : Reason: $!" );
