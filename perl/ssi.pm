@@ -1068,8 +1068,8 @@ sub link {
 sub include_logs {
 	my $Object = $_[0];
 	$variable{Object} = $Object;
-	setup_date_select( $r->uri, 'log_created_on_start', -31 );
-	setup_date_select( $r->uri, 'log_created_on_end', '' );
+	setup_date_select( $variable{uri}, 'log_created_on_start', -31 );
+	setup_date_select( $variable{uri}, 'log_created_on_end', '' );
 	return include('/includes/_logs_container.html');
 }
 
