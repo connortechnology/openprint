@@ -229,6 +229,8 @@ sub stock {
 		$Paper = $NewPaper;
 		$param{'stock_id'} = $Paper->id();
 	} elsif ( $param{'btnFunction'} eq 'Save' ) {
+
+		my @changes = $Paper->changes( \%param );
 		$Paper->owner_id( $param{'ddmOwner'} );
 		$Paper->manufacturer( $param{'txtManufacturer'} ) if $param{'txtManufacturer'};
 		$Paper->manufacturer_id( $param{'ddmManufacturer'} ) if ! $param{'txtManufacturer'};
@@ -297,26 +299,8 @@ sub stock {
 		my $message = '';
 # Save prices
 		foreach my $Price ( $Paper->Prices() ) {
-			if (
-					( $Price->price() != $param{"price-$$Price{id}"} ) 
-					or ( $Price->cost() != $param{"cost-$$Price{id}"} ) 
-					or ( $Price->markup() != $param{"markup-$$Price{id}"} ) 
-					or ( $Price->min() != $param{"min-$$Price{id}"} )
-					or ( $Price->max() != $param{"max-$$Price{id}"} )
-					or ( $Price->units() ne $param{"units-$$Price{id}"} )
-					or ( $Price->discountable() ne $param{"discountable-$$Price{id}"} )
-					or ( $Price->equipment_id() != $param{"equipment_id-$$Price{id}"} )
-			   ) {
-			$message .= "Price changed: " . join( ', ', (
-						( $Price->min() != $param{"min-$$Price{id}"} ? 'min: ' . $$Price{min} .' => ' . $param{"min-$$Price{id}"} : () ),
-						( $Price->max() != $param{"max-$$Price{id}"} ? 'max: '. $$Price{max} .' => ' . $param{"max-$$Price{id}"} : () ),
-						( $Price->cost() != $param{"cost-$$Price{id}"} ? 'cost: '. $$Price{cost} . ' => '. $param{"cost-$$Price{id}"} : () ),
-						( $Price->markup() != $param{"markup-$$Price{id}"} ? 'markup: '.$$Price{markup} . ' => '. $param{"markup-$$Price{id}"} : () ),
-						( $Price->price() != $param{"price-$$Price{id}"} ? 'price: '.$$Price{price} . ' => '. $param{"price-$$Price{id}"} : () ),
-						( $Price->units() ne $param{"units-$$Price{id}"} ? 'units: '.$$Price{units} . ' => '. $param{"units-$$Price{id}"} : () ),
-						( $Price->discountable() ne $param{"discountable-$$Price{id}"} ? 'discounted: ' .$$Price{discountable} . ' => '. $param{"discountable-$$Price{id}"} : () ),
-				) );
-			$variable{error} .= $Price->save({
+
+			my $new_values = {
 					equipment_id	=> $param{"equipment_id-$$Price{id}"},
 					min				=> $param{"min-$$Price{id}"},
 					max				=> $param{"max-$$Price{id}"},
@@ -325,12 +309,16 @@ sub stock {
 					markup			=> $param{"markup-$$Price{id}"},
 					price			=> $param{"price-$$Price{id}"},
 					discountable	=> $param{"discountable-$$Price{id}"},
-					});
+			};
+			my @price_changes = $Price->changes( $new_values );
+			if ( @price_changes ) {
+				push @changes, ( 'Change price for ' .$Price->id_string() . ': ' .  join(', ', map { $_ } @price_changes ) );
+				$variable{error} .= $Price->save( $new_values );
 			} # end if Price has changed
 		} # end foreach Price
 
 		$variable{'error'} .= $Paper->save();
-		(new openprint::Log())->save({ object_type=>(ref $Paper), object_id=>$$Paper{id}, action=>($param{stock_id}?'Edited stock':'Saved stock'), note=>$message });
+		(new openprint::Log())->save({ object_type=>(ref $Paper), object_id=>$$Paper{id}, action=>($param{stock_id}?'Edited stock':'Saved stock'), note=>join('<br/>', @changes) });
 		if ( ! $variable{'error'} ) {
 			$variable{'information'} .= 'Stock ' . $Paper->id() . ' has been saved.';
 			$variable{ExternalRedirect} = '/administrator/stock/stock.html?stock_id='.$$Paper{id};
