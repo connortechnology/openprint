@@ -62,7 +62,9 @@
 		$$variable{interest_total} += $Invoice->interest();
 		$$variable{owing_total} += $Invoice->owing();
 		foreach my $Tax ( @{$$variable{Taxes}} ) {
-			$$variable{tax_totals}{$Tax->id()} += $Invoice->Tax( $Tax )->amount();
+			my $IT = $Invoice->Tax( $Tax );
+			next if ! $$IT{tax_id};
+			$$variable{tax_totals}{$Tax->id()} += $IT->amount();
 		} # end foreach Tax
 	} # end foreach Invoice
 
@@ -85,7 +87,7 @@
 			<th class="Company">Company</th>
 			<th class="Price">SubTotal</th>
 			<? echo ( 
-				return join('', map { sprintf('<th class="Price">%s (%d%)</th>', $_->name(), $_->rate() ) } @{$$variable{Taxes}} );
+				return join('', map { exists $$variable{tax_totals}{$_->id()} ? sprintf('<th class="Price">%s (%d%)</th>', $_->name(), $_->rate() ) : () } @{$$variable{Taxes}} );
 			) ?>
 			<th class="Price">Total</th>
 			<th class="Interest Price">Interest</th>
@@ -111,7 +113,7 @@
 				format_date( $Invoice->due_on() ),
 				ssi::htmlize( $Invoice->Invoicee()->name() ),
 				openprint::Currency::format( $Invoice->subtotal() ),
-				join('', map { sprintf('<td class="Price">%s</td>', openprint::Currency::format( $Invoice->Tax( $_ )->amount() ) ) } @{$$variable{Taxes}} ),
+				join('', map { exists $$variable{tax_totals}{$_->id()} ? sprintf('<td class="Price">%s</td>', openprint::Currency::format( $Invoice->Tax( $_ )->amount() ) ) : () } @{$$variable{Taxes}} ),
 				openprint::Currency::format( $Invoice->total() ),
 				openprint::Currency::format( $Invoice->interest() ),
 				openprint::Currency::format( $Invoice->owing() ),
@@ -124,7 +126,7 @@
 			<td colspan="5">Totals</td>
 			<td class="Price"><? echo ( openprint::Currency::format( $$variable{subtotal} ); ) ?></td>	
 			<? echo (
-				return join('', map { sprintf('<td class="Price">%s</td>', openprint::Currency::format( $$variable{tax_totals}{$_->id()} ) ) } @{$$variable{Taxes}} );
+				return join('', map { exists $$variable{tax_totals}{$_->id()} ? sprintf('<td class="Price">%s</td>', openprint::Currency::format( $$variable{tax_totals}{$_->id()} ) ) : () } @{$$variable{Taxes}} );
 			) ?>
 			<td class="Price"><? echo ( openprint::Currency::format( $$variable{total} ); ) ?></td>	
 			<td class="Interest Price"><? echo ( openprint::Currency::format( $$variable{interest_total} ); ) ?></td>	
@@ -134,6 +136,6 @@
 	<span class="Currency">All prices listed in <? hecho ( new openprint::Currency( $session{Currency_id} )->name(); ) ?></span>
 	<br class="spacer"/>
 <p class="buttons">
-<? echo ( ssi::button( 'Delete',{ onclick=>'delete_confirm(document.f1);' } ); ) ?>
+<? echo ( button( 'Delete',{ onclick=>'delete_confirm(document.f1);' } ); ) ?>
 </p>
 <? endif ( @{$$variable{Invoices}} == 0 ) ?>

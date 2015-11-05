@@ -1487,8 +1487,8 @@ sub production_cost {
 sub Service {
 	my ( $self, $service_id ) = @_;
 	if ( ! $service_id ) {
-		$openprint::log->error("No service_id passed to ServiceType for project $$self{id}");
-		Carp::cluck("No service_id passwrod to ServiceType");
+		$openprint::log->error("No service_id passed to Service for project $$self{id}");
+		Carp::cluck("No service_id passwrod to Project::Service");
 	} # end if
 	return new openprint::Project_Service( {project_id=>$$self{id}, service_id=>$service_id} );
 } # end sub Service
@@ -1630,6 +1630,10 @@ sub calliper {
 				$pages = 4;
 			} elsif ( $$sig_specs{rdbTemplateType} eq 'DifficultFold' ) {
 				$pages = 6;
+			} elsif ( $$sig_specs{rdbTemplateType} eq '8PageFold' ) {
+				$pages = 4;
+			} else {
+				$log->error("Unknown template type n calliper $$sig_specs{rdbTemplateType}");
 			} #// end if
 			$finished_calliper += $pages * $calliper;
 		} # end if

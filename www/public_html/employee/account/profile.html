@@ -204,16 +204,7 @@
 <? endif ( ($session{user_type} eq 'A' ) or ( openprint::usergroup::is_user_in( ['UserManagement'], $session{user_id} ) ) ) ?>
 	<div class="Notifications">
 	   <fieldset><legend>Notifications</legend>
-		<? echo ( 
-			my $html;
-			my $n = $$variable{User}->notifications();
-			foreach my $Type ( openprint::User_Notification_Type->find( order=>'sort,lower(name)' ) ) {
-				$html .= '<p><label>'.$Type->name().'</label>';
-				$html .= radio( 'notification_'.$Type->id(), [ 'Yes', 'On', '', 'Off' ], $$n{$Type->name()} );
-				$html .= '</p>';
-			} # end foreach Type
-			return $html;
-		) ?>
+		<div id="Notifications"><?include('/account/_notifications.html')?></div>
 		</fieldset>
 	</div>
 	<br class="spacer"/>

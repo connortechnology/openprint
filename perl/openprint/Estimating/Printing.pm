@@ -2402,7 +2402,13 @@ $openprint::log->debug("after sorting presses: " . ( sprintf('%.4f', tv_interval
 $log->warn("There are no quantities!");
 	} # end if
 
-	$GripperMakeReadyService = openprint::Service->find_one( name=>'GripperMakeReady' );
+		# For caching
+	%Services = map { $$_{name}, $_ } openprint::Service->find();
+	$openprint::Service::cached = 1;
+	$GripperMakeReadyService = $Services{GripperMakeReady};
+
+	%Materials = map { $$_{name}, $_ } openprint::Material->find();
+	$openprint::Material::cached = 1;
 
 	foreach my $qty_index ( @quantity_indexes ) {
 		if ( $$specs{'OverridePrice'.$qty_index} ne 'Y' ) {
@@ -2635,11 +2641,6 @@ $openprint::log->debug(Data::Dumper::Dumper( \%Overrides ) );
 		}
 		} 
 
-		# For caching
-		%Services = map { $$_{name}, $_ } openprint::Service->find();
-		$openprint::Service::cached = 1;
-		%Materials = map { $$_{name}, $_ } openprint::Material->find();
-		$openprint::Material::cached = 1;
 
 		%stitching_cache = ();
 		%price_cache = ();
@@ -2774,7 +2775,7 @@ if ( 1 ) {
 			} # end if
 		} # end if
 		if ( $Paper->message() ) {
-			my $paper_message = ssi::variable_substitution( \$Paper->message(), { Project=>$Project } );
+			my $paper_message = ssi::variable_substitution( \$Paper->message(), { Project=>$Project, Stock=>$Paper, qty_index=>$qty_index } );
 			if ( ! ( $$project{HasAqueous} or $$specs{AqueousMessage} ) ) {
 				$$specs{AqueousMessage} = 1;
 				$$specs{popup} .= $paper_message;
@@ -2959,9 +2960,9 @@ sub breakdown {
 	} # end if
 
 	if ( $stock_qty ) {
-		$breakdown .= sprintf( 'Overs: Base:%s Initial Setups: %d*%d=%d, Additional Setups: %d*%d=%d Run:%s FM:%s Additional Plate:%d * %d changes = %s Bindery: %d (FoldMakeReady: %d FoldRun: %d', @$stock_qty{'Net Sheet Count','Initial Setup Rate','Initial Setup Count','Initial Setup Overs','Additional Setup Rate','Additional Setup Count','Additional Setup Overs','Run Overs','FM Overs','Additional Plate Overs Rate','Plate Changes','Additional Plate Overs', 'BinderyOvers', 'FoldingMakeReadyOvers','FoldingRunOvers'} );
+		$breakdown .= sprintf( 'Overs: Base:%s Initial Setups: %d*%d=%d, Additional Setups: %d*%d=%d Run: %.2f% = %s FM:%s Additional Plate:%d * %d changes = %s Bindery: %d (FoldMakeReady: %d FoldRun: %d', @$stock_qty{'Net Sheet Count','Initial Setup Rate','Initial Setup Count','Initial Setup Overs','Additional Setup Rate','Additional Setup Count','Additional Setup Overs','Run Overs Rate', 'Run Overs','FM Overs','Additional Plate Overs Rate','Plate Changes','Additional Plate Overs', 'BinderyOvers', 'FoldingMakeReadyOvers','FoldingRunOvers'} );
 		$breakdown .= ' Cutting: ' . $$stock_qty{CuttingOvers} if $$stock_qty{CuttingOvers};
-		$breakdown .= ' Scoring: ' . $$stock_qty{ScoringOvers} if $$stock_qty{ScoringOvers};
+		$breakdown .= $$stock_qty{ScoringOvers} if $$stock_qty{ScoringOvers};
 		$breakdown .= ' DieCutting: ' . $$stock_qty{DieCuttingOvers} if $$stock_qty{DieCuttingOvers};
 		$breakdown .= ' UV Coating: ' . $$stock_qty{UVOvers} if $$stock_qty{UVOvers};
 		$breakdown .= ') Total: ' . $$stock_qty{'Total Overs'};
@@ -5248,7 +5249,7 @@ $openprint::log->warn("No folding equipment");
 	} # end if
 
 	my %scoring_results;
-	if ( $$project{HasScoring} and $$project{NeedScoring} ) {
+	if ( $$project{HasScoring} and $$project{NeedScoring} and openprint::Estimating::Scoring::signature_needs( $Project, $$project{ScoringSpecs}, $specs, $Paper ) ) {
 		%scoring_results = openprint::Estimating::Scoring::signature_calc( $Project, $$project{ScoringSpecs}, $specs, $qty_index, $Imposition, $project );
 #foreach my $k ( keys %scoring_results ) {
 #$openprint::log->debug("Scoring: $k => $scoring_results{$k}");
@@ -5256,9 +5257,9 @@ $openprint::log->warn("No folding equipment");
 		if ( $scoring_results{Status} eq 'uncalculated' ) {
 			$price{'Scoring Breakdown'} .= "Scoring error: $scoring_results{alert} $scoring_results{Breakdown} <br/>";
 			$price{'Comparison Cost'} += 1000000; 
-		} elsif ( $scoring_results{Imposition} ) {
-			$price{'Scoring Breakdown'} .= sprintf('Scoring Price: %dout $%.2f on %s<br/>', $scoring_results{Imposition}->imposition(), $scoring_results{Price}, $scoring_results{Equipment} ? $scoring_results{Equipment}->name() : '' );
-			$openprint::log->error("Scoring is calculated $price{'Scoring Breakdown'}");
+		} elsif ( $scoring_results{Impositions} ) {
+			$price{'Scoring Breakdown'} .= sprintf('Scoring Price: %s on %s $%.2f<br/>', join(',', map { $_->to_string() } @{$scoring_results{Impositions}} ), $scoring_results{Price}, $scoring_results{Equipment} ? $scoring_results{Equipment}->name() : '' );
+			#$openprint::log->error("Scoring is calculated $price{'Scoring Breakdown'}");
 			$price{'Comparison Cost'} += $scoring_results{Price};
 			if ( $scoring_results{Equipment} and ( $scoring_results{Equipment}->id() == $Press->id() ) ) {
 				if ( $scoring_results{Runspeed} =~ /(.*)\%/ ) {
@@ -5268,9 +5269,9 @@ $openprint::log->warn("No folding equipment");
 					$$specs{Runspeed} = $price{Runspeed} = $scoring_results{Runspeed} if $price{Runspeed} > $scoring_results{Runspeed};
 				} # end if
 			} # end if
-			$scoring_results{Overs} = ceil( $scoring_results{Overs} / ( $$Imposition{imposition}/$scoring_results{Imposition}->imposition() ) ) if $scoring_results{Imposition}->imposition();
+			#$scoring_results{Overs} = ceil( $scoring_results{Overs} / ( $$Imposition{imposition}/$scoring_results{Imposition}->imposition() ) ) if $scoring_results{Imposition}->imposition();
 		} else {
-			$openprint::log->error("Scoring is not uncalculated but no Imposition");
+			$openprint::log->error("Scoring is not uncalculated but no Imposition $scoring_results{Breakdown}");
 		} # end if
 	#} else {
 			#$openprint::log->error("Scoring is not being done");
@@ -5542,6 +5543,7 @@ $openprint::log->warn("No folding equipment");
 			'Additional Setup Rate'		=> $setup_rate,
 			'Additional Setup Overs'	=> $additional_setup_overs,
 			'Run Overs'					=>	$run_overs,
+			'Run Overs Rate'			=>	$price{'Overs Rate'},
 			'Additional Plate Overs'	=>	$additional_overs,
 			'Additional Plate Overs Rate'	=>	$additional_overs_rate,
 			'Total Overs'				=>	$total_overs,

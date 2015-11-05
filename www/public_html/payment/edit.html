@@ -51,6 +51,7 @@
 				</select>
 			</li>
 			<li><label for="payor_id">Payor</label>
+				<input type="text" onkeyup="filter_companies('payor_id', {name:this.value,selected_id:get_ddm_value($('payor_id'))});" class="filter" />
 				<select id="payor_id" name="payor_id">
 					<option value=""> select </option>
 					<? echo ( make_drop_down( openprint::Company->dropdown( 'last_invoice_id is null'=>0 ), 

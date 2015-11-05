@@ -37,6 +37,7 @@ $ARGV[2] = $ARGV[1] if ! $ARGV[2];
 
 $dbh = sql::open_sql( $log, ('database'=>$ARGV[0], 'driver'=>'Pg','login'=>$ARGV[1], 'password'=>$ARGV[2], 'host'=>$ARGV[3]) );
 my @tables = sql::execute( undef, undef, q`SELECT table_name FROM information_schema.tables where table_schema='public'`);
+$log->debug("Tables: @tables");
 my @sequences = sql::execute( undef, undef, q`SELECT sequence_name FROM information_schema.sequences where sequence_schema='public'`);
 
 if ( ! sets::isin( 'database_info', \@tables ) ) {
@@ -45,11 +46,6 @@ if ( ! sets::isin( 'database_info', \@tables ) ) {
 }
 my ( $version, $updated_on, $backup ) = sql::execute( undef, undef, q{SELECT version,updated_on, backup FROM database_info ORDER BY updated_on DESC LIMIT 1} );
 print "Current Database Version: $version Backups: $backup, Last Updated: $updated_on\n";
-my $data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM database_info LIMIT 1', {} );
-if ( ! $data ) {
-	$dbh->do( misc::load_file( $log, q{../openprint/sql/database_info.sql}) );
-	die $dbh->errstr() if $dbh->errstr();
-} 
 
 if ( ! sets::isin( 'configuration', \@tables ) ) {
 	$log->debug("Adding Configuration table");
@@ -67,7 +63,6 @@ if ( ! sets::isin( 'object_types', \@tables ) ) {
 
 configuration::init( $log, $dbh );
 $config{db_name} = $ARGV[0];
-
 
 if ( ! sets::isin( 'currencies', \@tables ) ) {
 	$dbh->do( misc::load_file( $log, q{../openprint/sql/Currencies.sql}) );
@@ -89,6 +84,7 @@ if ( ! sets::isin( 'annualsales', \@tables ) ) {
 if ( ! sets::isin( 'companies', \@tables ) ) {
 	if ( ! sets::isin( 'company', \@tables ) ) {
 		$dbh->do( misc::load_file( $log, q{../openprint/sql/Companies.sql}) );
+		die $dbh->errstr() if $dbh->errstr();
 	} else {
 		my $ac = sql::start_transaction( $dbh );
 		print "Renaming company to companies\n";

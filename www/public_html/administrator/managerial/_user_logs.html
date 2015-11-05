@@ -14,11 +14,12 @@
 	return if ! @Logs;
 	
 	my $rowclass = '';
-	$html .= '<table class="List"><tr><th class="DateTime">When</th><th class="User">Who</th><th class="action_type">Action</th><th class="note">Note</th></tr>';
+	$html .= '<table class="List"><tr><th class="hostname">Host</th><th class="DateTime">When</th><th class="User">Who</th><th class="action_type">Action</th><th class="note">Note</th></tr>';
 	foreach my $Log ( @Logs ) {
 		
-		$html .= sprintf('<tr%s><td class="DateTime">%s</td><td class="User">%s</td><td class="action_type">%s</td><td class="note">%s</td></tr>',
+		$html .= sprintf('<tr%s><td class="hostname">%s</td><td class="DateTime">%s</td><td class="User">%s</td><td class="action_type">%s</td><td class="note">%s</td></tr>',
 			$rowclass,
+			$Log->ip_address(),
 			format_datetime( $Log->date_time() ),
 			$Log->User()->link_to(),
 			$Log->Action()->name(), $Log->note(),

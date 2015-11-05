@@ -9,7 +9,28 @@
 </script>
 <?echo(ssi::link('/css/order.css');)?>
 <?include('/includes/error_reporting.html')?>
-<form name="f1" method="post" action="/employee/accounting/details.html?order_id=<?OrderID?>">
+<form id="f2" name="f2" method="get" action="/employee/accounting/details.html">
+    <fieldset class="filters">
+        <div class="content">
+            <ul>
+			<li>
+				<label>Docket #</label>
+				<? echo (
+					input( type=>'cardinal', id=>'docket', name=>'docket', value=>$param{docket}, onkeypress=>q`$('order_id').value='';return input_handler(this, event);`, onkeydown=>q`if(event.keyCode == 13){$('f2').submit();}`);
+				) ?>
+			</li>
+			<li>
+				<label>Order ID</label>
+				<? echo ( 
+					input( type=>'cardinal', id=>'order_id', name=>'order_id', value=>$param{order_id}, onkeypress=>q`$('docket').value='';$('docket').value='';return input_handler(this, event);`, onkeydown=>q`if(event.keyCode == 13){$('f2').submit();}` );
+				) ?>
+			</li>
+			</ul>
+		</div>
+	</fieldset>
+</form>
+<? if ( $$variable{Order}{id} ) ?>
+<form id="f1" name="f1" method="post" action="/employee/accounting/details.html?order_id=<?OrderID?>">
 	<p class="buttons">
 	<? echo ( my $html;
 		$html .= button( 'Log', { onclick=>"popup_window('/main/order/_view_log.html', { order_id:$$variable{Order}{id} }, { width: 800 } );", text=> 'View Log' } );
@@ -67,3 +88,4 @@
 	<input type="hidden" name="payment_id"/>
 	<input type="hidden" name="btnFunction"/>
 </form>
+<? endif ( $$variable{Order}{id} ) ?>

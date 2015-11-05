@@ -583,14 +583,14 @@ $log->debug("regexp: $regexp");
 		} else {
 			if ( $Company->salesrep_id() ) {
 				my $CSR = $Company->CSR();
-				if ( $CSR->notification('CSR Client File Uploads') ne 'No' ) {
+				if ( openprint::User_Notification->find_one( type=>'CSR Client File Uploads', 'value !=' => 'No', user_company_id=>[ $config{owner_id}, $Company->id() ] ) ) {
 					@to = ( $CSR );
 					$log->debug("Adding CSR $$CSR{email}");
 				} else {
 					$log->debug("Not Adding CSR $$CSR{email} : notifications etting:" . $CSR->notification('CSR Client File Uploads') );
 				} # end if
 			} # end if
-			push @to, map { $_->User() } openprint::User_Notification->find( type=>'Client File Uploads',value=>'Yes', company_id=>[ $config{owner_id}, $Company->id() ] );
+			push @to, map { $_->User() } openprint::User_Notification->find( type=>'Client File Uploads',value=>'Yes', 'company_id is null or ='=>$Company->id(), company_id=>[ $config{owner_id}, $Company->id() ] );
 		} # end if
 		
 		if ( ! @to ) {
