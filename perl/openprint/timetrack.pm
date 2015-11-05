@@ -108,6 +108,7 @@ sub edit {
 		$param{ending} = $parser->format_datetime( $end_datetime );
 		if ( ! $param{timetrack_id} ) {
 			if ( openprint::Timetrack->find_one(
+						user_id		=>$param{user_id},
 						owner_id	=>$param{owner_id},
 						company_id	=>$param{company_id},
 						starting	=>$param{starting},
