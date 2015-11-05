@@ -605,7 +605,7 @@ sub save_location {
 		$parent_id = $$param{city_id};
 	} # end if
 	my $Location;
-	$$Location = $param{company_id} if $param{company_id};
+	$$Location = $$param{company_id} if $$param{company_id};
 
 	if ( $$param{location} ) {
 		$Location = openprint::Location->find_one('name lc'=> lc openprint::Location->transform('name',$$param{location}),
