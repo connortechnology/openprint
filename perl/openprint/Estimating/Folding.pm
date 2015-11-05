@@ -775,10 +775,6 @@ if ( 0 ) {
 				$Breakdown .= 'Not stitching:<br/>';
 				next;
 			} # end if
-			if ( ( exists $$specs{StitchingCost} ) and ( $$specs{StitchingEquipment}->id() != $Equipment->id() ) ) {
-				$Breakdown .= "Not stitching on $$Equipment{name}:<br/>";
-				next;
-			} # end if
 		} elsif ( $capable eq 'When Printing' ) {
 			$Breakdown .= $capable.':';
 			if ( $$Press{id} != $$Equipment{id} ) {
@@ -1339,6 +1335,7 @@ $openprint::log->debug(qq`Wrong imposition: $$specs{"FoldImposition-$form-$qty_i
 				my $impo_qty = $Imposition->quantity();
 				my $imposition = $$Imposition{imposition};
 				my $runspeed = int($Fold->runspeed($$Paper{gsm}));
+				$$Imposition{Folder} = $Equipment;
 $openprint::log->debug("Resulting fold: " . $Fold->to_string() ) if DEBUG;
 
 
