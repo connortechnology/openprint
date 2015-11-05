@@ -114,7 +114,7 @@ sub is_photo {
 sub sized_url {
 	my $size = $_[1];
 	if ( ! $_[0]{id} ) {
-		return;
+		return '';
 	} # end if
 
 	my $src = $_[0]->on_disk_path();
