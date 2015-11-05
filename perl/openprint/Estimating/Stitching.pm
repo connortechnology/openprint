@@ -263,7 +263,7 @@ $openprint::log->debug("Fold pq($$FI{page_quantity}) pages($$FI{pages}) ($$Fold{
 				}
 				if ( ! $$I{Folder} ) {
 					$$I{Folder} = $Fold->Equipment();
-					#$openprint::log->debug("Setting folder to " . $$I{Folder}->strid() );
+					$openprint::log->debug("Setting folder to " . $$I{Folder}->strid() );
 					#} else {
 					#$openprint::log->debug('Folder is ' . $$I{Folder}->strid() );
 				}
@@ -441,7 +441,7 @@ EQUIPMENT:foreach my $Equipment ( @equipment ) {
 			} # end if
 			if ( $$I{Folder} and ( $$I{Folder}->id() != $Equipment->id() ) ) {
 				if ( ( $_ = $$I{Folder}->specification('Folding Capable') ) and ( $_ eq 'When Stitching' ) ) {
-					$results{Breakdown} .= $Equipment->strid() . ' is not the folding equipment<br/>';
+					$results{Breakdown} .= $Equipment->strid() . ' is not the folding equipment, is '.$$I{Folder}->name() . '<br/>';
 					next;
 				} 
 				if ( $capable eq 'When Folding' ) {
