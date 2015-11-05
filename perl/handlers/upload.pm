@@ -224,10 +224,13 @@ sub get_destdir {
 		( $destdir ) = new openprint::Company( $session{company_id} )->name();
 		$destdir = '/'.$destdir.'/';
 		return '' if ! create_dir( $config{ProjectFilesPath}.$destdir );
-	} else {
+	} elsif ( $param{txtCompanyName} ) {
 # This ends up prefixing the file with the company's name
 		$param{txtCompanyName} = openprint::Company->transform('name', $param{txtCompanyName});
 		$destdir .= $param{txtCompanyName} . '_';
+	} else {
+		$destdir .= '/'.$openprint::Owner->name().'/';
+		return '' if ! create_dir( $config{ProjectFilesPath}.$destdir );
 	} # end if
 
 	if ( $param{docket} ) {
