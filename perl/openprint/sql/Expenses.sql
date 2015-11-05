@@ -20,11 +20,13 @@ CREATE TABLE Expenses (
 	owner_id	INTEGER NOT NULL, FOREIGN KEY (owner_id) REFERENCES Companies (id),
 	description	TEXT,
 	created_on	TIMESTAMP WITH TIME ZONE NOT NULL default NOW(),
-	due_on	TIMESTAMP WITH TIME ZONE,
-	invoiced_on	TIMESTAMP WITH TIME ZONE,
+	due_on	DATE,
+	paid_on		DATE,
+	invoiced_on	DATE,
 	currency_id	INTEGER NOT NULL, FOREIGN KEY (currency_id) REFERENCES Currencies (id),
 	business_use	float,
 	business_use_amount	float,
+	deleted		BOOLEAN NOT NULL DEFAULT FALSE,
 	PRIMARY KEY (id)
 );
 
