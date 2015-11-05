@@ -1630,6 +1630,10 @@ sub calliper {
 				$pages = 4;
 			} elsif ( $$sig_specs{rdbTemplateType} eq 'DifficultFold' ) {
 				$pages = 6;
+			} elsif ( $$sig_specs{rdbTemplateType} eq '8PageFold' ) {
+				$pages = 4;
+			} else {
+				$log->error("Unknown template type n calliper $$sig_specs{rdbTemplateType}");
 			} #// end if
 			$finished_calliper += $pages * $calliper;
 		} # end if
