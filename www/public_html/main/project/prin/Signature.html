@@ -59,37 +59,36 @@
 				) ?>
 				</ul>
             </div>
-<? if ( $$variable{'Group'} == 1 ) ?>
+	<? if ( $$variable{'Group'} == 1 ) ?>
             <div class="rightColumn" id="PresentationFolderQuestions" <? echo ( ! sets::isin( $$variable{'rdbTemplateType'}, ['2Panel1Pocket','2Panel2Pocket','TriFoldDoublePocket'] ) ? 'style="display:none;"' : '' ) ?> >
             <?include('/includes/main/proj/presentation_folder_printing.html')?>
             </div>
-<? endif ( $$variable{'Group'} == 1 ) ?>
+	<? endif ( $$variable{'Group'} == 1 ) ?>
 <? else ( $$variable{'txtSignatureType'} ) ?>
+	<? if ( $$variable{'ProjectType'}->name() eq 'Envelopes' ) ?>
+			<?include(/includes/main/proj/templates/generic.html)?>
+	<? endif ( $$variable{'ProjectType'}->name() eq 'Envelopes' ) ?>
 
-<? if ( $$variable{'ProjectType'}->name() eq 'Envelopes' ) ?>
-		<?include(/includes/main/proj/templates/generic.html)?>
-<? endif ( $$variable{'ProjectType'}->name() eq 'Envelopes' ) ?>
-
-<? echo ( 
-	if ( sets::isin( $$variable{'ProjectType'}->name(), [ 'DoorHangers', 'Brochures', 'GreetingCards','Postcards','Posters','Signs','Banners','RackCards','Labels','NCR','Inserts' ] ) ) {
-		return join("\n",
-			include('/includes/main/proj/templates/generic.html'),
-			include('/includes/main/proj/dimensions.html'),
-		);
-	} elsif ( $$variable{'ProjectType'}->name() eq 'Custom' ) {
-		return include('/includes/main/proj/dimensions_boxes_only.html');
-	} elsif ( sets::isin( $$variable{'ProjectType'}->name(),['Banners'] ) )  {
-		return include('/includes/main/proj/banner_printing.html');
-	} elsif ( $$variable{'ProjectType'}->name() eq 'Envelopes' ) {
-		return qq`
-            <input type="hidden" id="txtWidth" name="txtWidth" value="$$variable{txtWidth}" />
-            <input type="hidden" id="txtHeight" name="txtHeight" value="$$variable{txtHeight}" />
-            <input type="hidden" id="txtFinalWidth" name="txtFinalWidth" value="$$variable{txtFinalWidth}" />
-            <input type="hidden" id="txtFinalHeight" name="txtFinalHeight" value="$$variable{txtFinalHeight}" />
-		`;
-	} # end if
-	return '';
-) ?>
+	<? echo ( 
+		if ( sets::isin( $$variable{'ProjectType'}->name(), [ 'DoorHangers', 'Brochures', 'GreetingCards','Postcards','Posters','Signs','Banners','RackCards','Labels','NCR','Inserts' ] ) ) {
+			return join("\n",
+				include('/includes/main/proj/templates/generic.html'),
+				include('/includes/main/proj/dimensions.html'),
+			);
+		} elsif ( $$variable{'ProjectType'}->name() eq 'Custom' ) {
+			return include('/includes/main/proj/dimensions_boxes_only.html');
+		} elsif ( sets::isin( $$variable{'ProjectType'}->name(),['Banners'] ) )  {
+			return include('/includes/main/proj/banner_printing.html');
+		} elsif ( $$variable{'ProjectType'}->name() eq 'Envelopes' ) {
+			return qq`
+				<input type="hidden" id="txtWidth" name="txtWidth" value="$$variable{txtWidth}" />
+				<input type="hidden" id="txtHeight" name="txtHeight" value="$$variable{txtHeight}" />
+				<input type="hidden" id="txtFinalWidth" name="txtFinalWidth" value="$$variable{txtFinalWidth}" />
+				<input type="hidden" id="txtFinalHeight" name="txtFinalHeight" value="$$variable{txtFinalHeight}" />
+			`;
+		} # end if
+		return '';
+	) ?>
 <? endif ( $$variable{'txtSignatureType'} ) ?>
 <? if ( sets::isin( $$variable{'ProjectType'}->name(),['Banners'] ) ) ?>
 		<?include(/includes/main/proj/banner_printing.html)?>
@@ -173,8 +172,15 @@
 		</fieldset>
 	</div>
 -->
-<br class="spacer"/>
 	<?include(_versions.html)?>
+	<div class="PressProofApprovals">
+	<fieldset><legend>Approvals</legend>
+	<ul>
+	<?include(_press_proof_approval.html)?>
+	</ul>
+	</fieldset>
+	</div>
+<br class="spacer"/>
 	<?include(/includes/main/proj/colours_coatings.html)?>
 <? if ( $$variable{'ProjectType'}->name() ne 'Envelopes' ) ?>
 	<?include(/includes/main/proj/bleeds_colourbars.html)?>	

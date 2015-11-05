@@ -165,6 +165,7 @@ $serial	= 'paper_id_seq';
 	minimum_order		=>	undef,
 	parts				=>	undef,
 	digital				=>	undef,
+	message				=>	undef,
 );
 
 %grades = (
@@ -1752,6 +1753,20 @@ sub Unit_Cost {
 	return $$Price{'100lb Cost'};
 }
 	
+sub printing_types {
+	my ( $self, $Project, $qty_index ) = @_;
+	my @types;
+	
+	foreach my $sig_id ( $Project->signatures() ) {
+		my $sig_specs = openprint::service::get_specs_ref( $Project, $sig_id );
+		foreach my $q_index ( $qty_index ? ( $qty_index ) : $Project->quantity_indexes() ) {
+			next if ! $$sig_specs{"txtImposition$q_index"};
+			push @types, $$sig_specs{"PrintingType$q_index"};
+		}
+	} # end foreach
+$openprint::log->debug( "Types @types for " . $self->to_string() );
+	return sets::union( @types );
+}
 
 1;
 __END__

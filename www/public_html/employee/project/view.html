@@ -65,7 +65,7 @@ function send_notifications( form, project_id ) {
 <?include(/includes/error_reporting.html)?>
 <div class="Docket">
 	<? echo ( 
-		$$variable{checkboxes} = ($session{user_type} eq 'A') or ( $session{user_id} == $$variable{Order}->salesrep_id() ) or openprint::usergroup::is_user_in( ['Sales Admin','Scheduling','PrepressManager'], $session{user_id} );
+		$$variable{checkboxes} = ( ($session{user_type} eq 'A') or ( $session{user_id} == $$variable{Order}->salesrep_id() ) or openprint::usergroup::is_user_in( ['Sales Admin','Scheduling','PrepressManager'], $session{user_id} ) ) ? 1 : 0;
 		my $html;
 		if ( $$variable{Order}->status() eq 'Re-Opened' ) {
 			$html .= '<div class="warning">This docket has been re-opened. There may be changes being made. Please consult the CSR.</div>';

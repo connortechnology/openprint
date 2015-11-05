@@ -7,12 +7,6 @@
 			<div class="content">
 				<ul>
 					<li><label>Project #</label><? echo ( $$variable{Project}->id() ) ?></li>
-					<? if ( $$variable{Project}->docket() ) ?>
-					<li><label>Docket Number</label>
-					<a href="/main/order/history_details.html?order_id=<? echo ( $$variable{Project}->order_id() ) ?>"><? echo ( $$variable{Project}->docket() ) ?></a>
-					</li>
-					<li><label>Ordered Quantity</label><? echo ( $$variable{Project}->ordered_quantity() ) ?></li>
-					<? endif ( $$variable{Project}->docket() ) ?>
 					<li class="<? echo ( $_ = $$variable{Project}->status(); $_  =~ s/ //g; return $_; ) ?>">
 						<label>Status</label>
 						<? echo ( $$variable{Project}->status() ) ?>
@@ -108,6 +102,22 @@
 			</div>
 		</fieldset>
 	</div>
+	<? if ( $$variable{Project}->docket() ) ?>
+		<? eval ( $$variable{Order} = $$variable{Project}->Order() if ! $$variable{Order}; ) ?>
+	<div class="OrderInformation">
+		<fieldset><legend>Order Information</legend>
+			<div class="content">
+				<ul>
+					<li><label>Docket Number</label>
+					<a href="/main/order/history_details.html?order_id=<? echo ( $$variable{Project}->order_id() ) ?>"><? echo ( $$variable{Project}->docket() ) ?></a>
+					</li>
+					<li><label>Ordered Quantity</label><? echo ( $$variable{Project}->ordered_quantity() ) ?></li>
+					<li><label>Invoices</label><div id="Invoices"><?include('/employee/accounting/_order_invoices.html')?></div></li>
+				</ul>
+			</div>
+		</fieldset>
+	</div>
+	<? endif ( $$variable{Project}->docket() ) ?>
 	<div class="ContactInformation">
 		<fieldset><legend>Contact Information</legend>
 			<div class="content">

@@ -6,3 +6,5 @@ CREATE TABLE Host_Info (
 	value	TEXT,
 	PRIMARY KEY (id)
 );
+
+CREATE INDEX host_info_host_idx ON host_info (host_id);

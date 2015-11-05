@@ -31,6 +31,7 @@ my @variables = (
 		'txtPrice',
 		'CustomProofSpecs',
 		'RequireColourProofs',
+		'RequirePressProofs',
 		'alert',
 		);
 
@@ -249,6 +250,8 @@ sub signature_calc {
 				or
 				( $openprint::config{'Add_Default_Press_Proof'} eq 'Y' ) 
 				or 
+				( $$sig_specs{rdbPressProof} eq 'Y' )
+				or
 				($_ = $Project->Company()->add_press_proofs() and $_->value() eq 'Y' ) 
 	   ) ) {
 		push @{$$indexes{$signature_index}}, 3;
@@ -592,6 +595,7 @@ sub save_proof_specs {
 
     $log->debug("In Save Proof Specs" );
 
+	my $Project = new openprint::Project( $project_index );
 # First off, slap everything in, just like every other service
 	#openprint::service::save_service( $r, $log, $dbh, $project_index, $service_index );
 	my @v = variables( $project_index, $service_index, \%openprint::param );
@@ -605,6 +609,12 @@ sub save_proof_specs {
 	} # end foreach
 	sql::end_transaction( $dbh, $ac );
 
+	if ( $openprint::param{RequirePressProofs} eq 'N' ) {
+		foreach my $sig_id ( $Project->signatures() ) {
+			openprint::service::insert_service_spec( $log, $dbh, $project_index, $sig_id, 'rdbPressProof', '' );
+		}
+	}
+
 	my $redirect = 0;
 
 # Now check to see if we need to add more proofs, and redirect back
@@ -617,7 +627,7 @@ sub save_proof_specs {
 				$_ = 'SELECT lngServiceIndex FROM tbl_Service_Specifications WHERE lngProjectIndex=? AND strName=? AND strValue=?';
 				my ( $signature_service_index ) = sql::execute( $log, $dbh, $_, $project_index, 'SignatureIndex',$signature_index );
 
-				foreach my $qty_index ( 1 .. 3 ) {
+				foreach my $qty_index ( $Project->quantity_indexes() ) {
 					$_ = 'SELECT MAX(strValue::integer) FROM tbl_Service_Specifications WHERE lngProjectIndex=? AND lngServiceIndex=? AND strName LIKE ?';
 					my ( $proof_index ) = sql::execute( $log, $dbh, $_, $project_index, $service_index, "txtProofIndex-$signature_index-%-$qty_index" );
 					$proof_index += 1;

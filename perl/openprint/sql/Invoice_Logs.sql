@@ -14,3 +14,5 @@ ALTER TABLE ONLY invoice_logs
 ALTER TABLE ONLY invoice_logs
     ADD CONSTRAINT "$2" FOREIGN KEY (user_id) REFERENCES users(id);
 
+create index invoice_logs_invoice_id on invoice_logs (invoice_id);
+

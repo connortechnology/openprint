@@ -13,3 +13,5 @@ CREATE TABLE PurchaseOrder_Contents (
 	PRIMARY KEY (id)
 );
 
+
+create index purchaseorder_contents_docket_idx on purchaseorder_contents (docket);

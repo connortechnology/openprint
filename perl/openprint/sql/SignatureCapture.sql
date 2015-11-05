@@ -9,3 +9,5 @@ CREATE TABLE SignatureCapture (
 	created_on	timestamp with time zone not null default now(),
 	PRIMARY KEY (id)
 );
+
+create index signaturecapture_project_service_idx ON signaturecapture (project_id,service_id);

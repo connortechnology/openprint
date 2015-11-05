@@ -355,11 +355,16 @@ sub Taxes {
 } # end sub Taxes
 
 sub Tax {
-	my $result = openprint::Invoice_Tax->find_one( invoice_id =>$_[0]{id}, tax_id=>$_[1]->id() );
-	if ( ! $result ) {
-		return new openprint::Invoice_Tax();
+	if ( ! $_[0]{Taxes} ) {
+		@{$_[0]{Taxes}} = openprint::Invoice_Tax->find( invoice_id=>$_[0]{id} );
 	} # end if
-	return $result;
+
+	foreach my $IT ( @{$_[0]{Taxes}} ) {
+		if ( $$IT{tax_id} == $$_[1]{id} ) {
+			return $IT;
+		}
+	} # end if
+	return new openprint::Invoice_Tax();
 } # end sub Tax
 
 sub num {

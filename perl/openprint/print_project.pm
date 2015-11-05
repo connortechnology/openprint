@@ -743,18 +743,118 @@ sub reuse_project {
 
 	# Make this all one transaction... Don't need locking because a reload would get a different projectindex
 	my $ac = sql::start_transaction( $dbh );
-	foreach my $service_index ( sql::execute( $log, $dbh, q{SELECT lngServiceIndex FROM tbl_Project_Contents WHERE lngProjectIndex=?}, $NewProject->id() ) ) {
-			
-		if ( $Project->quantity1() != $NewProject->quantity1() ) {
-			openprint::service::insert_service_spec( $log, $dbh, $NewProject->id(), $service_index, 'txtQuantity1', $NewProject->quantity1() );
+	my $services = $NewProject->services();
+	my @service_ids = map { $$services{$_} ? @{$$services{$_}} : () } keys %$services;
+
+	if ( $Project->quantity1() != $NewProject->quantity1() ) {
+		if ( ! $NewProject->quantity1() ) { # Project has a quantity, we are deleting it
+			foreach my $service_id ( @service_ids ) {
+				foreach my $spec ( 'txtPrice1','txtUnitPrice1','txtQuantity1' ) {
+					openprint::service::delete_service_spec( $NewProject->id(), $service_id, $spec );
+				} # end foreach
+			} # end foreach
+		} else {
+			if ( ! $Project->quantity1() ) {
+				if ( $Project->quantity2() ) {
+					foreach my $service_id ( @service_ids ) {
+						my $specs = openprint::service::get_specs_ref( $NewProject, $service_id );
+						foreach my $key ( keys %$specs ) {
+							next if $key =~ /^txtQuantity/;
+							if ( $key =~ /(.*)2$/ and ! $key =~ /Special/ ) {
+								openprint::service::insert_service_spec( $log, $dbh, $NewProject->id(), $service_id, $1.'1', $$specs{$key} );
+							} # end if
+						} # end foreach
+					} # end if
+				} elsif ( $NewProject->quantity3() ) {
+					foreach my $service_id ( @service_ids ) {
+						my $specs = openprint::service::get_specs_ref( $NewProject, $service_id );
+						foreach my $key ( keys %$specs ) {
+							next if $key =~ /^txtQuantity/;
+							if ( $key =~ /(.*)3$/ and ! $key =~ /Special/ ) {
+								openprint::service::insert_service_spec( $log, $dbh, $NewProject->id(), $service_id, $1.'1', $$specs{$key} );
+							} # end if
+						} # end foreach
+					} # end if
+				} # end if Project 2 or 3
+			} # end if
+			foreach my $service_id ( @service_ids ) {
+				openprint::service::insert_service_spec( $log, $dbh, $NewProject->id(), $service_id, 'txtQuantity1', $NewProject->quantity1() );
+			} # end foreach
+		} # end nif
+		$Project->quantity1( int $param{'txtQuantity1'} );
+	} # end if
+	if ( $NewProject->quantity2() != $Project->quantity2() ) {
+		if ( ! $NewProject->quantity2() ) {
+			foreach my $service_id ( @service_ids ) {
+				foreach my $spec ( 'txtPrice2','txtUnitPrice2','txtQuantity2' ) {
+					openprint::service::delete_service_spec( $NewProject->id(), $service_id, $spec );
+				} # end foreach
+			} # end foreach
+		} else {
+			if ( ! $Project->quantity2() ) {
+				if ( $Project->quantity1() ) {
+					foreach my $service_id ( @service_ids ) {
+						my $specs = openprint::service::get_specs_ref( $NewProject, $service_id );
+						foreach my $key ( keys %$specs ) {
+							next if $key =~ /^txtQuantity/ or $key =~ /Special/;
+							if ( $key =~ /^(.*)1$/ ) {
+								openprint::service::insert_service_spec( $log, $dbh, $NewProject->id(), $service_id, $1.'2', $$specs{$key} );
+							} # end if
+						} # end foreach
+					} # end if
+				} elsif ( $Project->quantity3() ) {
+					foreach my $service_id ( @service_ids ) {
+						my $specs = openprint::service::get_specs_ref( $NewProject, $service_id );
+						foreach my $key ( keys %$specs ) {
+							next if $key =~ /^txtQuantity/ or $key =~ /Special/;
+							if ( $key =~ /^(.*)3$/ ) {
+								openprint::service::insert_service_spec( $log, $dbh, $NewProject->id(), $service_id, $1.'2', $$specs{$key} );
+							} # end if
+						} # end foreach
+					} # end if
+				} # end if Project 2 or 3
+			} # end if
+			foreach my $service_id ( @service_ids ) {
+				openprint::service::insert_service_spec( $log, $dbh, $NewProject->id(), $service_id, 'txtQuantity2', $NewProject->quantity2() );
+			} # end foreach
 		} # end if
-		if ( $Project->quantity2() != $NewProject->quantity2() ) {
-			openprint::service::insert_service_spec( $log, $dbh, $NewProject->id(), $service_index, 'txtQuantity2', $NewProject->quantity2() );
+	} # end if
+	if ( $NewProject->quantity3() != $Project->quantity3() ) {
+		if ( ! $NewProject->quantity3() ) {
+			foreach my $service_id ( @service_ids ) {
+				foreach my $spec ( 'txtPrice3','txtUnitPrice3','txtQuantity3' ) {
+					openprint::service::delete_service_spec( $NewProject->id(), $service_id, $spec );
+				} # end foreach
+			} # end foreach
+		} else {
+			if ( ! $Project->quantity3() ) {
+				if ( $Project->quantity1() ) {
+					foreach my $service_id ( @service_ids ) {
+						my $specs = openprint::service::get_specs_ref( $NewProject, $service_id );
+						foreach my $key ( keys %$specs ) {
+							next if $key =~ /^txtQuantity/ or $key =~ /Special/;
+							if ( $key =~ /^(.*)1$/ ) {
+								openprint::service::insert_service_spec( $log, $dbh, $NewProject->id(), $service_id, $1.'3', $$specs{$key} );
+							} # end if
+						} # end foreach
+					} # end if
+				} elsif ( $Project->quantity2() ) {
+					foreach my $service_id ( @service_ids ) {
+						my $specs = openprint::service::get_specs_ref( $NewProject, $service_id );
+						foreach my $key ( keys %$specs ) {
+							next if $key =~ /^txtQuantity/ or $key =~ /Special/;
+							if ( $key =~ /^(.*)2$/ ) {
+								openprint::service::insert_service_spec( $log, $dbh, $NewProject->id(), $service_id, $1.'3', $$specs{$key} );
+							} # end if
+						} # end foreach
+					} # end if
+				} # end if Project 2 or 3
+			} # end if
+			foreach my $service_id ( @service_ids ) {
+				openprint::service::insert_service_spec( $log, $dbh, $NewProject->id(), $service_id, 'txtQuantity3', $NewProject->quantity3() );
+			} # end foreach
 		} # end if
-		if ( $Project->quantity3() != $NewProject->quantity3() ) {
-			openprint::service::insert_service_spec( $log, $dbh, $NewProject->id(), $service_index, 'txtQuantity3', $NewProject->quantity3() );
-		} # end if
-	} # end foreach
+	} # end if
 	sql::end_transaction( $dbh, $ac );
 
 

@@ -52,6 +52,12 @@ function filter_onChange( element, id, selected ) {
 		new Ajax.Updater('Operators','/administrator/equipment/_operators.html', {
 				parameters: { action: 'add', equipment_id: equipment_id, user_id: user_id } } );
 	}
+	function delete_spec( id ) {
+new Ajax.Request('/administrator/equipment/_specification.html?action=delete&amp;id='+id, { onSuccess: function(){var tr = $('S'+id); tr.parentNode.removeChild(tr);SortableTable.load();} } );
+	}
+	function copy_spec( id ) {
+new Ajax.Request('/administrator/equipment/_specification.html?action=copy&amp;id='+id, { onSuccess: function(response){ $('S'+id).insert( {after: response.responseText } ); SortableTable.load();} } );
+	}
 </script>
 <form id="f1" name="f1" method="post" enctype="multipart/form-data" action="edit.html">
 	<fieldset class="filters"><legend>Search Information</legend>

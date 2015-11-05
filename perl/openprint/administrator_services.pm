@@ -79,19 +79,7 @@ sub edit {
 				my @price_changes = $Price->changes( $new_values );
 				if ( @price_changes ) {
 					$variable{error} .= $Price->save( $new_values );
-					my $price_desc = '';
-					if ( ! ( $Price->min() or $Price->max() ) ) {
-						'all quantities';
-					} else {
-						if ( $Price->min() ) {
-							$price_desc .= 1*$Price->min() . ' ';
-						}	
-						$price_desc .= 'up';
-						if ( $Price->max() ) {
-							$price_desc .= ' to ' . 1*$Price->max();
-						} 
-					} # end if
-					push @changes, ( 'Change price for ' .$Price->Pricelist()->name() . ' '. $price_desc . ' on ' . $Price->Equipment()->strid() . ': ' .  join(', ', map { $_ } @price_changes ) );
+					push @changes, ( 'Change price for ' .$Price->id_string() . ': ' .  join(', ', map { $_ } @price_changes ) );
 				} # end if
 			} # end foreach 
 			(new openprint::Log())->save({object_id=>$$Service{id},object_type=>ref$Service, action=>'Edit Service', note=>join('<br/>', @changes) }) if @changes;
@@ -107,20 +95,20 @@ sub edit {
 			} # end if
 		} # end if
     } elsif ( $param{btnFunction} eq 'Copy' ) {
-        my @prices = $Service->prices();
         
-        openprint::logs::insertLogRecord('27', "Service Index: " . $Service->id() . " - " . $Service->name(),);
-		$Service = $Service->copy();
-		$$Service{name} = 'Copy of '.$$Service{name};
+		my $NewService = $Service->copy();
+		$$NewService{name} = 'Copy of '.$$Service{name};
         
-        $variable{error} = $Service->save();
+        $variable{error} = $NewService->save();
+		(new openprint::Log())->save({object_id=>$$NewService{id},object_type=>ref$NewService, action=>'Copy Service', note=>'From ' . $Service->name()} ) if ! $variable{error};
         if ( ! $variable{error} ) {
-			foreach my $price ( @prices ) {
-				$$price{service_id} = $$Service{id};
+			foreach my $price ( $Service->prices() ) {
+				$$price{service_id} = $$NewService{id};
 				delete $$price{id};
 				$variable{error} .= $price->save();
 			} # end foreach
 		} # end if
+		$Service = $NewService;
 	} # end if
 
 	$variable{Service} = $Service;
@@ -130,7 +118,7 @@ sub _prices_table_body {
 	my $Price = new openprint::ServicePrice( $param{price_id} );
 	$variable{Equipment} = $Price->Equipment();
 	$variable{Pricelist} = $Price->Pricelist();
-	$variable{Service} = $Price->Service();
+	my $Service = $variable{Service} = $Price->Service();
 	$variable{company_ids} = [ map { $_->id(), $_->name() } openprint::Company->find( supplier=>'Y', order=>'lower(name)' ) ];
 	if ( $param{action} eq 'add' ) {
 		my $Service = $variable{Service} = new openprint::Service( $param{ddmService} );
@@ -141,6 +129,7 @@ sub _prices_table_body {
 		$variable{error} .= $Price->save();
 	} elsif ( $param{action} eq 'delete' ) {
 		$variable{error} .= $Price->delete();
+		(new openprint::Log())->save({object_id=>$$Service{id},object_type=>ref$Service, action=>'Delete Service Price', note=>$Price->id_string() }) if ! $variable{error};
 	} # end if
 } # end sub _prices_table_body
 

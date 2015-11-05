@@ -96,7 +96,7 @@
 <?include(/includes/error_reporting.html)?>
 <? if ( @{$$variable{Manifests}} ) ?>
 <form id="ManifestResults" name="ManifestResults" action="manifests.html" method="post">
-	<table class="List sortable">
+	<table id="ResultsTable" class="List sortable">
 		<tr>
 			<th class="checkbox"><input type="checkbox" onclick="select_all( this.form, 'manifests', this.checked );"/></th>
 			<th class="manifest_num">Manifest #</th>
@@ -115,7 +115,28 @@
 			my $value_total;
 			my $ac = sql::start_transaction( $dbh );
 
-			my @MContents = openprint::ManifestContent->find( manifest_id=>[ map { $$_{id} } @{$$variable{Manifests}} ] );
+			my @manifest_ids = map { $$_{id} } @{$$variable{Manifests}};
+	
+			my @ManifestContentTypes = openprint::Manifest_Content_Type->find( manifest_id=>\@manifest_ids );
+			my @po_ids = map { $_->po_id() } @ManifestContentTypes;
+			my @POs	= openprint::PurchaseOrder->find( id=>\@po_ids );
+
+			my %POCs;
+			foreach my $POC ( openprint::PurchaseOrder_Content->find( id=>\@po_ids, order=>'id' ) ) {
+				push @{$POCs{$$POC{po_id}}}, $POC;
+			}
+			foreach my $PO ( @POs ) {
+				$PO->Contents( $POCs{$$PO{id}} );
+			}
+
+			my %ManifestCTs;
+			foreach my $MCT ( @ManifestContentTypes ) {
+				$ManifestCTs{$$MCT{manifest_id}} = [] if !$ManifestCTs{$$MCT{manifest_id}};
+				@{$ManifestCTs{$$MCT{manifest_id}}}, $MCT;
+			}
+
+		
+			my @MContents = openprint::ManifestContent->find( manifest_id=>\@manifest_ids );
 			my %MContents;
 			foreach my $MC ( @MContents ) {
 				push @{$MContents{$$MC{manifest_id}}}, $MC;
@@ -124,6 +145,7 @@
 			my %SkidContents = ();
 			my @skid_ids = map { $$_{skid_id} ? $$_{skid_id} : () } @MContents;
 			if ( @skid_ids ) {
+				openprint::Skid->find( id=>\@skid_ids );
 				foreach my $SC ( openprint::SkidContent->find(skid_id=>\@skid_ids) ) {
 					push @{$SkidContents{$$SC{skid_id}}}, $SC;
 				} # end foreach
@@ -131,6 +153,7 @@
 
 			foreach my $Manifest ( @{$$variable{Manifests}} ) {
 				$Manifest->Contents( $MContents{$$Manifest{id}} ? $MContents{$$Manifest{id}} : [] );
+				$$Manifest{Types} = $ManifestCTs{$$Manifest{id}} if $ManifestCTs{$$Manifest{id}};
 
 				if ( $session{'/employee/inventory/manifests.html?delivery'} ) {
 					my $under = 0;
@@ -253,6 +276,9 @@
 			return $html;
 		) ?>
 	</table>
+<script type="text/javascript">
+TableKit.Sortable.init('ResultsTable');
+</script>
 	<input type="hidden" name="btnFunction"/>
 	<p class="buttons">
 		<? echo ( join('',

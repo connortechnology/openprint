@@ -288,11 +288,11 @@ sub reboot {
 	require LWP;
 	my $browser = LWP::UserAgent->new();
 	my $response = $browser->get('http://'.$Host->hostname().'/');
-	$openprint::log->error( $response->status_line );
-	$openprint::log->error( $response->content );
+	$openprint::log->debug( $response->status_line );
+	$openprint::log->debug( $response->content );
 	my $headers = $response->headers();
 	foreach my $k ( keys %$headers ) {
-		$openprint::log->error("Header $k => $$headers{$k}");
+		$openprint::log->debug("Initial Header $k => $$headers{$k}");
 	}  # end foreach
 	my ( $auth, $tokens ) = $$headers{'www-authenticate'} =~ /(\w+)\s+(.*)/;
 	$tokens =~ s/"//g;	
@@ -304,58 +304,58 @@ sub reboot {
 	} elsif( $_[0]->type() eq 'D-Link DAP1522' ) {
 		$url = 'http://'.$Host->hostname().'/sys_cfg_valid.xgi?&exeshell=submit REBOOT';
 	} else {
-		$openprint::log->debug("Unknown host type $_[0]{type}");
+		$openprint::log->error("Unknown host type $_[0]{type}");
+		return 0;
 	} # end if
 
-	if ( $url ) {
-		$openprint::log->debug("URL: $url" );
-		my $response = $browser->get($url);
+	$openprint::log->debug("URL: $url" );
+	my $response = $browser->get($url);
 
-		if ( ! $response->is_success ) {
-			$openprint::log->error( $response->content );
+	if ( ! $response->is_success ) {
+		$openprint::log->error( $response->content );
+		if ( $response->status_line() eq '401 Unauthorized' or $response->status_line() eq '401 Not Authorized' ) {
+			$openprint::log->error("Couldn't get content from $url unauthorized trying again:". $response->status_line );
+			$response = $browser->get($url);
 			if ( $response->status_line() eq '401 Unauthorized' or $response->status_line() eq '401 Not Authorized' ) {
-				$openprint::log->error("Couldn't get content from $url unauthorized trying again:". $response->status_line );
-				$response = $browser->get($url);
-				if ( $response->status_line() eq '401 Unauthorized' or $response->status_line() eq '401 Not Authorized' ) {
-					$openprint::log->error("Couldn't get content from $url unauthorized:". $response->status_line );
-					my $headers = $response->headers();
-					foreach my $k ( keys %$headers ) {
-						$openprint::log->error("Header $k => $$headers{$k}");
-					}  # end foreach
-					$openprint::log->error( $response->content );
-					return 0;
-				} else {
-					$openprint::log->debug("Response after second attempt: " . $response->status_line );
-				} # end if
-			} else {
-				$openprint::log->warn("Couldn't get content from $url rebooting" . $response->status_line );
+				$openprint::log->error("Couldn't get content from $url unauthorized:". $response->status_line );
 				my $headers = $response->headers();
 				foreach my $k ( keys %$headers ) {
 					$openprint::log->error("Header $k => $$headers{$k}");
 				}  # end foreach
+				$openprint::log->error( $response->content );
 				return 0;
-			} # end if
-		} # end if
-
-		(new openprint::Log())->save({ action=>'Host rebooted', host_id=>$Host->id(), note=>sprintf('<a href="/employee/it/host.html?host_id=%d">%s</a> has been rebooted.', @$Host{'id','hostname'})});
-		if ( 0 ) {
-			my @To = map { $_->User() } $Host->Notifications();
-			if ( @To and ( @To < 10 ) ) {
-				$openprint::log->debug("Emailing: " . join(',', map { $_->email() } @To ) );
-				my $results = (new openprint::Email())->send(
-						TO    =>  \@To,
-						SUBJECT   =>  'Camera rebooted ' . $Host->hostname(),
-						FROM      =>  $openprint::config{'TechSupportEmail'},
-						BODY      =>  "
-						
-	Description: $$Host{description}
-	",
-				);
 			} else {
-				$openprint::log->error("No To or twoo many @To");
-			} # end if TO
-		} # end if 0
-	} # end if url
+				$openprint::log->debug("Response after second attempt: " . $response->status_line );
+			} # end if
+		} else {
+			$openprint::log->warn("Couldn't get content from $url rebooting" . $response->status_line );
+			my $headers = $response->headers();
+			foreach my $k ( keys %$headers ) {
+				$openprint::log->error("Header $k => $$headers{$k}");
+			}  # end foreach
+			return 0;
+		} # end if
+	} # end if
+
+	(new openprint::Log())->save({ action=>'Host rebooted', host_id=>$Host->id(), note=>sprintf('<a href="/employee/it/host.html?host_id=%d">%s</a> has been rebooted.', @$Host{'id','hostname'})});
+	if ( 0 ) {
+		my @To = map { $_->User() } $Host->Notifications();
+		if ( @To and ( @To < 10 ) ) {
+			$openprint::log->debug("Emailing: " . join(',', map { $_->email() } @To ) );
+			my $results = (new openprint::Email())->send(
+					TO    =>  \@To,
+					SUBJECT   =>  'Camera rebooted ' . $Host->hostname(),
+					FROM      =>  $openprint::config{'TechSupportEmail'},
+					BODY      =>  "
+
+					Description: $$Host{description}
+					",
+					);
+		} else {
+			$openprint::log->error("No To or too many @To");
+		} # end if TO
+	} # end if 0
+	return 1;
 } # end sub reboot
 
 sub link_to {

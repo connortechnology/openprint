@@ -118,6 +118,13 @@ sub _company_ddm {
 sub _logs_contents {
 	my $Object_Type = new openprint::Object_Type( $param{object_type_id} );
 	$variable{Object} = $Object_Type->Object( $param{object_id} );
+
+	$variable{uri} = $param{uri};
+	ssi::save_params( $variable{uri}, 
+			( map { 'log_created_on_start_'.$_ } ( 'year','month','day','hour','minute' ) ),
+			( map { 'log_created_on_end_'.$_ } ( 'year','month','day','hour','minute' ) ),
+			);
+	
 } # end sub _logs_contents
 1;
 __END__

@@ -161,6 +161,9 @@ sub Authorized_By {
 } # end sub Authorized_By
 
 sub Contents {
+	if ( @_ > 1 ) {
+		$_[0]{Contents} = $_[1];
+	}
 	if ( $_[0]{id} and ! $_[0]{Contents} ) {
 		$_[0]{Contents} = [openprint::PurchaseOrder_Content->find('po_id'=>$_[0]{id},'order'=>'id')];
 	} # end if
@@ -183,7 +186,7 @@ sub send_approval_required_notification {
 	my $mail = new openprint::Email();
 
 	my $results;
-	foreach my $U ( map { $_->User() } openprint::User_Notification->find(type=>\@notification_types,'value'=>'Yes' ) ) {
+	foreach my $U ( map { $_->User() } openprint::User_Notification->find(type=>\@notification_types,'value'=>'Yes', user_company_id=>$openprint::User->company_id() ) ) {
 		if ( $U->id() == $openprint::User->id() ) {
 			$openprint::log->debug( $U->email() . ' Not mailing me.' );
 			next;
@@ -412,10 +415,10 @@ sub update_notifications {
 	my @notifications = $PO->notifications(); # returns user_ids
 		my @new_notifications = @notifications;
 	if ( $PO->is_FSC() or $PO->is_PEFC() ) {
-		@new_notifications = sets::union( @new_notifications, map { $PO->can_view( $_->User() ) ? $_->user_id() : () } openprint::User_Notification->find( type=>'FSC/PEFC Notifications', value=>'Yes', company_id=>\@companies ) );
+		@new_notifications = sets::union( @new_notifications, map { $PO->can_view( $_->User() ) ? $_->user_id() : () } openprint::User_Notification->find( type=>'FSC/PEFC Notifications', value=>'Yes', user_company_id=>\@companies, 'company_id is null or ='=>$PO->supplier_id() ) );
 	} # end if
 	foreach my $type ( keys %{$types} ) {
-		@new_notifications = sets::union( @new_notifications, map { $PO->can_view( $_->User() ) ? $_->user_id() : () } openprint::User_Notification->find( type=>'PO ' . $type . ' Notifications', value=>'Yes', company_id=>\@companies ) );
+		@new_notifications = sets::union( @new_notifications, map { $PO->can_view( $_->User() ) ? $_->user_id() : () } openprint::User_Notification->find( type=>'PO ' . $type . ' Notifications', value=>'Yes', user_company_id=>\@companies, 'company_id is null or ='=>$PO->supplier_id() ) );
 	} # end foreach
 	if ( scalar @notifications != scalar @new_notifications ) {
 		$PO->notifications(\@new_notifications);

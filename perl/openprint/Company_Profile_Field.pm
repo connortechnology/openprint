@@ -2,7 +2,7 @@ use strict;
 package openprint::Company_Profile_Field;
 our @ISA = qw( openprint::Object );
 
-use vars qw( $debug $table $serial %fields %transforms %defaults );
+use vars qw( $debug $table $serial %fields %transforms %defaults $cache_field );
 $debug = 0;
 $table = 'company_profile_fields';
 $serial = 'company_profile_fields_id_seq';
@@ -33,6 +33,10 @@ $serial = 'company_profile_fields_id_seq';
 	'on_registration'	=>	0,
 	'viewable'	=>	1,
 );
+$cache_field = 'name';
+sub cache_field {
+	return $cache_field;
+}
 
 sub destroy {
 	my $error;

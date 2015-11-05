@@ -27,3 +27,7 @@ CREATE TABLE Expenses (
 	business_use_amount	float,
 	PRIMARY KEY (id)
 );
+
+create index expenses_deleted_owner_id_created_on_idx on expenses (deleted,owner_id,created_on);
+create index expenses_deleted_owner_id_paid_on_idx on expenses (deleted,owner_id,paid_on);
+

@@ -131,15 +131,15 @@ $log->warn("registration errors $error");
 	if ( $param{email} ) {
 		# enforce unique email addresses.
 		$param{email} =~ tr/[A-Z]/[a-z]/;
-		if ( openprint::User->find_one('email lc'=>$param{email},'company_id is null'=>0 ) ) {
+		if ( openprint::User->find_one(email=>$param{email},'company_id is null'=>0 ) ) {
 			$variable{error} = $param{email} .' is already a user!';
 			return;
 		} # end if
-		if ( openprint::User->find_one('email lc'=>$param{email},'deleted'=>1 ) ) {
+		if ( openprint::User->find_one(email=>$param{email}, deleted=>1 ) ) {
 			$variable{error} = $param{email} .' is already a user, but has been deleted. Please contact us to re-activate your account.';
 			return;
 		} # end if
-		$User = openprint::User->find_one('email lc'=>$param{email},'company_id is null'=>1 );
+		$User = openprint::User->find_one(email=>$param{email},'company_id is null'=>1 );
 	} # end if
 
 	my @agents = split(',', $config{UserRegistrationEmail} );
@@ -468,7 +468,7 @@ sub user_profile {
 				return;
 			} # end if
 
-			if ( openprint::User->find_one( 'email lc'=>lc $param{email}, ( $User->id() ? ( 'id !='=>$User->id() ) : () ) ) ) {
+			if ( openprint::User->find_one( email=>lc $param{email}, ( $User->id() ? ( 'id !='=>$User->id() ) : () ) ) ) {
 				$variable{error} = 'User already exists.';
 				$variable{information} = $param{email} . ' is already a user.';
 				$variable{User} = $User;
@@ -988,6 +988,33 @@ sub _companies {
 
 sub company_view {
 	$variable{Company} = new openprint::Company( $param{company_id} );
+} # end sub company_view
+
+sub _notification_popup {
+} # en sub _notification_popup
+
+sub _notifications {
+	my $User = $variable{User} = new openprint::User( $param{user_id} );
+	if ( $User->can_edit() ) {
+		if ( $param{action} eq 'add' ) {
+			my $N = new openprint::User_Notification();
+			$variable{error} .= $N->save({
+					user_id		=>	$param{user_id},
+					company_id	=>	$param{company_id},
+					type_id		=>	$param{type_id},
+					value		=>	$param{value},
+					});
+		} elsif ( $param{action} eq 'delete' ) {
+			my $N = new openprint::User_Notification( $param{id} );
+			if ( $$N{user_id} != $param{user_id} ) {
+				$variable{error} .= 'Notification does not belong to this user.';
+			} else {
+				$variable{error} .= $N->delete();
+			}
+		} # end if
+	} else {
+		$variable{error} .= 'You do not have privilege to edit Notifications for this user.<br/>';
+	} # end if
 }
 
 1;

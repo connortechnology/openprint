@@ -275,7 +275,8 @@ my %variables = (
 	'dutch_orientation3'	=>	['save'],
 	'txtQuantity1' => ['save'], 'txtQuantity2' => ['save'], 'txtQuantity3' => ['save'], 
 	'hdnImpressionQuantity1' => ['save','output'], 'hdnImpressionQuantity2' => ['save','output'], 'hdnImpressionQuantity3' => ['save','output'], 
-	'rdbPressProof' => ['save'], 
+	'rdbPressProof' => ['save'],
+	'PressApproval' => ['save'],
 	'txtMWeight1' => ['save','output'], 'txtMWeight2' => ['save','output'], 'txtMWeight3' => ['save','output'],
 	'paper_id1'	=>	['save','output'], 'paper_id2'	=>	['save','output'], 'paper_id3'	=> ['save','output'],
 	'hdnSuppliedStockWidth1' => ['save','output'], 'hdnSuppliedStockWidth2' => ['save','output'], 'hdnSuppliedStockWidth3' => ['save','output'],
@@ -1151,6 +1152,8 @@ $openprint::log->debug("not Skipping cuz ddmPress$qty_index eq $$Press{strid}");
 				push @side_one_colours, @side_one_varnishes;
 				push @side_two_colours, @side_two_varnishes;
 			} # end if
+		}
+		if ( 0 ) {
 			$openprint::log->debug("$$Press{strid} Side One varnihses @side_one_varnishes");
 			$openprint::log->debug("$$Press{strid} Side Two varnihses @side_two_varnishes");
 			$openprint::log->debug("$$Press{strid} Side One colours @side_one_colours");
@@ -1170,11 +1173,15 @@ $openprint::log->debug("not Skipping cuz ddmPress$qty_index eq $$Press{strid}");
 			$openprint::log->debug("** $$Press{strid} Can't Perfect - Perfecting not in runstyles ***") if DEBUG;
 			$do_perfecting = 0;
 		} elsif ( @side_one_colours > int($number_of_colours/2) or @side_two_colours > int($number_of_colours/2) ) {
+				$openprint::log->debug("** Too many colours to	Perfect	***") if DEBUG;
+				$do_perfecting = 0;
+		} elsif ( @side_one_varnishes or @side_two_varnishes  ) {
 			if ( ( $varnish_capable eq '1 Side' ) and (
+				( ! ( @side_one_varnishes and @side_two_varnishes ) ) and 
 				( ( @side_one_colours - @side_one_varnishes ) <= int($number_of_colours/2) ) and 
 				( ( @side_two_colours - @side_two_varnishes ) <= int($number_of_colours/2) ) ) 
 			) {
-				$openprint::log->debug("** Can do 1 sided varnish perfecting ***");
+				$openprint::log->debug("** Can do 1 sided varnish perfecting but @side_one_varnishes @side_two_varnishes ***");
 			} else {
 				#$openprint::log->debug(( @side_one_colours - @side_one_varnishes ) . ' <= ' . int($number_of_colours/2)) if DEBUG;
 				#$openprint::log->debug(( @side_two_colours - @side_two_varnishes ) . ' <= ' . int($number_of_colours/2)) if DEBUG;
@@ -2395,7 +2402,13 @@ $openprint::log->debug("after sorting presses: " . ( sprintf('%.4f', tv_interval
 $log->warn("There are no quantities!");
 	} # end if
 
-	$GripperMakeReadyService = openprint::Service->find_one( name=>'GripperMakeReady' );
+		# For caching
+	%Services = map { $$_{name}, $_ } openprint::Service->find();
+	$openprint::Service::cached = 1;
+	$GripperMakeReadyService = $Services{GripperMakeReady};
+
+	%Materials = map { $$_{name}, $_ } openprint::Material->find();
+	$openprint::Material::cached = 1;
 
 	foreach my $qty_index ( @quantity_indexes ) {
 		if ( $$specs{'OverridePrice'.$qty_index} ne 'Y' ) {
@@ -2628,11 +2641,6 @@ $openprint::log->debug(Data::Dumper::Dumper( \%Overrides ) );
 		}
 		} 
 
-		# For caching
-		%Services = map { $$_{name}, $_ } openprint::Service->find();
-		$openprint::Service::cached = 1;
-		%Materials = map { $$_{name}, $_ } openprint::Material->find();
-		$openprint::Material::cached = 1;
 
 		%stitching_cache = ();
 		%price_cache = ();
@@ -2767,7 +2775,7 @@ if ( 1 ) {
 			} # end if
 		} # end if
 		if ( $Paper->message() ) {
-			my $paper_message = ssi::variable_substitution( \$Paper->message(), { Project=>$Project } );
+			my $paper_message = ssi::variable_substitution( \$Paper->message(), { Project=>$Project, Stock=>$Paper, qty_index=>$qty_index } );
 			if ( ! ( $$project{HasAqueous} or $$specs{AqueousMessage} ) ) {
 				$$specs{AqueousMessage} = 1;
 				$$specs{popup} .= $paper_message;
@@ -2952,9 +2960,9 @@ sub breakdown {
 	} # end if
 
 	if ( $stock_qty ) {
-		$breakdown .= sprintf( 'Overs: Base:%s Initial Setups: %d*%d=%d, Additional Setups: %d*%d=%d Run:%s FM:%s Additional Plate:%d * %d changes = %s Bindery: %d (FoldMakeReady: %d FoldRun: %d', @$stock_qty{'Net Sheet Count','Initial Setup Rate','Initial Setup Count','Initial Setup Overs','Additional Setup Rate','Additional Setup Count','Additional Setup Overs','Run Overs','FM Overs','Additional Plate Overs Rate','Plate Changes','Additional Plate Overs', 'BinderyOvers', 'FoldingMakeReadyOvers','FoldingRunOvers'} );
+		$breakdown .= sprintf( 'Overs: Base:%s Initial Setups: %d*%d=%d, Additional Setups: %d*%d=%d Run: %.2f% = %s FM:%s Additional Plate:%d * %d changes = %s Bindery: %d (FoldMakeReady: %d FoldRun: %d', @$stock_qty{'Net Sheet Count','Initial Setup Rate','Initial Setup Count','Initial Setup Overs','Additional Setup Rate','Additional Setup Count','Additional Setup Overs','Run Overs Rate', 'Run Overs','FM Overs','Additional Plate Overs Rate','Plate Changes','Additional Plate Overs', 'BinderyOvers', 'FoldingMakeReadyOvers','FoldingRunOvers'} );
 		$breakdown .= ' Cutting: ' . $$stock_qty{CuttingOvers} if $$stock_qty{CuttingOvers};
-		$breakdown .= ' Scoring: ' . $$stock_qty{ScoringOvers} if $$stock_qty{ScoringOvers};
+		$breakdown .= $$stock_qty{ScoringOvers} if $$stock_qty{ScoringOvers};
 		$breakdown .= ' DieCutting: ' . $$stock_qty{DieCuttingOvers} if $$stock_qty{DieCuttingOvers};
 		$breakdown .= ' UV Coating: ' . $$stock_qty{UVOvers} if $$stock_qty{UVOvers};
 		$breakdown .= ') Total: ' . $$stock_qty{'Total Overs'};
@@ -2978,7 +2986,7 @@ sub breakdown {
 			( defined	$$price{'Numbering Breakdown'} ? $$price{'Numbering Breakdown'} : '' ),
 			( defined $$price{'DieCutting Breakdown'} ? $$price{'DieCutting Breakdown'}: '' ),
 			$$price{'Folding Breakdown'},
-			( defined $$price{'Scoring Breakdown'} ? $$price{'Scoring Breakdown'} : '' ),
+			( defined $$price{'Scoring Breakdown'} ? 'Scoring: '.$$price{'Scoring Breakdown'} : '' ),
 			( defined $$price{'Perforating Breakdown'} ? $$price{'Perforating Breakdown'} : '' ),
 			);
 
@@ -4064,7 +4072,7 @@ sub get_project_price {
 #$openprint::log->debug("Sigs: $sigs: signatures( @signatures )");
 								foreach ( 1 .. $sigs ) {
 									$$price{'Comparison Cost'} += $$sig_price{'Comparison Cost'};
-									$$price{'Comparison Log'} .= 'signature ' . $$sig_price{'Comparison Cost'} .'<br/>' if COMPARISON_LOG;
+									$$price{'Comparison Log'} .= 'signature ' . $_ .' ' . $$sig_price{'Comparison Cost'} .' total: ' . $$price{'Comparison Cost'}.'<br/>' if COMPARISON_LOG;
 									$PaperCounts{$Paper->id_string()} += $$sig_price{'Stock Qty'};
 									push @{$$price{Impositions}}, $imp;
 									push @{$$price{prices}}, $sig_price;
@@ -4078,7 +4086,7 @@ sub get_project_price {
 									$$imp{specs} = $new_specs;
 
 									$$sig_price{'Comparison Log'} .= 'plates ' . $$sig_price{PlateCost} . '<br/>' if COMPARISON_LOG;
-									$$sig_price{'Comparison Cost'} += $$sig_price{PlateCost};
+									#$$sig_price{'Comparison Cost'} += $$sig_price{PlateCost};
 									$PlateCounts{$$sig_price{'Plate Costs'}{'Plate ID'}} += $$sig_price{'Plate Costs'}{'Plate Count'};
 									$sig_count += 1;
 									last if $$sig_specs{'txtPlateChangeQuantity'.$qty_index} != $$new_specs{'txtPlateChangeQuantity'.$qty_index};
@@ -5241,7 +5249,7 @@ $openprint::log->warn("No folding equipment");
 	} # end if
 
 	my %scoring_results;
-	if ( $$project{HasScoring} and $$project{NeedScoring} ) {
+	if ( $$project{HasScoring} and $$project{NeedScoring} and openprint::Estimating::Scoring::signature_needs( $Project, $$project{ScoringSpecs}, $specs, $Paper ) ) {
 		%scoring_results = openprint::Estimating::Scoring::signature_calc( $Project, $$project{ScoringSpecs}, $specs, $qty_index, $Imposition, $project );
 #foreach my $k ( keys %scoring_results ) {
 #$openprint::log->debug("Scoring: $k => $scoring_results{$k}");
@@ -5249,8 +5257,9 @@ $openprint::log->warn("No folding equipment");
 		if ( $scoring_results{Status} eq 'uncalculated' ) {
 			$price{'Scoring Breakdown'} .= "Scoring error: $scoring_results{alert} $scoring_results{Breakdown} <br/>";
 			$price{'Comparison Cost'} += 1000000; 
-		} elsif ( $scoring_results{Imposition} ) {
-			$price{'Scoring Breakdown'} .= sprintf('Scoring Price: %dout $%.2f on %s<br/>', $scoring_results{Imposition}->imposition(), $scoring_results{Price}, $scoring_results{Equipment} ? $scoring_results{Equipment}->name() : '' );
+		} elsif ( $scoring_results{Impositions} ) {
+			$price{'Scoring Breakdown'} .= sprintf('Scoring Price: %s on %s $%.2f<br/>', join(',', map { $_->to_string() } @{$scoring_results{Impositions}} ), $scoring_results{Price}, $scoring_results{Equipment} ? $scoring_results{Equipment}->name() : '' );
+			#$openprint::log->error("Scoring is calculated $price{'Scoring Breakdown'}");
 			$price{'Comparison Cost'} += $scoring_results{Price};
 			if ( $scoring_results{Equipment} and ( $scoring_results{Equipment}->id() == $Press->id() ) ) {
 				if ( $scoring_results{Runspeed} =~ /(.*)\%/ ) {
@@ -5260,8 +5269,12 @@ $openprint::log->warn("No folding equipment");
 					$$specs{Runspeed} = $price{Runspeed} = $scoring_results{Runspeed} if $price{Runspeed} > $scoring_results{Runspeed};
 				} # end if
 			} # end if
-			$scoring_results{Overs} = ceil( $scoring_results{Overs} / ( $$Imposition{imposition}/$scoring_results{Imposition}->imposition() ) ) if $scoring_results{Imposition}->imposition();
+			#$scoring_results{Overs} = ceil( $scoring_results{Overs} / ( $$Imposition{imposition}/$scoring_results{Imposition}->imposition() ) ) if $scoring_results{Imposition}->imposition();
+		} else {
+			$openprint::log->error("Scoring is not uncalculated but no Imposition $scoring_results{Breakdown}");
 		} # end if
+	#} else {
+			#$openprint::log->error("Scoring is not being done");
 	} # end if
 	if ( $$project{HasPerforating} ) {
 		my %perforating_results = openprint::Estimating::Perforating::signature_calc( $Project, @$project{'HasPerforating','PerforatingSpecs'}, $service_index, $specs, $qty_index, $Imposition );
@@ -5525,11 +5538,12 @@ $openprint::log->warn("No folding equipment");
 			'Net Sheet Count'			=>	$net_sheets,
 			'Initial Setup Count'		=> $plate_setup{'Setup Plate Count'},
 			'Initial Setup Rate'		=> $initial_setup_rate,
-			'Initial Setup Overs'		=> ceil( $plate_setup{'Setup Plate Count'} * $initial_setup_rate ),
+			'Initial Setup Overs'		=> $$specs{'OverrideSetup'.$qty_index} eq 'Y' ? $$specs{'OverSetup'.$qty_index} : ceil( $plate_setup{'Setup Plate Count'} * $initial_setup_rate ),
 			'Additional Setup Count'	=> $additional_setup_count,
 			'Additional Setup Rate'		=> $setup_rate,
 			'Additional Setup Overs'	=> $additional_setup_overs,
 			'Run Overs'					=>	$run_overs,
+			'Run Overs Rate'			=>	$price{'Overs Rate'},
 			'Additional Plate Overs'	=>	$additional_overs,
 			'Additional Plate Overs Rate'	=>	$additional_overs_rate,
 			'Total Overs'				=>	$total_overs,
@@ -6754,6 +6768,9 @@ $openprint::log->debug("$1 is !- $$specs{txtSpecificStockCalliper} ");
 				( ( $$specs{BleedLeft} and $$specs{BleedRight} and $$specs{BleedTop} and $$specs{BleedBottom} ) ? '' : 'no bleed on ' . join(', ', map { $$specs{"Bleed$_"} ? '': $_ } ( 'Top','Bottom','Left','Right' ) ) ),
 				( $$specs{txtCropMarkSpace} ? () : 'no crop marks' ),
 		);
+		if ( $$specs{PressApproval} eq 'Y' ) {
+			$string .= ' Customer wants press approval';
+		}
 		return $string;
 	} # end if qty_index
 } # end sub summary
@@ -7023,11 +7040,12 @@ sub has_overrides {
 	$specs = openprint::service::get_specs_ref( $Project, $service_id ) if ! $specs;
 
 	if ( $qty_index ) {
-		return () if $$specs{'txtUnspecifiedPageQuantity'.$qty_index} <= 0 and $$specs{txtImposition}.$qty_index == 0;
+		return () if $$specs{'txtUnspecifiedPageQuantity'.$qty_index} <= 0 and $$specs{"txtImposition$qty_index"} == 0;
 		return map { $$specs{$_.$qty_index} eq 'Y' ? $_ : () } (
 				'chkOverrideBleedSize',
 				'chkOverridePageQuantity',
 				'chkOverrideImposition',
+				'OverrideImpositionLayout',
 				'chkOverrideRunStyle',
 				'OverrideCutOff',
 				'chkOverrideSheetSize',
@@ -7036,10 +7054,15 @@ sub has_overrides {
 				'OverrideStockType',
 				'chkOverrideGrainDirection',
 				'OverrideVersions',
+				'OverridePrice',
+				'OverrideSetup',
+				'OverrideRun',
 				);
 	} else {
 		return map { $$specs{$_} eq 'Y' ? $_ : () } (
 				'chkOverrideDimensions',
+				'OverrideAddGrip',
+				'OverrideSpreadSize',
 				);
 	} # end if
 

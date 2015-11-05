@@ -114,37 +114,37 @@ sub save {
 
 	my @changes = $self->changes( $params );
 
-	if ( $params and $$params{type} and $$self{type} and ( $$params{'type'} ne $$self{'type'} ) and ( $$params{'type'} ne 'C' ) ) {
+	if ( $params and $$params{type} and $$self{type} and ( $$params{type} ne $$self{type} ) and ( $$params{type} ne 'C' ) ) {
 # Notify someone
 		my %info;
-		$info{'User'} = $self;
+		$info{User} = $self;
 		@info{'UserFirstName','UserLastName','UserType'} = @$params{'firstname','lastname','type'};
 
-		$info{'ReplacementText'} = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/email_content/usertype_system_notification.html' );
-		$info{'ReplacementText'} = ssi::variable_substitution( \$info{'ReplacementText'}, \%info );
+		$info{ReplacementText} = misc::load_file( $log, $ENV{DOCUMENT_ROOT} . '/email_content/usertype_system_notification.html' );
+		$info{ReplacementText} = ssi::variable_substitution( \$info{ReplacementText}, \%info );
 
-		my $email_template = misc::load_file( $log, $config{'SkinPath'}.'/email_template.html' );
+		my $email_template = misc::load_file( $log, $config{SkinPath}.'/email_template.html' );
 		$email_template = ssi::variable_substitution( \$email_template, \%info );
 
 		new openprint::Email()->send(
-				FROM    => $openprint::config{'LoginEmail'},
-				TO      => $openprint::config{'LoginEmail'},
+				FROM    => $openprint::config{LoginEmail},
+				TO      => $openprint::config{LoginEmail},
 				SUBJECT => join(' ', @$params{'firstname','lastname'})."'s User Type has changed!",
 				ATTACHMENTS => [ '', MIME::QuotedPrint::encode_qp($email_template), 'text/html', 'quoted-printable' ],
 				);
 	} # end if
 
-	if ( $params and (defined $$params{'web_active'} and defined $$self{'web_active'} ) and ( $$self{'web_active'} ne $$params{'web_active'} ) and ( $$params{'web_active'} eq 'Y' ) ) {
+	if ( $params and (defined $$params{web_active} and defined $$self{web_active} ) and ( $$self{web_active} ne $$params{web_active} ) and ( $$params{web_active} eq 'Y' ) ) {
 		my %info;
-		$info{'User'} = $self;
-		$_ = $$params{'web_active'} eq 'Y' ? 'user_account_activated.html' : 'user_account_deactivated.html';
-		$info{'ReplacementText'} = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . "/email_content/$_" );
-		$info{'ReplacementText'} = ssi::variable_substitution( \$info{'ReplacementText'}, \%info );
-		my $email_template = misc::load_file( $log, $config{'SkinPath'}.'/email_template.html' );
+		$info{User} = $self;
+		$_ = $$params{web_active} eq 'Y' ? 'user_account_activated.html' : 'user_account_deactivated.html';
+		$info{ReplacementText} = misc::load_file( $log, $ENV{DOCUMENT_ROOT} . "/email_content/$_" );
+		$info{ReplacementText} = ssi::variable_substitution( \$info{ReplacementText}, \%info );
+		my $email_template = misc::load_file( $log, $config{SkinPath}.'/email_template.html' );
 		$email_template = ssi::variable_substitution( \$email_template, \%info );
 
 		new openprint::Email()->send(
-				FROM    => $openprint::config{'AdministratorEmail'},
+				FROM    => $openprint::config{AdministratorEmail},
 				TO      => sprintf( '"%s %s" <%s>', @$params{'firstame','lastname','email'} ),
 				SUBJECT => 'User account status has changed!',
 				ATTACHMENTS => [ '', MIME::QuotedPrint::encode_qp($email_template), 'text/html', 'quoted-printable' ],
@@ -155,11 +155,11 @@ sub save {
 	return $error if $error;
 	(new openprint::Log())->save({action=>'Save User', Object=>$self, note=>join('<br/>', @changes ) } );
 
-	if ( exists $$params{'assistant_ids'} ) {
-		$self->assistant_ids( $$params{'assistant_ids'} );
+	if ( exists $$params{assistant_ids} ) {
+		$self->assistant_ids( $$params{assistant_ids} );
 	} # end if
-	if ( exists $$params{'csr_ids'} ) {
-		$self->csr_ids( $$params{'csr_ids'} );
+	if ( exists $$params{csr_ids} ) {
+		$self->csr_ids( $$params{csr_ids} );
 	} # end if
 	return;
 } # end sub save
@@ -168,36 +168,36 @@ sub destroy {
 	my $self = shift;
 
 	my $ac = sql::start_transaction( $dbh );
-	sql::execute( undef, undef, 'DELETE FROM Users_in_Marketing_Categories WHERE User_Id=?', $$self{'id'} );
+	sql::execute( undef, undef, 'DELETE FROM Users_in_Marketing_Categories WHERE User_Id=?', $$self{id} );
 
-	foreach my $Quote ( openprint::Quote->find('user_id'=>$$self{'id'}) ) {
+	foreach my $Quote ( openprint::Quote->find('user_id'=>$$self{id}) ) {
 		$Quote->delete();
 	} # end foreach
-	foreach my $Order ( openprint::Order->find('user_id'=>$$self{'id'}) ) {
+	foreach my $Order ( openprint::Order->find('user_id'=>$$self{id}) ) {
 		$Order->delete();
 	} # end foreach
-	sql::update( undef, undef, 'order_log', ['user_id=?',$$self{'id'}], 'user_id', undef );
-	foreach my $Project ( openprint::Project->find('user_id'=>$$self{'id'}) ) {
+	sql::update( undef, undef, 'order_log', ['user_id=?',$$self{id}], 'user_id', undef );
+	foreach my $Project ( openprint::Project->find('user_id'=>$$self{id}) ) {
 		$Project->delete();
 	} # end foreach
-	sql::execute( $log, $dbh, 'DELETE FROM users_in_usergroups WHERE user_id=?', $$self{'id'} );
-	sql::execute( $log, $dbh, 'DELETE FROM Project_Log WHERE user_id=?', $$self{'id'} );
-	sql::update( undef, undef, 'barcode_log', ['operator_id=?', $$self{'id'} ], 'operator_id', undef );
-	sql::update( undef, undef, 'barcode_log', ['user_id=?',$$self{'id'}], 'user_id', undef );
-	sql::update( undef, undef, 'skids', ['created_by_id=?',$$self{'id'}], 'created_by_id', undef );
+	sql::execute( $log, $dbh, 'DELETE FROM users_in_usergroups WHERE user_id=?', $$self{id} );
+	sql::execute( $log, $dbh, 'DELETE FROM Project_Log WHERE user_id=?', $$self{id} );
+	sql::update( undef, undef, 'barcode_log', ['operator_id=?', $$self{id} ], 'operator_id', undef );
+	sql::update( undef, undef, 'barcode_log', ['user_id=?',$$self{id}], 'user_id', undef );
+	sql::update( undef, undef, 'skids', ['created_by_id=?',$$self{id}], 'created_by_id', undef );
 
-	sql::execute( $log, $dbh, 'DELETE FROM creditapplications WHERE user_id=?', $$self{'id'} );
-	sql::execute( $log, $dbh, 'DELETE FROM helpdesk WHERE user_id=?', $$self{'id'} );
+	sql::execute( $log, $dbh, 'DELETE FROM creditapplications WHERE user_id=?', $$self{id} );
+	sql::execute( $log, $dbh, 'DELETE FROM helpdesk WHERE user_id=?', $$self{id} );
 	sql::execute( undef, undef, 'DELETE FROM Assistants WHERE csr_id=? OR assistant_id=?', @$self{'id','id'} );
-	sql::execute( undef, undef, 'DELETE FROM EmailCampaign_sent WHERE user_id=?', $$self{'id'} );
-	sql::execute( undef, undef, 'DELETE FROM survey_responses WHERE user_id=?', $$self{'id'} );
-	sql::execute( undef, undef, 'DELETE FROM uploads WHERE user_id=?', $$self{'id'} );
-	sql::execute( undef, undef, 'DELETE FROM user_profiles WHERE user_id=?', $$self{'id'} );
-	sql::execute( undef, undef, 'DELETE FROM Message_to WHERE user_id=?', $$self{'id'} );
-	sql::execute( undef, undef, 'DELETE FROM Messages WHERE from_id=?', $$self{'id'} );
+	sql::execute( undef, undef, 'DELETE FROM EmailCampaign_sent WHERE user_id=?', $$self{id} );
+	sql::execute( undef, undef, 'DELETE FROM survey_responses WHERE user_id=?', $$self{id} );
+	sql::execute( undef, undef, 'DELETE FROM uploads WHERE user_id=?', $$self{id} );
+	sql::execute( undef, undef, 'DELETE FROM user_profiles WHERE user_id=?', $$self{id} );
+	sql::execute( undef, undef, 'DELETE FROM Message_to WHERE user_id=?', $$self{id} );
+	sql::execute( undef, undef, 'DELETE FROM Messages WHERE from_id=?', $$self{id} );
 	sql::execute( undef, undef, 'DELETE FROM User_Relationships WHERE user_id1=? OR user_id2=?', @$self{'id','id'} );
 
-	sql::execute( $log, $dbh, 'DELETE FROM Users WHERE id=?', $$self{'id'} );
+	sql::execute( $log, $dbh, 'DELETE FROM Users WHERE id=?', $$self{id} );
 
 	sql::end_transaction( $dbh, $ac );
 
@@ -210,13 +210,13 @@ sub next {
 
 	my $sql = 'SELECT MIN(firstname) FROM users WHERE firstname > ?';
 	my @values = ( $$self{firstname} );
-	if ( $params{'company_id'} ) {
+	if ( $params{company_id} ) {
 		$sql .= ' AND company_id=?';
-		push @values, $params{'company_id'};
+		push @values, $params{company_id};
 	} # end if
-	if ( $params{'type'} ) {
+	if ( $params{type} ) {
 		$sql .= ' AND type=?';
-		push @values, $params{'type'};
+		push @values, $params{type};
 	} # end if
 
 	$sql = qq{SELECT id FROM users WHERE firstname = ($sql)};
@@ -234,13 +234,13 @@ sub prev {
 
 	my $sql = 'SELECT MAX(FirstName) FROM Users WHERE FirstName < ?';
 	my @values = ( $$self{firstname} );
-	if ( $params{'company_id'} ) {
+	if ( $params{company_id} ) {
 		$sql .= ' AND company_id=?';
-		push @values, $params{'company_id'};
+		push @values, $params{company_id};
 	} # end if
-	if ( $params{'type'} ) {
+	if ( $params{type} ) {
 		$sql .= ' AND type=?';
-		push @values, $params{'type'};
+		push @values, $params{type};
 	} # end if
 
 	$sql = qq{SELECT id FROM Users WHERE FirstName = ($sql)};
@@ -261,11 +261,11 @@ sub Company {
 
 sub alias {
 	my $Company = $_[0]->Company();
-	#if ( $_[0]{'company_id'} == $openprint::session{'company_id'} ) {
-		#return $_[0]{'firstname'};
-	#} elsif ( $_[0]->Company()->name() ne ($_[0]{'firstname'} . ' ' . $_[0]{'lastname'}) ) {
-	if ( $_[0]{company_id} and ( $_[0]{company_id} != $openprint::session{company_id} ) and ( $Company->name() ne ($_[0]{'firstname'} . ( $_[0]{lastname} ? ( ' ' . $_[0]{'lastname'} ) : () ) ) ) ) {
-		return $Company->name() . ($_[0]{'firstname'} ? ' (' . $_[0]{'firstname'} . ')' : '' );
+	#if ( $_[0]{company_id} == $openprint::session{company_id} ) {
+		#return $_[0]{firstname};
+	#} elsif ( $_[0]->Company()->name() ne ($_[0]{firstname} . ' ' . $_[0]{lastname}) ) {
+	if ( $_[0]{company_id} and ( $_[0]{company_id} != $openprint::session{company_id} ) and ( $Company->name() ne ($_[0]{firstname} . ( $_[0]{lastname} ? ( ' ' . $_[0]{lastname} ) : () ) ) ) ) {
+		return $Company->name() . ($_[0]{firstname} ? ' (' . $_[0]{firstname} . ')' : '' );
 	} elsif ( $_[0]->firstname() or $_[0]->lastname() ) {
 		return $_[0]->name();
 	} else {
@@ -274,7 +274,7 @@ sub alias {
 } # end sub name
 
 sub name {
-	if ( $_[0]{'firstname'} and $_[0]{'lastname'} ) {
+	if ( $_[0]{firstname} and $_[0]{lastname} ) {
 		return join(' ', @{$_[0]}{'firstname','lastname'} );
 	} elsif ( $_[0]{firstname} ) {
 		return $_[0]{firstname};
@@ -319,46 +319,28 @@ sub csr_ids {
 
 sub Groups {
 	require openprint::UserGroup;
-	if ( $_[0]{'id'} ) {
+	if ( $_[0]{id} ) {
 		return openprint::UserGroup->find('user_id any'=>$_[0]{id} );
 	} # end if
 	return ();
 } # end sub Groups
 
-sub notifications {
-	my ( $self, $notifications_hash ) = @_;
+sub Notifications {
+	my ( $self ) = @_;
 	
 	require openprint::User_Notification;
-	if ( $notifications_hash ) {
-		my $ac = sql::start_transaction( $dbh );
-		my %types = sql::execute( undef, undef, 'SELECT id, name FROM User_Notification_types' );
-		$dbh->do( 'LOCK TABLE User_Notifications IN ACCESS EXCLUSIVE MODE' );
-		sql::execute( undef, undef, 'DELETE FROM User_Notifications WHERE user_id=?', $$self{'id'} );
-		foreach my $k ( keys %types ) {
-			sql::insert( undef, undef, 'User_Notifications', { user_id=>$$self{id},type_id=>$k, value=>$$notifications_hash{$types{$k}} } ) if $$notifications_hash{$types{$k}};
-		} # end foreach k
-		sql::end_transaction( $dbh, $ac );
-		$$self{notifications} = $notifications_hash;
-	} elsif ( ! exists $$self{notifications} ) {
+	if ( ! exists $$self{Notifications} ) {
 		if ( ! $$self{id} ) {
-			$$self{notifications} = {};
+			$$self{Notifications} = [];
 		} else {
-		%{$$self{notifications}} = sql::execute( undef, undef, 'SELECT (SELECT name FROM User_Notification_Types WHERE id=type_id),value FROM User_Notifications WHERE user_id=?', $$self{id} );
+			$$self{Notifications} = [ openprint::User_Notification->find( user_id=>$$self{id} ) ];
 		} # end if
 	} else {
-	$openprint::log->debug("Have notifications");
+		$openprint::log->debug("Have notifications");
 	} # end if
 	
-	return $$self{notifications};
+	return @{$$self{Notifications}};
 } # end sub notifications
-
-sub notification {
-	my ( $self, $name ) = @_;
-
-	$self->notifications() if ( ! exists $$self{'notifications'} );
-	return $$self{'notifications'}{$name} if $$self{'notifications'} and $$self{'notifications'}{$name};
-	return '';
-} # end sub notification
 
 sub purchasing_total {
 	require openprint::PurchaseOrder;
@@ -371,24 +353,24 @@ sub purchasing_total {
 sub po_limit {
 	my ( $self, $type_id, $new_value ) = @_;
 
-	if ( ! exists $$self{'po_limits'} ) {
+	if ( ! exists $$self{po_limits} ) {
 		if ( $$self{id} ) {
-		%{$$self{po_limits}} = sql::execute( undef, undef, 'SELECT type_id, po_limit FROM User_PurchaseOrder_limits WHERE user_id=?', $$self{'id'} );
+		%{$$self{po_limits}} = sql::execute( undef, undef, 'SELECT type_id, po_limit FROM User_PurchaseOrder_limits WHERE user_id=?', $$self{id} );
 		} else {
 			$$self{po_limits} = {};
 		} # end if
 	} # end if
 
 	if ( defined $new_value ) {
-		if ( exists $$self{'po_limits'}{$type_id} ) {
-			sql::update( undef, undef, 'user_purchaseorder_limits', ['user_id=? AND type_id=?', $$self{'id'},$type_id], 'po_limit', 1*$new_value );
+		if ( exists $$self{po_limits}{$type_id} ) {
+			sql::update( undef, undef, 'user_purchaseorder_limits', ['user_id=? AND type_id=?', $$self{id},$type_id], 'po_limit', 1*$new_value );
 		} else {
-			sql::insert( undef, undef, 'user_purchaseorder_limits', ['user_id',$$self{'id'},'type_id', $type_id, 'po_limit', 1*$new_value ] );
+			sql::insert( undef, undef, 'user_purchaseorder_limits', ['user_id',$$self{id},'type_id', $type_id, 'po_limit', 1*$new_value ] );
 		} # end if
-		$$self{'po_limits'}{$type_id} = 1*$new_value;
+		$$self{po_limits}{$type_id} = 1*$new_value;
 	} # end if
 
-	return $$self{'po_limits'}{$type_id};
+	return $$self{po_limits}{$type_id};
 } # end sub po_limit
 
 sub Asset {
@@ -399,35 +381,35 @@ sub Asset {
 		} else {
 			if ( $_[0]->Profile()->Gender() ) {
 				#$openprint::log->debug("Loading by gender");
-				$_[0]{'Asset'} = openprint::Asset->find_one('name'=>'Default Profile ' . $_[0]->Profile()->Gender() );
+				$_[0]{Asset} = openprint::Asset->find_one('name'=>'Default Profile ' . $_[0]->Profile()->Gender() );
 			} # end if
-			if ( ! $_[0]{'Asset'} ) {
+			if ( ! $_[0]{Asset} ) {
 				#$openprint::log->debug("Loading by default");
-				$_[0]{'Asset'} = openprint::Asset->find_one('name'=>'Default Profile' );
+				$_[0]{Asset} = openprint::Asset->find_one('name'=>'Default Profile' );
 			} # end if
-			if ( $_[0]{'id'} ) {
-				my @Albums = openprint::Photo_Album->find('user_id'=>$_[0]{'id'});
+			if ( $_[0]{id} ) {
+				my @Albums = openprint::Photo_Album->find('user_id'=>$_[0]{id});
 				foreach my $Album ( @Albums ) {
 					my @Photos = $Album->Photos();
 					if ( @Photos ) {
-						$_[0]{'Asset'} = $Photos[0]->Asset();
+						$_[0]{Asset} = $Photos[0]->Asset();
 					} # end if
 				} # end foreach Album
 			} # end if
-			if ( ! $_[0]{'Asset'} ) {
-				$_[0]{'Asset'} = new openprint::Asset( );
+			if ( ! $_[0]{Asset} ) {
+				$_[0]{Asset} = new openprint::Asset( );
 			} # end if
 		} # end if
 	} # end if
-	return $_[0]{'Asset'};
+	return $_[0]{Asset};
 } # end sub Asset
 
 sub Profile {
-	if ( ! exists $_[0]{'Profile'} ) {
+	if ( ! exists $_[0]{Profile} ) {
 		require openprint::User_Profile;
-		$_[0]{'Profile'} = new openprint::User_Profile( $_[0]{'id'} );
+		$_[0]{Profile} = new openprint::User_Profile( $_[0]{id} );
 	} # end if
-	return $_[0]{'Profile'};
+	return $_[0]{Profile};
 } # end sub Profile
 
 sub icon {
@@ -436,16 +418,16 @@ sub icon {
 
 sub thumbnail_html {
 if ( 0 ) {
-	if ( ! $openprint::session{'user_id'} ) {
+	if ( ! $openprint::session{user_id} ) {
 		return '';
 	} # end if
 } # end if
-	if ( ! $_[0]{'icon'} ) {
-		$_[0]{'icon'} = sprintf('<a href="/account/view.html?user_id=%1$d" class="thumbnail"><img src="%2$s" alt="%3$s" title="%3$s"/></a>',
-		#$_[0]{'icon'} = sprintf('<a href="/account/view.html?user_id=%1$d" class="thumbnail"><img src="%2$s?user_id=%1$d" alt="%3$s" title="%3$s" /></a>',
-			$_[0]{'id'}, $_[0]->Asset()->sized_url('thumbnail'), $_[0]->alias() );
+	if ( ! $_[0]{icon} ) {
+		$_[0]{icon} = sprintf('<a href="/account/view.html?user_id=%1$d" class="thumbnail"><img src="%2$s" alt="%3$s" title="%3$s"/></a>',
+		#$_[0]{icon} = sprintf('<a href="/account/view.html?user_id=%1$d" class="thumbnail"><img src="%2$s?user_id=%1$d" alt="%3$s" title="%3$s" /></a>',
+		$_[0]{id}, $_[0]->Asset()->sized_url('small'), $_[0]->alias() );
 	} # end if
-	return $_[0]{'icon'};
+	return $_[0]{icon};
 }
 
 sub link {
@@ -457,7 +439,7 @@ sub link_to {
 } # end sub link_to
 
 sub html {
-	if ( ! $_[0]{'id'} ) {
+	if ( ! $_[0]{id} ) {
 		$log->error("called html on user without id".$_[0]->to_string() );
 		return '';
 	} # end if
@@ -501,7 +483,7 @@ sub html {
 				( $_ = $User->Asset()->thumbnail_filename() ? $_ : 'no_image.gif' ), '',
 				$age ? $age : 'old!',
 				$Profile->Gender() ? $Profile->Gender() : 'indeterminate',
-				Date::Format::time2str( $openprint::config{'DateFormat'}, Date::Parse::str2time( $User->created_on() ) ),
+				Date::Format::time2str( $openprint::config{DateFormat}, Date::Parse::str2time( $User->created_on() ) ),
 			);
 } # end sub html
 
@@ -511,10 +493,10 @@ sub last_logged_in {
 		my $Log = openprint::Log->find_one(user_id=>$_[0]{id},'order'=>'date_time DESC');
 		if ( $Log ) {
 #$openprint::log->debug("last_Logged_in: " . $Log->to_string() );
-			$_[0]{'last_logged_on'} = $$Log{date_time};
+			$_[0]{last_logged_on} = $$Log{date_time};
 		} # end if
 	}
-	return $_[0]{'last_logged_on'};
+	return $_[0]{last_logged_on};
 } # end sub last_logged_in
 
 sub AUTOLOAD {
@@ -530,11 +512,11 @@ sub AUTOLOAD {
 		} # end if
 	} else {
 		my $Profile = $_[0]->Profile();
-		if ( exists $$Profile{'fields'}{$name} ) {
+		if ( exists $$Profile{fields}{$name} ) {
 			if ( @_ > 1 ) {
-				$$Profile{'fields'}{$name} = $_[1];
+				$$Profile{fields}{$name} = $_[1];
 			} # end if
-			return $$Profile{'fields'}{$name};
+			return $$Profile{fields}{$name};
 		#} else {
 			#$openprint::log->warn("Unknown field in User::AUTOLOAD $name");
 		} # end if
@@ -556,18 +538,18 @@ sub can_edit {
 } # end sub can_edit
 
 sub can_view {
-	return 1 if $openprint::session{'user_id'} == $_[0]{id};
-	return 1 if $openprint::session{'user_type'} eq 'A';
-	return 1 if ( $openprint::User->administrator() eq 'Y' ) and ( $_[0]{'company_id'} == $openprint::session{'company_id'} );
-	my $Company = new openprint::Company( $_[0]{'company_id'} );
-	return 1 if $Company->salesrep_id() and sets::isin( $Company->salesrep_id(), [ $openprint::session{'user_id'}, $openprint::User->csr_ids(), $openprint::User->assistant_ids() ] );
+	return 1 if $openprint::session{user_id} == $_[0]{id};
+	return 1 if $openprint::session{user_type} eq 'A';
+	return 1 if ( $openprint::User->administrator() eq 'Y' ) and ( $_[0]{company_id} == $openprint::session{company_id} );
+	my $Company = new openprint::Company( $_[0]{company_id} );
+	return 1 if $Company->salesrep_id() and sets::isin( $Company->salesrep_id(), [ $openprint::session{user_id}, $openprint::User->csr_ids(), $openprint::User->assistant_ids() ] );
 	require openprint::Blocklist;
 	return 0 if openprint::Blocklist::is_blocked( $openprint::session{user_id},$_[0]{id});
 	return 1;
 } # end sub can_view
 
 sub Location {
-	if ( ! $_[0]{'Location'} ) {
+	if ( ! $_[0]{Location} ) {
 		my $Profile = $_[0]->Profile();
 		my $Location;
 		if ( $Profile->postalcode() ) {
@@ -584,10 +566,10 @@ sub Location {
 			$log->error("Still no location");
 			return new openprint::Location();
 		} # endif
-		$_[0]{'Location'} = $Location;
+		$_[0]{Location} = $Location;
 	} # end if
 		
-	return $_[0]{'Location'};
+	return $_[0]{Location};
 } # end sub Location
 
 sub code {

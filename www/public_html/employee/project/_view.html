@@ -8,8 +8,8 @@
 <div class="buttons">
 <? echo (
 	my $html;
-	if ( $$variable{'HiddenSignatures'} ) {
-		if ( ! $session{'ShowAllSignatures'} ) {
+	if ( $$variable{HiddenSignatures} ) {
+		if ( ! $session{ShowAllSignatures} ) {
 			$html .= button( 'ShowAllSignatures', { href=>'/employee/project/view.html?ProjectIndex='.$$variable{ProjectIndex}.'&amp;ShowAllSignatures=1', text=>'Show All Signatures' } );
 		} else {
 			$html .= button( 'HideAllSignatures', { href=>'/employee/project/view.html?ProjectIndex='.$$variable{ProjectIndex}.'&amp;ShowAllSignatures=0', text=>'Hide All Signatures' } );
@@ -33,7 +33,7 @@
     my $html = '';
     my $rowclass = '';
     my $Project = $$variable{Project};
-    my $ProjectCurrency = $Project->Currency();
+    my $ProjectCurrency = $$variable{Currency} = $Project->Currency();
     my $services = $Project->services();
     my %statuses = map { $_->service_id(), $_->status() } openprint::Project_Service->find( project_id=>$Project->id());
     my $qty_index = $Project->ordered_quantity_index();
@@ -140,8 +140,8 @@
                                 q`<td class="Service"><a href="/employee/proj/%1$s?ProjectIndex=%2$d&amp;ServiceIndex=%3$d"><b>%4$s</b>%5$s<br/>%6$s<br/>%7$s</a></td>` :
                                 q`<td class="Service">%4$s%5$s<br/>%6$s<br/>%7$s</td>` ),
                             $ServiceType->url(), $Project->id(), $service_id,
-                            ( $$specs{'ServiceName'} ? $$specs{'ServiceName'} : $ServiceType->description() ),
-                            ( $$specs{'txtServiceDescription'} ? ' - '.$$specs{'txtServiceDescription'} : '' ),
+                            ( $$specs{ServiceName} ? $$specs{ServiceName} : $ServiceType->description() ),
+                            ( $$specs{txtServiceDescription} ? ' - '.$$specs{txtServiceDescription} : '' ),
                             $summary,
                            );
 					$html .= '<td class="Price">';
@@ -149,7 +149,7 @@
 						if ( $$specs{'txtQuantity'.$qty_index} and ($$specs{'txtQuantity'.$qty_index} != $Project->quantity($qty_index) ) ) {
 							$html .= '('.$$specs{'txtQuantity'.$qty_index}.') ';
 						} # end if
-                        $html .= openprint::Currency::format($$specs{'txtPrice'.$qty_index});
+                        $html .= openprint::Currency::format( $ProjectCurrency->convert_from( $$specs{'txtPrice'.$qty_index}) );
                     } # end if
 					
                     $html .= '</td><td class="status" id="status'.$service_id.'">';
@@ -188,10 +188,16 @@
 			if ( ! $$stock_specs{"cost-$stock_index-$qty_index"} ) {
 $log->warn("Lookup up stock price, cuz it's not in the paper service: cost-$stock_index-$qty_index");
 				my $price = $Stock->get_price( weight=>$totals{$string}, service=>'Material' );
-				$prices{$string} = sprintf('$%.2f/100lb = $%.2f', @$price{'100lb Price','100lb Total'} );
+				$prices{$string} = sprintf('$%.2f/100lb = $%.2f', 
+					$ProjectCurrency->convert_from( $$price{'100lb Price'} ),
+					$ProjectCurrency->convert_from( $$price{'100lb Total'} ),
+					);
 			} else {
 				$$stock_specs{"price-$stock_index-$qty_index"} = int( $totals{$string} * $$stock_specs{"cost-$stock_index-$qty_index"} / 100 ) if ! $$stock_specs{"price-$stock_index-$qty_index"};
-				$prices{$string} = sprintf('$%.2f/100lb = $%.2f', @$stock_specs{"cost-$stock_index-$qty_index","price-$stock_index-$qty_index"} );
+				$prices{$string} = sprintf('$%.2f/100lb = $%.2f', 
+					$ProjectCurrency->convert_from( $$stock_specs{"cost-$stock_index-$qty_index"} ),
+					$ProjectCurrency->convert_from( $$stock_specs{"price-$stock_index-$qty_index"} ),
+					);
 			} # en dif
 			$stock_index += 1;
 		} # end while
@@ -240,46 +246,48 @@ $log->warn("Lookup up stock price, cuz it's not in the paper service: cost-$stoc
 					$log->error("NO paper weight for project $$Project{id} " . $Paper->to_string() ) if $$sig_specs{"txtPrice$qty_index"};
 				} else {
 					my $price = $Paper->get_price( weight=>$totals{$string}, service=>'Material' );
-					$prices{$string} = sprintf('$%.2f/100lb = $%.2f', @$price{'100lb Price','100lb Total'} );
+					$prices{$string} = sprintf('$%.2f/100lb = $%.2f', 
+							$ProjectCurrency->convert_from( $$price{'100lb Price'} ),
+							$ProjectCurrency->convert_from( $$price{'100lb Total'} ),
+						);
 				}
             } # endif Supplied
         } # end foreach signature
 	} # end if has Paper Service
 
-		my @keys = sort keys %totals;
+	my @keys = sort keys %totals;
 
-        if ( @keys ) {
-            $html .= '<tr class="totals">';
-            $html .= '<td class="checkboxes">&nbsp;</td>' if $$variable{checkboxes};
-            $html .= '<td class="Service"><b>Stock</b><br/>';
-			$html .= join('<br/>', map { $Stocks{$_}->to_string() } @keys );
-            $html .= '</td>';
-			$html .= '<td class="Price"><br/>';
-			if($$variable{canseepaperpricing}){
-				$html .= join('<br/>', map { $_ ? $_ : () } @prices{sort keys %totals} );
-			}
-			$html .= '</td><td class="status"><br/>';
-            foreach my $string ( sort keys %totals ) {
-                my $Stock = $Stocks{$string};
+	if ( @keys ) {
+		$html .= '<tr class="totals">';
+		$html .= '<td class="checkboxes">&nbsp;</td>' if $$variable{checkboxes};
+		$html .= '<td class="Service"><b>Stock</b><br/>';
+		$html .= join('<br/>', map { $Stocks{$_}->to_string() } @keys );
+		$html .= '</td>';
+		$html .= '<td class="Price"><br/>';
+		if($$variable{canseepaperpricing}){
+			$html .= join('<br/>', map { $_ ? $_ : () } @prices{sort keys %totals} );
+		}
+		$html .= '</td><td class="status"><br/>';
+		foreach my $string ( sort keys %totals ) {
+			my $Stock = $Stocks{$string};
 
-                if ( $totals{$string} ) {
-                    if ( $sheets{$string} ) {
-                        $html .= $sheets{$string}.'sheets '.$totals{$string}.'lbs';
-                    } else {
-                        $html .= $totals{$string}.'lbs';
-                        if ( $Stock->type() eq 'Roll' ) {
-                            $html .= ' '.int((($totals{$string}/$Stock->wpsi())/$Stock->width())/12).'feet';
-                        } # end if
-                    } # end if
-                } else {
-                    $html .= 'none';
-                } # end if
-                $html .= '<br/>';
-            } # end foreach key
-			$html .= '</td>';
-$html .= '</tr>';
-        } # end if
-    #} # end if $$services{Paper}
+			if ( $totals{$string} ) {
+				if ( $sheets{$string} ) {
+					$html .= $sheets{$string}.'sheets '.$totals{$string}.'lbs';
+				} else {
+					$html .= $totals{$string}.'lbs';
+					if ( $Stock->type() eq 'Roll' ) {
+						$html .= ' '.int((($totals{$string}/$Stock->wpsi())/$Stock->width())/12).'feet';
+					} # end if
+				} # end if
+			} else {
+				$html .= 'none';
+			} # end if
+			$html .= '<br/>';
+		} # end foreach key
+		$html .= '</td>';
+		$html .= '</tr>';
+	} # end if
     return $html;
 ) ?>
 		<? if ( $$variable{Order}->can_edit() ) ?>
@@ -309,7 +317,7 @@ $html .= '</tr>';
 			<td class="checkbox">&nbsp;</td>
 			<? endif ( $$variable{checkboxes} ) ?>
 			<td class="Service">Subtotal</td>
-			<td class="Price"><? echo ( openprint::Currency::format( $$variable{Project}->price($$variable{'Project'}->ordered_quantity_index()) ); ) ?></td>
+			<td class="Price"><? echo ( openprint::Currency::format( $$variable{Currency}->convert_from($$variable{Project}->price($$variable{Project}->ordered_quantity_index()) ) ); ) ?></td>
 			<td class="status"></td>
 		</tr>
 		<? echo ( 
@@ -317,7 +325,7 @@ $html .= '</tr>';
 			foreach my $Tax ( $$variable{Order}->Taxes() ) {
 				$html .= sprintf('<tr class="tax">%s<td class="Service">%s (%d%)</td><td class="Price">%s</td><td class="status"></td></tr>',
 					( $$variable{checkboxes} ? '<td class="checkbox">&nbsp;</td>' : '' ),
-					$Tax->name(), $Tax->rate(), openprint::Currency::format( $$variable{'Order'}->Currency()->convert_from( $Tax->amount() ) ),
+					$Tax->name(), $Tax->rate(), openprint::Currency::format( $$variable{Currency}->convert_from( $Tax->amount() ) ),
 					);
 			} # end foreach Tax
 			return $html;
@@ -327,7 +335,7 @@ $html .= '</tr>';
 			<td class="checkbox">&nbsp;</td>
 			<? endif ( $$variable{checkboxes} ) ?>
 			<td class="Service">Total</td>
-			<td class="Price"><? echo ( openprint::Currency::format( $$variable{'Project'}->Order()->total() ); ) ?></td>
+			<td class="Price"><? echo ( openprint::Currency::format( $$variable{Currency}->convert_from( $$variable{Order}->total() ) ); ) ?></td>
 			<td class="status"></td>
 		</tr>
 		<tr class="paid">
@@ -335,79 +343,79 @@ $html .= '</tr>';
 			<td class="checkbox">&nbsp;</td>
 			<? endif ( $$variable{checkboxes} ) ?>
 			<td class="Service">Paid</td>
-			<td class="Price"><? echo ( openprint::Currency::format( 1*$$variable{'Project'}->Order()->paid() ); ) ?></td>
+			<td class="Price"><? echo ( openprint::Currency::format( $$variable{Currency}->convert_from( 1*$$variable{Order}->paid() ) ); ) ?></td>
 			<td class="status"></td>
 		</tr>
-		<? if ( $$variable{'Project'}->Order()->downpayment_owing() ) ?>
+		<? if ( $$variable{Order}->downpayment_owing() ) ?>
 		<tr class="downpayment">
 			<? if ( $$variable{checkboxes} ) ?>
 			<td class="checkbox">&nbsp;</td>
 			<? endif ( $$variable{checkboxes} ) ?>
 			<td class="Service">Downpayment Owing</td>
-			<td class="Price"><? echo ( openprint::Currency::format( $$variable{'Project'}->Order()->downpayment_owing() ); ) ?></td>
+			<td class="Price"><? echo ( openprint::Currency::format( $$variable{Currency}->convert_from( $$variable{Order}->downpayment_owing() ) ); ) ?></td>
 			<td class="status"></td>
 		</tr>
-		<? endif ( $$variable{'Project'}->Order()->downpayment_owing() ) ?>
-		<? if ( $$variable{'Project'}->Order()->cod_owing() ) ?>
+		<? endif ( $$variable{Order}->downpayment_owing() ) ?>
+		<? if ( $$variable{Order}->cod_owing() ) ?>
 		<tr class="cod">
 			<? if ( $$variable{checkboxes} ) ?>
 			<td class="checkbox">&nbsp;</td>
 			<? endif ( $$variable{checkboxes} ) ?>
 			<td class="Service">COD Owing</td>
 			<td class="Price"><? echo ( 
-					if ( openprint::usergroup::is_user_in( ['Sales Admin','Scheduling','PrepressManager'], $session{'user_id'} ) ) {
-						return openprint::Currency::format( $$variable{'Project'}->Order()->cod_owing() );
+					if ( openprint::usergroup::is_user_in( ['Sales Admin','Scheduling','PrepressManager'], $session{user_id} ) ) {
+						return openprint::Currency::format( $$variable{Currency}->convert_from( $$variable{Order}->cod_owing() ) );
 					} else {
-						return $$variable{'Project'}->Order()->cod_owing_percent().'%';
+						return $$variable{Order}->cod_owing_percent().'%';
 					} # end if
 			 ) ?></td>
 			<td class="status"></td>
 		</tr>
-		<? endif ( $$variable{'Project'}->Order()->cod_owing() ) ?>
-<? if ( $$variable{'Project'}->ordered_price() != $$variable{'Project'}->price($$variable{'Project'}->ordered_quantity_index()) ) ?>
+		<? endif ( $$variable{Order}->cod_owing() ) ?>
+<? if ( $$variable{Project}->ordered_price() != $$variable{Project}->price($$variable{Project}->ordered_quantity_index()) ) ?>
 		<tr>
 			<? if ( $$variable{checkboxes} ) ?>
 			<td class="checkbox">&nbsp;</td>
 			<? endif ( $$variable{checkboxes} ) ?>
 			<td class="Service"><b>Originally Ordered Price</b></td>
-			<td class="Price"><? echo ( openprint::Currency::format( $$variable{'Project'}->ordered_price() ); ) ?></td>
+			<td class="Price"><? echo ( openprint::Currency::format( $$variable{Currency}->convert_from( $$variable{Project}->ordered_price() ) ); ) ?></td>
 			<td class="status"></td>
 		</tr>
-<? endif ( $$variable{'Project'}->ordered_price() != $$variable{'Project'}->price($$variable{'Project'}->ordered_quantity_index()) ) ?>
+<? endif ( $$variable{Project}->ordered_price() != $$variable{Project}->price($$variable{Project}->ordered_quantity_index()) ) ?>
 		<? else ( $$variable{canseepricing} ) ?>
-		<? if ( openprint::usergroup::is_user_in( ['Shipping'], $session{'user_id'} ) ) ?>
+		<? if ( openprint::usergroup::is_user_in( ['Shipping'], $session{user_id} ) ) ?>
 		<tr>
 			<? if ( $$variable{checkboxes} ) ?>
 			<td class="checkbox">&nbsp;</td>
 			<? endif ( $$variable{checkboxes} ) ?>
 			<td class="Service"><b>Value for shipping</b></td>
 			<td class="Price"><? echo ( 
-				my $price = $$variable{'Project'}->price($$variable{'Project'}->ordered_quantity_index());
+				my $price = $$variable{Currency}->convert_from( $$variable{Project}->price($$variable{Project}->ordered_quantity_index()) );
 				$price = 5000 * ( int( $price/5000 ) );
 				if ( ! $price ) {
 					return 'under $5,000.00';
 				} else {
-				return openprint::Currency::format( $price );
+					return openprint::Currency::format( $price );
 				} # end if
 				) ?>
 			</td>
 			<td class="status"></td>
 		</tr>
-		<? endif ( openprint::usergroup::is_user_in( ['Shipping'], $session{'user_id'} ) ) ?>
+		<? endif ( openprint::usergroup::is_user_in( ['Shipping'], $session{user_id} ) ) ?>
 		<? endif ( $$variable{canseepricing} ) ?>
 	</table>
 	<? if ( $$variable{canseepricing} ) ?>
-	<? if ( $$variable{'Project'}->currency_id() != $session{'Currency_id'} ) ?>
-	<span class="Currency">Project originally quoted in <? echo ( $$variable{'Project'}->Currency()->name() ) ?>.</span>
-	<? endif ( $$variable{'Project'}->currency_id() != $session{'Currency_id'} ) ?>
+	<? if ( $$variable{Project}->currency_id() != $session{Currency_id} ) ?>
+	<span class="Currency">Project originally quoted in <? echo ( $$variable{Currency}->name() ) ?>.</span>
+	<? endif ( $$variable{Project}->currency_id() != $session{Currency_id} ) ?>
 	<span class="Currency">All prices in <? echo ( new openprint::Currency( $session{Currency_id} )->name() ) ?>.&nbsp;</span>
 	<? endif ( $$variable{canseepricing} ) ?>
 	<br/>
 	<span style="float: left;">
 		<? echo ( join("\n",
-		button( 'DocketButton'.$$variable{Project}{id}, { onclick=>"open_window('/main/project/docket_sheet.html?ProjectIndex=$$variable{'ProjectIndex'}');", text=>'Docket' } ),
-		button( 'Summary'.$$variable{Project}{id}, { href=> "summary.html?ProjectIndex=$$variable{'ProjectIndex'}", text=>'Summary' } ),
-		button( 'UploadPDFs'.$$variable{Project}{id}, { onclick=>"open_window('/employee/production/upload_pdfs.html?ProjectIndex=$$variable{'ProjectIndex'}','upload','resizable=yes,scrollbars=yes,width=800,height=600,screenX=10,screenY=10,top=0,left=0');", text=>'Upload PDFs' } ),
+		button( 'DocketButton'.$$variable{Project}{id}, { onclick=>"open_window('/main/project/docket_sheet.html?ProjectIndex=$$variable{ProjectIndex}');", text=>'Docket' } ),
+		button( 'Summary'.$$variable{Project}{id}, { href=> "summary.html?ProjectIndex=$$variable{ProjectIndex}", text=>'Summary' } ),
+		button( 'UploadPDFs'.$$variable{Project}{id}, { onclick=>"open_window('/employee/production/upload_pdfs.html?ProjectIndex=$$variable{ProjectIndex}','upload','resizable=yes,scrollbars=yes,width=800,height=600,screenX=10,screenY=10,top=0,left=0');", text=>'Upload PDFs' } ),
 		#button( 'ExportJDF', { onclick=>qq`form_submit('$$variable{formname}','Export JDF');`, text=>'JDF' } ),
 		#button( 'ExportMXML', { onclick=>qq`form_submit('$$variable{formname}','Export MXML');`, text=>'MXML' } ),
 		); ) ?>
@@ -416,17 +424,17 @@ $html .= '</tr>';
 	<span style="float: right;">
 		<? echo ( 
 			my $html;
-			if ( ! $$variable{'Project'}->rush() ) {
+			if ( ! $$variable{Project}->rush() ) {
 				$html .= button( 'Rush'.$$variable{Project}{id}, { onclick=>qq`if(confirm('Are you sure you want to rush this job?')) {form_submit('$$variable{formname}','Rush');}`, text=>'Rush' } );
 			} else {
 				$html .= button( 'NoRush'.$$variable{Project}{id}, { onclick=>qq`form_submit('$$variable{formname}','No Rush');`, text=>'No Rush' } );
 			} # end if
 			
-			if ( openprint::usergroup::is_user_in( ['Scheduling'], $session{'user_id'} ) ) {
+			if ( openprint::usergroup::is_user_in( ['Scheduling'], $session{user_id} ) ) {
 				my $need_add = 0;
 				my $pending = 0;
-				foreach my $sig_id ( $$variable{'Project'}->signatures() ) {
-					my $Job = openprint::ScheduledJob->find_one('project_id'=>$$variable{'ProjectIndex'}, 'service_id any'=>$sig_id );
+				foreach my $sig_id ( $$variable{Project}->signatures() ) {
+					my $Job = openprint::ScheduledJob->find_one('project_id'=>$$variable{ProjectIndex}, 'service_id any'=>$sig_id );
 					if ( ! $Job ) {
 						$need_add = 1;
 					} elsif ( ! $Job->starttime() ) {
@@ -442,28 +450,28 @@ $html .= '</tr>';
 				if ( $pending ) {
 					$html .= button( 'ScheduleJob'.$$variable{Project}{id}, { onclick=>qq`form_submit('$$variable{formname}','BumpSchedule');`, text=>'Schedule' } );
 				} # end if
-				$html .= button( 'CompletePrinting'.$$variable{Project}{id}, { onclick=>qq`form_submit('$$variable{formname}','Complete Printing');`, text=>'Complete Printing' } ) if $$variable{'Project'}->status() eq 'Approved';
+				$html .= button( 'CompletePrinting'.$$variable{Project}{id}, { onclick=>qq`form_submit('$$variable{formname}','Complete Printing');`, text=>'Complete Printing' } ) if $$variable{Project}->status() eq 'Approved';
 			} # end if
 
-			my @bindery_services = openprint::print_project::get_services_in_category( $log, $dbh, $$variable{'ProjectIndex'}, 'Bindery' );
+			my @bindery_services = openprint::print_project::get_services_in_category( $log, $dbh, $$variable{ProjectIndex}, 'Bindery' );
 
-			if ( $$variable{'ProjectStatus'} eq 'Printed' and @bindery_services and ! ( sql::execute( undef, undef, q{SELECT serviceindex FROM Bindery_Schedule WHERE projectindex=?}, $$variable{'ProjectIndex'} ) ) ) {
+			if ( $$variable{ProjectStatus} eq 'Printed' and @bindery_services and ! ( sql::execute( undef, undef, q{SELECT serviceindex FROM Bindery_Schedule WHERE projectindex=?}, $$variable{ProjectIndex} ) ) ) {
 				$html .= button( 'AddToBinderySchedule'.$$variable{Project}{id}, { onclick=>qq`form_submit('$$variable{formname}','AddToBinderySchedule');`, text=>'Add To Bindery Schedule' } );
 			} # end if
-			#if ( openprint::usergroup::is_user_in( ['Scheduling','Accounting'], $session{'user_id'} ) ) {
+			#if ( openprint::usergroup::is_user_in( ['Scheduling','Accounting'], $session{user_id} ) ) {
 			#$html .= button( 'Complete'.$$variable{Project}{id}, { onclick=>qq`form_submit('$$variable{formname}','Complete');`, text=>'Complete' } );
 			#} # end if
 			if ( @bindery_services ) {
 				$html .= button( 'CompleteBindery'.$$variable{Project}{id}, { onclick=>qq`form_submit('$$variable{formname}','BinderyComplete');`, text=>'Complete Bindery' } );
 			} # end if
-			if ( sets::isin( $$variable{Project}->shippingtype(), [ 'Delivery', 'Shipping' ] ) and $$variable{'Project'}->status() ne 'Shipped' ) {
+			if ( sets::isin( $$variable{Project}->shippingtype(), [ 'Delivery', 'Shipping' ] ) and $$variable{Project}->status() ne 'Shipped' ) {
 
 				$html .= button( 'Shipped'.$$variable{Project}{id}, { onclick=>qq`form_submit('$$variable{formname}','Shipped');`, text=>'Shipped' } );
 			} # end if
-			if ( $$variable{Project}->shippingtype() eq 'CustomerPickUp' and $$variable{'Project'}->status() ne 'Picked Up' ) {
+			if ( $$variable{Project}->shippingtype() eq 'CustomerPickUp' and $$variable{Project}->status() ne 'Picked Up' ) {
 				$html .= button( 'PickedUp'.$$variable{Project}{id}, { onclick=>qq`form_submit('$$variable{formname}','Picked Up');`, text=>'Picked Up' } );
 			} # end if
-			if ( $session{'user_type'} eq 'A' or openprint::usergroup::is_user_in( ['Sales Admin','Scheduling','PrepressManager'], $session{'user_id'} ) ) {
+			if ( $session{user_type} eq 'A' or $openprint::User->id() == $$variable{Order}->salesrep_id() or openprint::usergroup::is_user_in( ['Sales Admin','Scheduling','PrepressManager'], $session{user_id} ) ) {
 				$html .= button( 'Delete'.$$variable{Project}{id}, { onclick=>qq`form_submit( '$$variable{formname}', 'DeleteServices');`, text=>'Delete Checked Services' } );
 			} # end if
 
@@ -492,4 +500,4 @@ $html .= '</tr>';
 <fieldset><legend onclick="toggleContent( 'ModificationHistory<?echo($$variable{Project}{id})?>', '/employee/project/_modification_history.html?project_id=<? echo ( $$variable{Project}->id() ) ?>', null, null );">Modification History (click to hide/show)</legend>
 <div id="ModificationHistory<?echo($$variable{Project}{id})?>" style="display: none;"></div>
 </fieldset>
-<? endif ( $$variable{'Project'}->id() ) ?>
+<? endif ( $$variable{Project}->id() ) ?>

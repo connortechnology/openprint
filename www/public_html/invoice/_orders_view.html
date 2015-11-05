@@ -28,7 +28,7 @@
 	<td class="Price">%7$s</td>
 </tr>
 `, 
-						@$Order{'id','docket','po','status'}, format_date( $Order->created_on() ), 
+						@$Order{'id','docket','po'}, $Order->status(), format_date( $Order->created_on() ), 
 						openprint::Currency::format( $Order->total() ), 
 						openprint::Currency::format( $Order->owing() ),
 						$rowclass,

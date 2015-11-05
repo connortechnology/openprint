@@ -71,7 +71,7 @@ sub _hosts {
 			'updated_on_end_year', 'updated_on_end_month', 'updated_on_end_day', 
 			'has_hostname', 'monitored','whitelisted','blacklisted','online',
 			'ip','hostname','mac','type_id',
-			'radius_auth', 'order',
+			'radius_auth', 'order', 'deleted',
 			);
 	if ( $config{'RADIUS_Support'} eq 'Y' ) {
 		$openprint::RADIUS_Reply::dbh = $openprint::RADIUS_Check::dbh = sql::open_sql( $log,
