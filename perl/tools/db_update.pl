@@ -44,6 +44,11 @@ if ( ! sets::isin( 'database_info', \@tables ) ) {
 	$dbh->do( misc::load_file( $log, q{../openprint/sql/database_info.sql}) );
 	die $dbh->errstr() if $dbh->errstr();
 }
+my $data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM database_info LIMIT 1', {} );
+if ( ! $data ) {
+	sql::insert( undef, undef, 'database_info', 'version', 1, 'updated_on', 'NOW()','backup',0 );
+}
+
 my ( $version, $updated_on, $backup ) = sql::execute( undef, undef, q{SELECT version,updated_on, backup FROM database_info ORDER BY updated_on DESC LIMIT 1} );
 print "Current Database Version: $version Backups: $backup, Last Updated: $updated_on\n";
 
@@ -572,6 +577,10 @@ if ( ! sets::isin( 'payments', \@tables ) ) {
 	if ( $data and ! exists $$data{'type_id'} ) {
 		$dbh->do('ALTER TABLE payments add type_id INTEGER');
 		$dbh->do('ALTER TABLE payments add FOREIGN KEY (type_id) REFERENCES PaymentTypes (id)');
+	} # end if
+	if ( $data and ! exists $$data{'order_id'} ) {
+		$dbh->do('ALTER TABLE payments add order_id INTEGER');
+		$dbh->do('ALTER TABLE payments add FOREIGN KEY (order_id) REFERENCES Orders (id)');
 	} # end if
 } # end if
 if ( ! sets::isin( 'orders', \@tables ) ) {
@@ -1118,10 +1127,10 @@ if ( ! sets::isin( 'addresses', \@tables ) ) {
 	$dbh->do( misc::load_file( $log, q{../openprint/sql/Addresses.sql}) );
 	die $dbh->errstr() if $dbh->errstr();
 }
-if ( ! sets::isin( 'tbl_Addresses', \@tables ) ) {
-	print "Adding tbl_Addresses\n";
+if ( ! sets::isin( 'tbl_addresses', \@tables ) ) {
+	print "Adding tbl_Addresses @tables\n";
 	$dbh->do( misc::load_file( $log, q{../openprint/sql/tbl_Addresses.sql}) );
-	$dbh->errstr() if $dbh->errstr();
+	die $dbh->errstr() if $dbh->errstr();
 }
 if ( ! sets::isin( 'equipment_categories', \@tables ) ) {
 	$dbh->do( misc::load_file( $log, '../openprint/sql/Equipment_Categories.sql' ) ) or die $dbh->errstr();
@@ -1201,6 +1210,9 @@ if ( ! sets::isin( 'stockcolours', \@tables ) ) {
 }
 if ( ! sets::isin( 'stockweights', \@tables ) ) {
 	$dbh->do(misc::load_file( $log, '../openprint/sql/StockWeights.sql') );
+}
+if ( ! sets::isin( 'stockqualities', \@tables ) ) {
+	$dbh->do(misc::load_file( $log, '../openprint/sql/StockQualities.sql') );
 }
 
 if ( ! sets::isin( 'papers', \@tables ) ) {
@@ -1847,6 +1859,7 @@ if ( ! sets::isin( 'manifests', \@tables ) ) {
 } # end if
 if ( ! sets::isin( 'manifestcontents', \@tables ) ) {
 	$dbh->do( misc::load_file( $log, q{../openprint/sql/ManifestContents.sql}) );
+	die $dbh->errstr() if $dbh->errstr();
 } else {
 	my $data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='manifestcontents'", 'column_name');
 	if ( ! exists $$data{location_id} ) {
@@ -2621,6 +2634,7 @@ if ( ! sets::isin( 'order_contents', \@tables ) ) {
 
 if ( ! sets::isin( 'skid_contents', \@tables ) ) {
 	$dbh->do(misc::load_file( $log, '../openprint/sql/Skid_Contents.sql' ) );
+	die $dbh->errstr() if $dbh->errstr();
 } else {
 	my $data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='skid_contents'", 'column_name');
 	if ( ! exists $$data{'id'} ) {
