@@ -22,6 +22,22 @@
 		<li class="to_location"><label>Saved Addresses</label>
 		<? echo ( 
 			my @Locations = openprint::Location->find( type=>'place', company_id=> $$variable{to_company_id} );
+			my $Company = new openprint::Company( $$variable{to_company_id} );
+
+			if ( ( ! @Locations ) and $Company->postalcode() ) {
+				my $Location = openprint::Location->find( type=>'place', postalcode=>$Company->postalcode() );
+				if ( ! $Location ) {
+					$Location = Location::save( {
+						company_id	=> $$variable{to_company_id},
+						postalcode	=> $Company->postalcode(),
+						address		=> join(' ', $Company->address1(), $Company->address2(), ),
+						state		=>	$Company->state(),
+						country		=>	$Company->country(),
+						location	=>	$Company->name(),
+					} );
+
+				} # end if
+			}
 
 			ssi::select(
 				[ map { $_->id(), $_->name() . ' @ ' . join(', ', $_->address(), map { $_->name() } $_->Parents() ) } @Locations ],
