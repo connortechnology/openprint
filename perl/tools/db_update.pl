@@ -224,6 +224,12 @@ if ( ! sets::isin( 'companies', \@tables ) ) {
 		$dbh->do('UPDATE companies SET last_quote_id = (SELECT MAX(id) FROM Quotes WHERE companyindex=companies.id)');
 		die $dbh->errstr() if $dbh->errstr();
 	} # end if
+	if ( ! exists $$data{$openprint::Company::fields{last_invoice_id}} ) {
+		$dbh->do('ALTER TABLE companies ADD last_invoice_id INTEGER');
+		$dbh->do('ALTER TABLE companies ADD FOREIGN KEY (last_invoice_id) REFERENCES Invoices (id)');
+		$dbh->do('UPDATE companies SET last_invoice_id = (SELECT MAX(id) FROM Invoices WHERE company_id=companies.id)');
+		die $dbh->errstr() if $dbh->errstr();
+	} # end if
 
 } # end if
 
