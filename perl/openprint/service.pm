@@ -488,7 +488,7 @@ $openprint::log->error("Doing internal calc without service_index or, not found"
 		my $status = $function->( $log, $dbh, $variable, $project_index, $service_index, \%specs, $qty_index );
 		$specs{Status} = $status;
 		my $elapsed = time - $starttime;
-		$log->debug( sprintf( '%s calc: (%s) Elapsed seconds: %d (%s)', $service_type, $status, $elapsed, $specs{'alert'} ) );
+		$log->debug( sprintf( '%s calc: (%s) Elapsed seconds: %d (%s) prices(%s)', $service_type, $status, $elapsed, $specs{'alert'}, join(',',map { $specs{"txtPrice$_"} } $Project->quantity_indexes() ) ) );
 
 		$Service->save({status=>$status}) if $status ne $Service->status();
 
