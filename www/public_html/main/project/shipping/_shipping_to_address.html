@@ -27,7 +27,7 @@
 			if ( ( ! @Locations ) and $Company->postalcode() ) {
 				my $Location = openprint::Location->find( type=>'place', postalcode=>$Company->postalcode() );
 				if ( ! $Location ) {
-					$Location = Location::save( {
+					$Location = openprint::Location::save_location( {
 						company_id	=> $$variable{to_company_id},
 						postalcode	=> $Company->postalcode(),
 						address		=> join(' ', $Company->address1(), $Company->address2(), ),
@@ -35,6 +35,7 @@
 						country		=>	$Company->country(),
 						location	=>	$Company->name(),
 					} );
+					push @Locations, $Location if $Location;
 
 				} # end if
 			}
