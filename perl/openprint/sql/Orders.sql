@@ -2,8 +2,8 @@ DROP TABLE IF EXISTS Orders;
 
 CREATE TABLE Orders (
 	id		SERIAL,
-	CompanyIndex	INTEGER NOT NULL, FOREIGN KEY (CompanyIndex) REFERENCES companies (id),
-	UserIndex		INTEGER NOT NULL, FOREIGN KEY (UserIndex) REFERENCES Users (id),
+	company_id	INTEGER NOT NULL, FOREIGN KEY (company_id) REFERENCES companies (id),
+	user_id		INTEGER NOT NULL, FOREIGN KEY (user_id) REFERENCES Users (id),
 	EmployeeIndex	INTEGER NOT NULL, FOREIGN KEY (EmployeeIndex) REFERENCES Users (id),
 	curFedTax		NUMERIC(10,2),
 	curHarmTax		NUMERIC(10,2),
@@ -58,7 +58,7 @@ CREATE TABLE Orders (
 	strComments				TEXT,
 	strAdministratorComments	TEXT,
 	strAdministratorName		TEXT,
-	lngDocketNumber			INTEGER,
+	docket			INTEGER,
 	strsessionid			TEXT,
 	invoice_id				INTEGER, FOREIGN KEY (invoice_id) REFERENCES invoices(id),
 	PRIMARY KEY (id)

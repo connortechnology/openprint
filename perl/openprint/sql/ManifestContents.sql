@@ -9,6 +9,7 @@ CREATE TABLE ManifestContents (
 	location_id	INTEGER, FOREIGN KEY (location_id) REFERENCES Locations (id),
     type_id		INTEGER NOT NULL, FOREIGN KEY (type_id) REFERENCES Manifest_Content_Types (id),
     rfidtag_id	TEXT,
+	po_id		INTEGER, FOREIGN KEY (po_id) REFERENCES PurchaseOrders (id),
     manufacturers_id	TEXT,
 	PRIMARY KEY (id)
 );
