@@ -228,6 +228,7 @@ $log->debug("PageContent is $variable{PageContent}");
 			#$log->debug("Looking for $file");
 			if ( -e $file ) {
 				$template = misc::load_file( $log, $file );
+$log->debug("Foudn template at $file") if Debug;
 			} else {
 			while ( @page_path ) {
 				$file = join( '/', $config{SkinPath}, 'layouts', @page_path, 'default.html' );
@@ -590,7 +591,7 @@ $log->debug("Service: " . $Service->to_string() );
 				};
 			} # end if
 		} else {
-			$log->debug("No firstSo or non-existant $uri");
+			$log->debug("No firstSo or non-existant $uri first: $first ");
 		} # end if
 	} # end if $first
 
