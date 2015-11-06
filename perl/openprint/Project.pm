@@ -1616,6 +1616,7 @@ sub calliper {
 			my $pages = 1;
 			if ( $$sig_specs{rdbTemplateType} eq '2PanelFold' ) {
 				$pages = 2;
+			} elsif ( sets::isin( $$sig_specs{rdbTemplateType}, [  'NoFold', 'Portrait', '' ] ) ) {
 			} elsif ( sets::isin( $$sig_specs{rdbTemplateType},['3PanelFold','3PanelZFold'] ) ) {
 				$pages = 3;
 			} elsif ( sets::isin( $$sig_specs{rdbTemplateType}, ['4PanelFold', '4PanelZFold'] ) ) {
