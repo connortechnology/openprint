@@ -232,7 +232,7 @@ if ( ! sets::isin( 'companies', \@tables ) ) {
 	if ( ! exists $$data{$openprint::Company::fields{last_invoice_id}} ) {
 		$dbh->do('ALTER TABLE companies ADD last_invoice_id INTEGER');
 		$dbh->do('ALTER TABLE companies ADD FOREIGN KEY (last_invoice_id) REFERENCES Invoices (id)');
-		$dbh->do('UPDATE companies SET last_invoice_id = (SELECT MAX(id) FROM Invoices WHERE company_id=companies.id)');
+		$dbh->do('UPDATE companies SET last_invoice_id = (SELECT MAX(id) FROM Invoices WHERE invoicee_id=companies.id)');
 		die $dbh->errstr() if $dbh->errstr();
 	} # end if
 
