@@ -1,10 +1,10 @@
 	<form name="f1" id="f1" action="/messaging/list.html" method="post" enctype="multipart/form-data">
-		<fieldset><legend>Editing Conversation <? echo ( $$variable{'Conversation'}->id() ? '('.$$variable{'Conversation'}->id().')' : '' ) ?></legend>
-			<? if ( $$variable{'Conversation'}->deleted() ) ?>
+		<fieldset><legend>Editing Conversation <? echo ( $$variable{Conversation}->id() ? '('.$$variable{Conversation}->id().')' : '' ) ?></legend>
+			<? if ( $$variable{Conversation}->deleted() ) ?>
 			<span class="warning">This conversation has been deleted</span>
-			<? endif ( $$variable{'Conversation'}->deleted() ) ?>
+			<? endif ( $$variable{Conversation}->deleted() ) ?>
 			
-			<input type="hidden" name="conversation_id" value="<? echo ( $param{'conversation_id'} ) ?>" />
+			<input type="hidden" name="conversation_id" value="<? echo ( $param{conversation_id} ) ?>" />
 
 			<fieldset><legend></legend>
 				<div class="content">
@@ -17,7 +17,7 @@
 						</li>
 						<li>
 							<label for="body">Body</label>
-							<textarea id="body" name="body" rows="<? echo ( ssi::count_lines( $$variable{'Conversation'}->body() ); ) ?>" onkeyup="textarea_resize(this);"><? hecho ( $$variable{'Conversation'}->body() ) ?></textarea>
+							<textarea id="body" name="body" rows="<? echo ( ssi::count_lines( $$variable{Conversation}->body() ); ) ?>" onkeyup="textarea_resize(this);"><? hecho ( $$variable{Conversation}->body() ) ?></textarea>
 						</li>
 					</ul>
 				</div>
@@ -27,7 +27,7 @@
 					my $html = '';
 					$html = button( 'Cancel', { href=>'inbox.html' } );
 					
-					if ( $$variable{'Conversation'}->id() ) {
+					if ( $$variable{Conversation}->id() ) {
 						$html .= button( 'Delete', { onclick=>"if(confirm('Are you sure?')){f1.elements['action'].value='Delete';f1.submit();}" } );
 					} # end if
 					$html .= button( 'Save', { onclick=>"f1.elements['action'].value='Save';f1.submit();", text=>'Save (Draft)' } );
