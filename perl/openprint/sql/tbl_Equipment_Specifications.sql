@@ -11,6 +11,7 @@ CREATE TABLE tbl_Equipment_Specifications (
 	strUnits			TEXT,
 	strName				TEXT,
 	strValue			TEXT,
+	interpolate			BOOLEAN NOT NULL DEFAULT false,
 	PRIMARY KEY (lngIndex)
 );
 

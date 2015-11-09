@@ -141,15 +141,24 @@ if ( ! sets::isin( 'host_notifications', \@tables ) ) {
 	die $dbh->errstr() if $dbh->errstr();
 }
 
-my $data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='paper_prices'", 'column_name');
-if ( ! exists $$data{'equipment_id'} ) {
-	$dbh->do('ALTER TABLE paper_prices add equipment_id INTEGER');
-	$dbh->do('ALTER TABLE paper_prices add FOREIGN KEY(equipment_id) REFERENCES tbl_Equipment (id)');
-} # end if
-if ( ! exists $$data{'service'} ) {
-	$dbh->do('ALTER TABLE paper_prices ADD service TEXT');
-	$dbh->do("UPDATE paper_prices set service='Material'" );
-} # end if
+if ( ! sets::isin( 'paper_prices', \@tables ) ) {
+	$dbh->do( misc::load_file( $log, '../openprint/sql/Paper_Prices.sql' ) );
+	die $dbh->errstr() if $dbh->errstr();
+} else {
+	my $data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='paper_prices'", 'column_name');
+	if ( ! exists $$data{'equipment_id'} ) {
+		$dbh->do('ALTER TABLE paper_prices add equipment_id INTEGER');
+		$dbh->do('ALTER TABLE paper_prices add FOREIGN KEY(equipment_id) REFERENCES tbl_Equipment (id)');
+	} # end if
+	if ( ! exists $$data{interpolate} ) {
+		$log->debug("Add interpolate to paper_prices");
+		$dbh->do('ALTER TABLE paper_prices add interpolate BOOLEAN NOT NULL DEFAULT FALSE');
+	} # end if
+	if ( ! exists $$data{'service'} ) {
+		$dbh->do('ALTER TABLE paper_prices ADD service TEXT');
+		$dbh->do("UPDATE paper_prices set service='Material'" );
+	} # end if
+}
 
 if ( ! sets::isin( 'user_profile_fields', \@tables ) ) {
 	$dbh->do( misc::load_file( $log, '../openprint/sql/User_Profile_Fields.sql' ) );
@@ -963,6 +972,22 @@ if ( ! sets::isin('tbl_material_prices',\@tables) ) {
 	$dbh->do( misc::load_file( $log, q{../openprint/sql/Material_Prices.sql}) );
 } else {
 $dbh->do( 'update tbl_material_prices set strunits=lower(strunits)');
+my $data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='tbl_material_prices'", 'column_name');
+	if ( ! exists $$data{id} ) {
+			$log->debug("Adding id to tbl_material_prices");
+			$dbh->do('ALTER TABLE tbl_material_prices ADD id SERIAL');
+			$dbh->do('ALTER TABLE tbl_material_prices ADD PRIMARY KEY (id)');
+	}
+	if ( ! sets::isin( 'materialprices_id_seq', \@sequences ) ) {
+			$log->debug("renaming sequence for tbl_material_prices");
+		$dbh->do('CREATE SEQUENCE materialprices_id_seq');
+		$dbh->do("ALTER TABLE tbl_material_prices ALTER id set default nextval('materialprices_id_seq')");
+		$dbh->do('DROP SEQUENCE tbl_material_prices_id_seq');
+	}
+	if ( ! exists $$data{interpolate} ) {
+			$log->debug("adding interpolate to tbl_material_prices");
+		$dbh->do('ALTER TABLE tbl_material_prices ADD interpolate         BOOLEAN NOT NULL default false');
+	}
 }
 $dbh->do( 'update service_prices set units=lower(units)');
 $dbh->do( 'update paper_prices set strunits=lower(strunits)');
