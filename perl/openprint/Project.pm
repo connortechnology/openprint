@@ -91,6 +91,7 @@ $serial = 'lngProjectIndex_seq';
 	due_date	=>	undef,
 	markup		=>	undef,
 	priority	=>	undef,
+	reprint		=>	0,
 );
 
 %find_fields = (
