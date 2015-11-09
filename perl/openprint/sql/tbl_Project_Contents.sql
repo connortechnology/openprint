@@ -9,6 +9,7 @@ FOREIGN KEY (lngProjectIndex) REFERENCES Projects (Id),
 	strStatus		TEXT,
 	dtmLastModified	timestamp with time zone,
 	servicetype_id	INTEGER NOT NULL,
+	operator_id		INTEGER, FOREIGN KEY (operator_id) REFERENCES Users (id),
 	PRIMARY KEY (lngServiceIndex)
 );
 

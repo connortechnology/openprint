@@ -35,6 +35,11 @@ CREATE	TABLE	Projects	(
 	style_id				INTEGER, FOREIGN KEY (style_id) REFERENCES QuoteLevels (id),
 	summary					TEXT,
 	markup					float,
+	reprint					char(1) default 'N',
+	reprint_reason			TEXT,
+	predefined				BOOLEAN NOT NULL DEFAULT FALSE,
+	priority				INTEGER,
+	production_comments		TEXT,
 	PRIMARY	KEY	(id)
 );
 
