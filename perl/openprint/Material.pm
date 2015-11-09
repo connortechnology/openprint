@@ -19,7 +19,7 @@ use vars qw{ $debug $log $dbh %session $table $serial %fields %find_fields %tran
 $debug = 0;
 $cached = 0;
 $table = 'materials';
-$serial = 'material_id_seq';
+$serial = 'materials_id_seq';
 
 %fields = (
 		id				=>	'id',
