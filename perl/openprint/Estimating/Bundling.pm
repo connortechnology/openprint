@@ -209,18 +209,21 @@ $openprint::log->debug("Per package due to versions: $qty / $$sig_specs{Versions
 		} # end if
 		if ( @Materials ) {
 			if ( $Material ) {
-				my %MaterialPrice = $Material->get_price( $package_qty );
+				my %MaterialPrice = $Material->get_price( $$specs{bands_per_package} );
 
 				my $material_qty = $package_qty;
 				$material_qty *= $$specs{bands_per_package};
 # if $$specs{bands_per_package};
 				if ( $MaterialPrice{units} eq 'per m' ) {
+					%MaterialPrice = $Material->get_price( $package_qty );
 					$MaterialPrice{Total} = $MaterialPrice{Price} * $material_qty / 1000;
 				} elsif ( $MaterialPrice{units} eq 'each' ) {
 					$MaterialPrice{Total} = $MaterialPrice{Price} * $material_qty;
 				} elsif ( $MaterialPrice{units} eq 'per inch' ) {
+					%MaterialPrice = $Material->get_price( $package_qty );
 					$MaterialPrice{Total} = $MaterialPrice{Price} * $$printing_specs{txtFinalWidth} * $$printing_specs{txtFinalHeight} * $material_qty;
 				} elsif ( $MaterialPrice{units} eq 'per foot' ) {
+					%MaterialPrice = $Material->get_price( $package_qty );
 					$MaterialPrice{Total} = $MaterialPrice{Price} * $$printing_specs{txtFinalWidth} * $$printing_specs{txtFinalHeight} * $material_qty / 144;
 				} else {
 					$openprint::log->error("Uknown units on $$Material{name} $$Material{description}");
@@ -229,7 +232,7 @@ $openprint::log->debug("Per package due to versions: $qty / $$sig_specs{Versions
 				$unitPrice += $MaterialPrice{Total};
 				$$specs{'hdnBreakdown'.$qty_index} .= sprintf('Material Price: $%1$.2f%2$s * %4$d packages * %5$d per package = $%3$.2f<br/>',@MaterialPrice{'Price','units','Total'}, $package_qty, $$specs{bands_per_package} );
 			} # end if
-			if ( $CrossMaterial ) {
+			if ( $$specs{cross_bands_per_package} and $CrossMaterial ) {
 				my %MaterialPrice = $CrossMaterial->get_price( $package_qty );
 
 				my $material_qty = $package_qty;
