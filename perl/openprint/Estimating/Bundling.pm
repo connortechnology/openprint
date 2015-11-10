@@ -225,6 +225,8 @@ $openprint::log->debug("Per package due to versions: $qty / $$sig_specs{Versions
 				} elsif ( $MaterialPrice{units} eq 'per foot' ) {
 					%MaterialPrice = $Material->get_price( $package_qty );
 					$MaterialPrice{Total} = $MaterialPrice{Price} * $$printing_specs{txtFinalWidth} * $$printing_specs{txtFinalHeight} * $material_qty / 144;
+				} elsif ( $MaterialPrice{units} eq 'per bundle' ) {
+					$MaterialPrice{Total} = $MaterialPrice{Price} * $package_qty;
 				} else {
 					$openprint::log->error("Uknown units on $$Material{name} $$Material{description}");
 				} # end if
@@ -246,6 +248,8 @@ $openprint::log->debug("Per package due to versions: $qty / $$sig_specs{Versions
 					$MaterialPrice{Total} = $MaterialPrice{Price} * $$printing_specs{txtFinalWidth} * $$printing_specs{txtFinalHeight} * $material_qty;
 				} elsif ( $MaterialPrice{units} eq 'per foot' ) {
 					$MaterialPrice{Total} = $MaterialPrice{Price} * $$printing_specs{txtFinalWidth} * $$printing_specs{txtFinalHeight} * $material_qty / 144;
+				} elsif ( $MaterialPrice{units} eq 'per bundle' ) {
+					$MaterialPrice{Total} = $MaterialPrice{Price} * $package_qty;
 				} else {
 					$openprint::log->error("Uknown units on $$CrossMaterial{name} $$CrossMaterial{description}");
 				} # end if
