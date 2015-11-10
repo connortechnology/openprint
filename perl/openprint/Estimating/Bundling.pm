@@ -140,6 +140,10 @@ sub calc {
 		$CrossMaterial = $Material;
 	}
 	
+	if ( ! ( $$specs{cross_bands_per_package} or $$specs{bands_per_package} ) ) {
+		$$specs{alert} .= 'Please enter the # bands.<br/>';
+		return $status = 'uncalculated';
+	} # end if
 
 	foreach my $qty_index ( $Project->quantity_indexes() ) {
 
