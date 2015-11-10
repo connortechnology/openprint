@@ -30,7 +30,7 @@ my @variables = (
 	'OverridePrice1', 'OverridePrice2', 'OverridePrice3',
 	'txtPackageQuantity1', 'txtPackageQuantity2', 'txtPackageQuantity3',
 	'rdbCardboardBacking',
-	'type_id',
+	'type_id', 'cross_type_id',
 );
 sub variables {
     return @variables;
@@ -115,28 +115,31 @@ sub calc {
 			push @Materials, $M;
 		}
 	} # end foreach Material
-	if ( $$specs{bands_per_package} ) {
-		if ( scalar @Materials == 1 ) {
-			$$specs{type_id} = $Materials[0]->id();
-		} elsif ( @Materials ) {
-			if ( ! $$specs{type_id} ) {
-				$$specs{alert} .= 'Please select the type of band.<br/>';
-				$status = 'uncalculated';
-			}
-		} # end if
-	} # end if bands per package
-	if ( $$specs{cross_bands_per_package} ) {
-		if ( scalar @CrossMaterials == 1 ) {
-			$$specs{cross_type_id} = $CrossMaterials[0]->id();
-		} elsif ( @CrossMaterials ) {
-			if ( ! $$specs{cross_type_id} ) {
-				$$specs{alert} .= 'Please select the type of cross bands.<br/>';
-				$status = 'uncalculated';
-			}
-		} # end if
-	} # end if bands per package
+	
+	if ( scalar @Materials == 1 ) {
+		$$specs{type_id} = $Materials[0]->id();
+	} elsif ( @Materials and $$specs{bands_per_package} ) {
+		if ( ! $$specs{type_id} ) {
+			$$specs{alert} .= 'Please select the type of band.<br/>';
+			$status = 'uncalculated';
+		}
+	} # end if
+	if ( scalar @CrossMaterials == 1 ) {
+		$$specs{cross_type_id} = $CrossMaterials[0]->id();
+	} elsif ( @CrossMaterials and $$specs{cross_bands_per_package} ) {
+		if ( ! $$specs{cross_type_id} ) {
+			$$specs{alert} .= 'Please select the type of cross bands.<br/>';
+			$status = 'uncalculated';
+		}
+	} # end if
+
 	my $Material = new openprint::Material( $$specs{type_id} );
-	my $CrossMaterial = openprint::Material->find_one( name=>'Cross'.$Material->name(), category=>$ServiceType->name() ) if $Material->id();
+	my $CrossMaterial = new openprint::Material( $$specs{cross_type_id} );
+	if ( $$specs{cross_bands_per_package} and ! $$specs{bands_per_package} ) {
+		@CrossMaterials = @Materials;
+		$CrossMaterial = $Material;
+	}
+	
 
 	foreach my $qty_index ( $Project->quantity_indexes() ) {
 
@@ -215,6 +218,8 @@ $openprint::log->debug("Per package due to versions: $qty / $$sig_specs{Versions
 					$MaterialPrice{Total} = $MaterialPrice{Price} * $$printing_specs{txtFinalWidth} * $$printing_specs{txtFinalHeight} * $material_qty;
 				} elsif ( $MaterialPrice{units} eq 'per foot' ) {
 					$MaterialPrice{Total} = $MaterialPrice{Price} * $$printing_specs{txtFinalWidth} * $$printing_specs{txtFinalHeight} * $material_qty / 144;
+				} else {
+					$openprint::log->error("Uknown units on $$Material{name} $$Material{description}");
 				} # end if
 				$price += $MaterialPrice{Total};
 				$unitPrice += $MaterialPrice{Total};
@@ -234,6 +239,8 @@ $openprint::log->debug("Per package due to versions: $qty / $$sig_specs{Versions
 					$MaterialPrice{Total} = $MaterialPrice{Price} * $$printing_specs{txtFinalWidth} * $$printing_specs{txtFinalHeight} * $material_qty;
 				} elsif ( $MaterialPrice{units} eq 'per foot' ) {
 					$MaterialPrice{Total} = $MaterialPrice{Price} * $$printing_specs{txtFinalWidth} * $$printing_specs{txtFinalHeight} * $material_qty / 144;
+				} else {
+					$openprint::log->error("Uknown units on $$CrossMaterial{name} $$CrossMaterial{description}");
 				} # end if
 				$price += $MaterialPrice{Total};
 				$unitPrice += $MaterialPrice{Total};
