@@ -1628,7 +1628,7 @@ sub calliper {
 				$pages = 6;
 			} elsif ( $$sig_specs{rdbTemplateType} eq 'SingleGateFold' ) {
 				$pages = 3;
-			} elsif ( $$sig_specs{rdbTemplateType} eq 'DoubleGateFold' ) {
+			} elsif ( sets::isin( $$sig_specs{rdbTemplateType}, [ 'DoubleGateFold', '2Panel2Pocket' ] ) ) {
 				$pages = 4;
 			} elsif ( $$sig_specs{rdbTemplateType} eq 'DifficultFold' ) {
 				$pages = 6;
