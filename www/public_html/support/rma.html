@@ -1,5 +1,5 @@
 <div class="Support"><div class="Return">
-<? echo ( include('/includes/error_reporting.html'); ) ?>
+<?include('/includes/error_reporting.html')?>
 <form method="post" id="f1" name="f1" action="rma.html">
 <fieldset>
 	Please fill out the return authorization form and verify the information below.<br/>
@@ -26,9 +26,7 @@
 		<li><label>Company</label>
 			<select name="company_id" id="company_id" onchange="$('company').value='';">
 				<option value="">None or new</option>
-				<? echo (
-					openprint::Company::get_dropdown( $session{'/support/returns.html?company_id'} ? $session{'/support/returns.html?company_id'} : $param{company_id} );
-				) ?>
+<? echo ( make_drop_down( openprint::Company->dropdown('last_order_id is null'=>0), $session{'/support/rma.html?company_id'} ? $session{'/support/rma.html?company_id'} : $session{company_id}) ) ?>
 			</select>
 			or 
 			<input type="text" name="company" id="company" value="<? echo ( $param{company} ) ?>" onkeyup="ddm_select_by_text($('company_id'), this.value, 0);" placeholder="Enter new company here"/>
@@ -72,8 +70,8 @@
 	</ul>
 	<p class="buttons">
 	<? echo ( join("\n",
-				ssi::button( 'Submit', { onclick=>"f1.elements['action'].value='Submit';f1.submit();" } ),
-				ssi::button( 'Reset', { onclick=>'f1.reset();' } ), 
+				button( 'Submit', { onclick=>"f1.elements['action'].value='Submit';f1.submit();" } ),
+				button( 'Reset', { onclick=>'f1.reset();' } ), 
 	); ) ?>
 	</p>
 </fieldset>
