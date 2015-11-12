@@ -836,6 +836,11 @@ if ( sets::isin( 'projecttype_categories', \@tables ) ) {
 } else {
 	$dbh->do( misc::load_file( $log, q{../openprint/sql/ProjectType_Categories.sql}) );
 } # end if
+if ( ! sets::isin( 'project_statuses', \@tables ) ) {
+	$log->debug("Adding Project_Statuses");
+	$dbh->do( misc::load_file( $log, q{../openprint/sql/Project_Statuses.sql}) );
+	die $dbh->errstr() if $dbh->errstr();
+} # end if
 
 if ( sets::isin( 'tbl_projects', \@tables ) ) {
 	my $data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='tbl_projects'", 'column_name');

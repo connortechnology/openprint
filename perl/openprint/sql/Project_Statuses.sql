@@ -1,5 +1,4 @@
 
-DROP TABLE Project_Statuses;
 CREATE TABLE Project_Statuses (
 	id	SERIAL NOT NULL,
 	name	TEXT NOT NULL,
