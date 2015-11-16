@@ -46,6 +46,7 @@ sub edit {
 		foreach my $paper_id ( @recommendations ) {
 			sql::insert( undef, undef, 'Paper_recommendations','lngPaperIndex',$paper_id,'lngProjectTypeIndex', $ProjectType->id() );
 		} # end foreach
+		$variable{ExternalRedirect} = '/administrator/project_types/edit.html?ddmProjectType='.$ProjectType->id();
 	} elsif ( $param{'btnFunction'} eq 'Save' ) {
 		$variable{'error'} .= $ProjectType->save( \%param );
 
@@ -55,6 +56,7 @@ sub edit {
 				sql::insert( undef, undef, 'Paper_recommendations','lngPaperIndex',$param{$key},'lngProjectTypeIndex', $ProjectType->id() );
 			} # end if
 		} # end foreach
+		$variable{ExternalRedirect} = '/administrator/project_types/edit.html?ddmProjectType='.$ProjectType->id();
 	} elsif ( $param{'btnFunction'} eq 'Import' ) {
 		my $error = '';
 		if ( $param{'fileImport'} ) {
