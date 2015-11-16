@@ -2267,6 +2267,7 @@ $openprint::log->debug("AC " . $openprint::dbh->{AutoCommit} );
 		} # end if
 	} # end if
 
+	set_size( $Project, $specs, $printing_specs );
 	if ( $$specs{txtFinalWidth} and ! ( $$specs{txtFinalWidth} =~ /^(?=.+)(?:[1-9]\d*|0)?(?:\.\d+)?$/ ) ) {
 		$$specs{alert} .= 'The finished width is invalid. Please correct it.<br/>';
 		return $$specs{Status} = 'uncalculated';
@@ -2275,7 +2276,6 @@ $openprint::log->debug("AC " . $openprint::dbh->{AutoCommit} );
 		$$specs{alert} .= 'The finished height is invalid. Please correct it.<br/>';
 		return $$specs{Status} = 'uncalculated';
 	} # end if
-	set_size( $Project, $specs, $printing_specs );
 
 	if ( ! ( $$specs{txtWidth} and $$specs{txtHeight} ) ) {
 		$$specs{alert} .= 'Please enter width and height<br/>';
