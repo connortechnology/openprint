@@ -558,8 +558,8 @@ $openprint::log->debug("Adding special colour for $colour");
 					$$Ink{mix_service_id} = $PMSInkMixService->id() if $PMSInkMixService;
 					$$Ink{mix} = 1;
 					$$Ink{washups} = 1;
-					my $Material = openprint::Material->find_one(name=>$colour.'Ink');
-					$Material = openprint::Material->find_one(name=>'PMSInk') if ! $Material and $$real_colour{type} eq 'PMS';
+					my $Material = $Materials{$colour.'Ink'};
+					$Material = $Materials{'PMSInk'} if ! $Material and $$real_colour{type} eq 'PMS';
 					$$Ink{material_id} = $Material->id() if $Material;
 				} # end if
 			} # end if foudn Ink
@@ -5277,6 +5277,7 @@ $openprint::log->warn("No folding equipment");
 			#$openprint::log->error("Scoring is not being done");
 	} # end if
 	if ( $$project{HasPerforating} ) {
+$openprint::log->error("Doing perforating");
 		my %perforating_results = openprint::Estimating::Perforating::signature_calc( $Project, @$project{'HasPerforating','PerforatingSpecs'}, $service_index, $specs, $qty_index, $Imposition );
 		if ( $perforating_results{Status} eq 'uncalculated' ) {
 			$price{'Perforating Breakdown'} .= "Perforating error: $perforating_results{alert} $$project{PerforatingSpecs}{alert} " . $perforating_results{Breakdown} . '<br/>';

@@ -18,8 +18,8 @@ package openprint::Estimating::Perforating;
 use strict;
 #use warnings;
 
-require sql;
 require openprint::service;
+require openprint::Service;
 require openprint::Material;
 require openprint::imposition;
 require openprint::Imposition;
@@ -35,6 +35,7 @@ my @variables = (
 	'MPrice1', 'MPrice2', 'MPrice3',
 	'OverridePrice1', 'OverridePrice2', 'OverridePrice3',
 	'Markup1', 'Markup2', 'Markup3',
+	'hdnBreakdown1', 'hdnBreakdown2', 'hdnBreakdown3',
 );
 sub variables {
 	my $p_id = shift;
@@ -291,7 +292,7 @@ $openprint::log->debug("How many impositions do we get? " . @imps ) if DEBUG;
 			if ( $imposition->imposition() % $imps[$i]->imposition() ) {
 				next;
 			}
-			if ( ( $$specs{"chkOverrideImposition-$form-$qty_index"} ne 'Y' )
+			if ( (!$$specs{"chkOverrideImposition-$form-$qty_index"}) or ( $$specs{"chkOverrideImposition-$form-$qty_index"} ne 'Y' )
 					or ( $$specs{"txtImposition-$form-$qty_index"} == $imps[$i]->imposition() )
 			   ) {
 				push @cut_impositions, $imps[$i];
@@ -320,7 +321,7 @@ $openprint::log->debug("How many impositions do we get? " . @imps ) if DEBUG;
 		} # end if
 	} # end if
 
-	my $Rule = openprint::Material->find_one( name =>'PerforatingRule'.$$specs{"VerticalTeeth-$form"}.' Tooth' );
+	my $Rule = openprint::Material->find_one( name =>'PerforatingRule'.($$specs{"VerticalTeeth-$form"}?$$specs{"VerticalTeeth-$form"}.' Tooth' : '' ) );
 	if ( ! $Rule ) {
 		if ( $$specs{"VerticalTeeth-$form"} and ( $$specs{"VerticalTeeth-$form"} >= 25 ) ) {
 			$Rule = openprint::Material->find_one( name =>'PerforatingRule Micro Perf' );
@@ -329,10 +330,10 @@ $openprint::log->debug("How many impositions do we get? " . @imps ) if DEBUG;
 		} # end if
 	} # end if
 
-	my $Wheel = openprint::Material->find_one( name =>'PerforatingWheel'.$$specs{"HorizontalTeeth-$form"} );
+	my $Wheel = openprint::Material->find_one( name =>'PerforatingWheel'.($$specs{"HorizontalTeeth-$form"}?$$specs{"HorizontalTeeth-$form"}.' Tooth' : '' ) );
 	if ( ! $Wheel ) {
 		if ( $$specs{"HorizontalTeeth-$form"} and ( $$specs{"HorizontalTeeth-$form"} >= 25 ) ) {
-			my $Wheel = openprint::Material->find_one( name =>'PerforatingWheel Micro Perf' );
+			$Wheel = openprint::Material->find_one( name =>'PerforatingWheel Micro Perf' );
 		} else {
 			$Wheel = openprint::Material->find_one( name =>'PerforatingWheel' );
 		} # end if
@@ -340,11 +341,11 @@ $openprint::log->debug("How many impositions do we get? " . @imps ) if DEBUG;
 	$Wheel = $Rule if ! $Wheel;
 
 	foreach my $Equipment ( @equipment ) {
-		$Results{Breakdown} .= sprintf('<br/>Equipment: %s, ', $Equipment->name() );
 		my $Horizontal_Material = $Rule;
 		my $Vertical_Material = $Wheel;
 
 		my $type = $Equipment->specification('Type');
+		$Results{Breakdown} .= sprintf('<br/>Equipment: %s, ', $Equipment->name() . ' type: ' . $type . ' ' );
 		my $max_feed_width = $Equipment->specification('Maximum Feed Width');
 		$Results{Breakdown} .= "Maximum Feed Width: $max_feed_width<br/>" if $max_feed_width;
 		my $orientation = $Equipment->specification('Orientation');
@@ -461,7 +462,7 @@ $openprint::log->debug("How many impositions do we get? " . @imps ) if DEBUG;
 
 			my %servicePrice;
 
-			if ( $scor_equipment eq $Equipment->strid() and $scor_imposition == $I->imposition() ) {
+			if ( $scor_equipment and ( $scor_equipment eq $Equipment->strid() ) and ( $scor_imposition == $I->imposition() ) ) {
 				$Results{Breakdown} .= "\tSame equipment as scoring, no service price needed.<br/>";
 			} else {
 				%servicePrice = openprint::service::get_price_object( 'Perforating', $rule_qty, $Equipment );
@@ -536,7 +537,8 @@ $openprint::log->debug("How many impositions do we get? " . @imps ) if DEBUG;
 				$Results{Breakdown} .= $$specs{"txtHorizontalQty-$$sig_specs{SignatureIndex}"} . ' x ' . $$I{columns} . ' columns = ' . $vertical_rules . ' vertical rules * ' . $height . 'inches = ' . $vertical_length . 'inches of rule.<br/>';
 			} # end if
 
-			if ( $Horizontal_Material and ( $Horizontal_Material == $Vertical_Material ) ) {
+			if ( $Horizontal_Material and ( $Horizontal_Material->id() == $Vertical_Material->id() ) ) {
+				$Results{Breakdown} .= 'Rule: ' . $Horizontal_Material->to_string().'<br/>' if DEBUG;
 				my $length = $vertical_length + $horizontal_length;
 				my $rules = $vertical_rules + $horizontal_rules;
 				my $Package_Qty = $Horizontal_Material->Specification( 'Package Quantity' );
@@ -626,10 +628,11 @@ $openprint::log->debug("How many impositions do we get? " . @imps ) if DEBUG;
 							$Results{Breakdown} .= "Unknown units set on rule price ($horizontal_price{units})<br/>";
 						} # end if
 					} else {
-						$Results{Breakdown} .= "No price for Perforating Rule";
+						#$Results{Breakdown} .= "No price for $$Horizontal_Material{name}";
+						$Results{Breakdown} .= "No price for Horizontal Rule";
 					} # end if
 					$totalPrice += $horizontal_price{Total};
-				} # end if
+				} # end if horizontal_rules
 
 			#$openprint::log->debug("Vertical: $vertical_rule");	
 				if ( $vertical_rules ) {
@@ -691,7 +694,8 @@ $openprint::log->debug("How many impositions do we get? " . @imps ) if DEBUG;
 							$Results{Breakdown} .= "Unknown units set on wheel price ($vertical_price{units})<br/>";
 						} # end if
 					} else {
-						$Results{Breakdown} .= 'No price set for perfing wheel<br/>';
+						$Results{Breakdown} .= "No material for Vertical Wheel<br/>";
+						#$Results{Breakdown} .= "No price set for $$Vertical_Material{name}<br/>";
 					} # end if
 					$totalPrice += $vertical_price{Total};
 				} # end if
