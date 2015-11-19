@@ -2365,6 +2365,14 @@ $openprint::log->debug("No printing");
 		return $$specs{Status} = 'calculated';
 	} # end if
 
+		# For caching
+	%Services = map { $$_{name}, $_ } openprint::Service->find();
+	$openprint::Service::cached = 1;
+	$GripperMakeReadyService = $Services{GripperMakeReady};
+
+	%Materials = map { $$_{name}, $_ } openprint::Material->find();
+	$openprint::Material::cached = 1;
+
 	my $project = setup_project( $Project, $service_index, $services, $specs, \@side_one_colours, \@side_two_colours, \%inkCoverage, $Papers[0] );
 	openprint::Estimating::Folding::load_equipment( $Project );
 	openprint::Estimating::Cutting::load_equipment( $Project );
@@ -2402,13 +2410,6 @@ $openprint::log->debug("after sorting presses: " . ( sprintf('%.4f', tv_interval
 $log->warn("There are no quantities!");
 	} # end if
 
-		# For caching
-	%Services = map { $$_{name}, $_ } openprint::Service->find();
-	$openprint::Service::cached = 1;
-	$GripperMakeReadyService = $Services{GripperMakeReady};
-
-	%Materials = map { $$_{name}, $_ } openprint::Material->find();
-	$openprint::Material::cached = 1;
 
 	foreach my $qty_index ( @quantity_indexes ) {
 		if ( $$specs{'OverridePrice'.$qty_index} ne 'Y' ) {
