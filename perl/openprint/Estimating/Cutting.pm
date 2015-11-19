@@ -211,6 +211,7 @@ sub signature_calc_stock_cutting {
 	my $services = $Project->services();
 
 	my $Cutting = openprint::Service->find_one(name=>'Cutting');
+	my $PileHandling = openprint::Service->find_one(name=>'CuttingPileHandling');
 	my $CuttingMakeReady = openprint::Service->find_one(name=>'CuttingMakeReady');
 	my $BladeCleaning = openprint::Service->find_one(name=>'Blade Cleaning');
 
@@ -287,10 +288,11 @@ sub signature_calc_stock_cutting {
 			my $liftDepth = $Equipment->specification( 'Maximum Lift Depth', $Paper->calliper() );
 			# no lift depth means 1 at a time.
 
-			my $width_cuts = int( $start_width / $width );
-			my $height_cuts = int( $start_height / $height );
+			my $width_cuts = int( $start_width / $width ) - 1;
+			my $height_cuts = int( $start_height / $height ) - 1;
 			my $sheets = $$Stock_Amount{quantity};
-			$sheets = int( $sheets / ($width_cuts * $height_cuts) ) if $width_cuts and $height_cuts;
+			$sheets = int( $sheets / ($width_cuts+1) ) if $width_cuts;
+			$sheets = int( $sheets / ($height_cuts+1) ) if $height_cuts;
 			# This accounts for cutting a sheet out of another, but not in half...
 if ( 0 ) {
 			if ( $width_cuts == 1 and $start_width != $width ) {
@@ -301,23 +303,47 @@ if ( 0 ) {
 			} # end if
 }
 
+			my $piles = $liftDepth ? ceil( $sheets*$calliper/$liftDepth ) : $sheets;
+
 			my $price = 0;
 			if ( $CuttingMakeReady ) {
-				my %setupCost = $CuttingMakeReady->get_price( undef, $Equipment );
-				$results{Breakdown} .= sprintf('MakeReady: %.2f<br/>', $setupCost{Price} );
-				$price += $setupCost{Price};
+				my %setup = $CuttingMakeReady->get_price( undef, $Equipment );
+				if ( $setup{units} eq 'per cut' ) {
+			my $cuts = $width_cuts + $height_cuts;
+					%setup = $CuttingMakeReady->get_price( $cuts, $Equipment );
+					$setup{Total} = $setup{Price} * $cuts;
+					$results{Breakdown} .= sprintf('Make Ready: $%1$.2f%2$s * %4$d cuts = $%3$.2f<br/>', @setup{'Price','units','Total'}, $cuts );
+					$price += $setup{Total};
+				} else {
+				$results{Breakdown} .= sprintf('MakeReady: %.2f<br/>', $setup{Price} );
+				$price += $setup{Price};
+				} # en dif
 			} # end if MakeReady
+
+			if ( $PileHandling ) {
+				my %pilehandlingprice = $PileHandling->get_price( $piles, $Equipment );
+				if ( $pilehandlingprice{units} eq 'per pile' ) {
+					$pilehandlingprice{Total} = $pilehandlingprice{Price} * $piles;
+					$price += $pilehandlingprice{Total};
+					$results{Breakdown} .= sprintf('Pile handling: $%1$.2f%2$s * %4$d piles = $%3$.2f<br/>', @pilehandlingprice{'Price','units','Total'}, $piles );
+				} else {
+					$openprint::log->error("invalid units $pilehandlingprice{units} on $$PileHandling{name}");
+					$results{alert} .= "invalid units $pilehandlingprice{units} on $$PileHandling{name}<br/>";
+				} # end if
+			} elsif ( DEBUG ) {
+				$openprint::log->debug("No PileHandling");
+			} # end PileHandling
 			my $service_price = 0;
 			if ( $Cutting ) {
 				my %ServicePrice = $Cutting->get_price( $sheets, $Equipment );
-				foreach my $cuts ( $width_cuts-1, $height_cuts-1 ) {
+				foreach my $cuts ( $width_cuts, $height_cuts ) {
 					next if ! $cuts;
 		$openprint::log->warn("Negative CUTS!") if $cuts < 1;
-					my $runs = $liftDepth ? ceil( $sheets*$calliper/$liftDepth ) : $sheets;
-					my $cut_price = ( $runs * $cuts * $ServicePrice{Price} );
+					my $cut_price = ( $piles * $cuts * $ServicePrice{Price} );
+					$cuts += 1;
 					$service_price += $cut_price;
-					$results{Breakdown} .= sprintf('Cutting %d sheets into %d sheets in %d runs: %.2f<br/>', $sheets, $sheets*($cuts+1), $runs, $cut_price );
-					$sheets *= $cuts+1;
+					$results{Breakdown} .= sprintf('Cutting %d sheets into %d sheets in %d piles: %.2f<br/>', $sheets, $sheets*$cuts, $piles, $cut_price );
+					$sheets *= $cuts;
 				} # end foreach
 				$price += $service_price;
 			} # end if Cutting
@@ -431,9 +457,9 @@ sub signature_calc_folding_cutting {
 		my $sheets = ceil( $$sig_specs{'txtQuantity'.$qty_index} / $I->imposition() );
 		my %ServicePrice = openprint::service::get_price_object( 'Cutting', $sheets, $Equipment );
 		my $price = 0;
-		my $runs = ceil( $sheets*$Paper->calliper()/$liftDepth );
-		$price += ( $runs * $folding_cuts * $ServicePrice{Price} );
-		$results{Breakdown} .= sprintf('Cutting %d sheets in %d runs: %.2f<br/>', $sheets, $runs, $price );
+		my $piles = ceil( $sheets*$Paper->calliper()/$liftDepth );
+		$price += ( $piles * $folding_cuts * $ServicePrice{Price} );
+		$results{Breakdown} .= sprintf('Cutting %d sheets in %d piles: %.2f<br/>', $sheets, $piles, $price );
 		my $setupCost = openprint::service::get_price( 'CuttingMakeReady', undef, $Equipment );
 		$results{Breakdown} .= sprintf('MakeReady: %.2f<br/>', $setupCost );
 		my $totalPrice = $setupCost + $price;
@@ -559,6 +585,7 @@ sub signature_calc {
 	my $output_format = $Press->specification('OutputFormat');
 	
 	my $Cutting = openprint::Service->find_one(name=>'Cutting');
+	my $PileHandling = openprint::Service->find_one(name=>'CuttingPileHandling');
 	my $CuttingMakeReady = openprint::Service->find_one(name=>'CuttingMakeReady');
 	my $BladeCleaning = openprint::Service->find_one(name=>'Blade Cleaning');
 
@@ -609,7 +636,7 @@ $openprint::log->debug("Folding impositions: " . @folding_impositions ) if DEBUG
 				my $liftDepth = $Equipment->specification( 'Maximum Lift Depth', $calliper );
 				my $sheets = ceil( $$sig_specs{'txtQuantity'.$qty_index} / $$I{imposition} );
 				$sheets *= $$sig_specs{PageQuantity} if $$sig_specs{PageQuantity};
-				my $runs = $liftDepth ? ceil( $sheets*$calliper/$liftDepth ) : $sheets;
+				my $piles = $liftDepth ? ceil( $sheets*$calliper/$liftDepth ) : $sheets;
 				$results{Breakdown} .= '# of pre-folding cuts: ' . $folding_cuts . ' => ' .($folding_cuts * $sheets) . '<br/>';
 				my %ServicePrice = $Cutting->get_price( undef, $Equipment );
 				if ( $ServicePrice{units} eq 'per cut' ) {
@@ -619,11 +646,11 @@ $openprint::log->debug("Folding impositions: " . @folding_impositions ) if DEBUG
 				} # end if
 				my $price;
 				if ( $ServicePrice{units} eq 'per inch' ) {
-					$price = ( $runs * $folding_cuts * $ServicePrice{Price} * $I->image_height() );
-					$results{Breakdown} .= sprintf('%d pre-folding cuts on %d sheets in %d runs * %.2f inches: %.2f%s=%.2f<br/>', $folding_cuts, $sheets, $runs, $I->image_height(), @ServicePrice{'Price','units'}, $price );
+					$price = ( $piles * $folding_cuts * $ServicePrice{Price} * $I->image_height() );
+					$results{Breakdown} .= sprintf('%d pre-folding cuts on %d sheets in %d piles * %.2f inches: %.2f%s=%.2f<br/>', $folding_cuts, $sheets, $piles, $I->image_height(), @ServicePrice{'Price','units'}, $price );
 				} else {
-					$price = ( $runs * $folding_cuts * $ServicePrice{Price} );
-					$results{Breakdown} .= sprintf('%d pre-folding cuts on %d sheets in %d runs: %.2f%s=%.2f<br/>', $folding_cuts, $sheets, $runs, @ServicePrice{'Price','units'}, $price );
+					$price = ( $piles * $folding_cuts * $ServicePrice{Price} );
+					$results{Breakdown} .= sprintf('%d pre-folding cuts on %d sheets in %d piles: %.2f%s=%.2f<br/>', $folding_cuts, $sheets, $piles, @ServicePrice{'Price','units'}, $price );
 				} # end if
 				if ( ( ! defined $results{FoldingPrice} ) or ( $price < $results{FoldingPrice} ) ) {
 					$results{FoldingPrice} = $price;
@@ -902,106 +929,135 @@ $openprint::log->debug("Not a book") if DEBUG;
 			} # end if
 		} # end if
 
-		my $runs = $liftDepth ? ceil( $sheets*$calliper/$liftDepth ) : $sheets;
+		my $piles = $liftDepth ? ceil( $sheets*$calliper/$liftDepth ) : $sheets;
 		$results{Breakdown} .= '# of cuts: ' . $cuts . ' => ' .($cuts * $sheets) . '<br/>';
 
 		if ( %ServicePrice ) {
 			if ( $vertical_cuts > $horizontal_cuts ) {
 				if ( $ServicePrice{units} eq 'per inch' ) {
-					$price = ( $runs * $vertical_cuts *$ServicePrice{Price} * $I->image_height() );
-					$results{Breakdown} .= sprintf('%d Vertical cuts on %d sheets in %d runs * %.2f inches: %.2f%s=%.2f<br/>', $vertical_cuts, $sheets, $runs, $I->image_height(), @ServicePrice{'Price','units'}, $price );
+					$price = ( $piles * $vertical_cuts *$ServicePrice{Price} * $I->image_height() );
+					$results{Breakdown} .= sprintf('%d Vertical cuts on %d sheets in %d piles * %.2f inches: %.2f%s=%.2f<br/>', $vertical_cuts, $sheets, $piles, $I->image_height(), @ServicePrice{'Price','units'}, $price );
 				} else {
-					$price = ( $runs * $vertical_cuts * $ServicePrice{Price} );
-					$results{Breakdown} .= sprintf('%d Vertical cuts on %d sheets in %d runs: %.2f%s=%.2f<br/>', $vertical_cuts, $sheets, $runs, @ServicePrice{'Price','units'}, $price );
+					$price = ( $piles * $vertical_cuts * $ServicePrice{Price} );
+					$results{Breakdown} .= sprintf('%d Vertical cuts on %d sheets in %d piles: %.2f%s=%.2f<br/>', $vertical_cuts, $sheets, $piles, @ServicePrice{'Price','units'}, $price );
 				} # end if
 				$totalPrice += $price;
 				if ( (!$config{'Dumb_Cutting'}) or ( $config{'Dumb_Cutting'} ne 'Y' ) ) {
 					$sheets *= $$I{columns};
-					$runs = $liftDepth ? ceil( $sheets*$calliper/$liftDepth ) : $sheets;
+					$piles = $liftDepth ? ceil( $sheets*$calliper/$liftDepth ) : $sheets;
 				} # end if
 				if ( $ServicePrice{units} eq 'per inch' ) {
-					$price = ( $runs * $horizontal_cuts *$ServicePrice{Price} * $I->image_width() );
-					$results{Breakdown} .= sprintf("%d Horizontal cuts on %d sheets in %d runs * %.2f inches: %.2f%s=%.2f<br/>", $horizontal_cuts, $sheets, $runs, $I->image_width(), @ServicePrice{'Price','units'}, $price );
+					$price = ( $piles * $horizontal_cuts *$ServicePrice{Price} * $I->image_width() );
+					$results{Breakdown} .= sprintf("%d Horizontal cuts on %d sheets in %d piles * %.2f inches: %.2f%s=%.2f<br/>", $horizontal_cuts, $sheets, $piles, $I->image_width(), @ServicePrice{'Price','units'}, $price );
 				} else {
-					$price = ( $runs * $horizontal_cuts * $ServicePrice{Price} );
-					$results{Breakdown} .= sprintf("%d Horizontal cuts on %d sheets in %d runs: %.2f%s=%.2f<br/>", $horizontal_cuts, $sheets, $runs, @ServicePrice{'Price','units'}, $price );
+					$price = ( $piles * $horizontal_cuts * $ServicePrice{Price} );
+					$results{Breakdown} .= sprintf("%d Horizontal cuts on %d sheets in %d piles: %.2f%s=%.2f<br/>", $horizontal_cuts, $sheets, $piles, @ServicePrice{'Price','units'}, $price );
 				} # end if
 				$totalPrice += $price;
 			} else {
 				if ( $ServicePrice{units} eq 'per inch' ) {
-					$price = ( $runs * $horizontal_cuts *$ServicePrice{Price} * $I->image_width() );
-					$results{Breakdown} .= sprintf("%d Horizontal cuts on %d sheets in %d runs * %.2f inches: %.2f%s=%.2f<br/>", $horizontal_cuts, $sheets, $runs, $I->image_width(), @ServicePrice{'Price','units'}, $price );
+					$price = ( $piles * $horizontal_cuts *$ServicePrice{Price} * $I->image_width() );
+					$results{Breakdown} .= sprintf("%d Horizontal cuts on %d sheets in %d piles * %.2f inches: %.2f%s=%.2f<br/>", $horizontal_cuts, $sheets, $piles, $I->image_width(), @ServicePrice{'Price','units'}, $price );
 				} else {
-					$price = ( $runs * $horizontal_cuts * $ServicePrice{Price} );
-					$results{Breakdown} .= sprintf("%d Horizontal cuts on %d sheets in %d runs: %.2f%s=%.2f<br/>", $horizontal_cuts, $sheets, $runs, @ServicePrice{'Price','units'}, $price );
+					$price = ( $piles * $horizontal_cuts * $ServicePrice{Price} );
+					$results{Breakdown} .= sprintf("%d Horizontal cuts on %d sheets in %d piles: %.2f%s=%.2f<br/>", $horizontal_cuts, $sheets, $piles, @ServicePrice{'Price','units'}, $price );
 				}
 				$totalPrice += $price;
 				if ( (!$config{'Dumb_Cutting'}) or ( $config{'Dumb_Cutting'} ne 'Y' ) ) {
 					$sheets *= $$I{rows};
-					$runs = $liftDepth ? ceil( $sheets*$calliper/$liftDepth ) : $sheets;
+					$piles = $liftDepth ? ceil( $sheets*$calliper/$liftDepth ) : $sheets;
 				} # end if
 				if ( $ServicePrice{units} eq 'per inch' ) {
-					$price = ( $runs * $vertical_cuts *$ServicePrice{Price} * $I->image_height() );
-					$results{Breakdown} .= sprintf("%d Vertical cuts on %d sheets in %d runs * %.2f inches: %.2f<br/>", $vertical_cuts, $sheets, $runs, $I->image_height(), $price );
+					$price = ( $piles * $vertical_cuts *$ServicePrice{Price} * $I->image_height() );
+					$results{Breakdown} .= sprintf("%d Vertical cuts on %d sheets in %d piles * %.2f inches: %.2f<br/>", $vertical_cuts, $sheets, $piles, $I->image_height(), $price );
 				} else {
-					$price = ( $runs * $vertical_cuts * $ServicePrice{Price} );
-					$results{Breakdown} .= sprintf("%d Vertical cuts on %d sheets in %d runs: %.2f<br/>", $vertical_cuts, $sheets, $runs, $price );
+					$price = ( $piles * $vertical_cuts * $ServicePrice{Price} );
+					$results{Breakdown} .= sprintf('%d Vertical cuts on %d sheets in %d piles: $%.2f%s=$%.2f<br/>', $vertical_cuts, $sheets, $piles, @ServicePrice{'Price','units'}, $price );
 				}
 				$totalPrice += $price;
 			} # end if
 		} # end if ServicePrice
+
+		if ( $PileHandling ) {
+			my %pilehandlingprice = $PileHandling->get_price( $piles, $Equipment );
+			if ( $pilehandlingprice{units} eq 'per pile' ) {
+				$pilehandlingprice{Total} = $pilehandlingprice{Price} * $piles;
+				$totalPrice += $pilehandlingprice{Total};
+				$results{Breakdown} .= sprintf('Pile handling: $%1$.2f%2$s * %4$d piles = $%3$.2f<br/>', @pilehandlingprice{'Price','units','Total'}, $piles );
+			} else {
+				$openprint::log->error("invalid units $pilehandlingprice{units} on $$PileHandling{name}");
+				$results{alert} .= "invalid units $pilehandlingprice{units} on $$PileHandling{name}<br/>";
+			} # end if
+		} elsif ( DEBUG ) {
+			$openprint::log->debug("No PileHandling");
+		} # end PileHandling
 
 		if ( $dutch_vertical_cuts or $dutch_horizontal_cuts ) {
 			$results{Breakdown} .= "Dutch Cuts:<br/>";
 
 			$sheets = ceil( $$sig_specs{'txtQuantity'.$qty_index} / $$I{imposition} );
 			$sheets *= $$sig_specs{PageQuantity} if $$sig_specs{PageQuantity};
-			$runs = $liftDepth ? ceil( $sheets*$calliper/$liftDepth ) : $sheets;
+			$piles = $liftDepth ? ceil( $sheets*$calliper/$liftDepth ) : $sheets;
 
 			if ( $dutch_vertical_cuts > $dutch_horizontal_cuts ) {
 				if ( $ServicePrice{units} eq 'per inch' ) {
-					$price = ( $runs * $dutch_vertical_cuts *$ServicePrice{Price} * $I->image_width() );
-					$results{Breakdown} .= sprintf('%d Vertical cuts on %d sheets in %d runs * %.2f inches: %.2f%s=%.2f<br/>', $dutch_vertical_cuts, $sheets, $runs, $I->image_width(), @ServicePrice{'Price','units'}, $price );
+					$price = ( $piles * $dutch_vertical_cuts *$ServicePrice{Price} * $I->image_width() );
+					$results{Breakdown} .= sprintf('%d Vertical cuts on %d sheets in %d piles * %.2f inches: %.2f%s=%.2f<br/>', $dutch_vertical_cuts, $sheets, $piles, $I->image_width(), @ServicePrice{'Price','units'}, $price );
 				} else {
-					$price = ( $runs * $dutch_vertical_cuts * $ServicePrice{Price} );
-					$results{Breakdown} .= sprintf('%d Vertical cuts on %d sheets in %d runs: %.2f%s=%.2f<br/>', $dutch_vertical_cuts, $sheets, $runs, @ServicePrice{'Price','units'}, $price );
+					$price = ( $piles * $dutch_vertical_cuts * $ServicePrice{Price} );
+					$results{Breakdown} .= sprintf('%d Vertical cuts on %d sheets in %d piles: %.2f%s=%.2f<br/>', $dutch_vertical_cuts, $sheets, $piles, @ServicePrice{'Price','units'}, $price );
 				} # end if
 				$totalPrice += $price;
 				if ( (!$config{'Dumb_Cutting'}) or ( $config{'Dumb_Cutting'} ne 'Y' ) ) {
 					$sheets *= $$I{dutch_columns};
-					$runs = $liftDepth ? ceil( $sheets*$calliper/$liftDepth ) : $sheets;
+					$piles = $liftDepth ? ceil( $sheets*$calliper/$liftDepth ) : $sheets;
 				} # end if
 				if ( $ServicePrice{units} eq 'per inch' ) {
-					$price = ( $runs * $dutch_horizontal_cuts *$ServicePrice{Price} * $I->image_height() );
-					$results{Breakdown} .= sprintf('%d Horizontal cuts on %d sheets in %d runs * %.2f inches: %.2f%s=%.2f<br/>', $dutch_horizontal_cuts, $sheets, $runs, $I->image_height(), @ServicePrice{'Price','units'}, $price );
+					$price = ( $piles * $dutch_horizontal_cuts *$ServicePrice{Price} * $I->image_height() );
+					$results{Breakdown} .= sprintf('%d Horizontal cuts on %d sheets in %d piles * %.2f inches: %.2f%s=%.2f<br/>', $dutch_horizontal_cuts, $sheets, $piles, $I->image_height(), @ServicePrice{'Price','units'}, $price );
 				} else {
-					$price = ( $runs * $dutch_horizontal_cuts * $ServicePrice{Price} );
-					$results{Breakdown} .= sprintf('%d Horizontal cuts on %d sheets in %d runs: %.2f%s=%.2f<br/>', $dutch_horizontal_cuts, $sheets, $runs, @ServicePrice{'Price','units'}, $price );
+					$price = ( $piles * $dutch_horizontal_cuts * $ServicePrice{Price} );
+					$results{Breakdown} .= sprintf('%d Horizontal cuts on %d sheets in %d piles: %.2f%s=%.2f<br/>', $dutch_horizontal_cuts, $sheets, $piles, @ServicePrice{'Price','units'}, $price );
 				} # end if
 				$totalPrice += $price;
 			} else {
 				if ( $ServicePrice{units} eq 'per inch' ) {
-					$price = ( $runs * $dutch_horizontal_cuts *$ServicePrice{Price} * $I->image_height() );
-					$results{Breakdown} .= sprintf('%d Horizontal cuts on %d sheets in %d runs * %.2f inches: %.2f%s=%.2f<br/>', $dutch_horizontal_cuts, $sheets, $runs, $I->image_height(), @ServicePrice{'Price','units'}, $price );
+					$price = ( $piles * $dutch_horizontal_cuts *$ServicePrice{Price} * $I->image_height() );
+					$results{Breakdown} .= sprintf('%d Horizontal cuts on %d sheets in %d piles * %.2f inches: %.2f%s=%.2f<br/>', $dutch_horizontal_cuts, $sheets, $piles, $I->image_height(), @ServicePrice{'Price','units'}, $price );
 				} else {
-					$price = ( $runs * $dutch_horizontal_cuts * $ServicePrice{Price} );
-					$results{Breakdown} .= sprintf('%d Horizontal cuts on %d sheets in %d runs: %.2f<br/>', $dutch_horizontal_cuts, $sheets, $runs, $price );
+					$price = ( $piles * $dutch_horizontal_cuts * $ServicePrice{Price} );
+					$results{Breakdown} .= sprintf('%d Horizontal cuts on %d sheets in %d piles: %.2f<br/>', $dutch_horizontal_cuts, $sheets, $piles, $price );
 				} # end if
 				$totalPrice += $price;
 				if ( (!$config{'Dumb_Cutting'}) or ( $config{'Dumb_Cutting'} ne 'Y' ) ) {
 					$sheets *= $$I{dutch_rows};
-					$runs = $liftDepth ? ceil( $sheets*$calliper/$liftDepth ) : $sheets;
+					$piles = $liftDepth ? ceil( $sheets*$calliper/$liftDepth ) : $sheets;
 				} # end if
 				if ( $ServicePrice{units} eq 'per inch' ) {
-					$price = ( $runs * $dutch_vertical_cuts *$ServicePrice{Price} * $I->image_width() );
-					$results{Breakdown} .= sprintf("%d Vertical cuts on %d sheets in %d runs * %.2f inches: %.2f%s=%.2f<br/>", $dutch_vertical_cuts, $sheets, $runs, $I->image_width(), @ServicePrice{'Price','units'}, $price );
+					$price = ( $piles * $dutch_vertical_cuts *$ServicePrice{Price} * $I->image_width() );
+					$results{Breakdown} .= sprintf("%d Vertical cuts on %d sheets in %d piles * %.2f inches: %.2f%s=%.2f<br/>", $dutch_vertical_cuts, $sheets, $piles, $I->image_width(), @ServicePrice{'Price','units'}, $price );
 				} else {
-					$price = ( $runs * $dutch_vertical_cuts * $ServicePrice{Price} );
-					$results{Breakdown} .= sprintf('%d Vertical cuts on %d sheets in %d runs: %.2f%s=%.2f<br/>', $dutch_vertical_cuts, $sheets, $runs, @ServicePrice{'Price','units'}, $price );
+					$price = ( $piles * $dutch_vertical_cuts * $ServicePrice{Price} );
+					$results{Breakdown} .= sprintf('%d Vertical cuts on %d sheets in %d piles: %.2f%s=%.2f<br/>', $dutch_vertical_cuts, $sheets, $piles, @ServicePrice{'Price','units'}, $price );
 				} # end if
 				$totalPrice += $price;
 			} # end if
-		} # end if
+
+			if ( $PileHandling ) {
+				my %pilehandlingprice = $PileHandling->get_price( $piles, $Equipment );
+				if ( $pilehandlingprice{units} eq 'per pile' ) {
+					$pilehandlingprice{Total} = $pilehandlingprice{Price} * $piles;
+					$totalPrice += $pilehandlingprice{Total};
+					$results{Breakdown} .= sprintf('Pile handling: $%1$.2f%2$s * %4$d piles = $%3$.2f<br/>', @pilehandlingprice{'Price','units','Total'}, $piles );
+				} else {
+					$openprint::log->error("invalid units $pilehandlingprice{units} on $$PileHandling{name}");
+					$results{alert} .= "invalid units $pilehandlingprice{units} on $$PileHandling{name}<br/>";
+				} # end if
+			} elsif ( DEBUG ) {
+				$openprint::log->debug("No PileHandling");
+			} # end PileHandling
+
+		} # end if dutch
 
 
 		if ( ( ! $$specs{"txtAdditionalCuts$form"} ) and $$sig_specs{txtPressSheetComboItems} ) {
@@ -1010,8 +1066,8 @@ $openprint::log->debug("Not a book") if DEBUG;
 
 		if ( $$specs{"txtAdditionalCuts$form"} and %ServicePrice ) {
 			$sheets = ceil( $$sig_specs{'txtQuantity'.$qty_index} / $$I{imposition} );
-			my $runs = $liftDepth ? ceil( $sheets*$calliper/$liftDepth ) : $sheets;
-			my $price = ( $runs * $$specs{"txtAdditionalCuts$form"} * $ServicePrice{Price} );
+			my $piles = $liftDepth ? ceil( $sheets*$calliper/$liftDepth ) : $sheets;
+			my $price = ( $piles * $$specs{"txtAdditionalCuts$form"} * $ServicePrice{Price} );
 			$results{Breakdown} .= 'Additional cuts: ';
 			$results{Breakdown} .= sprintf('%d cuts on %d sheets: $%.2f<br/>', $$specs{"txtAdditionalCuts$form"}, $sheets, $price );
 			$totalPrice += $price;
@@ -1025,9 +1081,17 @@ $openprint::log->debug("Not a book") if DEBUG;
 				if ( ! %setup ) {
 					$log->error("No Cutting Makready for $$Equipment{strid}");
 				} else {
-					$results{Breakdown} .= sprintf('Make Ready: $%.2f<br/>', $setup{Price} );
+					if ( $setup{units} eq 'per cut' ) {
+						%setup = $CuttingMakeReady->get_price( $cuts, $Equipment );
+						$setup{Total} = $setup{Price} * $cuts;
+						$results{Breakdown} .= sprintf('Make Ready: $%1$.2f%2$s * %4$d cuts = $%3$.2f<br/>', @setup{'Price','units','Total'}, $cuts );
+					$totalPrice += $setup{Total};
+					} else {
+						$openprint::log->debug("unknown units on $$CuttingMakeReady{units}") if DEBUG;
+						$results{Breakdown} .= sprintf('Make Ready: $%.2f<br/>', $setup{Price} );
 					$totalPrice += $setup{Price};
-				} # end if
+					} # end if
+				} # end if has setup or not
 			} # end if
 			if ( $Paper->bladecleaning() and $BladeCleaning ) {
 				my %cleaning = $BladeCleaning->get_price( undef, $Equipment );
