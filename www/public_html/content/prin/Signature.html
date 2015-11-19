@@ -102,30 +102,28 @@
 						<ul>
 					<? if ( ! sets::isin( $$variable{ProjectType}->name(), ['InkjetOutputs'] ) ) ?>
 
-					<? if ( ! sets::isin( $$variable{ProjectType}->name(), ['NCR','ScratchPads','RackCards','Envelopes'] ) ) ?>
-					<? if ( ! sets::isin( $$variable{ProjectType}->name(), ['GreetingCards'] ) ) ?>
-							<?include(_drilling.html)?>
-					<? endif ( ! sets::isin( $$variable{ProjectType}->name(), ['GreetingCards'] ) ) ?>
-							<?include(_scoring.html)?>
-					<? endif ( ! sets::isin( $$variable{ProjectType}->name(), ['NCR','ScratchPads','RackCards','Envelopes'] ) ) ?>
+						<? if ( sets::isin( $$variable{ProjectType}->name(), ['NCR'] ) ) ?>
+								<?include(_numbering.html)?>
+						<? endif ( sets::isin( $$variable{ProjectType}->name(), ['NCR'] ) ) ?>
+						<? if ( sets::isin( $$variable{ProjectType}->name(), ['ScratchPads'] ) ) ?>
+								<?include(_padding.html)?>
+						<? endif ( sets::isin( $$variable{ProjectType}->name(), ['ScratchPads'] ) ) ?>
+						<? echo (
+							my $html;
+							my @blocked_services = $$variable{ProjectType}->blocked_services();
 
-					<? if ( sets::isin( $$variable{ProjectType}->name(), ['NCR'] ) ) ?>
-							<?include(_numbering.html)?>
-					<? endif ( sets::isin( $$variable{ProjectType}->name(), ['NCR'] ) ) ?>
-					<? if ( sets::isin( $$variable{ProjectType}->name(), ['ScratchPads'] ) ) ?>
-							<?include(_padding.html)?>
-					<? endif ( sets::isin( $$variable{ProjectType}->name(), ['ScratchPads'] ) ) ?>
-					<? if ( $$variable{ProjectType}->name() ne 'Envelopes' ) ?>
-							<?include(_perfing.html)?>
-					<? echo (
-						my $html;
-						my $Grommeting = openprint::ServiceType->find_one( name=>'Grommeting' );
-						if ( $Grommeting and ! sets::isin( $Grommeting, $$variable{ProjectType}->blocked_services() ) ) {
-							$html .= include('_grommeting.html');
-						}
-						return $html;
-					) ?>
-					<? endif ( $$variable{ProjectType}->name() ne 'Envelopes' ) ?>
+							foreach my $servicetype ( 'Scoring', 'Drilling', 'Grommeting', 'RoundCornering' ) {
+								my $ServiceType = openprint::ServiceType->find_one( name=>$servicetype );
+								if ( $ServiceType ) {
+									if ( ! sets::isin( $$ServiceType{id}, \@blocked_services ) ) {
+										$html .= include('_'.lc($servicetype). '.html');
+									}
+								$log->debug("Blocked services: @blocked_services : $servicetype : $$ServiceType{id} ");
+								}
+							} # end foreach servicetype
+
+							return $html;
+						) ?>
 					<? else ( ! sets::isin( $$variable{ProjectType}->name(), ['InkjetOutputs'] ) ) ?>
 							<?include(_lamination.html)?>
 					<? endif ( ! sets::isin( $$variable{ProjectType}->name(), ['InkjetOutputs'] ) ) ?>
