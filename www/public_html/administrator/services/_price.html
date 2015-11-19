@@ -27,7 +27,7 @@
 		input( type=>'float', name=>join('-', 'cost', $$Price{id} ), value=>$Price->cost(), onkeyup=>'calc_from_cost(this);', oninput=>'this.onkeyup();' ),
 		input( type=>'float', name=>join('-', 'markup', $$Price{id} ), value=>$Price->markup(), onkeyup=>'calc_from_markup(this);', oninput=>'this.onkeyup();' ),
 		input( type=>'float', name=>join('-', 'price', $$Price{id} ), value=>$Price->price(), onkeyup=>'calc_from_price(this);', oninput=>'this.onkeyup();' ),
-		radio( join('-', 'discount',$$Price{id} ), [ 'Y', 'Yes', 'N', 'No' ], $Price->discountable() ),
+		radio( join('-', 'discount',$$Price{id} ), [ 'Y', 'Yes', 'N', 'No' ], $Price->discountable(), { default=>'Y' } ),
 
 		($Price->id() ? 
 		join('', 
