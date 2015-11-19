@@ -28,6 +28,7 @@ $serial = 'tbl_equipment_specifications_id_seq';
 %defaults = (
 	min	=>	undef,
 	max	=>	undef,
+	interpolate	=>	0,
 );
 
 sub Equipment {

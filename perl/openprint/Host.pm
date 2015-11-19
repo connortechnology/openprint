@@ -309,7 +309,7 @@ sub reboot {
 	} # end if
 
 	$openprint::log->debug("URL: $url" );
-	my $response = $browser->get($url);
+	$response = $browser->get($url);
 
 	if ( ! $response->is_success ) {
 		$openprint::log->error( $response->content );

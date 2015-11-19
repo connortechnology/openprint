@@ -1510,7 +1510,7 @@ if ( DEBUG_INITIAL_FILTERING ) {
 					$openprint::log->debug("Not using " . $Paper->to_string() . " because not in sheetsizes. for $$Press{strid}" ) if DEBUG;
 					next;
 				} # end if
-				$openprint::log->debug("using " . $Paper->to_string() . ' must be in sheetsizes.' ) if DEBUG;
+				$openprint::log->debug("using " . $Paper->to_string() . ' is good must be in sheetsizes.' ) if DEBUG;
 
 				$$project{Runstyles} = $runstyles_sheet;
 
@@ -1668,7 +1668,7 @@ $imp->display(" Less than $max_imposition") if DEBUG_INITIAL_FILTERING;
 						} # end if
 					} # end foreach arrangement
 				} else {
-					$openprint::log->warn("NO blocks for $$imp{imposition}");
+					$openprint::log->warn("NO blocks for $$imp{imposition} when dutch");
 				} # end if
 				if ( $add ) {
 					push @{$dutches{$$imp{imposition}}}, $imp;
@@ -3274,20 +3274,32 @@ $log->warn("Getting all impos results: " . @results );
 		@results = @results2;
 	} else {
 		$openprint::log->debug("NOT Override Imposition: $qty_index, " . $$sig_specs{'txtImposition'.$qty_index} . ' ' . $$sig_specs{'chkOverrideImposition'.$qty_index} ) if DEBUG_FILTERING;
-		my $needs_smaller = 1;
-		foreach my $I ( @results ) {
-			if ( $I->imposition() <= $$sig_specs{'txtQuantity'.$qty_index} ) {
-				$needs_smaller = 0;
-				last;
-			} # end if
-		} # end foreach I
-		if ( $needs_smaller ) {
-			foreach my $I ( openprint::imposition::get_all_impositions( @results ) ) {
+		if ( $$sig_specs{'txtQuantity'.$qty_index} ) {
+			my $needs_smaller = 1;
+			foreach my $I ( @results ) {
 				if ( $I->imposition() <= $$sig_specs{'txtQuantity'.$qty_index} ) {
-					push @results, $I;
+					$needs_smaller = 0;
+					last;
 				} # end if
 			} # end foreach I
-		} # end if
+			if ( $needs_smaller ) {
+				$openprint::log->debug("Need smaller impositions, we have " . @results ) if DEBUG;
+				my @lesser = @results;
+				
+				do {
+					@lesser = openprint::imposition::decrease_imposition( @lesser );
+					@results = map { $$_{imposition} <= $$sig_specs{'txtQuantity'.$qty_index} ? $_ : () } @lesser;
+				} until ( @results );
+				$openprint::log->debug("Needed smaller impositions, we have " . @results ) if DEBUG;
+	if ( 0 ) {
+				foreach my $I ( openprint::imposition::get_all_impositions( @results ) ) {
+					if ( $I->imposition() <= $$sig_specs{'txtQuantity'.$qty_index} ) {
+						push @results, $I;
+					} # end if
+				} # end foreach I
+	}
+			} # end if
+		} # end if quantity
 	} # end if
 	if ( $$sig_specs{"OverrideImpositionLayout$qty_index"} eq 'Y' ) {
 		my @filtered_impos = map {(	
@@ -3376,12 +3388,15 @@ $log->warn("Getting all impos results: " . @results );
 	# Filter dutches, which don't happen for books
 	if ( ( ! $needed_pages ) and ( @results > 1 ) ) {
 		my $bump_count = 0;
+		$openprint::log->debug("about to filter Dutch for @results") if DEBUG;
 		foreach my $I ( @results ) {
+#$I->display() if DEBUG;
 			my $Paper = $I->Paper();
 			my $Press = $I->Press();
+#$I->display( "after paper and press" ) if DEBUG;
 
 			my $key = join(',', $Paper->area(), $I->imposition(), $I->runstyle(), $Press->strid() );
-			if ( ! ( $imps{$key} and @{$imps{$key}} ) ) {
+			if ( ! $imps{$key} ) {
 				$imps{$key} = [ $I ];
 				next;
 			} # end if

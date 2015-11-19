@@ -39,20 +39,20 @@ sub save {
 	if ( ( my $error = $self->SUPER::save( $params ) ) ) {
 		return $error;
 	} else {
-		# self->equired_services is guaranteed to populate $$self{'erquired_services'}
+		# self->equired_services is guaranteed to populate $$self{erquired_services}
 		$self->required_services( $$params{required_services} );
-		sql::execute( undef, undef, q{DELETE FROM ProjectType_RequiredServices WHERE ProjectType_id=?}, $$self{'id'} );
+		sql::execute( undef, undef, q{DELETE FROM ProjectType_RequiredServices WHERE ProjectType_id=?}, $$self{id} );
 		# The union gets rid of duplicates
-		foreach my $servicetype_id ( sets::union( @{$$self{'required_services'}} ) ) {
+		foreach my $servicetype_id ( sets::union( @{$$self{required_services}} ) ) {
 			next if ! $servicetype_id;
-			sql::insert( undef, undef, 'ProjectType_RequiredServices', ['ProjectType_id', $$self{'id'}, 'ServiceType_id', $servicetype_id ] );
+			sql::insert( undef, undef, 'ProjectType_RequiredServices', ['ProjectType_id', $$self{id}, 'ServiceType_id', $servicetype_id ] );
 		} # end foreach
-		# self->equired_services is guaranteed to populate $$self{'erquired_services'}
+		# self->equired_services is guaranteed to populate $$self{erquired_services}
 		$self->blocked_services( $$params{blocked_services} );
-		sql::execute( undef, undef, q{DELETE FROM ProjectType_BlockedServices WHERE projecttype_id=?}, $$self{'id'} );
+		sql::execute( undef, undef, q{DELETE FROM ProjectType_BlockedServices WHERE projecttype_id=?}, $$self{id} );
 		# The union gets rid of duplicates
-		foreach my $servicetype_id ( sets::union( @{$$self{'blocked_services'}} ) ) {
-			sql::insert( undef, undef, 'ProjectType_BlockedServices', ['projecttype_id', $$self{'id'}, 'servicetype_id', $servicetype_id ] );
+		foreach my $servicetype_id ( sets::union( @{$$self{blocked_services}} ) ) {
+			sql::insert( undef, undef, 'ProjectType_BlockedServices', ['projecttype_id', $$self{id}, 'servicetype_id', $servicetype_id ] );
 		} # end foreach
 	} # end if
 	return;	
@@ -63,7 +63,7 @@ sub next {
 	if ( $$self{name} ) {
 		($_) = sql::execute( undef, undef, q{SELECT id FROM Project_Types WHERE name = (SELECT MIN(name) FROM Project_Types WHERE name>?)}, $$self{name} );
 		if ( ! $_ ) {
-			( $_ ) = sql::execute( undef, undef, q{SELECT id FROM Project_Types WHERE name = (SELECT MAX(name) FROM Project_Types WHERE name<?)}, $$self{'name'} );
+			( $_ ) = sql::execute( undef, undef, q{SELECT id FROM Project_Types WHERE name = (SELECT MAX(name) FROM Project_Types WHERE name<?)}, $$self{name} );
 		} # end if
 	} # end if
 	( $_ ) = sql::execute( undef, undef, q{SELECT MIN(id) FROM Project_Types} ) if ! $_;
@@ -72,9 +72,9 @@ sub next {
 sub prev {
 	my $self = shift;
 	if ( $$self{name} ) {
-		($_) = sql::execute( undef, undef, q{SELECT Id FROM Project_Types WHERE name = (SELECT MAX(name) FROM Project_Types WHERE name<?)}, $$self{'name'} );
+		($_) = sql::execute( undef, undef, q{SELECT Id FROM Project_Types WHERE name = (SELECT MAX(name) FROM Project_Types WHERE name<?)}, $$self{name} );
 		if ( ! $_ ) {
-			( $_ ) = sql::execute( undef, undef, q{SELECT Id FROM Project_Types WHERE name = (SELECT MIN(name) FROM Project_Types WHERE name>?)}, $$self{'name'} );
+			( $_ ) = sql::execute( undef, undef, q{SELECT Id FROM Project_Types WHERE name = (SELECT MIN(name) FROM Project_Types WHERE name>?)}, $$self{name} );
 		} # end if
 	} # end if name
 	( $_ ) = sql::execute( undef, undef, q{SELECT MIN(id) FROM Project_Types} ) if ! $_;
@@ -84,22 +84,22 @@ sub prev {
 sub required_services {
 	my $self = shift;
 	if ( @_ > 1 ) {
-		@{$$self{'required_services'}} = @_;
+		@{$$self{required_services}} = @_;
 	} elsif ( @_ ) {
 		if ( ref $_[0] eq 'ARRAY' ) {
-			$$self{'required_services'} = $_[0];
+			$$self{required_services} = $_[0];
 		} elsif ( $_[0] ) {
-			$$self{'required_services'} = [$_[0]];
+			$$self{required_services} = [$_[0]];
 		} # end if
 	} # end if
-	if ( ! $$self{'required_services'} ) {
-		if ( $$self{'id'} ) {
-			@{$$self{'required_services'}} = sql::execute( undef, undef, q{SELECT ServiceType_id FROM ProjectType_RequiredServices WHERE ProjectType_id=?}, $$self{'id'} );
+	if ( ! $$self{required_services} ) {
+		if ( $$self{id} ) {
+			@{$$self{required_services}} = sql::execute( undef, undef, q{SELECT ServiceType_id FROM ProjectType_RequiredServices WHERE ProjectType_id=?}, $$self{id} );
 		} else {
-			@{$$self{'required_services'}} = ();
+			@{$$self{required_services}} = ();
 		} # end if
 	} # end if
-	return @{$$self{'required_services'}};
+	return @{$$self{required_services}};
 } # end sub required_services
 
 sub required_ServiceTypes {
@@ -111,22 +111,22 @@ sub required_ServiceTypes {
 sub blocked_services {
 	my $self = shift;
 	if ( @_ > 1 ) {
-		@{$$self{'blocked_services'}} = @_;
+		@{$$self{blocked_services}} = @_;
 	} elsif ( @_ ) {
 		if ( ref $_[0] eq 'ARRAY' ) {
-			$$self{'blocked_services'} = $_[0];
+			$$self{blocked_services} = $_[0];
 		} elsif ( $_[0] ) {
-			$$self{'blocked_services'} = [$_[0]];
+			$$self{blocked_services} = [$_[0]];
 		} # end if
 	} # end if
-	if ( ! $$self{'blocked_services'} ) {
-		if ( $$self{'id'} ) {
-			@{$$self{'blocked_services'}} = sql::execute( undef, undef, q{SELECT ServiceType_id FROM ProjectType_BlockedServices WHERE ProjectType_id=?}, $$self{'id'} );
+	if ( ! $$self{blocked_services} ) {
+		if ( $$self{id} ) {
+			@{$$self{blocked_services}} = sql::execute( undef, undef, q{SELECT ServiceType_id FROM ProjectType_BlockedServices WHERE ProjectType_id=?}, $$self{id} );
 		} else {
-			@{$$self{'blocked_services'}} = ();
+			@{$$self{blocked_services}} = ();
 		} # end if
 	} # end if
-	return @{$$self{'blocked_services'}};
+	return @{$$self{blocked_services}};
 } # end sub blocked_services
 
 sub blocked_ServiceTypes {
@@ -137,12 +137,12 @@ sub delete {
 	my $self = shift;
 
 	my $ac = sql::start_transaction( $openprint::dbh );
-	sql::execute( undef, undef, q{DELETE FROM projecttype_defaults WHERE projecttype_id=?}, $$self{'id'} );
-	sql::execute( undef, undef, q{DELETE FROM ProjectTemplate WHERE projecttype_id=?}, $$self{'id'} );
-	sql::execute( undef, undef, q{DELETE FROM Paper_Recommendations WHERE lngProjectTypeIndex=?}, $$self{'id'} );
-	sql::execute( undef, undef, q{DELETE FROM ProjectType_RequiredServices WHERE ProjectType_Id=?}, $$self{'id'} );
-	sql::update( undef, undef, 'Projects', ['type_id=?',$$self{'id'}], 'type_id', undef );
-	sql::execute( undef, undef, q{DELETE FROM Project_Types WHERE Id=?}, $$self{'id'} );
+	sql::execute( undef, undef, q{DELETE FROM projecttype_defaults WHERE projecttype_id=?}, $$self{id} );
+	sql::execute( undef, undef, q{DELETE FROM ProjectTemplate WHERE projecttype_id=?}, $$self{id} );
+	sql::execute( undef, undef, q{DELETE FROM Paper_Recommendations WHERE lngProjectTypeIndex=?}, $$self{id} );
+	sql::execute( undef, undef, q{DELETE FROM ProjectType_RequiredServices WHERE ProjectType_Id=?}, $$self{id} );
+	sql::update( undef, undef, 'Projects', ['type_id=?',$$self{id}], 'type_id', undef );
+	sql::execute( undef, undef, q{DELETE FROM Project_Types WHERE Id=?}, $$self{id} );
 	sql::end_transaction( $openprint::dbh, $ac );
 	
 	(new openprint::Log())->save({ action=>'Delete Project Type', note=>"Project Type ID: $$self{id} Project Type: $$self{name}"});
@@ -151,7 +151,7 @@ sub delete {
 
 sub Templates {
 	my ( $self, %params ) = @_;
-	$params{'projecttype_id'} = $$self{'id'};
+	$params{projecttype_id} = $$self{id};
 	return openprint::ProjectType_Template->find(%params);
 } # end sub Templates
 

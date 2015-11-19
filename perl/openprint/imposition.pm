@@ -1,10 +1,11 @@
 use strict;
 package openprint::imposition;
 use POSIX qw{ ceil };
+use Carp;
 
 require openprint::Imposition;
 
-use constant DEBUG => 0;
+use constant DEBUG => 1;
 use constant DEBUG_CONVERT => 0;
 
 # The various way we can group spreads
@@ -835,8 +836,9 @@ sub get_imposition {
 	push @styles, 'Work & Turn', 'Work & Tumble' if $do_work_turn;
 	push @styles, 'Perfecting' if $do_perfecting;
 	if ( $$project{Runstyles} ) {
-		$openprint::log->debug(" *1* Run Styles to consider for $$Press{strid}: @styles ** $$project{Runstyles} $do_perfecting") if DEBUG;
+		$openprint::log->debug(" *1* Run Styles to consider for $$Press{strid}: style:@styles ** Available runstyle:$$project{Runstyles} perfecting:$do_perfecting") if DEBUG;
 		@styles = sets::intersection( @styles, misc::trim(split(',', $$project{Runstyles} ) ) );
+		$openprint::log->debug(" *1* Resulting Run Styles to consider for $$Press{strid}: style:@styles") if DEBUG;
 	} # end if
 	#$openprint::log->debug(" *2* Run Styles to consider for $$Press{strid}: @styles **") if DEBUG;
 
@@ -1130,6 +1132,7 @@ sub decrease_imposition {
 } # end sub decrease_imposition
 
 sub get_all_impositions {
+Carp::cluck("Really don't want to use get_all_impositions");
 #map { $openprint::log->debug( $_ ) } @_;
 	my @imps = decrease_imposition( @_ );
 	@imps = get_all_impositions( @imps ) if @imps;
