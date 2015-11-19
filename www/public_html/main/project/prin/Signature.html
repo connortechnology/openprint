@@ -108,12 +108,6 @@
 				include('/includes/main/proj/templates/brochures.html'),
 				include('/includes/main/proj/dimensions.html'),
 			);
-		} elsif ( $$variable{ProjectType}->name() eq 'Packaging' ) {
-					return join("\n",
-				include('/includes/main/proj/templates/project_template_select.html'),
-				include('/includes/main/proj/templates/packaging.html'),
-				include('/includes/main/proj/dimensions.html'),
-					);
 		} elsif ( $$variable{ProjectType}->name() eq 'PressSheetCombination' ) {
 				return include('/includes/main/proj/press_sheet_combo.html');
 		} elsif ( $$variable{ProjectType}->name() eq 'PresentationFolders' ) {
@@ -149,7 +143,6 @@
 				include('/includes/main/proj/dimensions.html'),
 			);
 		} else {
-#( sets::isin( $$variable{ProjectType}->name(), [ 'DoorHangers', 'Brochures', 'GreetingCards','Postcards','Posters','Signs','Banners','RackCards','Labels','NCR','Inserts' ] ) ) {
 			return join("\n",
 				include('/includes/main/proj/templates/generic.html'),
 				include('/includes/main/proj/dimensions.html'),
