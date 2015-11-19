@@ -94,10 +94,6 @@
 <? if ( sets::isin( $$variable{ProjectType}->name(),['Banners'] ) ) ?>
 		<?include(/includes/main/proj/banner_printing.html)?>
 <? endif ( sets::isin( $$variable{ProjectType}->name(),['Banners'] ) ) ?>
-<? if ( $$variable{ProjectType}->name() eq 'Flyers' ) ?>
-		<?include(/includes/main/proj/templates/brochures.html)?>
-		<?include(/includes/main/proj/dimensions.html)?>
-<? endif ( $$variable{ProjectType}->name() eq 'Flyers' ) ?>
 <? if ( $$variable{ProjectType}->name() eq 'Cards' ) ?>
 		<?include(/includes/main/proj/templates/project_template_select.html)?>
 		<?include(/includes/main/proj/templates/cards.html)?>
