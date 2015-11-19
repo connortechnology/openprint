@@ -158,6 +158,11 @@ sub information {
 			} = $User->get('email','title','firstname','lastname','salutation','phone','fax');
 
 		} # end if
+		foreach my $OP ( openprint::OrderedProject->find('order_id'=>$order_id) ) {
+			if ( ! sets::isin( $OP->quantity_index(), $OP->Project->quantity_indexes() ) ) {
+				$OP->save({quantity_index=>undef});
+			}
+		}
 	} # end if $Order_id
 	$variable{'order_id'} = $order_id;
 	$variable{'Order'} = new openprint::Order( $order_id );

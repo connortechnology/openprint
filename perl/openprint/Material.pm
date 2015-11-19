@@ -1,7 +1,6 @@
 use strict;
 package openprint::Material;
 our @ISA = qw( openprint::Object );
-use Memoize;
 
 require sql;
 require openprint::Object;

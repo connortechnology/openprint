@@ -51,6 +51,12 @@ sub debug {
 			$log->debug( "$o : $id" );
 		} # end foreach
 	} # end foreach
+	foreach my $object_type ( keys %name_cache ) {
+		$log->debug("Name Cach contains $object_type => $name_cache{$object_type}");
+		foreach my $k ( keys %{$name_cache{$object_type}} ) {
+			$log->debug("Name Cach for $object_type contains $k => $name_cache{$object_type}{$k}");
+		}
+	}
 } # end sub debug
 
 sub new_scalar_id {
@@ -64,7 +70,7 @@ sub new_scalar_id {
 	my @keys = map { ( (defined $$fields{$_} or exists $$data{$_} ) and $$fields{$_} ne $_ ) ? $_ : () } keys %$fields;
 	@$self{@keys} = @$self{@$fields{@keys}};
 	if ( ! $no_cache ) {
-		$log->debug("Caching $config{db_name} $parent $id = $self") if $debug;
+		$log->debug("new_scaler_id: Caching $config{db_name} $parent $id = $self") if $debug;
 		$cache{$config{db_name}}{$parent}{$id} = $self;
 	} else {
 		$log->debug("NOT Caching $config{db_name} $parent $id = $self") if $debug;
@@ -114,7 +120,7 @@ $log->debug("Loading object $parent $id from cache and populating with data new 
 			if ( $id ) {
 				# Using $id instead of $$self{od} means that we cache non existent entries
 			#if ( $$self{id} ) {
-$log->debug("Caching $config{db_name} $parent $id = $self") if DEBUG_CACHE or $debug;
+$log->debug("new id_Caching $config{db_name} $parent $id = $self") if DEBUG_CACHE or $debug;
 				
 				$$sub_cache{$id} = $self;
 			} # end if
@@ -686,27 +692,30 @@ sub find {
 	my $cache_field = ${$object_type.'::cache_field'} if $do_cache;
 	if ( $cache_field and $$params{$cache_field} and ( 1 == @param_keys ) ) {
 
-#$log->debug("have cache field $cache_field for $$params{$cache_field}") if DEBUG_ALL;
+$log->debug("have cache field $cache_field for $$params{$cache_field}") if DEBUG_ALL;
 		if ( exists $name_cache{$object_type} and exists $name_cache{$object_type}{$$params{$cache_field}} ) {
-#$log->debug("There is an object in the cache") if DEBUG_ALL;
+$log->debug("There is an object in the cache for $$params{$cache_field}") if DEBUG_ALL;
 			if ( $name_cache{$object_type}{$$params{$cache_field}} ) {
-#$log->debug("returning " . $name_cache{$object_type}{$$params{$cache_field}} . " for $object_type $cache_field $$params{$cache_field}") if DEBUG_ALL;
+$log->debug("returning " . $name_cache{$object_type}{$$params{$cache_field}} . " for $object_type $cache_field $$params{$cache_field}") if DEBUG_ALL;
 				return $name_cache{$object_type}{$$params{$cache_field}}; 
 			} else {
-#$log->debug("returning nothing for $object_type $cache_field $$params{$cache_field}") if DEBUG_ALL;
+				# Shouldn't have to test for cached, because the hash will not get populated.
+$log->error("returning nothing for $object_type $cache_field $$params{$cache_field}") if DEBUG_ALL;
 				return ();
 			} # end if
-		} else {
-#$log->debug("Undefing $object_type $cache_field $$params{$cache_field} cache: $name_cache{$object_type}{$$params{$cache_field}} so that future lookups find an empty cache") if DEBUG_ALL or DEBUG_CACHE;
-#foreach my $k ( keys %{$name_cache{$object_type}} ) {
-#$log->debug("Cach contains $k => $name_cache{$object_type}{$k}");
-#}
-			$name_cache{$object_type}{$$params{$cache_field}} = undef;
-		if ( ${$object_type.'::cached'} ) {
-#$log->debug("ALl cached $object_type $cache_field $$params{$cache_field}") if DEBUG_ALL or DEBUG_CACHE;
-			return ();
-		} # end if
-		} # end if
+		} else { # not in cache
+			my $cached = eval( '$'.$object_type.'::cached' );
+			if ( $cached ) {
+				# if all items should have been loaded
+
+# Can only undef here if we know that we have already loaded them all
+				$log->debug("Undefing $object_type cached: $cached $cache_field $$params{$cache_field} cache: so that future lookups find an empty cache") if DEBUG_ALL or DEBUG_CACHE;
+	#debug();
+				#$name_cache{$object_type}{$$params{$cache_field}} = undef;
+	#$log->debug("ALl cached $object_type $cache_field $$params{$cache_field}") if DEBUG_ALL or DEBUG_CACHE;
+				return ();
+			} # end if Object::cached
+		} # end if is in cache or not
 	} else {
 		$do_cache = 0;
 		$log->debug("Not doing caching for $object_type using $cache_field with params $$params{$cache_field} ") if DEBUG_ALL or DEBUG_CACHE;
@@ -860,11 +869,15 @@ sub find {
 	if ( $$fields{id} ) {
 		if ( $cache_field ) {
 			my @results = map { $object_type->new( $_->{$$fields{id}}, $_ ) } @$data;
+			$name_cache{$object_type} = {} if ! $name_cache{$object_type};
 			my $cache_ref = $name_cache{$object_type};
+#$log->warn("Doing find_cache for $object_type $cache_ref $name_cache{$object_type}");
 
 			foreach my $O ( @results ) {
-				$$cache_ref{$$O{$cache_field}} = $O;
+				$cache_ref->{$$O{$cache_field}} = $O;
+#$log->warn("Doing find_cache for $object_type $$O{$cache_field}");
 			} 
+#debug();
 			return @results;
 		} # end if
 		#return map { $object_type->new_scalar_id( $_->{$$fields{id}}, $_ ) } @$data;
