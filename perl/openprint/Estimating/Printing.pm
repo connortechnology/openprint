@@ -3275,7 +3275,7 @@ $log->warn("Getting all impos results: " . @results );
 		@results = @results2;
 	} else {
 		$openprint::log->debug("NOT Override Imposition: $qty_index, " . $$sig_specs{'txtImposition'.$qty_index} . ' ' . $$sig_specs{'chkOverrideImposition'.$qty_index} ) if DEBUG_FILTERING;
-		if ( $$sig_specs{'txtQuantity'.$qty_index} ) {
+		if ( $$sig_specs{'txtQuantity'.$qty_index} and @results ) {
 			my $needs_smaller = 1;
 			foreach my $I ( @results ) {
 				if ( $I->imposition() <= $$sig_specs{'txtQuantity'.$qty_index} ) {
