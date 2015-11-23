@@ -327,7 +327,7 @@ if ( 0 ) {
 					$price += $pilehandlingprice{Total};
 					$results{Breakdown} .= sprintf('Pile handling: $%1$.2f%2$s * %4$d piles = $%3$.2f<br/>', @pilehandlingprice{'Price','units','Total'}, $piles );
 				} else {
-					$openprint::log->error("invalid units $pilehandlingprice{units} on $$PileHandling{name}");
+					$openprint::log->error("invalid units $pilehandlingprice{units} on $$PileHandling{name} on $$Equipment{name}");
 					$results{alert} .= "invalid units $pilehandlingprice{units} on $$PileHandling{name} on $$Equipment{name}<br/>";
 				} # end if
 			} elsif ( DEBUG ) {
@@ -986,7 +986,7 @@ $openprint::log->debug("Not a book") if DEBUG;
 				$results{Breakdown} .= sprintf('Pile handling: $%1$.2f%2$s * %4$d piles = $%3$.2f<br/>', @pilehandlingprice{'Price','units','Total'}, $piles );
 			} else {
 				$openprint::log->error("invalid units $pilehandlingprice{units} on $$PileHandling{name}");
-				$results{alert} .= "invalid units $pilehandlingprice{units} on $$PileHandling{name}<br/>";
+				$results{alert} .= "invalid units $pilehandlingprice{units} on $$PileHandling{name} on $$Equipment{name}<br/>";
 			} # end if
 		} elsif ( DEBUG ) {
 			$openprint::log->debug("No PileHandling");
