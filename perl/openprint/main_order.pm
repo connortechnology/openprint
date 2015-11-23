@@ -260,7 +260,7 @@ sub confirmation {
 	if ( $param{btnFunction} eq 'Close' or $param{btnFunction} eq 'Complete' ) {
 	
 		if ( $Order->id() and ( sets::isin( $Order->status(), ['Incomplete','Re-Opened'] ) ) ) {
-			if ( ( $Order->company_id() == $session{'company_id'} ) and ( $session{'company_id'} == new openprint::User( $session{'user_id'})->company_id() ) ) {
+			if ( ( $Order->company_id() == $session{company_id} ) and ( $session{company_id} == $openprint::User->company_id() ) ) {
 				if ( ! $param{accept_terms} ) {
 					$variable{error} = 'Terms not accepted';
 					$variable{information} = 'You must check the box to indicate your acceptance of the terms and conditions.';
@@ -312,7 +312,7 @@ sub confirmation {
 			} # end if
 			# This is messed up.  I think an order should never switch companies unless it doesn't have a company assigned.  I don't see how it could work any other way.
 			$Order->company_id( $session{'company_id'} ) if ! $Order->company_id();
-			$Order->salesrep_id( new openprint::Company( $session{'company_id'} )->salesrep_id() );
+			$Order->salesrep_id( $openprint::Company->salesrep_id() );
 			$Order->downpayment( $downpayment );
 			$Order->status( $status );
 			$Order->administrator_name( $param{'AdministratorName'} );
