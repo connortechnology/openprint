@@ -4309,7 +4309,7 @@ $imp->display('[warn]');
 					} # end if
 			} # end if versions vs unspecifiedpages
 
-			if ( ! $$price{complete} ) {
+			if ( $best_price{complete} and ! $$price{complete} ) {
 				if ( DEBUG or 0 ) {
 					$imp->display('Incomplete Price');
 				} # end if
