@@ -309,7 +309,7 @@ if ( 0 ) {
 			if ( $CuttingMakeReady ) {
 				my %setup = $CuttingMakeReady->get_price( undef, $Equipment );
 				if ( $setup{units} eq 'per cut' ) {
-			my $cuts = $width_cuts + $height_cuts;
+					my $cuts = $width_cuts + $height_cuts;
 					%setup = $CuttingMakeReady->get_price( $cuts, $Equipment );
 					$setup{Total} = $setup{Price} * $cuts;
 					$results{Breakdown} .= sprintf('Make Ready: $%1$.2f%2$s * %4$d cuts = $%3$.2f<br/>', @setup{'Price','units','Total'}, $cuts );
@@ -328,7 +328,7 @@ if ( 0 ) {
 					$results{Breakdown} .= sprintf('Pile handling: $%1$.2f%2$s * %4$d piles = $%3$.2f<br/>', @pilehandlingprice{'Price','units','Total'}, $piles );
 				} else {
 					$openprint::log->error("invalid units $pilehandlingprice{units} on $$PileHandling{name}");
-					$results{alert} .= "invalid units $pilehandlingprice{units} on $$PileHandling{name}<br/>";
+					$results{alert} .= "invalid units $pilehandlingprice{units} on $$PileHandling{name} on $$Equipment{name}<br/>";
 				} # end if
 			} elsif ( DEBUG ) {
 				$openprint::log->debug("No PileHandling");
