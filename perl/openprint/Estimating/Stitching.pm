@@ -646,7 +646,12 @@ sub calc {
 		if ( $results{Status} eq 'calculated' ) {
 			$$specs{"ddmEquipment$qty_index"} = $results{Equipment}->id();
 			$$specs{'Imposition'.$qty_index} = $results{Imposition};
-			$$specs{'hdnBreakdown'.$qty_index} .= 'Estimated Run Time: @'.$price{Runspeed}.'/Hr = '. Math::Round::nearest( 0.1, $price{RunTime} ) . ',<br/>';
+			if ( $price{PocketMakeReady} ) {
+				my $mr_time = Math::Round::nearest( 0.1, $price{Pockets} * $price{PocketMakeReady}{value} / 60 ); # assume minutes
+				$$specs{'hdnBreakdown'.$qty_index} .= 'Makeready Time: ' . $price{PocketMakeReady}{value}.$price{PocketMakeReady}{units} . ' per pocket * ' . $price{Pockets} . ' pockets = ' . $mr_time . ' hours<br/>';
+				$price{RunTime} -= $mr_time;
+			} # end if
+			$$specs{'hdnBreakdown'.$qty_index} .= 'Estimated Run Time: '.$$specs{"txtQuantity$qty_index"}.'@'.$price{Runspeed}.'/Hr = '. Math::Round::nearest( 0.1, $price{RunTime} ) . 'hours,<br/>';
 			$$specs{'hdnBreakdown'.$qty_index} .= "Number of Passes: $price{Passes}<br/>";
 			$$specs{'hdnBreakdown'.$qty_index} .= "Imposition: $price{Imposition}out<br/>";
 			$$specs{'hdnBreakdown'.$qty_index} .= sprintf('Calliper Markup %d%<br/>', $price{'Calliper Markup'} ) if $price{'Calliper Markup'};
@@ -784,16 +789,25 @@ sub get_price {
 	$MakeReadyService = openprint::Service->find_one( name=>join('',$$ServiceType{name},'MakeReady') ) if ! $MakeReadyService;
 
 	if ( $MakeReadyService ) {
-	my $MakeReady = $price{MakeReadyPrice} = $MakeReadyService->get_Price( $pockets+$plusCover, $Equipment );
-	$$MakeReady{Total} = $$MakeReady{Price};
-	$price{MakeReadyTotal} = $$MakeReady{Total};
+		my $MakeReady = $price{MakeReadyPrice} = $MakeReadyService->get_Price( $pockets+$plusCover, $Equipment );
+		$$MakeReady{Total} = $$MakeReady{Price};
+		$price{MakeReadyTotal} = $$MakeReady{Total};
 	}
 
 	my $maxPockets = 1*$Equipment->specification( 'Number of Pockets', undef );
 	my $neededPockets = $pockets;
-	$price{RunTime} += $neededPockets * $Equipment->specification( 'Pocket Make Ready', undef );
+	$price{PocketMakeReady} = $Equipment->Specification( 'Pocket Make Ready', undef );
+	if ( $price{PocketMakeReady} ) {
+		if ( lc $price{PocketMakeReady}{units} eq 'minutes' ) {
+			$price{RunTime} += $neededPockets * $price{PocketMakeReady}{value} /60;
+		} else {
+			$openprint::log->error("Unknown units on PocketMakeReady");
+		} # end if
+	} # end if PocketMakeReady
 
 	my $unitsPerHour;
+	my $MinimumRunTime = $Equipment->Specification( 'Minimum Run Time' );
+
 # Calculate Full Passes
 	if ( $maxPockets and ( $neededPockets > $maxPockets ) ) {
 # Loaded here, so we don't do it in the loop many times
@@ -812,8 +826,11 @@ sub get_price {
 		$unitsPerHour = $Equipment->specification( 'Units Per Hour '.$price{Imposition}.' out', $maxPockets );
 		$unitsPerHour = $Equipment->specification( 'Units Per Hour', $maxPockets ) if ! $unitsPerHour;
 		$price{Runspeed} = $unitsPerHour;
-		my $runtime = $unitsPerHour ? $qty/$unitsPerHour : 0; # in seconds
-		$price{RunTime} += $runtime * 360;
+		my $runtime = $unitsPerHour ? $qty/$unitsPerHour : 0; # in hours
+		$price{RunTime} += $runtime;
+		if ( $MinimumRunTime ) {
+			$runtime = $$MinimumRunTime{value} if $runtime < $$MinimumRunTime{value};
+		} # end if
 		my $loopbreak_pockets = $neededPockets;
 		while ( $neededPockets > $maxPockets ) {
 			if ( $servicePrice{units} eq 'per m' ) {
@@ -846,8 +863,11 @@ sub get_price {
 		$unitsPerHour = $Equipment->specification( 'Units Per Hour ' . $price{Imposition} . ' out', $neededPockets );
 		$unitsPerHour = $Equipment->specification( 'Units Per Hour', $neededPockets ) if ! $unitsPerHour;
 		$price{Runspeed} = $unitsPerHour;
-		my $runtime = $unitsPerHour ? $qty/$unitsPerHour : 0; # in seconds
-			$price{RunTime} += $runtime * 360;
+		my $runtime = $unitsPerHour ? $qty/$unitsPerHour : 0; # in horus
+		if ( $MinimumRunTime ) {
+			$runtime = $$MinimumRunTime{value} if $runtime < $$MinimumRunTime{value};
+		} # end if
+		$price{RunTime} += $runtime;
 		if ( $servicePrice{units} eq 'per m' ) {
 			$servicePrice{Total} = $servicePrice{Price} * $qty/1000;
 			$price{Service} += $servicePrice{Total};
@@ -880,12 +900,15 @@ sub get_price {
 			} # end if
 			my $slowdown_percent = $Equipment->specification('2ndPass Slowdown');
 
-			my $runtime = $unitsPerHour ? $qty/$unitsPerHour : 0; # in seconds
+			my $runtime = $unitsPerHour ? $qty/$unitsPerHour : 0; # in hours
 			if ( $slowdown_percent ) {
 				$slowdown_percent =~ s/[^\d\.\-]//g;
 				$runtime *= (1+$slowdown_percent/100);
 			} # end if
-			$price{RunTime} += $runtime * 360;
+			if ( $MinimumRunTime ) {
+				$runtime = $$MinimumRunTime{value} if $runtime < $$MinimumRunTime{value};
+			}
+			$price{RunTime} += $runtime;
 			if ( $servicePrice{units} eq 'per m' ) {
 				$servicePrice{Total} = $servicePrice{Price} * $qty/1000;
 				$price{Service} += $servicePrice{Total};
