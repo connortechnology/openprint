@@ -5,6 +5,17 @@
 	function check_inputs( form ) {
 		return true;
 	} //  end function check_inputs
+    var tinymce_options = {
+        mode : "textareas",
+        plugins: "paste",
+        theme : "advanced",
+theme_advanced_buttons1 : "bold,italic,underline,strikethrough,|,justifyleft,justifycenter,justifyright,justifyfull,|,fontsizeselect,|,bullist,numlist,|,indent,outdent",
+theme_advanced_buttons2 : '',
+theme_advanced_buttons2 : '',
+cleanup : true
+    };
+
+    tinyMCE.init( tinymce_options );
 </script>
 <div class="Host"><div class="Edit">
 <?include(/includes/error_reporting.html)?>
