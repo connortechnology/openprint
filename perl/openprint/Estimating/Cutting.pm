@@ -291,8 +291,8 @@ sub signature_calc_stock_cutting {
 			my $width_cuts = int( $start_width / $width ) - 1;
 			my $height_cuts = int( $start_height / $height ) - 1;
 			my $sheets = $$Stock_Amount{quantity};
-			$sheets = int( $sheets / ($width_cuts+1) ) if $width_cuts;
-			$sheets = int( $sheets / ($height_cuts+1) ) if $height_cuts;
+			$sheets = int( $sheets / ($width_cuts+1) ) if $width_cuts > 0;
+			$sheets = int( $sheets / ($height_cuts+1) ) if $height_cuts > 0;
 			# This accounts for cutting a sheet out of another, but not in half...
 if ( 0 ) {
 			if ( $width_cuts == 1 and $start_width != $width ) {
