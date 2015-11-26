@@ -154,10 +154,12 @@ sub send {
 			foreach my $email ( split (/,;\s/,	$recipient->email() ) ) {
 				s/^\s+//, s/\s+$// for $email;
 #$openprint::log->debug("Email: checking vacation for $email");
-				if ( email::get_vacation( $email ) ) {
-					$results .= 'Not sending to ' . $email . ' because they are on vacation.<br/>';
-#$openprint::log->debug("Email: got vacation for $email");
-					next;
+				if ( my $vacation = email::get_vacation_entry( $email ) ) {
+					if ( ! $$vacation{system_emails} ) {
+						$results .= 'Not sending to ' . $email . ' because they are on vacation.<br/>';
+	#$openprint::log->debug("Email: got vacation for $email");
+						next;
+					}
 				} # end if
 				push @to, sprintf('"%s" <%s>', $recipient->name(), $email );
 			} # end foreach email
@@ -173,9 +175,11 @@ sub send {
 					next;
 				} # end if
 
-				if ( email::get_vacation( $email ) ) {
-					$results .= 'Not sending to ' . $email . ' because they are on vacation.<br/>';
-					next;
+				if ( my $vacation = email::get_vacation_entry( $email ) ) {
+					if ( ! $$vacation{system_emails} ) {
+						$results .= 'Not sending to ' . $email . ' because they are on vacation.<br/>';
+						next;
+					}
 				} # end if
 				$mail{TO} = $recipient;
 			} else {
@@ -183,9 +187,11 @@ sub send {
 					$results .= 'Not sending to ' . $recipient . ' because they have been excluded.<br/>';
 					next;
 				} # end if
-				if ( email::get_vacation( $recipient ) ) {
-					$results .= 'Not sending to ' . $recipient . ' because they are on vacation.<br/>';
-					next;
+				if ( my $vacation = email::get_vacation_entry( $recipient ) ) {
+					if ( ! $$vacation{system_emails} ) {
+						$results .= 'Not sending to ' . $recipient . ' because they are on vacation.<br/>';
+						next;
+					}
 				} # end if
 				$mail{TO} = $recipient;
 			} # end if

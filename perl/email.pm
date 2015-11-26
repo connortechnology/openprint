@@ -12,15 +12,15 @@ require sql;
 my $dbh;
 
 sub db_connect {
-	if ( $config{'mail_db_name'} ) {
+	if ( $config{mail_db_name} ) {
 # Fairly important to us the config hash.  r->dir_config causes crashes
 		$dbh = sql::open_sql( $openprint::log, 
 				(
-				 'host'		=>	$config{'mail_db_hostname'},
-				 'database'	=>	$config{'mail_db_name'},
-				 'login'	=>	$config{'mail_db_username'},
-				 'password'	=>	$config{'mail_db_password'},
-				 'driver'	=>	$config{'mail_db_driver'},
+				 'host'		=>	$config{mail_db_hostname},
+				 'database'	=>	$config{mail_db_name},
+				 'login'	=>	$config{mail_db_username},
+				 'password'	=>	$config{mail_db_password},
+				 'driver'	=>	$config{mail_db_driver},
 				) );
 	} # end if;
 	return $dbh;
@@ -39,21 +39,32 @@ sub get_vacation {
 
 	$dbh = db_connect() if ! $dbh; 
 	if ( $dbh ) {
-		my ( $subject, $message ) = sql::execute( $log, $dbh, q{SELECT subject, body FROM vacation WHERE email=?}, $email );
+		my ( $subject, $message, $system_emails ) = sql::execute( $log, $dbh, q{SELECT subject, body, system_emails FROM vacation WHERE email=?}, $email );
 		if ( $message or $subject ) {
-			return 1, $subject, $message;
+			return 1, $subject, $message, $system_emails;
 		} # end if
 	} # end if
 	return;	
 } # end sub get_vacation
 
+sub get_vacation_entry {
+    my ( $email ) = @_;
+
+    $dbh = db_connect() if ! $dbh;
+    if ( $dbh ) {
+		return $dbh->selectall_arrayref( 'SELECT * FROM vacation WHERE email=?', { Slice => {} }, $email );
+    } # end if
+    return;
+} # end sub get_vacation
+
+
 sub start_vacation {
-	my ( $email, $subject, $message ) = @_;
+	my ( $email, $subject, $message, $system_emails ) = @_;
 
 	$dbh = db_connect() if ! $dbh; 
 
 	$email =~ /(.*)\@.*/;
-	my $autoreply_address = $1.'@'.$config{'mail_autoreply_domain'};
+	my $autoreply_address = $1.'@'.$config{mail_autoreply_domain};
 
 	my $ac = sql::start_transaction( $dbh );
 	$dbh->do( 'LOCK TABLE vacation IN ACCESS EXCLUSIVE MODE' ) or $log->error( $dbh->errstr );
@@ -64,6 +75,7 @@ sub start_vacation {
 		'subject',	$subject,
 		'body',		$message,
 		'domain',	$autoreply_address,
+		'system_emails',	$system_emails,
 		'created',	'NOW()',
 		);
 	my @aliases;
@@ -145,7 +157,7 @@ sub domains {
 	} # end if;
 	my $domains = $dbh->selectall_arrayref( 'SELECT * FROM domain', { Slice => {} } );
 	if ( $domains ) {
-		return map { $$_{'domain'} } @{$domains};
+		return map { $$_{domain} } @{$domains};
 	}  # end if
 	$openprint::log->debug("No domains found");
 	return ();
