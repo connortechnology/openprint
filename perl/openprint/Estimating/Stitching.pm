@@ -263,7 +263,7 @@ $openprint::log->debug("Fold pq($$FI{page_quantity}) pages($$FI{pages}) ($$Fold{
 				}
 				if ( ! $$I{Folder} ) {
 					$$I{Folder} = $Fold->Equipment();
-					$openprint::log->debug("Setting folder to " . $$I{Folder}->strid() );
+					$openprint::log->debug("Setting folder to " . $$I{Folder}->strid() ) if DEBUG;
 					#} else {
 					#$openprint::log->debug('Folder is ' . $$I{Folder}->strid() );
 				}
