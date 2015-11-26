@@ -54,7 +54,7 @@ sub get_vacation_entry {
     if ( $dbh ) {
 		my $data = $dbh->selectall_arrayref( 'SELECT * FROM vacation WHERE email=?', { Slice => {} }, $email );
 		if ( $data and @{$data} ) {
-			return $data[0];
+			return $$data[0];
 		}
     } # end if
     return;
