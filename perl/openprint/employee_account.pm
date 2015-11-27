@@ -74,7 +74,7 @@ sub profile {
 			if ( sets::isin( $domain, \@domains ) ) {
 
 				if ( $param{VacationState} ) {
-					email::start_vacation( @param{'email','VacationSubject','VacationMessage'} );
+					email::start_vacation( @param{'email','VacationSubject','VacationMessage','VacationSystemMessages'} );
 				} else {
 					email::stop_vacation( $param{email} );
 				} # end if
@@ -130,7 +130,7 @@ sub profile {
         my ( $user, $domain ) = $User->email() =~ /^([^\@]+)\@(.+)$/;
         if ( sets::isin( $domain, \@domains ) ) {
             $variable{DoEmail} = 1;
-            @variable{'VacationState','VacationSubject','VacationMessage'} = email::get_vacation( $User->email() );
+            @variable{'VacationState','VacationSubject','VacationMessage','VacationSystemEmails'} = email::get_vacation( $User->email() );
             @{$variable{Aliases}} = email::aliases( $User->email() );
         } # end if
     } # end if

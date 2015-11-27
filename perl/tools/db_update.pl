@@ -1647,6 +1647,7 @@ if ( sets::isin( 'tbl_service_prices', \@tables ) ) {
 	} # end if
 } # end if
 if ( ! sets::isin( 'service_prices',\@tables )  ) {
+	$log->debug("Adding service prices");
 	$dbh->do( misc::load_file( $log, '../openprint/sql/Service_Prices.sql' ) );
 	die if $dbh->errstr();
 } else {
@@ -1667,6 +1668,11 @@ if ( ! sets::isin( 'service_prices',\@tables )  ) {
 	} # end if
 	if ( ! exists $$data{period_end} ) {
 		$dbh->do('ALTER TABLE Service_Prices ADD period_end TIMESTAMP WITH TIME ZONE');
+	} # end if
+	if ( ! exists $$data{id} ) {
+		$log->debug("Adding id SERIAL to Service_prices");
+		$dbh->do('ALTER TABLE Service_Prices ADD id SERIAL');
+		die $dbh->errstr() if $dbh->errstr();
 	} # end if
 } # end if
 @sequences = sql::execute( undef, undef, q`SELECT sequence_name FROM information_schema.sequences where sequence_schema='public'`);

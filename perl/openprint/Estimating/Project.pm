@@ -38,6 +38,7 @@ my @no_outputs = (
 	'rdbPanels','rdbPocketSize','chkPocketLeft','chkPocketRight',
 	'txtQuantity1',
 	'chkOverrideScoreQty',
+	'h_stands',
 );
 sub outputs {
 } # end sub outputs
@@ -145,6 +146,11 @@ $openprint::log->debug("In Project::calc");
 		map { openprint::print_project::delete_service( $Project, $_ ); } @{$$services{Sewing}};
 		delete $$services{Sewing};
 	} # end if
+	if ( $$specs{h_stands} eq 'Y' ) {
+		if ( ! $$services{HStands} ) {
+            push @{$$services{HStands}, $Project->add_service( 'HStands' );
+        } # end i
+	}
 
 	if ( ! sets::isin( $$specs{'Dimensions'}, ['', 'Custom'] ) ) {
 		my ( $width, $height, $type ) = $$specs{'Dimensions'} =~ /([\d\.]*)x([\d\.]*)(\w*)/;

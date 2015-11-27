@@ -295,47 +295,7 @@ Please select a company or user to obtain login information.<br/>
 			</ul>
 		</fieldset>
 		<? if ( $$variable{'DoEmail'} ) ?>
-<div class="Email">
-	<div class="Settings">
-		<fieldset><legend>Email Settings</legend>
-			<ul>
-			<li>
-				<label>Password</label>
-				<input type="text" name="EmailPassword" value="<?EmailPassword?>" />
-			</li>
-			<li>
-				<label>Verify Password</label>
-				<input type="text" name="VerifyEmailPassword" value="<?EmailPassword?>" />
-			</li>
-			<li>
-				<label>Forwards<br/>(One per line)</label>
-				<textarea id="aliases" name="aliases" onkeyup="textarea_resize(this);" rows="<? echo ( scalar @{$$variable{'Aliases'}} + 1 ) ?>"><? echo ( join("\n", @{$$variable{'Aliases'}})) ?></textarea>
-			</li>
-			</ul>
-		</fieldset>
-	</div>
-	<div class="Vacation">
-		<fieldset><legend>Vacation Auto-Responder Settings</legend>
-			<ul>
-			<li>
-				<label>Subject</label>
-				<input type="text" name="VacationSubject" value="<?VacationSubject?>" />
-			</li>
-			<li>
-				<label>Vacation Message</label>
-				<textarea name="VacationMessage" rows="10"><?VacationMessage?></textarea>
-			</li>
-			<li>
-				<label>Vacation Status</label>
-				<input type="radio" id="VacationState1" name="VacationState" <? echo ( $$variable{'VacationState'} ? 'checked="checked"' : '' ) ?> value="1">
-				<label class="radio" for="VacationState1">Enabled</label>
-				<input type="radio" id="VacationState0" name="VacationState" <? echo ( (!$$variable{'VacationState'})? 'checked="checked"' : '' ) ?> value="0">
-				<label class="radio" for="VacationState0">Disabled</label>
-			</li>
-			</ul>
-		</fieldset>
-	</div>
-</div>
+		<?include(/account/_email_settings.html)?>
 		<? endif ( $$variable{'DoEmail'} ) ?>
 		<? echo ( include('/account/_user_profile_edit.html'); ) ?>
 		<div class="LoginCredentials">

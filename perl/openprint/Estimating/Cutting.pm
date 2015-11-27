@@ -218,6 +218,8 @@ sub signature_calc_stock_cutting {
 	my $total = 0;
 	my $total_mprice = 0;
 
+	$results{Stocks} = $Stocks;
+
 	foreach my $Stock_Amount ( @{$Stocks} ) {
 		my $Paper = $$Stock_Amount{Stock};
 		my $paper_string = $Paper->id_string();
@@ -291,8 +293,8 @@ sub signature_calc_stock_cutting {
 			my $width_cuts = int( $start_width / $width ) - 1;
 			my $height_cuts = int( $start_height / $height ) - 1;
 			my $sheets = $$Stock_Amount{quantity};
-			$sheets = int( $sheets / ($width_cuts+1) ) if $width_cuts;
-			$sheets = int( $sheets / ($height_cuts+1) ) if $height_cuts;
+			$sheets = int( $sheets / ($width_cuts+1) ) if $width_cuts > 0;
+			$sheets = int( $sheets / ($height_cuts+1) ) if $height_cuts > 0;
 			# This accounts for cutting a sheet out of another, but not in half...
 if ( 0 ) {
 			if ( $width_cuts == 1 and $start_width != $width ) {
@@ -365,6 +367,7 @@ if ( 0 ) {
 			$results{alert} .= "No equipment found for cutting stock $paper_string<br/>";
 		} # end if
 		$total += $bestPrice;
+		$$Stock_Amount{Equipment} = $bestEquipment;
 		$total_mprice += $mprice;
 	} # end foreach Paper
 	$$specs{"txtQuantity$qty_index"} = $Project->quantity( $qty_index ) if ! $$specs{"txtQuantity$qty_index"};	
@@ -1167,6 +1170,7 @@ sub calc {
 		my $mprice;
 
 		my %Cut_Stocks;
+		my $stock_id = 1;
 
 # For the non-book case, this devolves into the printing service
 		foreach my $signature_service_index ( @signatures ) {
@@ -1192,7 +1196,8 @@ sub calc {
 				if ( $Cut_Stocks{ $Paper->id_string() } ) {
 					$Cut_Stocks{ $Paper->id_string() }{quantity} += $$sig_specs{"StockQuantity$qty_index"};
 				} else {
-					$Cut_Stocks{ $Paper->id_string() } = { Stock=>$Paper, quantity=>$$sig_specs{"StockQuantity$qty_index"} };
+					$Cut_Stocks{ $Paper->id_string() } = { Stock=>$Paper, quantity=>$$sig_specs{"StockQuantity$qty_index"}, index=>$stock_id };
+					$stock_id += 1;
 				} # end if
 			} # end if
 $openprint::log->debug("Paper: " . $Paper->to_string() ) if DEBUG;
@@ -1236,6 +1241,15 @@ $openprint::log->debug("Paper: " . $Paper->to_string() ) if DEBUG;
 			my %results = signature_calc_stock_cutting( $Project, $specs, $qty_index, [ values %Cut_Stocks ] );
 #$$specs{"ddmStockCutEquipment-$form-$qty_index"} = $results{Equipment} ? $results{Equipment}->id() : '';
 			$$specs{"txtStockCutPrice-$qty_index"} = sprintf('%.2f', $results{Price} );
+			foreach my $Stock_Amount ( @{$results{Stocks}} ) {
+				if ( ! $$Stock_Amount{Equipment} ) {
+					$openprint::log->error("No Equipment for stock cutting for " . $Stock_Amount->to_string() );
+					$$specs{"ddmStockCutEquipment-$$Stock_Amount{index}-$qty_index"} = '';
+				} else {
+					$openprint::log->debug("Setting Equipment for stock cutting for " . $$Stock_Amount{Stock}->to_string() . ' to ' . $$Stock_Amount{Equipment}->strid() );
+					$$specs{"ddmStockCutEquipment-$$Stock_Amount{index}-$qty_index"} = $$Stock_Amount{Equipment}->id();
+				}
+			}
 			$price += $results{Price};
 			$mprice += $results{MPrice};
 			$$specs{Status} = 'uncalculated' if $results{Status} eq 'uncalculated';

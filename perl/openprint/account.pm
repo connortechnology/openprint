@@ -496,7 +496,7 @@ sub user_profile {
 				my ( $user, $domain ) = $User->email() =~ /^([^\@]+)\@(.+)$/;
 				if ( sets::isin( $domain, \@domains ) ) {
 					if ( $param{VacationState} ) {
-						email::start_vacation( $User->email(), @param{'VacationSubject','VacationMessage'} );
+						email::start_vacation( $User->email(), @param{'VacationSubject','VacationMessage','VacationSystemEmails'} );
 					} else {
 						email::stop_vacation( $User->email() );
 					} # end if

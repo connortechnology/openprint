@@ -6752,7 +6752,7 @@ if ( 0 ) {
 					join(', ', @$specs{'txtSpecificStockBrand','txtSpecificStockFinish','txtSpecificStockColour','txtSpecificStockWeight'} ) :
 					join(', ', @$specs{'ddmStockBrand','ddmStockFinish','ddmStockColour','ddmStockWeight'} ),
 					);
-			if ( ! ( $$specs{ddmStockWeight} =~ /([\d\.]\s*)PT/ ) ) {
+			if ( ! ( $$specs{ddmStockWeight} =~ /([\d\.]+\s*)PT/ ) ) {
 				if ( $$specs{txtSpecificStockCalliper} ) {
 					$string .= ' ' . ($$specs{txtSpecificStockCalliper} * 1000).'PT';
 				} # end if

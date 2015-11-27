@@ -326,6 +326,11 @@ sub small_url {
 	return sized_url( $_[0], 'small' );
 } # end small_url
 
+sub sized_html {
+	return '' if ! $_[0]{'id'};
+	return sprintf('<img src="%1$s" alt="%2$s" title="%2$s" />', $_[0]->sized_url($_[1]), $_[0]->name() );
+}
+
 sub large_html {
 	return '' if ! $_[0]{'id'};
 	return sprintf('<img src="%1$s" alt="%2$s" title="%2$s" />', $_[0]->sized_url('large'), $_[0]->name() );
