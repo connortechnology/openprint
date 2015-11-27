@@ -52,7 +52,10 @@ sub get_vacation_entry {
 
     $dbh = db_connect() if ! $dbh;
     if ( $dbh ) {
-		return $dbh->selectall_arrayref( 'SELECT * FROM vacation WHERE email=?', { Slice => {} }, $email );
+		my $data = $dbh->selectall_arrayref( 'SELECT * FROM vacation WHERE email=?', { Slice => {} }, $email );
+		if ( $data and @{$data} ) {
+			return $$data[0];
+		}
     } # end if
     return;
 } # end sub get_vacation

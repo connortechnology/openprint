@@ -112,7 +112,7 @@
 							my $html;
 							my @blocked_services = $$variable{ProjectType}->blocked_services();
 
-							foreach my $servicetype ( 'Scoring', 'Drilling', 'Grommeting', 'RoundCornering' ) {
+							foreach my $servicetype ( 'Scoring', 'Drilling', 'Grommeting', 'RoundCornering', 'HStands' ) {
 								my $ServiceType = openprint::ServiceType->find_one( name=>$servicetype );
 								if ( $ServiceType ) {
 									if ( ! sets::isin( $$ServiceType{id}, \@blocked_services ) ) {

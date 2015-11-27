@@ -66,7 +66,12 @@
 <? if ( new openprint::User( $session{user_id} )->email() =~ /iconnor/ ) ?>
 		<li> 
 			<label>Type</label>
-			<input type="text" name="type" value="<? echo ( $$variable{ProjectType}->type() ) ?>" /> 
+			<? echo ( ssi::select( 
+				[ 'SinglePage', 'Single Page',
+					'MultiPage', 'Multiple Pages / Book',
+					'ScratchPads',	'Scratch/Note Pads',
+				], $$variable{ProjectType}->type(),
+				{ name => 'type' } ); ) ?>
 		</li>
 		<li> 
 			<label>URL</label>
