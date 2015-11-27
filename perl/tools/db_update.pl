@@ -1405,6 +1405,17 @@ if ( ! sets::isin( 'skids', \@tables ) ) {
 		if ( ! exists $$data{'received_on'} ) {
 			$dbh->do(q{alter table skids add received_on date});
 		} # endif
+		if ( ! exists $$data{location_id} ) {
+			$log->debug("Adding location_id to skids");
+			$dbh->do(q{alter table skids add location_id INTEGER});
+			$dbh->do(q{alter table skids ADD FOREIGN KEY (location_id) REFERENCES Locations (id)});
+			die $dbh->errstr() if $dbh->errstr();
+		} # endif
+		if ( exists $$data{'location'} ) {
+			$log->debug("Removing location from skids");
+			$dbh->do('ALTER TABLE skids DROP location');
+			die $dbh->errstr() if $dbh->errstr();
+		} # endif
 	} # end if
 } # end if 1456
 
@@ -2998,6 +3009,14 @@ if ( ! sets::isin('user_notification_types',\@tables ) ) {
 } # end if
 if ( ! sets::isin('user_notifications',\@tables ) ) {
 	$dbh->do( misc::load_file( $log, q{../openprint/sql/User_Notifications.sql}) );
+} else {
+	my $data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='user_notifications'", 'column_name');
+    if ( ! exists $$data{company_id} ) {
+		$log->debug("Adding company_id to notifications");
+        $dbh->do('ALTER TABLE user_notifications ADD company_id INTEGER');
+        $dbh->do('ALTER TABLE user_notifications ADD FOREIGN KEY (company_id) REFERENCES companies (id)');
+    } # end if
+
 } # end if
 
 if ( ! sets::isin( 'claims', \@tables ) ) {
