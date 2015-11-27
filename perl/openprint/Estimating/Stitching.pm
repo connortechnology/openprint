@@ -210,7 +210,7 @@ sub signature_calc {
 	my $pockets = $$specs{"txtPockets$qty_index"} = 0;
 
 	foreach my $I ( @$Impositions ) {
-$I->display('In Stitching:') if DEBUG;
+$I->display('In Stitching:') if DEBUG and 0;
         my $sig_specs = $I->specs();
 		#next if $$sig_specs{txtSignatureType} eq 'Cover Pages';
         if ( ! $sig_specs ) {
@@ -263,7 +263,7 @@ $openprint::log->debug("Fold pq($$FI{page_quantity}) pages($$FI{pages}) ($$Fold{
 				}
 				if ( ! $$I{Folder} ) {
 					$$I{Folder} = $Fold->Equipment();
-					$openprint::log->debug("Setting folder to " . $$I{Folder}->strid() ) if DEBUG;
+					$openprint::log->debug("Setting folder to " . $$I{Folder}->strid() ) if DEBUG and 0;
 					#} else {
 					#$openprint::log->debug('Folder is ' . $$I{Folder}->strid() );
 				}
@@ -354,6 +354,7 @@ $openprint::log->debug("Fold pq($$FI{page_quantity}) pages($$FI{pages}) ($$Fold{
 	my %error;
 	my @equipment = ();
 
+
 	if ( ( defined $$specs{"chkOverrideEquipment$qty_index"} ) and ( $$specs{"chkOverrideEquipment$qty_index"} eq 'Y' ) ) {
 		if ( ! $$specs{"ddmEquipment$qty_index"} ) {
 			$results{alert} .= 'Please select a piece of equipment to stitch your job.<br/>';
@@ -361,18 +362,23 @@ $openprint::log->debug("Fold pq($$FI{page_quantity}) pages($$FI{pages}) ($$Fold{
 			@equipment = ( new openprint::Equipment( $$specs{"ddmEquipment$qty_index"} ) );
 			if ( ! $equipment[0]->id() ) {
 				$results{alert} .= 'Your selected equipment was not found. Please select another.<br/>';
+			} elsif ( $_ = equipment_fits( $equipment[0], $specs ) ) {
+				$results{alert} .= $_;
+				$results{Status} = 'uncalculated';
+$openprint::log->error("$_");
+				return \%results;
 			} # end if
 		} # end if
-#$openprint::log->debug("Using " . $equipment[0]->name() . " as overriden stitcher" );
 	} else {
-#$openprint::log->debug("Not Using overriden stitcher" . $$specs{"chkOverrideEquipment$qty_index"} );
+	#$openprint::log->debug("Not Using overriden stitcher" . $$specs{"chkOverrideEquipment$qty_index"} );
 		if ( $$calc_hash{'Stitching::signature_calc::equipment'} ) {
-#$results{Breakdown} .= 'Using cached equipment';
+	#$results{Breakdown} .= 'Using cached equipment';
 			@equipment = @{$$calc_hash{'Stitching::signature_calc::equipment'}};
 		} else {
-#$results{Breakdown} .= 'getting freshequipment';
+	#$results{Breakdown} .= 'getting freshequipment';
 			@{$$calc_hash{'Stitching::signature_calc::equipment'}} = @equipment = get_equipment( $specs, \%error );
 		} # end if
+	#$openprint::log->debug("Using " . $equipment[0]->name() . " as overriden stitcher" );
 	} # end if
 
 	my $bestPrice;
@@ -710,6 +716,43 @@ sub display {
 	$$variable{txtPockets} = $$variable{SignatureCount} + $$variable{txtInsertQuantity};
 } # end sub display
 
+sub equipment_fits {
+	my ( $Equipment, $specs ) = @_;
+
+	if ( $_ = $Equipment->fits( $$specs{Width}, $$specs{Height}, undef, 'Stitching' ) ) {
+		return $_;
+	} # end if
+	if ( $_ = $Equipment->specification('Maximum Spread Width') and ( $$specs{Width} > $_ ) ) {
+		return ': spread too big.<br/>';
+	} # end if
+	if ( $_ = $Equipment->specification('Minimum Spread Width') and ( $$specs{Width} < $_ ) ) {
+		return ': spread too small.<br/>';
+	} # end if
+	if ( $_ = $Equipment->specification('Maximum Finished Width') and ( $$specs{Width} > $_ ) ) {
+		return ': finished width too big.<br/>';
+	} # end if
+	if ( $_ = $Equipment->specification('Minimum Finished Width') and ( $$specs{Width} < $_ ) ) {
+		return ': finished width too small.<br/>';
+	} # end if
+	if ( $_ = $Equipment->specification('Maximum Finished Height') and ( $$specs{Height} > $_ ) ) {
+		return ': finished height too big.<br/>';
+	} # end if
+	if ( $_ = $Equipment->specification('Minimum Finished Height') and ( $$specs{Height} < $_ ) ) {
+		return ': finished height too small.<br/>';
+	} # end if
+	if ( $$specs{txtCalliper} > 0 ) {
+		if ( $_ = $Equipment->specification('Maximum Calliper') and ( $$specs{txtCalliper} > $_ ) ) {
+			return ": Too Thick $$specs{txtCalliper} > Maximum calliper: $_.<br/>";
+		} # end if
+		if ( $_ = $Equipment->specification('Minimum Calliper') and ( $$specs{txtCalliper} < $_ ) ) {
+			return ': Too Thick.<br/>';
+		} # end if
+	} else {
+		$openprint::log->warn("No calliper in Stitching::get_equipment");
+	} # end if
+	return;
+}
+
 sub get_equipment {
 	my ( $specs, $error ) = @_;
 
@@ -717,47 +760,12 @@ sub get_equipment {
 	my @all_equipment = openprint::Equipment->find( Specifications => {'Stitching Capable'=>['Y','When Printing','When Digital','When Folding']}, useinestimating=>1,order=>'strName');
 
 	foreach my $Equipment ( @all_equipment ) {
-		if ( $_ = $Equipment->fits( $$specs{Width}, $$specs{Height}, undef, 'Stitching' ) ) {
+		$_ = equipment_fits( $Equipment, $specs );
+		if ( $_ ) {
 			$$error{$$Equipment{id}} .= $_;
-			next;
-		} # end if
-		if ( $_ = $Equipment->specification('Maximum Spread Width') and ( $$specs{Width} > $_ ) ) {
-			$$error{$$Equipment{id}} .= ': spread too big.<br/>';
-			next;
-		} # end if
-		if ( $_ = $Equipment->specification('Minimum Spread Width') and ( $$specs{Width} < $_ ) ) {
-			$$error{$$Equipment{id}} .= ': spread too small.<br/>';
-			next;
-		} # end if
-		if ( $_ = $Equipment->specification('Maximum Finished Width') and ( $$specs{Width} > $_ ) ) {
-			$$error{$$Equipment{id}} .= ': finished width too big.<br/>';
-			next;
-		} # end if
-		if ( $_ = $Equipment->specification('Minimum Finished Width') and ( $$specs{Width} < $_ ) ) {
-			$$error{$$Equipment{id}} .= ': finished width too small.<br/>';
-			next;
-		} # end if
-		if ( $_ = $Equipment->specification('Maximum Finished Height') and ( $$specs{Height} > $_ ) ) {
-			$$error{$$Equipment{id}} .= ': finished height too big.<br/>';
-			next;
-		} # end if
-		if ( $_ = $Equipment->specification('Minimum Finished Height') and ( $$specs{Height} < $_ ) ) {
-			$$error{$$Equipment{id}} .= ': finished height too small.<br/>';
-			next;
-		} # end if
-		if ( $$specs{txtCalliper} > 0 ) {
-			if ( $_ = $Equipment->specification('Maximum Calliper') and ( $$specs{txtCalliper} > $_ ) ) {
-				$$error{$$Equipment{id}} .= ': Too Thick.<br/>';
-				next;
-			} # end if
-			if ( $_ = $Equipment->specification('Minimum Calliper') and ( $$specs{txtCalliper} < $_ ) ) {
-				$$error{$$Equipment{id}} .= ': Too Thick.<br/>';
-				next;
-			} # end if
 		} else {
-			$openprint::log->warn("No calliper in Stitching::get_equipment");
-		} # end if
-		push @possible_equipment, $Equipment;
+			push @possible_equipment, $Equipment;
+		}
 	} # end foreach equipment
 	return @possible_equipment;
 } # end sub get_equipment
