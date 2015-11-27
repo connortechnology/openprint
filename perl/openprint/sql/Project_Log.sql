@@ -1,11 +1,11 @@
 
-DROP TABLE IF EXISTS Project_Log;
-
 CREATE TABLE Project_Log (
-	Project_Id	INTEGER	NOT NULL, FOREIGN KEY(Project_Id) REFERENCES Projects (Id),
-	Company_id	INTEGER, FOREIGN KEY(Company_id) REFERENCES Companies (id),
-	User_Id		INTEGER, FOREIGN KEY(User_id) REFERENCES Users (id),
+	project_id	INTEGER	NOT NULL, FOREIGN KEY(project_id) REFERENCES Projects (id),
+	company_id	INTEGER, FOREIGN KEY(company_id) REFERENCES Companies (id),
+	user_id		INTEGER, FOREIGN KEY(user_id) REFERENCES Users (id),
 	dtmTimestamp		timestamp with time zone NOT NULL default(NOW()),
-	Description			TEXT,
-	PRIMARY KEY (Project_Id,dtmTimestamp)
+	Description			TEXT
 );
+
+CREATE INDEX Project_log_project_id_idx on Project_Log (project_id);
+CREATE INDEX Project_log_when_idx on Project_Log (dtmTimestamp);
