@@ -543,6 +543,9 @@ $log->debug("Binder: @BinderyServiceNames");
 			foreach ( @{$$services{ShrinkWrap}} ) {
 				my $specs = openprint::service::get_specs_ref( $$variable{Project}, $_ );
 				$html .= ", ShrinkWrap in $$specs{txtWrapQuantity}'s";
+				if ( $$specs{AccurateCount} eq 'Y' ) {
+					$html .= ' accurate count';
+				}
 			} # end foreach
 		} # end if
 		if ( $$services{Bundling} ) {
