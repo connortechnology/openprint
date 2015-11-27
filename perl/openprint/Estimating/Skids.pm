@@ -86,7 +86,7 @@ sub neccessary {
 # type is actually category name, not material type
 
 	if ( $type eq 'BulkSkids' ) {
-		my $finished_weight = openprint::print::get_finished_weight( $Project->id() );
+		my $finished_weight = $Project->finished_weight();
 		foreach my $qty_index ( $Project->quantity_indexes() ) {
 			if ( $finished_weight * $$Project{'quantity'.$qty_index} > 1500 ) {
 				return 1;
