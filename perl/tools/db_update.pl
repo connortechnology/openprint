@@ -3004,6 +3004,13 @@ if ( ! sets::isin('user_notification_types',\@tables ) ) {
 } # end if
 if ( ! sets::isin('user_notifications',\@tables ) ) {
 	$dbh->do( misc::load_file( $log, q{../openprint/sql/User_Notifications.sql}) );
+} else {
+	my $data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='user_notifications'", 'column_name');
+	if ( ! exists $$data{company_id} ) {
+		$dbh->do('ALTER TABLE user_notifications ADD company_id INTEGER');
+		$dbh->do('ALTER TABLE user_notifications ADD FOREIGN KEY (company_id) REFERENCES companies (id)');
+	} # end if
+	
 } # end if
 
 if ( ! sets::isin( 'claims', \@tables ) ) {
