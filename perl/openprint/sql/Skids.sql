@@ -1,6 +1,6 @@
 CREATE TABLE Skids (
 	id	SERIAL NOT NULL,
-	location	TEXT,
+	location_id	INTEGER, FOREIGN KEY (location_id) REFERENCES Locations (id),
 	rfidtag_id	TEXT,
 	created_on	timestamp with time zone default NOW(),
 	updated_on	timestamp with time zone default NOW(),
