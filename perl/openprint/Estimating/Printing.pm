@@ -1294,6 +1294,9 @@ $openprint::log->debug("not Skipping cuz ddmPress$qty_index eq $$Press{strid}");
 		$runstyles_roll = $runstyles if ! $runstyles_roll;
 		my $runstyles_sheet = $Press->specification('RunstylesSheet');
 		$runstyles_sheet = $runstyles if ! $runstyles_sheet;
+if ( DEBUG_IMPOSITIONS and $$specs{"chkOverrideRunStyle$qty_index"} ) {
+	$runstyles_sheet = $runstyles_roll = $runstyles = $$specs{"ddmRunStyle$qty_index"};
+}
 		my $roll2sheet_minimum_weight = $Press->Specification('Roll2Sheet Minimum Weight');
 
 		my %sheetsizes;
@@ -1420,15 +1423,18 @@ $openprint::log->debug("Skipping cuz not $height");
 					# We need to do some initial filtering here.	
 					my %paper_impositions;
 					foreach my $cut_off ( @cut_offs ) {
-		if ( DEBUG_IMPOSITIONS and $$Overrides{"OverrideCutOff$qty_index"} and $$specs{"CutOff$qty_index"} ) {
-			next if $cut_off != $$specs{"CutOff$qty_index"};
-		}
+						if ( DEBUG_IMPOSITIONS and $$Overrides{"OverrideCutOff$qty_index"} and $$specs{"CutOff$qty_index"} ) {
+							next if $cut_off != $$specs{"CutOff$qty_index"};
+						}
 						$$project{'Cut Off'} = $cut_off;
 						foreach my $i ( openprint::imposition::get_imposition( $project, $do_work_turn, $do_perfecting, $$specs{Versions}, $P, $Press ) ) {
 							my $AP = $i->Paper();
-							next if $maximum_roll_width and ( $$AP{width} > $maximum_roll_width );
+							if ( $maximum_roll_width and ( $$AP{width} > $maximum_roll_width ) ) {
+								$openprint::log->debug("Next due to maximum roll siwth $$AP{width} > $maximum_roll_width ") if DEBUG_IMPOSITIONS;
+								next;
+							}
 #$i->display('doig');
-							my $key = join( ',', @$i{'imposition','columns','runstyle','grain_direction'} );
+							my $key = join( ',', @$i{'imposition','columns','runstyle','grain_direction','image_orientation'} );
 							if ( ! $paper_impositions{$key} ) {
 								push @{$paper_impositions{$key}}, $i;
 							} else {
