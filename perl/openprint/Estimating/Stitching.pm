@@ -741,10 +741,10 @@ sub equipment_fits {
 		return ': finished height too small.<br/>';
 	} # end if
 	if ( $$specs{txtCalliper} > 0 ) {
-		if ( $_ = $Equipment->specification('Maximum Calliper') and ( $$specs{txtCalliper} > $_ ) ) {
+		if ( $_ = $Equipment->specification('MaximumStitching Calliper') and ( $$specs{txtCalliper} > $_ ) ) {
 			return ": Too Thick $$specs{txtCalliper} > Maximum calliper: $_.<br/>";
 		} # end if
-		if ( $_ = $Equipment->specification('Minimum Calliper') and ( $$specs{txtCalliper} < $_ ) ) {
+		if ( $_ = $Equipment->specification('MinimumStitching Calliper') and ( $$specs{txtCalliper} < $_ ) ) {
 			return ': Too Thick.<br/>';
 		} # end if
 	} else {
