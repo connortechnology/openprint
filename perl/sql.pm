@@ -10,7 +10,7 @@ use vars qw( $log $dbh $timing );
 use openprint ();
 *dbh = \$openprint::dbh;
 *log = \$openprint::log;
-use constant DEBUG => 1;
+use constant DEBUG => 0;
 $timing = 1;
 
 # This uses it's own dbh so as not to quash the global dbh.  This is so that we can easily open secondary db connections while maintaining the global one.
