@@ -1,13 +1,10 @@
 <li>
 	<label>Scoring</label>
-	<input type="radio" id="ScoringY" name="Scoring" value="Y" onclick="$('ScoringDiv').show();$('OrderButton').hide();" <? echo ( ssi::checked( $$variable{'Scoring'} eq 'Y' ); ) ?> />
-	<label class="radio" for="ScoringY">Yes</label>
-	<input type="radio" id="ScoringN" name="Scoring" value="N" onclick="$('ScoringDiv').hide();$('OrderButton').hide();" <? echo ( ssi::checked( $$variable{'Scoring'} ne 'Y' ); ) ?> />
-	<label class="radio" for="ScoringN">No</label>
+	<?echo(radio('Scoring', ['Y','Yes','N','No'], $$variable{'Scoring'}, { onclick=>q`if(this.value=='Y'){$('ScoringDiv').show();$('OrderButton').hide();}else{$('ScoringDiv').hide();$('OrderButton').hide();};` } );
 </li>
 <li id="ScoringDiv" <? echo ( 'style="display:none;"' if $$variable{'Scoring'} ne 'Y' ) ?> >
 	<label for="txtScoreQty"># of Scores</label>
-	<input type="number" id="txtScoreQty" name="txtScoreQty" value="<?txtScoreQty?>" onkeyup="this.value=this.value.replace(/\D/g,'');$('chkOverrideScoreQty').checked=true;$('OrderButton').hide();"/>
+	<? echo ( input( type=>'cardinal', name=>'txtScoreQty', value=>$$variable{txtScoreQty}, oninput=>q`$('chkOverrideScoreQty').checked=true;$('OrderButton').hide();` ); ) ?>
 	<input type="checkbox" id="chkOverrideScoreQty" name="chkOverrideScoreQty" value="Y" <? echo ( ssi::checked( $$variable{'chkOverrideScoreQty'} eq 'Y' ); ) ?> onclick="$('OrderButton').hide();" />
 	<label class="radio" for="chkOverrideScoreQty">Override</label>
 </li>

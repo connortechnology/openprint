@@ -73,7 +73,7 @@ sub edit {
 						cost			=>	$param{"cost-$$Price{id}"},
 						markup			=>	$param{"markup-$$Price{id}"},
 						price			=>	$param{"price-$$Price{id}"},
-						discountable	=>	$param{"discount-$$Price{id}"},
+						discountable	=>	$param{"discountable-$$Price{id}"},
 						supplier_id		=>	$param{"supplier_id-$$Price{id}"},
 						};
 				my @price_changes = $Price->changes( $new_values );

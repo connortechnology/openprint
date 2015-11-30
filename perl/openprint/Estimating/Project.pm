@@ -148,7 +148,7 @@ $openprint::log->debug("In Project::calc");
 	} # end if
 	if ( $$specs{h_stands} eq 'Y' ) {
 		if ( ! $$services{HStands} ) {
-            push @{$$services{HStands}, $Project->add_service( 'HStands' );
+            push @{$$services{HStands}}, $Project->add_service( 'HStands' );
         } # end i
 	}
 
