@@ -170,6 +170,8 @@ sub signature_calc {
 		$results{alert} .= 'Unable to determine stitching type!<br/>';
 		$results{Status} = 'uncalculated';
 		return \%results;
+	} else {
+		$$specs{ServiceTypeName} = $ServiceType->name();
 	} # end if
 
 	my $plusCover = $$printing_specs{rdbCover} eq 'Different' ? 1 : 0;
@@ -518,6 +520,8 @@ sub calc {
 	if ( ! $ServiceType->id() ) {
 		$$specs{alert} .= 'Unable to determine stitching type!<br/>';
 		return $$specs{Status} = 'uncalculated';
+	} else {
+		$$specs{ServiceTypeName} = $ServiceType->name();
 	} # end if
 
 	my $services = $Project->services();
@@ -741,12 +745,21 @@ sub equipment_fits {
 		return ': finished height too small.<br/>';
 	} # end if
 	if ( $$specs{txtCalliper} > 0 ) {
-		if ( $_ = $Equipment->specification('MaximumStitching Calliper') and ( $$specs{txtCalliper} > $_ ) ) {
-			return ": Too Thick $$specs{txtCalliper} > Maximum calliper: $_.<br/>";
+		if ( $_ = $Equipment->specification('Maximum '.$$specs{ServiceTypeName} .' Calliper') ) {
+			if ( $$specs{txtCalliper} > $_ ) {
+				return ": Too Thick $$specs{txtCalliper} > Maximum calliper: $_.<br/>";
+			}
+		} else {
+			$openprint::log->warn("No max calliper set for $$specs{ServiceTypeName} on $$Equipment{strid}");
 		} # end if
-		if ( $_ = $Equipment->specification('MinimumStitching Calliper') and ( $$specs{txtCalliper} < $_ ) ) {
-			return ': Too Thick.<br/>';
-		} # end if
+		if ( $_ = $Equipment->specification('Minimum ' . $$specs{ServiceTypeName} .' Calliper') ) {
+			if ( $$specs{txtCalliper} < $_ ) {
+				return ': Too Thick.<br/>';
+			} # end if
+		} else {
+            $openprint::log->warn("No min calliper set for $$specs{ServiceTypeName} on $$Equipment{strid}");
+        } # end if
+
 	} else {
 		$openprint::log->warn("No calliper in Stitching::get_equipment");
 	} # end if
