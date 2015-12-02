@@ -287,7 +287,22 @@ sub reboot {
 	my $Host = $_[0];
 	require LWP;
 	my $browser = LWP::UserAgent->new();
-	my $response = $browser->get('http://'.$Host->hostname().'/');
+
+	my $url;
+	if ( sets::isin( $_[0]->type(), [ 'AIC500', 'AIC500W', 'AIC777W', 'AIC747W' ] ) ) {
+		$url = 'http://'.$Host->hostname().'/admin/reboot.cgi?type=0';
+	} elsif( $_[0]->type() eq 'M8640' ) {
+		$url = 'http://'.$Host->hostname().'/cgi-bin/reboot.cgi';
+	} elsif( $_[0]->type() eq 'D-Link DAP1522' ) {
+		$url = 'http://'.$Host->hostname().'/sys_cfg_valid.xgi?&exeshell=submit REBOOT';
+	} else {
+		$openprint::log->error("Unknown host type $_[0]{type}");
+		return 0;
+	} # end if
+
+	$openprint::log->debug("URL: $url" );
+
+	my $response = $browser->get($url);
 	$openprint::log->debug( $response->status_line );
 	$openprint::log->debug( $response->content );
 	my $headers = $response->headers();
@@ -297,18 +312,8 @@ sub reboot {
 	my ( $auth, $tokens ) = $$headers{'www-authenticate'} =~ /(\w+)\s+(.*)/;
 	$tokens =~ s/"//g;	
 	my %tokens = map { split('=', $_ ) } split(/\s/, $tokens);
+$openprint::log->debug("realm: $tokens{realm}");
 	$browser->credentials( $Host->hostname().':80', $tokens{realm}, $Host->info('username'), $Host->info('password') );
-	my $url;
-	if ( sets::isin( $_[0]->type(), [ 'AIC500', 'AIC500W', 'AIC777W', 'AIC747W' ] ) ) {
-		$url = 'http://'.$Host->hostname().'/admin/reboot.cgi?type=0';
-	} elsif( $_[0]->type() eq 'D-Link DAP1522' ) {
-		$url = 'http://'.$Host->hostname().'/sys_cfg_valid.xgi?&exeshell=submit REBOOT';
-	} else {
-		$openprint::log->error("Unknown host type $_[0]{type}");
-		return 0;
-	} # end if
-
-	$openprint::log->debug("URL: $url" );
 	$response = $browser->get($url);
 
 	if ( ! $response->is_success ) {
