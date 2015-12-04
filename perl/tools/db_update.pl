@@ -2200,6 +2200,14 @@ if ( ! sets::isin( 'tbl_quote_details', \@tables ) ) {
 	$dbh->do( misc::load_file( $log, '../openprint/sql/tbl_Quote_Details.sql' ) );
 	die if $dbh->errstr();
 }
+if ( ! sets::isin( 'tbl_quote_users_for', \@tables ) ) {
+	$dbh->do( misc::load_file( $log, '../openprint/sql/tbl_Quote_Users_For.sql' ) );
+	die if $dbh->errstr();
+}
+if ( ! sets::isin( 'tbl_quote_users_by', \@tables ) ) {
+	$dbh->do( misc::load_file( $log, '../openprint/sql/tbl_Quote_Users_By.sql' ) );
+	die if $dbh->errstr();
+}
 if ( ! sets::isin( 'quote_log', \@tables ) ) {
 	$dbh->do( misc::load_file( $log, '../openprint/sql/Quote_Log.sql' ) );
 	die if $dbh->errstr();

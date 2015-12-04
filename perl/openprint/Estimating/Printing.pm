@@ -5754,7 +5754,7 @@ $openprint::log->debug("Was mixed") if DEBUG_INKS;
 					$ink_price{Material} = \%material_price;
 					$material_price{Total} += Math::Round::nearest( 0.01, $material_price{Price} * $qty );
 					$ink_price{Total} += $material_price{Total};
-					$price{'Ink breakdown'} .= sprintf(' mileage: %d, %.2f * $%s%s=$%.2f', $$Coverage{value}, $qty, @material_price{'Price','units','Total'});
+					$price{'Ink breakdown'} .= sprintf(' mileage: %d sq in per cartridge, %.2fsq in means %.2f * $%s%s=$%.2f', $$Coverage{value}, $area, $qty, @material_price{'Price','units','Total'});
 				} elsif ( $material_price{units} eq 'per kg' ) {
 					my $Coverage = $InkMaterial->New_Specification('Coverage', { range=>$grade, equipment_id=>$$Press{id}} );
 					if ( ( ! $Coverage ) or ! $$Coverage{value} ) {
