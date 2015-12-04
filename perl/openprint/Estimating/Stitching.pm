@@ -844,7 +844,9 @@ sub get_price {
 		} # end if
 		$price{ServicePrice} = \%servicePrice;
 
-		$unitsPerHour = $Equipment->specification( 'Units Per Hour '.$price{Imposition}.' out', $maxPockets );
+		$unitsPerHour = $Equipment->specification( $$ServiceType{name}.'Units Per Hour '.$price{Imposition}.' out', $maxPockets );
+		$unitsPerHour = $Equipment->specification( $$ServiceType{name}.'Units Per Hour', $maxPockets ) if ! $unitsPerHour;
+		$unitsPerHour = $Equipment->specification( 'Units Per Hour '.$price{Imposition}.' out', $maxPockets ) if ! $unitsPerHour;
 		$unitsPerHour = $Equipment->specification( 'Units Per Hour', $maxPockets ) if ! $unitsPerHour;
 		$price{Runspeed} = $unitsPerHour;
 		my $runtime = $unitsPerHour ? $qty/$unitsPerHour : 0; # in hours
@@ -881,7 +883,9 @@ sub get_price {
 			%servicePrice = openprint::service::get_price_object( $$ServiceType{name}, $neededPockets, $Equipment );
 		} # end if
 		$price{LastServicePrice} = \%servicePrice;
-		$unitsPerHour = $Equipment->specification( 'Units Per Hour ' . $price{Imposition} . ' out', $neededPockets );
+		$unitsPerHour = $Equipment->specification( $$ServiceType{name}.'Units Per Hour '.$price{Imposition}.' out', $neededPockets );
+		$unitsPerHour = $Equipment->specification( $$ServiceType{name}.'Units Per Hour', $neededPockets ) if ! $unitsPerHour;
+		$unitsPerHour = $Equipment->specification( 'Units Per Hour ' . $price{Imposition} . ' out', $neededPockets ) if ! $unitsPerHour;
 		$unitsPerHour = $Equipment->specification( 'Units Per Hour', $neededPockets ) if ! $unitsPerHour;
 		$price{Runspeed} = $unitsPerHour;
 		my $runtime = $unitsPerHour ? $qty/$unitsPerHour : 0; # in horus
@@ -1000,6 +1004,7 @@ sub summary {
 sub runtime {
 	my ( $Project, $Service, $Equipment, $qty_index, $speed ) = @_;
 
+	my $ServiceType = $Service->ServiceType();
 	my $specs = $Service->specs();
 	if ( ! $Equipment ) {
 		$openprint::log->warn("No equipment passed to runtime");
@@ -1038,14 +1043,19 @@ sub runtime {
 # Calculate Full Passes
 	if ( $pockets > $maxPockets ) {
 # Loaded here, so we don't do it in the loop many times
-		if ( my $unitsPerHour = $Equipment->specification( 'Units Per Hour', $maxPockets ) ) {
+		my $unitsPerHour = $Equipment->specification( $$ServiceType{name}.'Units Per Hour', $maxPockets );
+		$unitsPerHour = $Equipment->specification( 'Units Per Hour', $maxPockets ) if ! $unitsPerHour;
+
+		if ( $unitsPerHour ) {
 			$runTime += ($$specs{"txtQuantity$qty_index"}*3600/$unitsPerHour) * int ( $pockets / $maxPockets );
 			$pockets = $pockets % $maxPockets;
 		} # end if
 	} # end if
 
+	my $unitsPerHour = $Equipment->specification( $$ServiceType{name}.'Units Per Hour', $pockets );
+	$unitsPerHour = $Equipment->specification( 'Units Per Hour', $pockets ) if ! $unitsPerHour;
 # Calculate Last Pass
-	if ( my $unitsPerHour = $Equipment->specification( 'Units Per Hour', $pockets ) ) {
+	if ( $unitsPerHour ) {
 		$runTime += $$specs{"txtQuantity$qty_index"}*3600/$unitsPerHour; # in seconds
 	} # end if
 	return $runTime;
