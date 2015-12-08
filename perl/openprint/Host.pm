@@ -295,6 +295,8 @@ sub reboot {
 		$url = 'http://'.$Host->hostname().'/cgi-bin/reboot.cgi';
 	} elsif( $_[0]->type() eq 'D-Link DAP1522' ) {
 		$url = 'http://'.$Host->hostname().'/sys_cfg_valid.xgi?&exeshell=submit REBOOT';
+	} elsif ( $_[0]->type() eq 'TL-WPA4220' ) {
+		$url = 'http://'.$Host->hostname().'/userRpm/SysRebootRpm.htm?Reboot=Reboot';
 	} else {
 		$openprint::log->error("Unknown host type $_[0]{type}");
 		return 0;
