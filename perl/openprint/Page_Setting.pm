@@ -3,6 +3,7 @@ package openprint::Page_Setting;
 our @ISA = qw(openprint::Object);
 
 use vars qw( $debug $serial $table %fields %transforms %defaults $cache_field $cached %cache );
+use constant DEBUG => 0;
 
 $debug = 0;
 $cached = 0;
@@ -46,11 +47,29 @@ sub can_view {
 		}
 	} # end if
 		
+	if ( $_[0]{usergroup_ids} and @{$_[0]{usergroup_ids}} ) {
+#$openprint::log->debug("CHecking usergroups " . ( $_[0]{usergroup_ids} ? join(', ', @{ $_[0]{usergroup_ids} } ) : 'none' ) );
+		return 0 if ! $openprint::session{user_id};
+		my $User = $openprint::User;
+$openprint::log->debug( "User is in " . join(',', $User->usergroup_ids()) ) if DEBUG;
+$openprint::log->debug( "Usergroups are " . join(',', @{$_[0]{usergroup_ids}}) ) if DEBUG;
+		my @intersection = sets::intersection( @{$_[0]{usergroup_ids}}, $User->usergroup_ids() );
+		$openprint::log->debug( "Inserection: (" . join(',', @intersection ) . ')' . @intersection) if DEBUG;
+		if ( @intersection ) {
+			$openprint::log->debug("REturning 0");
+			return 1;
+		}
+	} else {
+#$openprint::log->debug("Not CHecking usergroups " );
+
+	}
 	# User level defineds the default response.
 	if ( $_[0]{user_level} ) {
 		if ( $_[0]{user_level} eq 'A' ) {
-			return 0 if $openprint::session{user_type} ne 'A';
-
+			if ( $openprint::session{user_type} ne 'A' ) {
+				$openprint::log->debug("REturning 0 cuz not an admin");
+				return 0;
+			}
 		} elsif ( $_[0]{user_level} eq 'E' ) {
 			return 0 if ( $openprint::session{user_type} ne 'A' and $openprint::session{user_type} ne 'E' );
 
@@ -60,18 +79,7 @@ sub can_view {
 			return 0;
 		} 
 	} 
-	if ( $_[0]{usergroup_ids} and @{$_[0]{usergroup_ids}} ) {
-#$openprint::log->debug("CHecking usergroups " . ( $_[0]{usergroup_ids} ? join(', ', @{ $_[0]{usergroup_ids} } ) : 'none' ) );
-		return 0 if ! $openprint::session{user_id};
-		my $User = new openprint::User( $openprint::session{user_id} );
-#$openprint::log->debug( "User in in " . join(',', $User->usergroup_ids()) );
-		my @intersection = sets::intersection( @{$_[0]{usergroup_ids}}, $User->usergroup_ids() );
-#$openprint::log->debug( "Inserection: (" . join(',', @intersection ) . ')' . @intersection);
-		return 0 if ! @intersection;
-	} else {
-#$openprint::log->debug("Not CHecking usergroups " );
-
-	}
+$openprint::log->debug("Returning 1") if DEBUG;
 	return 1; 
 } # end sub can_view
 
@@ -116,10 +124,9 @@ sub get {
 $openprint::log->debug("Didn't find page setting for $page") if $debug;
 			$$cache{$page} = new openprint::Page_Setting();
 			#$$cache{$page}->save({url=>$page}) if $openprint::session{user_type} eq 'A';
-		} elsif ( $debug ) {
-$openprint::log->debug("Found Page settnig " . $$cache{$page}->to_string() ) if $debug;
 		} # end if
 	} # end if Page Settings not found
+$openprint::log->debug("Found Page settnig " . $$cache{$page}->to_string() ) if DEBUG;
 	return $$cache{$page};
 } # end sub get
 
