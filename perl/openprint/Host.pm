@@ -305,51 +305,51 @@ sub reboot {
 			return 0;
 		} # end if
 
-	$openprint::log->debug("URL: $url" );
+		$openprint::log->debug("URL: $url" );
 
-	my $response = $browser->get($url);
-	$openprint::log->debug( $response->status_line );
-	$openprint::log->debug( $response->content );
-	my $headers = $response->headers();
-	foreach my $k ( keys %$headers ) {
-		$openprint::log->debug("Initial Header $k => $$headers{$k}");
-	}  # end foreach
-	my ( $auth, $tokens ) = $$headers{'www-authenticate'} =~ /^(\w+)\s+(.*)$/;
-	if ( $tokens =~ /\w+="([^"]+)"/i ) {
-		my %tokens;
-	$tokens{realm} = $1;
-	$openprint::log->debug("tokens: $tokens realm: $tokens{realm}");
-	$browser->credentials( $HI->ip().':80', $tokens{realm}, $Host->info('username'), $Host->info('password') );
-
-	$response = $browser->get($url);
-	} # end if
-
-	if ( ! $response->is_success ) {
-		$openprint::log->error( $response->content );
-		if ( $response->status_line() eq '401 Unauthorized' or $response->status_line() eq '401 Not Authorized' ) {
-			$openprint::log->error("Couldn't get content from $url unauthorized trying again:". $response->status_line );
+		my $response = $browser->get($url);
+		$openprint::log->debug( $response->status_line );
+		$openprint::log->debug( $response->content );
+		my $headers = $response->headers();
+		foreach my $k ( keys %$headers ) {
+			$openprint::log->debug("Initial Header $k => $$headers{$k}");
+		}  # end foreach
+		my ( $auth, $tokens ) = $$headers{'www-authenticate'} =~ /^(\w+)\s+(.*)$/;
+		my %tokens = map { /(\w+)="([^"]+)"/i } split(', ', $tokens );
+		if ( $tokens{realm} ) {
+			$openprint::log->debug("tokens: $tokens realm: $tokens{realm}");
+			$browser->credentials( $HI->ip().':80', $tokens{realm}, $Host->info('username'), $Host->info('password') );
 			$response = $browser->get($url);
+		} # end if
+
+		if ( ! $response->is_success ) {
+			$openprint::log->error( $response->content );
 			if ( $response->status_line() eq '401 Unauthorized' or $response->status_line() eq '401 Not Authorized' ) {
-				$openprint::log->error("Couldn't get content from $url unauthorized:". $response->status_line );
+				$openprint::log->error("Couldn't get content from $url unauthorized trying again:". $response->status_line );
+				$response = $browser->get($url);
+				if ( $response->status_line() eq '401 Unauthorized' or $response->status_line() eq '401 Not Authorized' ) {
+					$openprint::log->error("Couldn't get content from $url unauthorized:". $response->status_line );
+					my $headers = $response->headers();
+					foreach my $k ( keys %$headers ) {
+						$openprint::log->error("Header $k => $$headers{$k}");
+					}  # end foreach
+					$openprint::log->error( $response->content );
+					next;
+				} else {
+					$openprint::log->debug("Response after second attempt: " . $response->status_line );
+					$success = 1;
+				} # end if
+			} else {
+				$openprint::log->warn("Couldn't get content from $url rebooting" . $response->status_line );
 				my $headers = $response->headers();
 				foreach my $k ( keys %$headers ) {
 					$openprint::log->error("Header $k => $$headers{$k}");
 				}  # end foreach
-				$openprint::log->error( $response->content );
 				next;
-			} else {
-				$openprint::log->debug("Response after second attempt: " . $response->status_line );
-				$success = 1;
 			} # end if
 		} else {
-			$openprint::log->warn("Couldn't get content from $url rebooting" . $response->status_line );
-			my $headers = $response->headers();
-			foreach my $k ( keys %$headers ) {
-				$openprint::log->error("Header $k => $$headers{$k}");
-			}  # end foreach
-			next;
+			$success = 1;
 		} # end if
-	} # end if
 		last if $success;
 	} # end foreach HI
 
