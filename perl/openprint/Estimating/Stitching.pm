@@ -730,7 +730,7 @@ sub equipment_fits {
 		return ': spread too big.<br/>';
 	} # end if
 	if ( $_ = $Equipment->specification('Minimum Spread Width') and ( $$specs{Width} < $_ ) ) {
-		return ': spread too small.<br/>';
+		return ": spread width too small ($$specs{Width} < $_).<br/>";
 	} # end if
 	if ( $_ = $Equipment->specification('Maximum Finished Width') and ( $$specs{Width} > $_ ) ) {
 		return ': finished width too big.<br/>';
