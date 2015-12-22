@@ -6322,39 +6322,19 @@ sub press_setup_cost {
 		$Price{Total} = $Price{Price} * $setup_count;
 	} elsif ( $Price{units} eq 'per job' ) {
 		my $specs = $$Imposition{specs};
-		my $charge = 1;
-		if ( $$specs{Group} != 1 ) {
-			foreach my $Imp ( @$other_impositions ) {
-				if ( $Imp->Press()->id() == $Press->id() ) {
-					$charge = 0;
-					my $sig_specs = $Imp->specs();
-			#$openprint::log->warn("Turning off setup because imp for $$sig_specs{SignatureIndex} has it. My index is $$specs{SignatureIndex}");
-					last;
-				} # end if
-			} # end foreach
-		} # end if
-		if ( $charge ) {
-			my $Project = $Imposition->Project();
-			if ( $Project ) {
-				my @signatures = $Project->signatures();
-				foreach my $sig_id ( sort @signatures ) {
-					my $sig_specs = openprint::service::get_specs_ref( $Project, $sig_id );
-					if ( $$sig_specs{SignatureIndex} == $$specs{SignatureIndex} ) {
-						last;
-					} elsif ( $$sig_specs{"ddmPress$qty_index"} eq $Press->strid() ) {
-						$openprint::log->warn("Turning off setup because $$sig_specs{SignatureIndex} has it. My index is $$specs{SignatureIndex}");
-						$charge = 0;
-						last;
-					} # end if
-				} # end foreach
-			} else {
-				$openprint::log->error("No Project in iimposition");
-			} # end if
-			if ( $charge ) {
+		
+		my $Project = $Imposition->Project();
+		if ( $Project ) {
+			my @signatures = sort $Project->signatures();
+			my $sig_specs = openprint::service::get_specs_ref( $Project, $signatures[0] );
+			if ( $$sig_specs{SignatureIndex} == $$specs{SignatureIndex} ) {
+				# Do the charge.	
 				#$openprint::log->warn("Charging $Price{Price} setup for $$specs{SignatureIndex}");
 				$Price{Total} = $Price{Price};
 			} # end if
-		} # end if charge
+		} else {
+			$openprint::log->error("No Project in iimposition");
+		} # end if
 	} elsif ( $Price{units} eq 'per form' ) {
 		my $specs = $$Imposition{specs};
 #$openprint::log->debug("PressMakeRady per form: previous forms: " . ( $$specs{'PreviousForms'.$qty_index} + 1 ) );

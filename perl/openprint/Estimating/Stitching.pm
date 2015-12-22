@@ -211,6 +211,14 @@ sub signature_calc {
 	my $imposition = 2;
 	my $pockets = $$specs{"txtPockets$qty_index"} = 0;
 
+	my $override_pockets = 0;
+	if ( ( defined $$specs{'OverridePockets'.$qty_index}) and ($$specs{'OverridePockets'.$qty_index} eq 'Y') ) {
+		foreach my $pages ( 4, 6, 8, 12, 16, 20, 24, 32, 36, 40, 48, 64 ) {
+			$pockets += $$specs{join('','txtSignatureQty',$pages,'Page-',$qty_index)};
+		}
+		$override_pockets = 1;
+	} 
+
 	foreach my $I ( @$Impositions ) {
 $I->display('In Stitching:') if DEBUG and 0;
         my $sig_specs = $I->specs();
@@ -247,12 +255,14 @@ $I->display('In Stitching:') if DEBUG and 0;
 				$openprint::log->error("No folds in imposition, guess 1");
 				$I->display("No Folds");
 			} # end if
-			$$specs{join('','txtSignatureQty',$I->pages(),'Page-',$qty_index)} += 1;
-			if ( $$sig_specs{Group} == 1 ) {
-				$openprint::log->debug("Not counting pocket due to it being cover. $form") if DEBUG;
-				next;
-			}
-			$pockets += 1;
+			if ( ! $override_pockets ) {
+				$$specs{join('','txtSignatureQty',$I->pages(),'Page-',$qty_index)} += 1;
+				if ( $$sig_specs{Group} == 1 ) {
+					$openprint::log->debug("Not counting pocket due to it being cover. $form") if DEBUG;
+					next;
+				}
+				$pockets += 1;
+			} # end if
 # This doesn't really make sense.  If we are doing printing estimation, then the folding probably isn't going to match.  
 		} else {
 			foreach my $FI ( @{$$I{Folds}} ) {
@@ -270,12 +280,14 @@ $openprint::log->debug("Fold pq($$FI{page_quantity}) pages($$FI{pages}) ($$Fold{
 					#$openprint::log->debug('Folder is ' . $$I{Folder}->strid() );
 				}
 				#$openprint::log->debug("Adding " . $Fold->pages() . 'x'.$Fold->quantity() );
-				$$specs{join('','txtSignatureQty',$Fold->pages(),'Page-',$qty_index)} += $FI->page_quantity();
-			if ( $$sig_specs{Group} == 1 ) {
-				$openprint::log->debug("Not counting pocket due to it being cover. $form") if DEBUG;
-				next;
-			}
-				$pockets += $FI->page_quantity();
+				if ( ! $override_pockets ) {
+					$$specs{join('','txtSignatureQty',$Fold->pages(),'Page-',$qty_index)} += $FI->page_quantity();
+					if ( $$sig_specs{Group} == 1 ) {
+						$openprint::log->debug("Not counting pocket due to it being cover. $form") if DEBUG;
+						next;
+					}
+					$pockets += $FI->page_quantity();
+				}
 			} # end foreach Fold
 		}
 
