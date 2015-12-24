@@ -379,7 +379,6 @@ $openprint::log->debug("Fold pq($$FI{page_quantity}) pages($$FI{pages}) ($$Fold{
 			} elsif ( $_ = equipment_fits( $equipment[0], $specs ) ) {
 				$results{alert} .= $_;
 				$results{Status} = 'uncalculated';
-$openprint::log->error("$_");
 				return \%results;
 			} # end if
 		} # end if
