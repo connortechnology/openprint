@@ -74,7 +74,7 @@ sub profile {
 			if ( sets::isin( $domain, \@domains ) ) {
 
 				if ( $param{VacationState} ) {
-					email::start_vacation( @param{'email','VacationSubject','VacationMessage','VacationSystemMessages'} );
+					email::start_vacation( @param{'email','VacationSubject','VacationMessage','VacationSystemEmails'} );
 				} else {
 					email::stop_vacation( $param{email} );
 				} # end if
