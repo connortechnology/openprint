@@ -8,13 +8,14 @@ require openprint::Project_Log;
 require openprint::Order_Status;
 
 require openprint;
-use vars qw( $r $log $dbh %variable %session %param );
+use vars qw( $r $log $dbh %variable %session %param %config );
 *r = \$openprint::r;
 *log = \$openprint::log;
 *dbh = \$openprint::dbh;
 *session = \%openprint::session;
 *param = \%openprint::param;
 *variable = \%openprint::variable;
+*config = \%openprint::config;
 
 sub project_history {
 	my $page = '/employee/reports/project_history.html';
@@ -246,7 +247,7 @@ $log->warn("Paper was supplied");
 					$stock_total += $totals{$string};
 				} # end foreach string
 
-				push @Data, $Order->id(), $Order->docket(), $Order->invoice_id(), $Order->Company()->name(), $Project->reference(), $Order->created_on(), $Order->status(), $Order->total(), $stock_price, $stock_total;
+				push @Data, $Order->id(), $Order->docket(), join(',', map { $_->Invoice()->num() } $Order->Invoices() ), $Order->Company()->name(), $Project->reference(), $Order->created_on(), $Order->status(), $Order->total(), $stock_price, $stock_total;
 			} # end foreach Project
 		} # end foreach Order
 
@@ -274,6 +275,7 @@ sub _order_history_results {
 	$variable{Orders} = [];
 	foreach my $Order ( openprint::Order->find(
 		company_id => ( ($session{$uri.'?company_id'} and ( ( ! %parameters ) or exists $companies{$session{$uri.'?company_id'}} ) ) ? $session{$uri.'?company_id'} : [ keys %companies ] ),
+		( $session{$uri.'?CSR'} ? ( salesrep_id	=> $session{$uri.'?CSR'} ) : () ),
 		ssi::date_filter( $uri.'?created_on_start', 'created_on >=' ),
 		ssi::date_filter( $uri.'?created_on_end', 'created_on <=' ),
 		( $session{$uri.'?status'} ? ( status_id => [ split(',', $session{$uri.'?status'} ) ] ) : () ),
@@ -399,10 +401,40 @@ sub _stock {
 sub stock_usage {
 	_stock_usage();
 
-	ssi::setup_date_select( '/employee/reports/stock_usage.html', 'ordered_on_start', -31 );
-	ssi::setup_date_select( '/employee/reports/stock_usage.html', 'ordered_on_end', '' );
-	if ( ! exists $session{'/employee/reports/stock_usage.html?projects_orders'} ) {
-		$session{'/employee/reports/stock_usage.html?projects_orders'} = 'Orders';
+	if ( $param{'action'} eq 'download' ) {
+		my @Header = ( 'Manufacturer','Brand','Finish','Colour','Weight','Quality','Material','Group','Width','Height','Type','Calliper','GSM','FSC','Projects','Orders','Sheets','Weight' );
+		my @Data = ();
+		my %totals = %{$variable{totals}};
+		my %Stocks = %{$variable{Stocks}};
+		my %Projects = %{$variable{Projects}};
+		my @Orders = @{$variable{Orders}};
+		foreach my $paper_string ( sort keys %totals ) {
+			my $Stock = $Stocks{$paper_string};
+            my $quantity = $totals{$paper_string}{quantity};
+            my @unique_order_ids = sets::union( map { $$_{id} } @{$totals{$paper_string}{Orders}} );
+            my @unique_project_ids = sets::union( map { $$_{id} } @{$totals{$paper_string}{Projects}} );
+			push @Data, (
+				$Stock->manufacturer(),
+				$Stock->brand(),
+				$Stock->finish(),
+				$Stock->colour(),
+				$Stock->weight(),
+				$Stock->quality(),
+				$Stock->material(),
+				$Stock->group(),
+				$Stock->width(),
+				$Stock->height(),
+				$Stock->type(),
+				$Stock->calliper(),
+				$Stock->gsm(),
+				$Stock->fsc_code(),
+                scalar @unique_project_ids,
+                scalar @unique_order_ids,
+                $Stock->type() eq 'Sheet' ? Number::Format::format_number($quantity).' sheets' : '',
+                Number::Format::format_number($Stock->type() eq 'Roll' ? $quantity : $quantity * $Stock->sheet_weight() ),
+            );
+		}
+		misc::export_csv( $r, $log, \%variable, 'stock_usage.csv', \@Header,\@Data );	
 	} # end if
 } # end sub stock_usage
 
@@ -412,8 +444,187 @@ sub _stock_usage {
 			( map { 'ordered_on_end_'.$_ } ( 'year','month','day' ) ),
 			'manufacturer_id', 'brand_id', 'finish_id', 'colour_id', 'weight_id',
 			'type', 'fsc', 'fsc_code', 'width','height','OrLarger', 'basis_weight','mweight',
-			'projects_orders',
+			'projects_orders','customer_supplied',
 	 );
+	ssi::setup_date_select( '/employee/reports/stock_usage.html', 'ordered_on_start', -31 );
+	ssi::setup_date_select( '/employee/reports/stock_usage.html', 'ordered_on_end', '' );
+	if ( ! exists $session{'/employee/reports/stock_usage.html?projects_orders'} ) {
+		$session{'/employee/reports/stock_usage.html?projects_orders'} = 'Orders';
+	} # end if
+	if ( ! exists $session{'/employee/reports/stock_usage.html?customer_supplied'} ) {
+		$session{'/employee/reports/stock_usage.html?customer_supplied'} = 'N';
+	} # end if
+$log->debug("done saving params");
+    my @company_ids = ( $session{'/employee/reports/stock_usage.html?company_id'} ) if $session{'/employee/reports/stock_usage.html?company_id'};
+
+    my @Orders;
+    my %Projects;
+
+	if ( $session{'/employee/reports/stock_usage.html?projects_orders'} eq 'Orders' ) {
+		@Orders = openprint::Order->find(
+				status      =>  [ 'In Production','Picked Up','Shipped','Waiting For QA Approval', 'Waiting For Customer Approval','Complete','Waiting For Pickup','Order Submitted','Paid','Pending Deposit','Re-Opened' ],
+				( @company_ids ? ( company_id => \@company_ids ) : () ),
+				ssi::date_filter( '/employee/reports/stock_usage.html?ordered_on_end', 'created_on <=' ),
+				ssi::date_filter( '/employee/reports/stock_usage.html?ordered_on_start', 'created_on >=' ),
+				);
+		foreach my $Order ( @Orders ) {
+			$Projects{$Order->id()} = [] if ! $Projects{$Order->id()};
+			push @{$Projects{$Order->id()}}, $Order->Projects();
+		}
+
+	} else {
+$log->debug("Loading projects");
+		foreach my $Project ( openprint::Project->find(
+					( @company_ids ? ( 'company_id' => \@company_ids ) : () ),
+					ssi::date_filter( '/employee/reports/stock_usage.html?ordered_on_end', 'created_on <=' ),
+					ssi::date_filter( '/employee/reports/stock_usage.html?ordered_on_start', 'created_on >=' ),
+					) ) {
+			push @Orders, $Project->Order() if $Project->order_id();
+			$Projects{$Project->order_id()} = [] if ! $Projects{$Project->order_id()};
+			push @{$Projects{$Project->order_id()}}, $Project;
+		} # end foreach Project
+	} # end if
+
+	my %totals;
+	my %Stocks;
+$openprint::log->debug("orders: " . @Orders );
+
+	foreach my $Order ( @Orders, ( $session{'/employee/reports/stock_usage.html?projects_orders'} eq 'Projects' ? new openprint::Order() : () ) ) {
+
+		next if ! $Projects{$Order->id()};
+
+		foreach my $Project ( @{$Projects{$Order->id()}} ) {
+			my $qty_index = $Project->ordered_quantity_index();
+			if ( ! $qty_index ) {
+				if ( $session{'/employee/reports/stock_usage.html?projects_orders'} eq 'Projects' ) {
+					$qty_index = $Project->quantity_indexes();
+				} else {
+					$log->error("No Ordered QTY Index in $$Order{id} $$Project{id}!");
+				} # end
+			} # end if
+			foreach my $service_id ( $Project->signatures() ) {
+				my $sig_specs = openprint::service::get_specs_ref( $Project, $service_id );
+				if ( ! $$sig_specs{'txtImposition'.$qty_index} ) {
+					next;
+				}
+
+				if ( ! $$sig_specs{'StockType'.$qty_index} ) {
+					if ( $$sig_specs{'StockType'} ) {
+						openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $service_id, 'StockType'.$qty_index, $$sig_specs{'StockType'} );
+					} else {
+						$log->error("Unknown stock type: " . $$sig_specs{'StockType'.$qty_index} );
+						next;
+					} # end if
+				} # end if
+
+				if ( $session{'/employee/reports/stock_usage.html?type'} and ! sets::isin( $$sig_specs{'StockType'.$qty_index}, split( ',', $session{'/employee/reports/stock_usage.html?type'} ) ) ) {
+#$log->debug("Wrong type ". $$sig_specs{'StockType'.$qty_index} );
+					next;
+				}
+
+				if ( $session{'/employee/reports/stock_usage.html?mweight'} ) {
+#$log->warn( 'MWeight: ' . $$sig_specs{'txtMWeight'.$qty_index} );
+					if ( ! $$sig_specs{'txtMWeight'.$qty_index} ) {
+						$log->error("No MWeight!");
+						next;
+					} elsif ( ( $$sig_specs{'txtMWeight'.$qty_index} < ( $session{'/employee/reports/stock_usage.html?mweight'}-1) )
+							or ( $$sig_specs{'txtMWeight'.$qty_index} > ( $session{'/employee/reports/stock_usage.html?mweight'}+1 ) ) ) {
+						next;
+					} # end if
+				} # end if
+
+				my $Stock = openprint::Paper::load_from_signature( $Project, $sig_specs, $qty_index );
+				$Stock = $Stock->Supplied();
+
+				if (
+						( ( $session{'/employee/reports/stock_usage.html?customer_supplied'} eq 'Y' ) and ! $Stock->supplied() )
+						or
+						( ( $session{'/employee/reports/stock_usage.html?customer_supplied'} eq 'N' ) and $Stock->supplied() )
+				   ) {
+					next;
+				} # end if
+
+				if ( $session{'/employee/reports/stock_usage.html?width'} and $session{'/employee/reports/stock_usage.html?height'} ) {
+					next if $Stock->area() < $session{'/employee/reports/stock_usage.html?width'} * $session{'/employee/reports/stock_usage.html?height'};
+					if ( ! $session{'/employee/reports/stock_usage.html?OrLarger'} ) {
+						next if $Stock->area() != $session{'/employee/reports/stock_usage.html?width'} * $session{'/employee/reports/stock_usage.html?height'};
+					} # end if
+				} elsif ( $session{'/employee/reports/stock_usage.html?width'} ) {
+					next if $Stock->width() < $session{'/employee/reports/stock_usage.html?width'};
+					if ( ! $session{'/employee/reports/stock_usage.html?OrLarger'} ) {
+						next if $Stock->width() != $session{'/employee/reports/stock_usage.html?width'};
+					} # end if
+				} elsif ( $session{'/employee/reports/stock_usage.html?height'} ) {
+					next if $Stock->height() < $session{'/employee/reports/stock_usage.html?height'};
+					if ( ! $session{'/employee/reports/stock_usage.html?OrLarger'} ) {
+						next if $Stock->height() != $session{'/employee/reports/stock_usage.html?height'};
+					} # end if
+				} # end if
+
+				if ( $session{'/employee/reports/stock_usage.html?basis_weight'} ) {
+                    if ( ( $Stock->basis_mweight() < ( $session{'/employee/reports/stock_usage.html?basis_weight'}-1) )
+							or ( $Stock->basis_mweight() >( $session{'/employee/reports/stock_usage.html?basis_weight'}+1 ) ) ) {
+                        next;
+                    } # end if
+                } # end if
+                if ( $session{'/employee/reports/stock_usage.html?manufacturer_id'} ) {
+                    if ( $Stock->manufacturer_id() ne $session{'/employee/reports/stock_usage.html?manufacturer_id'} ) {
+                        $log->debug("Different manufacturer_id: $$Stock{'manufacturer_id'} != $session{'/employee/reports/stock_usage.html?manufacturer_id'}");
+                        next;
+                    } # end if
+                } # end if
+                if ( $session{'/employee/reports/stock_usage.html?brand_id'} ) {
+                    my $StockBrand = new openprint::StockBrand( $session{'/employee/reports/stock_usage.html?brand_id'} );
+                    if ( lc $Stock->brand() ne lc $StockBrand->name() ) {
+                        $log->debug("Different Brand: $$Stock{'brand'} != $$StockBrand{'name'}");
+                        next;
+                    } # end if
+                } # end if
+                if ( $session{'/employee/reports/stock_usage.html?finish_id'} ) {
+                    my $StockFinish = new openprint::StockFinish( $session{'/employee/reports/stock_usage.html?finish_id'} );
+                    if ( lc $Stock->finish() ne lc $StockFinish->name() ) {
+                        $log->debug("Different Finish: $$Stock{'finish'} != $$StockFinish{'name'}");
+                        next;
+                    } # end if
+                } # end if
+                if ( $session{'/employee/reports/stock_usage.html?weight_id'} ) {
+                    my $StockWeight = new openprint::StockWeight( $session{'/employee/reports/stock_usage.html?weight_id'} );
+                    if ( lc $Stock->weight() ne lc $StockWeight->name() ) {
+                        $log->debug("Different Weight: $$Stock{'weight'} != $$StockWeight{'name'}");
+                        next;
+                    } # end if
+				} # end if
+				if ( $session{'/employee/reports/stock_usage.html?colour_id'} ) {
+					my $StockColour = new openprint::StockColour( $session{'/employee/reports/stock_usage.html?colour_id'} );
+					if ( lc $Stock->colour() ne lc $StockColour->name() ) {
+						$log->debug("Different Colour: $$Stock{'colour'} != $$StockColour{'name'}");
+						next;
+					} # end if
+				} # end if
+				my $qty = $$sig_specs{'txtPressSheetQty'.$qty_index};
+#$log->debug(" Got $qty in project $$Project{id}");
+				$qty =~ s/[^\d\.]//g;
+				if ( ! $qty ) {
+					$log->error("No Ordered QTY in $$Order{id} $$Project{id}!");
+				}
+				$Stocks{$Stock->to_string()} = $Stock;
+				$totals{$Stock->to_string()}{quantity} += $qty;
+
+				$totals{$Stock->to_string()}{Orders} = [] if ! $totals{$Stock->to_string()}{Orders};
+				$totals{$Stock->to_string()}{Projects} = [] if ! $totals{$Stock->to_string()}{Projects};
+
+				push @{$totals{$Stock->to_string()}{Projects}}, $Project;
+				push @{$totals{$Stock->to_string()}{Orders}}, $Order;
+
+			} # end foreach service_id
+		} # end foreach Project
+	} # end foreach Order
+
+	$variable{totals} = \%totals;
+	$variable{Stocks} = \%Stocks;
+	$variable{Projects} = \%Projects;
+	$variable{Orders} = \@Orders;
+
 } # end sub _stock_usage
 
 sub delivery {
@@ -421,8 +632,15 @@ sub delivery {
 sub efficiency {
 } # end sub efficiency
 sub prepress_overview {
+	_prepress_project_list();
+	ssi::setup_date_select( '/employee/reports/prepress_overview.html', 'takeover_on_start', -31 );
+	ssi::setup_date_select( '/employee/reports/prepress_overview.html', 'takeover_on_end', '' );
 } # end sub prepress_overview
 sub _prepress_project_list {
+	ssi::save_params('/employee/reports/prepress_overview.html', 
+			( map { 'takeover_on_start_'.$_ } ( 'year','month','day' ) ),
+			( map { 'takeover_on_end_'.$_ } ( 'year','month','day' ) ),
+	);
 } # end sub _prepress_project_list
 
 sub _delivery_results {
@@ -582,7 +800,7 @@ sub customer_performance {
 		} elsif ( $param{'salesrep_id'} ) {
 			@csr_ids = ( $param{'salesrep_id'} );
 		} else {
-			@csr_ids = map { $_->id() } openprint::User->find('type'=>['E','A'], 'usergroup any'=>'Sales', 'order'=>'lower(firstname),lower(lastname)');
+			@csr_ids = map { $_->id() } openprint::User->find( company_id=>$config{owner_id}, type=>['E','A'], 'usergroup any'=>'Sales', order=>'lower(firstname),lower(lastname)');
 		} # end if
 		foreach my $csr_id ( @csr_ids ) {
 			my $CSR = new openprint::User( $csr_id );
@@ -660,6 +878,8 @@ sub prepress_productivity {
 
 sub project_log {
 	_project_log();
+	ssi::setup_date_select( '/employee/reports/project_log.html', 'created_on_start', -7 );
+	ssi::setup_date_select( '/employee/reports/project_log.html', 'created_on_end', '' );
 } # end sub project_log
 sub _project_log {
 	ssi::save_params('/employee/reports/project_log.html',

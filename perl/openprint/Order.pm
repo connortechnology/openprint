@@ -73,7 +73,7 @@ $serial = 'orders_id_seq';
 );
 
 %find_fields = (
-	project_id	=>	'(SELECT lngprojectindex FROM Order_Contents WHERE OrderIndex=Orders.id)',
+	project_id	=>	'id IN (SELECT orderindex FROM Order_Contents WHERE lngprojectindex=?)',
 	status		=>	'(SELECT name FROM Order_Statuses WHERE order_statuses.id=status_id)',
 	#invoice_id	=>	'(SELECT invoice_id FROM order_invoices WHERE order_id=orders.id)',
 invoice_id => 'id IN (SELECT order_id FROM order_invoices WHERE invoice_id=?)',
@@ -528,13 +528,14 @@ sub send_sales_order {
 		$sales_person_email = $config{'OrderingEmail'};
 	} # end if
 	
-	new openprint::Email()->send(
+	my $email_results = (new openprint::Email())->send(
 		FROM	=> $sales_person_email,
 		TO		=> sprintf('"%s %s" <%s>', $self->get('firstname','lastname','email')),
 		#BCC	 =>	'iconnor@point-one.com',
 		SUBJECT => "Order $$self{id} Docket $$self{docket}",
 		ATTACHMENTS	=>	[ @body, @sales_order ],
 		);
+	$self->add_log ( 'Sales Order ' . $email_results );
 
 	$order{'ReplacementText'} = ssi::include( '/email_content/order_admin_body.html', \%order );
 	$_ = MIME::QuotedPrint::encode_qp( Encode::encode( 'utf-8', ssi::variable_substitution( \$email_template, \%order ) ) );
@@ -566,10 +567,14 @@ sub send_sales_order {
 	my @accounting_emails = split( ',', $config{'AccountingEmail'} );
 	@accounting_emails = map { misc::trim(lc $_) } @accounting_emails;
 
-	@admin_emails = sets::union( @admin_emails, @accounting_emails, $sales_person_email );
+	@admin_emails = sets::union( @admin_emails, @accounting_emails, $sales_person_email, 
+		map {
+			sprintf('"%s %s" <%s>', new openprint::User( $_->user_id() )->get('firstname','lastname','email')) 
+			} $self->Projects()
+		);
 
 	if ( @admin_emails ) {
-		new openprint::Email()->send(
+		my $results = (new openprint::Email())->send(
 				FROM	=> $config{'OrderingEmail'},
 				'Reply-to'	=> $$self{'email'},
 				TO		=> join(',',@admin_emails),
@@ -577,6 +582,7 @@ sub send_sales_order {
 				SUBJECT => "Order $$self{id}",
 				ATTACHMENTS	=>	[ @body, @sales_order, @project_summaries, @project_dockets ],
 				);
+		$self->add_log( 'Sales Order '.$results );
 	} # end if
 
 } # end sub send_sales_order

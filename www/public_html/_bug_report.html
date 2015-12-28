@@ -9,19 +9,20 @@
 
 		$param{comment} = htmlize($param{comment});
 			
-		my @body = ('', "
+		$param{page} = 
+		my @body = ('',qq` 
 			<fieldset><legend>Bug Report</legend>
 				<p><label>Server</label>$param{'server'}</p>
-				<p><label>Page</label>$param{'page'}</p>
+				<p><label>Page</label><a href="$param{'page'}">$param{page}</a></p>
 				<p><label>When</label> $param{'when'}</p>
 				<p><label>Name</label> $param{'user'}</p>
 				<p><label>Company</label> $param{'company'}</p>
 				<p><label>Comment</label> $param{'comment'}</p>
 			</fieldset>
-		", 'text/html', 'quoted-printable');
+		`, 'text/html', 'quoted-printable');
 
 		my %mail = (
-			SMTP   => $config{'Mail Server'},
+			SMTP   => $config{'Mail_Server'},
 			FROM   => sprintf('"%s %s" <%s>', new openprint::User( $session{user_id} )->get('firstname','lastname','email') ),
 			TO     => $config{TechSupportEmail},
 			SUBJECT => 'Bug Report',
@@ -41,7 +42,7 @@
 			</p>
 			<p>
 				<label>Page</label>
-				<input type="text" name="page" value="<? echo ( $ENV{'HTTP_REFERER'} ) ?>" />
+				<input type="url" name="page" value="<? echo ( $ENV{'HTTP_REFERER'} ) ?>" />
 			</p>
 			<p>
 				<label>When</label>

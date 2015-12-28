@@ -23,6 +23,7 @@
 			( $session{'/administrator/stock/list.html?digital'} ne '' ? ( digital=>$session{'/administrator/stock/list.html?digital'} ) : () ),
 			( $session{'/administrator/stock/list.html?scoring'} ne '' ? ( score_required=>$session{'/administrator/stock/list.html?scoring'} ) : () ),
 			( $session{'/administrator/stock/list.html?customer_supplied'} ne '' ? ( supplied=>$session{'/administrator/stock/list.html?customer_supplied'} ) : () ),
+			( $session{'/administrator/stock/list.html?has_message'} ne '' ? ( 'message is not null' => $session{'/administrator/stock/list.html?has_message'} ) : () ),
 			'order'		=> 'brand,finish,colour,weight, width, height'
 		) ) {
 		next if $session{'/administrator/stock/list.html?recommendations'} eq '0' and $Stock->recommendations();
@@ -68,7 +69,7 @@
 				<th class="quality">Quality</th>
 				<th class="size">Size</th>
 				<th class="calliper">Calliper</th>
-				<th class="mweight">MWeight</th>
+				<th class="mweight">MWeight/Basis</th>
 				<th class="gsm">GSM</th>
 				<th class="spp_min">SPP/Min</th>
 				<th class="pricing">Pricing CWT</th>
@@ -95,7 +96,8 @@
 		<td class="quality"><a href="stock.html?stock_id=<? echo ( $$variable{Stock}{'id'} ) ?>"><? echo ( $$variable{Stock}->quality() ) ?></a></td>
 		<td class="size"><a href="stock.html?stock_id=<? echo ( $$variable{Stock}{'id'} ) ?>"><? echo ( $$variable{Stock}->size() ) ?></a></td>
 		<td class="calliper"><a href="stock.html?stock_id=<? echo ( $$variable{Stock}{'id'} ) ?>"><? echo ( $$variable{Stock}->calliper() ) ?></a></td>
-		<td class="mweight"><a href="stock.html?stock_id=<? echo ( $$variable{Stock}{'id'} ) ?>"><? echo ( sprintf('%.2f', Math::Round::nearest(0.01, $$variable{Stock}->type() eq 'Roll' ? $$variable{Stock}->basis_mweight() : $$variable{Stock}->mweight() ) ); ) ?></a></td>
+		<td class="mweight"><a href="stock.html?stock_id=<? echo ( $$variable{Stock}{'id'} ) ?>"><? echo ( 
+			$$variable{Stock}->type() eq 'Roll' ? Math::Round::nearest(1,$$variable{Stock}->basis_mweight()) : Math::Round::nearest(1,$$variable{Stock}->mweight()) . '/' .  Math::Round::nearest(1,$$variable{Stock}{basis_mweight} ); ) ?></a></td>
 		<td class="gsm"><a href="stock.html?stock_id=<? echo ( $$variable{Stock}{'id'} ) ?>"><? echo ( sprintf('%.2f', $$variable{Stock}->gsm() ); ) ?></a></td>
 		<td class="spp_min"><a href="stock.html?stock_id=<? echo ( $$variable{Stock}{'id'} ) ?>"><? echo ( $$variable{Stock}->sheets_per_package().'/'.$$variable{Stock}->minimum_order() ) ?></a></td>
 		<td class="pricing"><a href="stock.html?stock_id=<? echo ( $$variable{Stock}{'id'} ) ?>">

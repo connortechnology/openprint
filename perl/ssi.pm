@@ -856,7 +856,7 @@ sub date_filter {
 	return ( $sql_field, $parser->format_datetime( $datetime ) );
 } # end sub date_filter
 
-my @input_options = ( 'type','name','id','onblur','onfocus','onkeyup','onkeydown','onchange','class','pattern','ontouch','min','max', 'step', 'placeholder', 'oninput', 'title', 'decimalplaces' );
+my @input_options = ( 'type','name','id','onblur','onfocus','onkeyup','onkeypress', 'onkeydown','onchange','class','pattern','ontouch','min','max', 'step', 'placeholder', 'oninput', 'title', 'decimalplaces', 'style' );
 
 sub input {
 	my %options = @_;
@@ -1063,6 +1063,14 @@ sub format_datetime {
 
 sub link {
 	return '<link rel="stylesheet" type="text/css" href="'.hash_link($_[0]).'"/>';
+}
+
+sub include_logs {
+	my $Object = $_[0];
+	$variable{Object} = $Object;
+	setup_date_select( $variable{uri}, 'log_created_on_start', -31 );
+	setup_date_select( $variable{uri}, 'log_created_on_end', '' );
+	return include('/includes/_logs_container.html');
 }
 
 1;

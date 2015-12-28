@@ -19,7 +19,7 @@
 			format_datetime( $Label->created_on() ), 
 			format_date( $Label->created_on() ), 
 			$Label->Type()->name(), $Label->reference(),
-			join('',
+			join("\n",
 				button( 'delete'.$Label->id(), { onclick=>qq`new Ajax.Updater('Labels','/employee/production/_labels.html', { parameters:{action:'delete', id: $$Label{id}, project_id: $$variable{Project}{id} } } );`, text=>'X', title=>'Delete' } ),
 				button( 'copy'.$Label->id(), { onclick=>qq`new Ajax.Updater('Labels','/employee/production/_labels.html', { parameters:{action:'copy', id: $$Label{id}, project_id: $$variable{Project}{id} } } );`, text=>'C', title=>'Copy' } ),
 			)

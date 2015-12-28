@@ -186,6 +186,7 @@ sub get_best_prices {
 	my @pricing = ();
 	my $price_type = ref $Object;
 	if ( $price_type and $price_cache{$config{db_name}}{$list_id}{$price_type}{$$Object{id}} ) {
+#$log->debug("Using new style price caching" );
 		@pricing = @{$price_cache{$config{db_name}}{$list_id}{$price_type}{$$Object{id}}};
 	} else {
 #$log->warn("Request for old style price for $Object");

@@ -37,19 +37,20 @@ $ARGV[2] = $ARGV[1] if ! $ARGV[2];
 
 $dbh = sql::open_sql( $log, ('database'=>$ARGV[0], 'driver'=>'Pg','login'=>$ARGV[1], 'password'=>$ARGV[2], 'host'=>$ARGV[3]) );
 my @tables = sql::execute( undef, undef, q`SELECT table_name FROM information_schema.tables where table_schema='public'`);
+$log->debug("Tables: @tables");
 my @sequences = sql::execute( undef, undef, q`SELECT sequence_name FROM information_schema.sequences where sequence_schema='public'`);
 
 if ( ! sets::isin( 'database_info', \@tables ) ) {
 	$dbh->do( misc::load_file( $log, q{../openprint/sql/database_info.sql}) );
 	die $dbh->errstr() if $dbh->errstr();
 }
-my ( $version, $updated_on, $backup ) = sql::execute( undef, undef, q{SELECT version,updated_on, backup FROM database_info ORDER BY updated_on DESC LIMIT 1} );
-print "Current Database Version: $version Backups: $backup, Last Updated: $updated_on\n";
 my $data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM database_info LIMIT 1', {} );
 if ( ! $data ) {
-	$dbh->do( misc::load_file( $log, q{../openprint/sql/database_info.sql}) );
-	die $dbh->errstr() if $dbh->errstr();
-} 
+	sql::insert( undef, undef, 'database_info', 'version', 1, 'updated_on', 'NOW()','backup',0 );
+}
+
+my ( $version, $updated_on, $backup ) = sql::execute( undef, undef, q{SELECT version,updated_on, backup FROM database_info ORDER BY updated_on DESC LIMIT 1} );
+print "Current Database Version: $version Backups: $backup, Last Updated: $updated_on\n";
 
 if ( ! sets::isin( 'configuration', \@tables ) ) {
 	$log->debug("Adding Configuration table");
@@ -67,7 +68,6 @@ if ( ! sets::isin( 'object_types', \@tables ) ) {
 
 configuration::init( $log, $dbh );
 $config{db_name} = $ARGV[0];
-
 
 if ( ! sets::isin( 'currencies', \@tables ) ) {
 	$dbh->do( misc::load_file( $log, q{../openprint/sql/Currencies.sql}) );
@@ -89,6 +89,7 @@ if ( ! sets::isin( 'annualsales', \@tables ) ) {
 if ( ! sets::isin( 'companies', \@tables ) ) {
 	if ( ! sets::isin( 'company', \@tables ) ) {
 		$dbh->do( misc::load_file( $log, q{../openprint/sql/Companies.sql}) );
+		die $dbh->errstr() if $dbh->errstr();
 	} else {
 		my $ac = sql::start_transaction( $dbh );
 		print "Renaming company to companies\n";
@@ -213,6 +214,25 @@ if ( ! sets::isin( 'companies', \@tables ) ) {
 	if ( ! exists $$data{$openprint::Company::fields{last_project_id}} ) {
 		$dbh->do('ALTER TABLE companies ADD last_project_id INTEGER');
 		$dbh->do('ALTER TABLE companies ADD FOREIGN KEY (last_project_id) REFERENCES Projects (id)');
+		$dbh->do('UPDATE companies SET last_project_id = (SELECT MAX(id) FROM projects WHERE company_id=companies.id)');
+		die $dbh->errstr() if $dbh->errstr();
+	} # end if
+	if ( ! exists $$data{$openprint::Company::fields{last_order_id}} ) {
+		$dbh->do('ALTER TABLE companies ADD last_order_id INTEGER');
+		$dbh->do('ALTER TABLE companies ADD FOREIGN KEY (last_order_id) REFERENCES Orders (id)');
+		$dbh->do('UPDATE companies SET last_order_id = (SELECT MAX(id) FROM Orders WHERE company_id=companies.id)');
+		die $dbh->errstr() if $dbh->errstr();
+	} # end if
+	if ( ! exists $$data{$openprint::Company::fields{last_quote_id}} ) {
+		$dbh->do('ALTER TABLE companies ADD last_quote_id INTEGER');
+		$dbh->do('ALTER TABLE companies ADD FOREIGN KEY (last_quote_id) REFERENCES Quotes (id)');
+		$dbh->do('UPDATE companies SET last_quote_id = (SELECT MAX(id) FROM Quotes WHERE companyindex=companies.id)');
+		die $dbh->errstr() if $dbh->errstr();
+	} # end if
+	if ( ! exists $$data{$openprint::Company::fields{last_invoice_id}} ) {
+		$dbh->do('ALTER TABLE companies ADD last_invoice_id INTEGER');
+		$dbh->do('ALTER TABLE companies ADD FOREIGN KEY (last_invoice_id) REFERENCES Invoices (id)');
+		$dbh->do('UPDATE companies SET last_invoice_id = (SELECT MAX(id) FROM Invoices WHERE invoicee_id=companies.id)');
 		die $dbh->errstr() if $dbh->errstr();
 	} # end if
 
@@ -564,6 +584,10 @@ if ( ! sets::isin( 'payments', \@tables ) ) {
 		$dbh->do('ALTER TABLE payments add type_id INTEGER');
 		$dbh->do('ALTER TABLE payments add FOREIGN KEY (type_id) REFERENCES PaymentTypes (id)');
 	} # end if
+	if ( $data and ! exists $$data{'order_id'} ) {
+		$dbh->do('ALTER TABLE payments add order_id INTEGER');
+		$dbh->do('ALTER TABLE payments add FOREIGN KEY (order_id) REFERENCES Orders (id)');
+	} # end if
 } # end if
 if ( ! sets::isin( 'orders', \@tables ) ) {
 	$dbh->do( misc::load_file( $log, q{../openprint/sql/Orders.sql}) ) or die $dbh->errstr();
@@ -812,6 +836,11 @@ if ( sets::isin( 'projecttype_categories', \@tables ) ) {
 } else {
 	$dbh->do( misc::load_file( $log, q{../openprint/sql/ProjectType_Categories.sql}) );
 } # end if
+if ( ! sets::isin( 'project_statuses', \@tables ) ) {
+	$log->debug("Adding Project_Statuses");
+	$dbh->do( misc::load_file( $log, q{../openprint/sql/Project_Statuses.sql}) );
+	die $dbh->errstr() if $dbh->errstr();
+} # end if
 
 if ( sets::isin( 'tbl_projects', \@tables ) ) {
 	my $data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='tbl_projects'", 'column_name');
@@ -868,6 +897,12 @@ if ( ! sets::isin( 'projects', \@tables ) ) {
 	} # end if
 	if ( ! exists $$data{calculated_on} ) {
 		$dbh->do(q`ALTER TABLE projects ADD calculated_on TIMESTAMP WITH TIME ZONE`) or $log->error($dbh->errstr());
+	} # end if
+	if ( ! exists $$data{reprint} ) {
+		$dbh->do(q`ALTER TABLE projects ADD reprint BOOLEAN NOT NULL default false`) or $log->error($dbh->errstr());
+	} # end if
+	if ( ! exists $$data{reprint_reason} ) {
+		$dbh->do(q`ALTER TABLE projects ADD reprint_reason TEXT`) or $log->error($dbh->errstr());
 	} # end if
 } # end if
 if ( ! sets::isin( 'servicetype_categories', \@tables ) ) {
@@ -929,6 +964,9 @@ if ( ! sets::isin( 'service_types', \@tables ) ) {
 	if ( ! exists $$data{summary_visible} ) {
 		$dbh->do('ALTER TABLE service_types add summary_visible BOOLEAN NOT NULL default true');
 	} # end if
+	if ( ! exists $$data{allow_delete} ) {
+		$dbh->do('ALTER TABLE service_types add allow_delete BOOLEAN NOT NULL default true');
+	} # end if
 }# end if
 if ( ! sets::isin( 'service_categories_id_seq', \@sequences ) ) {
 	$dbh->do('create sequence service_categories_id_seq;');
@@ -946,7 +984,13 @@ if ( ! sets::isin( 'tbl_project_contents', \@tables ) ) {
 } else {
 	my $data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='tbl_project_contents'", 'column_name');
 	if ( ! exists $$data{'servicetype_id'} ) {
+		$log->debug("Adding servicetype_id to tbl_project_contents");
 		$dbh->do('ALTER TABLE tbl_project_contents add servicetype_id INTEGER NOT NULL');
+	} 
+	if ( ! exists $$data{'operator_id'} ) {
+		$log->debug("Adding operator_id to tbl_project_contents");
+		$dbh->do('ALTER TABLE tbl_project_contents add operator_id INTEGER');
+		$dbh->do('ALTER TABLE tbl_project_contents add FOREIGN KEY (operator_id) REFERENCES Users (id)');
 	} 
 }
 if ( ! sets::isin( 'tbl_service_specifications', \@tables ) ) {
@@ -1095,9 +1139,20 @@ if ( ! sets::isin( 'locations', \@tables ) ) {
 		} # end if
 		$dbh->do('DROP SEQUENCE location_id_seq');
 	} # end if
+	if ( ! exists $$data{'company_id'} ) {
+		$dbh->do('ALTER TABLE Locations add company_id INTEGER');
+		$dbh->do('ALTER TABLE Locations ADD FOREIGN KEY (company_id) REFERENCES companies (id)');
+		print "Added company_id to Locations\n";
+		die $dbh->errstr() if $dbh->errstr();
+	} # end if
 } # end if
 if ( ! sets::isin( 'addresses', \@tables ) ) {
 	$dbh->do( misc::load_file( $log, q{../openprint/sql/Addresses.sql}) );
+	die $dbh->errstr() if $dbh->errstr();
+}
+if ( ! sets::isin( 'tbl_addresses', \@tables ) ) {
+	print "Adding tbl_Addresses @tables\n";
+	$dbh->do( misc::load_file( $log, q{../openprint/sql/tbl_Addresses.sql}) );
 	die $dbh->errstr() if $dbh->errstr();
 }
 if ( ! sets::isin( 'equipment_categories', \@tables ) ) {
@@ -1158,6 +1213,10 @@ if ( ! sets::isin( 'tbl_equipment_specifications', \@tables ) ) {
 			$dbh->do('DROP SEQUENCE EquipmentSpecification_seq');
 			$dbh->do("SELECT setval('tbl_equipment_specifications_id_seq', (SELECT MAX(id) FROM tbl_equipment_specifications) )");
 		} # end if
+		if ( ! exists $$data{interpolate} ) {
+			$log->debug("Adding interpolate to tbl_equipment_specifications");
+			$dbh->do('ALTER TABLE tbl_equipment_specifications ADD interpolate         BOOLEAN NOT NULL DEFAULT false');
+		}
 	} # end if
 } # end if
 
@@ -1178,6 +1237,9 @@ if ( ! sets::isin( 'stockcolours', \@tables ) ) {
 }
 if ( ! sets::isin( 'stockweights', \@tables ) ) {
 	$dbh->do(misc::load_file( $log, '../openprint/sql/StockWeights.sql') );
+}
+if ( ! sets::isin( 'stockqualities', \@tables ) ) {
+	$dbh->do(misc::load_file( $log, '../openprint/sql/StockQualities.sql') );
 }
 
 if ( ! sets::isin( 'papers', \@tables ) ) {
@@ -1214,6 +1276,26 @@ if ( ! sets::isin( 'papers', \@tables ) ) {
 		print "Adding supplier_id to Papers\n";
 		$dbh->do(q`ALTER TABLE papers add supplier_id INTEGER`);
 		$dbh->do(q`ALTER TABLE papers add FOREIGN KEY (supplier_id) REFERENCES companies (id)`);
+	} # end nif
+	if ( ! exists $$data{supplied} ) {
+		print "Adding supplied to Papers\n";
+		$dbh->do(q`ALTER TABLE papers add supplied boolean`);
+	} # end nif
+	if ( ! exists $$data{digital} ) {
+		print "Adding digital to Papers\n";
+		$dbh->do(q`ALTER TABLE papers add digital boolean`);
+	} # end nif
+	if ( ! exists $$data{wpsi} ) {
+		print "Adding wpsi to Papers\n";
+		$dbh->do(q`ALTER TABLE papers add wpsi float`);
+	} # end nif
+	if ( ! exists $$data{type} ) {
+		print "Adding type to Papers\n";
+		$dbh->do(q`ALTER TABLE papers add type text`);
+	} # end nif
+	if ( ! exists $$data{created_on} ) {
+		print "Adding created_on to Papers\n";
+		$dbh->do(q`ALTER TABLE papers add created_on TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()`);
 	} # end nif
 	if ( ! exists $$data{department_id} ) {
 		print "Adding department_id to Papers\n";
@@ -1274,7 +1356,14 @@ if ( ! sets::isin( 'materials', \@tables ) ) {
 		$dbh->do('ALTER TABLE materials add manufacturer_id INTEGER');
 		$dbh->do('ALTER TABLE materials add FOREIGN KEY (manufacturer_id) REFERENCES Manufacturers (id)');
 	} 
+	if ( ! exists $$data{activity_code} ) {
+		$dbh->do('ALTER TABLE materials add activity_code text');
+	} 
 } # end if
+if ( sets::isin( 'materialindex_seq', \@sequences ) and ! sets::isin( 'materials_id_seq', \@sequences ) ) {
+	$dbh->do('alter sequence materialindex_seq rename to materials_id_seq');
+	$dbh->do("ALTER TABLE Materials alter id set default nextval('materials_id_seq')");
+}
 if ( ! sets::isin( 'material_specifications', \@tables ) ) {
 	$dbh->do(misc::load_file( $log, '../openprint/sql/Material_Specifications.sql') );
 } else {
@@ -1315,6 +1404,17 @@ if ( ! sets::isin( 'skids', \@tables ) ) {
 		} # end if
 		if ( ! exists $$data{'received_on'} ) {
 			$dbh->do(q{alter table skids add received_on date});
+		} # endif
+		if ( ! exists $$data{location_id} ) {
+			$log->debug("Adding location_id to skids");
+			$dbh->do(q{alter table skids add location_id INTEGER});
+			$dbh->do(q{alter table skids ADD FOREIGN KEY (location_id) REFERENCES Locations (id)});
+			die $dbh->errstr() if $dbh->errstr();
+		} # endif
+		if ( exists $$data{'location'} ) {
+			$log->debug("Removing location from skids");
+			$dbh->do('ALTER TABLE skids DROP location');
+			die $dbh->errstr() if $dbh->errstr();
 		} # endif
 	} # end if
 } # end if 1456
@@ -1547,6 +1647,7 @@ if ( sets::isin( 'tbl_service_prices', \@tables ) ) {
 	} # end if
 } # end if
 if ( ! sets::isin( 'service_prices',\@tables )  ) {
+	$log->debug("Adding service prices");
 	$dbh->do( misc::load_file( $log, '../openprint/sql/Service_Prices.sql' ) );
 	die if $dbh->errstr();
 } else {
@@ -1568,6 +1669,11 @@ if ( ! sets::isin( 'service_prices',\@tables )  ) {
 	if ( ! exists $$data{period_end} ) {
 		$dbh->do('ALTER TABLE Service_Prices ADD period_end TIMESTAMP WITH TIME ZONE');
 	} # end if
+	if ( ! exists $$data{id} ) {
+		$log->debug("Adding id SERIAL to Service_prices");
+		$dbh->do('ALTER TABLE Service_Prices ADD id SERIAL');
+		die $dbh->errstr() if $dbh->errstr();
+	} # end if
 } # end if
 @sequences = sql::execute( undef, undef, q`SELECT sequence_name FROM information_schema.sequences where sequence_schema='public'`);
 if ( ! sets::isin( 'service_prices_id_seq',\@sequences ) ) {
@@ -1576,9 +1682,9 @@ if ( ! sets::isin( 'service_prices_id_seq',\@sequences ) ) {
 	} else {
 		$dbh->do('CREATE SEQUENCE service_prices_id_seq') or die $dbh->errstr();
 		$dbh->do(q`SELECT setval('service_prices_id_seq', (SELECT max(id) FROM service_prices))`) or die $dbh->errstr();
-		$dbh->do('ALTER TABLE service_prices alter id set default nextval(service_prices_id_seq)') or die $dbh->errstr();
 	} # end if
 } # end if
+$dbh->do(q`ALTER TABLE service_prices alter id set default nextval('service_prices_id_seq')`) or die $dbh->errstr();
 
 if ( sets::isin( 'pricelists', \@tables ) ) {
 	my $data = $dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='pricelists'", 'column_name' );
@@ -1824,6 +1930,7 @@ if ( ! sets::isin( 'manifests', \@tables ) ) {
 } # end if
 if ( ! sets::isin( 'manifestcontents', \@tables ) ) {
 	$dbh->do( misc::load_file( $log, q{../openprint/sql/ManifestContents.sql}) );
+	die $dbh->errstr() if $dbh->errstr();
 } else {
 	my $data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='manifestcontents'", 'column_name');
 	if ( ! exists $$data{location_id} ) {
@@ -1848,7 +1955,18 @@ if ( ! sets::isin( 'purchaseorder_items', \@tables ) ) {
 } # en dif
 if ( ! sets::isin( 'purchaseorder_contents', \@tables ) ) {
 	$dbh->do( misc::load_file( $log, q{../openprint/sql/PurchaseOrder_Contents.sql}) ) or die $dbh->errstr();
+} else {
+	my $data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='purchaseorder_contents'", 'column_name');
+	if ( ! exists $$data{object_type_id} ) {
+		$dbh->do('ALTER TABLE purchaseorder_contents ADD object_type_id INTEGER');
+		$dbh->do('ALTER TABLE purchaseorder_contents ADD FOREIGN KEY (object_type_id) REFERENCES Object_Types (id)');
+		$dbh->do('ALTER TABLE purchaseorder_contents ADD object_id INTEGER');
+	}
 } # en dif
+if ( ! sets::isin( 'purchaseorder_items_to_inventory_items', \@tables ) ) {
+	$dbh->do( misc::load_file( $log, q{../openprint/sql/PurchaseOrder_Items_to_Inventory_Items.sql}) ) or die $dbh->errstr();
+}
+
 if ( ! sets::isin( 'user_purchaseorder_limits', \@tables ) ) {
 	$dbh->do( misc::load_file( $log, q{../openprint/sql/User_PurchaseOrder_Limits.sql}) ) or die $dbh->errstr();
 	die 'user_purchaseorder_limits' if $dbh->errstr();
@@ -1922,6 +2040,9 @@ if ( ! sets::isin( 'papers', \@tables ) ) {
 	} # end if
 	if ( ! exists $$data{'parts'} ) {
 		$dbh->do(q`alter table papers add parts integer`);
+	} # end if
+	if ( ! exists $$data{'sheets_per_package'} ) {
+		$dbh->do(q`alter table papers add sheets_per_package integer`);
 	} # end if
 } # end if
 
@@ -2077,6 +2198,14 @@ my $data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, c
 
 if ( ! sets::isin( 'tbl_quote_details', \@tables ) ) {
 	$dbh->do( misc::load_file( $log, '../openprint/sql/tbl_Quote_Details.sql' ) );
+	die if $dbh->errstr();
+}
+if ( ! sets::isin( 'tbl_quote_users_for', \@tables ) ) {
+	$dbh->do( misc::load_file( $log, '../openprint/sql/tbl_Quote_Users_For.sql' ) );
+	die if $dbh->errstr();
+}
+if ( ! sets::isin( 'tbl_quote_users_by', \@tables ) ) {
+	$dbh->do( misc::load_file( $log, '../openprint/sql/tbl_Quote_Users_By.sql' ) );
 	die if $dbh->errstr();
 }
 if ( ! sets::isin( 'quote_log', \@tables ) ) {
@@ -2587,6 +2716,7 @@ if ( ! sets::isin( 'order_contents', \@tables ) ) {
 
 if ( ! sets::isin( 'skid_contents', \@tables ) ) {
 	$dbh->do(misc::load_file( $log, '../openprint/sql/Skid_Contents.sql' ) );
+	die $dbh->errstr() if $dbh->errstr();
 } else {
 	my $data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='skid_contents'", 'column_name');
 	if ( ! exists $$data{'id'} ) {
@@ -2893,6 +3023,14 @@ if ( ! sets::isin('user_notification_types',\@tables ) ) {
 } # end if
 if ( ! sets::isin('user_notifications',\@tables ) ) {
 	$dbh->do( misc::load_file( $log, q{../openprint/sql/User_Notifications.sql}) );
+} else {
+	my $data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='user_notifications'", 'column_name');
+    if ( ! exists $$data{company_id} ) {
+		$log->debug("Adding company_id to notifications");
+        $dbh->do('ALTER TABLE user_notifications ADD company_id INTEGER');
+        $dbh->do('ALTER TABLE user_notifications ADD FOREIGN KEY (company_id) REFERENCES companies (id)');
+    } # end if
+
 } # end if
 
 if ( ! sets::isin( 'claims', \@tables ) ) {
@@ -3782,6 +3920,25 @@ if ( ! sets::isin( 'page_settings', \@tables ) ) {
 		$dbh->do('ALTER TABLE page_settings ADD message TEXT');
 	} # end if
 }
+my $data = 0;
+if ( sets::isin( 'emailcampaigns', \@tables ) ) {
+	my $data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='emailcampaigns'", 'column_name');
+	if ( ! exists $$data{deleted} ) {
+		print "Adding deleted to email_campaigns\n";
+		$dbh->do('ALTER TABLE emailcampaigns ADD deleted BOOLEAN NOT NULL default false');
+	} # end if
+} else {
+	$_ = misc::load_file( $log, q{../openprint/sql/EmailCampaigns.sql});
+	foreach my $st ( split(';', $_ ) ) {
+		$dbh->do($st);
+	} # end foreach
+} # end if
+
+if ( sets::isin( 'trade_references', \@tables ) ) {
+	my $data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='trade_references'", 'column_name');
+} else {
+		$dbh->do( misc::load_file( $log, q{../openprint/sql/Trade_References.sql}) );
+} # end if
 print "Finished\n";
 1;
 __END__

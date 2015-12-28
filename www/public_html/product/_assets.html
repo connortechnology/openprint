@@ -1,4 +1,4 @@
-<? echo ( include('/includes/error_reporting.html'); ) ?>
+<?include('/includes/error_reporting.html')?>
 <h3>Attachments:</h3>
 <table>
 	<thead>
@@ -24,9 +24,9 @@ foreach my $Object_Asset ( $$variable{'Product'}->Assets() ) {
 			<td class="actions">%6$s</td>
 		</tr>
 		', $Asset->on_disk_filename(), $Asset->name(), $Asset->filename(),
-		Date::Format::time2str( $config{'DateTimeFormat'}, Date::Parse::str2time( $Asset->created_on() ) ),
+		format_datetime( $Asset->created_on() ),
 		$Asset->sized_url('small'),
-		ssi::button( 'd'.$Asset->id(), { onclick=>q`new Ajax.Updater( 'Assets', '_assets.html', { parameters: { object_type: 'openprint::Product', object_id: `.$$variable{'Product'}->id().q`, asset_id: `.$Asset->id().q`, action: 'delete' } } );`, text=>'Delete' } ),
+		button( 'd'.$Asset->id(), { onclick=>q`new Ajax.Updater( 'Assets', '_assets.html', { parameters: { object_type: 'openprint::Product', object_id: `.$$variable{'Product'}->id().q`, asset_id: `.$Asset->id().q`, action: 'delete' } } );`, text=>'Delete' } ),
 		);
 } # end foreach Asset
 return $html;
@@ -35,7 +35,7 @@ return $html;
 		<tr class="unprintable">
 			<td class="Name"><input type="text" id="name" name="name"/></td>
 			<td colspan="3" class="Filename"><input type="file" id="filename" name="filename"/></td>
-			<td><? echo ( ssi::button( 'Upload', { onclick=>"f1.action='view.html';f1.btnFunction.value='Attach';f1.submit();" } ); ) ?></td>
+			<td><? echo ( button( 'Upload', { onclick=>"f1.action='view.html';f1.btnFunction.value='Attach';f1.submit();" } ); ) ?></td>
 		</tr>
 	</tbody>
 </table>

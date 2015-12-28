@@ -86,7 +86,7 @@ sub neccessary {
 # type is actually category name, not material type
 
 	if ( $type eq 'BulkSkids' ) {
-		my $finished_weight = openprint::print::get_finished_weight( $Project->id() );
+		my $finished_weight = $Project->finished_weight();
 		foreach my $qty_index ( $Project->quantity_indexes() ) {
 			if ( $finished_weight * $$Project{'quantity'.$qty_index} > 1500 ) {
 				return 1;
@@ -134,7 +134,7 @@ sub calc {
 		$$specs{alert} .= 'Unable to calculate the calliper of the project.  Please recalculate printing services.';
 		return $$specs{Status} = 'uncalculated';
 	} # end if
-	$$specs{txtFinishedWeight} = 1 * openprint::print::get_finished_weight( $project_index, 1 );
+	$$specs{txtFinishedWeight} = $Project->finished_weight( 1 );
 	if ( ! $$specs{txtFinishedWeight} ) {
 		$$specs{alert} .= 'Unable to calculate the weight of the project.  Please recalculate printing services.';
 		return $$specs{Status} = 'uncalculated';

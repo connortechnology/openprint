@@ -68,8 +68,20 @@ sub _search {
 
 sub details {
 
-    my $order_id = $param{order_id};
-	my $Order = new openprint::Order( $order_id );
+	my $order_id;
+	my $Order;
+	
+	if ( $param{order_id} ) {
+		$order_id = openprint::Order->transform( id => $param{order_id} );
+		$Order = new openprint::Order( $order_id );
+	} elsif ( $param{docket} ) {
+		$Order = openprint::Order->find_one( docket=> openprint::Order->transform( docket => $param{docket} ) );
+		$order_id = $Order->id() if $Order;
+	}
+	if ( ! ( $Order and $Order->id() ) ) {
+		$variable{error} .= 'Please specify the order by order id or docket #.<br/>';
+		return;
+	}
 
 	if ( $param{btnFunction} eq 'Send' ) {
 		openprint::order::send_sales_order( $r, $log, $dbh, $order_id );
@@ -429,7 +441,7 @@ sub _expenses {
 				'paid_on_start_year','paid_on_start_month','paid_on_start_day',
 				'paid_on_end_year','paid_on_end_month','paid_on_end_day',
 				'category_id', 'recipient_id', 'account_id','attention',
-				
+				'amount','total',
 				) );
 } # end sub _expenses
 
@@ -474,7 +486,7 @@ $log->debug("Calcing amount: $param{amount}");
 		} # end if
 		if ( $param{account_id} ) {
 			delete $param{account};
-		} else {
+		} elsif ( $param{account} ) {
 			delete $param{account_id};
 		} # end if
 		my $Expense = new openprint::Expense( $param{expense_id} );
@@ -500,7 +512,7 @@ $log->debug("Calcing amount: $param{amount}");
 		$variable{ExternalRedirect} = '/employee/accounting/expenses.html';
 
 		# Now update the session for expenses so that we always show the entry we just saved.
-		foreach my $key ( 'company_id', 'recipient_id', 'account_id' ) {
+		foreach my $key ( 'company_id', 'recipient_id', 'account_id', 'category_id' ) {
 			if ( $session{'/employee/accounting/expenses.html?'.$key} and ( $session{'/employee/accounting/expenses.html?'.$key} != $$Expense{$key} ) ) {
 				delete $session{'/employee/accounting/expenses.html?'.$key};
 			} # end if

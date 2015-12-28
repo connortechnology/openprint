@@ -35,7 +35,7 @@
 		<? echo (
 			my $Invoicee = $$variable{Invoice}->Invoicee();
 			my $html = '';
-			$html .= ($Invoicee->business_name() ? $Invoicee->business_name() : $Invoicee->name()).'<br/>';
+			$html .= $Invoicee->link_to( ($Invoicee->business_name() ? $Invoicee->business_name() : $Invoicee->name()) ).'<br/>';
 			$html .= $Invoicee->address1().'<br/>';
 			$html .= $Invoicee->address2().'<br/>' if $Invoicee->address2();
 			$html .= join(', ', $Invoicee->get('city','state','country') ).'<br/>';
@@ -64,7 +64,7 @@ $$variable{Timetracks} = [ openprint::Timetrack->find(invoice_id=>$$variable{Inv
 	<fieldset><legend>Services</legend>
 		<table class="List">
 			<tr>
-				<th class="Date">Date</th>
+				<th class="Date">Employee / Date</th>
 				<th class="Service">Description</th>
 				<th class="PO">PO #</th>
 				<th class="Interval">Interval</th>
@@ -86,7 +86,7 @@ $$variable{Timetracks} = [ openprint::Timetrack->find(invoice_id=>$$variable{Inv
 					$html .= sprintf('<td class="Rate">%s%s</td>', openprint::Currency::format( $$Price{Price} ), $$Price{units} );
 					$html .= sprintf('<td class="Price">%s</td>', openprint::Currency::format( $$Price{Total} ) );
 					$html .= sprintf(q`</tr><tr %2$s>`, $Timetrack->id(), $rowclass );
-					$html .= '<td>&nbsp;</td><td colspan="4">'.$Timetrack->description().'</td><td>&nbsp;</td>';
+					$html .= '<td>'.$Timetrack->Employee()->link_to().'</td><td colspan="4">'.$Timetrack->description().'</td><td>&nbsp;</td>';
 					$html .= '</tr>';
 					$$variable{service_total} += $$Price{Total};
 					$rowclass = $rowclass ? '' : 'class="colRow"';

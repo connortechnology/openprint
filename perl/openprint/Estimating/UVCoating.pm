@@ -142,6 +142,7 @@ sub calc {
 		my $GrandTotal = 0;
 		foreach my $signature_service_index ( $Project->signatures( { sort=>1 } ) ) {
 			my $sig_specs = openprint::service::get_specs_ref( $Project, $signature_service_index );
+			my $form = $$sig_specs{SignatureIndex};
 			$$specs{'hdnBreakdown'.$qty_index} .= 'Signature ' . $$sig_specs{SignatureIndex} . 'Printed: ' .openprint::service::summary( $Project, $signature_service_index, $qty_index ).'<br/>';
 # If any of the signatures doesn't have an imposition, then we are in an incomplete state.
 			if ( ! $$sig_specs{'txtImposition'.$qty_index} ) {
@@ -155,35 +156,35 @@ sub calc {
 
 			$MakeReadies{$results{Equipment}->id()} = $$sig_specs{'StockWidth'.$qty_index} * $$sig_specs{'StockHeight'.$qty_index} if $results{Equipment};
 			@outputs = sets::union( @outputs, 
-					"ddmEquipment-$$sig_specs{SignatureIndex}-$qty_index", 
-					"MakeReadyPrice-$$sig_specs{SignatureIndex}-$qty_index",
-                    "BlanketPrice-$$sig_specs{SignatureIndex}-$qty_index",
-                    "ServicePrice-$$sig_specs{SignatureIndex}-$qty_index",
-                    "MaterialPrice-$$sig_specs{SignatureIndex}-$qty_index",
-                    "SignaturePrice-$$sig_specs{SignatureIndex}-$qty_index",
+					"ddmEquipment-$form-$qty_index", 
+					"MakeReadyPrice-$form-$qty_index",
+                    "BlanketPrice-$form-$qty_index",
+                    "ServicePrice-$form-$qty_index",
+                    "MaterialPrice-$form-$qty_index",
+                    "SignaturePrice-$form-$qty_index",
 					);	
-			if ( $$specs{"OverrideMakeReadyPrice-$$sig_specs{SignatureIndex}-$qty_index"} ne 'Y' ) {
-				$$specs{"MakeReadyPrice-$$sig_specs{SignatureIndex}-$qty_index"} = sprintf($config{ProjectMoneyFormat}, $results{MakeReady} );
+			if ( $$specs{"OverrideMakeReadyPrice-$form-$qty_index"} ne 'Y' ) {
+				$$specs{"MakeReadyPrice-$form-$qty_index"} = sprintf($config{ProjectMoneyFormat}, $results{MakeReady} );
 			} # end if
-			if ( ( ! defined $$specs{"OverrideBlanketPrice-$$sig_specs{SignatureIndex}-$qty_index"} ) or ( $$specs{"OverrideBlanketPrice-$$sig_specs{SignatureIndex}-$qty_index"} ne 'Y' ) ) {
-				$$specs{"BlanketPrice-$$sig_specs{SignatureIndex}-$qty_index"} = sprintf($config{ProjectMoneyFormat}, $results{Blanket} );
+			if ( ( ! defined $$specs{"OverrideBlanketPrice-$form-$qty_index"} ) or ( $$specs{"OverrideBlanketPrice-$form-$qty_index"} ne 'Y' ) ) {
+				$$specs{"BlanketPrice-$form-$qty_index"} = sprintf($config{ProjectMoneyFormat}, $results{Blanket} );
 			} # end if
-			if ( ( ! defined $$specs{"OverrideServicePrice-$$sig_specs{SignatureIndex}-$qty_index"} ) or ( $$specs{"OverrideServicePrice-$$sig_specs{SignatureIndex}-$qty_index"} ne 'Y' ) ) {
-				$$specs{"ServicePrice-$$sig_specs{SignatureIndex}-$qty_index"} = sprintf($config{ProjectMoneyFormat}, $results{Service} );
+			if ( ( ! defined $$specs{"OverrideServicePrice-$form-$qty_index"} ) or ( $$specs{"OverrideServicePrice-$form-$qty_index"} ne 'Y' ) ) {
+				$$specs{"ServicePrice-$form-$qty_index"} = sprintf($config{ProjectMoneyFormat}, $results{Service} );
 			} # end if
-			if ( ( ! defined $$specs{"OverrideMaterialPrice-$$sig_specs{SignatureIndex}-$qty_index"} ) or ( $$specs{"OverrideMaterialPrice-$$sig_specs{SignatureIndex}-$qty_index"} ne 'Y' ) ) {
-				$$specs{"MaterialPrice-$$sig_specs{SignatureIndex}-$qty_index"} = sprintf($config{ProjectMoneyFormat}, $results{Material} );
+			if ( ( ! defined $$specs{"OverrideMaterialPrice-$form-$qty_index"} ) or ( $$specs{"OverrideMaterialPrice-$form-$qty_index"} ne 'Y' ) ) {
+				$$specs{"MaterialPrice-$form-$qty_index"} = sprintf($config{ProjectMoneyFormat}, $results{Material} );
 			} # end if
-			if ( ( ! defined $$specs{"OverrideSignaturePrice-$$sig_specs{SignatureIndex}-$qty_index"} ne 'Y' ) or ( $$specs{"OverrideSignaturePrice-$$sig_specs{SignatureIndex}-$qty_index"} ne 'Y' ) ) {
-				$$specs{"SignaturePrice-$$sig_specs{SignatureIndex}-$qty_index"} = sprintf($config{ProjectMoneyFormat}, $results{Total} );
+			if ( ( ! defined $$specs{"OverrideSignaturePrice-$form-$qty_index"} ne 'Y' ) or ( $$specs{"OverrideSignaturePrice-$form-$qty_index"} ne 'Y' ) ) {
+				$$specs{"SignaturePrice-$form-$qty_index"} = sprintf($config{ProjectMoneyFormat}, $results{Total} );
             } # end if
 
-			if ( ( ! defined $$specs{"chkOverrideEquipment-$$sig_specs{SignatureIndex}-$qty_index"} ) or ( $$specs{"chkOverrideEquipment-$$sig_specs{SignatureIndex}-$qty_index"} ne 'Y' ) ) {
-				$$specs{"ddmEquipment-$$sig_specs{SignatureIndex}-$qty_index"} = '';
+			if ( ( ! defined $$specs{"chkOverrideEquipment-$form-$qty_index"} ) or ( $$specs{"chkOverrideEquipment-$form-$qty_index"} ne 'Y' ) ) {
+				$$specs{"ddmEquipment-$form-$qty_index"} = '';
 			} # end if
 			if ( $results{Status} eq 'uncalculated' ) {
 				$status = 'uncalculated';
-				if ( $$specs{"chkOverrideEquipment-$$sig_specs{SignatureIndex}-$qty_index"} eq 'Y' ) {
+				if ( $$specs{"chkOverrideEquipment-$form-$qty_index"} eq 'Y' ) {
 					$$specs{alert} = 'The selected equipment can not handle your project.  This may be because the stock is too heavy, or too large.';
 				} else {
 					$$specs{alert} = $results{alert};
@@ -196,8 +197,8 @@ sub calc {
 				} # end if
 			} else {
 				if ( $results{Equipment} ) {
-					$$specs{"ddmEquipment-$$sig_specs{SignatureIndex}-$qty_index"} = $results{Equipment}->id();
-					$GrandTotal += $$specs{"SignaturePrice-$$sig_specs{SignatureIndex}-$qty_index"};
+					$$specs{"ddmEquipment-$form-$qty_index"} = $results{Equipment}->id();
+					$GrandTotal += $$specs{"SignaturePrice-$form-$qty_index"};
 				} # end if
 			} # end if uncalculated
 		} # end foreach signature
@@ -249,17 +250,17 @@ $i1->display('Cut to 1');
 $i2->display('Cut to 2');
 		push @results, $i2;
 	} elsif ( $I->layout_width() >= $I->layout_height() and $I->columns() > 1 ) {
-$I->display('B');
-		my $i2 = $I->copy();
-		$i1->sheet_width();
-		$i2->sheet_width();
-		$i1->columns( int($I->columns() / 2) );
-		$i2->columns( $I->columns() - $i1->columns() );
-		#$i1->sheet_width( Math::Round::nearest( 0.001,$I->sheet_width() / ( $I->columns()/$i1->columns() ) ) );
-		#$i2->sheet_width( $I->sheet_width() - $i1->sheet_width() );
-$i1->display('Cut to 1');
-$i2->display('Cut to 2');
-		push @results, $i2;
+	$I->display('Cut columns');
+			my $i2 = $I->copy();
+			$i1->sheet_width();
+			$i2->sheet_width();
+			$i1->columns( int($I->columns() / 2) );
+			$i2->columns( $I->columns() - $i1->columns() );
+			#$i1->sheet_width( Math::Round::nearest( 0.001,$I->sheet_width() / ( $I->columns()/$i1->columns() ) ) );
+			#$i2->sheet_width( $I->sheet_width() - $i1->sheet_width() );
+	$i1->display('Cut to 1');
+	$i2->display('Cut to 2');
+			push @results, $i2;
 	} elsif ( $I->layout_width() < $I->layout_height() and $I->rows() > 1 ) {
 $I->display('C');
 		my $i2 = $I->copy();
@@ -391,7 +392,7 @@ sub signature_calc {
 
 			my $complete = 1;
 			my $totalPrice = 0;
-			my $breakdown = '<b>'.$Equipment->name() . '</b><br/>';;
+			my $breakdown = '<table>';
 
 			my %ImpositionPrice;
 			#if ( @$impositions > 1 ) {
@@ -405,7 +406,7 @@ sub signature_calc {
 				my $imp = $$impositions[$imp_index];
 
 				#$breakdown .= sprintf( '%dx%d+%dx%d=%dout on %sx%s<br/>',$imp->get('columns','rows','dutch_columns','dutch_rows','imposition'), $Stock->width(), $Stock->height() );
-				$breakdown = $imp->to_string().'<br/>';
+				$breakdown .= '<tr><td colspan="2"><br/>'.$imp->to_string().'</td></tr>';
 				$openprint::log->debug('Trying: ' . $breakdown ) if DEBUG;
 
 				if ( ! ( $imp->rows() * $imp->columns() ) ) {
@@ -416,7 +417,7 @@ sub signature_calc {
 				} # end if
 
 				if ( (sets::intersection( @front_uv, @back_uv ) != sets::union( @front_uv, @back_uv ) ) and sets::isin($$imp{runstyle},['Work & Turn','Work & Tumble']) and ($Equipment->specification('WT UVCoating') ne 'Y') ) {
-					$breakdown .= 'Does not support WT UV Coating<br/>';
+					$breakdown .= '<tr><td colspan="2" class="error">Does not support WT UV Coating</td></tr>';
 					if ( $$services{Cutting} ) {
 						# If we are the last set
 						if ( $set_index+1 == @Sets_Of_Impositions ) {
@@ -425,7 +426,7 @@ sub signature_calc {
 							push @Sets_Of_Impositions, \@new_imps;
 						} # end if
 					} else {
-						$breakdown .= 'Cant cut down W&T because no cutting.  Please add cutting.<br/>';
+						$breakdown .= '<tr><td colspan="2" class="error">Cant cut down W&T because no cutting.  Please add cutting.</td></tr>';
 					} # end if
 $openprint::log->debug('W&T: ' . $breakdown ) if DEBUG;
 					$complete = 0;
@@ -437,7 +438,7 @@ $openprint::log->debug('W&T: ' . $breakdown ) if DEBUG;
 						and
 						( $_ = $Equipment->fits( $imp->layout_width(), $imp->layout_height(), $Stock->calliper() ) )
 				   ) {
-					$breakdown .= "Doesn't fit. $_<br/>";
+					$breakdown .= "<tr><td colspan=\"2\" class=\"error\">Doesn't fit. $_</td></tr>";
 $openprint::log->debug('DOESNT: ' . $breakdown ) if DEBUG;
 					$complete = 0;
 					if ( ! ( $_ =~ /Too small/ ) ) {
@@ -447,12 +448,12 @@ $openprint::log->debug('DOESNT: ' . $breakdown ) if DEBUG;
 							push @Sets_Of_Impositions, \@new_imps;
 						} # end if
 					} # end if
-$BestPrice{Breakdown} .= $breakdown;
+					$BestPrice{Breakdown} .= $breakdown;
 					last;
 				} # end if
 
-				my $run_qty = $qty * $imp->quantity() / $Imposition->imposition();
-				$breakdown .= 'impressions: ' . $run_qty;
+				my $run_qty = Math::Round::nearest( 1, $qty * $imp->quantity() / $Imposition->imposition() );
+				$breakdown .= '<tr><td colspan="2">impressions: ' . $run_qty .'</td></tr>';
 		
 				if ( my $Overs = $Equipment->Specification('UVCoating Overs', $run_qty ) ) {
 					if ( $$Overs{units} eq 'Sheets' ) {
@@ -462,7 +463,6 @@ $BestPrice{Breakdown} .= $breakdown;
 						$breakdown .= ' Overs: ' . $overs;
 					} # endif
 				} # end if
-				$breakdown .= '<br/><table>';
 				my @types;
 				if ( sets::isin( $imp->runstyle(), ['Work & Turn', 'Work & Tumble'] ) ) {
 # need to merge any overalls into spots
@@ -570,7 +570,7 @@ $openprint::log->debug("Types: @types") if DEBUG;
 						$ImpositionPrice{Material} += $MaterialPrice{Total};
 						$type_total += $MaterialPrice{Total};
 					} # end if
-					$breakdown .= sprintf('=</td><td class="Price">$%.2f</td></tr>>', $MaterialPrice{Total} );
+					$breakdown .= sprintf('=</td><td class="Price">$%.2f</td></tr>', $MaterialPrice{Total} );
 				} # end foreach type
 				#$totalPrice += $ImpositionPrice{Total} + $ImpositionPrice{Cutting};
 			} # end foreach imposition

@@ -30,3 +30,5 @@ CREATE TABLE Locations (
 	PRIMARY KEY (id)
 );
 
+CREATE INDEX idx_locations_type_id ON locations (type_id);
+CREATE INDEX idx_locations_name ON locations (name);

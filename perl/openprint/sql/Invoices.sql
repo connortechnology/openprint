@@ -36,3 +36,7 @@ ALTER TABLE ONLY invoices
 
 ALTER TABLE ONLY invoices
     ADD CONSTRAINT "$3" FOREIGN KEY (currency_id) REFERENCES currencies(id);
+
+CREATE INDEX invoices_created_on_idx on invoices (created_on);
+CREATE INDEX invoices_due_on_idx on invoices (due_on);
+CREATE INDEX invoices_invoicee_id_idx on invoices (invoicee_id);

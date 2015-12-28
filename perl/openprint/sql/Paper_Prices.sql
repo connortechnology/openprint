@@ -13,5 +13,8 @@ CREATE TABLE Paper_Prices (
 	dblMarkup			NUMERIC( 10, 2 ),
 	dblPrice			NUMERIC( 10, 5 ),
 	ysnDiscountable     CHAR(1) DEFAULT 'Y',
+	interpolate			BOOLEAN NOT NULL default false,
+	service				TEXT,
+	equipment_id		INTEGER, FOREIGN KEY (equipment_id) REFERENCES Equipment (id),
 	PRIMARY KEY (id)
 );

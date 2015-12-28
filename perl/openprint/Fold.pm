@@ -242,12 +242,12 @@ sub runspeed {
 	if ( $_[0]{runspeed} ) {
 		return $_[0]{runspeed};
 	} else {
-	if ( ! $_[1] ) {
-		my ( $caller, undef, $line ) = caller;
-		$openprint::log->warn("No gsm in Fold->runspeed from $caller line $line");
-	} # end if
-	my $RunSpeed = $_[0]->RunSpeed($_[1]);
-	return $RunSpeed ? $$RunSpeed{'runspeed'} : undef;
+		if ( ! $_[1] ) {
+			my ( $caller, undef, $line ) = caller;
+			$openprint::log->warn("No gsm in Fold->runspeed from $caller line $line");
+		} # end if
+		my $RunSpeed = $_[0]->RunSpeed($_[1]);
+		return $RunSpeed ? $$RunSpeed{'runspeed'} : undef;
 	} # end if
 } # end sub runspeed
 

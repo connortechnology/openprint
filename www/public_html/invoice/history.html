@@ -3,7 +3,6 @@
 	<h2>History</h2>
 </div>
 <script type="text/javascript">
-<!--
 	function delete_confirm(form) {
 		var number_of_deleted_invoices = 0;
 		for ( var index = 0; index < form.elements.length; index += 1 ) {
@@ -24,11 +23,10 @@
 	}
 	function load_invoices( form ) {
 		$('InvoiceList').innerHTML = 'Please wait...';
-		new Ajax.Updater('InvoiceList','_history.html', {method:'get',parameters:form.serialize()});
+		new Ajax.Updater('InvoiceList','_history.html', {parameters:form.serialize()});
 	} // end function
--->
 </script>	 
-<? echo ( include('/includes/error_reporting.html'); ) ?>
+<?include('/includes/error_reporting.html')?>
 <? if ( $session{'user_id'} ) ?>
 <form id="f1" name="f1" method="post" action="/invoice/history.html">
 	<input type="hidden" name="btnFunction"/>
@@ -62,10 +60,10 @@
 			<ul>
 			<li>
 				<label>Company</label>
-			<input class="filter" type="text" oninput="filter_companies('customer_id', { name: this.value,selected_id: get_ddm_value($('company_id')) } );" />
+				<input class="filter" type="text" oninput="filter_companies('customer_id', { name: this.value,selected_id: get_ddm_value($('company_id')) } );" />
 				<select name="company_id" id="company_id" onchange="load_invoices(this.form);">
 					<option value="">All</option>
-					<? echo ( make_drop_down( openprint::Company->dropdown('last_invoiced_on is null'=>0), $session{'/invoice/history.html?company_id'} ); ) ?>
+					<? echo ( make_drop_down( openprint::Company->dropdown('last_invoice_id is null'=>0), $session{'/invoice/history.html?company_id'} ); ) ?>
 				</select>
 			</li>
 			<li>
@@ -85,21 +83,12 @@
 		<div class="rightColumn">
 			<ul>
 			<li><label>Paid?</label>
-				<input type="radio" id="paid_1" name="paid" value="1" <? echo ( checked( $session{'/invoice/history.html?paid'} eq '1' ); ) ?> onclick="load_invoices(this.form);" />
-				<label class="radio" for="paid_1">Yes</label>
-				<input type="radio" id="paid_0" name="paid" value="0" <? echo ( checked( $session{'/invoice/history.html?paid'} eq '0' ); ) ?> onclick="load_invoices(this.form);" />
-				<label class="radio" for="paid_0">No</label>
-				<input type="radio" id="paid_2" name="paid" value="2" <? echo ( checked( $session{'/invoice/history.html?paid'} eq '2' ); ) ?> onclick="load_invoices(this.form);" />
-				<label class="radio" for="paid_2">Both</label>
+				<? echo ( radio( 'paid', [ '1','Yes','0','No','','Both'], $session{'/invoice/history.html?paid'}, { onclick=>'load_invoices(this.form);' } ); ) ?>
 			</li>
 			<li><label>Bad Debt?</label>
-				<input type="radio" id="bad_debt_1" name="bad_debt" value="1" <? echo ( checked( $session{'/invoice/history.html?bad_debt'} eq '1' ); ) ?> onclick="load_invoices(this.form);" />
-				<label class="radio" for="bad_debt_1">Yes</label>
-				<input type="radio" id="bad_debt_0" name="bad_debt" value="0" <? echo ( checked( $session{'/invoice/history.html?bad_debt'} eq '0' ); ) ?> onclick="load_invoices(this.form);" />
-				<label class="radio" for="bad_debt_0">No</label>
-				<input type="radio" id="bad_debt_2" name="bad_debt" value="2" <? echo ( checked( $session{'/invoice/history.html?bad_debt'} eq '2' ); ) ?> onclick="load_invoices(this.form);" />
-				<label class="radio" for="bad_debt_2">Both</label>
+				<? echo ( radio( 'bad_debt', [ '1','Yes','0','No','','Both'], $session{'/invoice/history.html?bad_debt'}, { onclick=>'load_invoices(this.form);' } ); ) ?>
 			</li>
+			<li><label>Contains Product</label><? echo ( ssi::select( openprint::Product->dropdown(order=>'lower(name)'), $session{$r->uri().'?product_id'}, { name=>'product_id', onchange=>'load_invoices(this.form);',prepend=>['','All'] } ); ) ?></li>
 			</ul>
 		</div>
 		<br class="spacer"/>

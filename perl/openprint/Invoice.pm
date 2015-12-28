@@ -58,6 +58,7 @@ $serial = 'invoices_id_seq';
 %find_fields = (
 	po		=>	'(SELECT po FROM invoiced_products WHERE invoiced_products.invoice_id = invoices.id)',
 	sent_on	=>	'(SELECT created_on FROM invoice_logs WHERE invoice_id=invoices.id LIMIT 1)',
+	product_id	=>	'(SELECT product_id FROM invoiced_products WHERE invoice_id=invoices.id)',
 );
 
 %transforms = (
@@ -198,15 +199,14 @@ sub add_Payment {
 	my ( $self, $Payment ) = @_;
 	if ( $Payment->remaining() ) {
 		if ( $self->owing() ) {
-		my $error;
-		my $amount = $Payment->remaining() > $self->owing() ? $self->owing() : $Payment->remaining();	
-		my $IP = new openprint::Invoice_Payment();
-		$error .= $IP->save({ payment_id=>$Payment->id(), invoice_id=>$$self{id}, amount=>$amount });
-		$Payment->remaining( undef ); # force update
-		$error .= $Payment->save();
-		$self->paid( undef );
-		$error .= $self->save();
-		return $error;
+			my $error;
+			my $amount = $Payment->remaining() > $self->owing() ? $self->owing() : $Payment->remaining();	
+			my $IP = new openprint::Invoice_Payment();
+			$error .= $IP->save({ payment_id=>$Payment->id(), invoice_id=>$$self{id}, amount=>$amount });
+			$error .= $Payment->save( remaining => undef );
+			$self->paid( undef );
+			$error .= $self->save();
+			return $error;
 		} else {
 			return 'Invoice is already paid.';
 		} # end if
@@ -355,11 +355,17 @@ sub Taxes {
 } # end sub Taxes
 
 sub Tax {
-	my $result = openprint::Invoice_Tax->find_one( invoice_id =>$_[0]{id}, tax_id=>$_[1]->id() );
-	if ( ! $result ) {
-		return new openprint::Invoice_Tax();
+	my ( $self, $Tax ) = @_;
+	if ( ! $_[0]{Taxes} ) {
+		@{$_[0]{Taxes}} = openprint::Invoice_Tax->find( invoice_id=>$_[0]{id} );
 	} # end if
-	return $result;
+
+	foreach my $IT ( @{$_[0]{Taxes}} ) {
+		if ( $$IT{tax_id} == $$Tax{id} ) {
+			return $IT;
+		}
+	} # end if
+	return new openprint::Invoice_Tax();
 } # end sub Tax
 
 sub num {

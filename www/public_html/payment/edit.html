@@ -1,14 +1,14 @@
-<? if ( $$variable{'Payment'}->id() ) ?>
+<? if ( $$variable{Payment}->id() ) ?>
 <script type="text/javascript">
 	function pay_invoice( invoice_id ) {
 		new Ajax.Updater( 'Paid', '_paid.html', { 
 				parameters: { 
-					payment_id: <? echo ( $$variable{'Payment'}->id() ) ?>,
+					payment_id: <? echo ( $$variable{Payment}->id() ) ?>,
 					invoice_id: invoice_id 
 				},
 				onSuccess: function(transport) {
 					new Ajax.Updater( 'Unpaid', '_unpaid.html', {
-						parameters: { payment_id: <? echo ( $$variable{'Payment'}->id() ) ?> }
+						parameters: { payment_id: <? echo ( $$variable{Payment}->id() ) ?> }
 						} );
 				},
 				onFailure: function(transport) {
@@ -19,7 +19,7 @@
 	function unpay_invoice( invoice_id ) {
 		new Ajax.Updater( 'Unpaid', '_unpaid.html', {
 				parameters: {
-					payment_id: <? echo ( $$variable{'Payment'}->id() ) ?>,
+					payment_id: <? echo ( $$variable{Payment}->id() ) ?>,
 					invoice_id: invoice_id
 				},
 				onSuccess: load_paid(),
@@ -30,51 +30,53 @@
 	} // end function unpay_invoice(invoice_id)
 	function load_paid ( ) {
 		new Ajax.Updater( 'Paid', '_paid.html', {
-			parameters: { payment_id: <? echo ( $$variable{'Payment'}->id() ) ?> },
+			parameters: { payment_id: <? echo ( $$variable{Payment}->id() ) ?> },
 			evalScripts: true,
 		} );
 	} // end function load_paid
 </script>
-<? endif ( $$variable{'Payment'}->id() ) ?>
+<? endif ( $$variable{Payment}->id() ) ?>
 <?include('/includes/error_reporting.html')?>
 <form name="f1" id="f1" action="edit.html" method="post">
 	<input type="hidden" name="btnFunction" />
-	<input type="hidden" name="payment_id" value="<? echo ( $$variable{'Payment'}->id() ) ?>" />
+	<input type="hidden" name="payment_id" value="<? echo ( $$variable{Payment}->id() ) ?>" />
 	<fieldset><legend>Editing Payment</legend>
 		<div class="leftColumn">
 			<ul>
 			<li><label for="recipient_id">Recipient</label>
 				<select id="recipient_id" name="recipient_id">
 					<option value=""> select </option>
-					<? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::Company->find('supplier'=>'Y',order=>'lower(name)') ],
-						$$variable{'Payment'}->recipient_id() ? $$variable{'Payment'}->recipient_id() : $session{'company_id'} ); ) ?>
+					<? echo ( make_drop_down( openprint::Company->dropdown( supplier=>'Y'),
+						$$variable{Payment}->recipient_id() ? $$variable{Payment}->recipient_id() : $session{company_id} ); ) ?>
 				</select>
 			</li>
 			<li><label for="payor_id">Payor</label>
+				<input type="text" onkeyup="filter_companies('payor_id', {name:this.value,selected_id:get_ddm_value($('payor_id'))});" class="filter" />
 				<select id="payor_id" name="payor_id">
 					<option value=""> select </option>
-					<? echo ( openprint::Company::get_dropdown( $$variable{'Payment'}->payor_id() ? $$variable{'Payment'}->payor_id() : $session{'company_id'} ); ) ?>
+					<? echo ( make_drop_down( openprint::Company->dropdown( 'last_invoice_id is null'=>0 ), 
+					 $$variable{Payment}->payor_id() ? $$variable{Payment}->payor_id() : $session{company_id} ); ) ?>
 				</select>
 			</li>
 			<li><label>Received On</label>
-			<? echo ( ssi::date_select( 'received_on', $$variable{'Payment'}->received_on(), {'with_today'=>1} ); ) ?>
+			<? echo ( date_select( 'received_on', $$variable{Payment}->received_on() ? $$variable{Payment}->received_on() : [Date::Calc::Today()], { with_today=>1} ); ) ?>
 			</li>
 			<li><label for="amount">Amount</label>
 				<? echo ( input( type=>'float', name=>'amount', id=>'amount', value=> $$variable{Payment}->amount() ); ) ?>
 				<select name="currency_id" id="currency_id">
-					<? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::Currency->find('order'=>'lower(name)') ], $$variable{'Payment'}->currency_id() ? $$variable{'Payment'}->currency_id() : openprint::Currency::get_current()->id() ); ) ?>
+					<? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::Currency->find('order'=>'lower(name)') ], $$variable{Payment}->currency_id() ? $$variable{Payment}->currency_id() : openprint::Currency::get_current()->id() ); ) ?>
 				</select>
 			</li>
 			<li><label for="method">Method</label>
 				<select id="method" name="method">
 <? echo ( 
 	my @options = ( '', 'Cash','Cheque','Email Transfer','Manual','Paypal','Work In Trade' );
-	return ssi::make_drop_down( [ map { $_, $_ } @options ], $$variable{'Payment'}->method() );
+	return ssi::make_drop_down( [ map { $_, $_ } @options ], $$variable{Payment}->method() );
 ) ?>
 				</select>
 			</li>
 			<li><label for="transaction_id">Transaction ID</label>
-				<input type="text" name="transaction_id" id="transaction_id" value="<? echo ( $$variable{'Payment'}->transaction_id() ) ?>" />
+				<input type="text" name="transaction_id" id="transaction_id" value="<? echo ( $$variable{Payment}->transaction_id() ) ?>" />
 			</li>
 			</ul>
 		</div>
@@ -82,7 +84,7 @@
 			<ul>
 			<li>
 				<label for="memo">Memo</label>
-				<textarea id="memo" name="memo" rows="<? echo ( ssi::count_lines( $$variable{'Payment'}->memo() ); ) ?>" onkeyup="textarea_resize(this);"><? echo ( $$variable{'Payment'}->memo() ) ?></textarea>
+				<textarea id="memo" name="memo" rows="<? echo ( ssi::count_lines( $$variable{Payment}->memo() ); ) ?>" onkeyup="textarea_resize(this);"><? echo ( $$variable{Payment}->memo() ) ?></textarea>
 			</li>
 			</ul>
 		</div>
@@ -104,12 +106,12 @@
 			) ?>
 		</p>
 	</fieldset>
-	<? if ( $$variable{'Payment'}->id() ) ?>
+	<? if ( $$variable{Payment}->id() ) ?>
 	<div class="leftColumn" id="Paid">
 		<?include('_paid.html')?>
 	</div>
 	<div class="rightColumn" id="Unpaid">
 		<?include('_unpaid.html')?>
 	</div>
-	<? endif ( $$variable{'Payment'}->id() ) ?>
+	<? endif ( $$variable{Payment}->id() ) ?>
 </form>

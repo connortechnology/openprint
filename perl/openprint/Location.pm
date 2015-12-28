@@ -120,9 +120,11 @@ sub Parents {
 	
 	if ( ( ! $_[0]{id} ) or ! $_[0]{parent_id} ) {
 		return ();
-	} else {
-		return $_[0]->Parent(), $_[0]->Parent()->Parents();
-	} # end if
+	} 
+	if ( ! $_[0]{Parents} ) {
+		$_[0]{Parents} = [ $_[0]->Parent(), $_[0]->Parent()->Parents() ];
+	}
+	return @{$_[0]{Parents}};
 } # end sub Parents
 
 sub Type {
@@ -603,6 +605,7 @@ sub save_location {
 		$parent_id = $$param{city_id};
 	} # end if
 	my $Location;
+	$$Location = $$param{company_id} if $$param{company_id};
 
 	if ( $$param{location} ) {
 		$Location = openprint::Location->find_one('name lc'=> lc openprint::Location->transform('name',$$param{location}),

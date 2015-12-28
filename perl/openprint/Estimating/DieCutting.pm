@@ -237,6 +237,8 @@ sub calc {
 
 	my @signatures_needing = ();
 
+	$$specs{alert} = '';
+
 	foreach my $signature_service_index ( $Project->signatures( { sort=>1 }) ) {
 		my $sig_specs = openprint::service::get_specs_ref( $Project, $signature_service_index );
 		my $form = $$sig_specs{SignatureIndex};
@@ -473,7 +475,7 @@ sub signature_calc {
 		@Sets_of_Impositions = ( \@override_impos );
 		my $overriden_count = misc::sum( map { $_->quantity() * $_->imposition() } @override_impos );
 		if ( $overriden_count != $Imposition->quantity() * $Imposition->imposition() ) {
-			$results{alert} .= "Overriden imposition count does not match printed imposition count for form $form.<br/>";
+			$results{alert} .= "Overriden imposition count ($overriden_count) does not match printed imposition count (".$Imposition->quantity() * $Imposition->imposition().") for form $form quantity $qty_index (".$$specs{"txtQuantity$qty_index"}.").<br/>";
 		} else {
 			$openprint::log->debug(" override count: $overriden_count $$Imposition{quantity} * $$Imposition{imposition}");
 		} # end if
@@ -492,6 +494,7 @@ sub signature_calc {
 			my @Impositions = openprint::imposition::sort( @{$Set_of_Impositions} );
 
 			my %price;
+			$price{Prices} = [];
 			my $complete = 1;
 			for( my $impo_index = 0; $impo_index < @Impositions; $impo_index += 1 ) {
 				my $imposition = $Impositions[$impo_index];
@@ -517,12 +520,7 @@ sub signature_calc {
 
 			if ( (! $results{Total} ) or ( $price{Total} < $results{Total} ) ) {
 				$results{Equipment} = $Equipment;
-				if ( $price{Prices} ) {
-					@{$results{Prices}} = @{$price{Prices}};
-				} else {
-					$openprint::log->error("No prices in DieCutting?");
-					$results{Prices} = [];
-				}
+				@{$results{Prices}} = @{$price{Prices}};
 				$results{Overs} = $price{Overs};
 				$results{Total} = $price{Total};
 			} # end if

@@ -1,11 +1,12 @@
 <?include('/includes/error_reporting.html')?>
 <? eval (
+	use constant DEBUG => 0;
 	openprint::StockBrand->find();
 	openprint::StockFinish->find();
 	openprint::StockWeight->find();
 	openprint::Manufacturer->find();
 	my %sql = (
-		'in_stock null_or_>'	=>	1,
+		'in_stock >'	=>	1,
 		type					=>	[ split( ',', $session{'/employee/inventory/available_paper.html?type'} ) ],
 		columns					=>	'*,(SELECT SUM(quantity) FROM paper_allocations WHERE paper_id=papers.id) AS allocated',
 		( $session{'/employee/inventory/available_paper.html?OrLarger'} ne 'Y' ? (
@@ -48,6 +49,11 @@
 	foreach my $Paper ( @{$$variable{Papers}}  ) {
 		$Paper->SkidContents( $SkidContents{$$Paper{id}} );
 	} # end foreach Paper
+if ( DEBUG ) {
+	foreach my $Paper ( @{$$variable{Papers}}  ) {
+		$log->debug("Initial Papers: " . $Paper->to_string() );
+	}
+}
 ) ?>
 <? if ( @{$$variable{'Papers'}} ) ?>
 	<table class="List">
@@ -82,24 +88,28 @@
 			my $total_skids;
 			my $available_weight;
 			my $available_sheets;
+			my %Press_Feed_Locations;
+
+			if ( $session{'/employee/inventory/available_paper.html?exclude_press_feeds'} eq '1' ) {
+				foreach my $Equipment ( openprint::Equipment->find( 'category any'=>'Printing' ) ) {
+					$Press_Feed_Locations{$Equipment->location_id()} = 1;	
+$log->debug("Excluding " . $Equipment->Location()->name() );
+				}
+			}
 
 			my @SkidContents = openprint::SkidContent->find('condition not in' => ['Damaged','Used'], paper_id=>$$variable{paper_ids}, deleted=>0, 'location not in' => 'Missing', 'quantity >' => 1 );
 			my %SkidContents;
 			my %SkidContentsByPaper;
 			my @skid_ids = map { $$_{skid_id} } @SkidContents;
-$log->debug("After SkidIds");
 			my %Skids = map { $$_{id}, $_ } openprint::Skid->find(id=>\@skid_ids) if @skid_ids;
-$log->debug("After Skids");
 			my %SkidsByPaper;
 
-$log->debug("Before preloading");
 			foreach my $SC ( @SkidContents ) {
 				push @{$SkidContents{$$SC{skid_id}}}, $SC;
 				push @{$SkidContentsByPaper{$$SC{paper_id}}}, $SC;
 				#push @{$SkidsByPaper{$$SC{paper_id}}}, $SC->Skid();
 				push @{$SkidsByPaper{$$SC{paper_id}}}, $Skids{$$SC{skid_id}};
 			} # end foreach SC
-$log->debug("Done preloading");
 
 			foreach my $Paper ( @{$$variable{Papers}} ) {
 				my $in_stock = misc::sum( map { $_->quantity() } @{$SkidContentsByPaper{$$Paper{id}}} ) if $SkidContentsByPaper{$$Paper{id}};
@@ -134,11 +144,15 @@ $log->debug("Done preloading");
 						next if ! $keep;
 					} # end if
 
+					if ( $session{'/employee/inventory/available_paper.html?exclude_press_feeds'} eq '1' ) {
+						next if $Press_Feed_Locations{$Skid->location_id()};
+					} # end if
+
 					my $root_id = $Skid->Location()->Root(type=>'place')->id();
 					if ( @location_ids ) {
 						my @parent_ids = sets::union( map { $$_{id} } ( $Skid->Location(), $Skid->Location()->Parents() ) );
-$log->debug("Parents: @parent_ids" );
- my @intersect = sets::intersection( @location_ids, @parent_ids );
+#$log->debug("Parents: @parent_ids" );
+						my @intersect = sets::intersection( @location_ids, @parent_ids );
 						if ( ! @intersect ) {
 							$log->debug("Next because @parent_ids is not in location_ids (@location_ids) intersection: ( @intersect )");
 							next;

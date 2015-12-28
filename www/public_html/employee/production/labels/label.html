@@ -14,9 +14,9 @@
 		$$variable{Project} = $$variable{Label}->Project();
 	} # end if
 
-	if ( $param{'type_id'} and ! $param{'id'} ) {
-		$$variable{'error'} .= $$variable{'Label'}->save();
-		$$variable{'Project'}->add_to_log( @session{'company_id','user_id'}, 'Added ' . $$variable{'Label'}->Type()->name() );
+	if ( $param{type_id} and ! $param{id} ) {
+		$$variable{error} .= $$variable{Label}->save();
+		$$variable{Project}->add_to_log( @session{'company_id','user_id'}, 'Added ' . $$variable{Label}->link_to() );
 	} # end if
 ) ?>
 <div class="buttons">
@@ -36,3 +36,6 @@
 		} # end if
 	) ?>
 </div>
+	<? if ( $$variable{Label}->id() ) ?>
+	<? echo ( include_logs( $$variable{Label} ); ) ?>
+	<? endif ( $$variable{Label}->id() ) ?>

@@ -2,8 +2,8 @@
 	my $html='';
 	my @Logs = openprint::Log->find(
 		host_id		=>	$$variable{Host}->id(),
-		ssi::date_filter( '/employee/it/host.html?log_created_on_end', 'date_time <=' ),
-		ssi::date_filter( '/employee/it/host.html?log_created_on_start', 'date_time >=' ),
+		date_filter( '/employee/it/host.html?log_created_on_end', 'date_time <=' ),
+		date_filter( '/employee/it/host.html?log_created_on_start', 'date_time >=' ),
 		order =>'date_time DESC',
 	);
 	return if ! @Logs;
@@ -14,7 +14,7 @@
 		
 		$html .= sprintf('<tr%s><td class="DateTime">%s</td><td class="action_type">%s</td><td class="note">%s</td></tr>',
 			$rowclass,
-			Date::Format::time2str( $config{'DateTimeFormat'}, Date::Parse::str2time( $Log->date_time() ) ),
+			format_datetime( $Log->date_time() ),
 			$Log->Action()->name(), $Log->note(),
 			);
 

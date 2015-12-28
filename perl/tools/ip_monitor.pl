@@ -81,7 +81,7 @@ $config{ping_wait} = 2 if ! $config{ping_wait};
 my $p = Net::Ping->new($config{ping_type},$config{ping_wait});
 my $hup;
 my %times;
-@SIG{qw(HUP)} = \&sig_handler;
+$SIG{HUP} = \&sig_handler;
 
 # TUrn off Object caching
 $openprint::Object::no_cache = 1;
@@ -124,9 +124,11 @@ while(1) {
 		my $online = 0;
 
 		foreach my $HI ( $Host->Interfaces() ) {
-			
-			next if ! $HI->ip();
-		
+			if ( ! $HI->ip() ) {
+				$log->debug("No ip for " . $HI->to_string() );
+				next;
+			}
+
 			$log->debug( $Host->hostname() . ' is ' . ( $Host->online() ? 'online' : 'offline' ) );
 			my @ping = $p->ping($HI->ip());
 			my $ping = $ping[0];
@@ -278,6 +280,8 @@ sub sig_handler {
 	if ( $signame eq 'HUP' ) {
 		$log->info('Got HUP, re-opening log, re-reading config');
 		$hup = 1;
+	} else {
+		$log->warn("Unknown signal $signame ");
 	} # end if
 	#die "Somebody sent me a SIG$signame";
 } # end sub sig_handler

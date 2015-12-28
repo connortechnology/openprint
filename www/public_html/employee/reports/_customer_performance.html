@@ -6,7 +6,7 @@
 	} elsif ( $param{'salesrep_id'} ) {
 		@csr_ids = ( $param{salesrep_id} );
 	} else {
-		@csr_ids = map { $_->id() } openprint::User->find( type=>['E','A'], 'usergroup any'=>'Sales', order=>'lower(firstname),lower(lastname)');
+		@csr_ids = map { $_->id() } openprint::User->find( type=>['E','A'], 'usergroup any'=>'Sales', company_id=>$config{owner_id} );
 	} # end if
 	foreach my $csr_id ( @csr_ids ) {
 		my $CSR = new openprint::User( $csr_id );
@@ -31,8 +31,6 @@
                         '/employee/reports/customer_performance.html?ordered_on_start_month',
                         '/employee/reports/customer_performance.html?ordered_on_start_day'
                         } );
-
-			 
 
 			if ( @Orders and Date::Calc::check_date( @session{
 						'/employee/reports/customer_performance.html?not_ordered_on_start_year',

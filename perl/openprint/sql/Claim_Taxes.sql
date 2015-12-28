@@ -8,3 +8,4 @@ CREATE TABLE Claim_Taxes (
     PRIMARY KEY (id)
 );
 
+create index claim_taxes_claim_tax_idx on claim_taxes (claim_id,tax_id);

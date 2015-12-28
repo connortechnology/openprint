@@ -1,6 +1,6 @@
 <?include(/includes/error_reporting.html)?>
 <?eval(
-	$variable{'location_dropdown'} = openprint::Location->dropdown(order=>'parent_id NULLS FIRST, lower(name)') if ! exists $variable{'location_dropdown'};
+	$variable{'location_dropdown'} = openprint::Location->dropdown(order=>'parent_id NULLS FIRST, lower(name)', type=>'place') if ! exists $variable{'location_dropdown'};
 )?>
 <table id="Contents-<?type_id?>" class="List sortable">
 	<tr>
@@ -22,12 +22,13 @@
 		<th class="in_stock">In Stock</th>
 		<th class="last_seen">Last Seen</th>
 		<th class="Location">Location</th>
+		<th class="Manifest">Manifests</th>
 		<th class="buttons">&nbsp;</th>
 	</tr>
 	<tr id="new-<?type_id?>">
 		<td class="RFID"><input type="text" id="rfidtag_id-<?type_id?>-" name="rfidtag_id-<?type_id?>-" onkeypress="return input_handler( this, event);" onkeydown="if(event.keyCode==13){add_content(this.form,'<?type_id?>');}" /></td>
 		<td class="Skid"><? echo ( input( type=>'cardinal', id=>join('-', 'skid_id', $$variable{type_id}, '' ), name=>join('-', 'skid_id', $$variable{type_id}, '' ), onkeypress=>'return input_handler(this,event);', onkeydown=>"if(event.keyCode==13){add_content(this.form,$$variable{type_id});}" ); ) ?></td>
-		<td class="ManufacturersID"><? echo ( input( type=>'text', id=>join('-','manufacturers_id',$$variable{type_id}, '' ), name=>join('-','manufacturers_id', $$variable{type_id}, '' ), onkeypress=>'return input_handler(this,event);', onkeydown=>"if(event.keyCode == 13){add_content(this.form, $$variable{type_id} );}" ); ) ?></td>
+		<td class="ManufacturersID"><? echo ( input( type=>'text', id=>join('-','manufacturers_id',$$variable{type_id}, '' ), name=>join('-','manufacturers_id', $$variable{type_id}, '' ), onkeydown=>"if(event.keyCode == 13){add_content(this.form, $$variable{type_id} );}" ); ) ?></td>
 		<td class="qty_lbs">
 <? echo ( input( type=>'cardinal', id=>'qty_lbs-'.$$variable{type_id}.'-', name=>'qty_lbs-'.$$variable{type_id}.'-', onkeyup=>"from_lbs(this,'$$variable{type_id}','');" ); ) ?>
 		</td>
@@ -48,13 +49,13 @@ input( type=>'cardinal', id=>'qty_sheets-'.$$variable{type_id}.'-', name=>'qty_s
 ) ?>
 		<td class="in_stock">&nbsp;</td>
 		<td class="last_seen">&nbsp;</td>
-		<td class="Location"><? echo ( ssi::select( $variable{'location_dropdown'}, $param{'location_id-'.$$variable{type_id}.'-'}, { name=>'location_id-'.$$variable{type_id}.'-', id=>'location_id-'.$$variable{type_id}.'-', prepend=>['','select'] } ))?></td>
-		<td class="buttons"><? echo ( button( 'Add'.$$variable{type_id}, { onclick=>"add_content( \$('f1'), $$variable{type_id} );", text=>'Add' } ); ) ?></td>
+		<td class="Location"><? echo ( ssi::select( $variable{'location_dropdown'}, $variable{'location_id-'.$$variable{type_id}.'-'}, { name=>'location_id-'.$$variable{type_id}.'-', id=>'location_id-'.$$variable{type_id}.'-', prepend=>['','select'] } ))?></td>
+		<td colspan="2" class="buttons"><? echo ( button( 'Add'.$$variable{type_id}, { onclick=>"add_content( \$('f1'), $$variable{type_id} );", text=>'Add' } ); ) ?></td>
 	</tr>
 	<? echo (
 		my $html = '';
 		my $total = 0;
-		my $content = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'}.'/employee/inventory/_manifest_content.html' );
+		my $content = slurp_content( '/employee/inventory/_manifest_content.html' );
 		my @Contents = $$variable{Type}->Contents();
 		my @skid_ids = map { $$_{skid_id} ? $$_{skid_id} : () } @Contents;
 		%{$$variable{SkidContents}} = ();
@@ -89,10 +90,9 @@ input( type=>'cardinal', id=>'qty_sheets-'.$$variable{type_id}.'-', name=>'qty_s
 				Number::Format::format_number( ( ( $Paper->wpsi() and $Paper->width() ) ? (($total/$Paper->wpsi())/$Paper->width())/12 : 0 ) ),
 					);
 		} #end if
-$log->debug($$variable{Type}->type());
-		$html .= '<td colspan="'.(sets::isin($$variable{Type}->type(), [ 'Roll', 'Sheet' ] ) ? '4' : '5' ). '">&nbsp;</td></tr>';
+		$html .= '<td colspan="5">&nbsp;</td></tr>';
 		if ( scalar @Contents != $$variable{Type}{item_count} ) {
-			$html .= '<tr><td colspan="'.(sets::isin($$variable{Type}->type(), [ 'Roll', 'Sheet' ] ) ? '10' : '11' ). '" class="warning">Contents and expected content count do not match!';
+			$html .= '<tr><td colspan="11" class="warning">Contents and expected content count do not match!';
 			$html .= ' Please enter the expected # of items for this stock type.' if ! $$variable{Type}{item_count};
 			$html .= '</td></tr>';
 		} # end if

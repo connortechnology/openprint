@@ -135,7 +135,7 @@ Please select a Paper to view/edit.<br>
 				</li>
 				<li>
 					<label>Size</label>
-					<select name="width" size="1" onchange="calc(this.form.name);" >
+					<select name="width" size="1" onchange="calc(this.form);" >
 						<option value="">All</option>
 					<? echo ( 
 							my %data;
@@ -148,7 +148,7 @@ Please select a Paper to view/edit.<br>
 							make_drop_down( [map { $_, $_ } sort keys %data ], $session{'/employee/inventory/available_paper.html?width'} );
 						) ?>
 					</select> x 
-					<select name="height" size="1" onchange="calc(this.form.name);" >
+					<select name="height" size="1" onchange="calc(this.form);" >
 						<option value="">All</option>
 					<? echo ( 
 							my %data;
@@ -161,15 +161,18 @@ Please select a Paper to view/edit.<br>
 							make_drop_down( [map { $_, $_ } sort keys %data ], $session{'/employee/inventory/available_paper.html?height'} );
 						) ?>
 					</select>
-					<input type="checkbox" id="OrLarger" name="OrLarger" value="Y" onclick="calc(this.form.name);" <? echo ( ssi::checked( $session{'/employee/inventory/available_paper.html?OrLarger'} eq 'Y' ); ) ?> /><label class="radio" for="OrLarger">or larger</label>
+					<input type="checkbox" id="OrLarger" name="OrLarger" value="Y" onclick="calc(this.form);" <? echo ( ssi::checked( $session{'/employee/inventory/available_paper.html?OrLarger'} eq 'Y' ); ) ?> /><label class="radio" for="OrLarger">or larger</label>
 				</li>
 				<li>
 					<label>FSC Code</label>
-					<input type="text" name="fsc_code" onkeyup="calc(this.form.name);"/>
+					<input type="text" name="fsc_code" onkeyup="calc(this.form);"/>
+				</li>
+				<li><label>Exclude Press Feeds</label>
+					<?echo( radio( 'exclude_press_feeds', [ '1', 'Yes','0','No' ], $session{'/employee/inventory/available_paper.html?exclude_press_feeds'}, { onclick=>'calc(this.form);', default=>'0' } ); ) ?>
 				</li>
 				<li>
 					<label>Location</label>
-					<select id="location_id" name="location_id" multiple="multiple" onchange="calc(this.form.name);">
+					<select id="location_id" name="location_id" multiple="multiple" onchange="calc(this.form);">
 					<? echo ( 
 						my @options =	('All','All','Unknown','Unknown', map { $_->id(), $_->name() } openprint::Location->find(type=>'place', order=>'parent_id NULLS FIRST,lower(name)') );
 						$session{'/employee/inventory/available_paper.html?location_id'} = undef if ! sets::isin( $session{'/employee/inventory/available_paper.html?location_id'}, \@options );
@@ -201,15 +204,12 @@ Please select a Paper to view/edit.<br>
 				</li>
 				<li>
 					<label>Show unmatched stocks</label>
-					<input type="radio" name="unmatched" id="unmatchedY" value="Y" onclick="calc(this.form.name);" <? echo ( ssi::checked( $session{'/employee/inventory/available_paper.html?unmatched'} eq 'Y' ); ) ?> />
-					<label class="radio" for="unmatchedY">Yes</label>
-					<input type="radio" name="unmatched" id="unmatchedN" value="N" onclick="calc(this.form.name);" <? echo ( ssi::checked( $session{'/employee/inventory/available_paper.html?unmatched'} ne 'Y' ); ) ?> />
-					<label class="radio" for="unmatchedN">No</label>
+					<?echo( radio( 'unmatched', ['Y','Yes','N','No'], $session{'/employee/inventory/available_paper.html?unmatched'}, { onclick=>'calc(this.form);', default=>'N' } ); ) ?>
 				</li>
 			</ul>
 		</div>
 		<p class="buttons">
-			<? echo ( join('',
+			<? echo ( join("\n",
 				button( 'ShowResults', { onclick=>"calc('f1');", text=>'Show Results' } ),
 				button( 'Reset', { onclick=>'f1.reset();', text=>'Reset' } ),
 				); ) ?>

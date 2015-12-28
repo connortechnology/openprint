@@ -31,7 +31,7 @@ Please select a host to view/edit.<br>
 			<li><label>Username/MAC</label>
 				<input type="text" id="username" name="username" value="<? echo ( $session{'/employee/it/radius.html?username'} ) ?>" onkeyup="this.value=this.value.replace(/\s/,'');" onkeydown="if(event.keyCode == 13){load_records( $('f1') );}" />
 			</li>
-			<? if ( $config{'RADIUS Support'} ) ?>
+			<? if ( $config{'RADIUS_Support'} ) ?>
 				<li><label>Attribute</label>
 					<select name="attribute" id="attribute">
 						<option value="">All</option>
@@ -41,7 +41,7 @@ Please select a host to view/edit.<br>
 						], $session{'/employee/it/radius.html?attribute'} ); ) ?>
 					</select>
 				</li>
-			<? endif ( $config{'RADIUS Support'} ) ?>
+			<? endif ( $config{'RADIUS_Support'} ) ?>
 			<li><label>Value</label>
 				<input type="text" id="value" name="value" value="<? echo ( $session{'/employee/it/radius.html?value'} ) ?>" onkeydown="if(event.keyCode==13){load_records( $('f1') );}" />
 			</li>

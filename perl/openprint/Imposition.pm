@@ -40,6 +40,7 @@ my @fields = (
 	'Folds', 'Fold',
 	'runspeed',
 	'impressions',
+	'equipment_id', 'Equipment',
 );
 
 # spread_cols and spread_rows are oriented identically to the imposition
@@ -180,10 +181,10 @@ if ( 0 ) {
 				#$$self{layout_width} = $$self{spread_columns} * $$self{layout_width};
 				#$$self{layout_height} = $$self{spread_rows} * $$self{layout_height};
 			#} # end if
-	#} else {
-#$openprint::log->debug("optimise $name" . ( @_ > 1 ? 'set to ' . $_[1] : '' ) );
-		} # end if
-	} # end if
+	} elsif ( DEBUG ) {
+$openprint::log->debug("optimise $name" . ( @_ > 1 ? 'set to ' . $_[1] : '' ) );
+		} # end if isin whatever fields
+	} # end if @_ > 1
 	return $_[0]{$name};
 } # end sub AUTOLOAD
 
@@ -678,7 +679,11 @@ sub to_string {
 		if ( $_[0]{paper} ) {
 		$_[0]{to_string} = sprintf('%s %dx%d+%dx%d=%dout %s %dx%d=%dpages on %sx%s%s->%sx%s %s', ( $_[0]{Press} ? $_[0]->Press()->strid() : 'unknown equipment' ), $_[0]->get('columns','rows','dutch_columns','dutch_rows','imposition','runstyle','page_columns','page_rows','pages', 'paper_width','paper_height', 'paper_type','sheet_width','sheet_height', 'image_orientation') );
 		} else {
+			if ( $_[0]{quantity} > 1 ) {
+			$_[0]{to_string} = sprintf('%s %d @ %dx%d+%dx%d=%dout %s %dx%d=%dpages %s', ( $_[0]{Press} ? $_[0]->Press()->strid() : 'unknown equipment' ), $_[0]->get('quantity','columns','rows','dutch_columns','dutch_rows','imposition','runstyle','page_columns','page_rows','pages', 'sheet_width','sheet_height', 'image_orientation') );
+			} else {
 			$_[0]{to_string} = sprintf('%s %dx%d+%dx%d=%dout %s %dx%d=%dpages %s', ( $_[0]{Press} ? $_[0]->Press()->strid() : 'unknown equipment' ), $_[0]->get('columns','rows','dutch_columns','dutch_rows','imposition','runstyle','page_columns','page_rows','pages', 'sheet_width','sheet_height', 'image_orientation') );
+			}
 		} # end if
 	}
 	return $_[0]{to_string};
@@ -698,8 +703,59 @@ sub quantity {
 } # end subquantity
 sub sides {
 	$_[0]{sides} = $_[1] if @_ > 1;
+	if ( ! $_[0]{sides} ) {
+
+		my $specs = $_[0]->specs();
+		my @side_one = openprint::Estimating::Printing::get_colours( $specs, 'SideOne' );
+		my @side_two = openprint::Estimating::Printing::get_colours( $specs, 'SideTwo' );
+
+		my $CoatingsCategory = openprint::ServiceCategory->find_one( name => 'Coating' );
+		my %coatings = map { $_->name(), 1 } $CoatingsCategory->Services() if $CoatingsCategory;
+
+# Split out colours vs coatings, but Varnish is not a coating like AQ
+
+		my @side_one_colours;
+		my @side_one_coatings;
+		foreach my $c ( @side_one ) {
+			if ( $coatings{$$c{name}} and ! ( $$c{name} =~ /Varnish/i ) ) {
+#push @side_one_coatings, $c;
+			} else {
+				push @side_one_colours, $c;
+			} # end if
+		} # end foreach
+		my @side_two_colours = ();
+		my @side_two_coatings = ();
+		foreach my $c ( @side_two ) {
+			if ( $coatings{$$c{name}} and ! ( $$c{name} =~ /Varnish/i ) ) {
+#push @side_two_coatings, $c;
+			} else {
+				push @side_two_colours, $c;
+			} # end if
+		} # end foreach
+
+		if ( @side_one_colours > 0 ) {
+			$_[0]{sides} += 1;
+		} 
+		if ( @side_two_colours > 0 ) {
+			$_[0]{sides} += 1;
+		} # end if
+	} # end if ! $_[0]s{dies}
 	return $_[0]{sides};
 } # end sub sides
+
+sub Equipment {
+	if ( @_ > 1 ) {
+		$_[0]{Equipment} = $_[1];
+		$_[0]{equipment_id} = $_[0]{Equipment}{id};
+	}
+	if ( ! $_[0]{Equipment} ) {
+		my ( $caller, undef, $line ) = caller;
+		$_[0]{Equipment} = new openprint::Equipment();
+		$openprint::log->error("No Equipment in Imposition:Equipment from $caller : $line");
+	} # end if
+	return $_[0]{Equipment};
+} # end sub Equipment
+
 sub Press { 
 	$_[0]{Press} = $_[1] if @_ > 1;
 	if ( ! $_[0]{Press} ) {

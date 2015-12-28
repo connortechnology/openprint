@@ -5,14 +5,12 @@
 </div>
 <div class="Service"><div class="<?ServiceTypeID?>">
 	Please enter the specifications for your proofs. In most cases these are automatically chosen, but if you would like to modify them, check the override and make your changes.
-	<form name="f1" method="post" action="/main/project/view.html">
+	<form id="f1" name="f1" method="post" action="/main/project/view.html">
 		<p><label>Do you require colour proofs?</label>
-			<input type="radio" name="RequireColourProofs" id="RequireColourProofsY" value="Y" onclick="calc(this.form.name);" <? echo ( ssi::checked( $$variable{'RequireColourProofs'} eq 'Y' ); ) ?> />
-			<label class="radio" for="RequireColourProofsY">Yes</label>
-			<input type="radio" name="RequireColourProofs" id="RequireColourProofsN" value="N" onclick="calc(this.form.name);" <? echo ( ssi::checked( $$variable{'RequireColourProofs'} eq 'N' ); ) ?> />
-			 <label class="radio" for="RequireColourProofsN">No</label>
-			<input type="radio" name="RequireColourProofs" id="RequireColourProofsA" value="A" onclick="calc(this.form.name);" <? echo ( ssi::checked( ! sets::isin($$variable{'RequireColourProofs'}, ['Y','N'] ) ); ) ?> />
-			<label class="radio" for="RequireColourProofsA">Auto</label>
+			<? echo ( radio( 'RequireColourProofs', ['Y','Yes','N','No','A','Auto'], $$variable{'RequireColourProofs'}, { onclick=>'calc(this.form.name);', default=>'A' } ); ) ?>
+		</p>
+		<p><label>Do you require press proofs?</label>
+			<? echo ( radio( 'RequirePressProofs', ['Y','Yes','N','No','','Auto'], $$variable{'RequirePressProofs'}, { onclick=>'calc(this.form.name);', default=>($$variable{Project}->Company()->add_press_proofs() ? $$variable{Project}->Company()->add_press_proofs()->value() : '' ) } ); ) ?>
 		</p>
 		<!-- The rest is done for each qty -->
 		<? echo ( 

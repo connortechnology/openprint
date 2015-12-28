@@ -49,7 +49,7 @@ while getopts hvn:c:t:T OPT; do
 			TYPE=$OPTARG
 			;;
 		T)
-			TIME="time "
+			TIME="/usr/bin/time "
 			;;
 		\?)
 			# getopts issues an error message
@@ -87,6 +87,7 @@ if [ -d "$DEST$TYPE.new" ] ; then
 	CREATEDON=$($STAT -c %y "$DEST$TYPE.new" | $AWK '{ printf $1 "\n"}')
 	if (( "${TODAY//-/}" > "${CREATEDON//-/}" )) ; then 
 		$RM -r "$DEST$TYPE.new"
+		$RM "$DEST$TYPE.new.log"
 	else 
 		echo "$DEST$TYPE.new already exists, last modified on $CREATEDON. Is another backup already running?"
 		exit 1
@@ -108,13 +109,31 @@ if [ -e "$DEST$TYPE.0.du" ] ; then
 OLDDU=$(<"$DEST$TYPE.0.du")
 else
 OLDDU=`$DU -b -sh "$DEST$TYPE.new" |$AWK '{print $1}'`
+echo $OLDDU > "$DEST$TYPE.0.du"
 fi
 echo $OLDDU
-$TIME$RSYNC -a --delete-delay --delete-excluded $@ "$SOURCE" "$DEST$TYPE.new"
+if [[ $SOURCE =~ : ]]; then
+$TIME$RSYNC -aHx --delete-delay --delete-excluded --log-file="$DEST$TYPE.new.log" $@ -e "ssh -T -c aes128-ctr -o Compression=no -x" "$SOURCE" "$DEST$TYPE.new"
+else
+$TIME$RSYNC -aHx --delete-delay --delete-excluded --log-file="$DEST$TYPE.new.log" $@ "$SOURCE" "$DEST$TYPE.new"
+fi
 if [ $? != 0 -a $? != 24 ]; then
-    echo "rsync return non-zero code. ($?)  Storing this backup as bad."
-$MV "$DEST$TYPE.new" "$DEST$TYPE.bad";
-	exit $?
+    echo "rsync return non-zero code. ($?)"
+
+	# Only mark it bad if we already haev a scuccessful backup
+	if [ -e "$DEST$TYPE.0" ] ; then
+		echo "Storing this backup as bad."
+		if [ -e "$DEST$TYPE.bad" ] ; then
+			echo "Removing old $DEST$TYPE.bad";
+			$RM -rf "$DEST$TYPE.bad";
+		fi
+		$MV "$DEST$TYPE.new" "$DEST$TYPE.bad";
+		$MV "$DEST$TYPE.new.log" "$DEST$TYPE.bad.log";
+		$TOUCH "$DEST$TYPE.bad"
+		NEWDU=`$DU -b -sh "$DEST$TYPE.bad" |$AWK '{print $1}'`
+		echo $NEWDU > "$DEST$TYPE.bad.du"
+		exit $?
+	fi
 fi;
 
 # step 5: update the mtime of hourly.0 to reflect the snapshot time
@@ -129,6 +148,7 @@ if [ -d "$DEST$TYPE.$BACKUPS" ] ; then
 	$CHMOD a+wr -R "$DEST$TYPE.$BACKUPS"
 	$MV "$DEST$TYPE.$BACKUPS" "$DEST$TYPE.$BACKUPS.todelete"
 	$RM -rf "$DEST$TYPE.$BACKUPS.todelete" ;
+	$RM "$DEST$TYPE.$BACKUPS.log"
 else
 	echo "No $DEST$TYPE.$BACKUPS to delete"
 fi ;
@@ -144,10 +164,15 @@ while (( "$BACKUPS" > "0" )) ; do
         echo "$MV $DEST$TYPE.$DEC.du $DEST$TYPE.$BACKUPS.du"
         $MV "$DEST$TYPE.$DEC.du" "$DEST$TYPE.$BACKUPS.du" ;
     fi ;
+	if [ -e "$DEST$TYPE.$DEC.log" ] ; then
+        echo "$MV $DEST$TYPE.$DEC.log $DEST$TYPE.$BACKUPS.log"
+        $MV "$DEST$TYPE.$DEC.log" "$DEST$TYPE.$BACKUPS.log" ;
+    fi ;
 
 	let BACKUPS=DEC;
 done
 
 $MV "$DEST$TYPE.new" "$DEST$TYPE.0";
+$MV "$DEST$TYPE.new.log" "$DEST$TYPE.0.log";
 echo $NEWDU > "$DEST$TYPE.0.du"
 $FIND "$DEST$TYPE.0" -type d -executable -exec chmod u+wx {} \;

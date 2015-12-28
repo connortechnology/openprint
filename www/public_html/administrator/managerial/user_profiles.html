@@ -13,6 +13,10 @@ function keepCompany( form ) {
 	form.ddmUserRole.selectedIndex= Role;
 	form.company_id.selectedIndex = Company;
 }
+function add_notification() {
+	popup_window('_user_notification_popup.html');
+	
+}
 </script>
 <?include('/includes/error_reporting.html')?>
 Please select a company or user to obtain login information.<br/>
@@ -27,10 +31,15 @@ Please select a company or user to obtain login information.<br/>
 				</li>	
 				<li>
 					<label>Company Name</label>
-					<input type="text" onkeyup="filterDDM(this, f1.ddmCustomer);" onkeydown="if(event.keyCode == 13){f1.ddmUser.selectedIndex=-1;f1.btnFunction.value='';this.form.submit();}" class="filter" />
-					<select id="ddmCustomer" name="ddmCustomer" onchange="if(this.options[this.selectedIndex].value != ''){f1.ddmUser.selectedIndex=-1;f1.btnFunction.value='Go';f1.submit();}">
-						<option value="">All Companies</option>
-						<? echo ( openprint::Company::get_dropdown( $param{'ddmCustomer'} ); ) ?>
+				   <input type="text" oninput="filter_companies( f1.ddmCustomer, {name:this.value} );" 
+				   onkeydown="if(event.keyCode == 13){f1.ddmUser.selectedIndex=-1;f1.btnFunction.value='';this.form.submit();}" 
+				   class="filter" />
+					<select name="ddmCustomer" id="ddmCustomer" onchange="if(this.options[this.selectedIndex].value != ''){f1.ddmUser.selectedIndex=-1;f1.btnFunction.value='Go';f1.submit();}">
+						<option value="">All</option>
+						<? echo ( 
+		$variable{companies_ddm} = openprint::Company->dropdown();
+		make_drop_down( $variable{companies_ddm}, $session{$r->uri().'?company_id'} );
+		 ) ?>
 					</select>
 					<? echo ( button( 'Go1', { onclick=>"f1.ddmUser.selectedIndex=-1;f1.btnFunction.value='Go';f1.submit();", 'text'=>'Go' } ); ) ?>
 				</li>
@@ -119,11 +128,10 @@ Please select a company or user to obtain login information.<br/>
 						<select id="company_id" name="company_id">
 							<option value=""> Select </option>
 							<? echo ( 
-								my @Companies = openprint::Company->find('order'=>'lower(name)');
 								if ( $$variable{User}->Company()->deleted() ) {
-									unshift @Companies, $$variable{User}->Company();
+									unshift @{$variable{companies_ddm}}, $$variable{User}->company_id(), $$variable{User}->Company()->name();
 								} # end if
-								return make_drop_down( [ map { $_->id(), $_->name() } @Companies ], $$variable{User}->company_id() );
+								return make_drop_down( $variable{companies_ddm}, $$variable{User}->company_id() );
 							) ?>
 						</select>
 					</li>
@@ -233,14 +241,14 @@ Please select a company or user to obtain login information.<br/>
 							'<li><label>Limit for ' . $_->name() . '</label>'.input( type=>'cardinal', name=>'po_limit-'.$_->id(), value=>$$variable{User}->po_limit( $_->id() ) ).'</li>' } openprint::PurchaseOrder_ContentType->find( order=>'lower(name)')
 							);
 					) ?>
-					<? if ( @{$$variable{'csr_ids'}} = openprint::User->find('id !='=>$$variable{User}->id(), 'type'=>['E','A'], 'usergroup any'=>'Sales', 'order'=>'lower(firstname),lower(lastname)' ) ) ?>
+					<? if ( @{$$variable{'csr_ids'}} = openprint::User->find('id !='=>$$variable{User}->id(), company_id=>$config{owner_id}, type=>['E','A'], 'usergroup any'=>'Sales' ) ) ?>
 					<li class="csr_ids">
 						<label>Assistant to</label>
 						<select name="csr_ids" size="4" multiple="multiple">
 							<? echo ( make_drop_down( [ map { $_->id(), $_->name() } @{$$variable{'csr_ids'}} ], [$$variable{User}->csr_ids()] ); ) ?>
 						</select>
 					</li>
-					<? endif ( @{$$variable{'csr_ids'}} = openprint::User->find('id !='=>$$variable{User}->id(), 'type'=>['E','A'], 'usergroup any'=>'Sales', 'order'=>'lower(firstname),lower(lastname)' ) ) ?>
+					<? endif ( @{$$variable{'csr_ids'}} = openprint::User->find('id !='=>$$variable{User}->id(), company_id=>$config{owner_id}, type=>['E','A'], 'usergroup any'=>'Sales' ) ) ?>
 					<? endif ( sets::isin( $$variable{User}->type(), ['E','A'] ) ) ?>
 				</ul>
 			</div>
@@ -287,47 +295,7 @@ Please select a company or user to obtain login information.<br/>
 			</ul>
 		</fieldset>
 		<? if ( $$variable{'DoEmail'} ) ?>
-<div class="Email">
-	<div class="Settings">
-		<fieldset><legend>Email Settings</legend>
-			<ul>
-			<li>
-				<label>Password</label>
-				<input type="text" name="EmailPassword" value="<?EmailPassword?>" />
-			</li>
-			<li>
-				<label>Verify Password</label>
-				<input type="text" name="VerifyEmailPassword" value="<?EmailPassword?>" />
-			</li>
-			<li>
-				<label>Forwards<br/>(One per line)</label>
-				<textarea id="aliases" name="aliases" onkeyup="textarea_resize(this);" rows="<? echo ( scalar @{$$variable{'Aliases'}} + 1 ) ?>"><? echo ( join("\n", @{$$variable{'Aliases'}})) ?></textarea>
-			</li>
-			</ul>
-		</fieldset>
-	</div>
-	<div class="Vacation">
-		<fieldset><legend>Vacation Auto-Responder Settings</legend>
-			<ul>
-			<li>
-				<label>Subject</label>
-				<input type="text" name="VacationSubject" value="<?VacationSubject?>" />
-			</li>
-			<li>
-				<label>Vacation Message</label>
-				<textarea name="VacationMessage" rows="10"><?VacationMessage?></textarea>
-			</li>
-			<li>
-				<label>Vacation Status</label>
-				<input type="radio" id="VacationState1" name="VacationState" <? echo ( $$variable{'VacationState'} ? 'checked="checked"' : '' ) ?> value="1">
-				<label class="radio" for="VacationState1">Enabled</label>
-				<input type="radio" id="VacationState0" name="VacationState" <? echo ( (!$$variable{'VacationState'})? 'checked="checked"' : '' ) ?> value="0">
-				<label class="radio" for="VacationState0">Disabled</label>
-			</li>
-			</ul>
-		</fieldset>
-	</div>
-</div>
+		<?include(/account/_email_settings.html)?>
 		<? endif ( $$variable{'DoEmail'} ) ?>
 		<? echo ( include('/account/_user_profile_edit.html'); ) ?>
 		<div class="LoginCredentials">
@@ -363,25 +331,13 @@ Please select a company or user to obtain login information.<br/>
 		</div>
 		<div class="Notifications">
 		<fieldset><legend>Notifications</legend>
-			<ul>
-			<? echo ( 
-				my $html;
-				my $n = $$variable{User}->notifications();
-				foreach my $Type ( openprint::User_Notification_Type->find( order=>'sort,lower(name)' ) ) {
-					$html .= '<li><label>'.$Type->name().'</label>';
-					#$html .= radio( 'notification_'.$Type->id(), [ 'Yes', 'On', '', 'Off' ], $$n{$Type->name()} );
-					$html .= input( type=>'text', name=>'notification_'.$Type->id(), value=>$$n{$Type->name()} );
-					$html .= '</li>';
-				} # end foreach Type
-				return $html;
-			) ?>
-			</ul>
+			<div id="Notifications"><?include(/account/_notifications.html)?></div>
 		</fieldset>
 		</div>
 		<? if ( openprint::ServiceType->find_one() ) ?>
 		<div class="ServiceDefaults">
 		<fieldset><legend>Service Defaults</legend>
-			<? echo ( include('_service_defaults.html'); ) ?>
+			<?include('_service_defaults.html')?>
 		</fieldset>
 		</div>
 		<? endif ( openprint::ServiceType->find_one() ) ?>
@@ -417,6 +373,32 @@ Please select a company or user to obtain login information.<br/>
 		</p>
 		</fieldset>
 		<input type="hidden" name="btnFunction"/>
-		<?include(/account/_user_login_log.html)?>
 	</form>
+<div id="Log">
+<? if ( $$variable{User}->id() ) ?>
+	<form id="f2" name="f2" method="post" action="user_profiles.html">
+		<input type="hidden" name="user_id" value="<?echo ($variable{User}->id())?>"/>
+		<fieldset><legend>Logs</legend>
+			<ul>
+				<li><label>Date</label>
+					<? echo ( join( ' to ',
+							datetime_select_session( $r->uri(),'log_created_on_start', {
+								onchange    =>q`new Ajax.Updater( 'Logs', '_user_logs.html', { parameters: $('f2').serialize() } );`,
+								with_today=>1,
+								with_clear=>1,
+								} ),
+							datetime_select_session( $r->uri(),'log_created_on_end', {
+								onchange    =>q`new Ajax.Updater( 'Logs', '_user_logs.html', { parameters: $('f2').serialize() } );`,
+								with_today=>1,
+								with_clear=>1,
+								} ),
+						); ) ?>
+					<? echo ( button( 'LoadLog', { onclick=>q`new Ajax.Updater( 'Logs', '_user_logs.html', { parameters: $('f2').serialize() } );`, text=>'Load' } ); ) ?>
+				</li>
+			</ul>
+			<div id="Logs"><?include('_user_logs.html')?></div>
+		</fieldset>
+	</form>
+<? endif ( $$variable{User}->id() ) ?>
+</div>
 </div>

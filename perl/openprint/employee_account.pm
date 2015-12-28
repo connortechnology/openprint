@@ -8,7 +8,7 @@ require misc;
 require sql;
 require openprint::MarketingCategory;
 require Authen::Passphrase::BlowfishCrypt;
-
+require openprint::User_Notification;
 
 require openprint;
 use vars qw( $r $log $dbh %variable %param %session %config);
@@ -74,7 +74,7 @@ sub profile {
 			if ( sets::isin( $domain, \@domains ) ) {
 
 				if ( $param{VacationState} ) {
-					email::start_vacation( @param{'email','VacationSubject','VacationMessage'} );
+					email::start_vacation( @param{'email','VacationSubject','VacationMessage','VacationSystemEmails'} );
 				} else {
 					email::stop_vacation( $param{email} );
 				} # end if
@@ -122,13 +122,6 @@ sub profile {
 			} # end if
 		} # end if
 
-		my %notifications;
-		my %types = sql::execute(undef,undef,'SELECT id,name FROM User_Notification_Types');
-		foreach my $k ( keys %types ) {
-			$notifications{$types{$k}} = $param{"notification_$k"};
-		} # end foreach
-		$User->notifications( \%notifications );
-
 		$variable{information} = 'Record saved successfully.<br/>';
 	} # end if
 	$variable{User} = $User;
@@ -137,7 +130,7 @@ sub profile {
         my ( $user, $domain ) = $User->email() =~ /^([^\@]+)\@(.+)$/;
         if ( sets::isin( $domain, \@domains ) ) {
             $variable{DoEmail} = 1;
-            @variable{'VacationState','VacationSubject','VacationMessage'} = email::get_vacation( $User->email() );
+            @variable{'VacationState','VacationSubject','VacationMessage','VacationSystemEmails'} = email::get_vacation( $User->email() );
             @{$variable{Aliases}} = email::aliases( $User->email() );
         } # end if
     } # end if

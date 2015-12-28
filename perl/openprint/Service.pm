@@ -8,7 +8,6 @@ require openprint::Object;
 require openprint::pricing;
 require openprint::logs;
 
-use Memoize;
 use openprint ();
 *session = \%openprint::session;
 *log = \$openprint::log;

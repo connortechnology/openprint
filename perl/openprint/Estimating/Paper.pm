@@ -187,10 +187,10 @@ if ( 0 ) {
 			if ( $$specs{"overrideqty-$form-$stock_index-$qty_index"} ne 'Y' ) {
 				if ( $PressSheet->type() eq 'Sheet' ) {
 					my $sheets = $$sig_specs{'StockQuantity'.$qty_index};
-$log->debug("StockQuantity: $sheets") if DEBUG;
+$log->debug("StockQuantity from sig $form : $sheets") if DEBUG;
 					if ( ! ( $PressSheet->area() and $PressSheet->start_area() ) ) {
 						Carp::cluck("No sheet area");
-					} else {
+					} elsif ( $PressSheet->factor() > 1 ) {
 						# convert to supplied count
 						$sheets = ceil( $sheets / $PressSheet->factor() );
 $log->debug("converted StockQuantity: $sheets") if DEBUG;
@@ -201,6 +201,8 @@ $log->debug("converted StockQuantity: $sheets") if DEBUG;
 					$$specs{"qty-$form-$stock_index-$qty_index"} = $$sig_specs{'StockQuantity'.$qty_index};
 					delete $$specs{"sheets-$form-$stock_index-$qty_index"};
 				} # end if
+			} else {
+$log->debug("StockQuantity from sig $form : overriden to ".$$specs{"qty-$form-$stock_index-$qty_index"} ) if DEBUG;
 			} # end if
 
 			if ( $SuppliedStock->type() eq 'Sheet' ) {
@@ -226,12 +228,15 @@ $openprint::log->debug("QTY $qty_index ($paper_string) => " . $totals{$$Stock_En
 		my $total = $totals{$stock_index};
 
 		my $Stock = $$Stock_Entry{Stock};
-$openprint::log->debug($Stock->id_string() . ' full packages ' . $Stock->full_packages() . ' per ' . $Stock->sheets_per_package() . ' available to order: ' . $$Stock{available_to_order} ) if DEBUG;
+		foreach my $qty_index ( $Project->quantity_indexes() ) {
+			$$specs{"hdnBreakdown$qty_index"} .= $Stock->to_string() . '<br/>';
+		}
 		if ( $Stock->full_packages() ) {
 			my $qty_per_package = $Stock->sheets_per_package();
 			if ( $qty_per_package ) {
 				foreach my $qty_index ( $Project->quantity_indexes() ) {
 					next if ! $$total{"qty_$qty_index"};
+					$$specs{"hdnBreakdown$qty_index"} .= " requires full packages $qty_per_package sheets per package<br/>";
 					$$total{"qty_$qty_index"} = $qty_per_package * ceil( $$total{"qty_$qty_index"} / $qty_per_package );
 				} # end foreah qty_index
 			} # end if sheets_per_package
@@ -241,6 +246,7 @@ $openprint::log->debug($Stock->id_string() . ' full packages ' . $Stock->full_pa
 			foreach my $qty_index ( $Project->quantity_indexes() ) {
 				next if ! $$total{"qty_$qty_index"};
 				if ( $$Stock{'minimum_order'} > $$total{"qty_$qty_index"} ) {
+					$$specs{"hdnBreakdown$qty_index"} .= " adjusting to minimum order $$Stock{'minimum_order'}".$Stock->units()."<br/>";
 					$$total{"qty_$qty_index"} = $$Stock{'minimum_order'};
 				} # end if
 			} # end foreach qty_index
@@ -392,7 +398,13 @@ sub summary {
 		} # end foreach STock
 		return \@summaries;
 	} # end if
-	return [ map { $$_{Stock}->message() ? $$_{Stock}->to_string() . '<br/><span class="StockMessage">'. ssi::variable_substitution( \$$_{Stock}->message(), { Project => $Project } ) . '</span>' : $$_{Stock}->to_string() } @Stocks ];
+	return [ map { $$_{Stock}->message() ? $$_{Stock}->to_string() . '<br/><span class="StockMessage">'. 
+		ssi::variable_substitution( \$$_{Stock}->message(), { 
+				Stock	=>	$$_{Stock},
+				Project => $Project,
+				qty_index	=>	$qty_index,
+				} ) . 
+			'</span>' : $$_{Stock}->to_string() } @Stocks ];
 } # end sub summary
 
 sub save {

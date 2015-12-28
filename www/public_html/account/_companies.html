@@ -45,7 +45,7 @@
 		} # end if
 	} # end if
 	if ( $session{$uri.'?salesrep_id_exclude'} ) {
-		my @csr_ids = map { $_->id() } openprint::User->find( 'usergroup any'=>'Sales' );
+		my @csr_ids = map { $_->id() } openprint::User->find( 'usergroup any'=>'Sales', company_id=>$config{owner_id} );
 		@csr_ids = sets::exclude( [ split(',', $session{$uri.'?salesrep_id'} ) ], \@csr_ids ) if $session{$uri.'?salesrep_id'};
 		$filters{'salesrep_id not in'} = \@csr_ids;
 	} # end if

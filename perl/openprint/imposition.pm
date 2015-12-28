@@ -1,6 +1,7 @@
 use strict;
 package openprint::imposition;
 use POSIX qw{ ceil };
+use Carp;
 
 require openprint::Imposition;
 
@@ -553,12 +554,16 @@ $openprint::log->debug("Using Single wheel space $$specs{'Perfecting Single Gutt
 		if ( check_setup( $setup1, $specs ) ) {
 			$openprint::log->debug(" CHECK 1 $run_style Using Paper $paper_width x $paper_height -> $adjusted_paper_width x $adjusted_paper_height Gutter: $gutters, Image: $$setup1{image_width} x $$setup1{image_height} Imposition: " . $setup1->imposition(). ":".$setup1->columns() . 'x' . $setup1->rows(). " $run_style " . $setup1->layout_width() . 'x' . $setup1->layout_height() ) if DEBUG;
 			push @results, $setup1;
-			if ( ( $$specs{dutch} ne 'N' ) and ( $run_style ne 'Perfecting' or $Paper->perfecting() or ( $$specs{OverrideRunStyle} and $$specs{OverrideImposition} ) ) ) {
+			if ( ( $$specs{dutch} ne 'N' ) and ( $run_style ne 'Perfecting' or $Paper->perfecting() or $$specs{PerfectingDutchByDefault} or ( $$specs{OverrideRunStyle} and $$specs{OverrideImposition} ) ) ) {
 				# Too hard to figure space for rollers
 				push @results, calc_dutch( $setup1, $adjusted_paper_width, $adjusted_paper_height, $specs );
 			} else {
 $openprint::log->debug("Not doing dutch because ($$specs{dutch}) or $run_style or $$Paper{perfecting}") if DEBUG;
 			} # end if
+			if ( ! $setup1->Paper()->width() ) {
+				$setup1->Paper()->width( $setup1->used_width() );
+			} # end if
+			$setup1->Paper()->height( $setup1->used_height() ) if ! $setup1->Paper()->height();
 		} # end if check_setup
 	} elsif ( $run_style eq 'Work & Turn' ) {
 		calc_setup( $setup1, $setup1->image_width(), $setup1->image_height(), $adjusted_paper_width/2, $adjusted_paper_height );
@@ -774,7 +779,7 @@ $openprint::log->debug("Using Single wheel space $$specs{'Perfecting Single Gutt
 
 #	Rotating sheet reverses the grain direction, so grain width + rotated sheet is the same as grain height + non rotated sheet.
 #	if no grain direction is specified, then use the larger imposition
-			if ( ( $$specs{dutch} ne 'N' ) and ( $run_style ne 'Perfecting' or $Paper->perfecting() or ( $$specs{OverrideRunStyle} and $$specs{OverrideImposition}  ) ) ) {
+			if ( ( $$specs{dutch} ne 'N' ) and ( $run_style ne 'Perfecting' or $Paper->perfecting() or $$specs{PerfectingDutchByDefault} or ( $$specs{OverrideRunStyle} and $$specs{OverrideImposition}  ) ) ) {
 				push @results, calc_dutch( $setup2, $adjusted_paper_width, $adjusted_paper_height, $specs );
 			} # end if
 			push @results, $setup2;
@@ -831,8 +836,9 @@ sub get_imposition {
 	push @styles, 'Work & Turn', 'Work & Tumble' if $do_work_turn;
 	push @styles, 'Perfecting' if $do_perfecting;
 	if ( $$project{Runstyles} ) {
-		$openprint::log->debug(" *1* Run Styles to consider for $$Press{strid}: @styles ** $$project{Runstyles} $do_perfecting") if DEBUG;
+		$openprint::log->debug(" *1* Run Styles to consider for $$Press{strid}: style:@styles ** Available runstyle:$$project{Runstyles} perfecting:$do_perfecting") if DEBUG;
 		@styles = sets::intersection( @styles, misc::trim(split(',', $$project{Runstyles} ) ) );
+		$openprint::log->debug(" *1* Resulting Run Styles to consider for $$Press{strid}: style:@styles") if DEBUG;
 	} # end if
 	#$openprint::log->debug(" *2* Run Styles to consider for $$Press{strid}: @styles **") if DEBUG;
 
@@ -1126,6 +1132,7 @@ sub decrease_imposition {
 } # end sub decrease_imposition
 
 sub get_all_impositions {
+Carp::cluck("Really don't want to use get_all_impositions");
 #map { $openprint::log->debug( $_ ) } @_;
 	my @imps = decrease_imposition( @_ );
 	@imps = get_all_impositions( @imps ) if @imps;

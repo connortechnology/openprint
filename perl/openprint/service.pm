@@ -27,7 +27,7 @@ sub get_price_object {
 	my ( $service, $range, $Equipment ) = @_;
 	my $Service = openprint::Service->find_one( name=>$service );
 	if ( ! $Service ) {
-		if ( Debug ) {
+		if ( 0 and Debug ) {
 			$openprint::log->debug("No Service for $service");
 		};
 		return;
@@ -303,7 +303,7 @@ require openprint::Estimating::PerfectBound;
 	} # end if
 
 	foreach my $si ( @{$$services{'Proofs'}} ) {
-		if ( $openprint::config{'Insert Default Proofs'} eq 'Y' ) {
+		if ( $openprint::config{'Insert_Default_Proofs'} eq 'Y' ) {
 			openprint::Estimating::Proofs::insert_proof_defaults( $openprint::log, $openprint::dbh, $$Project{'id'}, $si );
 		} # end if
 	} # end foreach
@@ -355,6 +355,11 @@ require openprint::Estimating::PerfectBound;
 
 		foreach my $service_index ( @{$$services{$type}} ) {
 			my $ServiceType = $Project->ServiceType( $service_index );
+			if ( $ServiceType->deleted() ) {
+				my $PS = $Project->Service( $service_index );
+				$PS->delete();
+				next;
+			}
 			next if $ServiceType->category() eq 'Shipping';
 			my $service_type = $ServiceType->type();
 			next if sets::isin( $service_type, ['','Signature'] );
@@ -483,12 +488,12 @@ $openprint::log->error("Doing internal calc without service_index or, not found"
 		my $status = $function->( $log, $dbh, $variable, $project_index, $service_index, \%specs, $qty_index );
 		$specs{Status} = $status;
 		my $elapsed = time - $starttime;
-		$log->debug( sprintf( '%s calc: (%s) Elapsed seconds: %d (%s)', $service_type, $status, $elapsed, $specs{'alert'} ) );
+		$log->debug( sprintf( '%s calc: (%s) Elapsed seconds: %d (%s) prices(%s)', $service_type, $status, $elapsed, $specs{'alert'}, join(',',map { $specs{"txtPrice$_"} } $Project->quantity_indexes() ) ) );
 
 		$Service->save({status=>$status}) if $status ne $Service->status();
 
 		foreach my $key ( eval( 'openprint::Estimating::'.$service_type.'::variables( $project_index, $service_index, \%specs )') ) {
-			$log->debug("Internal Calc:: looking at $key $specs{$key} :". $specs_cache{$service_index}{$key}) if Debug;
+			$log->debug("Internal Calc:: looking at $key new $specs{$key} : old ". $$specs{$key}) if Debug;
 			openprint::service::insert_service_spec( $log, $dbh, $project_index, $service_index, $key, $specs{$key} );
 		} # end foreach
 	} else {

@@ -19,7 +19,7 @@ $log = new logger( 'warn' );
 my ( $src_db, $dst_db, $src_host, $year, $month, $day ) = @ARGV;
 $src_db = 'topknotch' if ! $src_db;
 $dst_db = 'topknotch' if ! $dst_db;
-$src_host = 'www2.topknotch.com' if ! $src_host;
+$src_host = 'www1.topknotchtrade.com' if ! $src_host;
 
 `/etc/init.d/apache2 reload`;
 if ( $year ) {

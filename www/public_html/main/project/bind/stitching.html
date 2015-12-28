@@ -2,7 +2,7 @@
 <div class="Service">
 	<form id="f1" name="f1" method="post" action="/main/project/view.html">
 		<fieldset><legend><?ServiceTypeName?></legend>
-		<? echo ( include('/includes/main/proj/stitching.html'); ) ?>
+		<?include('/includes/main/proj/stitching.html')?>
 		</fieldset>
 		<fieldset><legend>Results</legend>
 			<ul>
@@ -20,7 +20,7 @@
 			name		=>	"txtSignatureQty${page}Page-$$variable{QTYIndex}",
 			value		=>	$$variable{"txtSignatureQty${page}Page-$$variable{QTYIndex}"},
 			type		=>	'cardinal',
-			onkeyup		=>	'calc(this.form.name);',
+			oninput		=>	'calc(this.form.name);',
 			readonly	=>	!sets::isin( $session{'user_type'}, ['A','E'] ),
 			) . ' ' . $page . ' Page Signature(s)<br/>';
 	} # end foreach

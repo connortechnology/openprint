@@ -124,7 +124,9 @@ sub comment {
 		if ( ! $$Project{id} ) {
 			$log->error("Job has project_id that no longer exists( $$self{project_id})");
 		} # end if
-		if ( $self->ServiceType()->name() eq 'Folding' ) {
+		my $ServiceType = $self->ServiceType();
+
+		if ( $ServiceType->name() eq 'Folding' ) {
 			my $qty_index = $Project->ordered_quantity_index();
 
 			foreach my $service_index ( @{$$self{service_id}} ) {
@@ -148,8 +150,8 @@ $log->error("Signature service $sig_id not foudn in project $$Project{id}");
 				$comment = 'unknown fold' if ! $comment;
 			} # end foreach service_index
 
-		} elsif ( $self->ServiceType()->name() eq 'Cutting' ) {
-		} elsif ( $self->ServiceType()->name() eq 'SaddleStitching' ) {
+		} elsif ( $ServiceType->name() eq 'Cutting' ) {
+		} elsif ( $ServiceType->name() eq 'SaddleStitching' ) {
 		} else {
 			my $service_specs = openprint::service::get_specs_ref( $Project, $$self{service_id}[0] );
 			$comment = openprint::Estimating::Printing::get_colour_description( $service_specs );
@@ -707,7 +709,7 @@ sub speed {
 	if ( ! $$self{speed} ) {
 		if ( (!($$self{speed} = $self->Equipment()->specification('Default Scheduling Runspeed'))) and $$self{project_id} ) {
 			my $Project = $self->Project();
-			if ( $Project->ordered_quantity_index() ) {
+			if ( $Project->ordered_quantity_index() and $$self{service_id} and @{$$self{service_id}} ) {
 				my $Service = $Project->Service( $$self{service_id}[0] );
 				my $ServiceType = $Service->ServiceType();
 				my $specs = $Service->specs();

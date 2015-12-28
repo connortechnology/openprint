@@ -170,12 +170,15 @@ $I->display('In PerfectBi:') if DEBUG;
         } else {
             foreach my $FI ( @{$$I{Folds}} ) {
 				my $Fold = $FI->Fold();
-$openprint::log->debug("Fold pq($$FI{page_quantity}) pages($$FI{pages}) ($$Fold{name}) Pockets: $pockets" . $Fold->to_string()) if DEBUG;
+$openprint::log->debug("Fold pq($$FI{page_quantity}) pages($$FI{pages}) ($$Fold{name}) Pockets: $pockets " . $Fold->to_string()) if DEBUG;
                 if ( $FI->imposition() < $imposition ) {
 					$results{Breakdown} .= "Setting stitching imposition to $$FI{imposition} out because Folding imposition is $$FI{imposition}out<br/>";
                     $imposition = $FI->imposition();
                 }
-                $$I{Folder} = $FI->Equipment() if ! $$I{Folder};
+				#if ( ! $$I{Folder} ) {
+#$I->display("Has no folder");
+                #$$I{Folder} = $$FI{Folder};
+				#}
                 $$specs{'txtSignatureQty'.$FI->pages().'Page-'.$qty_index} += $FI->page_quantity();
                 $pockets += $FI->page_quantity();
             } # end foreach Fold
@@ -292,8 +295,8 @@ $$specs{"txtPockets$qty_index"} = $pockets;
 					$openprint::log->debug("Press not the same: " . $$Press{id} . ' != ' . $$Equipment{id} );
 					next;
 				} # end if
-				if ( $$folding_specs{"ddmEquipment-$$sig_specs{SignatureIndex}-$qty_index"} != $$Equipment{id} ) {
-					$openprint::log->debug("Folder not the same: " . $$folding_specs{"ddmEquipment-$$sig_specs{SignatureIndex}-$qty_index"}. ' != ' . $$Equipment{id} );
+				if ( $$folding_specs{"ddmEquipment-$form-$qty_index"} != $$Equipment{id} ) {
+					$openprint::log->debug("Folder not the same: " . $$folding_specs{"ddmEquipment-$form-$qty_index"}. ' != ' . $$Equipment{id} );
 					next;
 				} # end if
 			} # end if
@@ -350,12 +353,12 @@ sub get_equipment {
 			next;
 		} # end if
 		if ( $$specs{txtCalliper} > 0 ) {
-			if ( $_ = $Equipment->specification('Maximum Calliper') and ( $$specs{txtCalliper} > $_ ) ) {
-				$$error{$$Equipment{id}} .= ': Too thick.<br/>';
+			if ( $_ = $Equipment->specification('MaximumPerfectBound Calliper') and ( $$specs{txtCalliper} > $_ ) ) {
+				$$error{$$Equipment{id}} .= ": Too thick. $$specs{txtCalliper} > $_ <br/>";
 				next;
 			} # end if
-			if ( $_ = $Equipment->specification('Minimum Calliper') and ( $$specs{txtCalliper} < $_ ) ) {
-				$$error{$$Equipment{id}} .= ': Too thin.<br/>';
+			if ( $_ = $Equipment->specification('MinimumPerfectBound Calliper') and ( $$specs{txtCalliper} < $_ ) ) {
+				$$error{$$Equipment{id}} .= ": Too thin $$specs{txtCalliper} < $_ .<br/>";
 				next;
 			} # end if
 		} else {

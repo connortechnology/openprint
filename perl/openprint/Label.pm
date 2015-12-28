@@ -23,7 +23,7 @@ $serial = 'labels_id_seq';
 	'created_on'	=>	'created_on',
 );
 %find_fields = (
-	'company_id'	=>	'(SELECT DISTINCT companyindex FROM tbl_Projects WHERE tbl_Projects.lngDocketNumber=labels.docket)',
+	company_id	=>	'(SELECT DISTINCT company_id FROM Projects WHERE Projects.lngDocketNumber=labels.docket)',
 );
 
 %transforms = (
@@ -104,6 +104,10 @@ sub copy {
 	} # end foreach
 	return $new;
 } # end sub copy
+
+sub link_to {
+	return sprintf('<a href="/employee/production/labels/label.html?id=%d&docket=%d">%s</a>', $_[0]{id}, $_[0]{docket}, @_ > 1 ? $_[1] :  join(' ', $_[0]->Type()->name(), $_[0]{reference} ) );
+} # end sub link_to
 
 1;
 __END__

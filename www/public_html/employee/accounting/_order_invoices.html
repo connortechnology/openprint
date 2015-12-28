@@ -9,9 +9,11 @@ $html .= '<br/>';
     } # end foreach
 
     if ( $can_invoice ) {
+		$html .= '<span class="edit">';
         $html .= input( type=>"text", id=>"invoice_num", name=>"invoice_num", placeholder=>'enter invoice #' ). ' on ';
 		$html .= date_select( 'posted_on', [ Date::Calc::Today() ] );
 		$html .= button( 'Invoice', { onclick=>q`if($('invoice_num').value) {new Ajax.Updater( 'Order_Invoices', '/employee/accounting/_order_invoices.html', { parameters: { order_id: '`.$$variable{Order}->id().q`',  action: 'add', invoice_num: $('invoice_num').value, posted_on: get_date_value('posted_on') } } );}else{alert('Please enter an invoice #');};`, text=>'Add Invoice ID' } );
+		$html .= '</span>';
     } # end if can_invoice
 	if ( $$variable{uri} =~ /_order_invoices.html$/ ) {
 		$html .= include( '/includes/error_reporting.html' );

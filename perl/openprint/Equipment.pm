@@ -336,8 +336,8 @@ sub copy {
 
 	my $ac = sql::start_transaction( $openprint::dbh );
 
-	foreach my $ES ( openprint::EquipmentSpecification->find('equipment_id'=>$$self{'id'} ) ) {
-		$ES->copy()->save({'equipment_id'=>$$new{id}});
+	foreach my $ES ( openprint::EquipmentSpecification->find( equipment_id=>$$self{id} ) ) {
+		$ES->copy()->save({ equipment_id=>$$new{id} });
 	} # end foreach
 
 # Now do pricing, start with Service Prices
@@ -409,7 +409,7 @@ sub destroy {
 sub update_schedule {
 	my $self = shift;
 
-	if ( $openprint::config{'Smart Schedule'} ne 'Y' ) {
+	if ( $openprint::config{'Smart_Schedule'} ne 'Y' ) {
 		$openprint::log->debug("Not using Smart Schedule.  Not Updating Press Schedule");
 		return;
 	} # end if

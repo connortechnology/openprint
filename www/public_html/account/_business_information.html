@@ -5,7 +5,7 @@
 				<label for="businessname">Legal Name</label>
 				<input type="text" id="businessname" name="business_name" value="<? hecho ( $param{'business_name'} ? $param{'business_name'} : $$variable{'Company'}->business_name() ) ?>" />
 			</li>
-			<li class="required"> 
+			<li class="required legal_form"> 
 				<label>Legal Form</label>
 				<? echo ( radio( 'business_form', [ 'Corporation','Corporation', 'SoleProprietor', 'Sole Proprietor', 'Partnership', 'Partnership' ], $param{'business_form'} ? $param{'business_form'} : $$variable{'Company'}->business_form() ); ) ?>
 			</li>

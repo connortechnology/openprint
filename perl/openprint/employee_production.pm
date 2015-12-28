@@ -263,19 +263,8 @@ sub print_overview {
 
 sub bindery_overview {
 
-	my @time = localtime(time);
-	my ( $start_year, $start_month, $start_day ) = Date::Calc::Add_Delta_Days( $time[5], $time[4]+1, $time[3], -6 );
-	my ( $end_year, $end_month, $end_day ) = Date::Calc::Add_Delta_Days( $time[5], $time[4]+1, $time[3], 14 );
-	$variable{Today} = sprintf('%.4d-%.2d-%.2d', $time[5]+1900, $time[4]+1, $time[3] );
-	ssi::get_start_end_dates( $log, $dbh, \%variable,
-			( defined $r->param('ddmStartYear') ? $r->param('ddmStartYear') : $start_year+1900 ),
-			( defined $r->param('ddmStartMonth') ? $r->param('ddmStartMonth') : $start_month ),
-			( defined $r->param('ddmStartDay') ? $r->param('ddmStartDay') : $start_day ),
-			( defined $r->param('ddmEndYear') ? $r->param('ddmEndYear') : $end_year+1900 ),
-			( defined $r->param('ddmEndMonth') ? $r->param('ddmEndMonth') : $end_month ),
-			( defined $r->param('ddmEndDay') ?$r->param('ddmEndDay') : $end_day ),
-			);
-
+	ssi::setup_date_select( $r->uri(), 'due_date_start', -7 );
+	ssi::setup_date_select( $r->uri(), 'due_date_end', '' );
 	my @possible_statuses = ( 'Approved','Printed','Complete' );
 	my @statuses = $r->param('Status') ? sets::intersection( @possible_statuses , $r->param('Status') ) : ( 'Printed' );
 	$variable{Status} = ssi::make_drop_down( [ map { $_, $_ } @possible_statuses ], [@statuses] );
@@ -300,10 +289,10 @@ sub bindery_overview {
 
 	@{$variable{Projects}} = ();
 	my @Projects = openprint::Project->find(order=>'due_date',
-			'status'		=>	\@statuses,
-			'due_date >='	=>	$variable{StartDate},
-			'due_date <='	=>	$variable{EndDate},
-			( $param{ddmSalesRep} ? ( 'salesrep_id'		=>	$param{ddmSalesRep} ) : () ),
+			status		=>	\@statuses,
+			ssi::date_filter( 'due_date_end', 'due_date <=', \%param ),
+			ssi::date_filter( 'due_date_start', 'due_date >=', \%param ),
+			( $param{ddmSalesRep} ? ( salesrep_id => $param{ddmSalesRep} ) : () ),
 			);
 	foreach my $Project ( @Projects ) {
 		my $qty_index = $Project->ordered_quantity_index();
@@ -466,47 +455,39 @@ sub projects {
 	my $project_index = $param{Project};
 	my $order_id = $param{OrderID};
 
-
-	if ( $param{btnFunction} eq 'Go' ) {
-		if ( $project_index ) {
-			@projects = ( new openprint::Project( $project_index ) );
-		} elsif ( $order_id ) {
-			my $Order = new openprint::Order( $order_id );
-			@projects = $Order->Projects();
-		} elsif ( $startdocket and $enddocket ) {
-			@projects = openprint::Project->find( 'docket >='=>$startdocket, 'docket <=' => $enddocket );
-		} elsif ( $startdocket ) {
-			@projects = openprint::Project->find( 'docket'=>$startdocket );
-			if ( ! @projects ) {
-				my $Order = openprint::Order->find_one( docket=>$startdocket );
-				if ( $Order ) {
-					$variable{ExternalRedirect} = '/employee/project/view.html?OrderID='.$$Order{id};
-					return;
-				} # end if
+	if ( $project_index ) {
+		@projects = ( new openprint::Project( $project_index ) );
+	} elsif ( $order_id ) {
+		my $Order = new openprint::Order( $order_id );
+		@projects = $Order->Projects();
+	} elsif ( $startdocket and $enddocket ) {
+		@projects = openprint::Project->find( 'docket >='=>$startdocket, 'docket <=' => $enddocket );
+	} elsif ( $startdocket ) {
+		@projects = openprint::Project->find( 'docket'=>$startdocket );
+		if ( ! @projects ) {
+			my $Order = openprint::Order->find_one( docket=>$startdocket );
+			if ( $Order ) {
+				$variable{ExternalRedirect} = '/employee/project/view.html?OrderID='.$$Order{id};
+				return;
 			} # end if
-		} elsif ( $enddocket ) {
-			@projects = openprint::Project->find( 'docket'=>$enddocket );
 		} # end if
-		if ( @projects == 1 ) {
-			$order_id = $projects[0]->order_id();
-			$variable{Redirect} = '/employee/project/view.html';
-			$param{OrderID} = $order_id;
-			$param{ProjectIndex} = $projects[0]->id();
-			return;
-		} # end if
+	} elsif ( $enddocket ) {
+		@projects = openprint::Project->find( 'docket'=>$enddocket );
 	} elsif ( $param{order_id} ) {
 		$param{order_id} =~ s/\D//g;
 		if ( $param{order_id} ) {
 			my $Order = new openprint::Order( $param{order_id} );
 			@projects = $Order->Projects();
 		} # end if
-		if ( @projects == 1 ) {
-			$order_id = $projects[0]->order_id();
-			$variable{Redirect} = '/employee/project/view.html';
-			$param{OrderID} = $order_id;
-			$param{ProjectIndex} = $projects[0]->id();
-			return;
-		} # end if
+	} # end if
+
+	if ( @projects == 1 ) {
+		if ( $projects[0]->docket() ) {
+		$variable{ExternalRedirect} = '/employee/project/view.html?docket='.$projects[0]->docket();
+		} else {
+		$variable{ExternalRedirect} = '/employee/project/view.html?project_id='.$projects[0]->id();
+		}
+		return;
 	} # end if
 
 	$variable{txtDocket} = $param{txtDocket};
@@ -529,7 +510,7 @@ sub upload_pdfs {
 	$variable{CompanyName} = $Company->name();
 
 	$variable{Docket} = $Project->docket();
-	my $destdir = $config{'PDFS Path'} . "/$variable{CompanyName}";
+	my $destdir = $config{'PDFS_Path'} . "/$variable{CompanyName}";
 	if ( ! -e $destdir  ) {
 		if ( ! mkdir $destdir ) {
 			$log->error("Cannot create company PDFs dir $destdir : Reason: $!" );

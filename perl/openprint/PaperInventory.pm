@@ -9,22 +9,22 @@ use vars qw( $table $debug $serial %fields %transforms %defaults );
 require sql;
 require openprint::Skid;
 
-$debug = 1;
+$debug = 0;
 $table = 'paper_inventory';
 $serial = 'paperinventory_id_seq';
 
 %fields = (
-	'id'			=>	'id',
-	'paper_id'		=>	'paper_id',
-	'user_id'		=>	'user_id',
-	'instock'		=>	'instock',
-	'updated_on'	=>	'updated_on',
-	'delta'			=>	'delta',
-	'comment'		=>	'comment',
-	'skid_id'		=>	'skid_id',
-	'units'			=>	'units',
-	'docket'		=>	'docket',
-	project_id		=>	'project_id',
+	id			=>	'id',
+	paper_id	=>	'paper_id',
+	user_id		=>	'user_id',
+	instock		=>	'instock',
+	updated_on	=>	'updated_on',
+	delta		=>	'delta',
+	comment		=>	'comment',
+	skid_id		=>	'skid_id',
+	units		=>	'units',
+	docket		=>	'docket',
+	project_id	=>	'project_id',
 );
 # project_id is deprecated
 %transforms = (
@@ -41,6 +41,7 @@ $serial = 'paperinventory_id_seq';
 	docket		=>	undef,
 	project_id	=>	undef,
 	instock		=>	undef,
+	paper_id	=>	undef,
 );
 
 sub Paper {

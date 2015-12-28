@@ -11,7 +11,7 @@ require sql;
 require openprint::Object;
 require openprint::User;
 
-$debug = 1;
+$debug = 0;
 $default_sort = 'lower(name)';
 $table = 'companies';
 $serial = 'companies_id_seq';
@@ -65,6 +65,8 @@ $serial = 'companies_id_seq';
 		'offers_credit'				=>	'offers_credit',
 		'last_project_id'			=>	'last_project_id',
 		'last_order_id'				=>	'last_order_id',
+		'last_quote_id'				=>	'last_quote_id',
+		last_invoice_id				=>	'last_invoice_id',
 		);
 %find_fields = (
 	last_online	=>	'(SELECT MAX(date_time) FROM Logs WHERE company_id=companies.id)',
@@ -101,7 +103,9 @@ $serial = 'companies_id_seq';
 	'offers_credit'	=>	0,
 	supplier		=>	q`'N'`,
 	last_order_id	=>	undef,
+	last_quote_id	=>	undef,
 	last_project_id	=>	undef,
+	last_invoice_id	=>	undef,
 );
 
 sub Currency {
@@ -459,7 +463,7 @@ sub admin_link_to {
 } # end sub link_to
 
 sub link_to {
-	return sprintf('<a href="/account/company_profile.html?ddmCustomer=%d">%s</a>', $_[0]{id}, $_[0]{name} );
+	return sprintf('<a href="/account/company_profile.html?company_id=%d">%s</a>', $_[0]{id}, $_[0]{name} );
 } # end sub link_to
 
 sub last_ordered_on {

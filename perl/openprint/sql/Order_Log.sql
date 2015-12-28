@@ -9,3 +9,5 @@ CREATE TABLE Order_Log (
 	Description			TEXT,
 	PRIMARY KEY (Order_Id,dtmwhen)
 );
+
+CREATE INDEX order_log_order_id_idx ON order_log (order_id);

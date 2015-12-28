@@ -34,7 +34,12 @@
 			</ul>';
 			my @Conditions = openprint::InventoryCondition->find(order=>'lower(name)');
 			foreach my $Condition ( @Conditions, new openprint::InventoryCondition() ) {
-				next if $Condition->message();
+				if ( $Condition->message() ) {
+					#$log->debug("Next cuz of message $$Condition{name} $$Condition{message}");
+					next;
+				} else {
+					#$log->debug("Doing of message $$Condition{name}");
+				}	
 				my $condition_id = $Condition->id();
 
 				# So allocations are either per specific skids, in which case the condition is taken from the skid,
@@ -46,7 +51,10 @@
 					'quantity >'	=>	1,
 					( $param{skid_id} ? ( skid_id=>[ split(',', $param{skid_id} ) ] ) : () ),
 					);
-				next if ! @SkidContents;
+				if ( ! @SkidContents ) {
+	#$log->debug("Next cuz no skid contents");
+				next ;
+				}
 				my @skid_ids = map { $_->skid_id() } @SkidContents;
 
 				my @Allocations = openprint::PaperAllocation->find(
@@ -54,11 +62,13 @@
 					paper_id		=>	$$variable{Paper}{id}, 
 					'skid_ids &&'=> ( $param{skid_id} ? [ split(',', $param{skid_id} ) ] : \@skid_ids ),
 				);
+if ( 0 ) {
 				push @Allocations, openprint::PaperAllocation->find(
 					condition_id	=>	$Condition->id(),
 					paper_id		=>	$$variable{Paper}{id}, 
 					'skid_ids'=> [],
 				);
+}
 
 				my $in_stock = misc::sum(map { $_->quantity() } @SkidContents);
 				my $allocated = misc::sum(map { $_->quantity() } @Allocations);
