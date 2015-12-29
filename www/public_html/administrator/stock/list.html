@@ -238,6 +238,13 @@ checkboxes( 'OrLarger', [1,'Or Larger'], $session{'/administrator/stock/list.htm
 		</p>
 	</fieldset>
 	<br/>
-	<div id="Stocks"></div>
+	<div id="Stocks">
+<? echo (
+	 if ( map { $session{'/administrator/stock/list.html?'.$_} ? $session{'/administrator/stock/list.html?'.$_} : () } ( qw{ brand_id finish_id colour_id weight_id } ) ) {
+		return include('/administrator/stock/_stocks.html');
+	}
+
+) ?>
+	</div>
 	<input type="hidden" name="btnFunction"/>
 </form>
