@@ -68,6 +68,7 @@ $desc );
 		<? echo (
 			my $html = '';
 			my @Timetracks;
+			$$variable{service_total} = 0;
 			foreach my $T ( openprint::Timetrack->find(
 				billable		=>	1,
 				owner_id		=> $session{'company_id'},	
@@ -91,9 +92,15 @@ $desc );
 				$html .= sprintf('<td class="Price">%s</td>', openprint::Currency::format( $$Price{'Total'} ) );
 				$html .= sprintf('<td class="buttons">%s</td>', button( 'add'.$T->id(), { onclick=>qq`add_timetrack($$T{id});`, text=> '+' } ) );
 				$html .= "</tr>\n";
+			$$variable{service_total} += $$Price{Total};
 			} # end foreach $T
 			return $html;
 		) ?>
+<tr class="totals">
+            <td colspan="6">Totals</td>
+            <td class="Price" id="timetrack_total"><? echo ( openprint::Currency::format( $$variable{'service_total'} ); ) ?></td>
+            <td>&nbsp;</td>
+        </tr>
 	</table>
 </fieldset>
 <? endif ( openprint::Timetrack->find_one() ) ?>

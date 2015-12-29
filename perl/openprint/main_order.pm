@@ -29,55 +29,55 @@ require openprint::Tax;
 sub information {
 
 	my $error;
-	my $order_id = $param{'order_id'};
+	my $order_id = $param{order_id};
 	# Order creation can happen here as well, because we are doing away with quantity_select
 	# order_id may also be the word New
 
-	if ( $order_id and $param{'action'} eq 'remove' ) {
-		if ( $param{'project_id'} ) {
-			$param{'project_id'} =~ s/\D//g;
-			my $OrderedProject = openprint::OrderedProject->find_one('project_id'=>$param{'project_id'}, 'order_id'=>$order_id);
+	if ( $order_id and $param{action} eq 'remove' ) {
+		if ( $param{project_id} ) {
+			$param{project_id} =~ s/\D//g;
+			my $OrderedProject = openprint::OrderedProject->find_one('project_id'=>$param{project_id}, 'order_id'=>$order_id);
 			if ( ! $OrderedProject ) {
-				$variable{'error'} .= "Project $param{project_id} is not in order $order_id<br/>";
-			} elsif ( $OrderedProject->order_id() != $order_id or $OrderedProject->project_id() != $param{'project_id'} ) {
+				$variable{error} .= "Project $param{project_id} is not in order $order_id<br/>";
+			} elsif ( $OrderedProject->order_id() != $order_id or $OrderedProject->project_id() != $param{project_id} ) {
 				$openprint::log->error("Wrong OrderedProject returned!");
 			} else {
-				$variable{'error'} .= $OrderedProject->delete();
+				$variable{error} .= $OrderedProject->delete();
 			} # end if
-		} elsif ( $param{'product_id'} ) {
-			$param{'product_id'} =~ s/\D//g;
-			my $OrderedProduct = openprint::OrderedProduct->find_one('id'=>$param{'product_id'}, 'order_id'=>$order_id);
+		} elsif ( $param{product_id} ) {
+			$param{product_id} =~ s/\D//g;
+			my $OrderedProduct = openprint::OrderedProduct->find_one('id'=>$param{product_id}, 'order_id'=>$order_id);
 			if ( ! $OrderedProduct ) {
-				$variable{'error'} .= "Product $param{product_id} is not in order $order_id<br/>";
-			} elsif ( $OrderedProduct->order_id() != $order_id or $OrderedProduct->id() != $param{'product_id'} ) {
+				$variable{error} .= "Product $param{product_id} is not in order $order_id<br/>";
+			} elsif ( $OrderedProduct->order_id() != $order_id or $OrderedProduct->id() != $param{product_id} ) {
 				$openprint::log->error("Wrong OrderedProduct returned!");
 			} else {
-				$variable{'error'} .= $OrderedProduct->delete();
+				$variable{error} .= $OrderedProduct->delete();
 			} # end if
 		} else {
 			$openprint::log->error('Nothing specified to delete');
-			$variable{'error'} .= 'Nothing specified to delete.';
+			$variable{error} .= 'Nothing specified to delete.';
 		} # end if
-	} elsif ( $param{'btnFunction'} eq 'New Order' ) {
+	} elsif ( $param{btnFunction} eq 'New Order' ) {
 		# Re order situation
 		$order_id = openprint::order::make_order_from_order( $order_id );
 		return if ! $order_id;
-	} elsif ( $param{'btnFunction'} eq 'ReOpen' ) {
+	} elsif ( $param{btnFunction} eq 'ReOpen' ) {
 		if ( $order_id ) {
 			openprint::order::delete_unfinished_orders();
 			my $Order = new openprint::Order( $order_id );
-			$Order->save({'status'=>'Re-Opened','session_id'=>$session{'_session_id'}, total=>undef});
+			$Order->save({'status'=>'Re-Opened','session_id'=>$session{_session_id}, total=>undef});
 			foreach my $OP ( $Order->Ordered_Projects() ) {
-				$variable{'error'} .= $OP->save({'price'=>undef});
+				$variable{error} .= $OP->save({'price'=>undef});
 				
 			} # end foreach
 			$Order->add_log( 'Re-Opened' );
 		} else {
 			$error = 'No order_id given to Re-Open.';
 		} # end if order_id
-	} elsif ( $param{'btnFunction'} eq 'Process Order' ) {
-		if ( $param{'quote_id'} ) {
-			( $order_id, $error ) = openprint::order::make_order_from_quote( $param{'quote_id'} );
+	} elsif ( $param{btnFunction} eq 'Process Order' ) {
+		if ( $param{quote_id} ) {
+			( $order_id, $error ) = openprint::order::make_order_from_quote( $param{quote_id} );
 		} else {
 			if ( openprint::Order->find('project_id'=>$param{ProjectIndex},status=>['Pending Deposit', 'In Production', 'Complete', 'Shipped', 'Waiting For Pickup', 'Picked Up']) ) {
 				return misc::error($log, $dbh, \%variable, q{Can't order project.}, "Project $param{ProjectIndex} has already been ordered." );
@@ -90,12 +90,12 @@ sub information {
 			( $order_id, $error ) = openprint::order::add_project_to_order( $Project, $order_id );
 			$Project->unlock();
 		} # end if
-	} elsif ( $param{'btnFunction'} eq 'Continue') { # saving projcet information
+	} elsif ( $param{btnFunction} eq 'Continue') { # saving projcet information
 		$order_id = openprint::order::get_unfinished_order( ) if ! $order_id;
 		foreach my $OP ( openprint::OrderedProject->find('order_id'=>$order_id) ) {
-			$variable{'error'} .= openprint::order::save_project_information( $OP );
+			$variable{error} .= openprint::order::save_project_information( $OP );
 		} # end foreach
-	} elsif ( $param{'Product'} and $param{'Quantity'} ) {
+	} elsif ( $param{Product} and $param{Quantity} ) {
 		( $order_id, $error ) = openprint::order::add_product( $order_id, @param{'Product','Quantity'} );
 	} # end if
 
@@ -105,7 +105,7 @@ sub information {
 	} # end if
 	$order_id = openprint::order::get_unfinished_order( ) if ! $order_id;
 	my $Order = new openprint::Order( $order_id );
-	$session{'order_id'} = $order_id;
+	$session{order_id} = $order_id;
 
 	if ( $order_id ) {
 		$variable{error} = check_for_errors( $Order ) if ! $variable{error};
@@ -127,7 +127,7 @@ sub information {
 			'alsonotify',
 		} = $Order->get('company_name','salutation','firstname','lastname','address1','address2','city','state','postalcode','country','phone','fax','email','alsonotify');
 
-		if ( $variable{'company_name'} eq '' ) {
+		if ( $variable{company_name} eq '' ) {
 			my $Company = new openprint::Company($session{company_id});
 			@variable{'company_name',
 				'address1',
@@ -140,13 +140,13 @@ sub information {
 				'fax'} = $Company->get('name','address1','address2','city','state','postalcode','country','phone','fax');
 		} # end if
 
-		if ( $variable{'email'} eq '' ) {
+		if ( $variable{email} eq '' ) {
 			my $User = new openprint::User( $session{user_id} );
 			# Assume that we are acting on someone else's behalf
-			if ( sets::isin( $session{'user_type'}, [ 'A','E'] ) ) {
+			if ( sets::isin( $session{user_type}, [ 'A','E'] ) ) {
 			
 				# WE ARE logged in as someone else
-				if ( $User->company_id() != $session{'company_id'} ) {
+				if ( $User->company_id() != $session{company_id} ) {
 					my @Users = openprint::User->find( 
 							company_id=>$param{company_id} ? $param{company_id} : $session{company_id}, 
 							order=>'lower(lastname),lower(firstname)'
@@ -158,9 +158,14 @@ sub information {
 			} = $User->get('email','title','firstname','lastname','salutation','phone','fax');
 
 		} # end if
+		foreach my $OP ( openprint::OrderedProject->find('order_id'=>$order_id) ) {
+			if ( ! sets::isin( $OP->quantity_index(), $OP->Project->quantity_indexes() ) ) {
+				$OP->save({quantity_index=>undef});
+			}
+		}
 	} # end if $Order_id
-	$variable{'order_id'} = $order_id;
-	$variable{'Order'} = new openprint::Order( $order_id );
+	$variable{order_id} = $order_id;
+	$variable{Order} = new openprint::Order( $order_id );
 
 } # end sub information
 
@@ -187,25 +192,25 @@ sub submit {
 			} # end if
 			#my %price = $Product->Product()->get_price( $Product->quantity() );
 			#$Product->price( $price{Price} );
-			$variable{'error'} .= openprint::order::save_project_information( $Product );
+			$variable{error} .= openprint::order::save_project_information( $Product );
 			# Need to update price to include shipping costs
 			my %Price = $Product->Product()->get_price( $Product->quantity() );
-$openprint::log->debug("Initial price for " . $Product->quantity() . ' is : ' . $Price{'Price'} );
+$openprint::log->debug("Initial price for " . $Product->quantity() . ' is : ' . $Price{Price} );
 			my $Project = $Product->Project();
 			my $services = $Project->services();
 			foreach my $ShippingType ( openprint::ServiceType->find('category'=>'Shipping') ) {
 				next if ! $$services{$ShippingType->name()};
 				foreach my $service_id ( @{$$services{$ShippingType->name()}} ) {
 					my $specs =  openprint::service::get_specs_ref( $Project, $service_id );
-					$Price{Price} += $$specs{'txtPrice1'};
+					$Price{Price} += $$specs{txtPrice1};
 				} # end foreach service_id
 			} # end foreach
 			$Product->price( $Project->Currency()->convert_to( $Currency, $Price{Price} ) );
-			$Product->requested_for( sprintf('%.4d-%.2d-%.2d', @param{'ddmDueDateYear'.$$Project{'id'},'ddmDueDateMonth'.$$Project{'id'},'ddmDueDateDay'.$$Project{'id'}} ) ) if exists $param{'ddmDueDateYear'.$$Project{'id'}};
+			$Product->requested_for( sprintf('%.4d-%.2d-%.2d', @param{'ddmDueDateYear'.$$Project{id},'ddmDueDateMonth'.$$Project{id},'ddmDueDateDay'.$$Project{id}} ) ) if exists $param{'ddmDueDateYear'.$$Project{id}};
 			$Product->save();
 		} # end foreach Product
 
-		$variable{error} .= openprint::order::store_order_info( $openprint::r, $log, $dbh, $session{'_session_id'}, \%variable );
+		$variable{error} .= openprint::order::store_order_info( $openprint::r, $log, $dbh, $session{_session_id}, \%variable );
 		if ( $variable{error} ) {
 			$session{error} = $variable{error};
 			$variable{ExternalRedirect} = '/main/order/information.html';
@@ -213,9 +218,9 @@ $openprint::log->debug("Initial price for " . $Product->quantity() . ' is : ' . 
 		} else {
 			$variable{ExternalRedirect} = '/main/order/submit.html?order_id='.$Order->id();
 		} # end if
-	} elsif ( $param{'btnFunction'} eq 'Save Service' ) {
-		my $Project = new openprint::Project( $param{'ProjectIndex'} );
-		openprint::print::save_service( $openprint::r, $log, $dbh, \%variable, $Project, $param{'ServiceIndex'} );
+	} elsif ( $param{btnFunction} eq 'Save Service' ) {
+		my $Project = new openprint::Project( $param{ProjectIndex} );
+		openprint::print::save_service( $openprint::r, $log, $dbh, \%variable, $Project, $param{ServiceIndex} );
 	} # end if
 
 	$variable{error} = check_for_errors( $Order );
@@ -225,7 +230,7 @@ $openprint::log->debug("Initial price for " . $Product->quantity() . ' is : ' . 
 	} # end if
 	
 	@variable{'Currency','CurrencyName','CurrencySymbol'} = ( $Currency, $Currency->name(), $Currency->symbol() );
-	$variable{'Order'} = $Order;
+	$variable{Order} = $Order;
 	$Order->subtotal(undef); # Force a reload
 	foreach my $Tax ( $Order->Taxes() ) {
 		$Tax->amount(undef);
@@ -233,17 +238,17 @@ $openprint::log->debug("Initial price for " . $Product->quantity() . ' is : ' . 
 
 	$variable{order_id} = $order_id;
 
-	@{$variable{'Projects'}} = $Order->Projects();
+	@{$variable{Projects}} = $Order->Projects();
 	$variable{Order} = $Order;
 
-	if ( sets::isin( $session{'user_type'}, ['A','E'] ) ) {
-		$variable{'AdministratorName'} = new openprint::User( $session{'user_id'} )->name();
+	if ( sets::isin( $session{user_type}, ['A','E'] ) ) {
+		$variable{AdministratorName} = new openprint::User( $session{user_id} )->name();
 	} # end if
 
 } # end sub submit
 
 sub confirmation {
-	my $order_id = $param{'order_id'};
+	my $order_id = $param{order_id};
 	$order_id = openprint::order::get_unfinished_order( ) if ! $order_id;
 	if ( $order_id eq '' ) {
 		$log->error( "Still no Order ID" );
@@ -255,7 +260,7 @@ sub confirmation {
 	if ( $param{btnFunction} eq 'Close' or $param{btnFunction} eq 'Complete' ) {
 	
 		if ( $Order->id() and ( sets::isin( $Order->status(), ['Incomplete','Re-Opened'] ) ) ) {
-			if ( ( $Order->company_id() == $session{'company_id'} ) and ( $session{'company_id'} == new openprint::User( $session{'user_id'})->company_id() ) ) {
+			if ( ( $Order->company_id() == $session{company_id} ) and ( $session{company_id} == $openprint::User->company_id() ) ) {
 				if ( ! $param{accept_terms} ) {
 					$variable{error} = 'Terms not accepted';
 					$variable{information} = 'You must check the box to indicate your acceptance of the terms and conditions.';
@@ -290,11 +295,11 @@ sub confirmation {
 			} # end foreach Tax
 			my $total = $Order->total(undef);
 
-			#my $customer_credit = new openprint::customer_credit( $session{'company_id'} );
+			#my $customer_credit = new openprint::customer_credit( $session{company_id} );
 			my $downpayment;
 			#my ( $downpayment ) = $customer_credit->get( 'Downpayment' );
 			#if ( $downpayment eq '' ) {
-				#$downpayment = $config{'DefaultDownpayment'};
+				#$downpayment = $config{DefaultDownpayment};
 			#} # end if
 			#$downpayment = $total * ( $downpayment / 100 );
 			#$downpayment = Math::Round::nearest( 0.01, $downpayment );
@@ -306,12 +311,12 @@ sub confirmation {
 				( $docket_number ) = sql::execute( $log, $dbh, q{SELECT nextval('DocketNumber_seq')} );
 			} # end if
 			# This is messed up.  I think an order should never switch companies unless it doesn't have a company assigned.  I don't see how it could work any other way.
-			$Order->company_id( $session{'company_id'} ) if ! $Order->company_id();
-			$Order->salesrep_id( new openprint::Company( $session{'company_id'} )->salesrep_id() );
+			$Order->company_id( $session{company_id} ) if ! $Order->company_id();
+			$Order->salesrep_id( $openprint::Company->salesrep_id() );
 			$Order->downpayment( $downpayment );
 			$Order->status( $status );
-			$Order->administrator_name( $param{'AdministratorName'} );
-			$Order->administrator_comments( $param{'AdministratorComments'} );
+			$Order->administrator_name( $param{AdministratorName} );
+			$Order->administrator_comments( $param{AdministratorComments} );
 			$Order->docket( $docket_number );
 			$Order->currency_id( $session{Currency_id} );
 			$Order->save();
@@ -342,16 +347,16 @@ sub confirmation {
 			} # end foreach Product
 
 			
-			$variable{'Downpayment'} = $downpayment - $Order->paid();
-			$variable{'Downpayment'} = 0 if $variable{'Downpayment'} < 0;
-			$variable{'Downpayment'} = Math::Round::nearest( 0.01, $variable{'Downpayment'} );
+			$variable{Downpayment} = $downpayment - $Order->paid();
+			$variable{Downpayment} = 0 if $variable{Downpayment} < 0;
+			$variable{Downpayment} = Math::Round::nearest( 0.01, $variable{Downpayment} );
 
 			$Order->update_status();
 	# send out email notifications
 			$Order->send_sales_order( ) if $param{btnFunction} eq 'Complete';
 
 	# *************************** WE are going to manually invoice for now *******************
-			if ( $variable{'Downpayment'} > 0 ) {
+			if ( $variable{Downpayment} > 0 ) {
 			#	send_invoice( $r, $log, $dbh, $order_id );
 			} # end if
 		} else {
@@ -359,9 +364,9 @@ sub confirmation {
 		} # end if
 	} # end if btnFunction eq 'Close or Complete
 
-	$variable{'order_id'} = $order_id;
-	$variable{'Order'} = $Order;
-	delete $session{'order_id'}
+	$variable{order_id} = $order_id;
+	$variable{Order} = $Order;
+	delete $session{order_id}
 } # end sub confirmation
 
 sub history {
@@ -384,48 +389,48 @@ sub _history {
 } # end sub _history
 
 sub history_details {
-	my $order_id = $param{'order_id'};
+	my $order_id = $param{order_id};
 	my $Order = new openprint::Order( $order_id );
 
-	if ( $param{'btnFunction'} eq 'AcceptTerms' ) {
-		if ( ( $Order->company_id() != $session{'company_id'} ) or ( new openprint::User( $session{'user_id'} )->company_id() != $session{'company_id'} ) ) {
-			$variable{'error'} = 'Terms not accepted';
-			$variable{'information'} = 'You are not authorised to accept the terms and conditions.';
-		} elsif ( ! $param{'accept_terms'} ) {
-			$variable{'error'} = 'Terms not accepted';
-			$variable{'information'} = 'You must check the box to indicate your acceptance of the terms and conditions.';
+	if ( $param{btnFunction} eq 'AcceptTerms' ) {
+		if ( ( $Order->company_id() != $session{company_id} ) or ( new openprint::User( $session{user_id} )->company_id() != $session{company_id} ) ) {
+			$variable{error} = 'Terms not accepted';
+			$variable{information} = 'You are not authorised to accept the terms and conditions.';
+		} elsif ( ! $param{accept_terms} ) {
+			$variable{error} = 'Terms not accepted';
+			$variable{information} = 'You must check the box to indicate your acceptance of the terms and conditions.';
 		} else {
 			$Order->add_log( 'User accepted the terms and conditions.' );
 			$Order->save({'terms_accepted'=>1});
 		} # end if
 
-	} elsif ( $param{'btnFunction'} eq 'Cancel' ) {
+	} elsif ( $param{btnFunction} eq 'Cancel' ) {
 		openprint::order::cancel_order( $order_id );
-	} elsif ( $param{'btnFunction'} eq 'Pay' ) {
+	} elsif ( $param{btnFunction} eq 'Pay' ) {
 		$Order->pay();
-	} elsif ( $param{'btnFunction'} eq 'Save Payment' ) {
+	} elsif ( $param{btnFunction} eq 'Save Payment' ) {
 
 		$param{amount} = openprint::Payment->transform('amount', $param{amount} );
 
-		if ( ! $param{'amount'} ) {
-			$variable{'error'} .= 'Invalid Amount<br/>';
-			$variable{'information'} .= 'Please enter a valid monetary amount.';
+		if ( ! $param{amount} ) {
+			$variable{error} .= 'Invalid Amount<br/>';
+			$variable{information} .= 'Please enter a valid monetary amount.';
 		} # end if
 		if ( ! Date::Calc::check_date( @param{'received_on_year','received_on_month','received_on_day'} ) ) {
-			$variable{'error'} .= 'Invalid received on date.';
-			$variable{'information'} .= 'Please enter a valid date.';
+			$variable{error} .= 'Invalid received on date.';
+			$variable{information} .= 'Please enter a valid date.';
 		} # end if
-		if ( ! $variable{'error'} ) {
+		if ( ! $variable{error} ) {
 
 			my $Payment = new openprint::Payment();
 			my $error .= $Payment->save( {
 					'order_id'		=> $order_id,
 					'payor_id'		=> $Order->company_id(),
-					'recipient_id'	=> new openprint::User( $session{'user_id'} )->company_id(),
+					'recipient_id'	=> new openprint::User( $session{user_id} )->company_id(),
 					'amount'		=> $param{amount},
 					'method'		=> 'Manual',
 					'currency_id'	=> ( $param{payment_currency_id} ? $param{payment_currency_id} : $Order->currency_id() ),
-					'memo'			=> $param{'memo'},
+					'memo'			=> $param{memo},
 					'completed'		=> 1,
 					} );
 			if ( $error ) {
@@ -434,7 +439,7 @@ sub history_details {
 
 			openprint::order::get_misc( \%variable, $Order );
 
-			if ( $variable{'DepositDue'} > 0 ) {
+			if ( $variable{DepositDue} > 0 ) {
 				foreach my $project_index ( sql::execute( $log, $dbh, 'SELECT lngProjectIndex FROM Order_Contents WHERE OrderIndex=?', $order_id ) ) {
 					sql::update( $log, $dbh, 'Projects', ['id=? AND strStatus=?', $project_index, 'In Prepress'], 'strStatus', 'Pending Deposit' );
 					sql::update( $log, $dbh, 'tbl_Project_Contents', ['lngProjectIndex=? AND strStatus=?',$project_index, 'Ordered'], 'strStatus', 'Pending Deposit' );
@@ -446,40 +451,40 @@ sub history_details {
 					sql::update( $log, $dbh, 'Projects', ['id=? AND strStatus=?', $project_index, 'Pending Deposit'], 'strStatus', 'In Prepress' );
 					sql::update( $log, $dbh, 'tbl_Project_Contents', ['lngProjectIndex=? AND strStatus=?', $project_index, 'Pending Deposit'], 'strStatus', 'Ordered' );
 				} # end foreach
-				if ( $variable{'AmountPaid'} >= $variable{'TOTAL'} ) {
+				if ( $variable{AmountPaid} >= $variable{TOTAL} ) {
 					$Order->status('Paid') if $Order->status() eq 'Complete';
 				} # end if
 				$Order->save();
 			} # end if no error
 			$variable{ExternalRedirect} = '/main/order/history_details.html?order_id='.$Order->id();
         } # end if btnFunction
-	} elsif ( $param{'btnFunction'} eq 'Delete Payment' ) {
-		my $Payment = new openprint::Payment( $param{'payment_id'} );
+	} elsif ( $param{btnFunction} eq 'Delete Payment' ) {
+		my $Payment = new openprint::Payment( $param{payment_id} );
 		if ( ! $Payment->id() ) {
-			$variable{'error'} .= 'Invalid payment id specified.<br/>';
+			$variable{error} .= 'Invalid payment id specified.<br/>';
 		} else {
 			if ( my $error = $Payment->delete() ) {
-				$variable{'error'} .= 'Payment not deleted: <br/>' . $error . '<br/>';
+				$variable{error} .= 'Payment not deleted: <br/>' . $error . '<br/>';
 			} else {
-				$variable{'information'} .= 'Payment deleted successfully.<br/>';
+				$variable{information} .= 'Payment deleted successfully.<br/>';
 				$Order->update_status();
 			} # end if
 		} # end if
-	} elsif ( $param{'btnFunction'} eq 'Resend') {
+	} elsif ( $param{btnFunction} eq 'Resend') {
 		$Order->send_sales_order( );
-		$variable{'information'} .= "Order emails sent.<br/>";
+		$variable{information} .= "Order emails sent.<br/>";
 		$variable{ExternalRedirect} = '/main/order/history_details.html?order_id='.$Order->id();
 	} # end if
 	openprint::order::display_order( $order_id );
 } # end sub history_details
 
 sub _Shipping {
-	$variable{'Project'} = new openprint::Project( $param{'project_id'} );
-	$variable{'Order'} = $variable{'Project'}->Order();
+	$variable{Project} = new openprint::Project( $param{project_id} );
+	$variable{Order} = $variable{Project}->Order();
 } # end sub _Shipping
 sub _CustomerPickUp {
-	$variable{'Project'} = new openprint::Project( $param{'project_id'} );
-	$variable{'Order'} = $variable{'Project'}->Order();
+	$variable{Project} = new openprint::Project( $param{project_id} );
+	$variable{Order} = $variable{Project}->Order();
 } # end sub _CustoemrPickUp
 sub _view_log {
 } # end sub _view_log
@@ -532,22 +537,24 @@ sub check_for_errors {
 			foreach my $service_id ( @{$$services{$ServiceType->name()}} ) {
 				my $specs = openprint::service::get_specs_ref( $Project, $service_id );
 # do error checks
-				push @errors, 'Please enter the Shipping Company Name.' if ! $$specs{'ToCompanyName'};
-				push @errors, 'Please enter the Shipping Address.' if ! $$specs{'ToAddress1'};
-				push @errors, 'Please enter the Shipping City.' if ! $$specs{'ToCity'};
-				push @errors, 'Please enter the Shipping State/Province.' if ! $$specs{'ToStateProvince'};
-				push @errors, 'Please enter the Shipping PostalCode.' if ! $$specs{'ToPostalCode'};
-				push @errors, 'Please enter the Shipping Country.' if ! $$specs{'ToCountry'};
-				push @errors, 'Please enter the Shipping Phone.' if ! $$specs{'ToPhone'};
-				#push @errors, 'Please enter the Shipping Email.' if	! $$specs{'ToEmail'};
+				push @errors, 'Please enter the Shipping Company Name.' if ! $$specs{ToCompanyName};
+				push @errors, 'Please enter the Shipping Address.' if ! $$specs{ToAddress1};
+				push @errors, 'Please enter the Shipping City.' if ! $$specs{ToCity};
+				push @errors, 'Please enter the Shipping State/Province.' if ! $$specs{ToStateProvince};
+				push @errors, 'Please enter the Shipping PostalCode.' if ! $$specs{ToPostalCode};
+				push @errors, 'Please enter the Shipping Country.' if ! $$specs{ToCountry};
+				push @errors, 'Please enter the Shipping Phone.' if ! $$specs{ToPhone};
+				#push @errors, 'Please enter the Shipping Email.' if	! $$specs{ToEmail};
 
-				$_ = Email::Valid->address($$specs{'ToEmail'} );
-				if ( ( ! $_ ) or ( $_ ne $$specs{'ToEmail'} ) ) {
-					push @errors, 'Shipping Email is not a valid email address.';
+				if ( $$specs{ToEmail} ) {
+					$_ = Email::Valid->address($$specs{ToEmail} );
+					if ( ( ! $_ ) or ( $_ ne $$specs{ToEmail} ) ) {
+						push @errors, 'Shipping Email is not a valid email address.';
+					} # end if
 				} # end if
 	
 				if ( openprint::service::status( $Project->id(), $service_id ) eq 'uncalculated' ) {
-					push @errors, 'Unable to calculate shipping:' . $$specs{'alert'};
+					push @errors, 'Unable to calculate shipping:' . $$specs{alert};
 				} # end if
 			} # end foreach service_id
 		} # end foreach ServiceType

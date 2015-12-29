@@ -16,43 +16,59 @@ sub edit {
 
 	my $ServiceType = new openprint::ServiceType( $param{ServiceType_id} );
 
-	if ( $param{'btnFunction'} eq '<<' ) {
+	if ( $param{btnFunction} eq '<<' ) {
 		$ServiceType = $ServiceType->Prev();
-	} elsif ( $param{'btnFunction'} eq '>>' ) {
+	} elsif ( $param{btnFunction} eq '>>' ) {
 		$ServiceType = $ServiceType->Next();
-	} elsif ( $param{'btnFunction'} eq 'Delete' ) {
+	} elsif ( $param{btnFunction} eq 'Delete' ) {
 		$variable{error} .= $ServiceType->delete();
 		if ( ! $variable{error} ) {
 			$ServiceType = $ServiceType->Next() if ! $variable{error};
 			openprint::logs::insertLogRecord('23',sprintf('Service Type: %d - %s', $ServiceType->id(), $ServiceType->name() ) );
 		} # end if
-	} elsif ( $param{'btnFunction'} eq 'Destroy' ) {
+	} elsif ( $param{btnFunction} eq 'Destroy' ) {
 		$variable{error} .= $ServiceType->destroy();
 		if ( ! $variable{error} ) {
 			$ServiceType = $ServiceType->Next();
 			openprint::logs::insertLogRecord('23',sprintf('Service Type: %d - %s', $ServiceType->id(), $ServiceType->name() ) );
 		} # end if
-	} elsif ( $param{'btnFunction'} eq 'Save' ) {
-		$variable{'error'} = $ServiceType->save( \%param );
+	} elsif ( $param{btnFunction} eq 'Save' ) {
+
+		if ( $param{new_category} ) {
+			if ( my $Category = openprint::ServiceType_Category->find_one( name=>$param{new_category} ) ) {
+				$param{category_id} = $Category->id();
+			} else {
+				my $Category = new openprint::ServiceType_Category();
+				$Category->name( $param{new_category} );
+				if ( $_ = $Category->save() ) {
+					$variable{error} .= $_;
+					return;
+				} else {
+					$param{category_id} = $Category->id();
+                } # end if
+            } # end if
+        } # end if
+
+		$variable{error} = $ServiceType->save( \%param );
 		my $ac = sql::start_transaction( $dbh );
 		foreach my $SD ( $ServiceType->Defaults() ) {
 			if ( ! $param{'name-'.$$SD{id}} ) {
-				$SD->delete();
+				$variable{error} .= $SD->delete();
 			} else {
-				$SD->save({
+				$variable{error} .= $SD->save({
 					projecttype_id	=>	$param{'projecttype_id-'.$$SD{id}},
 					name			=>	$param{'name-'.$$SD{id}},
 					value			=>	$param{'value-'.$$SD{id}},
 					}) if (
-						( $SD->projecttype_id() != $param{'projecttype_id-'.$$SD{'id'}} ) or
-						( $SD->name() ne $param{'name-'.$$SD{'id'}} ) or
-						( $SD->value() ne $param{'value-'.$$SD{'id'}} )
+						( $SD->projecttype_id() != $param{'projecttype_id-'.$$SD{id}} ) or
+						( $SD->name() ne $param{'name-'.$$SD{id}} ) or
+						( $SD->value() ne $param{'value-'.$$SD{id}} )
 						);
 			} # end if
 		} # end foreach
 		if ( $param{'name-'} ne '' ) {
 			my $SD = new openprint::ServiceType_Default( );
-			$SD->save({
+			$variable{error} .= $SD->save({
 					servicetype_id	=>	$$ServiceType{id},
 					projecttype_id	=>	$param{'projecttype_id-'},
 					name				=>	$param{'name-'},
@@ -60,33 +76,33 @@ sub edit {
 					});
 		} # end if
 		sql::end_transaction( $dbh, $ac );
-	} elsif ( $param{'btnFunction'} eq 'Copy' ) {
+	} elsif ( $param{btnFunction} eq 'Copy' ) {
 		my $New = $ServiceType->copy();
 		
 		if ( $_ = $New->save({'name'=>'Copy of' . $New->name()}) ) {
-			$variable{'error'} = $_;
+			$variable{error} = $_;
 		} else {
 			foreach my $Default ( $ServiceType->Defaults() ) {
 				$Default = $Default->copy();
-				$variable{'error'} .= $Default->save({'servicetype_id'=>$New->id()});
-				last if $variable{'error'};
+				$variable{error} .= $Default->save({'servicetype_id'=>$New->id()});
+				last if $variable{error};
 			} # end foreach Default
 			$ServiceType = $New;
 		} # end if
 	} # end if
 
-	$variable{'ServiceType'} = $ServiceType;
+	$variable{ServiceType} = $ServiceType;
 } # end sub edit
 
 sub _row {
-	my $Default = new openprint::ServiceType_Default( $param{'default_id'} );
-	if ( $param{'action'} eq 'delete' ) {
-		$variable{'error'} .= $Default->delete();
-	} elsif ( $param{'action'} eq 'copy' ) {
+	my $Default = new openprint::ServiceType_Default( $param{default_id} );
+	if ( $param{action} eq 'delete' ) {
+		$variable{error} .= $Default->delete();
+	} elsif ( $param{action} eq 'copy' ) {
 		$Default = $Default->copy();
-		$variable{'error'} .= $Default->save();
+		$variable{error} .= $Default->save();
 	} # end if
-	$variable{'Default'} = $Default;
+	$variable{Default} = $Default;
 } # end sub _row
 
 1;

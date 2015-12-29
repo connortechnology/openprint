@@ -104,9 +104,7 @@ sub edit {
 		$Equipment->delete();
 		$Equipment = $Equipment->Next();
 	} elsif ( $param{btnFunction} eq 'Import Specifications' ) {
-		if ( ( my $error = import_specs( $r, $Equipment ) ) ) {
-			return misc::error( $log, $dbh, \%variable, 'The following errors occurred:', $error );
-		} # end if
+		$variable{error} .= import_specs( $r, $Equipment );
 	} elsif ( $param{btnFunction} eq 'Export Specifications' ) {
 		export_specs( $Equipment );
 	} elsif ( $param{btnFunction} eq 'Export Folds' ) {

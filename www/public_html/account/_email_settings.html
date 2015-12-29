@@ -1,38 +1,46 @@
-<div id="EmailSettings">
-<fieldset><legend>Email Settings</legend>
-	<div class="content">
-	<ul>
-		<li>
-			<label>Password</label>
-			<input type="text" name="EmailPassword" />
-		</li>
-		<li>
-			<label>Verify Password</label>
-			<input type="text" name="VerifyEmailPassword" />
-		</li>
-		<li>
-			<label>Forwards<br/>(One per line)</label>
-			<textarea id="aliases" name="aliases" onkeyup="textarea_resize(this);" rows="<? echo ( @{$$variable{'Aliases'}} ? scalar @{$$variable{'Aliases'}} + 1 : 2 ) ?>"><? echo ( join("\n", @{$$variable{'Aliases'}})) ?></textarea>
-		</li>
-	</ul>
+<div class="Email">
+	<div class="Settings">
+		<fieldset><legend>Email Settings</legend>
+			<div class="content">
+			<ul>
+				<li>
+					<label>Password</label>
+					<input type="text" name="EmailPassword" />
+				</li>
+				<li>
+					<label>Verify Password</label>
+					<input type="text" name="VerifyEmailPassword" />
+				</li>
+				<li>
+					<label>Forwards<br/>(One per line)</label>
+					<textarea id="aliases" name="aliases" onkeyup="textarea_resize(this);" rows="<? echo ( @{$$variable{Aliases}} ? scalar @{$$variable{Aliases}} + 1 : 2 ) ?>"><? echo ( join("\n", @{$$variable{Aliases}})) ?></textarea>
+				</li>
+			</ul>
+			</div>
+		</fieldset>
 	</div>
-</fieldset>
-<fieldset><legend>Vacation Auto-Responder Settings</legend>
-	<div class="content">
-	<ul>
-		<li>
-			<label>Subject</label>
-			<input type="text" name="VacationSubject" value="<?VacationSubject?>" />
-		</li>
-		<li>
-			<label>Message</label>
-			<textarea name="VacationMessage" onkeyup="textarea_resize(this);" rows="<? echo ( ssi::count_lines($$variable{VacationMessage}); ) ?>"><?VacationMessage?></textarea>
-		</li>
-		<li>
-			<label>Vacation Status</label>
-			<? echo ( ssi::radio( 'VacationState', [ 1, 'Enabled', '0', 'Disabled' ], 1*$$variable{'VacationState'} ); ) ?> 
-		</li>
-	</ul>
+	<div class="Vacation">
+		<fieldset><legend>Vacation Auto-Responder Settings</legend>
+			<div class="content">
+			<ul>
+				<li>
+					<label>Subject</label>
+					<input type="text" name="VacationSubject" value="<?VacationSubject?>" />
+				</li>
+				<li>
+					<label>Message</label>
+					<textarea name="VacationMessage" onkeyup="textarea_resize(this);" rows="<? echo ( count_lines($$variable{VacationMessage}); ) ?>"><?VacationMessage?></textarea>
+				</li>
+				<li>
+					<label>Vacation Status</label>
+					<? echo ( radio( 'VacationState', [ 1, 'Enabled', '0', 'Disabled' ], $$variable{VacationState}, { default=>0 } ); ) ?> 
+				</li>
+				<li>
+					<label>Receive System Emails</label>
+					<? echo ( radio( 'VacationSystemEmails', [ 1, 'Yes', '0', 'No' ], $$variable{VacationSystemEmails}, { default=>1 } ); ) ?> 
+				</li>
+			</ul>
+			</div>
+		</fieldset>
 	</div>
-</fieldset>
 </div>

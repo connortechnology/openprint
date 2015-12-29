@@ -2,6 +2,8 @@ use strict;
 package openprint::Quote;
 our @ISA=qw(openprint::Object);
 
+use constant DEBUG => 1;
+
 require MIME::QuotedPrint;
 use openprint ();
 use vars qw( $debug $r %variable $log $dbh %config %session $table $serial %fields %transforms %defaults %find_fields );
@@ -488,7 +490,10 @@ sub can_view {
 } # end sub can_view
 
 sub can_send {
-	my $User = $_[1] ? $_[1] : new openprint::User( $openprint::session{user_id} );
+	my $User = $_[1] ? $_[1] : $openprint::User;
+	if ( DEBUG ) {
+		$openprint::log->debug("Quote->can_send user_type: $$User{type}, $_[0]{company_id} == $openprint::session{company_id}");
+	}
 	if ( sets::isin( $$User{type}, ['A','E'] ) or ( $_[0]{company_id} == $openprint::session{company_id} ) ) {
 		return 1;
 	} # end if

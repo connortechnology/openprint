@@ -1,5 +1,6 @@
 <?include('/includes/error_reporting.html')?>
 <? eval (
+	use constant DEBUG => 0;
 	openprint::StockBrand->find();
 	openprint::StockFinish->find();
 	openprint::StockWeight->find();
@@ -48,6 +49,11 @@
 	foreach my $Paper ( @{$$variable{Papers}}  ) {
 		$Paper->SkidContents( $SkidContents{$$Paper{id}} );
 	} # end foreach Paper
+if ( DEBUG ) {
+	foreach my $Paper ( @{$$variable{Papers}}  ) {
+		$log->debug("Initial Papers: " . $Paper->to_string() );
+	}
+}
 ) ?>
 <? if ( @{$$variable{'Papers'}} ) ?>
 	<table class="List">
@@ -95,19 +101,15 @@ $log->debug("Excluding " . $Equipment->Location()->name() );
 			my %SkidContents;
 			my %SkidContentsByPaper;
 			my @skid_ids = map { $$_{skid_id} } @SkidContents;
-$log->debug("After SkidIds");
 			my %Skids = map { $$_{id}, $_ } openprint::Skid->find(id=>\@skid_ids) if @skid_ids;
-$log->debug("After Skids");
 			my %SkidsByPaper;
 
-$log->debug("Before preloading");
 			foreach my $SC ( @SkidContents ) {
 				push @{$SkidContents{$$SC{skid_id}}}, $SC;
 				push @{$SkidContentsByPaper{$$SC{paper_id}}}, $SC;
 				#push @{$SkidsByPaper{$$SC{paper_id}}}, $SC->Skid();
 				push @{$SkidsByPaper{$$SC{paper_id}}}, $Skids{$$SC{skid_id}};
 			} # end foreach SC
-$log->debug("Done preloading");
 
 			foreach my $Paper ( @{$$variable{Papers}} ) {
 				my $in_stock = misc::sum( map { $_->quantity() } @{$SkidContentsByPaper{$$Paper{id}}} ) if $SkidContentsByPaper{$$Paper{id}};

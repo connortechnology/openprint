@@ -1,7 +1,7 @@
 <?include(/includes/error_reporting.html)?>
 <form id="config_form" name="config_form" action="/administrator/managerial/configuration.html" method="post">
 	<input type="hidden" name="btnFunction" value="New"/>
-	<fieldset><legend>New Configuration Entry</legend>
+	<fieldset><legend><?echo($$variable{Entry}->id() ? 'Edit' : 'New' )?> Configuration Entry</legend>
 		<div class="content">
 			<ul>
 				<li><label>Name</label>

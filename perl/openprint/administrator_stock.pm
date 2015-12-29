@@ -51,7 +51,7 @@ sub list {
 			$Paper->delete();
 		} # end foreach
 	} elsif ( $param{'btnFunction'} eq 'Export' ) {
-		my @header = ( 'ID', 'Owner','Manufacturer','Supplier','Group','Brand', 'Finish', 'Colour', 'Weight', 'Quality', 'MWeight', 'gsm','Calliper', 'Type','Width', 'Height', 'Basis Width','Basis Height', 'Grain Direction','Supplier','DoubleSided?','Cuttable?','Multiple Parts?','Perfecting','Scoring Required?','Blade Cleaning Required?','Grade','Sheets Per Package','Supplied', 'Digital','Full Packages','Minimum Order','Inventory #','Material Type','Message', 'Recommendations');
+		my @header = ( 'ID', 'Owner','Manufacturer','Supplier','Group','Brand', 'Finish', 'Colour', 'Weight', 'Quality', 'MWeight', 'gsm','Calliper', 'Type','Width', 'Height', 'Basis Width','Basis Height', 'Grain Direction','DoubleSided?','Cuttable?','Multiple Parts?','Perfecting','Scoring Required?','Blade Cleaning Required?','Grade','Sheets Per Package','Supplied', 'Digital','Full Packages','Minimum Order','Inventory #','Material Type','Message', 'Recommendations');
 		my @data;
 
 		foreach my $Stock ( openprint::Paper->find( order=>'brand,finish,colour,weight,width,height', 
@@ -87,7 +87,7 @@ sub list {
 				next if openprint::PaperPrice->find_one(paper_id=>$$Stock{id}, service=>'Material');
 			} # end if
 			push @data, $Stock->id(), $Stock->owner(), $Stock->manufacturer(), $Stock->Supplier()->name(), $Stock->group(), $Stock->brand(), $Stock->finish(), $Stock->colour(), $Stock->weight(), $Stock->quality(), 
-				 $Stock->mweight(), $Stock->gsm(), $Stock->calliper(), $Stock->type(), $Stock->width(), $Stock->height(), $Stock->basis_width(), $Stock->basis_height(), $Stock->grain_direction(), '', $Stock->doublesided(), $Stock->cuttable(), $Stock->multipart(), $Stock->perfecting(), $Stock->score_required(), $Stock->bladecleaning(), $openprint::Paper::grades{$Stock->grade()}, $Stock->sheets_per_package(), $Stock->supplied(), $Stock->digital(), $Stock->full_packages(), $Stock->minimum_order(), $Stock->inventory_number(), $Stock->material(), $Stock->message();
+				 $Stock->mweight(), $Stock->gsm(), $Stock->calliper(), $Stock->type(), $Stock->width(), $Stock->height(), $Stock->basis_width(), $Stock->basis_height(), $Stock->grain_direction(), $Stock->doublesided(), $Stock->cuttable(), $Stock->multipart(), $Stock->perfecting(), $Stock->score_required(), $Stock->bladecleaning(), $openprint::Paper::grades{$Stock->grade()}, $Stock->sheets_per_package(), $Stock->supplied(), $Stock->digital(), $Stock->full_packages(), $Stock->minimum_order(), $Stock->inventory_number(), $Stock->material(), $Stock->message();
 			push @data, join(',', map { new openprint::ProjectType($_)->name() } $Stock->recommendations());
 		} # end foreach
 		misc::export_csv( $r, $log, \%variable, 'stock.csv', \@header, \@data );
@@ -229,6 +229,8 @@ sub stock {
 		$Paper = $NewPaper;
 		$param{'stock_id'} = $Paper->id();
 	} elsif ( $param{'btnFunction'} eq 'Save' ) {
+
+		my @changes = $Paper->changes( \%param );
 		$Paper->owner_id( $param{'ddmOwner'} );
 		$Paper->manufacturer( $param{'txtManufacturer'} ) if $param{'txtManufacturer'};
 		$Paper->manufacturer_id( $param{'ddmManufacturer'} ) if ! $param{'txtManufacturer'};
@@ -297,26 +299,8 @@ sub stock {
 		my $message = '';
 # Save prices
 		foreach my $Price ( $Paper->Prices() ) {
-			if (
-					( $Price->price() != $param{"price-$$Price{id}"} ) 
-					or ( $Price->cost() != $param{"cost-$$Price{id}"} ) 
-					or ( $Price->markup() != $param{"markup-$$Price{id}"} ) 
-					or ( $Price->min() != $param{"min-$$Price{id}"} )
-					or ( $Price->max() != $param{"max-$$Price{id}"} )
-					or ( $Price->units() ne $param{"units-$$Price{id}"} )
-					or ( $Price->discountable() ne $param{"discountable-$$Price{id}"} )
-					or ( $Price->equipment_id() != $param{"equipment_id-$$Price{id}"} )
-			   ) {
-			$message .= "Price changed: " . join( ', ', (
-						( $Price->min() != $param{"min-$$Price{id}"} ? 'min: ' . $$Price{min} .' => ' . $param{"min-$$Price{id}"} : () ),
-						( $Price->max() != $param{"max-$$Price{id}"} ? 'max: '. $$Price{max} .' => ' . $param{"max-$$Price{id}"} : () ),
-						( $Price->cost() != $param{"cost-$$Price{id}"} ? 'cost: '. $$Price{cost} . ' => '. $param{"cost-$$Price{id}"} : () ),
-						( $Price->markup() != $param{"markup-$$Price{id}"} ? 'markup: '.$$Price{markup} . ' => '. $param{"markup-$$Price{id}"} : () ),
-						( $Price->price() != $param{"price-$$Price{id}"} ? 'price: '.$$Price{price} . ' => '. $param{"price-$$Price{id}"} : () ),
-						( $Price->units() ne $param{"units-$$Price{id}"} ? 'units: '.$$Price{units} . ' => '. $param{"units-$$Price{id}"} : () ),
-						( $Price->discountable() ne $param{"discountable-$$Price{id}"} ? 'discounted: ' .$$Price{discountable} . ' => '. $param{"discountable-$$Price{id}"} : () ),
-				) );
-			$variable{error} .= $Price->save({
+
+			my $new_values = {
 					equipment_id	=> $param{"equipment_id-$$Price{id}"},
 					min				=> $param{"min-$$Price{id}"},
 					max				=> $param{"max-$$Price{id}"},
@@ -325,12 +309,16 @@ sub stock {
 					markup			=> $param{"markup-$$Price{id}"},
 					price			=> $param{"price-$$Price{id}"},
 					discountable	=> $param{"discountable-$$Price{id}"},
-					});
+			};
+			my @price_changes = $Price->changes( $new_values );
+			if ( @price_changes ) {
+				push @changes, ( 'Change price for ' .$Price->id_string() . ': ' .  join(', ', map { $_ } @price_changes ) );
+				$variable{error} .= $Price->save( $new_values );
 			} # end if Price has changed
 		} # end foreach Price
 
 		$variable{'error'} .= $Paper->save();
-		(new openprint::Log())->save({ object_type=>(ref $Paper), object_id=>$$Paper{id}, action=>($param{stock_id}?'Edited stock':'Saved stock'), note=>$message });
+		(new openprint::Log())->save({ object_type=>(ref $Paper), object_id=>$$Paper{id}, action=>($param{stock_id}?'Edited stock':'Saved stock'), note=>join('<br/>', @changes) });
 		if ( ! $variable{'error'} ) {
 			$variable{'information'} .= 'Stock ' . $Paper->id() . ' has been saved.';
 			$variable{ExternalRedirect} = '/administrator/stock/stock.html?stock_id='.$$Paper{id};

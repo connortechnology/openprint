@@ -486,7 +486,7 @@ $log->debug("Calcing amount: $param{amount}");
 		} # end if
 		if ( $param{account_id} ) {
 			delete $param{account};
-		} else {
+		} elsif ( $param{account} ) {
 			delete $param{account_id};
 		} # end if
 		my $Expense = new openprint::Expense( $param{expense_id} );

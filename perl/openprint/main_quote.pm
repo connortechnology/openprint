@@ -106,12 +106,14 @@ sub history_details {
 			$variable{ExternalRedirect} = '/main/quote/history_details.html?quote_id='.$Quote->id();
 		} # end if
 	} elsif ( $param{btnFunction} eq 'Resend' ) {
-		if ( ! $Quote->can_send( ) ) {
+		if ( $Quote->can_send( ) ) {
 			my $results = $Quote->send();
 			$Quote->add_log('Resent. Results: ' . $results);
 			$variable{information} .= 'Quote resent. Results: '. $results;
-			$variable{ExternalRedirect} = '/main/quote/history_details.html?quote_id='.$Quote->id();
+		} else {
+			$variable{error} .= "Can't resend quote.<br/>";
 		} # end if
+		$variable{ExternalRedirect} = '/main/quote/history_details.html?quote_id='.$Quote->id();
 	} # end if
 	openprint::quote::get_finished_quote_contents( $log, $dbh, \%variable, $$Quote{id} ) if $param{quote_id};
 } # end sub history_details

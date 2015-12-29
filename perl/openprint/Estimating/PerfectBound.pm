@@ -353,12 +353,12 @@ sub get_equipment {
 			next;
 		} # end if
 		if ( $$specs{txtCalliper} > 0 ) {
-			if ( $_ = $Equipment->specification('Maximum Calliper') and ( $$specs{txtCalliper} > $_ ) ) {
-				$$error{$$Equipment{id}} .= ': Too thick.<br/>';
+			if ( $_ = $Equipment->specification('MaximumPerfectBound Calliper') and ( $$specs{txtCalliper} > $_ ) ) {
+				$$error{$$Equipment{id}} .= ": Too thick. $$specs{txtCalliper} > $_ <br/>";
 				next;
 			} # end if
-			if ( $_ = $Equipment->specification('Minimum Calliper') and ( $$specs{txtCalliper} < $_ ) ) {
-				$$error{$$Equipment{id}} .= ': Too thin.<br/>';
+			if ( $_ = $Equipment->specification('MinimumPerfectBound Calliper') and ( $$specs{txtCalliper} < $_ ) ) {
+				$$error{$$Equipment{id}} .= ": Too thin $$specs{txtCalliper} < $_ .<br/>";
 				next;
 			} # end if
 		} else {

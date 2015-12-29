@@ -205,7 +205,7 @@
 				<td class="Docket"><a href="/employee/purchase_order/view.html?po_id=%1$d">%8$s</a></td>
 				<td class="Price">%5$s</td>
 			</tr>`, $PO->id(), format_datetime($PO->created_on()), $PO->Supplier()->name(), $PO->Creator()->name(), 
-				$PO->cancelled() ? 'CANCELLED' : openprint::Currency::format($total), 
+				$PO->cancelled() ? 'CANCELLED' : ( $PO->can_see_pricing() ? openprint::Currency::format($total) : '' ), 
 				( ( $PO->authorized() and ! $PO->authorized_by() ) ? 'Authorized' : $PO->Authorized_By()->name() ),
 				$PO->Manifest()->name(),
 				join('<br/>', sets::exclude( [''], [ sets::union( map { $_->docket() } $PO->Contents() ) ] ) ),

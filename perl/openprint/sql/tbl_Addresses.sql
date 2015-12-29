@@ -1,3 +1,4 @@
+DROP SEQUENCE IF EXISTS Address_Index_seq;
 CREATE SEQUENCE Address_Index_seq;
 CREATE TABLE tbl_Addresses (
 	lngIndex			INTEGER DEFAULT nextval('Address_Index_seq'),

@@ -1,4 +1,4 @@
-<? echo ( include('/includes/error_reporting.html'); ) ?>
+<?include('/includes/error_reporting.html')?>
 <form id="f1" name="f1" method="post" action="ink.html">
 	<fieldset class="filters"><legend>Search</legend>
 		<p> 
@@ -61,7 +61,7 @@
 			</li>
 			<li>
 				<label>Needs Mixing</label>
-				<? echo ( radio( 'mix', [ '1', 'Yes', '0', 'No' ], $$variable{Ink}->mix() ); ) ?>
+				<? echo ( radio( 'mix', [ '1', 'Yes', '0', 'No' ], $$variable{Ink}->mix(), { default=>'0' } ); ) ?>
 			</li>
 			<li><label>Stock Grades</label>
 				<select id="grades" name="grades" multiple="multiple">

@@ -355,12 +355,13 @@ sub Taxes {
 } # end sub Taxes
 
 sub Tax {
+	my ( $self, $Tax ) = @_;
 	if ( ! $_[0]{Taxes} ) {
 		@{$_[0]{Taxes}} = openprint::Invoice_Tax->find( invoice_id=>$_[0]{id} );
 	} # end if
 
 	foreach my $IT ( @{$_[0]{Taxes}} ) {
-		if ( $$IT{tax_id} == $$_[1]{id} ) {
+		if ( $$IT{tax_id} == $$Tax{id} ) {
 			return $IT;
 		}
 	} # end if

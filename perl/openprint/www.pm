@@ -48,7 +48,7 @@ sub cleanup {
 		openprint::pricing::clear_cache();
 		openprint::service::init_cache();
 		$openprint::Service::cached = 0;
-		$openprint::Materials::cached = 0;
+		$openprint::Material::cached = 0;
 		openprint::Object::init_cache();
 		$session{lastupdated} = time;
 		untie %session;
@@ -107,7 +107,6 @@ sub handler {
 			password	=> $r->dir_config('db_password'),
 			);
 
-	my $page = $r->uri();
 	my $lastpage = '';
 
 	# This one has to go here, because it loads data, the others clear data, so they can go after the requires
@@ -229,6 +228,7 @@ $log->debug("PageContent is $variable{PageContent}");
 			#$log->debug("Looking for $file");
 			if ( -e $file ) {
 				$template = misc::load_file( $log, $file );
+$log->debug("Foudn template at $file") if Debug;
 			} else {
 			while ( @page_path ) {
 				$file = join( '/', $config{SkinPath}, 'layouts', @page_path, 'default.html' );
@@ -412,7 +412,7 @@ $log->debug("Running openprint::$module->$proc") if Debug;
 			require openprint::print;
 			require openprint::main_project;
 			require openprint::print_project;
-			if ( ( defined $third ) or ( $filename eq 'Paper.html' ) ) {
+			if ( ( defined $third ) or ( $filename eq 'Paper.html' ) or ( $filename eq 'Bundling.html' ) ) {
 				if ( $param{ServiceIndex} and ! $variable{ServiceIndex} ) {
 					my @service_ids = split(',', $param{ServiceIndex} );
 					$variable{ServiceIndex} = $service_ids[0];
@@ -582,16 +582,16 @@ $log->debug("Service: " . $Service->to_string() );
 				my $module = lc $first;
 				$module .= '_'.$second if $second;
 				eval {
-				require "openprint/$module.pm"; 
-				if ( my $function = ('openprint::'.$module)->can($proc) ) {
-					$function->($r, $log, $dbh, \%variable );
-				} else {
-					$log->error( "Eval error of require $module :: $proc, Reason: " );
-				}
-				}
+					require "openprint/$module.pm"; 
+					if ( my $function = ('openprint::'.$module)->can($proc) ) {
+						$function->($r, $log, $dbh, \%variable );
+					} else {
+						$log->error( "Eval error of require $module :: $proc, Reason: " );
+					}
+				};
 			} # end if
 		} else {
-			$log->debug("No firstSo or non-existant $uri");
+			$log->debug("No firstSo or non-existant $uri first: $first ");
 		} # end if
 	} # end if $first
 

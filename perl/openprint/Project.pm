@@ -91,6 +91,7 @@ $serial = 'lngProjectIndex_seq';
 	due_date	=>	undef,
 	markup		=>	undef,
 	priority	=>	undef,
+	reprint		=>	0,
 );
 
 %find_fields = (
@@ -1487,8 +1488,8 @@ sub production_cost {
 sub Service {
 	my ( $self, $service_id ) = @_;
 	if ( ! $service_id ) {
-		$openprint::log->error("No service_id passed to ServiceType for project $$self{id}");
-		Carp::cluck("No service_id passwrod to ServiceType");
+		$openprint::log->error("No service_id passed to Service for project $$self{id}");
+		Carp::cluck("No service_id passwrod to Project::Service");
 	} # end if
 	return new openprint::Project_Service( {project_id=>$$self{id}, service_id=>$service_id} );
 } # end sub Service
@@ -1614,8 +1615,11 @@ sub calliper {
 				$calliper = int( $Paper->calliper() * 10000);
 			} # end if
 			my $pages = 1;
-			if ( $$sig_specs{rdbTemplateType} eq '2PanelFold' ) {
+			if ( $$sig_specs{rdbTemplateType} eq '2PanelFold' or $$sig_specs{rdbTemplateType} eq '4PageFold' ) {
 				$pages = 2;
+			} elsif ( sets::isin( $$sig_specs{rdbTemplateType}, [  'NoFold', 'Portrait', 'Landscape','Square','Forms', '' ] ) ) {
+			} elsif ( sets::isin( $$sig_specs{rdbTemplateType}, [ 'PadsPortrait', 'PadsLandscape','PadsSquare' ] ) ) {
+				$pages *= $$sig_specs{PageQuantity} if $$sig_specs{PageQuantity};
 			} elsif ( sets::isin( $$sig_specs{rdbTemplateType},['3PanelFold','3PanelZFold'] ) ) {
 				$pages = 3;
 			} elsif ( sets::isin( $$sig_specs{rdbTemplateType}, ['4PanelFold', '4PanelZFold'] ) ) {
@@ -1626,10 +1630,14 @@ sub calliper {
 				$pages = 6;
 			} elsif ( $$sig_specs{rdbTemplateType} eq 'SingleGateFold' ) {
 				$pages = 3;
-			} elsif ( $$sig_specs{rdbTemplateType} eq 'DoubleGateFold' ) {
+			} elsif ( sets::isin( $$sig_specs{rdbTemplateType}, [ 'DoubleGateFold', '2Panel2Pocket' ] ) ) {
 				$pages = 4;
 			} elsif ( $$sig_specs{rdbTemplateType} eq 'DifficultFold' ) {
 				$pages = 6;
+			} elsif ( $$sig_specs{rdbTemplateType} eq '8PageFold' ) {
+				$pages = 4;
+			} else {
+				$log->error("Unknown template type n calliper $$sig_specs{rdbTemplateType}");
 			} #// end if
 			$finished_calliper += $pages * $calliper;
 		} # end if

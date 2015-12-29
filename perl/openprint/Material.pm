@@ -1,7 +1,6 @@
 use strict;
 package openprint::Material;
 our @ISA = qw( openprint::Object );
-use Memoize;
 
 require sql;
 require openprint::Object;
@@ -19,7 +18,7 @@ use vars qw{ $debug $log $dbh %session $table $serial %fields %find_fields %tran
 $debug = 0;
 $cached = 0;
 $table = 'materials';
-$serial = 'materialindex_seq';
+$serial = 'materials_id_seq';
 
 %fields = (
 		id				=>	'id',

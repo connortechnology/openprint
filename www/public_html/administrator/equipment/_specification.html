@@ -1,3 +1,9 @@
+<? echo (
+	if ( $$variable{error} ) {
+		return '<tr class="error"><td colspan="7">'.$$variable{error}.'</td></tr>';
+	}
+	return '';
+) ?>
 <tr<?rowclass?> id="S<? echo ( $$variable{Specification}->id(); ) ?>" >
 	<td class="name"><span id="SName<? echo ( $$variable{Specification}->id() ) ?>"><? hecho ( $$variable{Specification}->name(); ) ?></span></td>
 	<td class="min"><span id="SMin<? echo ( $$variable{Specification}->id(); ) ?>"><? echo ( $$variable{Specification}->min() ? $$variable{Specification}->min() : '&nbsp;'; ) ?></span></td>

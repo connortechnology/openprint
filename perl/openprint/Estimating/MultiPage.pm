@@ -330,6 +330,11 @@ $openprint::log->warn("FIXM E");
 			$$specs{'txtFinalWidth'.$group_id} = $$specs{txtFinalWidth};
 			$$specs{'txtFinalHeight'.$group_id} = $$specs{txtFinalHeight};
 		} # end if
+		if ( $sig_specs{txtSpreadSize} ) {
+			if ( $sig_specs{GroupPageQuantity} % $sig_specs{txtSpreadSize} ) {
+			$$specs{alert} .= "The # of pages for group $group_id is not a multiple of $sig_specs{txtSpreadSize}.  A GateFold page will be required.<br/>";
+			} 
+		}
 		$openprint::log->debug("Group: $group_id, remaining: $remaining_pages, $override_pages{$group_id}") if DEBUG;
 	} # end foreach group_id
 

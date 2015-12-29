@@ -52,7 +52,7 @@ input( type=>'text', name=>join('-', 'units', $$Pricelist{id}, $$Equipment{id}, 
 input( type=>'float', name=>join('-', 'cost', $$Pricelist{id}, $$Equipment{id}, $$Price{id} ), value=>$$Price{cost}, onkeyup=>'calc_from_cost(this);', oninput=>'this.onkeyup();' ),
 input( type=>'float', name=>join('-', 'markup', $$Pricelist{id}, $$Equipment{id}, $$Price{id} ), value=>$$Price{markup}, onkeyup=>'calc_from_markup(this);', oninput=>'this.onkeyup();' ),
 input( type=>'float', name=>join('-', 'price', $$Pricelist{id}, $$Equipment{id}, $$Price{id} ), value=>$$Price{price}, onkeyup=>'calc_from_price(this);', oninput=>'this.onkeyup();' ),
-radio( 'discount-'.$$Pricelist{id}.'-'.$$Equipment{id}.'-'.$$Price{id}, ['Y','Yes','N','No'], $$Price{discountable} ),
+radio( 'discountable-'.$$Pricelist{id}.'-'.$$Equipment{id}.'-'.$$Price{id}, ['Y','Yes','N','No'], $$Price{discountable}, { default=>'Y' } ),
  );
 			} # end foreach Price
 			$html .= '</table></fieldset><!--Equipment-->';

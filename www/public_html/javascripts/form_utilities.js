@@ -1456,6 +1456,11 @@ function integerize(e) {
 		e.value = e.value.replace(/[^\d\-%\*]/g,'');
 	return e.value;
 }
+function to_hostname(e) {
+	if ( e.value.match(/\s/) ) {
+		e.value = parseFloat(e.value.replace(/\s/g,''));
+	} 
+}
 function floatize(e) {
 	if ( e.value.match(/[^\d\-\.%\*]/) ) {
 		e.value = parseFloat(e.value.replace(/[^\d\-\.%\*]/g,''));

@@ -5,6 +5,17 @@
 	function check_inputs( form ) {
 		return true;
 	} //  end function check_inputs
+    var tinymce_options = {
+        mode : "textareas",
+        plugins: "paste",
+        theme : "advanced",
+theme_advanced_buttons1 : "bold,italic,underline,strikethrough,|,justifyleft,justifycenter,justifyright,justifyfull,|,fontsizeselect,|,bullist,numlist,|,indent,outdent",
+theme_advanced_buttons2 : '',
+theme_advanced_buttons2 : '',
+cleanup : true
+    };
+
+    tinyMCE.init( tinymce_options );
 </script>
 <div class="Host"><div class="Edit">
 <?include(/includes/error_reporting.html)?>
@@ -16,7 +27,7 @@
 			<ul>
 				<li>
 					<label>Hostname</label>
-					<input type="text" id="hostname" name="hostname" value="<? echo ( $$variable{Host}->hostname() ) ?>" onkeyup="this.value=this.value.replace(/\s/g,'');" onchange="this.onkeyup.call(this);"/>
+					<input type="text" id="hostname" name="hostname" value="<? echo ( $$variable{Host}->hostname() ) ?>" oninput="to_hostname(this);" />
 				</li>
 				<li><label onclick="toggle_input( $('type_id'), $('type') );">Type</label>
 					<input type="text" id="type" name="type" style="display:none;" onkeyup="ddm_select_by_text( $('type_id'), this.value, 0 );" />
@@ -51,23 +62,6 @@
 				</li>
 				<li><label>Created On</label><? echo ( format_datetime( $$variable{Host}->created_on() ); ) ?></li>
 				<li><label>Updated On</label><? echo ( format_datetime( $$variable{Host}->created_on() ); ) ?></li>
-				<li class="buttons">
-					<? echo ( 
-						my $html;
-						$html .= button( 'Save', { onclick=>"if( check_inputs( f1 ) ){f1.elements['action'].value='Save';f1.submit();}" } );
-						$html .= button( 'Reset', { onclick=>'f1.reset();' } );
-						if ( $$variable{Host}->id() ) {
-							$html .= button( 'Delete', { onclick=>"if(confirm('Are you sure?')){f1.elements['action'].value='Delete';f1.submit();}" } ) if $$variable{Host}->id();
-						} # end if
-						$html .= button( 'Resolve', { onclick=>"f1.elements['action'].value='Resolve';f1.action='/employee/it/host.html';f1.submit();" } );
-						$html .= button( 'Ping', { onclick=>"f1.elements['action'].value='ping';f1.action='/employee/it/host.html';f1.submit();" } );
-						$html .= button( 'Wake', { onclick=>"f1.elements['action'].value='Wake';f1.action='/employee/it/host.html';f1.submit();" } );
-						$html .= button( 'Reboot', { onclick=>"f1.elements['action'].value='reboot';f1.action='/employee/it/host.html';f1.submit();" } );
-						$html .= button( 'GEOLookup', { onclick=>"f1.elements['action'].value='GEOLookup';f1.action='/employee/it/host.html';f1.submit();" } );
-						#$html .= ssi::writeButton( $log, $dbh, 'clear', 'clear.gif', 'clearForm(f1);', '', 'Clear' );
-						return $html;
-					) ?>
-				</li>
 			</ul>
 		</div>
 <? if ( $$variable{Host}->id() ) ?>
@@ -92,8 +86,25 @@
 				<div id="licenses"><?include('_host_licenses.html')?></div>
 			</fieldset>
 		</div>
-	</fieldset>
 <? endif ( $$variable{Host}->id() ) ?>
+				<p class="buttons">
+					<? echo ( 
+						my $html;
+						$html .= button( 'Save', { onclick=>"if( check_inputs( f1 ) ){f1.elements['action'].value='Save';f1.submit();}" } );
+						$html .= button( 'Reset', { onclick=>'f1.reset();' } );
+						if ( $$variable{Host}->id() ) {
+							$html .= button( 'Delete', { onclick=>"if(confirm('Are you sure?')){f1.elements['action'].value='Delete';f1.submit();}" } ) if $$variable{Host}->id();
+						} # end if
+						$html .= button( 'Resolve', { onclick=>"f1.elements['action'].value='Resolve';f1.action='/employee/it/host.html';f1.submit();" } );
+						$html .= button( 'Ping', { onclick=>"f1.elements['action'].value='ping';f1.action='/employee/it/host.html';f1.submit();" } );
+						$html .= button( 'Wake', { onclick=>"f1.elements['action'].value='Wake';f1.action='/employee/it/host.html';f1.submit();" } );
+						$html .= button( 'Reboot', { onclick=>"f1.elements['action'].value='reboot';f1.action='/employee/it/host.html';f1.submit();" } );
+						$html .= button( 'GEOLookup', { onclick=>"f1.elements['action'].value='GEOLookup';f1.action='/employee/it/host.html';f1.submit();" } );
+						#$html .= ssi::writeButton( $log, $dbh, 'clear', 'clear.gif', 'clearForm(f1);', '', 'Clear' );
+						return $html;
+					) ?>
+				</p>
+	</fieldset>
 <fieldset><legend>Interfaces</legend>
 	<table class="List">
 		<tr>

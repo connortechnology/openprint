@@ -197,6 +197,16 @@ sub calc {
 	@$specs{'txtPrice1','txtPrice2','txtPrice3'} = ('','','');
 
 	my $Project = new openprint::Project( $project_index );
+	my $services = $Project->services();
+
+    if ( ! ( $$services{'PlainCartons'} and @{$$services{'PlainCartons'}} ) ) {
+        $$specs{'alert'} = 'UPS Shipping requires that the project be packed in cartons.';
+        $$specs{'NeedPlainCartons'} = 1;
+        return $$specs{'Status'} = 'uncalculated';
+    } else {
+        $$specs{'NeedPlainCartons'} = 0;
+    } # end if
+
 	my %upsResponse = get_ratings( $Project, $service_index, $specs );
 	if ( ! %upsResponse ) {
 		$$specs{'alert'} = 'Could not connect to ups.com.	We were unable to obtain a shipping estimate. Please select an alternate shipping method, or wait five minutes and try again.';

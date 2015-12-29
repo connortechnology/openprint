@@ -40,7 +40,7 @@
 		my $count = 0;
 		$html .= '<table class="List">
 			<tr>
-				<th class="Date">Date</th>
+				<th class="Date">Date / Employee</th>
 				<th class="Service">Description</th>
 				<th class="PO">PO #</th>
 				<th class="Interval">Interval</th>
@@ -57,7 +57,7 @@
 					$html .= sprintf('<td class="Rate">%s%s</td>', openprint::Currency::format( $$Price{Price} ), $$Price{units} );
 					$html .= sprintf('<td class="Price">%s</td>', openprint::Currency::format( $$Price{Total} ) );
 					$html .= sprintf('</tr><tr %2$s>', $Timetrack->id(), $rowclass );
-					$html .= '<td class="Date">&nbsp;</td><td class="Service" colspan="4">'.$Timetrack->description().'</td><td>&nbsp;</td>';
+					$html .= '<td class="Date">'.($Timetrack->user_id() ? $Timetrack->Employee()->name() : '&nbsp;' ). '</td><td class="Service" colspan="4">'.$Timetrack->description().'</td><td>&nbsp;</td>';
 					$html .= '</tr>';
 					$$variable{'service_total'} += $$Price{'Total'};
 					$rowclass = $rowclass ? '' : 'class="colRow"';
