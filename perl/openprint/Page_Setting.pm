@@ -56,7 +56,7 @@ $openprint::log->debug( "Usergroups are " . join(',', @{$_[0]{usergroup_ids}}) )
 		my @intersection = sets::intersection( @{$_[0]{usergroup_ids}}, $User->usergroup_ids() );
 		$openprint::log->debug( "Inserection: (" . join(',', @intersection ) . ')' . @intersection) if DEBUG;
 		if ( @intersection ) {
-			$openprint::log->debug("REturning 0");
+			#$openprint::log->debug("REturning 0");
 			return 1;
 		}
 	} else {
@@ -67,7 +67,7 @@ $openprint::log->debug( "Usergroups are " . join(',', @{$_[0]{usergroup_ids}}) )
 	if ( $_[0]{user_level} ) {
 		if ( $_[0]{user_level} eq 'A' ) {
 			if ( $openprint::session{user_type} ne 'A' ) {
-				$openprint::log->debug("REturning 0 cuz not an admin");
+				#$openprint::log->debug("REturning 0 cuz not an admin");
 				return 0;
 			}
 		} elsif ( $_[0]{user_level} eq 'E' ) {

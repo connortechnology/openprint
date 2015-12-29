@@ -173,5 +173,6 @@ while (( "$BACKUPS" > "0" )) ; do
 done
 
 $MV "$DEST$TYPE.new" "$DEST$TYPE.0";
+$MV "$DEST$TYPE.new.log" "$DEST$TYPE.0.log";
 echo $NEWDU > "$DEST$TYPE.0.du"
 $FIND "$DEST$TYPE.0" -type d -executable -exec chmod u+wx {} \;
