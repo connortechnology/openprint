@@ -18,7 +18,7 @@
 			<select name="equipment_id" onchange="form.btnFunction.value='';f1.submit();">
 				<option value="">All</option>
 				<? echo ( 
-					$variable{Equipment} = openprint::Equipment->dropdown( order=>'lower('.$openprint::Equipment::fields{name}.')');
+					$variable{Equipment} = [ map { $_->id(), $_->strid() . ': '.$_->name() } openprint::Equipment->find( order=>'lower('.$openprint::Equipment::fields{name}.')') ];
 					make_drop_down( $variable{Equipment}, $param{equipment_id} ); ) ?>
 			</select>
 		</li>	
@@ -28,7 +28,7 @@
 				<option value="">Select a Material</option>
 				<? echo ( 
 						make_drop_down( [ map { $_->id(), $_->name() . ' : ' . $_->description() } openprint::Material->find(
-								'order'=>'lower(name)', 
+								order=>'lower(name)', 
 								( $param{'ddmSearchCategory'} ? ( 'category_id'=>$param{'ddmSearchCategory'} ) : () ),
 								( $param{'equipment_id'} ? ( 'equipment_id any' => $param{'equipment_id'} ) : () ),
 								) ], $$variable{'Material'}->id() );
