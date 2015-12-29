@@ -82,6 +82,7 @@
 <? if ( ! sets::isin( $$variable{ProjectType}->name(),[ 'Envelopes','NCR','PresentationFolders' ] ); ) ?>
 			<option value="Custom">Custom</option>
 			<? echo (
+				return;
 			  make_drop_down( [
 				  map { 1*$_->finished_width().'x'.1*$_->finished_height(), 1*$_->finished_width().'&quot;'.' x '.1*$_->finished_height().'&quot;' }
 					 $$variable{ProjectType}->Templates( order=>'name' )
