@@ -134,7 +134,7 @@ sub edit {
 		} # end if
 	} elsif ( $param{func} eq 'Copy' ) {
 		$variable{Timetrack} = $variable{Timetrack}->copy();
-		$variable{error} .= $variable{Timetrack}->save();
+		#$variable{error} .= $variable{Timetrack}->save();
 	} elsif ( $param{func} eq 'Destroy' ) {
 		my $Timetrack = new openprint::Timetrack( $param{timetrack_id} );
 		$variable{error} .= $Timetrack->destroy();
