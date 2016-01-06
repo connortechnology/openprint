@@ -42,7 +42,7 @@
 				$html .= button( 'Prev1', { onclick=>"f1.btnFunction.value='&lt;&lt;';fmCheck(f1);", href=>'', text=>'<<' } );
 				$html .= button( 'Next1', { onclick=>"f1.btnFunction.value='>>';fmCheck(f1);", href=>'', text=>'>>' } );
 				$html .= button( 'New1', { onclick=>"addCheck(f1);", href=>'', text=>'New' } );
-				$html .= button( 'Save1', { onclick=>"f1.btnFunction.value='Save';fmChange=3;fmCheck(f1);", href=>'', text=>'Save' } );
+				$html .= button( 'Save1', { onclick=>"f1.btnFunction.value='Save';f1.submit();", text=>'Save' } );
 				if ( $$variable{'Material'}->id() ) {
 					$html .= button( 'Copy1', { onclick=>"f1.btnFunction.value='Copy';fmCheck(f1);", href=>'', text=>'Copy' } );
 					$html .= button( 'Delete1', { onclick=>"f1.btnFunction.value='Delete';fmChange=2;fmCheck(f1);", href=>'', text=>'Delete' } );
