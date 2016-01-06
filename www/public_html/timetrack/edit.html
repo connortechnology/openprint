@@ -56,7 +56,6 @@
 						} ); ) ?>
 			</li>
 			<li><label>Duration</label>
-				<?echo($$variable{Timetrack}->duration())?>
 				<input type="text" name="duration" id="duration" value="<?echo($$variable{Timetrack}->duration())?>"/>
 				<? echo ( write_override( 'duration_override', $$variable{Timetrack}->duration_override() ); ) ?>
 				<script type="text/javascript">update_duration(document.forms['f1'],'starting','ending');</script>
