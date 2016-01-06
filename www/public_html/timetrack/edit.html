@@ -28,7 +28,7 @@
 			<li><label for="user_id">Employee</label>
 				<select id="user_id" name="user_id">
 					<option value=""> select </option>
-					<? echo ( make_drop_down( openprint::User->dropdown(company_id=>$session{company_id}), $$variable{Timetrack}->id() ? $$variable{Timetrack}->user_id() : $session{user_id} ); ) ?>
+					<? echo ( make_drop_down( openprint::User->dropdown(company_id=>$session{company_id}), $$variable{Timetrack}->id() ); ) ?>
 				</select>
 			</li>
 			<li>
