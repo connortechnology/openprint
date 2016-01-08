@@ -269,6 +269,8 @@ $log->debug("# of entries in Object_name_cache: " . keys %{$openprint::Object::n
 				} # end if
 
 				my $updated_on_dt = $parser->parse_datetime( $host_counts{$ip}{updated_on} );
+
+				# Instead of parsing when, we just use the current time
 				my $now_dt = DateTime->now( time_zone=>$config{Timezone} );
 
 				if ( $host_counts{$ip}{updated_on} and ! $host_counts{$ip}{updated_on_seconds} ) {
@@ -276,13 +278,14 @@ $log->debug("# of entries in Object_name_cache: " . keys %{$openprint::Object::n
 					$log->debug("Covnerting  $host_counts{$ip}{updated_on} to $host_counts{$ip}{updated_on_seconds} seconds") if $config{debug};
 				}
 	#$log->warn("Last: $host_counts{$ip}{updated_on} => $last_seen, $when => $occurrence") if $host_counts{$ip};
-				if ( DateTime->compare( $updated_on_dt, $now_dt ) <= 0 ) {
+				#if ( DateTime->compare( $updated_on_dt, $now_dt ) <= 0 ) {
 					$host_counts{$ip}{count} += 1;
 					$host_counts{$ip}{update} = 1;
 					$changed = 1;
-				} else {
-					$log->debug( "Not counting because too old " . $host_counts{$ip}{updated_on} . " >= $when " ) if $config{debug};
-				} # end if
+				#} else {
+					#$log->debug( "Not counting because too old " . $host_counts{$ip}{updated_on} . " >= $when " ) if $config{debug};
+					#$log->debug( "Not counting because too old " . $updated_on_dt->epoch() . " >= " . $now_dt->epoch() ) if $config{debug};
+				#} # end if
 				last; # re
 			} # end if line matches re
 		} # end foreach re

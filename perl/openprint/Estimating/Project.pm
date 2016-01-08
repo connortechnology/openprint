@@ -8,6 +8,7 @@ use vars qw( $r $log $dbh %session );
 *dbh = \$openprint::dbh;
 *session = \%openprint::session;
 
+use constant DEBUG => 1;
 
 require sql;
 require openprint::account;
@@ -390,7 +391,7 @@ $log->debug("Presentation folder sizes $$specs{'chkPocketLeft'} $$specs{'chkPock
 # The adding of signatures will be done automatically by multipage_signatures
 # This will add bindery services, and a printing service
 		$$specs{'Status'} = openprint::print::multipage_signatures( $specs, $log, $dbh, $variable, $$Project{'id'}, $$services{''}[0] );
-	} else {
+	} elsif ( $ProjectType->type() ne 'ChannelLetters' ) {
 # Non-book
 		my @signatures = $Project->signatures();
 		if ( ! @signatures ) {
@@ -537,9 +538,22 @@ $log->debug("Presentation folder sizes $$specs{'chkPocketLeft'} $$specs{'chkPock
 		# Although this could calculate the printing, it is here only to further store and validate and auto-ppulate fields
 		$sig_specs = openprint::service::internal_calc( $log, $dbh, $variable, $$Project{'id'}, $sig_id, 'Printing' );
 		@$specs{'txtWidth','txtHeight','chkPocketCenter','alert','Status'} = @$sig_specs{'txtWidth','txtHeight','chkPocketCenter','alert','Status'};
-	} # end if printing (actually looks for txtTotalPageQut
-	openprint::service::internal_calc( $log, $dbh, $variable, $$Project{'id'}, $$services{''}[0], $ProjectType->type() );
+	} else { # ChannelLetters
+		eval 'require openprint::Estimating::'.$ProjectType->type();
+		$log->error("Error in requiring $$ProjectType{type} $@") if $@;
+		my @variables = eval('openprint::Estimating::'.$ProjectType->type().'::variables( $project_index, $service_index, $specs )');
+		$log->error("Error in requiring $$ProjectType{type} $@") if $@;
+$log->debug("Vars for $$ProjectType{type} : @variables");
 
+        foreach my $spec ( @variables ) {
+			if ( $$project_specs{$spec} ne $$specs{$spec} ) {
+				openprint::service::insert_service_spec( $log, $dbh, $$Project{'id'}, $$services{''}[0], $spec, $$specs{$spec} );
+			} # end if
+		} # end foreach
+	} # end if printing (actually looks for txtTotalPageQut
+	my $service_specs = openprint::service::internal_calc( $log, $dbh, $variable, $$Project{'id'}, $$services{''}[0], $ProjectType->type() );
+	$$specs{Status} = $$service_specs{Status};
+	$$specs{alert} .= $$service_specs{alert};
 
 	if ( ! $$specs{'txtQuantity1'} ) {
 		$$specs{'alert'} .= 'Please enter the quantity.';
@@ -559,6 +573,7 @@ $log->debug("Presentation folder sizes $$specs{'chkPocketLeft'} $$specs{'chkPock
 
 #$log->debug("Adding Required Services");
 	if ( openprint::Estimating::Cutting::neccessary( $Project ) and ! $$services{'Cutting'} ) {
+		$openprint::log->debug("Adding Cutting") if DEBUG;
 		push @{$$services{'Cutting'}}, $Project->add_service( 'Cutting' );
 	} # end if
 
@@ -874,8 +889,8 @@ $log->warn("unitprice: $$specs{'txtUnitPrice1'}");
 			$$specs{'alert'} .= $$service_specs{'alert'};
 		} # end foreach service
 	} # end if UPS
-	$$specs{'ShippingPrice1'} = sprintf( '%.2f', $$specs{'ShippingPrice1'} );
-	$$specs{'ProductionPrice1'} = sprintf( '%.2f', $$specs{'ProductionPrice1'} );
+	$$specs{'ShippingPrice1'} = sprintf( '%.2f', Math::Round::nearest(0.01,$$specs{'ShippingPrice1'} ) );
+	$$specs{'ProductionPrice1'} = sprintf( '%.2f', Math::Round::nearest(0.01,$$specs{'ProductionPrice1'} ) );
 
 
 	$$specs{'Status'} = $Project->update_status( $variable );

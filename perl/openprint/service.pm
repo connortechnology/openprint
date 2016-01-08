@@ -202,7 +202,7 @@ sub auto_calculate {
 	my @signature_indices = $Project->signatures();
 	if ( ! @signature_indices ) {
 		$openprint::log->warn("service::auto_calculate with no signatures");
-		return;
+		#return;
 	} # end if
 
 	# If the printing services aren't complete, then there is no sense continuing
