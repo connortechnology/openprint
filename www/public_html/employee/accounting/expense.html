@@ -1,16 +1,16 @@
 <script type="text/javascript">
 var tax_ids = [ <? echo ( 
 	my @Taxes = openprint::Tax->find(
-			'period_start null_or_<='   =>  $$variable{'Expense'}->invoiced_on(),
-			'period_end null_or_>='     =>  $$variable{'Expense'}->invoiced_on(),
-			'country'   =>  $$variable{'Expense'}->Company()->country(),
-			'state'     =>  $$variable{'Expense'}->Company()->state()
+			'period_start null_or_<='   =>  $$variable{Expense}->invoiced_on(),
+			'period_end null_or_>='     =>  $$variable{Expense}->invoiced_on(),
+			'country'   =>  $$variable{Expense}->Company()->country(),
+			'state'     =>  $$variable{Expense}->Company()->state()
 );
 return join(',', map { $_->id() } @Taxes ); ) ?> ];
 
 function update_taxes( ) {
 	var parameters = {
-		expense_id: '<? echo ( $$variable{'Expense'}->id() ) ?>', 
+		expense_id: '<? echo ( $$variable{Expense}->id() ) ?>', 
 		invoiced_on_year: $('invoiced_on_year').value, 
 		invoiced_on_month: $('invoiced_on_month').value,
 		invoiced_on_day: $('invoiced_on_day').value
@@ -82,7 +82,7 @@ function select_category( recipient_id ) {
 <?include(/includes/error_reporting.html)?>
 <form name="f1" id="f1" action="expense.html" method="post">
 	<input type="hidden" name="btnFunction" />
-	<input type="hidden" name="expense_id" value="<? echo ( $$variable{'Expense'}->id() ) ?>" />
+	<input type="hidden" name="expense_id" value="<? echo ( $$variable{Expense}->id() ) ?>" />
 	<fieldset><legend>Editing Expense</legend>
 		<div class="leftColumn">
 			<ul>
@@ -91,7 +91,7 @@ function select_category( recipient_id ) {
 					<select name="recipient_id" id="recipient_id" onchange="$('recipient').value='';select_category(this.value);">
 						<option value="">select</option>
 						<? echo ( 
-							openprint::Company::get_dropdown( $$variable{'Expense'}->recipient_id() );
+							openprint::Company::get_dropdown( $$variable{Expense}->recipient_id() );
 						) ?>
 					</select>
 				</li>
@@ -109,14 +109,14 @@ function select_category( recipient_id ) {
 					<select name="account_id" id="account_id" onchange="$('account').value='';">
 						<option value="">select</option>
 						<? echo (
-							make_drop_down( openprint::Expense_Account->dropdown( order=>'lower(name)'), $$variable{'Expense'}->account_id() );
+							make_drop_down( openprint::Expense_Account->dropdown( order=>'lower(name)'), $$variable{Expense}->account_id() );
 						) ?>
 					</select>	
 				</li>
-				<li><label for="amount">Amount (<? echo ( $$variable{'Expense'}->Currency()->symbol() ) ?>)</label>
+				<li><label for="amount">Amount (<? echo ( $$variable{Expense}->Currency()->symbol() ) ?>)</label>
 					<? echo ( join("\n",
-						input(type=>'float_calculator', name=>'amount', id=>'amount', value=>$$variable{'Expense'}->amount(), onkeyup=>'update_total(this.form);', oninput=>'this.onkeyup();' ),
-						write_override( 'amount_locked', $$variable{'Expense'}->amount_locked() ),
+						input(type=>'float_calculator', name=>'amount', id=>'amount', value=>$$variable{Expense}->amount(), onkeyup=>'update_total(this.form);', oninput=>'this.onkeyup();' ),
+						write_override( 'amount_locked', $$variable{Expense}->amount_locked() ),
 					); ) ?>
 					<select name="currency_id" id="currency_id">
 						<option value="">select</option>
@@ -128,14 +128,14 @@ function select_category( recipient_id ) {
 				<? include(_expense_taxes.html) ?>
 				</ul>
 				<ul>
-				<li><label for="total">Total (<? echo ( $$variable{'Expense'}->Currency()->symbol() ) ?>)</label>
+				<li><label for="total">Total (<? echo ( $$variable{Expense}->Currency()->symbol() ) ?>)</label>
 					<? echo ( join("\n",
-						input(type=>'float', name=>'total', id=>'total', value=>$$variable{'Expense'}->total(), onkeyup=>'calc_amount_from_total(this.form);', oninput=>'this.onkeyup();' ),
-						write_override( 'total_locked', $$variable{'Expense'}->total_locked() ),
+						input(type=>'float', name=>'total', id=>'total', value=>$$variable{Expense}->total(), onkeyup=>'calc_amount_from_total(this.form);', oninput=>'this.onkeyup();' ),
+						write_override( 'total_locked', $$variable{Expense}->total_locked() ),
 					); ) ?>
 				</li>
 				<li><label for="business_use">Business %</label>
-					<? echo ( input(type=>'cardinal',name=>'business_use',id=>'business_use', value=>$$variable{'Expense'}->business_use() ); ) ?>
+					<? echo ( input(type=>'cardinal',name=>'business_use',id=>'business_use', value=>$$variable{Expense}->business_use() ); ) ?>
 				</li>
 			</ul>
 		</div>
@@ -144,29 +144,29 @@ function select_category( recipient_id ) {
 				<li>
 					<label>Invoiced On</label>
 					<? echo ( 	
-						date_select( 'invoiced_on', $$variable{'Expense'}->invoiced_on(), {
+						date_select( 'invoiced_on', $$variable{Expense}->invoiced_on(), {
 							'with_today'=>1,
 							'onchange'=>'update_taxes()',
 							} ); ) ?>
-					<? echo ( button( 'invoiced_on_all', { 'onclick'=>q`var form = $('f1');set_date( form, 'invoiced_on', 'due_on' );set_date( form, 'invoiced_on', 'paid_on' );update_taxes();`, 'text'=>'All' } ); ) ?>
+					<? echo ( button( 'invoiced_on_all', { onclick=>q`var form = $('f1');set_date( form, 'invoiced_on', 'due_on' );set_date( form, 'invoiced_on', 'paid_on' );update_taxes();`, 'text'=>'All' } ); ) ?>
 				</li>
 				<li>
 					<label>Due On</label>
-					<? echo ( date_select( 'due_on', $$variable{'Expense'}->due_on(), { with_today=>1 } ); ) ?>
-					<? echo ( button( 'due_on_all', { 'onclick'=>q`var form = $('f1');set_date( form, 'due_on', 'invoiced_on' );set_date( form, 'due_on', 'paid_on' );update_taxes();`, 'text'=>'All' } ); ) ?>
+					<? echo ( date_select( 'due_on', $$variable{Expense}->due_on(), { with_today=>1 } ); ) ?>
+					<? echo ( button( 'due_on_all', { onclick=>q`var form = $('f1');set_date( form, 'due_on', 'invoiced_on' );set_date( form, 'due_on', 'paid_on' );update_taxes();`, 'text'=>'All' } ); ) ?>
 				</li>
 				<li>
 					<label>Paid On</label>
-					<? echo ( date_select( 'paid_on', $$variable{'Expense'}->paid_on(), { with_today=>1 } ); ) ?>
-					<? echo ( button( 'paid_on_all', { 'onclick'=>q`var form = $('f1');set_date( form, 'paid_on', 'due_on' );set_date( form, 'paid_on', 'invoiced_on' );update_taxes();`, 'text'=>'All' } ); ) ?>
+					<? echo ( date_select( 'paid_on', $$variable{Expense}->paid_on(), { with_today=>1 } ); ) ?>
+					<? echo ( button( 'paid_on_all', { onclick=>q`var form = $('f1');set_date( form, 'paid_on', 'due_on' );set_date( form, 'paid_on', 'invoiced_on' );update_taxes();`, 'text'=>'All' } ); ) ?>
 				</li>
 				<li>
 					<label for="description">Description</label>
-					<textarea cols="40" id="description" name="description" rows="<? echo ( $$variable{'Expense'}->description() ? scalar split("\n", $$variable{'Expense'}->description()) + 2 : 2 ) ?>" onkeyup="textarea_resize(this);"><? echo ( $$variable{'Expense'}->description() ) ?></textarea>
+					<textarea cols="40" id="description" name="description" rows="<? echo ( $$variable{Expense}->description() ? scalar split("\n", $$variable{Expense}->description()) + 2 : 2 ) ?>" onkeyup="textarea_resize(this);"><? echo ( $$variable{Expense}->description() ) ?></textarea>
 				</li>
 				<li>
 					<label>Attention</label>
-					<? echo ( ssi::radio( 'attention', [ '1', 'Yes', '0', 'No' ], $$variable{'Expense'}->attention() ); ) ?>
+					<? echo ( ssi::radio( 'attention', [ '1', 'Yes', '0', 'No' ], $$variable{Expense}->attention() ); ) ?>
 				</li>
 				<li><label>Transaction ID</label>
 					<? echo ( input( type=>'text', name=>'transaction_id', value=>$$variable{Expense}->transaction_id() ); ) ?>
@@ -177,9 +177,9 @@ function select_category( recipient_id ) {
 		<p class="buttons">
 			<? echo (
 				my $html = '';
-				if ( $$variable{'Expense'}->id() ) {
+				if ( $$variable{Expense}->id() ) {
 					$html .= button( 'Copy', { onclick=>"f1.action='expense.html';f1.btnFunction.value='Copy';f1.submit();" } );
-					if ( $$variable{'Expense'}->deleted() ) {
+					if ( $$variable{Expense}->deleted() ) {
 						$html .= button( 'Destroy', { onclick=>"if(confirm('Are you sure?')){f1.btnFunction.value='Destroy';f1.submit();}" } );
 					} else {
 						$html .= button( 'Delete', { onclick=>"f1.btnFunction.value='Delete';f1.submit();" } );

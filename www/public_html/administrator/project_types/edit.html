@@ -67,7 +67,9 @@
 		<li> 
 			<label>Type</label>
 			<? echo ( ssi::select( 
-				[ 'SinglePage', 'Single Page',
+				[
+					'ChannelLetters', 'Channel Letter',
+					 'SinglePage', 'Single Page',
 					'MultiPage', 'Multiple Pages / Book',
 					'ScratchPads',	'Scratch/Note Pads',
 				], $$variable{ProjectType}->type(),
@@ -90,7 +92,11 @@
 			<label for="please_call0" class="radio">No</label>
 		</li>
 		</ul>
-	</fieldset><!-- Column -->
+		</fieldset><!-- Column -->
+		
+
+<?eval( $$variable{Object} = $$variable{ProjectType} ) ?>
+<?include(/employee/assets/_asset_upload.html)?>
 	<br class="spacer"/>
 	<fieldset class="RequiredServices"> 
 		<legend>Required Services</legend>
@@ -128,6 +134,7 @@
 		</div>	
 	</fieldset>
 	</div>
+<?include('_logs.html')?>
 <? endif ( $$variable{'ProjectType'}->id() ) ?>
 	<br class="spacer"/>
 	<input type="hidden" name="btnFunction"/>
