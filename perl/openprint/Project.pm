@@ -1618,7 +1618,7 @@ sub calliper {
 			if ( $$sig_specs{rdbTemplateType} eq '2PanelFold' or $$sig_specs{rdbTemplateType} eq '4PageFold' ) {
 				$pages = 2;
 			} elsif ( sets::isin( $$sig_specs{rdbTemplateType}, [  'NoFold', 'Portrait', 'Landscape','Square','Forms', '' ] ) ) {
-			} elsif ( sets::isin( $$sig_specs{rdbTemplateType}, [ 'PadsPortrait', 'PadsLandscape','PadsSquare' ] ) ) {
+			} elsif ( sets::isin( $$sig_specs{rdbTemplateType}, [ 'PadsPortrait', 'PadsLandscape','PadsSquare','Pads' ] ) ) {
 				$pages *= $$sig_specs{PageQuantity} if $$sig_specs{PageQuantity};
 			} elsif ( sets::isin( $$sig_specs{rdbTemplateType},['3PanelFold','3PanelZFold'] ) ) {
 				$pages = 3;
