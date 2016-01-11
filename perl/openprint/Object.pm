@@ -1208,6 +1208,12 @@ sub Privacy {
 sub can_view {
 	return 1;
 } # end sub can_view
+sub can_edit {
+	if ( $openprint::session{user_type} eq 'A' ) {
+	return 1;
+	}
+	return 0;
+} # end sub can_view
 
 sub Assets {
 	return () if ! $_[0]{id};

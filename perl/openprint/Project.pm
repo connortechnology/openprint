@@ -562,20 +562,20 @@ sub update_status {
 			sql::update( $openprint::log, $openprint::dbh, 'tbl_Project_Contents', ['lngProjectIndex=? AND strStatus=?', $$self{id},'Ordered'], 'strStatus', 'calculated' );
 			@statuses = sql::execute( $openprint::log, $openprint::dbh, q{SELECT DISTINCT strStatus FROM tbl_Project_Contents WHERE lngProjectIndex=?}, $$self{id} );
 		} # end if
+		if ( $self->Type()->type() eq 'MultiPage' ) {
 			foreach my $qty_index ( $self->quantity_indexes() ) {
-				if ( $self->Type()->type() eq 'MultiPage' ) {
-					if ( openprint::Estimating::MultiPage::status( $$self{id}, undef, $qty_index ) ) {
-						$new_status = 'uncalculated';
-						last;
-					} # end if
-					my $ProjectService = $self->Service( $services{''}[0] );
-					if ( openprint::Estimating::MultiPage::check( $self, $ProjectService, $qty_index ) ) {
-						$ProjectService->status('uncalculated');
-						$new_status = 'uncalculated';
-						last;
-					} # end if
+				if ( openprint::Estimating::MultiPage::status( $$self{id}, undef, $qty_index ) ) {
+					$new_status = 'uncalculated';
+					last;
+				} # end if
+				my $ProjectService = $self->Service( $services{''}[0] );
+				if ( openprint::Estimating::MultiPage::check( $self, $ProjectService, $qty_index ) ) {
+					$ProjectService->status('uncalculated');
+					$new_status = 'uncalculated';
+					last;
 				} # end if
 			} # end foreach
+		} # end if
 		if ( sets::isin( 'uncalculated', \@statuses ) ) {
 			$new_status = 'uncalculated';
 		} elsif ( sets::isin( 'calculated', \@statuses ) ) { # This works because we have already checked for uncalculated
@@ -1618,7 +1618,7 @@ sub calliper {
 			if ( $$sig_specs{rdbTemplateType} eq '2PanelFold' or $$sig_specs{rdbTemplateType} eq '4PageFold' ) {
 				$pages = 2;
 			} elsif ( sets::isin( $$sig_specs{rdbTemplateType}, [  'NoFold', 'Portrait', 'Landscape','Square','Forms', '' ] ) ) {
-			} elsif ( sets::isin( $$sig_specs{rdbTemplateType}, [ 'PadsPortrait', 'PadsLandscape','PadsSquare' ] ) ) {
+			} elsif ( sets::isin( $$sig_specs{rdbTemplateType}, [ 'PadsPortrait', 'PadsLandscape','PadsSquare','Pads' ] ) ) {
 				$pages *= $$sig_specs{PageQuantity} if $$sig_specs{PageQuantity};
 			} elsif ( sets::isin( $$sig_specs{rdbTemplateType},['3PanelFold','3PanelZFold'] ) ) {
 				$pages = 3;

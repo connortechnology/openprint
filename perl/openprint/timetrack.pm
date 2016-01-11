@@ -134,7 +134,7 @@ sub edit {
 		} # end if
 	} elsif ( $param{func} eq 'Copy' ) {
 		$variable{Timetrack} = $variable{Timetrack}->copy();
-		$variable{error} .= $variable{Timetrack}->save();
+		#$variable{error} .= $variable{Timetrack}->save();
 	} elsif ( $param{func} eq 'Destroy' ) {
 		my $Timetrack = new openprint::Timetrack( $param{timetrack_id} );
 		$variable{error} .= $Timetrack->destroy();
@@ -145,6 +145,7 @@ sub edit {
 	} # end if
 	if ( (!$variable{Timetrack}->id()) ) {
 		$variable{Timetrack}->set(\%param); # Sets defaults
+		$variable{Timetrack}->user_id( $session{user_id} ) if ! $variable{Timetrack}->user_id();
 		if ( time - $session{'/timetrack/edit.html?lastupdated'} < ( 12*60*60 ) ) {
 			$variable{Timetrack}->company_id( $session{'/timetrack/edit.html?company_id'} ) if ! $variable{Timetrack}->company_id();
 			$variable{Timetrack}->starting( $session{'/timetrack/edit.html?ending'} ) if ! $variable{Timetrack}->starting();

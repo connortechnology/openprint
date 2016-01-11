@@ -6,6 +6,7 @@ my %menu = (
 		'/administrator/stock/import_export.html'	=>	'Import/Export',
 		'/administrator/production/pricelists.html'	=>	'Pricelists',
 		'/administrator/stock/filters.html'			=>	'Filters',
+		'/administrator/stock/stock.html'			=>	'',
 	},
 	Managerial	=> {
 							'/administrator/managerial/companies.html'	=>	'Companies',
@@ -51,11 +52,12 @@ foreach my $category ( sort keys %menu ) {
     my $submenu_html;
     my $on = 0;
     foreach my $url ( sort { $urls{$a} cmp $urls{$b} } keys %urls ) {
+        $on = 1 if $$variable{uri} eq $url;
+		next if ! $urls{$url};
         my $Page_Setting = openprint::Page_Setting::get( $url );
         if ( $Page_Setting->can_view() ) {
 			$submenu_html .= sprintf('<li><a href="%s">%s</a></li>', $url, $urls{$url} );
         } # end if
-        $on = 1 if $$variable{uri} eq $url;
     } # end foreach url
     if ( $submenu_html ) {
         $html .= join( $submenu_html,
