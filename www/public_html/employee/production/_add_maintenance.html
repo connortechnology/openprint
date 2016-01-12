@@ -1,38 +1,46 @@
 <form id="AddDocketForm" name="AddDocketForm" action="<?referer?>" method="post">
 	<input type="hidden" name="btnFunction" value="Add Docket" />
 	<fieldset><legend>Add Maintenance</legend>
-		<p><label>Comment</label>
+		<ul>
+		<li><label>Comment</label>
 			<textarea name="comment" rows="5"></textarea>
-		</p>
-		<p><label>Press</label>
+		</li>
+		<li><label>Press</label>
 			<select name="press_id">
 			
-		<? echo ( ssi::make_drop_down( [map { $_->id(), $_->name() } openprint::Equipment->find('category'=>'Printing','useinscheduling'=>1,'order'=>'lower(strname)') ] ) ) ?>
+		<? echo ( make_drop_down( [map { $_->id(), $_->name() } openprint::Equipment->find('category any'=>'Printing',useinscheduling=>1,order=>'lower(strname)') ] ) ) ?>
 			</select>
-		</p>
-		<p>
+		</li>
+		<li>
 			<label>Locked</label>
-			<input type="radio" id="locked1" name="locked" value="1" <? echo ( ssi::checked( 1 ); ) ?> onclick="$('StartTime').show();" />
-			<label class="radio" for="locked1">Yes</label>
-			<input type="radio" id="locked0" name="locked" value="0" onclick="$('StartTime').hide();" />
-			<label class="radio" for="locked0">No</label>
-		</p>
-		<p id="StartTime">
+			<? echo ( radio('lockeed', [ '1','Yes','0','No' ], 1, { onclick=>q`if(this.value=="1"){$('StartTime').show();}else{$('StartTime').hide();};` } ); ) ?>
+		</li>
+		<li id="StartTime">
 			<label>Start Time</label>
 			<span class="DateTimeSelector">
 			<? echo ( 
-				my $html = ssi::datetime_select( 'starttime', ( $$variable{'Job'}{'starttime'} ? $$variable{'Job'}{'starttime'} : ''), { 'onchange'=>q`set_rdb_value($('locked'), 1 );` } );
-				$html .= ssi::writeButton( $log, $dbh, 'Today', 't.gif', 'set_today( AddDocketForm.starttime_year, AddDocketForm.starttime_month, AddDocketForm.starttime_day, AddDocketForm.starttime_hour, AddDocketForm.starttime_minute );', '', 'T' ); 
+				my $html = datetime_select( 'starttime', ( $$variable{Job}{starttime} ? $$variable{Job}{starttime} : ''), { onchange=>q`set_rdb_value($('locked'), 1 );`, with_today=>1 } );
+				#$html .= button( 'Today', { onclick=>'set_today( AddDocketForm.starttime_year, AddDocketForm.starttime_month, AddDocketForm.starttime_day, AddDocketForm.starttime_hour, AddDocketForm.starttime_minute );', text=>'T', ' ); 
 				return $html;
 			) ?>
 			</span>
-		</p>
-		<p><label>Runtime</label>
-			<input type="text" name="runtime" value="" size="7" />
-		</p>
+		</li>
+		<li><label>Runtime</label>
+            <? echo (
+                my ( $h, $m, $s );
+## goes to 99 because it can be more than a day.
+                return join("\n",
+                    ssi::select( [ map { $_, $_ } map { sprintf('%.2d', $_ ) } ( 0 .. 99 ) ], sprintf('%.2d', $h ), { name=>'runtime_hours', onchange=>'update_runtime(this);' } ),
+                    ssi::select( [ map { $_, $_ } map { sprintf('%.2d', $_ ) } ( 0 .. 59 ) ], sprintf('%.2d', $m ), { name=>'runtime_minutes', onchange=>'update_runtime(this);' } ),
+                    ssi::select( [ map { $_, $_ } map { sprintf('%.2d', $_ ) } ( 0 .. 59 ) ], sprintf('%.2d', $s ), { name=>'runtime_seconds', onchange=>'update_runtime(this);' } ),
+                    input( type=>'text',readonly=>'readonly', name=>'runtime' ),
+                    );
+            ) ?>
+		</li>
+		</ul>
 		<p class="buttons">
-			<? echo ( ssi::writeButton( $log, $dbh, 'Submit', 'submit.gif', "\$('AddDocketForm').submit();", '', 'Submit' ); ) ?>
-			<? echo ( ssi::writeButton( $log, $dbh, 'Cancel', 'cancel.gif', 'contentWin.destroy();', '', 'Cancel' ); ) ?>
+			<? echo ( button( 'Submit', { onclick=> q`$('AddDocketForm').submit();` ); ) ?>
+			<? echo ( button( 'Cancel', { onclick=>'contentWin.destroy();' ); ) ?>
 		</p>
 	</fieldset>
 </form>
