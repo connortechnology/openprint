@@ -14,6 +14,7 @@ $serial= 'inventory_check_entries_id_seq';
 	ic_id		=>	'ic_id',
 	skid_id		=>	'skid_id',
 	rfidtag_id	=>	'rfidtag_id',
+	scanner_id	=>	'scanner_id',
 	created_on	=>	'created_on',
 	operator_id	=>	'operator_id',
 	quantity	=>	'quantity',
