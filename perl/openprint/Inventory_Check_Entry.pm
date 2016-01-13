@@ -6,7 +6,7 @@ require openprint::Location;
 
 use vars qw( $debug $table $serial %fields %transforms %defaults );
 
-$debug = 1;
+$debug = 0;
 $table = 'inventory_check_entries';
 $serial= 'inventory_check_entries_id_seq';
 %fields = (
