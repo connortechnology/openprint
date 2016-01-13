@@ -6,7 +6,7 @@ require openprint::Location;
 
 use vars qw( $debug $table $serial %fields %transforms %defaults );
 
-$debug = 1;
+$debug = 0;
 $table = 'inventory_check_entries';
 $serial= 'inventory_check_entries_id_seq';
 %fields = (
@@ -14,6 +14,7 @@ $serial= 'inventory_check_entries_id_seq';
 	ic_id		=>	'ic_id',
 	skid_id		=>	'skid_id',
 	rfidtag_id	=>	'rfidtag_id',
+	scanner_id	=>	'scanner_id',
 	created_on	=>	'created_on',
 	operator_id	=>	'operator_id',
 	quantity	=>	'quantity',
