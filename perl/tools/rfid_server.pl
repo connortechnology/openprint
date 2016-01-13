@@ -206,6 +206,24 @@ sub process_request {
 					if ( $_ = $Tag->save() ) {
 						$self->log(1, sprintf('%s : %s : error saving tag %s', $date, $ip_addr, $_ ));
 					} # end if
+					foreach my $IC ( openprint::Inventory_Check->find(
+								'started_on <=' => 'NOW()',
+								'ended_on >=' => 'NOW()' 
+								) ) {
+						if ( ! openprint::Inventory_Check_Entry->find_one(
+									ic_id=>$$IC{id},
+									rfidtag_id=>$Tag->id(),
+									scanner_id=>$Scanner->id(),
+									) ) {
+							my $ICE = new openprint::Inventory_Check_Entry();
+							$ICE->save({
+									ic_id=>$$IC{id},
+									rfidtag_id=>$Tag->id(),
+									location_id=>$Scanner->location_id(),
+									scanner_id=>$Scanner->id(),
+									});
+						} # end if
+					} # end foreach IC
 				} # end if
 			} elsif ( $Scanner->type() eq 'Fixed' ) {
 				if ( $Scanner->location_id() != $Tag->location_id() ) {
