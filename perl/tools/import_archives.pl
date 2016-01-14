@@ -76,9 +76,29 @@ $log->debug("Got tar.bz2 at $file" );
 					archive		=>	$archive,
 				});
 				$log->error($_) if $_;
+			} else {
+				$log->error("No docket found for $docket");
 			}
+        } elsif ( my ($docket) = $file =~ /^(\d+).+\.bkf.bz2$/ ) {
+$log->debug("Got bkf.bz2 at $file" );
+            next if ! $docket;
+            my $Project = openprint::Project->find_one( docket=>$docket );
+            if ( $Project ) {
+                next if openprint::File->find_one( project_id=>$Project->id(), filename=>$path.'/'.$file, archive=>$archive );
+
+                my $File = new openprint::File();
+                $_ = $File->save({
+                    project_id  =>  $Project->id(),
+                    filename    =>  $path.'/'.$file,
+                    archive     =>  $archive,
+                });
+                $log->error($_) if $_;
+			} else {
+				$log->error("No docket found for $docket");
+            }
+
 		} else {
-$log->debug("Unknown archive at $archive/$path/$file" );
+$log->debug("Unknown archive at $archive/$path/$file" ) if $path =~ /Group/;
 		} # end if
 	} # end foreach file
 } # end sub get_files
