@@ -121,6 +121,9 @@ sub edit {
 		} # end if
 		$variable{error} .= $Timetrack->save(\%param);
 		if ( ! $variable{error} ) {
+
+			# Keywords won't get saved when creating a timetrack, so have to save them manually
+			$Timetrack->keywords( $param{keywords} ) if ! $param{timetrack_id};
 			if ( $param{referrer_invoice_id} ) {
 				$_ = $param{referrer_invoice_id};
 				$variable{ExternalRedirect} = '/invoice/edit.html?invoice_id='.$_;
