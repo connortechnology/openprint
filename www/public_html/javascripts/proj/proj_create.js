@@ -15,12 +15,15 @@ function validate_data (form) {
 	var text = '';
 
 	var ptype = false;
-	for ( var index = 0; index < form.rdbProjectType.length; index += 1 ) {
-		if ( form.rdbProjectType[index].checked ) {
+	if ( form.rdbProjectType ) {
+		if ( get_value( form.rdbProjectType ) ) {
 			ptype = true;
-			break;
 		} // end if
-	} // end for
+	} else if ( form.project_type_id ) {
+		if ( get_value( form.project_type_id ) ) {
+			ptype = true;
+		} // end if
+	}
 	if ( ! ptype ) {
 		text += "Please select the type of project.\n";
 	} // end if
