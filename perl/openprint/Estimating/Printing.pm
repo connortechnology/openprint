@@ -912,6 +912,8 @@ sub get_Stocks {
 			$openprint::log->warn('no papers');
 			$$specs{alert} .= 'Unable to find any stocks matching your specifications.<br/>';
 			return @Papers;
+		} elsif ( DEBUG ) {
+			$openprint::log->debug("Got for papers: " . @Papers );
 		} # end if
 
 		# Load this here, so that later cloning will copy the prices as well.
@@ -2179,7 +2181,6 @@ sub get_overrides {
 sub calc {
 	my ( $log, $dbh, $variable, $project_index, $service_index, $specs ) = @_;
 
-$openprint::log->debug("AC " . $openprint::dbh->{AutoCommit} );
 	# Must clear these
 	%filtered_imposition_cache = ();
 	$master_time = gettimeofday();
