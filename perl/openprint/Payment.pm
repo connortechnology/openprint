@@ -52,7 +52,7 @@ $serial = 'payments_id_seq';
 sub save {
 	$_[0]->set( $_[1] ) if $_[1];
 	$_[0]->remaining(undef);
-    my $error = $self->SUPER::save( );
+    my $error = $_[0]->SUPER::save( );
 	if ( (! $error) and $_[0]{order_id} ) {
 		$_[0]->Order()->paid(undef);
 	} # end if
