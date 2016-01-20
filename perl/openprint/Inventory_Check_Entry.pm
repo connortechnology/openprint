@@ -81,6 +81,10 @@ sub RFIDTag {
     return $_[0]{RFIDTag};
 } # end sub RFIDTag
 
+sub Scanner {
+	return new openprint::RFIDScanner( $_[0]{scanner_id} );
+}
+
 sub rfidtag_id {
 	if ( @_ > 1 ) {
 		$_[0]{rfidtag_id} = $_[1];
@@ -128,6 +132,10 @@ sub check {
 	return 'No Skid.' if ! $_[0]->Skid()->id();
 	return 'Quantity not the same: Check has ' . $_[0]->quantity() . ' Skid has ' . $_[0]->Skid()->quantity() if $_[0]->quantity() != $_[0]->Skid()->quantity();
 	return '';
+}
+
+sub User {
+	return new openprint::User( $_[0]{operator_id} );
 }
 
 1;
