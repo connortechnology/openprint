@@ -287,7 +287,14 @@ sub neccessary {
 	my ( $Project, $Service ) = @_;
 
 	my $ServiceType = openprint::ServiceType->find_one( type=>'Folding' );
-	return 0 if ! ( $ServiceType and sets::isin( $ServiceType->id(), $Project->Type()->blocked_services() ) );
+	if ( ! $ServiceType ) {
+$openprint::log->error("NO Folding!");
+	}
+	my @blocked = $Project->Type()->blocked_services();
+	if ( ( ! $ServiceType ) or sets::isin( $ServiceType->id(), \@blocked ) ) {
+		$openprint::log->error("Folding blocked: $$ServiceType{id} blocked: @blocked");
+		return 0 ;
+	}
 	my $services = $Project->services( );
 
 	if ( $$services{NoBindery} ) {
