@@ -42,10 +42,13 @@ sub get_files {
     } # end if
 	foreach my $file ( @filenames ) {
 		next if $file =~ /^\./;
+
+		my $docket;
+
 		if ( -d $archive.'/'.$path.'/'.$file ) {
 			$log->debug("descending into $archive.'/'.$path.'/'.$file " );
 			get_files( $archive, $path.'/'.$file );
-		} elsif ( my ($docket) = $file =~ /^(\d+).+\.bkf$/ ) {
+		} elsif ( ($docket) = $file =~ /^(\d+).+\.bkf$/ ) {
 $log->debug("Got bkf at $file" );
 			next if ! $docket;
 			my $Project = openprint::Project->find_one( docket=>$docket );
@@ -62,7 +65,7 @@ $log->debug("Got bkf at $file" );
 			#} else {
 				#$log->error("No project found for docket $docket!");
 			} # end if Project
-		} elsif ( my ($docket) = $file =~ /^(\d+).+\.tar.bz2$/ ) {
+		} elsif ( ($docket) = $file =~ /^(\d+).+\.tar.bz2$/ ) {
 $log->debug("Got tar.bz2 at $file" );
 			next if ! $docket;
 			my $Project = openprint::Project->find_one( docket=>$docket );

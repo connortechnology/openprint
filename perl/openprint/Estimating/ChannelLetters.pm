@@ -27,11 +27,55 @@ my @variables = (
 	'can_finish',
 	'include_leds','led_colour','led_density','led_quantity','led_power_supply','led_install',
 
+	'txtWidth','txtHeight',
+
 	'OverridePrice1', 'OverridePrice2', 'OverridePrice3',
 	'Markup1', 'Markup2', 'Markup3',
 	'txtPrice1', 'txtPrice2', 'txtPrice3',
 	'txtUnitPrice1', 'txtUnitPrice2', 'txtUnitPrice3',
 	'txtQuantity1', 'txtQuantity2', 'txtQuantity3',
+	'alert', 
+	'hdnBreakdown1',
+	'hdnBreakdown2',
+	'hdnBreakdown3',
+
+);
+
+my %font_sizes = (
+	Helvetica	=>	{
+		9 => {
+			width	=>	9.1875,
+		},
+		12	=> {
+			width	=>	10.5,
+		},
+		15	=> {
+			width	=>	13.125,
+		},
+		18	=> {
+			width	=>	14.5,
+		},
+		24	=> {
+			width	=>	21,
+		},
+	},
+	'Times Bold'=>  {
+        9 => {
+           width   =>  8.75,
+        },
+        12  => {
+            width   =>  11.75,
+        },
+        15  => {
+            width   =>  14.5,
+        },
+        18  => {
+            width   =>  17.1875,
+        },
+        24  => {
+            width   =>  23,
+        },
+    },
 );
 
 sub variables {
@@ -102,6 +146,7 @@ sub calc {
 $openprint::log->debug("CHannelLetters:");
 
 	my $status = 'calculated';
+	$$specs{alert} = '';
 
 foreach my $k ( keys %$specs ) {
 $openprint::log->debug("$k => $$specs{$k}");
@@ -119,6 +164,26 @@ $openprint::log->debug("$k => $$specs{$k}");
 		$$specs{alert} .= 'Please enter the height of your upper-case letters.<br/>';
 		return $$specs{Status} = 'uncalculated';
 	} # end if
+	if ( ! $$specs{letter_font} ) {
+		$$specs{alert} .= 'Please select the font of your sign.<br/>';
+		return $$specs{Status} = 'uncalculated';
+	} # end if
+
+	my $LED_Material;
+	if ( $$specs{include_leds} eq 'Y' ) {
+		if ( ! sets::isin( $$specs{led_density}, [ 'high','medium','low' ] ) ) {
+			$$specs{alert} .= 'Please select the density of LEDs.<br/>';
+			return $$specs{Status} = 'uncalculated';
+		} # end if
+		$LED_Material = openprint::Material->find_one(name=>'LED');
+	} # end if
+	my $font_specs = $font_sizes{$$specs{letter_font}}{$$specs{letter_height}};
+	my $font_width = $$font_specs{width};
+	if ( ! $font_width ) {
+		$$specs{alert} .= 'Unable to determine font size.  Please call for pricing.<br/>';
+		return $$specs{Status} = 'uncalculated';
+	} # end if
+
 
 	my $makeReadyPrice = openprint::service::get_price( 'ChannelLettersMakeReady', undef, undef );
 	my $minimumCharge = openprint::service::get_price( 'ChannelLettersMinimumCharge', undef, undef );
@@ -131,6 +196,10 @@ $openprint::log->debug("$k => $$specs{$k}");
 
 	my $other_letters = $$specs{letters};
 	$other_letters =~ s/[^A-Za-z]//g;
+	my $num_letters = length( $$specs{letters} );
+
+	$$specs{txtHeight} = $$specs{letter_height};
+	$$specs{txtWidth} = $num_letters * $font_width;
 
 	my $CanMaterial = openprint::Material->find_one(name=>join('', 'ChannelLetterCan',@$specs{'letter_font','letter_size'} ) );
 	$CanMaterial = openprint::Material->find_one(name=>join('', 'ChannelLetterCan',@$specs{'letter_font'} ) ) if ! $CanMaterial;
@@ -138,7 +207,7 @@ $openprint::log->debug("$k => $$specs{$k}");
 	my $FaceMaterial = openprint::Material->find_one(name=>join('', 'ChannelLetterFace',@$specs{'letter_font','letter_size'} ) );
 	$FaceMaterial = openprint::Material->find_one(name=>join('', 'ChannelLetterFace',@$specs{'letter_font'} ) ) if ! $FaceMaterial;
 	$FaceMaterial = openprint::Material->find_one(name=>'ChannelLetterFace' ) if ! $CanMaterial;
-			my $num_letters = length( $$specs{letters} );
+
 
 	foreach my $qty_index ( $Project->quantity_indexes() ) {
 		$$specs{"txtQuantity$qty_index"} = int( $$specs{"txtQuantity$qty_index"} );
@@ -164,7 +233,7 @@ $openprint::log->debug("$k => $$specs{$k}");
 			my $CanPrice = $CanMaterial->get_Price( $num_letters * $qty );
 			if ( $CanPrice ) {
 				$$CanPrice{Total} = $$CanPrice{Price} * $num_letters * $qty;
-				$$specs{'hdnBreakdown'.$qty_index} .= sprintf('Can Price: %1$.2f%2$s * %4$d = %3$.2f', @$CanPrice{'Price','units','Total'}, $num_letters * $qty );
+				$$specs{'hdnBreakdown'.$qty_index} .= sprintf('Can Price: %1$.2f%2$s * %4$d = %3$.2f<br/>', @$CanPrice{'Price','units','Total'}, $num_letters * $qty );
 				$price += $$CanPrice{Total};
 			} else {
 				$$specs{'hdnBreakdown'.$qty_index} .= 'No price for Cans<br/>';
@@ -174,12 +243,91 @@ $openprint::log->debug("$k => $$specs{$k}");
 			my $FacePrice = $FaceMaterial->get_Price( $num_letters * $qty );
 			if ( $FacePrice ) {
 				$$FacePrice{Total} = $$FacePrice{Price} * $num_letters * $qty;
-				$$specs{'hdnBreakdown'.$qty_index} .= sprintf('Face Price: %1$.2f%2$s * %4$d = %3$.2f', @$FacePrice{'Price','units','Total'}, $num_letters * $qty );
+				$$specs{'hdnBreakdown'.$qty_index} .= sprintf('Face Price: %1$.2f%2$s * %4$d = %3$.2f<br/>', @$FacePrice{'Price','units','Total'}, $num_letters * $qty );
 				$price += $$FacePrice{Total};
 			} else {
 				$$specs{'hdnBreakdown'.$qty_index} .= 'No price for Face<br/>';
 			}
 		}
+
+		if ( $$specs{include_leds} eq 'Y' ) {
+			$$specs{'hdnBreakdown'.$qty_index} .= '<fieldset><legend>LED Pricing</legend>';
+			my $led_area = Math::Round::nearest(1,$$specs{letter_height} * $font_width * $num_letters ) / 2;
+			$$specs{'hdnBreakdown'.$qty_index} .= 'Number of letters; ' . $num_letters . '<br/>';
+			$$specs{'hdnBreakdown'.$qty_index} .= 'Letter area = ' . $font_width . 'x'.$$specs{letter_height} . ' / 2 = ' . $led_area . 'square inches<br/>';
+			if ( $$specs{led_density} eq 'high' ) {
+				$$specs{led_quantity} = POSIX::ceil( $led_area );
+			} elsif ( $$specs{led_density} eq 'medium' ) {
+				$$specs{led_quantity} = POSIX::ceil( $led_area / 4 );
+			} elsif ( $$specs{led_density} eq 'low' ) {
+				$$specs{led_quantity} = POSIX::ceil( $led_area / 9 );
+			} # end if include_leds
+			if ( $LED_Material ) {
+				my $Price = $LED_Material->get_Price( $$specs{led_quantity} );
+				if ( $$Price{units} eq 'per roll' ) {
+					my $length_feet = $LED_Material->Specification('Length');
+					if ( $$length_feet{units} eq 'inches' ) {
+$openprint::log->debug("adusting to feed" . $length_feet->to_string() );
+						$$length_feet{value} *= 12;
+						$$length_feet{units} = 'feet';
+					}
+					my $leds_per_foot = $LED_Material->Specification('leds per foot');
+					if ( $$length_feet{value} and $leds_per_foot and $$leds_per_foot{value} ) {
+						my $leds_per_roll = $$length_feet{value} * $$leds_per_foot{value};
+						$$specs{'hdnBreakdown'.$qty_index} .= 'LEDS per roll: ' . $$length_feet{value} .'*'. $$leds_per_foot{value} . '='.$leds_per_roll . '<br/>';
+						my $rolls = POSIX::ceil( $$specs{led_quantity} / $leds_per_roll );
+						$$Price{Total} = $$Price{Price} * $rolls;
+						$$specs{'hdnBreakdown'.$qty_index} .= sprintf('LED Price: %1$.2f%2$s * %4$d rolls = %3$.2f<br/>', @$Price{'Price','units','Total'}, $rolls );
+						$price += $$Price{Total};
+					} else {
+						$$specs{alert} .= 'Unable to calculate # of Leds<br/>';
+					$openprint::log->error("Unable to calculate on LEDS " . $Price->to_string() );
+					} # end if
+				} elsif ( $$Price{units} eq 'each' ) {
+					$$Price{Total} = $$Price{Price} * $$specs{led_quantity};
+					$$specs{'hdnBreakdown'.$qty_index} .= sprintf('LED Price: %1$.2f%2$s * %4$d rolls = %3$.2f<br/>', @$Price{'Price','units','Total'}, $$specs{led_quantity} );
+					$price += $$Price{Total};
+				} else {
+					$openprint::log->error("Unknown units on LEDS " . $Price->to_string() );
+				} # end if
+			} # end if
+			if ( $$specs{led_power_supply} eq 'Y' ) {
+				my $watts = $LED_Material->Specification('Watts');
+				if ( $watts and $$watts{value} ) {
+					if ( $$watts{units} eq 'per led' ) {
+						my $total_watts = $$specs{led_quantity} * $$watts{value};
+						$$specs{'hdnBreakdown'.$qty_index} .= sprintf('Power needed: %dwatts<br/>', $total_watts );
+
+						my $best_PS = undef;
+						foreach my $PS ( openprint::Material->find( category=>'LED Power Supplies' ) ) {
+							my $ps_watts = $PS->Specification('Watts');
+							if ( ! ( $ps_watts and $$ps_watts{value} ) ) {
+								$openprint::log->error("No watts for " . $PS->to_string() );
+								next;
+							} 
+							my $ps_quantity = $total_watts / $$ps_watts{value};
+							my $PS_Price = $PS->get_Price( $ps_quantity );
+							$$PS_Price{Total} = $$PS_Price{Price} * $ps_quantity;
+							if ( ( ! defined $best_PS ) or ( $$PS_Price{Total} < $$best_PS{price} ) ) {
+								$$best_PS{price} = $PS_Price;
+								$$best_PS{PS} = $PS;
+								$$best_PS{quantity} = $ps_quantity;
+							}
+						} # end foraech PS
+						if ( $best_PS ) {
+							my $PS_Price = $$best_PS{price};
+							$$specs{'hdnBreakdown'.$qty_index} .= sprintf('Power Supply:%5$s %1$.2f%2$s * %4$d = %3$.2f<br/>', @$PS_Price{'Price','units','Total'}, $$best_PS{quantity}, $$best_PS{PS}->name() );
+						} else {
+							$openprint::log->error("Unable to determine PS");
+						}
+					} 
+				} else {
+					$openprint::log->error("Unable to get watts units on LEDS " );
+				} 	
+			} # end if
+
+		$$specs{'hdnBreakdown'.$qty_index} .= '</fieldset>';	
+		} # end if include_leds
 
 		if ( $minimumCharge > 0 and $price < $minimumCharge ) {
 			$price = $minimumCharge;

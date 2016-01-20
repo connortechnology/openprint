@@ -342,7 +342,12 @@ sub category {
 			my $ProjectType = new openprint::ProjectType( $pt_id );
 			$variable{error} .= $ProjectType->save({ category_id=>$ProjectTypeCategory->id()});
 		} # end foreach pt_id
-		$variable{ExternalRedirect} = '/administrator/project_types/categories.html' if ! $variable{error};;
+		$variable{ExternalRedirect} = '/administrator/project_types/categories.html' if ! $variable{error};
+	} elsif ( $param{btnFunction} eq 'Delete' ) {
+		$variable{error} .= $ProjectTypeCategory->delete();
+		if ( ! $variable{error} ) {
+			$variable{ExternalRedirect} = '/administrator/project_types/categories.html';
+		}
 	} # end if
 } # end sub category
 

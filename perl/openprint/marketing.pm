@@ -139,6 +139,9 @@ sub survey_responses {
     } # end if
 } # end sub survey_responses
 
+sub _email_template_body {
+	my $Template = $variable{Template} = new openprint::EmailTemplate( $param{template_id}) ;
+}
 sub email_template {
 	require openprint::EmailTemplate;
 
@@ -151,6 +154,11 @@ sub email_template {
 		$Template->save( \%param );
 	} # end if
 	$variable{Template} = $Template;
+
+	# These are for template preview
+	$variable{User} = $openprint::User;
+	$variable{Campaign} = new openprint::EmailCampaign();
+	$variable{Email} = new openprint::Email();
 } # end sub email_campaign
 
 sub email_templates {

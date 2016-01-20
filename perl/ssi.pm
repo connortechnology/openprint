@@ -58,6 +58,9 @@ sub slurp_content {
 	} else {
 		$content = File::Slurp::read_file($file,err_mode => 'carp' );
 	} # end if
+	if ( ! $content ) {
+		$log->warn( "No content found for $file" );
+	}
 	return $content;
 } # end sub slurp_content
 

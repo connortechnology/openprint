@@ -120,7 +120,7 @@ sub id_string {
 	my $Price = $_[0];
 	my $price_desc = '';
 	if ( ! ( $Price->min() or $Price->max() ) ) {
-		'all quantities';
+		$price_desc .= 'all quantities';
 	} else {
 		if ( $Price->min() ) {
 			$price_desc .= 1*$Price->min() . ' ';
