@@ -56,7 +56,7 @@ foreach my $param ( 'db_name','db_user','db_pass' ) {
 } # end foreach required-param
 
 $log = logger->new( {'file'=>$config{'log_file'}, 'level'=>$config{'log_level'}} );
-$log->info("Opening SQL connection");
+$log->info("Opening SQL connection $config{db_user} $config{db_name} on $config{db_host}");
 $dbh = sql::open_sql( $log,
 	host		=> $config{db_host},
 	database	=> $config{db_name},
@@ -160,10 +160,10 @@ while (my $buf = <STDIN>) {
 		$log->debug("Done updating shorewall.") if $config{debug};
 	} # end if do update
 
-print ( $buf);
+print ( $buf );
 	#my ($port, $ipaddr) = IO::Socket::sockaddr_in($sock->peername);
 	#my $hn = gethostbyaddr($ipaddr, Socket::AF_INET);
-	#$log->debug($buf) if $config{debug};
+	$log->debug($buf) if $config{debug};
 	# Without the multiline flag, will do one line at a time, nice.
 	my ( $source, $remote_logname, $user, $when, $request, $server_response, $bytes, $referrer, $agent ) = $buf =~ /^(\S+) (\S+) (\S+) \[([^\]]+)\] "([^"]+)" (\d+) (\d+) "([^"]+)" "([^"]+)"$/;
 	if ( ! $source ) {
@@ -204,6 +204,7 @@ print ( $buf);
 		next;
 	} # end if
 	if ( $server_response == 404 ) {
+		$log->debug("GOt 404");
 
 		if ( ! $host_counts{$ip} ) {
 			my $Interface = openprint::Host_Interface->find_one(ip=>$ip);

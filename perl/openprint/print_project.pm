@@ -632,7 +632,8 @@ sub create_edit_process {
 	$Project->reprint_reason( $openprint::param{'reprint_reason'} );
 
 	# This will likely never happen, because the act of cilcking on the different project type changes it.
-	my $ProjectType = openprint::ProjectType->find_one( name => $param{rdbProjectType} );
+	my $ProjectType = openprint::ProjectType->find_one( name => $param{rdbProjectType} ) if $param{rdbProjectType};
+	$ProjectType = openprint::ProjectType->find_one( id => $param{project_type_id} ) if $param{project_type_id};
 	my $OldProjectType = $Project->Type();
 # Handle ProjectType
 	if ( $OldProjectType->id() != $ProjectType->id() ) {

@@ -198,18 +198,19 @@ sub auto_calculate {
 
 	my $alert;
 	my $specs;
+	my @statuses;
 
 	my @signature_indices = $Project->signatures();
 	if ( ! @signature_indices ) {
 		$openprint::log->warn("service::auto_calculate with no signatures");
 		#return;
-	} # end if
-
-	# If the printing services aren't complete, then there is no sense continuing
-	my @statuses = sql::execute( $openprint::log, $openprint::dbh, q{SELECT DISTINCT strStatus FROM tbl_Project_Contents WHERE lngProjectIndex=? AND lngServiceIndex IN (}.join(',', @signature_indices).q{)}, $$Project{'id'} );
-	if ( sets::isin( 'uncalculated', \@statuses ) ) {
-		$openprint::log->warn("service::auto_calculate with uncalcaulted signatures");
-		return;
+	} else {
+		# If the printing services aren't complete, then there is no sense continuing
+		my @statuses = sql::execute( $openprint::log, $openprint::dbh, q{SELECT DISTINCT strStatus FROM tbl_Project_Contents WHERE lngProjectIndex=? AND lngServiceIndex IN (}.join(',', @signature_indices).q{)}, $$Project{'id'} );
+		if ( sets::isin( 'uncalculated', \@statuses ) ) {
+			$openprint::log->warn("service::auto_calculate with uncalcaulted signatures");
+			return;
+		} # end if
 	} # end if
 	my $services = $Project->services();
 
@@ -244,7 +245,7 @@ sub auto_calculate {
 		} # end if
 	} # end if
 
-require openprint::Estimating::PerfectBound;
+	require openprint::Estimating::PerfectBound;
 	if ( openprint::Estimating::PerfectBound::neccessary( $Project ) ) {
 		if ( ! $$services{'PerfectBound'} ) {
 			$_ = $Project->add_service( 'PerfectBound' );
@@ -256,8 +257,6 @@ require openprint::Estimating::PerfectBound;
 		} # end while
 		delete $$services{'PerfectBound'};
 	} # end if
-
-
 			
 	require openprint::Estimating::Stitching;
 	if ( openprint::Estimating::Stitching::neccessary( $Project ) ) {

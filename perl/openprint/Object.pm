@@ -1286,7 +1286,7 @@ sub Keywords {
 
 sub keywords {
 	my $object_type = ref $_[0];
-	if ( @_ > 1 and ( $_[1] ne $_[0]->keywords() ) ) {
+	if ( @_ > 1 and $_[0]{id} and ( $_[1] ne $_[0]->keywords() ) ) {
 		my @OKs = openprint::Object_Keyword->find( object_type=>$object_type, object_id=>$_[0]{id} );
 		my %keywords = map { $_->Keyword()->word(), $_ } @OKs;
 		my @new_keywords = split(/\s/, $_[1]);

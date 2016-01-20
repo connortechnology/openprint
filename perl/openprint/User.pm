@@ -502,10 +502,10 @@ sub last_logged_in {
 sub AUTOLOAD {
 	my $name = $AUTOLOAD;
 	$name =~ s/.*://;
-#$openprint::log->debug("AUTOLOAD $name");
+$openprint::log->debug("AUTOLOAD $name") if $debug;
 	if ( $fields{$name} ) {
 		if ( @_ > 1 ) {
-#$openprint::log->debug("Autoload $type $name $_[0]");
+$openprint::log->debug("Autoload User $name $_[0]") if $debug;
 			return $_[0]{$name} = $_[1];
 		} else {
 			return $_[0]{$name};
@@ -513,12 +513,13 @@ sub AUTOLOAD {
 	} else {
 		my $Profile = $_[0]->Profile();
 		if ( exists $$Profile{fields}{$name} ) {
+			$openprint::log->warn("PRofile field in User::AUTOLOAD $name") if $debug;
 			if ( @_ > 1 ) {
 				$$Profile{fields}{$name} = $_[1];
 			} # end if
 			return $$Profile{fields}{$name};
-		#} else {
-			#$openprint::log->warn("Unknown field in User::AUTOLOAD $name");
+		} else {
+			$openprint::log->warn("Unknown field in User::AUTOLOAD $name");
 		} # end if
 	} # end if
 } # end sub AUTOLOAD

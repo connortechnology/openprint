@@ -23,6 +23,7 @@ require POSIX;
 require Math::Round;
 require openprint::Project;
 require openprint::service;
+require openprint::ServiceType;
 require openprint::Estimating::Perforating;
 
 use vars qw( @folds %fold_types );
@@ -283,9 +284,10 @@ sub signature_needs {
 
 # A function that is smart enough to return true if the project needs folding, and false if it doesn't.
 sub neccessary {
-	my ( $Project ) = @_;
+	my ( $Project, $Service ) = @_;
 
-	return 0 if $Project->Type()->name() eq 'Banners';
+	my $ServiceType = openprint::ServiceType->find_one( type=>'Folding' );
+	return 0 if ! ( $ServiceType and sets::isin( $ServiceType->id(), $Project->Type()->blocked_services() ) );
 	my $services = $Project->services( );
 
 	if ( $$services{NoBindery} ) {
