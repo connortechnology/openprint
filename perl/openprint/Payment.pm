@@ -52,8 +52,12 @@ $serial = 'payments_id_seq';
 sub save {
 	$_[0]->set( $_[1] ) if $_[1];
 	$_[0]->remaining(undef);
-    return $_[0]->SUPER::save();
-}
+    my $error = $self->SUPER::save( );
+	if ( (! $error) and $_[0]{order_id} ) {
+		$_[0]->Order()->paid(undef);
+	} # end if
+	return $error;
+} # end sub save
 
 sub destroy {
 	my $self = shift;
@@ -130,14 +134,6 @@ sub send_receipt {
 	
 } # end sub send_receipt
 
-sub save {
-    my ( $self, $data ) = @_;
-    my $error = $self->SUPER::save( $data );
-	if ( (! $error) and $$self{order_id} ) {
-		$self->Order()->paid(undef);
-	} # end if
-	return $error;
-} # end sub save
 
 sub Invoices {
 	if ( ! exists $_[0]{Invoices} ) {
