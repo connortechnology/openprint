@@ -74,12 +74,12 @@
 			</li>
 			<li class="required"> 
 				<label for="phone">Phone</label>
-				<input type="tel" id="phone" name="phone" value="<? hecho ( $$variable{User}->phone() ) ?>" > x
+				<input type="tel" class="phone" id="phone" name="phone" value="<? hecho ( $$variable{User}->phone() ) ?>" > x
 				<input type="tel" id="extension" name="extension" value="<? hecho ( $$variable{User}->extension() ) ?>" />
 			</li>
 			<li> 
 				<label for="mobile">Mobile</label>
-				<input type="tel" id="mobile" name="mobile" value="<? hecho ( $$variable{User}->mobile() ) ?>" />
+				<input type="tel" class="phone" id="mobile" name="mobile" value="<? hecho ( $$variable{User}->mobile() ) ?>" />
 			</li>
 			<li> 
 				<label for="sms">SMS (email)</label>
@@ -87,7 +87,7 @@
 			</li>
 			<li> 
 				<label for="fax">Fax</label>
-				<input type="tel" id="fax" name="fax" value="<? hecho ( $$variable{User}->fax() ) ?>" />
+				<input type="tel" class="phone" id="fax" name="fax" value="<? hecho ( $$variable{User}->fax() ) ?>" />
 			</li>
 			<li> 
 				<label>Mailing List</label>
@@ -132,7 +132,7 @@
 				</li>
 				<li class="required"> 
 					<label for="password">Password</label>
-					<input type="password" name="password" id="password" onkeyup="updateStrength(this.value);check_passwords(this.form.password, this);"/>
+					<input type="<?echo($session{user_type} eq 'A' ? 'text' : 'password' )?>" name="password" id="password" onkeyup="updateStrength(this.value);check_passwords(this.form.password, this);"/>
 					<span id="psContainer"><span id="psStrength"></span></span>
 				</li>
 				<li class="required"> 
