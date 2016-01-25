@@ -877,7 +877,7 @@ sub get_price {
 				$servicePrice{Total} = $servicePrice{Price} * $qty;
 				$price{Service} += $servicePrice{Total};
 			} else {
-				$openprint::log->debug("Unknown Unit Type: ($servicePrice{units}) for service $$ServiceType{name} on $$Equipment{name}");
+				$openprint::log->debug("880: Unknown Unit Type: ($servicePrice{units}) for service $$ServiceType{name} on $$Equipment{strid} $$Equipment{name}");
 			} # end if
 
 # The minus 1 is because the result of each pass takes up a pocket
@@ -952,7 +952,7 @@ sub get_price {
 				$servicePrice{Total} = $servicePrice{Price} * $runtime;
 				$price{Service} += $servicePrice{Total}
 			} else {
-				$openprint::log->debug("Unknown Unit Type: $servicePrice{units} for $$ServiceType{name} range($neededPockets) equipment(".$Equipment->strid().")");
+				$openprint::log->debug("955: Unknown Unit Type: $servicePrice{units} for $$ServiceType{name} range($neededPockets) equipment(".$Equipment->strid().")");
 			} # end if
 			
 			my $ExactFitMakeReady = $MakeReadyService->get_Price( 1, $Equipment );
