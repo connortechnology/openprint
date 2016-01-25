@@ -113,17 +113,15 @@ sub save {
 	$self->set( $param );
 
 	my $ac = sql::start_transaction( $openprint::dbh );
+$openprint::log->debug("PurchaseOrder::Save AC: $ac");
 	$dbh->do( "LOCK TABLE $openprint::PurchaseOrder_Tax::table IN EXCLUSIVE MODE" ) or $log->error( DBI->errstr );
 	# force recalculation
 	$self->subtotal(undef);
-$log->debug("After recalc, subtoatal is: $$self{subtotal}");
 	foreach my $Tax ( $self->Taxes(1) ) {
 		$Tax->PurchaseOrder( $self );
 		$Tax->amount(undef);
-$log->debug("After recalc, Tax $$Tax{name} is: $$Tax{amount}");
 	} # end foreach Tax
 	$self->total(undef);
-$log->debug("After recalc, toatal is: $$self{total}");
 	if ( ! $$self{currency_id} ) {
 		my $Currency = openprint::Currency::get_current();
 		$$self{currency_id} = $Currency->id() if $Currency;

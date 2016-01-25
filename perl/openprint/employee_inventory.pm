@@ -457,32 +457,28 @@ sub paper_details {
 			my $option_lc = lc $option;
 			my $option_id = $option_lc.'_id';
 			if ( $param{'txt'.$option} ) {
-				$Paper->$option_lc( $param{'txt'.$option} );
+				$param{$option_lc} = $param{'txt'.$option};
+				delete $param{'txt'.$option};
 			} elsif ( $param{$option} ) {
-				$Paper->$option_id( $param{$option} );
+				$param{$option_id} = $param{$option};
+				delete $param{$option};
 			} # end if
 		} # end foreach
+
+		my @changes = $Paper->changes( \%param );
+		$Paper->set( \%param );
 			
-		$Paper->type( $param{type} );
 		if ( $param{type} eq 'Roll' ) {
-			$Paper->width( $param{width} );
 			$Paper->height( undef );
-		} else { #Sheet
-			$Paper->width( $param{width} );
-			$Paper->height( $param{height} );
 		} # end if
 		$Paper->mweight( $param{mweight} ) if $param{mweight};
 		$Paper->basis_mweight( $param{basis_weight} ) if exists $param{basis_weight};
 $openprint::log->debug("Basis:: " . $Paper->basis_mweight() );
-		$Paper->basis_width( $param{basis_width} ) if exists $param{basis_width};
-		$Paper->basis_height( $param{basis_height} ) if exists $param{basis_height};
 		if ( exists $param{manufacturers_name} ) {
 			s/^\s+//, s/\s+$//, s/\s+/ /g for $param{manufacturers_name};
 			$Paper->manufacturers_name( $param{manufacturers_name} );
 		} # end if
-		$Paper->gsm( $param{gsm} ) if $param{gsm};
 		$Paper->calliper( $param{txtCalliper} );
-		$Paper->fsc_code( $param{fsc_code} );
 		if ( ! $param{paper_id} ) {
 			my @papers = openprint::Paper->find(
 					( $param{Owner} ? ( 'owner_id'	=>	$param{Owner} ) : () ),
@@ -509,6 +505,14 @@ $openprint::log->debug("Basis:: " . $Paper->basis_mweight() );
 		} # end if
 		if ( ! ( $variable{error} .= $Paper->save() ) ) {
 			$variable{information} .= 'Paper successfully saved.<br/>';
+			my $PI = new openprint::PaperInventory();
+			$PI->save({
+					paper_id    =>  $$Paper{id},
+					user_id     =>  $openprint::session{user_id},
+					poindex     =>  undef,
+					instock     =>  $Paper->in_stock(),
+					comment     =>  join(', ', @changes),
+					});
 		} # end if
 	} elsif ( $param{btnFunction} eq 'Delete' ) {
 		if ( ! ( $variable{error} .= $Paper->delete() ) ) {
@@ -2633,6 +2637,9 @@ sub check {
 			($param{ended_on} ? ( ended_on	=>	$param{ended_on} ) : () ),
 			contains	=>	 join(',', ref $param{contains} eq 'ARRAY' ? @{$param{contains}} : $param{contains} ),
 		});
+		if ( ! $variable{error} ) {
+			$variable{ExternalRedirect} = '/employee/inventory/check.html?check_id='.$$Check{id};
+		} # end if
 	} elsif ( $param{action} eq 'Delete Duplicates' ) {
 		my %skid_ids;
 		my %rfidtag_ids;

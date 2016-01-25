@@ -33,7 +33,7 @@ function load_entries() {
 						#$html .= button( 'Destroy', { onclick=>"f1.elements['action'].value='Destroy';f1.submit();" } );
 						#$html .= button( 'Undelete', { onclick=>"f1.elements['action'].value='Undelete';f1.submit();" } );
 					#} else {
-						$html .= button( 'delete', { onclick=>"if(confirm('You should never do this. You should just check out the contents of the skid.  Are you sure?')){f1.action='skids.html?skid_id=$$variable{Check}{id}';f1.elements['action'].value='Delete';f1.submit();}", text=>'Delete' } );
+						$html .= button( 'delete', { onclick=>"f1.elements['action'].value='Delete';f1.submit();", text=>'Delete' } );
 					#} # end if
 					$html .= input( type=>'file', name=>'import' );
 					$html .= button( 'Import', { onclick=>q`f1.elements['action'].value='Import';f1.submit();` } );
@@ -51,10 +51,14 @@ function load_entries() {
 			<li><label>Has Quantity?</label><?echo(radio('has_quantity', ['1','Yes','0','No','','Both'], $session{$r->uri().'?has_quantity'}, { onclick=>'load_entries();' } );)?></li>
 		</ul>
 	</fieldset>
-	<div id="Entries"><? echo ( include('_check_entries.html') ) ?></div>
+	<div id="Entries"><?include('_check_entries.html') ?></div>
 </fieldset>
-<fieldset><legend>System Contents not in Check</legend>
-	<div id="SystemContents"><?include(_check_system_contents.html)?></div>
+<fieldset><legend onclick="toggleContent( 'SystemContents', '/employee/inventory/_check_system_contents.html', new Array('ic_id',<?echo($$variable{Check}->id())?>) );">System Contents not in Check <span class="unprintable"> - click to hide/show</span></legend>
+	<div id="SystemContents">
+<?if($session{$r->uri().'?show_system_contents'})?>
+<?include(_check_system_contents.html)?>
+<?endif($session{$r->uri().'?show_system_contents'})?>
+</div>
 </fieldset>
 <? endif ( $$variable{Check}{id} ) ?>
 </form>

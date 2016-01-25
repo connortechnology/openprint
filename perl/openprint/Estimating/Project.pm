@@ -643,11 +643,7 @@ $log->debug("Vars for $$ProjectType{type} : @variables");
 			} # end foreach proof_index
 		} # end foreach signature
 
-	} # end if
-
-	if ( my $S = openprint::ServiceType->find_one('name'=>'Paper') ) {
-		push @{$$services{'Paper'}}, $Project->add_service( $S ) if ! ( $$services{'Paper'} and @{$$services{'Paper'}} );
-	} # end if
+	} # end if exists rpoof_type
 
 	if ( openprint::Estimating::Folding::neccessary( $Project ) ) {
 		push @{$$services{'Folding'}}, $Project->add_service( 'Folding' ) if ! $$services{'Folding'};
@@ -734,7 +730,11 @@ $log->debug("Vars for $$ProjectType{type} : @variables");
 	} # end if Padding
 
 # Handle cartons
-	push @{$$services{'PlainCartons'}}, $Project->add_service( 'PlainCartons' ) if ! $$services{'PlainCartons'};
+    my $ServiceType = openprint::ServiceType->find_one( type=>'PlainCartons' );
+    if ( $ServiceType and sets::isin( $ServiceType->id(), $Project->Type()->blocked_services() ) ) {
+		push @{$$services{'PlainCartons'}}, $Project->add_service( 'PlainCartons' ) if ! $$services{'PlainCartons'};
+	} # end if
+
 	if ( $$specs{'UPSShipping'} eq 'Y' ) {
 		push @{$$services{'UPS'}}, $Project->add_service( 'UPS' ) if ! $$services{'UPS'};
 		foreach my $sid ( @{$$services{'UPS'}} ) {

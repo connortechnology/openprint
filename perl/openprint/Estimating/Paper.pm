@@ -110,6 +110,9 @@ sub signature_needs {
 sub neccessary {
 	my ( $Project ) = @_;
 
+    my $ServiceType = openprint::ServiceType->find_one( type=>'Paper' );
+    return 0 if ( ! $ServiceType ) or sets::isin( $ServiceType->id(), $Project->Type()->blocked_services() );
+
 	my $services = $Project->services();
 	return 0 if $$services{'NoPrinting'};
 
