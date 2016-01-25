@@ -1143,7 +1143,7 @@ $openprint::log->debug("No Fold") if DEBUG;
 						# If we get here, then we couldn't find the fold
 						if ( $set_index < @All_Impositions-1 ) {
 							# if we aren't the last set, then do nothing because we assume that this set has already been cut down.
-$openprint::log->debug("$set_index < " . ( @All_Impositions-1 ) );
+$openprint::log->debug("Couldnt find fold, set_index:$set_index < all_impositions: " . ( @All_Impositions-1 ) ) if DEBUG;
 						} elsif ( $Imposition->imposition() > 1 ) {
 							my @new_impositions = @$Set_Of_Impositions;
 							splice @new_impositions, $imp_index, 1, cut_imposition( $Imposition );
