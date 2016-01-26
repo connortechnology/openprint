@@ -28,6 +28,7 @@ use threads;
 use constant DEBUG => 0;
 use constant DEBUG_PLATES => 0;
 use constant DEBUG_VERSIONS => 0;
+use constant DEBUG_PRESSES => 0;
 use constant DEBUG_FILTERING => 0;
 use constant DEBUG_INITIAL_FILTERING => 0;
 use constant DEBUG_AFTER_FILTERING => 0;
@@ -45,6 +46,10 @@ my %special_colours;
 my %folding_cache;
 my %Papers;
 my %Presses;
+sub load_presses {
+%Presses = map { $$_{strid}, $_ } openprint::Equipment->find( 'category any'=>'Printing', 'useinestimating'=>1 );
+}
+
 my %Services;
 my %Materials;
 
@@ -2592,31 +2597,7 @@ $openprint::log->debug(Data::Dumper::Dumper( \%Overrides ) );
 		my %impositions = get_impositions( $Project, $specs, $project, $qty, $qty_index, \@possible_presses, \@Papers, \%Overrides );
 #$openprint::log->debug("after get_impositions: " . ( sprintf('%.4f', tv_interval( [$master_time])*1000) ) .' usecs' );
 
-		my $SpreadLayout = 0;
-		if ( $Project->Type()->name() eq 'ScratchPads' ) {
-			$SpreadLayout = 0;
-		} elsif ( $$specs{txtSignatureType} ) {
-			if ( ! $$project{txtSpreadSize} ) {
-				$log->error("No spread size in calculate_impositions.");
-				$$project{txtSpreadSize} = 4;
-			} # end if
-			if ( $$specs{'chkOverridePageQuantity'.$qty_index} eq 'Y' ) {
-				$SpreadLayout = int( $$specs{'PageQuantity'.$qty_index} / $$project{txtSpreadSize} );
-				$log->debug("Calcing SpreadLayout as overriden upq: $$specs{'PageQuantity'.$qty_index} / spreadsize:$$project{txtSpreadSize} = layout$SpreadLayout") if DEBUG;
-			} elsif ( $$project{ProjectSpecs}{"PageQuantity-$$specs{Group}"} and ( $$project{ProjectSpecs}{"PageQuantity-$$specs{Group}"} <= $$specs{'txtUnspecifiedPageQuantity'.$qty_index} ) ) {
-				$SpreadLayout = int( $$project{ProjectSpecs}{"PageQuantity-$$specs{Group}"} / $$project{txtSpreadSize} );
-				$log->debug("Calcing SpreadLayout as overriden upq: ".$$project{ProjectSpecs}{"PageQuantity-$$specs{Group}"}." / spreadsize:$$project{txtSpreadSize} = layout$SpreadLayout");
-			} else {
-				$SpreadLayout = int( $$specs{'txtUnspecifiedPageQuantity'.$qty_index} / $$project{txtSpreadSize} );
-				$log->debug("Calcing SpreadLayout as upq: $$specs{'txtUnspecifiedPageQuantity'.$qty_index} / spreadsize:$$project{txtSpreadSize} = layout$SpreadLayout") if DEBUG_FILTERING;
-			} # end if
-		} # end if
-		if ( $SpreadLayout > 1 ) {
-			# ecause convert will consider all smaller spreadlayouts as well, we really only need to do this once, and can simply filter out any that are larger than we need.
-			foreach my $press ( keys %impositions ) {
-				$impositions{$press} = [ openprint::imposition::convert_impositions( $SpreadLayout, $$project{txtSpreadSize}, $impositions{$press} ) ];
-			} # end foreach press
-		} # end if spreadylayout
+		convert_impositions( $Project, $project, $specs, $qty_index, \%impositions );
 		
 		if ( ! values %impositions ) {
 			$$specs{alert} .= 'There were no possible impositions for your specifications.<br/>';
@@ -3117,6 +3098,8 @@ $openprint::log->debug("Needed pages: $needed_pages") if DEBUG;
 	}
 	my @results;
 
+	my %grain_direction_imps;
+
 	foreach my $imp ( @impositions ) {
 		my $Paper = $imp->Paper();
 		if ( $$project{ProjectSpecs}{"ddmRunStyle-$$sig_specs{Group}"} and ( $$project{ProjectSpecs}{"ddmRunStyle-$$sig_specs{Group}"} ne $$imp{runstyle} ) ) {
@@ -3185,11 +3168,13 @@ $openprint::log->debug("Needed pages: $needed_pages") if DEBUG;
 				$imp->display("Grain needs	" . $$sig_specs{'rdbGrainDirection'.$qty_index} ) if DEBUG_FILTERING;
 				next;
 			} # end if
-		} elsif ( ( $$sig_specs{'MatchGrain'.$qty_index} eq 'Y' ) and $$sig_specs{PreviousGrainDirection} and ( $imp->grain_direction() ne $$sig_specs{PreviousGrainDirection} ) ) {
-			$imp->display("PreviousGrainDirection: $$sig_specs{PreviousGrainDirection} ne " . $imp->grain_direction() ) if DEBUG_FILTERING;
-			next;
+		} elsif ( 
+$$sig_specs{PreviousGrainDirection} and ( $imp->grain_direction() ne $$sig_specs{PreviousGrainDirection} ) ) {
+			if ( ( $$sig_specs{'MatchGrain'.$qty_index} eq 'Y' ) or ( $grain_direction_imps{join(',',$imp->imposition(),$imp->columns(),$imp->runstyle())} ) ) {
+				$imp->display("PreviousGrainDirection: $$sig_specs{PreviousGrainDirection} ne " . $imp->grain_direction() ) if DEBUG_FILTERING;
+				next;
+			}
 		} # end if
-
 
 		if ( $needed_pages > 0 ) {
 			if ( $$sig_specs{PreviousImposition} and ( $$sig_specs{PreviousImposition} > $$imp{imposition} ) ) {
@@ -3211,6 +3196,7 @@ $openprint::log->debug("Needed pages: $needed_pages") if DEBUG;
 
 		} # end if needed_pages
 		push @results, $imp;
+		$grain_direction_imps{join(',',$imp->imposition(),$imp->columns(),$imp->runstyle())} = $imp;
 		$imp->display('Good') if DEBUG_FILTERING;
 	} # end foreach imp
 
@@ -3769,7 +3755,7 @@ $I->display("Bumping A paper_factor $paper_factor impo factor: $impo_factor ") i
 	@impositions = map {@{$_}} values %imps;
 
 
-	$log->debug("Press Impositions after filtering: " . @impositions . sprintf('%.4f', tv_interval( [$master_time])*1000) ) if DEBUG_FILTERING;
+	$log->debug("Press Impositions after filtering: " . @impositions . sprintf(' %.4f', tv_interval( [$master_time])*1000) ) if DEBUG_FILTERING;
 	if ( $$sig_specs{versions} > 1 and @impositions < 30 ) {
 		$openprint::log->debug("Calling do_versions, # of imps: " . @impositions ) if DEBUG_VERSIONS;
 		@impositions = openprint::imposition::do_versions( $versions, \@impositions );
@@ -3872,7 +3858,7 @@ sub get_project_price {
 	if ( DEBUG or DEBUG_AFTER_FILTERING ) {
 		$openprint::log->debug("@ of impositions: " . @Is );
 		foreach my $I ( @Is ) {
-			$I->display( "Before calculation:" . @Is );
+			$I->display( "Before calculation: depth: $recursion_depth # of sigs: " . @Is );
 		} # end while
 	}
 #$openprint::log->debug("calculated_impositions: $$Press{strid} " . ( sprintf('%.4f', tv_interval( [$time])*1000) ) .' usecs' );
@@ -4209,7 +4195,7 @@ $openprint::log->warn("Override subsig values $$imp{pages}pg $$price{upq} upq");
 #$imp->display("Recursing need $$price{upq} more pages actually");
 # Not identical, so clear this so we get charged setups, etc
 								$$new_specs{'PreviousForms'.$qty_index} = 0;
-#$openprint::log->debug("Doing full calc when UPQ:$upq >= Pages:" . $$imp{pages} . ' PageQuantity:' . $$new_specs{'PageQuantity'.$qty_index} ) if $upq >= $$imp{pages} or 0;
+#$openprint::log->debug("Doing full calc when UPQ: >= Pages:" . $$imp{pages} . ' PageQuantity:' . $$new_specs{'PageQuantity'.$qty_index} ) if $upq >= $$imp{pages} or 0;
 
 								$$new_specs{PrintingTypes} = [ $Press->specification('Printing Type') ];
 								$$new_specs{PreviousStockType} = $$Paper{type};
@@ -4578,7 +4564,7 @@ $openprint::log->debug("Sheet No supplied wight: $supplied_sheets $paper_string 
 		#if ( ($$services{LoopStitching} or $$services{SaddleStitching}) ) {
 				if ( $$project{HasStitching} and ($$sig_specs{txtSignatureType} ne 'Cover Pages') ) {
 					my $results;
-					my $starttime = gettimeofday() if DEBUG;
+					my $starttime = [gettimeofday()] if DEBUG;
 
 					$openprint::log->debug("Stitching::signature_calc: recursion_depth; $recursion_depth do_final_pricing: $do_final_pricing total imps: " . @total_impositions) if DEBUG;
 					$results = openprint::Estimating::Stitching::signature_calc( $Project, @$project{'HasStitching','StitchingSpecs'}, $qty_index, \@total_impositions, $project );
@@ -4600,7 +4586,7 @@ $openprint::log->debug("Sheet No supplied wight: $supplied_sheets $paper_string 
 				#$stitching_cache{scalar @all_impositions} = $results;
 						$openprint::log->debug("After Stitching $$price{'Comparison Cost'} $$price{'Stitching Cost'} $$results{Breakdown}") if DEBUG;
 					} # end if
-					$openprint::log->debug( 'Stitching Calc: ' . sprintf('%.4f', tv_interval( [$starttime])*1000) ) if DEBUG;
+					$openprint::log->debug( 'Stitching Calc: ' . sprintf('%.4f', tv_interval($starttime)*1000) . ' msecs' ) if DEBUG;
 
 				} elsif ( $$services{PerfectBound} and $$sig_specs{txtSignatureType} ne 'Cover Pages') {
 					my $results = openprint::Estimating::PerfectBound::signature_calc( $Project, $$project{HasPerfectBound}, $$project{PerfectBoundSpecs}, $qty_index, \@total_impositions, $project );
@@ -5811,7 +5797,10 @@ $openprint::log->debug("Was mixed") if DEBUG_INKS;
 
 	# Used to be hasAQ.. but that doesn't make any sense.	Must be NeedAQ.
 	if ( $$project{NeedAqueous} ) {
+		#my $aq_time = [gettimeofday()];
 		my %aq_results = openprint::Estimating::Aqueous::signature_calc( $Project, @$project{'HasAqueous','AqueousSpecs'}, $service_index, $specs, $qty_index, $Imposition );
+#my $aq_elapsed = sprintf('%.4f', tv_interval($aq_time)*1000);
+#$openprint::log->warn("AQ elapsed: $aq_elapsed");
 	#$price{'Aqueous Breakdown'} .= $$project{AqueousSpecs}{'hdnBreakdown'.$qty_index};
 		if ( $aq_results{Status} eq 'uncalculated' ) {
 			$price{'Aqueous Breakdown'} .= "AQ error: $aq_results{alert} $$project{AqueousSpecs}{alert} " . $$project{AqueousSpecs}{'hdnBreakdown'.$qty_index} . '<br/>';
@@ -5922,7 +5911,11 @@ sub select_presses {
 	#my @side_two_colours = sets::exclude( \@Coatings, $side_one_colours );
 	my $ProjectType = $Project->Type();
 
+	if ( ! %Presses ) {
+		$openprint::log->warn("Nothing in presses");
+	}
 	foreach my $Press ( values %Presses ) {
+$openprint::log->debug("COnsidering $$Press{strid}") if DEBUG_PRESSES;
 		my $press_id = $Press->id();
 
 		my ( $min_object_width, $min_object_length ) = ( $Press->specification( 'Minimum Object Width'), $Press->specification('Minimum Object Length') );
@@ -6146,16 +6139,19 @@ sub get_run_price {
 
 	if ( $$Imposition{runstyle} eq 'Web' or $$Imposition{runstyle} eq 'Perfecting' ) {
 # A web does both sides at once, and cannot do multipass
-		$impression_service = $$Imposition{runstyle}.'Impression'.$side_one_colours.'/'.$side_two_colours;
-		my %RunPrice;
-		if ( ! ( %RunPrice = openprint::service::get_price_object( $impression_service, $impressions, $Press ) ) ) {
-			$impression_service = $$Imposition{runstyle}.'Impression'.$side_two_colours.'/'.$side_one_colours;
-			if ( ! ( %RunPrice = openprint::service::get_price_object( $impression_service, $impressions, $Press ) ) ) {
-				%RunPrice = openprint::service::get_price_object( $$Imposition{runstyle}.'Impression', $impressions, $Press );
+		$impression_service = join('',$$Imposition{runstyle},'Impression',$side_one_colours,'/',$side_two_colours);
+		my $Impression_Service = $Services{$impression_service};
+		my $RunPrice;
+		if ( ! ( $Impression_Service and $RunPrice = $Impression_Service->get_Price( $impressions, $Press ) ) ) {
+			$impression_service = join('',$$Imposition{runstyle},'Impression',$side_two_colours,'/',$side_one_colours);
+			$Impression_Service = $Services{$impression_service};
+			if ( ! ( $Impression_Service and $RunPrice = $Impression_Service->get_Price( $impressions, $Press ) ) ) {
+				$Impression_Service = $Services{$$Imposition{runstyle}.'Impression'};
+				$RunPrice = $Impression_Service->get_Price( $impressions, $Press ) if $Impression_Service;
 			} # end if
 		} # end if
-		$run_price{units} = $RunPrice{units};
-		$running_price = $RunPrice{Price};
+		$run_price{units} = $$RunPrice{units};
+		$running_price = $$RunPrice{Price};
 	} else {
 		if ( $side_one_colours ) {
 			my $full_runs = int($side_one_colours / $max_colours);
@@ -7070,6 +7066,37 @@ sub has_overrides {
 	} # end if
 
 } # end sub has_overrides
+
+sub convert_impositions {
+	my ( $Project, $project, $specs, $qty_index, $impositions ) = @_;
+
+	my $SpreadLayout = 0;
+	if ( $Project->Type()->name() eq 'ScratchPads' ) {
+		$SpreadLayout = 0;
+	} elsif ( $$specs{txtSignatureType} ) {
+		if ( ! $$project{txtSpreadSize} ) {
+			$log->error("No spread size in calculate_impositions.");
+			$$project{txtSpreadSize} = 4;
+		} # end if
+		if ( $$specs{'chkOverridePageQuantity'.$qty_index} eq 'Y' ) {
+			$SpreadLayout = int( $$specs{'PageQuantity'.$qty_index} / $$project{txtSpreadSize} );
+			$log->debug("Calcing SpreadLayout as overriden upq: $$specs{'PageQuantity'.$qty_index} / spreadsize:$$project{txtSpreadSize} = layout$SpreadLayout") if DEBUG;
+		} elsif ( $$project{ProjectSpecs}{"PageQuantity-$$specs{Group}"} and ( $$project{ProjectSpecs}{"PageQuantity-$$specs{Group}"} <= $$specs{'txtUnspecifiedPageQuantity'.$qty_index} ) ) {
+			$SpreadLayout = int( $$project{ProjectSpecs}{"PageQuantity-$$specs{Group}"} / $$project{txtSpreadSize} );
+			$log->debug("Calcing SpreadLayout as overriden upq: ".$$project{ProjectSpecs}{"PageQuantity-$$specs{Group}"}." / spreadsize:$$project{txtSpreadSize} = layout$SpreadLayout");
+		} else {
+			$SpreadLayout = int( $$specs{'txtUnspecifiedPageQuantity'.$qty_index} / $$project{txtSpreadSize} );
+			$log->debug("Calcing SpreadLayout as upq: $$specs{'txtUnspecifiedPageQuantity'.$qty_index} / spreadsize:$$project{txtSpreadSize} = layout$SpreadLayout") if DEBUG_FILTERING;
+		} # end if
+	} # end if
+	if ( $SpreadLayout > 1 ) {
+# ecause convert will consider all smaller spreadlayouts as well, we really only need to do this once, and can simply filter out any that are larger than we need.
+		foreach my $press ( keys %$impositions ) {
+			$$impositions{$press} = [ openprint::imposition::convert_impositions( $SpreadLayout, $$project{txtSpreadSize}, $$impositions{$press} ) ];
+		} # end foreach press
+	} # end if spreadylayout
+
+}
 
 1;
 __END__
