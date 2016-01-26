@@ -844,16 +844,14 @@ sub get_price {
 	if ( $maxPockets and ( $neededPockets > $maxPockets ) ) {
 # Loaded here, so we don't do it in the loop many times
 		$openprint::log->debug("Need more pockets $neededPockets > $maxPockets") if DEBUG;
-		my %servicePrice;
+		my $servicePrice;
 		my $Service = openprint::Service->find_one( name=>$$ServiceType{name}.$maxPockets.'Pockets' );
-		if ( $Service ) {
-			%servicePrice = $Service->get_price( $qty, $Equipment );
-		} else {
+		$servicePrice = $Service->get_Price( $qty, $Equipment ) if $Service;
+		if ( ! $servicePrice ) {
 			$Service = openprint::Service->find_one( name=>$$ServiceType{name} );
-	
-			%servicePrice = $Service->get_price( $maxPockets, $Equipment ) if $Service;
+			$servicePrice = $Service->get_Price( $maxPockets, $Equipment ) if $Service;
 		} # end if
-		$price{ServicePrice} = \%servicePrice;
+		$price{ServicePrice} = $servicePrice;
 
 		$unitsPerHour = $Equipment->specification( $$ServiceType{name}.'Units Per Hour '.$price{Imposition}.' out', $maxPockets );
 		$unitsPerHour = $Equipment->specification( $$ServiceType{name}.'Units Per Hour', $maxPockets ) if ! $unitsPerHour;
@@ -867,17 +865,17 @@ sub get_price {
 		} # end if
 		my $loopbreak_pockets = $neededPockets;
 		while ( $neededPockets > $maxPockets ) {
-			if ( $servicePrice{units} eq 'per m' ) {
-				$servicePrice{Total} = $servicePrice{Price} * $qty/1000;
-				$price{Service} += $servicePrice{Total};
-			} elsif ( $servicePrice{units} eq 'per hour' ) {
-				$servicePrice{Total} = $servicePrice{Price} * $runtime;
-				$price{Service} += $servicePrice{Total}
-			} elsif ( $servicePrice{units} eq 'each' ) {
-				$servicePrice{Total} = $servicePrice{Price} * $qty;
-				$price{Service} += $servicePrice{Total};
+			if ( $$servicePrice{units} eq 'per m' ) {
+				$$servicePrice{Total} = $$servicePrice{Price} * $qty/1000;
+				$price{Service} += $$servicePrice{Total};
+			} elsif ( $$servicePrice{units} eq 'per hour' ) {
+				$$servicePrice{Total} = $$servicePrice{Price} * $runtime;
+				$price{Service} += $$servicePrice{Total}
+			} elsif ( $$servicePrice{units} eq 'each' ) {
+				$$servicePrice{Total} = $$servicePrice{Price} * $qty;
+				$price{Service} += $$servicePrice{Total};
 			} else {
-				$openprint::log->debug("880: Unknown Unit Type: ($servicePrice{units}) for service $$ServiceType{name} on $$Equipment{strid} $$Equipment{name}");
+				$openprint::log->error("880: Unknown Unit Type: ($$servicePrice{units}) for service $$Service{name} on $$Equipment{strid} $$Equipment{name} maxpockets: $maxPockets");
 			} # end if
 
 # The minus 1 is because the result of each pass takes up a pocket
