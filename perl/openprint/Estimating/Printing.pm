@@ -1803,6 +1803,7 @@ $openprint::log->debug("Doing nothing, keeping all add:$add") if DEBUG_INITIAL_F
 		%imps = ();
 		my $bump_count = 0;
 		foreach my $I ( @impositions ) {
+			$$I{inkCoverage} = $$project{inkCoverage};
 			my $Paper = $I->Paper();
 			my $key = join(',', $Paper->area(), $$I{pages}, $I->image_orientation(), $I->imposition(), $I->runstyle() );
 			if ( ! ( $imps{$key} and @{$imps{$key}} ) ) {
@@ -3854,7 +3855,8 @@ sub get_project_price {
 
 	$$sig_specs{'txtUnspecifiedPageQuantity'.$qty_index} = $txtUnspecifiedPageQuantity;
 
-	my @Is = openprint::imposition::sort( calculate_impositions( $Project, $sig_specs, $qty_index, $qty, $PaperCounts, $versions, $project, $impositions ) );
+	#my @Is = openprint::imposition::sort( calculate_impositions( $Project, $sig_specs, $qty_index, $qty, $PaperCounts, $versions, $project, $impositions ) );
+	my @Is = calculate_impositions( $Project, $sig_specs, $qty_index, $qty, $PaperCounts, $versions, $project, $impositions );
 	if ( DEBUG or DEBUG_AFTER_FILTERING ) {
 		$openprint::log->debug("@ of impositions: " . @Is );
 		foreach my $I ( @Is ) {
@@ -3872,6 +3874,15 @@ sub get_project_price {
 		$$sig_specs{'ddmRunStyle'.$qty_index} = $$imp{runstyle};
 		$$sig_specs{'ddmPress'.$qty_index} = $$Press{strid};
 		$$sig_specs{'PageQuantity'.$qty_index} = $$imp{pages};
+# It's ok to do this, because $$specs is either a copy, or will be reset before being returned
+	$$sig_specs{'SpreadRows'.$qty_index} = $$imp{spread_rows};
+	$$sig_specs{'SpreadCols'.$qty_index} = $$imp{spread_columns};
+	$$sig_specs{'hdnImageOrientation'.$qty_index} = $$imp{image_orientation};
+	$$sig_specs{"PageQuantity$qty_index"} = $$imp{pages};
+		my $Paper = $imp->Paper();
+	$$sig_specs{txtStockGSM} = $Paper->gsm();
+	$$sig_specs{txtSpecificStockCalliper} = $$Paper{calliper};
+
 		my %previous_forms_cache = %$previous_forms_cache;
 		my $hash_key = join(',', $$Press{strid}, $$imp{runstyle}, $$imp{pages}, $$imp{imposition}, $$imp{columns} );
 		$$sig_specs{'PreviousForms'.$qty_index} = $previous_forms_cache{$hash_key};
@@ -3880,8 +3891,6 @@ sub get_project_price {
 		my %PlateCounts = %$PlateCounts;
 		my %washed_colours = %$washed_colours;
 		my %PaperCounts = %$PaperCounts;
-		my $Paper = $imp->Paper();
-		$$sig_specs{txtSpecificStockCalliper} = $Paper->calliper();
 
 		my @total_impositions = @$other_impositions;
 
@@ -4189,9 +4198,13 @@ $openprint::log->warn("Override subsig values $$imp{pages}pg $$price{upq} upq");
 						} else {
 
 							my $price_cache_key = join(',', keys %PaperCounts, $qty_index, $$Press{strid}, $$price{upq}, $$imp{runstyle}, $$Paper{type}, $$Paper{width}, $$imp{imposition}, $$imp{columns} );
+#$log->error("key: $price_cache_key");
 							#my $price_cache_key = join(',', keys %PaperCounts, $qty_index, $$Press{strid}, $$price{upq}, $$imp{runstyle}, $$Paper{type}, $$Paper{width},$$Paper{height} );
 #$imp->display("Recursing need $$price{upq} more pages");
 							if ( ! $price_cache{$price_cache_key} ) {
+#foreach my $k ( sort keys %price_cache ) {
+	#$log->error("NOT IN $k");
+#}
 #$imp->display("Recursing need $$price{upq} more pages actually");
 # Not identical, so clear this so we get charged setups, etc
 								$$new_specs{'PreviousForms'.$qty_index} = 0;
@@ -4220,6 +4233,8 @@ $openprint::log->warn("Override subsig values $$imp{pages}pg $$price{upq} upq");
 								} # end foreach 
 								$price_cache{$price_cache_key} = 
 									get_project_price( $Project, $$new_specs{ServiceIndex}, $project, $service_specs, $new_specs, $qty, $qty_index, \@new_possible_presses, $printing_specs, $versions, \%PlateCounts, \%PaperCounts, \%washed_colours, \%previous_forms_cache, \@signatures, $impositions, $other_impositions, undef, $recursion_depth + 1 );
+							} else {
+$log->error("using a cached calc_other_groups");
 							} # end if
 							%{$sig_price} = %{$price_cache{$price_cache_key}};
 #$openprint::log->debug("Prices: $sig_price $price_cache{$price_cache_key}");
@@ -4273,7 +4288,7 @@ $imp->display('[warn]');
 #$openprint::log->debug("Adding $$sig_price{'Plate Costs'}{'Plate ID'} $$sig_price{'Plate Costs'}{'Plate Count'}" );
 							$PlateCounts{'Blank'.$$sig_price{'Plate Costs'}{'Plate ID'}} += $$sig_price{'Plate Costs'}{'Blank Plates'};
 							$$price{'Comparison Cost'} += $$sig_price{'Comparison Cost'};
-						$$price{'Comparison Log'} .= 'signature ' . $$sig_price{'Comparison Cost'} . '<br/>' if COMPARISON_LOG;
+							$$price{'Comparison Log'} .= 'signature ' . $$sig_price{'Comparison Cost'} . '<br/>' if COMPARISON_LOG;
 						} # end if sig_price complete
 
 						# Since recursive... it should have taken care of all needed pages.
@@ -4357,7 +4372,9 @@ if ( DEBUG_PLATES ) {
 				if ( $$Paper{type} eq 'Roll' and sets::isin('Sheet', [ split(',', $Press->specification('Feed') ) ] ) ) {
 # Add Roll2SheetSetup
 					if ( ! $$project{roll2sheetcharged} ) {
-						if ( $$price{Roll2SheetMakeReady} = openprint::service::get_price( 'Roll2SheetMakeReady', $Paper->gsm(), $Press ) ) {
+						my $R2SMR = $Services{Roll2SheetMakeReady};
+
+						if ( $R2SMR and $$price{Roll2SheetMakeReady} = $R2SMR->get_price( $Paper->gsm(), $Press ) ) {
 							$$price{'Comparison Cost'} += $$price{Roll2SheetMakeReady};
 							$$price{'Comparison Log'} .= 'rol2sheetmr ' . $$price{Roll2SheetMakeReady} . '<br/>' if COMPARISON_LOG;
 							$$price{'Total Cost'} += $$price{Roll2SheetMakeReady};
@@ -4416,14 +4433,13 @@ if ( DEBUG_PLATES ) {
 						$log->error("No Paper Object for $paper_string");
 						foreach my $paper_string ( keys %Papers ) { $log->error("$paper_string $Papers{$paper_string}"); } 
 						$$price{'Comparison Cost'} += 1000000;
-				$$price{'Comparison Log'} .= 'Bad paper + 1000000 total: ' . $$price{'Comparison Cost'} . '<br/>' if COMPARISON_LOG;
+						$$price{'Comparison Log'} .= 'Bad paper + 1000000 total: ' . $$price{'Comparison Cost'} . '<br/>' if COMPARISON_LOG;
 						$$price{'Paper Breakdown'} .= 'Unable to calculate price for ' . $paper_string.'</br>';
 						next;
 					} elsif ( $paper_string ne $Paper->id_string() ) {
 						$openprint::log->error("Different paper in count versus imposition: $paper_string ne " . $Paper->id_string() );
 					} # end if
 	
-
 					if ( $Paper->full_packages() ) {
 						if ( my $qty_per_package = $Paper->sheets_per_package() ) {
 							$PaperCounts{$paper_string} = $qty_per_package * ceil( $PaperCounts{$paper_string}/$qty_per_package );
@@ -4448,9 +4464,9 @@ if ( DEBUG_PLATES ) {
 						} # end if
 						$supplied_sheets = ceil($PaperCounts{$paper_string}/$Paper->factor());
 						$supplied_weight = Math::Round::nearest( 0.1, $supplied_sheets * $Supplied->sheet_weight() );
-if ( ! $supplied_weight ) {
-$openprint::log->debug("Sheet No supplied wight: $supplied_sheets $paper_string factor: " . $Paper->factor() . ' sheet weight: ' . $Supplied->sheet_weight() );
-} # end if
+						if ( ! $supplied_weight ) {
+							$openprint::log->debug("Sheet No supplied wight: $supplied_sheets $paper_string factor: " . $Paper->factor() . ' sheet weight: ' . $Supplied->sheet_weight() );
+						} # end if
 						$paper_price = $Supplied->get_price( sheets=>$supplied_sheets, service=>'Material' );
 					} else {
 						$supplied_weight = ceil( $PaperCounts{$paper_string}/$Paper->factor() );
@@ -4500,18 +4516,20 @@ $openprint::log->debug("Sheet No supplied wight: $supplied_sheets $paper_string 
 				} # end if
 
 				if ( $$sig_specs{rdbSuppliedStock} eq 'Y' ) {
-					if ( my %SuppliedPaperPrice = openprint::service::get_price_object( 'Supplied'.$$Paper{type}, undef, undef ) ) {
-						if ( $SuppliedPaperPrice{units} eq 'per 100lbs' ) {
-							$SuppliedPaperPrice{Total} = $SuppliedPaperPrice{Price} * $$price{'Stock Weight'} / 100;
-						} elsif ( $SuppliedPaperPrice{units} eq 'per sheet' ) {
-							$SuppliedPaperPrice{Total} = $SuppliedPaperPrice{Price} * $$price{'Gross Sheet Count'};
-						} elsif ( $SuppliedPaperPrice{units} eq 'per m' ) {
-							$SuppliedPaperPrice{Total} = $SuppliedPaperPrice{Price} * $$price{'Gross Sheet Count'}/1000;
+					if ( my $SuppliedService = $Services{'Supplied'.$$Paper{type}} ) {
+						if ( my %SuppliedPaperPrice = $SuppliedService->get_price( undef, undef ) ) {
+							if ( $SuppliedPaperPrice{units} eq 'per 100lbs' ) {
+								$SuppliedPaperPrice{Total} = $SuppliedPaperPrice{Price} * $$price{'Stock Weight'} / 100;
+							} elsif ( $SuppliedPaperPrice{units} eq 'per sheet' ) {
+								$SuppliedPaperPrice{Total} = $SuppliedPaperPrice{Price} * $$price{'Gross Sheet Count'};
+							} elsif ( $SuppliedPaperPrice{units} eq 'per m' ) {
+								$SuppliedPaperPrice{Total} = $SuppliedPaperPrice{Price} * $$price{'Gross Sheet Count'}/1000;
+							} # end if
+							$$price{SuppliedPaperPrice} = \%SuppliedPaperPrice;
+							$$price{'Comparison Cost'} += $SuppliedPaperPrice{Total};
+							$$price{'Comparison Log'} .= 'SuppliedPaper: +'.$SuppliedPaperPrice{Total} . '<br/>' if COMPARISON_LOG;
+							$$price{'Total Cost'} += $SuppliedPaperPrice{Total};
 						} # end if
-						$$price{SuppliedPaperPrice} = \%SuppliedPaperPrice;
-						$$price{'Comparison Cost'} += $SuppliedPaperPrice{Total};
-						$$price{'Comparison Log'} .= 'SuppliedPaper: +'.$SuppliedPaperPrice{Total} . '<br/>' if COMPARISON_LOG;
-						$$price{'Total Cost'} += $SuppliedPaperPrice{Total};
 					} # end if
 				} elsif ( ! $PaperServiceType ) {
 
@@ -4915,18 +4933,11 @@ sub plate_cost {
 # Takes and Imposition object, and calculates a Price Object.
 # Does not need to take folding or Cutting into account, as those were chosen separately
 sub calc_price {
+	#my $aq_time = [gettimeofday()];
 	my ( $Project, $service_index, $Imposition, $project, $services, $specs, $qty, $qty_index, $PlateCounts, $washed_colours, $other_impositions ) = @_;
 
 	my $Paper = $Imposition->Paper();
 	my $Press = $Imposition->Press();
-
-# It's ok to do this, because $$specs is either a copy, or will be reset before being returned
-	$$specs{'SpreadRows'.$qty_index} = $$Imposition{spread_rows};
-	$$specs{'SpreadCols'.$qty_index} = $$Imposition{spread_columns};
-	$$specs{'hdnImageOrientation'.$qty_index} = $$Imposition{image_orientation};
-	$$specs{"PageQuantity$qty_index"} = $$Imposition{pages};
-	$$specs{txtStockGSM} = $Paper->gsm();
-	$$specs{txtSpecificStockCalliper} = $$Paper{calliper};
 
 	my %price;
 	$price{Imposition} = $Imposition;
@@ -4947,11 +4958,11 @@ sub calc_price {
 			push @colours, @{$$project{side_two_colours}},@{$$project{side_two_coatings}};
 		} # end if
 
-	} elsif ( $$Imposition{runstyle} eq 'Work & Turn' or $$Imposition{runstyle} eq 'Work & Tumble' ) {
+	} elsif ( $$Imposition{runstyle} =~ /^Work/ ) {
 		$is_sheetwork = 0;
 		$is_perfecting = 0;
 		$is_wt = 1;
-		$price{'WorkTurn Dry Charge'} = openprint::service::get_price( 'WTDrying', $$Paper{grade}, $Press );
+		$price{'WorkTurn Dry Charge'} = $Services{'WTDrying'} ? $Services{'WTDrying'}->get_price( $$Paper{grade}, $Press ) : 0;
 		@colours = ( @{$$project{filtered_colours}},@{$$project{filtered_coatings}} );
 	} elsif ( $$Imposition{runstyle} eq 'Perfecting' ) {
 #$log->debug("************ WE HAVE PERFECTING ****************");
@@ -5369,7 +5380,9 @@ $openprint::log->warn("No folding equipment");
 	my $plate_id = $plate_size . '-' . $plate_type . 'Plate';
 	my %plate_setup = ( 'Plate Type', $plate_type, 'Plate ID', $plate_id, 'Plate Runs', $plate_runs ) if $plate_size and $plate_type;
 	
-	foreach my $Colour ( filter_coatings_from_colours(\@colours) ) {
+	my @colours_no_coatings = filter_coatings_from_colours(\@colours);
+
+	foreach my $Colour ( @colours_no_coatings ) {
 		my $real_colour = $$Colour{name};
 		my $key = $real_colour.'-'.$$Press{strid}.'-'.$qty_index;
 		#if ( $real_colour =~ /Varnish/ and $real_colour =~ /Overall/ and $$washed_colours{$key} ) {
@@ -5585,7 +5598,7 @@ $openprint::log->warn("No folding equipment");
 	$colour_impressions = POSIX::ceil( $colour_impressions/2 ) if $$Imposition{sides} == 2;
 #$openprint::log->debug("Impressions: $colour_impressions sides: $$Imposition{sides}");
 
-	foreach my $Colour ( filter_coatings_from_colours(\@colours) ) {
+	foreach my $Colour ( @colours_no_coatings ) {
 		
 		my $real_colour = $$Colour{name};
 $openprint::log->debug("Colour: $real_colour impressions $colour_impressions $$Imposition{runstyle}") if DEBUG_INKS;
@@ -5798,7 +5811,8 @@ $openprint::log->debug("Was mixed") if DEBUG_INKS;
 	# Used to be hasAQ.. but that doesn't make any sense.	Must be NeedAQ.
 	if ( $$project{NeedAqueous} ) {
 		#my $aq_time = [gettimeofday()];
-		my %aq_results = openprint::Estimating::Aqueous::signature_calc( $Project, @$project{'HasAqueous','AqueousSpecs'}, $service_index, $specs, $qty_index, $Imposition );
+		my %aq_results = openprint::Estimating::Aqueous::signature_calc( $Project, $$project{'AqueousSpecs'}, $specs, $qty_index, $Imposition );
+		#my $aq_time = [gettimeofday()];
 #my $aq_elapsed = sprintf('%.4f', tv_interval($aq_time)*1000);
 #$openprint::log->warn("AQ elapsed: $aq_elapsed");
 	#$price{'Aqueous Breakdown'} .= $$project{AqueousSpecs}{'hdnBreakdown'.$qty_index};
@@ -5871,6 +5885,8 @@ $openprint::log->warn("Something wrong in AQ");
 	$price{'Total Cost'} = $run_cost + $setup_cost + $price{'Ink Price'};
 
 	$price{complete} = 1;
+#my $aq_elapsed = sprintf('%.4f', tv_interval($aq_time)*1000);
+##$openprint::log->warn("AQ elapsed: $aq_elapsed");
 	return \%price;
 } # end sub calc_price
 
