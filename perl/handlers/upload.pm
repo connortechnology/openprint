@@ -3,6 +3,7 @@ package handlers::upload;
 
 require Apache2::Request;    # instead of CGI, it's MUCH faster, and does nice things.
 require Apache2::RequestRec;
+use Apache2::RequestUtil ();
 use Apache2::Const -compile => qw(HTTP_INTERNAL_SERVER_ERROR OK DECLINED HTTP_NOT_FOUND HTTP_FORBIDDEN);# Offers OK, Error,etc for web server.
 require Apache2::Log;
 require Apache2::ServerUtil;
