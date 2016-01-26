@@ -184,7 +184,7 @@ sub calc {
 			$$specs{'hdnBreakdown'.$qty_index} .= "<br/>Signature: $$sig_specs{txtServiceDescription},<br/>" if $$sig_specs{txtServiceDescription};
 			my $Imposition = new openprint::Imposition();
 			$Imposition->load( $sig_specs, $qty_index );
-			my %results = signature_calc( $Project, $service_index, $specs, $signature_service_index, $sig_specs, $qty_index, $Imposition, \%MakeReadies );
+			my %results = signature_calc( $Project, $specs, $sig_specs, $qty_index, $Imposition, \%MakeReadies );
 			$MakeReadies{$results{Equipment}->id()} = $Imposition->layout_area() if $results{Equipment};
 			@outputs = sets::union( @outputs, 
 					"ddmEquipment-$form-$qty_index",
@@ -253,7 +253,7 @@ sub calc {
 } # end sub calc
 
 sub signature_calc {
-    my ( $Project, $service_index, $specs, $signature_service_index, $sig_specs, $qty_index, $imposition, $MakeReadies ) = @_;
+    my ( $Project, $specs, $sig_specs, $qty_index, $imposition, $MakeReadies ) = @_;
 
 if ( DEBUG ) {
 foreach my $equipment_id ( keys %{$MakeReadies} ) {
@@ -288,13 +288,12 @@ $openprint::log->debug("Makereadies $equipment_id $$MakeReadies{$equipment_id}")
 		} # end if
 	} # end foreach colour
 
-	$openprint::log->debug("Signature : $signature_service_index") if DEBUG;
 	if ( ! ( @front_aq or @back_aq ) ) {
 $openprint::log->warn("Doing AQ when not needed @front_aq @back_aq");
 		$bestPrice{Status} = 'calculated';	
 		return %bestPrice;
 	} # end if
-	my %inkCoverage = openprint::Estimating::Printing::get_inkcoverage( $Project, $sig_specs );
+	my $inkCoverage = $$imposition{inkCoverage} ? $$imposition{inkCoverage} : { openprint::Estimating::Printing::get_inkcoverage( $Project, $sig_specs ) };
 
 	my @different_types = sets::union( @front_aq, @back_aq );
 
@@ -371,6 +370,8 @@ $openprint::log->debug("Impressions: $impressions") if DEBUG;
 	$openprint::log->debug('AQ DOne Cutting :' . @impositions) if DEBUG;
 
 	my $AllAqueousMakeReady = openprint::Service->find_one( name=>'AqueousMakeReady');
+	my $AqueousMinimumCharge = openprint::Service->find_one( name=>'AqueousMinimumCharge');
+	
 
 	foreach my $Equipment ( @equipment ) {
 $openprint::log->debug("AQ Equipment $$Equipment{strid}") if DEBUG;
@@ -384,7 +385,7 @@ $openprint::log->debug("AQ Equipment $$Equipment{strid}") if DEBUG;
 				next;
 			} # end if
 		} # end if
-		my %minimum = openprint::service::get_price_object( 'AqueousMinimumCharge', undef, $Equipment );
+		my %minimum = $AqueousMinimumCharge->get_price( undef, $Equipment ) if $AqueousMinimumCharge;
 
 		foreach my $imp ( @impositions ) {
 			my %MakeReadies = $MakeReadies ? %$MakeReadies : ();
@@ -505,13 +506,13 @@ $colour_total += $setupPrice{Price};
 				} else {
 					%MaterialPrice = $Material->get_price( $run_qty, $Equipment );
 					if ( $MaterialPrice{units} eq 'per square inch' ) {
-						my $area = $imp->object_area() * $run_qty * ($inkCoverage{$type}/100);
+						my $area = $imp->object_area() * $run_qty * ($$inkCoverage{$type}/100);
 						$MaterialPrice{Total} = $MaterialPrice{Price} * $run_qty * $area;
 					} elsif ( $MaterialPrice{units} eq 'per square foot' ) {
-						my $area = $imp->object_area() * $run_qty * ($inkCoverage{$type}/100) /144;
+						my $area = $imp->object_area() * $run_qty * ($$inkCoverage{$type}/100) /144;
 						$MaterialPrice{Total} = $MaterialPrice{Price} * $area;
 					} elsif ( $MaterialPrice{units} eq 'per 1000 square feet' ) {
-						my $area = $imp->object_area() * $run_qty * ($inkCoverage{$type}/100) /144;
+						my $area = $imp->object_area() * $run_qty * ($$inkCoverage{$type}/100) /144;
 # area is # of square feet
 						$MaterialPrice{Total} = $MaterialPrice{Price} * $area/1000;
 					} elsif ( $MaterialPrice{units} eq 'per m' ) {
