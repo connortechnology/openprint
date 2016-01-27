@@ -3223,58 +3223,19 @@ $$sig_specs{PreviousGrainDirection} and ( $imp->grain_direction() ne $$sig_specs
 
 			my @matching_impositions = map { $$_{imposition} == $$sig_specs{'txtImposition'.$qty_index} ? $_ : () } @press_impositions;
 			if ( ! @matching_impositions ) {
-		
-$openprint::log->debug( " Didn't find the desired imposition, so cutting them down.");
-			my @lesser_imps = map { $$_{imposition} > $$sig_specs{'chkOverrideImposition'.$qty_index} ? $_ : () } @press_impositions;
-			if ( DEBUG_FILTERING ) {
-$openprint::log->debug( " first set: " . @lesser_imps );
-				foreach ( @lesser_imps ) {
-					$_->display("first set:");
-				}
-			}
-			@lesser_imps = map { $$_{imposition} >= $$sig_specs{'chkOverrideImposition'.$qty_index} ? $_ : () } openprint::imposition::decrease_imposition( @lesser_imps );
-			if ( DEBUG_FILTERING ) {
-$openprint::log->debug( " second set: " . @lesser_imps );
-				foreach ( @lesser_imps ) {
-					$_->display("second set:");
-				}
-			}
-			@matching_impositions = map { $$_{imposition} == $$sig_specs{'txtImposition'.$qty_index} ? $_ : () } @lesser_imps;
-			if ( DEBUG_FILTERING ) {
-				$openprint::log->debug( " matching imps: " . @results2 );
-				foreach ( @matching_impositions ) {
-					$_->display("After cutting:");
-				}
-			}
-			#@results2 = map { $$_{imposition} > $$sig_specs{'txtImposition'.$qty_index} ? $_ : () } @lesser_imps if ! @results2;
 
-if ( 1 ) {
-			while ( (!@matching_impositions) and @lesser_imps ) {
-				my $I = shift @lesser_imps;
-				if ( $$I{imposition} == $$sig_specs{'txtImposition'.$qty_index} ) {
-					push @matching_impositions, $I;
-				} elsif ( $$I{imposition} > $$sig_specs{'txtImposition'.$qty_index} ) {
-					push @matching_impositions, map { $$_{imposition} >= $$sig_specs{'txtImposition'.$qty_index} ? $_ : () } openprint::imposition::decrease_imposition( $I );
-				} # end if
+				$openprint::log->debug( " Didn't find the desired imposition, so cutting them down.");
+				my @lesser_imps = map { $$_{imposition} > $$sig_specs{'txtImposition'.$qty_index} ? $_ : () } @press_impositions;
+				while ( @lesser_imps and !@matching_impositions ) {
+					@lesser_imps = map { $$_{imposition} >= $$sig_specs{'txtImposition'.$qty_index} ? $_ : () } openprint::imposition::decrease_imposition( @lesser_imps );
+					@matching_impositions = map { $$_{imposition} == $$sig_specs{'txtImposition'.$qty_index} ? $_ : () } @lesser_imps;
+					$openprint::log->debug( " matching imps: " . @matching_impositions );
+					foreach ( @matching_impositions ) {
+						$_->display("After cutting:" . $$sig_specs{'txtImposition'.$qty_index} );
+					}
+				} # end while
 
-#$openprint::log->debug( " during set: " . @lesser_imps );
-			} # end while
-}
-	
-if ( 0 ) {
-			my %cuts;
-$log->warn("Getting all impos results: " . @results );
-			foreach my $I ( openprint::imposition::get_all_impositions( map { $$_{imposition} > $$sig_specs{'txtImposition'.$qty_index} ? $_ : () } @results ) ) {
-				if ( $$I{imposition} == $$sig_specs{'txtImposition'.$qty_index} ) {
-					my $str = sprintf('%d=%dx%d %dx%d-%s-%s-%s-%d-%d', @$I{'pages','spread_columns','spread_rows','columns','rows','runstyle','image_orientation'} );
-					if ( ! $cuts{$str} ) {
-						$cuts{$str} = $I;
-					} # en dif
-				} # end if
-			} # end foreach I
-			@results2 = values %cuts;
-}
-		} # end if
+			} # end if
 			push @results2, @matching_impositions;
 		} # end foreach Press
 		@results = @results2;
