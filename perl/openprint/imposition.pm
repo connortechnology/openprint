@@ -1060,68 +1060,34 @@ sub decrease_imposition {
 	my @results;
 
 	foreach my $imposition ( @_ ) {
-		next if ( ($imposition->columns() * $imposition->rows()) <= 1 );
+		next if ( ($$imposition{columns} * $$imposition{rows}) <= 1 );
 
-		if ( $imposition->dutch_columns() ) {
+		if ( $$imposition{dutch_columns} ) {
 			my $imp1 = $imposition->copy();
 			$imp1->dutch_rows( 0 );
 			$imp1->dutch_columns( 0 );
-			if ( $imp1->imposition() ) {
-				push @results, $imp1;
-			} # end if
+			push @results, $imp1;
 
 			my $imp2 = $imp1->copy();
-			$imp2->columns( $imposition->dutch_columns() );
-			$imp2->rows( $imposition->dutch_rows() );
-			if ( $imp2->imposition() ) {
-				push @results, $imp2;
-			} # end if
+			$imp2->columns( $$imposition{dutch_columns} );
+			$imp2->rows( $$imposition{dutch_rows} );
+			push @results, $imp2;
 		} else {
 
-			if ( $imposition->rows() >= 2 ) {
-				my $imp1 = $imposition->copy();
-				$imp1->rows( int ( $imp1->rows()/2 ) );
-				if ( $imp1->imposition() ) {
+			if ( $$imposition{rows} >= 2 ) {
+				foreach my $row ( 2 .. $$imposition{rows} ) {
+					my $imp1 = $imposition->copy();
+					$imp1->rows( $$imp1{rows} - ( $row -1 ) );
 					push @results, $imp1;
-				} # end if
-				if ( $imposition->rows() % 2 ) {
-					my $imp2 = $imposition->copy();
-					$imp2->rows( $imp2->rows() - $imp1->rows() );
-					if ( $imp2->imposition() ) {
-						push @results, $imp2;
-					} # end if
-				} 
-
-				if ( $imp1->rows() != $imposition->rows() - 1 ) {
-					my $imp4 = $imposition->copy();
-					$imp4->rows( $imp4->rows()-1 );
-					if ( $imp4->imposition() ) {
-						push @results, $imp4;
-					} # end if
-				} # end if
+				} # end foraech
 			} # end if
 
-			if ( $imposition->columns() >= 2 ) {
-				my $imp2 = $imposition->copy();
-				$imp2->columns( int ( $imp2->columns()/2 ) );
-				if ( $imp2->imposition() ) {
+			if ( $$imposition{columns} >= 2 ) {
+				foreach my $columns ( 2 .. $$imposition{columns} ) {
+					my $imp2 = $imposition->copy();
+					$imp2->columns( $$imp2{columns} - ( $columns -1 ) );
 					push @results, $imp2;
-				} # end if
-				if ( $imposition->columns() % 2 ) {
-					my $imp3 = $imposition->copy();
-					$imp3->columns( $imp3->columns() - $imp2->columns() );
-					if ( $imp3->imposition() ) {
-						push @results, $imp3;
-					} # end if
-				} 
-			
-				if ( $imp2->columns() != $imposition->columns() - 1 ) {
-					my $imp3 = $imposition->copy();
-					$imp3->columns( $imp3->columns()-1 );
-					if ( $imp3->imposition() ) {
-						push @results, $imp3;
-					} # end if
-				} # end if
+				}
 			} # end if
 
 		} # end if
