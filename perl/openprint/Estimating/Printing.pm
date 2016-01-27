@@ -4386,11 +4386,14 @@ if ( DEBUG_PLATES ) {
 					if ( ! $$project{roll2sheetcharged} ) {
 						my $R2SMR = $Services{Roll2SheetMakeReady};
 
-						if ( $R2SMR and $$price{Roll2SheetMakeReady} = $R2SMR->get_price( $Paper->gsm(), $Press ) ) {
-							$$price{'Comparison Cost'} += $$price{Roll2SheetMakeReady};
-							$$price{'Comparison Log'} .= 'rol2sheetmr ' . $$price{Roll2SheetMakeReady} . '<br/>' if COMPARISON_LOG;
-							$$price{'Total Cost'} += $$price{Roll2SheetMakeReady};
-							$$price{'Setup Total'} += $$price{Roll2SheetMakeReady};
+						if ( $R2SMR ) {
+							if ( my $R2SMRPrice = $R2SMR->get_Price( $Paper->gsm(), $Press ) ) {
+								$$price{Roll2SheetMakeReady} = $$R2SMRPrice{Price};
+								$$price{'Comparison Cost'} += $$price{Roll2SheetMakeReady};
+								$$price{'Comparison Log'} .= 'rol2sheetmr ' . $$price{Roll2SheetMakeReady} . '<br/>' if COMPARISON_LOG;
+								$$price{'Total Cost'} += $$price{Roll2SheetMakeReady};
+								$$price{'Setup Total'} += $$price{Roll2SheetMakeReady};
+							} # end if
 						} # end if
 					} # end if
 # Add Roll2SheetRun
