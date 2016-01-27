@@ -41,6 +41,7 @@ my @fields = (
 	'runspeed',
 	'impressions',
 	'equipment_id', 'Equipment',
+	'inkCoverage',
 );
 
 # spread_cols and spread_rows are oriented identically to the imposition
@@ -120,70 +121,38 @@ sub layout_height {
 	return $_[0]{layout_height};
 }
 
+my %fields_to_recalc_layout_for = map { $_, 1 } ( 'rows','columns','dutch_rows','dutch_columns','spread_rows','spread_columns','spreads','image_width','image_height','spread_size','object_width','object_height' );
 
 sub AUTOLOAD {
+	no strict;
     my $name = $AUTOLOAD;
     $name =~ s/.*://;
 #$openprint::log->debug("Imposition::AUTOLOAD::$name");
 
     if ( @_ > 1 ) {
 		$_[0]{$name} = $_[1];
-		if ( sets::isin( $name, ['rows','columns','dutch_rows','dutch_columns','spread_rows','spread_columns','spreads','image_width','image_height','spread_size','object_width','object_height' ] ) ) {
+		if ( $fields_to_recalc_layout_for{$name} ) {
 			$_[0]{imposition} = $_[0]{rows} * $_[0]{columns} + $_[0]{dutch_rows} * $_[0]{dutch_columns};
 			$_[0]{spreads} = $_[0]{spread_rows} * $_[0]{spread_columns};
 			$_[0]{pages} = $_[0]{spreads} * $_[0]{spread_size};
 
 			$_[0]->layout_width(undef);
 			$_[0]->layout_height(undef);
-if ( 0 ) {
-			if ( $_[0]{image_orientation} eq 'Vertical' ) {
-				$_[0]{layout_width} = $_[0]{columns} * $_[0]{image_width} + ( $_[0]{perfecting_wheel_space} - $_[0]{bleed_size} );
-				$_[0]{layout_height} = $_[0]{rows} * $_[0]{image_height};
-#$openprint::log->debug("Vertical laytou: $_[0]{layout_width}  x $_[0]{layout_height} image: $_[0]{image_width}x$_[0]{image_height}");
-#$_[0]->display();
-				if ( $_[0]{dutch_columns} ) {
-					my $dutch_width = $_[0]{dutch_columns} * $_[0]{image_height};
-					my $dutch_height = $_[0]{dutch_rows} * $_[0]{image_width};
-
-					if ( $_[0]{dutch_orientation} eq 'width' ) {
-						$_[0]{layout_width} += $dutch_width;
-						$_[0]{layout_height} = $dutch_height if $dutch_height > $_[0]{layout_height};
-	#$openprint::log->debug("Vertical width laytou: $_[0]{layout_width} x $_[0]{layout_height} dutch: $dutch_width x $dutch_height");
-	#$_[0]->display();
-					} else {
-						$_[0]{layout_height} += $dutch_height;
-
-						# Only adjust the width if it exceeds the non-dutch width
-						$_[0]{layout_width} = $dutch_width if $dutch_width > $_[0]{layout_width};
-	#$openprint::log->debug("Vertical default to height $_[0]{dutch_orientation} laytou: $_[0]{layout_width}  x $_[0]{layout_height} dutch_width: $dutch_width");
-	#$_[0]->display();
-					} # end if
-				} # end if
-			} elsif ( $_[0]{image_orientation} eq 'Horizontal' ) {
-				$_[0]{layout_width} = $_[0]{columns} * $_[0]{image_height} + ( $_[0]{perfecting_wheel_space} - $_[0]{bleed_size} );
-				$_[0]{layout_height} = $_[0]{rows} * $_[0]{image_width};
-
-				if ( $_[0]{dutch_columns} ) {
-					my $dutch_width = $_[0]{dutch_columns} * $_[0]{image_width};
-					my $dutch_height = $_[0]{dutch_rows} * $_[0]{image_height};
-
-					if ( $_[0]{dutch_orientation} eq 'width' ) {
-						$_[0]{layout_width} += $dutch_width;
-						$_[0]{layout_height} = $dutch_height if $dutch_height > $_[0]{layout_height};
-					} else {
-						$_[0]{layout_height} += $dutch_height;
-						$_[0]{layout_width} = $dutch_width if $dutch_width > $_[0]{layout_width};
-					} # end if
-				} # end if
-			} # end if
-}
-			#if ( $$self{spreads} ) {
-				#$$self{layout_width} = $$self{spread_columns} * $$self{layout_width};
-				#$$self{layout_height} = $$self{spread_rows} * $$self{layout_height};
-			#} # end if
-	} elsif ( DEBUG ) {
-$openprint::log->debug("optimise $name" . ( @_ > 1 ? 'set to ' . $_[1] : '' ) );
+		} else {
+			my ( $caller, undef, $line ) = caller;
+			$openprint::log->debug("optimise $name from $caller : $line setting " . ( @_ > 1 ? 'set to ' . $_[1] : '' ) );
+*{$name} = sub {
+      @_ > 1 ? $_[0]->{$name} = $_[1]
+        : $_[0]->{$name};
+    };
 		} # end if isin whatever fields
+	} else {
+		my ( $caller, undef, $line ) = caller;
+		$openprint::log->debug("optimise $name from $caller : $line getting " );
+#*{$name} = sub {
+      #@_ > 1 ? $_[0]->{$name} = $_[1]
+        #: $_[0]->{$name};
+    #};
 	} # end if @_ > 1
 	return $_[0]{$name};
 } # end sub AUTOLOAD
@@ -205,6 +174,8 @@ my ( $caller, undef, $line ) = caller;
 
 sub get {
 	my ( $self, @fields ) = @_;
+my ( $caller, undef, $line ) = caller;
+$openprint::log->debug("someone using get() from $caller:$line");
 	return map { $self->$_ } @fields;
 } # end sub get
 
@@ -351,12 +322,14 @@ sub load {
 	$$self{rotate_sheet} = $$specs{"RotateSheet$qty_index"};
 	$$self{printing_type} = $$specs{"PrintingType$qty_index"};
 
+	my $Paper = $$self{paper};
+
 	if ( ! $$self{image_orientation} ) {
 		# Guess the image orientation
 		if ( 
-				( $$self{image_width} * $$self{columns} < $self->Paper()->width() )
+				( $$self{image_width} * $$self{columns} < $$Paper{width} )
 				and 
-				( $$self{image_height} * $$self{rows} < $self->Paper()->height() )
+				( $$self{image_height} * $$self{rows} < $$Paper{height} )
 		   ) {
 			$$self{image_orientation} = 'Vertical';
 		} else {
@@ -380,7 +353,7 @@ sub load {
 	} # end if
 
 	if ( ! $$self{dutch_orientation} ) {
-		if ( $$self{layout_width} + $dutch_width > ( $$specs{"RotateSheet$qty_index"} ? $self->paper()->height() : $self->paper()->width() ) ) {
+		if ( $$self{layout_width} + $dutch_width > ( $$specs{"RotateSheet$qty_index"} ? $$Paper{height} : $$Paper{width} ) ) {
 			$$self{dutch_orientation} = 'height';
 		} else {
 			$$self{dutch_orientation} = 'width';
@@ -441,29 +414,29 @@ $self->display('After load') if DEBUG;
 
 sub save {
 	my ( $self, $specs, $qty_index ) = @_;
-	$$specs{'txtImposition'.$qty_index} = $self->imposition();
+	$$specs{'txtImposition'.$qty_index} = $$self{imposition};
 	$$specs{'Versions'.$qty_index} = $$self{versions};
-	$$specs{'hdnImpositionRows'.$qty_index} = $self->rows();
-	$$specs{'hdnImpositionColumns'.$qty_index} = $self->columns();
-	$$specs{'hdnImpositionDutchRows'.$qty_index} = $self->dutch_rows();
-	$$specs{'hdnImpositionDutchColumns'.$qty_index} = $self->dutch_columns();
-	$$specs{'hdnImageOrientation'.$qty_index} = $self->image_orientation();
+	$$specs{'hdnImpositionRows'.$qty_index} = $$self{rows};
+	$$specs{'hdnImpositionColumns'.$qty_index} = $$self{columns};
+	$$specs{'hdnImpositionDutchRows'.$qty_index} = $$self{dutch_rows};
+	$$specs{'hdnImpositionDutchColumns'.$qty_index} = $$self{dutch_columns};
+	$$specs{'hdnImageOrientation'.$qty_index} = $$self{image_orientation};
 	$$specs{'page_columns'.$qty_index} = $self->page_columns();
 	$$specs{'page_rows'.$qty_index} = $self->page_rows();
-	$$specs{'SpreadRows'.$qty_index} = $self->spread_rows();
-	$$specs{'SpreadCols'.$qty_index} = $self->spread_columns();
+	$$specs{'SpreadRows'.$qty_index} = $$self{spread_rows};
+	$$specs{'SpreadCols'.$qty_index} = $$self{spread_columns};
 	$$specs{txtSpreadSize} = $$self{spread_size} if $$self{spread_size};
-	$$specs{'ddmRunStyle'.$qty_index} = $self->runstyle();
-	$$specs{'txtImageWidth'.$qty_index} = $self->image_width();
-	$$specs{'txtImageHeight'.$qty_index} = $self->image_height();
+	$$specs{'ddmRunStyle'.$qty_index} = $$self{runstyle};
+	$$specs{'txtImageWidth'.$qty_index} = $$self{image_width};
+	$$specs{'txtImageHeight'.$qty_index} = $$self{image_height};
 	$$specs{'txtLayoutWidth'.$qty_index} = $self->layout_width();
 	$$specs{'txtLayoutHeight'.$qty_index} = $self->layout_height();
 	$$specs{'rdbGrainDirection'.$qty_index} = $self->grain_direction() if ! $$specs{'chkOverrideGrainDirection'.$qty_index};
 	$$specs{'ddmBleedSize'.$qty_index} = $$self{bleed_size};
 	$$specs{'PrintingType'.$qty_index} = $$self{printing_type};
 	my $Paper = $self->Paper();
-	if ( $Paper and ($Paper->type() eq 'Roll') and $Paper->height() ) {
-		$$specs{'CutOff'.$qty_index} = $Paper->height();
+	if ( $Paper and ($$Paper{type} eq 'Roll') and $$Paper{height} ) {
+		$$specs{'CutOff'.$qty_index} = $$Paper{height};
 	} else {
 		$$specs{'CutOff'.$qty_index} = '';
 	} # end if
@@ -514,9 +487,9 @@ sub page_columns {
 		if ( int($old_spread_columns) and ( $old_spread_columns != $$self{spread_columns} ) ) {
 			# image_* and object_* are not rotated
 			if ( $$self{image_orientation} eq 'Horizontal' ) {
-				$self->image_height( ( $self->image_height() / $old_spread_columns ) * $$self{spread_columns} );
+				$self->image_height( ( $$self{image_height} / $old_spread_columns ) * $$self{spread_columns} );
 			} else {
-				$self->image_width( ( $self->image_width() / $old_spread_columns ) * $$self{spread_columns} );
+				$self->image_width( ( $$self{image_width} / $old_spread_columns ) * $$self{spread_columns} );
 			} # end if
 		}
 		#$self->layout_width(undef);
@@ -541,9 +514,9 @@ sub page_rows {
 		}
 		if ( int($old_spread_rows) and ( $old_spread_rows != $$self{spread_rows} ) ) {
 			if ( $$self{image_orientation} eq 'Horizontal' ) {
-				$self->image_height( ( $self->image_height() / $old_spread_rows ) * $$self{spread_rows} );
+				$self->image_height( ( $$self{image_height} / $old_spread_rows ) * $$self{spread_rows} );
 			} else {
-				$self->image_width( ( $self->image_width() / $old_spread_rows ) * $$self{spread_rows} );
+				$self->image_width( ( $$self{image_width} / $old_spread_rows ) * $$self{spread_rows} );
 			}
 		}
 		#$self->layout_width(undef);
@@ -677,7 +650,10 @@ sub equals {
 sub to_string {
 	if ( ! $_[0]{to_string} ) {
 		if ( $_[0]{paper} ) {
-		$_[0]{to_string} = sprintf('%s %dx%d+%dx%d=%dout %s %dx%d=%dpages on %sx%s%s->%sx%s %s', ( $_[0]{Press} ? $_[0]->Press()->strid() : 'unknown equipment' ), $_[0]->get('columns','rows','dutch_columns','dutch_rows','imposition','runstyle','page_columns','page_rows','pages', 'paper_width','paper_height', 'paper_type','sheet_width','sheet_height', 'image_orientation') );
+		$_[0]{to_string} = sprintf('%s %dx%d+%dx%d=%dout %s %dx%d=%dpages on %sx%s%s->%sx%s %s', ( $_[0]{Press} ? $_[0]{Press}->strid() : 'unknown equipment' ), 
+				$_[0]{'columns','rows','dutch_columns','dutch_rows','imposition','runstyle','page_columns','page_rows','pages'}, 
+				$_[0]{paper}{'width','height', 'type'},
+				$_[0]->sheet_width(),$_[0]->sheet_height(), $_[0]{'image_orientation'} );
 		} else {
 			if ( $_[0]{quantity} > 1 ) {
 			$_[0]{to_string} = sprintf('%s %d @ %dx%d+%dx%d=%dout %s %dx%d=%dpages %s', ( $_[0]{Press} ? $_[0]->Press()->strid() : 'unknown equipment' ), $_[0]->get('quantity','columns','rows','dutch_columns','dutch_rows','imposition','runstyle','page_columns','page_rows','pages', 'sheet_width','sheet_height', 'image_orientation') );

@@ -226,7 +226,7 @@ sub calc {
 				if ( $results{Equipment} ) {
 					$$specs{"ddmEquipment-$form-$qty_index"} = $results{Equipment}->id();
 					$GrandTotal += $$specs{"SignaturePrice-$form-$qty_index"};
-					$$specs{"txtImposition-$form-$qty_index"} = $results{Imposition}->imposition();
+					$$specs{"txtImposition-$form-$qty_index"} = $results{Imposition}{imposition};
 					$$specs{"txtLayoutWidth-$form-$qty_index"} = $results{Imposition}->layout_width();
 					$$specs{"txtLayoutHeight-$form-$qty_index"} = $results{Imposition}->layout_height();
 				} else {
@@ -311,7 +311,7 @@ $openprint::log->debug("Impressions: " . $$sig_specs{"hdnImpressionQuantity$qty_
 $openprint::log->debug("Impressions: $impressions") if DEBUG;
 if ( 1 ) {
 	# This just can't be right anymore. Actually it can... if double sided, impressions are doubled...
-	if ( $imposition->runstyle() eq 'Perfecting' ) {
+	if ( $$imposition{runstyle} eq 'Perfecting' ) {
 		# We know that it is printing 2 sided, but may be only AQ 1 sided.
 		# Sheets = impressions / 2
 		# I'm not sure this is true anymore.
@@ -336,7 +336,7 @@ $openprint::log->debug("Impressions: $impressions") if DEBUG;
 	} # endif
 
 	if ( (defined $$specs{"chkOverrideImposition-$form-$qty_index"} ) and ( $$specs{"chkOverrideImposition-$form-$qty_index"} eq 'Y' ) ) {
-		if ( $$specs{"txtImposition-$form-$qty_index"} > $imposition->imposition() or $$specs{"txtImposition-$form-$qty_index"} <= 0 ) {
+		if ( $$specs{"txtImposition-$form-$qty_index"} > $$imposition{imposition} or $$specs{"txtImposition-$form-$qty_index"} <= 0 ) {
 			$$specs{alert} .= 'The specified imposition is not possible.<br/>';
 			return %bestPrice;
 		} # end if
@@ -351,14 +351,14 @@ $openprint::log->debug("Impressions: $impressions") if DEBUG;
 		for ( my $i = 0; $i < @imps; $i += 1 ) {
 			$openprint::log->debug("Imposition: " . $imps[$i]{imposition} . 'out' );
 			if ( ( $$specs{"chkOverrideImposition-$form-$qty_index"} ne 'Y' )
-					or ( $$specs{"txtImposition-$form-$qty_index"} == $imps[$i]->imposition() )
+					or ( $$specs{"txtImposition-$form-$qty_index"} == $imps[$i]{imposition} )
 			   ) {
 				push @impositions, $imps[$i];
 			} # end if
 
 # Remove any other impositions that have the same setup
 			for ( my $j = $i + 1; $j < @imps; $j += 1 ) {
-				if ( $imps[$i]->imposition() == $imps[$j]->imposition() and $imps[$i]->rows() == $imps[$j]->rows() ) {
+				if ( $imps[$i]{imposition} == $imps[$j]{imposition} and $imps[$i]{rows} == $imps[$j]{rows} ) {
 					splice @imps, $j, 1;
 					$j -= 1;
 				} # end if
@@ -380,7 +380,7 @@ $openprint::log->debug("AQ Equipment $$Equipment{strid}") if DEBUG;
 			if ( $$sig_specs{'ddmPress'.$qty_index} ne $Equipment->strid() ) {
 				$$specs{'hdnBreakdown'.$qty_index} .= 'Not printing on this press.<br/>';
 				next;
-			} elsif ( @front_aq and @back_aq and ( $imposition->runstyle() eq 'Perfecting' ) and ! $Equipment->specification('Aqueous Double Sided When Perfecting') ) {
+			} elsif ( @front_aq and @back_aq and ( $$imposition{runstyle} eq 'Perfecting' ) and ! $Equipment->specification('Aqueous Double Sided When Perfecting') ) {
 				$$specs{'hdnBreakdown'.$qty_index} .= 'Cant perfect with double sided AQ.<br/>';
 				next;
 			} # end if
@@ -390,9 +390,9 @@ $openprint::log->debug("AQ Equipment $$Equipment{strid}") if DEBUG;
 		foreach my $imp ( @impositions ) {
 			my %MakeReadies = $MakeReadies ? %$MakeReadies : ();
 			$$specs{'hdnBreakdown'.$qty_index} .= sprintf('Imposition: %dx%d+%dx%d=%dout %s:', @$imp{'columns','rows','dutch_columns','dutch_rows','imposition','runstyle'} );
-			next if ! ( $imp->rows() * $imp->columns() );
-			my $width = $imposition->sheet_width() / ( $imposition->columns()/$imp->columns() );
-			my $height = $imposition->sheet_height() / ( $imposition->rows()/$imp->rows() );
+			next if ! $$imp{imposition};
+			my $width = $imposition->sheet_width() / ( $$imposition{columns}/$$imp{columns} );
+			my $height = $imposition->sheet_height() / ( $$imposition{rows}/$$imp{rows} );
 			$$specs{'hdnBreakdown'.$qty_index} .= $imposition->sheet_width().'x'.$imposition->sheet_height().'=>'.$width.'x'.$height.'<br/>';
 
 			if ( $_ = $Equipment->fits( $width, $height, $$sig_specs{txtSpecificStockCalliper} ) ) {
@@ -405,11 +405,11 @@ $openprint::log->debug("AQ Equipment $$Equipment{strid}") if DEBUG;
 			);
 			my $run_qty = $impressions;
 #$openprint::log->debug("Run QTY: $run_qty $$imposition{imposition} / $$imp{imposition} ");
-			$run_qty += ( $imposition->imposition() / $imp->imposition() ) if $imposition->imposition() != $imp->imposition();
+			$run_qty += ( $$imposition{imposition} / $$imp{imposition} ) if $$imposition{imposition} != $$imp{imposition};
 #$openprint::log->debug("Run QTY: $run_qty $$imposition{imposition} / $$imp{imposition} ");
 
 			my @types;
-			if ( $imposition->runstyle() =~ /^Work/ ) {
+			if ( $$imposition{runstyle} =~ /^Work/ ) {
 #sets::isin( $imposition->runstyle(), ['Work & Turn', 'Work & Tumble'] ) ) {
 # need to merge any overalls into spots
 				foreach my $type ( @different_types ) {
