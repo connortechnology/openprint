@@ -25,7 +25,7 @@ use Data::Dumper;
 package openprint::Estimating::Printing;
 my $threading = 0;
 use threads;
-use constant DEBUG => 1;
+use constant DEBUG => 0;
 use constant DEBUG_PLATES => 0;
 use constant DEBUG_VERSIONS => 0;
 use constant DEBUG_PRESSES => 0;
@@ -1501,17 +1501,19 @@ if ( DEBUG_INITIAL_FILTERING ) {
 				} else {
 					foreach my $i ( @i ) {
 						my $i2 = $i->copy();
-						$i2->Paper()->width( $i2->used_width() ) if ! $i2->Paper()->width();
-						$Papers{$i2->Paper()->id_string()} = $i2->Paper()->clone() if ! $Papers{$i2->Paper()->id_string()};
-						while ( $i2->columns() ) {
+						my $P2 = $i2->Paper();
+
+						$P2->width( $i2->used_width() ) if ! $$P2{width};
+						$Papers{$P2->id_string()} = $P2->clone() if ! $Papers{$P2->id_string()};
+						while ( $$i2{columns} ) {
 							push @imps, $i2;
 							$i2 = $i2->copy();
-							$i2->columns( $i2->columns()-1 );
-							$i2->Paper()->width( $i2->used_width() );
-							$Papers{$i2->Paper()->id_string()} = $i2->Paper()->clone() if ! $Papers{$i2->Paper()->id_string()};
+							$i2->columns( $$i2{columns}-1 );
+							$P2->width( $i2->used_width() );
+							$Papers{$P2->id_string()} = $P2->clone() if ! $Papers{$P2->id_string()};
 							openprint::imposition::check_setup( $i2, $project );
-							$i2->columns(0) if $minimum_sheet_width and ($i2->paper()->width() < $minimum_sheet_width);
-							$i2->columns(0) if $minimum_roll_width and ($i2->paper()->width() < $minimum_roll_width);
+							$i2->columns(0) if $minimum_sheet_width and ($$P2{width} < $minimum_sheet_width);
+							$i2->columns(0) if $minimum_roll_width and ($$P2{width} < $minimum_roll_width);
 						} # end while
 					} # end foreach
 				} # end if start_width or cut for all sizes
@@ -4977,7 +4979,12 @@ sub calc_price {
 		$is_sheetwork = 0;
 		$is_perfecting = 0;
 		$is_wt = 1;
-		$price{'WorkTurn Dry Charge'} = $Services{'WTDrying'} ? $Services{'WTDrying'}->get_price( $$Paper{grade}, $Press ) : 0;
+		if ( $Services{'WTDrying'} ) {
+			my $WTDryPrice = $Services{'WTDrying'}->get_Price( $$Paper{grade}, $Press );
+			if ( $WTDryPrice ) {
+				$price{'WorkTurn Dry Charge'} = $$WTDryPrice{Price};
+			} # end if 
+		} # end if 
 		@colours = ( @{$$project{filtered_colours}},@{$$project{filtered_coatings}} );
 	} elsif ( $$Imposition{runstyle} eq 'Perfecting' ) {
 #$log->debug("************ WE HAVE PERFECTING ****************");
