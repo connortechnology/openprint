@@ -1,13 +1,14 @@
 <table class="List">
 	<tr>
-		<th class="Skid">Skid/Roll</th>
-		<th class="RFIDTag">RFIDTag</th>
+		<th class="Skid" onclick="load_entries('sort=skid_id,rfidtag_id,created_on');">Skid/Roll</th>
+		<th class="RFIDTag" onclick="load_entries('sort=rfidtag_id,skid_id,created_on');">RFIDTag</th>
 		<th class="Width">Width</th>
 		<th class="Diameter">Diameter</th>
 		<th class="Quantity">Weight(lbs)</th>
-		<th class="Location">Location</th>
+		<th class="DateTime" onclick="load_entries('sort=created_on,rfidtag_id,skid_id');">When</th>
+		<th class="Location" onclick="load_entries('sort=location_id,created_on,rfidtag_id,skid_id');">Location</th>
 		<th class="Notes">Notes</th>
-		<th class="RFIDScanner">Scanner</th>
+		<th class="RFIDScanner" onclick="load_entries('sort=scanner_id,rfidtag_id,skid_id');">Scanner</th>
 		<th class="buttons"></th>
 	</tr>
 <? echo ( 
@@ -21,7 +22,9 @@
 	openprint::Manufacturer->find();
 	openprint::Location->find( type=>'place' );
 
-	my @Contents = openprint::Inventory_Check_Entry->find( ic_id=>$$variable{Check}->id(), order=>'skid_id,rfidtag_id' );
+	$session{$uri.'?sort'} = 'created_on' if ! $session{$uri.'?sort'};
+
+	my @Contents = openprint::Inventory_Check_Entry->find( ic_id=>$$variable{Check}->id(), order=>$session{$uri.'?sort'} );
 	foreach my $ICE ( @Contents ) {
 		if ( $$ICE{rfidtag_id} ne $ICE->rfidtag_id() ) {
 			$ICE->save();
@@ -72,11 +75,12 @@
 		<td class="Width">%5$s</td>
 		<td class="Diameter">%6$s</td>
 		<td class="Quantity">%4$s</td>
+		<td class="DateTime">%17$s</td>
 		<td class="Location" rowspan="2">%11$s</td>
 		<td class="Notes" rowspan="2">%7$s<br/>%14$s</td>
-		<td class="RFIDScanner" rowspan="2">%15$s %16$s</td>
+		<td class="RFIDScanner/User" rowspan="2">%15$s %16$s</td>
 		<td class="buttons" rowspan="2">%10$s</td>
-	</tr><tr class="%13$s%1$s"><td colspan="4">%8$s</td><td class="Quantity">%9$s</td></tr>',
+	</tr><tr class="%13$s%1$s"><td colspan="4">%8$s</td><td class="Quantity">%9$s</td><td></td></tr>',
 		$rowclass,
 		$Skid->link_to(),
 		$ICE->RFIDTag()->link_to(),
@@ -95,13 +99,14 @@
 		($check ? 'warning' : '' ),
 		$check,
 		$ICE->Scanner()->name(), $ICE->User()->name(),
+		format_datetime( $ICE->created_on() ),
 		);
 
 		$total_weight += $ICE->quantity();
 		
 		$rowclass = $rowclass?'':' colRow';
 	} # end foreach ICE
-	$html .= '<tr class="totals"><td colspan="2"># of items in check: ' . scalar @Contents . '</td><td class="Quantity">'.Number::Format::format_number(int($total_weight)).'lbs</td><td></td><td></td><td></td><td></td></tr>';
+	$html .= '<tr class="totals"><td colspan="4"># of items in check: ' . scalar @Contents . '</td><td class="Quantity">'.Number::Format::format_number(int($total_weight)).'lbs</td><td></td><td></td><td></td><td></td></tr>';
 	return $html;
 ) ?>
 

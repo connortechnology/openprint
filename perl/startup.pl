@@ -5,7 +5,7 @@ BEGIN {
 	#use	APR::Pool ();
 #use	Apache::DB ();
 	#Apache::DB->init();
-	use Apache::DProf;
+	#use Apache::DProf;
 	#use Apache::SmallProf;
 	use 5.10.0;
 	use utf8;

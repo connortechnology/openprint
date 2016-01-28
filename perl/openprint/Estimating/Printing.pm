@@ -25,7 +25,7 @@ use Data::Dumper;
 package openprint::Estimating::Printing;
 my $threading = 0;
 use threads;
-use constant DEBUG => 1;
+use constant DEBUG => 0;
 use constant DEBUG_PLATES => 0;
 use constant DEBUG_VERSIONS => 0;
 use constant DEBUG_PRESSES => 0;
@@ -1501,17 +1501,19 @@ if ( DEBUG_INITIAL_FILTERING ) {
 				} else {
 					foreach my $i ( @i ) {
 						my $i2 = $i->copy();
-						$i2->Paper()->width( $i2->used_width() ) if ! $i2->Paper()->width();
-						$Papers{$i2->Paper()->id_string()} = $i2->Paper()->clone() if ! $Papers{$i2->Paper()->id_string()};
-						while ( $i2->columns() ) {
+						my $P2 = $i2->Paper();
+
+						$P2->width( $i2->used_width() ) if ! $$P2{width};
+						$Papers{$P2->id_string()} = $P2->clone() if ! $Papers{$P2->id_string()};
+						while ( $$i2{columns} ) {
 							push @imps, $i2;
 							$i2 = $i2->copy();
-							$i2->columns( $i2->columns()-1 );
-							$i2->Paper()->width( $i2->used_width() );
-							$Papers{$i2->Paper()->id_string()} = $i2->Paper()->clone() if ! $Papers{$i2->Paper()->id_string()};
+							$i2->columns( $$i2{columns}-1 );
+							$P2->width( $i2->used_width() );
+							$Papers{$P2->id_string()} = $P2->clone() if ! $Papers{$P2->id_string()};
 							openprint::imposition::check_setup( $i2, $project );
-							$i2->columns(0) if $minimum_sheet_width and ($i2->paper()->width() < $minimum_sheet_width);
-							$i2->columns(0) if $minimum_roll_width and ($i2->paper()->width() < $minimum_roll_width);
+							$i2->columns(0) if $minimum_sheet_width and ($$P2{width} < $minimum_sheet_width);
+							$i2->columns(0) if $minimum_roll_width and ($$P2{width} < $minimum_roll_width);
 						} # end while
 					} # end foreach
 				} # end if start_width or cut for all sizes
@@ -1992,6 +1994,10 @@ sub set_size {
 			if ( $$specs{OverrideSpreadSize} ne 'Y' ) {
 				$$specs{txtSpreadSize} = ( $$specs{GroupPageQuantity} > 6 ? 4 : $$specs{GroupPageQuantity} );
 				$variables{txtSpreadSize} = [ sets::union( 'output', @{$variables{txtSpreadSize}} ) ];
+			} else {
+				if ( $$specs{txtSpreadSize} > $$specs{GroupPageQuantity} ) {
+					$$specs{GroupPageQuantity} = $$specs{txtSpreadSize};
+				} # end if
 			} # end if
 			#$openprint::log->debug("SpreadSize: $$specs{txtSpreadSize}");
 			if ( ( ! defined $$specs{chkOverrideDimensions} ) or ( $$specs{chkOverrideDimensions} ne 'Y' ) ) {
@@ -3221,58 +3227,19 @@ $$sig_specs{PreviousGrainDirection} and ( $imp->grain_direction() ne $$sig_specs
 
 			my @matching_impositions = map { $$_{imposition} == $$sig_specs{'txtImposition'.$qty_index} ? $_ : () } @press_impositions;
 			if ( ! @matching_impositions ) {
-		
-$openprint::log->debug( " Didn't find the desired imposition, so cutting them down.");
-			my @lesser_imps = map { $$_{imposition} > $$sig_specs{'chkOverrideImposition'.$qty_index} ? $_ : () } @press_impositions;
-			if ( DEBUG_FILTERING ) {
-$openprint::log->debug( " first set: " . @lesser_imps );
-				foreach ( @lesser_imps ) {
-					$_->display("first set:");
-				}
-			}
-			@lesser_imps = map { $$_{imposition} >= $$sig_specs{'chkOverrideImposition'.$qty_index} ? $_ : () } openprint::imposition::decrease_imposition( @lesser_imps );
-			if ( DEBUG_FILTERING ) {
-$openprint::log->debug( " second set: " . @lesser_imps );
-				foreach ( @lesser_imps ) {
-					$_->display("second set:");
-				}
-			}
-			@matching_impositions = map { $$_{imposition} == $$sig_specs{'txtImposition'.$qty_index} ? $_ : () } @lesser_imps;
-			if ( DEBUG_FILTERING ) {
-				$openprint::log->debug( " matching imps: " . @results2 );
-				foreach ( @matching_impositions ) {
-					$_->display("After cutting:");
-				}
-			}
-			#@results2 = map { $$_{imposition} > $$sig_specs{'txtImposition'.$qty_index} ? $_ : () } @lesser_imps if ! @results2;
 
-if ( 1 ) {
-			while ( (!@matching_impositions) and @lesser_imps ) {
-				my $I = shift @lesser_imps;
-				if ( $$I{imposition} == $$sig_specs{'txtImposition'.$qty_index} ) {
-					push @matching_impositions, $I;
-				} elsif ( $$I{imposition} > $$sig_specs{'txtImposition'.$qty_index} ) {
-					push @matching_impositions, map { $$_{imposition} >= $$sig_specs{'txtImposition'.$qty_index} ? $_ : () } openprint::imposition::decrease_imposition( $I );
-				} # end if
+				$openprint::log->debug( " Didn't find the desired imposition, so cutting them down.");
+				my @lesser_imps = map { $$_{imposition} > $$sig_specs{'txtImposition'.$qty_index} ? $_ : () } @press_impositions;
+				while ( @lesser_imps and !@matching_impositions ) {
+					@lesser_imps = map { $$_{imposition} >= $$sig_specs{'txtImposition'.$qty_index} ? $_ : () } openprint::imposition::decrease_imposition( @lesser_imps );
+					@matching_impositions = map { $$_{imposition} == $$sig_specs{'txtImposition'.$qty_index} ? $_ : () } @lesser_imps;
+					$openprint::log->debug( " matching imps: " . @matching_impositions );
+					foreach ( @matching_impositions ) {
+						$_->display("After cutting:" . $$sig_specs{'txtImposition'.$qty_index} );
+					}
+				} # end while
 
-#$openprint::log->debug( " during set: " . @lesser_imps );
-			} # end while
-}
-	
-if ( 0 ) {
-			my %cuts;
-$log->warn("Getting all impos results: " . @results );
-			foreach my $I ( openprint::imposition::get_all_impositions( map { $$_{imposition} > $$sig_specs{'txtImposition'.$qty_index} ? $_ : () } @results ) ) {
-				if ( $$I{imposition} == $$sig_specs{'txtImposition'.$qty_index} ) {
-					my $str = sprintf('%d=%dx%d %dx%d-%s-%s-%s-%d-%d', @$I{'pages','spread_columns','spread_rows','columns','rows','runstyle','image_orientation'} );
-					if ( ! $cuts{$str} ) {
-						$cuts{$str} = $I;
-					} # en dif
-				} # end if
-			} # end foreach I
-			@results2 = values %cuts;
-}
-		} # end if
+			} # end if
 			push @results2, @matching_impositions;
 		} # end foreach Press
 		@results = @results2;
@@ -4386,11 +4353,14 @@ if ( DEBUG_PLATES ) {
 					if ( ! $$project{roll2sheetcharged} ) {
 						my $R2SMR = $Services{Roll2SheetMakeReady};
 
-						if ( $R2SMR and $$price{Roll2SheetMakeReady} = $R2SMR->get_price( $Paper->gsm(), $Press ) ) {
-							$$price{'Comparison Cost'} += $$price{Roll2SheetMakeReady};
-							$$price{'Comparison Log'} .= 'rol2sheetmr ' . $$price{Roll2SheetMakeReady} . '<br/>' if COMPARISON_LOG;
-							$$price{'Total Cost'} += $$price{Roll2SheetMakeReady};
-							$$price{'Setup Total'} += $$price{Roll2SheetMakeReady};
+						if ( $R2SMR ) {
+							if ( my $R2SMRPrice = $R2SMR->get_Price( $Paper->gsm(), $Press ) ) {
+								$$price{Roll2SheetMakeReady} = $$R2SMRPrice{Price};
+								$$price{'Comparison Cost'} += $$price{Roll2SheetMakeReady};
+								$$price{'Comparison Log'} .= 'rol2sheetmr ' . $$price{Roll2SheetMakeReady} . '<br/>' if COMPARISON_LOG;
+								$$price{'Total Cost'} += $$price{Roll2SheetMakeReady};
+								$$price{'Setup Total'} += $$price{Roll2SheetMakeReady};
+							} # end if
 						} # end if
 					} # end if
 # Add Roll2SheetRun
@@ -4974,7 +4944,12 @@ sub calc_price {
 		$is_sheetwork = 0;
 		$is_perfecting = 0;
 		$is_wt = 1;
-		$price{'WorkTurn Dry Charge'} = $Services{'WTDrying'} ? $Services{'WTDrying'}->get_price( $$Paper{grade}, $Press ) : 0;
+		if ( $Services{'WTDrying'} ) {
+			my $WTDryPrice = $Services{'WTDrying'}->get_Price( $$Paper{grade}, $Press );
+			if ( $WTDryPrice ) {
+				$price{'WorkTurn Dry Charge'} = $$WTDryPrice{Price};
+			} # end if 
+		} # end if 
 		@colours = ( @{$$project{filtered_colours}},@{$$project{filtered_coatings}} );
 	} elsif ( $$Imposition{runstyle} eq 'Perfecting' ) {
 #$log->debug("************ WE HAVE PERFECTING ****************");

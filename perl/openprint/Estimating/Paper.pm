@@ -192,7 +192,7 @@ if ( 0 ) {
 					my $sheets = $$sig_specs{'StockQuantity'.$qty_index};
 $log->debug("StockQuantity from sig $form : $sheets") if DEBUG;
 					if ( ! ( $PressSheet->area() and $PressSheet->start_area() ) ) {
-						Carp::cluck("No sheet area");
+						Carp::cluck("No sheet area PressSheet: " . $PressSheet->area() . ' start: ' . $PressSheet->start_area() );
 					} elsif ( $PressSheet->factor() > 1 ) {
 						# convert to supplied count
 						$sheets = ceil( $sheets / $PressSheet->factor() );
