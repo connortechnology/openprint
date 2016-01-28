@@ -3180,7 +3180,7 @@ $openprint::log->debug("Needed pages: $needed_pages") if DEBUG;
 			} # end if
 		} elsif ( 
 $$sig_specs{PreviousGrainDirection} and ( $imp->grain_direction() ne $$sig_specs{PreviousGrainDirection} ) ) {
-			if ( ( $$sig_specs{'MatchGrain'.$qty_index} eq 'Y' ) or ( $grain_direction_imps{join(',',@$imp{'imposition','columns','runstyle'})} ) ) {
+			if ( ( $$sig_specs{'MatchGrain'.$qty_index} eq 'Y' ) or ( $grain_direction_imps{join(',',$qty_index, @$imp{'imposition','columns','runstyle'})} ) ) {
 				$imp->display("PreviousGrainDirection: $$sig_specs{PreviousGrainDirection} ne " . $imp->grain_direction() ) if DEBUG_FILTERING;
 				next;
 			}
@@ -3206,7 +3206,7 @@ $$sig_specs{PreviousGrainDirection} and ( $imp->grain_direction() ne $$sig_specs
 
 		} # end if needed_pages
 		push @results, $imp;
-		$grain_direction_imps{join(',',@$imp{'imposition','columns','runstyle'})} = $imp;
+		$grain_direction_imps{join(',',$qty_index,@$imp{'imposition','columns','runstyle'})} = $imp;
 		$imp->display('Good') if DEBUG_FILTERING;
 	} # end foreach imp
 
