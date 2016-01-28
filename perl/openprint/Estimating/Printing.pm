@@ -1994,6 +1994,10 @@ sub set_size {
 			if ( $$specs{OverrideSpreadSize} ne 'Y' ) {
 				$$specs{txtSpreadSize} = ( $$specs{GroupPageQuantity} > 6 ? 4 : $$specs{GroupPageQuantity} );
 				$variables{txtSpreadSize} = [ sets::union( 'output', @{$variables{txtSpreadSize}} ) ];
+			} else {
+				if ( $$specs{txtSpreadSize} > $$specs{GroupPageQuantity} ) {
+					$$specs{GroupPageQuantity} = $$specs{txtSpreadSize};
+				} # end if
 			} # end if
 			#$openprint::log->debug("SpreadSize: $$specs{txtSpreadSize}");
 			if ( ( ! defined $$specs{chkOverrideDimensions} ) or ( $$specs{chkOverrideDimensions} ne 'Y' ) ) {
