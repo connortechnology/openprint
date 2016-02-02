@@ -126,7 +126,7 @@ sub signature_calc {
 		if ( @Materials ) {
 			# Auto guss glue type
 			foreach my $I ( @$Impositions ) {
-				my $sig_specs = $I->specs();
+				my $sig_specs = $$I{specs};
 				next if $$sig_specs{txtSignatureType} eq 'Cover Pages';
 
 				my $Paper = openprint::Paper::load_from_signature( $Project, $sig_specs, $qty_index );
@@ -141,8 +141,8 @@ sub signature_calc {
 	} # end if override
 
     foreach my $I ( @$Impositions ) {
-$I->display('In PerfectBi:') if DEBUG;
-        my $sig_specs = $I->specs();
+		$I->display('In PerfectBi:') if DEBUG;
+		my $sig_specs = $$I{specs};
         if ( ! $sig_specs ) {
             my ( $caller, undef, $line ) = caller;
             $openprint::log->error("No specs from imposition $caller line $line @$Impositions");
@@ -255,7 +255,7 @@ $openprint::log->debug("Fold pq($$FI{page_quantity}) pages($$FI{pages}) ($$Fold{
 	my $bestPrice;
 	my $bestEquipment;
 	my $I = $$Impositions[0];
-	my $sig_specs = $I->specs();
+	my $sig_specs = $$I{specs};
 	my $Press = $I->Press();
 	my $form = $$sig_specs{SignatureIndex};
 $$specs{"txtPockets$qty_index"} = $pockets;
