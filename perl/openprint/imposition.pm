@@ -85,7 +85,10 @@ sub calc_dutch {
 				);
 		next if $dutch_imp->imposition() <= $setup->imposition();
 		next if $dutch_imp->imposition() <= $previous_dutch_imp;
-		$dutch_imp->paper()->width( $dutch_imp->used_width() ) if ! $dutch_imp->paper()->start_width();
+		if ( ! $dutch_imp->paper()->start_width() ) {
+			$openprint::log->debug("Setting dutch paper width to " . $dutch_imp->used_width() );
+			$dutch_imp->paper()->width( $dutch_imp->used_width() );
+		}
 		$dutch_imp->Paper()->height( $dutch_imp->used_height() ) if ! $dutch_imp->Paper()->height();
 
 		if ( check_setup( $dutch_imp, $specs ) ) {
@@ -532,7 +535,7 @@ $openprint::log->debug("Using Single wheel space $$specs{'Perfecting Single Gutt
 
 
 	if ( ( ! $paper_width ) or ( $$specs{'Maximum Image Area Width'} > 0 and $adjusted_paper_width > $$specs{'Maximum Image Area Width'} ) ) {
-		$openprint::log->debug("*** Using Max Image Width1: $adjusted_paper_width > $$specs{'Maximum Image Area Width'}***") if DEBUG;
+		$openprint::log->debug("*** Using Max Image Width1: paper_width: $paper_width adj paper width: $adjusted_paper_width > $$specs{'Maximum Image Area Width'}***") if DEBUG;
 		$adjusted_paper_width = $$specs{'Maximum Image Area Width'};
 	} # end if
 	if ( $$specs{'Colour Bar Orientation'} eq 'Length' ) {
@@ -548,7 +551,7 @@ $openprint::log->debug("Using Single wheel space $$specs{'Perfecting Single Gutt
 
 	if ( sets::isin( $run_style, ['Perfecting','Sheet Work','Web'] ) ) {
 		calc_setup( $setup1, @$setup1{'image_width','image_height'}, $adjusted_paper_width, $adjusted_paper_height ? $adjusted_paper_height : $$setup1{image_height} );
-		$openprint::log->debug(" CHECK 1 Upright $run_style Using Paper $paper_width x $paper_height -> $adjusted_paper_width x $adjusted_paper_height Gutter: $gutters, Image: $$setup1{image_width} x $$setup1{image_height} Imposition: " . $setup1->imposition(). ":".$setup1->columns() . 'x' . $setup1->rows(). " $run_style " . $setup1->layout_width(undef) . 'x' . $setup1->layout_height() ) if DEBUG;
+		$openprint::log->debug(" CHECK 1 Upright $run_style Using Paper $paper_width x $paper_height -> $adjusted_paper_width x $adjusted_paper_height Gutter: $gutters, Image: $$setup1{image_width} x $$setup1{image_height} Imposition: " . $$setup1{imposition}. ":".$$setup1{columns} . 'x' . $$setup1{rows}. " $run_style " . $setup1->layout_width(undef) . 'x' . $setup1->layout_height() ) if DEBUG;
 
 		my $Paper1 = $setup1->Paper();
 
@@ -559,6 +562,7 @@ $openprint::log->debug("Using Single wheel space $$specs{'Perfecting Single Gutt
 			push @results, $setup1;
 			if ( ( $$specs{dutch} ne 'N' ) and ( $run_style ne 'Perfecting' or $Paper->perfecting() or $$specs{PerfectingDutchByDefault} or ( $$specs{OverrideRunStyle} and $$specs{OverrideImposition} ) ) ) {
 				# Too hard to figure space for rollers
+$openprint::log->debug("add dutches");
 				push @results, calc_dutch( $setup1, $adjusted_paper_width, $adjusted_paper_height, $specs );
 			} else {
 $openprint::log->debug("Not doing dutch because ($$specs{dutch}) or $run_style or $$Paper{perfecting}") if DEBUG;

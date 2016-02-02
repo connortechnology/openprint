@@ -1443,7 +1443,14 @@ $openprint::log->debug("Skipping cuz not $height");
 							next if $cut_off != $$specs{"CutOff$qty_index"};
 						}
 						$$project{'Cut Off'} = $cut_off;
-						foreach my $i ( openprint::imposition::get_imposition( $project, $do_work_turn, $do_perfecting, $$specs{Versions}, $P, $Press ) ) {
+						my @temp_imps = openprint::imposition::get_imposition( $project, $do_work_turn, $do_perfecting, $$specs{Versions}, $P, $Press );
+if ( DEBUG ) {
+$openprint::log->error("Got " . @temp_imps . " for " . $P->to_string() );
+foreach my$i( @temp_imps ) {
+$i->display( 'Returned from get_imposition' );
+}
+}
+						foreach my $i ( @temp_imps ) {
 							my $AP = $i->Paper();
 							if ( $maximum_roll_width and ( $$AP{width} > $maximum_roll_width ) ) {
 								$openprint::log->debug("Next due to maximum roll siwth $$AP{width} > $maximum_roll_width ") if DEBUG_IMPOSITIONS;
@@ -1460,12 +1467,12 @@ $openprint::log->debug("Skipping cuz not $height");
 									# Shouldn't really do this here.
 								} else {
 								
-									my $iarea = $i->Paper()->area();
+									my $iarea = $AP->area();
 									for ( my $imp_index = 0; $imp_index < @{$paper_impositions{$key}}; $imp_index += 1 ) {
 										my $j = $paper_impositions{$key}[$imp_index];
 										my $B = $j->Paper();
 										next if ( (defined $$specs{'OverrideCutOff'.$qty_index} ) and ( $$specs{'OverrideCutOff'.$qty_index} eq 'Y' ) and ( $$B{height} == $$specs{"CutOff$qty_index"} ) );
-										my $jarea = $j->Paper()->area();
+										my $jarea = $B->area();
 										if ( $iarea < $jarea ) {
 if ( DEBUG_INITIAL_FILTERING ) {
 	$j->display('1 dumping');
@@ -1494,26 +1501,49 @@ if ( DEBUG_INITIAL_FILTERING ) {
 					} # end foreach cut_off
 					push @i, map { @{$_} } values %paper_impositions;
 				} else {
-					push @i, openprint::imposition::get_imposition( $project, $do_work_turn, $do_perfecting, $$specs{Versions}, $P, $Press );
+					my @temp_imps = openprint::imposition::get_imposition( $project, $do_work_turn, $do_perfecting, $$specs{Versions}, $P, $Press );
+					push @i, @temp_imps;
+if ( DEBUG ) {
+$openprint::log->error("Got " . @temp_imps . " for " . $P->to_string() );
+foreach my$i( @temp_imps ) {
+$i->display( 'Returned from get_imposition' );
+}
+}
 				} # end if
 				if ( $$P{start_width} ) {
 					push @imps, @i;
 				} else {
+
+					# IF it's a custom paper, then also cut it down
 					foreach my $i ( @i ) {
 						my $i2 = $i->copy();
-						my $P2 = $i2->Paper();
+						my $P2 = $i2->Paper()->clone();
 
-						$P2->width( $i2->used_width() ) if ! $$P2{width};
+						if ( ! $$P2{width} ) {
+							$openprint::log->error("Setting siwdth to ". $i2->used_width() );
+							$P2->width( $i2->used_width() )
+						}
 						$Papers{$P2->id_string()} = $P2->clone() if ! $Papers{$P2->id_string()};
 						while ( $$i2{columns} ) {
 							push @imps, $i2;
-							$i2 = $i2->copy();
-							$i2->columns( $$i2{columns}-1 );
-							$P2->width( $i2->used_width() );
-							$Papers{$P2->id_string()} = $P2->clone() if ! $Papers{$P2->id_string()};
-							openprint::imposition::check_setup( $i2, $project );
-							$i2->columns(0) if $minimum_sheet_width and ($$P2{width} < $minimum_sheet_width);
-							$i2->columns(0) if $minimum_roll_width and ($$P2{width} < $minimum_roll_width);
+							if ( $$i2{columns} > 1 ) {
+								$i2 = $i2->copy();
+								$i2->columns( $$i2{columns}-1 );
+								openprint::imposition::check_setup( $i2, $project );
+								if ( $minimum_sheet_width and ($$P2{width} < $minimum_sheet_width) ) {
+									$openprint::log->debug("Paper width $$P2{width} < $minimum_sheet_width minimum sheet width") if DEBUG;
+									$i2->columns(0);
+								} elsif ( DEBUG ) {
+									$openprint::log->debug("Paper width $$P2{width} > $minimum_sheet_width minimum sheet width") if DEBUG;
+								}
+								$i2->columns(0) if $minimum_roll_width and ($$P2{width} < $minimum_roll_width);
+								if ( $$i2{imposition} ) {
+									$P2->width( $i2->used_width() );
+									$Papers{$P2->id_string()} = $P2->clone() if ! $Papers{$P2->id_string()};
+								}
+							} else {
+								last;
+							} # end if columns > 1
 						} # end while
 					} # end foreach
 				} # end if start_width or cut for all sizes
