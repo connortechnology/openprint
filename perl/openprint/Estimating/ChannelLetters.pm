@@ -19,6 +19,7 @@ use strict;
 
 require sql;
 require openprint::service;
+require POSIX;
 
 	#'ServiceType',
 	#'rdbChannelLettersType',
@@ -217,15 +218,15 @@ $openprint::log->debug("$k => $$specs{$k}");
 		$$specs{"txtPrice$qty_index"} =~ s/[^\d\.]//g;
 		my $price = 0;
 		my $unitPrice = 0;
-		$$specs{'hdnBreakdown'.$qty_index} = '';
-		$$specs{'hdnBreakdown'.$qty_index}  .= 'MakeReady: $' . sprintf( '%.2f', $makeReadyPrice ) . '<br/>';
-		$$specs{'hdnBreakdown'.$qty_index}  .= 'MinimumCharge: $' . sprintf( '%.2f', $minimumCharge ) . '<br/>';
+		$$specs{'hdnBreakdown'.$qty_index} = '<fieldset><legend>Letter Pricing</legend><table>';
+		$$specs{'hdnBreakdown'.$qty_index}  .= '<tr><td>MakeReady:</td><td class="Price">$' . sprintf( '%.2f', $makeReadyPrice ) . '</td></tr>';
+		$$specs{'hdnBreakdown'.$qty_index}  .= '<tr><td>MinimumCharge:</td><td class="Price">$' . sprintf( '%.2f', $minimumCharge ) . '</td></tr>';
 
 		my $qty = $$specs{"txtQuantity$qty_index"};
 		my %servicePrice = openprint::service::get_price_object( 'ChannelLetters', $qty, undef );
 		if ( sets::isin( $servicePrice{'units'}, ['', 'per m', 'per 1000'] ) ) {
 			$servicePrice{'Total'} = $qty * $servicePrice{'Price'} / 1000;
-			$$specs{'hdnBreakdown'.$qty_index} .= sprintf( 'Service: $%.2f %s = $%.2f<br/>', @servicePrice{'Price','units','Total'} );
+			$$specs{'hdnBreakdown'.$qty_index} .= sprintf( '<tr><td>Service:$%.2f %s =</td><td class="Price">$%.2f</td></tr>', @servicePrice{'Price','units','Total'} );
 		} # end if
 		$price = $makeReadyPrice + $servicePrice{'Total'};
 
@@ -233,28 +234,30 @@ $openprint::log->debug("$k => $$specs{$k}");
 			my $CanPrice = $CanMaterial->get_Price( $num_letters * $qty );
 			if ( $CanPrice ) {
 				$$CanPrice{Total} = $$CanPrice{Price} * $num_letters * $qty;
-				$$specs{'hdnBreakdown'.$qty_index} .= sprintf('Can Price: %1$.2f%2$s * %4$d = %3$.2f<br/>', @$CanPrice{'Price','units','Total'}, $num_letters * $qty );
+				$$specs{'hdnBreakdown'.$qty_index} .= sprintf('<tr><td>Can Price: %1$.2f%2$s * %4$d =</td><td class="Price">$%3$.2f</td></tr>', @$CanPrice{'Price','units','Total'}, $num_letters * $qty );
 				$price += $$CanPrice{Total};
 			} else {
-				$$specs{'hdnBreakdown'.$qty_index} .= 'No price for Cans<br/>';
+				$$specs{'hdnBreakdown'.$qty_index} .= '<tr><td colspan="2" class="warning">No price for Cans</td></tr>';
 			}
 		}
 		if ( $FaceMaterial ) {
 			my $FacePrice = $FaceMaterial->get_Price( $num_letters * $qty );
 			if ( $FacePrice ) {
 				$$FacePrice{Total} = $$FacePrice{Price} * $num_letters * $qty;
-				$$specs{'hdnBreakdown'.$qty_index} .= sprintf('Face Price: %1$.2f%2$s * %4$d = %3$.2f<br/>', @$FacePrice{'Price','units','Total'}, $num_letters * $qty );
+				$$specs{'hdnBreakdown'.$qty_index} .= sprintf('<tr><td>Face Price: $%1$.2f%2$s * %4$d = </td><td class="Price">$%3$.2f</td></tr>', @$FacePrice{'Price','units','Total'}, $num_letters * $qty );
 				$price += $$FacePrice{Total};
 			} else {
-				$$specs{'hdnBreakdown'.$qty_index} .= 'No price for Face<br/>';
+				$$specs{'hdnBreakdown'.$qty_index} .= '<tr><td class="warning" colspan="2">No price for Face</td></tr>';
 			}
 		}
+		$$specs{'hdnBreakdown'.$qty_index} .= '</table></fieldset>';
 
 		if ( $$specs{include_leds} eq 'Y' ) {
-			$$specs{'hdnBreakdown'.$qty_index} .= '<fieldset><legend>LED Pricing</legend>';
+$log->debug("Inlcuding leds");
+			$$specs{'hdnBreakdown'.$qty_index} .= '<fieldset><legend>LED Pricing</legend><table>';
 			my $led_area = Math::Round::nearest(1,$$specs{letter_height} * $font_width * $num_letters ) / 2;
-			$$specs{'hdnBreakdown'.$qty_index} .= 'Number of letters; ' . $num_letters . '<br/>';
-			$$specs{'hdnBreakdown'.$qty_index} .= 'Letter area = ' . $font_width . 'x'.$$specs{letter_height} . ' / 2 = ' . $led_area . 'square inches<br/>';
+			$$specs{'hdnBreakdown'.$qty_index} .= '<tr><td colspan="2">Number of letters; ' . $num_letters . '</td></tr>';
+			$$specs{'hdnBreakdown'.$qty_index} .= '<tr><td colspan="2">Letter area = ' . $font_width . 'x'.$$specs{letter_height} . ' / 2 = ' . $led_area . 'square inches</td></tr>';
 			if ( $$specs{led_density} eq 'high' ) {
 				$$specs{led_quantity} = POSIX::ceil( $led_area );
 			} elsif ( $$specs{led_density} eq 'medium' ) {
@@ -274,10 +277,10 @@ $openprint::log->debug("adusting to feed" . $length_feet->to_string() );
 					my $leds_per_foot = $LED_Material->Specification('leds per foot');
 					if ( $$length_feet{value} and $leds_per_foot and $$leds_per_foot{value} ) {
 						my $leds_per_roll = $$length_feet{value} * $$leds_per_foot{value};
-						$$specs{'hdnBreakdown'.$qty_index} .= 'LEDS per roll: ' . $$length_feet{value} .'*'. $$leds_per_foot{value} . '='.$leds_per_roll . '<br/>';
+						$$specs{'hdnBreakdown'.$qty_index} .= '<tr><td>LEDS per roll: ' . $$length_feet{value} .' feet per roll *'. $$leds_per_foot{value} . ' leds per foot ='.$leds_per_roll . ' leds per roll</td></tr>';
 						my $rolls = POSIX::ceil( $$specs{led_quantity} / $leds_per_roll );
 						$$Price{Total} = $$Price{Price} * $rolls;
-						$$specs{'hdnBreakdown'.$qty_index} .= sprintf('LED Price: %1$.2f%2$s * %4$d rolls = %3$.2f<br/>', @$Price{'Price','units','Total'}, $rolls );
+						$$specs{'hdnBreakdown'.$qty_index} .= sprintf('<tr><td>LED Price: $%1$.2f%2$s * %4$d rolls = </td><td class="Price">$%3$.2f</td></tr>', @$Price{'Price','units','Total'}, $rolls );
 						$price += $$Price{Total};
 					} else {
 						$$specs{alert} .= 'Unable to calculate # of Leds<br/>';
@@ -285,7 +288,7 @@ $openprint::log->debug("adusting to feed" . $length_feet->to_string() );
 					} # end if
 				} elsif ( $$Price{units} eq 'each' ) {
 					$$Price{Total} = $$Price{Price} * $$specs{led_quantity};
-					$$specs{'hdnBreakdown'.$qty_index} .= sprintf('LED Price: %1$.2f%2$s * %4$d rolls = %3$.2f<br/>', @$Price{'Price','units','Total'}, $$specs{led_quantity} );
+					$$specs{'hdnBreakdown'.$qty_index} .= sprintf('<tr><td>LED Price: $%1$.2f%2$s * %4$d rolls = </td><td class="Price">$%3$.2f</td></tr>', @$Price{'Price','units','Total'}, $$specs{led_quantity} );
 					$price += $$Price{Total};
 				} else {
 					$openprint::log->error("Unknown units on LEDS " . $Price->to_string() );
@@ -296,7 +299,7 @@ $openprint::log->debug("adusting to feed" . $length_feet->to_string() );
 				if ( $watts and $$watts{value} ) {
 					if ( $$watts{units} eq 'per led' ) {
 						my $total_watts = $$specs{led_quantity} * $$watts{value};
-						$$specs{'hdnBreakdown'.$qty_index} .= sprintf('Power needed: %dwatts<br/>', $total_watts );
+						$$specs{'hdnBreakdown'.$qty_index} .= sprintf('<tr><td>Power needed: %dwatts</td></tr>', $total_watts );
 
 						my $best_PS = undef;
 						foreach my $PS ( openprint::Material->find( category=>'LED Power Supplies' ) ) {
@@ -305,7 +308,7 @@ $openprint::log->debug("adusting to feed" . $length_feet->to_string() );
 								$openprint::log->error("No watts for " . $PS->to_string() );
 								next;
 							} 
-							my $ps_quantity = $total_watts / $$ps_watts{value};
+							my $ps_quantity = POSIX::ceil( $total_watts / $$ps_watts{value} );
 							my $PS_Price = $PS->get_Price( $ps_quantity );
 							$$PS_Price{Total} = $$PS_Price{Price} * $ps_quantity;
 							if ( ( ! defined $best_PS ) or ( $$PS_Price{Total} < $$best_PS{price} ) ) {
@@ -316,7 +319,7 @@ $openprint::log->debug("adusting to feed" . $length_feet->to_string() );
 						} # end foraech PS
 						if ( $best_PS ) {
 							my $PS_Price = $$best_PS{price};
-							$$specs{'hdnBreakdown'.$qty_index} .= sprintf('Power Supply:%5$s %1$.2f%2$s * %4$d = %3$.2f<br/>', @$PS_Price{'Price','units','Total'}, $$best_PS{quantity}, $$best_PS{PS}->name() );
+							$$specs{'hdnBreakdown'.$qty_index} .= sprintf('<tr><td>Power Supply:%5$s $%1$.2f%2$s * %4$d = </td><td class="Price">$%3$.2f</td></tr>', @$PS_Price{'Price','units','Total'}, $$best_PS{quantity}, $$best_PS{PS}->name() );
 						} else {
 							$openprint::log->error("Unable to determine PS");
 						}
@@ -325,8 +328,7 @@ $openprint::log->debug("adusting to feed" . $length_feet->to_string() );
 					$openprint::log->error("Unable to get watts units on LEDS " );
 				} 	
 			} # end if
-
-		$$specs{'hdnBreakdown'.$qty_index} .= '</fieldset>';	
+			$$specs{'hdnBreakdown'.$qty_index} .= '</table></fieldset>';
 		} # end if include_leds
 
 		if ( $minimumCharge > 0 and $price < $minimumCharge ) {
