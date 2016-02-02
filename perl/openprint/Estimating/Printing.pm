@@ -3212,7 +3212,7 @@ $$sig_specs{PreviousGrainDirection} and ( $imp->grain_direction() ne $$sig_specs
 
 		} # end if needed_pages
 		push @results, $imp;
-		$grain_direction_imps{join(',',$qty_index,@$imp{'imposition','columns','runstyle'})} = $imp;
+		#$grain_direction_imps{join(',',$qty_index,@$imp{'imposition','columns','runstyle'})} = $imp;
 		$imp->display('Good') if DEBUG_FILTERING;
 	} # end foreach imp
 
