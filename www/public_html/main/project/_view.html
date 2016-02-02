@@ -41,7 +41,7 @@
 			my $function_name = 'openprint::Estimating::'.$Project_Type->type();
 			my $summary = '';
 			if ( my $function = $function_name->can('summary') ) {
-				$summary = $function->($Project, $$services{''}[0], $printing_specs );
+				$summary = $function->( $Project, $$services{''}[0], $printing_specs );
 			} # end if
 
 			my $Service = $Project->Service( $$services{''}[0] );
@@ -51,15 +51,15 @@
 
             if ( $editable ) {
 				if ( $Project->Type()->url() ) {
-					$html .= sprintf('<tr%s><td class="description"><a href="/main/project/%s?ProjectIndex=%d&amp;ServiceIndex=%d"><b>Printing</b><br/>%s%s</a></td>', 
-						$rowclass, $Project_Type->url(), $Project->id(), $$services{''}[0], $summary,
+					$html .= sprintf('<tr%1$s><td class="description"><a href="/main/project/%2$s?ProjectIndex=%3$d&amp;ServiceIndex=%4$d">%5$s<br/>%6$s%7$s</a></td>', 
+						$rowclass, $Project_Type->url(), $Project->id(), $$services{''}[0], $Project_Type->description(), $summary,
 						( $$printing_specs{alert} ? join( $$printing_specs{alert}, '<span class="error">','</span>' ) : '' ),
 						);
 				} else {
-					$html .= sprintf('<tr%s><td class="description"><b>Printing</b></td>', $rowclass  );
+					$html .= sprintf('<tr%s><td class="description">Printing</td>', $rowclass  );
 				} # end if
             } else {
-                $html .= sprintf('<tr%s><td class="description"><b>Printing</b><br/>%s</td>', $rowclass, $summary );
+                $html .= sprintf('<tr%s><td class="description"><span class="service_name">Printing</b><br/>%s</td>', $rowclass, $summary );
             } # end if
 
 			if ( $$services{Signature} ) {
@@ -155,7 +155,7 @@
 							$html .= '</td>';
 							$totals[$qty_index] += $price;
 						} # end foreach qty_index
-					} # end if
+					} # end if editable
 
 					if ( ! $$variable{'Quote'} ) {
 						$html .= join( '', '<td class="status">', $SigService->status(), '</td>' );
