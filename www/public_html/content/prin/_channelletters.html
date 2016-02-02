@@ -11,7 +11,7 @@
 						{ name=>'letter_height_select',
 							onchange=>q`if(this.getValue()==''){$('letter_height').show();}else{$('letter_height').hide();$('letter_height').value=this.getValue();};`, 
 					} ),
-					input( type=>'float', id=>'letter_height', name=>'letter_height', ( sets::isin( $$variable{letter_height}, \@sizes ) ? ( style=>'display:none;' ) : () ), placeholder=>'letter height in inches' ),
+					input( type=>'float', id=>'letter_height', name=>'letter_height', value=>$$variable{letter_height}, ( sets::isin( $$variable{letter_height}, \@sizes ) ? ( style=>'display:none;' ) : () ), placeholder=>'letter height in inches' ),
 					);
 			) ?>
 				<li><label>Font</label><? echo(
