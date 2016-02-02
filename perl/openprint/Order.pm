@@ -569,7 +569,9 @@ sub send_sales_order {
 
 	@admin_emails = sets::union( @admin_emails, @accounting_emails, $sales_person_email, 
 		map {
-			sprintf('"%s %s" <%s>', new openprint::User( $_->user_id() )->get('firstname','lastname','email')) 
+			sets::isin( $_->User()->type(), ['E','A'] ) ? 
+			sprintf('"%s %s" <%s>', $_->User()->get('firstname','lastname','email')) 
+			: ()
 			} $self->Projects()
 		);
 
