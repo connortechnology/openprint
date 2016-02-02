@@ -81,7 +81,7 @@ sub fits {
 		if ( $max_width and $max_length ) {
 			my $imp = openprint::imposition::fit( $width, $height, $max_width, $max_length );
 	#$log->debug("Impo: $$imp{'imposition'} $$imp{'rows'}x$$imp{'columns'} on $$self{'strid'}");
-			if ( ! $imp->imposition() ) {
+			if ( ! $$imp{imposition} ) {
 				return sprintf('Too big %s x %s on %s x %s', $width, $height, $max_width, $max_length );
 			} # end if
 		} elsif ( $max_width ) {
@@ -99,7 +99,7 @@ sub fits {
 
 		if ( $min_width and $min_length ) {
 			my $imp = openprint::imposition::fit( $min_width, $min_length, $width, $height );
-			if ( ! $imp->imposition() ) {
+			if ( ! $$imp{imposition} ) {
 				return sprintf('Too small %s x %s on %s x %s', $width, $height, $min_width, $min_length);
 			} # end if
 		} elsif ( $min_width ) {

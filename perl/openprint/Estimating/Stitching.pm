@@ -221,7 +221,7 @@ sub signature_calc {
 
 	foreach my $I ( @$Impositions ) {
 $I->display('In Stitching:') if DEBUG and 0;
-        my $sig_specs = $I->specs();
+        my $sig_specs = $$I{specs};
 		#next if $$sig_specs{txtSignatureType} eq 'Cover Pages';
         if ( ! $sig_specs ) {
             my ( $caller, undef, $line ) = caller;
@@ -234,7 +234,7 @@ $I->display('In Stitching:') if DEBUG and 0;
             next;
         }
         my $form = $$sig_specs{SignatureIndex};
-        push @printed_impositions, $I->imposition();
+        push @printed_impositions, $$I{imposition};
         if ( ! $$I{Folds} ) {
 			if ( DEBUG ) {
 				$openprint::log->debug("Sitchign: No folds in imposition, generating") if DEBUG;
@@ -269,24 +269,24 @@ $I->display('In Stitching:') if DEBUG and 0;
 				$FI->display() if DEBUG;
 				my $Fold = $FI->Fold();
 $openprint::log->debug("Fold pq($$FI{page_quantity}) pages($$FI{pages}) ($$Fold{name}) Pockets: $pockets") if DEBUG;
-				if ( $FI->imposition() < $imposition ) {
+				if ( $$FI{imposition} < $imposition ) {
 					$results{Breakdown} .= "Setting stitching imposition to $$FI{imposition} out because Folding imposition is $$FI{imposition}out<br/>";
-					$imposition = $FI->imposition();
+					$imposition = $$FI{imposition};
 				}
 				if ( ! $$I{Folder} ) {
 					$$I{Folder} = $Fold->Equipment();
-					$openprint::log->debug("Setting folder to " . $$I{Folder}->strid() ) if DEBUG and 0;
+					$openprint::log->debug("Setting folder to " . $$I{Folder}{strid} ) if DEBUG and 0;
 					#} else {
 					#$openprint::log->debug('Folder is ' . $$I{Folder}->strid() );
 				}
 				#$openprint::log->debug("Adding " . $Fold->pages() . 'x'.$Fold->quantity() );
 				if ( ! $override_pockets ) {
-					$$specs{join('','txtSignatureQty',$Fold->pages(),'Page-',$qty_index)} += $FI->page_quantity();
+					$$specs{join('','txtSignatureQty',$Fold->pages(),'Page-',$qty_index)} += $$FI{page_quantity};
 					if ( $$sig_specs{Group} == 1 ) {
 						$openprint::log->debug("Not counting pocket due to it being cover. $form") if DEBUG;
 						next;
 					}
-					$pockets += $FI->page_quantity();
+					$pockets += $$FI{page_quantity};
 				}
 			} # end foreach Fold
 		}
@@ -399,7 +399,7 @@ $openprint::log->debug("Fold pq($$FI{page_quantity}) pages($$FI{pages}) ($$Fold{
 #$results{Breakdown} = 'Imposition: ' . $$specs{'Imposition'.$qty_index} .'<br/>';
 	my $I = $$Impositions[0];
 	my $Press = $I->Press();
-	my $sig_specs = $I->specs();
+	my $sig_specs = $$I{specs};
 	my $form = $$sig_specs{SignatureIndex};
 
 	while ( ! $bestPrice and $imposition ) {
@@ -844,16 +844,14 @@ sub get_price {
 	if ( $maxPockets and ( $neededPockets > $maxPockets ) ) {
 # Loaded here, so we don't do it in the loop many times
 		$openprint::log->debug("Need more pockets $neededPockets > $maxPockets") if DEBUG;
-		my %servicePrice;
+		my $servicePrice;
 		my $Service = openprint::Service->find_one( name=>$$ServiceType{name}.$maxPockets.'Pockets' );
-		if ( $Service ) {
-			%servicePrice = $Service->get_price( $qty, $Equipment );
-		} else {
+		$servicePrice = $Service->get_Price( $qty, $Equipment ) if $Service;
+		if ( ! $servicePrice ) {
 			$Service = openprint::Service->find_one( name=>$$ServiceType{name} );
-	
-			%servicePrice = $Service->get_price( $maxPockets, $Equipment ) if $Service;
+			$servicePrice = $Service->get_Price( $maxPockets, $Equipment ) if $Service;
 		} # end if
-		$price{ServicePrice} = \%servicePrice;
+		$price{ServicePrice} = $servicePrice;
 
 		$unitsPerHour = $Equipment->specification( $$ServiceType{name}.'Units Per Hour '.$price{Imposition}.' out', $maxPockets );
 		$unitsPerHour = $Equipment->specification( $$ServiceType{name}.'Units Per Hour', $maxPockets ) if ! $unitsPerHour;
@@ -867,17 +865,17 @@ sub get_price {
 		} # end if
 		my $loopbreak_pockets = $neededPockets;
 		while ( $neededPockets > $maxPockets ) {
-			if ( $servicePrice{units} eq 'per m' ) {
-				$servicePrice{Total} = $servicePrice{Price} * $qty/1000;
-				$price{Service} += $servicePrice{Total};
-			} elsif ( $servicePrice{units} eq 'per hour' ) {
-				$servicePrice{Total} = $servicePrice{Price} * $runtime;
-				$price{Service} += $servicePrice{Total}
-			} elsif ( $servicePrice{units} eq 'each' ) {
-				$servicePrice{Total} = $servicePrice{Price} * $qty;
-				$price{Service} += $servicePrice{Total};
+			if ( $$servicePrice{units} eq 'per m' ) {
+				$$servicePrice{Total} = $$servicePrice{Price} * $qty/1000;
+				$price{Service} += $$servicePrice{Total};
+			} elsif ( $$servicePrice{units} eq 'per hour' ) {
+				$$servicePrice{Total} = $$servicePrice{Price} * $runtime;
+				$price{Service} += $$servicePrice{Total}
+			} elsif ( $$servicePrice{units} eq 'each' ) {
+				$$servicePrice{Total} = $$servicePrice{Price} * $qty;
+				$price{Service} += $$servicePrice{Total};
 			} else {
-				$openprint::log->debug("Unknown Unit Type: ($servicePrice{units}) for service $$ServiceType{name} on $$Equipment{name}");
+				$openprint::log->error("880: Unknown Unit Type: ($$servicePrice{units}) for service $$Service{name} on $$Equipment{strid} $$Equipment{name} maxpockets: $maxPockets");
 			} # end if
 
 # The minus 1 is because the result of each pass takes up a pocket
@@ -952,7 +950,7 @@ sub get_price {
 				$servicePrice{Total} = $servicePrice{Price} * $runtime;
 				$price{Service} += $servicePrice{Total}
 			} else {
-				$openprint::log->debug("Unknown Unit Type: $servicePrice{units} for $$ServiceType{name} range($neededPockets) equipment(".$Equipment->strid().")");
+				$openprint::log->debug("955: Unknown Unit Type: $servicePrice{units} for $$ServiceType{name} range($neededPockets) equipment(".$Equipment->strid().")");
 			} # end if
 			
 			my $ExactFitMakeReady = $MakeReadyService->get_Price( 1, $Equipment );

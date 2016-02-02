@@ -118,8 +118,8 @@ $openprint::log->error("Unknown units on ImpositionMakeready");
 				%ImpositionCharge = $ServiceService->get_price( $Imposition->layout_area(),$Press);
 				$price{Total} += $ImpositionCharge{Price} * $Imposition->layout_area();
 			} else {
-				%ImpositionCharge = $ServiceService->get_price( $Imposition->imposition(),$Press);
-				$price{Total} += $ImpositionCharge{Price} * $Imposition->imposition();
+				%ImpositionCharge = $ServiceService->get_price( $$Imposition{imposition},$Press);
+				$price{Total} += $ImpositionCharge{Price} * $$Imposition{imposition};
 			} # end if
 		} # end if
 $openprint::log->debug("MakeReady is $ImpositionCharge{Price} $ImpositionCharge{units} $ImpositionCharge{Total}") if DEBUG;

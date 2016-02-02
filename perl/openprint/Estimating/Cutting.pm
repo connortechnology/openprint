@@ -607,7 +607,7 @@ $openprint::log->debug("Folding impositions: " . @folding_impositions ) if DEBUG
 			$folding_cuts = $$specs{"FoldingCuts-$form-$qty_index"};
 		} else {
 			if ( ( @folding_impositions == 1 ) 
-					and ( $folding_impositions[0]->imposition() == 1 )
+					and ( $folding_impositions[0]{imposition} == 1 )
 					and ( ! $stitching_imposition )
 
 # Why about the quanitty? Basically if it's 1out, we pre-trim.  Otherwise let the folder do it.  So if er have 2@1out, then we might as well pre-trim
@@ -777,8 +777,8 @@ $openprint::log->debug("Folding impositions: " . @folding_impositions ) if DEBUG
 				if ( ($cutting_capable ne 'When Stitching') and $I->pages() and ! ( $folding_specs and $Folder and $Folder->specification('Cutting Capable') ) ) {
 $openprint::log->debug("Cutting because not folding or can't cut on folder $folding_specs " . ( $Folder ? $$Folder{strid} : '' ) ) if DEBUG;
 	# Have to cut the pages out
-					$vertical_cuts += int ( ($I->page_columns()-1)*$I->columns()*2 ) + 2;
-					$horizontal_cuts += int( ($I->page_rows()-1)*$I->rows() * 2 ) + 2;
+					$vertical_cuts += int ( ($I->page_columns()-1)*$$I{columns}*2 ) + 2;
+					$horizontal_cuts += int( ($I->page_rows()-1)*$$I{rows} * 2 ) + 2;
 											
 				} elsif ( $stitching_imposition ) {
 					if ( ! @folding_impositions ) {
@@ -822,7 +822,7 @@ $openprint::log->debug("Cutting because not folding or can't cut on folder $fold
 					# This is special... something about if it's plasticCoil... you have to cut it into 8's...
 
 					if ( $I->pages() > 8 ) {
-						if ( @folding_impositions == 1 and $folding_impositions[0]->quantity() <= 1 and $folding_impositions[0]->imposition() == 1 ) {
+						if ( @folding_impositions == 1 and $folding_impositions[0]->quantity() <= 1 and $folding_impositions[0]{imposition} == 1 ) {
 							# According to Brendan, will trim it first.
 							$vertical_cuts += 2;
 							$horizontal_cuts += 2;
@@ -1190,9 +1190,9 @@ sub calc {
 			} # end if
 			my $Imposition = new openprint::Imposition();
 			$Imposition->load( $sig_specs, $qty_index );
-			next if ! $Imposition->imposition();
+			next if ! $$Imposition{imposition};
 			my $Paper = $Imposition->Paper();
-			if ( $Paper->type() eq 'Sheet' and $Paper->is_cut() ) {
+			if ( $$Paper{type} eq 'Sheet' and $Paper->is_cut() ) {
 				if ( $Cut_Stocks{ $Paper->id_string() } ) {
 					$Cut_Stocks{ $Paper->id_string() }{quantity} += $$sig_specs{"StockQuantity$qty_index"};
 				} else {

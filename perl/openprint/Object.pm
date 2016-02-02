@@ -907,6 +907,7 @@ sub find_one {
 } # end sub find_one
 
 sub AUTOLOAD {
+	no strict;
 	my ( $self, $newvalue ) = @_;
 	my $type = ref($_[0]);
 	my $name = $AUTOLOAD;
@@ -920,6 +921,10 @@ sub AUTOLOAD {
 			} # end if
 		} # end if
 $openprint::log->debug("Autoload $type $name $_[0] $_[1] $self $newvalue") if ! $type;
+*{$name} = sub {
+      @_ > 1 ? $_[0]->{$name} = $_[1]
+        : $_[0]->{$name};
+    };
 		return $_[0]{$name} = $_[1];
 	} else {
 		if ( $fields ) {
@@ -933,6 +938,9 @@ $openprint::log->debug("Autoload $type $name $_[0] $_[1] $self $newvalue") if ! 
 						#return $$defaults{$name};
 					#}
 				#} # end if
+*{$name} = sub {
+      @_ > 1 ? $_[0]->{$name} = $_[1] : $_[0]->{$name};
+    };
 				return $_[0]{$name};
 			} else {
 				my $field = (lc $name) . '_id';

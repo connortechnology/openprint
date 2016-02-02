@@ -1569,9 +1569,8 @@ sub start_area {
 }
 
 sub is_cut {
-	my $self = shift;
-	if ( $$self{start_width} and $$self{start_height} ) {
-		return 1 if ( $$self{start_width} != $$self{width} or $$self{start_height} != $$self{height} );
+	if ( $_[0]{start_width} and $_[0]{start_height} ) {
+		return 1 if ( $_[0]{start_width} != $_[0]{width} or $_[0]{start_height} != $_[0]{height} );
 	} # end if
 	return 0;	
 } # end sub is_cut

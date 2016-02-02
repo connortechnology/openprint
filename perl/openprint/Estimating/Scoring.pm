@@ -228,7 +228,7 @@ $log->debug("Setting imposition cuz " . $$specs{"chkOverrideImposition-$form-$qt
 							"ImpOut-$form-$qty_index-$imp_index",
 							"ImpColumns-$form-$qty_index-$imp_index",
 							"ImpRows-$form-$qty_index-$imp_index"} =
-							$I->get('quantity','imposition','columns','rows');
+							@$I{'quantity','imposition','columns','rows'};
 						$imp_index += 1;
 					} # end foreach 
 				} # end if
@@ -350,7 +350,7 @@ sub signature_calc($$$$$$) {
 	}
 
 # Get the impositions to consider
-	if ( ! $SignatureImposition->imposition() ) {
+	if ( ! $$SignatureImposition{imposition} ) {
 		$Results{alert} .= "Unable to load the imposition.  This likely is because printing has not finished calculating.<br/>";
 		return $Results{Status} = 'uncalculated';
 	} # end if
@@ -370,13 +370,16 @@ sub signature_calc($$$$$$) {
 
         my @override_impos;
         foreach my $index ( 1 .. 4 ) {
-            next if ! $$specs{"ImpQty-$form-$qty_index-$index"};
+			my $imp_qty =$$specs{join('-','ImpQty', $form,$qty_index,$index)};
+            next if ! $imp_qty;
             my $I = $SignatureImposition->copy();
-            $I->quantity( $$specs{"ImpQty-$form-$qty_index-$index"} );
+            $I->quantity( $imp_qty );
             $I->imposition( $$specs{"ImpOut-$form-$qty_index-$index"} );
             $I->columns( $$specs{"ImpColumns-$form-$qty_index-$index"} );
             $I->rows( $$specs{"ImpRows-$form-$qty_index-$index"} );
-            $I->Paper( $SignatureImposition->Paper() );
+
+			# Paper was already cloned... why are we uncloning it?
+            #$I->Paper( $SignatureImposition->Paper() );
             push @override_impos, $I;
             $I->display('Override');
         } # end foreach
@@ -393,15 +396,15 @@ sub signature_calc($$$$$$) {
 		if ( $$SignatureImposition{runstyle} eq 'Work & Turn' ) {
 			my $i = $SignatureImposition->copy();
 			$i->runstyle('Sheet Work');
-			$i->start_columns( $i->columns() );
-			$i->columns( $i->columns()/2 );
+			$i->start_columns( $$i{columns} );
+			$i->columns( $$i{columns}/2 );
 			$$i{quantity} = 2;
 			push @Sets_of_Impositions, $i;
 		} elsif ( $$SignatureImposition{runstyle} eq 'Work & Tumble' ) {
 			my $i = $SignatureImposition->copy();
 			$i->runstyle('Sheet Work');
-			$i->start_rows( $i->rows() );
-			$i->rows( $i->rows()/2 );
+			$i->start_rows( $$i{rows} );
+			$i->rows( $$i{rows}/2 );
 			$$i{quantity} = 2;
 			push @Sets_of_Impositions, $i;
 		} else {
@@ -411,16 +414,16 @@ sub signature_calc($$$$$$) {
 		} # end if
 
 	# Get rid of dutches
-		if ( $SignatureImposition->dutch_columns() ) {
+		if ( $$SignatureImposition{dutch_columns} ) {
 			my @Impositions = ();
 			my $modified = 0;
 			foreach my $I ( @Sets_of_Impositions ) {
-				if ( $I->dutch_columns() ) {
+				if ( $$I{dutch_columns} ) {
 					{
 						my $i = $I->copy();
 						$i->dutch_columns(0);
 						$i->dutch_rows(0);
-						$i->quantity(1);
+						$$i{quantity}=1;
 						push @Impositions, $i;
 					}
 					{
@@ -429,8 +432,8 @@ sub signature_calc($$$$$$) {
 						$i->rows( $i->dutch_rows() );
 						$i->dutch_columns(0);
 						$i->dutch_rows(0);
-						$i->quantity(1);
-						$i->image_orientation($I->image_orientation() eq 'Vertical' ? 'Horizontal' : 'Vertical');
+						$$i{quantity} = 1;
+						$i->image_orientation($$I{image_orientation} eq 'Vertical' ? 'Horizontal' : 'Vertical');
 						push @Impositions, $i;
 					}
 					$modified = 1;
@@ -455,7 +458,7 @@ sub signature_calc($$$$$$) {
 					$I->display('quantity '.$I->quantity() );
 				} # end foreach I
 			} # end foreach set
-			$openprint::log->debug(sprintf('Original Sign info: %dx%d*%d,%dout', $SignatureImposition->spread_columns(), $SignatureImposition->spread_rows(), $SignatureImposition->spread_size(), $SignatureImposition->imposition() ) );
+			$openprint::log->debug(sprintf('Original Sign info: %dx%d*%d,%dout', @$SignatureImposition{'spread_columns', 'spread_rows', 'spread_size', 'imposition'} ) );
 		} # end if debug
 	} # end if overrideImpositions
 
@@ -474,7 +477,7 @@ sub signature_calc($$$$$$) {
 				} # end if
 				next;
 			} 
-			if ( $$calc_hash{FoldingSpecs}{"ddmEquipment-$form-$qty_index"} != $Equipment->id() ) {
+			if ( $$calc_hash{FoldingSpecs}{"ddmEquipment-$form-$qty_index"} != $$Equipment{id} ) {
 				my $Folder = new openprint::Equipment( $$calc_hash{FoldingSpecs}{"ddmEquipment-$form-$qty_index"} );
 				$Results{Breakdown} .= "Form $form qty $qty_index not being folded on $$Equipment{strid}. Is being folded on $$Folder{strid}.<br/>";
 				if ( $$specs{"chkOverrideEquipment-$form-$qty_index"} eq 'Y' ) {
@@ -517,7 +520,7 @@ sub signature_calc($$$$$$) {
 			my $impressions;
 			my $parts = 0;
 			foreach my $Fold ( @Folds ) {
-				$parts += $Fold->imposition() * $Fold->quantity();
+				$parts += $$Fold{imposition} * $$Fold{quantity};
 				if ( $_ = fits_on_equipment( $Equipment, $Fold, $sig_specs, $$specs{"txtVerticalQty-$form"}, $$specs{"txtHorizontalQty-$form"} ) ) {
 					$Results{Breakdown} .= "Doesn't fit. $_<br/>";
 					next EQUIPMENT;
@@ -564,7 +567,7 @@ sub signature_calc($$$$$$) {
 
 					$Results{Breakdown} .= '<br/>';
 
-					my $Price = get_price( $Equipment, $$specs{"txtVerticalQty-$form"}, $$specs{"txtHorizontalQty-$form"}, $qty/$I->imposition(), $I );
+					my $Price = get_price( $Equipment, $$specs{"txtVerticalQty-$form"}, $$specs{"txtHorizontalQty-$form"}, $qty/$$I{imposition}, $I );
 
 					$totalPrice += $$Price{setup} + $$Price{Vertical}{Total} + $$Price{Horizontal}{Total} + $$Price{Service}{Total};
 					$Results{Breakdown} .= $$Price{Breakdown};
@@ -603,22 +606,22 @@ sub get_price {
 	my $vertical_length = 0;
 	my %vertical_price;
 
-	if ( $I->image_orientation() eq 'Vertical' ) {
+	if ( $$I{image_orientation} eq 'Vertical' ) {
 		if ( $vertical ) {
-			$vertical_rule = $vertical * $I->columns();
-			$vertical_length = $vertical_rule * $I->layout_height();
+			$vertical_rule = $vertical * $$I{columns};
+			$vertical_length = $vertical_rule * $$I{layout_height};
 		}
 		if ( $horizontal ) {
-			$horizontal_rule = $horizontal * $I->rows();
+			$horizontal_rule = $horizontal * $$I{rows};
 			$horizontal_length = $horizontal_rule * $I->layout_width();
 		} # end if
-	} elsif ( $I->image_orientation() eq 'Horizontal' ) {
+	} elsif ( $$I{image_orientation} eq 'Horizontal' ) {
 		if ( $horizontal ) {
-			$vertical_rule = $horizontal * $I->rows();
+			$vertical_rule = $horizontal * $$I{rows};
 			$vertical_length = $vertical_rule * $I->layout_width();
 		} # end if
 		if ( $vertical ) {
-			$horizontal_rule = $vertical * $I->columns();
+			$horizontal_rule = $vertical * $$I{columns};
 			$horizontal_length = $horizontal_rule * $I->layout_height();
 		} # end if
 	} # end if

@@ -1259,7 +1259,10 @@ function toggleContent( divID, show_url, inputs, hide_url ) {
 	} // end if
 } // end function toggleContent
 
+var openprint_load_content_ajax = null;
 function LoadContent( divID, page, parameters, message ) {
+    if ( openprint_load_content_ajax ) { openprint_load_content_ajax.transport.abort(); }
+
 	var div = $( divID );
 	if ( div ) {
 		if ( message ) { 
@@ -1284,7 +1287,7 @@ function LoadContent( divID, page, parameters, message ) {
 	if ( parameters.length > 8190 ) 
 		method = 'post';
 	
-	new Ajax.Updater( divID, page, { method: method, parameters: parameters, evalScripts: true } );
+	openprint_load_content_ajax = new Ajax.Updater( divID, page, { method: method, parameters: parameters, evalScripts: true } );
 } // end function LoadContent
 
 function photo_popup( asset_id, album_id ) {

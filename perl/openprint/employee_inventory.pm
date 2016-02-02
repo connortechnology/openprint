@@ -2795,7 +2795,7 @@ $log->debug("Have skid not in check: " . $Skid->to_string() );
 } # end sub check
 
 sub _check_entries {
-	ssi::save_params( '/employee/inventory/check.html', ( 'has_skid' , 'has_quantity',
+	ssi::save_params( '/employee/inventory/check.html', ( 'has_skid' , 'has_quantity', 'sort', 'scanner_id', 'user_id', 'auto_refresh',
 	) );
 	$variable{Check} = new openprint::Inventory_Check( $param{check_id} );
 }
