@@ -1103,9 +1103,14 @@ sub decrease_imposition {
 sub get_all_impositions {
 #Carp::cluck("Really don't want to use get_all_impositions");
 #map { $openprint::log->debug( $_ ) } @_;
-	my @imps = decrease_imposition( @_ );
-	@imps = get_all_impositions( @imps ) if @imps;
-	return (@_, @imps);
+	my @results = @_;
+	my @imps = @_;
+
+	while ( @imps = decrease_imposition( @imps ) ) {
+		#@imps = get_all_impositions( @imps );
+		push @results, @imps;
+	}
+	return @results;
 }
 
 sub breakup_impositions {
