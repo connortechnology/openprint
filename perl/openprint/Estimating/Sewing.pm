@@ -90,6 +90,7 @@ $log->debug("Sewing!!!!!!!!!!!!!!!!!!");
 	my $Project = new openprint::Project( $project_index );
 	my $services = $Project->services();
 	my $printing_specs = openprint::service::get_specs_ref( $Project, $$services{''}[0] ) if $$services{''};
+	my $sig_specs = openprint::service::get_specs_ref( $Project, $$services{Signature}[0] ) if $$services{Signature};
 	if ( ! ( $$specs{'EdgeLeft'} or $$specs{'EdgeRight'} or $$specs{'EdgeTop'} or $$specs{'EdgeBottom'} ) ) {
 		$$specs{'EdgeLeft'} = 'Left';
 		$$specs{'EdgeRight'} = 'Right';
@@ -98,13 +99,13 @@ $log->debug("Sewing!!!!!!!!!!!!!!!!!!");
 	} # end if
 	if ( $$specs{'OverrideQuantity'} ne 'Y' ) {
 		$$specs{'Quantity'} = 0;
-		$$specs{'Quantity'} += $$printing_specs{'txtFinalWidth'} if $$specs{'EdgeTop'};
-		$$specs{'Quantity'} += $$printing_specs{'txtFinalWidth'} if $$specs{'EdgeBottom'};
-		$$specs{'Quantity'} += $$printing_specs{'txtFinalHeight'} if $$specs{'EdgeLeft'};
-		$$specs{'Quantity'} += $$printing_specs{'txtFinalHeight'} if $$specs{'EdgeRight'};
+		$$specs{'Quantity'} += $$sig_specs{'txtFinalWidth'} if $$specs{'EdgeTop'};
+		$$specs{'Quantity'} += $$sig_specs{'txtFinalWidth'} if $$specs{'EdgeBottom'};
+		$$specs{'Quantity'} += $$sig_specs{'txtFinalHeight'} if $$specs{'EdgeLeft'};
+		$$specs{'Quantity'} += $$sig_specs{'txtFinalHeight'} if $$specs{'EdgeRight'};
 	} # end if
 	if ( ! $$specs{'Quantity'} ) {
-		$$specs{'alert'} .= 'Please enter the # of inches to be sold.<br/>';
+		$$specs{'alert'} .= 'Please enter the # of inches to be sewn.<br/>';
 		return $$specs{'Status'} = 'uncalculated';
 	} # end if
 
