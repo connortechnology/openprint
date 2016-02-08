@@ -2461,7 +2461,7 @@ $openprint::log->debug("Before select presses: " . ( sprintf('%.4f', tv_interval
 		$openprint::log->debug( "Presses: " . join(',', map { $_->strid() } @possible_presses ) );
 	} # end if
 	@possible_presses = sort { $$a{strid} <=>$$b{strid} } @possible_presses;
-$openprint::log->debug("after sorting presses: " . ( sprintf('%.4f', tv_interval( [$master_time])*1000) ) .' usecs' );
+$openprint::log->debug("after sorting presses: " . ( sprintf('%.4f', tv_interval( [$master_time])*1000) ) .' usecs there are ' . @possible_presses );
 
 	my @available_printingtypes = sets::union( map { $_->specification('Printing Type') } @possible_presses );
 
@@ -2473,7 +2473,6 @@ $openprint::log->debug("after sorting presses: " . ( sprintf('%.4f', tv_interval
 	if ( ! @quantity_indexes ) {
 $log->warn("There are no quantities!");
 	} # end if
-
 
 	foreach my $qty_index ( @quantity_indexes ) {
 		if ( $$specs{'OverridePrice'.$qty_index} ne 'Y' ) {
