@@ -7,7 +7,8 @@ require sql;
 require openprint::logs;
 require openprint::ServiceType;
 
-use vars qw( $log $dbh %variable %param );
+use vars qw( $r $log $dbh %variable %param );
+*r = \$openprint::r;
 *log = \$openprint::log;
 *dbh = \$openprint::dbh;
 *variable = \%openprint::variable;
@@ -25,7 +26,7 @@ sub edit {
 		$variable{error} .= $ServiceType->delete();
 		if ( ! $variable{error} ) {
 			$ServiceType = $ServiceType->Next() if ! $variable{error};
-			openprint::logs::insertLogRecord('23',sprintf('Service Type: %d - %s', $ServiceType->id(), $ServiceType->name() ) );
+			(new openprint::Log())->save({'action'=>'Delete Service Type', 'note'=> "Service Type ID: $$ServiceType{id} Name: $$ServiceType{name}"});
 		} # end if
 		if ( ! $variable{error} ) {
 			$variable{ExternalRedirect} = '/administrator/service_types/index.html';
@@ -33,8 +34,8 @@ sub edit {
 	} elsif ( $param{btnFunction} eq 'Destroy' ) {
 		$variable{error} .= $ServiceType->destroy();
 		if ( ! $variable{error} ) {
+			(new openprint::Log())->save({'action'=>'Destroy Service Type', 'note'=> "Service Type ID: $$ServiceType{id} Name: $$ServiceType{name}"});
 			$ServiceType = $ServiceType->Next();
-			openprint::logs::insertLogRecord('23',sprintf('Service Type: %d - %s', $ServiceType->id(), $ServiceType->name() ) );
 		} # end if
 		if ( ! $variable{error} ) {
 			$variable{ExternalRedirect} = '/administrator/service_types/index.html';
@@ -99,6 +100,48 @@ sub edit {
 			} # end foreach Default
 			$ServiceType = $New;
 		} # end if
+	} elsif ( $param{btnFunction} eq 'Import' ) {
+		if ( $param{fileImport} ) {
+			my $upload = $r->upload( 'fileImport' );
+			my $io = $upload->io();
+			$_ = <$io>;
+
+			my $csv = Text::CSV_XS->new();
+			my %PT_cache = map { $_->name(), $_ } openprint::ProjectType->find();
+			
+			(new openprint::Log())->save({'action'=>'Import Service Type Defaults', 'note'=> "Service Type ID: $$ServiceType{id} Name: $$ServiceType{name}"});
+      	
+			my $ac = sql::start_transaction( $dbh );
+			while ( <$io> ) {
+				my $status = $csv->parse($_);
+				my ( $project_type, $name, $value ) = misc::trim( $csv->fields() );
+				
+				my $PT = $PT_cache{$project_type};
+				if ( ! $PT ) {
+					$variable{error} .= "No Project Type found for $project_type<br/>";
+					next;
+				}
+
+				my $STD = new openprint::ServiceType_Default();
+				if ( $_ .= $PT->save({
+							projecttype_id	=>	$PT->id(),
+							servicetype_id	=>	$ServiceType->id(),
+							name			=>	$name,
+							value			=>	$value,
+							}) ) {
+					$variable{error} .= "Error saving Service Type Default $$ServiceType{id} : $_<br/>";
+				} # end if
+			} # end foreach
+			sql::end_transaction( $dbh, $ac );
+		} else {
+			$log->warn( "No file given to upload." );
+		} # end if
+	} elsif ( $param{btnFunction} eq 'Export' ) {
+	    my @header = ( 'Project Type', 'Name', 'Value' );
+	    my @data = map { $_->ProjectType()->name(), $_->name(), $_->value() } openprint::ServiceType_Default->find(servicetype_id=>$$ServiceType{id}, order=>$openprint::ServiceType_Default::fields{'name'});
+    	misc::export_csv( $r, $log, \%variable, $ServiceType->name().'_ServiceTypeDefaults.csv', \@header, \@data );
+		# Add record to audit log - action "Export Project Types".
+		(new openprint::Log())->save({'action'=>'Export Service Type Defaults', 'note'=> "Service Type ID: $$ServiceType{id} Name: $$ServiceType{name}"});
 	} # end if
 
 	$variable{ServiceType} = $ServiceType;
