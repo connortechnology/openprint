@@ -3,7 +3,7 @@ package openprint::Page_Setting;
 our @ISA = qw(openprint::Object);
 
 use vars qw( $debug $serial $table %fields %transforms %defaults $cache_field $cached %cache );
-use constant DEBUG => 0;
+use constant DEBUG => 1;
 
 $debug = 0;
 $cached = 0;

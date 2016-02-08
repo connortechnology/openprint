@@ -23,12 +23,6 @@ sub Asset {
 	return new openprint::Asset( $_[0]{'asset_id'} );
 } # end sub Asset
 
-sub Object {
-	$_ = $_[0]->object_type()->new( $_[0]{'object_id'} );
-	$openprint::log->debug( "Returning object of type " . ref $_ );
-	return $_;
-} # end sub Object
-
 sub upload {
 	my $error = '';
 	my $Asset = openprint::Asset::upload( $_[1], $_[2] );

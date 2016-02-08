@@ -25,13 +25,13 @@ use Data::Dumper;
 package openprint::Estimating::Printing;
 my $threading = 0;
 use threads;
-use constant DEBUG => 0;
+use constant DEBUG => 1;
 use constant DEBUG_PLATES => 0;
 use constant DEBUG_VERSIONS => 0;
 use constant DEBUG_PRESSES => 0;
-use constant DEBUG_FILTERING => 0;
+use constant DEBUG_FILTERING => 1;
 use constant DEBUG_INITIAL_FILTERING => 0;
-use constant DEBUG_AFTER_FILTERING => 0;
+use constant DEBUG_AFTER_FILTERING => 1;
 use constant DEBUG_PRICE_DECISIONS => 0;
 use constant DEBUG_INKS => 0;
 use constant DEBUG_STOCK => 0;
@@ -2336,6 +2336,7 @@ sub calc {
 	} # end if
 
 	if ( ! ( $$specs{txtWidth} and $$specs{txtHeight} ) ) {
+$openprint::log->debug("after set_size");
 		$$specs{alert} .= 'Please enter width and height<br/>';
 		return $$specs{Status} = 'uncalculated';
 	} # end if
@@ -2398,7 +2399,12 @@ sub calc {
 			$variables{"hdnImpositionDutchRows$qty_index"} = [ sets::union( 'output', @{$variables{"hdnImpositionDutchRows$qty_index"}} ) ];
 		} # end if
 	} # end foreach
-	return $$specs{Status} = 'uncalculated' if $$specs{alert};
+	if ( $$specs{alert} ) {
+		$openprint::log->debug("Returning early alert($$specs{alert})") if DEBUG;
+		return $$specs{Status} = 'uncalculated';
+	} elsif ( DEBUG ) {
+		$openprint::log->debug("NOT Returning early");
+	}
 
 	if ( ! ( $$services{NoPrinting} or @side_one_colours or @side_two_colours ) ) {
 		$$specs{alert} .= 'Please choose the colours to be printed.<br/>';

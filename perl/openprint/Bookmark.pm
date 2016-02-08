@@ -26,11 +26,6 @@ $serial = 'bookmarks_id_seq';
 %find_fields = (
 	'object_type'	=>	'(SELECT name FROM object_types WHERE id=object_type_id)',
 );
-sub Object {
-	$_ =  $_[0]->object_type()->new( $_[0]{'object_id'} );
-$openprint::log->debug( "Returning object of type " . ref $_ );
-	return $_;
-} # end sub Object
 
 1;
 __END__

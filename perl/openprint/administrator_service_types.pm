@@ -5,6 +5,7 @@ use openprint ();
 
 require sql;
 require openprint::logs;
+require openprint::ServiceType;
 
 use vars qw( $log $dbh %variable %param );
 *log = \$openprint::log;
@@ -26,12 +27,18 @@ sub edit {
 			$ServiceType = $ServiceType->Next() if ! $variable{error};
 			openprint::logs::insertLogRecord('23',sprintf('Service Type: %d - %s', $ServiceType->id(), $ServiceType->name() ) );
 		} # end if
+		if ( ! $variable{error} ) {
+			$variable{ExternalRedirect} = '/administrator/service_types/index.html';
+		}
 	} elsif ( $param{btnFunction} eq 'Destroy' ) {
 		$variable{error} .= $ServiceType->destroy();
 		if ( ! $variable{error} ) {
 			$ServiceType = $ServiceType->Next();
 			openprint::logs::insertLogRecord('23',sprintf('Service Type: %d - %s', $ServiceType->id(), $ServiceType->name() ) );
 		} # end if
+		if ( ! $variable{error} ) {
+			$variable{ExternalRedirect} = '/administrator/service_types/index.html';
+		}
 	} elsif ( $param{btnFunction} eq 'Save' ) {
 
 		if ( $param{new_category} ) {
@@ -76,6 +83,9 @@ sub edit {
 					});
 		} # end if
 		sql::end_transaction( $dbh, $ac );
+		if ( ! $variable{error} ) {
+			$variable{ExternalRedirect} = '/administrator/service_types/index.html';
+		}
 	} elsif ( $param{btnFunction} eq 'Copy' ) {
 		my $New = $ServiceType->copy();
 		
@@ -104,6 +114,23 @@ sub _row {
 	} # end if
 	$variable{Default} = $Default;
 } # end sub _row
+
+sub index {
+    _index();
+    #if ( ( ! $session{'/administrator/service_types/index.html?lastupdated'} ) or ( time - $session{'/administrator/service_types/index.html?lastupdated'} ) > ( 12*60*60 ) ) {
+        #ssi::setup_date_select( '/administrator/service_types/index.html', 'starting_on_start', 0 );
+        #ssi::setup_date_select( '/administrator/service_types/index.html', 'starting_on_end', '' );
+    #} # end if
+} # end sub search
+sub _index {
+    if ( ! $param{'btnFunction'} ) {
+        ssi::save_params( '/administrator/service_types/index.html', (
+                #'starting_on_start_year','starting_on_start_month','starting_on_start_day',
+                #'starting_on_end_year','starting_on_end_month','starting_on_end_day',
+					'category_id',
+					) );
+    } # end if
+}
 
 1;
 __END__

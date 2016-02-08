@@ -734,7 +734,7 @@ $openprint::log->debug("Folding impositions: " . @folding_impositions ) if DEBUG
 			$sheet_height = $Equipment->specification('Maximum Sheet Length');
 			if ( ! $sheet_height ) {
 				$I->rows( $sheets );
-				$I->dutch_rows( $sheets ) if $I->dutch_rows();
+				$I->dutch_rows( $sheets ) if $$I{dutch_rows};
 				$sheet_height = $I->layout_height();
 				$sheets = 1;
 			} else {
@@ -952,7 +952,7 @@ $openprint::log->debug("Not a book") if DEBUG;
 					$piles = $liftDepth ? ceil( $sheets*$calliper/$liftDepth ) : $sheets;
 				} # end if
 				if ( $ServicePrice{units} eq 'per inch' ) {
-					$price = ( $piles * $horizontal_cuts *$ServicePrice{Price} * $I->image_width() );
+					$price = ( $piles * $horizontal_cuts *$ServicePrice{Price} * $$I{image_width} );
 					$results{Breakdown} .= sprintf("%d Horizontal cuts on %d sheets in %d piles * %.2f inches: %.2f%s=%.2f<br/>", $horizontal_cuts, $sheets, $piles, $I->image_width(), @ServicePrice{'Price','units'}, $price );
 				} else {
 					$price = ( $piles * $horizontal_cuts * $ServicePrice{Price} );
@@ -961,7 +961,7 @@ $openprint::log->debug("Not a book") if DEBUG;
 				$totalPrice += $price;
 			} else {
 				if ( $ServicePrice{units} eq 'per inch' ) {
-					$price = ( $piles * $horizontal_cuts *$ServicePrice{Price} * $I->image_width() );
+					$price = ( $piles * $horizontal_cuts *$ServicePrice{Price} * $$I{image_width} );
 					$results{Breakdown} .= sprintf("%d Horizontal cuts on %d sheets in %d piles * %.2f inches: %.2f%s=%.2f<br/>", $horizontal_cuts, $sheets, $piles, $I->image_width(), @ServicePrice{'Price','units'}, $price );
 				} else {
 					$price = ( $piles * $horizontal_cuts * $ServicePrice{Price} );
@@ -973,7 +973,7 @@ $openprint::log->debug("Not a book") if DEBUG;
 					$piles = $liftDepth ? ceil( $sheets*$calliper/$liftDepth ) : $sheets;
 				} # end if
 				if ( $ServicePrice{units} eq 'per inch' ) {
-					$price = ( $piles * $vertical_cuts *$ServicePrice{Price} * $I->image_height() );
+					$price = ( $piles * $vertical_cuts *$ServicePrice{Price} * $$I{image_height} );
 					$results{Breakdown} .= sprintf("%d Vertical cuts on %d sheets in %d piles * %.2f inches: %.2f<br/>", $vertical_cuts, $sheets, $piles, $I->image_height(), $price );
 				} else {
 					$price = ( $piles * $vertical_cuts * $ServicePrice{Price} );
