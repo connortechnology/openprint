@@ -5,8 +5,10 @@ use openprint ();
 
 require sql;
 require openprint::logs;
+require openprint::ServiceType;
 
-use vars qw( $log $dbh %variable %param );
+use vars qw( $r $log $dbh %variable %param );
+*r = \$openprint::r;
 *log = \$openprint::log;
 *dbh = \$openprint::dbh;
 *variable = \%openprint::variable;
@@ -24,14 +26,20 @@ sub edit {
 		$variable{error} .= $ServiceType->delete();
 		if ( ! $variable{error} ) {
 			$ServiceType = $ServiceType->Next() if ! $variable{error};
-			openprint::logs::insertLogRecord('23',sprintf('Service Type: %d - %s', $ServiceType->id(), $ServiceType->name() ) );
+			(new openprint::Log())->save({'action'=>'Delete Service Type', 'note'=> "Service Type ID: $$ServiceType{id} Name: $$ServiceType{name}"});
 		} # end if
+		if ( ! $variable{error} ) {
+			$variable{ExternalRedirect} = '/administrator/service_types/index.html';
+		}
 	} elsif ( $param{btnFunction} eq 'Destroy' ) {
 		$variable{error} .= $ServiceType->destroy();
 		if ( ! $variable{error} ) {
+			(new openprint::Log())->save({'action'=>'Destroy Service Type', 'note'=> "Service Type ID: $$ServiceType{id} Name: $$ServiceType{name}"});
 			$ServiceType = $ServiceType->Next();
-			openprint::logs::insertLogRecord('23',sprintf('Service Type: %d - %s', $ServiceType->id(), $ServiceType->name() ) );
 		} # end if
+		if ( ! $variable{error} ) {
+			$variable{ExternalRedirect} = '/administrator/service_types/index.html';
+		}
 	} elsif ( $param{btnFunction} eq 'Save' ) {
 
 		if ( $param{new_category} ) {
@@ -76,6 +84,9 @@ sub edit {
 					});
 		} # end if
 		sql::end_transaction( $dbh, $ac );
+		if ( ! $variable{error} ) {
+			$variable{ExternalRedirect} = '/administrator/service_types/index.html';
+		}
 	} elsif ( $param{btnFunction} eq 'Copy' ) {
 		my $New = $ServiceType->copy();
 		
@@ -89,6 +100,49 @@ sub edit {
 			} # end foreach Default
 			$ServiceType = $New;
 		} # end if
+	} elsif ( $param{btnFunction} eq 'Import' ) {
+		if ( $param{fileImport} ) {
+			my $upload = $r->upload( 'fileImport' );
+			my $io = $upload->io();
+			$_ = <$io>;
+
+			my $csv = Text::CSV_XS->new();
+			my %PT_cache = map { $_->name(), $_ } openprint::ProjectType->find();
+			
+			(new openprint::Log())->save({'action'=>'Import Service Type Defaults', 'note'=> "Service Type ID: $$ServiceType{id} Name: $$ServiceType{name}"});
+      	
+			my $ac = sql::start_transaction( $dbh );
+			while ( <$io> ) {
+				my $status = $csv->parse($_);
+				my ( $project_type, $name, $value ) = misc::trim( $csv->fields() );
+				
+				my $PT = $PT_cache{$project_type};
+				if ( $project_type and ! $PT ) {
+					$variable{error} .= "No Project Type found for $project_type<br/>";
+					next;
+				}
+
+				my $STD = new openprint::ServiceType_Default();
+				if ( $_ .= $STD->save({
+							projecttype_id	=>	$PT ? $PT->id() : undef,
+							servicetype_id	=>	$ServiceType->id(),
+							name			=>	$name,
+							value			=>	$value,
+							}) ) {
+					$variable{error} .= "Error saving Service Type Default $$ServiceType{id} : $_<br/>";
+				} # end if
+			} # end while <io>
+			sql::end_transaction( $dbh, $ac );
+			$ServiceType->Defaults( undef );
+		} else {
+			$log->warn( "No file given to upload." );
+		} # end if
+	} elsif ( $param{btnFunction} eq 'Export' ) {
+	    my @header = ( 'Project Type', 'Name', 'Value' );
+	    my @data = map { $_->ProjectType()->name(), $_->name(), $_->value() } openprint::ServiceType_Default->find(servicetype_id=>$$ServiceType{id}, order=>$openprint::ServiceType_Default::fields{'name'});
+    	misc::export_csv( $r, $log, \%variable, $ServiceType->name().'_ServiceTypeDefaults.csv', \@header, \@data );
+		# Add record to audit log - action "Export Project Types".
+		(new openprint::Log())->save({'action'=>'Export Service Type Defaults', 'note'=> "Service Type ID: $$ServiceType{id} Name: $$ServiceType{name}"});
 	} # end if
 
 	$variable{ServiceType} = $ServiceType;
@@ -104,6 +158,23 @@ sub _row {
 	} # end if
 	$variable{Default} = $Default;
 } # end sub _row
+
+sub index {
+    _index();
+    #if ( ( ! $session{'/administrator/service_types/index.html?lastupdated'} ) or ( time - $session{'/administrator/service_types/index.html?lastupdated'} ) > ( 12*60*60 ) ) {
+        #ssi::setup_date_select( '/administrator/service_types/index.html', 'starting_on_start', 0 );
+        #ssi::setup_date_select( '/administrator/service_types/index.html', 'starting_on_end', '' );
+    #} # end if
+} # end sub search
+sub _index {
+    if ( ! $param{'btnFunction'} ) {
+        ssi::save_params( '/administrator/service_types/index.html', (
+                #'starting_on_start_year','starting_on_start_month','starting_on_start_day',
+                #'starting_on_end_year','starting_on_end_month','starting_on_end_day',
+					'category_id',
+					) );
+    } # end if
+}
 
 1;
 __END__

@@ -19,8 +19,9 @@ package openprint::Estimating::HStands;
 use strict;
 
 require sql;
-require openprint::print;
 require openprint::service;
+
+use constant DEBUG => 1;
 
 my @variables = (
 		'OverridePrice1', 'OverridePrice2', 'OverridePrice3',
@@ -50,34 +51,46 @@ sub calc {
 
 	my $Project = new openprint::Project( $project_index );
 
+	my $HStand_Service = openprint::Service->find_one(name=>'HStands');
+	if ( ! $HStand_Service ) {
+		if ( DEBUG ) {
+			$openprint::log->error("No HStand service found.");
+		}
+	}
+	my $HStand_Material = openprint::Material->find_one(name=>'HStands');
+	if ( ! $HStand_Material ) {
+		if ( DEBUG ) {
+			$openprint::log->error("No HStand material found.");
+		}
+	}
+
 	foreach my $qty_index ( $Project->quantity_indexes() ) {
 		$$specs{"Markup$qty_index"} =~ s/[^\d\.\-]//g;
 		$$specs{"txtPrice$qty_index"} =~ s/[^\d\.]//g;
 		$$specs{"txtQuantity$qty_index"} = $Project->quantity($qty_index) if ! $$specs{"txtQuantity$qty_index"};
 
-		
-		my $unit_pricei = 0;
+		my $unit_price = 0;
 		my $total_price = 0;
 
-		my %ServicePrice;
-		if ( my $Service = openprint::Service->find_one(name=>'HStand') ) {
-			%ServicePrice = $Service->get_price( $$specs{"txtQuantity$qty_index"} );
-			if ( %ServicePrice ) {
-				$ServicePrice{Total} = $ServicePrice{Price} * $$specs{"txtQuantity$qty_index"};
-				$unit_price += $ServicePrice{Price};
-				$total_price += $ServicePrice{Total};
+		my $ServicePrice;
+		if ( $HStand_Service ) {
+			$ServicePrice = $HStand_Service->get_Price( $$specs{"txtQuantity$qty_index"} );
+			if ( $ServicePrice ) {
+				$$ServicePrice{Total} = $$ServicePrice{Price} * $$specs{"txtQuantity$qty_index"};
+				$unit_price += $$ServicePrice{Price};
+				$total_price += $$ServicePrice{Total};
 			}
-			$$specs{"hdnBreakdown$qty_index"} .= sprintf('Service: %1$.f%2$s * %4$d = %3$.2f<br/>', @ServicePrice{'Price','units','Total'}, $$specs{"txtQuantity$qty_index"} );
+			$$specs{"hdnBreakdown$qty_index"} .= sprintf('Service: %1$.f%2$s * %4$d = %3$.2f<br/>', @$ServicePrice{'Price','units','Total'}, $$specs{"txtQuantity$qty_index"} );
 		} # end if Service
-		my %MaterialPrice;
-		if ( my $Material = openprint::Material->find_one(name=>'HStand') ) {
-			%MaterialPrice = $Material->get_price( $$specs{"txtQuantity$qty_index"} );
-			if ( %MaterialPrice ) {
-				$MaterialPrice{Total} = $MaterialPrice{Price} * $$specs{"txtQuantity$qty_index"};
-				$unit_price += $MaterialPrice{Price};
-				$total_price += $MaterialPrice{Total};
+		my $MaterialPrice;
+		if ( $HStand_Material ) {
+			$MaterialPrice = $HStand_Material->get_Price( $$specs{"txtQuantity$qty_index"} );
+			if ( $MaterialPrice ) {
+				$$MaterialPrice{Total} = $$MaterialPrice{Price} * $$specs{"txtQuantity$qty_index"};
+				$unit_price += $$MaterialPrice{Price};
+				$total_price += $$MaterialPrice{Total};
 			}
-			$$specs{"hdnBreakdown$qty_index"} .= sprintf('Materials: %1$.f%2$s * %4$d = %3$.2f<br/>', @MaterialPrice{'Price','units','Total'}, $$specs{"txtQuantity$qty_index"} );
+			$$specs{"hdnBreakdown$qty_index"} .= sprintf('Materials: %1$.f%2$s * %4$d = %3$.2f<br/>', @$MaterialPrice{'Price','units','Total'}, $$specs{"txtQuantity$qty_index"} );
 			
 		} # end if Service
 
@@ -95,7 +108,7 @@ sub calc {
 
 		$$specs{'txtUnitPrice'.$qty_index} = $unit_price;
 		if ( $$specs{"OverridePrice$qty_index"} ne 'Y' ) {
-			$$specs{'txtPrice'.$qty_index} = sprintf($openprint::config{'ProjectMoneyFormat'}, $total_price;
+			$$specs{'txtPrice'.$qty_index} = sprintf($openprint::config{'ProjectMoneyFormat'}, $total_price );
 		} else {
 			$$specs{'txtPrice'.$qty_index} = sprintf($openprint::config{'ProjectMoneyFormat'}, $$specs{"txtPrice$qty_index"} );
 		} # end if

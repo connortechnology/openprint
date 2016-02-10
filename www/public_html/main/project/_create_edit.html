@@ -9,14 +9,14 @@
         my @ProjectTypes = openprint::ProjectType->find(category_id=>$$ProjectTypeCategory{id}, order=>'sorting,lower(name)');
         next if ! @ProjectTypes;
 
-        $html .= sprintf('<h3 class="Category">%s</h3><ul>', $ProjectTypeCategory->name() );
+        $html .= sprintf('<div class="Category"><h3>%s</h3><ul>', $ProjectTypeCategory->name() );
 		$html .= radio( 'rdbProjectType', 
 					[ map { $_->name(), ssi::htmlize( $_->description() ) } @ProjectTypes ],
 					$$variable{SelectedProjectType},
 					{ 
 						onclick=>q`project_type_alert(f1, this);calc('f1');`, 
 						container=>['<li>','</li>'] } );
-		$html .= '</ul>';
+		$html .= '</ul></div>';
     } # end foreach Category
     $html .= "</div>\n";
     return $html;

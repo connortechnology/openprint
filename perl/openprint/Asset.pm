@@ -770,5 +770,36 @@ sub content_type {
 		$openprint::log->error('unimplemented content type for ' . $src . ' ext:' . $extension);
 	} # end if
 } # end sub content_type
+
+sub slider {
+    my ( $Assets, $size ) = @_;
+    $size = 'medium' if ! $size;
+
+	if ( ! ( $Assets and @{$Assets} ) ) {
+		return;
+	}
+
+    my $html = '<ul class="slider" style="background-image:url(/images/loading.gif); height: '.$$Assets[0]->height().'px;">';
+    my @slider_images;
+
+    for ( my $i = 0; $i < @$Assets ; $i += 1 ) {
+        my $Asset = $$Assets[$i];
+        push @slider_images, 'image'.$i;
+        if ( ! $i ) {
+            $html .= sprintf('<li id="image%d"><img onclick="GoNext();" src="%s"/></li>', $i, $Asset->sized_url( $size ) );
+        } else {
+            $html .= sprintf('<li id="image%d" style="display:none;"><img onclick="GoNext();" src="%s"/></li>', $i, $Asset->sized_url( $size ) );
+        }
+    } # end for
+    $html .= '</ul>';
+
+$html .= q`<script type="text/javascript">
+image_slide = new Array( '`. join("','", @slider_images ) .q`' );
+StartSlideShow();
+</script>`;
+    return $html;
+
+}
+
 1;
 __END__

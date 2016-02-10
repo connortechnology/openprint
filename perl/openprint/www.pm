@@ -412,7 +412,7 @@ $log->debug("Running openprint::$module->$proc") if Debug;
 			require openprint::print;
 			require openprint::main_project;
 			require openprint::print_project;
-			if ( ( defined $third ) or ( $filename eq 'Paper.html' ) or ( $filename eq 'Bundling.html' ) ) {
+			if ( ( defined $third ) or sets::isin( $filename , ['Paper.html' ,'Bundling.html','HStands.html' ] ) ) {
 				if ( $param{ServiceIndex} and ! $variable{ServiceIndex} ) {
 					my @service_ids = split(',', $param{ServiceIndex} );
 					$variable{ServiceIndex} = $service_ids[0];

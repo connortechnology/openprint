@@ -1,7 +1,8 @@
 <script type="text/javascript" src="<?hash_link('/javascripts/service.js')?>"></script>
 <script type="text/javascript">
-	function calc( formName ) {
-		if ( gettingNewPrice ) {
+	function calc( formName, force ) {
+		form = $(formName);
+		if ( gettingNewPrice && ! force ) {
 			if ( timeout )
 				clearTimeout( timeout );
 			setTimeout( "calc('"+formName+"');", 1000 );

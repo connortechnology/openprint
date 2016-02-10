@@ -425,7 +425,11 @@ sub se_quantity_summary {
 		if ( $Paper->type() eq 'Sheet' ) {
 			$html .= $$specs{"sheets-$stock_id-$qty_index"}.'sheets ';
 		} # end if
+		if ( $$specs{"qty-$stock_id-$qty_index"} < 10 ) {
+		$html .= Number::Format::format_number( Math::Round::nearest(.1, $$specs{"qty-$stock_id-$qty_index"} ) ).' lbs';
+		} else {
 		$html .= Number::Format::format_number( Math::Round::nearest(1, $$specs{"qty-$stock_id-$qty_index"} ) ).' lbs';
+		}
 		$$Stock_Entry{"Price$qty_index"} = $Paper->get_price( weight=>$$specs{"qty-$stock_id-$qty_index"}, service=>'Material' ) if ! $$Stock_Entry{"Price$qty_index"};
 		my $Price = $$Stock_Entry{"Price$qty_index"};
 
