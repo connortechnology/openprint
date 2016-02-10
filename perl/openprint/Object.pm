@@ -383,8 +383,14 @@ $log->warn('Object::set called on an object with no fields');
 
 	foreach my $field ( keys %$fields ) {
 		next if ! exists $$params{$field};
-
-		if ( $$self{$field} ne $$params{$field} ) {
+		if ( ref $$self{$field} eq 'ARRAY'  ) {
+			if ( @{$$self{$field}} != sets::intersection( 
+				@{$$self{$field}},
+				( ref $$params{$field} eq 'ARRAY' ? @{$$params{$field}} : ( $$params{$field} ) )
+				) ) {
+				push @results, "$field changed from ".join(',',@{$$self{$field}}) .' to '.join(',',@{$$params{$field}} );
+			}
+		} elsif ( $$self{$field} ne $$params{$field} ) {
 			if ( $field eq 'password' ) {
 			
 				push @results, "$field changed";
