@@ -2336,6 +2336,7 @@ sub calc {
 	} # end if
 
 	if ( ! ( $$specs{txtWidth} and $$specs{txtHeight} ) ) {
+$openprint::log->debug("after set_size");
 		$$specs{alert} .= 'Please enter width and height<br/>';
 		return $$specs{Status} = 'uncalculated';
 	} # end if
@@ -2398,7 +2399,12 @@ sub calc {
 			$variables{"hdnImpositionDutchRows$qty_index"} = [ sets::union( 'output', @{$variables{"hdnImpositionDutchRows$qty_index"}} ) ];
 		} # end if
 	} # end foreach
-	return $$specs{Status} = 'uncalculated' if $$specs{alert};
+	if ( $$specs{alert} ) {
+		$openprint::log->debug("Returning early alert($$specs{alert})") if DEBUG;
+		return $$specs{Status} = 'uncalculated';
+	} elsif ( DEBUG ) {
+		$openprint::log->debug("NOT Returning early");
+	}
 
 	if ( ! ( $$services{NoPrinting} or @side_one_colours or @side_two_colours ) ) {
 		$$specs{alert} .= 'Please choose the colours to be printed.<br/>';
@@ -2455,7 +2461,7 @@ $openprint::log->debug("Before select presses: " . ( sprintf('%.4f', tv_interval
 		$openprint::log->debug( "Presses: " . join(',', map { $_->strid() } @possible_presses ) );
 	} # end if
 	@possible_presses = sort { $$a{strid} <=>$$b{strid} } @possible_presses;
-$openprint::log->debug("after sorting presses: " . ( sprintf('%.4f', tv_interval( [$master_time])*1000) ) .' usecs' );
+$openprint::log->debug("after sorting presses: " . ( sprintf('%.4f', tv_interval( [$master_time])*1000) ) .' usecs there are ' . @possible_presses );
 
 	my @available_printingtypes = sets::union( map { $_->specification('Printing Type') } @possible_presses );
 
@@ -2467,7 +2473,6 @@ $openprint::log->debug("after sorting presses: " . ( sprintf('%.4f', tv_interval
 	if ( ! @quantity_indexes ) {
 $log->warn("There are no quantities!");
 	} # end if
-
 
 	foreach my $qty_index ( @quantity_indexes ) {
 		if ( $$specs{'OverridePrice'.$qty_index} ne 'Y' ) {
@@ -5766,12 +5771,12 @@ $openprint::log->debug("Was mixed") if DEBUG_INKS;
 
 				if ( $material_price{units} eq 'per cartridge' ) {
 					my $Coverage = $InkMaterial->New_Specification('Coverage', { range=>$grade, equipment_id=>$$Press{id}} );
-					my $qty = Math::Round::nearest( 0.01, $area/$$Coverage{value} ) if $Coverage and $$Coverage{value};
+					my $qty = Math::Round::nearest( 0.0001, $area/$$Coverage{value} ) if $Coverage and $$Coverage{value};
 					%material_price = $InkMaterial->get_price( $qty, $Press );
 					$ink_price{Material} = \%material_price;
 					$material_price{Total} += Math::Round::nearest( 0.01, $material_price{Price} * $qty );
 					$ink_price{Total} += $material_price{Total};
-					$price{'Ink breakdown'} .= sprintf(' mileage: %d sq in per cartridge, %.2fsq in means %.2f * $%s%s=$%.2f', $$Coverage{value}, $area, $qty, @material_price{'Price','units','Total'});
+					$price{'Ink breakdown'} .= sprintf(' mileage: %d sq in per cartridge, %.2fsq in means %.4f * $%s%s=$%.2f', $$Coverage{value}, $area, $qty, @material_price{'Price','units','Total'});
 				} elsif ( $material_price{units} eq 'per kg' ) {
 					my $Coverage = $InkMaterial->New_Specification('Coverage', { range=>$grade, equipment_id=>$$Press{id}} );
 					if ( ( ! $Coverage ) or ! $$Coverage{value} ) {
@@ -6827,13 +6832,16 @@ $openprint::log->debug("Printing::save");
 			openprint::service::insert_service_spec( $openprint::log, $openprint::dbh, $p_id, $s_id, 'Quantity', $$param{grommets} );
 		} # end foreach
 	} # end if
-	if ( $$services{Sewing} ) {
+	if ( $$param{hemmed} eq 'Y' ) {
+		if ( ! $$services{Sewing} ) {
+			$$services{Sewing}[0] = $Project->add_service( 'Sewing' );
+		}
 		foreach my $s_id ( @{$$services{Sewing}} ) {
 			foreach my $spec ( 'EdgeLeft','EdgeRight','EdgeTop','EdgeBottom','HemWidth' ) {
 				openprint::service::insert_service_spec( $openprint::log, $openprint::dbh, $p_id, $s_id, $spec, $$param{$spec} );
 			} # end foreach
 		} # end foreach
-	} # end if
+	} # end if hemmed
 
 	my $sig_specs = openprint::service::get_specs_ref( $Project, $s_id );
 	if ( $$sig_specs{Group} ) {

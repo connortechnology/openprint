@@ -57,12 +57,12 @@ sub neccessary {
 
     my $services = $Project->services();
 
-    if ( $$services{'NoBindery'} ) {
+    if ( $$services{NoBindery} ) {
         $openprint::log->debug(" ** Project is marked as No bindery, Grommets not needed ! ** ");
         return 0;
     } # end if
 	my $printing_specs = openprint::service::get_specs_ref( $Project, $$services{''}[0] ) if $$services{''};
-	if ( $$printing_specs{'grommets'} ) {
+	if ( $$printing_specs{grommets} ) {
 		return 1;
 	} # end if
 
@@ -83,10 +83,10 @@ $log->debug("Grommeting!!!!!!!!!!!!!!!!!!");
 		delete $$specs{$_};
 	} # end foreach
 
-	if ( ! $$specs{'Quantity'} ) {
+	if ( ! $$specs{Quantity} ) {
 		if ( $$services{''} ) {
 			my $printing_specs = openprint::service::get_specs_ref( $Project, $$services{''}[0] );
-			$$specs{'Quantity'} = $$printing_specs{'grommets'};
+			$$specs{Quantity} = $$printing_specs{grommets};
 			@outputs = sets::union( @outputs, 'Quantity' );
 			@no_outputs = sets::exclude( ['Quantity'], \@no_outputs );
 		} # end if
@@ -94,9 +94,9 @@ $log->debug("Grommeting!!!!!!!!!!!!!!!!!!");
 		@no_outputs = sets::union( @no_outputs, 'Quantity' );
 		@outputs = sets::exclude( ['Quantity'], \@outputs );
 	} # end if
-	if ( ! $$specs{'Quantity'} ) {
-		$$specs{'alert'} = 'Please enter the # of grommets per item.<br/>';
-		return $$specs{'Status'} = 'uncalculated';
+	if ( ! $$specs{Quantity} ) {
+		$$specs{alert} = 'Please enter the # of grommets per item.<br/>';
+		return $$specs{Status} = 'uncalculated';
 	} # end if
 
 	my $makeReadyPrice = openprint::service::get_price( 'GrommetingMakeReady' );
@@ -113,21 +113,21 @@ $log->debug("Grommeting!!!!!!!!!!!!!!!!!!");
 		$$specs{'hdnBreakdown'.$qty_index}  .= 'MinimumCharge: $' . sprintf( '%.2f', $minimumCharge ) . '<br/>';
 
 		my $qty = $$specs{"txtQuantity$qty_index"};
-		my %servicePrice = openprint::service::get_price_object( 'Grommeting', $qty * $$specs{'Quantity'}, undef );
-		if ( sets::isin( $servicePrice{'units'}, ['', 'per m', 'per 1000'] ) ) {
-			$servicePrice{'Total'} = $qty * $$specs{'Quantity'} * $servicePrice{'Price'} / 1000;
+		my %servicePrice = openprint::service::get_price_object( 'Grommeting', $qty * $$specs{Quantity}, undef );
+		if ( sets::isin( $servicePrice{units}, ['', 'per m', 'per 1000'] ) ) {
+			$servicePrice{Total} = $qty * $$specs{Quantity} * $servicePrice{Price} / 1000;
 			$$specs{'hdnBreakdown'.$qty_index} .= sprintf( 'Service: $%.2f %s = $%.2f<br/>', @servicePrice{'Price','units','Total'} );
 		} # end if
-		$price = $makeReadyPrice + $servicePrice{'Total'};
+		$price = $makeReadyPrice + $servicePrice{Total};
 		if ( my $Material = openprint::Material->find_one('name'=>'Grommets') ) {
-			my %materialPrice = $Material->get_price( $qty * $$specs{'Quantity'}, undef );
+			my %materialPrice = $Material->get_price( $qty * $$specs{Quantity}, undef );
 			if ( %materialPrice ) {
-				$materialPrice{'Total'} = $materialPrice{'Price'} * $$specs{'Quantity'} * $qty;
-				$$specs{'hdnBreakdown'.$qty_index} .= sprintf( 'Material: $%.2f %s * %d grommets * %d = $%.2f<br/>', @materialPrice{'Price','units'}, $$specs{'Quantity'}, $qty, $materialPrice{'Total'} );
+				$materialPrice{Total} = $materialPrice{Price} * $$specs{Quantity} * $qty;
+				$$specs{'hdnBreakdown'.$qty_index} .= sprintf( 'Material: $%.2f %s * %d grommets * %d = $%.2f<br/>', @materialPrice{'Price','units'}, $$specs{Quantity}, $qty, $materialPrice{Total} );
 			} else {
 				$$specs{'hdnBreakdown'.$qty_index} .= 'No Material Price.<br/>';
 			} # end if
-			$price += $materialPrice{'Total'};
+			$price += $materialPrice{Total};
 		} else {
 			$$specs{'hdnBreakdown'.$qty_index} .= 'No Material.<br/>';
 		} # end if
@@ -137,7 +137,7 @@ $log->debug("Grommeting!!!!!!!!!!!!!!!!!!");
 		} # end if
 		$unitPrice = $price / $qty;
 		$$specs{"txtUnitPrice$qty_index"} = sprintf( '%.2f', $unitPrice * (1+$Project->markup()/100) );
-		$$specs{"txtPrice$qty_index"} = sprintf( $openprint::config{'ProjectMoneyFormat'}, $price * (1+$Project->markup()/100) );
+		$$specs{"txtPrice$qty_index"} = sprintf( $openprint::config{ProjectMoneyFormat}, $price * (1+$Project->markup()/100) );
 	} # end foreach
 
 	return $status;
@@ -149,7 +149,7 @@ sub summary {
 	if ( $qty_index ) {
 		
 	} else {
-		return $$specs{'Quantity'} . ' grommets per item.';
+		return $$specs{Quantity} . ' grommets per item.';
 	} # end if
 } # end sub summary
 
@@ -159,8 +159,11 @@ sub save {
 	$specs = openprint::service::get_specs_ref( $Project, $service_id ) if ! $specs;
 	my $services = $Project->services();
 	my $printing_specs = openprint::service::get_specs_ref( $Project, $$services{''}[0] ) if $$services{''} and @{$$services{''}};
-	if ( $$printing_specs{'grommets'} != $$specs{'Quantity'} ) {
-		openprint::service::insert_service_spec( $openprint::log, $openprint::dbh, $Project->id(), $$services{''}[0], 'grommets', $$specs{'Quantity'} );
+	if ( $$printing_specs{grommets} != $$specs{Quantity} ) {
+		openprint::service::insert_service_spec( $openprint::log, $openprint::dbh, $Project->id(), $$services{''}[0], 'grommets', $$specs{Quantity} );
+		foreach my $sig_id ( $Project->signatures() ) {
+			openprint::service::insert_service_spec( $openprint::log, $openprint::dbh, $Project->id(), $sig_id, 'grommets', $$specs{Quantity} );
+		}
 	} # end if
 } # end sub save
 

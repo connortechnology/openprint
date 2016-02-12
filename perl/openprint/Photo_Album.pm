@@ -152,5 +152,13 @@ sub copy {
 	return $New;
 } # end sub copy
 
+sub slider {
+	my ( $Album, $size ) = @_;
+	$size = 'medium' if ! $size;
+
+    my @Assets = map { $_->Asset() } $_[0]->Photos();
+	return openprint::Asset::slider( \@Assets, $size );
+} # end sub slider
+
 1;
 __END__

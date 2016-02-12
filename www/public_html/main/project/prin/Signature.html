@@ -29,7 +29,7 @@
             <?include(/includes/main/proj/templates/signature_template_select.html)?>
             <?include(/includes/main/proj/templates/signatures.html)?>
         <? endif ( $$variable{txtSignatureType} eq 'Cover Pages' or $$variable{txtSignatureType} eq 'Gate Folded Pages' ) ?>
-		<fieldset><legend><? echo ( $$variable{Project}->Type()->name() ) ?> <?txtSignatureType?></legend>
+		<fieldset><legend><? echo ( $$variable{Project}->Type()->description() ) ?> <?txtSignatureType?></legend>
 <? if ( $$variable{txtSignatureType} ) ?>
             <div class="<? echo ( my $type = $$variable{txtSignatureType}; $type =~ s/\s//g; return $type; ) ?>">
 				<ul>
@@ -80,7 +80,11 @@
 				include('/includes/main/proj/dimensions.html'),
 				);
 		} elsif ( sets::isin( $$variable{ProjectType}->name(),['Banners'] ) )  {
-			return include('/includes/main/proj/banner_printing.html');
+			return join("\n",
+					include('/includes/main/proj/templates/generic.html'),
+					include('/includes/main/proj/dimensions.html'),
+					include('/includes/main/proj/banner_printing.html'),
+				);
 		} elsif ( $$variable{ProjectType}->name() eq 'Covers' ) {
 			return join("\n",
 					include('/includes/main/proj/templates/signatures.html'),
@@ -168,13 +172,16 @@
 	<?include(_versions.html)?>
 	<div class="PressProofApprovals">
 	<fieldset><legend>Approvals</legend>
-	<ul>
-	<?include(_press_proof_approval.html)?>
-	</ul>
+		<div class="content">
+			<ul>
+			<?include(_press_proof_approval.html)?>
+			</ul>
+		</div>
 	</fieldset>
 	</div>
 <br class="spacer"/>
 	<?include(/includes/main/proj/colours_coatings.html)?>
+<br class="spacer"/>
 <? if ( $$variable{ProjectType}->name() ne 'Envelopes' ) ?>
 	<?include(/includes/main/proj/bleeds_colourbars.html)?>	
 <? endif ( $$variable{ProjectType}->name() ne 'Envelopes' ) ?>

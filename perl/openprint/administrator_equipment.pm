@@ -99,7 +99,12 @@ sub edit {
 	} elsif ( $param{btnFunction} eq 'Save' ) {
 		$param{servicetype_id} = [ $param{servicetype_id} ] if ref $param{servicetype_id} ne 'ARRAY';
 		$param{category_id} = [ $param{category_id} ] if ref $param{category_id} ne 'ARRAY';
-		$Equipment->save( \%param );
+		my @changes = $Equipment->changes( \%param );
+		if ( ! ( $variable{error} = $Equipment->save( \%param ) ) ) {
+			(new openprint::Log())->save({ object_type=>(ref $Equipment), object_id=>$$Equipment{id}, action=>($param{ddmEquipment}?'Edited Equipment':'Saved Equipment'), note=>join('<br/>', @changes) });
+		$variable{ExternalRedirect} = '/administrator/equipment/edit.html?ddmEquipment='.$Equipment->id();
+		}
+	
 	} elsif ( $param{btnFunction} eq 'Delete' ) {
 		$Equipment->delete();
 		$Equipment = $Equipment->Next();
@@ -126,11 +131,16 @@ sub edit {
 
 sub _specification {
 	my $Specification = new openprint::EquipmentSpecification( $param{id} );
+	my $Equipment = $Specification->Equipment();
+
 	if ( $param{action} eq 'add' ) {
 		$variable{error} .= $Specification->save({'name'=>'new','equipment_id'=>$param{equipment_id}});
 	} elsif ( $param{action} eq 'delete' ) {
-		$Specification->delete();
-		$variable{PageContent} = ' ';
+		if ( ! $Specification->delete() ) {
+			(new openprint::Log())->save({ object_type=>(ref $Equipment), object_id=>$$Equipment{id}, action=>'Delete Equipment Specification', 
+				note=>join(' => ' , @$Specification{'name','value'} ) });
+			$variable{PageContent} = ' ';
+		}
 	} elsif ( $param{action} eq 'copy' ) {
 		$Specification = $Specification->copy();
 		$Specification->save();
@@ -147,6 +157,8 @@ sub _specification {
 				$param{value} = ssi::unhtmlize( $param{value} );
 			} elsif ( $param{field} eq 'units' ) {
 			} # end if
+			(new openprint::Log())->save({ object_type=>(ref $Equipment), object_id=>$$Equipment{id}, action=>'Save Equipment Specification', 
+				note=>$$Specification{name} . ' ' . $param{field} . ' from ' . join(' => ' , $$Specification{$param{field}}, $param{value} ) });
 			$variable{error} .= $Specification->save({$param{field}=>$param{value}});
 			$variable{PageContent} = $$Specification{$param{field}} ne '' ? $$Specification{$param{field}} : '&nbsp;';
 		} else {

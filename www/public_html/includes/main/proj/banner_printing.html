@@ -3,22 +3,16 @@
 		<div class="content">
 			<ul>
 				<li><label># of Grommets per Banner</label>
-					<input type="number" name="grommets" id="grommets" value="<?grommets?>" onkeyup="integerize(this);calc(this.form.name);" />
+					<? echo ( input( type=>'cardinal', name=>'grommets', id=>'grommets', value=>$$variable{grommets}, onkeyup=>'calc(this.form.name);' ); ) ?>
 				</li>
 				<li id="pocketsli"><label>Will your banner have pole pockets?</label>
-					<input type="radio" name="pockets" id="pocketsY" value="Y" <? echo ( ssi::checked( $$variable{'pockets'} eq 'Y' ); ) ?> onclick="$('PocketSizeli').show();calc(this.form.name);" />
-					<label class="radio" for="pocketsY">Yes</label>
-					<input type="radio" name="pockets" id="pocketsN" value="N" <? echo ( ssi::checked( $$variable{'pockets'} ne 'Y' ); ) ?> onclick="$('PocketSizeli').hide();calc(this.form.name);" />
-					<label class="radio" for="pocketsN">No</label>
+					<? echo ( radio( 'pockets', ['Y', 'Yes','N','No' ], $$variable{'pockets'}, { default=>'Y', onclick=>q`if(this.value=='Y'){$('PocketSizeli').show();}else{$('PocketSizeli').hide();}calc(this.form.name);` } ); ) ?>
 				</li>
 				<li id="PocketSizeli" <? echo ( $$variable{'pockets'} ne 'Y' ? 'style="display:none;"' : '' ) ?>><label>Pole pocket diameter</label>
-					<input type="number" name="PocketSize" id="PocketSize" value="<?PocketSize?>" onkeyup="floatize(this);calc(this.form.name);" />
+					<? echo ( input(type=>'float', name=>'PocketSize', id=>'PocketSize', value=>$$variable{PocketSize},  onkeyup=>'calc(this.form.name);' ); ) ?>
 				</li>
 				<li id="hemmed"><label>Will your banner be hemmed?</label>
-					<input type="radio" name="hemmed" id="hemmedY" value="Y" <? echo ( ssi::checked( $$variable{'hemmed'} ne 'N' ); ) ?> onclick="$('edges').show();$('HemWidth').show();calc(this.form.name);" />
-					<label class="radio" for="hemmedY">Yes</label>
-					<input type="radio" name="hemmed" id="hemmedN" value="N" <? echo ( ssi::checked( $$variable{'hemmed'} eq 'N' ); ) ?> onclick="$('edges').hide();$('HemWidth').hide();calc(this.form.name);" />
-					<label class="radio" for="hemmedN">No</label>
+					<?echo ( radio( 'hemmed', [ 'Y', 'Yes', 'N', 'No' ], $$variable{'hemmed'}, { default=>'Y', onclick=>q`if(this.value=='Y'){$('edges').show();$('HemWidth').show();}{$('edges').hide();$('HemWidth').hide();}calc(this.form.name);` } ); ) ?>
 				</li>
 				<li id="edges" <? echo ( $$variable{'hemmed'} ne 'Y' ? 'style="display:none;"' : '' ) ?>><label>Hemmed Edges</label>
 					<? echo (

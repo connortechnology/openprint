@@ -289,16 +289,16 @@ sub signature_calc {
 		my @imps = openprint::imposition::get_all_impositions( $imposition );
 $openprint::log->debug("How many impositions do we get? " . @imps ) if DEBUG;
 		for ( my $i = 0; $i < @imps; $i += 1 ) {
-			if ( $imposition->imposition() % $imps[$i]->imposition() ) {
+			if ( $$imposition{imposition} % $imps[$i]{imposition} ) {
 				next;
 			}
 			if ( (!$$specs{"chkOverrideImposition-$form-$qty_index"}) or ( $$specs{"chkOverrideImposition-$form-$qty_index"} ne 'Y' )
-					or ( $$specs{"txtImposition-$form-$qty_index"} == $imps[$i]->imposition() )
+					or ( $$specs{"txtImposition-$form-$qty_index"} == $imps[$i]{imposition} )
 			   ) {
 				push @cut_impositions, $imps[$i];
 			} # end if
 			for ( my $j = $i + 1; $j < @imps; $j += 1 ) {
-				if ( $imps[$i]->imposition() == $imps[$j]->imposition() and $imps[$i]->rows() == $imps[$j]->rows() ) {
+				if ( $imps[$i]{imposition} == $imps[$j]{imposition} and $imps[$i]{rows} == $imps[$j]{rows} ) {
 					splice @imps, $j, 1;
 					$j -= 1;
 				} # end if
@@ -490,7 +490,7 @@ $openprint::log->debug("How many impositions do we get? " . @imps ) if DEBUG;
 				$Results{Breakdown} .= sprintf('Service: $%1$.2f%2$s * %4$d = $%3$.2f<br/>', @servicePrice{'Price','units','Total'}, $qty/$I->imposition() );
 			} elsif ( $servicePrice{units} eq 'per hour' ) {
 				if ( $runspeed ) {
-					my $hours = Math::Round::nearest( 0.01, ( $qty / $I->imposition() ) / $runspeed );
+					my $hours = Math::Round::nearest( 0.01, ( $qty / $$I{imposition} ) / $runspeed );
 					$servicePrice{Total} = $servicePrice{Price} * $hours;
 					$Results{Breakdown} .= sprintf('Service: $%1$.2f%2$s @ %4$d%5$s = %6$s hours = $%3$.2f<br/>', @servicePrice{'Price','units','Total'}, $Equipment->specification('PerfScoreRunSpeed'), 'Per Hour', $hours );
 				} else {
