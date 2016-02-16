@@ -636,7 +636,7 @@ sub credit_application {
 	} elsif ( $param{btnFunction} eq 'SendToMe' ) {
 		$variable{information} .= $Application->send_notification( $openprint::User );
 		$variable{ExternalRedirect} = '/employee/accounting/credit_application.html?credit_index='.$Application->id();
-	} elsif ( $param{btnFunction} eq 'Resend' ) {
+	} elsif ( $param{btnFunction} eq 'resend' ) {
 		$variable{information} .= $Application->send_notification( );
 		$variable{ExternalRedirect} = '/employee/accounting/credit_application.html?credit_index='.$Application->id();
 	} # end if
