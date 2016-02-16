@@ -622,10 +622,9 @@ sub credit_application {
 			} );
 		if ( ! $variable{error} ) {
 
-			$variable{ReplacementText} = misc::load_file( $log, $ENV{DOCUMENT_ROOT} . '/email_content/credit_change_notification.html' );
+			$variable{ReplacementText} = ssi::slurp_content( '/email_content/credit_change_notification.html' );
 			$variable{ReplacementText} = ssi::variable_substitution( \$variable{ReplacementText}, \%variable );
-			$_ = misc::load_file( $log, $config{SkinPath}.'/email_template.html' );
-			my $template = ssi::variable_substitution( \$_, \%variable );
+			my $template = ssi::include( '/email_template.html', \%variable );
 			$variable{error} .= ( new openprint::Email())->send(
 					FROM	=> $config{AdministratorEmail},
 					TO		=> $Application->User()->email(),
@@ -634,6 +633,12 @@ sub credit_application {
 				);
 		} # end if
 		$variable{ExternalRedirect} = '/employee/accounting/credit_applications.html' if ! $variable{error};
+	} elsif ( $param{btnFunction} eq 'SendToMe' ) {
+		$variable{information} .= $Application->send_notification( $openprint::User );
+		$variable{ExternalRedirect} = '/employee/accounting/credit_application.html?credit_index='.$Application->id();
+	} elsif ( $param{btnFunction} eq 'Resend' ) {
+		$variable{information} .= $Application->send_notification( );
+		$variable{ExternalRedirect} = '/employee/accounting/credit_application.html?credit_index='.$Application->id();
 	} # end if
 
 } # end sub credit_application
