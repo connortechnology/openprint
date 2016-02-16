@@ -38,17 +38,14 @@
 		</fieldset>
 	</div>
 	<br class="spacer"/>
-	<div class="CompanyInformation">
 		<?include('/email_content/_company_information.html') ?>
-	</div>
 	<div class="OwnershipInformation">
 		<?include('/email_content/_business_information.html') ?>
 	</div>
 	<?include('/account/_company_profile_view.html') ?>
 	<?include('/account/_trade_references_view.html') ?>
-	<div class="BankInformation">
-		<? echo ( include('/email_content/_bank_information.html', $variable ); ) ?>
-	</div>
+	<? echo ( include('/email_content/_bank_information.html', $variable ); ) ?>
+	<br class="spacer"/>
 	<div class="Disclaimer">
 	<? echo ( $config{CreditApplicationDisclaimer} ) ?>
 	</div>
@@ -66,6 +63,7 @@
 			<li class="Name"><label>Name In Print</label><span class="input"></span></li>
 			<li class="Date"><label>Date</label><span class="input"></span></li>
 		</ul>
+		<br class="spacer"/>
 		Signature of Owner(s) or Officer(s) is required.  Two Signatories are required for Partnership.
 		</fieldset>
 	</div>
