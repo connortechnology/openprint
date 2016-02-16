@@ -53,11 +53,48 @@ $serial = 'lngCreditAppIndex_seq';
 );
 
 sub Company {
-	return new openprint::Company( $_[0]{'company_id'} );
+	return new openprint::Company( $_[0]{company_id} );
 } # end sub Company
 
 sub User {
-	return new openprint::User( $_[0]{'user_id'} );
+	return new openprint::User( $_[0]{user_id} );
 } # end sub User
+
+sub send_notification {
+	my ( $this, @To ) = @_;
+# Now send email notifications
+	my %info;
+	$info{Company} = $this->Company();
+	$info{User} = $this->User();
+
+	$info{CreditAppIndex} = $this->id();
+	$info{Application} = $this;
+
+	$info{ReplacementText} = ssi::include( '/email_content/credit_application_notification.html', \%info );
+	my $body = ssi::include( '/email_template.html', \%info );
+	$info{ReplacementText} = ssi::include( '/email_content/credit_application.html', \%info );
+	my $credit_application;
+	$credit_application = ssi::include( '/credit_application_template.html', \%info );
+	$credit_application = ssi::include( '/email_template.html', \%info ) if ! $credit_application;
+
+	my $Email = new openprint::Email();
+
+	$Email->add_pdf_attachment_from_html( 'CreditApplication'.$this->id(), $credit_application );
+	if ( @To ) {
+		$Email->add_html_attachment( 'CreditApplication'.$this->id().'.html', $credit_application );
+		#$Email->add_html_attachment( 'CreditApplicationBody.html', $body );
+	} else {
+		push @To, $openprint::config{CreditApplicationEmail};
+	}
+
+	my $results = $Email->send(
+			FROM		=> $openprint::config{CreditApplicationEmail},
+			TO			=> \@To,
+			BCC			=> 'iconnor@point-one.com',
+			SUBJECT		=> 'New Credit Application',
+			HTML_BODY	=>  $body,
+			);
+	return $results;
+} # end if
 1;
 __END__
