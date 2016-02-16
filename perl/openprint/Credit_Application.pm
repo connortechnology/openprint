@@ -94,7 +94,6 @@ sub send_notification {
 			SUBJECT		=> 'New Credit Application',
 			HTML_BODY	=>  $body,
 			);
-	$openprint::log->debug("Results: $results");
 	return $results;
 } # end if
 1;
