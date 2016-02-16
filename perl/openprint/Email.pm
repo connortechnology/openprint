@@ -257,5 +257,10 @@ sub add_pdf_attachment_from_html {
 	push @{$$self{ATTACHMENTS}}, @attachments;
 	return $results;
 }
+
+sub add_html_attachment {
+	my ( $self, $name, $html ) = @_;
+	push @{$$self{ATTACHMENTS}}, ($name, MIME::QuotedPrint::encode_qp($html), 'text/html', 'quoted-printable');
+}
 1;
 __END__

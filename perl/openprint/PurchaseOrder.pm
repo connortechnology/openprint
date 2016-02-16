@@ -624,18 +624,29 @@ sub can_send {
 sub can_authorize {
 	my $User = @_ > 1 ? $_[1] : $openprint::User;
 
-	return 1 if ! $_[0]->total();
-	return 1 if $User->purchasing_limit() and ( $_[0]->total() < $User->purchasing_limit() );
+	if ( ! $_[0]->total() ) {
+		$openprint::log->debug("can_authorize 1 because no total") if $debug;
+		return 1;
+	} # end if
+	if ( $User->purchasing_limit() and ( $_[0]->total() < $User->purchasing_limit() ) ) {
+		$openprint::log->debug("can_authorize 1 because total " .  $_[0]->total() . ' < ' . $User->purchasing_limit() ) if $debug;
+		return 1;
+	} # end if
 	my %Totals;
 	my %Types;
 	foreach my $C ( $_[0]->Contents() ) {
-		$Totals{$C->type_id()} += $C->price();
+		$Totals{$C->type_id()} += $C->total();
 		$Types{$C->type_id()} = $C->Type();
 	} # end foreach C
 		
 	my $authorized = 1;
 	foreach my $T ( values %Types ) {
-		$authorized = 0 if $Totals{$$T{id}} > $User->po_limit( $$T{id} );
+		if ( $Totals{$$T{id}} > $User->po_limit( $$T{id} ) ) {
+			$openprint::log->debug("can_authorize 0 because $Totals{$$T{id}} > " . $User->po_limit( $$T{id} ) ) if $debug;
+			$authorized = 0
+		} else {
+			$openprint::log->debug("can_authorize 1 because $Totals{$$T{id}} <= " . $User->po_limit( $$T{id} ) ) if $debug;
+		} # end if
 	} # end foreach Content 
 	if ( $authorized and $User->purchasing_total_limit() ) {
 		# Need to check all unauthorized POs FIXME later

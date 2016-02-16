@@ -311,3 +311,6 @@ new Ajax.Request('/administrator/equipment/_specification.html?action=copy&amp;i
 		</p>
 	</fieldset>
 </form>
+<? if ( $$variable{Equipment}->id() ) ?>
+	<? echo ( include_logs( $$variable{Equipment} ); ) ?>
+<? endif ( $$variable{Equipment}->id() ) ?>
