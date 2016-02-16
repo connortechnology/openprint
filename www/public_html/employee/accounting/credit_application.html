@@ -79,7 +79,11 @@
 							</li>
 						</ul>
 						<p class="buttons">
-						<? echo ( button( 'Save', { onclick=>"f1.btnFunction.value='Save';submit_check(f1);" } ); ) ?> 
+						<? echo ( join("\n",
+									button( 'Save', { onclick=>"f1.btnFunction.value='Save';submit_check(f1);" } ),
+									button( 'SendToMe', { onclick=>"f1.btnFunction.value='SendToMe';f1.submit();" } ),
+									button( 'Resend', { onclick=>"f1.btnFunction.value='ReSend';f1.submit();" } ),
+							); ) ?> 
 						</p>
 					</fieldset>
 				</div><!--Granted-->
@@ -112,17 +116,13 @@
 			</div>
 		</form>
 		<br class="spacer"/>
-		<div class="CompanyInformation">
 			<?include('/email_content/_company_information.html') ?>
-		</div>
 		<div class="OwnershipInformation">
 			<?include('/email_content/_business_information.html') ?>
 		</div>
 			<?include('/account/_company_profile_view.html') ?>
 			<?include('/account/_trade_references_view.html') ?>
-		<div class="BankInformation">
-			<? echo ( include('/email_content/_bank_information.html'); ) ?>
-		</div>
+			<?include('/email_content/_bank_information.html') ?>
 		<div class="Disclaimer">
 		<? echo ( $config{CreditApplicationDisclaimer} ) ?>
 		</div>
