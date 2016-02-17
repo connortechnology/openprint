@@ -1471,10 +1471,12 @@ $i->display( 'Returned from get_imposition' );
 									for ( my $imp_index = 0; $imp_index < @{$paper_impositions{$key}}; $imp_index += 1 ) {
 										my $j = $paper_impositions{$key}[$imp_index];
 										my $B = $j->Paper();
+										next if $$AP{type} ne $$B{type};
+
 										next if ( (defined $$specs{'OverrideCutOff'.$qty_index} ) and ( $$specs{'OverrideCutOff'.$qty_index} eq 'Y' ) and ( $$B{height} == $$specs{"CutOff$qty_index"} ) );
 										my $jarea = $B->area();
 										if ( $iarea < $jarea ) {
-if ( DEBUG_INITIAL_FILTERING ) {
+if ( DEBUG_INITIAL_FILTERING and $$AP{width} == 35 ) {
 	$j->display('1 dumping');
 	$i->display('1 for');
 }
@@ -1482,7 +1484,7 @@ if ( DEBUG_INITIAL_FILTERING ) {
 											$imp_index -= 1;
 	#$i->display('1 for');
 										} elsif ( $jarea < $iarea ) {
-if ( DEBUG_INITIAL_FILTERING ) {
+if ( DEBUG_INITIAL_FILTERING and $$AP{width} == 35 ) {
 	$i->display('2 dumping');
 	$j->display('2 for');
 }
@@ -1699,6 +1701,7 @@ if ( 0 ) {
 $imp->display(" Less than $max_imposition") if DEBUG_INITIAL_FILTERING;
 				next;
 			} # end if
+			$$imp{inkCoverage} = $$project{inkCoverage};
 			my $A = $imp->Paper();
 			my $a_stock_minimum = $$specs{"txtQuantity$qty_index"} / $$imp{imposition};
 			my $a_stock_lbs = Math::Round::nearest(0.01, $a_stock_minimum * $A->area() * $A->wpsi() );
@@ -1750,7 +1753,7 @@ $imp->display(" Less than $max_imposition") if DEBUG_INITIAL_FILTERING;
 			} # end if
 			next if ! $add;
 
-			my $str = join(',', @$imp{'columns','rows','dutch_columns','dutch_rows','runstyle','image_orientation','bleed_size'}, $$A{digital} );
+			my $str = join(',', @$imp{'columns','rows','dutch_columns','dutch_rows','runstyle','image_orientation','bleed_size'}, $$A{digital}, $$A{type} );
 			#my $str = sprintf('%dx%d+%dx%d-%s-%s-%s-%s', @$imp{'columns','rows','dutch_columns','dutch_rows','runstyle','image_orientation','bleed_size'}, $$A{digital} );
 #$openprint::log->error("A $$A{width}x$$A{height} " . join(',', @{$$Overrides{"OverrideStockWidth$qty_index"}} ) . ' heights: ' . join(',', @{$$Overrides{"OverrideStockHeight$qty_index"}} ) );
 			if ( ($$Overrides{'chkOverrideSheetSize'.$qty_index} eq 'Y') and sets::isin( $$A{width}, $$Overrides{"OverrideStockWidth$qty_index"} )
@@ -1840,13 +1843,14 @@ $openprint::log->debug("Doing nothing, keeping all add:$add") if DEBUG_INITIAL_F
 
 		@impositions = map {@{$_}} values %imps;
 
+if ( 0 ) {
 		# This is ok, because we are on the same press
 		%imps = ();
 		my $bump_count = 0;
 		foreach my $I ( @impositions ) {
 			$$I{inkCoverage} = $$project{inkCoverage};
 			my $Paper = $I->Paper();
-			my $key = join(',', $Paper->area(), @$I{'pages','image_orientation','imposition','runstyle'} );
+			my $key = join(',', $$Paper{type}, $Paper->area(), @$I{'pages','image_orientation','imposition','runstyle'} );
 			if ( ! ( $imps{$key} and @{$imps{$key}} ) ) {
 				$imps{$key} = [ $I ];
 				next;
@@ -1869,20 +1873,21 @@ $openprint::log->debug("Doing nothing, keeping all add:$add") if DEBUG_INITIAL_F
 				$bump_count += 1;
 			}
 		} # end foreach I
-		$openprint::log->debug("Initial Bumped $bump_count for Perfecting vs Sheet Work") if DEBUG_INITIAL_FILTERING;
+		$openprint::log->debug("Initial Bumped $bump_count for Perfecting vs Sheet Work") if DEBUG_INITIAL_FILTERING or 1;
 
 		@impositions = map {@{$_}} values %imps;
+}
 		%imps = ();
-		if ( DEBUG_INITIAL_FILTERING ) {
+		if ( DEBUG_INITIAL_FILTERING or 1 ) {
 			$openprint::log->debug("Afgter filtering by Perfecting vs Sheetwork");
 			foreach my $I ( openprint::imposition::sort ( @impositions ) ) {
-				$I->display("After filtering by paper");
+				$I->display("After filtering by paper and runstyle");
 			}
 		}
 
 } # end if do_initial_filtering
 #$openprint::log->debug("After filtering qty: $qty_index, Press: $$Press{strid} " . ( sprintf('%.4f', tv_interval( [$master_time])*1000) ) .' usecs' );
-		if ( DEBUG or DEBUG_INITIAL_FILTERING ) {
+		if ( DEBUG or DEBUG_INITIAL_FILTERING or 1 ) {
 			$openprint::log->warn('Impositions after initial filtering for '. $$Press{strid} . ': ' . @impositions . ' time: ' . ( sprintf('%.4f', tv_interval( [$master_time])*1000) ) .' usecs');
 			foreach my $I ( openprint::imposition::sort( @impositions ) ) {
 				$I->display('QTY $' );
@@ -3880,7 +3885,7 @@ sub get_project_price {
 #$openprint::log->debug("calculated_impositions: $$Press{strid} " . ( sprintf('%.4f', tv_interval( [$time])*1000) ) .' usecs' );
 	foreach my $base_imp ( @Is ) {
 # Imp still gets modified in calc_price, Folding adds Folder member
-#$base_imp->display("Starting");
+$base_imp->display("Starting");
 		$$base_imp{Project} = $Project;
 		my $imp = $base_imp->copy();
 		my $Press = $imp->Press();
@@ -4168,7 +4173,7 @@ $openprint::log->error("No proofs>!");
 #$openprint::log->debug( breakdown( $price, $sig_specs ) ) if ! $recursion_depth;
 
 					if ( $$price{upq} ) {
-						if ( $$price{upq} == 2 and %best_price ) {
+						if ( ( $$price{upq} == 2 ) and %best_price ) {
 							$$price{complete} = 0;
 							$$price{'Comparison Cost'} += 10000000;
 							$$price{Breakdown} .= 'Unable to calculate additional 2pg signatures.<br/>';
@@ -4810,7 +4815,7 @@ if ( DEBUG_PLATES ) {
 							( defined $$price{'Comparison Log'} ? sprintf('Comparison Log: %s total: %s<br/>', @$price{'Comparison Log','Comparison Cost'}) : '' ),
 							);
 					$openprint::log->debug( 'this: ' . $breakdown );
-					$best_price{Imposition}->display($recursion_depth.'best');
+					$best_price{Imposition}->display('best dpeth: ' . $recursion_depth . ' group: ' . $$sig_specs{Group} );
 					$breakdown = breakdown( \%best_price, $best_price{specs} );
 					$breakdown .= join('',
 							( defined $best_price{'SpinePaste Breakdown'} ? $best_price{'SpinePaste Breakdown'} : '' ),
@@ -4824,7 +4829,7 @@ if ( DEBUG_PLATES ) {
 			} else {
 
 				if ( DEBUG_PRICE_DECISIONS ) {
-					$imp->display("$recursion_depth New best price chosen: $best_price{'Comparison Cost'} >= $$price{'Comparison Cost'}");
+					$imp->display("Depth: $recursion_depth Group: $$sig_specs{Group} New best price chosen: $best_price{'Comparison Cost'} >= $$price{'Comparison Cost'}");
 					if ( %best_price ) {
 						my $stitching_breakdown = $best_price{'Stitching Breakdown'};
 						foreach my $sig_price ( @{$best_price{prices}} ) {
@@ -4895,8 +4900,7 @@ if ( DEBUG_PLATES ) {
 		return {};
 	} # end if
 	if ( DEBUG_PRICE_DECISIONS or $$sig_specs{Group} == 1 and ! $recursion_depth ) {
-		$openprint::log->debug("Returning from get_project_price");
-		$best_price{Imposition}->display( $recursion_depth . "Returning: qty_index: $qty_index :" );
+		$best_price{Imposition}->display( "Depth: $recursion_depth Group: $$sig_specs{Group} Returning: qty_index: $qty_index :" );
 		if ( $best_price{Impositions} ) {
 			foreach my $I ( reverse @{ $best_price{Impositions} } ) {
 				$I->display( join('', map { ' ' } ( 1 .. $recursion_depth ) ) . "FINAL BEST: qty_index: $qty_index :" );
