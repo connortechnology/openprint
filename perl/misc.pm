@@ -220,7 +220,8 @@ sub error {
 
 	$$variable{'error'} = $error;
 	$$variable{'details'} = $details;
-	$$variable{'Redirect'} = $openprint::config{'errorpage'};
+	$$variable{information} = $details;
+	#$$variable{'Redirect'} = $openprint::config{'errorpage'};
 } # end sub error
 
 sub trim {
