@@ -74,7 +74,7 @@ sub history_details {
 			my $OldCompany = $Quote->Company();
 			my $NewCompany = new openprint::Company( $param{company_id} );
 
-			if ( $Quote->can_delete() and ( $session{user_id} eq $$NewCompany{salesrep_id} ) ) {
+			if ( $Quote->can_delete() and ( (!$$NewCompany{salesrep_id}) or ( $session{user_id} == $$NewCompany{salesrep_id} ) ) ) {
 				$variable{error} .= $Quote->save({company_id=>$param{company_id}});
 			} else {
 				$variable{error} .= 'You do not have permission to move this quote.<br/>';
