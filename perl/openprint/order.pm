@@ -266,19 +266,37 @@ sub make_order_from_quote {
 	my $error = '';
 	my $order_id;
 
+	my @contents;
 	my @quote = sql::execute( $log, $dbh, q{SELECT project_id FROM tbl_Quote_Details WHERE quote_id=?}, $quote_id );
+	push @contents, @quote;
 
 	if ( @quote > 0 ) {
 		foreach my $project_index ( @quote ) {
 			( $order_id, $_ ) =	add_project_to_order( new openprint::Project( $project_index ), $order_id );
 			$error .= $_;
 		} # end foreach
-		return ( $order_id, $error );
-	} else {
+	} # end if
+
+	$order_id = create_order() if ! $order_id;
+	my $Order = new openprint::Order( $order_id );
+	
+	my $Quote = new openprint::Quote( $quote_id );
+	foreach my $QP ( $Quote->Products() ) {
+		my $OP = new openprint::OrderedProduct();
+		$error .= $OP->save({
+			order_id	=>	$Order->id(),
+			product_id	=>	$QP->product_id(),
+			quantity	=>	$QP->quantity(),
+			price		=>	$QP->price(),
+		});
+		push @contents, $OP;
+	}
+
+	if ( ! @contents ) {
 		$error .= "make_order_from_quote: Empty quote specified: $quote_id";
 		$log->debug( "make_order_from_quote: Empty quote specified: $quote_id" );
-	} # end if
-	return ( 0, $error );
+	}
+	return ( $$Order{id}, $error );
 } # end sub make_order_from_quote
 
 sub check_credit {
