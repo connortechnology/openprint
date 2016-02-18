@@ -231,7 +231,8 @@ sub user_profiles {
 	my $user_role = $param{ddmUserRole};
 
 	if ( exists $param{ddmCustomer} ) {
-		if ( $param{ddmCustomer} and ( $User->company_id() != $param{ddmCustomer} ) ) {
+		if ( $param{ddmCustomer} and $User->company_id() and ( $User->company_id() != $param{ddmCustomer} ) ) {
+$log->error("PReventing customer change");
 			# Prevent selection of user from another company
 			$User = new openprint::User();
 		} # end if
@@ -290,6 +291,7 @@ sub user_profiles {
 
 		my @Users = openprint::User->find( 'email lc' => lc $param{email} ) if $param{email};
 		if ( @Users > 1 or ( ( @Users == 1 ) and ( $Users[0]->id() != $User->id() ) ) ) {
+$log->debug("User ids not match " . $Users[0]->id()  . ' != ' . $User->id() );
 			my $error = "There is already one or more users with the specified email address.  They are listed below:<br/>";
 			foreach my $U ( @Users ) {
 				$error .= sprintf('<a href="/administrator/managerial/user_profiles.html?ddmUser=%d">%s : %s &lt;%s&gt; %s</a><br/>', $U->id(), $U->Company()->name(), $U->name(), $U->email(), $U->deleted() ? 'deleted' : '' );
