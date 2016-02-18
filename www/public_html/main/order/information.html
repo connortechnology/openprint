@@ -12,7 +12,7 @@
 				<fieldset>
 					<div class="content">
 						<ul>
-							<li class="order_id"><label>Order ID</label><? echo ( $$variable{'Order'}->id() ) ?></li>
+							<li class="order_id"><label>Order ID</label><? echo ( $$variable{Order}->id() ) ?></li>
 							<li class="po_id"> 
 								<label>Purchase Order</label>
 								<input type="text" id="txtPurchaseOrder" name="txtPurchaseOrder" value="<? echo ( $$variable{Order}->po() ) ?>" />
@@ -31,7 +31,7 @@
 								} # end if @Suppliers > 1 
 								return $html;
 							) ?>
-							<? if ( (! $session{'company_id'}) and sets::isin($session{'user_type'}, ['A','E'] ) ) ?>
+							<? if ( (! $session{company_id}) and sets::isin($session{user_type}, ['A','E'] ) ) ?>
 							<li class="company_id">
 								<label>Company</label>
 								<span id="CompanyDropDown">
@@ -39,27 +39,27 @@
 								</span>
 								<? echo ( button( 'AddFromBelow', { onclick=>'save_company();', text=>'Save Company' } ); ) ?>
 							</li>
-							<? endif ( (! $session{'company_id'}) and sets::isin($session{'user_type'}, ['A','E'] ) ) ?>
+							<? endif ( (! $session{company_id}) and sets::isin($session{user_type}, ['A','E'] ) ) ?>
 						</ul>
 					</div>
 				</fieldset>
 			</div><!--Information-->
 			<div id="BillingInformation"><?include(_billing_information.html) ?></div>
-<? if ( $config{'PaymentOnOrderInformation'} ) ?>
+<? if ( $config{PaymentOnOrderInformation} ) ?>
 			<div id="PaymentOptions">
 			<?include(_payment_options.html) ?>
 			</div>
-<? endif ( $config{'PaymentOnOrderInformation'} ) ?>
+<? endif ( $config{PaymentOnOrderInformation} ) ?>
 			<? eval ( 
-				$$variable{Projects} = [ $$variable{'Order'}->Projects() ];
-				$$variable{Products} = [ $$variable{'Order'}->Products() ];
-				@{$$variable{'Contents'}} = ( @{$$variable{'Projects'}}, @{$$variable{'Products'}} );
+				$$variable{Projects} = [ $$variable{Order}->Projects() ];
+				$$variable{Products} = [ $$variable{Order}->Products() ];
+				@{$$variable{Contents}} = ( @{$$variable{Projects}}, @{$$variable{Products}} );
 			) ?>
-<? if ( @{$$variable{'Contents'}} == 1 ) ?>
+<? if ( @{$$variable{Contents}} == 1 ) ?>
 			<div id="ShippingInformation">
 				<? echo (
 					# If there is only 1 thing in the order, then we can condense
-					$$variable{'Project'} = $$variable{'Contents'}[0]->Project();
+					$$variable{Project} = $$variable{Contents}[0]->Project();
 					my $html;
 					if ( $$variable{Project}->quantity_indexes() > 1 ) {
 						$html .= '<fieldset><legend>Select Quantity</legend><div class="content"><ul>';
@@ -71,15 +71,16 @@
 					return $html;
 				) ?>
 			</div><!--Shipping-->
-<? endif ( @{$$variable{'Contents'}} == 1 ) ?>
+<? endif ( @{$$variable{Contents}} == 1 ) ?>
 		</div><!--Header-->
 		<div id="Contents">
-			<? if ( @{$$variable{'Contents'}} ) ?>
+			<? if ( @{$$variable{Contents}} ) ?>
+				<? if ( @{$$variable{Projects}} ) ?>
 				<div id="Projects">
 					<? echo (
 						my $html;
-						foreach my $Project ( @{$$variable{'Projects'}} ) {
-							$$variable{'Project'} = $Project;
+						foreach my $Project ( @{$$variable{Projects}} ) {
+							$$variable{Project} = $Project;
 							$html .= '<div class="Project"><h3 class="project_id">'.$Project->link_to('Project '.$Project->id() ).'</h3><p class="buttons">';
 							$html .= button( 'Edit'.$$Project{id}, { href=>$Project->url_to(), text=>'Edit' } );
 							$html .= button( 'Remove'.$$Project{id}, { href=>"information.html?order_id=$$variable{order_id}&amp;action=remove&amp;project_id=$$Project{id}", text=>'Remove' } );
@@ -90,49 +91,56 @@
 						return $html;
 					) ?>
 				</div>
+				<? endif ( @{$$variable{Projects}} ) ?>
 				<div id="Products">
 					<? echo (
 						my $html;
-						foreach my $Product ( @{$$variable{'Products'}} ) {
-							$$variable{'Product'} = $Product;
-							my $Project = $$variable{'Project'} = $Product->Project();
-							$html .= '<div class="Project"><p class="buttons">';
-							$html .= button( 'Remove'.$$Project{'id'}, { 'href'=>"information.html?order_id=$$variable{'order_id'}&amp;action=remove&amp;product_id=$$Product{id}", 'text' => 'Remove' } );
-							$html .= '</p><br class="spacer"/>';
-							$html .= include( '/main/order/_product_information.html' );
-							$html .= '</div>';
+						foreach my $Product ( @{$$variable{Products}} ) {
+							$$variable{Product} = $Product;
+							if ( $Product->project_id() ) {
+								my $Project = $$variable{Project} = $Product->Project();
+								$html .= '<div class="Project"><p class="buttons">';
+								$html .= button( 'Remove'.$$Project{id}, { 'href'=>"information.html?order_id=$$variable{order_id}&amp;action=remove&amp;product_id=$$Product{id}", 'text' => 'Remove' } );
+								$html .= '</p><br class="spacer"/>';
+								$html .= include( '/main/order/_product_project_information.html' );
+								$html .= '</div>';
+							} else {
+								$html .= '<div class="Product"><p class="buttons">';
+								$html .= button( 'Remove'.$$Product{id}, { href=>"information.html?order_id=$$variable{order_id}&amp;action=remove&amp;product_id=$$Product{id}", text => 'Remove' } );
+								$html .= '</p><br class="spacer"/>';
+								$html .= include( '/main/order/_product_information.html' );
+								$html .= '</div>';
+							} # end if
 						} # end foreach
 						return $html;
 					) ?>
 				</div>
-			<? else ( @{$$variable{'Contents'}} ) ?>
+			<? else ( @{$$variable{Contents}} ) ?>
 				<p>This order appears to be empty.</p>
-			<? endif ( @{$$variable{'Contents'}} ) ?>
+			<? endif ( @{$$variable{Contents}} ) ?>
 		</div><!--Contents-->
-<div id="Totals">
-	<ul>
-		<li id="SubTotal">
-			<label>Sub Total</label>
-			<? echo ( openprint::Currency::format( $$variable{'Order'}->Currency()->convert_from( $$variable{'Order'}->subtotal() ) ); ) ?>
-		</li>
-	</ul>
-</div>
+		<div id="Totals">
+			<ul>
+				<li id="SubTotal">
+					<label>Sub Total</label>
+					<? echo ( openprint::Currency::format( $$variable{Order}->Currency()->convert_from( $$variable{Order}->subtotal() ) ); ) ?>
+				</li>
+			</ul>
+		</div>
 		<p class="buttons">
 			<? echo ( 
 				my $html;
-				my @Projects = $$variable{'Order'}->Projects();
+				my @Projects = $$variable{Order}->Projects();
 				if ( @Projects ) {
 					my $Project = $Projects[0];
 					if ( $Project->mode() eq 'Simple' ) {
-						$html .= ssi::button( 'Back',{ href=>'/content/'.$Project->Type()->url().'?project_id='.$$Project{id}} );
+						$html .= button( 'Back',{ href=>'/content/'.$Project->Type()->url().'?project_id='.$$Project{id}} );
 					} else {
-						$html .= ssi::button( 'Back', { href=>'/main/project/view.html?ProjectIndex='.$$Project{id} } );
+						$html .= button( 'Back', { href=>'/main/project/view.html?ProjectIndex='.$$Project{id} } );
 					} 
-				} else {
-					$log->debug("NO Project");
 				} # end if
-				$html .= ssi::button( 'AddProject', { onclick=>'', href=>'/main/project/history.html', text=>'Add Project From History' } ) if $config{'OrderMode'} ne 'Simple';
-				$html .= ssi::button( 'SaveAndContinue', { onclick=>'f1.submit();', text=>'Save And Continue' } ); 
+				$html .= button( 'AddProject', { href=>'/main/project/history.html', text=>'Add Project From History' } ) if $config{OrderMode} ne 'Simple';
+				$html .= button( 'SaveAndContinue', { onclick=>'f1.submit();', text=>'Save And Continue' } ); 
 				return $html;
 			) ?>
 		</p>
