@@ -926,7 +926,7 @@ sub get_price {
 			if ( $MakeReadyPrice ) {
 				$$MakeReadyPrice{Total} = $$MakeReadyPrice{Price};
 				$pass{MakeReadyPrice} = $MakeReadyPrice;
-				$price{MakeReady} += $$MakeReadyPrice{Total}
+				$price{MakeReadyTotal} += $$MakeReadyPrice{Total}
 			}
 		} elsif ( DEBUG ) {
 			$openprint::log->debug("No Makeready Service");
