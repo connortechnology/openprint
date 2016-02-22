@@ -292,8 +292,8 @@ $openprint::log->error("NO Folding!");
 	}
 	my @blocked = $Project->Type()->blocked_services();
 	if ( ( ! $ServiceType ) or sets::isin( $ServiceType->id(), \@blocked ) ) {
-		$openprint::log->error("Folding blocked: $$ServiceType{id} blocked: @blocked");
-		return 0 ;
+		$openprint::log->debug("Folding blocked: $$ServiceType{id} blocked: @blocked");
+		return 0;
 	}
 	my $services = $Project->services( );
 

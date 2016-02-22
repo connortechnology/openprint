@@ -398,6 +398,9 @@ sub insert_press_proof($$$$$$) {
 sub insert_colour_proof($$$$$) {
 	my ( $Project, $sig_specs, $proof_index, $qty_index, $specs ) = @_;
 
+	$$sig_specs{SideOneColours} = [openprint::Estimating::Printing::get_colours( $sig_specs, 'SideOne' )] if ! $$sig_specs{SideOneColours};
+	$$sig_specs{SideTwoColours} = [openprint::Estimating::Printing::get_colours( $sig_specs, 'SideTwo' )] if ! $$sig_specs{SideTwoColours};
+
 	#$log->debug("*** Inserting Colour Proof *******");
 	my $Equipment = openprint::Equipment->find_one( strid=>$$sig_specs{'ddmPress'.$qty_index} ) if $$sig_specs{'ddmPress'.$qty_index};
 
@@ -406,12 +409,12 @@ sub insert_colour_proof($$$$$) {
 
 	if ( $default_proof_type ) {
 		if ( 
-				( $$specs{'RequireColourProofs'} eq 'Y' )  or (
+				( $$specs{'RequireColourProofs'} eq 'Y' and @{$$sig_specs{SideOneColours}} )  or (
 					($$specs{'RequireColourProofs'} ne 'N') and $$sig_specs{'chkProcessColourSideOne'} ) ) {
 			$quantity += 1;
 		} # end if
 		if ( 
-				( $$specs{'RequireColourProofs'} eq 'Y' )  or (
+				( $$specs{'RequireColourProofs'} eq 'Y' and @{$$sig_specs{SideTwoColours}} )  or (
 					($$specs{'RequireColourProofs'} ne 'N') and $$sig_specs{'chkProcessColourSideTwo'} ) ) {
 			$quantity += 1;
 		} # end if

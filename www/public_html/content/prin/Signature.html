@@ -96,20 +96,17 @@
 					</fieldset>
 				</div>
 				<? if ( ! sets::isin( $$variable{ProjectType}->name(), ['Letterhead','Posters','Labels','Banners'] ) ) ?>
-				<div class="Finishing"><fieldset>
-					<legend>Finishing</legend>
-					<div class="content">
-						<ul>
-					<? if ( ! sets::isin( $$variable{ProjectType}->name(), ['InkjetOutputs'] ) ) ?>
+<? echo (
+	my $html;
 
-						<? if ( sets::isin( $$variable{ProjectType}->name(), ['NCR'] ) ) ?>
-								<?include(_numbering.html)?>
-						<? endif ( sets::isin( $$variable{ProjectType}->name(), ['NCR'] ) ) ?>
-						<? if ( sets::isin( $$variable{ProjectType}->name(), ['ScratchPads'] ) ) ?>
-								<?include(_padding.html)?>
-						<? endif ( sets::isin( $$variable{ProjectType}->name(), ['ScratchPads'] ) ) ?>
-						<? echo (
-							my $html;
+					if ( ! sets::isin( $$variable{ProjectType}->name(), ['InkjetOutputs'] ) ) {
+
+						if ( sets::isin( $$variable{ProjectType}->name(), ['NCR'] ) ) {
+								$html .= include('_numbering.html');
+						}
+						if ( sets::isin( $$variable{ProjectType}->name(), ['ScratchPads'] ) ) {
+								$html .= include('_padding.html');
+						}
 							my @blocked_services = $$variable{ProjectType}->blocked_services();
 
 							foreach my $servicetype ( 'Scoring', 'Drilling', 'Grommeting', 'RoundCornering', 'HStands' ) {
@@ -122,19 +119,26 @@
 								}
 							} # end foreach servicetype
 
-							return $html;
-						) ?>
-					<? else ( ! sets::isin( $$variable{ProjectType}->name(), ['InkjetOutputs'] ) ) ?>
-							<?include(_lamination.html)?>
-					<? endif ( ! sets::isin( $$variable{ProjectType}->name(), ['InkjetOutputs'] ) ) ?>
-							<? if ( sets::isin( $$variable{ProjectType}->name(), ['Brochures','Postcards','Menus','GreetingCards','RackCards','DoorHangers'] ); ) ?>
-							<?include(_shrinkwrapping.html)?>
-							<?include(_bundling.html)?>
-							<? endif ( sets::isin( $$variable{ProjectType}->name(), ['Brochures','Postcards','Menus','GreetingCards','RackCards','DoorHangers'] ); ) ?>
-						</ul>
+					} else {
+							$html .= include('_lamination.html');
+					}
+							 if ( sets::isin( $$variable{ProjectType}->name(), ['Brochures','Postcards','Menus','GreetingCards','RackCards','DoorHangers'] ); ) {
+							$html .= include('_shrinkwrapping.html');
+							$html .= include('_bundling.html');
+							}
+							if ( $html ) {
+							}
+							return 
+				'<div class="Finishing"><fieldset>
+					<legend>Finishing</legend>
+					<div class="content">
+						<ul>'.
+$html.
+						'</ul>
 					</div>
 					</fieldset>
-				</div><!--Finishing-->
+				</div><!--Finishing-->';
+				) ?>
 				<? endif ( ! sets::isin( $$variable{ProjectType}->name(), ['Letterhead','Posters','Labels','Banners'] ) ) ?>
 				<div class="Production">
 					<fieldset><legend>Production</legend>
@@ -150,9 +154,9 @@
 					</fieldset>
 				</div>
 				<?include(_ups.html)?>
-				<div id="AlertDiv" style="display:none;"></div>
 				<br class="spacer"/>
 		  </div><!--ProjectSpecifications-->
+				<div id="AlertDiv" style="display:none;"></div>
 				<?include(_prices.html)?>
 <? endif ( $dbh and ( ( ! $$variable{ProjectType}->please_call() ) or ( sets::isin( $session{user_type}, ['E','A'] ) ) ) ) ?>
 				</div></div><!--Questions-->

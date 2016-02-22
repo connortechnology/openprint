@@ -117,22 +117,23 @@ sub edit {
 				my ( $project_type, $name, $value ) = misc::trim( $csv->fields() );
 				
 				my $PT = $PT_cache{$project_type};
-				if ( ! $PT ) {
+				if ( $project_type and ! $PT ) {
 					$variable{error} .= "No Project Type found for $project_type<br/>";
 					next;
 				}
 
 				my $STD = new openprint::ServiceType_Default();
-				if ( $_ .= $PT->save({
-							projecttype_id	=>	$PT->id(),
+				if ( $_ .= $STD->save({
+							projecttype_id	=>	$PT ? $PT->id() : undef,
 							servicetype_id	=>	$ServiceType->id(),
 							name			=>	$name,
 							value			=>	$value,
 							}) ) {
 					$variable{error} .= "Error saving Service Type Default $$ServiceType{id} : $_<br/>";
 				} # end if
-			} # end foreach
+			} # end while <io>
 			sql::end_transaction( $dbh, $ac );
+			$ServiceType->Defaults( undef );
 		} else {
 			$log->warn( "No file given to upload." );
 		} # end if

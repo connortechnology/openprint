@@ -7,6 +7,7 @@ require misc;
 require openprint::StockPurpose;
 require openprint::PaperInventory;
 require openprint::StockBrand;
+require openprint::StockManufacturer;
 require openprint::StockFinish;
 require openprint::StockColour;
 require openprint::StockQuality;

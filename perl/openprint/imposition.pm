@@ -1102,7 +1102,7 @@ sub decrease_imposition {
 } # end sub decrease_imposition
 
 sub get_all_impositions {
-Carp::cluck("Really don't want to use get_all_impositions");
+#Carp::cluck("Really don't want to use get_all_impositions");
 #map { $openprint::log->debug( $_ ) } @_;
 	my @results = @_;
 	my @imps = @_;

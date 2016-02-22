@@ -905,6 +905,7 @@ $openprint::log->debug("Setting paper in_stock to $_[1]");
 			return $in_stock;
 		} else {
 			$_[0]{in_stock} = $_[1];
+			delete $_[0]{SkidContents};
 		} # end if
 	} # end if
 

@@ -19,8 +19,8 @@ $serial = 'tbl_Service_Defaults_lngID_seq';
 	value			=>	'strdefaultvalue',
 );
 %find_fields = (
-	'projecttype'	=>	'(SELECT name FROM project_types WHERE project_types.id=projecttype_id)',
-	'servicetype'	=>	'(SELECT name FROM service_types WHERE service_types.id=lngservicetypeindex)',
+	projecttype	=>	'(SELECT name FROM project_types WHERE project_types.id=projecttype_id)',
+	servicetype	=>	'(SELECT name FROM service_types WHERE service_types.id=lngservicetypeindex)',
 );
 
 %transforms = (
@@ -43,10 +43,10 @@ sub projecttype {
 		} else {
 $openprint::log->error("Unknown projecttype");
 		} # end if
-	} elsif ( $_[0]{'projecttype_id'} and ! $_[0]{'projecttype'} ) {
-		$_[0]{'projecttype'} = new openprint::ProjectType( $_[0]{'projecttype_id'} )->name();
+	} elsif ( $_[0]{projecttype_id} and ! $_[0]{projecttype} ) {
+		$_[0]{projecttype} = new openprint::ProjectType( $_[0]{projecttype_id} )->name();
 	} # end if
-	return $_[0]{'projecttype'};
+	return $_[0]{projecttype};
 } # end sub projecttype
 sub servicetype {
 	if ( @_ > 1 ) {
@@ -56,10 +56,10 @@ sub servicetype {
 		} else {
 $openprint::log->error("Unknown servicetype");
 		} # end if
-	} elsif ( $_[0]{'servicetype_id'} and ! $_[0]{'servicetype'} ) {
-		$_[0]{'servicetype'} = new openprint::ServiceType( $_[0]{'servicetype_id'} )->name();
+	} elsif ( $_[0]{servicetype_id} and ! $_[0]{servicetype} ) {
+		$_[0]{servicetype} = new openprint::ServiceType( $_[0]{servicetype_id} )->name();
 	} # end if
-	return $_[0]{'servicetype'};
+	return $_[0]{servicetype};
 } # end sub servicetype
 
 1;

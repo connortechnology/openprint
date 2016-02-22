@@ -145,7 +145,7 @@ sub edit {
 			$variable{ExternalRedirect} = '/timetrack/history.html';
 			return;
 		}
-	} # end if
+	} else {
 	if ( (!$variable{Timetrack}->id()) ) {
 		$variable{Timetrack}->set(\%param); # Sets defaults
 		$variable{Timetrack}->user_id( $session{user_id} ) if ! $variable{Timetrack}->user_id();
@@ -154,6 +154,7 @@ sub edit {
 			$variable{Timetrack}->starting( $session{'/timetrack/edit.html?ending'} ) if ! $variable{Timetrack}->starting();
 			$variable{Timetrack}->ending( $session{'/timetrack/edit.html?ending'} ) if ! $variable{Timetrack}->ending();
 		} # end if
+	} # end if
 	} # end if
 } # end sub edit
 
