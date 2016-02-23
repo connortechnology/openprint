@@ -841,5 +841,43 @@ sub link_to {
 	return '';
 } # end sub link_to
 
+sub company_name {
+	if ( @_ > 1 ) {
+		$_[0]{company_name} = $_[1];
+	} else {
+		if ( ! $_[0]{company_name} ) {
+			if ( $_[0]{company_id}  ) {
+				$_[0]{company_name} = $_[0]->Company()->name();
+			} # end if
+		} # end if
+	} # end if
+	return $_[0]{company_name};
+}
+sub firstname {
+	if ( @_ > 1 ) {
+		$_[0]{firstname} = $_[1];
+	} else {
+		if ( ! $_[0]{firstname} ) {
+			if ( $_[0]{user_id}  ) {
+				$_[0]{firstname} = $_[0]->User()->firstname();
+			} # end if
+		} # end if
+	} # end if
+	return $_[0]{firstname};
+}
+sub lastname {
+	if ( @_ > 1 ) {
+		$_[0]{lastname} = $_[1];
+	} else {
+		if ( ! $_[0]{lastname} ) {
+			if ( $_[0]{user_id}  ) {
+				$_[0]{lastname} = $_[0]->User()->lastname();
+			} # end if
+		} # end if
+	} # end if
+	return $_[0]{lastname};
+}
+
+
 1;
 __END__
