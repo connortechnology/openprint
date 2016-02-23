@@ -2679,7 +2679,7 @@ if ( sets::isin( 'ordered_products', \@tables ) ) {
 	} # end if
 	if ( ! exists $$data{comments} ) {
 		$log->debug("Adding comments to ordered_products");
-		$dbh->do('ALTER TABLE Ordered_Product add comments text') or die $dbh->errstr();
+		$dbh->do('ALTER TABLE Ordered_Products add comments text') or die $dbh->errstr();
 	}
 } else {
 	$dbh->do( misc::load_file( $log, q{../openprint/sql/Ordered_Products.sql}) );
