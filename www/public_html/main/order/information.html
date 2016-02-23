@@ -5,7 +5,6 @@
 <script type="text/javascript" src="<? hash_link( /main/order/order.js ) ?>"></script>
 <div class="Order"><div class="Information">
 <?include('/includes/error_reporting.html') ?>
-<? if ( $$variable{Order} and $$variable{Order}->id() ) ?>
 	<form method="post" id="f1" name="f1" action="/main/order/submit.html">
 		<div class="Header">
 			<div id="Information">
@@ -74,7 +73,9 @@
 <? endif ( @{$$variable{Contents}} == 1 ) ?>
 		</div><!--Header-->
 		<div id="Contents">
-			<? if ( @{$$variable{Contents}} ) ?>
+			<? if ( ! @{$$variable{Contents}} ) ?>
+				<p>This order appears to be empty.</p>
+			<? endif ( ! @{$$variable{Contents}} ) ?>
 				<? if ( @{$$variable{Projects}} ) ?>
 				<div id="Projects">
 					<? echo (
@@ -92,32 +93,10 @@
 					) ?>
 				</div>
 				<? endif ( @{$$variable{Projects}} ) ?>
-				<div id="Products">
-					<? echo (
-						my $html;
-						foreach my $Product ( @{$$variable{Products}} ) {
-							$$variable{Product} = $Product;
-							if ( $Product->project_id() ) {
-								my $Project = $$variable{Project} = $Product->Project();
-								$html .= '<div class="Project"><p class="buttons">';
-								$html .= button( 'Remove'.$$Project{id}, { 'href'=>"information.html?order_id=$$variable{order_id}&amp;action=remove&amp;product_id=$$Product{id}", 'text' => 'Remove' } );
-								$html .= '</p><br class="spacer"/>';
-								$html .= include( '/main/order/_product_project_information.html' );
-								$html .= '</div>';
-							} else {
-								$html .= '<div class="Product"><p class="buttons">';
-								$html .= button( 'Remove'.$$Product{id}, { href=>"information.html?order_id=$$variable{order_id}&amp;action=remove&amp;product_id=$$Product{id}", text => 'Remove' } );
-								$html .= '</p><br class="spacer"/>';
-								$html .= include( '/main/order/_product_information.html' );
-								$html .= '</div>';
-							} # end if
-						} # end foreach
-						return $html;
-					) ?>
+				<div id="Products">	
+					<?include(_product_list_edit.html)?>
+					<p class="buttons"><?echo(button('AddProduct', { onclick=>qq`popup_window('_add_product_popup.html', { order_id: $$variable{Order}{id} } );` } ); )?></p>
 				</div>
-			<? else ( @{$$variable{Contents}} ) ?>
-				<p>This order appears to be empty.</p>
-			<? endif ( @{$$variable{Contents}} ) ?>
 		</div><!--Contents-->
 		<div id="Totals">
 			<ul>
@@ -147,5 +126,4 @@
 		<input type="hidden" name="order_id" value="<?order_id?>"/>
 		<input type="hidden" name="btnFunction" value="Continue"/>
 	</form>
-<? endif ( $$variable{Order} and $$variable{Order}->id() ) ?>
 </div><!--Information--></div><!--class=Order-->
