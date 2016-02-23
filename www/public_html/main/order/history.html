@@ -32,6 +32,16 @@
 		</fieldset>
 		<fieldset id="Filter" class="filters unprintable"><legend>or Select Search Criteria</legend>
 			<ul>
+<? if ( sets::isin( $session{user_type}, ['E','A'] ) ) ?>
+            <li>
+                <label>Company</label>
+                <input class="filter" type="text" oninput="filter_companies('company_id', {name:this.value,selected_id:get_ddm_value($('company_id'))});" />
+                <select name="company_id" id="company_id" onchange="LoadContent('Results','/main/order/_history.html',f1);">
+                    <option value="">All</option>
+<? echo ( make_drop_down( openprint::Company->dropdown('last_order_id is null'=>0), $session{'/main/order/history.html?company_id'} ? $session{'/main/order/history.html?company_id'} : $session{company_id}) ) ?>
+                </select>
+            </li>
+<? endif ( sets::isin( $session{user_type}, ['E','A'] ) ) ?>
 			<li>
 				<label>Ordered by</label>
 				<select id="ddmOrderedBy" name="ddmOrderedBy" size="1" onchange="LoadContent('Results','/main/order/_history.html',this.form);">
@@ -52,6 +62,7 @@
 			<p class="buttons">
 				<? echo ( join( '',
 					button( 'ShowResults', { onclick=>'f1.submit();', text=>'Show Results' } ),
+					button( 'New', { href=>'/main/order/information.html', text=>'New' } ),
 					button( 'Reset', { onclick=>'f1.reset();' } ),
 				); ) ?>
 			</p>
