@@ -181,7 +181,7 @@ sub submit {
 	my $Order = new openprint::Order( $order_id );
 	$session{order_id} = $order_id;
 	my $Currency = openprint::Currency::get_current();
-	$variable{error} .= $Order->save({currency_id=>$Currency->id()}) if $$Order{currency_id} != $$Currency{id};
+	$variable{error} .= $Order->save({currency_id=>$Currency->id()}) if $$Order{currency_id} != $$Currency{id} or ! $Order->id();;
 
 	if ( $param{btnFunction} eq 'Continue') { # saving project information
 		
@@ -377,16 +377,12 @@ sub confirmation {
 sub history {
 	ssi::setup_date_select( '/main/order/history.html', 'created_on_start', -30 );
 	ssi::setup_date_select( '/main/order/history.html', 'created_on', 0 );
-	ssi::save_params( '/main/order/history.html', 
-			'ddmOrderedBy',
-			'created_on_start_year', 'created_on_start_month','created_on_start_day', 
-			'created_on_end_year', 'created_on_end_month','created_on_end_day', 
-			);
-
+	_history();
 } # end sub history
+
 sub _history {
 	ssi::save_params( '/main/order/history.html', 
-			'ddmOrderedBy',
+			'ddmOrderedBy','company_id',
 			'created_on_start_year', 'created_on_start_month','created_on_start_day', 
 			'created_on_end_year', 'created_on_end_month','created_on_end_day', 
 			);
@@ -582,5 +578,29 @@ $log->error("Updating project order_id, shouldn't have to do this");
 	} # end if
 	return;
 } # end sub check_for_errors
+
+sub _add_product_popup {
+	my $Order = $variable{Order} = openprint::Order->find_one(id=>$param{order_id} );
+	if ( ! $Order ) {
+		$variable{error} .= 'Order ' . $param{order_id} . ' not found.';
+		return;
+	}
+}
+
+sub _product_list_edit {
+	my $Order = $variable{Order} = openprint::Order->find_one(id=>$param{order_id} );
+	if ( ! $Order ) {
+		$variable{error} .= 'Order ' . $param{order_id} . ' not found.';
+		return;
+	}
+	if ( $param{action} eq 'add' ) {
+		my $OP = new openprint::OrderedProduct();
+		$variable{error} .= $OP->save({
+			order_id	=>$Order->id(),
+			product_id	=>	$param{product_id},
+			quantity	=>	1,
+		});
+	} # end if
+} # end sub 
 1;
 __END__
