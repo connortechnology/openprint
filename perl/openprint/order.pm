@@ -34,7 +34,7 @@ sub delete_unfinished_orders {
 	foreach my $Order ( openprint::Order->find('session_id'=>$session{_session_id},'status'=>'Incomplete') ) {
 		$Order->delete();
 	} # end foreach
-	sql::update( $log, $dbh, 'Orders', ['strSessionID=?', $session{'_session_id'}], 'strSessionID', undef );
+	sql::update( $log, $dbh, 'Orders', ['strSessionID=?', $session{_session_id}], 'strSessionID', undef );
 	sql::end_transaction( $dbh, $ac );
 } # end sub delete_unfinished_orders
 
@@ -45,7 +45,7 @@ sub get_unfinished_order {
 		return $Order->id() if $Order->id();
 	} # end if
 
-	my $Order = openprint::Order->find_one('session_id'=>$session{'_session_id'}, company_id=>$session{company_id}, 'status'=>'Incomplete', 'order'=>'id DESC' );
+	my $Order = openprint::Order->find_one('session_id'=>$session{_session_id}, company_id=>$session{company_id}, 'status'=>'Incomplete', 'order'=>'id DESC' );
 
 	if ( $Order ) {
 		$session{order_id} = $Order->id();
@@ -203,37 +203,37 @@ sub add_project_to_order {
 		} # end if
 	} # end foreach
 	if ( $num_qtys == 1 ) {
-		$sql{'intQuantityIndex'}=$qty_index;
+		$sql{intQuantityIndex}=$qty_index;
 	} # end if
 	my $services = $Project->services();
-	if ( $$services{'Turnaround'} ) {
-		my $specs = openprint::service::get_specs_ref( $Project, $$services{'Turnaround'}[0] );
+	if ( $$services{Turnaround} ) {
+		my $specs = openprint::service::get_specs_ref( $Project, $$services{Turnaround}[0] );
 		my ( $year, $month, $day ) = Date::Calc::Today();
-		( $year, $month, $day ) = Date::Calc::Add_Delta_Days( $year, $month, $day, $$specs{'TurnaroundDays'} );
+		( $year, $month, $day ) = Date::Calc::Add_Delta_Days( $year, $month, $day, $$specs{TurnaroundDays} );
 		if ( Date::Calc::Day_of_Week( $year, $month, $day ) == 6 ) {
 			( $year, $month, $day ) = Date::Calc::Add_Delta_Days( $year, $month, $day, 2 );
 		} elsif ( Date::Calc::Day_of_Week( $year, $month, $day ) == 7 ) {
 			( $year, $month, $day ) = Date::Calc::Add_Delta_Days( $year, $month, $day, 1 );
 		} # end if
-		$sql{'dateRequired'} = join('-', $year, $month, $day );
+		$sql{dateRequired} = join('-', $year, $month, $day );
 	} # end if
 	my @ShippingServices = openprint::ServiceType->find('category'=>'Shipping');
 	if ( @ShippingServices ) {
 		foreach my $ShippingType ( @ShippingServices ) {
 			next if sets::isin( $ShippingType->name(), ['Turnaround'] );
 			if ( $$services{$ShippingType->name()} ) {
-				$sql{'ShippingType'}=$ShippingType->name();
+				$sql{ShippingType}=$ShippingType->name();
 				last;
 			} # end if
 		} # end foreach
 if ( 0 ) {
 # Stop defaulting to CP
-		if ( ! $sql{'ShippingType'} ) {
-			$sql{'ShippingType'} = 'CustomerPickUp';
+		if ( ! $sql{ShippingType} ) {
+			$sql{ShippingType} = 'CustomerPickUp';
 		} # end if
 } # end if
 	} else {
-		$sql{'ShippingType'}='CustomerPickUp';
+		$sql{ShippingType}='CustomerPickUp';
 	} # end if
 
 	my $ac = sql::start_transaction( $dbh );
@@ -251,7 +251,7 @@ if ( 0 ) {
 
 	add_to_log( $log, $dbh, $order_id, @session{'company_id','user_id'}, "Add Project $$Project{id}" );
 	$Project->add_to_log( @session{'company_id','user_id'}, "Add to Order $order_id" );
-	delete $$Order{'Projects'};
+	delete $$Order{Projects};
 
 	return ( $order_id, $error );
 } # end sub add_project_to_order
@@ -301,13 +301,13 @@ sub make_order_from_quote {
 
 sub check_credit {
 	my ( $amount ) = @_;
-	my $Credit = new openprint::Company_Credit( { 'company_id'=>$openprint::session{'company_id'}, 'supplier_id'=>$openprint::config{'owner_id'} } );
+	my $Credit = new openprint::Company_Credit( { 'company_id'=>$openprint::session{company_id}, 'supplier_id'=>$openprint::config{owner_id} } );
 
 	if ( $Credit->hold() eq 'Y' ) {
 		return misc::error( $log, $dbh, \%variable, 'Credit on hold', 'Your credit account is on hold, you will not be able to place orders.' );
 	} # end if
 
-	if ( $config{'EnforceCredit'} eq 'Y' ) {
+	if ( $config{EnforceCredit} eq 'Y' ) {
 		if ( ! $Credit->denydays() ) {
 			if ( $Credit->debt() > 0 ) {
 				my $error = 'Because you do not have a credit account, your previous order must be paid in full before another order is placed.	Click <a href="/account/credit_application.html">here</a> to apply for a credit account now.';
@@ -355,12 +355,12 @@ sub create_order {
 
 	my $Order = new openprint::Order();
 	$Order->save({
-		user_id		=>	$session{'user_id'},
-		company_id	=>	$session{'company_id'},
-		session_id	=>	$session{'_session_id'},
+		user_id		=>	$session{user_id},
+		company_id	=>	$session{company_id},
+		session_id	=>	$session{_session_id},
 		created_on	=>	'NOW()',
 		status		=>	'Incomplete',
-		salesrep_id	=>	new openprint::Company( $session{'company_id'} )->salesrep_id(),
+		salesrep_id	=>	new openprint::Company( $session{company_id} )->salesrep_id(),
 		currency_id	=>	openprint::Currency::get_current()->id(),
 		});
 
@@ -506,20 +506,27 @@ $openprint::log->debug("OProject price " . $OP->price() );
 # comes here on the transition from orde_info to orde_info_cred_card or order_info_digi_cheq
 # stores the order information into the database
 sub store_order_info {
-	my $order_id = $param{'order_id'};
+	my $order_id = $param{order_id};
 	$order_id = get_unfinished_order( ) if ! $order_id;
 
 	my $error = '';
-	$error .= 'Company Name is a required field.<br/>' if $param{'company_name'} eq '';
-	$error .= 'Address is a required field.<br/>' if $param{'address1'} eq '';
-	$error .= 'City is a required field.<br/>' if $param{'city'} eq '';
-	$error .= 'State/Province is a required field.<br/>' if $param{'state'} eq '';
-	$error .= 'PostalCode is a required field.<br/>' if $param{'postalcode'} eq '';
-	$error .= 'Country is a required field.<br/>' if $param{'country'} eq '';
-	$error .= 'Email is a required field.<br/>' if	$param{'email'} eq '';
-	$error .= 'Please select a company.<br/>' if exists $param{'company_id'} and ! $param{'company_id'};
+	$error .= 'Company Name is a required field.<br/>' if $param{company_name} eq '';
+	$error .= 'Address is a required field.<br/>' if $param{address1} eq '';
+	$error .= 'City is a required field.<br/>' if $param{city} eq '';
+	$error .= 'State/Province is a required field.<br/>' if $param{state} eq '';
+	$error .= 'PostalCode is a required field.<br/>' if $param{postalcode} eq '';
+	$error .= 'Country is a required field.<br/>' if $param{country} eq '';
+	$error .= 'Email is a required field.<br/>' if	$param{email} eq '';
+	if ( exists $param{company_id} and ! $param{company_id} ) {
+		my @Companies = openprint::Company->find( 'name lc' => lc $param{company_name} );
+		if ( @Companies == 1 ) {
+			$param{company_id} = $Companies[0]->id();
+		} else {
+			$error .= 'Please select a company.<br/>';
+		} 
+	} # end if
 
-	$_ = Email::Valid->address($param{'email'});
+	$_ = Email::Valid->address($param{email});
 	if ( ( ! $_ ) or ( $_ ne $param{email} ) ) {
 		$error .= "Email is not a valid email address.<br>";
 	} # end if
@@ -528,14 +535,36 @@ sub store_order_info {
 		return $error;
 	} # end if
 
-	my $Order = new openprint::Order( $order_id );
-	if ( $param{'company_id'} ) {
-		$Order->company_id( $param{'company_id'} );
-		$session{'company_id'} = $param{'company_id'};
+	if ( ! $param{user_id} ) {
+$log->debug("No user_id");
+		my @Users = openprint::User->find( email => $param{email} );
+		if ( @Users == 1 ) {
+$log->debug("No user_id setting to " . $Users[0]->to_string() );
+			$param{user_id} = $Users[0]->id();
+		} elsif ( $param{company_id} and ! @Users ) {
+$log->debug("creating user_id");
+			my $User = new openprint::User();
+			$error .= $User->save({
+				email	=>	$param{email},
+				firstname	=>	$param{firstname},
+				lastname	=>	$param{lastname},
+				phone		=>	$param{phone},
+				company_id	=>	$param{company_id},
+			});
+		} else {
+$log->debug("not creating user_id");
+		}
 	} # end if
-	$Order->po( $param{'txtPurchaseOrder'} );
+
+	my $Order = new openprint::Order( $order_id );
+	if ( $param{company_id} ) {
+		$Order->company_id( $param{company_id} );
+		$session{company_id} = $param{company_id};
+	} # end if
+	$Order->po( $param{txtPurchaseOrder} );
 	$Order->currency_id( openprint::Currency::get_current()->id() );
-	return $Order->save(\%param);
+	$error .= $Order->save(\%param);
+	return $error;
 } # end sub store_order_info
 
 sub get_invoice_to {
@@ -563,17 +592,17 @@ sub get_misc {
 	my ( $variable, $Order ) = @_;
 
 	$log->debug("********* START OF Get Misc **************");
-	$$variable{'Order'} = $Order;
+	$$variable{Order} = $Order;
 
 	@$variable{'Downpayment','TOTAL', 'CreationDate', 'ORDER_STATUS', 'CurrencyIndex', 'PONUM','AdministratorComments','AdministratorName'} = $Order->get('downpayment','total','created_on','status','currency_id','po','administrator_comments','administrator_name');
 
 
 	if ( $Order->status() ne 'Cancelled' ) {
-		$$variable{'AmountOutstanding'} = Math::Round::nearest( 0.01, $Order->total() - $Order->paid() );
-		$$variable{'DepositDue'} = Math::Round::nearest( 0.01, $Order->downpayment() - $Order->paid() ) if $Order->paid() < $Order->downpayment();
+		$$variable{AmountOutstanding} = Math::Round::nearest( 0.01, $Order->total() - $Order->paid() );
+		$$variable{DepositDue} = Math::Round::nearest( 0.01, $Order->downpayment() - $Order->paid() ) if $Order->paid() < $Order->downpayment();
 	} # end if
 
-	$$variable{'AmountPaid'} = Math::Round::nearest( 0.01, $Order->paid() );
+	$$variable{AmountPaid} = Math::Round::nearest( 0.01, $Order->paid() );
 } # end sub get_misc
 
 sub display_order {
@@ -582,9 +611,9 @@ sub display_order {
 	my $Order = new openprint::Order( $order_id );
 	my $Currency = openprint::Currency::get_current();
 	@variable{'CurrencyName','CurrencySymbol'} = ( $Currency->name(), $Currency->symbol() );
-	$variable{'Currency'} = $Currency;
-	$variable{'order_id'} = $order_id;
-	$variable{'Order'} = $Order;
+	$variable{Currency} = $Currency;
+	$variable{order_id} = $order_id;
+	$variable{Order} = $Order;
 } # end sub display_order
 
 # duplicates the given order.	returns the id of the newly created order
@@ -609,7 +638,7 @@ sub make_order_from_order {
 		# get the contents
 		my @contents = sql::execute( $log, $dbh, q{SELECT lngProjectIndex, intQuantityIndex FROM Order_Contents WHERE OrderIndex=?}, $src_order_id );
 
-		my $order_id = make_order( $log, $dbh, $session{'_session_id'}, \%variable );
+		my $order_id = make_order( $log, $dbh, $session{_session_id}, \%variable );
 		while ( my ( $p_id, $qty ) = splice( @contents, 0, 2 ) ) {
 			my $Project = new openprint::Project( $p_id );
 			my $New = $Project->copy();
