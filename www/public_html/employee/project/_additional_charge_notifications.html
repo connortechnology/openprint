@@ -12,6 +12,10 @@
 	<? echo ( 
 	my $html;
 	foreach my $U ( $$variable{Order}->AdditionalChargeNotifications() ) {
+		if ( ! $U->id() ) {
+$log->warn("No id in Order Notifications " . $U->to_string() );
+			next;
+		}
 		$html .= checkboxes( 'notify_user_id', [ $U->id(), 
 		 sprintf('&quot;%s %s&quot; &lt;%s&gt;<br/>', $U->firstname(), $U->lastname(), $U->email() ) ], $U->id() );
 	} # end foreach U
