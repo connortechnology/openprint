@@ -21,6 +21,7 @@ $table = 'ordered_products';
 	price			=> 'price',
 	shipping_type	=> 'shipping_type',
 	requested_for	=> 'requested_for',
+	comments		=>	'comments',
 );
 
 sub delete {
