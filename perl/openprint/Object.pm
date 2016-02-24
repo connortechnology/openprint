@@ -638,6 +638,82 @@ sub User {
 	return new openprint::User( $_[0]{user_id} );
 } # end sub User
 
+sub get_fields_values {
+	my ( $object_type, $search, $param_keys ) = @_;
+
+	my @used_fields;
+	my @where;
+	my @values;
+	no strict 'refs';
+
+	foreach my $k ( @$param_keys ) {
+		my ( $field, $type, $function ) = $k =~ /^([_\+\w\-]+)(::\w+\[?\]?)?[\s_]*(.*)?$/;
+		$type = '' if ! defined $type;
+#$log->debug("$object_type param $field($type) func($function) " . ( ref $search{$k} eq 'ARRAY' ? join(',',@{$search{$k}}) : $search{$k} ) );
+
+		foreach ( 'find_fields', 'fields' ) {
+			my $fields = \%{$object_type.'::'.$_};
+			if ( ! $fields ) {
+				$log->debug("No $fields in $object_type") if DEBUG_ALL;
+				next;
+			} # end if
+
+#$log->debug("looking for ($k) in $type :: $_ , $$f{$k}");
+			if ( ! $$fields{$field} ) {
+				#$log->debug("No $field in $_ for $object_type") if DEBUG_ALL;
+				next;
+			} # end if
+
+# This allows mainly for find_fields to reference multiple values, opinion in Project, value
+			foreach my $db_field ( ref $$fields{$field} eq 'ARRAY' ? @{$$fields{$field}} : $$fields{$field} ) {
+				if ( ! $function ) {
+					$db_field .= $type;
+
+					if ( ref $$search{$k} eq 'ARRAY' ) {
+						if ( @{$$search{$k}} ) {
+							push @where, $db_field .' IN ('.join(',', map {'?'} @{$$search{$k}} ) . ')';
+							push @values, @{$$search{$k}};
+						} # end if
+					} elsif ( ref $$search{$k} eq 'HASH' ) {
+						foreach my $p_k ( keys %{$$search{$k}} ) {
+							my $v = $$search{$k}{$p_k};
+							if ( ref $v eq 'ARRAY' ) {
+								push @where, $db_field.' IN ('.join(',', map {'?'} @{$v} ) . ')';
+								push @values, $p_k, @{$v};
+							} else {
+								push @where, $db_field.'=?';
+								push @values, $p_k, $v;
+							} # end if
+						} # end foreach p_k
+					} elsif ( ! defined $$search{$k} ) {
+						push @where, $db_field.' IS NULL';
+					} else {
+						if ( ! ( $db_field =~ /\?/ ) ) {
+							push @where, $db_field .'=?';
+						} else {
+							push @where, $db_field;
+						}
+						push @values, $$search{$k};
+					} # end if
+					push @used_fields, $k;
+				} else {
+					#my @w = 
+#ref $search{$k} eq 'ARRAY' ? 
+						#map { find_operators( $field, $type, $function, $_ ); } @{$search{$k}} :
+					my ( $w, @v ) = find_operators( $db_field, $type, $function, $$search{$k} );
+					if ( $w ) {
+						#push @where, '(' . join(' OR ', @w ) . ')';
+						push @where, $w;
+						push @values, @v if @v;
+						push @used_fields, $k;
+					} # end if @w
+				} # end if has function or not
+			} # end foreach db_field
+		} # end foreach find_field
+	} # end foreach k
+	return ( \@where, \@values, \@used_fields );
+}
+
 sub find {
 	no strict 'refs';
 	my $object_type = shift;
@@ -733,74 +809,14 @@ $log->error("returning nothing for $object_type $cache_field $$params{$cache_fie
 	# We use this search hash so that we can mash it up and leave the params hash alone
 	my %search;
 	@search{@param_keys} = @$params{@param_keys};
+
+	my ( $where, $values, $used_fields ) = get_fields_values( $object_type, \%search, \@param_keys );
+	delete @search{@{$used_fields}};
+	push @used_fields, @{$used_fields};
+	push @where, @{$where};
+	push @values, @{$values};
 	
-	foreach my $k ( @param_keys ) {
-		my ( $field, $type, $function ) = $k =~ /^([_\+\w\-]+)(::\w+\[?\]?)?[\s_]*(.*)?$/;
-		$type = '' if ! defined $type;
-#$log->debug("$object_type param $field($type) func($function) " . ( ref $search{$k} eq 'ARRAY' ? join(',',@{$search{$k}}) : $search{$k} ) );
 
-		foreach ( 'find_fields', 'fields' ) {
-			my $fields = \%{$object_type.'::'.$_};
-			if ( ! $fields ) {
-				$log->debug("No $fields in $object_type") if DEBUG_ALL;
-				next;
-			} # end if
-
-#$log->debug("looking for ($k) in $type :: $_ , $$f{$k}");
-			if ( ! $$fields{$field} ) {
-				#$log->debug("No $field in $_ for $object_type") if DEBUG_ALL;
-				next;
-			} # end if
-
-# This allows mainly for find_fields to reference multiple values, opinion in Project, value
-			foreach my $db_field ( ref $$fields{$field} eq 'ARRAY' ? @{$$fields{$field}} : $$fields{$field} ) {
-				if ( ! $function ) {
-					$db_field .= $type;
-
-					if ( ref $search{$k} eq 'ARRAY' ) {
-						if ( @{$search{$k}} ) {
-							push @where, $db_field .' IN ('.join(',', map {'?'} @{$search{$k}} ) . ')';
-							push @values, @{$search{$k}};
-						} # end if
-					} elsif ( ref $search{$k} eq 'HASH' ) {
-						foreach my $p_k ( keys %{$search{$k}} ) {
-							my $v = $search{$k}{$p_k};
-							if ( ref $v eq 'ARRAY' ) {
-								push @where, $db_field.' IN ('.join(',', map {'?'} @{$v} ) . ')';
-								push @values, $p_k, @{$v};
-							} else {
-								push @where, $db_field.'=?';
-								push @values, $p_k, $v;
-							} # end if
-						} # end foreach p_k
-					} elsif ( ! defined $search{$k} ) {
-						push @where, $db_field.' IS NULL';
-					} else {
-						if ( ! ( $db_field =~ /\?/ ) ) {
-							push @where, $db_field .'=?';
-						} else {
-							push @where, $db_field;
-						}
-						push @values, $search{$k};
-					} # end if
-					delete $search{$k};
-					push @used_fields, $k;
-				} else {
-					#my @w = 
-#ref $search{$k} eq 'ARRAY' ? 
-						#map { find_operators( $field, $type, $function, $_ ); } @{$search{$k}} :
-					my ( $w, @v ) = find_operators( $db_field, $type, $function, $search{$k} );
-					if ( $w ) {
-						#push @where, '(' . join(' OR ', @w ) . ')';
-						push @where, $w;
-						push @values, @v if @v;
-						delete $search{$k};
-						push @used_fields, $k;
-					} # end if @w
-				} # end if has function or not
-			} # end foreach db_field
-		} # end foreach find_field
-	} # end foreach k
 	my $fields = \%{$object_type.'::fields'};
 # Check for Object references
 	if ( %search ) {
@@ -831,10 +847,30 @@ $log->error("returning nothing for $object_type $cache_field $$params{$cache_fie
 	} # end if
 
 	if ( $$params{or} ) {
-		if ( @where ) {
-			$sql .= ' WHERE ( ' . join(' AND ', @where ) . ' ) OR ( ' . $$params{or} . ')';
+		if ( ref $$params{or} eq 'HASH' ) {
+			my ( $where, $values, $used_fields ) = get_fields_values( $object_type, $$params{or},  [ keys %{$$params{or}} ] );
+			if ( @where ) {
+				$sql .= ' WHERE ( ' . join(' AND ', @where ) . ' ) AND ( ' . join(' OR ', @{$where} ) . ')';
+			} else {
+				$sql .= ' WHERE ( ' . join(' OR ', @{$where} ) . ' )';
+			} 
+			push @values, @{$values};
+		} elsif ( ref $$params{or} eq 'ARRAY' ) {
+			my %s = @{$$params{or}};
+			my ( $where, $values, $used_fields ) = get_fields_values( $object_type, \%s,  [ keys %s ] );
+			if ( @where ) {
+				$sql .= ' WHERE ( ' . join(' AND ', @where ) . ' ) AND ( ' . join(' OR ', @{$where} ) . ')';
+			} else {
+				$sql .= ' WHERE ( ' . join(' OR ', @{$where} ) . ' )';
+			} 
+			push @values, @{$values};
+
 		} else {
-			$sql .= " WHERE $$params{or}";
+			if ( @where ) {
+				$sql .= ' WHERE ( ' . join(' AND ', @where ) . ' ) OR ( ' . $$params{or} . ')';
+			} else {
+				$sql .= " WHERE $$params{or}";
+			} # end if
 		} # end if
 	} else {
 		$sql .= ' WHERE ' . join(' AND ', @where ) if @where;
