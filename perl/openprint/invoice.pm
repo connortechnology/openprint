@@ -377,5 +377,33 @@ sub _interests {
 sub _invoicee_onchange {
 } # end sub _invoicee_onchange
 
+sub _invoiced_orders {
+	my $Invoice = $variable{Invoice} = new openprint::Invoice( $param{invoice_id} );
+$log->debug("here");
+	if ( $param{action} eq 'add' ) {
+$log->debug("Adding");
+		my $Order = openprint::Order->find_one( id => $param{order_id} );
+		if ( ! $Order ) {
+			$variable{error} .= 'Order ' . $param{order_id} . ' not found.<br/>';
+			return;
+		}
+		my $OI = new openprint::Order_Invoice();
+		$variable{error} .= $OI->save({
+			order_id	=> $$Order{id},
+			invoice_id	=>	$$Invoice{id},
+		});	
+		foreach my $Product ( $Order->Products() ) {
+			my $IP = new openprint::Invoiced_Product();
+			$variable{error} .= $IP->save({
+				invoice_id	=>	$$Invoice{id},
+				product_id	=>	$$Product{product_id},
+				quantity	=>	$$Product{quantity},
+				price		=>	$$Product{price},
+			});
+		}
+	} # end if param add
+
+} # end sub _invoiced_orders
+
 1;
 __END__
