@@ -3983,6 +3983,12 @@ if ( sets::isin( 'trade_references', \@tables ) ) {
 } else {
 		$dbh->do( misc::load_file( $log, q{../openprint/sql/Trade_References.sql}) );
 } # end if
+if ( sets::isin( 'sales_logs', \@tables ) ) {
+	my $data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='sales_logs'", 'column_name');
+} else {
+	$log->debug("Adding Sales Logs");
+		$dbh->do( misc::load_file( $log, q{../openprint/sql/Sales_Logs.sql}) ) or die $dbh->errstr();
+} # end if
 print "Finished\n";
 1;
 __END__
