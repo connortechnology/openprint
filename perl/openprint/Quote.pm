@@ -207,7 +207,7 @@ sub Projects {
 sub Products {
 	my $self = shift;
 	if ( ! exists $$self{Products} ) {
-		@{$$self{Products}} = openprint::QuotedProduct->find('quote_id'=>$$self{id});
+		$$self{Products} = [ openprint::QuotedProduct->find( quote_id=>$$self{id} ) ];
 	} # end if
 	return @{$$self{Products}};
 } # end sub Products

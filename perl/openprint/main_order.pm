@@ -44,6 +44,7 @@ sub information {
 			} else {
 				$variable{error} .= $OrderedProject->delete();
 			} # end if
+			$variable{ExternalRedirect} = '/main/order/information.html?order_id='.$order_id;
 		} elsif ( $param{product_id} ) {
 			$param{product_id} =~ s/\D//g;
 			my $OrderedProduct = openprint::OrderedProduct->find_one('id'=>$param{product_id}, 'order_id'=>$order_id);
@@ -54,6 +55,7 @@ sub information {
 			} else {
 				$variable{error} .= $OrderedProduct->delete();
 			} # end if
+			$variable{ExternalRedirect} = '/main/order/information.html?order_id='.$order_id;
 		} else {
 			$openprint::log->error('Nothing specified to delete');
 			$variable{error} .= 'Nothing specified to delete.';
@@ -90,6 +92,7 @@ sub information {
 			( $order_id, $error ) = openprint::order::add_project_to_order( $Project, $order_id );
 			$Project->unlock();
 		} # end if
+		$variable{ExternalRedirect} = '/main/order/information.html?order_id='.$order_id;
 	} elsif ( $param{btnFunction} eq 'Continue') { # saving projcet information
 		$order_id = openprint::order::get_unfinished_order( ) if ! $order_id;
 		foreach my $OP ( openprint::OrderedProject->find('order_id'=>$order_id) ) {
@@ -158,7 +161,7 @@ sub information {
 			} = $User->get('email','title','firstname','lastname','salutation','phone','fax');
 
 		} # end if
-		foreach my $OP ( openprint::OrderedProject->find('order_id'=>$order_id) ) {
+		foreach my $OP ( openprint::OrderedProject->find( order_id=>$order_id) ) {
 			if ( ! sets::isin( $OP->quantity_index(), $OP->Project->quantity_indexes() ) ) {
 				$OP->save({quantity_index=>undef});
 			}
@@ -178,7 +181,7 @@ sub submit {
 	my $Order = new openprint::Order( $order_id );
 	$session{order_id} = $order_id;
 	my $Currency = openprint::Currency::get_current();
-	$variable{error} .= $Order->save({currency_id=>$Currency->id()}) if $$Order{currency_id} != $$Currency{id};
+	$variable{error} .= $Order->save({currency_id=>$Currency->id()}) if $$Order{currency_id} != $$Currency{id} or ! $Order->id();;
 
 	if ( $param{btnFunction} eq 'Continue') { # saving project information
 		
@@ -195,17 +198,19 @@ sub submit {
 			$variable{error} .= openprint::order::save_project_information( $Product );
 			# Need to update price to include shipping costs
 			my %Price = $Product->Product()->get_price( $Product->quantity() );
-$openprint::log->debug("Initial price for " . $Product->quantity() . ' is : ' . $Price{Price} );
+			$openprint::log->debug("Initial price for " . $Product->quantity() . ' is : ' . $Price{Price} );
 			my $Project = $Product->Project();
-			my $services = $Project->services();
-			foreach my $ShippingType ( openprint::ServiceType->find('category'=>'Shipping') ) {
-				next if ! $$services{$ShippingType->name()};
-				foreach my $service_id ( @{$$services{$ShippingType->name()}} ) {
-					my $specs =  openprint::service::get_specs_ref( $Project, $service_id );
-					$Price{Price} += $$specs{txtPrice1};
-				} # end foreach service_id
-			} # end foreach
-			$Product->price( $Project->Currency()->convert_to( $Currency, $Price{Price} ) );
+			if ( $Project ) {
+				my $services = $Project->services();
+				foreach my $ShippingType ( openprint::ServiceType->find('category'=>'Shipping') ) {
+					next if ! $$services{$ShippingType->name()};
+					foreach my $service_id ( @{$$services{$ShippingType->name()}} ) {
+						my $specs =  openprint::service::get_specs_ref( $Project, $service_id );
+						$Price{Price} += $$specs{txtPrice1};
+					} # end foreach service_id
+				} # end foreach
+			} # end if
+			$Product->price( $Product->Currency()->convert_to( $Currency, $Price{Price} ) );
 			$Product->requested_for( sprintf('%.4d-%.2d-%.2d', @param{'ddmDueDateYear'.$$Project{id},'ddmDueDateMonth'.$$Project{id},'ddmDueDateDay'.$$Project{id}} ) ) if exists $param{'ddmDueDateYear'.$$Project{id}};
 			$Product->save();
 		} # end foreach Product
@@ -335,15 +340,17 @@ sub confirmation {
 				openprint::press_schedule::add_project_to_press_schedule( $Project );
 			} # end foreach Project
 			foreach my $Product ( $Order->Products() ) {
-				my $Project = $Product->Project();
-				sql::update( $log, $dbh, 'tbl_Project_Contents', ["lngProjectIndex=? AND strStatus NOT IN ( 'Complete', 'Approved', 'Proofs Out', 'Waiting For Client Approval','Waiting For QA Approval','')", $Project->id()], 'strStatus', 'Ordered' );
-				$Project->docket( $docket_number );
-				$Project->order_id( $Order->id() );
-				$Project->status( $status eq 'Pending Deposit' ? $status : 'In Prepress' );
-				$Project->save();	
-				$Project->update_status();
+				if ( $$Product{project_id} ) {
+					my $Project = $Product->Project();
+					sql::update( $log, $dbh, 'tbl_Project_Contents', ["lngProjectIndex=? AND strStatus NOT IN ( 'Complete', 'Approved', 'Proofs Out', 'Waiting For Client Approval','Waiting For QA Approval','')", $Project->id()], 'strStatus', 'Ordered' );
+					$Project->docket( $docket_number );
+					$Project->order_id( $Order->id() );
+					$Project->status( $status eq 'Pending Deposit' ? $status : 'In Prepress' );
+					$Project->save();	
+					$Project->update_status();
 
-				openprint::press_schedule::add_project_to_press_schedule( $Project );
+					openprint::press_schedule::add_project_to_press_schedule( $Project );
+				}
 			} # end foreach Product
 
 			
@@ -372,16 +379,12 @@ sub confirmation {
 sub history {
 	ssi::setup_date_select( '/main/order/history.html', 'created_on_start', -30 );
 	ssi::setup_date_select( '/main/order/history.html', 'created_on', 0 );
-	ssi::save_params( '/main/order/history.html', 
-			'ddmOrderedBy',
-			'created_on_start_year', 'created_on_start_month','created_on_start_day', 
-			'created_on_end_year', 'created_on_end_month','created_on_end_day', 
-			);
-
+	_history();
 } # end sub history
+
 sub _history {
 	ssi::save_params( '/main/order/history.html', 
-			'ddmOrderedBy',
+			'ddmOrderedBy','company_id',
 			'created_on_start_year', 'created_on_start_month','created_on_start_day', 
 			'created_on_end_year', 'created_on_end_month','created_on_end_day', 
 			);
@@ -569,7 +572,7 @@ $log->error("Updating project order_id, shouldn't have to do this");
 # Only check for errors if we don't have any yet
 	foreach my $Product ( $Order->Products() ) {
 		if ( ! $Product->shippingtype() ) {
-			push @errors, "Please select a shipping type.<br/>";
+			#push @errors, "Please select a shipping type.<br/>";
 		} # end if
 	} # end foreach Project
 	if ( @errors ) {
@@ -577,5 +580,29 @@ $log->error("Updating project order_id, shouldn't have to do this");
 	} # end if
 	return;
 } # end sub check_for_errors
+
+sub _add_product_popup {
+	my $Order = $variable{Order} = openprint::Order->find_one(id=>$param{order_id} );
+	if ( ! $Order ) {
+		$variable{error} .= 'Order ' . $param{order_id} . ' not found.';
+		return;
+	}
+}
+
+sub _product_list_edit {
+	my $Order = $variable{Order} = openprint::Order->find_one(id=>$param{order_id} );
+	if ( ! $Order ) {
+		$variable{error} .= 'Order ' . $param{order_id} . ' not found.';
+		return;
+	}
+	if ( $param{action} eq 'add' ) {
+		my $OP = new openprint::OrderedProduct();
+		$variable{error} .= $OP->save({
+			order_id	=>$Order->id(),
+			product_id	=>	$param{product_id},
+			quantity	=>	1,
+		});
+	} # end if
+} # end sub 
 1;
 __END__

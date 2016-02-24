@@ -78,7 +78,15 @@ sub set_conversion {
 sub convert_from {
 	my ( $self, $value ) = @_;
 	my $DST_Currency = get_current();
-	if ( $DST_Currency and ( $DST_Currency->id() != $$self{'id'} ) ) {
+	if ( ! ( $DST_Currency and $$DST_Currency{id} ) ) {
+		$log->error("Invalid destiation currency in convert_from");
+		return $value;
+	} elsif ( ! $$self{id} ) {
+		$log->error("Invalid src currency in convert_from");
+		return $value;
+	}
+
+	if ( $DST_Currency->id() != $$self{id} ) {
 		my $rate = $self->conversions( $DST_Currency->id() );
 		my $new = $value * $rate;
 		$log->debug("Converting $value in $$self{'name'} to $$DST_Currency{'name'} using rate $rate $new") if $debug;

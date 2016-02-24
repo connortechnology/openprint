@@ -206,6 +206,12 @@ sub sized_url {
 						$openprint::log->error("ERror optimising sized image. Reason: ($?) stdout($stdout) stderr($stderr)");
 					} # end if convert
 				} # end if
+				if ( $openprint::config{Watermark_Text} ) {
+					IPC::Run3::run3(qq`gmic -input "$dest" -watermark_fourier "$openprint::config{Watermark_Text}" -output "$dest"`, undef, $stdout, $stderr );
+					if ( $? ) {
+						$openprint::log->error("ERror watermarking sized image. Reason: ($?) stdout($stdout) stderr($stderr)");
+					} # end if watermark
+				}
 			} # end if -e dest
 		} else {
 			$openprint::log->error("NO assetpath specified");

@@ -38,8 +38,8 @@
 		@{$$variable{Orders}} = openprint::Order->find(
 			date_filter( '/main/order/history.html?created_on_end', 'created_on <=' ),
 			date_filter( '/main/order/history.html?created_on_start', 'created_on >=' ),
-			company_id		=>	$session{'company_id'},
-			( $session{'/main/order/history.html?ddmOrderedBy'} ? ( 'user_id'			=>	$session{'/main/order/history.html?ddmOrderedBy'} ) : () ),
+			( $session{'/main/order/history.html?company_id'} ? ( company_id		=>	$session{'/main/order/history.html?company_id'} ) : () ),
+			( $session{'/main/order/history.html?ddmOrderedBy'} ? ( user_id			=>	$session{'/main/order/history.html?ddmOrderedBy'} ) : () ),
 			order				=>	'id DESC',
 		);
 	} # end if

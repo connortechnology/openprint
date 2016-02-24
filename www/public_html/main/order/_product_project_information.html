@@ -1,19 +1,40 @@
+<? if ( $config{OrderMode} eq 'Simple' ) ?>
+	<? echo ( include('/main/order/_project_header.html', $variable ); ) ?>
+<div class="PrintingFinishing">
+	<h3>Printing &amp; Finishing</h3>
+	<ul>
+		<li class="SubTotal">
+			<label>Cost:</label>
+			<? echo ( openprint::Currency::format( $$variable{Order}->Currency()->convert_from( $$variable{Product}->price() - $$variable{Project}->delivery_cost() ) ); ) ?>
+		</li>
+	</ul>
+</div>
+<? if ( $$variable{Project}->delivery_cost() ) ?>
+<div class="Delivery">
+	<h3>Delivery</h3>
+	<ul>
+		<li class="Cost">
+			<label>Cost:</label>
+			<? echo ( openprint::Currency::format( $$variable{Order}->Currency()->convert_from( $$variable{Project}->delivery_cost() ) ); ) ?>
+		</li>
+	</ul>
+</div>
+<? endif ( $$variable{Project}->delivery_cost() ) ?>
+<? else ( $config{OrderMode} eq 'Simple' ) ?>
 <table class="List">
 	<thead>
 		<tr>
-			<th class="Product">Product</th>
-			<th class="Description">Description</th>
-			<th class="Date Requested">Requested Date</th>
-			<th class="Quantity">Qty</th>
+			<th align="left">Product</th>
+			<th width="120" align="left">Requested Date</th>
+			<th width="75" align="left">Qty</th>
 			<th class="Price">Price</th>
 		</tr>
 	</thead>
     <? while ( $$variable{Product} = shift @{$$variable{Products}} ) ?>
     <tr<?rowclass?>>
-        <td class="Product"><? echo ( $$variable{Product}->Product()->name(); ) ?></td>
-        <td class="Description"><? echo ( $$variable{Product}->Product()->description(); ) ?></td>
-        <td class="Date Requested"><? echo ( format_date( $$variable{Product}->requested_for() ); ) ?></td>
-        <td class="Quantity"><? echo ( $$variable{Product}->quantity(); ) ?></td>
+        <td><? echo ( $$variable{Product}->Product()->name(); ) ?></td>
+        <td><? echo ( Date::Format::time2str( $config{DateFormat}, Date::Parse::str2time( $$variable{Product}->requested_for() ) ); ) ?></td>
+        <td align="left"><? echo ( $$variable{Product}->quantity(); ) ?></td>
         <td class="Price">
 <? echo (
     $$variable{price} = $$variable{Order}->Currency()->convert_from( $$variable{Product}->price() );
@@ -60,3 +81,4 @@ return sprintf( '%s</td></tr>', openprint::Currency::format( $$variable{price} )
     ) ?>
     <? endwhile ( $$variable{Product} = shift @{$$variable{Products}} ) ?>
 </table>
+<? endif ( $config{OrderMode} eq 'Simple' ) ?>

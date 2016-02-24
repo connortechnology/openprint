@@ -331,6 +331,8 @@ $openprint::log->debug("Not Pretrimming on $$Press{strid}") if DEBUG;
 			$setup1->bleed_size( $bindery_bleed );
 			$setup2->bleed_size( $bindery_bleed );
 		} # end if
+		$setup1->folio_lip( $bindery_gutters );
+		$setup2->folio_lip( $bindery_gutters );
 	} elsif ( sets::isin( $$specs{Binding}, ['PerfectBound','SpinePaste'] ) ) {
 		$bindery_gutters = $Press->specification('PerfectBindGutter');
 		$bindery_bleed = $Press->specification('PerfectBindBleed');
@@ -338,6 +340,8 @@ $openprint::log->debug("Not Pretrimming on $$Press{strid}") if DEBUG;
 			$setup1->bleed_size( $bindery_bleed );
 			$setup2->bleed_size( $bindery_bleed );
 		} # end if
+		$setup1->folio_lip( $bindery_gutters );
+		$setup2->folio_lip( $bindery_gutters );
 		$bindery_head = $$specs{PerfectBindCoverGutter};
 	} # end if
 #$openprint::log->debug("Using perfectbind cover gutter: $bindery_head Bindery bleed: $bindery_bleed");
@@ -1049,7 +1053,7 @@ $openprint::log->debug("Considering sig size: $signature_size") if DEBUG_CONVERT
 				$newimp->spread_columns( $col );
 				$newimp->spread_rows( $row );
 				$openprint::log->debug("To: $imp->{columns}x$imp->{rows}=$imp->{imposition} $imp->{runstyle} $imp->{image_width}x$imp->{image_height} $imp->{layout_width}x$imp->{layout_height}") if DEBUG_CONVERT;
-				push @imps, $newimp;
+				push @imps, $newimp if ( $newimp->layout_width() < $newimp->sheet_width() and $newimp->layout_height() < $newimp->sheet_height() );
 #$newimp->display();
 			} # end foreach block
 			#last if @imps and (@imps[@imps-1]->imposition() >= 4);
