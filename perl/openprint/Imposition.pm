@@ -30,6 +30,7 @@ my @fields = (
 	'cropmark_top','cropmark_bottom','cropmark_left','cropmark_right',
 	'sheet_width','sheet_height',
 	'page_quantity','quantity','width_folds','height_folds',
+	'bleed_top','bleed_bottom','bleed_left','bleed_right',
 	'bleed_size',
 	'specs',
 	'pages',
@@ -42,6 +43,7 @@ my @fields = (
 	'impressions',
 	'equipment_id', 'Equipment',
 	'inkCoverage',
+	'folio_lip',
 );
 
 # spread_cols and spread_rows are oriented identically to the imposition
@@ -59,7 +61,12 @@ sub layout_width {
 	} 
 	if ( ! $_[0]{layout_width} ) {
 		if ( $_[0]{image_orientation} eq 'Vertical' ) {
-			$_[0]{layout_width} = $_[0]{columns} * $_[0]{image_width} + $_[0]{perfecting_wheel_space};
+			$_[0]{layout_width} = ( $_[0]{columns} * $_[0]{image_width} ) + $_[0]{perfecting_wheel_space};
+			if ( $_[0]{folio_lip} > $_[0]{bleed_size} ) {
+				$openprint::log->debug("Adding folio lip size to width " . $_[0]{columns} * ( $_[0]{folio_lip} - $_[0]{bleed_size} ) );
+				$_[0]{layout_width}  += $_[0]{columns} * ( $_[0]{folio_lip} - $_[0]{bleed_size}  );
+			}
+
 #$openprint::log->debug("layout_width = $_[0]{columns} * $_[0]{image_width} + ( $_[0]{perfecting_wheel_space} - $_[0]{bleed_size} )");
 			if ( $_[0]{dutch_columns} ) {
 				my $dutch_width = $_[0]{dutch_columns} * $_[0]{image_height};
@@ -106,6 +113,10 @@ sub layout_height {
 			} # end if
 		} elsif ( $_[0]{image_orientation} eq 'Horizontal' ) {
 			$_[0]{layout_height} = $_[0]{rows} * $_[0]{image_width};
+			if ( $_[0]{folio_lip} > $_[0]{bleed_size} ) {
+				$openprint::log->debug("Adding folio lip size " . $_[0]{rows} * ( $_[0]{folio_lip} - $_[0]{bleed_size} )  );
+				$_[0]{layout_height} += $_[0]{rows} * ( $_[0]{folio_lip} - $_[0]{bleed_size} ) if $_[0]{folio_lip} > $_[0]{bleed_size};
+			}
 
 			if ( $_[0]{dutch_columns} ) {
 				my $dutch_height = $_[0]{dutch_rows} * $_[0]{image_height};
@@ -186,9 +197,11 @@ sub set {
 		$$self{$key} = $hash{$key} if ( sets::isin( $key, \@fields ) );
 	} # end foreach
 	$self->{imposition} = $$self{rows} * $$self{columns} + $$self{dutch_rows} * $$self{dutch_columns};
+	
 	if ( $$self{image_orientation} eq 'Vertical' ) {
 		$$self{layout_width} = $$self{columns} * $$self{image_width};
 		$$self{layout_width} += ( $$self{perfecting_wheel_space} - $$self{bleed_size} ) if $$self{perfecting_wheel_space};
+		$$self{layout_width} += $$self{columns} * ( $$self{folio_lip} - $$self{bleed_size} ) if $$self{folio_lip} > $$self{bleed_size};
 		$$self{layout_height} = $$self{rows} * $$self{image_height};
 		if ( $$self{dutch_orientation} eq 'width' ) {
 			$$self{layout_width} += $$self{dutch_columns} * $$self{image_height};
@@ -205,6 +218,8 @@ sub set {
 		$$self{layout_width} += ( $$self{perfecting_wheel_space} - $$self{bleed_size} ) if $$self{perfecting_wheel_space};
 
 		$$self{layout_height} = $$self{rows} * $$self{image_width};
+		$$self{layout_height} += $$self{rows} * ( $$self{folio_lip} - $$self{bleed_size} ) if $$self{folio_lip} > $$self{bleed_size};
+
 		if ( $$self{dutch_orientation} eq 'width' ) {
 			$$self{layout_width} += $$self{dutch_columns} * $$self{image_width};
 			my $dutch_height = $$self{dutch_rows} * $$self{image_height};
