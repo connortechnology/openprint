@@ -340,15 +340,17 @@ sub confirmation {
 				openprint::press_schedule::add_project_to_press_schedule( $Project );
 			} # end foreach Project
 			foreach my $Product ( $Order->Products() ) {
-				my $Project = $Product->Project();
-				sql::update( $log, $dbh, 'tbl_Project_Contents', ["lngProjectIndex=? AND strStatus NOT IN ( 'Complete', 'Approved', 'Proofs Out', 'Waiting For Client Approval','Waiting For QA Approval','')", $Project->id()], 'strStatus', 'Ordered' );
-				$Project->docket( $docket_number );
-				$Project->order_id( $Order->id() );
-				$Project->status( $status eq 'Pending Deposit' ? $status : 'In Prepress' );
-				$Project->save();	
-				$Project->update_status();
+				if ( $$Product{project_id} ) {
+					my $Project = $Product->Project();
+					sql::update( $log, $dbh, 'tbl_Project_Contents', ["lngProjectIndex=? AND strStatus NOT IN ( 'Complete', 'Approved', 'Proofs Out', 'Waiting For Client Approval','Waiting For QA Approval','')", $Project->id()], 'strStatus', 'Ordered' );
+					$Project->docket( $docket_number );
+					$Project->order_id( $Order->id() );
+					$Project->status( $status eq 'Pending Deposit' ? $status : 'In Prepress' );
+					$Project->save();	
+					$Project->update_status();
 
-				openprint::press_schedule::add_project_to_press_schedule( $Project );
+					openprint::press_schedule::add_project_to_press_schedule( $Project );
+				}
 			} # end foreach Product
 
 			
