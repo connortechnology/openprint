@@ -192,7 +192,13 @@ sub _fold {
 		$param{id} = $NewFold->id();
 		
 	} elsif ( $param{action} eq 'save' ) {
-		$Fold->save(\%param);
+		my @changes = $Fold->changes( \%param );
+		$variable{error} = $Fold->save(\%param);
+		if ( ! $variable{error} ) {
+			my $Equipment = $Fold->Equipment();
+			(new openprint::Log())->save({ object_type=>(ref $Equipment), object_id=>$$Equipment{id}, action=>'Save Fold', 
+				note=>$$Fold{name} . ' ' . join('<br/>', @changes ) });
+		} # end if
 		$variable{Fold} = $Fold;
 	} elsif ( $param{action} eq 'delete' ) {
 		$Fold->delete();

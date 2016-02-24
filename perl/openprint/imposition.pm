@@ -1069,6 +1069,7 @@ sub decrease_imposition {
 
 	foreach my $imposition ( @_ ) {
 		next if ( ($$imposition{columns} * $$imposition{rows}) <= 1 );
+		next if $$imposition{runstyle} =~ /^Work/;
 
 		if ( $$imposition{dutch_columns} ) {
 			my $imp1 = $imposition->copy();

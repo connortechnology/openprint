@@ -1615,7 +1615,7 @@ sub calliper {
 				$calliper = int( $Paper->calliper() * 10000);
 			} # end if
 			my $pages = 1;
-			if ( $$sig_specs{rdbTemplateType} eq '2PanelFold' or $$sig_specs{rdbTemplateType} eq '4PageFold' ) {
+			if ( sets::isin( $$sig_specs{rdbTemplateType}, [ '2PanelFold', '4PageFold', 'Landscape Fold', 'Portrait Fold' ] ) ) {
 				$pages = 2;
 			} elsif ( sets::isin( $$sig_specs{rdbTemplateType}, [  'NoFold', 'Portrait', 'Landscape','Square','Forms', '' ] ) ) {
 			} elsif ( sets::isin( $$sig_specs{rdbTemplateType}, [ 'PadsPortrait', 'PadsLandscape','PadsSquare','Pads' ] ) ) {

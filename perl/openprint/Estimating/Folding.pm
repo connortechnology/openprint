@@ -622,11 +622,11 @@ $SigImpo->display();
 	if ( ! $$sig_specs{txtSignatureType} ) {
 
 		# Get rid of dutches
-		if ( $SignatureImposition->dutch_columns() ) {
+		if ( $$SignatureImposition{dutch_columns} ) {
 			my @Impositions = ();
 			my $modified = 0;
 			foreach my $I ( @Set_Of_Impositions ) {
-				if ( $I->dutch_columns() ) {
+				if ( $$I{dutch_columns} ) {
 					{
 						my $i = $I->copy();
 						$i->dutch_columns(0);
@@ -636,8 +636,8 @@ $SigImpo->display();
 					}
 					{
 						my $i = $I->copy();
-						$i->columns( $i->dutch_columns() );
-						$i->rows( $i->dutch_rows() );
+						$i->columns( $$i{dutch_columns} );
+						$i->rows( $$i{dutch_rows} );
 						$i->dutch_columns(0);
 						$i->dutch_rows(0);
 						$i->quantity(1);
