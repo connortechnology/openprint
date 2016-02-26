@@ -224,7 +224,7 @@ sub calc_price {
 		#$$specs{'hdnBreakdown'.$qty_index} .= sprintf('&nbsp;&nbsp;Hole Clearing: $%.2f %s * %d impressions * %d holes = $%.2f<br/>', @HoleClearingPrice{'Price','units'}, $impressions, $hole_qty, $HoleClearingPrice{Total});
 	} # end if
 
-	$Total{UnitPrice} = $Total{Total} / $$specs{"txtQuantity$qty_index"};
+	$Total{UnitPrice} = $Total{Total} / $$specs{"txtQuantity$qty_index"} if $$specs{"txtQuantity$qty_index"};
     return %Total;
 
 } # end sub calc_price
