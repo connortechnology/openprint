@@ -5,13 +5,14 @@ require Email::Valid;
 use Date::Calc qw(Add_Delta_Days check_date);
 
 use openprint ();
-use vars qw( %config %param %variable $log $dbh %session );
+use vars qw( $r %config %param %variable $log $dbh %session );
 *variable = \%openprint::variable;
 *session = \%openprint::session;
 *config = \%openprint::config;
 *param = \%openprint::param;
 *log = \$openprint::log;
 *dbh = \$openprint::dbh;
+*r = \$openprint::r;
 
 use constant DEBUG => 0;
 
@@ -379,6 +380,7 @@ sub confirmation {
 sub history {
 	ssi::setup_date_select( '/main/order/history.html', 'created_on_start', -30 );
 	ssi::setup_date_select( '/main/order/history.html', 'created_on', 0 );
+	$session{$r->uri().'?company_id'} = $session{company_id} if ! exists $session{$r->uri().'?company_id'};
 	_history();
 } # end sub history
 
