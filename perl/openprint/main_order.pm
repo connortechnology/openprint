@@ -5,13 +5,14 @@ require Email::Valid;
 use Date::Calc qw(Add_Delta_Days check_date);
 
 use openprint ();
-use vars qw( %config %param %variable $log $dbh %session );
+use vars qw( $r %config %param %variable $log $dbh %session );
 *variable = \%openprint::variable;
 *session = \%openprint::session;
 *config = \%openprint::config;
 *param = \%openprint::param;
 *log = \$openprint::log;
 *dbh = \$openprint::dbh;
+*r = \$openprint::r;
 
 use constant DEBUG => 0;
 
@@ -93,6 +94,7 @@ sub information {
 			$Project->unlock();
 		} # end if
 		$variable{ExternalRedirect} = '/main/order/information.html?order_id='.$order_id;
+		return;
 	} elsif ( $param{btnFunction} eq 'Continue') { # saving projcet information
 		$order_id = openprint::order::get_unfinished_order( ) if ! $order_id;
 		foreach my $OP ( openprint::OrderedProject->find('order_id'=>$order_id) ) {
@@ -128,7 +130,7 @@ sub information {
 			'fax',
 			'email',
 			'alsonotify',
-		} = $Order->get('company_name','salutation','firstname','lastname','address1','address2','city','state','postalcode','country','phone','fax','email','alsonotify');
+		} = @$Order{'company_name','salutation','firstname','lastname','address1','address2','city','state','postalcode','country','phone','fax','email','alsonotify'};
 
 		if ( $variable{company_name} eq '' ) {
 			my $Company = new openprint::Company($session{company_id});
@@ -379,6 +381,7 @@ sub confirmation {
 sub history {
 	ssi::setup_date_select( '/main/order/history.html', 'created_on_start', -30 );
 	ssi::setup_date_select( '/main/order/history.html', 'created_on', 0 );
+	$session{$r->uri().'?company_id'} = $session{company_id} if ! exists $session{$r->uri().'?company_id'};
 	_history();
 } # end sub history
 
