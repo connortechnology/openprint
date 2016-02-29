@@ -32,8 +32,8 @@ sub save {
 	my ( $self, $data ) = @_;
 	my $ac = sql::start_transaction( $openprint::dbh );
 	my $error = $self->SUPER::save( $data );
-	$error .= $self->Invoice()->save({'paid'=>undef});
-	$error .= $self->Payment()->save({'remaining'=>undef});
+	$error .= $self->Invoice()->save({ paid=>undef });
+	$error .= $self->Payment()->save({ remaining=>undef });
 	sql::end_transaction( $openprint::dbh, $ac );
 	return $error;
 } # end sub save
