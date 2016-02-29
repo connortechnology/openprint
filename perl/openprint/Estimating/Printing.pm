@@ -53,7 +53,7 @@ sub load_presses {
 my %Services;
 my %Materials;
 
-my $do_initial_filtering = 1;
+my $do_initial_filtering = 0;
 my $max_recursion_depth = 3;
 my %filtered_imposition_cache;
 my $use_filtered_imposition_cache = 0;
@@ -328,7 +328,7 @@ my %variables = (
 	'pages_supplied'=>['save'],
 	'supplied_format'=>['save'],
 # Banners
-	'grommets' => ['save'],
+	'grommets' => ['save'], grommeting => ['save'],
 	'pockets'	=>	['save'],
 	'hemmed'	=>	['save'],
 	'EdgeLeft' => ['save'], 'EdgeRight' => ['save'], 'EdgeTop' => ['save'], 'EdgeBottom'=>['save'],
