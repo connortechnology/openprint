@@ -147,6 +147,18 @@ $openprint::log->debug("In Project::calc");
 		map { openprint::print_project::delete_service( $Project, $_ ); } @{$$services{Sewing}};
 		delete $$services{Sewing};
 	} # end if
+
+	if ( $$specs{grommeting} eq 'Y' ) {
+		if ( ! $$services{Grommeting} ) {
+			push @{$$services{Grommeting}}, $Project->add_service( 'Grommeting' );
+			my $grommeting_specs = openprint::service::get_specs_ref( $Project, $$services{Grommeting}[0] );
+			$$specs{grommets} = $$grommeting_specs{Quantity};
+		} 
+	} elsif ( $$services{Grommeting} ) {
+		map { openprint::print_project::delete_service( $Project, $_ ); } @{$$services{Grommeting}};
+		delete $$services{Grommeting};
+	} # end if
+
 	if ( $$specs{h_stands} eq 'Y' ) {
 		if ( ! $$services{HStands} ) {
             push @{$$services{HStands}}, $Project->add_service( 'HStands' );
@@ -527,6 +539,9 @@ $log->debug("Presentation folder sizes $$specs{chkPocketLeft} $$specs{chkPocketR
 			} # end foreach
 		} else {
 			foreach my $spec ( 'PocketSize','grommets','hemmed','pockets','EdgeLeft','EdgeRight','EdgeBottom','EdgeTop' ) {
+				#openprint::service::insert_service_spec( $log, $dbh, $$Project{id}, $$services[0], $spec, $$specs{$spec} );
+				$$project_specs{$spec} = $$specs{$spec};
+
 				if ( $$sig_specs{$spec} ne $$specs{$spec} ) {
 					openprint::service::insert_service_spec( $log, $dbh, $$Project{id}, $sig_id, $spec, $$specs{$spec} );
 				} # end if
@@ -890,7 +905,6 @@ $log->warn("unitprice: $$specs{txtUnitPrice1}");
 	} # end if UPS
 	$$specs{ShippingPrice1} = sprintf( '%.2f', Math::Round::nearest(0.01,$$specs{ShippingPrice1} ) );
 	$$specs{ProductionPrice1} = sprintf( '%.2f', Math::Round::nearest(0.01,$$specs{ProductionPrice1} ) );
-
 
 	$$specs{Status} = $Project->update_status( $variable );
 	if ( $$specs{Status} ne 'Unordered' ) {
