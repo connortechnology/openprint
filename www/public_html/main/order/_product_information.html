@@ -6,6 +6,8 @@
 			<th class="Date Requested">Requested Date</th>
 			<th class="Quantity">Qty</th>
 			<th class="Price">Price</th>
+			<th class="Price">Total</th>
+			<th class="buttons">&nbsp;</th>
 		</tr>
 	</thead>
     <? while ( $$variable{Product} = shift @{$$variable{Products}} ) ?>
@@ -55,8 +57,18 @@
 			} # end foreach
 		} # end foreach
 	} # end if has project_id
+		$$variable{total} += $$variable{price} * $$variable{Product}->quantity();
     $$variable{rowclass} = $$variable{rowclass} ? '' : ' class="colRow"';
-return sprintf( '%s</td></tr>', openprint::Currency::format( $$variable{price} ) ).$shipping_html;
+		return sprintf( '%s</td><td class="Price">%s</td><td class="buttons">', 
+			openprint::Currency::format( $$variable{price} ),
+			openprint::Currency::format( $$variable{price} * $$variable{Product}->quantity() ),
+			).$shipping_html.
+		button('rp'.$$variable{Product}->id(), { onclick=>'remove_product('.$$variable{Product}->id().');', text=>'-', title=>'Delete Product' } )
+		. '</td></tr>';
     ) ?>
     <? endwhile ( $$variable{Product} = shift @{$$variable{Products}} ) ?>
+	<tr class="totals">
+		<td colspan="5">subtotal</td>
+		<td class="Price"><?echo(openprint::Currency::format($$variable{total});)?></td>
+	</tr>
 </table>
