@@ -94,6 +94,7 @@ sub information {
 			$Project->unlock();
 		} # end if
 		$variable{ExternalRedirect} = '/main/order/information.html?order_id='.$order_id;
+		return;
 	} elsif ( $param{btnFunction} eq 'Continue') { # saving projcet information
 		$order_id = openprint::order::get_unfinished_order( ) if ! $order_id;
 		foreach my $OP ( openprint::OrderedProject->find('order_id'=>$order_id) ) {
@@ -129,7 +130,7 @@ sub information {
 			'fax',
 			'email',
 			'alsonotify',
-		} = $Order->get('company_name','salutation','firstname','lastname','address1','address2','city','state','postalcode','country','phone','fax','email','alsonotify');
+		} = @$Order{'company_name','salutation','firstname','lastname','address1','address2','city','state','postalcode','country','phone','fax','email','alsonotify'};
 
 		if ( $variable{company_name} eq '' ) {
 			my $Company = new openprint::Company($session{company_id});
