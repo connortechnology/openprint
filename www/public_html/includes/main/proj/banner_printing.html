@@ -2,19 +2,16 @@
 	<fieldset><legend>Banner Options</legend>
 		<div class="content">
 			<ul>
-				<li><label># of Grommets per Banner</label>
-					<? echo ( input( type=>'cardinal', name=>'grommets', id=>'grommets', value=>$$variable{grommets}, onkeyup=>'calc(this.form.name);' ); ) ?>
-				</li>
 				<li id="pocketsli"><label>Will your banner have pole pockets?</label>
-					<? echo ( radio( 'pockets', ['Y', 'Yes','N','No' ], $$variable{'pockets'}, { default=>'Y', onclick=>q`if(this.value=='Y'){$('PocketSizeli').show();}else{$('PocketSizeli').hide();}calc(this.form.name);` } ); ) ?>
+					<? echo ( radio( 'pockets', ['Y', 'Yes','N','No' ], $$variable{pockets}, { default=>'N', onclick=>q`if(this.value=='Y'){$('PocketSizeli').show();}else{$('PocketSizeli').hide();}calc(this.form.name);` } ); ) ?>
 				</li>
-				<li id="PocketSizeli" <? echo ( $$variable{'pockets'} ne 'Y' ? 'style="display:none;"' : '' ) ?>><label>Pole pocket diameter</label>
+				<li id="PocketSizeli" <? echo ( $$variable{pockets} ne 'Y' ? 'style="display:none;"' : '' ) ?>><label>Pole pocket diameter</label>
 					<? echo ( input(type=>'float', name=>'PocketSize', id=>'PocketSize', value=>$$variable{PocketSize},  onkeyup=>'calc(this.form.name);' ); ) ?>
 				</li>
 				<li id="hemmed"><label>Will your banner be hemmed?</label>
-					<?echo ( radio( 'hemmed', [ 'Y', 'Yes', 'N', 'No' ], $$variable{'hemmed'}, { default=>'Y', onclick=>q`if(this.value=='Y'){$('edges').show();$('HemWidth').show();}{$('edges').hide();$('HemWidth').hide();}calc(this.form.name);` } ); ) ?>
+					<?echo ( radio( 'hemmed', [ 'Y', 'Yes', 'N', 'No' ], $$variable{hemmed}, { default=>'Y', onclick=>q`if(this.value=='Y'){$('edges').show();$('HemWidth').show();}{$('edges').hide();$('HemWidth').hide();}calc(this.form.name);` } ); ) ?>
 				</li>
-				<li id="edges" <? echo ( $$variable{'hemmed'} ne 'Y' ? 'style="display:none;"' : '' ) ?>><label>Hemmed Edges</label>
+				<li id="edges" <? echo ( $$variable{hemmed} ne 'Y' ? 'style="display:none;"' : '' ) ?>><label>Hemmed Edges</label>
 					<? echo (
 						my $html;
 						foreach my $edge ( 'Left', 'Right','Top', 'Bottom' ) {
@@ -24,8 +21,8 @@
 						return $html;
 					) ?>
 				</li>
-				<li id="HemWidth"<? echo ( $$variable{'hemmed'} ne 'Y' ? ' style="display:none;"' : '' ) ?>><label>Hem Width:</label>
-					<input type="number" name="HemWidth" value="<? echo ( $$variable{'HemWidth'} ) ?>" onkeyup="floatize(this);calc(this.form.name);"/>
+				<li id="HemWidth"<? echo ( $$variable{hemmed} ne 'Y' ? ' style="display:none;"' : '' ) ?>><label>Hem Width:</label>
+					<input type="number" name="HemWidth" value="<? echo ( $$variable{HemWidth} ) ?>" onkeyup="floatize(this);calc(this.form.name);"/>
 				</li>
 			</ul>
 		</div>
