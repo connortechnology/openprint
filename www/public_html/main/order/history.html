@@ -5,7 +5,8 @@
 <? if ( $session{'user_id'} ) ?>
 <form id="f1" name="f1" action="history.html" method="post">
 	<div class="Order"><div class="History">
-		<fieldset id="JumpTo" class="filters unprintable"><legend>Enter Order ID</legend>
+		<div id="JumpTo">
+		<fieldset class="filters unprintable"><legend>Enter Order ID</legend>
 			<ul>
 			<li>
 				<label for="order_id">Order ID</label>
@@ -30,7 +31,9 @@
 			</li>
 			</ul>
 		</fieldset>
-		<fieldset id="Filter" class="filters unprintable"><legend>or Select Search Criteria</legend>
+		</div>
+		<div id="Filter">
+		<fieldset class="filters unprintable"><legend>or Select Search Criteria</legend>
 			<ul>
 <? if ( sets::isin( $session{user_type}, ['E','A'] ) ) ?>
             <li>
@@ -53,20 +56,21 @@
 			</li>
 			<li> 
 				<label>Created</label>
-<? echo ( date_select_session( '/main/order/history.html', 'created_on_start', { onchange=>q`LoadContent('Results','_history.html',$('f1'));`,with_clear=>1,with_today=>1 } ); ) ?>
+<? echo ( date_select_session( $r->uri(), 'created_on_start', { onchange=>q`LoadContent('Results','_history.html',$('f1'));`,with_clear=>1,with_today=>1 } ); ) ?>
 				to
-<? echo ( date_select_session( '/main/order/history.html', 'created_on_end', { onchange=>q`LoadContent('Results','_history.html',$('f1'));`,with_clear=>1,with_today=>1 } ); ) ?>
+<? echo ( date_select_session( $r->uri(), 'created_on_end', { onchange=>q`LoadContent('Results','_history.html',$('f1'));`,with_clear=>1,with_today=>1 } ); ) ?>
 			</li>
 			</ul>
 			<br class="spacer"/>
 			<p class="buttons">
-				<? echo ( join( '',
+				<? echo ( join( "\n",
 					button( 'ShowResults', { onclick=>'f1.submit();', text=>'Show Results' } ),
 					button( 'New', { href=>'/main/order/information.html', text=>'New' } ),
 					button( 'Reset', { onclick=>'f1.reset();' } ),
 				); ) ?>
 			</p>
 		</fieldset>
+		</div>
 	</div>
 	</div>
 	<hr class="spacer"/>
