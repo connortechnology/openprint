@@ -24,7 +24,7 @@ require openprint::Order_Invoice;
 
 use vars qw( $debug $table $serial %fields %find_fields %defaults %transforms );
 
-$debug = 0;
+$debug = 1;
 
 $table = 'invoices';
 $serial = 'invoices_id_seq';
@@ -37,6 +37,7 @@ $serial = 'invoices_id_seq';
 	internal_notes	=>	'internal_notes',
 	posted			=>	'posted',
 	subtotal		=>	'subtotal',
+	subtotal_override		=>	'subtotal_override',
 	total			=>	'total',
 	due_on			=>	'due_on',
 	posted_on		=>	'posted_on',
@@ -79,15 +80,17 @@ $serial = 'invoices_id_seq';
 	early_payment_date		=>	undef,
 	num						=>	undef,
 	due_on					=>	undef,
+	subtotal_override		=>	0,
 );
 
 sub save {
 	my ( $self, $param ) = @_;
 	
+	$self->set( $param );
 	# none of these should be set by param
 	$$self{total} = $self->total();
 
-	my $rc = $self->SUPER::save( $param );
+	my $rc = $self->SUPER::save( );
 	if ( ! $rc and $$self{posted_on} ) {
 		foreach my $T ( $self->Taxes(undef) ) {
 			$rc .= $T->save();
@@ -138,14 +141,19 @@ sub Invoicer {
 sub subtotal {
 	my ( $self ) = @_;
 
+	if ( @_ > 1 ) {
+$openprint::log->debug("Setting subtotal to $_[1]") if $debug;
+		$$self{subtotal} = $_[1];
+	}
+
 	if ( ! $$self{id} ) {
 		$log->error('Invoice:subtotal no id! ref:' . (ref $self) . ' self:' . $self);
 #cluck('Invoice:subtotal no id! ref:' . (ref $self) . ' self:' . $self);
 		return;
 	} # end if
 
-	if ( (!$$self{posted}) or ( ! defined $$self{subtotal} ) ) {
-#$log->debug("Recalculating subtotal");
+	if ( ( (!$$self{posted}) or ( ! defined $$self{subtotal} ) ) and ( ! $$self{subtotal_override} ) ) {
+$log->debug("Recalculating subtotal") if $debug;
 		$$self{subtotal} = 0;
 		foreach my $T ( openprint::Timetrack->find('invoice_id'=>$$self{id}) ) {
 			$$self{subtotal} += $T->value();
@@ -204,7 +212,7 @@ sub add_Payment {
 			my $amount = $Payment->remaining() > $self->owing() ? $self->owing() : $Payment->remaining();	
 			my $IP = new openprint::Invoice_Payment();
 			$error .= $IP->save({ payment_id=>$Payment->id(), invoice_id=>$$self{id}, amount=>$amount });
-			$error .= $Payment->save( remaining => undef );
+			$error .= $Payment->save( { remaining => undef } );
 			$self->paid( undef );
 			$error .= $self->save();
 			return $error;
