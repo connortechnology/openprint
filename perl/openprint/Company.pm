@@ -240,7 +240,15 @@ sub dropdown {
 		if ( (!$sql{salesrep_id}) or ( ! sets::isin( $sql{salesrep_id}, [ $openprint::session{user_id}, $openprint::User->csr_ids() ] ) ) ) {
 			$sql{salesrep_id} = [ $openprint::session{user_id}, $openprint::User->csr_ids() ];
 		}
-		$sql{or} = 'id=' . $$openprint::User{company_id};
+		if ( ! $sql{or} ) {
+			$sql{or} = 'id=' . $$openprint::User{company_id};
+		} elsif ( ref $sql{or} eq 'SCALAR' ) {
+			$log->error("BAH");
+		} elsif ( ref $sql{or} eq 'HASH' ) {
+			$sql{or}{id} = $$openprint::User{company_id};
+		} else {
+			$log->error("BLAH");
+		}
 	} else {
 $log->debug("Not adding filter");
 	} # end if
