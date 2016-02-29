@@ -428,7 +428,7 @@ sub subtotal {
 		$$self{subtotal} = 0;
 		$$self{subtotal} += misc::sum( map { $_->price() } $self->Ordered_Projects() );
 		foreach my $Product ( $self->Products() ) {
-			my $price = $Product->price();
+			my $price = $Product->total();
 #$log->debug("subtotal: ordered price: $price");
 			if ( $Product->currency_id() != $$self{currency_id} ) {
 				my $rate = $Product->Currency()->conversions( $$self{currency_id} );
