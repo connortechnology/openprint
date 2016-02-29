@@ -14,6 +14,7 @@ CREATE TABLE Invoices (
     federaltax numeric(10,2),
     currency_id integer NOT NULL,
     subtotal numeric(10,2),
+	subtotal_override	BOOLEAN NOT NULL default false,
     total numeric(10,2),
     federaltaxrate double precision,
     statetaxrate double precision,
