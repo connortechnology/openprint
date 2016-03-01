@@ -93,6 +93,9 @@ sub information {
 			( $order_id, $error ) = openprint::order::add_project_to_order( $Project, $order_id );
 			$Project->unlock();
 		} # end if
+		if ( ! $order_id ) {
+			$variable{error} .= 'Had trouble generating order.' . $error;
+		}
 		$variable{ExternalRedirect} = '/main/order/information.html?order_id='.$order_id;
 		return;
 	} elsif ( $param{btnFunction} eq 'Continue') { # saving projcet information
