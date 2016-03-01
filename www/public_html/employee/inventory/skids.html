@@ -35,7 +35,7 @@ Please select a Skid to view/edit.<br/>
 			<label for="manufacturers_id">Manufacturers ID</label>
 			<? echo ( join("\n",
 						input( type=>'text', id=>'manufacturers_id', name=>'manufacturers_id', 
-							onkeypress=>'return input_handler(this,event);', onkeydown=>'if(event.keyCode==13){submit_handler(f1);}' ),
+							onkeydown=>'if(event.keyCode==13){submit_handler(f1);}' ),
 						button( 'GoManufacturers', { onclick=>'calc();',text=>'Go' } ),
 						); ) ?>
 		</li>
