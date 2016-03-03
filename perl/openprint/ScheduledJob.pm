@@ -68,8 +68,14 @@ sub runtime_seconds {
 	if ( @_ > 1 ) {
 		$_[0]{runtime} = misc::seconds2hms($_[1]);
 	} # end if
+
+	my $seconds = misc::hms2time( $_[0]->runtime() );
+
+	if ( ! $seconds ) {
+		$log->error("Got nothing for $_[0]{runtime} from misc::hms2time");
+	}
 	
-	return misc::hms2time( $_[0]{runtime} );
+	return $seconds;
 } # end sub runtime_seconds
 
 sub starttime {
