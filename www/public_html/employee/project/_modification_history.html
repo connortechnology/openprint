@@ -19,10 +19,16 @@
 
 		my $uri = '/employee/project/modification_log.html';
 
+my @project_ids;
+if ( $session{$uri.'?StartDocket'} ) {
+@project_ids = map { $_->id() } openprint::Project->find( docket=>$session{$uri.'?StartDocket'} );
+}
+
 		my @ProjectLog = openprint::Project_Log->find(
 			( $$variable{Project} ? (
 					( project_id=>$$variable{Project}->id() ),
 				) : (
+					( $session{$uri.'?StartDocket'} ? ( project_id=>\@project_ids ) : () ),
 					( $$variable{project_id} ? ( project_id=>$$variable{project_id} ) : () ),
 					date_filter( $uri.'?action_date_end', 'created_on <=' ),
 					date_filter( $uri.'?action_date_start', 'created_on >=' ),
