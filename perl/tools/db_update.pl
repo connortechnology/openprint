@@ -1701,14 +1701,21 @@ if ( ! sets::isin( 'service_prices',\@tables )  ) {
 		$dbh->do('ALTER TABLE Service_Prices ADD supplier_id INTEGER');
 		$dbh->do('ALTER TABLE Service_Prices ADD FOREIGN KEY (supplier_id) REFERENCES Companies(id)');
 	} # end if
-	if ( ! exists $$data{'interpolate'} ) {
-		$dbh->do('ALTER TABLE Service_Prices ADD interpolate boolean default false');
-	} # end if
+	#if ( ! exists $$data{'interpolate'} ) {
+		#$dbh->do('ALTER TABLE Service_Prices ADD interpolate boolean default false');
+	#} # end if
 	if ( ! exists $$data{period_start} ) {
 		$dbh->do('ALTER TABLE Service_Prices ADD period_start TIMESTAMP WITH TIME ZONE');
 	} # end if
 	if ( ! exists $$data{period_end} ) {
 		$dbh->do('ALTER TABLE Service_Prices ADD period_end TIMESTAMP WITH TIME ZONE');
+	} # end if
+	if ( ! exists $$data{mode} ) {
+		$log->debug("Adding mode to service_prices");
+		$dbh->do('ALTER TABLE Service_Prices ADD mode text') or die $dbh->errstr();
+		if ( ! exists $$data{'interpolate'} ) {
+			$dbh->do("UPDATE Service_Prices set mode='Interpolated' WHERE interpolate iS true") or die $dbh->errstr();
+		} # end if
 	} # end if
 	if ( ! exists $$data{id} ) {
 		$log->debug("Adding id SERIAL to Service_prices");

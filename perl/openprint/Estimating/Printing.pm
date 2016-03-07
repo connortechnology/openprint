@@ -6177,7 +6177,7 @@ sub get_run_price {
 		$openprint::log->error(" ***** FATAL ERROR: Could Not Get 'Number of Colours' for Press: $$Press{strid} ***********");
 		return \%run_price;
 	} # end if
-	my $impression_service = $$Imposition{runstyle} eq 'Perfecting' ? 'ColourImpressionPerfecting' : 'ColourImpression';
+	my $impression_service = 'ColourImpression';
 
 	if ( $$Imposition{runstyle} eq 'Web' or $$Imposition{runstyle} eq 'Perfecting' ) {
 # A web does both sides at once, and cannot do multipass
@@ -6208,6 +6208,9 @@ $log->debug("**** RUN PRICE 2 : $running_price ** side1 colours: $side_one_colou
 			my $mod_colours = $side_one_colours % $max_colours;
 			if ( $mod_colours ) {
 				my %RunPrice = openprint::service::get_price_object( $mod_colours.$impression_service, $impressions, $Press );
+				if ( $RunPrice{mode} eq 'Stepped' ) {
+					openprint::pricing::get_stepped( \%RunPrice );
+				}
 				$running_price += $RunPrice{Price};
 				$run_price{units} = $RunPrice{units} if ! $run_price{units};
 $log->debug("**** RUN PRICE 3 : $running_price **") if DEBUG;

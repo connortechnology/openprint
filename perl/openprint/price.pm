@@ -92,6 +92,7 @@ sub copy {
 	setMarkup( $self, $src->{Markup} );
 	setPrice( $self, $src->{Price} );
 	setDiscountable( $self, $src->{Discountable} );
+	$$self{interpolate} = $$src{interpolate};
 } # end sub copy
 
 1;
