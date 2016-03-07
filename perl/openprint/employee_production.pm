@@ -1708,7 +1708,7 @@ sub _li_change {
 			# was first in the list
 			$log->debug("Was first in list.");
 		} elsif ( $index == @Jobs ) {
-			$log->warn("Job not found.");
+			$log->error("Job $$Job{id} not found in list." . join(',', map { $$_{id} } @Jobs ) );
 			$index = 0;
 		} # end if
 
@@ -1734,8 +1734,11 @@ $log->debug("second job can't move");
 		} else {
 			if ( @Jobs ) {
 				if ( $index > 1 ) {
+					# IF there are jobs, and we are higher than second in the list
+					# If the current job's shift is different from the previous job's shift...
 					if ( $Jobs[$index]->Shift()->ul_id() ne $Jobs[$index-1]->Shift()->ul_id() ) {
-						if ( ! $Job->Shift()->Previous()->Jobs() ) {
+						# If the previous shift is empty
+						if ( ! $Job->Shift()->Previous()->Schedule() ) {
 							push @{$variable{changed}}, $Job->ul_id();
 							$Job->starttime( $Jobs[$index-1]->Shift()->Next()->starttime() );
 						} # end if
