@@ -112,7 +112,7 @@ sub name {
 } # end sub name
 
 sub schedule {
-	return openprint::press_schedule->find( 'starttime >='=>$_[0]{starttime}, 'starttime <='=>$_[0]{endtime}, 'equipment_id'=>$_[0]{equipment_id} );
+	return openprint::press_schedule->find( 'starttime >='=>$_[0]{starttime}, 'starttime <='=>$_[0]{endtime}, equipment_id=>$_[0]{equipment_id} );
 } # end sub schedule
 
 sub Schedule {
@@ -124,8 +124,8 @@ sub Schedule {
 			) : (
 			'starttime is null'	=>	$_[0]{starttime} ? 0 : 1,
 			) ),
-			'equipment_id'		=>	$_[0]{equipment_id},
-			'order'				=>	'starttime,projectindex,service_id',
+			equipment_id		=>	$_[0]{equipment_id},
+			order				=>	'starttime,projectindex,service_id',
 			);
 } # end sub Schedule
 
@@ -135,7 +135,7 @@ sub operator_id {
 	if ( @_ ) {
 		if ( $$self{id} ) {
 			foreach my $Job ( $self->Schedule() ) {
-				$Job->save({'operator_id'=>$_[0]});	
+				$Job->save({ operator_id=>$_[0] });
 			} # end foreach
 $openprint::log->debug("Setting operator from $$self{operator_id} to $_[0]");
 			if ( $$self{operator_id} != $_[0] ) {

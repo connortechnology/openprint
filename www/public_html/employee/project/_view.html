@@ -40,8 +40,11 @@
     my $printing_specs = openprint::service::get_specs_ref( $Project, $$services{''}[0] );
     my $status_html .= slurp_content( '/employee/project/_status.html' );
 
+	my @shown_services;
+
     foreach my $ServiceCategory ( openprint::ServiceType_Category->find( order=>'sorting,name') ) {
         if ( $ServiceCategory->name() eq 'Printing' ) {
+			push @shown_services, $$services{''}[0];
             $html .= "<tr$rowclass>\n";
             $html .= sprintf(q`<td class="checkbox"><input type="checkbox" name="chkDelete-%1$d" /></td>`, $$services{''}[0] ) if $$variable{checkboxes};
             if ( $Project->Type()->url() ) {
@@ -63,6 +66,7 @@
             while (@sigs) {
                 my $ss_id = shift @sigs;
                 next if $ss_id == $$services{''}[0];
+				push @shown_services, $ss_id;
 
                 my %sig_specs = %{openprint::service::get_specs_ref( $Project, $ss_id)};
 
@@ -82,6 +86,7 @@
                         } else {
                             $sig_specs{'txtPressSheetQty'.$qty_index}.='sheets';
                         } # end if
+						push @shown_services, $sigs[$i];
                         splice @sigs, $i, 1;
                         $i -= 1;
                     } # end if
@@ -112,6 +117,7 @@
                 next if ! $$services{$ServiceType->name()};
 				next if $ServiceType->name() eq 'Paper';
                 foreach my $service_id ( @{$$services{$ServiceType->name()}} ) {
+					push @shown_services, $service_id;
                     $rowclass = ' class="colRowRed"' if $statuses{$service_id} eq 'Waiting For Customer Approval';
                     my $specs = openprint::service::get_specs_ref( $Project, $service_id );
 
@@ -168,6 +174,7 @@
 	my %Stocks;
 
 	if ( $$services{Paper} and $$services{Paper}[0] ) {
+		push @shown_services, $$services{Paper}[0];
 
 		my $stock_specs = openprint::service::get_specs_ref( $Project, $$services{Paper}[0] );
 		my @stocks_and_quantities = openprint::Estimating::Paper::get_stocks_and_quantities( $Project, $$services{Paper}[0], $stock_specs, $qty_index );
@@ -254,6 +261,58 @@ $log->warn("Lookup up stock price, cuz it's not in the paper service: cost-$stoc
             } # endif Supplied
         } # end foreach signature
 	} # end if has Paper Service
+
+	if ( my @extras = sets::exclude( \@shown_services, [ map { @{$_ } } values %{$services} ] ) ) {
+		foreach my $service_id ( @extras ) {
+			my $Service = $Project->Service( $service_id );
+			my $ServiceType = $Service->ServiceType();
+
+			my $specs = openprint::service::get_specs_ref( $Project, $service_id );
+
+			$html .= "<tr$rowclass>\n";
+			$html .= sprintf(q`<td class="checkbox"><input type="checkbox" name="chkDelete-%1$d" /></td>`, $service_id ) if $$variable{checkboxes};
+
+			my @summaries;
+			my $summary = openprint::service::summary( $Project->id(),$service_id );
+			if ( ref $summary eq 'ARRAY' ) {
+				@summaries = @{$summary};
+				$summary = shift @summaries;
+			} # end if
+
+			my $qty_summary = openprint::service::summary( $Project->id(), $service_id, $qty_index );
+			if ( ref $qty_summary eq 'ARRAY' ) {
+				$$qty_summary[0] =~ s/\n/<br\/>/g;
+			} else {
+				$qty_summary =~ s/\n/<br\/>/g;
+			} # end if
+
+			$summary .= $qty_summary;
+			$summary =~ s/<br\/>+/<br\/>/g;
+
+			$html .= sprintf( (
+						$ServiceType->url() ?
+						q`<td class="Service"><a href="/employee/proj/%1$s?ProjectIndex=%2$d&amp;ServiceIndex=%3$d"><b>%4$s</b>%5$s<br/>%6$s<br/>%7$s</a></td>` :
+						q`<td class="Service">%4$s%5$s<br/>%6$s<br/>%7$s</td>` ),
+					$ServiceType->url(), $Project->id(), $service_id,
+					( $$specs{ServiceName} ? $$specs{ServiceName} : $ServiceType->description() ),
+					( $$specs{txtServiceDescription} ? ' - '.$$specs{txtServiceDescription} : '' ),
+					$summary,
+				   );
+			$html .= '<td class="Price">';
+			if ( $$variable{canseepricing} ) {
+				if ( $$specs{'txtQuantity'.$qty_index} and ($$specs{'txtQuantity'.$qty_index} != $Project->quantity($qty_index) ) ) {
+					$html .= '('.$$specs{'txtQuantity'.$qty_index}.') ';
+				} # end if
+				$html .= openprint::Currency::format( $ProjectCurrency->convert_from( $$specs{'txtPrice'.$qty_index}) );
+			} # end if
+
+			$html .= '</td><td class="status" id="status'.$service_id.'">';
+			@$variable{'status','index'} = ( $statuses{$service_id}, $service_id );
+			$html .= variable_substitution( \$status_html, $variable );
+			$html .= "</td></tr>\n";
+		}
+
+	}
 
 	my @keys = sort keys %totals;
 

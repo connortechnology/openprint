@@ -28,10 +28,12 @@
 			( $session{'/employee/inventory/skids.html?deleted'} ? ( deleted => [ split(',', $session{'/employee/inventory/skids.html?deleted'} ) ] ) : () ),
 			) ];
 	} elsif ( $session{'/employee/inventory/skids.html?manufacturers_id'} ) {
+		
 		$$variable{Skids} = [ openprint::Skid->find( 
-			( $session{'/employee/inventory/skids.html?manufacturers_id'} =~ /%/ ?
-			( 'manufacturers_id ilike'	=>	$session{'/employee/inventory/skids.html?manufacturers_id'} ) :
-			( manufacturers_id	=>	$session{'/employee/inventory/skids.html?manufacturers_id'} ) ),
+			'manufacturers_id ilike'	=>	(
+				$session{'/employee/inventory/skids.html?manufacturers_id'} =~ /%/ ?
+				$session{'/employee/inventory/skids.html?manufacturers_id'} : 
+				$session{'/employee/inventory/skids.html?manufacturers_id'} .'%' ),
 			order	=>	'id',
 			( $session{'/employee/inventory/skids.html?deleted'} ? ( deleted => [ split(',', $session{'/employee/inventory/skids.html?deleted'} ) ] ) : () ),
 			) ];

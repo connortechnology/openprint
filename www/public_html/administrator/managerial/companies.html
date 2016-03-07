@@ -3,8 +3,11 @@
 <h2>Companies</h2>
 </div>
 <script type="text/javascript">
+var openprint_load_content_ajax = null;
+
 function load_page() {
-	new Ajax.Updater( 'Results', '_companies.html', { parameters: $('f1').serialize() } );
+	if ( openprint_load_content_ajax ) { openprint_load_content_ajax.transport.abort(); }
+	openprint_load_content_ajax = new Ajax.Updater( 'Results', '_companies.html', { parameters: $('f1').serialize() } );
 } 
 </script>
 <form id="f1" name="f1" method="post" action="companies.html">

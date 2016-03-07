@@ -37,7 +37,9 @@ use vars qw( %blocks );
 sub fit {
 	my ( $object_width, $object_height, $space_width, $space_height ) = @_;
 	my $imp1 = new openprint::Imposition;
+	$$imp1{image_orientation} = 'Vertical';
 	my $imp2 = new openprint::Imposition;
+	$$imp2{image_orientation} = 'Horizontal';
 	calc_setup( $imp1, $object_width, $object_height, $space_width, $space_height );
 	calc_setup( $imp2, $object_height, $object_width, $space_width, $space_height );
 	return $$imp1{imposition} > $$imp2{imposition} ? $imp1 : $imp2;
@@ -392,7 +394,7 @@ $openprint::log->debug("Not Pretrimming on $$Press{strid}") if DEBUG;
 #	3. For %setup1, Paper Width is matched to Image Width. eg: For a 22x28 Image on 23x39 sheet would match the 22 IW to the 39 PW and 28 IH to the 22 PW.
 
 	my $gutters = $$specs{Gutter};
-	$gutters = $bindery_gutters if $gutters < $bindery_gutters;
+	#$gutters = $bindery_gutters if $gutters < $bindery_gutters;
 	if ( $bleed_locations{Right} ) {
 		$gutters -= $bleed_size;
 	} # end if
@@ -1069,7 +1071,6 @@ sub decrease_imposition {
 
 	foreach my $imposition ( @_ ) {
 		next if ( ($$imposition{columns} * $$imposition{rows}) <= 1 );
-		next if $$imposition{runstyle} =~ /^Work/;
 
 		if ( $$imposition{dutch_columns} ) {
 			my $imp1 = $imposition->copy();
@@ -1081,6 +1082,33 @@ sub decrease_imposition {
 			$imp2->columns( $$imposition{dutch_columns} );
 			$imp2->rows( $$imposition{dutch_rows} );
 			push @results, $imp2;
+		} elsif ( $$imposition{runstyle} eq 'Work & Turn' ) {
+			if ( $$imposition{columns} > 2 ) {
+					my $imp1 = $imposition->copy();
+					$imp1->columns( $$imp1{columns} / 2 );
+					push @results, $imp1;
+			}
+			if ( $$imposition{rows} >= 2 ) {
+				foreach my $row ( 2 .. $$imposition{rows} ) {
+					my $imp1 = $imposition->copy();
+					$imp1->rows( $$imp1{rows} - ( $row -1 ) );
+					push @results, $imp1;
+				} # end foraech
+			} # end if
+		} elsif ( $$imposition{runstyle} eq 'Work & Tumble' ) {
+			if ( $$imposition{rows} > 2 ) {
+				my $imp1 = $imposition->copy();
+				$imp1->rows( $$imp1{rows} / 2 );
+				push @results, $imp1;
+			} # end foraech
+			if ( $$imposition{columns} >= 2 ) {
+				foreach my $columns ( 2 .. $$imposition{columns} ) {
+					my $imp2 = $imposition->copy();
+					$imp2->columns( $$imp2{columns} - ( $columns -1 ) );
+					push @results, $imp2;
+				}
+			} # end if
+
 		} else {
 
 			if ( $$imposition{rows} >= 2 ) {

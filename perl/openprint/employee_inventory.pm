@@ -428,7 +428,7 @@ Date::Format::time2str('%Y-%m-%d %H:%M', Date::Parse::str2time($I->updated_on())
 	_paper_results();
 	$session{'/employee/inventory/paper.html?owner_id_exclude'} = $param{owner_id_exclude} if exists $param{owner_id};
     $session{'/employee/inventory/paper.html?type'} = 'Roll,Sheet' if ! exists $session{'/employee/inventory/paper.html?type'};
-	ssi::setup_date_select( '/employee/inventory/paper.html', 'added_on_start', -7 );
+	ssi::setup_date_select( '/employee/inventory/paper.html', 'added_on_start', -365 );
 	ssi::setup_date_select( '/employee/inventory/paper.html', 'added_on_end', '' );
 	$session{'/employee/inventory/paper.html?instock'} = 'B' if ! $session{'/employee/inventory/paper.html?instock'};
 

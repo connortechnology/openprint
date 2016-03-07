@@ -1258,9 +1258,11 @@ $log->debug("Order after coalesce: @order : " . join(',', map { new openprint::S
 				foreach my $row ( openprint::ScheduledJob->find( 'equipment_id'=>$Shift->equipment_id(),'starttime <'=>$Shift->starttime(),'servicetype_id'=>$Equipment->servicetype_id(), 'order'=>'starttime' ) ) {
 					push @final_order, $row if ! sets::isin( $$row{id}, \@order );
 				} # end foreach row
+$log->debug("Jobs before: ".join(',',map { $$_{id} . ' ' . $_->Project()->docket() } @final_order ) );
 
 # Get the rest of the jobs on this equipment
 				my @jobs = openprint::ScheduledJob->find( 'equipment_id'=>$Shift->equipment_id(),'starttime >='=>$Shift->starttime(),'servicetype_id'=>$Equipment->servicetype_id(), 'order'=>'starttime' );
+$log->debug("Jobs: ".join(',',map { $$_{id} . ' ' . $_->Project()->docket() } @final_order ) );
 
 # Search for each job in the list of remaining jobs.  If we don't find it, it might be on another press.
 				foreach my $row_id ( @order ) {
@@ -1281,6 +1283,7 @@ $log->debug("Order after coalesce: @order : " . join(',', map { new openprint::S
 						push @final_order, $Job;
 					} # end if
 				} # end foreach row_id
+$log->debug("Before reorder Jobs: ".join(',',map { $$_{id} . ' ' . $_->Project()->docket() } ( @final_order, @jobs ) ));
 				reorder_jobs( @final_order, @jobs );
 			} else { # has starttime
 # Pending or Approved
@@ -1356,7 +1359,7 @@ sub reorder_jobs {
 #$log->debug("Running job,moving up starttime");
 		$start_time = $row->starttime_seconds();
 	} # end if
-$log->debug("Grab all $start_time");
+$log->debug("Grab all start time is $start_time");
 	# Grab all shifts.  We will only add a shift at the end
 	my @Shifts = openprint::Shift->find(
 			equipment_id	=>	$$row{equipment_id},
@@ -1384,7 +1387,7 @@ $log->debug("No shifts");
 					'order'				=>	'starttime_seconds',
 					);
 		} # end if ! NextES
-$log->debug("ES: " . $NextES->name() );
+$log->debug("NES: " . $NextES->name() );
 		if ( ! $NextES ) {
 			$variable{alert} .= 'There are no shifts to schedule on.';
 			return;
@@ -1410,11 +1413,17 @@ $log->debug("ES: " . $NextES->name() );
 			$i -= 1;
 		} # end if
 	} # end for
+	$log->debug("Fixed jobs: " . join(',', map { $_->Project()->docket() } @fixed_jobs ) );
 
 	my @jobs_in_shift;
 	while ( @order ) {
 		my $row = shift @order;
 		my $run_time = $row->runtime_seconds();
+$log->debug("run time for " . $row->Project()->docket() . ' is ' . $run_time );
+if ( ! $run_time ) {
+$log->error("JOb $$row{id} " . $row->Project()->docket() . ' is 0, making it 1' );
+$run_time = 1;
+}
 
 		my $old_start_time = $start_time - $run_time;
 
@@ -1699,7 +1708,7 @@ sub _li_change {
 			# was first in the list
 			$log->debug("Was first in list.");
 		} elsif ( $index == @Jobs ) {
-			$log->warn("Job not found.");
+			$log->error("Job $$Job{id} not found in list." . join(',', map { $$_{id} } @Jobs ) );
 			$index = 0;
 		} # end if
 
@@ -1725,8 +1734,11 @@ $log->debug("second job can't move");
 		} else {
 			if ( @Jobs ) {
 				if ( $index > 1 ) {
+					# IF there are jobs, and we are higher than second in the list
+					# If the current job's shift is different from the previous job's shift...
 					if ( $Jobs[$index]->Shift()->ul_id() ne $Jobs[$index-1]->Shift()->ul_id() ) {
-						if ( ! $Job->Shift()->Previous()->Jobs() ) {
+						# If the previous shift is empty
+						if ( ! $Job->Shift()->Previous()->Schedule() ) {
 							push @{$variable{changed}}, $Job->ul_id();
 							$Job->starttime( $Jobs[$index-1]->Shift()->Next()->starttime() );
 						} # end if
