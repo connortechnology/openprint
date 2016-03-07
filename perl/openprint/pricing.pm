@@ -18,6 +18,7 @@ my %price_cache;
 
 sub clear_cache {
 	%price_cache = ();
+	Memoize::flush_cache('get_best_prices');
 } # end sub clear_cache
 
 sub init_cache {
