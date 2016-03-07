@@ -5,33 +5,27 @@
 		Please select a product to view/edit. 
 		<fieldset class="filters"><legend>Search Information</legend>
 			<ul>
-				<li> 
-					<label>Category</label>
-					<select name="ddmSearchCategory" onchange="form.btnFunction.value='';f1.submit();">
-						<option value="">All</option>
-						<? echo (
-								make_drop_down( openprint::Product_Category->dropdown( order=>'lower(name)'), $param{ddmSearchCategory} );
-								) ?>
-					</select>
-				</li>
-				<li> 
-					<label>Manufacturer</label>
-					<select name="search_manufacturer_id" onchange="form.btnFunction.value='';f1.submit();">
-						<option value="">All</option>
-						<? echo (
-								make_drop_down( openprint::Manufacturer->dropdown( order=>'lower(name)'), $param{search_manufacturer_id} );
-								) ?>
-					</select>
-				</li>
-                <li>
-                    <label>Supplier</label>
-                    <select id="search_supplier_id" name="search_supplier_id" size="1" onchange="form.btnFunction.value='';f1.submit();">
-                        <option value="">select</option>
-                    <? echo (
-                            make_drop_down( openprint::Company->dropdown(order=>'lower(name)', supplier=>'Y'), $param{search_supplier_id} );
-                            ) ?>
-                    </select>
-                </li>
+<? echo (
+	my $contents = openprint::Product_Category->dropdown( order=>'lower(name)');
+	if ( @{$contents} ) {
+		return '<li><label>Category</label>'.ssi::select( $contents,  $param{ddmSearchCategory}, { name=>'ddmSearchCategory', onchange=>q`form.btnFunction.value='';f1.submit();`, prepend=>['','All'] } ).'</li>';
+	}
+	return;
+)?>
+<? echo (
+	my $contents = openprint::Manufacturer->dropdown( order=>'lower(name)');
+	if ( @{$contents} ) {
+		return '<li><label>Manufacturer</label>'.ssi::select( $contents,  $param{search_manufacturer_id}, { name=>'search_manufacturer_id', onchange=>q`form.btnFunction.value='';f1.submit();`, prepend=>['','All'] }  ).'</li>';
+	}
+	return;
+)?>
+<? echo (
+	my $contents = openprint::Company->dropdown(order=>'lower(name)', supplier=>'Y');
+	if ( @{$contents} ) {
+		return '<li><label>Supplier</label>'.ssi::select( $contents,  $param{search_supplier_id}, { name=>'search_supplier_id', onchange=>q`form.btnFunction.value='';f1.submit();`, prepend=>['','All'] }  ).'</li>';
+	}
+	return;
+)?>
 				<li> 
 					<label>Product</label>
 					<select name="product_id" onchange="if(this.options[this.selectedIndex].value != ''){form.btnFunction.value='';f1.submit();}">
