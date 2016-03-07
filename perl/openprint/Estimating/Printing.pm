@@ -53,7 +53,7 @@ sub load_presses {
 my %Services;
 my %Materials;
 
-my $do_initial_filtering = 1;
+my $do_initial_filtering = 0;
 my $max_recursion_depth = 3;
 my %filtered_imposition_cache;
 my $use_filtered_imposition_cache = 0;
@@ -1887,7 +1887,7 @@ if ( 0 ) {
 
 } # end if do_initial_filtering
 #$openprint::log->debug("After filtering qty: $qty_index, Press: $$Press{strid} " . ( sprintf('%.4f', tv_interval( [$master_time])*1000) ) .' usecs' );
-		if ( DEBUG or DEBUG_INITIAL_FILTERING or 1 ) {
+		if ( DEBUG or DEBUG_INITIAL_FILTERING ) {
 			$openprint::log->warn('Impositions after initial filtering for '. $$Press{strid} . ': ' . @impositions . ' time: ' . ( sprintf('%.4f', tv_interval( [$master_time])*1000) ) .' usecs');
 			foreach my $I ( openprint::imposition::sort( @impositions ) ) {
 				$I->display('QTY $' );
@@ -2760,6 +2760,7 @@ if ( 0 ) {
 		} # end nif
 		$$specs{alert} .= $$best_price{alert};
 		my $Paper = $Imposition->Paper();
+$Imposition->layout_width(undef);
 
 		$$specs{'hdnBreakdown'.$qty_index} = breakdown( $best_price, $specs );
 		shift @{$$best_price{Impositions}};
@@ -3196,7 +3197,7 @@ $openprint::log->debug("Needed pages: $needed_pages") if DEBUG;
 
 
 		if ( $$sig_specs{'chkOverrideGrainDirection'.$qty_index} eq 'Y' ) {
-			if ( $imp->dutch_columns() ) {
+			if ( $$imp{dutch_columns} ) {
 				$imp->display("Has Dutch") if DEBUG_FILTERING;
 				next;
 			} # end if
@@ -3266,11 +3267,22 @@ $$sig_specs{PreviousGrainDirection} and ( $imp->grain_direction() ne $$sig_specs
 			my @press_impositions = map { $$_{Press}{strid} eq $strid ? $_ : ()  } @results;
 
 			my @matching_impositions = map { $$_{imposition} == $$sig_specs{'txtImposition'.$qty_index} ? $_ : () } @press_impositions;
+			if ( DEBUG_FILTERING ) {
+				if ( @matching_impositions ) {
+					foreach my $i ( @matching_impositions ) {
+						$i->display("Matched");
+					}
+				}else{
+					foreach my $i ( @press_impositions ) {
+						$i->display("Not Matched");
+					}
+				}
+			}
 			if ( ! @matching_impositions ) {
 
 				$openprint::log->debug( " Didn't find the desired imposition, so cutting them down.");
 				my @lesser_imps = map { $$_{imposition} > $$sig_specs{'txtImposition'.$qty_index} ? $_ : () } @press_impositions;
-				while ( @lesser_imps and !@matching_impositions ) {
+				while ( @lesser_imps and ! @matching_impositions ) {
 					@lesser_imps = map { $$_{imposition} >= $$sig_specs{'txtImposition'.$qty_index} ? $_ : () } openprint::imposition::decrease_imposition( @lesser_imps );
 					@matching_impositions = map { $$_{imposition} == $$sig_specs{'txtImposition'.$qty_index} ? $_ : () } @lesser_imps;
 					$openprint::log->debug( " matching imps: " . @matching_impositions );
@@ -5846,7 +5858,7 @@ $openprint::log->debug("Was mixed") if DEBUG_INKS;
 			$price{'Aqueous Breakdown'} .= "AQ error: $aq_results{alert} $$project{AqueousSpecs}{alert} " . $$project{AqueousSpecs}{'hdnBreakdown'.$qty_index} . '<br/>';
 			$price{'Comparison Cost'} += 1000000; 
 		} elsif ( $aq_results{Equipment} ) {
-			$price{'Aqueous Breakdown'} = sprintf('Aqueous Price: %dout MR $%.2f + BC: $%.2f + Service $%.2f + Material $%.2f = $%.2f on %s<br/>', $aq_results{Imposition}->imposition(), @aq_results{'MakeReady','Blanket','Service','Material','Total'}, $aq_results{Equipment}->name() );
+			$price{'Aqueous Breakdown'} = sprintf('Aqueous Price: %dout MR $%.2f + BC: $%.2f + Service $%.2f + Material $%.2f = $%.2f on %s<br/>', $aq_results{Imposition}{imposition}, @aq_results{'MakeReady','Blanket','Service','Material','Total'}, $aq_results{Equipment}->name() );
 			$price{'Comparison Cost'} += $aq_results{Total};
 			$price{'Press Washes'} += $aq_results{washups};
 		} else {
