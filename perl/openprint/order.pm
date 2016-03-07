@@ -128,7 +128,9 @@ sub add_project_to_order {
 	} # end if
 
 	# Can't check an amount, because we havn't selected the quantity to order yet
-	return if check_credit( );
+	if ( check_credit( ) ) {
+		return (undef, 'No more credit.');
+	}
 
 	$order_id = get_unfinished_order( ) if ! $order_id;
 	# get unfinished no longer looks for re-opened orders.

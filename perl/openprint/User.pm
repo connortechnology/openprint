@@ -340,7 +340,7 @@ sub Notifications {
 	} # end if
 	
 	return @{$$self{Notifications}};
-} # end sub notifications
+} # end sub Notifications
 
 sub purchasing_total {
 	require openprint::PurchaseOrder;
