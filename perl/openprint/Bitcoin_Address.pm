@@ -43,6 +43,7 @@ sub generate {
 	} # end if
 	my $New = openprint::Bitcoin_Address->find_one('object_id is null'=>1);
 	if ( ! $New ) {
+eval {
 		require Finance::Bitcoin;
 		require Finance::Bitcoin::API;
 		require Finance::Bitcoin::Wallet;
@@ -71,6 +72,8 @@ $openprint::log->debug($uri);
 			$openprint::log->debug($_);
 
 		} # end if
+};
+				$openprint::log->error( "Eval error of BitcoinAddress Reason: " . $@ ) if $@;
 	} else {
 		$New->save({object_type=>ref $_[1], object_id=>$_[1]{id}});
 	} # end if ! New
