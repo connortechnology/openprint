@@ -5439,8 +5439,8 @@ $openprint::log->warn("No folding equipment");
 		} # end if
 		$blanks_needed -= $$PlateCounts{'Blank'.$plate_id} if $$PlateCounts{'Blank'.$plate_id};
 		$blanks_needed = 0 if $blanks_needed < 0;
+		$plate_setup{'Blank Plates'} = $blanks_needed;
 	} # end if defined require_blank_plates
-	$plate_setup{'Blank Plates'} = $blanks_needed;
 	$plate_setup{'Plate Count'} = $plate_count;
 #$Imposition->display("Plate Count $plate_count");
 
