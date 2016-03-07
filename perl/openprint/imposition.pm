@@ -37,7 +37,9 @@ use vars qw( %blocks );
 sub fit {
 	my ( $object_width, $object_height, $space_width, $space_height ) = @_;
 	my $imp1 = new openprint::Imposition;
+	$$imp1{image_orientation} = 'Vertical';
 	my $imp2 = new openprint::Imposition;
+	$$imp2{image_orientation} = 'Horizontal';
 	calc_setup( $imp1, $object_width, $object_height, $space_width, $space_height );
 	calc_setup( $imp2, $object_height, $object_width, $space_width, $space_height );
 	return $$imp1{imposition} > $$imp2{imposition} ? $imp1 : $imp2;
