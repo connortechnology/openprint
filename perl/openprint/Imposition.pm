@@ -219,8 +219,8 @@ sub set {
 	} # end foreach
 	$self->{imposition} = $$self{rows} * $$self{columns} + $$self{dutch_rows} * $$self{dutch_columns};
 	
-	layout_width(undef);
-	layout_height(undef);
+	$self->layout_width(undef);
+	$self->layout_height(undef);
 
 } # end sub set
 
