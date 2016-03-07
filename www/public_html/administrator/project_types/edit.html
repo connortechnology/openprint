@@ -1,4 +1,5 @@
 <form id="f1" name="f1" method="post" action="edit.html" enctype="multipart/form-data">
+	<input type="hidden" name="btnFunction"/>
 	<fieldset class="filters"><legend>Search Information</legend>
 		<div class="content">
 			<ul>
@@ -134,7 +135,7 @@
 		</div>	
 	</fieldset>
 	</div>
-<?include('_logs.html')?>
+	<? echo ( include_logs( $$variable{ProjectType} ); ) ?>
 <? endif ( $$variable{'ProjectType'}->id() ) ?>
 	<br class="spacer"/>
 	<input type="hidden" name="btnFunction"/>
