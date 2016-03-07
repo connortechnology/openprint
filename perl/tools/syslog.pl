@@ -295,6 +295,7 @@ $log->debug("# of entries in Object_name_cache: " . keys %{$openprint::Object::n
 			foreach my $ip ( sort keys %host_counts ) {
 				next if ! $host_counts{$ip}{update};
 				next if $host_counts{$ip}{whitelist};
+				
 				if ( $ip eq '127.0.0.1' ) {
 					$log->warn("WTF blacklistint localhost?!");
 					next;
@@ -302,18 +303,20 @@ $log->debug("# of entries in Object_name_cache: " . keys %{$openprint::Object::n
 				if ( ! defined $host_counts{$ip}{count} ) {
 					$host_counts{$ip}{count} = 0;
 				}
-				if ( $host_counts{$ip}{count} > 20 ) {
-					$host_counts{$ip}{blacklist} = 1;
-				} # end if
-				if ( $dbh and $dbh->ping() ) {
-					$_ = $host_counts{$ip}->save();
-					if ( $_ ) {
-						$log->error( $_ );
+				if ( ! $host_counts{$ip}{blacklist} ) {
+					if ( $host_counts{$ip}{count} > 20 ) {
+						$host_counts{$ip}{blacklist} = 1;
 					} # end if
-					$host_counts{$ip}{updated_on_seconds} = time;
-				} # end if
-				#$log->debug( "$ip $host_counts{$ip}{ip} $host_counts{$ip}{count}" ) if $config{debug};
-				`shorewall drop $ip` if $host_counts{$ip}{blacklist};
+					if ( $dbh and $dbh->ping() ) {
+						$_ = $host_counts{$ip}->save();
+						if ( $_ ) {
+							$log->error( $_ );
+						} # end if
+						$host_counts{$ip}{updated_on_seconds} = time;
+					} # end if
+					#$log->debug( "$ip $host_counts{$ip}{ip} $host_counts{$ip}{count}" ) if $config{debug};
+					`shorewall drop $ip` if $host_counts{$ip}{blacklist};
+				} # end if wasn't blacklisted, but now is
 			} # end foreach ip
 			$changed = 0;
 		} elsif ( $config{debug} ) {
