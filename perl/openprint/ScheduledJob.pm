@@ -20,7 +20,7 @@ require openprint::Shift;
 require openprint::employee_production;
 require openprint::ProductionFeedback;
 
-$debug = 1;
+$debug = 0;
 $table = 'schedule';
 $serial = 'schedule_id_seq';
 
@@ -107,7 +107,7 @@ sub startdate_seconds {
 
 sub endtime {
 	if ( ! $_[0]{endtime} ) {
-		$_[0]{endtime} = Date::Format::time2str( '%Y-%m-%d %H:%M:%S%z', $_[0]->starttime_seconds() + $_[0]->duration_seconds() );
+		$_[0]{endtime} = Date::Format::time2str( '%Y-%m-%d %H:%M:%S%z', $_[0]->starttime_seconds() + $_[0]->runtime_seconds() );
 	} # end if
 	return $_[0]{endtime};
 } # end sub endtime_seconds
