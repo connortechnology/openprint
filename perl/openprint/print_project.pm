@@ -513,7 +513,7 @@ $log->debug("other quantities @other_quantities");
 $log->debug("Next qty $next_qty_index");
 
 		if ( $param{"txtQuantity$qty_index"} != $Project->quantity($qty_index) ) {
-$log->debug("adding new quantity $qty_index");
+$log->debug("changing new quantity $qty_index from " . $Project->quantity($qty_index) . ' to ' . $param{"txtQuantity$qty_index"} );
 			if ( ! $param{"txtQuantity$qty_index"} ) { # Project has a quantity, we are deleting it
 				foreach my $service_id ( @service_ids ) {
 					foreach my $spec ( map { $_.$qty_index } ( 'txtPrice','txtUnitPrice','txtQuantity' ) ) {
