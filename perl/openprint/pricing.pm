@@ -280,6 +280,7 @@ sub get_Price {
 						( ( ! defined $P->{max} ) or $P->{max} >= $qty )
 				   ) {
 					$Price = $P->clone();
+					last;
 				} # end if
 			} # end foreach
 		} # end if qty
