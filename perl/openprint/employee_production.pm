@@ -1332,6 +1332,7 @@ sub reorder_jobs {
 		$log->warn("No Jobs");
 		return;
 	} # end if
+	$log->debug("Reorder jobs: " . join(',', map { $_->Project()->docket() } @order ) );
 
 	# Cache for speed
 	openprint::Project->find(id=>[map { $_->project_id() ? $_->project_id() : () } @order ]);
@@ -1355,9 +1356,11 @@ sub reorder_jobs {
 	push @{$variable{changed}}, $row->Shift()->ul_id();
 
 	# This is if there is a job currently running, then use it's start time as the beginning of the schedule
-	if ( $row->locked() and ( $row->starttime_seconds() < $start_time ) ) {
-#$log->debug("Running job,moving up starttime");
-		$start_time = $row->starttime_seconds();
+	if ( $row->locked() and ( $row->endtime_seconds() < $start_time ) ) {
+$log->debug("Running job,moving up starttime");
+		$row->runtime_seconds( $start_time - $row->starttime_seconds() );
+		$start_time = $row->endtime_seconds()+1;
+		$row->save();
 	} # end if
 $log->debug("Grab all start time is $start_time");
 	# Grab all shifts.  We will only add a shift at the end
@@ -1403,22 +1406,27 @@ $log->debug("NES: " . $NextES->name() );
 	my @fixed_jobs = ();
 	for ( my $i = 0; $i < @order; $i += 1 ) {
 		if ( $order[$i]{starttime} and $order[$i]{locked} ) {
+$log->debug(" splicing $order[$i]{starttime} $i " . $order[$i]->Project()->docket() );
 			push @fixed_jobs, splice @order, $i, 1;
 			$i -= 1;
 			next;
 		} # end if
+if ( 0 ) {
 		# Tentative jobs do not affect non-tentative jobs
 		if ( $order[$i]{tentative} ) {
+$log->debug(" splicing $order[$i]{starttime} $i " . $order[$i]->Project()->docket() );
 			splice @order, $i, 1;
 			$i -= 1;
 		} # end if
+}
 	} # end for
 	$log->debug("Fixed jobs: " . join(',', map { $_->Project()->docket() } @fixed_jobs ) );
+	$log->debug("Free jobs: " . join(',', map { $_->Project()->docket() } @order ) );
 
 	my @jobs_in_shift;
 	while ( @order ) {
 		my $row = shift @order;
-		my $run_time = $row->runtime_seconds();
+		my $run_time = $$row{tentative} ? 1 : $row->runtime_seconds();
 $log->debug("run time for " . $row->Project()->docket() . ' is ' . $run_time );
 if ( ! $run_time ) {
 $log->error("JOb $$row{id} " . $row->Project()->docket() . ' is 0, making it 1' );
