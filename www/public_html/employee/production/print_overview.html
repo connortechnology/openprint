@@ -106,6 +106,9 @@
 	function up_job( job_id ) {
 		new Ajax.Request( '/employee/production/_li_change.json', {parameters: { schedule_id:job_id, action: 'Up' }, evalScripts: true } );
 	} // end function up_job
+	function down_job( job_id ) {
+		new Ajax.Request( '/employee/production/_li_change.json', {parameters: { schedule_id:job_id, action: 'Down' }, evalScripts: true } );
+	} // end function up_job
 
 	function update_runtime( ddm ) {
 		ddm.form.runtime.value = ddm.form.runtime_hours.value + ':' + ddm.form.runtime_minutes.value + ':' + ddm.form.runtime_seconds.value;
