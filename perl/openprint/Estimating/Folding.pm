@@ -2143,7 +2143,7 @@ sub cut_spreads {
 	my ( $I ) = @_;
 
 	my @results;
-	if ( $$I{spread_rows} >= ( $$I{image_orientation} eq 'Horizontal' ? $$I{spread_size}/2 : 1 ) ) {
+	if ( $$I{spread_rows} > ( $$I{image_orientation} eq 'Horizontal' ? ($$I{spread_size}/2)-1 : 1 ) ) {
 	#if ( $I->spread_rows() > $I->spread_columns() ) {
 		
 		if ( $$I{spread_rows} % 2 ) {
@@ -2208,7 +2208,7 @@ sub cut_spreads {
 		#} else {
 
 
-	if ( $$I{spread_columns} >= ( $$I{image_orientation} eq 'Horizontal' ? 1 : $$I{spread_size}/2 ) ) {
+	if ( $$I{spread_columns} > ( $$I{image_orientation} eq 'Horizontal' ? 1 : ($$I{spread_size}/2)-1 ) ) {
 		if ( $$I{spread_columns} % 2 ) {
 			my $i1 = $I->copy();
 			$i1->spread_columns(1);
