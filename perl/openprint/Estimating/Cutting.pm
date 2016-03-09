@@ -1243,7 +1243,7 @@ $openprint::log->debug("Paper: " . $Paper->to_string() ) if DEBUG;
 			$$specs{"txtStockCutPrice-$qty_index"} = sprintf('%.2f', $results{Price} );
 			foreach my $Stock_Amount ( @{$results{Stocks}} ) {
 				if ( ! $$Stock_Amount{Equipment} ) {
-					$openprint::log->error("No Equipment for stock cutting for " . $Stock_Amount->to_string() );
+					$openprint::log->error("No Equipment for stock cutting for " . $$Stock_Amount{Stock}->to_string() );
 					$$specs{"ddmStockCutEquipment-$$Stock_Amount{index}-$qty_index"} = '';
 				} else {
 					$openprint::log->debug("Setting Equipment for stock cutting for " . $$Stock_Amount{Stock}->to_string() . ' to ' . $$Stock_Amount{Equipment}->strid() );
