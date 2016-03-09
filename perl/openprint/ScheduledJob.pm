@@ -20,7 +20,7 @@ require openprint::Shift;
 require openprint::employee_production;
 require openprint::ProductionFeedback;
 
-$debug = 0;
+$debug = 1;
 $table = 'schedule';
 $serial = 'schedule_id_seq';
 
