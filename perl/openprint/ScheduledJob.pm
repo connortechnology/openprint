@@ -74,7 +74,7 @@ sub runtime_seconds {
 	if ( ! $seconds ) {
 		$log->error("Got nothing for $_[0]{runtime} from misc::hms2time");
 	} elsif ( $debug ) {
-		$log->error("Got $seconds seconds for $_[0]{runtime} from misc::hms2time");
+		$log->debug("Got $seconds seconds for $_[0]{runtime} from misc::hms2time");
 	}
 	
 	return $seconds;
