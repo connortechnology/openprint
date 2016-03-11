@@ -1754,9 +1754,9 @@ $log->debug("second job can't move");
 					if ( $Jobs[$index]->Shift()->ul_id() ne $Jobs[$index+1]->Shift()->ul_id() ) {
 						# If the previous shift is empty
 						if ( ! $Job->Shift()->Next()->Schedule() ) {
-							push @{$variable{changed}}, $Job->ul_id();
+							push @{$variable{changed}}, $Job->Shift()->ul_id();
 							$Job->starttime( $Jobs[$index+1]->Shift()->Next()->starttime() );
-							push @{$variable{changed}}, $Job->ul_id();
+							push @{$variable{changed}}, $Job->Shift()->ul_id();
 						} # end if
 					} # end if
 					$_ = $Jobs[$index]{starttime};
