@@ -147,7 +147,7 @@ sub layout_height {
 				} # end if
 			} # end if
 		} else {
-$openprint::log->error("Unknown orientation $_[0]{image_orientation}");
+$openprint::log->debug("Unknown orientation $_[0]{image_orientation}");
 		} # end if
 	} 
 	return $_[0]{layout_height};
