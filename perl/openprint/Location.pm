@@ -513,6 +513,24 @@ sub address_line {
 	return $_[0]{address_line};
 } # end sub address_line
 
+sub address_formatted {
+	if ( ! $_[0]{address_formatted} ) {
+		my $L = $_[0];
+		$_[0]{address_formatted} = '';
+		if ( $$L{company_id} ) {
+			$$L{address_formatted} .= $L->Company()->name()."\n";
+		}
+		if ( $L->address() ) {
+			$_[0]{address_formatted} .= $L->address() . "\n";
+		} # end if
+		$_[0]{address_formatted} .= join(', ', map { $_->name() } $L->Parents() ) . "\n";
+		if ( $L->postalcode() ) {
+			$_[0]{address_formatted} .= $L->postalcode() . "\n";
+		} # end if
+	} # end if
+	return $_[0]{address_formatted};
+}
+
 sub where {
 	if ( ! $_[0]{where} ) {
 		my $L = $_[0];
@@ -832,5 +850,9 @@ sub three_letter {
 	} # end if
 	return $_[0]{three_letter};
 } # end sub three_letter
+
+sub Company {
+	return new openprint::Company($_[0]{company_id});
+}
 1;
 __END__
