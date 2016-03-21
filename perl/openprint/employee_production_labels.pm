@@ -18,18 +18,41 @@ sub index {
 } # end sub index
 
 sub _label {
-	my $Label = new openprint::Label( $param{id} );
+	my $Label = $variable{Label} = new openprint::Label( $param{id} );
 	if ( $param{id} and ! $$Label{id} ) {
 		$variable{error} .= "Invalid label specified.  Label $param{id} does not exist.";
 		return;
 	} # end if
 	if ( $param{action} eq 'update' ) {
-		$param{value} =~ s/<br\/>/\n/ig;
-		$Label->set_data($param{field}=>$param{value});
+		if ( exists $param{value} ) {
+			$param{value} =~ s/<br\/>/\n/ig;
+			$Label->set_data($param{field}=>$param{value});
+		} elsif ( exists $param{location_id} ) {
+			my $old = $Label->get_data( $param{field} );
+$log->debug("Ol is $old");
+
+			my $OldLocation = openprint::Location->find_one(id=>$Label->get_data($param{field}.'_location_id')) if $Label->get_data($param{field}.'_location_id');
+$log->debug("OldLocation is " . $OldLocation->to_string() ) if $OldLocation;
+			my $NewLocation = openprint::Location->find_one(id=>$param{location_id});
+$log->debug("NewLocation is " . $NewLocation->to_string() ) if $NewLocation;
+			if ( $NewLocation ) {
+				if ( $OldLocation ) {
+					my $oldaddress = $OldLocation->address_formatted();
+					my ( $first, $last ) = $old =~ /(.*)$oldaddress(.*)/m;
+$log->debug("Got first ($first) and last ($last) from $old oldaddress($oldaddress)");
+					my $newfrom = $1.$NewLocation->address_formatted().$2;
+					$Label->set_data($param{field}=>$newfrom);
+				} else {
+					$Label->set_data($param{field}=>$NewLocation->address_formatted());
+				}
+			} else {
+				$variable{error} .= 'Location not found.';
+			}
+		} # end if
+
 		$variable{error} .= $Label->save();
-		$variable{PageContent} = join('',$Label->get_data($param{field}));
 	} elsif ( $param{action} eq 'get' ) {
-		$variable{PageContent} = join('',$Label->get_data($param{field}));
+
 	} elsif ( $param{action} eq 'getnohtml' ) {
 		$variable{PageContent} = join('',$Label->get_data($param{field}));
 		$variable{PageContent} =~ s/<br\/>/\n/ig;
