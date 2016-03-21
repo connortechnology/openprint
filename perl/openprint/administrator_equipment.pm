@@ -89,13 +89,20 @@ sub export_specs {
 
 sub edit {
 	my $Equipment = new openprint::Equipment( $param{ddmEquipment} );
+	if ( $param{ddmEquipment} and ! $$Equipment{id} ) {
+		$variable{error} .= "Equipment $param{ddmEquipment} not found.<br/>";
+	}
 
 	if ( $param{btnFunction} eq 'Next' ) {
 		$Equipment = $Equipment->Next();
 	} elsif ( $param{btnFunction} eq 'Previous' ) {
 		$Equipment = $Equipment->Previous();
 	} elsif ( $param{btnFunction} eq 'Copy' ) {
-		$Equipment = $Equipment->copy();
+		if ( $Equipment->id() ) {
+			$Equipment = $Equipment->copy();
+		} else {
+			$variable{error} .= "No equipment specified. No copy made.";
+		}
 	} elsif ( $param{btnFunction} eq 'Save' ) {
 		$param{servicetype_id} = [ $param{servicetype_id} ] if ref $param{servicetype_id} ne 'ARRAY';
 		$param{category_id} = [ $param{category_id} ] if ref $param{category_id} ne 'ARRAY';
@@ -105,9 +112,15 @@ sub edit {
 		$variable{ExternalRedirect} = '/administrator/equipment/edit.html?ddmEquipment='.$Equipment->id();
 		}
 	
+	} elsif ( $param{btnFunction} eq 'UnDelete' ) {
+		$Equipment->undelete();
+		$variable{ExternalRedirect} = '/administrator/equipment/list.html';
 	} elsif ( $param{btnFunction} eq 'Delete' ) {
 		$Equipment->delete();
 		$Equipment = $Equipment->Next();
+	} elsif ( $param{btnFunction} eq 'Destroy' ) {
+		$Equipment->destroy();
+		$variable{ExternalRedirect} = '/administrator/equipment/list.html';
 	} elsif ( $param{btnFunction} eq 'Import Specifications' ) {
 		$variable{error} .= import_specs( $r, $Equipment );
 	} elsif ( $param{btnFunction} eq 'Export Specifications' ) {
@@ -269,6 +282,19 @@ sub _operators {
 		$variable{error} .= $EO->save( { equipment_id=>$param{equipment_id}, user_id=>$param{user_id} } );
 	} # end if
 } # end sub _operators
+
+sub list {
+	_list();
+	ssi::setup_date_select( '/administrator/equipment/list.html', 'created_on_start', -365 );
+	ssi::setup_date_select( '/administrator/equipment/list.html', 'created_on_end', '' );
+	$openprint::session{'/administrator/equipment/list.html?deleted'} = 'Y' if ! exists $openprint::session{'/administrator/equipment/list.html?deleted'};
+}
+sub _list {
+    ssi::save_params( '/administrator/equipment/list.html', (
+                ( map { 'created_on_start_' . $_ } ( 'year','month','day' ) ),
+				'deleted',
+                ) );
+}
 
 1;
 __END__
