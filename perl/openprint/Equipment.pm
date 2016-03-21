@@ -331,6 +331,7 @@ sub copy {
 	my $new = new openprint::Equipment();
 	@$new{keys %fields} = @$self{keys %fields};
 	delete $$new{id};
+	$$new{deleted} = 0;
 	$$new{name} = 'Copy of ' . $$new{name};
 	$new->save();
 
@@ -520,6 +521,10 @@ sub Operators {
 	} # end if
 	return @{$_[0]{Operators}};
 } # end sub Operators
+
+sub link_to {
+	return '<a href="/administrator/equipment/edit.html?ddmEquipment='.$_[0]{id}.'">'.(@_ > 1 ? $_[1] : $_[0]{strid}).'</a>';
+}
 
 1;
 __END__
