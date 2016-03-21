@@ -74,7 +74,11 @@ new Ajax.Request('/administrator/equipment/_specification.html?action=copy&amp;i
 			<select name="ddmEquipment" onchange="if(this.options[this.selectedIndex].value != ''){f1.btnFunction.value='';fmCheck(f1);}" >
 				<option value="">Select Equipment</option>
 <? echo (
-    make_drop_down( [ map { $_->id(), $_->strid().': ' . $_->name() } openprint::Equipment->find( order => 'lower(strID)' ) ], $$variable{Equipment}->id() );
+	my @Equipment = openprint::Equipment->find( 
+		( $param{ddmEquipment} ? ( or=>{deleted=>0, id=>$param{ddmEquipment} } ) : () ),
+		order => 'lower(strID)',
+		);
+    make_drop_down( [ map { $_->id(), join(': ', $_->strid(), $_->name() ) } @Equipment ], $$variable{Equipment}->id() );
 ) ?>
 			</select>
 		</li>
@@ -84,7 +88,12 @@ new Ajax.Request('/administrator/equipment/_specification.html?action=copy&amp;i
 				button( 'PreviousTop', { onclick=>"f1.btnFunction.value='Previous';fmCheck(f1);", text=>'Previous' } ),
 				button( 'NextTop', { onclick=>"f1.btnFunction.value='Next';fmCheck(f1);", text=>'Next' } ),
 				button( 'NewTop', { onclick=>"addCheck(\$('f2'));", text=>'New' } ),
+				( $$variable{Equipment}->deleted() ? (
+				button( 'Destroy', { onclick=>"f1.btnFunction.value='Destroy';fmChange=2;fmCheck(f1);", text=>'Destroy' } ),
+				button( 'UnDelete', { onclick=>"f1.btnFunction.value='UnDelete';fmChange=2;fmCheck(f1);", text=>'UnDelete' } ),
+				) : (
 				button( 'DeleteTop', { onclick=>"f1.btnFunction.value='Delete';fmChange=2;fmCheck(f1);", text=>'Delete' } ),
+				) ),
 				button( 'SaveTop', { onclick=>q`$('f2').btnFunction.value='Save';fmChange=3;fmCheck($('f2'));`, text=>'Save' } ),
 				button( 'CopyTop', { onclick=>"f1.btnFunction.value='Copy';f1.submit();", text=>'Copy' } ),
 				button( 'ResetTop', { onclick=>'f1.reset();', text=>'Reset' } ),
