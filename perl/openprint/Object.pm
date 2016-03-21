@@ -841,14 +841,15 @@ $log->error("returning nothing for $object_type $cache_field $$params{$cache_fie
 		delete $search{custom};
 	} # end if
 
-	if ( $$fields{deleted} and ! sets::isin( 'deleted', \@used_fields ) ) {
-		push @where, 'deleted=?';
-		push @values, 0;
-	} # end if
-
 	if ( $$params{or} ) {
 		if ( ref $$params{or} eq 'HASH' ) {
 			my ( $where, $values, $used_fields ) = get_fields_values( $object_type, $$params{or},  [ keys %{$$params{or}} ] );
+
+			if ( $$fields{deleted} and ( ! sets::isin( 'deleted', $used_fields ) ) and ( ! sets::isin( 'deleted', \@used_fields ) ) ) {
+				push @where, 'deleted=?';
+				push @values, 0;
+			} # end if
+
 			if ( @where ) {
 				$sql .= ' WHERE ( ' . join(' AND ', @where ) . ' ) AND ( ' . join(' OR ', @{$where} ) . ')';
 			} else {
@@ -858,6 +859,10 @@ $log->error("returning nothing for $object_type $cache_field $$params{$cache_fie
 		} elsif ( ref $$params{or} eq 'ARRAY' ) {
 			my %s = @{$$params{or}};
 			my ( $where, $values, $used_fields ) = get_fields_values( $object_type, \%s,  [ keys %s ] );
+			if ( $$fields{deleted} and ( ! sets::isin( 'deleted', $used_fields ) ) and ( ! sets::isin( 'deleted', \@used_fields ) ) ) {
+				push @where, 'deleted=?';
+				push @values, 0;
+			} # end if
 			if ( @where ) {
 				$sql .= ' WHERE ( ' . join(' AND ', @where ) . ' ) AND ( ' . join(' OR ', @{$where} ) . ')';
 			} else {
@@ -866,6 +871,10 @@ $log->error("returning nothing for $object_type $cache_field $$params{$cache_fie
 			push @values, @{$values};
 
 		} else {
+			if ( $$fields{deleted} and ( ! sets::isin( 'deleted', $used_fields ) ) and ( ! sets::isin( 'deleted', \@used_fields ) ) ) {
+				push @where, 'deleted=?';
+				push @values, 0;
+			} # end if
 			if ( @where ) {
 				$sql .= ' WHERE ( ' . join(' AND ', @where ) . ' ) OR ( ' . $$params{or} . ')';
 			} else {
@@ -873,6 +882,10 @@ $log->error("returning nothing for $object_type $cache_field $$params{$cache_fie
 			} # end if
 		} # end if
 	} else {
+	if ( $$fields{deleted} and ! sets::isin( 'deleted', \@used_fields ) ) {
+		push @where, 'deleted=?';
+		push @values, 0;
+	} # end if
 		$sql .= ' WHERE ' . join(' AND ', @where ) if @where;
 	} # end if
 	if ( exists $$params{order} ) {
