@@ -95,7 +95,8 @@ sub has_overrides {
 } # end sub has_overrides
 
 sub signature_needs {
-	my ( $Project, $sig_specs ) = @_;
+	my ( $Project, $specs, $sig_specs, $q_index ) = @_;
+
 
 	if ( $Project->Type()->name() eq 'Envelopes' ) {
         $openprint::log->debug(" ** Project Type is Envelopes, Cutting Service is NOT needed ** ") if DEBUG;
@@ -108,11 +109,14 @@ sub signature_needs {
         return 0;
     } # end if
 
-	foreach my $qty_index ( $Project->quantity_indexes() ) {
+	$specs = openprint::service::get_specs_ref( $Project, $$services{Cutting}[0] ) if ! $specs;
+
+	foreach my $qty_index ( $q_index ? ( $q_index ) : $Project->quantity_indexes() ) {
 #$openprint::log->debug("Cutting sig needs: imp: " .  $$specs{'txtImposition'.$qty_index} );
 #$openprint::log->debug("Cutting sig needs: stock: " . join('x', @$specs{'hdnSuppliedStockWidth'.$qty_index,'hdnSuppliedStockHeight'.$qty_index} ) );
 #$openprint::log->debug("Cutting sig needs: ssize: " . join('x', @$specs{'txtWidth','txtHeight'} ) );
 		if ( $$sig_specs{'txtImposition'.$qty_index} > 1 ) {
+			$openprint::log->debug(" ** Imposition > 1, Cutting needed ! ** ") if DEBUG;
 			return 1;
 		} # end if
 		if ( ! (
@@ -124,9 +128,13 @@ sub signature_needs {
 						and $$sig_specs{'hdnSuppliedStockHeight'.$qty_index} == $$sig_specs{txtWidth}
 						)
 			   ) ) {
+			$openprint::log->debug(" Supplied Width $$sig_specs{'hdnSuppliedStockWidth'.$qty_index} != $$sig_specs{txtWidth} or $$sig_specs{'hdnSuppliedStockHeight'.$qty_index} != $$sig_specs{txtHeight} Cutting needed ! ** ") if DEBUG;
 			return 1;
 		} # end if
-	} # end foreach
+		if ( $specs and $$specs{"chkOverrideCalculatedCuts-$$sig_specs{SignatureIndex}-$qty_index"} ) {
+			return 1;
+		}
+	} # end foreach qty_index
 
 	foreach my $service_name ( 'PlasticCoil', 'MetalCoil', 'PlasticComb', 'Cerlox', 'DoubleLoopWire' ) {
 		if ( $$services{$service_name} ) {
@@ -153,10 +161,11 @@ sub neccessary {
 			return 1;
 		} # end if
 	} # end foreach
+	my $specs = openprint::service::get_specs_ref( $Project, $$services{Cutting}[0] ) if $$services{Cutting} and @{$$services{Cutting}};
 
 	foreach my $signature_service_index ( $Project->signatures() ) {
-		my $specs = openprint::service::get_specs_ref( $Project, $signature_service_index );
-		if ( signature_needs( $Project, $specs ) ) {
+		my $sig_specs = openprint::service::get_specs_ref( $Project, $signature_service_index );
+		if ( signature_needs( $Project, $specs, $sig_specs ) ) {
 			return 1;
 		} # end if
 	} # end foreach
@@ -1177,7 +1186,7 @@ sub calc {
 			my $sig_specs = openprint::service::get_specs_ref( $Project, $signature_service_index );
 			my $form = $$sig_specs{SignatureIndex};
 			$$specs{'hdnBreakdown'.$qty_index} .= "Signature: $form $$sig_specs{txtSignatureType}<br/>";
-			if ( ! $$sig_specs{'txtImposition'.$qty_index} ) {
+			if ( ! ( $$sig_specs{'txtImposition'.$qty_index} and signature_needs( $Project, $specs, $sig_specs, $qty_index ) ) ) {
 				$$specs{'hdnBreakdown'.$qty_index} .= 'no imposition.';
 				$$specs{"txtRegularCutPrice-$form-$qty_index"} = '';
 				$$specs{"ddmEquipment-$form-$qty_index"}  = '';
