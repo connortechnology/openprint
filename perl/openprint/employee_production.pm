@@ -1332,6 +1332,7 @@ sub reorder_jobs {
 		$log->warn("No Jobs");
 		return;
 	} # end if
+	$log->debug("Reorder jobs: " . join(',', map { $_->Project()->docket() } @order ) );
 
 	# Cache for speed
 	openprint::Project->find(id=>[map { $_->project_id() ? $_->project_id() : () } @order ]);
@@ -1355,9 +1356,11 @@ sub reorder_jobs {
 	push @{$variable{changed}}, $row->Shift()->ul_id();
 
 	# This is if there is a job currently running, then use it's start time as the beginning of the schedule
-	if ( $row->locked() and ( $row->starttime_seconds() < $start_time ) ) {
-#$log->debug("Running job,moving up starttime");
-		$start_time = $row->starttime_seconds();
+	if ( $row->locked() and ( $row->endtime_seconds() < $start_time ) ) {
+$log->debug("Running job,moving up starttime");
+		$row->runtime_seconds( $start_time - $row->starttime_seconds() );
+		$start_time = $row->endtime_seconds()+1;
+		$row->save();
 	} # end if
 $log->debug("Grab all start time is $start_time");
 	# Grab all shifts.  We will only add a shift at the end
@@ -1403,22 +1406,27 @@ $log->debug("NES: " . $NextES->name() );
 	my @fixed_jobs = ();
 	for ( my $i = 0; $i < @order; $i += 1 ) {
 		if ( $order[$i]{starttime} and $order[$i]{locked} ) {
+$log->debug(" splicing $order[$i]{starttime} $i " . $order[$i]->Project()->docket() );
 			push @fixed_jobs, splice @order, $i, 1;
 			$i -= 1;
 			next;
 		} # end if
+if ( 0 ) {
 		# Tentative jobs do not affect non-tentative jobs
 		if ( $order[$i]{tentative} ) {
+$log->debug(" splicing $order[$i]{starttime} $i " . $order[$i]->Project()->docket() );
 			splice @order, $i, 1;
 			$i -= 1;
 		} # end if
+}
 	} # end for
 	$log->debug("Fixed jobs: " . join(',', map { $_->Project()->docket() } @fixed_jobs ) );
+	$log->debug("Free jobs: " . join(',', map { $_->Project()->docket() } @order ) );
 
 	my @jobs_in_shift;
 	while ( @order ) {
 		my $row = shift @order;
-		my $run_time = $row->runtime_seconds();
+		my $run_time = $$row{tentative} ? 1 : $row->runtime_seconds();
 $log->debug("run time for " . $row->Project()->docket() . ' is ' . $run_time );
 if ( ! $run_time ) {
 $log->error("JOb $$row{id} " . $row->Project()->docket() . ' is 0, making it 1' );
@@ -1689,6 +1697,77 @@ sub _li_change {
 		} else {
 			$variable{error} .= $Job->bump( $param{equipment_id} );
 		} # end if
+	} elsif ( $param{action} eq 'Down' ) {
+		my $Job = new openprint::ScheduledJob( $param{schedule_id} );
+		if ( ! $$Job{id} ) {
+			$variable{error} .= 'Job was not found in db. Maybe you should refresh the schedule.';
+			sql::end_transaction( $dbh, $ac );
+			return;
+		} # end if
+		my @Jobs = openprint::ScheduledJob->find( 'starttime is null'=>0, equipment_id=>$$Job{equipment_id}, order=>'starttime' );
+		if ( ! @Jobs ) {
+			# Told to bump a job up but it has already been removed.
+			
+		} # end if/LO
+		
+		my $index = 0;
+		for(;$index < @Jobs and $Jobs[$index]{id} != $$Job{id}; $index += 1 ) {};
+		if ( ! $index ) {
+			# was first in the list
+			$log->debug("Was first in list.");
+		} elsif ( $index == @Jobs ) {
+			$log->error("Job $$Job{id} not found in list." . join(',', map { $$_{id} } @Jobs ) );
+			$index = 0;
+		} else {
+			$log->debug("Job foudn at $index");
+		} # end if
+
+		if ( $Job->Equipment()->smartscheduling() ) {
+			if ( ( $index < @Jobs -1 ) and $Jobs[$index+1]->locked() ) {
+$log->debug("second job can't move");
+				$variable{error} .= "Cant move locked job " . $Jobs[$index+1]->Project()->docket();
+				sql::end_transaction( $dbh, $ac );
+				return;
+			} elsif ( $index < @Jobs-1 ) {
+				my $switch_index = $index+1;
+				while ( ( $switch_index < @Jobs ) and $Jobs[$switch_index]->locked() ) { $switch_index += 1; }
+				if ( $switch_index < 0 ) {
+					$variable{error} .= "Cant move locked jobs";
+					sql::end_transaction( $dbh, $ac );
+					return;
+				} # end if
+				$_ = $Jobs[$switch_index];
+				$Jobs[$switch_index] = $Jobs[$index];
+				$Jobs[$index] = $_;
+			} else {
+				$variable{error} .= "Job already at the end";
+				sql::end_transaction( $dbh, $ac );
+				return;
+			} # end if
+			reorder_jobs( @Jobs );
+		} else {
+			if ( @Jobs ) {
+				push @{$variable{changed}}, $Jobs[$index]->Shift()->ul_id();
+				if ( $index < @Jobs - 1 ) {
+					# IF there are jobs, and we are higher than second in the list
+					# If the current job's shift is different from the previous job's shift...
+					if ( $Jobs[$index]->Shift()->ul_id() ne $Jobs[$index+1]->Shift()->ul_id() ) {
+						# If the previous shift is empty
+						if ( ! $Job->Shift()->Next()->Schedule() ) {
+							push @{$variable{changed}}, $Job->Shift()->ul_id();
+							$Job->starttime( $Jobs[$index+1]->Shift()->Next()->starttime() );
+							push @{$variable{changed}}, $Job->Shift()->ul_id();
+						} # end if
+					} # end if
+					$_ = $Jobs[$index]{starttime};
+					$Jobs[$index]{starttime} = $Jobs[$index+1]{starttime};
+					$Jobs[$index+1]{starttime} = $_;
+					$Jobs[$index]->save();
+					$Jobs[$index+1]->save();
+					push @{$variable{changed}}, $Jobs[$index+1]->Shift()->ul_id();
+				} # end if index
+			} # end if can do anyhing
+		} # end if
 	} elsif ( $param{action} eq 'Up' ) {
 		my $Job = new openprint::ScheduledJob( $param{schedule_id} );
 		if ( ! $$Job{id} ) {
@@ -1710,6 +1789,8 @@ sub _li_change {
 		} elsif ( $index == @Jobs ) {
 			$log->error("Job $$Job{id} not found in list." . join(',', map { $$_{id} } @Jobs ) );
 			$index = 0;
+		} else {
+			$log->debug("Job foudn at $index");
 		} # end if
 
 		if ( $Job->Equipment()->smartscheduling() ) {
@@ -1733,13 +1814,13 @@ $log->debug("second job can't move");
 			reorder_jobs( @Jobs );
 		} else {
 			if ( @Jobs ) {
-				if ( $index > 1 ) {
+				if ( $index > 0 ) {
 					# IF there are jobs, and we are higher than second in the list
 					# If the current job's shift is different from the previous job's shift...
 					if ( $Jobs[$index]->Shift()->ul_id() ne $Jobs[$index-1]->Shift()->ul_id() ) {
 						# If the previous shift is empty
 						if ( ! $Job->Shift()->Previous()->Schedule() ) {
-							push @{$variable{changed}}, $Job->ul_id();
+							push @{$variable{changed}}, $Job->Shift()->ul_id();
 							$Job->starttime( $Jobs[$index-1]->Shift()->Next()->starttime() );
 						} # end if
 					} # end if
@@ -1962,6 +2043,9 @@ sub _li {
 		my $stock = $Job->stock();
 		if ( ! ( $stock =~ /House Stock/ ) ) {
 			$Job->save({stock=>$stock.' House Stock'});	
+		} else {
+			$stock =~ s/House Stock//g;
+			$Job->save({stock=>$stock});	
 		} # end if
 	} # end if
 } # end sub _li

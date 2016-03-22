@@ -28,7 +28,7 @@ require openprint::Estimating::Perforating;
 
 use vars qw( @folds %fold_types );
 
-use constant DEBUG => 0;
+use constant DEBUG => 1;
 use constant DEBUG_NEEDS => 0;
 
 my @equipment;
@@ -2143,8 +2143,11 @@ sub cut_spreads {
 	my ( $I ) = @_;
 
 	my @results;
-	if ( $$I{spread_rows} >= ( $$I{image_orientation} eq 'Horizontal' ? $$I{spread_size}/2 : 1 ) ) {
+	if ( ( $$I{spread_rows} > 1 ) and 
+		( ( $$I{image_orientation} eq 'Horizontal' ) or ( $$I{spread_rows} >= ($$I{spread_size}/2) ) )
+	   ) {
 	#if ( $I->spread_rows() > $I->spread_columns() ) {
+$openprint::log->debug("Cutting rows $$I{spread_rows} > ( $$I{image_orientation} eq 'Horizontal' ? ($$I{spread_size}/2)-1 : 1 )" );
 		
 		if ( $$I{spread_rows} % 2 ) {
 			my $i1 = $I->copy();
@@ -2208,7 +2211,9 @@ sub cut_spreads {
 		#} else {
 
 
-	if ( $$I{spread_columns} >= ( $$I{image_orientation} eq 'Horizontal' ? 1 : $$I{spread_size}/2 ) ) {
+	if ( ( $$I{spread_columns} > 1 ) and 
+		( ( $$I{image_orientation} eq 'Horizontal' ) or ( $$I{spread_columns} >= ($$I{spread_size}/2) )
+		) ) {
 		if ( $$I{spread_columns} % 2 ) {
 			my $i1 = $I->copy();
 			$i1->spread_columns(1);

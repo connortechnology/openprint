@@ -74,7 +74,7 @@ sub runtime_seconds {
 	if ( ! $seconds ) {
 		$log->error("Got nothing for $_[0]{runtime} from misc::hms2time");
 	} elsif ( $debug ) {
-		$log->error("Got $seconds seconds for $_[0]{runtime} from misc::hms2time");
+		$log->debug("Got $seconds seconds for $_[0]{runtime} from misc::hms2time");
 	}
 	
 	return $seconds;
@@ -107,7 +107,7 @@ sub startdate_seconds {
 
 sub endtime {
 	if ( ! $_[0]{endtime} ) {
-		$_[0]{endtime} = Date::Format::time2str( '%Y-%m-%d %H:%M:%S%z', $_[0]->starttime_seconds() + $_[0]->duration_seconds() );
+		$_[0]{endtime} = Date::Format::time2str( '%Y-%m-%d %H:%M:%S%z', $_[0]->starttime_seconds() + $_[0]->runtime_seconds() );
 	} # end if
 	return $_[0]{endtime};
 } # end sub endtime_seconds
@@ -344,7 +344,8 @@ sub get_li {
 		if ( $$self{project_id} ) {
 			$html .= ssi::button( 'Approve'.$$self{id}, {onclick=>"approve_job('$ul_id',$$self{id});", text=>'A', title=>'Approve' } ) if sets::isin( $Project->status(), 'In Prepress', 'Proofs Out','Waiting For Customer Approval','Waiting For QA Approval' );
 			if ( ! $$self{locked} ) {
-				$html .= ssi::button( 'Up'.$$self{id}, { onclick=>"up_job($$self{id});", text=>'U', title=>'Move Up' } );
+				$html .= ssi::button( 'Up'.$$self{id}, { onclick=>"up_job($$self{id});", text=>'&uarr;', title=>'Move Up' } );
+				$html .= ssi::button( 'Down'.$$self{id}, { onclick=>"down_job($$self{id});", text=>'&darr;', title=>'Move Down' } );
 			} # end if
 		} # end if
 		$html .= ssi::button( 'Bump'.$$self{id}, { onclick=>"popup_window('/employee/production/_bump_job.html','schedule_id=$$self{id}');", text=> 'B', title=>'Bump to next shift' } );
