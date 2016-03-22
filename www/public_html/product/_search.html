@@ -1,22 +1,22 @@
 <? eval (
-	@{$$variable{'Products'}} = ();
+	@{$$variable{Products}} = ();
 	foreach my $Product ( openprint::Product->find( 
-		ssi::date_filter( '/product/search.html?created_on_start','created_on >=' ),
 		ssi::date_filter( '/product/search.html?created_on_end','created_on <=' ),
-			( $session{'/product/search.html?category_id'} ? ( 'category_id' => $session{'/product/search.html?category_id'} ) : () ),
-			'order'				=> 'created_on',
+		ssi::date_filter( '/product/search.html?created_on_start','created_on >=' ),
+			( $session{'/product/search.html?category_id'} ? ( category_id => $session{'/product/search.html?category_id'} ) : () ),
+			order				=> 'created_on',
 		) ) {
 		next if ! $Product->can_view();
-		push @{$$variable{'Products'}}, $Product;
+		push @{$$variable{Products}}, $Product;
 	} # end foreach Products
 ) ?>
 
-<? if ( @{$$variable{'Products'}} == 0 ) ?>
+<? if ( @{$$variable{Products}} == 0 ) ?>
 	There are no products which match your search criteria. 
-<? else ( @{$$variable{'Products'}} == 0 ) ?>
+<? else ( @{$$variable{Products}} == 0 ) ?>
 		<? echo ( 
 			my $html;
-			foreach my $Product ( @{$$variable{'Products'}} ) {
+			foreach my $Product ( @{$$variable{Products}} ) {
 
 				$html .= sprintf(q` 
 					<div title="%2$s" class="Product"> %6$s
@@ -25,11 +25,11 @@
 						<div class="Category"><a href="/product/view.html?product_id=%1$d">%4$s</a></div>
 						<div class="assets">%5$s</div>
 					</div>
-					`, $Product->id(), ssi::html_escape($Product->name()), ssi::html_escape($Product->description()),
+					`, $Product->id(), html_escape($Product->name()), html_escape($Product->description()),
 					$Product->Category()->name(),
-					$Product->asset_html(),
+					$Product->Album()->Thumbnail()->Asset()->sized_html('large'),
 				);
 			} # end foreach Products
 			return $html;
 		) ?>
-<? endif ( @{$$variable{'Products'}} == 0 ) ?>
+<? endif ( @{$$variable{Products}} == 0 ) ?>
