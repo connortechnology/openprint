@@ -2351,15 +2351,13 @@ sub _check_in_popup {
 } # end sub _check_in_popup
 
 sub packingslips {
-	ssi::save_params( '/employee/inventory/packingslips.html', ( 'company_id','docket','type_id',
-				'created_on_start_year','created_on_start_month','created_on_start_day',
-				'created_on_end_year','created_on_end_month','created_on_end_day',
-				) );
+	_packingslips();
 	ssi::setup_date_select( '/employee/inventory/packingslips.html', 'created_on_start', -7 );
 	ssi::setup_date_select( '/employee/inventory/packingslips.html', 'created_on_end', '' );
+	$session{'/employee/inventory/packingslips.html?deleted'} = '0' if ! exists $session{'/employee/inventory/packingslips.html?deleted'};
 } # end sub packingslips
 sub _packingslips {
-	ssi::save_params( '/employee/inventory/packingslips.html', ( 'company_id','docket','type_id',
+	ssi::save_params( '/employee/inventory/packingslips.html', ( 'company_id','docket','type_id','deleted',
 				'created_on_start_year','created_on_start_month','created_on_start_day',
 				'created_on_end_year','created_on_end_month','created_on_end_day',
 				) );
