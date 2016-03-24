@@ -21,7 +21,7 @@
             <li><label>Early Payment Days</label>%16$s</li>
         </ul>
     </fieldset></div>
-        `, $Supplier->id(), $Supplier->name(),
+        `, $Supplier->id(), $Supplier->link_to(),
         input(type=>'cardinal', name=>'terms-'.$$Supplier{id}, value=>$Credit->terms() ),
         input(type=>'cardinal', name=>'warndays-'.$$Supplier{id}, value=>$Credit->warndays() ),
         input(type=>'cardinal', name=>'denydays-'.$$Supplier{id}, value=>$Credit->denydays() ),
