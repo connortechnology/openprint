@@ -32,8 +32,9 @@ $serial = 'labels_id_seq';
 );
 
 %defaults = (
-	'docket'		=>	undef,
-	'created_on'	=>	q`'NOW()'`,
+	docket		=>	undef,
+	created_on	=>	q`'NOW()'`,
+	deleted			=>	'0',
 );
 
 sub load {
