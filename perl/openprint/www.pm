@@ -160,14 +160,16 @@ sub handler {
 		} # end while
 	} # end if
 
-	if ( $lastpage =~ /\.html/ ) {
-		$r->content_type(q{text/html; charset=utf-8});
-	} elsif ( $lastpage =~ /\.json/ ) {
-		$r->content_type(q{text/javascript; charset=utf-8});
-	} elsif ( $lastpage =~ /\.xml/ ) {
-		$r->content_type(q{text/xml; charset=utf-8});
-	} elsif ( $lastpage =~ /\.rss/ ) {
-		$r->content_type(q{application/rss+xml; charset=utf-8});
+	if ( ! $variable{Download} ) {
+		if ( $lastpage =~ /\.html/ ) {
+			$r->content_type(q{text/html; charset=utf-8});
+		} elsif ( $lastpage =~ /\.json/ ) {
+			$r->content_type(q{text/javascript; charset=utf-8});
+		} elsif ( $lastpage =~ /\.xml/ ) {
+			$r->content_type(q{text/xml; charset=utf-8});
+		} elsif ( $lastpage =~ /\.rss/ ) {
+			$r->content_type(q{application/rss+xml; charset=utf-8});
+		} # end if
 	} # end if
 
 	if ( $variable{ExternalRedirect} ) {
