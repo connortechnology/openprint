@@ -654,11 +654,13 @@ sub equals {
 }
 
 sub to_string {
+	my $self = $_[0];
 	if ( ! $_[0]{to_string} ) {
 		if ( $_[0]{paper} ) {
+			my $Paper = $_[0]{paper};
 		$_[0]{to_string} = sprintf('%s %dx%d+%dx%d=%dout %s %dx%d=%dpages on %sx%s%s->%sx%s %s', ( $_[0]{Press} ? $_[0]{Press}->strid() : 'unknown equipment' ), 
-				$_[0]{'columns','rows','dutch_columns','dutch_rows','imposition','runstyle','page_columns','page_rows','pages'}, 
-				$_[0]{paper}{'width','height', 'type'},
+				@$self{'columns','rows','dutch_columns','dutch_rows','imposition','runstyle'},$_[0]->page_columns(), $_[0]->page_rows(),$_[0]{'pages'}, 
+				@$Paper{'width','height', 'type'},
 				$_[0]->sheet_width(),$_[0]->sheet_height(), $_[0]{'image_orientation'} );
 		} else {
 			if ( $_[0]{quantity} > 1 ) {

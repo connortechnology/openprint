@@ -12,7 +12,7 @@
 			( $session{'/employee/inventory/packingslips.html?company_id'} ? ( company_id=>$session{'/employee/inventory/packingslips.html?company_id'}):()),
 			( $session{'/employee/inventory/packingslips.html?type_id'} ? ( type_id=>$session{'/employee/inventory/packingslips.html?type_id'}):()),
 			deleted => ( $session{$uri.'?deleted'} ne '' ? $session{$uri.'?deleted'} : [undef,1,0] ),
-			order		=>	'id',
+			order		=>	'id desc',
 			);
 	} # end if
 ) ?>

@@ -37,6 +37,13 @@ function stop_auto_refresh() {
 			</li>
 			<li><label>Name</label><input type="text" name="name" value="<?echo($$variable{Check}->name())?>"/></li>
 			<li><label>Contains</label><? echo ( checkboxes( 'contains', [ map { $_, $_.'s' } ( 'Roll', 'Sheet' ) ], [split(',',$$variable{Check}->contains())] ); ) ?>
+			<li><label>Scanner</label>
+				<?echo(ssi::select( openprint::RFIDScanner->dropdown(), $$variable{Check}->scanner_id(), { 
+					name=>'scanner_id',
+					prepend=>['','All'],
+					} );
+				) ?>
+			</li>
 			</ul>
 		</div><!-- column -->
 		<p class="buttons">
@@ -44,7 +51,7 @@ function stop_auto_refresh() {
 				my $html;
 				$html .= button( 'Save', { onclick=>"f1.elements['action'].value='Save';f1.submit();" } );
 				if ( $$variable{Check}->id() ) {
-				$html .= button( 'Apply', { onclick=>"f1.elements['action'].value='Apply';f1.submit();" } );
+				$html .= button( 'Apply', { onclick=>"if(confirm('Warning, this will adjust inventory to match this check.'){f1.elements['action'].value='Apply';f1.submit();};" } );
 				$html .= button( 'Test', { onclick=>"f1.elements['action'].value='Test';f1.submit();" } );
 					#if ( $$variable{Check}->deleted() ) {
 						#$html .= button( 'Destroy', { onclick=>"f1.elements['action'].value='Destroy';f1.submit();" } );

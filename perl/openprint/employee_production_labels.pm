@@ -98,6 +98,28 @@ sub label {
 				note=> 'Emailed from ' . $param{from} . ' to the following recipients:<br/>' . $variable{information} });
 
 		$variable{ExternalRedirect} = '/employee/production/labels/label.html?id='.$Label->id();
+	} elsif ( $param{action} eq 'pdf' ) {
+		my %info;
+		$info{Label} = $Label;
+
+		my $content = ssi::slurp_content( '/email_content/label.html' );
+		$content = Encode::encode('utf-8', ssi::variable_substitution( \$content, \%info ) );
+
+		my $file_base = $Label->Type()->name().$$Label{id};
+        #push @attachments, ($file_base.'.html', MIME::QuotedPrint::encode_qp($invoice_html), 'text/html', 'quoted-printable');
+		if ( File::Slurp::write_file('/tmp/'.$file_base.'.html', { atomic => 1, err_mode=>'carp' }, \$content ) ) {
+			`wkhtmltopdf -q -s Letter --print-media-type "/tmp/$file_base.html" "/tmp/$file_base.pdf"`;
+			my $content_pdf = File::Slurp::read_file( "/tmp/$file_base.pdf" );
+			unlink "/tmp/$file_base.html";
+			unlink "/tmp/$file_base.pdf";
+			if ( $content_pdf ) {
+				$openprint::r->content_type(q{application/pdf; charset=utf-8});
+				$variable{Download} = $content_pdf;
+			} else {
+				$openprint::log->debug("Error making pdf");
+			} # end if has pdf contents
+		} # end if successfully wrote html content
+
 	} # end if
 } # end sub label
 
