@@ -41,6 +41,8 @@ use vars qw( $r %variable %session %param %config $log $dbh $starttime );
 sub cleanup {
 	if ( $r->connection->aborted( ) ) {
 		$log->debug("Was aborted");
+	} elsif ( Debug ) {
+		$log->debug("cleanup");
 	} # end if
 	%openprint::variable = ();
 	%openprint::param = ();
@@ -54,6 +56,8 @@ sub cleanup {
 		untie %session;
 		if ( ! $dbh->{AutoCommit} ) {
 			$log->error("Uncommited transaction");
+		} elsif ( Debug ) {
+			$log->debug("Finished cleanup");
 		} # end if
 		$dbh->disconnect();
 	} else {
