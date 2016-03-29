@@ -134,7 +134,7 @@
 		$$variable{Label}->set_data('quantity'=>$html);
 		$changed = 1;
 	} # end if
-	$$variable{Label}->save() if $changed;
+	$variable{error} .= $$variable{Label}->save() if $changed;
 ) ?>
 <script type="text/javascript">
 	var tinymce_options = {
@@ -160,6 +160,7 @@ cleanup : true
 		} );
 	}
 </script>
+<?include(/includes/error_reporting.html)?>
 <div class="PackingSlip">
 	<form name="PackingSlip" id="PackingSlip_form" action="label.html" method="post">
 	<table style="height: .5in;">
