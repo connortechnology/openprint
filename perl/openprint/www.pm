@@ -187,13 +187,13 @@ sub handler {
 		#$r->send_http_header;
 		$log->debug("Redirecting to " . $variable{ExternalRedirect} );
 	} elsif ( exists $variable{Download} and $variable{Download} ) {
-		if ( $variable{File_Data} ) {
-		foreach ( @{$variable{File_Data}} ) {
-			$r->print( $_ );
-		} # end foreach
+		if ( ref $variable{Download} eq 'ARRAY' ) {
+			foreach ( @{$variable{Download}} ) {
+				$r->print( $_ );
+			}
 		} else {
 			$r->print( $variable{Download} );
-		} # en dif
+		}
 	} else {
 		$variable{SiteTitle} = $config{SiteTitle};
 		$variable{SecureSiteURL} = $config{SecureSiteURL};
@@ -288,12 +288,10 @@ sub parse_page {
 	my $fourth = shift @thing if @thing;
 
 	if ( $filename eq 'getfile.html' ) {
-$openprint::log->debug("Getfile");
-		$variable{Download} = $openprint::param{filename};
 		my $sourceDir = $config{ProjectFilesPath} . openprint::upload_handler::get_destdir();
-		push @{$variable{File_Data}}, misc::load_file( $log, $sourceDir.$param{path}.'/'.$variable{Download});
-		$r->headers_out->{'Content-Disposition'} = "attachment; filename=\"$variable{Download}\"";
-		$r->content_type( "application/octet-stream; name=\"$variable{Download}\"" );
+		$variable{Download} = misc::load_file( $log, $sourceDir.$param{path}.'/'.$variable{Download});
+		$r->headers_out->{'Content-Disposition'} = "attachment; filename=\"$param{filename}\"";
+		$r->content_type( "application/octet-stream; name=\"$param{filename}\"" );
 		return;
 	} elsif ( $first eq 'administrator' ) {
 		$status = Apache2::Const::OK;
