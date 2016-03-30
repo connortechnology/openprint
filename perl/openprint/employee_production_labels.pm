@@ -114,6 +114,7 @@ sub label {
 			unlink "/tmp/$file_base.pdf";
 			if ( $content_pdf ) {
 				$openprint::r->content_type(q{application/pdf; charset=utf-8});
+		$openprint::r->headers_out->{'Content-Disposition'} = "attachment; filename=\"$file_base for docket $$Label{docket}.pdf\"";
 				$variable{Download} = $content_pdf;
 			} else {
 				$openprint::log->debug("Error making pdf");
