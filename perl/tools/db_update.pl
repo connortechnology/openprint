@@ -4006,6 +4006,10 @@ if ( sets::isin( 'sales_logs', \@tables ) ) {
 	$log->debug("Adding Sales Logs");
 		$dbh->do( misc::load_file( $log, q{../openprint/sql/Sales_Logs.sql}) ) or die $dbh->errstr();
 } # end if
+
+if ( sets::isin( 'inventory_checks', \@tables ) ) {
+	$dbh->do( misc::load_file( $log, q{../openprint/sql/Inventory_Checks.sql}) ) or die $dbh->errstr();
+}
 print "Finished\n";
 1;
 __END__
