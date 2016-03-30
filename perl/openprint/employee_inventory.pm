@@ -261,11 +261,12 @@ sub inventory_report {
 	} # end if
 
 	my @Skids = openprint::Skid->find(
+				( $param{skid_ids} ? ( id=> ( ref $param{skid_ids} eq 'ARRAY' ? $param{skid_ids} : [ split(',', $param{skid_ids} ) ] ) ) : () ),
 				( %stock_ids ? ( paper_id => [ keys %stock_ids ] ) : () ),
 				ssi::date_filter( 'added_on_start', 'created_on >=', \%param ),
 				ssi::date_filter( 'added_on_end', 'created_on <=', \%param ),
 				( $param{in_stock} ne '' ? ( $param{in_stock} eq '1' ? ( 'quantity >='=>1 ) : ( quantity=>0 ) ) : () ),
-				'type is null or in'=>[ ref $param{type} eq 'ARRAY' ? @{$param{type}} : $param{type} ],
+				( $param{type} ? ( 'type is null or in'=>[ ref $param{type} eq 'ARRAY' ? @{$param{type}} : $param{type} ] ) : () ),
  ) ;
 	$log->debug("# of Skids: " . @Skids );
 	#openprint::RFIDTag->find(id=>[ map { $_->rfidtag_id() ? $_->rfidtag_id() : () } @Skids] );
@@ -273,7 +274,7 @@ sub inventory_report {
 	foreach my $Skid ( @Skids ) {
 		foreach my $C ( $Skid->Contents() ) {
 			next if ! $C;
-			next if ! $C->quantity();
+			next if $param{in_stock} eq '1' and ! $C->quantity();
 
 			my $Paper = $C->Paper();
 			my $weight = 0;
@@ -2614,6 +2615,17 @@ sub check {
 	} elsif ( $param{action} eq 'Destroy' ) {
         $variable{error} .= $Check->destroy();
         $variable{ExternalRedirect} = '/employee/inventory/checks.html' if ! $variable{error};
+	} elsif ( $param{action} eq 'Download' ) {
+		my %p;
+		$p{skid_ids} = [ map { $_->skid_id() } $Check->Entries() ];
+		my ( $header, $data ) = inventory_report( %p );
+		misc::export_csv( $r, $log, \%variable, "InventoryCheck_$$Check{name}.csv", $header, $data );
+	} elsif ( $param{action} eq 'Merge' ) {
+		my $SRC_Check = new openprint::Inventory_Check( $param{merge_check_id} );
+		foreach my $SRC_ICE ( $SRC_Check->Entries() ) {
+			my $DST_ICE = $SRC_ICE->copy();
+			$variable{error} .= $DST_ICE->save({ic_id=>$$Check{id}});
+		}
     } elsif ( $param{action} eq 'Undelete' ) {
         $variable{error} .= $Check->undelete();
         $variable{ExternalRedirect} = '/employee/inventory/checks.html' if ! $variable{error};
