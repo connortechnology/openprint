@@ -14,6 +14,8 @@ $serial= 'inventory_checks_id_seq';
 	started_on	=>	'started_on',
 	contains	=>	'contains', # 'sheets','rolls', etc'
 	ended_on	=>	'ended_on',
+	scanner_id	=>	'scanner_id',
+	deleted		=>	'deleted',
 );
 %transforms = (
 	name	=> [ 's/^\s+//', 's/\s+$//', 's/\s\s+/ /g' ],
@@ -21,6 +23,8 @@ $serial= 'inventory_checks_id_seq';
 %defaults = (
 	created_on	=>	q`'NOW()'`,
 	started_on	=>	q`'NOW()'`,
+	scanner_id	=>	undef,
+	deleted		=>	'0',
 );
 
 sub link_to {
@@ -30,6 +34,13 @@ sub link_to {
 		( $_[0]{name} ? $_{name} : $_[0]{id} . ' started on ' . $_[0]{started_on} )
 	 );
 } # end sub link_to
+
+sub Entries {
+	if ( ! $_[0]{Entries} ) {
+		$_[0]{Entries} = [ openprint::Inventory_Check_Entry->find( ic_id => $_[0]{id} ) ];
+	}
+	return @{$_[0]{Entries}};
+} # end sub Entries
 
 1;
 __END__
