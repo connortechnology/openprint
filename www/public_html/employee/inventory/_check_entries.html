@@ -77,11 +77,11 @@
 		$ICE->notes(),
 		join('<br/>', map { $_->Paper()->to_string() } $Skid->Contents() ),
 		join('<br/>', map { Number::Format::format_number( $_->quantity() ) . $_->Paper()->units() } $Skid->Contents() ),
-		join('',
+		join("\n",
 			button( 'x'.$$ICE{id}, { onclick=>"del_entry($$ICE{id});", title=>'Delete', text=>'X' } ),
 		),
 
-		( $ICE->Location()->name() . ' was ' . $ICE->Skid()->Location()->name() ),
+		( $ICE->location_id() != $ICE->Skid()->location_id() ? $ICE->Location()->name() . ' was ' . $ICE->Skid()->Location()->name() : $ICE->Location()->name() ),
 		$ICE->id(),
 		($check ? 'warning' : '' ),
 		$check,
@@ -91,7 +91,7 @@
 
 		$total_weight += $ICE->quantity();
 		
-		$rowclass = $rowclass?'':' colRow';
+		$rowclass = $rowclass ? '' : ' colRow';
 	} # end foreach ICE
 $html = q` 
 # of items in check: `.(scalar @Contents).q`<br/>
