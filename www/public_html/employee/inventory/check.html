@@ -5,7 +5,7 @@ function del_entry( id ) {
 }
 function load_entries( param ) {
 $('Entries').innerHTML='Loading...';
-	new Ajax.Updater( 'Entries', '_check_entries.html?check_id=<?echo($$variable{Check}->id())?>'+(param?'&'+param:''), { parameters: $('f1').serialize() } );
+	new Ajax.Updater( 'Entries', '_check_entries.html?check_id=<?echo($$variable{Check}->id())?>'+(param?'&'+param:''), { parameters: $('f2').serialize() } );
 }
 var auto_refresh_timeout;
 
@@ -73,6 +73,8 @@ function stop_auto_refresh() {
 			) ?>
 		</p>
 	</fieldset>
+</form>
+<form id="f2" name="f2" method="post" enctype="multipart/form-data" action="check.html?check_id=<?echo($$variable{Check}->id())?>">
 <? if ( $$variable{Check}{id} ) ?>
 <fieldset><legend>Contents</legend>
 	<fieldset><legend>Filter</legend>
@@ -98,8 +100,9 @@ onclick=>q`if(this.value=='1'){start_auto_refresh();}else{stop_auto_refresh();};
 			); ) ?>
 		</p>
 	</fieldset>
-	<div id="Entries"><?include('_check_entries.html') ?></div>
+	<div id="Entries"><?include(_check_entries.html)?></div>
 </fieldset>
+<hr/>
 <fieldset><legend onclick="toggleContent( 'SystemContents', '/employee/inventory/_check_system_contents.html', new Array('ic_id',<?echo($$variable{Check}->id())?>) );">System Contents not in Check <span class="unprintable"> - click to hide/show</span></legend>
 	<div id="SystemContents">
 <?if($session{$r->uri().'?show_system_contents'})?>
