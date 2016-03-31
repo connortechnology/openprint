@@ -27,6 +27,16 @@ $serial= 'inventory_checks_id_seq';
 	deleted		=>	'0',
 );
 
+sub name {
+	if ( @_ > 1 ) {
+		$_[0]{name} = $_[1];
+	}
+	if ( ! $_[0]{name} ) {
+		return $_[0]{id};
+	}
+	return $_[0]{name};
+}
+
 sub link_to {
 	return sprintf(
 		'<a href="/employee/inventory/check.html?check_id=%d">%s</a>'
