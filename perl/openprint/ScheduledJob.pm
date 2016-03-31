@@ -400,7 +400,7 @@ sub get_li {
 			if ( ( $session{user_id} == $self->Shift()->operator_id() ) or ( 
 						( ! $self->Shift()->operator_id() ) and sets::isin( $session{user_id}, [ map { $_->id() } $Equipment->Operators() ] ) 
 						) ) {
-			$html .= ssi::button( 'Complete'.$$self{id}, { 'onclick'=>"popup_window('/employee/production/_signature_completion_popup.html', 'schedule_id=$$self{id}', { height: '100px', center: 'false' } );", 'text'=>'Complete',title=>'Complete Job' } );
+			$html .= ssi::button( 'Complete'.$$self{id}, { onclick=>"popup_window('/employee/production/_signature_completion_popup.html', 'schedule_id=$$self{id}', { height: '100px', center: 'false' } );", text=>'Complete',title=>'Complete Job' } );
 			}
 		} # end if
 		if ( $$self{operator_id} == $session{user_id} ) {
