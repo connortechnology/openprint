@@ -62,6 +62,14 @@ Please select a Skid to view/edit.<br/>
 						button( 'Go3', { onclick=>q`calc();`, text=>'Go' } ),
 			); ) ?>
 		</li>
+		<li>
+			<label>Inventory Check</label>
+			<?echo( join("\n",
+						ssi::select( openprint::Inventory_Check->dropdown(), $session{'/employee/inventory/skids.html?inventory_check_id'}, { name=>'inventory_check_id', prepend=>['','All'] } ),
+				checkboxes('inventory_check_id_exclude', [ '1', 'Exclude' ], $session{'/employee/inventory/skids.html?inventory_check_id_exclude'} ),
+); ) ?>
+
+		</li>
 		</ul>
 	</fieldset>
 	</div>
