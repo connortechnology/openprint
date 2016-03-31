@@ -11,7 +11,9 @@
 
 	$session{$uri.'?sort'} = 'created_on' if ! $session{$uri.'?sort'};
 
-	my @Contents = openprint::Inventory_Check_Entry->find( ic_id=>$$variable{Check}->id(), order=>$session{$uri.'?sort'} );
+	my @Contents = openprint::Inventory_Check_Entry->find( ic_id=>$$variable{Check}->id(), 
+		($session{$uri.'?scanner_id'} ? ( scanner_id=>$session{$uri.'?scanner_id'} ) : () ),
+		order=>$session{$uri.'?sort'} );
 	foreach my $ICE ( @Contents ) {
 		if ( $$ICE{rfidtag_id} ne $ICE->rfidtag_id() ) {
 			$ICE->save();
