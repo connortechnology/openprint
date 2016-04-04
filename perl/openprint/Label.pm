@@ -28,7 +28,7 @@ $serial = 'labels_id_seq';
 );
 
 %transforms = (
-	'docket'	=>	[ 's/\D//g' ],
+	docket	=>	[ 's/\D//g' ],
 );
 
 %defaults = (
