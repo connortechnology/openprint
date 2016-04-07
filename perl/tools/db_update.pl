@@ -3044,6 +3044,12 @@ if ( ! sets::isin( 'schedule', \@tables ) ) {
 
 if ( ! sets::isin( 'labels', \@tables ) ) {
 	$dbh->do( misc::load_file( $log, q{../openprint/sql/Labels.sql}) );
+} else {
+	my $data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='labels'", 'column_name');
+	if ( ! exists $$data{deleted} ) {
+		$log->debug("Add deleted to labels");
+		$dbh->do('ALTER TABLE labels ADD deleted BOOLEAN NOT NULL DEFAULT FALSE') or die $dbh->errstr();
+	}
 } # end if
 
 if ( sets::isin('shifts',\@tables) and ! sets::isin( 'equipment_shifts', \@tables ) ) {
@@ -4000,6 +4006,10 @@ if ( sets::isin( 'sales_logs', \@tables ) ) {
 	$log->debug("Adding Sales Logs");
 		$dbh->do( misc::load_file( $log, q{../openprint/sql/Sales_Logs.sql}) ) or die $dbh->errstr();
 } # end if
+
+if ( sets::isin( 'inventory_checks', \@tables ) ) {
+	$dbh->do( misc::load_file( $log, q{../openprint/sql/Inventory_Checks.sql}) ) or die $dbh->errstr();
+}
 print "Finished\n";
 1;
 __END__
