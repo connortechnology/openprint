@@ -20,48 +20,50 @@ require openprint::Shift;
 require openprint::employee_production;
 require openprint::ProductionFeedback;
 
+my $parser = 'DateTime::Format::Pg';
+
 $debug = 1;
 $table = 'schedule';
 $serial = 'schedule_id_seq';
 
 %fields = (
-	'id'			=>	'id',
-	'starttime'		=>	'starttime',
-	'runtime'		=>	'runtime',
-	'project_id'	=>	'projectindex',
-	'service_id'	=>	'service_id',
-	'pertains_id'	=>	'pertains_id',
-	'equipment_id'	=>	'equipment_id',
-	'locked'		=>	'starttime_locked',
-	'speed'			=>	'speed',
-	'comment'		=>	'comment',
-	'runtime_seconds'	=>	undef,
-	'starttime_seconds'	=>	undef,
-	'impressions'		=>	'impressions',
-	'created_on'		=>	'created_on',
-	'operator_id'		=>	undef,
-	'stock_verified'	=>	'stock_verified',
-	'stock'				=>	'stock',
-	'servicetype_id'	=>	'servicetype_id',
-	'tentative'			=>	'tentative',
+	id				=>	'id',
+	starttime		=>	'starttime',
+	runtime			=>	'runtime',
+	project_id		=>	'projectindex',
+	service_id		=>	'service_id',
+	pertains_id		=>	'pertains_id',
+	equipment_id	=>	'equipment_id',
+	locked			=>	'starttime_locked',
+	speed			=>	'speed',
+	comment			=>	'comment',
+	runtime_seconds	=>	undef,
+	starttime_seconds	=>	undef,
+	impressions		=>	'impressions',
+	created_on		=>	'created_on',
+	operator_id		=>	undef,
+	stock_verified	=>	'stock_verified',
+	stock			=>	'stock',
+	servicetype_id	=>	'servicetype_id',
+	tentative		=>	'tentative',
 );
 
 %find_fields = (
-	'servicetype'	=>	'(SELECT name FROM service_types WHERE id=servicetype_id)',
+	servicetype		=>	'(SELECT name FROM service_types WHERE id=servicetype_id)',
 );
 
 %transforms = (
-	'id'			=>	[ 's/\D//g' ],
-	'project_id'	=>	[ 's/\D//g' ],
-	'speed'			=>	[ 's/\D//g' ],
+	id				=>	[ 's/\D//g' ],
+	project_id		=>	[ 's/\D//g' ],
+	speed			=>	[ 's/\D//g' ],
 	#'runtime'		=>	[ 's/[^\d:]//g' ],
 );
 
 %defaults = (
-	'speed'			=>	undef,
-	'created_on'	=>	q`'NOW()'`,
-	'stock_verified'	=>	0,
-	'tentative'			=>	0,
+	speed			=>	undef,
+	created_on		=>	q`'NOW()'`,
+	stock_verified	=>	0,
+	tentative		=>	0,
 );
 
 sub runtime_seconds {
@@ -89,14 +91,21 @@ sub starttime {
 } # end sub starttime
 
 sub starttime_seconds {
+	my $starttime_dt;
+
 	if ( @_ > 1 ) {
 		if ( $_[1] < ( time -10 ) ) {
-			$log->error( 'ScheduledJob: startime_seconds < NOW() ' . Date::Format::time2str( '%Y-%m-%d %H:%M:%S', $_[1] ) );
+			$log->error( 'ScheduledJob: startime_seconds < NOW() ' . $parser->format_datetime( $starttime_dt ) );
 		} # end if
-		$_[0]{starttime} = Date::Format::time2str( '%Y-%m-%d %H:%M:%S', $_[1] );
+		$starttime_dt = DateTime->from_epoch( epoch=>$_[1], time_zone=>$openprint::TZ );
+		$_[0]{starttime} = $parser->format_datetime( $starttime_dt );
 		delete $_[0]{Shift};
+	} elsif ( $_[0]{starttime} ) {
+		
+		$starttime_dt = $parser->parse_datetime( $_[0]{starttime} );
 	} # end if
-	return Date::Parse::str2time( $_[0]{starttime} );
+	return $starttime_dt->epoch() if $starttime_dt;
+	return;
 } # endsub
 
 sub startdate_seconds {
@@ -110,10 +119,11 @@ sub endtime {
 		$_[0]{endtime} = Date::Format::time2str( '%Y-%m-%d %H:%M:%S%z', $_[0]->starttime_seconds() + $_[0]->runtime_seconds() );
 	} # end if
 	return $_[0]{endtime};
-} # end sub endtime_seconds
+} # end sub endtime
+
 sub endtime_seconds {
 	return $_[0]->starttime_seconds() + $_[0]->runtime_seconds();
-} # endsub
+} # end sub endtime_seconds
 
 sub Equipment {
 	return new openprint::Equipment( $_[0]{equipment_id} );
@@ -558,7 +568,7 @@ sub Shift {
 				$$Shift{name} = 'Approved';
 			} # end if
 		} else {
-
+$openprint::log->debug("Getting shift for " . $self->to_string() );
 			# There should only ever be 1
 			my @Shifts = openprint::Shift->find({
 					equipment_id	=>	$$self{equipment_id}, 
@@ -572,6 +582,11 @@ sub Shift {
 					DateTime->from_epoch( epoch=>$self->starttime_seconds(), time_zone=>$openprint::TZ ),
 					DateTime->from_epoch( epoch=>$self->endtime_seconds(), time_zone=>$openprint::TZ ),
 				);
+				if ( ! @Shifts ) {
+					$openprint::log->warning( "No shift for $$self{starttime}" );
+					return;
+				}
+				
 			} # end if
 
 			if ( @Shifts > 1 ) {
@@ -632,7 +647,7 @@ sub bump {
 	my ( $self, $equipment_id ) = @_;
 	push @{$variable{changed}}, $self->Shift()->ul_id();
 	my $Project = $self->Project();
-	$Project->save({'due_date'=>$Project->get_due_date()}) if $Project->id() and ! $Project->due_date();
+	$Project->save({ due_date=>$Project->get_due_date()}) if $Project->id() and ! $Project->due_date();
 
 	my $ac = sql::start_transaction( $dbh );
 	$dbh->do( 'LOCK TABLE Schedule IN ACCESS EXCLUSIVE MODE' ) or $log->error( DBI->errstr );
@@ -643,7 +658,7 @@ sub bump {
 		$self->save({'equipment_id'=>$equipment_id});
 		# Shuffle the old list
 		if ( $old_equipment_id and new openprint::Equipment( $old_equipment_id )->smartscheduling() ) {
-			openprint::employee_production::reorder_jobs(openprint::ScheduledJob->find( 'equipment_id'=>$old_equipment_id,'starttime is null'=>0,'order'=>'starttime' ));
+			openprint::employee_production::reorder_jobs(openprint::ScheduledJob->find( equipment_id=>$old_equipment_id,'starttime is null'=>0,order=>'starttime' ));
 		} # end if
 	} # end if
 
@@ -679,17 +694,35 @@ sub bump {
 			openprint::employee_production::reorder_jobs( @final_order );
 		} # end if
 	} else {
+		$openprint::log->debug("Not smart scheduling");
 		if ( ! $$self{starttime} ) {
+			$openprint::log->debug("Coming from pending");
 			my $LastJob = openprint::ScheduledJob->find_one(
-				'order'	=>	'starttime DESC NULLS LAST',
-				'tentative'	=>	0,
-				'equipment_id'	=>	$$self{equipment_id},
+				order	=>	'starttime DESC',
+				tentative	=>	0,
+				equipment_id	=>	$$self{equipment_id},
 				'id !='			=>	$$self{id},
+				'starttime is null' => 0
 			);
-			my $starttime_seconds = $LastJob->endtime_seconds() + 1 if $LastJob;
-			# NOW() might not fall on a shift.
-			$starttime_seconds = time if $starttime_seconds < time;
-			$error .= $self->save({'starttime_seconds'=>$starttime_seconds});
+			my $starttime_seconds = 0;
+			if ( $LastJob ) {
+				$starttime_seconds = $LastJob->endtime_seconds() + 1;
+				$log->debug("Setting starttime after last job : " .$LastJob->to_string() );
+			} else {
+				$log->debug("No Last Job");
+			}
+			# This time might not fall on a shift.
+			if ( $starttime_seconds < ( $_ = time ) ) {
+				$openprint::log->debug("Resulting time is less than now $starttime_seconds, bumping to now $_");
+				$starttime_seconds = $_;
+			}
+			$self->starttime_seconds( $starttime_seconds );
+			if ( ! $self->Shift() ) {
+				$openprint::log->debug("No shift");
+				# Fell into a spot where there are not Shifts.
+			} # end if
+
+			$error .= $self->save({ starttime_seconds=>$starttime_seconds });
 		} else {
 			my $NextShift = $self->Shift()->Next();
 			my @NextSchedule = $NextShift->Schedule();
