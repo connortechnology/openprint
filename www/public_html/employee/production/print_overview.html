@@ -341,6 +341,7 @@
 
 			# When its time to add shifts, we add in sets, until we find an already-implemented shift.
 			my @Equipment_Shifts = $E->Equipment_Shifts();
+			my %Equipment_Shifts = map { $_->id(), $_ } @Equipment_Shifts;
 #foreach my $ES ( @Equipment_Shifts ) {
 #$log->debug( "Available ES: " . $ES->to_string() );
 #}
@@ -376,6 +377,20 @@
 #$log->debug("Shifts are: " . $S->to_string());
 					#}
 			for ( my $shift_index = 1; $shift_index < @Shifts; $shift_index += 1 ) {
+				if ( $Shifts[$shift_index]{shift_id} == $ES->Next()->id() ) {
+					# It's the right shift, just make sure it isn't too far in the future
+					my $last_time = $Shifts[$shift_index-1]->starttime_dt();
+					while ( $ES->Next()->compare( $last_time ) ) {
+						$last_time += new DateTime::Duration( seconds=>3600 );
+						last if $last_time >= $Shifts[$shift_index]->starttime_dt();
+					}
+					last if $last_time >= $Shifts[$shift_index]->starttime_dt();
+					my $test_Shift = $ES->Next()->test_emanantise( $last_time );
+					if ( $test_Shift->starttime() eq $Shifts[$shift_index]{starttime} ) {
+						next;
+					}
+				}
+					
 				#$log->debug( $Shifts[$shift_index]->shift_id() . ' == ' . $ES->Next()->id() );
 				#$log->debug( "This ES: " . $ES->to_string() );
 				#$log->debug( "Next ES: " . $ES->Next()->to_string() );
@@ -383,48 +398,45 @@
 				
 				# By putting emanantise here....
 				# emanantise will figure out what the next shift should loook like, and add it if neccessary.
-				my $NextShift = $ES->Next()->emanantise( $Shifts[$shift_index-1]->starttime_seconds() + 1 );
+				my $last_time = $Shifts[$shift_index-1]->endtime_seconds() + 1;
+				while( $ES->Next()->compare( $last_time ) ) {
+					$last_time += 3600;
+					last if $last_time > $Shifts[$shift_index]->starttime_seconds();
+				}
+				my $NextShift = $ES->Next()->emanantise( $last_time );
+				if ( $NextShift ) {
 
-				if ( $NextShift->id() != $Shifts[$shift_index]->id() ) {
+					if ( $NextShift->id() != $Shifts[$shift_index]->id() ) {
 #$log->debug("Adding new shift; previous: " . $Shifts[$shift_index-1]->to_string() );
 #$log->debug("Adding new shift; current: " . $Shifts[$shift_index]->to_string() );
 #$log->debug("Adding new shift; next: " . $NextShift->to_string() );
-					splice @Shifts, $shift_index, 0, $NextShift;
-					#foreach my $S ( @Shifts ) {
+						splice @Shifts, $shift_index, 0, $NextShift;
+#foreach my $S ( @Shifts ) {
 #$log->debug("Shifts are: " . $S->to_string());
-					#}
-				} 
-				next if $NextShift->starttime_dt() > $Shifts[$shift_index]->starttime_dt();
-				last if $NextShift->starttime_dt() > $et;
-
-
-if ( 0 ) {
-				if ( $Shifts[$shift_index]->shift_id() == $ES->Next()->id() ) {
-
-					# There is only 1 ES, then this wil always be true... even if a shift is skipped.
-	
-				} elsif ( $Shifts[$shift_index]->starttime_dt() > ( $Shifts[$shift_index-1]->endtime_dt() + $ES->Next()->Duration() ) ) {
-#$log->debug("Need another shift");
-				#} elsif ( $Shifts[$shift_index]->starttime_seconds() > $Shifts[$shift_index-1]->starttime_seconds() + $ES->distance() ) {
-					my $NewShift = $ES->Next()->emanantise( $Shifts[$shift_index-1]->starttime_seconds() + 1 );
-					# emanantise may pass back an existing shift... in which case it SHOULD be the one we are looking at!
-					if ( $NewShift->id() == $Shifts[$shift_index]->id() ) {
-						$log->error("BAD MOJO!");
-					} # end if
-					splice @Shifts,$shift_index, 0, $NewShift;
+#}
+					} 
+					next if $NextShift->starttime_dt() > $Shifts[$shift_index]->starttime_dt();
+					last if $NextShift->starttime_dt() > $et;
 				} else {
-					$openprint::log->error("SOmething else wrong");
-					$openprint::log->error( $Shifts[$shift_index]->to_string() );
-					$openprint::log->error( $ES->Next()->to_string() );
+					$log->error( " Failed to match the shift for " . $ES->Next()->to_string() );
+				} # end if
 
-				} # end if need shiftsadded
-}
 				$ES = $ES->Next();
 			} # end for each Shift
 			
 			my $LastShift = $Shifts[@Shifts-1];
-			while ( $LastShift->starttime_seconds() < $et->epoch() ) {
-				my $NewShift = $LastShift->Equipment_Shift()->Next()->emanantise( $LastShift->starttime_seconds() + 1 );
+			while ( $LastShift->endtime_seconds() < $et->epoch() ) {
+				my $ES = $LastShift->Equipment_Shift()->Next();
+
+				my $last_time = $LastShift->endtime_seconds() + 1;
+				while( $ES->compare( $last_time ) ) {
+					$last_time += 3600;
+				}
+				my $NewShift = $ES->emanantise( $last_time );
+				if ( ! $NewShift ) {
+					$log->error("Error getting shift for $last_time ");
+					last;
+				}
 				
 				push @Shifts, $NewShift;
 				$LastShift = $NewShift;
