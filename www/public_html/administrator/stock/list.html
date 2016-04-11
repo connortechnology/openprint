@@ -221,6 +221,9 @@ checkboxes( 'OrLarger', [1,'Or Larger'], $session{'/administrator/stock/list.htm
 		<li><label>Has message</label>
 			<? echo ( radio( 'has_message', [ '1','Yes','0','No', '', 'All' ], $session{'/administrator/stock/list.html?has_message'}, { onclick=>'calc(this.form.name);' } ); ) ?>
 		</li>
+		<li><label>Has minimum order</label>
+			<? echo ( radio( 'has_minimum_order', [ '1','Yes','0','No', '', 'All' ], $session{'/administrator/stock/list.html?has_minimum_order'}, { onclick=>'calc(this.form.name);' } ); ) ?>
+		</li>
 
 		</ul>
 		</div><br class="spacer"/>
