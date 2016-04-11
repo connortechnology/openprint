@@ -289,7 +289,7 @@
 		foreach my $E ( @{$$variable{Equipment}} ) {
 			$html .= '<th class="PressColumn ' . join(' ', $E->categories() ) . '"><a href="/employee/production/print_overview.html?Equipment='.$E->id().'">'.$E->name().'('.$E->strid().')</a>';
 			if ( openprint::usergroup::is_user_in( ['Scheduling'], $session{user_id} ) ) {
-				$html .= button('Edit'.$E->id(), { onclick=>q`popup_window('_equipment_popup.html', 'equipment_id=`.$E->id().q`' );`, text=>'E', title=>'Edit' } );
+				$html .= button('Edit'.$E->id(), { onclick=>q`popup_window('_equipment_popup.html', 'equipment_id=`.$E->id().q`', { width: 500, height: 400 } );`, text=>'E', title=>'Edit' } );
 			} # end if
 			$html .= '<br/><div id="message'.$E->id().'" class="message">';
 			$html .= $E->message();
