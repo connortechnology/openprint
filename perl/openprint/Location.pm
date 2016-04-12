@@ -841,10 +841,12 @@ sub html {
 sub three_letter {
 	if ( ! $_[0]{three_letter} ) {
 		if ( $_[0]->type() eq 'country' ) {
-			require Locale::Country;
-			$_[0]{three_letter} = uc Locale::Country::country2code( $_[0]{name}, 'alpha-3' );
-			if ( ! $_[0]{three_letter} ) {
-				$openprint::log->warn("No code found for $_[0]{name}");
+			if ( $_[0]{name} ) {
+				require Locale::Country;
+				$_[0]{three_letter} = uc Locale::Country::country2code( $_[0]{name}, 'alpha-3' );
+				if ( ! $_[0]{three_letter} ) {
+					$openprint::log->warn("No code found for $_[0]{name}");
+				}
 			}
 		} # end if
 	} # end if
