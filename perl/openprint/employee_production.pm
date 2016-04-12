@@ -1670,7 +1670,7 @@ sub _li_change {
 				if ( ! $Job->project_id() ) {
 					my $J = $Job->copy();
 					$J->save({
-						'equipment_id'		=>	$param{equipment_id},
+						equipment_id =>	$param{equipment_id},
 					});
 				} else {
 					my @Services = openprint::Project_Service->find( project_id=>$Job->project_id(), servicetype_id=>$servicetype_id);
@@ -1684,10 +1684,10 @@ sub _li_change {
 						if ( ! $J ) {
 							$J = new openprint::ScheduledJob();
 							$variable{error} .= $J->save({
-								'project_id'		=>	$Service->project_id(),
-								'service_id'		=>	[$Service->service_id()],
-								'equipment_id'		=>	$param{equipment_id},
-								'servicetype_id'	=>	$Service->servicetype_id(),
+								project_id		=>	$Service->project_id(),
+								service_id		=>	[$Service->service_id()],
+								equipment_id	=>	$param{equipment_id},
+								servicetype_id	=>	$Service->servicetype_id(),
 							});
 						} # end if
 						$variable{error} .= $J->bump( $param{equipment_id} );

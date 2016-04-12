@@ -1,5 +1,5 @@
 <form id="JobForm" name="JobForm">
-	<input type="hidden" name="schedule_id" value="<? echo ( $param{'schedule_id'} ) ?>" />
+	<input type="hidden" name="schedule_id" value="<? echo ( $param{schedule_id} ) ?>" />
 	<fieldset><legend>Job Scheduling Information</legend>
 		<ul>
 		<li>
@@ -26,7 +26,7 @@
 			<label>Start Time</label>
 			<span class="DateTimeSelector">
 			<? echo ( 
-				datetime_select( 'starttime', ( $$variable{Job}{'starttime'} ? $$variable{Job}{'starttime'} : ''), { onchange=>q`set_rdb_value($('JobForm').locked, 1 );`, with_today=>1 } );
+				datetime_select( 'starttime', ( $$variable{Job}{starttime} ? $$variable{Job}{starttime} : ''), { onchange=>q`set_rdb_value($('JobForm').locked, 1 );`, with_today=>1 } );
 			) ?>
 			</span>
 		</li>
@@ -67,7 +67,7 @@
 <? if ( $$variable{Job}->Equipment()->specification('DoStockVerification') eq 'Y' ) ?>
 		<li>
 			<label>Stock Verified</label>
-			<? echo ( radio( 'stock_verified', [ '1', 'Yes', '0', 'No' ], $$variable{Job}{'stock_verified'}, { default=>'0' } ); ) ?>
+			<? echo ( radio( 'stock_verified', [ '1', 'Yes', '0', 'No' ], $$variable{Job}{stock_verified}, { default=>'0' } ); ) ?>
 		</li>
 <? endif ( $$variable{Job}->Equipment()->specification('DoStockVerification') eq 'Y' ) ?>
 		</ul>
