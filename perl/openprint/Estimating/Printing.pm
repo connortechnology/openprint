@@ -2488,7 +2488,7 @@ $log->warn("There are no quantities!");
 		my $qty = $$specs{"txtQuantity$qty_index"};
 		$qty = $Project->quantity($qty_index) if $qty eq '';
 		if ( ! $qty ) {
-			$log->error("There must be a qty here!");
+			$log->error("There must be a qty heref or qty $qty_index!");
 			next;
 		} else {
 #I$log->debug("QTY: $qty");

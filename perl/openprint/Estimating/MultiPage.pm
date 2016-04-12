@@ -496,8 +496,12 @@ $openprint::log->debug("Removing impo cuz wrong group") if DEBUG;
 					if ( $specs{"chkOverrideImposition$qty_index"} eq 'Y' and $specs{"txtImposition$qty_index"} != $$Imposition{imposition} ) {
 						$status = 'uncalculated';
 					} else {
-						$Imposition->save( \%specs, $qty_index );
-						openprint::Estimating::Printing::save_price( $Project, \%specs, $price, $Imposition, $qty_index );
+						if ( $Project->quantity( $qty_index ) ) {
+							$Imposition->save( \%specs, $qty_index );
+							openprint::Estimating::Printing::save_price( $Project, \%specs, $price, $Imposition, $qty_index );
+						} else {
+							$openprint::log->error("empty qty in project->quantity_indexes");
+						}
 					}
 					$specs{'hdnBreakdown'.$qty_index} = openprint::Estimating::Printing::breakdown( $price, \%specs );
 					
