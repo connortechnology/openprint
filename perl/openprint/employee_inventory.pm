@@ -246,7 +246,7 @@ sub inventory_report {
 			( $param{height} ? ( ($param{OrLarger} ? 'height >=' : 'height') => $param{height} ) : () ),
 			);
 
-	foreach my $filter ( 'owner_id', 'manufacturer_id','brand_id','finish_id','colour_id','weight_id','group_id','quality_id','material_id' ) {
+	foreach my $filter ( 'owner_id', 'manufacturer_id','brand_id','finish_id','colour_id','weight_id','group_id','quality_id','material_id', 'type' ) {
 		next if ! $param{$filter};
 		if ( $param{$filter.'_id_exclude'} ) {
 			$sql{$filter.' !='} = $param{$filter};
@@ -258,11 +258,13 @@ sub inventory_report {
 		@Stocks = openprint::Paper->find(%sql);
 		%stock_ids = map { $_->id(), $_ } @Stocks;
 		openprint::StockBrand->find(id => [ map { $_->brand_id() } @Stocks ] );
+	} else {
+		$log->debug("Not loading stocks");
 	} # end if
 
 	my @Skids = openprint::Skid->find(
 				( $param{skid_ids} ? ( id=> ( ref $param{skid_ids} eq 'ARRAY' ? $param{skid_ids} : [ split(',', $param{skid_ids} ) ] ) ) : () ),
-				( %stock_ids ? ( paper_id => [ keys %stock_ids ] ) : () ),
+				#( %stock_ids ? ( 'paper_id &&'=> [ keys %stock_ids ] ) : () ),
 				ssi::date_filter( 'added_on_start', 'created_on >=', \%param ),
 				ssi::date_filter( 'added_on_end', 'created_on <=', \%param ),
 				( $param{in_stock} ne '' ? ( $param{in_stock} eq '1' ? ( 'quantity >='=>1 ) : ( quantity=>0 ) ) : () ),
@@ -271,6 +273,7 @@ sub inventory_report {
 	$log->debug("# of Skids: " . @Skids );
 	#openprint::RFIDTag->find(id=>[ map { $_->rfidtag_id() ? $_->rfidtag_id() : () } @Skids] );
 
+	my $total_value = 0;
 	foreach my $Skid ( @Skids ) {
 		foreach my $C ( $Skid->Contents() ) {
 			next if ! $C;
@@ -317,10 +320,11 @@ sub inventory_report {
 					1*$C->cost(),
 					1*$C->value(),
 					);
+			$total_value += $C->value();
 		} # end foreach C
 	} # end foreach Skid
 	my $date = Date::Format::time2str('%Y-%m-%d %H:%M', time );
-	push @data, ( 'Report generated',$date,'Count:',$count,undef,undef,undef,undef, undef,undef,undef, undef, undef, undef, undef, undef, undef, undef, undef, undef,undef, 'Total Weight (lbs):', $total_weight, undef, undef );
+	push @data, ( 'Report generated',$date,'Count:',$count,undef,undef,undef,undef, undef,undef,undef, undef, undef, undef, undef, undef, undef, undef, undef, undef,undef, 'Total Weight (lbs):', $total_weight, undef, $total_value );
 	return ( \@header, \@data );
 } # end sub inventory_report
 
@@ -431,7 +435,7 @@ Date::Format::time2str('%Y-%m-%d %H:%M', Date::Parse::str2time($I->updated_on())
     $session{'/employee/inventory/paper.html?type'} = 'Roll,Sheet' if ! exists $session{'/employee/inventory/paper.html?type'};
 	ssi::setup_date_select( '/employee/inventory/paper.html', 'added_on_start', -365 );
 	ssi::setup_date_select( '/employee/inventory/paper.html', 'added_on_end', '' );
-	$session{'/employee/inventory/paper.html?instock'} = 'B' if ! $session{'/employee/inventory/paper.html?instock'};
+	$session{'/employee/inventory/paper.html?in_stock'} = '' if ! $session{'/employee/inventory/paper.html?in_stock'};
 
 } # end sub paper
 
@@ -441,7 +445,7 @@ sub _paper_results {
 				'type','owner_id','material_id','group_id', 'condition_id',
 				( map { 'added_on_start_'.$_ } ( 'year','month','day' ) ),
 				( map { 'added_on_end_'.$_ } ( 'year','month','day' ) ),
-				'Docket','fsc_code','width','height','OrLarger','instock','owner_id_exclude','allocated',
+				'Docket','fsc_code','width','height','OrLarger','in_stock','owner_id_exclude','allocated',
 			) );
 	$session{'/employee/inventory/paper.html?owner_id_exclude'} = $param{owner_id_exclude} if exists $param{owner_id};
 	$session{'/employee/inventory/paper.html?OrLarger'} = $param{OrLarger};
