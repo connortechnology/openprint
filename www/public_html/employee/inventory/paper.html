@@ -92,14 +92,14 @@ $log->debug("Caching all $option results:" . @blah );
 			} # end if
 		} # end foreach option
 	} # end foreach $Stock
-$log->debug( Data::Dumper::Dumper( \%filters ) );
+#$log->debug( Data::Dumper::Dumper( \%filters ) );
 
 	foreach my $option ( @StockOptions ) {
 		next if ! $filters{$option};
 		my $lower_option = lc $option;
 		my $option_id  = $lower_option.'_id';
 		my @options = map { $filters{$option}{$_}, $_ } ( sort keys %{$filters{$option}} );
-$log->debug("options : @options ");
+#$log->debug("options : @options ");
 		# Don't do this because even if there is only 1 entry, papers can be unassigned.
 		#$session{'/employee/inventory/paper.html?'.$option} = $options[0] if ( @options == 2 );
 
@@ -158,7 +158,7 @@ $log->debug("options : @options ");
 		</li>
 		<li>
 			<label>In/Out of Stock</label>
-			<? echo ( radio( 'instock', [ 'Y', 'In Stock', 'N', 'Out of Stock', 'B', 'Both' ], $session{'/employee/inventory/paper.html?instock'} ); ) ?>
+			<? echo ( radio( 'in_stock', [ '1', 'In Stock', '0', 'Out of Stock', '', 'Both' ], $session{'/employee/inventory/paper.html?in_stock'} ); ) ?>
 		</li>
 		<li><label>Allocated</label>
 			<? echo ( radio( 'allocated', [ '1','Yes','0','No','','Both' ], $session{'/employee/inventory/paper.html?allocated'} ); ) ?>
