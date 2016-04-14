@@ -2,7 +2,7 @@
 	<th class="Type">Type</th>
 	<th class="Company">Company</th>
 	<th class="value">Yes/No</th>
-	<th class="buttons"><?echo ( button('addnotification', { onclick=>qq`popup_window('_notification_popup.html', {user_id: $$variable{User}{id} });`, text=>'+', title=>'Add' } ); ) ?></th>
+	<th class="buttons"><?echo ( button('addnotification', { onclick=>qq`popup_window('/account/_notification_popup.html', {user_id: $$variable{User}{id} });`, text=>'+', title=>'Add' } ); ) ?></th>
 </tr>
 <? echo ( 
 	my $html;
