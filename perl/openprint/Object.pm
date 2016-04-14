@@ -412,6 +412,10 @@ sub set {
 $log->warn('Object::set called on an object with no fields');
 	} # end if
 	my %defaults = eval('%'.$type.'::defaults');
+if ( ref $params ne 'HASH' ) {
+	my ( $caller, undef, $line ) = caller;
+$openprint::log->error("$type -> set called with non-hash params from $caller $line");
+}
 
 	foreach my $field ( keys %$fields ) {
 $log->debug("field: $field, param: ".$$params{$field}) if $debug;
