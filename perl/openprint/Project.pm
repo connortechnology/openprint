@@ -595,7 +595,7 @@ sub update_status {
 sub save {
 	my ( $self, $hash ) = @_;
 
-	$self->set( $hash );
+	$self->set( $hash ? $hash : {} );
 	$self->services(undef);
 	foreach my $qty_index ( $self->quantity_indexes() ) {
 		$self->price( $qty_index, undef );
