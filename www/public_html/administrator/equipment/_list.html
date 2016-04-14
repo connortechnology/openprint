@@ -1,0 +1,45 @@
+<? eval (
+	my $uri = '/administrator/equipment/list.html';
+    my %filters = (
+		order	=>	'lower(strid)',
+		( $session{$uri.'?deleted'} ne '' ? ( deleted => $session{$uri.'?deleted'} ) : () ),
+		date_filter( $uri.'?created_on_end', 'created_on <=' ),
+		date_filter( $uri.'?created_on_start', 'created_on >=' ),
+		);
+
+    $$variable{Equipment} = [ openprint::Equipment->find( %filters ) ];
+) ?>	
+<? if ( @{$$variable{Equipment}} ) ?>
+	<table class="List">
+		<tr> 
+			<th class="EquipmentID">ID #</th>
+			<th class="EquipmentName">Name</th>
+			<th class="Description">Description</th>
+			<th class="Date">Created</th>
+		</tr>
+<? echo (
+	my $html;
+	my $rowclass;
+	foreach my $Equipment ( @{$$variable{Equipment}} ) {
+		$html .= sprintf(q`
+<tr%1$s> 
+	<td class="EquipmentID">%2$s</td>
+	<td class="EquipmentName">%3$s</td>
+	<td class="Description">%4$s</td>
+	<td class="Date">%5$s</td>
+</tr>
+`, $rowclass, 
+	$Equipment->link_to( $$Equipment{id} ),
+	$Equipment->link_to( $$Equipment{strid} ), 
+	$Equipment->link_to( $$Equipment{name} ), 
+	format_date( $$Equipment{created_on} ),
+ );
+
+		$rowclass = $rowclass ? '' : ' class="colRow"';
+	} # end foreach
+	return $html;
+) ?>
+</table>
+<? else ( @{$$variable{Equipment}} ) ?>
+There were no results matching your criteria.<br>
+<? endif ( @{$$variable{Equipment}} ) ?>

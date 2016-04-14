@@ -144,7 +144,7 @@ $log->debug("Values: @values");
 				push @values, $value;
 			}
 	#print sprintf( $format_string, @values );
-			print FH sprintf( $format_string, @values );
+			print FH Encode::encode('utf-8', sprintf( $format_string, @values ) );
 		} # end foreach Cmompany
 		close( FH );
 	}

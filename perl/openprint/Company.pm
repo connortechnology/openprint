@@ -495,7 +495,7 @@ sub Country {
 		$_[0]{Country} = openprint::Location->find_one( type=>'country', short=>$_[0]->country() );
 		if ( ! $_[0]{Country} ) {
 			 $_[0]{Country} = new openprint::Location();
-			 $_[0]{Country}->set( type=>'country' );
+			 $_[0]{Country}->set( { type=>'country', short=>$_[0]->country() } );
 		}
 	}
 	return $_[0]{Country};
