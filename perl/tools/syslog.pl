@@ -255,6 +255,7 @@ $log->debug("# of entries in Object_name_cache: " . keys %{$openprint::Object::n
 				} # end if
 
 				if ( ! $host_counts{$ip} ) {
+					$log->debug("$ip not in host_counts, adding it");
 					my $Host;
 					my $HI = openprint::Host_Interface->find_one(ip=>$ip);
 					if ( ! $HI ) {
@@ -280,6 +281,7 @@ $log->debug("# of entries in Object_name_cache: " . keys %{$openprint::Object::n
 	#$log->warn("Last: $host_counts{$ip}{updated_on} => $last_seen, $when => $occurrence") if $host_counts{$ip};
 				#if ( DateTime->compare( $updated_on_dt, $now_dt ) <= 0 ) {
 					$host_counts{$ip}{count} += 1;
+$log->debug("coutn for $ip is $host_counts{$ip}{count}");
 					$host_counts{$ip}{update} = 1;
 					$changed = 1;
 				#} else {
@@ -315,7 +317,14 @@ $log->debug("# of entries in Object_name_cache: " . keys %{$openprint::Object::n
 						$host_counts{$ip}{updated_on_seconds} = time;
 					} # end if
 					#$log->debug( "$ip $host_counts{$ip}{ip} $host_counts{$ip}{count}" ) if $config{debug};
-					`shorewall drop $ip` if $host_counts{$ip}{blacklist};
+	
+					if ( $host_counts{$ip}{blacklist} ) {
+						$log->debug("Dropping $ip");
+						`shorewall drop $ip`;
+					}
+				} elsif ( $host_counts{$ip}{count} > 20 ) {
+					$log->debug("Dropping $ip");
+					`shorewall drop $ip`;
 				} # end if wasn't blacklisted, but now is
 			} # end foreach ip
 			$changed = 0;
