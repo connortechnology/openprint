@@ -41,6 +41,8 @@ use vars qw( $r %variable %session %param %config $log $dbh $starttime );
 sub cleanup {
 	if ( $r->connection->aborted( ) ) {
 		$log->debug("Was aborted");
+	} elsif ( Debug ) {
+		$log->debug("cleanup");
 	} # end if
 	%openprint::variable = ();
 	%openprint::param = ();
@@ -54,6 +56,8 @@ sub cleanup {
 		untie %session;
 		if ( ! $dbh->{AutoCommit} ) {
 			$log->error("Uncommited transaction");
+		} elsif ( Debug ) {
+			$log->debug("Finished cleanup");
 		} # end if
 		$dbh->disconnect();
 	} else {
@@ -160,14 +164,16 @@ sub handler {
 		} # end while
 	} # end if
 
-	if ( $lastpage =~ /\.html/ ) {
-		$r->content_type(q{text/html; charset=utf-8});
-	} elsif ( $lastpage =~ /\.json/ ) {
-		$r->content_type(q{text/javascript; charset=utf-8});
-	} elsif ( $lastpage =~ /\.xml/ ) {
-		$r->content_type(q{text/xml; charset=utf-8});
-	} elsif ( $lastpage =~ /\.rss/ ) {
-		$r->content_type(q{application/rss+xml; charset=utf-8});
+	if ( ! $variable{Download} ) {
+		if ( $lastpage =~ /\.html/ ) {
+			$r->content_type(q{text/html; charset=utf-8});
+		} elsif ( $lastpage =~ /\.json/ ) {
+			$r->content_type(q{text/javascript; charset=utf-8});
+		} elsif ( $lastpage =~ /\.xml/ ) {
+			$r->content_type(q{text/xml; charset=utf-8});
+		} elsif ( $lastpage =~ /\.rss/ ) {
+			$r->content_type(q{application/rss+xml; charset=utf-8});
+		} # end if
 	} # end if
 
 	if ( $variable{ExternalRedirect} ) {
@@ -181,13 +187,13 @@ sub handler {
 		#$r->send_http_header;
 		$log->debug("Redirecting to " . $variable{ExternalRedirect} );
 	} elsif ( exists $variable{Download} and $variable{Download} ) {
-		if ( $variable{File_Data} ) {
-		foreach ( @{$variable{File_Data}} ) {
-			$r->print( $_ );
-		} # end foreach
+		if ( ref $variable{Download} eq 'ARRAY' ) {
+			foreach ( @{$variable{Download}} ) {
+				$r->print( $_ );
+			}
 		} else {
 			$r->print( $variable{Download} );
-		} # en dif
+		}
 	} else {
 		$variable{SiteTitle} = $config{SiteTitle};
 		$variable{SecureSiteURL} = $config{SecureSiteURL};
@@ -282,12 +288,10 @@ sub parse_page {
 	my $fourth = shift @thing if @thing;
 
 	if ( $filename eq 'getfile.html' ) {
-$openprint::log->debug("Getfile");
-		$variable{Download} = $openprint::param{filename};
 		my $sourceDir = $config{ProjectFilesPath} . openprint::upload_handler::get_destdir();
-		push @{$variable{File_Data}}, misc::load_file( $log, $sourceDir.$param{path}.'/'.$variable{Download});
-		$r->headers_out->{'Content-Disposition'} = "attachment; filename=\"$variable{Download}\"";
-		$r->content_type( "application/octet-stream; name=\"$variable{Download}\"" );
+		$variable{Download} = misc::load_file( $log, $sourceDir.$param{path}.'/'.$variable{Download});
+		$r->headers_out->{'Content-Disposition'} = "attachment; filename=\"$param{filename}\"";
+		$r->content_type( "application/octet-stream; name=\"$param{filename}\"" );
 		return;
 	} elsif ( $first eq 'administrator' ) {
 		$status = Apache2::Const::OK;

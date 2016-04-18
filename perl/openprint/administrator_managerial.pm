@@ -560,7 +560,9 @@ sub company_profiles {
 				$param{start_month} = '01' if ! $param{start_month};
 				$param{established} = $param{start_year} . '-' . $param{start_month} . '-01';
 			} # end if
+			my @changes = $Company->changes( \%param );
 			$variable{error} .= $Company->save( \%param );
+			(new openprint::Log())->save({object_id=>$$Company{id},object_type=>ref$Company, action=>'Edit Company', note=>join('<br/>', @changes) }) if @changes;
 			$index = $Company->id();
 
 			if ( $index > 0 ) {

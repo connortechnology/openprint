@@ -174,7 +174,7 @@ sub Manifest_Contents {
 
 sub checked_out {
 	if ( ! exists $_[0]{checked_out} ) {
-		$_[0]{checked_out} = openprint::PaperInventory->find_one( skid_id=>$_[0]{skid_id}, paper_id=>$_[0]{paper_id}, 'comment like'=>'Checked out%' ); 
+		$_[0]{checked_out} = openprint::PaperInventory->find_one( skid_id=>$_[0]{skid_id}, paper_id=>$_[0]{paper_id}, 'comment like'=>'Checked out%', order=>'updated_on desc' ); 
 	} 
 	return $_[0]{checked_out};
 } # end sub checked_out

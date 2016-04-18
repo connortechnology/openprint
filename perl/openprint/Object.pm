@@ -412,6 +412,10 @@ sub set {
 $log->warn('Object::set called on an object with no fields');
 	} # end if
 	my %defaults = eval('%'.$type.'::defaults');
+if ( ref $params ne 'HASH' ) {
+	my ( $caller, undef, $line ) = caller;
+$openprint::log->error("$type -> set called with non-hash params from $caller $line");
+}
 
 	foreach my $field ( keys %$fields ) {
 $log->debug("field: $field, param: ".$$params{$field}) if $debug;
@@ -506,6 +510,7 @@ sub delete {
 		delete $openprint::Object::cache{$config{db_name}}{$type}{join('-',@$self{@identified_by})};
 	} # end if
 	eval 'if ( %'.$type.'::find_cache ) { %'.$type.'::find_cache = (); }';
+	(new openprint::Log())->save({Object=>$self,action=>'Delete'});
 	return;
 } # end sub delete
 
@@ -561,6 +566,8 @@ my $add_placeholder = ( ! ( $field =~ /\?/ ) ) ?  1 : 0;
 
 	if ( sets::isin( $operator, [ '=', '!=', '<', '>', '<=', '>=', '<<=' ] ) ) {
 		return ( $field.$type.' ' . $operator . ( $add_placeholder ? ' ?' : '' ), $value );
+	} elsif ( $operator eq 'not' ) {
+		return ( 'NOT ' . $field.$type, $value );
 	} elsif ( sets::isin( $operator, [ '&&', '<@', '@>' ] ) ) {
 		if ( ref $value eq 'ARRAY' ) {
 			if ( $field =~ /^\(/ ) {
@@ -841,14 +848,15 @@ $log->error("returning nothing for $object_type $cache_field $$params{$cache_fie
 		delete $search{custom};
 	} # end if
 
-	if ( $$fields{deleted} and ! sets::isin( 'deleted', \@used_fields ) ) {
-		push @where, 'deleted=?';
-		push @values, 0;
-	} # end if
-
 	if ( $$params{or} ) {
 		if ( ref $$params{or} eq 'HASH' ) {
 			my ( $where, $values, $used_fields ) = get_fields_values( $object_type, $$params{or},  [ keys %{$$params{or}} ] );
+
+			if ( $$fields{deleted} and ( ! sets::isin( 'deleted', $used_fields ) ) and ( ! sets::isin( 'deleted', \@used_fields ) ) ) {
+				push @where, 'deleted=?';
+				push @values, 0;
+			} # end if
+
 			if ( @where ) {
 				$sql .= ' WHERE ( ' . join(' AND ', @where ) . ' ) AND ( ' . join(' OR ', @{$where} ) . ')';
 			} else {
@@ -858,6 +866,10 @@ $log->error("returning nothing for $object_type $cache_field $$params{$cache_fie
 		} elsif ( ref $$params{or} eq 'ARRAY' ) {
 			my %s = @{$$params{or}};
 			my ( $where, $values, $used_fields ) = get_fields_values( $object_type, \%s,  [ keys %s ] );
+			if ( $$fields{deleted} and ( ! sets::isin( 'deleted', $used_fields ) ) and ( ! sets::isin( 'deleted', \@used_fields ) ) ) {
+				push @where, 'deleted=?';
+				push @values, 0;
+			} # end if
 			if ( @where ) {
 				$sql .= ' WHERE ( ' . join(' AND ', @where ) . ' ) AND ( ' . join(' OR ', @{$where} ) . ')';
 			} else {
@@ -866,6 +878,10 @@ $log->error("returning nothing for $object_type $cache_field $$params{$cache_fie
 			push @values, @{$values};
 
 		} else {
+			if ( $$fields{deleted} and ( ! sets::isin( 'deleted', $used_fields ) ) and ( ! sets::isin( 'deleted', \@used_fields ) ) ) {
+				push @where, 'deleted=?';
+				push @values, 0;
+			} # end if
 			if ( @where ) {
 				$sql .= ' WHERE ( ' . join(' AND ', @where ) . ' ) OR ( ' . $$params{or} . ')';
 			} else {
@@ -873,6 +889,10 @@ $log->error("returning nothing for $object_type $cache_field $$params{$cache_fie
 			} # end if
 		} # end if
 	} else {
+	if ( $$fields{deleted} and ! sets::isin( 'deleted', \@used_fields ) ) {
+		push @where, 'deleted=?';
+		push @values, 0;
+	} # end if
 		$sql .= ' WHERE ' . join(' AND ', @where ) if @where;
 	} # end if
 	if ( exists $$params{order} ) {

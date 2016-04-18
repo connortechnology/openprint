@@ -31,6 +31,9 @@ $serial = 'user_notifications_id_seq';
 	type		=>	'(SELECT name from user_notification_types WHERE id=type_id)',
 	user_company_id  =>  '(SELECT company_id FROM Users WHERE users.id=user_notifications.user_id)',
 );
+%defaults = (
+	company_id	=>	undef,
+);
 
 sub User {
 	require openprint::User;

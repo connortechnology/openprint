@@ -27,18 +27,10 @@
 <fieldset>
 	<legend>What quantities would you like to calculate pricing for?</legend>
 	<ul>
-		<li>
-			<label for="Quantity1">Quantity 1</label>
-			<? echo ( input( name=>'txtQuantity1', id=>'Quantity1', value=>$$variable{txtQuantity1}, type=>'cardinal', max=>2147483647 ); ) ?>
-		</li>
-		<li>
-			<label for="Quantity2">Quantity 2</label>
-			<? echo ( input( name=>'txtQuantity2', id=>'Quantity2', value=>$$variable{txtQuantity2}, type=>'cardinal', max=>2147483647 ); ) ?>
-		</li>
-		<li>
-			<label for="Quantity3">Quantity 3</label>
-			<? echo ( input( name=>'txtQuantity3', id=>'Quantity3', value=>$$variable{txtQuantity3}, type=>'cardinal', max=>2147483647 ); ) ?>
-		</li>
+		<? echo ( join("\n", 
+			map { ( qq`<li><label for="Quantity$_">Quantity $_</label>`, input( name=>'quantity'.$_, id=>'quantity'.$_, value=>$$variable{Project}->quantity($_), type=>'cardinal', max=>2147483647 ), '</li>' ) } ( 1 .. 3 ) 
+		); 
+		) ?>
 	</ul>
 </fieldset>
 <? eval ( 

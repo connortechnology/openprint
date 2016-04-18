@@ -5,11 +5,11 @@ function del_entry( id ) {
 }
 function load_entries( param ) {
 $('Entries').innerHTML='Loading...';
-	new Ajax.Updater( 'Entries', '_check_entries.html?check_id=<?echo($$variable{Check}->id())?>'+(param?'&'+param:''), { parameters: $('f1').serialize() } );
+	new Ajax.Updater( 'Entries', '_check_entries.html?check_id=<?echo($$variable{Check}->id())?>'+(param?'&'+param:''), { parameters: $('f2').serialize() } );
 }
 var auto_refresh_timeout;
 
-if ( timeout ) clearTimeout( timeout );
+if ( auto_refresh_timeout ) clearTimeout( auto_refresh_timeout );
 
 function auto_refresh() {
 	load_entries();
@@ -37,29 +37,44 @@ function stop_auto_refresh() {
 			</li>
 			<li><label>Name</label><input type="text" name="name" value="<?echo($$variable{Check}->name())?>"/></li>
 			<li><label>Contains</label><? echo ( checkboxes( 'contains', [ map { $_, $_.'s' } ( 'Roll', 'Sheet' ) ], [split(',',$$variable{Check}->contains())] ); ) ?>
+			<li><label>Scanner</label>
+				<?echo(ssi::select( openprint::RFIDScanner->dropdown(), $$variable{Check}->scanner_id(), { 
+					name=>'scanner_id',
+					prepend=>['','All'],
+					} );
+				) ?>
+			</li>
 			</ul>
 		</div><!-- column -->
 		<p class="buttons">
-			<? echo ( 
-				my $html;
-				$html .= button( 'Save', { onclick=>"f1.elements['action'].value='Save';f1.submit();" } );
-				if ( $$variable{Check}->id() ) {
-				$html .= button( 'Apply', { onclick=>"f1.elements['action'].value='Apply';f1.submit();" } );
-				$html .= button( 'Test', { onclick=>"f1.elements['action'].value='Test';f1.submit();" } );
+			<? echo ( join("\n",
+				
+				 button( 'Save', { onclick=>"f1.elements['action'].value='Save';f1.submit();" } ),
+				( $$variable{Check}->id() ?
+				(
+				 button( 'Apply', { onclick=>"if(confirm('Warning, this will adjust inventory to match this check.')){f1.elements['action'].value='Apply';f1.submit();};" } ),
+				 button( 'Download', { onclick=>"f1.elements['action'].value='Download';f1.submit();", text=>'Download' } ),
+				 button( 'Test', { onclick=>"f1.elements['action'].value='Test';f1.submit();" } ),
 					#if ( $$variable{Check}->deleted() ) {
 						#$html .= button( 'Destroy', { onclick=>"f1.elements['action'].value='Destroy';f1.submit();" } );
 						#$html .= button( 'Undelete', { onclick=>"f1.elements['action'].value='Undelete';f1.submit();" } );
 					#} else {
-						$html .= button( 'delete', { onclick=>"f1.elements['action'].value='Delete';f1.submit();", text=>'Delete' } );
+						 button( 'delete', { onclick=>"f1.elements['action'].value='Delete';f1.submit();", text=>'Delete' } ),
 					#} # end if
-					$html .= input( type=>'file', name=>'import' );
-					$html .= button( 'Import', { onclick=>q`f1.elements['action'].value='Import';f1.submit();` } );
-					$html .= button( 'DelDupes', { onclick=>q`f1.elements['action'].value='Delete Duplicates';f1.submit();`, text=>'Delete Duplicates'} );
-				} # end if
-				return $html;
+					'<br/>', input( type=>'file', name=>'import' ),
+					button( 'Import', { onclick=>q`f1.elements['action'].value='Import';f1.submit();` } ),
+					'<br/>',
+					ssi::select( openprint::Inventory_Check->dropdown( 'id !=' => $$variable{Check}->id() ), undef, { name=>'merge_check_id', prepend=>['','select'] } ),
+					button( 'Merge', { onclick=>q`f1.elements['action'].value='Merge';f1.submit();` } ),
+					'<br/>',
+					button( 'DelDupes', { onclick=>q`f1.elements['action'].value='Delete Duplicates';f1.submit();`, text=>'Delete Duplicates'} ),
+				) : () ),
+			);
 			) ?>
 		</p>
 	</fieldset>
+</form>
+<form id="f2" name="f2" method="post" enctype="multipart/form-data" action="check.html?check_id=<?echo($$variable{Check}->id())?>">
 <? if ( $$variable{Check}{id} ) ?>
 <fieldset><legend>Contents</legend>
 	<fieldset><legend>Filter</legend>
@@ -85,8 +100,9 @@ onclick=>q`if(this.value=='1'){start_auto_refresh();}else{stop_auto_refresh();};
 			); ) ?>
 		</p>
 	</fieldset>
-	<div id="Entries"><?include('_check_entries.html') ?></div>
+	<div id="Entries"><?include(_check_entries.html)?></div>
 </fieldset>
+<hr/>
 <fieldset><legend onclick="toggleContent( 'SystemContents', '/employee/inventory/_check_system_contents.html', new Array('ic_id',<?echo($$variable{Check}->id())?>) );">System Contents not in Check <span class="unprintable"> - click to hide/show</span></legend>
 	<div id="SystemContents">
 <?if($session{$r->uri().'?show_system_contents'})?>

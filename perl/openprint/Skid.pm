@@ -46,6 +46,7 @@ $serial = 'skid_id_seq';
 	fsc_code			=>	'id IN ( SELECT skid_id FROM skid_contents WHERE paper_id=(SELECT id FROM papers WHERE fsc_code=?))',
 	purpose_id 			=>	'id IN ( SELECT skid_id FROM skid_contents WHERE purpose_id=?)',
 	condition_id 		=>	'(SELECT condition_id FROM skid_contents WHERE skid_contents.skid_id=skids.id )',
+	inventory_check_id	=>	'id IN (SELECT skid_id FROM inventory_check_entries WHERE ic_id=?)',
 );
 
 %transforms = (

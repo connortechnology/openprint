@@ -1,16 +1,3 @@
-<table class="List">
-	<tr>
-		<th class="Skid" onclick="load_entries('sort=skid_id,rfidtag_id,created_on');">Skid/Roll</th>
-		<th class="RFIDTag" onclick="load_entries('sort=rfidtag_id,skid_id,created_on');">RFIDTag</th>
-		<th class="Width">Width</th>
-		<th class="Diameter">Diameter</th>
-		<th class="Quantity">Weight(lbs)</th>
-		<th class="DateTime" onclick="load_entries('sort=created_on,rfidtag_id,skid_id');">When</th>
-		<th class="Location" onclick="load_entries('sort=location_id,created_on,rfidtag_id,skid_id');">Location</th>
-		<th class="Notes">Notes</th>
-		<th class="RFIDScanner" onclick="load_entries('sort=scanner_id,rfidtag_id,skid_id');">Scanner</th>
-		<th class="buttons"></th>
-	</tr>
 <? echo ( 
 	my $uri = '/employee/inventory/check.html';
 	my $html;
@@ -24,7 +11,9 @@
 
 	$session{$uri.'?sort'} = 'created_on' if ! $session{$uri.'?sort'};
 
-	my @Contents = openprint::Inventory_Check_Entry->find( ic_id=>$$variable{Check}->id(), order=>$session{$uri.'?sort'} );
+	my @Contents = openprint::Inventory_Check_Entry->find( ic_id=>$$variable{Check}->id(), 
+		($session{$uri.'?scanner_id'} ? ( scanner_id=>$session{$uri.'?scanner_id'} ) : () ),
+		order=>$session{$uri.'?sort'} );
 	foreach my $ICE ( @Contents ) {
 		if ( $$ICE{rfidtag_id} ne $ICE->rfidtag_id() ) {
 			$ICE->save();
@@ -90,11 +79,11 @@
 		$ICE->notes(),
 		join('<br/>', map { $_->Paper()->to_string() } $Skid->Contents() ),
 		join('<br/>', map { Number::Format::format_number( $_->quantity() ) . $_->Paper()->units() } $Skid->Contents() ),
-		join('',
+		join("\n",
 			button( 'x'.$$ICE{id}, { onclick=>"del_entry($$ICE{id});", title=>'Delete', text=>'X' } ),
 		),
 
-		( $ICE->Location()->name() . ' was ' . $ICE->Skid()->Location()->name() ),
+		( $ICE->location_id() != $ICE->Skid()->location_id() ? $ICE->Location()->name() . ' was ' . $ICE->Skid()->Location()->name() : $ICE->Location()->name() ),
 		$ICE->id(),
 		($check ? 'warning' : '' ),
 		$check,
@@ -104,9 +93,23 @@
 
 		$total_weight += $ICE->quantity();
 		
-		$rowclass = $rowclass?'':' colRow';
+		$rowclass = $rowclass ? '' : ' colRow';
 	} # end foreach ICE
-	$html .= '<tr class="totals"><td colspan="4"># of items in check: ' . scalar @Contents . '</td><td class="Quantity">'.Number::Format::format_number(int($total_weight)).'lbs</td><td></td><td></td><td></td><td></td></tr>';
+$html = q` 
+# of items in check: `.(scalar @Contents).q`<br/>
+<table class="List">
+	<tr>
+		<th class="Skid" onclick="load_entries('sort=skid_id,rfidtag_id,created_on');">Skid/Roll</th>
+		<th class="RFIDTag" onclick="load_entries('sort=rfidtag_id,skid_id,created_on');">RFIDTag</th>
+		<th class="Width">Width</th>
+		<th class="Diameter">Diameter</th>
+		<th class="Quantity">Weight(lbs)</th>
+		<th class="DateTime" onclick="load_entries('sort=created_on,rfidtag_id,skid_id');">When</th>
+		<th class="Location" onclick="load_entries('sort=location_id,created_on,rfidtag_id,skid_id');">Location</th>
+		<th class="Notes">Notes</th>
+		<th class="RFIDScanner" onclick="load_entries('sort=scanner_id,rfidtag_id,skid_id');">Scanner</th>
+		<th class="buttons"></th>
+	</tr>`.$html.'<tr class="totals"><td colspan="4"># of items in check: ' . scalar @Contents . '</td><td class="Quantity">'.Number::Format::format_number(int($total_weight)).'lbs</td><td></td><td></td><td></td><td></td></tr>';
 	return $html;
 ) ?>
 

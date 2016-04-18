@@ -157,8 +157,7 @@ sub export_csv {
 	$r->headers_out->{'Content-Disposition'} = "attachment; filename=\"$filename\"";
 	$r->content_type( "text/csv; name=\"$filename\"" );
 	#$r->content_encoding( "binary" );
-	$$variable{'Download'} = $filename;
-	return $$variable{'File_Data'} = \@data;
+	$$variable{Download} = \@data;
 } # end sub
 
 sub export {
@@ -166,8 +165,7 @@ sub export {
 	$r->headers_out->{'Content-Disposition'} = "attachment; filename=\"$filename\"";
 	$r->content_type( "application/octet-stream; name=\"$filename\"" );
 	#$r->content_encoding( "binary" );
-	$$variable{'Download'} = $filename;
-	return $$variable{'File_Data'} = $data;
+	$$variable{Download} = $data;
 } # end sub export
 
 sub get_destination {

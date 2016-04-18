@@ -74,19 +74,21 @@
 			my $total_value;
 
 			my $Condition = $session{'/employee/inventory/paper.html?condition_id'} ? new openprint::InventoryCondition( $session{'/employee/inventory/paper.html?condition_id'}) : undef;
+			my $result_count = 0;
 
 			foreach my $Paper ( @{$$variable{'Papers'}} ) {
 				if ( ! $session{'/employee/inventory/paper.html?Docket'} ) {
-					if ( $session{'/employee/inventory/paper.html?instock'} eq 'N' ) {
+					if ( $session{'/employee/inventory/paper.html?in_stock'} eq '0' ) {
 						next if $Paper->in_stock();
 					}  # end if
-					if ( $session{'/employee/inventory/paper.html?instock'} eq 'Y' ) {
+					if ( $session{'/employee/inventory/paper.html?in_stock'} eq '1' ) {
 						next if ! $Paper->in_stock();
 						next if $Condition and ! $Paper->in_stock( $Condition );
 					} # end if
 				} # end if
 				next if $session{'/employee/inventory/paper.html?allocated'} eq '1' and ! $Paper->allocated();
 				next if $session{'/employee/inventory/paper.html?allocated'} eq '0' and ( $Paper->in_stock() <= $Paper->allocated() );
+				$result_count += 1;
 				
 
 				$html .= sprintf( '<tr class="%1$s %11$s">
@@ -130,7 +132,7 @@
 					$allocated_sheets += $Paper->allocated();
 				} # end if
 			} # end foreach Paper
-			$html .= '<tr class="totals"><td colspan="3">Totals</td><td class="on_order"></td><td class="allocated">';
+			$html .= '<tr class="totals"><td colspan="3">Totals: ' . $result_count . ' entries</td><td class="on_order"></td><td class="allocated">';
 			$html .= Number::Format::format_number( $allocated_lbs ).'lbs<br/>' if $total_lbs;
 			$html .= Number::Format::format_number( $allocated_sheets ).'sheets<br/>' if $total_sheets;
 			$html .= '</td><td class="in_stock">';

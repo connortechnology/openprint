@@ -933,7 +933,7 @@ sub create_calc {
 
 # Sanitize input
 	foreach my $qty_index ( 1 .. 3 ) {
-		$$specs{"txtQuantity$qty_index"} =~ s/\D//g;
+		$$specs{"quantity$qty_index"} =~ s/\D//g;
 	} # end foreach qty_index
 
 	my $Project = new openprint::Project( $$specs{ProjectIndex} );
@@ -943,10 +943,11 @@ sub create_calc {
 		$Project->add_to_log( @openprint::session{'company_id','user_id'}, 'Created' );
 	} # end if
 
+	# Why are we doing this?
 	my %services = $Project->get_services( );
 	foreach my $qty_index ( 1 .. 3 ) {
 # Should not do this
-		if ( $$specs{'txtQuantity'.$qty_index} != $Project->quantity($qty_index) ) {
+		if ( $$specs{'quantity'.$qty_index} != $Project->quantity($qty_index) ) {
 if ( 0 ) {
 			foreach my $service_id ( keys %services ) {
 				foreach my $s_id ( @{$services{$service_id}} ) {
@@ -954,7 +955,7 @@ if ( 0 ) {
 				} # end foreach
 			} # end foreach
 } 
-			$Project->quantity( $qty_index, $$specs{'txtQuantity'.$qty_index} );
+			$Project->quantity( $qty_index, $$specs{'quantity'.$qty_index} );
 		} # end if
 	} # end foreach qty_index
 
@@ -964,7 +965,7 @@ if ( 0 ) {
 		%services = $Project->get_services( );
 	} # end if ProjectType changed
 
-	foreach my $ServiceType ( openprint::ServiceType->find( 'create_visible' => 'Y' ) ) {
+	foreach my $ServiceType ( openprint::ServiceType->find( create_visible => 'Y' ) ) {
 		if ( $services{$ServiceType->name()} ) {
 			$$specs{'chkServices'.$ServiceType->name()} = $ServiceType->name();
 		} else {

@@ -15,24 +15,26 @@ $debug = 0;
 $table = 'labels';
 $serial = 'labels_id_seq';
 %fields = (
-	'id'			=>	'id',
-	'type_id'		=>	'type_id',
-	'reference'		=>	'reference',
-	'content'		=>	'content',
-	'docket'		=>	'docket',
-	'created_on'	=>	'created_on',
+	id			=>	'id',
+	type_id		=>	'type_id',
+	reference	=>	'reference',
+	content		=>	'content',
+	docket		=>	'docket',
+	created_on	=>	'created_on',
+	deleted		=>	'deleted',
 );
 %find_fields = (
 	company_id	=>	'(SELECT DISTINCT company_id FROM Projects WHERE Projects.lngDocketNumber=labels.docket)',
 );
 
 %transforms = (
-	'docket'	=>	[ 's/\D//g' ],
+	docket	=>	[ 's/\D//g' ],
 );
 
 %defaults = (
-	'docket'		=>	undef,
-	'created_on'	=>	q`'NOW()'`,
+	docket		=>	undef,
+	created_on	=>	q`'NOW()'`,
+	deleted			=>	'0',
 );
 
 sub load {
@@ -58,12 +60,12 @@ sub save {
 	return $error;
 } # end sub save
 
-sub delete {
+sub destroy {
     my $ac = sql::start_transaction( );
     sql::execute( undef, undef, q{DELETE FROM Label_data WHERE label_id=?}, $_[0]{'id'} );
     sql::execute( undef, undef, q{DELETE FROM Labels WHERE id=?}, $_[0]{'id'} );
     sql::end_transaction( undef, $ac );
-} # end sub delete
+} # end sub destroy
 
 sub Order {
 	$_ = openprint::Order->find_one(docket=>$_[0]{docket}) if $_[0]{docket};
@@ -84,9 +86,14 @@ sub Type {
 sub set_data {
 	my $self = shift;
 	my %new_data = @_;	
+	my @changes;
 	foreach my $k ( keys %new_data ) {
-		$$self{'data'}{$k} = $new_data{$k};
+		if ( $$self{data}{$k} ne $new_data{$k} ) {	
+			push @changes, "$k changed from $$self{data}{$k} to $new_data{$k}";
+			$$self{'data'}{$k} = $new_data{$k};
+		}
 	} # end foreach
+	(new openprint::Log())->save({object_id=>$$self{id},object_type=>ref$self,action=>'Edit', note=>'Document Changed:<br/>'.join('<br/>', @changes) }) if @changes;
 } # end sub set_data
 
 sub get_data {

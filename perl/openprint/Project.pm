@@ -595,7 +595,7 @@ sub update_status {
 sub save {
 	my ( $self, $hash ) = @_;
 
-	$self->set( $hash );
+	$self->set( $hash ? $hash : {} );
 	$self->services(undef);
 	foreach my $qty_index ( $self->quantity_indexes() ) {
 		$self->price( $qty_index, undef );
@@ -629,7 +629,10 @@ sub save {
 
 sub quantity_indexes {
 	my ( $self ) = @_;
-	if ( ! exists $$self{quantity_indexes} ) {
+	if ( @_ > 1 ) {
+		$$self{quantity_indexes} = $_[1];
+	}
+	if ( ! $$self{quantity_indexes} ) {
 		@{$$self{quantity_indexes}} = ();
 		foreach my $qty_index ( 1 .. 3 ) {
 			push @{$$self{quantity_indexes}}, $qty_index if $$self{"quantity$qty_index"};
@@ -649,9 +652,7 @@ sub quantity {
 		return $self->ordered_quantity();
 	} elsif ( defined $qty ) {
 		$$self{"quantity$index"} = $qty;
-		if ( exists $$self{quantity_indexes} ) {
-			$$self{quantity_indexes}[$index-1] = $index;
-		} # end if
+		delete $$self{quantity_indexes};
 	} # end if
 	return $$self{'quantity'.$index};
 } # end sub quanitty

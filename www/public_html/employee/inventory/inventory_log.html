@@ -19,7 +19,7 @@ LoadContent( 'Log', '_inventory_log.html', $('LogForm').serialize() );
 				<label class="radio" for="outs">Check Outs</label>
 			</li>
 		<li><label>Type</label>
-			<? echo ( checkboxes( 'Type', [ 'Sheet', 'Sheet', 'Roll','Roll','Unknown','Unknown' ], [ split(',',$session{'/employee/inventory/inventory_log.html?Type'}) ],  {onclick=>'calc)();' } ); ) ?>
+			<? echo ( checkboxes( 'Type', [ 'Sheet', 'Sheet', 'Roll','Roll','Unknown','Unknown' ], [ split(',',$session{'/employee/inventory/inventory_log.html?Type'}) ],  {onclick=>'calc();' } ); ) ?>
         </li>
 		<li>
 		<label>User</label>
