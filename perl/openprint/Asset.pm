@@ -176,13 +176,23 @@ sub sized_url {
 						return '/assets/'.$filename;
 					} # end if	
 				} # end if	
+				my ( $stderr, $stdout );
+				require IPC::Run3;
+				if ( $openprint::config{Watermark_Text} ) {
+					if ( ! -e $src.'.watermarked' ) {
+						IPC::Run3::run3(qq`gmic -input "$src" -watermark_fourier "$openprint::config{Watermark_Text}",33 -output "$src.watermarked"`, undef, $stdout, $stderr );
+						if ( $? ) {
+							$openprint::log->error("ERror watermarking sized image. Reason: ($?) stdout($stdout) stderr($stderr)");
+						} # end if watermark
+					} else {
+						$src = $src . '.watermarked';
+					}
+				}
 				$openprint::log->debug("Creating $size at ${width} x $src $dest");
 				if ( ! -e $src ) {
 					$openprint::log->error("Source file $src does not exist.");
 					return '/assets/'.$filename;
 				} # end if
-				my ( $stderr, $stdout );
-				require IPC::Run3;
 
 				
 				my $command;
@@ -206,12 +216,6 @@ sub sized_url {
 						$openprint::log->error("ERror optimising sized image. Reason: ($?) stdout($stdout) stderr($stderr)");
 					} # end if convert
 				} # end if
-				if ( $openprint::config{Watermark_Text} ) {
-					IPC::Run3::run3(qq`gmic -input "$dest" -watermark_fourier "$openprint::config{Watermark_Text}" -output "$dest"`, undef, $stdout, $stderr );
-					if ( $? ) {
-						$openprint::log->error("ERror watermarking sized image. Reason: ($?) stdout($stdout) stderr($stderr)");
-					} # end if watermark
-				}
 			} # end if -e dest
 		} else {
 			$openprint::log->error("NO assetpath specified");
