@@ -94,6 +94,7 @@ sub information {
 			$Project->unlock();
 		} # end if
 		if ( ! $order_id ) {
+			$log->debug("Had trouble generating order $error");
 			$variable{error} .= 'Had trouble generating order.' . $error;
 		}
 		$variable{ExternalRedirect} = '/main/order/information.html?order_id='.$order_id;

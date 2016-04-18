@@ -41,11 +41,11 @@ sub delete_unfinished_orders {
 sub get_unfinished_order {
 	# This also tests for existence of the order
 	if ( $session{order_id} ) {
-		my $Order = new openprint::Order( $session{order_id} );
-		return $Order->id() if $Order->id();
+		my $Order = openprint::Order->find_one( id=>$session{order_id} );
+		return $Order->id() if $Order;
 	} # end if
 
-	my $Order = openprint::Order->find_one('session_id'=>$session{_session_id}, company_id=>$session{company_id}, 'status'=>'Incomplete', 'order'=>'id DESC' );
+	my $Order = openprint::Order->find_one( session_id=>$session{_session_id}, company_id=>$session{company_id}, status=>'Incomplete', order=>'id DESC' );
 
 	if ( $Order ) {
 		$session{order_id} = $Order->id();
@@ -159,15 +159,22 @@ sub add_project_to_order {
 
 	if ( ( ! $order_id ) or $order_id eq 'New' ) {
 		$order_id = create_order();
+$log->debug("Creating order $order_id");
+	} else {
+$log->debug("NOT Creating order $order_id");
 	} # end if
-	my $Order = new openprint::Order( $order_id );
+	my $Order = openprint::Order->find_one( id=>$order_id );
+	if ( ! $Order ) {
+		$log->error("Failure to load order $order_id");
+		return ( undef, "Failure to create order");
+	}
 	if ( ! $Project->company_id() ) {
 		if ( $session{company_id} ) {
 			# Will be saved later.
 			$Project->company_id($session{company_id});
 		} # end if
 	} elsif ( $Order->company_id() != $Project->company_id() ) {
-		$log->error("SHOULD NEVER HAPPEN");
+		$log->error("SHOULD NEVER HAPPEN order company ( $$Order{company_id}) != Project company ($$Project{company_id})");
 		if ( ! $Order->Projects() ) {
 			$variable{warning} .= 'Project is owned by ' . $Project->Company()->name() . ' but order is owned by ' . $Order->Company()->name().". The order is empty, so it's owner has been switched to " . $Project->Company()->name().'.';
 			$variable{error} .= $Order->save({
