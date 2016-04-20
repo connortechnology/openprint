@@ -583,7 +583,13 @@ $openprint::log->debug("Getting shift for " . $self->to_string() );
 					DateTime->from_epoch( epoch=>$self->endtime_seconds(), time_zone=>$openprint::TZ ),
 				);
 				if ( ! @Shifts ) {
-					$openprint::log->warning( "No shift for $$self{starttime}" );
+					while( ! ( @Shifts = openprint::Shift::get_Shifts( $self->Equipment(),
+                    DateTime->from_epoch( epoch=>$self->starttime_seconds(), time_zone=>$openprint::TZ ),
+                    DateTime->from_epoch( epoch=>$self->endtime_seconds(), time_zone=>$openprint::TZ ), 
+                ) ) ) {
+						$self->starttime_seconds( $self->starttime_seconds() + 60*60 );
+					}
+					$openprint::log->warn( "No shift for $$self{starttime}" );
 					return;
 				}
 				
@@ -716,6 +722,9 @@ sub bump {
 				$openprint::log->debug("Resulting time is less than now $starttime_seconds, bumping to now $_");
 				$starttime_seconds = $_;
 			}
+
+			# Can't just set startime here.  Should always be a valid shift time.
+			# So get a shift first
 			$self->starttime_seconds( $starttime_seconds );
 			if ( ! $self->Shift() ) {
 				$openprint::log->debug("No shift");
