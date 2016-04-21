@@ -1031,8 +1031,10 @@ sub _ul {
 		$variable{Shift} = $Job->Shift();
 	} elsif ( $param{action} eq 'split' ) {
 		my $Job = new openprint::ScheduledJob( $param{schedule_id} );
+		my $Shift = $variable{Shift} = $Job->Shift();
+		$Shift->lock();
 		$Job->split( $param{new_form_count} );
-		$variable{Shift} = $Job->Shift();
+		$Shift->unlock();
 	} elsif ( $param{shift_id} ) {
 		$variable{Shift} = new openprint::Shift( $param{shift_id} );
 	} elsif ( $param{ul_id} ) {
