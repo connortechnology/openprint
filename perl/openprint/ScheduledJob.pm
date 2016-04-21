@@ -95,10 +95,13 @@ sub starttime_seconds {
 
 	if ( @_ > 1 ) {
 		if ( $_[1] < ( time -10 ) ) {
+		$starttime_dt = DateTime->from_epoch( epoch=>$_[1], time_zone=>$openprint::TZ );
 			$log->error( 'ScheduledJob: startime_seconds < NOW() ' . $parser->format_datetime( $starttime_dt ) );
 		} # end if
+$openprint::log->debug("Setting starttime_seconds to $_[1]");
 		$starttime_dt = DateTime->from_epoch( epoch=>$_[1], time_zone=>$openprint::TZ );
 		$_[0]{starttime} = $parser->format_datetime( $starttime_dt );
+$openprint::log->debug("Got $starttime_dt = $_[0]{starttime}");
 		delete $_[0]{Shift};
 	} elsif ( $_[0]{starttime} ) {
 		
@@ -802,29 +805,41 @@ sub split {
 	my @service_ids = $$self{pertains_id} ? @{$$self{pertains_id}} : @{$$self{service_id}};
 	my $printing = ( (!($$self{pertains_id} and @{$$self{pertains_id}})) or sets::union( @{$$self{service_id}}, @{$$self{pertains_id}} ) == @{$$self{service_id}} );
 
+$openprint::log->debug("Service ids: @service_ids");
 	if ( @service_ids > 1 ) {
 		if ( $forms ) {
 			# Some specified # of forms
+			$openprint::log->debug("forms $forms" );
 			my @new_forms = splice @service_ids, @service_ids - $forms, $forms;
 			if ( $printing ) {
 				$self->service_id( \@service_ids );
 			} # end if
 			$self->pertains_id( \@service_ids );
 			$self->runtime(undef);
-			$self->save();
+			$openprint::log->debug("BEforesave $_");
+			$_ = $self->save();
+			$openprint::log->debug("After save $_");
+			return if $_;
 
+			$openprint::log->debug("About to copy");
 			my $J2 = $self->copy();
+			$openprint::log->debug("copy");
 			if ( $self->starttime() ) {
+			$openprint::log->debug("new starttime: " .$self->endtime_seconds() + 1);
 				$J2->starttime_seconds( $self->endtime_seconds() + 1);
 			} # end if
 			$J2->pertains_id(\@new_forms);
 			if ( $printing ) {
 				$J2->service_id(\@new_forms);
 			} # end if
+			$openprint::log->debug("Runtime");
 			$J2->runtime(undef);
+			$openprint::log->debug("Runtime");
 			$J2->save();
 		} else {
+			$openprint::log->debug("No forms" );
 			my $runtime = int ( $self->runtime_seconds()/@service_ids );
+$openprint::log->debug("RUntime seconds: $runtime");
 			$self->runtime_seconds( $runtime );
 			my $impressions = int( $self->impressions() / @service_ids );
 			$$self{pertains_id} = [ shift @service_ids ];
@@ -833,15 +848,19 @@ sub split {
 			$self->impressions( $impressions );
 			$self->save();
 			my $starttime = $self->starttime_seconds() + $runtime if $self->starttime();
+$openprint::log->debug("Starttime: $starttime, now: " . time);
 			foreach my $s_id ( @service_ids ) {
 				my $J2 = $self->copy();
 				$$J2{service_id} = [ $s_id ] if $printing;
 				$$J2{pertains_id} = [ $s_id ];
 				if ( $self->starttime() ) {
+$openprint::log->debug("Setting starttime to $starttime");
 					$J2->starttime_seconds( $starttime );
 					$starttime += $runtime;
 				} # end if starttime
-				$J2->save();
+$openprint::log->debug("Asave");
+				$_ = $J2->save();
+$openprint::log->debug("Asave $_");
 			} # end foreach 
 		} # end if
 	} elsif ( @service_ids ) { # == 1
