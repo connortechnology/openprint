@@ -349,18 +349,24 @@ sub get_Shifts {
 			$log->error("Unable to find ES $$LastShift{shift_id} in Equipment_Shifts");
 			$ES_index = 0;
 		} else {
+$log->debug("Found ES for last shift: " . $Equipment_Shifts[$ES_index]->to_string() );
 			$ES_index += 1;
 			$ES_index = 0 if $ES_index == @Equipment_Shifts;
 		}
 		
 		# The ordering of the Shifts is important for multi-day schedules
 		while ( $last_dt < $end_dt ) {
+$log->debug("Last_dt: $last_dt < $end_dt");
 			while ( $Equipment_Shifts[$ES_index]->compare( $last_dt ) ) {
 				# Add by hours until we fit into a shift again.
 				$last_dt += DateTime::Duration->new( seconds => 3600 );
+$log->debug("while Last_dt: $last_dt < $end_dt");
 				last if $last_dt > $end_dt;
 			} # end if
-			last if $last_dt > $end_dt;
+			if ( $last_dt > $end_dt ) {
+				$log->debug("last cuz Last_dt: $last_dt > $end_dt");
+				last ;
+			}
 
 			# Need to start on the correct shift.
 			my $Shift = $Equipment_Shifts[$ES_index]->emanantise( $last_dt );

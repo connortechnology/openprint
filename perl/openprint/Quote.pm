@@ -109,7 +109,7 @@ sub load {
 
 sub save {
 	my ( $self, $params ) = @_;
-	$self->set( $params );
+	$self->set( $params ? $params : {} );
 	my %sql;
 	foreach my $key ( keys %fields ) {
 		next if ! $fields{$key};

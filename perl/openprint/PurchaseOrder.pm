@@ -110,7 +110,7 @@ $serial = 'purchaseorders_id_seq';
 sub save {
 	my ( $self, $param, $force_insert ) = @_;
 
-	$self->set( $param );
+	$self->set( $param ? $param : {} );
 
 	my $ac = sql::start_transaction( $openprint::dbh );
 $openprint::log->debug("PurchaseOrder::Save AC: $ac");

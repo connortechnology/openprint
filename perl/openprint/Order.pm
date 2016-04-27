@@ -88,7 +88,7 @@ invoice_num => 'id IN (SELECT order_id FROM order_invoices WHERE invoice_id=(SEL
 sub save {
 	my ( $self, $params ) = @_;
 
-	$self->set( $params );
+	$self->set( $params ? $params : {} );
 	$self->paid(undef);
 	$$self{owing} = $$self{total} - $$self{paid};
 	$$self{company_id} = $session{company_id} if ! $$self{company_id};

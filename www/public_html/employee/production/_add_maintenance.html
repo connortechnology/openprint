@@ -39,8 +39,10 @@
 		</li>
 		</ul>
 		<p class="buttons">
-			<? echo ( button( 'Submit', { onclick=> q`$('AddDocketForm').submit();` ); ) ?>
-			<? echo ( button( 'Cancel', { onclick=>'contentWin.destroy();' ); ) ?>
+			<? echo ( join("\n",
+						button( 'Submit', { onclick=> q`$('AddDocketForm').submit();` } ),
+						button( 'Cancel', { onclick=>'popupWin.close();' } ),
+						); ) ?>
 		</p>
 	</fieldset>
 </form>
