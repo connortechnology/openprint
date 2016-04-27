@@ -5775,9 +5775,9 @@ $openprint::log->debug("Was mixed") if DEBUG_INKS;
 				
 			if ( %material_price ) {
 				my $area = $Imposition->object_area() * $colour_impressions * $coverage;
-				if ( $qty < $$Imposition{imposition} * $colour_impressions ) {
-					$area *= $qty / $$Imposition{imposition} * $colour_impressions;
-				}
+				#if ( $qty < $$Imposition{imposition} * $colour_impressions ) {
+					#$area *= $qty / $$Imposition{imposition} * $colour_impressions;
+				#}
 
 	$openprint::log->debug("Area $area = $$Imposition{object_area} * $colour_impressions * ($coverage) ") if DEBUG_INKS;
 
