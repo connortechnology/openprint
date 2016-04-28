@@ -787,6 +787,14 @@ $openprint::log->debug("Not employee" );
 	return 0;
 } # end sub can_invoice
 
+sub can_reopen {
+	return 0 if ! $_[0]{id};
+	return 1 if $openprint::session{user_type} eq 'A';
+	return 1 if $openprint::session{user_type} eq 'E' and openprint::usergroup::is_user_in( ['Accounting'], $openprint::session{user_id} );
+	return 0 if sets::isin( $_[0]->status(), [ 'Paid', 'Re-Opened', 'Incomplete' ] );
+	return 1;
+} # end sub can_reopen
+
 sub Invoice {
 $openprint::log->error("Deprecated call to Order::Invoice");
 	return new openprint::Invoice( $_[0]{invoice_id} );
