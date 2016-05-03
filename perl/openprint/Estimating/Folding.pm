@@ -1100,7 +1100,7 @@ $openprint::log->debug("No Fold") if DEBUG;
 												$Fold = undef;
 											} # end if
 										} else {
-											if ( $Imposition->layout_height() >= $max_feed_width ) {
+											if ( $Imposition->layout_width() >= $max_feed_width ) {
 												$fits = "Fold no good due to max feed width ($max_feed_width). $width_folds x $height_folds size: ($$Imposition{layout_width}).";
 												$Fold = undef;
 											} # end if
