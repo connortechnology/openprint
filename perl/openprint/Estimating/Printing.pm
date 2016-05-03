@@ -2403,6 +2403,19 @@ $openprint::log->debug("after set_size");
 			$variables{"hdnImpositionDutchColumns$qty_index"} = [ sets::union( 'output', @{$variables{"hdnImpositionDutchColumns$qty_index"}} ) ];
 			$variables{"hdnImpositionDutchRows$qty_index"} = [ sets::union( 'output', @{$variables{"hdnImpositionDutchRows$qty_index"}} ) ];
 		} # end if
+		if ( 
+				( $$specs{"chkOverrideRunStyle$qty_index"} eq 'Y' ) 
+				and
+				$$specs{"ddmRunStyle$qty_index"} 
+				and 
+				( $$specs{"chkOverridePress$qty_index"} eq 'Y' )
+				and 
+				$$specs{"ddmPress$qty_index"} ) {
+			my $Press = openprint::Equipment->find_one(strid=>$$specs{"ddmPress$qty_index"});
+			if ( ! sets::isin( $$specs{"ddmRunStyle$qty_index"}, [ split(',', $Press->specification('Runstyles') ) ] ) ) {
+				$$specs{alert} .= "Press $$Press{name} cannot do " . $$specs{"ddmRunStyle$qty_index"}.'<br/>';
+			}
+		}
 	} # end foreach
 	if ( $$specs{alert} ) {
 		$openprint::log->debug("Returning early alert($$specs{alert})") if DEBUG;
