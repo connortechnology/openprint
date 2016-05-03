@@ -276,7 +276,7 @@ sub auto_calculate {
 		} # end if
 	} # end foreach
 
-	foreach my $service_type ( 'Collating', 'Aqueous', 'UVCoating' ) {
+	foreach my $service_type ( 'Collating', 'Aqueous', 'UVCoating', 'Grommeting', 'Sewing' ) {
 		my $module = 'openprint::Estimating::'.$service_type;
 		eval ( 'require '.$module.';' );
 		$openprint::log->error("Error requiring opepnrint::Estimating::$service_type: $@") if $@;
@@ -319,7 +319,7 @@ sub auto_calculate {
 		} # end if
 	} # end if
 
-	foreach my $service_name ( 'Scoring', 'Perforating', 'Counting', 'Grommeting', 'Sewing', 'Imposition', 'Stripping' ) {
+	foreach my $service_name ( 'Scoring', 'Perforating', 'Counting', 'Imposition', 'Stripping' ) {
 		next if $$services{$service_name};
 		eval 'require openprint::Estimating::'.$service_name.';';
 		$openprint::log->error("Error requiring opepnrint::Estimating::$service_name: $@") if $@;
@@ -331,6 +331,7 @@ sub auto_calculate {
 			push @{$$services{$service_name}}, $_ if $_ and !$$services{$service_name};
 		} # end if
 	} # end foreach service_name;
+
 
 	# Order for these is important.  Stitching must be calc'd before Folding
 	foreach my $type ( 'Folding','SaddleStitching','LoopStitching' ) {
