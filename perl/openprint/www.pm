@@ -556,6 +556,8 @@ $log->debug("Service: " . $Service->to_string() );
 						} else {
 							$log->error( "No function def for $module :: $proc!" );
 						}
+					} else {
+$log->debug("No proc found for $filename");
 					} # end if
 				} # end if -e $ENV{DOCUMENT_ROOT}.$uri 
 
