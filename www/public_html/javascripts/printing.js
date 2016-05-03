@@ -224,6 +224,8 @@ function calc_print( formName, force, options ) {
 			h.unset(pair.key);
 		if ( pair.key == 'btnFunction' ) 
 			h.unset(pair.key);
+		if ( pair.key == 'alert' ) 
+			h.unset(pair.key);
 	});
 	if ( options ) {
 		$H(options).each(function(pair) {
