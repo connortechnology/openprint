@@ -65,6 +65,12 @@ sub calc {
 $openprint::log->debug("In Project::calc");
 	my $ProjectType = new openprint::ProjectType( $$specs{projecttype_id} );
 	my $Project = new openprint::Project( $project_index );
+	if ( $project_index and ! $$Project{id} ) {
+		$log->error("Project Index was specified, but not found. $project_index");
+		$Project->save();
+	} else {
+		$log->debug("Have project $project_index $$Project{id}");
+	}
 	my $services = $Project->services();
 	$Project->Currency( openprint::Currency::get_current() );
 	if ( $Project->type_id() != $ProjectType->id() ) {
