@@ -2,7 +2,7 @@
 <h1>Orders</h1>
 <h2>History</h2>
 </div>
-<? if ( $session{'user_id'} ) ?>
+<? if ( $session{user_id} ) ?>
 <form id="f1" name="f1" action="history.html" method="post">
 	<div class="Order"><div class="History">
 		<div id="JumpTo">
@@ -35,6 +35,13 @@
 		<div id="Filter">
 		<fieldset class="filters unprintable"><legend>or Select Search Criteria</legend>
 			<ul>
+				<li>
+					<label>Status</label>
+					<select name="status_id" onchange="LoadContent('Results','/main/order/_history.html',f1);">
+						<option value="">All</option>
+						<? echo ( make_drop_down( openprint::Order_Status->dropdown(), [ split(',', $session{$r->uri().'?status_id'} )] );) ?>
+					</select>
+				</li>
 <? if ( sets::isin( $session{user_type}, ['E','A'] ) ) ?>
             <li>
                 <label>Company</label>
@@ -77,6 +84,6 @@
 	<input type="hidden" name="btnFunction"/>
 </form>
 <div id="Results"><?include('_history.html')?></div>
-<? else ( $session{'user_id'} ) ?>
+<? else ( $session{user_id} ) ?>
 Only logged in customers have an order history. 
-<? endif ( $session{'user_id'} ) ?>
+<? endif ( $session{user_id} ) ?>

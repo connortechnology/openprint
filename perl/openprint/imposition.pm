@@ -135,7 +135,7 @@ sub check_setup {
 if ( 
 ( $$setup{columns} == 1 ) and 
 ( $$setup{runstyle} eq 'Perfecting' ) and 
-$setup->perfecting_wheel_space() ) {
+$$setup{perfecting_wheel_space} ) {
 	$openprint::log->debug("check)setup no good") if DEBUG;
 	return 0;
 }

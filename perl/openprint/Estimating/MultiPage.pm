@@ -320,6 +320,12 @@ $openprint::log->warn("FIXM E");
 		openprint::Estimating::Printing::get_inkcoverage( $Project, $specs, \%variables, $group_id );
 		openprint::Estimating::Printing::get_Stocks( $Project, \%sig_specs, \%variables );
 		openprint::Estimating::Printing::set_size( $Project, \%sig_specs, $specs );
+		if ( $$specs{"ddmRunStyle-$group_id"} and $$specs{"ddmPress-$group_id"} ) {
+			my $Press = openprint::Equipment->find_one(strid=>$$specs{"ddmPress-$group_id"});
+			if ( ! sets::isin( $$specs{"ddmRunStyle-$group_id"}, [ split(',', $Press->specification('Runstyles') ) ] ) ) {
+				$$specs{alert} .= "Press $$Press{name} cannot do " . $$specs{"ddmRunStyle-$group_id"}.'<br/>';
+			}
+		}
 		$$specs{alert} .= $sig_specs{alert} .' for group ' . $group_id . ' ' . $$specs{'txtServiceDescription'.$group_id}. '<br/>' if $sig_specs{alert};
 		@$specs{map { $_.$group_id} @signature_variables} = @sig_specs{@signature_variables};
 		if ( ! ( $variables{'GroupPageQuantity'.$group_id} and @{$variables{'GroupPageQuantity'.$group_id}} ) ) {
