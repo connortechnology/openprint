@@ -128,11 +128,6 @@ sub display {
 sub summary {
 	my ( $Project, $service_id, $specs, $qty_index ) = @_;
 
-	$specs = openprint::service::get_specs_ref( $Project, $service_id ) if ! $specs;
-	if ( $qty_index ) {
-		return $$specs{'txtNegativeQuantity'.$qty_index}.' negative' . ( $$specs{'txtNegativeQuantity'.$qty_index} == 1 ? '' : 's');
-	} else {
-	} # end if
 	return '';
 } # end sub summary
 
