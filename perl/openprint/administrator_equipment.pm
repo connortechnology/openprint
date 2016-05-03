@@ -285,9 +285,9 @@ sub _operators {
 
 sub list {
 	_list();
-	ssi::setup_date_select( '/administrator/equipment/list.html', 'created_on_start', -365 );
+	ssi::setup_date_select( '/administrator/equipment/list.html', 'created_on_start', '' );
 	ssi::setup_date_select( '/administrator/equipment/list.html', 'created_on_end', '' );
-	$openprint::session{'/administrator/equipment/list.html?deleted'} = 'Y' if ! exists $openprint::session{'/administrator/equipment/list.html?deleted'};
+	$openprint::session{'/administrator/equipment/list.html?deleted'} = '1' if ! exists $openprint::session{'/administrator/equipment/list.html?deleted'};
 }
 sub _list {
     ssi::save_params( '/administrator/equipment/list.html', (

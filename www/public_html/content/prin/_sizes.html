@@ -58,25 +58,31 @@ return;
 					);
 
 				my $html;
+
 				if ( $$variable{ProjectType}->name() eq 'Envelopes' ) {
-                    $_ = q{SELECT DISTINCT dblFinishedWidth::float || 'x' || dblFinishedHeight::float || 'Finished' AS size, description FROM projecttemplate WHERE projecttype_id = ? ORDER BY SIZE};
-                    $html = make_drop_down( [ sql::execute( undef, undef, $_, $$variable{ProjectType}->id()) ] );
+					my @Templates = openprint::ProjectType_Template->find( 
+						projecttype_id	=>	$$variable{ProjectType}->id(), 
+						order			=>	'name,dblfinishedwidth,dblfinishedheight',
+						);
+                    $html = make_drop_down( [ map { $_->finishedwidth() . 'x' . $_->finishedheight() . 'Finished', $_->description() } @Templates ], 
+						join('x', @$variable{'txtFinalWidth','txtFinalHeight'} ) . 'Finished',
+					);
 				} else {
 					my $sql;
-					if ( $$variable{DimensionsDisplay} eq 'Finished' ) {
-						$sql = q{SELECT DISTINCT dblFinishedWidth::float || 'x' || dblFinishedHeight::float || 'Finished' AS size, dblFinishedWidth::float || '" x ' || dblFinishedHeight::float || '" Finished' FROM projecttemplate WHERE projecttype_id=?};
-					} else {
-						$sql = q{SELECT DISTINCT dblFlatWidth::float || 'x' || dblFlatHeight::float || 'Flat' AS size, dblFlatWidth::float || '" x ' || dblFlatHeight::float || '" Flat' FROM projecttemplate WHERE projecttype_id=?};
-					} # end if
 
-					my @options = ( $$variable{FoldType} ?
-                          sql::execute( undef, undef, $sql . ' AND type=? ORDER BY SIZE', $$variable{ProjectType}->id(), $$variable{FoldType} ) :
-                          sql::execute( undef, undef, $sql . ' ORDER BY SIZE', $$variable{ProjectType}->id() ) );
-					@options = sql::execute( undef, undef, $sql . ' ORDER BY SIZE', $$variable{ProjectType}->id() ) if ! @options;
-					
-					$html = make_drop_down( \@options,
-						join('x', @$variable{'txtFinalWidth','txtFinalHeight'} ) . ( $$variable{DimensionsDisplay} eq 'Finished' ? 'Finished' : 'Flat' ),
+					my @Templates = openprint::ProjectType_Template->find( 
+							projecttype_id=>$$variable{ProjectType}->id(), 
+							order=>'dblfinishedwidth,dblfinishedheight',
+							( $$variable{FoldType} ? ( type=>$$variable{FoldType} ) : () ),
 						);
+					@Templates = openprint::ProjectType_Template->find( 
+							projecttype_id=>$$variable{ProjectType}->id(), 
+							order=>'dblfinishedwidth,dblfinishedheight',
+						) if ! @Templates;
+					
+                    $html = make_drop_down( [ map { $_->finishedwidth() . 'x' . $_->finishedheight() . 'Finished', $_->description() } @Templates ], 
+						join('x', @$variable{'txtFinalWidth','txtFinalHeight'} ) . 'Finished',
+					);
 					if ( ! $html ) {
 						$$variable{Dimensions} = 'Custom';
 					} # end if
@@ -89,7 +95,7 @@ return;
 				#return;
 			  make_drop_down( [
 				  map { 1*$_->finished_width().'x'.1*$_->finished_height(), $_->description() }
-					 $$variable{ProjectType}->Templates( order=>'name' )
+					 $$variable{ProjectType}->Templates( order=>'dblfinishedwidth,dblfinishedheight' )
 					 ],
 				$$variable{ddmProjectSize},
 );

@@ -54,7 +54,7 @@ sub save {
 	$_[0]->remaining(undef);
     my $error = $_[0]->SUPER::save( );
 	if ( (! $error) and $_[0]{order_id} ) {
-		$_[0]->Order()->paid(undef);
+		#$_[0]->Order()->paid(undef);
 	} # end if
 	return $error;
 } # end sub save

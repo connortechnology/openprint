@@ -1,4 +1,4 @@
 <li>
 	<label>Quantity<? if ( $$variable{'ProjectType'}->name() eq 'ScratchPads' ) ?> (No. of Pads)<? endif ( $$variable{'ProjectType'}->name() eq 'ScratchPads' ) ?></label>
-	<input type="number" id="txtQuantity1" name="txtQuantity1" value="<? echo ( $$variable{'Project'}->quantity1() ) ?>" onkeyup="this.value=this.value.replace(/\D/g,'');remove_div('OrderButton');" />
+	<? echo ( input( type=>'cardinal', name=>'txtQuantity1', id=>'txtQuantity1', value=> $$variable{'Project'}->quantity1(), oninput=>q`remove_div('OrderButton');calc('f1');` ); ) ?>
 </li>

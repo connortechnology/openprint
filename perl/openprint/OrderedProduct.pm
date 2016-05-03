@@ -92,6 +92,11 @@ sub price {
 	} # end if
 	return $$self{price};
 } # end sub price
+
+sub total {
+	return $_[0]->price() * $_[0]->quantity();
+}
+
 sub Currency {
 	if ( $_[0]{project_id} ) {
 		return $_[0]->Project()->Currency();

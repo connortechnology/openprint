@@ -139,8 +139,8 @@ sub history {
 	ssi::setup_date_select( '/invoice/history.html', 'due_on_start', -365 );
 	ssi::setup_date_select( '/invoice/history.html', 'due_on_end', '' );
 
-	$session{'/invoice/history.html?paid'} = '0' if ! sets::isin( $session{'/invoice/history.html?paid'}, [ 0,1,2] );
-	$session{'/invoice/history.html?bad_debt'} = '0' if ! sets::isin( $session{'/invoice/history.html?bad_debt'}, [ 0,1,2] );
+	$session{'/invoice/history.html?paid'} = '0' if ! sets::isin( $session{'/invoice/history.html?paid'}, [ 0,1,''] );
+	$session{'/invoice/history.html?bad_debt'} = '0' if ! sets::isin( $session{'/invoice/history.html?bad_debt'}, [ 0,1,''] );
 	$session{'/invoice/history.html?employee_id'} = $session{user_id} if ! exists $session{'/invoice/history.html?employee_id'};
 } # end sub history
 
@@ -401,6 +401,9 @@ $log->debug("Adding");
 				price		=>	$$Product{price},
 			});
 		}
+	} elsif ( $param{action} eq 'remove' ) {
+		my $OI = openprint::Order_Invoice->find_one( order_id=>$param{order_id}, invoice_id=>$param{invoice_id} );
+		$OI->delete();
 	} # end if param add
 
 } # end sub _invoiced_orders

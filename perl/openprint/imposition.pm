@@ -62,18 +62,18 @@ sub calc_dutch {
 	my ( $setup, $space_width, $space_height, $specs ) = @_;
 #$openprint::log->debug("Trying dutch:") if DEBUG;
 	my ( $image_width, $image_height );
-	if ( $setup->image_orientation() eq 'Vertical' ) {
-		( $image_width, $image_height ) = $setup->get('image_width','image_height');
+	if ( $$setup{image_orientation} eq 'Vertical' ) {
+		( $image_width, $image_height ) = @$setup{'image_width','image_height'};
 	} else {
-		( $image_width, $image_height ) = reverse $setup->get('image_width','image_height');
+		( $image_width, $image_height ) = @$setup{'image_height','image_width'};
 	} # end if
 
 	my @dutch_imps;
 	my $previous_dutch_imp = 0;
 	# So now we have a non-dutch imp, now
-	foreach my $col_delta ( 0 .. int ( $setup->columns() / 2 ) ) {
+	foreach my $col_delta ( 0 .. int ( $$setup{columns} / 2 ) ) {
 
-		my $col_space = $space_width - ( ($setup->columns() -$col_delta) * $image_width );
+		my $col_space = $space_width - ( ($$setup{columns} -$col_delta) * $image_width );
 		my $dutch_cols = int($col_space / $image_height);
 		my $dutch_rows = int($space_height / $image_width);
 		
@@ -81,12 +81,12 @@ sub calc_dutch {
 		$dutch_imp->set(
 				'dutch_columns'	=>	$dutch_cols,
 				'dutch_rows'	=>	$dutch_rows,
-				'columns'		=>	$setup->columns() - $col_delta,
-				'imposition'	=>	($setup->columns() - $col_delta) * $setup->rows() + ( $dutch_cols * $dutch_rows ),
+				'columns'		=>	$$setup{columns} - $col_delta,
+				'imposition'	=>	($$setup{columns} - $col_delta) * $$setup{rows} + ( $dutch_cols * $dutch_rows ),
 				'dutch_orientation'	=>	'width',
 				);
-		next if $dutch_imp->imposition() <= $setup->imposition();
-		next if $dutch_imp->imposition() <= $previous_dutch_imp;
+		next if $$dutch_imp{imposition} <= $$setup{imposition};
+		next if $$dutch_imp{imposition} <= $previous_dutch_imp;
 		if ( ! $dutch_imp->paper()->start_width() ) {
 			$openprint::log->debug("Setting dutch paper width to " . $dutch_imp->used_width() );
 			$dutch_imp->paper()->width( $dutch_imp->used_width() );
@@ -95,33 +95,33 @@ sub calc_dutch {
 
 		if ( check_setup( $dutch_imp, $specs ) ) {
 			push @dutch_imps, $dutch_imp;
-			$previous_dutch_imp = $dutch_imp->imposition();
+			$previous_dutch_imp = $$dutch_imp{imposition};
 		} # end if
 	} # end foreach
 
 	$previous_dutch_imp = 0;
-	foreach my $row_delta ( 0 .. int ( $setup->rows() / 2 ) ) {
+	foreach my $row_delta ( 0 .. int ( $$setup{rows} / 2 ) ) {
 
-		my $row_space = $space_height - ( ($setup->rows() -$row_delta) * $image_height );
+		my $row_space = $space_height - ( ($$setup{rows} -$row_delta) * $image_height );
 		my $dutch_rows = int($row_space / $image_width);
 		my $dutch_cols = int($space_width / $image_height);
 		
 		my $dutch_imp = $setup->copy();
 		$dutch_imp->set(
-				'dutch_columns'	=>	$dutch_cols,
-				'dutch_rows'	=>	$dutch_rows,
-				'rows'			=>	$setup->rows() - $row_delta,
-				'imposition'	=>	($setup->rows() - $row_delta) * $setup->columns() + ( $dutch_cols * $dutch_rows ),
-				'dutch_orientation'	=>	'height',
+				dutch_columns		=>	$dutch_cols,
+				dutch_rows			=>	$dutch_rows,
+				rows				=>	$$setup{rows} - $row_delta,
+				imposition			=>	($$setup{rows} - $row_delta) * $$setup{columns} + ( $dutch_cols * $dutch_rows ),
+				dutch_orientation	=>	'height',
 				);
-		next if $dutch_imp->imposition() <= $setup->imposition();
-		next if $dutch_imp->imposition() <= $previous_dutch_imp;
+		next if $$dutch_imp{imposition} <= $$setup{imposition};
+		next if $$dutch_imp{imposition} <= $previous_dutch_imp;
 		$dutch_imp->paper()->width( $dutch_imp->used_width() ) if ! $dutch_imp->paper()->start_width();
 		$dutch_imp->Paper()->height( $dutch_imp->used_height() ) if ! $dutch_imp->Paper()->height();
 
 		if ( check_setup( $dutch_imp, $specs ) ) {
 			push @dutch_imps, $dutch_imp;
-			$previous_dutch_imp = $dutch_imp->imposition();
+			$previous_dutch_imp = $$dutch_imp{imposition};
 		} # end if
 	} # end foreach
 	return @dutch_imps;

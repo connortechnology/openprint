@@ -1475,16 +1475,16 @@ function to_hostname(e) {
 	} 
 }
 function floatize(e) {
-	if ( e.value.match(/[^\d\-\.%\*]/) ) {
-		e.value = parseFloat(e.value.replace(/[^\d\-\.%\*]/g,''));
+	if ( e.value.match(/[^\d\+\-\.%\*]/) ) {
+		e.value = parseFloat(e.value.replace(/[^\d\+\-\.%\*]/g,''));
 	} 
 	if ( e.value == 'NaN' )
 		e.value = '';
 	return e.value;
 }
 function positive_floatize(e) {
-	if ( e.value.match(/[^\d\.%\*]/) ) {
-		e.value = parseFloat(e.value.replace(/[^\d\.%\*]/g,''));
+	if ( e.value.match(/[^\d\+\.%\*]/) ) {
+		e.value = parseFloat(e.value.replace(/[^\d\+\.%\*]/g,''));
 	} 
 	if ( e.value == 'NaN' )
 		e.value = '';

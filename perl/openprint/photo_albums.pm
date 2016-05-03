@@ -192,6 +192,7 @@ sub view_photo {
 
 	my $Photo = openprint::Photo_in_Album->find_one( asset_id => $param{asset_id}, album_id=> $param{album_id} );
 	if ( ! $Photo ) {
+		$variable{Photo} = new openprint::Photo_in_Album();
 		$log->warn("No photo for album $param{album_id} phto: $param{asset_id}");
 		return;
 	} # end if

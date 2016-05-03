@@ -905,6 +905,7 @@ if ( ! sets::isin( 'company_credit', \@tables ) ) {
 		$dbh->do('ALTER TABLE company_credit add cod float');
 	} # end if
 	if ( ! exists $$data{terms} ) {
+		$log->debug("Adding terms to company_credit");
 		$dbh->do('ALTER TABLE company_credit add terms integer');
 	} # end if
 	if ( ! exists $$data{supplier_id} ) {

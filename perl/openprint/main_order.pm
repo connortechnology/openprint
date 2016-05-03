@@ -94,6 +94,7 @@ sub information {
 			$Project->unlock();
 		} # end if
 		if ( ! $order_id ) {
+			$log->debug("Had trouble generating order $error");
 			$variable{error} .= 'Had trouble generating order.' . $error;
 		}
 		$variable{ExternalRedirect} = '/main/order/information.html?order_id='.$order_id;
@@ -608,7 +609,11 @@ sub _product_list_edit {
 			product_id	=>	$param{product_id},
 			quantity	=>	1,
 		});
+	} elsif ( $param{action} eq 'remove' ) {
+		my $OP = openprint::OrderedProduct->find_one(order_id => $param{order_id}, id=>$param{id} );
+		$variable{error} .= $OP->delete() if $OP;
 	} # end if
+	$variable{Products} = [ $Order->Products() ];
 } # end sub 
 1;
 __END__

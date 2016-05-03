@@ -94,7 +94,7 @@ $log->debug("Grommeting!!!!!!!!!!!!!!!!!!");
 		@no_outputs = sets::union( @no_outputs, 'Quantity' );
 		@outputs = sets::exclude( ['Quantity'], \@outputs );
 	} # end if
-	if ( ! $$specs{Quantity} ) {
+	if ( (!defined $$specs{Quantity}) or ( $$specs{Quantity} eq '' ) ) {
 		$$specs{alert} = 'Please enter the # of grommets per item.<br/>';
 		return $$specs{Status} = 'uncalculated';
 	} # end if

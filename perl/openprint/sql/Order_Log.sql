@@ -9,4 +9,4 @@ CREATE TABLE Order_Log (
 	PRIMARY KEY (id)
 );
 
-CREATE INDEX order_log_order_id_idx ON order_log (order_id);
+CREATE INDEX order_log_order_id_idx ON order_log (order_id,dtmwhen);

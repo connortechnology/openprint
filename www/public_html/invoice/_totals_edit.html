@@ -3,9 +3,10 @@
 		<div class="content">
 			<ul>
 				<li class="subtotal">
-					<label>Sub Total</label>
-					<span id="subtotal"><? echo ( join("\n",
-						openprint::Currency::format( $$variable{Invoice}->subtotal() ),
+					<label>Sub Total</label><?echo($$variable{CurrencySymbol})?>
+					<? echo ( join("\n",
+						input( type=>'float', name=>'subtotal', id=>'subtotal', value=>$$variable{Invoice}->subtotal() ),
+						boolean_override('subtotal_override', $$variable{Invoice}->subtotal_override() ),
 						); ) ?>
 					</span>
 				</li>

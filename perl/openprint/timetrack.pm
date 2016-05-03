@@ -114,6 +114,7 @@ sub edit {
 						starting	=>$param{starting},
 						ending		=>$param{ending},
 						service_id	=>( $param{service_id} ? $param{service_id} : undef ),
+						description	=>	$param{description},
 						) ) {
 				$variable{error} = 'Not creating duplicate.<br/>';
 				return;

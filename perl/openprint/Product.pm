@@ -199,7 +199,7 @@ sub Photos {
 sub Album {
 	my $Album = new openprint::Photo_Album( $_[0]{'album_id'} );
 	if ( ! $Album->id() ) {
-	$Album->name('Photos for product '.$_[0]{'name'});
+		$Album->name('Photos for product '.$_[0]{'name'});
 	} # end if
     return $Album;
 } # end sub Album

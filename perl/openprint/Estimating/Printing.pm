@@ -328,7 +328,7 @@ my %variables = (
 	'pages_supplied'=>['save'],
 	'supplied_format'=>['save'],
 # Banners
-	'grommets' => ['save'],
+	'grommets' => ['save'], grommeting => ['save'],
 	'pockets'	=>	['save'],
 	'hemmed'	=>	['save'],
 	'EdgeLeft' => ['save'], 'EdgeRight' => ['save'], 'EdgeTop' => ['save'], 'EdgeBottom'=>['save'],
@@ -2843,7 +2843,7 @@ if ( 1 ) {
 		} # end if
 $openprint::log->debug("Master time after qty: $qty_index" . ( sprintf('%.4f', tv_interval( [$master_time])*1000) ) .' usecs' ) if DEBUG;
 	} # end foreach quantity
-	$$specs{NeedCutting} = openprint::Estimating::Cutting::signature_needs( $Project, $specs ) if ! $$project{HasCutting};
+	$$specs{NeedCutting} = openprint::Estimating::Cutting::signature_needs( $Project, $$project{CuttingSpecs}, $specs ) if ! $$project{HasCutting};
 $openprint::log->debug("Leaving Printing::calc status: $$specs{Status}");
 	return $$specs{Status};
 } # end sub calc
@@ -3033,7 +3033,7 @@ sub breakdown {
 		$breakdown .= "Paper: $$price{'Gross Sheet Count'} sheets @".$Paper->mweight() . 'M = ' . $$price{'Gross Sheet Count'} * $Paper->mweight()/1000 . 'lbs<br/>';
 		$breakdown .= " minimum order adjustment $$price{minimum_order}sheets<br/>" if $$price{minimum_order};
 	} elsif ( $Paper->width() ) {
-		$breakdown .= sprintf('Paper: %sx%s -> %sx%s * %.6flbs/sq inch = %.6f lbs per sheet (%d gsm, %sPT) Total: %slbs<br/>', $Paper->start_width(), $Paper->start_height(), $Paper->width(), $Paper->height(), $Paper->wpsi(), $Paper->width() * $Paper->height()* $Paper->wpsi(), $Paper->gsm(), $Paper->calliper(), $$price{'Stock Weight'} );
+		$breakdown .= sprintf('Paper: %sx%s -> %sx%s * %.6flbs/sq inch = %.6f lbs per sheet (%d gsm, %sPT) Total: %slbs<br/>', $Paper->start_width(), $Paper->start_height(), $Paper->width(), $Paper->height(), $Paper->wpsi(), $Paper->width() * $Paper->height()* $Paper->wpsi(), $Paper->gsm(), 1000*$Paper->calliper(), $$price{'Stock Weight'} );
 	} # end if
 	$breakdown .= $$price{'Ink breakdown'};
 	$breakdown .= sprintf('Ink Total: $%.2f<br/>', $$price{'Ink Price'} );
@@ -4516,7 +4516,7 @@ if ( DEBUG_PLATES ) {
 						} # end if
 						$paper_price = $Supplied->get_price( sheets=>$supplied_sheets, service=>'Material' );
 					} else {
-						$supplied_weight = ceil( $PaperCounts{$paper_string}/$Paper->factor() );
+						$supplied_weight = Math::Round::nearest( 0.1, $PaperCounts{$paper_string}/$Paper->factor() );
 						$paper_price = $Supplied->get_price( weight=>$supplied_weight, service=>'Material' );
 					} # en dif
 
@@ -5464,8 +5464,8 @@ $openprint::log->warn("No folding equipment");
 		} # end if
 		$blanks_needed -= $$PlateCounts{'Blank'.$plate_id} if $$PlateCounts{'Blank'.$plate_id};
 		$blanks_needed = 0 if $blanks_needed < 0;
+		$plate_setup{'Blank Plates'} = $blanks_needed;
 	} # end if defined require_blank_plates
-	$plate_setup{'Blank Plates'} = $blanks_needed;
 	$plate_setup{'Plate Count'} = $plate_count;
 #$Imposition->display("Plate Count $plate_count");
 
@@ -5598,12 +5598,13 @@ $openprint::log->warn("No folding equipment");
 	$impressions = $gross_sheets;
 	$impressions *= 2 if $$Imposition{sides} == 2 and ( $is_wt or $$Imposition{runstyle} eq 'Sheet Work');
 #$openprint::log->debug("New impressions: $impressions");
-	my $weight = Math::Round::nearest( .01, $gross_sheets * $Paper->sheet_weight() );
+	my $weight = $gross_sheets * $Paper->sheet_weight();
 	if ( $Paper->type() eq 'Roll' and my $Waste = $Press->Specification('Waste Stock') ) {
 		if ( $$Waste{units} eq 'Inches' ) {
 			$weight += $$Waste{value} * $$Paper{width} * $Paper->wpsi();
 		} # end if
 	} # end if
+	$weight = Math::Round::nearest( .01, $weight );
 
 	my %sheet_qty = (
 			'Impressions'				=>	$impressions, 
@@ -5788,6 +5789,10 @@ $openprint::log->debug("Was mixed") if DEBUG_INKS;
 				
 			if ( %material_price ) {
 				my $area = $Imposition->object_area() * $colour_impressions * $coverage;
+				if ( $qty < $$Imposition{imposition} ) {
+# * $colour_impressions ) {
+					$area *= $qty / $$Imposition{imposition};
+				}
 
 	$openprint::log->debug("Area $area = $$Imposition{object_area} * $colour_impressions * ($coverage) ") if DEBUG_INKS;
 

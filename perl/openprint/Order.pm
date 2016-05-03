@@ -428,7 +428,7 @@ sub subtotal {
 		$$self{subtotal} = 0;
 		$$self{subtotal} += misc::sum( map { $_->price() } $self->Ordered_Projects() );
 		foreach my $Product ( $self->Products() ) {
-			my $price = $Product->price();
+			my $price = $Product->total();
 #$log->debug("subtotal: ordered price: $price");
 			if ( $Product->currency_id() != $$self{currency_id} ) {
 				my $rate = $Product->Currency()->conversions( $$self{currency_id} );
@@ -520,6 +520,7 @@ sub send_sales_order {
 		push @project_summaries, "ProjectSummary$$Project{id}.html", MIME::QuotedPrint::encode_qp( Encode::encode('utf-8', ssi::variable_substitution( \$email_template, \%data ))), 'text/html', 'quoted-printable';
 	} # for each Project
 
+
 	my $sales_person_email;
 	if ( $self->salesrep_id() ) {
 		my $CSR = new openprint::User( $self->salesrep_id() );
@@ -528,15 +529,20 @@ sub send_sales_order {
 	if ( ! $sales_person_email ) {
 		$sales_person_email = $config{OrderingEmail};
 	} # end if
+	if ( ! $sales_person_email ) {
+		$log->error("No sales person email configured.  Emails will not be sent");
+		$self->add_log( '<div class="error">No sales person email configured.  Emails will not be sent.</div>');
+	} else {
 	
-	my $email_results = (new openprint::Email())->send(
-		FROM	=> $sales_person_email,
-		TO		=> sprintf('"%s %s" <%s>', $self->get('firstname','lastname','email')),
-		#BCC	 =>	'iconnor@point-one.com',
-		SUBJECT => "Order $$self{id} Docket $$self{docket}",
-		ATTACHMENTS	=>	[ @body, @sales_order ],
-		);
-	$self->add_log ( 'Sales Order ' . $email_results );
+		my $email_results .= (new openprint::Email())->send(
+				FROM	=> $sales_person_email,
+				TO		=> sprintf('"%s %s" <%s>', $self->get('firstname','lastname','email')),
+#BCC	 =>	'iconnor@point-one.com',
+				SUBJECT => "Order $$self{id} Docket $$self{docket}",
+				ATTACHMENTS	=>	[ @body, @sales_order ],
+				);
+		$self->add_log( 'Sales Order:'.$email_results.'<br/>' );
+	}
 
 	$order{ReplacementText} = ssi::include( '/email_content/order_admin_body.html', \%order );
 	$_ = MIME::QuotedPrint::encode_qp( Encode::encode( 'utf-8', ssi::variable_substitution( \$email_template, \%order ) ) );
@@ -577,7 +583,7 @@ sub send_sales_order {
 		);
 
 	if ( @admin_emails ) {
-		my $results = (new openprint::Email())->send(
+		my $email_results .= (new openprint::Email())->send(
 				FROM	=> $config{OrderingEmail},
 				'Reply-to'	=> $$self{email},
 				TO		=> join(',',@admin_emails),
@@ -585,9 +591,8 @@ sub send_sales_order {
 				SUBJECT => "Order $$self{id}",
 				ATTACHMENTS	=>	[ @body, @sales_order, @project_summaries, @project_dockets ],
 				);
-		$self->add_log( 'Sales Order '.$results );
+		$self->add_log( 'Admin Sales Order:'.$email_results );
 	} # end if
-
 } # end sub send_sales_order
 
 sub owing {
@@ -606,23 +611,31 @@ sub Taxes {
 	} # end if
 
 	if ( ! $$self{Taxes} ) {
-		@{$$self{Taxes}} = openprint::Order_Tax->find('order_id'=>$$self{id});
+		$$self{Taxes} = [ openprint::Order_Tax->find( order_id=>$$self{id} ) ];
 	} # end if
-	if ( $self->Company()->country() and $self->Company()->state() and ! @{$$self{Taxes}} ) {
-		foreach my $Tax ( openprint::Tax->find(
-					'period_start null_or_<='	=>	$$self{created_on},
-					'period_end null_or_>='		=>	$$self{created_on},
-					'country'	=>	$self->Company()->country(),
-					'state'		=>	$self->Company()->state()),
-				) {
-			my $T = new openprint::Order_Tax();
-			$T->save({
-				'order_id'	=>	$$self{id},
-				'tax_id'	=>	$$Tax{id},
-				'rate'		=>	$$Tax{rate},
-			});
-			push @{$$self{Taxes}}, $T;
-		} # end foreach Tax
+	if ( ! @{$$self{Taxes}} ) {
+		my $country = $self->country();
+		$country = $self->Company()->country() if ! $country;
+
+		my $state = $self->state();
+		$state = $self->Company()->state() if ! $state;
+
+		if ( $country and $state ) {
+			foreach my $Tax ( openprint::Tax->find(
+						'period_start null_or_<='	=>	$$self{created_on},
+						'period_end null_or_>='		=>	$$self{created_on},
+						country	=>	$country,
+						state	=>	$state,
+					) ) {
+				my $T = new openprint::Order_Tax();
+				$T->save({
+						order_id	=>	$$self{id},
+						tax_id		=>	$$Tax{id},
+						rate		=>	$$Tax{rate},
+						});
+				push @{$$self{Taxes}}, $T;
+			} # end foreach Tax
+		} # end if
 	} # end if
 	return @{$$self{Taxes}};
 } # end sub Taxes

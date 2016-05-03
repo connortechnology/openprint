@@ -48,7 +48,9 @@ sub edit {
 		} # end foreach
 		$variable{ExternalRedirect} = '/administrator/project_types/edit.html?ddmProjectType='.$ProjectType->id();
 	} elsif ( $param{btnFunction} eq 'Save' ) {
+		my @changes = $ProjectType->changes( \%param );
 		$variable{error} .= $ProjectType->save( \%param );
+		(new openprint::Log())->save({ object_type=>(ref $ProjectType), object_id=>$$ProjectType{id}, action=>($param{ddmProjectType}?'Edited ProjectType':'Saved ProjectType'), note=>join('<br/>', @changes) });
 
 		sql::execute( undef, undef, 'DELETE FROM Paper_Recommendations WHERE lngProjectTypeIndex=?', $ProjectType->id() ) if $param{ddmProjectType};
 		foreach my $key ( keys %param ) {

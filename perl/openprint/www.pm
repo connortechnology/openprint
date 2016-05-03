@@ -556,6 +556,8 @@ $log->debug("Service: " . $Service->to_string() );
 						} else {
 							$log->error( "No function def for $module :: $proc!" );
 						}
+					} else {
+$log->debug("No proc found for $filename");
 					} # end if
 				} # end if -e $ENV{DOCUMENT_ROOT}.$uri 
 
@@ -585,14 +587,16 @@ $log->debug("Service: " . $Service->to_string() );
 			if ( $proc ) {
 				my $module = lc $first;
 				$module .= '_'.$second if $second;
-				eval {
 					require "openprint/$module.pm"; 
 					if ( my $function = ('openprint::'.$module)->can($proc) ) {
 						$function->($r, $log, $dbh, \%variable );
+						$log->debug( "calling of require $module :: $proc, Reason: " );
 					} else {
 						$log->error( "Eval error of require $module :: $proc, Reason: " );
 					}
-				};
+						$log->error( "Eval error of require $module :: $proc, Reason: $!" ) if $!;
+			} else {
+						$log->error( "No proc Eval error of require $proc, $filename Reason: " );
 			} # end if
 		} else {
 			$log->debug("No firstSo or non-existant $uri first: $first ");

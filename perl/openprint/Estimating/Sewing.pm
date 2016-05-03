@@ -42,7 +42,7 @@ my @outputs = (
 
 sub outputs {
 	my ( $p_id, $s_id, $specs ) = @_;
-	if ( $$specs{'OverrideQuantity'} eq 'Y' ) {
+	if ( $$specs{OverrideQuantity} eq 'Y' ) {
 		return sets::exclude( ['Quantity'], \@outputs );
 	} else {
 		return @outputs;
@@ -56,7 +56,7 @@ my @no_outputs = (
 
 sub no_outputs {
 	my ( $p_id, $s_id, $specs ) = @_;
-	if ( $$specs{'OverrideQuantity'} eq 'Y' ) {
+	if ( $$specs{OverrideQuantity} eq 'Y' ) {
 		return @no_outputs;
 	} else {
 		return sets::exclude( ['Quantity'], \@no_outputs );
@@ -67,17 +67,28 @@ sub neccessary {
 	my ( $Project ) = @_;
 
     my $services = $Project->services();
-    if ( $$services{'NoBindery'} ) {
+    if ( $$services{NoBindery} ) {
         $openprint::log->debug(" ** Project is marked as No bindery, Sews not needed ! ** ");
         return 0;
     } # end if
-	my $printing_specs = openprint::service::get_specs_ref( $Project, $$services{''}[0] ) if $$services{''};
-	if ( $$printing_specs{'hemmed'} eq 'Y' ) {
-		return 1;
+	if ( $$services{''} ) {
+		my $printing_specs = openprint::service::get_specs_ref( $Project, $$services{''}[0] );
+		if ( $$printing_specs{hemmed} eq 'Y' ) {
+			return 1;
+		} # end if
+		if ( $$printing_specs{pockets} eq 'Y' ) {
+			return 1;
+		} # end if
 	} # end if
-	if ( $$printing_specs{'pockets'} eq 'Y' ) {
-		return 1;
-	} # end if
+	foreach my $sig_id ( $Project->signatures() ) {
+		my $sig_specs = openprint::service::get_specs_ref( $Project, $sig_id );
+		if ( $$sig_specs{hemmed} eq 'Y' ) {
+			return 1;
+		} # end if
+		if ( $$sig_specs{pockets} eq 'Y' ) {
+			return 1;
+		} # end if
+	} # end foreach sig
 
 	return 0;
 } # end sub neccessary
@@ -91,22 +102,22 @@ $log->debug("Sewing!!!!!!!!!!!!!!!!!!");
 	my $services = $Project->services();
 	my $printing_specs = openprint::service::get_specs_ref( $Project, $$services{''}[0] ) if $$services{''};
 	my $sig_specs = openprint::service::get_specs_ref( $Project, $$services{Signature}[0] ) if $$services{Signature};
-	if ( ! ( $$specs{'EdgeLeft'} or $$specs{'EdgeRight'} or $$specs{'EdgeTop'} or $$specs{'EdgeBottom'} ) ) {
-		$$specs{'EdgeLeft'} = 'Left';
-		$$specs{'EdgeRight'} = 'Right';
-		$$specs{'EdgeTop'} = 'Top';
-		$$specs{'EdgeBottom'} = 'Bottom';
+	if ( ! ( $$specs{EdgeLeft} or $$specs{EdgeRight} or $$specs{EdgeTop} or $$specs{EdgeBottom} ) ) {
+		$$specs{EdgeLeft} = 'Left';
+		$$specs{EdgeRight} = 'Right';
+		$$specs{EdgeTop} = 'Top';
+		$$specs{EdgeBottom} = 'Bottom';
 	} # end if
-	if ( $$specs{'OverrideQuantity'} ne 'Y' ) {
-		$$specs{'Quantity'} = 0;
-		$$specs{'Quantity'} += $$sig_specs{'txtFinalWidth'} if $$specs{'EdgeTop'};
-		$$specs{'Quantity'} += $$sig_specs{'txtFinalWidth'} if $$specs{'EdgeBottom'};
-		$$specs{'Quantity'} += $$sig_specs{'txtFinalHeight'} if $$specs{'EdgeLeft'};
-		$$specs{'Quantity'} += $$sig_specs{'txtFinalHeight'} if $$specs{'EdgeRight'};
+	if ( $$specs{OverrideQuantity} ne 'Y' ) {
+		$$specs{Quantity} = 0;
+		$$specs{Quantity} += $$sig_specs{txtFinalWidth} if $$specs{EdgeTop};
+		$$specs{Quantity} += $$sig_specs{txtFinalWidth} if $$specs{EdgeBottom};
+		$$specs{Quantity} += $$sig_specs{txtFinalHeight} if $$specs{EdgeLeft};
+		$$specs{Quantity} += $$sig_specs{txtFinalHeight} if $$specs{EdgeRight};
 	} # end if
-	if ( ! $$specs{'Quantity'} ) {
-		$$specs{'alert'} .= 'Please enter the # of inches to be sewn.<br/>';
-		return $$specs{'Status'} = 'uncalculated';
+	if ( ! $$specs{Quantity} ) {
+		$$specs{alert} .= 'Please enter the # of inches to be sewn.<br/>';
+		return $$specs{Status} = 'uncalculated';
 	} # end if
 
 	foreach ( outputs( $project_index, $service_index, $specs) ) {
@@ -126,34 +137,34 @@ $log->debug("Sewing!!!!!!!!!!!!!!!!!!");
 		$$specs{'hdnBreakdown'.$qty_index}  .= 'MakeReady: $' . sprintf( '%.2f', $makeReadyPrice ) . '<br/>';
 		$$specs{'hdnBreakdown'.$qty_index}  .= 'MinimumCharge: $' . sprintf( '%.2f', $minimumCharge ) . '<br/>';
 
-		my $qty = $$specs{"txtQuantity$qty_index"} * $$specs{'Quantity'};
+		my $qty = $$specs{"txtQuantity$qty_index"} * $$specs{Quantity};
 		my %servicePrice = openprint::service::get_price_object( 'Sewing', $qty, undef );
 		if ( ! %servicePrice ) {
 			$$specs{'hdnBreakdown'.$qty_index} .= sprintf( 'No service price.<br/>' );
 		} else {
-			if ( sets::isin( $servicePrice{'units'}, ['', 'per m', 'per 1000'] ) ) {
-				$servicePrice{'Total'} = $qty * $servicePrice{'Price'} / 1000;
+			if ( sets::isin( $servicePrice{units}, ['', 'per m', 'per 1000'] ) ) {
+				$servicePrice{Total} = $qty * $servicePrice{Price} / 1000;
 				$$specs{'hdnBreakdown'.$qty_index} .= sprintf( 'Service: $%.2f %s = $%.2f<br/>', @servicePrice{'Price','units','Total'} );
-			} elsif ( sets::isin( $servicePrice{'units'}, ['per inch'] ) ) {
-				$servicePrice{'Total'} = $qty * $servicePrice{'Price'};
+			} elsif ( sets::isin( $servicePrice{units}, ['per inch'] ) ) {
+				$servicePrice{Total} = $qty * $servicePrice{Price};
 				$$specs{'hdnBreakdown'.$qty_index} .= sprintf( 'Service: $%1$.2f%2$s * %4$dinches * %5$d = $%3$.2f<br/>', @servicePrice{'Price','units','Total'}, @$specs{'Quantity','txtQuantity'.$qty_index} );
-			} elsif ( sets::isin( $servicePrice{'units'}, ['per foot'] ) ) {
-				$servicePrice{'Total'} = $qty/12 * $servicePrice{'Price'};
-				$$specs{'hdnBreakdown'.$qty_index} .= sprintf( 'Service: $%1$.2f%2$s * %4$.2ffeet * %5$d = $%3$.2f<br/>', @servicePrice{'Price','units','Total'}, $$specs{'Quantity'}/12,$$specs{'txtQuantity'.$qty_index} );
+			} elsif ( sets::isin( $servicePrice{units}, ['per foot'] ) ) {
+				$servicePrice{Total} = $qty/12 * $servicePrice{Price};
+				$$specs{'hdnBreakdown'.$qty_index} .= sprintf( 'Service: $%1$.2f%2$s * %4$.2ffeet * %5$d = $%3$.2f<br/>', @servicePrice{'Price','units','Total'}, $$specs{Quantity}/12,$$specs{'txtQuantity'.$qty_index} );
 			} else {
 				$$specs{'hdnBreakdown'.$qty_index} .= sprintf( "unknown units for service price $servicePrice{units}<br/>" );
 			} # end if
 		} # end if
-		$price = $makeReadyPrice + $servicePrice{'Total'};
+		$price = $makeReadyPrice + $servicePrice{Total};
 		if ( my $Material = openprint::Material->find_one('name'=>'Thread') ) {
-			my %materialPrice = $Material->get_price( $qty * $$specs{'Quantity'}, undef );
+			my %materialPrice = $Material->get_price( $qty * $$specs{Quantity}, undef );
 			if ( %materialPrice ) {
-				$materialPrice{'Total'} = $materialPrice{'Price'} * $$specs{'Quantity'} * $qty;
-				$$specs{'hdnBreakdown'.$qty_index} .= sprintf( 'Material: $%.2f %s * %d * %d = $%.2f<br/>', @materialPrice{'Price','units'}, $$specs{'txtArea'}, $qty, $materialPrice{'Total'} );
+				$materialPrice{Total} = $materialPrice{Price} * $$specs{Quantity} * $qty;
+				$$specs{'hdnBreakdown'.$qty_index} .= sprintf( 'Material: $%.2f %s * %d * %d = $%.2f<br/>', @materialPrice{'Price','units'}, $$specs{txtArea}, $qty, $materialPrice{Total} );
 			} else {
 				$$specs{'hdnBreakdown'.$qty_index} .= 'No Material Price.<br/>';
 			} # end if
-			$price += $materialPrice{'Total'};
+			$price += $materialPrice{Total};
 		} else {
 			$$specs{'hdnBreakdown'.$qty_index} .= 'No Material.<br/>';
 		} # end if
@@ -163,10 +174,10 @@ $log->debug("Sewing!!!!!!!!!!!!!!!!!!");
 		} # end if
 		$unitPrice = $price / $qty;
 		$$specs{"txtUnitPrice$qty_index"} = sprintf( '%.2f', $unitPrice * (1+$Project->markup()/100) );
-		$$specs{"txtPrice$qty_index"} = sprintf( $openprint::config{'ProjectMoneyFormat'}, $price * (1+$Project->markup()/100) );
+		$$specs{"txtPrice$qty_index"} = sprintf( $openprint::config{ProjectMoneyFormat}, $price * (1+$Project->markup()/100) );
 	} # end foreach
 
-	return $$specs{'Status'} = 'calculated';
+	return $$specs{Status} = 'calculated';
 } # end sub calc
 
 sub summary {
@@ -175,7 +186,7 @@ sub summary {
 	if ( $qty_index ) {
 		
 	} else {
-		return $$specs{'Quantity'} . ' inches ' . join(' ', @$specs{'EdgeTop','EdgeBottom','EdgeLeft','EdgeRight'}).'.';
+		return $$specs{Quantity} . ' inches ' . join(' ', @$specs{'EdgeTop','EdgeBottom','EdgeLeft','EdgeRight'}).'.';
 	} # end if
 } # end sub summary
 

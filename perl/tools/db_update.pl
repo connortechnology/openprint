@@ -494,6 +494,9 @@ if ( ! sets::isin( 'invoices', \@tables ) ) {
 	if ( ! exists $$data{early_payment_date} ) {
 		$dbh->do('ALTER TABLE Invoices ADD early_payment_date DATE');
 	} # end if
+	if ( ! exists $$data{subtotal_override} ) {
+		$dbh->do('ALTER TABLE Invoices ADD subtotal_override BOOLEAN NOT NULL default false');
+	} # end if
 } # end if
 if ( ! sets::isin( 'invoice_interests', \@tables ) ) {
     $dbh->do( misc::load_file( $log, '../openprint/sql/Invoice_Interests.sql' ) );
