@@ -388,6 +388,7 @@
 			for ( my $shift_index = 1; $shift_index < @Shifts; $shift_index += 1 ) {
 				my $Next_Shift = $Shifts[$shift_index];
 
+if ( 0 ) {
 				if ( $$Next_Shift{shift_id} == $Next_ES->id() ) {
 					# It's the right shift, just make sure it isn't too far in the future
 
@@ -408,6 +409,7 @@ $log->error("Last time $last_time $_, adding an hour");
 						}
 					} # end if
 				}
+}
 					
 				#$log->debug( $Shifts[$shift_index]->shift_id() . ' == ' . $ES->Next()->id() );
 				#$log->debug( "This ES: " . $ES->to_string() );
@@ -419,12 +421,14 @@ $log->error("Last time $last_time $_, adding an hour");
 				my $last_time = $Shifts[$shift_index-1]->endtime_seconds() + 1;
 				while( $_ = $Next_ES->compare( $last_time ) ) {
 					if ( $_ > 0 ) {
+$log->error("Last time $last_time $_, adding an hour");
 						# We have not yet reached the starttime of the next shift.  They may be gaps between shifts.
 						# Add an hour until we get there.
 						$last_time += 3600;
 					} else { # $_ < 0
+$log->error("Went past, going back an hour $last_time $_, adding an hour");
 						# We have passed the ES, So the ES must be missing.
-						$last_time -= 3600;
+						#$last_time -= 3600;
 						last;
 					}
 					last if $last_time > $Shifts[$shift_index]->starttime_seconds();
