@@ -7,6 +7,7 @@
             theme_advanced_buttons2 : '',
             theme_advanced_buttons3 : '',
         });
+
 	var current_editor;
 	function tinymce_on( id ) {
 		if ( current_editor ) {
@@ -15,9 +16,11 @@
 		current_editor=id;
 		tinymce.execCommand('mceToggleEditor', true, id );
 	} // end function tinymce_on
+
 	function job_popup( job_id ) {
 		popup_window( '/employee/production/_job_popup.html', 'schedule_id='+job_id, {width:575, height:525,closeCallback: job_popup_close} );
 	} // end function job_popup
+
 	function job_popup_close() {
 		tinymce.EditorManager.execCommand('mceRemoveControl',true,'comment');
 		tinymce.EditorManager.execCommand('mceRemoveControl',true,'stock');
@@ -29,7 +32,7 @@
 		mode: "textareas",
 		editor_selector : "mce",
         plugins: "paste",
-        theme : "simple",
+        theme : "advanced",
     };
 
 	function textarea_init() {
@@ -116,7 +119,6 @@
 	function stop_job( job_id ) {
 		new Ajax.Request('_li_change.json', { parameters: { schedule_id: job_id, action: 'stop' } } );
 	} // end function stop_job
--->
 </script>
 <? eval (
 	my ( $starttime, $endtime );
@@ -162,7 +164,7 @@
 				<select name="category_id" id="category_id" onchange="f1.submit();">
 					<option value="">All</option>
 				<? echo (
-	make_drop_down( openprint::Equipment_Category->dropdown('order'=>'lower(name)'), $session{'/employee/production/print_overview.html?category_id'} );
+	make_drop_down( openprint::Equipment_Category->dropdown( order=>'lower(name)'), $session{'/employee/production/print_overview.html?category_id'} );
 	) ?>
 				</select>
 			</li>
@@ -171,9 +173,9 @@
 	@{$$variable{Equipment}} = ();
 	my @presses = openprint::Equipment->find(
 		( $session{'/employee/production/print_overview.html?category_id'} ? 
-		  ( 'category_id <@'=> [ split(',', $session{'/employee/production/print_overview.html?category_id'} ) ] ) : ()
+		  ( 'category_id <@' => [ split(',', $session{'/employee/production/print_overview.html?category_id'} ) ] ) : ()
 		),
-		'useinscheduling'=>1,'order'=>'sorting,lower(strname)'
+		 useinscheduling=>1, order=>'sorting,lower(strname)'
 		);
 	my @selected_equipment = sets::intersection( ( map { $_->id() } @presses) , split(',', $session{'/employee/production/print_overview.html?Equipment'} ) );
 	if ( ! @selected_equipment ) {
@@ -303,9 +305,11 @@
 
 		my $start_dt = new DateTime( time_zone=>$openprint::TZ, map { $_ => $session{'/employee/production/print_overview.html?schedule_start_'.$_} } ( 'year', 'month', 'day' ) );
 		my $end_dt = new DateTime( time_zone=>$openprint::TZ, map { $_ => $session{'/employee/production/print_overview.html?schedule_end_'.$_} } ( 'year', 'month', 'day' ) );
+		$log->debug("Start: $start_dt, end $end_dt");
 
 		my $ac = sql::start_transaction( $dbh );
 
+		$log->debug("Get all jobs");
 		my @Jobs = openprint::ScheduledJob->find( 
 			equipment_id=>[ map { $_->id() } @{$$variable{Equipment}} ],
 			'starttime <='	=> $parser->format_datetime( $end_dt ),
@@ -349,9 +353,11 @@
 			# Showing over 100 days makes the browser crawl forever. So limit it.
 			$end = 100 if $end > 100;
 			# Get the shifts on this day.
-			my $st = new DateTime( year=>$year, month=>$month, day=>$day, time_zone=>$openprint::TZ );
+			my $st = $start_dt;
+#new DateTime( year=>$year, month=>$month, day=>$day, time_zone=>$openprint::TZ );
 			my $et = $st + DateTime::Duration->new( days=>$end );
 
+			$log->debug("Getting shifts");
 			my @Shifts = openprint::Shift->find( 
 				equipment_id 		=>	$E->id(),
 				'starttime <'		=>	$parser->format_datetime( $et ),
@@ -360,6 +366,7 @@
 				);
 
 			if ( ! @Shifts ) {
+				$log->debug("No shifts found, implementing some");
 				@Shifts = openprint::Shift::get_Shifts( $E, $st, $et, @Equipment_Shifts );
 			} # end if
 #$log->debug("# of Shifts: " . @Shifts );
@@ -370,25 +377,37 @@
 
 			# First, need to find the first Equipment Shift to show.  Easy, will be given by the first shift in our list of shifts
 			my $ES = $Shifts[0]->Equipment_Shift();
+			$log->debug("First ES: " . $ES->to_string() );
 
 			# Step two: Make sure all the shifts are there. We do this by running through them, comparing the shift_id to the expected ES
 			# We start at 1 because we already looked for 0 and found it.  Micro-optimisation
 					#foreach my $S ( @Shifts ) {
 #$log->debug("Shifts are: " . $S->to_string());
 					#}
+			my $Next_ES = $ES->Next();
+
 			for ( my $shift_index = 1; $shift_index < @Shifts; $shift_index += 1 ) {
-				if ( $Shifts[$shift_index]{shift_id} == $ES->Next()->id() ) {
+				my $Next_Shift = $Shifts[$shift_index];
+
+				if ( $$Next_Shift{shift_id} == $Next_ES->id() ) {
 					# It's the right shift, just make sure it isn't too far in the future
-					my $last_time = $Shifts[$shift_index-1]->starttime_dt();
-					while ( $ES->Next()->compare( $last_time ) ) {
+
+					my $last_time = $Shifts[$shift_index-1]->endtime_dt();
+$log->error("Last Shift endtime $last_time");
+					while ( $_ = $Next_ES->compare( $last_time ) ) {
+$log->error("Last time $last_time $_, adding an hour");
 						$last_time += new DateTime::Duration( seconds=>3600 );
 						last if $last_time >= $Shifts[$shift_index]->starttime_dt();
 					}
-					last if $last_time >= $Shifts[$shift_index]->starttime_dt();
-					my $test_Shift = $ES->Next()->test_emanantise( $last_time );
-					if ( $test_Shift->starttime() eq $Shifts[$shift_index]{starttime} ) {
-						next;
-					}
+					if ( $last_time >= $Shifts[$shift_index]->starttime_dt() ) {
+						$log->debug("Verified that the nex shift is good>");
+						#last;
+					} else {
+						my $test_Shift = $ES->Next()->test_emanantise( $last_time );
+						if ( $test_Shift->starttime() eq $Shifts[$shift_index]{starttime} ) {
+							next;
+						}
+					} # end if
 				}
 					
 				#$log->debug( $Shifts[$shift_index]->shift_id() . ' == ' . $ES->Next()->id() );
@@ -399,29 +418,39 @@
 				# By putting emanantise here....
 				# emanantise will figure out what the next shift should loook like, and add it if neccessary.
 				my $last_time = $Shifts[$shift_index-1]->endtime_seconds() + 1;
-				while( $ES->Next()->compare( $last_time ) ) {
-					$last_time += 3600;
+				while( $_ = $Next_ES->compare( $last_time ) ) {
+					if ( $_ > 0 ) {
+						# We have not yet reached the starttime of the next shift.  They may be gaps between shifts.
+						# Add an hour until we get there.
+						$last_time += 3600;
+					} else { # $_ < 0
+						# We have passed the ES, So the ES must be missing.
+						$last_time -= 3600;
+						last;
+					}
 					last if $last_time > $Shifts[$shift_index]->starttime_seconds();
 				}
-				my $NextShift = $ES->Next()->emanantise( $last_time );
-				if ( $NextShift ) {
+				my $New_Next_Shift = $Next_ES->emanantise( $last_time );
+				if ( $New_Next_Shift ) {
 
-					if ( $NextShift->id() != $Shifts[$shift_index]->id() ) {
-#$log->debug("Adding new shift; previous: " . $Shifts[$shift_index-1]->to_string() );
-#$log->debug("Adding new shift; current: " . $Shifts[$shift_index]->to_string() );
-#$log->debug("Adding new shift; next: " . $NextShift->to_string() );
-						splice @Shifts, $shift_index, 0, $NextShift;
+					if ( $New_Next_Shift->id() != $Next_Shift->id() ) {
+$log->debug("Adding new shift; previous: " . $Shifts[$shift_index-1]->to_string() );
+$log->debug("Adding new shift; current: " . $Shifts[$shift_index]->to_string() );
+$log->debug("Adding new shift; next: " . $New_Next_Shift->to_string() );
+						splice @Shifts, $shift_index, 0, $New_Next_Shift;
 #foreach my $S ( @Shifts ) {
 #$log->debug("Shifts are: " . $S->to_string());
 #}
+						# Reset counter, and go again
+						$shift_index -= 1;
+						next;
 					} 
-					next if $NextShift->starttime_dt() > $Shifts[$shift_index]->starttime_dt();
-					last if $NextShift->starttime_dt() > $et;
+					last if $New_Next_Shift->starttime_dt() > $et;
 				} else {
 					$log->error( " Failed to match the shift for " . $ES->Next()->to_string() );
 				} # end if
 
-				$ES = $ES->Next();
+				$Next_ES = $Next_ES->Next();
 			} # end for each Shift
 			
 			my $LastShift = $Shifts[@Shifts-1];
