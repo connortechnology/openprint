@@ -97,33 +97,33 @@ sub endtime_seconds {
 } # end sub endtime_seconds
 
 sub compare {
-	my ( $self, $dt ) = @_;
-	if ( ref $dt ne 'DateTime' ) {
-		$dt = DateTime->from_epoch( epoch=>$dt, time_zone=>$openprint::TZ );
+	my ( $self, $requested_dt ) = @_;
+	if ( ref $requested_dt ne 'DateTime' ) {
+		$requested_dt = DateTime->from_epoch( epoch=>$requested_dt, time_zone=>$openprint::TZ );
 	}
 	my $shift_start_time_dt = DateTime::Duration->new( seconds => $self->starttime_seconds() % DAY );
-	my $date_part_dt = $dt->clone()->truncate(to=>'day');
-	if ( $dt->is_dst() and ! $date_part_dt->is_dst() ) {
+	my $date_part_dt = $requested_dt->clone()->truncate(to=>'day');
+	if ( $requested_dt->is_dst() and ! $date_part_dt->is_dst() ) {
 #$log->debug("subtracting an hour for DST");
 		$date_part_dt -= DateTime::Duration->new( hours=>1 );
-	} elsif ( $date_part_dt->is_dst() and ! $dt->is_dst() ) {
+	} elsif ( $date_part_dt->is_dst() and ! $requested_dt->is_dst() ) {
 #$log->debug("adding an hour for DST");
 		$date_part_dt += DateTime::Duration->new( hours=>1 );
 	} # end if
 	my $st = $date_part_dt + $shift_start_time_dt;
-	$log->debug("compare: " . $parser->format_datetime( $st ) . ' requested: ' . $parser->format_datetime( $dt ) );
+	$log->debug("compare: start_time: " . $parser->format_datetime( $st ) . ' requested: ' . $parser->format_datetime( $requested_dt ) );
 	my $es_duration = DateTime::Duration->new( seconds => $self->duration_seconds() );
-	if ( $st > $dt ) {
+	if ( $st > $requested_dt ) {
 		$st -= DateTime::Duration->new( days => 1 );
 	}
-	if ( $st < $dt and $st + $es_duration > $dt ) {
-		$log->debug("ES " . $self->to_string() . " fits " . $parser->format_datetime( $dt ) );
+	if ( $st <=  $requested_dt and $st + $es_duration > $requested_dt ) {
+		$log->debug("ES " . $self->to_string() . " fits " . $parser->format_datetime( $requested_dt ) );
 		return 0;
-	} elsif ( $st > $dt ) {
-		$log->debug("st>dt " . $self->to_string() . " does not fits rdt" . $parser->format_datetime( $dt ) . ' end was ' . $parser->format_datetime( $st + $es_duration ) );
+	} elsif ( $st > $requested_dt ) {
+		$log->debug("st>dt " . $self->to_string() . " does not fits rdt" . $parser->format_datetime( $requested_dt ) . ' end was ' . $parser->format_datetime( $st + $es_duration ) );
 		return 1;
 	} else {
-		$log->debug("st<dt " . $self->to_string() . " does not fits rdt " . $parser->format_datetime( $dt ) . ' end was ' . $parser->format_datetime( $st + $es_duration ) );
+		$log->debug("st<dt " . $self->to_string() . " does not fits rdt " . $parser->format_datetime( $requested_dt ) . ' end was ' . $parser->format_datetime( $st + $es_duration ) );
 		return -1;
 	}
 }
@@ -191,7 +191,9 @@ sub test_emanantise {
 				endtime			=>	$parser->format_datetime( $et ),
 				});
 	return $Shift;
-} # end sub emanantise
+} # end sub test_emanantise
+
+
 #Pass back a shift for the next time slot >= the passed in $date_seconds
 # We presume that normally date_seconds is teh starttie + 1 of the previous shift -> why? why not endtime?  I don't kn ow.
 sub emanantise {
