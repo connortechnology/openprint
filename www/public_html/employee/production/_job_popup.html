@@ -73,7 +73,7 @@
 		</ul>
 	</fieldset>
 		<p class="buttons">
-			<? echo ( join('',
+			<? echo ( join("\n",
 				button( 'SaveStartTime', { onclick=>q`tinyMCE.triggerSave();new Ajax.Request('_li_change.json',{parameters:$('JobForm').serialize(), onSuccess:function(){popupWin.close();}});`, text=>'Save' } ),
 				button( 'CancelStartTime', { onclick=>'popupWin.close();', text=> 'Cancel' } ) 
 			); ) ?>
