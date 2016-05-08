@@ -578,7 +578,7 @@ $SigImpo->display();
 	my $width_folds = Math::Round::nearest( 1, $$sig_specs{txtWidth}/$$sig_specs{txtFinalWidth})-1;
 	my $height_folds = Math::Round::nearest( 1, $$sig_specs{txtHeight}/$$sig_specs{txtFinalHeight})-1;
 	@$SignatureImposition{'width_folds','height_folds'} = ( $width_folds, $height_folds );
-	$openprint::log->debug("FOlds: $width_folds x $height_folds") if DEBUG;
+	$openprint::log->debug("FOlds: $width_folds x $height_folds from $$sig_specs{txtWidth}/$$sig_specs{txtFinalWidth} and height: $$sig_specs{txtHeight}/$$sig_specs{txtFinalHeight}") if DEBUG;
 	if ( $$sig_specs{txtSignatureType} and $$sig_specs{txtSpreadSize} == 2 ) {
 
 		# Is this right? What does the orientation have to do with the fold direction?
@@ -1073,6 +1073,9 @@ $openprint::log->debug("No Fold") if DEBUG;
 									printing_type	=>	$ppt,
 									});
 							if ( $Fold and $max_feed_width ) {
+$width_folds = $Fold->page_columns()-1;
+$height_folds = $Fold->page_rows()-1;
+$openprint::log->debug("Got new folds $width_folds x $height_folds from Fold");
 								my $fits;
 								if ( $orientation ) {
 									if (
@@ -1090,9 +1093,10 @@ $openprint::log->debug("No Fold") if DEBUG;
 										} # end if
 									} # end if
 								} else {
+
 # decide whether it's running portrait or landscape basessd on which way the folds go
 									$openprint::log->debug("Has max feed width width_folds: $width_folds height_folds: $height_folds final_width $$sig_specs{txtWidth} final_heigh $$sig_specs{txtHeight} max_feed $max_feed_width") if DEBUG;
-									if ( ( $width_folds and ! $height_folds ) or ( $width_folds == $$Fold{folds} and $height_folds == $$Fold{angles} ) ) {
+									if ( ( $width_folds and ! $height_folds ) or ( $width_folds == $$Fold{folds} and $height_folds == $$Fold{angles} and ( $width_folds < $height_folds ) ) ) {
 										if ( $$Imposition{image_orientation} eq 'Vertical' ) {
 # If folds are on width, we grip on height...
 											if ( $Imposition->layout_height() >= $max_feed_width ) {
@@ -1633,7 +1637,7 @@ $openprint::log->debug("Quitting, all:found: $all_found, undesired: $undesired")
 			$openprint::log->warn("Fold didn't have equipment");
 		}
 		$FI->Equipment( $Fold->Equipment() );
-		my $printed_sheets = (($$specs{'txtQuantity'.$qty_index}/$FI->imposition())/$SignatureImposition->imposition());
+		my $printed_sheets = (($$specs{'txtQuantity'.$qty_index}/$$FI{imposition})/$$SignatureImposition{imposition});
 
 		$results{MakeReadyTime} = $Fold->makeready_time() if $results{MakeReadyTime} < $Fold->makeready_time();
 		if ( $Fold->makeready_overs_units() eq 'Percent' ) {
@@ -1803,7 +1807,7 @@ $i->display() if DEBUG;
 						my $fold_type = $Fold->type();
 
 						if ( DEBUG ) {
-							$openprint::log->debug("Foldtype: $fold_type " . $FI->imposition() . "out $$Fold{name} $$Fold{folds} $$Fold{angles}" );
+							$openprint::log->debug("Foldtype: $fold_type " . $$FI{imposition} . "out $$Fold{name} $$Fold{folds} $$Fold{angles}" );
 							$Imposition->display(" Runspeed: $$Imposition{runspeed}");
 						}
 						$$specs{"FoldType-$form-$qty_index-$index"} = $fold_type;

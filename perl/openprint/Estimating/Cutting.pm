@@ -109,7 +109,10 @@ sub signature_needs {
         return 0;
     } # end if
 
-	$specs = openprint::service::get_specs_ref( $Project, $$services{Cutting}[0] ) if ! $specs;
+	if ( $$services{Cutting} and ! $specs ) {
+		# Could call sig_needs when there is no cutting in the project
+		$specs = openprint::service::get_specs_ref( $Project, $$services{Cutting}[0] );
+	}
 
 	foreach my $qty_index ( $q_index ? ( $q_index ) : $Project->quantity_indexes() ) {
 #$openprint::log->debug("Cutting sig needs: imp: " .  $$specs{'txtImposition'.$qty_index} );
