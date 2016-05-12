@@ -256,7 +256,7 @@
 			<? echo ( button( 'AddDocket', { onclick=>"popup_window('_add_docket.html', '', { width: 600, height: 400 } );", text=>'Add Docket' } ); ) ?>
 			<? echo ( button( 'AddMaintenance', { onclick=>"popup_window('_add_maintenance.html', '', { width: 600, height: 400 } );", text=>'Add Maintenance' } ); ) ?>
 			<? echo (
-				if ( @{$$variable{Equipment}} == 1 and $$variable{Equipment}[0]->smartscheduling() ) {
+				if ( @{$$variable{Equipment}} == 1 ) {
 					return button( 'ReFlow', { href=>'/employee/production/print_overview.html?Equipment='.$$variable{Equipment}[0]->id().'&amp;btnFunction=Reflow', text=>'Reflow Jobs' } );
 				} # end if
 				return;
