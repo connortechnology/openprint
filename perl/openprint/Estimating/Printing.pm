@@ -25,7 +25,7 @@ use Data::Dumper;
 package openprint::Estimating::Printing;
 my $threading = 0;
 use threads;
-use constant DEBUG => 1;
+use constant DEBUG => 0;
 use constant DEBUG_PLATES => 0;
 use constant DEBUG_VERSIONS => 0;
 use constant DEBUG_PRESSES => 0;
@@ -5600,6 +5600,11 @@ $openprint::log->warn("No folding equipment");
 	$impressions = $gross_sheets;
 	$impressions *= 2 if $$Imposition{sides} == 2 and ( $is_wt or $$Imposition{runstyle} eq 'Sheet Work');
 #$openprint::log->debug("New impressions: $impressions");
+
+	if ( $max_impression_quantity and ($max_impression_quantity < $impressions ) ) {
+		$openprint::log->debug("Next cuz of maximum impression quantity $max_impression_quantity : $impressions" ) if DEBUG;
+		return \%price;
+	}
 	my $weight = $gross_sheets * $Paper->sheet_weight();
 	if ( $Paper->type() eq 'Roll' and my $Waste = $Press->Specification('Waste Stock') ) {
 		if ( $$Waste{units} eq 'Inches' ) {
