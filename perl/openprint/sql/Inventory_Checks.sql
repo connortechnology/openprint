@@ -1,6 +1,4 @@
 
-DROP TABLE Inventory_Checks;
-
 CREATE TABLE Inventory_Checks (
 	id	SERIAL,
 	created_on	timestamp with time zone NOT NULL default NOW(),
@@ -12,9 +10,8 @@ CREATE TABLE Inventory_Checks (
 	PRIMARY KEY (id)
 );
 
-DROP TABLE Inventory_Check_Entries;
 CREATE TABLE Inventory_Check_Entries (
-	ic_id	INTEGER NOT NULL, FOREIGN KEY (ic_id) REFERENCES InventoryChecks (id),
+	ic_id	INTEGER NOT NULL, FOREIGN KEY (ic_id) REFERENCES Inventory_Checks (id),
 	skid_id	INTEGER NOT NULL, FOREIGN KEY (skid_id) REFERENCES Skids (id),
 	rfidtag_id	TEXT,
 	paper_id	INTEGER, FOREIGN KEY (paper_id) REFERENCES Papers (id),
