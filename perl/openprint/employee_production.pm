@@ -168,14 +168,20 @@ sub print_overview {
 	if ( $param{btnFunction} eq 'Reflow' ) {
 		my $Equipment = new openprint::Equipment( $param{Equipment} );
 		if ( $Equipment->smartscheduling() ) {
-			my @Jobs = openprint::ScheduledJob->find( 'starttime is null'=>0, 'equipment_id'=>$param{Equipment},'order'=>'starttime' );
+			my @Jobs = openprint::ScheduledJob->find( 'starttime is null'=>0, equipment_id=>$param{Equipment}, order=>'starttime' );
 			if ( @Jobs ) {
 				reorder_jobs( @Jobs );
 			} else {
 				$variable{error} .= 'There are no jobs scheduled to reflow.';
 			} # end if
 		} else {
-			$variable{error} .= 'Press does not support auto-scheduling.';
+			# Logic is ... take all jobs keep the order, 
+			my @Jobs = openprint::ScheduledJob->find( 'starttime is null'=>0, equipment_id=>$param{Equipment}, order=>'starttime' );
+			if ( @Jobs ) {
+				reorder_jobs( @Jobs );
+			} else {
+				$variable{error} .= 'There are no jobs scheduled to reflow.';
+			} # end if
 		} # end if
 	} elsif ( $param{btnFunction} eq 'Add Docket' ) {
 		my $Job = new openprint::ScheduledJob();
@@ -1345,7 +1351,7 @@ sub reorder_jobs {
 		$log->debug($Job->id() .' ' . $Project->docket() . ' ' . $Project->Company()->name() . ' Due: (' . $Project->due_date().')' );
 		if ( ! $Project->due_date() ) {
 			$log->debug("Saving project");
-			if ( $_ = $Project->save({'due_date'=>$Project->get_due_date()}) ) {
+			if ( $_ = $Project->save({ due_date=>$Project->get_due_date() }) ) {
 			$log->error("Error Saving project") if $_;
 			} # end if
 			$log->debug("DOne Saving project");
@@ -1444,6 +1450,7 @@ $run_time = 1;
 			push @jobs_in_shift, $$Job{id};
 		} # end while
 
+		$log->debug("Job: " . $row->to_string() );
 # Time to move on to next shift
 		while ( ( ! $Shift->operator_id() ) or ( $start_time > $Shift->endtime_seconds() ) ) {
 $log->debug("Moving on to next shift: " . $Shift->to_string() );
@@ -1455,11 +1462,18 @@ $log->debug("Moving on to next shift: " . $Shift->to_string() );
 				if ( ! $NextES ) {
 $log->debug(" NO NEXT ES: "  );
 					$NextES = openprint::Equipment_Shift->find_one( 
-							'equipment_id'		=>	$$row{equipment_id}, 
-							'order'				=>	'starttime_seconds',
+							equipment_id		=>	$$row{equipment_id}, 
+							order				=>	'starttime_seconds',
 							);
 				} # end if ! NextES
 				$Shift = $NextES->emanantise( $start_time );
+					
+				if ( ( ! $Shift ) or ! $Shift->operator_id() ) {
+					$variable{error} .= "Unable to add more shifts.\n";
+					$dbh->rollback();
+					sql::end_transaction( $dbh, $ac );
+					return;
+				}
 				$start_time = $Shift->starttime_seconds();
 				push @{$variable{changed}}, $Shift->ul_id();
 			} else {
@@ -1482,8 +1496,8 @@ $log->debug(" NO NEXT ES: "  );
 
 		$row->operator_id( $Shift->operator_id() );
 		last if $row->save({
-				'starttime'	=> $start_time ? Date::Format::time2str('%Y-%m-%d %H:%M:%S%z', $start_time ) : undef,
-				'equipment_id'	=>	$$Shift{equipment_id},
+				starttime		=> $start_time ? Date::Format::time2str('%Y-%m-%d %H:%M:%S%z', $start_time ) : undef,
+				equipment_id	=> $$Shift{equipment_id},
 				} );
 		if ( ! $start_time ) {
 			last;
