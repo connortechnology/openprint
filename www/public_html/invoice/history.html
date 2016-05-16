@@ -27,7 +27,7 @@
 	} // end function
 </script>	 
 <?include('/includes/error_reporting.html')?>
-<? if ( $session{'user_id'} ) ?>
+<? if ( $session{user_id} ) ?>
 <form id="f1" name="f1" method="post" action="/invoice/history.html">
 	<input type="hidden" name="btnFunction"/>
 	<fieldset class="filters unprintable">
@@ -106,6 +106,6 @@
 	</fieldset>
 	<div id="InvoiceList"><?include('_history.html')?></div>
 </form>
-<? else ( $session{'user_id'} ) ?>
+<? else ( $session{user_id} ) ?>
 	Only logged in users have an invoice history.
-<? endif ( $session{'user_id'} ) ?>
+<? endif ( $session{user_id} ) ?>
