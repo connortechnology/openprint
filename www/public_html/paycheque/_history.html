@@ -1,23 +1,23 @@
 <? eval (
-	@{$$variable{'Paycheques'}} = ();
-	$$variable{'Total'} = 0;
+	@{$$variable{Paycheques}} = ();
+	$$variable{Total} = 0;
 	foreach my $Paycheque ( openprint::Paycheque->find( 
-			ssi::date_filter( '/paycheque/history.html?paid_on_start', 'paid_on >=' ),
-			ssi::date_filter( '/paycheque/history.html?paid_on_end', 'paid_on <=' ),
-		( $session{'/paycheque/history.html?employer_id'} ? ( 'employer_id'		=> $session{'/paycheque/history.html?employer_id'} ) : () ),
-		( $session{'/paycheque/history.html?employee_id'} ? ( 'employee_id'		=> $session{'/paycheque/history.html?employee_id'} ) : () ),
+			date_filter( '/paycheque/history.html?paid_on_end', 'paid_on <=' ),
+			date_filter( '/paycheque/history.html?paid_on_start', 'paid_on >=' ),
+		( $session{'/paycheque/history.html?employer_id'} ? ( employer_id => $session{'/paycheque/history.html?employer_id'} ) : () ),
+		( $session{'/paycheque/history.html?employee_id'} ? ( employee_id => $session{'/paycheque/history.html?employee_id'} ) : () ),
 		'order'				=> 'id',
 		) ) {
-		push @{$$variable{'Paycheques'}}, $Paycheque;
-		$$variable{'Total'} += $Paycheque->total();
+		push @{$$variable{Paycheques}}, $Paycheque;
+		$$variable{Total} += $Paycheque->total();
 	} # end foreach Paycheque
 
-	$$variable{'Currency'} = openprint::Currency::get_current() if ! $$variable{'Currency'};
+	$$variable{Currency} = openprint::Currency::get_current() if ! $$variable{Currency};
 ) ?>
 
-<? if ( @{$$variable{'Paycheques'}} == 0 ) ?>
+<? if ( @{$$variable{Paycheques}} == 0 ) ?>
 	There are no paycheques which match your search criteria. 
-<? else ( @{$$variable{'Paycheques'}} == 0 ) ?>
+<? else ( @{$$variable{Paycheques}} == 0 ) ?>
 	<div class="unprintable">
 		Please click on a <b>Paycheque ID #</b> to view paycheque details.<br/>
 		To delete paycheques from history check the appropriate paycheque(s) and click delete.<br/>
@@ -33,19 +33,19 @@
 		<? echo ( 
 			my $html;
 			my $rowclass;
-			foreach my $Paycheque ( @{$$variable{'Paycheques'}} ) {
-				my $conversion_rate = $Paycheque->Currency()->conversions( $session{'Currency_id'} );
+			foreach my $Paycheque ( @{$$variable{Paycheques}} ) {
+				my $conversion_rate = $Paycheque->Currency()->conversions( $session{Currency_id} );
 				$html .= sprintf(q`
 <tr title="%3$s"%1$s>
 	<td class="paycheque_id"><a href="/paycheque/edit.html?paycheque_id=%2$d">%2$d</a></td>
 	<td class="Date"><a href="/paycheque/edit.html?paycheque_id=%2$d">%4$s</a></td>
 	<td class="CompanyName"><a href="/paycheque/edit.html?paycheque_id=%2$d">%5$s</a></td>
-			<td class="User"><a href="/paycheque/edit.html?paycheque_id=%2$d">%6$s</a></td>
-			<td class="Price">%7$s</td>
+	<td class="User"><a href="/paycheque/edit.html?paycheque_id=%2$d">%6$s</a></td>
+	<td class="Price">%7$s</td>
 </tr>`,
-			$rowclass, $Paycheque->id(), ssi::html_escape( $Paycheque->external_notes() ), 
-			Date::Format::time2str( $config{'DateFormat'}, Date::Parse::str2time( $Paycheque->paid_on() ) ),
-			ssi::html_escape( $Paycheque->Employer()->name() ), ssi::html_escape( $Paycheque->Employee()->name() ),
+			$rowclass, $Paycheque->id(), html_escape( $Paycheque->external_notes() ), 
+			Date::Format::time2str( $config{DateFormat}, Date::Parse::str2time( $Paycheque->paid_on() ) ),
+			html_escape( $Paycheque->Employer()->name() ), html_escape( $Paycheque->Employee()->name() ),
 			openprint::Currency::format( 1*$Paycheque->total() ),
 );
 				$rowclass = $rowclass ? '' : ' class="colRow"';
@@ -54,12 +54,9 @@
 		) ?>
 		<tr class="totals">
 			<td colspan="4">Totals</td>
-			<td class="Price"><? echo ( openprint::Currency::format($$variable{'Total'}); ) ?></td>
+			<td class="Price"><? echo ( openprint::Currency::format($$variable{Total}); ) ?></td>
 		</tr>
 	</table>
-	<span class="Currency">All prices listed in <? hecho ( new openprint::Currency( $session{'Currency_id'} )->name(); ) ?></span>
+	<span class="Currency">All prices listed in <? hecho ( new openprint::Currency( $session{Currency_id} )->name(); ) ?></span>
 	<br class="spacer"/>
-<p class="buttons>
-<? echo ( ssi::button( 'Delete', { onclick=>"delete_confirm(document.f1);", href=>'', text=>'Delete' } ); ) ?>
-</p>
-<? endif ( @{$$variable{'Paycheques'}} == 0 ) ?>
+<? endif ( @{$$variable{Paycheques}} == 0 ) ?>
