@@ -128,6 +128,8 @@ sub neccessary {
 sub calc {
 	my ( $log, $dbh, $variable, $project_index, $service_index, $specs ) = @_;
 
+	$$specs{alert} = '';
+
 	my $Project = new openprint::Project( $project_index );
 	foreach my $qty_index ( $Project->quantity_indexes() ) {
 		delete $$specs{'txtPrice'.$qty_index};
