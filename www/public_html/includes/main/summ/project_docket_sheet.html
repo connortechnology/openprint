@@ -462,7 +462,9 @@ $log->debug("No a press proof: $$variable{ProofType} ");
         </tr>
 
 </table>
-<br/>
+<div id="OutsideBindery"><label>Outside Bindery</label>
+	<? echo ( radio( 'outside_bindery', [ 0, 'Yes', 1, 'No' ] ); ) ?>
+</div>
 <table width="100%" border="1" cellspacing="0" cellpadding="0">
 	<tr> 
 		<td width="10%" class="docketText" ><b>Quantity</b></td>
