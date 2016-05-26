@@ -44,7 +44,7 @@
 			<li><label for="employer_id">Employer</label>
 				<select id="employer_id" name="employer_id">
 					<option value=""> select </option>
-					<? echo ( make_drop_down( openprint::Company->dropdown( $$variable{Paycheque}->employer_id() ? $$variable{Paycheque}->employer_id() : $session{company_id} ) ); ) ?>
+					<? echo ( make_drop_down( openprint::Company->dropdown(), $$variable{Paycheque}->employer_id() ? $$variable{Paycheque}->employer_id() : $session{company_id} ); ) ?>
 				</select>
 			</li>
 			<li><label for="employee_id">Employee</label>
@@ -78,7 +78,7 @@
 			<? echo ( join("\n",
 				button( 'back', { href=>'history.html', text=>'Back' } ),
 				( $$variable{Paycheque}->id() ?
-				  button( 'delete', { onclick=>"if(confirm('Are you sure?')){f1.btnFunction.value='Destroy';f1.submit();}", text=>'Destroy' } ),
+				  button( 'delete', { onclick=>"if(confirm('Are you sure?')){f1.btnFunction.value='Destroy';f1.submit();}", text=>'Destroy' } )
 				: () ),
 				button( 'Save', { onclick=>"f1.btnFunction.value='Save';f1.submit();", text=>'Save' } ),
 			); ) ?>
