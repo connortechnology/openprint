@@ -27,7 +27,7 @@ sub save {
 } # end sub save
 
 sub set {
-	@{$_[0]}{'self','equipment_index','period_start','period_end','min','max','units','Cost','Markup','Price','discountable'} = @_;
+	@{$_[0]}{'self','service_id','equipment_index','period_start','period_end','min','max','units','Cost','Markup','Price','discountable','mode'} = @_;
 } # end sub set
 
 1;

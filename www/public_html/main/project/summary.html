@@ -4,33 +4,33 @@
 </div>
 <style type="text/css">
 <? eval ( 
-	$$variable{'QTYS'} = scalar $$variable{Project}->quantity_indexes();
+	$$variable{QTYS} = scalar $$variable{Project}->quantity_indexes();
 	@{$$variable{quantity_indexes}} = $$variable{Project}->quantity_indexes();
-    if ( $$variable{'QTYS'} == 3 ) {
-		$$variable{'Columns'} = 'Three';
-    } elsif ( $$variable{'QTYS'} == 2 ) {
-		$$variable{'Columns'} = 'Two';
+    if ( $$variable{QTYS} == 3 ) {
+		$$variable{Columns} = 'Three';
+    } elsif ( $$variable{QTYS} == 2 ) {
+		$$variable{Columns} = 'Two';
     } else {
-		$$variable{'Columns'} = 'One';
+		$$variable{Columns} = 'One';
     } # end if
 ) ?>
 
 .ProjectSummary .value {
 	float: left;
-<? if ( $$variable{'QTYS'} == 1 ) ?>
+<? if ( $$variable{QTYS} == 1 ) ?>
     width: 60%;
-<? endif ( $$variable{'QTYS'} == 1 ) ?>
-<? if ( $$variable{'QTYS'} == 2 ) ?>
+<? endif ( $$variable{QTYS} == 1 ) ?>
+<? if ( $$variable{QTYS} == 2 ) ?>
     width: 30%;
-<? endif ( $$variable{'QTYS'} == 2 ) ?>
-<? if ( $$variable{'QTYS'} == 3 ) ?>
+<? endif ( $$variable{QTYS} == 2 ) ?>
+<? if ( $$variable{QTYS} == 3 ) ?>
     width: 21%;
-<? endif ( $$variable{'QTYS'} == 3 ) ?>
+<? endif ( $$variable{QTYS} == 3 ) ?>
 }
 </style>
-<? if ( $$variable{'ProjectIndex'} eq '' ) ?>
+<? if ( $$variable{ProjectIndex} eq '' ) ?>
 There is no current project. 
-<? else ( $$variable{'ProjectIndex'} eq '' ) ?>
+<? else ( $$variable{ProjectIndex} eq '' ) ?>
 <p class="buttons">
 	<? echo ( button( 'Print', { onclick=>'window.print();' } ); ) ?>
 </p>
@@ -40,7 +40,7 @@ There is no current project.
 	<fieldset><legend>Project Information</legend>
 	<?include('/includes/main/summ/project_create_edit.html')?>
 	</fieldset>
-	<? while ( @$variable{'ServiceIndex','ServiceTypeName','prod_url'} = splice @{$$variable{'SERVICES'}},0,3; ) ?>
+	<? while ( @$variable{'ServiceIndex','ServiceTypeName','prod_url'} = splice @{$$variable{SERVICES}},0,3; ) ?>
 		<? eval ( 
 			foreach my $k ( keys %$variable ) {
 				if ( $k =~ /^chk/ ) {
@@ -53,18 +53,20 @@ There is no current project.
 		) ?>
 		
 		<fieldset><legend><?ServiceTypeName?> <?txtServiceDescription?><?if($$variable{ServiceTypeName} eq 'Signature')?> Form <?SignatureIndex?><?endif($$variable{ServiceTypeName} eq 'Signature')?></legend>
-			<? if ( $$variable{'prod_url'} ) ?>
 			<? echo ( 
-$_ = include('/main/summ/'.$$variable{prod_url}, $variable ); 
-return $_;
-) ?>
-			<? endif ( $$variable{'prod_url'} ) ?>
+			if ( $$variable{prod_url} ) {
+				return include('/main/summ/'.$$variable{prod_url}, $variable ); 
+			} elsif ( -e $ENV{DOCUMENT_ROOT} . '/main/summ/'.$$variable{ServiceTypeName} . '.html' ) {
+				return include('/main/summ/'.$$variable{ServiceTypeName} . '.html', $variable );
+			}
+			return;
+		) ?>
 		</fieldset>
-	<? endwhile ( @$variable{'ServiceIndex','ServiceTypeName','prod_url'} = splice @{$$variable{'SERVICES'}},0,3; ) ?>
+	<? endwhile ( @$variable{'ServiceIndex','ServiceTypeName','prod_url'} = splice @{$$variable{SERVICES}},0,3; ) ?>
 </div><!-- Project Summary -->
 </div>
-<? endif ( $$variable{'ProjectIndex'} eq '' ) ?>
+<? endif ( $$variable{ProjectIndex} eq '' ) ?>
 <br/>
 <p class="buttons">
-<? echo ( button( 'ReturnToProjectView', { href=>'view.html?ProjectIndex='.$$variable{'ProjectIndex'}, text=>'Return to Project View' } ); ) ?>
+<? echo ( button( 'ReturnToProjectView', { href=>'view.html?ProjectIndex='.$$variable{ProjectIndex}, text=>'Return to Project View' } ); ) ?>
 </p>

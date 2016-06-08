@@ -15,6 +15,7 @@
 			<ul>
 			<li>
 				<label>Recipient</label>
+				<input type="text" onkeyup="filter_companies('recipient_id', {name:this.value,selected_id:get_ddm_value($('recipient_id'))});" class="filter" />
 				<select name="recipient_id" id="recipient_id" onchange="load_payments(this.form);">
 					<option value="">All</option>
 					<? echo ( make_drop_down( openprint::Company->dropdown(supplier=>'Y',order=>'lower(name)'), $session{'/payment/history.html?recipient_id'} ); ) ?>
@@ -22,9 +23,10 @@
 			</li>
 			<li>
 				<label>Payor</label>
+				<input type="text" onkeyup="filter_companies('payor_id', {name:this.value,selected_id:get_ddm_value($('payor_id'))});" class="filter" />
 				<select name="payor_id" id="payor_id" onchange="load_payments(this.form);">
 					<option value="">All</option>
-					<? echo ( make_drop_down( openprint::Company->dropdown( 'last_ordered_on is null'=>0), $session{'/payment/history.html?company_id'} ); ) ?>
+					<? echo ( make_drop_down( openprint::Company->dropdown( 'last_invoiced_on is null'=>0), $session{'/payment/history.html?company_id'} ); ) ?>
 				</select>
 			</li>
 			<li>

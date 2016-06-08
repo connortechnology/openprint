@@ -37,6 +37,7 @@ $serial = 'invoices_id_seq';
 	internal_notes	=>	'internal_notes',
 	posted			=>	'posted',
 	subtotal		=>	'subtotal',
+	subtotal_override		=>	'subtotal_override',
 	total			=>	'total',
 	due_on			=>	'due_on',
 	posted_on		=>	'posted_on',
@@ -58,6 +59,7 @@ $serial = 'invoices_id_seq';
 %find_fields = (
 	po		=>	'(SELECT po FROM invoiced_products WHERE invoiced_products.invoice_id = invoices.id)',
 	sent_on	=>	'(SELECT created_on FROM invoice_logs WHERE invoice_id=invoices.id LIMIT 1)',
+	product_id	=>	'(SELECT product_id FROM invoiced_products WHERE invoice_id=invoices.id)',
 );
 
 %transforms = (
@@ -77,19 +79,25 @@ $serial = 'invoices_id_seq';
 	early_payment_units		=>	undef,
 	early_payment_date		=>	undef,
 	num						=>	undef,
+	due_on					=>	undef,
+	subtotal_override		=>	0,
 );
 
 sub save {
 	my ( $self, $param ) = @_;
 	
+	$self->set( $param );
 	# none of these should be set by param
 	$$self{total} = $self->total();
 
-	my $rc = $self->SUPER::save( $param );
-	if ( ! $rc and $$self{posted_on} ) {
+	my $rc = $self->SUPER::save( );
+	if ( ! $rc ) {
+		$self->Invoicee()->save({last_invoice_id=>$$self{id}});
+		if ( $$self{posted_on} ) {
 		foreach my $T ( $self->Taxes(undef) ) {
 			$rc .= $T->save();
 		} # end foreach
+		}
 	} else {
 		return $rc;
 	} # end if
@@ -136,14 +144,19 @@ sub Invoicer {
 sub subtotal {
 	my ( $self ) = @_;
 
+	if ( @_ > 1 ) {
+$openprint::log->debug("Setting subtotal to $_[1]") if $debug;
+		$$self{subtotal} = $_[1];
+	}
+
 	if ( ! $$self{id} ) {
 		$log->error('Invoice:subtotal no id! ref:' . (ref $self) . ' self:' . $self);
 #cluck('Invoice:subtotal no id! ref:' . (ref $self) . ' self:' . $self);
 		return;
 	} # end if
 
-	if ( (!$$self{posted}) or ( ! defined $$self{subtotal} ) ) {
-#$log->debug("Recalculating subtotal");
+	if ( ( (!$$self{posted}) or ( ! defined $$self{subtotal} ) ) and ( ! $$self{subtotal_override} ) ) {
+$log->debug("Recalculating subtotal") if $debug;
 		$$self{subtotal} = 0;
 		foreach my $T ( openprint::Timetrack->find('invoice_id'=>$$self{id}) ) {
 			$$self{subtotal} += $T->value();
@@ -202,7 +215,7 @@ sub add_Payment {
 			my $amount = $Payment->remaining() > $self->owing() ? $self->owing() : $Payment->remaining();	
 			my $IP = new openprint::Invoice_Payment();
 			$error .= $IP->save({ payment_id=>$Payment->id(), invoice_id=>$$self{id}, amount=>$amount });
-			$error .= $Payment->save( remaining => undef );
+			$error .= $Payment->save( { remaining => undef } );
 			$self->paid( undef );
 			$error .= $self->save();
 			return $error;
@@ -354,11 +367,17 @@ sub Taxes {
 } # end sub Taxes
 
 sub Tax {
-	my $result = openprint::Invoice_Tax->find_one( invoice_id =>$_[0]{id}, tax_id=>$_[1]->id() );
-	if ( ! $result ) {
-		return new openprint::Invoice_Tax();
+	my ( $self, $Tax ) = @_;
+	if ( ! $_[0]{Taxes} ) {
+		@{$_[0]{Taxes}} = openprint::Invoice_Tax->find( invoice_id=>$_[0]{id} );
 	} # end if
-	return $result;
+
+	foreach my $IT ( @{$_[0]{Taxes}} ) {
+		if ( $$IT{tax_id} == $$Tax{id} ) {
+			return $IT;
+		}
+	} # end if
+	return new openprint::Invoice_Tax();
 } # end sub Tax
 
 sub num {

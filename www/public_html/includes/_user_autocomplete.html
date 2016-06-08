@@ -38,7 +38,9 @@
 		} # end foreach $User
 	} # end foreach $Company
 
-	my @Users = openprint::User->find('name ilike'=>'%'.$param{'user_name'}.'%',limit=>10, 'id not in'=>[ $session{'user_id'}, @user_ids ] );
+	my @Users = openprint::User->find(
+			( $param{user_type} ? type => $param{user_type} : () ),
+			'name ilike'=>'%'.$param{'user_name'}.'%',limit=>10, 'id not in'=>[ $session{'user_id'}, @user_ids ] );
 	foreach my $User (@Users) {
 		next if ! $User->can_view();
 		my $Asset = $User->Asset();

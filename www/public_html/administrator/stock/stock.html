@@ -193,7 +193,14 @@
 				</p>
 				<p>
 					<label>Calliper</label>
-					<? echo ( input(type=>'float', id=>'calliper', name=>'calliper', value=> $$variable{Stock}->calliper() ); ) ?> inches
+					<? echo ( input(type=>'float', id=>'calliper', name=>'calliper', 
+								value=> $$variable{Stock}->calliper(), 
+								oninput=>q`$('calliper_mm').value=do_decimals(this.value*25.4,1);`,
+								); ) ?> inches
+					<? echo ( input(type=>'float', id=>'calliper_mm', name=>'calliper_mm', 
+									value => Math::Round::nearest( .1, $$variable{Stock}->calliper()*25.4),
+									oninput =>q`$('calliper').value=do_decimals( this.value*0.0393701, 4 );`,
+								); ) ?> mm
 				</p>
 				<p>
 					<label>Type</label>
@@ -229,23 +236,17 @@
 				</p>
 				<p>
 					<label>WPSI</label>
-					<? echo ( input( type=>'float', readonly=>"readonly", name=>'wpsi', id=>'wpsi', value=>$$variable{Stock}->wpsi(), step=>'any' ); ) ?>
+					<? echo ( input( type=>'float', name=>'wpsi', id=>'wpsi', value=>$$variable{Stock}->wpsi(), step=>'any',
+								oninput=>q`$('gsm').value=do_decimals( this.value*703064.5, 2);gsm_to_mweight(this.form);`,
+								); ) ?>
 				</p>
 				<p>
 					<label>Grain Direction</label>
-					<input type="radio" name="grain_direction" id="grain_directionwidth" value="width" <? echo ( checked( $$variable{'Stock'}->grain_direction() eq 'width' ); ) ?> />
-					<label class="radio" for="grain_directionwidth">Width</label>
-					<input type="radio" name="grain_direction" id="grain_directionheight" value="height" <? echo ( checked( $$variable{'Stock'}->grain_direction() eq 'height' ); ) ?> />
-					<label class="radio" for="grain_directionheight">Height</label>
+					<? echo ( radio( 'grain_direction', [ 'width', 'Width', 'height', 'Height' ], $$variable{'Stock'}->grain_direction() ); ) ?>
 				</p>
 				<p>
 					<label>Customer Supplied</label>
-					<input type="radio" name="supplied" id="supplied1" value="1" <? echo ( checked($$variable{'Stock'}->supplied() == 1 ); ) ?> />
-					<label class="radio" for="supplied1">Yes</label>
-					<input type="radio" name="supplied" id="supplied0" value="0" <? echo ( checked($$variable{'Stock'}->supplied() eq '0' );) ?> />
-					<label class="radio" for="supplied0">No</label>
-					<input type="radio" name="supplied" id="supplied" value="" <? echo ( checked($$variable{'Stock'}->supplied() eq '' ); ) ?> />
-					<label class="radio" for="supplied">Both</label>
+					<? echo ( radio( 'supplied', [ '1', 'Yes', '0', 'No', '', 'Both' ], $$variable{'Stock'}->supplied() ); ) ?>
 				</p>
 				<p>
 					<label>Quantity Per Package (<span id="QuantityPerPackageUnits"><? echo ( $$variable{'Stock'}->units() ) ?></span>)</label>
@@ -255,10 +256,7 @@
 			<div class="rightColumn">
 				<p class="full_packages">
 					<label>Order Full Packages</label>
-					<input type="radio" name="full_packages" id="full_packages1" value="1" <? echo ( checked( $$variable{'Stock'}->full_packages() ); ) ?> />
-					<label class="radio" for="full_packages1">Yes</label>
-					<input type="radio" name="full_packages" id="full_packages0" value="0" <? echo ( checked( ! $$variable{'Stock'}->full_packages() ); ) ?> />
-					<label class="radio" for="full_packages0">No</label>
+					<? echo ( radio( 'full_packages', [ '1', 'Yes', '0', 'No' ], $$variable{'Stock'}->full_packages() ); ) ?>
 				</p>
 				<p class="minimum_order">
 					<label>Minimum Order (<span id="MinimumOrderUnits"><? echo ( $$variable{'Stock'}->type() eq 'Roll' ? 'lbs' : 'sheets' ) ?></span>)</label>
@@ -404,26 +402,9 @@
 			<div id="Prices"><?include(_prices.html)?></div>
 		</fieldset>
 	</div>
-<fieldset><legend>Logs</legend>
-        <ul>
-            <li><label>Date</label>
-                <? echo ( join( ' to ',
-                        datetime_select_session( $r->uri(),'log_created_on_start', {
-                            onchange    =>q`new Ajax.Updater( 'Logs', '_stock_logs.html', { parameters: $('f1').serialize() } );`,
-                            with_today=>1,
-                            with_clear=>1,
-                            } ),
-                        datetime_select_session( '/employee/it/host.html','log_created_on_end', {
-                            onchange    =>q`new Ajax.Updater( 'Logs', '_stock_logs.html', { parameters: $('f1').serialize() } );`,
-                            with_today=>1,
-                            with_clear=>1,
-                            } ),
-					); ) ?>
-                <? echo ( button( 'LoadLog', { onclick=>q`new Ajax.Updater( 'Logs', '_stock_logs.html', { parameters: $('f1').serialize() } );`, text=>'Load' } ); ) ?>
-            </li>
-        </ul>
-        <div id="Logs"><?include('_stock_logs.html')?></div>
-    </fieldset>
 	<? endif ( $$variable{'stock_id'} ) ?>
 </form>
+	<? if ( $$variable{'stock_id'} ) ?>
+	<? echo ( include_logs( $$variable{Stock} ); ) ?>
+	<? endif ( $$variable{'stock_id'} ) ?>
 </div><!--Stock-->

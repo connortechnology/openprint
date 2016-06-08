@@ -5,26 +5,40 @@
             theme : "advanced",
             theme_advanced_buttons1 : "bold,italic,underline,strikethrough,|,justifyleft,justifycenter,justifyright,justifyfull,|,fontsizeselect,bullist,numlist,outdent,indent,cleanup,html",
             theme_advanced_buttons2 : '',
-            theme_advanced_buttons3 : '',
-        });
+            theme_advanced_buttons3 : ''
+        } );
+
 	var current_editor;
 	function tinymce_on( id ) {
 		if ( current_editor ) {
-			tinymce.execCommand('mceToggleEditor',false,current_editor);
+			tinymce.execCommand( 'mceToggleEditor', false, current_editor );
 		} // end if
-		current_editor=id;
-		tinymce.execCommand('mceToggleEditor', true, id );
+		current_editor = id;
+		tinymce.execCommand( 'mceToggleEditor', true, id );
 	} // end function tinymce_on
+
 	function job_popup( job_id ) {
 		popup_window( '/employee/production/_job_popup.html', 'schedule_id='+job_id, {width:575, height:525,closeCallback: job_popup_close} );
 	} // end function job_popup
+
 	function job_popup_close() {
-		tinymce.EditorManager.execCommand('mceRemoveControl',true,'comment');
-		tinymce.EditorManager.execCommand('mceRemoveControl',true,'stock');
-		current_editor=null;
+		tinymce.EditorManager.execCommand( 'mceRemoveControl', true, 'comment' );
+		tinymce.EditorManager.execCommand( 'mceRemoveControl', true, 'stock' );
+		current_editor = null;
 		return true;
 	} // end function job_popup_close
 
+    var job_popup_options = {
+		mode: "textareas",
+		editor_selector : "mce",
+        plugins: "paste",
+        theme : "advanced",
+            theme_advanced_buttons1 : "bold,italic,underline,strikethrough,|,justifyleft,justifycenter,justifyright,justifyfull,|,fontsizeselect,bullist,numlist,outdent,indent,cleanup,html",
+            theme_advanced_buttons2 : '',
+            theme_advanced_buttons3 : ''
+    };
+
+<? if ( openprint::usergroup::is_user_in( ['Scheduling'], $session{user_id} ) ) ?>
 	var dropfunction = function(el){
 		new Ajax.Request( '_drop.json', { method: 'post', parameters: { ul_id: el.id, services: Sortable.serialize(el) }, evalScripts: true } );
 	}
@@ -74,17 +88,6 @@
 		new Ajax.Request( '_li_change.json', { parameters: { action: 'setduedate', schedule_id: ar[1], duedate: date.params.inputField.value } } );
 		calendar.hide();
 	}
-    var job_popup_options = {
-		mode: "textareas",
-		editor_selector : "mce",
-        plugins: "paste",
-        theme : "simple",
-    };
-
-	function textarea_init() {
-		tinyMCE.init( project_description_options );
-		tinyMCE.init( content_description_options );
-	}
 
 	function approve_job( ul_id, job_id ) {
 		new Ajax.Updater( ul_id, '_ul.html', { parameters: { schedule_id: job_id, action:'approve'}, evalScripts: true } );
@@ -97,20 +100,24 @@
 	function split_job( ul_id, job_id ) {
 		new Ajax.Updater( ul_id, '_ul.html', { parameters: { schedule_id: job_id, action:'split'}, evalScripts: true } );
 	} // end function split_job
+	function up_job( job_id ) {
+		new Ajax.Request( '/employee/production/_li_change.json', {parameters: { schedule_id:job_id, action: 'Up' }, evalScripts: true } );
+	} // end function up_job
+	function down_job( job_id ) {
+		new Ajax.Request( '/employee/production/_li_change.json', {parameters: { schedule_id:job_id, action: 'Down' }, evalScripts: true } );
+	} // end function up_job
+
+	function update_runtime( ddm ) {
+		ddm.form.runtime.value = ddm.form.runtime_hours.value + ':' + ddm.form.runtime_minutes.value + ':' + ddm.form.runtime_seconds.value;
+	}
+
+<? endif ( openprint::usergroup::is_user_in( ['Scheduling'], $session{user_id} ) ) ?>
 	function start_job( job_id ) {
 		new Ajax.Request('_li_change.json', { parameters: { schedule_id: job_id, action: 'start' } } );
 	} // end function start_job
 	function stop_job( job_id ) {
 		new Ajax.Request('_li_change.json', { parameters: { schedule_id: job_id, action: 'stop' } } );
 	} // end function stop_job
-	function up_job( job_id ) {
-		new Ajax.Request( '/employee/production/_li_change.json', {parameters: { schedule_id:job_id, action: 'Up' }, evalScripts: true } );
-	} // end function up_job
-
-	function update_runtime( ddm ) {
-		ddm.form.runtime.value = ddm.form.runtime_hours.value + ':' + ddm.form.runtime_minutes.value + ':' + ddm.form.runtime_seconds.value;
-	}
--->
 </script>
 <? eval (
 	my ( $starttime, $endtime );
@@ -156,18 +163,18 @@
 				<select name="category_id" id="category_id" onchange="f1.submit();">
 					<option value="">All</option>
 				<? echo (
-	make_drop_down( openprint::Equipment_Category->dropdown('order'=>'lower(name)'), $session{'/employee/production/print_overview.html?category_id'} );
+	make_drop_down( openprint::Equipment_Category->dropdown( order=>'lower(name)'), $session{'/employee/production/print_overview.html?category_id'} );
 	) ?>
 				</select>
 			</li>
 <li><label>Equipment</label>
 <? echo ( 
-	@{$$variable{'Equipment'}} = ();
+	@{$$variable{Equipment}} = ();
 	my @presses = openprint::Equipment->find(
 		( $session{'/employee/production/print_overview.html?category_id'} ? 
-		  ( 'category_id <@'=> [ split(',', $session{'/employee/production/print_overview.html?category_id'} ) ] ) : ()
+		  ( 'category_id <@' => [ split(',', $session{'/employee/production/print_overview.html?category_id'} ) ] ) : ()
 		),
-		'useinscheduling'=>1,'order'=>'sorting,lower(strname)'
+		 useinscheduling=>1, order=>'sorting,lower(strname)'
 		);
 	my @selected_equipment = sets::intersection( ( map { $_->id() } @presses) , split(',', $session{'/employee/production/print_overview.html?Equipment'} ) );
 	if ( ! @selected_equipment ) {
@@ -176,7 +183,7 @@
 	}
 
 	foreach (@presses) {
-		push @{$$variable{'Equipment'}}, $_ if sets::isin( $_->id(), \@selected_equipment );
+		push @{$$variable{Equipment}}, $_ if sets::isin( $_->id(), \@selected_equipment );
 	} # end foreach press
 
 	my $html = '<select name="Equipment" multiple="multiple" size="'. @presses.'">';
@@ -245,16 +252,16 @@
 		<p class="buttons">
 			<? echo ( button( 'ShowResults', { onclick=>'f1.submit();', text=>'Show Results' } ); ) ?>
 			<? echo ( button( 'Reset', { onclick=>"f1.btnFunction.value='Reset';f1.submit();", text=>'Reset' } ); ) ?>
-<? if ( openprint::usergroup::is_user_in( ['Scheduling'], $session{'user_id'} ) ) ?>
+<? if ( openprint::usergroup::is_user_in( ['Scheduling'], $session{user_id} ) ) ?>
 			<? echo ( button( 'AddDocket', { onclick=>"popup_window('_add_docket.html', '', { width: 600, height: 400 } );", text=>'Add Docket' } ); ) ?>
 			<? echo ( button( 'AddMaintenance', { onclick=>"popup_window('_add_maintenance.html', '', { width: 600, height: 400 } );", text=>'Add Maintenance' } ); ) ?>
 			<? echo (
-				if ( @{$$variable{'Equipment'}} == 1 and $$variable{'Equipment'}[0]->smartscheduling() ) {
-					return button( 'ReFlow', { href=>'/employee/production/print_overview.html?Equipment='.$$variable{'Equipment'}[0]->id().'&amp;btnFunction=Reflow', text=>'Reflow Jobs' } );
+				if ( @{$$variable{Equipment}} == 1 ) {
+					return button( 'ReFlow', { href=>'/employee/production/print_overview.html?Equipment='.$$variable{Equipment}[0]->id().'&amp;btnFunction=Reflow', text=>'Reflow Jobs' } );
 				} # end if
 				return;
 			) ?>
-<? endif ( openprint::usergroup::is_user_in( ['Scheduling'], $session{'user_id'} ) ) ?>
+<? endif ( openprint::usergroup::is_user_in( ['Scheduling'], $session{user_id} ) ) ?>
 		</p>
 	</fieldset>
 	<div class="unprintable">
@@ -280,10 +287,10 @@
 <tr>
 	<? echo (
 		my $html;
-		foreach my $E ( @{$$variable{'Equipment'}} ) {
+		foreach my $E ( @{$$variable{Equipment}} ) {
 			$html .= '<th class="PressColumn ' . join(' ', $E->categories() ) . '"><a href="/employee/production/print_overview.html?Equipment='.$E->id().'">'.$E->name().'('.$E->strid().')</a>';
-			if ( openprint::usergroup::is_user_in( ['Scheduling'], $session{'user_id'} ) ) {
-				$html .= button('Edit'.$E->id(), { onclick=>q`popup_window('_equipment_popup.html', 'equipment_id=`.$E->id().q`' );`, text=>'E', title=>'Edit' } );
+			if ( openprint::usergroup::is_user_in( ['Scheduling'], $session{user_id} ) ) {
+				$html .= button('Edit'.$E->id(), { onclick=>q`popup_window('_equipment_popup.html', 'equipment_id=`.$E->id().q`', { width: 500, height: 400 } );`, text=>'E', title=>'Edit' } );
 			} # end if
 			$html .= '<br/><div id="message'.$E->id().'" class="message">';
 			$html .= $E->message();
@@ -291,17 +298,19 @@
 			$html .= '</th>';
 		} # end foreach
 		$html .= '</tr></thead><tbody><tr>';
-		@{$$variable{'drops'}} = ();
+		@{$$variable{drops}} = ();
 
 		my $parser = 'DateTime::Format::Pg';
 
 		my $start_dt = new DateTime( time_zone=>$openprint::TZ, map { $_ => $session{'/employee/production/print_overview.html?schedule_start_'.$_} } ( 'year', 'month', 'day' ) );
 		my $end_dt = new DateTime( time_zone=>$openprint::TZ, map { $_ => $session{'/employee/production/print_overview.html?schedule_end_'.$_} } ( 'year', 'month', 'day' ) );
+		$log->debug("Start: $start_dt, end $end_dt");
 
 		my $ac = sql::start_transaction( $dbh );
 
+		$log->debug("Get all jobs");
 		my @Jobs = openprint::ScheduledJob->find( 
-			equipment_id=>[ map { $_->id() } @{$$variable{'Equipment'}} ],
+			equipment_id=>[ map { $_->id() } @{$$variable{Equipment}} ],
 			'starttime <='	=> $parser->format_datetime( $end_dt ),
 			'starttime >='	=> $parser->format_datetime( $start_dt ),
 		);
@@ -316,7 +325,7 @@
 		$dbh->do( 'LOCK TABLE Shifts IN ACCESS EXCLUSIVE MODE' ) or $log->error( DBI->errstr );
 #$log->debug("Have lock");
 
-		foreach my $E ( @{$$variable{'Equipment'}} ) {
+		foreach my $E ( @{$$variable{Equipment}} ) {
 			$html .= '<td class="PressColumn ' . join(' ', $E->categories() ). '">';
 
 			my ( $year, $month, $day ) = @session{'/employee/production/print_overview.html?schedule_start_year',
@@ -335,6 +344,7 @@
 
 			# When its time to add shifts, we add in sets, until we find an already-implemented shift.
 			my @Equipment_Shifts = $E->Equipment_Shifts();
+			my %Equipment_Shifts = map { $_->id(), $_ } @Equipment_Shifts;
 #foreach my $ES ( @Equipment_Shifts ) {
 #$log->debug( "Available ES: " . $ES->to_string() );
 #}
@@ -342,9 +352,11 @@
 			# Showing over 100 days makes the browser crawl forever. So limit it.
 			$end = 100 if $end > 100;
 			# Get the shifts on this day.
-			my $st = new DateTime( year=>$year, month=>$month, day=>$day, time_zone=>$openprint::TZ );
+			my $st = $start_dt;
+#new DateTime( year=>$year, month=>$month, day=>$day, time_zone=>$openprint::TZ );
 			my $et = $st + DateTime::Duration->new( days=>$end );
 
+			$log->debug("Getting shifts");
 			my @Shifts = openprint::Shift->find( 
 				equipment_id 		=>	$E->id(),
 				'starttime <'		=>	$parser->format_datetime( $et ),
@@ -353,6 +365,7 @@
 				);
 
 			if ( ! @Shifts ) {
+				$log->debug("No shifts found, implementing some");
 				@Shifts = openprint::Shift::get_Shifts( $E, $st, $et, @Equipment_Shifts );
 			} # end if
 #$log->debug("# of Shifts: " . @Shifts );
@@ -363,13 +376,41 @@
 
 			# First, need to find the first Equipment Shift to show.  Easy, will be given by the first shift in our list of shifts
 			my $ES = $Shifts[0]->Equipment_Shift();
+			$log->debug("First ES: " . $ES->to_string() );
 
 			# Step two: Make sure all the shifts are there. We do this by running through them, comparing the shift_id to the expected ES
 			# We start at 1 because we already looked for 0 and found it.  Micro-optimisation
 					#foreach my $S ( @Shifts ) {
 #$log->debug("Shifts are: " . $S->to_string());
 					#}
+			my $Next_ES = $ES->Next();
+
 			for ( my $shift_index = 1; $shift_index < @Shifts; $shift_index += 1 ) {
+				my $Next_Shift = $Shifts[$shift_index];
+
+if ( 0 ) {
+				if ( $$Next_Shift{shift_id} == $Next_ES->id() ) {
+					# It's the right shift, just make sure it isn't too far in the future
+
+					my $last_time = $Shifts[$shift_index-1]->endtime_dt();
+$log->error("Last Shift endtime $last_time");
+					while ( $_ = $Next_ES->compare( $last_time ) ) {
+$log->error("Last time $last_time $_, adding an hour");
+						$last_time += new DateTime::Duration( seconds=>3600 );
+						last if $last_time >= $Shifts[$shift_index]->starttime_dt();
+					}
+					if ( $last_time >= $Shifts[$shift_index]->starttime_dt() ) {
+						$log->debug("Verified that the nex shift is good>");
+						#last;
+					} else {
+						my $test_Shift = $ES->Next()->test_emanantise( $last_time );
+						if ( $test_Shift->starttime() eq $Shifts[$shift_index]{starttime} ) {
+							next;
+						}
+					} # end if
+				}
+}
+					
 				#$log->debug( $Shifts[$shift_index]->shift_id() . ' == ' . $ES->Next()->id() );
 				#$log->debug( "This ES: " . $ES->to_string() );
 				#$log->debug( "Next ES: " . $ES->Next()->to_string() );
@@ -377,54 +418,63 @@
 				
 				# By putting emanantise here....
 				# emanantise will figure out what the next shift should loook like, and add it if neccessary.
-				my $NextShift = $ES->Next()->emanantise( $Shifts[$shift_index-1]->starttime_seconds() + 1 );
+				my $last_time = $Shifts[$shift_index-1]->endtime_seconds() + 1;
+				while( $_ = $Next_ES->compare( $last_time ) ) {
+					if ( $_ > 0 ) {
+$log->error("Last time $last_time $_, adding an hour");
+						# We have not yet reached the starttime of the next shift.  They may be gaps between shifts.
+						# Add an hour until we get there.
+						$last_time += 3600;
+					} else { # $_ < 0
+$log->error("Went past, going back an hour $last_time $_, adding an hour");
+						# We have passed the ES, So the ES must be missing.
+						#$last_time -= 3600;
+						last;
+					}
+					last if $last_time > $Shifts[$shift_index]->starttime_seconds();
+				}
+				my $New_Next_Shift = $Next_ES->emanantise( $last_time );
+				if ( $New_Next_Shift ) {
 
-				if ( $NextShift->id() != $Shifts[$shift_index]->id() ) {
-#$log->debug("Adding new shift; previous: " . $Shifts[$shift_index-1]->to_string() );
-#$log->debug("Adding new shift; current: " . $Shifts[$shift_index]->to_string() );
-#$log->debug("Adding new shift; next: " . $NextShift->to_string() );
-					splice @Shifts, $shift_index, 0, $NextShift;
-					#foreach my $S ( @Shifts ) {
+					if ( $New_Next_Shift->id() != $Next_Shift->id() ) {
+$log->debug("Adding new shift; previous: " . $Shifts[$shift_index-1]->to_string() );
+$log->debug("Adding new shift; current: " . $Shifts[$shift_index]->to_string() );
+$log->debug("Adding new shift; next: " . $New_Next_Shift->to_string() );
+						splice @Shifts, $shift_index, 0, $New_Next_Shift;
+#foreach my $S ( @Shifts ) {
 #$log->debug("Shifts are: " . $S->to_string());
-					#}
-				} 
-				next if $NextShift->starttime_dt() > $Shifts[$shift_index]->starttime_dt();
-				last if $NextShift->starttime_dt() > $et;
-
-
-if ( 0 ) {
-				if ( $Shifts[$shift_index]->shift_id() == $ES->Next()->id() ) {
-
-					# There is only 1 ES, then this wil always be true... even if a shift is skipped.
-	
-				} elsif ( $Shifts[$shift_index]->starttime_dt() > ( $Shifts[$shift_index-1]->endtime_dt() + $ES->Next()->Duration() ) ) {
-#$log->debug("Need another shift");
-				#} elsif ( $Shifts[$shift_index]->starttime_seconds() > $Shifts[$shift_index-1]->starttime_seconds() + $ES->distance() ) {
-					my $NewShift = $ES->Next()->emanantise( $Shifts[$shift_index-1]->starttime_seconds() + 1 );
-					# emanantise may pass back an existing shift... in which case it SHOULD be the one we are looking at!
-					if ( $NewShift->id() == $Shifts[$shift_index]->id() ) {
-						$log->error("BAD MOJO!");
-					} # end if
-					splice @Shifts,$shift_index, 0, $NewShift;
+#}
+						# Reset counter, and go again
+						$shift_index -= 1;
+						next;
+					} 
+					last if $New_Next_Shift->starttime_dt() > $et;
 				} else {
-					$openprint::log->error("SOmething else wrong");
-					$openprint::log->error( $Shifts[$shift_index]->to_string() );
-					$openprint::log->error( $ES->Next()->to_string() );
+					$log->error( " Failed to match the shift for " . $ES->Next()->to_string() );
+				} # end if
 
-				} # end if need shiftsadded
-}
-				$ES = $ES->Next();
+				$Next_ES = $Next_ES->Next();
 			} # end for each Shift
 			
 			my $LastShift = $Shifts[@Shifts-1];
-			while ( $LastShift->starttime_seconds() < $et->epoch() ) {
-				my $NewShift = $LastShift->Equipment_Shift()->Next()->emanantise( $LastShift->starttime_seconds() + 1 );
+			while ( $LastShift->endtime_seconds() < $et->epoch() ) {
+				my $ES = $LastShift->Equipment_Shift()->Next();
+
+				my $last_time = $LastShift->endtime_seconds() + 1;
+				while( $ES->compare( $last_time ) ) {
+					$last_time += 3600;
+				}
+				my $NewShift = $ES->emanantise( $last_time );
+				if ( ! $NewShift ) {
+					$log->error("Error getting shift for $last_time ");
+					last;
+				}
 				
 				push @Shifts, $NewShift;
 				$LastShift = $NewShift;
 			} # end while
 			foreach my $Shift ( @Shifts ) {	
-				push @{$$variable{'drops'}}, $Shift->ul_id() if $Shift->operator_id() or ! $E->smartscheduling();
+				push @{$$variable{drops}}, $Shift->ul_id() if $Shift->operator_id() or ! $E->smartscheduling();
 				$html .= $Shift->get_ul( );
 			} # end foreach Shift
 
@@ -442,9 +492,10 @@ if ( 0 ) {
 	) ?>
 </form>
 <br class="spacer"/>
+<? if ( openprint::usergroup::is_user_in( ['Scheduling'], $session{user_id} ) ) ?>
 <script type="text/javascript">
-	drops.push("<? echo ( join('","', @{$$variable{'drops'}} ) ) ?>");
+	drops.push("<? echo ( join('","', @{$$variable{drops}} ) ) ?>");
 	setup_drops();
 	setup_dates();
 </script>
-<? endif ( openprint::usergroup::is_user_in( ['Scheduling'], $session{'user_id'} ) ) ?>
+<? endif ( openprint::usergroup::is_user_in( ['Scheduling'], $session{user_id} ) ) ?>

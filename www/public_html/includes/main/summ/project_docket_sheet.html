@@ -88,12 +88,27 @@
 <table width="100%" border="1" cellspacing="0" cellpadding="0">
 	<tr>
 		<td width="30%" class="headerText"><b>Press Proof Required?</b>&nbsp;
-		<? if ( $$variable{'rdbPressProofYes'} ne '' ) ?>
-			Yes <?rdbPressProofYes?>
-		<? endif ( $$variable{'rdbPressProofYes'} ne '' ) ?>
-		<? if ( $$variable{'rdbPressProofYes'} eq '' ) ?>
-			No
-		<? endif ( $$variable{'rdbPressProofYes'} eq '' ) ?>
+		<? echo ( 
+			my $press_proof_required = 0;
+	openprint::Estimating::Proofs::get_proof_specs( $log, $dbh, $variable, @$variable{'ProjectIndex','ProofServiceIndex'} );
+   while ( @{$$variable{SignatureGroups}} ) {
+		if ( @$variable{'SignatureIndex','Reference'} = splice @{$$variable{'SignatureGroups'}},0,2 ) {
+			my $proofs_string = join('-', 'Proofs',$$variable{SignatureIndex},$$variable{Project}->ordered_quantity_index());
+			
+			next if ! ( $$variable{$proofs_string} and @{$$variable{$proofs_string}} );
+
+			while ( @$variable{'ProofIndex','ProofQuantity','ProofWidth','ProofHeight','ProofType','ddmProofType'} = splice @{$$variable{$proofs_string}},0,6 ) {
+				if ( $$variable{ProofQuantity} and $$variable{ProofType} eq 'PressProof' ) {
+					$press_proof_required = 1;
+					last;
+} else {
+$log->debug("No a press proof: $$variable{ProofType} ");
+				}
+			} # end while
+		} # end if
+    } # end while SignatureGgroups
+	return $press_proof_required ? 'Yes' : 'No';
+	) ?>
 		</td>
 		<td width="40%" class="headerText"><b>Special Inks</b>&nbsp;</td>
 		<td width="30%" class="docketText"><b><? echo ( 'FM SCREENING' if $$variable{'ScreenType'} eq 'FM' ) ?></b>&nbsp;</td>
@@ -391,11 +406,12 @@
 	my $qty_index = $$variable{Project}->ordered_quantity_index();
 
 	my %Proof_Types = (
-		DigitalDylux	=>	'Digital Dylux',
+		DigitalDylux	=>	'Digital Dylux & Ricoh',
 		EpsonProof		=>	'Epson Proof',
 		CanonProof		=>	'Canon Proof',
 		FujiFinalProof	=>	'Fuji Proof',
 		PDFProof		=>	'PDF Proof',
+		PressProof		=>	'Press Proof',
 	);
 
 	while ( @{$$variable{SignatureGroups}} ) {
@@ -412,7 +428,7 @@
 				while ( @$variable{'ProofIndex','ProofQuantity','ProofWidth','ProofHeight','ProofType','ddmProofType'} = splice @{$$variable{$proofs_string}},0,6 ) {
 					next if ! $$variable{ProofQuantity};
 					$html .= sprintf('<tr><td class="docketText">%d</td><td class="docketText">%s&quot; x %s&quot;</td><td class="docketText">%s</td></tr>', 
-							@$variable{'ProofQuantity','ProofWidth','ProofHeight'},$Proof_Types{$$variable{ProofType}} );
+							@$variable{'ProofQuantity','ProofWidth','ProofHeight'},$Proof_Types{$$variable{ProofType}} ? $Proof_Types{$$variable{ProofType}} : $$variable{ProofType} );
 				} # end while
 				$html .= '</table>';
 			} # end if
@@ -446,7 +462,9 @@
         </tr>
 
 </table>
-<br/>
+<div id="OutsideBindery"><label>Outside Bindery</label>
+	<? echo ( radio( 'outside_bindery', [ 0, 'Yes', 1, 'No' ] ); ) ?>
+</div>
 <table width="100%" border="1" cellspacing="0" cellpadding="0">
 	<tr> 
 		<td width="10%" class="docketText" ><b>Quantity</b></td>
@@ -527,6 +545,9 @@ $log->debug("Binder: @BinderyServiceNames");
 			foreach ( @{$$services{ShrinkWrap}} ) {
 				my $specs = openprint::service::get_specs_ref( $$variable{Project}, $_ );
 				$html .= ", ShrinkWrap in $$specs{txtWrapQuantity}'s";
+				if ( $$specs{AccurateCount} eq 'Y' ) {
+					$html .= ' accurate count';
+				}
 			} # end foreach
 		} # end if
 		if ( $$services{Bundling} ) {

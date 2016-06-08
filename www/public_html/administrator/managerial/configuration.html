@@ -1,4 +1,4 @@
-<div id="Configuration">
+<div class="Configuration">
 <form id="f1" name="f1" method="post" action="/administrator/managerial/configuration.html">
 <p class="buttons">
 		<? echo ( join('',
@@ -7,6 +7,7 @@
 					button( 'New', { 'onclick'=>q`popup_window('_configuration_popup.html');`, '', 'New' } )
 		); ) ?>
 </p>
+<div id="Configuration">
 <? echo (
 	my $html;
 	my @Suppliers = openprint::Company->find( supplier =>'Y', order =>'lower(name)');
@@ -51,11 +52,7 @@
 	return $html;
 ) ?>
 	</ul></fieldset>
-	<p class="buttons"> <? echo ( join('',
-		button( 'SaveBottom', { 'onclick'=>"f1.btnFunction.value='Save';f1.submit();",'text'=>'Save' } ),
-		button( 'ResetBottom', { 'onclick'=>'f1.reset();','text'=>'Reset' } ),
-		); ) ?>
-	</p>
+</div>
 	<input type="hidden" name="btnFunction"/>
 </form>
 </div>

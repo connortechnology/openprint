@@ -38,7 +38,7 @@ sub handler {
 	$r->log->debug( "Beginning of Request: $ENV{HTTP_USER_AGENT} $ENV{REMOTE_ADDR} Page: " . $r->uri() );
 
 	$log	= $r->log;
-	my $hostname = $r->param('host');
+	my $hostname = lc $r->param('host');
 	if ( ! $hostname ) {
 		$log->warn("No hostname specified.");
 		return Apache2::Const::DECLINED;

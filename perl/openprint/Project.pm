@@ -91,6 +91,7 @@ $serial = 'lngProjectIndex_seq';
 	due_date	=>	undef,
 	markup		=>	undef,
 	priority	=>	undef,
+	reprint		=>	0,
 );
 
 %find_fields = (
@@ -561,20 +562,20 @@ sub update_status {
 			sql::update( $openprint::log, $openprint::dbh, 'tbl_Project_Contents', ['lngProjectIndex=? AND strStatus=?', $$self{id},'Ordered'], 'strStatus', 'calculated' );
 			@statuses = sql::execute( $openprint::log, $openprint::dbh, q{SELECT DISTINCT strStatus FROM tbl_Project_Contents WHERE lngProjectIndex=?}, $$self{id} );
 		} # end if
+		if ( $self->Type()->type() eq 'MultiPage' ) {
 			foreach my $qty_index ( $self->quantity_indexes() ) {
-				if ( $self->Type()->type() eq 'MultiPage' ) {
-					if ( openprint::Estimating::MultiPage::status( $$self{id}, undef, $qty_index ) ) {
-						$new_status = 'uncalculated';
-						last;
-					} # end if
-					my $ProjectService = $self->Service( $services{''}[0] );
-					if ( openprint::Estimating::MultiPage::check( $self, $ProjectService, $qty_index ) ) {
-						$ProjectService->status('uncalculated');
-						$new_status = 'uncalculated';
-						last;
-					} # end if
+				if ( openprint::Estimating::MultiPage::status( $$self{id}, undef, $qty_index ) ) {
+					$new_status = 'uncalculated';
+					last;
+				} # end if
+				my $ProjectService = $self->Service( $services{''}[0] );
+				if ( openprint::Estimating::MultiPage::check( $self, $ProjectService, $qty_index ) ) {
+					$ProjectService->status('uncalculated');
+					$new_status = 'uncalculated';
+					last;
 				} # end if
 			} # end foreach
+		} # end if
 		if ( sets::isin( 'uncalculated', \@statuses ) ) {
 			$new_status = 'uncalculated';
 		} elsif ( sets::isin( 'calculated', \@statuses ) ) { # This works because we have already checked for uncalculated
@@ -594,7 +595,7 @@ sub update_status {
 sub save {
 	my ( $self, $hash ) = @_;
 
-	$self->set( $hash );
+	$self->set( $hash ? $hash : {} );
 	$self->services(undef);
 	foreach my $qty_index ( $self->quantity_indexes() ) {
 		$self->price( $qty_index, undef );
@@ -628,7 +629,10 @@ sub save {
 
 sub quantity_indexes {
 	my ( $self ) = @_;
-	if ( ! exists $$self{quantity_indexes} ) {
+	if ( @_ > 1 ) {
+		$$self{quantity_indexes} = $_[1];
+	}
+	if ( ! $$self{quantity_indexes} ) {
 		@{$$self{quantity_indexes}} = ();
 		foreach my $qty_index ( 1 .. 3 ) {
 			push @{$$self{quantity_indexes}}, $qty_index if $$self{"quantity$qty_index"};
@@ -648,9 +652,7 @@ sub quantity {
 		return $self->ordered_quantity();
 	} elsif ( defined $qty ) {
 		$$self{"quantity$index"} = $qty;
-		if ( exists $$self{quantity_indexes} ) {
-			$$self{quantity_indexes}[$index-1] = $index;
-		} # end if
+		delete $$self{quantity_indexes};
 	} # end if
 	return $$self{'quantity'.$index};
 } # end sub quanitty
@@ -1487,8 +1489,8 @@ sub production_cost {
 sub Service {
 	my ( $self, $service_id ) = @_;
 	if ( ! $service_id ) {
-		$openprint::log->error("No service_id passed to ServiceType for project $$self{id}");
-		Carp::cluck("No service_id passwrod to ServiceType");
+		$openprint::log->error("No service_id passed to Service for project $$self{id}");
+		Carp::cluck("No service_id passwrod to Project::Service");
 	} # end if
 	return new openprint::Project_Service( {project_id=>$$self{id}, service_id=>$service_id} );
 } # end sub Service
@@ -1614,22 +1616,29 @@ sub calliper {
 				$calliper = int( $Paper->calliper() * 10000);
 			} # end if
 			my $pages = 1;
-			if ( $$sig_specs{rdbTemplateType} eq '2PanelFold' ) {
+			if ( sets::isin( $$sig_specs{rdbTemplateType}, [ '2PanelFold', '4PageFold', 'Landscape Fold', 'Portrait Fold' ] ) ) {
 				$pages = 2;
+			} elsif ( sets::isin( $$sig_specs{rdbTemplateType}, [  'NoFold', 'Portrait', 'Landscape','Square','Forms', '' ] ) ) {
+			} elsif ( sets::isin( $$sig_specs{rdbTemplateType}, [ 'PadsPortrait', 'PadsLandscape','PadsSquare','Pads' ] ) ) {
+				$pages *= $$sig_specs{PageQuantity} if $$sig_specs{PageQuantity};
 			} elsif ( sets::isin( $$sig_specs{rdbTemplateType},['3PanelFold','3PanelZFold'] ) ) {
 				$pages = 3;
 			} elsif ( sets::isin( $$sig_specs{rdbTemplateType}, ['4PanelFold', '4PanelZFold'] ) ) {
 				$pages = 4;
 			} elsif ( sets::isin( $$sig_specs{rdbTemplateType}, ['5PanelFold', '5PanelZFold'] ) ) {
 				$pages = 5;
-			} elsif ( sets::isin( $$sig_specs{rdbTemplateType}, ['6PanelFold', '6PanelZFold'] ) ) {
+			} elsif ( sets::isin( $$sig_specs{rdbTemplateType}, ['6PanelFold', '6PanelZFold','12pg3PanelRollFold'] ) ) {
 				$pages = 6;
 			} elsif ( $$sig_specs{rdbTemplateType} eq 'SingleGateFold' ) {
 				$pages = 3;
-			} elsif ( $$sig_specs{rdbTemplateType} eq 'DoubleGateFold' ) {
+			} elsif ( sets::isin( $$sig_specs{rdbTemplateType}, [ 'DoubleGateFold', '2Panel2Pocket' ] ) ) {
 				$pages = 4;
 			} elsif ( $$sig_specs{rdbTemplateType} eq 'DifficultFold' ) {
 				$pages = 6;
+			} elsif ( $$sig_specs{rdbTemplateType} eq '8PageFold' ) {
+				$pages = 4;
+			} else {
+				$log->error("Unknown template type n calliper $$sig_specs{rdbTemplateType}");
 			} #// end if
 			$finished_calliper += $pages * $calliper;
 		} # end if

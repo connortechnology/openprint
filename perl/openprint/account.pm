@@ -1,5 +1,6 @@
 use strict;
 package openprint::account;
+use constant DEBUG => 1;
 
 require Email::Valid;
 require sql;
@@ -131,15 +132,15 @@ $log->warn("registration errors $error");
 	if ( $param{email} ) {
 		# enforce unique email addresses.
 		$param{email} =~ tr/[A-Z]/[a-z]/;
-		if ( openprint::User->find_one('email lc'=>$param{email},'company_id is null'=>0 ) ) {
+		if ( openprint::User->find_one(email=>$param{email},'company_id is null'=>0 ) ) {
 			$variable{error} = $param{email} .' is already a user!';
 			return;
 		} # end if
-		if ( openprint::User->find_one('email lc'=>$param{email},'deleted'=>1 ) ) {
+		if ( openprint::User->find_one(email=>$param{email}, deleted=>1 ) ) {
 			$variable{error} = $param{email} .' is already a user, but has been deleted. Please contact us to re-activate your account.';
 			return;
 		} # end if
-		$User = openprint::User->find_one('email lc'=>$param{email},'company_id is null'=>1 );
+		$User = openprint::User->find_one(email=>$param{email},'company_id is null'=>1 );
 	} # end if
 
 	my @agents = split(',', $config{UserRegistrationEmail} );
@@ -468,7 +469,7 @@ sub user_profile {
 				return;
 			} # end if
 
-			if ( openprint::User->find_one( 'email lc'=>lc $param{email}, ( $User->id() ? ( 'id !='=>$User->id() ) : () ) ) ) {
+			if ( openprint::User->find_one( email=>lc $param{email}, ( $User->id() ? ( 'id !='=>$User->id() ) : () ) ) ) {
 				$variable{error} = 'User already exists.';
 				$variable{information} = $param{email} . ' is already a user.';
 				$variable{User} = $User;
@@ -496,7 +497,7 @@ sub user_profile {
 				my ( $user, $domain ) = $User->email() =~ /^([^\@]+)\@(.+)$/;
 				if ( sets::isin( $domain, \@domains ) ) {
 					if ( $param{VacationState} ) {
-						email::start_vacation( $User->email(), @param{'VacationSubject','VacationMessage'} );
+						email::start_vacation( $User->email(), @param{'VacationSubject','VacationMessage','VacationSystemEmails'} );
 					} else {
 						email::stop_vacation( $User->email() );
 					} # end if
@@ -704,31 +705,7 @@ sub credit_application {
 		$log->error($variable{error}) if $variable{error};
 
 		if ( ! $variable{error} ) {
-# Now send email notifications
-			my %info;
-			$info{Company} = $Company;
-			$info{User} = $openprint::User;
-
-			$info{CreditAppIndex} = $App->id();
-			$info{Application} = $App;
-
-			$info{ReplacementText} = ssi::include( '/email_content/credit_application_notification.html', \%info );
-			my $body = ssi::include( '/email_template.html', \%info );
-			$info{ReplacementText} = ssi::include( '/email_content/credit_application.html', \%info );
-			my $credit_application = ssi::include( '/email_template.html', \%info );
-
-			my $Email = new openprint::Email();
-
-			$Email->add_pdf_attachment_from_html( 'CreditApplication'.$App->id(), $credit_application );
-
-			$Email->send(
-					FROM	=> $config{CreditApplicationEmail},
-					#TO	=> $config{CreditApplicationEmail},
-					TO	=> 'iconnor@point-one.com',
-					#BCC	=> 'iconnor@point-one.com',
-					SUBJECT => 'New Credit Application',
-					HTML_BODY	=>	$body,
-					);
+			$variable{information} .= $App->send_notification();
 		} # end if
 	} # end if Apply
 
@@ -988,6 +965,33 @@ sub _companies {
 
 sub company_view {
 	$variable{Company} = new openprint::Company( $param{company_id} );
+} # end sub company_view
+
+sub _notification_popup {
+} # en sub _notification_popup
+
+sub _notifications {
+	my $User = $variable{User} = new openprint::User( $param{user_id} );
+	if ( $User->can_edit() ) {
+		if ( $param{action} eq 'add' ) {
+			my $N = new openprint::User_Notification();
+			$variable{error} .= $N->save({
+					user_id		=>	$param{user_id},
+					company_id	=>	$param{company_id},
+					type_id		=>	$param{type_id},
+					value		=>	$param{value},
+					});
+		} elsif ( $param{action} eq 'delete' ) {
+			my $N = new openprint::User_Notification( $param{id} );
+			if ( $$N{user_id} != $param{user_id} ) {
+				$variable{error} .= 'Notification does not belong to this user.';
+			} else {
+				$variable{error} .= $N->delete();
+			}
+		} # end if
+	} else {
+		$variable{error} .= 'You do not have privilege to edit Notifications for this user.<br/>';
+	} # end if
 }
 
 1;

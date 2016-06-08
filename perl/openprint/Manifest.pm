@@ -33,6 +33,7 @@ $debug = 0;
 	rfidtag_id	=>	'(SELECT rfidtag_id FROM ManifestContents WHERE manifest_id=manifests.id)',
 	manufacturers_id	=>	'(SELECT manufacturers_id FROM ManifestContents WHERE manifest_id=manifests.id)',
 	type		=>	'(SELECT type from Manifest_Content_Types WHERE manifest_id=manifests.id)',
+	po_unconfirmed_type_ids	=>	'(SELECT id FROM Manifest_Content_Types WHERE manifest_id=manifests.id AND po_content_id is NULL)',
 );
 
 %transforms = (
@@ -71,17 +72,18 @@ sub destroy {
 
 sub Types {
 	my ( $self, %params ) = @_;
+	if ( $$self{'id'} and ! $_[0]{Types} ) {
+		$_[0]{Types} = [ openprint::Manifest_Content_Type->find( manifest_id=>$$self{'id'}, order=>'id' ) ];
+	}
 	if ( %params ) {
-		if ( $$self{'id'} ) {
-			$params{'manifest_id'} = $$self{id};
-			return openprint::Manifest_Content_Type->find(%params);
-		} # end if
-	} # end if
-	if ( ! $$self{'Types'} ) {
-		if ( $$self{'id'} ) {
-			$params{manifest_id} = $$self{id};
-			@{$$self{'Types'}} = openprint::Manifest_Content_Type->find(%params);
-		} # end if
+		my @results;
+		TYPE: foreach my $Type ( @{$$self{'Types'}} ) {
+			foreach my $key ( keys %params ) {
+				next TYPE if $$Type{$key} ne $params{$key};
+			}
+			push @results, $Type;
+		}
+		return @results;
 	} # end if
 	return @{$$self{'Types'}} if $$self{'Types'};
 	return;

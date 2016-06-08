@@ -1,7 +1,6 @@
 use strict;
 package openprint::Material;
 our @ISA = qw( openprint::Object );
-use Memoize;
 
 require sql;
 require openprint::Object;
@@ -19,7 +18,7 @@ use vars qw{ $debug $log $dbh %session $table $serial %fields %find_fields %tran
 $debug = 0;
 $cached = 0;
 $table = 'materials';
-$serial = 'materialindex_seq';
+$serial = 'materials_id_seq';
 
 %fields = (
 		id				=>	'id',
@@ -152,6 +151,20 @@ sub get_price {
 
 	return %price;
 } # end sub get_price
+
+sub get_Price {
+	return if ! $_[0]{id};
+	my ( $self, $quantity, $Equipment ) = @_;
+
+	my $Pricelist = openprint::Pricelist::get_current();
+	my %price = openprint::pricing::get_best_price_object( $session{'company_id'}, $$self{id}, $$Pricelist{id}, 'openprint::material_priceset', $quantity, $$Equipment{'id'} );
+	return if ! %price;
+
+	$price{'currency_id'} = $Pricelist->currency_id();
+	openprint::Currency::convert( \%price );
+
+	return \%price;
+}
 
 sub next {
 	my ($self, $params) = shift;

@@ -14,6 +14,7 @@ CREATE TABLE Ordered_Products (
 	gst				NUMERIC(10,2),
 	hst				NUMERIC(10,2),
 	pst				NUMERIC(10,2),
+	comments		TEXT,
 	PRIMARY KEY (id)
 );
 CREATE INDEX OrderedProducts_idx on Ordered_Products (order_id, product_id);

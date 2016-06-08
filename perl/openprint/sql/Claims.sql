@@ -42,3 +42,6 @@ CREATE TABLE CLAIMS (
 	vendor_email		text,
 	PRIMARY KEY (id)
 );
+
+create index claims_created_on_idx on claims (created_on);
+create index claims_company_supplier_idx on claims (company_id,supplier_id);

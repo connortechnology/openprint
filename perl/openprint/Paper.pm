@@ -35,6 +35,8 @@ use Time::HiRes qw{ time gettimeofday tv_interval };
 
 use vars qw( $debug $table $serial %fields %find_fields %defaults %transforms %grades );
 
+use constant DEBUG_PRICING => 0;
+
 $debug = 0;
 $table = 'papers';
 $serial	= 'paper_id_seq';
@@ -163,6 +165,7 @@ $serial	= 'paper_id_seq';
 	minimum_order		=>	undef,
 	parts				=>	undef,
 	digital				=>	undef,
+	message				=>	undef,
 );
 
 %grades = (
@@ -208,7 +211,7 @@ sub Prices {
 sub save {
 	my ( $self, $hash ) = @_;
 
-	$self->set($hash);
+	$self->set($hash ? $hash : {} );
 	
 	if ( $$self{group} and ! $$self{group_id} ) {
 		my $Group = openprint::StockGroup->find_one('name lc'=>lc openprint::StockGroup->transform( 'name', $$self{group} ) );
@@ -902,6 +905,7 @@ $openprint::log->debug("Setting paper in_stock to $_[1]");
 			return $in_stock;
 		} else {
 			$_[0]{in_stock} = $_[1];
+			delete $_[0]{SkidContents};
 		} # end if
 	} # end if
 
@@ -1022,8 +1026,8 @@ sub get_price {
 			next if $$Price{service} ne $params{service};
 #$openprint::log->warn(sprintf('Price: %s - %s : %s',$Price->min(), $Price->max(), $Price->price() ) );
 			if ( 
-					( (!(1*$Price->min())) or $Price->min() <= $lookup_qty ) and
-					( (!(1*$Price->max())) or $Price->max() >= $lookup_qty )
+					( (!$Price->min()) or $Price->min() <= $lookup_qty ) and
+					( (!$Price->max()) or $Price->max() >= $lookup_qty )
 				) {
 				$price = $Price->clone();
 				last;
@@ -1061,11 +1065,9 @@ sub get_price {
 			return;
 		} # end if ! price
 		if ( (!$$self{custom}) and $openprint::config{ApplyMarkup} ) {
-		#$openprint::log->debug("Apply Markup: $openprint::config{ApplyMarkup}");	
-			my $pricingpercent = $openprint::config{ApplyMarkup};
-			#$pricingpercent =~ s/[^\d\.\-]//g;
-			$pricingpercent /= 100;
-			$$price{price} *= ( 1 + $pricingpercent );
+			my $new_price = $$price{price} * ( 1 + ( $openprint::config{ApplyMarkup} / 100 ) );
+			$openprint::log->debug("Apply Markup: $$price{price} * ( 1 + $openprint::config{ApplyMarkup} / 100 ) = $new_price " ) if DEBUG_PRICING;
+			$$price{price} = $new_price;
 		} # end if
 
 		my $Pricelist = new openprint::Pricelist( $list_id );
@@ -1075,34 +1077,33 @@ sub get_price {
 		Carp::cluck("No custom price, and no paper::id for service: $params{service}" . $self->to_string()) if $debug;
 	} # end if
 
-	#if ( ! $$self{custom} ) {
-		my $Company = new openprint::Company( $openprint::session{company_id} );
-		if ( $Company->discount() ) {
-			$$price{price} *= 1 - ( $Company->discount()/100 );
-		} # end if
-	#} # end if
+	if ( $openprint::Company->discount() != 0 ) {
+		$_ = $$price{price};
+		$$price{price} *= 1 - ( $openprint::Company->discount()/100 );
+		$openprint::log->debug("Apply Markup: $_ * ( 1 - $$openprint::Company{discount} / 100 ) = $$price{price} " ) if DEBUG_PRICING;
+	} # end if
 
 	if ( $params{service} eq 'Material' ) {
 	# Don't need to cut it because the mweight has already byeen cut
-		$$price{mweight} = $self->mweight();
+		#$$price{mweight} = $self->mweight();
 		# Prices are always stored in cwt now
-		if ( ! $$self{mweight} ) {
+		#if ( ! $$self{mweight} ) {
 			# ROll papers won't have an mweight
 			$$price{'100lb'} = $$price{price};
 			$$price{'100lb Cost'} = $$price{cost};
 			$$price{'100lb Price'} = $$price{price};
 			#$price{Cost} *= $$self{wpsi} * $self->width() * $self->height();
 			#$price{Price} *= $$self{wpsi} * $self->width() * $self->height();
-		} else {
-			$$price{'100lb'} = $$price{price};
-			$$price{'100lb Cost'} = $$price{cost};
-			$$price{'100lb Price'} = $$price{price};
+		#} else {
+			#$$price{'100lb'} = $$price{price};
+			#$$price{'100lb Cost'} = $$price{cost};
+			#$$price{'100lb Price'} = $$price{price};
 			#$price{Cost} *= $$self{mweight} / 100000;
 			#$price{Price} *= $$self{mweight} / 100000;
-		} # end if
+		#} # end if
 		$$price{'100lb Total'} = $$price{'100lb Price'} * $qty/100;
 	} # end if
-$openprint::log->debug("Costs: cost($$price{cost}) Price($$price{'100lb Price'})/100lb cost($$price{'100lb Cost'})/cwt Price($$price{Price}) qty($qty) Total($$price{'100lb Total'})") if $debug;
+$openprint::log->debug("Costs: cost($$price{cost}) Price($$price{'100lb Price'})/100lb cost($$price{'100lb Cost'})/cwt Price($$price{Price}) qty($qty) lookup_qty($lookup_qty) Total($$price{'100lb Total'})") if DEBUG_PRICING;
 	return $price;
 } # end sub get_price
 
@@ -1376,14 +1377,14 @@ sub load_from_signature {
 			if ( $qty_index and $$specs{'hdnSuppliedStockWidth'.$qty_index} ) {
 				$params{width} = $$specs{'hdnSuppliedStockWidth'.$qty_index};
 				$params{type}	= $$specs{'StockType'.$qty_index} if $$specs{'StockType'.$qty_index};
-				$params{type}	= $$specs{StockType} if $$specs{StockType};
+				#$params{type}	= $$specs{StockType} if $$specs{StockType};
 				if ( $params{type} ne 'Roll' ) {
 					$params{height} = $$specs{'hdnSuppliedStockHeight'.$qty_index};
 				} # end if
 			} # end if
 			my @Papers = openprint::Paper->find( %params );
 			if ( ! @Papers ) {
-$log->debug("Didn't find specific paper $params{width} x $params{height}");
+$log->debug("Didn't find specific paper $params{width} x $params{height} $$specs{StockType} type: " . $$specs{'StockType'.$qty_index});
 				delete $params{width};
 				delete $params{height};
 				@Papers = openprint::Paper->find( %params );
@@ -1569,9 +1570,8 @@ sub start_area {
 }
 
 sub is_cut {
-	my $self = shift;
-	if ( $$self{start_width} and $$self{start_height} ) {
-		return 1 if ( $$self{start_width} != $$self{width} or $$self{start_height} != $$self{height} );
+	if ( $_[0]{start_width} and $_[0]{start_height} ) {
+		return 1 if ( $_[0]{start_width} != $_[0]{width} or $_[0]{start_height} != $_[0]{height} );
 	} # end if
 	return 0;	
 } # end sub is_cut
@@ -1753,6 +1753,20 @@ sub Unit_Cost {
 	return $$Price{'100lb Cost'};
 }
 	
+sub printing_types {
+	my ( $self, $Project, $qty_index ) = @_;
+	my @types;
+	
+	foreach my $sig_id ( $Project->signatures() ) {
+		my $sig_specs = openprint::service::get_specs_ref( $Project, $sig_id );
+		foreach my $q_index ( $qty_index ? ( $qty_index ) : $Project->quantity_indexes() ) {
+			next if ! $$sig_specs{"txtImposition$q_index"};
+			push @types, $$sig_specs{"PrintingType$q_index"};
+		}
+	} # end foreach
+$openprint::log->debug( "Types @types for " . $self->to_string() );
+	return sets::union( @types );
+}
 
 1;
 __END__

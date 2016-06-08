@@ -33,10 +33,10 @@ $serial = 'logs_id_seq';
 );
 %defaults = (
 	'date_time'	=>	"'NOW()'",
-	'user_id'	=>	q`$openprint::session{'user_id'}`,
-	'company_id'	=>	q`$openprint::session{'company_id'}`,
+	'user_id'	=>	q`$openprint::session{user_id}`,
+	'company_id'	=>	q`$openprint::session{company_id}`,
 	'url'           =>  q`$ENV{SERVER_NAME} . $ENV{REQUEST_URI}`,
-	'host_id'		=>	q`$self->ip_address( $ENV{REMOTE_ADDR} );return $$self{'host_id'};`,
+	'host_id'		=>	q`$self->ip_address( $ENV{REMOTE_ADDR} );return $$self{host_id};`,
 	'object_type_id'		=>	q`undef`,
 	'object_id'		=>	q`undef`,
 );
@@ -51,8 +51,8 @@ sub Company {
 } # end sub Company
 
 sub Action {
-	$_[0]{'Action'} = new openprint::Log_Action( $_[0]{'action_id'} ) if ! $_[0]{'Action'};
-	return $_[0]{'Action'};
+	$_[0]{Action} = new openprint::Log_Action( $_[0]{action_id} ) if ! $_[0]{Action};
+	return $_[0]{Action};
 } # end sub Action
 
 sub hostname {
@@ -70,7 +70,7 @@ sub ip_address {
 
 	if ( @_ > 1 ) {
 		if ( ! defined $_[1] ) {
-			$_[1] = $ENV{'REMOTE_ADDR'};
+			$_[1] = $ENV{REMOTE_ADDR};
 		} # end if
 		my $Interface = openprint::Host_Interface->find_one( ip=>$_[1] );
 		if ( ! $Interface ) {
@@ -113,8 +113,8 @@ sub action {
 			$Action = new openprint::Log_Action();
 			$Action->save({'name'=>$_[1], 'description'=>$_[1]});
 		} # end if
-		$_[0]{'Action'} = $Action;
-		$_[0]{'action_id'} = $Action->id();
+		$_[0]{Action} = $Action;
+		$_[0]{action_id} = $Action->id();
 		return $Action->name();
 	} # end if
 	return $_[0]->Action()->name();

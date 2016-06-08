@@ -84,9 +84,9 @@ sub send {
 
         $mail{"MIME-Version"} = "1.0";
 		if ( @attachments ) {
-        $mail{'content-type'} = "multipart/mixed;\n  boundary=\"$mail{BOUNDARY}\"\n";
+			$mail{'content-type'} = "multipart/mixed;\n  boundary=\"$mail{BOUNDARY}\"\n";
         } else {
-        $mail{'content-type'} = "multipart/alternative;\n  boundary=\"$mail{BOUNDARY}\"\n";
+			$mail{'content-type'} = "multipart/alternative;\n  boundary=\"$mail{BOUNDARY}\"\n";
         }
 
 		$mail{BODY} .= "\nThis is a message with multiple parts in MIME format.\n";
@@ -124,10 +124,10 @@ sub send {
             $mail{BODY} .= "\n$text\n";
         } # end while
 
-# Signal end of attachments
+		# Signal end of attachments
         $mail{BODY} .= "--$mail{BOUNDARY}--\n\n";
-		$openprint::log->debug($mail{BODY});
-    } # end if
+		$openprint::log->debug($mail{BODY}) if $debug;
+    } # end if attachments or HTML BODY
 
 	my @recipients = $self->to();
 #$openprint::log->debug("Email: Recipients @recipients");
@@ -154,10 +154,12 @@ sub send {
 			foreach my $email ( split (/,;\s/,	$recipient->email() ) ) {
 				s/^\s+//, s/\s+$// for $email;
 #$openprint::log->debug("Email: checking vacation for $email");
-				if ( email::get_vacation( $email ) ) {
-					$results .= 'Not sending to ' . $email . ' because they are on vacation.<br/>';
-#$openprint::log->debug("Email: got vacation for $email");
-					next;
+				if ( my $vacation = email::get_vacation_entry( $email ) ) {
+					if ( ! $$vacation{system_emails} ) {
+						$results .= 'Not sending to ' . $email . ' because they are on vacation.<br/>';
+	#$openprint::log->debug("Email: got vacation for $email");
+						next;
+					}
 				} # end if
 				push @to, sprintf('"%s" <%s>', $recipient->name(), $email );
 			} # end foreach email
@@ -173,9 +175,11 @@ sub send {
 					next;
 				} # end if
 
-				if ( email::get_vacation( $email ) ) {
-					$results .= 'Not sending to ' . $email . ' because they are on vacation.<br/>';
-					next;
+				if ( my $vacation = email::get_vacation_entry( $email ) ) {
+					if ( ! $$vacation{system_emails} ) {
+						$results .= 'Not sending to ' . $email . ' because they are on vacation.<br/>';
+						next;
+					}
 				} # end if
 				$mail{TO} = $recipient;
 			} else {
@@ -183,9 +187,11 @@ sub send {
 					$results .= 'Not sending to ' . $recipient . ' because they have been excluded.<br/>';
 					next;
 				} # end if
-				if ( email::get_vacation( $recipient ) ) {
-					$results .= 'Not sending to ' . $recipient . ' because they are on vacation.<br/>';
-					next;
+				if ( my $vacation = email::get_vacation_entry( $recipient ) ) {
+					if ( ! $$vacation{system_emails} ) {
+						$results .= 'Not sending to ' . $recipient . ' because they are on vacation.<br/>';
+						next;
+					}
 				} # end if
 				$mail{TO} = $recipient;
 			} # end if
@@ -250,6 +256,11 @@ sub add_pdf_attachment_from_html {
 	$$self{ATTACHMENTS} = [] if ! $$self{ATTACHMENTS};
 	push @{$$self{ATTACHMENTS}}, @attachments;
 	return $results;
+}
+
+sub add_html_attachment {
+	my ( $self, $name, $html ) = @_;
+	push @{$$self{ATTACHMENTS}}, ($name, MIME::QuotedPrint::encode_qp($html), 'text/html', 'quoted-printable');
 }
 1;
 __END__

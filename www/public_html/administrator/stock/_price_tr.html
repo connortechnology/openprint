@@ -1,5 +1,5 @@
 <? echo (
-	return $variable{error} if $variable{error};
+	return '<tr class="error"><td colspan="6">'.$variable{error}.'</td></tr>' if $variable{error};
 	return if ! $$variable{Price}->id();
 	my $html = '';
 	my $Pricelist = $$variable{Pricelist};

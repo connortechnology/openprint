@@ -81,7 +81,10 @@ $config{ping_wait} = 2 if ! $config{ping_wait};
 my $p = Net::Ping->new($config{ping_type},$config{ping_wait});
 my $hup;
 my %times;
-@SIG{qw(HUP)} = \&sig_handler;
+$SIG{HUP} = \&sig_handler;
+
+# TUrn off Object caching
+$openprint::Object::no_cache = 1;
 
 while(1) {
 	if ( ! ( $dbh and $dbh->ping ) ) {
@@ -117,9 +120,15 @@ while(1) {
 			$log->debug( "Monitored host without Interfaces: " . $Host->to_string() );
 			next;
 		} # end if
+
+		my $online = 0;
+
 		foreach my $HI ( $Host->Interfaces() ) {
-			next if ! $HI->ip();
-		
+			if ( ! $HI->ip() ) {
+				$log->debug("No ip for " . $HI->to_string() );
+				next;
+			}
+
 			$log->debug( $Host->hostname() . ' is ' . ( $Host->online() ? 'online' : 'offline' ) );
 			my @ping = $p->ping($HI->ip());
 			my $ping = $ping[0];
@@ -130,53 +139,54 @@ while(1) {
 			} elsif ( $ping and ( $ping[1] > 1 ) ) {
 				(new openprint::Log())->save({action=>'Long response time', ip_address=>$HI->ip(), host_id=>$$Host{id}, note=>sprintf('Response time %s seconds.<a href="/employee/it/host.html?host_id=%d">%s</a>', $ping[1], @$Host{'id','hostname'}) });
 			} # end if
+			$online = $ping if ! $online;
+			last if $online;
+		} # end oreach Host_Interface
 
 			my $last_changed_on = $$Host{state_changed_on};
 			my $since = time-$last_changed_on;
 
-			if ( $Host->online() != $ping ) {
+			if ( $Host->online() != $online ) {
 
 # Have a change, so it should get logged, only email notifications should use the offline seconds
 				
 				$Host->load();
-				if ( $_ = $Host->save({online=>$ping,state_changed_on=>time,notified=>0}) ) {
+				if ( $_ = $Host->save({online=>$online,state_changed_on=>time,notified=>0}) ) {
 					$log->error($_);
 					next;
 				} # end if	
 
-				(new openprint::Log())->save({action_id=>( $ping ? 100 : 101 ), ip_address=>$HI->ip(), host_id=>$$Host{id}, note=>sprintf('<a href="/employee/it/host.html?host_id=%d">%s</a>', @$Host{'id','hostname'}) });
+				(new openprint::Log())->save({action_id=>( $online ? 100 : 101 ), host_id=>$$Host{id}, note=>sprintf('<a href="/employee/it/host.html?host_id=%d">%s</a>', @$Host{'id','hostname'}) });
 				$log->debug( $Host->hostname() . ' is now ' . ( $Host->online() ? 'online' : 'offline' ) );
 
-				if ( ( $ping and ($since > $$Host{offline_seconds}) ) or ( ! $$Host{offline_seconds} ) ) {
-					$log->warn("BLAH should be 0 $ping $$Host{'offline_seconds'}");
+				if ( ( $online and ($since > $$Host{offline_seconds}) ) or ( ! $$Host{offline_seconds} ) ) {
+					$log->warn("BLAH should be 0 $online $$Host{'offline_seconds'}");
 # Do immediate notifications
 					my @To = map { $_->User() } $Host->Notifications();
 					if ( @To and ( @To < 10 ) ) {
 						my $results = (new openprint::Email())->send(
 								'TO'	=>	\@To,
-								'SUBJECT'	=>	'Host has gone ' . ($ping?'online':'offline') . ': ' . $Host->hostname() . ' ' . misc::seconds2hms($since) . ' seconds ago.',
+								'SUBJECT'	=>	'Host has gone ' . ($online?'online':'offline') . ': ' . $Host->hostname() . ' ' . misc::seconds2hms($since) . ' seconds ago.',
 								'FROM'		=>	$config{'TechSupportEmail'},
 								'BODY'		=>	"
-								IP: $$HI{ip}
 Description: $$Host{'description'}
 
 Please investigate.",
 );
 					} # end if to < 10
 				} # end if immediate notifications
-			} elsif ( $Host->offline_seconds() and ( ! $ping ) and ( ! $$Host{notified} ) ) {
+			} elsif ( $Host->offline_seconds() and ( ! $online ) and ( ! $$Host{notified} ) ) {
 				if ( $since > $$Host{offline_seconds} ) {
-					$log->warn("$ping $$Host{offline_seconds} $$Host{notified}");
+					$log->warn("$online $$Host{offline_seconds} $$Host{notified}");
 					$Host->load();
 					$Host->save({'notified'=>1});
 					my @To = map { $_->User() } $Host->Notifications();
 					if ( @To and ( @To < 10 ) ) {
 						my $results = (new openprint::Email())->send(
 								'TO'	=>	\@To,
-								'SUBJECT'	=>	'Host has gone ' . ($ping?'online':'offline') . ': ' . $Host->hostname(),
+								'SUBJECT'	=>	'Host has gone ' . ($online?'online':'offline') . ': ' . $Host->hostname(),
 								'FROM'		=>	$config{'TechSupportEmail'},
 								'BODY'		=>	"
-								IP: $$HI{ip}
 Description: $$Host{'description'}
 
 Please investigate.",
@@ -186,7 +196,42 @@ Please investigate.",
 			} # end if online != ping
 
 			if ( $Host->online() ) {
-				if ( sets::isin( $Host->type(), [ 'AIC500', 'AIC500W', 'AIC777W', 'AIC747W' ] ) ) {
+				if ( $Host->type() =~ /DCS-910/ ) {
+					require LWP;
+					my $browser = LWP::UserAgent->new();
+					$browser->credentials( $Host->hostname().':80', 'DCS-910', $Host->info('username') => $Host->info('password') );
+
+					my $url = 'http://'.$Host->hostname().'/IMAGE.JPG';
+					$log->debug("URL: $url");
+					my $response = $browser->get($url);
+					if ( ! $response->is_success ) {
+						if ( $response->status_line() eq '401 Unauthorized' ) {
+							$log->debug("Unauthorized with " . $Host->info('username') . ' password: ' . $Host->info('password') );
+							my $header = $response->header('WWW-Authenticate');
+							my ( $realm ) = $header =~ /realm="(.*)"/;
+							if ( $realm and ( $realm ne 'DCS-910' ) ) {
+								$log->debug("Different REALM $realm");
+								$browser->credentials( $Host->hostname().':80', $realm, $Host->info('username') => $Host->info('password') );
+								$response = $browser->get($url);
+							} # end if
+						} # end if
+					} # end if
+					if ( ! $response->is_success ) {
+						if ( $response->status_line() eq '401 Unauthorized' ) {
+							$log->error("Couldn't get content from " . $url . ' unauthorized'. $response->status_line );
+						} else {
+							$log->warn("Couldn't get content from " . $url .' rebooting' . $response->status_line );
+							my $headers = $response->headers();
+							foreach my $k ( keys %$headers ) {
+								$log->debug("Header $k => $$headers{$k}");
+							}  # end foreach
+							$Host->reboot();
+						} # end if
+					} else {
+						$log->debug("Got content from host. Size: " . $response->content_type );
+					} # end if
+
+				} elsif ( sets::isin( $Host->type(), [ 'AIC500', 'AIC500W', 'AIC777W', 'AIC747W' ] ) ) {
 					require LWP;
 					my $browser = LWP::UserAgent->new();
 					$browser->credentials( $Host->hostname().':80', 'Netcam', $Host->info('username') => $Host->info('password') );
@@ -220,10 +265,9 @@ Please investigate.",
 						$log->debug("Got content from host. Size: " . $response->content_type );
 					} # end if
 				} elsif ( $Host->type() ) {
-					$log->warn("nothing to do for : " . $Host->type()  . ' for host ' . $$Host{hostname} . ' ip ' . $$HI{ip} );
+					$log->warn("nothing to do for : " . $Host->type()  . ' for host ' . $$Host{hostname}  );
 				} # end if
 			} # end if online
-		} # end oreach Host_Interface
 	} # end foreach $Host
 	sleep $config{'sleep'};
 } # end while
@@ -236,6 +280,8 @@ sub sig_handler {
 	if ( $signame eq 'HUP' ) {
 		$log->info('Got HUP, re-opening log, re-reading config');
 		$hup = 1;
+	} else {
+		$log->warn("Unknown signal $signame ");
 	} # end if
 	#die "Somebody sent me a SIG$signame";
 } # end sub sig_handler

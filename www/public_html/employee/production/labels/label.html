@@ -21,6 +21,7 @@
 ) ?>
 <div class="buttons">
 	<? echo ( join("\n",
+		button( 'PDF', { href=>'/employee/production/labels/label.html?action=pdf&amp;id='.$$variable{Label}->id() } ),
 		button( 'Print', { onclick => 'window.print();' } ),
 		button( 'Docket', { href => '/employee/project/view.html?docket='.$$variable{Label}->docket() } ),
 		button( 'PO', { href => "/employee/purchase_order/edit.html?btnFunction=New&amp;label_id=$$variable{Label}{id}", text => 'Generate PO' } ),
@@ -36,3 +37,6 @@
 		} # end if
 	) ?>
 </div>
+<? if ( $$variable{Label}->id() ) ?>
+<? echo ( include_logs( $$variable{Label} ); ) ?>
+<? endif ( $$variable{Label}->id() ) ?>

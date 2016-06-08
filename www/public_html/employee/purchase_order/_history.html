@@ -159,7 +159,7 @@
 	<div class="warning">There are a large # of results being returned.  It may take a moment to display them.  You may wish to adjust your filters to return fewer results.	</div>
 	<? endif ( @{$$variable{'PurchaseOrders'}} > 1000 ) ?>
 	<p>Please click on a <b>Purchase Order #</b> to view details.</p>
-<table class="List sortable">
+<table id="ResultsTable" class="List sortable">
 	<tr>
 <? if ( $session{'user_type'} eq 'A' ) ?>
 		<th class="checkbox"><input type="checkbox" onclick="select_all( $('f1'), 'po_id', this.checked );"/></th>
@@ -205,7 +205,7 @@
 				<td class="Docket"><a href="/employee/purchase_order/view.html?po_id=%1$d">%8$s</a></td>
 				<td class="Price">%5$s</td>
 			</tr>`, $PO->id(), format_datetime($PO->created_on()), $PO->Supplier()->name(), $PO->Creator()->name(), 
-				$PO->cancelled() ? 'CANCELLED' : openprint::Currency::format($total), 
+				$PO->cancelled() ? 'CANCELLED' : ( $PO->can_see_pricing() ? openprint::Currency::format($total) : '' ), 
 				( ( $PO->authorized() and ! $PO->authorized_by() ) ? 'Authorized' : $PO->Authorized_By()->name() ),
 				$PO->Manifest()->name(),
 				join('<br/>', sets::exclude( [''], [ sets::union( map { $_->docket() } $PO->Contents() ) ] ) ),
@@ -231,4 +231,7 @@
 			return $html;
 		) ?>
 	</p>
+<script type="text/javascript">
+TableKit.Sortable.init('ResultsTable');
+</script>
 <? endif ( @{$$variable{'PurchaseOrders'}} == 0 ) ?>

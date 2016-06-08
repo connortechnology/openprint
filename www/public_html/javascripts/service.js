@@ -47,15 +47,15 @@ function submit_handler( formName ) {
 		return false;
 	} // end if
 
-	var status = true;
+	var Status = true;
 	if ( typeof(validate_data) == 'function' ) {
-		status = validate_data(formName);
+		Status = validate_data(formName);
 	} // end if
 
-	if (status) {
+	if (Status) {
 		form.submit();
 	} // end if
-	return status;
+	return Status;
 
 } // end function submit_form
 
@@ -106,6 +106,8 @@ function calc( formName, force, options ) {
 		if ( pair.value == '' ) 
 			h.unset(pair.key);
 		if ( pair.key == 'btnFunction' ) 
+			h.unset(pair.key);
+		if ( pair.key == 'alert' ) 
 			h.unset(pair.key);
 	});
 			new Ajax.Request( '/main/project/_calc.json', { method: 'post', parameters: h, evalScripts: true } );

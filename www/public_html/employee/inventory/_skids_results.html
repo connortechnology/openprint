@@ -28,10 +28,12 @@
 			( $session{'/employee/inventory/skids.html?deleted'} ? ( deleted => [ split(',', $session{'/employee/inventory/skids.html?deleted'} ) ] ) : () ),
 			) ];
 	} elsif ( $session{'/employee/inventory/skids.html?manufacturers_id'} ) {
+		
 		$$variable{Skids} = [ openprint::Skid->find( 
-			( $session{'/employee/inventory/skids.html?manufacturers_id'} =~ /%/ ?
-			( 'manufacturers_id ilike'	=>	$session{'/employee/inventory/skids.html?manufacturers_id'} ) :
-			( manufacturers_id	=>	$session{'/employee/inventory/skids.html?manufacturers_id'} ) ),
+			'manufacturers_id ilike'	=>	(
+				$session{'/employee/inventory/skids.html?manufacturers_id'} =~ /%/ ?
+				$session{'/employee/inventory/skids.html?manufacturers_id'} : 
+				$session{'/employee/inventory/skids.html?manufacturers_id'} .'%' ),
 			order	=>	'id',
 			( $session{'/employee/inventory/skids.html?deleted'} ? ( deleted => [ split(',', $session{'/employee/inventory/skids.html?deleted'} ) ] ) : () ),
 			) ];
@@ -89,7 +91,13 @@
 		if ( $session{'/employee/inventory/skids.html?hasmanufacturers'} eq 'Y' ) {
 			$sql{'manufacturers_id is null'} = 0;
 		}
-
+		if ( $session{'/employee/inventory/skids.html?inventory_check_id'} ) {
+			if ( $session{'/employee/inventory/skids.html?inventory_check_id_exclude'}  ) {
+				$sql{'inventory_check_id not'} = $session{'/employee/inventory/skids.html?inventory_check_id'};
+			} else {
+				$sql{inventory_check_id} = $session{'/employee/inventory/skids.html?inventory_check_id'};
+			}	
+		}
 		
 		if ( $session{'/employee/inventory/skids.html?type'} ) {
 			my @types = split(',',$session{'/employee/inventory/skids.html?type'} );

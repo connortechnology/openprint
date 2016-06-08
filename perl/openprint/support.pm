@@ -21,6 +21,7 @@ require openprint::RMA_Status;
 require openprint::Project;
 require openprint::Order;
 require openprint::Company;
+require openprint::Helpdesk;
 
 sub rma {
 	if ( $param{action} eq 'Submit' ) {
@@ -137,6 +138,7 @@ sub help_desk {
 
 		if ( $error ) {
 			$variable{error} = $error;
+			Debug($error);
 			return;
 		} # end if
 
@@ -187,10 +189,14 @@ sub help_desk {
 				);
 
 		%param = ();
+		$variable{information} .= "Thank you for your help desk submission. Your reference # is $index";
 		$variable{ExternalRedirect} = '/support/help_desk.html';
 	} # end if
 
-} # end sub helpdesk
+} # end sub help_desk
+sub helpdesk_view {
+	$variable{Helpdesk} = new openprint::Helpdesk($param{helpdesk_id} );
+}
 
 1;
 __END__

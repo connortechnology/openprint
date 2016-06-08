@@ -114,6 +114,7 @@ sub history {
 		foreach my $Invoice ( @Invoices ) {
 			next if $Invoice->is_paid();
 			next if $Invoice->bad_debt();
+			next if ! $Invoice->posted();
 
 			$data{uri} = 'invoice';
 			$data{Invoice} = $Invoice;
@@ -138,8 +139,8 @@ sub history {
 	ssi::setup_date_select( '/invoice/history.html', 'due_on_start', -365 );
 	ssi::setup_date_select( '/invoice/history.html', 'due_on_end', '' );
 
-	$session{'/invoice/history.html?paid'} = '0' if ! sets::isin( $session{'/invoice/history.html?paid'}, [ 0,1,2] );
-	$session{'/invoice/history.html?bad_debt'} = '0' if ! sets::isin( $session{'/invoice/history.html?bad_debt'}, [ 0,1,2] );
+	$session{'/invoice/history.html?paid'} = '0' if ! sets::isin( $session{'/invoice/history.html?paid'}, [ 0,1,''] );
+	$session{'/invoice/history.html?bad_debt'} = '0' if ! sets::isin( $session{'/invoice/history.html?bad_debt'}, [ 0,1,''] );
 	$session{'/invoice/history.html?employee_id'} = $session{user_id} if ! exists $session{'/invoice/history.html?employee_id'};
 } # end sub history
 
@@ -149,7 +150,7 @@ sub _history {
 		( map { 'created_on_end_'.$_ } ( 'year','month','day' ) ),
 		( map { 'due_on_start_'.$_ } ( 'year','month','day' ) ),
 		( map { 'due_on_end_'.$_ } ( 'year','month','day' ) ),
-		'paid','company_id','bad_debt') );
+		'paid','company_id','bad_debt','product_id') );
 } # end sub _history
 
 sub edit {
@@ -375,6 +376,37 @@ sub _interests {
 
 sub _invoicee_onchange {
 } # end sub _invoicee_onchange
+
+sub _invoiced_orders {
+	my $Invoice = $variable{Invoice} = new openprint::Invoice( $param{invoice_id} );
+$log->debug("here");
+	if ( $param{action} eq 'add' ) {
+$log->debug("Adding");
+		my $Order = openprint::Order->find_one( id => $param{order_id} );
+		if ( ! $Order ) {
+			$variable{error} .= 'Order ' . $param{order_id} . ' not found.<br/>';
+			return;
+		}
+		my $OI = new openprint::Order_Invoice();
+		$variable{error} .= $OI->save({
+			order_id	=> $$Order{id},
+			invoice_id	=>	$$Invoice{id},
+		});	
+		foreach my $Product ( $Order->Products() ) {
+			my $IP = new openprint::Invoiced_Product();
+			$variable{error} .= $IP->save({
+				invoice_id	=>	$$Invoice{id},
+				product_id	=>	$$Product{product_id},
+				quantity	=>	$$Product{quantity},
+				price		=>	$$Product{price},
+			});
+		}
+	} elsif ( $param{action} eq 'remove' ) {
+		my $OI = openprint::Order_Invoice->find_one( order_id=>$param{order_id}, invoice_id=>$param{invoice_id} );
+		$OI->delete();
+	} # end if param add
+
+} # end sub _invoiced_orders
 
 1;
 __END__

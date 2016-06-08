@@ -15,12 +15,15 @@ function validate_data (form) {
 	var text = '';
 
 	var ptype = false;
-	for ( var index = 0; index < form.rdbProjectType.length; index += 1 ) {
-		if ( form.rdbProjectType[index].checked ) {
+	if ( form.rdbProjectType ) {
+		if ( get_value( form.rdbProjectType ) ) {
 			ptype = true;
-			break;
 		} // end if
-	} // end for
+	} else if ( form.project_type_id ) {
+		if ( get_value( form.project_type_id ) ) {
+			ptype = true;
+		} // end if
+	}
 	if ( ! ptype ) {
 		text += "Please select the type of project.\n";
 	} // end if
@@ -38,22 +41,22 @@ function validate_data (form) {
 		} // end if
 	} // end if
 
-	if (form.txtQuantity1.value) {
-		if ( parseInt(form.txtQuantity1.value) != form.txtQuantity1.value) {
+	if (form.quantity1.value) {
+		if ( parseInt(form.quantity1.value) != form.quantity1.value) {
 			text += "The field 'Quantity 1' may only contain whole numbers greater than 1.\n";
 		} // end if
 	} // end if
-	if (form.txtQuantity2.value) {
-		if ( parseInt(form.txtQuantity2.value) != form.txtQuantity2.value) {
+	if (form.quantity2.value) {
+		if ( parseInt(form.quantity2.value) != form.quantity2.value) {
 			text += "The field 'Quantity 2' may only contain whole numbers greater than 1.\n";
 		} // end if
 	} // end if
-	if (form.txtQuantity3.value) {
-		if ( parseInt(form.txtQuantity3.value) != form.txtQuantity3.value) {
+	if (form.quantity3.value) {
+		if ( parseInt(form.quantity3.value) != form.quantity3.value) {
 			text += "The field 'Quantity 3' may only contain whole numbers greater than 1.\n";
 		} // end if
 	} // end if
-	if ( ! form.txtQuantity1.value && ! form.txtQuantity2.value && ! form.txtQuantity3.value ) { 
+	if ( ! form.quantity1.value && ! form.quantity2.value && ! form.quantity3.value ) { 
 		text += "Please enter at least one Quantity for your project.\n";
 	} // end if
 	if ( form.ddmDesign && ! get_value( form.ddmDesign ) ) {

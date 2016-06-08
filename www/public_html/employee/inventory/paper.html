@@ -52,20 +52,31 @@ Please select a Paper to view/edit.<br>
 
 	my @Papers = openprint::Paper->find( %find );
 	my %filter_validations;
-	openprint::Manufacturer->find();
-	openprint::StockBrand->find();
-	openprint::StockFinish->find();
-	openprint::StockColour->find();
-	openprint::StockWeight->find();
-	#openprint::StockQuality->find();
-	#openprint::StockMaterial->find();
+
+	foreach my $option ( @StockOptions ) {
+		my $lower_option = lc $option;
+		my $option_id  = $lower_option.'_id';
+
+		if ( $session{'/employee/inventory/paper.html?'.$option_id} ) {
+$log->debug("Looking for $option id => " . $session{'/employee/inventory/paper.html?'.$option_id} );
+			if ( ! ('openprint::Stock'.$option)->find_one( id => $session{'/employee/inventory/paper.html?'.$option_id} ) ) {
+				# Clear filter if it no longer ixists
+$log->debug("Deleting filter because it no longer exists $option id => " . $session{'/employee/inventory/paper.html?'.$option_id} );
+				delete $session{'/employee/inventory/paper.html?'.$option_id};
+			}
+		} else {
+			my @blah = ('openprint::Stock'.$option)->find();
+$log->debug("Caching all $option results:" . @blah );
+		}
+	}
 
 	my %filters;
 	for ( my $stock_index = 0; $stock_index < @Papers; $stock_index += 1 ) {
 		my $Stock = $Papers[$stock_index];
 
 		foreach my $option ( @StockOptions ) {
-			my ( $lower_option, $option_id ) = ( lc $option, lc $option.'_id' );
+			my $lower_option = lc $option;
+			my $option_id  = $lower_option.'_id';
 
 			# Load up the filter
 			$filters{$option}{$Stock->$lower_option()} = $$Stock{$option_id} if $$Stock{$option_id};
@@ -81,12 +92,14 @@ Please select a Paper to view/edit.<br>
 			} # end if
 		} # end foreach option
 	} # end foreach $Stock
+#$log->debug( Data::Dumper::Dumper( \%filters ) );
 
 	foreach my $option ( @StockOptions ) {
 		next if ! $filters{$option};
-		my ( $lower_option, $option_id ) = ( lc $option, lc $option.'_id' );
+		my $lower_option = lc $option;
+		my $option_id  = $lower_option.'_id';
 		my @options = map { $filters{$option}{$_}, $_ } ( sort keys %{$filters{$option}} );
-
+#$log->debug("options : @options ");
 		# Don't do this because even if there is only 1 entry, papers can be unassigned.
 		#$session{'/employee/inventory/paper.html?'.$option} = $options[0] if ( @options == 2 );
 
@@ -145,7 +158,7 @@ Please select a Paper to view/edit.<br>
 		</li>
 		<li>
 			<label>In/Out of Stock</label>
-			<? echo ( radio( 'instock', [ 'Y', 'In Stock', 'N', 'Out of Stock', 'B', 'Both' ], $session{'/employee/inventory/paper.html?instock'} ); ) ?>
+			<? echo ( radio( 'in_stock', [ '1', 'In Stock', '0', 'Out of Stock', '', 'Both' ], $session{'/employee/inventory/paper.html?in_stock'} ); ) ?>
 		</li>
 		<li><label>Allocated</label>
 			<? echo ( radio( 'allocated', [ '1','Yes','0','No','','Both' ], $session{'/employee/inventory/paper.html?allocated'} ); ) ?>
@@ -170,4 +183,12 @@ Please select a Paper to view/edit.<br>
 	</fieldset>
 	<input type="hidden" name="btnFunction"/>
 </form>
-<div id="Results">Select search criteria and click Show Results.</div>
+<div id="Results">
+<? echo (
+     if ( map { $session{$r->uri().'?'.$_} ? $session{$r->uri().'?'.$_} : () } ( qw{ brand_id finish_id colour_id weight_id } ) ) {
+        return include('/employee/inventory/_paper_results.html');
+    }
+
+) ?>
+
+Select search criteria and click Show Results.</div>

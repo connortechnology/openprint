@@ -18,6 +18,7 @@
 		$html .= '<br/>';
 
 		if ( $$variable{Album}->can_edit() ) {
+			$html .= '<p class="buttons">';
 			my $deletable = 1;
 			if ( $Photo->asset_id() != $$variable{Album}->thumbnail_id() ) {
 #$log->debug("Photo asset_id $$Photo{asset_id} != thumbnail_id: " . $$variable{Album}->thumbnail_id() . ' album type: ' . ref $$variable{Album});
@@ -42,7 +43,8 @@
 	, text=> 'Delete' } );
 				$html .= '<br/>';
 			} # end if
-		} # end if
+			$html .= '</p>';
+		} # end if can edit
 		$html .= '</div>';
 	} # end foreach Photo
 	$html .= '<input type="hidden" name="asset_ids" value="'.join(',',map { $_->asset_id() } @Portrait, @Landscape ) . '"/>';

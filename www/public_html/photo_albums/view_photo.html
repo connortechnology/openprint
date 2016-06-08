@@ -2,11 +2,6 @@
 <div class="Photo">
 	<div class="View">
 <? if ( $variable{'Photo'} and $variable{'Photo'}->asset_id() ) ?>
-	<? if ( $param{album_id} ) ?>
-	<div class="Album">
-		<?include('/photo_albums/_album_photos.html') ?>
-	</div>
-	<? endif ( $param{album_id} ) ?>
 		<form id="f1" name="f1" action="view_photo.html" method="post">
 			<input type="hidden" name="action" />
 			<input type="hidden" name="asset_id" value="<? echo ( $$variable{'Photo'}->asset_id() ) ?>" />
@@ -129,5 +124,10 @@ if ( 0 ) {
 <? else ( $variable{'Photo'} and $variable{'Photo'}->asset_id() ) ?>
 No photo specified
 <? endif ( $variable{'Photo'} and $variable{'Photo'}->asset_id() ) ?>
+	<? if ( $param{album_id} ) ?>
+	<div class="Album">
+		<?include('/photo_albums/_album_photos.html') ?>
+	</div>
+	<? endif ( $param{album_id} ) ?>
 	</div><!--View-->
 </div><!--Photo-->

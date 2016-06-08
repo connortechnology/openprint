@@ -17,45 +17,45 @@ require JSON;
 
 sub sign_off {
 	require Authen::Captcha;
-	if ( $param{'btnFunction'} eq 'Approve Project' ) {
-		my $Captcha = new Authen::Captcha('data_folder' => '/tmp', 'output_folder' => $config{'SkinPath'}.'/images/captcha');
-		if ( 1 == $Captcha->check_code( $param{'Captcha'}, $param{'MD5SUM'} ) ) {
-			$variable{'Approved'} = 1;
+	if ( $param{btnFunction} eq 'Approve Project' ) {
+		my $Captcha = new Authen::Captcha('data_folder' => '/tmp', 'output_folder' => $config{SkinPath}.'/images/captcha');
+		if ( 1 == $Captcha->check_code( $param{Captcha}, $param{MD5SUM} ) ) {
+			$variable{Approved} = 1;
 			# Transitions from Waiting for Customer Approval to Waiting for QA Approval
 			#eprint::project::set_status( $log, $dbh, $variable, $param{'ProjectIndex'), 'Waiting for QA Approval' };
-			my $Project = new openprint::Project( $param{'ProjectIndex'} );
+			my $Project = new openprint::Project( $param{ProjectIndex} );
 			my $services = $Project->services();
-			my $proofs_service_index = $$services{'Proofs'} ? $$services{'Proofs'}[0] : $$services{'FilmStripping'}[0];
+			my $proofs_service_index = $$services{Proofs} ? $$services{Proofs}[0] : $$services{FilmStripping}[0];
 
-			my $name = $param{'Name'};
+			my $name = $param{Name};
 			my $when = sprintf('%.4d-%.2d-%.2d %.2d:%.2d:%.2d', Date::Calc::Today_and_Now() );
 			$Project->add_to_log( @session{'company_id','user_id'}, "Client Approval by $name at $when" );
-			openprint::service::insert_service_spec( $log, $dbh, $param{'ProjectIndex'}, $proofs_service_index, 'rdbClientApproved', 'Y' );
-			openprint::service::insert_service_spec( $log, $dbh, $param{'ProjectIndex'}, $proofs_service_index, 'ClientApprovalDate', $when );
+			openprint::service::insert_service_spec( $log, $dbh, $param{ProjectIndex}, $proofs_service_index, 'rdbClientApproved', 'Y' );
+			openprint::service::insert_service_spec( $log, $dbh, $param{ProjectIndex}, $proofs_service_index, 'ClientApprovalDate', $when );
 		} else {
-			$variable{'Name'} = $param{'Name'};
-			$variable{'error'} = 'Validation Code incorrect.	Please try again.';
-			$variable{'Redirect'} = '/main/project/sign_off.html';
+			$variable{Name} = $param{Name};
+			$variable{error} = 'Validation Code incorrect.	Please try again.';
+			$variable{Redirect} = '/main/project/sign_off.html';
 		} # end if
 	} # end if
-	openprint::main_project::view( $param{'ProjectIndex'} );
-	$variable{'ProjectIndex'} = $param{'ProjectIndex'};
+	openprint::main_project::view( $param{ProjectIndex} );
+	$variable{ProjectIndex} = $param{ProjectIndex};
 } # end sub sign_off
 
 sub history {
 
-	if ( $param{'btnFunction'} eq 'Delete Project' ) {
-		if ( $param{'project_id'} ) {
-		foreach my $project_id ( ref $param{'project_id'} eq 'ARRAY' ? @{$param{'project_id'}} : $param{'project_id'} ) {
-			$variable{'error'} .= openprint::print_project::try_to_delete_project( $log, $dbh, \%variable, $project_id );
+	if ( $param{btnFunction} eq 'Delete Project' ) {
+		if ( $param{project_id} ) {
+		foreach my $project_id ( ref $param{project_id} eq 'ARRAY' ? @{$param{project_id}} : $param{project_id} ) {
+			$variable{error} .= openprint::print_project::try_to_delete_project( $log, $dbh, \%variable, $project_id );
 		} # end foreach project_id
-		} elsif ( $param{'ProjectIndex'} ) {
-			$variable{'error'} .= openprint::print_project::try_to_delete_project( $log, $dbh, \%variable, $param{'ProjectIndex'} );
+		} elsif ( $param{ProjectIndex} ) {
+			$variable{error} .= openprint::print_project::try_to_delete_project( $log, $dbh, \%variable, $param{ProjectIndex} );
 		} # end if
 		$variable{ExternalRedirect} = '/main/project/history.html';
 		return;
-	} elsif ( $param{'btnFunction'} eq 'Reuse Project' ) {
-		foreach my $project_id ( ref $param{'project_id'} eq 'ARRAY' ? @{$param{'project_id'}} : $param{'project_id'} ) {
+	} elsif ( $param{btnFunction} eq 'Reuse Project' ) {
+		foreach my $project_id ( ref $param{project_id} eq 'ARRAY' ? @{$param{project_id}} : $param{project_id} ) {
 			openprint::print_project::reuse_project( $project_id );
 		} # end if
 	} elsif ( $param{btnFunction} eq 'Reset' ) {
@@ -97,11 +97,11 @@ sub _history {
 sub view {
 	my ( $project_index ) = @_;
 
-	if ( exists $param{'ShowAllSignatures'} ) {
-		$session{'ShowAllSignatures'} = $param{'ShowAllSignatures'};
+	if ( exists $param{ShowAllSignatures} ) {
+		$session{ShowAllSignatures} = $param{ShowAllSignatures};
 	} # end if
-	$variable{'ProjectIndex'} = $project_index;
-	my $Project = $variable{'Project'} = new openprint::Project( $project_index );
+	$variable{ProjectIndex} = $project_index;
+	my $Project = $variable{Project} = new openprint::Project( $project_index );
 	my $save = 0;
 	foreach my $qty_index ( $Project->quantity_indexes() ) {
 		if ( $$Project{'price'.$qty_index} != $Project->price($qty_index,undef) ) {
@@ -118,26 +118,35 @@ sub _copy_popup {
 } # end sub _copy_popup
 
 sub create_edit {
-	my $project_index = $param{'ProjectIndex'};
+	my $project_index = $param{ProjectIndex};
 
-	my $Project = $variable{Project} = new openprint::Project( $project_index );
+	my $Project = $variable{Project} = openprint::Project->find_one( id=>$project_index );
+	if ( ! $Project ) {
+		$Project = $variable{Project} = new openprint::Project();
+		if ( $project_index ) {
+			$variable{error} .= "Project $param{ProjectIndex} was not found.  A new Project will be created.<br/>";
+		}
+	}
 
-	@{$variable{'ProjectTypes'}} = map { $_->name(), $_->description() } openprint::ProjectType->find( 'order'=>'sorting, lower(name)' );
+	@{$variable{ProjectTypes}} = map { $_->name(), $_->description() } openprint::ProjectType->find( order=>'sorting, lower(name)' );
 	# Check the appropriate button for project type
-	$variable{'SelectedProjectType'} = $Project->Type()->name();
+	$variable{SelectedProjectType} = $Project->Type()->name();
 
 	@variable{'txtProjectReference','ddmDesign','txtComments','txtQuantity1','txtQuantity2','txtQuantity3','rdbMode','chkPrograms','txtOtherPrograms'} = (
 		$Project->reference(), $Project->design(), $Project->comments(), $Project->quantity1(), $Project->quantity2(), $Project->quantity3(), $Project->mode(), $Project->programs(), $Project->other_programs() 
 	);
 
 	my $services = $Project->services();
-	@{$variable{'SelectedServices'}} = keys %{$services};
+	@{$variable{SelectedServices}} = keys %{$services};
 
-	$variable{'ProjectIndex'} = $project_index;
+	$variable{ProjectIndex} = $$Project{id};
 } # end sub create_edit
 
 sub _calc {
 	my $Project = new openprint::Project( $param{ProjectIndex} );
+if ( $param{ProjectIndex} and ! $$Project{id} ) {
+$log->debug("No project $param{ProjectIndex} found");
+}
     if ( $param{action} eq 'add_service' ) {
         my $services = $Project->services();
         foreach my $service_name ( ref $param{service_name} eq 'ARRAY' ? @{$param{service_name}} : $param{service_name} ) {
@@ -160,6 +169,12 @@ sub _calc {
 sub calc {
 	my $debug = 0;
 	my $Project = new openprint::Project( $param{ProjectIndex} );
+if ( $param{ProjectIndex} and ! $$Project{id} ) {
+$log->error("Project specified, but not found: $param{ProjectIndex}");
+$Project->save();
+} else {
+$log->debug("Found proejct $$Project{id}" . $Project->to_string() );
+}
 	my $module = 'openprint::Estimating::'.( $param{ServiceTypeType} ? $param{ServiceTypeType} : $param{ServiceType} );
 	eval "require $module";
 	$log->error("Error requiring $module: $@") if $@;
@@ -169,6 +184,7 @@ sub calc {
 	$openprint::service::specs_cache{$param{ServiceIndex}} = \%param;
 	my %specs = %param;
 	if ( my $function = $module->can( $param{method} ) ) {
+		$log->debug("Can do $module -> $param{method}");
 		$specs{Status} = $function->( $log, $dbh, \%variable, @param{'ProjectIndex','ServiceIndex'}, \%specs );
 	} else {
 		$log->error("Cant do $param{method} for $module");
@@ -235,12 +251,12 @@ sub calc {
 
 sub reuse {
 
-	$variable{'Project'} = new openprint::Project( $param{'ProjectIndex'} );
-	$variable{'ProjectIndex'} = $variable{'Project'}->id();
-	if ( $variable{'Project'}->reference() ) {
-		$variable{'Project'}->reference( 'Copy of ' . $variable{'Project'}->reference() );
+	$variable{Project} = new openprint::Project( $param{ProjectIndex} );
+	$variable{ProjectIndex} = $variable{Project}->id();
+	if ( $variable{Project}->reference() ) {
+		$variable{Project}->reference( 'Copy of ' . $variable{Project}->reference() );
 	} else {
-		$variable{'Project'}->reference( 'Copy of project # ' . $param{'ProjectIndex'} );
+		$variable{Project}->reference( 'Copy of project # ' . $param{ProjectIndex} );
 	} # end if
 	
 } # end sub

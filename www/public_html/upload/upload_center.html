@@ -25,7 +25,7 @@ function delete_files() {
 	}
 
 	form.btnFunction.value='Delete';
-	LoadContent('FileList', '/upload/_files.html', Serialize(f1));
+	LoadContent('FileList', '/upload/_files.html', f1.serialize());
 	return true;
 } // end function delete_files
 

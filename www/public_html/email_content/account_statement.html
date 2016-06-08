@@ -2,10 +2,10 @@
 	<h1>Account Statement</h1>
 	<h2>For <? echo ( new openprint::Company( $session{'/invoice/history.html?company_id'} )->name(); ) ?></h2>
 </div>
-Thank you for using <? echo ( new openprint::User( $session{'user_id'} )->Company()->name() ) ?>.  The following invoices are now due.<br/><br/>
+Thank you for using <? echo ( new openprint::User( $session{user_id} )->Company()->name() ) ?>.  The following invoices are now due.<br/><br/>
 <? eval (
-	$$variable{'subtotal'} = $$variable{'federaltax_total'} = $$variable{'total'} = $$variable{'interest_total'} = $$variable{'owing_total'} = 0;
-	@{$$variable{'Invoices'}} = ();
+	$$variable{subtotal} = $$variable{federaltax_total} = $$variable{total} = $$variable{interest_total} = $$variable{owing_total} = $$variable{paid_total} = 0;
+	$$variable{Invoices} = [];
 	my $period_start;
 	my $period_end;
 
@@ -13,7 +13,8 @@ Thank you for using <? echo ( new openprint::User( $session{'user_id'} )->Compan
 		date_filter('/invoice/history.html?created_on_start', 'created_on >=' ),
 		date_filter('/invoice/history.html?created_on_end', 'created_on >=' ),
 		invoicee_id		=> $session{'/invoice/history.html?company_id'},
-		invoicer_id		=> $session{'company_id'},
+		invoicer_id		=> $session{company_id},
+		posted			=>	1,
 		order				=> 'id',
 		);
 	foreach my $Invoice ( @Invoices ) {
@@ -24,7 +25,7 @@ Thank you for using <? echo ( new openprint::User( $session{'user_id'} )->Compan
 	} # end foreach Invoice
 
 	# Periods must be defined if there are any invoices.
-	@{$$variable{'Taxes'}} = openprint::Tax->find(
+	@{$$variable{Taxes}} = openprint::Tax->find(
 			'period_start null_or_<=' => $period_start,
 			'period_end null_or_>='	=> $period_end,
 			'order'		=>	'period_start,name',
@@ -32,21 +33,22 @@ Thank you for using <? echo ( new openprint::User( $session{'user_id'} )->Compan
 	foreach my $Invoice ( @Invoices ) {
 		next if $Invoice->is_paid();
 		next if $Invoice->bad_debt();
-		push @{$$variable{'Invoices'}}, $Invoice;
-		$$variable{'subtotal'} += $Invoice->subtotal();
-		foreach my $Tax ( @{$$variable{'Taxes'}} ) {
-			$$variable{'tax_totals'}{$Tax->id()} += $Invoice->Tax( $Tax )->amount();
+		push @{$$variable{Invoices}}, $Invoice;
+		$$variable{subtotal} += $Invoice->subtotal();
+		foreach my $Tax ( @{$$variable{Taxes}} ) {
+			$$variable{tax_totals}{$Tax->id()} += $Invoice->Tax( $Tax )->amount();
 		} # end foreach Tax
-		$$variable{'total'} += $Invoice->total();
-		$$variable{'interest_total'} += $Invoice->interest();
-		$$variable{'owing_total'} += $Invoice->owing();
+		$$variable{total} += $Invoice->total();
+		$$variable{interest_total} += $Invoice->interest();
+		$$variable{owing_total} += $Invoice->owing();
+		$$variable{owing_total} += $Invoice->paid();
 
 		if ( ( time - Date::Parse::str2time( $Invoice->due_on() ) ) > ( 60*60*24*30*3 ) ) {
-			$$variable{'3monthwarning'} = 1;
+			$$variable{3monthwarning} = 1;
 		} # end if
 	} # end foreach Invoice
 
-	$$variable{'Currency'} = openprint::Currency::get_current() if ! $$variable{'Currency'};
+	$$variable{Currency} = openprint::Currency::get_current() if ! $$variable{Currency};
 ) ?>
 
 <table class="List">
@@ -56,48 +58,51 @@ Thank you for using <? echo ( new openprint::User( $session{'user_id'} )->Compan
 		<th class="Date">Due</th>
 		<th class="Price">SubTotal</th>
 			<? echo ( 
-				return join('', map { sprintf('<th class="Price">%s (%d%)</th>', $_->name(), $_->rate() ) } @{$$variable{'Taxes'}} );
+				return join('', map { sprintf('<th class="Price">%s (%d%)</th>', $_->name(), $_->rate() ) } @{$$variable{Taxes}} );
 			) ?>
 		<th class="Price">Total</th>
 		<th class="Price">Interest</th>
+		<th class="Price">Paid</th>
 		<th class="Price">Owing</th>
 	</tr>
-	<? while ( $$variable{'Invoice'} = shift @{$$variable{'Invoices'}}; ) ?>
+	<? while ( $$variable{Invoice} = shift @{$$variable{Invoices}}; ) ?>
 	<? eval ( 
-		$$variable{'conversion_rate'} = $$variable{'Invoice'}->Currency()->conversions( $session{'Currency_id'} );
-		$$variable{'rowclass'} = $$variable{'rowclass'} ? '' : ' class="colRow"';
+		$$variable{conversion_rate} = $$variable{Invoice}->Currency()->conversions( $session{Currency_id} );
+		$$variable{rowclass} = $$variable{rowclass} ? '' : ' class="colRow"';
 	) ?>
 	<tr<?rowclass?>> 
-		<td class="invoice_id"><a href="/invoice/view.html?invoice_id=<? echo ( $$variable{'Invoice'}->id(); ) ?>"><? echo ( $$variable{'Invoice'}->id(); ) ?></a></td>
-		<td class="Date"><? echo ( Date::Format::time2str( $config{'DateFormat'}, Date::Parse::str2time( $$variable{'Invoice'}->posted_on() ) ); ) ?></td>
-		<td class="Date"><? echo ( Date::Format::time2str( $config{'DateFormat'}, Date::Parse::str2time( $$variable{'Invoice'}->due_on() ) ); ) ?></td>
-		<td class="Price"><? echo ( openprint::Currency::format( $$variable{'Invoice'}->subtotal() ); ) ?></td>
+		<td class="invoice_id"><a href="/invoice/view.html?invoice_id=<? echo ( $$variable{Invoice}->id(); ) ?>"><? echo ( $$variable{Invoice}->id(); ) ?></a></td>
+		<td class="Date"><? echo ( format_date( $$variable{Invoice}->posted_on() ); ) ?></td>
+		<td class="Date"><? echo ( format_date( $$variable{Invoice}->due_on() ); ) ?></td>
+		<td class="Price"><? echo ( openprint::Currency::format( $$variable{Invoice}->subtotal() ); ) ?></td>
 			<? echo ( 
-				return join('', map { sprintf('<td class="Price">%s</td>', openprint::Currency::format( $$variable{'Invoice'}->Tax( $_ )->amount() ) ) } @{$$variable{'Taxes'}} );
+				return join('', map { sprintf('<td class="Price">%s</td>', openprint::Currency::format( $$variable{Invoice}->Tax( $_ )->amount() ) ) } @{$$variable{Taxes}} );
 			) ?>
-		<td class="Price"><? echo ( openprint::Currency::format( $$variable{'Invoice'}->total() ); ) ?></td>
-		<td class="Price"><? echo ( openprint::Currency::format( $$variable{'Invoice'}->interest() ); ) ?></td>
-		<td class="Price"><? echo ( openprint::Currency::format( $$variable{'Invoice'}->owing() ); ) ?></td>
+		<td class="Price"><? echo ( openprint::Currency::format( $$variable{Invoice}->total() ); ) ?></td>
+		<td class="Price"><? echo ( openprint::Currency::format( $$variable{Invoice}->interest() ); ) ?></td>
+		<td class="Price"><? echo ( openprint::Currency::format( $$variable{Invoice}->paid() ); ) ?></td>
+		<td class="Price"><? echo ( openprint::Currency::format( $$variable{Invoice}->owing() ); ) ?></td>
 	</tr>
-	<? endwhile ( $$variable{'Invoice'} = shift @{$$variable{'Invoices'}}; ) ?>
+	<? endwhile ( $$variable{Invoice} = shift @{$$variable{Invoices}}; ) ?>
 	<tr class="totals">
 		<td colspan="3">Totals</td>
-		<td class="Price"><? echo ( openprint::Currency::format( $$variable{'subtotal'} ); ) ?></td>	
+		<td class="Price"><? echo ( openprint::Currency::format( $$variable{subtotal} ); ) ?></td>	
 			<? echo (
-				return join('', map { sprintf('<td class="Price">%s</td>', openprint::Currency::format( $$variable{'tax_totals'}{$_->id()} ) ) } @{$$variable{'Taxes'}} );
+				return join('', map { sprintf('<td class="Price">%s</td>', openprint::Currency::format( $$variable{tax_totals}{$_->id()} ) ) } @{$$variable{Taxes}} );
 			) ?>
-		<td class="Price"><? echo ( openprint::Currency::format( $$variable{'total'} ); ) ?></td>	
-		<td class="Price"><? echo ( openprint::Currency::format( $$variable{'interest_total'} ); ) ?></td>	
-		<td class="Price"><? echo ( openprint::Currency::format( $$variable{'owing_total'} ); ) ?></td>	
+		<td class="Price"><? echo ( openprint::Currency::format( $$variable{total} ); ) ?></td>	
+		<td class="Price"><? echo ( openprint::Currency::format( $$variable{interest_total} ); ) ?></td>	
+		<td class="Price"><? echo ( openprint::Currency::format( $$variable{paid_total} ); ) ?></td>	
+		<td class="Price"><? echo ( openprint::Currency::format( $$variable{owing_total} ); ) ?></td>	
 	</tr>
 </table>
-<span class="Currency">All prices listed in <? hecho ( new openprint::Currency( $session{'Currency_id'} )->name(); ) ?></span>
+<span class="Currency">All prices listed in <? hecho ( new openprint::Currency( $session{Currency_id} )->name(); ) ?></span>
 <br class="spacer"/><br/>
-Payments received after <? echo ( Date::Format::time2str( $config{'DateFormat'}, time ); ) ?> will not be shown.  Please make payment immediately.  <br/>
+Payments received after <? echo ( Date::Format::time2str( $config{DateFormat}, time ); ) ?> will not be shown.  Please make payment immediately.  <br/>
 <br/>
-<? if ( $$variable{'3monthwarning'} ) ?>
+<? if ( $$variable{3monthwarning} ) ?>
 <b>
 Please note that at least one of these Invoices is 3 months overdue. No further service will be given until the account is brought up to date.<br/> 
 You expect prompt service from us, and we expect prompt payment from you.  Please take care of this matter immediately.
 </b>
-<? endif ( $$variable{'3monthwarning'} ) ?>
+<? endif ( $$variable{3monthwarning} ) ?>

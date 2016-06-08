@@ -81,7 +81,7 @@ sub edit {
 						cost			=>	$param{"cost-$$Price{pricelist_id}-$$Price{equipment_id}-$$Price{id}"},
 						markup			=>	$param{"markup-$$Price{pricelist_id}-$$Price{equipment_id}-$$Price{id}"},
 						price			=>	$param{"price-$$Price{pricelist_id}-$$Price{equipment_id}-$$Price{id}"},
-						discount		=>	$param{"discount-$$Price{pricelist_id}-$$Price{equipment_id}-$$Price{id}"},
+						discountable		=>	$param{"discountable-$$Price{pricelist_id}-$$Price{equipment_id}-$$Price{id}"},
 						} );
 
 				if ( @price_changes ) {
@@ -93,7 +93,7 @@ sub edit {
 							cost			=>	$param{"cost-$$Price{pricelist_id}-$$Price{equipment_id}-$$Price{id}"},
 							markup			=>	$param{"markup-$$Price{pricelist_id}-$$Price{equipment_id}-$$Price{id}"},
 							price			=>	$param{"price-$$Price{pricelist_id}-$$Price{equipment_id}-$$Price{id}"},
-							discount		=>	$param{"discount-$$Price{pricelist_id}-$$Price{equipment_id}-$$Price{id}"},
+							discountable	=>	$param{"discountable-$$Price{pricelist_id}-$$Price{equipment_id}-$$Price{id}"},
 							} ) ) {
 						$_ = $Price->save();
 						if ( $_ ) {

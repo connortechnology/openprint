@@ -81,7 +81,7 @@ sub fits {
 		if ( $max_width and $max_length ) {
 			my $imp = openprint::imposition::fit( $width, $height, $max_width, $max_length );
 	#$log->debug("Impo: $$imp{'imposition'} $$imp{'rows'}x$$imp{'columns'} on $$self{'strid'}");
-			if ( ! $imp->imposition() ) {
+			if ( ! $$imp{imposition} ) {
 				return sprintf('Too big %s x %s on %s x %s', $width, $height, $max_width, $max_length );
 			} # end if
 		} elsif ( $max_width ) {
@@ -99,7 +99,7 @@ sub fits {
 
 		if ( $min_width and $min_length ) {
 			my $imp = openprint::imposition::fit( $min_width, $min_length, $width, $height );
-			if ( ! $imp->imposition() ) {
+			if ( ! $$imp{imposition} ) {
 				return sprintf('Too small %s x %s on %s x %s', $width, $height, $min_width, $min_length);
 			} # end if
 		} elsif ( $min_width ) {
@@ -331,13 +331,14 @@ sub copy {
 	my $new = new openprint::Equipment();
 	@$new{keys %fields} = @$self{keys %fields};
 	delete $$new{id};
+	$$new{deleted} = 0;
 	$$new{name} = 'Copy of ' . $$new{name};
 	$new->save();
 
 	my $ac = sql::start_transaction( $openprint::dbh );
 
-	foreach my $ES ( openprint::EquipmentSpecification->find('equipment_id'=>$$self{'id'} ) ) {
-		$ES->copy()->save({'equipment_id'=>$$new{id}});
+	foreach my $ES ( openprint::EquipmentSpecification->find( equipment_id=>$$self{id} ) ) {
+		$ES->copy()->save({ equipment_id=>$$new{id} });
 	} # end foreach
 
 # Now do pricing, start with Service Prices
@@ -409,7 +410,7 @@ sub destroy {
 sub update_schedule {
 	my $self = shift;
 
-	if ( $openprint::config{'Smart Schedule'} ne 'Y' ) {
+	if ( $openprint::config{'Smart_Schedule'} ne 'Y' ) {
 		$openprint::log->debug("Not using Smart Schedule.  Not Updating Press Schedule");
 		return;
 	} # end if
@@ -520,6 +521,10 @@ sub Operators {
 	} # end if
 	return @{$_[0]{Operators}};
 } # end sub Operators
+
+sub link_to {
+	return '<a href="/administrator/equipment/edit.html?ddmEquipment='.$_[0]{id}.'">'.(@_ > 1 ? $_[1] : $_[0]{strid}).'</a>';
+}
 
 1;
 __END__

@@ -44,6 +44,8 @@ CREATE TABLE RFIDScannerHistory (
 	PRIMARY KEY (id)
 );
 
+
+
 DROP TABLE IF EXISTS RFIDTagHistory;
 CREATE TABLE RFIDTagHistory (
 	id	SERIAL NOT NULL,
@@ -53,3 +55,6 @@ CREATE TABLE RFIDTagHistory (
 	updated_on	TIMESTAMP WITH TIME ZONE NOT NULL default NOW(),
 	PRIMARY KEY (id)
 );
+
+create index rfidtaghistory_updated_on_scanner_idx on rfidtaghistory (updated_on,scanner_id);
+create index rfidtaghistory_rfidtag_idx on rfidtaghistory (rfidtag_id);

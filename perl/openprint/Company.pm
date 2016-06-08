@@ -11,7 +11,7 @@ require sql;
 require openprint::Object;
 require openprint::User;
 
-$debug = 1;
+$debug = 0;
 $default_sort = 'lower(name)';
 $table = 'companies';
 $serial = 'companies_id_seq';
@@ -66,6 +66,7 @@ $serial = 'companies_id_seq';
 		'last_project_id'			=>	'last_project_id',
 		'last_order_id'				=>	'last_order_id',
 		'last_quote_id'				=>	'last_quote_id',
+		last_invoice_id				=>	'last_invoice_id',
 		);
 %find_fields = (
 	last_online	=>	'(SELECT MAX(date_time) FROM Logs WHERE company_id=companies.id)',
@@ -104,6 +105,7 @@ $serial = 'companies_id_seq';
 	last_order_id	=>	undef,
 	last_quote_id	=>	undef,
 	last_project_id	=>	undef,
+	last_invoice_id	=>	undef,
 );
 
 sub Currency {
@@ -238,7 +240,15 @@ sub dropdown {
 		if ( (!$sql{salesrep_id}) or ( ! sets::isin( $sql{salesrep_id}, [ $openprint::session{user_id}, $openprint::User->csr_ids() ] ) ) ) {
 			$sql{salesrep_id} = [ $openprint::session{user_id}, $openprint::User->csr_ids() ];
 		}
-		$sql{or} = 'id=' . $$openprint::User{company_id};
+		if ( ! $sql{or} ) {
+			$sql{or} = 'id=' . $$openprint::User{company_id};
+		} elsif ( ref $sql{or} eq 'SCALAR' ) {
+			$log->error("BAH");
+		} elsif ( ref $sql{or} eq 'HASH' ) {
+			$sql{or}{id} = $$openprint::User{company_id};
+		} else {
+			$log->error("BLAH");
+		}
 	} else {
 $log->debug("Not adding filter");
 	} # end if
@@ -461,6 +471,9 @@ sub admin_link_to {
 } # end sub link_to
 
 sub link_to {
+	if ( $openprint::session{user_type} eq 'A' ) {
+		return sprintf('<a href="/administrator/managerial/company_profiles.html?ddmCustomer=%d">%s</a>', $_[0]{id}, ( @_ > 1 ? $_[1] : $_[0]{name} ) );
+	}
 	return sprintf('<a href="/account/company_profile.html?company_id=%d">%s</a>', $_[0]{id}, $_[0]{name} );
 } # end sub link_to
 
@@ -490,7 +503,7 @@ sub Country {
 		$_[0]{Country} = openprint::Location->find_one( type=>'country', short=>$_[0]->country() );
 		if ( ! $_[0]{Country} ) {
 			 $_[0]{Country} = new openprint::Location();
-			 $_[0]{Country}->set( type=>'country' );
+			 $_[0]{Country}->set( { type=>'country', short=>$_[0]->country() } );
 		}
 	}
 	return $_[0]{Country};

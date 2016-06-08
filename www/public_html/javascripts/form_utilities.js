@@ -928,11 +928,16 @@ function check_time_starting( form, starting_prefix, ending_prefix, suffix ) {
 	} // end if
 
 	if ( start > end ) {
-		if ( form.elements[ending_prefix+suffix+'_year'] != form.elements[starting_prefix+suffix+'_year'].value ) 
-			ddm_select_by_value( form.elements[ending_prefix+suffix+'_year'], form.elements[starting_prefix+suffix+'_year'].value );
-		if ( form.elements[ending_prefix+suffix+'_month'] != form.elements[starting_prefix+suffix+'_month'].value ) {
-			ddm_select_by_value( form.elements[ending_prefix+suffix+'_month'], form.elements[starting_prefix+suffix+'_month'].value );
-			form.elements[ending_prefix+suffix+'_month'].onchange();
+		var ending_year_ddm = form.elements[ending_prefix+suffix+'_year'];
+		if ( ending_year_ddm.value != form.elements[starting_prefix+suffix+'_year'].value ) 
+			ddm_select_by_value( ending_year_ddm, form.elements[starting_prefix+suffix+'_year'].value );
+
+		var ending_month_ddm = form.elements[ending_prefix+suffix+'_month'];
+
+		if ( ending_month_ddm.value != form.elements[starting_prefix+suffix+'_month'].value ) {
+			ending_month_ddm.previousValue = ending_month_ddm.value;
+			ddm_select_by_value( ending_month_ddm, form.elements[starting_prefix+suffix+'_month'].value );
+			ending_month_ddm.onchange();
 		} // end if
 		if ( parseInt(form.elements[ending_prefix+suffix+'_day'].value) < parseInt(form.elements[starting_prefix+suffix+'_day'].value) ) {
 			ddm_select_by_value( form.elements[ending_prefix+suffix+'_day'], form.elements[starting_prefix+suffix+'_day'].value );
@@ -1060,8 +1065,13 @@ function update_duration(form, starting_prefix, ending_prefix, suffix ) {
 			if ( form.elements['duration'+suffix+'_minutes'] ) ddm_select_by_value( form.elements['duration'+suffix+'_minutes'], 0 );
 		} else {
 			var duration = $('duration'+suffix);
-			if ( duration )
-				duration.innerHTML = days +'days';
+			if ( duration ) {
+				if ( duration.type == 'text' ) {
+				duration.value = days +'day'+(days==1?'':'s');
+				} else {
+				duration.innerHTML = days +'day'+(days==1?'':'s');
+				}
+			}
 		} // end if
 	} // end if
 } // end function update_duration
@@ -1249,7 +1259,10 @@ function toggleContent( divID, show_url, inputs, hide_url ) {
 	} // end if
 } // end function toggleContent
 
+var openprint_load_content_ajax = null;
 function LoadContent( divID, page, parameters, message ) {
+    if ( openprint_load_content_ajax ) { openprint_load_content_ajax.transport.abort(); }
+
 	var div = $( divID );
 	if ( div ) {
 		if ( message ) { 
@@ -1274,7 +1287,7 @@ function LoadContent( divID, page, parameters, message ) {
 	if ( parameters.length > 8190 ) 
 		method = 'post';
 	
-	new Ajax.Updater( divID, page, { method: method, parameters: parameters, evalScripts: true } );
+	openprint_load_content_ajax = new Ajax.Updater( divID, page, { method: method, parameters: parameters, evalScripts: true } );
 } // end function LoadContent
 
 function photo_popup( asset_id, album_id ) {
@@ -1456,17 +1469,22 @@ function integerize(e) {
 		e.value = e.value.replace(/[^\d\-%\*]/g,'');
 	return e.value;
 }
+function to_hostname(e) {
+	if ( e.value.match(/\s/) ) {
+		e.value = parseFloat(e.value.replace(/\s/g,''));
+	} 
+}
 function floatize(e) {
-	if ( e.value.match(/[^\d\-\.%\*]/) ) {
-		e.value = parseFloat(e.value.replace(/[^\d\-\.%\*]/g,''));
+	if ( e.value.match(/[^\d\+\-\.%\*]/) ) {
+		e.value = parseFloat(e.value.replace(/[^\d\+\-\.%\*]/g,''));
 	} 
 	if ( e.value == 'NaN' )
 		e.value = '';
 	return e.value;
 }
 function positive_floatize(e) {
-	if ( e.value.match(/[^\d\.%\*]/) ) {
-		e.value = parseFloat(e.value.replace(/[^\d\.%\*]/g,''));
+	if ( e.value.match(/[^\d\+\.%\*]/) ) {
+		e.value = parseFloat(e.value.replace(/[^\d\+\.%\*]/g,''));
 	} 
 	if ( e.value == 'NaN' )
 		e.value = '';

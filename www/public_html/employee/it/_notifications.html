@@ -6,7 +6,7 @@
 		if ( @Notifications ) {
 			foreach my $U ( @Notifications ) {
 				$html .= sprintf( q`<li id="notification_%d"><span class="name">%s</span><span class="buttons">%s</span></li>`, 
-					$U->user_id(), $U->User()->name(), 
+					$U->user_id(), $U->User()->link_to(), 
 					button( 'd'.$U->user_id(), { onclick=>qq`new Ajax.Updater('notifications','_notifications.html', { parameters: { action: 'delete', host_id: '$$variable{Host}{id}', user_id: $$U{user_id}} } );`, 'text', 'X' } ),
 					);
 			} # end foreach User in Notifications

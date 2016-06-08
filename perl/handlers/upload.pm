@@ -3,6 +3,7 @@ package handlers::upload;
 
 require Apache2::Request;    # instead of CGI, it's MUCH faster, and does nice things.
 require Apache2::RequestRec;
+use Apache2::RequestUtil ();
 use Apache2::Const -compile => qw(HTTP_INTERNAL_SERVER_ERROR OK DECLINED HTTP_NOT_FOUND HTTP_FORBIDDEN);# Offers OK, Error,etc for web server.
 require Apache2::Log;
 require Apache2::ServerUtil;
@@ -224,10 +225,13 @@ sub get_destdir {
 		( $destdir ) = new openprint::Company( $session{company_id} )->name();
 		$destdir = '/'.$destdir.'/';
 		return '' if ! create_dir( $config{ProjectFilesPath}.$destdir );
-	} else {
+	} elsif ( $param{txtCompanyName} ) {
 # This ends up prefixing the file with the company's name
 		$param{txtCompanyName} = openprint::Company->transform('name', $param{txtCompanyName});
 		$destdir .= $param{txtCompanyName} . '_';
+	} else {
+		$destdir .= '/'.$openprint::Owner->name().'/';
+		return '' if ! create_dir( $config{ProjectFilesPath}.$destdir );
 	} # end if
 
 	if ( $param{docket} ) {

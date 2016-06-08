@@ -17,7 +17,7 @@ require openprint::SkidContent;
 require openprint::InventoryCondition;
 require openprint::PaperAllocation;
 
-$debug = 1;
+$debug = 0;
 
 $table = 'Skids';
 $serial = 'skid_id_seq';
@@ -46,6 +46,7 @@ $serial = 'skid_id_seq';
 	fsc_code			=>	'id IN ( SELECT skid_id FROM skid_contents WHERE paper_id=(SELECT id FROM papers WHERE fsc_code=?))',
 	purpose_id 			=>	'id IN ( SELECT skid_id FROM skid_contents WHERE purpose_id=?)',
 	condition_id 		=>	'(SELECT condition_id FROM skid_contents WHERE skid_contents.skid_id=skids.id )',
+	inventory_check_id	=>	'id IN (SELECT skid_id FROM inventory_check_entries WHERE ic_id=?)',
 );
 
 %transforms = (
@@ -563,9 +564,12 @@ sub PurchaseOrders {
 	if ( ! $_[0]{PurchaseOrders} ) {
 		require openprint::Manifest_Content_Type;
 		my @POs;
-		foreach my $MCT ( openprint::Manifest_Content_Type->find( 'skid_id any'=>$_[0]->id() ) ) {
-			push @POs, $MCT->PurchaseOrder() if $MCT->po_id();
-		} # end foreach MCT
+		my @manifest_type_ids = map { $_->type_id() } openprint::ManifestContent->find( skid_id=>$_[0]->id() );
+		if ( @manifest_type_ids ) {
+			foreach my $MCT ( openprint::Manifest_Content_Type->find( id=>\@manifest_type_ids ) ) {
+				push @POs, $MCT->PurchaseOrder() if $MCT->po_id();
+			} # end foreach MCT
+		}
 		$_[0]{PurchaseOrders} = \@POs;
 	} # end if
 	return @{$_[0]{PurchaseOrders}} if ref $_[0]{PurchaseOrders} eq 'ARRAY';

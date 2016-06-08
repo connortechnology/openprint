@@ -22,7 +22,7 @@
 		`, 'text/html', 'quoted-printable');
 
 		my %mail = (
-			SMTP   => $config{'Mail Server'},
+			SMTP   => $config{'Mail_Server'},
 			FROM   => sprintf('"%s %s" <%s>', new openprint::User( $session{user_id} )->get('firstname','lastname','email') ),
 			TO     => $config{TechSupportEmail},
 			SUBJECT => 'Bug Report',

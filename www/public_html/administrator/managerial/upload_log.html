@@ -3,13 +3,13 @@
 		<ul>
 			<li>
 				<label>Date</label>
-				<? echo (datetime_select_session( '/administrator/managerial/upload_log.html', 'uploaded_on_start',  { with_today=>1 } ); ) ?>
+				<? echo (datetime_select_session( '/administrator/managerial/upload_log.html', 'uploaded_on_start',  { with_today=>1, with_clear=>1 } ); ) ?>
 				to
-				<? echo (datetime_select_session( '/administrator/managerial/upload_log.html', 'uploaded_on_end',  { with_today=>1 } ); ) ?>
+				<? echo (datetime_select_session( '/administrator/managerial/upload_log.html', 'uploaded_on_end',  { with_today=>1, with_clear=>1 } ); ) ?>
 			</li>
 			<li>
 				<label>Company</label>
-				<input type="text" onkeyup="filterDDM(this,this.form.company_id);" onkeydown="if(event.keyCode==13){searchLog.btnFunction.value='Go';searchLog.submit();}" class="filter" />
+				<input type="text" onkeyup="filter_companies('company_id', {name:this.value,selected_id:get_ddm_value($('company_id'))});" onkeydown="if(event.keyCode==13){searchLog.btnFunction.value='Go';searchLog.submit();}" class="filter" />
 				<select name="company_id" id="company_id" onchange="searchLog.submit();" >
 					<option value="">All</option>
 					<? echo ( make_drop_down( openprint::Company->dropdown('last_ordered_on is null'=>0), $param{company_id} );) ?>
@@ -17,6 +17,8 @@
 			</li>
 			<li><label>Type</label>
 				<? echo ( radio( 'type', [ 'FTP','FTP', 'Web','Web', '', 'All' ], $session{'/administrator/managerial/upload_log.html?type'} ); ) ?>
+			</li>
+			<li><label>Filename</label><input type="text" name="filename" />
 			</li>
 		</ul>
 		<p class="buttons">
@@ -45,6 +47,7 @@
 				date_filter( '/administrator/managerial/upload_log.html?uploaded_on_start', 'start >=' ),
 				( $session{'/administrator/managerial/upload_log.html?type'} ? ( type=>$session{'/administrator/managerial/upload_log.html?type'} ) : () ),
 				( $session{'/administrator/managerial/upload_log.html?company_id'} ? ( company_id=>$session{'/administrator/managerial/upload_log.html?company_id'} ) : () ),
+				( $param{filename} ? ( 'file_path ilike' => '%'.$param{filename}.'%' ) : () ),
 				limit	=>	1000,
 				order	=>	'start DESC',
 			);

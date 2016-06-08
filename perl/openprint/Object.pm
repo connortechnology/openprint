@@ -51,6 +51,12 @@ sub debug {
 			$log->debug( "$o : $id" );
 		} # end foreach
 	} # end foreach
+	foreach my $object_type ( keys %name_cache ) {
+		$log->debug("Name Cach contains $object_type => $name_cache{$object_type}");
+		foreach my $k ( keys %{$name_cache{$object_type}} ) {
+			$log->debug("Name Cach for $object_type contains $k => $name_cache{$object_type}{$k}");
+		}
+	}
 } # end sub debug
 
 sub new_scalar_id {
@@ -64,7 +70,7 @@ sub new_scalar_id {
 	my @keys = map { ( (defined $$fields{$_} or exists $$data{$_} ) and $$fields{$_} ne $_ ) ? $_ : () } keys %$fields;
 	@$self{@keys} = @$self{@$fields{@keys}};
 	if ( ! $no_cache ) {
-		$log->debug("Caching $config{db_name} $parent $id = $self") if $debug;
+		$log->debug("new_scaler_id: Caching $config{db_name} $parent $id = $self") if $debug;
 		$cache{$config{db_name}}{$parent}{$id} = $self;
 	} else {
 		$log->debug("NOT Caching $config{db_name} $parent $id = $self") if $debug;
@@ -114,7 +120,7 @@ $log->debug("Loading object $parent $id from cache and populating with data new 
 			if ( $id ) {
 				# Using $id instead of $$self{od} means that we cache non existent entries
 			#if ( $$self{id} ) {
-$log->debug("Caching $config{db_name} $parent $id = $self") if DEBUG_CACHE or $debug;
+$log->debug("new id_Caching $config{db_name} $parent $id = $self") if DEBUG_CACHE or $debug;
 				
 				$$sub_cache{$id} = $self;
 			} # end if
@@ -176,6 +182,9 @@ sub load {
 			if ( $d->errstr ) {
 				$log->error( 'Failure to load ' . $type . " $$self{id}: Reason: " . $d->errstr );
 				Carp::cluck( 'Failure to load ' . $type . " $$self{id}: Reason: " . $d->errstr );
+			} elsif ( $debug ) {
+				$log->debug( 'Failure to load ' . $type . " $$self{id}: Reason: " );
+				delete $$self{id};
 			} # end if
 			if ( @identified_by ) {
 				delete @$self{@identified_by};
@@ -377,9 +386,20 @@ $log->warn('Object::set called on an object with no fields');
 
 	foreach my $field ( keys %$fields ) {
 		next if ! exists $$params{$field};
-
-		if ( $$self{$field} ne $$params{$field} ) {
-			push @results, "$field changed from $$self{$field} to $$params{$field}";
+		if ( ref $$self{$field} eq 'ARRAY'  ) {
+			if ( @{$$self{$field}} != sets::intersection( 
+				@{$$self{$field}},
+				( ref $$params{$field} eq 'ARRAY' ? @{$$params{$field}} : ( $$params{$field} ) )
+				) ) {
+				push @results, "$field changed from ".join(',',@{$$self{$field}}) .' to '.join(',',@{$$params{$field}} );
+			}
+		} elsif ( $$self{$field} ne $$params{$field} ) {
+			if ( $field eq 'password' ) {
+			
+				push @results, "$field changed";
+			} else {
+				push @results, "$field changed from $$self{$field} to $$params{$field}";
+			}
 		} # end if
 	} # end foreachf ield
 	return @results;
@@ -395,6 +415,10 @@ sub set {
 $log->warn('Object::set called on an object with no fields');
 	} # end if
 	my %defaults = eval('%'.$type.'::defaults');
+if ( ref $params ne 'HASH' ) {
+	my ( $caller, undef, $line ) = caller;
+$openprint::log->error("$type -> set called with non-hash params from $caller $line");
+}
 
 	foreach my $field ( keys %$fields ) {
 $log->debug("field: $field, param: ".$$params{$field}) if $debug;
@@ -489,6 +513,7 @@ sub delete {
 		delete $openprint::Object::cache{$config{db_name}}{$type}{join('-',@$self{@identified_by})};
 	} # end if
 	eval 'if ( %'.$type.'::find_cache ) { %'.$type.'::find_cache = (); }';
+	(new openprint::Log())->save({Object=>$self,action=>'Delete'});
 	return;
 } # end sub delete
 
@@ -544,6 +569,8 @@ my $add_placeholder = ( ! ( $field =~ /\?/ ) ) ?  1 : 0;
 
 	if ( sets::isin( $operator, [ '=', '!=', '<', '>', '<=', '>=', '<<=' ] ) ) {
 		return ( $field.$type.' ' . $operator . ( $add_placeholder ? ' ?' : '' ), $value );
+	} elsif ( $operator eq 'not' ) {
+		return ( 'NOT ' . $field.$type, $value );
 	} elsif ( sets::isin( $operator, [ '&&', '<@', '@>' ] ) ) {
 		if ( ref $value eq 'ARRAY' ) {
 			if ( $field =~ /^\(/ ) {
@@ -604,6 +631,12 @@ my $add_placeholder = ( ! ( $field =~ /\?/ ) ) ?  1 : 0;
 		} else {
 			return $field.$type. ' is not null';
 		} # end if
+	} elsif ( $operator eq 'is not null' ) {
+		if ( $value ) {
+			return $field.$type. ' is not null';
+		} else {
+			return $field.$type. ' is null';
+		} # end if
 	} else {
 $log->warn("find_operators: op not found field($field) type($type) op($operator) value($value)");
 	} # end if
@@ -614,6 +647,82 @@ sub User {
 	require openprint::User;
 	return new openprint::User( $_[0]{user_id} );
 } # end sub User
+
+sub get_fields_values {
+	my ( $object_type, $search, $param_keys ) = @_;
+
+	my @used_fields;
+	my @where;
+	my @values;
+	no strict 'refs';
+
+	foreach my $k ( @$param_keys ) {
+		my ( $field, $type, $function ) = $k =~ /^([_\+\w\-]+)(::\w+\[?\]?)?[\s_]*(.*)?$/;
+		$type = '' if ! defined $type;
+#$log->debug("$object_type param $field($type) func($function) " . ( ref $search{$k} eq 'ARRAY' ? join(',',@{$search{$k}}) : $search{$k} ) );
+
+		foreach ( 'find_fields', 'fields' ) {
+			my $fields = \%{$object_type.'::'.$_};
+			if ( ! $fields ) {
+				$log->debug("No $fields in $object_type") if DEBUG_ALL;
+				next;
+			} # end if
+
+#$log->debug("looking for ($k) in $type :: $_ , $$f{$k}");
+			if ( ! $$fields{$field} ) {
+				#$log->debug("No $field in $_ for $object_type") if DEBUG_ALL;
+				next;
+			} # end if
+
+# This allows mainly for find_fields to reference multiple values, opinion in Project, value
+			foreach my $db_field ( ref $$fields{$field} eq 'ARRAY' ? @{$$fields{$field}} : $$fields{$field} ) {
+				if ( ! $function ) {
+					$db_field .= $type;
+
+					if ( ref $$search{$k} eq 'ARRAY' ) {
+						if ( @{$$search{$k}} ) {
+							push @where, $db_field .' IN ('.join(',', map {'?'} @{$$search{$k}} ) . ')';
+							push @values, @{$$search{$k}};
+						} # end if
+					} elsif ( ref $$search{$k} eq 'HASH' ) {
+						foreach my $p_k ( keys %{$$search{$k}} ) {
+							my $v = $$search{$k}{$p_k};
+							if ( ref $v eq 'ARRAY' ) {
+								push @where, $db_field.' IN ('.join(',', map {'?'} @{$v} ) . ')';
+								push @values, $p_k, @{$v};
+							} else {
+								push @where, $db_field.'=?';
+								push @values, $p_k, $v;
+							} # end if
+						} # end foreach p_k
+					} elsif ( ! defined $$search{$k} ) {
+						push @where, $db_field.' IS NULL';
+					} else {
+						if ( ! ( $db_field =~ /\?/ ) ) {
+							push @where, $db_field .'=?';
+						} else {
+							push @where, $db_field;
+						}
+						push @values, $$search{$k};
+					} # end if
+					push @used_fields, $k;
+				} else {
+					#my @w = 
+#ref $search{$k} eq 'ARRAY' ? 
+						#map { find_operators( $field, $type, $function, $_ ); } @{$search{$k}} :
+					my ( $w, @v ) = find_operators( $db_field, $type, $function, $$search{$k} );
+					if ( $w ) {
+						#push @where, '(' . join(' OR ', @w ) . ')';
+						push @where, $w;
+						push @values, @v if @v;
+						push @used_fields, $k;
+					} # end if @w
+				} # end if has function or not
+			} # end foreach db_field
+		} # end foreach find_field
+	} # end foreach k
+	return ( \@where, \@values, \@used_fields );
+}
 
 sub find {
 	no strict 'refs';
@@ -670,28 +779,35 @@ sub find {
 		return ();
 	}
 	delete $$params{dbh};
+	my @param_keys = sets::exclude( [ 'order','limit','offset','or' ], [ keys %$params ] );
 
 	my $cache_field = ${$object_type.'::cache_field'} if $do_cache;
-	if ( $cache_field and $$params{$cache_field} and ( ( 1 == keys %$params ) or ( 2 == keys %$params and exists $$params{limit} ) ) ) {
+	if ( $cache_field and $$params{$cache_field} and ( 1 == @param_keys ) ) {
 
-#$log->debug("have cache field $cache_field for $$params{$cache_field}") if DEBUG_ALL;
+$log->debug("have cache field $cache_field for $$params{$cache_field}") if DEBUG_ALL;
 		if ( exists $name_cache{$object_type} and exists $name_cache{$object_type}{$$params{$cache_field}} ) {
-#$log->debug("There is an object in the cache") if DEBUG_ALL;
+$log->debug("There is an object in the cache for $$params{$cache_field}") if DEBUG_ALL;
 			if ( $name_cache{$object_type}{$$params{$cache_field}} ) {
-#$log->debug("returning " . $name_cache{$object_type}{$$params{$cache_field}} . " for $object_type $cache_field $$params{$cache_field}") if DEBUG_ALL;
+$log->debug("returning " . $name_cache{$object_type}{$$params{$cache_field}} . " for $object_type $cache_field $$params{$cache_field}") if DEBUG_ALL;
 				return $name_cache{$object_type}{$$params{$cache_field}}; 
 			} else {
-#$log->debug("returning nothing for $object_type $cache_field $$params{$cache_field}") if DEBUG_ALL;
+				# Shouldn't have to test for cached, because the hash will not get populated.
+$log->error("returning nothing for $object_type $cache_field $$params{$cache_field}") if DEBUG_ALL;
 				return ();
 			} # end if
-		} else {
-$log->debug("Undefing $object_type $cache_field $$params{$cache_field}") if DEBUG_ALL or DEBUG_CACHE;
-			$name_cache{$object_type}{$$params{$cache_field}} = undef;
-		} # end if
-		if ( 0 and ${$object_type.'::cached'} ) {
-$log->debug("ALl cached $object_type $cache_field $$params{$cache_field}") if DEBUG_ALL or DEBUG_CACHE;
-			return ();
-		} # end if
+		} else { # not in cache
+			my $cached = eval( '$'.$object_type.'::cached' );
+			if ( $cached ) {
+				# if all items should have been loaded
+
+# Can only undef here if we know that we have already loaded them all
+				$log->debug("Undefing $object_type cached: $cached $cache_field $$params{$cache_field} cache: so that future lookups find an empty cache") if DEBUG_ALL or DEBUG_CACHE;
+	#debug();
+				#$name_cache{$object_type}{$$params{$cache_field}} = undef;
+	#$log->debug("ALl cached $object_type $cache_field $$params{$cache_field}") if DEBUG_ALL or DEBUG_CACHE;
+				return ();
+			} # end if Object::cached
+		} # end if is in cache or not
 	} else {
 		$do_cache = 0;
 		$log->debug("Not doing caching for $object_type using $cache_field with params $$params{$cache_field} ") if DEBUG_ALL or DEBUG_CACHE;
@@ -700,79 +816,17 @@ $log->debug("ALl cached $object_type $cache_field $$params{$cache_field}") if DE
 	# no operators, just which fields are being searched on. Mostly just useful for detetion of the deleted field.
 	my @used_fields;
 
-	my @param_keys = sets::exclude( [ 'order','limit','offset','or' ], [ keys %$params ] );
-
 	# We use this search hash so that we can mash it up and leave the params hash alone
 	my %search;
 	@search{@param_keys} = @$params{@param_keys};
+
+	my ( $where, $values, $used_fields ) = get_fields_values( $object_type, \%search, \@param_keys );
+	delete @search{@{$used_fields}};
+	push @used_fields, @{$used_fields};
+	push @where, @{$where};
+	push @values, @{$values};
 	
-	foreach my $k ( @param_keys ) {
-		my ( $field, $type, $function ) = $k =~ /^([_\+\w\-]+)(::\w+\[?\]?)?[\s_]*(.*)?$/;
-		$type = '' if ! defined $type;
-#$log->debug("$object_type param $field($type) func($function) " . ( ref $search{$k} eq 'ARRAY' ? join(',',@{$search{$k}}) : $search{$k} ) );
 
-		foreach ( 'find_fields', 'fields' ) {
-			my $fields = \%{$object_type.'::'.$_};
-			if ( ! $fields ) {
-				$log->debug("No $fields in $object_type") if DEBUG_ALL;
-				next;
-			} # end if
-
-#$log->debug("looking for ($k) in $type :: $_ , $$f{$k}");
-			if ( ! $$fields{$field} ) {
-				#$log->debug("No $field in $_ for $object_type") if DEBUG_ALL;
-				next;
-			} # end if
-
-# This allows mainly for find_fields to reference multiple values, opinion in Project, value
-			foreach my $db_field ( ref $$fields{$field} eq 'ARRAY' ? @{$$fields{$field}} : $$fields{$field} ) {
-				if ( ! $function ) {
-					$db_field .= $type;
-
-					if ( ref $search{$k} eq 'ARRAY' ) {
-						if ( @{$search{$k}} ) {
-							push @where, $db_field .' IN ('.join(',', map {'?'} @{$search{$k}} ) . ')';
-							push @values, @{$search{$k}};
-						} # end if
-					} elsif ( ref $search{$k} eq 'HASH' ) {
-						foreach my $p_k ( keys %{$search{$k}} ) {
-							my $v = $search{$k}{$p_k};
-							if ( ref $v eq 'ARRAY' ) {
-								push @where, $db_field.' IN ('.join(',', map {'?'} @{$v} ) . ')';
-								push @values, $p_k, @{$v};
-							} else {
-								push @where, $db_field.'=?';
-								push @values, $p_k, $v;
-							} # end if
-						} # end foreach p_k
-					} elsif ( ! defined $search{$k} ) {
-						push @where, $db_field.' IS NULL';
-					} else {
-						if ( ! ( $db_field =~ /\?/ ) ) {
-							push @where, $db_field .'=?';
-						} else {
-							push @where, $db_field;
-						}
-						push @values, $search{$k};
-					} # end if
-					delete $search{$k};
-					push @used_fields, $k;
-				} else {
-					#my @w = 
-#ref $search{$k} eq 'ARRAY' ? 
-						#map { find_operators( $field, $type, $function, $_ ); } @{$search{$k}} :
-					my ( $w, @v ) = find_operators( $db_field, $type, $function, $search{$k} );
-					if ( $w ) {
-						#push @where, '(' . join(' OR ', @w ) . ')';
-						push @where, $w;
-						push @values, @v if @v;
-						delete $search{$k};
-						push @used_fields, $k;
-					} # end if @w
-				} # end if has function or not
-			} # end foreach db_field
-		} # end foreach find_field
-	} # end foreach k
 	my $fields = \%{$object_type.'::fields'};
 # Check for Object references
 	if ( %search ) {
@@ -797,18 +851,51 @@ $log->debug("ALl cached $object_type $cache_field $$params{$cache_field}") if DE
 		delete $search{custom};
 	} # end if
 
+	if ( $$params{or} ) {
+		if ( ref $$params{or} eq 'HASH' ) {
+			my ( $where, $values, $used_fields ) = get_fields_values( $object_type, $$params{or},  [ keys %{$$params{or}} ] );
+
+			if ( $$fields{deleted} and ( ! sets::isin( 'deleted', $used_fields ) ) and ( ! sets::isin( 'deleted', \@used_fields ) ) ) {
+				push @where, 'deleted=?';
+				push @values, 0;
+			} # end if
+
+			if ( @where ) {
+				$sql .= ' WHERE ( ' . join(' AND ', @where ) . ' ) AND ( ' . join(' OR ', @{$where} ) . ')';
+			} else {
+				$sql .= ' WHERE ( ' . join(' OR ', @{$where} ) . ' )';
+			} 
+			push @values, @{$values};
+		} elsif ( ref $$params{or} eq 'ARRAY' ) {
+			my %s = @{$$params{or}};
+			my ( $where, $values, $used_fields ) = get_fields_values( $object_type, \%s,  [ keys %s ] );
+			if ( $$fields{deleted} and ( ! sets::isin( 'deleted', $used_fields ) ) and ( ! sets::isin( 'deleted', \@used_fields ) ) ) {
+				push @where, 'deleted=?';
+				push @values, 0;
+			} # end if
+			if ( @where ) {
+				$sql .= ' WHERE ( ' . join(' AND ', @where ) . ' ) AND ( ' . join(' OR ', @{$where} ) . ')';
+			} else {
+				$sql .= ' WHERE ( ' . join(' OR ', @{$where} ) . ' )';
+			} 
+			push @values, @{$values};
+
+		} else {
+			if ( $$fields{deleted} and ( ! sets::isin( 'deleted', $used_fields ) ) and ( ! sets::isin( 'deleted', \@used_fields ) ) ) {
+				push @where, 'deleted=?';
+				push @values, 0;
+			} # end if
+			if ( @where ) {
+				$sql .= ' WHERE ( ' . join(' AND ', @where ) . ' ) OR ( ' . $$params{or} . ')';
+			} else {
+				$sql .= " WHERE $$params{or}";
+			} # end if
+		} # end if
+	} else {
 	if ( $$fields{deleted} and ! sets::isin( 'deleted', \@used_fields ) ) {
 		push @where, 'deleted=?';
 		push @values, 0;
 	} # end if
-
-	if ( $$params{or} ) {
-		if ( @where ) {
-			$sql .= ' WHERE ( ' . join(' AND ', @where ) . ' ) OR ( ' . $$params{or} . ')';
-		} else {
-			$sql .= " WHERE $$params{or}";
-		} # end if
-	} else {
 		$sql .= ' WHERE ' . join(' AND ', @where ) if @where;
 	} # end if
 	if ( exists $$params{order} ) {
@@ -845,13 +932,17 @@ $log->debug("ALl cached $object_type $cache_field $$params{$cache_field}") if DE
 		$log->debug("Loading Debug:$debug $object_type ($sql) (".join(',', map { ref $_ eq 'ARRAY' ? join(',', @{$_}) : $_ } @values).') # of results:' . @$data . ' in ' . sprintf('%.4f', tv_interval($starttime)*1000) .' useconds' );
 	} # end if
 	if ( $$fields{id} ) {
-		if ( $cache_field and $do_cache ) {
+		if ( $cache_field ) {
 			my @results = map { $object_type->new( $_->{$$fields{id}}, $_ ) } @$data;
+			$name_cache{$object_type} = {} if ! $name_cache{$object_type};
 			my $cache_ref = $name_cache{$object_type};
+#$log->warn("Doing find_cache for $object_type $cache_ref $name_cache{$object_type}");
 
 			foreach my $O ( @results ) {
-				$$cache_ref{$$O{$cache_field}} = $O;
+				$cache_ref->{$$O{$cache_field}} = $O;
+#$log->warn("Doing find_cache for $object_type $$O{$cache_field}");
 			} 
+#debug();
 			return @results;
 		} # end if
 		#return map { $object_type->new_scalar_id( $_->{$$fields{id}}, $_ ) } @$data;
@@ -881,6 +972,7 @@ sub find_one {
 } # end sub find_one
 
 sub AUTOLOAD {
+	no strict;
 	my ( $self, $newvalue ) = @_;
 	my $type = ref($_[0]);
 	my $name = $AUTOLOAD;
@@ -894,6 +986,10 @@ sub AUTOLOAD {
 			} # end if
 		} # end if
 $openprint::log->debug("Autoload $type $name $_[0] $_[1] $self $newvalue") if ! $type;
+*{$name} = sub {
+      @_ > 1 ? $_[0]->{$name} = $_[1]
+        : $_[0]->{$name};
+    };
 		return $_[0]{$name} = $_[1];
 	} else {
 		if ( $fields ) {
@@ -907,6 +1003,9 @@ $openprint::log->debug("Autoload $type $name $_[0] $_[1] $self $newvalue") if ! 
 						#return $$defaults{$name};
 					#}
 				#} # end if
+*{$name} = sub {
+      @_ > 1 ? $_[0]->{$name} = $_[1] : $_[0]->{$name};
+    };
 				return $_[0]{$name};
 			} else {
 				my $field = (lc $name) . '_id';
@@ -1182,6 +1281,12 @@ sub Privacy {
 sub can_view {
 	return 1;
 } # end sub can_view
+sub can_edit {
+	if ( $openprint::session{user_type} eq 'A' ) {
+	return 1;
+	}
+	return 0;
+} # end sub can_view
 
 sub Assets {
 	return () if ! $_[0]{id};
@@ -1254,7 +1359,7 @@ sub Keywords {
 
 sub keywords {
 	my $object_type = ref $_[0];
-	if ( @_ > 1 and ( $_[1] ne $_[0]->keywords() ) ) {
+	if ( @_ > 1 and $_[0]{id} and ( $_[1] ne $_[0]->keywords() ) ) {
 		my @OKs = openprint::Object_Keyword->find( object_type=>$object_type, object_id=>$_[0]{id} );
 		my %keywords = map { $_->Keyword()->word(), $_ } @OKs;
 		my @new_keywords = split(/\s/, $_[1]);

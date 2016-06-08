@@ -80,3 +80,6 @@ function save_company( ) {
 function ddmUsers_onchange( form ) {
 	new Ajax.Request('/main/order/_user_info.json', { parameters: { user_id: form.ddmUsers.options[form.ddmUsers.selectedIndex].value } } );
 } // end function
+function remove_product(op_id) {
+	new Ajax.Updater( 'Products', '/main/order/_product_list_edit.html', { parameters: { order_id: $('f1').order_id.value, id: op_id, action: 'remove' } } );
+}

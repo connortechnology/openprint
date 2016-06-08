@@ -247,7 +247,7 @@ $log->warn("Paper was supplied");
 					$stock_total += $totals{$string};
 				} # end foreach string
 
-				push @Data, $Order->id(), $Order->docket(), $Order->invoice_id(), $Order->Company()->name(), $Project->reference(), $Order->created_on(), $Order->status(), $Order->total(), $stock_price, $stock_total;
+				push @Data, $Order->id(), $Order->docket(), join(',', map { $_->Invoice()->num() } $Order->Invoices() ), $Order->Company()->name(), $Project->reference(), $Order->created_on(), $Order->status(), $Order->total(), $stock_price, $stock_total;
 			} # end foreach Project
 		} # end foreach Order
 

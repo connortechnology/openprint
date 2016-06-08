@@ -86,7 +86,7 @@ function submit_handler() {
 		</fieldset>
 <? echo (
 	join("\n",
-		( $openprint::User->email() =~ /iconnor/ ? button( 'ServiceDump', { onclick=>qq`popup_window('/employee/proj/_service_dump.html', { project_id: $$variable{ProjectIndex}, service_id: $$variable{ServiceIndex} } );` } ) : () ),
+		( $openprint::User->email() =~ /iconnor/ ? button( 'ServiceDump', { onclick=>qq`popup_window('/main/project/_service_dump.html', { project_id: $$variable{ProjectIndex}, service_id: $$variable{ServiceIndex} } );` } ) : () ),
 	);
 )?>
 		<?include('/includes/main/proj/add_to_project.html')?>

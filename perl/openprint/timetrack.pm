@@ -108,11 +108,13 @@ sub edit {
 		$param{ending} = $parser->format_datetime( $end_datetime );
 		if ( ! $param{timetrack_id} ) {
 			if ( openprint::Timetrack->find_one(
+						user_id		=> ( $param{user_id} ? $param{user_id} : undef ),
 						owner_id	=>$param{owner_id},
 						company_id	=>$param{company_id},
 						starting	=>$param{starting},
 						ending		=>$param{ending},
 						service_id	=>( $param{service_id} ? $param{service_id} : undef ),
+						description	=>	$param{description},
 						) ) {
 				$variable{error} = 'Not creating duplicate.<br/>';
 				return;
@@ -120,6 +122,9 @@ sub edit {
 		} # end if
 		$variable{error} .= $Timetrack->save(\%param);
 		if ( ! $variable{error} ) {
+
+			# Keywords won't get saved when creating a timetrack, so have to save them manually
+			$Timetrack->keywords( $param{keywords} ) if ! $param{timetrack_id};
 			if ( $param{referrer_invoice_id} ) {
 				$_ = $param{referrer_invoice_id};
 				$variable{ExternalRedirect} = '/invoice/edit.html?invoice_id='.$_;
@@ -133,7 +138,7 @@ sub edit {
 		} # end if
 	} elsif ( $param{func} eq 'Copy' ) {
 		$variable{Timetrack} = $variable{Timetrack}->copy();
-		$variable{error} .= $variable{Timetrack}->save();
+		#$variable{error} .= $variable{Timetrack}->save();
 	} elsif ( $param{func} eq 'Destroy' ) {
 		my $Timetrack = new openprint::Timetrack( $param{timetrack_id} );
 		$variable{error} .= $Timetrack->destroy();
@@ -141,14 +146,16 @@ sub edit {
 			$variable{ExternalRedirect} = '/timetrack/history.html';
 			return;
 		}
-	} # end if
+	} else {
 	if ( (!$variable{Timetrack}->id()) ) {
 		$variable{Timetrack}->set(\%param); # Sets defaults
+		$variable{Timetrack}->user_id( $session{user_id} ) if ! $variable{Timetrack}->user_id();
 		if ( time - $session{'/timetrack/edit.html?lastupdated'} < ( 12*60*60 ) ) {
 			$variable{Timetrack}->company_id( $session{'/timetrack/edit.html?company_id'} ) if ! $variable{Timetrack}->company_id();
 			$variable{Timetrack}->starting( $session{'/timetrack/edit.html?ending'} ) if ! $variable{Timetrack}->starting();
 			$variable{Timetrack}->ending( $session{'/timetrack/edit.html?ending'} ) if ! $variable{Timetrack}->ending();
 		} # end if
+	} # end if
 	} # end if
 } # end sub edit
 

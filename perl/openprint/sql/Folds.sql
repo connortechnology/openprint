@@ -33,3 +33,5 @@ CREATE TABLE Folds (
 	comments		TEXT,
 	PRIMARY KEY (id)
 );
+
+CREATE INDEX folds_equipment_idx ON folds (equipment_id);

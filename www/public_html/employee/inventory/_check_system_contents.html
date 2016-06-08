@@ -13,7 +13,7 @@
 <? echo ( 
 	my $html;
 	my $rowclass;
-	my $total_weight;
+	my $total_weight = 0;
 
 	if ( ! $$variable{skid_ids} ) {
 		my @Contents = openprint::Inventory_Check_Entry->find( ic_id=>$$variable{Check}->id(), order=>'skid_id,rfidtag_id' );
@@ -27,7 +27,8 @@ $log->debug("SKids to not be in " . @skid_ids );
 
 my @Good_Skids = ();
 	my @Skids = openprint::Skid->find(
-		'type in' => [ split(',', $$variable{Check}->contains() ) ],
+		'inventory_check_id not'=>$$variable{Check}->id(),
+		( $$variable{Check}->contains() ? ( 'type in' => [ split(',', $$variable{Check}->contains() ) ] ) : () ),
 		#'rfidtag_id is null'=>0,
 		#'location_id is null'=>0,
 		'quantity >=' => 1, 

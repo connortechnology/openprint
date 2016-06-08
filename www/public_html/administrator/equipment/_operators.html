@@ -2,7 +2,7 @@
 <? echo (
 	my @EOs = openprint::Equipment_Operator->find( equipment_id=>$$variable{Equipment}->id() );
 	my $html .= join("\n", 
-			map { sprintf('<li id="operator-%d">%s<span class="buttons">%s</span></li>', $_->user_id(), $_->Operator()->name(), 	button('del_operator-'.$$_{user_id}, { onclick=>qq`del_operator( $$_{user_id} );`, text=>'X', title=>'Delete' } ) ) } @EOs
+			map { sprintf('<li id="operator-%d">%s<span class="buttons">%s</span></li>', $_->user_id(), $_->Operator()->link_to(), 	button('del_operator-'.$$_{user_id}, { onclick=>qq`del_operator( $$_{user_id} );`, text=>'X', title=>'Delete' } ) ) } @EOs
 		 );
 
 	$html .= '<li>'.

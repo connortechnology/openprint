@@ -12,7 +12,7 @@
 		</div>
 		<div class="rightColumn">
 			<fieldset><legend>Preview</legend>
-				<div id="preview"><? echo ( variable_substitution( \$$variable{Template}->body() ); )?></div>
+				<iframe id="preview" src="_email_template_body.html?template_id=<?echo($$variable{Template}->id())?>"></iframe>
 			</fieldset>
 		</div>
 		<p class="buttons">
