@@ -3420,6 +3420,23 @@ if ( ! sets::isin( 'car', \@tables ) ) {
 	}
 } # en dif
 
+if ( ! sets::isin( 'usergroups', \@tables ) ) {
+	$dbh->do( misc::load_file( $log, q{../openprint/sql/Usergroups.sql}) );
+	die if $dbh->errstr();
+} else {
+	my $data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='usergroups'", 'column_name');
+	if ( ! $$data{'duration'} ) {
+		$dbh->do('ALTER TABLE usergroups ADD duration INTERVAL');
+	} # end if
+	if ( ! $$data{'asset_id'} ) {
+		$dbh->do('ALTER TABLE usergroups ADD asset_id INTEGER');
+		$dbh->do('ALTER TABLE usergroups ADD FOREIGN KEY (asset_id) REFERENCES Assets (id)');
+	} # end if
+	if ( ! $$data{description} ) {
+		$log->debug("Add description to usergroups");
+		$dbh->do('ALTER TABLE usergroups ADD description TEXT') or die $dbh->errstr();
+	} # end if
+} # end if
 if ( ! sets::isin( 'users_in_usergroups', \@tables ) ) {
 	$dbh->do( misc::load_file( $log, q{../openprint/sql/Users_in_Usergroups.sql}) );
 	die $dbh->errstr() if $dbh->errstr();

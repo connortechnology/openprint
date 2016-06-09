@@ -150,7 +150,7 @@ sub host {
 			delete $param{type_id};
 		} # end if
 		my $Location = openprint::Location::save_location( \%param );
-		$param{location_id} = $Location->id() if $Location->id();
+		$param{location_id} = $Location->id() if $Location and $Location->id();
 		$variable{error} .= $Host->save(\%param);
 		foreach my $I ( $Host->Interfaces(), new openprint::Host_Interface() ) {
 			if ( $param{"mac-$$I{id}"} or $param{"ip-$$I{id}"} or $param{"comment-$$I{id}"} ) {

@@ -1528,6 +1528,7 @@ sub rfidtag_details {
 	
 	if ( $param{btnFunction} eq 'Save' ) {
 		$variable{error} .= $RFIDTag->save( \%param );
+		$variable{ExternalRedirect} = '/employee/inventory/rfidtag_details.html?rfidtag_id='.$RFIDTag->id();
 	} elsif ( $param{btnFunction} eq 'Delete' ) {
 		$variable{error} .= $RFIDTag->delete();
 	} elsif ( $param{btnFunction} eq 'AllocateSkid' ) {
