@@ -195,11 +195,11 @@ $log->debug("Materials: " . map { $_->name() } @Materials ) if DEBUG;
 
 					openprint::imposition::calc_setup( $setup1, @$specs{'txtFinalWidth','txtFinalHeight'}, $width, $height );
 					openprint::imposition::calc_setup( $setup2, @$specs{'txtFinalHeight','txtFinalWidth'}, $width, $height );
-					my $imposition = $setup1->imposition() > $setup2->imposition() ? $setup1->imposition() : $setup2->imposition();
+					my $imposition = $$setup1{imposition} > $$setup2{imposition} ? $$setup1{imposition} : $$setup2{imposition};
 					if ( $imposition ) {
 						# Fits flat
 						$items_by_size = int ( ($depth/$$specs{txtFinishedCalliper}) * $imposition );
-						$$specs{'hdnBreakdown'.$qty_index} .= sprintf('Items by size: %d<br/>', $items_by_size );
+						$$specs{'hdnBreakdown'.$qty_index} .= sprintf('Items by size: %s/%s * %dout = %d<br/>', $depth, $$specs{txtFinishedCalliper}, $imposition, $items_by_size );
 					} else {
 						# Try Rolling
 						my ( $item_width, $item_length ) = sort @$specs{'txtFinalWidth','txtFinalHeight'};
