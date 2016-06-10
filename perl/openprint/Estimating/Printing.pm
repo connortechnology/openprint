@@ -2456,6 +2456,12 @@ $openprint::log->debug("No printing");
 	$openprint::Material::cached = 1;
 
 	my $project = setup_project( $Project, $service_index, $services, $specs, \@side_one_colours, \@side_two_colours, \%inkCoverage, $Papers[0] );
+	if ( $$project{NeedFolding} ) {
+		if ( $$specs{txtFinalHeight} * $$specs{txtFinalWidth} == ( $$specs{txtHeight} * $$specs{txtWidth} ) ) {
+			$$specs{alert} .= 'Folding is needed, but your finished and flat dimensions are the same!<br/>';
+			return $$specs{Status} = 'uncalculated';
+		} # end if
+	}
 	openprint::Estimating::Folding::load_equipment( $Project );
 	openprint::Estimating::Cutting::load_equipment( $Project );
 $openprint::log->debug("Before select presses: " . ( sprintf('%.4f', tv_interval( [$master_time])*1000) ) .' usecs' );
@@ -6706,14 +6712,14 @@ sub get_weight {
 				$openprint::log->error("$k=>$$specs{$k}");
 			} # end foreach
 		} # end if
-		$weight *= $$specs{'PageQuantity'.$qty_index}/($$specs{txtSpreadSize});
+		$weight *= $$specs{'PageQuantity'.$qty_index}/$$specs{txtSpreadSize};
 	} # end if
 # This is business cards, etc.
 	if ( $$specs{PageQuantity} ) {
 # For Scratch Pads
 		$weight *= $$specs{PageQuantity};
 	} # end if
-#$openprint::log->debug("Get_weight: ($$specs{'PageQuantity'.$qty_index} > 0 ? $$specs{'PageQuantity'.$qty_index} : 1 ) * ( $$specs{txtWidth} * $$specs{txtHeight} ) * ".$Paper->gsm().'gsm '.$Paper->wpsi() . '==='.$Paper->wpsi(undef)." wpsi = $sig_weight * $$specs{'PageQuantity'.$qty_index} = " . $weight);
+#$openprint::log->debug("Get_weight: Spreadsize($$specs{txtSpreadSize} ($$specs{'PageQuantity'.$qty_index} > 0 ? $$specs{'PageQuantity'.$qty_index} : 1 ) * ( $$specs{txtWidth} * $$specs{txtHeight} ) * ".$Paper->gsm().'gsm '.$Paper->wpsi() . '==='.$Paper->wpsi(undef)." wpsi = $sig_weight * $$specs{'PageQuantity'.$qty_index} = " . $weight);
 	return $weight;
 } # end sub get_weight
 
