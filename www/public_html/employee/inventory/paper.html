@@ -98,7 +98,7 @@ $log->debug("Caching all $option results:" . @blah );
 		next if ! $filters{$option};
 		my $lower_option = lc $option;
 		my $option_id  = $lower_option.'_id';
-		my @options = map { $filters{$option}{$_}, $_ } ( sort keys %{$filters{$option}} );
+		my @options = map { $filters{$option}{$_}, $_ } ( sort { lc $a cmp lc $b } keys %{$filters{$option}} );
 #$log->debug("options : @options ");
 		# Don't do this because even if there is only 1 entry, papers can be unassigned.
 		#$session{'/employee/inventory/paper.html?'.$option} = $options[0] if ( @options == 2 );
