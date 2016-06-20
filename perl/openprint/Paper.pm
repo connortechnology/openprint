@@ -364,42 +364,59 @@ sub merge {
 
 sub delete {
 	my $self = shift;
+
+	my $error;
+
 	my $ac = sql::start_transaction( );
 	# We don't want to lose the paper if it's in a manifest
 	#sql::update( undef, undef, 'manifest_content_types', ['paper_id=?', $$self{id}], 'paper_id', undef );
 	sql::execute( undef, undef, q{DELETE FROM Paper_Allocations WHERE paper_id=?}, $$self{id} );
+	$error .= $openprint::dbh->errstr();
 	sql::execute( undef, undef, q{DELETE FROM Paper_Inventory WHERE paper_id=?}, $$self{id} );
+	$error .= $openprint::dbh->errstr();
 	sql::execute( undef, undef, q{DELETE FROM Paper_prices WHERE lngpaperindex=?}, $$self{id} );
+	$error .= $openprint::dbh->errstr();
 	sql::execute( undef, undef, q{DELETE FROM Paper_recommendations WHERE lngpaperindex=?}, $$self{id} );
+	$error .= $openprint::dbh->errstr();
 	sql::execute( undef, undef, q{DELETE FROM Skid_Contents WHERE paper_id=?}, $$self{id} );
-	foreach my $ESS ( openprint::Equipment_Stock_Setting->find('stock_id'=>$$self{id} ) ) {
+	$error .= $openprint::dbh->errstr();
+	foreach my $ESS ( openprint::Equipment_Stock_Setting->find( stock_id=>$$self{id} ) ) {
 		$ESS->destroy();
 	} # end foreach
+	$error .= $openprint::dbh->errstr();
 	sql::execute( undef, undef, q{DELETE FROM Papers WHERE id=?}, $$self{id} );
+	$error .= $openprint::dbh->errstr();
 
 	if ( ! sql::execute( undef, undef, q{SELECT DISTINCT manufacturer_id FROM Papers WHERE manufacturer_id=?}, $$self{manufacturer_id} ) ) {
 		sql::execute( undef, undef, q{DELETE FROM Manufacturers WHERE Id=?}, $$self{manufacturer_id} );
+		$error .= $openprint::dbh->errstr();
 	} # end if
 	if ( ! sql::execute( undef, undef, q{SELECT DISTINCT brand_id FROM Papers WHERE brand_id=?}, $$self{brand_id} ) ) {
 		sql::execute( undef, undef, q{DELETE FROM StockBrands WHERE id=?}, $$self{brand_id} );
+	$error .= $openprint::dbh->errstr();
 	} # end if
 	if ( ! sql::execute( undef, undef, q{SELECT DISTINCT finish_id FROM Papers WHERE finish_id=?}, $$self{finish_id} ) ) {
 		sql::execute( undef, undef, q{DELETE FROM StockFinishes WHERE Id=?}, $$self{finish_id} );
+	$error .= $openprint::dbh->errstr();
 	} # end if
 	if ( ! sql::execute( undef, undef, q{SELECT DISTINCT colour_id FROM Papers WHERE colour_id=?}, $$self{colour_id} ) ) {
 		sql::execute( undef, undef, q{DELETE FROM StockColours WHERE Id=?}, $$self{colour_id} );
+	$error .= $openprint::dbh->errstr();
 	} # end if
 	if ( ! sql::execute( undef, undef, q{SELECT DISTINCT weight_id FROM Papers WHERE weight_id=?}, $$self{weight_id} ) ) {
 		sql::execute( undef, undef, q{DELETE FROM StockWeights WHERE Id=?}, $$self{weight_id} );
+	$error .= $openprint::dbh->errstr();
 	} # end if
 	sql::execute( undef, undef, q{DELETE FROM StockGroups WHERE id NOT IN (SELECT DISTINCT group_id FROM Papers)} );
+	$error .= $openprint::dbh->errstr();
 	sql::execute( undef, undef, q{DELETE FROM StockMaterials WHERE id NOT IN (SELECT DISTINCT material_id FROM Papers)} );
+	$error .= $openprint::dbh->errstr();
 	
 	# Add record to audit log - action "Delete Paper".
 	new openprint::Log()->save({action=>'Delete Paper', note=>'Stock ID: '.$$self{id}  . $self->to_string() });
 	sql::end_transaction( undef, $ac );
 	
-	return;
+	return $error;
 } # end sub delete
 
 sub id_string {
