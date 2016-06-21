@@ -11,6 +11,8 @@ use vars qw( $debug $log $dbh %config %session $table $serial %fields %find_fiel
 *config = \%openprint::config;
 *session = \%openprint::session;
 
+$debug = 0;
+
 require sql;
 require ssi;
 require misc;
@@ -30,7 +32,6 @@ require MIME::Base64;
 require openprint::Object_Asset;
 require openprint::Asset;
 
-$debug = 0;
 
 $table = 'purchaseorders';
 $serial = 'purchaseorders_id_seq';
