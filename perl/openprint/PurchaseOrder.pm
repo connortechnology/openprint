@@ -261,7 +261,7 @@ sub send_to_vendor {
 		$results .= $Email->send( 
 				TO		=>	$self->shipto_email(),
 				SUBJECT	=>	'Purchase Order '. $self->id() . ' for ' . $self->vendor_name(),
-				BODY	=>	'',
+				HTML_BODY	=>	$html_body,
 				ATTACHMENTS =>	\@attachments,
 				);
 	} # end if
