@@ -2147,6 +2147,21 @@ sub cut_spreads {
 	my ( $I ) = @_;
 
 	my @results;
+
+	# Something like doing 16pg as 2 8pgs
+	if ( $$I{image_orientation} eq 'Vertical' and $$I{spread_rows} % 2 == 0 ) {
+			my $i1 = $I->copy();
+			$i1->spread_rows( $i1->spread_rows() / 2 );
+			$i1->imposition( $i1->imposition() * 2 );
+
+			$i1->page_quantity( $i1->page_quantity() * $$I{spread_rows} );
+			$i1->image_height( $$I{image_height}/$$I{spread_rows} );
+			$openprint::log->debug(sprintf('Cutting pages down from q%d x %d pages to q%d x %d pages pq(%d)', $I->quantity(), $I->pages(), $i1->quantity(), $i1->pages(), $I->page_quantity() ) ) if DEBUG;
+			push @results, [ $i1 ];
+		
+	}
+
+
 	if ( ( $$I{spread_rows} > 1 ) and 
 		( ( $$I{image_orientation} eq 'Horizontal' ) or ( $$I{spread_rows} >= ($$I{spread_size}/2) ) )
 	   ) {
