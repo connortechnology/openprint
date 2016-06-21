@@ -571,9 +571,6 @@ $SigImpo->display();
 		}
 	}
 
-	# What we do is build a set of pieces of the imposition, all of which can be folded. We don't worry about optimality, just possibility.
-	my @Set_Of_Impositions;
-	my @All_Impositions;
 
 	my $width_folds = Math::Round::nearest( 1, $$sig_specs{txtWidth}/$$sig_specs{txtFinalWidth})-1;
 	my $height_folds = Math::Round::nearest( 1, $$sig_specs{txtHeight}/$$sig_specs{txtFinalHeight})-1;
@@ -581,7 +578,7 @@ $SigImpo->display();
 	$openprint::log->debug("FOlds: $width_folds x $height_folds from $$sig_specs{txtWidth}/$$sig_specs{txtFinalWidth} and height: $$sig_specs{txtHeight}/$$sig_specs{txtFinalHeight}") if DEBUG;
 	if ( $$sig_specs{txtSignatureType} and $$sig_specs{txtSpreadSize} == 2 ) {
 
-		# Is this right? What does the orientation have to do with the fold direction?
+		# Is this right? What does the orientation have to do with the fold direction? Not much, but the last fold is the spine
 		if ( $$SignatureImposition{image_orientation} eq 'Vertical' ) {
 			$width_folds = 1;
 		} else {
@@ -596,7 +593,9 @@ $SigImpo->display();
 		$height_folds = 1;
 	} 
 
-
+	# What we do is build a set of pieces of the imposition, all of which can be folded. We don't worry about optimality, just possibility.
+	my @Set_Of_Impositions;
+	my @All_Impositions;
 	$$SignatureImposition{page_quantity} = 1;
 # IF it's a W&T, we have to cut in half first, so just do it.
 	if ( $$SignatureImposition{runstyle} eq 'Work & Turn' ) {
@@ -619,138 +618,62 @@ $SigImpo->display();
 		push @Set_Of_Impositions, $i;
 	} # end if
 
-	if ( ! $$sig_specs{txtSignatureType} ) {
-
-		# Get rid of dutches
-		if ( $$SignatureImposition{dutch_columns} ) {
-			my @Impositions = ();
-			my $modified = 0;
-			foreach my $I ( @Set_Of_Impositions ) {
-				if ( $$I{dutch_columns} ) {
-					{
-						my $i = $I->copy();
-						$i->dutch_columns(0);
-						$i->dutch_rows(0);
-						$i->quantity(1);
-						push @Impositions, $i;
-					}
-					{
-						my $i = $I->copy();
-						$i->columns( $$i{dutch_columns} );
-						$i->rows( $$i{dutch_rows} );
-						$i->dutch_columns(0);
-						$i->dutch_rows(0);
-						$i->quantity(1);
-						$i->image_orientation($$I{image_orientation} eq 'Vertical' ? 'Horizontal' : 'Vertical');
-						push @Impositions, $i;
-					}
-					$modified = 1;
-				} else {
-					push @Impositions, $I;
-				} # end if
-			} # end foreach
-
-			@Set_Of_Impositions = @Impositions if $modified;
-			if ( DEBUG ) {
-				foreach my $I ( @Impositions ) {
-					$I->display('Results from dutch cuts');
-				} # end foreach
-			} # end if
-		} # end if
-
-if ( 0 ) {
-		if ( $$sig_specs{txtFinalWidth} and $$sig_specs{txtFinalHeight} ) {
-			# Something else entirely
-			my @Impositions = @Set_Of_Impositions;
-			@Set_Of_Impositions = ();
-			foreach my $I ( @Impositions ) {
-				if ( $$I{width_folds} and $$I{height_folds} ) {
-	# All impositions must be 1 out. This may not be true
-					my $Singleton = $I->copy();
-					$Singleton->rows( 1 );
-					$Singleton->columns( 1 );
-					$Singleton->quantity( $I->quantity()*$$I{imposition} );
-					push @Set_Of_Impositions, $Singleton;
-				} elsif ( $$I{width_folds} ) {
-					my $Singleton = $I->copy();
-					if ( $$I{image_orientation} eq 'Vertical' ) {
-						$Singleton->quantity( $I->quantity()*$$I{columns} );
-						$Singleton->columns( 1 );
-					} else {
-						$Singleton->quantity( $I->quantity()*$$I{rows} );
-						$Singleton->rows( 1 );
-					} # end if
-					push @Set_Of_Impositions, $Singleton;
-				} elsif ( $$I{height_folds} ) {
-					my $Singleton = $I->copy();
-					if ( $$I{image_orientation} eq 'Vertical' ) {
-						$Singleton->quantity( $I->quantity()*$$I{rows} );
-						$Singleton->rows( 1 );
-					} else {
-						$Singleton->quantity( $I->quantity()*$$I{columns} );
-						$Singleton->columns( 1 );
-					} # end if Orientation
-					push @Set_Of_Impositions, $Singleton;
-				} else {
-$openprint::log->debug("No folds") if DEBUG;
-					push @Set_Of_Impositions, $I;
-				} # end if
-			} # end foreach I in the set of impositons
-		} else {
-			$openprint::log->warn("No final width and height!");
-		} # end if finalwidth and height
-}
-		# Now we have a base set of Maximal Impositions.	Now some of the I's in this set may have an imposition > 1.	
-		# Problem is that we apparently also need to price the situation of doing them 1 out, and everything in between.	
-		if ( DEBUG ) {
-			foreach my $I ( @Set_Of_Impositions ) {
-				$I->display('Results after initial cuts qty: ' . $$I{quantity} . 'x ');
-			} # end foreach
-		} # end if
-
-		@All_Impositions = reduce_impositions( \@Set_Of_Impositions );
-		if ( DEBUG ) {
-			$openprint::log->debug("Sets of Maximum Impositions: " . @All_Impositions);
-			foreach my $Set ( @All_Impositions ) {
-				$openprint::log->debug("Impositions in set: " . @$Set);
-				foreach my $I ( @$Set ) {
-					$I->display('quantity '.$I->quantity() );
-				} # end foreach I
-			} # end foreach set
-			$openprint::log->debug(sprintf('Original Sign info: %dx%d*%d,%dout', @$SignatureImposition{'spread_columns','spread_rows','spread_size','imposition'} ) );
-		} # end if debug
-
-	} else { # is a book signature
-if ( 0 ) {
-		my @Impositions = @Set_Of_Impositions;
-		@Set_Of_Impositions = ();
-		foreach my $I ( @Impositions ) {
-			push @Set_Of_Impositions, $I;
-			if ( ( $$I{columns} > 1 ) and ( $$I{image_orientation} eq 'Vertical' ) ) {
-				my $Singleton = $I->copy();
-				$Singleton->quantity( $I->quantity()*$I->columns() );
-				$Singleton->columns( 1 );
-				push @Set_Of_Impositions, $Singleton;
-			} elsif ( $$I{rows} > 1 and ( $$I{image_orientation} eq 'Horizontal' ) ) {
-				my $Singleton = $I->copy();
-				$Singleton->quantity( $I->quantity()*$I->rows() );
-				$Singleton->rows( 1 );
-				push @Set_Of_Impositions, $Singleton;
+	# Get rid of dutches, which I think can happen on books now.
+	if ( $$SignatureImposition{dutch_columns} ) {
+		my @Impositions = ();
+		my $modified = 0;
+		foreach my $I ( @Set_Of_Impositions ) {
+			if ( $$I{dutch_columns} ) {
+				{
+					my $i = $I->copy();
+					$i->dutch_columns(0);
+					$i->dutch_rows(0);
+					$i->quantity(1);
+					push @Impositions, $i;
+				}
+				{
+					my $i = $I->copy();
+					$i->columns( $$i{dutch_columns} );
+					$i->rows( $$i{dutch_rows} );
+					$i->dutch_columns(0);
+					$i->dutch_rows(0);
+					$i->quantity(1);
+					$i->image_orientation($$I{image_orientation} eq 'Vertical' ? 'Horizontal' : 'Vertical');
+					push @Impositions, $i;
+				}
+				$modified = 1;
 			} else {
-				push @Set_Of_Impositions, $I;
+				push @Impositions, $I;
 			} # end if
-		} # end foreach I in the set of impositons
+		} # end foreach
+
+		@Set_Of_Impositions = @Impositions if $modified;
 		if ( DEBUG ) {
-			$openprint::log->debug("Is a book signatures: $$sig_specs{txtSignatureType}");
-			foreach my $I ( @Set_Of_Impositions ) {
-				$I->display('Results after initial cuts');
+			foreach my $I ( @Impositions ) {
+				$I->display('Results from dutch cuts');
 			} # end foreach
 		} # end if
-}
+	} # end if
 
-		#@All_Impositions = ( \@Set_Of_Impositions );
-		@All_Impositions = reduce_impositions( \@Set_Of_Impositions );
-	} # end if SignatureType
+# Now we have a base set of Maximal Impositions.	Now some of the I's in this set may have an imposition > 1.	
+# Problem is that we apparently also need to price the situation of doing them 1 out, and everything in between.	
+	if ( DEBUG ) {
+		foreach my $I ( @Set_Of_Impositions ) {
+			$I->display('Results after initial cuts qty: ' . $$I{quantity} . 'x ');
+		} # end foreach
+	} # end if
+
+	@All_Impositions = reduce_impositions( \@Set_Of_Impositions );
+	if ( DEBUG ) {
+		$openprint::log->debug("Sets of Maximum Impositions: " . @All_Impositions);
+		foreach my $Set ( @All_Impositions ) {
+			$openprint::log->debug("Impositions in set: " . @$Set);
+			foreach my $I ( @$Set ) {
+				$I->display('quantity '.$I->quantity() );
+			} # end foreach I
+		} # end foreach set
+		$openprint::log->debug(sprintf('Original Sign info: %dx%d*%d,%dout', @$SignatureImposition{'spread_columns','spread_rows','spread_size','imposition'} ) );
+	} # end if debug
 
 	#$openprint::log->debug("All impositions: " . @All_Impositions );
 
@@ -994,7 +917,14 @@ $openprint::log->debug("Has a fold, doing extra checks") if DEBUG;
 								} else {
 # decide whether it's running portrait or landscape basessd on which way the folds go
 									$openprint::log->debug("Has max feed width width folds: $width_folds height folds: $height_folds $$sig_specs{txtWidth} $$sig_specs{txtHeight} width_size: $width_size height_size: $height_size max_feed_width: $max_feed_width") if DEBUG;
-									if ( ( $width_folds and ! $height_folds ) or ( $width_folds == $$Fold{folds} and $height_folds == $$Fold{angles} ) ) {
+									if ( $width_folds and $height_folds ) {
+										if ( $height_size > $max_feed_width and $width_size > $max_feed_width ) {
+											$failure_reason = "Fold no good due to max feed on both dimensions $max_feed_width .";
+											$Fold = undef;
+										} # end if
+
+									} elsif ( ( $width_folds and ! $height_folds ) or ( $width_folds == $$Fold{folds} and $height_folds == $$Fold{angles} ) ) {
+										
 # If folds are on width, we grip on height...
 										if ( $height_size > $max_feed_width ) {
 											$failure_reason = "Fold no good due to max feed height $height_size > $max_feed_width on height ($$sig_specs{txtHeight}).";
@@ -1205,9 +1135,6 @@ $openprint::log->debug("Couldnt find fold, set_index:$set_index < all_imposition
 							and $$specs{"FoldType-$form-$qty_index-$index"}
 							and $$specs{"FoldImposition-$form-$qty_index-$index"} );
 
-				if ( $$specs{"FoldImposition-$form-$qty_index-$index"} > $SignatureImposition->imposition() ) {
-					$$specs{alert} .= "You seem to be specifying a higher imposition for folding than was printed for form $form quantity $qty_index<br/>";
-				}
 
 					my $pages;
 					my $this_pages;
@@ -1215,6 +1142,10 @@ $openprint::log->debug("Couldnt find fold, set_index:$set_index < all_imposition
 						( $pages ) = $$specs{"FoldType-$form-$qty_index-$index"} =~ /(\d+)PageFold/;
 						$this_pages = $$specs{"FoldQty-$form-$qty_index-$index"} * $pages * $$specs{"FoldImposition-$form-$qty_index-$index"};
 						$override_pages += $this_pages;
+					} else {
+						if ( $$specs{"FoldImposition-$form-$qty_index-$index"} > $SignatureImposition->imposition() ) {
+							$$specs{alert} .= "You seem to be specifying a higher imposition for folding than was printed for form $form quantity $qty_index<br/>";
+						}
 					} # end if
 					$found{$index} = 0;
 					if ( DEBUG ) {
