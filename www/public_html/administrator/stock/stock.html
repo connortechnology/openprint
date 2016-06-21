@@ -211,28 +211,28 @@
 				</p>
 				<p>
 					<label>Size</label>
-					<? echo ( input(type=>'float', id=>'width', name=>'width', value=>$$variable{Stock}->width(),  onkeyup=>'gsm_to_mweight( this.form );' ); ) ?>
+					<? echo ( input(type=>'float', id=>'width', name=>'width', value=>$$variable{Stock}->width(),  oninput=>'gsm_to_mweight( this.form );' ); ) ?>
 					<span id="StockHeight" <? echo ( 'style="display: none;"' if $$variable{Stock}->type() eq 'Roll' ) ?>> x
-					<? echo ( input(type=>'float', id=>'height', name=>'height', value=>$$variable{Stock}->height(),  onkeyup=>'gsm_to_mweight( this.form );' ); ) ?>
+					<? echo ( input(type=>'float', id=>'height', name=>'height', value=>$$variable{Stock}->height(), oninput=>'gsm_to_mweight( this.form );' ); ) ?>
 					</span> inches
 				</p>
 				<p id="MWeight" <? echo ( 'style="display: none;"' if $$variable{Stock}->type() eq 'Roll' ) ?>>
 					<label>MWeight</label>
-					<? echo ( input(type=>'float', id=>'mweight', name=>'mweight', value=>$$variable{Stock}->mweight(),  onkeyup=>'mweight_to_gsm( this.form );' ); ) ?>
+					<? echo ( input(type=>'float', id=>'mweight', name=>'mweight', value=>$$variable{Stock}->mweight(),  oninput=>'mweight_to_gsm( this.form );' ); ) ?>
 				</p>
 				<p id="BasisSize">
 					<label>Basis MWeight</label>
-					<? echo ( input(type=>'float', id=>'basis_mweight', name=>'basis_mweight', value=>$$variable{Stock}->basis_mweight(),  onkeyup=>'mweight_to_gsm( this.form );' ); ) ?>
+					<? echo ( input(type=>'float', id=>'basis_mweight', name=>'basis_mweight', value=>$$variable{Stock}->basis_mweight(),  oninput=>'mweight_to_gsm( this.form );' ); ) ?>
 					<br/>
 					<label>Basis Size</label>
 					<? echo ( join(' x ',
-								input(type=>'float', id=>'basis_width', name=>'basis_width', value=>( $$variable{Stock}->basis_width() ? $$variable{Stock}->basis_width() : 25 ),  onkeyup=>'gsm_to_mweight( this.form );' ),
-								input(type=>'float', id=>'basis_height', name=>'basis_height', value=>( $$variable{Stock}->basis_height() ? $$variable{Stock}->basis_height() : 38 ),  onkeyup=>'gsm_to_mweight( this.form );' ),
+								input(type=>'float', id=>'basis_width', name=>'basis_width', value=>( $$variable{Stock}->basis_width() ? $$variable{Stock}->basis_width() : 25 ),  oninput=>'gsm_to_mweight( this.form );' ),
+								input(type=>'float', id=>'basis_height', name=>'basis_height', value=>( $$variable{Stock}->basis_height() ? $$variable{Stock}->basis_height() : 38 ),  oninput=>'gsm_to_mweight( this.form );' ),
 						); ) ?>
 				</p>
 				<p>
 					<label>GSM</label>
-					<? echo ( input(type=>'float', id=>'gsm', name=>'gsm', value=>$$variable{Stock}->gsm(), onkeyup=>'gsm_to_mweight( this.form );' ); ) ?>
+					<? echo ( input(type=>'float', id=>'gsm', name=>'gsm', value=>$$variable{Stock}->gsm(), oninput=>'gsm_to_mweight( this.form );' ); ) ?>
 				</p>
 				<p>
 					<label>WPSI</label>

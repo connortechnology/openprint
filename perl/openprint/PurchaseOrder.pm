@@ -184,7 +184,9 @@ sub send_approval_required_notification {
 	my $mail = new openprint::Email();
 
 	my $results;
-	foreach my $U ( map { $_->User() } openprint::User_Notification->find(type=>\@notification_types,'value'=>'Yes', user_company_id=>$openprint::User->company_id() ) ) {
+	my @user_ids = sets::union( $self->notifications(), map { $_->user_id() } openprint::User_Notification->find(type=>\@notification_types,'value'=>'Yes', user_company_id=>$openprint::User->company_id() ) );
+
+	foreach my $U ( openprint::User->find( id=>\@user_ids, company_id=>$openprint::User->company_id() ) ) {
 		if ( $U->id() == $openprint::User->id() ) {
 			$openprint::log->debug( $U->email() . ' Not mailing me.' );
 			next;
@@ -359,9 +361,9 @@ sub authorize {
 	$$self{authorized_on} = 'NOW()';
 	my $L = new openprint::PurchaseOrder_Log();
 	$L->save({
-			'po_id'		=> $$self{id},
-			'user_id'	=> $session{user_id},
-			'reason'	=> 'Authorized by ' . new openprint::User( $session{user_id} )->name(),
+			po_id	=> $$self{id},
+			user_id	=> $session{user_id},
+			reason	=> 'Authorized by ' . new openprint::User( $session{user_id} )->name(),
 			});
 	return $self->save();
 } # end sub authorize

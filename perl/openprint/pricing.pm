@@ -120,7 +120,7 @@ sub merge_prices {
 
 	# now Price1 has the lower price.
 	if ( $price1->{min} ne '' and ( $price2->{min} < $price1->{min} or $price2->{min} eq '' ) ) {
-$log->debug("Filling in price");
+$log->debug("Filling in price mins $$price2{min} < $$price1{min}") if DEBUG;
 		# tack on a price in front
 		my $newprice = openprint::price->new( $openprint::log, '' );
 		$newprice->copy( $price2 );
@@ -130,7 +130,7 @@ $log->debug("Filling in price");
 	} # end if
 
 	if ( $price1->{max} ne '' and ( $price2->{max} > $price1->{max} or $price2->{max} eq '' ) ) {
-$log->debug("Filling in price");
+$log->debug("Filling in price maxs $$price2{max} < $$price1{max}") if DEBUG;
 		my $newprice = openprint::price->new( $openprint::log, '' );
 		$newprice->copy( $price2 );
 		my $increment = get_increment( $price1->{max} );
@@ -197,8 +197,10 @@ sub get_best_prices {
 		$priceGroup->load();	
 		push @pricing, @{$priceGroup->{prices}};
 	}
+if ( DEBUG ) {
 foreach my $p ( @pricing ) {
-$log->debug("Price $$p{service_id} $$p{interpolate};");
+$log->debug("Price service_id:$$p{service_id} interpolate:$$p{interpolate};");
+}
 }
 
 # We should do this later...

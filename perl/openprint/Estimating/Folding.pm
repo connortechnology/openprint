@@ -414,7 +414,7 @@ sub signature_calc {
 			MakeReadyTime	=>	0,
 	);
 	
-	if ( ! $SignatureImposition->imposition() ) {
+	if ( ! $$SignatureImposition{imposition} ) {
 		Carp::cluck( 'Invalid Imposition');
 		$results{Breakdown}	 = 'Invalid Signature passed to Folding';
 		return %results;
@@ -912,7 +912,7 @@ if ( 0 ) {
 						push @{$folds{$Imposition->pages().'PageFold-'.$Imposition->imposition().'out'}}, $Fold;
 						$openprint::log->debug(sprintf('Found: %dx%d,%dout', $Imposition->page_columns(), $Imposition->page_rows(), $Imposition->imposition() ) ) if DEBUG;
 					} else {
-						$Breakdown .= sprintf('Didnt find fold pages: %dx%d=%d %.3fx%.3f %s, %dout %dgsm<br/>', $Imposition->page_columns(), $Imposition->page_rows(), $Imposition->pages(), $Imposition->page_width(), $Imposition->page_height(), $Imposition->image_orientation(), $Imposition->imposition(), $Paper->gsm() );
+						$Breakdown .= sprintf('Didnt find fold pages: %dx%d=%d %.3fx%.3f %s, %dout %dgsm<br/>', $Imposition->page_columns(), $Imposition->page_rows(), $Imposition->pages(), $Imposition->page_width(), $Imposition->page_height(), $Imposition->image_orientation(), $$Imposition{imposition}, $Paper->gsm() );
 						$openprint::log->debug(sprintf('Didnt find: %dx%d %s,%dout', $Imposition->page_columns(), $Imposition->page_rows(), $Imposition->image_orientation(), $Imposition->imposition() ) ) if DEBUG;
 						%folds = ();
 						# Last because it's on press, can't do any cut impos.	Not actually True.	Webs can slit it and do dual delivery, fold one, sheet the other. FIXME
@@ -965,8 +965,8 @@ $openprint::log->debug("Has a fold, doing extra checks") if DEBUG;
 								my $width_size;
 								my $height_size;
 								if ( $$Imposition{imposition} == 1 ) {
-									$width_size = $Imposition->object_width();
-									$height_size = $Imposition->object_height();
+									$width_size = $$Imposition{object_width};
+									$height_size = $$Imposition{object_height};
 	
 								} elsif ( $Imposition->image_orientation() eq 'Vertical' ) {
 									$width_size = $$SignatureImposition{columns} != $$Imposition{columns} ? $Imposition->layout_width() : $Imposition->sheet_width();
@@ -1032,7 +1032,7 @@ $openprint::log->debug("No Fold") if DEBUG;
 						if ( $set_index < @All_Impositions-1 ) {
                             # if we aren't the last set, then do nothing because we assume that this set has already been cut down.
 #$openprint::log->debug("$set_index < " . ( @All_Impositions-1 ) );
-                        } elsif ( $Imposition->spreads() > 1 ) {
+                        } elsif ( $$Imposition{spreads} > 1 ) {
                             foreach my $cuts ( cut_spreads( $Imposition ) ) {
                                 my @new_impositions = @$Set_Of_Impositions;
                                 splice @new_impositions, $imp_index, 1, @$cuts;
@@ -1075,7 +1075,7 @@ $openprint::log->debug("No Fold") if DEBUG;
 							if ( $Fold and $max_feed_width ) {
 $width_folds = $Fold->page_columns()-1;
 $height_folds = $Fold->page_rows()-1;
-$openprint::log->debug("Got new folds $width_folds x $height_folds from Fold");
+$openprint::log->debug("Got new folds $width_folds x $height_folds from Fold") if DEBUG;
 								my $fits;
 								if ( $orientation ) {
 									if (

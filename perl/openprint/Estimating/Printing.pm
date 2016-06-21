@@ -4247,7 +4247,7 @@ $openprint::log->warn("Override subsig values $$imp{pages}pg $$price{upq} upq");
 							$$sig_price{complete} = 0;
 						} else {
 
-							my $price_cache_key = join(',', keys %PaperCounts, $qty_index, $$Press{strid}, $$price{upq}, $$imp{runstyle}, $$Paper{type}, $$Paper{width}, $$imp{imposition}, $$imp{columns} );
+							my $price_cache_key = join(',', keys %PaperCounts, $qty_index, $$Press{strid}, $$price{upq}, $$imp{runstyle}, $$Paper{type}, $$Paper{width}, $$imp{imposition}, $$imp{columns}, $$imp{image_orientation} );
 #$log->error("key: $price_cache_key");
 							#my $price_cache_key = join(',', keys %PaperCounts, $qty_index, $$Press{strid}, $$price{upq}, $$imp{runstyle}, $$Paper{type}, $$Paper{width},$$Paper{height} );
 #$imp->display("Recursing need $$price{upq} more pages");
@@ -4257,6 +4257,7 @@ $openprint::log->warn("Override subsig values $$imp{pages}pg $$price{upq} upq");
 #}
 #$imp->display("Recursing need $$price{upq} more pages actually");
 # Not identical, so clear this so we get charged setups, etc
+
 								$$new_specs{'PreviousForms'.$qty_index} = 0;
 #$openprint::log->debug("Doing full calc when UPQ: >= Pages:" . $$imp{pages} . ' PageQuantity:' . $$new_specs{'PageQuantity'.$qty_index} ) if $upq >= $$imp{pages} or 0;
 
@@ -4269,6 +4270,14 @@ $openprint::log->warn("Override subsig values $$imp{pages}pg $$price{upq} upq");
 									$$new_specs{PreviousImposition} = $$price{FoldingImposition};
 								} # end if	
 								$$new_specs{Impositions} = [ ( $$sig_specs{Impositions} ? @{$$sig_specs{Impositions}} : () ), @{$$price{Impositions}} ];
+								# Could be identical, need to regenerate the hash
+		#my %sub_previous_forms_cache;
+		#foreach my $previous_imp ( @{$$new_specs{Impositions}} ) {
+			#my $Press = $previous_imp->Press();
+		#my $hash_key = join(',', $$Press{strid}, $$previous_imp{runstyle}, $$previous_imp{pages}, $$previous_imp{imposition}, $$previous_imp{columns} );
+			#$sub_previous_forms_cache{$hash_key} += 1;
+#$openprint::log->debug("$$Press{strid}, $$previous_imp{runstyle}, $$previous_imp{pages}, $$previous_imp{imposition}, $$previous_imp{columns} = $sub_previous_forms_cache{$hash_key}" );
+		#} # end foreach previous_imp
 
 								if ( DEBUG_PLATES ) {
 									foreach my $k ( keys %PlateCounts ) {
@@ -4283,8 +4292,11 @@ $openprint::log->warn("Override subsig values $$imp{pages}pg $$price{upq} upq");
 								} # end foreach 
 								$price_cache{$price_cache_key} = 
 									get_project_price( $Project, $$new_specs{ServiceIndex}, $project, $service_specs, $new_specs, $qty, $qty_index, \@new_possible_presses, $printing_specs, $versions, \%PlateCounts, \%PaperCounts, \%washed_colours, \%previous_forms_cache, \@signatures, $impositions, $other_impositions, undef, $recursion_depth + 1 );
-							#} else {
-#$log->error("using a cached calc_other_groups");
+							} else {
+my $sub_sig_price = $price_cache{$price_cache_key};
+my $sub_imp = $$sub_sig_price{Imposition};
+$sub_imp->display();
+$log->error("using a cached calc_other_groups $$sub_sig_price{'Comparison Cost'}");
 							} # end if
 							%{$sig_price} = %{$price_cache{$price_cache_key}};
 #$openprint::log->debug("Prices: $sig_price $price_cache{$price_cache_key}");
@@ -4780,14 +4792,19 @@ if ( DEBUG_PLATES ) {
 										} else {
 											# Don't need to call get_unspecified_pages because we know that we are calculating all of them.
 											$subsig_specs{'txtUnspecifiedPageQuantity'.$qty_index} = $subsig_specs{GroupPageQuantity};
-											my @o_impositions = ( $imp );
-											foreach my $i ( @{$other_impositions} ) {
+		my %sub_previous_forms_cache;
+											my @o_impositions;
+											foreach my $i ( $imp, @{$other_impositions} ) {
 												next if $$i{specs}{Group} == $Group;
 												push @o_impositions, $i;
-											}
+			my $Press = $i->Press();
+		my $hash_key = join(',', $$Press{strid}, $$i{runstyle}, $$i{pages}, $$i{imposition}, $$i{columns} );
+			$sub_previous_forms_cache{$hash_key} += 1;
+$openprint::log->debug("$$Press{strid}, $$i{runstyle}, $$i{pages}, $$i{imposition}, $$i{columns} = $sub_previous_forms_cache{$hash_key}" );
+		} # end foreach previous_imp
 
 											my $sig_price = get_project_price( $Project, $sigs[0], $new_project, \%subsig_specs, \%subsig_specs, $qty, $qty_index, 
-													\@possible_presses, $printing_specs, $versions, \%PlateCounts, \%PaperCounts, \%washed_colours, \%previous_forms_cache, \@sigs, \%impositions, \@o_impositions, {}, 0 );
+													\@possible_presses, $printing_specs, $versions, \%PlateCounts, \%PaperCounts, \%washed_colours, \%sub_previous_forms_cache, \@sigs, \%impositions, \@o_impositions, {}, 0 );
 											$other_group_cache{$other_group_cache_key} = $sig_price;
 									
 										} # end if
@@ -6422,7 +6439,7 @@ sub press_setup_cost {
 		} # end if
 	} elsif ( $Price{units} eq 'per form' ) {
 		my $specs = $$Imposition{specs};
-#$openprint::log->debug("PressMakeRady per form: previous forms: " . ( $$specs{'PreviousForms'.$qty_index} + 1 ) );
+$openprint::log->debug("PressMakeRady per form: previous forms: " . ( $$specs{'PreviousForms'.$qty_index} + 1 ) );
 		%Price = openprint::service::get_price_object( 'PressUnitMakeReady', $$specs{'PreviousForms'.$qty_index} + 1, $Press);
 		$Price{Total} = $Price{Price};
 	} elsif ( $Price{units} eq 'total' ) {
