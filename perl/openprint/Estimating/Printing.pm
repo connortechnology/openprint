@@ -47,7 +47,7 @@ my %folding_cache;
 my %Papers;
 my %Presses;
 sub load_presses {
-%Presses = map { $$_{strid}, $_ } openprint::Equipment->find( 'category any'=>'Printing', 'useinestimating'=>1 );
+%Presses = map { $$_{strid}, $_ } openprint::Equipment->find( 'category any'=>'Printing', 'useinestimating is null or ='=>1 );
 }
 
 my %Services;
@@ -2465,7 +2465,7 @@ $openprint::log->debug("No printing");
 	openprint::Estimating::Folding::load_equipment( $Project );
 	openprint::Estimating::Cutting::load_equipment( $Project );
 $openprint::log->debug("Before select presses: " . ( sprintf('%.4f', tv_interval( [$master_time])*1000) ) .' usecs' );
-	%Presses = map { $$_{strid}, $_ } openprint::Equipment->find( 'category any'=>'Printing', 'useinestimating'=>1 );
+	%Presses = map { $$_{strid}, $_ } openprint::Equipment->find( 'category any'=>'Printing', 'useinestimating is null or ='=>1 );
 	my %presses = select_presses( $Project, \@Papers, $specs, $project );
 	my @possible_presses;
 	foreach my $press_id ( keys %presses ) {
@@ -3080,6 +3080,7 @@ $openprint::log->debug("Needed pages: $needed_pages") if DEBUG;
 	foreach my $strid ( $$sig_specs{"chkOverridePress$qty_index"} eq 'Y' ? ( $$sig_specs{"ddmPress$qty_index"} ) : keys %{$impositions} ) {
 		next if ! ( $$impositions{$strid} and @{$$impositions{$strid}} );
 
+
 		if ( $$project{ProjectSpecs}{"ddmPress-$$sig_specs{Group}"} and ( $$project{ProjectSpecs}{"ddmPress-$$sig_specs{Group}"} ne $strid ) ) {
 			next;
 		} # end if
@@ -3089,6 +3090,11 @@ $openprint::log->debug("Needed pages: $needed_pages") if DEBUG;
 			$openprint::log->error("No Pressf or $strid");
 			next;
 		} # end if
+
+		if ( (!defined $$Press{useinestimating}) and ($$sig_specs{"chkOverridePress$qty_index"} ne 'Y') ) {
+			$openprint::log->debug("Not doing $$Press{strid} because it is not overriden");
+			next;
+		}
 
 		if ( $$sig_specs{PrintingTypes} 
 			and ( $$sig_specs{"chkOverridePress$qty_index"} ne 'Y' ) 
