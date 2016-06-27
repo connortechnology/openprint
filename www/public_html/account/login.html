@@ -39,6 +39,7 @@
 	<? include(/includes/login_log.html) ?>
 	</div>
 	<? echo (
+if ( $session{user_type} eq 'A' or $session{user_type} eq 'E' ) {
 		my $now = DateTime->now();
 		my $weekago = $now->clone->subtract( weeks => 1);
 
@@ -64,7 +65,8 @@ $Log->User()->link_to(),
 				$rowclass = $rowclass ? '' : ' class="colRow"';
 			}
 			return $html;
-		};
+		}
+		}
 		return;
 	)?>
 
