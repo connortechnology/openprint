@@ -107,6 +107,7 @@ sub handler {
 			database	=> $r->dir_config('db_name'),
 			driver		=> $r->dir_config('db_driver'), 
 			host		=> $r->dir_config('db_host'),
+			port		=> $r->dir_config('db_port'),
 			login		=> $r->dir_config('db_user'),
 			password	=> $r->dir_config('db_password'),
 			);
