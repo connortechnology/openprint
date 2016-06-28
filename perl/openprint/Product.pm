@@ -240,9 +240,11 @@ sub upload {
 
 
 sub can_edit {
-    if ( $_[0]{'id'} and $openprint::session{'user_type'} eq 'A' ) {
-        return 1;
-    } # end if
+	return 1 if $openprint::session{user_type} eq 'A';
+
+    #if ( $_[0]{id} and $openprint::session{'user_type'} eq 'A' ) {
+        #return 1;
+    #} # end if
     return 0;
 } # end sub can_edit
 
