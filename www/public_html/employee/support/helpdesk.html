@@ -89,8 +89,8 @@
 		</ul>
 	<p class="buttons">
 		<? echo ( join("\n",
-			button('Submit', { 'onclick'=>"f1.btnFunction.value='Submit';f1.submit();" } ),
-			button('Reset', { 'onclick'=>'f1.reset();' } ),
+			button('Submit', { onclick=>"f1.btnFunction.value='Submit';f1.submit();" } ),
+			button('Reset', { onclick=>'f1.reset();' } ),
 		); ) ?>
 	</p>
 </fieldset>

@@ -284,29 +284,38 @@ sub signature_calc {
 		} # end if
 	} # end if
 
-	my @cut_impositions = ();
+	my @cut_impositions = ( $imposition );
 	if ( $cutting_service_index ) {
-		my @imps = openprint::imposition::get_all_impositions( $imposition );
+		my @imps = openprint::imposition::get_all_impositions( @cut_impositions );
 $openprint::log->debug("How many impositions do we get? " . @imps ) if DEBUG;
-		for ( my $i = 0; $i < @imps; $i += 1 ) {
-			if ( $$imposition{imposition} % $imps[$i]{imposition} ) {
-				next;
-			}
-			if ( (!$$specs{"chkOverrideImposition-$form-$qty_index"}) or ( $$specs{"chkOverrideImposition-$form-$qty_index"} ne 'Y' )
-					or ( $$specs{"txtImposition-$form-$qty_index"} == $imps[$i]{imposition} )
-			   ) {
-				push @cut_impositions, $imps[$i];
-			} # end if
-			for ( my $j = $i + 1; $j < @imps; $j += 1 ) {
-				if ( $imps[$i]{imposition} == $imps[$j]{imposition} and $imps[$i]{rows} == $imps[$j]{rows} ) {
-					splice @imps, $j, 1;
-					$j -= 1;
+	if ( DEBUG ) {
+		foreach my $i ( @imps ) {
+			$i->display("Cut impo");
+		}
+	}
+			for ( my $i = 0; $i < @imps; $i += 1 ) {
+				if ( $$imposition{imposition} % $imps[$i]{imposition} ) {
+					next;
+				}
+				if ( (!$$specs{"chkOverrideImposition-$form-$qty_index"}) or ( $$specs{"chkOverrideImposition-$form-$qty_index"} ne 'Y' )
+						or ( $$specs{"txtImposition-$form-$qty_index"} == $imps[$i]{imposition} )
+				   ) {
+					push @cut_impositions, $imps[$i];
 				} # end if
+				for ( my $j = $i + 1; $j < @imps; $j += 1 ) {
+					if ( $imps[$i]{imposition} == $imps[$j]{imposition} and $imps[$i]{rows} == $imps[$j]{rows} ) {
+						splice @imps, $j, 1;
+						$j -= 1;
+					} # end if
+				} # end foreach
+				
 			} # end foreach
-		} # end foreach
-	} else {
-		@cut_impositions = ( $imposition );
 	} # end if
+	if ( DEBUG ) {
+		foreach my $i ( @cut_impositions ) {
+			$i->display("Cut impo");
+		}
+	}
 
 	my ( $scor_equipment, $scor_imposition );
 	if ( $scoring_service_index ) {
@@ -392,7 +401,7 @@ $openprint::log->debug("How many impositions do we get? " . @imps ) if DEBUG;
 		my $max_impo = $Equipment->specification('Maximum Perforation Imposition');
 
 		my $CylinderCount = $Equipment->specification('Perforating # of Cylinders');
-		$Results{Breakdown} .= join( '', 'Cylinder Count: ', $CylinderCount, '<br/>' );
+		$Results{Breakdown} .= join( '', 'Cylinder Count: ', $CylinderCount, '<br/>' ) if defined $CylinderCount;
 
 		foreach my $I ( @impositions ) {
 			$Results{Breakdown} .= "Imposition: " . $I->to_string() . '<br/>';
@@ -405,34 +414,34 @@ $openprint::log->debug("How many impositions do we get? " . @imps ) if DEBUG;
                             ( $orientation eq 'Landscape' and $I->layout_width() >= $I->layout_height() )
                        ) {
                         if ( $I->layout_width() >= $max_feed_width ) {
-                            $Results{Breakdown} .= "Score no good due to max feed width($max_feed_width) on width ($$sig_specs{txtWidth}).<br/>";
+                            $Results{Breakdown} .= "Perf no good due to max feed width($max_feed_width) on width ($$sig_specs{txtWidth}).<br/>";
                             next;
                         } # end if
                     } else {
                         if ( $I->layout_height() >= $max_feed_width ) {
-                            $Results{Breakdown} .= "Score no good due to max feed width($max_feed_width) on width ($$sig_specs{txtHeight}).<br/>";
+                            $Results{Breakdown} .= "Perf no good due to max feed width($max_feed_width) on width ($$sig_specs{txtHeight}).<br/>";
                             next;
                         } # end if
                     } # end if
                 } else {
-                    if ( $$specs{"txtVerticalQty-$$sig_specs{SignatureIndex}"} and $$specs{"txtHorizontalQty-$$sig_specs{SignatureIndex}"} ) {
+                    if ( $$specs{"txtVerticalQty-$form"} and $$specs{"txtHorizontalQty-$form"} ) {
 # Do nothing, we already know it fits on the machine, and it has to go one way or another.
                         $Results{Breakdown} .= 'Running either way because scores both ways.<br/>';
-                    } elsif ( $$specs{"txtVerticalQty-$$sig_specs{SignatureIndex}"} ) {
+                    } elsif ( $$specs{"txtVerticalQty-$form"} ) {
                         if ( $I->image_orientation() eq 'Vertical' ) {
                             $Results{Breakdown} .= 'Running ' . $I->layout_width() . ' ' . $I->image_orientation() . ' on feed of ' . $max_feed_width . '<br/>';
                             if ( $I->layout_width() >= $max_feed_width ) {
-                                $Results{Breakdown} .= "Score no good due to max feed width($max_feed_width) on width (".$I->layout_width().").<br/>";
+                                $Results{Breakdown} .= "Perf no good due to max feed width($max_feed_width) on width (".$I->layout_width().").<br/>";
                                 next;
                             } # end if
                         } else {
                             $Results{Breakdown} .= 'Running ' . $I->layout_height() . ' on feed of ' . $max_feed_width . '<br/>';
                         } # end if
-                    } elsif ( $$specs{"txtHorizontalQty-$$sig_specs{SignatureIndex}"} ) {
+                    } elsif ( $$specs{"txtHorizontalQty-$form"} ) {
                         if ( $I->image_orientation() eq 'Horizontal' ) {
                             $Results{Breakdown} .= 'Running ' . $I->layout_height() . ' on feed of ' . $max_feed_width . '<br/>';
                             if ( $I->layout_height() >= $max_feed_width ) {
-                                $Results{Breakdown} .= "Score no good due to max feed width($max_feed_width) on width (".$I->layout_height().").<br/>";
+                                $Results{Breakdown} .= "Perf no good due to max feed width($max_feed_width) on width (".$I->layout_height().").<br/>";
                                 next;
                             } # end if
                         } else {
@@ -512,29 +521,29 @@ $openprint::log->debug("How many impositions do we get? " . @imps ) if DEBUG;
 				$horizontal_length = $horizontal_rules * $width;
 				$horizontal_length *= $CylinderCount if $CylinderCount;
 
-				$Results{Breakdown} .= $$specs{"txtHorizontalQty-$$sig_specs{SignatureIndex}"} . ' x ' . $$I{rows} . ' rows = ' . $horizontal_rules . ' horizontal rules * ' . $width . ' = ' . $horizontal_length . 'inches of rule.<br/>';
+				$Results{Breakdown} .= $$specs{"txtHorizontalQty-$form"} . ' x ' . $$I{rows} . ' rows = ' . $horizontal_rules . ' horizontal rules * ' . $width . ' = ' . $horizontal_length . 'inches of rule.<br/>';
 
-			} elsif ( $I->image_orientation() eq 'Horizontal' and  $$specs{"txtVerticalQty-$$sig_specs{SignatureIndex}"} ) {
-				$horizontal_rules = $$specs{"txtVerticalQty-$$sig_specs{SignatureIndex}"} * $$I{rows};
+			} elsif ( $I->image_orientation() eq 'Horizontal' and  $$specs{"txtVerticalQty-$form"} ) {
+				$horizontal_rules = $$specs{"txtVerticalQty-$form"} * $$I{rows};
 				$horizontal_length = $horizontal_rules * $width;
 				$horizontal_length *= $CylinderCount if $CylinderCount;
-				$Results{Breakdown} .= $$specs{"txtVerticalQty-$$sig_specs{SignatureIndex}"} . ' x ' . $$I{rows} . ' rows = ' . $horizontal_rules . ' horizontal rules * ' . $width . 'inches = ' . $horizontal_length . 'inches of rule.<br/>';
+				$Results{Breakdown} .= $$specs{"txtVerticalQty-$form"} . ' x ' . $$I{rows} . ' rows = ' . $horizontal_rules . ' horizontal rules * ' . $width . 'inches = ' . $horizontal_length . 'inches of rule.<br/>';
 			} # end if
 
 			my $vertical_rules = 0;
 			my $vertical_length = 0;
 			my %vertical_price;
 			
-			if ( $I->image_orientation() eq 'Vertical' and  $$specs{"txtVerticalQty-$$sig_specs{SignatureIndex}"} ) {
-				$vertical_rules = $$specs{"txtVerticalQty-$$sig_specs{SignatureIndex}"} * $I->columns();
+			if ( $I->image_orientation() eq 'Vertical' and  $$specs{"txtVerticalQty-$form"} ) {
+				$vertical_rules = $$specs{"txtVerticalQty-$form"} * $I->columns();
 				$vertical_length = $vertical_rules * $height;
 				$vertical_length *= $CylinderCount if $CylinderCount;
-				$Results{Breakdown} .= $$specs{"txtVerticalQty-$$sig_specs{SignatureIndex}"} . ' x ' . $$I{columns} . ' columns = ' . $vertical_rules . ' vertical rules * ' . $height . 'inches = ' . $vertical_length . 'inches of rule.<br/>';
-			} elsif ( $I->image_orientation() eq 'Horizontal' and $$specs{"txtHorizontalQty-$$sig_specs{SignatureIndex}"} ) {
-				$vertical_rules = $$specs{"txtHorizontalQty-$$sig_specs{SignatureIndex}"} * $I->columns();
+				$Results{Breakdown} .= $$specs{"txtVerticalQty-$form"} . ' x ' . $$I{columns} . ' columns = ' . $vertical_rules . ' vertical rules * ' . $height . 'inches = ' . $vertical_length . 'inches of rule.<br/>';
+			} elsif ( $I->image_orientation() eq 'Horizontal' and $$specs{"txtHorizontalQty-$form"} ) {
+				$vertical_rules = $$specs{"txtHorizontalQty-$form"} * $I->columns();
 				$vertical_length = $vertical_rules * $height;
 				$vertical_length *= $CylinderCount if $CylinderCount;
-				$Results{Breakdown} .= $$specs{"txtHorizontalQty-$$sig_specs{SignatureIndex}"} . ' x ' . $$I{columns} . ' columns = ' . $vertical_rules . ' vertical rules * ' . $height . 'inches = ' . $vertical_length . 'inches of rule.<br/>';
+				$Results{Breakdown} .= $$specs{"txtHorizontalQty-$form"} . ' x ' . $$I{columns} . ' columns = ' . $vertical_rules . ' vertical rules * ' . $height . 'inches = ' . $vertical_length . 'inches of rule.<br/>';
 			} # end if
 
 			if ( $Horizontal_Material and ( $Horizontal_Material->id() == $Vertical_Material->id() ) ) {

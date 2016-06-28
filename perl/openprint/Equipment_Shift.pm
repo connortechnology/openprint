@@ -25,14 +25,14 @@ $table = 'equipment_shifts';
 $serial = 'equipment_shifts_id_seq';
 
 %fields = (
-	'id'			=>	'id',
-	'starttime_seconds'		=>	'starttime_seconds',
-	'duration_seconds'		=>	'duration_seconds',
-	'duration'				=>	undef,
-	'endtime_seconds'		=>	undef,
-	'name'			=>	'name',
-	'equipment_id'	=>	'equipment_id',
-    'operator_id'   =>  'operator_id',
+	id					=>	'id',
+	starttime_seconds	=>	'starttime_seconds',
+	duration_seconds	=>	'duration_seconds',
+	duration			=>	undef,
+	endtime_seconds		=>	undef,
+	name				=>	'name',
+	equipment_id		=>	'equipment_id',
+    operator_id  		=>  'operator_id',
 );
 %find_fields = (
 	'endtime'		=>	'(starttime+duration)',
@@ -228,8 +228,14 @@ sub emanantise {
 		#$log->error("Dt > $st does not fit on this shift");
 	#} els
 	if ( $st > $requested_dt ) {
-		$log->error("Dt < $st does not fit on this shift, minusing 1 day");
-		$st -= DateTime::Duration->new( days=>1 );
+		$log->debug("Dt $requested_dt < $st does not fit on this shift, adding 1 hour");
+		while ( $st > $requested_dt ) {
+			$requested_dt += DateTime::Duration->new( hours=>1 );
+		}
+	
+		# If this shift was on the second day of the rotation
+		#return;
+		#$st -= DateTime::Duration->new( days=>1 );
 	} # end if
 	#$log->debug("final st: " . $parser->format_datetime( $st ) . ' requested: ' . $parser->format_datetime( $requested_dt ) );
 	my $now = DateTime->now( time_zone => 'UTC' );
@@ -247,7 +253,7 @@ sub emanantise {
 		$et += DateTime::Duration->new( hours=>1 );
 	} # end if
 	if ( $et < $requested_dt ) {
-		$log->error("Dt > ET $et does not fit on this shift");
+		$log->error("Dt $requested_dt > ET $et does not fit on this shift");
 		return;
 	}
 

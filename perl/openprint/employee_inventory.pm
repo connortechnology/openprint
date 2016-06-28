@@ -452,7 +452,11 @@ sub _paper_results {
 } # end sub _paper_results
 
 sub paper_details {
-	my $Paper = new openprint::Paper( $param{paper_id} );
+	my $Paper = $variable{Paper} = new openprint::Paper( $param{paper_id} );
+	if ( ! $$Paper{id} ) {
+		$variable{error} .= "Paper $param{paper_id} not found.\n";
+		return;
+	} # end if
 	if ( $param{btnFunction} eq 'Previous' ) {
 		$Paper = $Paper->previous();
 	} elsif ( $param{btnFunction} eq 'Next' ) {
@@ -1528,6 +1532,7 @@ sub rfidtag_details {
 	
 	if ( $param{btnFunction} eq 'Save' ) {
 		$variable{error} .= $RFIDTag->save( \%param );
+		$variable{ExternalRedirect} = '/employee/inventory/rfidtag_details.html?rfidtag_id='.$RFIDTag->id();
 	} elsif ( $param{btnFunction} eq 'Delete' ) {
 		$variable{error} .= $RFIDTag->delete();
 	} elsif ( $param{btnFunction} eq 'AllocateSkid' ) {

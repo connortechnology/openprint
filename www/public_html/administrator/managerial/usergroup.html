@@ -1,5 +1,5 @@
 <div class="UserGroup"><div class="View">
-<? echo ( include('/includes/error_reporting.html'); ) ?>
+<?include('/includes/error_reporting.html')?>
 <form id="f1" name="f1" action="usergroups.html" method="post" enctype="multipart/form-data">
 	<input type="hidden" name="command" />
 	<p class="buttons">
@@ -12,20 +12,23 @@
 			<div class="leftColumn">
 				<ul>
 					<li><label>ID</label>
-						<input type="hidden" name="id" id="id" value="<? echo ( $$variable{'UserGroup'}->id() ) ?>" />
-						<? echo ( $$variable{'UserGroup'}->id() ) ?>
+						<input type="hidden" name="id" id="id" value="<? echo ( $$variable{UserGroup}->id() ) ?>" />
+						<? echo ( $$variable{UserGroup}->id() ) ?>
 					</li>
 					<li><label>Name</label>
-						<input type="text" name="name" id="name" value="<? echo ( $$variable{'UserGroup'}->name() ) ?>" />
+						<input type="text" name="name" id="name" value="<? echo ( $$variable{UserGroup}->name() ) ?>" />
+					</li>
+					<li><label>Description</label>
+						<textarea name="description" rows="<?echo(count_lines($$variable{UserGroup}->description())?>"><? echo ( $$variable{UserGroup}->description() ?></textarea>
 					</li>
 					<li><label>Duration</label>
-						<input type="text" name="duration" id="duration" value="<? echo ( $$variable{'UserGroup'}->duration() ) ?>" />
+						<input type="text" name="duration" id="duration" value="<? echo ( $$variable{UserGroup}->duration() ) ?>" />
 					</li>
 				</ul>
 			</div>
 			<div class="rightColumn">
 				<? echo (
-					my $Asset = $$variable{'UserGroup'}->Asset();
+					my $Asset = $$variable{UserGroup}->Asset();
 					return '<img src="'.$Asset->url().'"/>' if $Asset->id();
 					return;
 				) ?>
@@ -37,15 +40,15 @@
 			</div>
 		</div>
 	</fieldset>
-	Listing of users in <? echo ( $$variable{'UserGroup'}->name() ) ?><br/>
+	Listing of users in <? echo ( $$variable{UserGroup}->name() ) ?><br/>
 	<table class="sortable">
 		<thead><tr><th>Name</th><th>Company</th></tr></thead>
 		<tbody>
 		<? echo (
 		my $html;
-		foreach my $User ( $$variable{'UserGroup'}->Users( order=>'lower(firstname),lower(lastname)') ) {
-			$html .= sprintf(q`<tr><td><a href="/administrator/managerial/user_profiles.html?ddmUser=%1$d">%2$s</a></td><td><a href="/administrator/managerial/company_profiles.html?ddmCustomer=%4$d">%3$s</a></td></tr>`, 
-				$User->id(), $User->name(), $User->Company()->name(), $User->company_id(),
+		foreach my $User ( $$variable{UserGroup}->Users( order=>'lower(firstname),lower(lastname)') ) {
+			$html .= sprintf(q`<tr><td>%1$s</td><td>%2$s</td></tr>`, 
+				$User->link_to(), $User->Company()->link_to(),
 				);
 		} # end foreach UG
 		return $html;

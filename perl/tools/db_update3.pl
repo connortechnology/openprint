@@ -838,19 +838,6 @@ if ( ! sets::isin( 'purchaseorder_departments', \@tables ) ) {
 	$dbh->do( misc::load_file( $log, q{../openprint/sql/PurchaseOrder_Departments.sql}) );
 	die if $dbh->errstr();
 } # en dif
-if ( ! sets::isin( 'usergroups', \@tables ) ) {
-	$dbh->do( misc::load_file( $log, q{../openprint/sql/Usergroups.sql}) );
-	die if $dbh->errstr();
-} else {
-	my $data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='usergroups'", 'column_name');
-	if ( ! $$data{'duration'} ) {
-		$dbh->do('ALTER TABLE usergroups ADD duration INTERVAL');
-	} # end if
-	if ( ! $$data{'asset_id'} ) {
-		$dbh->do('ALTER TABLE usergroups ADD asset_id INTEGER');
-		$dbh->do('ALTER TABLE usergroups ADD FOREIGN KEY (asset_id) REFERENCES Assets (id)');
-	} # end if
-} # end if
 if ( ! sets::isin( 'banners', \@tables )) {
 	$dbh->do( misc::load_file( $log, q{../openprint/sql/Banners.sql}) );
 	die if $dbh->errstr();

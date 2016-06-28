@@ -1041,10 +1041,10 @@ $openprint::log->debug("Considering sig size: $signature_size") if DEBUG_CONVERT
 				my $newimp = $imp->copy();
 
 				$newimp->rows($rows);
-				$newimp->start_rows($rows);
+				$$newimp{start_rows} = $rows;
 				$newimp->columns($cols);
-				$newimp->start_columns($cols);
-				$newimp->imposition($rows * $cols);
+				$$newimp{start_columns} = $cols;
+				#$newimp->imposition($rows * $cols);
 				if ( $$newimp{image_orientation} eq 'Vertical' ) {
 					$newimp->image_width( $$newimp{image_width} * $col );
 					$newimp->image_height( $$newimp{image_height} * $row );
@@ -1083,31 +1083,33 @@ sub decrease_imposition {
 			$imp2->rows( $$imposition{dutch_rows} );
 			push @results, $imp2;
 		} elsif ( $$imposition{runstyle} eq 'Work & Turn' ) {
-			if ( $$imposition{columns} > 2 ) {
+			#if ( $$imposition{columns} >= 2 ) {
 					my $imp1 = $imposition->copy();
+					$imp1->runstyle( 'Sheet Work' );
 					$imp1->columns( $$imp1{columns} / 2 );
 					push @results, $imp1;
-			}
-			if ( $$imposition{rows} >= 2 ) {
-				foreach my $row ( 2 .. $$imposition{rows} ) {
-					my $imp1 = $imposition->copy();
-					$imp1->rows( $$imp1{rows} - ( $row -1 ) );
-					push @results, $imp1;
-				} # end foraech
-			} # end if
+			#
+			#f ( $$imposition{rows} >= 2 ) {
+			#foreach my $row ( 2 .. $$imposition{rows} ) {
+			#	my $imp1 = $imposition->copy();
+			#	$imp1->rows( $$imp1{rows} - ( $row -1 ) );
+			#	push @results, $imp1;
+			#} # end foraech
+			# # end if
 		} elsif ( $$imposition{runstyle} eq 'Work & Tumble' ) {
-			if ( $$imposition{rows} > 2 ) {
+			#if ( $$imposition{rows} >= 2 ) {
 				my $imp1 = $imposition->copy();
+					$imp1->runstyle( 'Sheet Work' );
 				$imp1->rows( $$imp1{rows} / 2 );
 				push @results, $imp1;
-			} # end foraech
-			if ( $$imposition{columns} >= 2 ) {
-				foreach my $columns ( 2 .. $$imposition{columns} ) {
-					my $imp2 = $imposition->copy();
-					$imp2->columns( $$imp2{columns} - ( $columns -1 ) );
-					push @results, $imp2;
-				}
-			} # end if
+			#} # end foraech
+			#if ( $$imposition{columns} >= 2 ) {
+				#foreach my $columns ( 2 .. $$imposition{columns} ) {
+					##my $imp2 = $imposition->copy();
+					#$imp2->columns( $$imp2{columns} - ( $columns -1 ) );
+					#push @results, $imp2;
+				#}
+			#} # end if
 
 		} else {
 
@@ -1267,6 +1269,25 @@ $i->display('Cut to ');
 	}
 	return @Results;
 } # end sub cut_imposition
+# Takes an array of impositions(Folds) and merges duplicates. 
+sub compact {
+    my @results;
+    while ( @_ ) {
+        my $Imposition = shift @_;
+        $Imposition = $Imposition->copy();
+        push @results, $Imposition;
+
+        for ( my $index = 0; $index < @_; $index += 1 ) {
+            if ( $$Imposition{imposition} == $_[$index]{imposition} and $$Imposition{spreads} == $_[$index]{spreads} ) {
+                $$Imposition{quantity} += $_[$index]->quantity();
+                splice @_, $index, 1;
+                $index -= 1;
+            } # end if
+        } # end for each index
+    } # end while @_
+    return @results;
+} # end sub compact_impositions
+
 
 
 1;

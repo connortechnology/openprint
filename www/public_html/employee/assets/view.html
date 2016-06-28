@@ -17,7 +17,7 @@
 	return $html;
 ) ?>
 	</p>
-	<? echo ( include('/includes/error_reporting.html'); ) ?>
+	<?include('/includes/error_reporting.html')?>
 	<div class="Asset"><div class="View">
 			<div class="PageTitle">
 				<h1>Asset</h1><br/>
@@ -28,7 +28,7 @@
 					<div class="leftColumn">
 						<ul>
 							<li><label>Created On</label>
-					<? echo ( Date::Format::time2str($config{DateFormat}, Date::Parse::str2time( $$variable{Asset}->created_on() ) ) ) ?>
+							<? echo ( format_date( $$variable{Asset}->created_on() ) ) ?>
 							</li>
 							<li><label>Name</label>
 							<? echo ( $$variable{Asset}->name() ) ?>
@@ -56,8 +56,7 @@
 							<li><label>Filename</label>
 							<? echo ( 
 								my $html = $$variable{Asset}->filename() ;
-								$html .= $$variable{Asset}->html();
-
+								$html .= $$variable{Asset}->sized_html('medium');
 								return $html;
 							) ?>
 							</li>
@@ -68,7 +67,7 @@
 							<? echo ( $$variable{Asset}->license() ) ?>
 							</li>
 							<li><label>Used in</label>
-							<? echo ( join(',', map { $_->Object()->link_to() } openprint::Object_Asset->find('asset_id'=>$$variable{Asset}->id()) ); ) ?>
+							<? echo ( join(',', map { $_->Object()->link_to() } openprint::Object_Asset->find( asset_id=>$$variable{Asset}->id()) ); ) ?>
 							<? echo ( join(',', map { sprintf('<a href="/article/view.html?article_id=%1$d">Article %1$d</a>', $_->article_id() ); } openprint::Article_Asset->find('asset_id'=>$$variable{Asset}->id()) ); ) ?>
 							</li>
 						</ul>

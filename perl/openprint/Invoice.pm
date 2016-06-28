@@ -91,10 +91,13 @@ sub save {
 	$$self{total} = $self->total();
 
 	my $rc = $self->SUPER::save( );
-	if ( ! $rc and $$self{posted_on} ) {
+	if ( ! $rc ) {
+		$self->Invoicee()->save({last_invoice_id=>$$self{id}});
+		if ( $$self{posted_on} ) {
 		foreach my $T ( $self->Taxes(undef) ) {
 			$rc .= $T->save();
 		} # end foreach
+		}
 	} else {
 		return $rc;
 	} # end if

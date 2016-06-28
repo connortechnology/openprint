@@ -152,7 +152,7 @@ new Ajax.Request('/administrator/equipment/_specification.html?action=copy&amp;i
 			</p>
 			<p>
 				<label>Use in estimating</label>
-				<? echo ( radio( 'useinestimating', [ '1', 'Yes', '0', 'No' ], $$variable{Equipment}->useinestimating(), { default=>'0' } ); ) ?>
+				<? echo ( radio( 'useinestimating', [ '1', 'Yes', '0', 'No', '', 'By Override' ], $$variable{Equipment}->useinestimating(), { default=>'0' } ); ) ?>
 			</p>
 			<p>
 				<label>Use in scheduling</label>

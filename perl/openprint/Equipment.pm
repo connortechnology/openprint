@@ -67,6 +67,7 @@ $debug = 0;
 	servicetype_id	=>	undef,
 	sorting			=>	undef,
 	category_id		=>	undef,
+	useinestimating	=>	undef,
 );
 
 sub fits {

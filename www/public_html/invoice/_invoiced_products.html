@@ -9,7 +9,7 @@
 				<th class="Price">Total</th>
 				<th class="buttons">&nbsp;</th>
 			</tr>
-<? if ( $$variable{'Invoice'}->Products() > 0 ) ?>
+<? if ( $$variable{Invoice}->Products() > 0 ) ?>
 			<? echo ( 
 				my $html = '';
 				$$variable{product_total} = 0;
@@ -34,7 +34,7 @@
 				<td id="product_total"><? echo ( openprint::Currency::format($$variable{product_total}); ) ?></td>
 				<td class="buttons">&nbsp;</td>
 			</tr>
-<? endif ( $$variable{'Invoice'}->Products() > 0 ) ?>
+<? endif ( $$variable{Invoice}->Products() > 0 ) ?>
 			<tr>
 				<td class="Description">
 					<select id="product-category-id-" name="product-category-id-" onchange="new Ajax.Updater( 'product-id-', '/includes/_products_ddm.html', { parameters: { category_id: this.value } } );">
@@ -42,7 +42,9 @@
 					<? echo ( make_drop_down( openprint::Product_Category->dropdown( order =>'lower(name)'), $param{'product-category-id-'} ); ) ?>
 					</select>
 					<select id="product-id-" name="product-id-">
-					<? echo ( make_drop_down( openprint::Product->dropdown( order =>'lower(name)'), $param{'product-id-'} ); ) ?>
+					<? echo ( make_drop_down( openprint::Product->dropdown( order =>'lower(name)',
+									( $param{'product-category-id-'} ? ( category_id=>$param{'product-category-id-'} ) : () ),
+									), $param{'product-id-'} ); ) ?>
 					</select>
 				</td>
 				<td class="po"><input type="text" id="product-po-" name="product-po-" value="" onkeyup=""/></td>

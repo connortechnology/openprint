@@ -149,6 +149,8 @@ sub host {
 		} else {
 			delete $param{type_id};
 		} # end if
+		my $Location = openprint::Location::save_location( \%param );
+		$param{location_id} = $Location->id() if $Location and $Location->id();
 		$variable{error} .= $Host->save(\%param);
 		foreach my $I ( $Host->Interfaces(), new openprint::Host_Interface() ) {
 			if ( $param{"mac-$$I{id}"} or $param{"ip-$$I{id}"} or $param{"comment-$$I{id}"} ) {
@@ -186,9 +188,9 @@ sub host {
         } else {
             my $Object_Asset = new openprint::Object_Asset();
             $variable{error} .= $Object_Asset->save({
-					'asset_id'		=>	$Asset->id(),
-					'object_id'		=>	$Host->id(),
-					'object_type'	=>	'openprint::Host',
+					asset_id	=>	$Asset->id(),
+					object_id	=>	$Host->id(),
+					object_type	=>	'openprint::Host',
 					});
             if ( $param{asset_name} and ! $Asset->name() ) {
                 $Asset->save({'name'=>$param{asset_name}});

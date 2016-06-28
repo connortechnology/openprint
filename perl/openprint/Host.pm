@@ -298,6 +298,8 @@ sub reboot {
 			$url = 'http://'.$HI->ip().'/cgi-bin/reboot.cgi';
 		} elsif( $_[0]->type() eq 'D-Link DAP1522' ) {
 			$url = 'http://'.$HI->ip().'/sys_cfg_valid.xgi?&exeshell=submit REBOOT';
+		} elsif( $_[0]->type() eq 'DCS932L' ) {
+			$url = 'http://'.$HI->ip().'/setSystemReboot';
 		} elsif ( $_[0]->type() eq 'TL-WPA4220' ) {
 			$url = 'http://'.$HI->ip().'/userRpm/SysRebootRpm.htm?Reboot=Reboot';
 		} else {
