@@ -17,7 +17,7 @@ require openprint::Currency;
 require ssi;
 require DateTime::Format::Pg;
 require DateTime::TimeZone;
-
+require HTML::Strip;
 
 sub history {
 	if ( $param{func} eq 'Destroy' ) {
