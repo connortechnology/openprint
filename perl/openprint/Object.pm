@@ -1221,9 +1221,16 @@ sub Object {
 		$log->error("No type in Object::Object". $_[0]->to_string());
 		return undef;
 	} # end if
-	$_ = $type->new( $_[0]{object_id} );
-	$openprint::log->debug( "Returning object of type " . ref $_ );
-	return $_;
+	my ( $module ) = $type =~ /openprint::(.*)/;
+	if ( $module ) {
+		require "openprint/$module.pm";
+		$_ = $type->new( $_[0]{object_id} );
+		$openprint::log->debug( "Returning object of type " . ref $_ );
+		return $_;
+	} else {
+		$log->error("Unvalid object $type");
+		return new openprint::Object();
+	}
 } # end sub Object
 
 sub date_format {
