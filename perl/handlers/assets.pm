@@ -70,12 +70,14 @@ sub handler {
 
 		# The asset filename form is id_title.extension, path is either assets or thumbnails
 		my ( $path, $id, $filename ) = $r->uri() =~ /^\/(.*)\/(\d+)_(.+)$/;
-$log->debug("Path: $path $id uri:" . $r->uri());
+$log->debug("Path: $path id: $id uri:" . $r->uri());
 		$path =~ s/^assets\///;
+$log->debug("Path: $path id: $id uri:" . $r->uri());
 		if ( $id ) {
 			my $Asset = new openprint::Asset( $id );
 			if ( $$Asset{id} ) {
-				if ( my @Photos = openprint::Photo_in_Album->find('asset_id'=>$$Asset{id}) ) {
+				if ( my @Photos = openprint::Photo_in_Album->find( asset_id=>$$Asset{id} ) ) {
+$log->debug(" Have " . @Photos . " for this asset" );
 					my $can_view = 0;
 					foreach my $Album ( map { $_->Album() } @Photos ) {
 						if ( $Album->can_view() ) {
@@ -83,7 +85,7 @@ $log->debug("Path: $path $id uri:" . $r->uri());
 							last;
 						} # end if
 					} # end foreach Album
-					if ( 1 or $can_view ) {
+					if ( $can_view ) {
 						#$r->headers_out->set('Last-Modified'=>Date::Format::time2str( '%a, %d %b %Y %H:%M:%S %Z', Date::Parse::str2time( $Asset->updated_on() ) ));
 						if ( $path eq 'thumbnails' ) {
 							$r->sendfile( $Asset->thumbnail_path() );
@@ -92,6 +94,7 @@ $log->debug("Path: $path $id uri:" . $r->uri());
 						} elsif ( $path eq 'large' ) {
 							$r->sendfile( $Asset->large_path() );
 						} elsif ( $path eq 'small' ) {
+$log->debug("Sending: " .  $Asset->sized_path( 'small' ) );
 							$r->sendfile( $Asset->sized_path( 'small' ) );
 						} elsif ( $path eq 'videos' ) {
 							if ( -e $config{AssetPath}.'videos/'.$id.'_'.$filename ) {
@@ -121,8 +124,8 @@ $log->error("FORBIDDEN");
 						$r->sendfile( $Asset->medium_path() );
 					} else {
 # No album means has to be an article image, or a generic site image.
-$log->debug( $Asset->on_disk_path() );
-						$r->sendfile( $Asset->on_disk_path() );
+#$log->debug( $Asset->on_disk_path() );
+						$r->sendfile( $Asset->sized_path( $path ) );
 					} # end if
 				} # end if
 			} else {
