@@ -323,11 +323,12 @@ sub view {
 			$variable{information} = 'Approval request ' . $variable{information};
 			my $L = new openprint::PurchaseOrder_Log();
 			$L->save({
-					'user_id'	=>	$session{user_id},
-					'po_id'		=>	$PO->id(),
-					'reason'	=>	$variable{information}
+					user_id	=>	$session{user_id},
+					po_id	=>	$PO->id(),
+					reason	=>	$variable{information}
 					});
 		} # end if
+		$variable{ExternalRedirect} = '/employee/purchase_order/view.html?po_id='.$PO->id();
 	} elsif ( $param{btnFunction} eq 'Attach' ) {
 		my $Asset = new openprint::Asset();
 		$variable{error} .= $Asset->save({ 'name'	=>	$param{asset_name}, 'filename' => $param{filename} } );

@@ -240,6 +240,14 @@ sub Unit_Of_Measure_Costing {
 	'';
 } # end sub  Unit_Of_Measure_Costing
 
+sub link_to {
+	if ( $openprint::session{user_type} eq 'A' ) {
+		return sprintf('<a href="/administrator/materials/edit.html?material_id=%d">%s</a>', $_[0]{id}, ( @_ > 1 ? $_[1] : $_[0]{name} ) );
+	} else {
+		return @_ > 1 ? $_[1] : $_[0]{name};
+	}
+}
+
 
 1;
 __END__

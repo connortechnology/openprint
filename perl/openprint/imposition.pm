@@ -1041,10 +1041,10 @@ $openprint::log->debug("Considering sig size: $signature_size") if DEBUG_CONVERT
 				my $newimp = $imp->copy();
 
 				$newimp->rows($rows);
-				$newimp->start_rows($rows);
+				$$newimp{start_rows} = $rows;
 				$newimp->columns($cols);
-				$newimp->start_columns($cols);
-				$newimp->imposition($rows * $cols);
+				$$newimp{start_columns} = $cols;
+				#$newimp->imposition($rows * $cols);
 				if ( $$newimp{image_orientation} eq 'Vertical' ) {
 					$newimp->image_width( $$newimp{image_width} * $col );
 					$newimp->image_height( $$newimp{image_height} * $row );

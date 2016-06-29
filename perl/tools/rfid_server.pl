@@ -340,6 +340,6 @@ sub sig_handler {
 
 register_sig( USR1 => \&sig_handler );
 
-__PACKAGE__->run();
+__PACKAGE__->run( ipv => 4 );
 1;
 __END__

@@ -280,23 +280,23 @@ x
 		) ];
 		) ?>
 		<? if ( @{$$variable{Duplicates}} > 1 ) ?>
- <fieldset><legend>Similar Papers</legend>
- <table class="List">
-	<tr><th width="50">ID</th><th>Description</th></tr>
-	<? echo (
-		my $html = '';
-		my $rowclass;
-		while ( my $Duplicate = shift @{$$variable{Duplicates}} ) {
-			next if $Duplicate->id() == $$variable{Paper}->id();
-			$html .= sprintf('<tr%1$s><td><a href="/employee/inventory/paper_details.html?paper_id=%2$d">%2$d</a></td><td><a href="/employee/inventory/paper_details.html?paper_id=%2$d">%3$s</a></td></tr>', $rowclass, $Duplicate->id(), $Duplicate->to_string() );
-			$rowclass = $rowclass ? '' : ' class="colRow"';
-		} # end while
-		return $html;
-	) ?>
- </table>
- <? echo ( button( 'Merge', { onclick=>"f1.btnFunction.value='Merge';f1.submit();", text=>'Merge' } ); ) ?>
- </fieldset>
-<? endif ( @{$$variable{Duplicates}} > 1 ) ?>
+		<fieldset><legend>Similar Papers</legend>
+		<table class="List">
+			<tr><th width="50">ID</th><th>Description</th></tr>
+			<? echo (
+				my $html = '';
+				my $rowclass;
+				while ( my $Duplicate = shift @{$$variable{Duplicates}} ) {
+					next if $Duplicate->id() == $$variable{Paper}->id();
+					$html .= sprintf('<tr%1$s><td><a href="/employee/inventory/paper_details.html?paper_id=%2$d">%2$d</a></td><td><a href="/employee/inventory/paper_details.html?paper_id=%2$d">%3$s</a></td></tr>', $rowclass, $Duplicate->id(), $Duplicate->to_string() );
+					$rowclass = $rowclass ? '' : ' class="colRow"';
+				} # end while
+				return $html;
+			) ?>
+		</table>
+		<? echo ( button( 'Merge', { onclick=>"f1.btnFunction.value='Merge';f1.submit();", text=>'Merge' } ); ) ?>
+		</fieldset>
+		<? endif ( @{$$variable{Duplicates}} > 1 ) ?>
 <? endif ( $$variable{Paper}->id() ) ?>
 </form>
 <? if ( $$variable{paper_id} ) ?>

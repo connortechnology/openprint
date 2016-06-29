@@ -1189,7 +1189,7 @@ sub Object_Type {
 	if ( $_[0]{object_type_id} ) {
 		$_[0]{Object_Type} = new openprint::Object_Type( $_[0]{object_type_id} );
 	} else {
-		$_[0]{Object_Type} = openprint::Object_Type->find_one('name'=>ref $_[0] );
+		$_[0]{Object_Type} = openprint::Object_Type->find_one( name=>ref $_[0] );
 		$_[0]{Object_Type} = new openprint::Object_Type() if ! $_[0]{Object_Type};
 	} # end if
 	return $_[0]{Object_Type};
