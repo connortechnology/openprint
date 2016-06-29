@@ -19,9 +19,14 @@
 					} # end if
 					$html .= button( 'Delete', { onclick=>q`f1.btnFunction.value='Delete';f1.submit();` } );
 					$html .= button( 'Edit', { href=>'edit.html?invoice_id='.$$variable{Invoice}->id() } );
-					if ( $$variable{Invoice}->posted() and $$variable{Invoice}->can_send() ) {
-						$html .= button( 'Send', { onclick=>q`f1.btnFunction.value='Send';f1.submit();` } );
-						$html .= button( 'SendMe', { onclick=>q`f1.btnFunction.value='Send To Me';f1.submit();`, text=>'Send To Me' } );
+					if ( $$variable{Invoice}->posted() ) {
+						$html .= button( 'unpost', { onclick=>"f1.btnFunction.value='UnPost';f1.submit();",text=>'UnPost' } );
+						if ( $$variable{Invoice}->can_send() ) {
+							$html .= button( 'Send', { onclick=>q`f1.btnFunction.value='Send';f1.submit();` } );
+							$html .= button( 'SendMe', { onclick=>q`f1.btnFunction.value='Send To Me';f1.submit();`, text=>'Send To Me' } );
+						} # end if
+					} else {
+						$html .= button( 'post', { onclick=>"f1.btnFunction.value='Post';f1.submit();",text=>'Post' } );
 					} # end if
 					$html .= button( 'Print', { onclick=>'window.print();' } );
 				} # end if
