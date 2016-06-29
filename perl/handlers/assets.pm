@@ -77,12 +77,14 @@ $log->debug("Path: $path id: $id uri:" . $r->uri());
 			my $Asset = new openprint::Asset( $id );
 			if ( $$Asset{id} ) {
 				if ( my @Photos = openprint::Photo_in_Album->find( asset_id=>$$Asset{id} ) ) {
-$log->debug(" Have " . @Photos . " for this asset" );
+$log->debug(" Have " . @Photos . " photo for this asset" );
 					my $can_view = 0;
 					foreach my $Album ( map { $_->Album() } @Photos ) {
 						if ( $Album->can_view() ) {
 							$can_view = 1;
 							last;
+						} else {
+							$log->debug("Album " . $Album->to_string() . " cannot view" );
 						} # end if
 					} # end foreach Album
 					if ( $can_view ) {
