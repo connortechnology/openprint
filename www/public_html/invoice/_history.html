@@ -111,7 +111,7 @@
 				</tr>`, $rowclass, $Invoice->id(), $Invoice->num(), $Invoice->internal_notes().$Invoice->external_notes(), 
 				format_date( $Invoice->created_on() ),
 				format_date( $Invoice->due_on() ),
-				ssi::htmlize( $Invoice->Invoicee()->name() ),
+				htmlize( $Invoice->Invoicee()->name() ),
 				openprint::Currency::format( $Invoice->subtotal() ),
 				join('', map { exists $$variable{tax_totals}{$_->id()} ? sprintf('<td class="Price">%s</td>', openprint::Currency::format( $Invoice->Tax( $_ )->amount() ) ) : () } @{$$variable{Taxes}} ),
 				openprint::Currency::format( $Invoice->total() ),
