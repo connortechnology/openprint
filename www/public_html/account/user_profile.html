@@ -180,6 +180,22 @@
 				<br class="spacer"/>
 				<?include(_email_settings.html)?>
 			<? endif ($variable{DoEmail}) ?> 
+
+			<? if ( sets::isin( $$variable{User}->type(), ['E','A'] ) ) ?>
+			<? if ( @{$$variable{csr_ids}} = openprint::User->find('id !='=>$$variable{User}->id(), company_id=>$config{owner_id}, type=>['E','A'], 'usergroup any'=>'Sales' ) ) ?>
+			<fieldset><legend>Sales Settings</legend>
+				<ul>
+					<li class="assistant_ids">
+						<label>Assistants</label>
+						<select name="assistant_ids" size="4" multiple="multiple">
+						<? echo ( make_drop_down( [ map { $_->id(), $_->name() } @{$$variable{csr_ids}} ], [$$variable{User}->assistant_ids()] ); ) ?>
+						</select>
+					</li>
+				</ul>
+			</fieldset>
+			<? endif ( @{$$variable{csr_ids}} = openprint::User->find('id !='=>$$variable{User}->id(), company_id=>$config{owner_id}, type=>['E','A'], 'usergroup any'=>'Sales' ) ) ?>
+			<? endif ( sets::isin( $$variable{User}->type(), ['E','A'] ) ) ?>
+
 			<?include(_user_login_log.html)?>
 <? else ( $$variable{User}->can_edit() ) ?>
 You cannot edit this user.
