@@ -182,18 +182,34 @@
 			<? endif ($variable{DoEmail}) ?> 
 
 			<? if ( sets::isin( $$variable{User}->type(), ['E','A'] ) ) ?>
-			<? if ( @{$$variable{csr_ids}} = openprint::User->find('id !='=>$$variable{User}->id(), company_id=>$config{owner_id}, type=>['E','A'], 'usergroup any'=>'Sales' ) ) ?>
-			<fieldset><legend>Sales Settings</legend>
-				<ul>
-					<li class="assistant_ids">
-						<label>Assistants</label>
-						<select name="assistant_ids" size="4" multiple="multiple">
-						<? echo ( make_drop_down( [ map { $_->id(), $_->name() } @{$$variable{csr_ids}} ], [$$variable{User}->assistant_ids()] ); ) ?>
-						</select>
-					</li>
-				</ul>
-			</fieldset>
-			<? endif ( @{$$variable{csr_ids}} = openprint::User->find('id !='=>$$variable{User}->id(), company_id=>$config{owner_id}, type=>['E','A'], 'usergroup any'=>'Sales' ) ) ?>
+<br class="spacer"/>
+    <div class="AssistantTo">
+        <fieldset><legend>Assistant To</legend>
+                <ul>
+                <? echo ( 
+                    my @csr_ids = $$variable{User}->csr_ids();
+                    if ( $session{user_type} eq 'A' or $openprint::User->administrator() eq 'Y' ) {
+                        return checkboxes( 'csr_ids', openprint::User->dropdown(type=>['E','A'], 'usergroup any'=>'Sales' ), \@csr_ids, { container=>['<li>','</li>'] } );
+                    } elsif ( @csr_ids ) {
+                        return checkboxes( 'csr_ids', openprint::User->dropdown(type=>['E','A'], 'usergroup any'=>'Sales', id=>\@csr_ids ), \@csr_ids, { container=>['<li>','</li>'] } );
+                    }
+                    return 'No one';
+ ) ?>
+                </ul>
+
+        </fieldset>
+    </div>
+    <div class="Assistants">
+        <fieldset><legend>Assistants</legend>
+                <ul>
+                <? echo ( 
+                    my @assistant_ids = $$variable{User}->assistant_ids();
+                    return checkboxes( 'assistant_ids', openprint::User->dropdown(company_id=>$openprint::User->company_id(), type=>['E','A'], 'usergroup any'=>'Sales' ), \@assistant_ids, { container=>['<li>','</li>'] } );
+ ) ?>
+                </ul>
+
+        </fieldset>
+    </div>
 			<? endif ( sets::isin( $$variable{User}->type(), ['E','A'] ) ) ?>
 
 			<?include(_user_login_log.html)?>
