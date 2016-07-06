@@ -2,7 +2,7 @@ use strict;
 package openprint::Quote;
 our @ISA=qw(openprint::Object);
 
-use constant DEBUG => 1;
+use constant DEBUG => 0;
 
 require MIME::QuotedPrint;
 use openprint ();
