@@ -1,0 +1,22 @@
+/var/log/openprint-syslog.log
+/var/log/openprint-syslog-apache.log
+{
+	rotate 7
+	daily
+	missingok
+	notifempty
+	delaycompress
+	compress
+}
+/var/log/ip_monitor.log 
+{
+	rotate 7
+	daily
+	missingok
+	notifempty
+	delaycompress
+	compress
+	postrotate
+		[ ! -f /var/run/ip_monitor.pid ] || kill -HUP `cat /var/run/ip_monitor.pid`
+	endscript
+}
