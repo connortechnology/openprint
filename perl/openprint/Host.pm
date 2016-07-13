@@ -91,26 +91,6 @@ $serial = 'host_types_id_seq';
 	name	=>	[ 's/^\s+//', 's/\s+$//', 's/\s\s+/ /g' ],
 );
 
-package openprint::Host_Info;
-our @ISA = qw( openprint::Object );
-use vars qw( $debug $table $serial %fields %transforms %defaults %types %find_fields );
-$debug = 0;
-$table = 'host_info';
-$serial = 'host_info_id_seq';
-%fields = (
-	id			=>	'id',
-	host_id		=>	'host_id',
-	name		=>	'name',
-	value		=>	'value',
-);
-%find_fields = (
-);
-%transforms = (
-	id		=>	[ 's/\D//g' ],
-	name	=>	[ 's/^\s+//', 's/\s+$//', 's/\s\s+/ /g' ],
-	value	=>	[ 's/^\s+//', 's/\s+$//' ],
-);
-
 package openprint::Host;
 our @ISA = qw( openprint::Object );
 
@@ -254,6 +234,7 @@ sub Interfaces {
 } # end sub Notifications
 
 sub info {
+	require openprint::Host_Info;
 	if ( ! $_[0]{Info} ) {
 		%{$_[0]{Info}} = map { $_->name(), $_ } openprint::Host_Info->find(host_id=>$_[0]{id});
 		foreach my $k ( keys %{$_[0]{Info}} ) {
