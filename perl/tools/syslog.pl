@@ -83,7 +83,7 @@ my @re = (
 		'^(\w{3} [ :0-9]{11}) [\._a-zA-Z0-9\-]+ sshd\[[0-9]+\]: error: maximum authentication attempts exceeded for root from (?<IP>[.[:digit:]]+) port [[:digit:]]+ ssh2 \[preauth\]$',
 		'^(\w{3} [ :0-9]{11}) [\._a-zA-Z0-9\-]+ sshd\[[0-9]+\]: Invalid user \w+ from (?<IP>[0-9.]+)$',
 		'^(\w{3} [ :0-9]{11}) [\._a-zA-Z0-9\-]+ sshd\[[0-9]+\]: Connection closed by (?<IP>[0-9.]+):? \[preauth\]$',
-		'^(\w{3} [ :0-9]{11}) [\._a-zA-Z0-9\-]+ sshd\[[0-9]+\]: Received disconnect from (?<IP>[0-9.]+) 11: [ .,/:([:alnum:]]+ \[preauth\]$',
+		'^(\w{3} [ :0-9]{11}) [\._a-zA-Z0-9\-]+ sshd\[[0-9]+\]: Received disconnect from (?<IP>[0-9.]+) (port [[:digit:]]+:)?11: [ .,/:([:alnum:]]* \[preauth\]$',
 		'^(\w{3} [ :0-9]{11}) [\._a-zA-Z0-9\-]+ sshd\[[0-9]+\]: Received disconnect from (?<IP>[0-9.]+) 10:  \[preauth\]$',
 		'^(\w{3} [ :0-9]{11}) [\._a-zA-Z0-9\-]+ sshd\[[0-9]+\]: Received disconnect from (?<IP>[0-9.]+) 3: com.jcraft.jsch.JSchException: (Auth cancel|reject HostKey: [0-9\.]+) \[preauth\]$',
 		'^(\w{3} [ :0-9]{11}) [\._a-zA-Z0-9\-]+ sshd\[[0-9]+\]: User \w+ from (?<IP>[0-9.]+) not allowed because (account is locked|not listed in AllowUsers)$',
@@ -95,7 +95,7 @@ my @re = (
 		'^(\w{3} [ :0-9]{11}) [\._a-zA-Z0-9\-]+ dovecot: pop3\-login: Aborted (l|L)ogin \(auth failed, [0-9]+ attempts in [0-9]+ secs\): user=<[a-zA-Z@\.0-9]*>, method=PLAIN, rip=(?<IP>[\.0-9]+), lip=[\.0-9]+, session=<[^>]+>$',
 		q`^(\w{3} [ :0-9]{11}) [\._a-zA-Z0-9\-]+ named\[[0-9]+\]: client (?<IP>[0-9.]+)#[0-9]+: (view [A-Za-z0-9]+: )?query \(cache\) '[./[:alnum:]]+' denied$`,
 		q`^(\w{3} [ :0-9]{11}) [\._a-zA-Z0-9\-]+ pam-abl\[[0-9]+\]: Blocking access from (?<IP>[0-9.]+) to service sshd, user root$`,
-		q`^(\w{3} [ :0-9]{11}) [\._a-zA-Z0-9\-]+ postfix\/smtpd\[[0-9]+\]: warning: [\.\-A-Za-z0-9]+\[(?<IP>[0-9.]+)\]: SASL LOGIN authentication failed: authentication failure$`,
+		q`^(\w{3} [ :0-9]{11}) [\._a-zA-Z0-9\-]+ postfix\/smtpd\[[0-9]+\]: warning: [\.\-A-Za-z0-9]+\[(?<IP>[0-9.]+)\]: SASL LOGIN authentication failed:`,
 		q`^(\w{3} [ :0-9]{11}) [\._a-zA-Z0-9\-]+ pdns\[[0-9]+\]: Received a malformed qdomain from (?<IP>[0-9.]+), '[^']+': sending servfail$`,
 );
 

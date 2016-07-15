@@ -7,7 +7,7 @@
 <form name="f1" id="f1" action="edit.html" method="post">
 	<input type="hidden" name="btnFunction" />
 	<input type="hidden" name="invoice_id" value="<? echo ( $$variable{Invoice}->id() ) ?>" />
-	<fieldset><legend><? echo ( $$variable{'Invoice'}->num() ? 'Editing Invoice ' . $$variable{Invoice}->num() : 'New Invoice' ) ?></legend>
+	<fieldset><legend><? echo ( $$variable{Invoice}->num() ? 'Editing Invoice ' . $$variable{Invoice}->num() : 'New Invoice' ) ?></legend>
 		<div class="leftColumn">
 			<ul>
 				<li class="invoice_num"><label>Number</label><input type="text" name="num" value="<? echo ( $$variable{Invoice}->num() ) ?>" /></li>
@@ -22,7 +22,7 @@ name=>'invoicer_id', prepend=>['','select']
 				<li class="invoicee"><label for="invoicee_id" onclick="$('invoicee_id').toggle();$('invoicee').toggle();">Prepared For</label>
 					<select id="invoicee_id" name="invoicee_id" onchange="$('invoicee').value='';invoicee_change(this);">
 						<option value=""> select </option>
-						<? echo ( openprint::Company::get_dropdown( $$variable{'Invoice'}->invoicee_id() ? $$variable{'Invoice'}->invoicee_id() : $session{'company_id'} ); ) ?>
+						<? echo ( openprint::Company::get_dropdown( $$variable{Invoice}->invoicee_id() ? $$variable{Invoice}->invoicee_id() : $session{company_id} ); ) ?>
 					</select>
 					<input type="text" name="invoicee" id="invoicee" style="display: none;"/>
 				</li>
@@ -41,7 +41,7 @@ name=>'invoicer_id', prepend=>['','select']
 								ssi::select( [ 'percent', 'Percent', 'amount', 'Amount' ], $$variable{Invoice}->early_payment_units(), { name=>'early_payment_units', id=>'early_payment_units' } ),
 					); ) ?>
 				<li class="early_payment_date"><label>Early Payment Date</label>
-				<? echo ( date_select( 'early_payment_date', $$variable{'Invoice'}->early_payment_date() ); ) ?>
+				<? echo ( date_select( 'early_payment_date', $$variable{Invoice}->early_payment_date() ); ) ?>
 				</li>
 			</ul>
 		</div>
@@ -49,15 +49,15 @@ name=>'invoicer_id', prepend=>['','select']
 			<ul>
 			<li>
 				<label for="external_notes">External Notes</label>
-				<textarea id="external_notes" name="external_notes" rows="<? echo ( ssi::count_lines( $$variable{'Invoice'}->external_notes() ); ) ?>" onkeyup="textarea_resize(this);"><? echo ( $$variable{'Invoice'}->external_notes() ) ?></textarea>
+				<textarea id="external_notes" name="external_notes" rows="<? echo ( ssi::count_lines( $$variable{Invoice}->external_notes() ); ) ?>" onkeyup="textarea_resize(this);"><? echo ( $$variable{Invoice}->external_notes() ) ?></textarea>
 			</li>
 			<li>
 				<label for="internal_notes">Internal Notes</label>
-				<textarea id="internal_notes" name="internal_notes" rows="<? echo ( ssi::count_lines( $$variable{'Invoice'}->internal_notes() ); ) ?>" onkeyup="textarea_resize(this);"><? echo ( $$variable{'Invoice'}->internal_notes() ) ?></textarea>
+				<textarea id="internal_notes" name="internal_notes" rows="<? echo ( ssi::count_lines( $$variable{Invoice}->internal_notes() ); ) ?>" onkeyup="textarea_resize(this);"><? echo ( $$variable{Invoice}->internal_notes() ) ?></textarea>
 			</li>
 			<li>
 				<label>Bad Debt?</label>
-				<? echo ( radio( 'bad_debt', ['1','Yes','0','No'], $$variable{'Invoice'}->bad_debt() ); ) ?>
+				<? echo ( radio( 'bad_debt', ['1','Yes','0','No'], $$variable{Invoice}->bad_debt() ); ) ?>
 			</li>
 			<li><label>Currency</label><? echo ( ssi::select( openprint::Currency->dropdown(), $$variable{Invoice}->currency_id() ? $$variable{Invoice}->currency_id() : $session{Currency_id}, { name=>'currency_id', id=>'currency_id', prepend=>['','select'] } ); ) ?></li>
 			</ul>
@@ -68,13 +68,13 @@ name=>'invoicer_id', prepend=>['','select']
 				my $html = '';
 				$html .= button( 'back', { href=>'history.html', text=>'Back' } );
 				$html .= button( 'save', { onclick=>"f1.btnFunction.value='Save';f1.submit();",text=>'Save' } );
-				if ( $$variable{'Invoice'}->id() ) {
-					if ( $$variable{'Invoice'}->deleted() ) {
+				if ( $$variable{Invoice}->id() ) {
+					if ( $$variable{Invoice}->deleted() ) {
 						$html .= button( 'delete', { onclick=>"if(confirm('Are you sure?')){f1.btnFunction.value='Destroy';f1.submit();}",text=>'Destroy' } );
 					} else {
 						$html .= button( 'delete', { onclick=>"f1.btnFunction.value='Delete';f1.submit();",text=>'Delete' } );
 					} # end if
-					if ( $$variable{'Invoice'}->posted() ) {
+					if ( $$variable{Invoice}->posted() ) {
 						$html .= button( 'unpost', { onclick=>"f1.btnFunction.value='UnPost';f1.submit();",text=>'UnPost' } );
 					} else {
 						$html .= button( 'post', { onclick=>"f1.btnFunction.value='Post';f1.submit();",text=>'Post' } );
@@ -84,7 +84,7 @@ name=>'invoicer_id', prepend=>['','select']
 			) ?>
 		</p>
 	</fieldset>
-	<? if ( $$variable{'Invoice'}->id() ) ?>
+	<? if ( $$variable{Invoice}->id() ) ?>
 	<div id="Orders"><?include(_invoiced_orders.html)?></div>
 	<div id="Timetracks"><?include(_timetracks.html)?></div>
 	<div id="InvoicedProducts"><?include(_invoiced_products.html)?></div>
@@ -96,8 +96,8 @@ name=>'invoicer_id', prepend=>['','select']
 			<tr><th class="payment_id">ID</th><th class="transaction">Transaction ID/Cheque #</th><th class="Date">When</th><th>Notes</th><th class="Price">Amount</th></tr>
 			<? echo ( 
 				my $html = '';
-				$$variable{'payment_total'} = 0;
-				foreach my $P ( $$variable{'Invoice'}->Payments() ) {
+				$$variable{payment_total} = 0;
+				foreach my $P ( $$variable{Invoice}->Payments() ) {
 					my $Payment = $P->Payment();
 					$html .= sprintf('<tr><td class="payment_id"><a href="/payment/edit.html?payment_id=%1$d">%1$d</a></td>
 							<td class="transaction">%2$s</td>
@@ -106,15 +106,15 @@ name=>'invoicer_id', prepend=>['','select']
 							<td class="Price">%5$s</td>
 						</tr>', $Payment->id(), 
 						$Payment->transaction_id(),
-						Date::Format::time2str( $config{'DateFormat'}, Date::Parse::str2time( $Payment->received_on() ) ), 
+						Date::Format::time2str( $config{DateFormat}, Date::Parse::str2time( $Payment->received_on() ) ), 
 						$Payment->memo(), openprint::Currency::format( $P->amount() ) );
-					$$variable{'payment_total'} += $P->amount();
+					$$variable{payment_total} += $P->amount();
 				} # end foreach
 				return $html;
 			) ?>
 			<tr class="totals">
 				<td align="right" colspan="4">Total</td>
-				<td class="Price"><? echo ( openprint::Currency::format( $$variable{'payment_total'} ); ) ?></td>
+				<td class="Price"><? echo ( openprint::Currency::format( $$variable{payment_total} ); ) ?></td>
 			</tr>
 		</table>
 	</fieldset>
@@ -122,6 +122,6 @@ name=>'invoicer_id', prepend=>['','select']
 <?eval( $$variable{Object} = $$variable{Invoice} ) ?>
 <?include(/employee/assets/_asset_upload.html)?>
 <?include('_logs.html')?>
-<? endif ( $$variable{'Invoice'}->id() ) ?>
+<? endif ( $$variable{Invoice}->id() ) ?>
 </form>
 </div></div>

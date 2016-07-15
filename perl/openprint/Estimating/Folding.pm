@@ -1063,11 +1063,11 @@ $openprint::log->debug("Got new folds $width_folds x $height_folds from Fold") i
 								$Imposition->Fold( $Fold );
 
 								push @{$folds{$Fold->type().'-'.$$Imposition{imposition}.'out'}}, $Fold;
-								$openprint::log->debug(sprintf('Found: %dx%d %s,%dout', $Imposition->page_columns(), $Imposition->page_rows(),$Imposition->image_orientation(), $Imposition->imposition()) ) if DEBUG;
+								$openprint::log->debug(sprintf('Found: %dx%d %s,%dout', $Imposition->page_columns(), $Imposition->page_rows(),@$Imposition{'image_orientation','imposition'} ) ) if DEBUG;
 								next;
 							} elsif ( @my_equipment == 1 ) {
 								$Imposition->display('Didnt find:' ) if DEBUG;
-								$Breakdown .= sprintf('Didnt find: %dx%d=%dpages %s,%dout<br/>', $Imposition->page_columns(), $Imposition->page_rows(), $Imposition->pages(), $Imposition->image_orientation(), $Imposition->imposition() );
+								$Breakdown .= sprintf('Didnt find: %dx%d=%dpages %s,%dout<br/>', $Imposition->page_columns(), $Imposition->page_rows(), $Imposition->pages(), @$Imposition{'image_orientation','imposition'} );
 								$complete = 0;
 							} elsif ( DEBUG ) {
 								$Imposition->display('Didnt find fold:' );
@@ -2082,10 +2082,10 @@ sub cut_spreads {
 	# Something like doing 16pg as 2 8pgs
 	if ( $$I{image_orientation} eq 'Vertical' and $$I{spread_rows} % 2 == 0 ) {
 			my $i1 = $I->copy();
-			$i1->spread_rows( $i1->spread_rows() / 2 );
-			$i1->imposition( $i1->imposition() * 2 );
+			$$i1{spread_rows} = ( $$i1{spread_rows} / 2 );
+			$i1->rows( $i1->rows() * 2 );
 
-			$i1->page_quantity( $i1->page_quantity() * $$I{spread_rows} );
+			#$i1->page_quantity( $i1->page_quantity() / 2 );
 			$i1->image_height( $$I{image_height}/$$I{spread_rows} );
 			$openprint::log->debug(sprintf('Cutting pages down from q%d x %d pages to q%d x %d pages pq(%d)', $I->quantity(), $I->pages(), $i1->quantity(), $i1->pages(), $I->page_quantity() ) ) if DEBUG;
 			push @results, [ $i1 ];

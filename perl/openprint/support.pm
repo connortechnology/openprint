@@ -191,6 +191,8 @@ sub help_desk {
 		%param = ();
 		$variable{information} .= "Thank you for your help desk submission. Your reference # is $index";
 		$variable{ExternalRedirect} = '/support/help_desk.html';
+	} else {
+		# Guess location?
 	} # end if
 
 } # end sub help_desk

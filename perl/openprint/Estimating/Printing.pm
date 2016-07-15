@@ -4302,7 +4302,7 @@ $openprint::log->warn("Override subsig values $$imp{pages}pg $$price{upq} upq");
 my $sub_sig_price = $price_cache{$price_cache_key};
 my $sub_imp = $$sub_sig_price{Imposition};
 $sub_imp->display();
-$log->error("using a cached calc_other_groups $$sub_sig_price{'Comparison Cost'}");
+#$log->error("using a cached calc_other_groups $$sub_sig_price{'Comparison Cost'}");
 							} # end if
 							%{$sig_price} = %{$price_cache{$price_cache_key}};
 #$openprint::log->debug("Prices: $sig_price $price_cache{$price_cache_key}");

@@ -99,6 +99,9 @@ $serial = 'expenses_id_seq';
 );
 
 
+sub link_to {
+	return sprintf('<a href="/employee/accounting/expense.html?expense_id=%d">%s</a>', $_[0]{id}, 'Expense ' . $_[0]{id} );
+}
 sub Company {
 	return new openprint::Company( $_[0]{'owner_id'} );
 } # end sub Company

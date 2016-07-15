@@ -47,10 +47,10 @@ Please select a company or user to obtain login information.<br/>
 					<label>User Type</label>
 					<select name="ddmUserRole" onchange="f1.btnFunction.value='';f1.submit();">
 						<option value="">All User Types</option>
-						<? echo ( make_drop_down( [ 'C', 'Customer', 'E', 'Employee','A', 'Administrator' ], $param{'ddmUserRole'} ); ) ?>
+						<? echo ( make_drop_down( [ 'C', 'Customer', 'E', 'Employee','A', 'Administrator' ], $param{ddmUserRole} ); ) ?>
 					</select>
 				</li>
-				<li><label>Deleted?</label><? echo ( radio( 'deleted', [ '1','Yes', '0', 'No', '', 'Both' ], $param{'deleted'}, {onclick=>"f1.ddmUser.selectedIndex=-1;f1.btnFunction.value='Go';f1.submit();"} ); ) ?></li>
+				<li><label>Deleted?</label><? echo ( radio( 'deleted', [ '1','Yes', '0', 'No', '', 'Both' ], $param{deleted}, {onclick=>"f1.ddmUser.selectedIndex=-1;f1.btnFunction.value='Go';f1.submit();"} ); ) ?></li>
 				<li>
 					<label>User Name</label>
 					<select name="ddmUser" onchange="f1.btnFunction.value='';f1.submit();">
@@ -73,9 +73,9 @@ Please select a company or user to obtain login information.<br/>
 					) ?>
 				</label>
 				
-				<? if ( $$variable{'EDIT_USER_NUM'} ) ?>
+				<? if ( $$variable{EDIT_USER_NUM} ) ?>
 				<span style="float:right;"><?EDIT_USER_NUM?> of <?NUM_USERS?></span>
-				<? endif ( $$variable{'EDIT_USER_NUM'} ) ?>
+				<? endif ( $$variable{EDIT_USER_NUM} ) ?>
 				<? echo ( my $html = '';
 					$html .= button( 'Prev1', { onclick=>"f1.btnFunction.value='&lt;&lt;';fmCheck(f1);", text=>'&lt;&lt;' } );
 					$html .= button( 'Next1', { onclick=>"f1.btnFunction.value='&gt;&gt;';fmCheck(f1);", text=>'&gt;&gt;' } );
@@ -241,27 +241,33 @@ Please select a company or user to obtain login information.<br/>
 							'<li><label>Limit for ' . $_->name() . '</label>'.input( type=>'cardinal', name=>'po_limit-'.$_->id(), value=>$$variable{User}->po_limit( $_->id() ) ).'</li>' } openprint::PurchaseOrder_ContentType->find( order=>'lower(name)')
 							);
 					) ?>
-					<? if ( @{$$variable{'csr_ids'}} = openprint::User->find('id !='=>$$variable{User}->id(), company_id=>$config{owner_id}, type=>['E','A'], 'usergroup any'=>'Sales' ) ) ?>
+					<? if ( @{$$variable{csr_ids}} = openprint::User->find('id !='=>$$variable{User}->id(), company_id=>$config{owner_id}, type=>['E','A'], 'usergroup any'=>'Sales' ) ) ?>
 					<li class="csr_ids">
 						<label>Assistant to</label>
 						<select name="csr_ids" size="4" multiple="multiple">
-							<? echo ( make_drop_down( [ map { $_->id(), $_->name() } @{$$variable{'csr_ids'}} ], [$$variable{User}->csr_ids()] ); ) ?>
+							<? echo ( make_drop_down( [ map { $_->id(), $_->name() } @{$$variable{csr_ids}} ], [$$variable{User}->csr_ids()] ); ) ?>
 						</select>
 					</li>
-					<? endif ( @{$$variable{'csr_ids'}} = openprint::User->find('id !='=>$$variable{User}->id(), company_id=>$config{owner_id}, type=>['E','A'], 'usergroup any'=>'Sales' ) ) ?>
+					<li class="assistant_ids">
+						<label>Assistants</label>
+						<select name="assistant_ids" size="4" multiple="multiple">
+							<? echo ( make_drop_down( [ map { $_->id(), $_->name() } @{$$variable{csr_ids}} ], [$$variable{User}->assistant_ids()] ); ) ?>
+						</select>
+					</li>
+					<? endif ( @{$$variable{csr_ids}} = openprint::User->find('id !='=>$$variable{User}->id(), company_id=>$config{owner_id}, type=>['E','A'], 'usergroup any'=>'Sales' ) ) ?>
 					<? endif ( sets::isin( $$variable{User}->type(), ['E','A'] ) ) ?>
 				</ul>
 			</div>
 			<div class="rightColumn">
 				<ul>
-					<? if ( @{$$variable{'user_categories'}} = openprint::MarketingCategory->find('order'=>'lower(name)') ) ?>
+					<? if ( @{$$variable{user_categories}} = openprint::MarketingCategory->find('order'=>'lower(name)') ) ?>
 					<li class="user_categories">
 						<label>User Category</label>
 						<select name="selectUserCategories" size="4" multiple="multiple">
-						<? echo ( make_drop_down( [ map { $_->id(), $_->name() } @{$$variable{'user_categories'}} ], [ openprint::MarketingCategory->find('user_id any'=>$$variable{User}->id()) ] ); ) ?>
+						<? echo ( make_drop_down( [ map { $_->id(), $_->name() } @{$$variable{user_categories}} ], [ openprint::MarketingCategory->find('user_id any'=>$$variable{User}->id()) ] ); ) ?>
 						</select>
 					</li>
-					<? endif ( @{$$variable{'user_categories'}} = openprint::MarketingCategory->find('order'=>'lower(name)') ) ?>
+					<? endif ( @{$$variable{user_categories}} = openprint::MarketingCategory->find('order'=>'lower(name)') ) ?>
 <li class="email_quotes notrequired">
                     <label>Email my quotes to myself?</label>
                     <input type="radio" id="email_quotes_to_myself1" name="email_quotes_to_myself" <? echo ( checked( $$variable{User}->email_quotes_to_myself() ); ) ?> value="1" />
@@ -269,16 +275,16 @@ Please select a company or user to obtain login information.<br/>
                     <input type="radio" id="email_quotes_to_myself0" name="email_quotes_to_myself" <? echo ( checked( ! $$variable{User}->email_quotes_to_myself() ); ) ?> value="0" />
                     <label class="radio" for="email_quotes_to_myself0">No</label>
                 </li>
-<? eval ( @{$$variable{'QuoteLevels'}} = sql::execute( undef, undef, 'SELECT id,name FROM QuoteLevels Order BY lower(name)' ); ) ?>
-<? if ( @{$$variable{'QuoteLevels'}} > 1 ) ?>
+<? eval ( @{$$variable{QuoteLevels}} = sql::execute( undef, undef, 'SELECT id,name FROM QuoteLevels Order BY lower(name)' ); ) ?>
+<? if ( @{$$variable{QuoteLevels}} > 1 ) ?>
                 <li class="notrequired">
                     <label>Quote Level</label>
                     <select id="quote_level" name="quote_level">
                         <option value="">select</option>
-                        <? echo ( make_drop_down( $$variable{'QuoteLevels'}, $$variable{User}->quote_level() ) ) ?>
+                        <? echo ( make_drop_down( $$variable{QuoteLevels}, $$variable{User}->quote_level() ) ) ?>
                     </select>
                 </li>
-<? endif ( @{$$variable{'QuoteLevels'}} > 1 ) ?>
+<? endif ( @{$$variable{QuoteLevels}} > 1 ) ?>
 				</ul>
 			</div>
 		</fieldset>
@@ -294,9 +300,9 @@ Please select a company or user to obtain login information.<br/>
 			) ?>
 			</ul>
 		</fieldset>
-		<? if ( $$variable{'DoEmail'} ) ?>
+		<? if ( $$variable{DoEmail} ) ?>
 		<?include(/account/_email_settings.html)?>
-		<? endif ( $$variable{'DoEmail'} ) ?>
+		<? endif ( $$variable{DoEmail} ) ?>
 		<? echo ( include('/account/_user_profile_edit.html'); ) ?>
 		<div class="LoginCredentials">
 			<fieldset><legend>Login Information</legend> 
@@ -317,7 +323,7 @@ Please select a company or user to obtain login information.<br/>
 						<span id="password_alert"></span>
 					</li>
 					<li><label>Password Last Changed</label>
-						<? echo ( $$variable{User}->password_changed_on() ? Date::Format::time2str($config{'DateTimeFormat'}, Date::Parse::str2time( $$variable{User}->password_changed_on() ) ) : 'never' ) ?>
+						<? echo ( $$variable{User}->password_changed_on() ? Date::Format::time2str($config{DateTimeFormat}, Date::Parse::str2time( $$variable{User}->password_changed_on() ) ) : 'never' ) ?>
 					</li>
 					<li> 
 						<label>User must change password on next login?</label>
@@ -348,15 +354,15 @@ Please select a company or user to obtain login information.<br/>
 			<? echo (
 					if ( $$variable{User}->company_id() ) {
 						return button( 'CompanyInfo2', { href=>'company_profiles.html?ddmCustomer='.$$variable{User}->company_id(), text=>'Company Information' } );
-					} elsif ( $param{'ddmCustomer'} ) {
-						return button( 'CompanyInfo2', { href=>'company_profiles.html?ddmCustomer='.$param{'ddmCustomer'}, text=>'Company Information' } );
+					} elsif ( $param{ddmCustomer} ) {
+						return button( 'CompanyInfo2', { href=>'company_profiles.html?ddmCustomer='.$param{ddmCustomer}, text=>'Company Information' } );
 					}
 					return;
 			) ?>
 			</label>
-			<? if ( $$variable{'EDIT_USER_NUM'} ) ?>
+			<? if ( $$variable{EDIT_USER_NUM} ) ?>
 			<span style="float:right;"><?EDIT_USER_NUM?> of <?NUM_USERS?></span>
-			<? endif ( $$variable{'EDIT_USER_NUM'} ) ?>
+			<? endif ( $$variable{EDIT_USER_NUM} ) ?>
 			<? echo ( my $html = '';
 				$html .= button( 'Prev2', { onclick=>"f1.btnFunction.value='&lt;&lt;';fmCheck(f1);", text=>'&lt;&lt;' } );
 				$html .= button( 'Next2', { onclick=>"f1.btnFunction.value='&gt;&gt;';fmCheck(f1);", text=>'&gt;&gt;' } );

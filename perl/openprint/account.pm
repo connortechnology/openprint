@@ -1,6 +1,6 @@
 use strict;
 package openprint::account;
-use constant DEBUG => 1;
+use constant DEBUG => 0;
 
 require Email::Valid;
 require sql;

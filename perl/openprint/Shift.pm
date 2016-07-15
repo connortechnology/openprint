@@ -17,37 +17,37 @@ require openprint::Equipment_Shift;
 require openprint::User;
 require openprint::ScheduledJob;
 
-$debug = 1;
+$debug = 0;
 
 $table = 'shifts';
 $serial = 'shifts_id_seq';
 
 %fields = (
-	'id'				=>	'id',
-	'starttime'			=>	'starttime',
-	'endtime'			=>	'endtime',
-	'operator_id'		=>	'operator_id',
-	'shift_id'			=>	'shift_id',
-	'equipment_id'		=>	'equipment_id',
-	'starttime_seconds'	=>	undef,
-	'endtime_seconds'	=>	undef,
-	'created_on'		=>	'created_on',
-	'updated_on'		=>	'updated_on',
+	id					=>	'id',
+	starttime			=>	'starttime',
+	endtime				=>	'endtime',
+	operator_id			=>	'operator_id',
+	shift_id			=>	'shift_id',
+	equipment_id		=>	'equipment_id',
+	starttime_seconds	=>	undef,
+	endtime_seconds		=>	undef,
+	created_on			=>	'created_on',
+	updated_on			=>	'updated_on',
 );
 %find_fields = (
-	'name'		=>	'(SELECT name FROM equipment_shifts WHERE shift_id=equipment_shifts.id)',
-	'startdate'	=>	'date(starttime)',
+	name		=>	'(SELECT name FROM equipment_shifts WHERE shift_id=equipment_shifts.id)',
+	startdate	=>	'date(starttime)',
 );
 
 %transforms = (
-	'id'			=>	[ 's/\D//g' ],
-	'operator_id'	=>	[ 's/\D//g' ],
+	id			=>	[ 's/\D//g' ],
+	operator_id	=>	[ 's/\D//g' ],
 );
 
 %defaults = (
-	'operator_id'		=>	undef,
-	'created_on'		=>	q`'NOW()'`,
-	'updated_on'		=>	q`'NOW()'`,
+	operator_id		=>	undef,
+	created_on		=>	q`'NOW()'`,
+	updated_on		=>	q`'NOW()'`,
 );
 
 my $parser = 'DateTime::Format::Pg';
@@ -155,12 +155,10 @@ sub Equipment {
 sub to_string {
 	my ( $self ) = @_;
 	if ( ! exists $$self{to_string} ) {
-$openprint::log->debug("Getting to_string");
 		$$self{to_string} = sprintf('%s %s %s to %s op:(%s)', $self->Equipment()->name(), $self->name(), 
 			$self->starttime() ? $parser->format_datetime( $self->starttime_dt ) : '',
 			$self->endtime() ? $parser->format_datetime( $self->endtime_dt ) : '',
 			$self->Operator()->name() );
-$openprint::log->debug("Getting to_string");
 	} # end if
 	return $$self{to_string};
 } # end sub to_string
