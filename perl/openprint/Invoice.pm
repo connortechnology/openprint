@@ -347,9 +347,11 @@ sub Taxes {
 
 	if ( @_ > 1 and ! defined $_[1] ) {
 $log->debug("Getting rid of taxes") if $debug;
-		foreach ( openprint::Invoice_Tax->find( invoice_id=>$$self{id} ) ) {
-			$_->destroy();
-		} # end foreach	 Tax
+		if ( $$self{id} ) {
+			foreach ( openprint::Invoice_Tax->find( invoice_id=>$$self{id} ) ) {
+				$_->destroy();
+			} # end foreach	 Tax
+		}
 		$$self{Taxes} = [];
 	} # end if
 
