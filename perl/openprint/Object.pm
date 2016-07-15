@@ -1222,7 +1222,7 @@ sub Object {
 		return undef;
 	} # end if
 	$_ = $type->new( $_[0]{object_id} );
-	$openprint::log->debug( "Returning object of type " . ref $_ );
+	$openprint::log->debug( "Returning object of type " . ref $_ ) if $debug;
 	return $_;
 } # end sub Object
 
