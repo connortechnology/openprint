@@ -55,6 +55,10 @@ $serial = 'equipment_shifts_id_seq';
 	'name'			=>	q`'Shift'`,
 );
 
+sub to_string {
+	return sprintf("EquipmentShift: %s %s %s", $_[0]->Equipment()->name(), $_[0]->name(), misc::seconds_to_JDF_interval( $_[0]{duration} ) );
+}
+
 my $dtfd = DateTime::Format::Duration->new(
 		pattern => '%Y years, %m months, %e days, '.
 		'%H hours, %M minutes, %S seconds'
@@ -71,7 +75,7 @@ sub starttime_seconds {
 		$_[0]{endtime_seconds} = $_[0]{starttime_seconds} + $_[0]{duration_seconds};
 	} # end if
 	return $_[0]{starttime_seconds};
-} # end sub endtime_seconds
+} # end sub starttime_seconds
 
 sub endtime {
 	if ( ! $_[0]{endtime} ) {
@@ -430,8 +434,10 @@ sub duration_seconds {
 sub distance {
 	my ( $self, $Next ) = @_;
 	$Next = $self->Next() if ! $Next;
-	if ( $$Next{starttime_seconds} >= $$self{starttime_seconds} ) {
-		return $$Next{starttime_seconds} - $$self{starttime_seconds};
+	if ( $$Next{starttime_seconds} > $$self{starttime_seconds} ) {
+		return $$Next{starttime_seconds} - $self->endtime_seconds();
+	} elsif ( $$self{starttime_seconds} == $$Next{starttime_seconds} ) {
+		return DAY - $$self{duration_seconds};
 	} else {
 		# Wrap around
 		my $endtime = $self->endtime_seconds() % DAY;
