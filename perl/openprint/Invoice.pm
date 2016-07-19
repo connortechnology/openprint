@@ -370,11 +370,11 @@ $log->debug("Generating taxes");
 					state	=>	$self->Invoicee()->state()),
 				) {
 			my $T = new openprint::Invoice_Tax();
-			$T->save({
-				invoice_id	=>	$$self{id},
+			$T->set({
 				tax_id		=>	$$Tax{id},
 				rate 		=>	$$Tax{rate},
 			});
+			$T->save({ invoice_id	=>	$$self{id} } ) if $$self{id};
 			push @{$$self{Taxes}}, $T;
 		} # end foreach Tax
 	} # end if

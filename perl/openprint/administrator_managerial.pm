@@ -685,6 +685,7 @@ sub payment_options {
 		$variable{error} .= $variable{PaymentType}->save(\%param);
 	} elsif ( $param{btnFunction} eq 'Delete' ) {
 		$variable{error} .= $variable{PaymentType}->delete();
+		$variable{ExternalRedirect} = '/administrator/managerial/payment_options.html' if ! $variable{error};
 	} # end if
 } # end sub payment_options
 sub emails {
