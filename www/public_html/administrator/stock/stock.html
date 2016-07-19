@@ -67,7 +67,7 @@
 </script>
 <?include('/includes/error_reporting.html')?>
 <div class="Stock">
-<form id="f1" name="f1" method="post" action="stock.html?stock_id=<? echo ( $$variable{'Stock'}->id(); ) ?>">
+<form id="f1" name="f1" method="post" action="stock.html?stock_id=<? echo ( $$variable{Stock}->id(); ) ?>">
 	<p class="buttons">
 		<? echo ( join('',
 		button( 'Prev1', { onclick=>"f1.btnFunction.value='Prev';f1.submit();", text=>'&lt;&lt;' } ),
@@ -82,7 +82,7 @@
 	</p>
 	<br class="spacer"/>
 	<div class="Information">
-		<fieldset><legend>Stock Information: (<? echo ( $$variable{'Stock'}->id(); ) ?>)</legend>
+		<fieldset><legend>Stock Information: (<? echo ( $$variable{Stock}->id(); ) ?>)</legend>
 			<div class="leftColumn">
 				<p>
 					<label for="ddmOwner">Owner</label>
@@ -107,7 +107,7 @@
 					<select id="ddmManufacturer" name="ddmManufacturer" size="1">
 						<option value="">select</option>
 					<? echo (
-							make_drop_down( openprint::Manufacturer->dropdown(order=>'lower(name)'), $$variable{'Stock'}->manufacturer_id() );
+							make_drop_down( openprint::Manufacturer->dropdown(order=>'lower(name)'), $$variable{Stock}->manufacturer_id() );
 							) ?>
 					</select>
 					<input style="display: none;" type="text" id="txtManufacturer" name="txtManufacturer" onfocus="if(!this.value){this.value=get_ddm_text(f1.ddmManufacturer);}ddm_select_by_index( f1.ddmManufacturer, 0 );" />
@@ -127,7 +127,7 @@
 					<select id="ddmBrand" name="ddmBrand" size="1" onchange="f1.txtBrand.value='';">
 						<option value="">select</option>
 						<? echo (
-							make_drop_down( openprint::StockBrand->dropdown(order=>'lower(name)'), $$variable{'Stock'}->brand_id() );
+							make_drop_down( openprint::StockBrand->dropdown(order=>'lower(name)'), $$variable{Stock}->brand_id() );
 						) ?>
 					</select>
 					<input style="display: none;" type="text" id="txtBrand" name="txtBrand" onfocus="if(!this.value){this.value=get_ddm_text(f1.ddmBrand);}ddm_select_by_index( f1.ddmBrand, 0 );" />
@@ -137,7 +137,7 @@
 					<select id="ddmFinish" name="ddmFinish" size="1" onchange="f1.txtFinish.value='';">
 						<option value="">select</option>
 					<? echo (
-							make_drop_down( openprint::StockFinish->dropdown(order=>'lower(name)'), $$variable{'Stock'}->finish_id() );
+							make_drop_down( openprint::StockFinish->dropdown(order=>'lower(name)'), $$variable{Stock}->finish_id() );
 					) ?>
 					</select>
 					<input style="display: none;" type="text" id="txtFinish" name="txtFinish" onfocus="if(!this.value){this.value=get_ddm_text(f1.ddmFinish);}ddm_select_by_index( f1.ddmFinish, 0 );" />
@@ -147,7 +147,7 @@
 					<select id="ddmColour" name="ddmColour" size="1" onchange="f1.txtColour.value='';">
 						<option value="">select</option>
 						<? echo (
-							make_drop_down( openprint::StockColour->dropdown(order=>'lower(name)'), $$variable{'Stock'}->colour_id() );
+							make_drop_down( openprint::StockColour->dropdown(order=>'lower(name)'), $$variable{Stock}->colour_id() );
 						) ?>
 					</select>
 					<input style="display: none;" type="text" id="txtColour" name="txtColour" onfocus="if(!this.value){this.value=get_ddm_text(f1.ddmColour);}ddm_select_by_index( f1.ddmColour, 0 );" />
@@ -157,7 +157,7 @@
 					<select id="ddmWeight" name="ddmWeight" size="1" onchange="f1.txtWeight.value='';">
 						<option value="">select</option>
 					<? echo (
-							make_drop_down( openprint::StockWeight->dropdown(order=>'lower(name)'), $$variable{'Stock'}->weight_id() );
+							make_drop_down( openprint::StockWeight->dropdown(order=>'lower(name)'), $$variable{Stock}->weight_id() );
 							) ?>
 					</select>
 					<input style="display: none;" type="text" id="txtWeight" name="txtWeight" onfocus="ddm_select_by_index( f1.ddmWeight, 0 );" />
@@ -167,7 +167,7 @@
 					<select id="ddmQuality" name="ddmQuality" size="1">
 						<option value="">select</option>
 					<? echo (
-							make_drop_down( openprint::StockQuality->dropdown(order=>'lower(name)'), $$variable{'Stock'}->quality_id() );
+							make_drop_down( openprint::StockQuality->dropdown(order=>'lower(name)'), $$variable{Stock}->quality_id() );
 							) ?>
 					</select>
 					<input style="display: none;" type="text" id="txtQuality" name="txtQuality" onfocus="ddm_select_by_index( f1.ddmQuality, 0 ) ;" />
@@ -177,7 +177,7 @@
 					<select id="material_id" name="material_id" size="1" onchange="f1.material.value='';">
 						<option value="">select</option>
 					<? echo (
-							make_drop_down( openprint::StockMaterial->dropdown(order=>'lower(name)'), $$variable{'Stock'}->material_id() );
+							make_drop_down( openprint::StockMaterial->dropdown(order=>'lower(name)'), $$variable{Stock}->material_id() );
 							) ?>
 					</select>
 					<input style="display: none;" type="text" id="material" name="material" onfocus="ddm_select_by_index( f1.material_id, 0 );" />
@@ -204,9 +204,9 @@
 				</p>
 				<p>
 					<label>Type</label>
-					<input type="radio" id="typeSheet" name="type" value="Sheet" onclick="$('StockHeight').show();$('BasisSize').hide();$('MWeight').show();$('QuantityPerPackageUnits').innerHTML='sheets';$('MinimumOrderUnits').innerHTML='sheets';" <? echo ( 'checked="checked"' if $$variable{'Stock'}->type() ne 'Roll'; ) ?> />
+					<input type="radio" id="typeSheet" name="type" value="Sheet" onclick="$('StockHeight').show();$('BasisSize').hide();$('MWeight').show();$('QuantityPerPackageUnits').innerHTML='sheets';$('MinimumOrderUnits').innerHTML='sheets';" <? echo ( 'checked="checked"' if $$variable{Stock}->type() ne 'Roll'; ) ?> />
 					<label class="radio" for="typeSheet">Sheet</label>
-					<input type="radio" id="typeRoll" name="type" value="Roll" onclick="$('StockHeight').hide();$('BasisSize').show();$('MWeight').hide();$('QuantityPerPackageUnits').innerHTML='lbs';$('MinimumOrderUnits').innerHTML='lbs';" <? echo ( 'checked="checked"' if $$variable{'Stock'}->type() eq 'Roll'; ) ?> />
+					<input type="radio" id="typeRoll" name="type" value="Roll" onclick="$('StockHeight').hide();$('BasisSize').show();$('MWeight').hide();$('QuantityPerPackageUnits').innerHTML='lbs';$('MinimumOrderUnits').innerHTML='lbs';" <? echo ( 'checked="checked"' if $$variable{Stock}->type() eq 'Roll'; ) ?> />
 					<label class="radio" for="typeRoll">Roll</label>
 				</p>
 				<p>
@@ -242,24 +242,24 @@
 				</p>
 				<p>
 					<label>Grain Direction</label>
-					<? echo ( radio( 'grain_direction', [ 'width', 'Width', 'height', 'Height' ], $$variable{'Stock'}->grain_direction() ); ) ?>
+					<? echo ( radio( 'grain_direction', [ 'width', 'Width', 'height', 'Height' ], $$variable{Stock}->grain_direction() ); ) ?>
 				</p>
 				<p>
 					<label>Customer Supplied</label>
-					<? echo ( radio( 'supplied', [ '1', 'Yes', '0', 'No', '', 'Both' ], $$variable{'Stock'}->supplied() ); ) ?>
+					<? echo ( radio( 'supplied', [ '1', 'Yes', '0', 'No', '', 'Both' ], $$variable{Stock}->supplied() ); ) ?>
 				</p>
 				<p>
-					<label>Quantity Per Package (<span id="QuantityPerPackageUnits"><? echo ( $$variable{'Stock'}->units() ) ?></span>)</label>
+					<label>Quantity Per Package (<span id="QuantityPerPackageUnits"><? echo ( $$variable{Stock}->units() ) ?></span>)</label>
 					<? echo ( input( type=>'cardinal', name=>'sheets_per_package', value=>$$variable{Stock}->sheets_per_package() ); ) ?>
 				</p>
 			</div><!--left-->
 			<div class="rightColumn">
 				<p class="full_packages">
 					<label>Order Full Packages</label>
-					<? echo ( radio( 'full_packages', [ '1', 'Yes', '0', 'No' ], $$variable{'Stock'}->full_packages() ); ) ?>
+					<? echo ( radio( 'full_packages', [ '1', 'Yes', '0', 'No' ], $$variable{Stock}->full_packages() ); ) ?>
 				</p>
 				<p class="minimum_order">
-					<label>Minimum Order (<span id="MinimumOrderUnits"><? echo ( $$variable{'Stock'}->type() eq 'Roll' ? 'lbs' : 'sheets' ) ?></span>)</label>
+					<label>Minimum Order (<span id="MinimumOrderUnits"><? echo ( $$variable{Stock}->type() eq 'Roll' ? 'lbs' : 'sheets' ) ?></span>)</label>
 					<? echo ( input( type=>'cardinal', id=>'minimum_order', name=>'minimum_order', value=>$$variable{Stock}->minimum_order() ); ) ?>
 				</p>
 				<p class="available_to_order">
@@ -268,11 +268,11 @@
 				</p>
 				<p class="fsc_code">
 					<label>FSC Code</label>
-					<input type="text" id="fsc_code" name="fsc_code" value="<? echo ( $$variable{'Stock'}->fsc_code(); ) ?>" />
+					<input type="text" id="fsc_code" name="fsc_code" value="<? echo ( $$variable{Stock}->fsc_code(); ) ?>" />
 				</p>
 				<p class="inventory_number">
 					<label>Inventory #</label>
-					<input type="text" id="inventory_number" name="inventory_number" value="<? echo ( $$variable{'Stock'}->inventory_number(); ) ?>" />
+					<input type="text" id="inventory_number" name="inventory_number" value="<? echo ( $$variable{Stock}->inventory_number(); ) ?>" />
 				</p>
 				<p class="message">
 					<label>Message</label>
@@ -280,78 +280,78 @@
 				</p>
 				<p class="cuttable">
 					<label>Can this stock be cut?</label>
-					<input type="radio" id="cuttableY" name="cuttable" value="1" <? echo ( checked( $$variable{'Stock'}->cuttable() ); ) ?> />
+					<input type="radio" id="cuttableY" name="cuttable" value="1" <? echo ( checked( $$variable{Stock}->cuttable() ); ) ?> />
 					<label class="radio" for="cuttableY">Yes</label>
-					<input type="radio" id="cuttableN" name="cuttable" value="0" <? echo ( checked( ! $$variable{'Stock'}->cuttable() ); ) ?> />
+					<input type="radio" id="cuttableN" name="cuttable" value="0" <? echo ( checked( ! $$variable{Stock}->cuttable() ); ) ?> />
 					<label class="radio" for="cuttableN">No</label>
 				</p>
 				<p class="doublesided">
 					<label>Is this stock double sided?</label>
-					<input type="radio" id="doublesidedY" name="doublesided" value="1" <? echo ( checked( $$variable{'Stock'}->doublesided() ); ) ?> />
+					<input type="radio" id="doublesidedY" name="doublesided" value="1" <? echo ( checked( $$variable{Stock}->doublesided() ); ) ?> />
 					<label class="radio" for="doublesidedY">Yes</label>
-					<input type="radio" id="doublesidedN" name="doublesided" value="0" <? echo ( checked( ! $$variable{'Stock'}->doublesided() ); ) ?> />
+					<input type="radio" id="doublesidedN" name="doublesided" value="0" <? echo ( checked( ! $$variable{Stock}->doublesided() ); ) ?> />
 					<label class="radio" for="doublesidedN">No</label>
 				</p>
 				<p class="multipart">
 					<label>Does this stock have multiple parts (eg: forms)?</label>
-					<input type="radio" id="multipartY" name="multipart" value="1" <? echo ( checked( $$variable{'Stock'}->multipart() ); ) ?> onclick="$('parts_div').show();" />
+					<input type="radio" id="multipartY" name="multipart" value="1" <? echo ( checked( $$variable{Stock}->multipart() ); ) ?> onclick="$('parts_div').show();" />
 					<label class="radio" for="multipartY">Yes</label>
-					<input type="radio" id="multipartN" name="multipart" value="0" onclick="$('parts_div').hide();" <? echo ( checked( ! $$variable{'Stock'}->multipart() ); ) ?> />
+					<input type="radio" id="multipartN" name="multipart" value="0" onclick="$('parts_div').hide();" <? echo ( checked( ! $$variable{Stock}->multipart() ); ) ?> />
 					<label class="radio" for="multipartN">No</label>
 				</p>
-				<p id="parts_div" <? echo ( $$variable{'Stock'}->multipart() ? '' : 'style="display:none;"' ) ?>>
+				<p id="parts_div" <? echo ( $$variable{Stock}->multipart() ? '' : 'style="display:none;"' ) ?>>
 					<label>How many parts</label>
-					<input type="number" id="parts" name="parts" value="<? echo ( $$variable{'Stock'}->parts() ) ?>" />
+					<input type="number" id="parts" name="parts" value="<? echo ( $$variable{Stock}->parts() ) ?>" />
 				</p>
 				<p class="perfecting">
 					<label>Is this stock stiff enough to perfect without gutters?</label>
-					<input type="radio" id="perfectingY" name="perfecting" value="1" <? echo ( checked( $$variable{'Stock'}->perfecting() ); ) ?> />
+					<input type="radio" id="perfectingY" name="perfecting" value="1" <? echo ( checked( $$variable{Stock}->perfecting() ); ) ?> />
 					<label class="radio" for="perfectingY">Yes</label>
-					<input type="radio" id="perfectingN" name="perfecting" value="0" <? echo ( checked( ! $$variable{'Stock'}->perfecting() ); ) ?> />
+					<input type="radio" id="perfectingN" name="perfecting" value="0" <? echo ( checked( ! $$variable{Stock}->perfecting() ); ) ?> />
 					<label class="radio" for="perfectingN">No</label>
 				</p>
 				<p class="scoring">
 					<label>Does this stock require folder scoring before folding?</label>
-					<? echo ( radio( 'scoring', ['1','Yes','0','No', '', 'Auto' ], $$variable{'Stock'}->score_required(), { default=>'' } ); ) ?>
+					<? echo ( radio( 'score_required', ['1','Yes','0','No' ], $$variable{Stock}->score_required(), { default=>'0' } ); ) ?>
 				</p>
 				<p class="diescoring">
 					<label>Does this stock require die scoring before folding?</label>
-					<? echo ( radio( 'die_score_required', [ 1, 'Yes', 0, 'No' ], $$variable{'Stock'}->die_score_required() ); ) ?>
+					<? echo ( radio( 'die_score_required', [ 1, 'Yes', 0, 'No' ], $$variable{Stock}->die_score_required() ); ) ?>
 				</p>
 				<p class="digital">
 					<label>Is this stock suitable for digital printing?</label>
-					<input type="radio" id="digitalY" name="digital" value="1" <? echo ( checked( $$variable{'Stock'}->digital() ); ) ?> />
+					<input type="radio" id="digitalY" name="digital" value="1" <? echo ( checked( $$variable{Stock}->digital() ); ) ?> />
 					<label class="radio" for="digitalY">Yes</label>
-					<input type="radio" id="digitalN" name="digital" value="0" <? echo ( checked( ! $$variable{'Stock'}->digital() ); ) ?> />
+					<input type="radio" id="digitalN" name="digital" value="0" <? echo ( checked( ! $$variable{Stock}->digital() ); ) ?> />
 					<label class="radio" for="digitalN">No</label>
 				</p>
 				<p class="bladecleaning">
 					<label>Does this stock require blade cleaning after cutting?</label>
-					<input type="radio" id="bladecleaningY" name="bladecleaning" value="1" <? echo ( checked( $$variable{'Stock'}->bladecleaning() ); ) ?> />
+					<input type="radio" id="bladecleaningY" name="bladecleaning" value="1" <? echo ( checked( $$variable{Stock}->bladecleaning() ); ) ?> />
 					<label class="radio" for="bladecleaningY">Yes</label>
-					<input type="radio" id="bladecleaningN" name="bladecleaning" value="0" <? echo ( checked( ! $$variable{'Stock'}->bladecleaning() ); ) ?> />
+					<input type="radio" id="bladecleaningN" name="bladecleaning" value="0" <? echo ( checked( ! $$variable{Stock}->bladecleaning() ); ) ?> />
 					<label class="radio" for="bladecleaningN">No</label>
 				</p>
 				<p class="user_type">
 					<label>Required User Type</label>
 					<select name="user_type" id="user_type">
-					<? echo	( make_drop_down( [ '', 'All', 'C', 'Customer', 'E', 'Employee', 'A', 'Administrator' ], $$variable{'Stock'}->user_type() ); ) ?>
+					<? echo	( make_drop_down( [ '', 'All', 'C', 'Customer', 'E', 'Employee', 'A', 'Administrator' ], $$variable{Stock}->user_type() ); ) ?>
 					</select>
 				</p>
 				<hr class="spacer"/>
 				<p> <b>Tax Information</b> </p>
 				<p class="taxexempt1">
 					<label>Federal Tax Exemption?</label>
-						<input type="radio" id="taxexempt1Y" name="taxexempt1" value="1" <? echo ( checked( $$variable{'Stock'}->taxexempt1() ); ) ?> />
+						<input type="radio" id="taxexempt1Y" name="taxexempt1" value="1" <? echo ( checked( $$variable{Stock}->taxexempt1() ); ) ?> />
 						<label class="radio" for="taxexempt1Y">Yes</label>
-						<input type="radio" id="taxexempt1N" name="taxexempt1" value="0" <? echo ( checked( ! $$variable{'Stock'}->taxexempt1() ); ) ?> />
+						<input type="radio" id="taxexempt1N" name="taxexempt1" value="0" <? echo ( checked( ! $$variable{Stock}->taxexempt1() ); ) ?> />
 						<label class="radio" for="taxexempt1N">No</label>
 				</p>
 				<p class="taxexempt2">
 					<label>Prov/State Tax Exemption?</label>
-						<input type="radio" id="taxexempt2Y" name="taxexempt2" value="1" <? echo ( checked( $$variable{'Stock'}->taxexempt2() ); ) ?> />
+						<input type="radio" id="taxexempt2Y" name="taxexempt2" value="1" <? echo ( checked( $$variable{Stock}->taxexempt2() ); ) ?> />
 						<label class="radio" for="taxexempt2Y">Yes</label>
-						<input type="radio" id="taxexempt2N" name="taxexempt2" value="0" <? echo ( checked( ! $$variable{'Stock'}->taxexempt2() ); ) ?> />
+						<input type="radio" id="taxexempt2N" name="taxexempt2" value="0" <? echo ( checked( ! $$variable{Stock}->taxexempt2() ); ) ?> />
 						<label class="radio" for="taxexempt2N">No</label>
 				</p>
 				<p>
@@ -387,7 +387,7 @@
 							$ProjectType->id(),
 							URI::Escape::uri_escape($ProjectType->name()),
 							htmlize($ProjectType->description()),
-							checked( sets::isin( $ProjectType->id(), [ $$variable{'Stock'}->recommendations() ] ) ),
+							checked( sets::isin( $ProjectType->id(), [ $$variable{Stock}->recommendations() ] ) ),
 							);
 					} # end foreach
 					return $html;
@@ -396,15 +396,15 @@
 		</fieldset>
 	</div>
 	<input type="hidden" name="btnFunction" />
-	<? if ( $$variable{'stock_id'} ) ?>
+	<? if ( $$variable{stock_id} ) ?>
 	<div class="Pricing">
 		<fieldset><legend>Pricing</legend>
 			<div id="Prices"><?include(_prices.html)?></div>
 		</fieldset>
 	</div>
-	<? endif ( $$variable{'stock_id'} ) ?>
+	<? endif ( $$variable{stock_id} ) ?>
 </form>
-	<? if ( $$variable{'stock_id'} ) ?>
+	<? if ( $$variable{stock_id} ) ?>
 	<? echo ( include_logs( $$variable{Stock} ); ) ?>
-	<? endif ( $$variable{'stock_id'} ) ?>
+	<? endif ( $$variable{stock_id} ) ?>
 </div><!--Stock-->

@@ -173,13 +173,21 @@
 		</li>
 		<li>
 			<label>Size</label>
-			<? echo ( join('',
+			<? echo ( join("\n",
 input( type=>'float', name=>'width', id=>'width', value=>$session{'/administrator/stock/list.html?width'}, onkeyup=>'calc(this.form.name);' ),
 'x',
 input( type=>'float', name=>'height', id=>'height', value=>$session{'/administrator/stock/list.html?height'}, onkeyup=>'calc(this.form.name);' ),
 checkboxes( 'OrLarger', [1,'Or Larger'], $session{'/administrator/stock/list.html?OrLarger'}, { onclick=>'calc(this.form.name);' } ),
 ); ) ?>
 			
+		</li>
+		<li class="calliper"><label>Calliper (Use &lt; and &gt;)</label>
+		<? echo ( join("\n",
+					input( type=>'text', name=>'calliper', id=>'calliper', value=>$session{'/administrator/stock/list.html?calliper'},
+						oninput=>'calc(this.form.name);', pattern=>'[<>.0-9]*' ),
+					'inches',
+);
+) ?>
 		</li>
 		<li>
 			<label>Recommendations</label>
@@ -243,7 +251,7 @@ checkboxes( 'OrLarger', [1,'Or Larger'], $session{'/administrator/stock/list.htm
 	<br/>
 	<div id="Stocks">
 <? echo (
-	 if ( map { $session{'/administrator/stock/list.html?'.$_} ? $session{'/administrator/stock/list.html?'.$_} : () } ( qw{ brand_id finish_id colour_id weight_id } ) ) {
+	 if ( map { $session{'/administrator/stock/list.html?'.$_} ? $session{'/administrator/stock/list.html?'.$_} : () } ( qw{ brand_id finish_id colour_id weight_id calliper } ) ) {
 		return include('/administrator/stock/_stocks.html');
 	}
 

@@ -33,7 +33,8 @@ sub _stocks {
 			'group_id','owner_id','manufacturer_id','supplier_id', 'brand_id','finish_id',
 			'colour_id','weight_id','fsc_code','material_id', 'Types', 'recommendations',
 			'grain_direction', 'digital', 'width','height', 'scoring', 'setup_prices', 
-			'material_prices', 'customer_supplied', 'has_message', 'has_minimum_order' );
+			'material_prices', 'customer_supplied', 'has_message', 'has_minimum_order',
+			'calliper', );
 		$session{'/administrator/stock/list.html?OrLarger'} = $param{OrLarger};
 	} # end if
 } # end sub _stocks
@@ -199,6 +200,17 @@ $openprint::log->debug("Setting: $param{amount} " );
 				$Paper->recommendations( ref $param{PRF} eq 'ARRAY' ? @{$param{PRF}} : ( $param{PRF} ) );
 				$variable{error} .= $Paper->save();
 				$variable{ExternalRedirect} = '/administrator/stock/list.html';
+			} elsif ( $param{mode} eq 'other' ) {
+				my $changed = 0;
+				foreach my $field ( 'score_required' ) {
+					if ( $param{$field} ne '' and $Paper->$field() ne $param{$field} ) {
+						$Paper->$field( $param{$field} );
+						$changed = 1;
+					}
+				} # end foreach field
+				$Paper->save() if $changed;
+			} else {
+				$log->error("Unknown mode in apply changes");
 			} # end if
 			sql::end_transaction( $dbh, $ac );
 		} # end foreach Paper
@@ -274,7 +286,7 @@ sub stock {
 		$Paper->doublesided( $param{doublesided} );
 		$Paper->multipart( $param{multipart} );
 		$Paper->perfecting( $param{perfecting} );
-		$Paper->score_required( $param{scoring} );
+		$Paper->score_required( $param{score_required} );
 		$Paper->die_score_required( $param{die_score_required} );
 		$Paper->digital( $param{digital} );
 		$Paper->bladecleaning( $param{bladecleaning} );

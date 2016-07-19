@@ -2,7 +2,7 @@
 	@{$$variable{'Stocks'}} = ();
 	my $uri = '/administrator/stock/list.html';
 	my %suppliers;
-	foreach my $Stock ( openprint::Paper->find( 
+	my %sql = (
 			columns	=>	'*,(select name from stockbrands where id=brand_id) AS brand, (select name from stockfinishes where id=finish_id) AS finish, (select name from stockcolours where id=colour_id) AS colour, (select name from stockweights where id=weight_id) AS weight',
 			( $session{$uri.'?group_id'} ? ( group_id		=> $session{$uri.'?group_id'} ) : () ),
 			( $session{'/administrator/stock/list.html?owner_id'} ? ( 'owner_id'		=> $session{'/administrator/stock/list.html?owner_id'} ) : () ),
@@ -26,7 +26,17 @@
 			( $session{'/administrator/stock/list.html?has_message'} ne '' ? ( 'message is not null' => $session{'/administrator/stock/list.html?has_message'} ) : () ),
 			( $session{'/administrator/stock/list.html?has_minimum_order'} ne '' ? ( 'minimum_order is not null' => $session{'/administrator/stock/list.html?has_minimum_order'} ) : () ),
 			order		=> 'brand,finish,colour,weight, width, height'
-		) ) {
+		);
+		if ( $session{'/administrator/stock/list.html?calliper'} ) {
+			if ( $session{'/administrator/stock/list.html?calliper'} =~ /<([\.0-9]*)/ ) { 
+				$sql{'calliper <='} = $1;
+			} elsif ( $session{'/administrator/stock/list.html?calliper'} =~ />([\.0-9]*)/ ) { 
+				$sql{'calliper >='} = $1;
+			} else {
+				$sql{calliper} = $session{'/administrator/stock/list.html?calliper'};
+			}
+		}
+		foreach my $Stock ( openprint::Paper->find( %sql) ) {
 		next if $session{'/administrator/stock/list.html?recommendations'} eq '0' and $Stock->recommendations();
 		next if $session{'/administrator/stock/list.html?recommendations'} eq '1' and ! $Stock->recommendations();
 		if ( $session{'/administrator/stock/list.html?setup_prices'} eq '1' ) {
