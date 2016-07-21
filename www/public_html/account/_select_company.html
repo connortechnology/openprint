@@ -48,8 +48,10 @@ return $html;
 			<select id="ddmCompany" name="ddmCompany" onchange="stop_filter_companies();if(this.options[this.selectedIndex].value != '') f1.submit();">
 				<? echo ( 
 					$$variable{company_dropdown} = openprint::Company->dropdown(
-						or	=>'id IN ('.join(',',$openprint::User->company_id(), $session{company_id} ).')',
-						salesrep_id=>$session{'/account/select_company.html?csr_ids'} ? $session{'/account/select_company.html?csr_ids'} : [ $session{user_id}, $openprint::User->csr_ids() ],
+						or	=> { 
+							id => [ sets::union( $openprint::User->company_id(), $session{company_id} ) ],
+							salesrep_id=>$session{'/account/select_company.html?csr_ids'} ? $session{'/account/select_company.html?csr_ids'} : [ $session{user_id}, $openprint::User->csr_ids() ],
+							}
 						);
 					#$$variable{company_dropdown} = openprint::Company->dropdown( ) if @{$$variable{company_dropdown}} <= 2;
 					if ( @{$$variable{company_dropdown}} > 2000 ) {
