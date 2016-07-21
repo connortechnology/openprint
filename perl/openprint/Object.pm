@@ -686,10 +686,12 @@ sub get_fields_values {
 					$db_field .= $type;
 
 					if ( ref $$search{$k} eq 'ARRAY' ) {
-						if ( @{$$search{$k}} ) {
+						if ( @{$$search{$k}} != 1 ) {
 							push @where, $db_field .' IN ('.join(',', map {'?'} @{$$search{$k}} ) . ')';
-							push @values, @{$$search{$k}};
+						} else {
+							push @where, $db_field.'=?';
 						} # end if
+						push @values, @{$$search{$k}};
 					} elsif ( ref $$search{$k} eq 'HASH' ) {
 						foreach my $p_k ( keys %{$$search{$k}} ) {
 							my $v = $$search{$k}{$p_k};
