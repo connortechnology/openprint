@@ -89,10 +89,10 @@ sub save {
 	$self->set( $param ? $param : {} );
 
 	my $rc;
-	# none of these should be set by param
-	$$self{subtotal} = $self->subtotal( undef ) if ! $$self{subtotal_override};
+	# none of these should be set by param ( however employee_accounting will pass in a total if specified.. FIXME
+	$$self{subtotal} = $self->subtotal( undef ) if $$self{id} and ! $$self{subtotal_override};
 	$self->Taxes( undef );
-	$$self{total} = $self->total( undef );
+	$$self{total} = $self->total( undef ) if $$self{id};
 
 	$rc .= $self->SUPER::save( );
 	if ( ! $rc ) {
