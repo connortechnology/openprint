@@ -1623,7 +1623,7 @@ sub calliper {
 				$pages *= $$sig_specs{PageQuantity} if $$sig_specs{PageQuantity};
 			} elsif ( sets::isin( $$sig_specs{rdbTemplateType},['3PanelFold','3PanelZFold'] ) ) {
 				$pages = 3;
-			} elsif ( sets::isin( $$sig_specs{rdbTemplateType}, ['4PanelFold', '4PanelZFold'] ) ) {
+			} elsif ( sets::isin( $$sig_specs{rdbTemplateType}, ['4PanelFold', '4PanelZFold', '4PanelRollFold'] ) ) {
 				$pages = 4;
 			} elsif ( sets::isin( $$sig_specs{rdbTemplateType}, ['5PanelFold', '5PanelZFold'] ) ) {
 				$pages = 5;
