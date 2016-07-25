@@ -39,7 +39,11 @@ function delete_confirm(form) {
 					$html .= button( 'Copy', { onclick=>"f1.action='/main/quote/information.html';f1.btnFunction.value='Process New Quote';f1.submit();", text=>'Copy to' } );
 					$html .= button( 'Move', { onclick=>"f1.action='/main/quote/history_details.html';f1.btnFunction.value='Move To';f1.submit();", text=>'Move to' } );
 					$html .= q`<input type="text" onkeyup="filter_companies('company_id', {name:this.value,selected_id:get_ddm_value($('company_id'))});" class="filter" />`;
-					$html .= ssi::select( openprint::Company->dropdown( ( $$variable{Quote}->company_id()?(or=>'id='.$$variable{Quote}->company_id()):()), salesrep_id=>[ $session{user_id}, $openprint::User->csr_ids() ] ), $session{'company_id'}, { name=>'company_id', id=>'company_id', onchange=>'stop_filter_companies();' } );
+					$html .= ssi::select( openprint::Company->dropdown( or => {
+							id=>[ $openprint::User->company_id(), $openprint::Company->id(), ( $$variable{Quote}->company_id() ? $$variable{Quote}->company_id() : () ), 
+							salesrep_id => [ $session{user_id}, $openprint::User->csr_ids() ] } ),
+
+							$session{'company_id'}, { name=>'company_id', id=>'company_id', onchange=>'stop_filter_companies();' } );
 				} else {
 					$html .= button( 'Reuse', { onclick=>"f1.action='/main/quote/information.html';f1.btnFunction.value='Process New Quote';f1.submit();", text=>'Copy' } );
 				} # end if
