@@ -746,7 +746,7 @@ sub bump {
 				$self->save({'starttime'=>$NextShift->starttime()});
 			} # end if
 		} # end if
-		push @{$variable{changed}}, $self->Shift()->ul_id();
+		push @{$variable{changed}}, $self->Shift()->ul_id() if $Shift;
 	} # end if smartscheduling
 	sql::end_transaction( $dbh, $ac );
 	if ( $Project->id() ) {
