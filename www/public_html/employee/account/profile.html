@@ -257,7 +257,7 @@
 					if ( ($session{user_type} eq 'A' ) or ( openprint::usergroup::is_user_in( ['UserManagement'], $session{user_id} ) ) ) {
 						checkboxes( 'marketing_categories', openprint::MarketingCategory->dropdown( order=>'lower(name)'), \@users_categories, { container=>['<li>','</li>'] } );
 					} else {
-						return join("\n", map { '<li>'.$_->name().'</li>' } openprint::MarketingCategory->find( id=>\@users_categories, order=>'lower(name)' ) );
+						return join("\n", map { '<li>'.$_->name().'</li>' } openprint::MarketingCategory->find( id=>\@users_categories, order=>'lower(name)' ) ) if @users_categories;
 					} # end if
 				) ?>
 				</ul>
@@ -270,7 +270,7 @@
 					if ( ($session{user_type} eq 'A' ) or ( openprint::usergroup::is_user_in( ['UserManagement'], $session{user_id} ) ) ) {
 						$html .= checkboxes( 'UserGroups', openprint::UserGroup->dropdown( order=>'lower(name)'), \@usergroup_ids, { container=>['<li>','</li>'] } );
 					} else {
-						$html .= join("\n", map { '<li>'.$_->name().'</li>' } openprint::UserGroup->find( id=>\@usergroup_ids, order=>'lower(name)' ) );
+						$html .= join("\n", map { '<li>'.$_->name().'</li>' } openprint::UserGroup->find( id=>\@usergroup_ids, order=>'lower(name)' ) ) if @usergroup_ids;
 					} # end if
 					return $html . '</ul>';
 				) ?>
