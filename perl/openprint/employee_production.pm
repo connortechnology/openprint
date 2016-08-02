@@ -1879,7 +1879,17 @@ $log->debug("second job can't move");
 } # end sub _li_change
 
 sub _shift_popup {
-	$variable{Shift} = new openprint::Shift( $param{shift_id} );
+	if ( ! $param{shift_id} ) {
+		$variable{error} .= 'No shift id specified.<br/>';
+		$variable{Shift} = new openprint::Shift();
+		return;
+	}
+
+	my $Shift = $variable{Shift} = openprint::Shift->find_one( id=>$param{shift_id} );
+	if ( ! $Shift ) {
+		$variable{Shift} = new openprint::Shift();
+		$variable{error} .= "Shift not found for $param{shift_id}<br/>";
+	}
 } # end sub _shift_popup
 
 sub _shift_change {
@@ -2007,7 +2017,17 @@ sub _job_popup {
 } # end sub _job_popup
 
 sub _signature_completion_popup {
-	$variable{Job} = new openprint::ScheduledJob( $param{schedule_id} );
+	if ( ! $param{schedule_id} ) {
+		$variable{error} .= "Job id not specified<br/>";
+		$variable{Job} = new openprint::ScheduledJob();
+		return;
+	}
+		
+	my $Job = $variable{Job} = openprint::ScheduledJob->find_one( id=>$param{schedule_id} );
+	if ( ! $Job ) {
+		$variable{error} .= "Job not found for id $param{schedule_id}<br/>";
+		$variable{Job} = new openprint::ScheduledJob();
+	}
 }
 
 sub _operators {
