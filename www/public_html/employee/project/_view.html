@@ -509,8 +509,10 @@ $log->warn("Lookup up stock price, cuz it's not in the paper service: cost-$stoc
 				if ( $pending ) {
 					$html .= button( 'ScheduleJob'.$$variable{Project}{id}, { onclick=>qq`form_submit('$$variable{formname}','BumpSchedule');`, text=>'Schedule' } );
 				} # end if
-				$html .= button( 'CompletePrinting'.$$variable{Project}{id}, { onclick=>qq`form_submit('$$variable{formname}','Complete Printing');`, text=>'Complete Printing' } ) if $$variable{Project}->status() eq 'Approved';
 			} # end if
+			if ( openprint::usergroup::is_user_in( ['Scheduling','Production'], $session{user_id} ) ) {
+				$html .= button( 'CompletePrinting'.$$variable{Project}{id}, { onclick=>qq`form_submit('$$variable{formname}','Complete Printing');`, text=>'Complete Printing' } ) if $$variable{Project}->status() eq 'Approved';
+			}
 
 			my @bindery_services = openprint::print_project::get_services_in_category( $log, $dbh, $$variable{ProjectIndex}, 'Bindery' );
 
