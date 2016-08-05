@@ -22,7 +22,7 @@ require openprint::ProductionFeedback;
 
 my $parser = 'DateTime::Format::Pg';
 
-$debug = 1;
+$debug = 0;
 $table = 'schedule';
 $serial = 'schedule_id_seq';
 
@@ -746,7 +746,8 @@ sub bump {
 				$self->save({'starttime'=>$NextShift->starttime()});
 			} # end if
 		} # end if
-		push @{$variable{changed}}, $self->Shift()->ul_id();
+		my $Shift = $self->Shift();
+		push @{$variable{changed}}, $Shift->ul_id() if $Shift;
 	} # end if smartscheduling
 	sql::end_transaction( $dbh, $ac );
 	if ( $Project->id() ) {

@@ -495,7 +495,7 @@ function clearSelect( ddm ) {
 }
 
 function clearForm(form) {
-	form = $(form);
+	//form = $('#'+form);
 	for ( var i=0, len = form.elements.length; i < len; i += 1 ) {
 		var e = form.elements[i];
 		if ( ! e.type )
@@ -1317,6 +1317,7 @@ function popup_window( url, parameters, options ) {
 		}
 
 		Object.extend( defaults, options );
+
 		popupWin = new Window(defaults);
 
 		// Set up a windows observer, check ou debug window to get messages

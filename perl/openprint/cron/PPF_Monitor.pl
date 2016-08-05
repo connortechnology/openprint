@@ -70,6 +70,10 @@ my @Equipment = openprint::Equipment->find('cip3_monitor'=>1,
 if ( ! @Equipment ) {
 	die "No equipment found.\n";
 } # end if
+
+# This script may hang on a remote fs after this point, so in iorder to not tie up db handles, we will disconnect and re-connect if neccessary.
+$dbh->disconnect();
+
 foreach my $Equipment ( @Equipment ) {
 	#$log->debug("Processing " . $Equipment->name() );
 	my @filenames;
@@ -218,8 +222,19 @@ if ( $mangle ) {
 				$log->error("No data! $file_base $docket $sig $side");
 				next;
 			} # end if
+
+$dbh = sql::open_sql( $log,
+		'host'      => $opts->{db_host},
+		'database'  => $opts->{db_name},
+		'driver'    => 'Pg',
+		'login'     => $opts->{db_user},
+		'password'  => $opts->{db_pass},
+		);
+die 'Error opening db' if ! $dbh;
 			my $PPF = store_PPF( $docket, $name, $sig, $side, $Equipment, $data );
 			$PPF->send_ppf( $Equipment ) if ! $$Equipment{'cip3_hold'};
+$dbh->disconnect();
+
 			unlink $$Equipment{'cip3_in'}.'/'.$file_base.'A.'.$extension;
 			unlink $$Equipment{'cip3_in'}.'/'.$file_base.'B.'.$extension;
 		} # end foreach file in input hotfolder
@@ -286,6 +301,14 @@ if ( $mangle ) {
 			$log->error("File was not complete! $file_base");
 			next;
 		} # end if
+$dbh = sql::open_sql( $log,
+		'host'      => $opts->{db_host},
+		'database'  => $opts->{db_name},
+		'driver'    => 'Pg',
+		'login'     => $opts->{db_user},
+		'password'  => $opts->{db_pass},
+		);
+die 'Error opening db' if ! $dbh;
 		my $PPF = store_PPF( $docket, $name, $sig, $side, $Equipment, $data );
 		$PPF->send_ppf( $Equipment ) if ! $$Equipment{'cip3_hold'};
 		unlink $$Equipment{'cip3_in'}.'/'.$file;
@@ -376,5 +399,3 @@ EOH
 }
 1;
 __END__
-
-

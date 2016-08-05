@@ -4300,8 +4300,13 @@ $openprint::log->warn("Override subsig values $$imp{pages}pg $$price{upq} upq");
 									get_project_price( $Project, $$new_specs{ServiceIndex}, $project, $service_specs, $new_specs, $qty, $qty_index, \@new_possible_presses, $printing_specs, $versions, \%PlateCounts, \%PaperCounts, \%washed_colours, \%previous_forms_cache, \@signatures, $impositions, $other_impositions, undef, $recursion_depth + 1 );
 							} else {
 my $sub_sig_price = $price_cache{$price_cache_key};
+
 my $sub_imp = $$sub_sig_price{Imposition};
-$sub_imp->display();
+if ( ! $sub_imp ) {
+	$log->error("No sub_imp $sub_imp $sub_sig_price ");
+} else {
+	$sub_imp->display();
+}
 #$log->error("using a cached calc_other_groups $$sub_sig_price{'Comparison Cost'}");
 							} # end if
 							%{$sig_price} = %{$price_cache{$price_cache_key}};

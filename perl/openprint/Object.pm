@@ -378,14 +378,17 @@ sub changes {
 	my $type = ref $self;
 	my $fields = eval ('\%'.$type.'::fields');
 	if ( ! $fields ) {
-$log->warn('Object::set called on an object with no fields');
+$log->warn('Object::changes called on an object with no fields');
 		return;
 	} # end if
 	#my %defaults = eval('%'.$type.'::defaults');
 	my @results;
 
-	foreach my $field ( keys %$fields ) {
-		next if ! exists $$params{$field};
+	foreach my $field ( sort keys %$fields ) {
+		if ( ! exists $$params{$field} ) {
+			$log->debug("$field does not exist in params") if $debug;
+			next;
+		}
 		if ( ref $$self{$field} eq 'ARRAY'  ) {
 			if ( @{$$self{$field}} != sets::intersection( 
 				@{$$self{$field}},
@@ -395,13 +398,16 @@ $log->warn('Object::set called on an object with no fields');
 			}
 		} elsif ( $$self{$field} ne $$params{$field} ) {
 			if ( $field eq 'password' ) {
-			
 				push @results, "$field changed";
 			} else {
 				push @results, "$field changed from $$self{$field} to $$params{$field}";
 			}
+		} else {
+			if ( $debug ) {
+				$log->debug("$field eq $$self{$field} to $$params{$field}");
+			}
 		} # end if
-	} # end foreachf ield
+	} # end foreach field
 	return @results;
 } # end sub changes
 
@@ -680,10 +686,12 @@ sub get_fields_values {
 					$db_field .= $type;
 
 					if ( ref $$search{$k} eq 'ARRAY' ) {
-						if ( @{$$search{$k}} ) {
+						if ( @{$$search{$k}} != 1 ) {
 							push @where, $db_field .' IN ('.join(',', map {'?'} @{$$search{$k}} ) . ')';
-							push @values, @{$$search{$k}};
+						} else {
+							push @where, $db_field.'=?';
 						} # end if
+						push @values, @{$$search{$k}};
 					} elsif ( ref $$search{$k} eq 'HASH' ) {
 						foreach my $p_k ( keys %{$$search{$k}} ) {
 							my $v = $$search{$k}{$p_k};
@@ -1223,9 +1231,11 @@ sub Object {
 	} # end if
 	my ( $module ) = $type =~ /openprint::(.*)/;
 	if ( $module ) {
+		eval {
 		require "openprint/$module.pm";
+		};
 		$_ = $type->new( $_[0]{object_id} );
-		$openprint::log->debug( "Returning object of type " . ref $_ );
+		$openprint::log->debug( "Returning object of type " . ref $_ ) if $debug;
 		return $_;
 	} else {
 		$log->error("Unvalid object $type");

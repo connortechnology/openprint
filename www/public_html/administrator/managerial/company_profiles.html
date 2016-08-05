@@ -43,7 +43,7 @@ function load_customers( ) {
 		<li> 
 			<label>Company</label>
 			<input type="text" id="search_company_filter" oninput="load_customers();" onkeydown="if(event.keyCode == 13){f1.btnFunction.value='Go';this.form.submit();}" class="filter" />
-			<select id="ddmCustomer" name="ddmCustomer" onchange="if(this.options[this.selectedIndex].value != '') { f1.btnFunction.value='Go'; $('ButtonsTop').hide();$('ButtonsBottom').hide();f1.submit();}">
+			<select id="ddmCustomer" name="ddmCustomer" onchange="if(this.options[this.selectedIndex].value != '') { f1.btnFunction.value='Go'; $('ButtonsTop').hide();f1.submit();}">
 				<option value=""> select </option>
 				<? echo ( 
 if ( 0 ) {

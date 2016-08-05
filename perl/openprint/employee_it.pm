@@ -12,6 +12,7 @@ use vars qw( %variable %session %param %config $log $dbh $r );
 *r = \$openprint::r;
 
 require openprint::Host;
+require openprint::Host_Info;
 require openprint::RADIUS_Check;
 require openprint::RADIUS_Reply;
 require openprint::User_Type;
@@ -345,7 +346,7 @@ sub _radius {
 	} # end if
 	if ( $param{action} eq 'Delete' ) {
 		foreach my $id ( ref $param{record_id} eq 'ARRAY' ? @{$param{record_id}} : $param{record_id} ) {
-			my $Record = new openprint::openprint::RADIUS_Check( $id );
+			my $Record = new openprint::RADIUS_Check( $id );
 			$variable{error} .= $Record->delete();
 		} # end foreach host_id
 	} # end if

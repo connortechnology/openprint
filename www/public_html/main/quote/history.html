@@ -57,7 +57,7 @@
 			<li><label>Deleted</label><? echo ( radio( 'deleted', ['1','Yes','0','No','','All'], $session{'/main/quote/history.html?deleted'}, { onclick=>'load_quotes(f1);' } ); ) ?></li>
 			<ul>
 			<p class="buttons">
-				<? echo ( join( '',
+				<? echo ( join( "\n",
 					button( 'ShowResults', { onclick=>'f1.submit();', text=>'Show Results' } ),
 					button( 'Add', { href=>'/main/quote/information.html?btnFunction=New', text=>'Create New' } ),
 					button( 'Reset', { onclick=>'f1.reset();', text=>'Reset' } ),

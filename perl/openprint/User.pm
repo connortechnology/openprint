@@ -281,6 +281,7 @@ sub name {
 	} elsif ( $_[0]{lastname} ) {
 		return $_[0]{lastname};
 	} # end if
+	return '';
 }
 
 sub assistant_ids {

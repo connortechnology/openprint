@@ -14,7 +14,7 @@ use constant PI => atan2(1,1)*4;
 # 3.14159265358979;
 
 use vars qw( $debug $table $serial %fields %find_fields %transforms %defaults $default_sort $cache_field $cached );
-$debug = 1;
+$debug = 0;
 $cached = 0;
 $cache_field='short';
 $default_sort = 'lower(name)';

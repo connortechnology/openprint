@@ -247,7 +247,8 @@ sub dropdown {
 		} elsif ( ref $sql{or} eq 'HASH' ) {
 			$sql{or}{id} = $$openprint::User{company_id};
 		} else {
-			$log->error("BLAH");
+my ( $caller, undef, $line ) = caller;
+			$log->error("BLAH from $caller $line or is $sql{or} " . ref $sql{or});
 		}
 	} else {
 $log->debug("Not adding filter");

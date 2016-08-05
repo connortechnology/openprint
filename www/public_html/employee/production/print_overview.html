@@ -353,10 +353,8 @@
 			$end = 100 if $end > 100;
 			# Get the shifts on this day.
 			my $st = $start_dt;
-#new DateTime( year=>$year, month=>$month, day=>$day, time_zone=>$openprint::TZ );
 			my $et = $st + DateTime::Duration->new( days=>$end );
 
-			$log->debug("Getting shifts");
 			my @Shifts = openprint::Shift->find( 
 				equipment_id 		=>	$E->id(),
 				'starttime <'		=>	$parser->format_datetime( $et ),
@@ -368,15 +366,15 @@
 				$log->debug("No shifts found, implementing some");
 				@Shifts = openprint::Shift::get_Shifts( $E, $st, $et, @Equipment_Shifts );
 			} # end if
-#$log->debug("# of Shifts: " . @Shifts );
 			if ( ! @Shifts ) {
 				$html .= 'No Shifts defined.</div>';
 				next;
 			} # end if
 
 			# First, need to find the first Equipment Shift to show.  Easy, will be given by the first shift in our list of shifts
+			# What about multi-day schedules?
 			my $ES = $Shifts[0]->Equipment_Shift();
-			$log->debug("First ES: " . $ES->to_string() );
+			#$log->debug("First ES: " . $ES->to_string() );
 
 			# Step two: Make sure all the shifts are there. We do this by running through them, comparing the shift_id to the expected ES
 			# We start at 1 because we already looked for 0 and found it.  Micro-optimisation
@@ -384,56 +382,35 @@
 #$log->debug("Shifts are: " . $S->to_string());
 					#}
 			my $Next_ES = $ES->Next();
+			#$log->debug("Next ES: " . $Next_ES->to_string() );
 
 			for ( my $shift_index = 1; $shift_index < @Shifts; $shift_index += 1 ) {
+				my $Shift = $Shifts[$shift_index-1];
 				my $Next_Shift = $Shifts[$shift_index];
 
-if ( 0 ) {
-				if ( $$Next_Shift{shift_id} == $Next_ES->id() ) {
-					# It's the right shift, just make sure it isn't too far in the future
-
-					my $last_time = $Shifts[$shift_index-1]->endtime_dt();
-$log->error("Last Shift endtime $last_time");
-					while ( $_ = $Next_ES->compare( $last_time ) ) {
-$log->error("Last time $last_time $_, adding an hour");
-						$last_time += new DateTime::Duration( seconds=>3600 );
-						last if $last_time >= $Shifts[$shift_index]->starttime_dt();
-					}
-					if ( $last_time >= $Shifts[$shift_index]->starttime_dt() ) {
-						$log->debug("Verified that the nex shift is good>");
-						#last;
-					} else {
-						my $test_Shift = $ES->Next()->test_emanantise( $last_time );
-						if ( $test_Shift->starttime() eq $Shifts[$shift_index]{starttime} ) {
-							next;
-						}
-					} # end if
-				}
-}
-					
-				#$log->debug( $Shifts[$shift_index]->shift_id() . ' == ' . $ES->Next()->id() );
-				#$log->debug( "This ES: " . $ES->to_string() );
-				#$log->debug( "Next ES: " . $ES->Next()->to_string() );
-
-				
 				# By putting emanantise here....
 				# emanantise will figure out what the next shift should loook like, and add it if neccessary.
-				my $last_time = $Shifts[$shift_index-1]->endtime_seconds() + 1;
-				while( $_ = $Next_ES->compare( $last_time ) ) {
+				my $next_shift_start_time = $Shift->endtime_seconds() + $ES->distance();
+#$log->debug("DIstance: " . $ES->distance() . " from " . $Shift->endtime() . " to " . $Next_Shift->starttime() );
+
+	# If there is only 1 shift, then we don't need to do this.
+if ( 0 ) {
+				while( $_ = $Next_ES->compare( $next_shift_start_time ) ) {
 					if ( $_ > 0 ) {
-$log->error("Last time $last_time $_, adding an hour");
+$log->error("Last time $next_shift_start_time $_, adding an hour");
 						# We have not yet reached the starttime of the next shift.  They may be gaps between shifts.
 						# Add an hour until we get there.
-						$last_time += 3600;
+						$next_shift_start_time += 3600;
 					} else { # $_ < 0
-$log->error("Went past, going back an hour $last_time $_, adding an hour");
+$log->error("Went past, going back an hour $next_shift_start_time $_, adding an hour");
 						# We have passed the ES, So the ES must be missing.
-						#$last_time -= 3600;
+						#$next_shift_start_time -= 3600;
 						last;
 					}
-					last if $last_time > $Shifts[$shift_index]->starttime_seconds();
+					last if $next_shift_start_time > $Shifts[$shift_index]->starttime_seconds();
 				}
-				my $New_Next_Shift = $Next_ES->emanantise( $last_time );
+}
+				my $New_Next_Shift = $Next_ES->emanantise( $next_shift_start_time );
 				if ( $New_Next_Shift ) {
 
 					if ( $New_Next_Shift->id() != $Next_Shift->id() ) {
@@ -456,14 +433,12 @@ $log->debug("Adding new shift; next: " . $New_Next_Shift->to_string() );
 				$Next_ES = $Next_ES->Next();
 			} # end for each Shift
 			
+			# List of Shifts may end before our specified date range is up, so start at the last shift and fill in.
 			my $LastShift = $Shifts[@Shifts-1];
 			while ( $LastShift->endtime_seconds() < $et->epoch() ) {
 				my $ES = $LastShift->Equipment_Shift()->Next();
 
-				my $last_time = $LastShift->endtime_seconds() + 1;
-				while( $ES->compare( $last_time ) ) {
-					$last_time += 3600;
-				}
+				my $last_time = $LastShift->endtime_seconds() + $LastShift->Equipment_Shift()->distance();
 				my $NewShift = $ES->emanantise( $last_time );
 				if ( ! $NewShift ) {
 					$log->error("Error getting shift for $last_time ");

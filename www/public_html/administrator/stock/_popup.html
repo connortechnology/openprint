@@ -53,6 +53,12 @@
 			) ?>
 		</ul>
 	</fieldset>
+	<fieldset><legend><input type="radio" id="modeother" name="mode" value="other" /> Other</legend>
+		<ul><li><label>Score required</label>
+		<?echo( radio('score_required', ['1','Yes','0','No','','Unchanged'] ); ) ?>
+			</li>
+		</ul>
+	</fieldset>
 	<p class="buttons">
 		<? echo ( join("\n",
 			button( 'apply', { onclick=>q`$('f1').submit();`, text=>'Apply' } ),

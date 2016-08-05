@@ -1,7 +1,7 @@
 <div class="Quote"><div class="History">
 <div class="PageTitle">
 	<h1>QUOTE</h1>
-	<h2>View Quote <? echo ( $$variable{'Quote'}->id(); ) ?></h2>
+	<h2>View Quote <? echo ( $$variable{Quote}->id(); ) ?></h2>
 </div>
 <script type="text/javascript">
 function delete_confirm(form) {
@@ -21,7 +21,7 @@ function delete_confirm(form) {
 <form id="f1" name="f1" method="post" action="/main/quote/history_details.html">
 	<p class="buttons">
 		<input type="hidden" name="btnFunction"/>
-		<input type="hidden" name="quote_id" value="<? echo ( $$variable{'Quote'}->id() ) ?>"/>
+		<input type="hidden" name="quote_id" value="<? echo ( $$variable{Quote}->id() ) ?>"/>
 		<? echo ( my $html = '';
 			if ( $$variable{Quote}->can_view() ) {
 				$html .= button( 'Print', { onclick=>'window.print();' } );
@@ -39,11 +39,15 @@ function delete_confirm(form) {
 					$html .= button( 'Copy', { onclick=>"f1.action='/main/quote/information.html';f1.btnFunction.value='Process New Quote';f1.submit();", text=>'Copy to' } );
 					$html .= button( 'Move', { onclick=>"f1.action='/main/quote/history_details.html';f1.btnFunction.value='Move To';f1.submit();", text=>'Move to' } );
 					$html .= q`<input type="text" onkeyup="filter_companies('company_id', {name:this.value,selected_id:get_ddm_value($('company_id'))});" class="filter" />`;
-					$html .= ssi::select( openprint::Company->dropdown( ( $$variable{Quote}->company_id()?(or=>'id='.$$variable{Quote}->company_id()):()), salesrep_id=>[ $session{user_id}, $openprint::User->csr_ids() ] ), $session{'company_id'}, { name=>'company_id', id=>'company_id', onchange=>'stop_filter_companies();' } );
+					$html .= ssi::select( openprint::Company->dropdown( or => {
+							id => [ $openprint::User->company_id(), $openprint::Company->id(), ( $$variable{Quote}->company_id() ? $$variable{Quote}->company_id() : () ) ], 
+							salesrep_id => [ $session{user_id}, $openprint::User->csr_ids() ] ,
+							} ),
+							$session{company_id}, { name=>'company_id', id=>'company_id', onchange=>'stop_filter_companies();' } );
 				} else {
 					$html .= button( 'Reuse', { onclick=>"f1.action='/main/quote/information.html';f1.btnFunction.value='Process New Quote';f1.submit();", text=>'Copy' } );
 				} # end if
-				if ( $$variable{'Quote'}->status() eq 'Complete' ) {
+				if ( $$variable{Quote}->status() eq 'Complete' ) {
 					$html .= button( 'Resend', { onclick=>"f1.action='/main/quote/history_details.html';f1.btnFunction.value='Resend';f1.submit();", text=>'Resend' } );
 					$html .= button( 'Order', { onclick=>"f1.action='/main/order/information.html';f1.btnFunction.value='Process Order';f1.submit();", text=>'Order' } );
 					$html .= button( 'Edit', { onclick=>"f1.action='/main/quote/information.html';f1.btnFunction.value='Continue';f1.submit();", text=>'Edit' } );
@@ -70,23 +74,23 @@ To save, process a new quote or process an order from this quotation, please cli
 	<table class="List">
 		<tr>
 			<td>
-				<? if ( $$variable{'AdministratorName'} ) ?>
+				<? if ( $$variable{AdministratorName} ) ?>
 				<b>Administrator Name</b> <?AdministratorName?><br/>
-				<? endif ( $$variable{'AdministratorName'} ) ?>
-				<? if ( $$variable{'AdministratorComments'} ) ?>
+				<? endif ( $$variable{AdministratorName} ) ?>
+				<? if ( $$variable{AdministratorComments} ) ?>
 				<b>Administrator Comments</b> <?AdministratorComments?><br/>
-				<? endif ( $$variable{'AdministratorComments'} ) ?>
+				<? endif ( $$variable{AdministratorComments} ) ?>
 			</td>
 		</tr>
 		<tr>
 			<td colspan="3" align="right"><br/>
-				<span class="Currency">All prices listed in <? echo ( $$variable{'Quote'}->Currency()->name(); ) ?>.</span><br class="spacer"/>
+				<span class="Currency">All prices listed in <? echo ( $$variable{Quote}->Currency()->name(); ) ?>.</span><br class="spacer"/>
 				Prices are subject to applicable taxes.<br/>
 			</td>
 		</tr>
 		<tr>
 			<td colspan="3" align="left"><br/>
-			<div class="Disclaimer"><? echo ( $config{'QuoteViewDisclaimer'} ) ?></div>
+			<div class="Disclaimer"><? echo ( $config{QuoteViewDisclaimer} ) ?></div>
 			</td>
 		</tr>
 	</table>

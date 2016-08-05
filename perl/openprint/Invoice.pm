@@ -24,7 +24,7 @@ require openprint::Order_Invoice;
 
 use vars qw( $debug $table $serial %fields %find_fields %defaults %transforms );
 
-$debug = 1;
+$debug = 0;
 
 $table = 'invoices';
 $serial = 'invoices_id_seq';
@@ -89,10 +89,10 @@ sub save {
 	$self->set( $param ? $param : {} );
 
 	my $rc;
-	# none of these should be set by param
-	$$self{subtotal} = $self->subtotal( undef ) if ! $$self{subtotal_override};
+	# none of these should be set by param ( however employee_accounting will pass in a total if specified.. FIXME
+	$$self{subtotal} = $self->subtotal( undef ) if $$self{id} and ! $$self{subtotal_override};
 	$self->Taxes( undef );
-	$$self{total} = $self->total( undef );
+	$$self{total} = $self->total( undef ) if $$self{id};
 
 	$rc .= $self->SUPER::save( );
 	if ( ! $rc ) {
@@ -347,9 +347,11 @@ sub Taxes {
 
 	if ( @_ > 1 and ! defined $_[1] ) {
 $log->debug("Getting rid of taxes") if $debug;
-		foreach ( openprint::Invoice_Tax->find( invoice_id=>$$self{id} ) ) {
-			$_->destroy();
-		} # end foreach	 Tax
+		if ( $$self{id} ) {
+			foreach ( openprint::Invoice_Tax->find( invoice_id=>$$self{id} ) ) {
+				$_->destroy();
+			} # end foreach	 Tax
+		}
 		$$self{Taxes} = [];
 	} # end if
 
@@ -368,11 +370,11 @@ $log->debug("Generating taxes");
 					state	=>	$self->Invoicee()->state()),
 				) {
 			my $T = new openprint::Invoice_Tax();
-			$T->save({
-				invoice_id	=>	$$self{id},
+			$T->set({
 				tax_id		=>	$$Tax{id},
 				rate 		=>	$$Tax{rate},
 			});
+			$T->save({ invoice_id	=>	$$self{id} } ) if $$self{id};
 			push @{$$self{Taxes}}, $T;
 		} # end foreach Tax
 	} # end if
