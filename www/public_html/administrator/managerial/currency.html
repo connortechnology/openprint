@@ -1,6 +1,6 @@
 <script type="text/javascript">
 	function set_conversion( from_id ) {
-		var form = $('f1');
+		var form = jQuery('#f1')[0];
 		var to_id = get_ddm_value(form.elements['to-'+from_id]);
 
 		if ( ! form.elements['amount-'+from_id].value ) {
@@ -9,14 +9,14 @@
 			return;
 		}
 
-		new Ajax.Updater( 'Conversions'+from_id, '_currency_conversions.html', { 
-				parameters: { 	
+		jQuery( '#Conversions'+from_id).load( '_currency_conversions.html',  
+				{ 	
 					currency_id: from_id, 
 					to_id: to_id, 
 					amount: form.elements['amount-'+from_id].value, 
 					btnFunction: 'Add'
-				}, onSuccess: function(){ 
-						new Ajax.Updater( 'Conversions'+to_id, '_currency_conversions.html', { parameters: { currency_id: to_id } } );
+				},  function(){ 
+						jQuery( '#Conversions'+to_id ).load( '_currency_conversions.html', { currency_id: to_id } );
 					} 
 			});
 	} // end function set_conversion

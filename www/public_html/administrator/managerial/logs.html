@@ -8,7 +8,7 @@
 					<ul id="logactions">
 					<? echo(
 							my $html;
-							foreach my $Action ( openprint::Log_Action->find('order'=>'lower(name)') ) {
+							foreach my $Action ( openprint::Log_Action->find( order=>'lower(name)' ) ) {
 								$html .= sprintf('<li><input type="checkbox" name="log_actions" id="log_action-%1$s" value="%1$s" %3$s /><label class="radio" for="log_action-%1$s">%2$s</label></li>', 
 									$Action->id(), $Action->name(), ssi::checked( sets::isin( $Action->id(), $param{log_actions} ) ) 
 									);
@@ -20,9 +20,9 @@
 		<li>
 			<label>Company</label>
 			<input type="text" onkeyup="filterDDM(this, this.form.company_id);" size="4" />
-			<select name="company_id" onclick="new Ajax.Request( 'user_id', '/includes/_user_ddm.html', { parameters{ company_id: this.getValue() }} );">
+			<select name="company_id" onchange="jQuery( '#user_id').load( '/includes/_user_ddm.html', { company_id: this.getValue() } );">
 			<option value="">All</option>
-			<? echo ( openprint::Company::get_dropdown( exists $param{company_id} ? $param{company_id} : $session{company_id} ); ) ?>
+			<? echo ( make_drop_down( openprint::Company->dropdown(), exists $param{company_id} ? $param{company_id} : $session{company_id} ); ) ?>
 			</select>
 		</li>			
 		<li>
@@ -33,7 +33,7 @@
 			</select>
 		</li>			
 	<? eval (
-		if ( $param{'StartYear'} ) {
+		if ( $param{StartYear} ) {
 			@session{$r->uri().'?StartYear',$r->uri().'?StartMonth',$r->uri().'?StartDay'} =
 				@param{'StartYear','StartMonth','StartDay'};
 			@session{$r->uri().'?EndYear',$r->uri().'?EndMonth',$r->uri().'?EndDay'} =
@@ -87,7 +87,7 @@
 					action_id	=>	$param{log_actions},
 					) ];
 
-				foreach my $Log ( @{$$variable{'Results'}} ) {
+				foreach my $Log ( @{$$variable{Results}} ) {
 					$html .= sprintf('<tr id="log_%d">
 							<td class="Action">%s</td>
 							<td class="DateTime">%s</td>
@@ -105,8 +105,8 @@
 						$Log->User()->link_to( $Log->User()->email() ),
 						$Log->User()->name(),
 						$Log->Company()->name(),
-						join('',
-							button( 'X'.$Log->id(), { 'onclick'=>qq`new Ajax.Request('_logs.json', { parameters: { action: 'delete', log_id: $$Log{id} }, onSuccess: function(){ \$('log_$$Log{id}').remove() } } );`, 'text'=>'X' } ),
+						join("\n",
+							button( 'X'.$Log->id(), { onclick=>qq`jQuery.ajax('_logs.json', { data: { action: 'delete', log_id: $$Log{id} } } ).done( function(){ \$('#log_$$Log{id}').remove() } );`, 'text'=>'X' } ),
 						),
 						);
 				} # end foreach

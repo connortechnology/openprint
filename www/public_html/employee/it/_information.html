@@ -7,7 +7,7 @@
 			foreach my $I ( @Information ) {
 				$html .= sprintf( q`<li id="information_%d"><span class="name">%s</span> = <span class="value">%s</span><span class="buttons">%s</span></li>`, 
 					$I->id(), $I->name(), $I->value(),
-					ssi::button( 'd'.$$I{id}, { onclick=>qq`new Ajax.Updater('information','_information.html', { parameters: { action: 'delete', host_id: '$$variable{Host}{id}', info_id: '$$I{id}'} } );`, text=>'X', title=>'Delete' } ),
+					button( 'd'.$$I{id}, { onclick=>qq`jQuery('#information').load( '_information.html', { action: 'delete', host_id: '$$variable{Host}{id}', info_id: '$$I{id}'} );`, text=>'X', title=>'Delete' } ),
 					);
 			} # end foreach User in Information
 		} else {
@@ -20,7 +20,7 @@
 			input( type=>'text', name=>'new_info_name', id=>'new_info_name', placeholder=>'name' ),
 			input( type=>'text', name=>'new_info_value', id=>'new_info_value', placeholder=>'value' ),
 			button( 'AddInfo', { 
-					onclick=>qq`new Ajax.Updater('information', '_information.html', { parameters: { action: 'add', host_id: '$$variable{Host}{id}', name: \$('new_info_name').value, value: \$('new_info_value').value } } );`, text=>'Add' } ),
+					onclick=>qq`jQuery('#information').load( '_information.html', { action: 'add', host_id: '$$variable{Host}{id}', name: jQuery('#new_info_name').val(), value: jQuery('#new_info_value').val() } );`, text=>'Add' } ),
 			); ) ?>
 	</li>
 </ul>

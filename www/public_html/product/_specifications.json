@@ -3,8 +3,8 @@
 		return qq`alert('$variable{error}');`;
 	} # end if
 	if ( $param{'func'} eq 'Del' ) {
-		return qq`\$('spec-$param{spec_id}').remove();`;
+		return qq`\$('#spec-$param{spec_id}').remove();`;
 	} elsif ( $param{'func'} eq 'Add' ) {
-	return qq`new Ajax.Updater( 'specifications', '/product/_specification.html', { parameters: { spec_id: $$variable{'Spec'}{'id'} }, insertion: Insertion.Bottom } );`;
+	return qq` jQuery.get( '/product/_specification.html', { spec_id: $$variable{'Spec'}{'id'} }, function(content) { $('#specifications').append(content); } );`;
 	} # end if
 ) ?>

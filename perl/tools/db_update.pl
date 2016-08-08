@@ -1180,6 +1180,10 @@ if ( ! sets::isin( 'locations', \@tables ) ) {
 		print "Added company_id to Locations\n";
 		die $dbh->errstr() if $dbh->errstr();
 	} # end if
+	$dbh->do( q`INSERT INTO Location_Types (name) SELECT 'country' WHERE NOT EXISTS (SELECT id from location_types where name='country')` ) or die $dbh->errstr();
+	$dbh->do( q`INSERT INTO Location_Types (name) SELECT 'state' WHERE NOT EXISTS (SELECT id from location_types where name='state')` ) or die $dbh->errstr();
+	$dbh->do( q`INSERT INTO Location_Types (name) SELECT 'city' WHERE NOT EXISTS (SELECT id from location_types where name='city')` ) or die $dbh->errstr();
+	$dbh->do( q`INSERT INTO Location_Types (name) SELECT 'place' WHERE NOT EXISTS (SELECT id from location_types where name='place')` ) or die $dbh->errstr();
 } # end if
 if ( ! sets::isin( 'addresses', \@tables ) ) {
 	$dbh->do( misc::load_file( $log, q{../openprint/sql/Addresses.sql}) );

@@ -1,20 +1,20 @@
 <script type="text/javascript">
 function load_records( form, options ) {
+	form = $(form);
 	var p = form.serialize(true);
 	if ( options && options.order )
 		p.order = options.order;
 	
-	new Ajax.Updater( 'Results','/employee/it/_radius.html', { parameters: p } );
+	jQuery('Results').load('/employee/it/_radius.html', p );
 } // end function load
 function new_record( ) {
-	new Ajax.Request('_radius_mac_line.html', { 
-		parameters: {
+	jQuery.ajax( '_radius_mac_line.html', { 
+		data: {
 			action: 'add', 
 			username: $('username').value, 
 			attribute: $('attribute').getValue(),
 			value: $('value').value
 		}, 
-		evalScripts:true, 
 		onSuccess: function(response) { 
 			$('Results').insert({top: response.responseText} ); 
 			SortableTable.load();   
@@ -29,7 +29,7 @@ Please select a host to view/edit.<br>
 	<fieldset class="filters"><legend>Search Criteria</legend>
 		<ul>
 			<li><label>Username/MAC</label>
-				<input type="text" id="username" name="username" value="<? echo ( $session{'/employee/it/radius.html?username'} ) ?>" onkeyup="this.value=this.value.replace(/\s/,'');" onkeydown="if(event.keyCode == 13){load_records( $('f1') );}" />
+				<input type="text" id="username" name="username" value="<? echo ( $session{'/employee/it/radius.html?username'} ) ?>" onkeyup="this.value=this.value.replace(/\s/,'');" onkeydown="if(event.keyCode == 13){load_records('f1');}" />
 			</li>
 			<? if ( $config{'RADIUS_Support'} ) ?>
 				<li><label>Attribute</label>
@@ -43,12 +43,12 @@ Please select a host to view/edit.<br>
 				</li>
 			<? endif ( $config{'RADIUS_Support'} ) ?>
 			<li><label>Value</label>
-				<input type="text" id="value" name="value" value="<? echo ( $session{'/employee/it/radius.html?value'} ) ?>" onkeydown="if(event.keyCode==13){load_records( $('f1') );}" />
+				<input type="text" id="value" name="value" value="<? echo ( $session{'/employee/it/radius.html?value'} ) ?>" onkeydown="if(event.keyCode==13){load_records('f1');}" />
 			</li>
 		</ul>
 		<p class="buttons">
-			<? echo ( join('',
-				button( 'ShowResults', { onclick=>"load_records( \$('f1') );", text=>'Show Results' } ),
+			<? echo ( join("\n",
+				button( 'ShowResults', { onclick=>q`load_records('f1');`, text=>'Show Results' } ),
 				button( 'Reset', { onclick=>'f1.reset();' } ),
 				button( 'Add', { onclick=>'new_record();', text=>'Add New RADIUS' } ),
 				); ) ?>

@@ -3,16 +3,19 @@
 <h2>Folds</h2>
 </div>
 <script type="text/javascript">
+var load_page_ajax = null;
 function load_page() {
-	new Ajax.Updater( 'Folds', '_folds.html', {
-		evalScripts:true, 
-		onLoading:function(){ $('Folds').innerHTML='Loading...';}, 
-		parameters:{	
-			equipment_id: get_ddm_value( $('equipment_id') ),
-			type: $('type').getValue() 
+	if ( load_page_ajax ) load_page_ajax.abort();
+	 load_page_ajax = jQuery('#Folds').load( '_folds.html',
+		{	
+			equipment_id: $('#equipment_id').val(),
+			type: $('#type').val() 
+		},
+		function() {
+			load_page_ajax = null;
 		}
-	}
-);
+
+	);
 } 
 </script>
 <form id="f1" name="f1" method="post" action="folds.html">

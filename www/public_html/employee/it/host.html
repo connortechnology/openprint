@@ -1,6 +1,6 @@
 <script type="text/javascript">
 	function delete_interface( id ) {
-		new Ajax.Request( '_host_actions.json', { parameters: { interface_id: id, action: 'delete interface' } } );
+		jQuery.ajax( '_host_actions.json', { data: { interface_id: id, action: 'delete interface' } } );
 	}
 	function check_inputs( form ) {
 		return true;
@@ -29,9 +29,9 @@ cleanup : true
 					<label>Hostname</label>
 					<input type="text" id="hostname" name="hostname" value="<? echo ( $$variable{Host}->hostname() ) ?>" oninput="to_hostname(this);" />
 				</li>
-				<li><label onclick="toggle_input( $('type_id'), $('type') );">Type</label>
-					<input type="text" id="type" name="type" style="display:none;" onkeyup="ddm_select_by_text( $('type_id'), this.value, 0 );" />
-					<select name="type_id" id="type_id" onchange="$('type').value='';">
+				<li><label onclick="toggle_input( $('#type_id'), $('#type') );">Type</label>
+					<input type="text" id="type" name="type" style="display:none;" onkeyup="ddm_select_by_text( $('#type_id'), this.value, 0 );" />
+					<select name="type_id" id="type_id" onchange="$('#type').value='';">
 						<option value="">select</option>
 						<? echo ( make_drop_down( openprint::Host_Type->dropdown(order=>'lower(name)'), $$variable{Host}->type_id() ); ) ?>
 					</select>
@@ -67,13 +67,13 @@ cleanup : true
 <? if ( $$variable{Host}->id() ) ?>
 		<div class="content rightColumn">
 			<fieldset><legend>Photos</legend>
-				<div id="assets"><? echo ( include('_assets.html'); ) ?></div>
+				<div id="assets"><?include('_assets.html')?></div>
 			</fieldset>
 			<fieldset><legend>Upload a new Asset</legend>
 				<input type="file" name="filename" />
 				<input type="text" name="asset_name" placeholder="Name"/>
 				<p class="buttons">
-					<? echo ( button( 'Upload', { 'onclick'=>qq`var form = \$('f1');form.action='/employee/it/host.html';form.elements['action'].value='Upload';form.submit();`} ); ) ?>
+					<? echo ( button( 'Upload', { onclick=>qq`var form = jQuery('#f1')[0];form.action='/employee/it/host.html';form.elements['action'].value='Upload';form.submit();`} ); ) ?>
 				</p>
 			</fieldset>
 			<fieldset><legend>Notifications</legend>
@@ -112,20 +112,20 @@ cleanup : true
 			<th class="ip">IP Address</th>
 			<th class="dhcp">DHCP?</th>
 			<th class="comment">Comment</th>
-<? if ( $config{'RADIUS_Support'} eq 'Y' ) ?>
+<? if ( $config{RADIUS_Support} eq 'Y' ) ?>
 	<th class="radius">RADIUS</th>
-<? endif ( $config{'RADIUS_Support'} eq 'Y' ) ?>
+<? endif ( $config{RADIUS_Support} eq 'Y' ) ?>
 			<th class="buttons">&nbsp;</th>
 		</tr>
 <? echo (
 	my $html;
-	 if ( $config{'RADIUS_Support'} eq 'Y' ) {
+	 if ( $config{RADIUS_Support} eq 'Y' ) {
 		$openprint::RADIUS_Check::dbh = sql::open_sql( $log,
-			database	=> $config{'RADIUS_DB_Name'},
-			driver		=> $config{'RADIUS_DB_Driver'},
-			host		=> $config{'RADIUS_DB_Server'},
-			login		=> $config{'RADIUS_DB_Username'},
-			password	=> $config{'RADIUS_DB_Password'},
+			database	=> $config{RADIUS_DB_Name},
+			driver		=> $config{RADIUS_DB_Driver},
+			host		=> $config{RADIUS_DB_Server},
+			login		=> $config{RADIUS_DB_Username},
+			password	=> $config{RADIUS_DB_Password},
 		);
 		if ( ! $openprint::RADIUS_Check::dbh ) {
 			$html .= 'Unable to connect to RADIUS DB server.';	
@@ -178,30 +178,13 @@ cleanup : true
 <? if ( $$variable{Host}->id() ) ?>
             <fieldset><legend>Where</legend>
 <? echo ( 
-    $$variable{'Location'} = $$variable{Host}->Location();
+    $$variable{Location} = $$variable{Host}->Location();
     return include( '/location/_location_fields.html' );
 ) ?>
-            </fieldset>
-	<fieldset><legend>Logs</legend>
-		<ul>
-			<li><label>Date</label>
-				<? echo (
-						datetime_select_session( '/employee/it/host.html','log_created_on_start', {
-							onchange	=>q`new Ajax.Updater( 'Logs', '/employee/it/_host_logs.html', { parameters: $('f1').serialize() } );`,
-							with_today=>1,
-							with_clear=>1,
-							} ); ) ?> to
-				<? echo (
-						datetime_select_session( '/employee/it/host.html','log_created_on_end', {
-							onchange	=>q`new Ajax.Updater( 'Logs', '/employee/it/_host_logs.html', { parameters: $('f1').serialize() } );`,
-							with_today=>1,
-							with_clear=>1,
-							} ); ) ?>
-				<? echo ( button( 'LoadLog', { onclick=>q`new Ajax.Updater( 'Logs', '/employee/it/_host_logs.html', { parameters: $('f1').serialize() } );`, text=>'Load' } ); ) ?>
-			</li>
-		</ul>
-		<div id="Logs"><?include('/employee/it/_host_logs.html')?></div>
-	</fieldset>
 <? endif ( $$variable{Host}->id() ) ?>
+            </fieldset>
 </form>
+<? if ( $$variable{Host}->id() ) ?>
+<? echo ( include_logs( $$variable{Host} ); ) ?>
+<? endif ( $$variable{Host}->id() ) ?>
 </div></div>

@@ -45,5 +45,5 @@
 	</tbody>
 </table>
 <p class="buttons">
-<? echo ( button( 'delete', { onclick => "f1.elements['action'].value='Delete';new Ajax.Updater( 'Results','/employee/it/_radius.html', { parameters: f1.serialize() } );", text=>'Delete Checked' } ); ) ?>
+<? echo ( button( 'delete', { onclick => "f1.elements['action'].value='Delete';jQuery( 'Results').load('/employee/it/_radius.html', f1.serialize() );", text=>'Delete Checked' } ); ) ?>
 </p>

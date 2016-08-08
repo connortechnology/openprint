@@ -2,12 +2,12 @@
 <ul class="notifications">
 	<? echo (
 		my $html;
-		my @Notifications = $$variable{'Host'}->Notifications();
+		my @Notifications = $$variable{Host}->Notifications();
 		if ( @Notifications ) {
 			foreach my $U ( @Notifications ) {
 				$html .= sprintf( q`<li id="notification_%d"><span class="name">%s</span><span class="buttons">%s</span></li>`, 
 					$U->user_id(), $U->User()->link_to(), 
-					button( 'd'.$U->user_id(), { onclick=>qq`new Ajax.Updater('notifications','_notifications.html', { parameters: { action: 'delete', host_id: '$$variable{Host}{id}', user_id: $$U{user_id}} } );`, 'text', 'X' } ),
+					button( 'd'.$U->user_id(), { onclick=>qq`$('notifications').load('_notifications.html', { action: 'delete', host_id: '$$variable{Host}{id}', user_id: $$U{user_id}} );`, text=>'X' } ),
 					);
 			} # end foreach User in Notifications
 		} else {
@@ -19,16 +19,15 @@
 		<select name="new_notification_id" id="new_notification_id">
 			<option value=""> select one </option>
 		<? echo ( 
-			return make_drop_down( [ map { $_->id(), $_->name() } openprint::User->find(
-					order => 'lower(firstname),lower(lastname)',
+			return make_drop_down( openprint::User->dropdown(
 					id=>[ sets::exclude(
-						[ map { $_->user_id() } $$variable{'Host'}->Notifications()], 
-						[ map { $_->id() } openprint::User->find( 'company_id'=>new openprint::User($session{'user_id'})->company_id() ) ]
+						[ map { $_->user_id() } $$variable{Host}->Notifications()], 
+						[ map { $_->id() } openprint::User->find( company_id=>$openprint::User->company_id() ) ]
 					) ],
-				) ] );
+				) );
 		) ?>
 		</select>
 		<? echo ( button( 'AddNotification', { 
-					onclick=>qq`new Ajax.Updater('notifications', '_notifications.html', { parameters: { action: 'add', host_id: '$$variable{Host}{id}', user_id: \$('new_notification_id').value } } );`, text=>'Add' } ); ) ?>
+					onclick=>qq`var user_id=jQuery('#new_notification_id').val();if( user_id ) { jQuery('#notifications').load( '_notifications.html', { action: 'add', host_id: '$$variable{Host}{id}', user_id: user_id } );}else{alert('Select a user');};`, text=>'Add' } ); ) ?>
 	</li>
 </ul>

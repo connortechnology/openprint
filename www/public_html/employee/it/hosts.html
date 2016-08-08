@@ -1,12 +1,13 @@
 <script type="text/javascript">
 function load_host( form, options ) {
-	var div = $('Results');
+	form = $(form);
+	var div = $('#Results');
 	div.innerHTML = 'Loading... Please wait.';
 	var p = form.serialize(true);
 	if ( options && options.order )
 		p.order = options.order;
 	
-	new Ajax.Updater( 'Results','/employee/it/_hosts.html', { method: 'get', parameters: p } );
+	div.load('/employee/it/_hosts.html', p );
 } // end function load
 </script>
 <? echo ( include('/includes/error_reporting.html'); ) ?>
@@ -17,11 +18,11 @@ Please select a host to view/edit.<br/>
 		<ul>
 		<li>
 			<label for="ip">Host IP</label>
-			<input type="text" id="ip" name="ip" value="<? echo ( $session{'/employee/it/hosts.html?ip'} ) ?>" onkeyup="this.form.hostname.value='';this.form.mac.value='';this.value=this.value.replace(/[^\.\d%\/\*]/g,'');" onkeydown="if(event && event.keyCode == 13){load_host($('f1'));}" oninput="this.onkeyup.call(this);" />
+			<input type="text" id="ip" name="ip" value="<? echo ( $session{'/employee/it/hosts.html?ip'} ) ?>" onkeyup="this.form.hostname.value='';this.form.mac.value='';this.value=this.value.replace(/[^\.\d%\/\*]/g,'');" onkeydown="if(event && event.keyCode == 13){load_host('f1');}" oninput="this.onkeyup.call(this);" />
 			Hostname:
-			<input type="text" id="hostname" name="hostname" value="<? echo ( $session{'/employee/it/hosts.html?hostname'} ) ?>" oninput="to_hostname(this);" onkeydown="this.form.ip.value='';this.form.mac.value='';if(event && event.keyCode == 13){load_host( $('f1') );}" />
+			<input type="text" id="hostname" name="hostname" value="<? echo ( $session{'/employee/it/hosts.html?hostname'} ) ?>" oninput="to_hostname(this);" onkeydown="this.form.ip.value='';this.form.mac.value='';if(event && event.keyCode == 13){load_host('f1');}" />
 			MAC:
-			<input type="text" id="mac" name="mac" value="<? echo ( $session{'/employee/it/hosts.html?mac'} ) ?>" onkeyup="this.value=this.value.replace(/\s/g,'');" onkeydown="this.form.ip.value='';this.form.hostname.value='';if(event && event.keyCode == 13){load_host( $('f1') );}" oninput="this.onkeyup.call(this);" />
+			<input type="text" id="mac" name="mac" value="<? echo ( $session{'/employee/it/hosts.html?mac'} ) ?>" onkeyup="this.value=this.value.replace(/\s/g,'');" onkeydown="this.form.ip.value='';this.form.hostname.value='';if(event && event.keyCode == 13){load_host('f1');}" oninput="this.onkeyup.call(this);" />
 		</li>
 		<li><label>Type</label>
 			<? echo ( ssi::select( openprint::Host_Type->dropdown(order=>'lower(name)'), $session{'/employee/it/hosts.html?type_id'}, { name=>'type_id', prepend=>['','All'] } ); ) ?>
@@ -77,10 +78,10 @@ Please select a host to view/edit.<br/>
 	</li>
 		</ul>
 		<p class="buttons">
-			<? echo ( join('',
-				button( 'ShowResults', { 'onclick'=>"load_host( \$('f1') );", 'text'=>'Show Results' } ),
-				button( 'Reset', { 'onclick'=>'f1.reset();' } ),
-				button( 'Add', { 'onclick'=>q`window.location='host.html?'+$('f1').serialize();`, 'text'=>'Add New Host' } ),
+			<? echo ( join("\n",
+				button( 'ShowResults', { onclick=>q`load_host('f1');`, text=>'Show Results' } ),
+				button( 'Reset', { onclick=>'f1.reset();' } ),
+				button( 'Add', { onclick=>q`window.location='host.html?'+$('f1').serialize();`, text=>'Add New Host' } ),
 				); ) ?>
 		</p>
 	</fieldset>

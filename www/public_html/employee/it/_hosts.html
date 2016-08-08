@@ -157,5 +157,5 @@
 	</tbody>
 </table>
 <p class="buttons">
-<? echo ( button( 'delete', { onclick=>q`new Ajax.Updater( 'Results','/employee/it/_hosts.html?action=Delete', { parameters: { host_id: get_value( $('f1').host_id ) } } );`, text=>'Delete Checked' } ); ) ?>
+<? echo ( button( 'delete', { onclick=>q`jQuery( 'Results').load('/employee/it/_hosts.html?action=Delete', { host_id: get_value( $('f1').host_id ) } );`, text=>'Delete Checked' } ); ) ?>
 </p>

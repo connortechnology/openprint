@@ -7,7 +7,7 @@ var openprint_load_content_ajax = null;
 
 function load_page() {
 	if ( openprint_load_content_ajax ) { openprint_load_content_ajax.transport.abort(); }
-	openprint_load_content_ajax = new Ajax.Updater( 'Results', '_companies.html', { parameters: $('f1').serialize() } );
+	openprint_load_content_ajax = $jQuery('#Results').load( '_companies.html', $('f1').serialize() );
 } 
 </script>
 <form id="f1" name="f1" method="post" action="companies.html">

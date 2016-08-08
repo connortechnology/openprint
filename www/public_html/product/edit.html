@@ -40,7 +40,7 @@
 				</li>
 			</ul>
 			<p class="buttons">
-				<? echo ( join( '', 
+				<? echo ( join( "\n", 
 						button( 'Prev1', { onclick=>"f1.btnFunction.value='<<';fmCheck(f1);", text=>'&lt;&lt;' } ),
 						button( 'Next1', { onclick=>"f1.btnFunction.value='>>';fmCheck(f1);", text=>'&gt;&gt;' } ),
 						button( 'New1', { href=>'/product/edit.html', text=>'New' } ),
@@ -53,14 +53,14 @@
 					); ) ?>
 			</p>
 			<p class="buttons">
-					<b>CSV File</b>
-					<input type="file" name="fileImport" />
-		<? echo ( join('',
-					button( 'ImportDefinitions', { onclick=>"f1.btnFunction.value='Import Definitions';f1.action='edit.html';f1.submit();", text=>'Import Definitions' } ),
-					button( 'ExportDefinitions', { onclick=>"f1.btnFunction.value='Export Definitions';f1.action='edit.html?Download';f1.submit();", text=>'Export Definitions' } ),
-					button( 'ImportSpecifications', { onclick=>"f1.btnFunction.value='Import Specifications';f1.action='edit.html';f1.submit();", text=>'Import Specifications' } ),
-					button( 'ExportSpecifications', { onclick=>"f1.btnFunction.value='Export Specifications';f1.action='edit.html?Download';f1.submit();", text=>'Export Specifications' } ),
-		); ) ?>
+				<b>CSV File</b>
+				<input type="file" name="fileImport" />
+	<? echo ( join("\n",
+				button( 'ImportDefinitions', { onclick=>"f1.btnFunction.value='Import Definitions';f1.action='edit.html';f1.submit();", text=>'Import Definitions' } ),
+				button( 'ExportDefinitions', { onclick=>"f1.btnFunction.value='Export Definitions';f1.action='edit.html?Download';f1.submit();", text=>'Export Definitions' } ),
+				button( 'ImportSpecifications', { onclick=>"f1.btnFunction.value='Import Specifications';f1.action='edit.html';f1.submit();", text=>'Import Specifications' } ),
+				button( 'ExportSpecifications', { onclick=>"f1.btnFunction.value='Export Specifications';f1.action='edit.html?Download';f1.submit();", text=>'Export Specifications' } ),
+	); ) ?>
 			</p>
 		</fieldset>
 		<div class="leftColumn">
@@ -71,14 +71,14 @@
 				<ul>
 					<li> 
 						<label>Product ID</label>
-						<? echo ( $$variable{'Product'}->id(); ) ?>
+						<? echo ( $$variable{Product}->id(); ) ?>
 					</li>
 					<li> 
 						<label>Product Name</label>
-						<input type="text" name="name" value="<? hecho ( $$variable{'Product'}->name(); ) ?>" />
+						<input type="text" name="name" value="<? hecho ( $$variable{Product}->name(); ) ?>" />
 					</li>
 					<li> 
-						<label onclick="$('category_id').toggle();$('category').toggle();">Category</label>
+						<label onclick="$('#category_id').toggle();$('#category').toggle();">Category</label>
 						<select name="category_id" id="category_id">
 							<option value="">Select a category</option>
 							<? echo (
@@ -88,7 +88,7 @@
 						<input type="text" name="category" id="category" style="display:none;"/>
 					</li>
 					<li> 
-						<label onclick="$('manufacturer_id').toggle();$('manufacturer').toggle();">Manufacturer</label>
+						<label onclick="$('#manufacturer_id').toggle();$('#manufacturer').toggle();">Manufacturer</label>
 						<select name="manufacturer_id" id="manufacturer_id">
 							<option value="">none</option>
 							<? echo (
@@ -98,7 +98,7 @@
 						<input type="text" name="manufacturer" id="manufacturer" style="display:none;"/>
 					</li>
                 <li>
-                    <label for="supplier" onclick="$('supplier_id').toggle();$('supplier').toggle();">Supplier</label>
+                    <label for="supplier" onclick="$('#supplier_id').toggle();$('#supplier').toggle();">Supplier</label>
                     <select id="supplier_id" name="supplier_id" size="1">
                         <option value="">select</option>
                     <? echo (
@@ -109,11 +109,11 @@
                 </li>
 					<li> 
 						<label>Description</label>
-						<input type="text" name="description" value="<? hecho ( $$variable{'Product'}->description(); ) ?>" />
+						<input type="text" name="description" value="<? hecho ( $$variable{Product}->description(); ) ?>" />
 					</li>
 					<li>
 						<label>Sort</label>
-						<input type="number" name="sort" value="<? echo ( 1*$$variable{'Product'}->sort(); ) ?>" />
+						<input type="number" name="sort" value="<? echo ( 1*$$variable{Product}->sort(); ) ?>" />
 					</li>
 <? if ( $$variable{Product}->id() ) ?>
 					<li><label>Created On</label>
@@ -125,7 +125,7 @@
 						<label>Template</label>
 						<select name="project_id" id="project_id">
 							<option value="">select</option>
-							<? echo ( make_drop_down( [ map { $_->id(), $_->reference() } openprint::Project->find( predefined=>1, order=>'lower(strprojectreference)') ], $$variable{'Product'}->project_id() ); ) ?>
+							<? echo ( make_drop_down( [ map { $_->id(), $_->reference() } openprint::Project->find( predefined=>1, order=>'lower(strprojectreference)') ], $$variable{Product}->project_id() ); ) ?>
 						</select>
 					</li>
 <? endif ( openprint::ProjectType->find_one() ) ?>
@@ -134,35 +134,35 @@
 			<fieldset><legend>Tax Information</legend>
 				<p> 
 					<label>Federal Exemption</label>
-					<input type="radio" id="taxexempt1Y" name="taxexempt1" value="Y" <? echo ( checked( $$variable{'Product'}->taxexempt1() eq 'Y' ); ) ?> />
+					<input type="radio" id="taxexempt1Y" name="taxexempt1" value="Y" <? echo ( checked( $$variable{Product}->taxexempt1() eq 'Y' ); ) ?> />
 					<label class="radio" for="taxexempt1Y">Yes</label>
-					<input type="radio" id="taxexempt1N" name="taxexempt1" value="N" <? echo ( checked( $$variable{'Product'}->taxexempt1() ne 'Y' ); ) ?> />
+					<input type="radio" id="taxexempt1N" name="taxexempt1" value="N" <? echo ( checked( $$variable{Product}->taxexempt1() ne 'Y' ); ) ?> />
 					<label class="radio" for="taxexempt1N">No</label>
 				</p>
 				<p> 
 					<label>Prov/State Exemption</label>
-					<input type="radio" id="taxexempt2Y" name="taxexempt2" value="Y" <? echo ( checked( $$variable{'Product'}->taxexempt2() eq 'Y' ); ) ?> />
+					<input type="radio" id="taxexempt2Y" name="taxexempt2" value="Y" <? echo ( checked( $$variable{Product}->taxexempt2() eq 'Y' ); ) ?> />
 					<label class="radio" for="taxexempt2Y">Yes</label>
-					<input type="radio" id="taxexempt2N" name="taxexempt2" value="N" <? echo ( checked( $$variable{'Product'}->taxexempt2() ne 'Y' ); ) ?> />
+					<input type="radio" id="taxexempt2N" name="taxexempt2" value="N" <? echo ( checked( $$variable{Product}->taxexempt2() ne 'Y' ); ) ?> />
 					<label class="radio" for="taxexempt2N">No</label>
 				</p>
 			</fieldset>
 		</div>
 		<div class="rightColumn" style="overflow: hidden;">
 			<fieldset><legend>Specifications</legend>
-			<? if ( $$variable{'Product'}->id() ) ?>
+			<? if ( $$variable{Product}->id() ) ?>
 <table class="List" id="specifications">
 	<tr>
 		<th class="name">Name</th>
 		<th class="value">Value</th>
 		<th class="buttons">
-	<? echo ( button( 'AddSpec', { onclick=>"new Ajax.Request('/product/_specifications.json', { parameters:{func:'Add', product_id: $$variable{Product}{id} } } );", text=>'+', title=>'Add' } ); ) ?>
+	<? echo ( button( 'AddSpec', { onclick=>"jQuery.get('/product/_specifications.json', {func:'Add', product_id: $$variable{Product}{id} } );", text=>'+', title=>'Add' } ); ) ?>
 		</th>
 	</tr>
 <? echo (
 		my $html;
 		my $rowclass;
-		my $Product = $$variable{'Product'};
+		my $Product = $$variable{Product};
 		my $template = slurp_content('/product/_specification.html');
 		foreach my $Spec ( $Product->Specifications() ) {
 			$html .= variable_substitution( \$template, {
@@ -174,23 +174,23 @@
 		return $html;
 ) ?>
 </table>
-			<? else ( $$variable{'Product'}->id() ) ?>
+			<? else ( $$variable{Product}->id() ) ?>
 					Please save your new Product before setting specifications.
-			<? endif ( $$variable{'Product'}->id() ) ?>
+			<? endif ( $$variable{Product}->id() ) ?>
 			</fieldset>
 		</div>
 		<div class="rightColumn">
-    <? eval ( $$variable{'Album'} = $$variable{'Product'};) ?>
+    <? eval ( $$variable{Album} = $$variable{Product};) ?>
     <?include(/photo_albums/_album_upload.html)?>
 		</div>
 		<br class="spacer"/>
 		<fieldset><legend>Prices</legend>
 			<div id="Prices">
-		<? if ( $$variable{'Product'}->id() ) ?>
+		<? if ( $$variable{Product}->id() ) ?>
 				<?include(_prices.html)?>
-		<? else ( $$variable{'Product'}->id() ) ?>
+		<? else ( $$variable{Product}->id() ) ?>
 				Please save your new Product before setting pricing.
-		<? endif ( $$variable{'Product'}->id() ) ?>
+		<? endif ( $$variable{Product}->id() ) ?>
 			</div>
 		</fieldset>
 		<input type="hidden" name="btnFunction"/>

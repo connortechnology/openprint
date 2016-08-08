@@ -346,12 +346,12 @@ Please select a company or user to obtain login information.<br/>
 			<p id="ButtonsBottom" class="buttons">
 			<label>
 			<? echo (
-					if ( $$variable{User}->company_id() ) {
-						return button( 'CompanyInfo2', { href=>'company_profiles.html?ddmCustomer='.$$variable{User}->company_id(), text=>'Company Information' } );
-					} elsif ( $param{'ddmCustomer'} ) {
-						return button( 'CompanyInfo2', { href=>'company_profiles.html?ddmCustomer='.$param{'ddmCustomer'}, text=>'Company Information' } );
-					}
-					return;
+				if ( $$variable{User}->company_id() ) {
+					return button( 'CompanyInfo2', { href=>'company_profiles.html?ddmCustomer='.$$variable{User}->company_id(), text=>'Company' } );
+				} elsif ( $param{'ddmCustomer'} ) {
+					return button( 'CompanyInfo2', { href=>'company_profiles.html?ddmCustomer='.$param{'ddmCustomer'}, text=>'Company' } );
+				}
+				return;
 			) ?>
 			</label>
 			<? if ( $$variable{'EDIT_USER_NUM'} ) ?>
@@ -374,31 +374,7 @@ Please select a company or user to obtain login information.<br/>
 		</fieldset>
 		<input type="hidden" name="btnFunction"/>
 	</form>
-<div id="Log">
 <? if ( $$variable{User}->id() ) ?>
-	<form id="f2" name="f2" method="post" action="user_profiles.html">
-		<input type="hidden" name="user_id" value="<?echo ($variable{User}->id())?>"/>
-		<fieldset><legend>Logs</legend>
-			<ul>
-				<li><label>Date</label>
-					<? echo ( join( ' to ',
-							datetime_select_session( $r->uri(),'log_created_on_start', {
-								onchange    =>q`new Ajax.Updater( 'Logs', '_user_logs.html', { parameters: $('f2').serialize() } );`,
-								with_today=>1,
-								with_clear=>1,
-								} ),
-							datetime_select_session( $r->uri(),'log_created_on_end', {
-								onchange    =>q`new Ajax.Updater( 'Logs', '_user_logs.html', { parameters: $('f2').serialize() } );`,
-								with_today=>1,
-								with_clear=>1,
-								} ),
-						); ) ?>
-					<? echo ( button( 'LoadLog', { onclick=>q`new Ajax.Updater( 'Logs', '_user_logs.html', { parameters: $('f2').serialize() } );`, text=>'Load' } ); ) ?>
-				</li>
-			</ul>
-			<div id="Logs"><?include('_user_logs.html')?></div>
-		</fieldset>
-	</form>
+<? echo ( include_logs( $$variable{User} ); ) ?>
 <? endif ( $$variable{User}->id() ) ?>
-</div>
 </div>

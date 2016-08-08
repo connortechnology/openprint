@@ -26,8 +26,8 @@
 		</div>
 		<p class="buttons">
 			<? echo (
-				return join('',
-					button( 'SaveNew', { onclick=>q`$('config_form').submit();`, text=>'Save' } ),
+				return join("\n",
+					button( 'SaveNew', { onclick=>q`$('#config_form').submit();`, text=>'Save' } ),
 					button( 'CancelNew', { onclick=>q`popupWin.destroy();`, text=>'Cancel' } ),
 				);
 			) ?>

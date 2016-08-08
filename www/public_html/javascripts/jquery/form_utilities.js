@@ -496,6 +496,7 @@ function clearSelect( ddm ) {
 
 function clearForm(form) {
 	form = $(form);
+	if ( form ) { form = form[0] } else { alert("No form found for form"); };
 	for ( var i=0, len = form.elements.length; i < len; i += 1 ) {
 		var e = form.elements[i];
 		if ( ! e.type )
@@ -1306,55 +1307,70 @@ function popup_window( url, parameters, options ) {
 	if ( ! popupWin ) {
 		var defaults = {
 			maximizable: false,
-			 resizable: true,
-			 hideEffect:Element.hide,
-			 showEffect:Element.show,
-			 destroyOnClose: true,
-			 className:"alphacube",
-			 width:400,
-			 height:400, 
-			 recenterAuto:false
+			resizable: true,
+			hideEffect:Element.hide,
+			showEffect:Element.show,
+			destroyOnClose: true,
+			className:"alphacube",
+			width:400,
+			height:400, 
+			recenterAuto:false
 		}
 
-		Object.extend( defaults, options );
-		popupWin = new Window(defaults);
+       var d = $('#dialog');
+        if ( ! d.length ) {
+			console.log("Creating dialog elemtn");
+
+			$('body').append('<div id="dialog" style=""></div>' );
+       d = $('#dialog');
+		} else {
+			console.log("Dialog is " + d.length );
+        }
+
+        d.load( url );
+        d.dialog();
+
+
+		//Object.extend( defaults, options );
+
+		//popupWin = new Window(defaults);
 
 		// Set up a windows observer, check ou debug window to get messages
-		myObserver = {
-onDestroy: function(eventName, win) {
-				if (win == popupWin) {
-					popupWin = null;
-					Windows.removeObserver(this);
-				}
-			}
-		}
-		Windows.addObserver(myObserver);
+		//myObserver = {
+//onDestroy: function(eventName, win) {
+				//if (win == popupWin) {
+					//popupWin = null;
+					//Windows.removeObserver(this);
+				//}
+			//}
+		//}
+		//Windows.addObserver(myObserver);
 	} // end if
-	popupWin.setHTMLContent('Loading... please wait');
-	if ( options && options.center != "" ) {
-		if ( options.center == "true" ) {
-			popupWin.showCenter();
-		} else {
-			popupWin.show();
-		} // end if
-	} else {
-		popupWin.showCenter();
-	} // end if
-	if ( options && options.content ) {
-		popupWin.setHTMLContent( options.content );
-	} else {
-		if ( parameters ) {
-			if ( parameters == '[object HTMLFormElement]' ) {
-				var p = parameters.serialize(true);
-				if ( p )
-					parameters = $H(p).toQueryString();
-			} else if ( typeof parameters == 'object' ) {
-				parameters = $H(parameters).toQueryString();
-			}
-			url += '?' + parameters;
-		}
-		popupWin.setAjaxContent(url, null , true);
-	} // end if
+	//popupWin.setHTMLContent('Loading... please wait');
+	//if ( options && options.center != "" ) {
+		//if ( options.center == "true" ) {
+			//popupWin.showCenter();
+		//} else {
+			//popupWin.show();
+		//} // end if
+	//} else {
+		//popupWin.showCenter();
+	//} // end if
+	//if ( options && options.content ) {
+		//popupWin.setHTMLContent( options.content );
+	//} else {
+		//if ( parameters ) {
+			//if ( parameters == '[object HTMLFormElement]' ) {
+				//var p = parameters.serialize(true);
+				//if ( p )
+					//parameters = $H(p).toQueryString();
+			//} else if ( typeof parameters == 'object' ) {
+				//parameters = $H(parameters).toQueryString();
+			//}
+			//url += '?' + parameters;
+		//}
+		//popupWin.setAjaxContent(url, null , true);
+	//} // end if
 } // end function popup_window
 
 
