@@ -888,6 +888,10 @@ sub get_Stocks {
 			$$specs{alert} .= 'GSM is too low.';
 			return ();
 		} # end if
+		if ( int($Paper->gsm()) != int($Paper->gsm(undef)) ) {
+			$$specs{alert} .= "GSM ($$specs{txtStockGSM}) and calculated gsm ($$Paper{gsm}) are different.  Please double check that everything is ok.";
+			#return ();
+		}
 	} else {
 		$$v{txtStockGSM} = [ sets::union( 'output', @{$$v{txtStockGSM}} ) ];
 
