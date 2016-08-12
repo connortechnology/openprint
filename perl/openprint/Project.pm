@@ -1723,6 +1723,10 @@ sub link_to {
 	return sprintf('<a href="/main/project/view.html?project_id=%1$d">%2$s</a>', $_[0]{id}, ( $_[1] ? $_[1] : $_[0]{id} ) );
 } # end sub link_to
 
+sub production_link_to {
+	return sprintf('<a href="/employee/proj/view.html?project_id=%1$d">%2$s</a>', $_[0]{id}, ( $_[1] ? $_[1] : $_[0]{id} ) );
+} # end sub production_link_to
+
 sub lock {
 	my ( $caller, undef, $line ) = caller;
 	if ( $_[0]{ac} ) {
