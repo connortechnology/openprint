@@ -133,21 +133,16 @@ sub notify_csr {
 	my %info;
 	$info{Label} = $Label;
 
-	$_ = MIME::QuotedPrint::encode_qp( Encode::encode('utf-8', ssi::variable_substitution( \$email_template, \%info ) ) );
-	push @attachments, ('', $_, 'text/html', 'quoted-printable');
-
-	my $content = ssi::slurp_content( '/email_content/label.html' );
-	push @attachments, $Label->Type()->name(). ' for docket ' . $Label->docket().'.html', 
-		 MIME::QuotedPrint::encode_qp( Encode::encode('utf-8',
-					 ssi::variable_substitution( \$content, \%info ) ) ), 'text/html', 'quoted-printable';
+	$info{ReplacementText} = '<br/>Click to view ' . $Project->production_link_to( 'Project ' . $Project->id() ) . '<br/>
+Click to view this ' . $Label->link_to() . ', however it may not be filled in yet.<br/>';
 
 	my $Email = new openprint::Email();
 	my $results .= $Email->send(
-#TO  =>  'iconnor@point-one.com',
-			TO		=>	$CSR,
+TO  =>  'iconnor@point-one.com',
+			#TO		=>	$CSR,
 			FROM    =>  $openprint::User,
-			SUBJECT =>  "I have created a new " . $Label->type() . ' for docket ' . $Label->docket(),
-			ATTACHMENTS =>  \@attachments,
+			SUBJECT =>  "New " . $Label->Type()->name() . ' created for docket ' . $Label->docket() . ( $$Label{reference} ? ' ref ' . $$Label{reference} : '' ),
+			HTML_BODY	=>	ssi::variable_substitution( \$email_template, \%info ),
 			);
 	(new openprint::Log())->save({
 			action=>'Notified CSR', 
