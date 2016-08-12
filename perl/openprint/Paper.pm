@@ -1191,9 +1191,10 @@ sub gsm {
 	if ( @_ ) {
 		$$self{gsm} = shift;
 		$self->wpsi(undef) if $$self{gsm};
-	} elsif ( ! $$self{gsm} ) {
+	} 
+	if ( ! $$self{gsm} ) {
 		if ( $self->wpsi(undef) ) {
-			$$self{gsm} = sprintf('%.2f', $$self{wpsi} * 703064.5 );
+			$$self{gsm} = Math::Round::nearest( 0.01, $$self{wpsi} * 703064.5 );
 		} else { 
 			$$self{gsm} = 'unknown';
 			$openprint::log->warn("Can't calculate gsm for " . $self->to_string() ) if $$self{brand};
