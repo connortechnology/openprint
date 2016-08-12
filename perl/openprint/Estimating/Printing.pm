@@ -2457,10 +2457,21 @@ $openprint::log->debug("No printing");
 
 	my $project = setup_project( $Project, $service_index, $services, $specs, \@side_one_colours, \@side_two_colours, \%inkCoverage, $Papers[0] );
 	if ( $$project{NeedFolding} ) {
-		if ( $$specs{txtFinalHeight} * $$specs{txtFinalWidth} == ( $$specs{txtHeight} * $$specs{txtWidth} ) and ! $$specs{txtSignatureType} ) {
+		if ( (
+					( $$specs{txtFinalHeight} * $$specs{txtFinalWidth} ) == ( $$specs{txtHeight} * $$specs{txtWidth} ) 
+					) and ! $$specs{txtSignatureType} ) {
 			$$specs{alert} .= 'Folding is needed, but your finished and flat dimensions are the same!<br/>';
 			return $$specs{Status} = 'uncalculated';
+		} else {
+$openprint::log->debug("$$specs{txtFinalHeight} * $$specs{txtFinalWidth} == ( $$specs{txtHeight} * $$specs{txtWidth} ) and ! $$specs{txtSignatureType}");
 		} # end if
+	} else {
+		$openprint::log->debug("Do not need Folding");
+		if ( (
+					( $$specs{txtFinalHeight} * $$specs{txtFinalWidth} ) != ( $$specs{txtHeight} * $$specs{txtWidth} ) 
+					) and ! $$specs{txtSignatureType} ) {
+			$$specs{alert} .= 'Folding is not required but dimensions are different.  Be sure this is what you want!<br/>';
+		}
 	}
 	openprint::Estimating::Folding::load_equipment( $Project );
 	openprint::Estimating::Cutting::load_equipment( $Project );

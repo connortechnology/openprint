@@ -874,7 +874,7 @@ $openprint::log->debug("Cutting because not folding or can't cut on folder $fold
 						$vertical_cuts += 1;
 					} # end if
 				} # end foreach pre-trimmed sides
-			} elsif ( @folding_impositions >= 1 and $folding_impositions[0]->imposition() > 1 and ( $Folder and $Folder->specification('Cutting Capable') ) ) {
+			} elsif ( @folding_impositions >= 1 and $folding_impositions[0]{imposition} > 1 and ( $Folder and $Folder->specification('Cutting Capable') ) ) {
 	# Splitting the folded products is done on the folder for free
 	#if ( ( $$folding_imposition{columns} > 1 ) and ( $$folding_imposition{columns} < $$I{columns} ) ) {
 	#$vertical_cuts += ($$I{columns} / $$folding_imposition{columns})-1;

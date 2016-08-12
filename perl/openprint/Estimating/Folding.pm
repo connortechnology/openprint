@@ -207,6 +207,10 @@ sub signature_needs {
 		$openprint::log->debug("Folding::signature_needs: is a banner") if DEBUG_NEEDS;
 		return 0;
 	} # end if
+
+	if ( $$specs{rdbTemplateType} eq 'NoFold' ) {
+		return 0;
+	}
 		
 	my $services = $Project->services();
 	if ( $$services{NoBindery} ) {
@@ -2347,7 +2351,7 @@ $openprint::log->debug("Has no equipment_id");
 			} # end if
 			if ( $Fold->pages() ) {
 				$$Imposition{pages} = $Fold->pages();
-				$Imposition->page_quantity( $$folding_specs{"FoldPageQty-$form-$qty_index-$fold_index"} );
+				$$Imposition{page_quantity} = $$folding_specs{"FoldPageQty-$form-$qty_index-$fold_index"};
 				if ( ! $$Imposition{page_quantity} ) {
 					$$Imposition{page_quantity} = $Source_Imposition->pages() / $Fold->pages();
 				} # end if

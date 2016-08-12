@@ -16,6 +16,11 @@ $table = 'host_interfaces';
 	dhcp			=>	'dhcp',
     host_id         =>  'host_id',
 );
+%transforms = (
+	mac	=>    [ 's/[^\da-fA-F:\-]//g' ],
+	ip	=>    [ 's/[^\d\.\:a-fA-F]//g' ],
+);
+
 %find_fields = (
 	whitelist	=>	'(SELECT whitelist FROM Hosts WHERE Hosts.id=host_id)',
 );

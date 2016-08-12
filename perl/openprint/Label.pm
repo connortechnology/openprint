@@ -40,30 +40,30 @@ $serial = 'labels_id_seq';
 sub load {
 	my ( $self, $data ) = @_;
 	$self->SUPER::load( $data );
-	%{$$self{'data'}} = sql::execute( undef, undef, 'SELECT name, value FROM label_data WHERE label_id=?', $$self{'id'} ) if $$self{'id'};
+	%{$$self{data}} = sql::execute( undef, undef, 'SELECT name, value FROM label_data WHERE label_id=?', $$self{id} ) if $$self{id};
 } # end sub load
 
 sub save {
 	my ( $self, $param ) = @_;
 
-	my %data = %{$$self{'data'}} if $$self{'data'};
+	my %data = %{$$self{data}} if $$self{data};
 	my $ac = sql::start_transaction( $openprint::dbh );
 	my $error = $self->SUPER::save( $param );
 	if ( ! $error ) {
-		sql::execute(undef,undef,'DELETE FROM Label_Data WHERE label_id=?', $$self{'id'} );
+		sql::execute(undef,undef,'DELETE FROM Label_Data WHERE label_id=?', $$self{id} );
 		foreach my $k ( keys %data ) {
-			sql::insert( undef, undef, 'Label_data', 'label_id', $$self{'id'}, 'name', $k, 'value', $data{$k} );
+			sql::insert( undef, undef, 'Label_data', 'label_id', $$self{id}, 'name', $k, 'value', $data{$k} );
 		} # end foreach
 	} # end if
 	sql::end_transaction( $openprint::dbh, $ac );
-	%{$$self{'data'}} = %data;
+	%{$$self{data}} = %data;
 	return $error;
 } # end sub save
 
 sub destroy {
     my $ac = sql::start_transaction( );
-    sql::execute( undef, undef, q{DELETE FROM Label_data WHERE label_id=?}, $_[0]{'id'} );
-    sql::execute( undef, undef, q{DELETE FROM Labels WHERE id=?}, $_[0]{'id'} );
+    sql::execute( undef, undef, q{DELETE FROM Label_data WHERE label_id=?}, $_[0]{id} );
+    sql::execute( undef, undef, q{DELETE FROM Labels WHERE id=?}, $_[0]{id} );
     sql::end_transaction( undef, $ac );
 } # end sub destroy
 
@@ -80,7 +80,7 @@ sub Project {
 } # end sub Project
 
 sub Type {
-	return new openprint::LabelType( $_[0]{'type_id'} );
+	return new openprint::LabelType( $_[0]{type_id} );
 } # end sub Type
 
 sub set_data {
@@ -90,7 +90,7 @@ sub set_data {
 	foreach my $k ( keys %new_data ) {
 		if ( $$self{data}{$k} ne $new_data{$k} ) {	
 			push @changes, "$k changed from $$self{data}{$k} to $new_data{$k}";
-			$$self{'data'}{$k} = $new_data{$k};
+			$$self{data}{$k} = $new_data{$k};
 		}
 	} # end foreach
 	(new openprint::Log())->save({object_id=>$$self{id},object_type=>ref$self,action=>'Edit', note=>'Document Changed:<br/>'.join('<br/>', @changes) }) if @changes;
@@ -98,16 +98,16 @@ sub set_data {
 
 sub get_data {
 	my $self = shift;
-	return @{$$self{'data'}}{@_};
+	return @{$$self{data}}{@_};
 } # end sub get_data
 
 sub copy {
 	my $self = shift;
 	my $new = new openprint::Label();
 	@$new{keys %fields} = @$self{keys %fields};
-	delete $$new{'id'};
-	foreach my $k ( keys %{$$self{'data'}} ) {
-		$$new{'data'}{$k} = $$self{'data'}{$k};
+	delete $$new{id};
+	foreach my $k ( keys %{$$self{data}} ) {
+		$$new{data}{$k} = $$self{data}{$k};
 	} # end foreach
 	return $new;
 } # end sub copy
@@ -115,6 +115,47 @@ sub copy {
 sub link_to {
 	return sprintf('<a href="/employee/production/labels/label.html?id=%d&docket=%d">%s</a>', $_[0]{id}, $_[0]{docket}, @_ > 1 ? $_[1] :  join(' ', $_[0]->Type()->name(), $_[0]{reference} ) );
 } # end sub link_to
+
+sub notify_csr {
+	my ( $Label ) = @_;
+
+	my $Project = $Label->Project();
+	my $CSR;
+	if ( $Project and $Project->Company()->salesrep_id() ) {
+		$CSR = new openprint::User( $Project->Company()->salesrep_id() );
+	} # end if
+	if ( ! $CSR ) {
+		return;
+	}
+
+	my $email_template = ssi::slurp_content( '/email_template.html' );
+	my @attachments;
+	my %info;
+	$info{Label} = $Label;
+
+	$_ = MIME::QuotedPrint::encode_qp( Encode::encode('utf-8', ssi::variable_substitution( \$email_template, \%info ) ) );
+	push @attachments, ('', $_, 'text/html', 'quoted-printable');
+
+	my $content = ssi::slurp_content( '/email_content/label.html' );
+	push @attachments, $Label->Type()->name(). ' for docket ' . $Label->docket().'.html', 
+		 MIME::QuotedPrint::encode_qp( Encode::encode('utf-8',
+					 ssi::variable_substitution( \$content, \%info ) ) ), 'text/html', 'quoted-printable';
+
+	my $Email = new openprint::Email();
+	my $results .= $Email->send(
+#TO  =>  'iconnor@point-one.com',
+			TO		=>	$CSR,
+			FROM    =>  $openprint::User,
+			SUBJECT =>  "I have created a new " . $Label->type() . ' for docket ' . $Label->docket(),
+			ATTACHMENTS =>  \@attachments,
+			);
+	(new openprint::Log())->save({
+			action=>'Notified CSR', 
+			Object=>$Label,
+			note=> 'Emailed from ' . $openprint::User->link_to() . ' to ' . $CSR->link_to(),
+			});
+	return $results;
+} # end sub notify_csr
 
 1;
 __END__
