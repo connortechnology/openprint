@@ -147,8 +147,8 @@ cleanup : true
 	<td class="comment"><textarea name="comment-%1$s">%5$s</textarea></td>
 `, 
 	$$Interface{id},
-	input( type=>'text', name=>'mac-'.$$Interface{id}, value=>$$Interface{mac} ),
-	input( type=>'text', name=>'ip-'.$$Interface{id}, value=>$Interface->ip() ),
+	input( type=>'mac', name=>'mac-'.$$Interface{id}, value=>$$Interface{mac} ),
+	input( type=>'ip', name=>'ip-'.$$Interface{id}, value=>$Interface->ip() ),
 	checkboxes( 'dhcp-'.$$Interface{id}, [ 1, '' ], $Interface->dhcp() ),
 	$Interface->comment(),
 );
