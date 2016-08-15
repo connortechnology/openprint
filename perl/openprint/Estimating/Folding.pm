@@ -1295,7 +1295,7 @@ $openprint::log->debug("Resulting fold: " . $Fold->to_string() ) if DEBUG;
 				$fold_specs{"FoldType-$form-$qty_index-$fold_index"} = $Fold->type();
 				$fold_specs{"FoldQty-$form-$qty_index-$fold_index"} = $$Imposition{quantity};
 				#$Imposition->page_quantity( int($SignatureImposition->pages()/$Imposition->pages() ) );
-				$fold_specs{"FoldPageQty-$form-$qty_index-$fold_index"} = $Imposition->page_quantity();
+				$fold_specs{"FoldPageQty-$form-$qty_index-$fold_index"} = $$Imposition{page_quantity};
 				$fold_specs{"FoldImposition-$form-$qty_index-$fold_index"} = $$Imposition{imposition};
 				$fold_specs{"FoldColumns-$form-$qty_index-$fold_index"} = $$Imposition{columns};
 				$fold_specs{"FoldRows-$form-$qty_index-$fold_index"} = $$Imposition{rows};
@@ -1747,7 +1747,7 @@ $i->display() if DEBUG;
 						}
 						$$specs{"FoldType-$form-$qty_index-$index"} = $fold_type;
 						$$specs{"FoldQty-$form-$qty_index-$index"} = $$FI{quantity};
-						$$specs{"FoldPageQty-$form-$qty_index-$index"} = $FI->page_quantity();
+						$$specs{"FoldPageQty-$form-$qty_index-$index"} = $$FI{page_quantity};
 						$$specs{"FoldImposition-$form-$qty_index-$index"} = $$FI{imposition};
 						$$specs{"FoldColumns-$form-$qty_index-$index"} = $$FI{columns};
 						$$specs{"FoldRows-$form-$qty_index-$index"} = $$FI{rows};
@@ -2373,15 +2373,15 @@ sub compare_folds {
 	my @FoldsA = get_Folds( $specs, $sig_specsA, $qty_index );
 	my @FoldsB = get_Folds( $specs, $sig_specsB, $qty_index );
 	if ( @FoldsA != @FoldsB ) {
-		$openprint::log->debug("Fold count different");
+		$openprint::log->debug("Fold count different") if DEBUG;
 		return 0 
 	}
 		
 	if ( $FoldsA[0]{Folder}{id} != $FoldsB[0]{Folder}{id} ) {
-		$openprint::log->debug("Folder different");
+		$openprint::log->debug("Folder different") if DEBUG;
 		return 0 ;
 	} else {
-		$openprint::log->debug("Folder same $FoldsA[0]{Folder}{id} = $FoldsB[0]{Folder}{id}");
+		$openprint::log->debug("Folder same $FoldsA[0]{Folder}{id} = $FoldsB[0]{Folder}{id}") if DEBUG;
 	}
 	return 1;
 }
