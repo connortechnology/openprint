@@ -128,6 +128,11 @@ sub notify_csr {
 		return;
 	}
 
+	my $Notification = openprint::User_Notification->find( type=>'Label Creation', user_id=>$CSR->id() );
+	if ( $Notification and $Notification->value() eq 'No' ) {
+		return;
+	} # end if
+
 	my $email_template = ssi::slurp_content( '/email_template.html' );
 	my @attachments;
 	my %info;
