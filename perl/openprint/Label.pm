@@ -132,8 +132,12 @@ sub notify_csr {
 	my @attachments;
 	my %info;
 	$info{Label} = $Label;
+	$info{base_href} = $openprint::config{InternalSiteURL};
 
-	$info{ReplacementText} = '<br/>Click to view ' . $Project->production_link_to( 'Project ' . $Project->id() ) . '<br/>
+	$info{ReplacementText} = '
+<br/>
+Click to view ' . $Project->production_link_to( 'Project ' . $Project->id() ) . '<br/>
+<br/>
 Click to view this ' . $Label->link_to() . ', however it may not be filled in yet.<br/>';
 
 	my $Email = new openprint::Email();
