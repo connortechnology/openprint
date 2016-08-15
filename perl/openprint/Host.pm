@@ -48,7 +48,7 @@ sub resolve {
 sub get_mac {
 	my ( $self ) = @_;
 
-	my ( $subnet ) = $$self{'ip'} =~ /^(\d+\.\d+\.\d+)\.\d+$/;
+	my ( $subnet ) = $$self{ip} =~ /^(\d+\.\d+\.\d+)\.\d+$/;
 
 	my $use_iface;
 
@@ -62,7 +62,7 @@ $openprint::log->debug("Looking at $iface. " . $iface->address . ', subnet: ' . 
 
 	if ( $use_iface ) {
 		require Net::ARP;
-		my $mac = Net::ARP::arp_lookup( $use_iface, $$self{'ip'} );
+		my $mac = Net::ARP::arp_lookup( $use_iface, $$self{ip} );
 		$openprint::log->debug("Mac: $mac");
 		return $mac;
 	} else {
@@ -154,7 +154,7 @@ $serial = 'hosts_id_seq';
 sub destroy {
 	my $error;
 	require openprint::Log;
-	foreach my $Log ( openprint::Log->find('host_id'=>$_[0]{'id'}) ) {
+	foreach my $Log ( openprint::Log->find('host_id'=>$_[0]{id}) ) {
 		$error .= $Log->destroy();
 		return $error if $error;
 	} # end foreach Log
@@ -174,7 +174,7 @@ sub destroy {
 sub ping {
 	require Net::Ping;
 	my $p = Net::Ping->new();
-	my $rc = $p->ping($_[0]{'ip'});
+	my $rc = $p->ping($_[0]{ip});
 	$p->close();
 	return $rc;
 } # end sub ping
@@ -202,31 +202,31 @@ sub type {
 sub Assets {
 	require openprint::Object_Asset;
 	if ( $_[1] ) {
-		$_[1]{'object_id'} = $_[0]{'id'};
-		$_[1]{'object_type'} = 'openprint::Host';
-		$_[1]{'order'} = 'created_on' if ! $_[1]{'order'};
+		$_[1]{object_id} = $_[0]{id};
+		$_[1]{object_type} = 'openprint::Host';
+		$_[1]{order} = 'created_on' if ! $_[1]{order};
 
 		return openprint::Object_Asset->find(%{$_[1]});
 	} # end if
 
-	if ( ! defined $_[0]{'Assets'} ) {
-		@{$_[0]{'Assets'}} = openprint::Object_Asset->find(
+	if ( ! defined $_[0]{Assets} ) {
+		@{$_[0]{Assets}} = openprint::Object_Asset->find(
 				'object_type'	=>	'openprint::Host',
-				'object_id'		=>	$_[0]{'id'}, 
+				'object_id'		=>	$_[0]{id}, 
 				'order'			=>	'created_on'
 				);
 	} # end if
-	return @{$_[0]{'Assets'}};
+	return @{$_[0]{Assets}};
 } # end sub Assets
 
 sub Notifications {
-	if ( ! $_[0]{'Notifications'} ) {
-		@{$_[0]{'Notifications'}} = openprint::Host_Notification->find(
-				'host_id'	=>	$_[0]{'id'},
+	if ( ! $_[0]{Notifications} ) {
+		@{$_[0]{Notifications}} = openprint::Host_Notification->find(
+				'host_id'	=>	$_[0]{id},
 				);
 				#'order' => 'lower(strfirstName),lower(strlastname)' );
 	} # end if
-	return @{$_[0]{'Notifications'}};
+	return @{$_[0]{Notifications}};
 } # end sub Notifications
 sub Interfaces {
 	if ( ! $_[0]{Interfaces} ) {
@@ -278,24 +278,35 @@ sub reboot {
 
 	foreach my $HI ( $Host->Interfaces() ) {
 		my $url;
+		my $initial_url; # in case we need to hit a different url first.
+		my $method = 'get';
+		my $args = {};
+
 		if ( sets::isin( $_[0]->type(), [ 'AIC500', 'AIC500W', 'AIC777W', 'AIC747W' ] ) ) {
 			$url = 'http://'.$HI->ip().'/admin/reboot.cgi?type=0';
 		} elsif( $_[0]->type() eq 'M8640' ) {
 			$url = 'http://'.$HI->ip().'/cgi-bin/reboot.cgi';
+		} elsif ( $_[0]->type() eq 'TL-WPA4220' ) {
+			$url = 'http://'.$HI->ip().'/userRpm/SysRebootRpm.htm?Reboot=Reboot';
 		} elsif( $_[0]->type() eq 'D-Link DAP1522' ) {
 			$url = 'http://'.$HI->ip().'/sys_cfg_valid.xgi?&exeshell=submit REBOOT';
 		} elsif( $_[0]->type() eq 'DCS932L' ) {
 			$url = 'http://'.$HI->ip().'/setSystemReboot';
-		} elsif ( $_[0]->type() eq 'TL-WPA4220' ) {
-			$url = 'http://'.$HI->ip().'/userRpm/SysRebootRpm.htm?Reboot=Reboot';
+		} elsif( $_[0]->type() eq 'DCS-933L' ) {
+			$initial_url = 'http://'.$HI->ip();
+			$url = 'http://'.$HI->ip().'/setSystemReboot';
+			$method = 'post';
+			$args = {
+				RepySuccessPage=>'reboot.htm',
+				ReplyErrorPage	=>	'reboot.htm',
+				Reset => 'Reboot the Device',
+			};
 		} else {
 			$openprint::log->error("Unknown host type $_[0]{type}");
 			return 0;
-		} # end if
+		}
 
-		$openprint::log->debug("URL: $url" );
-
-		my $response = $browser->get($url);
+		my $response = $browser->get($initial_url ? $initial_url : $url);
 		$openprint::log->debug( $response->status_line );
 		$openprint::log->debug( $response->content );
 		my $headers = $response->headers();
@@ -307,7 +318,7 @@ sub reboot {
 		if ( $tokens{realm} ) {
 			$openprint::log->debug("tokens: $tokens realm: $tokens{realm}");
 			$browser->credentials( $HI->ip().':80', $tokens{realm}, $Host->info('username'), $Host->info('password') );
-			$response = $browser->get($url);
+			$response = $browser->$method($url, $args );
 		} # end if
 
 		if ( ! $response->is_success ) {
@@ -349,7 +360,7 @@ sub reboot {
 			my $results = (new openprint::Email())->send(
 					TO    =>  \@To,
 					SUBJECT   =>  'Camera rebooted ' . $Host->hostname(),
-					FROM      =>  $openprint::config{'TechSupportEmail'},
+					FROM      =>  $openprint::config{TechSupportEmail},
 					BODY      =>  "
 
 					Description: $$Host{description}
