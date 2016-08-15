@@ -1,0 +1,52 @@
+<div class="PageTitle">
+<h1>Administrator Managerial</h1>
+<h2>Users</h2>
+</div>
+<script type="text/javascript">
+var openprint_load_content_ajax = null;
+
+function load_page() {
+	if ( openprint_load_content_ajax ) { openprint_load_content_ajax.transport.abort(); }
+	openprint_load_content_ajax = new Ajax.Updater( 'Results', '_users.html', { parameters: $('f1').serialize() } );
+} 
+</script>
+<form id="f1" name="f1" method="post" action="companies.html">
+	<fieldset class="filters"><legend>Report Criteria</legend>
+		<ul>
+		<li>
+			<label>ID</label>
+			<? echo ( input( type=>'cardinal', name=>'user_id', onkeydown=>"if(event.keyCode==13){f1.submit();}" ); ) ?>
+			<? echo ( button( 'Go1',{ onclick=>"f1.action='user_profiles.html';f1.submit();", text=> 'Go' } ); ) ?>	
+		</li>
+		<li>
+			<label>Email</label>
+			<? echo ( input( type=>'email', name=>'email', onkeydown=>'if(event.keyCode==13){f1.submit();}', oninput=>'load_page();' ); ) ?>
+			<? echo ( button( 'Go2',{ onclick=>"f1.action='user_profiles.html';f1.submit();", text=> 'Go' } ); ) ?>	
+		</li>
+		<li>
+			<label>Sales Rep</label>
+			<select name="salesrep_id" size="1" onchange="load_page();"> 
+				<option value="">All</option>
+				<? echo ( make_drop_down( openprint::User->dropdown( type=>['E','A'], 'usergroup any'=>'Sales' ), $session{$r->uri().'?salesrep_id'} ); ) ?>
+			</select>
+			<? echo ( checkboxes( 'salesrep_id_exclude', [ 1, 'Not in this list' ], $session{$r->uri().'?salesrep_id_exclude'}, { onclick=>'load_page();' } ); ) ?>
+		</li>
+		<li> 
+			<label>Created Date</label>
+			<? echo ( date_select_session( $r->uri(), 'created_on_start', { with_today=>1, with_clear=>1, onchange=>'load_page();' } ); ) ?>
+			to
+			<? echo ( date_select_session( $r->uri(), 'created_on_end', { with_today=>1, with_clear=>1, onchange=>'load_page();' } ); ) ?>
+		</li>
+		<li><label>Deleted?</label><? echo ( radio( 'deleted', [ '1','Yes', '0', 'No', '', 'Both' ], $session{$r->uri().'?deleted'}, {onclick=>"load_page();"} ); ) ?></li>
+		</ul>
+		<p class="buttons">
+			<? echo ( join("\n",
+				button( 'ShowResults', { onclick=>'load_page();', text=>'Show Results' } ),
+				#button( 'DownloadCSV', { onclick=>"f1.action='users.html?Download';f1.btnFunction.value='Download in CSV format';f1.submit();", href=>'', text=>'Download in CSV Format' } ),
+				button( 'Reset', { onclick=>"f1.reset();", text=>'Reset' } ),
+); ) ?>
+		</p>
+	</fieldset>
+	<div id="Results">Click Show Results</div>
+	<input type="hidden" name="btnFunction"/>
+</form>
