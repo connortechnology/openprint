@@ -289,7 +289,8 @@ $openprint::log->debug("Makereadies $equipment_id $$MakeReadies{$equipment_id}")
 	} # end foreach colour
 
 	if ( ! ( @front_aq or @back_aq ) ) {
-$openprint::log->warn("Doing AQ when not needed @front_aq @back_aq");
+		my ( $caller, undef, $line ) = caller;
+		$openprint::log->warn("Doing AQ when not needed @front_aq @back_aq from $caller:$line");
 		$bestPrice{Status} = 'calculated';	
 		return %bestPrice;
 	} # end if
