@@ -582,5 +582,16 @@ sub usergroup_ids {
 	return map { $_->usergroup_id() } openprint::User_in_UserGroup->find(user_id=>$_[0]{id});
 } # end sub usergroup_ids
 
+sub save_notifications {
+	my ( $User, $param ) = @_;	
+
+	my @results;
+	foreach my $N ( $User->Notifications() ) {
+		push @results, "Notification for $$N{name} changed $$N{value} => ".$$param{'notification_'.$$N{id}}.'<br/>';
+		$N->save( { value => $$param{'notification_'.$$N{id}} } ) if $$N{value} ne $$param{'notification_'.$$N{id}};
+	} # end foreach Notification
+	return @results;
+}
+
 1;
 __END__
