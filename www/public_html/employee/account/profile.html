@@ -280,4 +280,7 @@
 	</div>
 		<input type="hidden" name="btnFunction"/>
 	</form>
+<? if ( $$variable{User}->id() ) ?>
+<? echo ( include_logs( $$variable{User} ); ) ?>
+<? endif ( $$variable{User}->id() ) ?>
 </div>
