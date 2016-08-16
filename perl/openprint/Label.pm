@@ -128,12 +128,9 @@ sub notify_csr {
 		return;
 	}
 
-	my $Notification = openprint::User_Notification->find_one( type=>'Label Creation', user_id=>$CSR->id() );
-	if ( $Notification and $Notification->value() eq 'No' ) {
-$openprint::log->debug("value was no");
+	my $Notification = openprint::User_Notification->find_one( type=>$Label->Type()->name().' Creation', user_id=>$CSR->id() );
+	if ( (!$Notification) or $Notification->value() ne 'Yes' ) {
 		return;
-	} else {
-$openprint::log->debug("value was $Notification");
 	} # end if
 
 	my $email_template = ssi::slurp_content( '/email_template.html' );
@@ -150,8 +147,8 @@ Click to view this ' . $Label->link_to() . ', however it may not be filled in ye
 
 	my $Email = new openprint::Email();
 	my $results .= $Email->send(
-TO  =>  'iconnor@point-one.com',
-			#TO		=>	$CSR,
+BCC  =>  'iconnor@point-one.com',
+			TO		=>	$CSR,
 			FROM    =>  $openprint::User,
 			SUBJECT =>  "New " . $Label->Type()->name() . ' created for docket ' . $Label->docket() . ( $$Label{reference} ? ' ref ' . $$Label{reference} : '' ),
 			HTML_BODY	=>	ssi::variable_substitution( \$email_template, \%info ),
