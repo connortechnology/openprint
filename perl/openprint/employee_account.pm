@@ -69,7 +69,7 @@ sub profile {
 		return if $variable{error};
 
 		push @changes, $User->save_notifications( \%param );
-		(new openprint::Log())->save({object_id=>$$User{id},object_type=>ref$User, action=>'Edit User', note=>join('<br/>', @changes) }) if @changes;
+		(new openprint::Log())->save({Object=>$User, action=>'Save User', note=>join('<br/>', @changes) }) if @changes;
 
 		if ( $config{mail_db_name} ) {
 			my @domains = email::domains();
