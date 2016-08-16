@@ -52,7 +52,9 @@ function mweight_to_gsm( form, signature ) {
 		mweight = parseFloat(1*form.elements['txtCustomMWeight'+signature].value);
 		width = parseFloat(1*form.elements['txtSpecificStockWidth'+signature].value);
 		height = parseFloat(1*form.elements['txtSpecificStockHeight'+signature].value);
-	} //e nd if
+	} // end if
+	// mweight is the weight of 1000 sheets, so calc the wpsi and multiply by 703064.5 to get gsm
+	//console.log( "wpsi: " + (mweight/1000)/(width*height) );
 	var gsm = Math.round((mweight/1000)/(width*height)*70306450)/100;
 	form.elements['txtStockGSM'+signature].value = gsm;
 }
