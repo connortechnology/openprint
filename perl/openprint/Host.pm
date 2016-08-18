@@ -15,10 +15,12 @@ $table = 'host_interfaces';
 	comment			=>	'comment',
 	dhcp			=>	'dhcp',
     host_id         =>  'host_id',
+    connected_to  =>  'connected_to',
 );
 %transforms = (
-	mac	=>    [ 's/[^\da-fA-F:\-]//g' ],
-	ip	=>    [ 's/[^\d\.\:a-fA-F]//g' ],
+	mac         	=>    [ 's/[^\da-fA-F:\-]//g' ],
+	connected_to	=>    [ 's/[^\da-fA-F:\-]//g' ],
+	ip          	=>    [ 's/[^\d\.\:a-fA-F]//g' ],
 );
 
 %find_fields = (
@@ -28,6 +30,7 @@ $table = 'host_interfaces';
 	dhcp		=>	0,
 	ip			=>	undef,
 	mac			=>	undef,
+  connected_to  =>  undef,
 );
 
 sub Host {
