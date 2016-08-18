@@ -112,20 +112,20 @@ cleanup : true
 			<th class="ip">IP Address</th>
 			<th class="dhcp">DHCP?</th>
 			<th class="comment">Comment</th>
-<? if ( $config{'RADIUS_Support'} eq 'Y' ) ?>
+<? if ( $config{RADIUS_Support} eq 'Y' ) ?>
 	<th class="radius">RADIUS</th>
-<? endif ( $config{'RADIUS_Support'} eq 'Y' ) ?>
+<? endif ( $config{RADIUS_Support} eq 'Y' ) ?>
 			<th class="buttons">&nbsp;</th>
 		</tr>
 <? echo (
 	my $html;
-	 if ( $config{'RADIUS_Support'} eq 'Y' ) {
+	 if ( $config{RADIUS_Support} eq 'Y' ) {
 		$openprint::RADIUS_Check::dbh = sql::open_sql( $log,
-			database	=> $config{'RADIUS_DB_Name'},
-			driver		=> $config{'RADIUS_DB_Driver'},
-			host		=> $config{'RADIUS_DB_Server'},
-			login		=> $config{'RADIUS_DB_Username'},
-			password	=> $config{'RADIUS_DB_Password'},
+			database	=> $config{RADIUS_DB_Name},
+			driver		=> $config{RADIUS_DB_Driver},
+			host		=> $config{RADIUS_DB_Server},
+			login		=> $config{RADIUS_DB_Username},
+			password	=> $config{RADIUS_DB_Password},
 		);
 		if ( ! $openprint::RADIUS_Check::dbh ) {
 			$html .= 'Unable to connect to RADIUS DB server.';	
@@ -144,7 +144,7 @@ cleanup : true
 	<td class="mac">%2$s</td>
 	<td class="ip">%3$s</td>
 	<td class="dhcp">%4$s</td>
-	<td class="comment"><textarea name="comment-%1$s">%5$s</textarea></td>
+	<td class="comment" rowspan="2"><textarea name="comment-%1$s">%5$s</textarea></td>
 `, 
 	$$Interface{id},
 	input( type=>'mac', name=>'mac-'.$$Interface{id}, value=>$$Interface{mac} ),
@@ -159,7 +159,7 @@ cleanup : true
 				$mac = "$1-$2-$3-$4-$5-$6";
 			} # end if
 			$mac = uc $mac;
-			$html .= '<td class="radius" id="mac-'.$mac.'">';
+			$html .= '<td class="radius" id="mac-'.$mac.'" rowspan="2">';
 
 				$$variable{username} = $mac;
 				$html .= variable_substitution( \$radius_fragment, $variable ) if $mac;
@@ -169,6 +169,15 @@ cleanup : true
 		if ( $$Interface{id} ) {
 			$html .= button( 'DI'.$Interface->id(), { onclick=>qq`delete_interface('$$Interface{id}');`, text=>'X', title=>'Delete Interface' } ),
 		} # end if
+		$html .= '</td></tr><tr><td colspan="2">';
+		if ( $$Interface{mac} ) {
+			$html .= 'Connections:<br/>';
+			if ( $$variable{Host}->is_wap() ) {
+				foreach my $Station_HI ( openprint::Host_Interface->find( connected_to=>$$Interface{mac} ) ) {
+					$html .= $Station_HI->Host()->link_to().'<br/>';
+				}
+			} # end if
+		} # end if mac
 		$html .= '</td></tr>';
 	} # end foreach Interface
 	return $html;
@@ -178,7 +187,7 @@ cleanup : true
 <? if ( $$variable{Host}->id() ) ?>
             <fieldset><legend>Where</legend>
 <? echo ( 
-    $$variable{'Location'} = $$variable{Host}->Location();
+    $$variable{Location} = $$variable{Host}->Location();
     return include( '/location/_location_fields.html' );
 ) ?>
             </fieldset>
