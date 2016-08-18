@@ -373,6 +373,10 @@ sub reboot {
 	return $success;
 } # end sub reboot
 
+sub is_wap {
+	return sets::isin( $_[0]->type(), [ 'WG602v3' ] );
+}
+
 sub link_to {
 	return sprintf('<a href="/employee/it/host.html?host_id=%d">%s</a>', $_[0]->id(), $_[0]->hostname() );
 }
