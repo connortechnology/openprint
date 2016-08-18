@@ -85,7 +85,7 @@ $log->debug( 'WAP polling ' . @Hosts . ' hosts.' );
 foreach my $Host ( @Hosts ) {
 	foreach my $HI ( $Host->Interfaces() ) {
 		if ( ! $HI->ip() ) {
-			$log->warning( "Monitored host without ip: " . $Host->to_string() );
+			$log->warn( "Monitored host without ip: " . $Host->to_string() );
 			next;
 		} # end if
     $log->debug("Pinging $$Host{hostname} at $$HI{ip}");
