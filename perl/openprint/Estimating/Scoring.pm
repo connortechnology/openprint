@@ -957,7 +957,7 @@ sub fits_on_equipment {
 			} # end if
 		} # end if orientation or not
 	} # end if max_feed)wudetg
-	if ( ( $_ = $Equipment->specification('Maximum Imposition') ) and ( $_ < $I->imposition() ) ) {
+	if ( ( $_ = $Equipment->specification('Maximum Imposition') ) and ( $_ < $$I{imposition} ) ) {
 		return "Imposition $$I{imposition}out too high. Maximum: $_<br/>";
 	} # end if
 	if ( $type eq 'Press' ) {

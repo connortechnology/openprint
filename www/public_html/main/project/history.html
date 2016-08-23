@@ -36,7 +36,7 @@
 		if ( div ) LoadContent( $('ProjectList'), '/main/project/_history.html', $('f1') );
 	} // end function
 </script>	 
-<? if ( $session{'user_id'} ) ?>
+<? if ( $session{user_id} ) ?>
 <form id="f1" name="f1" method="post" action="/main/project/history.html">
    <div class="Project"><div class="History">
 		<fieldset class="filters"><legend>Select Search Criteria</legend>
@@ -52,7 +52,7 @@
 			</li>
 			<li>
 				<label>Reference</label>
-				<input type="text" id="reference" name="reference" value="<? echo ( $param{'reference'} ) ?>" onkeyup="load_projects();" />
+				<input type="text" id="reference" name="reference" value="<? echo ( $param{reference} ) ?>" onkeyup="load_projects();" />
 			</li>
 			<li>
 				<label>Status</label>
@@ -136,6 +136,6 @@
 	</div>
 	<input type="hidden" name="btnFunction" />
 </form>
-<? else ( $session{'user_id'} ) ?>
+<? else ( $session{user_id} ) ?>
 Only logged in customers have a project history.
-<? endif ( $session{'user_id'} ) ?>
+<? endif ( $session{user_id} ) ?>

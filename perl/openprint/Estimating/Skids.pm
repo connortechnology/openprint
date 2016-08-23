@@ -190,12 +190,9 @@ $log->debug("Materials: " . map { $_->name() } @Materials ) if DEBUG;
 #$maxWeight = 30;
 #} # end if
 				if ( $width and $height and $depth ) {
-					my $setup1 = new openprint::Imposition();
-					my $setup2 = new openprint::Imposition();
+					my $setup = openprint::imposition::fit( @$specs{'txtFinalWidth','txtFinalHeight'}, $width, $height );
 
-					openprint::imposition::calc_setup( $setup1, @$specs{'txtFinalWidth','txtFinalHeight'}, $width, $height );
-					openprint::imposition::calc_setup( $setup2, @$specs{'txtFinalHeight','txtFinalWidth'}, $width, $height );
-					my $imposition = $$setup1{imposition} > $$setup2{imposition} ? $$setup1{imposition} : $$setup2{imposition};
+					my $imposition = $$setup{imposition};
 					if ( $imposition ) {
 						# Fits flat
 						$items_by_size = int ( ($depth/$$specs{txtFinishedCalliper}) * $imposition );

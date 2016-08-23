@@ -1191,9 +1191,10 @@ sub gsm {
 	if ( @_ ) {
 		$$self{gsm} = shift;
 		$self->wpsi(undef) if $$self{gsm};
-	} elsif ( ! $$self{gsm} ) {
+	} 
+	if ( ! $$self{gsm} ) {
 		if ( $self->wpsi(undef) ) {
-			$$self{gsm} = sprintf('%.2f', $$self{wpsi} * 703064.5 );
+			$$self{gsm} = Math::Round::nearest( 0.01, $$self{wpsi} * 703064.5 );
 		} else { 
 			$$self{gsm} = 'unknown';
 			$openprint::log->warn("Can't calculate gsm for " . $self->to_string() ) if $$self{brand};
@@ -1213,7 +1214,7 @@ sub wpsi {
 			$$self{wpsi} = $$self{gsm} / 703064.5;
 		} elsif ( $$self{mweight} and ( $$self{type} eq 'Sheet' ) and $$self{width} and $$self{height} ) {
 			$$self{wpsi} = ($$self{mweight} / 1000)/($$self{width}*$$self{height});
-		} elsif ( $self->basis_mweight() ) {
+		} elsif ( $$self{basis_mweight} ) {
 			$$self{wpsi} = ($$self{basis_mweight}/1000)/($self->basis_width()*$self->basis_height());
 		} # end if
 	} # end if
@@ -1338,7 +1339,7 @@ sub load_from_signature {
 			$Paper->width( $$specs{txtSpecificStockWidth} );
 			$Paper->height( $$specs{txtSpecificStockHeight} ) if $Paper->type() ne 'Roll';
 		} # end if
-		$Paper->gsm( $$specs{txtStockGSM} );
+		$Paper->gsm( $$specs{txtStockGSM} ) if $$specs{txtStockGSM};
 
 		$Paper->minimum_order( $$specs{minimum_order} );
 		$Paper->sheets_per_package( $$specs{sheets_per_package} );
@@ -1360,12 +1361,13 @@ sub load_from_signature {
 
 		$$Paper{Price} = $$specs{CustomStockPrice};
 		$$Paper{Units} = $$specs{CustomStockPriceUnits};
+		# For Sheets, the basis weight fields aren't visible and don't get updated.
 		$Paper->basis_width( $$specs{basis_width} );
 		$Paper->basis_height( $$specs{basis_height} );
 		$Paper->basis_mweight( $$specs{basis_mweight} ) if $$specs{basis_mweight};
 		$Paper->score_required( $Paper->calliper() > 0.008 );
 		#if ( $$specs{StockType} ne 'Roll' ) {
-			$Paper->mweight( $$specs{txtCustomMWeight} ) if ! $Paper->gsm();
+			$Paper->mweight( $$specs{txtCustomMWeight} ) if $$specs{txtCustomMWeight};
 		#} # end if
 		$Paper->supplied( $$specs{rdbSuppliedStock} eq 'Y' ? 1 : 0 );
 	} else {
@@ -1602,13 +1604,13 @@ sub basis_mweight {
 		$$self{basis_mweight} = $mweight;
 	} # end if
 	if ( ! $$self{basis_mweight} ) {
-		if ( $$self{gsm} ) {
-			my $wpsi = $$self{gsm}/703064.5;
-			$$self{basis_mweight} = sprintf('%.2f', $wpsi * $self->basis_width() * $self->basis_height() * 1000 );
-		} elsif ( $$self{wpsi} ) {
-			$$self{basis_mweight} = sprintf('%.2f', $$self{wpsi} * $self->basis_width() * $self->basis_height() * 1000 );
+		my $wpsi = $self->wpsi();
+		if ( $wpsi ) {
+			$$self{basis_mweight} = Math::Round::nearest(0.01, $wpsi * $self->basis_width() * $self->basis_height() * 1000 );
 		} elsif ( ( $$self{weight} =~ /^(\d+)lb/i ) or ( $$self{weight} =~ /^(\d+)#/i ) ) {
 			$$self{basis_mweight} = 2*$1;
+		} else {
+			$openprint::log->error("Unable to calculated basis_mweight" . $self->to_string() );
 		} # end if
 	} # end if
 	return $$self{basis_mweight};

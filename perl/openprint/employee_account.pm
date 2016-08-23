@@ -58,15 +58,18 @@ sub profile {
             } else {
                 delete $param{password};
             } # end if
-
         } elsif ( $param{password} ne $User->password() ) {
             $param{password_changed_on} = 'NOW()';
         } # end if
 
-		delete $param{VerifyPassword} if ( ! $param{VerifyPassword} );
+		delete $param{VerifyPassword} if ! $param{VerifyPassword};
 		delete $param{btnFunction};
+		my @changes = $User->changes( \%param );
 		$variable{error} .= $User->save( \%param );
 		return if $variable{error};
+
+		push @changes, $User->save_notifications( \%param );
+		(new openprint::Log())->save({Object=>$User, action=>'Save User', note=>join('<br/>', @changes) }) if @changes;
 
 		if ( $config{mail_db_name} ) {
 			my @domains = email::domains();
@@ -120,9 +123,12 @@ sub profile {
 					sql::insert( $log, $dbh, 'Users_in_UserGroups', ['usergroup_id', $group_id, 'user_id', $User->id() ] );
 				} # end foreach
 			} # end if
-		} # end if
+
+			
+		} # end if can_editas an admin
 
 		$variable{information} = 'Record saved successfully.<br/>';
+		$variable{ExternalRedirect} = '/employee/account/profile.html?user_id='.$User->id();
 	} # end if
 	$variable{User} = $User;
     if ( $config{mail_db_name} ) {

@@ -120,11 +120,8 @@ sub save {
 		$info{User} = $self;
 		@info{'UserFirstName','UserLastName','UserType'} = @$params{'firstname','lastname','type'};
 
-		$info{ReplacementText} = misc::load_file( $log, $ENV{DOCUMENT_ROOT} . '/email_content/usertype_system_notification.html' );
-		$info{ReplacementText} = ssi::variable_substitution( \$info{ReplacementText}, \%info );
-
-		my $email_template = misc::load_file( $log, $config{SkinPath}.'/email_template.html' );
-		$email_template = ssi::variable_substitution( \$email_template, \%info );
+		$info{ReplacementText} = ssi::include( '/email_content/usertype_system_notification.html', \%info );
+		my $email_template = ssi::include( '/email_template.html', \%info );
 
 		new openprint::Email()->send(
 				FROM    => $openprint::config{LoginEmail},
@@ -138,10 +135,8 @@ sub save {
 		my %info;
 		$info{User} = $self;
 		$_ = $$params{web_active} eq 'Y' ? 'user_account_activated.html' : 'user_account_deactivated.html';
-		$info{ReplacementText} = misc::load_file( $log, $ENV{DOCUMENT_ROOT} . "/email_content/$_" );
-		$info{ReplacementText} = ssi::variable_substitution( \$info{ReplacementText}, \%info );
-		my $email_template = misc::load_file( $log, $config{SkinPath}.'/email_template.html' );
-		$email_template = ssi::variable_substitution( \$email_template, \%info );
+		$info{ReplacementText} = ssi::include( $_, \%info );
+		my $email_template = ssi::include( '/email_template.html', \%info  );
 
 		new openprint::Email()->send(
 				FROM    => $openprint::config{AdministratorEmail},
@@ -581,6 +576,20 @@ sub code {
 sub usergroup_ids {
 	return map { $_->usergroup_id() } openprint::User_in_UserGroup->find(user_id=>$_[0]{id});
 } # end sub usergroup_ids
+
+sub save_notifications {
+	my ( $User, $param ) = @_;	
+
+	my @results;
+	foreach my $N ( $User->Notifications() ) {
+		
+		if ( $$N{value} ne $$param{'notification_'.$$N{id}} ) {
+			push @results, 'Notification for ' . $N->Type()->name() . " Creation changed $$N{value} => ".$$param{'notification_'.$$N{id}}.'<br/>';
+			$N->save( { value => $$param{'notification_'.$$N{id}} } );
+		} # end if value changed
+	} # end foreach Notification
+	return @results;
+}
 
 1;
 __END__

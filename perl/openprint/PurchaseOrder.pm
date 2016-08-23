@@ -185,7 +185,12 @@ sub send_approval_required_notification {
 	my $mail = new openprint::Email();
 
 	my $results;
-	my @user_ids = sets::union( $self->notifications(), map { $_->user_id() } openprint::User_Notification->find(type=>\@notification_types,'value'=>'Yes', user_company_id=>$openprint::User->company_id() ) );
+	my @user_ids = sets::union( $self->notifications(), map { $_->user_id() } openprint::User_Notification->find(
+				type	=>\@notification_types,
+				value	=>'Yes',
+				user_company_id=>$openprint::User->company_id() 
+				) );
+	return if ! @user_ids;
 
 	foreach my $U ( openprint::User->find( id=>\@user_ids, company_id=>$openprint::User->company_id() ) ) {
 		if ( $U->id() == $openprint::User->id() ) {

@@ -1231,7 +1231,9 @@ sub Object {
 	} # end if
 	my ( $module ) = $type =~ /openprint::(.*)/;
 	if ( $module ) {
+		eval {
 		require "openprint/$module.pm";
+		};
 		$_ = $type->new( $_[0]{object_id} );
 		$openprint::log->debug( "Returning object of type " . ref $_ ) if $debug;
 		return $_;

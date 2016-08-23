@@ -1655,12 +1655,16 @@ sub _li_change {
 			} # end if
 			$sql{runtime} = $param{runtime};
 		} # end if
-		if ( exists $param{starttime_year} ) {
+		if ( exists $param{'starttime_year'} ) {
+		if ( Date::Calc::check_date( map { $_ => $param{'starttime_'.$_} } ( 'year', 'month', 'day' ) ) ) {
 			my $old_starttime_dt = DateTime::Format::Pg->parse_datetime( $Job->starttime() );
 			my $new_starttime_dt = DateTime->new( time_zone=>$openprint::TZ, map { $_ => $param{'starttime_'.$_} } ( 'year', 'month', 'day', 'hour', 'minute' ) );
 			if ( $old_starttime_dt != $new_starttime_dt ) {
 				$sql{starttime} = DateTime::Format::Pg->format_datetime( $new_starttime_dt );
 			} # end if
+		} else {
+			$variable{error} .= "Invalid date specified.<br/>";
+		} # end if
 		} # end if
 		$sql{locked} = $param{locked} if exists $param{locked} and $param{locked} != $$Job{locked};
 		$sql{comment} = $param{comment} if (exists $param{comment}) and ( $param{comment} ne $Job->comment() );
@@ -1879,7 +1883,17 @@ $log->debug("second job can't move");
 } # end sub _li_change
 
 sub _shift_popup {
-	$variable{Shift} = new openprint::Shift( $param{shift_id} );
+	if ( ! $param{shift_id} ) {
+		$variable{error} .= 'No shift id specified.<br/>';
+		$variable{Shift} = new openprint::Shift();
+		return;
+	}
+
+	my $Shift = $variable{Shift} = openprint::Shift->find_one( id=>$param{shift_id} );
+	if ( ! $Shift ) {
+		$variable{Shift} = new openprint::Shift();
+		$variable{error} .= "Shift not found for $param{shift_id}<br/>";
+	}
 } # end sub _shift_popup
 
 sub _shift_change {
@@ -2007,7 +2021,17 @@ sub _job_popup {
 } # end sub _job_popup
 
 sub _signature_completion_popup {
-	$variable{Job} = new openprint::ScheduledJob( $param{schedule_id} );
+	if ( ! $param{schedule_id} ) {
+		$variable{error} .= "Job id not specified<br/>";
+		$variable{Job} = new openprint::ScheduledJob();
+		return;
+	}
+		
+	my $Job = $variable{Job} = openprint::ScheduledJob->find_one( id=>$param{schedule_id} );
+	if ( ! $Job ) {
+		$variable{error} .= "Job not found for id $param{schedule_id}<br/>";
+		$variable{Job} = new openprint::ScheduledJob();
+	}
 }
 
 sub _operators {

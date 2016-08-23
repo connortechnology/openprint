@@ -17,6 +17,7 @@
 	if ( $param{type_id} and ! $param{id} ) {
 		$$variable{error} .= $$variable{Label}->save();
 		$$variable{Project}->add_to_log( @session{'company_id','user_id'}, 'Added ' . $$variable{Label}->link_to() );
+		$$variable{Label}->notify_csr();
 	} # end if
 ) ?>
 <div class="buttons">

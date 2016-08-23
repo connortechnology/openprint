@@ -128,9 +128,14 @@ sub Location {
 	return new openprint::Location( $_[0]{location_id} );
 }
 
+sub Check {
+	return new openprint::Inventory_Check( $_[0]{ic_id} );
+}
+
 sub check {
 	return 'No Skid.' if ! $_[0]->Skid()->id();
 	return 'Quantity not the same: Check has ' . $_[0]->quantity() . ' Skid has ' . $_[0]->Skid()->quantity() if $_[0]->quantity() != $_[0]->Skid()->quantity();
+	return 'Item is in the check more than once<br/>' if $_[0]->Check()->check_for_duplicates( $_[0] );
 	return '';
 }
 

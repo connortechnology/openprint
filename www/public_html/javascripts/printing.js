@@ -103,12 +103,14 @@ function SpecialColour_onchange( element, side, index, signature ) {
 
 function chkSpecial_onClick(chkBox) {
 	return;
-	var name = 'txt' + chkBox.name.substr(3);
+	/*
+    var name = 'txt' + chkBox.name.substr(3);
 	var form = chkBox.form;
 
 	if ( chkBox.checked == false ) {
 		form.elements[name].value = '';
 	} // end if
+	*/
 } // end function
 
 function validate_data(formName) {
