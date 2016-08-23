@@ -554,7 +554,7 @@ $openprint::log->debug("folds from sigimpo") if DEBUG;
 				foreach my $key ( keys %$Folds ) {
 					my ( $fold_type, $imposition ) = $key =~ /(.*)-(\d+)out$/;
 					$makereadies{$$SigImpo{folding_results}{Equipment}->id()} = {} if ! $makereadies{$$SigImpo{folding_results}{Equipment}->id()};
-					$makereadies{$$SigImpo{folding_results}{Equipment}->id()}->{$fold_type} = 1;
+					$makereadies{$$SigImpo{folding_results}{Equipment}->id()}{$fold_type} = 1;
 				} # end foreach
 			} elsif ( DEBUG ) {
 				$openprint::log->error("No folds from sigimpo so can't detect makereadies");
