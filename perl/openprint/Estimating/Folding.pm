@@ -1238,9 +1238,9 @@ $openprint::log->debug(qq`Wrong imposition: $$specs{"FoldImposition-$form-$qty_i
 					$remaining_pages -= $this_pages;
 				} # end foreach index
 				if ( $$sig_specs{txtSignatureType} ) {
-					if ( $override_pages > $SignatureImposition->imposition() * $SignatureImposition->pages() ) {
+					if ( $override_pages > $$SignatureImposition{imposition} * $SignatureImposition->pages() ) {
 						$$specs{alert} .= "You seem to be specifying more pages for folding than were printed for form $form quantity $qty_index<br/>";
-					} elsif ( $override_pages < $SignatureImposition->imposition() * $SignatureImposition->pages() ) {
+					} elsif ( $override_pages < $$SignatureImposition{imposition} * $SignatureImposition->pages() ) {
 						$$specs{alert} .= "You seem to be specifying fewer pages for folding than were printed for form $form quantity $qty_index<br/>";
 					} else {
 						
@@ -2187,7 +2187,7 @@ $openprint::log->debug("Cutting rows $$I{spread_rows} > ( $$I{image_orientation}
 # Just duplicating the singleton case
 				my $i2_quantity = int($$I{spread_columns}/$$i2{spread_columns});
 				$i2->quantity( $$I{quantity} * $i2_quantity );
-				$i2->page_quantity( $I->page_quantity() * $i2_quantity );
+				$i2->page_quantity( $$I{page_quantity} * $i2_quantity );
 				$openprint::log->debug(sprintf('Cutting pages down from q%d x %d pages to q%d x %d pages', $I->quantity(), $I->pages(), $i2->quantity(), $i2->pages() ) ) if DEBUG;
 				my $i3 = $I->copy();
 				$i3->spread_columns( $$I{spread_columns} - ( $$i2{spread_columns} * $i2_quantity ) );
