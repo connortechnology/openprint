@@ -543,6 +543,7 @@ $openprint::log->debug("Not adding because previousimposition != sigImposition")
 	# Here's the problem... if a sig after ours has our fold, then the makeready will be counted here. and so we won't change for makeready.
 
 	foreach my $SigImpo ( @{$Signature_Impositions} ) {
+$SigImpo->display("In Folding::siganture_calc");
 		last if $SigImpo == $SignatureImposition;
 		# Took this out so that we don't need signature_service_index, so we have to ensure that this service is not in the Signature_Impositions
 		#next if $signature_service_index and $$SigImpo{service_id} >= $signature_service_index;
@@ -553,7 +554,7 @@ $openprint::log->debug("folds from sigimpo") if DEBUG;
 				foreach my $key ( keys %$Folds ) {
 					my ( $fold_type, $imposition ) = $key =~ /(.*)-(\d+)out$/;
 					$makereadies{$$SigImpo{folding_results}{Equipment}->id()} = {} if ! $makereadies{$$SigImpo{folding_results}{Equipment}->id()};
-					push $makereadies{$$SigImpo{folding_results}{Equipment}->id()}{$fold_type} = 1;
+					$makereadies{$$SigImpo{folding_results}{Equipment}->id()}->{$fold_type} = 1;
 				} # end foreach
 			} elsif ( DEBUG ) {
 				$openprint::log->error("No folds from sigimpo so can't detect makereadies");
@@ -1070,7 +1071,7 @@ $openprint::log->debug("Got new folds $width_folds x $height_folds from Fold") i
 
 							if ( $Fold ) {
 								$Fold = $Fold->clone();
-								$Imposition->Fold( $Fold );
+								$$Imposition{Fold} = $Fold;
 
 								push @{$folds{$Fold->type().'-'.$$Imposition{imposition}.'out'}}, $Fold;
 								$openprint::log->debug(sprintf('Found: %dx%d %s,%dout', $Imposition->page_columns(), $Imposition->page_rows(),@$Imposition{'image_orientation','imposition'} ) ) if DEBUG;
@@ -1483,7 +1484,7 @@ $openprint::log->debug("Runspeed: $$Fold{type}(".$Fold->name().") : " . $Equipme
 						$stitching_specs = $$calc_hash{StitchingSpecs};
 					} # end if
 					
-					my $stitching_results = openprint::Estimating::Stitching::signature_calc( $Project, $$calc_hash{'HasStitching'},$stitching_specs, $qty_index, $Signature_Impositions, $calc_hash );
+					my $stitching_results = openprint::Estimating::Stitching::signature_calc( $Project, $$calc_hash{HasStitching}, $stitching_specs, $qty_index, $Signature_Impositions, $calc_hash );
 					if ( ! $$stitching_results{Equipment} ) {
 						$Breakdown .= "unable to determine stitching equipment: $$stitching_results{alert} $$stitching_results{Breakdown}<br/>";
 						$openprint::log->warn('unable to determine stitching equipment; ; '.$Breakdown) if DEBUG;
