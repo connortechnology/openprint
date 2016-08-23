@@ -38,6 +38,13 @@ use vars qw( $r %variable %session %param %config $log $dbh $starttime );
 *dbh = \$openprint::dbh;
 *r = \$openprint::r;
 
+sub warn {
+	$log->warn("Warning: $_[0]");
+
+}
+
+$SIG{__WARN__} = \&warn;
+
 sub cleanup {
 	if ( $r->connection->aborted( ) ) {
 		$log->debug("Was aborted");
