@@ -29,12 +29,12 @@ $serial = 'paperinventory_id_seq';
 # project_id is deprecated
 %transforms = (
 	project_id	=>	 [ 's/\D//g' ],
-	'paper_id'	=>	[ 's/\D//g' ],
-	'skid_id'	=>	[ 's/\D//g' ],
-	'user_id'	=>	[ 's/\D//g' ],
-	'instock'	=>	[ 's/\D//g' ],
-	'docket'	=>	[ 's/\D//g' ],
-	'delta'		=>	[ 's/[^\d\-]//g' ],
+	paper_id	=>	[ 's/\D//g' ],
+	skid_id		=>	[ 's/\D//g' ],
+	user_id		=>	[ 's/\D//g' ],
+	instock		=>	[ 's/\D//g' ],
+	docket		=>	[ 's/\D//g' ],
+	delta		=>	[ 's/[^\d\-]//g' ],
 );
 %defaults = (
 	updated_on	=>	q`'NOW()'`,
@@ -45,33 +45,33 @@ $serial = 'paperinventory_id_seq';
 );
 
 sub Paper {
-	return new openprint::Paper( $_[0]{'paper_id'} );
+	return new openprint::Paper( $_[0]{paper_id} );
 } # end sub Paper
 sub Skid {
-	return new openprint::Skid( $_[0]{'skid_id'} );
+	return new openprint::Skid( $_[0]{skid_id} );
 } # end sub Skid
 sub User {
-	return new openprint::User( $_[0]{'user_id'} );
+	return new openprint::User( $_[0]{user_id} );
 } # end sub User
 
 sub docket {
 	my $self = shift;
 	if ( @_ ) {
-		$$self{'docket'} = shift;
-		$$self{'docket'} =~ s/\D//g;
+		$$self{docket} = shift;
+		$$self{docket} =~ s/\D//g;
 	} # end if
-	if ( ! $$self{'docket'} ) {
-		if ( $$self{'comment'} =~ /docket (\d+)/ ) {
-			$$self{'docket'} = $1;
+	if ( ! $$self{docket} ) {
+		if ( $$self{comment} =~ /docket (\d+)/ ) {
+			$$self{docket} = $1;
 		} # end if
 	} # end if
-	return $$self{'docket'};
+	return $$self{docket};
 } # end sub docket
 
 sub Project {
 	my $self = $_[0];
-	return new openprint::Project() if ! $$self{'docket'};
-	my @Projects = openprint::Project->find('docket'=>$$self{'docket'});
+	return new openprint::Project() if ! $$self{docket};
+	my @Projects = openprint::Project->find('docket'=>$$self{docket});
 	if ( @Projects ) {
 		return $Projects[0];
 	} # end if
@@ -96,19 +96,19 @@ sub comment_html {
 sub instock {
 	my $self = shift;
 	if ( @_ ) {
-		$$self{'instock'} = shift;
+		$$self{instock} = shift;
 	} # end if
-	if ( ! defined $$self{'instock'} ) {
-		@$self{'instock'} = sql::execute( undef, undef, 'SELECT SUM(delta) FROM Paper_Inventory WHERE paper_id=? AND id <= ?', @$self{'paper_id', 'id'} );
+	if ( ! defined $$self{instock} ) {
+		@$self{instock} = sql::execute( undef, undef, 'SELECT SUM(delta) FROM Paper_Inventory WHERE paper_id=? AND id <= ?', @$self{'paper_id', 'id'} );
 	} # end if
-	return $$self{'instock'};
+	return $$self{instock};
 } # end sub instock
 
 sub units {
-	if ( ! $_[0]{'units'} ) {
-		$_[0]{'units'} = $_[0]->Paper()->units();
+	if ( ! $_[0]{units} ) {
+		$_[0]{units} = $_[0]->Paper()->units();
 	} 
-	return $_[0]{'units'};
+	return $_[0]{units};
 } # end sub units
 
 1;
