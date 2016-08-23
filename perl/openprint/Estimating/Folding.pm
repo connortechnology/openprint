@@ -1169,7 +1169,7 @@ $openprint::log->error("Checking for Overriden folds") if DEBUG;
 					}
 					foreach my $FI ( @$Set_Of_Impositions ) {
 						next if $$FI{found};
-						my $Fold = $FI->Fold();
+						my $Fold = $$FI{Fold};
 
 $FI->display();
 $openprint::log->debug(qq`Overriden $$specs{"FoldQty-$form-$qty_index-$index"} $$specs{"FoldImposition-$form-$qty_index-$index"}out $$specs{"FoldType-$form-$qty_index-$index"}`) if DEBUG;
@@ -1292,7 +1292,7 @@ $openprint::log->debug("Overriden Pages were found in the set: $pages pages qty:
 
 			for ( my $imp_index = 0; $imp_index < @Used_Impositions; $imp_index += 1 ) {
 				my $Imposition = $Used_Impositions[$imp_index];
-				my $Fold = $Imposition->Fold();
+				my $Fold = $$Imposition{Fold};
 				my $impo_qty = $Imposition->quantity();
 				my $imposition = $$Imposition{imposition};
 				my $runspeed = int($Fold->runspeed($$Paper{gsm}));
@@ -1580,7 +1580,7 @@ $openprint::log->debug("Quitting, all:found: $all_found, undesired: $undesired")
 		);
 
 	foreach my $FI ( @{$bestImpositions} ) {
-		my $Fold = $FI->Fold;
+		my $Fold = $$FI{Fold};
 		if ( ! $$Fold{equipment_id} ) {
 			$$Fold{equipment_id} = $$bestEquipment{id};
 			$openprint::log->warn("Fold didn't have equipment");
