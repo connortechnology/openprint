@@ -278,6 +278,8 @@ $openprint::log->debug("Fold pq($$FI{page_quantity}) pages($$FI{pages}) ($$Fold{
 				if ( $$FI{imposition} < $imposition ) {
 					$results{Breakdown} .= "Setting stitching imposition to $$FI{imposition} out because Folding imposition is $$FI{imposition}out<br/>";
 					$imposition = $$FI{imposition};
+				} elsif ( $$FI{imposition} % 2 ) {
+					$imposition = 1;
 				}
 				if ( ! $$I{Folder} ) {
 					$$I{Folder} = $Fold->Equipment();
