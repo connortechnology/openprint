@@ -15,7 +15,7 @@
 	<? echo (
 		my $html = '';
 		$$variable{Currency} = openprint::Currency::get_current() if ! $$variable{Currency};
-		$$variable{service_total} = 0;
+		$$variable{elapsed_total} = $$variable{service_total} = 0;
 		foreach my $Timetrack ( openprint::Timetrack->find( invoice_id=>$$variable{Invoice}->id(), order=>'starting') ) {
 			my $desc = $Timetrack->description();
 			$desc =~ s/"/&quot;/gm;
@@ -43,11 +43,14 @@ openprint::Currency::format( $$Price{Total} ),
 ssi::button( 'del'.$Timetrack->id(), { onclick=>qq`del_timetrack($$Timetrack{id});`, text=>'-' } ),
 $desc );
 			$$variable{service_total} += $$Price{Total};
+			$$variable{elapsed_total} += $Timetrack->elapsed();
 		} # end foreach Timetrack
 		return $html;
 	) ?>
 		<tr class="totals">
-			<td colspan="7">Totals</td>
+			<td colspan="5">Totals</td>
+			<td class="Interval"><?echo(misc::seconds_to_pretty_interval($$variable{elapsed_total});)?></td>
+			<td class="Rate"></td>
 			<td class="Price" id="timetrack_total"><? echo ( openprint::Currency::format( $$variable{service_total} ); ) ?></td>
 			<td>&nbsp;</td>
 		</tr>
@@ -68,13 +71,13 @@ $desc );
 		<? echo (
 			my $html = '';
 			my @Timetracks;
-			$$variable{service_total} = 0;
+			$$variable{elapsed_total} = $$variable{service_total} = 0;
 			foreach my $T ( openprint::Timetrack->find(
-				billable		=>	1,
-				owner_id		=> $session{company_id},	
+				billable	=>	1,
+				owner_id	=> $session{company_id},	
 				company_id	=> $variable{Invoice}->invoicee_id(),
 				invoice_id	=> undef,
-				order			=> 'starting',
+				order		=> 'starting',
 			) ) {
 				push @Timetracks, $T;
 			} # end foreach $T
@@ -93,11 +96,14 @@ $desc );
 				$html .= sprintf('<td class="buttons">%s</td>', button( 'add'.$T->id(), { onclick=>qq`add_timetrack($$T{id});`, text=> '+' } ) );
 				$html .= "</tr>\n";
 			$$variable{service_total} += $$Price{Total};
+			$$variable{elapsed_total} += $T->elapsed();
 			} # end foreach $T
 			return $html;
 		) ?>
 <tr class="totals">
-            <td colspan="6">Totals</td>
+            <td colspan="4">Totals</td>
+			<td class="Interval"><?echo(misc::seconds_to_pretty_interval($$variable{elapsed_total});)?></td>
+            <td>&nbsp;</td>
             <td class="Price" id="timetrack_total"><? echo ( openprint::Currency::format( $$variable{service_total} ); ) ?></td>
             <td>&nbsp;</td>
         </tr>
