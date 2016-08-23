@@ -1560,11 +1560,11 @@ sub calliper {
 	
 			foreach my $group_id ( $$printing_specs{groups} ? split(',', $$printing_specs{groups} ) : openprint::Estimating::MultiPage::groups( $$Project{id}, $printing_specs ) ) {
 				$finished_calliper += int( 10000 * ($$printing_specs{'GroupPageQuantity'.$group_id}/2) * $$printing_specs{"txtSpecificStockCalliper$group_id"} );
-				$log->debug("$finished_calliper += int( 10000 * (" . $$printing_specs{'GroupPageQuantity'.$group_id}.'/2) * '.$$printing_specs{"txtSpecificStockCalliper$group_id"} );
+				#$log->debug("$finished_calliper += int( 10000 * (" . $$printing_specs{'GroupPageQuantity'.$group_id}.'/2) * '.$$printing_specs{"txtSpecificStockCalliper$group_id"} );
 
 			} # end foreach group
 			if ( ! $finished_calliper ) {
-				$log->debug("Getting calliper the old way.");
+				$log->error("Getting calliper the old way.");
 				foreach my $signature_service_index ( $Project->signatures() ) {
 					my $sig_specs = openprint::service::get_specs_ref( $Project, $signature_service_index );
 					my $calliper = 0;

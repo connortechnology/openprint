@@ -48,9 +48,31 @@ sub link_to {
 sub Entries {
 	if ( ! $_[0]{Entries} ) {
 		$_[0]{Entries} = [ openprint::Inventory_Check_Entry->find( ic_id => $_[0]{id} ) ];
+		$_[0]{skid_ids} = {} if ! $_[0]{skid_ids};
+		$_[0]{rfid_ids} = {} if ! $_[0]{rfid_ids};
+		foreach my $ICE ( @{$_[0]{Entries}} ) {
+			$_[0]{skid_ids}{$$ICE{skid_id}} = [] if ! $_[0]{skid_ids}{$$ICE{skid_id}};
+			push @{$_[0]{skid_ids}{$$ICE{skid_id}}}, $ICE if $$ICE{skid_id};
+			
+			$_[0]{rfid_ids}{$$ICE{rfidtag_id}} = [] if ! $_[0]{rfid_ids}{$$ICE{rfidtag_id}};
+			push @{$_[0]{rfid_ids}{$$ICE{rfidtag_id}}}, $ICE if $$ICE{rfidtag_id};
+		}
 	}
 	return @{$_[0]{Entries}};
 } # end sub Entries
+
+sub check_for_duplicates {
+	my ( $self, $ICE ) = @_;
+
+	$_[0]->Entries() if ! $_[0]{Entries};
+
+$openprint::log->debug("check_for_duplicates: $$ICE{skid_id} " . $_[0]{skid_ids}{$$ICE{skid_id}} . ' # of entries ' . ( $_[0]{skid_ids}{$$ICE{skid_id}} ? @{$_[0]{skid_ids}{$$ICE{skid_id}}} : '' ) );
+	return 1 if $$ICE{skid_id} and $_[0]{skid_ids}{$$ICE{skid_id}} and @{$_[0]{skid_ids}{$$ICE{skid_id}}} > 1;
+$openprint::log->debug("check_for_duplicates: $$ICE{rfidtag_id} " . $_[0]{rfid_ids}{$$ICE{rfidtag_id}} . ' # of entries ' . ( $_[0]{rfid_ids}{$$ICE{rfidtag_id}} ? @{$_[0]{rfid_ids}{$$ICE{rfidtag_id}}} : '' ) );
+	return 1 if $$ICE{rfidtag_id} and $_[0]{rfid_ids}{$$ICE{rfidtag_id}} and @{$_[0]{rfid_ids}{$$ICE{rfidtag_id}}} > 1;
+	return 0;
+} # end sub check_for_duplicates
+
 
 1;
 __END__

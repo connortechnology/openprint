@@ -105,9 +105,9 @@ sub layout_width {
 				} # end if
 			} # end if
 		} else {
-$openprint::log->debug("Unknown orientation $_[0]{image_orientation}");
+$openprint::log->debug("layout_width: Unknown orientation ($_[0]{image_orientation})");
 		} # end if
-	}
+	} # end if ! defined $_[0]{layout_width}
 	return $_[0]{layout_width};
 }
 
