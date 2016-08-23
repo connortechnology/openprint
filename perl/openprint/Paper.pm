@@ -1610,7 +1610,7 @@ sub basis_mweight {
 		} elsif ( ( $$self{weight} =~ /^(\d+)lb/i ) or ( $$self{weight} =~ /^(\d+)#/i ) ) {
 			$$self{basis_mweight} = 2*$1;
 		} else {
-			$openprint::log->error("Unable to calculated basis_mweight");
+			$openprint::log->error("Unable to calculated basis_mweight" . $self->to_string() );
 		} # end if
 	} # end if
 	return $$self{basis_mweight};

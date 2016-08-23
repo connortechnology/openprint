@@ -38,6 +38,13 @@ use vars qw( $r %variable %session %param %config $log $dbh $starttime );
 *dbh = \$openprint::dbh;
 *r = \$openprint::r;
 
+sub warn {
+	$log->warn("Warning: $_[0]");
+
+}
+
+$SIG{__WARN__} = \&warn;
+
 sub cleanup {
 	if ( $r->connection->aborted( ) ) {
 		$log->debug("Was aborted");
@@ -325,7 +332,7 @@ sub parse_page {
 			require openprint::print;
 			require openprint::print_project;
 			require openprint::employee_production;
-			openprint::print_project::get_service_specifications( $r, $log, $dbh, \%variable, @param{'ProjectIndex','ServiceIndex'} ) if $filename ne 'multipage_signatures.html';
+			openprint::print_project::get_service_specifications( $r, $log, $dbh, \%variable, @param{'ProjectIndex','ServiceIndex'} ) if $param{ServiceIndex} and $filename ne 'multipage_signatures.html';
 			@variable{'ProjectIndex','ServiceIndex','OrderID'} = @param{'ProjectIndex','ServiceIndex','OrderID'};
 			
 			$variable{Project} = new openprint::Project( $variable{ProjectIndex} );

@@ -1375,6 +1375,8 @@ function getValues( form, element_names, more_values ) {
 			var form_element = form.elements[element_names[index-1]];
 			if ( form_element ) {
 				results.set(element_names[index-1], get_value( form_element ) );
+			} else {
+				console.log(element_names[index-1] + ' was not found in form' );
 			} // end if
 		} // end for
 	} else if ( element_names.constructor == RegExp ) {

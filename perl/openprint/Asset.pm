@@ -158,7 +158,8 @@ sub sized_url {
 						$width = $openprint::config{Small_Asset_Width} if ! $height;
 					} # end if
 					if ( ! ( $width or $height ) ) {
-						$openprint::log->error("No asset size in config for $size");
+						my ( $caller, undef, $line ) = caller;
+						$openprint::log->error("No asset size in config for size($size) called from $caller:$line");
 						return '/assets/'.$filename;
 					} # end if	
 				} else {
@@ -172,7 +173,8 @@ sub sized_url {
 						$width = $openprint::config{Small_Asset_Width};
 					} # end if
 					if ( ! $width ) {
-						$openprint::log->error("No asset size in config for $size");
+						my ( $caller, undef, $line ) = caller;
+						$openprint::log->error("No asset size in config for size($size) called from $caller:$line");
 						return '/assets/'.$filename;
 					} # end if	
 				} # end if	
@@ -387,6 +389,8 @@ sub large_path {
 
 sub sized_path {
 	my $url = $_[0]->sized_url($_[1]);
+		my ( $caller, undef, $line ) = caller;
+		$openprint::log->error("No url return for size $_[1] called from $caller:$line");
 	$url =~ s/^\/assets//;
 	return $openprint::config{AssetPath}.$url;
 } # end sub sized_path

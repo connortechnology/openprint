@@ -604,8 +604,14 @@ $openprint::log->debug("Adding special colour for $colour");
 			$project{NeedDieCutting} = openprint::Estimating::DieCutting::signature_needs( $Project, $project{DieCuttingSpecs}, $specs );
 #$log->debug("Need DieCutting: $project{NeedDieCutting}");
 			$project{NeedScoring} = 0;
-		} else {	
+		} else {
 			$project{NeedScoring} = openprint::Estimating::Scoring::signature_needs( $Project, $project{ScoringSpecs}, $specs, $Paper );
+			if ( $project{NeedScoring} ) {
+				my $form = $$specs{SignatureIndex};
+				if ( (!defined $project{ScoringSpecs}{"chkOverrideQty-$form"}) or ( $project{ScoringSpecs}{"chkOverrideQty-$form"} ne 'Y' ) ) {
+					openprint::Estimating::Scoring::get_scores( $Project, $project{ScoringSpecs}, $specs, $Paper );
+				} # end if
+			} # end if
 		} # end if
 	} else {
 		$project{NeedScoring} = 0;
@@ -5371,7 +5377,9 @@ $openprint::log->warn("No folding equipment");
 	} # end if
 
 	my %scoring_results;
-	if ( $$project{HasScoring} and $$project{NeedScoring} and openprint::Estimating::Scoring::signature_needs( $Project, $$project{ScoringSpecs}, $specs, $Paper ) ) {
+	if ( $$project{HasScoring} and $$project{NeedScoring} ) {
+# NeedScoring is set by signature_needs, so why call it again?
+	#if ( $$project{HasScoring} and $$project{NeedScoring} and openprint::Estimating::Scoring::signature_needs( $Project, $$project{ScoringSpecs}, $specs, $Paper ) ) {
 		%scoring_results = openprint::Estimating::Scoring::signature_calc( $Project, $$project{ScoringSpecs}, $specs, $qty_index, $Imposition, $project );
 #foreach my $k ( keys %scoring_results ) {
 #$openprint::log->debug("Scoring: $k => $scoring_results{$k}");

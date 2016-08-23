@@ -7,6 +7,8 @@ use Date::Calc ();
 use constant DAYS_TO_KEEP_TRASH => 60*60*24*90*1;
 use constant DEBUG => 0;
 
+my $amavis_home = '/usr/lib/amavis';
+
 
 my $domain = $ARGV[0] ? $ARGV[0] : '';
 my @users;
@@ -33,6 +35,7 @@ my $postfix_gid = getgrnam('postfix');
 foreach my $user ( @users ) {
 	next if $user =~ /^\./;
 
+	my $update_spamassassin = 0;
 	foreach my $folder ( '.Junk', '.SpamKiller', '.Junk E-mail' ) {
 		if ( ! -e "$spool_path$user/$folder" ) {
 			next;
@@ -58,12 +61,14 @@ foreach my $user ( @users ) {
             } # end if
 			if ( time - $mtime > $SECONDS_TO_KEEP_JUNK ) {
 				print "/usr/bin/sa-learn --spam \"$spool_path$user/$folder/cur/$message\"\n";
-				`/usr/bin/sa-learn --spam "$spool_path$user/$folder/cur/$message"`;
+				`/usr/bin/sa-learn --dbpath $amavis_home/.spamassassin -u amavis --spam "$spool_path$user/$folder/cur/$message"`;
 				unlink "$spool_path$user/$folder/cur/$message";
+				$update_spamassassin = 1;
 			} # end if
 		} # end foreach
 
 	} # end foreach folder
+	`/bin/kill -HUP \`/bin/cat /var/run/spamd.pid\`` if $update_spamassassin;
 	foreach my $folder ( '.Trash', '.Deleted Messages' ) {
 		next if $user eq 'matt';
 		if ( ! -e "$spool_path$user/$folder" ) {
