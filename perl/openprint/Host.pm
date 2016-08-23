@@ -128,7 +128,7 @@ $serial = 'hosts_id_seq';
 );
 %find_fields = (
 	type	=>	'(SELECT name FROM Host_types WHERE host_types.id=type_id)',
-	mac	=>	'(SELECT mac FROM host_interfaces WHERE host_id=hosts.id)',
+	mac	=>	'id=(SELECT host_id FROM host_interfaces WHERE mac=?)',
 	ip	=>	'(SELECT ip FROM host_interfaces WHERE host_id=hosts.id)',
 );
 %transforms = (

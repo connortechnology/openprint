@@ -159,5 +159,8 @@ sub edit {
 	} # end if
 } # end sub edit
 
+sub _currency {
+}
+
 1;
 __END__
