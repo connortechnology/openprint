@@ -2837,9 +2837,15 @@ $log->debug("Have skid not in check: " . $Skid->to_string() );
 } # end sub check
 
 sub _check_entries {
-	ssi::save_params( '/employee/inventory/check.html', ( 'has_skid' , 'has_quantity', 'sort', 'scanner_id', 'user_id', 'auto_refresh',
-	) );
-	$variable{Check} = new openprint::Inventory_Check( $param{check_id} );
+	my $Check = $variable{Check} = new openprint::Inventory_Check( $param{check_id} );
+	if ( $param{action} eq 'add' ) {
+		my $ICE = new openprint::Inventory_Check_Entry();
+		$variable{error} .= $ICE->save( {
+				ic_id		=>	$Check->id(),
+				map { $param{$_} ? ( $_ => $param{$_} ) : () } ( 'skid_id','rfidtag_id','quantity','notes' ),
+				} );
+	} # end if
+	ssi::save_params( '/employee/inventory/check.html', ( 'has_skid' , 'has_quantity', 'sort', 'scanner_id', 'user_id', 'auto_refresh',) );
 }
 sub _check_system_contents {
 	ssi::save_params( '/employee/inventory/check.html', ( ) );
