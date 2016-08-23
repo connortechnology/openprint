@@ -251,6 +251,9 @@ $I->display('In Stitching:') if DEBUG and 0;
 		} # end if
 
 		if ( ! ( $$I{Folds} and @{$$I{Folds}} ) ) {
+			# Might not be folding.  
+			if ( $$folding_specs{"chkOverrideEquipment-$form-$qty_index"} eq 'Y' and ! $$folding_specs{"ddmOverrideEquipment-$form-$qty_index"} ) {
+			} else {
 			if ( DEBUG ) {
 				$openprint::log->error("No folds in imposition, guess 1");
 				$I->display("No Folds");
@@ -263,11 +266,14 @@ $I->display('In Stitching:') if DEBUG and 0;
 				}
 				$pockets += 1;
 			} # end if
+			} # end if folding overriden to none or not
 # This doesn't really make sense.  If we are doing printing estimation, then the folding probably isn't going to match.  
 		} else {
+			my $total_pages = 0;
+
 			foreach my $FI ( @{$$I{Folds}} ) {
-				$FI->display() if DEBUG;
-				my $Fold = $FI->Fold();
+				$FI->display( 'Fold form '.$form ) if DEBUG;
+				my $Fold = $$FI{Fold};
 $openprint::log->debug("Fold pq($$FI{page_quantity}) pages($$FI{pages}) ($$Fold{name}) Pockets: $pockets") if DEBUG;
 				if ( $$FI{imposition} < $imposition ) {
 					$results{Breakdown} .= "Setting stitching imposition to $$FI{imposition} out because Folding imposition is $$FI{imposition}out<br/>";
@@ -281,15 +287,25 @@ $openprint::log->debug("Fold pq($$FI{page_quantity}) pages($$FI{pages}) ($$Fold{
 				}
 				#$openprint::log->debug("Adding " . $Fold->pages() . 'x'.$Fold->quantity() );
 				if ( ! $override_pockets ) {
-					my $p = $$FI{page_quantity};
-					$p *= $$FI{imposition} / $$I{imposition} if $$FI{imposition} > $$I{imposition};
-					$$specs{join('','txtSignatureQty',$Fold->pages(),'Page-',$qty_index)} += $p;
 					if ( $$sig_specs{Group} == 1 ) {
+						$$specs{join('','txtSignatureQty',$Fold->pages(),'Page-',$qty_index)} += 1;
 						$openprint::log->debug("Not counting pocket due to it being cover. $form") if DEBUG;
 						next;
+					} else {
+						$total_pages += $$FI{pages};
+
+						if ( $total_pages > $$I{pages} ) {
+							$openprint::log->debug("Already have enough pages $total_pages + $$FI{pages} <= $$I{pages}");
+							next;
+						} else {
+							my $p = $$FI{page_quantity};
+							$p *= $$FI{imposition} / $$I{imposition} if $$FI{imposition} > $$I{imposition};
+							$$specs{join('','txtSignatureQty',$Fold->pages(),'Page-',$qty_index)} += $p;
+							$pockets += $p;
+						}
 					}
-					$pockets += $p;
 				}
+$openprint::log->debug("Fold pq($$FI{page_quantity}) pages($$FI{pages}) ($$Fold{name}) Pockets: $pockets") if DEBUG;
 			} # end foreach Fold
 		}
 
@@ -632,7 +648,7 @@ sub calc {
 				$$Imposition{Folds} = [ openprint::Estimating::Folding::get_Folds( $folding_specs, $Imposition, $qty_index ) ];
 				if ( DEBUG ) {
 					foreach my $F ( @{$$Imposition{Folds}} ) {
-						$F->display('Fold:');
+						$F->display('Stitching::calc Fold:');
 					} # end foreach F
 				} # end if
 			}
