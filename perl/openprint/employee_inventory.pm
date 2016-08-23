@@ -2065,10 +2065,11 @@ sub inventory_log {
 		my @Data;
 
 		my @PIs = openprint::PaperInventory->find(
-			ssi::date_filter( 'updated_on_start', 'updated_on_start', \%param ),
-			ssi::date_filter( 'updated_on_end', 'updated_on_end', \%param ),
+			ssi::date_filter( 'updated_on_start', 'updated_on >=', \%param ),
+			ssi::date_filter( 'updated_on_end', 'updated_on <=', \%param ),
 			($param{employee_id} ? ( user_id		=>	$param{employee_id} ) : () ),
 		);
+		$log->debug("# of inventory entries: " . @PIs );
 		my $total = 0;
 		my %locations = map { $_, $_ } ( ref $param{location_id} eq 'ARRAY' ? @{$param{location_id}} : ($param{location_id}) );
 		my %types = map { $_, $_ } ( ref $param{Type} eq 'ARRAY' ? @{$param{Type}} : ($param{Type}) );
@@ -2103,7 +2104,7 @@ sub inventory_log {
 				$Skid->RFIDTag()->id_short(),
 				$Paper->to_string(),
 				$PI->delta,
-				join(',', map { sprintf('%d%s to %d', $_->quantity(),$_->units(),new openprint::Project( $_->project_id() )->docket() ) } openprint::PaperAllocation->find( 'skid_ids any'=>$PI->skid_id, paper_id=>$PI->paper_id)),
+				join(',', map { sprintf('%d%s to %d', $_->quantity(),$_->units(), $_->docket() ) } openprint::PaperAllocation->find( 'skid_ids any'=>$PI->skid_id, paper_id=>$PI->paper_id)),
 				$PI->instock,
 				$Skid->Location()->name(),
 				$PI->comment,
@@ -2842,7 +2843,7 @@ sub _check_entries {
 		my $ICE = new openprint::Inventory_Check_Entry();
 		$variable{error} .= $ICE->save( {
 				ic_id		=>	$Check->id(),
-				map { $param{$_} ? ( $_ => $param{$_} ) : () } ( 'skid_id','rfidtag_id','quantity','notes' ),
+				map { $param{$_} ? ( $_ => $param{$_} ) : () } ( 'skid_id','rfidtag_id','quantity','notes','location_id' ),
 				} );
 	} # end if
 	ssi::save_params( '/employee/inventory/check.html', ( 'has_skid' , 'has_quantity', 'sort', 'scanner_id', 'user_id', 'auto_refresh',) );
