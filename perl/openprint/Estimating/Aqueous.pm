@@ -294,7 +294,15 @@ $openprint::log->debug("Makereadies $equipment_id $$MakeReadies{$equipment_id}")
 		$bestPrice{Status} = 'calculated';	
 		return %bestPrice;
 	} # end if
-	my $inkCoverage = $$imposition{inkCoverage} ? $$imposition{inkCoverage} : { openprint::Estimating::Printing::get_inkcoverage( $Project, $sig_specs ) };
+	my $inkCoverage;
+	if ( $$imposition{inkCoverage} ) {
+$inkCoverage = $$imposition{inkCoverage};
+	} else {
+	$inkCoverage = { openprint::Estimating::Printing::get_inkcoverage( $Project, $sig_specs ) };
+		my ( $caller, undef, $line ) = caller;
+		$openprint::log->warn("No inkCoverage in Imposition from $caller:$line");
+
+	}
 
 	my @different_types = sets::union( @front_aq, @back_aq );
 
