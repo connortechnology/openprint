@@ -208,9 +208,14 @@ sub calc {
 			} # end if
 			my $Imposition = new openprint::Imposition();
 			$Imposition->load( $sig_specs, $qty_index );
+			$$Imposition{Folds} = [ openprint::Estimating::Folding::get_Folds( $$calc_hash{FoldingSpecs}, $sig_specs, $qty_index ) ];
+
 			$$specs{'hdnBreakdown'.$qty_index} .= $Imposition->to_string() . '<br/>';
 			$$specs{'hdnBreakdown'.$qty_index} .= $Imposition->Paper()->to_string() . '<br/>';
 
+			if ( (!defined $$specs{"chkOverrideQty-$form"}) or ( $$specs{"chkOverrideQty-$form"} ne 'Y' ) ) {
+				get_scores( $Project, $specs, $sig_specs, $Imposition->Paper() );
+			} # end if
 			my %Price = signature_calc( $Project, $specs, $sig_specs, $qty_index, $Imposition, $calc_hash );
 			$status = $Price{Status} if $Price{Status} eq 'uncalculated';
 			if ( $Price{Equipment} ) {
@@ -289,7 +294,8 @@ $log->debug("Setting imposition cuz " . $$specs{"chkOverrideImposition-$form-$qt
 	return $$specs{Status} = $status;
 } # end sub calc
 
-sub signature_calc($$$$$$) {
+#sub signature_calc($$$$$$) {
+sub signature_calc {
 	my ( $Project, $specs, $sig_specs, $qty_index, $SignatureImposition, $calc_hash ) = @_;
 	my %Results = (
 		Status		=> 'calculated',
@@ -297,9 +303,11 @@ sub signature_calc($$$$$$) {
 	);
 	my $form = $$sig_specs{SignatureIndex};
 
+if ( 0 ) {
 	if ( (!defined $$specs{"chkOverrideQty-$form"}) or ( $$specs{"chkOverrideQty-$form"} ne 'Y' ) ) {
 		get_scores( $Project, $specs, $sig_specs, $SignatureImposition->Paper() );
 	} # end if
+} # end if
 
 	my $score_qty = $$specs{"txtVerticalQty-$form"} + $$specs{"txtHorizontalQty-$form"};
 	@$specs{"txtWidth-$form", "txtHeight-$form"} = @$sig_specs{'txtWidth','txtHeight'};
@@ -315,13 +323,14 @@ sub signature_calc($$$$$$) {
 		$qty *= $$sig_specs{Versions};
 	} # end if
 
-	# juts for efficeincy
 	my @Folds;
 	if ( $$SignatureImposition{Folds} ) {
 		@Folds = @{$$SignatureImposition{Folds}};
 	} elsif ( $$calc_hash{FoldingSpecs} ) {
+$openprint::log->error("Getting Folds from folding in Scoring, but really should have already had them in the Imposition");
 		@Folds = openprint::Estimating::Folding::get_Folds( $$calc_hash{FoldingSpecs}, $sig_specs, $qty_index );
 	} # end if
+
 	if ( DEBUG ) {
 		$SignatureImposition->display('Original sig');
 		foreach my $Fold ( @Folds ) {
@@ -341,6 +350,7 @@ sub signature_calc($$$$$$) {
 		push @capabilities, 'When PerfectBinding' if $$calc_hash{PerfectBoundSpecs};
 		push @capabilities, 'When Stitching' if $$calc_hash{StitchingSpecs};
 		
+$openprint::log->warn("This should have been already done");
 		@equipment = openprint::Equipment->find( Specifications => {'Scoring Capable'=>\@capabilities}, useinestimating=>1, order=>'strName');
 	} # endif
 	if ( DEBUG ) {
@@ -351,6 +361,7 @@ sub signature_calc($$$$$$) {
 
 # Get the impositions to consider
 	if ( ! $$SignatureImposition{imposition} ) {
+$openprint::log->error("Scoring passed an invalid imposition");
 		$Results{alert} .= "Unable to load the imposition.  This likely is because printing has not finished calculating.<br/>";
 		return $Results{Status} = 'uncalculated';
 	} # end if
@@ -378,8 +389,6 @@ sub signature_calc($$$$$$) {
             $I->columns( $$specs{"ImpColumns-$form-$qty_index-$index"} );
             $I->rows( $$specs{"ImpRows-$form-$qty_index-$index"} );
 
-			# Paper was already cloned... why are we uncloning it?
-            #$I->Paper( $SignatureImposition->Paper() );
             push @override_impos, $I;
             $I->display('Override');
         } # end foreach
@@ -390,7 +399,7 @@ sub signature_calc($$$$$$) {
         } else {
             $openprint::log->debug(" override count: $overriden_count $$SignatureImposition{quantity} * $$SignatureImposition{imposition}");
         } # end if
-    } else {
+    } elsif ( ! $$SignatureImposition{cut_impositions} ) {
 
 		# IF it's a W&T, we have to cut in half first, so just do it.
 		if ( $$SignatureImposition{runstyle} eq 'Work & Turn' ) {
@@ -460,6 +469,11 @@ sub signature_calc($$$$$$) {
 			} # end foreach set
 			$openprint::log->debug(sprintf('Original Sign info: %dx%d*%d,%dout', @$SignatureImposition{'spread_columns', 'spread_rows', 'spread_size', 'imposition'} ) );
 		} # end if debug
+
+		# Store for use by other parts like perforating
+		@{$$SignatureImposition{cut_impositions}} = @All_Impositions;
+	} else {
+		@All_Impositions = @{$$SignatureImposition{cut_impositions}};
 	} # end if overrideImpositions
 
 	EQUIPMENT: foreach my $Equipment ( @equipment ) {
@@ -469,7 +483,9 @@ sub signature_calc($$$$$$) {
 			$Results{Breakdown} .= "No type for $$Equipment{name}. Please set it in equipment specifications.<br/>";
 			next;
 		}
-		if ( $Equipment->specification('Scoring Capable') eq 'When Folding' ) {
+		my $capable = $Equipment->specification('Scoring Capable');
+
+		if ( $capable eq 'When Folding' ) {
 			if ( ! $$calc_hash{FoldingSpecs} ) {
 				$Results{Breakdown} .= 'Not being folded.<br/>';
 				if ( $$specs{"chkOverrideEquipment-$form-$qty_index"} eq 'Y' ) {
@@ -478,6 +494,7 @@ sub signature_calc($$$$$$) {
 				next;
 			} 
 			if ( $$calc_hash{FoldingSpecs}{"ddmEquipment-$form-$qty_index"} != $$Equipment{id} ) {
+#FIXME Folder might already be set in the imposition
 				my $Folder = new openprint::Equipment( $$calc_hash{FoldingSpecs}{"ddmEquipment-$form-$qty_index"} );
 				$Results{Breakdown} .= "Form $form qty $qty_index not being folded on $$Equipment{strid}. Is being folded on $$Folder{strid}.<br/>";
 				if ( $$specs{"chkOverrideEquipment-$form-$qty_index"} eq 'Y' ) {
@@ -485,7 +502,11 @@ sub signature_calc($$$$$$) {
 				} # end if
 				next;
 			} # end if
+		} elsif ( ( $capable eq 'When Printing' ) and ( $Equipment->strid() ne $$sig_specs{'ddmPress'.$qty_index} ) ) {
+			$Results{Breakdown} .= "Not printing on $$Equipment{name}.<br/>";
+			next;
 		} # end if
+
 		if ( $type eq 'Stitcher' ) {
 			if ( ! $$calc_hash{StitchingSpecs} ) {
 				$Results{Breakdown} .= 'Not being stitched.<br/>';
@@ -495,27 +516,26 @@ sub signature_calc($$$$$$) {
 				$Results{Breakdown} .= 'Not stitching on this.<br/>';
 				next;
 			} # end if
-		} # end if
-		next if ( $type eq 'PerfectBinder' ) and ! $$calc_hash{PerfectBoundSpecs};
-		if ( ( $Equipment->specification('Scoring Capable') eq 'When Printing' ) and ( $Equipment->strid() ne $$sig_specs{'ddmPress'.$qty_index} ) ) {
-			$Results{Breakdown} .= "Not printing on $$Equipment{name}.<br/>";
-			next;
-		} # end if
-		my @impositions = ();
-		if ( $type eq 'Press' ) {
+		} elsif ( $type eq 'PerfectBinder' ) {
+			if ( ! $$calc_hash{PerfectBoundSpecs} ) {
+				next ;
+			} 
+		} elsif ( $type eq 'Press' ) {
 			if ( sets::isin( $$sig_specs{'ddmRunStyle'.$qty_index}, ['Work & Turn','Work & Tumble'] ) ) {
 				$Results{Breakdown} .= 'Cant do an inline score when W&T.<br/>';
 				next;
 			} # end if
-		} # end if
+		} # end if type
+
 		if ( $$calc_hash{NoOfflineBindery} and ( $$sig_specs{'ddmPress'.$qty_index} ne $Equipment->strid() ) ) {
 			$Results{Breakdown} .= "No Offline bindery and not printing on $$Equipment{name}.<br/>";
 			next;
 		} # end if
 
 		my $totalPrice;
+		my @impositions = ();
 
-		# FIXME, needs to be same oflder
+		# FIXME, needs to be same folder
 		if ( ( $type eq 'Folder' ) and @Folds ) {
 			my $impressions;
 			my $parts = 0;

@@ -167,7 +167,7 @@ $log->debug("No project $param{ProjectIndex} found");
 } # end sub _calc
 
 sub calc {
-	my $debug = 0;
+	my $debug = @_ ? $_[0] : 0;
 	my $Project = new openprint::Project( $param{ProjectIndex} );
 if ( $param{ProjectIndex} and ! $$Project{id} ) {
 $log->error("Project specified, but not found: $param{ProjectIndex}");

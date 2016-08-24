@@ -128,7 +128,7 @@ $serial = 'hosts_id_seq';
 );
 %find_fields = (
 	type	=>	'(SELECT name FROM Host_types WHERE host_types.id=type_id)',
-	mac	=>	'(SELECT mac FROM host_interfaces WHERE host_id=hosts.id)',
+	mac	=>	'id=(SELECT host_id FROM host_interfaces WHERE mac=?)',
 	ip	=>	'(SELECT ip FROM host_interfaces WHERE host_id=hosts.id)',
 );
 %transforms = (
@@ -304,24 +304,29 @@ sub reboot {
 				ReplyErrorPage	=>	'reboot.htm',
 				Reset => 'Reboot the Device',
 			};
+		} elsif ( $_[0]->type() eq 'WG602v3' ) {
+			$url = 'http://'.$HI->ip().'/cgi-bin/reboot.cgi';
+			$args = {
+				reboot_ap => 1,
+			};
 		} else {
 			$openprint::log->error("Unknown host type $_[0]{type}");
 			return 0;
 		}
 
 		my $response = $browser->get($initial_url ? $initial_url : $url);
-		$openprint::log->debug( $response->status_line );
-		$openprint::log->debug( $response->content );
+		#$openprint::log->debug( $response->status_line );
+		#$openprint::log->debug( $response->content );
 		my $headers = $response->headers();
-		foreach my $k ( keys %$headers ) {
-			$openprint::log->debug("Initial Header $k => $$headers{$k}");
-		}  # end foreach
+		#foreach my $k ( keys %$headers ) {
+			#$openprint::log->debug("Initial Header $k => $$headers{$k}");
+		#}  # end foreach
 		my ( $auth, $tokens ) = $$headers{'www-authenticate'} =~ /^(\w+)\s+(.*)$/;
 		my %tokens = map { /(\w+)="([^"]+)"/i } split(', ', $tokens );
 		if ( $tokens{realm} ) {
 			$openprint::log->debug("tokens: $tokens realm: $tokens{realm}");
 			$browser->credentials( $HI->ip().':80', $tokens{realm}, $Host->info('username'), $Host->info('password') );
-			$response = $browser->$method($url, $args );
+			$response = $browser->$method($url, $args ? $args : () );
 		} # end if
 
 		if ( ! $response->is_success ) {
@@ -351,6 +356,7 @@ sub reboot {
 			} # end if
 		} else {
 			$success = 1;
+			$openprint::log->debug("Success Content: " . $response->content );
 		} # end if
 		last if $success;
 	} # end foreach HI

@@ -1,4 +1,4 @@
-<? if ( $param{'action'} ne 'Download' ) ?>
+<? if ( $param{action} ne 'Download' ) ?>
 <table class="List">
 	<tr>
 		<th class="DateTime">When</th>
@@ -46,7 +46,7 @@
 				$log->debug("Next cit type not in types" . join(',', keys %types ) );
 				next;
 			}
-			if ( ( ! $Paper->type() ) and ! $types{'Unknown'} ) {
+			if ( ( ! $Paper->type() ) and ! $types{Unknown} ) {
 				$log->debug("Next cit not type in types");
 				next;
 			} # end if
@@ -158,4 +158,4 @@
 		return $html;
 	) ?>
 </table>
-<? endif ( $param{'action'} ne 'Download' ) ?>
+<? endif ( $param{action} ne 'Download' ) ?>

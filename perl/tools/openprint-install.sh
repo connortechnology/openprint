@@ -4,7 +4,7 @@ apt-get -y install lm-sensors sensord smartmontools liblinux-inotify2-perl libdi
 
 apt-get -y install libmail-sendmail-perl libjson-perl libjson-xs-perl libdate-calc-perl libbit-vector-perl libcarp-clan-perl libtext-csv-perl libdatetime-format-duration-perl libdatetime-format-pg-perl libdatetime-perl libemail-valid-perl libdigest-hmac-perl libmailtools-perl libnet-dns-perl libnet-domain-tld-perl libtimedate-perl libcrypt-ssleay-perl libtext-unaccent-perl libauthen-captcha-perl libdbi-perl libapache-dbi-perl libdbd-pg-perl libunicode-string-perl libsoap-lite-perl libxml-namespacesupport-perl libxml-sax-perl libmath-round-perl libnet-server-perl perlmagick libgd-barcode-perl libnumber-format-perl libbarcode-code128-perl liblinux-inotify2-perl libnet-arp-perl libchart-clicker-perl
 # Also need Barcode-Code128-2.00
-apt-get -y install jpegoptim pngcrush graphicsmagick imagemagick libgeo-ip-perl
+apt-get -y install jpegoptim pngcrush graphicsmagick imagemagick libgeo-ip-perl libjpeg-turbo-progs
 apt-get -y install libav-tools
 apt-get -y install libav-tools html2ps
 

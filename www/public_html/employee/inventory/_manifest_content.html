@@ -1,6 +1,6 @@
 <? echo (
 	my $html = '';
-	if ( $variable{'error'} ) {
+	if ( $variable{error} ) {
 		$variable{error} =~ s/<br\/>//g;
 		$variable{error} =~ s/\n/ /g;
 		$html .= qq`<script type="text/javascript">alert('Error: $$variable{error}');</script>`;
@@ -16,8 +16,8 @@ tr = \$('tr-$param{content_id}-error');
 if ( tr ) tr.remove();
 </script>
 `;
-	} elsif ( $$variable{'C'} ) {
-		my $C = $$variable{'C'};
+	} elsif ( $$variable{C} ) {
+		my $C = $$variable{C};
 		my $Type = $C->Type();
 		my $Paper = $Type->Paper();
 		my $Skid = $C->Skid();
@@ -36,7 +36,7 @@ if ( tr ) tr.remove();
 
 		$variable{location_dropdown} = openprint::Location->dropdown(order=>'parent_id NULLS FIRST, lower(name)', type=>'place') if ! exists $variable{location_dropdown};
 
-		my $id = $$variable{'type_id'}.'-'.$$C{id};
+		my $id = $$variable{type_id}.'-'.$$C{id};
 		$html .= '<tr id="tr-'.$$C{id}.'" title="'.$$C{id}.'">';
 			
 		#if ( (!$RFIDTag->created_on()) or ( $_ = $RFIDTag->is_invalid_id() ) ) {
@@ -126,14 +126,14 @@ if ( tr ) tr.remove();
 
 	my @Contents = $$variable{Manifest}->Contents( type_id=>$$variable{type_id} );
 	$$variable{total_lbs} = misc::sum( map { $_->quantity() } @Contents );
-	$$variable{total_kgs} = $$variable{'total_lbs'} /2.2046;
+	$$variable{total_kgs} = $$variable{total_lbs} /2.2046;
 	$$variable{count} = scalar @Contents;
 	return $html;
 ) ?>
-<? if ( $param{'action'} and $$variable{'type_id'} ) ?>
+<? if ( $param{action} and $$variable{type_id} ) ?>
 <script type="text/javascript">
 	$('totallbs-<?type_id?>').innerHTML = '<? echo ( Math::Round::nearest( 1, $$variable{total_lbs} ); ) ?>lbs';
 	$('totalkgs-<?type_id?>').innerHTML = '<? echo ( Math::Round::nearest( 0.01, $$variable{total_kgs} ); ) ?>kg';
 	$('skidcount-<?type_id?>').innerHTML = '<?count?> skids/rolls';
 </script>
-<? endif ( $param{'action'} and $$variable{'type_id'} ) ?>
+<? endif ( $param{action} and $$variable{type_id} ) ?>

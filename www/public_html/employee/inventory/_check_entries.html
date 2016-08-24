@@ -1,3 +1,4 @@
+<?include(/includes/error_reporting.html)?>
 <? echo ( 
 	my $uri = '/employee/inventory/check.html';
 	my $html;
@@ -14,6 +15,23 @@
 	my @Contents = openprint::Inventory_Check_Entry->find( ic_id=>$$variable{Check}->id(), 
 		($session{$uri.'?scanner_id'} ? ( scanner_id=>$session{$uri.'?scanner_id'} ) : () ),
 		order=>$session{$uri.'?sort'} );
+
+	$html .= q` 
+	# of items in check: `.(scalar @Contents).q`<br/>
+	<table class="List">
+	<tr>
+	<th class="Skid" onclick="load_entries('sort=skid_id,rfidtag_id,created_on');">Skid/Roll</th>
+	<th class="RFIDTag" onclick="load_entries('sort=rfidtag_id,skid_id,created_on');">RFIDTag</th>
+	<th class="Width">Width</th>
+	<th class="Diameter">Diameter</th>
+	<th class="Quantity">Weight(lbs)</th>
+	<th class="DateTime" onclick="load_entries('sort=created_on,rfidtag_id,skid_id');">When</th>
+	<th class="Location" onclick="load_entries('sort=location_id,created_on,rfidtag_id,skid_id');">Location</th>
+	<th class="Notes">Notes</th>
+	<th class="RFIDScanner" onclick="load_entries('sort=scanner_id,rfidtag_id,skid_id');">Scanner</th>
+	<th class="buttons"></th>
+	</tr>`;
+
 	foreach my $ICE ( @Contents ) {
 		if ( $$ICE{rfidtag_id} ne $ICE->rfidtag_id() ) {
 			$ICE->save();
@@ -24,7 +42,7 @@
 		} elsif ( $$ICE{rfidtag_id} and ( ! $$ICE{skid_id} ) and $ICE->Skid() and $ICE->Skid()->id() ) {
 			$ICE->save( { skid_id => $ICE->Skid()->id() } );
 		}
-	}
+	} # end foreach ICE
 
 	my @skid_ids = map { $$_{skid_id} } @Contents;
 	my @Skids;
@@ -57,19 +75,20 @@
 		my $Skid = $ICE->Skid();
 		my $check = $ICE->check();
 
+	
 		$html .= sprintf('
 <tr class="%13$s%1$s" id="entry-%12$d" title="entry %12$d">
-		<td class="Skid">%2$s</td>
-		<td class="RFIDTag">%3$s</td>
-		<td class="Width">%5$s</td>
-		<td class="Diameter">%6$s</td>
-		<td class="Quantity">%4$s</td>
-		<td class="DateTime">%17$s</td>
-		<td class="Location" rowspan="2">%11$s</td>
-		<td class="Notes" rowspan="2">%7$s<br/>%14$s</td>
-		<td class="RFIDScanner/User" rowspan="2">%15$s %16$s</td>
-		<td class="buttons" rowspan="2">%10$s</td>
-	</tr><tr class="%13$s%1$s"><td colspan="4">%8$s</td><td class="Quantity">%9$s</td><td></td></tr>',
+	<td class="Skid">%2$s</td>
+	<td class="RFIDTag">%3$s</td>
+	<td class="Width">%5$s</td>
+	<td class="Diameter">%6$s</td>
+	<td class="Quantity">%4$s</td>
+	<td class="DateTime">%17$s</td>
+	<td class="Location" rowspan="2">%11$s</td>
+	<td class="Notes" rowspan="2">%7$s<br/>%14$s</td>
+	<td class="RFIDScanner/User" rowspan="2">%15$s %16$s</td>
+	<td class="buttons" rowspan="2">%10$s</td>
+</tr><tr class="%13$s%1$s"><td colspan="4">%8$s</td><td class="Quantity">%9$s</td><td></td></tr>',
 		$rowclass,
 		$Skid->link_to(),
 		$ICE->RFIDTag()->link_to(),
@@ -95,21 +114,29 @@
 		
 		$rowclass = $rowclass ? '' : ' colRow';
 	} # end foreach ICE
-$html = q` 
-# of items in check: `.(scalar @Contents).q`<br/>
-<table class="List">
-	<tr>
-		<th class="Skid" onclick="load_entries('sort=skid_id,rfidtag_id,created_on');">Skid/Roll</th>
-		<th class="RFIDTag" onclick="load_entries('sort=rfidtag_id,skid_id,created_on');">RFIDTag</th>
-		<th class="Width">Width</th>
-		<th class="Diameter">Diameter</th>
-		<th class="Quantity">Weight(lbs)</th>
-		<th class="DateTime" onclick="load_entries('sort=created_on,rfidtag_id,skid_id');">When</th>
-		<th class="Location" onclick="load_entries('sort=location_id,created_on,rfidtag_id,skid_id');">Location</th>
-		<th class="Notes">Notes</th>
-		<th class="RFIDScanner" onclick="load_entries('sort=scanner_id,rfidtag_id,skid_id');">Scanner</th>
-		<th class="buttons"></th>
-	</tr>`.$html.'<tr class="totals"><td colspan="4"># of items in check: ' . scalar @Contents . '</td><td class="Quantity">'.Number::Format::format_number(int($total_weight)).'lbs</td><td></td><td></td><td></td><td></td></tr>';
+
+
+	$variable{location_dropdown} = openprint::Location->dropdown(order=>'parent_id NULLS FIRST, lower(name)', type=>'place') if ! exists $variable{location_dropdown};
+
+	$html .= '<tr id="tr">';
+	$html .= '<td class="Skid">'.input(type=>'cardinal',name=>'skid_id', id=>'skid_id').'</td>';
+	$html .= '<td class="RFID">'.input(type=>'text', name=>'rfidtag_id').'</td>';
+	$html .= '<td></td>';
+	$html .= '<td></td>';
+	$html .= '<td class="qty_lbs">'.input( type=>'positivefloat', id => 'qty_lbs', name	=> 'qty_lbs', oninput => "from_lbs(this,'','');" ) . '</td>';
+	#$html .= '<td class="qty_kgs">'.input( type=>'positivefloat', id => 'qty_kgs', name => 'qty_kgs', oninput => "from_kg(this,'','');" ) . '</td>';
+	#$html .= '<td class="qty_sheets">'.input( type=>'positivefloat', id => 'qty_sheets', name => 'qty_sheets', oninput => "from_sheets(this,'','');" ) . '</td>';
+	$html .= '<td></td>';
+	$html .= '<td class="Location">'.ssi::select( $variable{location_dropdown}, undef, { name=>'location_id', prepend=>['','select'] } ).'</td>';
+	$html .= '<td><textarea name="notes"></textarea></td>';
+	$html .= '<td></td>';
+
+	$html .= '<td class="buttons">' . join("\n",
+			button('Add', { onclick=>q`new Ajax.Updater( 'Entries', '_check_entries.html', { parameters:getValues( 'f2', [ 'rfidtag_id', 'skid_id', 'qty_lbs','qty_kgs', 'qty_sheets', 'location_id' ], { action: 'add', check_id: `.$$variable{Check}->id().q` } ) } );` } ),
+			) . '</td>';
+	$html .= '</tr>';
+
+	$html.='<tr class="totals"><td colspan="4"># of items in check: ' . scalar @Contents . '</td><td class="Quantity">'.Number::Format::format_number(int($total_weight)).'lbs</td><td></td><td></td><td></td><td></td></tr></table>';
 	return $html;
 ) ?>
 
