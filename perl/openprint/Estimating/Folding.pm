@@ -583,7 +583,15 @@ $openprint::log->debug("folds from sigimpo") if DEBUG;
 	}
 
 	my $width_folds = Math::Round::nearest( 1, $$sig_specs{txtWidth}/$$sig_specs{txtFinalWidth})-1;
+	if ( $width_folds < 0 ) {
+		$openprint::log->debug("Got negative width_folkds from Math::Round::nearest( 1, $$sig_specs{txtWidth}/$$sig_specs{txtFinalWidth})-1");
+		$width_folds = 0;
+	} # end if
 	my $height_folds = Math::Round::nearest( 1, $$sig_specs{txtHeight}/$$sig_specs{txtFinalHeight})-1;
+	if ( $height_folds < 0 ) {
+		$openprint::log->debug("Got negative width_folkds from Math::Round::nearest( 1, $$sig_specs{txtHeighth}/$$sig_specs{txtFinalHeight})-1");
+		$height_folds = 0;
+	} # end if
 	@$SignatureImposition{'width_folds','height_folds'} = ( $width_folds, $height_folds );
 	$openprint::log->debug("FOlds: $width_folds x $height_folds from $$sig_specs{txtWidth}/$$sig_specs{txtFinalWidth} and height: $$sig_specs{txtHeight}/$$sig_specs{txtFinalHeight}") if DEBUG;
 	if ( $$sig_specs{txtSignatureType} and $$sig_specs{txtSpreadSize} == 2 ) {
@@ -795,13 +803,14 @@ $openprint::log->debug("folds from sigimpo") if DEBUG;
 					} # end if
 				} # end if is not inline folding
 
-				if ( my $required_bleed = $Equipment->specification($$Imposition{imposition}.'out Required Bleed') ) {
+				my $required_bleed = $Equipment->specification($$Imposition{imposition}.'out Required Bleed');
+				if ( defined $required_bleed ) {
 					if ( $required_bleed > $$Imposition{bleed_size} ) {
 						$Breakdown .= 'Requires ' . $required_bleed . ' bleed for ' . $$Imposition{imposition} . q`out Can't fold it this way.<br/><br/>`;
 						$complete = 0;
 						last;
 					} else {
-					$openprint::log->debug("Bleed Good $$Imposition{bleed_size} < $required_bleed " . $$Imposition{imposition}.'out Required Bleed on ' . $Equipment->strid() ) if DEBUG;
+					$openprint::log->debug("Bleed Good $$Imposition{bleed_size} > $required_bleed " . $$Imposition{imposition}.'out Required Bleed on ' . $Equipment->strid() ) if DEBUG;
 					} # end if
 				} else {
 					$openprint::log->warn("No spec for " . $$Imposition{imposition}.'out Required Bleed on ' . $Equipment->strid() ) if DEBUG;
@@ -1014,9 +1023,29 @@ $openprint::log->debug("No Fold") if DEBUG;
 									printing_type	=>	$ppt,
 									});
 							if ( $Fold and $max_feed_width ) {
-$width_folds = $Fold->page_columns()-1;
-$height_folds = $Fold->page_rows()-1;
+
+if ( $$Fold{page_columns} and $$Fold{page_rows} ) {
+$width_folds = $$Fold{page_columns}-1;
+$height_folds = $$Fold{page_rows}-1;
 $openprint::log->debug("Got new folds $width_folds x $height_folds from Fold") if DEBUG;
+} else {
+	$openprint::log->debug("Fold does not have oif ( 0 ) {page_rows and page_columns filled in" . $Fold->to_string() );
+	$openprint::log->debug("old: $width_folds x $height_folds source: $$sig_specs{txtWidth}/$$sig_specs{txtFinalWidth} x $$sig_specs{txtHeighth}/$$sig_specs{txtFinalHeight} ");
+if ( 1 ) {
+	$width_folds = Math::Round::nearest( 1, $$Imposition{layout_width} / $$Imposition{object_width} )-1;
+	if ( $width_folds < 0 ) {
+		$openprint::log->debug("Got negative width_folkds from Math::Round::nearest( 1, $$sig_specs{txtWidth}/$$sig_specs{txtFinalWidth})-1");
+		$width_folds = 0;
+	} # end if
+	$height_folds = Math::Round::nearest( 1, $$Imposition{layout_height}/ $$Imposition{object_height} )-1;
+	if ( $height_folds < 0 ) {
+		$openprint::log->debug("Got negative width_folkds from Math::Round::nearest( 1, $$sig_specs{txtHeighth}/$$sig_specs{txtFinalHeight})-1");
+		$height_folds = 0;
+	} # end if
+	$openprint::log->debug("new: $width_folds x $height_folds x $$Imposition{layout_width} / $$Imposition{object_width} x $$Imposition{layout_height}/ $$Imposition{object_height}");
+	}
+	
+}
 								my $fits;
 								if ( $orientation ) {
 									if (
@@ -1091,7 +1120,7 @@ $openprint::log->debug("Got new folds $width_folds x $height_folds from Fold") i
 								$Imposition->display('Didnt fiit:'.$_ );
 							}
 							$complete =0;
-						} # end if
+						} # end if fits
 
 						$complete = 0;
 						# If we get here, then we couldn't find the fold
@@ -2224,7 +2253,7 @@ $openprint::log->debug("Cutting rows $$I{spread_rows} > ( $$I{image_orientation}
 				$i1->image_height( $$i1{image_height}/2 );
 			} 
 			$i1->quantity( $$i1{quantity} * 2 );
-			$i1->page_quantity( $i1->page_quantity() * 2 );
+			$$i1{page_quantity} = $$i1{page_quantity} * 2;
 			if ( DEBUG ) {
 				$openprint::log->debug(sprintf('Cutting pages down from %d to %d by cutting spread columns %d to %d', 
 							$I->pages(), $i1->pages(), $$I{spread_columns}, $$i1{spread_columns} ) );
