@@ -5295,7 +5295,7 @@ sub calc_price {
 
 				$$Imposition{Folds} = $folding_results{FoldedImpositions};
 				foreach my $FI ( @{$folding_results{FoldedImpositions}} ) {
-					my $Fold = $FI->Fold();
+					my $Fold = $$FI{Fold};
 					$price{'Folding Breakdown'} .= sprintf('Folding %d %s (%d out) %d/hr Price: $%.2f on %s<br/>', $FI->quantity(), $Fold->name(), @$FI{'imposition','runspeed','price'}, $Fold->Equipment()->name() );
 				} # end foreach
 				$price{'Folding Breakdown'} .= sprintf('Folding total: $%.2f<br/>', $folding_results{Price} ) if @{$folding_results{FoldedImpositions}} > 1;
