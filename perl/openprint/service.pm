@@ -10,10 +10,11 @@ require openprint::Project_Service;
 
 use constant Debug => 0;
 
-use vars qw( %specs_cache );
+use vars qw( %specs_cache %service_name_cache );
 
 sub init_cache {
 	%specs_cache = ();
+	%service_name_cache = ();
 } # end sub init_cache
 
 sub get_price {
@@ -25,7 +26,8 @@ sub get_price {
 
 sub get_price_object {
 	my ( $service, $range, $Equipment ) = @_;
-	my $Service = openprint::Service->find_one( name=>$service );
+	$service_name_cache{$service} = openprint::Service->find_one( name=>$service ) if ! exists $service_name_cache{$service};
+	my $Service = $service_name_cache{$service};
 	if ( ! $Service ) {
 		if ( 0 and Debug ) {
 			$openprint::log->debug("No Service for $service");
