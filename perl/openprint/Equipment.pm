@@ -301,8 +301,9 @@ sub specification {
 sub Specification {
 	my ( $self, $name, $range, $s_debug ) = @_;
 
-	if ( $Specification_cache{$$self{id}.$name.$range} ) {
-		return $Specification_cache{$$self{id}.$name.$range};
+	my $key = join('',$$self{id},$name,$range);
+	if ( $Specification_cache{$key} ) {
+		return $Specification_cache{$key};
 	} # end if
 
 	if ( ! $$self{Specifications} ) {
@@ -322,7 +323,7 @@ sub Specification {
 		return;
 	} # end if
 	my $Spec = misc::find_entry( $range, $$self{Specifications}{$name}, $s_debug );
-	$Specification_cache{$$self{id}.$name.$range} = $Spec;
+	$Specification_cache{$key} = $Spec;
 	return $Spec;
 } # end sub specification
 
