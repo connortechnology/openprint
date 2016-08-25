@@ -94,6 +94,7 @@ sub layout_width {
 			} # end if
 		} elsif ( $_[0]{image_orientation} eq 'Horizontal' ) {
 			$_[0]{layout_width} = $_[0]{columns} * $_[0]{image_height} + $_[0]{perfecting_wheel_space};
+$openprint::log->debug("Horz: $_[0]{layout_width} = $_[0]{columns} * $_[0]{image_height} + $_[0]{perfecting_wheel_space};");
 
 			if ( $_[0]{dutch_columns} ) {
 				my $dutch_width = $_[0]{dutch_columns} * $_[0]{image_width};
@@ -452,14 +453,17 @@ sub used_width {
 	my $self = shift;
 	my $width = $$self{layout_width} + $$self{gutters} + $$self{cropmark_left} + $$self{cropmark_right} + ( $$self{colour_bar_orientation} eq 'Length' ? $$self{colour_bar_size} : 0 );
 	$openprint::log->debug( "used_width: width $width = layout: $$self{layout_width} + gutters: $$self{gutters} + cropleft $$self{cropmark_left} + cropright $$self{cropmark_right} + ( $$self{colour_bar_orientation} eq 'Length' ? cb: $$self{colour_bar_size} : 0 );") if DEBUG;
+if ( 0 ) { # DOn't need to do this anymore, is taken care of in layout_width
 	if ( ($$self{runstyle} eq 'Perfecting' ) and $$self{Press} and $$self{Paper} ) {
 		if ( $$self{Paper}->perfecting() ne 'Y' ) {
 			if ( $$self{columns} > 1 and $$self{columns} % 2 ) {
 			$width += $$self{Press}->specification('Perfecting Double Gutter Size') - $$self{Press}->specification('Perfecting Single Gutter Size');
+	$openprint::log->debug( "used_width: adding perfecting wheel space: $$self{Press}->specification('Perfecting Double Gutter Size') - $$self{Press}->specification('Perfecting Single Gutter Size');" );
 			} # end if
 		} # end if
 	} # end if
-$openprint::log->debug("Setting used_width using layout:$$self{layout_width} + gutters:$$self{gutters} + cropleft:$$self{cropmark_left} + crop_right:$$self{cropmark_right} + cb: ( $$self{colour_bar_orientation} eq 'Length' ? $$self{colour_bar_size} : 0 )") if DEBUG;
+	} # end if
+$openprint::log->debug("Setting used_width ($width) = using layout:$$self{layout_width} + gutters:$$self{gutters} + cropleft:$$self{cropmark_left} + crop_right:$$self{cropmark_right} + cb: ( $$self{colour_bar_orientation} eq 'Length' ? $$self{colour_bar_size} : 0 )") if DEBUG;
 	return $width;
 }
 sub used_height {
