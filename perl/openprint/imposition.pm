@@ -87,9 +87,9 @@ sub calc_dutch {
 				);
 		next if $$dutch_imp{imposition} <= $$setup{imposition};
 		next if $$dutch_imp{imposition} <= $previous_dutch_imp;
-		if ( ! $dutch_imp->paper()->start_width() ) {
+		if ( ! $dutch_imp->Paper()->start_width() ) {
 			$openprint::log->debug("Setting dutch paper width to " . $dutch_imp->used_width() );
-			$dutch_imp->paper()->width( $dutch_imp->used_width() );
+			$dutch_imp->Paper()->width( $dutch_imp->used_width() );
 		}
 		$dutch_imp->Paper()->height( $dutch_imp->used_height() ) if ! $dutch_imp->Paper()->height();
 
@@ -116,7 +116,7 @@ sub calc_dutch {
 				);
 		next if $$dutch_imp{imposition} <= $$setup{imposition};
 		next if $$dutch_imp{imposition} <= $previous_dutch_imp;
-		$dutch_imp->paper()->width( $dutch_imp->used_width() ) if ! $dutch_imp->paper()->start_width();
+		$dutch_imp->Paper()->width( $dutch_imp->used_width() ) if ! $dutch_imp->Paper()->start_width();
 		$dutch_imp->Paper()->height( $dutch_imp->used_height() ) if ! $dutch_imp->Paper()->height();
 
 		if ( check_setup( $dutch_imp, $specs ) ) {
@@ -274,7 +274,7 @@ $openprint::log->debug("Not Pretrimming on $$Press{strid}") if DEBUG;
 
 	$setup2->quantity( 1 );
 	$$setup2{sides} = $$specs{print_sides};
-	$setup2->paper( $Paper->clone() );
+	$setup2->Paper( $Paper->clone() );
 	$setup2->runstyle( $run_style );
 	$setup2->image_orientation('Horizontal');
 	$setup2->spread_size( $$specs{txtSpreadSize} );
@@ -583,14 +583,14 @@ $openprint::log->debug("Not doing dutch because ($$specs{dutch}) or $run_style o
 				foreach my $imp ( calc_dutch( $setup1, $adjusted_paper_width/2, $adjusted_paper_height, $specs ) ) {
 					$imp->columns( $$imp{columns} * 2 );
 					$imp->dutch_columns( $$imp{dutch_columns} * 2 );
-					$imp->paper()->width( $imp->used_width() ) if ! $imp->paper()->start_width();
+					$imp->Paper()->width( $imp->used_width() ) if ! $imp->Paper()->start_width();
 					$openprint::log->debug( sprintf('CHECK 1 Work&Turn Dutch Using Paper %sx%s -> %sx%s Image: %s x %s Imposition: %dout:%dx%d+%dx%d',$paper_width, $paper_height, $adjusted_paper_width/2, $adjusted_paper_height, $setup1->image_width(), $setup1->image_height(), $imp->imposition(), $imp->columns(), $imp->rows(), $imp->dutch_columns(), $imp->dutch_rows() ) ) if DEBUG;
 					push @results, $imp;
 				} # end foreach
 			} # end if grain_direction
 			$setup1->columns( $$setup1{columns} * 2 );
-			if ( ! $setup1->paper()->width() ) {
-				$setup1->paper()->width( $setup1->used_width()*2 );
+			if ( ! $setup1->Paper()->width() ) {
+				$setup1->Paper()->width( $setup1->used_width()*2 );
 			} # end if
 			$setup1->Paper()->height( $setup1->used_height() ) if ! $setup1->Paper()->height();
 			push @results, $setup1;
@@ -637,7 +637,7 @@ $openprint::log->debug("Not doing dutch because ($$specs{dutch}) or $run_style o
 	} elsif ( $$specs{'Cut Off'} ) {
 		$openprint::log->debug("Using Cut Off : $$specs{'Cut Off'}") if DEBUG;
 		$adjusted_paper_height = $$specs{'Cut Off'};
-		$setup2->paper()->height( $$specs{'Cut Off'} );
+		$setup2->Paper()->height( $$specs{'Cut Off'} );
 		$setup2->stock_height( $$specs{'Cut Off'} );
 	} # end if
 
@@ -800,7 +800,7 @@ $openprint::log->debug("Using Single wheel space $$specs{'Perfecting Single Gutt
 				foreach my $imp ( calc_dutch( $setup2, $adjusted_paper_width/2, $adjusted_paper_height, $specs ) ) {
 					$imp->columns( $$imp{columns} * 2 );
 					$imp->dutch_columns( $$imp{dutch_columns} * 2 );
-					$imp->paper()->width( $imp->used_width() ) if ! $imp->paper()->start_width();
+					$imp->Paper()->width( $imp->used_width() ) if ! $imp->Paper()->start_width();
 					$openprint::log->debug( sprintf('CHECK 2 Work&Turn Dutch Using Paper %sx%s -> %sx%s Image: %s x %s Imposition: %dout:%dx%d+%dx%d',$paper_width, $paper_height, $adjusted_paper_width, $adjusted_paper_height/2, $setup2->image_height(), $setup2->image_width(), $imp->imposition(), $imp->columns(), $imp->rows(), $imp->dutch_columns(), $imp->dutch_rows() ) ) if DEBUG;
 					push @results, $imp;
 				} # end foreach

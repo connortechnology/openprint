@@ -21,7 +21,7 @@ $table = 'object_keywords';
 
 
 sub Keyword {
-	return new openprint::Keyword( $_[0]{'keyword_id'} );
+	return new openprint::Keyword( $_[0]{keyword_id} );
 } # end sub Keyword
 
 1;

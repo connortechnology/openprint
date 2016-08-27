@@ -1094,7 +1094,8 @@ $log->debug("Considering: " . $P->id_string() ) if DEBUG;
 	return map { $_->clone() } @Papers;
 } # end sub get_Stocks
 
-sub get_impositions($$$$$$$$) {
+sub get_impositions {
+#sub get_impositions($$$$$$$$) {
 	my ( $Project, $specs, $project, $qty, $qty_index, $Presses, $Papers, $Overrides ) = @_;
 	my %impositions;
 
@@ -1199,8 +1200,8 @@ $openprint::log->debug("not Skipping cuz ddmPress$qty_index eq $$Press{strid}");
 			$openprint::log->debug("** $$Press{strid} Can't Perfect - Perfecting not in runstyles ***") if DEBUG;
 			$do_perfecting = 0;
 		} elsif ( @side_one_colours > int($number_of_colours/2) or @side_two_colours > int($number_of_colours/2) ) {
-				$openprint::log->debug("** Too many colours to	Perfect	***") if DEBUG;
-				$do_perfecting = 0;
+			$openprint::log->debug("** Too many colours to	Perfect	***") if DEBUG;
+			$do_perfecting = 0;
 		} elsif ( @side_one_varnishes or @side_two_varnishes  ) {
 			if ( ( $varnish_capable eq '1 Side' ) and (
 				( ! ( @side_one_varnishes and @side_two_varnishes ) ) and 
@@ -1694,11 +1695,9 @@ if ( $do_initial_filtering ) {
 		my %dutches;
 		if ( DEBUG_INITIAL_FILTERING ) {
 			$openprint::log->debug('Impositions before filtering on ' . $$Press{strid} . ' ' . @impositions . ' impositions' . ( sprintf('%.4f', tv_interval( [$master_time])*1000) ) .' usecs');
-if ( 0 ) {
 			foreach my $i ( @impositions ) {
 				$i->display();
 			}
-}
 		}
 		my $max_imposition;
 		foreach my $imp ( @impositions ) {
@@ -1858,7 +1857,6 @@ if ( 0 ) {
 		%imps = ();
 		my $bump_count = 0;
 		foreach my $I ( @impositions ) {
-			$$I{inkCoverage} = $$project{inkCoverage};
 			my $Paper = $I->Paper();
 			my $key = join(',', $$Paper{type}, $Paper->area(), @$I{'pages','image_orientation','imposition','runstyle'} );
 			if ( ! ( $imps{$key} and @{$imps{$key}} ) ) {
@@ -1917,6 +1915,10 @@ if ( 0 ) {
 				} # end if
 			} # end if
 		} # end if ! impositions
+
+		foreach my $imp ( @impositions ) {
+			$$imp{inkCoverage} = $$project{inkCoverage};
+		}
 
 		$impositions{$Press->strid()} = \@impositions if @impositions;
 	} # end foreach Press
@@ -5202,8 +5204,6 @@ sub calc_price {
 	$plate_changes += $$project{ProjectSpecs}{"txtPlateChangeQuantity-$$specs{Group}"} if $$project{ProjectSpecs}{"txtPlateChangeQuantity-$$specs{Group}"};
 	$plate_changes += $$specs{'txtPlateChangeQuantity'.$qty_index} if $$specs{'txtPlateChangeQuantity'.$qty_index};
 	
-	
-
 	my $additional_overs = 0;
 	my $additional_overs_rate = 0;
 	if ( $plate_changes ) {
@@ -5295,7 +5295,7 @@ sub calc_price {
 
 				$$Imposition{Folds} = $folding_results{FoldedImpositions};
 				foreach my $FI ( @{$folding_results{FoldedImpositions}} ) {
-					my $Fold = $FI->Fold();
+					my $Fold = $$FI{Fold};
 					$price{'Folding Breakdown'} .= sprintf('Folding %d %s (%d out) %d/hr Price: $%.2f on %s<br/>', $FI->quantity(), $Fold->name(), @$FI{'imposition','runspeed','price'}, $Fold->Equipment()->name() );
 				} # end foreach
 				$price{'Folding Breakdown'} .= sprintf('Folding total: $%.2f<br/>', $folding_results{Price} ) if @{$folding_results{FoldedImpositions}} > 1;
