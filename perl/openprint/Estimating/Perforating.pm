@@ -358,11 +358,11 @@ sub signature_calc {
 	if ( ! $Wheel ) {
 		if ( $$specs{"HorizontalTeeth-$form"} and ( $$specs{"HorizontalTeeth-$form"} >= 25 ) ) {
 			$wheel_name = 'PerforatingWheel Micro Perf';
-			$Materials{$wheel_name} = openprint::Material->find_one( name=>$$wheel_name ) if ! exists $Materials{$wheel_name};
+			$Materials{$wheel_name} = openprint::Material->find_one( name=>$wheel_name ) if ! exists $Materials{$wheel_name};
 			$Wheel = $Materials{$wheel_name};
 		} else {
 			$wheel_name = 'PerforatingWheel';
-			$Materials{$wheel_name} = openprint::Material->find_one( name=>$$wheel_name ) if ! exists $Materials{$wheel_name};
+			$Materials{$wheel_name} = openprint::Material->find_one( name=>$wheel_name ) if ! exists $Materials{$wheel_name};
 			$Wheel = $Materials{$wheel_name};
 		} # end if
 	} # end if
