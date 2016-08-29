@@ -56,8 +56,10 @@ sub save_service {
 		$service_type = $Project->Type()->type();
 	} # end if
 	my $module = 'openprint::Estimating::'.$service_type;
+$openprint::log->debug("Module is: $module");
 
 	eval ( 'require '.$module.';' );
+	$log->error($@) if $@;
 	my @variables = eval( $module.'::variables( $project_index, $service_index, $specs, \%openprint::param )');
 	$log->error($@) if $@;
 #$log->debug("variables: @variables");

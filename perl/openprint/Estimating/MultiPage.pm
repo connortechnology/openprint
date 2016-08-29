@@ -487,7 +487,7 @@ $openprint::log->debug("Removing impo cuz wrong group") if DEBUG;
 						$specs{'txtUnitPrice'.$qty_index} = sprintf($openprint::config{UnitPriceFormat}, 0 );
 			#$$openprint::log->debug("no additional impos for qty $qty_index");
 						$Imposition = new openprint::Imposition();
-						$$Imposition{paper} = new openprint::Paper();
+						$$Imposition{Paper} = new openprint::Paper();
 					} else {
 						$Imposition = shift @{$$sig_specs{'Additional Impositions'.$qty_index}};
 					} # end if
