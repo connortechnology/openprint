@@ -3320,6 +3320,10 @@ if ( ! sets::isin( 'host_interfaces', \@tables ) ) {
 	if ( exists $$data{'dhcp'} ) {
 		$dbh->do('ALTER TABLE hosts DROP dhcp');
 	} # end if
+	if ( ! exists $$data{connected_to} ) {
+		$log->debug("Adding macaddr to host_interfaces");
+		$dbh->do('ALTER TABLE host_interfaces ADD connected_to macaddr') or die $openprint::dbh->errstr();
+	}
 }
 if ( ! sets::isin( 'host_info', \@tables ) ) {
 	$dbh->do( misc::load_file( $log, q{../openprint/sql/Host_Info.sql}) );
