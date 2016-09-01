@@ -34,7 +34,7 @@ if ( ddm ) {
 	my @parent_ids = ( $$Parent{id} ) if $Parent;
 	# Goes through each child type, populating the dropdowns.
 	while ( $type = openprint::Location->child_type($type) ) {
-		my @Options = openprint::Location->find( parent_id=>\@parent_ids, type=>( $type eq 'state' and $$Parent{name} eq 'Canada' ? ['state','province'] : $type ) );
+		my @Options = openprint::Location->find( parent_id=>\@parent_ids, type=>( $type eq 'state' and $$Parent{name} eq 'Canada' ? ['state','province'] : $type ) ) if @parent_ids;
 		my $options = [ map { $_->id(), $_->name() } @Options ];
 		@parent_ids = map { $_->parent_id() } @Options;
 
