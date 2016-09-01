@@ -133,8 +133,9 @@ sub Type {
 
 sub type {
 	if ( @_ > 1 ) {
+		my $Type;
 		if ( $_[1] ) {
-			my $Type = openprint::Location_Type->find_one('name lc'=>lc openprint::Location_Type->transform('name',$_[1]));
+			$Type = openprint::Location_Type->find_one('name lc'=>lc openprint::Location_Type->transform('name',$_[1]));
 			if ( ! $Type ) {
 				$Type = new openprint::Location_Type();
 				$Type->save({'name'=>$_[1]});
