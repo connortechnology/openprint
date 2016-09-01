@@ -44,7 +44,7 @@ configuration::from_file( $$opts{config} );
 configuration::merge( $opts );
 
 foreach my $param ( 'db_name','db_user','db_pass' ) {
-	if ( ! $config{$param} ) {
+	if ( ! $openprint::config{$param} ) {
 		die "$program: missing required --$param parameter";
 	}
 } # end foreach required-param
@@ -63,7 +63,7 @@ $config{'log_level'} = 'debug' if ! $config{'log_level'};
 $log = logger->new( {'file'=>$config{'log_file'}, 'level'=>$config{'log_level'}} );
 
 $log->debug("Connecting to db");	
-$dbh = sql::open_sql( $log,
+$openprint::dbh = sql::open_sql( $log,
 		'host'		=> $config{'db_host'},
 		'database'	=> $config{'db_name'},
 		'driver'	=> 'Pg',
@@ -85,7 +85,8 @@ $log->debug( 'WAP polling ' . @Hosts . ' hosts.' );
 foreach my $Host ( @Hosts ) {
 	foreach my $HI ( $Host->Interfaces() ) {
 		if ( ! $HI->ip() ) {
-			$log->warning( "Monitored host without ip: " . $Host->to_string() );
+			$log->warn( "Polled host without ip: HOST: " . $Host->to_string() );
+			$log->warn( "Polled host without ip: Interface: " . $HI->to_string() );
 			next;
 		} # end if
     $log->debug("Pinging $$Host{hostname} at $$HI{ip}");
@@ -123,24 +124,28 @@ foreach my $Host ( @Hosts ) {
 
         if ( ! $response->is_success ) {
           $log->error("Should have worked.");
-          $openprint::log->debug( $response->status_line );
-          $openprint::log->debug( $response->content );
+          $openprint::log->error( $response->status_line );
+          $openprint::log->error( $response->content );
           my $headers = $response->headers();
           foreach my $k ( keys %$headers ) {
             $openprint::log->debug("Initial Header $k => $$headers{$k}");
           }  # end foreach
         } else {
           my ($assoc_list_line ) = $response->content() =~ /var assoc_list='([^']*)';/m;
-          $assoc_list_line =~ s/assoclist //g;
-          my @macs = split(' ', $assoc_list_line );
-          foreach my $mac ( @macs ) {
-            foreach my $station_HI ( openprint::Host_Interface->find( mac=>$mac ) ) {
-              if ( (!defined $$station_HI{connected_to}) or ( uc $$station_HI{connected_to} ne uc $$HI{mac} ) ) {
-                $log->debug("Updating connection of ".$station_HI->Host()->hostname() );
-                $station_HI->save({connected_to=>$$HI{mac}});
-              }
-            } # end foreach station_HI
-          } # end foreach station mac
+			if ( $assoc_list_line ) {
+				$assoc_list_line =~ s/assoclist //g;
+				my @macs = split(' ', $assoc_list_line );
+				foreach my $mac ( @macs ) {
+					foreach my $station_HI ( openprint::Host_Interface->find( mac=>$mac ) ) {
+						if ( (!defined $$station_HI{connected_to}) or ( uc $$station_HI{connected_to} ne uc $$HI{mac} ) ) {
+							$log->debug("Updating connection of ".$station_HI->Host()->hostname() );
+							$station_HI->save({connected_to=>$$HI{mac}});
+						}
+					} # end foreach station_HI
+				} # end foreach station mac
+			} else {
+				$log->error("No assoc_list line from $$Host{hostname} $$HI{ip}");
+			}
 
         }
 
