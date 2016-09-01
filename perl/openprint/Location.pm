@@ -133,11 +133,15 @@ sub Type {
 
 sub type {
 	if ( @_ > 1 ) {
-		my $Type = openprint::Location_Type->find_one('name lc'=>lc openprint::Location_Type->transform('name',$_[1]));
-		if ( ! $Type ) {
+		if ( $_[1] ) {
+			my $Type = openprint::Location_Type->find_one('name lc'=>lc openprint::Location_Type->transform('name',$_[1]));
+			if ( ! $Type ) {
+				$Type = new openprint::Location_Type();
+				$Type->save({'name'=>$_[1]});
+			} # end if
+		} else {
 			$Type = new openprint::Location_Type();
-			$Type->save({'name'=>$_[1]});
-		} # end if
+		} 
 #$openprint::log->debug("Type: " . $Type->to_string() );
 		$_[0]{type_id} = $Type->id();
 		$_[0]{type} = $Type->name();
@@ -327,8 +331,8 @@ require Geo::Coder::Googlev3;
 	
 	my $Location = new openprint::Location();
 	$Location->save({
-		name=>$_[0],
-		parent	=>	$parent,
+		name		=>	$_[0],
+		parent		=>	$parent,
 		latitude	=>	$latitude,
 		longitude	=>	$longitude,
 		postalcode	=>	$postalcode,
