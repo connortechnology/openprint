@@ -6,7 +6,7 @@ $log->warn("No servicetype in params in calc");
 		return;
 	} # end if
 
-	my %specs = openprint::main_project::calc();
+	my %specs = openprint::main_project::calc( $debug );
 
 	$param{callback} = 'cbFillResults' if ! $param{callback};
 	my $json = JSON->new;

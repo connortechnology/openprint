@@ -106,11 +106,11 @@ $serial= 'folds_id_seq';
 );
 
 sub to_string {
-	if ( ! $_[0]{'to_string'} ) {
-		$_[0]{'to_string'} = sprintf('%s %dx%d=%d pages min:%d max:%d impo', 
-				@{$_[0]}{'name','page_columns','page_rows','pages', 'min_imposition','max_imposition'} );
+	if ( ! $_[0]{to_string} ) {
+		$_[0]{to_string} = sprintf('%s %dx%d=%d pages min:%d max:%d impo on %s', 
+				@{$_[0]}{'name','page_columns','page_rows','pages', 'min_imposition','max_imposition'}, $_[0]->Equipment()->name() );
 	} # end if
-	return $_[0]{'to_string'};
+	return $_[0]{to_string};
 } # end sub to_string
 
 sub delete {
@@ -127,34 +127,38 @@ sub copy {
 	my $self = $_[0];
 	my $new = new openprint::Fold();
 	@$new{keys %fields} =  @$self{ keys %fields};
-	@{$$new{'Specifications'}} = map { $_->copy() } $_[0]->Specifications();
+	@{$$new{Specifications}} = map { $_->copy() } $_[0]->Specifications();
 	delete $$new{id};
 	return $new;
 } # end sub copy
 
 sub Equipment {
-	return new openprint::Equipment( $_[0]{equipment_id} );
+	if ( ! $_[0]{Equipment} ) {
+		$_[0]{Equipment} = new openprint::Equipment( $_[0]{equipment_id} );
+	} 
+
+	return $_[0]{Equipment};
 } # end sub Equipment
 
 sub Specifications {
-	if ( ! $_[0]{'Specifications'} ) {
-		@{$_[0]{'Specifications'}} = openprint::FoldSpecification->find( 'fold_id'=>$_[0]{'id'},'order'=>'min_weight NULLS FIRST,max_weight NULLS FIRST' );
+	if ( ! $_[0]{Specifications} ) {
+		@{$_[0]{Specifications}} = openprint::FoldSpecification->find( 'fold_id'=>$_[0]{id},'order'=>'min_weight NULLS FIRST,max_weight NULLS FIRST' );
 	} # end if
-	return @{$_[0]{'Specifications'}};
+	return @{$_[0]{Specifications}};
 } # end sub Equipment
 
 sub Specification {
 	my ( $self, $range ) = @_;
 
-    if ( ! $$self{'Specifications'} ) {
-		@{$$self{'Specifications'}} = openprint::FoldSpecification->find( 'fold_id'=>$$self{'id'},'order'=>'min_weight NULLS FIRST,max_weight NULLS FIRST' );
+    if ( ! $$self{Specifications} ) {
+		@{$$self{Specifications}} = openprint::FoldSpecification->find( 'fold_id'=>$$self{id},'order'=>'min_weight NULLS FIRST,max_weight NULLS FIRST' );
     } # end if
 
-    if ( ! @{$$self{'Specifications'}} ) {
+    if ( ! @{$$self{Specifications}} ) {
 		return;
 	} # end if
 
-	if ( $$self{'Specifications'}[0]{weight_units} eq 'lbs' )  {
+	if ( $$self{Specifications}[0]{weight_units} eq 'lbs' )  {
 $log->debug("Converting $range gsm to " . openprint::Paper::gsm_to_weight( $range ) ) if $debug;
 		$range = openprint::Paper::gsm_to_weight( $range );
 	} # end if
@@ -163,8 +167,8 @@ $log->debug("Converting $range gsm to " . openprint::Paper::gsm_to_weight( $rang
 	my $i = 0;
 	my $x;
 	my $y;
-	for ( ; $i < @{$$self{'Specifications'}}; $i += 1 ) {
-		my $Spec = $$self{'Specifications'}[$i];
+	for ( ; $i < @{$$self{Specifications}}; $i += 1 ) {
+		my $Spec = $$self{Specifications}[$i];
 $log->debug("Examining: ".$Spec->Fold()->Equipment()->name() . ' ' . $Spec->Fold()->name() . " MIN(" . $Spec->min_weight() .     ') MAX(' . $Spec->max_weight() . $Spec->weight_units(). ') RUNSPEED(' . $Spec->runspeed() .') INTERPOLATE('.$Spec->interpolate() .') for range: ' . $range ) if $debug;
 		#return $Spec if ( 1*$$Spec{min_weight} == $range ) or ( 1*$$Spec{max_weight} == $range );
 
@@ -180,10 +184,10 @@ $log->debug("Examining: ".$Spec->Fold()->Equipment()->name() . ' ' . $Spec->Fold
 		last if ( $Spec->max_weight() eq '' and ! $Spec->interpolate() );
 	} # end if
 
-   if ( $i and $i <= @{$$self{'Specifications'}} ) {
+   if ( $i and $i <= @{$$self{Specifications}} ) {
         $i -= 1;
         # back up
-		$x = $$self{'Specifications'}[$i];
+		$x = $$self{Specifications}[$i];
 $log->debug("Found spec for $range:" . $x->min_weight() . ' ' . $x->max_weight() . ' : ' . $x->runspeed() ) if $debug;
 		return if ( $$x{max_weight} and ( $$x{max_weight} < $range ) and ! $$x{interpolate} );
    } else {
@@ -191,21 +195,21 @@ $log->debug("Found spec for $range:" . $x->min_weight() . ' ' . $x->max_weight()
 	   return;
    } # end if
 
-   for ( ; $i < @{$$self{'Specifications'}}; $i += 1 ) {
-	   my $Spec = $$self{'Specifications'}[$i];
+   for ( ; $i < @{$$self{Specifications}}; $i += 1 ) {
+	   my $Spec = $$self{Specifications}[$i];
 		# Don't need to check for equality, as we do that above
 	   return $Spec if ( !(1*$$Spec{max_weight}) and ! $$Spec{interpolate} );
 
 $log->debug("Examining MAX spec for $range:" . $Spec->min_weight() . ' ' . $Spec->max_weight() . ' : ' . $Spec->runspeed() ) if $debug;
 # first step, find one less than the min
 		if ( ( 1*$$Spec{max_weight} > 1*$range ) or ( $$Spec{max_weight} eq '' ) ) {
-			#$log->debug("Foudn Max at $i " . @{$$self{'Specifications'}} );
+			#$log->debug("Foudn Max at $i " . @{$$self{Specifications}} );
 			last;
 		} # end if
    } # end foreach
-   if ( $i and $i < @{$$self{'Specifications'}} ) {
+   if ( $i and $i < @{$$self{Specifications}} ) {
 # back up
-	   $y = $$self{'Specifications'}[$i];
+	   $y = $$self{Specifications}[$i];
 $log->debug("Found spec max " . $y->min_weight() . ' ' . $y->max_weight() . ' : ' . $y->runspeed() ) if $debug;
    } else {
 $log->debug("Couldn't find maximum") if $debug;
@@ -242,27 +246,27 @@ sub runspeed {
 	if ( $_[0]{runspeed} ) {
 		return $_[0]{runspeed};
 	} else {
-	if ( ! $_[1] ) {
-		my ( $caller, undef, $line ) = caller;
-		$openprint::log->warn("No gsm in Fold->runspeed from $caller line $line");
-	} # end if
-	my $RunSpeed = $_[0]->RunSpeed($_[1]);
-	return $RunSpeed ? $$RunSpeed{'runspeed'} : undef;
+		if ( ! $_[1] ) {
+			my ( $caller, undef, $line ) = caller;
+			$openprint::log->warn("No gsm in Fold->runspeed from $caller line $line");
+		} # end if
+		my $RunSpeed = $_[0]->RunSpeed($_[1]);
+		return $RunSpeed ? $$RunSpeed{runspeed} : undef;
 	} # end if
 } # end sub runspeed
 
 sub Imposition {
 	if ( @_ > 1 ) {
-		$_[0]{'Imposition'} = $_[1];
+		$_[0]{Imposition} = $_[1];
 	} # end if
-	return $_[0]{'Imposition'};
+	return $_[0]{Imposition};
 } # end sub Imposition
 
 sub imposition {
 	if ( @_ > 1 ) {
-		$_[0]{'imposition'} = $_[1];
+		$_[0]{imposition} = $_[1];
 	} # end if
-	return $_[0]{'imposition'};
+	return $_[0]{imposition};
 } # end sub imposition
 1;
 __END__

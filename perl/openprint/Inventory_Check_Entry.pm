@@ -6,7 +6,7 @@ require openprint::Location;
 
 use vars qw( $debug $table $serial %fields %transforms %defaults );
 
-$debug = 1;
+$debug = 0;
 $table = 'inventory_check_entries';
 $serial= 'inventory_check_entries_id_seq';
 %fields = (
@@ -14,6 +14,7 @@ $serial= 'inventory_check_entries_id_seq';
 	ic_id		=>	'ic_id',
 	skid_id		=>	'skid_id',
 	rfidtag_id	=>	'rfidtag_id',
+	scanner_id	=>	'scanner_id',
 	created_on	=>	'created_on',
 	operator_id	=>	'operator_id',
 	quantity	=>	'quantity',
@@ -80,6 +81,10 @@ sub RFIDTag {
     return $_[0]{RFIDTag};
 } # end sub RFIDTag
 
+sub Scanner {
+	return new openprint::RFIDScanner( $_[0]{scanner_id} );
+}
+
 sub rfidtag_id {
 	if ( @_ > 1 ) {
 		$_[0]{rfidtag_id} = $_[1];
@@ -123,10 +128,19 @@ sub Location {
 	return new openprint::Location( $_[0]{location_id} );
 }
 
+sub Check {
+	return new openprint::Inventory_Check( $_[0]{ic_id} );
+}
+
 sub check {
 	return 'No Skid.' if ! $_[0]->Skid()->id();
 	return 'Quantity not the same: Check has ' . $_[0]->quantity() . ' Skid has ' . $_[0]->Skid()->quantity() if $_[0]->quantity() != $_[0]->Skid()->quantity();
+	return 'Item is in the check more than once<br/>' if $_[0]->Check()->check_for_duplicates( $_[0] );
 	return '';
+}
+
+sub User {
+	return new openprint::User( $_[0]{operator_id} );
 }
 
 1;

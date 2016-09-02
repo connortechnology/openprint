@@ -67,9 +67,11 @@ configuration::merge($opts);
 
 $log->warn("Getting hosts");
 foreach my $Host ( openprint::Host->find( blacklist=>1, 'updated_on <=' => sprintf('%.4d-%.2d-%.2d', Date::Calc::Add_Delta_Days( Date::Calc::Today(), -30 ) ) ) ) {
-	$log->warn("Allowing $$Host{ip}");
+	foreach my $HI ( $Host->Interfaces() ) {
+	$log->warn("Allowing $$HI{ip}");
 	$Host->save({blacklist=>0});
-	`shorewall allow $$Host{ip}`;
+	`shorewall allow $$HI{ip}`;
+	}
 } # end foreach Host
 
 

@@ -8,3 +8,4 @@ CREATE TABLE Expense_Taxes (
     PRIMARY KEY (id)
 );
 
+CREATE INDEX expense_taxes_expense_id_tax_id_idx ON expense_taxes (expense_id,tax_id);

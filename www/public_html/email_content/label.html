@@ -2,20 +2,20 @@
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
     <head>
         <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
-        <title><? echo ( $config{'SiteTitle'} ) ?></title>
+        <title><? echo ( $config{SiteTitle} ) ?></title>
         <style type="text/css">
         <?include('/css/email.css')?>
         <?include('/css/employee_production_labels.css')?>
         </style>
-        <base href="<? echo ( $config{'ExternalSiteURL'} ) ?>"/>
+        <base href="<? echo ( $config{ExternalSiteURL} ) ?>"/>
     </head>
     <body>
 		<div class="Label">
 			<? echo (
-				if ( ! $$variable{'Label'}->type_id() ) {
+				if ( ! $$variable{Label}->type_id() ) {
 					return 'Unknown label type.';
 				} else {
-					return include( '/employee/production/labels/_'.$$variable{'Label'}->Type()->name().'_view.html', $variable );
+					return include( '/employee/production/labels/_'.$$variable{Label}->Type()->name().'_view.html', $variable );
 				} # end if
 			) ?>
 		</div>

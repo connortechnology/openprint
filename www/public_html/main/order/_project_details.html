@@ -78,8 +78,7 @@
 						} # end if
 
 						$html .= sprintf('<tr%1$s><td class="service">%2$s</td><td class="description">%3$s</td>',
-							$rowclass, ( $$service_specs{ServiceName} ? $$service_specs{ServiceName} : $ServiceType->description() ),
-							$summary, 
+							$rowclass, ( $$service_specs{ServiceName} ? ( '', $$service_specs{ServiceName} ) : ( $ServiceType->description(), $summary ) ),
 						);
 						foreach my $qty_index ( @quantity_indexes ) {
 							my $price = $ProjectCurrency->convert_to( $Currency, $$service_specs{'txtPrice'.$qty_index});

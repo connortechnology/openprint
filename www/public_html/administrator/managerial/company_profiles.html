@@ -2,7 +2,7 @@
 function load_customers( ) {
 	var form = $('f1');
 	new Ajax.Updater( 'ddmCustomer', '/includes/_company_ddm.html', { parameters: { 
-		salesrep_id: get_ddm_value( form.search_salesrep_id ),
+		salesrep_id: form.search_salesrep_id ? get_ddm_value( form.search_salesrep_id ) : null,
 		name: f1.search_company_filter.value,
 		type: get_value( form.search_type ),
 		deleted: get_value( form.deleted ),
@@ -43,7 +43,7 @@ function load_customers( ) {
 		<li> 
 			<label>Company</label>
 			<input type="text" id="search_company_filter" oninput="load_customers();" onkeydown="if(event.keyCode == 13){f1.btnFunction.value='Go';this.form.submit();}" class="filter" />
-			<select id="ddmCustomer" name="ddmCustomer" onchange="if(this.options[this.selectedIndex].value != '') { f1.btnFunction.value='Go'; $('ButtonsTop').hide();$('ButtonsBottom').hide();f1.submit();}">
+			<select id="ddmCustomer" name="ddmCustomer" onchange="if(this.options[this.selectedIndex].value != '') { f1.btnFunction.value='Go'; $('ButtonsTop').hide();f1.submit();}">
 				<option value=""> select </option>
 				<? echo ( 
 if ( 0 ) {
@@ -458,27 +458,10 @@ button( 'merge'.$C->id(), { href=>'/administrator/managerial/company_profiles.ht
 	</fieldset>
 </div>
 <?include(/account/_trade_references.html)?>
-	<fieldset id="ButtonsBottom">
-		<p> 
-			<label><? if ( $$variable{CustomerIndex} ) ?><a href="user_profiles.html?ddmCustomer=<?CustomerIndex?>">Link to Users</a><? endif ( $$variable{CustomerIndex} ) ?>&nbsp;</label>
-			
-			<? echo (
-				my $html = '';
-				$html .= button( 'Prev2', { onclick=>q`f1.btnFunction.value='&lt;&lt;';fmCheck(f1);`,text=>'&lt;&lt;' } );
-				$html .= button( 'Next2',{ onclick=>q`f1.btnFunction.value='&gt;&gt;';fmCheck(f1);`,text=>'&gt;&gt;' } );
-				$html .= button( 'New2',{ onclick=>'addCheck(f1);',text=>'New' } );
-				if ( $$variable{Company}->deleted() ) {
-					$html .= button( 'Undelete2', { onclick=>q`f1.btnFunction.value='Undelete';fmCheck(f1);`,text=>'Undelete' } );
-					$html .= button( 'Destroy2', { onclick=>q`f1.btnFunction.value='Destroy';fmCheck(f1);`,text=>'Destroy' } );
-				} else {
-					$html .= button( 'Delete2', { onclick=>q`f1.btnFunction.value='Delete';fmChange=2;fmCheck(f1);`,text=>'Delete' } );
-				} # end if
-				$html .= button( 'Save2',{ onclick=>q`f1.btnFunction.value='Save';fmChange=3;fmCheck(f1);`,text=>'Save' } );
-				$html .= button( 'Reset2', { onclick=>'f1.reset();',text => 'Reset' } );
-				return $html;
-			) ?>
-		</p>
-	</fieldset>
+<? if ( $$variable{CustomerIndex} ) ?>
+<br class="spacer"/>
+<? echo ( include_logs( $$variable{Company} ); ) ?>
+<? endif ( $$variable{CustomerIndex} ) ?>
 </form>
 </div>
 <script type="text/javascript">load_customers();</script>

@@ -19,9 +19,14 @@
 					} # end if
 					$html .= button( 'Delete', { onclick=>q`f1.btnFunction.value='Delete';f1.submit();` } );
 					$html .= button( 'Edit', { href=>'edit.html?invoice_id='.$$variable{Invoice}->id() } );
-					if ( $$variable{Invoice}->posted() and $$variable{Invoice}->can_send() ) {
-						$html .= button( 'Send', { onclick=>q`f1.btnFunction.value='Send';f1.submit();` } );
-						$html .= button( 'SendMe', { onclick=>q`f1.btnFunction.value='Send To Me';f1.submit();`, text=>'Send To Me' } );
+					if ( $$variable{Invoice}->posted() ) {
+						$html .= button( 'unpost', { onclick=>"f1.btnFunction.value='UnPost';f1.submit();",text=>'UnPost' } );
+						if ( $$variable{Invoice}->can_send() ) {
+							$html .= button( 'Send', { onclick=>q`f1.btnFunction.value='Send';f1.submit();` } );
+							$html .= button( 'SendMe', { onclick=>q`f1.btnFunction.value='Send To Me';f1.submit();`, text=>'Send To Me' } );
+						} # end if
+					} else {
+						$html .= button( 'post', { onclick=>"f1.btnFunction.value='Post';f1.submit();",text=>'Post' } );
 					} # end if
 					$html .= button( 'Print', { onclick=>'window.print();' } );
 				} # end if
@@ -35,7 +40,7 @@
 		<? echo (
 			my $Invoicee = $$variable{Invoice}->Invoicee();
 			my $html = '';
-			$html .= ($Invoicee->business_name() ? $Invoicee->business_name() : $Invoicee->name()).'<br/>';
+			$html .= $Invoicee->link_to( ($Invoicee->business_name() ? $Invoicee->business_name() : $Invoicee->name()) ).'<br/>';
 			$html .= $Invoicee->address1().'<br/>';
 			$html .= $Invoicee->address2().'<br/>' if $Invoicee->address2();
 			$html .= join(', ', $Invoicee->get('city','state','country') ).'<br/>';
@@ -64,7 +69,7 @@ $$variable{Timetracks} = [ openprint::Timetrack->find(invoice_id=>$$variable{Inv
 	<fieldset><legend>Services</legend>
 		<table class="List">
 			<tr>
-				<th class="Date">Date</th>
+				<th class="Date">Employee / Date</th>
 				<th class="Service">Description</th>
 				<th class="PO">PO #</th>
 				<th class="Interval">Interval</th>
@@ -74,7 +79,7 @@ $$variable{Timetracks} = [ openprint::Timetrack->find(invoice_id=>$$variable{Inv
 			<? echo (
 				my $html = '';
 				$$variable{Currency} = openprint::Currency::get_current() if ! $$variable{Currency};
-				$$variable{service_total} = 0;
+				$$variable{elapsed_total} = $$variable{service_total} = 0;
 				my $rowclass = '';
 				foreach my $Timetrack ( @{$$variable{Timetracks}} ) {
 					$html .= sprintf( q`<tr %2$s>`, $Timetrack->id(), $rowclass );
@@ -86,15 +91,18 @@ $$variable{Timetracks} = [ openprint::Timetrack->find(invoice_id=>$$variable{Inv
 					$html .= sprintf('<td class="Rate">%s%s</td>', openprint::Currency::format( $$Price{Price} ), $$Price{units} );
 					$html .= sprintf('<td class="Price">%s</td>', openprint::Currency::format( $$Price{Total} ) );
 					$html .= sprintf(q`</tr><tr %2$s>`, $Timetrack->id(), $rowclass );
-					$html .= '<td>&nbsp;</td><td colspan="4">'.$Timetrack->description().'</td><td>&nbsp;</td>';
+					$html .= '<td>'.$Timetrack->Employee()->link_to().'</td><td colspan="4">'.$Timetrack->description().'</td><td>&nbsp;</td>';
 					$html .= '</tr>';
 					$$variable{service_total} += $$Price{Total};
+					$$variable{elapsed_total} += $Timetrack->elapsed();
 					$rowclass = $rowclass ? '' : 'class="colRow"';
 				} # end foreach Timetrack
 				return $html;
 			) ?>
 			<tr class="totals">
-				<td colspan="5">Totals</td>
+				<td colspan="3">Totals</td>
+				<td class="Interval"><?echo(misc::seconds2hms($$variable{elapsed_total});)?></td>
+				<td class="Rate">&nbsp;</td>
 				<td class="Price"><? echo ( openprint::Currency::format( $$variable{service_total} ); ) ?></td>
 			</tr>
 		</table>
@@ -124,5 +132,7 @@ $$variable{Timetracks} = [ openprint::Timetrack->find(invoice_id=>$$variable{Inv
 	<?include(_payment_options.html)?>
 <? endif ( $$variable{Invoice}->owing() ) ?>
 <?include('/invoice/_payments_view.html') ?>
-<?include('_logs.html') ?>
+<? if ( $$variable{Invoice}->id() ) ?>
+	<? echo ( include_logs( $$variable{Invoice} ); ) ?>
+<? endif ( $$variable{Invoice}->id() ) ?>
 </div></div>

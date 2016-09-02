@@ -14,16 +14,24 @@
         timeout = null;
         gettingNewPrice = true;
 
-        var h = form.serialize(true);
-        h.ServiceType = 'Scoring';
-        h.callback = 'cbScoringResults';
+        var blah = Form.serialize( form, true );
+        var h = $H(blah);
+        h.each(function(pair) {
+            if ( pair.value == '' )
+                h.unset(pair.key);
+            if ( pair.key == 'btnFunction' )
+                h.unset(pair.key);
+            if ( pair.key == 'alert' )
+                h.unset(pair.key);
+        });
+        h.set('ServiceType','Scoring' );
+        h.set('callback', 'cbScoringResults' );
+ 
         new Ajax.Request( '/main/project/_calc.json', { method: 'post', parameters: h, evalScripts: true } );
     }
     function cbScoringResults( results ) {
-        
         var form = getFormObj('f1');
-
-        var re = /ScoreQty-(\d+)-(\d+)-(\d+)/;
+        var re = /ImpQty-(\d+)-(\d+)-(\d+)/;
         var keys = results.keys();
         for ( var index = 0, len = keys.length; index < len; index += 1 ) {
             var key = keys[index];
@@ -31,7 +39,7 @@
 
             var matches = re.exec( key );
             if ( matches ) {
-                var f = $('Score-'+matches[1]+'-'+matches[2]+'-'+matches[3]);
+                var f = $('Imp-'+matches[1]+'-'+matches[2]+'-'+matches[3]);
                 if ( f ) {
                     if ( matches[3] == 1 || value > 0 ) {
                         f.show();
@@ -39,7 +47,7 @@
                         f.hide();
                     } // end if
                 } else {
-                    alert('debug mesage: No html for score ' + matches[1]+'-'+matches[2]+'-'+matches[3] );
+                    alert('debug mesage: No html for imp ' + matches[1]+'-'+matches[2]+'-'+matches[3] );
                 } // end if f
             } // end if matches
         } // end foreach pair
@@ -51,36 +59,25 @@ function show_extra_score( signature, qty_index ) {
     var f = $('Score-'+signature+'-'+qty_index+'-'+'2');
     f.show();
 }
-function Score_onchange( element, signature, qty_index, index ) {
+function Imposition_onchange( element, signature, qty_index, index ) {
     var spec = signature + '-' + qty_index + '-' + index;
     var next_index = 1+parseInt(index);
     var do_calc = 1;
 
     if ( element.type == 'select-one' ) {
         if ( ! element.value ) {
-            $('ScoreQty-'+spec).value = '';
+            $('ImpQty-'+spec).value = '';
         } else {
-            $('ScoreScores-'+spec).value = '';
-            $('ScoreAngles-'+spec).value = '';
-            if ( ! $('ScoreQty-'+spec).value ) {
-                $('ScoreQty-'+spec).value = 1;
+            if ( ! $('ImpQty-'+spec).value ) {
+                $('ImpQty-'+spec).value = 1;
             } // end if
         } // end if
     } else { // must be the qty field
     } // end if
 
-    if ( ! $('ScoreQty-'+spec).value ) {
-        // This appears to hide the score if the qty is empty... but it doesn't seem to work.
-        // and it's bollocks. Basically we the score we are editing is empty, then hide the next one.  But the next one might be valid.
-//alert('hiding +1');
-if ( 0 ) {
-        var nextscore = $('Score-'+signature+'-'+qty_index+'-'+next_index );
-        if ( nextscore ) {
-            $('Score-'+signature+'-'+qty_index+'-'+next_index ).hide();
-        } // end if
-}
+    if ( ! $('ImpQty-'+spec).value ) {
     } else {
-        $('Score-'+signature+'-'+qty_index+'-'+(1+parseInt(index)) ).show();
+        $('Imp-'+signature+'-'+qty_index+'-'+(1+parseInt(index)) ).show();
     } // end if
     if ( do_calc ) 
         calc(element.form.name);
@@ -96,9 +93,9 @@ if ( 0 ) {
 					$html .= qq`<div class="Signature">Information for form $$sig_specs{SignatureIndex} ($$sig_specs{txtServiceDescription}):
 					<ul>
 					<li><label>Score Quantity</label>`;
-					$html .= input( name=>'txtVerticalQty-'.$$sig_specs{SignatureIndex}, value=>$$variable{"txtVerticalQty-$$sig_specs{SignatureIndex}"}, type=>'cardinal', onkeyup=>'calc(this.form.name);' );
+					$html .= input( name=>'txtVerticalQty-'.$$sig_specs{SignatureIndex}, value=>$$variable{"txtVerticalQty-$$sig_specs{SignatureIndex}"}, type=>'cardinal', oninput=>'calc(this.form.name);' );
 					$html .= ' Vertical + ';
-					$html .= input( name=>'txtHorizontalQty-'.$$sig_specs{SignatureIndex}, value=>$$variable{"txtHorizontalQty-$$sig_specs{SignatureIndex}"}, type=>'cardinal', onkeyup=>'calc(this.form.name);' );
+					$html .= input( name=>'txtHorizontalQty-'.$$sig_specs{SignatureIndex}, value=>$$variable{"txtHorizontalQty-$$sig_specs{SignatureIndex}"}, type=>'cardinal', oninput=>'calc(this.form.name);' );
 					$html .= ' Horizontal ';
 					$html .= write_override( 'chkOverrideQty-'.$$sig_specs{SignatureIndex}, $$variable{'chkOverrideQty-'.$$sig_specs{SignatureIndex}}, '', "calc('f1');" );
 					$html .= '</li>
@@ -110,47 +107,50 @@ if ( 0 ) {
 		</fieldset>
 		<fieldset><legend>Results</legend>
 <? echo (
-    my $html;
-	my $fragment = slurp_content( '/main/project/bind/_score.html' );
-	my $Project = $$variable{Project};
+	my $html;
+	my $fragment = slurp_content( '/main/project/bind/_imposition.html' );
+	my $qty_index = $$variable{QTYIndex};
+	foreach my $sig_id ( $$variable{Project}->signatures( { sort => 1 } ) ) {
+		my $sig_specs = openprint::service::get_specs_ref( $$variable{Project}, $sig_id );
+		@$variable{'SignatureIndex','Reference'} = @$sig_specs{'SignatureIndex','txtSignatureDescription'};
+		my $form = $$variable{form} = $$sig_specs{SignatureIndex};
 
-    foreach my $sig_id ( $Project->signatures( { sort => 1 } ) ) {
-        my $sig_specs = openprint::service::get_specs_ref( $Project, $sig_id );
-        @$variable{'SignatureIndex','Reference'} = @$sig_specs{'SignatureIndex','txtSignatureDescription'};
-        $html .= 'Form ' . $$sig_specs{SignatureIndex} . ( $$sig_specs{txtServiceDescription} ? ' : ' . $$sig_specs{txtServiceDescription} : '' ).'<br/>';
-        $html .= '<ul>';
-        $html .= include('/includes/main/proj/signature_equipment.html');
-
-	   $html .= '<li><label>Impositions</label>';
+		$html .= 'Form ' . $form . ( $$sig_specs{txtServiceDescription} ? ' : ' . $$sig_specs{txtServiceDescription} : '' ).'<br/>';
+		$html .= '<ul>';
+		$html .= include('/includes/main/proj/signature_equipment.html');
+		$html .= '<li><label>Imposition</label>';
 		foreach my $qty_index ( $$variable{Project}->quantity_indexes() ) {
 			$html .= '<div class="'.$$variable{Columns}.'Columns">';
 			if ( $$sig_specs{"txtImposition$qty_index"} ) {
+if ( 1 ) {
 				if ( sets::isin( $session{user_type}, ['A','E'] ) ) {
-					$html .= sprintf('<input type="checkbox" id="OverrideScores-%1$d-%2$d" name="OverrideScores-%1$d-%2$d" %3$s value="Y" onclick="if ( ! this.checked ) { calc(this.form.name);}else{show_extra_scores(%1$d,%2$d);};" /><label class="radio" for="OverrideScores-%1$d-%2$d">Override Scores</label><br/>', $$sig_specs{SignatureIndex}, $qty_index, $$variable{"OverrideScores-$$sig_specs{SignatureIndex}-$qty_index"} eq 'Y' ? 'checked="checked"' : '' );
-				} elsif ( $$variable{"OverrideScores-$$sig_specs{SignatureIndex}-$qty_index"} eq 'Y' ) {
-					$html .= sprintf('<input type="hidden" name="chkOverrideScore-%1$d-%2$d" value="Y" /> Overriden<br/>', $$sig_specs{'SignatureIndex'}, $qty_index );
-				} # end if
-				$$variable{SignatureIndex} = $$sig_specs{SignatureIndex};
-				$$variable{QTYIndex} = $qty_index;
+					$html .= write_override( "chkOverrideImposition-$form-$qty_index", $$variable{"chkOverrideImposition-$form-$qty_index"}, , qq`show_extra_imposition($form,$qty_index);`, q`calc('f1');` );
+					$html .= 'Override';
 
-				$html .= '<table><tr><th class="Qty">Qty</th><th class="Imp">Imp</th><th class="Speed">Speed</th></tr>';
+				} elsif ( $$variable{"chkOverrideImposition-$form-$qty_index"} ) {
+					$html .= sprintf('<input type="hidden" name="chkOverrideImposition-%1$d-%2$d" value="Y" /> Overriden<br/>', $form, $qty_index );
+				} # end if
+}
+				$$variable{qty_index} = $qty_index;
+
+				$html .= '<table class="Impositions"><tr><th class="Qty">Qty</th><th class="Imp">Columns x Rows = Imposition</th></tr>';
 				foreach my $index ( 1 .. 4 ) {
 					$$variable{index} = $index;
 					$html .= variable_substitution( \$fragment, $variable );
 				} # end foreach
 				$html .= '</table>';
-			} else { $html .= '&nbsp;';
+			} else { 
+				$html .= '&nbsp;';
 			} # end if imposition
 
-			$html .= '</div>';
+			$html .= '</div>'; # Column
 
 		} # end foreach qty_index
-		$html .= '</li>';
+	$html .= '</li>';
+	$html .= '</ul>';
 
-
-        $html .= '</ul>';
-    } # end foreach
-    return $html;
+	} # end foreach sig
+	return $html;
 ) ?>
 			<ul>
 			<?include('/includes/main/proj/quantities_prices.html')?>

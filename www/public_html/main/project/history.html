@@ -36,7 +36,7 @@
 		if ( div ) LoadContent( $('ProjectList'), '/main/project/_history.html', $('f1') );
 	} // end function
 </script>	 
-<? if ( $session{'user_id'} ) ?>
+<? if ( $session{user_id} ) ?>
 <form id="f1" name="f1" method="post" action="/main/project/history.html">
    <div class="Project"><div class="History">
 		<fieldset class="filters"><legend>Select Search Criteria</legend>
@@ -46,13 +46,13 @@
 			<li>
 				<label>Project #</label>
 				<? echo ( join("\n",
-					input( type=>'cardinal', id=>'ProjectID', name=>'ProjectID', onkeydown=>'if(event.keyCode==13){load_projects();}', value=>$param{ProjectID} ),
+					input( type=>'text', id=>'ProjectID', name=>'ProjectID', onkeydown=>'if(event.keyCode==13){load_projects();};', value=>$param{ProjectID}, pattern=>'[0-9%]*' ),
 					button( 'Go1', { onclick=>q`load_projects();`, text=>'Go' } ), 
 				); ) ?>
 			</li>
 			<li>
 				<label>Reference</label>
-				<input type="text" id="reference" name="reference" value="<? echo ( $param{'reference'} ) ?>" onkeyup="load_projects();" />
+				<input type="text" id="reference" name="reference" value="<? echo ( $param{reference} ) ?>" onkeyup="load_projects();" />
 			</li>
 			<li>
 				<label>Status</label>
@@ -91,8 +91,7 @@
 				<input type="text" onkeyup="filter_companies('company_id', {name:this.value,selected_id:get_ddm_value($('company_id'))});" class="filter" />
 				<select id="company_id" name="company_id" onchange="stop_filter_companies();load_projects();">
 					<option value="">All</option>
-					<? echo ( $session{'/main/project/history.html?company_id'} ? sprintf('<option value="%d" selected="selected">%s</option>', $session{'/main/project/history.html?company_id'}, new openprint::Company( $session{'/main/project/history.html?company_id'} )->name() ) : '';  ) ?>
-					<option value="">Use the filter to populate this dropdown with other options</option>
+<? echo ( make_drop_down( openprint::Company->dropdown(or=>{id=>$openprint::Company->id(),'last_project_id is null'=>0}), $session{'/main/project/history.html?company_id'} ) ) ?>
 				</select>
 			</li>
 	<? if ( openprint::Product->find_one() ) ?>
@@ -122,6 +121,7 @@
 			</ul>
 			</div>
 			</div>
+			<br class="spacer"/>
 			<p class="buttons">
 				<? echo ( join( "\n",
 					button( 'ShowResults', { onclick=>'f1.submit();', text=>'Show Results' } ),
@@ -136,6 +136,6 @@
 	</div>
 	<input type="hidden" name="btnFunction" />
 </form>
-<? else ( $session{'user_id'} ) ?>
+<? else ( $session{user_id} ) ?>
 Only logged in customers have a project history.
-<? endif ( $session{'user_id'} ) ?>
+<? endif ( $session{user_id} ) ?>

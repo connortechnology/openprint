@@ -1,6 +1,7 @@
 use strict;
 package openprint::imposition;
 use POSIX qw{ ceil };
+use Carp;
 
 require openprint::Imposition;
 
@@ -36,10 +37,12 @@ use vars qw( %blocks );
 sub fit {
 	my ( $object_width, $object_height, $space_width, $space_height ) = @_;
 	my $imp1 = new openprint::Imposition;
+	$$imp1{image_orientation} = 'Vertical';
 	my $imp2 = new openprint::Imposition;
+	$$imp2{image_orientation} = 'Horizontal';
 	calc_setup( $imp1, $object_width, $object_height, $space_width, $space_height );
 	calc_setup( $imp2, $object_height, $object_width, $space_width, $space_height );
-	return $imp1->imposition() > $imp2->imposition() ? $imp1 : $imp2;
+	return $$imp1{imposition} > $$imp2{imposition} ? $imp1 : $imp2;
 } # end sub fit
 
 sub calc_setup {
@@ -59,18 +62,18 @@ sub calc_dutch {
 	my ( $setup, $space_width, $space_height, $specs ) = @_;
 #$openprint::log->debug("Trying dutch:") if DEBUG;
 	my ( $image_width, $image_height );
-	if ( $setup->image_orientation() eq 'Vertical' ) {
-		( $image_width, $image_height ) = $setup->get('image_width','image_height');
+	if ( $$setup{image_orientation} eq 'Vertical' ) {
+		( $image_width, $image_height ) = @$setup{'image_width','image_height'};
 	} else {
-		( $image_width, $image_height ) = reverse $setup->get('image_width','image_height');
+		( $image_width, $image_height ) = @$setup{'image_height','image_width'};
 	} # end if
 
 	my @dutch_imps;
 	my $previous_dutch_imp = 0;
 	# So now we have a non-dutch imp, now
-	foreach my $col_delta ( 0 .. int ( $setup->columns() / 2 ) ) {
+	foreach my $col_delta ( 0 .. int ( $$setup{columns} / 2 ) ) {
 
-		my $col_space = $space_width - ( ($setup->columns() -$col_delta) * $image_width );
+		my $col_space = $space_width - ( ($$setup{columns} -$col_delta) * $image_width );
 		my $dutch_cols = int($col_space / $image_height);
 		my $dutch_rows = int($space_height / $image_width);
 		
@@ -78,44 +81,47 @@ sub calc_dutch {
 		$dutch_imp->set(
 				'dutch_columns'	=>	$dutch_cols,
 				'dutch_rows'	=>	$dutch_rows,
-				'columns'		=>	$setup->columns() - $col_delta,
-				'imposition'	=>	($setup->columns() - $col_delta) * $setup->rows() + ( $dutch_cols * $dutch_rows ),
+				'columns'		=>	$$setup{columns} - $col_delta,
+				'imposition'	=>	($$setup{columns} - $col_delta) * $$setup{rows} + ( $dutch_cols * $dutch_rows ),
 				'dutch_orientation'	=>	'width',
 				);
-		next if $dutch_imp->imposition() <= $setup->imposition();
-		next if $dutch_imp->imposition() <= $previous_dutch_imp;
-		$dutch_imp->paper()->width( $dutch_imp->used_width() ) if ! $dutch_imp->paper()->start_width();
+		next if $$dutch_imp{imposition} <= $$setup{imposition};
+		next if $$dutch_imp{imposition} <= $previous_dutch_imp;
+		if ( ! $dutch_imp->Paper()->start_width() ) {
+			$openprint::log->debug("Setting dutch paper width to " . $dutch_imp->used_width() );
+			$dutch_imp->Paper()->width( $dutch_imp->used_width() );
+		}
 		$dutch_imp->Paper()->height( $dutch_imp->used_height() ) if ! $dutch_imp->Paper()->height();
 
 		if ( check_setup( $dutch_imp, $specs ) ) {
 			push @dutch_imps, $dutch_imp;
-			$previous_dutch_imp = $dutch_imp->imposition();
+			$previous_dutch_imp = $$dutch_imp{imposition};
 		} # end if
 	} # end foreach
 
 	$previous_dutch_imp = 0;
-	foreach my $row_delta ( 0 .. int ( $setup->rows() / 2 ) ) {
+	foreach my $row_delta ( 0 .. int ( $$setup{rows} / 2 ) ) {
 
-		my $row_space = $space_height - ( ($setup->rows() -$row_delta) * $image_height );
+		my $row_space = $space_height - ( ($$setup{rows} -$row_delta) * $image_height );
 		my $dutch_rows = int($row_space / $image_width);
 		my $dutch_cols = int($space_width / $image_height);
 		
 		my $dutch_imp = $setup->copy();
 		$dutch_imp->set(
-				'dutch_columns'	=>	$dutch_cols,
-				'dutch_rows'	=>	$dutch_rows,
-				'rows'			=>	$setup->rows() - $row_delta,
-				'imposition'	=>	($setup->rows() - $row_delta) * $setup->columns() + ( $dutch_cols * $dutch_rows ),
-				'dutch_orientation'	=>	'height',
+				dutch_columns		=>	$dutch_cols,
+				dutch_rows			=>	$dutch_rows,
+				rows				=>	$$setup{rows} - $row_delta,
+				imposition			=>	($$setup{rows} - $row_delta) * $$setup{columns} + ( $dutch_cols * $dutch_rows ),
+				dutch_orientation	=>	'height',
 				);
-		next if $dutch_imp->imposition() <= $setup->imposition();
-		next if $dutch_imp->imposition() <= $previous_dutch_imp;
-		$dutch_imp->paper()->width( $dutch_imp->used_width() ) if ! $dutch_imp->paper()->start_width();
+		next if $$dutch_imp{imposition} <= $$setup{imposition};
+		next if $$dutch_imp{imposition} <= $previous_dutch_imp;
+		$dutch_imp->Paper()->width( $dutch_imp->used_width() ) if ! $dutch_imp->Paper()->start_width();
 		$dutch_imp->Paper()->height( $dutch_imp->used_height() ) if ! $dutch_imp->Paper()->height();
 
 		if ( check_setup( $dutch_imp, $specs ) ) {
 			push @dutch_imps, $dutch_imp;
-			$previous_dutch_imp = $dutch_imp->imposition();
+			$previous_dutch_imp = $$dutch_imp{imposition};
 		} # end if
 	} # end foreach
 	return @dutch_imps;
@@ -125,11 +131,11 @@ sub calc_dutch {
 sub check_setup {
 	my ( $setup, $specs ) = @_;
 
-	return 0 if ! $setup->imposition();
+	return 0 if ! $$setup{imposition};
 if ( 
-( $setup->columns() == 1 ) and 
-( $setup->runstyle() eq 'Perfecting' ) and 
-$setup->perfecting_wheel_space() ) {
+( $$setup{columns} == 1 ) and 
+( $$setup{runstyle} eq 'Perfecting' ) and 
+$$setup{perfecting_wheel_space} ) {
 	$openprint::log->debug("check)setup no good") if DEBUG;
 	return 0;
 }
@@ -245,7 +251,7 @@ $openprint::log->debug("Not Pretrimming on $$Press{strid}") if DEBUG;
 
 	$setup1->quantity( 1 );
 	$$setup1{sides} = $$specs{print_sides};
-	$setup1->paper( $Paper->clone() );
+	$setup1->Paper( $Paper->clone() );
 	$setup1->runstyle( $run_style );
 	$setup1->image_orientation('Vertical');
 	$setup1->spread_size( $$specs{txtSpreadSize} );
@@ -268,7 +274,7 @@ $openprint::log->debug("Not Pretrimming on $$Press{strid}") if DEBUG;
 
 	$setup2->quantity( 1 );
 	$$setup2{sides} = $$specs{print_sides};
-	$setup2->paper( $Paper->clone() );
+	$setup2->Paper( $Paper->clone() );
 	$setup2->runstyle( $run_style );
 	$setup2->image_orientation('Horizontal');
 	$setup2->spread_size( $$specs{txtSpreadSize} );
@@ -327,6 +333,8 @@ $openprint::log->debug("Not Pretrimming on $$Press{strid}") if DEBUG;
 			$setup1->bleed_size( $bindery_bleed );
 			$setup2->bleed_size( $bindery_bleed );
 		} # end if
+		$setup1->folio_lip( $bindery_gutters );
+		$setup2->folio_lip( $bindery_gutters );
 	} elsif ( sets::isin( $$specs{Binding}, ['PerfectBound','SpinePaste'] ) ) {
 		$bindery_gutters = $Press->specification('PerfectBindGutter');
 		$bindery_bleed = $Press->specification('PerfectBindBleed');
@@ -334,6 +342,8 @@ $openprint::log->debug("Not Pretrimming on $$Press{strid}") if DEBUG;
 			$setup1->bleed_size( $bindery_bleed );
 			$setup2->bleed_size( $bindery_bleed );
 		} # end if
+		$setup1->folio_lip( $bindery_gutters );
+		$setup2->folio_lip( $bindery_gutters );
 		$bindery_head = $$specs{PerfectBindCoverGutter};
 	} # end if
 #$openprint::log->debug("Using perfectbind cover gutter: $bindery_head Bindery bleed: $bindery_bleed");
@@ -384,7 +394,7 @@ $openprint::log->debug("Not Pretrimming on $$Press{strid}") if DEBUG;
 #	3. For %setup1, Paper Width is matched to Image Width. eg: For a 22x28 Image on 23x39 sheet would match the 22 IW to the 39 PW and 28 IH to the 22 PW.
 
 	my $gutters = $$specs{Gutter};
-	$gutters = $bindery_gutters if $gutters < $bindery_gutters;
+	#$gutters = $bindery_gutters if $gutters < $bindery_gutters;
 	if ( $bleed_locations{Right} ) {
 		$gutters -= $bleed_size;
 	} # end if
@@ -501,7 +511,7 @@ $openprint::log->debug("Colour bar is now $colour_bar") if DEBUG;
 	$adjusted_paper_width -= $gutters;
 
 	if ( $run_style eq 'Perfecting' and ! $Paper->perfecting() ) {
-		calc_setup( $setup1, $setup1->image_width(), $setup1->image_height(), $adjusted_paper_width, $adjusted_paper_height ? $adjusted_paper_height : $setup1->image_height()  );
+		calc_setup( $setup1, @$setup1{'image_width','image_height'}, $adjusted_paper_width, $adjusted_paper_height ? $adjusted_paper_height : $$setup1{image_height} );
 		my $wheel_space;
 		if ( $$setup1{columns} % 2 ) {
 			$wheel_space = $$specs{'Perfecting Double Gutter Size'};
@@ -531,7 +541,7 @@ $openprint::log->debug("Using Single wheel space $$specs{'Perfecting Single Gutt
 
 
 	if ( ( ! $paper_width ) or ( $$specs{'Maximum Image Area Width'} > 0 and $adjusted_paper_width > $$specs{'Maximum Image Area Width'} ) ) {
-		$openprint::log->debug("*** Using Max Image Width1: $adjusted_paper_width > $$specs{'Maximum Image Area Width'}***") if DEBUG;
+		$openprint::log->debug("*** Using Max Image Width1: paper_width: $paper_width adj paper width: $adjusted_paper_width > $$specs{'Maximum Image Area Width'}***") if DEBUG;
 		$adjusted_paper_width = $$specs{'Maximum Image Area Width'};
 	} # end if
 	if ( $$specs{'Colour Bar Orientation'} eq 'Length' ) {
@@ -546,66 +556,63 @@ $openprint::log->debug("Using Single wheel space $$specs{'Perfecting Single Gutt
 	$openprint::log->debug("P Width gutters: $adjusted_paper_width") if DEBUG;
 
 	if ( sets::isin( $run_style, ['Perfecting','Sheet Work','Web'] ) ) {
-		calc_setup( $setup1, $setup1->image_width(), $setup1->image_height(), $adjusted_paper_width, $adjusted_paper_height ? $adjusted_paper_height : $setup1->image_height()  );
-		$openprint::log->debug(" CHECK 1 Upright $run_style Using Paper $paper_width x $paper_height -> $adjusted_paper_width x $adjusted_paper_height Gutter: $gutters, Image: $$setup1{image_width} x $$setup1{image_height} Imposition: " . $setup1->imposition(). ":".$setup1->columns() . 'x' . $setup1->rows(). " $run_style " . $setup1->layout_width(undef) . 'x' . $setup1->layout_height() ) if DEBUG;
-		$setup1->Paper()->height( $setup1->used_height() ) if ! $setup1->Paper()->height();
-		$setup1->Paper()->width( $setup1->used_width() ) if ! $setup1->Paper()->width();
+		calc_setup( $setup1, @$setup1{'image_width','image_height'}, $adjusted_paper_width, $adjusted_paper_height ? $adjusted_paper_height : $$setup1{image_height} );
+		$openprint::log->debug(" CHECK 1 Upright $run_style Using Paper $paper_width x $paper_height -> $adjusted_paper_width x $adjusted_paper_height Gutter: $gutters, Image: $$setup1{image_width} x $$setup1{image_height} Imposition: " . $$setup1{imposition}. ":".$$setup1{columns} . 'x' . $$setup1{rows}. " $run_style " . $setup1->layout_width(undef) . 'x' . $setup1->layout_height() ) if DEBUG;
+
+		my $Paper1 = $setup1->Paper();
+
+		$Paper1->height( $setup1->used_height() ) if ! $$Paper1{height};
+		$Paper1->width( $setup1->used_width() ) if ! $$Paper1{width};
 		if ( check_setup( $setup1, $specs ) ) {
-			$openprint::log->debug(" CHECK 1 $run_style Using Paper $paper_width x $paper_height -> $adjusted_paper_width x $adjusted_paper_height Gutter: $gutters, Image: $$setup1{image_width} x $$setup1{image_height} Imposition: " . $setup1->imposition(). ":".$setup1->columns() . 'x' . $setup1->rows(). " $run_style " . $setup1->layout_width() . 'x' . $setup1->layout_height() ) if DEBUG;
+			$openprint::log->debug("Success CHECK 1 $run_style Using Paper $paper_width x $paper_height -> $adjusted_paper_width x $adjusted_paper_height Gutter: $gutters, Image: $$setup1{image_width} x $$setup1{image_height} Imposition: " . $$setup1{imposition}. ":".$$setup1{columns} . 'x' . $$setup1{rows}. " $run_style " . $setup1->layout_width() . 'x' . $setup1->layout_height() ) if DEBUG;
 			push @results, $setup1;
 			if ( ( $$specs{dutch} ne 'N' ) and ( $run_style ne 'Perfecting' or $Paper->perfecting() or $$specs{PerfectingDutchByDefault} or ( $$specs{OverrideRunStyle} and $$specs{OverrideImposition} ) ) ) {
 				# Too hard to figure space for rollers
+$openprint::log->debug("add dutches");
 				push @results, calc_dutch( $setup1, $adjusted_paper_width, $adjusted_paper_height, $specs );
 			} else {
 $openprint::log->debug("Not doing dutch because ($$specs{dutch}) or $run_style or $$Paper{perfecting}") if DEBUG;
 			} # end if
-			if ( ! $setup1->Paper()->width() ) {
-				$setup1->Paper()->width( $setup1->used_width() );
-			} # end if
-			$setup1->Paper()->height( $setup1->used_height() ) if ! $setup1->Paper()->height();
 		} # end if check_setup
 	} elsif ( $run_style eq 'Work & Turn' ) {
-		calc_setup( $setup1, $setup1->image_width(), $setup1->image_height(), $adjusted_paper_width/2, $adjusted_paper_height );
+		calc_setup( $setup1, @$setup1{'image_width','image_height'}, $adjusted_paper_width/2, $adjusted_paper_height );
 		$openprint::log->debug( sprintf('CHECK 1 Work&Turn Using Paper %sx%s -> %s x %s Image: %s x %s Imposition: %dout:%dx%d ',$paper_width, $paper_height, $adjusted_paper_width/2, $adjusted_paper_height, $setup1->image_width(), $setup1->image_height(), $setup1->imposition(), $setup1->columns(), $setup1->rows() ) ) if DEBUG;
 
-		if ( $setup1->imposition() ) {
+		if ( $$setup1{imposition} ) {
 			if ( $$specs{dutch} ne 'N' ) {
 				foreach my $imp ( calc_dutch( $setup1, $adjusted_paper_width/2, $adjusted_paper_height, $specs ) ) {
-					$imp->columns( $imp->columns() * 2 );
-					$imp->dutch_columns( $imp->dutch_columns() * 2 );
-					$imp->paper()->width( $imp->used_width() ) if ! $imp->paper()->start_width();
+					$imp->columns( $$imp{columns} * 2 );
+					$imp->dutch_columns( $$imp{dutch_columns} * 2 );
+					$imp->Paper()->width( $imp->used_width() ) if ! $imp->Paper()->start_width();
 					$openprint::log->debug( sprintf('CHECK 1 Work&Turn Dutch Using Paper %sx%s -> %sx%s Image: %s x %s Imposition: %dout:%dx%d+%dx%d',$paper_width, $paper_height, $adjusted_paper_width/2, $adjusted_paper_height, $setup1->image_width(), $setup1->image_height(), $imp->imposition(), $imp->columns(), $imp->rows(), $imp->dutch_columns(), $imp->dutch_rows() ) ) if DEBUG;
 					push @results, $imp;
 				} # end foreach
 			} # end if grain_direction
-			$setup1->columns( $setup1->columns() * 2 );
-			if ( ! $setup1->paper()->width() ) {
-				$setup1->paper()->width( $setup1->used_width()*2 );
+			$setup1->columns( $$setup1{columns} * 2 );
+			if ( ! $setup1->Paper()->width() ) {
+				$setup1->Paper()->width( $setup1->used_width()*2 );
 			} # end if
 			$setup1->Paper()->height( $setup1->used_height() ) if ! $setup1->Paper()->height();
 			push @results, $setup1;
 		} # end if imposition
 	} elsif ( $run_style eq 'Work & Tumble' ) {
-		calc_setup( $setup1, $setup1->image_width(), $setup1->image_height(), $adjusted_paper_width, $adjusted_paper_height/2 );
-		$openprint::log->debug( sprintf('CHECK 1 Work&TumbleUsing Paper %sx%s -> %sx%s Image: %s x %s Imposition: %dout:%dx%d ',$paper_width, $paper_height, $adjusted_paper_width, $adjusted_paper_height/2, $setup1->image_width(), $setup1->image_height(), $setup1->imposition(), $setup1->columns(), $setup1->rows() ) ) if DEBUG;
-		if ( $setup1->imposition() ) {
-
+		calc_setup( $setup1, @$setup1{'image_width','image_height'}, $adjusted_paper_width, $adjusted_paper_height/2 );
+		$openprint::log->debug( sprintf('CHECK 1 Work&TumbleUsing Paper %sx%s -> %sx%s Image: %s x %s Imposition: %dout:%dx%d ',$paper_width, $paper_height, $adjusted_paper_width, $adjusted_paper_height/2, @$setup1{'image_width','image_height','imposition', 'columns','rows'} ) ) if DEBUG;
+		if ( $$setup1{imposition} ) {
 
 			if ( $$specs{dutch} ne 'N' ) {
 				foreach my $imp ( calc_dutch( $setup1, $adjusted_paper_width, $adjusted_paper_height/2, $specs ) ) {
-					$imp->rows( $imp->rows() * 2 );
-					$imp->dutch_rows( $imp->dutch_rows() * 2 );
+					$imp->rows( $$imp{rows} * 2 );
+					$imp->dutch_rows( $$imp{dutch_rows} * 2 );
 					$imp->Paper()->height( $imp->used_height() ) if ! $imp->Paper()->height();
 					$openprint::log->debug( sprintf('CHECK 1 Work&Tumble Dutch Using Paper %sx%s -> %sx%s Image: %s x %s Imposition: %dout:%dx%d+%dx%d',$paper_width, $paper_height, $adjusted_paper_width/2, $adjusted_paper_height, $image_width, $image_height, $imp->imposition(), $imp->columns(), $imp->rows(), $imp->dutch_columns(), $imp->dutch_rows() ) ) if DEBUG;
-					if ( $setup1->imposition() ) {
-						push @results, $imp;
-					} # end if
+					push @results, $imp;
 				} # end foreach
 			} # end if grain_direction
-			$setup1->rows( $setup1->rows() * 2 );
+			$setup1->rows( $$setup1{rows} * 2 );
 			$setup1->Paper()->width( $setup1->used_width() ) if ! $setup1->Paper()->width();
 			$setup1->Paper()->height( $setup1->used_height() ) if ! $setup1->Paper()->height();
-			push @results, $setup1 if $setup1->imposition();
+			push @results, $setup1 if $$setup1{imposition};
 		} # end if imposition
 	} # end if run_style
 
@@ -630,7 +637,7 @@ $openprint::log->debug("Not doing dutch because ($$specs{dutch}) or $run_style o
 	} elsif ( $$specs{'Cut Off'} ) {
 		$openprint::log->debug("Using Cut Off : $$specs{'Cut Off'}") if DEBUG;
 		$adjusted_paper_height = $$specs{'Cut Off'};
-		$setup2->paper()->height( $$specs{'Cut Off'} );
+		$setup2->Paper()->height( $$specs{'Cut Off'} );
 		$setup2->stock_height( $$specs{'Cut Off'} );
 	} # end if
 
@@ -720,7 +727,7 @@ $openprint::log->debug("Not doing dutch because ($$specs{dutch}) or $run_style o
 	if ( $run_style eq 'Perfecting' and ! $Paper->perfecting() ) {
 
 		# This will calc an initial imposition.  It will get updated later.
-		calc_setup( $setup2, $setup2->image_height(), $setup2->image_width(), $adjusted_paper_width, $adjusted_paper_height ? $adjusted_paper_height : $setup2->image_width() );
+		calc_setup( $setup2, @$setup2{'image_height','image_width'}, $adjusted_paper_width, $adjusted_paper_height ? $adjusted_paper_height : $$setup2{image_width} );
         my $wheel_space;
         if ( $$setup2{columns} % 2 ) {
             $wheel_space = $$specs{'Perfecting Double Gutter Size'};
@@ -762,14 +769,14 @@ $openprint::log->debug("Using Single wheel space $$specs{'Perfecting Single Gutt
 		$adjusted_paper_width = 0 if $adjusted_paper_width < 0;
 	} # end if
 
+	my $Paper2 = $setup2->Paper();
+
 	if ( sets::isin( $run_style, ['Perfecting','Sheet Work','Web'] ) ) {
-		calc_setup( $setup2, $setup2->image_height(), $setup2->image_width(), $adjusted_paper_width, $adjusted_paper_height ? $adjusted_paper_height : $setup2->image_width() );
-
-
+		calc_setup( $setup2, @$setup2{'image_height','image_width'}, $adjusted_paper_width, $adjusted_paper_height ? $adjusted_paper_height : $$setup2{image_width} );
 
 		$openprint::log->debug(" CHECK 2 $run_style Using Paper $paper_width x $paper_height -> $adjusted_paper_width x $adjusted_paper_height Gutter: $gutters, Image: $$setup2{image_width} x $$setup2{image_height} Imposition: " . $setup2->imposition(). ":".$setup2->columns() . 'x' . $setup2->rows(). " $run_style") if DEBUG;
-		$setup2->Paper()->width( $setup2->used_width() ) if ! $setup2->Paper()->width();
-		$setup2->Paper()->height( $setup2->used_height() ) if ! $setup2->Paper()->height();
+		$Paper2->width( $setup2->used_width() ) if ! $$Paper2{width};
+		$Paper2->height( $setup2->used_height() ) if ! $$Paper2{height};
 		if ( check_setup( $setup2, $specs ) ) {
 			if ( $run_style eq 'Perfecting' ) {
 				$setup2->perfecting_wheel_space( $$setup1{imposition} % 2 ? $$specs{'Perfecting Double Gutter Size'} : $$specs{'Perfecting Single Gutter Size'} );
@@ -786,40 +793,41 @@ $openprint::log->debug("Using Single wheel space $$specs{'Perfecting Single Gutt
 			$openprint::log->debug(' failed check_setup');
 		} # end if
 	} elsif ( $run_style eq 'Work & Turn' ) {
-		calc_setup( $setup2, $setup2->image_height(), $setup2->image_width(), $adjusted_paper_width/2, $adjusted_paper_height );
-		$openprint::log->debug( sprintf('CHECK 2 Work&Turn Using Paper %sx%s -> %sx%s Image: %s x %s Imposition: %dout:%dx%d',$paper_width, $paper_height, $adjusted_paper_width/2, $adjusted_paper_height, $setup2->image_height(), $setup2->image_width(), $setup2->imposition(), $setup2->columns(), $setup2->rows() ) ) if DEBUG;
-		if ( $setup2->imposition() ) {
+		calc_setup( $setup2, @$setup2{'image_height','image_width'}, $adjusted_paper_width/2, $adjusted_paper_height );
+		$openprint::log->debug( sprintf('CHECK 2 Work&Turn Using Paper %sx%s -> %sx%s Image: %s x %s Imposition: %dout:%dx%d',$paper_width, $paper_height, $adjusted_paper_width/2, $adjusted_paper_height, @$setup2{'image_height','image_width','imposition','columns','rows'} ) ) if DEBUG;
+		if ( $$setup2{imposition} ) {
 			if ( $$specs{dutch} ne 'N' ) {
 				foreach my $imp ( calc_dutch( $setup2, $adjusted_paper_width/2, $adjusted_paper_height, $specs ) ) {
-					$imp->columns( $imp->columns() * 2 );
-					$imp->dutch_columns( $imp->dutch_columns() * 2 );
-					$imp->paper()->width( $imp->used_width() ) if ! $imp->paper()->start_width();
+					$imp->columns( $$imp{columns} * 2 );
+					$imp->dutch_columns( $$imp{dutch_columns} * 2 );
+					$imp->Paper()->width( $imp->used_width() ) if ! $imp->Paper()->start_width();
 					$openprint::log->debug( sprintf('CHECK 2 Work&Turn Dutch Using Paper %sx%s -> %sx%s Image: %s x %s Imposition: %dout:%dx%d+%dx%d',$paper_width, $paper_height, $adjusted_paper_width, $adjusted_paper_height/2, $setup2->image_height(), $setup2->image_width(), $imp->imposition(), $imp->columns(), $imp->rows(), $imp->dutch_columns(), $imp->dutch_rows() ) ) if DEBUG;
 					push @results, $imp;
 				} # end foreach
 			} # end if grain_direction
-			$setup2->columns( $setup2->columns() * 2 );
-			$setup2->Paper()->width( $setup2->used_width() ) if ! $setup2->Paper()->width();
-			$setup2->Paper()->height( $setup2->used_height() ) if ! $setup2->Paper()->height();
-			push @results, $setup2 if $setup2->imposition();
+			$setup2->columns( $$setup2{columns} * 2 );
+			$Paper2->width( $setup2->used_width() ) if ! $$Paper2{width};
+			$Paper2->height( $setup2->used_height() ) if ! $$Paper2{height};
+			push @results, $setup2;
 		} # end if imposition
 	} elsif ( $run_style eq 'Work & Tumble' ) {
-		calc_setup( $setup2, $setup2->image_height(), $setup2->image_width(), $adjusted_paper_width, $adjusted_paper_height/2 );
+		calc_setup( $setup2, @$setup2{'image_height','image_width'}, $adjusted_paper_width, $adjusted_paper_height/2 );
 		$openprint::log->debug( sprintf('CHECK 2 Work&Tumble Using Paper %sx%s -> %sx%s Image: %s x %s Imposition: %dout:%dx%d ',$paper_width, $paper_height, $adjusted_paper_width, $adjusted_paper_height/2, $setup2->image_height(), $setup2->image_width(), $setup2->imposition(), $setup2->columns(), $setup2->rows()) ) if DEBUG;
-		if ( $setup2->imposition() ) {
+		if ( $$setup2{imposition} ) {
+
 			if ( $$specs{dutch} ne 'N' ) {
 				foreach my $imp ( calc_dutch( $setup2, $adjusted_paper_width, $adjusted_paper_height/2, $specs ) ) {
-					$imp->rows( $imp->rows() * 2 );
-					$imp->dutch_rows( $imp->dutch_rows() * 2 );
+					$imp->rows( $$imp{rows} * 2 );
+					$imp->dutch_rows( $$imp{dutch_rows} * 2 );
 					$imp->Paper()->height( $imp->used_height() ) if ! $imp->Paper()->height();
 					$openprint::log->debug( sprintf('CHECK 2 Work&Tumble Dutch Using Paper %sx%s->%sx%s Image: %s x %s Imposition: %dout:%dx%d+%dx%d',$paper_width, $paper_height, $adjusted_paper_width, $adjusted_paper_height/2, $imp->image_height(), $imp->image_width(), $imp->imposition(), $imp->columns(), $imp->rows(), $imp->dutch_columns(), $imp->dutch_rows() ) ) if DEBUG;
-					push @results, $imp if $setup2->imposition();
+					push @results, $imp;
 				} # end foreach imposition
 			} # end if grain_direction
-			$setup2->rows( $setup2->rows() * 2 );
-			$setup2->Paper()->width( $setup2->used_width() ) if ! $setup2->Paper()->width();
-			$setup2->Paper()->height( $setup2->used_height() ) if ! $setup2->Paper()->height();
-			push @results, $setup2 if $setup2->imposition();
+			$setup2->rows( $$setup2{rows} * 2 );
+			$Paper2->width( $setup2->used_width() ) if ! $$Paper2{width};
+			$Paper2->height( $setup2->used_height() ) if ! $$Paper2{height};
+			push @results, $setup2;
 		} # end if imposition
 	} # end if run_style
 	return @results;
@@ -835,8 +843,9 @@ sub get_imposition {
 	push @styles, 'Work & Turn', 'Work & Tumble' if $do_work_turn;
 	push @styles, 'Perfecting' if $do_perfecting;
 	if ( $$project{Runstyles} ) {
-		$openprint::log->debug(" *1* Run Styles to consider for $$Press{strid}: @styles ** $$project{Runstyles} $do_perfecting") if DEBUG;
+		$openprint::log->debug(" *1* Run Styles to consider for $$Press{strid}: style:@styles ** Available runstyle:$$project{Runstyles} perfecting:$do_perfecting") if DEBUG;
 		@styles = sets::intersection( @styles, misc::trim(split(',', $$project{Runstyles} ) ) );
+		$openprint::log->debug(" *1* Resulting Run Styles to consider for $$Press{strid}: style:@styles") if DEBUG;
 	} # end if
 	#$openprint::log->debug(" *2* Run Styles to consider for $$Press{strid}: @styles **") if DEBUG;
 
@@ -852,6 +861,8 @@ sub add_imposition {
 	foreach my $run_style ( @styles ) {
 		$openprint::log->debug(" ** Processing Run Style: $run_style on $$Paper{width} x $$Paper{height} CutOff: $$project{'Cut Off'}**") if DEBUG;
 
+		my $wt = $run_style =~ /^Work/;
+
 		if ( ! $Paper->cuttable() ) {
 			if ( ! sets::isin( $run_style, ['Web','Sheet Work','Perfecting'] ) ) {
 				$openprint::log->debug("$run_style not possible when stock not cuttable") if DEBUG;
@@ -862,19 +873,19 @@ sub add_imposition {
 			#push @impositions, {'Imposition' => 1, 'Rows' => 1, 'Cols' => 1 };
 			foreach my $bleed_size ( $$project{BleedSize} ? split(',', $$project{BleedSize} ) : 0 ) {
 				foreach my $i ( calc_setup_object( $project, @$project{'image_width','image_height'}, $Paper, $run_style, $Press, $bleed_size ) ) {
-					next if $i->imposition() != 1;
+					next if $$i{imposition} != 1;
 					push @impositions, $i;
 				} # end foreach
 			} # end foreach bleed
 			next;
-		} elsif ( ($Paper->type() eq 'Roll') and ($Press->specification('W&TonRoll') eq 'N') and sets::isin( $run_style, ['Work & Turn','Work & Tumble'] ) ) {
+		} elsif ( ($$Paper{type} eq 'Roll') and $wt and ($Press->specification('W&TonRoll') eq 'N') ) {
 			next;
 		} # end if
 
 		foreach my $bleed_size ( $$project{BleedSize} ? split(',', $$project{BleedSize} ) : 0 ) {
 			foreach my $i ( calc_setup_object( $project, @$project{'image_width','image_height'}, $Paper, $run_style, $Press, $bleed_size ) ) {
-				if ( sets::isin( $run_style, ['Work & Turn','Work & Tumble']) ) {
-					if ( ($versions * 2) > $i->imposition() ) {
+				if ( $wt ) {
+					if ( $versions and ( ($versions * 2) > $$i{imposition} ) ) {
 #$log->debug("Nixing imposition because W&T needds 2* versions > imposition");
 						next;
 					} # end if
@@ -1011,8 +1022,8 @@ $imp->display("Converting From Desired: $desired_signature_size impo: $impo From
 #Now figure out how to cut up the imposition
 $openprint::log->debug("Considering sig size: $signature_size") if DEBUG_CONVERT;
 			my ( $rows, $cols );
-			my $imp_rows = $imp->rows();
-			my $imp_cols = $imp->columns();
+			my $imp_rows = $$imp{rows};
+			my $imp_cols = $$imp{columns};
 			foreach my $block ( @{$blocks{$signature_size}} ) {
 				my ( $col, $row ) = @$block;
 			
@@ -1024,27 +1035,27 @@ $openprint::log->debug("Considering sig size: $signature_size") if DEBUG_CONVERT
 				$openprint::log->debug("Trying $signature_size: IMP: $imp_cols x $imp_rows BLOCK: $col x $row Got $cols x $rows") if DEBUG_CONVERT;
 				$openprint::log->debug("Trying $col x $row Got $cols x $rows") if DEBUG_CONVERT;
 				next if ! ( $rows and $cols );
-				next if ( $cols % 2 and $imp->runstyle() eq 'Work & Turn' );
-				next if ( $rows % 2 and $imp->runstyle() eq 'Work & Tumble' );
+				next if ( $cols % 2 and $$imp{runstyle} eq 'Work & Turn' );
+				next if ( $rows % 2 and $$imp{runstyle} eq 'Work & Tumble' );
 
 				my $newimp = $imp->copy();
 
 				$newimp->rows($rows);
-				$newimp->start_rows($rows);
+				$$newimp{start_rows} = $rows;
 				$newimp->columns($cols);
-				$newimp->start_columns($cols);
-				$newimp->imposition($rows * $cols);
-				if ( $newimp->image_orientation() eq 'Vertical' ) {
-					$newimp->image_width( $newimp->image_width() * $col );
-					$newimp->image_height( $newimp->image_height() * $row );
+				$$newimp{start_columns} = $cols;
+				#$newimp->imposition($rows * $cols);
+				if ( $$newimp{image_orientation} eq 'Vertical' ) {
+					$newimp->image_width( $$newimp{image_width} * $col );
+					$newimp->image_height( $$newimp{image_height} * $row );
 				} else {
-					$newimp->image_width( $newimp->image_width() * $row );
-					$newimp->image_height( $newimp->image_height() * $col );
+					$newimp->image_width( $$newimp{image_width} * $row );
+					$newimp->image_height( $$newimp{image_height} * $col );
 				} # end if
 				$newimp->spread_columns( $col );
 				$newimp->spread_rows( $row );
 				$openprint::log->debug("To: $imp->{columns}x$imp->{rows}=$imp->{imposition} $imp->{runstyle} $imp->{image_width}x$imp->{image_height} $imp->{layout_width}x$imp->{layout_height}") if DEBUG_CONVERT;
-				push @imps, $newimp;
+				push @imps, $newimp if ( $newimp->layout_width() < $newimp->sheet_width() and $newimp->layout_height() < $newimp->sheet_height() );
 #$newimp->display();
 			} # end foreach block
 			#last if @imps and (@imps[@imps-1]->imposition() >= 4);
@@ -1059,68 +1070,63 @@ sub decrease_imposition {
 	my @results;
 
 	foreach my $imposition ( @_ ) {
-		next if ( ($imposition->columns() * $imposition->rows()) <= 1 );
+		next if ( ($$imposition{columns} * $$imposition{rows}) <= 1 );
 
-		if ( $imposition->dutch_columns() ) {
+		if ( $$imposition{dutch_columns} ) {
 			my $imp1 = $imposition->copy();
 			$imp1->dutch_rows( 0 );
 			$imp1->dutch_columns( 0 );
-			if ( $imp1->imposition() ) {
-				push @results, $imp1;
-			} # end if
+			push @results, $imp1;
 
 			my $imp2 = $imp1->copy();
-			$imp2->columns( $imposition->dutch_columns() );
-			$imp2->rows( $imposition->dutch_rows() );
-			if ( $imp2->imposition() ) {
-				push @results, $imp2;
-			} # end if
+			$imp2->columns( $$imposition{dutch_columns} );
+			$imp2->rows( $$imposition{dutch_rows} );
+			push @results, $imp2;
+		} elsif ( $$imposition{runstyle} eq 'Work & Turn' ) {
+			#if ( $$imposition{columns} >= 2 ) {
+					my $imp1 = $imposition->copy();
+					$imp1->runstyle( 'Sheet Work' );
+					$imp1->columns( $$imp1{columns} / 2 );
+					push @results, $imp1;
+			#
+			#f ( $$imposition{rows} >= 2 ) {
+			#foreach my $row ( 2 .. $$imposition{rows} ) {
+			#	my $imp1 = $imposition->copy();
+			#	$imp1->rows( $$imp1{rows} - ( $row -1 ) );
+			#	push @results, $imp1;
+			#} # end foraech
+			# # end if
+		} elsif ( $$imposition{runstyle} eq 'Work & Tumble' ) {
+			#if ( $$imposition{rows} >= 2 ) {
+				my $imp1 = $imposition->copy();
+					$imp1->runstyle( 'Sheet Work' );
+				$imp1->rows( $$imp1{rows} / 2 );
+				push @results, $imp1;
+			#} # end foraech
+			#if ( $$imposition{columns} >= 2 ) {
+				#foreach my $columns ( 2 .. $$imposition{columns} ) {
+					##my $imp2 = $imposition->copy();
+					#$imp2->columns( $$imp2{columns} - ( $columns -1 ) );
+					#push @results, $imp2;
+				#}
+			#} # end if
+
 		} else {
 
-			if ( $imposition->rows() >= 2 ) {
-				my $imp1 = $imposition->copy();
-				$imp1->rows( int ( $imp1->rows()/2 ) );
-				if ( $imp1->imposition() ) {
+			if ( $$imposition{rows} >= 2 ) {
+				foreach my $row ( 2 .. $$imposition{rows} ) {
+					my $imp1 = $imposition->copy();
+					$imp1->rows( $$imp1{rows} - ( $row -1 ) );
 					push @results, $imp1;
-				} # end if
-				if ( $imposition->rows() % 2 ) {
-					my $imp2 = $imposition->copy();
-					$imp2->rows( $imp2->rows() - $imp1->rows() );
-					if ( $imp2->imposition() ) {
-						push @results, $imp2;
-					} # end if
-				} 
-
-				if ( $imp1->rows() != $imposition->rows() - 1 ) {
-					my $imp4 = $imposition->copy();
-					$imp4->rows( $imp4->rows()-1 );
-					if ( $imp4->imposition() ) {
-						push @results, $imp4;
-					} # end if
-				} # end if
+				} # end foraech
 			} # end if
 
-			if ( $imposition->columns() >= 2 ) {
-				my $imp2 = $imposition->copy();
-				$imp2->columns( int ( $imp2->columns()/2 ) );
-				if ( $imp2->imposition() ) {
+			if ( $$imposition{columns} >= 2 ) {
+				foreach my $columns ( 2 .. $$imposition{columns} ) {
+					my $imp2 = $imposition->copy();
+					$imp2->columns( $$imp2{columns} - ( $columns -1 ) );
 					push @results, $imp2;
-				} # end if
-				if ( $imposition->columns() % 2 ) {
-					my $imp3 = $imposition->copy();
-					$imp3->columns( $imp3->columns() - $imp2->columns() );
-					if ( $imp3->imposition() ) {
-						push @results, $imp3;
-					} # end if
-				} 
-			
-				if ( $imp2->columns() != $imposition->columns() - 1 ) {
-					my $imp3 = $imposition->copy();
-					$imp3->columns( $imp3->columns()-1 );
-					if ( $imp3->imposition() ) {
-						push @results, $imp3;
-					} # end if
-				} # end if
+				}
 			} # end if
 
 		} # end if
@@ -1130,10 +1136,16 @@ sub decrease_imposition {
 } # end sub decrease_imposition
 
 sub get_all_impositions {
+#Carp::cluck("Really don't want to use get_all_impositions");
 #map { $openprint::log->debug( $_ ) } @_;
-	my @imps = decrease_imposition( @_ );
-	@imps = get_all_impositions( @imps ) if @imps;
-	return (@_, @imps);
+	my @results = @_;
+	my @imps = @_;
+
+	while ( @imps = decrease_imposition( @imps ) ) {
+		#@imps = get_all_impositions( @imps );
+		push @results, @imps;
+	}
+	return @results;
 }
 
 sub breakup_impositions {
@@ -1221,35 +1233,35 @@ sub cut {
 		$i2->dutch_rows( 0 );
 		$i2->dutch_columns( 0 );
 		push @Results, $i1, $i2;
-	} elsif ( $I->layout_width() >= $I->layout_height() and $I->columns() > 1 ) {
-		$i1->columns( int($I->columns() / 2) );
-		if ( ! ( $I->columns() % 2 ) ) {
+	} elsif ( $I->layout_width() >= $I->layout_height() and $$I{columns} > 1 ) {
+		$i1->columns( int($$I{columns} / 2) );
+		if ( ! ( $$I{columns} % 2 ) ) {
 			$i1->quantity( $i1->quantity() * 2 );
 			push @Results, $i1;
 		} else {
 			my $i2 = $I->copy();
-			$i2->columns( $I->columns() - $i1->columns() );
+			$i2->columns( $$I{columns} - $$i1{columns} );
 			push @Results, $i1, $i2;
 		} # end if
-	} elsif ( $I->layout_width() < $I->layout_height() and $I->rows() > 1 ) {
-		$i1->rows( int($I->rows() / 2) );
-		if ( ! ( $I->rows() % 2 ) ) {
+	} elsif ( $I->layout_width() < $I->layout_height() and $$I{rows} > 1 ) {
+		$i1->rows( int($$I{rows} / 2) );
+		if ( ! ( $$I{rows} % 2 ) ) {
 			$i1->quantity( $i1->quantity() * 2 );
 			push @Results, $i1;
 		} else {
 			my $i2 = $I->copy();
-			$i2->rows( $I->rows() - $i1->rows() );
+			$i2->rows( $$I{rows} - $$i1{rows} );
 			push @Results, $i1, $i2;
 		} # end if
-	} elsif ( $I->columns() >= $I->rows() ) {
+	} elsif ( $$I{columns} >= $$I{rows} ) {
 		my $i2 = $I->copy();
-		$i1->columns( int($I->columns() / 2) );
-		$i2->columns( $I->columns() - $i1->columns() );
+		$i1->columns( int($$I{columns} / 2) );
+		$i2->columns( $$I{columns} - $$i1{columns} );
 		push @Results, $i1, $i2;
 	} else {
 		my $i2 = $I->copy();
-		$i1->rows( int($I->rows() / 2) );
-		$i2->rows( $I->rows() - $i1->rows() );
+		$i1->rows( int($$I{rows} / 2) );
+		$i2->rows( $$I{rows} - $$i1{rows} );
 		push @Results, $i1, $i2;
 	} # end if
 	foreach my $i ( @Results ) {
@@ -1257,6 +1269,25 @@ $i->display('Cut to ');
 	}
 	return @Results;
 } # end sub cut_imposition
+# Takes an array of impositions(Folds) and merges duplicates. 
+sub compact {
+    my @results;
+    while ( @_ ) {
+        my $Imposition = shift @_;
+        $Imposition = $Imposition->copy();
+        push @results, $Imposition;
+
+        for ( my $index = 0; $index < @_; $index += 1 ) {
+            if ( $$Imposition{imposition} == $_[$index]{imposition} and $$Imposition{spreads} == $_[$index]{spreads} ) {
+                $$Imposition{quantity} += $_[$index]->quantity();
+                splice @_, $index, 1;
+                $index -= 1;
+            } # end if
+        } # end for each index
+    } # end while @_
+    return @results;
+} # end sub compact_impositions
+
 
 
 1;

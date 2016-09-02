@@ -5,3 +5,4 @@ CREATE TABLE ProjectType_Defaults (
 		value         TEXT
 		);
 
+create index projecttype_defaults_projecttype_id_idx on projecttype_defaults (projecttype_id);

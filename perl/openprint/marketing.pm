@@ -44,7 +44,19 @@ sub email_campaigns {
 	} # end if
 
 	$variable{campaign_id} = $Campaign->id();
+	ssi::setup_date_select( $r->uri(), 'called_on_start', -30 );
+	ssi::setup_date_select( $r->uri(), 'called_on_end', '' );
+	$session{'/marketing/email_campaigns.html?deleted'} = '0' if ! $session{'/marketing/email_campaigns.html?deleted'};
 } # end sub email_campaigns
+
+sub _email_campaigns {
+
+	    ssi::save_params( '/marketing/email_campaigns.html', (
+                ( map { 'called_on_start_' . $_ } ( 'year','month','day' ) ),
+                ( map { 'called_on_end_' . $_ } ( 'year','month','day' ) ),
+				'user_id', 'deleted', 'active',
+		) );
+} # end sub _email_campaigns
 
 sub categories {
 
@@ -127,6 +139,9 @@ sub survey_responses {
     } # end if
 } # end sub survey_responses
 
+sub _email_template_body {
+	my $Template = $variable{Template} = new openprint::EmailTemplate( $param{template_id}) ;
+}
 sub email_template {
 	require openprint::EmailTemplate;
 
@@ -139,6 +154,11 @@ sub email_template {
 		$Template->save( \%param );
 	} # end if
 	$variable{Template} = $Template;
+
+	# These are for template preview
+	$variable{User} = $openprint::User;
+	$variable{Campaign} = new openprint::EmailCampaign();
+	$variable{Email} = new openprint::Email();
 } # end sub email_campaign
 
 sub email_templates {

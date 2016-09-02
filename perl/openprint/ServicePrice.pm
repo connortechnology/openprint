@@ -24,7 +24,7 @@ $serial = 'service_prices_id_seq';
 	markup			=>	'markup',
 	price			=>	'price',
 	discountable	=>	'discountable',
-	interpolate		=>	'interpolate',
+	mode			=>	'mode',
 	supplier_id		=>	'supplier_id',
 	period_start	=>	'period_start',
 	period_end		=>	'period_end',
@@ -38,8 +38,8 @@ $serial = 'service_prices_id_seq';
 	cost	=>	undef,
 	markup	=>	undef,
 	price			=>	undef,
-	discountable	=>	1,
-	interpolate		=>	0,
+	discountable	=>	q`'Y'`,
+	mode			=>	undef,
 	period_start    =>  undef,
 	period_end      =>  undef,
 	supplier_id		=>	undef,
@@ -59,39 +59,56 @@ sub next {
 } # end sub next
 
 sub Pricelist {
-	return new openprint::Pricelist( $_[0]{'pricelist_id'} );
+	return new openprint::Pricelist( $_[0]{pricelist_id} );
 }
 sub Equipment {
-	return new openprint::Equipment( $_[0]{'equipment_id'} );
+	return new openprint::Equipment( $_[0]{equipment_id} );
 }
 sub Service {
-	return new openprint::Service( $_[0]{'service_id'} );
+	return new openprint::Service( $_[0]{service_id} );
 }
 
 sub price {
     if ( @_ > 1 ) {
-        $_[0]{'price'} = $_[1];
+        $_[0]{price} = $_[1];
     } # end if
-    if ( ! defined $_[0]{'price'} ) {
-        $_[0]{'price'} = $_[0]{markup} ? Math::Round::nearest( 0.01, $_[0]{'cost'} * ( 1+($_[0]{'markup'}/100) ) ) : $_[0]{cost};
+    if ( ! defined $_[0]{price} ) {
+        $_[0]{price} = $_[0]{markup} ? Math::Round::nearest( 0.01, $_[0]{cost} * ( 1+($_[0]{markup}/100) ) ) : $_[0]{cost};
     } # end if
-    return $_[0]{'price'};
+    return $_[0]{price};
 } # end sub price
 
 sub markup {
 	if ( @_ > 1 ) {
-		$_[0]{'markup'} = $_[1];
+		$_[0]{markup} = $_[1];
 		$_[0]->price( undef );
 	} # end if
-	return $_[0]{'markup'};
+	return $_[0]{markup};
 } # end sub markup
 sub cost {
 	if ( @_ > 1 ) {
-		$_[0]{'cost'} = $_[1];
+		$_[0]{cost} = $_[1];
 		$_[0]->price( undef );
 	} # end if
-	return $_[0]{'cost'};
+	return $_[0]{cost};
 } # end sub cost
+
+sub id_string {
+	my $Price = $_[0];
+	my $price_desc = '';
+	if ( ! ( $Price->min() or $Price->max() ) ) {
+		$price_desc .= 'all quantities';
+	} else {
+		if ( $Price->min() ) {
+			$price_desc .= 1*$Price->min() . ' ';
+		}
+		$price_desc .= 'up';
+		if ( $Price->max() ) {
+			$price_desc .= ' to ' . 1*$Price->max();
+		}
+	} # end if
+	return $Price->Pricelist()->name() . ' '. $price_desc . ' on ' . $Price->Equipment()->strid();
+}
 
 1;
 __END__

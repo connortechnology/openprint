@@ -4,7 +4,7 @@ our @ISA = qw(openprint::Object);
 
 use vars qw( $debug $table $serial %fields %transforms %defaults );
 
-$debug = 1;
+$debug = 0;
 $table = 'inventory_checks';
 $serial= 'inventory_checks_id_seq';
 %fields = (
@@ -14,6 +14,8 @@ $serial= 'inventory_checks_id_seq';
 	started_on	=>	'started_on',
 	contains	=>	'contains', # 'sheets','rolls', etc'
 	ended_on	=>	'ended_on',
+	scanner_id	=>	'scanner_id',
+	deleted		=>	'deleted',
 );
 %transforms = (
 	name	=> [ 's/^\s+//', 's/\s+$//', 's/\s\s+/ /g' ],
@@ -21,7 +23,19 @@ $serial= 'inventory_checks_id_seq';
 %defaults = (
 	created_on	=>	q`'NOW()'`,
 	started_on	=>	q`'NOW()'`,
+	scanner_id	=>	undef,
+	deleted		=>	'0',
 );
+
+sub name {
+	if ( @_ > 1 ) {
+		$_[0]{name} = $_[1];
+	}
+	if ( ! $_[0]{name} ) {
+		return $_[0]{id};
+	}
+	return $_[0]{name};
+}
 
 sub link_to {
 	return sprintf(
@@ -30,6 +44,35 @@ sub link_to {
 		( $_[0]{name} ? $_{name} : $_[0]{id} . ' started on ' . $_[0]{started_on} )
 	 );
 } # end sub link_to
+
+sub Entries {
+	if ( ! $_[0]{Entries} ) {
+		$_[0]{Entries} = [ openprint::Inventory_Check_Entry->find( ic_id => $_[0]{id} ) ];
+		$_[0]{skid_ids} = {} if ! $_[0]{skid_ids};
+		$_[0]{rfid_ids} = {} if ! $_[0]{rfid_ids};
+		foreach my $ICE ( @{$_[0]{Entries}} ) {
+			$_[0]{skid_ids}{$$ICE{skid_id}} = [] if ! $_[0]{skid_ids}{$$ICE{skid_id}};
+			push @{$_[0]{skid_ids}{$$ICE{skid_id}}}, $ICE if $$ICE{skid_id};
+			
+			$_[0]{rfid_ids}{$$ICE{rfidtag_id}} = [] if ! $_[0]{rfid_ids}{$$ICE{rfidtag_id}};
+			push @{$_[0]{rfid_ids}{$$ICE{rfidtag_id}}}, $ICE if $$ICE{rfidtag_id};
+		}
+	}
+	return @{$_[0]{Entries}};
+} # end sub Entries
+
+sub check_for_duplicates {
+	my ( $self, $ICE ) = @_;
+
+	$_[0]->Entries() if ! $_[0]{Entries};
+
+$openprint::log->debug("check_for_duplicates: $$ICE{skid_id} " . $_[0]{skid_ids}{$$ICE{skid_id}} . ' # of entries ' . ( $_[0]{skid_ids}{$$ICE{skid_id}} ? @{$_[0]{skid_ids}{$$ICE{skid_id}}} : '' ) );
+	return 1 if $$ICE{skid_id} and $_[0]{skid_ids}{$$ICE{skid_id}} and @{$_[0]{skid_ids}{$$ICE{skid_id}}} > 1;
+$openprint::log->debug("check_for_duplicates: $$ICE{rfidtag_id} " . $_[0]{rfid_ids}{$$ICE{rfidtag_id}} . ' # of entries ' . ( $_[0]{rfid_ids}{$$ICE{rfidtag_id}} ? @{$_[0]{rfid_ids}{$$ICE{rfidtag_id}}} : '' ) );
+	return 1 if $$ICE{rfidtag_id} and $_[0]{rfid_ids}{$$ICE{rfidtag_id}} and @{$_[0]{rfid_ids}{$$ICE{rfidtag_id}}} > 1;
+	return 0;
+} # end sub check_for_duplicates
+
 
 1;
 __END__

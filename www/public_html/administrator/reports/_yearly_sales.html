@@ -6,7 +6,7 @@
 	} elsif ( $param{'salesrep_id'} ) {
 		@csr_ids = ( $param{'salesrep_id'} );
 	} else {
-		@csr_ids = map { $_->id() } openprint::User->find( type=>['E','A'], 'usergroup any'=>'Sales', order=>'lower(firstname),lower(lastname)');
+		@csr_ids = map { $_->id() } openprint::User->find( type=>['E','A'], 'usergroup any'=>'Sales', company_id=>$config{owner_id} );
 	} # end if
 
 	my ( $y, $m, $d ) = Date::Calc::Today();
@@ -35,9 +35,9 @@
 		my $rowclass;
 		my @Companies = openprint::Company->find('salesrep_id'=>$csr_id, 'order'=>'lower(name)');
 		foreach my $Company ( @Companies ) {
-			my $Contact = openprint::User->find_one('company_id'=>$Company->id(), 'administrator'=>1, 'web_active'=>1,'order'=>'id');
-            $Contact = openprint::User->find_one('company_id'=>$Company->id(), 'web_active'=>1, 'order'=>'id') if ! $Contact;
-            $Contact = openprint::User->find_one('company_id'=>$Company->id(), 'order'=>'id') if ! $Contact;
+			my $Contact = openprint::User->find_one( company_id=>$Company->id(), administrator=>1, web_active=>1, order=>'id');
+            $Contact = openprint::User->find_one( company_id=>$Company->id(), web_active=>1, order=>'id') if ! $Contact;
+            $Contact = openprint::User->find_one( company_id=>$Company->id(), order=>'id') if ! $Contact;
             $Contact = new openprint::User() if ! $Contact;
 
 			$html .= sprintf(q`

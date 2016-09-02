@@ -1,20 +1,22 @@
 <? eval (
+	my $uri = '/employee/inventory/packingslips.html';
 	if ( $session{'/employee/inventory/packingslips.html?docket'} ) {
-		@{$$variable{'Labels'}} = openprint::Label->find( 
+		@{$$variable{Labels}} = openprint::Label->find( 
 			docket	=>	$session{'/employee/inventory/packingslips.html?docket'},
 			order	=>	'id',
 			);
 	} else {
-		@{$$variable{'Labels'}} = openprint::Label->find( 
-			ssi::date_filter( '/employee/inventory/packingslips.html?created_on_end', 'created_on <=' ),
-			ssi::date_filter( '/employee/inventory/packingslips.html?created_on_start', 'created_on >=' ),
-			( $session{'/employee/inventory/packingslips.html?company_id'} ? ( 'company_id'=>$session{'/employee/inventory/packingslips.html?company_id'}):()),
-			( $session{'/employee/inventory/packingslips.html?type_id'} ? ( 'type_id'=>$session{'/employee/inventory/packingslips.html?type_id'}):()),
-			'order'		=>	'id',
+		@{$$variable{Labels}} = openprint::Label->find( 
+			date_filter( '/employee/inventory/packingslips.html?created_on_end', 'created_on <=' ),
+			date_filter( '/employee/inventory/packingslips.html?created_on_start', 'created_on >=' ),
+			( $session{'/employee/inventory/packingslips.html?company_id'} ? ( company_id=>$session{'/employee/inventory/packingslips.html?company_id'}):()),
+			( $session{'/employee/inventory/packingslips.html?type_id'} ? ( type_id=>$session{'/employee/inventory/packingslips.html?type_id'}):()),
+			deleted => ( $session{$uri.'?deleted'} ne '' ? $session{$uri.'?deleted'} : [undef,1,0] ),
+			order		=>	'id desc',
 			);
 	} # end if
 ) ?>
-<? if ( @{$$variable{'Labels'}} ) ?>
+<? if ( @{$$variable{Labels}} ) ?>
 <form id="LabelResults" name="LabelResults" action="packingslips.html" method="post">
 	<table class="List">
 		<tr>
@@ -29,7 +31,7 @@
 			my $html;
 			my $rowclass;
 
-			foreach my $Label ( @{$$variable{'Labels'}} ) {
+			foreach my $Label ( @{$$variable{Labels}} ) {
 				$html .= sprintf( q`<tr%1$s>
 					<td class="checkbox"><input type="checkbox" name="packingslips" value="%2$d"/></td>
 				<td class="Docket"><a href="/employee/production/labels/label.html?id=%2$d">%3$s</a></td>
@@ -37,8 +39,8 @@
 				<td class="Reference"><a href="/employee/production/labels/label.html?id=%2$d">%5$s</a></td>
 				<td class="Type"><a href="/employee/production/labels/label.html?id=%2$d">%6$s</a></td>
 				<td class="DateTime"><a href="/employee/production/labels/label.html?id=%2$d">%7$s</a></td>
-				</tr>`, $rowclass, $$Label{'id'}, $Label->docket(), $Label->Project()->Company()->name(),  $Label->reference(), $Label->Type()->name(), 
-				Date::Format::time2str($config{'DateTimeFormat'}, Date::Parse::str2time($Label->created_on()) ),
+				</tr>`, $rowclass, $$Label{id}, $Label->docket(), $Label->Project()->Company()->name(),  $Label->reference(), $Label->Type()->name(), 
+				Date::Format::time2str($config{DateTimeFormat}, Date::Parse::str2time($Label->created_on()) ),
  );
 				$rowclass = $rowclass ? '' : ' class="colRow"';
 			} # end foreach Label
@@ -47,6 +49,6 @@
 	</table>
 	<input type="hidden" name="btnFunction"/>
 </form>
-<? else ( @{$$variable{'Labels'}} ) ?>
+<? else ( @{$$variable{Labels}} ) ?>
 There were no packingslips matching your search criteria.
-<? endif ( @{$$variable{'Labels'}} ) ?>
+<? endif ( @{$$variable{Labels}} ) ?>

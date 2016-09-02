@@ -45,39 +45,39 @@ sub cache_field {
 sub save {
 	my ( $self, $hash ) = @_;
 
-	$self->set( $hash );
+	$self->set( $hash ? $hash : {} );
 
-	if ( ! $$self{'id'} ) {
+	if ( ! $$self{id} ) {
 		return 'RFID Tag must have an id';
 	} # end if
 
-	if ( ! $$self{'type_id'} ) {
-		if ( ! $$self{'type'} ) {
-			my $type_digit = substr( $$self{'id'}, 0, 1 );
+	if ( ! $$self{type_id} ) {
+		if ( ! $$self{type} ) {
+			my $type_digit = substr( $$self{id}, 0, 1 );
 			if ( $type_digit == 1 ) {
-				$$self{'type'} = 'Location';
+				$$self{type} = 'Location';
 			} elsif ( $type_digit == 2 ) {
-				$$self{'type'} = 'Skid';
+				$$self{type} = 'Skid';
 			} # end if
 		} # end if
                     
-		if ( $$self{'type'} ) {
-			my ( $type_id ) = sql::execute( undef, undef, 'SELECT id FROM RFIDTagTypes WHERE lower(name)=lower(?)', $$self{'type'} );
+		if ( $$self{type} ) {
+			my ( $type_id ) = sql::execute( undef, undef, 'SELECT id FROM RFIDTagTypes WHERE lower(name)=lower(?)', $$self{type} );
 			if ( ! $type_id ) {
 				my $Type = new openprint::RFIDTagType();
-				$Type->save( {'name' => $$self{'type'} } );
-				$$self{'type_id'} = $Type->id();
+				$Type->save( {'name' => $$self{type} } );
+				$$self{type_id} = $Type->id();
 			} else {
-				$$self{'type_id'} = $type_id;
+				$$self{type_id} = $type_id;
 			} # end if
 		} # end if
 	} # end if
-	$$self{'updated_on'} = 'NOW()';
+	$$self{updated_on} = 'NOW()';
 
 	if ( $self->type() eq 'Skid' ) {
 		my $Skid = $self->Skid();
-		if ( $Skid->id() and ( $Skid->location_id() != $$self{'location_id'} ) ) {
-			$Skid->save({location_id=>$$self{'location_id'}});
+		if ( $Skid->id() and ( $Skid->location_id() != $$self{location_id} ) ) {
+			$Skid->save({location_id=>$$self{location_id}});
 		} # end if
 	} # end if
 
@@ -85,9 +85,9 @@ sub save {
 	
 	my $ac = sql::start_transaction( $dbh );
 
-	if ( ! sql::execute( undef, undef, 'SELECT * FROM RFIDTags WHERE id=?', $$self{'id'} ) ) {
+	if ( ! sql::execute( undef, undef, 'SELECT * FROM RFIDTags WHERE id=?', $$self{id} ) ) {
 		if ( my $error = sql::insert( undef, undef, 'RFIDTags', [ map { $_, $$self{$_} } keys %fields ] ) ) {
-			$$self{'id'} = undef;
+			$$self{id} = undef;
 			sql::end_transaction( $dbh, $ac );
 			return $error;
 		} # end if
@@ -106,11 +106,11 @@ sub save {
 sub delete {
     my $self = shift;
     my $ac = sql::start_transaction( );
-	sql::update( undef, undef, 'Skids', ['rfidtag_id=?', $$self{'id'}], 'rfidtag_id', undef );
-    sql::execute( undef, undef, q{DELETE FROM RFIDTagHistory WHERE rfidtag_id=?}, $$self{'id'} );
-    sql::execute( undef, undef, q{DELETE FROM RFIDTags WHERE id=?}, $$self{'id'} );
+	sql::update( undef, undef, 'Skids', ['rfidtag_id=?', $$self{id}], 'rfidtag_id', undef );
+    sql::execute( undef, undef, q{DELETE FROM RFIDTagHistory WHERE rfidtag_id=?}, $$self{id} );
+    sql::execute( undef, undef, q{DELETE FROM RFIDTags WHERE id=?}, $$self{id} );
     sql::end_transaction( undef, $ac );
-	delete $openprint::Object::cache{'openprint::RFIDTag'}{$$self{'id'}};
+	delete $openprint::Object::cache{'openprint::RFIDTag'}{$$self{id}};
 	return '';
 } # end sub delete
 
@@ -120,14 +120,14 @@ sub Type {
 
 sub type {
 	my ( $self, $new ) = @_;
-	if ( $new and ($new ne $$self{'type'}) ) {
-		$$self{'type'} = $new;
-		$$self{'type_id'} = '';
+	if ( $new and ($new ne $$self{type}) ) {
+		$$self{type} = $new;
+		$$self{type_id} = '';
 	} # end if
-	if ( $$self{'type_id'} and ! $$self{'type'} ) {
-		$$self{'type'} = $self->Type()->name();
+	if ( $$self{type_id} and ! $$self{type} ) {
+		$$self{type} = $self->Type()->name();
 	} # end if
-	return $$self{'type'};
+	return $$self{type};
 } # end sub type
 
 sub Location {
@@ -137,50 +137,50 @@ sub Location {
 sub location_id {
     my ( $self, $new, $scanner_id ) = @_;
     if ( $new ) {
-        if ( (!defined $$self{'location_id'}) or ( $new != $$self{'location_id'} ) ) {
-            sql::insert( undef, undef, 'RFIDTagHistory', {'rfidtag_id'=>$$self{'id'},'location_id'=>$new, 'scanner_id'=>$scanner_id} ) if $$self{'id'};
-            $$self{'location_id'} = $new;
+        if ( (!defined $$self{location_id}) or ( $new != $$self{location_id} ) ) {
+            sql::insert( undef, undef, 'RFIDTagHistory', {'rfidtag_id'=>$$self{id},'location_id'=>$new, 'scanner_id'=>$scanner_id} ) if $$self{id};
+            $$self{location_id} = $new;
         } # end if
     } # end if
-    return $$self{'location_id'};
+    return $$self{location_id};
 } # end sub location_id
 
 sub skid_id {
 	my ( $self ) = @_;
-	if ( ! $$self{'id'} ) {
+	if ( ! $$self{id} ) {
 		$openprint::log->error('Cant load skid on a tag without an id');
 		return;
 	} # end if
-	if ( ! $$self{'skid_id'} ) {
-		my @Skids = openprint::Skid->find('rfidtag_id'=>$$self{'id'},'deleted'=>[0,1]);
+	if ( ! $$self{skid_id} ) {
+		my @Skids = openprint::Skid->find('rfidtag_id'=>$$self{id},'deleted'=>[0,1]);
 		if ( @Skids ) {
-			$$self{'skid_id'} = $Skids[0]->id();
+			$$self{skid_id} = $Skids[0]->id();
 		} # end if
 	} # end if
-	return $$self{'skid_id'};
+	return $$self{skid_id};
 } # end sub skid_id
 
 sub Skid {
 	my ( $self ) = @_;
-	if ( ! $$self{'id'} ) {
+	if ( ! $$self{id} ) {
 		$openprint::log->error('Cant load skid on a tag without an id');
 		return;
 	} # end if
-	if ( ! $$self{'skid_id'} ) {
-		my @Skids = openprint::Skid->find('rfidtag_id'=>$$self{'id'},'deleted'=>[0,1]);
+	if ( ! $$self{skid_id} ) {
+		my @Skids = openprint::Skid->find('rfidtag_id'=>$$self{id},'deleted'=>[0,1]);
 		if ( @Skids ) {
-			$$self{'skid_id'} = $Skids[0]->id();
+			$$self{skid_id} = $Skids[0]->id();
 		} # end if
 	} # end if
-	return new openprint::Skid( $$self{'skid_id'} );
+	return new openprint::Skid( $$self{skid_id} );
 } # end sub Skid
 
 sub id_short {
 	my ( $self ) = @_;
-	return '' if ! $$self{'id'};
-	return $$self{'id'} if $self->is_invalid_id();
+	return '' if ! $$self{id};
+	return $$self{id} if $self->is_invalid_id();
 
-	my ( $type, $significant ) = $$self{'id'} =~ /^(\d)(\d{14})$/;
+	my ( $type, $significant ) = $$self{id} =~ /^(\d)(\d{14})$/;
 	return 1*$significant;
 } # end sub id_short
 

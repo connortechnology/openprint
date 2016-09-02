@@ -31,6 +31,7 @@ my @variables = (
 		'txtPrice',
 		'CustomProofSpecs',
 		'RequireColourProofs',
+		'RequirePressProofs',
 		'alert',
 		);
 
@@ -154,7 +155,13 @@ sub calc {
 			if ( ( ! sets::isin( 2, $proof_indexes{$signature_index} ) ) and $openprint::config{'Add_Default_Colour_Proof'} eq 'Y' ) {
 				push @{$proof_indexes{$signature_index}}, 2;
 			} # end if
-			if ( ( ! sets::isin( 3, $proof_indexes{$signature_index} ) ) and ( ( $openprint::config{'Add_Default_Press_Proof'} eq 'Y' ) or ( $Equipment and $Equipment->specification('Require Press Proof') eq 'Y' ) ) ) {
+			if ( ( ! sets::isin( 3, $proof_indexes{$signature_index} ) ) and ( 
+				( $openprint::config{'Add_Default_Press_Proof'} eq 'Y' )
+				or 
+				( $Equipment and $Equipment->specification('Require Press Proof') eq 'Y' ) 
+				or 
+				($_ = $Project->Company()->add_press_proofs() and $_->value() eq 'Y' ) 
+				) ) {
 				push @{$proof_indexes{$signature_index}}, 3;
 			} # end if
 				
@@ -195,7 +202,7 @@ sub calc {
 			} # end if
 			my $Imposition = new openprint::Imposition();
 			$Imposition->load( $sig_specs, $qty_index );
-			my $Equipment = $Imposition->Equipment();
+			my $Equipment = $Imposition->Press();
 			my %Results = signature_calc( $Project, $specs, $sig_specs, $qty_index, \%proof_indexes, \%proof_totals, $Equipment, $Imposition );
 			$totalPrice += $Results{Total};
 			$$specs{"hdnBreakdown$qty_index"} .= $Results{'Breakdown'};
@@ -237,7 +244,16 @@ sub signature_calc {
 	if ( ( ! sets::isin( 2, $$indexes{$signature_index} ) ) and $openprint::config{'Add_Default_Colour_Proof'} eq 'Y' ) {
 		push @{$$indexes{$signature_index}}, 2;
 	} # end if
-	if ( ( ! sets::isin( 3, $$indexes{$signature_index} ) ) and $openprint::config{'Add_Default_Press_Proof'} eq 'Y' ) {
+	if ( ( ! sets::isin( 3, $$indexes{$signature_index} ) ) and  
+			( $$specs{RequirePressProofs} ne 'N' ) and (
+				( $$specs{RequirePressProofs} eq 'Y' ) 
+				or
+				( $openprint::config{'Add_Default_Press_Proof'} eq 'Y' ) 
+				or 
+				( $$sig_specs{rdbPressProof} eq 'Y' )
+				or
+				($_ = $Project->Company()->add_press_proofs() and $_->value() eq 'Y' ) 
+	   ) ) {
 		push @{$$indexes{$signature_index}}, 3;
 	} # end if
 
@@ -368,17 +384,22 @@ sub insert_press_proof($$$$$$) {
 	$$sig_specs{SideOneColours} = [openprint::Estimating::Printing::get_colours( $sig_specs, 'SideOne' )] if ! $$sig_specs{SideOneColours};
 	$$sig_specs{SideTwoColours} = [openprint::Estimating::Printing::get_colours( $sig_specs, 'SideTwo' )] if ! $$sig_specs{SideTwoColours};
 	my $quantity = 0;
-	if ( sets::isin( $$sig_specs{'ddmRunStyle'.$qty_index}, ['Web','Sheet Work','Perfecting'] ) ) {
-		$quantity += 1 if @{$$sig_specs{SideOneColours}};
-		$quantity += 1 if @{$$sig_specs{SideTwoColours}};
-	} else {
-		$quantity += 1 if @{$$sig_specs{SideOneColours}} or @{$$sig_specs{SideTwoColours}};
+	if ( $$specs{'RequirePressProofs'} ne 'N' ) {
+		if ( sets::isin( $$sig_specs{'ddmRunStyle'.$qty_index}, ['Web','Sheet Work','Perfecting'] ) ) {
+			$quantity += 1 if @{$$sig_specs{SideOneColours}};
+			$quantity += 1 if @{$$sig_specs{SideTwoColours}};
+		} else {
+			$quantity += 1 if @{$$sig_specs{SideOneColours}} or @{$$sig_specs{SideTwoColours}};
+		} # end if
 	} # end if
 	insert_new_proof( $specs, $proof_index, $$sig_specs{'SignatureIndex'}, $quantity, $Imposition->sheet_width(), $Imposition->sheet_height(), 'PressProof', $qty_index );
 } # end sub insert_press_proof
 
 sub insert_colour_proof($$$$$) {
 	my ( $Project, $sig_specs, $proof_index, $qty_index, $specs ) = @_;
+
+	$$sig_specs{SideOneColours} = [openprint::Estimating::Printing::get_colours( $sig_specs, 'SideOne' )] if ! $$sig_specs{SideOneColours};
+	$$sig_specs{SideTwoColours} = [openprint::Estimating::Printing::get_colours( $sig_specs, 'SideTwo' )] if ! $$sig_specs{SideTwoColours};
 
 	#$log->debug("*** Inserting Colour Proof *******");
 	my $Equipment = openprint::Equipment->find_one( strid=>$$sig_specs{'ddmPress'.$qty_index} ) if $$sig_specs{'ddmPress'.$qty_index};
@@ -388,12 +409,12 @@ sub insert_colour_proof($$$$$) {
 
 	if ( $default_proof_type ) {
 		if ( 
-				( $$specs{'RequireColourProofs'} eq 'Y' )  or (
+				( $$specs{'RequireColourProofs'} eq 'Y' and @{$$sig_specs{SideOneColours}} )  or (
 					($$specs{'RequireColourProofs'} ne 'N') and $$sig_specs{'chkProcessColourSideOne'} ) ) {
 			$quantity += 1;
 		} # end if
 		if ( 
-				( $$specs{'RequireColourProofs'} eq 'Y' )  or (
+				( $$specs{'RequireColourProofs'} eq 'Y' and @{$$sig_specs{SideTwoColours}} )  or (
 					($$specs{'RequireColourProofs'} ne 'N') and $$sig_specs{'chkProcessColourSideTwo'} ) ) {
 			$quantity += 1;
 		} # end if
@@ -522,8 +543,11 @@ sub get_proof_specs {
 				$openprint::log->debug("ADDING Colour Proof to $signature_index") if DEBUG;
 				insert_colour_proof( $Project, $sig_specs, 2, $qty_index, $specs );
 			} # end if
-			if ( ! sets::isin( 3, $proof_indexes{$signature_index} ) ) {
-				if ( ( $openprint::config{'Add_Default_Press_Proof'} eq 'Y' ) or ( $Equipment and $Equipment->specification('Require Press Proof') eq 'Y' ) ) {
+			if ( ( ! sets::isin( 3, $proof_indexes{$signature_index} )  ) and ( $$specs{RequirePressProofs} ne 'N' )  ) {
+				if ( ( $openprint::config{'Add_Default_Press_Proof'} eq 'Y' ) or ( $Equipment and $Equipment->specification('Require Press Proof') eq 'Y' ) 
+				or 
+				($_ = $Project->Company()->add_press_proofs() and $_->value() eq 'Y' ) 
+				) {
 					push @{$proof_indexes{$signature_index}}, 3;
 					$log->debug("Adding Press Proof");
 					insert_press_proof( $Project, $sig_specs, 3, $qty_index, $specs, $Imposition );
@@ -574,6 +598,7 @@ sub save_proof_specs {
 
     $log->debug("In Save Proof Specs" );
 
+	my $Project = new openprint::Project( $project_index );
 # First off, slap everything in, just like every other service
 	#openprint::service::save_service( $r, $log, $dbh, $project_index, $service_index );
 	my @v = variables( $project_index, $service_index, \%openprint::param );
@@ -587,6 +612,12 @@ sub save_proof_specs {
 	} # end foreach
 	sql::end_transaction( $dbh, $ac );
 
+	if ( $openprint::param{RequirePressProofs} eq 'N' ) {
+		foreach my $sig_id ( $Project->signatures() ) {
+			openprint::service::insert_service_spec( $log, $dbh, $project_index, $sig_id, 'rdbPressProof', '' );
+		}
+	}
+
 	my $redirect = 0;
 
 # Now check to see if we need to add more proofs, and redirect back
@@ -599,7 +630,7 @@ sub save_proof_specs {
 				$_ = 'SELECT lngServiceIndex FROM tbl_Service_Specifications WHERE lngProjectIndex=? AND strName=? AND strValue=?';
 				my ( $signature_service_index ) = sql::execute( $log, $dbh, $_, $project_index, 'SignatureIndex',$signature_index );
 
-				foreach my $qty_index ( 1 .. 3 ) {
+				foreach my $qty_index ( $Project->quantity_indexes() ) {
 					$_ = 'SELECT MAX(strValue::integer) FROM tbl_Service_Specifications WHERE lngProjectIndex=? AND lngServiceIndex=? AND strName LIKE ?';
 					my ( $proof_index ) = sql::execute( $log, $dbh, $_, $project_index, $service_index, "txtProofIndex-$signature_index-%-$qty_index" );
 					$proof_index += 1;
@@ -791,7 +822,9 @@ sub get_next_proof_index {
 	if ( ( ! sets::isin( 2, \@proof_indexes ) ) and $openprint::config{'Add_Default_Colour_Proof'} eq 'Y' ) {
 		push @proof_indexes, 2;
 	} # end if
-	if ( ( ! sets::isin( 3, \@proof_indexes ) ) and $openprint::config{'Add_Default_Press_Proof'} eq 'Y' ) {
+	if ( ( ! sets::isin( 3, \@proof_indexes ) ) and 
+				( $openprint::config{'Add_Default_Press_Proof'} eq 'Y' ) 
+	   ) {
 		push @proof_indexes, 3;
 	} # end if
 	return sets::max( \@proof_indexes ) + 1;

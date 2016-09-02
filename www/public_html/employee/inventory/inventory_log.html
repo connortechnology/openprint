@@ -19,14 +19,14 @@ LoadContent( 'Log', '_inventory_log.html', $('LogForm').serialize() );
 				<label class="radio" for="outs">Check Outs</label>
 			</li>
 		<li><label>Type</label>
-			<? echo ( checkboxes( 'Type', [ 'Sheet', 'Sheet', 'Roll','Roll','Unknown','Unknown' ], [ split(',',$session{'/employee/inventory/inventory_log.html?Type'}) ],  {onclick=>'calc)();' } ); ) ?>
+			<? echo ( checkboxes( 'Type', [ 'Sheet', 'Sheet', 'Roll','Roll','Unknown','Unknown' ], [ split(',',$session{'/employee/inventory/inventory_log.html?Type'}) ],  {onclick=>'calc();' } ); ) ?>
         </li>
 		<li>
 		<label>User</label>
 		<select name="employee_id" onchange="calc();">
 			<option value="">All Employees</option>
 <? echo (
-	make_drop_down( [ map { $_->id(), $_->name() } openprint::User->find( order=>'lower(firstname),lower(lastname)', type=>['E','A'] ) ],
+	make_drop_down( openprint::User->dropdown( type=>['E','A'] ),
 	$session{'/employee/inventory/inventory_log.html?employee_id'} );
 )?>
 			</select>

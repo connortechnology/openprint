@@ -3,18 +3,18 @@
 	<ul>
 	<li>
 		<label>Stock Format</label>
-		<? echo ( radio( 'StockType-'.$$variable{Signature}, [ '', 'Auto', 'Roll', 'Roll', 'Sheet','Sheet' ], $$variable{'StockType-'.$$variable{'Signature'}} ); ) ?>
+		<? echo ( radio( 'StockType-'.$$variable{Signature}, [ '', 'Auto', 'Roll', 'Roll', 'Sheet','Sheet' ], $$variable{'StockType-'.$$variable{Signature}} ); ) ?>
 	</li>
 	<li>
 		<label>Runstyle</label>
-		<select name="ddmRunStyle-<?Signature?>" size="1">
+		<select name="ddmRunStyle-<?Signature?>" size="1" onchange="calc(this.form.name);">
 			<option value="">Auto</option>
-			<? echo ( make_drop_down( $$variable{'RunStyleOptions'}, $$variable{"ddmRunStyle-$$variable{Signature}"} ); ) ?>
+			<? echo ( make_drop_down( $$variable{RunStyleOptions}, $$variable{"ddmRunStyle-$$variable{Signature}"} ); ) ?>
 		</select>
 	</li>
 	<li>
 		<label>Press</label>
-		<select name="ddmPress-<?Signature?>" size="1">
+		<select name="ddmPress-<?Signature?>" size="1" onchange="calc(this.form.name);">
 			<option value="">Auto</option>
 			<? echo ( make_drop_down( [ map { $_->strid(), $_->name() } openprint::Equipment->find('category any'=>'Printing',useinestimating=>1, order=>'lower(strname)') ], $$variable{"ddmPress-$$variable{Signature}"} ); ) ?>
 		</select>

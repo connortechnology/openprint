@@ -6,3 +6,5 @@ CREATE TABLE Invoice_Taxes (
 	amount		float,
 	PRIMARY KEY (id)
 );
+
+CREATE INDEX invoice_taxes_idx on invoice_taxes (invoice_id,tax_id);

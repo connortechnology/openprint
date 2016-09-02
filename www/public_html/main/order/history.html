@@ -2,10 +2,11 @@
 <h1>Orders</h1>
 <h2>History</h2>
 </div>
-<? if ( $session{'user_id'} ) ?>
+<? if ( $session{user_id} ) ?>
 <form id="f1" name="f1" action="history.html" method="post">
 	<div class="Order"><div class="History">
-		<fieldset id="JumpTo" class="filters unprintable"><legend>Enter Order ID</legend>
+		<div id="JumpTo">
+		<fieldset class="filters unprintable"><legend>Enter Order ID</legend>
 			<ul>
 			<li>
 				<label for="order_id">Order ID</label>
@@ -30,8 +31,27 @@
 			</li>
 			</ul>
 		</fieldset>
-		<fieldset id="Filter" class="filters unprintable"><legend>or Select Search Criteria</legend>
+		</div>
+		<div id="Filter">
+		<fieldset class="filters unprintable"><legend>or Select Search Criteria</legend>
 			<ul>
+				<li>
+					<label>Status</label>
+					<select name="status_id" onchange="LoadContent('Results','/main/order/_history.html',f1);">
+						<option value="">All</option>
+						<? echo ( make_drop_down( openprint::Order_Status->dropdown(), [ split(',', $session{$r->uri().'?status_id'} )] );) ?>
+					</select>
+				</li>
+<? if ( sets::isin( $session{user_type}, ['E','A'] ) ) ?>
+            <li>
+                <label>Company</label>
+                <input class="filter" type="text" oninput="filter_companies('company_id', {name:this.value,selected_id:get_ddm_value($('company_id'))});" />
+                <select name="company_id" id="company_id" onchange="LoadContent('Results','/main/order/_history.html',f1);">
+                    <option value="">All</option>
+<? echo ( make_drop_down( openprint::Company->dropdown(or=>{id=>$session{company_id}, 'last_order_id is null'=>0}), $session{'/main/order/history.html?company_id'} ) ) ?>
+                </select>
+            </li>
+<? endif ( sets::isin( $session{user_type}, ['E','A'] ) ) ?>
 			<li>
 				<label>Ordered by</label>
 				<select id="ddmOrderedBy" name="ddmOrderedBy" size="1" onchange="LoadContent('Results','/main/order/_history.html',this.form);">
@@ -43,25 +63,27 @@
 			</li>
 			<li> 
 				<label>Created</label>
-<? echo ( date_select_session( '/main/order/history.html', 'created_on_start', { onchange=>q`LoadContent('Results','_history.html',$('f1'));`,with_clear=>1,with_today=>1 } ); ) ?>
+<? echo ( date_select_session( $r->uri(), 'created_on_start', { onchange=>q`LoadContent('Results','_history.html',$('f1'));`,with_clear=>1,with_today=>1 } ); ) ?>
 				to
-<? echo ( date_select_session( '/main/order/history.html', 'created_on_end', { onchange=>q`LoadContent('Results','_history.html',$('f1'));`,with_clear=>1,with_today=>1 } ); ) ?>
+<? echo ( date_select_session( $r->uri(), 'created_on_end', { onchange=>q`LoadContent('Results','_history.html',$('f1'));`,with_clear=>1,with_today=>1 } ); ) ?>
 			</li>
 			</ul>
 			<br class="spacer"/>
 			<p class="buttons">
-				<? echo ( join( '',
+				<? echo ( join( "\n",
 					button( 'ShowResults', { onclick=>'f1.submit();', text=>'Show Results' } ),
+					button( 'New', { href=>'/main/order/information.html', text=>'New' } ),
 					button( 'Reset', { onclick=>'f1.reset();' } ),
 				); ) ?>
 			</p>
 		</fieldset>
+		</div>
 	</div>
 	</div>
 	<hr class="spacer"/>
 	<input type="hidden" name="btnFunction"/>
 </form>
 <div id="Results"><?include('_history.html')?></div>
-<? else ( $session{'user_id'} ) ?>
+<? else ( $session{user_id} ) ?>
 Only logged in customers have an order history. 
-<? endif ( $session{'user_id'} ) ?>
+<? endif ( $session{user_id} ) ?>

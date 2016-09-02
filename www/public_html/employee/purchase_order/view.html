@@ -119,10 +119,8 @@ Manifest: <a href="/employee/inventory/manifest_view.html?manifest_id=<? echo ( 
 <? endif ( $$variable{PurchaseOrder}->notifications() ) ?>
 		<div id="DocketSummary"><p><label>DOCKET:</label>
 <? echo ( my $html;
-	foreach my $C ( $$variable{PurchaseOrder}->Contents() ) {
-		$html .= $C->docket().'<br/>' if $C->docket();
-	} # end foreach C
-	return $html;
+	my @dockets = map { $_->docket() ? $_->docket() : () } $$variable{PurchaseOrder}->Contents();
+	return join('<br/>', sets::union(@dockets) );
 ) ?></p>
 		</div>
 		<br class="spacer"/><br/>
@@ -172,10 +170,13 @@ Manifest: <a href="/employee/inventory/manifest_view.html?manifest_id=<? echo ( 
 			
 		$html .= sprintf('
 			<div class="product">%1$s</div>
-			<div class="description">%2$s<br/>%3$s</div>
+			<div class="description">%2$s<br/>%3$s%6$s</div>
 			<div class="docket"><a href="/employee/production/projects.html?StartDocket=%4$s">%4$s</a></div>
 			<div class="dept">%5$s</div>
 			', $C->product(), $C->item(), ( $C->item() eq $C->description() ? '' : $C->description() ), $C->docket(), $C->department(), 
+				join('<br/>',
+					map { $_->to_string() } $C->Item()->Inventory_Items()
+				),
 			);
 
 		if ( $$variable{PurchaseOrder}->can_see_pricing($C) ) {
@@ -289,6 +290,9 @@ Manifest: <a href="/employee/inventory/manifest_view.html?manifest_id=<? echo ( 
 		</div>
 	</div><!--PO-->
 	<br class="spacer"/>
+<? if ( ! $$variable{PurchaseOrder}->authorized() ) ?>
+<div id="not_approved"><img src="/images/not_approved.png"/></div>
+<? endif ( ! $$variable{PurchaseOrder}->authorized() ) ?>
 <? else ( $$variable{PurchaseOrder}->can_view() ) ?>
 You do not have the rights to view this PO.
 <? endif ( $$variable{PurchaseOrder}->can_view() ) ?>

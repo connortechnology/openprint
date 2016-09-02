@@ -12,6 +12,8 @@ require openprint::RFIDScannerHistory;
 require openprint::RFIDTag;
 require openprint::RFIDTagHistory;
 require openprint::Skid;
+require openprint::Inventory_Check;
+require openprint::Inventory_Check_Entry;
 require logger;
 require sets;
 require sql;
@@ -26,7 +28,7 @@ use vars qw( $log $dbh );
 $log = new logger( 'debug' );
 my %CheckedOutSkids;
 my %Scanners;
-my $debug = 0;
+my $debug = 1;
 my $location_cache_size = 10;
 my %stats;
 
@@ -204,6 +206,24 @@ sub process_request {
 					if ( $_ = $Tag->save() ) {
 						$self->log(1, sprintf('%s : %s : error saving tag %s', $date, $ip_addr, $_ ));
 					} # end if
+					foreach my $IC ( openprint::Inventory_Check->find(
+								'started_on <=' => 'NOW()',
+								'ended_on >=' => 'NOW()' 
+								) ) {
+						if ( ! openprint::Inventory_Check_Entry->find_one(
+									ic_id=>$$IC{id},
+									rfidtag_id=>$Tag->id(),
+									scanner_id=>$Scanner->id(),
+									) ) {
+							my $ICE = new openprint::Inventory_Check_Entry();
+							$ICE->save({
+									ic_id=>$$IC{id},
+									rfidtag_id=>$Tag->id(),
+									location_id=>$Scanner->location_id(),
+									scanner_id=>$Scanner->id(),
+									});
+						} # end if
+					} # end foreach IC
 				} # end if
 			} elsif ( $Scanner->type() eq 'Fixed' ) {
 				if ( $Scanner->location_id() != $Tag->location_id() ) {
@@ -212,6 +232,24 @@ sub process_request {
 						$self->log(1, sprintf('%s : %s : error saving tag %s', $date, $ip_addr, $_ ));
 					} # end if
 				} # End if
+				foreach my $IC ( openprint::Inventory_Check->find(
+					'started_on <=' => 'NOW()',
+					'ended_on >=' => 'NOW()' 
+					) ) {
+					if ( ! openprint::Inventory_Check_Entry->find_one(
+							ic_id=>$$IC{id},
+							rfidtag_id=>$Tag->id(),
+							scanner_id=>$Scanner->id(),
+					) ) {
+						my $ICE = new openprint::Inventory_Check_Entry();
+						$ICE->save({
+							ic_id=>$$IC{id},
+							rfidtag_id=>$Tag->id(),
+							location_id=>$Scanner->location_id(),
+							scanner_id=>$Scanner->id(),
+						});
+					}
+				}
 			} elsif ( $Scanner->type() eq 'Checkout' ) {
 				if ( $Tag->type() eq 'Skid' ) {
 					if ( ! sets::isin( $Tag->location_id(), [ map { $_->location_id() } @checkout_tags ] ) ) {
@@ -302,6 +340,6 @@ sub sig_handler {
 
 register_sig( USR1 => \&sig_handler );
 
-__PACKAGE__->run();
+__PACKAGE__->run( ipv => 4 );
 1;
 __END__

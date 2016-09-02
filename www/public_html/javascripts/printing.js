@@ -103,12 +103,14 @@ function SpecialColour_onchange( element, side, index, signature ) {
 
 function chkSpecial_onClick(chkBox) {
 	return;
-	var name = 'txt' + chkBox.name.substr(3);
+	/*
+    var name = 'txt' + chkBox.name.substr(3);
 	var form = chkBox.form;
 
 	if ( chkBox.checked == false ) {
 		form.elements[name].value = '';
 	} // end if
+	*/
 } // end function
 
 function validate_data(formName) {
@@ -223,6 +225,8 @@ function calc_print( formName, force, options ) {
 		if ( pair.value == '' ) 
 			h.unset(pair.key);
 		if ( pair.key == 'btnFunction' ) 
+			h.unset(pair.key);
+		if ( pair.key == 'alert' ) 
 			h.unset(pair.key);
 	});
 	if ( options ) {

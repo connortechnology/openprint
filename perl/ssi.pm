@@ -58,6 +58,9 @@ sub slurp_content {
 	} else {
 		$content = File::Slurp::read_file($file,err_mode => 'carp' );
 	} # end if
+	if ( ! $content ) {
+		$log->warn( "No content found for $file" );
+	}
 	return $content;
 } # end sub slurp_content
 
@@ -753,6 +756,11 @@ $openprint::log->debug("Storing ($_) (".$session{"$url?$_"}.")") if Debug;
 	} # end foreach
 } # end sub save_params
 
+sub boolean_override {
+	my ( $for, $value, $locked_js, $unlocked_js ) = @_;
+	return sprintf(q`<input type="hidden" id="%1$s" name="%1$s" value="%2$s"/><img class="Override" src="/images/%3$s.gif" onclick="var e=$('%1$s');if(e.value!='0'){e.value='0';this.src='/images/unlocked.gif';%5$s} else {e.value='1';this.src='/images/locked.gif';%4$s}" alt=""/>`, 
+			$for, 1*$value, ($value ? 'locked' : 'unlocked'), $locked_js, $unlocked_js );
+}
 sub write_override {
 	my ( $for, $value, $locked_js, $unlocked_js ) = @_;
 	if ( 1 ) {
@@ -856,7 +864,7 @@ sub date_filter {
 	return ( $sql_field, $parser->format_datetime( $datetime ) );
 } # end sub date_filter
 
-my @input_options = ( 'type','name','id','onblur','onfocus','onkeyup','onkeydown','onchange','class','pattern','ontouch','min','max', 'step', 'placeholder', 'oninput', 'title', 'decimalplaces' );
+my @input_options = ( 'type','name','id','onblur','onfocus','onkeyup','onkeypress', 'onkeydown','onchange','class','pattern','ontouch','min','max', 'step', 'placeholder', 'oninput', 'title', 'decimalplaces', 'style' );
 
 sub input {
 	my %options = @_;
@@ -879,10 +887,10 @@ sub input {
 	} elsif ( $options{type} eq 'integer' ) {
 		if ( $ENV{HTTP_USER_AGENT} =~ /ip(ad|od|hone)/i ) {
 			$options{type} = 'text';
-			$options{pattern} = '\-?[0-9]*' if ! $options{pattern};
+			$options{pattern} = '^-?\d*' if ! $options{pattern};
 		} elsif ( $ENV{HTTP_USER_AGENT} =~ /Firefox/ ) {
 			$options{type} = 'text';
-			$options{pattern} = '\-?[0-9]*' if ! $options{pattern};
+			$options{pattern} = '^-?\d*' if ! $options{pattern};
 			delete $options{step};
 		} else {
 			$options{type} = 'number';
@@ -893,10 +901,10 @@ sub input {
 		$options{step} = 'any' if ! exists $options{step};
 		if ( $ENV{HTTP_USER_AGENT} =~ /ip(ad|od|hone)/i ) {
 			$options{type} = 'text';
-			$options{pattern} = '[\-.0-9]*' if ! $options{pattern};
+			$options{pattern} = '[\+\-]?[.0-9]*' if ! $options{pattern};
 		} elsif ( $ENV{HTTP_USER_AGENT} =~ /Firefox/ ) {
 			$options{type} = 'text';
-			$options{pattern} = '[\-.0-9]*' if ! $options{pattern};
+			$options{pattern} = '^[\+\-]?[.0-9]*' if ! $options{pattern};
 			delete $options{step};
 		} else {
 			$options{type} = 'number';
@@ -929,6 +937,16 @@ sub input {
 		} # end if
 		$options{step} = 'any' if ! exists $options{step};
 		$options{oninput} = 'floatize_calculator(this);'.$options{oninput};
+	} elsif ( $options{type} eq 'ip' ) {
+		$options{pattern} = '[0-9\/\.\:a-fA-F]*' if ! $options{pattern};
+		$options{type} = 'text';
+		$options{step} = 'any' if ! exists $options{step};
+		$options{oninput} = q`this.value=this.value.replace(/[^\.\d%\/\*a-fA-F:]/g,'');`.$options{oninput};
+	} elsif ( $options{type} eq 'mac' ) {
+		$options{pattern} = '[0-9\-\:a-fA-F]*' if ! $options{pattern};
+		$options{type} = 'text';
+		$options{step} = 'any' if ! exists $options{step};
+		$options{oninput} = q`this.value=this.value.replace(/[^\-\d%\/\*a-fA-F:]/g,'');`.$options{oninput};
 	} # end if
 	$html .= ' value="'.html_escape($options{value}).'"' if $options{value} ne '';
 
@@ -1063,6 +1081,14 @@ sub format_datetime {
 
 sub link {
 	return '<link rel="stylesheet" type="text/css" href="'.hash_link($_[0]).'"/>';
+}
+
+sub include_logs {
+	my $Object = $_[0];
+	$variable{Object} = $Object;
+	setup_date_select( $variable{uri}, 'log_created_on_start', -31 );
+	setup_date_select( $variable{uri}, 'log_created_on_end', '' );
+	return include('/includes/_logs_container.html');
 }
 
 1;

@@ -35,7 +35,7 @@ Please select a Skid to view/edit.<br/>
 			<label for="manufacturers_id">Manufacturers ID</label>
 			<? echo ( join("\n",
 						input( type=>'text', id=>'manufacturers_id', name=>'manufacturers_id', 
-							onkeypress=>'return input_handler(this,event);', onkeydown=>'if(event.keyCode==13){submit_handler(f1);}' ),
+							onkeydown=>'if(event.keyCode==13){submit_handler(f1);}' ),
 						button( 'GoManufacturers', { onclick=>'calc();',text=>'Go' } ),
 						); ) ?>
 		</li>
@@ -61,6 +61,14 @@ Please select a Skid to view/edit.<br/>
 							onchange=>'change_handler(this);', onkeypress=>'return input_handler(this,event);', onkeydown=>q`if(event.keyCode==13){calc();}` ),
 						button( 'Go3', { onclick=>q`calc();`, text=>'Go' } ),
 			); ) ?>
+		</li>
+		<li>
+			<label>Inventory Check</label>
+			<?echo( join("\n",
+						ssi::select( openprint::Inventory_Check->dropdown(), $session{'/employee/inventory/skids.html?inventory_check_id'}, { name=>'inventory_check_id', prepend=>['','All'] } ),
+				checkboxes('inventory_check_id_exclude', [ '1', 'Exclude' ], $session{'/employee/inventory/skids.html?inventory_check_id_exclude'} ),
+); ) ?>
+
 		</li>
 		</ul>
 	</fieldset>

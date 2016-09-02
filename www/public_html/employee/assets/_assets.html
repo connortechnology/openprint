@@ -14,7 +14,14 @@
 
 	foreach my $Asset ( @Portrait, @Landscape ) {
 		$html .= '<div class="Asset">';
-		$html .=  $Asset->Asset()->thumbnail_html();
+		if ( $Asset->Asset()->can_edit() ) {
+		$html .= join("\n",
+				'<a href="/employee/assets/view.html?asset_id='.$Asset->Asset()->id().'">',
+				$Asset->Asset()->thumbnail_html(),
+				'</a>' );
+		} else {
+			$html .= $Asset->Asset()->thumbnail_html();
+		}
 		$html .= '</div>';
 	} # end foreach Asset
 	$html .= '<input type="hidden" name="asset_ids" value="'.join(',',map { $_->asset_id() } @Portrait, @Landscape ) . '"/>';

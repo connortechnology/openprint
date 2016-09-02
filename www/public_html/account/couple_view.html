@@ -1,19 +1,19 @@
 <div class="PageTitle">
 <h1>ACCOUNT</h1>
-<h2>Couple Profile</h2>
+<h2>Company Profile</h2>
 </div>
 <?include('/includes/error_reporting.html')?>
-<? if ( $session{'user_id'} ) ?>
+<? if ( $session{user_id} ) ?>
 	<div class="CoupleProfile">
 		<p class="buttons">
 			<? echo ( 
 				my $html;
-				if ( $$variable{'Company'}->can_edit() ) {
-					$html .= ssi::button( 'Delete', { href=>'/account/company_profile.html?btnFunction=Delete&amp;ddmCompany='.$$variable{'Company'}->id() } );
-					$html .= ssi::button( 'Edit', { href=>'/account/company_profile.html?ddmCompany='.$$variable{'Company'}->id() } );
+				if ( $$variable{Company}->can_edit() ) {
+					$html .= button( 'Delete', { href=>'/account/company_profile.html?btnFunction=Delete&amp;ddmCompany='.$$variable{Company}->id() } );
+					$html .= button( 'Edit', { href=>'/account/company_profile.html?ddmCompany='.$$variable{Company}->id() } );
 				} # end if
-				if ( $$variable{'Company'}->id() and ( $session{'company_id'} != $$variable{'Company'}->id() ) ) {
-					$html .= ssi::button( 'Message', { href=>'/messaging/edit.html?to_id='.$$variable{'User'}->id() } );
+				if ( $$variable{Company}->id() and ( $session{company_id} != $$variable{Company}->id() ) ) {
+					$html .= button( 'Message', { href=>'/messaging/edit.html?to_id='.$$variable{User}->id() } );
 				} # end if
 				return $html;
 			) ?>
@@ -21,8 +21,8 @@
 
 		<? echo ( 
 			my $html = '';
-			foreach my $User ( openprint::User->find('company_id'=>$$variable{'Company'}->id(),'order'=>'id') ) {
-				$variable{'User'} = $User;
+			foreach my $User ( openprint::User->find( company_id=>$$variable{Company}->id() ) ) {
+				$variable{User} = $User;
 				$html .= '<div class="UserProfile">
 
 				<div class="leftColumn">
@@ -37,7 +37,7 @@
 				$html .= '</div><!--ProfilePicture-->
 				<div id="Albums">
 					<fieldset><legend>Photo Albums</legend>';
-				my @Albums = openprint::Photo_Album->find( { 'user_id' => $User->id(), 'order'=>'id' } );
+				my @Albums = openprint::Photo_Album->find( user_id => $User->id(), order=>'id' );
 				if ( ! @Albums ) {
 					$html .= 'no albums';
 				} else {
@@ -54,7 +54,7 @@
 					</fieldset>
 					<fieldset><legend>Video Albums</legend>
 					';
-				my @Albums = openprint::Video_Album->find( { 'user_id' => $User->id(), 'order'=>'id' } );
+				my @Albums = openprint::Video_Album->find( { user_id => $User->id(), order=>'id' } );
 				if ( ! @Albums ) {
 					$html .= 'no albums';
 				} else {
@@ -98,14 +98,14 @@
 					<div class="content">
 						<ul>
 ';
-			my @Events = openprint::Event->find( created_by=>[ openprint::User->find('company_id'=>$variable{'Company'}->id())], 'starting_on >'=>Date::Format::time2str( '%Y-%m-%d %H:%M:%S%z', time ) );
+			my @Events = openprint::Event->find( created_by=>[ map { $_->id() } openprint::User->find( company_id=>$variable{Company}->id())], 'starting_on >'=>Date::Format::time2str( '%Y-%m-%d %H:%M:%S%z', time ) );
 			if ( ! @Events ) {
 				$html .= '<li>No upcoming events</li>';
 			} else {
 				foreach my $Event ( @Events ) {
 					$html .= sprintf(q`<li><a class="thumbnail" href="/event/view.html?event_id=%1$d"><img src="%4$s" alt="%5$s"/></a><a href="/event/view.html?event_id=%1$d">%2$s on %3$s</a></li>`,
 						$Event->id(), $Event->name(), 
-						Date::Format::time2str( $config{'DateTimeFormat'}, Date::Parse::str2time( $Event->starting_on() ) ),
+						Date::Format::time2str( $config{DateTimeFormat}, Date::Parse::str2time( $Event->starting_on() ) ),
 						$Event->Asset()->sized_url('thumbnail'),
 						( $Event->Asset()->caption() ? $Event->Asset()->caption() : $Event->name() ),
 					);
@@ -117,12 +117,12 @@
 				</fieldset>
 			</div>
 		</div>
-		<div id="Wall"><?include('/account/_wall.html')?></div>
+		<div id="Wall">'.include('/account/_wall.html').'</div>
 	</div><!--UserProfile-->
 ';
 	return $html;
 ) ?>
 </div><!--CoupleProfile-->
-<? else ( $session{'user_id'} ) ?>
+<? else ( $session{user_id} ) ?>
 You must be logged in to view profiles.<br/>
-<? endif ( $session{'user_id'} ) ?>
+<? endif ( $session{user_id} ) ?>

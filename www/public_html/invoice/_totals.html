@@ -4,7 +4,10 @@
 			<ul>
 				<li class="subtotal">
 					<label>Sub Total</label>
-					<span id="subtotal"><? echo ( openprint::Currency::format( $$variable{Invoice}->subtotal() ); ) ?></span>
+					<span id="subtotal"><? echo ( join("\n",
+						openprint::Currency::format( $$variable{Invoice}->subtotal() ),
+						); ) ?>
+					</span>
 				</li>
 				<? echo ( 
 					my $html;

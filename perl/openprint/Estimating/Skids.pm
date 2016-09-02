@@ -86,7 +86,7 @@ sub neccessary {
 # type is actually category name, not material type
 
 	if ( $type eq 'BulkSkids' ) {
-		my $finished_weight = openprint::print::get_finished_weight( $Project->id() );
+		my $finished_weight = $Project->finished_weight();
 		foreach my $qty_index ( $Project->quantity_indexes() ) {
 			if ( $finished_weight * $$Project{'quantity'.$qty_index} > 1500 ) {
 				return 1;
@@ -134,7 +134,7 @@ sub calc {
 		$$specs{alert} .= 'Unable to calculate the calliper of the project.  Please recalculate printing services.';
 		return $$specs{Status} = 'uncalculated';
 	} # end if
-	$$specs{txtFinishedWeight} = 1 * openprint::print::get_finished_weight( $project_index, 1 );
+	$$specs{txtFinishedWeight} = $Project->finished_weight( 1 );
 	if ( ! $$specs{txtFinishedWeight} ) {
 		$$specs{alert} .= 'Unable to calculate the weight of the project.  Please recalculate printing services.';
 		return $$specs{Status} = 'uncalculated';
@@ -190,16 +190,13 @@ $log->debug("Materials: " . map { $_->name() } @Materials ) if DEBUG;
 #$maxWeight = 30;
 #} # end if
 				if ( $width and $height and $depth ) {
-					my $setup1 = new openprint::Imposition();
-					my $setup2 = new openprint::Imposition();
+					my $setup = openprint::imposition::fit( @$specs{'txtFinalWidth','txtFinalHeight'}, $width, $height );
 
-					openprint::imposition::calc_setup( $setup1, @$specs{'txtFinalWidth','txtFinalHeight'}, $width, $height );
-					openprint::imposition::calc_setup( $setup2, @$specs{'txtFinalHeight','txtFinalWidth'}, $width, $height );
-					my $imposition = $setup1->imposition() > $setup2->imposition() ? $setup1->imposition() : $setup2->imposition();
+					my $imposition = $$setup{imposition};
 					if ( $imposition ) {
 						# Fits flat
 						$items_by_size = int ( ($depth/$$specs{txtFinishedCalliper}) * $imposition );
-						$$specs{'hdnBreakdown'.$qty_index} .= sprintf('Items by size: %d<br/>', $items_by_size );
+						$$specs{'hdnBreakdown'.$qty_index} .= sprintf('Items by size: %s/%s * %dout = %d<br/>', $depth, $$specs{txtFinishedCalliper}, $imposition, $items_by_size );
 					} else {
 						# Try Rolling
 						my ( $item_width, $item_length ) = sort @$specs{'txtFinalWidth','txtFinalHeight'};

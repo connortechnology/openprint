@@ -11,7 +11,7 @@
 		date_filter( $uri.'?created_on_start', 'created_on >=' ),
 		);
 	if ( $session{$uri.'?salesrep_id_exclude'} ) {
-		my @csr_ids = map { $_->id() } openprint::User->find( 'usergroup any'=>'Sales' );
+		my @csr_ids = map { $_->id() } openprint::User->find( company_id=>$config{owner_id}, 'usergroup any'=>'Sales' );
 		@csr_ids = sets::exclude( [ split(',', $session{$uri.'?salesrep_id'} ) ], \@csr_ids ) if $session{$uri.'?salesrep_id'};
 		$filters{'salesrep_id not in'} = \@csr_ids;
 	} # end if
@@ -21,10 +21,10 @@
 <? if ( @{$$variable{'Companies'}} ) ?>
 	<table class="List">
 		<tr> 
-			<th class="Company">Account #</th>
+			<th class="Account">Account #</th>
 			<th class="Company">Name</th>
+			<th class="User CSR">CSR</th>
 			<th class="Date">Created</th>
-			<th class="CSR">CSR</th>
 		</tr>
 <? echo (
 	my $html;
@@ -34,8 +34,8 @@
 <tr%1$s> 
 	<td class="Account">%2$s</td>
 	<td class="Company">%3$s</td>
+	<td class="User CSR">%5$s</td>
 	<td class="Date">%4$s</td>
-	<td class="CSR">%5$s</td>
 </tr>
 `, $rowclass, 
 	$Company->admin_link_to( $$Company{accountnumber} ),

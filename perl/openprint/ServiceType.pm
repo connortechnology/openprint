@@ -23,6 +23,7 @@ $serial = 'service_types_id_seq';
 	view_visible	=> 'view_visible',
 	summary_visible	=> 'summary_visible',
 	category		=> undef,
+	allow_delete	=> 'allow_delete',
 	deleted			=> 'deleted',
 );
 %find_fields = (
@@ -35,6 +36,7 @@ $serial = 'service_types_id_seq';
 	category_id		=>	undef,
 	sorting			=>	undef,
 	summary_visible	=>	1,
+	allow_delete	=>	1,
 );
 
 sub cache_field {
@@ -44,9 +46,9 @@ $cache_field = 'name';
 
 sub next {
 	my $self = shift;
-	($_) = sql::execute( undef, undef, q{SELECT id FROM Service_Types WHERE name = (SELECT MIN(name) FROM Service_Types WHERE name>?)}, $$self{'name'} );
+	($_) = sql::execute( undef, undef, q{SELECT id FROM Service_Types WHERE name = (SELECT MIN(name) FROM Service_Types WHERE name>?)}, $$self{name} );
 	if ( ! $_ ) {
-		( $_ ) = sql::execute( undef, undef, q{SELECT id FROM Service_Types WHERE name = (SELECT MAX(name) FROM Service_Types WHERE name<?)}, $$self{'name'} );
+		( $_ ) = sql::execute( undef, undef, q{SELECT id FROM Service_Types WHERE name = (SELECT MAX(name) FROM Service_Types WHERE name<?)}, $$self{name} );
 	} # end if
 	return $_;
 } # end sub next
@@ -55,9 +57,9 @@ sub Next {
 }
 sub prev {
 	my $self = shift;
-	($_) = sql::execute( undef, undef, q{SELECT id FROM Service_Types WHERE name = (SELECT MAX(name) FROM Service_Types WHERE name<?)}, $$self{'name'} );
+	($_) = sql::execute( undef, undef, q{SELECT id FROM Service_Types WHERE name = (SELECT MAX(name) FROM Service_Types WHERE name<?)}, $$self{name} );
 	if ( ! $_ ) {
-		( $_ ) = sql::execute( undef, undef, q{SELECT id FROM Service_Types WHERE name = (SELECT MIN(name) FROM Service_Types WHERE name>?)}, $$self{'name'} );
+		( $_ ) = sql::execute( undef, undef, q{SELECT id FROM Service_Types WHERE name = (SELECT MIN(name) FROM Service_Types WHERE name>?)}, $$self{name} );
 	} # end if
 	return $_;
 } # end sub prev
@@ -68,28 +70,32 @@ sub Prev {
 
 sub destroy {
 	my $ac = sql::start_transaction( $openprint::dbh );
-	sql::execute( undef, undef, q{DELETE FROM tbl_service_defaults WHERE lngServiceTypeIndex=?}, $_[0]{'id'} );
+	sql::execute( undef, undef, q{DELETE FROM tbl_service_defaults WHERE lngServiceTypeIndex=?}, $_[0]{id} );
 	sql::update( undef, undef, $openprint::Project_Service::table, [ $openprint::Project_Service::fields{servicetype_id} . ' =?', $_[0]{id} ], $openprint::Project_Service::fields{servicetype_id}, undef );
-	sql::execute( undef, undef, q{DELETE FROM Service_Types WHERE id=?}, $_[0]{'id'} );
+	sql::execute( undef, undef, q{DELETE FROM Service_Types WHERE id=?}, $_[0]{id} );
 	sql::end_transaction( $openprint::dbh, $ac );
 } # end sub destroy
 
+sub Category {
+	return new openprint::ServiceType_Category( $_[0]{category_id} );
+} # end sub category
 sub category {
 	if ( @_ == 2 ) {
 		my $ServiceType_Category = openprint::ServiceType_Category->find_one('name'=>$_[1]);
 		if ( $ServiceType_Category ) {
-			$_[0]{'category_id'} = $ServiceType_Category->id();
+			$_[0]{category_id} = $ServiceType_Category->id();
 		} else {
 			$ServiceType_Category = new openprint::ServiceType_Category();
 			$ServiceType_Category->save({'name'=>$_[1]});
 		} # end if
-		$_[0]{'category_id'} = $ServiceType_Category->id();
+		$_[0]{category_id} = $ServiceType_Category->id();
 	} # end if
-	return new openprint::ServiceType_Category( $_[0]{'category_id'} )->name();
-} # end sub category
+
+	return $_[0]->Category()->name();
+}
 
 sub Defaults {
-	return openprint::ServiceType_Default->find('servicetype_id'=>$_[0]{'id'});
+	return openprint::ServiceType_Default->find('servicetype_id'=>$_[0]{id});
 } # end sub Defaults
 
 1;

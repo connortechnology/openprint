@@ -22,7 +22,7 @@
 	function delete_to( user_id ) {
 		var form = $('f1');
 		var params = $H(Form.serializeElements( form.getInputs('hidden','to_id'), true ));
-		params.set('conversation_id', '<? echo ( $$variable{'Conversation'}->id() ) ?>' );
+		params.set('conversation_id', '<? echo ( $$variable{Conversation}->id() ) ?>' );
 		params.set('action', 'remove' );
 		params.set('user_id', user_id );
 
@@ -31,7 +31,7 @@
 	function add_to( input, li ) {
 		var form = input.form;
 		var params = $H(Form.serializeElements( form.getInputs('hidden','to_id'), true ));
-		params.set('conversation_id', '<? echo ( $$variable{'Conversation'}->id() ) ?>' );
+		params.set('conversation_id', '<? echo ( $$variable{Conversation}->id() ) ?>' );
 		params.set('action', 'add' );
 		params.set('user_id', li.id );
 
@@ -40,7 +40,7 @@
 	function reply_to( form ) {
 		tinyMCE.triggerSave();
 		var params = $H(Form.serializeElements( form.getInputs('hidden','to_id'), true ));
-		params.set('conversation_id', '<? echo ( $$variable{'Conversation'}->id() ) ?>' );
+		params.set('conversation_id', '<? echo ( $$variable{Conversation}->id() ) ?>' );
 		params.set('action', 'reply' );
 		params.set('message_id', form.last_message_id.value );
 		params.set('body', form.elements['body'].value );
@@ -50,33 +50,33 @@
 </script>
 <?include(/includes/error_reporting.html)?>
 <div class="Conversation"><div class="View">
-	<form id="f1" name="f1" action="/messaging/view.html?conversation_id=<? echo ( $$variable{'Conversation'}->id() ) ?>" method="post">
+	<form id="f1" name="f1" action="/messaging/view.html?conversation_id=<? echo ( $$variable{Conversation}->id() ) ?>" method="post">
 		<input type="hidden" id="last_message_id" value="" />
 		<fieldset>
-<? if ( $$variable{'Conversation'}->id() ) ?>
-<legend>Viewing Conversation: <? echo ( $$variable{'Conversation'}->subject() ) ?></legend>
-<? else ( $$variable{'Conversation'}->id() ) ?>
+<? if ( $$variable{Conversation}->id() ) ?>
+<legend>Viewing Conversation: <? echo ( $$variable{Conversation}->subject() ) ?></legend>
+<? else ( $$variable{Conversation}->id() ) ?>
 <legend>Start a New Conversation</legend>
-<? endif ( $$variable{'Conversation'}->id() ) ?>
-			<? if ( $$variable{'Conversation'}->deleted() ) ?>
+<? endif ( $$variable{Conversation}->id() ) ?>
+			<? if ( $$variable{Conversation}->deleted() ) ?>
 			<span class="warning">This message has been deleted</span>
-			<? endif ( $$variable{'Conversation'}->deleted() ) ?>
-			<div id="Messages"><? echo ( include('_messages.html'); ) ?></div>
+			<? endif ( $$variable{Conversation}->deleted() ) ?>
+			<div id="Messages"><?include('_messages.html')?></div>
 			<div class="Message Reply">
-				<div id="To"><? echo ( include('_to.html'); ) ?></div>
-				<? echo ( new openprint::User( $session{'user_id'} )->icon(); ) ?>
-<? if ( ! $$variable{'Conversation'}->id() ) ?>
+				<div id="To"><?include('_to.html')?></div>
+				<? echo ( $openprint::User->icon(); ) ?>
+<? if ( ! $$variable{Conversation}->id() ) ?>
 				<div id="Subject">
-					<input type="text" id="subject" name="subject" value="<? echo ( $param{'subject'} ) ?>" placeholder="Subject" />
+					<input type="text" id="subject" name="subject" value="<? echo ( $param{subject} ) ?>" placeholder="Subject" />
 				</div>
-<? endif ( ! $$variable{'Conversation'}->id() ) ?>
-				<textarea id="body" name="body" class="mce" onkeyup="textarea_resize(this);" placeholder="<? echo ( $$variable{'Conversation'}->id() ? 'Reply' : 'Type your message here.' ) ?>"><? echo ( $param{'body'} ) ?></textarea>
+<? endif ( ! $$variable{Conversation}->id() ) ?>
+				<textarea id="body" name="body" class="mce" onkeyup="textarea_resize(this);" placeholder="<? echo ( $$variable{Conversation}->id() ? 'Reply' : 'Type your message here.' ) ?>"><? echo ( $param{body} ) ?></textarea>
 				<span class="buttons">
 				<? echo (
-if ( $$variable{'Conversation'}->id() ) {
-	return ssi::button( 'Reply', { onclick=>q`reply_to( $('f1') );` } );
+if ( $$variable{Conversation}->id() ) {
+	return button( 'Reply', { onclick=>q`reply_to( $('f1') );` } );
 } else {
-	return ssi::button( 'Send', { onclick=>q`var form = $('f1'); form.elements['action'].value='Send';form.submit();` } );
+	return button( 'Send', { onclick=>q`var form = $('f1'); form.elements['action'].value='Send';form.submit();` } );
 } # end if
 ) ?>
 				</span>
@@ -84,9 +84,9 @@ if ( $$variable{'Conversation'}->id() ) {
 
 			<p class="buttons">
 				<? echo (
-					return if ! $$variable{'Conversation'}->id();
+					return if ! $$variable{Conversation}->id();
 					my $html = '';
-					$html .= ssi::button( 'DC', { onclick=>"f1.elements['action'].value='Delete';f1.submit();", 'text'=>'Leave Conversation' } );
+					$html .= button( 'DC', { onclick=>"f1.elements['action'].value='Delete';f1.submit();", 'text'=>'Leave Conversation' } );
 					return $html;
 				) ?>
 			</p>

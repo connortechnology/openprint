@@ -8,3 +8,4 @@ CREATE TABLE Order_Taxes (
     PRIMARY KEY (id)
 );
 
+create index order_taxes_order_id_tax_id_idx on order_taxes (order_id,tax_id);

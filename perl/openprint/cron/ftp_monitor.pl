@@ -101,6 +101,7 @@ $openprint::dbh = sql::open_sql( $log,
 die 'Error opening db' if ! $dbh;
 configuration::init( \%config );
 configuration::from_file($$opts{config});
+openprint::session_init();
 # Cache of recently completed uploads.  keys are username, value is array of upload hashes.  When the user is no longer logged in or
 # older than a certain age, the email notification should go out, and the hash entry cleared.
 my %uploads;
@@ -280,7 +281,7 @@ $log->debug("data: $client $remote_user $user_name $curr_time $xfer_type $path $
 						complete	=> 1,
 					};
 				} # end if send email
-			} elsif ($line =~ /^(\S+)\s+(\S+)\s+(\S+)\s+\[([^\]]+)\]\s+"([^"]+)"\s+(\d+)\s+([\-\d]+)\s+([\.\d]+)$/o) {
+			} elsif ($line =~ /^(\S+)\s+(\S+)\s+(\S+)\s+\[([^\]]+)\]\s+"([^"]*)"\s+(\d+)\s+([\-\d]+)\s+([\.\d]+)$/o) {
 #LogFormat IQFormat "%h %l %u %t \"%f\" %s %b %T"
 
 				my $client = $1;
@@ -299,6 +300,9 @@ $log->debug("Not an upload, ignoring");
 next;
 } elsif ( $response_code != 226 ) {
 	$log->debug("Not an upload, response_code: $response_code");
+	next;
+} elsif ( $path eq '-' ) {
+	$log->debug("Not an upload, response_code: $response_code path was $path");
 	next;
 }
 
@@ -575,18 +579,18 @@ $log->debug("regexp: $regexp");
 
 		my @to;
 		if ( $User->email() =~ /^iconnor/ ) {
-			@to = ( $User );
+			@to = ( 'iconnor@connortechnology.com' );
 		} else {
 			if ( $Company->salesrep_id() ) {
 				my $CSR = $Company->CSR();
-				if ( $CSR->notification('CSR Client File Uploads') ne 'No' ) {
+				if ( openprint::User_Notification->find_one( type=>'CSR Client File Uploads', 'value !=' => 'No', user_company_id=>[ $config{owner_id}, $Company->id() ] ) ) {
 					@to = ( $CSR );
 					$log->debug("Adding CSR $$CSR{email}");
 				} else {
 					$log->debug("Not Adding CSR $$CSR{email} : notifications etting:" . $CSR->notification('CSR Client File Uploads') );
 				} # end if
 			} # end if
-			push @to, map { $_->User() } openprint::User_Notification->find( type=>'Client File Uploads',value=>'Yes', company_id=>[ $config{Owner}, $Company->id() ] );
+			push @to, map { $_->User() } openprint::User_Notification->find( type=>'Client File Uploads',value=>'Yes', 'company_id is null or ='=>$Company->id(), company_id=>[ $config{owner_id}, $Company->id() ] );
 		} # end if
 		
 		if ( ! @to ) {
@@ -599,13 +603,20 @@ $log->debug("regexp: $regexp");
 			$variable{Uploads} = \@Uploads;
 
 			$variable{ReplacementText} = ssi::include( '/email_content/ftp_csr_notification.html', \%variable );
+			if ( ! $variable{ReplacementText} ) {
+				$log->error("No CSR notification text");
+			}
 			my $body = ssi::include( '/email_template.html', \%variable );
+			if ( ! $body ) {
+				$log->error("No body notification text");
+			}
+
 			my $Mail = new openprint::Email();
 			$Mail->send(
 					FROM    => ( $config{AdministratorEmail} ? $config{AdministratorEmail} : $from ),
 					'Reply-To'	=>	$from,
 					TO      => \@to,
-#BCC		=>	'iconnor@point-one.com',
+#BCC		=>	'iconnor@connortechnology.com',
 					SUBJECT => $subject,
 					ATTACHMENTS => [ '', MIME::QuotedPrint::encode_qp(Encode::encode('utf-8',$body)), 'text/html', 'quoted-printable' ]
 				);
@@ -639,7 +650,7 @@ EOT
 			smtp => $config{smtp_server},
 			From => $config{from},
 			To => $config{recipient},
-			BCC	=>	'iconnor@point-one.com',
+			BCC	=>	'iconnor@connortechnology.com',
 			Subject => $subject,
 		};
 

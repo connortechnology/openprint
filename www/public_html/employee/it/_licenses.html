@@ -1,4 +1,4 @@
-<? eval (
+<? echo (
 	my @Hosts;
 	$session{'/employee/it/licenses.html?order'} = 'lower(hostname)' if ! $session{'/employee/it/licenses.html?order'};
 	if ( $session{'/employee/it/licenses.html?serialkey'} ) {
@@ -10,9 +10,12 @@
 		if ( $session{'/employee/it/licenses.html?mac'} and $session{'/employee/it/licenses.html?mac'} !~ /%/ ) {
 			@Hosts = openprint::Host->find(
 				order	=>	$session{'/employee/it/licenses.html?order'},
-				mac_any	=>	$session{'/employee/it/licenses.html?mac'},
+				mac		=>	$session{'/employee/it/licenses.html?mac'},
 				limit	=>	10,
 			);
+			if ( ! @Hosts ) {
+return '<div class="error">No hosts found for mac '. $session{'/employee/it/licenses.html?mac'} . '</div>';
+			}
 		} else {
 			@Hosts = openprint::Host->find(
 				order => $session{'/employee/it/licenses.html?order'},
@@ -59,6 +62,7 @@
 			
 		)];
 	} # end if serialkey
+	return;
 ) ?>
 <table class="List sortable">
 	<thead>

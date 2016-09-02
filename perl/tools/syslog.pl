@@ -11,6 +11,8 @@ require logger;
 require openprint;
 require openprint::Host;
 require Date::Parse;
+require DateTime;
+require DateTime::Format::Pg;
 
 use vars qw( $log $dbh %config );
 *log = \$openprint::log;
@@ -70,30 +72,31 @@ configuration::from_file($$opts{config});
 configuration::merge($opts);
 
 @SIG{qw(HUP)} = \&sig_handler;
-
 my @re = (
 		'^(\w{3} [ :0-9]{11}) [\._a-zA-Z0-9\-]+ sshd\[[0-9]+\]: pam_\w+\(sshd:auth\): authentication failure; logname= uid=0 euid=0 tty=ssh ruser= rhost=(?<IP>[\._a-zA-Z0-9\-]+)\s*$',
+		'^(\w{3} [ :0-9]{11}) [\._a-zA-Z0-9\-]+ sshd\[[0-9]+\]: Bad protocol version identification \'[^\']+\' from (?<IP>[\._a-zA-Z0-9\-]+)( port [[:digit:]]+)?$',
 		'^(\w{3} [ :0-9]{11}) [\._a-zA-Z0-9\-]+ sshd\[[0-9]+\]: pam_\w+\(sshd:auth\): authentication failure; logname= uid=0 euid=0 tty=ssh ruser= rhost=(?<IP>[\._a-zA-Z0-9\-]+)\s+user\=\w+$',
 		'^(\w{3} [ :0-9]{11}) [\._a-zA-Z0-9\-]+ sshd\[[0-9]+\]: Failed password for [\._a-zA-Z0-9\-]+ from (?<IP>[\._a-zA-Z0-9\-]+) port [0-9]+ ssh2$',
 		'^(\w{3} [ :0-9]{11}) [\._a-zA-Z0-9\-]+ sshd\[[0-9]+\]: Failed password for (invalid|illegal) user [\._a-zA-Z0-9\-]+ from (?<IP>[\._a-zA-Z0-9\-]+) port [0-9]+ ssh2$',
 		'^(\w{3} [ :0-9]{11}) [\._a-zA-Z0-9\-]+ sshd\[[0-9]+\]: error: PAM: Authentication failure for (illegal user root|[\._a-zA-Z0-9\-]+) from (?<IP>[\._a-zA-Z0-9\-]+)$',
 		'^(\w{3} [ :0-9]{11}) [\._a-zA-Z0-9\-]+ sshd\[[0-9]+\]: (error: )?PAM: [[:digit:]]+ more authentication failures?; logname= uid=0 euid=0 tty=ssh ruser= rhost=(?<IP>[\._a-zA-Z0-9\-]+)(\s+user\=\w+)?$',
 		'^(\w{3} [ :0-9]{11}) [\._a-zA-Z0-9\-]+ sshd\[[0-9]+\]: Disconnecting: Too many authentication failures for (invalid user )?[^[:space:]]* from (?<IP>[.[:digit:]]+) port [[:digit:]]+ ssh2 \[preauth\]$',
+		'^(\w{3} [ :0-9]{11}) [\._a-zA-Z0-9\-]+ sshd\[[0-9]+\]: error: maximum authentication attempts exceeded for (invalid user )?root from (?<IP>[.[:digit:]]+) port [[:digit:]]+ ssh2 \[preauth\]$',
 		'^(\w{3} [ :0-9]{11}) [\._a-zA-Z0-9\-]+ sshd\[[0-9]+\]: Invalid user \w+ from (?<IP>[0-9.]+)$',
 		'^(\w{3} [ :0-9]{11}) [\._a-zA-Z0-9\-]+ sshd\[[0-9]+\]: Connection closed by (?<IP>[0-9.]+):? \[preauth\]$',
-		'^(\w{3} [ :0-9]{11}) [\._a-zA-Z0-9\-]+ sshd\[[0-9]+\]: Received disconnect from (?<IP>[0-9.]+) 11: [ .,/:([:alnum:]]+ \[preauth\]$',
-		'^(\w{3} [ :0-9]{11}) [\._a-zA-Z0-9\-]+ sshd\[[0-9]+\]: Received disconnect from (?<IP>[0-9.]+) 10:  \[preauth\]$',
-		'^(\w{3} [ :0-9]{11}) [\._a-zA-Z0-9\-]+ sshd\[[0-9]+\]: Received disconnect from (?<IP>[0-9.]+) 3: com.jcraft.jsch.JSchException: (Auth cancel|reject HostKey: [0-9\.]+) \[preauth\]$',
+		'^(\w{3} [ :0-9]{11}) [\._a-zA-Z0-9\-]+ sshd\[[0-9]+\]: Received disconnect from (?<IP>[0-9.]+) (port [[:digit:]]+:)?[[:digit:]]+: [ \.,/:[:alnum:]]* \[preauth\]$',
 		'^(\w{3} [ :0-9]{11}) [\._a-zA-Z0-9\-]+ sshd\[[0-9]+\]: User \w+ from (?<IP>[0-9.]+) not allowed because (account is locked|not listed in AllowUsers)$',
 		'^(\w{3} [ :0-9]{11}) [\._a-zA-Z0-9\-]+ proftpd\[[0-9]+\]: [\.\-A-Za-z0-9]+ \([\.\-A-Za-z0-9]+\[(?<IP>[.:a-zA-Z0-9]+)\]\) \- Maximum login attempts \([0-9]+\) exceeded, connection refused$',
 		'^(\w{3} [ :0-9]{11}) [\._a-zA-Z0-9\-]+ proftpd\[[0-9]+\]: [\.\-A-Za-z0-9]+ \([\.\-A-Za-z0-9]+\[(?<IP>[.:a-zA-Z0-9]+)\]\) \- USER [\.\-A-Za-z0-9]+: no such user found from [0-9.]+\[[0-9.]+\] to [.:a-zA-Z0-9]+$',
 		'^(\w{3} [ :0-9]{11}) [\._a-zA-Z0-9\-]+ sshd\[[0-9]+\]: Failed keyboard-interactive/pam for invalid user [\.\-A-Za-z0-9]+ from (?<IP>[.:a-zA-Z0-9]+) port [0-9]+ ssh2$',
-		'^(\w{3} [ :0-9]{11}) [\._a-zA-Z0-9\-]+ dovecot: pop3-login: Disconnected \(auth failed, 1 attempts\): user=<[a-zA-Z@\.0-9]*>, method=PLAIN, rip=(?<IP>[\.0-9]+), lip=[\.0-9]+?$',
-		'^(\w{3} [ :0-9]{11}) [\._a-zA-Z0-9\-]+ dovecot: pop3-login: Disconnected \(auth failed, [0-9]+ attempts in [0-9]+ secs\): user=<[a-zA-Z@\.0-9]*>, method=PLAIN, rip=(?<IP>[\.0-9]+), lip=[\.0-9]+, session=<[^>]+$',
-		'^(\w{3} [ :0-9]{11}) [\._a-zA-Z0-9\-]+ dovecot: pop3-login: Aborted Login \(auth failed, [0-9]+ attempts in [0-9]+ secs\): user=<[a-zA-Z@\.0-9]*>, method=PLAIN, rip=(?<IP>[\.0-9]+), lip=[\.0-9]+, session=<[^>]+$',
+		'^(\w{3} [ :0-9]{11}) [\._a-zA-Z0-9\-]+ dovecot: pop3\-login: Disconnected \(auth failed, 1 attempts\): user=<[a-zA-Z@\.0-9]*>, method=PLAIN, rip=(?<IP>[\.0-9]+), lip=[\.0-9]+?$',
+		'^(\w{3} [ :0-9]{11}) [\._a-zA-Z0-9\-]+ dovecot: pop3\-login: Disconnected \(auth failed, [0-9]+ attempts in [0-9]+ secs\): user=<[a-zA-Z@\.0-9]*>, method=PLAIN, rip=(?<IP>[\.0-9]+), lip=[\.0-9]+, session=<[^>]+>$',
+		'^(\w{3} [ :0-9]{11}) [\._a-zA-Z0-9\-]+ dovecot: pop3\-login: Aborted (l|L)ogin \(auth failed, [0-9]+ attempts in [0-9]+ secs\): user=<[a-zA-Z@\.0-9]*>, method=PLAIN, rip=(?<IP>[\.0-9]+), lip=[\.0-9]+, session=<[^>]+>$',
 		q`^(\w{3} [ :0-9]{11}) [\._a-zA-Z0-9\-]+ named\[[0-9]+\]: client (?<IP>[0-9.]+)#[0-9]+: (view [A-Za-z0-9]+: )?query \(cache\) '[./[:alnum:]]+' denied$`,
 		q`^(\w{3} [ :0-9]{11}) [\._a-zA-Z0-9\-]+ pam-abl\[[0-9]+\]: Blocking access from (?<IP>[0-9.]+) to service sshd, user root$`,
-		q`^(\w{3} [ :0-9]{11}) [\._a-zA-Z0-9\-]+ postfix\/smtpd\[[0-9]+\]: warning: unknown\[(?<IP>[0-9.]+)\]: SASL LOGIN authentication failed: authentication failure$`,
+		q`^(\w{3} [ :0-9]{11}) [\._a-zA-Z0-9\-]+ postfix\/smtpd\[[0-9]+\]: warning: [\.\-A-Za-z0-9]+\[(?<IP>[0-9.]+)\]: SASL LOGIN authentication failed:`,
+		q`^(\w{3} [ :0-9]{11}) [\._a-zA-Z0-9\-]+ pdns\[[0-9]+\]: Received a malformed qdomain from (?<IP>[0-9.]+), '[^']+': sending servfail$`,
+		q`^(\w{3} [ :0-9]{11}) [\._a-zA-Z0-9\-]+ ovpn\-server\[[0-9]+\]: (?<IP>[0-9.]+):[0-9]+ WARNING Bad encapsulated packet length from peer \([[:digit:]]+\), which must be > 0 and <= 1547 \-\- please ensure that \-\-tun\-mtu or \-\-link\-mtu is equal on both peers \-\- this condition could also indicate a possible active attack on the TCP link \-\- \[Attempting restart\.\.\.\]$`,
 );
 
 
@@ -101,6 +104,7 @@ my %whitelist;
 my $last_update = 0;
 my $hup;
 my %hostname_lookups;
+my $parser = 'DateTime::Format::Pg';
 
 # Variables and Constants
 my $MAXLEN = 1524;
@@ -155,7 +159,8 @@ $log->debug("# of entries in Object_name_cache: " . keys %{$openprint::Object::n
 	if ( $last_update < (time-3600) ) {
 		$last_update = time;
 
-		%whitelist = map{ $_->ip(),$_ } openprint::Host_Interface->find( whitelist=>1,'ip is null'=>0);
+		my @WhiteList_Hosts = openprint::Host->find( whitelist=>1 );
+		%whitelist = map{ $_->ip(),$_ } openprint::Host_Interface->find('ip is null'=>0, host_id=>[ map { $$_{id} } @WhiteList_Hosts ] ) if @WhiteList_Hosts;
 		$openprint::log->debug(join("\n", map { 'whitelist: ' . $_ } keys %whitelist ) ) if $config{debug};
 
 		# If a blacklist is specified, update it on start
@@ -252,6 +257,7 @@ $log->debug("# of entries in Object_name_cache: " . keys %{$openprint::Object::n
 				} # end if
 
 				if ( ! $host_counts{$ip} ) {
+					$log->debug("$ip not in host_counts, adding it");
 					my $Host;
 					my $HI = openprint::Host_Interface->find_one(ip=>$ip);
 					if ( ! $HI ) {
@@ -264,19 +270,26 @@ $log->debug("# of entries in Object_name_cache: " . keys %{$openprint::Object::n
 					} # end if      
 					$host_counts{$ip} = $Host;
 				} # end if
+
+				my $updated_on_dt = $parser->parse_datetime( $host_counts{$ip}{updated_on} );
+
+				# Instead of parsing when, we just use the current time
+				my $now_dt = DateTime->now( time_zone=>$config{Timezone} );
+
 				if ( $host_counts{$ip}{updated_on} and ! $host_counts{$ip}{updated_on_seconds} ) {
-					$host_counts{$ip}{updated_on_seconds} = Date::Parse::str2time( $host_counts{$ip}{updated_on} );
+					$host_counts{$ip}{updated_on_seconds} = $updated_on_dt->epoch();
+					$log->debug("Covnerting  $host_counts{$ip}{updated_on} to $host_counts{$ip}{updated_on_seconds} seconds") if $config{debug};
 				}
-				my $last_seen = $host_counts{$ip}{updated_on_seconds};
-				my $occurrence = Date::Parse::str2time( $when );
 	#$log->warn("Last: $host_counts{$ip}{updated_on} => $last_seen, $when => $occurrence") if $host_counts{$ip};
-				if ( (!$last_seen) or ($last_seen < $occurrence) ) {
+				#if ( DateTime->compare( $updated_on_dt, $now_dt ) <= 0 ) {
 					$host_counts{$ip}{count} += 1;
+$log->debug("coutn for $ip is $host_counts{$ip}{count}");
 					$host_counts{$ip}{update} = 1;
 					$changed = 1;
-				} else {
-					$log->debug( "Not counting because too old " . $host_counts{$ip}{updated_on} . " >= $when" ) if $config{debug};
-				} # end if
+				#} else {
+					#$log->debug( "Not counting because too old " . $host_counts{$ip}{updated_on} . " >= $when " ) if $config{debug};
+					#$log->debug( "Not counting because too old " . $updated_on_dt->epoch() . " >= " . $now_dt->epoch() ) if $config{debug};
+				#} # end if
 				last; # re
 			} # end if line matches re
 		} # end foreach re
@@ -286,6 +299,7 @@ $log->debug("# of entries in Object_name_cache: " . keys %{$openprint::Object::n
 			foreach my $ip ( sort keys %host_counts ) {
 				next if ! $host_counts{$ip}{update};
 				next if $host_counts{$ip}{whitelist};
+				
 				if ( $ip eq '127.0.0.1' ) {
 					$log->warn("WTF blacklistint localhost?!");
 					next;
@@ -293,18 +307,27 @@ $log->debug("# of entries in Object_name_cache: " . keys %{$openprint::Object::n
 				if ( ! defined $host_counts{$ip}{count} ) {
 					$host_counts{$ip}{count} = 0;
 				}
-				if ( $host_counts{$ip}{count} > 20 ) {
-					$host_counts{$ip}{blacklist} = 1;
-				} # end if
-				if ( $dbh and $dbh->ping() ) {
-					$_ = $host_counts{$ip}->save();
-					if ( $_ ) {
-						$log->error( $_ );
+				if ( ! $host_counts{$ip}{blacklist} ) {
+					if ( $host_counts{$ip}{count} > 20 ) {
+						$host_counts{$ip}{blacklist} = 1;
 					} # end if
-					$host_counts{$ip}{updated_on_seconds} = time;
-				} # end if
-				#$log->debug( "$ip $host_counts{$ip}{ip} $host_counts{$ip}{count}" ) if $config{debug};
-				`shorewall drop $ip` if $host_counts{$ip}{blacklist};
+					if ( $dbh and $dbh->ping() ) {
+						$_ = $host_counts{$ip}->save();
+						if ( $_ ) {
+							$log->error( $_ );
+						} # end if
+						$host_counts{$ip}{updated_on_seconds} = time;
+					} # end if
+					#$log->debug( "$ip $host_counts{$ip}{ip} $host_counts{$ip}{count}" ) if $config{debug};
+	
+					if ( $host_counts{$ip}{blacklist} ) {
+						$log->debug("Dropping $ip");
+						`shorewall drop $ip`;
+					}
+				} elsif ( $host_counts{$ip}{count} > 20 ) {
+					$log->debug("Dropping $ip");
+					`shorewall drop $ip`;
+				} # end if wasn't blacklisted, but now is
 			} # end foreach ip
 			$changed = 0;
 		} elsif ( $config{debug} ) {

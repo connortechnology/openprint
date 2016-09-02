@@ -107,5 +107,9 @@ sub banners {
 	$variable{'Redirect'} = '/content/'.$variable{'ProjectType'}->url();
 } # end sub banners
 
+sub ChannelLetters {
+	load_simple();
+}
+
 1;
 __END__

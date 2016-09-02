@@ -1,0 +1,9 @@
+[Unit]
+Description=Openprint Syslog Monitor
+
+[Service]
+#Type=forking
+ExecStart=/var/www/testing/perl/tools/syslog.pl --config=/etc/openprint/syslog.conf
+
+[Install]
+WantedBy=multi-user.target

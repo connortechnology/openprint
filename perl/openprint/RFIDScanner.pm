@@ -50,12 +50,14 @@ $serial = 'rfidscanners_id_seq';
 sub delete {
     my $self = shift;
     my $ac = sql::start_transaction( );
-	foreach ( openprint::RFIDScannerHistory->find('scanner_id'=>$$self{'id'}) ) {
-		$_->delete();
-	} # end foreach
-	foreach ( openprint::RFIDTagHistory->find('scanner_id'=>$$self{'id'}) ) {
-		$_->delete();
-	} # end foreach
+	sql::execute( undef, undef, "DELETE FROM $openprint::RFIDScannerHistory::table WHERE scanner_id=$$self{id}" );
+	#foreach ( openprint::RFIDScannerHistory->find('scanner_id'=>$$self{'id'}) ) {
+		#$_->delete();
+	#} # end foreach
+	sql::execute( undef, undef, "DELETE FROM $openprint::RFIDTagHistory::table WHERE scanner_id=$$self{id}" );
+	#foreach ( openprint::RFIDTagHistory->find('scanner_id'=>$$self{'id'}) ) {
+		#$_->delete();
+	#} # end foreach
     sql::execute( undef, undef, q{DELETE FROM RFIDScanners WHERE id=?}, $$self{'id'} );
     sql::end_transaction( undef, $ac );
 } # end sub delete

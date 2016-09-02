@@ -48,8 +48,8 @@ $debug = 0;
 	type_id		=>	undef,
 	created_on	=>	q`'NOW()'`,
 	updated_on	=>	q`'NOW()'`,
-	created_by	=>	q`$openprint::session{'user_id'}`,
-	company_id	=>	q`$openprint::session{'company_id'}`,
+	created_by	=>	q`$openprint::session{user_id}`,
+	company_id	=>	q`$openprint::session{company_id}`,
 	md5			=>	undef,
 	deleted		=>	0,
 	optimised	=>	0,
@@ -71,11 +71,11 @@ $table = 'assets';
 $serial = 'assets_id_seq';
 
 sub Type {
-	return new openprint::Asset_Type( $_[0]{'type_id'} );
+	return new openprint::Asset_Type( $_[0]{type_id} );
 } # end sub Type
 
 sub on_disk_path {
-	return $openprint::config{'AssetPath'}.'/'.$_[0]->on_disk_filename();
+	return $openprint::config{AssetPath}.'/'.$_[0]->on_disk_filename();
 } # end sub on_disk_path
 
 sub on_disk_filename {
@@ -114,7 +114,7 @@ sub is_photo {
 sub sized_url {
 	my $size = $_[1];
 	if ( ! $_[0]{id} ) {
-		return;
+		return '';
 	} # end if
 
 	my $src = $_[0]->on_disk_path();
@@ -139,50 +139,62 @@ sub sized_url {
 	my ( $blah, $extension ) = $filename =~ /(.+)\.([^\.]+)$/;
 	if ( is_photo( $extension ) ) {
 		my $dest_filename = $blah.'.jpg';
-		if ( $openprint::config{'AssetPath'} ) {
+		if ( $openprint::config{AssetPath} ) {
 			my $dest = $path.$dest_filename;
 			if ( ! -e $dest ) {
 				my ( $width, $height );
 				if ( $_[0]->layout() eq 'Landscape' ) {
 					if ( $size eq 'medium' ) {
-						$height = $openprint::config{'Medium_Asset_Height'};
-						$width = $openprint::config{'Medium_Asset_Width'} if ! $height;
+						$height = $openprint::config{Medium_Asset_Height};
+						$width = $openprint::config{Medium_Asset_Width} if ! $height;
 					} elsif ( $size eq 'large' ) {
-						$height = $openprint::config{'Large_Asset_Height'};
-						$width = $openprint::config{'Large_Asset_Width'} if ! $height;
+						$height = $openprint::config{Large_Asset_Height};
+						$width = $openprint::config{Large_Asset_Width} if ! $height;
 					} elsif ( $size eq 'thumbnail' ) {
-						$height = $openprint::config{'Small_Asset_Height'};
-						$width = $openprint::config{'Small_Asset_Width'} if ! $height;
+						$height = $openprint::config{Small_Asset_Height};
+						$width = $openprint::config{Small_Asset_Width} if ! $height;
 					} elsif ( $size eq 'small' ) {
-						$height = $openprint::config{'Small_Asset_Height'};
-						$width = $openprint::config{'Small_Asset_Width'} if ! $height;
+						$height = $openprint::config{Small_Asset_Height};
+						$width = $openprint::config{Small_Asset_Width} if ! $height;
 					} # end if
 					if ( ! ( $width or $height ) ) {
-						$openprint::log->error("No asset size in config for $size");
+						my ( $caller, undef, $line ) = caller;
+						$openprint::log->error("No asset size in config for size($size) called from $caller:$line");
 						return '/assets/'.$filename;
 					} # end if	
 				} else {
 					if ( $size eq 'medium' ) {
-						$width = $openprint::config{'Medium_Asset_Width'};
+						$width = $openprint::config{Medium_Asset_Width};
 					} elsif ( $size eq 'large' ) {
-						$width = $openprint::config{'Large_Asset_Width'};
+						$width = $openprint::config{Large_Asset_Width};
 					} elsif ( $size eq 'thumbnail' ) {
-						$width = $openprint::config{'Small_Asset_Width'};
+						$width = $openprint::config{Small_Asset_Width};
 					} elsif ( $size eq 'small' ) {
-						$width = $openprint::config{'Small_Asset_Width'};
+						$width = $openprint::config{Small_Asset_Width};
 					} # end if
 					if ( ! $width ) {
-						$openprint::log->error("No asset size in config for $size");
+						my ( $caller, undef, $line ) = caller;
+						$openprint::log->error("No asset size in config for size($size) called from $caller:$line");
 						return '/assets/'.$filename;
 					} # end if	
 				} # end if	
+				my ( $stderr, $stdout );
+				require IPC::Run3;
+				if ( $openprint::config{Watermark_Text} ) {
+					if ( ! -e $src.'.watermarked' ) {
+						IPC::Run3::run3(qq`gmic -input "$src" -watermark_fourier "$openprint::config{Watermark_Text}",33 -output "$src.watermarked"`, undef, $stdout, $stderr );
+						if ( $? ) {
+							$openprint::log->error("ERror watermarking sized image. Reason: ($?) stdout($stdout) stderr($stderr)");
+						} # end if watermark
+					} else {
+						$src = $src . '.watermarked';
+					}
+				}
 				$openprint::log->debug("Creating $size at ${width} x $src $dest");
 				if ( ! -e $src ) {
 					$openprint::log->error("Source file $src does not exist.");
 					return '/assets/'.$filename;
 				} # end if
-				my ( $stderr, $stdout );
-				require IPC::Run3;
 
 				
 				my $command;
@@ -217,7 +229,7 @@ sub sized_url {
 		if ( ! -e $openprint::config{SkinPath}.$fallback ) {
 			$fallback = '/images/icons/unknown.png';
 		} # end if
-		if ( $openprint::config{'AssetPath'} ) {
+		if ( $openprint::config{AssetPath} ) {
 			if ( ! -e $src ) {
 				$openprint::log->error("Src file $src no longer exists! Can't make thumbs");
 				return $fallback;
@@ -227,13 +239,13 @@ sub sized_url {
 			if ( ! -e $dest ) {
 				my $width;
 				if ( $size eq 'medium' ) {
-					$width = $openprint::config{'Medium_Asset_Width'};
+					$width = $openprint::config{Medium_Asset_Width};
 				} elsif ( $size eq 'large' ) {
-					$width = $openprint::config{'Large_Asset_Width'};
+					$width = $openprint::config{Large_Asset_Width};
 				} elsif ( $size eq 'thumbnail' ) {
-					$width = $openprint::config{'Small_Asset_Width'};
+					$width = $openprint::config{Small_Asset_Width};
 				} elsif ( $size eq 'small' ) {
-					$width = $openprint::config{'Small_Asset_Width'};
+					$width = $openprint::config{Small_Asset_Width};
 				} elsif ( ! $size ) {
 					$size = 'full';
 				} # end if
@@ -309,10 +321,10 @@ if ( 0 ) {
 		} # end if
 		return  '/assets/'.$size.'/'.$blah.'.jpg';
 	} else {
-		if ( -e $openprint::config{'SkinPath'}.'/images/icons/'.(lc $extension).'.png' ) {
+		if ( -e $openprint::config{SkinPath}.'/images/icons/'.(lc $extension).'.png' ) {
 			return '/images/icons/'.(lc $extension).'.png';
 		} else {
-$openprint::log->error("Shuold have found an icon.  Install icons!! for ($extension) at " . $openprint::config{'SkinPath'}.'/images/icons/'.(lc $extension).'png' ) if $extension;
+$openprint::log->error("Shuold have found an icon.  Install icons!! for ($extension) at " . $openprint::config{SkinPath}.'/images/icons/'.(lc $extension).'png' ) if $extension;
 		} # end if
 	} # end if
 $openprint::log->error("unknown externsion or somerthitng.  Install icons!! for ($extension)") if $extension;
@@ -326,23 +338,28 @@ sub small_url {
 	return sized_url( $_[0], 'small' );
 } # end small_url
 
+sub sized_html {
+	return '' if ! $_[0]{id};
+	return sprintf('<img src="%1$s" alt="%2$s" title="%2$s" />', $_[0]->sized_url($_[1]), $_[0]->name() );
+}
+
 sub large_html {
-	return '' if ! $_[0]{'id'};
+	return '' if ! $_[0]{id};
 	return sprintf('<img src="%1$s" alt="%2$s" title="%2$s" />', $_[0]->sized_url('large'), $_[0]->name() );
 } # end sub large_html
 sub medium_html {
-	return '' if ! $_[0]{'id'};
+	return '' if ! $_[0]{id};
 	my $options = join(' ', map { qq`$_="$_[1]{$_}"` } keys %{$_[1]} ) if $_[1];
 	return sprintf('<img src="%1$s" alt="%2$s" title="%2$s" %3$s/>', $_[0]->medium_url(), $_[0]->name(), $options );
 } # end sub medium_html
 
 sub html {
-	return '' if ! $_[0]{'id'};
+	return '' if ! $_[0]{id};
 	return sprintf('<img src="%1$s" alt="%2$s" title="%2$s" />', $_[0]->url(), $_[0]->name() );
 } # end sub html
 
 sub thumbnail_html {
-	if ( ! $_[0]{'id'} ) {
+	if ( ! $_[0]{id} ) {
 		$openprint::log->warn('Called thumbnail_html on asset with no id');
 		return '';
 	} # end if
@@ -352,48 +369,53 @@ sub thumbnail_html {
 sub thumbnail_path {
 	my $url = $_[0]->sized_url('thumbnail');
 	if ( $url =~ /^\/thumbnails/ ) {
-		return $openprint::config{'AssetPath'}.$url;
+		return $openprint::config{AssetPath}.$url;
 	} elsif ( $url =~ /^\/small/ ) {
-		return $openprint::config{'AssetPath'}.$url;
+		return $openprint::config{AssetPath}.$url;
 	} else {
-		return $openprint::config{'SkinPath'}.$url;
+		return $openprint::config{SkinPath}.$url;
 	} # end if
 } # end sub thumbnail_path
 sub medium_path {
 	my $url = $_[0]->medium_url();
 	$url =~ s/^\/assets//;
-	return $openprint::config{'AssetPath'}.$url;
+	return $openprint::config{AssetPath}.$url;
 } # end sub medium_path
 sub large_path {
 	my $url = $_[0]->sized_url('large');
 	$url =~ s/^\/assets//;
-	return $openprint::config{'AssetPath'}.$url;
+	return $openprint::config{AssetPath}.$url;
 } # end sub medium_path
 
 sub sized_path {
 	my $url = $_[0]->sized_url($_[1]);
+		my ( $caller, undef, $line ) = caller;
+		$openprint::log->error("No url return for size $_[1] called from $caller:$line");
 	$url =~ s/^\/assets//;
-	return $openprint::config{'AssetPath'}.$url;
+	return $openprint::config{AssetPath}.$url;
 } # end sub sized_path
 
 sub md5 {
 	if ( @_ > 1 ) {
-		$_[0]{'md5'} = $_[1];
+		$_[0]{md5} = $_[1];
 	} # end if
-	if ( ( ! $_[0]{'md5'} ) and $_[0]{'data'} ) {
+	if ( ( ! $_[0]{md5} ) and $_[0]{data} ) {
 		require Digest::MD5;
-		$_[0]{'md5'} = Digest::MD5::md5_base64( $_[0]{'data'} );
+		$_[0]{md5} = Digest::MD5::md5_base64( $_[0]{data} );
 	} # end if
-	return $_[0]{'md5'};	
+	return $_[0]{md5};	
 } # end sub md5
 
 sub can_edit {
-	return 1 if $_[0]{'created_by'} == $openprint::session{'user_id'};
+	return 1 if $_[0]{created_by} == $openprint::session{user_id};
+	return 1 if $openprint::session{user_type} eq 'A';
+	return 1 if openprint::usergroup::is_user_in( ['Accounting','IT'], $openprint::session{user_id} );
+
 	return 0;
 } # end sub can_edit
 
 sub can_view {
-	my @Albums = openprint::Photo_in_Album->find('asset_id'=>$_[0]{'id'});
+	my @Albums = openprint::Photo_in_Album->find('asset_id'=>$_[0]{id});
 	return 1 if ! @Albums;
 	foreach my $Album ( @Albums ) {
 		return 1 if $Album->can_view();
@@ -402,19 +424,19 @@ sub can_view {
 } # end sub can_view
 
 sub can_delete {
-	return 1 if $_[0]{'created_by'} == $openprint::session{'user_id'};
+	return 1 if $_[0]{created_by} == $openprint::session{user_id};
 	return 0;
 } # end sub can_delete
 sub can_approve {
-	return 1 if $_[0]{'created_by'} == $openprint::session{'user_id'};
+	return 1 if $_[0]{created_by} == $openprint::session{user_id};
 	return 0;
 } # end sub can_approve {
 
 sub destroy {
-	foreach ( openprint::SRED_Asset->find('asset_id'=>$_[0]{'id'}) ) {
+	foreach ( openprint::SRED_Asset->find('asset_id'=>$_[0]{id}) ) {
 		$_->destroy();
 	} # end foreach SRED_Asset
-	foreach ( openprint::Claim_Asset->find('asset_id'=>$_[0]{'id'}) ) {
+	foreach ( openprint::Claim_Asset->find('asset_id'=>$_[0]{id}) ) {
 		$_->destroy();
 	} # end foreach Claim_Asset
 	foreach ( openprint::Object_Asset->find( asset_id=>$_[0]{id}) ) {
@@ -422,7 +444,7 @@ sub destroy {
 	} # end foreach Claim_Asset
 	unlink $_[0]->on_disk_thumbnail_path();
 	unlink $_[0]->on_disk_path();
-	sql::execute( undef, undef, 'DELETE FROM Assets WHERE id=?', $_[0]{'id'} );
+	sql::execute( undef, undef, 'DELETE FROM Assets WHERE id=?', $_[0]{id} );
 } # end sub destroy
 
 sub fetch {
@@ -607,11 +629,11 @@ sub upload {
 } # end sub upload
 
 sub caption {
-	if ( $_[0]{'name'} ) {
-		return $_[0]{'name'};
+	if ( $_[0]{name} ) {
+		return $_[0]{name};
 	} # end if
-	if ( $_[0]{'filename'} ) {
-		return $_[0]{'filename'};
+	if ( $_[0]{filename} ) {
+		return $_[0]{filename};
 	} # end if
 } # end sub caption
 
@@ -639,7 +661,7 @@ $openprint::log->debug("Getting size for video: " . $_[0]->sized_url('full') . "
 } # end sub width
 
 sub height {
-	if ( ! $_[0]{'height'} ) {
+	if ( ! $_[0]{height} ) {
 		require Image::Size;
 		if ( $_[0]->is_video() ) {
 			# get the image size, and print it out
@@ -649,25 +671,25 @@ sub height {
 			@{$_[0]}{'width','height'} = Image::Size::imgsize( $_[0]->on_disk_path() );
 		} # end if
 	} # end if
-	return $_[0]{'height'};
+	return $_[0]{height};
 } # end sub height
 
 sub layout {
-	if ( ! $_[0]{'layout'} ) {
+	if ( ! $_[0]{layout} ) {
 		if ( $_[0]->width() > $_[0]->height() ) {
-			$_[0]{'layout'} = 'Landscape';
+			$_[0]{layout} = 'Landscape';
 		} else {
-			$_[0]{'layout'} = 'Portrait';
+			$_[0]{layout} = 'Portrait';
 		} # end if
 	} # end if
-	return $_[0]{'layout'};
+	return $_[0]{layout};
 } # end sub layout
 
 sub video_url {
 	my ( $self, $type ) = @_;
 $openprint::log->debug("Calling video_url($type)");
-	my $path = $openprint::config{'AssetPath'}.'/videos/';
-	if ( $openprint::config{'AssetPath'} ) {
+	my $path = $openprint::config{AssetPath}.'/videos/';
+	if ( $openprint::config{AssetPath} ) {
 		if ( ! -e $path ) {
 			mkdir $path;
 			$openprint::log->error("Unable to create path $path: $!" );
@@ -762,5 +784,36 @@ sub content_type {
 		$openprint::log->error('unimplemented content type for ' . $src . ' ext:' . $extension);
 	} # end if
 } # end sub content_type
+
+sub slider {
+    my ( $Assets, $size ) = @_;
+    $size = 'medium' if ! $size;
+
+	if ( ! ( $Assets and @{$Assets} ) ) {
+		return;
+	}
+
+    my $html = '<ul class="slider" style="background-image:url(/images/loading.gif); height: '.$$Assets[0]->height().'px;">';
+    my @slider_images;
+
+    for ( my $i = 0; $i < @$Assets ; $i += 1 ) {
+        my $Asset = $$Assets[$i];
+        push @slider_images, 'image'.$i;
+        if ( ! $i ) {
+            $html .= sprintf('<li id="image%d"><img onclick="GoNext();" src="%s"/></li>', $i, $Asset->sized_url( $size ) );
+        } else {
+            $html .= sprintf('<li id="image%d" style="display:none;"><img onclick="GoNext();" src="%s"/></li>', $i, $Asset->sized_url( $size ) );
+        }
+    } # end for
+    $html .= '</ul>';
+
+$html .= q`<script type="text/javascript">
+image_slide = new Array( '`. join("','", @slider_images ) .q`' );
+StartSlideShow();
+</script>`;
+    return $html;
+
+}
+
 1;
 __END__

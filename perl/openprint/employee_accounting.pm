@@ -68,8 +68,20 @@ sub _search {
 
 sub details {
 
-    my $order_id = $param{order_id};
-	my $Order = new openprint::Order( $order_id );
+	my $order_id;
+	my $Order;
+	
+	if ( $param{order_id} ) {
+		$order_id = openprint::Order->transform( id => $param{order_id} );
+		$Order = new openprint::Order( $order_id );
+	} elsif ( $param{docket} ) {
+		$Order = openprint::Order->find_one( docket=> openprint::Order->transform( docket => $param{docket} ) );
+		$order_id = $Order->id() if $Order;
+	}
+	if ( ! ( $Order and $Order->id() ) ) {
+		$variable{error} .= 'Please specify the order by order id or docket #.<br/>';
+		return;
+	}
 
 	if ( $param{btnFunction} eq 'Send' ) {
 		openprint::order::send_sales_order( $r, $log, $dbh, $order_id );
@@ -455,8 +467,8 @@ $log->debug("Calcing amount: $param{amount}");
 $log->debug("Calcing amount: $param{amount}");
 		} # end if
 		$param{owner_id} = $session{company_id} if ! $param{owner_id};
-		$param{due_on} = sprintf('%.4d-%.2d-%.2d', @param{'due_on_year','due_on_month','due_on_day'} );
-		$param{paid_on} = sprintf('%.4d-%.2d-%.2d', @param{'paid_on_year','paid_on_month','paid_on_day'} );
+		$param{due_on} = sprintf('%.4d-%.2d-%.2d', @param{'due_on_year','due_on_month','due_on_day'} ) if Date::Calc::check_date( @param{'due_on_year','due_on_month','due_on_day'} );
+		$param{paid_on} = sprintf('%.4d-%.2d-%.2d', @param{'paid_on_year','paid_on_month','paid_on_day'} ) if Date::Calc::check_date( @param{'paid_on_year','paid_on_month','paid_on_day'} );
 		$param{invoiced_on} = sprintf('%.4d-%.2d-%.2d', @param{'invoiced_on_year','invoiced_on_month','invoiced_on_day'} );
 		if ( ! $param{recipient_id} ) {
 			my $Recipient = openprint::Company->find_one('name lc'=>lc $param{recipient});
@@ -474,7 +486,7 @@ $log->debug("Calcing amount: $param{amount}");
 		} # end if
 		if ( $param{account_id} ) {
 			delete $param{account};
-		} else {
+		} elsif ( $param{account} ) {
 			delete $param{account_id};
 		} # end if
 		my $Expense = new openprint::Expense( $param{expense_id} );
@@ -500,7 +512,7 @@ $log->debug("Calcing amount: $param{amount}");
 		$variable{ExternalRedirect} = '/employee/accounting/expenses.html';
 
 		# Now update the session for expenses so that we always show the entry we just saved.
-		foreach my $key ( 'company_id', 'recipient_id', 'account_id' ) {
+		foreach my $key ( 'company_id', 'recipient_id', 'account_id', 'category_id' ) {
 			if ( $session{'/employee/accounting/expenses.html?'.$key} and ( $session{'/employee/accounting/expenses.html?'.$key} != $$Expense{$key} ) ) {
 				delete $session{'/employee/accounting/expenses.html?'.$key};
 			} # end if
@@ -610,10 +622,9 @@ sub credit_application {
 			} );
 		if ( ! $variable{error} ) {
 
-			$variable{ReplacementText} = misc::load_file( $log, $ENV{DOCUMENT_ROOT} . '/email_content/credit_change_notification.html' );
+			$variable{ReplacementText} = ssi::slurp_content( '/email_content/credit_change_notification.html' );
 			$variable{ReplacementText} = ssi::variable_substitution( \$variable{ReplacementText}, \%variable );
-			$_ = misc::load_file( $log, $config{SkinPath}.'/email_template.html' );
-			my $template = ssi::variable_substitution( \$_, \%variable );
+			my $template = ssi::include( '/email_template.html', \%variable );
 			$variable{error} .= ( new openprint::Email())->send(
 					FROM	=> $config{AdministratorEmail},
 					TO		=> $Application->User()->email(),
@@ -622,6 +633,12 @@ sub credit_application {
 				);
 		} # end if
 		$variable{ExternalRedirect} = '/employee/accounting/credit_applications.html' if ! $variable{error};
+	} elsif ( $param{btnFunction} eq 'SendToMe' ) {
+		$variable{information} .= $Application->send_notification( $openprint::User );
+		$variable{ExternalRedirect} = '/employee/accounting/credit_application.html?credit_index='.$Application->id();
+	} elsif ( $param{btnFunction} eq 'Resend' ) {
+		$variable{information} .= $Application->send_notification( );
+		$variable{ExternalRedirect} = '/employee/accounting/credit_application.html?credit_index='.$Application->id();
 	} # end if
 
 } # end sub credit_application

@@ -1,79 +1,81 @@
 <div class="ProjectType">
 	<fieldset>
 		<legend>Please select the project type</legend>
-		<ul>
-		<? while ( @$variable{'index','name'} = splice @{$$variable{'ProjectTypes'}},0,2; ) ?>
-			<li>
-				<input type="radio" id="<?index?>" name="rdbProjectType" value="<?index?>" onclick="project_type_alert(f1, this);calc('f1');"
-				<? echo ( $$variable{'SelectedProjectType'} eq $$variable{'index'} ? 'checked="checked"' : '' ) ?>
-	<? echo ( 'checked="checked"' if $$variable{'rdbProjectType'} eq $$variable{'index'} ) ?>
-				/>
-				<label for="<?index?>"><?name?></label>
-			</li>
-		<? endwhile ( @$variable{'index','name'} = splice @{$$variable{'ProjectTypes'}},0,2; ) ?>
-		</ul>
-	</fieldset>
+<? echo ( 
+    require openprint::ProjectTypeCategory;
+    my @ProjectTypeCategories = openprint::ProjectTypeCategory->find(order=>'sort,lower(name)');
+    my $html = '<div id="ProjectTypes">';
+    foreach my $ProjectTypeCategory ( @ProjectTypeCategories ) {
+        my @ProjectTypes = openprint::ProjectType->find(category_id=>$$ProjectTypeCategory{id}, order=>'sorting,lower(name)');
+        next if ! @ProjectTypes;
+
+        $html .= sprintf('<div class="Category"><h3>%s</h3><ul>', $ProjectTypeCategory->name() );
+		$html .= radio( 'rdbProjectType', 
+					[ map { $_->name(), ssi::htmlize( $_->description() ) } @ProjectTypes ],
+					$$variable{SelectedProjectType},
+					{ 
+						onclick=>q`project_type_alert(f1, this);calc('f1');`, 
+						container=>['<li>','</li>'] } );
+		$html .= '</ul></div>';
+    } # end foreach Category
+    $html .= "</div>\n";
+    return $html;
+) ?>
+</fieldset>
 </div>
+
 <fieldset>
 	<legend>What quantities would you like to calculate pricing for?</legend>
 	<ul>
-		<li>
-			<label for="Quantity1">Quantity 1</label>
-			<? echo ( input( name=>'txtQuantity1', id=>'Quantity1', value=>$$variable{'txtQuantity1'}, type=>'cardinal', max=>2147483647 ); ) ?>
-		</li>
-		<li>
-			<label for="Quantity2">Quantity 2</label>
-			<? echo ( input( name=>'txtQuantity2', id=>'Quantity2', value=>$$variable{'txtQuantity2'}, type=>'cardinal', max=>2147483647 ); ) ?>
-		</li>
-		<li>
-			<label for="Quantity3">Quantity 3</label>
-			<? echo ( input( name=>'txtQuantity3', id=>'Quantity3', value=>$$variable{'txtQuantity3'}, type=>'cardinal', max=>2147483647 ); ) ?>
-		</li>
+		<? echo ( join("\n", 
+			map { ( qq`<li><label for="Quantity$_">Quantity $_</label>`, input( name=>'quantity'.$_, id=>'quantity'.$_, value=>$$variable{Project}->quantity($_), type=>'cardinal', max=>2147483647 ), '</li>' ) } ( 1 .. 3 ) 
+		); 
+		) ?>
 	</ul>
 </fieldset>
 <? eval ( 
-	@{$$variable{'Modes'}} = ();
-	push @{$$variable{'Modes'}}, 'Easy' if $config{'EasyMode'};
-	#push @{$$variable{'Modes'}}, 'Simple' if $config{'SimpleMode'};
-	push @{$$variable{'Modes'}}, 'Detailed' if $config{'DetailedMode'};
+	@{$$variable{Modes}} = ();
+	push @{$$variable{Modes}}, 'Easy' if $config{EasyMode};
+	#push @{$$variable{Modes}}, 'Simple' if $config{SimpleMode};
+	push @{$$variable{Modes}}, 'Detailed' if $config{DetailedMode};
 ) ?>
-<? if ( @{$$variable{'Modes'}} > 1 ) ?>
+<? if ( @{$$variable{Modes}} > 1 ) ?>
 	<fieldset>
 		<legend>How would you like to create your project?</legend>
 		<ul>
 	<? echo ( 
 		my $html;
-		foreach my $mode ( @{$$variable{'Modes'}} ) {
+		foreach my $mode ( @{$$variable{Modes}} ) {
 			my $detailedSpecifications;
 			if($mode eq 'Detailed') {
 				$detailedSpecifications = q{onclick="$('step2Questions').show();"};
 			} else {
 				$detailedSpecifications = q{onclick="$('step2Questions').hide();"};
 			} # end if
-			$html .= qq{<li><input type="radio" id="rdbMode$mode" name="rdbMode" value="$mode"} . ssi::checked($$variable{'rdbMode'} eq $mode) .' '. $detailedSpecifications . ' />';
+			$html .= qq{<li><input type="radio" id="rdbMode$mode" name="rdbMode" value="$mode"} . ssi::checked($$variable{rdbMode} eq $mode) .' '. $detailedSpecifications . ' />';
 			$html .= qq{<label class="radio" for="rdbMode$mode">} . ssi::writeTip($mode.' Specifications') . '</label></li>';
 		} # end foreach
 		return $html;
 	) ?>
 		</ul>
 	</fieldset>
-<? else ( @{$$variable{'Modes'}} > 1 ) ?>
+<? else ( @{$$variable{Modes}} > 1 ) ?>
 	<? echo ( 
-		$$variable{'rdbMode'} = $$variable{'Modes'}[0];
-		return '<input type="hidden" name="rdbMode" value="' . (shift @{$$variable{'Modes'}}) . '" />' if @{$$variable{'Modes'}} == 1;
+		$$variable{rdbMode} = $$variable{Modes}[0];
+		return '<input type="hidden" name="rdbMode" value="' . (shift @{$$variable{Modes}}) . '" />' if @{$$variable{Modes}} == 1;
 	) ?>
-<? endif ( @{$$variable{'Modes'}} > 1 ) ?>
+<? endif ( @{$$variable{Modes}} > 1 ) ?>
 
-<? eval (  @{$$variable{'OptionServiceTypes'}} = openprint::ServiceType->find('category'=>'Options','create_visible'=>1,'order'=>'sorting,lower(description)'); ) ?>
-<? if ( @{$$variable{'OptionServiceTypes'}} ) ?>
+<? eval (  @{$$variable{OptionServiceTypes}} = openprint::ServiceType->find('category'=>'Options','create_visible'=>1,'order'=>'sorting,lower(description)'); ) ?>
+<? if ( @{$$variable{OptionServiceTypes}} ) ?>
 <fieldset><legend>Options</legend>
 	<ul>
 		<? echo ( 
 			my $html = '';
-			foreach my $ServiceType (@{$$variable{'OptionServiceTypes'}}) {
+			foreach my $ServiceType (@{$$variable{OptionServiceTypes}}) {
 				$html .= sprintf('<li><input type="checkbox" name="chkServices%1$s" id="chkServices%1$s" value="%1$s" onclick="service_onclick( this );" %2$s /> <label for="chkServices%1$s">%3$s</label></li>', 
 				$ServiceType->name(),
-				(sets::isin( $ServiceType->name(), $$variable{'SelectedServices'} ) ? 'checked="checked"' : ''),
+				(sets::isin( $ServiceType->name(), $$variable{SelectedServices} ) ? 'checked="checked"' : ''),
 				writeTip( $ServiceType->description() ),
 				);
 			} # end foreach Service Type
@@ -81,9 +83,9 @@
 		) ?>
 	</ul>
 </fieldset>
-<? endif ( @{$$variable{'OptionServiceTypes'}} ) ?>
+<? endif ( @{$$variable{OptionServiceTypes}} ) ?>
 <!-- Step 2 questions -->
-<div id="step2Questions" <? echo ( 'style="display:none;"' if $$variable{'rdbMode'} ne 'Detailed' ) ?>>
+<div id="step2Questions" <? echo ( 'style="display:none;"' if $$variable{rdbMode} ne 'Detailed' ) ?>>
 <fieldset><legend>What prepress services are required for the project?</legend>
 	<ul>
 <? echo ( 
@@ -94,7 +96,7 @@
 				<input type="checkbox" name="chkServices%1$s" id="chkServices%1$s" value="%1$s" onclick="service_onclick( this );" %3$s />
 				<label for="chkServices%1$s">%2$s</label>
 			</li>
-		`, $ServiceType->name(), ssi::writeTip( $ServiceType->description() ), ssi::checked( sets::isin( $ServiceType->id(), $$variable{'SelectedServices'} ) ) );
+		`, $ServiceType->name(), ssi::writeTip( $ServiceType->description() ), ssi::checked( sets::isin( $ServiceType->id(), $$variable{SelectedServices} ) ) );
 	} # end foreach
 	return $html;
 ) ?>
@@ -110,31 +112,31 @@
 				<input type="checkbox" name="chkServices%1$s" id="chkServices%1$s" value="%1$s" onclick="service_onclick( this );" %3$s />
 				<label for="chkServices%1$s">%2$s</label>
 			</li>
-		`, $ServiceType->name(), ssi::writeTip( $ServiceType->description() ), ssi::checked( sets::isin( $ServiceType->id(), $$variable{'SelectedServices'} ) ) );
+		`, $ServiceType->name(), ssi::writeTip( $ServiceType->description() ), ssi::checked( sets::isin( $ServiceType->id(), $$variable{SelectedServices} ) ) );
 	} # end foreach
 	return $html;
 ) ?>
 	</ul>
 </fieldset>
-<? eval ( @{$$variable{'SpecialtyServiceTypes'}} = openprint::ServiceType->find('category'=>'Specialty','create_visible'=>1,'order'=>'sorting,lower(description)'); ) ?>
-<? if (	@{$$variable{'SpecialtyServiceTypes'}} ) ?>
+<? eval ( @{$$variable{SpecialtyServiceTypes}} = openprint::ServiceType->find('category'=>'Specialty','create_visible'=>1,'order'=>'sorting,lower(description)'); ) ?>
+<? if (	@{$$variable{SpecialtyServiceTypes}} ) ?>
 <fieldset><legend>What type of specialty finishing services are required for the project?</legend>
 	<ul>
 <? echo ( 
 	my $html = '';
-	foreach my $ServiceType ( @{$$variable{'SpecialtyServiceTypes'}} ) {
+	foreach my $ServiceType ( @{$$variable{SpecialtyServiceTypes}} ) {
 		$html .= sprintf(q`
 			<li>
 				<input type="checkbox" name="chkServices%1$s" id="chkServices%1$s" value="%1$s" onclick="service_onclick( this );" %3$s />
 				<label for="chkServices%1$s">%2$s</label>
 			</li>
-		`, $ServiceType->name(), ssi::writeTip( $ServiceType->description() ), ssi::checked( sets::isin( $ServiceType->id(), $$variable{'SelectedServices'} ) ) );
+		`, $ServiceType->name(), ssi::writeTip( $ServiceType->description() ), ssi::checked( sets::isin( $ServiceType->id(), $$variable{SelectedServices} ) ) );
 	} # end foreach
 	return $html;
 ) ?>
 	</ul>
 </fieldset>
-<? endif (	@{$$variable{'SpecialtyServiceTypes'}} ) ?>
+<? endif (	@{$$variable{SpecialtyServiceTypes}} ) ?>
 </div>
 <!-- End of Step 2 questions -->
 
@@ -150,7 +152,7 @@
 					<input type="checkbox" name="chkServices%1$s" id="chkServices%1$s" value="%1$s" onclick="service_onclick( this );" %3$s />
 					<label for="chkServices%1$s">%2$s</label>
 				</li>
-			`, $ServiceType->name(), ssi::writeTip( $ServiceType->description() ), ssi::checked( sets::isin( $ServiceType->id(), $$variable{'SelectedServices'} ) ) );
+			`, $ServiceType->name(), ssi::writeTip( $ServiceType->description() ), ssi::checked( sets::isin( $ServiceType->id(), $$variable{SelectedServices} ) ) );
 		} # end foreach
 		$html .= '</ul></fieldset>';
 	} # end if
@@ -170,7 +172,7 @@
 					<input type="checkbox" name="chkServices%1$s" id="chkServices%1$s" value="%1$s" onclick="service_onclick( this );" %3$s />
 					<label for="chkServices%1$s">%2$s</label>
 				</li>
-			`, $ServiceType->name(), ssi::writeTip( $ServiceType->description() ), ssi::checked( sets::isin( $ServiceType->id(), $$variable{'SelectedServices'} ) ) );
+			`, $ServiceType->name(), ssi::writeTip( $ServiceType->description() ), ssi::checked( sets::isin( $ServiceType->id(), $$variable{SelectedServices} ) ) );
 		} # end foreach
 		$html .= '</ul></fieldset>';
 	} # end if
@@ -178,21 +180,21 @@
 ) ?>
 <fieldset>
 <? eval ( 
-	@{$$variable{'design_options'}} = ( 'ElectronicFile', 'Electronic File' );
+	@{$$variable{design_options}} = ( 'ElectronicFile', 'Electronic File' );
 	if ( openprint::ServiceType->find('name'=>'FilmStripping') ) {
-		push @{$$variable{'design_options'}}, 'FinalFilm', 'Final Film';
+		push @{$$variable{design_options}}, 'FinalFilm', 'Final Film';
 	} # end if
 ) ?>
 	<ul>
-	<? if ( @{$$variable{'design_options'}} > 2 ) ?>
-		<li class="design" id="Design" <? echo ( sets::isin('NoPrinting', $$variable{'SelectedServices'} ) ? 'style="display:none;"' : '' ) ?>><label>If you are providing your own design, please specify the supplied format.</label>
+	<? if ( @{$$variable{design_options}} > 2 ) ?>
+		<li class="design" id="Design" <? echo ( sets::isin('NoPrinting', $$variable{SelectedServices} ) ? 'style="display:none;"' : '' ) ?>><label>If you are providing your own design, please specify the supplied format.</label>
 			<select name="ddmDesign" size="1" onchange="ddmDesign_onChange(f1);">
-	<? echo ( ssi::make_drop_down( $$variable{'design_options'}, $$variable{'ddmDesign'} ); ) ?>
+	<? echo ( ssi::make_drop_down( $$variable{design_options}, $$variable{ddmDesign} ); ) ?>
 			</select>
 		</li>
-	<? else ( @{$$variable{'design_options'}} > 2 ) ?>
+	<? else ( @{$$variable{design_options}} > 2 ) ?>
 		<input type="hidden" name="ddmDesign" value="ElectronicFile" />
-	<? endif ( @{$$variable{'design_options'}} > 2 ) ?>
+	<? endif ( @{$$variable{design_options}} > 2 ) ?>
 		<li class="reference"> 
 			<label>Please provide a reference</label>
 			<textarea id="reference" name="txtProjectReference" rows="<?echo(count_lines(unhtmlize($$variable{Project}->reference()));)?>" onkeyup="textarea_resize( this );"><? echo ( unhtmlize($$variable{Project}->reference()) ) ?></textarea>
@@ -203,23 +205,20 @@
 		</li>
 	</ul>
 </fieldset>
-<? if ( sets::isin( $session{'user_type'}, [ 'E', 'A' ] ); ) ?>
+<? if ( sets::isin( $session{user_type}, [ 'E', 'A' ] ); ) ?>
 <div class="ReprintOptions">
 <fieldset>
 	<legend>Reprint Options</legend>
 	<ul>
 		<li>
 			<label>Is this a reprint?</label>
-			<input type="radio" id="reprintY" name="reprint" value="Y" onclick="setReason(this.value,document.getElementById('reprintReasonSection'));" <? echo ( ssi::checked( $$variable{'reprint'} eq 'Y' ); ) ?> />
-			<label for="reprintY" class="radio">Yes</label>
-			<input type="radio" id="reprintN" name="reprint" value="N" onclick="setReason(this.value,document.getElementById('reprintReasonSection'));" <? echo ( ssi::checked( $$variable{'reprint'} ne 'Y' ); ) ?> />
-			<label for="reprintN" class="radio">No</label>
+			<? echo ( radio( 'reprint', [ 'Y', 'Yes', 'N', 'No' ], $$variable{reprint}, { default=>'N', onclick=>q`setReason(this.value,$('reprintReasonSection'));` } ); ) ?>
 		</li>
 		<li id="reprintReasonSection" style="display: none;">
 			<label>Reason</label>
 			<select name="reprint_reason">
 				<option value=""> select </option>
-			<? echo ( ssi::make_drop_down( [
+			<? echo ( make_drop_down( [
 					'Customer','Customer',
 					'Docket','Docket',
 					'Prepress','Prepress',
@@ -229,10 +228,10 @@
 					'Supplier - Service','Supplier - Service',
 					'Supplier - Material', 'Supplier - Material',
 					'Other', 'Other',
-					], $$variable{'reprint_reason'} );) ?>
+					], $$variable{reprint_reason} );) ?>
 			</select>
 		</li>
 	</ul>
 </fieldset>
 </div>
-<? endif ( sets::isin( $session{'user_type'}, [ 'E', 'A' ] ); ) ?>
+<? endif ( sets::isin( $session{user_type}, [ 'E', 'A' ] ); ) ?>

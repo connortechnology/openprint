@@ -1,11 +1,15 @@
 <? eval (
 	my @Hosts;
 	if ( $session{'/employee/it/hosts.html?mac'} and ( $session{'/employee/it/hosts.html?mac'} !~ /%/ ) ) {
+		my @HIs = openprint::Host_Interface->find( mac => $session{'/employee/it/hosts.html?mac'} );
+		if ( @HIs ) {
 		@Hosts = openprint::Host->find(
+			id	=> [ sets::union( map { $$_{host_id} } @HIs ) ],
 			order	=> $session{'/employee/it/hosts.html?order'} ? $session{'/employee/it/hosts.html?order'} : 'lower(hostname)',
-			'mac any'=> $session{'/employee/it/hosts.html?mac'},
+			( $session{'/employee/it/hosts.html?deleted'} ? ( deleted=>$session{'/employee/it/hosts.html?deleted'} ) : () ),
 			limit	=>10,
 		);
+		}
 	} else {
 		my $host_ids;
 		if ( $session{'/employee/it/hosts.html?ip'} ) {
@@ -22,12 +26,13 @@
 				order	=> $session{'/employee/it/hosts.html?order'} ? $session{'/employee/it/hosts.html?order'} : 'lower(hostname)',
 				( $host_ids ? ( id => $host_ids ) : () ),
 				( $session{'/employee/it/hosts.html?hostname'} ? ( 'hostname ilike' => ( $session{'/employee/it/hosts.html?hostname'} =~ /%/ ? $session{'/employee/it/hosts.html?hostname'} : $session{'/employee/it/hosts.html?hostname'}.'%' ) ) : () ),
-				( $session{'/employee/it/hosts.html?blacklisted'} ne '' ? ( 'blacklist'=>$session{'/employee/it/hosts.html?blacklisted'} ) : () ),
-				( $session{'/employee/it/hosts.html?whitelisted'} ne '' ? ( 'whitelist'=>$session{'/employee/it/hosts.html?whitelisted'} ) : () ),
-				( $session{'/employee/it/hosts.html?monitored'} ne '' ? ( 'monitored'=>$session{'/employee/it/hosts.html?monitored'} ) : () ),
-				( $session{'/employee/it/hosts.html?online'} ne '' ? ( 'online'=>$session{'/employee/it/hosts.html?online'} ) : () ),
+				( $session{'/employee/it/hosts.html?blacklisted'} ne '' ? ( blacklist=>$session{'/employee/it/hosts.html?blacklisted'} ) : () ),
+				( $session{'/employee/it/hosts.html?whitelisted'} ne '' ? ( whitelist=>$session{'/employee/it/hosts.html?whitelisted'} ) : () ),
+				( $session{'/employee/it/hosts.html?monitored'} ne '' ? ( monitored=>$session{'/employee/it/hosts.html?monitored'} ) : () ),
+				( $session{'/employee/it/hosts.html?online'} ne '' ? ( online=>$session{'/employee/it/hosts.html?online'} ) : () ),
 				( $session{'/employee/it/hosts.html?has_hostname'} ne '' ? ( 'hostname is null' => ! $session{'/employee/it/hosts.html?has_hostname'} ) : () ),
 				( $session{'/employee/it/hosts.html?type_id'} ne '' ? ( type_id => $session{'/employee/it/hosts.html?type_id'} ) : () ),
+				( $session{'/employee/it/hosts.html?deleted'} ? ( deleted=>$session{'/employee/it/hosts.html?deleted'} ) : () ),
 				date_filter( '/employee/it/hosts.html?created_on_end', 'created_on <=' ),
 				date_filter( '/employee/it/hosts.html?created_on_start', 'created_on >=' ),
 				date_filter( '/employee/it/hosts.html?updated_on_end', 'updated_on <=' ),
@@ -106,6 +111,7 @@
 	<thead>
 		<tr>
 			<th class="checkbox">&nbsp;</th>
+			<th class="thumbnail"></th>
 			<th class="name">Name</th>
 			<th class="type">Type</th>
 			<th class="ip" onclick="load_host(f1, {order:'ip'});">IP</th>
@@ -119,9 +125,11 @@
 			my $html;
 			my $rowclass;
 			foreach my $Host ( @{$$variable{Hosts}} ) {
+				my @Assets = $Host->Assets();
 				$html .= sprintf('
-					<tr%7$s>
+					<tr%8$s>
 						<td class="checkbox"><input type="checkbox" id="host_id" name="host_id" value="%1$d"/></td>
+						<td class="thumbnail">%9$s</td>
 						<td class="name"><a href="/employee/it/host.html?host_id=%1$d">%2$s</a></td>
 						<td class="type"><a href="/employee/it/host.html?host_id=%1$d">%3$s</a></td>
 						<td class="ip"><a href="/employee/it/host.html?host_id=%1$d">%4$s</a></td>
@@ -141,10 +149,11 @@
 					) ),
 					$Host->description(),
 					$rowclass,
+					( @Assets ? $Assets[0]->Asset()->sized_html('small') : '' ),
 					);
 				$rowclass = $rowclass ? '' : ' class="colRow"';
 			} # end foreach Host
-			$html .= '<tr class="totals"><td colspan="7"># of hosts: ' . @{$$variable{Hosts}} . '</td></tr>';
+			$html .= '<tr class="totals"><td colspan="8"># of hosts: ' . @{$$variable{Hosts}} . '</td></tr>';
 			return $html;
 		) ?>
 		<tr>

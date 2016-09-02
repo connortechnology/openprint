@@ -21,6 +21,7 @@ $debug = 0;
 	deleted		=>	'(SELECT deleted FROM skids where skids.id=skid_id)',
 	condition	=>	'(SELECT name FROM InventoryConditions WHERE id=skid_contents.condition_id)',
 	location	=>	'(SELECT name from Locations WHERE id=(SELECT location_id FROM skids where skids.id=skid_id))',
+	type		=>	'(SELECT type FROM Skids WHERE skids.id=skid_id)',
 );
 %defaults = (
 	paper_id		=>	undef,
@@ -62,7 +63,7 @@ sub delete {
 	my $error = $self->SUPER::delete();
 	if ( !$error ) {
 		$self->Skid()->Contents(undef);
-		$self->Paper()->save();
+		$self->Paper()->save() if $$self{paper_id};
 	} # end if
 } # end sub delete
 
@@ -173,7 +174,7 @@ sub Manifest_Contents {
 
 sub checked_out {
 	if ( ! exists $_[0]{checked_out} ) {
-		$_[0]{checked_out} = openprint::PaperInventory->find_one( skid_id=>$_[0]{skid_id}, paper_id=>$_[0]{paper_id}, 'comment like'=>'Checked out%' ); 
+		$_[0]{checked_out} = openprint::PaperInventory->find_one( skid_id=>$_[0]{skid_id}, paper_id=>$_[0]{paper_id}, 'comment like'=>'Checked out%', order=>'updated_on desc' ); 
 	} 
 	return $_[0]{checked_out};
 } # end sub checked_out

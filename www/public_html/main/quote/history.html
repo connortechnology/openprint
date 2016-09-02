@@ -40,7 +40,7 @@
 				<input class="filter" type="text" oninput="filter_companies('company_id', {name:this.value,selected_id:get_ddm_value($('company_id'))});" />
 				<select name="company_id" id="company_id" onchange="load_quotes(this.form);">
 					<option value="">All</option>
-<? echo ( make_drop_down( openprint::Company->dropdown('last_quoted_on is null'=>0), $session{'/main/quote/history.html?company_id'} ? $session{'/main/quote/history.html?company_id'} : $session{'company_id'}) ) ?>				
+<? echo ( make_drop_down( openprint::Company->dropdown(or=>{id=>$openprint::Company->id(),'last_quote_id is null'=>0}), $session{'/main/quote/history.html?company_id'} ? $session{'/main/quote/history.html?company_id'} : $session{'company_id'}) ) ?>				
 				</select>
 			</li>
 <? endif ( sets::isin( $session{user_type}, ['E','A'] ) ) ?>
@@ -57,7 +57,7 @@
 			<li><label>Deleted</label><? echo ( radio( 'deleted', ['1','Yes','0','No','','All'], $session{'/main/quote/history.html?deleted'}, { onclick=>'load_quotes(f1);' } ); ) ?></li>
 			<ul>
 			<p class="buttons">
-				<? echo ( join( '',
+				<? echo ( join( "\n",
 					button( 'ShowResults', { onclick=>'f1.submit();', text=>'Show Results' } ),
 					button( 'Add', { href=>'/main/quote/information.html?btnFunction=New', text=>'Create New' } ),
 					button( 'Reset', { onclick=>'f1.reset();', text=>'Reset' } ),

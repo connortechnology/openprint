@@ -22,38 +22,41 @@
 	<p class="buttons">
 		<? echo ( 
 			my $html;
-			if ( $$variable{'Order'}->status() eq 'Re-Opened' ) {
-				$html .= button( 'ReOpen', { onclick=>q`f1.action='information.html';f1.btnFunction.value='ReOpen';f1.submit();`, text=>'Continue' } );
-				$html .= button( 'Cancel',{ onclick=>q`f1.action='history_details.html';f1.btnFunction.value='Cancel';f1.submit();` } ) if $$variable{'Order'}->status() ne 'Cancelled';
-			} elsif ( $$variable{'Order'}->status() eq 'Incomplete' or ! $$variable{'Order'}->status() ) {
-				$html .= button( 'Continue', { href=>'information.html?order_id='.$$variable{'order_id'} } );
-				$html .= button( 'Cancel', { onclick=>q`f1.action='history_details.html';f1.btnFunction.value='Cancel';f1.submit();` } ) if $$variable{'Order'}->status() ne 'Cancelled';
-			} elsif ( sets::isin( $$variable{'Order'}->status(), [ 'Complete', 'Paid','Pending Deposit','In Production','Cancelled','Waiting For Customer Approval','Waiting For QA Approval','Picked Up' ] ) ) {
-				$html .= button( 'UploadCenter', { href=>'/upload/upload_center.html?docket='.$$variable{'Order'}->docket(), text=>'Upload Files' } ) if $$variable{'Order'}->status() ne 'Cancelled';
+			if ( $$variable{Order}->status() eq 'Re-Opened' ) {
+				$html .= button( 'Continue', { href=>'information.html?order_id='.$$variable{order_id} } );
+				$html .= button( 'Cancel',{ onclick=>q`f1.action='history_details.html';f1.btnFunction.value='Cancel';f1.submit();` } ) if $$variable{Order}->status() ne 'Cancelled';
+			} elsif ( $$variable{Order}->status() eq 'Incomplete' or ! $$variable{Order}->status() ) {
+				$html .= button( 'Continue', { href=>'information.html?order_id='.$$variable{order_id} } );
+				$html .= button( 'Cancel', { onclick=>q`f1.action='history_details.html';f1.btnFunction.value='Cancel';f1.submit();` } ) if $$variable{Order}->status() ne 'Cancelled';
+			} elsif ( sets::isin( $$variable{Order}->status(), [ 'Complete', 'Paid','Pending Deposit','In Production','Cancelled','Waiting For Customer Approval','Waiting For QA Approval','Picked Up' ] ) ) {
+				$html .= button( 'UploadCenter', { href=>'/upload/upload_center.html?docket='.$$variable{Order}->docket(), text=>'Upload Files' } ) if $$variable{Order}->status() ne 'Cancelled';
 				$html .= button( 'reOrder', { onclick=>"f1.action='information.html';f1.btnFunction.value='New Order';f1.submit();", text=>'ReOrder' } ); 
-				$html .= button( 'Resend', { href=>"/main/order/history_details.html?order_id=$$variable{order_id}&amp;btnFunction=Resend", text=>'Resend' } ) if $$variable{'Order'}->status() ne 'Cancelled'; 
+				$html .= button( 'Resend', { href=>"/main/order/history_details.html?order_id=$$variable{order_id}&amp;btnFunction=Resend", text=>'Resend' } ) if $$variable{Order}->status() ne 'Cancelled'; 
 				if ( $$variable{Order}->can_invoice() ) {
 					$html .= button( 'Invoice', { href=>'/invoice/edit.html?order_id='.$$variable{Order}->id(), text=>'Create Invoice' } );
 				} # end if
-				if ( sets::isin( $session{'user_type'}, ['A', 'E'] ) or ( $$variable{'Order'}->status() eq 'Pending Deposit' ) ) {
+				if ( $$variable{Order}->can_reopen() ) {
 					$html .= button( 'ReOpen', { onclick=>"f1.action='information.html';f1.btnFunction.value='ReOpen';f1.submit();", text=>'ReOpen' } );
-					$html .= button( 'Cancel', { onclick=>"f1.action='history_details.html';f1.btnFunction.value='Cancel';f1.submit();", text=>'Cancel' } ) if $$variable{'Order'}->status() ne 'Cancelled';
+				}
+
+				if ( sets::isin( $session{user_type}, ['A', 'E'] ) or ( $$variable{Order}->status() eq 'Pending Deposit' ) ) {
+					$html .= button( 'Cancel', { onclick=>"f1.action='history_details.html';f1.btnFunction.value='Cancel';f1.submit();", text=>'Cancel' } ) if $$variable{Order}->status() ne 'Cancelled';
 				} # end if
 			} # end if
-			if ( $$variable{'Order'}->owing() ) {
+			if ( $$variable{Order}->owing() ) {
 				my @Payments = openprint::PaymentType->find();
 				if ( @Payments ) {
 					if ( @Payments == 1 and $Payments[0]->name() eq 'PayPal' ) {
-						$html .= '<a href="/payment/make.html?order_id='.$$variable{'Order'}->id().'&amp;btnFunction=SetExpressCheckOut"><img src="https://www.paypal.com/en_US/i/btn/btn_xpressCheckout.gif" alt="ExpressCheckOut"/></a>';
+						$html .= '<a href="/payment/make.html?order_id='.$$variable{Order}->id().'&amp;btnFunction=SetExpressCheckOut"><img src="https://www.paypal.com/en_US/i/btn/btn_xpressCheckout.gif" alt="ExpressCheckOut"/></a>';
 					} else {
-						$html .= button( 'MakePayment', { href=>'/payment/make.html?order_id='.$$variable{'Order'}->id(), text=>'Make Payment' } ); 
+						$html .= button( 'MakePayment', { href=>'/payment/make.html?order_id='.$$variable{Order}->id(), text=>'Make Payment' } ); 
 					} # end if
 				} # end if
 			} # end if
 			
 			$html .= button( 'Print', { onclick=>'window.print();' } );
-			if ( sets::isin( $session{'user_type'}, ['A','E'] ) ) {
-				$html .= button( 'Log', { onclick=> "popup_window('_view_log.html?order_id=".$$variable{'Order'}->id()."', '', { width: 800 } );", text=>'View Log' } );
+			if ( sets::isin( $session{user_type}, ['A','E'] ) ) {
+				$html .= button( 'Log', { onclick=> "popup_window('_view_log.html?order_id=".$$variable{Order}->id()."', '', { width: 800 } );", text=>'View Log' } );
 			} # end if
 			return $html;
 		) ?>
@@ -63,40 +66,39 @@ Items listed in red have changed price from the time this order was originally g
 <br/>
 	<div class="Order"><div class="View">
 		<?include('/includes/order_header.html')?>
-		<? if ( $config{'OrderMode'} eq 'Simple' ) ?>
-		<?include('/main/order/_contents.html')?>
-		<? else ( $config{'OrderMode'} eq 'Simple' ) ?>
-		<?include('/includes/order_project_list.html')?>
-		<?include('_product_list.html')?>
-		<? endif ( $config{'OrderMode'} eq 'Simple' ) ?>
+		<? if ( $config{OrderMode} eq 'Simple' ) ?>
+		  <?include('/main/order/_contents.html')?>
+		<? else ( $config{OrderMode} eq 'Simple' ) ?>
+		  <?include('/includes/order_project_list.html')?>
+		  <?include('_product_list.html')?>
+		<? endif ( $config{OrderMode} eq 'Simple' ) ?>
 		<div id="AdminOptions"><ul>
-			<? if ( $$variable{'Order'}->administrator_name() ) ?>
-			<li><label>Representative</label><? echo ( $$variable{'Order'}->administrator_name() ) ?></li>
-			<? endif ( $$variable{'Order'}->administrator_name() ) ?>
-			<? if ( $$variable{'Order'}->administrator_comments() ) ?>
-			<li><label>Representative Comments</label><? echo ( $$variable{'Order'}->administrator_comments() ) ?></li>
-			<? endif ( $$variable{'Order'}->administrator_comments() ) ?>
+			<? if ( $$variable{Order}->administrator_name() ) ?>
+			<li><label>Representative</label><? echo ( $$variable{Order}->administrator_name() ) ?></li>
+			<? endif ( $$variable{Order}->administrator_name() ) ?>
+			<? if ( $$variable{Order}->administrator_comments() ) ?>
+			<li><label>Representative Comments</label><? echo ( $$variable{Order}->administrator_comments() ) ?></li>
+			<? endif ( $$variable{Order}->administrator_comments() ) ?>
 		</ul></div>
-		<? echo ( include('_totals.html'); ) ?>
+		<?include('_totals.html')?>
 		<br class="spacer"/>
-		<? echo ( include('/includes/_order_payments.html'); ) ?>
+		<?include('/includes/_order_payments.html')?>
 		<div class="Disclaimer">
 	<? echo (
-		my $html = $config{'OrderViewDisclaimer'};
+		my $html = $config{OrderViewDisclaimer};
 		if ( $html ) {
 			$html .= '<div class="AcceptTerms">';
-			if ( $$variable{'Order'}->terms_accepted() ) {
+			if ( $$variable{Order}->terms_accepted() ) {
 				$html .= '<br/>Terms have been accepted.';
 			} else {
 				$html .= '<span class="unprintable">The terms and conditions have not yet been accepted.<br/></span>';
-				my $Me = new openprint::User( $session{'user_id'} );
-				if ( $Me->company_id() == $session{'company_id'} and $Me->company_id() == $$variable{'Order'}->company_id() ) {
+				if ( $openprint::User->company_id() == $session{company_id} and $openprint::User->company_id() == $$variable{Order}->company_id() ) {
 					$html .= '<input type="checkbox" id="accept_terms" name="accept_terms" value="1" />
 					By checking the box and clicking Accept you agree to accept the listed terms and conditions.';
 
 					$html .= button( 'Accept', { onclick=>"f1.btnFunction.value='AcceptTerms';f1.submit();" } );
 				} else {
-					$html .= 'You cannot accept the terms on behalf of ' . $$variable{'Order'}->Company()->name().'<br/>';
+					$html .= 'You cannot accept the terms on behalf of ' . $$variable{Order}->Company()->name().'<br/>';
 				} # end if
 			} # end if 
 			$html .= '</div>';

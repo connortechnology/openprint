@@ -1,5 +1,3 @@
-DROP TABLE tbl_Quote_Users_For;
-
 CREATE TABLE tbl_Quote_Users_For (
 	quote_id		INTEGER NOT NULL, FOREIGN KEY (quote_id) REFERENCES Quotes (id),
 	strCompanyName	TEXT,

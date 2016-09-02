@@ -4,7 +4,8 @@ CREATE SEQUENCE Paper_id_seq;
 CREATE TABLE Papers (
 	id			INTEGER NOT NULL default nextval('Paper_id_seq'),
 	owner_id	INTEGER NOT NULL, FOREIGN KEY (owner_id) REFERENCES Companies (id),
-	manufacturer_id	INTEGER NOT NULL, FOREIGN KEY (manufacturer_id) REFERENCES Manufacturers (id),
+	manufacturer_id	INTEGER, FOREIGN KEY (manufacturer_id) REFERENCES Manufacturers (id),
+	group_id	INTEGER, FOREIGN KEY (group_id) REFERENCES StockGroups (id),
 	brand_id		INTEGER NOT NULL, FOREIGN KEY (brand_id) REFERENCES StockBrands (id),
 	finish_id	INTEGER NOT NULL, FOREIGN KEY (finish_id) REFERENCES StockFinishes (id),
 	colour_id	INTEGER NOT NULL, FOREIGN KEY (colour_id) REFERENCES StockColours (id),
@@ -23,6 +24,7 @@ CREATE TABLE Papers (
 	height		float,
 	mweight		float,
 	gsm			float,
+	wpsi		float,
 	basis_width	float,
 	basis_height	float,
 	blade_cleaning	boolean,
@@ -34,5 +36,11 @@ CREATE TABLE Papers (
 	in_stock		INTEGER,
 	allocated		INTEGER,
 	user_type		char(1),
+	digital		BOOLEAN,
+	supplied	BOOLEAN,
+	full_packages		BOOLEAN NOT NULL DEFAULT FALSE,
+	sheets_per_package	INTEGER,
+	type			TEXT,
+	created_on	TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
 	PRIMARY KEY (id)
 );

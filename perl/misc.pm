@@ -157,8 +157,7 @@ sub export_csv {
 	$r->headers_out->{'Content-Disposition'} = "attachment; filename=\"$filename\"";
 	$r->content_type( "text/csv; name=\"$filename\"" );
 	#$r->content_encoding( "binary" );
-	$$variable{'Download'} = $filename;
-	return $$variable{'File_Data'} = \@data;
+	$$variable{Download} = \@data;
 } # end sub
 
 sub export {
@@ -166,8 +165,7 @@ sub export {
 	$r->headers_out->{'Content-Disposition'} = "attachment; filename=\"$filename\"";
 	$r->content_type( "application/octet-stream; name=\"$filename\"" );
 	#$r->content_encoding( "binary" );
-	$$variable{'Download'} = $filename;
-	return $$variable{'File_Data'} = $data;
+	$$variable{Download} = $data;
 } # end sub export
 
 sub get_destination {
@@ -220,7 +218,8 @@ sub error {
 
 	$$variable{'error'} = $error;
 	$$variable{'details'} = $details;
-	$$variable{'Redirect'} = $openprint::config{'errorpage'};
+	$$variable{information} = $details;
+	#$$variable{'Redirect'} = $openprint::config{'errorpage'};
 } # end sub error
 
 sub trim {
@@ -500,6 +499,32 @@ sub smart_time {
 		return Date::Format::time2str( '<span title="%A, %b %d %Y at %H:%M">', $_[0] ) . $difference. ' second'.($difference == 1?'':'s').' ago</span>';
 	}
 } # end sub smart_time
+
+sub get_files_recursive {
+	if ( ! -d $_[0] ) {
+		$openprint::log->error("Supplied path $_[0] was not a directory");
+		return;
+	}
+	my @results;
+	my @filenames;
+	if ( opendir DIRHANDLE, $_[0] ) {
+		@filenames = readdir DIRHANDLE;
+		closedir DIRHANDLE;
+	} # end if
+$openprint::log->debug("Have @filenames from $_[0]");
+	foreach ( @filenames ) {
+		next if $_ =~ /^\./;
+		my $path = $_[0].'/'.$_ ;
+		if ( -d $path ) {
+			push @results, get_files_recursive( $path );
+		} elsif ( -f $path ) {
+			push @results, $path;
+		} else {
+			$openprint::log->debug("What was $path");
+		}
+	}
+	return @results;
+}
 
 
 1;

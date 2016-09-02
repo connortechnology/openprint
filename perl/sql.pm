@@ -22,6 +22,7 @@ sub open_sql {
 	
 	my $dsn = "dbi:$sql_server{'driver'}:dbname=$sql_server{'database'};";
 	$dsn .= "host=$sql_server{'host'}" if $sql_server{'host'};
+	$dsn .= ";port=$sql_server{'port'}" if $sql_server{'port'};
 	if ( ! ( $new_dbh = DBI->connect( $dsn, $sql_server{'login'}, $sql_server{'password'}, {AutoCommit=>1,pg_enable_utf8 => 1 } ) ) ) {
 		$log->crit("Unable to connect to database $sql_server{'database'}: " . DBI->errstr );
 		return;

@@ -120,9 +120,11 @@ sub Parents {
 	
 	if ( ( ! $_[0]{id} ) or ! $_[0]{parent_id} ) {
 		return ();
-	} else {
-		return $_[0]->Parent(), $_[0]->Parent()->Parents();
-	} # end if
+	} 
+	if ( ! $_[0]{Parents} ) {
+		$_[0]{Parents} = [ $_[0]->Parent(), $_[0]->Parent()->Parents() ];
+	}
+	return @{$_[0]{Parents}};
 } # end sub Parents
 
 sub Type {
@@ -131,11 +133,16 @@ sub Type {
 
 sub type {
 	if ( @_ > 1 ) {
-		my $Type = openprint::Location_Type->find_one('name lc'=>lc openprint::Location_Type->transform('name',$_[1]));
-		if ( ! $Type ) {
+		my $Type;
+		if ( $_[1] ) {
+			$Type = openprint::Location_Type->find_one('name lc'=>lc openprint::Location_Type->transform('name',$_[1]));
+			if ( ! $Type ) {
+				$Type = new openprint::Location_Type();
+				$Type->save({'name'=>$_[1]});
+			} # end if
+		} else {
 			$Type = new openprint::Location_Type();
-			$Type->save({'name'=>$_[1]});
-		} # end if
+		} 
 #$openprint::log->debug("Type: " . $Type->to_string() );
 		$_[0]{type_id} = $Type->id();
 		$_[0]{type} = $Type->name();
@@ -325,8 +332,8 @@ require Geo::Coder::Googlev3;
 	
 	my $Location = new openprint::Location();
 	$Location->save({
-		name=>$_[0],
-		parent	=>	$parent,
+		name		=>	$_[0],
+		parent		=>	$parent,
 		latitude	=>	$latitude,
 		longitude	=>	$longitude,
 		postalcode	=>	$postalcode,
@@ -511,6 +518,24 @@ sub address_line {
 	return $_[0]{address_line};
 } # end sub address_line
 
+sub address_formatted {
+	if ( ! $_[0]{address_formatted} ) {
+		my $L = $_[0];
+		$_[0]{address_formatted} = '';
+		if ( $$L{company_id} ) {
+			$$L{address_formatted} .= $L->Company()->name()."\n";
+		}
+		if ( $L->address() ) {
+			$_[0]{address_formatted} .= $L->address() . "\n";
+		} # end if
+		$_[0]{address_formatted} .= join(', ', map { $_->name() } $L->Parents() ) . "\n";
+		if ( $L->postalcode() ) {
+			$_[0]{address_formatted} .= $L->postalcode() . "\n";
+		} # end if
+	} # end if
+	return $_[0]{address_formatted};
+}
+
 sub where {
 	if ( ! $_[0]{where} ) {
 		my $L = $_[0];
@@ -603,6 +628,7 @@ sub save_location {
 		$parent_id = $$param{city_id};
 	} # end if
 	my $Location;
+	$$Location = $$param{company_id} if $$param{company_id};
 
 	if ( $$param{location} ) {
 		$Location = openprint::Location->find_one('name lc'=> lc openprint::Location->transform('name',$$param{location}),
@@ -820,14 +846,20 @@ sub html {
 sub three_letter {
 	if ( ! $_[0]{three_letter} ) {
 		if ( $_[0]->type() eq 'country' ) {
-			require Locale::Country;
-			$_[0]{three_letter} = uc Locale::Country::country2code( $_[0]{name}, 'alpha-3' );
-			if ( ! $_[0]{three_letter} ) {
-				$openprint::log->warn("No code found for $_[0]{name}");
+			if ( $_[0]{name} ) {
+				require Locale::Country;
+				$_[0]{three_letter} = uc Locale::Country::country2code( $_[0]{name}, 'alpha-3' );
+				if ( ! $_[0]{three_letter} ) {
+					$openprint::log->warn("No code found for $_[0]{name}");
+				}
 			}
 		} # end if
 	} # end if
 	return $_[0]{three_letter};
 } # end sub three_letter
+
+sub Company {
+	return new openprint::Company($_[0]{company_id});
+}
 1;
 __END__

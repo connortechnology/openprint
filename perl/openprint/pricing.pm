@@ -18,6 +18,7 @@ my %price_cache;
 
 sub clear_cache {
 	%price_cache = ();
+	Memoize::flush_cache('get_best_prices');
 } # end sub clear_cache
 
 sub init_cache {
@@ -119,6 +120,7 @@ sub merge_prices {
 
 	# now Price1 has the lower price.
 	if ( $price1->{min} ne '' and ( $price2->{min} < $price1->{min} or $price2->{min} eq '' ) ) {
+$log->debug("Filling in price mins $$price2{min} < $$price1{min}") if DEBUG;
 		# tack on a price in front
 		my $newprice = openprint::price->new( $openprint::log, '' );
 		$newprice->copy( $price2 );
@@ -128,6 +130,7 @@ sub merge_prices {
 	} # end if
 
 	if ( $price1->{max} ne '' and ( $price2->{max} > $price1->{max} or $price2->{max} eq '' ) ) {
+$log->debug("Filling in price maxs $$price2{max} < $$price1{max}") if DEBUG;
 		my $newprice = openprint::price->new( $openprint::log, '' );
 		$newprice->copy( $price2 );
 		my $increment = get_increment( $price1->{max} );
@@ -186,6 +189,7 @@ sub get_best_prices {
 	my @pricing = ();
 	my $price_type = ref $Object;
 	if ( $price_type and $price_cache{$config{db_name}}{$list_id}{$price_type}{$$Object{id}} ) {
+#$log->debug("Using new style price caching" );
 		@pricing = @{$price_cache{$config{db_name}}{$list_id}{$price_type}{$$Object{id}}};
 	} else {
 #$log->warn("Request for old style price for $Object");
@@ -193,7 +197,11 @@ sub get_best_prices {
 		$priceGroup->load();	
 		push @pricing, @{$priceGroup->{prices}};
 	}
-
+if ( DEBUG ) {
+foreach my $p ( @pricing ) {
+$log->debug("Price service_id:$$p{service_id} interpolate:$$p{interpolate};");
+}
+}
 
 # We should do this later...
 
@@ -271,13 +279,18 @@ sub get_Price {
 		if ( ! defined $qty or $qty eq '' ) {
 			$Price = $Prices[0];
 		} else {	
-			foreach my $P ( @Prices ) {
+			for( my $i = 0; $i < @Prices; $i += 1 ) {
+				my $P = $Prices[$i];
 				#$log->debug("Need $qty, equipment: $$P{equipment_id} $$Object{name} min: $$P{min} max: $$P{max} ");
 				if ( 
 						( ( ! defined $P->{min} ) or $P->{min} <= $qty ) and 
 						( ( ! defined $P->{max} ) or $P->{max} >= $qty )
 				   ) {
 					$Price = $P->clone();
+					# For interpolation
+					#$$Price{Previous} = $Prices[$i-1] if $i > 0;
+					$$Price{Next} = $Prices[$i+1] if $i < @Prices -1;
+					last;
 				} # end if
 			} # end foreach
 		} # end if qty
@@ -307,6 +320,15 @@ sub get_Price {
 # the if here is to preserve empty pricing. if pricei s empty, we display call, instead of 0.00.
 			$Price->{price} *= $pricingpercent;
 		} # end if
+		if ( $$Price{interpolate} ) {
+			if ( $$Price{max} and $$Price{Next} ) {
+				my $xa = $$Price{min};
+				my $xb = $$Price{Next}{min};
+				my $ya = $$Price{price};
+				my $yb = $$Price{Next}{price};
+				$Price->{price} = $ya + ($yb - $ya)*( ($qty - $xa ) / ( $xb - $xa ) );
+			}
+		}
 	} # end if
 	return $Price;
 }
@@ -323,13 +345,14 @@ sub get_best_price_object {
 	my ( $cust_id, $prod_index, $list_id, $pricesetclass, $qty, $equipment, $period ) = @_;
 	my $prices = get_best_prices( $cust_id, $prod_index, $list_id, $pricesetclass, $equipment, $qty, $period );
 if ( DEBUG ) {
-	$openprint::log->debug("Prices in get_best_price_obejct" . @$prices);
+	$openprint::log->debug("Prices in get_best_price_obejct for $qty " . @$prices);
 	foreach my $price ( @$prices ) {
-		$openprint::log->debug("$$price{min} $$price{max} $$price{Price}");
+		$openprint::log->debug("service: $$price{service_id} min: $$price{min} max: $$price{max} price:$$price{Price} interpolate: $$price{interpolate}");
 	} # end foreach
 	
 }
-	foreach my $price ( @$prices ) {
+	for ( my $i = 0; $i < @$prices; $i += 1 ) {
+		my $price = $$prices[$i];
 		if ( $price and ( 
 					( (!defined $qty) or $qty eq '' ) or
 					( 
@@ -337,6 +360,25 @@ if ( DEBUG ) {
 					 ( ( $price->{max} eq '' or ! defined $price->{max} ) or 1*$price->{max} >= $qty )
 					)
 ) ) {
+			if ( $$price{mode} eq 'Interpolate' ) {
+$log->error("Using interpolate $$price{max}");
+				if ( $$price{max} and $i <= ( @$prices - 1 ) ) {
+					$$price{Previous} = $$prices[$i-1] if $i;
+					$$price{Next} = $$prices[$i+1];
+					my $xa = $$price{min};
+					my $xb = $$price{Next}{min};
+					my $ya = $$price{Price};
+					my $yb = $$price{Next}{Price};
+
+					$price->{Price} = $ya + ($yb - $ya)*( ($qty - $xa ) / ( $xb - $xa ) );
+$log->error("Using interpolate $price->{Price} = $ya + ($yb - $ya)*( ($qty - $xa ) / ( $xb - $xa ) );");
+				}
+			} elsif ( $$price{mode} eq 'Stepped' ) {
+				# Store these for later processing
+				$$price{index} = $i;
+				$$price{prices} = $prices;
+				
+			}
 			return %$price;
 		} # end if
 	} # end foreach
@@ -357,6 +399,20 @@ sub adjust_price {
 	} # end if
 	return openprint::Currency::convert( $Price );
 } # end sub adjust_price
+
+sub get_stepped {
+	my ( $price, $qty ) = @_;
+	my $total = 0;
+	my $remaining_qty = $qty;
+	for ( my $i = 0; $i < $$price{index}; $i += 1 ) {
+		my $partial_qty = $$price{prices}[$i]{max} - $$price{prices}[$i]{min};
+
+		$total += $partial_qty * $$price{prices}[$i]{Price};
+		$remaining_qty -= $partial_qty;
+	}
+	$total += $remaining_qty * $$price{Price};
+	$$price{total} = $total;
+}
 
 1;
 __END__

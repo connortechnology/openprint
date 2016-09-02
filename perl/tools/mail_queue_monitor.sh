@@ -18,7 +18,7 @@
 MSMTP=/usr/bin/msmtp
 
 # Remote mail host (this is the mail server msmtp will use to send the alert. It should NOT be the local postfix installation)
-MAILHOST=backup.mailserver.com
+MAILHOST=mail.connortechnology.com
 
 # Remote mail port
 MAILPORT=25
@@ -27,13 +27,13 @@ MAILPORT=25
 MAILPROTO=smtp
 
 # Fully qualified domain name of local postfix installation
-DOMAIN=primary.mailserver.com
+DOMAIN=`cat /etc/mailname`
 
 # From address
-MAILFROM=postmaster@mailserver.com
+MAILFROM=mail1@point-one.com
 
 # Recipient (this address should not route to the local postfix installation, for obvious reasons)
-MAILTO="alerts@anotherdomain.com"
+MAILTO="iconnor@connortechnology.com"
 
 # Email subject
 MAILSUBJECT="Postfix queue length alert for ${DOMAIN}"
@@ -67,7 +67,7 @@ Q_MAILDROP=$(find ${QUEUEDIR_ROOT}/maildrop -type f | wc -l)
 
 # If any of these queues contain more than $MAX_QUEUE_LENGTH issue an alert
 if [ ${Q_ACTIVE} -gt ${MAX_QUEUE_LENGTH} -o ${Q_INCOMING} -gt ${MAX_QUEUE_LENGTH} -o ${Q_DEFERRED} -gt ${MAX_QUEUE_LENGTH} -o ${Q_MAILDROP} -gt ${MAX_QUEUE_LENGTH} ]; then
-
+QUEUES=$(/usr/sbin/postqueue -p)
     (
         echo "From: ${MAILFROM} "
         echo "To: ${MAILTO} "
@@ -76,6 +76,7 @@ if [ ${Q_ACTIVE} -gt ${MAX_QUEUE_LENGTH} -o ${Q_INCOMING} -gt ${MAX_QUEUE_LENGTH
         echo "Subject: ${MAILSUBJECT}"
         echo ""
         echo "One or more of the postfix queues on ${DOMAIN} has grown beyond ${MAX_QUEUE_LENGTH} messages in length."
+		echo "${QUEUES}"
     ) | ${MSMTP} --host=${MAILHOST} --port=${MAILPORT} --protocol=${MAILPROTO} --domain=${DOMAIN} --auth=off --tls=off --from=${MAILFROM} --logfile=${LOGFILE} --syslog=off --read-recipients
 
     exit 2

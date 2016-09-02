@@ -80,5 +80,10 @@ sub delete {
 	return;
 } # end sub delete
 
+sub Inventory_Items {
+	require openprint::PurchaseOrder_Item_to_Inventory_Item;
+	return openprint::PurchaseOrder_Item_to_Inventory_Item->find( purchaseorder_item_id => $_[0]{id}, order=>'purchaseorder_item_id' );
+}
+
 1;
 __END__

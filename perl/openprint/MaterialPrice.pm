@@ -41,7 +41,7 @@ $serial = 'materialprices_id_seq';
 	'markup'	=>	undef,
 	'price'		=>	undef,
 	'equipment_id'	=>	undef,
-	'discountable'	=>	1,
+	'discountable'	=>	q`'Y'`,
 	'interpolate'	=>	0,
 );
 

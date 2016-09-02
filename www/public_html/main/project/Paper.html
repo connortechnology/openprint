@@ -28,7 +28,6 @@ function calc_weight_from_sheets(e) {
 			qty.value = do_decimals( e.value * sheet_weight, 1 );
 		}
 	}
-
 }
 </script>
 <div class="Service <?ServiceTypeID?>">
@@ -56,13 +55,45 @@ function calc_weight_from_sheets(e) {
 
 		# We use @stock_ids to put things in the same order for each sig.
 		foreach my $Stock_Entry ( @Stocks ) {
+			
 			if ( ! $sig_papers{$$Stock_Entry{key}} ) {
 				next;
 			} # end if
 
 			$$variable{stock_index} = $$Stock_Entry{index};
 			$$variable{Stock} = $$Stock_Entry{Stock};
-			$html .= include('/main/project/_stock_line.html');
+
+			$html .= '<li><label style="width: auto;">'.$$variable{Stock}->to_string().'</label><br/>';
+			$html .= sprintf('<input type="hidden" id="id-%1$d-%2$d" name="id-%1$d-%2$d" value="%3$s" />', @$variable{'form','stock_index','paper_id'} );;
+
+			foreach my $qty_index ( $Project->quantity_indexes() ) {
+				$html .= '<span class="'.$$variable{Columns}.'Columns">';
+				my $Stock = openprint::Paper::load_from_signature( $Project, $sig_specs, $qty_index );
+				$Stock = $Stock->Supplied();
+				if ( $$Stock_Entry{Stock}->id() == $Stock->id() ) {
+
+					my $key = 'form'.join('-',$$variable{form},$qty_index );
+					$html .= '<span class="quantity">';
+
+					if ( $$variable{Stock}->type() ne 'Roll' ) {
+						$html .= input( type=>'float', id=>'qty-'.$key, name=>"qty-$key", value=>$$variable{"qty-$key"}, oninput=>'calc_sheets_from_weight(this);calc(this.form.name);' );
+						$html .= 'lbs ';
+						$html .= input( type=>'cardinal', id=>"sheets-$key", name=>"sheets-$key", value=> $$variable{"sheets-$key"}, onkeyup=>'calc_weight_from_sheets(this);calc(this.form.name);' );
+						$html .= 'sheets ';
+						$html .= input( type=>'hidden', id=>'sheet_weight-'.$key, name=>'sheet_weight'.$key, value=>$$variable{Stock}->wpsi() * $$variable{Stock}->area() );
+					} else {
+						$html .= input( type=>'float', id=>'qty-'.$key, name=>"qty-$key", value=>$$variable{"qty-$key"}, onkeyup=>'calc(this.form.name);' );
+						$html .= 'lbs ';
+					} # end if
+					$html .= write_override( "overrideqty-$key", $$variable{"overrideqty-$key"}, '', "calc('f1')" );
+					$html .= '</span>';
+				} else {
+					$html .= 'none';
+				}
+				$html .= '</span>';
+
+			} # end foreach qty_index
+			$html .= '</li>';
 		} # end foreach stock_index
 		$html .= "</ul></fieldset>\n";
 	} # end foreach signature

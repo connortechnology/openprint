@@ -1,8 +1,6 @@
 DROP TABLE IF EXISTS hosts;
 CREATE TABLE hosts (
 	id			SERIAL,
-	ip			inet,
-	mac	macaddr[],
 	hostname	text,
 	blacklisted	boolean not null default false,
 	whitelisted	boolean not null default false,
@@ -17,6 +15,7 @@ CREATE TABLE hosts (
 	state_changed_on	INTEGER,
 	offline_seconds		INTEGER,
 	notified			BOOLEAN NOT NULL DEFAULT FALSE,
+	location_id			INTEGER, FOREIGN KEY (location_id) REFERENCES Locations (id),
 	PRIMARY KEY (id)
 );
 CREATE INDEX hosts_ip_idx on Hosts (ip);

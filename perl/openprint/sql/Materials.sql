@@ -7,6 +7,7 @@ CREATE TABLE materials (
     supplier_id		INTEGER, FOREIGN KEY (supplier_id) REFERENCES Companies (id),
 	taxexempt1		char(1) NOT NULL DEFAULT 'N',
 	taxexempt2		char(1) NOT NULL DEFAULT 'N',
+	activity_code	TEXT,
 	PRIMARY KEY (id)
 );
  

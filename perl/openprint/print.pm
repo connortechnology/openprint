@@ -214,6 +214,9 @@ sub view_services {
 				if ( sets::isin( $ServiceType->name(), ['Proofs'] ) and ( @{$$services{$ServiceType->name()}} == 1 ) ) {
 					$$variable{error} .= 'Proofs cannot be removed from the project.<br/>';
 					next;
+				} elsif ( ! $ServiceType->allow_delete() ) {
+					$$variable{error} .= $ServiceType->name() . ' cannot be removed from the project.<br/>';
+					next;
 				} # end if
 				my $specs = $PS->specs();
 				$$variable{error} .= $PS->delete();
@@ -441,7 +444,7 @@ $log->debug("group $group_id");
 
 		# We have to do this for simple printing.  Simple printing calls here, but doesn't have these fields, so it clears out the defaults!
 		foreach my $spec ( 
-				'txtSignatureType','pages_supplied','supplied_format',
+				'txtSignatureType','pages_supplied','supplied_format','rdbPressProof', 'ProofApproval',
 				'ddmStockBrand','ddmStockFinish','ddmStockColour','ddmStockWeight','ddmStockQuality','ddmStockGroup',
 				'txtSpecificStockBrand','txtSpecificStockFinish','txtSpecificStockColour','txtSpecificStockWeight',
 				'txtSpecificStockWidth','txtSpecificStockHeight','txtSpecificStockCalliper',
@@ -591,7 +594,7 @@ $log->error("No Group!") if ! $type;
 				'CyanSideTwoCoverage', 'MagentaSideTwoCoverage', 'YellowSideTwoCoverage', 'BlackSideTwoCoverage',
 				'BleedLeft','BleedRight','BleedTop','BleedBottom','rdbColourBar','txtCropMarkSpace',
 				'GroupPageQuantity','txtServiceDescription',
-				'txtSignatureType','rdbTemplateType','pages_supplied','supplied_format',
+				'txtSignatureType','rdbTemplateType','pages_supplied','supplied_format','rdbPressProof','PressApproval',
 				'rdbPanels','PocketSize','chkPocketLeft','chkPocketCenter','chkPocketRight',
 				'txtWidth','txtHeight','chkOverrideDimensions','txtQuantity1','txtQuantity2','txtQuantity3',
 	'sides_the_same',

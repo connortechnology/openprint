@@ -52,6 +52,12 @@ function filter_onChange( element, id, selected ) {
 		new Ajax.Updater('Operators','/administrator/equipment/_operators.html', {
 				parameters: { action: 'add', equipment_id: equipment_id, user_id: user_id } } );
 	}
+	function delete_spec( id ) {
+new Ajax.Request('/administrator/equipment/_specification.html?action=delete&amp;id='+id, { onSuccess: function(){var tr = $('S'+id); tr.parentNode.removeChild(tr);SortableTable.load();} } );
+	}
+	function copy_spec( id ) {
+new Ajax.Request('/administrator/equipment/_specification.html?action=copy&amp;id='+id, { onSuccess: function(response){ $('S'+id).insert( {after: response.responseText } ); SortableTable.load();} } );
+	}
 </script>
 <form id="f1" name="f1" method="post" enctype="multipart/form-data" action="edit.html">
 	<fieldset class="filters"><legend>Search Information</legend>
@@ -68,7 +74,11 @@ function filter_onChange( element, id, selected ) {
 			<select name="ddmEquipment" onchange="if(this.options[this.selectedIndex].value != ''){f1.btnFunction.value='';fmCheck(f1);}" >
 				<option value="">Select Equipment</option>
 <? echo (
-    make_drop_down( [ map { $_->id(), $_->strid().': ' . $_->name() } openprint::Equipment->find( order => 'lower(strID)' ) ], $$variable{Equipment}->id() );
+	my @Equipment = openprint::Equipment->find( 
+		( $param{ddmEquipment} ? ( or=>{deleted=>0, id=>$param{ddmEquipment} } ) : () ),
+		order => 'lower(strID)',
+		);
+    make_drop_down( [ map { $_->id(), join(': ', $_->strid(), $_->name() ) } @Equipment ], $$variable{Equipment}->id() );
 ) ?>
 			</select>
 		</li>
@@ -78,7 +88,12 @@ function filter_onChange( element, id, selected ) {
 				button( 'PreviousTop', { onclick=>"f1.btnFunction.value='Previous';fmCheck(f1);", text=>'Previous' } ),
 				button( 'NextTop', { onclick=>"f1.btnFunction.value='Next';fmCheck(f1);", text=>'Next' } ),
 				button( 'NewTop', { onclick=>"addCheck(\$('f2'));", text=>'New' } ),
+				( $$variable{Equipment}->deleted() ? (
+				button( 'Destroy', { onclick=>"f1.btnFunction.value='Destroy';fmChange=2;fmCheck(f1);", text=>'Destroy' } ),
+				button( 'UnDelete', { onclick=>"f1.btnFunction.value='UnDelete';fmChange=2;fmCheck(f1);", text=>'UnDelete' } ),
+				) : (
 				button( 'DeleteTop', { onclick=>"f1.btnFunction.value='Delete';fmChange=2;fmCheck(f1);", text=>'Delete' } ),
+				) ),
 				button( 'SaveTop', { onclick=>q`$('f2').btnFunction.value='Save';fmChange=3;fmCheck($('f2'));`, text=>'Save' } ),
 				button( 'CopyTop', { onclick=>"f1.btnFunction.value='Copy';f1.submit();", text=>'Copy' } ),
 				button( 'ResetTop', { onclick=>'f1.reset();', text=>'Reset' } ),
@@ -87,7 +102,7 @@ function filter_onChange( element, id, selected ) {
 		</p>
 		<p class="buttons">
 			<input type="file" name="fileSpecifications"/>
-			<? echo ( join('',
+			<? echo ( join("\n",
 			button( 'Import', { onclick=>"f1.btnFunction.value='Import Specifications';f1.submit();", text=>'Import' } ),
 			button( 'Export', { onclick=>"f1.btnFunction.value='Export Specifications';f1.submit();", text=>'Export' } ),
 			); ) ?>
@@ -137,7 +152,7 @@ function filter_onChange( element, id, selected ) {
 			</p>
 			<p>
 				<label>Use in estimating</label>
-				<? echo ( radio( 'useinestimating', [ '1', 'Yes', '0', 'No' ], $$variable{Equipment}->useinestimating(), { default=>'0' } ); ) ?>
+				<? echo ( radio( 'useinestimating', [ '1', 'Yes', '0', 'No', '', 'By Override' ], $$variable{Equipment}->useinestimating(), { default=>'0' } ); ) ?>
 			</p>
 			<p>
 				<label>Use in scheduling</label>
@@ -155,28 +170,19 @@ function filter_onChange( element, id, selected ) {
 			</p>
 			<p>
 				<label>Smart Scheduling</label>
-				<input type="radio" id="smartscheduling1" name="smartscheduling" value="1" <? echo ( ssi::checked( $$variable{'Equipment'}->smartscheduling() ); ) ?> />
-				<label class="radio" for="smartscheduling1">Yes</label>
-				<input type="radio" id="smartscheduling0" name="smartscheduling" value="0"  <? echo ( ssi::checked( ! $$variable{'Equipment'}->smartscheduling() ); ) ?> />
-				<label class="radio" for="smartscheduling0">No</label>
+				<? echo ( radio( 'smartscheduling', [ '1', 'Yes', '0', 'No' ], $$variable{'Equipment'}->smartscheduling() ); ) ?>
 			</p>
 	</div>
 	<? if ( $config{'JMFEnabled'} eq 'Y' ) ?>
 			<p>
 				<label>Use JMF</label>
-				<input type="radio" id="jmf_enabledtrue" name="jmf_enabled" value="true"  <? echo ( 'checked="checked"' if $$variable{'Equipment'}->jmf_enabled(); ) ?> />
-				<label class="radio" for="jmf_enabledtrue">Yes</label>
-				<input type="radio" id="jmf_enabledfalse" name="jmf_enabled" value="false"  <? echo ( 'checked="checked"' if ! $$variable{'Equipment'}->jmf_enabled(); ) ?> />
-				<label class="radio" for="jmf_enabledfalse">No</label>
+				<? echo ( radio( 'jmf_enabled', [ 'true', 'Yes', 'false', 'No' ], $$variable{'Equipment'}->jmf_enabled() ); ) ?>
 			</p>
 	<? endif ( $config{'JMFEnabled'} eq 'Y' ) ?>
 	<? if ( $config{'InstantGateEnabled'} eq 'Y' ) ?>
 			<p>
 				<label>Use InstantGate</label>
-				<input type="radio" id="instantgate_enabledtrue" name="instantgate_enabled" value="true"  <? echo ( 'checked="checked"' if $$variable{'Equipment'}->instantgate_enabled(); ) ?> onclick="$('CostCenter').show();" />
-				<label class="radio" for="instantgate_enabledtrue">Yes</label>
-				<input type="radio" id="instantgate_enabledfalse" name="instantgate_enabled" value="false"  <? echo ( 'checked="checked"' if ! $$variable{'Equipment'}->instantgate_enabled(); ) ?> onclick="$('CostCenter').hide();" />
-				<label class="radio" for="instantgate_enabledfalse">No</label>
+				<? echo ( radio( 'instantgate_enabled', [ 'true', 'Yes', 'false', 'No' ], $$variable{'Equipment'}->instantgate_enabled(), { onclick=>qq`if(this.value=='true'){$('CostCenter').show();}else{$('CostCenter').hide();};` } ); ) ?>
 			</p>
 	<? endif ( $config{'InstantGateEnabled'} eq 'Y' ) ?>
 	<? if ( $config{'InstantGateEnabled'} eq 'Y' or $config{'JDFEnabled'} eq 'Y' ) ?>
@@ -197,7 +203,7 @@ function filter_onChange( element, id, selected ) {
 				<label>Location</label>
 				<select id="location_id" name="location_id">
 					<option value="">select</option>
-					<? echo ( make_drop_down( openprint::Location->dropdown( order=>'lower(name)', type=>'place', 'parent_id is null'=>1), $$variable{'Equipment'}->location_id() ); ) ?>
+					<? echo ( make_drop_down( openprint::Location->dropdown( order=>'parent_id NULLS FIRST, lower(name)', type=>'place'), $$variable{'Equipment'}->location_id() ); ) ?>
 				</select>
 			</p>
 			<p>
@@ -314,3 +320,6 @@ function filter_onChange( element, id, selected ) {
 		</p>
 	</fieldset>
 </form>
+<? if ( $$variable{Equipment}->id() ) ?>
+	<? echo ( include_logs( $$variable{Equipment} ); ) ?>
+<? endif ( $$variable{Equipment}->id() ) ?>

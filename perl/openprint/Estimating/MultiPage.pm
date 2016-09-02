@@ -86,7 +86,7 @@ my %variables = (
 		'txtCustomMWeight', 'basis_mweight', 'basis_width', 'basis_height', 
 		'CustomStockPrice', 'StockPricePerM', 'txtStockGSM','CustomSheetDoubleSided',
 		'cuttable', 'perfecting', 'StockGrade', 'minimum_order','sheets_per_package','full_packages',
-		'sides_the_same',
+		'sides_the_same','rdbPressProof','PressApproval',
 		);
 
 sub variables {
@@ -310,19 +310,24 @@ $openprint::log->warn("FIXM E");
 	foreach my $group_id ( @Groups ) {
 		$openprint::log->debug("Group: $group_id, remaining: $remaining_pages, override: $override_pages{$group_id}") if DEBUG;
 		my %sig_specs =  map { $_, $$specs{$_.$group_id } } @signature_variables;
-		
+		if ( ! exists $override_pages{$group_id} ) {
+			$override_pages{$group_id} = $remaining_pages;
+			$remaining_pages = 0;
+		} # end if
+		$sig_specs{GroupPageQuantity} = $$specs{'GroupPageQuantity'.$group_id} = $override_pages{$group_id};
 		openprint::Estimating::Printing::get_colours( $specs, 'SideOne', \%variables, $group_id );
 		openprint::Estimating::Printing::get_colours( $specs, 'SideTwo', \%variables, $group_id );
 		openprint::Estimating::Printing::get_inkcoverage( $Project, $specs, \%variables, $group_id );
 		openprint::Estimating::Printing::get_Stocks( $Project, \%sig_specs, \%variables );
 		openprint::Estimating::Printing::set_size( $Project, \%sig_specs, $specs );
+		if ( $$specs{"ddmRunStyle-$group_id"} and $$specs{"ddmPress-$group_id"} ) {
+			my $Press = openprint::Equipment->find_one(strid=>$$specs{"ddmPress-$group_id"});
+			if ( ! sets::isin( $$specs{"ddmRunStyle-$group_id"}, [ split(',', $Press->specification('Runstyles') ) ] ) ) {
+				$$specs{alert} .= "Press $$Press{name} cannot do " . $$specs{"ddmRunStyle-$group_id"}.'<br/>';
+			}
+		}
 		$$specs{alert} .= $sig_specs{alert} .' for group ' . $group_id . ' ' . $$specs{'txtServiceDescription'.$group_id}. '<br/>' if $sig_specs{alert};
 		@$specs{map { $_.$group_id} @signature_variables} = @sig_specs{@signature_variables};
-		if ( ! exists $override_pages{$group_id} ) {
-			$override_pages{$group_id} = $remaining_pages;
-			$remaining_pages = 0;
-		} # end if
-		$$specs{'GroupPageQuantity'.$group_id} = $override_pages{$group_id};
 		if ( ! ( $variables{'GroupPageQuantity'.$group_id} and @{$variables{'GroupPageQuantity'.$group_id}} ) ) {
 			$openprint::log->debug("Setting output on GroupPageQuantity$group_id") if DEBUG;
 			$variables{'GroupPageQuantity'.$group_id} = [sets::union('output', @{$variables{'GroupPageQuantity'.$group_id}})];
@@ -331,6 +336,11 @@ $openprint::log->warn("FIXM E");
 			$$specs{'txtFinalWidth'.$group_id} = $$specs{txtFinalWidth};
 			$$specs{'txtFinalHeight'.$group_id} = $$specs{txtFinalHeight};
 		} # end if
+		if ( $sig_specs{txtSpreadSize} ) {
+			if ( $sig_specs{GroupPageQuantity} % $sig_specs{txtSpreadSize} ) {
+			$$specs{alert} .= "The # of pages for group $group_id is not a multiple of $sig_specs{txtSpreadSize}.  A GateFold page will be required.<br/>";
+			} 
+		}
 		$openprint::log->debug("Group: $group_id, remaining: $remaining_pages, $override_pages{$group_id}") if DEBUG;
 	} # end foreach group_id
 
@@ -418,7 +428,7 @@ $openprint::log->debug("********************************************************
 			foreach my $qty_index ( $Project->quantity_indexes() ) {
 				if ( $$sig_specs{'Additional Impositions'.$qty_index} and @{$$sig_specs{'Additional Impositions'.$qty_index}} ) {
                     my $Imposition = $$sig_specs{'Additional Impositions'.$qty_index}[0];
-					my $specs = $Imposition->specs();
+					my $specs = $$Imposition{specs};
 					if ( $$specs{Group} and ( $$specs{Group} != $group ) ) {
 $openprint::log->debug("Removing impo cuz wrong group") if DEBUG;
 						shift @{$$sig_specs{'Additional Impositions'.$qty_index}};
@@ -477,7 +487,7 @@ $openprint::log->debug("Removing impo cuz wrong group") if DEBUG;
 						$specs{'txtUnitPrice'.$qty_index} = sprintf($openprint::config{UnitPriceFormat}, 0 );
 			#$$openprint::log->debug("no additional impos for qty $qty_index");
 						$Imposition = new openprint::Imposition();
-						$$Imposition{paper} = new openprint::Paper();
+						$$Imposition{Paper} = new openprint::Paper();
 					} else {
 						$Imposition = shift @{$$sig_specs{'Additional Impositions'.$qty_index}};
 					} # end if
@@ -492,8 +502,12 @@ $openprint::log->debug("Removing impo cuz wrong group") if DEBUG;
 					if ( $specs{"chkOverrideImposition$qty_index"} eq 'Y' and $specs{"txtImposition$qty_index"} != $$Imposition{imposition} ) {
 						$status = 'uncalculated';
 					} else {
-						$Imposition->save( \%specs, $qty_index );
-						openprint::Estimating::Printing::save_price( $Project, \%specs, $price, $Imposition, $qty_index );
+						if ( $Project->quantity( $qty_index ) ) {
+							$Imposition->save( \%specs, $qty_index );
+							openprint::Estimating::Printing::save_price( $Project, \%specs, $price, $Imposition, $qty_index );
+						} else {
+							$openprint::log->error("empty qty in project->quantity_indexes");
+						}
 					}
 					$specs{'hdnBreakdown'.$qty_index} = openprint::Estimating::Printing::breakdown( $price, \%specs );
 					

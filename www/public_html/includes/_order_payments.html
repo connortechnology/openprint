@@ -46,20 +46,22 @@
             <td class="Price">%s%s</td>
             <td class="buttons">%s</td>
         </tr></tbody>`,
-ssi::date_select('received_on', [ Date::Calc::Today() ] ),
+date_select('received_on', [ Date::Calc::Today() ] ),
 ssi::select( [map{$_->id(), $_->symbol().' ' . $_->short() } openprint::Currency->find(order=>'lower(name)') ], $variable{Order}->currency_id(), { name=>'payment_currency_id' } ),
-ssi::input( type=>'float', name=>'amount', id=>'amount', value=>$$variable{Order}->owing() ),
-ssi::button( 'AddPayment', { onclick=>"f1.btnFunction.value='Save Payment';f1.submit();", href=>'', text=>'Add' } ),
+input( type=>'float', name=>'amount', id=>'amount', value=>$$variable{Order}->owing() ),
+button( 'AddPayment', { onclick=>"f1.btnFunction.value='Save Payment';f1.submit();", text=>'Add' } ),
 );
 } else {
 	$html .= '
+<table class="List">
+	<thead>
         <tr>
             <th class="payment_id">Ref #</th>
             <th class="type">Type</th>
             <th class="description">Description</th>
             <th class="DateTime">Date</th>
             <th class="Price">Amount</th>
-        </tr>';
+        </tr></thead>';
 		foreach my $Payment ( @Payments ) {
 			$html .= sprintf(q`
 <tr%1$s>

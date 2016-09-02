@@ -1,4 +1,6 @@
+/*
 DROP TABLE IF EXISTS database_info;
+*/
 
 CREATE TABLE database_info (
     version integer NOT NULL,

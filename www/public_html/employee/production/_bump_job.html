@@ -7,9 +7,10 @@
 <form id="bump_form" name="bump_form" action="_li_change.json" method="post">
 	<input type="hidden" name="schedule_id" value="<? echo ( $param{'schedule_id'} ) ?>" />
 	<input type="hidden" name="btnFunction" value="BumpJob" />
+	<fieldset>
 	<h3>Bump Docket <? echo ( $$variable{'Job'}->Project()->docket() ) ?> Form <?Form?></h3>
-	<p>
-		<label>Press</label>
+	<ul>
+		<li><label>Press</label>
 		<select name="equipment_id" onchange="new Ajax.Updater( 'other_servicetypes', '_bump_job_popup_servicetypes.html', { parameters: { equipment_id: this.getValue(), schedule_id: this.form.schedule_id.value} } );">
 			<option value="">Unknown</option>
 			<? echo ( 
@@ -20,7 +21,8 @@
 					), $$variable{'Job'}->equipment_id() );
 			) ?>
 		</select>
-	</p>
+	</li>
+	</ul>
 	<br/>
 	<div id="other_servicetypes"><?include('_bump_job_popup_servicetypes.html')?></div>
 	<br/>
@@ -32,4 +34,5 @@
 		return $html;
 	) ?>
 	</p>
+	</fieldset>
 </form>

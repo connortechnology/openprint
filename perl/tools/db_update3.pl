@@ -141,15 +141,24 @@ if ( ! sets::isin( 'host_notifications', \@tables ) ) {
 	die $dbh->errstr() if $dbh->errstr();
 }
 
-my $data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='paper_prices'", 'column_name');
-if ( ! exists $$data{'equipment_id'} ) {
-	$dbh->do('ALTER TABLE paper_prices add equipment_id INTEGER');
-	$dbh->do('ALTER TABLE paper_prices add FOREIGN KEY(equipment_id) REFERENCES tbl_Equipment (id)');
-} # end if
-if ( ! exists $$data{'service'} ) {
-	$dbh->do('ALTER TABLE paper_prices ADD service TEXT');
-	$dbh->do("UPDATE paper_prices set service='Material'" );
-} # end if
+if ( ! sets::isin( 'paper_prices', \@tables ) ) {
+	$dbh->do( misc::load_file( $log, '../openprint/sql/Paper_Prices.sql' ) );
+	die $dbh->errstr() if $dbh->errstr();
+} else {
+	my $data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='paper_prices'", 'column_name');
+	if ( ! exists $$data{'equipment_id'} ) {
+		$dbh->do('ALTER TABLE paper_prices add equipment_id INTEGER');
+		$dbh->do('ALTER TABLE paper_prices add FOREIGN KEY(equipment_id) REFERENCES tbl_Equipment (id)');
+	} # end if
+	if ( ! exists $$data{interpolate} ) {
+		$log->debug("Add interpolate to paper_prices");
+		$dbh->do('ALTER TABLE paper_prices add interpolate BOOLEAN NOT NULL DEFAULT FALSE');
+	} # end if
+	if ( ! exists $$data{'service'} ) {
+		$dbh->do('ALTER TABLE paper_prices ADD service TEXT');
+		$dbh->do("UPDATE paper_prices set service='Material'" );
+	} # end if
+}
 
 if ( ! sets::isin( 'user_profile_fields', \@tables ) ) {
 	$dbh->do( misc::load_file( $log, '../openprint/sql/User_Profile_Fields.sql' ) );
@@ -272,6 +281,10 @@ if ( ! sets::isin( 'photos_in_albums', \@tables ) ) {
 		$dbh->do( 'ALTER TABLE photos_in_albums DROP CONSTRAINT photos_in_albums_pkey');
 		$dbh->do( 'ALTER TABLE photos_in_albums ADD PRIMARY KEY (id)' );
 	} # end if
+	if ( ! exists $$data{sort} ) {
+		$dbh->do('ALTER TABLE photos_in_albums ADD sort INTEGER');
+		print "Adding sort to photos_in_albums\n";
+	}
 }
 if ( ! sets::isin( 'video_albums', \@tables ) ) {
     $dbh->do( misc::load_file( $log, '../openprint/sql/Video_Albums.sql' ) );
@@ -825,19 +838,6 @@ if ( ! sets::isin( 'purchaseorder_departments', \@tables ) ) {
 	$dbh->do( misc::load_file( $log, q{../openprint/sql/PurchaseOrder_Departments.sql}) );
 	die if $dbh->errstr();
 } # en dif
-if ( ! sets::isin( 'usergroups', \@tables ) ) {
-	$dbh->do( misc::load_file( $log, q{../openprint/sql/Usergroups.sql}) );
-	die if $dbh->errstr();
-} else {
-	my $data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='usergroups'", 'column_name');
-	if ( ! $$data{'duration'} ) {
-		$dbh->do('ALTER TABLE usergroups ADD duration INTERVAL');
-	} # end if
-	if ( ! $$data{'asset_id'} ) {
-		$dbh->do('ALTER TABLE usergroups ADD asset_id INTEGER');
-		$dbh->do('ALTER TABLE usergroups ADD FOREIGN KEY (asset_id) REFERENCES Assets (id)');
-	} # end if
-} # end if
 if ( ! sets::isin( 'banners', \@tables )) {
 	$dbh->do( misc::load_file( $log, q{../openprint/sql/Banners.sql}) );
 	die if $dbh->errstr();
@@ -892,6 +892,7 @@ if ( ! sets::isin( 'company_credit', \@tables ) ) {
 		$dbh->do('ALTER TABLE company_credit add cod float');
 	} # end if
 	if ( ! exists $$data{terms} ) {
+		$log->debug("Adding terms to company_credit");
 		$dbh->do('ALTER TABLE company_credit add terms integer');
 	} # end if
 	if ( ! exists $$data{supplier_id} ) {
@@ -959,6 +960,22 @@ if ( ! sets::isin('tbl_material_prices',\@tables) ) {
 	$dbh->do( misc::load_file( $log, q{../openprint/sql/Material_Prices.sql}) );
 } else {
 $dbh->do( 'update tbl_material_prices set strunits=lower(strunits)');
+my $data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='tbl_material_prices'", 'column_name');
+	if ( ! exists $$data{id} ) {
+			$log->debug("Adding id to tbl_material_prices");
+			$dbh->do('ALTER TABLE tbl_material_prices ADD id SERIAL');
+			$dbh->do('ALTER TABLE tbl_material_prices ADD PRIMARY KEY (id)');
+	}
+	if ( ! sets::isin( 'materialprices_id_seq', \@sequences ) ) {
+			$log->debug("renaming sequence for tbl_material_prices");
+		$dbh->do('CREATE SEQUENCE materialprices_id_seq');
+		$dbh->do("ALTER TABLE tbl_material_prices ALTER id set default nextval('materialprices_id_seq')");
+		$dbh->do('DROP SEQUENCE tbl_material_prices_id_seq');
+	}
+	if ( ! exists $$data{interpolate} ) {
+			$log->debug("adding interpolate to tbl_material_prices");
+		$dbh->do('ALTER TABLE tbl_material_prices ADD interpolate         BOOLEAN NOT NULL default false');
+	}
 }
 $dbh->do( 'update service_prices set units=lower(units)');
 $dbh->do( 'update paper_prices set strunits=lower(strunits)');

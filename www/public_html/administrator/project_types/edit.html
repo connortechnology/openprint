@@ -1,4 +1,5 @@
 <form id="f1" name="f1" method="post" action="edit.html" enctype="multipart/form-data">
+	<input type="hidden" name="btnFunction"/>
 	<fieldset class="filters"><legend>Search Information</legend>
 		<div class="content">
 			<ul>
@@ -66,7 +67,14 @@
 <? if ( new openprint::User( $session{user_id} )->email() =~ /iconnor/ ) ?>
 		<li> 
 			<label>Type</label>
-			<input type="text" name="type" value="<? echo ( $$variable{ProjectType}->type() ) ?>" /> 
+			<? echo ( ssi::select( 
+				[
+					'ChannelLetters', 'Channel Letter',
+					 'SinglePage', 'Single Page',
+					'MultiPage', 'Multiple Pages / Book',
+					'ScratchPads',	'Scratch/Note Pads',
+				], $$variable{ProjectType}->type(),
+				{ name => 'type' } ); ) ?>
 		</li>
 		<li> 
 			<label>URL</label>
@@ -85,7 +93,11 @@
 			<label for="please_call0" class="radio">No</label>
 		</li>
 		</ul>
-	</fieldset><!-- Column -->
+		</fieldset><!-- Column -->
+		
+
+<?eval( $$variable{Object} = $$variable{ProjectType} ) ?>
+<?include(/employee/assets/_asset_upload.html)?>
 	<br class="spacer"/>
 	<fieldset class="RequiredServices"> 
 		<legend>Required Services</legend>
@@ -123,6 +135,7 @@
 		</div>	
 	</fieldset>
 	</div>
+	<? echo ( include_logs( $$variable{ProjectType} ); ) ?>
 <? endif ( $$variable{'ProjectType'}->id() ) ?>
 	<br class="spacer"/>
 	<input type="hidden" name="btnFunction"/>

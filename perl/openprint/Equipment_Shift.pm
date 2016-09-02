@@ -17,6 +17,7 @@ use vars qw( $log $dbh $debug $table $serial %fields %find_fields %transforms %d
 *dbh = \$openprint::dbh;
 
 # Note: duration_seconds is 1 seconds less than duration
+my $parser = 'DateTime::Format::Pg';
 
 $debug = 0;
 
@@ -24,14 +25,14 @@ $table = 'equipment_shifts';
 $serial = 'equipment_shifts_id_seq';
 
 %fields = (
-	'id'			=>	'id',
-	'starttime_seconds'		=>	'starttime_seconds',
-	'duration_seconds'		=>	'duration_seconds',
-	'duration'				=>	undef,
-	'endtime_seconds'		=>	undef,
-	'name'			=>	'name',
-	'equipment_id'	=>	'equipment_id',
-    'operator_id'   =>  'operator_id',
+	id					=>	'id',
+	starttime_seconds	=>	'starttime_seconds',
+	duration_seconds	=>	'duration_seconds',
+	duration			=>	undef,
+	endtime_seconds		=>	undef,
+	name				=>	'name',
+	equipment_id		=>	'equipment_id',
+    operator_id  		=>  'operator_id',
 );
 %find_fields = (
 	'endtime'		=>	'(starttime+duration)',
@@ -54,6 +55,10 @@ $serial = 'equipment_shifts_id_seq';
 	'name'			=>	q`'Shift'`,
 );
 
+sub to_string {
+	return sprintf("EquipmentShift: %s %s %s", $_[0]->Equipment()->name(), $_[0]->name(), misc::seconds_to_JDF_interval( $_[0]{duration} ) );
+}
+
 my $dtfd = DateTime::Format::Duration->new(
 		pattern => '%Y years, %m months, %e days, '.
 		'%H hours, %M minutes, %S seconds'
@@ -70,7 +75,7 @@ sub starttime_seconds {
 		$_[0]{endtime_seconds} = $_[0]{starttime_seconds} + $_[0]{duration_seconds};
 	} # end if
 	return $_[0]{starttime_seconds};
-} # end sub endtime_seconds
+} # end sub starttime_seconds
 
 sub endtime {
 	if ( ! $_[0]{endtime} ) {
@@ -95,17 +100,45 @@ sub endtime_seconds {
 	return $_[0]{endtime_seconds};
 } # end sub endtime_seconds
 
-#Pass back a shift for the next time slot >= the passed in $date_seconds
-# We presume that normally date_seconds is teh starttie + 1 of the previous shift -> why? why not endtime?  I don't kn ow.
-sub emanantise {
-	my ( $self, $date_seconds ) = @_;
-	#$log->debug("Emanantise: " . $self->to_string() );
-	my $parser = 'DateTime::Format::Pg';
+sub compare {
+	my ( $self, $requested_dt ) = @_;
+	if ( ref $requested_dt ne 'DateTime' ) {
+		$requested_dt = DateTime->from_epoch( epoch=>$requested_dt, time_zone=>$openprint::TZ );
+	}
+	my $shift_start_time_dt = DateTime::Duration->new( seconds => $self->starttime_seconds() % DAY );
+	my $date_part_dt = $requested_dt->clone()->truncate(to=>'day');
+	if ( $requested_dt->is_dst() and ! $date_part_dt->is_dst() ) {
+#$log->debug("subtracting an hour for DST");
+		$date_part_dt -= DateTime::Duration->new( hours=>1 );
+	} elsif ( $date_part_dt->is_dst() and ! $requested_dt->is_dst() ) {
+#$log->debug("adding an hour for DST");
+		$date_part_dt += DateTime::Duration->new( hours=>1 );
+	} # end if
+	my $st = $date_part_dt + $shift_start_time_dt;
+	$log->debug("compare: start_time: " . $parser->format_datetime( $st ) . ' requested: ' . $parser->format_datetime( $requested_dt ) );
+	my $es_duration = DateTime::Duration->new( seconds => $self->duration_seconds() );
+	if ( $st > $requested_dt ) {
+		$st -= DateTime::Duration->new( days => 1 );
+	}
+	if ( $st <=  $requested_dt and $st + $es_duration > $requested_dt ) {
+		$log->debug("ES " . $self->to_string() . " fits " . $parser->format_datetime( $requested_dt ) );
+		return 0;
+	} elsif ( $st > $requested_dt ) {
+		$log->debug("st>dt " . $self->to_string() . " does not fits rdt" . $parser->format_datetime( $requested_dt ) . ' end was ' . $parser->format_datetime( $st + $es_duration ) );
+		return 1;
+	} else {
+		$log->debug("st<dt " . $self->to_string() . " does not fits rdt " . $parser->format_datetime( $requested_dt ) . ' end was ' . $parser->format_datetime( $st + $es_duration ) );
+		return -1;
+	}
+}
 
-	my $requested_dt = DateTime->from_epoch( epoch=>$date_seconds-1, time_zone=>$openprint::TZ );
-	#$log->debug("Emanentise: Date: $date_seconds : " . $parser->format_datetime( $requested_dt ) );
-	$requested_dt = DateTime->from_epoch( epoch=>$date_seconds, time_zone=>$openprint::TZ );
-	#$log->debug("Emanentise: Date: $date_seconds : " . $parser->format_datetime( $requested_dt ) );
+# Doesn't do db queries
+sub test_emanantise {
+	my ( $self, $requested_dt ) = @_;
+	if ( ref $requested_dt ne 'DateTime' ) {
+		$requested_dt = DateTime->from_epoch( epoch=>$requested_dt, time_zone=>$openprint::TZ );
+	}
+	$log->debug("Emanentise: Date: " . $parser->format_datetime( $requested_dt ) );
 	# The point is to drop any additional time part, but how can that be right? What we want to do is jump gaps
 
 	my $shift_start_time_dt = DateTime::Duration->new( seconds => $self->starttime_seconds() % DAY );
@@ -119,13 +152,19 @@ sub emanantise {
 #$log->debug("adding an hour for DST");
 		$date_part_dt += DateTime::Duration->new( hours=>1 );
 	} # end if
-	#$log->debug("Date Part: " . $parser->format_datetime( $date_part_dt ) );
+	$log->debug("Date Part: " . $parser->format_datetime( $date_part_dt ) );
 
 	my $st = $date_part_dt + $shift_start_time_dt;
-	#$log->debug("initial st: " . $parser->format_datetime( $st ) . ' requested: ' . $parser->format_datetime( $requested_dt ) );
-	if ( $st < $requested_dt ) {
+	$log->debug("initial st: " . $parser->format_datetime( $st ) . ' requested: ' . $parser->format_datetime( $requested_dt ) );
+	#if ( $st < $requested_dt ) {
 		# Need to add a day
-		$st += DateTime::Duration->new( days=>1 );
+		# Who	y?because a shift may go into the next day.  
+		#$st += DateTime::Duration->new( days=>1 );
+		#$log->error("Dt > $st does not fit on this shift");
+	#} els
+	if ( $st > $requested_dt ) {
+		$log->error("Dt < $st does not fit on this shift, minusing 1 day");
+		$st -= DateTime::Duration->new( days=>1 );
 	} # end if
 	#$log->debug("final st: " . $parser->format_datetime( $st ) . ' requested: ' . $parser->format_datetime( $requested_dt ) );
 	my $now = DateTime->now( time_zone => 'UTC' );
@@ -142,6 +181,85 @@ sub emanantise {
 #$log->debug("adding an hour for DST");
 		$et += DateTime::Duration->new( hours=>1 );
 	} # end if
+	if ( $et < $requested_dt ) {
+		$log->error("Dt > ET $et does not fit on this shift");
+		return;
+	}
+
+	my $Shift = new openprint::Shift();
+		$Shift->set({
+				equipment_id	=>	$$self{equipment_id},
+				operator_id		=>	( $$self{operator_id} ? $$self{operator_id} : undef ),
+				shift_id		=>	$$self{id},
+				starttime		=>	$parser->format_datetime( $st ),
+				endtime			=>	$parser->format_datetime( $et ),
+				});
+	return $Shift;
+} # end sub test_emanantise
+
+
+#Pass back a shift for the next time slot >= the passed in $date_seconds
+# We presume that normally date_seconds is teh starttie + 1 of the previous shift -> why? why not endtime?  I don't kn ow.
+sub emanantise {
+	my ( $self, $requested_dt ) = @_;
+	$log->debug("Emanantise: " . $self->to_string() );
+
+	if ( ref $requested_dt ne 'DateTime' ) {
+		$requested_dt = DateTime->from_epoch( epoch=>$requested_dt, time_zone=>$openprint::TZ );
+	}
+	$log->debug("Emanentise: Date: " . $parser->format_datetime( $requested_dt ) );
+	# The point is to drop any additional time part, but how can that be right? What we want to do is jump gaps
+
+	my $shift_start_time_dt = DateTime::Duration->new( seconds => $self->starttime_seconds() % DAY );
+	#$log->debug( 'shift start time: ' . $dtfd->format_duration( $shift_start_time_dt ) );
+
+	my $date_part_dt = $requested_dt->clone()->truncate(to=>'day');
+	if ( $requested_dt->is_dst() and ! $date_part_dt->is_dst() ) {
+#$log->debug("subtracting an hour for DST");
+		$date_part_dt -= DateTime::Duration->new( hours=>1 );
+	} elsif ( $date_part_dt->is_dst() and ! $requested_dt->is_dst() ) {
+#$log->debug("adding an hour for DST");
+		$date_part_dt += DateTime::Duration->new( hours=>1 );
+	} # end if
+	$log->debug("Date Part: " . $parser->format_datetime( $date_part_dt ) );
+
+	my $st = $date_part_dt + $shift_start_time_dt;
+	$log->debug("initial st: " . $parser->format_datetime( $st ) . ' requested: ' . $parser->format_datetime( $requested_dt ) );
+	#if ( $st < $requested_dt ) {
+		# Need to add a day
+		# Who	y?because a shift may go into the next day.  
+		#$st += DateTime::Duration->new( days=>1 );
+		#$log->error("Dt > $st does not fit on this shift");
+	#} els
+	if ( $st > $requested_dt ) {
+		$log->debug("Dt $requested_dt < $st does not fit on this shift, adding 1 hour");
+		while ( $st > $requested_dt ) {
+			$requested_dt += DateTime::Duration->new( hours=>1 );
+		}
+	
+		# If this shift was on the second day of the rotation
+		#return;
+		#$st -= DateTime::Duration->new( days=>1 );
+	} # end if
+	#$log->debug("final st: " . $parser->format_datetime( $st ) . ' requested: ' . $parser->format_datetime( $requested_dt ) );
+	my $now = DateTime->now( time_zone => 'UTC' );
+	my $es_duration = DateTime::Duration->new( seconds => $self->duration_seconds() );
+	$_ = $now->clone->add_duration( $es_duration );
+	$es_duration = $_->subtract_datetime_absolute( $now );
+
+	my $et = $st->clone()->add_duration( $es_duration );
+	#$log->debug("et: " . $parser->format_datetime( $et ) . " is_dst() ? " . $et->is_dst() . " st_dst? " . $st->is_dst() );
+	if ( (!$st->is_dst()) and $et->is_dst() ) {
+		$et -= DateTime::Duration->new( hours=>1 );
+#$log->debug("subtracting an hour for DST new et:" . $parser->format_datetime( $et ));
+	} elsif ( $st->is_dst() and ! $et->is_dst() ) {
+#$log->debug("adding an hour for DST");
+		$et += DateTime::Duration->new( hours=>1 );
+	} # end if
+	if ( $et < $requested_dt ) {
+		$log->error("Dt $requested_dt > ET $et does not fit on this shift");
+		return;
+	}
 
 	my $Shift;
 	# FIXME: This does not handle cases where the times have been overriden.
@@ -232,20 +350,20 @@ sub Next {
 sub delete {
 	my $error;
 
-	my $dt = DateTime->from_epoch( 'epoch'=>time, 'time_zone'=>$openprint::TZ );
+	my $dt = DateTime->from_epoch( epoch=>time, time_zone=>$openprint::TZ );
 	my $now = DateTime::Format::Pg->format_datetime( $dt );
 
 	my $ac = sql::start_transaction( $openprint::dbh );
 
 	foreach my $Shift ( openprint::Shift->find('shift_id'=>$_[0]{id}, 'starttime <='=> $now ) ) {
 		if ( $$Shift{shift_id} == $_[0]{id} ) {
-			$error .= $Shift->save({'shift_id'=>undef});
+			$error .= $Shift->save({ shift_id=>undef });
 		} else {
 			$openprint::log->error("Equipment_Shift::delete deleting a shift that isn't ours!");
 		} # end if
 		last if $error;
 	} # end foreach
-	foreach my $Shift ( openprint::Shift->find('shift_id'=>$_[0]{id}, 'starttime >'=> $now ) ) {
+	foreach my $Shift ( openprint::Shift->find( shift_id=>$_[0]{id}, 'starttime >'=> $now ) ) {
 		if ( $$Shift{shift_id} == $_[0]{id} ) {
 			$error .= $Shift->delete() 
 		} else {
@@ -316,8 +434,10 @@ sub duration_seconds {
 sub distance {
 	my ( $self, $Next ) = @_;
 	$Next = $self->Next() if ! $Next;
-	if ( $$Next{starttime_seconds} >= $$self{starttime_seconds} ) {
-		return $$Next{starttime_seconds} - $$self{starttime_seconds};
+	if ( $$Next{starttime_seconds} > $$self{starttime_seconds} ) {
+		return $$Next{starttime_seconds} - $self->endtime_seconds();
+	} elsif ( $$self{starttime_seconds} == $$Next{starttime_seconds} ) {
+		return DAY - $$self{duration_seconds};
 	} else {
 		# Wrap around
 		my $endtime = $self->endtime_seconds() % DAY;

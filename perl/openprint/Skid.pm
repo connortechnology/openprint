@@ -46,6 +46,7 @@ $serial = 'skid_id_seq';
 	fsc_code			=>	'id IN ( SELECT skid_id FROM skid_contents WHERE paper_id=(SELECT id FROM papers WHERE fsc_code=?))',
 	purpose_id 			=>	'id IN ( SELECT skid_id FROM skid_contents WHERE purpose_id=?)',
 	condition_id 		=>	'(SELECT condition_id FROM skid_contents WHERE skid_contents.skid_id=skids.id )',
+	inventory_check_id	=>	'id IN (SELECT skid_id FROM inventory_check_entries WHERE ic_id=?)',
 );
 
 %transforms = (
@@ -563,9 +564,12 @@ sub PurchaseOrders {
 	if ( ! $_[0]{PurchaseOrders} ) {
 		require openprint::Manifest_Content_Type;
 		my @POs;
-		foreach my $MCT ( openprint::Manifest_Content_Type->find( 'skid_id any'=>$_[0]->id() ) ) {
-			push @POs, $MCT->PurchaseOrder() if $MCT->po_id();
-		} # end foreach MCT
+		my @manifest_type_ids = map { $_->type_id() } openprint::ManifestContent->find( skid_id=>$_[0]->id() );
+		if ( @manifest_type_ids ) {
+			foreach my $MCT ( openprint::Manifest_Content_Type->find( id=>\@manifest_type_ids ) ) {
+				push @POs, $MCT->PurchaseOrder() if $MCT->po_id();
+			} # end foreach MCT
+		}
 		$_[0]{PurchaseOrders} = \@POs;
 	} # end if
 	return @{$_[0]{PurchaseOrders}} if ref $_[0]{PurchaseOrders} eq 'ARRAY';
@@ -666,9 +670,15 @@ sub description {
 	return $_[0]{description};
 } # end sub description
 
+sub url_to {
+	return '/employee/inventory/skid_details.html?skid_id='.$_[0]{id};
+}
+
 sub link_to {
-	return sprintf('<a href="/employee/inventory/skid_details.html?skid_id=%1$d">%2$s %1$d</a>', $_[0]{id}, 
-		( @_ > 1 ? $_[1] : $_[0]->type() eq 'Roll' ? 'Roll':'Skid' ) );
+	return sprintf('<a href="%3$s">%2$s %1$d</a>', $_[0]{id}, 
+		( @_ > 1 ? $_[1] : $_[0]->type() eq 'Roll' ? 'Roll':'Skid' ),
+		$_[0]->url_to(),
+	);
 } # end sub link_to
 
 sub units {
@@ -691,6 +701,10 @@ sub quantity {
 	return $_[0]{quantity};
 }
 
+sub in_stock {
+	return quantity(@_);
+}
+
 sub last_seen {
 	if ( @_ > 1 ) {
 		$_[0]{last_seen} = $_[1];
@@ -704,6 +718,21 @@ sub last_seen {
 		}
 	} # end if
 	return $_[0]{last_seen};
+}
+
+sub Unit_Of_Measure_Costing {
+    if ( $_[0]->type() eq 'Sheet' ) {
+        return 'M';
+    } else {
+        return 'CWT';
+    } # end if
+} # end sub  Unit_Of_Measure_Costing
+
+sub Unit_Cost {
+	foreach my $C ( $_[0]->Contents() ) {
+		return $C->Paper()->Unit_Cost();
+	}
+	return ();
 }
 
 1;

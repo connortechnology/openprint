@@ -4,75 +4,56 @@
 	$$variable{Company} = $$variable{Project}->Company();
 	$$variable{qty_index} = $$variable{Project}->ordered_quantity_index();
 ) ?>
-<table width="100%" border="1" cellspacing="0" cellpadding="0">
-	<tr> 
-		<td width="20%" valign="top"><table cellspacing="0" cellpadding="0" border="0" width="100%">
-				<tr>
-				<td width="50%" class="headerText" valign="top"><b>Date</b></td>
-				<td width="50%" class="docketText">&nbsp;<? echo ( format_date( $$variable{Order}->created_on() ); ) ?></td>
-				</tr>
-			</table></td>
-		<td colspan="2" width="60%" valign="top">
-			<table cellspacing="0" cellpadding="0" border="0" width="100%">
-				<tr>
-					<td width="16%" class="headerText"><b>Company Name</b></td>
-					<td width="55%" class="hugeText"><b><? echo ( $$variable{Company}->name() ) ?></b></td>
-					<td width="4%" class="headerText"><b>CSR</b></td>
-					<td width="25%" class="docketText"><? echo ( $$variable{CSR}->name() ) ?></td>
-				</tr>
-			</table>
-		</td>
-		<td width="20%" valign="top"><table cellspacing="0" cellpadding="0" border="0" width="100%">
-				<tr>
-					<td width="50%" class="headerText"><b>Customer PO#</b></td>
-					<td width="50%" class="docketText">&nbsp;<? echo ( $$variable{Order}->po() ) ?></td>
-				</tr>
-			</table></td>
-	</tr>
-	<tr>
-		<td width="20%" valign="top"><table cellspacing="0" cellpadding="0" border="0" width="100%"><tr>
-			<td class="headerText"><b>Docket #</b></td>
-			<td class="docketText"><? echo ( $$variable{Order}->docket() ) ?></td>
-		</tr></table></td>
-		<td colspan="2" width="60%" valign="top"><table cellspacing="0" cellpadding="1" border="0" width="100%">
-				<tr>
-					<td width="16%" class="headerText"><b>Reference</b></td>
-					<td width="84%" class="docketText"><? echo ( $$variable{Project}->reference() ) ?></td>
-				</tr>
-			</table></td>
-		<td width="20%" valign="top"><table cellspacing="0" cellpadding="0" border="0" width="100%">
-				<tr>
-					<td width="50%" class="headerText"><b>COD?</b></td>
-					<td width="50%" class="docketText"><? echo ( 
-					my $cod = $$variable{Project}->Company()->Credit($config{Owner})->cod();
-					return $cod ? $cod . '%' : 'NO';
-					) ?></td>
-				</tr>
-			</table></td>
-	</tr>
-	<tr> 
-		<td width="20%" valign="top"><table cellspacing="0" cellpadding="0" border="0" width="100%"><tr>
-			<td class="headerText"><b>Project #</b></td>
-			<td class="docketText"><? echo ( $$variable{Project}->id() )?></td>
-			</tr></table>
-		</td>
-		<td width="30%" valign="top"><table cellspacing="0" cellpadding="1" border="0" width="100%"><tr>
-				<td width="33%" class="headerText"><b>Contact</b></td>
-				<td width="66%" class="docketText"><? echo ( join('&nbsp;', $$variable{Order}->get( 'salutation','firstname','lastname' ) ); ) ?></td>
-				</tr>
-			</table></td>
-		<td width="30%" valign="top"><table cellspacing="0" cellpadding="0" border="0" width="100%"><tr>
-				<td width="33%" class="headerText"><b>Phone</b></td>
-				<td width="66%" class="docketText"><? echo ( $$variable{Order}->phone().( $$variable{Order}->extension ? 'x'.$$variable{Order}->extension : '' ) ) ?></td>
-				</tr>
-			</table></td>
-			<td width="20%"><table cellspacing="0" cellpadding="0" border="0" width="100%"><tr>
-					<td width="50%" class="headerText"><b>Quantity</b></td>
-					<td width="50%" class="docketText">&nbsp;<? echo ( $$variable{Project}->ordered_quantity() ) ?></td>
-				</tr>
-			</table></td>
-	</tr>
-</table>
+<style type="text/css">
+	body {
+	font-size: 8pt;
+	}
+	label {
+		font-size: 10pt;
+		font-weight: bold;
+	}
+	#DateOrdered {
+		width: 20%;
+	float: left;
+	border: 1px solid black;
+	}
+	#Company {
+	width: 40%;
+	float: left;
+	border: 1px solid black;
+	}
+#CSR {
+	width: 20%;
+	float: left;
+	border: 1px solid black;
+}
+#PO {
+	width: 20%;
+	float: left;
+	border: 1px solid black;
+}
+
+	
+</style>
+<div id="Summary">
+	<div id="DateOrdered"><label>Date</label>
+	<? echo ( format_date( $$variable{Order}->created_on() ); ) ?>
+	</div>
+	<div id="Company"><label>Company</label><? echo ( $$variable{Company}->name() ) ?></div>
+	<div id="CSR"><label>CSR</div><? echo ( $$variable{CSR}->name() ) ?></div>
+	<div id="PO"><label>Customer PO#</label><? echo ( $$variable{Order}->po() ) ?></div>
+
+	<div id="Docket"><label>Docket #</label><? echo ( $$variable{Order}->docket() ) ?></div>
+	<div id="Reference"><label>Reference</label><? echo ( $$variable{Project}->reference() ) ?></div>
+	<div id="COD"><label>COD?</label><? echo ( 
+			my $cod = $$variable{Project}->Company()->Credit($config{Owner})->cod();
+			return $cod ? $cod . '%' : 'NO';
+			) ?></div>
+	<div id="Project"><label>Project #</label><? echo ( $$variable{Project}->id() )?></div>
+	<div id="Contact"><label>Contact</label><? echo ( join('&nbsp;', $$variable{Order}->get( 'salutation','firstname','lastname' ) ); ) ?></div>
+	<div id="Phone"><label>Phone</label><? echo ( $$variable{Order}->phone().( $$variable{Order}->extension ? 'x'.$$variable{Order}->extension : '' ) ) ?></div>
+	<div id="Quantity"><label>Quantity</label><? echo ( $$variable{Project}->ordered_quantity() ) ?></div>
+</div>
 <br/>
 <? eval (
 	my $services = $$variable{Project}->services();

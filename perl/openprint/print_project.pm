@@ -47,16 +47,16 @@ sub insert_project_type {
 			'strValue',		 $ProjectType->name(),
 			] );
 
-		my @defaults = map { $$_{'name'}, $$_{'value'} } openprint::ProjectType_Default->find(
+		my @defaults = map { $$_{name}, $$_{value} } openprint::ProjectType_Default->find(
 				'projecttype_id is null or ='=> $ProjectType->id(), 
 				'order'=>'projecttype_id NULLS FIRST' );
 
-		if ( $session{'user_id'} ) {
+		if ( $session{user_id} ) {
 			$_ = q{SELECT name, value FROM User_Service_Defaults WHERE servicetype_id IS NULL AND user_id=?};
-			push @defaults, sql::execute( $log, $dbh, $_, $session{'user_id'} );
+			push @defaults, sql::execute( $log, $dbh, $_, $session{user_id} );
 		} # end if
 		
-		if ( $param{'txtConventionalPlates'} == 1 ) {
+		if ( $param{txtConventionalPlates} == 1 ) {
 			push @defaults, 'rdbPlates','Conventional';
 		} else {
 			push @defaults, 'rdbPlates','CTP';
@@ -72,8 +72,8 @@ sub insert_project_type {
 			openprint::service::insert_service_spec( $log, $dbh, $project_index, $service_index, "txtQuantity$qty_index", $Project->quantity($qty_index), 1 );
 		} # end foreach
 		sql::end_transaction( $dbh,  $ac );
-		delete $$Project{'Services'};
-		delete $$Project{'signatures'};
+		delete $$Project{Services};
+		delete $$Project{signatures};
 		return $service_index;
 	} else {
 		$log->error( "Couldn't get project index for $project_type_id" );
@@ -101,8 +101,8 @@ sub get_incomplete_services_in_category {
 		my $Project = new openprint::Project( $project_index );
 		my $services = $Project->services();
 
-		if ( $$services{'Signature'} ) {
-			foreach my $index ( @{$$services{'Signature'}} ) {
+		if ( $$services{Signature} ) {
+			foreach my $index ( @{$$services{Signature}} ) {
 				if ( openprint::service::status( $Project->id(), $index ) ne 'calculated' ) {
 					return $index;
 				} # end if
@@ -198,12 +198,12 @@ sub choose_service {
 # The glue basiscally makes it look like someone clicked on the service link on the project view page, so it sets params ProjectIndex,and ServiceIndex, and sets the redirect.
 sub continue_project {
 	my ( $log, $dbh, $variable, $project_index ) = @_;
-	my $incoming_service_index = $param{'ServiceIndex'};
+	my $incoming_service_index = $param{ServiceIndex};
 			
 	$log->info(" ************* STARTING continue_project **************** " );
 
-	if ( $$variable{'Redirect'} eq '' ) {
-		$project_index = $session{'project_id'} if ! $project_index;
+	if ( $$variable{Redirect} eq '' ) {
+		$project_index = $session{project_id} if ! $project_index;
 
 		my ( $service_index, $redirect ) = choose_service( $log, $dbh, $project_index );
 		# pick the next unfinished service.
@@ -227,11 +227,11 @@ sub continue_project {
 
 		if ( $redirect ne '' and $service_index != $incoming_service_index ) {
 			#plugin new service.
-			$variable{'ExternalRedirect'} = $redirect . '?'.join('&','ProjectIndex='.$project_index, 'ServiceIndex='.$service_index);;
+			$variable{ExternalRedirect} = $redirect . '?'.join('&','ProjectIndex='.$project_index, 'ServiceIndex='.$service_index);;
 		} # end if
 	} # end if
 
-	$log->debug("********************* END PROJECT CONTINUE REDIRECT IS $$variable{'ExternalRedirect'} *************************");
+	$log->debug("********************* END PROJECT CONTINUE REDIRECT IS $$variable{ExternalRedirect} *************************");
 } # end sub continue_project 
 
 sub try_to_delete_project {
@@ -242,7 +242,7 @@ sub try_to_delete_project {
 	my $Project = new openprint::Project( $project_index );
 	my $proj_reference = $Project->reference();
 
-	if ( $Project->company_id() != $session{'company_id'} ) {
+	if ( $Project->company_id() != $session{company_id} ) {
 		$error .= "Project $proj_reference does not belong to you.	Not deleted.<br/>";
 		$delete = 0;
 	} # end if
@@ -267,11 +267,11 @@ sub try_to_delete_project {
 sub view_pdfs {
 	my ( $r, $log, $dbh, $variable ) = @_;
 
-	my $project_index = $param{'ProjectIndex'};
+	my $project_index = $param{ProjectIndex};
 	$_ = "SELECT strFileName, strDescription FROM tbl_Project_PDFs WHERE lngProjectIndex=?";
-	@{$$variable{'PDFS'}} = sql::execute( $log, $dbh, $_, $project_index );
+	@{$$variable{PDFS}} = sql::execute( $log, $dbh, $_, $project_index );
 
-	$$variable{'ProjectIndex'} = $project_index;
+	$$variable{ProjectIndex} = $project_index;
 } # end sub view_pdfs
 
 # Returns an array of pairs (ServiceIndex, ProductIndex)
@@ -302,7 +302,7 @@ sub summary {
 
 	$log->debug("************************* START OF PROJECT SUMMARY **********************************");
 
-	$project_index = $param{'ProjectIndex'} if ! $project_index;
+	$project_index = $param{ProjectIndex} if ! $project_index;
 	if ( ! $project_index ) {
 		$$variable{Project} = new openprint::Project();
 		$$variable{Order} = new openprint::Order();
@@ -310,17 +310,17 @@ sub summary {
 	} # end if
 
 	my $Project = $$variable{Project} = new openprint::Project( $project_index );
-	$$variable{'Order'} = $Project->Order();
-	$$variable{'OrderId'} = $Project->order_id();
+	$$variable{Order} = $Project->Order();
+	$$variable{OrderId} = $Project->order_id();
 	my $services = $Project->services();
-	$$variable{'Services'} = $services;
+	$$variable{Services} = $services;
 
 	if ( $$services{''} and @{$$services{''}} ) {
 		my $ProjectType = $Project->Type();
 		# print service comes first
 		@$variable{'ProjectTypeName','ProjectTypeURL'} = ( $ProjectType->name(), $ProjectType->url() );
 
-		@services = ( $$services{''}[0], 'Printing', $$variable{'ProjectTypeURL'} );
+		@services = ( $$services{''}[0], 'Printing', $$variable{ProjectTypeURL} );
 
 		openprint::print_project::get_service_specifications( $r, $log, $dbh, $variable, $project_index, $$services{''}[0] );
 	} else {
@@ -345,22 +345,22 @@ sub summary {
 	} # end foreach signature
 	$$variable{SERVICES} = \@services;
 	
-	$$variable{'TOTAL1'} = Math::Round::nearest( 0.01, $Project->price1() );
-	$$variable{'TOTAL2'} = Math::Round::nearest( 0.01, $Project->price2() );
-	$$variable{'TOTAL3'} = Math::Round::nearest( 0.01, $Project->price3() );
+	$$variable{TOTAL1} = Math::Round::nearest( 0.01, $Project->price1() );
+	$$variable{TOTAL2} = Math::Round::nearest( 0.01, $Project->price2() );
+	$$variable{TOTAL3} = Math::Round::nearest( 0.01, $Project->price3() );
 
-	$$variable{'UNITPRICE1'} = $$variable{'txtQuantity1'} ? sprintf( "%.2f", $$variable{'TOTAL1'}/$$variable{'txtQuantity1'} ) : '0.00';
-	$$variable{'UNITPRICE2'} = $$variable{'txtQuantity2'} ? sprintf( "%.2f", $$variable{'TOTAL2'}/$$variable{'txtQuantity2'} ) : '0.00';
-	$$variable{'UNITPRICE3'} = $$variable{'txtQuantity3'} ? sprintf( "%.2f", $$variable{'TOTAL3'}/$$variable{'txtQuantity3'} ) : '0.00';
+	$$variable{UNITPRICE1} = $$variable{txtQuantity1} ? sprintf( "%.2f", $$variable{TOTAL1}/$$variable{txtQuantity1} ) : '0.00';
+	$$variable{UNITPRICE2} = $$variable{txtQuantity2} ? sprintf( "%.2f", $$variable{TOTAL2}/$$variable{txtQuantity2} ) : '0.00';
+	$$variable{UNITPRICE3} = $$variable{txtQuantity3} ? sprintf( "%.2f", $$variable{TOTAL3}/$$variable{txtQuantity3} ) : '0.00';
 
-	$$variable{'ProjectIndex'} = $project_index;
-	$$variable{'NoPriceBreakDown'} = $param{'NoPriceBreakDown'};
+	$$variable{ProjectIndex} = $project_index;
+	$$variable{NoPriceBreakDown} = $param{NoPriceBreakDown};
 
-	@{$$variable{'PrintingServices'}} = $Project->signatures();
+	@{$$variable{PrintingServices}} = $Project->signatures();
 	# new stuff
 
-	$$variable{'ProofServiceIndex'}	= $$services{'Proofs'} ? $$services{'Proofs'}[0] : $$services{'FilmStripping'}[0];
-	if ( ! $$variable{'ProofServiceIndex'} ) {
+	$$variable{ProofServiceIndex}	= $$services{Proofs} ? $$services{Proofs}[0] : $$services{FilmStripping}[0];
+	if ( ! $$variable{ProofServiceIndex} ) {
 		Carp::cluck( "No ProofServiceIndex in Project $$Project{id}");
 	} # end if
 
@@ -374,10 +374,10 @@ sub get_proof_colours {
 # this function is used for summary pages in employee and admin sections.
 	my ( $r, $log, $dbh, $variable, $project_index, $service_index, $proof_index ) = @_;
 
-	$$variable{'chkProcessColourSideOne'} = '';
-	$$variable{'chkProcessColourSideTwo'} = '';
-	$$variable{'chkBlackColourSideOne'} = '';
-	$$variable{'chkBlackColourSideTwo'} = '';
+	$$variable{chkProcessColourSideOne} = '';
+	$$variable{chkProcessColourSideTwo} = '';
+	$$variable{chkBlackColourSideOne} = '';
+	$$variable{chkBlackColourSideTwo} = '';
 
 	$_ = 'SELECT lngServiceIndex FROM tbl_Service_Specifications WHERE lngProjectIndex=? AND strName=? AND strValue=?';
 	my ($index) = sql::execute( undef, undef, $_, $project_index, 'SignatureIndex',$proof_index );
@@ -396,9 +396,9 @@ sub get_service_specifications {
 	my ( $r, $log, $dbh, $variable, $project_index, $service_index ) = @_;
 
 	if ( $project_index and $service_index ) {
-		$$variable{'txtServiceDescription'} = '';
-		$$variable{'ddmRunStyle'} = '';
-		$$variable{'ServiceName'} = '';
+		$$variable{txtServiceDescription} = '';
+		$$variable{ddmRunStyle} = '';
+		$$variable{ServiceName} = '';
 
 		my $Project = new openprint::Project( $project_index );
 
@@ -408,11 +408,11 @@ sub get_service_specifications {
 		if ( ! $service_type_id ) {
 # Maybe it's a project type
 			my $PT = $Project->Type();
-			$$variable{'ServiceTypeID'} = $PT->name();
-			$$variable{'ServiceTypeName'} = 'Printing';
+			$$variable{ServiceTypeID} = $PT->name();
+			$$variable{ServiceTypeName} = 'Printing';
 		} else {
-			$$variable{'ServiceType'} = openprint::print::get_ServiceType( $project_index, $service_index );	
-			@$variable{'ServiceTypeID','ServiceTypeName'} = ( $$variable{'ServiceType'}->name(), $$variable{'ServiceType'}->description() ) if $$variable{'ServiceType'};
+			$$variable{ServiceType} = openprint::print::get_ServiceType( $project_index, $service_index );	
+			@$variable{'ServiceTypeID','ServiceTypeName'} = ( $$variable{ServiceType}->name(), $$variable{ServiceType}->description() ) if $$variable{ServiceType};
 		} # end if
 
 		# Do Specific Stuff
@@ -458,16 +458,16 @@ sub get_service_specifications {
 					$side_two_colours++ if $$specs{$name};;
 				} # end if
 			} # end while
-			$$variable{'SideOneColours'} = $side_one_colours;
-			$$variable{'SideTwoColours'} = $side_two_colours;
+			$$variable{SideOneColours} = $side_one_colours;
+			$$variable{SideTwoColours} = $side_two_colours;
 
 			$$variable{"hdnPaperTotal1"} = sprintf("%.2f",$$variable{"hdnPaperTotal1"});
 			$$variable{"hdnPaperTotal2"} = sprintf("%.2f",$$variable{"hdnPaperTotal2"});
 			$$variable{"hdnPaperTotal3"} = sprintf("%.2f",$$variable{"hdnPaperTotal3"});
 		} # end if
-		$$variable{'ServiceTypeName'} = $$variable{'ServiceName'} if $$variable{'ServiceName'} ne '';
+		$$variable{ServiceTypeName} = $$variable{ServiceName} if $$variable{ServiceName} ne '';
 
-		$$variable{'ProjectIndex'} = $project_index;
+		$$variable{ProjectIndex} = $project_index;
 	} else {
 		$log->debug(" *********** PROBLEM HERE Project Index: $project_index AND Service Index: $service_index **********************");
 	} # end if
@@ -476,23 +476,23 @@ sub get_service_specifications {
 sub create_edit_process {
 	my $Project;
 
-	$param{'txtQuantity1'} =~ s/\D//g;
-	$param{'txtQuantity2'} =~ s/\D//g;
-	$param{'txtQuantity3'} =~ s/\D//g;
+	$param{quantity1} =~ s/\D//g;
+	$param{quantity2} =~ s/\D//g;
+	$param{quantity3} =~ s/\D//g;
 
 	my $error = '';
-	$error .= "No quantities specified.<br/>" if $param{'txtQuantity1'} eq '' and $param{'txtQuantity2'} eq '' and $param{'txtQuantity3'} eq '';
-	$error .= "Invalid Quantity 1.<br/>" if $param{'txtQuantity1'} and ! int $param{'txtQuantity1'};
-	$error .= "Invalid Quantity 2.<br/>" if $param{'txtQuantity2'} and ! int $param{'txtQuantity2'};
-	$error .= "Invalid Quantity 3.<br/>" if $param{'txtQuantity3'} and ! int $param{'txtQuantity3'};
+	$error .= "No quantities specified.<br/>" if $param{quantity1} eq '' and $param{quantity2} eq '' and $param{quantity3} eq '';
+	$error .= "Invalid Quantity 1.<br/>" if $param{quantity1} and ! int $param{quantity1};
+	$error .= "Invalid Quantity 2.<br/>" if $param{quantity2} and ! int $param{quantity2};
+	$error .= "Invalid Quantity 3.<br/>" if $param{quantity3} and ! int $param{quantity3};
 	if ( ! $error ) {
 		$Project = new openprint::Project( int $param{ProjectIndex} );
 		$error .= $Project->save() if ! $Project->id();
     } # end if
 	if ( $error ne '' ) {
-		$variable{'Redirect'} = '/main/project/create_edit.html';
-		$variable{'error'} = 'Error saving project';
-		$variable{'details'} = $error;
+		$variable{Redirect} = '/main/project/create_edit.html';
+		$variable{error} = 'Error saving project';
+		$variable{details} = $error;
 		foreach ( keys %param ) {
 			$variable{$_} = $param{$_};
 		} # end foreach
@@ -501,138 +501,79 @@ sub create_edit_process {
 	my $recalculate;
 	my $project_index = $session{project_id} = $Project->id();
 	$Project->lock();
+	my @changes = $Project->changes( \%param );
 
 	my $services = $Project->services();
-	my @service_ids = map { $$services{$_} ? @{$$services{$_}} : () } keys %$services;
+	my @service_ids = sort map { $$services{$_} ? @{$$services{$_}} : () } keys %$services;
 
-	if ( $param{txtQuantity1} != $Project->quantity1() ) {
-		if ( ! $param{txtQuantity1} ) { # Project has a quantity, we are deleting it
-			foreach my $service_id ( @service_ids ) {
-				foreach my $spec ( 'txtPrice1','txtUnitPrice1','txtQuantity1' ) {
-					openprint::service::delete_service_spec( $project_index, $service_id, $spec );
-				} # end foreach
-			} # end foreach
-		} else {
-			$recalculate = 1;
 
-			if ( ! $Project->quantity1() ) {
-				if ( $Project->quantity2() ) {
-					foreach my $service_id ( @service_ids ) {
-						my $specs = openprint::service::get_specs_ref( $Project, $service_id );
-						foreach my $key ( keys %$specs ) {
-							next if $key =~ /^txtQuantity/;
-							if ( $key =~ /(.*)2$/ and ! $key =~ /Special/ ) {
-								openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $service_id, $1.'1', $$specs{$key} );
-							} # end if
-						} # end foreach
-					} # end if
-				} elsif ( $Project->quantity3() ) {
-					foreach my $service_id ( @service_ids ) {
-						my $specs = openprint::service::get_specs_ref( $Project, $service_id );
-						foreach my $key ( keys %$specs ) {
-							next if $key =~ /^txtQuantity/;
-							if ( $key =~ /(.*)3$/ and ! $key =~ /Special/ ) {
-								openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $service_id, $1.'1', $$specs{$key} );
-							} # end if
-						} # end foreach
-					} # end if
-				} # end if Project 2 or 3
-			} # end if
-			foreach my $service_id ( @service_ids ) {
-				openprint::service::insert_service_spec( $log, $dbh, $project_index, $service_id, 'txtQuantity1', int $param{'txtQuantity1'} );
-			} # end foreach
-		} # end nif
-		$Project->quantity1( int $param{'txtQuantity1'} );
-	} # end if
-	if ( $param{'txtQuantity2'} != $Project->quantity2() ) {
-		if ( ! $param{'txtQuantity2'} ) {
-			foreach my $service_id ( @service_ids ) {
-				foreach my $spec ( 'txtPrice2','txtUnitPrice2','txtQuantity2' ) {
-					openprint::service::delete_service_spec( $project_index, $service_id, $spec );
-				} # end foreach
-			} # end foreach
-		} else {
-			$recalculate = 1;
-			if ( ! $Project->quantity2() ) {
-				if ( $Project->quantity1() ) {
-					foreach my $service_id ( @service_ids ) {
-						my $specs = openprint::service::get_specs_ref( $Project, $service_id );
-						foreach my $key ( keys %$specs ) {
-							next if $key =~ /^txtQuantity/ or $key =~ /Special/;
-							if ( $key =~ /^(.*)1$/ ) {
-								openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $service_id, $1.'2', $$specs{$key} );
-							} # end if
-						} # end foreach
-					} # end if
-				} elsif ( $Project->quantity3() ) {
-					foreach my $service_id ( @service_ids ) {
-						my $specs = openprint::service::get_specs_ref( $Project, $service_id );
-						foreach my $key ( keys %$specs ) {
-							next if $key =~ /^txtQuantity/ or $key =~ /Special/;
-							if ( $key =~ /^(.*)3$/ ) {
-								openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $service_id, $1.'2', $$specs{$key} );
-							} # end if
-						} # end foreach
-					} # end if
-				} # end if Project 2 or 3
-			} # end if
-			foreach my $service_id ( @service_ids ) {
-				openprint::service::insert_service_spec( $log, $dbh, $project_index, $service_id, 'txtQuantity2', int $param{'txtQuantity2'} );
-			} # end foreach
-		} # end if
-		$Project->quantity2( int $param{'txtQuantity2'} );
-	} # end if
-	if ( $param{'txtQuantity3'} != $Project->quantity3() ) {
-		if ( ! $param{'txtQuantity3'} ) {
-			foreach my $service_id ( @service_ids ) {
-				foreach my $spec ( 'txtPrice3','txtUnitPrice3','txtQuantity3' ) {
-					openprint::service::delete_service_spec( $project_index, $service_id, $spec );
-				} # end foreach
-			} # end foreach
-		} else {
-			$recalculate = 1;
-			if ( ! $Project->quantity3() ) {
-				if ( $Project->quantity1() ) {
-					foreach my $service_id ( @service_ids ) {
-						my $specs = openprint::service::get_specs_ref( $Project, $service_id );
-						foreach my $key ( keys %$specs ) {
-							next if $key =~ /^txtQuantity/ or $key =~ /Special/;
-							if ( $key =~ /^(.*)1$/ ) {
-								openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $service_id, $1.'3', $$specs{$key} );
-							} # end if
-						} # end foreach
-					} # end if
-				} elsif ( $Project->quantity2() ) {
-					foreach my $service_id ( @service_ids ) {
-						my $specs = openprint::service::get_specs_ref( $Project, $service_id );
-						foreach my $key ( keys %$specs ) {
-							next if $key =~ /^txtQuantity/ or $key =~ /Special/;
-							if ( $key =~ /^(.*)2$/ ) {
-								openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $service_id, $1.'3', $$specs{$key} );
-							} # end if
-						} # end foreach
-					} # end if
-				} # end if Project 2 or 3
-			} # end if
-			foreach my $service_id ( @service_ids ) {
-				openprint::service::insert_service_spec( $log, $dbh, $project_index, $service_id, 'txtQuantity3', int $param{'txtQuantity3'} );
-			} # end foreach
-		} # end if
-		$Project->quantity3( int $param{'txtQuantity3'} );
-	} # end if
+	foreach my $qty_index ( 1 .. 3 ) {
+		my @other_quantities = sets::exclude( [ $qty_index ], [ $Project->quantity_indexes() ] );
+$log->debug("other quantities @other_quantities");
+		my $next_qty_index = $other_quantities[0] if @other_quantities;
+$log->debug("Next qty $next_qty_index");
 
-	$Project->reference( $param{'txtProjectReference'} );
-	$Project->comments( $param{'txtComments'} );
-	$Project->mode( $param{'rdbMode'} );
-	$Project->design( $param{'ddmDesign'} );
-	$Project->programs( $param{'chkPrograms'} );
-	$Project->other_programs( $param{'txtOtherPrograms'} );
-	$Project->currency_id( $session{'Currency_id'} ) if ! $Project->currency_id();
-	$Project->reprint( $openprint::param{'reprint'} );
-	$Project->reprint_reason( $openprint::param{'reprint_reason'} );
+		if ( $param{"quantity$qty_index"} != $Project->quantity($qty_index) ) {
+$log->debug("changing new quantity $qty_index from " . $Project->quantity($qty_index) . ' to ' . $param{"quantity$qty_index"} );
+			if ( ! $param{"quantity$qty_index"} ) { # Project has a quantity, we are deleting it
+				foreach my $service_id ( @service_ids ) {
+					foreach my $spec ( map { $_.$qty_index } ( 'txtPrice','txtUnitPrice','txtQuantity' ) ) {
+						openprint::service::delete_service_spec( $project_index, $service_id, $spec );
+					} # end foreach
+				} # end foreach
+			} else {
+				$recalculate = 1;
+
+				foreach my $service_id ( @service_ids ) {
+if ( 0 ) {
+# Don't do this for now.  It just doesn't work.
+
+					if ( ! $Project->quantity($qty_index) ) {
+						if ( $next_qty_index ) {
+
+							my $Service = $Project->Service( $service_id );
+		
+							# Must skip the project specs, becauswe they involve signature indexes
+							next if ! $Service->service_type();
+
+							my $specs = openprint::service::get_specs_ref( $Project, $service_id );
+
+							my $module = 'openprint::Estimating::'.$Service->service_type();
+							eval ( 'require '.$module.';' );
+							my @variables = eval( $module.'::variables( $project_index, $service_id, $specs, \%openprint::param )');
+							$log->debug("variable for $module @variables $!");
+							foreach my $key ( @variables ) {
+								next if $key =~ /^txtQuantity/;
+								my $re = qr/^(.*)$next_qty_index$/;
+
+								if ( ( $key =~ m/$re/ ) and ! ( $key =~ /Special/ ) ) {
+									$log->debug("loading setting $key with re");
+									openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $service_id, $1.$qty_index, $$specs{$key} );
+								} # end if
+							} # end foreach key
+						} # end if next_qty
+					} # end if quantity
+}
+					openprint::service::insert_service_spec( $log, $dbh, $project_index, $service_id, 'txtQuantity'.$qty_index, int $param{"quantity$qty_index"} );
+				} # end foreachs ervice
+			} # end nif has quantity
+			$Project->quantity( $qty_index, int $param{"quantity$qty_index"} );
+		} # end if quantity change
+	} # end foreach qty_index
+
+	$Project->reference( $param{txtProjectReference} );
+	$Project->comments( $param{txtComments} );
+	$Project->mode( $param{rdbMode} );
+	$Project->design( $param{ddmDesign} );
+	$Project->programs( $param{chkPrograms} );
+	$Project->other_programs( $param{txtOtherPrograms} );
+	$Project->currency_id( $session{Currency_id} ) if ! $Project->currency_id();
+	$Project->reprint( $openprint::param{reprint} );
+	$Project->reprint_reason( $openprint::param{reprint_reason} );
 
 	# This will likely never happen, because the act of cilcking on the different project type changes it.
-	my $ProjectType = openprint::ProjectType->find_one( name => $param{rdbProjectType} );
+	my $ProjectType = openprint::ProjectType->find_one( name => $param{rdbProjectType} ) if $param{rdbProjectType};
+	$ProjectType = openprint::ProjectType->find_one( id => $param{project_type_id} ) if $param{project_type_id};
 	my $OldProjectType = $Project->Type();
 # Handle ProjectType
 	if ( $OldProjectType->id() != $ProjectType->id() ) {
@@ -643,8 +584,8 @@ sub create_edit_process {
 	} # end if
 
 	# take care of the Graphic Design service
-	if ( $param{'rdbGraphicDesign'} eq 'Y' ) {
-		push @{$$services{'GraphicDesign'}}, $Project->add_service('GraphicDesign') if ! $$services{'GraphicDesign'};
+	if ( $param{rdbGraphicDesign} eq 'Y' ) {
+		push @{$$services{GraphicDesign}}, $Project->add_service('GraphicDesign') if ! $$services{GraphicDesign};
 	} # end if
 
 	my %statuses = sql::execute( $log, $dbh, 'SELECT lngserviceindex, strstatus FROM tbl_Project_Contents WHERE lngprojectindex=?', $project_index );
@@ -676,7 +617,7 @@ sub create_edit_process {
 		$recalculate = 1;
 	} # end if
 
-	$Project->add_to_log( @session{'company_id','user_id'}, 'Edited' );
+	$Project->add_to_log( @session{'company_id','user_id'}, 'Edited: ' . join('<br/>', @changes) );
 	my $book_type = openprint::print::get_book_type( $Project );
 	if ( $book_type ) {
 		my $project_specs = openprint::service::get_specs_ref( $Project, $$services{''}[0] );
@@ -743,18 +684,118 @@ sub reuse_project {
 
 	# Make this all one transaction... Don't need locking because a reload would get a different projectindex
 	my $ac = sql::start_transaction( $dbh );
-	foreach my $service_index ( sql::execute( $log, $dbh, q{SELECT lngServiceIndex FROM tbl_Project_Contents WHERE lngProjectIndex=?}, $NewProject->id() ) ) {
-			
-		if ( $Project->quantity1() != $NewProject->quantity1() ) {
-			openprint::service::insert_service_spec( $log, $dbh, $NewProject->id(), $service_index, 'txtQuantity1', $NewProject->quantity1() );
+	my $services = $NewProject->services();
+	my @service_ids = map { $$services{$_} ? @{$$services{$_}} : () } keys %$services;
+
+	if ( $Project->quantity1() != $NewProject->quantity1() ) {
+		if ( ! $NewProject->quantity1() ) { # Project has a quantity, we are deleting it
+			foreach my $service_id ( @service_ids ) {
+				foreach my $spec ( 'txtPrice1','txtUnitPrice1','txtQuantity1' ) {
+					openprint::service::delete_service_spec( $NewProject->id(), $service_id, $spec );
+				} # end foreach
+			} # end foreach
+		} else {
+			if ( ! $Project->quantity1() ) {
+				if ( $Project->quantity2() ) {
+					foreach my $service_id ( @service_ids ) {
+						my $specs = openprint::service::get_specs_ref( $NewProject, $service_id );
+						foreach my $key ( keys %$specs ) {
+							next if $key =~ /^txtQuantity/;
+							if ( $key =~ /(.*)2$/ and ! $key =~ /Special/ ) {
+								openprint::service::insert_service_spec( $log, $dbh, $NewProject->id(), $service_id, $1.'1', $$specs{$key} );
+							} # end if
+						} # end foreach
+					} # end if
+				} elsif ( $NewProject->quantity3() ) {
+					foreach my $service_id ( @service_ids ) {
+						my $specs = openprint::service::get_specs_ref( $NewProject, $service_id );
+						foreach my $key ( keys %$specs ) {
+							next if $key =~ /^txtQuantity/;
+							if ( $key =~ /(.*)3$/ and ! $key =~ /Special/ ) {
+								openprint::service::insert_service_spec( $log, $dbh, $NewProject->id(), $service_id, $1.'1', $$specs{$key} );
+							} # end if
+						} # end foreach
+					} # end if
+				} # end if Project 2 or 3
+			} # end if
+			foreach my $service_id ( @service_ids ) {
+				openprint::service::insert_service_spec( $log, $dbh, $NewProject->id(), $service_id, 'txtQuantity1', $NewProject->quantity1() );
+			} # end foreach
+		} # end nif
+		$Project->quantity1( int $param{txtQuantity1} );
+	} # end if
+	if ( $NewProject->quantity2() != $Project->quantity2() ) {
+		if ( ! $NewProject->quantity2() ) {
+			foreach my $service_id ( @service_ids ) {
+				foreach my $spec ( 'txtPrice2','txtUnitPrice2','txtQuantity2' ) {
+					openprint::service::delete_service_spec( $NewProject->id(), $service_id, $spec );
+				} # end foreach
+			} # end foreach
+		} else {
+			if ( ! $Project->quantity2() ) {
+				if ( $Project->quantity1() ) {
+					foreach my $service_id ( @service_ids ) {
+						my $specs = openprint::service::get_specs_ref( $NewProject, $service_id );
+						foreach my $key ( keys %$specs ) {
+							next if $key =~ /^txtQuantity/ or $key =~ /Special/;
+							if ( $key =~ /^(.*)1$/ ) {
+								openprint::service::insert_service_spec( $log, $dbh, $NewProject->id(), $service_id, $1.'2', $$specs{$key} );
+							} # end if
+						} # end foreach
+					} # end if
+				} elsif ( $Project->quantity3() ) {
+					foreach my $service_id ( @service_ids ) {
+						my $specs = openprint::service::get_specs_ref( $NewProject, $service_id );
+						foreach my $key ( keys %$specs ) {
+							next if $key =~ /^txtQuantity/ or $key =~ /Special/;
+							if ( $key =~ /^(.*)3$/ ) {
+								openprint::service::insert_service_spec( $log, $dbh, $NewProject->id(), $service_id, $1.'2', $$specs{$key} );
+							} # end if
+						} # end foreach
+					} # end if
+				} # end if Project 2 or 3
+			} # end if
+			foreach my $service_id ( @service_ids ) {
+				openprint::service::insert_service_spec( $log, $dbh, $NewProject->id(), $service_id, 'txtQuantity2', $NewProject->quantity2() );
+			} # end foreach
 		} # end if
-		if ( $Project->quantity2() != $NewProject->quantity2() ) {
-			openprint::service::insert_service_spec( $log, $dbh, $NewProject->id(), $service_index, 'txtQuantity2', $NewProject->quantity2() );
+	} # end if
+	if ( $NewProject->quantity3() != $Project->quantity3() ) {
+		if ( ! $NewProject->quantity3() ) {
+			foreach my $service_id ( @service_ids ) {
+				foreach my $spec ( 'txtPrice3','txtUnitPrice3','txtQuantity3' ) {
+					openprint::service::delete_service_spec( $NewProject->id(), $service_id, $spec );
+				} # end foreach
+			} # end foreach
+		} else {
+			if ( ! $Project->quantity3() ) {
+				if ( $Project->quantity1() ) {
+					foreach my $service_id ( @service_ids ) {
+						my $specs = openprint::service::get_specs_ref( $NewProject, $service_id );
+						foreach my $key ( keys %$specs ) {
+							next if $key =~ /^txtQuantity/ or $key =~ /Special/;
+							if ( $key =~ /^(.*)1$/ ) {
+								openprint::service::insert_service_spec( $log, $dbh, $NewProject->id(), $service_id, $1.'3', $$specs{$key} );
+							} # end if
+						} # end foreach
+					} # end if
+				} elsif ( $Project->quantity2() ) {
+					foreach my $service_id ( @service_ids ) {
+						my $specs = openprint::service::get_specs_ref( $NewProject, $service_id );
+						foreach my $key ( keys %$specs ) {
+							next if $key =~ /^txtQuantity/ or $key =~ /Special/;
+							if ( $key =~ /^(.*)2$/ ) {
+								openprint::service::insert_service_spec( $log, $dbh, $NewProject->id(), $service_id, $1.'3', $$specs{$key} );
+							} # end if
+						} # end foreach
+					} # end if
+				} # end if Project 2 or 3
+			} # end if
+			foreach my $service_id ( @service_ids ) {
+				openprint::service::insert_service_spec( $log, $dbh, $NewProject->id(), $service_id, 'txtQuantity3', $NewProject->quantity3() );
+			} # end foreach
 		} # end if
-		if ( $Project->quantity3() != $NewProject->quantity3() ) {
-			openprint::service::insert_service_spec( $log, $dbh, $NewProject->id(), $service_index, 'txtQuantity3', $NewProject->quantity3() );
-		} # end if
-	} # end foreach
+	} # end if
 	sql::end_transaction( $dbh, $ac );
 
 

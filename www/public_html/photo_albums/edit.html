@@ -49,6 +49,9 @@ make_drop_down( openprint::User->dropdown( company_id => $$variable{company_id},
 			<? endif ( $$variable{'Album'}->id() ) ?>
 			</fieldset>
 		</form>
+	<? if ( $$variable{Album}->id() ) ?>
+	<? echo ( include_logs( $$variable{Album} ); ) ?>
+	<? endif ( $$variable{Album}->id() ) ?>
 <? else ( $$variable{'Album'}->can_edit() ) ?>
 	You do not have rights to edit this album.
 <? endif ( $$variable{'Album'}->can_edit() ) ?>

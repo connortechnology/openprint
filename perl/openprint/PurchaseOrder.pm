@@ -11,6 +11,8 @@ use vars qw( $debug $log $dbh %config %session $table $serial %fields %find_fiel
 *config = \%openprint::config;
 *session = \%openprint::session;
 
+$debug = 0;
+
 require sql;
 require ssi;
 require misc;
@@ -30,7 +32,6 @@ require MIME::Base64;
 require openprint::Object_Asset;
 require openprint::Asset;
 
-$debug = 1;
 
 $table = 'purchaseorders';
 $serial = 'purchaseorders_id_seq';
@@ -110,20 +111,18 @@ $serial = 'purchaseorders_id_seq';
 sub save {
 	my ( $self, $param, $force_insert ) = @_;
 
-	$self->set( $param );
+	$self->set( $param ? $param : {} );
 
 	my $ac = sql::start_transaction( $openprint::dbh );
+$openprint::log->debug("PurchaseOrder::Save AC: $ac");
 	$dbh->do( "LOCK TABLE $openprint::PurchaseOrder_Tax::table IN EXCLUSIVE MODE" ) or $log->error( DBI->errstr );
 	# force recalculation
 	$self->subtotal(undef);
-$log->debug("After recalc, subtoatal is: $$self{subtotal}");
 	foreach my $Tax ( $self->Taxes(1) ) {
 		$Tax->PurchaseOrder( $self );
 		$Tax->amount(undef);
-$log->debug("After recalc, Tax $$Tax{name} is: $$Tax{amount}");
 	} # end foreach Tax
 	$self->total(undef);
-$log->debug("After recalc, toatal is: $$self{total}");
 	if ( ! $$self{currency_id} ) {
 		my $Currency = openprint::Currency::get_current();
 		$$self{currency_id} = $Currency->id() if $Currency;
@@ -161,6 +160,9 @@ sub Authorized_By {
 } # end sub Authorized_By
 
 sub Contents {
+	if ( @_ > 1 ) {
+		$_[0]{Contents} = $_[1];
+	}
 	if ( $_[0]{id} and ! $_[0]{Contents} ) {
 		$_[0]{Contents} = [openprint::PurchaseOrder_Content->find('po_id'=>$_[0]{id},'order'=>'id')];
 	} # end if
@@ -183,7 +185,14 @@ sub send_approval_required_notification {
 	my $mail = new openprint::Email();
 
 	my $results;
-	foreach my $U ( map { $_->User() } openprint::User_Notification->find(type=>\@notification_types,'value'=>'Yes' ) ) {
+	my @user_ids = sets::union( $self->notifications(), map { $_->user_id() } openprint::User_Notification->find(
+				type	=>\@notification_types,
+				value	=>'Yes',
+				user_company_id=>$openprint::User->company_id() 
+				) );
+	return if ! @user_ids;
+
+	foreach my $U ( openprint::User->find( id=>\@user_ids, company_id=>$openprint::User->company_id() ) ) {
 		if ( $U->id() == $openprint::User->id() ) {
 			$openprint::log->debug( $U->email() . ' Not mailing me.' );
 			next;
@@ -245,7 +254,7 @@ sub send_to_vendor {
 		} # end if
 	} # end foreach Asset
 
-	$results .= 'PO ' . $$self{id} . ' emailed to the following recipients:<br/>';
+	$results .= 'PO ' . $$self{id} . ' emailed from ' . $From->email() . ' to the following recipients:<br/>';
 	$results .= $Email->send(
 			FROM	=> $From,
 			SUBJECT => 'Purchase Order ' . $self->id() . ' from ' . $From->Company()->name(),
@@ -257,7 +266,7 @@ sub send_to_vendor {
 		$results .= $Email->send( 
 				TO		=>	$self->shipto_email(),
 				SUBJECT	=>	'Purchase Order '. $self->id() . ' for ' . $self->vendor_name(),
-				BODY	=>	'',
+				HTML_BODY	=>	$html_body,
 				ATTACHMENTS =>	\@attachments,
 				);
 	} # end if
@@ -358,9 +367,9 @@ sub authorize {
 	$$self{authorized_on} = 'NOW()';
 	my $L = new openprint::PurchaseOrder_Log();
 	$L->save({
-			'po_id'		=> $$self{id},
-			'user_id'	=> $session{user_id},
-			'reason'	=> 'Authorized by ' . new openprint::User( $session{user_id} )->name(),
+			po_id	=> $$self{id},
+			user_id	=> $session{user_id},
+			reason	=> 'Authorized by ' . new openprint::User( $session{user_id} )->name(),
 			});
 	return $self->save();
 } # end sub authorize
@@ -398,6 +407,29 @@ sub notifications {
 	} # end if
 	return $$self{notifications} ? @{$$self{notifications}} : ();
 } # end sub notifications
+
+sub update_notifications {
+	my $PO = $_[0];
+	my $types;
+	if ( @_ > 1 ) {
+		$types = $_[1];
+	} else {
+		%{$types} = sets::union( map { $_->type() => 1 } $PO->Contents() );
+	}
+
+	my @companies = ( $PO->company_id(), $PO->supplier_id() );
+	my @notifications = $PO->notifications(); # returns user_ids
+		my @new_notifications = @notifications;
+	if ( $PO->is_FSC() or $PO->is_PEFC() ) {
+		@new_notifications = sets::union( @new_notifications, map { $PO->can_view( $_->User() ) ? $_->user_id() : () } openprint::User_Notification->find( type=>'FSC/PEFC Notifications', value=>'Yes', user_company_id=>\@companies, 'company_id is null or ='=>$PO->supplier_id() ) );
+	} # end if
+	foreach my $type ( keys %{$types} ) {
+		@new_notifications = sets::union( @new_notifications, map { $PO->can_view( $_->User() ) ? $_->user_id() : () } openprint::User_Notification->find( type=>'PO ' . $type . ' Notifications', value=>'Yes', user_company_id=>\@companies, 'company_id is null or ='=>$PO->supplier_id() ) );
+	} # end foreach
+	if ( scalar @notifications != scalar @new_notifications ) {
+		$PO->notifications(\@new_notifications);
+	} # end if
+} # end sub update_notifications
 
 sub Logs {
 	my ( $self ) = @_;
@@ -600,18 +632,29 @@ sub can_send {
 sub can_authorize {
 	my $User = @_ > 1 ? $_[1] : $openprint::User;
 
-	return 1 if ! $_[0]->total();
-	return 1 if $User->purchasing_limit() and ( $_[0]->total() < $User->purchasing_limit() );
+	if ( ! $_[0]->total() ) {
+		$openprint::log->debug("can_authorize 1 because no total") if $debug;
+		return 1;
+	} # end if
+	if ( $User->purchasing_limit() and ( $_[0]->total() < $User->purchasing_limit() ) ) {
+		$openprint::log->debug("can_authorize 1 because total " .  $_[0]->total() . ' < ' . $User->purchasing_limit() ) if $debug;
+		return 1;
+	} # end if
 	my %Totals;
 	my %Types;
 	foreach my $C ( $_[0]->Contents() ) {
-		$Totals{$C->type_id()} += $C->price();
+		$Totals{$C->type_id()} += $C->total();
 		$Types{$C->type_id()} = $C->Type();
 	} # end foreach C
 		
 	my $authorized = 1;
 	foreach my $T ( values %Types ) {
-		$authorized = 0 if $Totals{$$T{id}} > $User->po_limit( $$T{id} );
+		if ( $Totals{$$T{id}} > $User->po_limit( $$T{id} ) ) {
+			$openprint::log->debug("can_authorize 0 because $Totals{$$T{id}} > " . $User->po_limit( $$T{id} ) ) if $debug;
+			$authorized = 0
+		} else {
+			$openprint::log->debug("can_authorize 1 because $Totals{$$T{id}} <= " . $User->po_limit( $$T{id} ) ) if $debug;
+		} # end if
 	} # end foreach Content 
 	if ( $authorized and $User->purchasing_total_limit() ) {
 		# Need to check all unauthorized POs FIXME later

@@ -6,7 +6,7 @@
 				my $html = '';
 				my @tooth_options = map { $_, $_.' Tooth' } ( 3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,20,25,35,50 );
 				
-				foreach my $sig_id ( $$variable{Project}->signatures() ) {
+				foreach my $sig_id ( $$variable{Project}->signatures( { sort=>1 } ) ) {
 					my $sig_specs = openprint::service::get_specs_ref( $$variable{Project}, $sig_id );
 					my $signature_index = $$sig_specs{SignatureIndex};
 					

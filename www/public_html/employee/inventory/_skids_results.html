@@ -28,10 +28,12 @@
 			( $session{'/employee/inventory/skids.html?deleted'} ? ( deleted => [ split(',', $session{'/employee/inventory/skids.html?deleted'} ) ] ) : () ),
 			) ];
 	} elsif ( $session{'/employee/inventory/skids.html?manufacturers_id'} ) {
+		
 		$$variable{Skids} = [ openprint::Skid->find( 
-			( $session{'/employee/inventory/skids.html?manufacturers_id'} =~ /%/ ?
-			( 'manufacturers_id ilike'	=>	$session{'/employee/inventory/skids.html?manufacturers_id'} ) :
-			( manufacturers_id	=>	$session{'/employee/inventory/skids.html?manufacturers_id'} ) ),
+			'manufacturers_id ilike'	=>	(
+				$session{'/employee/inventory/skids.html?manufacturers_id'} =~ /%/ ?
+				$session{'/employee/inventory/skids.html?manufacturers_id'} : 
+				$session{'/employee/inventory/skids.html?manufacturers_id'} .'%' ),
 			order	=>	'id',
 			( $session{'/employee/inventory/skids.html?deleted'} ? ( deleted => [ split(',', $session{'/employee/inventory/skids.html?deleted'} ) ] ) : () ),
 			) ];
@@ -89,7 +91,13 @@
 		if ( $session{'/employee/inventory/skids.html?hasmanufacturers'} eq 'Y' ) {
 			$sql{'manufacturers_id is null'} = 0;
 		}
-
+		if ( $session{'/employee/inventory/skids.html?inventory_check_id'} ) {
+			if ( $session{'/employee/inventory/skids.html?inventory_check_id_exclude'}  ) {
+				$sql{'inventory_check_id not'} = $session{'/employee/inventory/skids.html?inventory_check_id'};
+			} else {
+				$sql{inventory_check_id} = $session{'/employee/inventory/skids.html?inventory_check_id'};
+			}	
+		}
 		
 		if ( $session{'/employee/inventory/skids.html?type'} ) {
 			my @types = split(',',$session{'/employee/inventory/skids.html?type'} );
@@ -155,6 +163,7 @@
 			<? endif ( openprint::usergroup::is_user_in( ['InventoryManager'], $session{'user_id'} ) ) ?>
 		</tr>
 		<? echo (
+my $debug = 1;
 			my $html;
 			my $rowclass;
 			my $total_rolls;
@@ -173,11 +182,11 @@
 			} # end foreach
 			my @skid_ids = map { $$_{id} } @{$$variable{'Skids'}};
 			my %SkidContents;
-$log->debug("Loading SkidContent" );
+$log->debug("Loading SkidContent" ) if $debug;
 			foreach my $SC ( openprint::SkidContent->find( skid_id => \@skid_ids ) ) {
 				push @{$SkidContents{$$SC{skid_id}}}, $SC;
 			} # end foreach SC
-$log->debug("Done Loading SkidContent" );
+$log->debug("Done Loading SkidContent" ) if $debug;
 
 			foreach my $Skid ( @{$$variable{'Skids'}} ) {
 				$Skid->Contents( $SkidContents{$$Skid{id}} ? $SkidContents{$$Skid{id}} : [] );
@@ -302,6 +311,7 @@ $RFIDTag->id(),
 		<? echo ( join('',
 					button( 'move', { onclick=>"popup_window('/employee/inventory/_move_skids_window.html?skid_id='+\$A(SkidResults.skids).filter(function(e){return e.checked}).map(function(e){return e.value}).join(',') ) ;", text=>'Move To' } ),
 					button( 'manifest', { onclick=>"open_window('/employee/inventory/paper_label_window.html?skid_id='+\$A(SkidResults.skids).filter(function(e){return e.checked}).map(function(e){return e.value}).join(','), 'label', 'toolbar=no,width=400,height=400,location=no,resizeable=no,scrollbars=yes,status=no');", text=>'Print Labels' } ),
+					button( 'CheckOut', { onclick=>"SkidResults.btnFunction.value='CheckOut';SkidResults.submit();", text=>'Checkout Checked' } ),
 					button( 'Delete', { onclick=>"SkidResults.btnFunction.value='Delete';SkidResults.submit();", text=>'Delete Checked' } ),
 					button( 'Select', { onclick=>"SkidResults.btnFunction.value='Go';SkidResults.action='skid_details.html';SkidResults.submit();", text=>'Select Checked' } ),
 

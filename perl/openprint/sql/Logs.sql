@@ -37,4 +37,6 @@ insert into log_actions (name,description) values ('Update Configuration','Updat
 insert into log_actions (name,description) values ('Login Failed','Unsuccessful Login Attempt');
 insert into log_actions (name,description) values ('Switch Company','Switch Company');
 
-create index logs_company_action_idx on logs (company_id,action_id);
+create index logs_company_id_action_idx on logs (company_id,action_id);
+create index logs_user_id_action_idx on logs (user_id,action_id);
+create index logs_object_idx on logs (object_id,object_type_id);

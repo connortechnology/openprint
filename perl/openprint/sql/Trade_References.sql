@@ -1,8 +1,8 @@
 DROP TABLE IF EXISTS Trade_References;
 
 CREATE TABLE Trade_References (
-	Id	INTEGER NOT NULL,
-	Company_id INTEGER NOT NULL,FOREIGN KEY (company_id) REFERENCES Companies (id),
+	id	SERIAL,
+	company_Id INTEGER NOT NULL,FOREIGN KEY (company_id) REFERENCES Companies (id),
 	CompanyName TEXT,
 	Contact		TEXT,
 	Phone		TEXT,

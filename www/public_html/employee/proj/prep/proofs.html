@@ -17,8 +17,8 @@ function check_input( form, signature_index ) {
 </script>
 
 <? eval ( 
-	$$variable{'Project'} = new openprint::Project( $$variable{'ProjectIndex'} );
-	@$variable{'Docket'} = $$variable{'Project'}->docket();
+	$$variable{Project} = new openprint::Project( $$variable{ProjectIndex} );
+	@$variable{Docket} = $$variable{Project}->docket();
 ) ?>
 <a href="/employee/project/view.html?ProjectIndex=<?ProjectIndex?>">Return to Project <?ProjectIndex?></a><br/>
 <br/>
@@ -26,19 +26,19 @@ function check_input( form, signature_index ) {
 <div style="float: left; width: 49%;"/>
 	<form method="post" name="f1" action="/employee/project/view.html?ProjectIndex=<?ProjectIndex?>&ServiceIndex=<?ServiceIndex?>">
 		<fieldset><legend>Production Feedback</legend>
-			<? echo ( include('/includes/employee/feedback/employee.html'); ) ?>
-			<? echo ( include('/includes/employee/feedback/comments.html'); ) ?>
+			<?include('/includes/employee/feedback/employee.html')?>
+			<?include('/includes/employee/feedback/comments.html')?>
 			<p>
 				<label>Proofs Ready</label>
-				<input type="radio" id="rdbCompleteY" name="rdbComplete" value="Yes" <? echo ( $$variable{'rdbComplete'} eq 'Yes' ? 'checked="checked"' : '' ) ?> onclick="$('ClientApproved').show();$('QAApproved').show();" />
+				<input type="radio" id="rdbCompleteY" name="rdbComplete" value="Yes" <? echo ( $$variable{rdbComplete} eq 'Yes' ? 'checked="checked"' : '' ) ?> onclick="$('ClientApproved').show();$('QAApproved').show();" />
 				<label class="radio" for="rdbCompleteY">Yes</label>
-				<input type="radio" id="rdbCompleteN" name="rdbComplete" value="No" <? echo ( $$variable{'rdbComplete'} ne 'Yes' ? 'checked="checked"' : '' ) ?> onclick="$('ClientApproved').hide();$('QAApproved').hide();" />
+				<input type="radio" id="rdbCompleteN" name="rdbComplete" value="No" <? echo ( $$variable{rdbComplete} ne 'Yes' ? 'checked="checked"' : '' ) ?> onclick="$('ClientApproved').hide();$('QAApproved').hide();" />
 				<label class="radio" for="rdbCompleteN">No</label>
 			</p>
 			<p>
 				<label>Ready Date</label>
-				<? if ( $$variable{'rdbComplete'} ne 'Yes' ) ?>
-				<? eval ( $$variable{'CompletionDate'} = Date::Format::time2str( '%Y-%m-%d %H:%M', time ); ) ?>
+				<? if ( $$variable{rdbComplete} ne 'Yes' ) ?>
+				<? eval ( $$variable{CompletionDate} = Date::Format::time2str( '%Y-%m-%d %H:%M', time ); ) ?>
 					<input type="text" size="18" name="CompletionDate" id="CompletionDate" value="<?CompletionDate?>"/>
 					<img src="/images/calendar.gif" id="CompletionDateButton" style="cursor: pointer;" title="Date selector" />
 					<script type="text/javascript">
@@ -52,48 +52,48 @@ function check_input( form, signature_index ) {
 					timeFormat		: 24
 					});
 					</script>
-				<? else ( $$variable{'rdbComplete'} ne 'Yes' ) ?>
+				<? else ( $$variable{rdbComplete} ne 'Yes' ) ?>
 					<?CompletionDate?>
-				<? endif ( $$variable{'rdbComplete'} ne 'Yes' ) ?>
+				<? endif ( $$variable{rdbComplete} ne 'Yes' ) ?>
 			</p>
-			<p id="ClientApproved" <? echo ( $$variable{'rdbComplete'} eq 'Yes' ? '' : 'style="display:none;"' ) ?>>
+			<p id="ClientApproved" <? echo ( $$variable{rdbComplete} eq 'Yes' ? '' : 'style="display:none;"' ) ?>>
 				<label>Client Approved?</label>
-					<input type="radio" id="rdbClientApprovedY" name="rdbClientApproved" value="Y" <? echo ( ssi::checked( $$variable{'rdbClientApproved'} eq 'Y' ); ) ?> />
+					<input type="radio" id="rdbClientApprovedY" name="rdbClientApproved" value="Y" <? echo ( ssi::checked( $$variable{rdbClientApproved} eq 'Y' ); ) ?> />
 					<label class="radio" for="rdbClientApprovedY">Yes</label>
-					<input type="radio" id="rdbClientApprovedN" name="rdbClientApproved" value="N" <? echo ( ssi::checked( $$variable{'rdbClientApproved'} ne 'Y' ); ) ?> />
+					<input type="radio" id="rdbClientApprovedN" name="rdbClientApproved" value="N" <? echo ( ssi::checked( $$variable{rdbClientApproved} ne 'Y' ); ) ?> />
 					<label class="radio" for="rdbClientApprovedN">No</label>
-				<? if ( $$variable{'rdbClientApproved'} eq 'Y' ) ?>
-					at <? echo ( $$variable{'ClientApprovalDate'} ) ?>
-				<? endif ( $$variable{'rdbClientApproved'} eq 'Y' ) ?>
+				<? if ( $$variable{rdbClientApproved} eq 'Y' ) ?>
+					at <? echo ( $$variable{ClientApprovalDate} ) ?>
+				<? endif ( $$variable{rdbClientApproved} eq 'Y' ) ?>
 			</p>
-			<p id="QAApproved" <? echo ( $$variable{'rdbComplete'} eq 'Yes' ? '' : 'style="display:none;"' ) ?>>
+			<p id="QAApproved" <? echo ( $$variable{rdbComplete} eq 'Yes' ? '' : 'style="display:none;"' ) ?>>
 				<label>QA Approved?</label>
-					<input type="radio" id="rdbApprovedY" name="rdbApproved" value="Y" onclick="$('DueDate').show();" <? echo ( ssi::checked( $$variable{'rdbApproved'} eq 'Y' ); ) ?> />
+					<input type="radio" id="rdbApprovedY" name="rdbApproved" value="Y" onclick="$('DueDate').show();" <? echo ( ssi::checked( $$variable{rdbApproved} eq 'Y' ); ) ?> />
 					<label class="radio" for="rdbApprovedY">Yes</label>
-					<input type="radio" id="rdbApprovedN" name="rdbApproved" value="N" onclick="$('DueDate').hide();" <? echo ( ssi::checked( $$variable{'rdbApproved'} ne 'Y' ); ) ?> />
+					<input type="radio" id="rdbApprovedN" name="rdbApproved" value="N" onclick="$('DueDate').hide();" <? echo ( ssi::checked( $$variable{rdbApproved} ne 'Y' ); ) ?> />
 					<label class="radio" for="rdbApprovedN">No</label>
-				<? if ( $$variable{'rdbApproved'} eq 'Y' ) ?>
-					at <? echo ( $$variable{'ApprovalDate'} ) ?>
-				<? endif ( $$variable{'rdbApproved'} eq 'Y' ) ?>
+				<? if ( $$variable{rdbApproved} eq 'Y' ) ?>
+					at <? echo ( $$variable{ApprovalDate} ) ?>
+				<? endif ( $$variable{rdbApproved} eq 'Y' ) ?>
 			</p>
-			<p id="DueDate" <? echo ( $$variable{'rdbApproved'} eq 'Y' ? '' : 'style="display:none;"' ) ?> >
-<? if ( $session{'user_type'} eq 'A' or openprint::usergroup::is_user_in( ['Scheduling'], $session{'user_id'} ) ) ?>
+			<p id="DueDate" <? echo ( $$variable{rdbApproved} eq 'Y' ? '' : 'style="display:none;"' ) ?> >
+<? if ( $session{user_type} eq 'A' or openprint::usergroup::is_user_in( ['Scheduling'], $session{user_id} ) ) ?>
 				<label>Due Date</label>
 				<span class="DateSelector">
 <? echo ( ssi::date_select( 'duedate', [ @$variable{'duedate_year','duedate_month','duedate_day'} ] ) ) ?>
 				</span>
-<? endif ( $session{'user_type'} eq 'A' or openprint::usergroup::is_user_in( ['Scheduling'], $session{'user_id'} ) ) ?>
+<? endif ( $session{user_type} eq 'A' or openprint::usergroup::is_user_in( ['Scheduling'], $session{user_id} ) ) ?>
 			</p>
 			<p class="buttons">
 			<? echo (
 					my $html;
-					$html .= button( 'Save', { onclick=>"f1.submit();", href=>'', text=>'Save' } );
-					$html .= button( 'Reset', { onclick=>"f1.reset();", href=>'', text=>'Reset' } );
+					$html .= button( 'Save', { onclick=>'f1.submit();' } );
+					$html .= button( 'Reset', { onclick=>'f1.reset();' } );
 					my $body = include( '/email_content/sign-off.html' );
 					$body =~ s/([^A-Za-z0-9])/sprintf("%%%02X", ord($1))/seg;
-					$$variable{'body'} = $body;
+					$$variable{body} = $body;
 					$html .= button( 'Email', { href=>qq`mailto:`.$$variable{Project}->Order()->email().q`?subject=Docket%20$$variable{Docket}&body=$$variable{body}`, text=>'Email' } );
-					$html .= button( 'UploadPDFs', { onclick=>"open_window('/employee/production/upload_pdfs.html?ProjectIndex=$$variable{'ProjectIndex'}','upload','resizable=yes,scrollbars=yes,width=800,height=600,screenX=10,screenY=10,top=0,left=0');", href=>'', text=>'Upload PDFs' } );
+					$html .= button( 'UploadPDFs', { onclick=>"open_window('/employee/production/upload_pdfs.html?ProjectIndex=$$variable{ProjectIndex}','upload','resizable=yes,scrollbars=yes,width=800,height=600,screenX=10,screenY=10,top=0,left=0');", href=>'', text=>'Upload PDFs' } );
 					return $html;
 			) ?>
 			</p>
@@ -104,6 +104,6 @@ function check_input( form, signature_index ) {
 	</form>
 </div><!-- Column -->
 <div id="Signatures" style="float: right; width: 49%;"/>
-<? echo ( include('/employee/proj/prep/_proofs_signatures.html'); ) ?>
+<?include('/employee/proj/prep/_proofs_signatures.html')?>
 </div><!-- Column -->
 <br class="spacer"/>

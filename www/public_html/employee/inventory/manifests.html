@@ -88,14 +88,17 @@ function load_results( ) {
 			</li>
 			<li>
 				<label>Has Errors</label>
-				<? echo ( radio( 'has_errors', ['1','Yes','0','No','1,0','All'], $session{'/employee/inventory/manifests.html?has_errors'} ); ) ?>
+				<? echo ( radio( 'has_errors', ['1','Yes','0','No','1,0','All'], $session{'/employee/inventory/manifests.html?has_errors'}, { default=>'1,0' } ); ) ?>
 			</li>
-		<li><label>Type</label>
-            <? echo ( checkboxes( 'type', [ 'Sheet','Sheet','Roll','Roll','Unknown','Unknown' ], [ split(',', $session{'/employee/inventory/manifests.html?type'} ) ] ); ) ?>
-        </li>
+			<li><label>Type</label>
+				<? echo ( checkboxes( 'type', [ 'Sheet','Sheet','Roll','Roll','Unknown','Unknown' ], [ split(',', $session{'/employee/inventory/manifests.html?type'} ) ] ); ) ?>
+			</li>
+			<li><label>PO Confirmed</label>
+				<? echo ( radio( 'po_confirmed', ['1','Yes','0','No','','All'], $session{'/employee/inventory/manifests.html?po_confirmed'}, { default=>'' } ); ) ?>
+			</li>
 			</ul>
 			<p class="buttons">
-				<? echo ( join('',
+				<? echo ( join("\n",
 					button( 'ShowResults', { onclick=>q`load_results();`, text=>'Show Results' } ),
 					button( 'Add', { href=>'manifest.html', text=>'Add New Manifest' } ),
 					button( 'Import', { onclick=>q`popup_window( '/employee/inventory/_manifest_import_popup.html', '', {width:475} );` } ),

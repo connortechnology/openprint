@@ -18,7 +18,7 @@
 			<select name="equipment_id" onchange="form.btnFunction.value='';f1.submit();">
 				<option value="">All</option>
 				<? echo ( 
-					$variable{Equipment} = openprint::Equipment->dropdown( order=>'lower('.$openprint::Equipment::fields{name}.')');
+					$variable{Equipment} = [ map { $_->id(), $_->strid() . ': '.$_->name() } openprint::Equipment->find( order=>'lower('.$openprint::Equipment::fields{name}.')') ];
 					make_drop_down( $variable{Equipment}, $param{equipment_id} ); ) ?>
 			</select>
 		</li>	
@@ -28,7 +28,7 @@
 				<option value="">Select a Material</option>
 				<? echo ( 
 						make_drop_down( [ map { $_->id(), $_->name() . ' : ' . $_->description() } openprint::Material->find(
-								'order'=>'lower(name)', 
+								order=>'lower(name)', 
 								( $param{'ddmSearchCategory'} ? ( 'category_id'=>$param{'ddmSearchCategory'} ) : () ),
 								( $param{'equipment_id'} ? ( 'equipment_id any' => $param{'equipment_id'} ) : () ),
 								) ], $$variable{'Material'}->id() );
@@ -42,7 +42,7 @@
 				$html .= button( 'Prev1', { onclick=>"f1.btnFunction.value='&lt;&lt;';fmCheck(f1);", href=>'', text=>'<<' } );
 				$html .= button( 'Next1', { onclick=>"f1.btnFunction.value='>>';fmCheck(f1);", href=>'', text=>'>>' } );
 				$html .= button( 'New1', { onclick=>"addCheck(f1);", href=>'', text=>'New' } );
-				$html .= button( 'Save1', { onclick=>"f1.btnFunction.value='Save';fmChange=3;fmCheck(f1);", href=>'', text=>'Save' } );
+				$html .= button( 'Save1', { onclick=>"f1.btnFunction.value='Save';f1.submit();", text=>'Save' } );
 				if ( $$variable{'Material'}->id() ) {
 					$html .= button( 'Copy1', { onclick=>"f1.btnFunction.value='Copy';fmCheck(f1);", href=>'', text=>'Copy' } );
 					$html .= button( 'Delete1', { onclick=>"f1.btnFunction.value='Delete';fmChange=2;fmCheck(f1);", href=>'', text=>'Delete' } );
@@ -122,7 +122,7 @@
                             with_today=>1,
                             with_clear=>1,
                             } ),
-                        datetime_select_session( '/employee/it/host.html','log_created_on_end', {
+                        datetime_select_session( $r->uri(),'log_created_on_end', {
                             onchange    =>q`new Ajax.Updater( 'Logs', '_logs.html', { parameters: $('f1').serialize() } );`,
                             with_today=>1,
                             with_clear=>1,

@@ -224,7 +224,7 @@ sub calc_price {
 		#$$specs{'hdnBreakdown'.$qty_index} .= sprintf('&nbsp;&nbsp;Hole Clearing: $%.2f %s * %d impressions * %d holes = $%.2f<br/>', @HoleClearingPrice{'Price','units'}, $impressions, $hole_qty, $HoleClearingPrice{Total});
 	} # end if
 
-	$Total{UnitPrice} = $Total{Total} / $$specs{"txtQuantity$qty_index"};
+	$Total{UnitPrice} = $Total{Total} / $$specs{"txtQuantity$qty_index"} if $$specs{"txtQuantity$qty_index"};
     return %Total;
 
 } # end sub calc_price
@@ -236,6 +236,8 @@ sub calc {
 	my $Project = new openprint::Project( $project_index );
 
 	my @signatures_needing = ();
+
+	$$specs{alert} = '';
 
 	foreach my $signature_service_index ( $Project->signatures( { sort=>1 }) ) {
 		my $sig_specs = openprint::service::get_specs_ref( $Project, $signature_service_index );
@@ -473,7 +475,7 @@ sub signature_calc {
 		@Sets_of_Impositions = ( \@override_impos );
 		my $overriden_count = misc::sum( map { $_->quantity() * $_->imposition() } @override_impos );
 		if ( $overriden_count != $Imposition->quantity() * $Imposition->imposition() ) {
-			$results{alert} .= "Overriden imposition count does not match printed imposition count for form $form.<br/>";
+			$results{alert} .= "Overriden imposition count ($overriden_count) does not match printed imposition count (".$Imposition->quantity() * $Imposition->imposition().") for form $form quantity $qty_index (".$$specs{"txtQuantity$qty_index"}.").<br/>";
 		} else {
 			$openprint::log->debug(" override count: $overriden_count $$Imposition{quantity} * $$Imposition{imposition}");
 		} # end if

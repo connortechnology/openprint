@@ -5,10 +5,19 @@
 		mode : "textareas",
 		theme : "simple"
 	});
+
+	function company_id_onchange( ddm ) {
+		ddm = $j(ddm);
+		$j.getJSON( "_currency.json?company_id="+ddm.val(), function( data ) {
+			if ( data.currency_id ) {
+				$j('#currency_id').val( data.currency_id );
+			}
+			} );
+	}
 </script>
 <div class="Timetrack">
 <?include(/includes/error_reporting.html)?>
-<form name="f1" id="f1" action="edit.html" method="post">
+<form name="f1" id="f1" action="edit.html" method="post" onsubmit="$j('#buttons').html('Please wait...');return true;">
 	<input type="hidden" name="referrer_invoice_id" value="<? echo ( $param{invoice_id} ) ?>" />
 	<fieldset><legend>Editing timetrack<? echo ( $$variable{Timetrack}->id() ? '('.$$variable{Timetrack}->id().')' : '' ) ?></legend>
 		<div class="content">
@@ -20,7 +29,7 @@
 		<div class="leftColumn">
 			<ul>
 			<li><label for="company_id">Company</label>
-				<select id="company_id" name="company_id">
+				<select id="company_id" name="company_id" onchange="company_id_onchange(this);">
 					<option value=""> select </option>
 					<? echo ( make_drop_down( openprint::Company->dropdown(), $$variable{Timetrack}->company_id() ? $$variable{Timetrack}->company_id() : $session{company_id} ); ) ?>
 				</select>
@@ -28,7 +37,7 @@
 			<li><label for="user_id">Employee</label>
 				<select id="user_id" name="user_id">
 					<option value=""> select </option>
-					<? echo ( make_drop_down( openprint::User->dropdown(company_id=>$session{company_id}), $$variable{Timetrack}->id() ? $$variable{Timetrack}->user_id() : $session{user_id} ); ) ?>
+					<? echo ( make_drop_down( openprint::User->dropdown(company_id=>$session{company_id}), $$variable{Timetrack}->user_id() ); ) ?>
 				</select>
 			</li>
 			<li>
@@ -36,7 +45,7 @@
 				<? echo ( 
 					radio( 'time_associated', [ '1','Yes', '0', 'No' ], $$variable{Timetrack}->time_associated(), { 
 						default	=>	'1',
-						onclick=>"if(this.value=='1' && this.checked) { $('starting_time').show();$('ending_time').show(); } else { $('starting_time').hide();$('ending_time').hide(); }update_duration(this.form,'starting','ending');",
+						onclick=>q`if(this.value=='1' && this.checked) { $('starting_time').show();$('ending_time').show(); } else { $('starting_time').hide();$('ending_time').hide(); }update_duration(this.form,'starting','ending');`,
 				} ); ) ?>
 			</li>
 			<li><label>Start</label>
@@ -56,7 +65,6 @@
 						} ); ) ?>
 			</li>
 			<li><label>Duration</label>
-				<?echo($$variable{Timetrack}->duration())?>
 				<input type="text" name="duration" id="duration" value="<?echo($$variable{Timetrack}->duration())?>"/>
 				<? echo ( write_override( 'duration_override', $$variable{Timetrack}->duration_override() ); ) ?>
 				<script type="text/javascript">update_duration(document.forms['f1'],'starting','ending');</script>
@@ -71,7 +79,16 @@
 			<li><label for="rate">Override Rate</label>
 				<? echo (input( type=>'float', name=>'rate', id=>'rate', value=>$$variable{Timetrack}->rate() ); ) ?>
 			</li>
-			<li><label>Currency</label><? echo ( ssi::select( openprint::Currency->dropdown(), $$variable{Timetrack}->currency_id() ? $$variable{Timetrack}->currency_id() : $session{Currency_id}, { name=>'currency_id', id=>'currency_id', prepend=>['','select'] } ); ) ?></li>
+			<li><label>Currency</label><? echo ( 
+					my $default = $$variable{Timetrack}->currency_id();
+					if ( ! $default and $$variable{Timetrack}->company_id() ) {
+						$default = $$variable{Timetrack}->Company->currency_id();
+					} 
+					if ( ! $default ) {
+						$default = $session{Currency_id};
+					}
+ 
+					ssi::select( openprint::Currency->dropdown(), $default, { name=>'currency_id', id=>'currency_id', prepend=>['','select'] } ); ) ?></li>
 			<li>
 				<label>Travel Associated</label>
 				<? echo ( radio( 'travel_associated', [ '1', 'Yes', '0', 'No' ], $$variable{Timetrack}->travel_associated() ); ) ?>
@@ -104,17 +121,17 @@
 			</ul>
 		</div>
 		</div>
-		<p class="buttons">
+		<p class="buttons" id="buttons">
 			<? echo (
 				my $html = '';
 				#$html = button( 'Back', { href=>'history.html' } );
 				
 				if ( $$variable{Timetrack}->id() ) {
 					$html .= button( 'Reset', { onclick => 'f1.reset();check_time_starting(f1);'} );
-					$html .= button( 'Destroy', { onclick => "if(confirm('Are you sure?')){f1.func.value='Destroy';f1.submit();}" } );
+					$html .= button( 'Destroy', { onclick => q`if(confirm('Are you sure?')){f1.func.value='Destroy';$('buttons').innerHTML='Please wait...';f1.submit();}` } );
 					$html .= button( 'Copy', { onclick => "f1.func.value='Copy';f1.submit();" } );
 				} # end if
-				$html .= button( 'Save', { onclick => "f1.func.value='Save';f1.submit();" } );
+				$html .= button( 'Save', { onclick => "f1.func.value='Save';if(f1.onsubmit()){f1.submit();}" } );
 				return $html;
 			) ?>
 		</p>

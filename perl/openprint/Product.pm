@@ -199,7 +199,7 @@ sub Photos {
 sub Album {
 	my $Album = new openprint::Photo_Album( $_[0]{'album_id'} );
 	if ( ! $Album->id() ) {
-	$Album->name('Photos for product '.$_[0]{'name'});
+		$Album->name('Photos for product '.$_[0]{'name'});
 	} # end if
     return $Album;
 } # end sub Album
@@ -240,9 +240,11 @@ sub upload {
 
 
 sub can_edit {
-    if ( $_[0]{'id'} and $openprint::session{'user_type'} eq 'A' ) {
-        return 1;
-    } # end if
+	return 1 if $openprint::session{user_type} eq 'A';
+
+    #if ( $_[0]{id} and $openprint::session{'user_type'} eq 'A' ) {
+        #return 1;
+    #} # end if
     return 0;
 } # end sub can_edit
 

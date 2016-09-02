@@ -32,6 +32,7 @@ my @variables = (
 	'txtQuantity',
 	'txtQuantity1','txtQuantity2','txtQuantity3',
 	'txtPrice1','txtPrice2','txtPrice3',
+	'MPrice1','MPrice2','MPrice3',
 	'OverridePrice1', 'OverridePrice2', 'OverridePrice3',
 	'Markup1', 'Markup2', 'Markup3',
 	'alert',
@@ -60,12 +61,13 @@ sub variables {
 				);
 
 			# Could be old.
-			foreach my $score_index ( 1 .. 4 ) {
-                push @v, "ScoreQty-$form-$qty_index-$score_index";
-                push @v, "ScoreImposition-$form-$qty_index-$score_index";
-                push @v, "ScoreRunspeed-$form-$qty_index-$score_index";
-            } # end foreach
+            foreach my $imp_index ( 1 .. 4 ) {
+                push @v, map { join('-', $_, $form, $qty_index, $imp_index ) } ( 
+						'ScoreQty','Runspeed',
+						'ImpOut','ImpColumns','ImpRows','ImpQty' );
+            } # end foreach imp_index
 		} # end foreach
+
 	} # end foreach
 	return @v;
 } # end sub variables
@@ -99,10 +101,7 @@ sub signature_needs {
 	my $form = $$sig_specs{SignatureIndex};
 #$openprint::log->debug("Scoring::need $$sig_specs{SignatureIndex} : " .$$specs{"chkOverrideQty-$form"});
 	if ( $specs ) {
- 
-	# This is because for non-books, the specs hash doesn't have the SignatureIndex filledin.
-		if ( ( (defined $$specs{"chkOverrideQty-$form"} ) and ( $$specs{"chkOverrideQty-$form"} eq 'Y' ) ) and
-				( $$specs{"txtVerticalQty-$form"} or $$specs{"txtHorizontalQty-$form"} ) ) {
+		if ( ( $$specs{"txtVerticalQty-$form"} or $$specs{"txtHorizontalQty-$form"} ) ) {
 			return 1;
 		} # end if
 	} # end if
@@ -210,9 +209,14 @@ sub calc {
 			} # end if
 			my $Imposition = new openprint::Imposition();
 			$Imposition->load( $sig_specs, $qty_index );
+			$$Imposition{Folds} = [ openprint::Estimating::Folding::get_Folds( $$calc_hash{FoldingSpecs}, $sig_specs, $qty_index ) ];
+
 			$$specs{'hdnBreakdown'.$qty_index} .= $Imposition->to_string() . '<br/>';
 			$$specs{'hdnBreakdown'.$qty_index} .= $Imposition->Paper()->to_string() . '<br/>';
 
+			if ( (!defined $$specs{"chkOverrideQty-$form"}) or ( $$specs{"chkOverrideQty-$form"} ne 'Y' ) ) {
+				get_scores( $Project, $specs, $sig_specs, $Imposition->Paper() );
+			} # end if
 			my %Price = signature_calc( $Project, $specs, $sig_specs, $qty_index, $Imposition, $calc_hash );
 			$status = $Price{Status} if $Price{Status} eq 'uncalculated';
 			if ( $Price{Equipment} ) {
@@ -220,6 +224,20 @@ sub calc {
 				#$$specs{"txtImposition-$$sig_specs{SignatureIndex}-$qty_index"} = $Price{Imposition}->imposition();
 				#$$specs{"txtLayoutWidth-$$sig_specs{SignatureIndex}-$qty_index"} = $Price{Imposition}->layout_width();
 				#$$specs{"txtLayoutHeight-$$sig_specs{SignatureIndex}-$qty_index"} = $Price{Imposition}->layout_height();
+				if ( ! $$specs{"chkOverrideImposition-$form-$qty_index"} ) {
+$log->debug("Setting imposition cuz " . $$specs{"chkOverrideImposition-$form-$qty_index"} );
+					my $imp_index = 1;
+					foreach my $I ( @{$Price{Impositions}} ) {
+						$I->Equipment( $Price{Equipment} );
+						@$specs{
+							"ImpQty-$form-$qty_index-$imp_index",
+							"ImpOut-$form-$qty_index-$imp_index",
+							"ImpColumns-$form-$qty_index-$imp_index",
+							"ImpRows-$form-$qty_index-$imp_index"} =
+							@$I{'quantity','imposition','columns','rows'};
+						$imp_index += 1;
+					} # end foreach 
+				} # end if
 			} else {
 				$$specs{"ddmEquipment-$form-$qty_index"} = '' if $$specs{"chkOverrideEquipment-$form-$qty_index"} ne 'Y';
 				#$$specs{"txtImposition-$$sig_specs{SignatureIndex}-$qty_index"} = 0;
@@ -234,7 +252,7 @@ sub calc {
 				} # end if
 			} # end if
 			$$specs{'hdnBreakdown'.$qty_index} .= $Price{Breakdown};
-			$$specs{alert} .= $Price{alert};
+			$$specs{alert} .= $Price{alert} if $Price{alert};
 
 			$qtyTotal += $$specs{"txtVerticalQty-$form"};
 			$qtyTotal += $$specs{"txtHorizontalQty-$form"};
@@ -251,10 +269,23 @@ sub calc {
 		if ( $qtyTotal ) {
 			$unitPrice = $price / $qty if $qty;
 		} # end if
-		$$specs{"txtUnitPrice$qty_index"} = sprintf( $openprint::config{UnitPriceFormat}, $unitPrice * (1+$Project->markup()/100) );
+
+		if ( $Project->markup() ) {
+			my $markup = 1+$Project->markup()/100;
+			$unitPrice *= $markup;
+			$price *= $markup;
+		}
+		if ( $$specs{"Markup$qty_index"} ) {
+			my $markup = 1+$$specs{"Markup$qty_index"}/100;
+			$unitPrice *= $markup;
+			$price *= $markup;
+		}
+			
+		$$specs{"txtUnitPrice$qty_index"} = sprintf( $openprint::config{UnitPriceFormat}, $unitPrice );
+		$$specs{"MPrice$qty_index"} = sprintf( $openprint::config{UnitPriceFormat}, $unitPrice * 1000 );
 
 		if ( $$specs{"OverridePrice$qty_index"} ne 'Y' ) {
-			$$specs{"txtPrice$qty_index"} = sprintf( $openprint::config{ProjectMoneyFormat}, $price*(1+$$specs{"Markup$qty_index"}/100) * (1+$Project->markup()/100) );
+			$$specs{"txtPrice$qty_index"} = sprintf( $openprint::config{ProjectMoneyFormat}, $price );
 		} else {
 			$$specs{"txtPrice$qty_index"} = sprintf( $openprint::config{ProjectMoneyFormat}, $$specs{"txtPrice$qty_index"} );
 		} # end if
@@ -264,7 +295,8 @@ sub calc {
 	return $$specs{Status} = $status;
 } # end sub calc
 
-sub signature_calc($$$$$$) {
+#sub signature_calc($$$$$$) {
+sub signature_calc {
 	my ( $Project, $specs, $sig_specs, $qty_index, $SignatureImposition, $calc_hash ) = @_;
 	my %Results = (
 		Status		=> 'calculated',
@@ -272,9 +304,11 @@ sub signature_calc($$$$$$) {
 	);
 	my $form = $$sig_specs{SignatureIndex};
 
+if ( 0 ) {
 	if ( (!defined $$specs{"chkOverrideQty-$form"}) or ( $$specs{"chkOverrideQty-$form"} ne 'Y' ) ) {
 		get_scores( $Project, $specs, $sig_specs, $SignatureImposition->Paper() );
 	} # end if
+} # end if
 
 	my $score_qty = $$specs{"txtVerticalQty-$form"} + $$specs{"txtHorizontalQty-$form"};
 	@$specs{"txtWidth-$form", "txtHeight-$form"} = @$sig_specs{'txtWidth','txtHeight'};
@@ -290,13 +324,14 @@ sub signature_calc($$$$$$) {
 		$qty *= $$sig_specs{Versions};
 	} # end if
 
-	# juts for efficeincy
 	my @Folds;
 	if ( $$SignatureImposition{Folds} ) {
 		@Folds = @{$$SignatureImposition{Folds}};
 	} elsif ( $$calc_hash{FoldingSpecs} ) {
+$openprint::log->error("Getting Folds from folding in Scoring, but really should have already had them in the Imposition");
 		@Folds = openprint::Estimating::Folding::get_Folds( $$calc_hash{FoldingSpecs}, $sig_specs, $qty_index );
 	} # end if
+
 	if ( DEBUG ) {
 		$SignatureImposition->display('Original sig');
 		foreach my $Fold ( @Folds ) {
@@ -316,6 +351,7 @@ sub signature_calc($$$$$$) {
 		push @capabilities, 'When PerfectBinding' if $$calc_hash{PerfectBoundSpecs};
 		push @capabilities, 'When Stitching' if $$calc_hash{StitchingSpecs};
 		
+$openprint::log->warn("This should have been already done");
 		@equipment = openprint::Equipment->find( Specifications => {'Scoring Capable'=>\@capabilities}, useinestimating=>1, order=>'strName');
 	} # endif
 	if ( DEBUG ) {
@@ -325,107 +361,126 @@ sub signature_calc($$$$$$) {
 	}
 
 # Get the impositions to consider
-	if ( ! $SignatureImposition->imposition() ) {
+	if ( ! $$SignatureImposition{imposition} ) {
+$openprint::log->error("Scoring passed an invalid imposition");
 		$Results{alert} .= "Unable to load the imposition.  This likely is because printing has not finished calculating.<br/>";
 		return $Results{Status} = 'uncalculated';
 	} # end if
 
    # What we do is build a set of pieces of the imposition, all of which can be folded. We don't worry about optimality, just possibility.
-    my @Set_Of_Impositions;
+    my @Sets_of_Impositions;
+    my @All_Impositions;
 
-	$$SignatureImposition{impressions} = $qty / $$SignatureImposition{imposition};
+	if ( (defined $$specs{"chkOverrideImposition-$form-$qty_index"}) and ( $$specs{"chkOverrideImposition-$form-$qty_index"} eq 'Y' ) ) {
+        $openprint::log->debug("Overriding impositions");
 
-    # IF it's a W&T, we have to cut in half first, so just do it.
-    if ( $$SignatureImposition{runstyle} eq 'Work & Turn' ) {
-        my $i = $SignatureImposition->copy();
-        $i->runstyle('Sheet Work');
-        $i->start_columns( $i->columns() );
-        $i->columns( $i->columns()/2 );
-        $$i{quantity} = 2;
-        push @Set_Of_Impositions, $i;
-    } elsif ( $$SignatureImposition{runstyle} eq 'Work & Tumble' ) {
-        my $i = $SignatureImposition->copy();
-        $i->runstyle('Sheet Work');
-        $i->start_rows( $i->rows() );
-        $i->rows( $i->rows()/2 );
-        $$i{quantity} = 2;
-        push @Set_Of_Impositions, $i;
-    } else {
-        my $i = $SignatureImposition->copy();
-        $$i{quantity} = 1;
-        push @Set_Of_Impositions, $i;
-    } # end if
+        my @override_impos;
+        foreach my $index ( 1 .. 4 ) {
+			my $imp_qty =$$specs{join('-','ImpQty', $form,$qty_index,$index)};
+            next if ! $imp_qty;
+            my $I = $SignatureImposition->copy();
+            $I->quantity( $imp_qty );
+            $I->imposition( $$specs{"ImpOut-$form-$qty_index-$index"} );
+            $I->columns( $$specs{"ImpColumns-$form-$qty_index-$index"} );
+            $I->rows( $$specs{"ImpRows-$form-$qty_index-$index"} );
 
-# Get rid of dutches
-	if ( $SignatureImposition->dutch_columns() ) {
-		my @Impositions = ();
-		my $modified = 0;
-		foreach my $I ( @Set_Of_Impositions ) {
-			if ( $I->dutch_columns() ) {
-				{
-					my $i = $I->copy();
-					$i->dutch_columns(0);
-					$i->dutch_rows(0);
-					$i->quantity(1);
-					push @Impositions, $i;
-				}
-				{
-					my $i = $I->copy();
-					$i->columns( $i->dutch_columns() );
-					$i->rows( $i->dutch_rows() );
-					$i->dutch_columns(0);
-					$i->dutch_rows(0);
-					$i->quantity(1);
-					$i->image_orientation($I->image_orientation() eq 'Vertical' ? 'Horizontal' : 'Vertical');
-					push @Impositions, $i;
-				}
-				$modified = 1;
-			} else {
-				push @Impositions, $I;
-			} # end if
-		} # end foreach
+            push @override_impos, $I;
+            $I->display('Override');
+        } # end foreach
+        @All_Impositions = ( \@override_impos );
+        my $overriden_count = misc::sum( map { $_->quantity() * $_->imposition() } @override_impos );
+        if ( $overriden_count != $SignatureImposition->quantity() * $SignatureImposition->imposition() ) {
+            $Results{alert} .= "Overriden imposition count ($overriden_count) does not match printed imposition count (".$SignatureImposition->quantity() * $SignatureImposition->imposition().") for form $form quantity $qty_index (".$$specs{"txtQuantity$qty_index"}.").<br/>";
+        } else {
+            $openprint::log->debug(" override count: $overriden_count $$SignatureImposition{quantity} * $$SignatureImposition{imposition}");
+        } # end if
+    } elsif ( ! $$SignatureImposition{cut_impositions} ) {
 
-		@Set_Of_Impositions = @Impositions if $modified;
-		if ( DEBUG ) {
-			foreach my $I ( @Impositions ) {
-				$I->display('Results from dutch cuts');
-			} # end foreach
+		# IF it's a W&T, we have to cut in half first, so just do it.
+		if ( $$SignatureImposition{runstyle} eq 'Work & Turn' ) {
+			my $i = $SignatureImposition->copy();
+			$i->runstyle('Sheet Work');
+			$i->start_columns( $$i{columns} );
+			$i->columns( $$i{columns}/2 );
+			$$i{quantity} = 2;
+			push @Sets_of_Impositions, $i;
+		} elsif ( $$SignatureImposition{runstyle} eq 'Work & Tumble' ) {
+			my $i = $SignatureImposition->copy();
+			$i->runstyle('Sheet Work');
+			$i->start_rows( $$i{rows} );
+			$i->rows( $$i{rows}/2 );
+			$$i{quantity} = 2;
+			push @Sets_of_Impositions, $i;
+		} else {
+			my $i = $SignatureImposition->copy();
+			$$i{quantity} = 1;
+			push @Sets_of_Impositions, $i;
 		} # end if
-	} # end if dutch
 
-	my @Initial_Impositions = openprint::Estimating::Folding::reduce_impositions( \@Set_Of_Impositions );
-	my @All_Impositions = @Initial_Impositions;
+	# Get rid of dutches
+		if ( $$SignatureImposition{dutch_columns} ) {
+			my @Impositions = ();
+			my $modified = 0;
+			foreach my $I ( @Sets_of_Impositions ) {
+				if ( $$I{dutch_columns} ) {
+					{
+						my $i = $I->copy();
+						$i->dutch_columns(0);
+						$i->dutch_rows(0);
+						$$i{quantity}=1;
+						push @Impositions, $i;
+					}
+					{
+						my $i = $I->copy();
+						$i->columns( $i->dutch_columns() );
+						$i->rows( $i->dutch_rows() );
+						$i->dutch_columns(0);
+						$i->dutch_rows(0);
+						$$i{quantity} = 1;
+						$i->image_orientation($$I{image_orientation} eq 'Vertical' ? 'Horizontal' : 'Vertical');
+						push @Impositions, $i;
+					}
+					$modified = 1;
+				} else {
+					push @Impositions, $I;
+				} # end if
+			} # end foreach
 
-    for ( my $set_index = 0; $set_index < @All_Impositions; $set_index += 1 ) {
-        my $Set_Of_Impositions = $All_Impositions[$set_index];
-        for ( my $imp_index = 0; $imp_index < @$Set_Of_Impositions; $imp_index += 1 ) {
-            my $Imposition = $$Set_Of_Impositions[$imp_index];
-            if ( $$Imposition{imposition} > 1 ) {
-                foreach my $cuts ( openprint::Estimating::Folding::cut_imposition( $Imposition ) ) {
-                    my @new_impositions = @$Set_Of_Impositions;
-                    splice @new_impositions, $imp_index, 1, @$cuts;
-                    @new_impositions = openprint::Estimating::Folding::compact_impositions( @new_impositions ) if @new_impositions > 1;
-                    push @All_Impositions, \@new_impositions;
-                } # end foreach cuts
-            }
-        } # end foreach Impo
-    } # end foreach Set of
+			@Sets_of_Impositions = @Impositions if $modified;
+			if ( DEBUG ) {
+				foreach my $I ( @Impositions ) {
+					$I->display('Results from dutch cuts');
+				} # end foreach
+			} # end if
+		} # end if dutch
+		@All_Impositions = openprint::Estimating::Folding::reduce_impositions( \@Sets_of_Impositions );
+		if ( DEBUG ) {
+			$openprint::log->debug("Sets of Maximum Impositions: " . @All_Impositions);
+			foreach my $Set ( @All_Impositions ) {
+				$openprint::log->debug("Impositions in set: " . @$Set);
+				foreach my $I ( @$Set ) {
+					$I->display('quantity '.$I->quantity() );
+				} # end foreach I
+			} # end foreach set
+			$openprint::log->debug(sprintf('Original Sign info: %dx%d*%d,%dout', @$SignatureImposition{'spread_columns', 'spread_rows', 'spread_size', 'imposition'} ) );
+		} # end if debug
 
-	if ( DEBUG ) {
-		$openprint::log->debug("Sets of Maximum Impositions: " . @All_Impositions);
-		foreach my $Set ( @All_Impositions ) {
-			$openprint::log->debug("Impositions in set: " . @$Set);
-			foreach my $I ( @$Set ) {
-				$I->display('quantity '.$I->quantity() );
-			} # end foreach I
-		} # end foreach set
-		$openprint::log->debug(sprintf('Original Sign info: %dx%d*%d,%dout', $SignatureImposition->spread_columns(), $SignatureImposition->spread_rows(), $SignatureImposition->spread_size(), $SignatureImposition->imposition() ) );
-	} # end if debug
+		# Store for use by other parts like perforating
+		@{$$SignatureImposition{cut_impositions}} = @All_Impositions;
+	} else {
+		@All_Impositions = @{$$SignatureImposition{cut_impositions}};
+	} # end if overrideImpositions
 
 	EQUIPMENT: foreach my $Equipment ( @equipment ) {
 		$Results{Breakdown} .= "<br/>Equipment: $$Equipment{name}, ";
 		my $type = $Equipment->specification('Type');
-		if ( $Equipment->specification('Scoring Capable') eq 'When Folding' ) {
+		if ( ! $type ) {
+			$Results{Breakdown} .= "No type for $$Equipment{name}. Please set it in equipment specifications.<br/>";
+			next;
+		}
+		my $capable = $Equipment->specification('Scoring Capable');
+
+		if ( $capable eq 'When Folding' ) {
 			if ( ! $$calc_hash{FoldingSpecs} ) {
 				$Results{Breakdown} .= 'Not being folded.<br/>';
 				if ( $$specs{"chkOverrideEquipment-$form-$qty_index"} eq 'Y' ) {
@@ -433,7 +488,8 @@ sub signature_calc($$$$$$) {
 				} # end if
 				next;
 			} 
-			if ( $$calc_hash{FoldingSpecs}{"ddmEquipment-$form-$qty_index"} != $Equipment->id() ) {
+			if ( $$calc_hash{FoldingSpecs}{"ddmEquipment-$form-$qty_index"} != $$Equipment{id} ) {
+#FIXME Folder might already be set in the imposition
 				my $Folder = new openprint::Equipment( $$calc_hash{FoldingSpecs}{"ddmEquipment-$form-$qty_index"} );
 				$Results{Breakdown} .= "Form $form qty $qty_index not being folded on $$Equipment{strid}. Is being folded on $$Folder{strid}.<br/>";
 				if ( $$specs{"chkOverrideEquipment-$form-$qty_index"} eq 'Y' ) {
@@ -441,7 +497,11 @@ sub signature_calc($$$$$$) {
 				} # end if
 				next;
 			} # end if
+		} elsif ( ( $capable eq 'When Printing' ) and ( $Equipment->strid() ne $$sig_specs{'ddmPress'.$qty_index} ) ) {
+			$Results{Breakdown} .= "Not printing on $$Equipment{name}.<br/>";
+			next;
 		} # end if
+
 		if ( $type eq 'Stitcher' ) {
 			if ( ! $$calc_hash{StitchingSpecs} ) {
 				$Results{Breakdown} .= 'Not being stitched.<br/>';
@@ -451,32 +511,31 @@ sub signature_calc($$$$$$) {
 				$Results{Breakdown} .= 'Not stitching on this.<br/>';
 				next;
 			} # end if
-		} # end if
-		next if ( $type eq 'PerfectBinder' ) and ! $$calc_hash{PerfectBoundSpecs};
-		if ( ( $Equipment->specification('Scoring Capable') eq 'When Printing' ) and ( $Equipment->strid() ne $$sig_specs{'ddmPress'.$qty_index} ) ) {
-			$Results{Breakdown} .= "Not printing on $$Equipment{name}.<br/>";
-			next;
-		} # end if
-		my @impositions = ();
-		if ( $type eq 'Press' ) {
+		} elsif ( $type eq 'PerfectBinder' ) {
+			if ( ! $$calc_hash{PerfectBoundSpecs} ) {
+				next ;
+			} 
+		} elsif ( $type eq 'Press' ) {
 			if ( sets::isin( $$sig_specs{'ddmRunStyle'.$qty_index}, ['Work & Turn','Work & Tumble'] ) ) {
 				$Results{Breakdown} .= 'Cant do an inline score when W&T.<br/>';
 				next;
 			} # end if
-		} # end if
+		} # end if type
+
 		if ( $$calc_hash{NoOfflineBindery} and ( $$sig_specs{'ddmPress'.$qty_index} ne $Equipment->strid() ) ) {
 			$Results{Breakdown} .= "No Offline bindery and not printing on $$Equipment{name}.<br/>";
 			next;
 		} # end if
 
 		my $totalPrice;
+		my @impositions = ();
 
-		# FIXME, needs to be same oflder
+		# FIXME, needs to be same folder
 		if ( ( $type eq 'Folder' ) and @Folds ) {
 			my $impressions;
 			my $parts = 0;
 			foreach my $Fold ( @Folds ) {
-				$parts += $Fold->imposition() * $Fold->quantity();
+				$parts += $$Fold{imposition} * $$Fold{quantity};
 				if ( $_ = fits_on_equipment( $Equipment, $Fold, $sig_specs, $$specs{"txtVerticalQty-$form"}, $$specs{"txtHorizontalQty-$form"} ) ) {
 					$Results{Breakdown} .= "Doesn't fit. $_<br/>";
 					next EQUIPMENT;
@@ -570,6 +629,7 @@ sub signature_calc($$$$$$) {
 				my $complete = 1;
 
 				foreach my $I ( @impositions ) {
+					$I->Press( $Equipment );
 					$Results{Breakdown} .= '<br/>Imp: '.$I->to_string().'<br/>';
 
 					if ( $_ = fits_on_equipment( $Equipment, $I, $sig_specs, $$specs{"txtVerticalQty-$form"}, $$specs{"txtHorizontalQty-$form"} ) ) {
@@ -580,7 +640,7 @@ sub signature_calc($$$$$$) {
 
 					$Results{Breakdown} .= '<br/>';
 
-					my $Price = get_price( $Equipment, $$specs{"txtVerticalQty-$form"}, $$specs{"txtHorizontalQty-$form"}, $qty/$I->imposition(), $I );
+					my $Price = get_price( $Equipment, $$specs{"txtVerticalQty-$form"}, $$specs{"txtHorizontalQty-$form"}, $qty/$$I{imposition}, $I );
 
 					$totalPrice += $$Price{setup} + $$Price{Vertical}{Total} + $$Price{Horizontal}{Total} + $$Price{Service}{Total};
 					$Results{Breakdown} .= $$Price{Breakdown};
@@ -619,22 +679,22 @@ sub get_price {
 	my $vertical_length = 0;
 	my %vertical_price;
 
-	if ( $I->image_orientation() eq 'Vertical' ) {
+	if ( $$I{image_orientation} eq 'Vertical' ) {
 		if ( $vertical ) {
-			$vertical_rule = $vertical * $I->columns();
-			$vertical_length = $vertical_rule * $I->layout_height();
+			$vertical_rule = $vertical * $$I{columns};
+			$vertical_length = $vertical_rule * $$I{layout_height};
 		}
 		if ( $horizontal ) {
-			$horizontal_rule = $horizontal * $I->rows();
+			$horizontal_rule = $horizontal * $$I{rows};
 			$horizontal_length = $horizontal_rule * $I->layout_width();
 		} # end if
-	} elsif ( $I->image_orientation() eq 'Horizontal' ) {
+	} elsif ( $$I{image_orientation} eq 'Horizontal' ) {
 		if ( $horizontal ) {
-			$vertical_rule = $horizontal * $I->rows();
+			$vertical_rule = $horizontal * $$I{rows};
 			$vertical_length = $vertical_rule * $I->layout_width();
 		} # end if
 		if ( $vertical ) {
-			$horizontal_rule = $vertical * $I->columns();
+			$horizontal_rule = $vertical * $$I{columns};
 			$horizontal_length = $horizontal_rule * $I->layout_height();
 		} # end if
 	} # end if
@@ -665,6 +725,7 @@ sub get_price {
 	} else {
 		%servicePrice = openprint::service::get_price_object( 'Scoring', $qty, $Equipment );
 	} # end if
+	$servicePrice{Total} = 0;
 
 	if ( $servicePrice{units} eq 'per m' ) {
 		$servicePrice{Total} = Math::Round::nearest( 0.01, $servicePrice{Price} * $qty / 1000 );
@@ -689,7 +750,6 @@ sub get_price {
 		$Results{Breakdown} .= "Unknown units set on service price ($score_qty) ($servicePrice{units}) <br/>";
 	} # end if
 
-
 #$openprint::log->debug("Horizontal: $horizontal_rule");
 	if ( $horizontal_rule ) {
 		if ( my @Materials = openprint::Material->find(name=>'ScoringRule') ) {
@@ -707,6 +767,8 @@ sub get_price {
 				$Results{Breakdown} .= "Unknown units set on horizontal material price ($horizontal_price{units})<br/>";
 			} # end if
 		} # end if
+	} else {
+		$horizontal_price{Total} = 0;
 	} # end if
 
 
@@ -729,6 +791,8 @@ sub get_price {
 		} else {
 			$Results{Breakdown} .= "No material found for ScoringWheel<br/>";
 		} # end if
+	} else {
+		$vertical_price{Total} = 0;
 	} # end if vertical_rule
 
 	$Results{setup} = $setupPrice;
@@ -966,7 +1030,7 @@ sub fits_on_equipment {
 			} # end if
 		} # end if orientation or not
 	} # end if max_feed)wudetg
-	if ( ( $_ = $Equipment->specification('Maximum Imposition') ) and ( $_ < $I->imposition() ) ) {
+	if ( ( $_ = $Equipment->specification('Maximum Imposition') ) and ( $_ < $$I{imposition} ) ) {
 		return "Imposition $$I{imposition}out too high. Maximum: $_<br/>";
 	} # end if
 	if ( $type eq 'Press' ) {
