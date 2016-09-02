@@ -151,18 +151,18 @@ sub calc {
 			if ( $imposition2 > $imposition1 ) {
 				$imposition->rows($qty/$imposition2);
 				$imposition->columns($imposition2);
-				$imposition->image_orientation('Horizontal');
+				$imposition->image_orientation(Imposition::Horizontal);
 			} elsif ( $imposition1 ) {
 				$imposition->rows($qty/$imposition1);
 				$imposition->columns($imposition1);
-				$imposition->image_orientation('Vertical');
+				$imposition->image_orientation(Imposition::Vertical);
 			} else {
 				# doesn't fit?
 			} # end if
 			my $area;
 
 			my $length;
-			if ( $$imposition{'ImageOrientation'} eq 'Vertical' ) {
+			if ( $$imposition{image_orientation} == Imposition::Vertical ) {
 				$length = $item_height * $imposition->rows();
 			} else {
 				$length = $item_width * $imposition->rows();

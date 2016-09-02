@@ -389,7 +389,7 @@ $Imposition->display();
 			$Position->setAttribute('MarginLeft',0);
 			$Position->setAttribute('MarginRight',0);
 			if ( $Imposition->runstyle() eq 'Work & Turn') {
-				if ( $Imposition->image_orientation() eq 'Vertical' ) {
+				if ( $Imposition->image_orientation() == Imposition::Vertical ) {
 					if ($col <= $columns/2) {
 						$Position->setAttribute('Orientation', $fold_rotation eq 'Rotate90' ? 'Rotate90' : 'Rotate0');
 					} else {
@@ -403,7 +403,7 @@ $Imposition->display();
 					} # end if
 				} # end if
 			} elsif ( $Imposition->runstyle() eq 'Work & Tumble' ) {
-				if ( $Imposition->image_orientation() eq 'Vertical' ) {
+				if ( $Imposition->image_orientation() == Imposition::Vertical ) {
 					if ($row <= $rows/2) {
 						$Position->setAttribute('Orientation',$fold_rotation eq 'Rotate90' ? 'Rotate90' : 'Rotate0');
 					} else {
@@ -537,10 +537,10 @@ sub Layout_Signature {
 	# Layouts should generally be centered widthwise for even wear of blanket...
 	# # So we need to figure out the side padding...
 	# # For now left justify
-					 if ( $Imposition->image_orientation() eq 'Vertical' ) {
-										 $ContentObject->setAttribute('CTM', '1 0 0 1 0 0');
+					if ( $Imposition->image_orientation() == Imposition::Vertical ) {
+						$ContentObject->setAttribute('CTM', '1 0 0 1 0 0');
 
-					   my $left = ($column-1) * $Imposition->image_width();
+						my $left = ($column-1) * $Imposition->image_width();
 						my $top = ( $row-1) * $Imposition->image_height();
 						my $bottom = $top + $Imposition->image_height();
 						my $right = $left + $Imposition->image_width();
