@@ -94,8 +94,12 @@ sub no_outputs {
 					if ( $$incoming_specs{"FoldRunspeed-$form-$qty_index-$fold_index"} ) {
 						push @v, "FoldRunspeed-$form-$qty_index-$fold_index";
 					} # end if
+
 				} # end foraech fold
 			} # end if override
+			if ( $$incoming_specs{"chkOverrideEquipment-$form-$qty_index"} eq 'Y' ) {
+				push @v, "ddmEquipment-$form-$qty_index";
+			} # end if
 		} # end foreach qty
 	} # end foreach sig
 	return @v;
@@ -421,21 +425,21 @@ sub signature_calc {
 	if ( ! $$SignatureImposition{imposition} ) {
 		Carp::cluck( 'Invalid Imposition');
 		$results{Breakdown}	 = 'Invalid Signature passed to Folding';
-		return %results;
+		return \%results;
 	} # end if
 
 	if ( $$sig_specs{txtSignatureType} and ( $SignatureImposition->pages() == 2 ) ) {
 		# Does not need folding
 		$results{Status}		= 'calculated';
 		$results{Breakdown}		= '2 page does not require folding';
-		return %results;
+		return \%results;
 	} # end if
 
 	if ( ! ( $$sig_specs{txtFinalWidth} and $$sig_specs{txtFinalHeight} ) ) {
 $openprint::log->error("No finished width and height, cannot continue $$Project{id} $qty_index");
 		# Does not need folding
 		$results{Breakdown}		= 'No finished width and height, cannot continue';
-		return %results;
+		return \%results;
 	} # end if
 
 	my $Paper = $SignatureImposition->Paper();
@@ -477,10 +481,8 @@ $openprint::log->error("No finished width and height, cannot continue $$Project{
 					Folds		=> '',
 					Breakdown	=> 'Folding Equipment override to nothing',
 				);
-			push @no_outputs, "ddmEquipment-$form-$qty_index";
-			return %results;
+			return \%results;
 		} # end if
-		push @no_outputs, "ddmEquipment-$form-$qty_index";
 	} else {
 		if ( $Press->specification('Sheeter') eq 'Y' ) {
 			if ( $$calc_hash{'Folding::signature_calc::equipment'} ) {
@@ -533,7 +535,7 @@ $openprint::log->debug("Not adding because previousimposition != sigImposition")
 
 	if ( ! @my_equipment ) {
 		$$specs{alert} .= 'There is no Folding capable equipment.';
-		return;
+		return {};
 	} # end if
 
 	#$openprint::log->debug("Makereadies...");
@@ -1629,7 +1631,7 @@ $openprint::log->debug("Quitting, all:found: $all_found, undesired: $undesired")
 		$results{RunOvers} = $run_overs if $results{RunOvers} < $run_overs;
 	} # end foreach
 	
-	return %results;
+	return \%results;
 } # end sub signature_calc
 
 sub load_equipment { 
@@ -1768,23 +1770,21 @@ $i->display() if DEBUG;
 
 			if ( ( ! exists $$sig_specs{'PageQuantity'.$qty_index} ) or $$sig_specs{'PageQuantity'.$qty_index} ) {
 
-				my %results = signature_calc( $Project, $sig_specs, $specs, $qty_index, $Imposition, \@Signature_Impositions, $calc_hash );
+				my $results = signature_calc( $Project, $sig_specs, $specs, $qty_index, $Imposition, \@Signature_Impositions, $calc_hash );
 				#my %results = signature_calc( $Project, $sig_specs, $specs, $qty_index, $Imposition, [ sets::exclude( [ $Imposition ], \@Signature_Impositions ) ], $calc_hash );
-				$$specs{'hdnBreakdown'.$qty_index} .= $results{Breakdown};
-				$$specs{'hdnBreakdown'.$qty_index} .= sprintf('MR Waste: %d, Run Waste: %d<br/>', @results{'MakeReadyOvers','RunOvers'} );
-				$$specs{"Price-$form-$qty_index"} = $results{Price};
-				$price += $results{Price};
-				$mprice += $results{MPrice};
-				if ( $results{Equipment} ) {
+				$$specs{'hdnBreakdown'.$qty_index} .= $$results{Breakdown};
+				$$specs{'hdnBreakdown'.$qty_index} .= sprintf('MR Waste: %d, Run Waste: %d<br/>', @$results{'MakeReadyOvers','RunOvers'} );
+				$$specs{"Price-$form-$qty_index"} = $$results{Price};
+				$price += $$results{Price};
+				$mprice += $$results{MPrice};
+				if ( $$results{Equipment} ) {
 					if ( $$specs{"chkOverrideEquipment-$form-$qty_index"} ne 'Y' ) {
-						$$specs{"ddmEquipment-$form-$qty_index"} = $results{Equipment}->id();
-					} else {
-						@no_outputs = sets::exclude( [ "ddmEquipment-$form-$qty_index" ], \@no_outputs );
+						$$specs{"ddmEquipment-$form-$qty_index"} = $$results{Equipment}->id();
 					} # end if
 
 					my $index = 1;
-					$$Imposition{Folds} = $results{FoldedImpositions};
-					foreach my $FI ( @{$results{FoldedImpositions}} ) {
+					$$Imposition{Folds} = $$results{FoldedImpositions};
+					foreach my $FI ( @{$$results{FoldedImpositions}} ) {
 						my $Fold = $FI->Fold();
 						my $fold_type = $Fold->type();
 
@@ -1808,12 +1808,11 @@ $i->display() if DEBUG;
 					if ( $$specs{"chkOverrideEquipment-$form-$qty_index"} ne 'Y' ) {
 						$$specs{"ddmEquipment-$form-$qty_index"} = '';
 					} elsif ( $$specs{"ddmEquipment-$form-$qty_index"} ) {
-						@no_outputs = sets::exclude( [ "ddmEquipment-$form-$qty_index" ], \@no_outputs );
 						$status = 'uncalculated';
 						$$specs{alert} .= "Unable to fold form $form qty $qty_index<br/>";
 					} # end if
 				} # end if
-				if ( $results{Status} eq 'uncalculated' ) {
+				if ( $$results{Status} eq 'uncalculated' ) {
 					$status = 'uncalculated';
 				} # end if
 				if ( (!$previous_imposition) and ( new openprint::Equipment( $$specs{"ddmEquipment-$form-$qty_index"} )->strid() eq $$sig_specs{'ddmPress'.$qty_index} ) ) {

@@ -5254,14 +5254,14 @@ sub calc_price {
 			$openprint::log->debug("Using cached folding");
 		} else {
 #my @all_impositions = ( @{$other_impositions}, $Imposition );
-			%folding_results = openprint::Estimating::Folding::signature_calc( $Project, $specs, $$project{FoldingSpecs}, $qty_index, $Imposition, $other_impositions, $project );
-			$$Imposition{folding_results} = \%folding_results;
+			$folding_results = openprint::Estimating::Folding::signature_calc( $Project, $specs, $$project{FoldingSpecs}, $qty_index, $Imposition, $other_impositions, $project );
+			$$price{folding_results} = $$Imposition{folding_results} = $folding_results;
 		} # end if
 
 		delete $$Imposition{Folder};
-		if ( ( $folding_results{Status} eq 'uncalculated' ) or ( ( ! $folding_results{Equipment} ) and ( $$project{FoldingSpecs}{"chkOverrideEquipment-$$specs{SignatureIndex}-$qty_index"} ne 'Y' ) ) ) {
+		if ( ( $$folding_results{Status} eq 'uncalculated' ) or ( ( ! $$folding_results{Equipment} ) and ( $$project{FoldingSpecs}{"chkOverrideEquipment-$$specs{SignatureIndex}-$qty_index"} ne 'Y' ) ) ) {
 # do not want an invalid fold style to win out unless there are no other valid signatures.
-			$price{'Folding Breakdown'} .= sprintf('Unable to fold<br/>'.$folding_results{Breakdown});
+			$price{'Folding Breakdown'} .= sprintf('Unable to fold<br/>'.$$folding_results{Breakdown});
 			$price{'Comparison Cost'} += 10000000; 
 
 			# WHy are we doing this?	
@@ -5270,13 +5270,13 @@ sub calc_price {
 			} # end if
 			$$Imposition{Folds} = [];
 		} else {
-			if ( $folding_results{Equipment} ) {
+			if ( $$folding_results{Equipment} ) {
 
 				# Scoring needs this.
 				$$project{FoldingSpecs}{"ddmEquipment-$$specs{SignatureIndex}-$qty_index"} = $folding_results{Equipment}->id();
 				
-				if ( $folding_results{Equipment}->id() == $Press->id() ) {
-					my $FI = $folding_results{FoldedImpositions}[0];
+				if ( $$folding_results{Equipment}->id() == $Press->id() ) {
+					my $FI = $$folding_results{FoldedImpositions}[0];
 					if ( ! $FI ) {
 						$openprint::log->error("WTF FI is empty! maybe caching issue? Fold equipment is FI: " . $FI);
 						
@@ -5290,16 +5290,16 @@ sub calc_price {
 					$$specs{Runspeed} = $price{Runspeed} = $$FI{runspeed} if $$FI{runspeed};
 					} # end if
 				} # end if
-				$$Imposition{Folder} = $folding_results{Equipment};
+				$$Imposition{Folder} = $$folding_results{Equipment};
 #$$Imposition{FoldingCost} = $folding_results{Price};
 
-				$$Imposition{Folds} = $folding_results{FoldedImpositions};
-				foreach my $FI ( @{$folding_results{FoldedImpositions}} ) {
+				$$Imposition{Folds} = $$folding_results{FoldedImpositions};
+				foreach my $FI ( @{$$folding_results{FoldedImpositions}} ) {
 					my $Fold = $$FI{Fold};
 					$price{'Folding Breakdown'} .= sprintf('Folding %d %s (%d out) %d/hr Price: $%.2f on %s<br/>', $FI->quantity(), $Fold->name(), @$FI{'imposition','runspeed','price'}, $Fold->Equipment()->name() );
 				} # end foreach
-				$price{'Folding Breakdown'} .= sprintf('Folding total: $%.2f<br/>', $folding_results{Price} ) if @{$folding_results{FoldedImpositions}} > 1;
-				#$price{'Folding Breakdown'} .= $folding_results{Breakdown};
+				$price{'Folding Breakdown'} .= sprintf('Folding total: $%.2f<br/>', $$folding_results{Price} ) if @{$$folding_results{FoldedImpositions}} > 1;
+				#$price{'Folding Breakdown'} .= $$folding_results{Breakdown};
 			} else {
 $openprint::log->warn("No folding equipment");
 			} # end if
