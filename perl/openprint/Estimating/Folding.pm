@@ -64,10 +64,8 @@ sub variables {
 						'FoldPageQty', 'FoldQty', 'FoldImposition', 'FoldColumns', 'FoldRows', 'FoldType', 'FoldFolds', 'FoldAngles', 'FoldRunspeed', 'FoldImpressions',
 				);
 			} # end foreach
-#foreach my $fold_type ( keys %fold_types ) {
-#} # end foreach
-		} # end foreach
-	} # end foreach
+		} # end foreach qty_index
+	} # end foreach signature
 
 	return @v;
 } # end sub variables
