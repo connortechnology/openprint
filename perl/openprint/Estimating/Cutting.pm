@@ -591,7 +591,7 @@ sub signature_calc {
 #$openprint::log->debug("Folding impos " . @folding_impositions  . ' eq ' . @my_equipment );
 
 	if ( $stitching_specs and $stitching_imposition) {
-		if ( $$Imposition{image_orientation} == Imposition::Horizontal ) {
+		if ( $$Imposition{image_orientation} == openprint::Imposition::Horizontal ) {
 			$stitching_imposition = $$Imposition{columns} if $stitching_imposition > $$Imposition{columns};
 		} else {
 			$stitching_imposition = $$Imposition{rows} if $stitching_imposition > $$Imposition{rows};
@@ -804,18 +804,18 @@ $openprint::log->debug("Cutting because not folding or can't cut on folder $fold
 						# assumptions: 
 						foreach my $folding_imposition ( @folding_impositions ) {
 							$folding_imposition->display('getting stitching cuts from') if DEBUG;
-							if ( $$I{image_orientation} == Imposition::Vertical ) {
+							if ( $$I{image_orientation} == openprint::Imposition::Vertical ) {
 								if ( $$folding_imposition{columns} > 1 ) {
 									$openprint::log->error("Can't do that on the stitcher");
 								}
 								$vertical_cuts += 1; # Face trim
 								$horizontal_cuts += 1 + $$folding_imposition{rows};
 								if ( $$sig_specs{'ddmBleedSize'.$qty_index} and  
-											( $$I{image_orientation} == Imposition::Vertical ) and ( $$sig_specs{BleedTop} or $$sig_specs{BleedBottom} ) 
+											( $$I{image_orientation} == openprint::Imposition::Vertical ) and ( $$sig_specs{BleedTop} or $$sig_specs{BleedBottom} ) 
 								   ) {
 									$horizontal_cuts += $$folding_imposition{rows}-1;
 								} # end if
-							} elsif ( $$I{image_orientation} == Imposition::Horizontal ) {
+							} elsif ( $$I{image_orientation} == openprint::Imposition::Horizontal ) {
 								if ( $$folding_imposition{rows} > 1 ) {
 									$openprint::log->error("Can't do that on the stitcher");
 								}
@@ -823,7 +823,7 @@ $openprint::log->debug("Cutting because not folding or can't cut on folder $fold
 								$vertical_cuts += 1 + $$folding_imposition{columns};
 
 								if ( $$sig_specs{'ddmBleedSize'.$qty_index} and  
-										( $$I{image_orientation} == Imposition::Horizontal ) and ( $$sig_specs{BleedTop} or $$sig_specs{BleedBottom} ) 
+										( $$I{image_orientation} == openprint::Imposition::Horizontal ) and ( $$sig_specs{BleedTop} or $$sig_specs{BleedBottom} ) 
 								   ) {
 									$vertical_cuts += $$folding_imposition{columns}-1;
 								} # end if
@@ -846,14 +846,14 @@ $openprint::log->debug("Cutting because not folding or can't cut on folder $fold
 								my $rows = $$folding_imposition{rows} ?$$folding_imposition{rows} : $$I{rows};
 								$horizontal_cuts += 1 + $rows;#2 + $$I{rows}-1
 								if ( $$sig_specs{'ddmBleedSize'.$qty_index} and ( 
-											( $$I{image_orientation} == Imposition::Horizontal and ( $$sig_specs{BleedLeft} or $$sig_specs{BleedRight} ) ) or
-											( $$I{image_orientation} == Imposition::Vertical and ( $$sig_specs{BleedTop} or $$sig_specs{BleedBottom} ) ) )
+											( $$I{image_orientation} == openprint::Imposition::Horizontal and ( $$sig_specs{BleedLeft} or $$sig_specs{BleedRight} ) ) or
+											( $$I{image_orientation} == openprint::Imposition::Vertical and ( $$sig_specs{BleedTop} or $$sig_specs{BleedBottom} ) ) )
 								   ) {
 									$horizontal_cuts += $rows-1;
 								} # end if
 								if ( 
-										( $$I{image_orientation} == Imposition::Vertical and ( $$sig_specs{BleedLeft} or $$sig_specs{BleedRight} ) ) or
-										( $$I{image_orientation} == Imposition::Horizontal and ( $$sig_specs{BleedTop} or $$sig_specs{BleedBottom} ) )
+										( $$I{image_orientation} == openprint::Imposition::Vertical and ( $$sig_specs{BleedLeft} or $$sig_specs{BleedRight} ) ) or
+										( $$I{image_orientation} == openprint::Imposition::Horizontal and ( $$sig_specs{BleedTop} or $$sig_specs{BleedBottom} ) )
 								   ) {
 									$vertical_cuts += $columns-1;
 								} # end if
@@ -868,7 +868,7 @@ $openprint::log->debug("Cutting because not folding or can't cut on folder $fold
 				} # end if
 				foreach my $side ( keys %pretrim_sides ) {
 					# What I am thinking here, is that if it was 2 out, the in between head trim would already have been done, so there is just 1 to do
-					if ( $$I{image_orientation} == Imposition::Vertical ) {
+					if ( $$I{image_orientation} == openprint::Imposition::Vertical ) {
 						$horizontal_cuts += 1;
 					} else {
 						$vertical_cuts += 1;
@@ -884,16 +884,16 @@ $openprint::log->debug("Not a book") if DEBUG;
 				my $columns =  $$I{columns};
 				$vertical_cuts += 1+$columns;# = 2+$$I{columns}-1
 				if (
-						( $$I{image_orientation} == Imposition::Vertical and ( $$sig_specs{BleedLeft} or $$sig_specs{BleedRight} ) ) or
-						( $$I{image_orientation} == Imposition::Horizontal and ( $$sig_specs{BleedTop} or $$sig_specs{BleedBottom} ) )
+						( $$I{image_orientation} == openprint::Imposition::Vertical and ( $$sig_specs{BleedLeft} or $$sig_specs{BleedRight} ) ) or
+						( $$I{image_orientation} == openprint::Imposition::Horizontal and ( $$sig_specs{BleedTop} or $$sig_specs{BleedBottom} ) )
 				   ) {
 					$vertical_cuts += $columns-1;
 				} # end if
 				my $rows = $$I{rows};
 				$horizontal_cuts += 1 + $rows;#2 + $$I{rows}-1
 				if ( $$sig_specs{'ddmBleedSize'.$qty_index} and ( 
-							( $$I{image_orientation} == Imposition::Horizontal and ( $$sig_specs{BleedLeft} or $$sig_specs{BleedRight} ) ) or
-							( $$I{image_orientation} == Imposition::Vertical and ( $$sig_specs{BleedTop} or $$sig_specs{BleedBottom} ) ) )
+							( $$I{image_orientation} == openprint::Imposition::Horizontal and ( $$sig_specs{BleedLeft} or $$sig_specs{BleedRight} ) ) or
+							( $$I{image_orientation} == openprint::Imposition::Vertical and ( $$sig_specs{BleedTop} or $$sig_specs{BleedBottom} ) ) )
 				   ) {
 					$horizontal_cuts += $rows-1;
 				} # end if
@@ -909,14 +909,14 @@ $openprint::log->debug("Not a book") if DEBUG;
 							$dutch_horizontal_cuts += 1;
 						} # end if
 					if ( 
-							( $$I{image_orientation} == Imposition::Vertical and ( $$sig_specs{BleedTop} or $$sig_specs{BleedBottom} ) ) or
-							( $$I{image_orientation} == Imposition::Horizontal and ( $$sig_specs{BleedLeft} or $$sig_specs{BleedRight} ) )
+							( $$I{image_orientation} == openprint::Imposition::Vertical and ( $$sig_specs{BleedTop} or $$sig_specs{BleedBottom} ) ) or
+							( $$I{image_orientation} == openprint::Imposition::Horizontal and ( $$sig_specs{BleedLeft} or $$sig_specs{BleedRight} ) )
 					   ) {
 						$dutch_vertical_cuts += $$I{dutch_columns}-1;
 					} # end if
 					if ( 
-							( $$I{image_orientation} == Imposition::Horizontal and ( $$sig_specs{BleedTop} or $$sig_specs{BleedBottom} ) ) or
-							( $$I{image_orientation} == Imposition::Vertical and ( $$sig_specs{BleedLeft} or $$sig_specs{BleedRight} ) )
+							( $$I{image_orientation} == openprint::Imposition::Horizontal and ( $$sig_specs{BleedTop} or $$sig_specs{BleedBottom} ) ) or
+							( $$I{image_orientation} == openprint::Imposition::Vertical and ( $$sig_specs{BleedLeft} or $$sig_specs{BleedRight} ) )
 					   ) {
 						$dutch_horizontal_cuts += $$I{dutch_rows}-1;
 					} # end if

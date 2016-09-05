@@ -3,7 +3,7 @@ package openprint::imposition;
 use POSIX qw{ ceil };
 use Carp;
 
-require openprint::Imposition;
+use openprint::Imposition;
 
 use constant DEBUG => 0;
 use constant DEBUG_CONVERT => 0;
@@ -37,9 +37,9 @@ use vars qw( %blocks );
 sub fit {
 	my ( $object_width, $object_height, $space_width, $space_height ) = @_;
 	my $imp1 = new openprint::Imposition;
-	$$imp1{image_orientation} = Imposition::Vertical;
+	$$imp1{image_orientation} = openprint::Imposition::Vertical;
 	my $imp2 = new openprint::Imposition;
-	$$imp2{image_orientation} = Imposition::Horizontal;
+	$$imp2{image_orientation} = openprint::Imposition::Horizontal;
 	calc_setup( $imp1, $object_width, $object_height, $space_width, $space_height );
 	calc_setup( $imp2, $object_height, $object_width, $space_width, $space_height );
 	return $$imp1{imposition} > $$imp2{imposition} ? $imp1 : $imp2;
@@ -62,7 +62,7 @@ sub calc_dutch {
 	my ( $setup, $space_width, $space_height, $specs ) = @_;
 #$openprint::log->debug("Trying dutch:") if DEBUG;
 	my ( $image_width, $image_height );
-	if ( $$setup{image_orientation} == Imposition::Vertical ) {
+	if ( $$setup{image_orientation} == openprint::Imposition::Vertical ) {
 		( $image_width, $image_height ) = @$setup{'image_width','image_height'};
 	} else {
 		( $image_width, $image_height ) = @$setup{'image_height','image_width'};
@@ -253,7 +253,7 @@ $openprint::log->debug("Not Pretrimming on $$Press{strid}") if DEBUG;
 	$$setup1{sides} = $$specs{print_sides};
 	$setup1->Paper( $Paper->clone() );
 	$setup1->runstyle( $run_style );
-	$setup1->image_orientation(Imposition::Vertical);
+	$setup1->image_orientation(openprint::Imposition::Vertical);
 	$setup1->spread_size( $$specs{txtSpreadSize} );
 	$setup1->bleed_size( $bleed_size );
 	$setup1->spread_rows(1);
@@ -276,7 +276,7 @@ $openprint::log->debug("Not Pretrimming on $$Press{strid}") if DEBUG;
 	$$setup2{sides} = $$specs{print_sides};
 	$setup2->Paper( $Paper->clone() );
 	$setup2->runstyle( $run_style );
-	$setup2->image_orientation(Imposition::Horizontal);
+	$setup2->image_orientation(openprint::Imposition::Horizontal);
 	$setup2->spread_size( $$specs{txtSpreadSize} );
 	$setup2->bleed_size( $bleed_size );
 	$setup2->spread_rows(1);
@@ -1045,7 +1045,7 @@ $openprint::log->debug("Considering sig size: $signature_size") if DEBUG_CONVERT
 				$newimp->columns($cols);
 				$$newimp{start_columns} = $cols;
 				#$newimp->imposition($rows * $cols);
-				if ( $$newimp{image_orientation} == Imposition::Vertical ) {
+				if ( $$newimp{image_orientation} == openprint::Imposition::Vertical ) {
 					$newimp->image_width( $$newimp{image_width} * $col );
 					$newimp->image_height( $$newimp{image_height} * $row );
 				} else {
@@ -1229,7 +1229,7 @@ sub cut {
 		my $i2 = $I->copy();
 		$i2->rows( $I->dutch_rows() );
 		$i2->columns( $I->dutch_columns() );
-		$i2->image_orientation( $I->image_orientation() == Imposition::Vertical ? Imposition::Horizontal : Imposition::Vertical );
+		$i2->image_orientation( $I->image_orientation() == openprint::Imposition::Vertical ? openprint::Imposition::Horizontal : openprint::Imposition::Vertical );
 		$i2->dutch_rows( 0 );
 		$i2->dutch_columns( 0 );
 		push @Results, $i1, $i2;

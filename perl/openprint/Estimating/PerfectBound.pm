@@ -188,11 +188,11 @@ $openprint::log->debug("Fold pq($$FI{page_quantity}) pages($$FI{pages}) ($$Fold{
                 $I->display("Setting imposition to 1 due to odd impositions") if DEBUG;
                 $results{Breakdown} .= "Setting imposition to 1 due to odd impositions<br/>";
                 $imposition = 1;
-            } elsif ($$I{image_orientation} == Imposition::Vertical and $$I{rows} % 2 ) {
+            } elsif ($$I{image_orientation} == openprint::Imposition::Vertical and $$I{rows} % 2 ) {
                 $I->display("Setting imposition to 1 due to Vertial and odd rows") if DEBUG;
                 $results{Breakdown} .= "Setting imposition to 1 due to vertical and odd rows<br/>";
                 $imposition = 1;
-            } elsif ( ($$I{image_orientation} == Imposition::Horizontal ) and ( $$I{columns} % 2 ) ) {
+            } elsif ( ($$I{image_orientation} == openprint::Imposition::Horizontal ) and ( $$I{columns} % 2 ) ) {
                 $I->display("Setting imposition to 1 due to Horizal and odd cols") if DEBUG or 1;
                 $results{Breakdown} .= "Setting imposition to 1 due to Horizontal and odd cols<br/>";
                 $imposition = 1;
@@ -214,10 +214,10 @@ $openprint::log->debug("Fold pq($$FI{page_quantity}) pages($$FI{pages}) ($$Fold{
                 if ( $$I{imposition} % 2 ) {
                     $results{alert} .= ' imposition not multiple of 2out<br/>';
                 } # end if
-                if ( ($$I{image_orientation} == Imposition::Vertical and $$I{rows} % 2 ) ) {
+                if ( ($$I{image_orientation} == openprint::Imposition::Vertical and $$I{rows} % 2 ) ) {
                     $results{alert} .= ' vertical and rows not multiple of 2out<br/>';
                 } # end if
-                if ( $$I{image_orientation} == Imposition::Horizontal and $$I{columns} % 2 ) {
+                if ( $$I{image_orientation} == openprint::Imposition::Horizontal and $$I{columns} % 2 ) {
                     $results{alert} .= ' horizontal and cols not multiple of 2out<br/>';
                 } # end if
             } # end foreach

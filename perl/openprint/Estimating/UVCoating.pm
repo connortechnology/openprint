@@ -243,7 +243,7 @@ $i1->display('Cut to 1');
 		my $i2 = $I->copy();
 		$i2->rows( $I->dutch_rows() );
 		$i2->columns( $I->dutch_columns() );
-		$i2->image_orientation( $I->image_orientation() == Imposition::Vertical ? Imposition::Horizontal : Imposition::Vertical );
+		$i2->image_orientation( $I->image_orientation() == openprint::Imposition::Vertical ? openprint::Imposition::Horizontal : openprint::Imposition::Vertical );
 		$i2->dutch_rows( 0 );
 		$i2->dutch_columns( 0 );
 $i1->display('Cut to 1');

@@ -442,7 +442,7 @@ $openprint::log->error("Scoring passed an invalid imposition");
 						$i->dutch_columns(0);
 						$i->dutch_rows(0);
 						$$i{quantity} = 1;
-						$i->image_orientation($$I{image_orientation} == Imposition::Vertical ? Imposition::Horizontal : Imposition::Vertical);
+						$i->image_orientation($$I{image_orientation} == openprint::Imposition::Vertical ? openprint::Imposition::Horizontal : openprint::Imposition::Vertical);
 						push @Impositions, $i;
 					}
 					$modified = 1;
@@ -626,7 +626,7 @@ sub get_price {
 	my $vertical_length = 0;
 	my %vertical_price;
 
-	if ( $$I{image_orientation} == Imposition::Vertical ) {
+	if ( $$I{image_orientation} == openprint::Imposition::Vertical ) {
 		if ( $vertical ) {
 			$vertical_rule = $vertical * $$I{columns};
 			$vertical_length = $vertical_rule * $$I{layout_height};
@@ -635,7 +635,7 @@ sub get_price {
 			$horizontal_rule = $horizontal * $$I{rows};
 			$horizontal_length = $horizontal_rule * $I->layout_width();
 		} # end if
-	} elsif ( $$I{image_orientation} == Imposition::Horizontal ) {
+	} elsif ( $$I{image_orientation} == openprint::Imposition::Horizontal ) {
 		if ( $horizontal ) {
 			$vertical_rule = $horizontal * $$I{rows};
 			$vertical_length = $vertical_rule * $I->layout_width();
@@ -953,7 +953,7 @@ sub fits_on_equipment {
 			if ( $vertical_scores and $horizontal_scores ) {
 # Do nothing, we already know it fits on the machine, and it has to go one way or another.
 			} elsif ( $vertical_scores ) {
-				if ( $I->image_orientation() == Imposition::Vertical ) {
+				if ( $I->image_orientation() == openprint::Imposition::Vertical ) {
 					if ( $height >= $max_feed_width ) {
 						return "Scoring no good due to max feed width($max_feed_width) on height (".$height.").<br/>";
 					} # end if
@@ -963,7 +963,7 @@ sub fits_on_equipment {
 					} # end if
 				} # end if
 			} elsif ( $horizontal_scores ) {
-				if ( $I->image_orientation() == Imposition::Vertical ) {
+				if ( $I->image_orientation() == openprint::Imposition::Vertical ) {
 					if ( $width >= $max_feed_width ) {
 						return "Scoring no good due to max feed width($max_feed_width) on width (".$width.").<br/>";
 					} # end if

@@ -5244,18 +5244,18 @@ sub calc_price {
 #$run_speed = $$std_speed{value} if ! $run_speed;
 #$openprint::log->debug("Initial Runspeed: $run_speed, standard: $$std_speed{value}$$std_speed{units}");
 
-	my %folding_results;
+	my $folding_results;
 
 # Has to be NEED because they always leave folding out, and it chooses dumb impositions
 	if ( $$project{NeedFolding} ) {
 		my $time = gettimeofday() if DEBUG;
 		if ( $$Imposition{folding_results} ) {
-			%folding_results = %{$$Imposition{folding_results}};
+			$folding_results = $$Imposition{folding_results};
 			$openprint::log->debug("Using cached folding");
 		} else {
 #my @all_impositions = ( @{$other_impositions}, $Imposition );
 			$folding_results = openprint::Estimating::Folding::signature_calc( $Project, $specs, $$project{FoldingSpecs}, $qty_index, $Imposition, $other_impositions, $project );
-			$$price{folding_results} = $$Imposition{folding_results} = $folding_results;
+			$price{folding_results} = $$Imposition{folding_results} = $folding_results;
 		} # end if
 
 		delete $$Imposition{Folder};
@@ -5273,7 +5273,7 @@ sub calc_price {
 			if ( $$folding_results{Equipment} ) {
 
 				# Scoring needs this.
-				$$project{FoldingSpecs}{"ddmEquipment-$$specs{SignatureIndex}-$qty_index"} = $folding_results{Equipment}->id();
+				$$project{FoldingSpecs}{"ddmEquipment-$$specs{SignatureIndex}-$qty_index"} = $$folding_results{Equipment}->id();
 				
 				if ( $$folding_results{Equipment}->id() == $Press->id() ) {
 					my $FI = $$folding_results{FoldedImpositions}[0];
@@ -5307,15 +5307,15 @@ $openprint::log->warn("No folding equipment");
 		if ( DEBUG and tv_interval([$time])*1000 > 10 ) {
 			$openprint::log->debug("Folding Calculation time: " . ( sprintf('%.4f', tv_interval( [$time])*1000) ) .' usecs' );
 			$Imposition->display('Slow Folding');
-			$openprint::log->debug( $folding_results{Breakdown} );
+			$openprint::log->debug( $$folding_results{Breakdown} );
 		} # end if
-		$price{FoldingImposition} = $folding_results{Imposition};
-		$$Imposition{FoldingImposition} = $folding_results{Imposition};
+		$price{FoldingImposition} = $$folding_results{Imposition};
+		$$Imposition{FoldingImposition} = $$folding_results{Imposition};
 #$openprint::log->debug("FOlding IMPOSITION $folding_results{Imposition}");
 
-		$price{'Comparison Cost'} += $folding_results{Price};
-		$price{'Comparison Log'} .= "Folding: " . $folding_results{Comparison} . ' total: ' . $price{'Comparison Cost'} .'<br/>' if COMPARISON_LOG;
-		#$price{'Comparison Log'} .= "Folding: " . $folding_results{Comparison} . ' total: ' . $price{'Comparison Cost'} .'<br/>' if COMPARISON_LOG;
+		$price{'Comparison Cost'} += $$folding_results{Price};
+		$price{'Comparison Log'} .= "Folding: " . $$folding_results{Comparison} . ' total: ' . $price{'Comparison Cost'} .'<br/>' if COMPARISON_LOG;
+		#$price{'Comparison Log'} .= "Folding: " . $$folding_results{Comparison} . ' total: ' . $price{'Comparison Cost'} .'<br/>' if COMPARISON_LOG;
 	} # end if NeedFolding
 
 	if ( $$services{SpinePaste} ) {
@@ -5328,7 +5328,7 @@ $openprint::log->warn("No folding equipment");
 		} # end if
 	#my $starttime = gettimeofday();
 
-		my $results = openprint::Estimating::SpinePaste::signature_calc( $Project, $service_index, $Imposition, $$project{SpinePasteSpecs}, $qty_index, \%folding_results );
+		my $results = openprint::Estimating::SpinePaste::signature_calc( $Project, $service_index, $Imposition, $$project{SpinePasteSpecs}, $qty_index, $folding_results );
 		if ( $$results{Status} eq 'uncalculated' ) {
 			$price{'SpinePaste Breakdown'} .= "SpinePaste error: $$results{alert}<br/>";
 			$price{'Comparison Cost'} += 1000000; # Can't SP this on
@@ -5462,7 +5462,7 @@ $openprint::log->warn("No folding equipment");
 	} # end if
 
 	# Now we know the bindery overs
-	my $bindery_overs = sets::max( $folding_results{MakeReadyOvers} + $folding_results{RunOvers}, $scoring_results{Overs}, $uv_results{Overs}, $diecutting_results{Overs}, $price{'Cutting Overs'} );
+	my $bindery_overs = sets::max( $$folding_results{MakeReadyOvers} + $$folding_results{RunOvers}, $scoring_results{Overs}, $uv_results{Overs}, $diecutting_results{Overs}, $price{'Cutting Overs'} );
 	$bindery_overs *= $Paper->parts() if $Paper->parts();
 	$overs = $bindery_overs if $bindery_overs > $overs;
 	$overs = $min_overs if $overs < $min_overs;
@@ -5689,8 +5689,8 @@ $openprint::log->warn("No folding equipment");
 			'Total Overs'				=>	$total_overs,
 			'Weight'					=>	$weight,
 			'FM Overs'					=>	$fm_overs,
-			'FoldingMakeReadyOvers'		=>	$folding_results{MakeReadyOvers},
-			'FoldingRunOvers'			=>	$folding_results{RunOvers},
+			'FoldingMakeReadyOvers'		=>	$$folding_results{MakeReadyOvers},
+			'FoldingRunOvers'			=>	$$folding_results{RunOvers},
 			'ScoringOvers'				=>	$scoring_results{Overs},
 			'DieCuttingOvers'			=>	$diecutting_results{Overs},
 			'UVOvers'					=>	$uv_results{Overs},

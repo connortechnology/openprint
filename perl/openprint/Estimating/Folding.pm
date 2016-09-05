@@ -379,10 +379,10 @@ sub impositions {
 	$Fold = $Imposition->Press()->Fold(\%find);
 	return @imps if ! $Fold;
 
-	if ( $Fold->min_width() and $Fold->min_width() > ( $$Imposition{image_orientation} == Imposition::Vertical ? $Imposition->image_width() : $Imposition->image_height() ) ) {
+	if ( $Fold->min_width() and $Fold->min_width() > ( $$Imposition{image_orientation} == openprint::Imposition::Vertical ? $Imposition->image_width() : $Imposition->image_height() ) ) {
 		my $I = $Imposition->copy();
 
-		if ( $$I{image_orientation} == Imposition::Vertical ) {
+		if ( $$I{image_orientation} == openprint::Imposition::Vertical ) {
 			my $space = $Fold->min_width() - $I->image_width();
 			$I->cropmark_left(0) if $space >= $I->cropmark_left();
 			$I->cropmark_right(0) if $space >= $I->cropmark_right();
@@ -597,7 +597,7 @@ $openprint::log->debug("folds from sigimpo") if DEBUG;
 	if ( $$sig_specs{txtSignatureType} and $$sig_specs{txtSpreadSize} == 2 ) {
 
 		# Is this right? What does the orientation have to do with the fold direction? Not much, but the last fold is the spine
-		if ( $$SignatureImposition{image_orientation} == Imposition::Vertical ) {
+		if ( $$SignatureImposition{image_orientation} == openprint::Imposition::Vertical ) {
 			$width_folds = 1;
 		} else {
 			$height_folds = 1;
@@ -656,7 +656,7 @@ $openprint::log->debug("folds from sigimpo") if DEBUG;
 					$i->dutch_columns(0);
 					$i->dutch_rows(0);
 					$i->quantity(1);
-					$i->image_orientation($$I{image_orientation} == Imposition::Vertical ? Imposition::Horizontal : Imposition::Vertical);
+					$i->image_orientation($$I{image_orientation} == openprint::Imposition::Vertical ? openprint::Imposition::Horizontal : openprint::Imposition::Vertical);
 					push @Impositions, $i;
 				}
 				$modified = 1;
@@ -792,11 +792,11 @@ $openprint::log->debug("folds from sigimpo") if DEBUG;
 						$openprint::log->debug("Can't do that impo cuz impo > 3 cols > 1 and rows > 1") if DEBUG;
 						$complete = 0;
 						last;
-					} elsif ( ( $$Imposition{columns} > 1 ) and ( $$Imposition{image_orientation} == Imposition::Vertical ) ) {
+					} elsif ( ( $$Imposition{columns} > 1 ) and ( $$Imposition{image_orientation} == openprint::Imposition::Vertical ) ) {
 						$openprint::log->debug("Can't do that impovertical and columns $$Imposition{columns} > 1") if DEBUG;
 						$complete = 0;
 						last;
-					} elsif ( $$Imposition{rows} > 1 and ( $$Imposition{image_orientation} == Imposition::Horizontal ) ) {
+					} elsif ( $$Imposition{rows} > 1 and ( $$Imposition{image_orientation} == openprint::Imposition::Horizontal ) ) {
 						$openprint::log->debug("Can't do that impo horizontal and rows $$Imposition{rows} > 1") if DEBUG;
 						$complete = 0;
 						last;
@@ -827,7 +827,7 @@ $openprint::log->debug("folds from sigimpo") if DEBUG;
 
 					my $Fold = $Equipment->Fold( {
 							pages			=>	$Imposition->pages(),
-							#( $$Imposition{image_orientation} == Imposition::Vertical ? (
+							#( $$Imposition{image_orientation} == openprint::Imposition::Vertical ? (
 								   page_columns	=>	$Imposition->page_columns(),
 								   page_rows	=>	$Imposition->page_rows(),
 								  #) : (
@@ -878,7 +878,7 @@ $openprint::log->debug("Templatetype: $$sig_specs{rdbTemplateType}") if DEBUG;
 						} # end if
 							
 						my $Fold = $Equipment->Fold({
-							#( $$Imposition{image_orientation} == Imposition::Vertical ? (
+							#( $$Imposition{image_orientation} == openprint::Imposition::Vertical ? (
 									page_columns	=>	$Imposition->page_columns(),
 									page_rows		=>	$Imposition->page_rows(),
 								#) : (
@@ -911,7 +911,7 @@ $openprint::log->debug("Has a fold, doing extra checks") if DEBUG;
 									$width_size = $$Imposition{object_width};
 									$height_size = $$Imposition{object_height};
 	
-								} elsif ( $Imposition->image_orientation() == Imposition::Vertical ) {
+								} elsif ( $Imposition->image_orientation() == openprint::Imposition::Vertical ) {
 									$width_size = $$SignatureImposition{columns} != $$Imposition{columns} ? $Imposition->layout_width() : $Imposition->sheet_width();
 									$height_size = $$SignatureImposition{rows} != $$Imposition{rows} ? $Imposition->layout_height() : $Imposition->sheet_height();
 								} else {
@@ -1002,7 +1002,7 @@ $openprint::log->debug("No Fold") if DEBUG;
 							$openprint::log->debug("Fits") if DEBUG;
 							my $Fold = $Equipment->Fold({
 									pages			=>	$Imposition->pages(),
-									#( $$Imposition{image_orientation} == Imposition::Vertical ? (
+									#( $$Imposition{image_orientation} == openprint::Imposition::Vertical ? (
 									   page_columns	=>	$Imposition->page_columns(),
 									   page_rows	=>	$Imposition->page_rows(),
 									#) : (
@@ -1067,7 +1067,7 @@ if ( 1 ) {
 # decide whether it's running portrait or landscape basessd on which way the folds go
 									$openprint::log->debug("Has max feed width width_folds: $width_folds height_folds: $height_folds final_width $$sig_specs{txtWidth} final_heigh $$sig_specs{txtHeight} max_feed $max_feed_width") if DEBUG;
 									if ( ( $width_folds and ! $height_folds ) or ( $width_folds == $$Fold{folds} and $height_folds == $$Fold{angles} and ( $width_folds < $height_folds ) ) ) {
-										if ( $$Imposition{image_orientation} == Imposition::Vertical ) {
+										if ( $$Imposition{image_orientation} == openprint::Imposition::Vertical ) {
 # If folds are on width, we grip on height...
 											if ( $Imposition->layout_height() >= $max_feed_width ) {
 												$fits = "Fold no good due to max feed width ($max_feed_width). $width_folds x $height_folds size: ($$Imposition{layout_height}).";
@@ -1080,7 +1080,7 @@ if ( 1 ) {
 											} # end if
 										} # end if
 									} elsif ( ( $height_folds and ! $width_folds ) or ( $height_folds == $$Fold{folds} and $width_folds == $$Fold{angles} ) ) {
-										if ( $$Imposition{image_orientation} == Imposition::Vertical ) {
+										if ( $$Imposition{image_orientation} == openprint::Imposition::Vertical ) {
 											if ( $Imposition->layout_width() >= $max_feed_width ) {
 												$fits = "Fold no good due to max feed width ($max_feed_width). $width_folds x $height_folds size: ($$Imposition{layout_width}).";
 												$Fold = undef;
@@ -2001,7 +2001,7 @@ sub reduce_impositions {
 					my $mod_cols = $$I2{columns} % 2;
 					my $mod_rows = $$I2{rows} % 2;
 
-					if ( ( ( $$I2{image_orientation} == Imposition::Horizontal ) and ( $$I2{rows} > 1 ) ) or ( $$I2{columns} == 1 ) ) {
+					if ( ( ( $$I2{image_orientation} == openprint::Imposition::Horizontal ) and ( $$I2{rows} > 1 ) ) or ( $$I2{columns} == 1 ) ) {
 						if ( ! $mod_rows ) {	
 							$I2->rows( $$I2{rows}/2 );
 							$I2->quantity( $$I2{quantity} * 2 );
@@ -2084,14 +2084,14 @@ sub reduce_pages {
 
 sub cut_imposition {
 	my ( $I ) = @_;
-	if ( ( $$I{spread_size} >= 4 ) and ( $$I{image_orientation} == Imposition::Horizontal ) and ( $$I{rows} > 1 ) ) {
+	if ( ( $$I{spread_size} >= 4 ) and ( $$I{image_orientation} == openprint::Imposition::Horizontal ) and ( $$I{rows} > 1 ) ) {
 		$openprint::log->debug(sprintf("1 Cutting imposition down from %dx%d=%dout to %d %dx1=%d ", @$I{'columns','rows','imposition'}, @$I{'rows','columns','columns'} ) ) if DEBUG;
 		# For folding purposes, can only fold where spines are aligned
 		return map { my $i = $I->copy(); $i->rows(1); $i; } ( 1 .. $$I{rows} );
-	} elsif ( ( $$I{spread_size} >= 4 ) and ( $$I{image_orientation} == Imposition::Vertical ) and ( $$I{columns} > 1 ) ) {
+	} elsif ( ( $$I{spread_size} >= 4 ) and ( $$I{image_orientation} == openprint::Imposition::Vertical ) and ( $$I{columns} > 1 ) ) {
 		$openprint::log->debug(sprintf("2 Cutting imposition down from %dx%d=%dout to %d 1x%d=%d ", @$I{'columns','rows','imposition'}, @$I{'columns','rows','rows'} ) ) if DEBUG;
 		return map { my $i = $I->copy(); $i->columns(1); $i; } ( 1 .. $$I{columns} );
-	} elsif ( ( $$I{columns} > $$I{rows} ) or ( ( $$I{columns} == $$I{rows} ) and ( $$I{image_orientation} == Imposition::Vertical ) ) ) {
+	} elsif ( ( $$I{columns} > $$I{rows} ) or ( ( $$I{columns} == $$I{rows} ) and ( $$I{image_orientation} == openprint::Imposition::Vertical ) ) ) {
 		my ( $i1, $i2 ) = ( $I->copy(), $I->copy );
 		$i1->columns(int($$I{columns}/2 ));
 		$i2->columns( $$I{columns} - $$i1{columns} );
@@ -2112,7 +2112,7 @@ sub cut_spreads {
 	my @results;
 
 	# Something like doing 16pg as 2 8pgs
-	if ( $$I{image_orientation} == Imposition::Vertical and $$I{spread_rows} % 2 == 0 ) {
+	if ( $$I{image_orientation} == openprint::Imposition::Vertical and $$I{spread_rows} % 2 == 0 ) {
 		my $i1 = $I->copy();
 		$i1->spread_rows( $$i1{spread_rows} / 2 );
 		$i1->rows( $$i1{rows} * 2 );
@@ -2126,17 +2126,17 @@ sub cut_spreads {
 	}
 
 	if ( ( $$I{spread_rows} > 1 ) and 
-		( ( $$I{image_orientation} == Imposition::Horizontal ) or ( $$I{spread_rows} >= ($$I{spread_size}/2) ) )
+		( ( $$I{image_orientation} == openprint::Imposition::Horizontal ) or ( $$I{spread_rows} >= ($$I{spread_size}/2) ) )
 	   ) {
 	#if ( $I->spread_rows() > $I->spread_columns() ) {
-$openprint::log->debug("Cutting rows $$I{spread_rows} > ( $$I{image_orientation} == Imposition::Horizontal ? ($$I{spread_size}/2)-1 : 1 )" );
+$openprint::log->debug("Cutting rows $$I{spread_rows} > ( $$I{image_orientation} == openprint::Imposition::Horizontal ? ($$I{spread_size}/2)-1 : 1 )" );
 		
 		if ( $$I{spread_rows} % 2 ) {
 			my $i1 = $I->copy();
 			$i1->spread_rows(1);
 			$i1->quantity( $$i1{quantity} * $$I{spread_rows} );
 			$i1->page_quantity( $i1->page_quantity() * $$I{spread_rows} );
-			if ( $$I{image_orientation} == Imposition::Vertical ) {
+			if ( $$I{image_orientation} == openprint::Imposition::Vertical ) {
 				$i1->image_height( $$I{image_height}/$$I{spread_rows} );
 			} else {
 				$i1->image_width( $$I{image_width}/$$I{spread_rows} );
@@ -2153,7 +2153,7 @@ $openprint::log->debug("Cutting rows $$I{spread_rows} > ( $$I{image_orientation}
 				my $i3 = $I->copy();
 				$i3->spread_rows( $$I{spread_rows} - ( $$i2{spread_rows} * $i2_quantity ) );
 #$i3->quantity( $I->quantity() * int($I->spread_rows()/$i2->spread_rows()) );
-				if ( $$I{image_orientation} == Imposition::Vertical ) {
+				if ( $$I{image_orientation} == openprint::Imposition::Vertical ) {
 					$i2->image_height( $$I{image_height}*$$i2{spread_rows}/$$I{spread_rows} );
 					$i3->image_height( $$I{image_height}*$$i3{spread_rows} );
 				} else {
@@ -2168,7 +2168,7 @@ $openprint::log->debug("Cutting rows $$I{spread_rows} > ( $$I{image_orientation}
 		} else {
 			my $i1 = $I->copy();
 			$i1->spread_rows( $$i1{spread_rows}/2 );
-			if ( $$I{image_orientation} == Imposition::Vertical ) {
+			if ( $$I{image_orientation} == openprint::Imposition::Vertical ) {
 				$i1->image_height( $$i1{image_height}/2 );
 			} else {
 				$i1->image_width( $$i1{image_width}/2 );
@@ -2181,7 +2181,7 @@ $openprint::log->debug("Cutting rows $$I{spread_rows} > ( $$I{image_orientation}
 			
 			my $i2 = $I->copy();
 			$i2->spread_rows( $$i2{spread_rows}/2 );
-			if ( $$I{image_orientation} == Imposition::Vertical ) {
+			if ( $$I{image_orientation} == openprint::Imposition::Vertical ) {
 				$i2->image_height( $$i2{image_height}/2 );
 			} else {
 				$i2->image_width( $$i2{image_width}/2 );
@@ -2189,7 +2189,7 @@ $openprint::log->debug("Cutting rows $$I{spread_rows} > ( $$I{image_orientation}
 			push @results, [ $i2, $i2 ];
 		} # end if
 	}  # end if rows > 1
-		#if ( $I->image_orientation() == Imposition::Vertical ) {
+		#if ( $I->image_orientation() == openprint::Imposition::Vertical ) {
 			# Assume spread columns are multiple of 2
 			#if ( ( $I->spread_columns() > 2 ) and ( $I->spread_columns() % 2 ) ) {
 				#my $i1 = $I->copy();
@@ -2204,14 +2204,14 @@ $openprint::log->debug("Cutting rows $$I{spread_rows} > ( $$I{image_orientation}
 
 
 	if ( ( $$I{spread_columns} > 1 ) and 
-		( ( $$I{image_orientation} == Imposition::Horizontal ) or ( $$I{spread_columns} >= ($$I{spread_size}/2) )
+		( ( $$I{image_orientation} == openprint::Imposition::Horizontal ) or ( $$I{spread_columns} >= ($$I{spread_size}/2) )
 		) ) {
 		if ( $$I{spread_columns} % 2 ) {
 			my $i1 = $I->copy();
 			$i1->spread_columns(1);
 			$i1->quantity( $i1->quantity() * $$I{spread_columns} );
 			$i1->page_quantity( $i1->page_quantity() * $$I{spread_columns} );
-			if ( $$I{image_orientation} == Imposition::Vertical ) {
+			if ( $$I{image_orientation} == openprint::Imposition::Vertical ) {
 				$i1->image_width( $$I{image_width}/$$I{spread_columns} );
 			} else {
 				$i1->image_height( $$I{image_height}/$$I{spread_columns} );
@@ -2230,7 +2230,7 @@ $openprint::log->debug("Cutting rows $$I{spread_rows} > ( $$I{image_orientation}
 				my $i3 = $I->copy();
 				$i3->spread_columns( $$I{spread_columns} - ( $$i2{spread_columns} * $i2_quantity ) );
 				$openprint::log->debug(sprintf('Cutting pages down from q%d x %d pages to q%d x %d pages', $I->quantity(), $I->pages(), $i3->quantity(), $i3->pages() ) ) if DEBUG;
-				if ( $$I{image_orientation} == Imposition::Vertical ) {
+				if ( $$I{image_orientation} == openprint::Imposition::Vertical ) {
 					$i2->image_width( $$I{image_width}*$$i2{spread_columns}/$$I{spread_columns} );
 					$i3->image_width( $$I{image_width}*$$i3{spread_columns} );
 				} else {
@@ -2244,7 +2244,7 @@ $openprint::log->debug("Cutting rows $$I{spread_rows} > ( $$I{image_orientation}
 			$i1->spread_columns( $$i1{spread_columns}/2 );
 
 			# Image width is not rotated, it is relative to the object, not the sheet
-			if ( $$I{image_orientation} == Imposition::Vertical ) {
+			if ( $$I{image_orientation} == openprint::Imposition::Vertical ) {
 				$i1->image_width( $$i1{image_width}/2 );
 			} else {
 				$i1->image_height( $$i1{image_height}/2 );
@@ -2381,7 +2381,7 @@ $openprint::log->debug("Has no equipment_id");
 		} else {
 			$openprint::log->debug("Got FOld: " . $Fold->to_string() ) if DEBUG;
 			$$Imposition{Fold} = $Fold;
-			if ( $$Imposition{image_orientation} == Imposition::Vertical ) {
+			if ( $$Imposition{image_orientation} == openprint::Imposition::Vertical ) {
 				$Imposition->page_rows( $Fold->page_rows() );
 				$Imposition->page_columns( $Fold->page_columns() );
 			} else {
