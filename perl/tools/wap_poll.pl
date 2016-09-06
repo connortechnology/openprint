@@ -19,6 +19,7 @@ $log = logger->new( 'debug' );
 
 use Getopt::Long;
 use File::Basename qw(basename);
+use Data::Dumper;
 
 my $program = basename($0);
 
@@ -48,8 +49,12 @@ foreach my $param ( 'db_name','db_user','db_pass' ) {
 	}
 } # end foreach required-param
 
-require LWP;
+use LWP::UserAgent;
+use IO::Socket::SSL;
+$ENV{PERL_LWP_SSL_VERIFY_HOSTNAME} = 0;
 my $browser = LWP::UserAgent->new();
+use HTTP::Cookies;
+$browser->cookie_jar( HTTP::Cookies->new( file => '/tmp/cookies.txt', autosave => 1 ) );
 
 if ( $config{'site_url'} ) {
 	$config{'siteURL'} = $config{'site_url'};
@@ -104,7 +109,71 @@ foreach my $Host ( @Hosts ) {
 			my $args;
 			my $method = 'get';
 
-			if ( $Host->type() eq 'WPN802' ) {
+			if ( $Host->type() eq 'TP-Link Archer C7' ) {
+				use JSON;
+				$initial_url = 'http://'.$$HI{ip}.'/cgi-bin/luci';
+				$url = 'http://'.$$HI{ip}.'/cgi-bin/luci/;stok=7633201666a3f5dd7f25acea43449f5e/admin/status/overview?status=1&_=0.6478539785164518';
+				$args = {
+						'luci_username'=>'root',
+						'luci_password'=>'p1GraPHic',
+						'submit' => 'Login',
+						
+					};
+
+				my $response = $browser->get( $initial_url );
+				my $headers = $response->headers();
+      foreach my $k ( keys %{$headers} ) {
+            $openprint::log->debug("Header $k => $$headers{$k}");
+        }
+  $log->debug("status: ".  $response->is_success  . ' line: ' . $response->status_line() );
+  $log->debug( $response->content() );
+  $log->debug( $response->as_string() );
+
+				$response = $browser->post( $initial_url, $args );
+				my $headers = $response->headers();
+				$url = 'http://'.$$HI{ip}.$$headers{location}.'/admin/status/overview?status=1';
+				my $response = $browser->get( $url );
+
+				my $json = decode_json( $response->content() );
+				if ( $$json{wifinets} and @{$$json{wifinets}} ) {
+					foreach my $wifinet ( @{$$json{wifinets}} ) {
+						if ( $$wifinet{networks} and @{$$wifinet{networks}} ) {
+							foreach my $network ( @{$$wifinet{networks}} ) {
+								if ( $$network{assoclist} ) {
+									$log->debug( 'assoclist' . Dumper( $network ) );
+
+									my $wap_HI = $HI;
+									if ( $$HI{mac} ne $$network{bssid} ) {
+										$wap_HI = openprint::Host_Interface->find_one( mac=>$$network{bssid} );
+										if ( ! $wap_HI ) {
+											$wap_HI = new openprint::Host_Interface();
+											$wap_HI->save({mac=>$$network{bssid}, host_id=>$$Host{id} });
+										} # end if
+									}
+
+									foreach my $mac ( keys %{$$network{assoclist}} ) {
+										foreach my $station_HI ( openprint::Host_Interface->find( mac=>$mac ) ) {
+											if ( (!defined $$station_HI{connected_to}) or ( uc $$station_HI{connected_to} ne uc $$HI{mac} ) ) {
+												$log->debug("Updating connection of ".$station_HI->Host()->hostname() );
+												$station_HI->save({connected_to=>$$wap_HI{mac}});
+											}
+										} # end foreach station_HI
+									} # end foreach mac
+								} else {
+									$log->debug( 'No assoclist' . Dumper( $network ) );
+								} # end fi assocllist
+		
+							} # end ofreach network
+						} else {
+							$log->debug( 'No networks in wifinet ' . Dumper( $wifinet  ) );
+						} # end if networks
+					} # end foreach wifinet
+
+				} else {
+					$log->debug( 'No wifinets' . Dumper( $json ) );
+				}
+
+			} elsif ( $Host->type() eq 'WPN802' ) {
 				use Net::SSL;
 				$initial_url = 'https://'.$$HI{ip}.'/start.htm';
 				$url = 'https://'.$$HI{ip}.'/DEV_device.htm';
@@ -114,17 +183,7 @@ foreach my $Host ( @Hosts ) {
 
 				my $response = $browser->get($initial_url ? $initial_url : $url);
 				if ( ! $response->is_success ) {
-
-					my $headers = $response->headers();
-					my ( $auth, $tokens ) = $$headers{'www-authenticate'} =~ /^(\w+)\s+(.*)$/;
-					my %tokens = map { /(\w+)="([^"]+)"/i } split(', ', $tokens );
-					if ( $tokens{realm} ) {
-						$openprint::log->debug("tokens: $tokens realm: $tokens{realm}");
-						$browser->credentials( $HI->ip().':443', $tokens{realm}, $Host->info('username'), $Host->info('password') );
-						$response = $browser->$method($url, $args ? $args : () );
-					} else {
-						$log->error("No realm");
-					} # end if
+					$response = $HI->authenticate( $browser, $response, $method, $url, $args );
 				} # end if
 
 				my ( $assoc_list_line ) = $response->content() =~ /<tr>(.*)<\/tr>/m;
@@ -152,18 +211,8 @@ $log->debug("@ of connections: from $assoc_list_line #" . @lines );
 
         my $response = $browser->get($initial_url ? $initial_url : $url);
         if ( ! $response->is_success ) {
-
-          my $headers = $response->headers();
-          my ( $auth, $tokens ) = $$headers{'www-authenticate'} =~ /^(\w+)\s+(.*)$/;
-          my %tokens = map { /(\w+)="([^"]+)"/i } split(', ', $tokens );
-          if ( $tokens{realm} ) {
-            $openprint::log->debug("tokens: $tokens realm: $tokens{realm}");
-            $browser->credentials( $HI->ip().':80', $tokens{realm}, $Host->info('username'), $Host->info('password') );
-            $response = $browser->$method($url, $args ? $args : () );
-          } else {
-            $log->error("No realm");
-          } # end if
-        } # end if
+			$response = $HI->authenticate( $browser, $response, $method, $url, $args );
+		}
 
         if ( ! $response->is_success ) {
           $log->error("Should have worked.");
