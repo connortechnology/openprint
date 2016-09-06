@@ -1517,16 +1517,18 @@ sub add_Service {
 
 sub recalculate {
 	my $self = shift;
-$openprint::log->debug("Project::recalculate");
 	$self->currency_id( $openprint::session{Currency_id} );
 	my $services = $self->services();
 	if ( $$services{''} ) {
-		my $specs = openprint::service::internal_calc( $openprint::log, $openprint::dbh, \%openprint::variable, $$self{id}, $$services{''}[0], $self->Type()->type() );
+		my $Type = $self->Type();
+$openprint::log->debug("Project::recalculate $$Type{type}");
+		my $specs = openprint::service::internal_calc( $openprint::log, $openprint::dbh, \%openprint::variable, $$self{id}, $$services{''}[0], $$Type{type} );
 		my $status = $$specs{Status};
+$openprint::log->debug("Project::recalculate $$Type{type} $status");
 		# Why is this ne calculated... if the project service can't calc... then neither can the signatures
 		if ( $status eq 'calculated' ) {
 			# Recalc signatures
-			my $module = 'openprint::Estimating::'.$self->Type()->type();
+			my $module = 'openprint::Estimating::'.$$Type{type};
 			if ( my $function = $module->can( 'calculate_signatures' ) ) {
 				$status = $function->( $self );
 $openprint::log->debug("Calculate_Sigs: status: $status");

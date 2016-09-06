@@ -6461,7 +6461,7 @@ sub press_setup_cost {
 	} elsif ( $Price{units} eq 'per job' ) {
 		my $specs = $$Imposition{specs};
 		
-		my $Project = $Imposition->Project();
+		my $Project = $$Imposition{Project};
 		if ( $Project ) {
 			my @signatures = sort $Project->signatures();
 			my $sig_specs = openprint::service::get_specs_ref( $Project, $signatures[0] );

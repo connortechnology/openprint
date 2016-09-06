@@ -175,15 +175,22 @@ sub edit {
 		} else {
 			delete $param{invoicee};
 		} # end if
+		my @changes = $Invoice->changes( \%param );
+		$Invoice->subtotal_override( $param{subtotal_override} );
 		$variable{error} .= $variable{Invoice}->save(\%param);
 		foreach my $Product ( $Invoice->Products() ) {
-			$variable{error} .= $Product->save({
+			my %p_changes = (
 				description	=>	$param{'product-description-'.$Product->id()},
 				price		=>	$param{'product-price-'.$Product->id()},
 				quantity	=>	$param{'product-quantity-'.$Product->id()},
 				po			=>	$param{'product-po-'.$Product->id()},
-				});
+				);
+			my @p_changes = $Product->changes( \%p_changes );
+		 	push @changes, 'product changed: ' . join(',',@p_changes) if @p_changes;
+
+			$variable{error} .= $Product->save( \%p_changes );
 		} # end foreach Product
+		(new openprint::Log())->save({ Object =>$Invoice, action=>'Edit Invoice', note=>join('<br/>', @changes)});
 		if ( $param{invoice_id} and ! $variable{error} ) {
 			$variable{information} .= 'Invoice saved.<br/>';
 			$variable{ExternalRedirect} = '/invoice/view.html?invoice_id='.$Invoice->id();

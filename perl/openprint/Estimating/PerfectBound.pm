@@ -142,8 +142,7 @@ sub signature_calc {
 
     foreach my $I ( @$Impositions ) {
 		$I->display('In PerfectBi:') if DEBUG;
-		my $sig_specs = $$I{specs};
-        if ( ! $sig_specs ) {
+        if ( ! $$I{specs} ) {
             my ( $caller, undef, $line ) = caller;
             $openprint::log->error("No specs from imposition $caller line $line @$Impositions");
 
@@ -153,10 +152,11 @@ sub signature_calc {
             }
             next;
         }
+		my $sig_specs = $$I{specs};
         my $form = $$sig_specs{SignatureIndex};
-        push @printed_impositions, $I->imposition();
+        push @printed_impositions, $$I{imposition};
         if ( ! $$I{Folds} ) {
-            $openprint::log->debug("No folds in imposition, generating") if DEBUG;
+            $openprint::log->error("No folds in imposition, generating") if DEBUG;
             $I->display("No Folds") if DEBUG;
             $$I{Folds} = [ openprint::Estimating::Folding::get_Folds( $folding_specs, $I, $qty_index ) ] if $folding_specs;
         } # end if
@@ -169,7 +169,7 @@ sub signature_calc {
 # This doesn't really make sense.  If we are doing printing estimation, then the folding probably isn't going to match.  
         } else {
             foreach my $FI ( @{$$I{Folds}} ) {
-				my $Fold = $FI->Fold();
+				my $Fold = $$FI{Fold};
 $openprint::log->debug("Fold pq($$FI{page_quantity}) pages($$FI{pages}) ($$Fold{name}) Pockets: $pockets " . $Fold->to_string()) if DEBUG;
                 if ( $$FI{imposition} < $imposition ) {
 					$results{Breakdown} .= "Setting stitching imposition to $$FI{imposition} out because Folding imposition is $$FI{imposition}out<br/>";
