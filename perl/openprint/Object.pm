@@ -665,7 +665,7 @@ sub get_fields_values {
 	foreach my $k ( @$param_keys ) {
 		my ( $field, $type, $function ) = $k =~ /^([_\+\w\-]+)(::\w+\[?\]?)?[\s_]*(.*)?$/;
 		$type = '' if ! defined $type;
-#$log->debug("$object_type param $field($type) func($function) " . ( ref $search{$k} eq 'ARRAY' ? join(',',@{$search{$k}}) : $search{$k} ) );
+$log->debug("$object_type param $field($type) func($function) " . ( ref $$search{$k} eq 'ARRAY' ? join(',',@{$$search{$k}}) : $$search{$k} ) );
 
 		foreach ( 'find_fields', 'fields' ) {
 			my $fields = \%{$object_type.'::'.$_};
@@ -674,7 +674,6 @@ sub get_fields_values {
 				next;
 			} # end if
 
-#$log->debug("looking for ($k) in $type :: $_ , $$f{$k}");
 			if ( ! $$fields{$field} ) {
 				#$log->debug("No $field in $_ for $object_type") if DEBUG_ALL;
 				next;
@@ -686,11 +685,24 @@ sub get_fields_values {
 					$db_field .= $type;
 
 					if ( ref $$search{$k} eq 'ARRAY' ) {
-						if ( @{$$search{$k}} != 1 ) {
-							push @where, $db_field .' IN ('.join(',', map {'?'} @{$$search{$k}} ) . ')';
+$openprint::log->debug("Have array for $k $$search{$k}");
+
+						
+						if ( ! ( $db_field =~ /\?/ ) ) {
+							push @values, $$search{$k};
+							if ( @{$$search{$k}} != 1 ) {
+								push @where, $db_field .' IN ('.join(',', map {'?'} @{$$search{$k}} ) . ')';
+							} else {
+								push @where, $db_field.'=?';
+							} # end if
 						} else {
-							push @where, $db_field.'=?';
-						} # end if
+$openprint::log->debug("Have question ? for $k $$search{$k} $db_field");
+
+							$db_field =~ s/=/IN/g;
+							my $question_replacement = '('.join(',', map {'?'} @{$$search{$k}} ) . ')';
+							$db_field =~ s/\?/$question_replacement/;
+							push @where, $db_field;
+						}
 						push @values, @{$$search{$k}};
 					} elsif ( ref $$search{$k} eq 'HASH' ) {
 						foreach my $p_k ( keys %{$$search{$k}} ) {
@@ -777,16 +789,13 @@ sub find {
 
 	my @values;
 	my $local_dbh = ${$object_type.'::dbh'};
-	$local_dbh = $openprint::dbh if ! $local_dbh;
 	if ( $$params{dbh} ) {
 		$local_dbh = $$params{dbh};
 		delete $$params{dbh};
+	} elsif ( ! $local_dbh ) {
+		$local_dbh = $openprint::dbh;
 	} # end if
-	if ( ! $local_dbh ) {
-		$log->error("No local_dbh");
-		return ();
-	}
-	delete $$params{dbh};
+
 	my @param_keys = sets::exclude( [ 'order','limit','offset','or' ], [ keys %$params ] );
 
 	my $cache_field = ${$object_type.'::cache_field'} if $do_cache;
@@ -833,13 +842,16 @@ $log->error("returning nothing for $object_type $cache_field $$params{$cache_fie
 	push @used_fields, @{$used_fields};
 	push @where, @{$where};
 	push @values, @{$values};
-	
 
 	my $fields = \%{$object_type.'::fields'};
 # Check for Object references
 	if ( %search ) {
+$openprint::log->debug("Usgin search");
 		foreach my $k ( keys %search ) {
-			next if sets::isin( ref $search{$k}, [ '', 'SCALAR','ARRAY','HASH' ] );
+			if ( sets::isin( ref $search{$k}, [ '', 'SCALAR','ARRAY','HASH' ] ) ) {
+$openprint::log->debug("Wasting time looking for objects in find $k $search{$k}");
+				next;
+			}
 			my $f = (lc $k).'_id';
 			if ( exists $$fields{$f} ) {
 				Carp::cluck("Use of deprecated Object ref in find");
@@ -900,10 +912,11 @@ $log->error("returning nothing for $object_type $cache_field $$params{$cache_fie
 			} # end if
 		} # end if
 	} else {
-	if ( $$fields{deleted} and ! sets::isin( 'deleted', \@used_fields ) ) {
-		push @where, 'deleted=?';
-		push @values, 0;
-	} # end if
+		#optimsise this
+		if ( $$fields{deleted} and ! sets::isin( 'deleted', \@used_fields ) ) {
+			push @where, 'deleted=?';
+			push @values, 0;
+		} # end if
 		$sql .= ' WHERE ' . join(' AND ', @where ) if @where;
 	} # end if
 	if ( exists $$params{order} ) {
