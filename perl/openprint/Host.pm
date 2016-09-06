@@ -72,6 +72,29 @@ $openprint::log->debug("Looking at $iface. " . $iface->address . ', subnet: ' . 
 		$openprint::log->debug("Unable to determine interface");
 	} # end if
 } # end sub get_mac
+
+sub authenticate {
+	my ( $HI, $browser, $response, $method, $url, $args ) = @_;
+	my $headers = $response->headers();
+	if ( $$headers{'www-authenticate'} ) {
+		my ( $auth, $tokens ) = $$headers{'www-authenticate'} =~ /^(\w+)\s+(.*)$/;
+		my %tokens = map { /(\w+)="([^"]+)"/i } split(', ', $tokens );
+		if ( $tokens{realm} ) {
+			my $Host = $HI->Host();
+			$openprint::log->debug("tokens: $tokens realm: $tokens{realm}");
+			$browser->credentials( $HI->ip(), $tokens{realm}, $Host->info('username'), $Host->info('password') );
+			$response = $browser->$method( $url, $args ? $args : () );
+		} else {
+			$openprint::log->error("No realm");
+		} # end if
+	} else {
+		foreach my $k ( keys %{$headers} ) {
+			$openprint::log->debug("Header $k => $$headers{$k}");
+		}
+	}
+	return $response;
+} # end sub authenticate
+
 package openprint::Host_Notification;
 our @ISA = qw( openprint::Object );
 use vars qw( $debug $table @identified_by %fields %transforms %defaults );
@@ -383,12 +406,13 @@ sub reboot {
 } # end sub reboot
 
 sub is_wap {
-	return sets::isin( $_[0]->type(), [ 'WG602v3', 'WPN802' ] );
+	return sets::isin( $_[0]->type(), [ 'WG602v3', 'WPN802','TP-Link Archer C7' ] );
 }
 
 sub link_to {
 	return sprintf('<a href="/employee/it/host.html?host_id=%d">%s</a>', $_[0]->id(), $_[0]->hostname() );
 }
+
 
 1;
 __END__
