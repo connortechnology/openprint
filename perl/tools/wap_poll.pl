@@ -38,7 +38,6 @@ my %defaults = (
 foreach my $default ( keys %defaults ) {
 	$$opts{$default} = $defaults{$default} if ! $$opts{$default};
 } # end foreach
-$log->debug("Init config");
 configuration::init( );
 configuration::from_file( $$opts{config} );
 configuration::merge( $opts );
@@ -80,7 +79,7 @@ require Net::Ping;
 # udp has less network traffic overhead
 my $p = Net::Ping->new('icmp',10);
 
-my @Hosts = $$opts{host_id} ? openprint::Host->find(id=>$$opts{host_id}) : openprint::Host->find('type in'=>[ 'WG602v3' ]);
+my @Hosts = $$opts{host_id} ? openprint::Host->find(id=>$$opts{host_id}) : openprint::Host->find(type=>[ 'WG602v3' ]);
 $log->debug( 'WAP polling ' . @Hosts . ' hosts.' );
 foreach my $Host ( @Hosts ) {
 	foreach my $HI ( $Host->Interfaces() ) {
@@ -144,7 +143,7 @@ foreach my $Host ( @Hosts ) {
 					} # end foreach station_HI
 				} # end foreach station mac
 			} else {
-				$log->error("No assoc_list line from $$Host{hostname} $$HI{ip}");
+				$log->debug("No assoc_list line from $$Host{hostname} $$HI{ip}");
 			}
 
         }
