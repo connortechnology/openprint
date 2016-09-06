@@ -355,9 +355,11 @@ sub delete {
 
 	my $ac = sql::start_transaction( $openprint::dbh );
 
-	foreach my $Shift ( openprint::Shift->find('shift_id'=>$_[0]{id}, 'starttime <='=> $now ) ) {
+	foreach my $Shift ( openprint::Shift->find( shift_id=>$_[0]{id}, 'starttime <='=> $now ) ) {
 		if ( $$Shift{shift_id} == $_[0]{id} ) {
-			$error .= $Shift->save({ shift_id=>undef });
+			# Shifts aren't that special
+			$error .= $Shift->delete();
+			#$error .= $Shift->save({ shift_id=>undef });
 		} else {
 			$openprint::log->error("Equipment_Shift::delete deleting a shift that isn't ours!");
 		} # end if
