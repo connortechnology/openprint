@@ -50,9 +50,9 @@ foreach my $param ( 'db_name','db_user','db_pass' ) {
 } # end foreach required-param
 
 use LWP::UserAgent;
-use IO::Socket::SSL;
+use Net::SSL;
 $ENV{PERL_LWP_SSL_VERIFY_HOSTNAME} = 0;
-my $browser = LWP::UserAgent->new();
+my $browser = LWP::UserAgent->new( ssl_opts => { verify_hostname => 0 } );
 use HTTP::Cookies;
 $browser->cookie_jar( HTTP::Cookies->new( file => '/tmp/cookies.txt', autosave => 1 ) );
 
@@ -84,7 +84,7 @@ require Net::Ping;
 # udp has less network traffic overhead
 my $p = Net::Ping->new('icmp',10);
 
-my @Hosts = $$opts{host_id} ? openprint::Host->find(id=>$$opts{host_id}) : openprint::Host->find(type=>[ 'WG602v3', 'WPN802' ]);
+my @Hosts = $$opts{host_id} ? openprint::Host->find(id=>$$opts{host_id}) : openprint::Host->find(type=>[ 'WG602v3', 'WPN802', 'TP-Link Archer C7' ]);
 $log->debug( 'WAP polling ' . @Hosts . ' hosts.' );
 foreach my $Host ( @Hosts ) {
 	foreach my $HI ( $Host->Interfaces() ) {
@@ -108,11 +108,12 @@ foreach my $Host ( @Hosts ) {
 			my $url;
 			my $args;
 			my $method = 'get';
+			my $protocol = 'http';
 
 			if ( $Host->type() eq 'TP-Link Archer C7' ) {
 				use JSON;
-				$initial_url = 'http://'.$$HI{ip}.'/cgi-bin/luci';
-				$url = 'http://'.$$HI{ip}.'/cgi-bin/luci/;stok=7633201666a3f5dd7f25acea43449f5e/admin/status/overview?status=1&_=0.6478539785164518';
+				$initial_url = $protocol.'://'.$$HI{ip}.'/cgi-bin/luci';
+				$url = $protocol.'://'.$$HI{ip}.'/cgi-bin/luci/;stok=7633201666a3f5dd7f25acea43449f5e/admin/status/overview?status=1&_=0.6478539785164518';
 				$args = {
 						'luci_username'=>'root',
 						'luci_password'=>'p1GraPHic',
@@ -122,16 +123,21 @@ foreach my $Host ( @Hosts ) {
 
 				my $response = $browser->get( $initial_url );
 				my $headers = $response->headers();
-      foreach my $k ( keys %{$headers} ) {
-            $openprint::log->debug("Header $k => $$headers{$k}");
-        }
-  $log->debug("status: ".  $response->is_success  . ' line: ' . $response->status_line() );
-  $log->debug( $response->content() );
-  $log->debug( $response->as_string() );
+      #foreach my $k ( keys %{$headers} ) {
+            #$openprint::log->debug("Header $k => $$headers{$k}");
+        #}
+	if ( $$headers{'client-ssl-cipher'} ) {
+		$protocol = 'https';
+				$initial_url = $protocol.'://'.$$HI{ip}.'/cgi-bin/luci';
+				$url = $protocol.'://'.$$HI{ip}.'/cgi-bin/luci/;stok=7633201666a3f5dd7f25acea43449f5e/admin/status/overview?status=1&_=0.6478539785164518';
+	}
+  #$log->debug("status: ".  $response->is_success  . ' line: ' . $response->status_line() );
+  #$log->debug( $response->content() );
+  #$log->debug( $response->as_string() );
 
 				$response = $browser->post( $initial_url, $args );
 				my $headers = $response->headers();
-				$url = 'http://'.$$HI{ip}.$$headers{location}.'/admin/status/overview?status=1';
+				$url = $protocol.'://'.$$HI{ip}.$$headers{location}.'/admin/status/overview?status=1';
 				my $response = $browser->get( $url );
 
 				my $json = decode_json( $response->content() );
@@ -151,6 +157,16 @@ foreach my $Host ( @Hosts ) {
 										} # end if
 									}
 
+									if ( ref $$network{assoclist} eq 'ARRAY' ) {
+									foreach my $mac ( @{$$network{assoclist}} ) {
+										foreach my $station_HI ( openprint::Host_Interface->find( mac=>$mac ) ) {
+											if ( (!defined $$station_HI{connected_to}) or ( uc $$station_HI{connected_to} ne uc $$HI{mac} ) ) {
+												$log->debug("Updating connection of ".$station_HI->Host()->hostname() );
+												$station_HI->save({connected_to=>$$wap_HI{mac}});
+											}
+										} # end foreach station_HI
+									} # end foreach mac
+									} elsif ( ref $$network{assoclist} eq 'HASH' ) {
 									foreach my $mac ( keys %{$$network{assoclist}} ) {
 										foreach my $station_HI ( openprint::Host_Interface->find( mac=>$mac ) ) {
 											if ( (!defined $$station_HI{connected_to}) or ( uc $$station_HI{connected_to} ne uc $$HI{mac} ) ) {
@@ -159,6 +175,7 @@ foreach my $Host ( @Hosts ) {
 											}
 										} # end foreach station_HI
 									} # end foreach mac
+									}
 								} else {
 									$log->debug( 'No assoclist' . Dumper( $network ) );
 								} # end fi assocllist
@@ -177,9 +194,6 @@ foreach my $Host ( @Hosts ) {
 				use Net::SSL;
 				$initial_url = 'https://'.$$HI{ip}.'/start.htm';
 				$url = 'https://'.$$HI{ip}.'/DEV_device.htm';
-				$browser->ssl_opts(
-						verify_hostname => 0,
-						);
 
 				my $response = $browser->get($initial_url ? $initial_url : $url);
 				if ( ! $response->is_success ) {
