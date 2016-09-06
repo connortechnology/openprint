@@ -383,7 +383,7 @@ sub reboot {
 } # end sub reboot
 
 sub is_wap {
-	return sets::isin( $_[0]->type(), [ 'WG602v3' ] );
+	return sets::isin( $_[0]->type(), [ 'WG602v3', 'WPN802' ] );
 }
 
 sub link_to {

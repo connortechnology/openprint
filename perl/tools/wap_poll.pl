@@ -79,7 +79,7 @@ require Net::Ping;
 # udp has less network traffic overhead
 my $p = Net::Ping->new('icmp',10);
 
-my @Hosts = $$opts{host_id} ? openprint::Host->find(id=>$$opts{host_id}) : openprint::Host->find(type=>[ 'WG602v3' ]);
+my @Hosts = $$opts{host_id} ? openprint::Host->find(id=>$$opts{host_id}) : openprint::Host->find(type=>[ 'WG602v3', 'WPN802' ]);
 $log->debug( 'WAP polling ' . @Hosts . ' hosts.' );
 foreach my $Host ( @Hosts ) {
 	foreach my $HI ( $Host->Interfaces() ) {
@@ -98,12 +98,56 @@ foreach my $Host ( @Hosts ) {
 		} # end if
 
 		if ( $Host->online() and $ping ) {
-      my $initial_url;
-      my $url;
-      my $args;
-      my $method = 'get';
 
-      if ( $Host->type() eq 'WG602v3' ) {
+			my $initial_url;
+			my $url;
+			my $args;
+			my $method = 'get';
+
+			if ( $Host->type() eq 'WPN802' ) {
+				use Net::SSL;
+				$initial_url = 'https://'.$$HI{ip}.'/start.htm';
+				$url = 'https://'.$$HI{ip}.'/DEV_device.htm';
+				$browser->ssl_opts(
+						verify_hostname => 0,
+						);
+
+				my $response = $browser->get($initial_url ? $initial_url : $url);
+				if ( ! $response->is_success ) {
+
+					my $headers = $response->headers();
+					my ( $auth, $tokens ) = $$headers{'www-authenticate'} =~ /^(\w+)\s+(.*)$/;
+					my %tokens = map { /(\w+)="([^"]+)"/i } split(', ', $tokens );
+					if ( $tokens{realm} ) {
+						$openprint::log->debug("tokens: $tokens realm: $tokens{realm}");
+						$browser->credentials( $HI->ip().':443', $tokens{realm}, $Host->info('username'), $Host->info('password') );
+						$response = $browser->$method($url, $args ? $args : () );
+					} else {
+						$log->error("No realm");
+					} # end if
+				} # end if
+
+				my ( $assoc_list_line ) = $response->content() =~ /<tr>(.*)<\/tr>/m;
+				if ( $assoc_list_line ) {
+					my @lines = split( '</tr><tr>', $assoc_list_line );
+$log->debug("@ of connections: from $assoc_list_line #" . @lines );
+					foreach my $line ( @lines ) {
+						my ( $mac ) = $line =~ /<td align="center"><span class="thead">\d+<\/span><\/td><td align="center" noWrap><span class="ttext">([:[:xdigit:]]+)<\/span><\/td><td align="center" noWrap><span class="ttext">UNKNOWN<\/span><\/td><td align="center" noWrap><span class="ttext">Associated<\/span><\/td>/;
+						if ( $mac ) {
+							foreach my $station_HI ( openprint::Host_Interface->find( mac=>$mac ) ) {
+								if ( (!defined $$station_HI{connected_to}) or ( uc $$station_HI{connected_to} ne uc $$HI{mac} ) ) {
+									$log->debug("Updating connection of ".$station_HI->Host()->hostname() );
+									$station_HI->save({connected_to=>$$HI{mac}});
+								}
+							} # end foreach station_HI
+						} # end if mac
+					} # end foreach station mac
+				} else {
+					$log->debug("No assoc_list line from $$Host{hostname} $$HI{ip}");
+				}
+
+
+      } elsif ( $Host->type() eq 'WG602v3' ) {
         $url = 'http://'.$$HI{ip}.'/cgi-bin/stalist.html';
 
         my $response = $browser->get($initial_url ? $initial_url : $url);
