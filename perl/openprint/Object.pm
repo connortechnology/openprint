@@ -665,7 +665,7 @@ sub get_fields_values {
 	foreach my $k ( @$param_keys ) {
 		my ( $field, $type, $function ) = $k =~ /^([_\+\w\-]+)(::\w+\[?\]?)?[\s_]*(.*)?$/;
 		$type = '' if ! defined $type;
-$log->debug("$object_type param $field($type) func($function) " . ( ref $$search{$k} eq 'ARRAY' ? join(',',@{$$search{$k}}) : $$search{$k} ) );
+$log->debug("$object_type param $field($type) func($function) " . ( ref $$search{$k} eq 'ARRAY' ? join(',',@{$$search{$k}}) : $$search{$k} ) ) if DEBUG_ALL;
 
 		foreach ( 'find_fields', 'fields' ) {
 			my $fields = \%{$object_type.'::'.$_};
@@ -685,18 +685,16 @@ $log->debug("$object_type param $field($type) func($function) " . ( ref $$search
 					$db_field .= $type;
 
 					if ( ref $$search{$k} eq 'ARRAY' ) {
-$openprint::log->debug("Have array for $k $$search{$k}");
-
+$openprint::log->debug("Have array for $k $$search{$k}") if DEBUG_ALL;
 						
 						if ( ! ( $db_field =~ /\?/ ) ) {
-							push @values, $$search{$k};
 							if ( @{$$search{$k}} != 1 ) {
 								push @where, $db_field .' IN ('.join(',', map {'?'} @{$$search{$k}} ) . ')';
 							} else {
 								push @where, $db_field.'=?';
 							} # end if
 						} else {
-$openprint::log->debug("Have question ? for $k $$search{$k} $db_field");
+$openprint::log->debug("Have question ? for $k $$search{$k} $db_field") if DEBUG_ALL;
 
 							$db_field =~ s/=/IN/g;
 							my $question_replacement = '('.join(',', map {'?'} @{$$search{$k}} ) . ')';
