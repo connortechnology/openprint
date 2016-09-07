@@ -7,8 +7,8 @@ require Data::Dumper;
 use vars qw( $AUTOLOAD );
 use constant DEBUG => 0;
 
+use constant Vertical => 0;
 use constant Horizontal => 1;
-use constant Vertical => 1;
 
 my @fields = (
 	'start_imposition','start_columns','start_rows',
