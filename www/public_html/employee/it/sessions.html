@@ -6,10 +6,10 @@ function load_session( form, options ) {
 	if ( options && options.order )
 		p.order = options.order;
 	
-	new Ajax.Updater( 'Results','/employee/it/_sessions.html', { method: 'get', parameters: p } );
+	new Ajax.Updater( 'Results','/employee/it/_sessions.html', { parameters: p } );
 } // end function load
 </script>
-<? echo ( include('/includes/error_reporting.html'); ) ?>
+<?include('/includes/error_reporting.html')?>
 Please select a session to view/edit.<br>
 <form id="f1" name="f1" method="post" action="sessions.html">
 	<input type="hidden" name="action"/>
@@ -17,46 +17,46 @@ Please select a session to view/edit.<br>
 		<ul>
 		<li>
 			<label for="ip">Host IP</label>
-			<input type="text" id="ip" name="ip" value="<? echo ( $session{'/employee/it/sessions.html?ip'} ) ?>" onkeyup="this.value=this.value.replace(/[^\.\d%\/\*]/,'');" onkeydown="if(event.keyCode == 13){load_session($('f1'));}"/>
+			<? echo ( input( type=>'ip', name=>'ip', id=>'ip', value=>$session{'/employee/it/sessions.html?ip'}, onkeydown=>q`if(event.keyCode==13){load_session($('f1'));};` ); ) ?>
 		</li>
 		<li>
 			<label>Date Added</label>
-<? echo ( ssi::date_select_session( '/employee/it/sessions.html', 'created_on_start', { 'with_today' => 1, 'with_clear'=>1 } ); ) ?>
+<? echo ( date_select_session( '/employee/it/sessions.html', 'created_on_start', { with_today => 1, with_clear=>1 } ); ) ?>
 			to 
-<? echo ( ssi::date_select_session( '/employee/it/sessions.html', 'created_on_end', { 'with_today' => 1, 'with_clear'=>1 } ); ) ?>
+<? echo ( date_select_session( '/employee/it/sessions.html', 'created_on_end', { with_today => 1, with_clear=>1 } ); ) ?>
 		</li>
 		<li>
 			<label>Last Updated</label>
-<? echo ( ssi::date_select_session( '/employee/it/sessions.html', 'updated_on_start', { 'with_today' => 1, 'with_clear'=>1 } ); ) ?>
+<? echo ( date_select_session( '/employee/it/sessions.html', 'updated_on_start', { with_today => 1, with_clear=>1 } ); ) ?>
 			to 
-<? echo ( ssi::date_select_session( '/employee/it/sessions.html', 'updated_on_end', { 'with_today' => 1, 'with_clear'=>1 } ); ) ?>
+<? echo ( date_select_session( '/employee/it/sessions.html', 'updated_on_end', { with_today => 1, with_clear=>1 } ); ) ?>
 		</li>
 		<li><label>Company</label>
 			<select name="company_id" id="company_id"><option value="">All</option>
-			<? echo ( openprint::Company::get_dropdown( $session{'/employee/it/sessions.html?company_id'} ); ) ?>
+			<? echo ( make_drop_down( openprint::Company->dropdown(), $session{'/employee/it/sessions.html?company_id'} ); ) ?>
 			</select>
 		</li>		
 		<li>
             <label>User Type</label>
 			<select name="user_type" id="user_type"><option value="">All</option>
-			<? echo ( ssi::make_drop_down( openprint::User_Type->dropdown(), $session{'/employee/it/sessions.html?user_type'} ); ) ?>
+			<? echo ( make_drop_down( openprint::User_Type->dropdown(), $session{'/employee/it/sessions.html?user_type'} ); ) ?>
 			</select>
 		</li>
 		<li>
             <label>User</label>
 			<select name="user_id" id="user_id"><option value="">All</option>
-			<? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::User->find(
-							( $session{'/employee/it/sessions.html?company_id'} ? ( 'company_id'=>$session{'/employee/it/sessions.html?company_id'} ) : () ),
-							( $session{'/employee/it/sessions.html?user_type'} ? ( 'user_type'	=>	$session{'/employee/it/sessions.html?user_type'} ) : () ),
-							'order'=>'lower(firstname),lower(lastname)' ) ], $session{'/employee/it/sessions.html?user_id'} ); ) ?>
+			<? echo ( make_drop_down( openprint::User->dropdown(
+							( $session{'/employee/it/sessions.html?company_id'} ? ( company_id=>$session{'/employee/it/sessions.html?company_id'} ) : () ),
+							( $session{'/employee/it/sessions.html?user_type'} ? ( user_type	=>	$session{'/employee/it/sessions.html?user_type'} ) : () ),
+							order=>'lower(firstname),lower(lastname)' ) ], $session{'/employee/it/sessions.html?user_id'} ); ) ?>
 			</select>
 		</li>
 		</ul>
 		<p class="buttons">
-			<? echo ( join('',
-				ssi::button( 'ShowResults', { 'onclick'=>"load_session( \$('f1') );", 'text'=>'Show Results' } ),
-				ssi::button( 'Reset', { 'onclick'=>'f1.reset();' } ),
-				ssi::button( 'Add', { 'onclick'=>q`window.location='session.html?'+$('f1').serialize();`, 'text'=>'Add New Host' } ),
+			<? echo ( join("\n",
+				button( 'ShowResults', { onclick=>"load_session( \$('f1') );", text=>'Show Results' } ),
+				button( 'Reset', { onclick=>'f1.reset();' } ),
+				button( 'Add', { onclick=>q`window.location='session.html?'+$('f1').serialize();`, text=>'Add New Host' } ),
 				); ) ?>
 		</p>
 	</fieldset>
