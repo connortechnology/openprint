@@ -5,7 +5,7 @@
 	if ( ! exists $session{'/administrator/stock/list.html?recommendations'} ) {
 		$session{'/administrator/stock/list.html?recommendations'} = join(',', 1,0 );
 	} # end if
-	$session{'/administrator/stock/list.html?Owner'} = $session{'company_id'} if ! exists $session{'/administrator/stock/list.html?Owner'};
+	$session{'/administrator/stock/list.html?Owner'} = $session{company_id} if ! exists $session{'/administrator/stock/list.html?Owner'};
 ) ?>
 <script type="text/javascript" src="<?hash_link(/javascripts/paper.js)?>"></script>
 <script type="text/javascript" src="<?hash_link(/administrator/stock/stock.js)?>"></script>
@@ -45,8 +45,11 @@
 		popupWin.setAjaxContent(url, null , true);
 	} // end function popup_window
 
+	var stock_filter_ajax = null;
 	function calc(formName) {
-		new Ajax.Updater('Stocks','/administrator/stock/_stocks.html', {
+		if ( stock_filter_ajax ) { stock_filter_ajax.transport.abort(); }
+
+    stock_filter_ajax = new Ajax.Updater('Stocks','/administrator/stock/_stocks.html', {
 				onLoading:function(){ $('Stocks').innerHTML='Loading...'; },
 				onSuccess:function(){ TableKit.Sortable.reload('StocksTable'); },
 				parameters:Form.serialize($(formName))});
@@ -84,17 +87,17 @@
 				) ?>
 			</select>
 		</li>
-<? if ( @{$$variable{'Groups'}} = openprint::StockGroup->find('order'=>'lower(name)') ) ?>
+<? if ( @{$$variable{Groups}} = openprint::StockGroup->find('order'=>'lower(name)') ) ?>
 		<li>
 			<label>Group</label>
 			<select id="group_id" name="group_id" size="1" onchange="calc(this.form.name);">
 				<option value="">select</option>
 				<? echo (
-					make_drop_down( [ map { $_->id(), $_->name() } @{$$variable{'Groups'}} ], $session{'/administrator/stock/list.html?group_id'} );
+					make_drop_down( [ map { $_->id(), $_->name() } @{$$variable{Groups}} ], $session{'/administrator/stock/list.html?group_id'} );
 					) ?>
 			</select>
 		</li>
-<? endif ( @{$$variable{'Groups'}} = openprint::StockGroup->find('order'=>'lower(name)') ) ?>
+<? endif ( @{$$variable{Groups}} = openprint::StockGroup->find('order'=>'lower(name)') ) ?>
 		<li>
 			<label>Manufacturer</label>
 			<select id="manufacturer_id" name="manufacturer_id" size="1" onchange="calc(this.form.name);">

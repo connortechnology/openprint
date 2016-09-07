@@ -38,11 +38,11 @@ sub can_view {
 
 	if ( $openprint::session{user_id} ) {
 		if ( $_[0]{user_ids} and $openprint::session{user_id} and sets::isin( $openprint::session{user_id}, $_[0]{user_ids} ) ) {
-			$openprint::log->debug("User is in user_ids") if $debug;
+			$openprint::log->debug("User is in user_ids") if DEBUG;
 			return 1;
 		} # end if
 		if ( $openprint::session{user_type} eq 'A' ) {
-			$openprint::log->debug("User is an admin") if $debug;
+			$openprint::log->debug("User is an admin") if DEBUG;
 			return 1;
 		}
 	} # end if
@@ -51,7 +51,7 @@ sub can_view {
 #$openprint::log->debug("CHecking usergroups " . ( $_[0]{usergroup_ids} ? join(', ', @{ $_[0]{usergroup_ids} } ) : 'none' ) );
 		return 0 if ! $openprint::session{user_id};
 		my $User = $openprint::User;
-$openprint::log->debug( "User is in " . join(',', $User->usergroup_ids()) ) if DEBUG;
+$openprint::log->debug( "is User in groups: " . join(',', $User->usergroup_ids()) ) if DEBUG;
 $openprint::log->debug( "Usergroups are " . join(',', @{$_[0]{usergroup_ids}}) ) if DEBUG;
 		my @intersection = sets::intersection( @{$_[0]{usergroup_ids}}, $User->usergroup_ids() );
 		$openprint::log->debug( "Inserection: (" . join(',', @intersection ) . ')' . @intersection) if DEBUG;
@@ -59,6 +59,7 @@ $openprint::log->debug( "Usergroups are " . join(',', @{$_[0]{usergroup_ids}}) )
 			#$openprint::log->debug("REturning 0");
 			return 1;
 		}
+		return 0;
 	} else {
 #$openprint::log->debug("Not CHecking usergroups " );
 

@@ -543,7 +543,7 @@ $openprint::log->debug("Not adding because previousimposition != sigImposition")
 	# Here's the problem... if a sig after ours has our fold, then the makeready will be counted here. and so we won't change for makeready.
 
 	foreach my $SigImpo ( @{$Signature_Impositions} ) {
-$SigImpo->display("In Folding::siganture_calc");
+#$SigImpo->display("In Folding::siganture_calc");
 		last if $SigImpo == $SignatureImposition;
 		# Took this out so that we don't need signature_service_index, so we have to ensure that this service is not in the Signature_Impositions
 		#next if $signature_service_index and $$SigImpo{service_id} >= $signature_service_index;
@@ -1783,7 +1783,7 @@ $i->display() if DEBUG;
 					my $index = 1;
 					$$Imposition{Folds} = $$results{FoldedImpositions};
 					foreach my $FI ( @{$$results{FoldedImpositions}} ) {
-						my $Fold = $FI->Fold();
+						my $Fold = $$FI{Fold};
 						my $fold_type = $Fold->type();
 
 						if ( DEBUG ) {

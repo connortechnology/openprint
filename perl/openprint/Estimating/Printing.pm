@@ -3945,7 +3945,7 @@ sub get_project_price {
 #$openprint::log->debug("calculated_impositions: $$Press{strid} " . ( sprintf('%.4f', tv_interval( [$time])*1000) ) .' usecs' );
 	foreach my $base_imp ( @Is ) {
 # Imp still gets modified in calc_price, Folding adds Folder member
-$base_imp->display("Starting");
+#$base_imp->display("Starting");
 		$$base_imp{Project} = $Project;
 		my $imp = $base_imp->copy();
 		my $Press = $imp->Press();

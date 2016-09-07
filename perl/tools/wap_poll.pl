@@ -19,6 +19,7 @@ $log = logger->new( 'debug' );
 
 use Getopt::Long;
 use File::Basename qw(basename);
+use Data::Dumper;
 
 my $program = basename($0);
 
@@ -38,7 +39,6 @@ my %defaults = (
 foreach my $default ( keys %defaults ) {
 	$$opts{$default} = $defaults{$default} if ! $$opts{$default};
 } # end foreach
-$log->debug("Init config");
 configuration::init( );
 configuration::from_file( $$opts{config} );
 configuration::merge( $opts );
@@ -49,8 +49,12 @@ foreach my $param ( 'db_name','db_user','db_pass' ) {
 	}
 } # end foreach required-param
 
-require LWP;
-my $browser = LWP::UserAgent->new();
+use LWP::UserAgent;
+use Net::SSL;
+$ENV{PERL_LWP_SSL_VERIFY_HOSTNAME} = 0;
+my $browser = LWP::UserAgent->new( ssl_opts => { verify_hostname => 0 } );
+use HTTP::Cookies;
+$browser->cookie_jar( HTTP::Cookies->new( file => '/tmp/cookies.txt', autosave => 1 ) );
 
 if ( $config{'site_url'} ) {
 	$config{'siteURL'} = $config{'site_url'};
@@ -80,7 +84,7 @@ require Net::Ping;
 # udp has less network traffic overhead
 my $p = Net::Ping->new('icmp',10);
 
-my @Hosts = $$opts{host_id} ? openprint::Host->find(id=>$$opts{host_id}) : openprint::Host->find('type in'=>[ 'WG602v3' ]);
+my @Hosts = $$opts{host_id} ? openprint::Host->find(id=>$$opts{host_id}) : openprint::Host->find(type=>[ 'WG602v3', 'WPN802', 'TP-Link Archer C7' ]);
 $log->debug( 'WAP polling ' . @Hosts . ' hosts.' );
 foreach my $Host ( @Hosts ) {
 	foreach my $HI ( $Host->Interfaces() ) {
@@ -99,28 +103,130 @@ foreach my $Host ( @Hosts ) {
 		} # end if
 
 		if ( $Host->online() and $ping ) {
-      my $initial_url;
-      my $url;
-      my $args;
-      my $method = 'get';
 
-      if ( $Host->type() eq 'WG602v3' ) {
+			my $initial_url;
+			my $url;
+			my $args;
+			my $method = 'get';
+			my $protocol = 'http';
+
+			if ( $Host->type() eq 'TP-Link Archer C7' ) {
+				use JSON;
+				$initial_url = $protocol.'://'.$$HI{ip}.'/cgi-bin/luci';
+				$url = $protocol.'://'.$$HI{ip}.'/cgi-bin/luci/;stok=7633201666a3f5dd7f25acea43449f5e/admin/status/overview?status=1&_=0.6478539785164518';
+				$args = {
+						'luci_username'=>'root',
+						'luci_password'=>'p1GraPHic',
+						'submit' => 'Login',
+						
+					};
+
+				my $response = $browser->get( $initial_url );
+				my $headers = $response->headers();
+      #foreach my $k ( keys %{$headers} ) {
+            #$openprint::log->debug("Header $k => $$headers{$k}");
+        #}
+	if ( $$headers{'client-ssl-cipher'} ) {
+		$protocol = 'https';
+				$initial_url = $protocol.'://'.$$HI{ip}.'/cgi-bin/luci';
+				$url = $protocol.'://'.$$HI{ip}.'/cgi-bin/luci/;stok=7633201666a3f5dd7f25acea43449f5e/admin/status/overview?status=1&_=0.6478539785164518';
+	}
+  #$log->debug("status: ".  $response->is_success  . ' line: ' . $response->status_line() );
+  #$log->debug( $response->content() );
+  #$log->debug( $response->as_string() );
+
+				$response = $browser->post( $initial_url, $args );
+				my $headers = $response->headers();
+				$url = $protocol.'://'.$$HI{ip}.$$headers{location}.'/admin/status/overview?status=1';
+				my $response = $browser->get( $url );
+
+				my $json = decode_json( $response->content() );
+				if ( $$json{wifinets} and @{$$json{wifinets}} ) {
+					foreach my $wifinet ( @{$$json{wifinets}} ) {
+						if ( $$wifinet{networks} and @{$$wifinet{networks}} ) {
+							foreach my $network ( @{$$wifinet{networks}} ) {
+								if ( $$network{assoclist} ) {
+									$log->debug( 'assoclist' . Dumper( $network ) );
+
+									my $wap_HI = $HI;
+									if ( $$HI{mac} ne $$network{bssid} ) {
+										$wap_HI = openprint::Host_Interface->find_one( mac=>$$network{bssid} );
+										if ( ! $wap_HI ) {
+											$wap_HI = new openprint::Host_Interface();
+											$wap_HI->save({mac=>$$network{bssid}, host_id=>$$Host{id} });
+										} # end if
+									}
+
+									if ( ref $$network{assoclist} eq 'ARRAY' ) {
+									foreach my $mac ( @{$$network{assoclist}} ) {
+										foreach my $station_HI ( openprint::Host_Interface->find( mac=>$mac ) ) {
+											if ( (!defined $$station_HI{connected_to}) or ( uc $$station_HI{connected_to} ne uc $$HI{mac} ) ) {
+												$log->debug("Updating connection of ".$station_HI->Host()->hostname() );
+												$station_HI->save({connected_to=>$$wap_HI{mac}});
+											}
+										} # end foreach station_HI
+									} # end foreach mac
+									} elsif ( ref $$network{assoclist} eq 'HASH' ) {
+									foreach my $mac ( keys %{$$network{assoclist}} ) {
+										foreach my $station_HI ( openprint::Host_Interface->find( mac=>$mac ) ) {
+											if ( (!defined $$station_HI{connected_to}) or ( uc $$station_HI{connected_to} ne uc $$HI{mac} ) ) {
+												$log->debug("Updating connection of ".$station_HI->Host()->hostname() );
+												$station_HI->save({connected_to=>$$wap_HI{mac}});
+											}
+										} # end foreach station_HI
+									} # end foreach mac
+									}
+								} else {
+									$log->debug( 'No assoclist' . Dumper( $network ) );
+								} # end fi assocllist
+		
+							} # end ofreach network
+						} else {
+							$log->debug( 'No networks in wifinet ' . Dumper( $wifinet  ) );
+						} # end if networks
+					} # end foreach wifinet
+
+				} else {
+					$log->debug( 'No wifinets' . Dumper( $json ) );
+				}
+
+			} elsif ( $Host->type() eq 'WPN802' ) {
+				use Net::SSL;
+				$initial_url = 'https://'.$$HI{ip}.'/start.htm';
+				$url = 'https://'.$$HI{ip}.'/DEV_device.htm';
+
+				my $response = $browser->get($initial_url ? $initial_url : $url);
+				if ( ! $response->is_success ) {
+					$response = $HI->authenticate( $browser, $response, $method, $url, $args );
+				} # end if
+
+				my ( $assoc_list_line ) = $response->content() =~ /<tr>(.*)<\/tr>/m;
+				if ( $assoc_list_line ) {
+					my @lines = split( '</tr><tr>', $assoc_list_line );
+$log->debug("@ of connections: from $assoc_list_line #" . @lines );
+					foreach my $line ( @lines ) {
+						my ( $mac ) = $line =~ /<td align="center"><span class="thead">\d+<\/span><\/td><td align="center" noWrap><span class="ttext">([:[:xdigit:]]+)<\/span><\/td><td align="center" noWrap><span class="ttext">UNKNOWN<\/span><\/td><td align="center" noWrap><span class="ttext">Associated<\/span><\/td>/;
+						if ( $mac ) {
+							foreach my $station_HI ( openprint::Host_Interface->find( mac=>$mac ) ) {
+								if ( (!defined $$station_HI{connected_to}) or ( uc $$station_HI{connected_to} ne uc $$HI{mac} ) ) {
+									$log->debug("Updating connection of ".$station_HI->Host()->hostname() );
+									$station_HI->save({connected_to=>$$HI{mac}});
+								}
+							} # end foreach station_HI
+						} # end if mac
+					} # end foreach station mac
+				} else {
+					$log->debug("No assoc_list line from $$Host{hostname} $$HI{ip}");
+				}
+
+
+      } elsif ( $Host->type() eq 'WG602v3' ) {
         $url = 'http://'.$$HI{ip}.'/cgi-bin/stalist.html';
 
         my $response = $browser->get($initial_url ? $initial_url : $url);
         if ( ! $response->is_success ) {
-
-          my $headers = $response->headers();
-          my ( $auth, $tokens ) = $$headers{'www-authenticate'} =~ /^(\w+)\s+(.*)$/;
-          my %tokens = map { /(\w+)="([^"]+)"/i } split(', ', $tokens );
-          if ( $tokens{realm} ) {
-            $openprint::log->debug("tokens: $tokens realm: $tokens{realm}");
-            $browser->credentials( $HI->ip().':80', $tokens{realm}, $Host->info('username'), $Host->info('password') );
-            $response = $browser->$method($url, $args ? $args : () );
-          } else {
-            $log->error("No realm");
-          } # end if
-        } # end if
+			$response = $HI->authenticate( $browser, $response, $method, $url, $args );
+		}
 
         if ( ! $response->is_success ) {
           $log->error("Should have worked.");
@@ -144,7 +250,7 @@ foreach my $Host ( @Hosts ) {
 					} # end foreach station_HI
 				} # end foreach station mac
 			} else {
-				$log->error("No assoc_list line from $$Host{hostname} $$HI{ip}");
+				$log->debug("No assoc_list line from $$Host{hostname} $$HI{ip}");
 			}
 
         }
