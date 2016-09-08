@@ -94,7 +94,7 @@ sub layout_width {
 			} # end if
 		} elsif ( $_[0]{image_orientation} eq 'Horizontal' ) {
 			$_[0]{layout_width} = $_[0]{columns} * $_[0]{image_height} + $_[0]{perfecting_wheel_space};
-$openprint::log->debug("Horz: $_[0]{layout_width} = $_[0]{columns} * $_[0]{image_height} + $_[0]{perfecting_wheel_space};");
+#$openprint::log->debug("Horz: $_[0]{layout_width} = $_[0]{columns} * $_[0]{image_height} + $_[0]{perfecting_wheel_space};");
 
 			if ( $_[0]{dutch_columns} ) {
 				my $dutch_width = $_[0]{dutch_columns} * $_[0]{image_width};
