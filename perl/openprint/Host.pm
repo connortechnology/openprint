@@ -74,15 +74,17 @@ $openprint::log->debug("Looking at $iface. " . $iface->address . ', subnet: ' . 
 } # end sub get_mac
 
 sub authenticate {
-	my ( $HI, $browser, $response, $method, $url, $args ) = @_;
+	my ( $HI, $browser, $response, $method, $port, $url, $args ) = @_;
 	my $headers = $response->headers();
 	if ( $$headers{'www-authenticate'} ) {
 		my ( $auth, $tokens ) = $$headers{'www-authenticate'} =~ /^(\w+)\s+(.*)$/;
 		my %tokens = map { /(\w+)="([^"]+)"/i } split(', ', $tokens );
 		if ( $tokens{realm} ) {
 			my $Host = $HI->Host();
-			$openprint::log->debug("tokens: $tokens realm: $tokens{realm}");
-			$browser->credentials( $HI->ip(), $tokens{realm}, $Host->info('username'), $Host->info('password') );
+			my $username = $Host->info('username');
+			my $password = $Host->info('password');
+			$openprint::log->debug("tokens: $tokens realm: $tokens{realm} username: $username password: $password ");
+			$browser->credentials( $HI->ip().':'.$port, $tokens{realm}, $username, $password );
 			$response = $browser->$method( $url, $args ? $args : () );
 		} else {
 			$openprint::log->error("No realm");
