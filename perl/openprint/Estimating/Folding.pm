@@ -421,23 +421,10 @@ sub signature_calc {
 			#MakeReadyTime	=>	0,
 	);
 	
-	if ( ! $$SignatureImposition{imposition} ) {
-		Carp::cluck( 'Invalid Imposition');
-		$results{Breakdown}	 = 'Invalid Signature passed to Folding';
-		return \%results;
-	} # end if
-
 	if ( $$sig_specs{txtSignatureType} and ( $SignatureImposition->pages() == 2 ) ) {
 		# Does not need folding
 		$results{Status}		= 'calculated';
 		$results{Breakdown}		= '2 page does not require folding';
-		return \%results;
-	} # end if
-
-	if ( ! ( $$sig_specs{txtFinalWidth} and $$sig_specs{txtFinalHeight} ) ) {
-$openprint::log->error("No finished width and height, cannot continue $$Project{id} $qty_index");
-		# Does not need folding
-		$results{Breakdown}		= 'No finished width and height, cannot continue';
 		return \%results;
 	} # end if
 
@@ -544,7 +531,7 @@ $openprint::log->debug("Not adding because previousimposition != sigImposition")
 	# Here's the problem... if a sig after ours has our fold, then the makeready will be counted here. and so we won't change for makeready.
 
 	foreach my $SigImpo ( @{$Signature_Impositions} ) {
-$SigImpo->display("In Folding::siganture_calc");
+#$SigImpo->display("In Folding::siganture_calc");
 		last if $SigImpo == $SignatureImposition;
 		# Took this out so that we don't need signature_service_index, so we have to ensure that this service is not in the Signature_Impositions
 		#next if $signature_service_index and $$SigImpo{service_id} >= $signature_service_index;
@@ -599,6 +586,9 @@ $openprint::log->debug("folds from sigimpo") if DEBUG;
 	} # end if
 	@$SignatureImposition{'width_folds','height_folds'} = ( $width_folds, $height_folds );
 	$openprint::log->debug("FOlds: $width_folds x $height_folds from $$sig_specs{txtWidth}/$$sig_specs{txtFinalWidth} and height: $$sig_specs{txtHeight}/$$sig_specs{txtFinalHeight}") if DEBUG;
+
+# This code is wrong.  It sets every spreadsize=2 sig into a 4pg fold.
+if ( 0 ) {
 	if ( $$sig_specs{txtSignatureType} and $$sig_specs{txtSpreadSize} == 2 ) {
 
 		# Is this right? What does the orientation have to do with the fold direction? Not much, but the last fold is the spine
@@ -609,6 +599,7 @@ $openprint::log->debug("folds from sigimpo") if DEBUG;
 		} # end if
 		$openprint::log->debug("FOlds: $width_folds x $height_folds") if DEBUG;
 	} # end if
+}
 	if ( ( ! $width_folds ) and ( $$sig_specs{txtWidth} != $$sig_specs{txtFinalWidth} ) ) {
 		$width_folds = 1;
 	} 
@@ -628,7 +619,6 @@ $openprint::log->debug("folds from sigimpo") if DEBUG;
 		$i->columns( $$i{columns}/2 );
 		$$i{quantity} = 2;
 		push @Set_Of_Impositions, $i;
-		$SignatureImposition = $i;
 	} elsif ( $$SignatureImposition{runstyle} eq 'Work & Tumble' ) {
 		my $i = $SignatureImposition->copy();
 		$i->runstyle('Sheet Work');
@@ -636,7 +626,6 @@ $openprint::log->debug("folds from sigimpo") if DEBUG;
 		$i->rows( $$i{rows}/2 );
 		$$i{quantity} = 2;
 		push @Set_Of_Impositions, $i;
-		$SignatureImposition = $i;
 	} else {
 		my $i = $SignatureImposition->copy();
 		$$i{quantity} = 1;
@@ -646,7 +635,6 @@ $openprint::log->debug("folds from sigimpo") if DEBUG;
 	# Get rid of dutches, which I think can happen on books now.
 	if ( $$SignatureImposition{dutch_columns} ) {
 		my @Impositions = ();
-		my $modified = 0;
 		foreach my $I ( @Set_Of_Impositions ) {
 			if ( $$I{dutch_columns} ) {
 				{
@@ -666,20 +654,15 @@ $openprint::log->debug("folds from sigimpo") if DEBUG;
 					$i->image_orientation($$I{image_orientation} eq 'Vertical' ? 'Horizontal' : 'Vertical');
 					push @Impositions, $i;
 				}
-				$modified = 1;
 			} else {
 				push @Impositions, $I;
 			} # end if
-		} # end foreach
+		} # end foreach I
 
-		@Set_Of_Impositions = @Impositions if $modified;
-		if ( DEBUG ) {
-			foreach my $I ( @Impositions ) {
-				$I->display('Results from dutch cuts');
-			} # end foreach
-		} # end if
+		@Set_Of_Impositions = @Impositions;
 	} # end if dutches
 
+	# I suspect this is overkill
 	@Initial_Impositions = reduce_impositions( \@Set_Of_Impositions );
 #@All_Impositions = reduce_pages( \@All_Impositions ) if $SignatureImposition->pages() > $$SignatureImposition{spread_size};
 	if ( DEBUG ) {
@@ -690,7 +673,7 @@ $openprint::log->debug("folds from sigimpo") if DEBUG;
 				$I->display('quantity '.$I->quantity() );
 			} # end foreach I
 		} # end foreach set
-		$openprint::log->debug(sprintf('Original Sign info: %dx%d*%d,%dout', $SignatureImposition->spread_columns(), $SignatureImposition->spread_rows(), $SignatureImposition->spread_size(), $SignatureImposition->imposition() ) );
+		$openprint::log->debug(sprintf('Original Sign info: %dx%d*%d,%dout', @$SignatureImposition{'spread_columns','spread_rows','spread_size','imposition'} ) );
 	} # end if debug
 
 
@@ -1129,8 +1112,8 @@ $width_folds = $$Fold{page_columns}-1;
 $height_folds = $$Fold{page_rows}-1;
 $openprint::log->debug("Got new folds $width_folds x $height_folds from Fold") if DEBUG;
 } else {
-	$openprint::log->debug("Fold does not have oif ( 0 ) {page_rows and page_columns filled in" . $Fold->to_string() );
-	$openprint::log->debug("old: $width_folds x $height_folds source: $$sig_specs{txtWidth}/$$sig_specs{txtFinalWidth} x $$sig_specs{txtHeighth}/$$sig_specs{txtFinalHeight} ");
+	$openprint::log->debug("Fold does not have page_rows and page_columns filled in" . $Fold->to_string() ) if DEBUG;
+	$openprint::log->debug("old: $width_folds x $height_folds source: $$sig_specs{txtWidth}/$$sig_specs{txtFinalWidth} x $$sig_specs{txtHeighth}/$$sig_specs{txtFinalHeight} ") if DEBUG;
 if ( 1 ) {
 	$width_folds = Math::Round::nearest( 1, $$Imposition{layout_width} / $$Imposition{object_width} )-1;
 	if ( $width_folds < 0 ) {
@@ -1142,7 +1125,7 @@ if ( 1 ) {
 		$openprint::log->debug("Got negative width_folkds from Math::Round::nearest( 1, $$sig_specs{txtHeighth}/$$sig_specs{txtFinalHeight})-1");
 		$height_folds = 0;
 	} # end if
-	$openprint::log->debug("new: $width_folds x $height_folds x $$Imposition{layout_width} / $$Imposition{object_width} x $$Imposition{layout_height}/ $$Imposition{object_height}");
+	$openprint::log->debug("new: $width_folds x $height_folds x $$Imposition{layout_width} / $$Imposition{object_width} x $$Imposition{layout_height}/ $$Imposition{object_height}") if DEBUG;
 	}
 	
 }
@@ -1640,7 +1623,7 @@ $openprint::log->debug("Runspeed: $$Fold{type}(".$Fold->name().") : " . $Equipme
 			foreach my $FI ( @Used_Impositions ) {
 				my $Fold = $$FI{Fold};
 				$FI->Equipment( $Fold->Equipment() );
-				my $printed_sheets = (($$specs{'txtQuantity'.$qty_index}/$FI->imposition())/$SignatureImposition->imposition());
+				my $printed_sheets = (($$specs{'txtQuantity'.$qty_index}/$$FI{imposition})/$$SignatureImposition{imposition});
 
 				$r{MakeReadyTime} = $Fold->makeready_time() if $r{MakeReadyTime} < $Fold->makeready_time();
 				if ( $Fold->makeready_overs_units() eq 'Percent' ) {
@@ -1791,7 +1774,6 @@ sub calc {
 		my %Signature_Results;
 		my %similar_sigs;
 
-
 		foreach my $sig_id ( @signatures ) {
 			my $sig_specs = openprint::service::get_specs_ref( $Project, $sig_id );
 			my $form = $$sig_specs{SignatureIndex};
@@ -1806,7 +1788,7 @@ sub calc {
 			$$i{has_perforating} = openprint::Estimating::Perforating::signature_has_perforation( $$calc_hash{PerforatingSpecs}, $sig_specs );
 
 			push @Signature_Impositions, $i;
-$i->display() if DEBUG;
+#$i->display() if DEBUG;
 
 			$Impositions{$sig_id} = $i;
 			$$i{service_id} = $sig_id;
@@ -1836,8 +1818,7 @@ $i->display() if DEBUG;
 			}
 		} # end foreach signature
 
-
-		 for ( my $sig_index = 0; $sig_index < @signatures; $sig_index += 1 ) {
+		for ( my $sig_index = 0; $sig_index < @signatures; $sig_index += 1 ) {
             my $signature_service_index = $signatures[$sig_index];
 			my $sig_specs = openprint::service::get_specs_ref( $Project, $signature_service_index );
 			my $form = $$sig_specs{SignatureIndex};
@@ -1915,9 +1896,9 @@ foreach my $k ( keys %Signature_Results ) {
 			} # end foreach Permutation
 			$openprint::log->debug("Best permutation chose: cost: $$bestPerm{comparison_cost}");
 			foreach my $o ( @{$$bestPerm{Options}} ) {
-					foreach my $I ( @{$$o{FoldedImpositions}} ) {
-						$I->display( $$o{Equipment}{name});
-					} 
+				foreach my $I ( @{$$o{FoldedImpositions}} ) {
+					$I->display( $$o{Equipment}{name});
+				} 
 			} 
 
 		} else {
@@ -1939,7 +1920,6 @@ foreach my $k ( keys %Signature_Results ) {
 			$$bestPerm{Options} = \@options;
 			$$bestPerm{comparison_cost} = misc::sum( map { $$_{comparison_cost} } @options );
 		} # end if
-
 			
 			#my $form = $$sig_specs{SignatureIndex};
 			#$$specs{'hdnBreakdown'.$qty_index} .= "<fieldset><legend>Signature: $form $$sig_specs{txtSignatureType} Ref: $$sig_specs{txtServiceDescription}:</legend>";
@@ -1978,16 +1958,16 @@ foreach my $k ( keys %Signature_Results ) {
 				my $index = 1;
 				foreach my $Imposition ( @{$$o{FoldedImpositions}} ) {
 					$Imposition->display(" Runspeed: $$Imposition{runspeed}");
-					my $Fold = $Imposition->Fold();
+					my $Fold = $$Imposition{Fold};
 					my $fold_type = $Fold->type();
 
 					$openprint::log->debug("Foldtype: $fold_type " . $Imposition->imposition() . "out $$Fold{name} $$Fold{folds} $$Fold{angles}" ) if DEBUG;
 					$$specs{"FoldType-$form-$qty_index-$index"} = $fold_type;
 					$$specs{"FoldQty-$form-$qty_index-$index"} = $Imposition->quantity();
 					$$specs{"FoldPageQty-$form-$qty_index-$index"} = $Imposition->page_quantity();
-					$$specs{"FoldImposition-$form-$qty_index-$index"} = $Imposition->imposition();
-					$$specs{"FoldColumns-$form-$qty_index-$index"} = $Imposition->columns();
-					$$specs{"FoldRows-$form-$qty_index-$index"} = $Imposition->rows();
+					$$specs{"FoldImposition-$form-$qty_index-$index"} = $$Imposition{imposition};
+					$$specs{"FoldColumns-$form-$qty_index-$index"} = $$Imposition{columns};
+					$$specs{"FoldRows-$form-$qty_index-$index"} = $$Imposition{rows};
 					$$specs{"FoldFolds-$form-$qty_index-$index"} = $Fold->folds();
 					$$specs{"FoldAngles-$form-$qty_index-$index"} = $Fold->angles();
 					$$specs{"FoldRunspeed-$form-$qty_index-$index"} = $$Imposition{runspeed};
