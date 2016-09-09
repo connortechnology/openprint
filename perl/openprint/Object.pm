@@ -856,7 +856,9 @@ $openprint::log->error("Wasting time looking for objects in find $k $search{$k}"
 	} # end if
 
 	if ( $$params{or} ) {
-		if ( ref $$params{or} eq 'HASH' ) {
+		my $or_ref = ref $$params{or};
+
+		if ( $or_ref eq 'HASH' ) {
 			my ( $where, $values, $used_fields ) = get_fields_values( $object_type, $$params{or},  [ keys %{$$params{or}} ] );
 
 			if ( $$fields{deleted} and ( ! sets::isin( 'deleted', $used_fields ) ) and ( ! sets::isin( 'deleted', \@used_fields ) ) ) {
@@ -864,65 +866,42 @@ $openprint::log->error("Wasting time looking for objects in find $k $search{$k}"
 				push @values, 0;
 			} # end if
 
-			if ( @where ) {
-				$sql .= ' WHERE ( ' . join(' AND ', @where ) . ' ) AND ( ' . join(' OR ', @{$where} ) . ')';
-			} else {
-				$sql .= ' WHERE ( ' . join(' OR ', @{$where} ) . ' )';
-			} 
+			push @where, '('.join(' OR ', @{$where} ).')';
 			push @values, @{$values};
-		} elsif ( ref $$params{or} eq 'ARRAY' ) {
+
+		} elsif ( $or_ref eq 'ARRAY' ) {
 			my %s = @{$$params{or}};
 			my ( $where, $values, $used_fields ) = get_fields_values( $object_type, \%s,  [ keys %s ] );
 			if ( $$fields{deleted} and ( ! sets::isin( 'deleted', $used_fields ) ) and ( ! sets::isin( 'deleted', \@used_fields ) ) ) {
 				push @where, 'deleted=?';
 				push @values, 0;
 			} # end if
-			if ( @where ) {
-				$sql .= ' WHERE ( ' . join(' AND ', @where ) . ' ) AND ( ' . join(' OR ', @{$where} ) . ')';
-			} else {
-				$sql .= ' WHERE ( ' . join(' OR ', @{$where} ) . ' )';
-			} 
+			push @where, '('.join(' OR ', @{$where} ).')';
 			push @values, @{$values};
-
 		} else {
-			if ( $$fields{deleted} and ( ! sets::isin( 'deleted', $used_fields ) ) and ( ! sets::isin( 'deleted', \@used_fields ) ) ) {
-				push @where, 'deleted=?';
-				push @values, 0;
-			} # end if
-			if ( @where ) {
-				$sql .= ' WHERE ( ' . join(' AND ', @where ) . ' ) OR ( ' . $$params{or} . ')';
-			} else {
-				$sql .= " WHERE $$params{or}";
-			} # end if
+$log->error("Deprecated use of or $or_ref");
 		} # end if
-	} elsif ( $$params{and} ) {
+	} 
+
+	if ( $$params{and} ) {
 		my $and_ref = ref $$params{and};
 		if ( $and_ref eq 'HASH' ) {
 			my ( $where, $values, $used_fields ) = get_fields_values( $object_type, $$params{and},  [ keys %{$$params{and}} ] );
 
-			if ( $$fields{deleted} and ( ! sets::isin( 'deleted', $used_fields ) ) and ( ! sets::isin( 'deleted', \@used_fields ) ) ) {
-				push @where, 'deleted=?';
-				push @values, 0;
-			} # end if
-
-			if ( @where ) {
-				$sql .= ' WHERE ( ' . join(' AND ', @where ) . ' ) AND ( ' . join(' AND ', @{$where} ) . ')';
-			} else {
-				$sql .= ' WHERE ( ' . join(' AND ', @{$where} ) . ' )';
-			} 
+			push @where, '('.join(' AND ', @{$where} ).')';
 			push @values, @{$values};
 		} else {
 			$openprint::log->error("incorrect ref of and $and_ref");
 		}
+	}
 
-	} else {
-		#optimsise this
-		if ( $$fields{deleted} and ! sets::isin( 'deleted', \@used_fields ) ) {
-			push @where, 'deleted=?';
-			push @values, 0;
-		} # end if
-		$sql .= ' WHERE ' . join(' AND ', @where ) if @where;
+#optimsise this
+	if ( $$fields{deleted} and ! sets::isin( 'deleted', \@used_fields ) ) {
+		push @where, 'deleted=?';
+		push @values, 0;
 	} # end if
+	$sql .= ' WHERE ' . join(' AND ', @where ) if @where;
+
 	if ( exists $$params{order} ) {
 		$sql .= " ORDER BY $$params{order}";
 	} else {
