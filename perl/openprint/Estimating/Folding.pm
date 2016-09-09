@@ -678,25 +678,21 @@ $openprint::log->debug("folds from sigimpo") if DEBUG;
 				$I->display('Results from dutch cuts');
 			} # end foreach
 		} # end if
-	} # end if
+	} # end if dutches
 
 	@Initial_Impositions = reduce_impositions( \@Set_Of_Impositions );
-	#@All_Impositions = reduce_pages( \@All_Impositions ) if $SignatureImposition->pages() > $$SignatureImposition{spread_size};
-		if ( DEBUG ) {
-			$openprint::log->debug("Sets of Maximum Impositions: " . @Initial_Impositions);
-			foreach my $Set ( @Initial_Impositions ) {
-				$openprint::log->debug("Impositions in set: " . @$Set);
-				foreach my $I ( @$Set ) {
-					$I->display('quantity '.$I->quantity() );
-				} # end foreach I
-			} # end foreach set
-			$openprint::log->debug(sprintf('Original Sign info: %dx%d*%d,%dout', $SignatureImposition->spread_columns(), $SignatureImposition->spread_rows(), $SignatureImposition->spread_size(), $SignatureImposition->imposition() ) );
-		} # end if debug
+#@All_Impositions = reduce_pages( \@All_Impositions ) if $SignatureImposition->pages() > $$SignatureImposition{spread_size};
+	if ( DEBUG ) {
+		$openprint::log->debug("Sets of Maximum Impositions: " . @Initial_Impositions);
+		foreach my $Set ( @Initial_Impositions ) {
+			$openprint::log->debug("Impositions in set: " . @$Set);
+			foreach my $I ( @$Set ) {
+				$I->display('quantity '.$I->quantity() );
+			} # end foreach I
+		} # end foreach set
+		$openprint::log->debug(sprintf('Original Sign info: %dx%d*%d,%dout', $SignatureImposition->spread_columns(), $SignatureImposition->spread_rows(), $SignatureImposition->spread_size(), $SignatureImposition->imposition() ) );
+	} # end if debug
 
-	} else { # is a book signature
-#@All_Impositions = ( \@Set_Of_Impositions );
-		@Initial_Impositions = reduce_impositions( \@Set_Of_Impositions );
-	} # end if SignatureType
 
 	my @All_Impositions = @Initial_Impositions;
 	for ( my $set_index = 0; $set_index < @All_Impositions; $set_index += 1 ) {
@@ -711,7 +707,7 @@ $openprint::log->debug("folds from sigimpo") if DEBUG;
 					push @All_Impositions, \@new_impositions;
 				} # end foreach cuts
 			} 
-			if ( $Imposition->spreads() > 1 ) {
+			if ( $$Imposition{spreads} > 1 ) {
 				foreach my $cuts ( cut_spreads( $Imposition ) ) {
 					my @new_impositions = @$Set_Of_Impositions;
 					splice @new_impositions, $imp_index, 1, @$cuts;
@@ -1642,7 +1638,7 @@ $openprint::log->debug("Runspeed: $$Fold{type}(".$Fold->name().") : " . $Equipme
 			);
 			$r{Imposition}{Folds} = \@Used_Impositions;
 			foreach my $FI ( @Used_Impositions ) {
-				my $Fold = $FI->Fold;
+				my $Fold = $$FI{Fold};
 				$FI->Equipment( $Fold->Equipment() );
 				my $printed_sheets = (($$specs{'txtQuantity'.$qty_index}/$FI->imposition())/$SignatureImposition->imposition());
 

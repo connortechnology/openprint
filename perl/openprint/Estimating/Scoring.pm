@@ -566,7 +566,7 @@ $openprint::log->error("Scoring passed an invalid imposition");
 			my @My_All_Impositions;
 			my $type = $Equipment->specification('Type');
 			if ( $type eq 'Press' ) {
-				@My_All_Impositions = @Initial_Impositions;
+				@My_All_Impositions = ( [ $SignatureImposition ] );
 			} elsif ( $type eq 'Folder' ) {
 				@My_All_Impositions = @All_Impositions;
 			} elsif ( $type eq 'Stitcher' ) {
