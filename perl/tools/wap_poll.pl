@@ -136,9 +136,9 @@ foreach my $Host ( @Hosts ) {
   #$log->debug( $response->as_string() );
 
 				$response = $browser->post( $initial_url, $args );
-				my $headers = $response->headers();
+				$headers = $response->headers();
 				$url = $protocol.'://'.$$HI{ip}.$$headers{location}.'/admin/status/overview?status=1';
-				my $response = $browser->get( $url );
+				$response = $browser->get( $url );
 
 				my $json = decode_json( $response->content() );
 				if ( $$json{wifinets} and @{$$json{wifinets}} ) {
