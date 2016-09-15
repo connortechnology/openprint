@@ -25,7 +25,7 @@ my $program = basename($0);
 
 my $opts = {};
 GetOptions($opts, 'help', 
-    'db_name=s', 'db_host=s', 'db_user=s', 'db_pass=s','blacklist=s', 'debug=s', 'host_id=s',
+    'db_port=s', 'db_name=s', 'db_host=s', 'db_user=s', 'db_pass=s','blacklist=s', 'debug=s', 'host_id=s',
  );
 
 if ($opts->{help}) {
@@ -56,24 +56,26 @@ my $browser = LWP::UserAgent->new( ssl_opts => { verify_hostname => 0 } );
 use HTTP::Cookies;
 $browser->cookie_jar( HTTP::Cookies->new( file => '/tmp/cookies.txt', autosave => 1 ) );
 
-if ( $config{'site_url'} ) {
-	$config{'siteURL'} = $config{'site_url'};
-	$config{'ExternalSiteURL'} = $config{'site_url'};
+if ( $config{site_url} ) {
+	$config{siteURL} = $config{site_url};
+	$config{ExternalSiteURL} = $config{site_url};
 } # end if
-$config{'SiteTitle'} = $config{'site_title'};
-$config{'SkinPath'} = $config{'skin_path'};
+$config{SiteTitle} = $config{site_title};
+$config{SkinPath} = $config{skin_path};
 
-$config{'log_level'} = 'debug' if ! $config{'log_level'};
-$log = logger->new( {'file'=>$config{'log_file'}, 'level'=>$config{'log_level'}} );
+$config{log_level} = 'debug' if ! $config{log_level};
+$log = logger->new( { file=>$config{log_file}, level=>$config{log_level}} );
 
 $log->debug("Connecting to db");	
-$openprint::dbh = sql::open_sql( $log,
-		'host'		=> $config{'db_host'},
-		'database'	=> $config{'db_name'},
-		'driver'	=> 'Pg',
-		'login'		=> $config{'db_user'},
-		'password'	=> $config{'db_pass'},
+my %db_config_info = (
+		port		=> $config{db_port},
+		host		=> $config{db_host},
+		database	=> $config{db_name},
+		driver		=> 'Pg',
+		login		=> $config{db_user},
+		password	=> $config{db_pass},
 		);
+$openprint::dbh = sql::open_sql( $log, %db_config_info );
 if ( ! $dbh ) {
 	die "Error opening db. $!";
 } # end if
