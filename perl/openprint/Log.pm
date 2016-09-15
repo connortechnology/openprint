@@ -7,7 +7,7 @@ require openprint::Log_Action;
 require openprint::Host;
 
 use vars qw( $debug $table $serial %fields %find_fields %transforms %defaults %types );
-$debug = 0;
+$debug = 1;
 $table = 'logs';
 $serial = 'logs_id_seq';
 %fields = (

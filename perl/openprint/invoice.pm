@@ -190,7 +190,7 @@ sub edit {
 
 			$variable{error} .= $Product->save( \%p_changes );
 		} # end foreach Product
-		(new openprint::Log())->save({ Object =>$Invoice, action=>'Edit Invoice', note=>join('<br/>', @changes)});
+		(new openprint::Log())->save({ Object =>$Invoice, action=>'Invoice Edit', note=>join('<br/>', @changes)});
 		if ( $param{invoice_id} and ! $variable{error} ) {
 			$variable{information} .= 'Invoice saved.<br/>';
 			$variable{ExternalRedirect} = '/invoice/view.html?invoice_id='.$Invoice->id();
@@ -255,11 +255,10 @@ sub view {
 							compounded_on	=>	sprintf('%.4d-%.2d-%.2d', $year, $month, $day ),
 							});
 					if ( ! $_ ) {
-						$Invoice->add_to_log(sprintf('Added %s%.2f interest for %s', 
-									$Invoice->Currency()->symbol(), 
-									$I->amount(),
-									$date_string,
-									));
+						(new openprint::Log())->save({
+							Object	=>	$Invoice,
+							note	=>	sprintf('Added %s%.2f interest for %s', $Invoice->Currency()->symbol(), $I->amount(), $date_string),
+							action	=>	'Invoice Interest Added'});
 					} else {
 						$variable{error} .= $_;
 						last;
@@ -280,7 +279,7 @@ sub view {
 		} # e,nd if
 	} elsif ( $param{btnFunction} eq 'Post' ) {
 		if ( ! ( $variable{error} .= $Invoice->save({posted=>1,posted_on=>'NOW()'}) ) ) {
-			$Invoice->add_to_log( 'Invoice posted.' );
+			(new openprint::Log())->save({ Object=>$Invoice, action => 'Invoice Posted'});
 			$variable{information} .= 'Invoice posted.<br/>';
 			delete $param{invoice_id};
 			if ( $session{'/invoice/history.html?company_id'} and ( $session{'/invoice/history.html?company_id'} != $Invoice->invoicee_id() ) ) {
@@ -291,7 +290,7 @@ sub view {
 		} # end if
 	} elsif ( $param{btnFunction} eq 'UnPost' ) {
 		if ( ! ( $variable{error} .= $Invoice->save({ posted=>0 }) ) ) {
-			$Invoice->add_to_log( 'Invoice unposted.' );
+			(new openprint::Log())->save({ Object=>$Invoice, action => 'Invoice Unposted'});
 			$variable{information} .= 'Invoice unposted.<br/>';
 			$variable{ExternalRedirect} = '/invoice/view.html?invoice_id='.$Invoice->id();
 			return;
