@@ -1023,5 +1023,18 @@ sub _user_logs {
 	);
 } # end sub _logs
 
+sub users {
+	$session{$r->uri().'?company_id'} = $session{company_id} if ! exists $session{$r->uri().'?company_id'};
+
+}
+sub _users {
+	ssi::save_params( '/administrator/managerial/users.html', ( 
+				'salesrep_id', 'marketing_category_id', 'company_id','usergroup_id','deleted',
+				( map { 'created_on_start_' . $_ } ( 'year','month','day' ) ),
+				( map { 'created_on_end_' . $_ } ( 'year','month','day' ) ),
+				) );
+	$session{$r->uri().'?salesrep_id_exclude'} = $param{salesrep_id_exclude};
+}
+
 1;
 __END__

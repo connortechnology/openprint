@@ -760,32 +760,23 @@ sub find {
 		$params = { @_ };
 	} # end if
 
-	my @where;
-	my $sql = 'SELECT';
+	my $do_cache = $$params{columns} ? 0 : 1;
+	my $sql = join( ' ', 'SELECT',
+		( exists $$params{distinct} ? 'DISTINCT' : () ),
+		( exists $$params{columns} ? $$params{columns} : '*' ),
+		'FROM',
+		( exists $$params{table} ? $$params{table} : ${$object_type.'::table'} ),
+	);
+	delete @$params{'distinct','columns','table'};
 	
-	my $do_cache = 1;
-	if ( exists $$params{distinct} ) {
-		$sql .= ' DISTINCT';
-		delete $$params{distinct};
-	} # end if
-	if ( $$params{columns} ) {
-		$sql .= ' ' . $$params{columns};
-		delete $$params{columns};
-		# We may not have the full list, so don't cache this Object. Although, if we had a cached copy, if we just updated it, that would be ok...
-		$log->debug("Turning off caching due to columns on $object_type.") if DEBUG_ALL or DEBUG_CACHE;
-		$do_cache = 0;
-	} else {
-		$sql .= ' *';
-	} # end if
-	$sql .= ' FROM ';
-	if ( $$params{table} ) {
-		$sql .= $$params{table};
-		delete $$params{table};
-	} else {
-		$sql .= ${$object_type.'::table'};
+	my @where;
+	my @values;
+	if ( $$params{custom} ) {
+		push @where, '(' . (shift @{$$params{custom}}) . ')';
+		push @values, @{$$params{custom}};
+		delete $$params{custom};
 	} # end if
 
-	my @values;
 	my $local_dbh = ${$object_type.'::dbh'};
 	if ( $$params{dbh} ) {
 		$local_dbh = $$params{dbh};
@@ -794,7 +785,7 @@ sub find {
 		$local_dbh = $openprint::dbh;
 	} # end if
 
-	my @param_keys = sets::exclude( [ 'order','limit','offset','or' ], [ keys %$params ] );
+	my @param_keys = sets::exclude( [ 'order','limit','offset','or','and' ], [ keys %$params ] );
 
 	my $cache_field = ${$object_type.'::cache_field'} if $do_cache;
 	if ( $cache_field and $$params{$cache_field} and ( 1 == @param_keys ) ) {
@@ -843,11 +834,11 @@ $log->error("returning nothing for $object_type $cache_field $$params{$cache_fie
 
 	my $fields = \%{$object_type.'::fields'};
 # Check for Object references
-	if ( %search ) {
+	if ( 0 and  %search ) {
 $openprint::log->debug("Usgin search");
 		foreach my $k ( keys %search ) {
 			if ( sets::isin( ref $search{$k}, [ '', 'SCALAR','ARRAY','HASH' ] ) ) {
-$openprint::log->debug("Wasting time looking for objects in find $k $search{$k}");
+$openprint::log->error("Wasting time looking for objects in find $k $search{$k}");
 				next;
 			}
 			my $f = (lc $k).'_id';
@@ -863,14 +854,11 @@ $openprint::log->debug("Wasting time looking for objects in find $k $search{$k}"
 			} # end if
 		} # end foreach
 	} # end if
-	if ( $search{custom} ) {
-		push @where, '(' . (shift @{$search{custom}}) . ')';
-		push @values, @{$search{custom}};
-		delete $search{custom};
-	} # end if
 
 	if ( $$params{or} ) {
-		if ( ref $$params{or} eq 'HASH' ) {
+		my $or_ref = ref $$params{or};
+
+		if ( $or_ref eq 'HASH' ) {
 			my ( $where, $values, $used_fields ) = get_fields_values( $object_type, $$params{or},  [ keys %{$$params{or}} ] );
 
 			if ( $$fields{deleted} and ( ! sets::isin( 'deleted', $used_fields ) ) and ( ! sets::isin( 'deleted', \@used_fields ) ) ) {
@@ -878,45 +866,42 @@ $openprint::log->debug("Wasting time looking for objects in find $k $search{$k}"
 				push @values, 0;
 			} # end if
 
-			if ( @where ) {
-				$sql .= ' WHERE ( ' . join(' AND ', @where ) . ' ) AND ( ' . join(' OR ', @{$where} ) . ')';
-			} else {
-				$sql .= ' WHERE ( ' . join(' OR ', @{$where} ) . ' )';
-			} 
+			push @where, '('.join(' OR ', @{$where} ).')';
 			push @values, @{$values};
-		} elsif ( ref $$params{or} eq 'ARRAY' ) {
+
+		} elsif ( $or_ref eq 'ARRAY' ) {
 			my %s = @{$$params{or}};
 			my ( $where, $values, $used_fields ) = get_fields_values( $object_type, \%s,  [ keys %s ] );
 			if ( $$fields{deleted} and ( ! sets::isin( 'deleted', $used_fields ) ) and ( ! sets::isin( 'deleted', \@used_fields ) ) ) {
 				push @where, 'deleted=?';
 				push @values, 0;
 			} # end if
-			if ( @where ) {
-				$sql .= ' WHERE ( ' . join(' AND ', @where ) . ' ) AND ( ' . join(' OR ', @{$where} ) . ')';
-			} else {
-				$sql .= ' WHERE ( ' . join(' OR ', @{$where} ) . ' )';
-			} 
+			push @where, '('.join(' OR ', @{$where} ).')';
 			push @values, @{$values};
-
 		} else {
-			if ( $$fields{deleted} and ( ! sets::isin( 'deleted', $used_fields ) ) and ( ! sets::isin( 'deleted', \@used_fields ) ) ) {
-				push @where, 'deleted=?';
-				push @values, 0;
-			} # end if
-			if ( @where ) {
-				$sql .= ' WHERE ( ' . join(' AND ', @where ) . ' ) OR ( ' . $$params{or} . ')';
-			} else {
-				$sql .= " WHERE $$params{or}";
-			} # end if
+$log->error("Deprecated use of or $or_ref");
 		} # end if
-	} else {
-		#optimsise this
-		if ( $$fields{deleted} and ! sets::isin( 'deleted', \@used_fields ) ) {
-			push @where, 'deleted=?';
-			push @values, 0;
-		} # end if
-		$sql .= ' WHERE ' . join(' AND ', @where ) if @where;
+	} 
+
+	if ( $$params{and} ) {
+		my $and_ref = ref $$params{and};
+		if ( $and_ref eq 'HASH' ) {
+			my ( $where, $values, $used_fields ) = get_fields_values( $object_type, $$params{and},  [ keys %{$$params{and}} ] );
+
+			push @where, '('.join(' AND ', @{$where} ).')';
+			push @values, @{$values};
+		} else {
+			$openprint::log->error("incorrect ref of and $and_ref");
+		}
+	}
+
+#optimsise this
+	if ( $$fields{deleted} and ! sets::isin( 'deleted', \@used_fields ) ) {
+		push @where, 'deleted=?';
+		push @values, 0;
 	} # end if
+	$sql .= ' WHERE ' . join(' AND ', @where ) if @where;
+
 	if ( exists $$params{order} ) {
 		$sql .= " ORDER BY $$params{order}";
 	} else {
