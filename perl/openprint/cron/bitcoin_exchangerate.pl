@@ -83,11 +83,11 @@ if ($res->is_success) {
 	my %Currencies = map { $_->short(), $_ } openprint::Currency->find();
 	foreach my $cur ( keys %$rates ) {
 		next if ! $Currencies{$cur};
-		if ( ! $$rates{$cur}{30d} ) {
+		if ( ! $$rates{$cur}{'30d'} ) {
 			$log->error("NULL 30d rate for $cur");
 			next;
 		} # end if
-		my $rate = $$rates{$cur}{30d};
+		my $rate = $$rates{$cur}{'30d'};
 		if ( ! $rate ) {
 			$log->error("NULL 30d rate for $rate");
 			next;
