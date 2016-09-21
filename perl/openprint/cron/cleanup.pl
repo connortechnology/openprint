@@ -45,7 +45,6 @@ if ($opts->{help}) {
 }
 
 my %defaults = (
-    config  =>  '/etc/openprint/cleanup.conf',
 );
 foreach my $default ( keys %defaults ) {
     $$opts{$default} = $defaults{$default} if ! $$opts{$default};
@@ -53,8 +52,10 @@ foreach my $default ( keys %defaults ) {
 
 $log = new logger(level=>'debug',program=>$program);
 # Get our configuration information
-if (my $err = configuration::from_file($$opts{config})) {
-    die $err;
+if ( $$opts{config} ) {
+	if (my $err = configuration::from_file($$opts{config})) {
+		die $err;
+	}
 }
 configuration::merge( $opts );
 foreach my $param ( 'db_name','db_user','db_pass','fifo','from','recipient','smtp-server' ) {
