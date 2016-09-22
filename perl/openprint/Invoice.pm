@@ -11,7 +11,6 @@ use vars qw( %config $log %session );
 require openprint::Currency;
 require openprint::Company;
 require openprint::Service;
-require openprint::InvoiceLog;
 require openprint::Tax;
 require openprint::Invoiced_Product;
 require openprint::Invoiced_Project;
@@ -256,19 +255,8 @@ sub Payments {
 } # end sub Payments
 
 sub Logs {
-	return openprint::InvoiceLog->find('invoice_id'=>$_[0]{id},'order'=>'created_on');
+	return openprint::Log->find(object_id=>$_[0]{id},object_type=>'openprint::Invoice', order=>'date_time');
 } # end sub Logs
-
-sub add_to_log {
-	my ( $self, $desc, $user_id ) = @_;
-	my $Log = new openprint::InvoiceLog();
-	$Log->save({
-		invoice_id	=> $$self{id},
-		user_id		=> $user_id ? $user_id : $session{user_id},
-		description	=> $desc,
-	} );
-	
-} # end sub add_to_log
 
 sub send {
 	my ( $self, $To ) = @_;
@@ -310,13 +298,13 @@ sub send {
 	my $Email = new openprint::Email();
 	$results = $Email->send(
 		BCC			=>	new openprint::User( $session{user_id} ),
-		#'TO'			=>	new openprint::User( $session{user_id} ),
-		TO			=>	( $To ? $To : [$self->Invoicee()->AccountingContacts()] ),
+		TO			=>	new openprint::User( $session{user_id} ),
+		#TO			=>	( $To ? $To : [$self->Invoicee()->AccountingContacts()] ),
 		FROM		=>	$config{AccountingEmail},
 		ATTACHMENTS	=>	\@attachments,
 		SUBJECT		=>	sprintf('Your Invoice (%1$d) is now available.', $$self{id} ),
 	);
-	$self->add_to_log( $results );
+	(new openprint::Log())->save({Object=>$self, action=>'Invoice Sent', note=>$results});
 	return $results;
 } # end sub send
 

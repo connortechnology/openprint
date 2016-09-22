@@ -226,6 +226,7 @@ sub _currency_conversions {
 sub user_profiles {
 
 	my $user_id = $param{ddmUser} ? openprint::User->transform( 'id', $param{ddmUser} ) : undef;
+	$user_id = $param{user_id} ? openprint::User->transform( 'id', $param{user_id} ) : undef if ! $user_id;
 	my $User = $variable{User} = new openprint::User( $user_id );
 
 	my $user_role = $param{ddmUserRole};
@@ -1022,6 +1023,19 @@ sub _user_logs {
 			( map { 'log_created_on_end_' . $_ } ( 'year','month','day','hour','minute' ) ),
 	);
 } # end sub _logs
+
+sub users {
+	$session{$r->uri().'?company_id'} = $session{company_id} if ! exists $session{$r->uri().'?company_id'};
+
+}
+sub _users {
+	ssi::save_params( '/administrator/managerial/users.html', ( 
+				'salesrep_id', 'marketing_category_id', 'company_id','usergroup_id','deleted','email',
+				( map { 'created_on_start_' . $_ } ( 'year','month','day' ) ),
+				( map { 'created_on_end_' . $_ } ( 'year','month','day' ) ),
+				) );
+	$session{$r->uri().'?salesrep_id_exclude'} = $param{salesrep_id_exclude};
+}
 
 1;
 __END__

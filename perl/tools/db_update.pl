@@ -3316,12 +3316,12 @@ if ( ! sets::isin( 'host_interfaces', \@tables ) ) {
 		$dbh->do('ALTER TABLE host_interfaces ADD id serial');
 		$dbh->do('ALTER TABLE host_interfaces ADD PRIMARY KEY (id)');
 	}
-	my $data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='hosts'", 'column_name');
-	if ( exists $$data{'dhcp'} ) {
+	#my $data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='hosts'", 'column_name');
+	if ( exists $$data{dhcp} ) {
 		$dbh->do('ALTER TABLE hosts DROP dhcp');
 	} # end if
 	if ( ! exists $$data{connected_to} ) {
-		$log->debug("Adding macaddr to host_interfaces");
+		$log->debug("Adding connected_to to host_interfaces");
 		$dbh->do('ALTER TABLE host_interfaces ADD connected_to macaddr') or die $openprint::dbh->errstr();
 	}
 }
@@ -4039,6 +4039,46 @@ if ( ! sets::isin( 'helpdesk', \@tables ) ) {
 	$log->debug("Creating HelpDesk Table");
 	$dbh->do( misc::load_file( $log, q{../openprint/sql/Helpdesk.sql}) ) or die $dbh->errstr();
 }
+if ( sets::isin( 'invoice_logs', \@tables ) ) {
+	$log->debug("deprecating invoice_logs");
+	my $ac = sql::start_transaction( $dbh );
+	my $sth = $dbh->prepare('SELECT * from Invoice_logs');
+	my $res = $sth->execute() or die $dbh->errstr();
+	while ( my $invoice_log = $sth->fetchrow_hashref() ) {
+		my $action;
+		if ( $$invoice_log{description} =~ /^Invoice updated/ ) {
+			$action = 'Invoice Edit';
+		} elsif ( $$invoice_log{description} =~ /^Invoice emailed/ ) {
+			$action = 'Invoice Sent';
+		} elsif ( $$invoice_log{description} =~ /^Sent/ ) {
+			$action = 'Invoice Sent';
+		} elsif ( $$invoice_log{description} =~ /^Emailed/ ) {
+			$action = 'Invoice Sent';
+		} elsif ( $$invoice_log{description} =~ /^Invoice posted/ ) {
+			$action = 'Invoice Posted';
+		} elsif ( $$invoice_log{description} =~ /^Invoice unposted/ ) {
+			$action = 'Invoice Unposted';
+		} elsif ( $$invoice_log{description} =~ /^Added/ ) {
+			$action = 'Invoice Interest Added';
+		} elsif ( $$invoice_log{description} eq '' ) {
+			next;
+		} else {
+	die "unhandled desc: $$invoice_log{description}";
+		}
+		
+		my $Log = (new openprint::Log())->save({
+			object_id	=>	$$invoice_log{invoice_id},
+			object_type	=>	'openprint::Invoice',
+			user_id		=>	$$invoice_log{user_id},
+			date_time	=>	$$invoice_log{created_on},
+			note		=>	$$invoice_log{description},
+			action		=>	$action,
+		});
+		die if $dbh->errstr();
+    }
+	sql::end_transaction( $dbh, $ac );
+
+} # end if
 print "Finished\n";
 1;
 __END__

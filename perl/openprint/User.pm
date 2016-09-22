@@ -433,6 +433,9 @@ sub link {
 sub link_to {
     return sprintf('<a href="/account/view.html?user_id=%1$d">%2$s</a>', $_[0]{id}, @_ > 1 ? $_[1] : $_[0]->name() );
 } # end sub link_to
+sub admin_link_to {
+    return sprintf('<a href="/administrator/managerial/user_profiles.html?user_id=%1$d">%2$s</a>', $_[0]{id}, @_ > 1 ? $_[1] : $_[0]->name() );
+} # end sub admin_link_to
 
 sub html {
 	if ( ! $_[0]{id} ) {

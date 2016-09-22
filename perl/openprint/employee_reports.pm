@@ -784,7 +784,7 @@ sub customer_performance {
 			'ordered_on_end_year','ordered_on_end_month','ordered_on_end_day', 
 			'not_ordered_on_start_year','not_ordered_on_start_month','not_ordered_on_start_day',
 			'not_ordered_on_end_year','not_ordered_on_end_month','not_ordered_on_end_day', 
-			'salesrep_id','payment_cycle' );
+			'salesrep_id','payment_cycle', 'country' );
 	ssi::setup_date_select( '/employee/reports/customer_performance.html', 'ordered_on_start', -31 );
 	ssi::setup_date_select( '/employee/reports/customer_performance.html', 'ordered_on_end', 0 );
 	ssi::setup_date_select( '/employee/reports/customer_performance.html', 'not_ordered_on_start', -31 );
@@ -804,7 +804,7 @@ sub customer_performance {
 								} );
 		my @status_ids = map { $$_{id} } openprint::Order_Status->find(name=>['Complete','Picked Up', 'Shipped','Waiting For QA Approval', 'Waiting For Customer Approval','Order Submitted','In Production','Waiting For Pickup','Re-Opened','Pending Deposit','Paid','Complete' ]);
 
-		my @header = ( 'CSR', 'Company Name', 'Contact Name','Contact Phone','Contact Email', '# of Orders', 'Order Value', 'Date of Last Order', 'Payment Cycle' );
+		my @header = ( 'CSR', 'Company Name', 'Country', 'Contact Name','Contact Phone','Contact Email', '# of Orders', 'Order Value', 'Date of Last Order', 'Payment Cycle' );
 		my @data;
 		my @csr_ids;
 		if ( ( $session{user_type} ne 'A' ) and ! openprint::usergroup::is_user_in( ['Sales Admin','Reporting'], $session{user_id} ) ) {
@@ -814,8 +814,10 @@ sub customer_performance {
 		} else {
 			@csr_ids = map { $_->id() } openprint::User->find( company_id=>$config{owner_id}, type=>['E','A'], 'usergroup any'=>'Sales', order=>'lower(firstname),lower(lastname)');
 		} # end if
-			my %orders_by_company;
 
+		my %orders_by_company;
+
+		{
 			my @Orders = openprint::Order->find( 
 					ssi::date_filter( '/employee/reports/customer_performance.html?ordered_on_start', 'created_on >=' ),
 					ssi::date_filter( '/employee/reports/customer_performance.html?ordered_on_end', 'created_on <=' ),
@@ -825,24 +827,35 @@ sub customer_performance {
 				$orders_by_company{$$Order{company_id}} = [] if ! $orders_by_company{$$Order{company_id}};
 				push @{ $orders_by_company{$$Order{company_id}} }, $Order;
 			}
-			my %not_ordered_since;
-			my @Orders_Since = openprint::Order->find(
-					ssi::date_filter( '/employee/reports/customer_performance.html?not_ordered_on_start', 'created_on >=' ),
-					ssi::date_filter( '/employee/reports/customer_performance.html?not_ordered_on_end', 'created_on <=' ),
-					status_id => \@status_ids,
-					);
-			foreach my $Order ( @Orders_Since ) {
-				$not_ordered_since{$$Order{company_id}} = 1;
-			}
+		}
+		my %not_ordered_since;
+		my @Orders_Since = openprint::Order->find(
+				ssi::date_filter( '/employee/reports/customer_performance.html?not_ordered_on_start', 'created_on >=' ),
+				ssi::date_filter( '/employee/reports/customer_performance.html?not_ordered_on_end', 'created_on <=' ),
+				status_id => \@status_ids,
+				);
+		foreach my $Order ( @Orders_Since ) {
+			$not_ordered_since{$$Order{company_id}} = 1;
+		}
 	
 		foreach my $csr_id ( @csr_ids ) {
 			my $CSR = new openprint::User( $csr_id );
 
-			foreach my $Company ( openprint::Company->find( salesrep_id=>$csr_id, order=>'lower(name)') ) {
+			foreach my $Company ( openprint::Company->find( salesrep_id=>$csr_id, order=>'lower(name)',
+						( $session{'/employee/reports/customer_performance.html?country'} ? ( country=>$session{'/employee/reports/customer_performance.html?country'} ) : () ),
+						) ) {
 				my $order_total;
 				my $payment_cycle;
 
-				next if ! $orders_by_company{$$Company{id}} ;
+				next if ! $orders_by_company{$$Company{id}} and ( Date::Calc::check_date( @session{
+                            '/employee/reports/customer_performance.html?ordered_on_start_year',
+                            '/employee/reports/customer_performance.html?ordered_on_start_month',
+                            '/employee/reports/customer_performance.html?ordered_on_start_day'
+                            } ) or Date::Calc::check_date( @session{
+                            '/employee/reports/customer_performance.html?ordered_on_end_year',
+                            '/employee/reports/customer_performance.html?ordered_on_end_month',
+                            '/employee/reports/customer_performance.html?ordered_on_end_day'
+                            } ) );
 
 				if ( $do_not_ordered_since ) {
 					next if $not_ordered_since{$$Company{id}};
@@ -852,7 +865,7 @@ sub customer_performance {
 					$order_total += $Order->Currency()->convert_from( $Order->total() );
 					$payment_cycle += $Order->payment_days();
 				} # end foreach Order
-				$payment_cycle = int( $payment_cycle / scalar @Orders );
+				$payment_cycle = @{ $orders_by_company{$$Company{id}} } ? int( $payment_cycle / scalar @{ $orders_by_company{$$Company{id}} } ) : 0;
 				if ( $param{payment_cycle} ) {
 					if ( $payment_cycle > $param{payment_cycle} ) {
 						next;
@@ -864,12 +877,15 @@ sub customer_performance {
 				$Contact = openprint::User->find_one( company_id=>$Company->id(), order=>'id') if ! $Contact;
 				$Contact = new openprint::User() if ! $Contact;
 
+				my $LastOrder = $orders_by_company{$$Company{id}}[ @{ $orders_by_company{$$Company{id}} } - 1] if @{ $orders_by_company{$$Company{id}} };
+
 				push @data, ( $CSR->name(),
 						$Company->name(), 
+						$Company->country(), 
 						$Contact->name(), $Contact->phone(), $Contact->email(),
-						Number::Format::format_number( scalar @Orders ), 
+						Number::Format::format_number( scalar @{ $orders_by_company{$$Company{id}} } ), 
 						openprint::Currency::format( $order_total ),
-						Date::Format::time2str( '%Y-%m-%d', Date::Parse::str2time( $Orders[@Orders-1]->created_on() ) ),
+						( $LastOrder ? Date::Format::time2str( '%Y-%m-%d', Date::Parse::str2time( $LastOrder->created_on() ) ) : 'never' ),
 						$payment_cycle . ' days',
 						);
 			} # end foreach Company
@@ -883,7 +899,7 @@ sub _customer_performance {
 			'ordered_on_end_year','ordered_on_end_month','ordered_on_end_day', 
 			'not_ordered_on_start_year','not_ordered_on_start_month','not_ordered_on_start_day',
 			'not_ordered_on_end_year','not_ordered_on_end_month','not_ordered_on_end_day', 
-			'salesrep_id','payment_cycle' );
+			'salesrep_id','payment_cycle','country' );
 } # end sub _customer_performance
 
 sub prepress_productivity {
