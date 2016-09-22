@@ -25,7 +25,7 @@ my $program = basename($0);
 
 my $opts = {};
 GetOptions($opts, 'help', 
-		'db_name=s', 'db_host=s', 'db_user=s', 'db_pass=s','blacklist=s', 'debug=s', 'host_id=s',
+		'db_name=s', 'db_host=s', 'db_user=s', 'db_pass=s','blacklist=s', 'debug=s', 'host_id=s','log_level=s',
 		);
 
 if ($opts->{help}) {
@@ -155,7 +155,11 @@ foreach my $Host ( @Hosts ) {
 
 									if ( ref $$network{assoclist} eq 'ARRAY' ) {
 										foreach my $mac ( @{$$network{assoclist}} ) {
-											foreach my $station_HI ( openprint::Host_Interface->find( mac=>$mac ) ) {
+											my @WIS = openprint::Host_Interface->find( mac=>$mac ) ;
+											if ( ! @WIS ) {
+												$log->warning("NO Host found for mac $mac");
+											}
+											foreach my $station_HI ( @WIS ) {
 												if ( (!defined $$station_HI{connected_to}) or ( uc $$station_HI{connected_to} ne uc $$HI{mac} ) ) {
 													$log->debug("Updating connection of ".$station_HI->Host()->hostname() );
 													$station_HI->save({connected_to=>$$wap_HI{mac}});
