@@ -23,6 +23,15 @@ function load_page() {
 			<? echo ( input( type=>'email', name=>'email', onkeydown=>'if(event.keyCode==13){f1.submit();}', oninput=>'load_page();' ); ) ?>
 			<? echo ( button( 'Go2',{ onclick=>"f1.action='user_profiles.html';f1.submit();", text=> 'Go' } ); ) ?>	
 		</li>
+		<li><label>Company Name</label>
+			<input type="text" oninput="filter_companies( f1.ddmCustomer, {name:this.value} );" 
+			   onkeydown="if(event.keyCode == 13){f1.ddmUser.selectedIndex=-1;f1.btnFunction.value='';this.form.submit();}" 
+				   class="filter" />
+			<select name="company_id" id="company_id" onchange="load_page();">
+				<option value="">All</option>
+				<? echo ( make_drop_down( openprint::Company->dropdown(), $session{$r->uri().'?company_id'} );) ?>
+			</select>
+		</li>
 		<li>
 			<label>Sales Rep</label>
 			<select name="salesrep_id" size="1" onchange="load_page();"> 
@@ -30,6 +39,13 @@ function load_page() {
 				<? echo ( make_drop_down( openprint::User->dropdown( type=>['E','A'], 'usergroup any'=>'Sales' ), $session{$r->uri().'?salesrep_id'} ); ) ?>
 			</select>
 			<? echo ( checkboxes( 'salesrep_id_exclude', [ 1, 'Not in this list' ], $session{$r->uri().'?salesrep_id_exclude'}, { onclick=>'load_page();' } ); ) ?>
+		</li>
+		<li>
+			<label>Group</label>
+			<select name="usergroup_id" size="1" onchange="load_page();"> 
+				<option value="">All</option>
+				<? echo ( make_drop_down( openprint::UserGroup->dropdown(), $session{$r->uri().'?usergroup_id'} ); ) ?>
+			</select>
 		</li>
 		<li> 
 			<label>Created Date</label>

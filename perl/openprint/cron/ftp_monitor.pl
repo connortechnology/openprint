@@ -40,7 +40,7 @@ my $opts = {};
 Getopt::Long::GetOptions($opts, 'attach-file', 'fifo=s', 'from=s', 'help', 'ignore-users=s',
 	'log_file=s', 'log_level=s',
 	'recipient=s', 'sleep=s', 'smtp-server=s', 'subject=s',
-	'watch-users=s','pid_file=s', 'db_name=s', 'db_host=s', 'db_user=s', 'db_pass=s',
+	'watch-users=s','pid_file=s', 'db_port=s', 'db_name=s', 'db_host=s', 'db_user=s', 'db_pass=s',
 	'skin_path=s', 'document_root=s', 'file_path=s','site_title=s', 'site_url=s',
 	'scoreboard=s','max_files=s', 'config=s',
 );
@@ -92,6 +92,7 @@ if ( $config{pid_file} ) {
 $log = logger->new( { file=>$config{log_file}, level=>$config{log_level}} );
 $log->info("Opening SQL connection $config{db_host} $config{db_name}");
 $openprint::dbh = sql::open_sql( $log, 
+	port		=> $config{db_port},
 	host		=> $config{db_host},
 	database	=> $config{db_name},
 	driver		=> 'Pg',

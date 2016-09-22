@@ -27,7 +27,7 @@ my $program = basename($0);
 
 my $opts = {};
 GetOptions($opts, 'help', 
-    'db_name=s', 'db_host=s', 'db_user=s', 'db_pass=s','blacklist=s', 'debug=s', 'config=s', 'ping_type=s',
+    'db_port=s', 'db_name=s', 'db_host=s', 'db_user=s', 'db_pass=s','blacklist=s', 'debug=s', 'config=s', 'ping_type=s',
  );
 
 if ($opts->{help}) {
@@ -90,6 +90,7 @@ while(1) {
 	if ( ! ( $dbh and $dbh->ping ) ) {
 		$log->debug("Connecting to db");	
 		$dbh = sql::open_sql( $log,
+				port		=> $config{db_port},
 				host		=> $config{db_host},
 				database	=> $config{db_name},
 				driver		=> 'Pg',

@@ -758,7 +758,7 @@ $openprint::log->debug("Storing ($_) (".$session{"$url?$_"}.")") if Debug;
 
 sub boolean_override {
 	my ( $for, $value, $locked_js, $unlocked_js ) = @_;
-	return sprintf(q`<input type="hidden" id="%1$s" name="%1$s" value="%2$s"/><img class="Override" src="/images/%3$s.gif" onclick="var e=$('%1$s');if(e.value){e.value='0';this.src='/images/unlocked.gif';%5$s} else {e.value='1';this.src='/images/locked.gif';%4$s}" alt=""/>`, 
+	return sprintf(q`<input type="hidden" id="%1$s" name="%1$s" value="%2$s"/><img class="Override" src="/images/%3$s.gif" onclick="var e=$('%1$s');if(e.value!='0'){e.value='0';this.src='/images/unlocked.gif';%5$s} else {e.value='1';this.src='/images/locked.gif';%4$s}" alt=""/>`, 
 			$for, 1*$value, ($value ? 'locked' : 'unlocked'), $locked_js, $unlocked_js );
 }
 sub write_override {

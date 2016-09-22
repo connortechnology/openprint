@@ -47,7 +47,7 @@ if ($CFG::Config{help}) {
     exit 0;
 }
 
-if ( 1 ) {
+if ( 0 ) {
 if ( $CFG::Config{'log_level'} eq 'debug' ) {
 foreach my $k ( keys %ENV ) {
 $log->debug("Environment: $k => $ENV{$k}");

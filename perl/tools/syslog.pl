@@ -27,7 +27,7 @@ my $program = basename($0);
 my $opts = {};
 Getopt::Long::GetOptions($opts, 'fifo=s', 'help', 'config=s',
 	'log_file=s', 'log_level=s',
-	'pid_file=s', 'db_name=s', 'db_host=s', 'db_user=s', 'db_pass=s',
+	'pid_file=s', 'db_port=s', 'db_name=s', 'db_host=s', 'db_user=s', 'db_pass=s',
 	'port=s','debug=s',
 );
 
@@ -59,13 +59,16 @@ foreach my $param ( 'db_name','db_user','db_pass' ) {
 
 $log = new logger( {file=>$config{log_file}, level=>$config{log_level}} );
 $log->info("Opening SQL connection");
-$dbh = sql::open_sql( $log,
+my %db_connect_info = (
+	port		=> $config{db_port},
 	host		=> $config{db_host},
 	database	=> $config{db_name},
 	driver		=> 'Pg',
 	login	 	=> $config{db_user},
 	password	=> $config{db_pass},
 );
+
+$dbh = sql::open_sql( $log, %db_connect_info );
 die "Couldn't connect to db: $$dbh{errstr}" if ! $dbh;
 configuration::init();
 configuration::from_file($$opts{config});
@@ -96,6 +99,7 @@ my @re = (
 		q`^(\w{3} [ :0-9]{11}) [\._a-zA-Z0-9\-]+ pam-abl\[[0-9]+\]: Blocking access from (?<IP>[0-9.]+) to service sshd, user root$`,
 		q`^(\w{3} [ :0-9]{11}) [\._a-zA-Z0-9\-]+ postfix\/smtpd\[[0-9]+\]: warning: [\.\-A-Za-z0-9]+\[(?<IP>[0-9.]+)\]: SASL LOGIN authentication failed:`,
 		q`^(\w{3} [ :0-9]{11}) [\._a-zA-Z0-9\-]+ pdns\[[0-9]+\]: Received a malformed qdomain from (?<IP>[0-9.]+), '[^']+': sending servfail$`,
+		q`^(\w{3} [ :0-9]{11}) [\._a-zA-Z0-9\-]+ ovpn\-server\[[0-9]+\]: (?<IP>[0-9.]+):[0-9]+ WARNING Bad encapsulated packet length from peer \([[:digit:]]+\), which must be > 0 and <= 1547 \-\- please ensure that \-\-tun\-mtu or \-\-link\-mtu is equal on both peers \-\- this condition could also indicate a possible active attack on the TCP link \-\- \[Attempting restart\.\.\.\]$`,
 );
 
 
@@ -127,13 +131,7 @@ my %host_counts;
 
 while(1) {
 	if ( ! ($dbh and $dbh->ping() ) ) {
-		$dbh = sql::open_sql( $log,
-				host		=> $config{db_host},
-				database	=> $config{db_name},
-				driver		=> 'Pg',
-				login		=> $config{db_user},
-				password	=> $config{db_pass},
-				);
+		$dbh = sql::open_sql( $log, %db_connect_info );
 		if ( ! $dbh ) {
 			$log->error("Cannot connect to db! Sleeping");
 			sleep(10);

@@ -21,6 +21,8 @@ require openprint::Asset;
 require openprint::Claim_Content;
 use Date::Calc;
 use Apache::Session::Postgres;
+use File::Basename qw(basename);
+use Getopt::Long ();
 
 use openprint ();
 use vars qw($log $dbh %config);
@@ -28,20 +30,54 @@ use vars qw($log $dbh %config);
 *log = \$openprint::log;
 *config = \%openprint::config;
 
-my $r;
-$log = logger->new({ level=>'debug'});
+my $program = basename($0);
 
-$dbh = sql::open_sql( $log, 
-	'host'		=> $ARGV[0],
-	'database'	=> $ARGV[1],
-	'driver'	=> 'Pg',
-	'login'		=> $ARGV[2],
-	'password'	=> $ARGV[3],
+my $opts = {};
+Getopt::Long::GetOptions($opts, 'help',
+    'log_file=s', 'log_level=s',
+    'db_port=s', 'db_name=s', 'db_host=s', 'db_user=s', 'db_pass=s',
+    'config=s',
+);
+
+if ($opts->{help}) {
+    usage();
+    exit 0;
+}
+
+my %defaults = (
+);
+foreach my $default ( keys %defaults ) {
+    $$opts{$default} = $defaults{$default} if ! $$opts{$default};
+} # end foreach default
+
+$log = new logger(level=>'debug',program=>$program);
+# Get our configuration information
+if ( $$opts{config} ) {
+	if (my $err = configuration::from_file($$opts{config})) {
+		die $err;
+	}
+}
+configuration::merge( $opts );
+foreach my $param ( 'db_name','db_user','db_pass','fifo','from','recipient','smtp-server' ) {
+    if ( ! $config{$param} ) {
+        die "$program: missing required --$param parameter";
+    }
+} # end foreach required-param
+
+my $r;
+
+$openprint::dbh = sql::open_sql( $log, 
+	port		=> $config{db_port},
+	host		=> $config{db_host},
+	database	=> $config{db_name},
+	driver		=> 'Pg',
+	login		=> $config{db_user},
+	password	=> $config{db_pass},
 );
 die 'Error opening db' if ! $dbh;
 $openprint::Object::no_cache = 1;
 
-configuration::init( $log, $dbh );
+configuration::init( \%config );
 
 # Clear out old sessions
 my $session_ids = $dbh->selectcol_arrayref( q{SELECT id FROM sessions} );
@@ -54,14 +90,14 @@ foreach my $session ( @$session_ids ) {
         $log->debug("Error fetching Session: $session: $@");
         next;
     }
-    if ( ! $session{'lastupdated'} ) {
+    if ( ! $session{lastupdated} ) {
 		$log->debug("Updating time $session");
-        $session{'lastupdated'} = time;
+        $session{lastupdated} = time;
         untie %session;
-    } elsif ( time - $session{'lastupdated'} > ( 60*60*24*7 ) ) {
+    } elsif ( time - $session{lastupdated} > ( 60*60*24*7 ) ) {
 		tied(%session)->delete;
 		$deleted_session_count += 1;
-    } elsif ( ( time - $session{'lastupdated'} > ( 60*60*24*1 ) ) and ! $session{'user_id'} ) {
+    } elsif ( ( time - $session{lastupdated} > ( 60*60*24*1 ) ) and ! $session{user_id} ) {
 		tied(%session)->delete;
 		$deleted_session_count += 1;
 	} else {
@@ -88,7 +124,7 @@ if ( openprint::Quote->find_one() ) {
 }
 
 if ( 0 ) {
-if ( ( exists $config{'RFID'} ) and $config{'RFID'} ) {
+if ( ( exists $config{RFID} ) and $config{RFID} ) {
 	require openprint::RFIDTag;
 	require openprint::RFIDTagHistory;
 	require openprint::RFIDScannerHistory;
@@ -160,7 +196,7 @@ foreach my $Log ( openprint::Log->find('date_time <='=>sprintf('%.4d-%.2d-%.2d',
 $log->warn("Deleted $log_count log entries");
 }
 
-#if ( $config{'AssetPath'} ) {
+#if ( $config{AssetPath} ) {
 	foreach my $Asset ( openprint::Asset->find('md5 is null'=>1) ) {
 		my $data = misc::load_file( $log, $Asset->on_disk_path() );
 		if ( $data ) {
@@ -180,7 +216,7 @@ $log->warn("Deleted $log_count log entries");
 #} 
 
 foreach my $Photo_Album ( openprint::Photo_Album->find( 'thumbnail_id is null'=>0) ) {
-	if ( ! sets::isin( $$Photo_Album{'thumbnail_id'}, ( map { $_->asset_id() } $Photo_Album->Photos() ) ) ) {
+	if ( ! sets::isin( $$Photo_Album{thumbnail_id}, ( map { $_->asset_id() } $Photo_Album->Photos() ) ) ) {
 		$Photo_Album->save({'thumnail_id'=>undef});
 	} # end if
 } # end foreach
@@ -204,5 +240,18 @@ foreach my $Skid ( openprint::Skid->find(
 $log->warn("Deleted $deleted_skids skids");
 
 $dbh->disconnect();
+
+sub usage {
+	print <<EOH;
+
+usage: $program [--help] 
+
+The purpose of this script is to cleanup various things in the database.
+
+Command-line options:
+
+	--help		Displays this message.
+EOH
+}
 1;
 __END__

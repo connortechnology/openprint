@@ -132,5 +132,7 @@ $$variable{Timetracks} = [ openprint::Timetrack->find(invoice_id=>$$variable{Inv
 	<?include(_payment_options.html)?>
 <? endif ( $$variable{Invoice}->owing() ) ?>
 <?include('/invoice/_payments_view.html') ?>
-<?include('_logs.html') ?>
+<? if ( $$variable{Invoice}->id() ) ?>
+	<? echo ( include_logs( $$variable{Invoice} ); ) ?>
+<? endif ( $$variable{Invoice}->id() ) ?>
 </div></div>

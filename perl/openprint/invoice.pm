@@ -175,15 +175,22 @@ sub edit {
 		} else {
 			delete $param{invoicee};
 		} # end if
+		my @changes = $Invoice->changes( \%param );
+		$Invoice->subtotal_override( $param{subtotal_override} );
 		$variable{error} .= $variable{Invoice}->save(\%param);
 		foreach my $Product ( $Invoice->Products() ) {
-			$variable{error} .= $Product->save({
+			my %p_changes = (
 				description	=>	$param{'product-description-'.$Product->id()},
 				price		=>	$param{'product-price-'.$Product->id()},
 				quantity	=>	$param{'product-quantity-'.$Product->id()},
 				po			=>	$param{'product-po-'.$Product->id()},
-				});
+				);
+			my @p_changes = $Product->changes( \%p_changes );
+		 	push @changes, 'product changed: ' . join(',',@p_changes) if @p_changes;
+
+			$variable{error} .= $Product->save( \%p_changes );
 		} # end foreach Product
+		(new openprint::Log())->save({ Object =>$Invoice, action=>'Invoice Edit', note=>join('<br/>', @changes)});
 		if ( $param{invoice_id} and ! $variable{error} ) {
 			$variable{information} .= 'Invoice saved.<br/>';
 			$variable{ExternalRedirect} = '/invoice/view.html?invoice_id='.$Invoice->id();
@@ -248,11 +255,10 @@ sub view {
 							compounded_on	=>	sprintf('%.4d-%.2d-%.2d', $year, $month, $day ),
 							});
 					if ( ! $_ ) {
-						$Invoice->add_to_log(sprintf('Added %s%.2f interest for %s', 
-									$Invoice->Currency()->symbol(), 
-									$I->amount(),
-									$date_string,
-									));
+						(new openprint::Log())->save({
+							Object	=>	$Invoice,
+							note	=>	sprintf('Added %s%.2f interest for %s', $Invoice->Currency()->symbol(), $I->amount(), $date_string),
+							action	=>	'Invoice Interest Added'});
 					} else {
 						$variable{error} .= $_;
 						last;
@@ -273,7 +279,7 @@ sub view {
 		} # e,nd if
 	} elsif ( $param{btnFunction} eq 'Post' ) {
 		if ( ! ( $variable{error} .= $Invoice->save({posted=>1,posted_on=>'NOW()'}) ) ) {
-			$Invoice->add_to_log( 'Invoice posted.' );
+			(new openprint::Log())->save({ Object=>$Invoice, action => 'Invoice Posted'});
 			$variable{information} .= 'Invoice posted.<br/>';
 			delete $param{invoice_id};
 			if ( $session{'/invoice/history.html?company_id'} and ( $session{'/invoice/history.html?company_id'} != $Invoice->invoicee_id() ) ) {
@@ -284,7 +290,7 @@ sub view {
 		} # end if
 	} elsif ( $param{btnFunction} eq 'UnPost' ) {
 		if ( ! ( $variable{error} .= $Invoice->save({ posted=>0 }) ) ) {
-			$Invoice->add_to_log( 'Invoice unposted.' );
+			(new openprint::Log())->save({ Object=>$Invoice, action => 'Invoice Unposted'});
 			$variable{information} .= 'Invoice unposted.<br/>';
 			$variable{ExternalRedirect} = '/invoice/view.html?invoice_id='.$Invoice->id();
 			return;

@@ -177,6 +177,11 @@ cleanup : true
 					$html .= $Station_HI->Host()->link_to().'<br/>';
 				}
 			} # end if
+			if ( $$Interface{connected_to} ) {
+				foreach my $Station_HI ( openprint::Host_Interface->find( mac=>$$Interface{connected_to} ) ) {
+					$html .= $Station_HI->Host()->link_to().'<br/>';
+				}
+			}
 		} # end if mac
 		$html .= '</td></tr>';
 	} # end foreach Interface
