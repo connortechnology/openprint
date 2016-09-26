@@ -130,7 +130,7 @@ while(1) {
 				next;
 			}
 
-			$log->debug( $Host->hostname() . ' is ' . ( $Host->online() ? 'online' : 'offline' ) );
+			$log->debug( $Host->hostname() . ' is ' . ( $Host->online() ? 'online' : 'offline' ) . " at ip $$HI{ip}");
 			my @ping = $p->ping($HI->ip());
 			my $ping = $ping[0];
 #$openprint::log->debug("Ping1: @ping");
@@ -166,10 +166,10 @@ while(1) {
 					my @To = map { $_->User() } $Host->Notifications();
 					if ( @To and ( @To < 10 ) ) {
 						my $results = (new openprint::Email())->send(
-								'TO'	=>	\@To,
-								'SUBJECT'	=>	'Host has gone ' . ($online?'online':'offline') . ': ' . $Host->hostname() . ' ' . misc::seconds2hms($since) . ' seconds ago.',
-								'FROM'		=>	$config{TechSupportEmail},
-								'BODY'		=>	"
+								TO	=>	\@To,
+								SUBJECT	=>	'Host has gone ' . ($online?'online':'offline') . ': ' . $Host->hostname() . ' ' . misc::seconds2hms($since) . ' seconds ago.',
+								FROM		=>	$config{TechSupportEmail},
+								BODY		=>	"
 Description: $$Host{description}
 
 Please investigate.",
