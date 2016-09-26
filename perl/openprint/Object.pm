@@ -879,7 +879,7 @@ $openprint::log->error("Wasting time looking for objects in find $k $search{$k}"
 			push @where, '('.join(' OR ', @{$where} ).')';
 			push @values, @{$values};
 		} else {
-$log->error("Deprecated use of or $or_ref");
+$log->error("Deprecated use of or $or_ref for $$params{or}");
 		} # end if
 	} 
 
