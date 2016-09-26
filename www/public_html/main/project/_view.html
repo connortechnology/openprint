@@ -67,7 +67,11 @@
 				my @totals;
 
 				foreach my $qty_index ( @quantity_indexes ) {
-					$html .= '<td class="price"><span class="price">'.($$printing_specs{"txtPrice$qty_index"} ? $ProjectCurrency->convert_from($$printing_specs{"txtPrice$qty_index"}) : '&nbsp;').'</span></td>';
+					$html .= '<td class="price"><span class="price">'.($$printing_specs{"txtPrice$qty_index"} ? $ProjectCurrency->convert_from($$printing_specs{"txtPrice$qty_index"}) : '&nbsp;').'</span>';
+					if ( $$printing_specs{"alert$qty_index"} ) {
+						$html .= '<span class="error">'.$$printing_specs{"alert$qty_index"}.'</span>';
+					}
+					$html .= '</td>';
 				} # end foreach
 				$html .= '<td class="status">'.$statuses{$$services{''}[0]}.'</td>';
 				delete $statuses{$$services{''}[0]};
@@ -319,7 +323,14 @@
 						} # end foreach summary
 					} # end if summaries
 					if ( $$specs{alert} ) {
-						$html .= qq`<tr$rowclass><td class="error" colspan="`. ( scalar(@quantity_indexes) + 1 ) . '">' . $$specs{alert}. '</td>';
+						$html .= qq`<tr$rowclass><td class="error">` . $$specs{alert}. '</td>';
+						foreach my $qty_index ( @quantity_indexes ) {
+							if ( $$specs{"alert$qty_index"} ) {
+								$html .= '<td class="error">'.$$specs{"alert$qty_index"}.'</td>';
+							} else {
+								$html .= '<td></td>';
+							}
+						} 
 						$html .= '<td>&nbsp;</td>';
 						if ( ( ! $Project->docket() ) or ( $Project->Order()->status() eq 'Re-Opened' ) ) {
 							$html .= '<td class="unprintable actions">&nbsp;</td>';
