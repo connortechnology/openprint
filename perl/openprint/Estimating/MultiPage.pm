@@ -634,24 +634,39 @@ sub check {
     my %needed_pages;
     foreach my $ssid ( $Project->signatures({ sort=>1}) ) {
         my $sig_specs = openprint::service::get_specs_ref( $Project, $ssid );
-        $specified_pages{$$sig_specs{Group}} += $$sig_specs{"PageQuantity$qty_index"};
-        $needed_pages{$$sig_specs{Group}} = $$specs{'GroupPageQuantity'.$$sig_specs{Group}};
+		my $Group = $$sig_specs{Group};
+
+		if ( $qty_index ) {
+			$specified_pages{$Group} += $$sig_specs{"PageQuantity$qty_index"};
+			$needed_pages{$Group} = $$specs{'GroupPageQuantity'.$Group};
+		} else {
+
+			foreach my $ddm ( 'Brand','Finish','Colour','Weight' ) {
+#$openprint::log->debug("no qty_index $ddm " . $$sig_specs{"ddmStock$ddm"} . " " .  $$specs{"ddmStock$ddm$$sig_specs{Group}"} );
+
+				if ( $$sig_specs{"ddmStock$ddm"} ne $$specs{"ddmStock$ddm$$sig_specs{Group}"} ) {
+					$error .= "Stock $ddm for form $$sig_specs{SignatureIndex} " . $$sig_specs{"ddmStock$ddm"} . " does not match book specs " . $$specs{"ddmStock$ddm$$sig_specs{Group}"} ." group $$sig_specs{Group}.<br/>";
+				}
+			} # end foreach
+		}
     } # end foreach
+if ( $qty_index ) {
     foreach my $Group ( sort keys %needed_pages ) {
-$openprint::log->debug( "Grouup $Group needed $needed_pages{$Group} specd: $specified_pages{$Group}" );
+		$openprint::log->debug( "Grouup $Group needed $needed_pages{$Group} specd: $specified_pages{$Group}" );
         if ( $needed_pages{$Group} > $specified_pages{$Group} ) {
             $error .= 'Group ' . $Group . ' ' . $$specs{'txtSignatureType'.$Group} . ' needs another ' . ( $needed_pages{$Group} - $specified_pages{$Group} ) . ' pages.<br/>';
 		} elsif ( $needed_pages{$Group} < $specified_pages{$Group} ) {
             $error .= 'Group ' . $Group . ' ' . $$specs{'txtSignatureType'.$Group} . ' has ' . ( $specified_pages{$Group} - $needed_pages{$Group} ) . ' too many pages.<br/>';
         } # end if
     } # end foreach
+}
 	if ( $error ) {
-		if ( $error ne $$specs{alert} ) {
-			openprint::service::insert_service_spec( $openprint::log, $openprint::dbh, $Project->id(), $Service->service_id(), 'alert', $error ) if $error;
+		if ( $error ne $$specs{"alert$qty_index"} ) {
+			openprint::service::insert_service_spec( $openprint::log, $openprint::dbh, $Project->id(), $Service->service_id(), 'alert'.$qty_index, $error ) if $error;
 		} # end if
 	} else {
 		if ( $$specs{alert} =~ /^Group/ ) {
-			openprint::service::insert_service_spec( $openprint::log, $openprint::dbh, $Project->id(), $Service->service_id(), 'alert', $error );
+			openprint::service::insert_service_spec( $openprint::log, $openprint::dbh, $Project->id(), $Service->service_id(), 'alert'.$qty_index, $error );
 		} # end if
 	} # end if
 	
@@ -677,6 +692,7 @@ sub summary {
 			} # end if
 		} # end foreach group
 	} # end if
+	check( $Project, $Project->Service( $service_index ), $qty_index );
 	return $html;
 } # end sub summary
 
