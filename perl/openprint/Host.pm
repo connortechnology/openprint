@@ -318,6 +318,13 @@ sub reboot {
 			$url = 'http://'.$HI->ip().'/userRpm/SysRebootRpm.htm?Reboot=Reboot';
 		} elsif( $_[0]->type() eq 'D-Link DAP1522' ) {
 			$url = 'http://'.$HI->ip().'/sys_cfg_valid.xgi?&exeshell=submit REBOOT';
+		} elsif( $_[0]->type() eq 'DLink DCS-910' ) {
+			$initial_url = 'http://'.$HI->ip();
+			$url = 'http://'.$HI->ip().'/ReplyF.htm';
+			$method = 'post';
+			$args = {
+				Reset => 'Reboot the Device',
+			}
 		} elsif( $_[0]->type() eq 'DCS932L' ) {
 			$url = 'http://'.$HI->ip().'/setSystemReboot';
 		} elsif( $_[0]->type() eq 'DCS-933L' ) {
@@ -347,7 +354,7 @@ sub reboot {
 			#$openprint::log->debug("Initial Header $k => $$headers{$k}");
 		#}  # end foreach
 		my ( $auth, $tokens ) = $$headers{'www-authenticate'} =~ /^(\w+)\s+(.*)$/;
-		my %tokens = map { /(\w+)="([^"]+)"/i } split(', ', $tokens );
+		my %tokens = map { /(\w+)="?([^"]+)"?/i } split(', ', $tokens );
 		if ( $tokens{realm} ) {
 			$openprint::log->debug("tokens: $tokens realm: $tokens{realm}");
 			$browser->credentials( $HI->ip().':80', $tokens{realm}, $Host->info('username'), $Host->info('password') );
@@ -386,24 +393,27 @@ sub reboot {
 		last if $success;
 	} # end foreach HI
 
-	(new openprint::Log())->save({ action=>'Host rebooted', host_id=>$Host->id(), note=>sprintf('<a href="/employee/it/host.html?host_id=%d">%s</a> has been rebooted.', @$Host{'id','hostname'})});
-	if ( 0 ) {
-		my @To = map { $_->User() } $Host->Notifications();
-		if ( @To and ( @To < 10 ) ) {
-			$openprint::log->debug("Emailing: " . join(',', map { $_->email() } @To ) );
-			my $results = (new openprint::Email())->send(
-					TO    =>  \@To,
-					SUBJECT   =>  'Camera rebooted ' . $Host->hostname(),
-					FROM      =>  $openprint::config{TechSupportEmail},
-					BODY      =>  "
+	if ( $success ) {
 
-					Description: $$Host{description}
-					",
-					);
-		} else {
-			$openprint::log->error("No To or too many @To");
-		} # end if TO
-	} # end if 0
+		(new openprint::Log())->save({ action=>'Host rebooted', host_id=>$Host->id(), note=>sprintf('<a href="/employee/it/host.html?host_id=%d">%s</a> has been rebooted.', @$Host{'id','hostname'})});
+		if ( 0 ) {
+			my @To = map { $_->User() } $Host->Notifications();
+			if ( @To and ( @To < 10 ) ) {
+				$openprint::log->debug("Emailing: " . join(',', map { $_->email() } @To ) );
+				my $results = (new openprint::Email())->send(
+						TO    =>  \@To,
+						SUBJECT   =>  'Camera rebooted ' . $Host->hostname(),
+						FROM      =>  $openprint::config{TechSupportEmail},
+						BODY      =>  "
+
+						Description: $$Host{description}
+						",
+						);
+			} else {
+				$openprint::log->error("No To or too many @To");
+			} # end if TO
+		} # end if 0
+	} # end if
 	return $success;
 } # end sub reboot
 
