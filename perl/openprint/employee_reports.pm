@@ -264,8 +264,10 @@ sub _order_history_results {
 	if ( %param ) {
 	my %parameters; 
 	if ( ( $session{user_type} ne 'A' ) and ! openprint::usergroup::is_user_in( ['Sales Admin','Reporting','Accounting'], $session{user_id} ) ) {
-		$parameters{salesrep_id} = $session{user_id};
-		$parameters{or} = "companies.id=(SELECT company_id FROM users WHERE users.id=$session{user_id})";
+		$parameters{or} = {
+				company_id	=> $openprint::User->company_id(),
+				salesrep_id => $session{user_id},
+		};
 	} elsif ( $param{CSR} ) {
 		$parameters{salesrep_id} = $session{$uri.'?CSR'};
 	} # end if
