@@ -1,7 +1,6 @@
 <script type="text/javascript">
-	function load_contents( form ) {
-		$('Results').innerHTML = 'Please wait...';
-		new Ajax.Updater('Results','/employee/reports/_order_history_results.html', {parameters:Form.serialize(form)});
+    function calc(formName) {
+		LoadContent( 'Results', '/employee/reports/_order_history_results.html', $(formName) );
 	} // end function
 </script>
 <div class="PageTitle">
@@ -60,7 +59,7 @@
 			<label>Press</label>
 			<select id="press_id" name="press_id">
 				<option value="">All</option>
-				<? echo ( make_drop_down( [ map { $_->id(), $_->strid() . ': ' . $_->name() } openprint::Equipment->find('category any'=>'Printing', 'order'=>'lower(strid)') ], $param{press_id} ); ) ?>
+				<? echo ( make_drop_down( [ map { $_->id(), $_->strid() . ': ' . $_->name() } openprint::Equipment->find('category any'=>'Printing', order=>'lower(strid)') ], $param{press_id} ); ) ?>
 			</select>
 		</li>
 		<? if ( $session{user_type} eq 'A' or openprint::usergroup::is_user_in( ['Sales Admin','Reporting','Accounting'], $session{user_id} ) ) ?>
@@ -84,7 +83,7 @@
 		</ul>
 		 <p class="buttons">
 			 <? echo ( join("\n",
-					 button( 'Go', { onclick=>"LoadContent('Results','/employee/reports/_order_history_results.html', f1.serialize() );", text=>'Show Results' } ),
+					 button( 'Go', { onclick=>"calc('f1');", text=>'Show Results' } ),
 					 button( 'Download', { onclick=>"f1.elements['action'].value='download';f1.submit();" } ),
 ); ) ?>
 		 </p>

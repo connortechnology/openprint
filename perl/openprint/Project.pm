@@ -1555,7 +1555,7 @@ sub calliper {
 
 		my $printing_specs = openprint::service::get_specs_ref( $Project, $$services{''}[0] );
 
-		my $finished_calliper;
+		my $finished_calliper = 0;
 
 		my @quantity_indexes = $Project->quantity_indexes() ;
 		if ( $project_type eq 'MultiPage' ) {

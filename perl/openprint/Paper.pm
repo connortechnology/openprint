@@ -512,7 +512,10 @@ sub group {
 } # end sub group
 
 sub Brand {
-	return openprint::StockBrand( $_[0]{brand_id} );
+	if ( ! $_[0]{Brand} ) {
+		$_[0]{Brand} = new openprint::StockBrand( $_[0]{brand_id} );
+	} 
+	return $_[0]{Brand};
 }
 
 sub brand {
@@ -530,7 +533,8 @@ sub brand {
 			$_[0]{brand_id} = undef;
 		} # end if
 	} elsif ( $_[0]{brand_id} and ! $_[0]{brand} ) {
-		$_[0]{brand} = new openprint::StockBrand( $_[0]{brand_id} )->name();
+		$_[0]{Brand} = new openprint::StockBrand( $_[0]{brand_id} );
+		$_[0]{brand} = $_[0]{Brand}->name();
 	} # end if
 	return $_[0]{brand};
 } # end sub brand
@@ -1197,7 +1201,7 @@ sub gsm {
 			$$self{gsm} = Math::Round::nearest( 0.01, $$self{wpsi} * 703064.5 );
 		} else { 
 			$$self{gsm} = 'unknown';
-			$openprint::log->warn("Can't calculate gsm for " . $self->to_string() ) if $$self{brand};
+			$openprint::log->warn("Can't calculate gsm for " . $$self{to_string} ) if $$self{brand};
 		} # end if
 	} # end if
 	return $$self{gsm};
@@ -1610,7 +1614,8 @@ sub basis_mweight {
 		} elsif ( ( $$self{weight} =~ /^(\d+)lb/i ) or ( $$self{weight} =~ /^(\d+)#/i ) ) {
 			$$self{basis_mweight} = 2*$1;
 		} else {
-			$openprint::log->error("Unable to calculated basis_mweight" . $self->to_string() );
+			#$$self{basis_mweight} = 'Unknown';
+			$openprint::log->error("Unable to calculated basis_mweight" . $$self{id} );
 		} # end if
 	} # end if
 	return $$self{basis_mweight};
