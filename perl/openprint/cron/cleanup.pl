@@ -81,7 +81,7 @@ configuration::init( \%config );
 
 # Clear out old sessions
 my $session_ids = $dbh->selectcol_arrayref( q{SELECT id FROM sessions} );
-$log->warn("Cleaning out sessions: " . @$session_ids . " sessionsn in system");
+$log->warn("Cleaning out sessions: " . @$session_ids . " sessions in system");
 my $deleted_session_count = 0;
 foreach my $session ( @$session_ids ) {
     $session =~ s/\s//g;
@@ -169,9 +169,9 @@ foreach my $Host ( @Hosts ) {
 		if ( $host ) {
 			$Host->hostname( $host );
 		}
-			$Host->save({
+		$Host->save({
 				resolved_on	=> 'NOW()',
-			});
+				});
 } # end foreach Host
 }
 
