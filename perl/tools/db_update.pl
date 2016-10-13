@@ -34,8 +34,9 @@ $log = new logger( 'debug' );
 
 $ARGV[1] = $ARGV[0] if ! $ARGV[1];
 $ARGV[2] = $ARGV[1] if ! $ARGV[2];
+$ARGV[4] = 5432 if ! $ARGV[4];
 
-$dbh = sql::open_sql( $log, ('database'=>$ARGV[0], 'driver'=>'Pg','login'=>$ARGV[1], 'password'=>$ARGV[2], 'host'=>$ARGV[3]) );
+$dbh = sql::open_sql( $log, ('database'=>$ARGV[0], 'driver'=>'Pg','login'=>$ARGV[1], 'password'=>$ARGV[2], 'host'=>$ARGV[3], port=>$ARGV[4]) );
 my @tables = sql::execute( undef, undef, q`SELECT table_name FROM information_schema.tables where table_schema='public'`);
 $log->debug("Tables: @tables");
 my @sequences = sql::execute( undef, undef, q`SELECT sequence_name FROM information_schema.sequences where sequence_schema='public'`);

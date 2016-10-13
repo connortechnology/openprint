@@ -519,7 +519,7 @@ sub delete {
 		delete $openprint::Object::cache{$config{db_name}}{$type}{join('-',@$self{@identified_by})};
 	} # end if
 	eval 'if ( %'.$type.'::find_cache ) { %'.$type.'::find_cache = (); }';
-	(new openprint::Log())->save({Object=>$self,action=>'Delete'});
+	(new openprint::Log())->save({Object=>$self,action=>'Delete'}) if $type ne 'openprint::Log';
 	return;
 } # end sub delete
 

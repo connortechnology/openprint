@@ -25,6 +25,7 @@ use File::Basename qw(basename);
 my $opts = {};
 GetOptions($opts, 'help', 
 		'db_name=s', 'db_host=s', 'db_user=s', 'db_pass=s', 'debug=s', 'command=s', 'position=s','type=s','hostname=s',
+		'log_level=s','log_file=s',
 		);
 
 if ($opts->{help}) {
@@ -59,6 +60,7 @@ if ( $config{pid_file} ) {
 
 $log->debug("Connecting to db");
 $dbh = sql::open_sql( $log,
+		port		=> $config{db_port},
 		host		=> $config{db_host},
 		database	=> $config{db_name},
 		driver		=> 'Pg',
@@ -78,9 +80,12 @@ my $p = Net::Ping->new('icmp',10);
 
 my @Hosts = openprint::Host->find(
 	monitored=>1,
-	( $$opts{type} ? ( type=>[ split(',',$$opts{type})] ) : ( 'type in'=>[ 'AIC500', 'AIC500W', 'AIC777W', 'AIC747W','AIC250','AIC250W' ] ) ),
+	( $$opts{type} ? ( type=>[ split(',',$$opts{type})] ) : ( 'type in'=>[ 'AIC500', 'AIC500W', 'AIC777W', 'AIC747W','AIC250','AIC250W', 'DLink DCS-910' ] ) ),
 	( $$opts{hostname} ? ( hostname=>$$opts{hostname} ) : () ),
 	);
+if ( ! @Hosts ) {
+	$log->error("NO hosts found for command.");
+}
 foreach my $Host ( @Hosts ) {
 	my @ips = map { $_->ip() ? $_->ip() : () } $Host->Interfaces();
 	if ( ! @ips ) {
@@ -96,13 +101,13 @@ foreach my $Host ( @Hosts ) {
 		next;
 	} # end if
 
-	if ( $Host->online() and $ping ) {
-		my $browser = LWP::UserAgent->new();
-		$browser->credentials( $Host->hostname().':80', 'SkyIPCam', 'admin'=>'p1GraPHic' );
+	if ( $Host->online() or $ping ) {
 		if ( $$opts{command} eq 'reboot' ) {
 			$log->debug('Sending reboot to ' . $Host->hostname());
 			$Host->reboot();
 		} elsif ( $$opts{command} eq 'move' ) {
+			my $browser = LWP::UserAgent->new();
+			$browser->credentials( $Host->hostname().':80', 'SkyIPCam', $Host->info('username'), $Host->info('password') );
 			if ( sets::isin( $Host->type(), [ 'AIC777W', 'AIC747W' ] ) ) {
 				$log->debug('Sending move to ' . $Host->hostname() . " position $$opts{position}");
 				my $response = $browser->get('http://'.$Host->hostname().'/admin/ptctl.cgi?move='.$$opts{position});
