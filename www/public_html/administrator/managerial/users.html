@@ -53,6 +53,10 @@ function load_page() {
 			to
 			<? echo ( date_select_session( $r->uri(), 'created_on_end', { with_today=>1, with_clear=>1, onchange=>'load_page();' } ); ) ?>
 		</li>
+		<li>
+			<label>User Type</label>
+			<? echo ( ssi::select( openprint::User_Type->dropdown(), $session{$r->uri().'?type'}, { name=>'type', prepend=>['','All'], onchange=>'load_page();' } ); ) ?>
+		</li>
 		<li><label>Deleted?</label><? echo ( radio( 'deleted', [ '1','Yes', '0', 'No', '', 'Both' ], $session{$r->uri().'?deleted'}, {onclick=>"load_page();"} ); ) ?></li>
 		</ul>
 		<p class="buttons">
