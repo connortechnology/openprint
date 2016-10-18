@@ -18,7 +18,7 @@
 	} # end if
 
 	$html .= sprintf('
-		<select id="attribute-%1$s" name="attribute-%1$s" >%2$s</select>
+		<select id="attribute-%1$s" name="attribute-%1$s" ><option value="">select</option>%2$s</select>
 		<input type="text" id="value-%1$s" name="value-%1$s"/>', $$variable{username},
 		make_drop_down( [ 
 				( map { $_, $openprint::RADIUS_Reply::attributes{$_} } sort keys %openprint::RADIUS_Reply::attributes ),

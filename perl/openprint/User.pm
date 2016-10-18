@@ -290,7 +290,7 @@ sub assistant_ids {
 		sql::end_transaction( $dbh, $ac );
 		@{$$self{assistant_ids}} = ( @_ == 1 and ref $_[0] eq 'ARRAY' ) ? @{$_[0]} : @_;
 	} # end if
-	if ( ! $$self{assistant_ids} ) {
+	if ( ( ! $$self{assistant_ids} ) and $$self{id} ) {
 		 @{$$self{assistant_ids}} = sql::execute( undef, undef, 'SELECT assistant_id FROM Assistants WHERE csr_id=?', $$self{id} );
 	} # end if
 	return @{$$self{assistant_ids}};
@@ -307,7 +307,7 @@ sub csr_ids {
 		sql::end_transaction( $dbh, $ac );
 		@{$$self{csr_ids}} = ( @_ == 1 and ref $_[0] eq 'ARRAY' ) ? @{$_[0]} : @_;
 	} # end if
-	if ( ! $$self{csr_ids} ) {
+	if ( (! $$self{csr_ids} ) and $$self{id} ) {
 		@{$$self{csr_ids}} = sql::execute( undef, undef, 'SELECT csr_id FROM Assistants WHERE assistant_id=?', $$self{id} );
 	} # end if
 	return @{$$self{csr_ids}};
@@ -341,7 +341,7 @@ sub Notifications {
 sub purchasing_total {
 	require openprint::PurchaseOrder;
 	my $total = 0;
-	foreach my $PO ( openprint::PurchaseOrder->find('authorized'=>'N') ) {
+	foreach my $PO ( openprint::PurchaseOrder->find( authorized=>'N' ) ) {
 		$total += $PO->total();
 	} # end foreach $PO
 } # end sub purchasing_total
@@ -349,7 +349,7 @@ sub purchasing_total {
 sub po_limit {
 	my ( $self, $type_id, $new_value ) = @_;
 
-	if ( ! exists $$self{po_limits} ) {
+	if ( ( ! exists $$self{po_limits} ) and $$self{id} ) {
 		if ( $$self{id} ) {
 		%{$$self{po_limits}} = sql::execute( undef, undef, 'SELECT type_id, po_limit FROM User_PurchaseOrder_limits WHERE user_id=?', $$self{id} );
 		} else {
@@ -577,7 +577,8 @@ sub code {
 } # end sub code
 
 sub usergroup_ids {
-	return map { $_->usergroup_id() } openprint::User_in_UserGroup->find(user_id=>$_[0]{id});
+	return map { $_->usergroup_id() } openprint::User_in_UserGroup->find(user_id=>$_[0]{id}) if $_[0]{id};
+	return;
 } # end sub usergroup_ids
 
 sub save_notifications {
