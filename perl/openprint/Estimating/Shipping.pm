@@ -358,8 +358,10 @@ sub summary {
 				} else {
 					return sprintf( qq{%d items in %d package%s\nweighing %.2flbs}, @$specs{'txtQuantity'.$qty_index,'txtPackageQuantity'.$qty_index},( $$specs{'txtPackageQuantity'.$qty_index}==1?'' : 's'), $$specs{'txtTotalWeight'.$qty_index} );
 				} # end if
-			} else {
+			} elsif ( $$specs{'txtQuantity'.$qty_index} ) {
 				return sprintf( q{%d items}, $$specs{'txtQuantity'.$qty_index} ) if $$specs{"txtPrice$qty_index"};
+			} else {
+				return 'none';
 			} # end if
 		} # end if Used or index
 	} else {
