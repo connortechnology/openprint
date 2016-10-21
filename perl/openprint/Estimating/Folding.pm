@@ -543,7 +543,7 @@ $openprint::log->debug("Not adding because previousimposition != sigImposition")
 	# Here's the problem... if a sig after ours has our fold, then the makeready will be counted here. and so we won't change for makeready.
 
 	foreach my $SigImpo ( @{$Signature_Impositions} ) {
-$SigImpo->display("In Folding::siganture_calc");
+#$SigImpo->display("In Folding::siganture_calc");
 		last if $SigImpo == $SignatureImposition;
 		# Took this out so that we don't need signature_service_index, so we have to ensure that this service is not in the Signature_Impositions
 		#next if $signature_service_index and $$SigImpo{service_id} >= $signature_service_index;
@@ -1033,8 +1033,8 @@ $width_folds = $$Fold{page_columns}-1;
 $height_folds = $$Fold{page_rows}-1;
 $openprint::log->debug("Got new folds $width_folds x $height_folds from Fold") if DEBUG;
 } else {
-	$openprint::log->debug("Fold does not have oif ( 0 ) {page_rows and page_columns filled in" . $Fold->to_string() );
-	$openprint::log->debug("old: $width_folds x $height_folds source: $$sig_specs{txtWidth}/$$sig_specs{txtFinalWidth} x $$sig_specs{txtHeighth}/$$sig_specs{txtFinalHeight} ");
+	$openprint::log->debug("Fold does not have page_rows and page_columns filled in" . $Fold->to_string() ) if DEBUG;
+	$openprint::log->debug("old: $width_folds x $height_folds source: $$sig_specs{txtWidth}/$$sig_specs{txtFinalWidth} x $$sig_specs{txtHeighth}/$$sig_specs{txtFinalHeight} ") if DEBUG;
 if ( 1 ) {
 	$width_folds = Math::Round::nearest( 1, $$Imposition{layout_width} / $$Imposition{object_width} )-1;
 	if ( $width_folds < 0 ) {
@@ -1046,7 +1046,7 @@ if ( 1 ) {
 		$openprint::log->debug("Got negative width_folkds from Math::Round::nearest( 1, $$sig_specs{txtHeighth}/$$sig_specs{txtFinalHeight})-1");
 		$height_folds = 0;
 	} # end if
-	$openprint::log->debug("new: $width_folds x $height_folds x $$Imposition{layout_width} / $$Imposition{object_width} x $$Imposition{layout_height}/ $$Imposition{object_height}");
+	$openprint::log->debug("new: $width_folds x $height_folds x $$Imposition{layout_width} / $$Imposition{object_width} x $$Imposition{layout_height}/ $$Imposition{object_height}") if DEBUG;
 	}
 	
 }
@@ -1789,7 +1789,7 @@ $i->display() if DEBUG;
 					my $index = 1;
 					$$Imposition{Folds} = $results{FoldedImpositions};
 					foreach my $FI ( @{$results{FoldedImpositions}} ) {
-						my $Fold = $FI->Fold();
+						my $Fold = $$FI{Fold};
 						my $fold_type = $Fold->type();
 
 						if ( DEBUG ) {
