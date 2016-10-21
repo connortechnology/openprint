@@ -175,6 +175,11 @@ sub calc_setup_object {
 
 	my $min_bleed_size = $Press->specification( 'Minimum Bleed Size' );
 
+	my $Maximum_Image_Width = $Press->specification( 'Maximum Image Width ' . $run_style );
+	$Maximum_Image_Width = $Press->specification( 'Maximum Image Width ' ) if ! $Maximum_Image_Width;
+	my $Maximum_Image_Length = $Press->specification( 'Maximum Image Length ' . $run_style );
+	$Maximum_Image_Length = $Press->specification( 'Maximum Image Length ' ) if ! $Maximum_Image_Length;
+
 	my $press_grain;
 	if ( my $Stock_Setting = $Press->Stock_Setting( $Paper ) ) {
 		$press_grain = $Stock_Setting->grain();
@@ -441,8 +446,8 @@ $openprint::log->debug("Adjusted PHeght after grip: $adjusted_paper_height") if 
 
 
 # On the web press, we have no paper dimensions, only the maximagesize, so this effectively sets the printing area to the max image size. Theoretically Max Image Size = Cutoff-Grip anyways
-	if ( $$specs{'Maximum Image Area Length'} and ( ( $adjusted_paper_height <= 0 ) or ( $adjusted_paper_height > $$specs{'Maximum Image Area Length'} ) ) ) {
-		my $max_image_height = $$specs{'Maximum Image Area Length'};
+	if ( $Maximum_Image_Length and ( ( $adjusted_paper_height <= 0 ) or ( $adjusted_paper_height > $Maximum_Image_Length ) ) ) {
+		my $max_image_height = $Maximum_Image_Length;
 		$max_image_height += ( $bleed_size - $$specs{CropMarkSpace} ) if $bleed_locations{Top}; # Can bleed outside the image area
 		$max_image_height += ( $bleed_size - $$specs{CropMarkSpace} ) if $bleed_locations{Bottom}; # Can bleed outside the image area
 		if ( $max_image_height < $adjusted_paper_height ) {
@@ -544,9 +549,9 @@ $openprint::log->debug("Using Single wheel space $$specs{'Perfecting Single Gutt
 	} # end if
 
 
-	if ( ( ! $paper_width ) or ( $$specs{'Maximum Image Area Width'} > 0 and $adjusted_paper_width > $$specs{'Maximum Image Area Width'} ) ) {
-		$openprint::log->debug("*** Using Max Image Width1: paper_width: $paper_width adj paper width: $adjusted_paper_width > $$specs{'Maximum Image Area Width'}***") if DEBUG;
-		$adjusted_paper_width = $$specs{'Maximum Image Area Width'};
+	if ( ( ! $paper_width ) or ( $Maximum_Image_Width > 0 and $adjusted_paper_width > $Maximum_Image_Width ) ) {
+		$openprint::log->debug("*** Using Max Image Width1: paper_width: $paper_width adj paper width: $adjusted_paper_width > $Maximum_Image_Width***") if DEBUG;
+		$adjusted_paper_width = $Maximum_Image_Width;
 	} # end if
 	if ( $$specs{'Colour Bar Orientation'} eq 'Length' ) {
 		$adjusted_paper_width -= $$setup1{colour_bar_size};
@@ -657,11 +662,11 @@ $openprint::log->debug("Not doing dutch because ($$specs{dutch}) or $run_style o
 	$adjusted_paper_height -= $bindery_gutters;
 	}
 
-	if ( ($adjusted_paper_height<=0) or ( ( $$specs{'Maximum Image Area Length'} > 0 ) and ( $adjusted_paper_height > $$specs{'Maximum Image Area Length'} ) ) ) {
-		$openprint::log->debug("*** Using Max Image Length2: Before: $adjusted_paper_height After: $$specs{'Maximum Image Area Length'}***") if DEBUG;
-		$adjusted_paper_height = $$specs{'Maximum Image Area Length'};
+	if ( ($adjusted_paper_height<=0) or ( ( $Maximum_Image_Length > 0 ) and ( $adjusted_paper_height > $Maximum_Image_Length ) ) ) {
+		$openprint::log->debug("*** Using Max Image Length2: Before: $adjusted_paper_height After: $Maximum_Image_Length***") if DEBUG;
+		$adjusted_paper_height = $Maximum_Image_Length;
 	} else {
-		$openprint::log->debug("*** NOT Using Max Image Length2: $adjusted_paper_height After: $$specs{'Maximum Image Area Length'}***") if DEBUG;
+		$openprint::log->debug("*** NOT Using Max Image Length2: $adjusted_paper_height After: $Maximum_Image_Length***") if DEBUG;
 	} # end if
 
     if ( $$specs{'Colour Bar Orientation'} ne 'Length' ) {
@@ -759,9 +764,9 @@ $openprint::log->debug("Using Single wheel space $$specs{'Perfecting Single Gutt
         $adjusted_paper_width -= $wheel_space;
     } # end if
 
-	if ( (! $paper_width ) or ( $$specs{'Maximum Image Area Width'} > 0 and $adjusted_paper_width > $$specs{'Maximum Image Area Width'} ) ) {
-		$openprint::log->debug("*** Using Max Image Width2: $$specs{'Maximum Image Area Width'} instead of $adjusted_paper_width ***") if DEBUG;
-		$adjusted_paper_width = $$specs{'Maximum Image Area Width'};
+	if ( (! $paper_width ) or ( $Maximum_Image_Width > 0 and $adjusted_paper_width > $Maximum_Image_Width ) ) {
+		$openprint::log->debug("*** Using Max Image Width2: $Maximum_Image_Width instead of $adjusted_paper_width ***") if DEBUG;
+		$adjusted_paper_width = $Maximum_Image_Width;
 	} # end if
 	if ( $$specs{'Colour Bar Orientation'} eq 'Length' ) {
 		$adjusted_paper_width -= $$setup2{colour_bar_size};

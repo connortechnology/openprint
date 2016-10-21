@@ -231,7 +231,7 @@ sub stock {
 		$param{stock_id} = $Paper->id();
 		
 	} elsif ( $param{btnFunction} eq 'Copy' ) {
-		$variable{information} .= 'Stock ' . $Paper->id() . ' has been copied.';
+		$variable{information} .= 'Stock ' . $Paper->link_to( $Paper->id() ) . ' has been copied.';
 		my $NewPaper = $Paper->copy();
 		$NewPaper->save();
 		foreach my $Setting ( openprint::Equipment_Stock_Setting->find('stock_id'=>$Paper->id()) ) {
@@ -332,7 +332,7 @@ sub stock {
 		$variable{error} .= $Paper->save();
 		(new openprint::Log())->save({ object_type=>(ref $Paper), object_id=>$$Paper{id}, action=>($param{stock_id}?'Edited stock':'Saved stock'), note=>join('<br/>', @changes) });
 		if ( ! $variable{error} ) {
-			$variable{information} .= 'Stock ' . $Paper->id() . ' has been saved.';
+			$variable{information} .= 'Stock ' . $Paper->link_to( $$Paper{id} ) . ' has been saved.';
 			$variable{ExternalRedirect} = '/administrator/stock/stock.html?stock_id='.$$Paper{id};
 		} # end if
 	} elsif ( $param{btnFunction} eq 'Prev' ) {
