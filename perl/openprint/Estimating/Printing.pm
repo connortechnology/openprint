@@ -1277,8 +1277,6 @@ $openprint::log->debug("not Skipping cuz ddmPress$qty_index eq $$Press{strid}");
 			$$project{colour_bar_size} = 0;
 		} # end if Envelopes
 		$$project{Orientation} = $Press->specification('Orientation');
-		$$project{'Maximum Image Area Length'} = $Press->specification('Maximum Image Area Length');
-		$$project{'Maximum Image Area Width'} = $Press->specification('Maximum Image Area Width');
 		if ( $$specs{"dutch$qty_index"} eq 'N' ) {
 			$$project{dutch} = 'N';
 		} elsif ( $_ = $Press->Specification('Dutch') and $$_{value} eq 'N' ) {
@@ -5233,13 +5231,14 @@ sub calc_price {
 	$$specs{'hdnImpressionQuantity'.$qty_index} = $impressions;
 #$openprint::log->debug("Impressions $impressions overs: $overs setup: $setup_overs run: $run_overs");
 
-	my $std_speed = $Press->Specification('Standard Run Speed');
+	my $std_speed = $Press->Specification('Standard Run Speed ' . $$Imposition{runstyle} );
+	$std_speed = $Press->Specification('Standard Run Speed') if ! $std_speed;
 	$std_speed = $Press->Specification('Run Speed') if ! $std_speed;
 	if ( lc $$std_speed{units} eq 'calliper' ) {
-		$$specs{"Runspeed$qty_index"} = $$specs{Runspeed} = $price{Runspeed} = $Press->specification('Run Speed', $$Paper{calliper} );
+		$$specs{"Runspeed$qty_index"} = $$specs{Runspeed} = $price{Runspeed} = $Press->specification( $$std_speed{name}, $$Paper{calliper} );
 #$openprint::log->debug("Runspeed by calliper($$Paper{calliper}): $run_speed on $$Press{strid}");
 	} else {
-		$$specs{"Runspeed$qty_index"} = $$specs{Runspeed} = $price{Runspeed} = $Press->specification('Run Speed', $Paper->gsm() );
+		$$specs{"Runspeed$qty_index"} = $$specs{Runspeed} = $price{Runspeed} = $Press->specification( $$std_speed{name}, $Paper->gsm() );
 	} # end if
 #$run_speed = $$std_speed{value} if ! $run_speed;
 #$openprint::log->debug("Initial Runspeed: $run_speed, standard: $$std_speed{value}$$std_speed{units}");
@@ -6346,7 +6345,8 @@ $log->debug("**** RUN PRICE 3 : $running_price **") if DEBUG;
 
 	# THere should be either a Standard Run Speed
 
-	my $std_speed = $Press->Specification('Standard Run Speed');
+	my $std_speed = $Press->Specification('Standard Run Speed '.$$Imposition{runstyle});
+	$std_speed = $Press->Specification('Standard Run Speed') if ! $std_speed;
 	my $Paper = $Imposition->Paper();
 	
 	my $speed_mod;
@@ -6368,11 +6368,10 @@ $log->debug("**** RUN PRICE 3 : $running_price **") if DEBUG;
 		} else {
 
 	# Only load this if not already specified by some inline bindery service
-			$run_speed = $Press->specification('Run Speed', (lc $$std_speed{units} eq 'calliper' ? $$Paper{calliper} : $Paper->gsm()) ) if ! $run_speed;
+			$run_speed = $Press->specification( $$std_speed{name}, (lc $$std_speed{units} eq 'calliper' ? $$Paper{calliper} : $Paper->gsm()) ) if ! $run_speed;
 			if ( ! $run_speed ) {
 				$openprint::log->debug("No run sped on $$Press{strid} for $$std_speed{units} " . ($$std_speed{units} eq 'Calliper' ? $$Paper{calliper} : $Paper->gsm() ) ) if DEBUG or 0;
 				$run_speed = $$std_speed{value};
-			
 			} # end if
 		} # end if
 	} else {
@@ -6397,6 +6396,7 @@ $openprint::log->error("Unknown units on Outside Wheel Slow Down ($$Slow_Down{un
 			} # end if
 		} # end if
 	} # end if
+
 	if ( $std_speed and ( $run_speed != $$std_speed{value} ) ) {
 		$speed_mod = Math::Round::nearest( .001, $$std_speed{value} / $run_speed );
 		$openprint::log->debug("1Press ".$$Press{strid}." Calliper: $$Paper{calliper} gsm: $$Paper{gsm} ($running_price) ($run_price{units}) STD: ($$std_speed{value}) RUN ($run_speed), mod: $speed_mod,	std/run: " . ( $speed_mod ? $run_speed/$speed_mod : $std_speed/$run_speed ) ) if DEBUG;
