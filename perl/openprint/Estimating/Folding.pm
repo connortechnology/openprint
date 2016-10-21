@@ -702,6 +702,10 @@ $openprint::log->debug("folds from sigimpo") if DEBUG;
 	# Foreach equipment, figure out which folds are required.
 	foreach my $Equipment ( @my_equipment ) {
 		$Breakdown .= '<br/><b>Equipment '.$$Equipment{name}.':</b><br/>';
+	if ( (!$Equipment->useinestimating() ) and ( $$specs{"chkOverrideEquipment-$form-$qty_index"} ne 'Y' ) ) {
+		$Breakdown .= "Can only be used by override";
+		next;
+	}
 		#$openprint::log->debug('2 Equipment '.$Equipment->name()) if DEBUG;
 		if ( $$services{NoOfflineBindery} and ( $$sig_specs{'ddmPress'.$qty_index} ne $Equipment->strid() ) ) {
 			$Breakdown .= "No Offline bindery and not printing on $$Equipment{name}.<br/>";
@@ -1641,7 +1645,7 @@ sub load_equipment {
 	push @folding_capable, 'When PerfectBound' if $$services{PerfectBound};
 	push @folding_capable, 'When Stitching' if ( $$services{SaddleStitching} or $$services{LoopStitching} );
 	push @folding_capable, 'When Printing';
-	@equipment = openprint::Equipment->find( useinestimating=>1, Specifications=>{'Folding Capable'=>\@folding_capable} );
+	@equipment = openprint::Equipment->find( 'useinestimating is null or ='=>1, Specifications=>{'Folding Capable'=>\@folding_capable} );
 } # end sub load_equipment
 
 sub calc {
