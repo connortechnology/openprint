@@ -3112,7 +3112,10 @@ $openprint::log->debug("Needed pages: $needed_pages") if DEBUG;
 			next;
 		} # end if
 
-		if ( (!defined $$Press{useinestimating}) and ($$sig_specs{"chkOverridePress$qty_index"} ne 'Y') ) {
+		if ( (!defined $$Press{useinestimating}) and (
+					($$sig_specs{"chkOverridePress$qty_index"} ne 'Y') and ( ! ( $$project{ProjectSpecs}{"ddmPress-$$sig_specs{Group}"}  and ( $$project{ProjectSpecs}{"ddmPress-$$sig_specs{Group}"} eq $strid ) ) )
+)
+) {
 			$openprint::log->debug("Not doing $$Press{strid} because it is not overriden");
 			next;
 		}
