@@ -335,13 +335,17 @@ sub copy {
 	delete $$new{id};
 	$$new{deleted} = 0;
 	$$new{name} = 'Copy of ' . $$new{name};
-	$new->save();
+	$_ = $new->save();
+	return if $_;
 
 	my $ac = sql::start_transaction( $openprint::dbh );
 
 	foreach my $ES ( openprint::EquipmentSpecification->find( equipment_id=>$$self{id} ) ) {
 		$ES->copy()->save({ equipment_id=>$$new{id} });
 	} # end foreach
+	foreach my $Fold ( openprint::Fold->find( equipment_id=>$$self{id} ) ) {
+		$Fold->copy()->save({ equipment_id=>$$new{id} });
+	}
 
 # Now do pricing, start with Service Prices
 	my @prices = sql::execute( undef, undef, q{SELECT pricelist_id, service_id, min, max, units, cost, markup, price FROM Service_Prices WHERE equipment_id=?}, $$self{id} );

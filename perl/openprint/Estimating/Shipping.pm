@@ -85,7 +85,7 @@ sub calc {
 	my $services = $Project->services();
 	$$specs{alert} = '';
 	my $status = 'calculated';
-	my $carton_service_index = $$services{PlainCartons}[0] if $$services{PlainCartons}[0];
+	my $carton_service_index = $$services{PlainCartons}[0] if $$services{PlainCartons} and @{$$services{PlainCartons}};
 	if ( ! $carton_service_index ) {
 		if( $openprint::config{NeedCartonsForShipping} ) {
 			$$specs{alert} = 'Shipping requires that the project be packed in cartons.';
@@ -101,6 +101,7 @@ sub calc {
 
 	if ( $carton_service_index ) {
 		my $carton_status = openprint::service::status( $project_index, $carton_service_index );
+$openprint::log->debug("Status of cartons is $carton_status");
 		if ( sets::isin( $carton_status,['', 'uncalculated'] ) ) {
 			openprint::service::internal_calc( $log, $dbh, $variable, $project_index, $carton_service_index, 'Skids' );
 		} # end if
@@ -358,8 +359,10 @@ sub summary {
 				} else {
 					return sprintf( qq{%d items in %d package%s\nweighing %.2flbs}, @$specs{'txtQuantity'.$qty_index,'txtPackageQuantity'.$qty_index},( $$specs{'txtPackageQuantity'.$qty_index}==1?'' : 's'), $$specs{'txtTotalWeight'.$qty_index} );
 				} # end if
-			} else {
+			} elsif ( $$specs{'txtQuantity'.$qty_index} ) {
 				return sprintf( q{%d items}, $$specs{'txtQuantity'.$qty_index} ) if $$specs{"txtPrice$qty_index"};
+			} else {
+				return 'none';
 			} # end if
 		} # end if Used or index
 	} else {

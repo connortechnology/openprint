@@ -720,6 +720,7 @@ sub send_proofs_approved_email {
 
 	foreach my $User ( @Users ) {
 		next if $User->id() == $session{user_id};
+		next if $User->deleted();
 		
 		$Email->send(
 				FROM	=> $openprint::User,
@@ -746,7 +747,7 @@ sub send_duedate_change_notification {
 	my $User = new openprint::User( $session{user_id} );
 	@info{'EmployeeFirstName','EmployeeLastName','EmployeeEmail','EmployeeExtension'} = ( $User->firstname(), $User->lastname(), $User->email(), $User->extension() );
 	my $CSR = new openprint::User( $Order->salesrep_id() );
-	if ( $CSR->email() ) {
+	if ( $CSR->email() and ! $CSR->deleted() ) {
 		my $notification = $CSR->notification('Docket Due Date Changes');
 		if ( ( ! $notification ) or $notification ne 'No' ) {
 			my $email_template = ssi::slurp_content( '/email_template.html' );

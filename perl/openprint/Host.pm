@@ -77,8 +77,10 @@ sub authenticate {
 	my ( $HI, $browser, $response, $method, $port, $url, $args ) = @_;
 	my $headers = $response->headers();
 	if ( $$headers{'www-authenticate'} ) {
+$openprint::log->debug("Having authenticate $$headers{'www-authenticate'}");
+
 		my ( $auth, $tokens ) = $$headers{'www-authenticate'} =~ /^(\w+)\s+(.*)$/;
-		my %tokens = map { /(\w+)="([^"]+)"/i } split(', ', $tokens );
+		my %tokens = map { /(\w+)="?([^"]+)"?/i } split(', ', $tokens );
 		if ( $tokens{realm} ) {
 			my $Host = $HI->Host();
 			my $username = $Host->info('username');
@@ -86,12 +88,13 @@ sub authenticate {
 			$openprint::log->debug("tokens: $tokens realm: $tokens{realm} username: $username password: $password ");
 			$browser->credentials( $HI->ip().':'.$port, $tokens{realm}, $username, $password );
 			$response = $browser->$method( $url, $args ? $args : () );
+$openprint::log->debug("Auth response for $method $url $tokens{realm}, $username, $password " . $response->is_success );
 		} else {
 			$openprint::log->error("No realm");
 		} # end if
 	} else {
 		foreach my $k ( keys %{$headers} ) {
-			$openprint::log->debug("Header $k => $$headers{$k}");
+			$openprint::log->debug("No auth Header $k => $$headers{$k}");
 		}
 	}
 	return $response;
@@ -309,6 +312,8 @@ sub reboot {
 		my $initial_url; # in case we need to hit a different url first.
 		my $method = 'get';
 		my $args = {};
+		my $expect;
+		my $port = 80;
 
 		if ( sets::isin( $_[0]->type(), [ 'AIC500', 'AIC500W', 'AIC777W', 'AIC747W' ] ) ) {
 			$url = 'http://'.$HI->ip().'/admin/reboot.cgi?type=0';
@@ -318,6 +323,15 @@ sub reboot {
 			$url = 'http://'.$HI->ip().'/userRpm/SysRebootRpm.htm?Reboot=Reboot';
 		} elsif( $_[0]->type() eq 'D-Link DAP1522' ) {
 			$url = 'http://'.$HI->ip().'/sys_cfg_valid.xgi?&exeshell=submit REBOOT';
+		} elsif( $_[0]->type() eq 'DLink DCS-910' ) {
+			$initial_url = 'http://'.$HI->ip();
+			$url = 'http://'.$HI->ip().'/ReplyF.htm';
+			$method = 'post';
+			$args = {
+				Reset => 'Reboot the Device',
+			};
+			$expect = 'Device has been rebooted';
+
 		} elsif( $_[0]->type() eq 'DCS932L' ) {
 			$url = 'http://'.$HI->ip().'/setSystemReboot';
 		} elsif( $_[0]->type() eq 'DCS-933L' ) {
@@ -345,14 +359,8 @@ sub reboot {
 		my $headers = $response->headers();
 		#foreach my $k ( keys %$headers ) {
 			#$openprint::log->debug("Initial Header $k => $$headers{$k}");
-		#}  # end foreach
-		my ( $auth, $tokens ) = $$headers{'www-authenticate'} =~ /^(\w+)\s+(.*)$/;
-		my %tokens = map { /(\w+)="([^"]+)"/i } split(', ', $tokens );
-		if ( $tokens{realm} ) {
-			$openprint::log->debug("tokens: $tokens realm: $tokens{realm}");
-			$browser->credentials( $HI->ip().':80', $tokens{realm}, $Host->info('username'), $Host->info('password') );
-			$response = $browser->$method($url, $args ? $args : () );
-		} # end if
+		#} # end if
+		$response = $HI->authenticate( $browser, $response, $method, $port, $url, $args );
 
 		if ( ! $response->is_success ) {
 			$openprint::log->error( $response->content );
@@ -383,27 +391,36 @@ sub reboot {
 			$success = 1;
 			$openprint::log->debug("Success Content: " . $response->content );
 		} # end if
+		if ( $success and $expect ) {
+			if ( ! ( $response->content =~ /$expect/ ) ) {
+				$success = 0;
+				$openprint::log->error("Did not find expected content $expect in " . $response->content );
+			}
+		}
 		last if $success;
 	} # end foreach HI
 
-	(new openprint::Log())->save({ action=>'Host rebooted', host_id=>$Host->id(), note=>sprintf('<a href="/employee/it/host.html?host_id=%d">%s</a> has been rebooted.', @$Host{'id','hostname'})});
-	if ( 0 ) {
-		my @To = map { $_->User() } $Host->Notifications();
-		if ( @To and ( @To < 10 ) ) {
-			$openprint::log->debug("Emailing: " . join(',', map { $_->email() } @To ) );
-			my $results = (new openprint::Email())->send(
-					TO    =>  \@To,
-					SUBJECT   =>  'Camera rebooted ' . $Host->hostname(),
-					FROM      =>  $openprint::config{TechSupportEmail},
-					BODY      =>  "
+	if ( $success ) {
 
-					Description: $$Host{description}
-					",
-					);
-		} else {
-			$openprint::log->error("No To or too many @To");
-		} # end if TO
-	} # end if 0
+		(new openprint::Log())->save({ action=>'Host rebooted', Object=>$Host, host_id=>$Host->id(), note=>sprintf('<a href="/employee/it/host.html?host_id=%d">%s</a> has been rebooted.', @$Host{'id','hostname'})});
+		if ( 0 ) {
+			my @To = map { $_->User() } $Host->Notifications();
+			if ( @To and ( @To < 10 ) ) {
+				$openprint::log->debug("Emailing: " . join(',', map { $_->email() } @To ) );
+				my $results = (new openprint::Email())->send(
+						TO    =>  \@To,
+						SUBJECT   =>  'Camera rebooted ' . $Host->hostname(),
+						FROM      =>  $openprint::config{TechSupportEmail},
+						BODY      =>  "
+
+						Description: $$Host{description}
+						",
+						);
+			} else {
+				$openprint::log->error("No To or too many @To");
+			} # end if TO
+		} # end if 0
+	} # end if
 	return $success;
 } # end sub reboot
 

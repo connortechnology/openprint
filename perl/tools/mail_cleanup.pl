@@ -68,7 +68,7 @@ foreach my $user ( @users ) {
 		} # end foreach
 
 	} # end foreach folder
-	`/bin/kill -HUP \`/bin/cat /var/run/spamassassin.pid\`` if $update_spamassassin;
+	`/bin/kill -HUP \`/bin/cat /run/spamassassin.pid\`` if $update_spamassassin;
 	foreach my $folder ( '.Trash', '.Deleted Messages' ) {
 		next if $user eq 'matt';
 		if ( ! -e "$spool_path$user/$folder" ) {
