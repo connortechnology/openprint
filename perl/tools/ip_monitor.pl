@@ -165,15 +165,22 @@ while(1) {
 # Do immediate notifications
 					my @To = map { $_->User() } $Host->Notifications();
 					if ( @To and ( @To < 10 ) ) {
-						my $results = (new openprint::Email())->send(
-								TO	=>	\@To,
-								SUBJECT	=>	'Host has gone ' . ($online?'online':'offline') . ': ' . $Host->hostname() . ' ' . misc::seconds2hms($since) . ' seconds ago.',
-								FROM		=>	$config{TechSupportEmail},
-								BODY		=>	"
-Description: $$Host{description}
 
-Please investigate.",
-);
+						my %info = (
+								Host   =>  $Host,
+								);
+                        my $results;
+                        my $Email = new openprint::Email();
+                        $info{ReplacementText} = ssi::include("/email_content/host.html", \%info );
+
+                        my $html_body = ssi::include( '/email_template.html', \%info );
+                        my $results = (new openprint::Email())->send(
+                                TO  =>  \@To,
+                                SUBJECT =>  'Host has gone ' . ($online?'online':'offline') . ': ' . $Host->hostname(),
+                                FROM        =>  $config{TechSupportEmail},
+                                HTML_BODY       =>  $html_body,
+                                );
+
 					} # end if to < 10
 				} # end if immediate notifications
 			} elsif ( $Host->offline_seconds() and ( ! $online ) and ( ! $$Host{notified} ) ) {
@@ -183,15 +190,21 @@ Please investigate.",
 					$Host->save({'notified'=>1});
 					my @To = map { $_->User() } $Host->Notifications();
 					if ( @To and ( @To < 10 ) ) {
-						my $results = (new openprint::Email())->send(
-								'TO'	=>	\@To,
-								'SUBJECT'	=>	'Host has gone ' . ($online?'online':'offline') . ': ' . $Host->hostname(),
-								'FROM'		=>	$config{TechSupportEmail},
-								'BODY'		=>	"
-Description: $$Host{description}
 
-Please investigate.",
-);
+						my %info = (
+								Host   =>  $Host,
+								);
+						my $results;
+						my $Email = new openprint::Email();
+						$info{ReplacementText} = ssi::include("/email_content/host.html", \%info );
+
+						my $html_body = ssi::include( '/email_template.html', \%info );
+						my $results = (new openprint::Email())->send(
+								TO	=>	\@To,
+								SUBJECT	=>	'Host has gone ' . ($online?'online':'offline') . ': ' . $Host->hostname(),
+								FROM		=>	$config{TechSupportEmail},
+								HTML_BODY		=>	$html_body,
+								);
 					} # end if @To > 10
 				} # end if offline_seconds
 			} # end if online != ping
