@@ -6,6 +6,13 @@
 		date_filter( $uri.'?created_on_end', 'created_on <=' ),
 		date_filter( $uri.'?created_on_start', 'created_on >=' ),
 		);
+	if (  $session{$uri.'?equipment_name'} ) {
+		if ( ! ( $session{$uri.'?equipment_name'}  =~ /%/ ) ) {
+			$filters{'name ilike'} = $session{$uri.'?equipment_name'}.'%';
+		} else {
+			$filters{'name ilike'} = $session{$uri.'?equipment_name'};
+		}
+	}
 
     $$variable{Equipment} = [ openprint::Equipment->find( %filters ) ];
 ) ?>	
