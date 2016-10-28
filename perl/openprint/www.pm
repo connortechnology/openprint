@@ -39,7 +39,7 @@ use vars qw( $r %variable %session %param %config $log $dbh $starttime );
 *r = \$openprint::r;
 
 sub warn {
-	$log->warn("Warning: $_[0]");
+	$log->error("Warning: $_[0]");
 
 }
 

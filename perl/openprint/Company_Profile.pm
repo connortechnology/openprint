@@ -15,12 +15,13 @@ sub new {
 	my $self = {};
 	bless $self, $parent;
 	$$self{company_id} = $company_id;
+	%{$$self{Fields}} = map { $$_{name} => $_ } openprint::Company_Profile_Field->find();
 	if ( $company_id ) {
-		%{$$self{fields}} = map { $_->field(), $_ } openprint::Company_Profile_Entry->find( company_id=>$company_id );
+		%{$$self{Entries}} = map { $_->field(), $_ } openprint::Company_Profile_Entry->find( company_id=>$company_id );
 	} # end if
-#$openprint::log->debug("new Company_Profile now listing fields and values");
-#foreach my $f ( keys %{$$self{fields}} ) {
-#$openprint::log->debug("$f => " . $$self{fields}{$f}-value() );
+#$openprint::log->debug("new Company_Profile now listing Entries and values");
+#foreach my $f ( keys %{$$self{Entries}} ) {
+#$openprint::log->debug("$f => " . $$self{Entries}{$f}-value() );
 #}
 	return $self;
 } # end sub new
@@ -32,34 +33,36 @@ sub AUTOLOAD {
 	
 	$name =~ s/.*://;
 	if ( @_ ) {
-		if ( exists $$self{fields}{$name} ) {
-			return $$self{fields}{$name}->value( $_[0] );
+		if ( exists $$self{Entries}{$name} ) {
+			return $$self{Entries}{$name}->value( $_[0] );
 		} else {
 			# create a new entry
 		} # end if
-	} elsif ( $$self{fields} and exists $$self{fields}{$name} ) {
-		return $$self{fields}{$name}->value( );
+	} elsif ( $$self{Entries} and exists $$self{Entries}{$name} ) {
+		return $$self{Entries}{$name}->value( );
 	} # end if
 	return undef;
 } # end sub AUTOLOAD
 
 sub default {
-	my $Field = openprint::Company_Profile_Field->find_one( name=>$_[1] );
-$openprint::log->debug("default for $_[1] is $Field $$Field{defaults}");
+	
+	#my $Field = openprint::Company_Profile_Field->find_one( name=>$_[1] );
+	my $Field = $_[0]{Fields}{$_[1]};
+	$openprint::log->debug("default for $_[1] is $Field");
 	return $Field ? $$Field{defaults} : undef;
 } 
 
 sub value {
-	if ( ! $_[0]{fields} ) {
-		%{$_[0]{fields}} = map { $_->field(), $_ } openprint::Company_Profile_Entry->find( company_id=>$_[0]{company_id}) if $_[0]{company_id};
+	if ( ! $_[0]{Entries} ) {
+		%{$_[0]{Entries}} = map { $_->field(), $_ } openprint::Company_Profile_Entry->find( company_id=>$_[0]{company_id}) if $_[0]{company_id};
 	} # end if
 
 	my ( $Field, $Entry );
 	if ( ref $_[1] eq 'openprint::Company_Profile_Field' ) {
 		$Field = $_[1];
-		$Entry = $_[0]{fields}{$$Field{name}};
+		$Entry = $_[0]{Entries}{$$Field{name}};
 	} else {
-		$Entry = $_[0]{fields}{$_[1]};
+		$Entry = $_[0]{Entries}{$_[1]};
 		# We don't do the Field here because we only need it when saving
 	} # end if
 
@@ -69,7 +72,7 @@ sub value {
 			$openprint::log->debug("No entry for $_[1], creating one") if $debug;
 			$Entry = new openprint::Company_Profile_Entry();
 			$Field = openprint::Company_Profile_Field->find_one( name=>$_[1]) if ! $Field;
-			$_[0]{fields}{$_[1]} = $Entry;
+			$_[0]{Entries}{$_[1]} = $Entry;
 			# We don't set the value, here, so that the next block will make it save
 			$Entry->set({ field_id => $Field->id(), company_id => $_[0]{company_id} });
 			$openprint::log->debug("After set $_[1] => $_[2]") if $debug;
@@ -92,8 +95,8 @@ sub value {
 } # end sub value
 
 sub Field {
-	if ( ! $_[0]{fields} ) {
-		%{$_[0]{fields}} = map { $_->field(), $_ } openprint::Company_Profile_Entry->find('company_id'=>$_[0]{company_id}) if $_[0]{company_id};
+	if ( ! $_[0]{Entries} ) {
+		%{$_[0]{Entries}} = map { $_->field(), $_ } openprint::Company_Profile_Entry->find('company_id'=>$_[0]{company_id}) if $_[0]{company_id};
 	} # end if
 
 	my $name;
@@ -105,11 +108,12 @@ sub Field {
 		$name = $_[1];
 	} # end if
 
-	my $Entry = $_[0]{fields}{$name};
+	my $Entry = $_[0]{Entries}{$name};
 	if ( ! $Entry ) {
-		$Entry = $_[0]{fields}{$name} = new openprint::Company_Profile_Entry();
+		$Entry = $_[0]{Entries}{$name} = new openprint::Company_Profile_Entry();
 		$$Entry{company_id} = $_[0]{company_id};
-		$Field = openprint::Company_Profile_Field->find_one('name'=>$name) if ! $Field;
+		$Field = openprint::Company_Profile_Field->find_one( name=>$name ) if ! $Field;
+		return undef if ! $Field;
 		$Entry->Field( $Field );
 	} # end if
 	

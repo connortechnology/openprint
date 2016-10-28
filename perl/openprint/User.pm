@@ -594,6 +594,13 @@ sub save_notifications {
 	} # end foreach Notification
 	return @results;
 }
+sub email_valid {
+	if ( ! defined $_[0]{email_valid} ) {
+	require Email::Valid;
+	$_[0]{email_valid} = Email::Valid->address( $_[0]{email} );
+	} 
+	return $_[0]{email_valid};
+}
 
 1;
 __END__

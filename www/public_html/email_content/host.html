@@ -1,0 +1,154 @@
+<div class="Host">
+	<fieldset><legend>Host <? echo ( $$variable{Host}->id() ) ?></legend>
+		<div class="content leftColumn">
+			<ul>
+				<li>
+					<label>Hostname</label>
+					<? echo ( $$variable{Host}->hostname() ) ?>
+				</li>
+				<li><label>Type</label><? echo ( $$variable{Host}->type() ) ?></li>
+				<li><label>Blacklist</label><?echo ( $$variable{Host}->blacklist() ? 'yes' : 'no' ) ?></li>
+				<li><label>Access violation count</label><? echo ( $$variable{Host}->count() ) ?></li>
+				<li><label>Whitelist</label><?echo ( $$variable{Host}->whitelist() ? 'yes' : 'no' ) ?></li>
+				<li><label>Monitor</label><?echo ( $$variable{Host}->monitored() ? 'yes' : 'no' ) ?></li>
+<? if ( $$variable{Host}->monitored() ) ?>
+				<li><label>Seconds offline before notification</label>
+					<? echo ( $$variable{Host}->offline_seconds() ) ?>
+				</li>
+<? endif ( $$variable{Host}->monitored() ) ?>
+				<li>
+					<label>Online</label><? echo ( $$variable{Host}->online() ? 'Yes' : 'No' ) ?>
+				</li>
+				<li><label>Description</label>
+<? echo ( $$variable{Host}->description() ) ?>
+				</li>
+				<li><label>Created On</label><? echo ( format_datetime( $$variable{Host}->created_on() ); ) ?></li>
+				<li><label>Updated On</label><? echo ( format_datetime( $$variable{Host}->created_on() ); ) ?></li>
+			</ul>
+		</div>
+<? if ( $$variable{Host}->id() ) ?>
+		<div class="content rightColumn">
+			<fieldset><legend>Photos</legend>
+				<div id="assets"><?include('/employee/it/_assets.html')?></div>
+			</fieldset>
+			<fieldset><legend>Notifications</legend>
+				<div id="notifications"><?include('/employee/it/_notifications.html')?></div>
+			</fieldset>
+			<fieldset><legend>Information</legend>
+				<div id="information"><?include('/employee/it/_information.html')?></div>
+			</fieldset>
+			<fieldset><legend>Licenses</legend>
+				<div id="licenses"><?include('/employee/it/_host_licenses.html')?></div>
+			</fieldset>
+		</div>
+<? endif ( $$variable{Host}->id() ) ?>
+	</fieldset>
+<fieldset><legend>Interfaces</legend>
+	<table class="List">
+		<tr>
+			<th class="mac">Mac</th>
+			<th class="ip">IP Address</th>
+			<th class="dhcp">DHCP?</th>
+			<th class="comment">Comment</th>
+<? if ( $config{RADIUS_Support} eq 'Y' ) ?>
+	<th class="radius">RADIUS</th>
+<? endif ( $config{RADIUS_Support} eq 'Y' ) ?>
+			<th class="buttons">&nbsp;</th>
+		</tr>
+<? echo (
+	my $html;
+	 if ( $config{RADIUS_Support} eq 'Y' ) {
+		$openprint::RADIUS_Check::dbh = sql::open_sql( $log,
+			database	=> $config{RADIUS_DB_Name},
+			driver		=> $config{RADIUS_DB_Driver},
+			host		=> $config{RADIUS_DB_Server},
+			login		=> $config{RADIUS_DB_Username},
+			password	=> $config{RADIUS_DB_Password},
+		);
+		if ( ! $openprint::RADIUS_Check::dbh ) {
+			$html .= 'Unable to connect to RADIUS DB server.';	
+		} # end if
+	} # end if RADIUS
+
+	my $radius_fragment = slurp_content( '/employee/it/_radius_mac_line.html' );
+	my @macs = map { $_->mac() ? () : '' } $$variable{Host}->Interfaces();
+
+	my $NewHI = new openprint::Host_Interface();
+	$NewHI->mac( $param{mac} ) if ! $$variable{Host}->id();
+
+	foreach my $Interface ( $$variable{Host}->Interfaces(), ( @macs ? () : $NewHI ) ) {
+		$html .= sprintf(q`
+<tr id="hi-%1$d">
+	<td class="mac">%2$s</td>
+	<td class="ip">%3$s</td>
+	<td class="dhcp">%4$s</td>
+	<td class="comment" rowspan="2"><textarea name="comment-%1$s">%5$s</textarea></td>
+`, 
+	$$Interface{id},
+	input( type=>'mac', name=>'mac-'.$$Interface{id}, value=>$$Interface{mac} ),
+	input( type=>'ip', name=>'ip-'.$$Interface{id}, value=>$Interface->ip() ),
+	checkboxes( 'dhcp-'.$$Interface{id}, [ 1, '' ], $Interface->dhcp() ),
+	$Interface->comment(),
+);
+	
+		if ( $openprint::RADIUS_Check::dbh ) {
+			my $mac = $$Interface{mac};	
+			if ( $mac =~ /^([[:xdigit:]]{2})[\:\-]?([[:xdigit:]]{2})[\:\-]?([[:xdigit:]]{2})[\:\-]?([[:xdigit:]]{2})[\:\-]?([[:xdigit:]]{2})[\:\-]?([[:xdigit:]]{2})$/ ) {
+				$mac = "$1-$2-$3-$4-$5-$6";
+			} # end if
+			$mac = uc $mac;
+			$html .= '<td class="radius" id="mac-'.$mac.'" rowspan="2">';
+
+				$$variable{username} = $mac;
+				$html .= variable_substitution( \$radius_fragment, $variable ) if $mac;
+				$html .= '</td>';
+		} # end if RADIUS
+		$html .= '</tr><tr><td colspan="2">';
+		if ( $$Interface{mac} ) {
+			$html .= 'Connections:<br/>';
+			if ( $$variable{Host}->is_wap() ) {
+				foreach my $Station_HI ( openprint::Host_Interface->find( connected_to=>$$Interface{mac} ) ) {
+					$html .= $Station_HI->Host()->link_to().'<br/>';
+				}
+			} # end if
+			if ( $$Interface{connected_to} ) {
+				foreach my $Station_HI ( openprint::Host_Interface->find( mac=>$$Interface{connected_to} ) ) {
+					$html .= $Station_HI->Host()->link_to().'<br/>';
+				}
+			}
+		} # end if mac
+		$html .= '</td></tr>';
+	} # end foreach Interface
+	return $html;
+) ?>
+	</table>
+</fieldset>
+<? if ( $$variable{Host}->id() ) ?>
+            <fieldset><legend>Where</legend>
+<? echo ( 
+    $$variable{Location} = $$variable{Host}->Location();
+    return include( '/location/_location_fields.html' );
+) ?>
+            </fieldset>
+	<fieldset><legend>Logs</legend>
+		<ul>
+			<li><label>Date</label>
+				<? echo (
+						datetime_select_session( '/employee/it/host.html','log_created_on_start', {
+							onchange	=>q`new Ajax.Updater( 'Logs', '/employee/it/_host_logs.html', { parameters: $('f1').serialize() } );`,
+							with_today=>1,
+							with_clear=>1,
+							} ); ) ?> to
+				<? echo (
+						datetime_select_session( '/employee/it/host.html','log_created_on_end', {
+							onchange	=>q`new Ajax.Updater( 'Logs', '/employee/it/_host_logs.html', { parameters: $('f1').serialize() } );`,
+							with_today=>1,
+							with_clear=>1,
+							} ); ) ?>
+				<? echo ( button( 'LoadLog', { onclick=>q`new Ajax.Updater( 'Logs', '/employee/it/_host_logs.html', { parameters: $('f1').serialize() } );`, text=>'Load' } ); ) ?>
+			</li>
+		</ul>
+		<div id="Logs"><?include('/employee/it/_host_logs.html')?></div>
+	</fieldset>
+<? endif ( $$variable{Host}->id() ) ?>
+</div>

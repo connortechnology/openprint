@@ -1201,7 +1201,7 @@ sub gsm {
 			$$self{gsm} = Math::Round::nearest( 0.01, $$self{wpsi} * 703064.5 );
 		} else { 
 			$$self{gsm} = 'unknown';
-			$openprint::log->warn("Can't calculate gsm for " . $$self{to_string} ) if $$self{brand};
+			$openprint::log->warn("Can't calculate gsm for " . $$self{id} . ' ' . $$self{to_string} ) if $$self{brand};
 		} # end if
 	} # end if
 	return $$self{gsm};
