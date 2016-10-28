@@ -66,17 +66,17 @@
 		<li>
 			<label>Presses</label>
 <? echo ( 
-	@{$$variable{'Presses'}} = ();
-	my @presses = openprint::Equipment->find('category any'=>'Printing','useinscheduling'=>1,'order'=>'lower(strname)');
+	@{$$variable{Presses}} = ();
+	my @presses = openprint::Equipment->find('category any'=>'Printing', useinscheduling=>1, order=>'lower(strname)');
 	foreach (@presses) {
-		push @{$$variable{'Presses'}}, $_ if ! $session{'/employee/production/prepress_schedule.html?Presses'} or sets::isin( $_->id(), [ split(',', $session{'/employee/production/prepress_schedule.html?Presses'} ) ] );
+		push @{$$variable{Presses}}, $_ if ! $session{'/employee/production/prepress_schedule.html?Presses'} or sets::isin( $_->id(), [ split(',', $session{'/employee/production/prepress_schedule.html?Presses'} ) ] );
 	} # end foreach press
 
 	my $html = '<select name="Presses" multiple="multiple" size="'. @presses.'">';
 	if ( $session{'/employee/production/prepress_schedule.html?Presses'} ) {
-		$html .= ssi::make_drop_down( [ map { $_->id(), $_->name() } @presses ], [ split ',', $session{'/employee/production/prepress_schedule.html?Presses'} ] );
+		$html .= make_drop_down( [ map { $_->id(), $_->name() } @presses ], [ split ',', $session{'/employee/production/prepress_schedule.html?Presses'} ] );
 	} else {
-		$html .= ssi::make_drop_down( [ map { $_->id(), $_->name() } @presses ], [ map { $_->id() } @presses ] );
+		$html .= make_drop_down( [ map { $_->id(), $_->name() } @presses ], [ map { $_->id() } @presses ] );
 	} # end if
 	return $html;
 ) ?>
@@ -89,10 +89,10 @@
 	my @statuses = ( 'In Prepress', 'Proofs Out', 'Waiting For Customer Approval', 'Waiting For QA Approval' );
 	my $html = '<select name="statuses" multiple="multiple" size="'. @statuses.'">';
 	if ( $session{'/employee/production/prepress_schedule.html?statuses'} ) {
-		@{$$variable{'statuses'}} = split( ',', $session{'/employee/production/prepress_schedule.html?statuses'} );
-		$html .= ssi::make_drop_down( [ map { $_, $_ } @statuses ], $$variable{'statuses'} ); 
+		@{$$variable{statuses}} = split( ',', $session{'/employee/production/prepress_schedule.html?statuses'} );
+		$html .= ssi::make_drop_down( [ map { $_, $_ } @statuses ], $$variable{statuses} ); 
 	} else {
-		@{$$variable{'statuses'}} = @statuses;
+		@{$$variable{statuses}} = @statuses;
 		$html .= ssi::make_drop_down( [ map { $_, $_ } @statuses ], [ map { $_ } @statuses ] );
 	} # end if
 	return $html;
@@ -113,19 +113,15 @@
 		<div class="dates">
 			<ul><li>
 				<label>Proofs Out</label>
-					<? echo ( 
-						ssi::date_select_session( '/employee/production/prepress_schedule.html', 'takenover_on_start', { 'with_today'=>1 } );
-					) ?>
+				<? echo ( date_select_session( '/employee/production/prepress_schedule.html', 'takenover_on_start', { with_today=>1 } );) ?>
 				to
-					<? echo ( 
-						ssi::date_select_session( '/employee/production/prepress_schedule.html', 'takenover_on_end', { 'with_today'=>1 } );
-					) ?>
+				<? echo ( date_select_session( '/employee/production/prepress_schedule.html', 'takenover_on_end', { with_today=>1 } );) ?>
 			</li></ul>
 		</div>
 		<p class="buttons">
 			<? echo ( join("\n",
-						ssi::button( 'ShowResults', { onclick=>'f1.submit();', text=>'Show Results' } ),
-						ssi::button( 'Reset', { onclick=>"f1.btnFunction.value='Reset';f1.submit();", text=>'Reset' } ),
+						button( 'ShowResults', { onclick=>'f1.submit();', text=>'Show Results' } ),
+						button( 'Reset', { onclick=>"f1.btnFunction.value='Reset';f1.submit();", text=>'Reset' } ),
 				); ) ?>
 		</p>
 	</fieldset>
@@ -136,28 +132,31 @@
 	<hr style="clear: both;"/>
 	<? echo (
 		my $html;
-		foreach my $status ( @{$$variable{'statuses'}} ) {
+		foreach my $status ( @{$$variable{statuses}} ) {
 			$html .= '<fieldset><legend>'.$status.'</legend>';
 			
 			my %sql = (
 				status		=>	$status, 
 				order		=>	'lngdocketnumber',
-				date_filter( '/employee/production/prepress_schedule.html?takenover_on_start', 'takenover_on >=' ),
 				date_filter( '/employee/production/prepress_schedule.html?takenover_on_end', 'takenover_on <=' ),
+				date_filter( '/employee/production/prepress_schedule.html?takenover_on_start', 'takenover_on >=' ),
 				);
 
 			my @Projects = openprint::Project->find( %sql );
 			my %Schedule;
-			foreach my $S ( openprint::ScheduledJob->find(project_id=>[ map { $_->id() } @Projects ], 'starttime is null'=>0 ) ) {
-				push @{$Schedule{$$S{project_id}}}, $S;
-			} # end foreach
+			
+			if ( @Projects ) {
+				foreach my $S ( openprint::ScheduledJob->find( project_id=>[ map { $_->id() } @Projects ], 'starttime is null'=>0 ) ) {
+					push @{$Schedule{$$S{project_id}}}, $S;
+				} # end foreach
+			} # end if Projects
 
 			$html .= '<table><thead><tr>';
-			foreach my $E ( @{$$variable{'Presses'}} ) {
+			foreach my $E ( @{$$variable{Presses}} ) {
 				$html .= '<td class="PressColumn"><a href="/employee/production/prepress_schedule.html?Presses='.$E->id().'">'.$E->name().'</a></td>';
 			} # end foreach
 			$html .= '</tr></thead><tbody><tr>';
-			foreach my $E ( @{$$variable{'Presses'}} ) {
+			foreach my $E ( @{$$variable{Presses}} ) {
 				$html .= '<td class="PressColumn">';
 				$html .= '<ul>';
 				foreach my $Project ( @Projects ) {
@@ -169,20 +168,20 @@
 					my $onpress = 0;
 					foreach my $sig_id ( $Project->signatures() ) {
 						my $sig_specs = openprint::service::get_specs_ref( $Project, $sig_id );
-						$$sig_specs{'UsePress'} = $$sig_specs{'ddmPress'.$Project->ordered_quantity_index()} if ! $$sig_specs{'UsePress'};
-						if ( $$sig_specs{'UsePress'} eq $E->strid() ) {
+						$$sig_specs{UsePress} = $$sig_specs{'ddmPress'.$Project->ordered_quantity_index()} if ! $$sig_specs{UsePress};
+						if ( $$sig_specs{UsePress} eq $E->strid() ) {
 							$onpress = 1;
 						} else {
 							next;
 						} # endif
-						if ( ! $$sig_specs{'SignatureQuantity'} ) {
-							$$sig_specs{'SignatureQuantity'} = 1;
+						if ( ! $$sig_specs{SignatureQuantity} ) {
+							$$sig_specs{SignatureQuantity} = 1;
 						} # end if
-						if ( ! $$sig_specs{'ImpressionQuantity'} ) {
-							$$sig_specs{'ImpressionQuantity'} = $$sig_specs{'hdnImpressionQuantity'.$Project->ordered_quantity_index()};
+						if ( ! $$sig_specs{ImpressionQuantity} ) {
+							$$sig_specs{ImpressionQuantity} = $$sig_specs{'hdnImpressionQuantity'.$Project->ordered_quantity_index()};
 						} # end if
-						$impressions += $$sig_specs{'ImpressionQuantity'};
-						$forms += $$sig_specs{'SignatureQuantity'};
+						$impressions += $$sig_specs{ImpressionQuantity};
+						$forms += $$sig_specs{SignatureQuantity};
 					} # end foreach sig
 					next if ! $onpress;
 
@@ -198,7 +197,7 @@
 					$html .= sprintf( '<a class="docket" href="/employee/project/view.html?ProjectIndex=%1$d&amp;Docket=%2$d">%2$d</a>', $Project->id(), $Project->docket() );
 					my $n = $Project->Company()->name();
 					$n =~ s/The //gi;
-					$html .= ssi::htmlize( $n );
+					$html .= htmlize( $n );
 					$html .= '</div>';
 					$html .= qq`<span class="DueDate">`;
 					if ( ! $Project->requested_date() ) {
@@ -208,16 +207,16 @@
 						if ( $month ) { $html .= '&nbsp;'.substr( Date::Calc::Month_to_Text( $month ),0, 3); } # end if
 							$html .= qq` $day</span>`;
 					} # end if
-					if ( openprint::usergroup::is_user_in( ['Scheduling'], $session{'user_id'} ) ) {
+					if ( openprint::usergroup::is_user_in( ['Scheduling'], $session{user_id} ) ) {
 						$html .= sprintf( q{<div class="Comment" onclick="popup_window( '/employee/production/_job_popup.html', 'schedule_id=%1$d' );">%2$s</div>}, $Project->id(), $Project->summary() );
 
 						$html .= sprintf( q{<span class="Forms" onclick="popup_window( '/employee/production/_job_popup.html', 'schedule_id=%1$d' );">%2$d %3$s</span>}, $Project->id(), $forms, 'form'.($forms > 1 ? 's' : '') );
 						$html .= sprintf( q{<span class="Impressions" onclick="popup_window( '/employee/production/_job_popup.html', 'schedule_id=%1$d' );">%2$d imps</span>}, $Project->id(), $impressions );
 						$html .= '<span class="Services">';
-						$html .= '<span class="Service folding">fold</span>' if $$services{'Folding'};
-						$html .= '<span class="Service stitching">stitch</span>' if $$services{'SaddleStitching'} or $$services{'LoopStitching'};
-						$html .= '<span class="Service cutting">trim</span>' if $$services{'Cutting'};
-						$html .= '<span class="Service nobindery">nobindery</span>' if $$services{'NoBindery'};
+						$html .= '<span class="Service folding">fold</span>' if $$services{Folding};
+						$html .= '<span class="Service stitching">stitch</span>' if $$services{SaddleStitching} or $$services{LoopStitching};
+						$html .= '<span class="Service cutting">trim</span>' if $$services{Cutting};
+						$html .= '<span class="Service nobindery">nobindery</span>' if $$services{NoBindery};
 						$html .= '</span>';
 					} else {
 						$html .= sprintf( '<div class="Comment">%3$s</div>', ssi::htmlize( $Project->summary() ) );
