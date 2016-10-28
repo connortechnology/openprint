@@ -225,11 +225,16 @@ sub recipients {
 	return sql::execute( undef, undef, $$self{query});
 } # end sub recipients
 
+sub Recipients {
+	my ( $self ) = @_;
+	return map { $_->email_valid() ? $_ : () } openprint::User->find( id=>[ sql::execute( undef, undef, $$self{query} ) ] );
+} # end sub recipients
+
 sub test {
 	my ( $self ) = @_;
 	my %replacements;
 # de we need to send this email?
-	$replacements{User} = new openprint::User( $openprint::session{user_id} );
+	$replacements{User} = $openprint::User;
 	$$self{email_text} = ssi::variable_substitution( \$$self{email_text}, \%replacements ) if $$self{email_text};
 	$$self{email_html} = ssi::variable_substitution( \$$self{email_html}, \%replacements ) if $$self{email_html};
 	if ( ! ( $$self{email_text} or $$self{email_html} ) ) {

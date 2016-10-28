@@ -576,7 +576,7 @@ if ( 0 ) {
 	$ProjectType = openprint::ProjectType->find_one( id => $param{project_type_id} ) if $param{project_type_id};
 	my $OldProjectType = $Project->Type();
 # Handle ProjectType
-	if ( $ProjectType and ( $OldProjectType->id() != $ProjectType->id() ) ) {
+	if ( (!$OldProjectType) or ( $ProjectType and ( $OldProjectType->id() != $ProjectType->id() ) ) ) {
 		$recalculate = 1;
 		$error .= $Project->change_ProjectType( $ProjectType );
 	} else {
