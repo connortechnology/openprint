@@ -97,7 +97,7 @@ my @re = (
 		'^(\w{3} [ :0-9]{11}) [\._a-zA-Z0-9\-]+ dovecot: pop3\-login: Aborted (l|L)ogin \(auth failed, [0-9]+ attempts in [0-9]+ secs\): user=<[a-zA-Z@\.0-9]*>, method=PLAIN, rip=(?<IP>[\.0-9]+), lip=[\.0-9]+, session=<[^>]+>$',
 		q`^(\w{3} [ :0-9]{11}) [\._a-zA-Z0-9\-]+ named\[[0-9]+\]: client (?<IP>[0-9.]+)#[0-9]+: (view [A-Za-z0-9]+: )?query \(cache\) '[./[:alnum:]]+' denied$`,
 		q`^(\w{3} [ :0-9]{11}) [\._a-zA-Z0-9\-]+ pam-abl\[[0-9]+\]: Blocking access from (?<IP>[0-9.]+) to service sshd, user root$`,
-		q`^(\w{3} [ :0-9]{11}) [\._a-zA-Z0-9\-]+ postfix\/smtpd\[[0-9]+\]: warning: [\.\-A-Za-z0-9]+\[(?<IP>[0-9.]+)\]: SASL LOGIN authentication failed:`,
+		q`^(\w{3} [ :0-9]{11}) [\._a-zA-Z0-9\-]+ postfix\/smtpd\[[0-9]+\]: warning: [\.\-A-Za-z0-9]+\[(?<IP>[0-9.]+)\]: SASL (CRAM\-MD5|LOGIN) authentication failed:`,
 		q`^(\w{3} [ :0-9]{11}) [\._a-zA-Z0-9\-]+ pdns\[[0-9]+\]: Received a malformed qdomain from (?<IP>[0-9.]+), '[^']+': sending servfail$`,
 		q`^(\w{3} [ :0-9]{11}) [\._a-zA-Z0-9\-]+ ovpn\-server\[[0-9]+\]: (?<IP>[0-9.]+):[0-9]+ WARNING Bad encapsulated packet length from peer \([[:digit:]]+\), which must be > 0 and <= 1547 \-\- please ensure that \-\-tun\-mtu or \-\-link\-mtu is equal on both peers \-\- this condition could also indicate a possible active attack on the TCP link \-\- \[Attempting restart\.\.\.\]$`,
 );
