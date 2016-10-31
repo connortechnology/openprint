@@ -18,7 +18,7 @@
 	<fieldset><legend>Billing Information</legend>
 		<div class="content"><ul>
 			<? if ( $$variable{Order}->company_name() ) ?>
-			<li><label>Company Name</label><? hecho ( $$variable{Order}->company_name() ) ?><br/></li>
+			<li><label>Company Name</label><? echo ( $$variable{Order}->Company()->link_to( $$variable{Order}->company_name() ) ) ?><br/></li>
 			<? endif ( $$variable{Order}->company_name() ) ?>
 <? if ( $$variable{Order}->address1() or $$variable{Order}->address2() ) ?>
 			<li><label>Address</label>
