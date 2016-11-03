@@ -1,5 +1,4 @@
 <script type="text/javascript" src="/javascripts/tiny_mce/tiny_mce.js"></script>
-
 <script type="text/javascript">
 /*
 	tinyMCE.init({
@@ -11,11 +10,11 @@
 */
 </script>
 <?include('/includes/error_reporting.html')?>
-<? if ( $$variable{'Results'} ) ?>
+<? if ( $$variable{Results} ) ?>
 <b>The following are the results of your email campaign</b><br/>
 <?Results?><br/>
 <hr/>
-<? endif ( $$variable{'Results'} ) ?>
+<? endif ( $$variable{Results} ) ?>
 <form id="f1" name="f1" action="email_campaign.html<? echo ( $$variable{Campaign}->id() ? '?campaign_id='.$$variable{Campaign}->id() : '' ) ?>" method="post">
 		<p class="buttons">
 			<? echo ( join('',
@@ -25,44 +24,45 @@
 				button( 'ResetTop', { onclick=>'f1.reset();',text=>'Reset' }),
 				button( 'RunTop', { onclick=>"f1.btnFunction.value='Run';f1.submit();", href=>'', text=>'Run' } ),
 				button( 'TestTop', { onclick=>"f1.btnFunction.value='Test';f1.submit();",text=>'Test' } ),
-				button( 'ViewRecipientsTop', { onclick=>"f1.btnFunction.value='View Recipients';f1.submit();",text=>'View Recipients' } ),
+				button( 'ViewRecipientsTop', { onclick=>"popup_window('_recipients.html', { campaign_id:$$variable{Campaign}{id} }, {width: 1000});",text=>'View Recipients' } ),
+				#button( 'ViewRecipientsTop', { onclick=>"f1.btnFunction.value='View Recipients';f1.submit();",text=>'View Recipients' } ),
 				button( 'DownloadRecipientsTop', { onclick=>"f1.btnFunction.value='Download Recipients';f1.submit();",text=>'Download Recipients' } ),
 			); ) ?>
 		</p>
 	<input type="hidden" name="btnFunction"/>
 	<fieldset>
-		<p><label>ID</label><? echo ( $$variable{'Campaign'}->id() ) ?></p>
-		<p><label>Name</label><input type="text" name="name" value="<? echo ( $$variable{'Campaign'}->name() ) ?>" /></p>
-		<p><label>Query</label><textarea name="query" rows="<? echo ( ssi::count_lines($$variable{'Campaign'}->query()); ) ?>" onkeyup="textarea_resize(this);" ><? echo ($$variable{'Campaign'}->query()) ?></textarea></p>
-		<p><label>Email From</label><input type="text" name="email_from" value="<? hecho ( $$variable{'Campaign'}->email_from() ) ?>"  /></p>
-		<p><label>Override To</label><input type="text" name="email_to" value="<? hecho ( $$variable{'Campaign'}->email_to() ) ?>"  /></p>
-		<p><label>Email Subject</label><input type="text" name="email_subject" value="<? echo ( $$variable{'Campaign'}->email_subject() ) ?>"  /></p>
-		<p><label>Template</label><select name="template_id"><option value="">select</option><? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::EmailTemplate->find('order'=>'lower(name)') ], $$variable{'Campaign'}->template_id() ); ) ?></select></p>
-		<p><label>Email TEXT Body</label><textarea wrap="physical" name="email_text" rows="<? echo ( count_lines( $$variable{'Campaign'}->email_text() ) ) ?>" onkeyup="textarea_resize( this );" ><? echo ( ssi::html_escape( $$variable{'Campaign'}->email_text() ); ) ?></textarea></p>
-		<p><label>Email HTML Body</label><textarea wrap="physical" class="mce" name="email_html" rows="<? echo ( count_lines( $$variable{'Campaign'}->email_html() ) ) ?>" onkeyup="textarea_resize( this );" ><? echo ( ssi::html_escape( $$variable{'Campaign'}->email_html() ); ) ?></textarea></p>
-		<p><label>Attachments</label><textarea name="attachments" rows="<? echo ( scalar split("\n", $$variable{'Campaign'}->attachments() ) ) ?>" onkeyup="textarea_resize( this );" ><? echo ( $$variable{'Campaign'}->attachments() ) ?></textarea></p>
-		<p><label>Times to send</label><input type="text" name="timestosend" value="<? echo ( $$variable{'Campaign'}->timestosend() ) ?>"  /></p>
-		<p><label>Time of day to send</label><input type="text" name="timeofday" value="<? echo ( $$variable{'Campaign'}->timeofday() ) ?>"  /></p>
-		<p><label>Interval between emails</label><input type="text" name="interval" value="<? echo ( $$variable{'Campaign'}->interval() ) ?>"  /></p>
+		<p><label>ID</label><? echo ( $$variable{Campaign}->id() ) ?></p>
+		<p><label>Name</label><input type="text" name="name" value="<? echo ( $$variable{Campaign}->name() ) ?>" /></p>
+		<p><label>Query</label><textarea name="query" rows="<? echo ( ssi::count_lines($$variable{Campaign}->query()); ) ?>" onkeyup="textarea_resize(this);" ><? echo ($$variable{Campaign}->query()) ?></textarea></p>
+		<p><label>Email From</label><input type="text" name="email_from" value="<? hecho ( $$variable{Campaign}->email_from() ) ?>"  /></p>
+		<p><label>Override To</label><input type="text" name="email_to" value="<? hecho ( $$variable{Campaign}->email_to() ) ?>"  /></p>
+		<p><label>Email Subject</label><input type="text" name="email_subject" value="<? echo ( $$variable{Campaign}->email_subject() ) ?>"  /></p>
+		<p><label>Template</label><select name="template_id"><option value="">select</option><? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::EmailTemplate->find('order'=>'lower(name)') ], $$variable{Campaign}->template_id() ); ) ?></select></p>
+		<p><label>Email TEXT Body</label><textarea wrap="physical" name="email_text" rows="<? echo ( count_lines( $$variable{Campaign}->email_text() ) ) ?>" onkeyup="textarea_resize( this );" ><? echo ( ssi::html_escape( $$variable{Campaign}->email_text() ); ) ?></textarea></p>
+		<p><label>Email HTML Body</label><textarea wrap="physical" class="mce" name="email_html" rows="<? echo ( count_lines( $$variable{Campaign}->email_html() ) ) ?>" onkeyup="textarea_resize( this );" ><? echo ( ssi::html_escape( $$variable{Campaign}->email_html() ); ) ?></textarea></p>
+		<p><label>Attachments</label><textarea name="attachments" rows="<? echo ( scalar split("\n", $$variable{Campaign}->attachments() ) ) ?>" onkeyup="textarea_resize( this );" ><? echo ( $$variable{Campaign}->attachments() ) ?></textarea></p>
+		<p><label>Times to send</label><input type="text" name="timestosend" value="<? echo ( $$variable{Campaign}->timestosend() ) ?>"  /></p>
+		<p><label>Time of day to send</label><input type="text" name="timeofday" value="<? echo ( $$variable{Campaign}->timeofday() ) ?>"  /></p>
+		<p><label>Interval between emails</label><input type="text" name="interval" value="<? echo ( $$variable{Campaign}->interval() ) ?>"  /></p>
 		<p><label>Active</label>
-		<input type="radio" id="activeY" name="active" value="Y" <? echo ( $$variable{'Campaign'}->active() eq 'Y' ? 'checked="checked"' : '' ) ?> />
+		<input type="radio" id="activeY" name="active" value="Y" <? echo ( $$variable{Campaign}->active() eq 'Y' ? 'checked="checked"' : '' ) ?> />
 		<label for="activeY" class="radio">Yes</label>
-		<input type="radio" id="activeN" name="active" value="N" <? echo ( $$variable{'Campaign'}->active() ne 'Y' ? 'checked="checked"' : '' ) ?> />
+		<input type="radio" id="activeN" name="active" value="N" <? echo ( $$variable{Campaign}->active() ne 'Y' ? 'checked="checked"' : '' ) ?> />
 		<label for="activeN" class="radio">No</label>
 		</p>
-		<p><label>Last Run</label><? echo ( $$variable{'Campaign'}->lastrun() ) ?></p>
+		<p><label>Last Run</label><? echo ( $$variable{Campaign}->lastrun() ) ?></p>
 		<p><label>Next Run</label><span class="DateTimeSelector"><? echo ( 
-datetime_select( 'nextrun', $$variable{'Campaign'}->nextrun() ? $$variable{'Campaign'}->nextrun() : '', {with_today=>1} );
+datetime_select( 'nextrun', $$variable{Campaign}->nextrun() ? $$variable{Campaign}->nextrun() : '', {with_today=>1} );
 ) ?></span></p>
 		<p class="buttons">
-			<? echo ( join('',
+			<? echo ( join("\n",
 				button( 'DeleteBottom', { onclick=>"f1.btnFunction.value='Delete';fmChange=2;fmCheck(f1);", text=>'Delete' } ),
 				button( 'SaveBottom', { onclick=>"f1.btnFunction.value='Save';fmChange=3;fmCheck(f1);", text=>'Save' } ),
 				button( 'CopyBottom', { onclick=>"f1.btnFunction.value='Copy';fmCheck(f1);", text=>'Copy' } ),
 				button( 'ResetBottom', { onclick=>'f1.reset();',text=>'Reset'}),
 				button( 'Run', { onclick=>"f1.btnFunction.value='Run';f1.submit();", text=>'Run' } ),
 				button( 'Test', { onclick=>"f1.btnFunction.value='Test';f1.submit();",text=>'Test' } ),
-				button( 'ViewRecipients', { onclick=>"f1.btnFunction.value='View Recipients';f1.submit();",text=>'View Recipients' } ),
+				button( 'ViewRecipientsBottom', { onclick=>"popup_window('_recipients.html', { campaign_id:$$variable{Campaign}{id} }, {width: 1000});",text=>'View Recipients' } ),
 				button( 'DownloadRecipients', { onclick=>"f1.btnFunction.value='Download Recipients';f1.submit();", text=>'Download Recipients' } ),
 			); ) ?>
 		</p>
