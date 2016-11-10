@@ -2136,7 +2136,7 @@ sub cut_spreads {
 		( ( $$I{image_orientation} eq 'Horizontal' ) or ( $$I{spread_rows} >= ($$I{spread_size}/2) ) )
 	   ) {
 	#if ( $I->spread_rows() > $I->spread_columns() ) {
-$openprint::log->debug("Cutting rows $$I{spread_rows} > ( $$I{image_orientation} eq 'Horizontal' ? ($$I{spread_size}/2)-1 : 1 )" );
+$openprint::log->debug("Cutting rows $$I{spread_rows} > ( $$I{image_orientation} eq 'Horizontal' ? ($$I{spread_size}/2)-1 : 1 )" ) if DEBUG;
 		
 		if ( $$I{spread_rows} % 2 ) {
 			my $i1 = $I->copy();
