@@ -91,7 +91,7 @@ Please select a company or user to obtain login information.<br/>
 					if ( $$variable{User}->id() ) {
 						$html .= button( 'Become', { href=>'/account/select_user.html?user_id='.$$variable{User}->id() } );
 					} # end if
-				if ( $$variable{User}->id() and (new openprint::User( $session{user_id} ))->email() =~ /^iconnor/ ) {
+				if ( 0 and $$variable{User}->id() and (new openprint::User( $session{user_id} ))->email() =~ /^iconnor/ ) {
 					$html .= '<br/>';
 					$html .= button( 'Merge', { onclick=>"f1.btnFunction.value='merge';f1.submit();" } );
 					$html .= '<select name="merge_user_id"><option value=""> none </option>';
