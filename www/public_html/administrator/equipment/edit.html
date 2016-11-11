@@ -87,7 +87,7 @@ new Ajax.Request('/administrator/equipment/_specification.html?action=copy&amp;i
 		<? echo ( join( "\n",
 				button( 'PreviousTop', { onclick=>"f1.btnFunction.value='Previous';fmCheck(f1);", text=>'Previous' } ),
 				button( 'NextTop', { onclick=>"f1.btnFunction.value='Next';fmCheck(f1);", text=>'Next' } ),
-				button( 'NewTop', { onclick=>"addCheck(\$('f2'));", text=>'New' } ),
+				button( 'NewTop', { href=>'/administrator/equipment/edit.html', text=>'New' } ),
 				( $$variable{Equipment}->deleted() ? (
 				button( 'Destroy', { onclick=>"f1.btnFunction.value='Destroy';fmChange=2;fmCheck(f1);", text=>'Destroy' } ),
 				button( 'UnDelete', { onclick=>"f1.btnFunction.value='UnDelete';fmChange=2;fmCheck(f1);", text=>'UnDelete' } ),
