@@ -13,5 +13,6 @@ CREATE	TABLE Company_Credit (
 	early_payment_amount	float,
 	early_payment_units	text,
 	early_payment_days	smallint,
+	terms integer,
 	PRIMARY KEY (company_id,supplier_id)
 );
