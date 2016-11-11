@@ -30,6 +30,16 @@ sub edit {
 	} elsif ( $param{'btnFunction'} eq 'Delete' ) {
 		$Material->delete();
 		$Material = $Material->Next( 'category_id'=>$param{'ddmSearchCategory'} );
+	} elsif ( $param{'btnFunction'} eq 'Export' ) {
+		my @header = ( 'Material Name', 'Description','Category', 'Activity Code', 'Manufacturer', 'Supplier','Fed Tax Exempt', 'State Tax Exempt' );
+
+		my @data;
+		foreach my $Material ( openprint::Material->find( order=>'name' ) ) {
+			push @data, $Material->get( 'name', 'description', 'category', 'activity_code', 'manufacturer','supplier','taxexempt1','taxexempt2' );
+		} # end foreach
+
+		misc::export_csv( $openprint::r, $log, \%variable, 'materials.csv', \@header, \@data );
+
 	} elsif ( $param{'btnFunction'} eq 'Save' ) {
 		if ( $param{'new_category'} ) {
 			if ( my @Categories = openprint::MaterialCategory->find('name'=>$param{'new_category'} ) ) {
