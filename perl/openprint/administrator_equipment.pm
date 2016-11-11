@@ -79,18 +79,18 @@ sub export_specs {
 	my @header = ( 'Equipment ID', 'Field Name','Min', 'Max', 'Units', 'Value','Interpolate' );
 
 	my @data;
-	foreach my $Spec ( openprint::EquipmentSpecification->find( 'equipment_id'=>$Equipment->id(), 'order'=>'strName, dblmin' ) ) {
-		push @data, $Spec->Equipment()->strid(), $Spec->name(), $Spec->min(), $Spec->max(), $Spec->units(), $Spec->value(), $Spec->interpolate();
+	foreach my $Spec ( openprint::EquipmentSpecification->find( equipment_id=>$Equipment->id(), order=>'strName, dblmin' ) ) {
+		push @data, $Equipment->strid(), $Spec->name(), $Spec->min(), $Spec->max(), $Spec->units(), $Spec->value(), $Spec->interpolate();
 	} # end foreach
 
 	misc::export_csv( $r, $log, \%variable, 'equipment_specifications'.($Equipment->id()?'_'.$Equipment->strid():'').'.csv', \@header, \@data );
-	openprint::logs::insertLogRecord('38',);
 } # end sub export_specs
 
 sub edit {
-	my $Equipment = new openprint::Equipment( $param{ddmEquipment} );
-	if ( $param{ddmEquipment} and ! $$Equipment{id} ) {
-		$variable{error} .= "Equipment $param{ddmEquipment} not found.<br/>";
+	my $Equipment = openprint::Equipment->find_one( id=>$param{ddmEquipment} );
+	if ( ! $Equipment ) {
+		$variable{error} .= "Equipment $param{ddmEquipment} not found.<br/>" if $param{ddmEquipment};
+		$Equipment = new openprint::Equipment();
 	}
 
 	if ( $param{btnFunction} eq 'Next' ) {
