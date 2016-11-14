@@ -111,7 +111,7 @@ new Ajax.Request('/administrator/equipment/_specification.html?action=copy&amp;i
 	<input type="hidden" name="btnFunction"/>
 </form>
 <form id="f2" name="f2" method="post" enctype="multipart/form-data" action="edit.html">
-	<input type="hidden" id="ddmEquipment" name="ddmEquipment" value="<? echo ( $$variable{'Equipment'}->id() ) ?>" />
+	<input type="hidden" id="ddmEquipment" name="ddmEquipment" value="<? echo ( $$variable{Equipment}->id() ) ?>" />
 	<fieldset><legend>Equipment Information</legend>
 		<div class="leftColumn">
 			<p><label>Index</label><? hecho ( $$variable{Equipment}->id(); ) ?></p>
@@ -158,7 +158,7 @@ new Ajax.Request('/administrator/equipment/_specification.html?action=copy&amp;i
 				<label>Use in scheduling</label>
 				<? echo ( radio( 'useinscheduling', [ '1', 'Yes', '0', 'No' ], $$variable{Equipment}->useinscheduling(), { default=>'0', onclick=>q`if(this.value=='1'){$('schedulingoptions').show();}else{$('schedulingoptions').hide();}` } ); ) ?>
 			</p>
-	<div id="schedulingoptions" <? echo ( $$variable{'Equipment'}->useinscheduling() ? '' : 'style="display:none;"' ) ?>>
+	<div id="schedulingoptions" <? echo ( $$variable{Equipment}->useinscheduling() ? '' : 'style="display:none;"' ) ?>>
 			<p>
 				<label>Services</label>
 				<select name="servicetype_id" id="servicetype_id" multiple="multiple" size="4">
@@ -170,76 +170,76 @@ new Ajax.Request('/administrator/equipment/_specification.html?action=copy&amp;i
 			</p>
 			<p>
 				<label>Smart Scheduling</label>
-				<? echo ( radio( 'smartscheduling', [ '1', 'Yes', '0', 'No' ], $$variable{'Equipment'}->smartscheduling() ); ) ?>
+				<? echo ( radio( 'smartscheduling', [ '1', 'Yes', '0', 'No' ], $$variable{Equipment}->smartscheduling() ); ) ?>
 			</p>
 	</div>
-	<? if ( $config{'JMFEnabled'} eq 'Y' ) ?>
+	<? if ( $config{JMFEnabled} eq 'Y' ) ?>
 			<p>
 				<label>Use JMF</label>
-				<? echo ( radio( 'jmf_enabled', [ 'true', 'Yes', 'false', 'No' ], $$variable{'Equipment'}->jmf_enabled() ); ) ?>
+				<? echo ( radio( 'jmf_enabled', [ 'true', 'Yes', 'false', 'No' ], $$variable{Equipment}->jmf_enabled() ); ) ?>
 			</p>
-	<? endif ( $config{'JMFEnabled'} eq 'Y' ) ?>
-	<? if ( $config{'InstantGateEnabled'} eq 'Y' ) ?>
+	<? endif ( $config{JMFEnabled} eq 'Y' ) ?>
+	<? if ( $config{InstantGateEnabled} eq 'Y' ) ?>
 			<p>
 				<label>Use InstantGate</label>
-				<? echo ( radio( 'instantgate_enabled', [ 'true', 'Yes', 'false', 'No' ], $$variable{'Equipment'}->instantgate_enabled(), { onclick=>qq`if(this.value=='true'){$('CostCenter').show();}else{$('CostCenter').hide();};` } ); ) ?>
+				<? echo ( radio( 'instantgate_enabled', [ 'true', 'Yes', 'false', 'No' ], $$variable{Equipment}->instantgate_enabled(), { onclick=>qq`if(this.value=='true'){$('CostCenter').show();}else{$('CostCenter').hide();};` } ); ) ?>
 			</p>
-	<? endif ( $config{'InstantGateEnabled'} eq 'Y' ) ?>
-	<? if ( $config{'InstantGateEnabled'} eq 'Y' or $config{'JDFEnabled'} eq 'Y' ) ?>
-			<p id="CostCenter" <? echo ( 'style="display:none;"' if ! $$variable{'Equipment'}->instantgate_enabled() ) ?>>
+	<? endif ( $config{InstantGateEnabled} eq 'Y' ) ?>
+	<? if ( $config{InstantGateEnabled} eq 'Y' or $config{JDFEnabled} eq 'Y' ) ?>
+			<p id="CostCenter" <? echo ( 'style="display:none;"' if ! $$variable{Equipment}->instantgate_enabled() ) ?>>
 				<label>Cost Center</label>
-				<input type="text" name="cost_center" value="<? hecho ( $$variable{'Equipment'}->cost_center(); ) ?>"  />
+				<input type="text" name="cost_center" value="<? hecho ( $$variable{Equipment}->cost_center(); ) ?>"  />
 			</p>
-	<? endif ( $config{'InstantGateEnabled'} eq 'Y' or $config{'JDFEnabled'} eq 'Y' ) ?>
+	<? endif ( $config{InstantGateEnabled} eq 'Y' or $config{JDFEnabled} eq 'Y' ) ?>
 			<p>
 				<label>JDF ID</label>
-				<input type="text" name="jdf_id" value="<? hecho ( $$variable{'Equipment'}->jdf_id(); ) ?>"  />
+				<input type="text" name="jdf_id" value="<? hecho ( $$variable{Equipment}->jdf_id(); ) ?>"  />
 			</p>
 			<p>
 				<label>JDF Name</label>
-				<input type="text" name="jdf_name" value="<? hecho ( $$variable{'Equipment'}->jdf_name(); ) ?>"  />
+				<input type="text" name="jdf_name" value="<? hecho ( $$variable{Equipment}->jdf_name(); ) ?>"  />
 			</p>
 			<p>
 				<label>Location</label>
 				<select id="location_id" name="location_id">
 					<option value="">select</option>
-					<? echo ( make_drop_down( openprint::Location->dropdown( order=>'parent_id NULLS FIRST, lower(name)', type=>'place'), $$variable{'Equipment'}->location_id() ); ) ?>
+					<? echo ( make_drop_down( openprint::Location->dropdown( order=>'parent_id NULLS FIRST, lower(name)', type=>'place'), $$variable{Equipment}->location_id() ); ) ?>
 				</select>
 			</p>
 			<p>
 				<label>CIP3 Integration</label>
-				<input type="radio" id="cip3_monitor1" name="cip3_monitor" value="1"  <? echo ( ssi::checked( $$variable{'Equipment'}->cip3_monitor() ); ) ?> onclick="$('CIP3').show();" />
+				<input type="radio" id="cip3_monitor1" name="cip3_monitor" value="1"  <? echo ( ssi::checked( $$variable{Equipment}->cip3_monitor() ); ) ?> onclick="$('CIP3').show();" />
 				<label class="radio" for="cip3_monitor1">Yes</label>
-				<input type="radio" id="cip3_monitor0" name="cip3_monitor" value="0"  <? echo ( ssi::checked(! $$variable{'Equipment'}->cip3_monitor() ); ) ?> onclick="$('CIP3').hide();" />
+				<input type="radio" id="cip3_monitor0" name="cip3_monitor" value="0"  <? echo ( ssi::checked(! $$variable{Equipment}->cip3_monitor() ); ) ?> onclick="$('CIP3').hide();" />
 				<label class="radio" for="cip3_monitor0">No</label>
 			</p>
-			<div id="CIP3" <? echo ( $$variable{'Equipment'}->cip3_monitor() ? '' : 'style="display: none;"' ) ?>>	
+			<div id="CIP3" <? echo ( $$variable{Equipment}->cip3_monitor() ? '' : 'style="display: none;"' ) ?>>	
 				<p>
 					<label>Input Hotfolder</label>
-					<input type="text" name="cip3_in" value="<? hecho ( $$variable{'Equipment'}->cip3_in(); ) ?>" />
+					<input type="text" name="cip3_in" value="<? hecho ( $$variable{Equipment}->cip3_in(); ) ?>" />
 				</p>
 				<p>
 					<label>Output Hotfolder</label>
-					<input type="text" name="cip3_out" value="<? hecho ( $$variable{'Equipment'}->cip3_out(); ) ?>" />
+					<input type="text" name="cip3_out" value="<? hecho ( $$variable{Equipment}->cip3_out(); ) ?>" />
 				</p>
 				<p>
 					<label>Hold PPFs?</label>
-					<input type="radio" id="cip3_hold1" name="cip3_hold" value="1" <? echo ( ssi::checked( $$variable{'Equipment'}->cip3_hold() ); ) ?> />
+					<input type="radio" id="cip3_hold1" name="cip3_hold" value="1" <? echo ( ssi::checked( $$variable{Equipment}->cip3_hold() ); ) ?> />
 					<label class="radio" for="cip3_hold1">Yes</label>
-					<input type="radio" id="cip3_hold0" name="cip3_hold" value="0"  <? echo ( ssi::checked(! $$variable{'Equipment'}->cip3_hold() ); ) ?> />
+					<input type="radio" id="cip3_hold0" name="cip3_hold" value="0"  <? echo ( ssi::checked(! $$variable{Equipment}->cip3_hold() ); ) ?> />
 					<label class="radio" for="cip3_hold0">No</label>
 				</p>
 				<p>
 					<label>Merge PPFs?</label>
-					<input type="radio" id="cip3_merge1" name="cip3_merge" value="1" <? echo ( ssi::checked( $$variable{'Equipment'}->cip3_merge() ); ) ?> />
+					<input type="radio" id="cip3_merge1" name="cip3_merge" value="1" <? echo ( ssi::checked( $$variable{Equipment}->cip3_merge() ); ) ?> />
 					<label class="radio" for="cip3_merge1">Yes</label>
-					<input type="radio" id="cip3_merge0" name="cip3_merge" value="0"  <? echo ( ssi::checked(! $$variable{'Equipment'}->cip3_merge() ); ) ?> />
+					<input type="radio" id="cip3_merge0" name="cip3_merge" value="0"  <? echo ( ssi::checked(! $$variable{Equipment}->cip3_merge() ); ) ?> />
 					<label class="radio" for="cip3_merge0">No</label>
 				</p>
 			</div>
 		</div>
 	</fieldset>
-<? if ( $$variable{'Equipment'}->id() ) ?>
+<? if ( $$variable{Equipment}->id() ) ?>
 	<fieldset><legend>Specifications</legend>
 		Changes made below take effect immediately.<br/>
 		<table id="specifications" class="List sortable">
@@ -271,9 +271,9 @@ new Ajax.Request('/administrator/equipment/_specification.html?action=copy&amp;i
 			<tbody id="specifications_body">
 			<? echo ( 
 				my $html;
-				@{$$variable{'Specifications'}} = $$variable{'Equipment'}->Specifications();
+				@{$$variable{Specifications}} = $$variable{Equipment}->Specifications();
 				my $specification_html = slurp_content( '/administrator/equipment/_specification.html' );
-				while ( $$variable{'Specification'} = shift @{$$variable{'Specifications'}} ) {
+				while ( $$variable{Specification} = shift @{$$variable{Specifications}} ) {
 					$html .= variable_substitution( \$specification_html, $variable );
 					$$variable{rowclass} = $$variable{rowclass} ? '' : ' class="colRow"';
 				} # end while
@@ -282,15 +282,15 @@ new Ajax.Request('/administrator/equipment/_specification.html?action=copy&amp;i
 			</tbody>
 		</table>
 	</fieldset>
-<? endif ( $$variable{'Equipment'}->id() ) ?>
+<? endif ( $$variable{Equipment}->id() ) ?>
 	<input type="hidden" name="btnFunction"/>
 </form>
-<? if ( $$variable{'Equipment'}->specification('Folding Capable') ) ?>
+<? if ( $$variable{Equipment}->specification('Folding Capable') ) ?>
 	<fieldset><legend>Fold Specifications</legend>
 		Select the # of pages of the folds that you would like to edit.  To add a new fold click Add.
 		<p>
 			<label>Type</label>
-			<select style="width: auto;" id="type" name="type" onchange="new Ajax.Updater( 'Folds', '_fold.html', {method:'get', evalScripts:true, onLoading:function(){ $('Folds').innerHTML='Loading...';}, parameters:{equipment_id: <? echo ( $$variable{'Equipment'}->id() ) ?>, type: $('type').getValue() } } );">
+			<select style="width: auto;" id="type" name="type" onchange="new Ajax.Updater( 'Folds', '_fold.html', {method:'get', evalScripts:true, onLoading:function(){ $('Folds').innerHTML='Loading...';}, parameters:{equipment_id: <? echo ( $$variable{Equipment}->id() ) ?>, type: $('type').getValue() } } );">
 				<option value="">select</option>
 				<option value="all">All</option>
 <? echo ( 
@@ -303,15 +303,15 @@ new Ajax.Request('/administrator/equipment/_specification.html?action=copy&amp;i
 ) ?>
 			</select>
 <? echo ( join('',
-			button( 'AddFold', { onclick=>"new Ajax.Request('/administrator/equipment/_fold.html?action=add&equipment_id=". $$variable{'Equipment'}->id() ."', { onSuccess: function(response){new Insertion.Top(\$('Folds'), response.responseText);SortableTable.load();} } );", text=>'Add' } ),
+			button( 'AddFold', { onclick=>"new Ajax.Request('/administrator/equipment/_fold.html?action=add&equipment_id=". $$variable{Equipment}->id() ."', { onSuccess: function(response){new Insertion.Top(\$('Folds'), response.responseText);SortableTable.load();} } );", text=>'Add' } ),
 			button( 'ExportFolds', { onclick=>"f1.btnFunction.value='Export Folds';f1.submit();", text=>'Export Folds' } ),
 	);) ?>
 		</p>
 		<div id="Folds"> </div>
 	</fieldset>
-<? endif ( $$variable{'Equipment'}->specification('Folding Capable') ) ?>
+<? endif ( $$variable{Equipment}->specification('Folding Capable') ) ?>
 <form id="stock_settings_form" name="stock_settings_form" action="">
-	<input type="hidden" id="equipment_id" name="equipment_id" value="<? echo ( $$variable{'Equipment'}->id() ) ?>" />
+	<input type="hidden" id="equipment_id" name="equipment_id" value="<? echo ( $$variable{Equipment}->id() ) ?>" />
 	<fieldset><legend>Specific Stock Settings</legend>
 		<div id="StockSettings"><?include('_stock_settings.html')?></div>
 		<p class="buttons">
