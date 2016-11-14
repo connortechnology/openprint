@@ -44,7 +44,7 @@
 				return $html;
 			) ?>
 		</p>
-<? if ( $openprint::User->email() eq 'iconnor@connortechnology.com' ) ?>
+<? if ( $openprint::User->email() =~ 'iconnor@' ) ?>
         <p class="buttons">
             <input type="file" name="file"/>
             <? echo ( join("\n",
@@ -52,7 +52,7 @@
             button( 'Export', { onclick=>"f1.btnFunction.value='Export';f1.submit();", text=>'Export' } ),
             ); ) ?>
         </p>
-<? endif ( $openprint::User->email() eq 'iconnor@connortechnology.com' ) ?>
+<? endif ( $openprint::User->email() =~ 'iconnor@' ) ?>
 
 	</fieldset>
 	<div class="leftColumn">
