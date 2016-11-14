@@ -42,8 +42,6 @@
 				button( 'Next1', { onclick=>"f1.btnFunction.value='>>';fmCheck(f1);", text=>'>>' } ),
 				button( 'New1', { href=>'/administrator/materials/edit.html', text=>'New' } ),
 				button( 'Save1', { onclick=>"f1.btnFunction.value='Save';f1.submit();", text=>'Save' } ),
-				button( 'Import', { onclick=>"f1.btnFunction.value='Import';f1.submit();", text=>'Import' } ),
-				button( 'Export', { onclick=>"f1.btnFunction.value='Export';f1.submit();", text=>'Export' } ),
 				( $$variable{Material}->id() ? (
 					button( 'Copy1', { onclick=>"f1.btnFunction.value='Copy';fmCheck(f1);", href=>'', text=>'Copy' } ),
 					button( 'Delete1', { onclick=>"f1.btnFunction.value='Delete';fmChange=2;fmCheck(f1);", href=>'', text=>'Delete' } ),
@@ -52,6 +50,15 @@
 	);
 			) ?>
 		</p>
+<? if ( $openprint::User->email() eq 'iconnor@connortechnology.com' ) ?>
+		<p class="buttons">
+            <input type="file" name="file"/>
+            <? echo ( join("\n",
+            button( 'Import', { onclick=>"f1.btnFunction.value='Import';f1.submit();", text=>'Import' } ),
+            button( 'Export', { onclick=>"f1.btnFunction.value='Export';f1.submit();", text=>'Export' } ),
+            ); ) ?>
+        </p>
+<? endif ( $openprint::User->email() eq 'iconnor@connortechnology.com' ) ?>
 	</fieldset>
 	<fieldset class="leftColumn"><legend>Material Information (<? echo ( $$variable{Material}->id() ) ?>)</legend>
 		<p> 
