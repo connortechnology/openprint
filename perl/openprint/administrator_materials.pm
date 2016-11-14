@@ -12,7 +12,8 @@ require openprint::Material;
 require openprint::MaterialCategory;
 require openprint::Log;
 use openprint ();
-use vars qw( $log $dbh %param %variable );
+use vars qw( $r $log $dbh %param %variable );
+*r = \$openprint::r;
 *log = \$openprint::log;
 *dbh = \$openprint::dbh;
 *param = \%openprint::param;
@@ -21,16 +22,16 @@ use vars qw( $log $dbh %param %variable );
 sub edit {
 	require openprint::Equipment;
 
-	my $Material = $variable{Material} = new openprint::Material( $param{'ddmMaterial'} );
+	my $Material = $variable{Material} = new openprint::Material( $param{ddmMaterial} );
 
-	if ( $param{'btnFunction'} eq '<<' ) {
-		$Material = $Material->Previous( 'category_id'=>$param{'ddmSearchCategory'} );
-	} elsif ( $param{'btnFunction'} eq '>>' ) {
-		$Material = $Material->Next( 'category_id'=>$param{'ddmSearchCategory'} );
-	} elsif ( $param{'btnFunction'} eq 'Delete' ) {
+	if ( $param{btnFunction} eq '<<' ) {
+		$Material = $Material->Previous( 'category_id'=>$param{ddmSearchCategory} );
+	} elsif ( $param{btnFunction} eq '>>' ) {
+		$Material = $Material->Next( 'category_id'=>$param{ddmSearchCategory} );
+	} elsif ( $param{btnFunction} eq 'Delete' ) {
 		$Material->delete();
-		$Material = $Material->Next( 'category_id'=>$param{'ddmSearchCategory'} );
-	} elsif ( $param{'btnFunction'} eq 'Export' ) {
+		$Material = $Material->Next( 'category_id'=>$param{ddmSearchCategory} );
+	} elsif ( $param{btnFunction} eq 'Export' ) {
 		my @header = ( 'Material Name', 'Description','Category', 'Activity Code', 'Manufacturer', 'Supplier','Fed Tax Exempt', 'State Tax Exempt' );
 
 		my @data;
@@ -39,19 +40,65 @@ sub edit {
 		} # end foreach
 
 		misc::export_csv( $openprint::r, $log, \%variable, 'materials.csv', \@header, \@data );
+	} elsif ( $param{btnFunction} eq 'Import' ) {
 
-	} elsif ( $param{'btnFunction'} eq 'Save' ) {
-		if ( $param{'new_category'} ) {
-			if ( my @Categories = openprint::MaterialCategory->find('name'=>$param{'new_category'} ) ) {
-				$param{'category_id'} = $Categories[0]->id();
+		my $error = '';
+		if ( $param{file} ) {
+			my $ac = sql::start_transaction( $dbh );
+			my %Materials = map { $$_{name}, $_ } openprint::Material->find();
+
+			my $upload = $r->upload( 'file' );
+			my $io = $upload->io();
+			$_ = <$io>;
+
+			my $csv = Text::CSV_XS->new();
+
+			while (<$io>) {
+				my $status = $csv->parse($_);
+				my ( $name, $description, $category, $activity_code, $manufacturer, $supplier, $tax1, $tax2 ) = misc::trim( $csv->fields() );
+$log->debug("$name, $description, $category, $activity_code, $manufacturer, $supplier, $tax1, $tax2");
+				next if $name eq '';
+				if ( $Materials{$name} ) {
+					$error .= "Not importing $name because it already exists at " . $Materials{$name}->link_to().'<br/>';
+					next;
+				}
+				my $Material = new openprint::Material();
+				$_ = $Material->save({
+						name	=>	$name,
+						description	=>	$description,
+						category	=>	$category,
+						activity_code	=>	$activity_code,
+						manufacturer	=>	$manufacturer,
+						supplier		=>	$supplier,
+						taxexempt1		=>	$tax1,
+						taxexempt2		=>	$tax2,
+						});
+				if ( $_ ) {
+					$error .= $_;
+					$dbh->rollback();
+					last;
+				} else {
+					$Materials{$name} = $Material;
+				}
+			} # end while
+			sql::end_transaction( $dbh, $ac );
+		} else {
+			$error .= 'No file given to upload.<br>';
+		} # end if
+		$variable{error} = $error; 
+
+	} elsif ( $param{btnFunction} eq 'Save' ) {
+		if ( $param{new_category} ) {
+			if ( my @Categories = openprint::MaterialCategory->find('name'=>$param{new_category} ) ) {
+				$param{category_id} = $Categories[0]->id();
 			} else {
 				my $Category = new openprint::MaterialCategory();
-				$Category->name( $param{'new_category'} );
+				$Category->name( $param{new_category} );
 				if ( $_ = $Category->save() ) {
-					$variable{'error'} .= $_;
+					$variable{error} .= $_;
 					return;
 				} else {
-					$param{'category_id'} = $Category->id();
+					$param{category_id} = $Category->id();
 				} # end if
 			} # end if
 		} # end if
@@ -165,30 +212,30 @@ sub edit {
 			return;
 		} # end if
 
-	} elsif ( $param{'btnFunction'} eq 'Copy' ) {
+	} elsif ( $param{btnFunction} eq 'Copy' ) {
 		my @prices = $Material->prices();
 
 		my $NewMaterial = $Material->copy();
-		$$NewMaterial{'name'} = 'Copy of ' . $$NewMaterial{'name'};
+		$$NewMaterial{name} = 'Copy of ' . $$NewMaterial{name};
         
         if ( $_ = $NewMaterial->save() ) {
-			$variable{'error'} .= $_;
+			$variable{error} .= $_;
 		} else {
 			(new openprint::Log())->save({'action'=>'Copy Material', 'Object'=>$NewMaterial } );
 			foreach my $price ( @prices ) {
-				$$price{'material_id'} = $$NewMaterial{'id'};
-				delete $$price{'id'};
-				$variable{'error'} .= $price->save();
+				$$price{material_id} = $$NewMaterial{id};
+				delete $$price{id};
+				$variable{error} .= $price->save();
 			} # end foreach
 			foreach my $Spec ( $Material->Specifications() ) {
 				$Spec = $Spec->copy();
-				$$Spec{'material_id'} = $NewMaterial->id();
-				$variable{'error'} .= $Spec->save();
+				$$Spec{material_id} = $NewMaterial->id();
+				$variable{error} .= $Spec->save();
 			} # end foreach
 			$Material = $NewMaterial;
 		} # end if
 	} # end if
-	$variable{'Material'} = $Material;
+	$variable{Material} = $Material;
 
 } # end sub edit
 
