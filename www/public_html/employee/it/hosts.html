@@ -17,7 +17,7 @@ Please select a host to view/edit.<br/>
 		<ul>
 		<li>
 			<label for="ip">Host IP</label>
-			<? echo ( input( type=>'ip', id=>'ip', name=>'ip', value=>$session{'/employee/it/hosts.html?ip'}, oninput=>"this.form.hostname.value='';this.form.mac.value='';", onkeydown=>"if(event&&event.keyCode==13){load_host($('f1'));}" ); ) ?>
+			<? echo ( input( type=>'ip', id=>'ip', name=>'ip', value=>$session{'/employee/it/hosts.html?ip'}, oninput=>"this.form.hostname.value='';this.form.mac.value='';", onkeydown=>q`if(event&&event.keyCode==13){load_host($('f1'));}` ); ) ?>
 			Hostname:
 			<input type="text" id="hostname" name="hostname" value="<? echo ( $session{'/employee/it/hosts.html?hostname'} ) ?>" oninput="to_hostname(this);" onkeydown="this.form.ip.value='';this.form.mac.value='';if(event && event.keyCode == 13){load_host( $('f1') );}" />
 			MAC:

@@ -1,6 +1,8 @@
 use strict;
 package openprint::ZM_Monitor;
 our @ISA = qw(openprint::Object);
+use ZoneMinder;
+require ZoneMinder::Server;
 
 use vars qw( $debug $table $serial %fields %defaults %transforms );
 $debug = 0;
@@ -20,23 +22,27 @@ $table = 'Monitors';
 	'jpg_path'		=>	'JPGPath',
 	'mjpeg_path'	=>	'MJPGPath',
 	'host'			=>	'Host',
-	'server_host'	=>	'ServerHost',
+	server_id	=>	'ServerId',
 	public			=>	'public',
 	protocol		=>	'Protocol',
 	method			=>	'Method',
 
 );
 
+sub Server {
+	return new ZoneMinder::Server( $_[0]{server_id} );	
+}
+
 sub source_stream_url {
 	return ($_[0]{type} eq 'Remote' and $_[0]{protocol} eq 'http' ) ? 'http://'.$_[0]{host}.$_[0]{path} :
                           sprintf('http://%2$s/cgi-bin/zms?mode=jpeg&amp;monitor=%1$d&amp;maxfps=%3$d&amp;user=all',
-                              $_[0]{id}, $_[0]{server_host}.'.internal.point-one.com', int($_[0]{max_fps}) ? $_[0]{max_fps} : 1 );
+                              $_[0]{id}, $_[0]->Server()->Hostname(), int($_[0]{max_fps}) ? $_[0]{max_fps} : 1 );
 } # end sub source_stream_url
 
 sub source_snapshot_url {
 	return $_[0]{type} eq 'Remote' ? 'http://'.$_[0]{host}.($_[0]{jpg_path}?$_[0]{jpg_path}:$_[0]{path}) :
                           sprintf('http://%2$s/cgi-bin/zms?mode=single&amp;monitor=%1$d&amp;maxfps=%3$d&amp;user=all',
-                              $_[0]{id}, $_[0]{server_host}, $_[0]{max_fps} );
+                              $_[0]{id}, $_[0]->Server()->Hostname(), $_[0]{max_fps} );
 } # end sub source_snapshot_url
 
 sub can_view {

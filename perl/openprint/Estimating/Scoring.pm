@@ -327,7 +327,8 @@ if ( 0 ) {
 	if ( $$SignatureImposition{Folds} ) {
 		@Folds = @{$$SignatureImposition{Folds}};
 	} elsif ( $$calc_hash{FoldingSpecs} ) {
-$openprint::log->error("Getting Folds from folding in Scoring, but really should have already had them in the Imposition");
+		my ( $caller, undef, $line ) = caller;
+		$openprint::log->error("Getting Folds from folding in Scoring, but really should have already had them in the Imposition from $caller:$line");
 		@Folds = openprint::Estimating::Folding::get_Folds( $$calc_hash{FoldingSpecs}, $sig_specs, $qty_index );
 	} # end if
 
