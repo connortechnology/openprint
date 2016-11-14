@@ -100,6 +100,8 @@ my @re = (
 		q`^(\w{3} [ :0-9]{11}) [\._a-zA-Z0-9\-]+ postfix\/smtpd\[[0-9]+\]: warning: [\.\-A-Za-z0-9]+\[(?<IP>[0-9.]+)\]: SASL (CRAM\-MD5|LOGIN) authentication failed:`,
 		q`^(\w{3} [ :0-9]{11}) [\._a-zA-Z0-9\-]+ pdns\[[0-9]+\]: Received a malformed qdomain from (?<IP>[0-9.]+), '[^']+': sending servfail$`,
 		q`^(\w{3} [ :0-9]{11}) [\._a-zA-Z0-9\-]+ ovpn\-server\[[0-9]+\]: (?<IP>[0-9.]+):[0-9]+ WARNING Bad encapsulated packet length from peer \([[:digit:]]+\), which must be > 0 and <= 1547 \-\- please ensure that \-\-tun\-mtu or \-\-link\-mtu is equal on both peers \-\- this condition could also indicate a possible active attack on the TCP link \-\- \[Attempting restart\.\.\.\]$`,
+		q`^(\w{3} [ :0-9]{11}) [\._a-zA-Z0-9\-]+ kernel: \[[0-9]+\.[0-9]+\] Shorewall:logflags:DROP:IN=[a-z]+[0-9] OUT= MAC= SRC=(?<IP>[0-9.]+) DST=[0-9\.]+ LEN=40 TOS=0x00 PREC=0x00 TTL=[0-9]+ ID=[0-9]+ DF PROTO=TCP SPT=443 DPT=21 WINDOW=8192 RES=0x00 URGP=0$`,
+		q`^(\w{3} [ :0-9]{11}) [\._a-zA-Z0-9\-]+ kernel: \[[0-9]+\.[0-9]+\] Shorewall:logflags:DROP:IN=[a-z]+[0-9] OUT= MAC= SRC=(?<IP>[0-9.]+)`,
 );
 
 
