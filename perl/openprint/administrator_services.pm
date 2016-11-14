@@ -42,6 +42,50 @@ sub edit {
 		} # end foreach
 
 		misc::export_csv( $openprint::r, $log, \%variable, 'services.csv', \@header, \@data );
+	} elsif ( $param{btnFunction} eq 'Import' ) {
+
+		my $error = '';
+		if ( $param{file} ) {
+			my $ac = sql::start_transaction( $dbh );
+			my %Services = map { $$_{name}, $_ } openprint::Service->find();
+
+			my $upload = $r->upload( 'file' );
+			my $io = $upload->io();
+			$_ = <$io>;
+
+			my $csv = Text::CSV_XS->new();
+
+			while (<$io>) {
+				my $status = $csv->parse($_);
+				my ( $name, $description, $category, $activity_code, $tax1, $tax2 ) = misc::trim( $csv->fields() );
+				next if $name eq '';
+				if ( $Services{$name} ) {
+					$error .= "Not importing $name because it already exists at " . $Services{$name}->link_to().'<br/>';
+					next;
+				}
+				my $Service = new openprint::Service();
+				$_ = $Service->save({
+						name			=>	$name,
+						description		=>	$description,
+						category		=>	$category,
+						activity_code	=>	$activity_code,
+						taxexempt1		=>	$tax1,
+						taxexempt2		=>	$tax2,
+						});
+				if ( $_ ) {
+					$error .= $_;
+					$dbh->rollback();
+					last;
+				} else {
+					$variable{information} .= "$name successfully imported.<br/>";
+					$Services{$name} = $Service;
+				}
+			} # end while
+			sql::end_transaction( $dbh, $ac );
+		} else {
+			$error .= 'No file given to upload.<br>';
+		} # end if
+		$variable{error} = $error; 
 	} elsif ( $param{btnFunction} eq 'Save' ) {
 		if ( $param{new_category} ) {
 			if ( my @Categories = openprint::ServiceCategory->find(name=>$param{new_category} ) ) {
