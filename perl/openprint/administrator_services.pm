@@ -33,6 +33,15 @@ sub edit {
 		} # end foreach T
 		$variable{error} .= $Service->delete() if ! $variable{error};
 		$Service = $Service->Next( {category_id=>$param{ddmSearchCategory}} ) if ! $variable{error};
+	} elsif ( $param{btnFunction} eq 'Export' ) {
+		my @header = ( 'Service Name', 'Description','Category', 'Activity Code', 'Fed Tax Exempt', 'State Tax Exempt' );
+
+		my @data;
+		foreach ( openprint::Service->find( order=>'name' ) ) {
+			push @data, $_->get( 'name', 'description', 'category', 'activity_code', 'taxexempt1','taxexempt2' );
+		} # end foreach
+
+		misc::export_csv( $openprint::r, $log, \%variable, 'services.csv', \@header, \@data );
 	} elsif ( $param{btnFunction} eq 'Save' ) {
 		if ( $param{new_category} ) {
 			if ( my @Categories = openprint::ServiceCategory->find(name=>$param{new_category} ) ) {
