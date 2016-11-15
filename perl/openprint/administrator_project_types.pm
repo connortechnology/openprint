@@ -67,23 +67,39 @@ sub edit {
 			$_ = <$io>;
 
 			my $csv = Text::CSV_XS->new();
-			my %cache = map { $_->name(), $_->id() } openprint::ProjectType->find();
+			my %cache = map { $_->name(), $_ } openprint::ProjectType->find();
 			
-			openprint::logs::insertLogRecord('49', 'Import Project Types: ' );
       	
 			my $ac = sql::start_transaction( $dbh );
 			while ( <$io> ) {
 				my $status = $csv->parse($_);
-				my ( $id, $name, $url, $sort ) = misc::trim( $csv->fields() );
+				my ( $name, $desc, $category, $url, $sort ) = misc::trim( $csv->fields() );
+
+				if ( ! $cache{$name} ) {
+					$cache{$name} = new openprint::ProjectType();
+				}
+				my $PT = $cache{$name};
+
+				my %changes = (
+						name        =>  $name,
+						description =>  $desc,
+						category	=>	$category,
+						url         =>  $url,
+						sorting     =>  $sort,
+						);
+
+				my @changes = $PT->changes( \%changes );
+
+				if ( ! @changes ) {
+					$variable{information} .= "No changes for $$PT{name}<br/>";
+					next;
+				}
 				
-				my $PT = new openprint::ProjectType( $cache{$id} );
-				if ( $_ .= $PT->save({
-							'id'			=>	$id,
-							'description'	=>	$name,
-							'url'			=>	$url,
-							'sorting'		=>	$sort,
-							}) ) {
-					$error .= "Error saving Project Type $id : $_<br/>";
+				if ( $_ .= $PT->save( \%changes ) ) {
+					$error .= "Error saving Project Type $name : $_<br/>";
+				} else {
+					$variable{information} .= 
+					(new openprint::Log())->save({ Object=>$PT, action=>'Edit Project Type', note => join('<br/>', @changes ) });
 				} # end if
 			} # end foreach
 			sql::end_transaction( $dbh, $ac );
@@ -91,7 +107,7 @@ sub edit {
 			$log->warn( "No file given to upload." );
 		} # end if
 		if ( $error ne '' ) {
-			return misc::error( $log, $dbh, \%variable, 'Import errors.', $error );
+			$variable{error} = $error;
 		} # end if
 
 	} elsif ( $param{btnFunction} eq 'Export' ) {
