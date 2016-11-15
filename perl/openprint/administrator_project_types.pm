@@ -111,11 +111,11 @@ sub edit {
 		} # end if
 
 	} elsif ( $param{btnFunction} eq 'Export' ) {
-	    my @header = ( 'Name', 'Description', 'URL', 'Sort Order');
-	    my @data = map { $_->name(), $_->description(), $_->url(), $_->sorting() } openprint::ProjectType->find('order'=>'sorting');
-    	misc::export_csv( $r, $log, \%variable, 'projectTypes.csv', \@header, \@data );
+	    my @header = ( 'Name', 'Description', 'Category', 'URL', 'Sort Order');
+	    my @data = map { $_->name(), $_->description(), $_->category(), $_->url(), $_->sorting() } openprint::ProjectType->find( order=>'sorting');
+    	misc::export_csv( $r, $log, \%variable, 'ProjectTypes.csv', \@header, \@data );
 		# Add record to audit log - action "Export Project Types".
-		openprint::logs::insertLogRecord('40',);
+		#openprint::logs::insertLogRecord('40',);
 	} # end if
 	$variable{ProjectType} = $ProjectType;
 } # end sub edit
