@@ -53,9 +53,9 @@ sub edit {
 					return;
 				} else {
 					$param{category_id} = $Category->id();
-                } # end if
-            } # end if
-        } # end if
+					 } # end if
+				} # end if
+			} # end if
 
 		$variable{error} = $ServiceType->save( \%param );
 		my $ac = sql::start_transaction( $dbh );
@@ -110,7 +110,7 @@ sub edit {
 			my %PT_cache = map { $_->name(), $_ } openprint::ProjectType->find();
 			
 			(new openprint::Log())->save({'action'=>'Import Service Type Defaults', 'note'=> "Service Type ID: $$ServiceType{id} Name: $$ServiceType{name}"});
-      	
+			
 			my $ac = sql::start_transaction( $dbh );
 			while ( <$io> ) {
 				my $status = $csv->parse($_);
@@ -138,9 +138,9 @@ sub edit {
 			$log->warn( "No file given to upload." );
 		} # end if
 	} elsif ( $param{btnFunction} eq 'Export' ) {
-	    my @header = ( 'Project Type', 'Name', 'Value' );
-	    my @data = map { $_->ProjectType()->name(), $_->name(), $_->value() } openprint::ServiceType_Default->find(servicetype_id=>$$ServiceType{id}, order=>$openprint::ServiceType_Default::fields{'name'});
-    	misc::export_csv( $r, $log, \%variable, $ServiceType->name().'_ServiceTypeDefaults.csv', \@header, \@data );
+		 my @header = ( 'Project Type', 'Name', 'Value' );
+		 my @data = map { $_->ProjectType()->name(), $_->name(), $_->value() } openprint::ServiceType_Default->find(servicetype_id=>$$ServiceType{id}, order=>$openprint::ServiceType_Default::fields{'name'});
+	 	misc::export_csv( $r, $log, \%variable, $ServiceType->name().'_ServiceTypeDefaults.csv', \@header, \@data );
 		# Add record to audit log - action "Export Project Types".
 		(new openprint::Log())->save({'action'=>'Export Service Type Defaults', Object=>$ServiceType, note=> "Service Type ID: $$ServiceType{id} Name: $$ServiceType{name}"});
 	} # end if
@@ -160,37 +160,91 @@ sub _row {
 } # end sub _row
 
 sub index {
-    _index();
-    #if ( ( ! $session{'/administrator/service_types/index.html?lastupdated'} ) or ( time - $session{'/administrator/service_types/index.html?lastupdated'} ) > ( 12*60*60 ) ) {
-        #ssi::setup_date_select( '/administrator/service_types/index.html', 'starting_on_start', 0 );
-        #ssi::setup_date_select( '/administrator/service_types/index.html', 'starting_on_end', '' );
-    #} # end if
+	 _index();
+	 #if ( ( ! $session{'/administrator/service_types/index.html?lastupdated'} ) or ( time - $session{'/administrator/service_types/index.html?lastupdated'} ) > ( 12*60*60 ) ) {
+			#ssi::setup_date_select( '/administrator/service_types/index.html', 'starting_on_start', 0 );
+			#ssi::setup_date_select( '/administrator/service_types/index.html', 'starting_on_end', '' );
+	 #} # end if
 	if ( $param{btnFunction} eq 'Export' ) {
-	    my @header = ( 'Name', 'Description', 'Category', 'Type', 'URL', 'Visible in Project Create', 'Visible in Project View', 'Visible in Project Summary', 'Allow Removal', 'Sort Value' );
-	    my @data = map { $_->get( qw(
+		 my @header = ( 'Name', 'Description', 'Category', 'Type', 'URL', 'Visible in Project Create', 'Visible in Project View', 'Visible in Project Summary', 'Allow Removal', 'Sort Value' );
+		 my @data = map { $_->get( qw(
 					name 
-					description  
-					category      
-					type        
-					url         
+					description	
+					category		
+					type			
+					url			
 					create_visible
 					view_visible 
 					summary_visible
-					allow_delete  
-					sorting     
+					allow_delete	
+					sorting		
 					) )
 		} openprint::ServiceType->find( order=>$openprint::ServiceType::fields{name});
-    	misc::export_csv( $r, $log, \%variable, 'ServiceTypes.csv', \@header, \@data );
-	}
+	 	misc::export_csv( $r, $log, \%variable, 'ServiceTypes.csv', \@header, \@data );
+	} elsif ( $param{btnFunction} eq 'Import' ) {
+		my $error = '';
+		if ( $param{fileImport} ) {
+			my $upload = $r->upload( 'fileImport' );
+			my $io = $upload->io();
+			$_ = <$io>;
+
+			my $csv = Text::CSV_XS->new();
+			my %cache = map { $_->name(), $_ } openprint::ServiceType->find();
+			
+			my $ac = sql::start_transaction( $dbh );
+			while ( <$io> ) {
+				my $status = $csv->parse($_);
+				my ( $name, $desc, $category, $type, $url, $visible_in_project_create, $visible_in_project_view, $visible_in_project_summary, $allow_removal, $sort ) = misc::trim( $csv->fields() );
+
+				if ( ! $cache{$name} ) {
+					$cache{$name} = new openprint::ServiceType();
+				}
+				my $ST = $cache{$name};
+
+				my %changes = (
+						name			=>	$name,
+						description 	=>	$desc,
+						category		=>	$category,
+						type			=>	$type,
+						url				=>	$url,
+						create_visible	=>	$visible_in_project_create,
+						view_visible	=>	$visible_in_project_view,
+						summary_visible	=>	$visible_in_project_summary,
+						allow_delete	=>	$allow_removal,		
+						sorting			=>	$sort,
+						);
+
+				my @changes = $ST->changes( \%changes );
+
+				if ( ! @changes ) {
+					$variable{information} .= "No changes for $$ST{name}<br/>";
+					next;
+				}
+				
+				if ( $_ .= $ST->save( \%changes ) ) {
+					$error .= "Error saving Service Type $name : $_<br/>";
+				} else {
+					$variable{information} .= 
+					(new openprint::Log())->save({ Object=>$ST, action=>'Edit Service Type', note => join('<br/>', @changes ) });
+				} # end if
+			} # end foreach
+			sql::end_transaction( $dbh, $ac );
+		} else {
+			$log->warn( "No file given to upload." );
+		} # end if
+		if ( $error ne '' ) {
+			$variable{error} = $error;
+		} # end if
+	} # end if param{btnFunction}
 } # end sub search
 sub _index {
-    if ( ! $param{'btnFunction'} ) {
-        ssi::save_params( '/administrator/service_types/index.html', (
-                #'starting_on_start_year','starting_on_start_month','starting_on_start_day',
-                #'starting_on_end_year','starting_on_end_month','starting_on_end_day',
+	 if ( ! $param{'btnFunction'} ) {
+			ssi::save_params( '/administrator/service_types/index.html', (
+					 #'starting_on_start_year','starting_on_start_month','starting_on_start_day',
+					 #'starting_on_end_year','starting_on_end_month','starting_on_end_day',
 					'category_id',
 					) );
-    } # end if
+	 } # end if
 }
 
 1;
