@@ -235,6 +235,13 @@ sub index {
 		if ( $error ne '' ) {
 			$variable{error} = $error;
 		} # end if
+	} elsif ( $param{btnFunction} eq 'Export Defaults' ) {
+		my @header = ( 'Service Type', 'Project Type', 'Name', 'Value' );
+		my @data;
+		foreach my $ServiceType ( openprint::ServiceType->find(order=>'name') ) {
+			push @data, map { $ServiceType->name(), $_->ProjectType()->name(), $_->name(), $_->value() } openprint::ServiceType_Default->find(servicetype_id=>$$ServiceType{id}, order=>$openprint::ServiceType_Default::fields{'name'});
+		}
+		misc::export_csv( $r, $log, \%variable, 'All_ServiceTypeDefaults.csv', \@header, \@data );
 	} # end if param{btnFunction}
 } # end sub search
 sub _index {
