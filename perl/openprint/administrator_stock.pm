@@ -423,7 +423,10 @@ sub import_export {
 				my $Paper = $papers{$paper_id} ? $papers{$paper_id} : new openprint::Paper();
 				$Paper->owner_id( $owners{$owner} ? $owners{$owner} : $session{company_id} );
 				$Paper->manufacturer( $manufacturer );
-				$Paper->supplier( $supplier );
+				if ( $supplier ) {
+				my $supplier_id = openprint::Supplier::get_or_create( $supplier );
+				$Paper->supplier_id( $supplier_id );
+				}
 				$Paper->group( $group );
 				$Paper->brand( $brand );
 				$Paper->finish( $finish );
@@ -459,7 +462,7 @@ sub import_export {
 				if ( $rc ) {
 					$error .= "Error adding Stock: $rc<br>";
 					$error .= Data::Dumper::Dumper( $Paper );
-					next;
+					last;
 				} # end if
 				$import_count += 1;
 		
