@@ -18,7 +18,7 @@
 						<option value="">select one</option>
 						<? echo ( 
 								make_drop_down( [ map { $_->id(), $_->description() } openprint::ProjectType->find( order=>'lower(description)',
-								( $param{'search_category_id'} ? ( category_id => $param{'search_category_id'} ) : () ),
+								( $param{search_category_id} ? ( category_id => $param{search_category_id} ) : () ),
 								) ], $$variable{ProjectType}->id() );
 								) ?>
 					</select>
@@ -26,7 +26,7 @@
 			</ul>
 		</div>
 		<p class="buttons">
-			<? echo ( join('',
+			<? echo ( join("\n",
 					button( 'Prev1', { onclick=>"f1.action='edit.html';f1.btnFunction.value='Previous';fmCheck(f1);", text=>'&lt;&lt;' } ),
 					button( 'Next1', { onclick=>"f1.action='edit.html';f1.btnFunction.value='Next';fmCheck(f1);", text=>'&gt;&gt;' } ),
 					button( 'New1', { onclick=>"f1.action='edit.html';addCheck(f1);", text=>'New' } ),
@@ -39,7 +39,7 @@
 		<p class="buttons">
 			<b>CSV File</b>
 			<input type="file" name="fileImport" />
-<? echo ( join('',
+<? echo ( join("\n",
 			button( 'Import', { onclick=>"f1.btnFunction.value='Import';f1.action='edit.html';f1.submit();", text=>'Import' } ),
 			button( 'Export', { onclick=>"f1.btnFunction.value='Export';f1.action='edit.html?Download';f1.submit();", text=>'Export' } ),
 ); ) ?>
@@ -64,7 +64,7 @@
 			) ?>
 			</select>
 		</li>
-<? if ( new openprint::User( $session{user_id} )->email() =~ /iconnor/ ) ?>
+<? if ( $openprint::User->email() =~ /iconnor/ ) ?>
 		<li> 
 			<label>Type</label>
 			<? echo ( ssi::select( 
@@ -80,16 +80,16 @@
 			<label>URL</label>
 			<input type="url" id="url" name="url" value="<? echo ( $$variable{ProjectType}->url(); ) ?>" />
 		</li>
-<? endif ( new openprint::User( $session{user_id} )->email() =~ /iconnor/ ) ?>
+<? endif ( $openprint::User->email() =~ /iconnor/ ) ?>
 		<li> 
 			<label>Sort</label>
 			<input type="number" id="sorting" name="sorting" value="<? echo ( $$variable{ProjectType}->sorting(); ) ?>" />
 		</li>
 		<li> 
 			<label>Show please call</label>
-			<input type="radio" id="please_call1" name="please_call" value="1" <? echo ( checked( $$variable{'ProjectType'}->please_call() ); ) ?>" />
+			<input type="radio" id="please_call1" name="please_call" value="1" <? echo ( checked( $$variable{ProjectType}->please_call() ); ) ?>" />
 			<label for="please_call1" class="radio">Yes</label>
-			<input type="radio" id="please_call0" name="please_call" value="0" <? echo ( checked( ! $$variable{'ProjectType'}->please_call() ); ) ?>" />
+			<input type="radio" id="please_call0" name="please_call" value="0" <? echo ( checked( ! $$variable{ProjectType}->please_call() ); ) ?>" />
 			<label for="please_call0" class="radio">No</label>
 		</li>
 		</ul>
@@ -106,7 +106,7 @@
 <? echo (
 		return checkboxes('required_services', 
 			[ map { $_->id(), $_->description() } openprint::ServiceType->find('order'=>'lower(name)') ],
-			[ $$variable{'ProjectType'}->required_services() ],
+			[ $$variable{ProjectType}->required_services() ],
 			{ container=>['<li>','</li>'] }
 			);
 ) ?>
@@ -119,13 +119,13 @@
 <? echo (
 		return checkboxes('blocked_services', 
 			[ map { $_->id(), $_->description() } openprint::ServiceType->find('order'=>'lower(name)') ],
-			[ $$variable{'ProjectType'}->blocked_services() ],
+			[ $$variable{ProjectType}->blocked_services() ],
 			{ container=>['<li>','</li>'] }
 			);
 ) ?>
 		</ul>
 	</fieldset><!-- Column -->
-<? if ( $$variable{'ProjectType'}->id() ) ?>
+<? if ( $$variable{ProjectType}->id() ) ?>
 	<div class="PaperRecommendations">
 	<fieldset><legend>Paper Recommendations</legend>
 		<ul><li><? echo ( radio( 'Recommended', [ '1', 'Yes', '0', 'No', '', 'All' ], $param{Recommended}, { onclick=>qq`new Ajax.Updater( 'PaperRecommendations', '_paper_recommendations.html', { parameters: { projecttype_id: $param{ddmProjectType}, recommended: this.value } } );` } ); ) ?></li>
@@ -136,7 +136,7 @@
 	</fieldset>
 	</div>
 	<? echo ( include_logs( $$variable{ProjectType} ); ) ?>
-<? endif ( $$variable{'ProjectType'}->id() ) ?>
+<? endif ( $$variable{ProjectType}->id() ) ?>
 	<br class="spacer"/>
 	<input type="hidden" name="btnFunction"/>
 </form>
