@@ -18,7 +18,7 @@
 						<option value="">select one</option>
 						<? echo ( 
 								make_drop_down( [ map { $_->id(), $_->description() } openprint::ProjectType->find( order=>'lower(description)',
-								( $param{'search_category_id'} ? ( category_id => $param{'search_category_id'} ) : () ),
+								( $param{search_category_id} ? ( category_id => $param{search_category_id} ) : () ),
 								) ], $$variable{ProjectType}->id() );
 								) ?>
 					</select>
@@ -87,9 +87,9 @@
 		</li>
 		<li> 
 			<label>Show please call</label>
-			<input type="radio" id="please_call1" name="please_call" value="1" <? echo ( checked( $$variable{'ProjectType'}->please_call() ); ) ?>" />
+			<input type="radio" id="please_call1" name="please_call" value="1" <? echo ( checked( $$variable{ProjectType}->please_call() ); ) ?>" />
 			<label for="please_call1" class="radio">Yes</label>
-			<input type="radio" id="please_call0" name="please_call" value="0" <? echo ( checked( ! $$variable{'ProjectType'}->please_call() ); ) ?>" />
+			<input type="radio" id="please_call0" name="please_call" value="0" <? echo ( checked( ! $$variable{ProjectType}->please_call() ); ) ?>" />
 			<label for="please_call0" class="radio">No</label>
 		</li>
 		</ul>
@@ -106,7 +106,7 @@
 <? echo (
 		return checkboxes('required_services', 
 			[ map { $_->id(), $_->description() } openprint::ServiceType->find('order'=>'lower(name)') ],
-			[ $$variable{'ProjectType'}->required_services() ],
+			[ $$variable{ProjectType}->required_services() ],
 			{ container=>['<li>','</li>'] }
 			);
 ) ?>
@@ -119,13 +119,13 @@
 <? echo (
 		return checkboxes('blocked_services', 
 			[ map { $_->id(), $_->description() } openprint::ServiceType->find('order'=>'lower(name)') ],
-			[ $$variable{'ProjectType'}->blocked_services() ],
+			[ $$variable{ProjectType}->blocked_services() ],
 			{ container=>['<li>','</li>'] }
 			);
 ) ?>
 		</ul>
 	</fieldset><!-- Column -->
-<? if ( $$variable{'ProjectType'}->id() ) ?>
+<? if ( $$variable{ProjectType}->id() ) ?>
 	<div class="PaperRecommendations">
 	<fieldset><legend>Paper Recommendations</legend>
 		<ul><li><? echo ( radio( 'Recommended', [ '1', 'Yes', '0', 'No', '', 'All' ], $param{Recommended}, { onclick=>qq`new Ajax.Updater( 'PaperRecommendations', '_paper_recommendations.html', { parameters: { projecttype_id: $param{ddmProjectType}, recommended: this.value } } );` } ); ) ?></li>
@@ -136,7 +136,6 @@
 	</fieldset>
 	</div>
 	<? echo ( include_logs( $$variable{ProjectType} ); ) ?>
-<? endif ( $$variable{'ProjectType'}->id() ) ?>
+<? endif ( $$variable{ProjectType}->id() ) ?>
 	<br class="spacer"/>
-	<input type="hidden" name="btnFunction"/>
 </form>
