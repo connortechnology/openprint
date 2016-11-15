@@ -142,7 +142,7 @@ sub edit {
 	    my @data = map { $_->ProjectType()->name(), $_->name(), $_->value() } openprint::ServiceType_Default->find(servicetype_id=>$$ServiceType{id}, order=>$openprint::ServiceType_Default::fields{'name'});
     	misc::export_csv( $r, $log, \%variable, $ServiceType->name().'_ServiceTypeDefaults.csv', \@header, \@data );
 		# Add record to audit log - action "Export Project Types".
-		(new openprint::Log())->save({'action'=>'Export Service Type Defaults', 'note'=> "Service Type ID: $$ServiceType{id} Name: $$ServiceType{name}"});
+		(new openprint::Log())->save({'action'=>'Export Service Type Defaults', Object=>$ServiceType, note=> "Service Type ID: $$ServiceType{id} Name: $$ServiceType{name}"});
 	} # end if
 
 	$variable{ServiceType} = $ServiceType;
@@ -165,6 +165,23 @@ sub index {
         #ssi::setup_date_select( '/administrator/service_types/index.html', 'starting_on_start', 0 );
         #ssi::setup_date_select( '/administrator/service_types/index.html', 'starting_on_end', '' );
     #} # end if
+	if ( $param{btnFunction} eq 'Export' ) {
+	    my @header = ( 'Name', 'Description', 'Category', 'Type', 'URL', 'Visible in Project Create', 'Visible in Project View', 'Visible in Project Summary', 'Allow Removal', 'Sort Value' );
+	    my @data = map { $_->get( qw(
+					name 
+					description  
+					category      
+					type        
+					url         
+					create_visible
+					view_visible 
+					summary_visible
+					allow_delete  
+					sorting     
+					) )
+		} openprint::ServiceType->find( order=>$openprint::ServiceType::fields{name});
+    	misc::export_csv( $r, $log, \%variable, 'ServiceTypes.csv', \@header, \@data );
+	}
 } # end sub search
 sub _index {
     if ( ! $param{'btnFunction'} ) {
