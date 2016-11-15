@@ -465,7 +465,7 @@ sub pricelists {
 		$_ = <$io>;
 		my $csv = Text::CSV_XS->new();
 
-		my %equipment = map { $_->name(), $_->id() } openprint::Equipment->find();
+		my %equipment = map { $_->strid(), $_->id() } openprint::Equipment->find();
 		my %materials = map { $_->name(), $_->id() } openprint::Material->find();
 
 		while ( <$io> ) {
@@ -488,6 +488,7 @@ sub pricelists {
 
 				my $Price = new openprint::MaterialPrice();
 				$_ = $Price->save({
+					pricelist_id	=>	$Pricelist->id(),
 					material_id		=>	$materials{$name},
 					equipment_id	=>	$equip_id ? $equipment{$equip_id} : undef,
 					min				=>	$min,
