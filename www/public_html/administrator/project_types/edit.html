@@ -74,7 +74,8 @@
 					'MultiPage', 'Multiple Pages / Book',
 					'ScratchPads',	'Scratch/Note Pads',
 				], $$variable{ProjectType}->type(),
-				{ name => 'type' } ); ) ?>
+				{ name => 'type',
+					prepend=>['','please set'] } ); ) ?>
 		</li>
 		<li> 
 			<label>URL</label>
