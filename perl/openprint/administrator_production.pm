@@ -384,9 +384,9 @@ sub pricelists {
 
 	} elsif ( $param{btnFunction} eq 'Export Service Prices' ) {
 		return misc::error( $log, $dbh, \%variable, 'No pricelist selected.', 'You must select a pricelist before exporting.') if ! $Pricelist->id();
-		my @header = ( 'Service ID', 'Equipment ID','Min', 'Max', 'Units', 'Cost', 'Markup', 'Price', 'Discountable', 'Interpolate' );
+		my @header = ( 'Service ID', 'Equipment ID','Min', 'Max', 'Units', 'Cost', 'Markup', 'Price', 'Discountable' );
 		my @data = map {
-			$_->Service()->name(), $_->Equipment()->strid(), $_->min(), $_->max(), $_->units(), $_->cost(), $_->markup(), $_->price(), $_->discountable(), $_->interpolate()
+			$_->Service()->name(), $_->Equipment()->strid(), $_->min(), $_->max(), $_->units(), $_->cost(), $_->markup(), $_->price(), $_->discountable()
 		} openprint::ServicePrice->find( pricelist_id=>$Pricelist->id(), order=>join(',',@openprint::ServicePrice::fields{'min','max'}));
 		misc::export_csv( $r, $log, \%variable, $Pricelist->name() . 'ServicePrices.csv', \@header, \@data );
 	} elsif ( $param{btnFunction} eq 'Import Service Prices' ) {
@@ -411,7 +411,9 @@ sub pricelists {
 			my ( $prod_id, $equip_ids, @data ) = misc::trim( $csv->fields());
 			next if ! $prod_id;
 			
-			my $prod_index = openprint::service::get_index_by_id( $prod_id );
+			my $Service = openprint::Service->find_one( name=>$prod_id );
+
+			my $prod_index = $Service->id() if $Service;
 			if ( $prod_index eq '' ) {
 				$error .= "No Service found for $prod_id<br>";
 				next;
