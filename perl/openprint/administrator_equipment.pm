@@ -130,18 +130,34 @@ sub edit {
 
 		my $max_speeds = 0;
 		my @data;
-		foreach my $Fold ( openprint::Fold->find( equipment_id=>$Equipment->id(), order=>'type, pages' ) ) {
-				push @data, $Fold->Equipment()->strid(), $Fold->type(), $Fold->name(), $Fold->pages(), $Fold->page_columns(), $Fold->page_rows(), $Fold->folds(), $Fold->angles(), $Fold->spine_direction(), $Fold->min_imposition(), $Fold->max_imposition(), $Fold->min_width(), $Fold->max_width(), $Fold->min_height(), $Fold->max_height(), $Fold->min_calliper(), $Fold->max_calliper(), $Fold->printing_type(), $Fold->makeready_time(), $Fold->makeready_overs(), $Fold->makeready_overs_units(), $Fold->run_overs(), $Fold->run_overs_units(), $Fold->cutting(), $Fold->stitching(), $Fold->perfectbind(), $Fold->spinepaste();
+		my @Folds = openprint::Fold->find( equipment_id=>$Equipment->id(), order=>'type, pages' );
+		foreach my $Fold ( @Folds ) {
 			my @Speeds = $Fold->Specifications();
 			$max_speeds = scalar @Speeds if scalar @Speeds > $max_speeds;
+		}
+		foreach ( 1 .. $max_speeds ) {
+			push @header, ( 'Min Weight', 'Max Weight', 'Units', 'Speed', 'Interpolate' );
+		}
+
+		foreach my $Fold ( @Folds ) {
+				push @data, $Fold->Equipment()->strid(), $Fold->type(), $Fold->name(), 
+					 $Fold->pages(), $Fold->page_columns(), $Fold->page_rows(), 
+					 $Fold->folds(), $Fold->angles(), $Fold->spine_direction(), 
+					 $Fold->min_imposition(), $Fold->max_imposition(), 
+					 $Fold->min_width(), $Fold->max_width(), $Fold->min_height(), $Fold->max_height(), $Fold->min_calliper(), $Fold->max_calliper(), 
+					 $Fold->printing_type(), $Fold->makeready_time(), $Fold->makeready_overs(), $Fold->makeready_overs_units(), 
+					 $Fold->run_overs(), $Fold->run_overs_units(), 
+					 $Fold->cutting(), $Fold->stitching(), $Fold->perfectbind(), $Fold->spinepaste();
+			my @Speeds = $Fold->Specifications();
+			my $speeds = scalar @Speeds;
 
 			foreach my $Speed ( @Speeds ) {
 				push @data, $Speed->min_weight(), $Speed->max_weight(), $Speed->weight_units(), $Speed->runspeed(), $Speed->interpolate();
 			} # end foreach	Speed
+			foreach ( 1 .. ($max_speeds - $speeds ) ) {
+				push @data, '','','','','';
+			}
 		} # end foreach Fold
-		foreach ( 1 .. $max_speeds ) {
-			push @Header, ( 'Min Weight', 'Max Weight', 'Units', 'Speed', 'Interpolate' );
-		}
 
 		misc::export_csv( $r, $log, \%variable, 'fold_definitionss'.($Equipment->id()?'_'.$Equipment->strid():'').'.csv', \@header, \@data );
 		(new openprint::Log())->save({ action=>'Export Fold Definitions' });
@@ -169,12 +185,12 @@ sub edit {
 			my ( $equipment_strid, $type, $name, $pages, $page_columns, $page_rows, $folds, $angles, $spine_direction, 
 					$min_imposition, $max_imposition, $min_width, $max_width, $min_height, $max_height, 
 					$min_calliper, $max_calliper, 
-					$printing_type(), $makeready_time, $makeready_overs, $makeready_overs_units, $run_overs, $run_overs_units, $cutting, $stitching, $perfectbind, $spinepaste, @speeds )
+					$printing_type, $makeready_time, $makeready_overs, $makeready_overs_units, $run_overs, $run_overs_units, $cutting, $stitching, $perfectbind, $spinepaste, @speeds )
 
 				= misc::trim( $csv->fields() );
 
-			if ( ! $equipment{$equip_id} ) {
-				$error .= "Equipment $equip_id not found.<br>";
+			if ( ! $equipment{$equipment_strid} ) {
+				$error .= "Equipment $equipment_strid not found.<br>";
 				next;
 			} 
 			my $Fold = new openprint::Fold();
@@ -207,7 +223,8 @@ sub edit {
 					angles                =>  $angles,
 					printing_type         =>  $printing_type,
 			});
-			while ( my ( $min_weight, $max_weight, $units, $runspeed, $interpolate ) = splice @speeds, 0, 4 ) {
+			while ( my ( $min_weight, $max_weight, $weight_units, $runspeed, $interpolate ) = splice @speeds, 0, 5 ) {
+				next if ! $runspeed;
 				my $Speed =  new openprint::FoldSpecification();
 				$Speed->save({
 						fold_id       =>  $$Fold{id},
@@ -222,10 +239,8 @@ sub edit {
 
 		} # end while IO
         sql::end_transaction( $dbh, $ac );
-    } else {
-		return $error;
-	} # end if
 	$variable{error} = $error;
+	} # end if
 
 	$variable{Equipment} = $Equipment;
 } # end sub equipment_edit
