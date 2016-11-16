@@ -9,9 +9,9 @@ $table = 'ServiceType_Categories';
 $serial = 'ServiceType_Categories_id_seq';
 
 %fields = (
-	'id'				=>	'id',
-	'name'				=> 'name',
-	'sorting'			=> 'sorting',
+	id				=>	'id',
+	name			=> 'name',
+	sorting			=> 'sorting',
 );
 %transforms = (
 );
@@ -19,6 +19,25 @@ $serial = 'ServiceType_Categories_id_seq';
 	'sorting'	=>	undef,
 );
 
+
+sub ServiceTypes {
+	require openprint::ServiceType;
+	my $self = shift;
+	
+	if ( @_ ) {
+		my %params;
+		if ( ref $_[0] eq 'HASH' ) {
+			%params = %{$_[0]};
+		} else {
+			%params = @_;
+		} # end if
+		$params{category_id} = $$self{id};
+		return openprint::ServiceType->find( %params );
+	} elsif ( ! $$self{ServiceTypes} ) {
+		@{$$self{ServiceTypes}} = openprint::ServiceType->find( 'category_id'=>$$self{id} );
+	} # end if
+	return @{$$self{ServiceTypes}};
+} # end sub ServiceTypes
 
 1;
 __END__
