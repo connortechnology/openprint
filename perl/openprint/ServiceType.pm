@@ -101,8 +101,12 @@ sub category {
 }
 
 sub Defaults {
-	return openprint::ServiceType_Default->find('servicetype_id'=>$_[0]{id});
+	if ( ! $_[0]{Defaults} ) {
+		$_[0]{Defaults} = [ openprint::ServiceType_Default->find( servicetype_id=>$_[0]{id} ) ];
+	}
+	return @{$_[0]{Defaults}};
 } # end sub Defaults
+
 
 1;
 __END__
