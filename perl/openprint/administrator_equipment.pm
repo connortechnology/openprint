@@ -162,10 +162,11 @@ sub edit {
 		misc::export_csv( $r, $log, \%variable, 'fold_definitionss'.($Equipment->id()?'_'.$Equipment->strid():'').'.csv', \@header, \@data );
 		(new openprint::Log())->save({ action=>'Export Fold Definitions' });
 	} elsif ( $param{btnFunction} eq 'Import Folds' ) {
-		my %equipment = map { $_->strid(), $_->id() } openprint::Equipment->find() if ! $Equipment->id();
+		my %equipment = map { $_->strid(), $_->id() } openprint::Equipment->find();
+# if ! $Equipment->id();
 
 		my $error = '';
-		if ( ! $param{fileSpecifications} ) {
+		if ( ! $param{fileFolds} ) {
 			$variable{error} .= 'No file given to upload.<br>';
 			return;
 		} # end if
@@ -174,7 +175,7 @@ sub edit {
 
         sql::execute( undef, undef, 'DELETE FROM Folds' . ( $Equipment->id()?' WHERE equipment_id=' . $Equipment->id():''));
 
-        my $upload = $r->upload( 'fileImport' );
+        my $upload = $r->upload( 'fileFolds' );
         my $io = $upload->io();
         $_ = <$io>;
 
@@ -191,10 +192,11 @@ sub edit {
 
 			if ( ! $equipment{$equipment_strid} ) {
 				$error .= "Equipment $equipment_strid not found.<br>";
+$log->error($error);
 				next;
 			} 
 			my $Fold = new openprint::Fold();
-			$Fold->save({
+			$error .= $Fold->save({
 					equipment_id          =>  $equipment{$equipment_strid},
 					type                  =>  $type,
 					name                  =>  $name,
@@ -226,7 +228,7 @@ sub edit {
 			while ( my ( $min_weight, $max_weight, $weight_units, $runspeed, $interpolate ) = splice @speeds, 0, 5 ) {
 				next if ! $runspeed;
 				my $Speed =  new openprint::FoldSpecification();
-				$Speed->save({
+				$error .= $Speed->save({
 						fold_id       =>  $$Fold{id},
 						min_weight    =>  $min_weight,
 						max_weight    =>  $max_weight,
