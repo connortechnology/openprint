@@ -39,5 +39,8 @@ sub ServiceTypes {
 	return @{$$self{ServiceTypes}};
 } # end sub ServiceTypes
 
+sub description {
+	return $_[0]->name();
+} # end sub description
 1;
 __END__

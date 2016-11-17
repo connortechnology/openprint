@@ -317,7 +317,7 @@ sub categories {
 		$variable{error} .= $ServiceType_Category->save(\%param);
 		foreach my $st_id ( ref $param{servicetype_id} eq 'ARRAY' ? @{$param{servicetype_id}} : $param{servicetype_id} ) {
 			my $ServiceType = new openprint::ServiceType( $st_id );
-			$variable{error} .= $ProjectType->save({ category_id=>$ServiceType_Category->id()});
+			$variable{error} .= $ServiceType->save({ category_id=>$ServiceType_Category->id()});
 		} # end foreach st_id
 	} elsif ( $param{btnFunction} eq 'Delete' ) {
 		$variable{error} .= $ServiceType_Category->delete();
