@@ -1,4 +1,4 @@
-<form name="f1" id="f1" action="/administrator/project_types/category.html?category_id=<? echo ( $$variable{ServiceType_Category}->id(); ) ?>" method="post">
+<form name="f1" id="f1" action="/administrator/service_types/category.html?category_id=<? echo ( $$variable{ServiceType_Category}->id(); ) ?>" method="post">
 	<fieldset>
 		<legend>
 		<? echo (
@@ -17,7 +17,7 @@
 		</li>
 		<li>
 			<label>Sort</label>
-			<? echo ( input( type=>"integer", id=>"sort", name=>"sort", value=>$$variable{ServiceType_Category}->sort() ); ) ?>
+			<? echo ( input( type=>"integer", id=>"sorting", name=>"sorting", value=>$$variable{ServiceType_Category}->sort() ); ) ?>
 		</li>
 		</ul>
 		<p class="buttons">
@@ -33,7 +33,7 @@
 			<? echo (
 				my $html = '';
 				my @pt_ids = map { $_->id() } $$variable{ServiceType_Category}->ServiceTypes();
-				foreach my $ST ( openprint::ProjectType->find( 'order'=>'sorting,lower(name)' ) ) {
+				foreach my $ST ( openprint::ServiceType->find( order=>'sorting,lower(name)' ) ) {
 					$html .= sprintf('<li><input type="checkbox" name="servicetype_id" value="%d" %s/> %s</li>',
 						$ST->id(), checked( sets::isin( $ST->id(), \@pt_ids ) ), $ST->description() );
 				} # end foreach	
