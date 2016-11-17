@@ -394,7 +394,7 @@ sub pricelists {
 		return misc::error( $log, $dbh, \%variable, 'No file given.', 'You must select a file to import.') if ! $param{filePrices};
 
 		my $error = '';
-		my $pricelist = new openprint::pricelist( $log, $dbh, $Pricelist->id() );
+		my $ac = sql::start_transaction( $dbh );
 
 		# An import replaces the current pricelist, so delete verything in the current one.
 		sql::execute( $log, $dbh, 'DELETE FROM Service_Prices WHERE pricelist_id=?', $Pricelist->id() );
@@ -405,45 +405,54 @@ sub pricelists {
 		$_ = <$io>;
 		my $csv = Text::CSV_XS->new();
 		my %equipment = map { $_->strid(), $_->id() } openprint::Equipment->find();
+		my %services = map { $_->name(), $_->id() } openprint::Service->find();
 
 		while ( <$io> ) {
 			my $status = $csv->parse($_);
-			my ( $prod_id, $equip_ids, @data ) = misc::trim( $csv->fields());
-			next if ! $prod_id;
+			my ( $name, $equip_ids, $min,$max,$units, $cost, $markup, $price, $discountable ) = $csv->fields();
+			$name = openprint::Service->transform( name => $name );
+			next if $name eq '';
+
 			
-			my $Service = openprint::Service->find_one( name=>$prod_id );
+			my $Service = openprint::Service->find_one( name=>$name );
 
 			my $prod_index = $Service->id() if $Service;
 			if ( $prod_index eq '' ) {
-				$error .= "No Service found for $prod_id<br>";
+				$error .= "No Service found for $name<br>";
 				next;
 			} # end if
 
-			if ( $equip_ids eq '' ) {
-					my $price_set = $pricelist->getServicesPriceSet( $prod_index );
-					my $price = new openprint::service_price( $log, $dbh, $price_set );
-					$price->set( undef, @data );
-					$price_set->addPrice( $price );
-			} else {
-				foreach my $equip_id ( split(',',$equip_ids) ) {
-					$equip_id =~ s/^\s*(.*?)\s*$/$1/;
-					if ( ! $equipment{$equip_id} ) {
-						$error .= "No Equipment found for $equip_id<br>";
-						next;
-					} # end if
+			foreach my $equip_id ( split(',', $equip_ids ) ) {	
+				$equip_id = openprint::Equipment->transform( strid => $equip_id );
+				if ( ! $equipment{$equip_id} ) {
+					$error .= "No Equipment found for $equip_id<br>";
+					next;
+				} # end if
 
-					my $price_set = $pricelist->getServicesPriceSet( $prod_index );
-					my $price = new openprint::service_price( $log, $dbh, $price_set );
-					$price->set( $equipment{$equip_id}, @data );
-					$price_set->addPrice( $price );
-				} # end foreach
-			} # end if
-		} # end foreach
-		$pricelist->save();
+				my $Price = new openprint::ServicePrice();
+				$_ = $Price->save({
+					pricelist_id	=>	$Pricelist->id(),
+					service_id		=>	$services{$name},
+					equipment_id	=>	$equip_id ? $equipment{$equip_id} : undef,
+					min				=>	$min,
+					max				=>	$max,
+					units			=>	$units,
+					cost			=>	$cost,
+					price			=>	$price,
+					discountable	=>	$discountable,
+				});
+				if ( $_ ) {
+					$error .= $_ . " for $services{$name}\n";
+				} else {
+					$variable{information} .= "Added Price for service $name on $equip_id $min - $max $units $cost $markup $price<br/>";
+				}
 
-		if ( $error ne '' ) {
-			return misc::error( $log, $dbh, \%variable, 'Import errors.', $error );
-		} # end if
+			} # end foreach equipment_id
+				
+		} # end while IO
+		sql::end_transaction( $openprint::dbh, $ac );
+
+		$variable{error} .= $error;
 	} elsif ( $param{btnFunction} eq 'Import Material Prices' ) {
 		if ( ! $Pricelist->id() ) {
 			$variable{error} = 'No pricelist selected.';
