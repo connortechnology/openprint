@@ -47,46 +47,46 @@ $serial = 'materialprices_id_seq';
 
 sub next {
 	my $self = shift;
-	return new openprint::MaterialPrice( sql::execute( undef,undef, q{SELECT MIN(id) FROM 'tbl_material_prices WHERE id > ?}, $$self{'id'} ) );
+	return new openprint::MaterialPrice( sql::execute( undef,undef, q{SELECT MIN(id) FROM 'tbl_material_prices WHERE id > ?}, $$self{id} ) );
 } # end sub next
 
 sub Pricelist {
-	return new openprint::Pricelist( $_[0]{'pricelist_id'} );
+	return new openprint::Pricelist( $_[0]{pricelist_id} );
 }
 sub Equipment {
-	return new openprint::Equipment( $_[0]{'equipment_id'} );
+	return new openprint::Equipment( $_[0]{equipment_id} );
 } # end sub Equipment
 
 sub Material {
-	return new openprint::Material( $_[0]{'material_id'} );
+	return new openprint::Material( $_[0]{material_id} );
 } # end sub Material
 
 sub markup {
     if ( @_ > 1 ) {
-        $_[0]{'markup'} = $_[1];
-		$_[0]{'markup'} =~ s/[^\d\.\-]//g;
+        $_[0]{markup} = $_[1];
+		$_[0]{markup} =~ s/[^\d\.\-]//g;
         $_[0]->price( undef );
     } # end if
-    return $_[0]{'markup'};
+    return $_[0]{markup};
 } # end sub markup
 sub cost {
     if ( @_ > 1 ) {
-        $_[0]{'cost'} = $_[1];
-		$_[0]{'cost'} =~ s/[^\d\.\-]//g;
+        $_[0]{cost} = $_[1];
+		$_[0]{cost} =~ s/[^\d\.\-]//g;
         $_[0]->price( undef );
     } # end if
-    return $_[0]{'cost'};
+    return $_[0]{cost};
 } # end sub cost
 sub price {
 
     if ( @_ > 1 ) {
-        $_[0]{'price'} = $_[1];
+        $_[0]{price} = $_[1];
     } # end if
 	my $self = $_[0];
-    if ( ! defined $_[0]{'price'} ) {
-        $_[0]{'price'} = Math::Round::nearest( .01, $_[0]{'cost'} * ( 1+($_[0]{'markup'}/100) ) );
+    if ( ! defined $_[0]{price} ) {
+        $_[0]{price} = Math::Round::nearest( .01, $_[0]{cost} * ( 1+($_[0]{markup}/100) ) );
     } # end if
-    return $_[0]{'price'};
+    return $_[0]{price};
 } # end sub price
 
 1;

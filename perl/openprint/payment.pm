@@ -25,6 +25,9 @@ sub history {
 	} elsif ( $param{btnFunction} eq 'Send Receipt' ) {
 		my $Payment = new openprint::Payment( $param{payment_id} );
 		$variable{error} .= $Payment->send_receipt();
+	} elsif ( $param{btnFunction} eq 'Send Receipt To Me' ) {
+		my $Payment = new openprint::Payment( $param{payment_id} );
+		$variable{error} .= $Payment->send_receipt( $openprint::User );
 	} else {
 		_history();
 		ssi::setup_date_select( '/payment/history.html', 'received_on_start', -31 );
@@ -61,6 +64,8 @@ sub edit {
 		} # end if
 	} elsif ( $param{btnFunction} eq 'Send Receipt' ) {
 		$variable{error} .= $Payment->send_receipt();
+	} elsif ( $param{btnFunction} eq 'Send Receipt To Me' ) {
+		$variable{error} .= $Payment->send_receipt( $openprint::User );
 	} elsif ( $param{btnFunction} eq 'Delete' ) {
 		$variable{error} .= $Payment->delete();
 		$variable{ExternalRedirect} = '/payment/history.html' if ! $variable{error};
