@@ -283,7 +283,7 @@ sub view {
 			} # end foreach
 			$New->update_notifications();
 			$New->save();
-			$variable{information} .= 'PO ' . $PO->id() . ' copied to PO ' . $New->id() .'<br/>';
+			$variable{information} .= 'PO ' . $PO->link_to() . ' copied to PO ' . $New->link_to() .'<br/>';
 			my $L = new openprint::PurchaseOrder_Log();
 			$L->save({
 					'user_id'	=>	$session{user_id},
