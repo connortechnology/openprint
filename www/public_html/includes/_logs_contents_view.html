@@ -15,7 +15,7 @@
 				limit	=> 1,
 				);
 		if ( @Logs ) {
-			my ( $year, $month, $day ) = ( $Logs[0]{date_time} =~ /(\d\d\d\d)-(\d\d)-(\d\d)/ );
+			my ( $year, $month, $day ) = $Logs[0]{date_time} =~ /(\d\d\d\d)-(\d\d)-(\d\d)/;
 			$session{$variable{uri}.'?log_created_on_start_year'} = $year;
 			$session{$variable{uri}.'?log_created_on_start_month'} = $month;
 			$session{$variable{uri}.'?log_created_on_start_day'} = $day;
@@ -25,8 +25,9 @@
 					date_filter( $variable{uri}.'?log_created_on_end', 'date_time <=' ),
 					date_filter( $variable{uri}.'?log_created_on_start', 'date_time >=' ),
 					order =>'date_time DESC',
+			);
 		}
-	}
+	} # end if ! @Logs
 	return if ! @Logs;
 	
 	my $rowclass = '';
