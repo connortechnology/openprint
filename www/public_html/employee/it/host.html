@@ -196,26 +196,7 @@ cleanup : true
     return include( '/location/_location_fields.html' );
 ) ?>
             </fieldset>
-	<fieldset><legend>Logs</legend>
-		<ul>
-			<li><label>Date</label>
-				<? echo (
-						datetime_select_session( '/employee/it/host.html','log_created_on_start', {
-							onchange	=>q`new Ajax.Updater( 'Logs', '/employee/it/_host_logs.html', { parameters: $('f1').serialize() } );`,
-							with_today=>1,
-							with_clear=>1,
-							} ); ) ?> to
-				<? echo (
-						datetime_select_session( '/employee/it/host.html','log_created_on_end', {
-							onchange	=>q`new Ajax.Updater( 'Logs', '/employee/it/_host_logs.html', { parameters: $('f1').serialize() } );`,
-							with_today=>1,
-							with_clear=>1,
-							} ); ) ?>
-				<? echo ( button( 'LoadLog', { onclick=>q`new Ajax.Updater( 'Logs', '/employee/it/_host_logs.html', { parameters: $('f1').serialize() } );`, text=>'Load' } ); ) ?>
-			</li>
-		</ul>
-		<div id="Logs"><?include('/employee/it/_host_logs.html')?></div>
-	</fieldset>
+<? echo ( include_logs( $$variable{Host} ); ) ?>
 <? endif ( $$variable{Host}->id() ) ?>
 </form>
 </div></div>
