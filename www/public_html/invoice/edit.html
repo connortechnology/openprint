@@ -116,7 +116,7 @@ name=>'invoicer_id', prepend=>['','select']
 </div>
 <?eval( $$variable{Object} = $$variable{Invoice} ) ?>
 <?include(/employee/assets/_asset_upload.html)?>
-<?include('_logs.html')?>
+<? echo ( include_logs( $$variable{Invoice} ); ) ?>
 <? endif ( $$variable{Invoice}->id() ) ?>
 </form>
 </div></div>

@@ -25,16 +25,16 @@
 				next if $Monitor->function() eq 'None';
 				$html .= sprintf(q`
 <tr>
-	<td class="thumbnail" rowspan="2"><a href="camera.html?monitor_id=%1$d"><img src="http://%2$s.internal.point-one.com/cgi-bin/zms?mode=single&monitor=%1$d&amp;maxfps=%5$d" class="thumbnail"/></a></td>
+	<td class="thumbnail" rowspan="2"><a href="camera.html?monitor_id=%1$d"><img src="http://%2$s/cgi-bin/zms?mode=single&monitor=%1$d&amp;maxfps=%5$d" class="thumbnail"/></a></td>
 	<td class="thumbnail" rowspan="2"><a href="camera.html?monitor_id=%1$d"><img src="http://%6$s%7$s" class="thumbnail"/></a>
 		<a href="http://%6$s%7$s" target="_blank">Link to camera</a>
 	</td>
 	<td class="name">%3$s</td>
 	<td class="function">%4$s</td>
 </tr><tr>
-	<td colspan="2"><a href="http://%2$s.internal.point-one.com/cgi-bin/zms?mode=jpeg&monitor=%1$d&amp;maxfps=%5$d" target="_blank">http://%2$s.internal.point-one.com/cgi-bin/zms?mode=jpeg&monitor=%1$d&amp;maxfps=%5$d</a></td>
+	<td colspan="2"><a href="http://%2$s/cgi-bin/zms?mode=jpeg&monitor=%1$d&amp;maxfps=%5$d" target="_blank">http://%2$s/cgi-bin/zms?mode=jpeg&monitor=%1$d&amp;maxfps=%5$d</a></td>
 </tr>`,
-$Monitor->id(), $Monitor->server_host(), $Monitor->name(), $Monitor->function(), $Monitor->max_fps(), 
+$Monitor->id(), $Monitor->Server()->Hostname(), $Monitor->name(), $Monitor->function(), $Monitor->max_fps(), 
 $Monitor->host(),$Monitor->path(),
 );
 				

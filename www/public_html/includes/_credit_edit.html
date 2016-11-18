@@ -2,6 +2,7 @@
     my $html;
     my @Suppliers = openprint::Company->find( offers_credit=>1, order=>'id');
     foreach my $Supplier ( @Suppliers ) {
+		next if $$variable{Company}->id() == $Supplier->id();
         my $Credit = $$variable{Company}->Credit($Supplier->id());
 
         $html .= sprintf(q`

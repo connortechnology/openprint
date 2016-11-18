@@ -18,4 +18,3 @@ CREATE TABLE hosts (
 	location_id			INTEGER, FOREIGN KEY (location_id) REFERENCES Locations (id),
 	PRIMARY KEY (id)
 );
-CREATE INDEX hosts_ip_idx on Hosts (ip);

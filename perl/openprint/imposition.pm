@@ -176,9 +176,9 @@ sub calc_setup_object {
 	my $min_bleed_size = $Press->specification( 'Minimum Bleed Size' );
 
 	my $Maximum_Image_Width = $Press->specification( 'Maximum Image Width ' . $run_style );
-	$Maximum_Image_Width = $Press->specification( 'Maximum Image Width ' ) if ! $Maximum_Image_Width;
+	$Maximum_Image_Width = $Press->specification( 'Maximum Image Width' ) if ! $Maximum_Image_Width;
 	my $Maximum_Image_Length = $Press->specification( 'Maximum Image Length ' . $run_style );
-	$Maximum_Image_Length = $Press->specification( 'Maximum Image Length ' ) if ! $Maximum_Image_Length;
+	$Maximum_Image_Length = $Press->specification( 'Maximum Image Length' ) if ! $Maximum_Image_Length;
 
 	my $press_grain;
 	if ( my $Stock_Setting = $Press->Stock_Setting( $Paper ) ) {

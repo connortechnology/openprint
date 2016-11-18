@@ -60,6 +60,9 @@ $debug = 0;
 	servicetype		=>	'(SELECT name FROM service_types WHERE id = ANY(servicetype_id))',
 );
 %transforms = (
+	id			=>	[ 's/\D//g', '<2147483647' ],
+	strid		=>	[ 's/^\s+//', 's/\s+$//', 's/\s\s+/ /g' ],
+	description	=>	[ 's/^\s+//', 's/\s+$//', 's/\s\s+/ /g' ],
 );
 %defaults = (
 	deleted			=>	0,

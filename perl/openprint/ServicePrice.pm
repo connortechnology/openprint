@@ -44,6 +44,7 @@ $serial = 'service_prices_id_seq';
 	period_end      =>  undef,
 	supplier_id		=>	undef,
 	equipment_id	=>	undef,
+	owner			=>	q`$openprint::Owner->id()`,
 );
 
 %transforms = (

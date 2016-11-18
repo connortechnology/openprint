@@ -290,8 +290,12 @@ sub assistant_ids {
 		sql::end_transaction( $dbh, $ac );
 		@{$$self{assistant_ids}} = ( @_ == 1 and ref $_[0] eq 'ARRAY' ) ? @{$_[0]} : @_;
 	} # end if
-	if ( ( ! $$self{assistant_ids} ) and $$self{id} ) {
-		 @{$$self{assistant_ids}} = sql::execute( undef, undef, 'SELECT assistant_id FROM Assistants WHERE csr_id=?', $$self{id} );
+	if ( ! $$self{assistant_ids} ) {
+		if ( $$self{id} ) {
+			@{$$self{assistant_ids}} = sql::execute( undef, undef, 'SELECT assistant_id FROM Assistants WHERE csr_id=?', $$self{id} );
+		} else {
+			$$self{assistant_ids} = [];
+		}
 	} # end if
 	return @{$$self{assistant_ids}};
 } # end sub
@@ -307,8 +311,12 @@ sub csr_ids {
 		sql::end_transaction( $dbh, $ac );
 		@{$$self{csr_ids}} = ( @_ == 1 and ref $_[0] eq 'ARRAY' ) ? @{$_[0]} : @_;
 	} # end if
-	if ( (! $$self{csr_ids} ) and $$self{id} ) {
-		@{$$self{csr_ids}} = sql::execute( undef, undef, 'SELECT csr_id FROM Assistants WHERE assistant_id=?', $$self{id} );
+	if ( ! $$self{csr_ids} ) {
+		if ( $$self{id} ) {
+			@{$$self{csr_ids}} = sql::execute( undef, undef, 'SELECT csr_id FROM Assistants WHERE assistant_id=?', $$self{id} );
+		} else {
+			$$self{csr_ids} = [];
+		}
 	} # end if
 	return @{$$self{csr_ids}};
 } # end sub
@@ -593,6 +601,13 @@ sub save_notifications {
 		} # end if value changed
 	} # end foreach Notification
 	return @results;
+}
+sub email_valid {
+	if ( ! defined $_[0]{email_valid} ) {
+	require Email::Valid;
+	$_[0]{email_valid} = Email::Valid->address( $_[0]{email} );
+	} 
+	return $_[0]{email_valid};
 }
 
 1;

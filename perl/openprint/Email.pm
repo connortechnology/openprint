@@ -83,13 +83,8 @@ sub send {
 		my $message = $mail{BODY};
 
         $mail{"MIME-Version"} = "1.0";
-		if ( @attachments ) {
-			$mail{'content-type'} = "multipart/mixed;\n  boundary=\"$mail{BOUNDARY}\"\n";
-        } else {
-			$mail{'content-type'} = "multipart/alternative;\n  boundary=\"$mail{BOUNDARY}\"\n";
-        }
 
-		$mail{BODY} .= "\nThis is a message with multiple parts in MIME format.\n";
+		$mail{BODY} = "\nThis is a message with multiple parts in MIME format.\n";
 
 # start with the current body
         if ( $message ) {
@@ -97,6 +92,12 @@ sub send {
             $mail{BODY} .= 'Content-Type: ' . ($mail{'content-type'} ? $mail{'content-type'} : 'text/plain' ). '; charset="utf-8"; format="fixed"'."\n";
             $mail{BODY} .= "Content-Transfer-Encoding: quoted-printable\n";
             $mail{BODY} .= "\n".MIME::QuotedPrint::encode_qp( Encode::encode('utf-8', $message ) ) . "\n";
+        }
+
+		if ( @attachments ) {
+			$mail{'content-type'} = "multipart/mixed;\n  boundary=\"$mail{BOUNDARY}\"\n";
+        } else {
+			$mail{'content-type'} = "multipart/alternative;\n  boundary=\"$mail{BOUNDARY}\"\n";
         }
 
 		if ( $params{HTML_BODY} ) {

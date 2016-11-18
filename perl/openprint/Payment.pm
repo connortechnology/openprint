@@ -109,31 +109,31 @@ sub Type {
 } # end sub Type
 
 sub send_receipt {
-	my ( $self ) = @_;
+	my ( $self, @To ) = @_;
 
 	my %data;
 	$data{Payment} = $self;
 	$data{uri} = 'payment';
-	$data{User} = new openprint::User($openprint::session{user_id});
+	$data{User} = $openprint::User;
 	my $email_template = ssi::slurp_content( '/email_template.html' );
 	my @attachments;
 	$data{ReplacementText} = ssi::include( '/email_content/payment_receipt.html', \%data );
 
+	@To = map { $_->User() } $self->Payor()->AccountingContacts() if ! @To;
+
 	my $Email = new openprint::Email();
 	$Email->html_body( ssi::variable_substitution( \$email_template, \%data ) );
 	my $results = $Email->send(
-		#TO			=>	new openprint::User( $openprint::session{user_id} ),
-		TO			=>	[map { $_->User() } $self->Payor()->AccountingContacts()],
-		BCC			=>	new openprint::User( $openprint::session{user_id} ),
+		TO			=>	\@To,
+		BCC			=>	$openprint::User,
 		FROM		=>	$data{User},
 		#'ATTACHMENTS'	=>	\@attachments,
 		SUBJECT		=>	'Thank you for your payment!',
 	);
-	$self->add_to_log( $results );
+	(new openprint::Log())->save({Object=>$self, action=>'Email Sent', note=>$results });
 	return $results;
 	
 } # end sub send_receipt
-
 
 sub Invoices {
 	if ( ! exists $_[0]{Invoices} ) {

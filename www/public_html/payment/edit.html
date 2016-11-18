@@ -100,6 +100,7 @@
 						$html .= button( 'Delete', { onclick=>q`f1.btnFunction.value='Delete';f1.submit();` } );
 					} # end if
 					$html .= button( 'SendReceipt', { onclick=>q`f1.btnFunction.value='Send Receipt';f1.submit();`, text=>'Send Receipt' } );
+					$html .= button( 'SendReceiptToMe', { onclick=>q`f1.btnFunction.value='Send Receipt To Me';f1.submit();`, text=>'Send Receipt To Me' } );
 				} # end if
 				$html .= button( 'Save', { onclick=>q`f1.btnFunction.value='Save';f1.submit();` } );
 				return $html;
@@ -113,5 +114,9 @@
 	<div class="rightColumn" id="Unpaid">
 		<?include('_unpaid.html')?>
 	</div>
+<br class="spacer"/>
+<?eval( $$variable{Object} = $$variable{Payment} ) ?>
+<?include(/employee/assets/_asset_upload.html)?>
+<? echo ( include_logs( $$variable{Payment} ); ) ?>
 	<? endif ( $$variable{Payment}->id() ) ?>
 </form>
