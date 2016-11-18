@@ -282,7 +282,7 @@ $log->debug("data: $client $remote_user $user_name $curr_time $xfer_type $path $
 						complete	=> 1,
 					};
 				} # end if send email
-			} elsif ($line =~ /^(\S+)\s+(\S+)\s+(\S+)\s+\[([^\]]+)\]\s+"([^"]*)"\s+(\d+)\s+([\-\d]+)\s+([\.\d]+)$/o) {
+			} elsif ($line =~ /^(\S+)\s+(\S+)\s+(\S+)\s+\[([^\]]+)\]\s+"([^"]*)"\s+(\d+)\s+([\-\d]+)\s+([\.\d\-]+)$/o) {
 #LogFormat IQFormat "%h %l %u %t \"%f\" %s %b %T"
 
 				my $client = $1;
@@ -294,18 +294,30 @@ $log->debug("data: $client $remote_user $user_name $curr_time $xfer_type $path $
 				my $response_code = $6;
 				my $nbytes = $7;
 				my $xfer_nsecs = $8;
-$log->debug("Got IQFormat extended line: $line");
-$log->debug("data: $client $remote_user $user_name $curr_time $path $response_code $nbytes");
-if ( $nbytes eq '-' ) {
-$log->debug("Not an upload, ignoring");
-next;
-} elsif ( $response_code != 226 ) {
-	$log->debug("Not an upload, response_code: $response_code");
-	next;
-} elsif ( $path eq '-' ) {
-	$log->debug("Not an upload, response_code: $response_code path was $path");
-	next;
-}
+				$log->debug("Got IQFormat extended line: $line");
+				$log->debug("data: $client $remote_user $user_name $curr_time $path $response_code $nbytes");
+				if ( $response_code == 331 ) {
+#Username OK, need password
+					next;
+				} elsif ( $response_code == 230 ) {
+# Successful login
+					my $User = openprint::User->find_one( email => $user_name, ftp_active => 1 );
+					if ( ! $User ) {
+						$log->error("Unable to load user for a valid ftp account.");
+						next;
+					}
+					(new openprint::Log())->save({Object=>$User, action=>'Login', note=>'Successful FTP Login' } );
+					next;
+				} elsif ( $nbytes eq '-' ) {
+					$log->debug("Not an upload, ignoring");
+					next;
+				} elsif ( $response_code != 226 ) {
+					$log->debug("Not an upload, response_code: $response_code");
+					next;
+				} elsif ( $path eq '-' ) {
+					$log->debug("Not an upload, response_code: $response_code path was $path");
+					next;
+				}
 
 				# Note that any spaces or control characters will be replaced in this
 				# path with underscores.	This can make finding the actual file, as for
