@@ -34,14 +34,14 @@
 			<div class="content">
 				<div class="leftColumn">
 					<ul>
-					<? if ( @{$$variable{Categories}} = openprint::ProjectType_Category->find('order'=>'lower(name)') ) ?>
+						<? if ( @{$$variable{Categories}} = openprint::ProjectTypeCategory->find( order=>'lower(name)') ) ?>
 						<li><label>Category</label>
 							<select name="category_id" id="category_id" onchange="load_products(this.form);">
 								<option value="">All</option>
 								<? echo ( make_drop_down( [ map { $_->id(), $_->name() } @{$$variable{Categories}} ], $session{'/administrator/project_types/index.html?category_id'} ); ) ?>
 							</select>
 						</li>
-						<? endif ( @{$$variable{Categories}} = openprint::ProjectType_Category->find('order'=>'lower(name)') ) ?>
+						<? endif ( @{$$variable{Categories}} = openprint::ProjectTypeCategory->find( order=>'lower(name)') ) ?>
 						<li><label>Search</label><input type="text" name="search" id="search" value="<? echo ( $param{search} ) ?>"/></li>
 					</ul>
 				</div>

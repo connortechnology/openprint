@@ -224,7 +224,7 @@ sub index {
 				if ( $_ .= $ST->save( \%changes ) ) {
 					$error .= "Error saving Service Type $name : $_<br/>";
 				} else {
-					$variable{information} .= 
+					$variable{information} .= "ServiceType $name imported<br/>";
 					(new openprint::Log())->save({ Object=>$ST, action=>'Edit Service Type', note => join('<br/>', @changes ) });
 				} # end if
 			} # end foreach
@@ -242,6 +242,64 @@ sub index {
 			push @data, map { $ServiceType->name(), $_->ProjectType()->name(), $_->name(), $_->value() } openprint::ServiceType_Default->find(servicetype_id=>$$ServiceType{id}, order=>$openprint::ServiceType_Default::fields{'name'});
 		}
 		misc::export_csv( $r, $log, \%variable, 'All_ServiceTypeDefaults.csv', \@header, \@data );
+	} elsif ( $param{btnFunction} eq 'Import Defaults' ) {
+		my $error = '';
+		if ( $param{fileImport} ) {
+			my $upload = $r->upload( 'fileImport' );
+			my $io = $upload->io();
+			$_ = <$io>;
+
+			my $csv = Text::CSV_XS->new();
+			my %servicetype_cache = map { $_->name(), $_ } openprint::ServiceType->find();
+			my %projecttype_cache = map { $_->name(), $_ } openprint::ProjectType->find();
+			
+			my $ac = sql::start_transaction( $dbh );
+			while ( <$io> ) {
+				my $status = $csv->parse($_);
+				my ( $service_type, $project_type, $name, $value ) = misc::trim( $csv->fields() );
+
+				if ( ! $servicetype_cache{$service_type} ) {
+					$variable{error} .= "ServiceType $service_type not found $project_type $name $value<br/>";
+					next;
+				}
+				if ( $project_type and ! $projecttype_cache{$project_type} ) {
+					$variable{error} .= "ProjectType $service_type not found $project_type $name $value<br/>";
+					next;
+				}
+				my $cache = { map { $_->projecttype().$_->name() => $_ } $servicetype_cache{$service_type}->Defaults() };
+				if ( ! $$cache{$project_type.$name} ) {
+					$$cache{$project_type.$name} = new openprint::ServiceType_Default();
+				}
+				my $Default = $$cache{$project_type.$name};
+
+				my %changes = (
+						projecttype_id	=> $project_type ? $projecttype_cache{$project_type}->id() : undef,
+						servicetype_id	=> $servicetype_cache{$service_type}->id(),
+						name			=> $name,
+						value			=> $value,
+						);
+
+				my @changes = $Default->changes( \%changes );
+
+$log->debug("changes @changes");
+				if ( ! @changes ) {
+					$variable{information} .= "No changes for $$Default{name}<br/>";
+$log->debug("No changes");
+					next;
+				}
+				
+				if ( $_ = $Default->save( \%changes ) ) {
+					$error .= "Error saving Service Type Default $name : $_<br/>";
+				} else {
+					$variable{information} .= "Service Type Default $service_type $project_type $name $value imported<br/>";
+					(new openprint::Log())->save({ Object=>$servicetype_cache{$service_type}, action=>'Edit', note => join('<br/>', @changes ) });
+				} # end if
+			} # end while io
+			sql::end_transaction( $dbh, $ac );
+			$variable{error} = $error;
+		} else {
+			$log->warn( "No file given to upload." );
+		} # end if
 	} # end if param{btnFunction}
 } # end sub search
 sub _index {
@@ -253,6 +311,40 @@ sub _index {
 					) );
 	 } # end if
 }
+sub categories {
+	my $ServiceType_Category = new openprint::ServiceType_Category( $param{category_id} );
+	if ( $param{btnFunction} eq 'Save' ) {
+		$variable{error} .= $ServiceType_Category->save(\%param);
+		foreach my $st_id ( ref $param{servicetype_id} eq 'ARRAY' ? @{$param{servicetype_id}} : $param{servicetype_id} ) {
+			my $ServiceType = new openprint::ServiceType( $st_id );
+			$variable{error} .= $ServiceType->save({ category_id=>$ServiceType_Category->id()});
+		} # end foreach st_id
+	} elsif ( $param{btnFunction} eq 'Delete' ) {
+		$variable{error} .= $ServiceType_Category->delete();
+	} # end if
+	$variable{ServiceType_Category} = $ServiceType_Category;
+} # end sub categories
+
+sub category {
+	my $ServiceType_Category = $variable{ServiceType_Category} = new openprint::ServiceType_Category( $param{category_id} );
+	if ( $param{btnFunction} eq 'Save' ) {
+		$variable{error} .= $ServiceType_Category->save(\%param);
+		foreach my $Type ( $ServiceType_Category->ServiceTypes() ) {
+			next if sets::isin( $$Type{id}, $param{servicetype_id} );
+			$variable{error} .= $Type->save({category_id=>undef});
+		} # end if
+		foreach my $st_id ( ref $param{servicetype_id} eq 'ARRAY' ? @{$param{servicetype_id}} : $param{servicetype_id} ) {
+			my $ServiceType = new openprint::ServiceType( $st_id );
+			$variable{error} .= $ServiceType->save({ category_id=>$ServiceType_Category->id()});
+		} # end foreach st_id
+		$variable{ExternalRedirect} = '/administrator/service_types/categories.html' if ! $variable{error};
+	} elsif ( $param{btnFunction} eq 'Delete' ) {
+		$variable{error} .= $ServiceType_Category->delete();
+		if ( ! $variable{error} ) {
+			$variable{ExternalRedirect} = '/administrator/service_types/categories.html';
+		}
+	} # end if
+} # end sub category
 
 1;
 __END__

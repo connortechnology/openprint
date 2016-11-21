@@ -284,7 +284,6 @@ new Ajax.Request('/administrator/equipment/_specification.html?action=copy&amp;i
 	</fieldset>
 <? endif ( $$variable{Equipment}->id() ) ?>
 	<input type="hidden" name="btnFunction"/>
-</form>
 <? if ( $$variable{Equipment}->specification('Folding Capable') ) ?>
 	<fieldset><legend>Fold Specifications</legend>
 		Select the # of pages of the folds that you would like to edit.  To add a new fold click Add.
@@ -302,14 +301,17 @@ new Ajax.Request('/administrator/equipment/_specification.html?action=copy&amp;i
 	make_drop_down( [ map { $_, $types{$_} } sort keys %types ] );
 ) ?>
 			</select>
-<? echo ( join('',
+<? echo ( join("\n",
 			button( 'AddFold', { onclick=>"new Ajax.Request('/administrator/equipment/_fold.html?action=add&equipment_id=". $$variable{Equipment}->id() ."', { onSuccess: function(response){new Insertion.Top(\$('Folds'), response.responseText);SortableTable.load();} } );", text=>'Add' } ),
-			button( 'ExportFolds', { onclick=>"f1.btnFunction.value='Export Folds';f1.submit();", text=>'Export Folds' } ),
+			'<input type="file" name="fileFolds"/>',
+			button( 'ExportFolds', { onclick=>"f2.btnFunction.value='Export Folds';f2.submit();", text=>'Export Folds' } ),
+			button( 'ImportFolds', { onclick=>"f2.btnFunction.value='Import Folds';f2.submit();", text=>'Import Folds' } ),
 	);) ?>
 		</p>
 		<div id="Folds"> </div>
 	</fieldset>
 <? endif ( $$variable{Equipment}->specification('Folding Capable') ) ?>
+</form>
 <form id="stock_settings_form" name="stock_settings_form" action="">
 	<input type="hidden" id="equipment_id" name="equipment_id" value="<? echo ( $$variable{Equipment}->id() ) ?>" />
 	<fieldset><legend>Specific Stock Settings</legend>
