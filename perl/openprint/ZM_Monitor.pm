@@ -1,10 +1,10 @@
 use strict;
 package openprint::ZM_Monitor;
 our @ISA = qw(openprint::Object);
-use ZoneMinder;
-require ZoneMinder::Server;
+#use ZoneMinder;
+require openprint::ZM_Server;
 
-use vars qw( $debug $table $serial %fields %defaults %transforms );
+use vars qw( $debug $table $serial %fields %defaults %transforms $dbh );
 $debug = 0;
 $table = 'Monitors';
 
@@ -30,19 +30,29 @@ $table = 'Monitors';
 );
 
 sub Server {
-	return new ZoneMinder::Server( $_[0]{server_id} );	
+	if ( ! $_[0]{Server} ) {
+		$_[0]{Server} = openprint::ZM_Server->find_one( dbh=>$dbh, id=>$_[0]{server_id} ) if $_[0]{server_id};
+		if ( ! $_[0]{Server} ) {
+			$_[0]{Server} = new openprint::ZM_Server();
+		}
+
+	}
+	return $_[0]{Server};
 }
 
 sub source_stream_url {
-	return ($_[0]{type} eq 'Remote' and $_[0]{protocol} eq 'http' ) ? 'http://'.$_[0]{host}.$_[0]{path} :
-                          sprintf('http://%2$s/cgi-bin/zms?mode=jpeg&amp;monitor=%1$d&amp;maxfps=%3$d&amp;user=all',
-                              $_[0]{id}, $_[0]->Server()->Hostname(), int($_[0]{max_fps}) ? $_[0]{max_fps} : 1 );
+$openprint::log->debug($_[0]->Server()->to_string() );
+	return ($_[0]{type} eq 'Remote' and $_[0]{protocol} eq 'http' ) ? 
+		'http://'.$_[0]{host}.$_[0]{path} :
+		sprintf('http://%2$s/cgi-bin/zms?mode=jpeg&amp;monitor=%1$d&amp;maxfps=%3$d&amp;user=all',
+				$_[0]{id}, $_[0]->Server()->Hostname(), int($_[0]{max_fps}) ? $_[0]{max_fps} : 1 );
 } # end sub source_stream_url
 
 sub source_snapshot_url {
-	return $_[0]{type} eq 'Remote' ? 'http://'.$_[0]{host}.($_[0]{jpg_path}?$_[0]{jpg_path}:$_[0]{path}) :
-                          sprintf('http://%2$s/cgi-bin/zms?mode=single&amp;monitor=%1$d&amp;maxfps=%3$d&amp;user=all',
-                              $_[0]{id}, $_[0]->Server()->Hostname(), $_[0]{max_fps} );
+	return $_[0]{type} eq 'Remote' ? 'http://'.$_[0]{host}.($_[0]{jpg_path}?
+		$_[0]{jpg_path}:$_[0]{path}) :
+			sprintf('http://%2$s/cgi-bin/zms?mode=single&amp;monitor=%1$d&amp;maxfps=%3$d&amp;user=all',
+					$_[0]{id}, $_[0]->Server()->Hostname(), $_[0]{max_fps} );
 } # end sub source_snapshot_url
 
 sub can_view {
