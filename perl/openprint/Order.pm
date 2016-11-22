@@ -563,7 +563,7 @@ sub send_sales_order {
 					);
 			
 			openprint::print_project::summary( $openprint::r, $log, $dbh, \%data, $Project->id() );
-			$Email->add_pdf_attachment_from_html ( "ProjectDocket$$Project{id}", ssi::variable_substitution( \$docket_content, \%data ) );
+			$Email->add_html_attachmentl( "ProjectDocket$$Project{id}", ssi::variable_substitution( \$docket_content, \%data ) );
 		} # for each
 	} # end if
 
