@@ -942,11 +942,14 @@ sub create_calc {
 		$$specs{"quantity$qty_index"} =~ s/\D//g;
 	} # end foreach qty_index
 
-	my $Project = new openprint::Project( $$specs{ProjectIndex} );
-	$Project->currency_id( $openprint::session{Currency_id} ) if ! $Project->currency_id();
-	if ( ! $Project->id() ) {
+	my $Project = openprint::Project->find_one( id=>$$specs{ProjectIndex} ) if $$specs{ProjectIndex};
+	if ( ! $Project ) {
+		$Project = new openprint::Project();
+		$Project->currency_id( $openprint::session{Currency_id} );
 		$Project->save();
 		$Project->add_to_log( @openprint::session{'company_id','user_id'}, 'Created' );
+	} else {
+		$Project->currency_id( $openprint::session{Currency_id} ) if ! $Project->currency_id();
 	} # end if
 
 	# Why are we doing this?
