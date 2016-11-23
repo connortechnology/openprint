@@ -17,11 +17,11 @@ Please select a host to view/edit.<br/>
 		<ul>
 		<li>
 			<label for="ip">Host IP</label>
-			<? echo ( input( type=>'ip', id=>'ip', name=>'ip', value=>$session{'/employee/it/hosts.html?ip'}, oninput=>"this.form.hostname.value='';this.form.mac.value='';", onkeydown=>q`if(event&&event.keyCode==13){load_host($('f1'));}` ); ) ?>
+			<? echo ( input( type=>'ip', id=>'ip', name=>'ip', value=>$session{'/employee/it/hosts.html?ip'}, oninput=>"this.form.hostname.value='';this.form.mac.value='';", onkeydown=>q`if(event&&event.keyCode==13){load_host($('f1'));}`, ondblclick=>q`this.value='';` ); ) ?>
 			Hostname:
-			<input type="text" id="hostname" name="hostname" value="<? echo ( $session{'/employee/it/hosts.html?hostname'} ) ?>" oninput="to_hostname(this);" onkeydown="this.form.ip.value='';this.form.mac.value='';if(event && event.keyCode == 13){load_host( $('f1') );}" />
+			<input type="text" id="hostname" name="hostname" value="<? echo ( $session{'/employee/it/hosts.html?hostname'} ) ?>" oninput="to_hostname(this);" onkeydown="this.form.ip.value='';this.form.mac.value='';if(event && event.keyCode == 13){load_host( $('f1') );}" ondblclick="this.value='';"/>
 			MAC:
-			<input pattern="[0-9a-fA-F:\-%]*" type="text" id="mac" name="mac" value="<? echo ( $session{'/employee/it/hosts.html?mac'} ) ?>" onkeyup="this.value=this.value.replace(/[^0-9a-fA-F:\-%]/g,'');" onkeydown="this.form.ip.value='';this.form.hostname.value='';if(event && event.keyCode == 13){load_host( $('f1') );}" oninput="this.onkeyup.call(this);" />
+			<input pattern="[0-9a-fA-F:\-%]*" type="text" id="mac" name="mac" value="<? echo ( $session{'/employee/it/hosts.html?mac'} ) ?>" onkeyup="this.value=this.value.replace(/[^0-9a-fA-F:\-%]/g,'');" onkeydown="this.form.ip.value='';this.form.hostname.value='';if(event && event.keyCode == 13){load_host( $('f1') );}" oninput="this.onkeyup.call(this);" ondblclick="this.value='';"/>
 		</li>
 		<li><label>Type</label>
 			<? echo ( ssi::select( openprint::Host_Type->dropdown(order=>'lower(name)'), $session{'/employee/it/hosts.html?type_id'}, { name=>'type_id', prepend=>['','All'] } ); ) ?>

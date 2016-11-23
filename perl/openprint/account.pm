@@ -222,7 +222,7 @@ $log->warn("registration errors $error");
 		$User = new openprint::User() if ! $User;
 		$User->set( \%param );
 		$User->company_id( $Company->id() );
-		$User->ftp_active( 'Y' );
+		$User->ftp_active( 1 );
 		$User->type( 'C' );
 		$User->change_password( 'N' );
 		$User->howdidyouhearaboutus( $param{howdidyouhearaboutus} );

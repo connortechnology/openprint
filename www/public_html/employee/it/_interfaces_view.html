@@ -1,0 +1,80 @@
+<fieldset><legend>Interfaces</legend>
+	<table class="List">
+		<tr>
+			<th class="mac">Mac</th>
+			<th class="ip">IP Address</th>
+			<th class="dhcp">DHCP?</th>
+			<th class="comment">Comment</th>
+<? if ( $config{RADIUS_Support} eq 'Y' ) ?>
+	<th class="radius">RADIUS</th>
+<? endif ( $config{RADIUS_Support} eq 'Y' ) ?>
+			<th class="buttons">&nbsp;</th>
+		</tr>
+<? echo (
+	my $html;
+	 if ( $config{RADIUS_Support} eq 'Y' ) {
+		$openprint::RADIUS_Check::dbh = sql::open_sql( $log,
+			database	=> $config{RADIUS_DB_Name},
+			driver		=> $config{RADIUS_DB_Driver},
+			host		=> $config{RADIUS_DB_Server},
+			login		=> $config{RADIUS_DB_Username},
+			password	=> $config{RADIUS_DB_Password},
+		);
+		if ( ! $openprint::RADIUS_Check::dbh ) {
+			$html .= 'Unable to connect to RADIUS DB server.';	
+		} # end if
+	} # end if RADIUS
+
+	my $radius_fragment = slurp_content( '/employee/it/_radius_mac_line_view.html' );
+	my @macs = map { $_->mac() ? () : '' } $$variable{Host}->Interfaces();
+
+	my $NewHI = new openprint::Host_Interface();
+	$NewHI->mac( $param{mac} ) if ! $$variable{Host}->id();
+
+	foreach my $Interface ( $$variable{Host}->Interfaces(), ( @macs ? () : $NewHI ) ) {
+		$html .= sprintf(q`
+<tr id="hi-%1$d">
+	<td class="mac">%2$s</td>
+	<td class="ip">%3$s</td>
+	<td class="dhcp">%4$s</td>
+	<td class="comment" rowspan="2">%5$s</td>
+`, 
+	$$Interface{id},
+	$$Interface{mac},
+	$Interface->ip(),
+	$Interface->dhcp() ? 'yes' : 'no',
+	$Interface->comment(),
+);
+	
+		if ( $openprint::RADIUS_Check::dbh ) {
+			my $mac = $$Interface{mac};	
+			if ( $mac =~ /^([[:xdigit:]]{2})[\:\-]?([[:xdigit:]]{2})[\:\-]?([[:xdigit:]]{2})[\:\-]?([[:xdigit:]]{2})[\:\-]?([[:xdigit:]]{2})[\:\-]?([[:xdigit:]]{2})$/ ) {
+				$mac = "$1-$2-$3-$4-$5-$6";
+			} # end if
+			$mac = uc $mac;
+			$html .= '<td class="radius" id="mac-'.$mac.'" rowspan="2">';
+
+				$$variable{username} = $mac;
+				$html .= variable_substitution( \$radius_fragment, $variable ) if $mac;
+				$html .= '</td>';
+		} # end if RADIUS
+		$html .= '</tr><tr><td colspan="2">';
+		if ( $$Interface{mac} ) {
+			$html .= 'Connections:<br/>';
+			if ( $$variable{Host}->is_wap() ) {
+				foreach my $Station_HI ( openprint::Host_Interface->find( connected_to=>$$Interface{mac} ) ) {
+					$html .= $Station_HI->Host()->link_to().'<br/>';
+				}
+			} # end if
+			if ( $$Interface{connected_to} ) {
+				foreach my $Station_HI ( openprint::Host_Interface->find( mac=>$$Interface{connected_to} ) ) {
+					$html .= $Station_HI->Host()->link_to().'<br/>';
+				}
+			}
+		} # end if mac
+		$html .= '</td></tr>';
+	} # end foreach Interface
+	return $html;
+) ?>
+	</table>
+</fieldset>

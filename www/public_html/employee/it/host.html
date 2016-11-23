@@ -22,7 +22,7 @@ cleanup : true
 <form id="f1" name="f1" method="post" action="/employee/it/host.html" enctype="multipart/form-data">
 	<input type="hidden" id="host_id" name="host_id" value="<? echo ( $$variable{Host}->id() ) ?>" />
 	<input type="hidden" id="action" name="action" />
-	<fieldset><legend>Host <? echo ( $$variable{Host}->id() ) ?></legend>
+	<fieldset><legend>Host <? echo ( $$variable{Host}->link_to( $$variable{Host}->id() ) ) ?></legend>
 		<div class="content leftColumn">
 			<ul>
 				<li>
@@ -133,12 +133,13 @@ cleanup : true
 	} # end if RADIUS
 
 	my $radius_fragment = slurp_content( '/employee/it/_radius_mac_line.html' );
-	my @macs = map { $_->mac() ? () : '' } $$variable{Host}->Interfaces();
+	#my @macs = map { $_->mac() ? () : '' } $$variable{Host}->Interfaces();
 
 	my $NewHI = new openprint::Host_Interface();
 	$NewHI->mac( $param{mac} ) if ! $$variable{Host}->id();
 
-	foreach my $Interface ( $$variable{Host}->Interfaces(), ( @macs ? () : $NewHI ) ) {
+	foreach my $Interface ( $$variable{Host}->Interfaces(), ( $NewHI ) ) {
+	#foreach my $Interface ( $$variable{Host}->Interfaces(), ( @macs ? () : $NewHI ) ) {
 		$html .= sprintf(q`
 <tr id="hi-%1$d">
 	<td class="mac">%2$s</td>
@@ -196,26 +197,7 @@ cleanup : true
     return include( '/location/_location_fields.html' );
 ) ?>
             </fieldset>
-	<fieldset><legend>Logs</legend>
-		<ul>
-			<li><label>Date</label>
-				<? echo (
-						datetime_select_session( '/employee/it/host.html','log_created_on_start', {
-							onchange	=>q`new Ajax.Updater( 'Logs', '/employee/it/_host_logs.html', { parameters: $('f1').serialize() } );`,
-							with_today=>1,
-							with_clear=>1,
-							} ); ) ?> to
-				<? echo (
-						datetime_select_session( '/employee/it/host.html','log_created_on_end', {
-							onchange	=>q`new Ajax.Updater( 'Logs', '/employee/it/_host_logs.html', { parameters: $('f1').serialize() } );`,
-							with_today=>1,
-							with_clear=>1,
-							} ); ) ?>
-				<? echo ( button( 'LoadLog', { onclick=>q`new Ajax.Updater( 'Logs', '/employee/it/_host_logs.html', { parameters: $('f1').serialize() } );`, text=>'Load' } ); ) ?>
-			</li>
-		</ul>
-		<div id="Logs"><?include('/employee/it/_host_logs.html')?></div>
-	</fieldset>
+<? echo ( include_logs( $$variable{Host} ); ) ?>
 <? endif ( $$variable{Host}->id() ) ?>
 </form>
 </div></div>

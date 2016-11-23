@@ -352,6 +352,7 @@ sub _prices {
 	if ( $param{action} eq 'Delete' ) {
 		my $PaperPrice = new openprint::PaperPrice( $param{price_id} );
 		$PaperPrice->delete();
+		(new openprint::Log())->save({action=>'Delete Price', Object=>$PaperPrice->Stock(), note=>$PaperPrice->id_string()});
 	} elsif ( $param{action} eq 'Add' ) {
 		my $PaperPrice = new openprint::PaperPrice( );
 		$PaperPrice->paper_id( $param{stock_id} );
