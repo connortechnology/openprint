@@ -19,15 +19,14 @@
 			} // end if
 		} // end if
 	} // end function delete_confirrm
-	function load_quotes( form ) {
-		form = $(form);
-		$('QuoteList').innerHTML = 'Please wait...';
-		new Ajax.Updater('QuoteList','/main/quote/_history.html', {parameters:form.serialize(true)});
+	function load_quotes( ) {
+		LoadContent('QuoteList', '/main/quote/_history.html', $('f1') );
 	} // end function load_quotes
 </script>	 
 <?include('/includes/error_reporting.html')?>
 <div class="Quote"><div class="History">
 	<form id="f1" name="f1" method="post" action="history.html">
+		<input type="hidden" name="btnFunction"/>
 		<fieldset class="filters unprintable"><legend>Select Search Criteria</legend>
 			<ul>
 			<li>
@@ -40,25 +39,37 @@
 				<input class="filter" type="text" oninput="filter_companies('company_id', {name:this.value,selected_id:get_ddm_value($('company_id'))});" />
 				<select name="company_id" id="company_id" onchange="load_quotes(this.form);">
 					<option value="">All</option>
-<? echo ( make_drop_down( openprint::Company->dropdown(or=>{id=>$openprint::Company->id(),'last_quote_id is null'=>0}), $session{'/main/quote/history.html?company_id'} ? $session{'/main/quote/history.html?company_id'} : $session{'company_id'}) ) ?>				
+<? echo ( make_drop_down( openprint::Company->dropdown(or=>{id=>$openprint::Company->id(),'last_quote_id is null'=>0}), $session{'/main/quote/history.html?company_id'} ? $session{'/main/quote/history.html?company_id'} : $session{company_id}) ) ?>				
 				</select>
 			</li>
+			<li><label>Sales Rep</label>
+            <select name="salesrep_id" size="1">
+                <option value="">All Employees</option>
+            <? echo ( make_drop_down( openprint::User->dropdown( type=>['E','A'], 'usergroup any'=>['Sales']), $session{'/main/quote/history.html?salesrep_id'} ); ) ?>
+            </select>
 <? endif ( sets::isin( $session{user_type}, ['E','A'] ) ) ?>
 			<li>
-				<label for="QuotedFor">Quoted For</label>
-				<input type="text" name="QuotedFor" id="QuotedFor" onkeyup="if( this.value.length > 1 ){load_quotes(this.form);}" />
+				<label>Quoted For</label>
+				<input type="text" name="QuotedFor" id="QuotedFor" onkeyup="if( this.value.length > 1 ){load_quotes();}" />
 			</li>
 			<li>
-				<label for="ddmStartDay">Quote Date</label>
-	<? echo ( date_select_session( '/main/quote/history.html', 'created_on_start', { onchange=>'load_quotes(this.form);' } ); ) ?>
+				<label>Quote Date</label>
+	<? echo ( date_select_session( '/main/quote/history.html', 'created_on_start', { onchange=>'load_quotes();' } ); ) ?>
 				to
-	<? echo ( date_select_session( '/main/quote/history.html', 'created_on_end', { onchange=>'load_quotes(this.form);' } ); ) ?>
+	<? echo ( date_select_session( '/main/quote/history.html', 'created_on_end', { onchange=>'load_quotes();' } ); ) ?>
 			</li>
-			<li><label>Deleted</label><? echo ( radio( 'deleted', ['1','Yes','0','No','','All'], $session{'/main/quote/history.html?deleted'}, { onclick=>'load_quotes(f1);' } ); ) ?></li>
-			<ul>
+			<li><label>Deleted</label><? echo ( radio( 'deleted', ['1','Yes','0','No','','All'], $session{'/main/quote/history.html?deleted'}, { onclick=>'load_quotes();' } ); ) ?></li>
+			<li><label>Status</label><select name="status" size="1"><option value="">All</option><? echo ( my @options = ( 'Incomplete','Complete','Re-Opened' ); make_drop_down( [ map { $_, $_ } \@options ], $param{status} );) ?> </select></li>
+			<li><label>Value</label>
+			<? echo ( input( type=>'float', name=>'total_start', value=>$session{$r->uri().'?total_start'}, oninput=>'load_quotes();' ); ) ?>
+			to
+			<? echo ( input( type=>'float', name=>'total_end', value=>$session{$r->uri().'?total_end'}, oninput=>'load_quotes();' ); ) ?>
+			</li>
+			</ul>
 			<p class="buttons">
 				<? echo ( join( "\n",
-					button( 'ShowResults', { onclick=>'f1.submit();', text=>'Show Results' } ),
+					button( 'ShowResults', { onclick=>'f1.btnFunction.value='';f1.submit();', text=>'Show Results' } ),
+					button( 'DownloadCSV', { onclick=>"f1.btnFunction.value='Download in CSV format';f1.submit();", text=>'Download in CSV Format' } ),
 					button( 'Add', { href=>'/main/quote/information.html?btnFunction=New', text=>'Create New' } ),
 					button( 'Reset', { onclick=>'f1.reset();', text=>'Reset' } ),
 				); ) ?>
