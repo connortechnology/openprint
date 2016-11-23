@@ -2644,7 +2644,7 @@ $openprint::log->debug("No stock quantity for form $$sig_specs{SignatureIndex}")
 				return $$specs{Status} = 'uncalculated';
 			} # end if
 
-			my $OverridePress = openprint::Equipment->find_one( strid=>$$specs{'ddmPress'.$qty_index});
+			my $OverridePress = $Presses{$$specs{'ddmPress'.$qty_index}};
 			if (! $OverridePress ) {
 				$$specs{alert} .= 'Cant find the press that you have chosen.';
 				return $$specs{Status} = 'uncalculated';
