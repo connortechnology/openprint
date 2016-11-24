@@ -398,22 +398,31 @@ sub can_edit {
 } # end sub can_edit
 
 sub can_view {
+	if ( $openprint::session{user_type} eq 'A' ) {
 	return 1;
+	}
+	if ( $openprint::session{user_type} eq 'E' ) {
+		if ( $_[0]->Invoicee()->salesrep_id() == $openprint::session{user_id} ) {
+			return 1;
+		}
+	}
+	return 0;
+		
 } # end sub can_view
 
 sub can_send {
-	return 1 if ! $_[0]{id};
-	my $User = $_[1] ? $_[1] : new openprint::User( $openprint::session{user_id} );
+	my $User = $_[1] ? $_[1] : $openprint::User;
 
 	if ( $$User{type} eq 'A' ) {
 		$log->debug("$$User{firstname} Is administrator") if $debug;
 		return 1;
 	} # end if
 
-        if ( openprint::usergroup::is_user_in( ['Accounting'], $$User{id} ) )  {
-                $log->debug("$$User{firstname} Is in Accounting'") if $debug;
-                return 1;
-        } # end i
+	if ( openprint::usergroup::is_user_in( ['Accounting'], $$User{id} ) )  {
+		$log->debug("$$User{firstname} Is in Accounting'") if $debug;
+		return 1;
+	} # end i
+	return 0;
 } # end sub can_send
 
 sub upload {

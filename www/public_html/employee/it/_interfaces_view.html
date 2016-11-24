@@ -25,7 +25,7 @@
 		} # end if
 	} # end if RADIUS
 
-	my $radius_fragment = slurp_content( '/employee/it/_radius_mac_line.html' );
+	my $radius_fragment = slurp_content( '/employee/it/_radius_mac_line_view.html' );
 	my @macs = map { $_->mac() ? () : '' } $$variable{Host}->Interfaces();
 
 	my $NewHI = new openprint::Host_Interface();
