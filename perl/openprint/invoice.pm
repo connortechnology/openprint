@@ -24,6 +24,9 @@ sub history {
 		my $Invoice = openprint::Invoice->find_one( 'id'=>$param{invoice_id} );
 		if ( ! $Invoice ) {
 			$variable{error} .= "Invoice $param{invoice_id} not found";
+		} elsif ( ! $Invoice->can_send() ) {
+			$variable{error} .= "You are not authorized to send this invoice.<br/>";
+
 		} else {
 			$variable{error} .= $Invoice->send();
 			$variable{information} .= 'Invoice ' . $Invoice->id() . ' sent.<br/>';
@@ -115,12 +118,20 @@ sub history {
 			next if $Invoice->is_paid();
 			next if $Invoice->bad_debt();
 			next if ! $Invoice->posted();
+			next if ! $Invoice->can_send();
 
 			$data{uri} = 'invoice';
 			$data{Invoice} = $Invoice;
 			$data{ReplacementText} = ssi::include( '/email_content/invoice.html', \%data );
 			push @attachments, 'Invoice '.$$Invoice{id}.'.html', MIME::QuotedPrint::encode_qp( Encode::encode('utf-8',ssi::variable_substitution( \$email_template, \%data ) ) ), 'text/html', 'quoted-printable';
 		} # end foreach Invoice
+		if ( @attachments <= 4 ) {
+			$variable{error} .= "There were no invoices to include in this statement.";
+			if ( @Invoices ) {
+				$variable{error} .= "You may not be authorized to send them.";
+			}
+			return;
+		}
 
 		my @Recipients = new openprint::Company($param{company_id})->AccountingContacts();
 		(new openprint::Email())->send(
@@ -306,10 +317,14 @@ sub view {
 			$variable{ExternalRedirect} = '/invoice/history.html';
 		} # end if
 	} elsif ( $param{btnFunction} eq 'Send' ) {
-		$variable{error} .= $Invoice->send();
-		$variable{information} .= 'Invoice ' . $Invoice->id() . ' sent.<br/>';
-		$variable{ExternalRedirect} = $Invoice->url_to();
-		return;
+		if ( ! $Invoice->can_send() ) {
+			$variable{error} .= "You are not authorized to send this invoice.<br/>";
+		} else {
+			$variable{error} .= $Invoice->send();
+			$variable{information} .= 'Invoice ' . $Invoice->id() . ' sent.<br/>';
+			$variable{ExternalRedirect} = $Invoice->url_to();
+			return;
+		}
 	} elsif ( $param{btnFunction} eq 'Send To Me' ) {
 		$variable{error} .= $Invoice->send( new openprint::User( $session{user_id} ) );
 		$variable{information} .= 'Invoice ' . $Invoice->id() . ' sent.<br/>';

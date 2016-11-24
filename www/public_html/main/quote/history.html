@@ -59,7 +59,9 @@
 	<? echo ( date_select_session( '/main/quote/history.html', 'created_on_end', { onchange=>'load_quotes();' } ); ) ?>
 			</li>
 			<li><label>Deleted</label><? echo ( radio( 'deleted', ['1','Yes','0','No','','All'], $session{'/main/quote/history.html?deleted'}, { onclick=>'load_quotes();' } ); ) ?></li>
-			<li><label>Status</label><select name="status" size="1"><option value="">All</option><? echo ( my @options = ( 'Incomplete','Complete','Re-Opened' ); make_drop_down( [ map { $_, $_ } \@options ], $param{status} );) ?> </select></li>
+			<li><label>Status</label><? echo ( 
+my @options = ( 'Incomplete','Complete','Re-Opened' );
+ssi::select( [ map { $_, $_ } @options ], $session{$r->uri().'?status'}, { name=>'status', onchange=>'load_quotes();', prepend=>['','All'] } );) ?></li>
 			<li><label>Value</label>
 			<? echo ( input( type=>'float', name=>'total_start', value=>$session{$r->uri().'?total_start'}, oninput=>'load_quotes();' ); ) ?>
 			to
@@ -68,8 +70,8 @@
 			</ul>
 			<p class="buttons">
 				<? echo ( join( "\n",
-					button( 'ShowResults', { onclick=>'f1.btnFunction.value='';f1.submit();', text=>'Show Results' } ),
-					button( 'DownloadCSV', { onclick=>"f1.btnFunction.value='Download in CSV format';f1.submit();", text=>'Download in CSV Format' } ),
+					button( 'ShowResults', { onclick=>q`f1.btnFunction.value='';f1.submit();`, text=>'Show Results' } ),
+					button( 'DownloadCSV', { onclick=>q`f1.btnFunction.value='Download in CSV format';f1.submit();`, text=>'Download in CSV Format' } ),
 					button( 'Add', { href=>'/main/quote/information.html?btnFunction=New', text=>'Create New' } ),
 					button( 'Reset', { onclick=>'f1.reset();', text=>'Reset' } ),
 				); ) ?>

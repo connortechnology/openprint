@@ -1,3 +1,4 @@
+<?include(/includes/error_reporting.html)?>
 <? eval (
 	my $uri = '/employee/inventory/allocations.html';
 
@@ -20,7 +21,7 @@
 <form id="PaperAllocationResults" name="PaperAllocationResults" action="allocations.html" method="post">
 	<table class="List">
 		<tr>
-			<th class="checkbox"><input type="checkbox" onclick="select_all( this.form, 'allocations', this.checked );"/></th>
+			<th class="checkbox"><input type="checkbox" onclick="select_all( this.form, 'allocation_ids', this.checked );"/></th>
 			<th class="Docket">Docket</th>
 			<th class="Company">Company</th>
 			<th class="Stock">Stock</th>
@@ -98,7 +99,7 @@ $log->debug("Max end: $max_age_end Max Age $max_age");
 				} # end if
 
 				$html .= "<tr class=\"$rowclass $error\">";
-				$html .= qq`<td class="checkbox"><input type="checkbox" name="allocations" value="$$Allocation{id}"/></td>`;
+				$html .= qq`<td class="checkbox"><input type="checkbox" name="allocation_ids" value="$$Allocation{id}"/></td>`;
 				$html .= sprintf( '<td class="Docket"><a href="/employee/project/view.html?docket=%1$d">%1$s</a></td>', $$Allocation{docket} );
 				$html .= sprintf( '<td class="Company"><a href="allocation.html?allocation_id=%d">%s</a></td>', $$Allocation{id}, $Allocation->Order()->Company()->name() );
 				$html .= sprintf( '<td class="Stock"><a href="paper_details.html?paper_id=%d">%s</a></td>', $$Allocation{paper_id}, $Allocation->Paper()->to_string() );
@@ -116,12 +117,15 @@ $log->debug("Max end: $max_age_end Max Age $max_age");
 			$html .= '<tr class="totals"><td colspan="4">Totals</td><td class="Quantity">';
 			$html .= Number::Format::format_number($total_allocations) . 'allocations ' . Number::Format::format_number($total_sheets) . 'sheets<br/>' if $total_allocations;
 			$html .= Number::Format::format_number($total_rolls) . 'rolls ' . Number::Format::format_number($total_weight) . 'lbs<br/>' if $total_rolls;
-			$html .= '</td><td></td><td></td></tr>';
+			$html .= '</td><td></td><td></td><td></td></tr>';
 			return $html;
 		) ?>
 	</table>
 	<input type="hidden" name="btnFunction"/>
 </form>
+<p class="buttons">
+<? echo ( button( 'delete', { onclick=>q`new Ajax.Updater( 'Results','/employee/inventory/_allocations.html?action=Delete', { parameters: { allocation_id: get_value( $('PaperAllocationResults').allocation_ids ) } } );`, text=>'Delete Checked' } ); ) ?>
+</p>
 <? else ( @{$$variable{Allocations}} ) ?>
 There were no allocations matching your search criteria.
 <? endif ( @{$$variable{Allocations}} ) ?>

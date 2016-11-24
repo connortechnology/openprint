@@ -23,6 +23,9 @@ function load_page() {
 			<? echo ( input( type=>'email', name=>'email', onkeydown=>'if(event.keyCode==13){f1.submit();}', oninput=>'load_page();' ); ) ?>
 			<? echo ( button( 'Go2',{ onclick=>"f1.action='user_profiles.html';f1.submit();", text=> 'Go' } ); ) ?>	
 		</li>
+</ul>
+<hr/>
+<ul>
 		<li><label>Company Name</label>
 			<input type="text" oninput="filter_companies( f1.ddmCustomer, {name:this.value} );" 
 			   onkeydown="if(event.keyCode == 13){f1.ddmUser.selectedIndex=-1;f1.btnFunction.value='';this.form.submit();}" 

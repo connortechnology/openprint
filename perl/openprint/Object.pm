@@ -24,7 +24,7 @@ use vars qw( $log $dbh $AUTOLOAD %cache %name_cache %fields %defaults %transform
 *config = \%openprint::config;
 
 my $debug = 0;
-use constant DEBUG_ALL => 1;
+use constant DEBUG_ALL => 0;
 use constant DEBUG_CACHE => 0;
 $no_cache = 0;
 
@@ -601,7 +601,11 @@ my $add_placeholder = ( ! ( $field =~ /\?/ ) ) ?  1 : 0;
 		return $field.'::text ' . $operator . ' ?', $value;
 	} elsif ( $operator eq 'null_or_<=' ) {
 		return '('.$field.$type.' IS NULL OR '.$field.$type.' <= ?)', $value;
+	} elsif ( $operator eq 'is null or <=' ) {
+		return '('.$field.$type.' IS NULL OR '.$field.$type.' <= ?)', $value;
 	} elsif ( $operator eq 'null_or_>=' ) {
+		return '('.$field.$type.' IS NULL OR '.$field.$type.' >= ?)', $value;
+	} elsif ( $operator eq 'is null or >=' ) {
 		return '('.$field.$type.' IS NULL OR '.$field.$type.' >= ?)', $value;
 	} elsif ( $operator eq 'null_or_>' or $operator eq 'is null or >' ) {
 		return '('.$field.$type.' IS NULL OR '.$field.$type.' > ?)', $value;
@@ -701,7 +705,7 @@ $log->debug("get_fields_values " . join(',',@{$param_keys} ) );
 				} else {
 					$log->error("No keys in and");
 				} 
-			} elsif ( $and_ref eq 'ARRAY' ) {
+			} elsif ( $and_ref eq 'ARRAY' and @{$$search{and}} ) {
 				my @sub_where;
 
 				for( my $p_index = 0; $p_index < @{$$search{and}}; $p_index += 2 ) {
