@@ -83,7 +83,7 @@ sub _history {
     } else {
 		my $uri = '/main/quote/history.html';
         $variable{Quotes} = [ openprint::Quote->find(
-				( sets::isin($session{user_type}, ['E','A'] ) ? (
+				( sets::isin($session{user_type}, ['E','A']) ? (
 																 ( $session{$uri.'?company_id'} ? ( company_id=>$session{$uri.'?company_id'}) : () ) 
 																) : ( company_id =>   $session{company_id} ) ),
             ( $session{$uri.'?QuotedFor'} ? ( 'for_name ilike'           => '%'.$session{$uri.'?QuotedFor'}.'%' ) : () ),
