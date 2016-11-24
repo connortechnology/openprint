@@ -16,7 +16,7 @@ if ($opts->{help}) {
 } # end if
 
 my @whitelist = (
-        q`^\[\w{3} \w{3} [ .:0-9]+\] \[mpm_prefork:notice\] \[pid [0-9]+\] AH[[:digit:]]{5}: Apache\/2\.4\.18 \(Ubuntu\) mod_fcgid\/2\.3\.9 OpenSSL\/1\.0\.2g mod_apreq2-20090110\/2\.8\.0 mod_perl\/2\.0\.9 Perl\/v5\.22\.1 configured \-\- resuming normal operations$`,
+        q`^\[\w{3} \w{3} [ .:0-9]+\] \[mpm_prefork:notice\] \[pid [0-9]+\] AH[[:digit:]]{5}: Apache\/2\.4\.18 \(Ubuntu\) (mod_fcgid\/2\.3\.9 )?OpenSSL\/1\.0\.2g mod_apreq2-20090110\/2\.8\.0 mod_perl\/2\.0\.9 Perl\/v5\.22\.1 configured \-\- resuming normal operations$`,
 		q`^\[\w{3} \w{3} [ .:0-9]{23}\] \[core:notice\] \[pid [0-9]+\] AH[[:digit:]]{5}: Command line: '\/usr\/sbin\/apache2'$`,
 );
  
