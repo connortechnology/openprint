@@ -250,6 +250,10 @@ $log->error("PReventing customer change");
 		$User = $User->Prev( 'type'=>$param{ddmUserRole}, 'company_id'=>$param{ddmCustomer} );
 	} elsif ($param{btnFunction} eq '>>') {
 		$User = $User->Next( 'type'=>$param{ddmUserRole}, 'company_id'=>$param{ddmCustomer} );
+    } elsif ( $param{btnFunction} eq 'copy' ) {
+		$User = $User->copy();
+		$User->save({});
+		$user_id = $User->id();
     } elsif ( $param{btnFunction} eq 'merge' ) {
 		if ( $$User{id} == $openprint::param{merge_user_id} ) {
 			$variable{error} .= 'Choose a different user to merge into.';
@@ -290,6 +294,7 @@ $log->error("PReventing customer change");
 			return misc::error( $log, $dbh, \%variable, "Passwords don't match.", "Your password and verify password fields do not match.");
 		} # end if
 
+if ( 0 ) {
 		my @Users = openprint::User->find( 'email lc' => lc $param{email} ) if $param{email};
 		if ( @Users > 1 or ( ( @Users == 1 ) and ( $Users[0]->id() != $User->id() ) ) ) {
 $log->debug("User ids not match " . $Users[0]->id()  . ' != ' . $User->id() );
@@ -300,6 +305,7 @@ $log->debug("User ids not match " . $Users[0]->id()  . ' != ' . $User->id() );
 		
 			return misc::error( $log, $dbh, \%variable, 'User already exists.', $error);
 		} # end if
+}
 
 		if ( ! $param{password} ) {
 			delete $param{password};

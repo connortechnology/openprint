@@ -38,6 +38,16 @@ Please select a company or user to obtain login information.<br/>
 						<option value="">All</option>
 						<? echo ( 
 		$variable{companies_ddm} = openprint::Company->dropdown();
+		if ( @{$variable{companies_ddm}} > 1000 ) {
+			# TOo many.  find the selected one and drop all but previous and following 10..
+
+			for ( my $i = 0; $i < @{$variable{companies_ddm}}; $i += 2 ) {
+				if ( $variable{companies_ddm}[$i] == $session{$r->uri().'?company_id'} ) {
+					@{$variable{companies_ddm}} = splice( @{$variable{companies_ddm}}, ( $i > 100 ? $i - 20 : 0 ), 100 );
+					last;
+				}
+			}
+		}
 		make_drop_down( $variable{companies_ddm}, $session{$r->uri().'?company_id'} );
 		 ) ?>
 					</select>
@@ -79,6 +89,7 @@ Please select a company or user to obtain login information.<br/>
 				<? echo ( my $html = '';
 					$html .= button( 'Prev1', { onclick=>"f1.btnFunction.value='&lt;&lt;';fmCheck(f1);", text=>'&lt;&lt;' } );
 					$html .= button( 'Next1', { onclick=>"f1.btnFunction.value='&gt;&gt;';fmCheck(f1);", text=>'&gt;&gt;' } );
+					$html .= button( 'Copy1', { onclick=>"f1.btnFunction.value='copy';f1.submit();", text=>'Copy' } );
 					$html .= button( 'New1', { onclick=>"\$('Log').hide();keepCompany(f1);", text=>'New' } );
 					if ( $$variable{User}->deleted() ) {
 						$html .= button( 'UnDelete1', { onclick=>"f1.btnFunction.value='Undelete';f1.submit();", text=>'Undelete' } );
@@ -91,7 +102,7 @@ Please select a company or user to obtain login information.<br/>
 					if ( $$variable{User}->id() ) {
 						$html .= button( 'Become', { href=>'/account/select_user.html?user_id='.$$variable{User}->id() } );
 					} # end if
-				if ( 0 and $$variable{User}->id() and (new openprint::User( $session{user_id} ))->email() =~ /^iconnor/ ) {
+				if ( $$variable{User}->id() and (new openprint::User( $session{user_id} ))->email() =~ /^iconnor/ ) {
 					$html .= '<br/>';
 					$html .= button( 'Merge', { onclick=>"f1.btnFunction.value='merge';f1.submit();" } );
 					$html .= '<select name="merge_user_id"><option value=""> none </option>';
@@ -124,7 +135,7 @@ Please select a company or user to obtain login information.<br/>
 				<ul>
 					<li> 
 						<label>Company</label>
-						<input type="text" onkeyup="filterDDM(this, f1.company_id);" class="filter"/>
+						<input type="text" oninput="filter_companies( f1.company_id, {name:this.value} );" class="filter"/>
 						<select id="company_id" name="company_id">
 							<option value=""> Select </option>
 							<? echo ( 
