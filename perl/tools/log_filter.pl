@@ -37,7 +37,7 @@ while (<>) {
 		}
 	} # end foreach
 	if ( ! $whitelisted ) {
-		#print $input;
+		print $input;
 	}
 
 } # end while input
