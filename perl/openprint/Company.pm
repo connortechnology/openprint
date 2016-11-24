@@ -237,22 +237,16 @@ sub dropdown {
 	my %sql = @_;
 
 	if ( $openprint::session{user_id} and ( $openprint::session{user_type} ne 'A' ) and ! openprint::usergroup::is_user_in( ['Estimating','Prepress','Accounting','Shipping','Inventory'], $openprint::session{user_id} ) ) {
-		if ( (!$sql{salesrep_id}) or ( ! sets::isin( $sql{salesrep_id}, [ $openprint::session{user_id}, $openprint::User->csr_ids() ] ) ) ) {
-			$sql{salesrep_id} = [ $openprint::session{user_id}, $openprint::User->csr_ids() ];
-		}
-		if ( ! $sql{or} ) {
-			$sql{or} = { id => $$openprint::User{company_id},
-				salesrep_id	=> $sql{salesrep_id},
-			};
-			delete $sql{salesrep_id};
-		} elsif ( ref $sql{or} eq 'SCALAR' ) {
-			$log->error("BAH");
-		} elsif ( ref $sql{or} eq 'HASH' ) {
-			$sql{or}{id} = $$openprint::User{company_id};
-		} else {
-my ( $caller, undef, $line ) = caller;
-			$log->error("BLAH from $caller $line or is $sql{or} " . ref $sql{or});
-		}
+
+		my %new_sql = ( and => [
+			or => {
+			salesrep_id => [ $openprint::session{user_id}, $openprint::User->csr_ids() ],
+			id => $$openprint::User{company_id},
+			},
+			%sql,	
+			],
+		);
+		%sql = %new_sql;
 	} else {
 $log->debug("Not adding filter");
 	} # end if
@@ -377,10 +371,12 @@ sub find_filtered {
     return openprint::Company->find(order=>'lower(name)',@_) if $openprint::session{user_type} eq 'A';
 
     return openprint::Company->find(
+        or		=> {
+			id	=>	$openprint::User->company_id(),
 			( ! openprint::usergroup::is_user_in( ['Estimating','Prepress','Accounting','Shipping','Inventory'], $openprint::session{user_id} ) ? (
-        salesrep_id => [ $openprint::session{user_id}, $openprint::User->csr_ids() ],
-        ) : () ),
-        (or		=> 'id='.$openprint::User->company_id()),
+																																				   salesrep_id => [ $openprint::session{user_id}, $openprint::User->csr_ids() ],
+																																			  ) : () ),
+		},
         order	=>'lower(name)',
 		@_,
     );
