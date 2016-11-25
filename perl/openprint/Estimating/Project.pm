@@ -969,7 +969,7 @@ if ( 0 ) {
 	} # end foreach qty_index
 
 	my $ProjectType = openprint::ProjectType->find_one( name => $$specs{rdbProjectType} );
-	if ( $Project->type_id() != $ProjectType->id() ) {
+	if ( $ProjectType and ( $Project->type_id() != $ProjectType->id() ) ) {
 		$Project->change_ProjectType( $ProjectType );
 		%services = $Project->get_services( );
 	} # end if ProjectType changed
