@@ -665,7 +665,6 @@ sub get_fields_values {
 	my @where;
 	my @values;
 	no strict 'refs';
-$log->debug("get_fields_values " . join(',',@{$param_keys} ) );
 
 	foreach my $k ( @$param_keys ) {
 		if ( $k eq 'or' ) {
