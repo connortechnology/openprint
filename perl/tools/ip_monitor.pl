@@ -117,7 +117,8 @@ while(1) {
 	my @Hosts = openprint::Host->find( monitored=>1 );
 	$log->debug( 'Monitoring ' . @Hosts . ' hosts.' );
 	foreach my $Host ( @Hosts ) {
-		if ( ! $Host->Interfaces() ) {
+		# THe under is to prevent caching
+		if ( ! $Host->Interfaces( undef ) ) {
 			$log->debug( "Monitored host without Interfaces: " . $Host->to_string() );
 			next;
 		} # end if
