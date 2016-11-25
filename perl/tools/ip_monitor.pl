@@ -27,12 +27,12 @@ my $program = basename($0);
 
 my $opts = {};
 GetOptions($opts, 'help', 
-    'db_port=s', 'db_name=s', 'db_host=s', 'db_user=s', 'db_pass=s','blacklist=s', 'debug=s', 'config=s', 'ping_type=s',
+	'db_port=s', 'db_name=s', 'db_host=s', 'db_user=s', 'db_pass=s','blacklist=s', 'debug=s', 'config=s', 'ping_type=s',
  );
 
 if ($opts->{help}) {
-    usage();
-    exit 0;
+	usage();
+	exit 0;
 }
 
 my %defaults = (
@@ -117,7 +117,8 @@ while(1) {
 	my @Hosts = openprint::Host->find( monitored=>1 );
 	$log->debug( 'Monitoring ' . @Hosts . ' hosts.' );
 	foreach my $Host ( @Hosts ) {
-		if ( ! $Host->Interfaces() ) {
+		# THe under is to prevent caching
+		if ( ! $Host->Interfaces( undef ) ) {
 			$log->debug( "Monitored host without Interfaces: " . $Host->to_string() );
 			next;
 		} # end if
@@ -167,19 +168,19 @@ while(1) {
 					if ( @To and ( @To < 10 ) ) {
 
 						my %info = (
-								Host   =>  $Host,
+								Host	=>	$Host,
 								);
-                        my $results;
-                        my $Email = new openprint::Email();
-                        $info{ReplacementText} = ssi::include("/email_content/host.html", \%info );
+						my $results;
+						my $Email = new openprint::Email();
+						$info{ReplacementText} = ssi::include("/email_content/host.html", \%info );
 
-                        my $html_body = ssi::include( '/email_template.html', \%info );
-                        my $results = (new openprint::Email())->send(
-                                TO  =>  \@To,
-                                SUBJECT =>  'Host has gone ' . ($online?'online':'offline') . ': ' . $Host->hostname(),
-                                FROM        =>  $config{TechSupportEmail},
-                                HTML_BODY       =>  $html_body,
-                                );
+						my $html_body = ssi::include( '/email_template.html', \%info );
+						my $results = (new openprint::Email())->send(
+								TO 			=>	\@To,
+								SUBJECT		=>	'Host has gone ' . ($online?'online':'offline') . ': ' . $Host->hostname(),
+								FROM		=>	$config{TechSupportEmail},
+								HTML_BODY	=>	$html_body,
+								);
 
 					} # end if to < 10
 				} # end if immediate notifications
@@ -192,7 +193,7 @@ while(1) {
 					if ( @To and ( @To < 10 ) ) {
 
 						my %info = (
-								Host   =>  $Host,
+								Host	=>	$Host,
 								);
 						my $results;
 						my $Email = new openprint::Email();
@@ -200,10 +201,10 @@ while(1) {
 
 						my $html_body = ssi::include( '/email_template.html', \%info );
 						my $results = (new openprint::Email())->send(
-								TO	=>	\@To,
-								SUBJECT	=>	'Host has gone ' . ($online?'online':'offline') . ': ' . $Host->hostname(),
+								TO			=>	\@To,
+								SUBJECT		=>	'Host has gone ' . ($online?'online':'offline') . ': ' . $Host->hostname(),
 								FROM		=>	$config{TechSupportEmail},
-								HTML_BODY		=>	$html_body,
+								HTML_BODY	=>	$html_body,
 								);
 					} # end if @To > 10
 				} # end if offline_seconds
@@ -238,7 +239,7 @@ while(1) {
 							my $headers = $response->headers();
 							foreach my $k ( keys %$headers ) {
 								$log->debug("Header $k => $$headers{$k}");
-							}  # end foreach
+							}	# end foreach
 							$Host->reboot();
 						} # end if
 					} else {
@@ -272,14 +273,14 @@ while(1) {
 							my $headers = $response->headers();
 							foreach my $k ( keys %$headers ) {
 								$log->debug("Header $k => $$headers{$k}");
-							}  # end foreach
+							}	# end foreach
 							$Host->reboot();
 						} # end if
 					} else {
 						$log->debug("Got content from host. Size: " . $response->content_type );
 					} # end if
 				} elsif ( $Host->type() ) {
-					$log->warn("nothing to do for : " . $Host->type()  . ' for host ' . $$Host{hostname}  );
+					$log->warn("nothing to do for : " . $Host->type()	. ' for host ' . $$Host{hostname}	);
 				} # end if
 			} # end if online
 	} # end foreach $Host
