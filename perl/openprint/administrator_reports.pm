@@ -17,62 +17,14 @@ use vars qw( $r $log $dbh %variable %param %session %config );
 *param = \%openprint::param;
 *config = \%openprint::config;
 
-sub projects {
-
-	if ( $param{'btnFunction'} eq 'Download in CSV format' ) {
-		my @header = ('Project #', 'Docket #', 'Company', 'Reference', 'Summary', 'Creation Date', 'Status', 'Price 1', 'Price 2', 'Price 2', 'Currency');
-		my @data;
-		my ( $total1, $total2, $total3 );
-		foreach my $Project ( @{$variable{'Projects'}} ) {
-			push @data, $Project->id(), $Project->docket(), $Project->Company()->name(), $Project->reference(), $Project->summary(), 
-				Date::Format::time2str( $config{'DateTimeFormat'}, Date::Parse::str2time( $Project->created_on() ) ), $Project->status(),
-				$Project->price1(), $Project->price2(), $Project->price3(), $Project->Currency()->name();
-			$total1 += $Project->price1();
-			$total2 += $Project->price2();
-			$total3 += $Project->price3();
-		} # end foreach Project
-		push @data, '','','','','','','Totals:',$total1,$total2,$total3,'';
-		misc::export_csv( $r, $log, \%variable, 'project_report.csv', \@header, \@data );
-	} # end if
-} # end sub projects
-
-sub _projects {
-} # end sub _projects
-
-sub quotes {
-
-	ssi::get_start_end_dates( $log, $dbh, \%variable,
-			@param{'ddmStartYear','ddmStartMonth','ddmStartDay','ddmEndYear','ddmEndMonth','ddmEndDay'} );
-
-	if ( $param{'btnFunction'} eq 'Download in CSV format' ) {
-		my @header = ( 'Quote ID', 'Created On', 'Prepared By', 'Company', 'Prepared For','Status', 'Total1', 'Total2', 'Total3', 'Currency' );
-		my @data;
-		my $total1;
-		my $total2;
-		my $total3;
-		foreach my $Quote ( @{$variable{'Quotes'}} ) {
-			push @data, $Quote->id(), Date::Format::time2str($config{'DateTimeFormat'}, Date::Parse::str2time( $Quote->created_on() ) ), $Quote->by_name(), $Quote->Company()->name(), $Quote->for_name(), $Quote->status(), $Quote->total1(), $Quote->total2(), $Quote->total3(), $Quote->Currency()->name();
-			$total1 += $Quote->total1();
-			$total2 += $Quote->total2();
-			$total3 += $Quote->total3();
-		} # end foreach
-		push @data, '','','','','','Totals:', $total1, $total2, $total3, '';
-		misc::export_csv( $r, $log, \%variable, 'quote_report.csv', \@header, \@data );
-	} # end if
-
-} # end sub quotes
-
-sub _quotes {
-} # end sub _quotes
-
 sub orders {
 	if ( $param{'btnFunction'} eq 'Download in CSV format' ) {
 		my @header = ('OrderID', 'Docket', 'Order Date', 'CSR', 'Company Name', 'Status', 'Total', 'Currency');
 
 		my @Orders = openprint::Order->find(
-				( $param{ddmCustomer} ? ( 'company_id'		=> $param{'ddmCustomer'} ) : () ),
-				'created_on >='  => sprintf('%.4d-%.2d-%.2d 00:00:00', @session{$r->uri().'?StartYear',$r->uri().'?StartMonth',$r->uri().'?StartDay'} ),
-				'created_on <='	=> sprintf('%.4d-%.2d-%.2d 23:59:59', @session{$r->uri().'?EndYear',$r->uri().'?EndMonth',$r->uri().'?EndDay'} ),
+				( $param{company_id} ? ( company_id		=> $param{company_id} ) : () ),
+				ssi::date_filter( $r->uri().'?created_on_end', 'created_on <=' ), 
+				ssi::date_filter( $r->uri().'?created_on_start', 'created_on >=' ),
 				( $param{'TotalStart'} ? ( 'value >='	   => $param{'TotalStart'} ) : () ),
 				( $param{'TotalEnd'} ? ( 'value <='		 => $param{'TotalEnd'} ) : () ),
 				( $param{ddmEmployee} ? ( 'salesrep_id'	   => $param{'ddmEmployee'} ) : () ),
@@ -91,7 +43,7 @@ sub orders {
 		misc::export_csv( $r, $log, \%variable, 'order_report.csv', \@header, \@data );
 	} else {
 		ssi::setup_date_select( $r->uri(), 'created_on_start', -30 );
-		ssi::save_params( $r->uri(), (
+		ssi::save_params( $r->uri(), ( 'company_id',
 					( map { 'created_on_start_'.$_ } ( 'year', 'month', 'day' ) ),
 					( map { 'created_on_end_'.$_ } ( 'year', 'month', 'day' ) ),
 		) );
@@ -338,6 +290,10 @@ sub order_details {
 	} elsif ( $param{'btnFunction'} eq 'Save' ) {
 		$Order->company_id( $param{company_id} );
 		$variable{error} .= $Order->save();
+		my $Company = new openprint::Company( $param{company_id} );
+		if ( ! $$Company{last_order_id} ) {
+			$variable{error} .= $Company->save({last_order_id=>$param{company_id}});
+		}
 	} # end if
 	$variable{Order} = $Order;
 	openprint::order::display_order( $order_id );

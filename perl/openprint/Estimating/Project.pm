@@ -935,23 +935,26 @@ $log->warn("unitprice: $$specs{txtUnitPrice1}");
 sub create_calc {
 	my ( $log, $dbh, $variable, $project_index, $service_index, $specs ) = @_;
 
-	return if ! $$specs{rdbProjectType};
+	# If you havn't selected a type yet... we should still continue
+	#return if ! $$specs{rdbProjectType};
 
-# Sanitize input
-	foreach my $qty_index ( 1 .. 3 ) {
-		$$specs{"quantity$qty_index"} =~ s/\D//g;
-	} # end foreach qty_index
-
-	my $Project = new openprint::Project( $$specs{ProjectIndex} );
-	$Project->currency_id( $openprint::session{Currency_id} ) if ! $Project->currency_id();
-	if ( ! $Project->id() ) {
-		$Project->save();
+	my $Project = openprint::Project->find_one( id=>$$specs{ProjectIndex} ) if $$specs{ProjectIndex};
+	if ( ! $Project ) {
+		$Project = new openprint::Project();
+		$Project->currency_id( $openprint::session{Currency_id} );
+		$$variable{error} .= $Project->save();
+		if ( $$variable{error} ) {
+			return;
+		}
 		$Project->add_to_log( @openprint::session{'company_id','user_id'}, 'Created' );
+	} else {
+		$Project->currency_id( $openprint::session{Currency_id} ) if ! $Project->currency_id();
 	} # end if
 
 	# Why are we doing this?
 	my %services = $Project->get_services( );
 	foreach my $qty_index ( 1 .. 3 ) {
+		$$specs{"quantity$qty_index"} = openprint::Project->transform( "quantity$qty_index", $$specs{"quantity$qty_index"} );
 # Should not do this
 		if ( $$specs{'quantity'.$qty_index} != $Project->quantity($qty_index) ) {
 if ( 0 ) {
@@ -966,7 +969,7 @@ if ( 0 ) {
 	} # end foreach qty_index
 
 	my $ProjectType = openprint::ProjectType->find_one( name => $$specs{rdbProjectType} );
-	if ( $Project->type_id() != $ProjectType->id() ) {
+	if ( $ProjectType and ( $Project->type_id() != $ProjectType->id() ) ) {
 		$Project->change_ProjectType( $ProjectType );
 		%services = $Project->get_services( );
 	} # end if ProjectType changed

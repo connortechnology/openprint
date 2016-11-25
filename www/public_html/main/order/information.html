@@ -93,10 +93,12 @@
 					) ?>
 				</div>
 				<? endif ( @{$$variable{Projects}} ) ?>
+<?if(openprint::Product->find_one())?>
 				<div id="Products">	
 					<?include(_product_list_edit.html)?>
 					<p class="buttons"><?echo(button('AddProduct', { onclick=>qq`popup_window('_add_product_popup.html', { order_id: $$variable{Order}{id} } );` } ); )?></p>
 				</div>
+<?endif(openprint::Product->find_one())?>
 		</div><!--Contents-->
 		<div id="Totals">
 			<ul>

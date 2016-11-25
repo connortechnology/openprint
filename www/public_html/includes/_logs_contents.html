@@ -25,6 +25,7 @@
 					date_filter( $variable{uri}.'?log_created_on_end', 'date_time <=' ),
 					date_filter( $variable{uri}.'?log_created_on_start', 'date_time >=' ),
 					order =>'date_time DESC',
+			);
 		}
 	}
 	return if ! @Logs;

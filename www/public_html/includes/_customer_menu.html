@@ -1,4 +1,4 @@
-<li id="MenuAccount" class="<? echo ( $$variable{uri} =~ /account/ ? 'on' : 'off' ) ?>" ><a href="#" onclick="toggleMenu($('MenuAccount'), 'off', 'on');return false;">Account</a>
+<li id="MenuAccount" class="<? echo ( $$variable{uri} =~ /^\/account/ ? 'on' : 'off' ) ?>" ><a href="#" onclick="toggleMenu($('MenuAccount'), 'off', 'on');return false;">Account</a>
 	<ul>
 <? if ( $session{user_id} ) ?>
 		<li><a href="/account/company_profile.html"> Company Profile</a></li>

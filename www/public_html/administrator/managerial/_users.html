@@ -1,8 +1,13 @@
 <? eval (
 	my $uri = '/administrator/managerial/users.html';
+	if ( $session{$uri.'?email'} ) {
+    my %filters = (
+		'email ilike' => '%'.$session{$uri.'?email'}.'%' ,
+	);
+    $$variable{Users} = [ openprint::User->find( %filters ) ];
+	} else {
     my %filters = (
 		( map { $session{join('?', $uri, $_)} ? ( $_ => $session{join('?', $uri, $_) } ) : () } ( 'company_id','type' ) ),
-		( $session{$uri.'?email'} ? ( 'email ilike' => '%'.$session{$uri.'?email'}.'%' ) : () ),
 		date_filter( $uri.'?created_on_end', 'created_on <=' ),
 		date_filter( $uri.'?created_on_start', 'created_on >=' ),
 		);
@@ -21,8 +26,10 @@
 	if ( $session{$uri.'?usergroup_id'} ) {
 		$filters{'usergroup_id any'} = $session{$uri.'?usergroup_id'};
 	} # end if
+	
 
     $$variable{Users} = [ openprint::User->find( %filters ) ];
+	} 
 ) ?>	
 <? if ( @{$$variable{Users}} ) ?>
 	<table class="List">

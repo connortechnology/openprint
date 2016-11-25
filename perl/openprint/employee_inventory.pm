@@ -2312,6 +2312,11 @@ sub _allocations {
 ( map { 'stock_age_start_' . $_ } ( 'year','month','day' ) ),
 ( map { 'stock_age_end_' . $_ } ( 'year','month','day' ) ),
 'Docket', ) );
+	if ( $param{action} eq 'Delete' ) {
+		foreach my $Allocation ( openprint::PaperAllocation->find( id=>$param{allocation_id} ) ) {
+			$variable{error} .= $Allocation->delete();
+		}
+	}
 } # end sub _allocations
 
 sub _deallocate_popup {
