@@ -581,7 +581,7 @@ sub get_price {
 	my $maxPockets = $Equipment->specification( 'Number of Pockets' );
 	my $neededPockets = $$specs{"txtPockets$qty_index"};
 	$price{RunTime} += $neededPockets * $Equipment->specification( 'Pocket Make Ready' );
-$openprint::log->debug("Needed Pockets: $neededPockets");
+$openprint::log->debug("Needed Pockets: $neededPockets") if DEBUG;
 # Calculate Full Passes
 	if ( $maxPockets and ( $neededPockets > $maxPockets ) ) {
 # Loaded here, so we don't do it in the loop many times

@@ -1,26 +1,7 @@
 <? eval (
-	if ( $param{QuoteID} ) {
-		$$variable{Quotes} = [ openprint::Quote->find( 
-			( sets::isin($session{user_type}, ['E','A'] ) ? () : ( company_id	=>	$session{company_id} ) ),
-			'id like'	=>	'%'.$param{QuoteID}.'%',
-			deleted=>[0,1],
-		) ];
-	} else {
-		$$variable{Quotes} = [ openprint::Quote->find( 
-			( sets::isin($session{user_type}, ['E','A'] ) ? (
-				( $session{'/main/quote/history.html?company_id'} ? ( company_id=>$session{'/main/quote/history.html?company_id'}) : () ) ) : ( company_id =>	$session{company_id} ) ),
-			( $session{'/main/quote/history.html?QuotedFor'} ? ( 'for_name ilike'			=> '%'.$session{'/main/quote/history.html?QuotedFor'}.'%' ) : () ),
-			date_filter( '/main/quote/history.html?created_on_end', 'created_on <=' ),
-			date_filter( '/main/quote/history.html?created_on_start', 'created_on >=' ),
-			( $session{'/main/quote/history.html?deleted'} eq '' ? () : ( deleted=>$session{'/main/quote/history.html?deleted'} ) ),
-			order				=> $openprint::Quote::fields{'created_on'}.' DESC',
-			limit				=>	 1000,
-			) ];
-	} # end if
-
 	if ( @{$$variable{Quotes}} >= 1000 ) {
 		@{$$variable{Quotes}} = splice( @{$$variable{Quotes}}, 0, 1000 );
-		$$variable{error} .= 'Too many results.  Only showing the first 1000';
+		$$variable{error} .= 'Too many results.  Only showing the first 1000. Use CSV Download to see all.';
 	} elsif ( @{$$variable{Quotes}} >= 20 ) {
 		my %Projects;
 		foreach my $QP ( openprint::QuotedProject->find( quote_id=>[ map { $$_{id} } @{$$variable{Quotes}} ] ) ) {
@@ -33,14 +14,14 @@
 	$$variable{Currency} = new openprint::Currency( $session{Currency_id} );
 ) ?>
 <?include(/includes/error_reporting.html)?>
-<? if ( @{$$variable{'Quotes'}} == 0 ) ?>
+<? if ( @{$$variable{Quotes}} == 0 ) ?>
 
-	<? 	if ( sets::isin( $session{'user_type'}, ['A','E'] ) and $param{'QuoteID'} ) ?>
+	<? 	if ( sets::isin( $session{user_type}, ['A','E'] ) and $param{QuoteID} ) ?>
 		<? eval (
-				@{$$variable{'Quotes'}} = openprint::Quote->find( 'id like' => '%'.$param{'QuoteID'}.'%' );
+				@{$$variable{Quotes}} = openprint::Quote->find( 'id like' => '%'.$param{QuoteID}.'%' );
 		) ?>
 		There were no quotes matching your search criteria for your currently selected Company.<br/>
-		<? if ( @{$$variable{'Quotes'}} > 0 ) ?>
+		<? if ( @{$$variable{Quotes}} > 0 ) ?>
 			The following are results belonging to other companies:<br/>
 			<table class="List">
 				<tr> 
@@ -55,21 +36,23 @@
 				<? echo (
 					my $html;
 					my $rowclass;
-					foreach my $Quote ( @{$$variable{'Quotes'}} ) {
+					foreach my $Quote ( @{$$variable{Quotes}} ) {
 				$html .= sprintf(q`
 <tr%1$s> 
 	<td class="quote_id"><a href="history_details.html?quote_id=%2$d&amp;btnFunction=SelectCompany&amp;ddmCompany=%3$d">%2$d</a></td>
 	<td class="CompanyName"><a href="history_details.html?quote_id=%2$d&amp;btnFunction=SelectCompany&amp;ddmCompany=%3$d">%4$s</a></td>
-	<td class="QuotedFor"><a href="history_details.html?quote_id=%2$d&amp;btnFunction=SelectCompany&amp;ddmCompany=%3$d">%5$s</a></td>
-	<td class="Date"><a href="history_details.html?quote_id=%2$d&amp;btnFunction=SelectCompany&amp;ddmCompany=%3$d">%6$s</a></td>
-	<td class="Price"><a href="history_details.html?quote_id=%2$d&amp;btnFunction=SelectCompany&amp;ddmCompany=%3$d">%7$s</a></td>
+	<td class="User"><a href="history_details.html?quote_id=%2$d&amp;btnFunction=SelectCompany&amp;ddmCompany=%3$d">%5$s</a></td>
+	<td class="QuotedFor"><a href="history_details.html?quote_id=%2$d&amp;btnFunction=SelectCompany&amp;ddmCompany=%3$d">%6$s</a></td>
+	<td class="Date"><a href="history_details.html?quote_id=%2$d&amp;btnFunction=SelectCompany&amp;ddmCompany=%3$d">%7$s</a></td>
 	<td class="Price"><a href="history_details.html?quote_id=%2$d&amp;btnFunction=SelectCompany&amp;ddmCompany=%3$d">%8$s</a></td>
 	<td class="Price"><a href="history_details.html?quote_id=%2$d&amp;btnFunction=SelectCompany&amp;ddmCompany=%3$d">%9$s</a></td>
+	<td class="Price"><a href="history_details.html?quote_id=%2$d&amp;btnFunction=SelectCompany&amp;ddmCompany=%3$d">%10$s</a></td>
 </tr>
 <tr%1$s>
 	<td>&nbsp;</td>
-	<td colspan="6">%10$s</td>
+	<td colspan="6">%11$s</td><td></td>
 </tr>`, $rowclass, $Quote->id(), $Quote->company_id(), html_escape( $Quote->Company()->name() ),
+					$Quote->User()->name(),
 					html_escape( $Quote->for_name() ), 
 					format_date( $Quote->created_on() ),
 					openprint::Currency::format( $Quote->Currency()->convert_from( $Quote->total1() ) ),
@@ -82,12 +65,12 @@
 					return $html;
 				) ?>
 			</table>
-		<? endif ( @{$$variable{'Quotes'}} > 0 ) ?>
+		<? endif ( @{$$variable{Quotes}} > 0 ) ?>
 		
-	<? else ( sets::isin( $session{'user_type'}, ['A','E'] ) and $param{'QuoteID'} ) ?>
+	<? else ( sets::isin( $session{user_type}, ['A','E'] ) and $param{QuoteID} ) ?>
 		There are no quotes which match your search criteria. 
-	<? endif ( sets::isin( $session{'user_type'}, ['A','E'] ) and $param{'QuoteID'} ) ?>
-<? else ( @{$$variable{'Quotes'}} == 0 ) ?>
+	<? endif ( sets::isin( $session{user_type}, ['A','E'] ) and $param{QuoteID} ) ?>
+<? else ( @{$$variable{Quotes}} == 0 ) ?>
 <form method="post" action="history.html" name="f2" id="f2">
 	<div class="unprintable">
 		Please click on a <b>Quote ID # </b>to view its details.<br/>
@@ -98,6 +81,7 @@
 		<tr> 
 			<th class="quote_id">Quote ID</th>
 			<th class="QuotedFor">Quoted For</th>
+			<th class="QuotedBy">Quoted By</th>
 			<th class="Date">Date</th>
 			<th class="Price">Total1</th>
 			<th class="Price">Total2</th>
@@ -107,22 +91,24 @@
 <? echo (
 	my $html;
 	my $rowclass;
-	foreach my $Quote ( @{$$variable{'Quotes'}} ) {
+	foreach my $Quote ( @{$$variable{Quotes}} ) {
 $html .= sprintf(q`
 <tr%1$s> 
 	<td class="quote_id"><a href="history_details.html?quote_id=%2$d">%2$d</a></td>
 	<td class="QuotedFor"><a href="history_details.html?quote_id=%2$d">%3$s</a></td>
-	<td class="Date"><a href="history_details.html?quote_id=%2$d">%4$s</a></td>
-	<td class="Price"><a href="history_details.html?quote_id=%2$d">%5$s</a></td>
+	<td class="User"><a href="history_details.html?quote_id=%2$d">%4$s</a></td>
+	<td class="Date"><a href="history_details.html?quote_id=%2$d">%5$s</a></td>
 	<td class="Price"><a href="history_details.html?quote_id=%2$d">%6$s</a></td>
 	<td class="Price"><a href="history_details.html?quote_id=%2$d">%7$s</a></td>
+	<td class="Price"><a href="history_details.html?quote_id=%2$d">%8$s</a></td>
 	<td class="checkbox"><input type="checkbox" name="chkDelete" value="%2$d" /></td>
 </tr>
 <tr%1$s>
 	<td>&nbsp;</td>
-	<td colspan="6">%8$s</td>
+	<td colspan="6">%9$s</td><td></td>
 </tr>`, $rowclass, $Quote->id(), 
 	html_escape( $Quote->for_name() ), 
+	$Quote->User()->name(),
 	format_date( $Quote->created_on() ),
 	openprint::Currency::format( $Quote->Currency()->convert_from( $Quote->total1() ) ),
 	openprint::Currency::format( $Quote->Currency()->convert_from( $Quote->total2() ) ),
@@ -137,5 +123,5 @@ $html .= sprintf(q`
 	<p class="buttons"><? echo ( button( 'Delete', { onclick=>q`f2.btnFunction.value='Delete';delete_confirm(f2);`, text=>'Delete' } ); ) ?></p>
 	<input type="hidden" name="btnFunction" />
 </form>
-<span class="Currency">All prices listed in <? echo ( $$variable{'Currency'}->name(); ) ?>.</span>
-<? endif ( @{$$variable{'Quotes'}} == 0 ) ?>
+<span class="Currency">All prices listed in <? echo ( $$variable{Currency}->name(); ) ?>.</span>
+<? endif ( @{$$variable{Quotes}} == 0 ) ?>

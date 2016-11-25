@@ -120,7 +120,7 @@ function calc_price( element ) {
 
 		if ( form.elements['wpsi'] ) {
 			if ( form.elements['costperfoot-'+index] ) {
-				form.elements['costperfoot-'+index].value = do_decimals( costcwt * form.elements['wpsi'].value * 144 / 100, 2);
+				form.elements['costperfoot-'+index].value = do_decimals( costcwt * form.elements['wpsi'].value * 144 / 100, 8);
 				form.elements['priceperfoot-'+index].value = do_decimals( pricecwt * form.elements['wpsi'].value * 144 / 100, 2);
 			} // end if
 			if ( form.elements['costperm-'+index] ) {

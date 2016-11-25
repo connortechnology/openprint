@@ -620,9 +620,8 @@ if ( ! sets::isin( 'payments', \@tables ) ) {
 		$dbh->do('ALTER TABLE payments add FOREIGN KEY (order_id) REFERENCES Orders (id)');
 	} # end if
 } # end if
-if ( ! sets::isin( 'orders', \@tables ) ) {
-	$dbh->do( misc::load_file( $log, q{../openprint/sql/Orders.sql}) ) or die $dbh->errstr();
-} else {
+
+	# Check orders structure, don't have to check for existence because we did that twice above
 	my $data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='orders'", 'column_name');
 	if ( ! $$data{supplier_id} ) {
 		$dbh->do('ALTER TABLE orders ADD supplier_id INTEGER');
@@ -824,7 +823,6 @@ if ( ! sets::isin( 'orders', \@tables ) ) {
 		$dbh->do('ALTER TABLE orders ALTER updated_on SET NOT NULL');
 	} # end if
 
-}
 if ( ! sets::isin( 'order_notifications', \@tables ) ) {
     $dbh->do( misc::load_file( $log, '../openprint/sql/Order_Notifications.sql' ) );
     die $dbh->errstr() if $dbh->errstr();
@@ -5111,6 +5109,12 @@ if ( ! $config{Timezone} ) {
 $dbh->do(q`insert into Configuration values ('Timezone', 'America/Toronto', 'text', 'Timezone','Miscellaneous Settings' );` );
 	
 } # end if
+
+if ( ! sets::isin( 'order_invoices', \@tables ) ) {
+	$dbh->do( misc::load_file( $log, q{../openprint/sql/Order_Invoices.sql}) );
+	die if $dbh->errstr();
+}
+
 if ( ! sets::isin( 'schedule', \@tables ) ) {
 	$dbh->do( misc::load_file( $log, q{../openprint/sql/Schedule.sql}) );
 	die if $dbh->errstr();

@@ -601,7 +601,11 @@ my $add_placeholder = ( ! ( $field =~ /\?/ ) ) ?  1 : 0;
 		return $field.'::text ' . $operator . ' ?', $value;
 	} elsif ( $operator eq 'null_or_<=' ) {
 		return '('.$field.$type.' IS NULL OR '.$field.$type.' <= ?)', $value;
+	} elsif ( $operator eq 'is null or <=' ) {
+		return '('.$field.$type.' IS NULL OR '.$field.$type.' <= ?)', $value;
 	} elsif ( $operator eq 'null_or_>=' ) {
+		return '('.$field.$type.' IS NULL OR '.$field.$type.' >= ?)', $value;
+	} elsif ( $operator eq 'is null or >=' ) {
 		return '('.$field.$type.' IS NULL OR '.$field.$type.' >= ?)', $value;
 	} elsif ( $operator eq 'null_or_>' or $operator eq 'is null or >' ) {
 		return '('.$field.$type.' IS NULL OR '.$field.$type.' > ?)', $value;
@@ -663,6 +667,60 @@ sub get_fields_values {
 	no strict 'refs';
 
 	foreach my $k ( @$param_keys ) {
+		if ( $k eq 'or' ) {
+			my $or_ref = ref $$search{or};
+
+			if ( $or_ref eq 'HASH' ) {
+				my @keys = keys %{$$search{or}};
+				if ( @keys ) {
+					my ( $where, $values, $used_fields ) = get_fields_values( $object_type, $$search{or},  \@keys );
+
+					push @where, '('.join(' OR ', @{$where} ).')';
+					push @values, @{$values};
+				} else {
+					$log->error("No keys in or");
+				}
+
+			} elsif ( $or_ref eq 'ARRAY' ) {
+				my %s = @{$$search{or}};
+				my ( $where, $values, $used_fields ) = get_fields_values( $object_type, \%s,  [ keys %s ] );
+				push @where, '('.join(' OR ', @{$where} ).')';
+				push @values, @{$values};
+				
+			} else {
+				$log->error("Deprecated use of or $or_ref for $$search{or}");
+			} # end if
+			push @used_fields, $k;
+			next;
+		} elsif ( $k eq 'and' ) {
+			my $and_ref = ref $$search{and};
+			if ( $and_ref eq 'HASH' ) {
+				my @keys = keys %{$$search{and}};
+				if ( @keys ) {
+				my ( $where, $values, $used_fields ) = get_fields_values( $object_type, $$search{and},  \@keys );
+
+				push @where, '('.join(' AND ', @{$where} ).')';
+				push @values, @{$values};
+				} else {
+					$log->error("No keys in and");
+				} 
+			} elsif ( $and_ref eq 'ARRAY' and @{$$search{and}} ) {
+				my @sub_where;
+
+				for( my $p_index = 0; $p_index < @{$$search{and}}; $p_index += 2 ) {
+					my %p = ( $$search{and}[$p_index], $$search{and}[$p_index+1] );
+
+					my ( $where, $values, $used_fields ) = get_fields_values( $object_type, \%p, [ keys %p ] );
+					push @sub_where, @{$where};
+					push @values, @{$values};
+				}
+				push @where, '('.join(' AND ', @sub_where ).')';
+			} else {
+				$openprint::log->error("incorrect ref of and $and_ref");
+			}
+			push @used_fields, $k;
+			next;
+		}
 		my ( $field, $type, $function ) = $k =~ /^([_\+\w\-]+)(::\w+\[?\]?)?[\s_]*(.*)?$/;
 		$type = '' if ! defined $type;
 $log->debug("$object_type param $field($type) func($function) " . ( ref $$search{$k} eq 'ARRAY' ? join(',',@{$$search{$k}}) : $$search{$k} ) ) if DEBUG_ALL;
@@ -771,7 +829,7 @@ sub find {
 	
 	my @where;
 	my @values;
-	if ( $$params{custom} ) {
+	if ( exists $$params{custom} ) {
 		push @where, '(' . (shift @{$$params{custom}}) . ')';
 		push @values, @{$$params{custom}};
 		delete $$params{custom};
@@ -785,7 +843,7 @@ sub find {
 		$local_dbh = $openprint::dbh;
 	} # end if
 
-	my @param_keys = sets::exclude( [ 'order','limit','offset','or','and' ], [ keys %$params ] );
+	my @param_keys = sets::exclude( [ 'order','limit','offset'], [ keys %$params ] );
 
 	my $cache_field = ${$object_type.'::cache_field'} if $do_cache;
 	if ( $cache_field and $$params{$cache_field} and ( 1 == @param_keys ) ) {
@@ -794,7 +852,8 @@ $log->debug("have cache field $cache_field for $$params{$cache_field}") if DEBUG
 		if ( exists $name_cache{$object_type} and exists $name_cache{$object_type}{$$params{$cache_field}} ) {
 $log->debug("There is an object in the cache for $$params{$cache_field}") if DEBUG_ALL;
 			if ( $name_cache{$object_type}{$$params{$cache_field}} ) {
-$log->debug("returning " . $name_cache{$object_type}{$$params{$cache_field}} . " for $object_type $cache_field $$params{$cache_field}") if DEBUG_ALL;
+	my ( $caller, undef, $line ) = caller;
+$log->debug("returning " . $name_cache{$object_type}{$$params{$cache_field}} . " to $caller:$line for $object_type $cache_field $$params{$cache_field}") if DEBUG_ALL;
 				return $name_cache{$object_type}{$$params{$cache_field}}; 
 			} else {
 				# Shouldn't have to test for cached, because the hash will not get populated.
@@ -855,45 +914,7 @@ $openprint::log->error("Wasting time looking for objects in find $k $search{$k}"
 		} # end foreach
 	} # end if
 
-	if ( $$params{or} ) {
-		my $or_ref = ref $$params{or};
 
-		if ( $or_ref eq 'HASH' ) {
-			my ( $where, $values, $used_fields ) = get_fields_values( $object_type, $$params{or},  [ keys %{$$params{or}} ] );
-
-			if ( $$fields{deleted} and ( ! sets::isin( 'deleted', $used_fields ) ) and ( ! sets::isin( 'deleted', \@used_fields ) ) ) {
-				push @where, 'deleted=?';
-				push @values, 0;
-			} # end if
-
-			push @where, '('.join(' OR ', @{$where} ).')';
-			push @values, @{$values};
-
-		} elsif ( $or_ref eq 'ARRAY' ) {
-			my %s = @{$$params{or}};
-			my ( $where, $values, $used_fields ) = get_fields_values( $object_type, \%s,  [ keys %s ] );
-			if ( $$fields{deleted} and ( ! sets::isin( 'deleted', $used_fields ) ) and ( ! sets::isin( 'deleted', \@used_fields ) ) ) {
-				push @where, 'deleted=?';
-				push @values, 0;
-			} # end if
-			push @where, '('.join(' OR ', @{$where} ).')';
-			push @values, @{$values};
-		} else {
-$log->error("Deprecated use of or $or_ref for $$params{or}");
-		} # end if
-	} 
-
-	if ( $$params{and} ) {
-		my $and_ref = ref $$params{and};
-		if ( $and_ref eq 'HASH' ) {
-			my ( $where, $values, $used_fields ) = get_fields_values( $object_type, $$params{and},  [ keys %{$$params{and}} ] );
-
-			push @where, '('.join(' AND ', @{$where} ).')';
-			push @values, @{$values};
-		} else {
-			$openprint::log->error("incorrect ref of and $and_ref");
-		}
-	}
 
 #optimsise this
 	if ( $$fields{deleted} and ! sets::isin( 'deleted', \@used_fields ) ) {
@@ -972,6 +993,8 @@ sub find_one {
 	} # end if
 	$$params{limit}=1;
 	my @Results = $object_type->find(%$params);
+	my ( $caller, undef, $line ) = caller;
+$log->debug("returning to $caller:$line from find_one") if DEBUG_ALL;
 	return $Results[0] if @Results;
 } # end sub find_one
 
