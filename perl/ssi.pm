@@ -938,12 +938,12 @@ sub input {
 		$options{step} = 'any' if ! exists $options{step};
 		$options{oninput} = 'floatize_calculator(this);'.$options{oninput};
 	} elsif ( $options{type} eq 'ip' ) {
-		$options{pattern} = '[0-9\/\.\:a-fA-F]*' if ! $options{pattern};
+		$options{pattern} = '[0-9\/\.:a-fA-F]*' if ! $options{pattern};
 		$options{type} = 'text';
 		$options{step} = 'any' if ! exists $options{step};
 		$options{oninput} = q`this.value=this.value.replace(/[^\.\d%\/\*a-fA-F:]/g,'');`.$options{oninput};
 	} elsif ( $options{type} eq 'mac' ) {
-		$options{pattern} = '[0-9\-\:a-fA-F]*' if ! $options{pattern};
+		$options{pattern} = '[0-9\-:a-fA-F]*' if ! $options{pattern};
 		$options{type} = 'text';
 		$options{step} = 'any' if ! exists $options{step};
 		$options{oninput} = q`this.value=this.value.replace(/[^\-\d%\/\*a-fA-F:]/g,'');`.$options{oninput};

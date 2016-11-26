@@ -260,6 +260,9 @@ sub Notifications {
 	return @{$_[0]{Notifications}};
 } # end sub Notifications
 sub Interfaces {
+	if ( @_ > 1 ) {
+		$_[0]{Interfaces} = $_[1];
+	}
 	if ( ! $_[0]{Interfaces} ) {
 		@{$_[0]{Interfaces}} = openprint::Host_Interface->find(
 				host_id	=>	$_[0]{id},

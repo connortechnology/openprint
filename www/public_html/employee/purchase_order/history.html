@@ -64,16 +64,16 @@
 				<input type="text" onkeyup="filterDDM(this, this.form.supplier_id);" class="filter" />
 				<select name="supplier_id" id="supplier_id" onchange="if ( get_ddm_value($('supplier_id')) ) { new Ajax.Updater( 'item_id', '_item_filter.html', { parameters: { supplier_id: $F('supplier_id') } } ); $('item_filter').show(); } else { $('item_filter').hide(); };page_load('Results',$('f1'));">
 					<option value="">All</option>
-					<? echo ( make_drop_down( [ map { $_->id(), $_->name() } openprint::Company->find(
-								'order'=>'lower(name)', 
-								( $session{'/employee/purchase_order/history.html?vendor_category_id'} ? ( 
-								'category_id'	=> $session{'/employee/purchase_order/history.html?vendor_category_id'} ) : () ),
-								'supplier'=>'Y') ], $session{'/employee/purchase_order/history.html?supplier_id'} ); ) ?>
+					<? echo ( make_drop_down( openprint::Company->dropdown(
+								order=>'lower(name)', 
+								( $session{$r->uri().'?vendor_category_id'} ? ( 
+								category_id	=> $session{$r->uri().'?vendor_category_id'} ) : () ),
+								supplier=>'Y'), $session{$r->uri().'?supplier_id'} ); ) ?>
 				</select>
 			</li>
 			<li id="item_filter" <? echo ( $session{'/employee/purchase_order/history.html?supplier_id'} ? '' : 'style="display:none;"' ) ?>><label>Item</label>
 				<select name="item_id" id="item_id" onchange="page_load('Results',$('f1'));">
-					<? echo ( include('_item_filter.html'); ) ?>
+					<?include('_item_filter.html')?>
 				</select>
 			</li>
 			<li>
@@ -97,14 +97,14 @@
 			<li><label>Department</label>
 				<select name="department_id" onchange="page_load('Results',$('f1'));">
 					<option value="">All</option>
-					<? echo ( make_drop_down( openprint::PurchaseOrder_Department->dropdown('order'=>'lower(name)'), $session{'/employee/purchase_order/history.html?department_id'} ); ) ?>
+					<? echo ( make_drop_down( openprint::PurchaseOrder_Department->dropdown( order=>'lower(name)'), $session{'/employee/purchase_order/history.html?department_id'} ); ) ?>
 				</select>
 			</li>
 			<li>
 				<label>Types</label>
 				<? echo (
 					my $html;
-					foreach my $Type ( openprint::PurchaseOrder_ContentType->find('order'=>'name') ) {
+					foreach my $Type ( openprint::PurchaseOrder_ContentType->find( order=>'name') ) {
 						$html .= sprintf(q`<input type="checkbox" id="types%1$s" name="types" value="%1$s" %3$s onclick="page_load('Results',this.form);" /><label class="radio" for="types%1$s">%2$s</label>`, $Type->id(), $Type->name(), checked( sets::isin( $Type->id(), [ split(',', $session{'/employee/purchase_order/history.html?types'} ) ] ) or ! exists $session{'/employee/purchase_order/history.html?types'} ) );
 					} # end foreach Type
 					$html .= sprintf(q`<input type="checkbox" id="types" name="types" value="%1$s" %3$s onclick="page_load('Results',this.form);" /><label class="radio" for="types">%2$s</label>`, 
