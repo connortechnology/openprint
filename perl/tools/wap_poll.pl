@@ -91,6 +91,10 @@ foreach my $Host ( @Hosts ) {
 		if ( ! $HI->ip() ) {
 			next;
 		} # end if
+		if ( ! $$HI{mac} ) {
+			$log->error("NO mac in HI for $$Host{id} $$Host{hostname}");
+			next;
+		}
 		$log->debug("Pinging $$Host{hostname} at $$HI{ip}");
 		my @ping = $p->ping($HI->ip());
 		my $ping = $ping[0];
@@ -135,8 +139,15 @@ foreach my $Host ( @Hosts ) {
 
 				$response = $browser->post( $initial_url, $args );
 				$headers = $response->headers();
+				if ( ! $$headers{location} ) {
+					$log->error("Got no location for $$Host{name} at $$HI{ip} from $initial_url");
+				}
 				$url = $protocol.'://'.$$HI{ip}.$$headers{location}.'/admin/status/overview?status=1';
 				$response = $browser->get( $url );
+				if ( ! $response->is_success ) {
+					$log->error("Failed talkingt o $$Host{name} at $$HI{ip} " . $response->status_line() . ' ' . $response->content() );
+					next;
+				}
 
 				my $json = decode_json( $response->content() );
 				if ( $$json{wifinets} and @{$$json{wifinets}} ) {
