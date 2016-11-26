@@ -548,7 +548,7 @@ sub send_sales_order {
 
 	$order{ReplacementText} = ssi::include( '/email_content/sales_order_for_admin.html', \%order );
 	$_ = MIME::QuotedPrint::encode_qp( Encode::encode('utf-8', ssi::variable_substitution( \$email_template, \%order ) ) );
-	$Email->add_pdf_attachment_from_html ("Order$$self{id}",  ssi::variable_substitution( \$email_template, \%order ) );
+	$Email->add_pdf_attachment_from_html("Order$$self{id}",  ssi::variable_substitution( \$email_template, \%order ) );
 
 	my @project_dockets = ();
 
@@ -563,7 +563,7 @@ sub send_sales_order {
 					);
 			
 			openprint::print_project::summary( $openprint::r, $log, $dbh, \%data, $Project->id() );
-			$Email->add_html_attachmentl( "ProjectDocket$$Project{id}", ssi::variable_substitution( \$docket_content, \%data ) );
+			$Email->add_html_attachment( "ProjectDocket$$Project{id}", ssi::variable_substitution( \$docket_content, \%data ) );
 		} # for each
 	} # end if
 
