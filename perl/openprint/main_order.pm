@@ -366,7 +366,7 @@ sub confirmation {
 
 			$Order->update_status();
 	# send out email notifications
-			$Order->send_sales_order( ) if $param{btnFunction} eq 'Complete';
+			$variable{information} .= $Order->send_sales_order( ) if $param{btnFunction} eq 'Complete';
 
 	# *************************** WE are going to manually invoice for now *******************
 			if ( $variable{Downpayment} > 0 ) {

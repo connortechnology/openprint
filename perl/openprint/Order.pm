@@ -495,6 +495,7 @@ sub send_sales_order {
 		Order => $self,
 	);
 	my $Email = new openprint::Email();
+	my $results;
 
 	# When an order is made,the Order currency will be the current session Currency.	
 	# All resends should stay in the currency that the order was created in.
@@ -504,17 +505,14 @@ sub send_sales_order {
 	my $email_template = ssi::slurp_content( '/email_template.html' );
 
 	$order{ReplacementText} = ssi::include('/email_content/sales_order_body.html', \%order );
-	my @body = ('', MIME::QuotedPrint::encode_qp( Encode::encode( 'utf-8', ssi::variable_substitution( \$email_template, \%order ) ) ), 'text/html', 'quoted-printable');
 	$Email->html_body( ssi::variable_substitution( \$email_template, \%order ) );
 
 	$order{ReplacementText} = ssi::include( '/email_content/sales_order.html', \%order );
-	$Email->add_pdf_attachment_from_html ("Order$$self{id}",  ssi::variable_substitution( \$email_template, \%order ) );
-
+	$Email->add_pdf_attachment_from_html("Order$$self{id}",  ssi::variable_substitution( \$email_template, \%order ) );
 
 	my $sales_person_email;
 	if ( $self->salesrep_id() ) {
-		my $CSR = new openprint::User( $self->salesrep_id() );
-		$sales_person_email = sprintf('"%s %s" <%s>', $CSR->get('firstname','lastname','email')),
+		$sales_person_email = new openprint::User( $self->salesrep_id() );
 	}
 	if ( ! $sales_person_email ) {
 		$sales_person_email = $config{OrderingEmail};
@@ -527,10 +525,11 @@ sub send_sales_order {
 		my $email_results .= $Email->send(
 				FROM	=> $sales_person_email,
 				TO		=> sprintf('"%s %s" <%s>', $self->get('firstname','lastname','email')),
-#BCC	 =>	'iconnor@point-one.com',
+BCC	 =>	'iconnor@point-one.com',
 				SUBJECT => "Order $$self{id} Docket $$self{docket}",
 				);
 		$self->add_log( 'Sales Order:'.$email_results.'<br/>' );
+		$results .= 'Sales order sent to ' . $email_results . '<br/>';
 	}
 
 	$Email = new openprint::Email();
@@ -544,9 +543,8 @@ sub send_sales_order {
 
 	my @project_dockets = ();
 
-	$log->debug("***************** ADDING PROJECT DOCKET *************************");
+	# Add a project summary and docket sheet for each project in the order
 	my $docket_content = ssi::slurp_content( '/email_content/order_docket_sheet.html' );
-	# Add a project summary for each project in the order
 	my $summary_content = ssi::slurp_content( '/email_content/project_summary.html' );
 	foreach my $Project ($self->Projects()) {
 		my %data = (
@@ -561,7 +559,7 @@ sub send_sales_order {
 		} # end if docket_content
 		if ( $summary_content ) {
 			$data{ReplacementText} = ssi::variable_substitution( \$summary_content, \%data );
-			$Email->add_pdf_attachment_from_html ( "ProjectSummary$$Project{id}", ssi::variable_substitution( \$email_template, \%data ) );
+			$Email->add_pdf_attachment_from_html( "ProjectSummary$$Project{id}", ssi::variable_substitution( \$email_template, \%data ) );
 		} # end if
 	} # for each Project
 
@@ -584,11 +582,13 @@ sub send_sales_order {
 				FROM	=> $config{OrderingEmail},
 				'Reply-to'	=> $$self{email},
 				TO		=> join(',',@admin_emails),
-				#TO	 =>	'iconnor@point-one.com',
+				BCC	 =>	'iconnor@point-one.com',
 				SUBJECT => "Order $$self{id}",
 				);
 		$self->add_log( 'Admin Sales Order:'.$email_results );
+		$results .= 'Admin Sales Order sent to '. $email_results.'<br/>';
 	} # end if
+	return $results;
 } # end sub send_sales_order
 
 sub owing {
