@@ -7,7 +7,7 @@ create table log_actions (
 	description TEXT,
 	PRIMARY KEY (id)
 );
-alter table log_actions add constraint name_key UNIQUE (name);
+alter table log_actions add constraint log_actions_name_key UNIQUE (name);
 
 CREATE TABLE Logs (
 	id SERIAL,
