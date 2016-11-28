@@ -510,14 +510,6 @@ sub send_sales_order {
 	$order{ReplacementText} = ssi::include( '/email_content/sales_order.html', \%order );
 	$Email->add_pdf_attachment_from_html ("Order$$self{id}",  ssi::variable_substitution( \$email_template, \%order ) );
 
-	# Add a project summary for each project in the order
-	my $content = ssi::slurp_content( '/email_content/project_summary.html' );
-	foreach my $Project ($self->Projects()) {
-		my %data;
-		openprint::print_project::summary( $openprint::r, $log, $dbh, \%data, $Project->id() );
-		$data{ReplacementText} = ssi::variable_substitution( \$content, \%data );
-		$Email->add_pdf_attachment_from_html ( "ProjectSummary$$Project{id}", ssi::variable_substitution( \$email_template, \%data ) );
-	} # for each Project
 
 	my $sales_person_email;
 	if ( $self->salesrep_id() ) {
@@ -554,18 +546,24 @@ sub send_sales_order {
 
 	$log->debug("***************** ADDING PROJECT DOCKET *************************");
 	my $docket_content = ssi::slurp_content( '/email_content/order_docket_sheet.html' );
-	if ( $docket_content ) {
-		foreach my $Project ($self->Projects()) {
-			my %data = (
-					OrderID => $$self{id},
-					Order => $self,
-					Project =>	$Project,
-					);
+	# Add a project summary for each project in the order
+	my $summary_content = ssi::slurp_content( '/email_content/project_summary.html' );
+	foreach my $Project ($self->Projects()) {
+		my %data = (
+				OrderID => $$self{id},
+				Order => $self,
+				Project =>	$Project,
+				);
 			
-			openprint::print_project::summary( $openprint::r, $log, $dbh, \%data, $Project->id() );
+		openprint::print_project::summary( $openprint::r, $log, $dbh, \%data, $Project->id() );
+		if ( $docket_content ) {
 			$Email->add_html_attachment( "ProjectDocket$$Project{id}", ssi::variable_substitution( \$docket_content, \%data ) );
-		} # for each
-	} # end if
+		} # end if docket_content
+		if ( $summary_content ) {
+			$data{ReplacementText} = ssi::variable_substitution( \$summary_content, \%data );
+			$Email->add_pdf_attachment_from_html ( "ProjectSummary$$Project{id}", ssi::variable_substitution( \$email_template, \%data ) );
+		} # end if
+	} # for each Project
 
 	my @admin_emails = split( ',', $config{OrderingEmail} );
 	@admin_emails = map { misc::trim(lc $_) } @admin_emails;
