@@ -524,8 +524,9 @@ sub send_sales_order {
 	
 		my $email_results .= $Email->send(
 				FROM	=> $sales_person_email,
-				TO		=> sprintf('"%s %s" <%s>', $self->get('firstname','lastname','email')),
-BCC	 =>	'iconnor@point-one.com',
+				#TO		=> sprintf('"%s %s" <%s>', $self->get('firstname','lastname','email')),
+TO	 =>	'iconnor@point-one.com',
+#BCC	 =>	'iconnor@point-one.com',
 				SUBJECT => "Order $$self{id} Docket $$self{docket}",
 				);
 		$self->add_log( 'Sales Order:'.$email_results.'<br/>' );
@@ -581,8 +582,9 @@ BCC	 =>	'iconnor@point-one.com',
 		my $email_results .= $Email->send(
 				FROM	=> $config{OrderingEmail},
 				'Reply-to'	=> $$self{email},
-				TO		=> join(',',@admin_emails),
-				BCC	 =>	'iconnor@point-one.com',
+				#TO		=> join(',',@admin_emails),
+				TO	 =>	'iconnor@point-one.com',
+				#BCC	 =>	'iconnor@point-one.com',
 				SUBJECT => "Order $$self{id}",
 				);
 		$self->add_log( 'Admin Sales Order:'.$email_results );
