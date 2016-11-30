@@ -132,11 +132,13 @@ $log->error( $variable{error} );
 					$dbh->rollback();
 					last;
 				} # end if
+
+				my @Pricelists = openprint::Pricelist->find();
 				
 				if ( $Service and ( $service_cost or $service_markup or $service_units ) ) {
 					foreach my $e_id ( misc::trim( split(',', $equipment ) ) ) {
 						if ( my $Equipment = openprint::Equipment->find_one('strid'=>$e_id) ) {
-							foreach my $Pricelist ( openprint::Pricelist->find() ) {
+							foreach my $Pricelist ( @Pricelists ) {
 								my @Prices = openprint::ServicePrice->find('service_id'=>$services{$service}, 'equipment_id'=>$Equipment->id(), 'pricelist_id'=>$Pricelist->id() );
 								if ( ! @Prices ) {
 									my $Price = new openprint::ServicePrice();
@@ -240,8 +242,7 @@ $log->error( $variable{error} );
 
 			} # end while
 			sql::end_transaction( $dbh, $ac );
-				# Add record to audit log - action "Import Colour Definitions".
-			openprint::logs::insertLogRecord('56', '');
+			(new openprint::Log())->save({action=>'Import Colour Definitions'});
 		} else {
 			$log->warn( "No file given to upload." );
 		} # end if
@@ -250,8 +251,7 @@ $log->error( $variable{error} );
 		$_ = "SELECT PMSID, (SELECT name FROM Services WHERE id=service_id), (SELECT name FROM Materials WHERE id=Material_ID), washups, strColourName FROM Inks";
 		my @data = sql::execute( $log, $dbh, $_ );
 		misc::export_csv( $r, $log, \%variable, 'inks.csv', \@header, \@data );
-		# Add record to audit log - action "Export Colour Definitions".
-		logs::insertLogRecord('57',);
+		(new openprint::Log())->save({action=>'Export Colour Definitions'});
 	} # end if
 
 	_inks();
