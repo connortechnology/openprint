@@ -248,7 +248,7 @@ $log->error( $variable{error} );
 		} # end if
 	} elsif ( $param{btnFunction} eq 'Export Colours' ) {
 		my @header = ( 'PMSId', 'Service ID', 'Material ID', 'Colour Name' );
-		$_ = "SELECT PMSID, (SELECT name FROM Services WHERE id=service_id), (SELECT name FROM Materials WHERE id=Material_ID), washups, strColourName FROM Inks";
+		$_ = "SELECT PMSID, (SELECT name FROM Services WHERE id=service_id), (SELECT name FROM Materials WHERE id=Material_ID), name, washups FROM Inks";
 		my @data = sql::execute( $log, $dbh, $_ );
 		misc::export_csv( $r, $log, \%variable, 'inks.csv', \@header, \@data );
 		(new openprint::Log())->save({action=>'Export Colour Definitions'});
