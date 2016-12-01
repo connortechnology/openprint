@@ -247,10 +247,10 @@ $log->error( $variable{error} );
 			$log->warn( "No file given to upload." );
 		} # end if
 	} elsif ( $param{btnFunction} eq 'Export Colours' ) {
-		my @header = ( 'PMSId', 'Service ID', 'Material ID', 'Mix Service Id', 'Colour Name' );
+		my @header = ( 'PMSId', 'Service ID', 'Material ID', 'Mix Service Id', 'Colour Name', 'Washups', 'Grades' );
 		my @data;
 		foreach my $Ink ( openprint::Ink->find() ) {
-			push @data, $Ink->pmsid(), $Ink->Service()->name(), $Ink->Material()->name(), $Ink->Mix_Service()->name(), $Ink->name(), $Ink->washups(), join(',',@{$Ink->grades()});
+			push @data, $Ink->pmsid(), $Ink->Service()->name(), $Ink->Material()->name(), $Ink->Mix_Service()->name(), $Ink->name(), $Ink->washups(), $Ink->grades() ? join(',',@{$Ink->grades()}) : '';
 		}
 		misc::export_csv( $r, $log, \%variable, 'inks.csv', \@header, \@data );
 		(new openprint::Log())->save({action=>'Export Colour Definitions'});
