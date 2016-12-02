@@ -512,7 +512,8 @@ sub send_sales_order {
 
 	my $sales_person_email;
 	if ( $self->salesrep_id() ) {
-		$sales_person_email = new openprint::User( $self->salesrep_id() );
+		my $CSR = new openprint::User( $self->salesrep_id() );
+		$sales_person_email = sprintf('"%s %s" <%s>', $CSR->get('firstname','lastname','email'));
 	}
 	if ( ! $sales_person_email ) {
 		$sales_person_email = $config{OrderingEmail};
