@@ -216,41 +216,50 @@ sub calc {
 	my $remaining_pages = $$specs{txtTotalPageQuantity};
 	my %override_pages;
 	foreach my $group_id ( @Groups ) {
-		if ( exists $$specs{'OverrideGroupPageQuantity'.$group_id} ) {
-			if ( $$specs{'OverrideGroupPageQuantity'.$group_id} eq 'Y' ) {
-				$override_pages{$group_id} = $$specs{'GroupPageQuantity'.$group_id};
-				$log->debug("Setting override pages for group $group_id to " . $$specs{'GroupPageQuantity'.$group_id} );
+		if ( exists $$specs{'OverrideGroupPageQuantity'.$group_id} and $$specs{'OverrideGroupPageQuantity'.$group_id} eq 'Y' ) {
+			if ( ! $$specs{'GroupPageQuantity'.$group_id} ) {
+# We still set override so that it doesn't auto-fill	
+				$$specs{alert} .= 'You have override the # of pages in group ' . $$specs{"txtSignatureType$group_id"} . ' but not entered the # of pages.<br/>';
+				$$specs{Status} = 'uncalculated';
+				$$specs{'GroupPageQuantity'.$group_id.'_container'} = { addClassName=>'error' };
+			} else {
+				$$specs{'GroupPageQuantity'.$group_id.'_container'} = { removeClassName=>'error' };
+			}
+			$override_pages{$group_id} = $$specs{'GroupPageQuantity'.$group_id};
+			$log->debug("Setting override pages for group $group_id to " . $$specs{'GroupPageQuantity'.$group_id} );
+			if ( $$specs{'txtSignatureType'.$group_id} eq 'PerfReplyCard' ) {
+				$override_pages{$group_id} = 2;
+				if ( $$specs{'txtServiceDescription'.$group_id} eq 'Interior Pages' ) {
+					$$specs{'txtServiceDescription'.$group_id} = 'Perforated Reply Card';
+				} # end if
+			} else {
+				if ( ! $group_id ) {
+					$log->warn("NO GROUP ID $group_id");
+				}
+				my @g_signatures = $Project->signatures({Group=>$group_id});
+				if ( ! @g_signatures ) {
+
+# calc shouldn't really alter the project.
+					$Project->add_signature( undef, undef, {
+							Group=>$group_id,
+							( $group_id == 1 ? ( 'txtSignatureType'=>'Cover Pages', 'txtServiceDescription'=>'Cover' ) : () ),
+							( $group_id == 2 ? ( 'txtSignatureType'=>'Interior Pages', 'txtServiceDescription'=>'Interior Pages' ) : () ),
+							( $group_id == 3 ? ( 'txtSignatureType'=>'Gate Folded Pages', 'txtServiceDescription'=>'Gate Folded Pages' ) : () ),
+							} );
+				} # end if
+#foreach my $sig_id ( $Project->signatures({'Group'=>$group_id}) ) {
+#my $sig_specs = openprint::service::get_specs_ref( $Project, $sig_id );
+#$override_pages{$group_id} = $$sig_specs{GroupPageQuantity} if $$sig_specs{OverrideGroupPageQuantity} eq 'Y';
+#last if $override_pages{$group_id};
+#} # end foreach signature
 			} # end if
-		} elsif ( $$specs{'txtSignatureType'.$group_id} eq 'PerfReplyCard' ) {
-			$override_pages{$group_id} = 2;
-			if ( $$specs{'txtServiceDescription'.$group_id} eq 'Interior Pages' ) {
-				$$specs{'txtServiceDescription'.$group_id} = 'Perforated Reply Card';
+			$remaining_pages -= $override_pages{$group_id};
+			if ( $$specs{"PageQuantity-$group_id"} and ( $$specs{"PageQuantity-$group_id"} > $$specs{'GroupPageQuantity'.$group_id} ) ) {
+				$$specs{alert} .= "You have specified to print more pages per signature than are required for group $group_id.<br/>";
 			} # end if
 		} else {
-			if ( ! $group_id ) {
-				$log->warn("NO GROUP ID $group_id");
-			}
-			my @g_signatures = $Project->signatures({Group=>$group_id});
-			if ( ! @g_signatures ) {
-
-				# calc shouldn't really alter the project.
-				$Project->add_signature( undef, undef, {
-						Group=>$group_id,
-						( $group_id == 1 ? ( 'txtSignatureType'=>'Cover Pages', 'txtServiceDescription'=>'Cover' ) : () ),
-						( $group_id == 2 ? ( 'txtSignatureType'=>'Interior Pages', 'txtServiceDescription'=>'Interior Pages' ) : () ),
-						( $group_id == 3 ? ( 'txtSignatureType'=>'Gate Folded Pages', 'txtServiceDescription'=>'Gate Folded Pages' ) : () ),
-						} );
-			} # end if
-			#foreach my $sig_id ( $Project->signatures({'Group'=>$group_id}) ) {
-				#my $sig_specs = openprint::service::get_specs_ref( $Project, $sig_id );
-				#$override_pages{$group_id} = $$sig_specs{GroupPageQuantity} if $$sig_specs{OverrideGroupPageQuantity} eq 'Y';
-				#last if $override_pages{$group_id};
-			#} # end foreach signature
-		} # end if
-		$remaining_pages -= $override_pages{$group_id};
-		if ( $$specs{"PageQuantity-$group_id"} and ( $$specs{"PageQuantity-$group_id"} > $$specs{'GroupPageQuantity'.$group_id} ) ) {
-			$$specs{alert} .= "You have specified to print more pages per signature than are required for group $group_id.<br/>";
-		} # end if
+			$$specs{'GroupPageQuantity'.$group_id.'_container'} = { removeClassName=>'error' };
+		} # end if override
 	} # end foreach group
 
 	# if there is a cover, then force it to be non-zero
@@ -277,8 +286,10 @@ $openprint::log->warn("FIXM E");
 		$$specs{Status} = 'uncalculated';
 	} # end if
 
-	if ( $$specs{remaining_pages} ) {
-		$$specs{alert} .= 'There are ' . $$specs{remaining_pages} . ' unspecified pages.<br/>';
+	my @overrides = keys %override_pages;
+#$openprint::log->debug("Overrides: @overrides . " . @overrides . ' Groups: ' . @Groups );
+	if ( $remaining_pages and ( @overrides >= @Groups ) ) {
+		$$specs{alert} .= 'There are ' . $remaining_pages . ' unspecified pages.<br/>';
 		$$specs{Status} = 'uncalculated';
 	} # end if
 
@@ -357,8 +368,6 @@ $openprint::log->warn("FIXM E");
 		$$specs{'GroupPageQuantity'.$max_group} = '' if $$specs{'GroupPageQuantity'.$max_group} < 0;
 	} # end if
 	$$specs{groups} = join(',', @Groups );
-
-
 
 	return $$specs{Status};
 } # end sub calc

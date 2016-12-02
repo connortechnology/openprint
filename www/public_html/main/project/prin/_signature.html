@@ -1,14 +1,14 @@
 <? if ( $$variable{Signature} ) ?>
-<fieldset id="SignatureGroup<?Signature?>" <? echo ( ( $$variable{'Signature'} == 1 and ( $$variable{'rdbCover'} ne 'Different' and $$variable{'Backing'} ne 'Printed' ) ) 
+<fieldset id="SignatureGroup<?Signature?>" <? echo ( ( $$variable{Signature} == 1 and ( $$variable{rdbCover} ne 'Different' and $$variable{Backing} ne 'Printed' ) ) 
 ? 'style="display:none;"' : '' ) ?> class="SignatureGroup" >
-<? if ( $$variable{'SignatureType'.$$variable{'Signature'}} eq 'Cover Pages' ) ?>
+<? if ( $$variable{'SignatureType'.$$variable{Signature}} eq 'Cover Pages' ) ?>
 	<? echo ( include('/includes/main/proj/templates/signatures.html'); ) ?>
-<? endif ( $$variable{'SignatureType'.$$variable{'Signature'}} eq 'Cover Pages' ) ?>
+<? endif ( $$variable{'SignatureType'.$$variable{Signature}} eq 'Cover Pages' ) ?>
 
-<legend>Information for <? echo ( $$variable{'txtServiceDescription'.$$variable{'Signature'}} ? $$variable{'txtServiceDescription'.$$variable{'Signature'}} : ( $$variable{'Signature'} == 1 ? 'Cover' : 'Other Pages' ) ) ?></legend>
+<legend>Information for <? echo ( $$variable{'txtServiceDescription'.$$variable{Signature}} ? $$variable{'txtServiceDescription'.$$variable{Signature}} : ( $$variable{Signature} == 1 ? 'Cover' : 'Other Pages' ) ) ?></legend>
 	<div class="leftColumn">
 		<ul>
-		<li>
+		<li id="GroupPageQuantity<?echo($$variable{Signature})?>_container"<?echo( if ($$variable{'OverrideGroupPageQuantity'.$$variable{Signature}} and ! $$variable{'GroupPageQuantity'.$$variable{Signature}} ) { return ' class="error"' }; ) ?>>
 			<label># of Pages</label>
 			<? echo ( join("\n",
 				input( type=>'cardinal', name=>'GroupPageQuantity'.$$variable{Signature}, value=>$$variable{'GroupPageQuantity'.$$variable{Signature}}, onkeyup=>'calc(this.form.name);' ),
@@ -17,7 +17,7 @@
 		</li>
 		<li class="Description">
 			<label>Description</label>
-			<input type="text" name="txtServiceDescription<?Signature?>" value="<? echo ( $$variable{'txtServiceDescription'.$$variable{'Signature'}} ) ?>" />
+			<input type="text" name="txtServiceDescription<?Signature?>" value="<? echo ( $$variable{'txtServiceDescription'.$$variable{Signature}} ) ?>" />
 		</li>
 		<li class="Dimensions">
 			<label>Flat => Final Size</label>
@@ -35,9 +35,9 @@
 		</ul>
 	</div>
 	<div class="rightColumn">
-		<div id="PresentationFolderQuestions<?Signature?>" <? echo ( ! sets::isin( $$variable{'rdbTemplateType'.$$variable{'Signature'}}, ['2Panel1Pocket','2Panel2Pocket','TriFoldDoublePocket'] ) ? 'style="display:none;"' : '' ) ?> >
+		<div id="PresentationFolderQuestions<?Signature?>" <? echo ( ! sets::isin( $$variable{'rdbTemplateType'.$$variable{Signature}}, ['2Panel1Pocket','2Panel2Pocket','TriFoldDoublePocket'] ) ? 'style="display:none;"' : '' ) ?> >
 	<? echo (
-		if ( $$variable{'Signature'} == 1 ) {
+		if ( $$variable{Signature} == 1 ) {
 			return include('/includes/main/proj/presentation_folder_printing.html' );
 		} # end if
 		return;
@@ -45,7 +45,7 @@
 		</div>
 		<ul>
 <? if ( $$variable{Signature} == 1 or $$variable{Signature} == 2 ) ?>
-<input type="hidden" name="txtSignatureType<?Signature?>" value="<? echo ( $$variable{'txtSignatureType'.$$variable{'Signature'}} ) ?>" />
+<input type="hidden" name="txtSignatureType<?Signature?>" value="<? echo ( $$variable{'txtSignatureType'.$$variable{Signature}} ) ?>" />
 <? else ( $$variable{Signature} == 1 or $$variable{Signature} == 2 ) ?>
 		<li>
 			<label>Signature Type</label>
@@ -58,19 +58,19 @@
 		'Gate Folded Pages', 	'Gate Folded Pages',
 		'PerfReplyCard',	'Perforated Reply Card',
 		);
-		make_drop_down( \@options, $$variable{'txtSignatureType'.$$variable{'Signature'}} );
+		make_drop_down( \@options, $$variable{'txtSignatureType'.$$variable{Signature}} );
 ) ?>
 			</select>
 		</li>
 <? endif ( $$variable{Signature} == 1 or $$variable{Signature} == 2 ) ?>
 		<li>
 			<label>Customer supplied?</label>
-			<? echo ( radio( 'pages_supplied'.$$variable{Signature}, [ 'Y', 'Yes', 'N', 'No' ], $$variable{'pages_supplied'.$$variable{'Signature'}}, { default=>'N', 
+			<? echo ( radio( 'pages_supplied'.$$variable{Signature}, [ 'Y', 'Yes', 'N', 'No' ], $$variable{'pages_supplied'.$$variable{Signature}}, { default=>'N', 
 					onclick=>qq`if(this.value=='Y'){\$('Inks$$variable{Signature}').hide();\$('SuppliedFormat$$variable{Signature}').show();\$('BleedsColourBars$$variable{Signature}').hide();}else{\$('Inks$$variable{Signature}').show();\$('SuppliedFormat$$variable{Signature}').hide();\$('BleedsColourBars$$variable{Signature}').show();}` } ); ) ?>
 		</li>
-		<li id="SuppliedFormat<?Signature?>" <? echo ( $$variable{'pages_supplied'.$$variable{'Signature'}} eq 'Y' ? '' : 'style="display:none;"' ) ?>>
+		<li id="SuppliedFormat<?Signature?>" <? echo ( $$variable{'pages_supplied'.$$variable{Signature}} eq 'Y' ? '' : 'style="display:none;"' ) ?>>
 			<label>Supplied format</label>
-			<? echo ( radio( 'supplied_format'.$$variable{Signature}, [ 'Sheets', 'Flat Sheets', 'Folded', 'Folded Pages' ], $$variable{'supplied_format'.$$variable{'Signature'}}, { default=>'Sheets' } ); ) ?>
+			<? echo ( radio( 'supplied_format'.$$variable{Signature}, [ 'Sheets', 'Flat Sheets', 'Folded', 'Folded Pages' ], $$variable{'supplied_format'.$$variable{Signature}}, { default=>'Sheets' } ); ) ?>
 		</li>
 		<?include(_press_proof_approval.html)?>
 		</ul>
@@ -80,7 +80,7 @@
 		my $html .= slurp_content( '/includes/main/proj/colours_coatings.html' );
 		$html .= slurp_content( '/includes/main/proj/bleeds_colourbars.html' );
 		$html .= slurp_content( '/includes/main/proj/paper_dropdowns.html' );
-		if ( sets::isin( $session{'user_type'}, ['A','E'] ) ) {
+		if ( sets::isin( $session{user_type}, ['A','E'] ) ) {
 			$html .= slurp_content( '/main/project/prin/_overrides.html' );
 		} # end if
 
