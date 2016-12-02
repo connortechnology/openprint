@@ -389,8 +389,10 @@ sub large_path {
 
 sub sized_path {
 	my $url = $_[0]->sized_url($_[1]);
+	if ( ! $url ) {
 		my ( $caller, undef, $line ) = caller;
 		$openprint::log->error("No url return for size $_[1] called from $caller:$line");
+	}
 	$url =~ s/^\/assets//;
 	return $openprint::config{AssetPath}.$url;
 } # end sub sized_path
