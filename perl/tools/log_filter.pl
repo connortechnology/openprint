@@ -17,9 +17,10 @@ if ($opts->{help}) {
 
 my @whitelist = (
         q`^\[\w{3} \w{3} [ .:0-9]+\] \[ssl:warn\] \[pid [0-9]+\] AH[[:digit:]]{5}: Init: Name\-based SSL virtual hosts only work for clients with TLS server name indication support \(RFC 4366\)$`,
-        q`^\[\w{3} \w{3} [ .:0-9]+\] \[mpm_prefork:notice\] \[pid [0-9]+\] AH[[:digit:]]{5}: Apache\/[\.[:digit:]]+ \(Ubuntu\) (mod_fcgid\/2\.3\.9 )?OpenSSL\/1\.0\.2g mod_apreq2-20090110\/2\.8\.0 mod_perl\/[\.[:digit:]]+ Perl\/v[\.[:digit:]]+ configured \-\- resuming normal operations$`,
+        q`^\[\w{3} \w{3} [ .:0-9]+\] \[mpm_prefork:notice\] \[pid [0-9]+\] AH[[:digit:]]{5}: Apache\/[.[:digit:]]+ \(Ubuntu\) (mod_fcgid\/2\.3\.9 )?( PHP\/[.[:alnum:]-]+ )?OpenSSL\/1\.0\.2g mod_apreq2-20090110\/2\.8\.0 mod_perl\/[\.[:digit:]]+ Perl\/v[\.[:digit:]]+ configured \-\- resuming normal operations$`,
         q`^\[\w{3} \w{3} [ .:0-9]+\] \[mpm_prefork:notice\] \[pid [0-9]+\] AH[[:digit:]]{5}: caught SIGTERM, shutting down$`,
 		q`^\[\w{3} \w{3} [ .:0-9]{23}\] \[core:notice\] \[pid [0-9]+\] AH[[:digit:]]{5}: Command line: '\/usr\/sbin\/apache2'$`,
+		q`^\[\w{3} \w{3} [ .:0-9]{23}\] \[core:notice\] \[pid [0-9]+\] AH[[:digit:]]{5}: Graceful restart requested, doing restart$`,
 		q`^QFont::setPixelSize: Pixel size <= 0 \(0\)`,
 );
  

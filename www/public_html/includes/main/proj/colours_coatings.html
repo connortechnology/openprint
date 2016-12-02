@@ -46,7 +46,7 @@
 ) ?>
 		</span>
 		</div>
-		<div id="SpecialColoursSideOne<?Signature?>" <? if ( $$variable{'PrintingType'} eq 'Digital' ) ?>style="display:none"<? endif ( $$variable{'PrintingType'} eq 'Digital' ) ?>>
+		<div id="SpecialColoursSideOne<?Signature?>" class="SpecialColours" <? if ( $$variable{'PrintingType'} eq 'Digital' ) ?>style="display:none"<? endif ( $$variable{'PrintingType'} eq 'Digital' ) ?>>
 			<? echo ( 
 				my $html;
 				$$variable{'Side'} = 'SideOne';
