@@ -22,7 +22,7 @@
 			if ( $services{$ServiceType->name()} ) {
 				foreach my $service_index ( @{$services{$ServiceType->name()}} ) {
 					my $Service = $Project->Service( $service_index );
-					my $specs = $Project->specs();
+					my $specs = $Service->specs();
 					my $price = $Project->Currency()->convert_to( $$variable{Order}->Currency(), $$specs{'txtPrice'.$Project->ordered_quantity_index()} );
 					$project_price -= $price;
 		
@@ -30,7 +30,12 @@
 					my $summary = $Service->summary( $Project->ordered_quantity_index() );
 					$_ = $Service->summary( );
 					$summary .= ' to<br/>' . $_ if $_;
-					$shipping_html .= qq`<tr$$variable{rowclass}><td class="project_id">`.$ServiceType->description().qq`</td><td class="reference" colspan="2">$summary</td><td class="quantity">$$specs{'alert'}</td><td class="Price">`. $$variable{Currency}->format($price).'</td></tr>';
+					$shipping_html .= qq`<tr$$variable{rowclass}>
+<td class="project_id">`.$ServiceType->description().qq`</td>
+<td class="reference" colspan="2">$summary</td>
+<td class="quantity">$$specs{'alert'}</td>
+<td class="Price">`. $$variable{Currency}->format($price).'</td>
+</tr>';
 				} # end foreach
 			} # end if
 		} # end foreach

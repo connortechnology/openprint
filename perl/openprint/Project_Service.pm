@@ -209,10 +209,10 @@ sub summary {
 	} else {
 		my $ServiceTypeType = $ServiceType->type();
 		return if ! $ServiceTypeType;
-		
+
 		eval('require openprint::Estimating::'.$ServiceTypeType.';' );
 		$openprint::log->error("ERror requiring openprint::Estimating::$ServiceTypeType ::summary: $@)") if $@;
-		my $summary = eval('openprint::Estimating::'.$ServiceTypeType.'::summary( $Project, $_[0]}service_id}, $specs, $qty_index );' );
+		my $summary = eval('openprint::Estimating::'.$ServiceTypeType.'::summary( $Project, $_[0]{service_id}, $specs, $qty_index );' );
 		$openprint::log->error("ERror evalling openprint::Estimating:: $ServiceTypeType ::summary: $@)") if $@;
 		return $summary;
 	} # end if
