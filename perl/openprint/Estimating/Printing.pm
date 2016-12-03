@@ -611,6 +611,7 @@ $openprint::log->debug("Adding special colour for $colour");
 				if ( (!defined $project{ScoringSpecs}{"chkOverrideQty-$form"}) or ( $project{ScoringSpecs}{"chkOverrideQty-$form"} ne 'Y' ) ) {
 					openprint::Estimating::Scoring::get_scores( $Project, $project{ScoringSpecs}, $specs, $Paper );
 				} # end if
+				openprint::Estimating::Scoring::init( $Project, \%project );
 			} # end if
 		} # end if
 	} else {
