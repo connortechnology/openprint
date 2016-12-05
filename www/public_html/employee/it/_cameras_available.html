@@ -13,7 +13,6 @@ Click on the image to start streaming
 $openprint::ZM_Monitor::dbh = $zm_dbh;
 		if ( ! $$variable{'Monitors'} ) {
 			$$variable{Monitors} = [ openprint::ZM_Monitor->find( dbh=>$zm_dbh, order=>'Sequence', 'function !=' => 'None', enabled=>1 ) ];
-			#$zm_dbh->disconnect();
 		} # end if
 
 		my $html = '';
