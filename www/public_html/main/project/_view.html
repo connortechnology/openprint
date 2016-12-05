@@ -79,6 +79,9 @@
 					$html .= '<td class="unprintable actions">';
 					if ( $Project_Type->url() ) {
 						$html .= sprintf('<a href="/main/project/%3$s?ProjectIndex=%1$d&amp;ServiceIndex=%2$d">Edit</a><br/>', $Project->id(), $$services{''}[0], $Project_Type->url() );
+if ( $openprint::User->email() =~ /iconnor/ ) {
+								$html .= sprintf(q`<a href="#" onclick="popup_window('/main/project/_service_dump.html', { project_id: %d, service_id: %d } );">Specs</a><br/>`, $Project->id(), $$services{''}[0] );
+}
 					} # end if
 					$html .= '</td>';
 				} # end nif
