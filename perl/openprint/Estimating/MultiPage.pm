@@ -674,7 +674,8 @@ if ( $qty_index ) {
 			openprint::service::insert_service_spec( $openprint::log, $openprint::dbh, $Project->id(), $Service->service_id(), 'alert'.$qty_index, $error ) if $error;
 		} # end if
 	} else {
-		if ( $$specs{alert} =~ /^Group/ ) {
+		# Clears it, but leaves alert messages from elsewhere
+		if ( $$specs{alert} =~ /^Group/ or $$specs{alert} =~ /^Stock/ ) {
 			openprint::service::insert_service_spec( $openprint::log, $openprint::dbh, $Project->id(), $Service->service_id(), 'alert'.$qty_index, $error );
 		} # end if
 	} # end if
