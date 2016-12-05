@@ -39,9 +39,9 @@ sub thumbnail_html {
 	my $self = $_[0];
 	my $Asset = $self->Asset();
 	if ( $Asset->layout() eq 'Landscape' ) {
-		return sprintf('<a class="Landscape" href="/article/view.html?article_id=%d"><img src="%s" alt="%s"/></a>', $$self{article_id},$Asset->sized_url('thumbnail'), $Asset->caption() );
+		return sprintf('<a class="Landscape" href="/article/view.html?article_id=%d"><img src="%s" alt="%s"/></a>', $$self{article_id},$Asset->sized_url('small'), $Asset->caption() );
 	} else {
-		return sprintf('<a class="Portrait" href="/article/view.html?article_id=%d"><img src="%s" alt="%s"/></a>', $$self{article_id},$Asset->sized_url('thumbnail'), $Asset->caption() );
+		return sprintf('<a class="Portrait" href="/article/view.html?article_id=%d"><img src="%s" alt="%s"/></a>', $$self{article_id},$Asset->sized_url('small'), $Asset->caption() );
 	} # end if
 } # end sub thumbnail_html
 
