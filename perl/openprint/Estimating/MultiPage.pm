@@ -23,7 +23,7 @@ require openprint::Estimating::Printing;
 require openprint::service;
 require sets;
 
-use constant DEBUG => 0;
+use constant DEBUG => 1;
 
 use vars qw{ @signature_variables };
 
@@ -323,11 +323,13 @@ $openprint::log->warn("FIXM E");
 		my %sig_specs =  map { $_, $$specs{$_.$group_id } } @signature_variables;
 		if ( ! exists $override_pages{$group_id} ) {
 			$override_pages{$group_id} = $remaining_pages;
+
+		# THe purpose of calling this here, is to do auto-population of coverage, etc.
 			$remaining_pages = 0;
 		} # end if
 		$sig_specs{GroupPageQuantity} = $$specs{'GroupPageQuantity'.$group_id} = $override_pages{$group_id};
-		openprint::Estimating::Printing::get_colours( $specs, 'SideOne', \%variables, $group_id );
-		openprint::Estimating::Printing::get_colours( $specs, 'SideTwo', \%variables, $group_id );
+		openprint::Estimating::Printing::get_colours( \%sig_specs, 'SideOne', \%variables );
+		openprint::Estimating::Printing::get_colours( \%sig_specs, 'SideTwo', \%variables );
 		openprint::Estimating::Printing::get_inkcoverage( $Project, $specs, \%variables, $group_id );
 		openprint::Estimating::Printing::get_Stocks( $Project, \%sig_specs, \%variables );
 		openprint::Estimating::Printing::set_size( $Project, \%sig_specs, $specs );
