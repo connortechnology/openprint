@@ -91,6 +91,7 @@ sub _history {
             ssi::date_filter( $uri.'?created_on_start', 'created_on >=' ),
             ( $session{$uri.'?deleted'} eq '' ? () : ( deleted=>$session{$uri.'?deleted'} ) ),
 			( map { $session{$uri.'?'.$_} ? ( $_ => $session{$uri.'?'.$_} ) : () } ( 'status', 'salesrep_id' ) ),
+( ( $session{$uri.'?total_start'} or $session{$uri.'?total_end'} ) ? (
 			and => [ ( $session{$uri.'?total_start'} ? ( or => { 
 			  'total1 >=' => $session{$uri.'?total_start'},
 			  'total2 >=' => $session{$uri.'?total_start'},
@@ -101,8 +102,8 @@ sub _history {
 			  'total2 <=' => $session{$uri.'?total_end'},
 			  'total3 <=' => $session{$uri.'?total_end'},
 				} ) : () ),
-			],
-            order               =>	$openprint::Quote::fields{'created_on'}.' DESC',
+			] ) : () ),
+            order               =>	$openprint::Quote::fields{created_on}.' DESC',
             limit               =>   $session{$uri.'?limit'},
             ) ];
     } # end if

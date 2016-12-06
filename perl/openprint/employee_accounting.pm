@@ -440,7 +440,7 @@ sub _expenses {
 				'due_on_end_year','due_on_end_month','due_on_end_day',
 				'paid_on_start_year','paid_on_start_month','paid_on_start_day',
 				'paid_on_end_year','paid_on_end_month','paid_on_end_day',
-				'category_id', 'recipient_id', 'account_id','attention',
+				'category_id', 'recipient_id', 'account_id','attention', 'currency_id',
 				'amount','total',
 				) );
 } # end sub _expenses

@@ -512,7 +512,8 @@ sub send_sales_order {
 
 	my $sales_person_email;
 	if ( $self->salesrep_id() ) {
-		$sales_person_email = new openprint::User( $self->salesrep_id() );
+		my $CSR = new openprint::User( $self->salesrep_id() );
+		$sales_person_email = sprintf('"%s %s" <%s>', $CSR->get('firstname','lastname','email'));
 	}
 	if ( ! $sales_person_email ) {
 		$sales_person_email = $config{OrderingEmail};
@@ -539,7 +540,6 @@ sub send_sales_order {
 	$Email->html_body( ssi::variable_substitution( \$email_template, \%order ) );
 
 	$order{ReplacementText} = ssi::include( '/email_content/sales_order_for_admin.html', \%order );
-	$_ = MIME::QuotedPrint::encode_qp( Encode::encode('utf-8', ssi::variable_substitution( \$email_template, \%order ) ) );
 	$Email->add_pdf_attachment_from_html("Order$$self{id}",  ssi::variable_substitution( \$email_template, \%order ) );
 
 	my @project_dockets = ();
