@@ -238,6 +238,7 @@ sub add_pdf_attachment_from_html {
 	my ( $self, $name, $html ) = @_;
 
 	my @attachments;
+	$html = Encode::encode('utf-8',$html);
 	if ( File::Slurp::write_file('/tmp/'.$name.'.html', { atomic => 1, err_mode=>'carp' }, \$html ) ) {
         `wkhtmltopdf -q "/tmp/$name.html" "/tmp/$name.pdf"`;
         my $pdf = File::Slurp::read_file( "/tmp/$name.pdf", err_mode => 'carp' );
@@ -261,7 +262,7 @@ sub add_pdf_attachment_from_html {
 
 sub add_html_attachment {
 	my ( $self, $name, $html ) = @_;
-	push @{$$self{ATTACHMENTS}}, ($name, MIME::QuotedPrint::encode_qp($html), 'text/html', 'quoted-printable');
+	push @{$$self{ATTACHMENTS}}, ($name, MIME::QuotedPrint::encode_qp(Encode::encode('utf-8',$html)), 'text/html', 'quoted-printable');
 }
 1;
 __END__
