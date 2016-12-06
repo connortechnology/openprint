@@ -721,11 +721,10 @@ sub get_colours {
 } # end sub get_colours
 
 sub get_inkcoverage {
-	my ( $Project, $specs, $v, $signature ) = @_;
+	my ( $Project, $specs, $v ) = @_;
 	my ( $caller, undef, $line ) = caller;
 $log->debug("Inkcoverage from $caller : $line");
 	$v = \%variables if ! $v;
-	$signature = '' if ! defined $signature;
 	my $ProjectTypeName = $Project->Type()->name();
 	my $DefaultInkCoverage = $openprint::config{'DefaultInkCoverage'.$ProjectTypeName} ? 
 		$openprint::config{'DefaultInkCoverage'.$ProjectTypeName} : $openprint::config{DefaultInkCoverage};
@@ -733,8 +732,8 @@ $log->debug("Inkcoverage from $caller : $line");
 	my %inkCoverage;
 	foreach my $side ( 'SideOne','SideTwo' ) {
 		foreach my $colour ( 'Cyan','Magenta','Yellow','Black' ) {
-			my $key = $colour.'Spot'.$side.'Coverage'.$signature;
-			if ( $$specs{'chk'.$colour.$side.$signature} ) {
+			my $key = $colour.'Spot'.$side.'Coverage';
+			if ( $$specs{'chk'.$colour.$side} ) {
 				$$specs{$key} =~ s/[^\d\.]//g;
 				if ( ! $$specs{$key} ) {
 					$$specs{$key} = $DefaultInkCoverage;
@@ -746,9 +745,9 @@ $log->debug("Inkcoverage from $caller : $line");
 				$inkCoverage{$colour.' Spot Colour'} += $$specs{$key};
 			} # end if
 		} # end foreach
-		if ( $$specs{'chkProcessColour'.$side.$signature} ) {
+		if ( $$specs{'chkProcessColour'.$side} ) {
 			foreach my $colour ( 'Cyan','Magenta','Yellow','Black' ) {
-				my $key = $colour.$side.'Coverage'.$signature;
+				my $key = $colour.$side.'Coverage';
 				my $c = $$specs{$key};
 				$c =~ s/[^\d\.]//g;
 				if ( ! $c ) {
@@ -758,6 +757,7 @@ $log->debug("Inkcoverage from $caller : $line");
 				if ( $c ne $$specs{$key} ) {
 					$$v{$key} = [ sets::union( 'output', @{$$v{$key}} ) ];
 					$$specs{$key} = $c;
+$openprint::log->debug("$key => $c");
 				} # end if
 				$inkCoverage{$colour} += $$specs{$key};
 			} # end foreach
@@ -765,12 +765,12 @@ $log->debug("Inkcoverage from $caller : $line");
 
 		foreach my $k ( keys %$specs ) {
 # checked on
-			if ( my ( $index ) = $k =~ /^chkColourCoating(\d+)$side$signature/ ) {
-				next if ! $$specs{"chkColourCoating$index$side$signature"};
-				my $type = $$specs{"ColourCoatingType$index$side$signature"};
+			if ( my ( $index ) = $k =~ /^chkColourCoating(\d+)$side/ ) {
+				next if ! $$specs{"chkColourCoating$index$side"};
+				my $type = $$specs{"ColourCoatingType$index$side"};
 				next if ! $type;
 
-				my $coverage_key = join('', 'ColourCoatingCoverage'.$index.$side.$signature);
+				my $coverage_key = join('', 'ColourCoatingCoverage'.$index.$side);
 				$$specs{$coverage_key} =~ s/[^\d\.]//g;
 
 				if ( $type =~ /Overall/ ) {
@@ -778,7 +778,7 @@ $log->debug("Inkcoverage from $caller : $line");
 					$$specs{$coverage_key} = 100;
 #$openprint::log->warn("Oeral for $index $side $signature " . $$specs{'ColourCoatingCoverage'.$index.$side.$signature} .' ' . int($$specs{'ColourCoatingCoverage'.$index.$side.$signature}) );
 				} elsif ( ! int($$specs{$coverage_key}) ) {
-					$openprint::log->warn("Coverage for $index $side $signature $type" . $$specs{$coverage_key} .' ' . int($$specs{$coverage_key}) );
+					$openprint::log->warn("Coverage for $index $side $type" . $$specs{$coverage_key} .' ' . int($$specs{$coverage_key}) );
 					$type =~ s/ /_/g;
 					my $coverage;
 					if ( $openprint::config{"Default${type}Coverage$ProjectTypeName"} ) {
@@ -798,7 +798,7 @@ $log->debug("Inkcoverage from $caller : $line");
 					$$v{$coverage_key} = [ sets::exclude( ['output'], $$v{$coverage_key} ) ];
 				} # end if
 				if ( $type =~ /PMS/ ) {
-					$inkCoverage{$$specs{'ColourCoatingColour'.$index.$side.$signature}} += $$specs{$coverage_key};
+					$inkCoverage{$$specs{'ColourCoatingColour'.$index.$side}} += $$specs{$coverage_key};
 				} else {
 					$inkCoverage{$type} += $$specs{$coverage_key};
 				} # end if
