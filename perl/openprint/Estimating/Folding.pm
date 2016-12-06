@@ -2325,15 +2325,15 @@ sub get_Folds {
 		$Source_Imposition = new openprint::Imposition();
 		$Source_Imposition->load( $sig_specs, $qty_index );
 	} # end if
-	my $form = $$sig_specs{SignatureIndex};
 
 if ( DEBUG ) {
 foreach my $k ( sort { $a cmp $b } keys %$folding_specs ) {
 	$openprint::log->debug("$k=>$$folding_specs{$k}");
 }
 }
+	my $form = $$sig_specs{SignatureIndex};
 	if ( ! $$folding_specs{"ddmEquipment-$form-$qty_index"} ) {
-$openprint::log->debug("Has no equipment_id");
+$openprint::log->debug("Has no equipment_id") if DEBUG;
 		return ();
 	} # end if has equipment
 
