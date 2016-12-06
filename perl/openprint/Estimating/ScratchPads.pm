@@ -43,6 +43,48 @@ my %variables = (
 	'ProjectIndex'=>[], 'ServiceIndex'=>[], 'ServiceType'=>[], 'NewBook'=>[],
 	'remaining_pages'=>['output'],'next_group_id'=>['output'],
 );
+@signature_variables = (
+'chkCyanSideOne','chkMagentaSideOne','chkYellowSideOne','chkBlackSideOne', 'chkProcessColourSideOne',
+                'chkColourCoating1SideOne', 'ColourCoatingType1SideOne', 'ColourCoatingColour1SideOne','ColourCoatingCoverage1SideOne',
+                'chkColourCoating2SideOne', 'ColourCoatingType2SideOne', 'ColourCoatingColour2SideOne','ColourCoatingCoverage2SideOne',
+                'chkColourCoating3SideOne', 'ColourCoatingType3SideOne', 'ColourCoatingColour3SideOne','ColourCoatingCoverage3SideOne',
+                'chkColourCoating4SideOne', 'ColourCoatingType4SideOne', 'ColourCoatingColour4SideOne','ColourCoatingCoverage4SideOne',
+                'chkColourCoating5SideOne', 'ColourCoatingType5SideOne', 'ColourCoatingColour5SideOne','ColourCoatingCoverage5SideOne',
+                'chkColourCoating6SideOne', 'ColourCoatingType6SideOne', 'ColourCoatingColour6SideOne','ColourCoatingCoverage6SideOne',
+                'chkColourCoating7SideOne', 'ColourCoatingType7SideOne', 'ColourCoatingColour7SideOne','ColourCoatingCoverage7SideOne',
+                'chkColourCoating8SideOne', 'ColourCoatingType8SideOne', 'ColourCoatingColour8SideOne','ColourCoatingCoverage8SideOne',
+                'chkColourCoating9SideOne', 'ColourCoatingType9SideOne', 'ColourCoatingColour9SideOne','ColourCoatingCoverage9SideOne',
+                'chkCyanSideTwo','chkMagentaSideTwo','chkYellowSideTwo','chkBlackSideTwo', 'chkProcessColourSideTwo',
+                'chkColourCoating1SideTwo', 'ColourCoatingType1SideTwo', 'ColourCoatingColour1SideTwo','ColourCoatingCoverage1SideTwo',
+                'chkColourCoating2SideTwo', 'ColourCoatingType2SideTwo', 'ColourCoatingColour2SideTwo','ColourCoatingCoverage2SideTwo',
+                'chkColourCoating3SideTwo', 'ColourCoatingType3SideTwo', 'ColourCoatingColour3SideTwo','ColourCoatingCoverage3SideTwo',
+                'chkColourCoating4SideTwo', 'ColourCoatingType4SideTwo', 'ColourCoatingColour4SideTwo','ColourCoatingCoverage4SideTwo',
+                'chkColourCoating5SideTwo', 'ColourCoatingType5SideTwo', 'ColourCoatingColour5SideTwo','ColourCoatingCoverage5SideTwo',
+                'chkColourCoating6SideTwo', 'ColourCoatingType6SideTwo', 'ColourCoatingColour6SideTwo','ColourCoatingCoverage6SideTwo',
+                'chkColourCoating7SideTwo', 'ColourCoatingType7SideTwo', 'ColourCoatingColour7SideTwo','ColourCoatingCoverage7SideTwo',
+                'chkColourCoating8SideTwo', 'ColourCoatingType8SideTwo', 'ColourCoatingColour8SideTwo','ColourCoatingCoverage8SideTwo',
+                'chkColourCoating9SideTwo', 'ColourCoatingType9SideTwo', 'ColourCoatingColour9SideTwo','ColourCoatingCoverage9SideTwo',
+                'CyanSpotSideOneCoverage', 'MagentaSpotSideOneCoverage', 'YellowSpotSideOneCoverage', 'BlackSpotSideOneCoverage',
+                'CyanSideOneCoverage', 'MagentaSideOneCoverage', 'YellowSideOneCoverage', 'BlackSideOneCoverage',
+                'CyanSpotSideTwoCoverage', 'MagentaSpotSideTwoCoverage', 'YellowSpotSideTwoCoverage', 'BlackSpotSideTwoCoverage',
+                'CyanSideTwoCoverage', 'MagentaSideTwoCoverage', 'YellowSideTwoCoverage', 'BlackSideTwoCoverage',
+                'BleedLeft','BleedRight','BleedTop','BleedBottom','rdbColourBar','txtCropMarkSpace',
+		'ddmRunStyle-', 'ddmPress-', 'PrintingType-', 'StockType-', 'txtPlateChangeQuantity-', 'PageQuantity-',
+		'Pages', 'OverrideGroupPageQuantity', 'GroupPageQuantity', 'txtSignatureType',
+		'chkOverrideDimensions', 'txtFinalHeight', 'txtFinalWidth', 'txtHeight', 'txtWidth',
+		'rdbSpecificStock', 'rdbSuppliedStock',
+		'ddmStockBrand', 'txtSpecificStockBrand',
+		'ddmStockGroup', 'ddmStockQuality',
+		'ddmStockFinish', 'txtSpecificStockFinish',
+		'ddmStockColour', 'txtSpecificStockColour',
+		'ddmStockWeight', 'txtSpecificStockWeight',
+		'txtSpecificStockCalliper', 'StockType',
+		'txtSpecificStockWidth', 'txtSpecificStockHeight', 
+		'txtCustomMWeight', 'basis_mweight', 'basis_width', 'basis_height', 
+		'CustomStockPrice', 'StockPricePerM', 'txtStockGSM','CustomSheetDoubleSided',
+		'cuttable', 'perfecting', 'StockGrade', 'minimum_order','sheets_per_package','full_packages',
+		'sides_the_same','rdbPressProof','PressApproval',
+		);
 
 sub variables {
 	my @v;
@@ -108,10 +150,13 @@ $log->debug("ScratchPads::calc");
 	} # end if
 
 	foreach my $group_id ( @Groups ) {
+		my %sig_specs =  map { $_, $$specs{$_.$group_id } } @signature_variables;
+
 #$openprint::log->debug("Group: $group_id, remaining: $remaining_pages, $override_pages{$group_id}");
-		openprint::Estimating::Printing::get_colours( $specs, 'SideOne', \%variables, $group_id );
-		openprint::Estimating::Printing::get_colours( $specs, 'SideTwo', \%variables, $group_id );
-		openprint::Estimating::Printing::get_inkcoverage( $Project, $specs, \%variables, $group_id );
+		openprint::Estimating::Printing::get_inkcoverage( $Project, \%sig_specs, \%variables );
+		openprint::Estimating::Printing::get_colours( \%sig_specs, 'SideOne', \%variables );
+		openprint::Estimating::Printing::get_colours( \%sig_specs, 'SideTwo', \%variables );
+		@$specs{map { $_.$group_id} @signature_variables} = @sig_specs{@signature_variables};
         if ( ! exists $override_pages{$group_id} ) {
             $override_pages{$group_id} = $remaining_pages;
             $remaining_pages = 0;

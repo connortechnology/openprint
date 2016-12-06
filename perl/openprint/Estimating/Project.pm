@@ -275,6 +275,8 @@ $log->debug("Presentation folder sizes $$specs{chkPocketLeft} $$specs{chkPocketR
 				$$specs{alert} .= 'Please select an interior stock ' . lc $option .'.';
 				$Project->unlock();
 				return $$specs{Status} = 'uncalculated';
+			} else {
+				openprint::service::insert_service_spec( $log, $dbh, $$Project{id}, $$services{''}[0], 'ddmStock'.$option.'2', $$specs{'ddmStock'.$option.'2'} );
 			} # end if
 		} # end foreach option
 
