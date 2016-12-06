@@ -912,7 +912,7 @@ sub get_Stocks {
 
 		foreach my $option ( @RequiredStockOptions ) {
 			if ( ! $$specs{'ddmStock'.$option} ) {
-				$$specs{alert} .= 'Please select a stock ' . lc $option .'.';
+				$$specs{alert} .= 'Please select a stock ' . lc $option;
 				return @Papers;
 			} # end if
 		} # end foreach option
