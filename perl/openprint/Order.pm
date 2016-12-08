@@ -512,7 +512,8 @@ sub send_sales_order {
 
 	my $sales_person_email;
 	if ( $self->salesrep_id() ) {
-		$sales_person_email = new openprint::User( $self->salesrep_id() );
+		my $CSR = new openprint::User( $self->salesrep_id() );
+		$sales_person_email = sprintf('"%s %s" <%s>', $CSR->get('firstname','lastname','email'));
 	}
 	if ( ! $sales_person_email ) {
 		$sales_person_email = $config{OrderingEmail};
@@ -525,7 +526,8 @@ sub send_sales_order {
 		my $email_results .= $Email->send(
 				FROM	=> $sales_person_email,
 				TO		=> sprintf('"%s %s" <%s>', $self->get('firstname','lastname','email')),
-BCC	 =>	'iconnor@point-one.com',
+#TO	 =>	'iconnor@point-one.com',
+#BCC	 =>	'iconnor@point-one.com',
 				SUBJECT => "Order $$self{id} Docket $$self{docket}",
 				);
 		$self->add_log( 'Sales Order:'.$email_results.'<br/>' );
@@ -538,7 +540,6 @@ BCC	 =>	'iconnor@point-one.com',
 	$Email->html_body( ssi::variable_substitution( \$email_template, \%order ) );
 
 	$order{ReplacementText} = ssi::include( '/email_content/sales_order_for_admin.html', \%order );
-	$_ = MIME::QuotedPrint::encode_qp( Encode::encode('utf-8', ssi::variable_substitution( \$email_template, \%order ) ) );
 	$Email->add_pdf_attachment_from_html("Order$$self{id}",  ssi::variable_substitution( \$email_template, \%order ) );
 
 	my @project_dockets = ();
@@ -582,7 +583,8 @@ BCC	 =>	'iconnor@point-one.com',
 				FROM	=> $config{OrderingEmail},
 				'Reply-to'	=> $$self{email},
 				TO		=> join(',',@admin_emails),
-				BCC	 =>	'iconnor@point-one.com',
+				#TO	 =>	'iconnor@point-one.com',
+				#BCC	 =>	'iconnor@point-one.com',
 				SUBJECT => "Order $$self{id}",
 				);
 		$self->add_log( 'Admin Sales Order:'.$email_results );

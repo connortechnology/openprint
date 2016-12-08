@@ -203,10 +203,19 @@ function cbFillResults( results ) {
 
 			} // end if
 		} else if ( div = $(key) ) {
+			if ( typeof(value)== "object" ) {
+				if ( value.addClassName ) {
+					div.addClassName( value.addClassName );
+				}
+				if (value.removeClassName ) {
+					div.removeClassName( value.removeClassName );
+				}
+			} else {
 			//alert('filling: ' + data[0] + ' with: ' + data[1] );
 			//div.hide();
 			div.innerHTML = value;
 			//d//iv.show();
+			}
 		} else {
 			//alert('didnt find: ' + data[0]);
 		} // end if

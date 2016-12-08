@@ -39,6 +39,10 @@ my @variables = (
 );
 
 my @all_equipment;
+my $Rule;
+my $Wheel;
+my $ScoringService;
+my $ScoringMakeReadyService;
 
 my $folding_service_index;
 
@@ -90,6 +94,22 @@ sub has_overrides {
     return @v;
 
 } # end sub has_overrides
+
+sub init {
+    my ( $Project, $calc_hash ) = @_;
+	my @capabilities = ('Y','When Printing');
+	push @capabilities, 'For Pocket Folders' if $Project->Type()->name() eq 'PresentationFolders';
+	push @capabilities, 'When Folding' if $$calc_hash{FoldingSpecs};
+	push @capabilities, 'When PerfectBinding' if $$calc_hash{PerfectBoundSpecs};
+	push @capabilities, 'When Stitching' if $$calc_hash{StitchingSpecs};
+
+	@all_equipment = openprint::Equipment->find( Specifications => {'Scoring Capable'=>\@capabilities}, useinestimating=>1, order=>'strName');
+	$Rule = openprint::Material->find_one( name=>'ScoringRule');
+	$Wheel = openprint::Material->find_one( name=>'ScoringWheel');
+
+	$ScoringService = openprint::Service->find_one(name=>'Scoring');
+	$ScoringMakeReadyService = openprint::Service->find_one(name=>'ScoringMakeReady');
+}
 sub signature_needs {
 	my ( $Project, $specs, $sig_specs, $Paper ) = @_;
 
@@ -115,7 +135,10 @@ sub signature_needs {
 		or ( $$sig_specs{txtSignatureType} eq 'Cover Pages' ) 
 		or ( $$sig_specs{txtSignatureType} and ( ! $Project->signatures({type=>'Cover Pages'}) ) and ( $form == 1 ) ) 
 	) {
-		$Paper = openprint::Paper::load_from_signature( $Project, $sig_specs ) if ! $Paper;
+		if ( ! $Paper ) {
+			$openprint::log->error("Loading paper in Scoring::signature_needs");
+			$Paper = openprint::Paper::load_from_signature( $Project, $sig_specs );
+		}
 #$openprint::log->debug( "Score Required!: " . $Paper->score_required() );
 		if ( $Paper->score_required() ) {
 			return 1;
@@ -178,6 +201,8 @@ sub calc {
             $$calc_hash{"${service}Specs"} = openprint::service::get_specs_ref( $Project, $$services{$service}[0] );
         }
     } # end foreach
+
+	init( $Project, $calc_hash );
 
 	foreach my $qty_index ( $Project->quantity_indexes() ) {
 		$$specs{'txtPrice'.$qty_index} =~ s/[^\d\.]//g;
@@ -345,14 +370,12 @@ if ( 0 ) {
 		@equipment = openprint::Equipment->find( id=>$$specs{"ddmEquipment-$form-$qty_index"} );
 		$openprint::log->debug("Overriding Equipment to: " . $$specs{"ddmEquipment-$form-$qty_index"} );
 	} else {
-		my @capabilities = ('Y','When Printing');
-		push @capabilities, 'For Pocket Folders' if $Project->Type()->name() eq 'PresentationFolders';
-		push @capabilities, 'When Folding' if $$calc_hash{FoldingSpecs};
-		push @capabilities, 'When PerfectBinding' if $$calc_hash{PerfectBoundSpecs};
-		push @capabilities, 'When Stitching' if $$calc_hash{StitchingSpecs};
 		
-$openprint::log->warn("This should have been already done");
-		@equipment = openprint::Equipment->find( Specifications => {'Scoring Capable'=>\@capabilities}, useinestimating=>1, order=>'strName');
+		if ( ! @all_equipment ) {
+			$openprint::log->warn("This should have been already done");
+			init( $Project, $calc_hash );
+		}
+		@equipment = @all_equipment;
 	} # endif
 	if ( DEBUG ) {
 	foreach my $E ( @equipment ) {
@@ -554,7 +577,7 @@ $openprint::log->error("Scoring passed an invalid imposition");
 				$$Fold{impressions} = ( $qty / $SignatureImposition->imposition() ) * ( $Fold->quantity() ) if ! $$Fold{impressions};
 				#$$Fold{impressions} /= $Fold->imposition();
                 my $Price = get_price( $Equipment, $$specs{"txtVerticalQty-$form"}, $$specs{"txtHorizontalQty-$form"}, $$Fold{impressions}, $Fold );
-                $totalPrice += $$Price{setup} + $$Price{Vertical}{Total} + $$Price{Horizontal}{Total} + $$Price{Service}{Total};
+                $totalPrice += $$Price{setup}{Price} + $$Price{Vertical}{Total} + $$Price{Horizontal}{Total} + $$Price{Service}{Total};
                 $Results{Breakdown} .= $$Price{Breakdown};
 			} # end foreach my $Fold
 #$Results{Imposition} = $Fold;
@@ -590,7 +613,7 @@ $openprint::log->error("Scoring passed an invalid imposition");
 
 					my $Price = get_price( $Equipment, $$specs{"txtVerticalQty-$form"}, $$specs{"txtHorizontalQty-$form"}, $qty/$$I{imposition}, $I );
 
-					$totalPrice += $$Price{setup} + $$Price{Vertical}{Total} + $$Price{Horizontal}{Total} + $$Price{Service}{Total};
+					$totalPrice += $$Price{setup}{Price} + $$Price{Vertical}{Total} + $$Price{Horizontal}{Total} + $$Price{Service}{Total};
 					$Results{Breakdown} .= $$Price{Breakdown};
 				} # end foreach imposition I
 				next if ! $complete;
@@ -647,15 +670,15 @@ sub get_price {
 		} # end if
 	} # end if
 	my $score_qty = $horizontal_rule + $vertical_rule;
-	my $setupPrice;
+	my %setupPrice;
 	if ( ( $type eq 'Folder' ) and ! $folding_service_index ) {
-		$setupPrice = openprint::service::get_price( 'ScoringMakeReadyWithoutFolding', $score_qty, $Equipment );
-		$setupPrice = openprint::service::get_price( 'ScoringMakeReady', $score_qty, $Equipment ) if ! $setupPrice;
+		%setupPrice = openprint::service::get_price_object( 'ScoringMakeReadyWithoutFolding', $score_qty, $Equipment );
+		%setupPrice = $ScoringMakeReadyService->get_price( $score_qty, $Equipment ) if ( ! %setupPrice ) and $ScoringMakeReadyService;
 	} else {
-		$setupPrice = openprint::service::get_price( 'ScoringMakeReady', $score_qty, $Equipment );
+		%setupPrice = $ScoringMakeReadyService->get_price( $score_qty, $Equipment ) if $ScoringMakeReadyService;
 	} # end if
 
-	$Results{Breakdown} .= sprintf( 'MakeReady: for %d scores = $%.2f<br/>', $score_qty, $setupPrice );
+	$Results{Breakdown} .= sprintf( 'MakeReady: for %d scores = $%.2f<br/>', $score_qty, $setupPrice{Price} );
 	$Results{Breakdown} .= "Imposition: $$I{columns}x$$I{rows}=$$I{imposition}: ";
 
 	my $Overs = $Equipment->Specification( 'Scoring Overs', $qty );
@@ -669,9 +692,9 @@ sub get_price {
 	my %servicePrice;
 	if ( ( $type eq 'Folder' ) and ! $folding_service_index ) {
 		%servicePrice = openprint::service::get_price_object( 'ScoringWithoutFolding', $qty, $Equipment );
-		%servicePrice = openprint::service::get_price_object( 'Scoring', $qty, $Equipment ) if ! %servicePrice;
+		%servicePrice = $ScoringService->get_price( $qty, $Equipment ) if ( ! %servicePrice ) and $ScoringService;
 	} else {
-		%servicePrice = openprint::service::get_price_object( 'Scoring', $qty, $Equipment );
+		%servicePrice = $ScoringService->get_price( $qty, $Equipment ) if $ScoringService;
 	} # end if
 	$servicePrice{Total} = 0;
 
@@ -699,21 +722,19 @@ sub get_price {
 	} # end if
 
 #$openprint::log->debug("Horizontal: $horizontal_rule");
-	if ( $horizontal_rule ) {
-		if ( my @Materials = openprint::Material->find('name'=>'ScoringRule') ) {
-			%horizontal_price = $Materials[0]->get_price( $horizontal_rule, $Equipment );
-			if ( sets::isin( $horizontal_price{units},['per rule','each','per score'] ) ) {
-				$horizontal_price{Total} = $horizontal_price{Price} * $horizontal_rule;
-				$Results{Breakdown} .= sprintf('Rule: $%1$.2f%2$s * %4$d rule=$%3$.2f<br/>', @horizontal_price{'Price','units','Total'}, $horizontal_rule );
-			} elsif ( $horizontal_price{units} eq 'per inch' ) {
-				$horizontal_price{Total} = $horizontal_price{Price} * $horizontal_length;
-				$Results{Breakdown} .= sprintf('Rule: $%1$.2f%2$s * %4$.2finches=$%3$.2f<br/>', @horizontal_price{'Price','units','Total'}, $horizontal_length );
-			} elsif ( $horizontal_price{units} eq 'per foot' ) {
-				$horizontal_price{Total} = $horizontal_price{Price} * $horizontal_length/12;
-				$Results{Breakdown} .= sprintf('Rule: $%1$.2f%2$s * %4$.2finches=$%3$.2f<br/>', @horizontal_price{'Price','units','Total'}, $horizontal_length/12 );
-			} else {
-				$Results{Breakdown} .= "Unknown units set on horizontal material price ($horizontal_price{units})<br/>";
-			} # end if
+	if ( $horizontal_rule and $Rule ) {
+		%horizontal_price = $Rule->get_price( $horizontal_rule, $Equipment );
+		if ( sets::isin( $horizontal_price{units},['per rule','each','per score'] ) ) {
+			$horizontal_price{Total} = $horizontal_price{Price} * $horizontal_rule;
+			$Results{Breakdown} .= sprintf('Rule: $%1$.2f%2$s * %4$d rule=$%3$.2f<br/>', @horizontal_price{'Price','units','Total'}, $horizontal_rule );
+		} elsif ( $horizontal_price{units} eq 'per inch' ) {
+			$horizontal_price{Total} = $horizontal_price{Price} * $horizontal_length;
+			$Results{Breakdown} .= sprintf('Rule: $%1$.2f%2$s * %4$.2finches=$%3$.2f<br/>', @horizontal_price{'Price','units','Total'}, $horizontal_length );
+		} elsif ( $horizontal_price{units} eq 'per foot' ) {
+			$horizontal_price{Total} = $horizontal_price{Price} * $horizontal_length/12;
+			$Results{Breakdown} .= sprintf('Rule: $%1$.2f%2$s * %4$.2finches=$%3$.2f<br/>', @horizontal_price{'Price','units','Total'}, $horizontal_length/12 );
+		} else {
+			$Results{Breakdown} .= "Unknown units set on horizontal material price ($horizontal_price{units})<br/>";
 		} # end if
 	} else {
 		$horizontal_price{Total} = 0;
@@ -722,8 +743,8 @@ sub get_price {
 
 #$openprint::log->debug("Vertical: $vertical_rule");
 	if ( $vertical_rule ) {
-		if ( my $Material = openprint::Material->find_one( name=>'ScoringWheel') ) {
-			%vertical_price = $Material->get_price( $vertical_rule, $Equipment );
+		if ( $Wheel ) {
+			%vertical_price = $Wheel->get_price( $vertical_rule, $Equipment );
 			if ( sets::isin( $vertical_price{units},['per rule','each'] ) ) {
 				$vertical_price{Total} = $vertical_price{Price} * $vertical_rule;
 				$Results{Breakdown} .= sprintf('Wheel: $%1$.2f%2$s * %4$d wheels=$%3$.2f<br/>', @vertical_price{'Price','units','Total'}, $vertical_rule );
@@ -743,7 +764,7 @@ sub get_price {
 		$vertical_price{Total} = 0;
 	} # end if vertical_rule
 
-	$Results{setup} = $setupPrice;
+	$Results{setup} = \%setupPrice;
 	$Results{Service} = \%servicePrice;
 	$Results{Vertical} = \%vertical_price;
 	$Results{Horizontal} = \%horizontal_price;

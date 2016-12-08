@@ -167,14 +167,14 @@ $log->debug("No project $param{ProjectIndex} found");
 } # end sub _calc
 
 sub calc {
-	my $debug = @_ ? $_[0] : 0;
+	my $debug = @_ ? $_[0] : 1;
 	my $Project = new openprint::Project( $param{ProjectIndex} );
-if ( $param{ProjectIndex} and ! $$Project{id} ) {
-$log->error("Project specified, but not found: $param{ProjectIndex}");
-$Project->save();
-} else {
-$log->debug("Found proejct $$Project{id}" . $Project->to_string() );
-}
+	if ( $param{ProjectIndex} and ! $$Project{id} ) {
+		$log->error("Project specified, but not found: $param{ProjectIndex}");
+		$Project->save();
+	} else {
+		$log->debug("Found proejct $$Project{id}" . $Project->to_string() );
+	}
 	my $module = 'openprint::Estimating::'.( $param{ServiceTypeType} ? $param{ServiceTypeType} : $param{ServiceType} );
 	eval "require $module";
 	$log->error("Error requiring $module: $@") if $@;
@@ -228,7 +228,7 @@ $log->debug("Found proejct $$Project{id}" . $Project->to_string() );
 				delete $specs{$key};
 			} elsif ( ref $specs{$key} ) {
 				$log->error("Got a non-scalar in specs! $key => $specs{$key}");
-				delete $specs{$key};
+				#delete $specs{$key};
 			} # end if
 		} # end foreach
 		foreach my $key ( sort { $a cmp $b } keys %specs ) {
@@ -236,13 +236,15 @@ $log->debug("Found proejct $$Project{id}" . $Project->to_string() );
 		} # end foreach
 	} else {
 		foreach my $key ( keys %specs ) {
+			next if ref $specs{$key};
+
 			if ( (exists $param{$key}) and ($specs{$key} eq $param{$key}) ) {
 				delete $specs{$key};
 			} elsif ( ( ! exists $param{$key}) and ! $specs{$key} ) {
 				delete $specs{$key};
 			} elsif ( ref $specs{$key} ) {
 				$log->error("Got a non-scalar in specs! $key => $specs{$key}");
-				delete $specs{$key};
+				#delete $specs{$key};
 			} # end if
 		} # end foreach
 	} # end if debug
