@@ -94,6 +94,8 @@ To save, process a new quote or process an order from this quotation, please cli
 			</td>
 		</tr>
 	</table>
+<? else ( $$variable{Quote}->can_view() ) ?>
+<div class="warning">You may not view this quote.</div>
 <? endif ( $$variable{Quote}->can_view() ) ?>
 </div><!--Quote-->
 </div></div>

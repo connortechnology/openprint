@@ -67,8 +67,9 @@ sub inks {
 	} elsif ( $param{btnFunction} eq 'Import Colours' ) {
 		if ( $param{fileColour} ) {
 
-			my %services = map { $_->name(), $_->id() } openprint::Service->find();
-			my %materials = map { $_->name(), $_->id() } openprint::Material->find();
+			my @Pricelists = openprint::Pricelist->find();
+			my %services = map { $_->name(), $_ } openprint::Service->find();
+			my %materials = map { $_->name(), $_ } openprint::Material->find();
 			# get the upload.
 			my $upload = $r->upload( 'fileColour' );
 			my $io = $upload->io();
@@ -81,51 +82,57 @@ sub inks {
 				my $status = $csv->parse($_);		# parse a CSV string into fields
 				my @data = misc::trim($csv->fields());
 
-				my ( $pms_id, $service, $material, $desc, $washups, $equipment, $service_cost, $service_units,$service_markup, $material_cost, $material_units, $material_markup, $gloss_coverage, $matte_coverage, $uncoated_coverage ) = @data;
-				if ( ! $pms_id ) {
-					$variable{error} .= "Bad record: $pms_id, $service, $material, $desc, $washups, $equipment, $service_cost, $service_markup, $material_cost, $material_markup";
-					last;
+				my ( $pms_id, $service, $material, $mix, $desc, $washups, $grades ) = splice @data, 0, 7;
+
+				if ( ! ( $pms_id or $desc ) ) {
+					$variable{error} .= "Bad record: $pms_id, $service, $material, $desc, $washups, $grades, @data<br/>";
+					next;
 				} # end if
-$log->debug("Ink $pms_id Service: $service Material: $material $desc");
 				my $Service;
 				if ( $service ) {
 					if ( ! $services{$service} ) {
 						$Service = new openprint::Service();
-						$variable{error} .= $Service->save({
-								'name'			=>	$service,
-								'description'	=>	$desc,
-								});
-						$services{$service} = $Service->id();
+						$variable{error} .= $Service->save({ name		=>	$service, description	=>	$desc, });
+						$services{$service} = $Service;
 					} else {
-						$Service = new openprint::Service( $services{$service} );
+						$Service = $services{$service};
 					} # end if
 				} # end if
 				my $Material;
 				if ( $material ) {
 					if ( ! $materials{$material} ) {
 						$Material = new openprint::Material();
-						$variable{error} .= $Material->save({
-								'name'	=>	$material,
-								'description'	=>	$desc,
-								});
-						$materials{$material} = $Material->id();
+						$variable{error} .= $Material->save({ name	=>	$material, description	=>	$desc, });
+						$materials{$material} = $Material;
 					} else {
-						$Material = new openprint::Material( $materials{$material} );
+						$Material = $materials{$material};
 					} # end if
 				} # end if
+				my $Mix;
+				if ( $mix ) {
+					if ( ! $services{$mix} ) {
+						$Mix = new openprint::Service();
+						$variable{error} .= $Mix->save({ name =>	$mix, description	=>	$mix . $desc, });
+						$services{$mix} = $Mix;
+					} else {
+						$Mix = $services{$mix};
+					} # end if
+				} # en dif
 				if ( $variable{error} ) {
 					$dbh->rollback();
 					last;
 				} # end if
 
-				my $Ink = openprint::Ink->find_one( 'pmsid' => $pms_id );
+				my $Ink = $pms_id ? openprint::Ink->find_one( pmsid => $pms_id ) : openprint::Ink->find_one( name => $desc );
 				$Ink = new openprint::Ink() if ! $Ink;
 				$variable{error} .= $Ink->save({
-					'pmsid',			$pms_id,
-					'service_id',		( $Service ? $Service->id() : undef ),
-					'material_id',		( $Material ? $Material->id() : undef ),
-					'name',				$desc,
-					'washups',			$washups,
+					pmsid				=>	$pms_id,
+					service_id			=>	( $Service ? $Service->id() : undef ),
+					mix_service_id		=>	( $Mix ? $Mix->id() : undef ),
+					material_id			=>	( $Material ? $Material->id() : undef ),
+					name				=>	$desc,
+					washups				=>	$washups,
+					grades				=>	$grades ? [ split(',', $grades) ] : undef,
 				});
 				if ( $variable{error} ) {
 $log->error( $variable{error} );
@@ -133,7 +140,8 @@ $log->error( $variable{error} );
 					last;
 				} # end if
 
-				my @Pricelists = openprint::Pricelist->find();
+				next if ! @data;
+				my ( $equipment, $service_cost, $service_units,$service_markup, $material_cost, $material_units, $material_markup, $gloss_coverage, $matte_coverage, $uncoated_coverage ) = @data;
 				
 				if ( $Service and ( $service_cost or $service_markup or $service_units ) ) {
 					foreach my $e_id ( misc::trim( split(',', $equipment ) ) ) {
