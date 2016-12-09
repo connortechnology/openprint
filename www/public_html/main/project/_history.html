@@ -133,6 +133,7 @@
 			my $has_Products = openprint::Product->find_one();
 
 			foreach my $Project ( @{$$variable{Projects}} ) {
+if ( $Project->can_view() ) {
 				push @html, sprintf(q`
 <tr%1$s> 
 	<td class="project_id"><a href="/main/project/view.html?ProjectIndex=%2$d">%2$d</a></td>`, $rowclass, $Project->id() );
@@ -164,6 +165,35 @@
 						( $Project->predefined() and $_ = join('<br/>', map { $_->Category()->name() . ' ' . $_->name() } openprint::Product->find(project_id=>$Project->id()) ) ) ? '<br/>Predefined for ' . $_ : '<br/>Not assigned to a product.' 
 					),
 				);
+} else {
+                push @html, sprintf(q`
+<tr%1$s>
+    <td class="project_id">%2$d</td>`, $rowclass, $Project->id() );
+
+                if ( ( ! $session{'/main/project/history.html?company_id'} ) and sets::isin( $session{user_type}, ['E','A'] ) ) {
+                    push @html, sprintf( '<td class="Company"><a href="/main/project/view.html?ProjectIndex=%1$d">%2$s</a></td>', $Project->id(), $Project->Company()->name() );
+                } # end if
+    push @html, sprintf( q`
+    <td class="description">%3$s</td>
+    <td class="Price" colspan="3">You are not allowed to view this project.</td>
+    <td class="status">%4$s</td>
+    <td class="Date">%5$s</td>
+    <td class="checkbox"></td>
+</tr>
+<tr%1$s>
+    <td colspan="%6$d">&nbsp;</td>
+    <td colspan="7">%7$s</td>
+</tr>`,
+                    $rowclass, $Project->id(), $Project->reference(),
+                    $Project->status(), format_date($Project->created_on() ),
+                    ( ( ( ! $session{'/main/project/history.html?company_id'} ) and sets::isin( $session{user_type}, ['E','A'] ) ) ? '2' : '1' ),
+                    $Project->summary(),
+                    (
+                        ( $Project->predefined() and $_ = join('<br/>', map { $_->Category()->name() . ' ' . $_->name() } openprint::Product->find(project_id=>$Project->id()) ) ) ? '<br/>Predefined for ' . $_ : '<br/>Not assigned to a product.'
+                    ),
+                );
+
+}
 				$rowclass = $rowclass ? '' : ' class="colRow"';
 			} # end foreach Project
 			return join( "\n", @html );

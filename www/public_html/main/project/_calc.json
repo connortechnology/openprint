@@ -1,5 +1,5 @@
 <? echo (
-	my $debug = 0;
+	my $debug = 1;
 
 	if ( ! $param{ServiceType} ) {
 $log->warn("No servicetype in params in calc");

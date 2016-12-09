@@ -26,7 +26,7 @@ require openprint::Estimating::MultiPage;
 require openprint::service;
 require openprint::Project_Log;
 
-$debug = 0;
+$debug = 1;
 
 $table = 'projects';
 $serial = 'lngProjectIndex_seq';
@@ -1860,6 +1860,27 @@ $openprint::log->error("Unable to get sig_weight for signature $$sig_specs{Signa
     # This 1.1 was actually requested by Amin.  So it was pretty random, but then I thought abotu it, and our weight calculations don't take into account the weight of the ink, etc... so it may actually be not too off.... would love to see some real figures on it.
     return $project_weight * (1+$openprint::config{WeightMarkup}/100);
 } # end sub get_finished_weight
+
+sub can_view {
+	if ( ! $_[0]{id} ) {
+		$openprint::log->debug("can_view 1 cuz no id") if $debug;
+		return 1;
+	}
+	if ( $openprint::session{user_type} eq 'A' ) {
+		$openprint::log->debug("can_view 1 cuz admin") if $debug;
+		return 1 
+	}
+	if ( $openprint::session{company_id} == $_[0]{company_id} ) {
+		$openprint::log->debug("can_view 1 cuz i am the company") if $debug;
+		return 1;
+	}
+
+	if ( sets::isin( $_[0]{user_id}, [ $openprint::User{id}, $openprint::User->assistant_ids(), $openprint::User->csr_ids() ] ) ) {
+		$log->debug("$openprint::User{firstname} Either created it or is an assistant") if $debug;
+		return 1;
+	} # end if
+	return 0;
+}
 
 
 1;
