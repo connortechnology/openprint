@@ -23,7 +23,7 @@ require openprint::Estimating::Printing;
 require openprint::service;
 require sets;
 
-use constant DEBUG => 0;
+use constant DEBUG => 1;
 
 use vars qw{ @signature_variables };
 
@@ -323,6 +323,8 @@ $openprint::log->warn("FIXM E");
 		my %sig_specs =  map { $_, $$specs{$_.$group_id } } @signature_variables;
 		if ( ! exists $override_pages{$group_id} ) {
 			$override_pages{$group_id} = $remaining_pages;
+
+		# THe purpose of calling this here, is to do auto-population of coverage, etc.
 			$remaining_pages = 0;
 		} # end if
 		$sig_specs{GroupPageQuantity} = $$specs{'GroupPageQuantity'.$group_id} = $override_pages{$group_id};
