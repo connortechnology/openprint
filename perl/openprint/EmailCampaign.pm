@@ -86,7 +86,7 @@ __ADMIN_EMAIL__
 	$Email->send(
 			FROM => sprintf("\"%s\" <%s>", @$replacements{'REPNAME','REPEMAIL'} ),
 			#TO => sprintf("\"%s\" <%s>", @$replacements{'REPNAME','REPEMAIL'} ),
-			TO => 'iconnor@point-one.com',
+			TO => 'iconnor@connortechnology.com',
 			SUBJECT => 'Automatically Generated Account Deletion Email',
 			HTML_BODY => $email_template,
 		);
