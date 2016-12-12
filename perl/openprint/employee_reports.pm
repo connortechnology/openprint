@@ -259,7 +259,7 @@ sub _order_history_results {
 	ssi::save_params($uri,
 		( map { 'created_on_start_'.$_ } ( 'year','month','day' ) ),
 		( map { 'created_on_end_'.$_ } ( 'year','month','day' ) ),
-		'status', 'company_id', 'CSR', 'reprint', 
+		'status', 'company_id', 'CSR', 'reprint', 'currency_id', 'total_start', 'total_end'
 	);
 	if ( %param ) {
 	my %parameters; 
@@ -281,8 +281,9 @@ sub _order_history_results {
 		ssi::date_filter( $uri.'?created_on_start', 'created_on >=' ),
 		ssi::date_filter( $uri.'?created_on_end', 'created_on <=' ),
 		( $session{$uri.'?status'} ? ( status_id => [ split(',', $session{$uri.'?status'} ) ] ) : () ),
-		( $session{$uri.'?value_start'} ? ( 'value >=' => $session{$uri.'?value_start'} ) : () ),
-		( $session{$uri.'?value_end'} ? ( 'value <=' => $session{$uri.'?value_end'} ) : () ),
+		( $session{$uri.'?total_start'} ? ( 'total >=' => $session{$uri.'?total_start'} ) : () ),
+		( $session{$uri.'?total_end'} ? ( 'total <=' => $session{$uri.'?total_end'} ) : () ),
+		( $session{$uri.'?currency_id'} ? ( currency_id=>$session{$uri.'?currency_id'} ) : () ),
 		order => ($param{order} ? $openprint::Order::fields{$param{order}} : 'id'),
 	) ) {
 		if ( $param{reprint} ) {
