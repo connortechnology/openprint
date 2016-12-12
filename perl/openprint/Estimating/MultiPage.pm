@@ -23,7 +23,7 @@ require openprint::Estimating::Printing;
 require openprint::service;
 require sets;
 
-use constant DEBUG => 0;
+use constant DEBUG => 1;
 
 use vars qw{ @signature_variables };
 
@@ -96,7 +96,7 @@ sub variables {
 		push @v, $k if sets::isin( 'save', $variables{$k} );
 	} # end foreach;
 	my @Groups = sql::execute( undef, undef, 'SELECT DISTINCT strvalue FROM tbl_Service_Specifications WHERE lngProjectIndex=? AND strName=?', $project_id, 'Group' );
-	foreach my $group_id ( @Groups ) {
+	foreach my $group_id ( groups( $project_id, $incoming_specs ) ) {
 		push @v, map { join('', $_,$group_id) } @signature_variables;
 	} # end foreach group
 	return @v;
@@ -323,12 +323,15 @@ $openprint::log->warn("FIXM E");
 		my %sig_specs =  map { $_, $$specs{$_.$group_id } } @signature_variables;
 		if ( ! exists $override_pages{$group_id} ) {
 			$override_pages{$group_id} = $remaining_pages;
+
+		# THe purpose of calling this here, is to do auto-population of coverage, etc.
 			$remaining_pages = 0;
 		} # end if
 		$sig_specs{GroupPageQuantity} = $$specs{'GroupPageQuantity'.$group_id} = $override_pages{$group_id};
-		openprint::Estimating::Printing::get_colours( $specs, 'SideOne', \%variables, $group_id );
-		openprint::Estimating::Printing::get_colours( $specs, 'SideTwo', \%variables, $group_id );
-		openprint::Estimating::Printing::get_inkcoverage( $Project, $specs, \%variables, $group_id );
+		openprint::Estimating::Printing::get_inkcoverage( $Project, \%sig_specs, \%variables );
+		openprint::Estimating::Printing::get_colours( \%sig_specs, 'SideOne', \%variables );
+		openprint::Estimating::Printing::get_colours( \%sig_specs, 'SideTwo', \%variables );
+
 		openprint::Estimating::Printing::get_Stocks( $Project, \%sig_specs, \%variables );
 		openprint::Estimating::Printing::set_size( $Project, \%sig_specs, $specs );
 		if ( $$specs{"ddmRunStyle-$group_id"} and $$specs{"ddmPress-$group_id"} ) {
@@ -653,6 +656,7 @@ sub check {
 			foreach my $ddm ( 'Brand','Finish','Colour','Weight' ) {
 #$openprint::log->debug("no qty_index $ddm " . $$sig_specs{"ddmStock$ddm"} . " " .  $$specs{"ddmStock$ddm$$sig_specs{Group}"} );
 
+				# In the olden days, we weren't saving the stock type in the book service, now we are
 				if ( $$specs{"ddmStock$ddm$$sig_specs{Group}"} and ( $$sig_specs{"ddmStock$ddm"} ne $$specs{"ddmStock$ddm$$sig_specs{Group}"} ) ) {
 					$error .= "Stock $ddm for form $$sig_specs{SignatureIndex} " . $$sig_specs{"ddmStock$ddm"} . " does not match book specs " . $$specs{"ddmStock$ddm$$sig_specs{Group}"} ." group $$sig_specs{Group}.<br/>";
 				}

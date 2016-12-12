@@ -1,6 +1,6 @@
 #!/usr/bin/perl
 use strict;
-#use warnings;
+use warnings;
 use lib '/var/www/testing/perl';
 
 use Getopt::Long qw(GetOptions);
@@ -8,6 +8,7 @@ use File::Basename qw(basename);
 require openprint;
 require logger;
 require sql;
+require configuration;
 require openprint::Host;
 
 use vars qw( $log $dbh %config);
@@ -18,51 +19,51 @@ my $program = basename($0);
 
 my $opts = {};
 GetOptions($opts, 'help', 
-    'db_name=s', 'db_host=s', 'db_user=s', 'db_pass=s','log_level=s',
+    'db_name=s', 'db_host=s', 'db_user=s', 'db_pass=s','log_level=s','config=s',
  );
+my %defaults = (
+    config  =>  "/etc/openprint/$program.conf",
+);
+foreach my $default ( keys %defaults ) {
+    $$opts{$default} = $defaults{$default} if ! $$opts{$default};
+} # end foreach
+
 
 *log = \$openprint::log;
 $log = logger->new('debug');
-# Get our configuration information
-if (my $err = ReadCfg('/etc/chilli_nsupdate.conf')) {
-    die $err;
-} # end if
+configuration::init( );
+configuration::from_file( $$opts{config} );
+configuration::merge( $opts );
+
 
 foreach my $param ( 'db_name','db_user','db_pass' ) {
-	$CFG::Config{$param} = $$opts{$param} if $$opts{$param};
-	if ( ! $CFG::Config{$param} ) {
+	if ( ! $config{$param} ) {
 		die "$program: missing required --$param parameter";
 	}
 } # end foreach required-param
 
-foreach my $param ( 'db_host', 'log_file', 'log_level' ) {
-	$CFG::Config{$param} = $$opts{$param} if $$opts{$param};
-} # end foreach non-required param
+$config{log_level} = 'debug' if ! $config{'log_level'};
+$log = logger->new( {'file'=>$config{'log_file'}, 'level'=>$config{'log_level'}} );
 
-$CFG::Config{'log_level'} = 'debug' if ! $CFG::Config{'log_level'};
-$log = logger->new( {'file'=>$CFG::Config{'log_file'}, 'level'=>$CFG::Config{'log_level'}} );
-
-if ($CFG::Config{help}) {
+if ($config{help}) {
     usage();
     exit 0;
 }
 
-if ( 0 ) {
-if ( $CFG::Config{'log_level'} eq 'debug' ) {
-foreach my $k ( keys %ENV ) {
-$log->debug("Environment: $k => $ENV{$k}");
-}
-}
+if ( $config{'log_level'} eq 'debug' ) {
+	foreach my $k ( keys %ENV ) {
+		$log->debug("Environment: $k => $ENV{$k}");
+	}
 }
 
 if ( $ENV{'CALLING_STATION_ID'} ) {
-	if ( $CFG::Config{'db_name'} ) {
+	if ( $config{'db_name'} ) {
 		$dbh = sql::open_sql( $log,
-				'host'      => $CFG::Config{'db_host'},
-				'database'  => $CFG::Config{'db_name'},
+				'host'      => $config{'db_host'},
+				'database'  => $config{'db_name'},
 				'driver'    => 'Pg',
-				'login'     => $CFG::Config{'db_user'},
-				'password'  => $CFG::Config{'db_pass'},
+				'login'     => $config{'db_user'},
+				'password'  => $config{'db_pass'},
 				);
 		die 'Error opening db' if ! $dbh;
 	} else {
@@ -106,6 +107,10 @@ if ( $ENV{'CALLING_STATION_ID'} ) {
 		} # end foreach Inteface
 	} else {
 		$log->debug("Host not found for mac $ENV{'CALLING_STATION_ID'}");
+		my $Host = new openprint::Host();
+		$Host->save({hostname=>'unknown ' . $ENV{'CALLING_STATION_ID'}});
+		my $HI = new openprint::Host_Interface();
+		$HI->save({ mac=>$ENV{'CALLING_STATION_ID'}, address=>$ENV{'FRAMED_IP_ADDRESS'}, host_id=>$Host->id() });
 
 	} # end if Hosts
 	$dbh->disconnect() if $dbh;
@@ -113,34 +118,6 @@ if ( $ENV{'CALLING_STATION_ID'} ) {
 	$log->error("No CALLING_STATION_ID");
 } # end if
 exit(0);
-
-# Read a configuration file
-#   The arg can be a relative or full path, or
-#   it can be a file located somewhere in @INC.
-sub ReadCfg {
-    my $file = $_[0];
-
-    our $err;
-
-    {   # Put config data into a separate namespace
-        package CFG;
-		use vars qw( %Config );
-
-        # Process the contents of the config file
-        my $rc = do($file);
-
-        # Check for errors
-        if ($@) {
-            $::err = "ERROR: Failure compiling '$file' - $@";
-        } elsif (! defined($rc)) {
-            $::err = "ERROR: Failure reading '$file' - $!";
-        } elsif (! $rc) {
-            $::err = "ERROR: Failure processing '$file'";
-        }
-    }
-
-    return ($err);
-}
 
 sub usage {
 	print <<EOH;

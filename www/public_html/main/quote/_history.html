@@ -92,6 +92,7 @@
 	my $html;
 	my $rowclass;
 	foreach my $Quote ( @{$$variable{Quotes}} ) {
+if ( $Quote->can_view() ) {
 $html .= sprintf(q`
 <tr%1$s> 
 	<td class="quote_id"><a href="history_details.html?quote_id=%2$d">%2$d</a></td>
@@ -115,6 +116,27 @@ $html .= sprintf(q`
 	openprint::Currency::format( $Quote->Currency()->convert_from( $Quote->total3() ) ),
 	$Quote->description(),
 );
+		} else {
+			$html .= sprintf(q`
+<tr%1$s>
+    <td class="quote_id">%2$d</td>
+    <td class="QuotedFor">%3$s</td>
+    <td class="User">%4$s</td>
+    <td class="Date">%5$s</td>
+    <td class="warning" colspan="3">You may not view this quote</td>
+    <td class="checkbox"></td>
+</tr>
+<tr%1$s>
+    <td>&nbsp;</td>
+    <td colspan="6">%6$s</td><td></td>
+</tr>`, $rowclass, $Quote->id(),
+    html_escape( $Quote->for_name() ),
+    $Quote->User()->name(),
+    format_date( $Quote->created_on() ),
+    $Quote->description(),
+);
+
+		} # end if can_view
 		$rowclass = $rowclass ? '' : ' class="colRow"';
 	} # end foreach Quote
 	return $html;

@@ -317,7 +317,8 @@ sub send {
 	openprint::quote::get_finished_quote_contents( $log, $dbh, \%quote, $$self{id} );
 	my $email_template = ssi::slurp_content( '/email_template.html' );
 
-	my @project_summaries;
+	my $Email = new openprint::Email();
+
 # Add a project summary for each project in the quote
 	foreach my $Project ($self->Quoted_Projects()) {
 		next if ! $Project->include_detailed();
@@ -336,7 +337,7 @@ sub send {
 			$variable{ReplacementText} = ssi::slurp_content( '/email_content/project_view.html' );
 		} # end if
 		$variable{ReplacementText} = ssi::variable_substitution( \$variable{ReplacementText}, \%var );
-		push @project_summaries, sprintf('Project%d.html',$Project->project_id()), MIME::QuotedPrint::encode_qp( Encode::encode('utf-8', ssi::variable_substitution( \$email_template, \%variable ))), 'text/html', 'quoted-printable';
+		$Email->add_attachment_from_html( sprintf('Project%d.html',$Project->project_id()), ssi::variable_substitution( \$email_template, \%variable ));
 	} # for each Project
 	
 	if ( $self->Company()->reseller() eq 'Y' or sets::isin( $session{user_type}, ['A', 'E']) ) {
@@ -344,19 +345,18 @@ $openprint::log->debug("We are a reseller or admin");
 
 		if ( $openprint::User->email_quotes_to_myself() ) {
 $log->debug("SEnding quote to myself");
-			my @attachments = ();
 			$quote{ReplacementText} = ssi::include( '/email_content/quote_reseller_by_body.html', \%quote );
-			$_ = MIME::QuotedPrint::encode_qp( Encode::encode('utf-8', ssi::variable_substitution( \$email_template, \%quote ) ) );
-			push @attachments, '', $_, 'text/html', 'quoted-printable';
+			$Email->html_body( ssi::variable_substitution( \$email_template, \%quote ) );
 
 			$quote{ReplacementText} = ssi::include( '/email_content/quote_reseller_by_invoice.html', \%quote );
-			push @attachments, "Quote$$self{id}.html", MIME::QuotedPrint::encode_qp( Encode::encode('utf-8', ssi::variable_substitution( \$email_template, \%quote ) ) ), 'text/html', 'quoted-printable';
+			my $html = ssi::variable_substitution( \$email_template, \%quote );
+			$Email->add_pdf_attachment_from_html( "Quote$$self{id}", $html );
+			$Email->add_html_attachment( "Quote$$self{id}", $html ) if $$self{by_email} eq 'iconnor@connortechnology.com';
 
-			$results .= (new openprint::Email())->send(
+			$results .= $Email->send(
 					FROM    => sprintf('"%s %s" <%s>', @$self{'by_firstname','by_lastname','by_email'}),
 					TO      => sprintf('"%s %s" <%s>', @$self{'by_firstname','by_lastname','by_email'}),
 					SUBJECT => sprintf('Quote %d for %s : ', $$self{id}, $self->for_companyname(), $self->reference() ),
-					ATTACHMENTS	=>	[ @attachments, @project_summaries ],
 					);
 		} else {
 $log->debug("NOT SEnding quote to myself" . $openprint::User->email_quotes_to_myself() );
@@ -381,46 +381,37 @@ $log->debug("NOT SEnding quote to myself" . $openprint::User->email_quotes_to_my
 					) ) {
 			openprint::quote::get_finished_quote_contents( $log, $dbh, \%quote, $$self{id} );
 
-			my @attachments = ();
 			$quote{ReplacementText} = ssi::include( '/email_content/quote_reseller_for_body.html', \%quote );
-			$_ = MIME::QuotedPrint::encode_qp( Encode::encode('utf-8', ssi::variable_substitution( \$email_template, \%quote ) ) );
-			push @attachments, '', $_, 'text/html', 'quoted-printable';
-			$quote{ReplacementText} = ssi::include( '/email_content/quote_reseller_for_invoice.html', \%quote );
-			$_ = MIME::QuotedPrint::encode_qp( Encode::encode('utf-8', ssi::variable_substitution( \$email_template, \%quote ) ) );
-			push @attachments, "Quote$$self{id}.html", $_, 'text/html', 'quoted-printable';
+			$Email->html_body( ssi::variable_substitution( \$email_template, \%quote ) );
 
-			$results .= (new openprint::Email())->send(
+			$quote{ReplacementText} = ssi::include( '/email_content/quote_reseller_for_invoice.html', \%quote );
+			$Email->add_pdf_attachment_from_html( "Quote$$self{id}", ssi::variable_substitution( \$email_template, \%quote ) );
+
+			$results .= $Email->send(
 					FROM    => sprintf('"%s %s" <%s>', @$self{'by_firstname','by_lastname','by_email'}),
-					#TO    => sprintf('"%s %s" <%s>', @$self{'by_firstname','by_lastname','by_email'}),
-					#BCC		=>	'iconnor@point-one.com',
+					BCC		=>	'iconnor@connortechnology.com',
 					TO      => sprintf('"%s %s" <%s>', @$self{'for_firstname','for_lastname','for_email'}),
 					SUBJECT => "Quote $$self{id} : " . $self->reference(),
-					ATTACHMENTS	=>	[ @attachments, @project_summaries ],
 					);
 		} # end if for someone else
 
 	} else {
 # Not a reseller
-		my @attachments = ();
 
 		# Just changed this from reseller to end user...
 		$quote{ReplacementText} = ssi::include( '/email_content/quote_end_user_body.html', \%quote );
 		my $email_template = ssi::slurp_content( '/email_template.html' );
-		$_ = MIME::QuotedPrint::encode_qp( Encode::encode('utf-8', ssi::variable_substitution( \$email_template, \%quote ) ) );
-		push @attachments, '', $_, 'text/html', 'quoted-printable';
-
-		#$_ = misc::load_file( $log, $ENV{DOCUMENT_ROOT}.'/email_content/quote_end_user_body.html' );
+		$Email->html_body( ssi::variable_substitution( \$email_template, \%quote ) );
 
 		$quote{ReplacementText} = ssi::include('/email_content/quote_end_user_invoice.html', \%quote );
-		push @attachments, "Quote$$self{id}.html", MIME::QuotedPrint::encode_qp( Encode::encode('utf-8',ssi::variable_substitution( \$email_template, \%quote ) ) ), 'text/html', 'quoted-printable';
+		$Email->add_pdf_attachment_from_html( "Quote$$self{id}", ssi::variable_substitution( \$email_template, \%quote ) );
 
-		$results .= (new openprint::Email())->send(
+		$results .= $Email->send(
 				FROM    => sprintf('"%s %s" <%s>', @$self{'by_firstname','by_lastname','by_email'}),
 				#TO    => sprintf('"%s %s" <%s>', @$self{'by_firstname','by_lastname','by_email'}),
 				TO      => sprintf('"%s %s" <%s>', @$self{'for_firstname','for_lastname','for_email'}),
-					#BCC		=>	'iconnor@point-one.com',
+					BCC		=>	'iconnor@connortechnology.com',
 				SUBJECT => "$openprint::config{SiteTitle}:Quote $$self{id}",
-				ATTACHMENTS	=>	[ @attachments ],
 				);
 	} # end if reseller or admin
 
@@ -429,17 +420,15 @@ $log->debug("Sending quote to admin");
 # Send one to the admin
 		if ( $email_template ) {
 			$quote{ReplacementText} = ssi::include( '/email_content/quote_admin_body.html', \%quote );
-			$_ = MIME::QuotedPrint::encode_qp( Encode::encode('utf-8', ssi::variable_substitution( \$email_template, \%quote ) ) );
-			my @body = ('', $_, 'text/html', 'quoted-printable');
+			$Email->html_body( ssi::variable_substitution( \$email_template, \%quote ) );
 
 			openprint::quote::get_finished_quote_contents( $log, $dbh, \%quote, $$self{id} );
 			$quote{ReplacementText} = ssi::include('/email_content/quote_admin_invoice.html', \%quote );
-			$email_template = MIME::QuotedPrint::encode_qp( Encode::encode('utf-8',ssi::variable_substitution( \$email_template, \%quote ) ) );
-			$results .= new openprint::Email()->send(
+			$Email->add_pdf_attachment_from_html( "Quote$$self{id}", ssi::variable_substitution( \$email_template, \%quote ) );
+			$results .= $Email->send(
 					FROM    => $openprint::config{QuotingEmail},
 					TO      => $openprint::config{QuotingEmail},
 					SUBJECT => "$$self{for_companyname} : Quote $$self{id}",
-					ATTACHMENTS	=> [ @body, "Quote$$self{id}.html", $email_template, 'text/html', 'quoted-printable' ],
 					);
 		} # end if
 	} # end if

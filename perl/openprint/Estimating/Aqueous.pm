@@ -271,8 +271,8 @@ $openprint::log->debug("Makereadies $equipment_id $$MakeReadies{$equipment_id}")
 	foreach ( @{$$sig_specs{SideOneColours}} ) {
 #$openprint::log->debug("blah  $$_{name}");
 		if ( $$_{name} =~ /Aqueous/ ) {
-			push @front_aq, $$_{name};
-			$front_aq{$$_{name}} = 1;
+			push @front_aq, $_;
+			$front_aq{$$_{name}} = $_;
 			#$openprint::log->debug("Side one Aqueous: $_");
 		} # end if
 	} # end foreach colour
@@ -282,8 +282,8 @@ $openprint::log->debug("Makereadies $equipment_id $$MakeReadies{$equipment_id}")
     $$sig_specs{SideTwoColours} = [openprint::Estimating::Printing::get_colours( $sig_specs, 'SideTwo' )] if ! $$sig_specs{SideTwoColours};
 	foreach ( @{$$sig_specs{SideTwoColours}} ) {
 		if ( $$_{name} =~ /Aqueous/ ) {
-			push @back_aq, $$_{name};
-			$back_aq{$$_{name}} = 1;
+			push @back_aq, $_;
+			$back_aq{$$_{name}} = $_;
 			#$openprint::log->debug("Side two Aqueous: $_");
 		} # end if
 	} # end foreach colour
@@ -294,17 +294,8 @@ $openprint::log->debug("Makereadies $equipment_id $$MakeReadies{$equipment_id}")
 		$bestPrice{Status} = 'calculated';	
 		return %bestPrice;
 	} # end if
-	my $inkCoverage;
-	if ( $$imposition{inkCoverage} ) {
-$inkCoverage = $$imposition{inkCoverage};
-	} else {
-	$inkCoverage = { openprint::Estimating::Printing::get_inkcoverage( $Project, $sig_specs ) };
-		my ( $caller, undef, $line ) = caller;
-		$openprint::log->warn("No inkCoverage in Imposition from $caller:$line");
 
-	}
-
-	my @different_types = sets::union( @front_aq, @back_aq );
+	my @different_types = sets::union( keys %front_aq, keys %back_aq );
 
 	# Should include overs
 	my $impressions = $$sig_specs{"hdnImpressionQuantity$qty_index"} ? $$sig_specs{"hdnImpressionQuantity$qty_index"} : $$specs{"txtQuantity$qty_index"};
@@ -424,8 +415,11 @@ $openprint::log->debug("AQ Equipment $$Equipment{strid}") if DEBUG;
 				foreach my $type ( @different_types ) {
 					if ( ! ( $front_aq{$type} and $back_aq{$type} ) ) {
 						$type =~ s/Overall/W&T/;
+						push @types, { name => $type, coverage=> $front_aq{$type} ? $front_aq{$type}{coverage}/2 : $back_aq{$type}{coverage}/2 };
+
+					} else {
+						push @types, { name => $type, coverage=>($front_aq{$type}{coverage} + $back_aq{$type}{coverage} )/2 };
 					} # end if
-					push @types, $type;
 				} # end foreach
 				# In W&T, the impression count is total impressions, so both sides already, so no need to multiply
 				#$run_qty *= 2;
@@ -433,7 +427,6 @@ $openprint::log->debug("AQ Equipment $$Equipment{strid}") if DEBUG;
 				@types = (@front_aq, @back_aq);
 			} # end if
 			my $area = $imp->layout_area();
-$openprint::log->debug("AQ types @types") if DEBUG;
 			foreach my $type ( @types ) {
 
 				my %setupPrice;
@@ -471,15 +464,15 @@ $colour_total += $setupPrice{Price};
 					$colour_total += $BlanketCutPrice{Price};
 				} # end if
 
-				my $Service = openprint::Service->find_one( name=>$type );
+				my $Service = openprint::Service->find_one( name=>$$type{name} );
 				if ( ! $Service ) {
-					$$specs{'hdnBreakdown'.$qty_index} = 'No Service for ' . $type . '<br/>';
+					$$specs{'hdnBreakdown'.$qty_index} = 'No Service for ' . $$type{name} . '<br/>';
 					next;
 				} # end if
 
 				my %ServicePrice = $Service->get_price( $run_qty, $Equipment );
 				if ( ! %ServicePrice ) {
-					$$specs{'hdnBreakdown'.$qty_index} = 'No Service price for ' . $type . '<br/>';
+					$$specs{'hdnBreakdown'.$qty_index} = 'No Service price for ' . $$type{name} . '<br/>';
 					$ServicePrice{Total} = 1000000;
 				} # end if
 				if ( $ServicePrice{units} eq 'per 1000 impressions' ) {
@@ -493,7 +486,7 @@ $colour_total += $setupPrice{Price};
 					$ServicePrice{Quantity} = $run_qty;
 					$ServicePrice{Total} = $ServicePrice{Price} * $run_qty / $Equipment->specification('AqueousRunSpeed') if $Equipment->specification('AqueousRunSpeed');
 				} else {
-					$$specs{'hdnBreakdown'.$qty_index} = "Unkown units ( $ServicePrice{units} ) for $type<br/>";
+					$$specs{'hdnBreakdown'.$qty_index} = "Unkown units ( $ServicePrice{units} ) for $$type{name}<br/>";
 				} # end if
 # Div by imposition
 				#$ServicePrice{Total} /= $imp->imposition();
@@ -501,27 +494,27 @@ $colour_total += $setupPrice{Price};
 				$colour_total += $ServicePrice{Total};
 
 				my %MaterialPrice;
-				my $material_name = $type;
+				my $material_name = $$type{name};
 				$material_name =~ s/ ?Spot ?//;
 				$material_name =~ s/ ?Overall ?//;
 				$material_name =~ s/ ?W&T ?//;
-				my $Material = openprint::Material->find_one('name'=>$material_name);
+				my $Material = openprint::Material->find_one( name=>$material_name);
 				if ( ! $Material ) {
 					$material_name = 'Aqueous';
-					$Material = openprint::Material->find_one('name'=>$material_name);
+					$Material = openprint::Material->find_one( name=>$material_name);
 				} # end if
 				if ( ! $Material ) {
 					$$specs{'hdnBreakdown'.$qty_index} .= 'No material for aqueous found.<br/>';
 				} else {
 					%MaterialPrice = $Material->get_price( $run_qty, $Equipment );
 					if ( $MaterialPrice{units} eq 'per square inch' ) {
-						my $area = $imp->object_area() * $run_qty * ($$inkCoverage{$type}/100);
+						my $area = $imp->object_area() * $run_qty * ($$type{coverage}/100);
 						$MaterialPrice{Total} = $MaterialPrice{Price} * $run_qty * $area;
 					} elsif ( $MaterialPrice{units} eq 'per square foot' ) {
-						my $area = $imp->object_area() * $run_qty * ($$inkCoverage{$type}/100) /144;
+						my $area = $imp->object_area() * $run_qty * ($$type{coverage}/100) /144;
 						$MaterialPrice{Total} = $MaterialPrice{Price} * $area;
 					} elsif ( $MaterialPrice{units} eq 'per 1000 square feet' ) {
-						my $area = $imp->object_area() * $run_qty * ($$inkCoverage{$type}/100) /144;
+						my $area = $imp->object_area() * $run_qty * ($$type{coverage}/100) /144;
 # area is # of square feet
 						$MaterialPrice{Total} = $MaterialPrice{Price} * $area/1000;
 					} elsif ( $MaterialPrice{units} eq 'per m' ) {
