@@ -389,7 +389,7 @@ $log->debug("NOT SEnding quote to myself" . $openprint::User->email_quotes_to_my
 
 			$results .= $Email->send(
 					FROM    => sprintf('"%s %s" <%s>', @$self{'by_firstname','by_lastname','by_email'}),
-					BCC		=>	'iconnor@point-one.com',
+					BCC		=>	'iconnor@connortechnology.com',
 					TO      => sprintf('"%s %s" <%s>', @$self{'for_firstname','for_lastname','for_email'}),
 					SUBJECT => "Quote $$self{id} : " . $self->reference(),
 					);

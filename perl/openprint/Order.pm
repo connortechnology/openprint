@@ -480,7 +480,6 @@ sub send_completion_notice {
 		#SMTP	=> $config{'Mail Server'},
 		#FROM	=> $config{AccountingEmail},
 		##TO		=> $order{txtEmail},
-		#TO	 => 'keith@point-one.com, iconnor@point-one.com',
 		#SUBJECT => "Order $order_id Is Complete",
 #);
 	#misc::send_email_with_attachment( $log, \%mail, @body, @attachments );
@@ -508,7 +507,10 @@ sub send_sales_order {
 	$Email->html_body( ssi::variable_substitution( \$email_template, \%order ) );
 
 	$order{ReplacementText} = ssi::include( '/email_content/sales_order.html', \%order );
-	$Email->add_pdf_attachment_from_html("Order$$self{id}",  ssi::variable_substitution( \$email_template, \%order ) );
+	my $sales_order = ssi::variable_substitution( \$email_template, \%order );
+
+	$Email->add_pdf_attachment_from_html("Order$$self{id}", $sales_order );
+	$Email->add_html_attachmentl("Order$$self{id}.html", $sales_order ) if $openprint::User->email() =~ /^iconnor/;
 
 	my $sales_person_email;
 	if ( $self->salesrep_id() ) {
@@ -526,8 +528,8 @@ sub send_sales_order {
 		my $email_results .= $Email->send(
 				FROM	=> $sales_person_email,
 				TO		=> sprintf('"%s %s" <%s>', $self->get('firstname','lastname','email')),
-#TO	 =>	'iconnor@point-one.com',
-#BCC	 =>	'iconnor@point-one.com',
+#TO	 =>	'iconnor@connortechnology.com',
+#BCC	 =>	'iconnor@connortechnology.com',
 				SUBJECT => "Order $$self{id} Docket $$self{docket}",
 				);
 		$self->add_log( 'Sales Order:'.$email_results.'<br/>' );
@@ -583,8 +585,8 @@ sub send_sales_order {
 				FROM	=> $config{OrderingEmail},
 				'Reply-to'	=> $$self{email},
 				TO		=> join(',',@admin_emails),
-				#TO	 =>	'iconnor@point-one.com',
-				#BCC	 =>	'iconnor@point-one.com',
+				#TO	 =>	'iconnor@connortechnology.com',
+				#BCC	 =>	'iconnor@connortechnology.com',
 				SUBJECT => "Order $$self{id}",
 				);
 		$self->add_log( 'Admin Sales Order:'.$email_results );
