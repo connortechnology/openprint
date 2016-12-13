@@ -44,8 +44,8 @@
 						$weight = sprintf( '%.0flbs (%.0fg)', $weight, $g );
 					} # end if
 					$html .= sprintf(q`<tr><td class="weight">%s</td><td class="quantity">%s</td><td class="price">%s</td></tr>`, 
-							$QP->quantity($qty_index),
 							$weight, 
+							$QP->quantity($qty_index),
 							openprint::Currency::format( $QP->price($qty_index) ),
 							);
 				} # end foreach qty_index
