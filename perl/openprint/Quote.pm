@@ -337,7 +337,7 @@ sub send {
 			$variable{ReplacementText} = ssi::slurp_content( '/email_content/project_view.html' );
 		} # end if
 		$variable{ReplacementText} = ssi::variable_substitution( \$variable{ReplacementText}, \%var );
-		$Email->add_attachment_from_html( sprintf('Project%d.html',$Project->project_id()), ssi::variable_substitution( \$email_template, \%variable ));
+		$Email->add_pdf_attachment_from_html( sprintf('Project%d.html',$Project->project_id()), ssi::variable_substitution( \$email_template, \%variable ));
 	} # for each Project
 	
 	if ( $self->Company()->reseller() eq 'Y' or sets::isin( $session{user_type}, ['A', 'E']) ) {
