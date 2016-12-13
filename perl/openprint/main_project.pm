@@ -86,7 +86,7 @@ $log->debug("Reset $k");
 
 sub _history {
 	ssi::save_params( '/main/project/history.html', 
-			'ddmStatus', 'type_id', 'predefined', 'company_id', 'user_id', 'servicetype_id',
+			'ddmStatus', 'type_id', 'predefined', 'company_id', 'user_id', 'servicetype_id','salesrep_id',
 			'created_on_start_year', 'created_on_start_month','created_on_start_day', 
 			'created_on_end_year', 'created_on_end_month','created_on_end_day', 
 			'updated_on_start_year', 'updated_on_start_month','updated_on_start_day', 

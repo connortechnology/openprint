@@ -58,5 +58,6 @@
 <? endif ( $$variable{Quote}->Quoted_Projects() ) ?>
 	<?include('/email_content/_quote_products_for.html')?>
 	<span class="Currency">All prices are in <? echo ( $$variable{Quote}->Currency()->name() ) ?> and are subject to applicable taxes.</span><br/>
+	<br class="pagebreak"/>
 	<? echo ( $config{QuoteViewDisclaimer} ) ?>
 </div>

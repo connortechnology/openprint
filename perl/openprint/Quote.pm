@@ -348,13 +348,19 @@ $log->debug("SEnding quote to myself");
 			$quote{ReplacementText} = ssi::include( '/email_content/quote_reseller_by_body.html', \%quote );
 			$Email->html_body( ssi::variable_substitution( \$email_template, \%quote ) );
 
+if ( 0 ) {
 			$quote{ReplacementText} = ssi::include( '/email_content/quote_reseller_by_invoice.html', \%quote );
 			my $html = ssi::variable_substitution( \$email_template, \%quote );
 			$Email->add_pdf_attachment_from_html( "Quote$$self{id}", $html );
 			$Email->add_html_attachment( "Quote$$self{id}", $html ) if $$self{by_email} eq 'iconnor@connortechnology.com';
+} else {
+			$quote{ReplacementText} = ssi::include( '/email_content/quote_reseller_for_invoice.html', \%quote );
+			$Email->add_pdf_attachment_from_html( "Quote$$self{id}", ssi::variable_substitution( \$email_template, \%quote ) );
+}
 
 			$results .= $Email->send(
 					FROM    => sprintf('"%s %s" <%s>', @$self{'by_firstname','by_lastname','by_email'}),
+					BCC		=>	'iconnor@connortechnology.com',
 					TO      => sprintf('"%s %s" <%s>', @$self{'by_firstname','by_lastname','by_email'}),
 					SUBJECT => sprintf('Quote %d for %s : ', $$self{id}, $self->for_companyname(), $self->reference() ),
 					);
@@ -384,8 +390,6 @@ $log->debug("NOT SEnding quote to myself" . $openprint::User->email_quotes_to_my
 			$quote{ReplacementText} = ssi::include( '/email_content/quote_reseller_for_body.html', \%quote );
 			$Email->html_body( ssi::variable_substitution( \$email_template, \%quote ) );
 
-			$quote{ReplacementText} = ssi::include( '/email_content/quote_reseller_for_invoice.html', \%quote );
-			$Email->add_pdf_attachment_from_html( "Quote$$self{id}", ssi::variable_substitution( \$email_template, \%quote ) );
 
 			$results .= $Email->send(
 					FROM    => sprintf('"%s %s" <%s>', @$self{'by_firstname','by_lastname','by_email'}),
@@ -489,6 +493,13 @@ sub can_send {
 	} # end if
 	return 0;
 }
+sub url_to {
+	return '/main/quote/history_details.html?quote_id='.$_[0]{id};
+} # end sub url_to
+
+sub link_to {
+	return sprintf('<a href="/main/quote/history_details.html?quote_id=%1$d">%2$s</a>', $_[0]{id}, ( $_[1] ? $_[1] : $_[0]{id} ) );
+} # end sub link_to
 
 1;
 __END__
