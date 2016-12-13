@@ -489,6 +489,13 @@ sub can_send {
 	} # end if
 	return 0;
 }
+sub url_to {
+	return '/main/quote/history_details.html?quote_id='.$_[0]{id};
+} # end sub url_to
+
+sub link_to {
+	return sprintf('<a href="/main/quote/history_details.html?quote_id=%1$d">%2$s</a>', $_[0]{id}, ( $_[1] ? $_[1] : $_[0]{id} ) );
+} # end sub link_to
 
 1;
 __END__
