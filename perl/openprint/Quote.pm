@@ -353,6 +353,9 @@ if ( 0 ) {
 			my $html = ssi::variable_substitution( \$email_template, \%quote );
 			$Email->add_pdf_attachment_from_html( "Quote$$self{id}", $html );
 			$Email->add_html_attachment( "Quote$$self{id}", $html ) if $$self{by_email} eq 'iconnor@connortechnology.com';
+} else {
+			$quote{ReplacementText} = ssi::include( '/email_content/quote_reseller_for_invoice.html', \%quote );
+			$Email->add_pdf_attachment_from_html( "Quote$$self{id}", ssi::variable_substitution( \$email_template, \%quote ) );
 }
 
 			$results .= $Email->send(
@@ -387,8 +390,6 @@ $log->debug("NOT SEnding quote to myself" . $openprint::User->email_quotes_to_my
 			$quote{ReplacementText} = ssi::include( '/email_content/quote_reseller_for_body.html', \%quote );
 			$Email->html_body( ssi::variable_substitution( \$email_template, \%quote ) );
 
-			$quote{ReplacementText} = ssi::include( '/email_content/quote_reseller_for_invoice.html', \%quote );
-			$Email->add_pdf_attachment_from_html( "Quote$$self{id}", ssi::variable_substitution( \$email_template, \%quote ) );
 
 			$results .= $Email->send(
 					FROM    => sprintf('"%s %s" <%s>', @$self{'by_firstname','by_lastname','by_email'}),
