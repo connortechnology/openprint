@@ -1,5 +1,6 @@
-<style type="text/css"><? echo ( misc::load_file( $log, $config{SkinPath} . '/css/quote.css' ); ) ?></style>
+<style type="text/css"><?include('/css/quote.css')?></style>
 <div class="Quote">
+	<h1 style="display:none;">Quote <?echo($$variable{Quote}->id())?></h1>
 	<div class="Header">
 		<?include('/includes/quote_header.html')?>
 		<?include('/includes/quote_prepared_by.html')?>
@@ -10,8 +11,8 @@
 		<tr> 
 			<th class="project_id">ID</th>
 			<th class="description">Description</th>
-			<th class="quantity">Qty</th>
 			<th class="weight">Weight</th>
+			<th class="quantity">Qty</th>
 			<th class="price">Price</th>
 		</tr>
 		<? echo (

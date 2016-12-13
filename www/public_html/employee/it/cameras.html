@@ -20,7 +20,8 @@
 				);
 			return 'Unable to connect to ZM database<br/>' if ! $zm_dbh;
 			require openprint::ZM_Monitor;
-			foreach my $Monitor ( openprint::ZM_Monitor->find('dbh'=>$zm_dbh, 'order'=>'Sequence') ) {
+			$openprint::ZM_Monitor::dbh = $zm_dbh;
+			foreach my $Monitor ( openprint::ZM_Monitor->find( dbh=>$zm_dbh, order=>'Sequence') ) {
 				next if ! $Monitor->can_view();
 				next if $Monitor->function() eq 'None';
 				$html .= sprintf(q`
@@ -42,11 +43,6 @@ $Monitor->host(),$Monitor->path(),
 			$zm_dbh->disconnect();
 			return $html;
 		) ?>
-
-<!--
-		<tr>
-			<td><img src="http://security2.internal.point-one.com/cgi-bin/zms?mode=jpeg&monitor=26&scale=100&maxfps=5&buffer=1000&connkey=156343&rand=1292249714"/></td>
--->
 		</tr>	
 	</tbody>
 </table>
