@@ -51,9 +51,16 @@
 		<li>
 			<label>Value</label>
 			<? echo ( join(' to ', 
-				input( type=>'float', id=>'value_start', name=>'value_start', value=>$param{value_start} ),
-				input( type=>'float', id=>'value_end', name=>'value_end', value=>$param{value_end} ),
+				input( type=>'float', id=>'total_start', name=>'total_start', value=>$param{total_start} ),
+				input( type=>'float', id=>'total_end', name=>'total_end', value=>$param{total_end} ),
 			); ) ?>
+		</li>
+		<li>
+			<label>Currency</label>
+			<select name="currency_id" size="1">
+			<option value="">All Currencies</option>
+			<? echo ( make_drop_down( openprint::Currency->dropdown( order=>'lower(name)'), $session{$r->uri().'?currency_id'} ) ) ?>
+			</select>
 		</li>
 		<li>
 			<label>Press</label>

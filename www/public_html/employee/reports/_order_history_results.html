@@ -19,7 +19,12 @@ The following had one or more signatures that ran on <? echo ( join(': ', new op
 		my $rowclass;
 		my $total;
 		foreach my $Order ( @{$$variable{Orders}} ) {
-			my $price = $Order->Currency()->convert_from( $Order->total() );
+			my $price;
+			if ( $session{'/employee/reports/order_history.html?currency_id'} ) {
+				$price = $Order->total();
+			} else {
+				$price = $Order->Currency()->convert_from( $Order->total() );
+			}
 			$html .= sprintf(q`
 				<tr%1$s>
 					<td class="order_id"><a href="/employee/order/view.html?order_id=%2$d">%2$d</a></td>
@@ -50,7 +55,8 @@ The following had one or more signatures that ran on <? echo ( join(': ', new op
 		return $html;
 	) ?>
 </table>
-<span class="Currency">All prices shown are in <? echo ( openprint::Currency::get_current()->name() ) ?>.</span>
+<span class="Currency">All prices shown are in <? echo ( 
+$session{'/employee/reports/order_history.html?currency_id'} ? new openprint::Currency( $session{'/employee/reports/order_history.html?currency_id'} )->name() : openprint::Currency::get_current()->name() ) ?>.</span>
 <? else ( @{$$variable{Orders}} ) ?>
 There were no orders matching your criteria.  Please try again.
 <? endif ( @{$$variable{Orders}} ) ?>
