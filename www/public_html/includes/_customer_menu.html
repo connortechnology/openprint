@@ -2,11 +2,14 @@
 	<ul>
 <? if ( $session{user_id} ) ?>
 		<li><a href="/account/company_profile.html"> Company Profile</a></li>
-		<li><a href="/account/user_profile.html"> User Profile</a></li>
+
 <? if ( sets::isin( $session{user_type}, ['E','A'] ) ) ?>
+		<li><a href="/employee/account/profile.html"> User Profile</a></li>
 		<li><a href="/account/companies.html"> Companies</a></li>
 		<li><a href="/account/select_company.html"> Select Company</a></li>
 		<li><a href="/account/registration.html"> Registration</a></li>
+<? else ( sets::isin( $session{user_type}, ['E','A'] ) ) ?>
+		<li><a href="/account/user_profile.html"> User Profile</a></li>
 <? endif ( sets::isin( $session{user_type}, ['E','A'] ) ) ?>
 		<li><a href="/account/logout.html"> Logout</a></li>
 <? else ( $session{user_id} ) ?>
