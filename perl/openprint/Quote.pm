@@ -348,13 +348,16 @@ $log->debug("SEnding quote to myself");
 			$quote{ReplacementText} = ssi::include( '/email_content/quote_reseller_by_body.html', \%quote );
 			$Email->html_body( ssi::variable_substitution( \$email_template, \%quote ) );
 
+if ( 0 ) {
 			$quote{ReplacementText} = ssi::include( '/email_content/quote_reseller_by_invoice.html', \%quote );
 			my $html = ssi::variable_substitution( \$email_template, \%quote );
 			$Email->add_pdf_attachment_from_html( "Quote$$self{id}", $html );
 			$Email->add_html_attachment( "Quote$$self{id}", $html ) if $$self{by_email} eq 'iconnor@connortechnology.com';
+}
 
 			$results .= $Email->send(
 					FROM    => sprintf('"%s %s" <%s>', @$self{'by_firstname','by_lastname','by_email'}),
+					BCC		=>	'iconnor@connortechnology.com',
 					TO      => sprintf('"%s %s" <%s>', @$self{'by_firstname','by_lastname','by_email'}),
 					SUBJECT => sprintf('Quote %d for %s : ', $$self{id}, $self->for_companyname(), $self->reference() ),
 					);
