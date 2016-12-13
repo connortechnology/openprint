@@ -890,6 +890,19 @@ sub _production_feedback {
 
 sub _stock_allocations {
 	$variable{Order} = openprint::Order->find_one( docket=>$param{docket} );
+	if ( $param{action} eq 'delete' ) {
+		foreach my $Allocation ( openprint::PaperAllocation->find( id=>[ split(',', $param{allocation_id} ) ] ) ) {
+			if ( $Allocation->can_delete() ) {
+				if ( $_ = $Allocation->delete() ) {
+					$variable{error} .= $_.'<br/>';
+				} else {
+					$variable{information} .= "Allocation $$Allocation{id} deleted successfully.<br/>";
+				}
+			} else {
+				$variable{error} .= 'You are not authorized to delete this allocation.<br/>';
+			}
+		}
+	}
 }
 
 sub _signaturecapture {

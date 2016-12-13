@@ -1,11 +1,9 @@
 use strict;
 package openprint::PaperAllocation;
 our @ISA = qw(openprint::Object);
-require MIME::QuotedPrint;
 
 use openprint ();
-use vars qw($debug %session %variable $dbh $log $table $serial %fields %find_fields %transforms %defaults );
-*variable = \%openprint::variable;
+use vars qw($debug %session $dbh $log $table $serial %fields %find_fields %transforms %defaults );
 *log = \$openprint::log;
 *dbh = \$openprint::dbh;
 *session = \%openprint::session;
@@ -56,12 +54,12 @@ $serial = 'paper_allocation_id_seq';
 );
 
 sub delete {
-	if ( $_[0]{'id'} ) {
+	if ( $_[0]{id} ) {
 		my $ac = sql::start_transaction( );
-		if ( $_[0]{'project_id'} ) {
+		if ( $_[0]{project_id} ) {
 			$_[0]->Project()->add_to_log(@session{'company_id','user_id'}, 'Allocation deleted.' . ( @_ > 1 ? ' Reason: ' . $_[1] : '' ) );
 		} # end if
-		sql::execute( undef, undef, q{DELETE FROM Paper_Allocations WHERE id=?}, $_[0]{'id'} );
+		sql::execute( undef, undef, q{DELETE FROM Paper_Allocations WHERE id=?}, $_[0]{id} );
 		sql::end_transaction( undef, $ac );
 		my $Paper = $_[0]->Paper();
 		$Paper->allocated(undef,undef);
@@ -90,10 +88,10 @@ sub Condition {
 } # end sub Condition
 
 sub Paper {
-	return new openprint::Paper( $_[0]{'paper_id'} );
+	return new openprint::Paper( $_[0]{paper_id} );
 } # end sub Paper
 sub Stock {
-	return new openprint::Paper( $_[0]{'paper_id'} );
+	return new openprint::Paper( $_[0]{paper_id} );
 } # end sub Paper
 sub Skids {
 	if ( ! $_[0]{Skids} ) {
@@ -107,11 +105,11 @@ sub Skids {
 } # end sub Skids
 
 sub User {
-	return new openprint::User( $_[0]{'operator_id'} );
+	return new openprint::User( $_[0]{operator_id} );
 } # end sub User
 sub Project {
 $openprint::log->error("PaperAllocation::Project deprecated");
-	return new openprint::Project( $_[0]{'project_id'} );
+	return new openprint::Project( $_[0]{project_id} );
 } # end sub Project
 
 sub Order {
@@ -137,7 +135,7 @@ sub send_notification {
 	$info{Allocation} = $self;
 	my $Order = $info{Order} = $self->Order();
 	my $Paper = $info{Paper} = $self->Paper();
-	my @old_skids = @{$info{'OldSkids'}} = $self->old_Skids();
+	my @old_skids = @{$info{OldSkids}} = $self->old_Skids();
 
 	my @recipients = map { $_->notification('Stock Allocations') eq 'Yes' ? $_ : () } openprint::User->find( company_id=>$openprint::config{owner_id}, 'usergroup any'=>'InventoryManager' );
 
@@ -147,8 +145,8 @@ sub send_notification {
 		foreach my $sig_id ( $Project->signatures() ) {
 			my $sig_specs = openprint::service::get_specs_ref( $Project, $sig_id );
 			my $Press;
-			if ( $$sig_specs{'UsePress'} ) {
-				$Press = openprint::Equipment->find_one('strid'=>$$sig_specs{'UsePress'});
+			if ( $$sig_specs{UsePress} ) {
+				$Press = openprint::Equipment->find_one('strid'=>$$sig_specs{UsePress});
 			} else {
 				$Press = openprint::Equipment->find_one('strid'=>$$sig_specs{'ddmPress'.$Project->ordered_quantity_index()});
 			} # endif
@@ -163,24 +161,22 @@ sub send_notification {
 			} # end if
 		} # end foreach sig
 	} # end foreach Project
-	$info{'offsite'} = $offsite;
-	$info{'nolocation'} = $nolocation;
+	$info{offsite} = $offsite;
+	$info{nolocation} = $nolocation;
 
 	push @recipients, $Order->Company()->CSR() if $offsite or $nolocation or @old_skids;
 	if ( $Paper->available() < 0 ) {
 		my @PAs = openprint::PaperAllocation->find( paper_id=>$Paper->id());
-		@recipients = map { new openprint::User( $_ ) } sets::exclude( [ $session{'user_id'} ], [ sets::union( (map { $_->Order()->Company()->salesrep_id() } @PAs), (map{$_->id()}@recipients) ) ] );
+		@recipients = map { new openprint::User( $_ ) } sets::exclude( [ $session{user_id} ], [ sets::union( (map { $_->Order()->Company()->salesrep_id() } @PAs), (map{$_->id()}@recipients) ) ] );
 	} # endif
 
-	$info{'ReplacementText'} = ssi::include( '/email_content/stock_allocation_notification.html', \%info );
-	$_ = MIME::QuotedPrint::encode_qp( Encode::encode('utf-8', ssi::include( '/email_template.html', \%info ) ) );
-	my @body = ('', $_, 'text/html', 'quoted-printable');
+	$info{ReplacementText} = ssi::include( '/email_content/stock_allocation_notification.html', \%info );
 	my $Email = new openprint::Email();
+	$Email->html_body( ssi::include( '/email_template.html', \%info ) );
 	$Email->send( 
 			TO			=>	\@recipients, 
 			SUBJECT 	=> 'Stock allocated for docket ' . $Order->docket(),
 			FROM		=>	$openprint::User,
-			ATTACHMENTS	=>	\@body,
 			);
 
 } # end sub stock_allocation_notification
@@ -188,5 +184,23 @@ sub send_notification {
 sub link_to {
     return sprintf('<a href="/employee/inventory/allocation.html?allocation_id=%1$d">%2$s</a>', $_[0]{id}, @_ > 1 ? $_[1] : $_[0]->quantity().$_[0]->units() . ' of ' . $_[0]->Paper()->to_string() );
 } # end sub link_to
+
+sub can_delete {
+	if ( $openprint::session{user_type} eq 'A' ) {
+		return 1;
+	}
+	if ( $openprint::session{user_id} == $_[0]{operator_id} ) {
+		return 1;
+	}
+	my $Order = $_[0]->Order();
+	if ( sets::isin( $$Order{salesrep_id},  [ $openrpint::User{id}, $openprint::User->assistant_ids(), $openprint::User->csr_ids() ] ) ) {
+		return 1;
+	}
+	my $Company = $Order->Company();
+	if ( sets::isin( $$Company{salesrep_id}, [ $$openprint::User{id}, $openprint::User->assistant_ids(), $openprint::User->csr_ids() ] ) ) {
+		return 1;
+	} # end if
+}
+
 1;
 __END__

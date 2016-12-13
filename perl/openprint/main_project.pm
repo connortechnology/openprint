@@ -215,7 +215,7 @@ sub calc {
 	} # end foreach
 	if ( $debug ) {
 		foreach my $key ( sort keys %specs ) {
-			$log->debug("$key => $specs{$key}");
+			$log->debug("values still in specs $key => $specs{$key}");
 		} # end foreach
 	} # end if debug
 	if ( $debug ) {
