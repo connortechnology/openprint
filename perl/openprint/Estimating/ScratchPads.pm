@@ -43,7 +43,7 @@ my %variables = (
 	'ProjectIndex'=>[], 'ServiceIndex'=>[], 'ServiceType'=>[], 'NewBook'=>[],
 	'remaining_pages'=>['output'],'next_group_id'=>['output'],
 );
-@signature_variables = (
+my @signature_variables = (
 'chkCyanSideOne','chkMagentaSideOne','chkYellowSideOne','chkBlackSideOne', 'chkProcessColourSideOne',
                 'chkColourCoating1SideOne', 'ColourCoatingType1SideOne', 'ColourCoatingColour1SideOne','ColourCoatingCoverage1SideOne',
                 'chkColourCoating2SideOne', 'ColourCoatingType2SideOne', 'ColourCoatingColour2SideOne','ColourCoatingCoverage2SideOne',
@@ -115,7 +115,7 @@ sub calc {
 	my ( undef, undef, undef, $project_index, $service_index, $specs ) = @_;
 $log->debug("ScratchPads::calc");
 	my @Groups = sql::execute( undef, undef, 'SELECT DISTINCT strvalue FROM tbl_Service_Specifications WHERE lngProjectIndex=? AND strName=?', $project_index, 'Group' );
-	if ( (! sets::isin( 1, \@Groups ) ) and $$specs{'Backing'} eq 'Printed' ) {
+	if ( (! sets::isin( 1, \@Groups ) ) and $$specs{Backing} eq 'Printed' ) {
 		push @Groups, 1;
 	} # end if
 	if ( ! sets::isin( 2, \@Groups ) ) {
@@ -123,7 +123,7 @@ $log->debug("ScratchPads::calc");
 	} # end if
 
 	my $Project = new openprint::Project( $project_index );
-	my $remaining_pages = $$specs{'PageQuantity'};
+	my $remaining_pages = $$specs{PageQuantity};
 	my %override_pages;
 
 	foreach my $group_id ( @Groups ) {
@@ -135,7 +135,7 @@ $log->debug("ScratchPads::calc");
 		} else {
 			foreach my $sig_id ( $Project->signatures({'Group'=>$group_id}) ) {
 				my $sig_specs = openprint::service::get_specs_ref( $Project, $sig_id );
-				$override_pages{$group_id} = $$sig_specs{'GroupPageQuantity'} if $$sig_specs{'OverrideGroupPageQuantity'} eq 'Y';
+				$override_pages{$group_id} = $$sig_specs{GroupPageQuantity} if $$sig_specs{OverrideGroupPageQuantity} eq 'Y';
 				last if $override_pages{$group_id};
 			} # end foreach signature
 		} # end if
@@ -143,8 +143,8 @@ $log->debug("ScratchPads::calc");
 	} # end foreach group
 
 # if there is a cover, then force it to be non-zero
-	if ( (! $override_pages{1} ) and ($$specs{'OverrideGroupPageQuantity1'} ne 'Y' ) and ($$specs{'Backing'} eq 'Printed') ) {
-		my $new_remaining = int(($remaining_pages-1) / $$specs{'txtSpreadSize'} ) * $$specs{'txtSpreadSize'};
+	if ( (! $override_pages{1} ) and ($$specs{OverrideGroupPageQuantity1} ne 'Y' ) and ($$specs{Backing} eq 'Printed') ) {
+		my $new_remaining = int(($remaining_pages-1) / $$specs{txtSpreadSize} ) * $$specs{txtSpreadSize};
 		$override_pages{1} = $remaining_pages - $new_remaining;
 		$remaining_pages = $new_remaining;
 	} # end if
@@ -164,42 +164,42 @@ $log->debug("ScratchPads::calc");
         $$specs{'GroupPageQuantity'.$group_id} = $override_pages{$group_id};
 
 		if ( $$specs{'chkOverrideDimensions'.$group_id} ne 'Y' ) {
-			$$specs{'txtFinalWidth'.$group_id} = $$specs{'txtFinalWidth'};
-			$$specs{'txtFinalHeight'.$group_id} = $$specs{'txtFinalHeight'};
+			$$specs{'txtFinalWidth'.$group_id} = $$specs{txtFinalWidth};
+			$$specs{'txtFinalHeight'.$group_id} = $$specs{txtFinalHeight};
 		} # end if
 	} # end foreach group_id
 
-	if ( ! ( $$specs{'txtFinalWidth'} or $$specs{'txtFinalHeight'} ) ) {
-		$$specs{'help'} = 'Please select the dimensions.';
+	if ( ! ( $$specs{txtFinalWidth} or $$specs{txtFinalHeight} ) ) {
+		$$specs{help} = 'Please select the dimensions.';
 		return 'uncalculated';
 	} # end if
-	$$specs{'txtHeight'} = $$specs{'txtFinalHeight'};
-	$$specs{'txtWidth'} = $$specs{'txtFinalWidth'};
+	$$specs{txtHeight} = $$specs{txtFinalHeight};
+	$$specs{txtWidth} = $$specs{txtFinalWidth};
 
-    if ( $$specs{'remaining_pages'} = $remaining_pages ) {
+    if ( $$specs{remaining_pages} = $remaining_pages ) {
         my $max_group = 0;
         foreach my $g_id ( @Groups ) {
             if ( $g_id > $max_group ) {
                 $max_group = $g_id;
             } # end if
         } # end foreach g_id
-        $$specs{'next_group_id'} = $max_group + 1;
+        $$specs{next_group_id} = $max_group + 1;
     } else {
-        $$specs{'next_group_id'} = '';
+        $$specs{next_group_id} = '';
     } # end if
 
-	if ( ( $$specs{'txtWidth'} < $$specs{'txtFinalWidth'} ) or ( $$specs{'txtHeight'} < $$specs{'txtFinalHeight'} ) ) {
-		$$specs{'alert'} .= 'Flat size cannot be smaller than finished size!';
+	if ( ( $$specs{txtWidth} < $$specs{txtFinalWidth} ) or ( $$specs{txtHeight} < $$specs{txtFinalHeight} ) ) {
+		$$specs{alert} .= 'Flat size cannot be smaller than finished size!';
 		return 'uncalculated';
 	} # end if
 
-	if ( ! $$specs{'PageQuantity'} ) {
-		$$specs{'help'} = 'Please enter the # of pages';
+	if ( ! $$specs{PageQuantity} ) {
+		$$specs{help} = 'Please enter the # of pages';
 		return 'uncalculated';
 	} # end if
 
-	if ( ! $$specs{'Backing'} ) {
-		$$specs{'help'} = 'Please select the backing type.';
+	if ( ! $$specs{Backing} ) {
+		$$specs{help} = 'Please select the backing type.';
 		return 'uncalculated';
 	} # end if
 
@@ -217,13 +217,13 @@ sub status {
 		return if ! $printing_specs;
 	} # end if
 
-    my $total_pages = $$printing_specs{'PageQuantity'};
+    my $total_pages = $$printing_specs{PageQuantity};
 	my %specified_pages;
 	my %needed_pages;
 	foreach my $ssid ( $Project->signatures() ) {
 		my $sig_specs = openprint::service::get_specs_ref( $Project, $ssid );
-		$specified_pages{$$sig_specs{'Group'}} += $$sig_specs{"PageQuantity$qty_index"};
-		$needed_pages{$$sig_specs{'Group'}} = $$sig_specs{'GroupPageQuantity'.$qty_index};
+		$specified_pages{$$sig_specs{Group}} += $$sig_specs{"PageQuantity$qty_index"};
+		$needed_pages{$$sig_specs{Group}} = $$sig_specs{'GroupPageQuantity'.$qty_index};
 	} # end foreach
 	my @Groups = sql::execute( undef, undef, 'SELECT DISTINCT strvalue FROM tbl_Service_Specifications WHERE lngProjectIndex=? AND strName=?', $project_index, 'Group' );
 	foreach my $Group ( @Groups ) {
@@ -241,8 +241,8 @@ $openprint::log->debug("Scratch Pads : save");
 	my $services = $Project->services();
 
 	my %needed_pages;
-	$needed_pages{'Cover Pages'} = $$param{'OverrideGroupPageQuantity1'} eq 'Y' ? $$param{'GroupPageQuantity1'} : ($$param{'Backing'} eq 'Printed' ? 1 : 0);
-	$needed_pages{'Interior Pages'} = ( $$param{'PageQuantity'} - $needed_pages{'Cover Pages'} );
+	$needed_pages{'Cover Pages'} = $$param{OverrideGroupPageQuantity1} eq 'Y' ? $$param{GroupPageQuantity1} : ($$param{Backing} eq 'Printed' ? 1 : 0);
+	$needed_pages{'Interior Pages'} = ( $$param{PageQuantity} - $needed_pages{'Cover Pages'} );
 
 	my %specified_pages;
 	my $max_group;
@@ -261,7 +261,7 @@ $openprint::log->debug("Scratch Pads : save");
 										  txtServiceDescription	=> 'Padding Pages',
 										  ) ),
 						Group			=> $group_id,
-						PrintingType	=> $$param{'PrintingType'},
+						PrintingType	=> $$param{PrintingType},
 						txtSpreadSize	=> 1,
 						} );
 			} # end if
@@ -273,7 +273,7 @@ $openprint::log->debug("Scratch Pads : save");
 		} # end if
 	} # end foreach param
 
-	if ( $$param{'Backing'} eq 'Printed' ) {
+	if ( $$param{Backing} eq 'Printed' ) {
 # now add a cover spread if we need one.
 # First, see if we have one.
 		if ( ! $Project->signatures({'type'=>'Cover Pages'}) ) {
@@ -282,15 +282,15 @@ $openprint::log->debug("Scratch Pads : save");
 					txtServiceDescription	=> 'Backing',
 					Group	=> 1,
 # Used to give each signature a # for reference in proofs, etc.
-					PrintingType		=> $$param{'PrintingType'}
+					PrintingType		=> $$param{PrintingType},
 					txtSpreadSize		=> 1,
 					} );
 # Width and Height will be added on auto-calc
 		} # end if
 
 # Prime this for saving later
-		if ( ( ! $$param{'GroupPageQuantity1'} ) and ( $$param{'OverrideGroupPageQuantity1'} ne 'Y' ) ) {
-			$$param{'GroupPageQuantity1'} = $needed_pages{'Cover Pages'};
+		if ( ( ! $$param{GroupPageQuantity1} ) and ( $$param{OverrideGroupPageQuantity1} ne 'Y' ) ) {
+			$$param{GroupPageQuantity1} = $needed_pages{'Cover Pages'};
 		} # end if
 	} else {
 # Don't need a cover, so get rid of it
@@ -305,17 +305,17 @@ $openprint::log->debug("Scratch Pads : save");
 				txtSignatureType	=>  'Interior Pages',
 				txtServiceDescription	=> 'Padding Pages',
 				Group	=> 2,
-				PrintingType	=> $$param{'PrintingType'},
+				PrintingType	=> $$param{PrintingType},
 				txtSpreadSize	=> 1,
 				} );
 	} # end if
-	if ( ( ! $$param{'GroupPageQuantity2'} ) and ( $$param{'OverrideGroupPageQuantity2'} ne 'Y' ) ) {
-		$$param{'GroupPageQuantity2'} = $needed_pages{'Interior Pages'};
+	if ( ( ! $$param{GroupPageQuantity2} ) and ( $$param{OverrideGroupPageQuantity2} ne 'Y' ) ) {
+		$$param{GroupPageQuantity2} = $needed_pages{'Interior Pages'};
 	} # end if
 
 	foreach my $ss_id ( $Project->signatures() ) {
         my $sig_specs = openprint::service::get_specs_ref( $Project->id(), $ss_id );
-        my $type = $$sig_specs{'Group'};
+        my $type = $$sig_specs{Group};
 
 # We have to do this for simple printing.  Simple printing calls here, but doesn't have these fields, so it clears out the defaults!
 		foreach my $spec (
@@ -361,25 +361,25 @@ $openprint::log->debug("Scratch Pads : save");
         } # end foreach spec
     } # end foreach
 
-	if ( misc::sum( values %specified_pages ) < $$param{'PageQuantity'} ) {
+	if ( misc::sum( values %specified_pages ) < $$param{PageQuantity} ) {
 # Must have at least 1 interioer signature
 		my $print_service_index = $Project->add_signature( undef, 'uncalculated', { 
 				'txtSignatureType' => 'Interior Pages',
 				'txtServiceDescription' => 'Pad Pages',
 				'Group' => $max_group + 1,
 				'GroupPageQuantity' => $needed_pages{'Interior Pages'} - $specified_pages{'Interior Pages'},
-				'PrintingType' => $$param{'PrintingType'},
-				'txtSpreadSize' => $$param{'txtSpreadSize'},
+				'PrintingType' => $$param{PrintingType},
+				'txtSpreadSize' => $$param{txtSpreadSize},
 				} );
 
-		$variable{'Redirect'} = '/main/project/prin/ScratchPads.html';
+		$variable{Redirect} = '/main/project/prin/ScratchPads.html';
 		return;
 	} # end if
 
-	if ( $$services{'Padding'} ) {
-		foreach my $padding_id ( @{$$services{'Padding'}} ) {
-			openprint::service::insert_service_spec( $log, $dbh, $p_id, $padding_id, 'Backing', $$param{'Backing'} );
-			openprint::service::insert_service_spec( $log, $dbh, $p_id, $padding_id, 'PageQuantity', $$param{'PageQuantity'} );
+	if ( $$services{Padding} ) {
+		foreach my $padding_id ( @{$$services{Padding}} ) {
+			openprint::service::insert_service_spec( $log, $dbh, $p_id, $padding_id, 'Backing', $$param{Backing} );
+			openprint::service::insert_service_spec( $log, $dbh, $p_id, $padding_id, 'PageQuantity', $$param{PageQuantity} );
 		} # end foreach
 	} # end if
 
