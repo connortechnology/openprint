@@ -4,7 +4,7 @@ use Date::Calc ();
 
 my $domain = $ARGV[0];
 my @users;
-my $spool_path = '/var/mail/vhosts/'.$domain.'/';
+my $spool_path = '/var/mail/'.$domain.'/';
 
 if ( $ARGV[1] ) {
 	@users = ( $ARGV[1] );
