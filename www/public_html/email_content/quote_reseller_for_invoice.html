@@ -1,7 +1,7 @@
-<style type="text/css"><? echo ( misc::load_file( $log, $config{SkinPath} . '/css/quote.css' ); ) ?></style>
+<style type="text/css"><?include('/css/quote.css')?></style>
 <div class="Quote">
 	<div class="Header">
-		<?include('/includes/quote_header.html')?>
+		<h1>Quote <?echo($$variable{Quote}->id())?></h1>
 		<?include('/includes/quote_prepared_by.html')?>
 		<?include('/includes/quote_prepared_for.html')?>
 	</div>
@@ -10,8 +10,8 @@
 		<tr> 
 			<th class="project_id">ID</th>
 			<th class="description">Description</th>
-			<th class="quantity">Qty</th>
 			<th class="weight">Weight</th>
+			<th class="quantity">Qty</th>
 			<th class="price">Price</th>
 		</tr>
 		<? echo (
@@ -44,8 +44,8 @@
 						$weight = sprintf( '%.0flbs (%.0fg)', $weight, $g );
 					} # end if
 					$html .= sprintf(q`<tr><td class="weight">%s</td><td class="quantity">%s</td><td class="price">%s</td></tr>`, 
-							$QP->quantity($qty_index),
 							$weight, 
+							$QP->quantity($qty_index),
 							openprint::Currency::format( $QP->price($qty_index) ),
 							);
 				} # end foreach qty_index

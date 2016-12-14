@@ -2,18 +2,19 @@ Click on the image to start streaming
 <ul>
 	<? echo ( 
 			my $zm_dbh = sql::open_sql( $log,
-				  'database'  => $config{'zm_db_name'},
-				  'driver'    => $config{'zm_db_driver'},
-				  'host'      => $config{'zm_db_hostname'},
-				  'login'     => $config{'zm_db_username'},
-				  'password'  => $config{'zm_db_password'},
+				  database  => $config{'zm_db_name'},
+				  driver    => $config{'zm_db_driver'},
+				  host      => $config{'zm_db_hostname'},
+				  login     => $config{'zm_db_username'},
+				  password  => $config{'zm_db_password'},
 				);
 			return 'Unable to connect to ZM database<br/>' if ! $zm_dbh;
 			require openprint::ZM_Monitor;
-$openprint::ZM_Monitor::dbh = $zm_dbh;
-		if ( ! $$variable{'Monitors'} ) {
-			$$variable{Monitors} = [ openprint::ZM_Monitor->find( dbh=>$zm_dbh, order=>'Sequence', 'function !=' => 'None', enabled=>1 ) ];
-		} # end if
+			$openprint::ZM_Monitor::dbh = $zm_dbh;
+
+			if ( ! $$variable{'Monitors'} ) {
+				$$variable{Monitors} = [ openprint::ZM_Monitor->find( dbh=>$zm_dbh, order=>'Sequence', 'function !=' => 'None', enabled=>1 ) ];
+			} # end if
 
 		my $html = '';
 		my @monitor_ids = split(',', $session{'cameras_viewing'} );

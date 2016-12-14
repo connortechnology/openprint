@@ -8,6 +8,7 @@
 		) if $config{'zm_db_name'};
 	return 'Unable to connect to ZM database<br/>' if ! $zm_dbh;
 	require openprint::ZM_Monitor;
+	$openprint::ZM_Monitor::dbh = $zm_dbh;
 	$$variable{Monitors} = [ openprint::ZM_Monitor->find( dbh=>$zm_dbh, order=>'Sequence', 'function !=' => 'None', enabled=>1 ) ];
 	$zm_dbh->disconnect();
 ) ?>

@@ -337,7 +337,7 @@ sub send {
 			$variable{ReplacementText} = ssi::slurp_content( '/email_content/project_view.html' );
 		} # end if
 		$variable{ReplacementText} = ssi::variable_substitution( \$variable{ReplacementText}, \%var );
-		$Email->add_attachment_from_html( sprintf('Project%d.html',$Project->project_id()), ssi::variable_substitution( \$email_template, \%variable ));
+		$Email->add_pdf_attachment_from_html( sprintf('Project%d.html',$Project->project_id()), ssi::variable_substitution( \$email_template, \%variable ));
 	} # for each Project
 	
 	if ( $self->Company()->reseller() eq 'Y' or sets::isin( $session{user_type}, ['A', 'E']) ) {
@@ -366,6 +366,8 @@ if ( 0 ) {
 					);
 		} else {
 $log->debug("NOT SEnding quote to myself" . $openprint::User->email_quotes_to_myself() );
+			$quote{ReplacementText} = ssi::include( '/email_content/quote_reseller_for_invoice.html', \%quote );
+			$Email->add_pdf_attachment_from_html( "Quote$$self{id}", ssi::variable_substitution( \$email_template, \%quote ) );
 		} # end if
 
 		if ( $quote{ForEmail} ne '' and (
