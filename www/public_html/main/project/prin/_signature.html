@@ -8,6 +8,7 @@
 <legend>Information for <? echo ( $$variable{'txtServiceDescription'.$$variable{Signature}} ? $$variable{'txtServiceDescription'.$$variable{Signature}} : ( $$variable{Signature} == 1 ? 'Cover' : 'Other Pages' ) ) ?></legend>
 	<div class="leftColumn">
 		<ul>
+<?if($$variable{Project}->type() eq 'MultiPage' ) ?>
 		<li id="GroupPageQuantity<?echo($$variable{Signature})?>_container"<?echo( if ($$variable{'OverrideGroupPageQuantity'.$$variable{Signature}} and ! $$variable{'GroupPageQuantity'.$$variable{Signature}} ) { return ' class="error"' }; ) ?>>
 			<label># of Pages</label>
 			<? echo ( join("\n",
@@ -19,6 +20,8 @@
 			<label>Description</label>
 			<input type="text" name="txtServiceDescription<?Signature?>" value="<? echo ( $$variable{'txtServiceDescription'.$$variable{Signature}} ) ?>" />
 		</li>
+<?else($$variable{Project}->type() eq 'MultiPage' ) ?>
+<?endif($$variable{Project}->type() eq 'MultiPage' ) ?>
 		<li class="Dimensions">
 			<label>Flat => Final Size</label>
 			<? echo ( return join('',
