@@ -16,6 +16,22 @@
 
 package openprint::Estimating::Aqueous;
 use strict;
+use vars qw( %ServicePrices );
+%ServicePrices = (
+	AqueousMinimumCharge	=> { },
+	AqueousMakeReady		=> { },
+	'AqueousBlanketCutW&T'	=> { },
+	AqueousBlanketCut	=> { },
+	BlanketCut	=> { },
+	'Aqueous Satin Overall'	=> { units => [ 'per 1000 impressions', 'per m', 'per hour' ] },
+	'Aqueous Satin W&T'	=> { units => [ 'per 1000 impressions', 'per m', 'per hour' ] },
+	'Aqueous Gloss Overall'	=> {units => [ 'per 1000 impressions', 'per m', 'per hour' ] },
+	'Aqueous Gloss W&T'	=> { units => [ 'per 1000 impressions', 'per m', 'per hour' ] },
+	'Aqueous Matte W&T'	=> { units => [ 'per 1000 impressions', 'per m', 'per hour' ] },
+	'Aqueous Matte Overall'	=> { units => [ 'per 1000 impressions', 'per m', 'per hour' ] },
+	'Aqueous Soft Touch W&T'	=> { units => [ 'per 1000 impressions', 'per m', 'per hour' ] },
+	'Aqueous Soft Touch Overall'	=> { units => [ 'per 1000 impressions', 'per m', 'per hour' ] },
+);
 #use warnings;
 
 require sql;

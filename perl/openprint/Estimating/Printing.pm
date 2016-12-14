@@ -23,6 +23,56 @@ use Carp qw( cluck );
 use strict;
 use Data::Dumper;
 package openprint::Estimating::Printing;
+use vars qw( %ServicePrices );
+
+%ServicePrices = (
+	Roll2Sheet => {
+		units	=> [ 'per m' ],
+		},
+	SuppliedSheet	=>	 {
+		units	=> [ 'per 100lbs', 'per sheet', 'per m' ],
+		},
+	SuppliedRoll	=>	 {
+		units	=> [ 'per 100lbs', 'per sheet', 'per m' ],
+		},
+	Film	=> { },
+	'Version Setup'	=> { units=> [ 'each', 'total' ],
+		},
+	'BlanketCut'	=> { },
+	'Washup'		=> { units=> [ 'each' ] },
+	'WebSetup'	=> { units => [ ] },
+	'PerfectingSetup'	=> { units => [ ] },
+	'Work & TurnSetup'	=> { units => [ ] },
+	'Work & TumbleSetup'	=>	{ units=> [] },
+	'Sheet WorkSetup'		=>	{ units=> [] },
+	'PressRunChargeMinimum'	=>	{ units=> [] },
+	'1ColourImpression'		=>	{ units=> [] },
+	'2ColourImpression'		=>	{ units=> [] },
+	'3ColourImpression'		=>	{ units=> [] },
+	'4ColourImpression'		=>	{ units=> [] },
+	'5ColourImpression'		=>	{ units=> [] },
+	'6ColourImpression'		=>	{ units=> [] },
+	'7ColourImpression'		=>	{ units=> [] },
+	'8ColourImpression'		=>	{ units=> [] },
+	'9ColourImpression'		=>	{ units=> [] },
+	'10ColourImpression'		=>	{ units=> [] },
+	'PressUnitMakeReady'		=>	{ units => [ 'stock calliper - per plate', 'per job', 'per form', 'total', 'per side'] },
+	'PressUnitMakeReadyWeb'		=>	{ units => [ 'stock calliper - per plate', 'per job', 'per form', 'total', 'per side'] },
+	'PressUnitMakeReadyPerfecting'		=>	{ units => [ 'stock calliper - per plate', 'per job', 'per form', 'total', 'per side'] },
+	'PressUnitMakeReadyWork & Turn'		=>	{ units => [ 'stock calliper - per plate', 'per job', 'per form', 'total', 'per side'] },
+	'PressUnitMakeReadyWork & Tumble'		=>	{ units => [ 'stock calliper - per plate', 'per job', 'per form', 'total', 'per side'] },
+	'PressUnitMakeReadySheet Work'		=>	{ units => [ 'stock calliper - per plate', 'per job', 'per form', 'total', 'per side'] },
+	'PlateMakeReady'					=>	{ units => [ 'per hour', 'per plate' ] },
+	# Re-enable when someone uses
+	#'PlateMakeReadyWeb'					=>	{ units => [ 'per hour', 'per plate' ] },
+	#'PlateMakeReadyWeb1Sided'					=>	{ units => [ 'per hour', 'per plate' ] },
+	#'PlateMakeReadyWeb2Sided'					=>	{ units => [ 'per hour', 'per plate' ] },
+	#'PlateMakeReadyPerfecting'					=>	{ units => [ 'per hour', 'per plate' ] },
+	#'PlateMakeReadyWork & Turn'					=>	{ units => [ 'per hour', 'per plate' ] },
+	#'PlateMakeReadyWork & Tumble'					=>	{ units => [ 'per hour', 'per plate' ] },
+	#'PlateMakeReadySheet Work'					=>	{ units => [ 'per hour', 'per plate' ] },
+);
+
 my $threading = 0;
 use threads;
 use constant DEBUG => 0;
@@ -4495,7 +4545,10 @@ if ( DEBUG_PLATES ) {
 						} # end if
 					} # end if
 # Add Roll2SheetRun
-					if ( my %R2SPrice = openprint::service::get_price_object( 'Roll2Sheet', $$price{Impressions}, $Press ) ) {
+					my $Roll2SheetService = $Services{Roll2Sheet};
+					my %R2SPrice;
+
+					if ( $Roll2SheetService and ( %R2SPrice = $Roll2SheetService->get_price( $$price{Impressions}, $Press ) ) ) {
 						if ( $R2SPrice{units} eq 'per m' ) {
 							$$price{Roll2SheetRunCharge} = Math::Round::nearest(0.01,$R2SPrice{Price} * $$price{Impressions}/1000);
 						} else {
@@ -4504,7 +4557,7 @@ if ( DEBUG_PLATES ) {
 						$$price{Roll2SheetUnits} = $R2SPrice{units};
 						$$price{Roll2SheetRunCost} = $R2SPrice{Price};
 						$$price{'Comparison Cost'} += $$price{Roll2SheetRunCharge};
-						$$price{'Comparison Log'} .= 'rol2sheetrun ' . $$price{Roll2SheetRunCharge} . '<br/>' if COMPARISON_LOG;
+						$$price{'Comparison Log'} .= 'roll2sheetrun ' . $$price{Roll2SheetRunCharge} . '<br/>' if COMPARISON_LOG;
 						$$price{'Total Cost'} += $$price{Roll2SheetRunCharge};
 						$$price{'Run Total'} += $$price{Roll2SheetRunCharge};
 					} # end if Has Roll2Sheet Price
@@ -5139,7 +5192,8 @@ sub calc_price {
 				$$Imposition{versions} = $$specs{"UnspecifiedVersions$qty_index"};
 			} # end if
 		} # end if
-		my %VersionCharge = openprint::service::get_price_object( 'Version Setup', $$Imposition{versions} );
+		my $VersionService = $Services{'Version Setup'};
+		my %VersionCharge = $VersionService->get_price( $$Imposition{versions} );
 		if ( %VersionCharge ) {
 			if ( $VersionCharge{units} eq 'each' ) {
 				$VersionCharge{Total} = $VersionCharge{Price}*$$Imposition{versions};

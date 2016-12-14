@@ -17,6 +17,12 @@
 use strict;
 package openprint::Estimating::Bundling;
 use POSIX qw(ceil);
+use vars qw( %ServicePrices %MaterialPrices );
+%ServicePrices = (
+'BundlingMakeReady'	=> { },
+'BundlingMinimum'	=> { },
+'Bundling'			=> { units => [ 'per m', 'per bundle', 'per package' ] },
+);
 
 require openprint::service;
 
