@@ -5,7 +5,6 @@ use Carp qw( cluck );
 
 require openprint::Equipment;
 require openprint::pricing;
-require openprint::logs;
 require openprint::Project_Service;
 
 use constant Debug => 0;
