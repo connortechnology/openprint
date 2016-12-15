@@ -5727,10 +5727,16 @@ $openprint::log->warn("No folding equipment");
 
 	my %mixed_colours = %{$$project{mixed_colours}};
 	my $colour_impressions = $impressions;
-	$colour_impressions = POSIX::ceil( $colour_impressions/2 ) if $$Imposition{sides} == 2;
+	#$colour_impressions = POSIX::ceil( $colour_impressions/2 ) if $$Imposition{sides} == 2;
 #$openprint::log->debug("Impressions: $colour_impressions sides: $$Imposition{sides}");
 
- $price{'Ink breakdown'} .= sprintf( 'Image area: %s x %s x %simpressions = %ssq inches<br/>', $Imposition->object_width(), $Imposition->object_height(), $colour_impressions, $Imposition->object_area() * $colour_impressions  );
+ $price{'Ink breakdown'} .= sprintf( 'Image area: %s x %s x %d spreads x %dout x %s impressions = %s square inches<br/>', 
+		 $Imposition->object_width(), 
+		 $Imposition->object_height(), 
+		 $Imposition->spreads(),
+		 $Imposition->imposition(),
+		 $colour_impressions, 
+		 $Imposition->object_area() * $colour_impressions  );
 
 	foreach my $Colour ( @colours_no_coatings ) {
 		
@@ -5874,7 +5880,8 @@ $openprint::log->debug("Was mixed") if DEBUG_INKS;
 			} # end if
 				
 			if ( %material_price ) {
-				my $area = $Imposition->object_area() * $colour_impressions * $coverage;
+				# object_area  includes imposition and spreads
+				my $area = $Imposition->object_area() * $$Imposition{imposition} * $colour_impressions * $coverage;
 				if ( $qty < $$Imposition{imposition} ) {
 # * $colour_impressions ) {
 					$area *= $qty / $$Imposition{imposition};
