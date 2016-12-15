@@ -163,8 +163,9 @@ sub neccessary {
 		my $specs = openprint::service::get_specs_ref( $Project, $$services{Scoring}[0] ) if $$services{Scoring};
 		foreach my $signature_service_index ( $Project->signatures() ) {
 			my $sig_specs = openprint::service::get_specs_ref( $Project, $signature_service_index );
+			$Paper = openprint::Paper::load_from_signature( $Project, $sig_specs );
 
-			if ( signature_needs( $Project, $specs, $sig_specs ) ) {
+			if ( signature_needs( $Project, $specs, $sig_specs, $Paper ) ) {
 				return 1;
 			} # end if
 		} # end foreach
