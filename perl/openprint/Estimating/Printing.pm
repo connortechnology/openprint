@@ -47,7 +47,7 @@ my %folding_cache;
 my %Papers;
 my %Presses;
 sub load_presses {
-%Presses = map { $$_{strid}, $_ } openprint::Equipment->find( 'category any'=>'Printing', 'useinestimating is null or ='=>1 );
+	%Presses = map { $$_{strid}, $_ } openprint::Equipment->find( 'category any'=>'Printing', 'useinestimating is null or ='=>1 );
 }
 
 my %Services;
@@ -5874,14 +5874,9 @@ $openprint::log->debug("Was mixed") if DEBUG_INKS;
 			$ink_price{Material} = \%material_price;
 			my $coverage = $$Colour{coverage}/100;
 
-
-			if ( ( $$Imposition{sides} == 2 ) and ( $$Imposition{runstyle} eq 'Sheet Work' ) and sets::isin( $real_colour, $$project{side_one_colour_names} ) and sets::isin( $real_colour, $$project{side_two_colour_names} ) ) {
-				#$coverage /= 2;
-			} # end if
-				
 			if ( %material_price ) {
 				# object_area  includes imposition and spreads
-				my $area = $Imposition->object_area() * $$Imposition{imposition} * $colour_impressions * $coverage;
+				my $area = $Imposition->object_area() * $colour_impressions * $coverage;
 				if ( $qty < $$Imposition{imposition} ) {
 # * $colour_impressions ) {
 					$area *= $qty / $$Imposition{imposition};
