@@ -5730,6 +5730,8 @@ $openprint::log->warn("No folding equipment");
 	$colour_impressions = POSIX::ceil( $colour_impressions/2 ) if $$Imposition{sides} == 2;
 #$openprint::log->debug("Impressions: $colour_impressions sides: $$Imposition{sides}");
 
+ $price{'Ink breakdown'} .= sprintf( 'Image area: %s x %s x %simpressions = %ssq inches<br/>', $Imposition->object_width(), $Imposition->object_height(), $colour_impressions, $Imposition->object_area() * $colour_impressions  );
+
 	foreach my $Colour ( @colours_no_coatings ) {
 		
 		my $real_colour = $$Colour{name};
@@ -5905,7 +5907,7 @@ $openprint::log->debug("Area $area = $$Imposition{object_area} * Impressions($co
 					$material_price{Total} += Math::Round::nearest( 0.01, $material_price{Price} * $qty );
 					$ink_price{Material} = \%material_price;
 					$ink_price{Total} += $material_price{Total};
-					$price{'Ink breakdown'} .= sprintf(' %d%% mileage: %d, %.2fkg * $%s%s=$%.2f', $coverage*100, $$Coverage{value}, $qty, @material_price{'Price','units','Total'});
+					$price{'Ink breakdown'} .= sprintf(' %d%% = %d square inches, mileage: %dsquare inches/kg = %.2fkg * $%s%s=$%.2f', $coverage*100, $area, $$Coverage{value}, $qty, @material_price{'Price','units','Total'});
 				} elsif ( $material_price{units} eq 'per square foot' ) {
 					$area /= 144;
 					$material_price{Total} += Math::Round::nearest( 0.01, $material_price{Price} * $area );
