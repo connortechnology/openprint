@@ -4342,7 +4342,7 @@ my $sub_imp = $$sub_sig_price{Imposition};
 if ( ! $sub_imp ) {
 	$log->error("No sub_imp $sub_imp $sub_sig_price ");
 } else {
-	$sub_imp->display();
+	$sub_imp->display("sub_imp");
 }
 #$log->error("using a cached calc_other_groups $$sub_sig_price{'Comparison Cost'}");
 							} # end if
