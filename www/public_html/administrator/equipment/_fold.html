@@ -1,16 +1,16 @@
 <? eval (
-	if ( $param{'id'} ) {
-		@{$$variable{'Folds'}} = ( new openprint::Fold( $param{'id'} ) );
+	if ( $param{id} ) {
+		@{$$variable{Folds}} = ( new openprint::Fold( $param{id} ) );
 	} else {
-		$$variable{'Equipment'} = new openprint::Equipment( $param{'equipment_id'} );
-		if ( $param{'type'} eq 'all' ) {
-			@{$$variable{'Folds'}} = openprint::Fold->find( equipment_id=>$param{equipment_id},order=>'lower(name)' );
+		$$variable{Equipment} = new openprint::Equipment( $param{equipment_id} );
+		if ( $param{type} eq 'all' ) {
+			@{$$variable{Folds}} = openprint::Fold->find( equipment_id=>$param{equipment_id},order=>'lower(name)' );
 		} else {
-			@{$$variable{'Folds'}} = openprint::Fold->find( equipment_id=>$param{equipment_id}, type=>$param{type},order=>'lower(name)' );
+			@{$$variable{Folds}} = openprint::Fold->find( equipment_id=>$param{equipment_id}, type=>$param{type},order=>'lower(name)' );
 		} # end if
 	} # end if
 ) ?>
-<? while ( $$variable{Fold} = shift @{$$variable{'Folds'}} ) ?>
+<? while ( $$variable{Fold} = shift @{$$variable{Folds}} ) ?>
 <form id="Fold<? echo ( $$variable{Fold}->id() ) ?>">
 	<div class="leftColumn">
 		<fieldset><legend>Fold</legend>
@@ -24,21 +24,21 @@
 		</li>
 		<li>
 			<label>Description</label>
-			<input type="text" id="fold-<? echo ( $$variable{Fold}->id() ) ?>-name" name="name" value="<? echo ( $$variable{Fold}->name() ) ?>" onkeyup="if(this.value!=this.defaultValue){$('Fold<? echo ( $$variable{Fold}->id() ) ?>').addClassName('changed');}" style="width: 90%;" />
+			<input type="text" id="fold-<? echo ( $$variable{Fold}->id() ) ?>-name" name="name" value="<? echo ( $$variable{Fold}->name() ) ?>" oninput="if(this.value!=this.defaultValue){$('Fold<? echo ( $$variable{Fold}->id() ) ?>').addClassName('changed');}" style="width: 90%;" />
 		</li>
 		<li class="folds">
 			<label>Folds</label>
-			<? echo ( input(type=>'cardinal', id=>'fold-'.$$variable{Fold}->id().'-folds', name=>'folds', value=>$$variable{Fold}->folds(), onkeyup=>"if(this.value!=this.defaultValue){\$('Fold$$variable{Fold}{id}').addClassName('changed');}" ); ) ?> folds + 
-			<? echo ( input(type=>'cardinal', id=>'fold-'.$$variable{Fold}->id().'-angles', name=>'angles', value=>$$variable{Fold}->angles(), onkeyup=>"if(this.value!=this.defaultValue){\$('Fold$$variable{Fold}{id}').addClassName('changed');}" ); ) ?> angles
+			<? echo ( input(type=>'cardinal', id=>'fold-'.$$variable{Fold}->id().'-folds', name=>'folds', value=>$$variable{Fold}->folds(), oninput=>"if(this.value!=this.defaultValue){\$('Fold$$variable{Fold}{id}').addClassName('changed');}" ); ) ?> folds + 
+			<? echo ( input(type=>'cardinal', id=>'fold-'.$$variable{Fold}->id().'-angles', name=>'angles', value=>$$variable{Fold}->angles(), oninput=>"if(this.value!=this.defaultValue){\$('Fold$$variable{Fold}{id}').addClassName('changed');}" ); ) ?> angles
 		</li>
 		<li class="pages">
 			<label>Pages</label>
 			<? echo ( join("\n",
-						input(type=>'cardinal', id=>'fold-'.$$variable{Fold}->id().'-pages', name=>'pages', value=>$$variable{Fold}->pages(), onkeyup=>"if(this.value!=this.defaultValue){$('Fold$$variable{Fold}{id}').addClassName('changed');}" ),
+						input(type=>'cardinal', id=>'fold-'.$$variable{Fold}->id().'-pages', name=>'pages', value=>$$variable{Fold}->pages(), oninput=>"if(this.value!=this.defaultValue){$('Fold$$variable{Fold}{id}').addClassName('changed');}" ),
 			':',
-			input( type=>'cardinal', id=>'fold-'.$$variable{Fold}->id().'-page_columns', name=>'page_columns', value=>$$variable{Fold}->page_columns(), onkeyup=>"if(this.value!=this.defaultValue){\$('Fold$$variable{Fold}{id}').addClassName('changed');}" ),
+			input( type=>'cardinal', id=>'fold-'.$$variable{Fold}->id().'-page_columns', name=>'page_columns', value=>$$variable{Fold}->page_columns(), oninput=>"if(this.value!=this.defaultValue){\$('Fold$$variable{Fold}{id}').addClassName('changed');}" ),
 			'x',
-			input( type=>'cardinal', id=>'fold-'.$$variable{Fold}->id().'-page_rows', name=>'page_rows', value=>$$variable{Fold}->page_rows(), onkeyup=>"if(this.value!=this.defaultValue){\$('Fold$$variable{Fold}{id}').addClassName('changed');}" ),
+			input( type=>'cardinal', id=>'fold-'.$$variable{Fold}->id().'-page_rows', name=>'page_rows', value=>$$variable{Fold}->page_rows(), oninput=>"if(this.value!=this.defaultValue){\$('Fold$$variable{Fold}{id}').addClassName('changed');}" ),
 			); )?>
 		</li>
 		<li class="spine_direction">
@@ -51,28 +51,28 @@
 		</li>
 		<li class="imposition">
 			<label>Imposition</label>
-			Min: <? echo ( input(type=>'cardinal', id=>'fold-'.$$variable{Fold}->id().'-min_imposition', name=>'min_imposition', value=>$$variable{Fold}->min_imposition(), onkeyup=>"if(this.value!=this.defaultValue){\$('Fold$$variable{Fold}{id}').addClassName('changed');}" ) ) ?>
-			Max: <? echo ( input( type=>'cardinal', id=>'fold-'.$$variable{Fold}->id().'-max_imposition', name=>'max_imposition', value=>$$variable{Fold}->max_imposition(), onkeyup=>"if(this.value!=this.defaultValue){\$('Fold$$variable{Fold}{id}').addClassName('changed');}" ); ) ?>
+			Min: <? echo ( input(type=>'cardinal', id=>'fold-'.$$variable{Fold}->id().'-min_imposition', name=>'min_imposition', value=>$$variable{Fold}->min_imposition(), oninput=>"if(this.value!=this.defaultValue){\$('Fold$$variable{Fold}{id}').addClassName('changed');}" ) ) ?>
+			Max: <? echo ( input( type=>'cardinal', id=>'fold-'.$$variable{Fold}->id().'-max_imposition', name=>'max_imposition', value=>$$variable{Fold}->max_imposition(), oninput=>"if(this.value!=this.defaultValue){\$('Fold$$variable{Fold}{id}').addClassName('changed');}" ); ) ?>
 		</li>
 		<li class="imposition">
 			<label>Imposition Columns</label>
-			Min: <? echo ( input(type=>'cardinal', id=>'fold-'.$$variable{Fold}->id().'-min_imposition_columns', name=>'min_imposition_columns', value=>$$variable{Fold}->min_imposition_columns(), onkeyup=>"if(this.value!=this.defaultValue){\$('Fold$$variable{Fold}{id}').addClassName('changed');}" ) ) ?>
-			Max: <? echo ( input( type=>'cardinal', id=>'fold-'.$$variable{Fold}->id().'-max_imposition_columns', name=>'max_imposition_columns', value=>$$variable{Fold}->max_imposition_columns(), onkeyup=>"if(this.value!=this.defaultValue){\$('Fold$$variable{Fold}{id}').addClassName('changed');}" ); ) ?>
+			Min: <? echo ( input(type=>'cardinal', id=>'fold-'.$$variable{Fold}->id().'-min_imposition_columns', name=>'min_imposition_columns', value=>$$variable{Fold}->min_imposition_columns(), oninput=>"if(this.value!=this.defaultValue){\$('Fold$$variable{Fold}{id}').addClassName('changed');}" ) ) ?>
+			Max: <? echo ( input( type=>'cardinal', id=>'fold-'.$$variable{Fold}->id().'-max_imposition_columns', name=>'max_imposition_columns', value=>$$variable{Fold}->max_imposition_columns(), oninput=>"if(this.value!=this.defaultValue){\$('Fold$$variable{Fold}{id}').addClassName('changed');}" ); ) ?>
 		</li>
 		<li class="imposition">
 			<label>Imposition Rows</label>
-			Min: <? echo ( input(type=>'cardinal', id=>'fold-'.$$variable{Fold}->id().'-min_imposition_rows', name=>'min_imposition_rows', value=>$$variable{Fold}->min_imposition_rows(), onkeyup=>"if(this.value!=this.defaultValue){\$('Fold$$variable{Fold}{id}').addClassName('changed');}" ) ) ?>
-			Max: <? echo ( input( type=>'cardinal', id=>'fold-'.$$variable{Fold}->id().'-max_imposition_rows', name=>'max_imposition_rows', value=>$$variable{Fold}->max_imposition_rows(), onkeyup=>"if(this.value!=this.defaultValue){\$('Fold$$variable{Fold}{id}').addClassName('changed');}" ); ) ?>
+			Min: <? echo ( input(type=>'cardinal', id=>'fold-'.$$variable{Fold}->id().'-min_imposition_rows', name=>'min_imposition_rows', value=>$$variable{Fold}->min_imposition_rows(), oninput=>"if(this.value!=this.defaultValue){\$('Fold$$variable{Fold}{id}').addClassName('changed');}" ) ) ?>
+			Max: <? echo ( input( type=>'cardinal', id=>'fold-'.$$variable{Fold}->id().'-max_imposition_rows', name=>'max_imposition_rows', value=>$$variable{Fold}->max_imposition_rows(), oninput=>"if(this.value!=this.defaultValue){\$('Fold$$variable{Fold}{id}').addClassName('changed');}" ); ) ?>
 		</li>
 		<li class="page_width">
 			<label>Page Width</label>
-			Min: <? echo ( input( type=>'float', id=>'fold-'.$$variable{Fold}->id().'-min_width', name=>'min_width', value=>$$variable{Fold}->min_width(), onkeyup=>"if(this.value!=this.defaultValue){\$('Fold$$variable{Fold}{id}').addClassName('changed');}" ); ) ?>inches
-			Max: <? echo ( input( type=>'float', id=>'fold-'.$$variable{Fold}->id().'-max_width', name=>'max_width', value=>$$variable{Fold}->max_width(), onkeyup=>"if(this.value!=this.defaultValue){\$('Fold$$variable{Fold}{id}').addClassName('changed');}" ); ) ?>inches
+			Min: <? echo ( input( type=>'float', id=>'fold-'.$$variable{Fold}->id().'-min_width', name=>'min_width', value=>$$variable{Fold}->min_width(), oninput=>"if(this.value!=this.defaultValue){\$('Fold$$variable{Fold}{id}').addClassName('changed');}" ); ) ?>inches
+			Max: <? echo ( input( type=>'float', id=>'fold-'.$$variable{Fold}->id().'-max_width', name=>'max_width', value=>$$variable{Fold}->max_width(), oninput=>"if(this.value!=this.defaultValue){\$('Fold$$variable{Fold}{id}').addClassName('changed');}" ); ) ?>inches
 		</li>
 		<li class="page_height">
 			<label>Page Height</label>
-			Min: <? echo ( input( type=>'float', id=>'fold-'.$$variable{Fold}->id().'-min_height', name=>'min_height', value=>$$variable{Fold}->min_height(), onkeyup=>"if(this.value!=this.defaultValue){\$('Fold$$variable{Fold}{id}').addClassName('changed');}" ); ) ?>inches
-			Max: <? echo ( input( type=>'float', id=>'fold-'.$$variable{Fold}->id().'-max_height', name=>'max_height', value=>$$variable{Fold}->max_height(), onkeyup=>"if(this.value!=this.defaultValue){\$('Fold$$variable{Fold}{id}').addClassName('changed');}" ); ) ?>inches
+			Min: <? echo ( input( type=>'float', id=>'fold-'.$$variable{Fold}->id().'-min_height', name=>'min_height', value=>$$variable{Fold}->min_height(), oninput=>"if(this.value!=this.defaultValue){\$('Fold$$variable{Fold}{id}').addClassName('changed');}" ); ) ?>inches
+			Max: <? echo ( input( type=>'float', id=>'fold-'.$$variable{Fold}->id().'-max_height', name=>'max_height', value=>$$variable{Fold}->max_height(), oninput=>"if(this.value!=this.defaultValue){\$('Fold$$variable{Fold}{id}').addClassName('changed');}" ); ) ?>inches
 		</li>
 		<li class="calliper">
 			<label>Calliper</label>
@@ -81,15 +81,15 @@
 		</li>
 		<li class="printing_type">
 			<label>Printing Type</label>
-			<input type="text" id="fold-<? echo ( $$variable{Fold}->id() ) ?>-printing_type" name="printing_type" value="<? echo ( $$variable{Fold}->printing_type() ) ?>" onkeyup="if(this.value!=this.defaultValue){$('Fold<? echo ( $$variable{Fold}->id() ) ?>').addClassName('changed');}" />
+			<input type="text" id="fold-<? echo ( $$variable{Fold}->id() ) ?>-printing_type" name="printing_type" value="<? echo ( $$variable{Fold}->printing_type() ) ?>" oninput="if(this.value!=this.defaultValue){$('Fold<? echo ( $$variable{Fold}->id() ) ?>').addClassName('changed');}" />
 		</li>
 		<li class="make_ready_time">
 			<label>Make Ready Time</label>
-			<? echo ( input( type=>'cardinal', id=>'fold-'.$$variable{Fold}->id().'-makeready_time', name=>'makeready_time', value=>$$variable{Fold}->makeready_time(), onkeyup=>"if(this.value!=this.defaultValue){\$('Fold$$variable{Fold}{id}').addClassName('changed');}" ); ) ?>minutes
+			<? echo ( input( type=>'cardinal', id=>'fold-'.$$variable{Fold}->id().'-makeready_time', name=>'makeready_time', value=>$$variable{Fold}->makeready_time(), oninput=>"if(this.value!=this.defaultValue){\$('Fold$$variable{Fold}{id}').addClassName('changed');}" ); ) ?>minutes
 		</li>
 		<li class="make_ready_overs">
 			<label>Make Ready Overs</label>
-			<? echo ( input( type=>'cardinal', id=>'fold-'.$$variable{Fold}->id().'-makeready_overs', name=>'makeready_overs', value=>$$variable{Fold}->makeready_overs(), onkeyup=>"if(this.value!=this.defaultValue){\$('Fold$$variable{Fold}{id}').addClassName('changed');}" ); ) ?>
+			<? echo ( input( type=>'cardinal', id=>'fold-'.$$variable{Fold}->id().'-makeready_overs', name=>'makeready_overs', value=>$$variable{Fold}->makeready_overs(), oninput=>"if(this.value!=this.defaultValue){\$('Fold$$variable{Fold}{id}').addClassName('changed');}" ); ) ?>
 			<select id="fold-<? echo ( $$variable{Fold}->id() ) ?>-makeready_overs_units" name="makeready_overs_units" onchange="if(this.value!=this.defaultValue){$('Fold<? echo ( $$variable{Fold}->id() ) ?>').addClassName('changed');}" >
 				<option value="Sheets" <? echo ( $$variable{Fold}->makeready_overs_units() eq 'Sheets' ? 'selected="selected"' : '' ) ?>>Sheets</option>
 				<option value="Percent" <? echo ( $$variable{Fold}->makeready_overs_units() eq 'Percent' ? 'selected="selected"' : '' ) ?>>Percent</option>
@@ -97,8 +97,8 @@
 		</li>
 		<li class="run_overs">
 			<label>Run Overs</label>
-			<? echo ( input( type=>'cardinal', id=>'fold-'.$$variable{Fold}->id().'-run_overs', name=>'run_overs', value=>$$variable{Fold}->run_overs(), onkeyup=>"if(this.value!=this.defaultValue){\$('Fold$$variable{Fold}{id}').addClassName('changed');}" ); ) ?>
-			<select id="fold-<? echo ( $$variable{Fold}->id() ) ?>-run_overs_units" name="run_overs_units" onkeyup="if(this.value!=this.defaultValue){$('Fold<? echo ( $$variable{Fold}->id() ) ?>').addClassName('changed');}" >
+			<? echo ( input( type=>'cardinal', id=>'fold-'.$$variable{Fold}->id().'-run_overs', name=>'run_overs', value=>$$variable{Fold}->run_overs(), oninput=>"if(this.value!=this.defaultValue){\$('Fold$$variable{Fold}{id}').addClassName('changed');}" ); ) ?>
+			<select id="fold-<? echo ( $$variable{Fold}->id() ) ?>-run_overs_units" name="run_overs_units" oninput="if(this.value!=this.defaultValue){$('Fold<? echo ( $$variable{Fold}->id() ) ?>').addClassName('changed');}" >
 				<option value="Sheets" <? echo ( $$variable{Fold}->run_overs_units() eq 'Sheets' ? 'selected="selected"' : '' ) ?>>Sheets</option>
 				<option value="Percent" <? echo ( $$variable{Fold}->run_overs_units() eq 'Percent' ? 'selected="selected"' : '' ) ?>>Percent</option>
 			</select>
@@ -126,10 +126,7 @@
 		<fieldset><legend>Binding Options</legend>
 		<p>
 			<label>Inline Cutting</label>
-			<input type="radio" id="fold-<? echo ( $$variable{Fold}->id() ) ?>-cutting1" name="cutting" value="1" <? echo ( $$variable{Fold}->cutting() ? 'checked="checked"' : '' ) ?> onclick="$('Fold<? echo ( $$variable{Fold}->id() ) ?>').addClassName('changed');"/>
-			<label class="radio" for="fold-<? echo ( $$variable{Fold}->id() ) ?>-cutting1">Yes</label>
-			<input type="radio" id="fold-<? echo ( $$variable{Fold}->id() ) ?>-cutting0" name="cutting" value="0" <? echo ( ! $$variable{Fold}->cutting() eq '0' ? 'checked="checked"' : '' ) ?> onclick="$('Fold<? echo ( $$variable{Fold}->id() ) ?>').addClassName('changed');" />
-			<label class="radio" for="fold-<? echo ( $$variable{Fold}->id() ) ?>-cutting0">No</label>
+			<?echo ( radio( 'cutting', ['1','Yes','0','No' ], $$variable{Fold}->cutting(), { onclick=>qq`\$('Fold$$variable{Fold}{id}').addClassName('changed');`, id=>$$variable{Fold}->id() } ); ) ?>
 		</p>
 		<p>
 			<label>Stitching</label>
@@ -137,11 +134,11 @@
 		</p>
 		<p>
 			<label>Perfect Bind</label>
-			<? echo ( radio( 'perfectbind', ['1','Yes','0','No', '', 'Either'], $$variable{Fold}->perfectbind(), { onclick=>qq`\$('Fold$$variable{Fold}{'id'}').addClassName('changed');`, id=>$$variable{Fold}->id() } ); ) ?>
+			<? echo ( radio( 'perfectbind', ['1','Yes','0','No', '', 'Either'], $$variable{Fold}->perfectbind(), { onclick=>qq`\$('Fold$$variable{Fold}{id}').addClassName('changed');`, id=>$$variable{Fold}->id() } ); ) ?>
 		</p>
 		<p>
 			<label>Spine Paste</label>
-			<? echo ( radio( 'spinepaste', ['1','Yes','0','No', '', 'Either'], $$variable{Fold}->spinepaste(), { onclick=>qq`\$('Fold$$variable{Fold}{'id'}').addClassName('changed');`, id=>$$variable{Fold}->id() } ); ) ?>
+			<? echo ( radio( 'spinepaste', ['1','Yes','0','No', '', 'Either'], $$variable{Fold}->spinepaste(), { onclick=>qq`\$('Fold$$variable{Fold}{id}').addClassName('changed');`, id=>$$variable{Fold}->id() } ); ) ?>
 		</p>
 		</fieldset>
 		<fieldset><legend>Runspeeds</legend>
@@ -173,4 +170,4 @@
 	</div>
 	<br class="spacer"/>
 </form>
-<? endwhile ( $$variable{Fold} = shift @{$$variable{'Folds'}} ) ?>
+<? endwhile ( $$variable{Fold} = shift @{$$variable{Folds}} ) ?>
