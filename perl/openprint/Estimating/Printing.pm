@@ -4552,7 +4552,7 @@ if ( DEBUG_PLATES ) {
 						if ( $R2SPrice{units} eq 'per m' ) {
 							$$price{Roll2SheetRunCharge} = Math::Round::nearest(0.01,$R2SPrice{Price} * $$price{Impressions}/1000);
 						} else {
-							$openprint::log->error("Unknown units on Woll2SheetRunCharge ( $R2SPrice{units} for $$Press{strid}");
+							$openprint::log->error("Unknown units on Roll2SheetRunCharge ( $R2SPrice{units} for $$Press{strid}");
 						} # end if
 						$$price{Roll2SheetUnits} = $R2SPrice{units};
 						$$price{Roll2SheetRunCost} = $R2SPrice{Price};
@@ -6122,7 +6122,7 @@ sub select_presses {
 	my $ProjectType = $Project->Type();
 
 	if ( ! %Presses ) {
-		$openprint::log->warn("Nothing in presses");
+		$openprint::log->error("Nothing in presses");
 	}
 	foreach my $Press ( values %Presses ) {
 $openprint::log->debug("COnsidering $$Press{strid}") if DEBUG_PRESSES;
@@ -6279,6 +6279,10 @@ $openprint::log->debug("COnsidering $$Press{strid}") if DEBUG_PRESSES;
 				$results{$press_id} = "Too many colours for web.";
 				next;
 			} # end if
+		} elsif ( $side_one_colours and @$side_two_colours and $Press->specification('Runstyles') eq 'Sheet Work' and $Press->specification('Multipass', $Paper->gsm()) ne 'Y' ) {
+			# Something like an inkjet that can only do 1 sided
+			$results{$press_id} = "Can only do 1 sided jobs.";
+			next;
 		} # end if
 
 		if ( $varnish ) {
