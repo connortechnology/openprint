@@ -165,7 +165,7 @@ Manifest: <a href="/employee/inventory/manifest_view.html?manifest_id=<? echo ( 
 		} elsif ( $C->Type()->name() eq 'Sheet Stock' ) {
 			$html .= sprintf('<div class="quantity">%s sheets</div>', Number::Format::format_number($C->qty()) );
 		} else {
-			$html .= sprintf('<div class="quantity">%s</div>', Number::Format::format_number($C->qty()) );
+			$html .= sprintf('<div class="quantity">%s</div>', Number::Format::format_number(1*$C->qty()) );
 		} # end if
 			
 		$html .= sprintf('

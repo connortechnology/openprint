@@ -284,6 +284,7 @@ new Ajax.Request('/administrator/equipment/_specification.html?action=copy&amp;i
 	</fieldset>
 <? endif ( $$variable{Equipment}->id() ) ?>
 	<input type="hidden" name="btnFunction"/>
+</form>
 <? if ( $$variable{Equipment}->specification('Folding Capable') ) ?>
 	<fieldset><legend>Fold Specifications</legend>
 		Select the # of pages of the folds that you would like to edit.  To add a new fold click Add.

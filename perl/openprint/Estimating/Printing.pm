@@ -4392,7 +4392,7 @@ my $sub_imp = $$sub_sig_price{Imposition};
 if ( ! $sub_imp ) {
 	$log->error("No sub_imp $sub_imp $sub_sig_price ");
 } else {
-	$sub_imp->display();
+	$sub_imp->display("sub_imp");
 }
 #$log->error("using a cached calc_other_groups $$sub_sig_price{'Comparison Cost'}");
 							} # end if
@@ -6577,9 +6577,11 @@ sub press_setup_cost {
 		#$Price{Total} *= $plate_change_qty if $plate_change_qty;
 	} # end if
 	$Price{'Press Setup'} = $Price{Total};
-	my %PlateSetupPrice = openprint::service::get_price_object( 'PlateMakeReady'.$$Imposition{runstyle}.$$Imposition{sides}.'Sided', undef, $Press );
-	%PlateSetupPrice = openprint::service::get_price_object( 'PlateMakeReady'.$$Imposition{runstyle}, undef, $Press ) if ! %PlateSetupPrice;
-	%PlateSetupPrice = openprint::service::get_price_object( 'PlateMakeReady', undef, $Press ) if ! %PlateSetupPrice;
+	# No on is using these at this time. We can re-enable when someone does.
+	#my %PlateSetupPrice = openprint::service::get_price_object( 'PlateMakeReady'.$$Imposition{runstyle}.$$Imposition{sides}.'Sided', undef, $Press );
+	#%PlateSetupPrice = openprint::service::get_price_object( 'PlateMakeReady'.$$Imposition{runstyle}, undef, $Press ) if ! %PlateSetupPrice;
+	#%PlateSetupPrice = openprint::service::get_price_object( 'PlateMakeReady', undef, $Press ) if ! %PlateSetupPrice;
+	my %PlateSetupPrice = openprint::service::get_price_object( 'PlateMakeReady', undef, $Press );
 	if ( %PlateSetupPrice ) {
 		my $plates = $setup_count;
 		$plates *= $plate_runs if $plate_runs;
