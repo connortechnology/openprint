@@ -1,6 +1,6 @@
 use strict;
 package openprint;
-use vars qw( $r %variable %session %param %config $log $dbh $User $Company $TZ $Owner );
+use vars qw( $r %variable %session %param %config $log $dbh $User $Company $TZ $Owner $Pricelist );
 
 
 sub session_init {
@@ -135,6 +135,7 @@ sub session_init {
 			$session{Pricelist_id} = $Pricelist->id() if $Pricelist->id();
 		} # end if
 	} # end if
+	$Pricelist = new openprint::Pricelist( $session{Pricelist_id} ) if $session{Pricelist_id};
 
 } # end sub session_init
 
