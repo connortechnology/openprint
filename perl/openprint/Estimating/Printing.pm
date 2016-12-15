@@ -6519,9 +6519,11 @@ sub press_setup_cost {
 		#$Price{Total} *= $plate_change_qty if $plate_change_qty;
 	} # end if
 	$Price{'Press Setup'} = $Price{Total};
-	my %PlateSetupPrice = openprint::service::get_price_object( 'PlateMakeReady'.$$Imposition{runstyle}.$$Imposition{sides}.'Sided', undef, $Press );
-	%PlateSetupPrice = openprint::service::get_price_object( 'PlateMakeReady'.$$Imposition{runstyle}, undef, $Press ) if ! %PlateSetupPrice;
-	%PlateSetupPrice = openprint::service::get_price_object( 'PlateMakeReady', undef, $Press ) if ! %PlateSetupPrice;
+	# No on is using these at this time. We can re-enable when someone does.
+	#my %PlateSetupPrice = openprint::service::get_price_object( 'PlateMakeReady'.$$Imposition{runstyle}.$$Imposition{sides}.'Sided', undef, $Press );
+	#%PlateSetupPrice = openprint::service::get_price_object( 'PlateMakeReady'.$$Imposition{runstyle}, undef, $Press ) if ! %PlateSetupPrice;
+	#%PlateSetupPrice = openprint::service::get_price_object( 'PlateMakeReady', undef, $Press ) if ! %PlateSetupPrice;
+	my %PlateSetupPrice = openprint::service::get_price_object( 'PlateMakeReady', undef, $Press );
 	if ( %PlateSetupPrice ) {
 		my $plates = $setup_count;
 		$plates *= $plate_runs if $plate_runs;

@@ -26,6 +26,7 @@ sub calc {
 	my $services = $Project->services();
 	my @signatures = $Project->signatures();
 	my $sig_specs = openprint::service::get_specs_ref( $Project, $signatures[0] );
+	my $form = $$sig_specs{SignatureIndex};
 	my $folding_specs;
 
 	my @capable = ('Y');
@@ -44,14 +45,14 @@ sub calc {
 	my $status = 'calculated';
 	my @equipment = openprint::Equipment->find( Specifications=>{ 'ClipSealing Capable'=>\@capable },useinestimating=>1);
 	if ( ! @equipment ) {
-		$$specs{'alert'} = 'We have no clip sealing equipment.<br/>';
+		$$specs{alert} = 'We have no clip sealing equipment.<br/>';
 		return $$specs{Status} = 'uncalculated';
 	} # end if
 
-	if ( ! $$specs{'SealType_id'} ) {
+	if ( ! $$specs{SealType_id} ) {
 		my @Materials = openprint::Material->find(category=>'Clip Seal Types');
 		if ( @Materials == 1 ) {
-			$$specs{'SealType_id'};
+			$$specs{SealType_id};
 		} elsif ( @Materials > 1 ) {
 			$$specs{alert} .= 'Please select the type of clip seal.<br/>';
 			return $$specs{Status} = 'uncalculated';
@@ -73,49 +74,49 @@ sub calc {
 				next;
 			} # end if
 			if ( $Equipment->specification('ClipSealing Capable') eq 'When Folding' ) {
-				if ( $Equipment->id() != $$folding_specs{"ddmEquipment-$$sig_specs{SignatureIndex}-$qty_index"} ) {
-					$$specs{'hdnBreakdown'.$qty_index} .= 'Not folding on ' . $Equipment->name() . '. Folding on '.new openprint::Equipment($$folding_specs{"ddmEquipment-$$sig_specs{SignatureIndex}-$qty_index"})->name().'<br/>';
+				if ( $Equipment->id() != $$folding_specs{"ddmEquipment-$form-$qty_index"} ) {
+					$$specs{'hdnBreakdown'.$qty_index} .= 'Not folding on ' . $Equipment->name() . '. Folding on '.new openprint::Equipment($$folding_specs{"ddmEquipment-$form-$qty_index"})->name().'<br/>';
 					next;
 				} # end if
 			} # end if
-			my $runs = POSIX::ceil( $$specs{'SealQuantity'} / $clips_per_run );
+			my $runs = POSIX::ceil( $$specs{SealQuantity} / $clips_per_run );
 
 			my $totalPrice = 0;
 			my %MakeReadyPrice = openprint::service::get_price_object( 'ClipSealingMakeReady', $$specs{SealQuantity}, $Equipment );
 			if ( %MakeReadyPrice ) {
 				$$specs{'hdnBreakdown'.$qty_index} .= sprintf('MakeReady Price: $%1$f%2$s<br/>', @MakeReadyPrice{'Price','units'} );
-				$totalPrice += $MakeReadyPrice{'Price'};
+				$totalPrice += $MakeReadyPrice{Price};
 			} else {
 				$$specs{'hdnBreakdown'.$qty_index} .= 'No MakeReady Price.<br/>';
 			} # end if
 
-			my %ServicePrice = openprint::service::get_price_object('ClipSealing'.$$specs{'SealQuantity'}.'Clips', $$specs{'txtQuantity'.$qty_index}, $Equipment );
+			my %ServicePrice = openprint::service::get_price_object('ClipSealing'.$$specs{SealQuantity}.'Clips', $$specs{'txtQuantity'.$qty_index}, $Equipment );
 			%ServicePrice = openprint::service::get_price_object('ClipSealing', $$specs{'txtQuantity'.$qty_index}, $Equipment ) if ! %ServicePrice;
 			if ( ! %ServicePrice ) {
 				$$specs{'hdnBreakdown'.$qty_index} .= 'No Service Price.<br/>';
-			} elsif ( $ServicePrice{'units'} eq 'per m' ) {
-				$ServicePrice{'Total'} = $ServicePrice{Price} * $$specs{'txtQuantity'.$qty_index} * $runs/ 1000;
+			} elsif ( $ServicePrice{units} eq 'per m' ) {
+				$ServicePrice{Total} = $ServicePrice{Price} * $$specs{'txtQuantity'.$qty_index} * $runs/ 1000;
 				$$specs{'hdnBreakdown'.$qty_index} .= sprintf('Service Price: $%1$f%2$s * %4$d seals * %5$d = $%3$.2f<br/>', @ServicePrice{'Price','units','Total'}, @$specs{'SealQuantity','txtQuantity'.$qty_index} );
-				$totalPrice += $ServicePrice{'Total'};
+				$totalPrice += $ServicePrice{Total};
 			} else {
 				$$specs{'hdnBreakdown'.$qty_index} .= 'Unknown units for Service Price<br/>';
 			} # end if
 
 			
 			my %MaterialPrice;
-			if ( $$specs{'SealType_id'} ) {
-				my $Material = new openprint::Material( $$specs{'SealType_id'} );
-				%MaterialPrice = $Material->get_price( $$specs{'txtQuantity'.$qty_index} * $$specs{'SealQuantity'} );
+			if ( $$specs{SealType_id} ) {
+				my $Material = new openprint::Material( $$specs{SealType_id} );
+				%MaterialPrice = $Material->get_price( $$specs{'txtQuantity'.$qty_index} * $$specs{SealQuantity} );
 				if ( ! %MaterialPrice ) {
 					$$specs{'hdnBreakdown'.$qty_index} .= 'No Material Price.<br/>';
-				} elsif ( $MaterialPrice{'units'} eq 'per m' ) {
-					$MaterialPrice{'Total'} = $MaterialPrice{'Price'} * $$specs{'txtQuantity'.$qty_index} * $$specs{'SealQuantity'} /1000;
+				} elsif ( $MaterialPrice{units} eq 'per m' ) {
+					$MaterialPrice{Total} = $MaterialPrice{Price} * $$specs{'txtQuantity'.$qty_index} * $$specs{SealQuantity} /1000;
 					$$specs{'hdnBreakdown'.$qty_index} .= sprintf('Material Price: $%1$f%2$s * %4$d seals * %5$d = $%3$.2f<br/>', @MaterialPrice{'Price','units','Total'}, @$specs{'SealQuantity','txtQuantity'.$qty_index} );
-					$totalPrice += $MaterialPrice{'Total'};
-				} elsif ( $MaterialPrice{'units'} eq 'per seal' ) {
-					$MaterialPrice{'Total'} = $MaterialPrice{'Price'} * $$specs{'txtQuantity'.$qty_index} * $$specs{'SealQuantity'};
+					$totalPrice += $MaterialPrice{Total};
+				} elsif ( $MaterialPrice{units} eq 'per seal' ) {
+					$MaterialPrice{Total} = $MaterialPrice{Price} * $$specs{'txtQuantity'.$qty_index} * $$specs{SealQuantity};
 					$$specs{'hdnBreakdown'.$qty_index} .= sprintf('Material Price: $%1$f%2$s * %4$d seals * %5$d = $%3$.2f<br/>', @MaterialPrice{'Price','units','Total'}, @$specs{'SealQuantity','txtQuantity'.$qty_index} );
-					$totalPrice += $MaterialPrice{'Total'};
+					$totalPrice += $MaterialPrice{Total};
 				} else {
 					$$specs{'hdnBreakdown'.$qty_index} .= 'Unknown units for Material Price<br/>';
 				} # end if
@@ -127,34 +128,34 @@ sub calc {
 			} # end if
 
 			if ( (!defined $BestPrice{Total}) or $totalPrice < $BestPrice{Total} ) {
-				$BestPrice{'Total'} = $totalPrice;
-				$BestPrice{'Equipment'} = $Equipment;
-				$BestPrice{'ServicePrice'} = \%ServicePrice;
-				$BestPrice{'MaterialPrice'} = \%MaterialPrice
+				$BestPrice{Total} = $totalPrice;
+				$BestPrice{Equipment} = $Equipment;
+				$BestPrice{ServicePrice} = \%ServicePrice;
+				$BestPrice{MaterialPrice} = \%MaterialPrice
 			} # end if
 			$$specs{'hdnBreakdown'.$qty_index} .= '</fieldset>';
 		} # end foreach Equipment
 
-		if ( ! defined $BestPrice{'Total'} ) {
-			$$specs{'alert'} .= 'Unable to calculate a price for quantity ' . $qty_index . '.<br/>';
+		if ( ! defined $BestPrice{Total} ) {
+			$$specs{alert} .= 'Unable to calculate a price for quantity ' . $qty_index . '.<br/>';
 			$status = 'uncalculated';
 		} else {
-			$$specs{'ddmEquipment'.$qty_index} = $BestPrice{'Equipment'}->id();
+			$$specs{'ddmEquipment'.$qty_index} = $BestPrice{Equipment}->id();
 		} # end if
 
-        $$specs{"txtUnitPrice$qty_index"} = sprintf($openprint::config{'UnitPriceFormat'},
-				( ( $BestPrice{'ServicePrice'}{'Total'} + $BestPrice{'MaterialPrice'}{'Total'} ) / $$specs{'txtQuantity'.$qty_index} ) * (1+$Project->markup()/100)
+        $$specs{"txtUnitPrice$qty_index"} = sprintf($openprint::config{UnitPriceFormat},
+				( ( $BestPrice{ServicePrice}{Total} + $BestPrice{MaterialPrice}{Total} ) / $$specs{'txtQuantity'.$qty_index} ) * (1+$Project->markup()/100)
 				);
-        $$specs{"MPrice$qty_index"} = sprintf($openprint::config{'UnitPriceFormat'}, (($BestPrice{'ServicePrice'}{'Total'} + $BestPrice{'MaterialPrice'}{'Total'} ) / $$specs{'txtQuantity'.$qty_index} ) * 1000 );
+        $$specs{"MPrice$qty_index"} = sprintf($openprint::config{UnitPriceFormat}, (($BestPrice{ServicePrice}{Total} + $BestPrice{MaterialPrice}{Total} ) / $$specs{'txtQuantity'.$qty_index} ) * 1000 );
 		if ( $$specs{'OverridePrice'.$qty_index} ne 'Y' ) {
-			$$specs{'txtPrice'.$qty_index} = sprintf( $openprint::config{'ProjectMoneyFormat'}, 
-					$BestPrice{'Total'} * (1+$$specs{'Markup'.$qty_index}/100) * (1+$Project->markup()/100) );
+			$$specs{'txtPrice'.$qty_index} = sprintf( $openprint::config{ProjectMoneyFormat}, 
+					$BestPrice{Total} * (1+$$specs{'Markup'.$qty_index}/100) * (1+$Project->markup()/100) );
 		} else {
-			$$specs{'txtPrice'.$qty_index} = sprintf( $openprint::config{'ProjectMoneyFormat'}, $$specs{'txtPrice'.$qty_index} );
+			$$specs{'txtPrice'.$qty_index} = sprintf( $openprint::config{ProjectMoneyFormat}, $$specs{'txtPrice'.$qty_index} );
 		} # end if
     } # end foreach qty_index
     
-    return $$specs{'Status'} = $status;
+    return $$specs{Status} = $status;
 } # end sub calc
 
 sub summary {
@@ -165,7 +166,7 @@ sub summary {
 	} # end if
 	$specs = openprint::service::get_specs_ref( $Project, $service_id ) if ( ! $specs );
 
-	return $$specs{'SealQuantity'} . ' ' . ( $$specs{'SealType_id'} ? new openprint::Material( $$specs{'SealType_id'} )->description() : ' Clip Seal');
+	return $$specs{SealQuantity} . ' ' . ( $$specs{SealType_id} ? new openprint::Material( $$specs{SealType_id} )->description() : ' Clip Seal');
 } # end sub summary
 
 sub display {
