@@ -6,7 +6,6 @@ use vars qw($debug $table $serial %fields %find_fields %transforms %defaults %se
 require sql;
 require openprint::Object;
 require openprint::pricing;
-require openprint::logs;
 
 use openprint ();
 *session = \%openprint::session;
@@ -82,7 +81,6 @@ sub delete {
 	my $ac = sql::start_transaction( $dbh );
     sql::execute( undef, undef, q{DELETE FROM Service_Prices WHERE service_id=?}, $$self{id} );
 	$self->SUPER::delete();
-	openprint::logs::insertLogRecord('10', "Service Index: " . $$self{id},);
 	sql::end_transaction( $dbh, $ac );
 	return $dbh->errstr();
 } # end sub delete
@@ -101,7 +99,7 @@ sub get_Price {
         } # end if
     } # end if
 
-    $Pricelist = openprint::Pricelist::get_current() if ! $Pricelist;
+    $Pricelist = $openprint::Pricelist if ! $Pricelist;
     my %price = openprint::pricing::get_best_price_object( $openprint::session{company_id}, $$self{id}, $$Pricelist{id}, 'openprint::service_priceset', $quantity, $$Equipment{id}, $period );
 
     if ( ! %price ) {
@@ -112,7 +110,7 @@ sub get_Price {
     $price{currency_id} = $Pricelist->currency_id();
     $price{ServiceName} = $$self{name};
     $price{Service} = $self;
-    openprint::Currency::convert( \%price );
+    openprint::Currency::convert( \%price ) if $$Pricelist{currency_id} != $openprint::session{Currency_id};
     return \%price;
 } # end sub get_Price
 
@@ -126,7 +124,7 @@ sub get_price {
 		} # end if
 	} # end if
 
-	$Pricelist = openprint::Pricelist::get_current() if ! $Pricelist;
+	$Pricelist = $openprint::Pricelist if ! $Pricelist;
     my %price = openprint::pricing::get_best_price_object( $openprint::session{company_id}, $$self{id}, $$Pricelist{id}, 'openprint::service_priceset', $quantity, $$Equipment{id}, $period );
 
 	if ( ! %price ) {
@@ -137,7 +135,7 @@ sub get_price {
 	$price{currency_id} = $Pricelist->currency_id();
 	$price{ServiceName} = $$self{name};
 	$price{Service} = $self;
-	openprint::Currency::convert( \%price );
+    openprint::Currency::convert( \%price ) if $$Pricelist{currency_id} != $openprint::session{Currency_id};
     return %price;
 } # end sub get_price
 
