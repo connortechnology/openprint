@@ -682,7 +682,7 @@ $openprint::log->debug("folds from sigimpo") if DEBUG;
 	} # end if
 
 	@All_Impositions = reduce_impositions( \@Set_Of_Impositions );
-	#@All_Impositions = reduce_pages( \@All_Impositions ) if $SignatureImposition->pages() > $$SignatureImposition{spread_size};
+	@All_Impositions = reduce_pages( \@All_Impositions ) if $SignatureImposition->pages() > $$SignatureImposition{spread_size};
 	if ( DEBUG ) {
 		$openprint::log->debug("Sets of Maximum Impositions: # of sets: " . @All_Impositions);
 		foreach my $Set ( @All_Impositions ) {
@@ -1131,11 +1131,7 @@ if ( 1 ) {
 						if ( $set_index < @All_Impositions-1 ) {
 							# if we aren't the last set, then do nothing because we assume that this set has already been cut down.
 $openprint::log->debug("Couldnt find fold, set_index:$set_index < all_impositions: " . ( @All_Impositions-1 ) ) if DEBUG;
-						} elsif ( $$Imposition{imposition} > 1 ) {
-							my @new_impositions = @$Set_Of_Impositions;
-							splice @new_impositions, $imp_index, 1, cut_imposition( $Imposition );
-							@new_impositions = compact_impositions( @new_impositions );
-							push @All_Impositions, \@new_impositions;
+# Cut spreads first because simpler folds are better and 2out is better than 1 out
 						} elsif ( $$Imposition{spreads} > 1 ) {
 							foreach my $cuts ( cut_spreads( $Imposition ) ) {
 								my @new_impositions = @$Set_Of_Impositions;
@@ -1143,6 +1139,11 @@ $openprint::log->debug("Couldnt find fold, set_index:$set_index < all_imposition
 								@new_impositions = compact_impositions( @new_impositions ) if @new_impositions > 2;
 								push @All_Impositions, \@new_impositions;
 							} # end foreach cuts
+						} elsif ( $$Imposition{imposition} > 1 ) {
+							my @new_impositions = @$Set_Of_Impositions;
+							splice @new_impositions, $imp_index, 1, cut_imposition( $Imposition );
+							@new_impositions = compact_impositions( @new_impositions );
+							push @All_Impositions, \@new_impositions;
 						} # end if
 					} # end if template or book
 
@@ -2092,23 +2093,23 @@ sub reduce_pages {
 sub cut_imposition {
 	my ( $I ) = @_;
 	if ( ( $$I{spread_size} >= 4 ) and ( $$I{image_orientation} eq 'Horizontal' ) and ( $$I{rows} > 1 ) ) {
-		$openprint::log->debug(sprintf("1 Cutting imposition down from %dx%d=%dout to %d %dx1=%d ", @$I{'columns','rows','imposition'}, @$I{'rows','columns','columns'} ) ) if DEBUG;
+		$openprint::log->error(sprintf("1 Cutting imposition down from %dx%d=%dout to %d %dx1=%d ", @$I{'columns','rows','imposition'}, @$I{'rows','columns','columns'} ) ) if DEBUG;
 		# For folding purposes, can only fold where spines are aligned
 		return map { my $i = $I->copy(); $i->rows(1); $i; } ( 1 .. $$I{rows} );
 	} elsif ( ( $$I{spread_size} >= 4 ) and ( $$I{image_orientation} eq 'Vertical' ) and ( $$I{columns} > 1 ) ) {
-		$openprint::log->debug(sprintf("2 Cutting imposition down from %dx%d=%dout to %d 1x%d=%d ", @$I{'columns','rows','imposition'}, @$I{'columns','rows','rows'} ) ) if DEBUG;
+		$openprint::log->error(sprintf("2 Cutting imposition down from %dx%d=%dout to %d 1x%d=%d ", @$I{'columns','rows','imposition'}, @$I{'columns','rows','rows'} ) ) if DEBUG;
 		return map { my $i = $I->copy(); $i->columns(1); $i; } ( 1 .. $$I{columns} );
 	} elsif ( ( $$I{columns} > $$I{rows} ) or ( ( $$I{columns} == $$I{rows} ) and ( $$I{image_orientation} eq 'Vertical' ) ) ) {
 		my ( $i1, $i2 ) = ( $I->copy(), $I->copy );
 		$i1->columns(int($$I{columns}/2 ));
 		$i2->columns( $$I{columns} - $$i1{columns} );
-		$openprint::log->debug(sprintf("3 Cutting imposition down from %dx%d=%dout to %dx%d=%d and %dx%d=%d", @$I{'columns','rows','imposition'}, @$i1{'columns','rows','imposition'}, @$i2{'columns','rows','imposition'} ) ) if DEBUG;
+		$openprint::log->error(sprintf("3 Cutting imposition down from %dx%d=%dout to %dx%d=%d and %dx%d=%d", @$I{'columns','rows','imposition'}, @$i1{'columns','rows','imposition'}, @$i2{'columns','rows','imposition'} ) ) if DEBUG;
 		return ( $i1, $i2 );
 	} else {
 		my ( $i1, $i2 ) = ( $I->copy(), $I->copy );
 		$i1->rows(int $$I{rows}/2);
 		$i2->rows( $$I{rows} - $$i1{rows} );
-		$openprint::log->debug(sprintf("4 Cutting imposition down from %dx%d=%dout to %dx%d=%d and %dx%d=%d", @$I{'columns','rows','imposition'}, @$i1{'columns','rows','imposition'}, @$i2{'columns','rows','imposition'} ) ) if DEBUG;
+		$openprint::log->error(sprintf("4 Cutting imposition down from %dx%d=%dout to %dx%d=%d and %dx%d=%d", @$I{'columns','rows','imposition'}, @$i1{'columns','rows','imposition'}, @$i2{'columns','rows','imposition'} ) ) if DEBUG;
 		return ( $i1, $i2 );
 	} # end if
 } # end sub cut_imposition
@@ -2182,7 +2183,7 @@ $openprint::log->debug("Cutting rows $$I{spread_rows} > ( $$I{image_orientation}
 			} 
 			$i1->quantity( $$i1{quantity} * 2 );
 			$$i1{page_quantity} = $$i1{page_quantity} * 2;
-			$openprint::log->debug(sprintf('Cutting pages down from qty %d*%d,pq:%d to %d*%d,pq:%d', 
+			$openprint::log->error(sprintf('Cutting pages down from qty %d*%d,pq:%d to %d*%d,pq:%d', 
 						$I->quantity(),$I->pages(), $I->page_quantity(), $i1->quantity(), $i1->pages(), $$i1{page_quantity} ) ) if DEBUG;
 			push @results, [ $i1 ];
 			
@@ -2251,15 +2252,15 @@ $openprint::log->debug("Cutting rows $$I{spread_rows} > ( $$I{image_orientation}
 			$i1->spread_columns( $$i1{spread_columns}/2 );
 
 			# Image width is not rotated, it is relative to the object, not the sheet
-			if ( $$I{image_orientation} eq 'Vertical' ) {
+			#if ( $$I{image_orientation} eq 'Vertical' ) {
 				$i1->image_width( $$i1{image_width}/2 );
-			} else {
-				$i1->image_height( $$i1{image_height}/2 );
-			} 
+			#} else {
+				#$i1->image_height( $$i1{image_height}/2 );
+			#} 
 			$i1->quantity( $$i1{quantity} * 2 );
 			$$i1{page_quantity} = $$i1{page_quantity} * 2;
 			if ( DEBUG ) {
-				$openprint::log->debug(sprintf('Cutting pages down from %d to %d by cutting spread columns %d to %d', 
+				$openprint::log->error(sprintf('Cutting pages down from %d to %d by cutting spread columns %d to %d', 
 							$I->pages(), $i1->pages(), $$I{spread_columns}, $$i1{spread_columns} ) );
 				$I->display();
 				$i1->display();
