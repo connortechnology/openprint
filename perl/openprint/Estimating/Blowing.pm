@@ -36,7 +36,7 @@ sub neccessary {
 	my $services = $Project->services( );
 	if ( $$services{''} ) {
 		my $project_specs = openprint::service::get_specs_ref( $Project, $$services{''}[0] );
-		return 1 if $$project_specs{'BlowingQuantity'};
+		return 1 if $$project_specs{BlowingQuantity};
 	} # end if
 	return 0;
 } # end sub neccessary
@@ -48,24 +48,24 @@ sub calc {
 	my $services = $Project->services();
 	my $project_specs = openprint::service::get_specs_ref( $Project, $$services{''}[0] ) if $$services{''};
 
-	if ( ! $$specs{'Quantity'} ) {
-		$$specs{'Quantity'} = $$project_specs{'BlowingQuantity'};
+	if ( ! $$specs{Quantity} ) {
+		$$specs{Quantity} = $$project_specs{BlowingQuantity};
 	} # end if
-	$$specs{'Quantity'} =~ s/\D//g;
-	if ( ! $$specs{'Quantity'} ) {
-		$$specs{'alert'} = 'Please enter the number of blow-ins.';
-		return $$specs{'Status'} = 'uncalculated';
+	$$specs{Quantity} =~ s/\D//g;
+	if ( ! $$specs{Quantity} ) {
+		$$specs{alert} = 'Please enter the number of blow-ins.';
+		return $$specs{Status} = 'uncalculated';
 	} # end if
 
 	my @capabilities = ( 'Y', 
-			( $$services{'PerfectBind'} ? ( 'When PerfectBound' ) : () ),
-			( $$services{'SaddleStitching'} or $$services{'LoopStitching'} ? ( 'When Stitching' ) : () ),
+			( $$services{PerfectBind} ? ( 'When PerfectBound' ) : () ),
+			( $$services{SaddleStitching} or $$services{LoopStitching} ? ( 'When Stitching' ) : () ),
 			);
 	
 	my @Equipment = openprint::Equipment->find('Specifications'=>{'Blowing Capable'=>\@capabilities},'useinestimating'=>1);
 	if ( ! @Equipment ) {
-		$$specs{'alert'} = 'We have no equipment for blow-ins.';
-		return $$specs{'Status'} = 'uncalculated';
+		$$specs{alert} = 'We have no equipment for blow-ins.';
+		return $$specs{Status} = 'uncalculated';
 	} # end if
 
 	my $status = 'calculated';
@@ -86,7 +86,7 @@ sub calc {
 		foreach my $Equipment ( @Equipment ) {
 			$$specs{'hdnBreakdown'.$qty_index} .= '<fieldset><legend>'.$Equipment->name().'</legend>';
 			my $max_blow_ins = $Equipment->specification('Maximum Blow-ins');
-			if ( $max_blow_ins and ( $max_blow_ins < $$specs{'Quantity'} ) ) {
+			if ( $max_blow_ins and ( $max_blow_ins < $$specs{Quantity} ) ) {
 				$$specs{'hdnBreakdown'.$qty_index} .= 'Maximum blow-ins: ' . $max_blow_ins.'<br/>';
 				next;
 			} # end if
@@ -98,19 +98,19 @@ sub calc {
 				$$specs{'hdnBreakdown'.$qty_index} .= 'No MakeReady price.<br/>';
 			} else {
 				$$specs{'hdnBreakdown'.$qty_index} .= sprintf('MakeReady Price: $%1$.2f%2$s<br/>', @MakeReady{'Price','units'} );
-				$total += $MakeReady{'Price'};
+				$total += $MakeReady{Price};
 			} # end if
 
 			my %ServicePrice = $Blowing->get_price( undef, $Equipment ) if $Blowing;
 			if ( ! %ServicePrice ) {
 				$$specs{'hdnBreakdown'.$qty_index} .= 'No Service price.<br/>';
-			} elsif ( lc $ServicePrice{'units'} eq 'per m' ) {
-				$ServicePrice{'Total'} += $ServicePrice{'Price'} * $$specs{'txtQuantity'.$qty_index} / 1000;
-				$total += $ServicePrice{'Total'};
+			} elsif ( lc $ServicePrice{units} eq 'per m' ) {
+				$ServicePrice{Total} += $ServicePrice{Price} * $$specs{'txtQuantity'.$qty_index} / 1000;
+				$total += $ServicePrice{Total};
 				$$specs{'hdnBreakdown'.$qty_index} .= sprintf('Service Price: $%1$.2f%2$s * %4$d = $%3$.2f<br/>', @ServicePrice{'Price','units','Total'}, $$specs{'txtQuantity'.$qty_index} );
-			} elsif ( lc $ServicePrice{'units'} eq 'each' ) {
-				$ServicePrice{'Total'} += $ServicePrice{'Price'} * $$specs{'txtQuantity'.$qty_index};
-				$total += $ServicePrice{'Total'};
+			} elsif ( lc $ServicePrice{units} eq 'each' ) {
+				$ServicePrice{Total} += $ServicePrice{Price} * $$specs{'txtQuantity'.$qty_index};
+				$total += $ServicePrice{Total};
 				$$specs{'hdnBreakdown'.$qty_index} .= sprintf('Service Price: $%1$.2f%2$s * %4$d = $%3$.2f<br/>', @ServicePrice{'Price','units','Total'}, $$specs{'txtQuantity'.$qty_index} );
 			} # end if
 
@@ -119,25 +119,25 @@ sub calc {
 			} # end if
 			$$specs{'hdnBreakdown'.$qty_index} .= sprintf('Total: $%.2f<br/>', $total );
 			
-			if ( ( ! defined $BestPrice{'Total'} ) or $total < $BestPrice{'Total'} ) {
-				$BestPrice{'Total'} = $total;
-				$BestPrice{'Equipment'} = $Equipment;
-				$BestPrice{'ServicePrice'} = \%ServicePrice;
+			if ( ( ! defined $BestPrice{Total} ) or $total < $BestPrice{Total} ) {
+				$BestPrice{Total} = $total;
+				$BestPrice{Equipment} = $Equipment;
+				$BestPrice{ServicePrice} = \%ServicePrice;
 			} # end if
 			$$specs{'hdnBreakdown'.$qty_index} .= '</fieldset>';
         } # end foreach Equipment
 
-		if ( ! defined $BestPrice{'Total'} ) {
+		if ( ! defined $BestPrice{Total} ) {
 			$status = 'uncalculated';
 		} else {
-			$$specs{'ddmEquipment'.$qty_index} = $BestPrice{'Equipment'}->id();
+			$$specs{'ddmEquipment'.$qty_index} = $BestPrice{Equipment}->id();
 		} # end if
 
-		$$specs{'txtUnitPrice'.$qty_index} = sprintf($openprint::config{'UnitPriceFormat'}, ( $BestPrice{'ServicePrice'}{'Total'} / $$specs{'txtQuantity'.$qty_index} ) * (1+$Project->markup()/100) );
+		$$specs{'txtUnitPrice'.$qty_index} = sprintf($openprint::config{UnitPriceFormat}, ( $BestPrice{ServicePrice}{Total} / $$specs{'txtQuantity'.$qty_index} ) * (1+$Project->markup()/100) );
 		if ( $$specs{'OverridePrice'.$qty_index} ne 'Y' ) {
-			$$specs{'txtPrice'.$qty_index} = sprintf( $openprint::config{'ProjectMoneyFormat'}, $BestPrice{'Total'} * (1+$$specs{"Markup$qty_index"}/100) * (1+$Project->markup()/100) );
+			$$specs{'txtPrice'.$qty_index} = sprintf( $openprint::config{ProjectMoneyFormat}, $BestPrice{Total} * (1+$$specs{"Markup$qty_index"}/100) * (1+$Project->markup()/100) );
 		} else {
-			$$specs{'txtPrice'.$qty_index} = sprintf( $openprint::config{'ProjectMoneyFormat'}, $$specs{'txtPrice'.$qty_index} );
+			$$specs{'txtPrice'.$qty_index} = sprintf( $openprint::config{ProjectMoneyFormat}, $$specs{'txtPrice'.$qty_index} );
 		} # end if
 
     } # end foreach qty_index
@@ -156,14 +156,14 @@ sub summary {
 		return '';
 	} # end if
 
-	return sprintf( '%d blow in%s', $$specs{'Quantity'}, $$specs{'Quantity'} == 1 ? '' : 's' );
+	return sprintf( '%d blow in%s', $$specs{Quantity}, $$specs{Quantity} == 1 ? '' : 's' );
 } # end sub summary
 
 sub save {
 	my ( $p_id, $s_id, $param ) = @_;
 	my $Project = new openprint::Project( $p_id );
 	my $services = $Project->services();
-	openprint::service::insert_service_spec( $openprint::log, $openprint::dbh, $p_id, $$services{''}[0], 'BlowingQuantity', $$param{'Quantity'} );
+	openprint::service::insert_service_spec( $openprint::log, $openprint::dbh, $p_id, $$services{''}[0], 'BlowingQuantity', $$param{Quantity} );
 	
 } # end sub save
 
@@ -173,8 +173,8 @@ sub display {
 	my $Project = new openprint::Project( $project_index );
 	my $services = $Project->services();
 	my @capabilities = ( 'Y', 
-			( $$services{'PerfectBind'} ? ( 'When PerfectBound' ) : () ),
-			( $$services{'SaddleStitching'} or $$services{'LoopStitching'} ? ( 'When Stitching' ) : () ),
+			( $$services{PerfectBind} ? ( 'When PerfectBound' ) : () ),
+			( $$services{SaddleStitching} or $$services{LoopStitching} ? ( 'When Stitching' ) : () ),
 			);
 	
 	$$variable{Equipment} = [ openprint::Equipment->find('Specifications'=>{'Blowing Capable'=>\@capabilities},'useinestimating'=>1, order=>'lower(strName)') ];

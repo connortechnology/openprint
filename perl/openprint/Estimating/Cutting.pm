@@ -510,6 +510,12 @@ sub signature_calc {
 		$results{alert} = $Paper->to_string() . ': Stock is not cuttable.';
 		return %results;
 	} # end if
+	if ( ! $$Imposition{imposition} ) {
+		$openprint::log->error("Have empty imposition in Cutting.");
+		$results{alert} = 'Imposition was empty.';
+		$results{Status} = 'uncalculated';
+		return %results;
+	}
 	my $services = $Project->services();
 	my $printing_specs = openprint::service::get_specs_ref( $Project, $$services{''}[0] ) if $$services{''} and @{$$services{''}};
 
@@ -727,6 +733,8 @@ $openprint::log->debug("Folding impositions: " . @folding_impositions ) if DEBUG
 				next;
 			} # end if
 		} # end if
+
+			
 
 		my $sheets = ceil( $$sig_specs{'txtQuantity'.$qty_index} / $$I{imposition} );
 		$sheets *= $$sig_specs{PageQuantity} if $$sig_specs{PageQuantity};

@@ -25,9 +25,6 @@ $debug = 0;
 
 sub html_body {
 	my ( $self, $html ) = @_;
-	#$$self{boundary} = "====" . time() . "====" if ! $$self{boundary};
-	#$$self{BODY} .= "$$self{boundary}\nContent-Type: text/html;\n";
-	#$$self{BODY} .= "Content-Transfer-Encoding: quoted-printable\n";
 	$$self{HTML_BODY} = $html;
 } # end sub html_body
 
@@ -233,6 +230,16 @@ sub delete {
 sub to {
 	return ();
 } # end sub to
+
+sub attachments {
+	if ( @_ > 1 ) {
+		$_[0]{ATTACHMENTS} = $_[1];
+	}
+	if ( ! $_[0]{ATTACHMENTS} ) {
+		$_[0]{ATTACHMENTS} = [];
+	}
+	return @{$_[0]{ATTACHMENTS}};
+}
 
 sub add_pdf_attachment_from_html {
 	my ( $self, $name, $html ) = @_;

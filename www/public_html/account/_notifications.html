@@ -8,7 +8,7 @@
 	my $html;
 	my @Notification_Types = openprint::User_Notification_Type->find( order=>'sort,lower(name)' );
 	my %Notifications;
-	my @Notifications = openprint::User_Notification->find( user_id => $$variable{User}->id() );
+	my @Notifications = openprint::User_Notification->find( user_id => $$variable{User}->id() ) if $$variable{User}->id();
 	foreach my $N ( @Notifications ) {
 		push @{$Notifications{$$N{type_id}}}, $N;
 	}

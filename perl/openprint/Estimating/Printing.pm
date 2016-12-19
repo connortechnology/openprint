@@ -47,7 +47,7 @@ my %folding_cache;
 my %Papers;
 my %Presses;
 sub load_presses {
-%Presses = map { $$_{strid}, $_ } openprint::Equipment->find( 'category any'=>'Printing', 'useinestimating is null or ='=>1 );
+	%Presses = map { $$_{strid}, $_ } openprint::Equipment->find( 'category any'=>'Printing', 'useinestimating is null or ='=>1 );
 }
 
 my %Services;
@@ -4342,7 +4342,7 @@ my $sub_imp = $$sub_sig_price{Imposition};
 if ( ! $sub_imp ) {
 	$log->error("No sub_imp $sub_imp $sub_sig_price ");
 } else {
-	$sub_imp->display();
+	$sub_imp->display("sub_imp");
 }
 #$log->error("using a cached calc_other_groups $$sub_sig_price{'Comparison Cost'}");
 							} # end if
@@ -5671,8 +5671,14 @@ $openprint::log->warn("No folding equipment");
 
 	$gross_sheets = $net_sheets + $total_overs;
 	$impressions = $gross_sheets;
-	$impressions *= 2 if $$Imposition{sides} == 2 and ( $is_wt or $$Imposition{runstyle} eq 'Sheet Work');
-#$openprint::log->debug("New impressions: $impressions");
+	my $colour_impressions = $gross_sheets;
+	if ( $is_wt ) {
+# Same sheets, go through twice, colours merged.
+		$colour_impressions *= 2;
+		$impressions *= 2;
+	} elsif ( $$Imposition{sides} == 2 and $$Imposition{runstyle} eq 'Sheet Work' ) {
+		$impressions *= 2;
+	}
 
 	if ( $max_impression_quantity and ($max_impression_quantity < $impressions ) ) {
 		$openprint::log->debug("Next cuz of maximum impression quantity $max_impression_quantity : $impressions" ) if DEBUG;
@@ -5726,9 +5732,13 @@ $openprint::log->warn("No folding equipment");
 	$price{'Ink Price'} = 0;
 
 	my %mixed_colours = %{$$project{mixed_colours}};
-	my $colour_impressions = $impressions;
-	$colour_impressions = POSIX::ceil( $colour_impressions/2 ) if $$Imposition{sides} == 2;
+	#$colour_impressions = POSIX::ceil( $colour_impressions/2 ) if $$Imposition{sides} == 2;
 #$openprint::log->debug("Impressions: $colour_impressions sides: $$Imposition{sides}");
+
+ $price{'Ink breakdown'} .= sprintf( 'Image area: %s x %s x %d spreads x %dout x %s impressions = %s square inches<br/>', 
+		 @$Imposition{'object_width','object_height', 'spreads','imposition'}, 
+		 $colour_impressions, 
+		 $Imposition->object_area() * $colour_impressions  );
 
 	foreach my $Colour ( @colours_no_coatings ) {
 		
@@ -5866,12 +5876,8 @@ $openprint::log->debug("Was mixed") if DEBUG_INKS;
 			$ink_price{Material} = \%material_price;
 			my $coverage = $$Colour{coverage}/100;
 
-
-			if ( ( $$Imposition{sides} == 2 ) and ( $$Imposition{runstyle} eq 'Sheet Work' ) and sets::isin( $real_colour, $$project{side_one_colour_names} ) and sets::isin( $real_colour, $$project{side_two_colour_names} ) ) {
-				#$coverage /= 2;
-			} # end if
-				
 			if ( %material_price ) {
+				# object_area  includes imposition and spreads
 				my $area = $Imposition->object_area() * $colour_impressions * $coverage;
 				if ( $qty < $$Imposition{imposition} ) {
 # * $colour_impressions ) {
@@ -5905,7 +5911,7 @@ $openprint::log->debug("Area $area = $$Imposition{object_area} * Impressions($co
 					$material_price{Total} += Math::Round::nearest( 0.01, $material_price{Price} * $qty );
 					$ink_price{Material} = \%material_price;
 					$ink_price{Total} += $material_price{Total};
-					$price{'Ink breakdown'} .= sprintf(' %d%% mileage: %d, %.2fkg * $%s%s=$%.2f', $coverage*100, $$Coverage{value}, $qty, @material_price{'Price','units','Total'});
+					$price{'Ink breakdown'} .= sprintf(' %d%% = %d square inches, mileage: %dsquare inches/kg = %.2fkg * $%s%s=$%.2f', $coverage*100, $area, $$Coverage{value}, $qty, @material_price{'Price','units','Total'});
 				} elsif ( $material_price{units} eq 'per square foot' ) {
 					$area /= 144;
 					$material_price{Total} += Math::Round::nearest( 0.01, $material_price{Price} * $area );
@@ -6519,9 +6525,11 @@ sub press_setup_cost {
 		#$Price{Total} *= $plate_change_qty if $plate_change_qty;
 	} # end if
 	$Price{'Press Setup'} = $Price{Total};
-	my %PlateSetupPrice = openprint::service::get_price_object( 'PlateMakeReady'.$$Imposition{runstyle}.$$Imposition{sides}.'Sided', undef, $Press );
-	%PlateSetupPrice = openprint::service::get_price_object( 'PlateMakeReady'.$$Imposition{runstyle}, undef, $Press ) if ! %PlateSetupPrice;
-	%PlateSetupPrice = openprint::service::get_price_object( 'PlateMakeReady', undef, $Press ) if ! %PlateSetupPrice;
+	# No on is using these at this time. We can re-enable when someone does.
+	#my %PlateSetupPrice = openprint::service::get_price_object( 'PlateMakeReady'.$$Imposition{runstyle}.$$Imposition{sides}.'Sided', undef, $Press );
+	#%PlateSetupPrice = openprint::service::get_price_object( 'PlateMakeReady'.$$Imposition{runstyle}, undef, $Press ) if ! %PlateSetupPrice;
+	#%PlateSetupPrice = openprint::service::get_price_object( 'PlateMakeReady', undef, $Press ) if ! %PlateSetupPrice;
+	my %PlateSetupPrice = openprint::service::get_price_object( 'PlateMakeReady', undef, $Press );
 	if ( %PlateSetupPrice ) {
 		my $plates = $setup_count;
 		$plates *= $plate_runs if $plate_runs;

@@ -794,7 +794,7 @@ $log->debug("Selecting default $$options{default} for radio $name");
 		$html .= $$options{container}[0] if $$options{container};
 		$html .= sprintf(q`
 				<input type="radio" name="%1$s" value="%2$s" id="%1$s%6$s%2$s" %4$s%5$s />
-				<label class="radio" for="%1$s%2$s">%3$s</label>
+				<label class="radio" for="%1$s%6$s%2$s">%3$s</label>
 				`, $name, $value, $label, checked( $value eq $selected ), 
 				( $onclick ? ' onclick="'.$onclick.'"' : '' ),
 				$$options{id},

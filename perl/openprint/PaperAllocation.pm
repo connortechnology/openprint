@@ -193,7 +193,7 @@ sub can_delete {
 		return 1;
 	}
 	my $Order = $_[0]->Order();
-	if ( sets::isin( $$Order{salesrep_id},  [ $openrpint::User{id}, $openprint::User->assistant_ids(), $openprint::User->csr_ids() ] ) ) {
+	if ( sets::isin( $$Order{salesrep_id}, [ $openrpint::User{id}, $openprint::User->assistant_ids(), $openprint::User->csr_ids() ] ) ) {
 		return 1;
 	}
 	my $Company = $Order->Company();
