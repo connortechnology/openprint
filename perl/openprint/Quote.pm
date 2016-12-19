@@ -348,15 +348,10 @@ $log->debug("SEnding quote to myself");
 			$quote{ReplacementText} = ssi::include( '/email_content/quote_reseller_by_body.html', \%quote );
 			$Email->html_body( ssi::variable_substitution( \$email_template, \%quote ) );
 
-if ( 0 ) {
 			$quote{ReplacementText} = ssi::include( '/email_content/quote_reseller_by_invoice.html', \%quote );
 			my $html = ssi::variable_substitution( \$email_template, \%quote );
-			$Email->add_pdf_attachment_from_html( "Quote$$self{id}", $html );
-			$Email->add_html_attachment( "Quote$$self{id}", $html ) if $$self{by_email} eq 'iconnor@connortechnology.com';
-} else {
-			$quote{ReplacementText} = ssi::include( '/email_content/quote_reseller_for_invoice.html', \%quote );
-			$Email->add_pdf_attachment_from_html( "Quote$$self{id}", ssi::variable_substitution( \$email_template, \%quote ) );
-}
+			#$Email->add_pdf_attachment_from_html( "Quote$$self{id}", $html );
+			$Email->add_html_attachment( "Quote$$self{id}.html", $html );
 
 			$results .= $Email->send(
 					FROM    => sprintf('"%s %s" <%s>', @$self{'by_firstname','by_lastname','by_email'}),
@@ -364,10 +359,7 @@ if ( 0 ) {
 					TO      => sprintf('"%s %s" <%s>', @$self{'by_firstname','by_lastname','by_email'}),
 					SUBJECT => sprintf('Quote %d for %s : ', $$self{id}, $self->for_companyname(), $self->reference() ),
 					);
-		} else {
-$log->debug("NOT SEnding quote to myself" . $openprint::User->email_quotes_to_myself() );
-			$quote{ReplacementText} = ssi::include( '/email_content/quote_reseller_for_invoice.html', \%quote );
-			$Email->add_pdf_attachment_from_html( "Quote$$self{id}", ssi::variable_substitution( \$email_template, \%quote ) );
+			$Email->attachments(undef);
 		} # end if
 
 		if ( $quote{ForEmail} ne '' and (
@@ -389,9 +381,17 @@ $log->debug("NOT SEnding quote to myself" . $openprint::User->email_quotes_to_my
 					) ) {
 			openprint::quote::get_finished_quote_contents( $log, $dbh, \%quote, $$self{id} );
 
+			my $For_User = openprint::User->find_one( email=>$quote{ForEmail} );
+
 			$quote{ReplacementText} = ssi::include( '/email_content/quote_reseller_for_body.html', \%quote );
 			$Email->html_body( ssi::variable_substitution( \$email_template, \%quote ) );
-
+			$quote{ReplacementText} = ssi::include( '/email_content/quote_reseller_for_invoice.html', \%quote );
+			my $html = ssi::variable_substitution( \$email_template, \%quote );
+			if ( $For_User and sets::isin( $For_User->type(), [ 'E', 'A' ] ) ) {
+				$Email->add_html_attachment( "Quote$$self{id}.html", $html );
+			} else {
+				$Email->add_pdf_attachment_from_html( "Quote$$self{id}", $html );
+			}
 
 			$results .= $Email->send(
 					FROM    => sprintf('"%s %s" <%s>', @$self{'by_firstname','by_lastname','by_email'}),
@@ -399,6 +399,7 @@ $log->debug("NOT SEnding quote to myself" . $openprint::User->email_quotes_to_my
 					TO      => sprintf('"%s %s" <%s>', @$self{'for_firstname','for_lastname','for_email'}),
 					SUBJECT => "Quote $$self{id} : " . $self->reference(),
 					);
+			$Email->attachments(undef);
 		} # end if for someone else
 
 	} else {
@@ -419,6 +420,7 @@ $log->debug("NOT SEnding quote to myself" . $openprint::User->email_quotes_to_my
 					#nnBCC		=>	'iconnor@connortechnology.com',
 				SUBJECT => "$openprint::config{SiteTitle}:Quote $$self{id}",
 				);
+		$Email->attachments(undef);
 	} # end if reseller or admin
 
 	if ( $openprint::config{SendQuoteToAdmin} eq 'Y' ) {
