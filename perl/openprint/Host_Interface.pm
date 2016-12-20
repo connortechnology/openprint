@@ -18,6 +18,7 @@ $table = 'host_interfaces';
     host_id         =>  'host_id',
     connected_to  =>  'connected_to',
 	monitor			=>	'monitor',
+	online			=>	'online',
 );
 %transforms = (
 	mac         	=>    [ 's/[^\da-fA-F:\-]//g' ],
@@ -34,6 +35,7 @@ $table = 'host_interfaces';
 	mac			=>	undef,
   connected_to  =>  undef,
 	monitor		=>	0,
+	online		=>	undef,
 );
 
 sub Host {
