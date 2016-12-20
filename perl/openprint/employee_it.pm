@@ -106,6 +106,13 @@ sub host {
 			return;
 		} # end if
 		%param = ();
+	} elsif ( $param{action} eq 'Destroy' ) {
+		$variable{error} .= $Host->destroy();
+		if ( ! $variable{error} ) {
+			$variable{ExternalRedirect} = '/employee/it/hosts.html';
+			return;
+		} # end if
+		%param = ();
 	} elsif ( $param{action} eq 'reboot' ) {
 		if ( $Host->reboot() ) {
 			$variable{information} .= 'Host successfully rebooted';
