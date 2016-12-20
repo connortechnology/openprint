@@ -337,6 +337,22 @@ sub link_to {
 	return sprintf('<a href="/employee/it/host.html?host_id=%d">%s</a>', $_[0]->id(), ( @_ > 1 ? $_[1] : $_[0]->hostname() ) );
 }
 
+sub online {
+	if ( @_ > 1 ) {
+		$_[0]{online} = $_[1];
+	}
+	if ( ! defined $_[0]{online} ) {
+		foreach my $HI ( $_[0]->Interfaces() ) {
+			if ( $$HI{online} ) {
+				$_[0]{online} = 1;
+				last;
+			} elsif ( defined $$HI{online} ) {
+				$_[0]{online} = 0;
+			}
+		} # end foreach HI
+	}
+	return $_[0]{online};
+}
 
 1;
 __END__
