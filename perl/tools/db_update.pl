@@ -3329,6 +3329,11 @@ if ( ! sets::isin( 'host_interfaces', \@tables ) ) {
 		$log->debug("Adding connected_to to host_interfaces");
 		$dbh->do('ALTER TABLE host_interfaces ADD connected_to macaddr') or die $openprint::dbh->errstr();
 	}
+	if ( ! exists $$data{monitor} ) {
+		$log->debug("Adding connected_to to host_interfaces");
+		$dbh->do('ALTER TABLE host_interfaces ADD monitor boolean not null default false') or die $openprint::dbh->errstr();
+		$dbh->do('UPDATE host_interfaces SET monitor=(SELECT monitored from hosts where id=host_id) WHERE host_id IN (SELECT id FROM hosts WHERE monitor=true)') or die $openprint::dbh->errstr();
+	}
 }
 if ( ! sets::isin( 'host_info', \@tables ) ) {
 	$dbh->do( misc::load_file( $log, q{../openprint/sql/Host_Info.sql}) );
