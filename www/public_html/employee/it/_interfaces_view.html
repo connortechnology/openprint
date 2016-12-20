@@ -16,7 +16,7 @@
 	require openprint::RADIUS_Reply;
 
 	if ( $config{RADIUS_Support} eq 'Y' ) {
-		$openprint::RADIUS_Check->connect();
+		openprint::RADIUS_Check->connect();
 		if ( ! $openprint::RADIUS_Check::dbh ) {
 			$html .= 'Unable to connect to RADIUS DB server.';	
 		} # end if
