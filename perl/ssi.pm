@@ -22,6 +22,8 @@ use vars qw( $r %variable %session %param %config $log $dbh );
 *dbh = \$openprint::dbh;
 *r = \$openprint::r;
 
+require Date::Parse;
+require Date::Format;
 require DateTime::Format::Pg;
 require DateTime::TimeZone;
 my $parser = 'DateTime::Format::Pg';

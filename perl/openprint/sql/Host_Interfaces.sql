@@ -5,7 +5,9 @@ CREATE TABLE Host_Interfaces (
 	ip		inet,
 	dhcp	BOOLEAN NOT NULL default false,
 	comment	TEXT,
-  connected_to  macaddr,
+	connected_to  macaddr,
+	monitor boolean not null default false,
+	online boolean,
 	PRIMARY KEY (id)
 );
 

@@ -355,7 +355,7 @@ $log->debug("SEnding quote to myself");
 
 			$results .= $Email->send(
 					FROM    => sprintf('"%s %s" <%s>', @$self{'by_firstname','by_lastname','by_email'}),
-					BCC		=>	'iconnor@connortechnology.com',
+					#BCC		=>	'iconnor@connortechnology.com',
 					TO      => sprintf('"%s %s" <%s>', @$self{'by_firstname','by_lastname','by_email'}),
 					SUBJECT => sprintf('Quote %d for %s : ', $$self{id}, $self->for_companyname(), $self->reference() ),
 					);
@@ -395,7 +395,7 @@ $log->debug("SEnding quote to myself");
 
 			$results .= $Email->send(
 					FROM    => sprintf('"%s %s" <%s>', @$self{'by_firstname','by_lastname','by_email'}),
-					BCC		=>	'iconnor@connortechnology.com',
+					#BCC		=>	'iconnor@connortechnology.com',
 					TO      => sprintf('"%s %s" <%s>', @$self{'for_firstname','for_lastname','for_email'}),
 					SUBJECT => "Quote $$self{id} : " . $self->reference(),
 					);
@@ -417,7 +417,7 @@ $log->debug("SEnding quote to myself");
 				FROM    => sprintf('"%s %s" <%s>', @$self{'by_firstname','by_lastname','by_email'}),
 				#TO    => sprintf('"%s %s" <%s>', @$self{'by_firstname','by_lastname','by_email'}),
 				TO      => sprintf('"%s %s" <%s>', @$self{'for_firstname','for_lastname','for_email'}),
-					BCC		=>	'iconnor@connortechnology.com',
+					#nnBCC		=>	'iconnor@connortechnology.com',
 				SUBJECT => "$openprint::config{SiteTitle}:Quote $$self{id}",
 				);
 		$Email->attachments(undef);

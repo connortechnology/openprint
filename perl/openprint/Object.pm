@@ -16,6 +16,7 @@ require openprint::Opinion_Availability;
 require openprint::Object_Asset;
 require openprint::Keyword;
 require openprint::Object_Keyword;
+require openprint::Log;
 use vars qw( $log $dbh $AUTOLOAD %cache %name_cache %fields %defaults %transforms $no_cache %session %config );
 
 *log = \$openprint::log;
@@ -203,6 +204,10 @@ sub save {
 	my ( $self, $data, $force_insert ) = @_;
 
 	my $type = ref $self;
+	if ( ! $type ) {
+		my ( $caller, undef, $line ) = caller;
+		$log->error("No type in Object::save. self:$self from  $caller:$line");
+	}
 	my $local_dbh = eval '$'.$type.'::dbh';
 	$local_dbh = $openprint::dbh if ! $local_dbh;
 	$self->set( $data ? $data : {} );
@@ -840,7 +845,8 @@ sub find {
 		$local_dbh = $$params{dbh};
 		delete $$params{dbh};
 	} elsif ( ! $local_dbh ) {
-		$local_dbh = $openprint::dbh;
+		$local_dbh = $object_type->connect();
+		$local_dbh = $openprint::dbh if ! $local_dbh;
 	} # end if
 
 	my @param_keys = sets::exclude( [ 'order','limit','offset'], [ keys %$params ] );
@@ -1438,5 +1444,21 @@ sub upload {
 	return openprint::Object_Asset::upload(@_);
 } # end sub upload
 
+sub connect {
+	if ( ! ( $dbh and $dbh->ping() ) ) {
+		$dbh = sql::open_sql( $log,
+				database	=> $openprint::config{db_name},
+				driver		=> $openprint::config{db_Driver},
+				host		=> $openprint::config{db_Server},
+				login		=> $openprint::config{db_User},
+				password	=> $openprint::config{db_pass},
+				);
+
+		if ( ! $dbh ) {
+			$openprint::log->error( 'Unable to connect to RADIUS DB server.' );
+		} # end if
+	}
+return $dbh;
+}
 1;
 __END__
