@@ -218,6 +218,7 @@ sub reboot {
 		my $method = 'get';
 		my $args = {};
 		my $expect;
+		my $do_not_expect;
 		my $port = 80;
 
 		if ( sets::isin( $_[0]->type(), [ 'AIC500', 'AIC500W', 'AIC777W', 'AIC747W' ] ) ) {
@@ -253,6 +254,7 @@ sub reboot {
 			$args = {
 				reboot_ap => 1,
 			};
+			$do_not_expect = 'SORRY';
 		} else {
 			$openprint::log->error("Unknown host type $_[0]{type}");
 			return 0;
@@ -296,10 +298,13 @@ sub reboot {
 			$success = 1;
 			$openprint::log->debug("Success Content: " . $response->content );
 		} # end if
-		if ( $success and $expect ) {
-			if ( ! ( $response->content =~ /$expect/ ) ) {
+		if ( $success ) {
+			if ( $expect and ! ( $response->content =~ /$expect/ ) ) {
 				$success = 0;
 				$openprint::log->error("Did not find expected content $expect in " . $response->content );
+			} elsif ( $do_not_expect and ( $response->content =~ /$do_not_expect/ ) ) {
+				$success = 0;
+				$openprint::log->error("Found unwanted content $do_not_expect in " . $response->content );
 			}
 		}
 		last if $success;
