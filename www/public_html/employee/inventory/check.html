@@ -23,6 +23,10 @@ function start_auto_refresh() {
 function stop_auto_refresh() {
 	if ( auto_refresh_timeout ) clearTimeout( auto_refresh_timeout );
 }
+function lookup_item(e) {
+	
+	new Ajax.Updater( 'alert', '_check_lookup_item.html', { parameters: e.name+'='+e.value } );
+}
 </script>
 <form id="f1" name="f1" method="post" enctype="multipart/form-data" action="check.html?check_id=<?echo($$variable{Check}->id())?>">
 	<input type="hidden" name="action"/>
@@ -44,6 +48,14 @@ function stop_auto_refresh() {
 					} );
 				) ?>
 			</li>
+			<li><label>Location</label>
+<select id="location_id" name="location_id" multiple="multiple" onchange="calc(this.form);">
+                    <? echo ( 
+                        my @options =   ('','All', map { $_->id(), $_->name() } openprint::Location->find(type=>'place', company_id=>$openprint::Owner->id(), order=>'parent_id NULLS FIRST,lower(name)') );
+                        make_drop_down( \@options, $$variable{Check}->location_id() );
+                    ) ?>
+                    </select>
+			</li>
 			</ul>
 		</div><!-- column -->
 		<p class="buttons">
@@ -60,6 +72,7 @@ function stop_auto_refresh() {
 						#$html .= button( 'Undelete', { onclick=>"f1.elements['action'].value='Undelete';f1.submit();" } );
 					#} else {
 						 button( 'delete', { onclick=>"f1.elements['action'].value='Delete';f1.submit();", text=>'Delete' } ),
+						 button( 'clear', { onclick=>"f1.elements['action'].value='Clear';f1.submit();", text=>'Clear' } ),
 					#} # end if
 					'<br/>', input( type=>'file', name=>'import' ),
 					button( 'Import', { onclick=>q`f1.elements['action'].value='Import';f1.submit();` } ),
@@ -91,10 +104,9 @@ function stop_auto_refresh() {
 			</li>
 		</ul>
 		<p class="buttons">
-
 			<? echo ( join("\n",
-'Auto Refresh: ' . radio('auto_refresh', [ '1','On','0','Off' ], $session{'/employee/inventory/check.html?auto_refresh'}, {
-onclick=>q`if(this.value=='1'){start_auto_refresh();}else{stop_auto_refresh();};`,
+						'Auto Refresh: ' . radio('auto_refresh', [ '1','On','0','Off' ], $session{'/employee/inventory/check.html?auto_refresh'}, {
+							onclick=>q`if(this.value=='1'){start_auto_refresh();}else{stop_auto_refresh();};`,
 } ),
 				button('Refresh', { onclick=>'load_entries();' } ),
 			); ) ?>
