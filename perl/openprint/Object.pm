@@ -840,7 +840,8 @@ sub find {
 		$local_dbh = $$params{dbh};
 		delete $$params{dbh};
 	} elsif ( ! $local_dbh ) {
-		$local_dbh = $openprint::dbh;
+		$local_dbh = $object_type->connect();
+		$local_dbh = $openprint::dbh if ! $local_dbh;
 	} # end if
 
 	my @param_keys = sets::exclude( [ 'order','limit','offset'], [ keys %$params ] );
@@ -1438,5 +1439,21 @@ sub upload {
 	return openprint::Object_Asset::upload(@_);
 } # end sub upload
 
+sub connect {
+	if ( ! ( $dbh and $dbh->ping() ) ) {
+		$dbh = sql::open_sql( $log,
+				database	=> $openprint::config{db_name},
+				driver		=> $openprint::config{db_Driver},
+				host		=> $openprint::config{db_Server},
+				login		=> $openprint::config{db_User},
+				password	=> $openprint::config{db_pass},
+				);
+
+		if ( ! $dbh ) {
+			$openprint::log->error( 'Unable to connect to RADIUS DB server.' );
+		} # end if
+	}
+return $dbh;
+}
 1;
 __END__
