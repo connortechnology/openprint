@@ -16,6 +16,7 @@ require openprint::Opinion_Availability;
 require openprint::Object_Asset;
 require openprint::Keyword;
 require openprint::Object_Keyword;
+require openprint::Log;
 use vars qw( $log $dbh $AUTOLOAD %cache %name_cache %fields %defaults %transforms $no_cache %session %config );
 
 *log = \$openprint::log;
