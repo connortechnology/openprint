@@ -4039,6 +4039,13 @@ if ( sets::isin( 'sales_logs', \@tables ) ) {
 if ( ! sets::isin( 'inventory_checks', \@tables ) ) {
 	$log->debug("Creating Inventory Checks Tables");
 	$dbh->do( misc::load_file( $log, q{../openprint/sql/Inventory_Checks.sql}) ) or die $dbh->errstr();
+} else {
+	my $data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='inventory_checks'", 'column_name');
+	if ( ! exists $$data{location_id} ) {
+		$log->debug("Adding location_id to Invengtory_Checks");
+		$dbh->do( 'alter table inventory_checks add location_id INTEGER') or die $dbh->errstr();
+		$dbh->do( 'ater table inventory_checks add foreign key (location_id) REFERENCES Locations (id);') die $dbh->errstr();
+	}
 }
 if ( ! sets::isin( 'helpdesk', \@tables ) ) {
 	$log->debug("Creating HelpDesk Table");
