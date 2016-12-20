@@ -12,14 +12,11 @@
 		</tr>
 <? echo (
 	my $html;
-	 if ( $config{RADIUS_Support} eq 'Y' ) {
-		$openprint::RADIUS_Check::dbh = sql::open_sql( $log,
-			database	=> $config{RADIUS_DB_Name},
-			driver		=> $config{RADIUS_DB_Driver},
-			host		=> $config{RADIUS_DB_Server},
-			login		=> $config{RADIUS_DB_Username},
-			password	=> $config{RADIUS_DB_Password},
-		);
+	require openprint::RADIUS_Check;
+	require openprint::RADIUS_Reply;
+
+	if ( $config{RADIUS_Support} eq 'Y' ) {
+		openprint::RADIUS_Check->connect();
 		if ( ! $openprint::RADIUS_Check::dbh ) {
 			$html .= 'Unable to connect to RADIUS DB server.';	
 		} # end if
