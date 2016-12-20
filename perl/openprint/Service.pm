@@ -1,11 +1,21 @@
 use strict;
 package openprint::Service;
 our @ISA = qw( openprint::Object );
-use vars qw($debug $table $serial %fields %find_fields %transforms %defaults %session $log $dbh $cache_field $cached );
+use vars qw($debug $table $serial %fields %find_fields %transforms %defaults %session $log $dbh $cache_field $cached %ServicePrices );
 
 require sql;
 require openprint::Object;
 require openprint::pricing;
+
+foreach my $Service ( 'UVCoating' ) {
+	eval "
+		my \@keys = keys %openprint::Estimating::${Service}::ServicePrices;
+		\@ServicePrices{\@keys} = values %openprint::Estimating::${Service}::ServicePrices if \@keys;
+	";
+}
+foreach my $service ( keys %ServicePrices) {
+$log->debug("Have a price definition for $service");
+}
 
 use openprint ();
 *session = \%openprint::session;
@@ -29,6 +39,7 @@ $serial = 'services_id_seq';
 		taxexempt2		=>	'taxexempt2',
 		owner_id		=>	'owner_id',
 		activity_code	=>	'activity_code',
+		servicetype_id	=>	'servicetype_id',
 	 	);	
 %find_fields = (
 		category		=> '(SELECT name FROM Service_Categories WHERE service_categories.id=category_id)',
@@ -42,6 +53,7 @@ $serial = 'services_id_seq';
 		);
 
 %defaults = (
+		servicetype_id	=>	undef,
 		supplier_id	=>	undef,
 		category_id	=>	undef,
 		taxexempt1	=>	q`'N'`,
