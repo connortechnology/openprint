@@ -115,35 +115,48 @@ while(1) {
 	} # end if ! dbh
 
 	$log->debug( "Getting hosts" );
-	my @HIs = openprint::Host_Interface->find( monitor=>1 );
-	$log->debug( 'Monitoring ' . @HIs . ' host interfaces.' );
-	foreach my $HI ( @HIs ) {
-		if ( ! $HI->ip() ) {
-			$log->debug("No ip for " . $HI->to_string() );
-			next;
-		}
-		my $Host = $HI->Host();
-
-		$log->debug( $Host->hostname() . ' is ' . ( $Host->online() ? 'online' : 'offline' ) . " at ip $$HI{ip}");
-		my @ping = $p->ping($HI->ip());
-		my $ping = $ping[0];
-#$openprint::log->debug("Ping1: @ping");
-		if ( ! @ping ) {
-			$log->warn("Problem with ping for " . $Host->hostname() . ' ip: ' . $HI->ip() );
-			next;
-		} elsif ( $ping and ( $ping[1] > 1 ) ) {
-			(new openprint::Log())->save({action=>'Long response time', ip_address=>$HI->ip(), host_id=>$$Host{id}, note=>sprintf('Response time %s seconds.<a href="/employee/it/host.html?host_id=%d">%s</a>', $ping[1], @$Host{'id','hostname'}) });
-		} # end if
-		my $online = $ping;
+	my @Hosts = openprint::Host->find( monitored=>1 );
+	foreach my $Host ( @Hosts ) {
 
 		$Host->lock();
-		$Host->load();
+		$Host->load(); # these pings can take a long time, and the record could get out of date, so refresh
+		my $was_online = $Host->online();
+		$log->debug( $Host->hostname() . ' was ' . ( $Host->online() ? 'online' : 'offline' ) );
+
+		my $online = undef;
 		my $last_changed_on = $$Host{state_changed_on};
 		my $since = time-$last_changed_on;
 
-		if ( $Host->online() != $online ) {
+		my @HIs = $Host->Interfaces();
+		foreach my $HI ( @HIs ) {
+			next if ! $HI->monitor();
+			if ( ! $HI->ip() ) {
+				$log->debug("No ip for " . $HI->to_string() );
+				next;
+			}
+
+			$log->debug( $HI->ip() . ' was ' . ( $HI->online() ? 'online' : 'offline' ) . " " . $HI->to_string() );
+			my @ping = $p->ping($HI->ip());
+			my $ping = $ping[0];
+#$openprint::log->debug("Ping1: @ping");
+			if ( ! @ping ) {
+				$log->warn("Problem with ping for " . $Host->hostname() . ' ip: ' . $HI->ip() );
+				next;
+			} elsif ( $ping and ( $ping[1] > 1 ) ) {
+				(new openprint::Log())->save({Object=>$Host, action=>'Long response time', ip_address=>$HI->ip(), host_id=>$$Host{id}, note=>sprintf('Response time %s seconds.<a href="/employee/it/host.html?host_id=%d">%s</a>', $ping[1], @$Host{'id','hostname'}) });
+			} # end if
+			$online = $ping if ! $online;
+
+			if ( ( $HI->online() and ! $ping ) or ( $ping and !$HI->online() ) ) {
+				$HI->save({online=>$ping});
+			}
+			$log->debug( $HI->ip() . ' is now ' . ( $HI->online() ? 'online' : 'offline' ) . ' value of ping was ' . $ping );
+		} # end foreach HI
+
+		if ( $online != $Host->online() ) {
 			if ( $online and $$Host{notified} ) {
-				# We are now online and an offline notification went out. So send an online notification
+# We are now online and an offline notification went out. So send an online notification
+				$log->debug("Sending online notification");
 				notify( $Host, $online );
 			}
 
@@ -154,25 +167,26 @@ while(1) {
 				next;
 			} # end if	
 
-			(new openprint::Log())->save({action_id=>( $online ? 100 : 101 ), host_id=>$$Host{id}, note=>sprintf('<a href="/employee/it/host.html?host_id=%d">%s</a>', @$Host{'id','hostname'}) });
-			$log->debug( $Host->hostname() . ' is now ' . ( $Host->online() ? 'online' : 'offline' ) );
+			(new openprint::Log())->save({Object=>$Host, action_id=>( $online ? 100 : 101 ), host_id=>$$Host{id}, note=>sprintf('<a href="/employee/it/host.html?host_id=%d">%s</a>', @$Host{'id','hostname'}) });
+		} # end if ionline status change
+		$log->debug( $Host->hostname() . ' is now ' . ( $Host->online() ? 'online' : 'offline' ) . " $since " );
 
-		} 
 
-		if ( (!$online) and ( ! $$Host{notified} ) and ( $since > $$Host{offline_seconds} ) ) {
+		if ( (!$Host->online()) and ( ! $$Host{notified} ) and ( $since > $$Host{offline_seconds} ) ) {
 			$_ = $Host->save({ notified=>1 });
 			if ( $_ ) {
 				$log->error($_);
 				$Host->unlock();
 				next;
 			}
+			$log->debug("Sending offline notification");
 			notify( $Host, $online );
 		} # end if ! notified
 
 		$Host->unlock();
 
 		if ( $Host->online() ) {
-			if ( $Host->type() eq 'DCS-910' ) {
+			if ( $Host->type() =~ /DCS\-910/ ) {
 				require LWP;
 				my $browser = LWP::UserAgent->new();
 				$browser->credentials( $Host->hostname().':80', 'DCS-910', $Host->info('username') => $Host->info('password') );
@@ -244,7 +258,7 @@ while(1) {
 				$log->warn("nothing to do for : " . $Host->type()	. ' for host ' . $$Host{hostname}	);
 			} # end if
 		} # end if online
-	} # end foreach $HI
+	} # end foreach Host
 	sleep $config{sleep};
 } # end while
 $p->close();
@@ -273,7 +287,8 @@ sub notify {
 
 		my $html_body = ssi::include( '/email_template.html', \%info );
 		my $results = (new openprint::Email())->send(
-				TO			=>	\@To,
+				#TO			=>	\@To,
+				TO	=> 'iconnor@point-one.com',
 				SUBJECT		=>	'Host has gone ' . ($online?'online':'offline') . ': ' . $Host->hostname(),
 				FROM		=>	$config{TechSupportEmail},
 				HTML_BODY	=>	$html_body,
