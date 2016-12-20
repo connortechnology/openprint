@@ -116,7 +116,7 @@ while(1) {
 
 	$log->debug( "Getting hosts" );
 	my @HIs = openprint::Host_Interface->find( monitor=>1 );
-	$log->debug( 'Monitoring ' . @Hosts . ' hosts.' );
+	$log->debug( 'Monitoring ' . @HIs . ' host interfaces.' );
 	foreach my $HI ( @HIs ) {
 		if ( ! $HI->ip() ) {
 			$log->debug("No ip for " . $HI->to_string() );
@@ -134,7 +134,7 @@ while(1) {
 		} elsif ( $ping and ( $ping[1] > 1 ) ) {
 			(new openprint::Log())->save({action=>'Long response time', ip_address=>$HI->ip(), host_id=>$$Host{id}, note=>sprintf('Response time %s seconds.<a href="/employee/it/host.html?host_id=%d">%s</a>', $ping[1], @$Host{'id','hostname'}) });
 		} # end if
-		$online = $ping if ! $online;
+		my $online = $ping;
 
 		$Host->lock();
 		$Host->load();
