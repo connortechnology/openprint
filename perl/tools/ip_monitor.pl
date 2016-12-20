@@ -8,6 +8,7 @@ require configuration;
 require sql;
 require misc;
 require openprint::Host;
+require openprint::Host_Interface;
 require logger;
 require openprint::Email;
 require openprint::Log;
@@ -114,36 +115,26 @@ while(1) {
 	} # end if ! dbh
 
 	$log->debug( "Getting hosts" );
-	my @Hosts = openprint::Host->find( monitored=>1 );
+	my @HIs = openprint::Host_Interface->find( monitor=>1 );
 	$log->debug( 'Monitoring ' . @Hosts . ' hosts.' );
-	foreach my $Host ( @Hosts ) {
-		# THe under is to prevent caching
-		if ( ! $Host->Interfaces( undef ) ) {
-			$log->error( "Monitored host without Interfaces: " . $Host->to_string() );
+	foreach my $HI ( @HIs ) {
+		if ( ! $HI->ip() ) {
+			$log->debug("No ip for " . $HI->to_string() );
 			next;
-		} # end if
+		}
+		my $Host = $HI->Host();
 
-		my $online = 0;
-
-		foreach my $HI ( $Host->Interfaces() ) {
-			if ( ! $HI->ip() ) {
-				$log->debug("No ip for " . $HI->to_string() );
-				next;
-			}
-
-			$log->debug( $Host->hostname() . ' is ' . ( $Host->online() ? 'online' : 'offline' ) . " at ip $$HI{ip}");
-			my @ping = $p->ping($HI->ip());
-			my $ping = $ping[0];
+		$log->debug( $Host->hostname() . ' is ' . ( $Host->online() ? 'online' : 'offline' ) . " at ip $$HI{ip}");
+		my @ping = $p->ping($HI->ip());
+		my $ping = $ping[0];
 #$openprint::log->debug("Ping1: @ping");
-			if ( ! @ping ) {
-				$log->warn("Problem with ping for " . $Host->hostname() . ' ip: ' . $HI->ip() );
-				next;
-			} elsif ( $ping and ( $ping[1] > 1 ) ) {
-				(new openprint::Log())->save({action=>'Long response time', ip_address=>$HI->ip(), host_id=>$$Host{id}, note=>sprintf('Response time %s seconds.<a href="/employee/it/host.html?host_id=%d">%s</a>', $ping[1], @$Host{'id','hostname'}) });
-			} # end if
-			$online = $ping if ! $online;
-			last if $online;
-		} # end oreach Host_Interface
+		if ( ! @ping ) {
+			$log->warn("Problem with ping for " . $Host->hostname() . ' ip: ' . $HI->ip() );
+			next;
+		} elsif ( $ping and ( $ping[1] > 1 ) ) {
+			(new openprint::Log())->save({action=>'Long response time', ip_address=>$HI->ip(), host_id=>$$Host{id}, note=>sprintf('Response time %s seconds.<a href="/employee/it/host.html?host_id=%d">%s</a>', $ping[1], @$Host{'id','hostname'}) });
+		} # end if
+		$online = $ping if ! $online;
 
 		$Host->lock();
 		$Host->load();
@@ -159,6 +150,7 @@ while(1) {
 # Have a change, so it should get logged, only email notifications should use the offline seconds
 			if ( $_ = $Host->save({online=>$online,state_changed_on=>time,notified=>0}) ) {
 				$log->error($_);
+				$Host->unlock();
 				next;
 			} # end if	
 
@@ -168,7 +160,12 @@ while(1) {
 		} 
 
 		if ( (!$online) and ( ! $$Host{notified} ) and ( $since > $$Host{offline_seconds} ) ) {
-			$Host->save({ notified=>1 });
+			$_ = $Host->save({ notified=>1 });
+			if ( $_ ) {
+				$log->error($_);
+				$Host->unlock();
+				next;
+			}
 			notify( $Host, $online );
 		} # end if ! notified
 
@@ -247,7 +244,7 @@ while(1) {
 				$log->warn("nothing to do for : " . $Host->type()	. ' for host ' . $$Host{hostname}	);
 			} # end if
 		} # end if online
-	} # end foreach $Host
+	} # end foreach $HI
 	sleep $config{sleep};
 } # end while
 $p->close();
