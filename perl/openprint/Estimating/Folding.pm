@@ -2183,10 +2183,12 @@ $openprint::log->debug("Cutting rows $$I{spread_rows} > ( $$I{image_orientation}
 			} 
 			$i1->quantity( $$i1{quantity} * 2 );
 			$$i1{page_quantity} = $$i1{page_quantity} * 2;
-			$openprint::log->error(sprintf('Cutting pages down from qty %d*%d,pq:%d to %d*%d,pq:%d', 
+			$openprint::log->error(sprintf('1Cutting pages down from qty %d*%d,pq:%d to %d*%d,pq:%d', 
 						$I->quantity(),$I->pages(), $I->page_quantity(), $i1->quantity(), $i1->pages(), $$i1{page_quantity} ) ) if DEBUG;
 			push @results, [ $i1 ];
 			
+# What is this?, why are we doing it twice?
+if ( 0 ) {
 			my $i2 = $I->copy();
 			$i2->spread_rows( $$i2{spread_rows}/2 );
 			if ( $$I{image_orientation} eq 'Vertical' ) {
@@ -2195,6 +2197,7 @@ $openprint::log->debug("Cutting rows $$I{spread_rows} > ( $$I{image_orientation}
 				$i2->image_width( $$i2{image_width}/2 );
 			} 
 			push @results, [ $i2, $i2 ];
+}
 		} # end if
 	}  # end if rows > 1
 		#if ( $I->image_orientation() eq 'Vertical' ) {
@@ -2224,7 +2227,7 @@ $openprint::log->debug("Cutting rows $$I{spread_rows} > ( $$I{image_orientation}
 			} else {
 				$i1->image_height( $$I{image_height}/$$I{spread_columns} );
 			}
-			$openprint::log->debug(sprintf('Cutting pages down from %d@%dpg to %d@%dpg', $I->quantity(), $I->pages(), $i1->quantity(), $i1->pages() ) ) if DEBUG;
+			$openprint::log->debug(sprintf('2227 Cutting pages down from %d@%dpg to %d@%dpg', $I->quantity(), $I->pages(), $i1->quantity(), $i1->pages() ) ) if DEBUG;
 			push @results, [ $i1 ];
 
 			my $i2 = $I->copy();
@@ -2234,10 +2237,10 @@ $openprint::log->debug("Cutting rows $$I{spread_rows} > ( $$I{image_orientation}
 				my $i2_quantity = int($$I{spread_columns}/$$i2{spread_columns});
 				$i2->quantity( $$I{quantity} * $i2_quantity );
 				$i2->page_quantity( $$I{page_quantity} * $i2_quantity );
-				$openprint::log->debug(sprintf('Cutting pages down from q%d x %d pages to q%d x %d pages', $I->quantity(), $I->pages(), $i2->quantity(), $i2->pages() ) ) if DEBUG;
+				$openprint::log->debug(sprintf('2237 Cutting pages down from q%d x %d pages to q%d x %d pages', $I->quantity(), $I->pages(), $i2->quantity(), $i2->pages() ) ) if DEBUG;
 				my $i3 = $I->copy();
 				$i3->spread_columns( $$I{spread_columns} - ( $$i2{spread_columns} * $i2_quantity ) );
-				$openprint::log->debug(sprintf('Cutting pages down from q%d x %d pages to q%d x %d pages', $I->quantity(), $I->pages(), $i3->quantity(), $i3->pages() ) ) if DEBUG;
+				$openprint::log->debug(sprintf('2248 Cutting pages down from q%d x %d pages to q%d x %d pages', $I->quantity(), $I->pages(), $i3->quantity(), $i3->pages() ) ) if DEBUG;
 				if ( $$I{image_orientation} eq 'Vertical' ) {
 					$i2->image_width( $$I{image_width}*$$i2{spread_columns}/$$I{spread_columns} );
 					$i3->image_width( $$I{image_width}*$$i3{spread_columns} );

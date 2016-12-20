@@ -176,6 +176,8 @@ foreach my $Host ( @Hosts ) {
 												if ( (!defined $$station_HI{connected_to}) or ( uc $$station_HI{connected_to} ne uc $$HI{mac} ) ) {
 													$log->debug("Updating connection of ".$station_HI->Host()->hostname() );
 													$station_HI->save({connected_to=>$$wap_HI{mac}});
+									(new openprint::Log())->save({action=>'Update', Object=>$station_HI->Host(), note=>'Connection to ' . $Host->link_to() });
+									(new openprint::Log())->save({action=>'Update', Object=>$Host, note=>'Connection to ' . $station_HI->Host()->link_to() });
 												}
 											} # end foreach station_HI
 										} # end foreach mac
@@ -185,6 +187,8 @@ foreach my $Host ( @Hosts ) {
 												if ( (!defined $$station_HI{connected_to}) or ( uc $$station_HI{connected_to} ne uc $$HI{mac} ) ) {
 													$log->debug("Updating connection of ".$station_HI->Host()->hostname() );
 													$station_HI->save({connected_to=>$$wap_HI{mac}});
+									(new openprint::Log())->save({action=>'Update', Object=>$station_HI->Host(), note=>'Connection to ' . $Host->link_to() });
+									(new openprint::Log())->save({action=>'Update', Object=>$Host, note=>'Connection to ' . $station_HI->Host()->link_to() });
 												}
 											} # end foreach station_HI
 										} # end foreach mac
@@ -224,6 +228,8 @@ foreach my $Host ( @Hosts ) {
 								if ( (!defined $$station_HI{connected_to}) or ( uc $$station_HI{connected_to} ne uc $$HI{mac} ) ) {
 									$log->debug("Updating connection of ".$station_HI->Host()->hostname() );
 									$station_HI->save({connected_to=>$$HI{mac}});
+									(new openprint::Log())->save({action=>'Update', Object=>$station_HI->Host(), note=>'Connection to ' . $Host->link_to() });
+									(new openprint::Log())->save({action=>'Update', Object=>$Host, note=>'Connection to ' . $station_HI->Host()->link_to() });
 								}
 							} # end foreach station_HI
 						} # end if mac
@@ -259,6 +265,8 @@ foreach my $Host ( @Hosts ) {
 								if ( (!defined $$station_HI{connected_to}) or ( uc $$station_HI{connected_to} ne uc $$HI{mac} ) ) {
 									$log->debug("Updating connection of ".$station_HI->Host()->hostname() );
 									$station_HI->save({connected_to=>$$HI{mac}});
+									(new openprint::Log())->save({action=>'Update', Object=>$station_HI->Host(), note=>'Connection to ' . $Host->link_to() });
+									(new openprint::Log())->save({action=>'Update', Object=>$Host, note=>'Connection to ' . $station_HI->Host()->link_to() });
 								}
 							} # end foreach station_HI
 						} # end foreach station mac
@@ -283,13 +291,21 @@ exit 0;
 sub usage {
 	print <<EOH;
 
-usage: reboot_camera [--help] 
+usage: $program [--help] 
 
-		   The purpose of this script is to monitor hosts for uptime
+		   The purpose of this script is to scan wireless access points and document their station lists.
 
 		   Command-line options:
 
 		   --help		Displays this message.
+			--db_port
+			--db_name
+			--db_host
+			--db_user
+			--db_pass
+			--debug
+			--host_id
+			--log_level
 
 EOH
 } # end sub usage

@@ -5725,8 +5725,14 @@ $openprint::log->warn("No folding equipment");
 
 	$gross_sheets = $net_sheets + $total_overs;
 	$impressions = $gross_sheets;
-	$impressions *= 2 if $$Imposition{sides} == 2 and ( $is_wt or $$Imposition{runstyle} eq 'Sheet Work');
-#$openprint::log->debug("New impressions: $impressions");
+	my $colour_impressions = $gross_sheets;
+	if ( $is_wt ) {
+# Same sheets, go through twice, colours merged.
+		$colour_impressions *= 2;
+		$impressions *= 2;
+	} elsif ( $$Imposition{sides} == 2 and $$Imposition{runstyle} eq 'Sheet Work' ) {
+		$impressions *= 2;
+	}
 
 	if ( $max_impression_quantity and ($max_impression_quantity < $impressions ) ) {
 		$openprint::log->debug("Next cuz of maximum impression quantity $max_impression_quantity : $impressions" ) if DEBUG;
@@ -5780,15 +5786,11 @@ $openprint::log->warn("No folding equipment");
 	$price{'Ink Price'} = 0;
 
 	my %mixed_colours = %{$$project{mixed_colours}};
-	my $colour_impressions = $impressions;
 	#$colour_impressions = POSIX::ceil( $colour_impressions/2 ) if $$Imposition{sides} == 2;
 #$openprint::log->debug("Impressions: $colour_impressions sides: $$Imposition{sides}");
 
  $price{'Ink breakdown'} .= sprintf( 'Image area: %s x %s x %d spreads x %dout x %s impressions = %s square inches<br/>', 
-		 $Imposition->object_width(), 
-		 $Imposition->object_height(), 
-		 $Imposition->spreads(),
-		 $Imposition->imposition(),
+		 @$Imposition{'object_width','object_height', 'spreads','imposition'}, 
 		 $colour_impressions, 
 		 $Imposition->object_area() * $colour_impressions  );
 
