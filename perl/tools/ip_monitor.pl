@@ -287,8 +287,8 @@ sub notify {
 
 		my $html_body = ssi::include( '/email_template.html', \%info );
 		my $results = (new openprint::Email())->send(
-				#TO			=>	\@To,
-				TO	=> 'iconnor@point-one.com',
+				TO			=>	\@To,
+				#TO	=> 'iconnor@point-one.com',
 				SUBJECT		=>	'Host has gone ' . ($online?'online':'offline') . ': ' . $Host->hostname(),
 				FROM		=>	$config{TechSupportEmail},
 				HTML_BODY	=>	$html_body,
