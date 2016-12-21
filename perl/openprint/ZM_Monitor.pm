@@ -9,20 +9,20 @@ $debug = 0;
 $table = 'Monitors';
 
 %fields = (
-	'id'			=>	'Id',
-	'name'			=>	'Name',
-	'type'			=>	'Type',
-	'function'		=>	'Function',
-	'enabled'		=>	'Enabled',
-	'width'			=>	'Width',
-	'height'		=>	'Height',
-	'max_fps'		=>	'MaxFPS',
-	'alarm_max_fps'	=>	'AlarmMaxFPS',
-	'path'			=>	'Path',
-	'jpg_path'		=>	'JPGPath',
-	'mjpeg_path'	=>	'MJPGPath',
-	'host'			=>	'Host',
-	server_id	=>	'ServerId',
+	id				=>	'Id',
+	name			=>	'Name',
+	type			=>	'Type',
+	function		=>	'Function',
+	enabled			=>	'Enabled',
+	width			=>	'Width',
+	height			=>	'Height',
+	max_fps			=>	'MaxFPS',
+	alarm_max_fps	=>	'AlarmMaxFPS',
+	path			=>	'Path',
+	jpg_path		=>	'JPGPath',
+	mjpeg_path		=>	'MJPGPath',
+	host			=>	'Host',
+	server_id		=>	'ServerId',
 	public			=>	'public',
 	protocol		=>	'Protocol',
 	method			=>	'Method',
@@ -42,8 +42,8 @@ sub Server {
 
 sub source_stream_url {
 $openprint::log->debug($_[0]->Server()->to_string() );
-	return ($_[0]{type} eq 'Remote' and $_[0]{protocol} eq 'http' ) ? 
-		'http://'.$_[0]{host}.$_[0]{path} :
+	#$return ($_[0]{type} eq 'Remote' and $_[0]{protocol} eq 'http' ) ? 
+		#$'http://'.$_[0]{host}.$_[0]{path} :
 		sprintf('http://%2$s/cgi-bin/zms?mode=jpeg&amp;monitor=%1$d&amp;maxfps=%3$d&amp;user=all',
 				$_[0]{id}, $_[0]->Server()->Hostname(), int($_[0]{max_fps}) ? $_[0]{max_fps} : 1 );
 } # end sub source_stream_url
@@ -67,6 +67,19 @@ sub can_view {
 	$openprint::log->debug("Not public") if $debug;
 	return 0;
 } # end sub can_view
+
+sub connect {
+	if ( ! ( $dbh and $dbh->ping() ) ) {
+		$dbh = sql::open_sql( $openprint::log,
+				database  => $openprint::config{'zm_db_name'},
+				driver    => $openprint::config{'zm_db_driver'},
+				host      => $openprint::config{'zm_db_hostname'},
+				login     => $openprint::config{'zm_db_username'},
+				password  => $openprint::config{'zm_db_password'},
+				);
+	}
+	return $dbh;
+}
 
 1;
 __END__

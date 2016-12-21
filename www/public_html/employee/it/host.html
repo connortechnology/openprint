@@ -61,7 +61,7 @@ cleanup : true
 					<textarea id="description" name="description" rows="<? echo (count_lines($$variable{Host}->description()) ) ?>" onkeyup="textarea_resize(this);"><? echo ( $$variable{Host}->description() ) ?></textarea>
 				</li>
 				<li><label>Created On</label><? echo ( format_datetime( $$variable{Host}->created_on() ); ) ?></li>
-				<li><label>Updated On</label><? echo ( format_datetime( $$variable{Host}->created_on() ); ) ?></li>
+				<li><label>Updated On</label><? echo ( format_datetime( $$variable{Host}->updated_on() ); ) ?></li>
 			</ul>
 		</div>
 <? if ( $$variable{Host}->id() ) ?>

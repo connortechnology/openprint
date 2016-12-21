@@ -127,6 +127,17 @@ sub quantity {
 sub Location {
 	return new openprint::Location( $_[0]{location_id} );
 }
+sub location {
+	return new openprint::Location( $_[0]{location_id} )->name();
+}
+sub location_ids { 
+	if ( $_[0]{location_id} and ! $_[0]{location_ids} ) {
+		$_[0]{location_ids} = [map { $$_{id} } $_[0]->Location()->get_all_children()];
+	} else {
+		$_[0]{location_ids} = [];
+	}
+	return @{$_[0]{location_ids}};
+}
 
 sub Check {
 	return new openprint::Inventory_Check( $_[0]{ic_id} );
