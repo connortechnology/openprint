@@ -2629,6 +2629,11 @@ sub check {
 	if ( $param{action} eq 'Delete' ) {
         $variable{error} .= $Check->delete();
         $variable{ExternalRedirect} = '/employee/inventory/checks.html' if ! $variable{error};
+	} elsif ( $param{action} eq 'Clear' ) {
+		foreach my $ICE ( $Check->Entries() ) {
+			$variable{error} .= $ICE->delete();
+		}
+        $variable{ExternalRedirect} = '/employee/inventory/checks.html' if ! $variable{error};
 	} elsif ( $param{action} eq 'Destroy' ) {
         $variable{error} .= $Check->destroy();
         $variable{ExternalRedirect} = '/employee/inventory/checks.html' if ! $variable{error};
@@ -2673,6 +2678,7 @@ sub check {
 			($param{started_on} ? ( started_on	=>	$param{started_on} ) : () ),
 			($param{ended_on} ? ( ended_on	=>	$param{ended_on} ) : () ),
 			contains	=>	 join(',', ref $param{contains} eq 'ARRAY' ? @{$param{contains}} : $param{contains} ),
+			location_id	=>	$param{location_id},
 		});
 		if ( ! $variable{error} ) {
 			$variable{ExternalRedirect} = '/employee/inventory/check.html?check_id='.$$Check{id};
@@ -2703,6 +2709,13 @@ $log->debug("No duplicate fuond for $$ICE{rfidtag_id}, previous rags: " . $rfidt
 		my @ICE = openprint::Inventory_Check_Entry->find( ic_id=>$$Check{id}, order=>'skid_id,rfidtag_id' );
 		my %Skids = map { $$_{skid_id}, $_ } @ICE;
 		my %RFID = map { $$_{rfidtag_id}, $_ } @ICE;
+		my @location_ids;
+		if ( $Check->location_id() ) {
+			@location_ids = map { $$_{id} } $Check->Location()->get_all_children();
+		}
+
+		my $check_time = Date::Parse::str2time( $Check->started_on() );
+
 		foreach my $ICE ( @ICE ) {
 			my $Skid = $ICE->Skid();
 			my @SC = $Skid->Contents();
@@ -2712,25 +2725,25 @@ $log->debug("No duplicate fuond for $$ICE{rfidtag_id}, previous rags: " . $rfidt
 
 				if ( $SC->checked_out() ) {
 					my $PI = $SC->checked_out();
-					if ( $PI->updated_on() le $Check->started_on() ) {
+					if ( Date::Parse::str2time( $PI->updated_on() ) < $check_time ) {
 						if ( $ICE->quantity() and ( $ICE->quantity() != $SC->quantity() ) ) {
 							if ( $SC->quantity() ) {
 								$variable{information} .= 'Not adjusting the quantity of ' . $Paper->to_string() . ' on ' . $Skid->link_to(). ' from ' . $SC->quantity().' to '.$ICE->quantity().'<br/>';
 								next;
 						
 							} elsif ( $param{action} eq 'Test' ) {
-								$variable{information} .= 'Would adjust the quantity of ' . $Paper->to_string() . ' on ' . $Skid->link_to(). ' from ' . $SC->quantity().' to '.$ICE->quantity().'<br/>';
+								$variable{information} .= 'Would adjust the quantity of ' . $Paper->to_string() . ' on ' . $Skid->link_to(). ' from ' . $SC->quantity().' to '.$ICE->quantity().'. Last changed: '.$PI->updated_on().'<br/>';
 								next;
 							} else {
 								$variable{information} .= 'Adjusting quantity of ' . $Paper->to_string() . ' on ' . $Skid->link_to(). ' from ' . $SC->quantity().' to '.$ICE->quantity().'<br/>';
-								$SC->save({quantity=>$ICE->quantity()});
+								$SC->save({quantity=>$ICE->quantity(), condition=>'Used' });
 								$Paper->add_inventory( $Skid, $ICE->quantity(), $Paper->units(), 'Updated from Inventory Check ' . $Check->link_to());
 								next;
 							}
 
 						} elsif ( (!$SC->quantity) and $PI->delta() and ( -1*$PI->delta() != $SC->quantity() ) ) {
 							if ( $param{action} eq 'Test' ) {
-								$variable{information} .= 'Would Adjust quantity of ' . $Paper->to_string() . ' on ' . $Skid->link_to(). ' from ' . $SC->quantity().' to '.-1*$PI->delta().'<br/>';
+								$variable{information} .= 'Would Adjust quantity of ' . $Paper->to_string() . ' on ' . $Skid->link_to(). ' from ' . $SC->quantity().' to '.-1*$PI->delta().'. Last changed: '.$PI->updated_on().'<br/>';
 								next;
 							} else {
 								$variable{information} .= 'Adjusting quantity of ' . $Paper->to_string() . ' on ' . $Skid->link_to(). ' from ' . $SC->quantity().' to '.-1*$PI->delta().'<br/>';
@@ -2768,12 +2781,36 @@ $log->debug("No duplicate fuond for $$ICE{rfidtag_id}, previous rags: " . $rfidt
 					} # endi f
 				} # end if quantity needs adjusting
 			} # end if has exactly 1 content
+
+			if ( $ICE->location_id() ) {
+				if ( ( $Skid->location_id() != $ICE->location_id() ) and $Skid->location_id() and ! sets::isin( $Skid->location_id(), [ $ICE->location_ids() ] ) ) {
+					if ( $param{action} eq 'Test' ) {
+						$variable{information} .= 'Would adjust the location of ' . $Skid->link_to() . ' from ' . $Skid->location() . ' to ' . $ICE->location() . '<br/>';
+					} else {
+						$variable{information} .= 'Adjusted the location of ' . $Skid->link_to() . ' from ' . $Skid->location() . ' to ' . $ICE->location() . '<br/>';
+						$Skid->save({location_id=>$$ICE{location_id}});
+					} # end if
+				}
+			} elsif ( $Skid->location_id() and ! sets::isin( $Skid->location_id(), [ $Check->location_ids() ] ) ) {
+					if ( $param{action} eq 'Test' ) {
+						$variable{information} .= 'Would adjust the location of ' . $Skid->link_to() . ' from ' . $Skid->location() . ' to ' . $Check->Location()->name() . '<br/>';
+					} else {
+						$variable{information} .= 'Adjusted the location of ' . $Skid->link_to() . ' from ' . $Skid->location() . ' to ' . $Check->Location()->name() . '<br/>';
+						$Skid->save({location_id=>$$ICE{location_id}});
+					} # end if
+			}
+
 			last if $dbh->errstr();
-		} # end foreach
+		} # end foreach ICE
+
+		my @locations = $Check->location_ids();
+
 		foreach my $Skid ( openprint::Skid->find( 'quantity >=' => 1, 'updated_on <' => $$Check{started_on}, 
 					( $Check->contains() ? ( 'type in' => [ split(',',$Check->contains())] ) : () ),
+					( @location_ids ? ( location_id=>\@location_ids ) : () ),
+					'inventory_check_id not'=>$Check->id(),
 					) ) {
-			if ( ! $$Skid{type} ) {
+			if ( 0 and ! $$Skid{type} ) {
 				if ( $Skid->type() ) {
 					$Skid->save();
 				}
@@ -2794,7 +2831,7 @@ $log->debug("No duplicate fuond for $$ICE{rfidtag_id}, previous rags: " . $rfidt
 			} 
 $log->debug("Have skid not in check: " . $Skid->to_string() );
 			if ( $param{action} eq 'Test' ) {
-				$variable{information} .= 'Would check out skid ' . $Skid->link_to( $Skid->to_string() ) . '<br/>';
+				$variable{information} .= 'Would check out skid ' . $Skid->link_to( $Skid->to_string() ) . ' located at ' . $Skid->location() .'<br/>';
 			} else {
 				$Skid->checkout(undef,' by Inventory Check ' . $Check->link_to() . '<br/>', 1 );
 				$variable{information} .= 'Checked out ' . $Skid->link_to( $Skid->to_string() ) . '<br/>';
@@ -2813,16 +2850,32 @@ $log->debug("Have skid not in check: " . $Skid->to_string() );
 			return;
 		}
 		if ( my $upload = $r->upload('import') ) {
+			my %Locations = map { $$_{name}, $_ } openprint::Location->find();
 			require Text::CSV_XS;
 			my $csv = Text::CSV_XS->new();
 			my $io =$upload->io();
 			while ( my $line = <$io> ) {
 				my $status = $csv->parse($line);        # parse a CSV string into fields
-				my ( $id, $rfid, $quantity, $dimension1, $dimension2, $notes ) = $csv->fields();
-				next if $id eq 'ID';
+				my ( $id, $rfid, $quantity, $dimension1, $dimension2, $notes, $location ) = $csv->fields();
+				next if $id =~ /\D/;
+				next if ! ( $id or $rfid );
 
 				if ( $rfid =~ /R(\d+)/ ) {
 					$rfid = $1;
+				}
+
+				if ( $rfid ) {
+					my @RFID = openprint::RFIDTag->find('id like'=>'%'.$rfid);
+					if ( @RFID==1 ) {
+						$rfid = $RFID[0]->id();
+					}
+				}
+
+				if ( $location =~ /^(\w\w)(\d\d)$/ ) {
+					$location = $1.$2.($2-1);
+				}
+				if ( $location and ! $Locations{$location} ) {
+					$variable{error} .= "Location $location for $id $rfid not in system.<br/>";	
 				}
 
 				my $ICE = new openprint::Inventory_Check_Entry();
@@ -2834,6 +2887,7 @@ $log->debug("Have skid not in check: " . $Skid->to_string() );
 					dimension1	=>	$dimension1,
 					dimension2	=>	$dimension2,
 					notes		=>	$notes,
+					( ( $location and $Locations{$location} ) ? ( location_id	=>	$Locations{$location}->id() ) : () ),
 				} );
 			} # end while line = <IO>
 		} # end if upload
@@ -2862,6 +2916,9 @@ sub _check_entry_actions {
 }
 
 sub _select_stock {
+}
+
+sub _check_lookup_item {
 }
 
 1;

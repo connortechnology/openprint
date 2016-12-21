@@ -159,18 +159,25 @@ sub host {
 		} # end if
 		my $Location = openprint::Location::save_location( \%param );
 		$param{location_id} = $Location->id() if $Location and $Location->id();
-		$variable{error} .= $Host->save(\%param);
+		my @changes = $Host->changes(\%param);
+
+		$variable{error} .= $Host->save(\%param) if @changes;
 		foreach my $I ( $Host->Interfaces(), new openprint::Host_Interface() ) {
 			if ( $param{"mac-$$I{id}"} or $param{"ip-$$I{id}"} or $param{"comment-$$I{id}"} ) {
-				$variable{error} .= $I->save({
-					host_id=>$$Host{id},
-					map { $_, $param{"$_-$$I{id}"} } ( 'mac', 'ip', 'dhcp', 'comment' )
-				});
+				my %c =map { $_, $param{"$_-$$I{id}"} } ( 'mac', 'ip', 'dhcp', 'comment' );
+				my @c = $I->changes( \%c );
+				if ( @c ) {
+					$c{host_id} = $$Host{id};
+					$variable{error} .= $I->save(\%c);
+					push @changes, 'Interface changed: ' . join(',', @c ) . '<br/>' if ! $variable{error};
+				}
 			} else {
 				$variable{error} .= $I->delete() if $$I{id};
 			} # end if
 		} # end foreach Interface
+		
 		if ( ! $variable{error} ) {
+			(new openprint::Log())->save({Object=>$Host, action=>'Edit', note=>join('<br/>', @changes) });
 			$variable{ExternalRedirect} = '/employee/it/hosts.html';
 			return;
 		} # end if
