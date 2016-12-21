@@ -85,7 +85,8 @@ my %times;
 $SIG{HUP} = \&sig_handler;
 
 # TUrn off Object caching
-$openprint::Object::no_cache = 1;
+# If we do this, we incur a lot more db load which might be trivial, but.... our use of locking should mean that we don't need to do this anymore
+$openprint::Object::no_cache = 0;
 
 while(1) {
 	if ( ! ( $dbh and $dbh->ping ) ) {
