@@ -1,22 +1,17 @@
 Click on the image to stop streaming.
 <ul>
 	<? echo (
-		my $zm_dbh = sql::open_sql( $log,
-			  database  => $config{'zm_db_name'},
-			  driver    => $config{'zm_db_driver'},
-			  host      => $config{'zm_db_hostname'},
-			  login     => $config{'zm_db_username'},
-			  password  => $config{'zm_db_password'},
-			);
-		return 'Unable to connect to ZM database<br/>' if ! $zm_dbh;
 		require openprint::ZM_Monitor;
-		@{$$variable{'Monitors'}} = openprint::ZM_Monitor->find( dbh=>$zm_dbh, order=>'Sequence', 'function !=' => 'None', enabled=>1 );
+
+		my $zm_dbh = openprint::ZM_Monitor->connect();
+		return 'Unable to connect to ZM database<br/>' if ! $zm_dbh;
+
+		@{$$variable{Monitors}} = openprint::ZM_Monitor->find( dbh=>$zm_dbh, order=>'Sequence', 'function !=' => 'None', enabled=>1 );
 		my $html;
-		my @monitor_ids = split(',', $session{'cameras_viewing'} );
-		foreach my $Monitor ( @{$$variable{'Monitors'}} ) {
+		my @monitor_ids = split(',', $session{cameras_viewing} );
+		foreach my $Monitor ( @{$$variable{Monitors}} ) {
 			next if ! sets::isin( $Monitor->id(), \@monitor_ids );
 			next if ! $Monitor->can_view();
-			$Monitor::dbh = $zm_dbh;
 
 			my @size_options = ( '320x240', '352x240', '384x288', '640x480', '800x600', '1024x768' );
 			$session{'/employee/it/camera_viewer.html?monitor_size-'.$Monitor->id()} = join('x',$Monitor->get('width','height') ) if ! $session{'/employee/it/camera_viewer.html?monitor_size-'.$Monitor->id()};

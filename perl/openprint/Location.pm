@@ -72,7 +72,8 @@ $serial = 'locations_id_seq';
 );
 
 sub children {
-	return openprint::Location->find( parent_id => $_[0]{id} );
+	return openprint::Location->find( parent_id => $_[0]{id} ) if $_[0]{id};
+	return ();
 } # end sub children
 
 sub get_all_children {
