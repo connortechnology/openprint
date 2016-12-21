@@ -7,6 +7,7 @@ CREATE TABLE Host_Interfaces (
 	comment	TEXT,
 	connected_to  macaddr,
 	monitor boolean not null default false,
+	online boolean,
 	PRIMARY KEY (id)
 );
 
