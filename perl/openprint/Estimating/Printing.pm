@@ -5193,7 +5193,7 @@ sub calc_price {
 			} # end if
 		} # end if
 		my $VersionService = $Services{'Version Setup'};
-		my %VersionCharge = $VersionService->get_price( $$Imposition{versions} );
+		my %VersionCharge = $VersionService->get_price( $$Imposition{versions} ) if $VersionService;
 		if ( %VersionCharge ) {
 			if ( $VersionCharge{units} eq 'each' ) {
 				$VersionCharge{Total} = $VersionCharge{Price}*$$Imposition{versions};
@@ -6285,7 +6285,7 @@ $openprint::log->debug("COnsidering $$Press{strid}") if DEBUG_PRESSES;
 				$results{$press_id} = "Too many colours for web.";
 				next;
 			} # end if
-		} elsif ( $side_one_colours and @$side_two_colours and $Press->specification('Runstyles') eq 'Sheet Work' and $Press->specification('Multipass', $Paper->gsm()) ne 'Y' ) {
+		} elsif ( $side_one_colours and @$side_two_colours and ($printing_type ne 'Digital') and $Press->specification('Runstyles') eq 'Sheet Work' and $Press->specification('Multipass', $Paper->gsm()) ne 'Y' ) {
 			# Something like an inkjet that can only do 1 sided
 			$results{$press_id} = "Can only do 1 sided jobs.";
 			next;
@@ -6985,11 +6985,8 @@ if ( 0 ) {
 			} # end if
 		} # end if
 		if ( $Project->Type()->name() eq 'PresentationFolders' ) {
-			$string .= '<br/>' . $$specs{rdbPanels} . ' ' . ( $$specs{rdbPocketSize} ? $$specs{rdbPocketSize} . '&quot; ' : '' ) . ' panels on ' . join( ',', 
-				( $$specs{chkPocketLeft} ? ' left ' : () ),
-				( $$specs{chkPocketCenter} ? ' center ' : () ),
-				( $$specs{chkPocketRight} ? ' right ' : () ),
-			);
+			my @pockets = map { $$specs{"chkPocket$_"} ? lc $_ : () } ( 'Left', 'Center', 'Right' );
+			$string .= '<br/>' . $$specs{rdbPanels} . ' panels ' . ( $$specs{PocketSize} ? $$specs{PocketSize} . '&quot; ' : '' ) . ' pocket'.(@pockets == 1 ? '' : 's').' on ' . join( ',', @pockets );
 		} # end if
 		$string .= '<br/>'	. join(', ',
 		
