@@ -22,6 +22,7 @@ $dbh = sql::open_sql( $openprint::log,
               password  => $openprint::config{'zm_db_password'},
             );
     }
+	return $dbh;
 }
 
 
