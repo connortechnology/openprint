@@ -2736,7 +2736,7 @@ $log->debug("No duplicate fuond for $$ICE{rfidtag_id}, previous rags: " . $rfidt
 								next;
 							} else {
 								$variable{information} .= 'Adjusting quantity of ' . $Paper->to_string() . ' on ' . $Skid->link_to(). ' from ' . $SC->quantity().' to '.$ICE->quantity().'<br/>';
-								$SC->save({quantity=>$ICE->quantity()});
+								$SC->save({quantity=>$ICE->quantity(), condition=>'Used' });
 								$Paper->add_inventory( $Skid, $ICE->quantity(), $Paper->units(), 'Updated from Inventory Check ' . $Check->link_to());
 								next;
 							}
