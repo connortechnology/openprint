@@ -21,6 +21,10 @@ my $opts = {};
 GetOptions($opts, 'help', 
     'db_name=s', 'db_host=s', 'db_user=s', 'db_pass=s','log_level=s','config=s',
  );
+if ($$opts{help}) {
+    usage();
+    exit 0;
+}
 my %defaults = (
     config  =>  "/etc/openprint/$program.conf",
 );
@@ -45,10 +49,6 @@ foreach my $param ( 'db_name','db_user','db_pass' ) {
 $config{log_level} = 'debug' if ! $config{'log_level'};
 $log = logger->new( {'file'=>$config{'log_file'}, 'level'=>$config{'log_level'}} );
 
-if ($config{help}) {
-    usage();
-    exit 0;
-}
 
 if ( $config{'log_level'} eq 'debug' ) {
 	foreach my $k ( keys %ENV ) {
@@ -110,8 +110,7 @@ if ( $ENV{'CALLING_STATION_ID'} ) {
 		my $Host = new openprint::Host();
 		$Host->save({hostname=>'unknown ' . $ENV{'CALLING_STATION_ID'}});
 		my $HI = new openprint::Host_Interface();
-		$HI->save({ mac=>$ENV{'CALLING_STATION_ID'}, address=>$ENV{'FRAMED_IP_ADDRESS'}, host_id=>$Host->id() });
-
+		$HI->save({ mac=>$ENV{'CALLING_STATION_ID'}, address=>$ENV{'FRAMED_IP_ADDRESS'}, host_id=>$Host->id(), dhcp=>1 });
 	} # end if Hosts
 	$dbh->disconnect() if $dbh;
 } else {
