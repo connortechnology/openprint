@@ -111,7 +111,7 @@
 				<select id="ddmLocation" name="ddmLocation">
 					<option value="">select</option>
 					<? echo ( 
-						make_drop_down( openprint::Location->dropdown(type=>'place', order=>'parent_id NULLS FIRST,lower(name)'), $$variable{Skid} ? $$variable{Skid}->location_id() : $param{ddmLocation} );
+						make_drop_down( openprint::Location->dropdown(type=>'place', order=>'parent_id NULLS FIRST,lower(name)', company_id=>$openprint::Owner->id()), $$variable{Skid} ? $$variable{Skid}->location_id() : $param{ddmLocation} );
 						) ?>
 				</select>
 				<? echo ( join('',
