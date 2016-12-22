@@ -85,7 +85,8 @@ my %times;
 $SIG{HUP} = \&sig_handler;
 
 # TUrn off Object caching
-$openprint::Object::no_cache = 1;
+# If we do this, we incur a lot more db load which might be trivial, but.... our use of locking should mean that we don't need to do this anymore
+$openprint::Object::no_cache = 0;
 
 while(1) {
 	if ( ! ( $dbh and $dbh->ping ) ) {
@@ -124,8 +125,7 @@ while(1) {
 		$log->debug( $Host->hostname() . ' was ' . ( $Host->online() ? 'online' : 'offline' ) );
 
 		my $online = undef;
-		my $last_changed_on = $$Host{state_changed_on};
-		my $since = time-$last_changed_on;
+		my $now = time;
 
 		my @HIs = $Host->Interfaces();
 		foreach my $HI ( @HIs ) {
@@ -137,6 +137,7 @@ while(1) {
 
 			$log->debug( $HI->ip() . ' was ' . ( $HI->online() ? 'online' : 'offline' ) . " " . $HI->to_string() );
 			my @ping = $p->ping($HI->ip());
+			
 			my $ping = $ping[0];
 #$openprint::log->debug("Ping1: @ping");
 			if ( ! @ping ) {
@@ -153,25 +154,27 @@ while(1) {
 			$log->debug( $HI->ip() . ' is now ' . ( $HI->online() ? 'online' : 'offline' ) . ' value of ping was ' . $ping );
 		} # end foreach HI
 
-		if ( $online != $Host->online() ) {
-			if ( $online and $$Host{notified} ) {
-# We are now online and an offline notification went out. So send an online notification
-				$log->debug("Sending online notification");
-				notify( $Host, $online );
-			}
+		if ( $online != $was_online ) {
+			my $notified = $$Host{notified};
 
 # Have a change, so it should get logged, only email notifications should use the offline seconds
-			if ( $_ = $Host->save({online=>$online,state_changed_on=>time,notified=>0}) ) {
+			if ( $_ = $Host->save({online=>$online,state_changed_on=>$now,notified=>0}) ) {
 				$log->error($_);
 				$Host->unlock();
 				next;
 			} # end if	
 
 			(new openprint::Log())->save({Object=>$Host, action_id=>( $online ? 100 : 101 ), host_id=>$$Host{id}, note=>sprintf('<a href="/employee/it/host.html?host_id=%d">%s</a>', @$Host{'id','hostname'}) });
+			if ( $online and $notified ) {
+# We are now online and an offline notification went out. So send an online notification
+				$log->debug("Sending online notification");
+				notify( $Host, $online );
+			}
 		} # end if ionline status change
 		$log->debug( $Host->hostname() . ' is now ' . ( $Host->online() ? 'online' : 'offline' ) . " $since " );
 
 
+		my $since = $now-$$Host{state_changed_on};
 		if ( (!$Host->online()) and ( ! $$Host{notified} ) and ( $since > $$Host{offline_seconds} ) ) {
 			$_ = $Host->save({ notified=>1 });
 			if ( $_ ) {
