@@ -278,6 +278,8 @@ sub inventory_report {
 		foreach my $C ( $Skid->Contents() ) {
 			next if ! $C;
 			next if $param{in_stock} eq '1' and ! $C->quantity();
+			next if $param{has_value} eq '1' and ! $C->cost();
+			next if $param{has_value} eq '0' and $C->cost();
 
 			my $Paper = $C->Paper();
 			my $weight = 0;
@@ -445,7 +447,7 @@ sub _paper_results {
 				'type','owner_id','material_id','group_id', 'condition_id',
 				( map { 'added_on_start_'.$_ } ( 'year','month','day' ) ),
 				( map { 'added_on_end_'.$_ } ( 'year','month','day' ) ),
-				'Docket','fsc_code','width','height','OrLarger','in_stock','owner_id_exclude','allocated',
+				'Docket','fsc_code','width','height','OrLarger','in_stock','owner_id_exclude','allocated','has_value',
 			) );
 	$session{'/employee/inventory/paper.html?owner_id_exclude'} = $param{owner_id_exclude} if exists $param{owner_id};
 	$session{'/employee/inventory/paper.html?OrLarger'} = $param{OrLarger};
