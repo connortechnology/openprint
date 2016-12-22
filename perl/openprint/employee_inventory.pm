@@ -69,26 +69,26 @@ sub skids {
 			} # end if
 		} # end if skid_id
 	} elsif ( $param{btnFunction} eq 'CheckOut' )   {
-        if ( $param{skid_id} ) {
-            $param{skid_id} =~ s/[^\d\-\,]//g;
-            my @skid_ids;
-            foreach my $range ( split ',', $param{skid_id} ) {
-                if ( $range =~ /(\d*)\-(\d*)/ ) {
-                    push @skid_ids, ( $1 .. $2 );
-                } else {
-                    push @skid_ids, $range;
-                } # end if
-            } # end foreach
-            foreach my $skid_id ( @skid_ids ) {
-                my $Skid = new openprint::Skid( $skid_id );
-                $Skid->checkout();
-            } # end foreach
-        } elsif ( $param{skids} ) {
-            foreach my $skid_id ( ref $param{skids} eq 'ARRAY' ? @{$param{skids}} : $param{skids} ) {
-                my $Skid = new openprint::Skid( $skid_id );
-                $Skid->checkout();
-            } # end foreach
-        } # end if
+		if ( $param{skid_id} ) {
+			$param{skid_id} =~ s/[^\d\-\,]//g;
+			my @skid_ids;
+			foreach my $range ( split ',', $param{skid_id} ) {
+				if ( $range =~ /(\d*)\-(\d*)/ ) {
+					push @skid_ids, ( $1 .. $2 );
+				} else {
+					push @skid_ids, $range;
+				} # end if
+			} # end foreach
+			foreach my $skid_id ( @skid_ids ) {
+				my $Skid = new openprint::Skid( $skid_id );
+				$Skid->checkout();
+			} # end foreach
+		} elsif ( $param{skids} ) {
+			foreach my $skid_id ( ref $param{skids} eq 'ARRAY' ? @{$param{skids}} : $param{skids} ) {
+				my $Skid = new openprint::Skid( $skid_id );
+				$Skid->checkout();
+			} # end foreach
+		} # end if
 
 	} elsif ( $param{btnFunction} eq 'Delete' )	{
 		if ( $param{skid_id} ) {
@@ -202,6 +202,10 @@ sub skids {
 				$PA->send_notifications();
 			} # end foreach
 		} # end if skid_id
+	} elsif ( $param{btnFunction} eq 'Download Inventory' ) {
+		my ( $header, $data ) = inventory_report( %param );
+		my $date = Date::Format::time2str('%Y-%m-%d %H:%M', time );
+		misc::export_csv( $r, $log, \%variable, "PaperInventory $date.csv", $header, $data );
 	} # end if btnfunction
 
 	$session{'/employee/inventory/skids.html?empty'} = 'N' if ! exists $session{'/employee/inventory/skids.html?empty'};
@@ -235,7 +239,14 @@ sub inventory_report {
 	my @data;
 	my $count = 0;
 	my $total_weight = 0;
-	openprint::Location->find();
+
+	my @location_ids = ();
+	if ( $param{location_id} ) {
+		my @Locations = openprint::Location->find(id=>[ split(',', $param{location_id} ) ] );
+		@location_ids = map { $$_{id} } map { $_->get_all_children() } @Locations;
+	} else {
+		openprint::Location->find();
+	}
 
 	my @Stocks;
 	my %stock_ids;
@@ -257,7 +268,7 @@ sub inventory_report {
 	if ( %sql ) {
 		@Stocks = openprint::Paper->find(%sql);
 		%stock_ids = map { $_->id(), $_ } @Stocks;
-		openprint::StockBrand->find(id => [ map { $_->brand_id() } @Stocks ] );
+		openprint::StockBrand->find(); # How many can there be?  Just load them all. id => [ map { $_->brand_id() } @Stocks ] );
 	} else {
 		$log->debug("Not loading stocks");
 	} # end if
@@ -267,6 +278,7 @@ sub inventory_report {
 				#( %stock_ids ? ( 'paper_id &&'=> [ keys %stock_ids ] ) : () ),
 				ssi::date_filter( 'added_on_start', 'created_on >=', \%param ),
 				ssi::date_filter( 'added_on_end', 'created_on <=', \%param ),
+				( @location_ids ? ( location_id=>\@location_ids ) : () ),
 				( $param{in_stock} ne '' ? ( $param{in_stock} eq '1' ? ( 'quantity >='=>1 ) : ( quantity=>0 ) ) : () ),
 				( $param{type} ? ( 'type is null or in'=>[ ref $param{type} eq 'ARRAY' ? @{$param{type}} : $param{type} ] ) : () ),
  ) ;
@@ -2335,7 +2347,7 @@ sub _skids_results {
 				( map { 'last_seen_end_' . $_ } ( 'year','month','day' ) ),
 	
 				'Docket','fsc_code','empty', 'rfid','rfid_valid','location_id','verification_code', 'allocated','contents','hasmanifest',
-				'condition_id', 'skid_id', 'rfid_id', 'manufacturers_id', 'hasmanufacturers','deleted','checked_out','type',
+				'condition_id', 'skid_id', 'rfid_id', 'manufacturers_id', 'hasmanufacturers','deleted','checked_out','type','has_value',
 
 				'manufacturer_id','brand_id','finish_id','colour_id','weight_id','quality_id',
                 'owner_id','material_id','group_id', 'condition_id',
@@ -2720,6 +2732,9 @@ $log->debug("No duplicate fuond for $$ICE{rfidtag_id}, previous rags: " . $rfidt
 
 		foreach my $ICE ( @ICE ) {
 			my $Skid = $ICE->Skid();
+			if ( ! $Skid->id() ) {
+				next;
+			}
 			my @SC = $Skid->Contents();
 			if ( @SC == 1 ) {
 				my $SC = $SC[0];
@@ -2785,7 +2800,7 @@ $log->debug("No duplicate fuond for $$ICE{rfidtag_id}, previous rags: " . $rfidt
 			} # end if has exactly 1 content
 
 			if ( $ICE->location_id() ) {
-				if ( ( $Skid->location_id() != $ICE->location_id() ) and $Skid->location_id() and ! sets::isin( $Skid->location_id(), [ $ICE->location_ids() ] ) ) {
+				if ( ( $Skid->location_id() != $ICE->location_id() ) and ! ( $Skid->location_id() and ! sets::isin( $Skid->location_id(), [ $ICE->location_ids() ] ) ) ) {
 					if ( $param{action} eq 'Test' ) {
 						$variable{information} .= 'Would adjust the location of ' . $Skid->link_to() . ' from ' . $Skid->location() . ' to ' . $ICE->location() . '<br/>';
 					} else {
@@ -2835,8 +2850,8 @@ $log->debug("Have skid not in check: " . $Skid->to_string() );
 			if ( $param{action} eq 'Test' ) {
 				$variable{information} .= 'Would check out skid ' . $Skid->link_to( $Skid->to_string() ) . ' located at ' . $Skid->location() .'<br/>';
 			} else {
-				$Skid->checkout(undef,' by Inventory Check ' . $Check->link_to() . '<br/>', 1 );
 				$variable{information} .= 'Checked out ' . $Skid->link_to( $Skid->to_string() ) . '<br/>';
+				$Skid->checkout(undef,' by Inventory Check ' . $Check->link_to() . '<br/>', 1 );
 			}
 			last if $dbh->errstr();
 		}
@@ -2844,7 +2859,7 @@ $log->debug("Have skid not in check: " . $Skid->to_string() );
 			$dbh->rollback();
 		} 
 		sql::end_transaction( $dbh, $ac );
-        $variable{ExternalRedirect} = '/employee/inventory/check.html?check_id='.$$Check{id};
+		$variable{ExternalRedirect} = '/employee/inventory/check.html?check_id='.$$Check{id};
 
 	} elsif ( $param{action} eq 'Import' ) {
 		if ( ! $$Check{id} ) {
