@@ -165,6 +165,10 @@ $log->debug("Caching all $option results:" . @blah );
 		</li>
 		<li><label>Condition</label><? echo ( ssi::select( openprint::InventoryCondition->dropdown(order=>'lower(name)'), $session{'/employee/inventory/paper.html?condition_id'}, { name=>'condition_id', prepend=>['','all'] } ); ) ?>
 		</li>
+		<li>
+			<label>Has Value</label>
+			<? echo ( radio( 'has_value', [ '1', 'Yes', '0', 'No', '', 'Both' ], $session{'/employee/inventory/paper.html?has_value'} ); ) ?>
+		</li>
 		</ul>
 
 		<p class="buttons">
@@ -172,7 +176,7 @@ $log->debug("Caching all $option results:" . @blah );
 				my $html = '';
 				$html .= button( 'ShowResults', { onclick=>"LoadContent('Results','/employee/inventory/_paper_results.html', f1.serialize() );", text=>'Show Results' } );
 				$html .= button( 'Add', { onclick=>'', href=>'paper_details.html', text=>'Add New Paper' } );
-				if ( openprint::usergroup::is_user_in( ['Scheduling','Accounting'], $session{'user_id'} ) ) {
+				if ( openprint::usergroup::is_user_in( ['InventoryManager','Accounting'], $session{'user_id'} ) ) {
 					$html .= button( 'DownloadInventory', { onclick=>"f1.btnFunction.value='Download Inventory';f1.action='paper.html?Download';f1.submit();", text=>'Download Inventory' } );
 					$html .= button( 'DownloadLog', { onclick=>"f1.btnFunction.value='Download Log';f1.action='paper.html?Download';f1.submit();", text=>'Download Log' } );
 					$html .= button( 'Consumption', { onclick=>"f1.btnFunction.value='Consumption Report';f1.action='paper.html?Download';f1.submit();", text=>'Consumption Report' } ) if $session{'email'} =~ /iconnor/;
