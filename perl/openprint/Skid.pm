@@ -17,7 +17,7 @@ require openprint::SkidContent;
 require openprint::InventoryCondition;
 require openprint::PaperAllocation;
 
-$debug = 0;
+$debug = 1;
 
 $table = 'Skids';
 $serial = 'skid_id_seq';
@@ -46,7 +46,7 @@ $serial = 'skid_id_seq';
 	fsc_code			=>	'id IN ( SELECT skid_id FROM skid_contents WHERE paper_id=(SELECT id FROM papers WHERE fsc_code=?))',
 	purpose_id 			=>	'id IN ( SELECT skid_id FROM skid_contents WHERE purpose_id=?)',
 	condition_id 		=>	'(SELECT condition_id FROM skid_contents WHERE skid_contents.skid_id=skids.id )',
-	inventory_check_id	=>	'id IN (SELECT skid_id FROM inventory_check_entries WHERE ic_id=?)',
+	inventory_check_id	=>	'exists (SELECT skid_id FROM inventory_check_entries WHERE ic_id=? and skid_id=skids.id)',
 );
 
 %transforms = (
@@ -235,7 +235,6 @@ sub location_id {
 			} # end if
 		} # end if
 	} # end if
-
 
 	if ( ! $_[0]{location_id} ) {
 		if ( $_[0]{rfidtag_id} ) {
@@ -518,11 +517,20 @@ sub Manifest {
 } # end sub Manifest
 
 sub ManifestContent {
+$log->error("DEPRECATED CALL TO ManfiestContent");
 	if ( ! $_[0]{ManifestContent} ) {
 		require openprint::ManifestContent;
 		$_[0]{ManifestContent} = openprint::ManifestContent->find_one('skid_id'=>$_[0]{id});
 	} # end if
 	return $_[0]{ManifestContent};
+} # end sub ManifestContents
+
+sub ManifestContents {
+	if ( ! $_[0]{ManifestContents} ) {
+		require openprint::ManifestContent;
+		$_[0]{ManifestContents} = [ openprint::ManifestContent->find( skid_id=>$_[0]{id} ) ];
+	} # end if
+	return @{$_[0]{ManifestContents}};
 } # end sub ManifestContents
 
 sub manifest_id {
@@ -532,27 +540,21 @@ sub manifest_id {
 sub value {
 	my $self = $_[0];
 	if ( ! $$self{value} ) {
-		$$self{value} = misc::sum( map { $_->value() } ($self->Contents()) );
+		$$self{value} = misc::sum( map { $_->value() } $self->Contents() );
 	} # end if
 	return $$self{value};
 } # end sub value
 
 sub cost {
 	if ( ! $_[0]{cost} ) {
-		my $ManifestContent = $_[0]->ManifestContent();
-		return undef if ! $ManifestContent;
-		my $ManifestType = $ManifestContent->Type();
-		my ( $cost, $units );
-		if ( $ManifestType->cost() ) {
-			$cost = $ManifestType->cost();
-			$units = $ManifestType->cost_units();
-		} else {
-			my $POC = $ManifestType->PurchaseOrder_Content();
-			return undef if ! $POC;
-			$cost = $POC->price();
-			$units = $POC->price_units();
-		} # end if
-		$_[0]{cost} = $cost.$units;
+		my $Cost;
+		foreach my $SC ( $_[0]->Contents() ) {
+			$Cost = $SC->Cost();
+			last if $Cost;
+		}
+		if ( $Cost ) {
+			$_[0]{cost} = $$Cost{cost}.$$Cost{units};
+		}
 	} # end if
 	return $_[0]{cost};
 } # end sub cost

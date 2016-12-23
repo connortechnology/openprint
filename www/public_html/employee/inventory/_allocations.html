@@ -4,15 +4,15 @@
 
 	if ( $session{'/employee/inventory/allocations.html?Docket'} ) {
 		@{$$variable{Allocations}} = openprint::PaperAllocation->find( 
-			docket	=>	$session{'/employee/inventory/allocations.html?Docket'},
+			docket	=>	$session{$uri.'?Docket'},
 			order	=>	'id',
 			);
 	} else {
 		$$variable{Allocations} = [ openprint::PaperAllocation->find( 
-			date_filter( '/employee/inventory/allocations.html?created_on_end', 'created_on <=' ),
-			date_filter( '/employee/inventory/allocations.html?created_on_start', 'created_on >=' ),
-( $session{$uri.'?company_id'} ? ( company_id=>$session{$uri.'?company_id'} ) : () ),
-( $session{$uri.'?salesrep_id'} ? ( company_id=>[ map { $$_{id} } openprint::Company->find(salesrep_id=>$session{$uri.'?salesrep_id'} ) ] ) : () ),
+			date_filter( $uri.'?created_on_end', 'created_on <=' ),
+			date_filter( $uri.'?created_on_start', 'created_on >=' ),
+			( $session{$uri.'?company_id'} ? ( company_id=>$session{$uri.'?company_id'} ) : () ),
+			( $session{$uri.'?salesrep_id'} ? ( company_id=>[ map { $$_{id} } openprint::Company->find(salesrep_id=>$session{$uri.'?salesrep_id'} ) ] ) : () ),
 			order		=>	'id',
 			) ];
 	} # end if
@@ -37,38 +37,61 @@
 			my $total_allocations;
 			my $total_weight;
 			my $total_sheets;
+			my $uri = '/employee/inventory/allocations.html';
 
 			my %allocations;
 			foreach my $Allocation ( @{$$variable{Allocations}} ) {
-				push @{$allocations{"$$Allocation{docket}-$$Allocation{paper_id}"}},  $Allocation;
+				push @{$allocations{ join('-',@$Allocation{'docket','paper_id'} ) }}, $Allocation;
 			} # end foreach Allocation
 			
 			foreach my $key ( sort keys %allocations ) {
 				my $Allocation = $allocations{$key}[0];
+				my $Stock = $Allocation->Paper();
 
-				if ( ! sets::isin( $Allocation->Paper()->type(), split(',', $session{'/employee/inventory/allocations.html?Type'} ) ) ) {
+				if ( ! sets::isin( $Stock->type(), split(',', $session{$uri.'?Type'} ) ) ) {
 					next;
 				} # end if
-				my $quantity = 0;
+
 				my $max_age;
 				
-				foreach my $A ( @{$allocations{$key}} ) {	
-					$quantity += $A->quantity();
+				foreach my $A ( @{$allocations{$key}} ) {
 					if ( $_ = $A->skid_ids() and @{$_} ) {
-						foreach my $Skid ( openprint::Skid->find( id=>$A->skid_ids() ) ) {
+						foreach my $Skid ( $A->Skids() ) {
 							my $age = time - Date::Parse::str2time( $Skid->created_on() );
 							if ( $age > $max_age ) {
 								$max_age = $age;
 							} # end if
 						} # end foreach Skid
 					} else {
-						foreach my $SkidContent ( openprint::SkidContent->find('paper_id'=>$A->paper_id(),'quantity >'=>0) ) {
+						foreach my $SkidContent ( openprint::SkidContent->find( paper_id=>$A->paper_id(),'quantity >'=>0) ) {
 							my $age = time - Date::Parse::str2time( $SkidContent->Skid()->created_on() );
 							if ( $age > $max_age ) {
 								$max_age = $age;
 							} # end if
 						} # end if
 					} # end if
+				} # end foreach allocation
+
+
+				if ( $session{$uri.'?stock_age_start_year'} ) {
+					my $dt = DateTime->new( map { $_ => $session{$uri.'?stock_age_end_'.$_} } ( 'year','month','day' ), TZ=>$openprint::TZ );
+					my $max_age_start = time - $dt->epoch();
+					if ( $max_age_start ) {
+						next if $max_age_start <= $max_age;
+					} # end if
+				} # end if
+				if ( $session{$uri.'?stock_age_end_year'} ) {
+					my $dt = DateTime->new( map { $_ => $session{$uri.'?stock_age_end_'.$_} } ( 'year','month','day' ), TZ=>$openprint::TZ );
+					my $max_age_end = time - $dt->epoch();
+$log->debug("Max end: $max_age_end Max Age $max_age");
+					if ( $max_age_end ) {
+						next if $max_age_end >= $max_age;
+					} # end if
+				} # end if
+
+				my $quantity = 0;
+				foreach my $A ( @{$allocations{$key}} ) {	
+					$quantity += $A->quantity();
 					if ( $A->Paper()->type() eq 'Roll' ) {
 						$total_rolls += @{$A->skid_ids()} if $A->skid_ids();
 						$total_weight += $A->quantity;
@@ -77,21 +100,7 @@
 						$total_sheets += $A->quantity;
 					} # end if
 				} # end foreach Allocation
-				if ( $session{'/employee/inventory/allocations.html?stock_age_start_year'} ) {
-					my $max_age_start = time - Date::Parse::str2time( sprintf('%.4d-%.2d-%.2d', @session{'/employee/inventory/allocations.html?stock_age_start_year','/employee/inventory/allocations.html?stock_age_start_month','/employee/inventory/allocations.html?stock_age_start_day'} ) );
-					if ( $max_age_start ) {
-						next if $max_age_start <= $max_age;
-					} # end if
-				} # end if
-				if ( $session{'/employee/inventory/allocations.html?stock_age_end_year'} ) {
-					my $max_age_end = time - Date::Parse::str2time( sprintf('%.4d-%.2d-%.2d', @session{'/employee/inventory/allocations.html?stock_age_end_year','/employee/inventory/allocations.html?stock_age_end_month','/employee/inventory/allocations.html?stock_age_end_day'} ) );
-$log->debug("Max end: $max_age_end Max Age $max_age");
-					if ( $max_age_end ) {
-						next if $max_age_end >= $max_age;
-					} # end if
-				} # end if
 
-				my $Stock = $Allocation->Paper();
 
 				my $error = '';
 				if ( $quantity > $Stock->available() ) {
@@ -99,7 +108,7 @@ $log->debug("Max end: $max_age_end Max Age $max_age");
 				} # end if
 
 				$html .= "<tr class=\"$rowclass $error\">";
-				$html .= qq`<td class="checkbox"><input type="checkbox" name="allocation_ids" value="$$Allocation{id}"/></td>`;
+				$html .= qq`<td class="checkbox"><input type="checkbox" name="allocation_ids" value="`.join(',',map { $$_{id} } @{$allocations{$key}} ). '"/></td>';
 				$html .= sprintf( '<td class="Docket"><a href="/employee/project/view.html?docket=%1$d">%1$s</a></td>', $$Allocation{docket} );
 				$html .= sprintf( '<td class="Company"><a href="allocation.html?allocation_id=%d">%s</a></td>', $$Allocation{id}, $Allocation->Order()->Company()->name() );
 				$html .= sprintf( '<td class="Stock"><a href="paper_details.html?paper_id=%d">%s</a></td>', $$Allocation{paper_id}, $Allocation->Paper()->to_string() );

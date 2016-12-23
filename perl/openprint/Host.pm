@@ -126,7 +126,7 @@ sub type {
 		$_[0]{type_id} = $Type->id();
 		$_[0]{type} = $Type->name();
 	} # end if @_ > 1
-	if ( ! $_[0]{type} ) {
+	if ( ! defined $_[0]{type} ) {
 		$_[0]{type} = new openprint::Host_Type( $_[0]{type_id} )->name();
 	} # end if
 	return $_[0]{type};
