@@ -148,8 +148,8 @@ cleanup : true
 	$$Interface{id},
 	input( type=>'mac', name=>'mac-'.$$Interface{id}, value=>$$Interface{mac} ),
 	input( type=>'ip', name=>'ip-'.$$Interface{id}, value=>$Interface->ip() ),
-	checkboxes( 'dhcp-'.$$Interface{id}, [ 1, '' ], $Interface->dhcp() ),
 	checkboxes( 'monitor-'.$$Interface{id}, [ 1, '' ], $Interface->monitor() ),
+	checkboxes( 'dhcp-'.$$Interface{id}, [ 1, '' ], $Interface->dhcp() ),
 	$Interface->comment(),
 );
 	
