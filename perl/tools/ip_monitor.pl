@@ -174,7 +174,7 @@ while(1) {
 
 		my $since = $now-$$Host{state_changed_on};
 		$log->debug( $Host->hostname() . ' is now ' . ( $Host->online() ? 'online' : 'offline' ) . " $since " );
-		if ( ( ! $Host->online() ) {
+		if ( ! $Host->online() ) {
 			if ( ( ! $$Host{notified} ) and ( $since > $$Host{offline_seconds} ) ) {
 				$_ = $Host->save({ notified=>1 });
 				if ( $_ ) {
