@@ -1397,7 +1397,7 @@ $openprint::log->error("No makeready_time on " . $Fold->to_string() );
 						}
 						$setupPrice{Total} = $setupPrice{Price} * $$Fold{makeready_time} / 60;
 					} else {
-$openprint::log->error("No units set on Fold MR " . $setupPrice{Service}->name() . ' on ' . $Equipment->name() );
+#$openprint::log->error("No units set on Fold MR " . $setupPrice{Service}->name() . ' on ' . $Equipment->name() );
 						$setupPrice{Total} = $setupPrice{Price};
 					} # end if
 					$Breakdown .= sprintf( '($%1$.2f%2$s=$%3$.2f)', @setupPrice{'Price','units','Total'} );
