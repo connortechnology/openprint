@@ -171,19 +171,22 @@ while(1) {
 				notify( $Host, $online );
 			}
 		} # end if ionline status change
-		$log->debug( $Host->hostname() . ' is now ' . ( $Host->online() ? 'online' : 'offline' ) . " $since " );
-
 
 		my $since = $now-$$Host{state_changed_on};
-		if ( (!$Host->online()) and ( ! $$Host{notified} ) and ( $since > $$Host{offline_seconds} ) ) {
-			$_ = $Host->save({ notified=>1 });
-			if ( $_ ) {
-				$log->error($_);
-				$Host->unlock();
-				next;
+		$log->debug( $Host->hostname() . ' is now ' . ( $Host->online() ? 'online' : 'offline' ) . " $since " );
+		if ( ! $Host->online() ) {
+			if ( ( ! $$Host{notified} ) and ( $since > $$Host{offline_seconds} ) ) {
+				$_ = $Host->save({ notified=>1 });
+				if ( $_ ) {
+					$log->error($_);
+					$Host->unlock();
+					next;
+				}
+				$log->warn("Sending offline notification");
+				notify( $Host, $online );
+			} else {
+				$log->debug("Host is notified? $$Host{notified} or since($since) <= $$Host{offline_seconds}");
 			}
-			$log->debug("Sending offline notification");
-			notify( $Host, $online );
 		} # end if ! notified
 
 		$Host->unlock();
