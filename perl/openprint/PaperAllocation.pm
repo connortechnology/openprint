@@ -21,7 +21,7 @@ require openprint::Manufacturer;
 require openprint::Email;
 require openprint::InventoryCondition;
 
-$debug = 0;
+$debug = 1;
 
 $table = 'paper_allocations';
 $serial = 'paper_allocation_id_seq';
@@ -44,6 +44,10 @@ $serial = 'paper_allocation_id_seq';
 );
 
 %transforms = (
+	id			=>	[ 's/\D//g', '<2147483647' ],
+	paper_id			=>	[ 's/\D//g', '<2147483647' ],
+	operator_id			=>	[ 's/\D//g', '<2147483647' ],
+	condition_id			=>	[ 's/\D//g', '<2147483647' ],
 	quantity	=>	[ 's/\D//g' ],
 );
 
@@ -56,15 +60,20 @@ $serial = 'paper_allocation_id_seq';
 sub delete {
 	if ( $_[0]{id} ) {
 		my $ac = sql::start_transaction( );
-		if ( $_[0]{project_id} ) {
-			$_[0]->Project()->add_to_log(@session{'company_id','user_id'}, 'Allocation deleted.' . ( @_ > 1 ? ' Reason: ' . $_[1] : '' ) );
+		if ( $_[0]->docket() ) {
+			$_[0]->Order()->add_to_log(@session{'company_id','user_id'}, 'Allocation deleted.' . ( @_ > 1 ? ' Reason: ' . $_[1] : '' ) );
 		} # end if
-		sql::execute( undef, undef, q{DELETE FROM Paper_Allocations WHERE id=?}, $_[0]{id} );
-		sql::end_transaction( undef, $ac );
+		$_ = $_[0]->SUPER::delete();
+		if ( $_ ) {
+			$dbh->rollback();
+			sql::end_transaction( undef, $ac );
+			return;
+		}
 		my $Paper = $_[0]->Paper();
 		$Paper->allocated(undef,undef);
 		$Paper->available(undef);
 		$Paper->save();
+		sql::end_transaction( undef, $ac );
 		return;
 	} else {
 		return 'already deleted.';
@@ -109,7 +118,7 @@ sub User {
 } # end sub User
 sub Project {
 $openprint::log->error("PaperAllocation::Project deprecated");
-	return new openprint::Project( $_[0]{project_id} );
+	return openprint::Project->find( docket=>$_[0]{docket} );
 } # end sub Project
 
 sub Order {
