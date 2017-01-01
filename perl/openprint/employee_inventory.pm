@@ -69,26 +69,26 @@ sub skids {
 			} # end if
 		} # end if skid_id
 	} elsif ( $param{btnFunction} eq 'CheckOut' )   {
-        if ( $param{skid_id} ) {
-            $param{skid_id} =~ s/[^\d\-\,]//g;
-            my @skid_ids;
-            foreach my $range ( split ',', $param{skid_id} ) {
-                if ( $range =~ /(\d*)\-(\d*)/ ) {
-                    push @skid_ids, ( $1 .. $2 );
-                } else {
-                    push @skid_ids, $range;
-                } # end if
-            } # end foreach
-            foreach my $skid_id ( @skid_ids ) {
-                my $Skid = new openprint::Skid( $skid_id );
-                $Skid->checkout();
-            } # end foreach
-        } elsif ( $param{skids} ) {
-            foreach my $skid_id ( ref $param{skids} eq 'ARRAY' ? @{$param{skids}} : $param{skids} ) {
-                my $Skid = new openprint::Skid( $skid_id );
-                $Skid->checkout();
-            } # end foreach
-        } # end if
+		if ( $param{skid_id} ) {
+			$param{skid_id} =~ s/[^\d\-\,]//g;
+			my @skid_ids;
+			foreach my $range ( split ',', $param{skid_id} ) {
+				if ( $range =~ /(\d*)\-(\d*)/ ) {
+					push @skid_ids, ( $1 .. $2 );
+				} else {
+					push @skid_ids, $range;
+				} # end if
+			} # end foreach
+			foreach my $skid_id ( @skid_ids ) {
+				my $Skid = new openprint::Skid( $skid_id );
+				$Skid->checkout();
+			} # end foreach
+		} elsif ( $param{skids} ) {
+			foreach my $skid_id ( ref $param{skids} eq 'ARRAY' ? @{$param{skids}} : $param{skids} ) {
+				my $Skid = new openprint::Skid( $skid_id );
+				$Skid->checkout();
+			} # end foreach
+		} # end if
 
 	} elsif ( $param{btnFunction} eq 'Delete' )	{
 		if ( $param{skid_id} ) {
@@ -202,6 +202,11 @@ sub skids {
 				$PA->send_notifications();
 			} # end foreach
 		} # end if skid_id
+	} elsif ( $param{btnFunction} eq 'Download Inventory' ) {
+		my ( $header, $data ) = inventory_report( %param );
+		my $date = Date::Format::time2str('%Y-%m-%d %H:%M', time );
+		my $location = $param{location_id} ? new openprint::Location($param{location_id})->name() : 'All Locations';
+		misc::export_csv( $r, $log, \%variable, "PaperInventory $location $date.csv", $header, $data );
 	} # end if btnfunction
 
 	$session{'/employee/inventory/skids.html?empty'} = 'N' if ! exists $session{'/employee/inventory/skids.html?empty'};
@@ -230,12 +235,19 @@ sub skids {
 
 sub inventory_report {
 	my %param = @_;
-	my @header = ('Paper ID','Type','Owner','Manufacturer','Name','Finish','Colour','Weight','Material','Group','Type','Width','Height','Quality', 'MWeight','GSM','Skid#','RFIDTag #','Received On', 'Date Added','Last Updated', 'Location', 'In Stock (sheets)','In Stock(lbs)', 'Condition', 'Last Seen', 'Cost', 'Value' );
+	my @header = ('Paper ID','Type','Owner','Manufacturer','Name','Finish','Colour','Weight','Material','Group','Width','Height','Quality', 'MWeight','GSM','Skid#','RFIDTag #','Received On', 'Date Added','Last Updated', 'Location', 'In Stock (sheets)','In Stock(lbs)', 'Condition', 'Last Seen', 'Cost', 'Value' );
 
 	my @data;
 	my $count = 0;
 	my $total_weight = 0;
-	openprint::Location->find();
+
+	my @location_ids = ();
+	if ( $param{location_id} ) {
+		my @Locations = openprint::Location->find(id=>[ map { split(',', $_ ) } ( (ref $param{location_id} eq 'ARRAY') ? @{$param{location_id}} : ( $param{location_id} ) ) ] );
+		@location_ids = map { $$_{id} } map { $_, $_->get_all_children() } @Locations;
+	} else {
+		openprint::Location->find( company_id=>$openprint::Owner->id(), type=>'place' );
+	}
 
 	my @Stocks;
 	my %stock_ids;
@@ -257,7 +269,7 @@ sub inventory_report {
 	if ( %sql ) {
 		@Stocks = openprint::Paper->find(%sql);
 		%stock_ids = map { $_->id(), $_ } @Stocks;
-		openprint::StockBrand->find(id => [ map { $_->brand_id() } @Stocks ] );
+		openprint::StockBrand->find(); # How many can there be?  Just load them all. id => [ map { $_->brand_id() } @Stocks ] );
 	} else {
 		$log->debug("Not loading stocks");
 	} # end if
@@ -267,17 +279,40 @@ sub inventory_report {
 				#( %stock_ids ? ( 'paper_id &&'=> [ keys %stock_ids ] ) : () ),
 				ssi::date_filter( 'added_on_start', 'created_on >=', \%param ),
 				ssi::date_filter( 'added_on_end', 'created_on <=', \%param ),
+				( @location_ids ? ( location_id=>\@location_ids ) : () ),
 				( $param{in_stock} ne '' ? ( $param{in_stock} eq '1' ? ( 'quantity >='=>1 ) : ( quantity=>0 ) ) : () ),
+				( exists $param{empty} ? ( $param{empty} eq 'Y' ? ( 'quantity is null or ='=>0 ) : ( 'quantity >'=>0 ) ) : () ),
 				( $param{type} ? ( 'type is null or in'=>[ ref $param{type} eq 'ARRAY' ? @{$param{type}} : $param{type} ] ) : () ),
- ) ;
+			);
 	$log->debug("# of Skids: " . @Skids );
 	#openprint::RFIDTag->find(id=>[ map { $_->rfidtag_id() ? $_->rfidtag_id() : () } @Skids] );
 
+	my @skid_ids = map { $$_{id} } @Skids;
+	my %SkidContents;
+	foreach my $SC ( openprint::SkidContent->find( skid_id => \@skid_ids ) ) {
+		push @{$SkidContents{$$SC{skid_id}}}, $SC;
+		$SC->Skid()->Contents( $SkidContents{$$SC{skid_id}} );
+	} # end foreach SC
+
 	my $total_value = 0;
 	foreach my $Skid ( @Skids ) {
+		if ( ! $$Skid{type} ) {
+			$Skid->save({type=>undef});
+		}
 		foreach my $C ( $Skid->Contents() ) {
 			next if ! $C;
-			next if $param{in_stock} eq '1' and ! $C->quantity();
+			if ( $param{in_stock} eq '1' and ! $C->quantity() ) {
+				$log->debug("Skid $$Skid{id} skipped because  no quantity");
+				next;
+			}
+			if ( $param{has_value} eq '1' and ! $C->cost() ) {
+				$log->debug("Skid $$Skid{id} skipped because no cost");
+				next ;
+			}
+			if ( $param{has_value} eq '0' and $C->cost() ) {
+				$log->debug("Skid $$Skid{id} skipped because has cost");
+				next ;
+			}
 
 			my $Paper = $C->Paper();
 			my $weight = 0;
@@ -292,7 +327,7 @@ sub inventory_report {
 			$count += 1;
 			push @data,(
 					$$Paper{id},
-					$$Skid{type},
+					$Skid->type(),
 					new openprint::Company($Paper->owner_id())->name(),
 					$Paper->manufacturer(),
 					$Paper->brand(),
@@ -301,7 +336,6 @@ sub inventory_report {
 					$Paper->weight(),
 					$Paper->material(),
 					$Paper->group(),
-					$Paper->type(),
 					$Paper->width(),
 					$Paper->height(),
 					$Paper->quality(),
@@ -309,14 +343,14 @@ sub inventory_report {
 					$Paper->gsm(),
 					$$Skid{id},
 					$Skid->RFIDTag()->id_short(),
-					$$Skid{received_on},
-					$$Skid{created_on},
-					$$Skid{updated_on},
+					ssi::format_datetime( $$Skid{received_on} ),
+					ssi::format_datetime( $$Skid{created_on} ),
+					ssi::format_datetime( $$Skid{updated_on} ),
 					$Skid->Location()->name(),
 					$Paper->type() eq 'Sheet' ? $C->quantity() : '',
 					$weight,
 					$C->condition(),
-					$Skid->updated_on(),
+					ssi::format_datetime( $Skid->updated_on() ),#FIXME
 					1*$C->cost(),
 					1*$C->value(),
 					);
@@ -387,7 +421,8 @@ Date::Format::time2str('%Y-%m-%d %H:%M', Date::Parse::str2time($I->updated_on())
 	} elsif ( $param{btnFunction} eq 'Download Inventory' ) {
 		my ( $header, $data ) = inventory_report( %param );
 		my $date = Date::Format::time2str('%Y-%m-%d %H:%M', time );
-		misc::export_csv( $r, $log, \%variable, "PaperInventory $date.csv", $header, $data );
+		my $location = $param{location_id} ? new openprint::Location($param{location_id})->name() : 'All Locations';
+		misc::export_csv( $r, $log, \%variable, "PaperInventory $location $date.csv", $header, $data );
 
 	} elsif ( $param{btnFunction} eq 'Delete' ) {
 		if ( $param{paper_id} ) {
@@ -445,7 +480,7 @@ sub _paper_results {
 				'type','owner_id','material_id','group_id', 'condition_id',
 				( map { 'added_on_start_'.$_ } ( 'year','month','day' ) ),
 				( map { 'added_on_end_'.$_ } ( 'year','month','day' ) ),
-				'Docket','fsc_code','width','height','OrLarger','in_stock','owner_id_exclude','allocated',
+				'Docket','fsc_code','width','height','OrLarger','in_stock','owner_id_exclude','allocated','has_value',
 			) );
 	$session{'/employee/inventory/paper.html?owner_id_exclude'} = $param{owner_id_exclude} if exists $param{owner_id};
 	$session{'/employee/inventory/paper.html?OrLarger'} = $param{OrLarger};
@@ -2313,8 +2348,13 @@ sub _allocations {
 ( map { 'stock_age_end_' . $_ } ( 'year','month','day' ) ),
 'Docket', ) );
 	if ( $param{action} eq 'Delete' ) {
-		foreach my $Allocation ( openprint::PaperAllocation->find( id=>$param{allocation_id} ) ) {
-			$variable{error} .= $Allocation->delete();
+		my @ids = map { split(',', $_ ) } ( ( ref $param{allocation_id} eq 'ARRAY' ) ? @{$param{allocation_id}} : $param{allocation_id} );
+		@ids = map { openprint::PaperAllocation->transform( id=>$_ ) } @ids;
+$log->debug("Ids: @ids");
+		if ( @ids ) {
+			foreach my $Allocation ( openprint::PaperAllocation->find( id=>\@ids ) ) {
+				$variable{error} .= $Allocation->delete();
+			}
 		}
 	}
 } # end sub _allocations
@@ -2333,7 +2373,7 @@ sub _skids_results {
 				( map { 'last_seen_end_' . $_ } ( 'year','month','day' ) ),
 	
 				'Docket','fsc_code','empty', 'rfid','rfid_valid','location_id','verification_code', 'allocated','contents','hasmanifest',
-				'condition_id', 'skid_id', 'rfid_id', 'manufacturers_id', 'hasmanufacturers','deleted','checked_out','type',
+				'condition_id', 'skid_id', 'rfid_id', 'manufacturers_id', 'hasmanufacturers','deleted','checked_out','type','has_value',
 
 				'manufacturer_id','brand_id','finish_id','colour_id','weight_id','quality_id',
                 'owner_id','material_id','group_id', 'condition_id',
@@ -2629,6 +2669,11 @@ sub check {
 	if ( $param{action} eq 'Delete' ) {
         $variable{error} .= $Check->delete();
         $variable{ExternalRedirect} = '/employee/inventory/checks.html' if ! $variable{error};
+	} elsif ( $param{action} eq 'Clear' ) {
+		foreach my $ICE ( $Check->Entries() ) {
+			$variable{error} .= $ICE->delete();
+		}
+        $variable{ExternalRedirect} = '/employee/inventory/checks.html' if ! $variable{error};
 	} elsif ( $param{action} eq 'Destroy' ) {
         $variable{error} .= $Check->destroy();
         $variable{ExternalRedirect} = '/employee/inventory/checks.html' if ! $variable{error};
@@ -2673,6 +2718,7 @@ sub check {
 			($param{started_on} ? ( started_on	=>	$param{started_on} ) : () ),
 			($param{ended_on} ? ( ended_on	=>	$param{ended_on} ) : () ),
 			contains	=>	 join(',', ref $param{contains} eq 'ARRAY' ? @{$param{contains}} : $param{contains} ),
+			location_id	=>	$param{location_id},
 		});
 		if ( ! $variable{error} ) {
 			$variable{ExternalRedirect} = '/employee/inventory/check.html?check_id='.$$Check{id};
@@ -2701,46 +2747,69 @@ $log->debug("No duplicate fuond for $$ICE{rfidtag_id}, previous rags: " . $rfidt
 		my $ac = sql::start_transaction( $dbh );
 
 		my @ICE = openprint::Inventory_Check_Entry->find( ic_id=>$$Check{id}, order=>'skid_id,rfidtag_id' );
-		my %Skids = map { $$_{skid_id}, $_ } @ICE;
+		my %Skids = map { $$_{skid_id} ? ( $$_{skid_id} => $_ ) : () } @ICE;
 		my %RFID = map { $$_{rfidtag_id}, $_ } @ICE;
+		my @location_ids;
+		if ( $Check->location_id() ) {
+			@location_ids = map { $$_{id} } $Check->Location()->get_all_children();
+		}
+	openprint::Skid->find(id=>[ keys %Skids ] );
+
+		my $check_time = Date::Parse::str2time( $Check->started_on() );
+
 		foreach my $ICE ( @ICE ) {
 			my $Skid = $ICE->Skid();
+			if ( ! $Skid->id() ) {
+				next;
+			}
 			my @SC = $Skid->Contents();
-			if ( @SC == 1 ) {
-				my $SC = $SC[0];
-				my $Paper = $SC->Paper();
+			if ( @SC != 1 ) {
+				$variable{error} .= 'Skid ' . $Skid->link_to() . ' has more or less than 1 content. Please correct it before applying.<br/>';
+				next;
+			}
 
-				if ( $SC->checked_out() ) {
-					my $PI = $SC->checked_out();
-					if ( $PI->updated_on() le $Check->started_on() ) {
-						if ( $ICE->quantity() and ( $ICE->quantity() != $SC->quantity() ) ) {
-							if ( $SC->quantity() ) {
-								$variable{information} .= 'Not adjusting the quantity of ' . $Paper->to_string() . ' on ' . $Skid->link_to(). ' from ' . $SC->quantity().' to '.$ICE->quantity().'<br/>';
-								next;
-						
-							} elsif ( $param{action} eq 'Test' ) {
-								$variable{information} .= 'Would adjust the quantity of ' . $Paper->to_string() . ' on ' . $Skid->link_to(). ' from ' . $SC->quantity().' to '.$ICE->quantity().'<br/>';
-								next;
-							} else {
-								$variable{information} .= 'Adjusting quantity of ' . $Paper->to_string() . ' on ' . $Skid->link_to(). ' from ' . $SC->quantity().' to '.$ICE->quantity().'<br/>';
-								$SC->save({quantity=>$ICE->quantity()});
-								$Paper->add_inventory( $Skid, $ICE->quantity(), $Paper->units(), 'Updated from Inventory Check ' . $Check->link_to());
-								next;
-							}
+			my $SC = $SC[0];
+			my $Paper = $SC->Paper();
 
-						} elsif ( (!$SC->quantity) and $PI->delta() and ( -1*$PI->delta() != $SC->quantity() ) ) {
-							if ( $param{action} eq 'Test' ) {
-								$variable{information} .= 'Would Adjust quantity of ' . $Paper->to_string() . ' on ' . $Skid->link_to(). ' from ' . $SC->quantity().' to '.-1*$PI->delta().'<br/>';
-								next;
-							} else {
-								$variable{information} .= 'Adjusting quantity of ' . $Paper->to_string() . ' on ' . $Skid->link_to(). ' from ' . $SC->quantity().' to '.-1*$PI->delta().'<br/>';
-								$SC->save({quantity=>-1*$PI->delta()});
-								$Paper->add_inventory( $Skid, -1*$PI->delta(), $Paper->units(), 'Updated from Inventory Check ' . $Check->link_to());
-								next;
-							}
+			if ( $SC->checked_out() ) {
+				my $PI = $SC->checked_out();
+				my $pi_time = Date::Parse::str2time( $PI->updated_on() );
+				if ( ! $pi_time ) {
+					$log>error("Invalid pi_time");
+					die;
+				}
+
+				if ( $pi_time < $check_time ) {
+					if ( $ICE->quantity() and ( $ICE->quantity() != $SC->quantity() ) ) {
+						if ( $SC->quantity() ) {
+							$variable{information} .= 'Not adjusting adjusting quantity of ' . $Paper->to_string() . ' on ' . $Skid->link_to(). ' from ' . $SC->quantity().' to '.$ICE->quantity().'<br/>';
+							next;
+					
+						} elsif ( $param{action} eq 'Test' ) {
+							$variable{information} .= 'Would check back in ' . $Paper->to_string() . ' on ' . $Skid->link_to(). ' from ' . $SC->quantity().' to '.$ICE->quantity().'. Last changed: '.$PI->updated_on().'<br/>';
+							next;
+						} else {
+							$variable{information} .= 'Checking back in ' . $Paper->to_string() . ' on ' . $Skid->link_to(). ' '.$ICE->quantity().'<br/>';
+							$SC->save({quantity=>$ICE->quantity(), condition=>'Used' });
+							$Paper->add_inventory( $Skid, $ICE->quantity(), $Paper->units(), 'Updated from Inventory Check ' . $Check->link_to());
+							next;
+						}
+
+					} elsif ( (!$SC->quantity) and $PI->delta() and ( -1*$PI->delta() != $SC->quantity() ) ) {
+						if ( $param{action} eq 'Test' ) {
+$log->debug("Skid $$Skid{id} CHeck time $check_time PI time $pi_time "  );
+							$variable{information} .= 'Would Adjust quantity of ' . $Paper->to_string() . ' on ' . $Skid->link_to(). ' from ' . $SC->quantity().' to '.-1*$PI->delta().'. Last changed: '.$PI->updated_on().'<br/>';
+							next;
+						} else {
+							$variable{information} .= 'Adjusting quantity of ' . $Paper->to_string() . ' on ' . $Skid->link_to(). ' from ' . $SC->quantity().' to '.-1*$PI->delta().'<br/>';
+							$SC->save({quantity=>-1*$PI->delta()});
+							$Paper->add_inventory( $Skid, -1*$PI->delta(), $Paper->units(), 'Updated from Inventory Check ' . $Check->link_to());
+							next;
 						}
 					}
-				} # end if checked out
+				}
+			} else {
+
 				if ( ! $SC->quantity() and ! $ICE->quantity() ) {
 					if ( my @MCs = $SC->Manifest_Contents() ) {
 						my $MC = pop @MCs;
@@ -2756,24 +2825,47 @@ $log->debug("No duplicate fuond for $$ICE{rfidtag_id}, previous rags: " . $rfidt
 						}
 					}
 				}
-							
 
 				if ( $SC->quantity() != int($ICE->quantity()) ) {
 					if ( $param{action} eq 'Test' ) {
-					$variable{information} .= 'Would adjust the quantity of ' . $Paper->to_string() . ' on ' . $Skid->link_to(). ' from ' . $SC->quantity().' to '.$ICE->quantity().'<br/>';
+						$variable{information} .= 'Would adjust the quantity of ' . $Paper->to_string() . ' on ' . $Skid->link_to(). ' from ' . $SC->quantity().' to '.$ICE->quantity().'<br/>';
 					} else {
-					$variable{information} .= 'Adjusting quantity of ' . $Paper->to_string() . ' on ' . $Skid->link_to(). ' from ' . $SC->quantity().' to '.$ICE->quantity().'<br/>';
-					$SC->save({quantity=>int($ICE->quantity())});
-					$Paper->add_inventory( $Skid, int($ICE->quantity()-$SC->quantity()), $Paper->units(), 'Updated from Inventory Check ' );
+						$variable{information} .= 'Adjusting quantity of ' . $Paper->to_string() . ' on ' . $Skid->link_to(). ' from ' . $SC->quantity().' to '.$ICE->quantity().'<br/>';
+						$SC->save({quantity=>int($ICE->quantity())});
+						$Paper->add_inventory( $Skid, int($ICE->quantity()-$SC->quantity()), $Paper->units(), 'Updated from Inventory Check ' );
 					} # endi f
 				} # end if quantity needs adjusting
-			} # end if has exactly 1 content
+			} # end if checked out
+
+			if ( $ICE->location_id() ) {
+				if ( ( $Skid->location_id() != $ICE->location_id() ) and ! ( $Skid->location_id() and ! sets::isin( $Skid->location_id(), [ $ICE->location_ids() ] ) ) ) {
+					if ( $param{action} eq 'Test' ) {
+						$variable{information} .= 'Would adjust the location of ' . $Skid->link_to() . ' from ' . $Skid->location() . ' to ' . $ICE->location() . '<br/>';
+					} else {
+						$variable{information} .= 'Adjusted the location of ' . $Skid->link_to() . ' from ' . $Skid->location() . ' to ' . $ICE->location() . '<br/>';
+						$Skid->save({location_id=>$$ICE{location_id}});
+					} # end if
+				}
+			} elsif ( $Skid->location_id() and ! sets::isin( $Skid->location_id(), [ $Check->location_ids() ] ) ) {
+					if ( $param{action} eq 'Test' ) {
+						$variable{information} .= 'Would adjust the location of ' . $Skid->link_to() . ' from ' . $Skid->location() . ' to ' . $Check->Location()->name() . '<br/>';
+					} else {
+						$variable{information} .= 'Adjusted the location of ' . $Skid->link_to() . ' from ' . $Skid->location() . ' to ' . $Check->Location()->name() . '<br/>';
+						$Skid->save({location_id=>$$ICE{location_id}});
+					} # end if
+			}
+
 			last if $dbh->errstr();
-		} # end foreach
+		} # end foreach ICE
+
+		my @locations = $Check->location_ids();
+
 		foreach my $Skid ( openprint::Skid->find( 'quantity >=' => 1, 'updated_on <' => $$Check{started_on}, 
 					( $Check->contains() ? ( 'type in' => [ split(',',$Check->contains())] ) : () ),
+					( @location_ids ? ( location_id=>\@location_ids ) : () ),
+					'inventory_check_id not'=>$Check->id(),
 					) ) {
-			if ( ! $$Skid{type} ) {
+			if ( 0 and ! $$Skid{type} ) {
 				if ( $Skid->type() ) {
 					$Skid->save();
 				}
@@ -2794,10 +2886,10 @@ $log->debug("No duplicate fuond for $$ICE{rfidtag_id}, previous rags: " . $rfidt
 			} 
 $log->debug("Have skid not in check: " . $Skid->to_string() );
 			if ( $param{action} eq 'Test' ) {
-				$variable{information} .= 'Would check out skid ' . $Skid->link_to( $Skid->to_string() ) . '<br/>';
+				$variable{information} .= 'Would check out skid ' . $Skid->link_to( $Skid->to_string() ) . ' located at ' . $Skid->location() .'<br/>';
 			} else {
-				$Skid->checkout(undef,' by Inventory Check ' . $Check->link_to() . '<br/>', 1 );
 				$variable{information} .= 'Checked out ' . $Skid->link_to( $Skid->to_string() ) . '<br/>';
+				$Skid->checkout(undef,' by Inventory Check ' . $Check->link_to() . '<br/>', 1 );
 			}
 			last if $dbh->errstr();
 		}
@@ -2805,7 +2897,7 @@ $log->debug("Have skid not in check: " . $Skid->to_string() );
 			$dbh->rollback();
 		} 
 		sql::end_transaction( $dbh, $ac );
-        $variable{ExternalRedirect} = '/employee/inventory/check.html?check_id='.$$Check{id};
+		$variable{ExternalRedirect} = '/employee/inventory/check.html?check_id='.$$Check{id};
 
 	} elsif ( $param{action} eq 'Import' ) {
 		if ( ! $$Check{id} ) {
@@ -2813,16 +2905,32 @@ $log->debug("Have skid not in check: " . $Skid->to_string() );
 			return;
 		}
 		if ( my $upload = $r->upload('import') ) {
+			my %Locations = map { $$_{name}, $_ } openprint::Location->find();
 			require Text::CSV_XS;
 			my $csv = Text::CSV_XS->new();
 			my $io =$upload->io();
 			while ( my $line = <$io> ) {
 				my $status = $csv->parse($line);        # parse a CSV string into fields
-				my ( $id, $rfid, $quantity, $dimension1, $dimension2, $notes ) = $csv->fields();
-				next if $id eq 'ID';
+				my ( $id, $rfid, $quantity, $dimension1, $dimension2, $notes, $location ) = $csv->fields();
+				next if $id =~ /\D/;
+				next if ! ( $id or $rfid );
 
 				if ( $rfid =~ /R(\d+)/ ) {
 					$rfid = $1;
+				}
+
+				if ( $rfid ) {
+					my @RFID = openprint::RFIDTag->find('id like'=>'%'.$rfid);
+					if ( @RFID==1 ) {
+						$rfid = $RFID[0]->id();
+					}
+				}
+
+				if ( $location =~ /^(\w\w)(\d\d)$/ ) {
+					$location = $1.$2.($2-1);
+				}
+				if ( $location and ! $Locations{$location} ) {
+					$variable{error} .= "Location $location for $id $rfid not in system.<br/>";	
 				}
 
 				my $ICE = new openprint::Inventory_Check_Entry();
@@ -2834,6 +2942,7 @@ $log->debug("Have skid not in check: " . $Skid->to_string() );
 					dimension1	=>	$dimension1,
 					dimension2	=>	$dimension2,
 					notes		=>	$notes,
+					( ( $location and $Locations{$location} ) ? ( location_id	=>	$Locations{$location}->id() ) : () ),
 				} );
 			} # end while line = <IO>
 		} # end if upload
@@ -2862,6 +2971,9 @@ sub _check_entry_actions {
 }
 
 sub _select_stock {
+}
+
+sub _check_lookup_item {
 }
 
 1;

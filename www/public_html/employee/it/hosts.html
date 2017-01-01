@@ -84,6 +84,12 @@ Please select a host to view/edit.<br/>
 				); ) ?>
 		</p>
 	</fieldset>
-	<div id="Results">Choose criteria and click Show Results</div>
+	<div id="Results">
+<? if ( map { $session{'/employee/it/hosts.html?'.$_} ? $_ : () } ( 'ip','hostname','mac' ) ) ?>
+<?include('/employee/it/_hosts.html')?>
+<? else ( map { $session{'/employee/it/hosts.html?'.$_} ? $_ : () } ( 'ip','hostname','mac' ) ) ?>
+ Choose criteria and click Show Results
+<? endif ( map { $session{'/employee/it/hosts.html?'.$_} ? $_ : () } ( 'ip','hostname','mac' ) ) ?>
+</div>
 </form>
 <script type="text/javascript">document.f1.ip.focus();</script>

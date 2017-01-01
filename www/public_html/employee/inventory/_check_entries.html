@@ -32,6 +32,26 @@
 	<th class="buttons"></th>
 	</tr>`;
 
+	$variable{location_dropdown} = openprint::Location->dropdown(order=>'parent_id NULLS FIRST, lower(name)', type=>'place') if ! exists $variable{location_dropdown};
+
+	$html .= '<tr id="tr">';
+	$html .= '<td class="Skid">'.input(type=>'cardinal',name=>'skid_id', id=>'skid_id', oninput=>'lookup_item(this);').'</td>';
+	$html .= '<td class="RFID">'.input(type=>'text', name=>'rfidtag_id', oninput=>'lookup_item(this);').'</td>';
+	$html .= '<td></td>';
+	$html .= '<td></td>';
+	$html .= '<td class="qty_lbs">'.input( type=>'positivefloat', id => 'qty_lbs', name	=> 'qty_lbs', oninput => "from_lbs(this,'','');" ) . '</td>';
+	#$html .= '<td class="qty_kgs">'.input( type=>'positivefloat', id => 'qty_kgs', name => 'qty_kgs', oninput => "from_kg(this,'','');" ) . '</td>';
+	#$html .= '<td class="qty_sheets">'.input( type=>'positivefloat', id => 'qty_sheets', name => 'qty_sheets', oninput => "from_sheets(this,'','');" ) . '</td>';
+	$html .= '<td></td>';
+	$html .= '<td class="Location">'.ssi::select( $variable{location_dropdown}, undef, { name=>'location_id', prepend=>['','select'] } ).'</td>';
+	$html .= '<td><textarea name="notes"></textarea></td>';
+	$html .= '<td></td>';
+
+	$html .= '<td class="buttons">' . join("\n",
+			button('Add', { onclick=>q`new Ajax.Updater( 'Entries', '_check_entries.html', { parameters:getValues( 'f2', [ 'rfidtag_id', 'skid_id', 'qty_lbs','qty_kgs', 'qty_sheets', 'location_id' ], { action: 'add', check_id: `.$$variable{Check}->id().q` } ) } );` } ),
+			) . '</td>';
+	$html .= '</tr><tr><td colspan="9" id="alert"></td></tr>';
+
 	foreach my $ICE ( @Contents ) {
 		if ( $$ICE{rfidtag_id} ne $ICE->rfidtag_id() ) {
 			$ICE->save();
@@ -116,27 +136,8 @@
 	} # end foreach ICE
 
 
-	$variable{location_dropdown} = openprint::Location->dropdown(order=>'parent_id NULLS FIRST, lower(name)', type=>'place') if ! exists $variable{location_dropdown};
 
-	$html .= '<tr id="tr">';
-	$html .= '<td class="Skid">'.input(type=>'cardinal',name=>'skid_id', id=>'skid_id').'</td>';
-	$html .= '<td class="RFID">'.input(type=>'text', name=>'rfidtag_id').'</td>';
-	$html .= '<td></td>';
-	$html .= '<td></td>';
-	$html .= '<td class="qty_lbs">'.input( type=>'positivefloat', id => 'qty_lbs', name	=> 'qty_lbs', oninput => "from_lbs(this,'','');" ) . '</td>';
-	#$html .= '<td class="qty_kgs">'.input( type=>'positivefloat', id => 'qty_kgs', name => 'qty_kgs', oninput => "from_kg(this,'','');" ) . '</td>';
-	#$html .= '<td class="qty_sheets">'.input( type=>'positivefloat', id => 'qty_sheets', name => 'qty_sheets', oninput => "from_sheets(this,'','');" ) . '</td>';
-	$html .= '<td></td>';
-	$html .= '<td class="Location">'.ssi::select( $variable{location_dropdown}, undef, { name=>'location_id', prepend=>['','select'] } ).'</td>';
-	$html .= '<td><textarea name="notes"></textarea></td>';
-	$html .= '<td></td>';
-
-	$html .= '<td class="buttons">' . join("\n",
-			button('Add', { onclick=>q`new Ajax.Updater( 'Entries', '_check_entries.html', { parameters:getValues( 'f2', [ 'rfidtag_id', 'skid_id', 'qty_lbs','qty_kgs', 'qty_sheets', 'location_id' ], { action: 'add', check_id: `.$$variable{Check}->id().q` } ) } );` } ),
-			) . '</td>';
-	$html .= '</tr>';
-
-	$html.='<tr class="totals"><td colspan="4"># of items in check: ' . scalar @Contents . '</td><td class="Quantity">'.Number::Format::format_number(int($total_weight)).'lbs</td><td></td><td></td><td></td><td></td></tr></table>';
+	$html.='<tr class="totals"><td colspan="4"># of items in check: ' . scalar @Contents . '</td><td class="Quantity">'.Number::Format::format_number(int($total_weight)).'lbs</td><td></td><td class="Location"></td><td class="notes"></td><td></td><td class="buttons"></td></tr></table>';
 	return $html;
 ) ?>
 

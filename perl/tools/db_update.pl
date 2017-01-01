@@ -3329,6 +3329,15 @@ if ( ! sets::isin( 'host_interfaces', \@tables ) ) {
 		$log->debug("Adding connected_to to host_interfaces");
 		$dbh->do('ALTER TABLE host_interfaces ADD connected_to macaddr') or die $openprint::dbh->errstr();
 	}
+	if ( ! exists $$data{monitor} ) {
+		$log->debug("Adding connected_to to host_interfaces");
+		$dbh->do('ALTER TABLE host_interfaces ADD monitor boolean not null default false') or die $openprint::dbh->errstr();
+		$dbh->do('UPDATE host_interfaces SET monitor=(SELECT monitored from hosts where id=host_id) WHERE host_id IN (SELECT id FROM hosts WHERE monitor=true)') or die $openprint::dbh->errstr();
+	}
+	if ( ! exists $$data{online} ) {
+		$log->debug("Adding online to host_interfaces");
+		$dbh->do('ALTER TABLE host_interfaces ADD online boolean') or die $openprint::dbh->errstr();
+	}
 }
 if ( ! sets::isin( 'host_info', \@tables ) ) {
 	$dbh->do( misc::load_file( $log, q{../openprint/sql/Host_Info.sql}) );
@@ -4039,6 +4048,13 @@ if ( sets::isin( 'sales_logs', \@tables ) ) {
 if ( ! sets::isin( 'inventory_checks', \@tables ) ) {
 	$log->debug("Creating Inventory Checks Tables");
 	$dbh->do( misc::load_file( $log, q{../openprint/sql/Inventory_Checks.sql}) ) or die $dbh->errstr();
+} else {
+	my $data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='inventory_checks'", 'column_name');
+	if ( ! exists $$data{location_id} ) {
+		$log->debug("Adding location_id to Invengtory_Checks");
+		$dbh->do( 'alter table inventory_checks add location_id INTEGER') or die $dbh->errstr();
+		$dbh->do( 'ater table inventory_checks add foreign key (location_id) REFERENCES Locations (id);') die $dbh->errstr();
+	}
 }
 if ( ! sets::isin( 'helpdesk', \@tables ) ) {
 	$log->debug("Creating HelpDesk Table");

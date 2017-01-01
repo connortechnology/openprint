@@ -9,7 +9,7 @@
         mode : "textareas",
         plugins: "paste",
         theme : "advanced",
-theme_advanced_buttons1 : "bold,italic,underline,strikethrough,|,justifyleft,justifycenter,justifyright,justifyfull,|,fontsizeselect,|,bullist,numlist,|,indent,outdent",
+theme_advanced_buttons1 : "bold,italic,underline,strikethrough,|,fontsizeselect,|,bullist,numlist,|,indent,outdent",
 theme_advanced_buttons2 : '',
 theme_advanced_buttons2 : '',
 cleanup : true
@@ -61,7 +61,7 @@ cleanup : true
 					<textarea id="description" name="description" rows="<? echo (count_lines($$variable{Host}->description()) ) ?>" onkeyup="textarea_resize(this);"><? echo ( $$variable{Host}->description() ) ?></textarea>
 				</li>
 				<li><label>Created On</label><? echo ( format_datetime( $$variable{Host}->created_on() ); ) ?></li>
-				<li><label>Updated On</label><? echo ( format_datetime( $$variable{Host}->created_on() ); ) ?></li>
+				<li><label>Updated On</label><? echo ( format_datetime( $$variable{Host}->updated_on() ); ) ?></li>
 			</ul>
 		</div>
 <? if ( $$variable{Host}->id() ) ?>
@@ -93,7 +93,11 @@ cleanup : true
 						$html .= button( 'Save', { onclick=>"if( check_inputs( f1 ) ){f1.elements['action'].value='Save';f1.submit();}" } );
 						$html .= button( 'Reset', { onclick=>'f1.reset();' } );
 						if ( $$variable{Host}->id() ) {
-							$html .= button( 'Delete', { onclick=>"if(confirm('Are you sure?')){f1.elements['action'].value='Delete';f1.submit();}" } ) if $$variable{Host}->id();
+							if ( $$variable{Host}->deleted() ) {
+							$html .= button( 'Destroy', { onclick=>"if(confirm('Are you sure?')){f1.elements['action'].value='Destroy';f1.submit();}" } );
+							} else {
+							$html .= button( 'Delete', { onclick=>"if(confirm('Are you sure?')){f1.elements['action'].value='Delete';f1.submit();}" } );
+							}
 						} # end if
 						$html .= button( 'Resolve', { onclick=>"f1.elements['action'].value='Resolve';f1.action='/employee/it/host.html';f1.submit();" } );
 						$html .= button( 'Ping', { onclick=>"f1.elements['action'].value='ping';f1.action='/employee/it/host.html';f1.submit();" } );
@@ -110,7 +114,7 @@ cleanup : true
 		<tr>
 			<th class="mac">Mac</th>
 			<th class="ip">IP Address</th>
-			<th class="dhcp">DHCP?</th>
+			<th class="options">Options</th>
 			<th class="comment">Comment</th>
 <? if ( $config{RADIUS_Support} eq 'Y' ) ?>
 	<th class="radius">RADIUS</th>
@@ -119,14 +123,8 @@ cleanup : true
 		</tr>
 <? echo (
 	my $html;
-	 if ( $config{RADIUS_Support} eq 'Y' ) {
-		$openprint::RADIUS_Check::dbh = sql::open_sql( $log,
-			database	=> $config{RADIUS_DB_Name},
-			driver		=> $config{RADIUS_DB_Driver},
-			host		=> $config{RADIUS_DB_Server},
-			login		=> $config{RADIUS_DB_Username},
-			password	=> $config{RADIUS_DB_Password},
-		);
+	if ( $config{RADIUS_Support} eq 'Y' ) {
+		openprint::RADIUS_Check->connect();
 		if ( ! $openprint::RADIUS_Check::dbh ) {
 			$html .= 'Unable to connect to RADIUS DB server.';	
 		} # end if
@@ -144,12 +142,13 @@ cleanup : true
 <tr id="hi-%1$d">
 	<td class="mac">%2$s</td>
 	<td class="ip">%3$s</td>
-	<td class="dhcp">%4$s</td>
-	<td class="comment" rowspan="2"><textarea name="comment-%1$s">%5$s</textarea></td>
+	<td class="object">monitor %4$s<br/>dhcp %5$s</td>
+	<td class="comment" rowspan="2"><textarea name="comment-%1$s">%6$s</textarea></td>
 `, 
 	$$Interface{id},
 	input( type=>'mac', name=>'mac-'.$$Interface{id}, value=>$$Interface{mac} ),
 	input( type=>'ip', name=>'ip-'.$$Interface{id}, value=>$Interface->ip() ),
+	checkboxes( 'monitor-'.$$Interface{id}, [ 1, '' ], $Interface->monitor() ),
 	checkboxes( 'dhcp-'.$$Interface{id}, [ 1, '' ], $Interface->dhcp() ),
 	$Interface->comment(),
 );
