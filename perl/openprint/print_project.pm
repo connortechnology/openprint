@@ -589,16 +589,20 @@ if ( 0 ) {
 	} # end if
 
 	my %statuses = sql::execute( $log, $dbh, 'SELECT lngserviceindex, strstatus FROM tbl_Project_Contents WHERE lngprojectindex=?', $project_index );
-
-	foreach my $ServiceType ( openprint::ServiceType->find( create_visible=>'Y') ) {
+$log->debug("Doing services");
+	foreach my $ServiceType ( openprint::ServiceType->find( create_visible=>1) ) {
+$log->debug("Looking at $$ServiceType{name}");
 		if ( $ServiceType->type() eq 'CustomService' ) {
 			$log->error("CustomService is visible in project create.");
 			next;
 		} # end if
 		if ( $param{'chkServices'.$ServiceType->name()} eq $ServiceType->name() ) {
 			if ( ! $$services{$ServiceType->name()} ) {	
+$log->debug("Adding $$ServiceType{name}");
 				push @{$$services{$ServiceType->name()}}, $Project->add_service($ServiceType->name());
 				$recalculate = 1;
+			} else {
+$log->debug("Already have $$ServiceType{name}");
 			} # end if
 		} else {
 			if ( $$services{$ServiceType->name()} ) {
