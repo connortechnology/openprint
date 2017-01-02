@@ -858,7 +858,7 @@ $openprint::log->debug("No template($$sig_specs{rdbTemplateType}) width_folds:$w
 						$$specs{"txtHorizontalQty-$form"} = 0;
 					} # end if
 				} # end if
-			} elsif ( ! $$specs{"chkOverride-$form"} ) {
+			} elsif ( ! $$specs{"chkOverrideQty-$form"} ) {
 				$openprint::log->debug("Not setting scores");
 				$$specs{"txtVerticalQty-$form"} = 0;
 				$$specs{"txtHorizontalQty-$form"} = 0;
