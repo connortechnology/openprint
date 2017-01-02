@@ -26,7 +26,7 @@ require openprint::Paper;
 require openprint::Estimating::Folding;
 require openprint::Equipment;
 
-use constant DEBUG => 0;
+use constant DEBUG => 1;
 
 my @variables = (
 	'txtQuantity',
@@ -809,54 +809,59 @@ sub get_scores {
 		if ( sets::isin( $$sig_specs{rdbTemplateType}, 'Portrait', 'Landscape' ) ) {
 # needs no folding
 		} elsif ( sets::isin( $$sig_specs{rdbTemplateType}, ['4PageSignatureFold','2PanelFold','BusCardLandscapeFold','BusCardPortraitFold']) ) {
-			$$specs{"txtVerticalQty-$$sig_specs{SignatureIndex}"} = 1;
-			$$specs{"txtHorizontalQty-$$sig_specs{SignatureIndex}"} = 0;
+			$$specs{"txtVerticalQty-$form"} = 1;
+			$$specs{"txtHorizontalQty-$form"} = 0;
 		} elsif ( sets::isin( $$sig_specs{rdbTemplateType}, '3PanelFold', '3PanelZFold' ) ) {
-			$$specs{"txtVerticalQty-$$sig_specs{SignatureIndex}"} = $width_folds;
-			$$specs{"txtHorizontalQty-$$sig_specs{SignatureIndex}"} = $height_folds;
+			$$specs{"txtVerticalQty-$form"} = $width_folds;
+			$$specs{"txtHorizontalQty-$form"} = $height_folds;
 		} elsif ( sets::isin( $$sig_specs{rdbTemplateType}, 'AccordianFold') ) {
-			$$specs{"txtVerticalQty-$$sig_specs{SignatureIndex}"} = $width_folds;
-			$$specs{"txtHorizontalQty-$$sig_specs{SignatureIndex}"} = $height_folds;
+			$$specs{"txtVerticalQty-$form"} = $width_folds;
+			$$specs{"txtHorizontalQty-$form"} = $height_folds;
 		} elsif ( sets::isin( $$sig_specs{rdbTemplateType}, '4PanelFold','4PanelZFold', 'AccordianFold4Panel') ) {
 			if ( $width_folds ) {
-				$$specs{"txtVerticalQty-$$sig_specs{SignatureIndex}"} = 3;
+				$$specs{"txtVerticalQty-$form"} = 3;
 			} else {
-				$$specs{"txtHorizontalQty-$$sig_specs{SignatureIndex}"} = 3;
+				$$specs{"txtHorizontalQty-$form"} = 3;
 			} # end if
 		} elsif ( sets::isin( $$sig_specs{rdbTemplateType}, '5PanelFold', '5PanelZFold') ) {
-			$$specs{"txtVerticalQty-$$sig_specs{SignatureIndex}"} = $width_folds;
-			$$specs{"txtHorizontalQty-$$sig_specs{SignatureIndex}"} = $height_folds;
+			$$specs{"txtVerticalQty-$form"} = $width_folds;
+			$$specs{"txtHorizontalQty-$form"} = $height_folds;
 		} elsif ( sets::isin( $$sig_specs{rdbTemplateType}, '6PanelFold', '6PanelZFold' ) ) {
-			$$specs{"txtVerticalQty-$$sig_specs{SignatureIndex}"} = $width_folds;
-			$$specs{"txtHorizontalQty-$$sig_specs{SignatureIndex}"} = $height_folds;
+			$$specs{"txtVerticalQty-$form"} = $width_folds;
+			$$specs{"txtHorizontalQty-$form"} = $height_folds;
 		} elsif ( sets::isin( $$sig_specs{rdbTemplateType}, 'SingleGateFold' ) ) {
-			$$specs{"txtVerticalQty-$$sig_specs{SignatureIndex}"} = 2;
-			$$specs{"txtHorizontalQty-$$sig_specs{SignatureIndex}"} = 0;
+			$$specs{"txtVerticalQty-$form"} = 2;
+			$$specs{"txtHorizontalQty-$form"} = 0;
 		} elsif ( sets::isin( $$sig_specs{rdbTemplateType}, 'DoubleGateFold' ) ) {
-			$$specs{"txtVerticalQty-$$sig_specs{SignatureIndex}"} = 3;
-			$$specs{"txtHorizontalQty-$$sig_specs{SignatureIndex}"} = 0;
+			$$specs{"txtVerticalQty-$form"} = 3;
+			$$specs{"txtHorizontalQty-$form"} = 0;
 		} elsif ( sets::isin( $$sig_specs{rdbTemplateType}, 'PF1Pocket', 'PF2Pocket' ) ) {
-			$$specs{"txtVerticalQty-$$sig_specs{SignatureIndex}"} = 2;
-			$$specs{"txtHorizontalQty-$$sig_specs{SignatureIndex}"} = 0;
+			$$specs{"txtVerticalQty-$form"} = 2;
+			$$specs{"txtHorizontalQty-$form"} = 0;
 		} elsif ( sets::isin( $$sig_specs{rdbTemplateType}, '2Panel2Pocket', '2Panel1Pocket' ) ) {
-			$$specs{"txtVerticalQty-$$sig_specs{SignatureIndex}"} = 1;
-			$$specs{"txtHorizontalQty-$$sig_specs{SignatureIndex}"} = 1;
+			$$specs{"txtVerticalQty-$form"} = 1;
+			$$specs{"txtHorizontalQty-$form"} = 1;
 		} else {
+$openprint::log->debug("No template($$sig_specs{rdbTemplateType}) width_folds:$width_folds height_folds:$height_folds") if DEBUG;
 			if ( $width_folds or $height_folds ) {
-			$$specs{"txtVerticalQty-$$sig_specs{SignatureIndex}"} = $width_folds;
-			$$specs{"txtHorizontalQty-$$sig_specs{SignatureIndex}"} = $height_folds;
+				$$specs{"txtVerticalQty-$form"} = $width_folds;
+				$$specs{"txtHorizontalQty-$form"} = $height_folds;
 			} elsif ( $$specs{txtFinalWidth} ) {
 				my $cols = $$sig_specs{txtWidth} / $$specs{txtFinalWidth};
 				my $mod_cols = $$sig_specs{txtWidth} % $$specs{txtFinalWidth};
 				if ( $cols and ! $mod_cols ) {
-					$$specs{"txtVerticalQty-$$sig_specs{SignatureIndex}"} = 2;
+					$$specs{"txtVerticalQty-$form"} = 2;
 				} elsif ( $$specs{txtFinalHeight} ) {
 					my $rows = $$sig_specs{txtHeight} / $$specs{txtFinalHeight};
 					my $mod_rows = $$sig_specs{txtHeight} % $$specs{txtFinalHeight};
 					if ( $rows and ! $mod_rows ) {
-						$$specs{"txtHorizontalQty-$$sig_specs{SignatureIndex}"} = 0;
+						$$specs{"txtHorizontalQty-$form"} = 0;
 					} # end if
 				} # end if
+			} elsif ( ! $$specs{"chkOverride-$form"} ) {
+				$openprint::log->debug("Not setting scores");
+				$$specs{"txtVerticalQty-$form"} = 0;
+				$$specs{"txtHorizontalQty-$form"} = 0;
 			} # end if
 
 		} # end if
