@@ -5921,7 +5921,7 @@ $openprint::log->debug("Area $area = $$Imposition{object_area} * Impressions($co
 					my $sheets_per_ink_unit = 750000;
 					my $p = Math::Round::nearest( 0.01, $material_price{Price} * ($area/$sheets_per_ink_unit) / $$project{print_sides} );
 					$ink_price{Total} += $p;
-					$price{'Ink breakdown'} .= sprintf(' %d%% %s sq feet * $%s%s / %d sheets per unit = $%.2f', $coverage*100, Number::Format::format_number($area), @material_price{'Price','units'}, $sheets_per_ink_unit, $p );
+					$price{'Ink breakdown'} .= sprintf(' %d%% %s sq inches * $%s%s / %d sheets per unit = $%.2f', $coverage*100, Number::Format::format_number($area), @material_price{'Price','units'}, $sheets_per_ink_unit, $p );
 				} elsif ( $material_price{units} eq 'per square inch' ) {
 					my $p = Math::Round::nearest( 0.01, $material_price{Price} * $area );
 					$ink_price{Total} += $p;
