@@ -934,6 +934,8 @@ $log->warn("unitprice: $$specs{txtUnitPrice1}");
 	return $$specs{Status};
 } # end sub calc
 
+
+# This should not alter the db
 sub create_calc {
 	my ( $log, $dbh, $variable, $project_index, $service_index, $specs ) = @_;
 
@@ -944,47 +946,21 @@ sub create_calc {
 	if ( ! $Project ) {
 		$Project = new openprint::Project();
 		$Project->currency_id( $openprint::session{Currency_id} );
-		$$variable{error} .= $Project->save();
-		if ( $$variable{error} ) {
-			return;
-		}
-		$Project->add_to_log( @openprint::session{'company_id','user_id'}, 'Created' );
 	} else {
 		$Project->currency_id( $openprint::session{Currency_id} ) if ! $Project->currency_id();
 	} # end if
 
-	# Why are we doing this?
-	my %services = $Project->get_services( );
-	foreach my $qty_index ( 1 .. 3 ) {
-		$$specs{"quantity$qty_index"} = openprint::Project->transform( "quantity$qty_index", $$specs{"quantity$qty_index"} );
-# Should not do this
-		if ( $$specs{'quantity'.$qty_index} != $Project->quantity($qty_index) ) {
-if ( 0 ) {
-			foreach my $service_id ( keys %services ) {
-				foreach my $s_id ( @{$services{$service_id}} ) {
-					openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $s_id, 'txtQuantity'.$qty_index, $$specs{'txtQuantity'.$qty_index} );
-				} # end foreach
-			} # end foreach
-} 
-			$Project->quantity( $qty_index, $$specs{'quantity'.$qty_index} );
-		} # end if
-	} # end foreach qty_index
-
-	my $ProjectType = openprint::ProjectType->find_one( name => $$specs{rdbProjectType} );
-	if ( $ProjectType and ( $Project->type_id() != $ProjectType->id() ) ) {
-		$Project->change_ProjectType( $ProjectType );
-		%services = $Project->get_services( );
-	} # end if ProjectType changed
-
-	foreach my $ServiceType ( openprint::ServiceType->find( create_visible => 'Y' ) ) {
-		if ( $services{$ServiceType->name()} ) {
+	my $ProjectType = openprint::ProjectType->find_one( name => $$specs{rdbProjectType} ) if $$specs{rdbProjectType};
+	if ( $ProjectType ) {
+		# add needed services
+		foreach my $ServiceType ( $ProjectType->required_ServiceTypes() ) {
 			$$specs{'chkServices'.$ServiceType->name()} = $ServiceType->name();
-		} else {
-#push @results, 'chkServices'.$ServiceType->name().'~';
-		} # end if
-	} # end foreach
+		} # end foreach
+		foreach my $ServiceType ( $ProjectType->blocked_ServiceTypes() ) {
+			$$specs{'chkServices'.$ServiceType->name()} = '';
+		} # end foreach
+	} # end if
 
-	$$specs{ProjectIndex} = $Project->id();
 	return $$specs{Status} = 'calculated';
 } # end sub create_calc
 

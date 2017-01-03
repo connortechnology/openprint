@@ -84,7 +84,7 @@ sub price {
     } # end if
 	my $self = $_[0];
     if ( ! defined $_[0]{price} ) {
-        $_[0]{price} = Math::Round::nearest( .01, $_[0]{cost} * ( 1+($_[0]{markup}/100) ) );
+        $_[0]{price} = Math::Round::nearest( .00001, $_[0]{cost} * ( 1+($_[0]{markup}/100) ) );
     } # end if
     return $_[0]{price};
 } # end sub price

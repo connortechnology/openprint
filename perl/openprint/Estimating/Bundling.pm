@@ -103,12 +103,13 @@ sub calc {
 	$$specs{bands_per_package} =~ s/[^\d\.]//g;
 	$$specs{cross_bands_per_package} =~ s/[^\d\.]//g;
 	my $makeReady = openprint::service::get_price( $ServiceType->name().'MakeReady', undef, undef );
+	my $Service = openprint::Service->find_one( name=>$ServiceType->name() );
 	my $minCharge = openprint::service::get_price( $ServiceType->name().'Minimum', undef, undef );
 	if ( ! $minCharge ) {
 		$log->error("No minimum charge let's do debug $$specs{ServiceType} " . $ServiceType->to_string() );
-		my $Service = openprint::Service->find_one( name=>$ServiceType->name().'Minimum' );
-		if ( $Service ) {
-			$log->error( "Service: " . $Service->to_string() );
+		my $Minimum = openprint::Service->find_one( name=>$ServiceType->name().'Minimum' );
+		if ( $Minimum ) {
+			$log->error( "Service: " . $Minimum->to_string() );
 		} else {
 			$log->error("No ServiceMinimum ");
 		} # end if
@@ -152,6 +153,8 @@ sub calc {
 		return $status = 'uncalculated';
 	} # end if
 
+	my $Cardboard = openprint::Material->find_one( name=>'CardboardBacking');
+
 	foreach my $qty_index ( $Project->quantity_indexes() ) {
 
 		$$specs{"Markup$qty_index"} =~ s/[^\d\.\-]//g;
@@ -184,7 +187,7 @@ $openprint::log->debug("Per package due to versions: $qty / $$sig_specs{Versions
 		my $price = 0;
 		my $mprice = 0;
 		my $unitPrice = 0;
-		my %ServicePrice = openprint::service::get_price_object( $ServiceType->name(), $qty, undef );
+		my %ServicePrice = $Service->get_price( $qty, undef ) if $Service;
 		if ( %ServicePrice ) {
 			if ( $ServicePrice{units} eq 'per m' ) {
 				$ServicePrice{MPrice} = $ServicePrice{Price};
@@ -207,7 +210,7 @@ $openprint::log->debug("Per package due to versions: $qty / $$sig_specs{Versions
 		$price = $unitPrice + $makeReady;
 
 		if ( $$specs{rdbCardboardBacking} eq 'Y' ) {
-			if ( my $Cardboard = openprint::Material->find_one( name=>'CardboardBacking') ) {
+			if ( $Cardboard ) {
 				my %CardboardPrice = $Cardboard->get_price( $package_qty, undef );
 				if ( $CardboardPrice{units} eq 'per square inch' ) {
 					$CardboardPrice{Total} = $CardboardPrice{Price} * $$printing_specs{txtFinalWidth} * $$printing_specs{txtFinalHeight};
