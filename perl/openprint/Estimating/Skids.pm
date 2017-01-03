@@ -293,18 +293,18 @@ $log->debug("Materials: " . map { $_->name() } @Materials ) if DEBUG;
 		my $price = $makeReady + $qty * $unitPrice;
 
 		$$specs{"txtPackageQuantity$qty_index"} = $qty;
-		$$specs{"txtUnitPrice$qty_index"} = sprintf( $openprint::config{UnitPriceFormat}, $unitPrice * (1+$Project->markup()/100) );
-		$$specs{"MPrice$qty_index"} = sprintf( $openprint::config{UnitPriceFormat}, $unitPrice * $m_qty * (1+$Project->markup()/100) );
+		$$specs{"txtUnitPrice$qty_index"} = sprintf( $openprint::config{UnitPriceFormat}, Math::Round::nearest( $openprint::config{UnitPriceRounding}, $unitPrice * (1+$Project->markup()/100) ) );
+		$$specs{"MPrice$qty_index"} = sprintf( $openprint::config{UnitPriceFormat}, Math::Round::nearest( $openprint::config{UnitPriceRounding}, $unitPrice * $m_qty * (1+$Project->markup()/100) ) );
 
 		if ( $$specs{'OverridePrice'.$qty_index} ne 'Y' ) {
 			
-			$$specs{"txtPrice$qty_index"} = sprintf( $openprint::config{ProjectMoneyFormat}, ( $$specs{"Markup$qty_index"} ? $price*(1+$$specs{"Markup$qty_index"}/100) : $price ) * (1+$Project->markup()/100) );
+			$$specs{"txtPrice$qty_index"} = sprintf( $openprint::config{ProjectMoneyFormat}, Math::Round::nearest( $openprint::config{ProjectPriceRounding}, ( $$specs{"Markup$qty_index"} ? $price*(1+$$specs{"Markup$qty_index"}/100) : $price ) * (1+$Project->markup()/100) ) );
 		} else {
 			$$specs{"txtPrice$qty_index"} = sprintf( $openprint::config{ProjectMoneyFormat}, $$specs{"txtPrice$qty_index"} );
 		} # end if
 	} # end foreach qty
-	$$specs{txtFinishedWeight} = sprintf( '%.4f', $$specs{txtFinishedWeight} );
-$log->debug("Status: $status");
+	$$specs{txtFinishedWeight} = sprintf( '%.4f', Math::Round::nearest( 0.0001, $$specs{txtFinishedWeight} ) );
+$log->debug("Status: $status $price " . Math::Round::nearest( $openprint::config{ProjectPriceRounding}, $price ) );
 	return $$specs{Status} = $status;
 } # end sub calc
 
