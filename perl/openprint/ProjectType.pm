@@ -130,7 +130,8 @@ sub blocked_services {
 } # end sub blocked_services
 
 sub blocked_ServiceTypes {
-	return openprint::ServiceType->find( id=>[ $_[0]->blocked_services() ] );
+	return openprint::ServiceType->find( id=>[ $_[0]->blocked_services() ] ) if $_[0]->blocked_services();
+	return ();
 } # end sub blocked_ServiceTypes
 
 sub delete {
