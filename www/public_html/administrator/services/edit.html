@@ -21,7 +21,7 @@
 <? endif ( @{$$variable{Equipment}} = openprint::Equipment->find( order=>'lower(strid)') ) ?>
 		<li> 
 			<label>Service</label>
-			<select name="ddmService" onchange="if(this.options[this.selectedIndex].value != ''){this.form.btnFunction.value='';this.form.submit();}">
+			<select name="service_id" onchange="if(this.options[this.selectedIndex].value != ''){this.form.btnFunction.value='';this.form.submit();}">
 				<option value="">Select a Service</option>
 				<? echo ( make_drop_down( [ map { $_->id(), $_->name() . ' : '.$_->description() } openprint::Service->find(
 							( $param{ddmSearchCategory} ? ( category_id=>$param{ddmSearchCategory} ) : () ),
@@ -58,7 +58,7 @@
 	</fieldset>
 </form>
 <form id="f2" name="f2" method="post" action="edit.html">
-	<input type="hidden" name="ddmService" value="<?echo($$variable{Service}->id())?>"/>
+	<input type="hidden" name="service_id" value="<?echo($$variable{Service}->id())?>"/>
 	<div class="leftColumn">
 	<fieldset><legend>Service Information</legend>
 		<ul>
