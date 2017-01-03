@@ -27,6 +27,7 @@ my @variables = (
 	'txtQuantity1', 'txtQuantity2', 'txtQuantity3',
 	'Markup1','Markup2','Markup3',
 	'txtPrice1', 'txtPrice2', 'txtPrice3',
+	'MPrice1', 'MPrice2', 'MPrice3',
 	'OverridePrice1', 'OverridePrice2', 'OverridePrice3',
 	'txtPackageQuantity1', 'txtPackageQuantity2', 'txtPackageQuantity3',
 	'rdbCardboardBacking',
@@ -170,26 +171,32 @@ $openprint::log->debug("Per package due to versions: $qty / $$sig_specs{Versions
 			$openprint::log->debug("No signatnures");
 		} # end if
 		my $package_qty = $$specs{txtItemsPerPackage} ? ceil( $qty/$$specs{txtItemsPerPackage} ) : 0;
+		my $m_qty = $$specs{txtItemsPerPackage} ? ceil( 1000/$$specs{txtItemsPerPackage} ) : 0;
 
 		$$specs{'hdnBreakdown'.$qty_index} .= sprintf('Minimum Charge: $%.2f<br/>', $minCharge );
 		$$specs{'hdnBreakdown'.$qty_index} .= sprintf('Makeready: $%.2f<br/>', $makeReady );
 		my $price = 0;
+		my $mprice = 0;
 		my $unitPrice = 0;
 		my %ServicePrice = openprint::service::get_price_object( $ServiceType->name(), $qty, undef );
 		if ( %ServicePrice ) {
 			if ( $ServicePrice{units} eq 'per m' ) {
+				$ServicePrice{MPrice} = $ServicePrice{Price};
 				$ServicePrice{Total} = $ServicePrice{Price} * $qty / 1000;
 				$$specs{'hdnBreakdown'.$qty_index} .= sprintf('ServicePrice %1$.2f%2$s * %4$d = $%3$.2f<br/>', @ServicePrice{'Price','units','Total'}, $qty );
 			} elsif ( $ServicePrice{units} eq 'each' ) {
+				$ServicePrice{MPrice} = $ServicePrice{Price} * 1000;
 				$ServicePrice{Total} = $ServicePrice{Price} * $qty;
 				$$specs{'hdnBreakdown'.$qty_index} .= sprintf('ServicePrice %1$.2f%2$s * %4$d = $%3$.2f<br/>', @ServicePrice{'Price','units','Total'}, $qty );
 			} elsif ( sets::isin( $ServicePrice{units}, [ 'per bundle', 'per package' ] ) ) {
 				$ServicePrice{Total} = $ServicePrice{Price} * $package_qty;
+				$ServicePrice{MPrice} = $ServicePrice{Price} * $m_qty;
 				$$specs{'hdnBreakdown'.$qty_index} .= sprintf('ServicePrice %1$.2f%2$s * %4$d = $%3$.2f<br/>', @ServicePrice{'Price','units','Total'}, $package_qty );
 			} else {
 				$$specs{'hdnBreakdown'.$qty_index} .= sprintf('No units set for %s (%s)<br/>', $ServiceType->name(), $ServicePrice{units} );
 			} # end if
 			$unitPrice += $ServicePrice{Total};
+			$mprice += $ServicePrice{MPrice};
 		} # end if
 		$price = $unitPrice + $makeReady;
 
@@ -198,62 +205,77 @@ $openprint::log->debug("Per package due to versions: $qty / $$sig_specs{Versions
 				my %CardboardPrice = $Cardboard->get_price( $package_qty, undef );
 				if ( $CardboardPrice{units} eq 'per square inch' ) {
 					$CardboardPrice{Total} = $CardboardPrice{Price} * $$printing_specs{txtFinalWidth} * $$printing_specs{txtFinalHeight};
+					$CardboardPrice{MPrice} = $CardboardPrice{Price} * $$printing_specs{txtFinalWidth} * $$printing_specs{txtFinalHeight} * $m_qty;
 				} elsif ( $CardboardPrice{units} eq 'per square foot' ) {
 					$CardboardPrice{Total} = $CardboardPrice{Price} * ($$printing_specs{txtFinalWidth} * $$printing_specs{txtFinalHeight}/144);
+					$CardboardPrice{MPrice} = $CardboardPrice{Price} * ($$printing_specs{txtFinalWidth} * $$printing_specs{txtFinalHeight}/144) * $m_qty;
 				} elsif ( $CardboardPrice{units} eq 'per pad' ) {
 					$CardboardPrice{Total} = $CardboardPrice{Price};
 				} # end if
 				$$specs{'hdnBreakdown'.$qty_index} .= sprintf('Cardboard Price: $%.2f %s * %s x %s = $%.2f per package = %.2f total<br/>',@CardboardPrice{'Price','units'}, @$printing_specs{'txtFinalWidth','txtFinalHeight'}, $CardboardPrice{Total}, $CardboardPrice{Total}*$package_qty );
 				$price += $CardboardPrice{Total} * $package_qty;
+				$mprice += $CardboardPrice{MPrice};
 			} # end if
 		} # end if
 		if ( @Materials ) {
 			if ( $Material ) {
 				my %MaterialPrice = $Material->get_price( $$specs{bands_per_package} );
 
-				my $material_qty = $package_qty;
-				$material_qty *= $$specs{bands_per_package};
+				my $material_qty = $package_qty * $$specs{bands_per_package};
+				my $m_material_qty = $m_qty * $$specs{bands_per_package};
 # if $$specs{bands_per_package};
 				if ( $MaterialPrice{units} eq 'per m' ) {
 					%MaterialPrice = $Material->get_price( $package_qty );
 					$MaterialPrice{Total} = $MaterialPrice{Price} * $material_qty / 1000;
+					$MaterialPrice{MPrice} = $MaterialPrice{Price} * $m_material_qty / 1000;
 				} elsif ( $MaterialPrice{units} eq 'each' ) {
 					$MaterialPrice{Total} = $MaterialPrice{Price} * $material_qty;
+					$MaterialPrice{MPrice} = $MaterialPrice{Price} * $m_material_qty;
 				} elsif ( $MaterialPrice{units} eq 'per inch' ) {
 					%MaterialPrice = $Material->get_price( $package_qty );
 					$MaterialPrice{Total} = $MaterialPrice{Price} * $$printing_specs{txtFinalWidth} * $$printing_specs{txtFinalHeight} * $material_qty;
+					$MaterialPrice{MPrice} = $MaterialPrice{Price} * $$printing_specs{txtFinalWidth} * $$printing_specs{txtFinalHeight} * $m_material_qty;
 				} elsif ( $MaterialPrice{units} eq 'per foot' ) {
 					%MaterialPrice = $Material->get_price( $package_qty );
 					$MaterialPrice{Total} = $MaterialPrice{Price} * $$printing_specs{txtFinalWidth} * $$printing_specs{txtFinalHeight} * $material_qty / 144;
+					$MaterialPrice{MPrice} = $MaterialPrice{Price} * $$printing_specs{txtFinalWidth} * $$printing_specs{txtFinalHeight} * $m_material_qty / 144;
 				} elsif ( $MaterialPrice{units} eq 'per bundle' ) {
 					$MaterialPrice{Total} = $MaterialPrice{Price} * $package_qty;
+					$MaterialPrice{MPrice} = $MaterialPrice{Price} * $m_qty;
 				} else {
 					$openprint::log->error("Uknown units on $$Material{name} $$Material{description}");
 				} # end if
 				$price += $MaterialPrice{Total};
 				$unitPrice += $MaterialPrice{Total};
+				$mprice += $MaterialPrice{MPrice};
 				$$specs{'hdnBreakdown'.$qty_index} .= sprintf('Material Price: $%1$.2f%2$s * %4$d packages * %5$d per package = $%3$.2f<br/>',@MaterialPrice{'Price','units','Total'}, $package_qty, $$specs{bands_per_package} );
 			} # end if
 			if ( $$specs{cross_bands_per_package} and $CrossMaterial ) {
 				my %MaterialPrice = $CrossMaterial->get_price( $package_qty );
 
-				my $material_qty = $package_qty;
-				$material_qty *= $$specs{cross_bands_per_package};
+				my $material_qty = $package_qty * $$specs{cross_bands_per_package};
+				my $m_material_qty = $m_qty * $$specs{cross_bands_per_package};
 # if $$specs{bands_per_package};
 				if ( $MaterialPrice{units} eq 'per m' ) {
 					$MaterialPrice{Total} = $MaterialPrice{Price} * $material_qty / 1000;
+					$MaterialPrice{MPrice} = $MaterialPrice{Price} * $m_material_qty / 1000;
 				} elsif ( $MaterialPrice{units} eq 'each' ) {
 					$MaterialPrice{Total} = $MaterialPrice{Price} * $material_qty;
+					$MaterialPrice{MPrice} = $MaterialPrice{Price} * $m_material_qty;
 				} elsif ( $MaterialPrice{units} eq 'per inch' ) {
 					$MaterialPrice{Total} = $MaterialPrice{Price} * $$printing_specs{txtFinalWidth} * $$printing_specs{txtFinalHeight} * $material_qty;
+					$MaterialPrice{MPrice} = $MaterialPrice{Price} * $$printing_specs{txtFinalWidth} * $$printing_specs{txtFinalHeight} * $m_material_qty;
 				} elsif ( $MaterialPrice{units} eq 'per foot' ) {
 					$MaterialPrice{Total} = $MaterialPrice{Price} * $$printing_specs{txtFinalWidth} * $$printing_specs{txtFinalHeight} * $material_qty / 144;
+					$MaterialPrice{MPrice} = $MaterialPrice{Price} * $$printing_specs{txtFinalWidth} * $$printing_specs{txtFinalHeight} * $m_material_qty / 144;
 				} elsif ( $MaterialPrice{units} eq 'per bundle' ) {
 					$MaterialPrice{Total} = $MaterialPrice{Price} * $package_qty;
+					$MaterialPrice{MPrice} = $MaterialPrice{Price} * $m_qty;
 				} else {
 					$openprint::log->error("Uknown units on $$CrossMaterial{name} $$CrossMaterial{description}");
 				} # end if
 				$price += $MaterialPrice{Total};
+				$mprice += $MaterialPrice{MPrice};
 				$unitPrice += $MaterialPrice{Total};
 				$$specs{'hdnBreakdown'.$qty_index} .= sprintf('Cross Material Price: $%1$.2f%2$s * %4$d packages * %5$d per package = $%3$.2f<br/>',@MaterialPrice{'Price','units','Total'}, $package_qty, $$specs{cross_bands_per_package} );
 			} # end if
@@ -268,6 +290,7 @@ $openprint::log->debug("Per package due to versions: $qty / $$sig_specs{Versions
 			$$specs{"txtPrice$qty_index"} = sprintf( $openprint::config{ProjectMoneyFormat}, $$specs{"txtPrice$qty_index"} );
 		} # endif
 		$$specs{"txtUnitPrice$qty_index"} = sprintf( $openprint::config{UnitPriceFormat}, ( $unitPrice/$qty ) * (1+$Project->markup()/100) );
+		$$specs{"MPrice$qty_index"} = sprintf( $openprint::config{UnitPriceFormat}, ( $mprice ) * (1+$Project->markup()/100) );
 	} # end foreach
 
 	return $$specs{Status} = $status;

@@ -1384,9 +1384,8 @@ sub unlock {
 	} # end if
 	if ( $_[0]{ac} == 1 ) {
 		sql::end_transaction( $openprint::dbh, $_[0]{ac} );
-	} else {
-		$_[0]{ac} -= 1;
 	} # end if
+	$_[0]{ac} -= 1;
 } # end sub unlock
 
 sub Keywords {

@@ -343,14 +343,14 @@ sub inventory_report {
 					$Paper->gsm(),
 					$$Skid{id},
 					$Skid->RFIDTag()->id_short(),
-					$$Skid{received_on},
-					$$Skid{created_on},
-					$$Skid{updated_on},
+					ssi::format_datetime( $$Skid{received_on} ),
+					ssi::format_datetime( $$Skid{created_on} ),
+					ssi::format_datetime( $$Skid{updated_on} ),
 					$Skid->Location()->name(),
 					$Paper->type() eq 'Sheet' ? $C->quantity() : '',
 					$weight,
 					$C->condition(),
-					$Skid->updated_on(),
+					ssi::format_datetime( $Skid->updated_on() ),#FIXME
 					1*$C->cost(),
 					1*$C->value(),
 					);
