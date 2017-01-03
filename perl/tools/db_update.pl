@@ -1510,6 +1510,11 @@ if ( sets::isin( 'services', \@tables ) ) {
 	if ( ! exists $$data{activity_code} ) {
 		$dbh->do('ALTER TABLE Services ADD activity_code TEXT');
 	} # end if
+	if ( ! exists $$data{servicetype_id} ) {
+		$log->debug("Adding servicetype_id to Services");
+		$dbh->do('ALTER TABLE Services ADD servicetype_id  INTEGER');
+		$dbh->do('ALTER TABLE Services ADD FOREIGN KEY (servicetype_id) REFERENCES service_types (id)');
+	} # end if
 } else {
 	$dbh->do( misc::load_file( $log, q{../openprint/sql/Services.sql}) );
 } # end if

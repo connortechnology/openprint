@@ -5,7 +5,6 @@ use Carp qw( cluck );
 
 require openprint::Equipment;
 require openprint::pricing;
-require openprint::logs;
 require openprint::Project_Service;
 
 use constant Debug => 0;
@@ -325,15 +324,20 @@ sub auto_calculate {
 
 	foreach my $service_name ( 'Scoring', 'Perforating', 'Counting', 'Imposition', 'Stripping' ) {
 		next if $$services{$service_name};
-		eval 'require openprint::Estimating::'.$service_name.';';
-		$openprint::log->error("Error requiring opepnrint::Estimating::$service_name: $@") if $@;
-		my $neccessary = eval 'openprint::Estimating::'.$service_name.'::neccessary( $Project )';
-		$openprint::log->error("Error opepnrint::Estimating::$service_name::neccessary $@") if $@;
+		eval {
 
-		if ( $neccessary and ! $$services{$service_name} ) {
-			$_ = $Project->add_service($service_name);
-			push @{$$services{$service_name}}, $_ if $_ and !$$services{$service_name};
-		} # end if
+			require "openprint/Estimating/$service_name";
+			if ( my $function = "openprint::Estimating::$service_name"->can('neccessary') ) {
+				my $neccessary = $function->( $Project );
+
+				if ( $neccessary and ! $$services{$service_name} ) {
+					$_ = $Project->add_service($service_name);
+					push @{$$services{$service_name}}, $_ if $_ and !$$services{$service_name};
+				} # end if
+			} else {
+				$openprint::log->error("No neccessary function in openprint::Estimating::$service_name");
+			}
+		}; # end if eval
 	} # end foreach service_name;
 
 

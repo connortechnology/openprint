@@ -38,8 +38,8 @@
 		</ul>
 		<p class="buttons">
 			<? echo ( join("\n",
-				button( 'Prev1', { onclick=>"f1.btnFunction.value='&lt;&lt;';fmCheck(f1);", text=>'<<' } ),
-				button( 'Next1', { onclick=>"f1.btnFunction.value='>>';fmCheck(f1);", text=>'>>' } ),
+				button( 'Prev1', { onclick=>"f1.btnFunction.value='<<';fmCheck(f1);", text=>'&lt;&lt;' } ),
+				button( 'Next1', { onclick=>"f1.btnFunction.value='>>';fmCheck(f1);", text=>'&gt;&gt;' } ),
 				button( 'New1', { href=>'/administrator/materials/edit.html', text=>'New' } ),
 				button( 'Save1', { onclick=>"f1.btnFunction.value='Save';f1.submit();", text=>'Save' } ),
 				( $$variable{Material}->id() ? (

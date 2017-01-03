@@ -18,7 +18,7 @@ package openprint::Estimating::Stitching;
 use strict;
 #use warnings;
 
-use constant DEBUG => 0;
+use constant DEBUG => 1;
 
 require openprint::Equipment;
 require openprint::service;
@@ -802,7 +802,7 @@ sub equipment_fits {
         } # end if
 
 	} else {
-		$openprint::log->warn("No calliper in Stitching::get_equipment");
+		$openprint::log->error("No calliper in Stitching::get_equipment");
 	} # end if
 	return;
 }

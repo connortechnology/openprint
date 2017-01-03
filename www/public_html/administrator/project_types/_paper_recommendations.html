@@ -18,6 +18,7 @@
 			'project_type_id any' => $$variable{'ProjectType'}->id(),
 			order	=>'brand,finish,colour,weight,width,height' );
 		foreach my $Paper ( @recommended_papers ) {
+			next if ! $Paper->Prices();
 			$html .= '<tr><td>'.$Paper->link_to().'</td><td class="checkbox"><input type="checkbox" name="Paper'.$Paper->id().'" value="'.$Paper->id().'" checked="checked" /></td></tr>';
 
 		} # end foreach
@@ -28,7 +29,8 @@
 			'project_type_id not any' => $$variable{'ProjectType'}->id(),
 			order	=> 'brand,finish,colour,weight,width,height');
 		foreach my $Paper ( @all_papers ) {
-			next if $Paper->recommendations();
+			#next if $Paper->recommendations();
+			next if ! $Paper->Prices();
 			$html .= '<tr><td>'.$Paper->link_to().'</td><td class="checkbox"><input type="checkbox" name="Paper'.$Paper->id().'" value="'.$Paper->id().'"/></td></tr>';
 		} # end foreach
 	}

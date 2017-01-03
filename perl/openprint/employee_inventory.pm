@@ -289,13 +289,13 @@ sub inventory_report {
 
 	my @skid_ids = map { $$_{id} } @Skids;
 	my %SkidContents;
-	foreach my $SC ( openprint::SkidContent->find( skid_id => \@skid_ids ) ) {
-		push @{$SkidContents{$$SC{skid_id}}}, $SC;
-		$SC->Skid()->Contents( $SkidContents{$$SC{skid_id}} );
-	} # end foreach SC
+	#foreach my $SC ( openprint::SkidContent->find( skid_id => \@skid_ids ) ) {
+		#push @{$SkidContents{$$SC{skid_id}}}, $SC;
+	#} # end foreach SC
 
 	my $total_value = 0;
 	foreach my $Skid ( @Skids ) {
+		$Skid->Contents( $SkidContents{$$Skid{id}} );
 		if ( ! $$Skid{type} ) {
 			$Skid->save({type=>undef});
 		}
@@ -358,7 +358,7 @@ sub inventory_report {
 		} # end foreach C
 	} # end foreach Skid
 	my $date = Date::Format::time2str('%Y-%m-%d %H:%M', time );
-	push @data, ( 'Report generated',$date,'Count:',$count,undef,undef,undef,undef, undef,undef,undef, undef, undef, undef, undef, undef, undef, undef, undef, undef,undef, 'Total Weight (lbs):', $total_weight, undef, $total_value );
+	push @data, ( 'Report generated',$date,'Count:',$count,undef,undef,undef,undef, undef,undef,undef, undef, undef, undef, undef, undef, undef, undef, undef, undef,undef, 'Total Weight (lbs):', $total_weight, undef, undef, undef,$total_value );
 	return ( \@header, \@data );
 } # end sub inventory_report
 

@@ -54,6 +54,7 @@ sub edit {
 			_specifications()
 		} # end if
 		$param{btnFunction} = '';
+		$variable{ExternalRedirect} = '/product/edit.html?product_id='.$Product->id();
 	} elsif ( $param{btnFunction} eq 'Copy' ) {
 		my $NewProduct = $Product->copy();
 		$NewProduct->save();
@@ -174,44 +175,23 @@ sub _prices {
 		my $ac = sql::start_transaction( $dbh );
 		$dbh->do( 'LOCK TABLE Product_Prices IN EXCLUSIVE MODE' ) or $log->error( DBI->errstr );
 		foreach my $Pricelist ( openprint::Pricelist->find() ) {
-			foreach my $Price ( openprint::ProductPrice->find( 
-						product_id => $$Product{id}, pricelist_id => $$Pricelist{id} ) ) {
-				if ( $param{'chk-'.$Price->id()} ) {
-					my %changes = (
-							min				=>	$param{'min-'.$Price->id()},
-							max				=>	$param{'max-'.$Price->id()},
-							units			=>	$param{'units-'.$Price->id()},
-							cost			=>	$param{'cost-'.$Price->id()},
-							markup			=>	$param{'markup-'.$Price->id()},
-							price			=>	$param{'price-'.$Price->id()},
-							discountable	=>	$param{'discount-'.$Price->id()},
-					);
-					my @price_changes = $Price->changes(\%changes);
+			foreach my $Price ( openprint::ProductPrice->find( product_id => $$Product{id}, pricelist_id => $$Pricelist{id} ) ) {
+				my %changes = (
+						min				=>	$param{'min-'.$Price->id()},
+						max				=>	$param{'max-'.$Price->id()},
+						units			=>	$param{'units-'.$Price->id()},
+						cost			=>	$param{'cost-'.$Price->id()},
+						markup			=>	$param{'markup-'.$Price->id()},
+						price			=>	$param{'price-'.$Price->id()},
+						discountable	=>	$param{'discount-'.$Price->id()},
+				);
+				my @price_changes = $Price->changes(\%changes);
 $log->debug("Price changes (@price_changes)" . @price_changes );
-					if ( @price_changes ) {
-						$variable{error} .= $Price->save(\%changes);
-						push @changes, 'price for pricelist ' . $$Pricelist{name} . ' changed: ' . join(',',@price_changes);
-					} # end if
-				} else {
-					push @changes, 'price deleted for pricelist ' . $$Pricelist{name} . $Price->to_string();
-					$Price->delete();
+				if ( @price_changes ) {
+					$variable{error} .= $Price->save(\%changes);
+					push @changes, 'price for pricelist ' . $$Pricelist{name} . ' changed: ' . join(',',@price_changes);
 				} # end if
 			} # end foreach Price
-			if ( $param{'chk-'.$Pricelist->id().'-New'} ) {
-				my $Price = new openprint::ProductPrice();
-				$variable{error} .= $Price->save({
-						'product_id'	=>	$Product->id(),
-						'pricelist_id'	=>	$Pricelist->id(),
-						'min'			=>	$param{'min-'.$Pricelist->id().'-New'},
-						'max'			=>	$param{'max-'.$Pricelist->id().'-New'},
-						'units'			=>	$param{'units-'.$Pricelist->id().'-New'},
-						'cost'			=>	$param{'cost-'.$Pricelist->id().'-New'},
-						'markup'		=>	$param{'markup-'.$Pricelist->id().'-New'},
-						'price'			=>	$param{'price-'.$Pricelist->id().'-New'},
-						'discountable'	=>	$param{'discount-'.$Pricelist->id().'-New'},
-						});
-				push @changes, 'price add for pricelist ' . $$Pricelist{name} . $Price->to_string();
-			} # end if
 		} # end foreach Pricelist
 		sql::end_transaction( $dbh, $ac );
 		(new openprint::Log())->save({Object=>$Product, action=>'Edit', note=>join('<br/>', @changes)}) if @changes;
@@ -256,5 +236,28 @@ sub _search {
 				'user_id', 'category_id', 'country_id', 'state_id', 'city_id' ) );
 	} # end if
 } # end sub _history
+
+sub _prices_table_body {
+	my $Price = new openprint::ProductPrice( $param{price_id} );
+
+	my $Product = $variable{Product} = openprint::Product->find_one(id=>$param{product_id} );
+    $variable{Pricelist} =$param{pricelist_id} ?  openprint::Pricelist->find_one(id=>$param{pricelist_id} ) : $Price->Pricelist();
+
+    #$variable{company_ids} = [ map { $_->id(), $_->name() } openprint::Company->find( supplier=>'Y', order=>'lower(name)' ) ];
+    if ( $param{action} eq 'add' ) {
+        my $Price = new openprint::ProductPrice();
+        $variable{error} .= $Price->save({ pricelist_id=>$param{pricelist_id}, product_id=>$param{product_id} });
+        (new openprint::Log())->save({Object=>$Product, action=>'Add Price', note=>$Price->id_string() }) if ! $variable{error};
+	
+    } elsif ( $param{action} eq 'copy' ) {
+        $Price = $Price->copy();
+        $variable{error} .= $Price->save();
+        (new openprint::Log())->save({Object=>$Product, action=>'Copy Price', note=>$Price->id_string() }) if ! $variable{error};
+    } elsif ( $param{action} eq 'delete' ) {
+        $variable{error} .= $Price->delete();
+        (new openprint::Log())->save({Object=>$Product, action=>'Delete Price', note=>$Price->id_string() }) if ! $variable{error};
+    } # end if
+}
+
 1;
 __END__

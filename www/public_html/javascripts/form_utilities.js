@@ -519,6 +519,10 @@ function clearForm(form) {
 	} // end for
 } // end function clearForm(form)
 
+function update_changed( element ) {
+	if ( element_changed(element) ) {
+	}
+}
 function element_changed( element ) {
 	if ( ! element ) {
 //alert('Null element passed to element_changed');

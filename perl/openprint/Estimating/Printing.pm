@@ -23,9 +23,11 @@ use Carp qw( cluck );
 use strict;
 use Data::Dumper;
 package openprint::Estimating::Printing;
+use vars qw( %ServicePrices );
+
 my $threading = 0;
 use threads;
-use constant DEBUG => 0;
+use constant DEBUG => 1;
 use constant DEBUG_PLATES => 0;
 use constant DEBUG_VERSIONS => 0;
 use constant DEBUG_PRESSES => 0;
@@ -38,7 +40,56 @@ use constant DEBUG_STOCK => 0;
 use constant COMPARISON_LOG => 0;
 use constant USE_SUBSIG => 0;
 use constant USE_PRICE_CACHE => 1;
-use constant DEBUG_IMPOSITIONS => 0;
+use constant DEBUG_IMPOSITIONS => 1;
+
+%ServicePrices = (
+	Roll2Sheet => {
+		units	=> [ 'per m' ],
+		},
+	SuppliedSheet	=>	 {
+		units	=> [ 'per 100lbs', 'per sheet', 'per m' ],
+		},
+	SuppliedRoll	=>	 {
+		units	=> [ 'per 100lbs', 'per sheet', 'per m' ],
+		},
+	Film	=> { },
+	'Version Setup'	=> { units=> [ 'each', 'total' ],
+		},
+	'BlanketCut'	=> { },
+	'Washup'		=> { units=> [ 'each' ] },
+	'WebSetup'	=> { units => [ ] },
+	'PerfectingSetup'	=> { units => [ ] },
+	'Work & TurnSetup'	=> { units => [ ] },
+	'Work & TumbleSetup'	=>	{ units=> [] },
+	'Sheet WorkSetup'		=>	{ units=> [] },
+	'PressRunChargeMinimum'	=>	{ units=> [] },
+	'1ColourImpression'		=>	{ units=> [ 'per impression', 'per hour' ] },
+	'2ColourImpression'		=>	{ units=> [ 'per impression', 'per hour' ] },
+	'3ColourImpression'		=>	{ units=> [ 'per impression', 'per hour' ] },
+	'4ColourImpression'		=>	{ units=> [ 'per impression', 'per hour' ] },
+	'5ColourImpression'		=>	{ units=> [ 'per impression', 'per hour' ] },
+	'6ColourImpression'		=>	{ units=> [ 'per impression', 'per hour' ] },
+	'7ColourImpression'		=>	{ units=> [ 'per impression', 'per hour' ] },
+	'8ColourImpression'		=>	{ units=> [ 'per impression', 'per hour' ] },
+	'9ColourImpression'		=>	{ units=> [ 'per impression', 'per hour' ] },
+	'10ColourImpression'		=>	{ units=> [ 'per impression', 'per hour' ] },
+	'PressUnitMakeReady'		=>	{ units => [ 'stock calliper - per plate', 'per job', 'per form', 'total', 'per side'] },
+	'PressUnitMakeReadyWeb'		=>	{ units => [ 'stock calliper - per plate', 'per job', 'per form', 'total', 'per side'] },
+	'PressUnitMakeReadyPerfecting'		=>	{ units => [ 'stock calliper - per plate', 'per job', 'per form', 'total', 'per side'] },
+	'PressUnitMakeReadyWork & Turn'		=>	{ units => [ 'stock calliper - per plate', 'per job', 'per form', 'total', 'per side'] },
+	'PressUnitMakeReadyWork & Tumble'		=>	{ units => [ 'stock calliper - per plate', 'per job', 'per form', 'total', 'per side'] },
+	'PressUnitMakeReadySheet Work'		=>	{ units => [ 'stock calliper - per plate', 'per job', 'per form', 'total', 'per side'] },
+	'PlateMakeReady'					=>	{ units => [ 'per hour', 'per plate' ] },
+	# Re-enable when someone uses
+	#'PlateMakeReadyWeb'					=>	{ units => [ 'per hour', 'per plate' ] },
+	#'PlateMakeReadyWeb1Sided'					=>	{ units => [ 'per hour', 'per plate' ] },
+	#'PlateMakeReadyWeb2Sided'					=>	{ units => [ 'per hour', 'per plate' ] },
+	#'PlateMakeReadyPerfecting'					=>	{ units => [ 'per hour', 'per plate' ] },
+	#'PlateMakeReadyWork & Turn'					=>	{ units => [ 'per hour', 'per plate' ] },
+	#'PlateMakeReadyWork & Tumble'					=>	{ units => [ 'per hour', 'per plate' ] },
+	#'PlateMakeReadySheet Work'					=>	{ units => [ 'per hour', 'per plate' ] },
+);
+
 
 my $master_time;
 my %special_colours;
@@ -4495,16 +4546,19 @@ if ( DEBUG_PLATES ) {
 						} # end if
 					} # end if
 # Add Roll2SheetRun
-					if ( my %R2SPrice = openprint::service::get_price_object( 'Roll2Sheet', $$price{Impressions}, $Press ) ) {
+					my $Roll2SheetService = $Services{Roll2Sheet};
+					my %R2SPrice;
+
+					if ( $Roll2SheetService and ( %R2SPrice = $Roll2SheetService->get_price( $$price{Impressions}, $Press ) ) ) {
 						if ( $R2SPrice{units} eq 'per m' ) {
 							$$price{Roll2SheetRunCharge} = Math::Round::nearest(0.01,$R2SPrice{Price} * $$price{Impressions}/1000);
 						} else {
-							$openprint::log->error("Unknown units on Woll2SheetRunCharge ( $R2SPrice{units} for $$Press{strid}");
+							$openprint::log->error("Unknown units on Roll2SheetRunCharge ( $R2SPrice{units} for $$Press{strid}");
 						} # end if
 						$$price{Roll2SheetUnits} = $R2SPrice{units};
 						$$price{Roll2SheetRunCost} = $R2SPrice{Price};
 						$$price{'Comparison Cost'} += $$price{Roll2SheetRunCharge};
-						$$price{'Comparison Log'} .= 'rol2sheetrun ' . $$price{Roll2SheetRunCharge} . '<br/>' if COMPARISON_LOG;
+						$$price{'Comparison Log'} .= 'roll2sheetrun ' . $$price{Roll2SheetRunCharge} . '<br/>' if COMPARISON_LOG;
 						$$price{'Total Cost'} += $$price{Roll2SheetRunCharge};
 						$$price{'Run Total'} += $$price{Roll2SheetRunCharge};
 					} # end if Has Roll2Sheet Price
@@ -5139,7 +5193,8 @@ sub calc_price {
 				$$Imposition{versions} = $$specs{"UnspecifiedVersions$qty_index"};
 			} # end if
 		} # end if
-		my %VersionCharge = openprint::service::get_price_object( 'Version Setup', $$Imposition{versions} );
+		my $VersionService = $Services{'Version Setup'};
+		my %VersionCharge = $VersionService->get_price( $$Imposition{versions} ) if $VersionService;
 		if ( %VersionCharge ) {
 			if ( $VersionCharge{units} eq 'each' ) {
 				$VersionCharge{Total} = $VersionCharge{Price}*$$Imposition{versions};
@@ -5921,7 +5976,7 @@ $openprint::log->debug("Area $area = $$Imposition{object_area} * Impressions($co
 					my $sheets_per_ink_unit = 750000;
 					my $p = Math::Round::nearest( 0.01, $material_price{Price} * ($area/$sheets_per_ink_unit) / $$project{print_sides} );
 					$ink_price{Total} += $p;
-					$price{'Ink breakdown'} .= sprintf(' %d%% %s sq feet * $%s%s / %d sheets per unit = $%.2f', $coverage*100, Number::Format::format_number($area), @material_price{'Price','units'}, $sheets_per_ink_unit, $p );
+					$price{'Ink breakdown'} .= sprintf(' %d%% %s sq inches * $%s%s / %d sheets per unit = $%.2f', $coverage*100, Number::Format::format_number($area), @material_price{'Price','units'}, $sheets_per_ink_unit, $p );
 				} elsif ( $material_price{units} eq 'per square inch' ) {
 					my $p = Math::Round::nearest( 0.01, $material_price{Price} * $area );
 					$ink_price{Total} += $p;
@@ -6074,7 +6129,7 @@ sub select_presses {
 	my $ProjectType = $Project->Type();
 
 	if ( ! %Presses ) {
-		$openprint::log->warn("Nothing in presses");
+		$openprint::log->error("Nothing in presses");
 	}
 	foreach my $Press ( values %Presses ) {
 $openprint::log->debug("COnsidering $$Press{strid}") if DEBUG_PRESSES;
@@ -6231,6 +6286,10 @@ $openprint::log->debug("COnsidering $$Press{strid}") if DEBUG_PRESSES;
 				$results{$press_id} = "Too many colours for web.";
 				next;
 			} # end if
+		} elsif ( $side_one_colours and @$side_two_colours and ($printing_type ne 'Digital') and $Press->specification('Runstyles') eq 'Sheet Work' and $Press->specification('Multipass', $Paper->gsm()) ne 'Y' ) {
+			# Something like an inkjet that can only do 1 sided
+			$results{$press_id} = "Can only do 1 sided jobs.";
+			next;
 		} # end if
 
 		if ( $varnish ) {
@@ -6927,11 +6986,8 @@ if ( 0 ) {
 			} # end if
 		} # end if
 		if ( $Project->Type()->name() eq 'PresentationFolders' ) {
-			$string .= '<br/>' . $$specs{rdbPanels} . ' ' . ( $$specs{rdbPocketSize} ? $$specs{rdbPocketSize} . '&quot; ' : '' ) . ' panels on ' . join( ',', 
-				( $$specs{chkPocketLeft} ? ' left ' : () ),
-				( $$specs{chkPocketCenter} ? ' center ' : () ),
-				( $$specs{chkPocketRight} ? ' right ' : () ),
-			);
+			my @pockets = map { $$specs{"chkPocket$_"} ? lc $_ : () } ( 'Left', 'Center', 'Right' );
+			$string .= '<br/>' . $$specs{rdbPanels} . ' panels ' . ( $$specs{PocketSize} ? $$specs{PocketSize} . '&quot; ' : '' ) . ' pocket'.(@pockets == 1 ? '' : 's').' on ' . join( ',', @pockets );
 		} # end if
 		$string .= '<br/>'	. join(', ',
 		

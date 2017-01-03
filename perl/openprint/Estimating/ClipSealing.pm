@@ -1,5 +1,14 @@
 package openprint::Estimating::ClipSealing;
+use vars qw( %ServicePrices );
 use strict;
+%ServicePrices = (
+	ClipSealingMakeReady		=> { },
+	ClipSealingMinimumCharge	=> { },
+	ClipSealing	=> { units => [ 'per m' ] },
+	ClipSealing1Clips	=> { },
+	ClipSealing2Clips	=> { },
+	ClipSealing3Clips	=> { },
+);
 
 require POSIX;
 require openprint::service;

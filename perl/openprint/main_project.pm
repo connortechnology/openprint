@@ -181,7 +181,7 @@ sub calc {
 
 	$param{method} = 'calc' if ! $param{method};
 # Not sure this is a good idea, but its neccessary for printing... why is it neccessary?
-	$openprint::service::specs_cache{$param{ServiceIndex}} = \%param;
+	$openprint::service::specs_cache{$param{ServiceIndex}} = \%param if $param{ServiceIndex};
 	my %specs = %param;
 	if ( my $function = $module->can( $param{method} ) ) {
 		$log->debug("Can do $module -> $param{method}");
@@ -268,6 +268,8 @@ sub docket_sheet {
 } # end sub docket_sheet
 
 sub _view_log {
+}
+sub _service_dump {
 }
 1;
 __END__

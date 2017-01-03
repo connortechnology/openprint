@@ -31,6 +31,8 @@
 				push @label_options, 'Varnish';
 			} elsif ( $S->name() =~ /UV/i ) {
 				push @label_options, 'UV';
+			} elsif ( $S->name() =~ /White/i ) {
+				push @label_options, 'White';
 			} # end if
 		} # end foreach
 		foreach my $index ( 1 .. $$variable{index}-1 ) {

@@ -87,7 +87,7 @@ sub export_specs {
 } # end sub export_specs
 
 sub edit {
-	my $Equipment = $variable{Equipment} = openprint::Equipment->find_one( id=>$param{ddmEquipment} );
+	my $Equipment = $variable{Equipment} = openprint::Equipment->find_one( id=>$param{ddmEquipment} ) if $param{ddmEquipment};
 	if ( ! $Equipment ) {
 		$variable{error} .= "Equipment $param{ddmEquipment} not found.<br/>" if $param{ddmEquipment};
 		$Equipment = new openprint::Equipment();
@@ -109,7 +109,7 @@ sub edit {
 		my @changes = $Equipment->changes( \%param );
 		if ( ! ( $variable{error} = $Equipment->save( \%param ) ) ) {
 			(new openprint::Log())->save({ object_type=>(ref $Equipment), object_id=>$$Equipment{id}, action=>($param{ddmEquipment}?'Edited Equipment':'Saved Equipment'), note=>join('<br/>', @changes) });
-		$variable{ExternalRedirect} = '/administrator/equipment/edit.html?ddmEquipment='.$Equipment->id();
+			$variable{ExternalRedirect} = '/administrator/equipment/edit.html?ddmEquipment='.$Equipment->id();
 		}
 	
 	} elsif ( $param{btnFunction} eq 'UnDelete' ) {

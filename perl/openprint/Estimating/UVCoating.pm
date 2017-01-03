@@ -15,8 +15,13 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA
 
 package openprint::Estimating::UVCoating;
+use vars qw( %ServicePrices );
 use strict;
 #use warnings;
+%ServicePrices = (
+	UVCoatingMinimumCharge => {},
+	'UV(.*)MakeReady' => {},
+);
 
 require openprint::service;
 require openprint::Material;
@@ -488,8 +493,7 @@ $openprint::log->debug("Types: @types") if DEBUG;
 								) ) {
 						$setupPrice = 0;
 					} else {
-						$setupPrice = openprint::service::get_price( $type.'MakeReady', $run_qty, $Equipment );
-						$setupPrice = openprint::service::get_price( 'UVCoating'.$type.'MakeReady', $run_qty, $Equipment ) if ! $setupPrice;
+						$setupPrice = openprint::service::get_price( 'UV'.$type.'MakeReady', $run_qty, $Equipment );
 						$setupPrice = openprint::service::get_price( 'UVCoatingMakeReady', $run_qty, $Equipment ) if ! $setupPrice;
 						if ( ! $setupPrice ) {
 							$openprint::log->debug("No setup price for $type");

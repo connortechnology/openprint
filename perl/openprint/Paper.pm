@@ -12,10 +12,7 @@ use vars qw( $log %variable %config );
 *log = \$openprint::log;
 
 require sql;
-require ssi;
 require misc;
-require configuration;
-require openprint::logs;
 require openprint::Manufacturer;
 require openprint::PaperPrice;
 require openprint::Skid;
@@ -1027,14 +1024,14 @@ sub get_price {
 	my $price;
 	my $qty = $params{weight} ? $params{weight} : $params{sheets};
 	my $lookup_qty = $params{lookup_weight} ? $params{lookup_weight} : $qty;
-	if ( ($params{service} eq 'Material') and ! $lookup_qty ) {
+	if ( (!$lookup_qty) and ($params{service} eq 'Material') ) {
 		Carp::cluck("Paper qty lookup with no qty");
 		$openprint::log->error("Paper qty lookup with no qty");
 	} #end if
 
 	if ( $$self{Price} and ($params{service} eq 'Material') ) {
 		# If custom paper
-		$price = { 'price' => $$self{Price}, 'cost'=>$$self{Price}, 'units'=>$$self{Units} };
+		$price = { price => $$self{Price}, cost=>$$self{Price}, units=>$$self{Units} };
 #$openprint::log->debug("Usnig custom price $$self{Price}$$self{Units}");
 	} elsif ( $$self{id} ) {
 		my @Prices = $self->Prices( );
@@ -1152,14 +1149,13 @@ sub cut {
 } # end sub cut
 
 sub minimum_order {
-	my $self = shift;
-	if ( @_ ) {
-		$$self{minimum_order} = shift;
+	if ( @_ > 1 ) {
+		$_[0]{minimum_order} = $_[1];
 	} # end if
 
 #$openprint::log->debug("SPP: $$self{start_width} / $$self{width} ) * int( $$self{start_height} / $$self{height} * spp $$self{sheets_per_package} * $factor;");
-	return 0 if ! $$self{minimum_order};
-	return $$self{minimum_order} * $self->factor();
+	return 0 if ! $_[0]{minimum_order};
+	return $_[0]{minimum_order} * $_[0]->factor();
 } # end minimum_order 
 
 sub minimum_order_weight {
@@ -1377,9 +1373,8 @@ sub load_from_signature {
 	} else {
 
 		if ( $qty_index and $$specs{'paper_id'.$qty_index} ) {
-			$Paper = new openprint::Paper( $$specs{'paper_id'.$qty_index} );
-			if ( ! $Paper->id() ) {
-				$Paper = undef;
+			$Paper = openprint::Paper->find_one( id=>$$specs{'paper_id'.$qty_index} );
+			if ( ! $Paper ) {
 				$openprint::log->warn("Loading by paper id but not found: " . $$specs{'paper_id'.$qty_index} );
 			} # end if
 		}
@@ -1495,11 +1490,13 @@ $log->debug($P->id_string());
 	$Paper = $Paper->clone();
 #$openprint::log->debug($Paper->to_string() );
 	if ( $qty_index ) {
+#FIXME Whay?
+# So... if loading need to check that it fits the size.... but if we are loading by id.... then we don't need to do this... maybe test the impact of this code.
 		if ( 
 			( ( $Paper->width() != $$specs{'StockWidth'.$qty_index} ) or ($Paper->type() eq 'Sheet' and $Paper->height() != $$specs{'StockHeight'.$qty_index} ) )
 			and
 			( ( $Paper->height() != $$specs{'StockWidth'.$qty_index} ) or ($Paper->type() eq 'Sheet' and $Paper->width() != $$specs{'StockHeight'.$qty_index} ) )
-) {
+		   ) {
 #Carp::cluck("Custom size $$specs{'StockWidth'.$qty_index}x$$specs{'StockHeight'.$qty_index}");
 #$openprint::log->debug("Custom size $$Paper{width}x$$Paper{height} => $$specs{'StockWidth'.$qty_index}x$$specs{'StockHeight'.$qty_index}");
 			$$Paper{Supplied} = $P;
@@ -1537,7 +1534,7 @@ $log->debug($P->id_string());
 				} # end if
 			} # end if
 		} # end if
-	} # end if
+	} # end if qty_index
 #$openprint::log->debug($Paper->to_string() );
 	return $Paper;
 
