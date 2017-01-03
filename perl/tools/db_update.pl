@@ -1468,6 +1468,13 @@ if ( ! sets::isin( 'skids', \@tables ) ) {
 
 if ( ! sets::isin( 'paper_allocations', \@tables ) ) {
 	$dbh->do( misc::load_file( $log, '../openprint/sql/Paper_Allocations.sql' ) ) or die;
+} else {
+	$data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='paper_allocations'", 'column_name');
+	if ( ! exists $$data{docket} ) {
+		$log->debug("Adding docket column to paper_allocations");
+		$dbh->do('ALTER TABLE paper_allocations ADD docket INTEGER') or die $dbh->errstr();
+		$dbh->do('CREATE INDEX paper_allocations_docket_idx on paper_allocations (docket)') or die $dbh->errstr();
+	}
 }
 
 if ( ! sets::isin( 'tbl_service_defaults', \@tables ) ) {
@@ -4057,8 +4064,8 @@ if ( ! sets::isin( 'inventory_checks', \@tables ) ) {
 	my $data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='inventory_checks'", 'column_name');
 	if ( ! exists $$data{location_id} ) {
 		$log->debug("Adding location_id to Invengtory_Checks");
-		$dbh->do( 'alter table inventory_checks add location_id INTEGER') or die $dbh->errstr();
-		$dbh->do( 'ater table inventory_checks add foreign key (location_id) REFERENCES Locations (id);') die $dbh->errstr();
+		$dbh->do( 'ALTER TABLE inventory_checks add location_id INTEGER') or die $dbh->errstr();
+		$dbh->do( 'ALTER TABLE inventory_checks add foreign key (location_id) REFERENCES Locations (id);') or die $dbh->errstr();
 	}
 }
 if ( ! sets::isin( 'helpdesk', \@tables ) ) {

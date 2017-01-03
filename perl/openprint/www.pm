@@ -452,6 +452,7 @@ $log->debug("Service: " . $Service->to_string() );
 	$log->debug("ServiceType: $variable{ServiceTypeType}");
 						my $specs = $Service->specs();
 						@variable{keys %$specs} = values %$specs;
+						$variable{ServiceType} = $Service->ServiceType();
 					} # end if
 				} # end if
 				$variable{ProjectType} = $variable{Project}->Type();

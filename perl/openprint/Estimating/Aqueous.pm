@@ -387,7 +387,6 @@ $openprint::log->debug("Impressions: $impressions") if DEBUG;
 
 	my $AllAqueousMakeReady = openprint::Service->find_one( name=>'AqueousMakeReady');
 	my $AqueousMinimumCharge = openprint::Service->find_one( name=>'AqueousMinimumCharge');
-	
 
 	foreach my $Equipment ( @equipment ) {
 $openprint::log->debug("AQ Equipment $$Equipment{strid}") if DEBUG;
@@ -626,5 +625,4 @@ sub has_overrides {
 
 
 1;
-
 __END__
