@@ -25,6 +25,23 @@ use Data::Dumper;
 package openprint::Estimating::Printing;
 use vars qw( %ServicePrices );
 
+my $threading = 0;
+use threads;
+use constant DEBUG => 1;
+use constant DEBUG_PLATES => 0;
+use constant DEBUG_VERSIONS => 0;
+use constant DEBUG_PRESSES => 0;
+use constant DEBUG_FILTERING => 0;
+use constant DEBUG_INITIAL_FILTERING => 0;
+use constant DEBUG_AFTER_FILTERING => 0;
+use constant DEBUG_PRICE_DECISIONS => 0;
+use constant DEBUG_INKS => 0;
+use constant DEBUG_STOCK => 0;
+use constant COMPARISON_LOG => 0;
+use constant USE_SUBSIG => 0;
+use constant USE_PRICE_CACHE => 1;
+use constant DEBUG_IMPOSITIONS => 1;
+
 %ServicePrices = (
 	Roll2Sheet => {
 		units	=> [ 'per m' ],
@@ -46,16 +63,16 @@ use vars qw( %ServicePrices );
 	'Work & TumbleSetup'	=>	{ units=> [] },
 	'Sheet WorkSetup'		=>	{ units=> [] },
 	'PressRunChargeMinimum'	=>	{ units=> [] },
-	'1ColourImpression'		=>	{ units=> [] },
-	'2ColourImpression'		=>	{ units=> [] },
-	'3ColourImpression'		=>	{ units=> [] },
-	'4ColourImpression'		=>	{ units=> [] },
-	'5ColourImpression'		=>	{ units=> [] },
-	'6ColourImpression'		=>	{ units=> [] },
-	'7ColourImpression'		=>	{ units=> [] },
-	'8ColourImpression'		=>	{ units=> [] },
-	'9ColourImpression'		=>	{ units=> [] },
-	'10ColourImpression'		=>	{ units=> [] },
+	'1ColourImpression'		=>	{ units=> [ 'per impression', 'per hour' ] },
+	'2ColourImpression'		=>	{ units=> [ 'per impression', 'per hour' ] },
+	'3ColourImpression'		=>	{ units=> [ 'per impression', 'per hour' ] },
+	'4ColourImpression'		=>	{ units=> [ 'per impression', 'per hour' ] },
+	'5ColourImpression'		=>	{ units=> [ 'per impression', 'per hour' ] },
+	'6ColourImpression'		=>	{ units=> [ 'per impression', 'per hour' ] },
+	'7ColourImpression'		=>	{ units=> [ 'per impression', 'per hour' ] },
+	'8ColourImpression'		=>	{ units=> [ 'per impression', 'per hour' ] },
+	'9ColourImpression'		=>	{ units=> [ 'per impression', 'per hour' ] },
+	'10ColourImpression'		=>	{ units=> [ 'per impression', 'per hour' ] },
 	'PressUnitMakeReady'		=>	{ units => [ 'stock calliper - per plate', 'per job', 'per form', 'total', 'per side'] },
 	'PressUnitMakeReadyWeb'		=>	{ units => [ 'stock calliper - per plate', 'per job', 'per form', 'total', 'per side'] },
 	'PressUnitMakeReadyPerfecting'		=>	{ units => [ 'stock calliper - per plate', 'per job', 'per form', 'total', 'per side'] },
@@ -73,22 +90,6 @@ use vars qw( %ServicePrices );
 	#'PlateMakeReadySheet Work'					=>	{ units => [ 'per hour', 'per plate' ] },
 );
 
-my $threading = 0;
-use threads;
-use constant DEBUG => 0;
-use constant DEBUG_PLATES => 0;
-use constant DEBUG_VERSIONS => 0;
-use constant DEBUG_PRESSES => 0;
-use constant DEBUG_FILTERING => 0;
-use constant DEBUG_INITIAL_FILTERING => 0;
-use constant DEBUG_AFTER_FILTERING => 0;
-use constant DEBUG_PRICE_DECISIONS => 0;
-use constant DEBUG_INKS => 0;
-use constant DEBUG_STOCK => 0;
-use constant COMPARISON_LOG => 0;
-use constant USE_SUBSIG => 0;
-use constant USE_PRICE_CACHE => 1;
-use constant DEBUG_IMPOSITIONS => 0;
 
 my $master_time;
 my %special_colours;
