@@ -1391,16 +1391,18 @@ $openprint::log->debug("Resulting fold: " . $Fold->to_string() ) if DEBUG;
 				} elsif ( ! $makereadies{$$Equipment{id}}{$$Fold{type}} ) {
 					if ( $setupPrice{units} eq 'per imposition' ) {
 						$setupPrice{Total} = $setupPrice{Price} * $imposition;
+						$Breakdown .= sprintf( '($%1$.2f%2$s * %4$d out =$%3$.2f)', @setupPrice{'Price','units','Total'}, $imposition );
 					} elsif ( $setupPrice{units} eq 'per hour' ) {
 						if ( ! $$Fold{makeready_time} ) {
 $openprint::log->error("No makeready_time on " . $Fold->to_string() );
 						}
 						$setupPrice{Total} = $setupPrice{Price} * $$Fold{makeready_time} / 60;
+						$Breakdown .= sprintf( '($%1$.2f%2$s * %4$d minutes = $%3$.2f)', @setupPrice{'Price','units','Total'}, $$Fold{makeready_time} );
 					} else {
-$openprint::log->error("No units set on Fold MR " . $setupPrice{Service}->name() . ' on ' . $Equipment->name() );
+#$openprint::log->error("No units set on Fold MR " . $setupPrice{Service}->name() . ' on ' . $Equipment->name() );
 						$setupPrice{Total} = $setupPrice{Price};
-					} # end if
 					$Breakdown .= sprintf( '($%1$.2f%2$s=$%3$.2f)', @setupPrice{'Price','units','Total'} );
+					} # end if
 					$total_MR += $setupPrice{Total};
 
 					if ( $$Fold{folds} and $FoldingFoldMakeReadyService ) {
