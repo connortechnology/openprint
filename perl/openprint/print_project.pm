@@ -642,22 +642,21 @@ $log->debug("Already have $$ServiceType{name}");
 
 sub del_service {
 	# THis is an external wrapper 
-	my ( $r, $log, $dbh, $variable, $project_index, $service_id ) = @_;
-	my $Project = new openprint::Project( $project_index );
+	my ( $r, $log, $dbh, $variable, $project_id, $service_name ) = @_;
+	my $Project = new openprint::Project( $project_id );
 	my $services = $Project->services();
-	if ( $$services{$service_id} ) {
-		foreach my $service_index ( @{$$services{$service_id}} ) {
-			delete_service( $Project, $service_index );
+	if ( $$services{$service_name} ) {
+		foreach my $service_id ( @{$$services{$service_name}} ) {
+			delete_service( $Project, $service_id );
 		} # end foreach
 	} # end if
 } # end sub del_service
 
 sub delete_service {
-	my ( $Project, $service_index ) = @_;
-	my $Service = $Project->Service( $service_index );
+	my ( $Project, $service_id ) = @_;
+	my $Service = $Project->Service( $service_id );
 	return $Service->delete();
 } # end sub delete_service
-
 
 sub reuse_project {
 	my ( $project_index ) = @_;
