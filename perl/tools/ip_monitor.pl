@@ -126,6 +126,7 @@ while(1) {
 
 		my $online = undef;
 		my $now = time;
+		my $has_monitored_interfaces = 0;
 
 		my @HIs = $Host->Interfaces();
 		foreach my $HI ( @HIs ) {
@@ -134,6 +135,7 @@ while(1) {
 				$log->debug("No ip for " . $HI->to_string() );
 				next;
 			}
+			$has_monitored_interfaces = 1;
 
 			$log->debug( $HI->ip() . ' was ' . ( $HI->online() ? 'online' : 'offline' ) . " " . $HI->to_string() );
 			my @ping = $p->ping($HI->ip());
@@ -171,6 +173,12 @@ while(1) {
 				notify( $Host, $online );
 			}
 		} # end if ionline status change
+
+		if ( ! $has_monitored_interfaces ) {
+			$Host->unlock();
+			$log->error("Host $$Host{hostname} is monitored but none of it's interfaces are.");
+			next;
+		}
 
 		my $since = $now-$$Host{state_changed_on};
 		$log->debug( $Host->hostname() . ' is now ' . ( $Host->online() ? 'online' : 'offline' ) . " $since " );
