@@ -171,7 +171,12 @@ $openprint::log->debug("In Project::calc");
         } # end i
 	}
 
-	if ( ! sets::isin( $$specs{Dimensions}, ['', 'Custom'] ) ) {
+	if ( ! sets::isin( $$specs{Dimensions}, [ 'Custom'] ) ) {
+		if ( ! $$specs{Dimensions} ) {
+			$$specs{alert} .= 'Please select the Size<br/>';
+			
+		} else {
+		
 		my ( $width, $height, $type ) = $$specs{Dimensions} =~ /([\d\.]*)x([\d\.]*)(\w*)/;
 		my @args = ( $$specs{projecttype_id}, $width, $height );
 
@@ -224,6 +229,7 @@ $log->debug("Presentation folder sizes $$specs{chkPocketLeft} $$specs{chkPocketR
             } # end if
             $$specs{txtHeight} = $$specs{txtFinalHeight} + $$specs{rdbPocketSize};
 		} # end if
+		}
 	} elsif ( ( $ProjectType->name() eq 'Envelopes' ) and ( exists $$specs{ddmStockSize} ) ) {
 		@$specs{'txtWidth','txtHeight'} = $$specs{ddmStockSize} =~ /^([\d\.]+)"?\s*x?\s*([\d\.]+)?"?\s*$/;
 		@$specs{'txtFinalWidth','txtFinalHeight'} = @$specs{'txtWidth','txtHeight'};
@@ -957,21 +963,14 @@ sub create_calc {
 	my %services = $Project->get_services( );
 	foreach my $qty_index ( 1 .. 3 ) {
 		$$specs{"quantity$qty_index"} = openprint::Project->transform( "quantity$qty_index", $$specs{"quantity$qty_index"} );
-# Should not do this
 		if ( $$specs{'quantity'.$qty_index} != $Project->quantity($qty_index) ) {
-if ( 0 ) {
-			foreach my $service_id ( keys %services ) {
-				foreach my $s_id ( @{$services{$service_id}} ) {
-					openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $s_id, 'txtQuantity'.$qty_index, $$specs{'txtQuantity'.$qty_index} );
-				} # end foreach
-			} # end foreach
-} 
 			$Project->quantity( $qty_index, $$specs{'quantity'.$qty_index} );
 		} # end if
 	} # end foreach qty_index
 
 	my $ProjectType = openprint::ProjectType->find_one( name => $$specs{rdbProjectType} );
 	if ( $ProjectType and ( $Project->type_id() != $ProjectType->id() ) ) {
+$log->debug("Calling change_ProjectType");
 		$Project->change_ProjectType( $ProjectType );
 		%services = $Project->get_services( );
 	} # end if ProjectType changed
