@@ -67,7 +67,6 @@ sub delete {
 	(new openprint::Log())->save({action=>'Delete', Object=>$self, note=>"Material Id: $$self{id} Material Name: $$self{name}"});
 	sql::end_transaction( $dbh, $ac );
 
-	init_cache();
 } # end sub delete
 
 sub prices {
