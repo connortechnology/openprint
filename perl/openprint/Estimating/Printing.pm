@@ -27,7 +27,7 @@ use vars qw( %ServicePrices );
 
 my $threading = 0;
 use threads;
-use constant DEBUG => 1;
+use constant DEBUG => 0;
 use constant DEBUG_PLATES => 0;
 use constant DEBUG_VERSIONS => 0;
 use constant DEBUG_PRESSES => 0;
@@ -40,7 +40,7 @@ use constant DEBUG_STOCK => 0;
 use constant COMPARISON_LOG => 0;
 use constant USE_SUBSIG => 0;
 use constant USE_PRICE_CACHE => 1;
-use constant DEBUG_IMPOSITIONS => 1;
+use constant DEBUG_IMPOSITIONS => 0;
 
 %ServicePrices = (
 	Roll2Sheet => {
@@ -5873,11 +5873,12 @@ $openprint::log->debug("Varnish $real_colour") if DEBUG_INKS;
 			foreach my $C ( @{$special_colours{$colour}} ) {
 				$openprint::log->error($C->to_string() );
 			} # end foreach C
+			next;
 		} elsif ( DEBUG_INKS ) {
 			$openprint::log->debug("Got INK: " . $Ink->to_string() );
 		} # end if
 
-		my $InkService =  $Ink->Service() ?  $Ink->Service() : $Services{$real_colour};
+		my $InkService = $Ink->Service() ?  $Ink->Service() : $Services{$real_colour};
 		my %InkService;
 		if ( $InkService and %InkService = $InkService->get_price( $colour_impressions, $Press ) ) {
 			if ( $InkService{units} eq 'per m' ) {
