@@ -175,9 +175,21 @@ sub calc {
 	} else {
 		$log->debug("Found proejct $$Project{id}" . $Project->to_string() );
 	}
-	my $module = 'openprint::Estimating::'.( $param{ServiceTypeType} ? $param{ServiceTypeType} : $param{ServiceType} );
-	eval "require $module";
+	my $module;
+	my $Service;
+	if ( $param{ServiceIndex} ) {
+		my $Service = $Project->Service( $param{ServiceIndex} );
+	}
+	if ( ! $Service ) {
+		$Service = new openprint::Project_Service();
+		$Service->set({ project_id=>$Project->id(), service_type=>$param{ServiceType} } );
+	}
+
+	eval {
+		require 'openprint/Estimating/'.$Service->service_type().'.pm';
+	};
 	$log->error("Error requiring $module: $@") if $@;
+	my $module = 'openprint::Estimating::'.$Service->service_type();
 
 	$param{method} = 'calc' if ! $param{method};
 # Not sure this is a good idea, but its neccessary for printing... why is it neccessary?
