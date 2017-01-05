@@ -69,7 +69,7 @@ sub cache_field {
 sub save {
 	my ( $self, $params ) = @_;
 
-	$self->set( $params );
+	$self->set( $params ) if $params;
 
 	if ( $$self{category} and ! $$self{category_id} ) {
 		my $Category = new openprint::ServiceCategory();
