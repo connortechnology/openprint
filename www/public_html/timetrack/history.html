@@ -35,9 +35,10 @@
 <? if ( sets::isin( $session{user_type}, ['E','A'] ) ) ?>
 			<li>
 				<label>Company</label>
+				<input type="text" onkeyup="filter_companies('company_id', {name:this.value,selected_id:get_ddm_value($('company_id'))});" class="filter" />
 				<select name="company_id" id="company_id" onchange="load_timetracks();">
 					<option value="">All</option>
-					<? echo ( openprint::Company::get_dropdown( $session{'/timetrack/history.html?company_id'} ); ) ?>
+					<? echo ( make_drop_down( openprint::Company->dropdown( 'last_timetrack_id is null'=>0 ), $session{'/timetrack/history.html?company_id'} ); ) ?>
 				</select>
 			</li>
 <? else ( sets::isin( $session{user_type}, ['E','A'] ) ) ?>
