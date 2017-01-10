@@ -298,7 +298,13 @@ $log->debug("coutn for $ip is $host_counts{$ip}{count}");
 			$log->debug( "# of entries in host_counts: " . keys %host_counts ) if $config{debug};
 			foreach my $ip ( sort keys %host_counts ) {
 				next if ! $host_counts{$ip}{update};
-				next if $host_counts{$ip}{whitelist};
+				my $count = $host_counts{$ip}{count};
+				$host_counts{$ip}->load();
+				if ( $host_counts{$ip}{whitelist} ) {
+					delete $host_counts{$ip};
+					next;
+				}
+				$host_counts{$ip}{count} = $count;
 				
 				if ( $ip eq '127.0.0.1' ) {
 					$log->warn("WTF blacklistint localhost?!");
