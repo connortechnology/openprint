@@ -599,6 +599,9 @@ $openprint::log->debug("Needed Pockets: $neededPockets") if DEBUG;
 			if ( $servicePrice{units} eq 'per m' ) {
 				$servicePrice{Total} = $servicePrice{Price} * $qty/1000;
 				$price{Service} += $servicePrice{Total};
+			} elsif ( $servicePrice{units} eq 'each' ) {
+				$servicePrice{Total} = $servicePrice{Price} * $qty;
+				$price{Service} += $servicePrice{Total};
 			} elsif ( $servicePrice{units} =~ /per hour/i ) {
 				$servicePrice{Total} = $servicePrice{Price} * $runtime;
 				$price{Service} += $servicePrice{Total}
@@ -626,6 +629,9 @@ $openprint::log->debug("Needed Pockets: $neededPockets") if DEBUG;
 		$price{RunTime} += $runtime * 360;
 		if ( $servicePrice{units} eq 'per m' ) {
 			$servicePrice{Total} = $servicePrice{Price} * $qty/1000;
+			$price{Service} += $servicePrice{Total};
+		} elsif ( $servicePrice{units} eq 'each' ) {
+			$servicePrice{Total} = $servicePrice{Price} * $qty;
 			$price{Service} += $servicePrice{Total};
 		} elsif ( $servicePrice{units} =~ /per hour/i ) {
 			$servicePrice{Total} = $servicePrice{Price} * $runtime;
