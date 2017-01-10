@@ -642,10 +642,10 @@ sub check {
 	my $specs = $Service->specs();
 
 	my $total_pages = $$specs{txtTotalPageQuantity};
-    my %specified_pages;
-    my %needed_pages;
-    foreach my $ssid ( $Project->signatures({ sort=>1}) ) {
-        my $sig_specs = openprint::service::get_specs_ref( $Project, $ssid );
+	my %specified_pages;
+	my %needed_pages;
+	foreach my $ssid ( $Project->signatures({ sort=>1 }) ) {
+		my $sig_specs = openprint::service::get_specs_ref( $Project, $ssid );
 		my $Group = $$sig_specs{Group};
 
 		if ( $qty_index ) {
@@ -656,35 +656,36 @@ sub check {
 			foreach my $ddm ( 'Brand','Finish','Colour','Weight' ) {
 #$openprint::log->debug("no qty_index $ddm " . $$sig_specs{"ddmStock$ddm"} . " " .  $$specs{"ddmStock$ddm$$sig_specs{Group}"} );
 
-				# In the olden days, we weren't saving the stock type in the book service, now we are
+# In the olden days, we weren't saving the stock type in the book service, now we are
 				if ( $$specs{"ddmStock$ddm$$sig_specs{Group}"} and ( $$sig_specs{"ddmStock$ddm"} ne $$specs{"ddmStock$ddm$$sig_specs{Group}"} ) ) {
 					$error .= "Stock $ddm for form $$sig_specs{SignatureIndex} " . $$sig_specs{"ddmStock$ddm"} . " does not match book specs " . $$specs{"ddmStock$ddm$$sig_specs{Group}"} ." group $$sig_specs{Group}.<br/>";
 				}
 			} # end foreach
 		}
-    } # end foreach
-if ( $qty_index ) {
-    foreach my $Group ( sort keys %needed_pages ) {
-		$openprint::log->debug( "Grouup $Group needed $needed_pages{$Group} specd: $specified_pages{$Group}" );
-        if ( $needed_pages{$Group} > $specified_pages{$Group} ) {
-            $error .= 'Group ' . $Group . ' ' . $$specs{'txtSignatureType'.$Group} . ' needs another ' . ( $needed_pages{$Group} - $specified_pages{$Group} ) . ' pages.<br/>';
-		} elsif ( $needed_pages{$Group} < $specified_pages{$Group} ) {
-            $error .= 'Group ' . $Group . ' ' . $$specs{'txtSignatureType'.$Group} . ' has ' . ( $specified_pages{$Group} - $needed_pages{$Group} ) . ' too many pages.<br/>';
-        } # end if
-    } # end foreach
-}
+	} # end foreach
+
+	if ( $qty_index ) {
+		foreach my $Group ( sort keys %needed_pages ) {
+			$openprint::log->debug( "Grouup $Group needed $needed_pages{$Group} specd: $specified_pages{$Group}" );
+			if ( $needed_pages{$Group} > $specified_pages{$Group} ) {
+				$error .= 'Group ' . $Group . ' ' . $$specs{'txtSignatureType'.$Group} . ' needs another ' . ( $needed_pages{$Group} - $specified_pages{$Group} ) . ' pages.<br/>';
+			} elsif ( $needed_pages{$Group} < $specified_pages{$Group} ) {
+				$error .= 'Group ' . $Group . ' ' . $$specs{'txtSignatureType'.$Group} . ' has ' . ( $specified_pages{$Group} - $needed_pages{$Group} ) . ' too many pages.<br/>';
+			} # end if
+		} # end foreach
+	}
 	if ( $error ) {
 		if ( $error ne $$specs{"alert$qty_index"} ) {
 			openprint::service::insert_service_spec( $openprint::log, $openprint::dbh, $Project->id(), $Service->service_id(), 'alert'.$qty_index, $error ) if $error;
 		} # end if
 	} else {
-		# Clears it, but leaves alert messages from elsewhere
-		if ( $$specs{alert} =~ /^Group/ or $$specs{alert} =~ /^Stock/ ) {
+# Clears it, but leaves alert messages from elsewhere
+		if ( $$specs{"alert$qty_index"} =~ /^Group/ or $$specs{"alert$qty_index"} =~ /^Stock/ ) {
 			openprint::service::insert_service_spec( $openprint::log, $openprint::dbh, $Project->id(), $Service->service_id(), 'alert'.$qty_index, $error );
 		} # end if
 	} # end if
-	
-    return $error;
+
+	return $error;
 } # end sub check
 
 sub summary {
