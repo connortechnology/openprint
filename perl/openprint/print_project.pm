@@ -214,7 +214,7 @@ sub continue_project {
 				my $module = 'openprint::Estimating::'.$Project->Type()->type();
 				if ( my $function = $module->can('status') ) {
 					if ( $_ = $function->( $project_index, undef, $qty_index ) ) {
-						$log->debug("Multipage status says we need another sig of type $_");
+						$log->debug($Project->Type()->type(). " status says we need another sig of type $_");
 						my @sigs = $Project->signatures({'Group'=>$_});
 						my $src_id = pop @sigs;
 						my $src_specs = openprint::service::get_specs_ref( $Project, $src_id );
