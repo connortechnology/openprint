@@ -76,10 +76,10 @@ $openprint::log->debug("Module is: $module");
 			insert_service_spec( $log, $dbh, $project_index, $service_index, $key, $openprint::param{$key}, 0 );
 		} # end if
 	} # end foreach
-	$Project->unlock();
 	if ( my $function = $module->can('save') ) {
 		$function->( $project_index, $service_index, \%openprint::param );
 	} # end if
+	$Project->unlock();
 
 	# FIXME: should clean this up
 	if ( $openprint::param{Additional} eq 'Y' or $openprint::param{additional_service} eq 'Y' ) {
