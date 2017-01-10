@@ -211,16 +211,21 @@ sub continue_project {
 		if ( ! $service_index ) {
 			my $Project = new openprint::Project( $project_index );
 			foreach my $qty_index ( $Project->quantity_indexes() ) {
-				if ( $_ = openprint::Estimating::MultiPage::status( $project_index, undef, $qty_index ) ) {
-					$log->debug("Multipage status says we need another sig of type $_");
-					my @sigs = $Project->signatures({'Group'=>$_});
-					my $src_id = pop @sigs;
-					my $src_specs = openprint::service::get_specs_ref( $Project, $src_id );
-					$service_index = $Project->copy_signature( $src_specs );
-					( $service_index, $redirect ) = choose_service( $log, $dbh, $project_index );
-					last;
+				my $module = 'openprint::Estimating::'.$Project->Type()->type();
+				if ( my $function = $module->can('status') ) {
+					if ( $_ = $function->( $project_index, undef, $qty_index ) ) {
+						$log->debug("Multipage status says we need another sig of type $_");
+						my @sigs = $Project->signatures({'Group'=>$_});
+						my $src_id = pop @sigs;
+						my $src_specs = openprint::service::get_specs_ref( $Project, $src_id );
+						$service_index = $Project->copy_signature( $src_specs );
+						( $service_index, $redirect ) = choose_service( $log, $dbh, $project_index );
+						last;
+					} else {
+						$log->debug("Multpage status says we ok");
+					} # end if
 				} else {
-					$log->debug("Multpage status says we ok");
+					$log->debug("Dont have a status function for $module");
 				} # end if
 			} # end foreach
 		} # end if
