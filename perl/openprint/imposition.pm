@@ -4,7 +4,7 @@ use Carp;
 
 require openprint::Imposition;
 
-use constant DEBUG => 1;
+use constant DEBUG => 0;
 use constant DEBUG_CONVERT => 0;
 
 # The various way we can group spreads
