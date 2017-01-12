@@ -16,6 +16,7 @@ require openprint::Opinion_Availability;
 require openprint::Object_Asset;
 require openprint::Keyword;
 require openprint::Object_Keyword;
+require openprint::Object_Specification;
 require openprint::Log;
 use vars qw( $log $dbh $AUTOLOAD %cache %name_cache %fields %defaults %transforms $no_cache %session %config );
 
@@ -1440,6 +1441,17 @@ sub keywords {
 	} # end if
 	return $_[0]{keywords};
 } # end sub keywords
+
+sub Specifications {
+	if ( ! $_[0]{Specifications} ) {
+		if ( $_[0]{id} ) {
+			$_[0]{Specifications} = [ openprint::Object_Specification->find( object_type=> ref $_[0], object_id=>$_[0]->id() ) ];
+		} else {
+			$_[0]{Specifications} = [];
+		} # end if
+	} # end if
+	return @{$_[0]{Specifications}};
+}
 
 sub upload {
 	return openprint::Object_Asset::upload(@_);

@@ -70,9 +70,21 @@ sub Products {
 	return openprint::Product->find( %params );
 } # end sub products
 
-sub ProjectType {
-	return new openprint::ProjectType( $_[0]{projecttype_id} );
-} # end sub Type
+sub Photos {
+    if ( ! $_[0]{'album_id'} ) {
+        return ();
+    } # end if
+    return $_[0]->Album()->Photos( );
+} # end sub Photos
+
+sub Album {
+    my $Album = new openprint::Photo_Album( $_[0]{'album_id'} );
+    if ( ! $Album->id() ) {
+        $Album->name('Photos for product '.$_[0]{'name'});
+    } # end if
+    return $Album;
+} # end sub Album
+
 
 1;
 __END__

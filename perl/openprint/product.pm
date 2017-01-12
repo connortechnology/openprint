@@ -247,17 +247,34 @@ sub _prices_table_body {
     if ( $param{action} eq 'add' ) {
         my $Price = new openprint::ProductPrice();
         $variable{error} .= $Price->save({ pricelist_id=>$param{pricelist_id}, product_id=>$param{product_id} });
-        (new openprint::Log())->save({Object=>$Product, action=>'Add Price', note=>$Price->id_string() }) if ! $variable{error};
+        (new openprint::Log())->save({Object=>$Product, action=>'Add Price' }) if ! $variable{error};
 	
     } elsif ( $param{action} eq 'copy' ) {
         $Price = $Price->copy();
         $variable{error} .= $Price->save();
-        (new openprint::Log())->save({Object=>$Product, action=>'Copy Price', note=>$Price->id_string() }) if ! $variable{error};
+        (new openprint::Log())->save({Object=>$Product, action=>'Copy Price', note=>$Price->to_string() }) if ! $variable{error};
     } elsif ( $param{action} eq 'delete' ) {
         $variable{error} .= $Price->delete();
-        (new openprint::Log())->save({Object=>$Product, action=>'Delete Price', note=>$Price->id_string() }) if ! $variable{error};
+        (new openprint::Log())->save({Object=>$Product, action=>'Delete Price', note=>$Price->to_string() }) if ! $variable{error};
     } # end if
 }
+
+sub categories {
+} # end sub categories
+
+sub category {
+    my $Category = $variable{Category} = new openprint::Product_Category( $param{category_id} );
+    if ( $param{btnFunction} eq 'Save' ) {
+        $variable{error} .= $Category->save(\%param);
+        $variable{ExternalRedirect} = '/product/categories.html' if ! $variable{error};
+    } elsif ( $param{btnFunction} eq 'Delete' ) {
+        $variable{error} .= $Category->delete();
+        if ( ! $variable{error} ) {
+            $variable{ExternalRedirect} = '/product/categories.html';
+        }
+    } # end if
+} # end sub category
+
 
 1;
 __END__

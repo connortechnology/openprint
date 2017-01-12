@@ -2337,6 +2337,7 @@ sub get_Folds {
 		$Source_Imposition = new openprint::Imposition();
 		$Source_Imposition->load( $sig_specs, $qty_index );
 	} # end if
+	return () if !$$Source_Imposition{imposition};
 
 if ( DEBUG ) {
 foreach my $k ( sort { $a cmp $b } keys %$folding_specs ) {
