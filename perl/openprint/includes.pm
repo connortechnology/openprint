@@ -127,6 +127,7 @@ sub _logs_contents {
 	
 } # end sub _logs_contents
 
+# .json
 sub _specifications {
     my $Object_Type;
 	if ( $param{object_type_id} ) {
@@ -140,7 +141,29 @@ sub _specifications {
         return;
     } # end if
     my $Object = $variable{Object} = $Object_Type->Object( $param{object_id} );
-} # end sub _opinions
+
+    foreach my $Spec ( $Object->Specifications() ) {
+        if (
+                ( exists $param{'spec_name-'.$$Spec{id}} )
+                and ( ( $param{'spec_name-'.$$Spec{id}} ne $$Spec{name} ) or ( $param{'spec_value-'.$$Spec{id}} ne $$Spec{value} ) )
+           ) {
+            $variable{error} .= $Spec->save({ name=>$param{'spec_name-'.$$Spec{id}}, value=>$param{'spec_value-'.$$Spec{id}}});
+        } # end if
+    } # end foreach spec
+
+	if ( $param{func} eq 'Add' ) {
+		my $Spec = $variable{Spec} = new openprint::Object_Specification();
+		$variable{error} .= $Spec->save({Object=>$Object, name=>$param{name}, value=>$param{value}});
+	} elsif ( $param{func} eq 'Del' ) {
+		my $Spec = $variable{Spec} = new openprint::Object_Specification($param{spec_id});
+		$variable{error} .= $Spec->delete();
+	} # end if
+
+
+} # end sub _specifications
+sub _specification {
+	my $Spec = $variable{Spec} = new openprint::Object_Specification($param{spec_id});
+} # end sub _specification
 
 1;
 __END__

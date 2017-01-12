@@ -36,23 +36,18 @@
     <? eval ( $$variable{Album} = $$variable{Category};) ?>
     <?include(/photo_albums/_album_upload.html)?>
         </div>
-
-<!--
-		<div class="rightColumn">
+		<br/>
+		<div id="Products">
 			<ul>
 			<? echo (
-return;
 				my $html = '';
-				my @pt_ids = map { $_->id() } $$variable{Category}->ProjectTypes();
-				foreach my $PT ( openprint::ProjectType->find( 'order'=>'sorting,lower(name)' ) ) {
-					$html .= sprintf('<li><input type="checkbox" name="projecttype_id" value="%d" %s/> %s</li>',
-						$PT->id(), ssi::checked( sets::isin( $PT->id(), \@pt_ids ) ), $PT->description() );
+				foreach my $Product ( $$variable{Category}->Products() ) {
+					$html .= sprintf('<li>%s</li>', $Product->link_to() );
 				} # end foreach	
 				return $html;
 			) ?>
 			</ul>
 		</div>
--->
 	</fieldset>
 	<input type="hidden" name="btnFunction" />
 </form>

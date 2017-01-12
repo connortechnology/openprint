@@ -46,13 +46,15 @@ sub edit {
 		my @changes = $Product->changes( \%param );
 		if ( @changes ) {
 			$variable{error} = $Product->save( \%param );
-			( new openprint::Log())->save({Object=>$Product, action=>'Edit', note=>join('<br/>', @changes ) } );
 		}
 		if ( $param{product_id} ) {
 		# Save the prices
-			_prices() ;
-			_specifications()
+			_prices();
+			my @spec_changes = openprint::Object_Specification::save_changes();
+			push @changes, 'specification changes: ' . join(', ', @spec_changes ) if @spec_changes;
+
 		} # end if
+		( new openprint::Log())->save({Object=>$Product, action=>'Edit', note=>join('<br/>', @changes ) } ) if @changes;
 		$param{btnFunction} = '';
 		$variable{ExternalRedirect} = '/product/edit.html?product_id='.$Product->id();
 	} elsif ( $param{btnFunction} eq 'Copy' ) {
@@ -66,6 +68,10 @@ sub edit {
 			$$Price{id} = undef;
 			$Price->save();
 		} # end foreach
+		foreach ( $Product->Specification() ) {
+			my $Spec = $_->copy();
+			$Spec->save({object_id => $$NewProduct{id} });
+		}
 		$Product = $NewProduct;
 
 	} elsif ( $param{btnFunction} eq 'Delete' ) {
@@ -198,29 +204,6 @@ $log->debug("Price changes (@price_changes)" . @price_changes );
 	} # end if
 } # end sub _prices
 
-sub _specification {
-	my $Spec = $variable{Spec} = new openprint::Product_Specification($param{spec_id});
-} # end sub _specification
-
-sub _specifications {
-	my $Product = $variable{Product} = new openprint::Product( $param{product_id} );
-	foreach my $Spec ( $Product->Specifications() ) {
-		if ( 
-				( exists $param{'spec_name-'.$$Spec{id}} )
-				and ( ( $param{'spec_name-'.$$Spec{id}} ne $$Spec{name} ) or ( $param{'spec_value-'.$$Spec{id}} ne $$Spec{value} ) )
-		   ) {
-			$variable{error} .= $Spec->save({'name'=>$param{'spec_name-'.$$Spec{id}}, 'value'=>$param{'spec_value-'.$$Spec{id}}});
-		} # end if
-	} # end foreach spec
-	if ( $param{func} eq 'Add' ) {
-		my $Spec = $variable{Spec} = new openprint::Product_Specification();
-		$variable{error} .= $Spec->save({'product_id'=>$Product->id(),'name'=>$param{name}, 'value'=>$param{value}});
-	} elsif ( $param{func} eq 'Del' ) {
-		my $Spec = $variable{Spec} = new openprint::Product_Specification($param{spec_id});
-		$variable{error} .= $Spec->delete();
-	} # end if
-} # end sub _specifications
-
 sub search {
 	_search();
 	if ( ( ! $session{'/product/search.html?lastupdated'} ) or ( time - $session{'/product/search.html?lastupdated'} ) > ( 12*60*60 ) ) {
@@ -265,8 +248,15 @@ sub categories {
 sub category {
     my $Category = $variable{Category} = new openprint::Product_Category( $param{category_id} );
     if ( $param{btnFunction} eq 'Save' ) {
-        $variable{error} .= $Category->save(\%param);
-        $variable{ExternalRedirect} = '/product/categories.html' if ! $variable{error};
+       my @changes = $Category->changes( \%param );
+        if ( @changes ) {
+            $variable{error} = $Category->save( \%param );
+        }
+
+		my @spec_changes = openprint::Object_Specification::save_changes( $Category, \%param );
+		push @changes, 'specification changes: ' . join(', ', @spec_changes ) if @spec_changes;
+		( new openprint::Log())->save({Object=>$Category, action=>'Edit', note=>join('<br/>', @changes ) } );
+		$variable{ExternalRedirect} = '/product/categories.html' if ! $variable{error};
     } elsif ( $param{btnFunction} eq 'Delete' ) {
         $variable{error} .= $Category->delete();
         if ( ! $variable{error} ) {

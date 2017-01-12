@@ -13,6 +13,8 @@ $table = 'object_specifications';
 		object_type_id	=>	'object_type_id',
 		name			=>	'name',
 		value			=>	'value',
+	object_type	=>	undef,
+	Object		=>	undef,
 );
 %find_fields = (
 	object_type	=>	'(SELECT name FROM object_types WHERE id=object_type_id)',
@@ -25,5 +27,17 @@ $table = 'object_specifications';
 %defaults = (
 );
 
+sub save_changes {
+	my ( $Object, $input ) = @_;
+	my @specs_changes;
+	foreach my $Spec ( $Object->Specifications() ) {
+		my %spec_changes = map { exists $$input{"spec_$_-$$Spec{id}"} ? ( $_ => $$input{"spec_$_-$$Spec{id}"} ) : () } ( 'name', 'value' ) ;
+		my @spec_changes = $Spec->changes( \%spec_changes ) if %spec_changes;
+		if ( @spec_changes ) {
+			$Spec->save( \%spec_changes );
+			push @specs_changes, @spec_changes;
+		} # end if
+	} # end foreach
+} # end sub
 1;
 __END__
