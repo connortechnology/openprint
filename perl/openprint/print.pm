@@ -106,15 +106,14 @@ sub view_services {
 					} else {
 						openprint::Estimating::MultiPage::calculate_signatures( $Project );
 						# Shouldn't we do this befiore that?
+#2017-01-6 yeah I think so, but we are dealing with a currency change... so... who cares/.
 						openprint::service::internal_calc( $log, $dbh, $variable, $project_index, $$services{''}[0], $Project->Type()->type() );
 					} # end if
 				} # end if
 
 				$Project->lock();
 				if ( !$openprint::param{ServiceType} ) {
-					multipage_signatures( \%openprint::param, $log, $dbh, $variable, $project_index, $service_index );
-					$Project->unlock();
-					$Project->lock();
+					#multipage_signatures( \%openprint::param, $log, $dbh, $variable, $project_index, $service_index );
 					my $s = openprint::service::internal_calc( $log, $dbh, $variable, $project_index, $service_index, $Project->Type()->type() );
 					if ( $$s{Status} ne 'calculated' ) {
 						$log->error("Error calculting Project service");
@@ -294,6 +293,9 @@ sub print_prices {
 # It assumes that the book code has already been saved.
 sub multipage_signatures {
 	my ( $param, $log, $dbh, $variable, $project_index, $service_index ) = @_;
+
+#deprecate
+return;;
 
 	my $ac = sql::start_transaction( $dbh );
 	my $Project = new openprint::Project( $project_index );
