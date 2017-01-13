@@ -13,11 +13,12 @@ $table = 'object_specifications';
 		object_type_id	=>	'object_type_id',
 		name			=>	'name',
 		value			=>	'value',
-	object_type	=>	undef,
-	Object		=>	undef,
+		object_type		=>	undef,
+		Object			=>	undef,
+		Object_Type		=>	undef,
 );
 %find_fields = (
-	object_type	=>	'(SELECT name FROM object_types WHERE id=object_type_id)',
+		object_type	=>	'(SELECT name FROM object_types WHERE id=object_type_id)',
 );
 %transforms = (
 		name  => [ 's/^\s+//', 's/\s+$//', 's/\s\s+/ /g' ],
