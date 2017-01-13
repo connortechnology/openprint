@@ -1,0 +1,47 @@
+<form id="f1" name="f1" action="/administrator/managerial/emails.html">
+	<table class="List sortable">	
+		<tr>
+			<th style="width: 20px;"><input type="checkbox" onclick="select_all(this.form, 'id', this.checked );"/></th>
+			<th class="Email">Email address</th>
+			<th class="Name">Name</th>
+			<th class="Forwards">Forwards</th>
+			<th class="Boolean">Active</th>
+			<th class="Boolean">Has Website Login?</th>
+			<th class="DateTime">Created On</th>
+			<th class="DateTime">Updated On</th>
+		</tr>
+		<? echo (
+			my $html = '';
+			my $mail_dbh = email::db_connect();
+			$openprint::Email_Account::dbh = $mail_dbh;
+			my @Emails = openprint::Email_Account->find('order'=>'username');
+
+			foreach my $Email ( @Emails ) {
+				my $User = openprint::User->find_one('email'=>$Email->id());
+				$html .= sprintf( '<tr>
+<td><input type="checkbox" name="id" value="%1$s" /></td>
+<td class="Email"><a href="email.html?id=%1$s">%1$s</a></td>
+<td class="Name"><a href="email.html?id=%1$s">%2$s</a></td>
+<td class="Forwards"><a href="email.html?id=%1$s">%3$s</a></td>
+<td class="Boolean">%4$s</td>
+<td class="Boolean">%5$s</td>
+<td class="DateTime">%6$s</td>
+<td class="DateTime">%7$s</td>
+</tr>', $Email->id(), 
+					( $Email->name() ? $Email->name() : ( $User ? $User->name() : '' ) ),
+					join('<br/>', map { split(',', $_ ); } sets::exclude( [ $Email->id() ], [ sql::execute( undef, $mail_dbh, 'SELECT goto from alias WHERE address=?', $Email->id() ) ] ) ),
+					( $Email->active() ? 'Yes' : 'No' ),
+					 ( $User ? 'Yes' : 'No' ),
+					Date::Format::time2str( $config{'DateTimeFormat'}, Date::Parse::str2time( $Email->created_on() ) ),
+					Date::Format::time2str( $config{'DateTimeFormat'}, Date::Parse::str2time( $Email->updated_on() ) ),
+					);
+			} # end foreach Email
+			return $html;
+		) ?>
+	</table>
+	<? echo (
+		my $html = '';
+		$html .= ssi::writeButton( undef, undef, 'Delete', 'delete.gif', 'f1.submit();', '', 'Delete Checked' );
+		return $html;
+	) ?>
+</form>

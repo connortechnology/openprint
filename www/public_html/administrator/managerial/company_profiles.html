@@ -1,472 +1,467 @@
-<a name="top"></a>
-<form name="f1" method="post" action="/administrator/managerial/company_profiles.html">
-	<fieldset class="filters"><legend>Search:</legend>
-		<p>
-			<label>Account #:</label>
-			<input type="text" name="txtSearchAccountNum" size="13" />
-			<? echo ( ssi::writeButton( $log, $dbh, 'Go','go.gif',"f1.btnFunction.value='Go';fmCheck(f1);",'','Go'); ) ?>
-		</p>
-		<p> 
-			<label>Customer:</label>
-			<input type="text" onkeyup="filterDDM(this, this.form.ddmCustomer);" size="4" />
-			<select name="ddmCustomer" onchange="if(this.options[this.selectedIndex].value != '') { f1.btnFunction.value='Go'; f1.submit();}">
-				<option value=""> Select a Customer</option>
-	 <? echo ( openprint::obj_customer::get_customer_dropdown( $log, $dbh, $openprint::param{'ddmCustomer'} ); ) ?>
-			</select>
-			<? echo ( ssi::writeButton($log, $dbh, 'Go2','go.gif',"f1.btnFunction.value='Go';fmCheck(f1);",'','Go'); ) ?>
-		</p>
-	</fieldset>
-	<fieldset>
-		<p> 
-			<label><? if ( $$variable{'CustomerIndex'} ) ?><a href="user_profiles.html?ddmCustomer=<?CustomerIndex?>">Link</a> to Users<? endif ( $$variable{'CustomerIndex'} ) ?>&nbsp;</label>
-		
-			<? echo ( join( '',
-				ssi::writeButton( $log, $dbh, 'Prev1','prev.gif',"f1.btnFunction.value='<<';fmCheck(f1);",'','<<'),
-				ssi::writeButton( $log, $dbh, 'Next1','next.gif',"f1.btnFunction.value='>>';fmCheck(f1);",'','>>'),
-				ssi::writeButton( $log, $dbh, 'New1','new.gif',"addCheck(f1);",'','New'),
-				ssi::writeButton( $log, $dbh, 'Delete1','delete.gif',"f1.btnFunction.value='Delete';fmChange=2;fmCheck(f1);",'','Delete'),
-				ssi::writeButton( $log, $dbh, 'Save1','save.gif',"f1.btnFunction.value='Save';fmChange=3;fmCheck(f1);",'','Save'),
-				ssi::writeButton( $log, $dbh, 'Reset1','reset.gif','f1.reset();','','Reset'),
-); ) ?>
-		</p>
-	</fieldset>
-	<fieldset>
-		<p> 
-			<label><b>Account Activated:</b></label>
-			<input type="radio" name="rdbAccountActivation" value="Y" <?rdbAccountActivationY?> /> Yes 
-			<input type="radio" name="rdbAccountActivation" value="N" <?rdbAccountActivationN?> /> No
-		</p>
-		<p>
-			<label>Is this a supplier?:</label>
-			<input type="radio" name="rdbSupplier" value="Y" <?rdbSupplierY?> /> Yes
-			<input type="radio" name="rdbSupplier" value="N" <?rdbSupplierN?> /> No
-		</p> <p>
-			<label>Is this a Reseller?:</label>
-			<input type="radio" name="rdbReseller" value="Y" <?rdbResellerY?> /> Yes
-			<input type="radio" name="rdbReseller" value="N" <?rdbResellerN?> /> No
-		</p>
-	</fieldset>
-	<fieldset><legend>Customer Information:</legend>
-		<p> 
-			<label>Account #:</label>
-			<input type="text" name="txtAccountNum" value="<?txtAccountNum?>" >
-		</p>
-		<p> 
-			<label>Company Name:</label>
-			<input type="text" name="txtCompanyName" value="<?txtCompanyName?>" >
-		</p>
-		<p> 
-			<label>Address:</label>
-			<input type="text" name="txtAddress1" value="<?txtAddress1?>" >
-		</p>
-		<p> 
-			<label>&nbsp;</label>
-			<input type="text" name="txtAddress2" value="<?txtAddress2?>" >
-		</p>
-		<p> 
-			<label>City:</label>
-			<input type="text" name="txtCity" value="<?txtCity?>" >
-		</p>
-		<p> 
-			<label>State/Province:</label>
-			<select name="ddmStateProvince">
-				<option value=""> Select </option>
-				<?ddmStateProvince?> 
-			</select>
-		</p>
-		<p> 
-			<label>Zip/Postal Code:</label>
-			<input type="Text" name="txtPostalCode" value="<?txtPostalCode?>" >
-		</p>
-		<p> 
-			<label>Country:</label>
-			<select name="ddmCountry">
-				<option value=""> Select </option>
-				<?ddmCountry?> 
-			</select>
-		</p>
-	<p> 
-		<label>Phone:</label>
-		 
-			<input type="text" name="txtPhone" value="<?txtPhone?>" >
-	</p>
-	<p> 
-		<label>Extension:</label>
-		 
-			<input type="text" name="txtExtension" value="<?txtExtension?>" >
-	</p>
-	<p> 
-		<label>Fax:</label>
-		 
-			<input type="text" name="txtFax" value="<?txtFax?>" >
-	</p>
-	</fieldset>
-	<fieldset><legend>Business Information:</legend>
-		<p> 
-			<label>Legal Name:</label>
-			<input type="text" name="txtLegalBusinessName" value="<?txtLegalBusinessName?>" >
-		</p>
-		<p> 
-			<label>Legal Form:</label>
-			<input type="radio" name="rdbLegalForm" value="Corporation" <?rdbLegalFormCorporation?> > Corporation
-			<input type="radio" name="rdbLegalForm" value="SoleProprietor" <?rdbLegalFormSoleProprietor?> > Sole Proprietor
-			<input type="radio" name="rdbLegalForm" value="Partnership" <?rdbLegalFormPartnership?> > Partnership
-		</p>
-		<p> 
-			<label>Business Type:</label>
-			<input type="text" name="txtBusinessType" value="<?txtBusinessType?>" >
-		</p>
-		<p> 
-			<label>Date Established:</label>
-			<select name="ddmStartMonth">
-				<option value=""> Select </option>
-				<?ddmStartMonth?>
-			</select>
-			<input type="text" name="txtStartYear" value="<?txtStartYear?>" style="width:auto;" size="6" >
-		</p>
-		<p> 
-			<label>President/Owner/CEO:</label>
-			<input type="text" name="txtPresidentOwner" value="<?txtPresidentOwner?>" >
-	</p>
-	<p> 
-		<label># of Employees:</label>
-		 
-			<select name="ddmEmployees">
-				<option value=""> Select </option>
-			<?ddmEmployees?>
-			</select>
-	</p>
-	<p> 
-		<label>Annual Sales:</label>
-		 
-			<select name="ddmAnnualSales">
-				<option value=""> Select </option>
-			<?ddmAnnualSales?>
-			</select>
-	</p>
-	<p> 
-		<label>Prov/State #:</label>
-		 
-			<input type="text" name="txtPSTNumber" value="<?txtPSTNumber?>" >
-	</p>
-	<p> 
-		<label>Federal/GST #:</label>
-		 
-			<input type="text" name="txtGSTNumber" value="<?txtGSTNumber?>" >
-	</p>
-	<p> 
-		<label>Federal/GST Tax Exempt?:</label>
-		 
-			<input type="radio"	name="rdbGSTExempt" value="Y" <?rdbGSTExemptY?>>Yes
-			<input type="radio"	name="rdbGSTExempt" value="N" <?rdbGSTExemptN?>>No
-	</p> <p> 
-		<label>State/Provincial Tax Exempt?:</label>
-		
-			<input type="radio"	name="rdbPSTExempt" value="Y" <?rdbPSTExemptY?>>Yes
-			<input type="radio"	name="rdbPSTExempt" value="N" <?rdbPSTExemptN?>>No
-	</p>
-	</fieldset>
-	<fieldset><legend>Sales Information:</legend>
-	<p> 
-		<label>Pricing List:</label>
-		 
-			<select name="ddmPriceList">
-				<option value="">Please select a Price list</option>
-				<option value="">--------------------------</option>
-				<?ddmPriceList?>
-			</select>
-	</p>
-	<p> 
-		<label>Preferred Currency:</label>
-		 
-			<select name="ddmCurrency">
-				<option value=""> Please select a Currency </option>
-				<? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::Currency::find( 'order'=>'lower(name)' ) ], $$variable{'ddmCurrency'} ); ) ?>
-			</select>
-	</p>
-	<p> 
-		<label>Pricing Discount:</label>
-			<input type="text" name="txtPricingLevel" value="<?txtPricingLevel?>" >
-		</p>
-		<p> 
-			<label>Sales Person:</label>
-			<select name="ddmSalesPerson">
-				<option value="">select</option>
-				<? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::User::find('type'=>['E','A'], 'web_active'=>'Y', 'order'=>'lower(strfirstname),lower(strlastname)') ], $$variable{'ddmSalesPerson'} ); ) ?>
-			</select>
-	</p>
-	</fieldset>
-	<fieldset><legend>Marketing Information:</legend>
-		<p> 
-			<label>Customer Category:</label>
-			<select name="selectCustomerCategories" size="4" multiple > <?selectCustomerCategories?> 
-			</select>
-			<br>
-			<span class="smTbl">Ctrl+click to select multiple values</span>
-	</p>
-	<p> 
-		<label>Greeting Message:</label>
-		 
-			<textarea name="txtCustomGreeting" cols="25" ><?txtCustomGreeting?></textarea>
-	</p>
-	</fieldset>
-	<fieldset><legend>Shipping Information:</legend>
-		<p> 
-			<label>Company Name:</label>
-			<input type="text" name="txtShippingCompanyName" value="<?txtShippingCompanyName?>" >
-		</p>
-		<p>
-			<label>Salutation:</label>
-			<input type="radio" name="rdbShippingSalutation" value="Mr." <?rdbShippingSalutationMr.?> /> Mr.
-			<input type="radio" name="rdbShippingSalutation" value="Mrs." <?rdbShippingSalutationMrs.?> /> Mrs.
-			<input type="radio" name="rdbShippingSalutation" value="Ms." <?rdbShippingSalutationMs.?> /> Ms.
-			<input type="radio" name="rdbShippingSalutation" value="Miss" <?rdbShippingSalutationMiss?> /> Miss
-	</p>
-	<p> 
-		<label>First Name:</label>
-		 
-			<input type="text" name="txtShippingFirstName" value="<?txtShippingFirstName?>" >
-	</p>
-	<p> 
-		<label>Last Name:</label>
-		 
-			<input type="text" name="txtShippingLastName" value="<?txtShippingLastName?>" >
-	</p>
-	<p> 
-		<label>Address:</label>
-		 
-			<input type="text" name="txtShippingAddress1" value="<?txtShippingAddress1?>" >
-	</p>
-	<p> 
-		<label>&nbsp;</label>
-		 
-			<input type="text" name="txtShippingAddress2" value="<?txtShippingAddress2?>" >
-	</p>
-	<p> 
-		<label>City:</label>
-		 
-			<input type="text" name="txtShippingCity" value="<?txtShippingCity?>" >
-	</p>
-	<p> 
-		<label>Province/State:</label>
-		 
-			<select name="ddmShippingStateProvince">
-				<option value=""> Select </option>
-<?ddmShippingStateProvince?> 
-			</select>
-	</p>
-	<p> 
-		<label>Other:</label>
-		 
-			<input type="Text" name="txtShippingOtherStateProvince" value="<?txtShippingOtherStateProvince?>" >
-	</p>
-	<p> 
-		<label>Postal/ZipCode:</label>
-		 
-			<input type="text" name="txtShippingPostalCode" value="<?txtShippingPostalCode?>" >
-	</p>
-	<p> 
-		<label>Country:</label>
-		 
-			<select name="ddmShippingCountry">
-				<option value=""> Select </option>
-				<?ddmShippingCountry?>
-			</select>
-	</p>
-	<p> 
-		<label>Other:</label>
-		 
-			<input type="Text" name="txtShippingOtherCountry" value="<?txtShippingOtherCountry?>" >
-	</p>
-	<p> 
-		<label>Phone:</label>
-		 
-			<input type="text" name="txtShippingPhone" value="<?txtShippingPhone?>" >
-	</p>
-	<p> 
-		<label>Extension:</label>
-		 
-			<input type="text" name="txtShippingExtension" value="<?txtShippingExtension?>" >
-	</p>
-	<p> 
-		<label>Fax:</label>
-		 
-			<input type="text" name="txtShippingFax" value="<?txtShippingFax?>" >
-	</p>
-	<p> 
-		<label>Email:</label>
-		 
-			<input type="text" name="txtShippingEmail" value="<?txtShippingEmail?>" >
-	</p>
-	</fieldset>
-	<fieldset><legend>Credit Information:</legend>
-		<p> 
-			<label>Terms:</label>
-			<input type="text" class="formTxt" name="txtTerms" value="<?txtTerms?>" > Days
-		</p>
-		<p> 
-			<label>Credit Account Limit:</label>
-			<input type="text" class="formTxt" name="txtCreditLimit" value="<?txtCreditLimit?>" >
-	</p>
-	<p> 
-		<label>Current Credit Balance:</label>
-		<?CreditBalance?>
-	</p>
-	<p> 
-		<label>Remaining Credit:</label>
-		<?CreditRemaining?>
-	</p>
-	<p> 
-		<label>Credit Hold:</label>
-		 
-			<input type="radio" name="rdbCreditHold" value="Y" <?rdbCreditHoldY?> /> Yes
-			<input type="radio" name="rdbCreditHold" value="N" <?rdbCreditHoldN?> /> No
-	</p>
-	<p> 
-		<label>Required Downpayment Amount:</label>
-		 
-			<input type="text" name="txtDownpayment" value="<?txtDownpayment?>" >
-	</p>
-	</fieldset>
-	<fieldset><legend>Bank Information</legend>
-		<p> 
-			<label>Bank Name:</label>
-			<input type="text" name="txtBankName" value="<?txtBankName?>" >
-	</p>
-	<p> 
-		<label>Branch #:</label>
-		 
-			<input type="text" name="txtBankBranch" value="<?txtBankBranch?>" >
-	</p>
-	<p> 
-		<label>Bank Account #:</label>
-		 
-			<input type="text" name="txtBankAccountNo" value="<?txtBankAccountNo?>" >
-	</p>
-	<p> 
-		<label>Account Manager:</label>
-		 
-			<input type="text" name="txtBankAccountManager" value="<?txtBankAccountManager?>" >
-	</p>
-	<p> 
-		<label>Bank Phone:</label>
-		 
-			<input type="text" name="txtBankPhone" value="<?txtBankPhone?>" >
-	</p>
-	<p> 
-		<label>Bank Fax:</label>
-		 
-			<input type="text" name="txtBankFax" value="<?txtBankFax?>" >
-	</p>
-	<p> 
-		<label>Bank E-mail:</label>
-		 
-			<input type="text" name="txtBankEmail" value="<?txtBankEmail?>" >
-	</p>
-	</fieldset>
-	<fieldset><legend>Trade References:</legend>
-	<p> 
-		<label>Company Name:</label>
-		 
-			<input type="text" name="txtTradeReferenceCompanyName1" value="<?txtTradeReferenceCompanyName1?>" >
-	</p>
-	<p> 
-		<label>Contact:</label>
-		 
-			<input type="text" name="txtTradeReferenceContact1" value="<?txtTradeReferenceContact1?>" >
-	</p>
-	<p> 
-		<label>Phone:</label>
-		 
-			<input type="text" name="txtTradeReferencePhone1" value="<?txtTradeReferencePhone1?>" >
-	</p>
-	<p> 
-		<label>Extension:</label>
-		 
-			<input type="text" name="txtTradeReferenceExt1" value="<?txtTradeReferenceExt1?>" >
-	</p>
-	<p> 
-		<label>Fax:</label>
-		 
-			<input type="text" name="txtTradeReferenceFax1" value="<?txtTradeReferenceFax1?>" >
-	</p>
-	<p> 
-		<label>E-mail Address:</label>
-		 
-			<input type="text" name="txtTradeReferenceEmail1" value="<?txtTradeReferenceEmail1?>" >
-	</p>
-	<br/>
-	<p> 
-		<label>Company Name</label>
-		 
-			<input type="text" name="txtTradeReferenceCompanyName2" value="<?txtTradeReferenceCompanyName2?>" >
-	</p>
-	<p> 
-		<label>Contact:</label>
-		 
-			<input type="text" name="txtTradeReferenceContact2" value="<?txtTradeReferenceContact2?>" >
-	</p>
-	<p> 
-		<label>Phone:</label>
-		 
-			<input type="text" name="txtTradeReferencePhone2" value="<?txtTradeReferencePhone2?>" >
-	</p>
-	<p> 
-		<label>Extension:</label>
-		 
-			<input type="text" name="txtTradeReferenceExt2" value="<?txtTradeReferenceExt2?>" >
-	</p>
-	<p> 
-		<label>Fax:</label>
-		 
-			<input type="text" name="txtTradeReferenceFax2" value="<?txtTradeReferenceFax2?>" >
-	</p>
-	<p> 
-		<label>E-mail Address:</label>
-		 
-			<input type="text" name="txtTradeReferenceEmail2" value="<?txtTradeReferenceEmail2?>" >
-	</p>
-	<p> 
-		<label>Company Name:</label>
-		 
-			<input type="text" name="txtTradeReferenceCompanyName3" value="<?txtTradeReferenceCompanyName3?>" >
-	</p>
-	<p> 
-		<label>Contact:</label>
-		 
-			<input type="text" name="txtTradeReferenceContact3" value="<?txtTradeReferenceContact3?>" >
-	</p>
-	<p> 
-		<label>Phone:</label>
-		 
-			<input type="text" name="txtTradeReferencePhone3" value="<?txtTradeReferencePhone3?>" >
-	</p>
-	<p> 
-		<label>Extension:</label>
-		<input type="text" name="txtTradeReferenceExt3" value="<?txtTradeReferenceExt3?>" >
-	</p>
-	<p> 
-		<label>Fax:</label>
-		<input type="text" name="txtTradeReferenceFax3" value="<?txtTradeReferenceFax3?>" >
-	</p>
-	<p> 
-		<label>E-mail Address:</label>
-		<input type="text" name="txtTradeReferenceEmail3" value="<?txtTradeReferenceEmail3?>" >
-	</p>
-</fieldset>
-<fieldset>
-	<p> 
-		<label><? if ( $$variable{'CustomerIndex'} ) ?><a href="user_profiles.html?ddmCustomer=<?CustomerIndex?>">Link</a> to Users<? endif ( $$variable{'CustomerIndex'} ) ?>&nbsp;</label>
-		
-			<? echo ( join( '',
-				ssi::writeButton( $log, $dbh, 'Prev2','prev.gif',"f1.btnFunction.value='<<';fmCheck(f1);",'','<<'),
-				ssi::writeButton( $log, $dbh, 'Next2','next.gif',"f1.btnFunction.value='>>';fmCheck(f1);",'','>>'),
-				ssi::writeButton( $log, $dbh, 'New2','new.gif',"addCheck(f1);",'','New'),
-				ssi::writeButton( $log, $dbh, 'Delete2','delete.gif',"f1.btnFunction.value='Delete';fmChange=2;fmCheck(f1);",'','Delete'),
-				ssi::writeButton( $log, $dbh, 'Save2','save.gif',"f1.btnFunction.value='Save';fmChange=3;fmCheck(f1);",'','Save'),
-				ssi::writeButton( $log, $dbh, 'Reset2','reset.gif','f1.reset();','','Reset'),
-); ) ?>
-	</p>
-</fieldset>
+<script type="text/javascript">
+function load_customers( ) {
+	var form = $('f1');
+	new Ajax.Updater( 'ddmCustomer', '/includes/_company_ddm.html', { parameters: { 
+		salesrep_id: form.search_salesrep_id ? get_ddm_value( form.search_salesrep_id ) : null,
+		name: f1.search_company_filter.value,
+		type: get_value( form.search_type ),
+		deleted: get_value( form.deleted ),
+		selected_id: get_ddm_value( form.ddmCustomer )
+		} } );
+}
+</script>
+<div class="CompanyProfiles">
+<?include(/includes/error_reporting.html)?>
+<form id="f1" name="f1" method="post" action="/administrator/managerial/company_profiles.html">
 	<input type="hidden" name="btnFunction"/>
+	<fieldset class="filters"><legend>Search</legend>
+		<ul>
+		<li>
+			<label>Account #</label>
+			<input type="text" name="txtSearchAccountNum" />
+			<? echo ( button( 'Go', { onclick=>"f1.btnFunction.value='Go';fmCheck(f1);" } ); ) ?>
+		</li>
+		<li>
+			<label>Type</label>
+			<select name="search_type" onchange="load_customers();">
+				<? echo ( 
+					my @options = ('All','Suppliers', 'Resellers', 'Customers');
+					return make_drop_down( [ map { $_, $_ } @options ], $param{search_type} );	
+				) ?>
+			</select>
+		</li>
+<? if ( @{$$variable{SalesReps}} = openprint::User->find( id=>[sql::execute( undef, undef, 'SELECT DISTINCT salesrep_id FROM companies')], deleted=>[0,1], order=>'lower(firstname),lower(lastname)') ) ?>
+		<li>
+			<label>Sales Rep</label>
+			<select name="search_salesrep_id" onchange="load_customers();">
+				<option value=""> All </option>
+				<? echo ( make_drop_down( [ map { $_->id(),$_->name() } @{$$variable{SalesReps}} ], $param{search_salesrep_id} ); ) ?>
+			</select>
+		</li>
+<? endif ( @{$$variable{SalesReps}} = openprint::User->find( id=>[sql::execute( undef, undef, 'SELECT DISTINCT salesrep_id FROM companies')], deleted=>[0,1], order=>'lower(firstname),lower(lastname)') ) ?>
+		<li><label>Deleted?</label><? echo ( radio( 'deleted', [ '1','Yes', '0', 'No', '', 'Both' ], $param{deleted}, {onclick=>"f1.ddmCustomer.selectedIndex=-1;load_customers();"} ); ) ?></li>
+		<li> 
+			<label>Company</label>
+			<input type="text" id="search_company_filter" oninput="load_customers();" onkeydown="if(event.keyCode == 13){f1.btnFunction.value='Go';this.form.submit();}" class="filter" />
+			<select id="ddmCustomer" name="ddmCustomer" onchange="if(this.options[this.selectedIndex].value != '') { f1.btnFunction.value='Go'; $('ButtonsTop').hide();f1.submit();}">
+				<option value=""> select </option>
+				<? echo ( 
+if ( 0 ) {
+					my %params = (
+							( $param{search_salesrep_id} ? ( 'salesrep_id'=>$param{search_salesrep_id} ) : () ),
+							( $param{deleted} ne '' ? ( 'deleted'=>$param{deleted} ) : () ),
+							'order'=>'lower(name)',
+					);
+					if ( $param{search_type} eq 'Suppliers' ) {
+						$params{supplier} ='Y';
+					} elsif ( $param{search_type} eq 'Resellers' ) {
+						$params{reseller} = 'Y';
+					} elsif ( $param{search_type} eq 'Customers' ) {
+						$params{supplier} = 'N';
+						$params{reseller} = 'N';
+					} # end if
+					my @Companies = @{$$variable{Companies}} = openprint::Company->find( %params );
+					if ( ! sets::isin( $param{ddmCustomer}, map { $_->id() } @Companies ) ) {
+						unshift @Companies, new openprint::Company( $param{ddmCustomer} );
+					} # end if
+
+					return make_drop_down( [ map { $_->id(), $_->name() } openprint::Company->find( %params ) ], $$variable{CustomerIndex} );
+} else {
+	return make_drop_down( [ map { $_->id(), $_->name() } ( $$variable{Company} ) ], $$variable{CustomerIndex} );
+}
+				) ?>
+			</select>
+			<? echo ( button( 'Go2', { onclick=>"f1.btnFunction.value='Go';fmCheck(f1);", text=>'Go' } ); ) ?>
+		</li>
+		</ul>
+	</fieldset>
+	<input type="hidden" name="company_id" id="company_id" value="<?CustomerIndex?>" />
+	<fieldset id="ButtonsTop">
+		<p> 
+			<label><? echo ( $$variable{CustomerIndex} ? button( 'Users', { href=>'user_profiles.html?ddmCustomer='.$$variable{CustomerIndex} } ) : '' ) ?></label>
+		
+			<? echo (
+				my $html = '';
+				$html .= button( 'Prev1', { onclick=>q`f1.btnFunction.value='&lt;&lt;';fmCheck(f1);`,text=>'&lt;&lt;' } );
+				$html .= button( 'Next1', { onclick=>q`f1.btnFunction.value='&gt;&gt;';fmCheck(f1);`,text=>'&gt;&gt;' } );
+				$html .= button( 'New1', { onclick=>'addCheck(f1);',text=>'New' } );
+				if ( $$variable{Company}->deleted() ) {
+					$html .= button( 'Undelete1', { onclick=>"f1.btnFunction.value='Undelete';fmCheck(f1);",text=>'Undelete' } );
+					$html .= button( 'Destroy1',{ onclick=>"f1.btnFunction.value='Destroy';fmCheck(f1);",text=>'Destroy' } );
+				} else {
+					$html .= button( 'Delete1', { onclick=>"f1.btnFunction.value='Delete';fmChange=2;fmCheck(f1);",text=>'Delete' } );
+				} # end if
+				$html .= button( 'Save1',{ onclick=>"f1.btnFunction.value='Save';fmChange=3;fmCheck(f1);",text => 'Save' } );
+				$html .= button( 'Reset1', { onclick=>'f1.reset();',text=>'Reset' } );
+				$html .= button( 'Merge', { onclick=>qq`popup_window('_merge_popup.html','company_id=$$variable{CustomerIndex}');` } );
+				return $html;
+			) ?>
+		</p>
+		<? echo (
+			if ( $$variable{Company}->id() ) {
+				my @Companies = openprint::Company->find( name=>$$variable{Company}->name(), order=>'id');
+				if ( @Companies > 1 ) {
+					my $html = '<div class="warning">There are duplicate companies!<br/>';
+					foreach my $C ( @Companies ) {
+						next if $C->id() == $$variable{Company}->id();
+						$html .= sprintf(q`<p><a href="/administrator/managerial/company_profiles.html?ddmCustomer=%1$d">%1$d : %2$s</a><br/>
+%3$s<br/>%4$d Users %5$d Projects %6$d Quotes %7$d Orders<br/>%8$s</p>`, $C->id(), $C->name(), join(' ', $C->get('address1','address2','city','state','country','postalcode')),
+scalar openprint::User->find( company_id=>$C->id()),
+scalar openprint::Project->find( company_id=>$C->id()),
+scalar openprint::Quote->find( company_id=>$C->id()),
+scalar openprint::Order->find( company_id=>$C->id()),
+button( 'merge'.$C->id(), { href=>'/administrator/managerial/company_profiles.html?ddmCustomer='.$$variable{Company}->id().'&amp;merge_company_id='.$C->id().'&amp;btnFunction=merge', text=>'Merge' } ) );
+					} # end foreach C
+					$html .= '</div>';
+					return $html;
+				} # end if have dups
+			} # end if
+			return '';
+		) ?>
+	</fieldset>
+	<div class="SalesInformation">
+		<fieldset><legend>Sales Information</legend>
+		<? if ( $$variable{Company}->deleted() ) ?>
+		<div class="error">This company has been deleted.</div>
+		<? endif ( $$variable{Company}->deleted() ) ?>
+		<b><?notes?></b>
+	<div class="leftColumn">
+		<ul>
+			<? if ( $$variable{Company}->id() ) ?>
+			<li><label>ID #</label><?CustomerIndex?></li>
+			<? endif ( $$variable{Company}->id() ) ?>
+			<li class="activation"> 
+				<label>Account Activated</label>
+				<? echo ( radio( 'activation', ['Y','Yes','N','No'], $$variable{Company}->activation(), {default=>'N'} ); ) ?>
+			</li><li>
+				<label>Is this a Supplier?</label>
+				<? echo ( radio( 'supplier', ['Y','Yes','N','No'], $$variable{Company}->supplier(), {default=>'N'} ); ) ?>
+			</li><li>
+				<label>Is this a Reseller?</label>
+				<? echo ( radio( 'reseller', ['Y','Yes','N','No'], $$variable{Company}->reseller(), {default=>'N'} ); ) ?>
+			</li>
+			<li><label>Offers Credit</label>
+			<? echo ( radio( 'offers_credit', ['1','Yes','0','No'], $$variable{Company}->offers_credit() ); ) ?>
+			</li><li> 
+				<label>Price List</label>
+				<select name="pricelist_id">
+					<option value="">select</option>
+					<? echo ( make_drop_down( openprint::Pricelist->dropdown( order=>'lower(name)'), $$variable{Company}->pricelist_id() ); ) ?>
+				</select>
+			</li><li> 
+				<label>Preferred Currency</label>
+				<select name="currency_id">
+					<option value=""> select </option>
+					<? echo ( make_drop_down( openprint::Currency->dropdown( order=>'lower(name)' ), $$variable{Company}->currency_id() ); ) ?>
+				</select>
+			</li>
+			<li class="discount"> 
+				<label>Pricing Discount</label>
+				<? echo ( input( type=>'float', name=>'discount', value=>$$variable{Company}->discount() ); ) ?> %
+			</li>
+			<li> 
+				<label>Sales Person</label>
+				<select name="salesrep_id">
+					<option value="">select</option>
+					<? echo ( make_drop_down( openprint::User->dropdown( type=>['E','A'], order=>'lower(firstname),lower(lastname)', web_active=>'Y'), $$variable{Company}->salesrep_id() ); ) ?>
+				</select>
+			</li>
+		</ul>
+	</div>
+	<div class="rightColumn">
+		<ul>
+		<? if ( $$variable{Company}->id() ) ?>
+		<li>
+			<label>Created On</label>
+			<? echo ( format_datetime( $$variable{Company}->created_on() ); ) ?>
+		</li>
+		<li>
+			<label>Last Update</label>
+			<? echo ( format_datetime( $$variable{Company}->updated_on() ); ) ?>
+		</li>
+		<li>
+			<label>Last Login</label>
+			<? echo ( 
+				$_ = openprint::Log->find_one( order=>'date_time DESC', action=>'Login', company_id=>$$variable{Company}->id() );
+				if ( ! $_ ) {
+					return 'never';
+				}
+				return format_datetime( $_->date_time() );
+			 ) ?>
+		</li>
+		<? endif ( $$variable{Company}->id() ) ?>
+		<li>
+			<label>Notes</label>
+			<textarea id="notes" name="notes" rows="<? echo ( count_lines( $$variable{notes} ); ) ?>" onkeyup="textarea_resize(this);"><?notes?></textarea>
+		</li>
+		<? if ( $$variable{Company}->id() ) ?>
+			<? eval (
+				@{$$variable{Orders}} = openprint::Order->find('company_id'=>$$variable{CustomerIndex},'order'=>'id DESC');
+			) ?>
+			<li><label># of Orders</label>
+				<a href="/administrator/reports/orders.html?ddmCustomer=<?CustomerIndex?>"><? echo ( @{$$variable{Orders}} ) ?></a>
+				<? if ( @{$$variable{Orders}} ) ?>
+				Last on
+				<a href="/administrator/reports/orders.html?ddmCustomer=<?CustomerIndex?>"><? echo ( Date::Format::time2str( $config{DateFormat}, Date::Parse::str2time( $$variable{Orders}[0]->created_on() ) ); ) ?></a>
+				<? endif ( @{$$variable{Orders}} ) ?>
+			</li>
+			<? eval ( @{$$variable{Projects}} = openprint::Project->find('company_id'=>$$variable{CustomerIndex},'order'=>'id DESC'); ) ?>
+			<li><label># of Projects</label>
+				<a href="/administrator/reports/projects.html?ddmCustomer=<?CustomerIndex?>"><? echo ( @{$$variable{Projects}} ) ?></a>
+				<? if ( @{$$variable{Projects}} ) ?>
+				Last on
+				<a href="/administrator/reports/projects.html?ddmCustomer=<?CustomerIndex?>"><? echo ( Date::Format::time2str( $config{DateFormat}, Date::Parse::str2time( $$variable{Projects}[0]->created_on() ) ); ) ?></a>
+				<? endif ( @{$$variable{Projects}} ) ?>
+			</li>
+			<li>
+				<label>Accounting Contacts</label>
+				<span id="AccountingContacts"><?include('_company_accounting_contacts.html')?></span>
+			</li>
+		<? endif ( $$variable{Company}->id() ) ?>
+			</ul>
+		</div>
+	</fieldset>
+</div>
+<div class="CompanyInformation">
+	<fieldset><legend>Company Information</legend>
+		<ul>
+			<li> 
+				<label>Account #</label>
+				<input type="text" name="accountnumber" value="<? echo ( $$variable{Company}->accountnumber() ) ?>" />
+			</li>
+			<li><label>Company Category</label>
+				<select name="category_id" id="category_id">
+					<option value="">select</option>
+				<? echo ( make_drop_down( openprint::Company_Category->dropdown( order=>'lower(name)'), $$variable{Company}->category_id() ); ) ?>
+				</select>
+			</li>
+			<li> 
+				<label>Internal Name</label>
+				<input type="text" name="name" value="<? echo ( $$variable{Company}->name() ) ?>" />
+			</li>
+			<li> 
+				<label>Legal Name</label>
+				<input type="text" name="business_name" value="<? echo ( $$variable{Company}->business_name() ) ?>" />
+			</li>
+			<li> 
+				<label>Address</label>
+				<input type="text" name="address1" value="<? echo ( $$variable{Company}->address1() ) ?>" />
+			</li>
+			<li class="address2"> 
+				<label>&nbsp;</label>
+				<input type="text" name="address2" value="<? echo ( $$variable{Company}->address2() ) ?>" />
+			</li>
+			<li> 
+				<label>Country</label>
+				<select name="country" onchange="Country_onchange(this,this.form.state);">
+					<option value=""> select </option>
+					<? echo ( return_countries($$variable{Company}->country() ); ) ?>
+				</select>
+			</li>
+			<li> 
+				<label><span id="country_state">State/Province</span></label>
+				<select name="state">
+					<option value=""> select </option>
+					<? echo ( return_states_and_provinces($$variable{Company}->state() ); ) ?> 
+				</select>
+			</li>
+			<li> 
+				<label>City</label>
+				<input type="text" name="city" value="<? echo ( $$variable{Company}->city() ) ?>" />
+			</li>
+			<li> 
+				<label><span id="country_postal">Zip/Postal Code</span></label>
+				<input type="text" name="postalcode" value="<? echo ( $$variable{Company}->postalcode() ) ?>" />
+			</li>
+			<li> 
+				<label>Phone</label>
+				<input type="tel" name="phone" value="<? echo ( $$variable{Company}->phone() ) ?>" />
+			</li>
+			<li> 
+				<label>Extension</label>
+				<input type="tel" name="extension" value="<? echo ( $$variable{Company}->extension() ) ?>" />
+			</li>
+			<li> 
+				<label>Fax</label>
+				<input type="tel" name="fax" value="<? echo ( $$variable{Company}->fax() ) ?>" />
+			</li>
+		</ul>
+	</fieldset>
+</div>
+<?include('/account/_company_profile_edit.html')?>
+<div class="BusinessInformation">
+	<fieldset><legend>Business Information</legend>
+		<ul>
+			<li> 
+				<label>Legal Form</label>
+				<? echo ( radio( 'business_form', [ 'Corporation', 'Corporation', 'SoleProprietor', 'Sole Proprietor', 'Partnership', 'Partnership' ], $$variable{Company}->business_form() ); ) ?>
+			</li>
+			<li> 
+				<label>Business Type</label>
+				<input type="text" name="business_type" value="<? echo ( $$variable{Company}->business_type() ) ?>" />
+			</li>
+			<li> 
+				<label>Date Established</label>
+				<select name="start_month" id="start_month">
+					<option value=""> Select </option>
+					<? echo ( getmonths( $$variable{Company}->start_month() ); ) ?>
+				</select>
+				<? echo ( input( type=>'cardinal', name=>'start_year', id=>'start_year', value=>$$variable{Company}->start_year() ); ) ?>
+			</li>
+			<li> 
+				<label>President/Owner/CEO</label>
+				<input type="text" name="president_owner" value="<? echo ( $$variable{Company}->president_owner() ) ?>" />
+			</li>
+			<li> 
+				<label>Federal/GST #</label>
+				<input type="text" name="gst_number" value="<? echo ( $$variable{Company}->gst_number() ) ?>" />
+			</li>
+			<li> 
+				<label>Federal/GST Tax Exempt?</label>
+				<input type="radio"	name="gst_exempt" id="gst_exemptY" value="Y" <? echo ( ssi::checked( $$variable{Company}->gst_exempt() eq 'Y' ); ) ?> />
+				<label class="radio" for="gst_exemptY">Yes</label>
+				<input type="radio"	name="gst_exempt" id="gst_exemptN" value="N" <? echo ( ssi::checked( $$variable{Company}->gst_exempt() ne 'Y' ); ) ?> />
+				<label class="radio" for="gst_exemptN">No</label>
+			</li>
+			<li> 
+				<label>Prov/State #</label>
+				<input type="text" name="pst_number" value="<? echo ( $$variable{Company}->pst_number() ) ?>" />
+			</li>
+			<li> 
+				<label>State/Provincial Tax Exempt?</label>
+				<input type="radio"	name="pst_exempt" id="pst_exemptY" value="Y" <? echo ( ssi::checked( $$variable{Company}->pst_exempt() eq 'Y' ); ) ?> />
+				<label class="radio" for="pst_exemptY">Yes</label>
+				<input type="radio"	name="pst_exempt" id="pst_exemptN" value="N" <? echo ( ssi::checked( $$variable{Company}->pst_exempt() ne 'Y' ); ) ?> />
+				<label class="radio" for="pst_exemptN">No</label>
+			</li>
+		</ul>
+	</fieldset>
+</div>
+<div class="MarketingInformation">
+	<fieldset><legend>Marketing Information</legend>
+		<ul>
+			<? if ( $$variable{selectCustomerCategories} ) ?>
+			<li> 
+				<label>Marketing Category</label>
+				<select name="selectCustomerCategories" size="4" multiple="multiple"><?selectCustomerCategories?></select>
+			</li>
+			<? endif ( $$variable{selectCustomerCategories} ) ?>
+			<li> 
+				<label>Greeting Message</label>
+				<textarea name="greeting" rows="<? echo ( count_lines( $$variable{Company}->greeting() ); ) ?>" onkeyup="textarea_resize(this);"><? echo ( $$variable{Company}->greeting() ) ?></textarea>
+			</li>
+		</ul>
+	</fieldset>
+</div>
+<div class="ShippingInformation">
+	<fieldset><legend>Shipping Information</legend>
+		<ul>
+			<li> 
+				<label>Company Name</label>
+				<input type="text" name="txtShippingCompanyName" value="<?txtShippingCompanyName?>" />
+			</li>
+			<li>
+				<label>Salutation</label>
+				<input type="radio" name="rdbShippingSalutation" id="rdbShippingSalutationMr." value="Mr." <? echo ( ssi::checked( $$variable{rdbShippingSalutation} eq 'Mr.' ); ) ?> /><label class="radio" for="rdbShippingSalutationMr.">Mr.</label>
+				<input type="radio" name="rdbShippingSalutation" id="rdbShippingSalutationMrs." value="Mrs." <? echo ( ssi::checked( $$variable{rdbShippingSalutation} eq 'Mrs.' ); ) ?> /><label class="radio" for="rdbShippingSalutationMrs.">Mrs.</label>
+				<input type="radio" name="rdbShippingSalutation" id="rdbShippingSalutationMs." value="Ms." <? echo ( ssi::checked( $$variable{rdbShippingSalutation} eq 'Ms.' ); ) ?> /><label class="radio" for="rdbShippingSalutationMs.">Ms.</label>
+				<input type="radio" name="rdbShippingSalutation" id="rdbShippingSalutationMiss" value="Miss" <? echo ( ssi::checked( $$variable{rdbShippingSalutation} eq 'Miss' ); ) ?> /><label class="radio" for="rdbShippingSalutationMiss">Miss</label>
+			</li>
+			<li> 
+				<label>First Name</label>
+				<input type="text" name="txtShippingFirstName" value="<?txtShippingFirstName?>" />
+			</li>
+			<li> 
+				<label>Last Name</label>
+				<input type="text" name="txtShippingLastName" value="<?txtShippingLastName?>" />
+			</li>
+			<li> 
+				<label>Address</label>
+				<input type="text" name="txtShippingAddress1" value="<?txtShippingAddress1?>" />
+			</li>
+			<li> 
+				<label>&nbsp;</label>
+				<input type="text" name="txtShippingAddress2" value="<?txtShippingAddress2?>" />
+			</li>
+			<li> 
+				<label>Country</label>
+				<select name="ddmShippingCountry" onchange="Country_onchange(this, this.form.ddmShippingStateProvince );">
+					<option value=""> Select </option>
+					<? echo ( return_countries($variable{ddmShippingCountry}); ) ?>
+				</select>
+			</li>
+			<li> 
+				<label><span id="ddmShippingCountry_state">Province/State</span></label>
+				<select name="ddmShippingStateProvince">
+					<option value=""> Select </option>
+					<? echo ( return_states_and_provinces($variable{ddmShippingStateProvince}); ) ?>
+				</select>
+			</li>
+			<li> 
+				<label>City</label>
+				<input type="text" name="txtShippingCity" value="<?txtShippingCity?>" />
+			</li>
+			<li> 
+				<label><span id="ddmShippingCountry_postal">Postal/ZipCode</span></label>
+				<input type="text" name="txtShippingPostalCode" value="<?txtShippingPostalCode?>" />
+			</li>
+			<li> 
+				<label>Phone</label>
+				<input type="tel" name="txtShippingPhone" value="<?txtShippingPhone?>" />
+			</li>
+			<li> 
+				<label>Fax</label>
+				<input type="tel" name="txtShippingFax" value="<?txtShippingFax?>" />
+			</li>
+			<li> 
+				<label>Email</label>
+				<input type="email" name="txtShippingEmail" value="<?txtShippingEmail?>" />
+			</li>
+		</ul>
+	</fieldset>
+</div>
+<div class="CreditInformation">
+<?include(/includes/_credit_edit.html)?>
+</div>
+<div class="BankInformation">
+	<fieldset><legend>Bank Information</legend>
+		<ul>
+		<li> 
+			<label>Bank Name</label>
+			<input type="text" name="txtBankName" value="<?txtBankName?>" />
+		</li>
+		<li> 
+			<label>Branch #</label>
+			<input type="text" name="txtBankBranch" value="<?txtBankBranch?>" />
+		</li>
+		<li> 
+			<label>Bank Account #</label>
+			<input type="text" name="txtBankAccountNo" value="<?txtBankAccountNo?>" />
+		</li>
+		<li> 
+			<label>Account Manager</label>
+			<input type="text" name="txtBankAccountManager" value="<?txtBankAccountManager?>" />
+		</li>
+		<li> 
+			<label>Bank Phone</label>
+			<input type="tel" name="txtBankPhone" value="<?txtBankPhone?>" />
+		</li>
+		<li> 
+			<label>Bank Fax</label>
+			<input type="tel" name="txtBankFax" value="<?txtBankFax?>" />
+		</li>
+		<li> 
+			<label>Bank E-mail</label>
+			<input type="email" name="txtBankEmail" value="<?txtBankEmail?>" />
+		</li>
+		</ul>
+	</fieldset>
+</div>
+<?include(/account/_trade_references.html)?>
+<? if ( $$variable{CustomerIndex} ) ?>
+<br class="spacer"/>
+<? echo ( include_logs( $$variable{Company} ); ) ?>
+<? endif ( $$variable{CustomerIndex} ) ?>
 </form>
+</div>
+<script type="text/javascript">load_customers();</script>

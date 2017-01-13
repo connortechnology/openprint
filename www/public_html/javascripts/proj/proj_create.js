@@ -15,12 +15,15 @@ function validate_data (form) {
 	var text = '';
 
 	var ptype = false;
-	for ( var index = 0; index < form.rdbProjectType.length; index += 1 ) {
-		if ( form.rdbProjectType[index].checked ) {
+	if ( form.rdbProjectType ) {
+		if ( get_value( form.rdbProjectType ) ) {
 			ptype = true;
-			break;
 		} // end if
-	} // end for
+	} else if ( form.project_type_id ) {
+		if ( get_value( form.project_type_id ) ) {
+			ptype = true;
+		} // end if
+	}
 	if ( ! ptype ) {
 		text += "Please select the type of project.\n";
 	} // end if
@@ -38,28 +41,23 @@ function validate_data (form) {
 		} // end if
 	} // end if
 
-	if (form.txtQuantity1.value) {
-		if ( parseInt(form.txtQuantity1.value) != form.txtQuantity1.value) {
+	if (form.quantity1.value) {
+		if ( parseInt(form.quantity1.value) != form.quantity1.value) {
 			text += "The field 'Quantity 1' may only contain whole numbers greater than 1.\n";
 		} // end if
 	} // end if
-	if (form.txtQuantity2.value) {
-		if ( parseInt(form.txtQuantity2.value) != form.txtQuantity2.value) {
+	if (form.quantity2.value) {
+		if ( parseInt(form.quantity2.value) != form.quantity2.value) {
 			text += "The field 'Quantity 2' may only contain whole numbers greater than 1.\n";
 		} // end if
 	} // end if
-	if (form.txtQuantity3.value) {
-		if ( parseInt(form.txtQuantity3.value) != form.txtQuantity3.value) {
+	if (form.quantity3.value) {
+		if ( parseInt(form.quantity3.value) != form.quantity3.value) {
 			text += "The field 'Quantity 3' may only contain whole numbers greater than 1.\n";
 		} // end if
 	} // end if
-	if ( ! form.txtQuantity1.value && ! form.txtQuantity2.value && ! form.txtQuantity3.value ) { 
+	if ( ! form.quantity1.value && ! form.quantity2.value && ! form.quantity3.value ) { 
 		text += "Please enter at least one Quantity for your project.\n";
-	} // end if
-	var reference = form.txtProjectReference.value;
-	var reg = /\S/g;
-	if ( ! reg.exec(reference) ) {
-		text += "Please give your project a reference name.\n";
 	} // end if
 	if ( form.ddmDesign && ! get_value( form.ddmDesign ) ) {
 		text += "Please specify the supplied format.\n";
@@ -75,10 +73,10 @@ function validate_data (form) {
 
 function project_type_alert( form, rdb ) {
 	if ( rdb.value == "BusinessCards" ) {
-		alert ("Please input the business card quantities in the fields below." + "\n" + "\n" + "(Example: Each name would require 500, 1000, 2000 business cards.)" + "\n" + "\n" + "Name quantities can be input on the next page.");
+		alert ("Please input the total # of business cards in the fields below. Name quantities will be asked for later. ");
 	} // end if
 	if ( rdb.value == "MultiVersion" ) {
-		alert ("Please input the quantities for each version in the fields below." + "\n" + "\n" + "(Example: Each version would require 1000, 2000, 3000.)" + "\n" + "\n" + "Version quantities can be input on the next page.");
+		alert ("Please input the total quantity in the fields below." + "\n" + "\n" + "Version quantities can be input on the next page.");
 	} // end if
 // Project types not yet working	
 /*	if (( rdb.value == 'Calendars' ) || ( rdb.value == 'Forms' ) || ( rdb.value == 'Cheques' ) || ( rdb.value == 'PresentationFolders' )) {
@@ -133,6 +131,8 @@ function check_service( chk, service ) {
 
 function service_onclick( element ) {
 	if ( element.value == 'NoBindery' && element.checked ) {
+		if ( element.form.chkServicesPerfectBound ) 
+			element.form.chkServicesPerfectBound.checked = false;
 		if ( element.form.chkServicesSaddleStitching ) 
 			element.form.chkServicesSaddleStitching.checked = false;
 		if ( element.form.chkServicesLoopStitching ) 
@@ -147,6 +147,19 @@ function service_onclick( element ) {
 			element.form.chkServicesPerforating.checked = false;
 		if ( element.form.chkServicesDrilling ) 
 			element.form.chkServicesDrilling.checked = false;
+		if ( element.form.chkServicesPlainCartons ) 
+			element.form.chkServicesPlainCartons.checked = false;
+	} else if ( element.value == 'NoPrinting' ) {
+		var e = $('Design');
+		if ( element.checked ) {
+			if ( element.form.chkServicesProofs ) 
+				element.form.chkServicesProofs.checked = false;
+			if ( e ) e.hide();
+		} else {
+			if ( element.form.chkServicesProofs ) 
+				element.form.chkServicesProofs.checked = true;
+			if ( e ) e.show();
+		} // end if
 	} else if ( element.checked ) {
 		if ( element.form.chkServicesNoBindery ) 
 			element.form.chkServicesNoBindery.checked = false;
@@ -173,7 +186,7 @@ function checkSelections (form){
 	} // end if
 
 	if ( projectType == 'PresentationFolders' ) {
-		if ( ! form.chkServicesDieCutting.checked ) {
+		if ( form.chkServicesDieCutting && ! form.chkServicesDieCutting.checked ) {
 			if (confirm ("Your project requires a die cutting service in order for us to fufill your request for Presentation Folders.\n\nIf you would like to add die cutting to your project please click OK, otherwise click Cancel.")){
 				form.chkServicesDieCutting.checked = true;
 			} // end if			
@@ -195,8 +208,8 @@ function checkSelections (form){
 	return true;
 } // end checkFilmProofsPads()
 
-function calc(formName) {
-	if ( gettingNewPrice ) {
+function calc( formName, force ) {
+	if ( gettingNewPrice && ! force ) {
 		if ( timeout ) clearTimeout( timeout );
 		timeout = setTimeout( "calc('" + formName + "');", 1000 );
 		return;
@@ -204,5 +217,9 @@ function calc(formName) {
 	timeout = null;
 	var form = getFormObj( formName );
     gettingNewPrice = true;
-	jsrsExecute( '/jsrs.htm', cbFillResults, 'openprint::print_project::create_calc', Serialize( form ) );
+	var h = $H(Form.serialize(form,true));
+	h.set('ServiceType', 'Project' );
+	h.set('callback', 'cbFillResults' );
+	h.set('method', 'create_calc' );
+	new Ajax.Request( '/main/project/_calc.json', { method: 'post', parameters: h, evalScripts: true } );
 } // end function calc(form)

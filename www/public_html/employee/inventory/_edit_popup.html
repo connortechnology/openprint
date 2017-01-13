@@ -4,15 +4,16 @@
 		<input type="hidden" name="skid_id" value="<?skid_id?>"/>
 		<input type="hidden" name="paper_id" />
 		<input type="hidden" name="btnFunction" value="Edit" />
-		<div class="row">
-			<span class="label">Quantity:</span>
-			<span class="input"><input style="float: left;" type="text" name="Quantity" onKeyPress="return input_handler( this, event);"/>
+		<ul>
+		<li>
+			<label>Quantity</label>
+			<input type="text" name="Quantity" onkeypress="return input_handler( this, event);"/>
 			<? echo ( ssi::writeButton( $log, $dbh, 'clearEditQuantity', 'clear.gif', "EditForm.Quantity.value='';", '', 'Clear' ); ) ?>
-			</span>
-		</div>
-		<span style="float: right;">
+		</li>
+		</ul>
+		<p class="buttons">
 		<? echo ( ssi::writeButton( $log, $dbh, 'SaveEdit', 'save.gif', 'checkinform.submit();', '', 'Save' ); ) ?>
-		<? echo ( ssi::writeButton( $log, $dbh, 'CancelEdit', 'cancel.gif', "hide_div('Edit');", '', 'Cancel' ); ) ?>
-		</span>
+		<? echo ( ssi::writeButton( $log, $dbh, 'CancelEdit', 'cancel.gif', q`$('Edit').hide();`, '', 'Cancel' ); ) ?>
+		</p>
 	</form>
 </div>

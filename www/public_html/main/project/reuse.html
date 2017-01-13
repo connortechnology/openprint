@@ -2,56 +2,124 @@
 <h1>PROJECTS</h1>
 <h2>Reuse Project</h2>
 </div>
-<div class="ProjectCreateEdit">
-	<form name="f1" method="post" action="/main/project/view.html">
+<div class="Project"><div class="Reuse">
+	<? echo (
+		my $html;
+		my @required_services;
+		my @overrides;
+		my $services = $$variable{Project}->services();
+
+		foreach my $ServiceType ( openprint::ServiceType->find() ) {
+			my $module = 'openprint::Estimating::'.$ServiceType->name();
+			if ( ! ( $$services{$ServiceType->name()} and @{$$services{$ServiceType->name()}} ) ) {
+				if ( my $function = $module->can( 'neccessary' ) ) {
+					if ( $function->( $variable{Project} ) ) {
+						push @required_services, $ServiceType->name();	
+					} # end if
+				} # end if
+			} else {
+				if ( my $function = $module->can( 'has_overrides' ) ) {
+					foreach my $s_id ( @{$$services{$ServiceType->name()}} ) {
+						if ( $function->( $variable{Project}, $s_id ) ) {
+							push @overrides, $ServiceType->name();	
+						} # end if
+					} # end foreach my $s_id
+				} # end if
+			} # end if
+		} # end foreach ServiceType
+		if ( @required_services ) {
+			$html .= 'This project requires but does not have the following services:' . join(', ', @required_services).'<br/>';
+		} # end if
+		if ( @overrides ) {
+			$html .= 'The following services have overrides which may mean that this quote is not valid or not optimal:' . join(', ', @overrides).'<br/>';
+		} # end if
+		return '<span class="warning">'.$html.'</span>';
+	) ?>
+	<form id="f1" name="f1" method="post" action="/main/project/view.html">
 		<fieldset>
-			<p> 
-				<label>Please provide a reference:</label>
-				<textarea name="reference" rows="3" wrap="virtual" >Copy of <? echo ( $$variable{'Project'}->reference(); ) ?></textarea>
-			</p>
-			<p>
-				<label>Additional comments or instructions:</label>
-				<textarea name="comments" rows="5" wrap="virtual" ><? echo ( ssi::htmlize( $$variable{'Project'}->comments() ); ) ?></textarea>
-			</p>
-		</fieldset>
-		<fieldset>
-			<legend>What quantities would you like to calculate pricing for?</legend>
 			<ul>
-				<li>
-					<label for="quantity1">Quantity 1:</label>
-					<input id="quantity1" name="quantity1" value="<? echo ( $$variable{'Project'}->quantity1(); ) ?>" type="text" size="12" />
+				<li> 
+					<label>Please provide a reference</label>
+					<textarea name="reference" rows="<? echo ( count_lines( $$variable{Project}->reference() ) ) ?>" onkeyup="textarea_resize(this);"><? echo ( unhtmlize( $$variable{Project}->reference() ); ) ?></textarea>
 				</li>
 				<li>
-					<label for="quantity2">Quantity 2:</label>
-					<input id="quantity2" name="quantity2" value="<? echo ( $$variable{'Project'}->quantity2(); ) ?>" type="text" size="12" />
-				</li>
-				<li>
-					<label for="quantity3">Quantity 3:</label>
-					<input id="quantity3" name="quantity3" value="<? echo ( $$variable{'Project'}->quantity3(); ) ?>" type="text" size="12" />
+					<label>Additional comments or instructions</label>
+					<textarea name="comments" rows="<? echo ( count_lines( $$variable{Project}->comments() ); ) ?>" onkeyup="textarea_resize(this);"><? echo ( htmlize( $$variable{Project}->comments() ); ) ?></textarea>
 				</li>
 			</ul>
 		</fieldset>
-		<? if ( $openprint::session{'user_type'} eq 'E' or $openprint::session{'user_type'} eq 'A' ) ?>
+		<div class="quantities">
+		<fieldset>
+			<legend>What quantities would you like to calculate pricing for?</legend>
+			<ul>
+				<li class="quantity1">
+					<label for="quantity1">Quantity 1</label>
+					<? echo ( input( type=>'cardinal', id=>'quantity1', name=>'quantity1', value=>$$variable{Project}->quantity1() ); ) ?>
+				</li>
+				<li class="quantity2">
+					<label for="quantity2">Quantity 2</label>
+					<? echo ( input( type=>'cardinal', id=>'quantity2', name=>'quantity2', value=>$$variable{Project}->quantity2() ); ) ?>
+				</li>
+				<li class="quantity3">
+					<label for="quantity3">Quantity 3</label>
+					<? echo ( input( type=>'cardinal', id=>'quantity3', name=>'quantity3', value=>$$variable{Project}->quantity3() ); ) ?>
+				</li>
+			</ul>
+		</fieldset>
+		</div>
+		<? if ( sets::isin( $session{user_type}, [ 'E', 'A'] ) ) ?>
 	<fieldset>
-			If you would like to assign this project to a different customer, please select them now. You will be logged in as the selected customer and any orders or quotes you make from now on will be recorded in their history.
-		<p>
-			<label>Company:</label>
-			<input type="text" onkeyup="filterDDM(this, f1.ddmCompany);" size="4" style="width: auto;"/>
-			<select name="ddmCompany">
-				<option value="">Select a Customer</option>
-				<? echo ( openprint::obj_customer::get_customer_dropdown( $log, $dbh, $openprint::session{'company_id'} ); ) ?>
-			</select>
-		</p>
+		If you would like to assign this project to a different customer, please select them now. You will be logged in as the selected customer and any orders or quotes you make from now on will be recorded in their history.
+		<ul>
+			<li>
+				<label>Company</label>
+				<input type="text" onkeyup="filter_companies('company_id', {name:this.value,selected_id:get_ddm_value($('company_id'))});" class="filter" />
+				<select id="company_id" name="company_id" onchange="stop_filter_companies();">
+					<option value="">Select a Customer</option>
+					<? echo ( make_drop_down( openprint::Company->dropdown('last_project_id is null'=>0), $session{company_id});) ?>
+				</select>
+			</li>
+<li><label>Last 10</label>
+    <? echo ( 
+        my $html = '';
+
+        my $parser = 'DateTime::Format::Pg';
+        my $TZ = DateTime::TimeZone->new( name => $config{Timezone} );
+        my ( $year, $month, $day ) = Date::Calc::Add_Delta_Days( Date::Calc::Today(), -5 );
+
+        my $datetime = DateTime->new( time_zone => $TZ, ( year => $year, month=>$month, day=>$day, ));
+
+        my @Entries = openprint::Log->find( user_id=>$session{user_id}, action=>'Switch Company', order=>'date_time DESC','date_time >=' => $parser->format_datetime( $datetime ) );
+        my @Companies = openprint::Company->find( id=>[ map { $_->company_id() } @Entries ] ) if @Entries;
+        my %companies;
+        foreach my $Log ( sort { $a->Company()->name() cmp $b->Company()->name() }@Entries ) {
+            next if $companies{$$Log{company_id}};
+            $companies{$$Log{company_id}} = $Log->company_id();
+            $html .= sprintf(q`<a onclick="ddm_select_by_value($('company_id'), %d);" href="#">%s</a><br/>`,
+                $Log->company_id(), $Log->Company()->name(),
+            );
+        } # end foreach
+        my $User = new openprint::User($session{user_id});
+        if ( ! $companies{$$User{company_id}} ) {
+            $html .= sprintf(q`<a onclick="ddm_select_by_value($('company_id'), %d);"href="#">%s</a><br/>`,
+                $User->company_id(), $User->Company()->name(),
+            );
+        } # end if
+        return $html;
+        ) ?>
+        </li>
+		</ul>
 	</fieldset>
-		<? endif ( $openprint::session{'user_type'} eq 'E' or $openprint::session{'user_type'} eq 'A' ) ?>
+		<? endif ( sets::isin( $session{user_type}, [ 'E', 'A'] ) ) ?>
 		Please click &quot;Save &amp; Continue&quot; if you have provided all the relevant project information.
 		<p class="buttons">
-			<? echo ( join('',
-					ssi::writeButton( $log, $dbh, 'Reset','reset.gif','f1.reset();','','Reset'),
-					ssi::writeButton( $log, $dbh, 'SaveAndContinue','save_and_continue.gif','f1.submit();','','Save And Continue'),
+			<? echo ( join("\n",
+					button( 'Reset', { onclick=>'f1.reset();' } ),
+					button( 'SaveAndContinue', { onclick=>'f1.submit();',text=>'Save And Continue'}),
 			); ) ?>
 		</p>
 		<input type="hidden" name="ProjectIndex" value="<?ProjectIndex?>"/>
 		<input type="hidden" name="btnFunction" value="Reuse Project"/>
 	</form>
+</div>
 </div>

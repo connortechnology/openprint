@@ -43,9 +43,9 @@ Scan the barcodes in any order.  Once you have scanned in all fields, you may cl
 			<tr><th align="left" width="130">Date Time</th><th align="left" width="200">Operator</th><th align="left" width="75">Docket</th><th align="left">Action</th></tr>
 			<? echo (
 				my $html;
-				my @data = sql::execute( $log, $dbh, q{SELECT project_id, (SELECT Index FROM Orders WHERE lngDocketNumber=DocketNumber), DocketNumber, to_char(dtmTimestamp,'HH12:MIpm MM/DD/YYYY'), user_id, ( SELECT strFirstName || ' ' || strLastName FROM Users WHERE index=operator_id), Description FROM Barcode_Log WHERE dtmTimestamp > NOW() - '6 weeks'::interval ORDER BY dtmTimestamp DESC} );
+				my @data = sql::execute( $log, $dbh, q{SELECT project_id, (SELECT id FROM Orders WHERE docket=DocketNumber), DocketNumber, to_char(dtmTimestamp,'HH12:MIpm MM/DD/YYYY'), user_id, ( SELECT firstname || ' ' || lastname FROM Users WHERE id=operator_id), Description FROM Barcode_Log WHERE dtmTimestamp > NOW() - '6 weeks'::interval ORDER BY dtmTimestamp DESC} );
 				while ( my ( $project_index, $order_id, $docket, $when, $user_id, $user_name, $description ) = splice @data, 0, 7 ) {
-					$html .= qq{<tr><td>$when</td><td>$user_name</td><td><a href="project_view.html?ProjectIndex=$project_index&OrderID=$order_id">$docket</a></td><td>$description</td></tr>};
+					$html .= qq{<tr><td>$when</td><td>$user_name</td><td><a href="/employee/project/view.html?ProjectIndex=$project_index&OrderID=$order_id">$docket</a></td><td>$description</td></tr>};
 				} # end while
 				return $html;
 			) ?>

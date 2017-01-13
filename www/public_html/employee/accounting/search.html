@@ -1,115 +1,107 @@
-<? eval (
-		foreach my $key ( 'ddmCustomer','ddmStatus','ddmEmployee','ddmStartYear','ddmStartMonth','ddmStartDay','ddmEndYear','ddmEndMonth','ddmEndDay','dblTotal1','dblTotal2' ) {
-			$openprint::session{'/employee/accounting/search.html?'.$key} = $openprint::param{$key} if ( defined $openprint::param{$key} );
-		} # end foreach
-		if ( $openprint::session{'/employee/accounting/search.html?ddmStatus'} ) {
-			$openprint::session{'/employee/accounting/search.html?ddmStatus'} = [ 'Complete','In Production',' Order Submitted', 'Pending Deposit', 'Paid', 'Picked Up','Re-Opened', 'Shipped', 'Waiting For Customer Approval', 'Waiting For Pickup' ];
-		} # end if
-	if ( ! $openprint::session{'/employee/accounting/search.html?ddmStartYear'} ) {
-		@openprint::session{
-		'/employee/accounting/search.html?ddmStartYear',
-		'/employee/accounting/search.html?ddmStartMonth',
-		'/employee/accounting/search.html?ddmStartDay',
-		} = Date::Calc::Today();
-		@openprint::session{
-		'/employee/accounting/search.html?ddmEndYear',
-		'/employee/accounting/search.html?ddmEndMonth',
-		'/employee/accounting/search.html?ddmEndDay',
-		} = Date::Calc::Today();
-	} # end if
-) ?>
-<script language="javascript" src="/javascripts/barcode.js"></script>
-Choose criteria and click show results. You may the download the results in CSV (spreadsheet format) to view in a program such as Microsoft Excel.<br>
-<br>
-<form name="f1" method="post" action="search.html">
+<script type="text/javascript" src="<?hash_link(/javascripts/barcode.js)?>"></script>
+<script type="text/javascript">
+function load_results() {
+	LoadContent('Results','/employee/accounting/_search.html', $('f1') );
+}
+function jump_to( docket ) {
+	new Ajax.Request('/employee/accounting/_jump.json', { parameters: { docket: docket } } );
+}
+</script>
+<div class="Accounting"><div class="Search">
+Choose criteria and click show results. You may the download the results in CSV (spreadsheet format) to view in a program such as Microsoft Excel.<br/>
+<br/>
+<form id="f1" name="f1" method="post" action="/employee/accounting/search.html">
 	<fieldset class="filters">
+		<div class="content">
+		<div class="leftColumn">
+			<ul>
+		<li>
+			<label>Docket #</label>
+			<? echo ( my $html;
+				$html .= input( type=>'cardinal', id=>'StartDocket', name=>'StartDocket', value=>$param{StartDocket}, onkeypress=>q`$('order_id').value='';$('invoice_id').value='';$('project_id').value='';return input_handler(this, event);`, onkeydown=>q`if(event.keyCode == 13){jump_to(this.value);}`);
+				$html .= ' - ';
+				$html .= input( type=>'cardinal', id=>'EndDocket', name=>'EndDocket', value=>$param{EndDocket}, onkeypress=>q`$('order_id').value='';$('invoice_id').value='';$('project_id').value='';return input_handler(this, event);`, onkeydown=>q`if(event.keyCode == 13){load_results();}`);
+				return $html;
+			) ?>
+		</li>
+		<li>
+			<label>Order ID</label>
+			<? echo ( join("\n",
+						input( type=>'cardinal', id=>'order_id', name=>'order_id', value=>$param{order_id}, onkeypress=>q`$('StartDocket').value='';$('EndDocket').value='';$('invoice_id').value='';$('project_id').value='';return input_handler( this, event);`, onkeydown=>q`if(event.keyCode == 13){load_results();}` ),
+			); ) ?>
+		</li>
+		<li>
+			<label>Invoice #</label>
+			<input type="text" id="invoice_num" name="invoice_num" value="<? echo ( $param{invoice_num} ) ?>" onkeypress="$('StartDocket').value='';$('EndDocket').value='';$('order_id').value='';$('project_id').value='';return input_handler( this, event);" onkeydown="if(event.keyCode == 13){load_results();}" />
+		</li>
+<!--
 		<p>
-			<label>Docket #:</label>
-			<input type="text" name="StartDocket" value="<? echo ( $openprint::param{'StartDocket'} ) ?>" size="8"  onKeyPress="return input_handler( this, event);" />
-			- <input type="text" name="EndDocket" value="<? echo ( $openprint::param{'EndDocket'} ) ?>" size="8"  onKeyPress="return input_handler( this, event);" />
-			<? echo ( ssi::writeButton( $log, $dbh, 'DocketGo', 'go.gif', "f1.btnFunction.value='Go';f1.submit();", '', 'Go' ); ) ?>
+			<label>Invoice ID</label>
+			<input type="text" id="invoice_id" name="invoice_id" value="<? echo ( $param{'invoice_id'} ) ?>" onkeypress="$('StartDocket').value='';$('EndDocket').value='';$('order_id').value='';$('project_id').value='';return input_handler( this, event);" onkeydown="if(event.keyCode == 13){f1.btnFunction.value='Go';f1.submit();}" />
+			<? echo ( button( 'InvoiceGo', { 'onclick'=>"f1.btnFunction.value='Go';f1.submit();", 'text'=>'Go' } ); ) ?>
 		</p>
-		<p>
-			<label>Order ID:</label>
-			<input type="text" name="order_id" value="<? echo ( $openprint::param{'order_id'} ) ?>" size="13"  onKeyPress="return input_handler( this, event);" />
-			<? echo ( ssi::writeButton( $log, $dbh, 'OrderGo', 'go.gif', "f1.btnFunction.value='Go';f1.submit();", '', 'Go' ); ) ?>
-		</p>
-		<p>
-			<label>Invoice ID:</label>
-			<input type="text" name="invoice_id" size="13" value="<? echo ( $openprint::param{'invoice_id'} ) ?>"  onKeyPress="return input_handler( this, event);" />
-			<? echo ( ssi::writeButton( $log, $dbh, 'InvoiceGo', 'go.gif', "f1.btnFunction.value='Go';f1.submit();", '', 'Go' ); ) ?>
-		</p>
-		<p>
-			<label>Project ID:</label>
-			<input type="text" name="project_id" size="13" value="<? echo ( $openprint::param{'project_id'} ) ?>"  onKeyPress="return input_handler( this, event);" />
-			<? echo ( ssi::writeButton( $log, $dbh, 'ProjectGo', 'go.gif', "f1.btnFunction.value='Go';f1.submit();", '', 'Go' ); ) ?>
-		</p>
-	</fieldset>
-	<fieldset class="filters">
-		<p>
-			<label>Company:</label>
-			<input type="text" onkeyup="filterDDM(this, f1.ddmCustomer);" size="4" />
-			<select name="ddmCustomer" size="1">
+-->
+		<li>
+			<label>Project ID</label>
+			<? echo ( join("\n",
+			input( type=>'cardinal', id=>'project_id', name=>'project_id', value=>$param{'project_id'}, onkeypress=>q`$('StartDocket').value='';$('EndDocket').value='';$('order_id').value='';$('invoice_id').value='';return input_handler(this,event);`, onkeydown=>q`if(event.keyCode==13){load_results();};` ),
+		); ) ?>
+		</li>
+	</ul>
+</div>
+	<div class="rightColumn">
+		<ul>
+		<li>
+			<label>Company</label>
+			<input class="filter" type="text" oninput="filter_companies('ddmCustomer', { name: this.value,selected_id: get_ddm_value($('ddmCustomer')) } );" />
+			<select id="ddmCustomer" name="ddmCustomer" size="1">
 				<option value="">All Customers</option>
-				<? echo ( openprint::obj_customer::get_customer_dropdown( $log, $dbh, $variable, $openprint::session{'/employee/accounting/search.html?ddmCustomer'} ); ) ?>
+				<? echo ( make_drop_down( openprint::Company->dropdown('last_ordered_on is null'=>0), $session{'/employee/accounting/search.html?ddmCustomer'} ); ) ?>
 			</select>
-		</p>
-		<p> 
-			<label>Status:</label>
-			<select name="ddmStatus" size="1">
+		</li>
+		<li> 
+			<label>Status</label>
+			<select name="ddmStatus" multiple="multiple">
+				<option value="">All</option>
+				<? echo ( make_drop_down( openprint::Order_Status->dropdown(), [ split(',',$session{'/employee/accounting/search.html?ddmStatus'}) ] );) ?>
+			</select>
+		</li>
+		<li> 
+			<label>Sales Reps</label>
+			<select name="ddmEmployee" size="1">
 				<option value="">All</option>
 				<? echo (
-				       ssi::fill_drop_down( $log, $dbh, q{SELECT name,name FROM Order_statuses ORDER BY lower(name)}, $openprint::session{'/employee/accounting/search.html?ddmStatus'} );
-					   ) ?>
-			</select>
-		</p>
-		<p> 
-			<label>Sales Reps:</label>
-			<select name="ddmEmployee" size="1">
-				<option value="">All Employees</option>
-				<? echo (
-				    ssi::make_drop_down( 
-						[ map { $_->id(), $_->name() } openprint::User::find( 'type'=>['E','A'], 'order'=>'lower(strfirstname),lower(strlastname)' ) ],
-						$openprint::session{'/employee/accounting/search.html?ddmEmployee'} ); 
+				    make_drop_down( 
+						openprint::User->dropdown( type=>['E','A'], 'usergroup any'=>'Sales' ),
+						$session{'/employee/accounting/search.html?ddmEmployee'} ); 
 					) ?>
 			</select>
-		</p>
-		<? eval (
-			ssi::get_start_end_dates( $log, $dbh, $variable,
-				@openprint::session{
-				'/employee/accounting/search.html?ddmStartYear',
-				'/employee/accounting/search.html?ddmStartMonth',
-				'/employee/accounting/search.html?ddmStartDay',
-				'/employee/accounting/search.html?ddmEndYear',
-				'/employee/accounting/search.html?ddmEndMonth',
-				'/employee/accounting/search.html?ddmEndDay'} );
-
-			) ?>
-		<p> 
-			<label>Order Date:</label>
-			<select name="ddmStartMonth"><?startmonths?></select>
-			<select name="ddmStartDay"><?startdays?></select>
-			<select name="ddmStartYear"><?startyears?></select>
-			&nbsp;-&nbsp;
-			<select name="ddmEndMonth"><?endmonths?></select>
-			<select name="ddmEndDay"><?enddays?></select>
-			<select name="ddmEndYear"><?endyears?></select>
-		</p>
-		<p> 
-			<label>Total Range:</label>
-			<input type="text" name="dblTotal1" size="12" value="<? echo ( $openprint::session{'/employee/accounting/search.html?dblTotal1'} ) ?>"  />
+		</li>
+		<li> 
+			<label>Order Date</label>
+			<? echo ( date_select_session( '/employee/accounting/search.html', 'ordered_on_start', { onchange => q`load_results();`, with_today=>1, with_clear=>1 } ); ) ?>
+			to
+			<? echo ( date_select_session( '/employee/accounting/search.html', 'ordered_on_end', { onchange => q`load_results();`, with_today=>1, with_clear=>1, } ); ) ?>
+		</li>
+		<li> 
+			<label>Total Range</label>
+			<? echo ( input( type=>'float', name=>'dblTotal1', value=>$session{'/employee/accounting/search.html?dblTotal1'} ); ) ?>
 			to 
-			<input type="text" name="dblTotal2" size="12" value="<? echo ( $openprint::session{'/employee/accounting/search.html?dblTotal2'} ) ?>"  />
-		</p>
+			<? echo ( input( type=>'float', name=>'dblTotal2', value=>$session{'/employee/accounting/search.html?dblTotal2'} ); ) ?>
+		</li>
+		</ul>
+	</div>
+	</div>
 		<p class="buttons">
 		<? echo ( join('',
-					ssi::writeButton( $log, $dbh, 'ShowResults', 'showResults.gif', "f1.btnFunction.value='Show Results';f1.submit();", '', 'Show Results' ),
-					ssi::writeButton( $log, $dbh, 'DownloadCSV', 'downloadCSVFormat.gif', "f1.action='accounting_search.html?Download';f1.btnFunction.value='Download in CSV format';f1.submit();", '', 'Download in CSV Format' ),
-					ssi::writeButton( $log, $dbh, 'Reset', 'reset.gif', "f1.reset();", '', 'Reset' ),
+					button( 'ShowResults', { onclick=> q`load_results();`, text=>'Show Results' } ),
+					#ssi::button( 'DownloadCSV', { onclick=>"f1.action='/employee/accounting/search.html?Download';f1.btnFunction.value='Download in CSV format';f1.submit();", href=>'', text=>'Download in CSV Format' } ),
+					button( 'Reset', { onclick=>'f1.reset();' } ),
 					); ) ?>
 		</p>
 	</fieldset>
 	<input type="hidden" name="btnFunction"/>
 </form>
-<div id="Results"><!--#include virtual="/employee/accounting/_search_results.html"--></div>
+<div id="Results">Select criteria and click Show Results.</div>
+</div></div>
 <script type="text/javascript">document.forms['f1'].StartDocket.focus();</script>

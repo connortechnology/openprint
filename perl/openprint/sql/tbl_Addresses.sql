@@ -1,9 +1,8 @@
-DROP SEQUENCE Address_Index_seq;
-DROP TABLE tbl_Addresses;
-
+DROP SEQUENCE IF EXISTS Address_Index_seq;
 CREATE SEQUENCE Address_Index_seq;
 CREATE TABLE tbl_Addresses (
-	lngIndex			INT4 DEFAULT nextval('Address_Index_seq'),
+	lngIndex			INTEGER DEFAULT nextval('Address_Index_seq'),
+	company_id			INTEGER NOT NULL, FOREIGN KEY (company_id) REFERENCES Companies (id),
 	strCompanyName		TEXT,
 	strFirstName		TEXT,
 	strLastName			TEXT,

@@ -1,9 +1,8 @@
-<div class="row">
-	<span class="label">Price:</span>
+<p>
+	<label>Price</label>
 <? echo (
 	my $html;
-	foreach my $qty_index ( 1 .. 3 ) {
-		next if ! $$variable{"txtQuantity$qty_index"};
+	foreach my $qty_index ( $$variable{'Project'}->quantity_indexes() ) {
 		if ( ( ! $$variable{'OrderedQuantityIndex'} ) or ( $$variable{'OrderedQuantityIndex'} == $qty_index ) ) {
 			if ( $$variable{"txtPrice$qty_index"} and ( $$variable{"txtPrice$qty_index"} ne 'n/a' ) ) {
 				$html .= '<span class="value"><b>$'.$$variable{"txtPrice$qty_index"} .'</b></span>';
@@ -12,5 +11,4 @@
 	} # end foreach
 	return $html;
 ) ?>
-	<br class="spacer"/>
-</div>
+</p>

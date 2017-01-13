@@ -1,0 +1,37 @@
+<form id="bump_form" name="bump_form" action="/employee/project/view.html" method="post">
+	<input type="hidden" name="action" value="addtoschedule" />
+	<input type="hidden" name="project_id" value="<? echo ( $$variable{Job}->project_id() ) ?>" />
+	<input type="hidden" name="service_id" value="<? echo ( join(',',@{$$variable{Job}->service_id()} ) ) ?>" />
+	<h3>Add Docket <? echo ( $$variable{Job}->Project()->docket() . ' ' . $$variable{Job}->ServiceType()->name() ) ?></h3>
+	<p>
+		<label>Equipment</label>
+		<select name="equipment_id">
+			<? echo ( 
+				my $ServiceType = $$variable{Job}->ServiceType();
+				if ( ! $ServiceType->id() ) {
+					$log->error("No servicetype in job. Substituting prniting");
+					$ServiceType = openprint::ServiceType->find_one(name=>'Signature');
+				} # end if
+				if ( ! $ServiceType->id() ) {
+					$log->error("No Printing servicetype in job.");
+					$ServiceType = new openprint::ServiceType();
+				} # end if
+
+				return ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::Equipment->find(
+						'servicetype_id @>'	=>	$ServiceType->id(),
+						useinscheduling	=>	1,
+						order			=>	'lower(strname)'
+					) ], $$variable{Job}->equipment_id() );
+			) ?>
+		</select>
+	</p>
+	<p class="buttons">
+	<? echo ( 
+		my $html = '';
+		$html .= button( 'Ok',{onclick=> 
+				q`new Ajax.Updater('status`.join(',',@{$$variable{Job}->service_id()} ).q`', '/employee/project/_status.html', { parameters: $('bump_form').serialize() } );popupWin.close();`, text=>'Add to Schedule' } );
+		$html .= button( 'Cancel', { onclick=>'popupWin.close();', text=>'Cancel' } );
+		return $html;
+	) ?>
+	</p>
+</form>

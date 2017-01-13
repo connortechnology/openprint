@@ -10,7 +10,7 @@ declined.<br>
 <br>
 <table cellpadding="0" cellspacing="0" border="0">
 	<tr> 
-		<td>Submission Date:</td>
+		<td>Submission Date</td>
 		<td><?RequestDate?></td>
 	</tr>
 	<tr> 
@@ -21,7 +21,7 @@ declined.<br>
 		<td><a href="<? echo ( $openprint::config{ExternalSiteURL} ) ?>/main/order/history_details.html?order_id=<?OrderID?>"><?OrderID?></a></td>
 	</tr>
 	<tr>
-		<td>Order Date:</td>
+		<td>Order Date</td>
 		<td><?OrderDate?></td>
 	</tr>
 	<tr>
@@ -29,15 +29,15 @@ declined.<br>
 		<td><a href="<? echo ( $openprint::config{ExternalSiteURL} ) ?>/main/project/view.html?ProjectIndex=<?ProjectIndex?>"><?ProjectReference?></a></td>
 	</tr>
 	<tr>
-		<td>Company:</td>
+		<td>Company</td>
 		<td><?CompanyName?></td>
 	</tr>
 	<tr>
-		<td valign="top">Description of problem:</td>
+		<td valign="top">Description of problem</td>
 		<td><?Problem?></td>
 	</tr>
 	<tr>
-		<td>Type of Request:</td>
+		<td>Type of Request</td>
 		<td>
 <? if ( $$variable{'RMAType'} eq 'C' ) ?>
 Credit
@@ -51,12 +51,12 @@ Service
 </td>
 	</tr>
 	<tr>
-		<td valign="top">Comments:</td>
+		<td valign="top">Comments</td>
 		<td><?txtAdminComments?></td>
 	</tr>
 <? if ( $$variable{'Verdict'} eq 'Y' ) ?>
 	<tr>
-		<td>RMA #:</td>
+		<td>RMA #</td>
 		<td><?RMANumber?></td>
 	</tr>
 <? endif ( $$variable{'Verdict'} eq 'Y' ) ?>

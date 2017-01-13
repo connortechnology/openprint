@@ -1,23 +1,18 @@
-<div class="row"> 
-	<span class="label">Ink bleed size:</span>
-    <? echo ( 
-		my $html;
-		foreach my $qty_index ( 1 .. 3 ) {
-			next if ! $$variable{'txtQuantity'.$qty_index};
-			$html .= '<span class="value">'.$$variable{'ddmBleedSize'.$qty_index}."inches</span>\n";
+<p> 
+	<label>Bleeds</label>
+<? echo (
+	my $html = '';
+	my $sig_specs = $$variable{'ServiceSpecifications'};
+	if ( $$sig_specs{'BleedLeft'} or $$sig_specs{'BleedRight'} or $$sig_specs{'BleedTop'} or $$sig_specs{'BleedBottom'} ) {
+		foreach my $qty_index ( $$variable{'Project'}->quantity_indexes() ) {
+			$html .= '<span class="value">'.$$variable{'ddmBleedSize'.$qty_index}.'&quot; ';
+			$html .= join(' ', @$sig_specs{'BleedLeft','BleedRight','BleedTop','BleedBottom'} ) .'</span>';
 		} # end foreach
-		return $html;
-	) ?>
-</div>
-<? if ( $$variable{'chkBleedLeft'} or $$variable{'chkBleedRight'} or $$variable{'chkBleedTop'} or $$variable{'chkBleedBottom'} ) ?> 
-	<div class="row">
-		<span class="label">Ink bleed locations:</span>
-    <? eval ( $$variable{'QTYIndex'} = 1 ) ?>
-    <? while ( $$variable{'QTYIndex'} <= 3 ) ?>
-    <? if ( $$variable{'txtQuantity'.$$variable{'QTYIndex'}} ) ?>
-		<span class="value"> <?chkBleedLeft?> <?chkBleedRight?> <?chkBleedTop?> <?chkBleedBottom?> </span>
-    <? endif ( $$variable{'txtQuantity'.$$variable{'QTYIndex'}} ) ?>
-    <? eval ( $$variable{'QTYIndex'} += 1 ) ?>
-    <? endwhile ( $$variable{'QTYIndex'} <= 3 ) ?>
-	</div>
-<? endif ( $$variable{'chkBleedLeft'} or $$variable{'chkBleedRight'} or $$variable{'chkBleedTop'} or $$variable{'chkBleedBottom'} ) ?> 
+	} else {
+		foreach my $qty_index ( $$variable{'Project'}->quantity_indexes() ) {
+			$html .= '<span class="value">No bleed</span>';
+		} # end foreach
+	} # end if
+	return $html;
+) ?>
+</p>

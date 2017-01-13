@@ -1,128 +1,33 @@
-<style type="text/css">
-	.Add {
-		width: 20px;
-		text-align: center;
-	}
-	.Range  {
-        width: auto;
-        text-align: center;
-    }
-    table.List tr td.Range input, table.List tr td.Range input[type="text"] {
-        width: 40%;
-    }
+<? echo (
+	my $html;
+	my @Equipment = openprint::Equipment->find( order=>'lower(strid)' );
+	my @equipment_dropdown = map { $_->id(), $_->strid() . ': ' . $_->name() } @Equipment;
 
-	.Units {
-		width: 90px;
-		text-align: center;
-	}
-	.Cost {
-		width: 90px;
-		text-align: center;
-	}
-	.Markup {
-		width: 80px;
-		text-align: center;
-	}
-	.Price {
-		width: 90px;
-		text-align: center;
-	}
-	.Discount {
-		width: 95px;
-		text-align: center;
-	}
+	$$variable{company_ids} = [ map { $_->id(), $_->name() } openprint::Company->find( supplier=>'Y', order=>'lower(name)' ) ];
 
-	.Equipment {
-		margin-bottom: 5px;
-		background-color: #f1eee5;
-		border: 1px solid;
-	}
-</style>
-<script type="text/javascript" src="/javascripts/pricing.js"></script>
-<? eval ( @{$$variable{'Pricelists'}} = openprint::Pricelist::find('order'=>'lower(name)'); ) ?>
-<? while( $$variable{'Pricelist'} = shift @{$$variable{'Pricelists'}}; ) ?> 
-	<fieldset><legend>Pricing for Price List: <? echo ( $$variable{'Pricelist'}->name() ) ?></legend>
-		<? if ( @{$$variable{'Prices'}} = openprint::ServicePrice::find('Service'=>$$variable{'Service'}, 'Pricelist'=>$$variable{'Pricelist'} ) ) ?>
+	my $prices_per_equipment = slurp_content( '_prices_per_equipment.html' );
 
-		<? eval ( @{$$variable{'Equipment_ids'}} = sets::union( map{ $_->equipment_id() } @{$$variable{'Prices'}} ); ) ?>
-		<? while ( @{$$variable{'Equipment_ids'}} ) ?>
-			<? eval ( $$variable{Equipment} = new openprint::Equipment( shift @{$$variable{'Equipment_ids'}} ); ) ?>
-			<fieldset class="Equipment">
-				<p>
-					<label>Equipment:</label>
-					<select name="ddmEquipment-<? echo ( $$variable{Pricelist}->id() ) ?>-<? echo ( $$variable{Equipment}->id() ) ?>">
-						<option value="">All Equipment</option>
-						<? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::Equipment::find('lower'=>'lower(strID)') ], $$variable{Equipment}->id() ); ) ?>
-					</select>
-				</p>
-				<table class="List">
-					<tr> 
-						<th class="Add">&nbsp;</th>
-						<th class="Range">Quantity Range</th>
-						<th class="Units">Units</th>
-						<th class="Cost">Cost</th>
-						<th class="Markup">Mark up</th>
-						<th class="Price">Price</th>
-						<th class="Discount">Discount?</th>
-					</tr>
-					<? echo (
-						my $html = '';
-						my @Prices = openprint::ServicePrice::find('Service'=>$$variable{'Service'}, 'Pricelist'=>$$variable{'Pricelist'}, 'Equipment'=>$$variable{Equipment}, 'order'=>'lngmin,lngmax' );
-						foreach my $Price ( @Prices ) {
-							$html .= '<tr>';
-							$html .= sprintf('<td><input type="checkbox" name="chk-%d-%s-%d" checked="checked" /></td>', $Price->pricelist_id(), $$variable{'Equipment'}->id(), $Price->id() );
-							$html .= sprintf('<td class="Range"><input type="text" name="min-%1$d-%2$s-%3$d" value="%4$s"/> - <input type="text" name="max-%1$d-%2$s-%3$d" value="%5$s"/></td>', $Price->pricelist_id(), $$variable{'Equipment'}->id(), $Price->id(), $Price->min(), $Price->max() );
-							$html .= sprintf('<td><input type="text" name="units-%d-%s-%d" value="%s"/></td>', $Price->pricelist_id(), $$variable{'Equipment'}->id(), $Price->id(), $Price->units() );
-							$html .= sprintf('<td><input type="text" name="cost-%d-%s-%d" value="%s" onkeyup="calc_from_cost(this);" /></td>', $Price->pricelist_id(), $$variable{'Equipment'}->id(), $Price->id(), $Price->cost() );
-							$html .= sprintf('<td><input type="text" name="markup-%d-%s-%d" value="%s" onkeyup="calc_from_markup(this);"/></td>', $Price->pricelist_id(), $$variable{'Equipment'}->id(), $Price->id(), $Price->markup() );
-							$html .= sprintf('<td><input type="text" name="price-%d-%s-%d" value="%s" onkeyup="calc_from_price(this);"/></td>', $Price->pricelist_id(), $$variable{'Equipment'}->id(), $Price->id(), $Price->price() );
-							$html .= sprintf('<td class="Discount"> 
-								<input type="radio" name="discount-%1$d-%2$s-%3$d" value="Y" %4$s /> Yes
-								<input type="radio" name="discount-%1$d-%2$s-%3$d" value="N" %5$s /> No 
-							</td>', $Price->pricelist_id(), $$variable{'Equipment'}->id(), $Price->id(), $Price->discountable() eq 'Y' ? ( 'checked="checked"', '' ) : ( '', 'checked="checked"' ) );
-							$html .= '</tr>';
-						} # end foreach
-						return $html;
-					) ?>
-				</table>
-			</fieldset><!--Equipment-->
-		<? endwhile ( @{$$variable{'Equipment_ids'}} ) ?>
-		<? endif ( @{$$variable{'Prices'}} = openprint::ServicePrice::find('Service'=>$$variable{'Service'}, 'Pricelist'=>$$variable{'Pricelist'} ) ) ?>
-		<fieldset class="Equipment"><legend>Add New</legend>
-			<p>
-				<label>Equipment</label>
-				<select multiple="multiple" size="4" name="ddmEquipment-<? echo ( $$variable{'Pricelist'}->id() ) ?>-New">
-					<option value="">All Equipment</option>
-					<? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::Equipment::find('lower'=>'lower(strID)') ] ); ) ?>
-				</select>
-			</p>
-			<table class="List">
-			<tr> 
-				<th class="Add">&nbsp;</th>
-				<th class="Range">Quantity Range</th>
-				<th class="Units">Units</th>
-				<th class="Cost">Cost</th>
-				<th class="Markup">Mark up</th>
-				<th class="Price">Price</th>
-				<th class="Discount">Discount?</th>
-			</tr>
-			<tr>
-				<td><input type="checkbox" name="chk-<? echo ( $$variable{'Pricelist'}->id() ) ?>-New-0" /></td>
-				<td class="Range">
-					<input type="text" name="min-<? echo ( $$variable{'Pricelist'}->id() ) ?>-New-0" onchange="this.form.elements['chk-<? echo ( $$variable{'Pricelist'}->id() ) ?>-New-0'].checked = true;">
-					-
-					<input type="text" name="max-<? echo ( $$variable{'Pricelist'}->id() ) ?>-New-0" onchange="this.form.elements['chk-<? echo ( $$variable{'Pricelist'}->id() ) ?>-New-0'].checked = true;">
-				</td>
-				<td><input type="text" name="units-<? echo ( $$variable{'Pricelist'}->id() ) ?>-New-0" onchange="this.form.elements['chk-<? echo ( $$variable{'Pricelist'}->id() ) ?>-New-0'].checked = true;"> </td>
-				<td><input type="text" name="cost-<? echo ( $$variable{'Pricelist'}->id() ) ?>-New-0" onkeyup="calc_from_cost(this);this.form.elements['chk-<? echo ( $$variable{'Pricelist'}->id() ) ?>-New-0'].checked = true;"> </td>
-				<td><input type="text" name="markup-<? echo ( $$variable{'Pricelist'}->id() ) ?>-New-0" onkeyup="calc_from_markup(this);this.form.elements['chk-<? echo ( $$variable{'Pricelist'}->id() ) ?>-New-0'].checked = true;"> </td>
-				<td><input type="text" name="price-<? echo ( $$variable{'Pricelist'}->id() ) ?>-New-0" onkeyup="calc_from_price(this);this.form.elements['chk-<? echo ( $$variable{'Pricelist'}->id() ) ?>-New-0'].checked = true;"> </td>
-				<td>
-					<input type="radio" name="discount-<? echo ( $$variable{'Pricelist'}->id() ) ?>-New-0" value='Y' checked="checked" onchange="this.form.elements['chk-<? echo ( $$variable{'Pricelist'}->id() ) ?>-New-0'].checked = true;" /> Yes
-					<input type="radio" name="discount-<? echo ( $$variable{'Pricelist'}->id() ) ?>-New-0" value='N'  onchange="this.form.elements['chk-<? echo ( $$variable{'Pricelist'}->id() ) ?>-New-0'].checked = true;" /> No
-				</td>
-			</tr>
-			</table>
-		</fieldset><!--Equipment-->
-		</fieldset><!--Pricelist-->
-	<? endwhile( $$variable{'Pricelist'} = shift @{$$variable{'Pricelists'}}; ) ?> 
+	foreach my $Pricelist ( openprint::Pricelist->find( order=>'lower(name)') ) {
+		$$variable{Pricelist} = $Pricelist;
+		$html .= '<fieldset><legend>Pricing for Price List: '.$Pricelist->name() . "</legend><div id=\"pricelist-$$Pricelist{id}\">";
+		my @Prices = openprint::ServicePrice->find( service_id=>$$variable{Service}->id(), pricelist_id=>$Pricelist->id() );
+
+		my @equipment_ids = $param{equipment_id} ? ($param{equipment_id}) : sort( sets::union( map{ $_->equipment_id() } @Prices ) );
+		push @equipment_ids, undef if ! @equipment_ids;
+		foreach my $Equipment ( map{new openprint::Equipment($_)} @equipment_ids ) {
+			next if $Equipment->deleted();
+			$$variable{Equipment} = $Equipment;
+			$html .= variable_substitution( \$prices_per_equipment );
+		} # end foreach Equipment
+
+		$html .= '</div>';
+		if ( ! $param{equipment_id} ) {
+			$html .= '<p><label>New Price</label>';
+			$html .= ssi::select( \@equipment_dropdown, undef, { name=>"equipment_id-$$Pricelist{id}", id=>"equipment_id-$$Pricelist{id}", prepend=>['','All'] } );
+			$html .= button( 'a'.$$Pricelist{id}.'new', { onclick=>qq`add_new_price( $$variable{Service}{id}, $$Pricelist{id}, get_ddm_value( \$('equipment_id-$$Pricelist{id}') ) );`, text=>'+', title=>'Add New Price' } );
+			$html .= '</p>';
+		}
+		$html .= '</fieldset><!--Pricelist-->';
+	} # end foreach Pricelist
+	return $html;
+) ?>

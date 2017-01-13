@@ -1,61 +1,62 @@
 <? eval (
-	$$variable{'Skid'} = new openprint::Skid( $r->param('skid_id') ) if ! $$variable{'Skid'};
+	$$variable{'Skid'} = new openprint::Skid( $param{'skid_id'} ) if ! $$variable{'Skid'};
 ) ?>
 <div style="padding: 7px;">
 	<img style="float:right;" src="/barcode.png?code=I<? echo ( $$variable{'Skid'}{'id'} ) ?>+&amp;NoText=1&amp;Height=40"/>
-	<b>Skid #:</b> <? echo ( $$variable{'Skid'}->id() ) ?><br/>
+	<b>Skid #</b> <? echo ( $$variable{'Skid'}->id() ) ?><br/>
 	<? echo ( Date::Format::time2str('%d %b %Y %H:%M', Date::Parse::str2time($$variable{'Skid'}->created_on()) );) ?>
 </div>
-<div style="border: 1px solid black; padding: 0px 7px 0px 5px; height: 90px; margin-bottom: 2px;">
-<? if ( $$variable{'paper_id'} ) ?>
+<div class="Contents">
 <? echo ( 
 	my $html;
-	my $Paper = new openprint::Paper( $$variable{'paper_id'} );
-	$html .= '<table style="float: right; width:50%;">';
-	$html .= sprintf('<tr><td>ID:</td><td align="right"><img style="margin-bottom: 7px;" src="/barcode.png?code=R%1$d+&amp;NoText=1&amp;Height=30" alt="%1$d"/></td></tr>', $$variable{'paper_id'} );
-	$html .= sprintf('<tr><td>Qty:</td><td align="right"><img src="/barcode.png?code=Q%1$d+&amp;NoText=1&amp;Height=30" alt="%1$d"/></td></tr>', $$variable{'Skid'}{'Paper'}{$$variable{'paper_id'}} );
-	$html .= '</table>';
-	my $paper_detail = sprintf('%s %s %s', $Paper->name(), $Paper->finish(), $Paper->colour() );
-	$paper_detail .= '<br/>';
-	if ( $Paper->type() eq 'Roll' ) {
-	$paper_detail .= sprintf('<b>%s %s</b>', $Paper->weight, $Paper->width().'" Roll' );
-	} else {
-	$paper_detail .= sprintf('<b>%s %s</b>', $Paper->weight, join('x', $Paper->width(), $Paper->height() ) );
-	} # end if
-	if ( length $paper_detail > 80 ) {
-		$html .= '<span style="font-size: x-small;">'.$paper_detail.'</span>';
-	} else {
-		$html .= $paper_detail;
-	} # end if
-	$html .= '<br/><b>'. $$variable{'Skid'}{'Paper'}{$$variable{'paper_id'}} . ' '. ($Paper->type() eq 'Roll' ? 'lbs' : 'sheets' ) .'</b><br class="spacer"/>';
-return $html;
-) ?>
-<? endif ( $$variable{'paper_id'} ) ?>
-</div>
-<? echo (
-	if ( $$variable{'paper_id'} ) {
-		my $html;
-		my @data = sql::execute( $log, $dbh, q{SELECT (SELECT lngDocketNumber FROM tbl_Projects WHERE Index=project_id), quantity FROM Paper_Allocations WHERE paper_id=? AND skid_id=? ORDER BY created_on}, $$variable{'paper_id'}, $$variable{'Skid'}{'id'} );
-		my %totals;
-		while ( @data ) {
-			$totals{shift @data} += shift @data;
-		} # end while
+	foreach my $C ( $$variable{Skid}->Contents() ) {
+		$html .= '<div class="Content">';
+		my $Paper = $C->Paper();
+		$html .= '<div class="StockDetails"><div class="StockQuantity">';
+		my $qty = $C->quantity();
+		$html .= sprintf('<label>Qty:</label><img src="/barcode.png?code=Q%1$d+&amp;NoText=1&amp;Height=30" alt="%1$d"/>', $qty );
+		$html .= '</div>';
+		my $paper_detail = sprintf('%s %s %s', $Paper->brand(), $Paper->finish(), $Paper->colour() );
+		$paper_detail .= '<br/>';
+		if ( $Paper->type() eq 'Roll' ) {
+			$paper_detail .= sprintf('<b>%s %s</b>', $Paper->weight, $Paper->width().'" Roll' );
+		} else {
+			$paper_detail .= sprintf('<b>%s %s</b>', $Paper->weight, join('x', $Paper->width(), $Paper->height() ) );
+		} # end if
+		if ( length $paper_detail > 80 ) {
+			$html .= '<span style="font-size: x-small;">'.$paper_detail.'</span>';
+		} else {
+			$html .= $paper_detail;
+		} # end if
+		$html .= '<br/><b>'. $qty . ' '. $Paper->units().'</b></div>';
+		my @Allocations = openprint::PaperAllocation->find( paper_id=>$$Paper{id}, 'skid_ids any'=>$$variable{Skid}{id}, order=>'created_on' );
+		my %totals = map { $_->docket(), $_->quantity() } @Allocations;
 
 		foreach my $docket ( sort keys %totals ) {
-			$html .= '<div style="padding:0px 7px 0px 7px;">';
-			$html .= qq`<img style="float: right; margin-bottom: 7px;" src="/barcode.png?code=D$docket+&amp;NoText=1&amp;Height=30"><b>Docket:</b><br class="spacer"/>`;
-			$html .= '<img style="float: right;" src="/barcode.png?code=Q'.$totals{$docket}.'+&amp;NoText=1&amp;Height=30"><b>Allocated:</b>';
-			$html .= qq`<div style="font-size: 100pt; text-align: center;"><b>$docket</b></div></div><br class="pagebreak"/>`;
+			$html .= qq`
+<div class="Allocation">
+	<div class="docket">
+		<label>Docket</label>
+		<img src="/barcode.png?code=D$docket+&amp;NoText=1&amp;Height=30"/>
+	</div>
+	<div class="allocated">
+		<label>Allocated</label>
+		<img src="/barcode.png?code=Q$totals{$docket}+&amp;NoText=1&amp;Height=30"/>
+			$docket
+	</div>
+</div>`;
 		} # end foreach
 		
-		return $html;
-	} elsif ( $openprint::param{'docket'} ) {
-			my $html;
-			$html .= '<div style="padding:0px 7px 0px 7px;">';
-			$html .= qq`<img style="float: right; margin-bottom: 7px;" src="/barcode.png?code=D$openprint::param{docket}+&amp;NoText=1&amp;Height=30"><b>Docket:</b><br class="spacer"/>`;
-			$html .= qq`<div style="font-size: 100pt; text-align: center;"><b>$openprint::param{docket}</b></div></div><br class="pagebreak"/>`;
-			return $html;
-	} else {
-		return '<br class="pagebreak"/>';
-	} # end if docket
+		if ( $param{'docket'} ) {
+			$html .= qq`
+<div class="docket">
+	<label>Docket</label>
+	<img src="/barcode.png?code=D$param{docket}+&amp;NoText=1&amp;Height=30">
+	$param{docket}
+</div>`;
+		} # end if docket
+		$html .= '</div>';
+	} # end foreach stock
+	return $html;
 ) ?>
+</div>

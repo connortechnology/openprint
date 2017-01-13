@@ -1,18 +1,18 @@
-<fieldset><legend>Ship via <?ServiceType?> to:</legend>
+<fieldset><legend>Ship via <?ServiceType?> to</legend>
 	<p> 
-		<label>*Company Name:</label>
+		<label>*Company Name</label>
 		<input type="text" name="ProductCompanyName-<? echo ( $$variable{'OrderedProduct'}->id(); ) ?>" value="<? echo ( $$variable{'OrderedProduct'}->companyname(); ) ?>" onfocus="on(this);" onblur="off(this);" />
 	</p>
 	<p>
-		<label>&nbsp;First Name:</label>
+		<label>&nbsp;First Name</label>
 		<input type="text" name="ProductFirstName-<? echo ( $$variable{'OrderedProduct'}->id(); ) ?>" value="<? echo ( $$variable{'OrderedProduct'}->firstname(); ) ?>" onfocus="on(this);" onblur="off(this);" />
 	</p>
 	<p>
-		<label>&nbsp;Last Name:</label>
+		<label>&nbsp;Last Name</label>
 		<input type="text" name="ProductLastName-<? echo ( $$variable{'OrderedProduct'}->id(); ) ?>" value="<? echo ( $$variable{'OrderedProduct'}->lastname(); ) ?>" onfocus="on(this);" onblur="off(this);" />
 	</p>
 	<p>
-		<label>&nbsp;Salutation:</label>
+		<label>&nbsp;Salutation</label>
 		<input type="radio" id="ProductSalutation-<? echo ( $$variable{'OrderedProduct'}->id(); ) ?>Mr." name="ProductSalutation-<? echo ( $$variable{'OrderedProduct'}->id(); ) ?>" value="Mr." <? echo ( 'checked="checked"' if $$variable{'OrderedProduct'}->salutation() eq 'Mr.' ) ?> />
 		<label class="radio" for="ProductSalutation-<? echo ( $$variable{'OrderedProduct'}->id(); ) ?>Mr.">Mr. </label>
 		<input type="radio" id="ProductSalutation-<? echo ( $$variable{'OrderedProduct'}->id(); ) ?>Mrs." name="ProductSalutation-<? echo ( $$variable{'OrderedProduct'}->id(); ) ?>" value="Mrs." <? echo ( 'checked="checked"' if $$variable{'OrderedProduct'}->salutation() eq 'Mrs.' ) ?> />
@@ -23,7 +23,7 @@
 		<label class="radio" for="ProductSalutation-<? echo ( $$variable{'OrderedProduct'}->id(); ) ?>Miss">Miss</label>
 	</p>
 	<p> 
-		<label>*Address:</label>
+		<label>*Address</label>
 		<input type="text" name="ProductAddress1-<? echo ( $$variable{'OrderedProduct'}->id(); ) ?>" value="<? echo ( $$variable{'OrderedProduct'}->address1(); ) ?>" onfocus="on(this);" onblur="off(this);">
 	</p>
 	<p> 
@@ -31,7 +31,7 @@
 		<input type="text" name="ProductAddress2-<? echo ( $$variable{'OrderedProduct'}->id(); ) ?>" value="<? echo ( $$variable{'OrderedProduct'}->address2(); ) ?>" onfocus="on(this);" onblur="off(this);">
 	</p>
 	<p> 
-		<label>*Country:</label>
+		<label>*Country</label>
 		<input type="hidden" name="ProductCountry-<? echo ( $$variable{'OrderedProduct'}->id(); ) ?>" value="<? echo ( $$variable{OrderedProduct'}->country(); ) ?>" />
 			 <? echo ( $$variable{'OrderedProduct'}->country(); ) ?>
 	<!--
@@ -44,7 +44,7 @@
 	-->
 	</p>
 	<p> 
-		<label>*State/Province:</label>
+		<label>*State/Province</label>
 		<select name="ProductStateProvince-<? echo ( $$variable{'OrderedProduct'}->id(); ) ?>" onchange="off(this.options[this.selectedIndex])" onfocus="on(this.options[this.selectedIndex]);on(this);" onblur="off(this.options[this.selectedIndex]);off(this);">
 			<option value=""> Select </option>
 			<? echo ( 
@@ -54,11 +54,11 @@
 		</select>
 	</p>
 	<p> 
-		<label>*City:</label>
+		<label>*City</label>
 		<input type="text" name="ProductCity-<? echo ( $$variable{'OrderedProduct'}->id(); ) ?>" value="<? echo ( $$variable{'OrderedProduct'}->city(); ) ?>" onfocus="on(this);" onblur="off(this);" />
 	</p>
 	<p> 
-		<label>*Zip/Postal Code:</label>
+		<label>*Zip/Postal Code</label>
 		<input type="hidden" name="ProductPostalCode-<? echo ( $$variable{'OrderedProduct'}->id(); ) ?>" value="<? echo ( $$variable{'OrderedProduct'}->postal_code(); ) ?>" />
 		<? echo ( $$variable{'OrderedProduct'}->postal_code() ) ?>
 	<!--
@@ -66,15 +66,15 @@
 	-->
 	</p>
 	<p> 
-		<label>*Phone:</label>
+		<label>*Phone</label>
 		<input type="text" name="ProductPhone-<? echo ( $$variable{'OrderedProduct'}->id(); ) ?>" value="<? echo ( $$variable{'OrderedProduct'}->phone(); ) ?>" onfocus="on(this);" onblur="off(this);" />
 	</p>
 	<p> 
-		<label>&nbsp;Fax:</label>
+		<label>&nbsp;Fax</label>
 		<input type="text" name="ProductFax-<? echo ( $$variable{'OrderedProduct'}->id(); ) ?>" value="<? echo ( $$variable{'OrderedProduct'}->fax(); ) ?>" onfocus="on(this);" onblur="off(this);" />
 	</p>
 	<p> 
-		<label>*E-mail Address:</label>
+		<label>*E-mail Address</label>
 		<input type="text" name="ProductEmail-<? echo ( $$variable{'OrderedProduct'}->id(); ) ?>" value="<? echo ( $$variable{'OrderedProduct'}->email(); ) ?>" onfocus="on(this);" onblur="off(this);" />
 	</p>
 </fieldset>

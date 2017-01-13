@@ -1,5 +1,4 @@
 		<script language="javascript" src="/javascripts/proj/calc_prepress.js"></script>
-		<script language="javascript" src="/javascripts/proj/misc_prin.js"></script>
 		<script language="javascript">
 			var service = "PhotoRetouching";
 			var projectType = "Photo Retouching";
@@ -15,7 +14,7 @@
 				calc_prepress('f1');
 			}
 		</script>
-		<!--#include virtual="/includes/main/proj/required_fields.html"-->
+		<? echo ( include('/includes/main/proj/required_fields.html'); ) ?>
 		<table width="600" border="0" cellpadding="0" cellspacing="0" cols="3">
 			<tr> 
 				<td width="320" valign="top"><b class="lgTxt">Photo Retouching Services</b></td>
@@ -24,10 +23,10 @@
 			</tr>
 		</table>
 			<form name="f1" method="POST" action="/main/project/view.html">
-				<!--#include virtual="/includes/main/proj/prepress_hours.html"-->
-				<!--#include virtual="/includes/main/proj/prices_prepress.html"-->
-				<!--#include virtual="/includes/main/proj/add_to_project.html"-->
-				<!--#include virtual="/includes/main/proj/hdn_fields_prepress.html"-->
+				<? echo ( include('/includes/main/proj/prepress_hours.html'); ) ?>
+				<? echo ( include('/includes/main/proj/prices_prepress.html'); ) ?>
+				<? echo ( include('/includes/main/proj/add_to_project.html'); ) ?>
+				<? echo ( include('/includes/main/proj/hdn_fields_prepress.html'); ) ?>
 			</form>
 	<script language="javascript">calc_prepress('f1');</script>
 

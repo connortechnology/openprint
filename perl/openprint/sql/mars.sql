@@ -1,0 +1,27 @@
+CREATE TABLE mars (
+	id serial NOT NULL,
+	issued_to_id	INTEGER, FOREIGN KEY (issued_to_id) REFERENCES Users (id),
+	issued_on	date not null default NOW(),
+	issued_by_id	INTEGER NOT NULL, FOREIGN KEY (issued_by_id) REFERENCES Users (id),
+	reply_by	date not null default NOW(),
+	problem		text,
+	cause		text,
+	action		text,
+	effectiveness		text,
+	equipment_id		INTEGER, FOREIGN KEY (equipment_id) REFERENCES tbl_Equipment (id),
+	part1_user_id	INTEGER, FOREIGN KEY (part1_user_id) REFERENCES Users (id),
+	part1_signed_on	date,
+	part2_user_id	INTEGER, FOREIGN KEY (part2_user_id) REFERENCES Users (id),
+	part2_signed_on	date,
+	part3_user_id	INTEGER, FOREIGN KEY (part3_user_id) REFERENCES Users (id),
+	part3_signed_on	date,
+	part4_user_id	INTEGER, FOREIGN KEY (part3_user_id) REFERENCES Users (id),
+	part4_signed_on	date,
+	created_on	timestamp with time zone NOT NULL default NOW(),
+	updated_on	timestamp with time zone NOT NULL default NOW(),
+	deleted		boolean default false,
+	PRIMARY KEY (id)
+);
+
+create index mars_equipment_idx on mars (equipment_id);
+create index mars_deleted_issued_on_idx on mars (deleted,issued_on);

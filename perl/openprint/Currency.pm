@@ -1,96 +1,145 @@
-package openprint::Currency;
-@ISA = qw(openprint::Object);
-
 use strict;
-use openprint ();
-require openprint::Object;
+package openprint::Currency;
+our @ISA = qw(openprint::Object);
+
+require openprint;
+require openprint::Currency_Conversion;
+require openprint::Pricelist;
+require openprint::Company;
 require sql;
 
-# This treats a Currency as an object.  The database is only accessed on method access.
-my $debug = 1;
+use vars qw( $log $dbh $debug $table $serial %fields %transforms %defaults $cache_field );
+*log = \$openprint::log;
+*dbh = \$openprint::dbh;
 
-sub find {
-	my %params = @_;
-	my $sql = 'SELECT * FROM Currencies WHERE 1>0';
-	my @values;
-	if ( $params{'id'} ) {
-		$sql .= ' AND id=?';
-		push @values, $params{'id'};
-	} # end if
-	if ( $params{'short'} ) {
-		$sql .= ' AND short=?';
-		push @values, $params{'short'};
-	} # end if
-	$sql .= " ORDER BY $params{'order'}" if ( $params{'order'} );
+$debug = 0;
+$table = 'Currencies';
+$serial = 'currencies_id_seq';
+%fields = (
+	id		=>	'id',
+	short	=>	'short',
+	name	=>	'name',
+	symbol	=>	'symbol',
+);
+%transforms = (
+	id			=>	[ 's/\D//g', '<2147483647' ],
+    name => [ 's/^\s+//', 's/\s+$//', 's/\s\s+/ /g' ],
+    short => [ 's/\s+//' ],
+);
+%defaults = (
+);
 
-	my $data = $openprint::dbh->selectall_arrayref( $sql, { Slice => {} }, @values );
-	if ( ! $data ) {
-		$openprint::log->error("Error loading Currencies: ($sql) (@values)");
-		return;
-	} elsif ( $debug ) {
-		$openprint::log->debug("Loading Currencies: ($sql) (@values) " . @$data );
-	} # end if
-	return map { new openprint::Currency( $_->{id}, $_ ) } @$data;
-} # end sub find
-
-sub load {
-	my ( $self, $data ) = @_;
-	if ( ! $data ) {
-		$data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM CUrrencies WHERE id=?', {}, $$self{'id'} );
-	} # end if
-	@$self{qw/name short symbol/} = @$data{qw/name short symbol/};
-} # end sub load
-
-sub values {
-	my $self = shift;
-	my @results;
-	foreach ( @_ ) {
-		push @results, $$self{lc $_};
-	} # end foreach
-	return @results;
-} # end sub values
-
+$cache_field = 'short';
+sub cache_field {
+	return $cache_field;
+}
 sub conversions {
-	my $self = shift;
+	my ( $self, $to ) = @_;
+	return 1 if $$self{id} == $to;
 	if ( ! exists $$self{'Conversions'} ) {
-		%{$$self{'Conversions'}} = sql::execute( $openprint::log, $openprint::dbh, q{SELECT to_id, rate FROM Currency_Conversions WHERE from_id=?}, $$self{'id'} );
+		if ( $$self{'id'} ) {
+			%{$$self{'Conversions'}} = sql::execute( undef, undef, q{SELECT to_id, rate FROM Currency_Conversions WHERE from_id=? AND period_end IS NULL}, $$self{'id'} );
+		} else {
+			%{$$self{'Conversions'}} = ();
+		} # end if
 	} # end if
-	if ( my $to = shift ) {
-		return $$self{'Conversions'}{$to};
+	if ( $to ) {
+		if ( $$self{'Conversions'}{$to} ) {
+			return $$self{'Conversions'}{$to};
+		} else {
+			my $To = new openprint::Currency( $to );
+			if ( $To->id() ) {
+				if ( ! exists $$To{'Conversions'} ) {
+					%{$$To{'Conversions'}} = sql::execute( undef, undef, q{SELECT to_id, rate FROM Currency_Conversions WHERE from_id=? AND period_end IS NULL}, $$To{'id'} );
+				} # end if
+				if ( my $rate = $$To{'Conversions'}{$$self{'id'}} ) {
+					return 1/$rate if $rate;
+				} # end if
+				return;
+			} # end if
+		} # end if
 	} # end if
 	return %{$$self{'Conversions'}};
 } # end sub conversions
 
 sub set_conversion {
-	my ( $self, $to, $rate ) = @_;
-	sql::execute( $openprint::log, $openprint::dbh, q{DELETE FROM Currency_Conversions WHERE from_id=? and to_id=?}, $$self{'id'}, $to );
-	sql::insert( $openprint::log, $openprint::dbh, 'Currency_Conversions', 'from_id', $$self{'id'}, 'to_id', $to, 'rate', $rate );
+	my ( $self, $to_id, $rate ) = @_;
+	my $Conversion = openprint::Currency_Conversion->find_one({to_id=>$to_id, from_id=>$$self{id},period_end=>undef});
+	if ( ! $Conversion ) {
+		$Conversion = new openprint::Currency_Conversion();
+		$Conversion->set({to_id=>$to_id, from_id=>$$self{id}});
+	} else {
+		$Conversion->save({period_end=>'NOW()'});
+		$Conversion->set({period_start=>'NOW()',period_end=>undef});
+	} # end if
+	$Conversion->save({rate=>$rate});
 } # end sub add_conversion
 
 sub convert_from {
-} # end sub
+	my ( $self, $value ) = @_;
+	my $DST_Currency = get_current();
+	if ( ! ( $DST_Currency and $$DST_Currency{id} ) ) {
+		$log->error("Invalid destiation currency in convert_from");
+		return $value;
+	} elsif ( ! $$self{id} ) {
+		$log->error("Invalid src currency in convert_from");
+		return $value;
+	}
+
+	if ( $DST_Currency->id() != $$self{id} ) {
+		my $rate = $self->conversions( $DST_Currency->id() );
+		my $new = $value * $rate;
+		$log->debug("Converting $value in $$self{'name'} to $$DST_Currency{'name'} using rate $rate $new") if $debug;
+		return $new;
+	} # end if
+	return $value;
+} # end sub convert_from
 sub convert_to {
+	my ( $From, $To, $value ) = @_;
+	if ( ! ref $To ) {
+		$To = openprint::Currency->find_one('short'=>$To);
+	} 
+	if ( $From eq 'openprint::Currency' ) {
+		$From = get_current();
+	} # end if
+	if ( ! $To ) {
+		$log->error('No Currency for ' . $_[1] );
+		return;
+	} # end if
+	if ( $To and ( $$To{id} != $$From{id} ) ) {
+		my $rate = $From->conversions( $To->id() );
+		$log->debug("Converting $value in $$From{name} to $$To{name}") if $debug;
+		$value *= $rate;
+	} # end if
+	return $value;
 } # end sub
 
 # Takes a ref to a price
 # The price has a currency_id
 # if $$price{'currency_id'} is not the Session's Currency, then convert it , and return
 sub convert {
-	my $Price = shift;
+	my $Price = $_[0];
 
 	# Get display_currency
 	my $DST_Currency = get_current();
 	if ( $DST_Currency ) {
-		my $SRC_Currency = new openprint::Currency( $$Price{'currency_id'} );
-		if ( $DST_Currency->id() != $$Price{'currency_id'} ) {
+		if ( $$DST_Currency{'id'} != $$Price{'currency_id'} ) {
+			my $SRC_Currency = new openprint::Currency( $$Price{'currency_id'} );
 			my $rate = $SRC_Currency->conversions( $DST_Currency->id() );
-			$$Price{'Price'} *= $rate;
+			$$Price{'Price'} *= $rate if $rate;
+			$$Price{'price'} *= $rate if $rate;
+#$log->debug("Converting $$Price{'Price'} in $$SRC_Currency{'name'} to $$DST_Currency{'name'}") if $debug;
 			$$Price{'currency_id'} = $DST_Currency->id();
 		} # end if
 	} # end if
+	return $Price;
 } # end sub convert
 
 sub get_current {
+
+	if ( $openprint::session{'Currency_id'} ) {
+		return new openprint::Currency( $openprint::session{'Currency_id'} );
+	} # end if
 
 	if ( ( ! $openprint::session{'Currency_id'} ) and $openprint::session{'company_id'} ) {
 		my $Company = new openprint::Company( $openprint::session{'company_id'} );
@@ -98,14 +147,51 @@ sub get_current {
 	} # end if
 
 	if ( ! $openprint::session{'Currency_id'} ) {
-		my $list_id = openprint::pricing::get_pricelist_id( $openprint::log, $openprint::dbh, $openprint::variable );
-		@openprint::session{'Currency_id'} = sql::execute( undef, undef, q{SELECT CurrencyIndex FROM Pricelists WHERE Index=?}, $list_id ) if $list_id;
+		my $list_id = openprint::pricing::get_pricelist_id( );
+		my $Pricelist = new openprint::Pricelist( $list_id );
+		$openprint::session{'Currency_id'} = $Pricelist->currency_id();
+	} # end if
+	if ( ! $openprint::session{'Currency_id'} ) {
+		if ( $openprint::config{'Currency'} ) {
+			my @Currencies = openprint::Currency->find('short'=>$openprint::config{'Currency'});
+			if ( @Currencies ) {
+				$openprint::session{'Currency_id'} = $Currencies[0]->id();
+			} # end if
+		} # end if
 	} # end if
 	if ( $openprint::session{'Currency_id'} ) {
 		return new openprint::Currency( $openprint::session{'Currency_id'} );
 	} # end if
-} # end sub get_currenct
+	return new openprint::Currency();
+
+} # end sub get_currency
+
+sub format {
+	my ( $Currency, $price, $precision );
+	if ( ref $_[0] eq 'openprint::Currency' ) {
+		( $Currency, $price, $precision ) = @_;
+	} else {
+		( $price, $precision ) = @_;
+		$Currency = get_current();
+	} # end if
+	
+
+	$price = 0 if ! $price;
+	$precision = 2 if ! defined $precision;
+	my $symbol = $Currency->symbol();
+
+	if ( ! $symbol ) {
+		$openprint::log->error( "Currecy does not have symbol: " . $Currency->to_string() );
+		$symbol = '$';
+	}
+
+	require Number::Format;
+    my $Formatter = new Number::Format(
+            -decimal_digits     =>  $precision,
+            -int_curr_symbol    =>  $symbol,
+            );
+	return $Formatter->format_price( $price, $precision );
+} # end sub format
+
 1;
-
 __END__
-

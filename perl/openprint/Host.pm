@@ -1,0 +1,363 @@
+use strict;
+require openprint::Object;
+require openprint::Host_Interface;
+
+package openprint::Host_Notification;
+our @ISA = qw( openprint::Object );
+use vars qw( $debug $table @identified_by %fields %transforms %defaults );
+$debug = 0;
+$table = 'host_notifications';
+@identified_by = ( 'host_id','user_id' );
+
+%fields = (
+	host_id			=>	'host_id',
+	user_id			=>	'user_id',
+);
+
+package openprint::Host_Type;
+our @ISA = qw( openprint::Object );
+use vars qw( $debug $table $serial %fields %transforms %defaults %types );
+$debug = 0;
+$table = 'host_types';
+$serial = 'host_types_id_seq';
+%fields = (
+	id			=>	'id',
+	name		=>	'name',
+);
+%transforms = (
+	id		=>	[ 's/\D//g' ],
+	name	=>	[ 's/^\s+//', 's/\s+$//', 's/\s\s+/ /g' ],
+);
+
+package openprint::Host;
+our @ISA = qw( openprint::Object );
+
+use vars qw( $debug $table $serial %fields %find_fields %transforms %defaults %types );
+$debug = 0;
+$table = 'hosts';
+$serial = 'hosts_id_seq';
+%fields = (
+	id			=>	'id',
+	hostname	=>	'hostname',
+	blacklist	=>	'blacklist',
+	whitelist	=>	'whitelist',
+	monitored	=>	'monitored',
+	description	=>	'description',
+	created_on	=>	'created_on',
+	updated_on	=>	'updated_on',
+	resolved_on	=>	'resolved_on',
+	count		=>	'count',
+	deleted		=>	'deleted',
+	online		=>	'online',
+	type_id		=>	'type_id',
+	type			=>	undef,
+	offline_seconds	=>	'offline_seconds',
+	state_changed_on	=>	'state_changed_on',
+	notified			=>	'notified',
+	location_id			=>	'location_id',
+);
+%find_fields = (
+	type	=>	'type_id = (SELECT id FROM Host_types WHERE host_types.name = ?)',
+	mac	=>	'id=(SELECT host_id FROM host_interfaces WHERE mac=?)',
+	ip	=>	'(SELECT ip FROM host_interfaces WHERE host_id=hosts.id)',
+);
+%transforms = (
+	id			=>	[ 's/\D//g' ],
+	hostname	=>	[ 's/\s//g' ],
+	description	=>	[ 's/^\s+//', 's/\s+$//', 's/\s\s+/ /g' ],
+);
+%defaults = (
+	'blacklist'	=>	0,
+	'whitelist'	=>	0,
+	'monitored'	=>	0,
+	'hostname'	=>	undef,
+	'created_on'	=>	q`'NOW()'`,
+	'updated_on'	=>	q`'NOW()'`,
+	resolved_on		=>	undef,
+	'count'		=>	0,
+	'deleted'	=>	0,
+	'online'	=>	undef,
+	'type_id'	=>	undef,
+	'state_changed_on'	=>	undef,
+	'offline_seconds'	=>	undef,
+	'notified'=>	0,
+	location_id		=>	undef,
+);
+
+sub destroy {
+	my $error;
+	require openprint::Log;
+	foreach my $Log ( openprint::Log->find('host_id'=>$_[0]{id}) ) {
+		$error .= $Log->destroy();
+		return $error if $error;
+	} # end foreach Log
+	foreach my $N ( $_->Notifications() ) {
+		$error .= $N->destroy();
+		return $error if $error;
+	} # end foreach Log
+	foreach my $I ( $_->Interfaces() ) {
+		$error .= $I->destroy();
+		return $error if $error;
+	} # end foreach Log
+
+	$error .= $_[0]->SUPER::destroy();
+	return $error;
+} # end sub destroy
+
+sub ping {
+	require Net::Ping;
+	my $p = Net::Ping->new();
+	my $rc = $p->ping($_[0]{ip});
+	$p->close();
+	return $rc;
+} # end sub ping
+
+sub Type {
+	return new openprint::Host_Type( $_[0]{type_id} );
+} # end sub Type
+
+sub type {
+	if ( @_ > 1 ) {
+		my $Type = openprint::Host_Type->find_one('name lc'=> lc openprint::Host_Type->transform('name',$_[1]) );
+		if ( ! $Type ) {
+			$Type = new openprint::Host_Type();
+			$Type->save({name=>$_[1]});
+		} # end if
+		$_[0]{type_id} = $Type->id();
+		$_[0]{type} = $Type->name();
+	} # end if @_ > 1
+	if ( ! defined $_[0]{type} ) {
+		$_[0]{type} = new openprint::Host_Type( $_[0]{type_id} )->name();
+	} # end if
+	return $_[0]{type};
+} # end sub type
+
+sub Assets {
+	require openprint::Object_Asset;
+	if ( $_[1] ) {
+		$_[1]{object_id} = $_[0]{id};
+		$_[1]{object_type} = 'openprint::Host';
+		$_[1]{order} = 'created_on' if ! $_[1]{order};
+
+		return openprint::Object_Asset->find(%{$_[1]});
+	} # end if
+
+	if ( ! defined $_[0]{Assets} ) {
+		@{$_[0]{Assets}} = openprint::Object_Asset->find(
+				'object_type'	=>	'openprint::Host',
+				'object_id'		=>	$_[0]{id}, 
+				'order'			=>	'created_on'
+				);
+	} # end if
+	return @{$_[0]{Assets}};
+} # end sub Assets
+
+sub Notifications {
+	if ( ! $_[0]{Notifications} ) {
+		@{$_[0]{Notifications}} = openprint::Host_Notification->find(
+				'host_id'	=>	$_[0]{id},
+				);
+				#'order' => 'lower(strfirstName),lower(strlastname)' );
+	} # end if
+	return @{$_[0]{Notifications}};
+} # end sub Notifications
+sub Interfaces {
+	if ( @_ > 1 ) {
+		$_[0]{Interfaces} = $_[1];
+	}
+	if ( ! $_[0]{Interfaces} ) {
+		@{$_[0]{Interfaces}} = openprint::Host_Interface->find(
+				host_id	=>	$_[0]{id},
+				order	=>	'mac',
+				);
+	} # end if
+	return @{$_[0]{Interfaces}};
+} # end sub Notifications
+
+sub info {
+	require openprint::Host_Info;
+	if ( ! $_[0]{Info} ) {
+		%{$_[0]{Info}} = map { $_->name(), $_ } openprint::Host_Info->find(host_id=>$_[0]{id});
+		foreach my $k ( keys %{$_[0]{Info}} ) {
+			$openprint::log->debug(" $k => " . $_[0]{Info}{$k}->value() );
+		} # end foreach
+	} # end if
+	if ( $_[0]{Info}{$_[1]} ) {
+		return $_[0]{Info}{$_[1]}->value();
+	} # end if
+$openprint::log->debug("No value for $_[1] " . $_[0]->to_string() );
+		foreach my $k ( keys %{$_[0]{Info}} ) {
+			$openprint::log->debug(" $k => " . $_[0]{Info}{$k}->value() );
+		} # end foreach
+	return '';
+} # end sub info
+
+sub Location {
+	require openprint::Location;
+	return new openprint::Location( $_[0]{location_id} );
+} # end sub Location
+
+sub resolve {
+	foreach my $Interface (  $_[0]->Interfaces() ) {
+		my $hostname = $Interface->resolve();
+		return $hostname if $hostname;
+	} # end foreach Interface
+	return undef;
+} # end sub resolve
+
+sub reboot {
+	my $Host = $_[0];
+	require LWP;
+	my $browser = LWP::UserAgent->new();
+
+	my $success = 0;
+
+	foreach my $HI ( $Host->Interfaces() ) {
+		my $url;
+		my $initial_url; # in case we need to hit a different url first.
+		my $method = 'get';
+		my $args = {};
+		my $expect;
+		my $do_not_expect;
+		my $port = 80;
+
+		if ( sets::isin( $_[0]->type(), [ 'AIC500', 'AIC500W', 'AIC777W', 'AIC747W' ] ) ) {
+			$url = 'http://'.$HI->ip().'/admin/reboot.cgi?type=0';
+		} elsif( $_[0]->type() eq 'M8640' ) {
+			$url = 'http://'.$HI->ip().'/cgi-bin/reboot.cgi';
+		} elsif ( $_[0]->type() eq 'TL-WPA4220' ) {
+			$url = 'http://'.$HI->ip().'/userRpm/SysRebootRpm.htm?Reboot=Reboot';
+		} elsif( $_[0]->type() eq 'D-Link DAP1522' ) {
+			$url = 'http://'.$HI->ip().'/sys_cfg_valid.xgi?&exeshell=submit REBOOT';
+		} elsif( $_[0]->type() eq 'DLink DCS-910' ) {
+			$initial_url = 'http://'.$HI->ip();
+			$url = 'http://'.$HI->ip().'/ReplyF.htm';
+			$method = 'post';
+			$args = {
+				Reset => 'Reboot the Device',
+			};
+			$expect = 'Device has been rebooted';
+
+		} elsif( $_[0]->type() eq 'DCS932L' ) {
+			$url = 'http://'.$HI->ip().'/setSystemReboot';
+		} elsif( $_[0]->type() eq 'DCS-933L' ) {
+			$initial_url = 'http://'.$HI->ip();
+			$url = 'http://'.$HI->ip().'/setSystemReboot';
+			$method = 'post';
+			$args = {
+				RepySuccessPage=>'reboot.htm',
+				ReplyErrorPage	=>	'reboot.htm',
+				Reset => 'Reboot the Device',
+			};
+		} elsif ( $_[0]->type() eq 'WG602v3' ) {
+			$url = 'http://'.$HI->ip().'/cgi-bin/reboot.cgi';
+			$args = {
+				reboot_ap => 1,
+			};
+			$do_not_expect = 'SORRY';
+		} else {
+			$openprint::log->error("Unknown host type $_[0]{type}");
+			return 0;
+		}
+
+		my $response = $browser->get($initial_url ? $initial_url : $url);
+		#$openprint::log->debug( $response->status_line );
+		#$openprint::log->debug( $response->content );
+		my $headers = $response->headers();
+		#foreach my $k ( keys %$headers ) {
+			#$openprint::log->debug("Initial Header $k => $$headers{$k}");
+		#} # end if
+		$response = $HI->authenticate( $browser, $response, $method, $port, $url, $args );
+
+		if ( ! $response->is_success ) {
+			$openprint::log->error( $response->content );
+			if ( $response->status_line() eq '401 Unauthorized' or $response->status_line() eq '401 Not Authorized' ) {
+				$openprint::log->error("Couldn't get content from $url unauthorized trying again:". $response->status_line );
+				$response = $browser->get($url);
+				if ( $response->status_line() eq '401 Unauthorized' or $response->status_line() eq '401 Not Authorized' ) {
+					$openprint::log->error("Couldn't get content from $url unauthorized:". $response->status_line );
+					my $headers = $response->headers();
+					foreach my $k ( keys %$headers ) {
+						$openprint::log->error("Header $k => $$headers{$k}");
+					}  # end foreach
+					$openprint::log->error( $response->content );
+					next;
+				} else {
+					$openprint::log->debug("Response after second attempt: " . $response->status_line );
+					$success = 1;
+				} # end if
+			} else {
+				$openprint::log->warn("Couldn't get content from $url rebooting" . $response->status_line );
+				my $headers = $response->headers();
+				foreach my $k ( keys %$headers ) {
+					$openprint::log->error("Header $k => $$headers{$k}");
+				}  # end foreach
+				next;
+			} # end if
+		} else {
+			$success = 1;
+			$openprint::log->debug("Success Content: " . $response->content );
+		} # end if
+		if ( $success ) {
+			if ( $expect and ! ( $response->content =~ /$expect/ ) ) {
+				$success = 0;
+				$openprint::log->error("Did not find expected content $expect in " . $response->content );
+			} elsif ( $do_not_expect and ( $response->content =~ /$do_not_expect/ ) ) {
+				$success = 0;
+				$openprint::log->error("Found unwanted content $do_not_expect in " . $response->content );
+			}
+		}
+		last if $success;
+	} # end foreach HI
+
+	if ( $success ) {
+
+		(new openprint::Log())->save({ action=>'Host rebooted', Object=>$Host, host_id=>$Host->id(), note=>sprintf('<a href="/employee/it/host.html?host_id=%d">%s</a> has been rebooted.', @$Host{'id','hostname'})});
+		if ( 0 ) {
+			my @To = map { $_->User() } $Host->Notifications();
+			if ( @To and ( @To < 10 ) ) {
+				$openprint::log->debug("Emailing: " . join(',', map { $_->email() } @To ) );
+				my $results = (new openprint::Email())->send(
+						TO    =>  \@To,
+						SUBJECT   =>  'Camera rebooted ' . $Host->hostname(),
+						FROM      =>  $openprint::config{TechSupportEmail},
+						BODY      =>  "
+
+						Description: $$Host{description}
+						",
+						);
+			} else {
+				$openprint::log->error("No To or too many @To");
+			} # end if TO
+		} # end if 0
+	} # end if
+	return $success;
+} # end sub reboot
+
+sub is_wap {
+	return sets::isin( $_[0]->type(), [ 'WG602v3', 'WPN802','TP-Link Archer C7' ] );
+}
+
+sub link_to {
+	return sprintf('<a href="/employee/it/host.html?host_id=%d">%s</a>', $_[0]->id(), ( @_ > 1 ? $_[1] : $_[0]->hostname() ) );
+}
+
+sub online {
+	if ( @_ > 1 ) {
+		$_[0]{online} = $_[1];
+	}
+	if ( ! defined $_[0]{online} ) {
+		foreach my $HI ( $_[0]->Interfaces() ) {
+			if ( $$HI{online} ) {
+				$_[0]{online} = 1;
+				last;
+			} elsif ( defined $$HI{online} ) {
+				$_[0]{online} = 0;
+			}
+		} # end foreach HI
+	}
+	return $_[0]{online};
+}
+
+1;
+__END__

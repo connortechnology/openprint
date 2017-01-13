@@ -1,87 +1,97 @@
 <form name="f1" method="post" action="helpdesk_search.html" >
 	<input type="hidden" name="HelpdeskIndex" value="<?HelpdeskIndex?>">
 	<fieldset>
-		<p> 
-			<label>Submission Date:</label>
-			<?sub_date?>
-		</p>
-		<p> 
-			<label>Company Name:</label>
-			<?company_name?>
-		</p>
-		<p> 
-			<label>Title:</label>
-			<?title?>
-		</p>
-		<p> 
-			<label>First Name:</label>
-			<?first_name?>
-		</p>
-		<p> 
-			<label>Last Name:</label>
-			<?last_name?>
-		</p>
-		<p> 
-			<label>Address:</label>
-			<?address_one?>
-		</p>
-<? if ( $$variable{'address_two'} ) ?>
-		<p> 
-			<label>&nbsp;</label>
-			<?address_two?>
-		</p>
-<? endif ( $$variable{'address_two'} ) ?>
-		<p> 
-			<label>City:</label>
-			<?city?>
-		</p>
-		<p> 
-			<label>State/Province:</label>
-			<?state?>
-		</p>
-		<p> 
-			<label>Zip/Postal Code:</label>
-			<?postal_code?>
-		</p>
-		<p> 
-			<label>Country:</label>
-			<?country?>
-		</p>
-		<p> 
-			<label>Phone:</label>
-			<?phone?>
-		</p>
-		<p> 
-			<label>Extension:</label>
-			<?extension?>
-		</p>
-		<p> 
-			<label>E-mail Address:</label>
-			<?email?>
-		</p>
-		<p> 
-		<label><b>Question or Comment:</b></label>
+		<div class="leftColumn">
+		<ul>
+			<li><label>ID</label><?HelpdeskIndex?></li>
+			<li> 
+				<label>Submission Date</label>
+				<?sub_date?>
+			</li>
+			<li> 
+				<label>Title</label>
+				<?title?>
+			</li>
+			<li> 
+				<label>First Name</label>
+				<?firstname?>
+			</li>
+			<li> 
+				<label>Last Name</label>
+				<?lastname?>
+			</li>
+			<li> 
+				<label>Phone</label>
+				<?phone?><? if ( $$variable{'extension'} ) ?>x<?extension?><? endif ( $$variable{'extension'} ) ?>
+			</li>
+			<li> 
+				<label>E-mail Address</label>
+				<?email?>
+			</li>
+			</ul>
+		</div>
+		<div class="rightColumn">
+			<ul>
+			<li> 
+				<label>Company Name</label>
+				<?company_name?>
+			</li>
+			<li> 
+				<label>Address</label>
+				<?address_one?>
+			</li>
+	<? if ( $$variable{'address_two'} ) ?>
+			<li> 
+				<label>&nbsp;</label>
+				<?address_two?>
+			</li>
+	<? endif ( $$variable{'address_two'} ) ?>
+			<li> 
+				<label>Country</label>
+				<?country?>
+			</li>
+			<li> 
+				<label>State/Province</label>
+				<?state?>
+			</li>
+			<li> 
+				<label>City</label>
+				<?city?>
+			</li>
+			<li> 
+				<label>Zip/Postal Code</label>
+				<?postal_code?>
+			</li>
+			</ul>
+		</div>
+		<br class="spacer"/>
+		<ul>
+		<li> 
+		<label>Description</label>
+			<?description?>
+		</li>
+		<li> 
+		<label>Question or Comment</label>
 			<?question?>
-		</p>
-		<p> 
-			
-	<label><b>Response Type:</b></label>
+		</li>
+		<li> 
+			<label>Response Type</label>
 			<?response_type?>
-		</p>
-		<p> 
-			<label><b>Customer Service Response:</b></label>
-				<textarea name="txtQuestion-Quote" rows="10" cols="30"><?response?></textarea>
-		</p>
-		<p> 
-			<label>Mark as reviewed:</label>
-			<input name="rdbReviewed" type="radio" value="Y" <?rdbReviewedY?> /> Yes
-			<input name="rdbReviewed" type="radio" value="N" <?rdbReviewedN?> /> No
-		</p>
+		</li>
+		<li> 
+			<label>ustomer Service Response</label>
+			<textarea name="txtQuestion-Quote" rows="2" onkeyup="textarea_resize(this);"><?response?></textarea>
+		</li>
+		<li> 
+			<label>Mark as reviewed</label>
+			<? echo ( radio( 'rdbReviewed', ['Y','Yes','N','No'], $$variable{'rdbReviewed'} ? $$variable{'rdbReviewed'} : 'Y' ); ) ?>
+		</li>
+		</ul>
 	<p class="buttons">
-		<script type="text/javascript">
-			writeButton('Submit1','submit.gif',"f1.btnFunction.value='Submit';f1.submit();",'','Submit');
-			writeButton('Reset1','reset.gif',"f1.reset();",'','Reset');
-		</script>
+		<? echo ( join("\n",
+			button('Submit', { onclick=>"f1.btnFunction.value='Submit';f1.submit();" } ),
+			button('Reset', { onclick=>'f1.reset();' } ),
+		); ) ?>
 	</p>
 </fieldset>
 <input type="hidden" name="btnFunction"/>

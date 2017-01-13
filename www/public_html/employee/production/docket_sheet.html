@@ -1,17 +1,11 @@
-<style TYPE="text/css">
-	body div.Header {
-		display: none;
-	}
-	.menubar {
-		display: none;
-	}
-	.docketText {font-family: Arial, Helvetica, Sans-Serif; font-size:8pt; color: #000000;}
-	.headerText {font-family: Arial, Helvetica, Sans-Serif; font-size:8pt;}
-	.bigheaderText {font-family: Arial, Helvetica, Sans-Serif; font-size:10pt;}
-	.hugeText {font-family: Arial, Helvetica, Sans-Serif; font-size:12pt;}
-</style>
-<? if ( $$variable{'Project'}->order_id() ) ?>
-<!--#include virtual="/includes/main/summ/project_docket_sheet.html" -->
-<? else ( $$variable{'Project'}->order_id() ) ?>
-This Project has not been ordered yet.
-<? endif ( $$variable{'Project'}->order_id() ) ?>
+<? echo ( 
+	if ( $$variable{'Project'}->order_id() ) {
+		if ( -e $config{'SkinPath'}.'/docket.html' ) {
+			return ssi::include( $config{'SkinPath'}.'/docket.html' );
+		} else {
+			return ssi::include( $ENV{'DOCUMENT_ROOT'}.'/includes/main/summ/project_docket_sheet.html' );
+		} # end if
+	} else {
+		return 'This Project has not been ordered yet.';
+	} # end if
+) ?>

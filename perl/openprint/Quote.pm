@@ -1,23 +1,32 @@
-package openprint::Quote;
-@ISA=qw(openprint::Object);
-
-use MIME::QuotedPrint;
-use MIME::Base64;
-use openprint::Currency;
 use strict;
+package openprint::Quote;
+our @ISA=qw(openprint::Object);
+
+use constant DEBUG => 0;
+
+require MIME::QuotedPrint;
 use openprint ();
-use vars qw(%variable $log $dbh);
+use vars qw( $debug $r %variable $log $dbh %config %session $table $serial %fields %transforms %defaults %find_fields );
 *variable = \%openprint::variable;
 *log = \$openprint::log;
 *dbh = \$openprint::dbh;
+*config = \%openprint::config;
+*session = \%openprint::session;
+*r = \$openprint::r;
 
 require sql;
 require openprint::logs;
+require openprint::QuotedProject;
+require openprint::QuotedProduct;
+require openprint::Currency;
 
-my $debug = 1;
+$debug = 0;
 
-my %fields = (
-	'id'			=>	'index',
+$table = 'quotes';
+$serial = 'quotes_id_seq';
+
+%fields = (
+	'id'			=>	'id',
 	'created_on'	=>	'dtmquotedate',
 	'updated_on'	=>	'dtmlastmodified',
 	'company_id'	=>	'companyindex',
@@ -33,229 +42,189 @@ my %fields = (
 	'total1'		=>	'curtotalsale1',
 	'total2'		=>	'curtotalsale2',
 	'total3'		=>	'curtotalsale3',
+	'Currency'		=>	undef,
+	'reference'		=>	'reference',
+	'comments'		=>	'comments',
+	'deleted'		=>	'deleted',
+	'by_companyname'	=>	undef,
+	'by_firstname'		=>	undef,
+	'by_lastname'		=>	undef,
+	'by_title'			=>	undef,
+	'by_salutation'		=>	undef,
+	'by_address1'		=>	undef,
+	'by_address2'		=>	undef,
+	'by_city'			=>	undef,
+	'by_state'			=>	undef,
+	'by_country'		=>	undef,
+	'by_postalcode'		=>	undef,
+	'by_phone'			=>	undef,
+	'by_extension'		=>	undef,
+	'by_fax'			=>	undef,
+	'by_email'			=> undef,
+	'for_companyname'	=>	undef,
+	'for_firstname'		=>	undef,
+	'for_lastname'		=>	undef,
+	'for_title'			=>	undef,
+	'for_salutation'		=>	undef,
+	'for_address1'		=>	undef,
+	'for_address2'		=>	undef,
+	'for_city'			=>	undef,
+	'for_state'			=>	undef,
+	'for_country'		=>	undef,
+	'for_postalcode'		=>	undef,
+	'for_phone'			=>	undef,
+	'for_extension'		=>	undef,
+	'for_fax'			=>	undef,
+	'for_email'			=> undef,
 	);
 
-my %defaults = (
-	'created_on'	=>	'NOW()',
-	'updated_on'	=>	'NOW()',
+%find_fields = (
+	salesrep_id => '(SELECT salesrep_id FROM companies WHERE id=companyindex)',
+	for_name	=> q{(SELECT strFirstName || ' ' || strLastName FROM tbl_Quote_Users_for WHERE quote_id=quotes.id)},
+	project_id	=>	'(SELECT project_id FROM tbl_quote_details WHERE quote_id=id)',
 );
-
-sub find {
-	my %params = @_;
-	if ( $params{'id'} ) {
-		return new openprint::Quote( $params{'id'} );
-	} else {
-		my @values;
-		my $sql = 'SELECT * FROM tbl_Quotes WHERE 1>0';
-		if ( $params{'company_id'} ) {
-			if ( ref $params{'company_id'} eq 'ARRAY' ) {
-				if ( @{$params{'company_id'}} ) {
-					$sql .= q{ AND CompanyIndex IN (} . join(',', map {'?'} @{$params{'company_id'}}). ')';
-					push @values, @{$params{'company_id'}};
-				} else {
-					$log->warn("EMpty company array passed to openprint::Quote::find");
-				} # end if
-			} else {
-				$sql .= q{ AND CompanyIndex=?};
-				push @values, $params{'company_id'};
-			} # end if
-		} # end if
-		if ( $params{'user_id'} ) {
-			if ( $params{'user_id'} =~ /\D/ ) {
-				$sql .= " AND (UserIndex $params{'user_id'})";
-			} else {
-				$sql .= q{ AND (UserIndex=?)};
-				push @values, $params{'user_id'};
-			} # end if
-		} # end if
-		if ( $params{'created_on_start'} and $params{'created_on_end'} ) {
-			$sql .= q{ AND (dtmquotedate BETWEEN ? AND ?)};
-			push @values, @params{'created_on_start','created_on_end'};
-		} elsif ( $params{'created_on_start'} ) {
-			$sql .= q{ AND (dtmquotedate >= ?::timestamp with time zone)};
-			push @values, $params{'created_on_start'};
-		} elsif ( $params{'created_on_end'} ) {
-			$sql .= q{ AND (dtmquotedate <= ?::timestamp with time zone)};
-			push @values, $params{'created_on_end'};
-		} # end if
-		if ( $params{'value_start'} and $params{'value_end'} ) {
-			$sql .= q{ AND (curtotalsale BETWEEN ? AND ? )};
-			push @values, $params{'value_start','value_end'};
-		} elsif ( $params{'value_start'} ) {
-			$sql .= q{ AND (curtotalsale >= ?)};
-			push @values, $params{'value_start'};
-		} elsif ( $params{'value_end'} ) {
-			$sql .= q{ AND (curtotalsale <= ?)};
-			push @values, $params{'value_end'};
-		} # end if
-		if ( $params{'status'} ) {
-			if ( ref $params{'status'} eq 'ARRAY' ) {
-				$sql .= q{ AND strStatus IN (} . join(',', map {'?'} @{$params{'status'}}). ')';
-				push @values, @{$params{'status'}};
-			} else {
-				$sql .= q{ AND (strStatus=?)};
-				push @values, $params{'status'};
-			} # end if
-		} # end if
-		if ( $params{'for_name'} ) {
-			$sql .= q{ AND (SELECT strFirstName || ' ' || strLastName FROM tbl_Quote_Users_for WHERE quoteindex=index)=?};
-			push @values, $params{'for_name'};
-		} # end if
-
-		if ( exists $params{'order'} ) {
-			if ( $params{'order'} eq 'created_on' ) {
-				$sql .= ' ORDER BY dtmquotedate';
-			} elsif ( $params{'order'} ) {
-				$sql .= " ORDER BY $params{'order'}" if $params{'order'};
-			} # end if
-		} # end if
-		$sql .= " LIMIT $params{'limit'}" if $params{'limit'};
-		my $data = $dbh->selectall_arrayref( $sql, { Slice => {} }, @values );
-		if ( ! $data ) {
-			$log->error("Error loading Quotes: ($sql) (@values)");
-			return;
-		} elsif ( $debug ) {
-			$log->debug("Loading Quotes: ($sql) (@values)");
-		} # end if
-		return map { new openprint::Quote( $_->{index}, $_ ) } @$data;
-	} # end if
-} # end sub find
-
-sub copy {
-	my $self = shift;
-	my $new = new openprint::Quote( );
-	return $new;
-} # end sub copy
+%defaults = (
+	'created_on'	=>	q`'NOW()'`,
+	'updated_on'	=>	q`'NOW()'`,
+	'currency_id'	=>	'openprint::Currency::get_current()->id()',
+	'user_id'		=>	'$openprint::session{user_id}',
+	'company_id'	=>	'$openprint::session{company_id}',
+	'status'		=>	q`'Incomplete'`,
+	'deleted'		=>	0,
+);
 
 sub load {
 	my ( $self, $data ) = @_;
 	if ( ! $data ) {
-		$data = $dbh->selectrow_hashref( q{SELECT * FROM tbl_Quotes WHERE index=?}, {}, $$self{'id'} );
+		$data = $dbh->selectrow_hashref( qq{SELECT * FROM $table WHERE id=?}, {}, $$self{id} );
 	} # end if
 	@$self{keys %fields} = @$data{@fields{keys %fields}};
 
-	$data = $dbh->selectrow_hashref( q{SELECT * FROM tbl_Quote_Users_for WHERE quoteindex=?}, {}, $$self{'id'} );
+	$data = $dbh->selectrow_hashref( q{SELECT * FROM tbl_Quote_Users_for WHERE quote_id=?}, {}, $$self{id} );
 	@$self{qw/for_companyname for_firstname for_lastname for_title for_salutation for_address1 for_address2 for_city for_state for_country for_postalcode for_phone for_extension for_fax for_email/} = @$data{qw/strcompanyname strfirstname strlastname strtitle strsalutation straddress straddress2 strcity strstate strcountry strpostalcode strphone strextension strfax stremail/};
 
-	$data = $dbh->selectrow_hashref( q{SELECT * FROM tbl_Quote_Users_by WHERE quoteindex=?}, {}, $$self{'id'} );
+	$data = $dbh->selectrow_hashref( q{SELECT * FROM tbl_Quote_Users_by WHERE quote_id=?}, {}, $$self{id} );
 	@$self{qw/by_companyname by_firstname by_lastname by_title by_salutation by_address1 by_address2 by_city by_state by_country by_postalcode by_phone by_extension by_fax by_email/} = @$data{qw/strcompanyname strfirstname strlastname strtitle strsalutation straddress straddress2 strcity strstate strcountry strpostalcode strphone strextension strfax stremail/};
 } # end sub load
 
 sub save {
-	my $self = shift;
+	my ( $self, $params ) = @_;
+	$self->set( $params ? $params : {} );
 	my %sql;
 	foreach my $key ( keys %fields ) {
-		$sql{$fields{$key}} = ( defined $$self{$key} ? $$self{$key} : $defaults{$key} );
+		next if ! $fields{$key};
+		$sql{$fields{$key}} = $$self{$key};
 	} # end foreach
-
 		
-	if ( ! $$self{'id'} ) {
-		my $ac = sql::start_transaction( $dbh );
-		if ( $openprint::config{'QuoteIDFormat'} eq 'Year' ) {
-			$dbh->do( "LOCK TABLE tbl_Quotes IN SHARE ROW EXCLUSIVE MODE" ) or $log->error( DBI->errstr );
+	my $ac = sql::start_transaction( $dbh );
+	if ( ! $$self{id} ) {
+		if ( $openprint::config{QuoteIDFormat} eq 'Year' ) {
+			$dbh->do( "LOCK TABLE $table IN SHARE ROW EXCLUSIVE MODE" ) or $log->error( DBI->errstr );
 
-			my ( $quote ) = sql::execute( undef, undef, q{SELECT MAX(Index) FROM tbl_Quotes} );
+			my ( $quote ) = sql::execute( undef, undef, q{SELECT MAX(id) FROM Quotes} );
 			$quote =~ /(\d\d\d\d)/;
 			if ( $1 > ( 1900 + (localtime(time))[5]) or $quote eq '' ) {
 				return (1900 + (localtime(time))[5]) . '00001';
 			} # end if
-			$$self{'id'} = $quote + 1;
+			$$self{id} = $quote + 1;
 		} else {
-			@$self{'id'} = sql::execute( undef, undef, q{SELECT nextval('Quotes_id_seq')} );
+			@$self{id} = sql::execute( undef, undef, q{SELECT nextval('quotes_id_seq')} );
 		} # end if
-		$sql{'index'} = $$self{'id'};
-		sql::insert( undef, undef, 'tbl_Quotes', \%sql );
-		sql::end_transaction( $dbh, $ac );
+		$sql{id} = $$self{id};
+		if ( ( my $error = sql::insert( undef, undef, $table, \%sql ) ) ) {
+			sql::end_transaction( $dbh, $ac );
+			return $error;
+		} # end if
+		$openprint::Company->save({last_quote_id=>$$self{id}}) if $openprint::Company and $openprint::Company->id() and $$self{id};
 	} else {
-		sql::update( undef, undef, 'tbl_Quotes', ['Index=?', $$self{'id'}], \%sql );
+		my $error = sql::update( undef, undef, $table, ['id=?', $$self{id}], \%sql );
+		if ( $error ) {
+			sql::end_transaction( $dbh, $ac );
+			return $error;
+		} # end if
 	} # end if
+		sql::end_transaction( $dbh, $ac );
 	$self->load();
-
+	return;
 } # end sub save
 
-sub delete {
+sub destroy {
 	my $self = shift;
 
-	if ( ! $$self{'id'} ) {
+	if ( ! $$self{id} ) {
 		$log->error("Quote::delete called with no id");
 		return;
 	}
 
 	my $ac = sql::start_transaction( $dbh );
-	sql::execute( undef, undef, 'DELETE FROM tbl_Quote_Details WHERE QuoteIndex=?', $$self{'id'} );
-	sql::execute( undef, undef, 'DELETE FROM tbl_Quote_Users_By WHERE QuoteIndex=?', $$self{'id'} );
-	sql::execute( undef, undef, 'DELETE FROM tbl_Quote_Users_For WHERE QuoteIndex=?', $$self{'id'} );
-	sql::execute( undef, undef, 'DELETE FROM tbl_Quotes WHERE Index=?', $$self{'id'} );
+	sql::execute( undef, undef, 'DELETE FROM tbl_Quote_Details WHERE quote_id=?', $$self{id} );
+	sql::execute( undef, undef, 'DELETE FROM tbl_Quote_Users_By WHERE quote_id=?', $$self{id} );
+	sql::execute( undef, undef, 'DELETE FROM tbl_Quote_Users_For WHERE quote_id=?', $$self{id} );
+	sql::execute( undef, undef, 'DELETE FROM Quote_Log WHERE quote_id=?', $$self{id} );
+	sql::execute( undef, undef, 'DELETE FROM Quotes WHERE id=?', $$self{id} );
 	sql::end_transaction( $dbh, $ac );
-	openprint::logs::insertLogRecord('11', "Quote Index: " . $$self{'id'},);
-} # end sub delete
-
-sub to_string {
-	my $self = shift;
-	return '';
-} # end sub
-
-sub created_on {
-	my $self = shift;
-	if ( @_ ) {
-		$$self{'created_on'} = shift;
-	} # end if
-	return $$self{'created_on'};
-} # end sub created_on
-sub created_by_id {
-	my $self = shift;
-	return $$self{'created_by_id'};
-} # end sub created_by_id
+	openprint::logs::insertLogRecord('11', "Quote Index: " . $$self{id},);
+} # end sub destroy
 
 sub status {
 	my ( $self, $new_status ) = @_;
-	if ( defined $new_status and $$self{'status'} ne $new_status ) {
-		#sql::update( $log, $dbh, 'Quotes', "Index=$$self{'id'}", 'strStatus', $new_status );
-		$$self{'status'} = $new_status;
+	if ( defined $new_status and $$self{status} ne $new_status ) {
+		#sql::update( $log, $dbh, 'Quotes', "Index=$$self{id}", 'strStatus', $new_status );
+		$$self{status} = $new_status;
 		#$self->add_log( "Changed Status to $new_status" );
 	} # end if
-	return $$self{'status'};
-} # end sub set_status
+	return $$self{status};
+} # end sub status
 
 sub add_log {
 	my ( $self, $comment ) = @_;
 	sql::insert( $log, $dbh, 'Quote_Log',
-			'quote_id',		$$self{'id'},
-			'company_id',	$openprint::session{'company_id'},
-			'user_id',		$openprint::session{'user_id'},
+			'quote_id',		$$self{id},
+			'company_id',	$session{company_id},
+			'user_id',		$session{user_id},
 			'Description',	$comment,
 			);
 } # end sub add_log
 
-sub Company {
-	my $self = shift;
-	return new openprint::Company( $$self{'company_id'} );
-} # end sub company
+sub Quoted_Projects {
+	if ( @_ > 1 ) {
+		$_[0]{Quoted_Projects} = $_[1];
+	} 
+	if ( ! $_[0]{Quoted_Projects} ) {
+		$_[0]{Quoted_Projects} = [ openprint::QuotedProject->find(quote_id=>$_[0]{id},order=>'project_id') ];
+	} # end if
+	return @{$_[0]{Quoted_Projects}};
+} # end sub Quoted_Projects
+
 sub Projects {
 	my $self = shift;
-	if ( ! exists $$self{'Projects'} ) {
-	@{$$self{'Projects'}} = map {new openprint::Project( $_ );} sql::execute( undef, undef, q{SELECT ProjectIndex FROM tbl_Quote_Details WHERE QuoteIndex=?}, $$self{'id'} );
+	if ( ! exists $$self{Projects} ) {
+		@{$$self{Projects}} = map { $_->Project() } $self->Quoted_Projects();
 	} # end if
-	return @{$$self{'Projects'}};
+	return @{$$self{Projects}};
 } # end sub projects
 
-sub Currency {
+sub Products {
 	my $self = shift;
-	if ( @_ ) {
-		$$self{'currency_id'} = (shift @_)->id();
+	if ( ! exists $$self{Products} ) {
+		$$self{Products} = [ openprint::QuotedProduct->find( quote_id=>$$self{id} ) ];
 	} # end if
-	return new openprint::Currency( $$self{'currency_id'} );
-} # end sub Currency
+	return @{$$self{Products}};
+} # end sub Products
 
 sub for_name {
 	my $self = shift;
-	return $$self{'for_firstname'} . ' ' . $$self{'for_lastname'};
+	return $$self{for_firstname} . ' ' . $$self{for_lastname};
+} # end sub
+sub by_name {
+	my $self = shift;
+	return $$self{by_firstname} . ' ' . $$self{by_lastname};
 } # end sub
 
 sub contents {
 	my $self = shift;
-	$$self{'contents'} = $dbh->selectall_arrayref( q{SELECT * FROM tbl_Quote_Details WHERE QuoteIndex=?}, {Slice=>{}}, $$self{'id'} );
-	return $$self{'contents'};
+	$$self{contents} = $dbh->selectall_arrayref( q{SELECT * FROM tbl_Quote_Details WHERE quote_id=?}, {Slice=>{}}, $$self{id} );
+	return $$self{contents};
 }
 
 sub markup1 {
@@ -264,9 +233,9 @@ sub markup1 {
 	my $contents = $self->contents();
 	my %hash = map { $_->{projectindex}, $_ } @$contents;
 	if ( ref $project eq 'openprint::Project' ) {
-		return $hash{$project->id()}{'markup1'};
+		return $hash{$project->id()}{markup1};
 	} else {
-		return $hash{$project}{'markup1'};
+		return $hash{$project}{markup1};
 	} # end if
 }
 
@@ -274,24 +243,24 @@ sub store_user_by_info {
 	my ( $self, $data ) = @_;
 
 	my $ac = sql::start_transaction( $dbh );
-	sql::execute( undef, undef, 'DELETE FROM tbl_Quote_Users_By WHERE QuoteIndex=?', $$self{'id'} );
+	sql::execute( undef, undef, 'DELETE FROM tbl_Quote_Users_By WHERE quote_id=?', $$self{id} );
 	sql::insert( undef, undef, 'tbl_Quote_Users_By',
-			'QuoteIndex',		$$self{'id'},
-			'strFirstName',		$$data{'ByFirstName'},
-			'strLastName',		$$data{'ByLastName'},
-			'strCompanyName',	$$data{'ByCompanyName'},
-			'strTitle',			$$data{'ByTitle'},
-			'strSalutation',	$$data{'BySalutation'},
-			'strAddress',		$$data{'ByAddress1'},
-			'strAddress2',		$$data{'ByAddress2'},
-			'strCity',			$$data{'ByCity'},
-			'strState',			$$data{'ByStateProvince'},
-			'strCountry',		$$data{'ByCountry'},
-			'strPostalCode',	$$data{'ByPostalCode'},
-			'strPhone',			$$data{'ByPhone'},
-			'strExt',			$$data{'ByExtension'},
-			'strFax',			$$data{'ByFax'},
-			'strEmail',			$$data{'ByEmail'}
+			'quote_id',		$$self{id},
+			'strFirstName',		$$data{ByFirstName},
+			'strLastName',		$$data{ByLastName},
+			'strCompanyName',	$$data{ByCompanyName},
+			'strTitle',			$$data{ByTitle},
+			'strSalutation',	$$data{BySalutation},
+			'strAddress',		$$data{ByAddress1},
+			'strAddress2',		$$data{ByAddress2},
+			'strCity',			$$data{ByCity},
+			'strState',			$$data{ByStateProvince},
+			'strCountry',		$$data{ByCountry},
+			'strPostalCode',	$$data{ByPostalCode},
+			'strPhone',			$$data{ByPhone},
+			'strExt',			$$data{ByExtension},
+			'strFax',			$$data{ByFax},
+			'strEmail',			$$data{ByEmail}
 			);
 	sql::end_transaction( $dbh, $ac );
 	@$self{qw/by_companyname by_firstname by_lastname by_title by_salutation by_address1 by_address2 by_city by_state by_country by_postalcode by_phone by_extension by_fax by_email/} = 
@@ -303,159 +272,238 @@ sub store_user_for_info {
 	my ( $self, $data ) = @_;
 
 	my $ac = sql::start_transaction( $dbh );
-	sql::execute( undef, undef, 'DELETE FROM tbl_Quote_Users_For WHERE QuoteIndex=?', $$self{'id'} );
+	sql::execute( undef, undef, 'DELETE FROM tbl_Quote_Users_For WHERE quote_id=?', $$self{id} );
 	sql::insert( undef, undef, 'tbl_Quote_Users_For',
-			'QuoteIndex',		$$self{'id'},
-			'strFirstName',		$$data{'ForFirstName'},
-			'strLastName',		$$data{'ForLastName'},
-			'strCompanyName',	$$data{'ForCompanyName'},
-			'strTitle',			$$data{'ForTitle'},
-			'strSalutation',	$$data{'ForSalutation'},
-			'strAddress',		$$data{'ForAddress1'},
-			'strAddress2',		$$data{'ForAddress2'},
-			'strCity',			$$data{'ForCity'},
-			'strState',			$$data{'ForStateProvince'},
-			'strCountry',		$$data{'ForCountry'},
-			'strPostalCode',	$$data{'ForPostalCode'},
-			'strPhone',			$$data{'ForPhone'},
-			'strExt',			$$data{'ForExtension'},
-			'strFax',			$$data{'ForFax'},
-			'strEmail',			$$data{'ForEmail'}
+			'quote_id',		$$self{id},
+			'strFirstName',		$$data{ForFirstName},
+			'strLastName',		$$data{ForLastName},
+			'strCompanyName',	$$data{ForCompanyName},
+			'strTitle',			$$data{ForTitle},
+			'strSalutation',	$$data{ForSalutation},
+			'strAddress',		$$data{ForAddress1},
+			'strAddress2',		$$data{ForAddress2},
+			'strCity',			$$data{ForCity},
+			'strState',			$$data{ForStateProvince},
+			'strCountry',		$$data{ForCountry},
+			'strPostalCode',	$$data{ForPostalCode},
+			'strPhone',			$$data{ForPhone},
+			'strExt',			$$data{ForExtension},
+			'strFax',			$$data{ForFax},
+			'strEmail',			$$data{ForEmail}
 		);
 	sql::end_transaction( $dbh, $ac );
 	@$self{qw/for_companyname for_firstname for_lastname for_title for_salutation for_address1 for_address2 for_city for_state for_country for_postalcode for_phone for_extension for_fax for_email/} = 
 		@$data{qw/ForCompanyName ForFirstName ForLastName ForTitle ForSalutation ForAddress1 ForAddress2 ForCity ForState ForCountry ForPostalCode ForPhone ForExtension ForFax ForEmail/};
 } # end sub store_for_info
 
+sub description {
+	if ( ! $_[0]{reference} ) {
+	return join('<br/>', map { $_->reference() } $_[0]->Projects() );
+	} else {
+		return $_[0]{reference};
+	} # end if
+}
+
 sub send {
 	my $self = shift;
 
+	my $results;
+
     my %quote;
-    $quote{'Quote'} = $self;
+    $quote{Quote} = $self;
+	$quote{uri} = 'quote';
     openprint::quote::get_user_by_info( $log, $dbh, \%quote, $$self{id} );
     openprint::quote::get_user_for_info( $log, $dbh, \%quote, $$self{id} );
-
 	openprint::quote::get_finished_quote_contents( $log, $dbh, \%quote, $$self{id} );
-	my $email_template = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'}.'/email_content/email_template.html' );
+	my $email_template = ssi::slurp_content( '/email_template.html' );
 
-	if ( $self->Company()->reseller() eq 'Y' or sets::isin( $openprint::session{'user_type'}, ['A', 'E']) ) {
+	my $Email = new openprint::Email();
 
-		my @attachments = ();
-		$quote{'ReplacementText'} = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'}.'/email_content/quote_reseller_by_body.html' );
-		$quote{'ReplacementText'} = ssi::variable_substitution( undef, $log, $dbh, \$quote{'ReplacementText'}, \%quote );
-		$_ = encode_qp( ssi::variable_substitution( undef, $log, $dbh, \$email_template, \%quote ) );
-		push @attachments, '', $_, 'text/html', 'quoted-printable';
+# Add a project summary for each project in the quote
+	foreach my $Project ($self->Quoted_Projects()) {
+		next if ! $Project->include_detailed();
+		my %var;
+		$var{Quote} = $self;
+		$var{Project} = $Project->Project();
+		$var{QuotedProject} = $Project;
+		if ( $Project->template_id() ) {
+			$var{ReplacementText} = join("\n",
+					'<style type="text/css">',
+					ssi::slurp_content( '/css/project.css' ),
+					'</style>',
+					ssi::slurp_content( '/main/quote/_project_template_view.html' )
+					);
+		} else {
+			$variable{ReplacementText} = ssi::slurp_content( '/email_content/project_view.html' );
+		} # end if
+		$variable{ReplacementText} = ssi::variable_substitution( \$variable{ReplacementText}, \%var );
+		$Email->add_pdf_attachment_from_html( sprintf('Project%d.html',$Project->project_id()), ssi::variable_substitution( \$email_template, \%variable ));
+	} # for each Project
+	
+	if ( $self->Company()->reseller() eq 'Y' or sets::isin( $session{user_type}, ['A', 'E']) ) {
+$openprint::log->debug("We are a reseller or admin");
 
-		$quote{'ReplacementText'} = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'}.'/email_content/quote_reseller_by_invoice.html' );
-		$quote{'ReplacementText'} = ssi::variable_substitution( undef, $log, $dbh, \$quote{'ReplacementText'}, \%quote );
-		push @attachments, "Quote$$self{id}.html", encode_qp( ssi::variable_substitution( undef, $log, $dbh, \$email_template, \%quote ) ), 'text/html', 'quoted-printable';
+		if ( $openprint::User->email_quotes_to_myself() ) {
+$log->debug("SEnding quote to myself");
+			$quote{ReplacementText} = ssi::include( '/email_content/quote_reseller_by_body.html', \%quote );
+			$Email->html_body( ssi::variable_substitution( \$email_template, \%quote ) );
 
-		my %mail = (
+			$quote{ReplacementText} = ssi::include( '/email_content/quote_reseller_by_invoice.html', \%quote );
+			my $html = ssi::variable_substitution( \$email_template, \%quote );
+			#$Email->add_pdf_attachment_from_html( "Quote$$self{id}", $html );
+			$Email->add_html_attachment( "Quote$$self{id}.html", $html );
 
-				SMTP    => $openprint::config{'Mail Server'},
-				FROM    => sprintf("%s %s <%s>", @$self{'by_firstname','by_lastname','by_email'}),
-				TO      => sprintf("%s %s <%s>", @$self{'by_firstname','by_lastname','by_email'}),
-				SUBJECT => sprintf('Quote %d for %s', $$self{id}, $self->for_companyname() ),
-				);
-		misc::send_email_with_attachment( $log, \%mail, @attachments );
-#misc::send_email_with_attachment( $log, \%mail, @attachments, @project_summaries );
+			$results .= $Email->send(
+					FROM    => sprintf('"%s %s" <%s>', @$self{'by_firstname','by_lastname','by_email'}),
+					#BCC		=>	'iconnor@connortechnology.com',
+					TO      => sprintf('"%s %s" <%s>', @$self{'by_firstname','by_lastname','by_email'}),
+					SUBJECT => sprintf('Quote %d for %s : ', $$self{id}, $self->for_companyname(), $self->reference() ),
+					);
+			$Email->attachments(undef);
+		} # end if
 
-		if ( $quote{'ForEmail'} ne '' and (
-					( $quote{'ByFirstName'} ne $quote{'ForFirstName'} ) or
-					( $quote{'ByLastName'} ne $quote{'ForLastName'} ) or
-					( $quote{'ByCompanyName'} ne $quote{'ForCompanyName'} ) or
-					( $quote{'ByTitle'} ne $quote{'ForTitle'} ) or
-					( $quote{'BySalutation'} ne $quote{'ForSalutation'} ) or
-					( $quote{'ByAddress1'} ne $quote{'ForAddress1'} ) or
-					( $quote{'ByAddress2'} ne $quote{'ForAddress2'} ) or
-					( $quote{'ByCity'} ne $quote{'ForCity'} ) or
-					( $quote{'ByStateProvince'} ne $quote{'ForStateProvince'} ) or
-					( $quote{'ByCountry'} ne $quote{'ForCountry'} ) or
-					( $quote{'ByPostalCode'} ne $quote{'ForPostalCode'} ) or
-					( $quote{'ByPhone'}  ne $quote{'ForPhone'} ) or
-					( $quote{'ByExtension'} ne $quote{'ForExtension'} ) or
-					( $quote{'ByFax'} ne $quote{'ForFax'} ) or
-					( $quote{'ByEmail'} ne $quote{'ForEmail'} )
+		if ( $quote{ForEmail} ne '' and (
+					( $quote{ByFirstName} ne $quote{ForFirstName} ) or
+					( $quote{ByLastName} ne $quote{ForLastName} ) or
+					( $quote{ByCompanyName} ne $quote{ForCompanyName} ) or
+					( $quote{ByTitle} ne $quote{ForTitle} ) or
+					( $quote{BySalutation} ne $quote{ForSalutation} ) or
+					( $quote{ByAddress1} ne $quote{ForAddress1} ) or
+					( $quote{ByAddress2} ne $quote{ForAddress2} ) or
+					( $quote{ByCity} ne $quote{ForCity} ) or
+					( $quote{ByStateProvince} ne $quote{ForStateProvince} ) or
+					( $quote{ByCountry} ne $quote{ForCountry} ) or
+					( $quote{ByPostalCode} ne $quote{ForPostalCode} ) or
+					( $quote{ByPhone}  ne $quote{ForPhone} ) or
+					( $quote{ByExtension} ne $quote{ForExtension} ) or
+					( $quote{ByFax} ne $quote{ForFax} ) or
+					( $quote{ByEmail} ne $quote{ForEmail} )
 					) ) {
-
 			openprint::quote::get_finished_quote_contents( $log, $dbh, \%quote, $$self{id} );
 
-			my @attachments = ();
-			$_ = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'}.'/email_content/quote_reseller_for_body.html' );
-			if ( $_ ) {
-				$_ = ssi::variable_substitution( undef, $log, $dbh, \$_, \%quote );
-				push @attachments, '', encode_qp($_), 'text/html', 'quoted-printable';
-			} # end if
-			$_ = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'}.'/email_content/quote_reseller_for_invoice.html' );
-			if ( $_ ) {
-				$_ = ssi::variable_substitution( undef, $log, $dbh, \$_, \%quote );
-				push @attachments, "Quote$$self{id}.html", encode_qp($_), 'text/html', 'quoted-printable';
-			} # end if
+			my $For_User = openprint::User->find_one( email=>$quote{ForEmail} );
 
-			my %mail = (
-					SMTP    => $openprint::config{'Mail Server'},
-					FROM    => sprintf("%s %s <%s>", @$self{'by_firstname','by_lastname','by_email'}),
-					TO      => sprintf("%s %s <%s>", @$self{'for_firstname','for_lastname','for_email'}),
-					SUBJECT => "Quote $$self{id}",
+			$quote{ReplacementText} = ssi::include( '/email_content/quote_reseller_for_body.html', \%quote );
+			$Email->html_body( ssi::variable_substitution( \$email_template, \%quote ) );
+			$quote{ReplacementText} = ssi::include( '/email_content/quote_reseller_for_invoice.html', \%quote );
+			my $html = ssi::variable_substitution( \$email_template, \%quote );
+			if ( $For_User and sets::isin( $For_User->type(), [ 'E', 'A' ] ) ) {
+				$Email->add_html_attachment( "Quote$$self{id}.html", $html );
+			} else {
+				$Email->add_pdf_attachment_from_html( "Quote$$self{id}", $html );
+			}
+
+			$results .= $Email->send(
+					FROM    => sprintf('"%s %s" <%s>', @$self{'by_firstname','by_lastname','by_email'}),
+					#BCC		=>	'iconnor@connortechnology.com',
+					TO      => sprintf('"%s %s" <%s>', @$self{'for_firstname','for_lastname','for_email'}),
+					SUBJECT => "Quote $$self{id} : " . $self->reference(),
 					);
-			misc::send_email_with_attachment( $log, \%mail, @attachments );
-		} # end if
+			$Email->attachments(undef);
+		} # end if for someone else
 
 	} else {
-		my @attachments = ();
+# Not a reseller
 
-		$quote{'ReplacementText'} = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'}.'/email_content/quote_reseller_by_body.html' );
-		$quote{'ReplacementText'} = ssi::variable_substitution( undef, $log, $dbh, \$quote{'ReplacementText'}, \%quote );
-		my $email_template = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'}.'/email_content/email_template.html' );
-		$_ = encode_qp( ssi::variable_substitution( undef, $log, $dbh, \$email_template, \%quote ) );
-		push @attachments, '', $_, 'text/html', 'quoted-printable';
+		# Just changed this from reseller to end user...
+		$quote{ReplacementText} = ssi::include( '/email_content/quote_end_user_body.html', \%quote );
+		my $email_template = ssi::slurp_content( '/email_template.html' );
+		$Email->html_body( ssi::variable_substitution( \$email_template, \%quote ) );
 
-		$_ = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'}.'/email_content/quote_end_user_body.html' );
-#if ( $_ ) {
-#$_ = ssi::variable_substitution( undef, $log, $dbh, \$_, \%quote );
-#push @attachments, '', encode_qp($_), 'text/html', 'quoted-printable';
-#} # end if
-#get_finished_quote_contents( $log, $dbh, \%quote, $$self{id} );
+		$quote{ReplacementText} = ssi::include('/email_content/quote_end_user_invoice.html', \%quote );
+		$Email->add_pdf_attachment_from_html( "Quote$$self{id}", ssi::variable_substitution( \$email_template, \%quote ) );
 
-		$quote{'ReplacementText'} = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'}.'/email_content/quote_end_user_invoice.html' );
-		$quote{'ReplacementText'} = ssi::variable_substitution( undef, $log, $dbh, \$quote{'ReplacementText'}, \%quote );
-		$_ = encode_qp( ssi::variable_substitution( undef, $log, $dbh, \$email_template, \%quote ) );
-		push @attachments, "Quote$$self{id}.html", $_, 'text/html', 'quoted-printable';
-
-		my %mail = (
-				SMTP    => $openprint::config{'Mail Server'},
-				FROM    => sprintf("%s %s <%s>", @$self{'by_firstname','by_lastname','by_email'}),
-				TO      => sprintf("%s %s <%s>", @$self{'for_firstname','for_lastname','for_email'}),
-				SUBJECT => "$openprint::config{'SiteTitle'}:Quote $$self{id}",
+		$results .= $Email->send(
+				FROM    => sprintf('"%s %s" <%s>', @$self{'by_firstname','by_lastname','by_email'}),
+				#TO    => sprintf('"%s %s" <%s>', @$self{'by_firstname','by_lastname','by_email'}),
+				TO      => sprintf('"%s %s" <%s>', @$self{'for_firstname','for_lastname','for_email'}),
+					#nnBCC		=>	'iconnor@connortechnology.com',
+				SUBJECT => "$openprint::config{SiteTitle}:Quote $$self{id}",
 				);
-		misc::send_email_with_attachment( $log, \%mail, @attachments );
+		$Email->attachments(undef);
 	} # end if reseller or admin
 
-	if ( $openprint::config{'SendQuoteToAdmin'} eq 'Y' ) {
+	if ( $openprint::config{SendQuoteToAdmin} eq 'Y' ) {
+$log->debug("Sending quote to admin");
 # Send one to the admin
-		$quote{'ReplacementText'} = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/email_content/quote_admin_body.html' );
-		$quote{'ReplacementText'} = ssi::variable_substitution( undef, $log, $dbh, \$quote{'ReplacementText'}, \%quote );
-		my $email_template = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/email_content/email_template.html' );
-		$_ = encode_qp( ssi::variable_substitution( undef, $log, $dbh, \$email_template, \%quote ) );
-		my @body = ('', $_, 'text/html', 'quoted-printable');
-
-		openprint::quote::get_finished_quote_contents( $log, $dbh, \%quote, $$self{id} );
-		$quote{'ReplacementText'} = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/email_content/quote_admin_invoice.html' );
-		$quote{'ReplacementText'} = ssi::variable_substitution( undef, $log, $dbh, \$quote{'ReplacementText'}, \%quote );
 		if ( $email_template ) {
-			$email_template = encode_qp( ssi::variable_substitution( undef, $log, $dbh, \$email_template, \%quote ) );
-			my %mail = (
-					SMTP    => $openprint::config{'Mail Server'},
-					FROM    => $openprint::config{'QuotingEmail'},
-					TO      => $openprint::config{'QuotingEmail'},
-#BCC        =>  '"Isaac Connor" <iconnor@penultima.org>',
-					SUBJECT => "$$self{'for_companyname'} : Quote $$self{id}",
+			$quote{ReplacementText} = ssi::include( '/email_content/quote_admin_body.html', \%quote );
+			$Email->html_body( ssi::variable_substitution( \$email_template, \%quote ) );
+
+			openprint::quote::get_finished_quote_contents( $log, $dbh, \%quote, $$self{id} );
+			$quote{ReplacementText} = ssi::include('/email_content/quote_admin_invoice.html', \%quote );
+			$Email->add_pdf_attachment_from_html( "Quote$$self{id}", ssi::variable_substitution( \$email_template, \%quote ) );
+			$results .= $Email->send(
+					FROM    => $openprint::config{QuotingEmail},
+					TO      => $openprint::config{QuotingEmail},
+					SUBJECT => "$$self{for_companyname} : Quote $$self{id}",
 					);
-			misc::send_email_with_attachment( $log, \%mail, @body, "Quote$$self{id}.html", $email_template, 'text/html', 'quoted-printable' );
 		} # end if
 	} # end if
+	$self->add_log( $results );
+	return $results;
+} # end sub send
 
-} # end sub send_quote
+sub total {
+	my ( $self, $qty_index, $new_value ) = @_;
+	if ( defined $new_value ) {
+		$$self{'total'.$qty_index} = $new_value;
+	} # end if
+	return $$self{'total'.$qty_index};
+} # end sub total
+sub Currency {
+	return new openprint::Currency( $_[0]{currency_id} );
+} # end sub Currency
+
+sub can_delete {
+	my $User = $_[1] ? $_[1] : new openprint::User( $openprint::session{user_id} );
+	if ( $$User{type} eq 'A' ) {
+		return 1;
+	} elsif ( $$User{id} == $_[0]{user_id} ) {
+		return 1;
+	} else {
+		my $Company = $_[0]->Company();
+		if ( $$Company{salesrep_id} = $$User{id} ) {
+			return 1;
+		} # end if
+	} # end if
+	return 0;
+} # end sub can_delete
+
+sub can_view {
+	my $User = $_[1] ? $_[1] : new openprint::User( $openprint::session{user_id} );
+	if ( $$User{type} eq 'A' ) {
+		return 1;
+	} elsif ( $$User{id} == $_[0]{user_id} ) {
+		return 1;
+	} elsif ( $$User{company_id} == $_[0]{company_id} ) {
+		return 1;
+	} else {
+		my $Company = $_[0]->Company();
+		if ( sets::isin( $$Company{salesrep_id}, [ $$User{id}, $User->assistant_ids(), $User->csr_ids() ] ) ) {
+			return 1;
+		} # end if
+	} # end if
+	return 0;
+} # end sub can_view
+
+sub can_send {
+	my $User = $_[1] ? $_[1] : $openprint::User;
+	if ( DEBUG ) {
+		$openprint::log->debug("Quote->can_send user_type: $$User{type}, $_[0]{company_id} == $openprint::session{company_id}");
+	}
+	if ( sets::isin( $$User{type}, ['A','E'] ) or ( $_[0]{company_id} == $openprint::session{company_id} ) ) {
+		return 1;
+	} # end if
+	return 0;
+}
+sub url_to {
+	return '/main/quote/history_details.html?quote_id='.$_[0]{id};
+} # end sub url_to
+
+sub link_to {
+	return sprintf('<a href="/main/quote/history_details.html?quote_id=%1$d">%2$s</a>', $_[0]{id}, ( $_[1] ? $_[1] : $_[0]{id} ) );
+} # end sub link_to
 
 1;
 __END__

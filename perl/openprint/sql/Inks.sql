@@ -1,16 +1,12 @@
-
-DROP TABLE Inks;
-DROP SEQUENCE Inks_id_seq;
-
-CREATE  SEQUENCE Inks_id_seq;
-
-CREATE TABLE tbl_Ink_Colours (
-	id		INTEGER NOT NULL default('inks_id_seq'),
+CREATE TABLE Inks (
+	id		SERIAL,
 	pmsid	TEXT,
-	service_id		INTEGER, FOREIGN KEY (service_id) REFERENCES tbl_Services (lngIndex),
-	material_id		INTEGER, FOREIGN KEY (material_id) REFERENCES tbl_Materials (lngIndex),
+	service_id		INTEGER, FOREIGN KEY (service_id) REFERENCES Services (id),
+	material_id		INTEGER, FOREIGN KEY (material_id) REFERENCES Materials (id),
 	washups			integer,
-	strColourName		TEXT,
+	name		TEXT,
+	mix			BOOLEAN NOT NULL default false,
+	grades		INTEGER[],
 	PRIMARY KEY (id)
 );
 

@@ -1,5 +1,5 @@
-<div class="row"> 
-	<span class="label">Finished weight:</span>
+<p> 
+	<label>Finished weight</label>
    <? eval ( $$variable{'QTYIndex'} = 1 ) ?>
     <? while ( $$variable{'QTYIndex'} <= 3 ) ?>
     <? if ( $$variable{'txtQuantity'.$$variable{'QTYIndex'}} ) ?>
@@ -7,5 +7,4 @@
     <? endif ( $$variable{'txtQuantity'.$$variable{'QTYIndex'}} ) ?>
     <? eval ( $$variable{'QTYIndex'} += 1 ) ?>
     <? endwhile ( $$variable{'QTYIndex'} <= 3 ) ?>
-	<br class="spacer"/>
-</div>
+</p>

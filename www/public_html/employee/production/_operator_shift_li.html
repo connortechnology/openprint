@@ -1,0 +1,15 @@
+<? echo ( 
+	my $Shift = $$variable{'Shift'};
+
+	my $html .= sprintf( q`<li id="shift_%1$d"><div onclick="popup_window( '_operator_shift_popup.html', 'shift_id=%1$d', {width:475} );">%2$s %3$s to %4$s duration %5$s<span id="operator_id-%1$d">%6$s</span></div>`, @$Shift{'id','name'}, 
+		
+		$Shift->starttime_string(),
+		$Shift->endtime_string(),
+		$Shift->duration(),
+		( $Shift->operator_id() ? $Shift->Operator()->name() : 'assign' ),
+	);
+	$html .= '<p class="buttons">';
+	$html .= ssi::button( 'Remove'.$$Shift{'id'}, { 'href'=>'operator_schedule.html?func=delete&amp;shift_id='.$Shift->id(), 'text'=>'D' } );
+	$html .= '</p>';
+) ?>
+</li>

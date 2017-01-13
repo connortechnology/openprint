@@ -1,0 +1,32 @@
+<form name="copy_popup_form" method="post" action="/main/project/history.html">
+	<? echo ( join("\n", map { '<input type="hidden" name="project_id" value="'.$_.'" />' } ( ref $param{'project_id'} eq 'ARRAY' ? @{$param{'project_id'}} : ( $param{'project_id'} ) ) ); ) ?>
+	<? if ( $session{'user_type'} eq 'E' or $session{'user_type'} eq 'A' ) ?>
+	<fieldset>
+			If you would like to assign this project to a different customer, please select them now. You will be logged in as the selected customer and any orders or quotes you make from then on will be recorded in their history.
+		<ul>
+		<li>
+			<label>Company</label>
+			<input type="text" onkeyup="filter_companies('popup_company_id', {name:this.value,selected_id:get_ddm_value($('popup_company_id'))});" class="filter" />
+			<select id="popup_company_id" name="company_id" onchange="stop_filter_companies();">
+				<option value="">Select a Customer</option>
+				<? echo ( make_drop_down( openprint::Company->dropdown('last_project_on is null'=>0), $session{company_id});) ?>
+			</select>
+		</li>
+		</ul>
+		If you would like these projects to be recalculated to update their pricing, select yes.
+		<ul>
+		<li><label>Recalculate</label>
+			<? echo ( radio( 'recalculate', [ '1', 'Yes', '0', 'No' ], '0' ); ) ?>
+		</li>
+		</ul>
+	</fieldset>
+	<? endif ( $session{'user_type'} eq 'E' or $session{'user_type'} eq 'A' ) ?>
+	Please click &quot;Save &amp; Continue&quot; if you have provided all the relevant project information.
+	<p class="buttons">
+		<? echo ( join('',
+				button( 'Cancel', { onclick=>'popupWin.destroy();', text=>'Cancel' } ),
+				button( 'SaveAndContinue', { onclick=>'copy_popup_form.submit();', text=>'Save And Continue' } ),
+		); ) ?>
+	</p>
+	<input type="hidden" name="btnFunction" value="Reuse Project"/>
+</form>

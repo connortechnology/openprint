@@ -1,0 +1,28 @@
+<form id="f1" name="f1" action="emails.html" method="post">
+	<input type="hidden" name="action" />
+	<fieldset><legend>Information</legend>
+		<div class="content">
+			<ul>
+				<li><label>Email Address</label>
+					<input type="text" name="id" id="id" value="<? echo ( $$variable{'Email'}->id(); ) ?>" />
+				</li>
+				<li><label>Name</label>
+					<input type="text" name="name" id="name" value="<? echo ( $$variable{'Email'}->name(); ) ?>" />
+				</li>
+				<li><label>Maildir</label>
+					<input type="text" name="maildir" id="maildir" value="<? echo ( $$variable{'Email'}->maildir(); ) ?>" />
+				</li>
+				<li><label>Quota (-1 means infinite)</label>
+					<input type="text" name="quota" id="quota" value="<? echo ( $$variable{'Email'}->quota(); ) ?>" />
+				</li>
+			</ul>
+		</div>
+	</fieldset>
+	<p class="buttons">
+		<? echo (
+			my $html = '';
+			$html .= ssi::writeButton( undef, undef, 'delete', 'delete.gif', "f1.elements['action'].value='Delete';f1.submit();", '', 'Delete' );
+			return $html;
+		) ?>
+	</p>
+</form>

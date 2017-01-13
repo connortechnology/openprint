@@ -1,129 +1,60 @@
-Choose report criteria and click show results. You may the download the the results in CSV (spreadsheet format) to view in a program such as Microsoft Excel.<br>
-<br>
-<form name="f1" method="post" action="customer_login.html">
+<script type="text/javascript">
+	function load_results() {
+		var div = $('Results');
+		if ( div ) LoadContent( div, '/administrator/reports/_customer_login.html', $('f1') );
+	} // end function
+</script>
+
+Choose report criteria and click show results. You may the download the the results in CSV (spreadsheet format) to view in a program such as Microsoft Excel.<br/>
+<br/>
+<form id="f1" name="f1" method="post" action="customer_login.html">
 	<fieldset class="filters">
-		<p>
-			<label>Sales Reps:</label>
-			<select name="ddmEmployees" size="1">
+		<ul>
+		<li>
+			<label>Sales Reps</label>
+			<select name="salesrep_id" size="1">
 				<option value="">All Employees</option>
 <? echo (
-
-    ssi::make_drop_down( [ ( 'None','None' ), map { $_->id(), $_->name() } openprint::User::find('type'=>['E','A'],'order'=>'lower(strfirstname),lower(strlastname)','usergroup'=>'Sales' ) ], $r->param('ddmEmployees') );
+    make_drop_down( [ ( 'None','Not Assigned' ), map { $_->id(), $_->name() } openprint::User->find( type=>['E','A'], company_id=>$config{owner_id}, 'usergroup any'=>'Sales' ) ], $session{'/administrator/reports/customer_login.html?salesrep_id'} );
 ) ?>
 			</select>
-		</p>
-		<p> 
-			<label>Registration Date:</label>
-			<select name="ddmStartMonth"><?startmonths?></select>
-			<select name="ddmStartDay"><?startdays?></select>
-			<select name="ddmStartYear"><?startyears?></select>
+		</li>
+		<li> 
+			<label>Registration Date</label>
+			<? echo ( date_select_session( $r->uri(), 'registered_on_start', { with_today=>1, with_clear=>1 } ); ) ?>
 			to
-			<select name="ddmEndMonth"><?endmonths?></select>
-			<select name="ddmEndDay"><?enddays?></select>
-			<select name="ddmEndYear"><?endyears?></select>
-		</p>
-		<p>
-			<label>Last Project:</label>
-			<select name="ddmLastProjectStartMonth">
-			<option value=""></option>
-			<?LastProjectStartMonths?>
-			</select>
-			<select name="ddmLastProjectStartDay">
-			<option value=""></option>
-			<?LastProjectStartDays?>
-			</select>
-			<select name="ddmLastProjectStartYear">
-			<option value=""></option>
-			<?LastProjectStartYears?>
-			</select>
+			<? echo ( date_select_session( $r->uri(), 'registered_on_end', { with_today=>1, with_clear=>1 } ); ) ?>
+		</li>
+		<li>
+			<label>Last Project</label>
+			<? echo ( date_select_session( $r->uri(), 'last_project_start', { with_today=>1, with_clear=>1 } ); ) ?>
 			to
-			<select name="ddmLastProjectEndMonth">
-			<option value=""></option>
-			<?LastProjectEndMonths?>
-			</select>
-			<select name="ddmLastProjectEndDay">
-			<option value=""></option>
-			<?LastProjectEndDays?>
-			</select>
-			<select name="ddmLastProjectEndYear">
-			<option value=""></option>
-			<?LastProjectEndYears?>
-			</select>
-		</p>
-		<p>
-			<label>Last Order:</label>
-				<select name="ddmLastOrderStartMonth">
-				<option value=""></option>
-				<?LastOrderStartMonths?>
-				</select>
-				<select name="ddmLastOrderStartDay">
-				<option value=""></option>
-				<?LastOrderStartDays?>
-				</select>
-				<select name="ddmLastOrderStartYear">
-				<option value=""></option>
-				<?LastOrderStartYears?>
-				</select>
+			<? echo ( date_select_session( $r->uri(), 'last_project_end', { with_today=>1, with_clear=>1 } ); ) ?>
+		</li>
+		<li>
+			<label>Last Order</label>
+			<? echo ( date_select_session( $r->uri(), 'last_order_start', { with_today=>1, with_clear=>1 } ); ) ?>
 				to
-				<select name="ddmLastOrderEndMonth">
-				<option value=""></option>
-				<?LastOrderEndMonths?>
-				</select>
-				<select name="ddmLastOrderEndDay">
-				<option value=""></option>
-				<?LastOrderEndDays?>
-				</select>
-				<select name="ddmLastOrderEndYear">
-				<option value=""></option>
-				<?LastOrderEndYears?>
-				</select>
-		</p>
-		<p>
-			<label>Active?</label>
-				<input type="radio" id="rdbActiveY" name="rdbActive" value="Y" <? echo ( 'checked="checked"' if $$variable{'rdbActive'} eq 'Y' ) ?> />
-				<label class="radio" for="rdbActiveY">Yes</label>
-				<input type="radio" id="rdbActiveY" name="rdbActive" value="N" <? echo ( 'checked="checked"' if $$variable{'rdbActive'} eq 'N' ) ?> />
-				<label class="radio" for="rdbActiveN">No</label>
-		</p>
+			<? echo ( date_select_session( $r->uri(), 'last_order_end', { with_today=>1, with_clear=>1 } ); ) ?>
+		</li>
+		<li>
+			<label>Last Login</label>
+			<? echo ( date_select_session( $r->uri(), 'last_login_start', { with_today=>1, with_clear=>1 } ); ) ?>
+			to
+			<? echo ( date_select_session( $r->uri(), 'last_login_end', { with_today=>1, with_clear=>1 } ); ) ?>
+		</li>
+		<li>
+			<label>Activated?</label>
+			<? echo ( radio( 'activated', [ 'Y', 'Yes', 'N', 'No', '', 'All' ], $session{$r->uri().'?activated'}, { default=>'' } ); ) ?>
+		</li>
+		</ul>
 		<p class="buttons">
-			<? echo ( join('',
-				ssi::writeButton( $log, $dbh, 'ShowResults', 'showResults.gif', "f1.action='customer_login.html';f1.btnFunction.value='ShowResults';f1.submit();", '', 'Show Results' ),
-				ssi::writeButton( $log, $dbh, 'DownloadCSV', 'downloadCSVFormat.gif', "f1.action='customer_login.html?Download';f1.btnFunction.value='Download in CSV format';f1.submit();", '', 'Download in CSV Format' ),
-				ssi::writeButton( $log, $dbh, 'Reset', 'reset.gif', 'f1.reset();', '', 'Reset' ),
+			<? echo ( join("\n",
+				button( 'ShowResults', { onclick=>q`load_results();`, text=>'Show Results' } ),
+				button( 'DownloadCSV', { onclick=>"f1.action='customer_login.html?Download';f1.btnFunction.value='Download in CSV format';f1.submit();", text=>'Download in CSV Format' } ),
+				button( 'Reset', { onclick=>'f1.reset();' } ),
 	); ) ?>
 		</p>
 	</fieldset>
-	<br class="spacer" />
-	<? if ( @{$$variable{'DATA'}} ) ?>
-<table class="List" style="table-layout: auto;">
-		<tr> 
-			<th align="left">Company Name</th>
-			<th align="right">State<br />Province</th>
-			<th align="right">Reg'd Date</th>
-			<th align="right">Account Rep</th>
-			<th align="right">Projects</th>
-			<th align="right">Last Project</th>
-			<th align="right">Orders</th>
-			<th align="right">Total Value</th>
-			<th align="right">Last Order</th>
-		</tr>
-		<? while ( @$variable{'cust_index','cust_name','state','registration','rep','projects','lastproject','orders','total','lastorder'} = splice @{$$variable{'DATA'}},0,10; ) ?>
-		<tr<?rowclass?>> 
-			<td align="left"><a href="/administrator/managerial/company_profiles.html?ddmCustomer=<?cust_index?>">&nbsp;<?cust_name?></a></td>
-			<td align="right">&nbsp;<?state?></td>
-			<td align="right">&nbsp;<?registration?></td>
-			<td align="right">&nbsp;<?rep?></td>
-			<td align="right">&nbsp;<?projects?></td>
-			<td align="right"><?lastproject?></td>
-			<td align="right">&nbsp;<?orders?></td>
-			<td align="right">$<?total?></td>
-			<td align="right"><?lastorder?></td>
-		</tr>
-		<? eval ( $$variable{'rowclass'} = $$variable{'rowclass'} eq '' ? ' class="colRow"' : '' ) ?>
-		<? endwhile ( @$variable{'cust_index','cust_name','state','registration','rep','projects','lastproject','orders','total','lastorder'} = splice @{$$variable{'DATA'}},0,10; ) ?>
-	</table>
-	<? else ( @{$$variable{'DATA'}} ) ?>
-	There were no results matching your criteria.<br>
-	<? endif ( @{$$variable{'DATA'}} ) ?>
-	<input type="hidden" name="btnFunction"/>
 </form>
+<div id="Results">Select criteria and click Show Results</div>

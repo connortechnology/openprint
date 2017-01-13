@@ -1,75 +1,91 @@
 <? eval (
-	if ( %openprint::param ) {
-		foreach my $param ( 'DueDateStartYear','DueDateStartMonth','DueDateStartDay','DueDateEndYear','DueDateEndMonth','DueDateEndDay','ProjectStatus','ddmCustomer', 'ddmPress' ) {
-			if ( ref $openprint::param{$param} eq 'ARRAY' ) {
-			$openprint::session{'/employee/production/projects.html?'.$param} = join(';', @{$openprint::param{$param}} );
-			} else {
-			$openprint::session{'/employee/production/projects.html?'.$param} = $openprint::param{$param};
+	$$variable{Projects} = [];
+	if ( $param{'StartDocket'} and $param{'EndDocket'}) {
+		$$variable{Projects} = [ openprint::Project->find(
+			'docket <='	=> $param{EndDocket},
+			'docket >=' => $param{StartDocket},
+			order		=> 'lngdocketnumber',
+			) ];
+
+	} elsif ( $param{StartDocket} ) {
+		$$variable{Projects} = [ openprint::Project->find( docket=>$param{StartDocket} ) ];
+		if ( ! @{$$variable{Projects}} ) {
+			my $Order = openprint::Order->find_one(docket=>$param{StartDocket});
+			if ( $Order ) {
+				my $Project = new openprint::Project();
+				$Project->docket($Order->docket());
+				$Project->status( $Order->status() );
+				$Project->order_id( $$Order{id} );
+				push @{$$variable{Projects}}, $Project;
 			} # end if
-		} # end foreach
-	} # end if
-
-	if ( $openprint::param{'StartDocket'} and $openprint::param{'EndDocket'}) {
-		@{$$variable{'Projects'}} = openprint::Project::find( 'docket_start' => $openprint::param{'StartDocket'}, 'docket_end'=> $openprint::param{'EndDocket'},'order'=>'lngdocketnumber' );
-
-	} elsif ( $openprint::param{'StartDocket'} ) {
-		@{$$variable{'Projects'}} = openprint::Project::find( 'docket' => $openprint::param{'StartDocket'} );
+		} # end if
+	} elsif ( $param{OrderID} ) {
+		my $Order = openprint::Order->find_one( id => $param{OrderID} );
+		$$variable{Projects} = [ $Order->Projects() ] if $Order;
+		
 	} else {
-		$$variable{'DueDateStart'} = sprintf('%.4d-%.2d-%.2d', 
-			@openprint::session{
-			'/employee/production/projects.html?DueDateStartYear',
-			'/employee/production/projects.html?DueDateStartMonth',
-			'/employee/production/projects.html?DueDateStartDay'}
+		my %filters = (
+				( $session{'/employee/production/projects.html?ddmPress'} ? (	'used_press_name in'	=> $session{'/employee/production/projects.html?ddmPress'} ) : () ),
+				( $session{'/employee/production/projects.html?ddmEmployee'} ? (	'operator_id in'	=> $session{'/employee/production/projects.html?ddmEmployee'} ) : () ),
+				status			=> [ split ',', $session{'/employee/production/projects.html?ProjectStatus'} ],
+				'order_id is null'	=> 0,
+				date_filter( '/employee/production/projects.html?due_date_end', 'due_date is null or <=' ),
+				date_filter( '/employee/production/projects.html?due_date_start', 'due_date is null or >=' ),
+				order			=> 'due_date, lngDocketNumber',
 			);
-		$$variable{'DueDateEnd'} = sprintf('%.4d-%.2d-%.2d',
-			@openprint::session{
-			'/employee/production/projects.html?DueDateEndYear',
-			'/employee/production/projects.html?DueDateEndMonth',
-			'/employee/production/projects.html?DueDateEndDay'}
-			);
-
-		@{$$variable{'Projects'}} = openprint::Project::find( 
-				'used_press_name'	=> [ split ';', $openprint::session{'/employee/production/projects.html?ddmPress'} ],
-				'status'			=> [ split ';', $openprint::session{'/employee/production/projects.html?ProjectStatus'} ],
-				'company_id'		=> $openprint::session{'/employee/production/projects.html?ddmCustomer'},
-				'due_date_start'	=> $$variable{'DueDateStart'},
-				'due_date_end'		=> $$variable{'DueDateStart'},
-				'due_date'			=> undef,
-				'misc'				=> ' AND order_id IS NOT NULL',
-				'order'				=> 'due_date, lngDocketNumber',
-				);
+			if ( $session{'/employee/production/projects.html?ddmSalesRep'} ) {
+				$filters{salesrep_id} = $session{'/employee/production/projects.html?ddmSalesRep'};
+			} # end if
+			if ( $session{'/employee/production/projects.html?ddmCustomer'} ) {
+				$filters{company_id} = $session{'/employee/production/projects.html?ddmCustomer'};
+			} # end if
+		$$variable{Projects} = [ openprint::Project->find( %filters ) ];
 	} # end if
 ) ?>
 <? if ( @{$$variable{'Projects'}} ) ?>
 	<table class="List">
 		<tr> 
-			<th width="60">Project#</th>
-			<th width="60">Docket#</th>
-			<th align="left">Customer</th>
-			<th align="left">Project Name</th>
-	<? if ( ! $openprint::param{'ddmEmployee'} ) ?>
-			<th align="left">Operators</th>
-	<? endif ( ! $openprint::param{'ddmEmployee'} ) ?>
-			<th width="75" align="center">Due Date</th>
-			<th width="85" align="right">Status</th>
+			<th class="project_id">Project#</th>
+			<th class="docket">Docket#</th>
+			<th class="Company">Company</th>
+			<th class="reference">Project Name</th>
+	<? if ( ! $param{'ddmEmployee'} ) ?>
+			<th class="Operators">Operators</th>
+	<? endif ( ! $param{'ddmEmployee'} ) ?>
+			<th class="duedate">Due Date</th>
+			<th class="status">Status</th>
 		</tr>
-		<? while ( $$variable{'Project'} = shift @{$$variable{'Projects'}} ) ?>
-		<? eval ( @{$$variable{'operators'}} = sql::execute( $log, $dbh, q{SELECT DISTINCT operator_id FROM tbl_Project_Contents WHERE lngProjectIndex=? AND operator_id IS NOT NULL}, $$variable{'Project'}->id() ); ) ?>
-		<? if ( (!$openprint::param{'ddmEmployee'}) or sets::isin( $openprint::param{'ddmEmployee'}, $$variable{'operators'} ) ) ?>
-		<tr<?rowclass?>> 
-			<td><a href="project_view.html?OrderID=<? echo ( $$variable{'Project'}->order_id(); ) ?>&ProjectIndex=<? echo ( $$variable{'Project'}->id(); ) ?>"><? echo ( $$variable{'Project'}->id(); ) ?></a>&nbsp;</td>
-			<td><a href="project_view.html?OrderID=<? echo ( $$variable{'Project'}->order_id(); ) ?>&ProjectIndex=<? echo ( $$variable{'Project'}->id(); ) ?>"><? echo ( $$variable{'Project'}->docket(); ) ?></a>&nbsp;</td>
-			<td><a href="project_view.html?OrderID=<? echo ( $$variable{'Project'}->order_id(); ) ?>&ProjectIndex=<? echo ( $$variable{'Project'}->id(); ) ?>"><? echo ( $$variable{'Project'}->Company()->name(); ) ?></a>&nbsp;</td>
-			<td><a href="project_view.html?OrderID=<? echo ( $$variable{'Project'}->order_id(); ) ?>&ProjectIndex=<? echo ( $$variable{'Project'}->id(); ) ?>"><? echo ( ssi::htmlize($$variable{'Project'}->reference()); ) ?></a>&nbsp;</td>
-	<? if ( ! $openprint::param{'ddmEmployee'} ) ?>
-			<td><a href="project_view.html?OrderID=<? echo ( $$variable{'Project'}->order_id(); ) ?>&ProjectIndex=<? echo ( $$variable{'Project'}->id(); ) ?>"><?operator?></a>&nbsp;</td>
-	<? endif ( ! $openprint::param{'ddmEmployee'} ) ?>
-			<td align="center"><a href="project_view.html?OrderID=<? echo ( $$variable{'Project'}->order_id(); ) ?>&ProjectIndex=<? echo ( $$variable{'Project'}->id(); ) ?>"><? echo ( $$variable{'Project'}->due_date(); ) ?></a>&nbsp;</td>
-			<td align="right"><a href="project_view.html?OrderID=<? echo ( $$variable{'Project'}->order_id(); ) ?>&ProjectIndex=<? echo ( $$variable{'Project'}->id(); ) ?>"><? echo ( $$variable{'Project'}->status(); ) ?></a>&nbsp;</td>
-		</tr>
-		<? eval ( $$variable{'rowclass'} = $$variable{'rowclass'} eq ' class="colRow"' ? '' : ' class="colRow"' ) ?>
-		<? endif ( (!$openprint::param{'ddmEmployee'}) or sets::isin( $openprint::param{'ddmEmployee'}, $$variable{'operators'} ) ) ?>
-		<? endwhile ( $$variable{'Project'} = shift @{$$variable{'Projects'}} ) ?>
+		<? echo (
+			my $html = '';
+			my $rowclass;
+
+			foreach my $Project ( @{$$variable{'Projects'}} ) {
+				#next if $session{'/employee/production/projects.html?ddmPress'} and ! sets::isin( $session{'/employee/production/projects.html?ddmPress'}, [ $Project->used_press_names() ] );
+				#my @operators = sql::execute( $log, $dbh, q{SELECT DISTINCT operator_id FROM tbl_Project_Contents WHERE lngProjectIndex=? AND operator_id IS NOT NULL}, $Project->id() );
+				#next if $param{'ddmEmployee'} and sets::isin( $param{'ddmEmployee'}, \@operators );
+				$html .= "<tr$rowclass>\n";
+				$html .= sprintf(q`
+						<td class="project_id"><a href="/employee/project/view.html?project_id=%1$d">%1$d</a>&nbsp;</td>
+						<td class="docket"><a href="/employee/project/view.html?project_id=%1$d">%2$d</a>&nbsp;</td>
+						<td class="Company"><a href="/employee/project/view.html?project_id=%1$d">%3$s</a>&nbsp;</td>
+						<td class="reference"><a href="/employee/project/view.html?project_id=%1$d">%4$s</a>&nbsp;</td>
+			`, $Project->id(), $Project->docket(), $Project->Company()->name(), $Project->reference(),
+ );
+
+				if ( ! $param{'ddmEmployee'} ) {
+					$html .= sprintf(q`<td class="Operators"><a href="/employee/project/view.html?project_id=%1$d">%2$s</a>&nbsp;</td>`, $Project->id(), 
+						join(', ', map { $_->name() } map { new openprint::User( $_ ); } @{$$variable{'operators'}} ) );
+				} # end if
+				$html .= sprintf(q`
+					<td class="duedate"><a href="/employee/project/view.html?project_id=%1$d">%2$s</a>&nbsp;</td>
+					<td class="status"><a href="/employee/project/view.html?project_id=%1$d">%3$s</a>&nbsp;</td>
+				</tr>`, $Project->id(), $Project->due_date(), $Project->status(),
+				);
+
+				$rowclass = $rowclass ? '' : ' class="colRow"';
+			} # end foreach
+			return $html;
+		) ?>
 	</table>
 <? else ( @{$$variable{'Projects'}} ) ?>
 There were no results matching your criteria.

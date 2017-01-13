@@ -1,7 +1,5 @@
-DROP TABLE tbl_Quote_Users_By;
-
 CREATE TABLE tbl_Quote_Users_By (
-	QuoteIndex		INT4 NOT NULL, FOREIGN KEY (QuoteIndex) REFERENCES tbl_Quotes (Index),
+	quote_id		INTEGER NOT NULL, FOREIGN KEY (quote_id) REFERENCES Quotes (id),
 	strCompanyName	TEXT,
 	strFirstName	TEXT,
 	strLastName		TEXT,

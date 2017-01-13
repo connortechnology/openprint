@@ -1,0 +1,35 @@
+<link href="/css/order.css" rel="stylesheet" type="text/css"/>
+<script type="text/javascript">
+    function confirm_delete( form, payment_id ) {
+        if ( confirm( "Are you sure you want to delete this payment?" ) ) {
+            form.btnFunction.value = 'Delete Payment';
+            form.payment_id.value = payment_id;
+            form.submit();
+        } // end if
+    } // end function confirm_delete()
+</script>
+<? echo ( include('/includes/error_reporting.html'); ) ?>
+<? echo ( include('/includes/order_header.html'); ) ?>
+<br class="spacer"/>
+<? echo ( include('/includes/order_project_list.html'); ) ?>
+<? echo ( include('_product_list.html'); ) ?>
+<span style="float: left;">
+	<? if ( $$variable{'AdministratorName'} ) ?>
+	<b>Administrator Name</b> <?AdministratorName?><br>
+	<? endif ( $$variable{'AdministratorName'} ) ?>
+	<? if ( $$variable{'AdministratorComments'} ) ?>
+	<b>Administrator Comments</b> <?AdministratorComments?><br>
+	<? endif ( $$variable{'AdministratorComments'} ) ?>
+</span>
+<span style="float:right;">
+	<? echo ( include('/main/order/_totals.html'); ) ?>
+</span>
+<br class="spacer"/>
+<span class="Currency">All prices listed in <?CurrencyName?>.</span>
+	<form name="f1" action="view.html?order_id=<?OrderID?>" method="post">
+	<br class="spacer"/>
+	<? echo ( include('/includes/_order_payments.html'); ) ?>
+		<input type="hidden" name="btnFunction"/>
+	</form>
+<hr/>
+<? echo ( include('/main/order/_view_log.html'); ) ?>

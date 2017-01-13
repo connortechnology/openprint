@@ -1,8 +1,8 @@
-DROP TABLE tbl_Service_Specifications;
+DROP TABLE IF EXISTS tbl_Service_Specifications;
 
 CREATE TABLE tbl_Service_Specifications (
-	lngProjectIndex	INT4 NOT NULL, FOREIGN KEY (lngProjectIndex) REFERENCES tbl_Projects (Index),
-	lngServiceIndex	INT4 NOT NULL, FOREIGN KEY (lngServiceIndex) REFERENCES tbl_Project_Contents (lngServiceIndex),
+	lngProjectIndex	INTEGER NOT NULL, FOREIGN KEY (lngProjectIndex) REFERENCES Projects (Id),
+	lngServiceIndex	INTEGER NOT NULL, FOREIGN KEY (lngServiceIndex) REFERENCES tbl_Project_Contents (lngServiceIndex),
 	strName			TEXT,
 	strValue		TEXT
 );

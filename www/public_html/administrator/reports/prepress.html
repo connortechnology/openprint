@@ -2,11 +2,11 @@
 <fieldset class="filters"><legend>Report Criteria</legend>
 	Choose report criteria and click Show Results.<br/><br/>
 	<p>
-		<label>Employee:</label>
+		<label>Employee</label>
 			<select name="ddmEmployee" size="1">
 				<option value="Prepress">All Prepress Employees</option>
 				<option value="All" <? echo ( 'selected' if $r->param('ddmEmployee') eq 'All' ) ?>>All Employees</option>
-				<? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::User::find('type'=>['E','A'], 'order'=>'lower(strfirstname),lower(strlastname)') ], $r->param('ddmEmployee') ); ) ?>
+				<? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::User->find('type'=>['E','A'], 'order'=>'lower(firstname),lower(lastname)') ], $r->param('ddmEmployee') ); ) ?>
 			</select>
 	</p>
 	<? eval (
@@ -24,7 +24,7 @@
 ) ?>
 
 	<p>
-		<label>Ordered Date:</label>
+		<label>Ordered Date</label>
 			<select name="ddmStartYear"> <?StartYears?> </select>
 			<select name="ddmStartMonth"> <?StartMonths?> </select>
 			<select name="ddmStartDay"> <?StartDays?> </select>
@@ -35,20 +35,23 @@
 	</p>
 	<p class="buttons">
 		<? echo ( join('',
-				ssi::writeButton( $log, $dbh, 'ShowResults', 'showResults.gif', 'f1.submit();', '', 'Show Results' ),
-				ssi::writeButton( $log, $dbh, 'Reset', 'reset.gif', 'f1.reset();', '', 'Reset' ),
+				ssi::button( 'ShowResults', { onclick=>'f1.submit();', href=>'', text=>'Show Results' } ),
+				ssi::button( 'Reset', { onclick=>'f1.reset();', href=>'', text=>'Reset' } ),
 ); ) ?>
 	</p>
 </fieldset>
 <? eval ( 
-		my %params = ( 'type'=>['E','A'], 'order'=>'lower(strlastname),lower(strfirstname)' );
+		my %params = ( 'type'=>['E','A'], 'order'=>'lower(lastname),lower(firstname)' );
 		if ( $openprint::param{'ddmEmployee'} eq 'Prepress' ) {
 			$params{'usergroup'} = 'Prepress';
 		} elsif ( $openprint::param{'ddmEmployee'} ne 'All' ) {
 			$params{'id'} = $openprint::param{'ddmEmployee'};
 		} # end if
-		@{$$variable{'Results'}} = openprint::User::find( %params );
-		@{$$variable{'Projects'}} = openprint::Project::find( 'ordered_on_start'=>"$$variable{'Start'} 00:00:00", 'ordered_on_end'=>"$$variable{'End'} 23:59:59" );
+		@{$$variable{'Results'}} = openprint::User->find( %params );
+		@{$$variable{'Projects'}} = openprint::Project->find(
+			'ordered_on <='=>"$$variable{'End'} 23:59:59",
+			'ordered_on >='=>"$$variable{'Start'} 00:00:00",
+			);
  ) ?>
  <? if ( @{$$variable{'Projects'}} ) ?>
 	Total # of Dockets in the time period: <? echo ( @{$$variable{'Projects'}} ) ?>:
@@ -150,7 +153,7 @@
 </table>
 <? if ( $$variable{'UnassignedProjects'} ) ?>
 <br/>
-	<h3>Unassigned Projects:</h3>
+	<h3>Unassigned Projects</h3>
 <table class="List">
 	<tr>
 		<th valign="top" align="left" width="100">Index</th>

@@ -1,156 +1,328 @@
-<form name="f1" method="post" enctype="multipart/form-data" action="edit.html">
+<?include('/includes/error_reporting.html')?>
+<script type="text/javascript" src="<?hash_link(/javascripts/paper.js)?>"></script>
+<script type="text/javascript">
+var equipment_id='<?echo($$variable{Equipment}->id())?>';
+
+function add_stock_setting( stock_id ) {
+	new Ajax.Updater('Stocks','_stocks.html', {
+			parameters: {
+				action:'add',
+				equipment_id: equipment_id,
+				stock_id: stock_id
+			}, 
+			onLoading:function(){ $('Stocks').innerHTML='Loading...'; }, 
+			onSuccess: function(){ 
+				new Ajax.Updater('StockSettings', '_stock_settings.html', { parameters: { equipment_id: equipment_id } } );
+			}
+		}
+	);
+	var tr = $('stock_'+stock_id); if(tr) { tr.parentNode.removeChild(tr) };
+} // end function add_stock_setting
+
+function filter_onChange( element, id, selected ) {
+    var form = element.form;
+
+	var parameters = new Hash();
+		['Manufacturer','Group','Name','Finish','Colour','Weight'].each(function(name,index){
+			var ddm = form.elements[name+id];
+			if ( ! ddm ) ddm = form.elements['ddm'+name+id];
+			if ( ddm ) {
+				ddm.disabled = true;
+				parameters.set(ddm.name, get_ddm_value( ddm ) );
+			} // end if
+		} // end for each
+	);
+
+	parameters.set('form',form.name);
+	parameters.set('selected',selected);
+	new Ajax.Request( '/administrator/equipment/_stock_filters.json', { method: 'post', parameters: parameters, evalScripts: true } );
+
+} // end function Name_onChange()
+	function calc(formName) {
+		new Ajax.Updater('Stocks','/administrator/equipment/_stocks.html', {
+				onLoading:function(){ $('Stocks').innerHTML='Loading...'; },
+				parameters:Form.serialize($(formName))});
+				//evalScripts:true, 
+	}
+	function del_operator( user_id ) {
+		new Ajax.Updater('Operators','/administrator/equipment/_operators.html', {
+				parameters: { action: 'delete', equipment_id: equipment_id, user_id: user_id } } );
+	} // end function del_operator
+	function add_operator(user_id) {
+		new Ajax.Updater('Operators','/administrator/equipment/_operators.html', {
+				parameters: { action: 'add', equipment_id: equipment_id, user_id: user_id } } );
+	}
+	function delete_spec( id ) {
+new Ajax.Request('/administrator/equipment/_specification.html?action=delete&amp;id='+id, { onSuccess: function(){var tr = $('S'+id); tr.parentNode.removeChild(tr);SortableTable.load();} } );
+	}
+	function copy_spec( id ) {
+new Ajax.Request('/administrator/equipment/_specification.html?action=copy&amp;id='+id, { onSuccess: function(response){ $('S'+id).insert( {after: response.responseText } ); SortableTable.load();} } );
+	}
+</script>
+<form id="f1" name="f1" method="post" enctype="multipart/form-data" action="edit.html">
 	<fieldset class="filters"><legend>Search Information</legend>
-		<p>
-			<label>Equipment ID:</label>
-			<select name="ddmEquipment" onchange="if(this.options[this.selectedIndex].value != ''){f1.btnFunction.value='';fmCheck(f1);}" />
+		<ul>
+		<li>
+			<label>Category</label>
+			<select name="search_category_id" onchange="if(this.options[this.selectedIndex].value != ''){f1.btnFunction.value='';fmCheck(f1);};">
+				<option value="">All</option>
+<? echo ( make_drop_down( openprint::Equipment_Category->dropdown(order=>'lower(name)'), $param{search_category_id} );) ?>
+			</select>
+		</li>
+		<li>
+			<label>Equipment ID</label>
+			<select name="ddmEquipment" onchange="if(this.options[this.selectedIndex].value != ''){f1.btnFunction.value='';fmCheck(f1);}" >
 				<option value="">Select Equipment</option>
 <? echo (
-    ssi::make_drop_down( [ map { $_->id(), $_->strid() } openprint::Equipment::find( 'order' => 'lower(strID)' ) ], $$variable{'Equipment'}->id() );
+	my @Equipment = openprint::Equipment->find( 
+		( $param{ddmEquipment} ? ( or=>{deleted=>0, id=>$param{ddmEquipment} } ) : () ),
+		order => 'lower(strID)',
+		);
+    make_drop_down( [ map { $_->id(), join(': ', $_->strid(), $_->name() ) } @Equipment ], $$variable{Equipment}->id() );
 ) ?>
 			</select>
-		</p>
+		</li>
+		</ul>
 		<p class="buttons">
-		<? echo ( join( '',
-				ssi::writeButton( $log, $dbh, 'PreviousTop', 'prev.gif',"f1.btnFunction.value='<<';fmCheck(f1);",'','Previous'),
-				ssi::writeButton( $log, $dbh, 'NextTop', 'next.gif', "f1.btnFunction.value='>>';fmCheck(f1);",'','Next'),
-				ssi::writeButton( $log, $dbh, 'NewTop', 'new.gif', "addCheck(f1);",'','New'),
-				ssi::writeButton( $log, $dbh, 'DeleteTop', 'delete.gif', "f1.btnFunction.value='Delete';fmChange=2;fmCheck(f1);",'','Delete'),
-				ssi::writeButton( $log, $dbh, 'SaveTop', 'save.gif', "f1.btnFunction.value='Save';fmChange=3;fmCheck(f1);",'','Save'),
-				ssi::writeButton( $log, $dbh, 'CopyTop', 'copy.gif', "f1.btnFunction.value='Copy';f1.submit();",'','Copy'),
-				ssi::writeButton( $log, $dbh, 'ResetTop', 'reset.gif', 'f1.reset();','','Reset'),
+		<? echo ( join( "\n",
+				button( 'PreviousTop', { onclick=>"f1.btnFunction.value='Previous';fmCheck(f1);", text=>'Previous' } ),
+				button( 'NextTop', { onclick=>"f1.btnFunction.value='Next';fmCheck(f1);", text=>'Next' } ),
+				button( 'NewTop', { href=>'/administrator/equipment/edit.html', text=>'New' } ),
+				( $$variable{Equipment}->deleted() ? (
+				button( 'Destroy', { onclick=>"f1.btnFunction.value='Destroy';fmChange=2;fmCheck(f1);", text=>'Destroy' } ),
+				button( 'UnDelete', { onclick=>"f1.btnFunction.value='UnDelete';fmChange=2;fmCheck(f1);", text=>'UnDelete' } ),
+				) : (
+				button( 'DeleteTop', { onclick=>"f1.btnFunction.value='Delete';fmChange=2;fmCheck(f1);", text=>'Delete' } ),
+				) ),
+				button( 'SaveTop', { onclick=>q`$('f2').btnFunction.value='Save';fmChange=3;fmCheck($('f2'));`, text=>'Save' } ),
+				button( 'CopyTop', { onclick=>"f1.btnFunction.value='Copy';f1.submit();", text=>'Copy' } ),
+				button( 'ResetTop', { onclick=>'f1.reset();', text=>'Reset' } ),
 				);
 			) ?>
 		</p>
 		<p class="buttons">
 			<input type="file" name="fileSpecifications"/>
-			<? echo ( join('',
-			ssi::writeButton( $log, $dbh, 'Import','import.gif',"f1.btnFunction.value='Import Specifications';f1.submit();",'','Import' ),
-			ssi::writeButton( $log, $dbh, 'Export','export.gif',"f1.btnFunction.value='Export Specifications';f1.submit();",'','Export' ),
-); ) ?>
-		</p>
-	</fieldset>
-	<fieldset><legend>Equipment Information</legend>
-		<p> 
-			<label>ID:</label>
-			<input type="text" name="strid" value="<? hecho ( $$variable{Equipment}->strid(); ) ?>"/>
-		</p>
-		<p> 
-			<label>Name:</label>
-			<input type="text" name="name" value="<? hecho ( $$variable{Equipment}->name(); ) ?>" />
-		</p>
-		<p>
-			<label>Category:</label>
-			<select name="category"/>
-				<option value="">Select a category</option>
-    <? echo ( ssi::fill_drop_down( $log, $dbh, 'SELECT DISTINCT strCategory,strCategory FROM tbl_Equipment ORDER BY strCategory', $$variable{Equipment}->category() ); ) ?>
-			</select>
-		</p>
-		<p> 
-			<label>Description:</label>
-			<input type="text" name="description" value="<? hecho ( $$variable{Equipment}->description(); ) ?>" />
-		</p>
-		<p> 
-			<label>Image:</label>
-			<input type="text" name="image" value="<? hecho ( $$variable{Equipment}->image(); ) ?>" />
-		</p>
-		<p> 
-			<label>Supplier:</label>
-			<input type="text" name="supplier" value="<? hecho ( $$variable{Equipment}->supplier(); ) ?>" />
-		</p>
-		<p>
-			<label>Use in estimating:</label>
-			<input type="radio" id="useinestimatingtrue" name="useinestimating" value="true"  <? echo ( 'checked="checked"' if $$variable{Equipment}->useinestimating(); ) ?> />
-			<label class="radio" for="useinestimatingtrue">Yes</label>
-			<input type="radio" id="useinestimatingfalse" name="useinestimating" value="false"  <? echo ( 'checked="checked"' if ! $$variable{Equipment}->useinestimating(); ) ?> />
-			<label class="radio" for="useinestimatingfalse">No</label>
-		</p>
-		<p>
-			<label>Use in scheduling:</label>
-			<input type="radio" id="useinschedulingtrue" name="useinscheduling" value="true"  <? echo ( 'checked="checked"' if $$variable{'Equipment'}->useinscheduling(); ) ?> />
-			<label class="radio" for="useinschedulingtrue">Yes</label>
-			<input type="radio" id="useinschedulingfalse" name="useinscheduling" value="false"  <? echo ( 'checked="checked"' if ! $$variable{'Equipment'}->useinscheduling(); ) ?> />
-			<label class="radio" for="useinschedulingfalse">No</label>
-		</p>
-<? if ( $openprint::config{'JMFEnabled'} eq 'Y' ) ?>
-		<p>
-			<label>Use JMF:</label>
-			<input type="radio" id="jmf_enabledtrue" name="jmf_enabled" value="true"  <? echo ( 'checked="checked"' if $$variable{'Equipment'}->jmf_enabled(); ) ?> />
-			<label class="radio" for="jmf_enabledtrue">Yes</label>
-			<input type="radio" id="jmf_enabledfalse" name="jmf_enabled" value="false"  <? echo ( 'checked="checked"' if ! $$variable{'Equipment'}->jmf_enabled(); ) ?> />
-			<label class="radio" for="jmf_enabledfalse">No</label>
-		</p>
-<? endif ( $openprint::config{'JMFEnabled'} eq 'Y' ) ?>
-<? if ( $openprint::config{'InstantGateEnabled'} eq 'Y' ) ?>
-		<p>
-			<label>Use InstantGate:</label>
-			<input type="radio" id="instantgate_enabledtrue" name="instantgate_enabled" value="true"  <? echo ( 'checked="checked"' if $$variable{'Equipment'}->instantgate_enabled(); ) ?> onclick="$('CostCenter').show();" />
-			<label class="radio" for="instantgate_enabledtrue">Yes</label>
-			<input type="radio" id="instantgate_enabledfalse" name="instantgate_enabled" value="false"  <? echo ( 'checked="checked"' if ! $$variable{'Equipment'}->instantgate_enabled(); ) ?> onclick="$('CostCenter').hide();" />
-			<label class="radio" for="instantgate_enabledfalse">No</label>
-		</p>
-		<p id="CostCenter" <? echo ( 'style="display:none;"' if ! $$variable{'Equipment'}->instantgate_enabled() ) ?>>
-			<label>Cost Center:</label>
-			<input type="text" name="cost_center" value="<? hecho ( $$variable{'Equipment'}->cost_center(); ) ?>"  />
-		</p>
-<? endif ( $openprint::config{'InstantGateEnabled'} eq 'Y' ) ?>
-	</fieldset>
-<? if ( $$variable{'Equipment'}->id() ) ?>
-	<fieldset><legend>Specifications</legend>
-		<table class="List">
-			<tr>
-				<th>Specification</th>
-				<th width="10%">Min</th>
-				<th width="10%">Max</th>
-				<th width="10%">Value</th>
-				<th width="10%">Units</th>
-				<th width="95">Interpolate</th>
-			</tr>
-			<? eval ( @{$$variable{'Specifications'}} = $$variable{'Equipment'}->Specifications(); ) ?>
-			<? while ( $$variable{'Spec'} = shift @{$$variable{'Specifications'}}; ) ?>
-			<tr<?rowclass?>> 
-				<td><input type="text" name="txtSpecificationName<? echo ( $$variable{'Spec'}->id() ) ?>" value="<? echo ( $$variable{'Spec'}->name(); ) ?>" /></td>
-				<td><input type="text" name="txtSpecificationMin<? echo ( $$variable{'Spec'}->id(); ) ?>" value="<? echo ( $$variable{'Spec'}->min(); ) ?>" /></td>
-				<td><input type="text" name="txtSpecificationMax<? echo ( $$variable{'Spec'}->id(); ) ?>" value="<? echo ( $$variable{'Spec'}->max(); ) ?>" /></td>
-				<td><input type="text" name="txtSpecificationValue<? echo ( $$variable{'Spec'}->id(); ) ?>" value="<? echo ( HTML::Entities::encode_entities($$variable{'Spec'}->value()); ) ?>" /></td>
-				<td><input type="text" name="txtSpecificationUnits<? echo ( $$variable{'Spec'}->id(); ) ?>" value="<? echo ( $$variable{'Spec'}->units(); ) ?>" /></td>
-				<td>
-					<input type="radio" id="interpolate<? echo ( $$variable{'Spec'}->id(); ) ?>true" name="interpolate<? echo ( $$variable{'Spec'}->id(); ) ?>" value="true" <? echo ( 'checked="checked"' if $$variable{'Spec'}->interpolate() ) ?> />
-					<label class="radio" for="interpolate<? echo ( $$variable{'Spec'}->id(); ) ?>true">Yes</label>
-					<input type="radio" id="interpolate<? echo ( $$variable{'Spec'}->id(); ) ?>false" name="interpolate<? echo ( $$variable{'Spec'}->id(); ) ?>" value="false" <? echo ( 'checked="checked"' if ! $$variable{'Spec'}->interpolate() ) ?> />
-					<label class="radio" for="interpolate<? echo ( $$variable{'Spec'}->id(); ) ?>false">No</label>
-				</td>
-			</tr>
-			<? eval ( $$variable{'rowclass'} = $$variable{'rowclass'} ? '' : ' class="colRow"'; ) ?>
-			<? endwhile ( $$variable{'Spec'} = shift @{$$variable{'Specifications'}}; ) ?>
-			<tr> 
-				<td><input type="text" name="txtSpecificationNameNew" /></td>
-				<td><input type="text" name="txtSpecificationMinNew" /></td>
-				<td><input type="text" name="txtSpecificationMaxNew" /></td>
-				<td><input type="text" name="txtSpecificationValueNew" /></td>
-				<td><input type="text" name="txtSpecificationUnitsNew" /></td>
-				<td>
-					<input type="radio" id="interpolateNewtrue" name="interpolateNew" value="true"/>
-					<label class="radio" for="interpolateNewtrue">Yes</label>
-					<input type="radio" id="interpolateNewfalse" name="interpolateNew" value="false"/>
-					<label class="radio" for="interpolateNewfalse">No</label>
-				</td>
-			</tr>
-		</table>
-	</fieldset>
-<? endif ( $$variable{'Equipment'}->id() ) ?>
-	<fieldset>
-		<p class="buttons">
-		<? echo ( join( '',
-				ssi::writeButton( $log, $dbh, 'PreviousBottom', 'prev.gif',"f1.btnFunction.value='<<';fmCheck(f1);",'','Previous'),
-				ssi::writeButton( $log, $dbh, 'NextBottom', 'next.gif', "f1.btnFunction.value='>>';fmCheck(f1);",'','Next'),
-				ssi::writeButton( $log, $dbh, 'NewBottom', 'new.gif', "addCheck(f1);",'','New'),
-				ssi::writeButton( $log, $dbh, 'DeleteBottom', 'delete.gif', "f1.btnFunction.value='Delete';fmChange=2;fmCheck(f1);",'','Delete'),
-				ssi::writeButton( $log, $dbh, 'SaveBottom', 'save.gif', "f1.btnFunction.value='Save';fmChange=3;fmCheck(f1);",'','Save'),
-				ssi::writeButton( $log, $dbh, 'CopyBottom', 'copy.gif', "f1.btnFunction.value='Copy';f1.submit();",'','Copy'),
-				ssi::writeButton( $log, $dbh, 'ResetBottom', 'reset.gif', 'f1.reset();','','Reset'),
-				);
-			) ?>
+			<? echo ( join("\n",
+			button( 'Import', { onclick=>"f1.btnFunction.value='Import Specifications';f1.submit();", text=>'Import' } ),
+			button( 'Export', { onclick=>"f1.btnFunction.value='Export Specifications';f1.submit();", text=>'Export' } ),
+			); ) ?>
 		</p>
 	</fieldset>
 	<input type="hidden" name="btnFunction"/>
 </form>
+<form id="f2" name="f2" method="post" enctype="multipart/form-data" action="edit.html">
+	<input type="hidden" id="ddmEquipment" name="ddmEquipment" value="<? echo ( $$variable{Equipment}->id() ) ?>" />
+	<fieldset><legend>Equipment Information</legend>
+		<div class="leftColumn">
+			<p><label>Index</label><? hecho ( $$variable{Equipment}->id(); ) ?></p>
+			<p> 
+				<label>ID</label>
+				<input type="text" name="strid" value="<? hecho ( $$variable{Equipment}->strid(); ) ?>"/>
+			</p>
+			<p> 
+				<label>Name</label>
+				<input type="text" name="name" value="<? hecho ( $$variable{Equipment}->name(); ) ?>" />
+			</p>
+			<p>
+				<label>Category</label>
+				<select name="category_id" multiple="multiple" size="4">
+				<? echo ( make_drop_down( openprint::Equipment_Category->dropdown(order=>'lower(name)'), $$variable{Equipment}->category_id() );) ?>
+				</select>
+			</p>
+			<p> 
+				<label>Description</label>
+				<input type="text" name="description" value="<? hecho ( $$variable{Equipment}->description(); ) ?>" />
+			</p>
+			<p> 
+				<label>Sort</label>
+				<input type="text" name="sorting" value="<? echo ( $$variable{Equipment}->sorting(); ) ?>" />
+			</p>
+			<p> 
+				<label>Image</label>
+				<input type="text" name="image" value="<? hecho ( $$variable{Equipment}->image(); ) ?>" />
+			</p>
+			<p><label>Operators</label>
+			<div id="Operators"><?include(_operators.html)?></div>
+			</p>
+		</div>
+		<div class="rightColumn">
+			<p> 
+				<label>Supplier</label>
+				<input type="text" name="supplier" value="<? hecho ( $$variable{Equipment}->supplier(); ) ?>" />
+			</p>
+			<p>
+				<label>Use in estimating</label>
+				<? echo ( radio( 'useinestimating', [ '1', 'Yes', '0', 'No', '', 'By Override' ], $$variable{Equipment}->useinestimating(), { default=>'0' } ); ) ?>
+			</p>
+			<p>
+				<label>Services</label>
+				<select name="servicetype_id" id="servicetype_id" multiple="multiple" size="4">
+					<? echo ( make_drop_down(
+						openprint::ServiceType->dropdown( order=>'lower(name)'),
+						$$variable{Equipment}->servicetype_id(),
+						); ) ?>
+				</select>
+			</p>
+			<p>
+				<label>Use in scheduling</label>
+				<? echo ( radio( 'useinscheduling', [ '1', 'Yes', '0', 'No' ], $$variable{Equipment}->useinscheduling(), { default=>'0', onclick=>q`if(this.value=='1'){$('schedulingoptions').show();}else{$('schedulingoptions').hide();}` } ); ) ?>
+			</p>
+	<div id="schedulingoptions" <? echo ( $$variable{Equipment}->useinscheduling() ? '' : 'style="display:none;"' ) ?>>
+			<p>
+				<label>Smart Scheduling</label>
+				<? echo ( radio( 'smartscheduling', [ '1', 'Yes', '0', 'No' ], $$variable{Equipment}->smartscheduling() ); ) ?>
+			</p>
+	</div>
+	<? if ( $config{JMFEnabled} eq 'Y' ) ?>
+			<p>
+				<label>Use JMF</label>
+				<? echo ( radio( 'jmf_enabled', [ 'true', 'Yes', 'false', 'No' ], $$variable{Equipment}->jmf_enabled() ); ) ?>
+			</p>
+	<? endif ( $config{JMFEnabled} eq 'Y' ) ?>
+	<? if ( $config{InstantGateEnabled} eq 'Y' ) ?>
+			<p>
+				<label>Use InstantGate</label>
+				<? echo ( radio( 'instantgate_enabled', [ 'true', 'Yes', 'false', 'No' ], $$variable{Equipment}->instantgate_enabled(), { onclick=>qq`if(this.value=='true'){$('CostCenter').show();}else{$('CostCenter').hide();};` } ); ) ?>
+			</p>
+	<? endif ( $config{InstantGateEnabled} eq 'Y' ) ?>
+	<? if ( $config{InstantGateEnabled} eq 'Y' or $config{JDFEnabled} eq 'Y' ) ?>
+			<p id="CostCenter" <? echo ( 'style="display:none;"' if ! $$variable{Equipment}->instantgate_enabled() ) ?>>
+				<label>Cost Center</label>
+				<input type="text" name="cost_center" value="<? hecho ( $$variable{Equipment}->cost_center(); ) ?>"  />
+			</p>
+	<? endif ( $config{InstantGateEnabled} eq 'Y' or $config{JDFEnabled} eq 'Y' ) ?>
+			<p>
+				<label>JDF ID</label>
+				<input type="text" name="jdf_id" value="<? hecho ( $$variable{Equipment}->jdf_id(); ) ?>"  />
+			</p>
+			<p>
+				<label>JDF Name</label>
+				<input type="text" name="jdf_name" value="<? hecho ( $$variable{Equipment}->jdf_name(); ) ?>"  />
+			</p>
+			<p>
+				<label>Location</label>
+				<select id="location_id" name="location_id">
+					<option value="">select</option>
+					<? echo ( make_drop_down( openprint::Location->dropdown( order=>'parent_id NULLS FIRST, lower(name)', type=>'place'), $$variable{Equipment}->location_id() ); ) ?>
+				</select>
+			</p>
+			<p>
+				<label>CIP3 Integration</label>
+				<input type="radio" id="cip3_monitor1" name="cip3_monitor" value="1"  <? echo ( ssi::checked( $$variable{Equipment}->cip3_monitor() ); ) ?> onclick="$('CIP3').show();" />
+				<label class="radio" for="cip3_monitor1">Yes</label>
+				<input type="radio" id="cip3_monitor0" name="cip3_monitor" value="0"  <? echo ( ssi::checked(! $$variable{Equipment}->cip3_monitor() ); ) ?> onclick="$('CIP3').hide();" />
+				<label class="radio" for="cip3_monitor0">No</label>
+			</p>
+			<div id="CIP3" <? echo ( $$variable{Equipment}->cip3_monitor() ? '' : 'style="display: none;"' ) ?>>	
+				<p>
+					<label>Input Hotfolder</label>
+					<input type="text" name="cip3_in" value="<? hecho ( $$variable{Equipment}->cip3_in(); ) ?>" />
+				</p>
+				<p>
+					<label>Output Hotfolder</label>
+					<input type="text" name="cip3_out" value="<? hecho ( $$variable{Equipment}->cip3_out(); ) ?>" />
+				</p>
+				<p>
+					<label>Hold PPFs?</label>
+					<input type="radio" id="cip3_hold1" name="cip3_hold" value="1" <? echo ( ssi::checked( $$variable{Equipment}->cip3_hold() ); ) ?> />
+					<label class="radio" for="cip3_hold1">Yes</label>
+					<input type="radio" id="cip3_hold0" name="cip3_hold" value="0"  <? echo ( ssi::checked(! $$variable{Equipment}->cip3_hold() ); ) ?> />
+					<label class="radio" for="cip3_hold0">No</label>
+				</p>
+				<p>
+					<label>Merge PPFs?</label>
+					<input type="radio" id="cip3_merge1" name="cip3_merge" value="1" <? echo ( ssi::checked( $$variable{Equipment}->cip3_merge() ); ) ?> />
+					<label class="radio" for="cip3_merge1">Yes</label>
+					<input type="radio" id="cip3_merge0" name="cip3_merge" value="0"  <? echo ( ssi::checked(! $$variable{Equipment}->cip3_merge() ); ) ?> />
+					<label class="radio" for="cip3_merge0">No</label>
+				</p>
+			</div>
+		</div>
+	</fieldset>
+<? if ( $$variable{Equipment}->id() ) ?>
+	<fieldset><legend>Specifications</legend>
+		Changes made below take effect immediately.<br/>
+		<table id="specifications" class="List sortable">
+			<thead>
+				<tr>
+					<th class="name">Specification</th>
+					<th class="min nosort">Min</th>
+					<th class="max">Max</th>
+					<th class="value">Value</th>
+					<th class="units">Units</th>
+					<th class="interpolate">Interpolate</th>
+					<th class="buttons">
+<? echo ( 
+	button( 'Add', { onclick=>q`new Ajax.Request('/administrator/equipment/_specification.html', { 
+		parameters: {
+			action: 'add',
+			equipment_id: $('ddmEquipment').value,
+		}, 
+		evalScripts:true, 
+		onSuccess: function(response){
+			$('specifications_body').insert({top: response.responseText} );
+			SortableTable.load();	
+			} 
+	} );`,text=>'Add' } ); 
+) ?>
+</th>
+				</tr>
+			</thead>
+			<tbody id="specifications_body">
+			<? echo ( 
+				my $html;
+				@{$$variable{Specifications}} = $$variable{Equipment}->Specifications();
+				my $specification_html = slurp_content( '/administrator/equipment/_specification.html' );
+				while ( $$variable{Specification} = shift @{$$variable{Specifications}} ) {
+					$html .= variable_substitution( \$specification_html, $variable );
+					$$variable{rowclass} = $$variable{rowclass} ? '' : ' class="colRow"';
+				} # end while
+				return $html;
+			) ?>
+			</tbody>
+		</table>
+	</fieldset>
+<? endif ( $$variable{Equipment}->id() ) ?>
+	<input type="hidden" name="btnFunction"/>
+</form>
+<? if ( $$variable{Equipment}->specification('Folding Capable') ) ?>
+	<fieldset><legend>Fold Specifications</legend>
+		Select the # of pages of the folds that you would like to edit.  To add a new fold click Add.
+		<p>
+			<label>Type</label>
+			<select style="width: auto;" id="type" name="type" onchange="new Ajax.Updater( 'Folds', '_fold.html', {method:'get', evalScripts:true, onLoading:function(){ $('Folds').innerHTML='Loading...';}, parameters:{equipment_id: <? echo ( $$variable{Equipment}->id() ) ?>, type: $('type').getValue() } } );">
+				<option value="">select</option>
+				<option value="all">All</option>
+<? echo ( 
+	return make_drop_down( [ map { $_, $openprint::Estimating::Folding::fold_types{$_} } sort keys %openprint::Estimating::Folding::fold_types ] );
+	my %types;
+	foreach ( openprint::Fold->find( equipment_id=>$$variable{Equipment}->id()) ) {
+		$types{$_->type()} = $openprint::Estimating::Folding::fold_types{$_->type()};
+	}
+	make_drop_down( [ map { $_, $types{$_} } sort keys %types ] );
+) ?>
+			</select>
+<? echo ( join("\n",
+			button( 'AddFold', { onclick=>"new Ajax.Request('/administrator/equipment/_fold.html?action=add&equipment_id=". $$variable{Equipment}->id() ."', { onSuccess: function(response){new Insertion.Top(\$('Folds'), response.responseText);SortableTable.load();} } );", text=>'Add' } ),
+			'<input type="file" name="fileFolds"/>',
+			button( 'ExportFolds', { onclick=>"f2.btnFunction.value='Export Folds';f2.submit();", text=>'Export Folds' } ),
+			button( 'ImportFolds', { onclick=>"f2.btnFunction.value='Import Folds';f2.submit();", text=>'Import Folds' } ),
+	);) ?>
+		</p>
+		<div id="Folds"> </div>
+	</fieldset>
+<? endif ( $$variable{Equipment}->specification('Folding Capable') ) ?>
+</form>
+<form id="stock_settings_form" name="stock_settings_form" action="">
+	<input type="hidden" id="equipment_id" name="equipment_id" value="<? echo ( $$variable{Equipment}->id() ) ?>" />
+	<fieldset><legend>Specific Stock Settings</legend>
+		<div id="StockSettings"><?include('_stock_settings.html')?></div>
+		<p class="buttons">
+			<? echo ( button( 'addstocksetting', { onclick=>"popup_window('_stock_setting_popup.html','equipment_id=$$variable{Equipment}{id}', { width: '800px', height: '500px' } );", text=>'Add' } ); ) ?>
+			<? echo ( button( 'savestocksetting', { onclick=>"new Ajax.Updater('StockSettings','_stock_settings.html?action=save', { parameters: stock_settings_form.serialize() } );", text=>'Save' } ); ) ?>
+		</p>
+	</fieldset>
+</form>
+<? if ( $$variable{Equipment}->id() ) ?>
+	<? echo ( include_logs( $$variable{Equipment} ); ) ?>
+<? endif ( $$variable{Equipment}->id() ) ?>

@@ -1,55 +1,71 @@
-<form method="post" action="taxes.html" name="f1">
-	<table class="List">
+<div class="Taxes">
+<form method="post" action="taxes.html" id="f1" name="f1">
+	<table class="List sortable">
 		<tr>
-			<th align="left">Country</th>
-			<th align="left">State/Province</th>
-			<th width="80">Federal (%)</th>
-			<th width="80">State (%)</th>
-			<th width="80">Harmonised (%)</th>
-			<th width="20">&nbsp;</th>
+			<th class="checkbox">&nbsp;</th>
+			<th class="name">Name</th>
+			<th class="period">Period</th>
+			<th class="country">Country</th>
+			<th class="state">State/Province</th>
+			<th class="rate">Rate (%)</th>
 		</tr>
-		<? eval (
-				$_ = 'SELECT Country, State, dblFederalPercent, dblStatePercent, dblHarmonisedPercent FROM Taxes ORDER BY lower(State)';
-				@{$$variable{'TAXES'}} = sql::execute( $log, $dbh, $_ );
-				) ?>
-		<? while ( @$variable{'country','state','gst','pst','hst'} = splice @{$$variable{'TAXES'}},0,5; ) ?>
-		<tr<?rowclass?>>
-			<td><? echo ( $countries::countries{$$variable{'country'}} ? $countries::countries{$$variable{'country'}} : $$variable{'country'} ) ?></td>
-			<td><? echo (
-				if ( $$variable{'country'} eq 'CA' and $provinces::provinces{$$variable{'state'}} ) {
-					return $provinces::provinces{$$variable{'state'}};
-				} elsif ( $$variable{'country'} eq 'US' and $states::states{$$variable{'state'}} ) {
-					return $states::states{$$variable{'state'}};
+		<? eval ( $$variable{TAXES} = [ openprint::Tax->find(order=>'lower(state),period_start') ]; ) ?>
+		<? while ( $$variable{Tax} = shift @{$$variable{TAXES}}; ) ?>
+		<tr>
+			<td class="checkbox"><input type="checkbox" id="tax_ids<? echo ( $$variable{Tax}->id() ) ?>" name="tax_ids" value="<? echo ( $$variable{Tax}->id() ) ?>" /></td>
+			<td class="name"><input type="text" id="name-<? echo ( $$variable{Tax}->id() ) ?>" name="name-<? echo ( $$variable{Tax}->id() ) ?>" value="<? echo ( $$variable{Tax}->name() ) ?>" /></td>
+			<td class="period">
+				<? echo ( date_select( 'period_start-'.$$variable{Tax}->id(), [ split('-',$$variable{Tax}->period_start())], { with_today=>1 } ); ) ?> to 
+				<? echo ( date_select( 'period_end-'.$$variable{Tax}->id(), [ split('-',$$variable{Tax}->period_end())], { with_today=>1 } ); ) ?>
+			</td>
+			<td class="country"><? echo ( $countries::countries{$$variable{Tax}->country()} ? $countries::countries{$$variable{Tax}->country()} : $$variable{Tax}->country() ) ?></td>
+			<td class="state"><? echo (
+				if ( $$variable{Tax}->country() eq 'CA' and $provinces::provinces{$$variable{Tax}->state()} ) {
+					return $provinces::provinces{$$variable{Tax}->state()};
+				} elsif ( $$variable{Tax}->country() eq 'US' and $states::states{$$variable{Tax}->state()} ) {
+					return $states::states{$$variable{Tax}->state()};
 				} else {
-					return $$variable{'state'};
+					return $$variable{Tax}->state();
 				} # end if
 				) ?></td>
-			<td> 
-				<input type="text" name="txtFST<?state?>" value="<?gst?>" />
-			</td>
-			<td> 
-				<input type="text" name="txtSST<?state?>" value="<?pst?>" />
-			</td>
-			<td> 
-				<input type="text" name="txtHST<?state?>" value="<?hst?>" />
-			</td>
-			<td><input type="checkbox" id="chkDelete-<?country?>-<?state?>" name="chkDelete-<?country?>-<?state?>" /></td>
+			<td class="rate"><? echo ( input( type=>'float', name=>'rate-'.$$variable{Tax}->id(), value=>$$variable{Tax}->rate() ); ) ?></td>
 		</tr>
-		<? eval ( $$variable{'rowclass'} = $$variable{'rowclass'} ? '' : ' class="colRow"'; ) ?>
-		<? endwhile ( @$variable{'country','state','gst','pst','hst'} = splice @{$$variable{'TAXES'}},0,5; ) ?>
-		<tr class="totals">
-			<td><input type="text" name="txtCountryNew"/></td>
-			<td><input type="text" name="txtStateNew"/></td>
-			<td><input type="text" name="txtFSTNew" /></td>
-			<td><input type="text" name="txtSSTNew" /></td>
-			<td><input type="text" name="txtHSTNew" /></td>
-			<td>&nbsp;</td>
+		<? endwhile ( $$variable{Tax} = shift @{$$variable{TAXES}}; ) ?>
+		<tr class="new">
+			<td class="checkbox">&nbsp;</td>
+			<td class="name"><input type="text" id="name-New" name="name-New" /></td>
+			<td class="period">
+				<? echo (date_select( 'period_start-New',[], { with_today=>1 } ); ) ?> to 
+				<? echo (date_select( 'period_end-New',[], { with_today=>1 } ); ) ?>
+			</td>
+			<td class="country"><select name="country-New" onchange="new Ajax.Updater('state-New', '/includes/_states_provinces.html', { parameters: { country: this.getValue() } } );">
+				<option value="">select</option><?echo(return_countries($param{'country-New'} ? $param{'country-New'} : $openprint::Company->country() );)?></select></td>
+			<td class="state"><select name="state-New" id="state-New"><option value="">select</option>
+				<? echo (
+						if ( $param{'country-New'} ) {
+							if ( $param{'country-New'} eq 'CA' ) {
+								return_provinces();
+							} elsif ( $param{'country-New'} eq 'US' ) {
+								return_states();
+							} 
+						} else {
+							if ( $openprint::Company->country() eq 'CA' ) {
+								return_provinces();
+							} elsif ( $openprint::Company->country() eq 'US' ) {
+								   return_states();
+                            } 
+						}
+				) ?>
+				
+				</select></td>
+			<td class="rate"><? echo ( input( type=>'float', name=>'rate-New' ); ) ?></td>
 		</tr>
 	</table>
 	<p class="buttons"> 
-			<? echo ( ssi::writeButton( $log, $dbh, 'Save','save.gif',"f1.btnFunction.value='Save';f1.submit();",'','Save' ); ) ?>
-			<? echo ( ssi::writeButton( $log, $dbh, 'Delete','delete.gif',"f1.btnFunction.value='Delete';f1.submit();",'','Delete Checked' ); ) ?>
-			<? echo ( ssi::writeButton( $log, $dbh, 'Reset','reset.gif','f1.reset();','','Reset' ); ) ?>
+		<? echo ( button( 'Save', { onclick=>"f1.btnFunction.value='Save';f1.submit();", text=>'Save' } ); ) ?>
+		<? echo ( button( 'Delete', { onclick=>"f1.btnFunction.value='Delete';f1.submit();", text=>'Delete Checked' } ); ) ?>
+		<? echo ( button( 'Reset', { onclick=>'f1.reset();', text=>'Reset' } ); ) ?>
 	</p>
 	<input type="hidden" name="btnFunction"/>
 </form>
+</div>

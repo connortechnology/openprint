@@ -1,5 +1,4 @@
 		<script language="javascript" src="/javascripts/proj/calc_prepress.js"></script>
-		<script language="javascript" src="/javascripts/proj/misc_prin.js"></script>
 		<script language="javascript">
 			var service = "Miscellaneous";
 		
@@ -25,11 +24,11 @@
 					</tr>
 				</table>
 			<form name="f1" method="POST" action="/main/project/view.html">
-				<!--#include virtual="/includes/main/proj/project_name.html"-->
-				<!--#include virtual="/includes/main/proj/prepress_hours.html"-->
-				<!--#include virtual="/includes/main/proj/prices_prepress.html"-->
-				<!--#include virtual="/includes/main/proj/add_to_project.html"-->
-				<!--#include virtual="/includes/main/proj/hdn_fields_prepress.html"-->
+				<? echo ( include('/includes/main/proj/project_name.html'); ) ?>
+				<? echo ( include('/includes/main/proj/prepress_hours.html'); ) ?>
+				<? echo ( include('/includes/main/proj/prices_prepress.html'); ) ?>
+				<? echo ( include('/includes/main/proj/add_to_project.html'); ) ?>
+				<? echo ( include('/includes/main/proj/hdn_fields_prepress.html'); ) ?>
 			</form>
 	<script language="javascript">calc_prepress('f1');</script>
 

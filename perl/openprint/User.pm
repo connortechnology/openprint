@@ -1,240 +1,221 @@
-package openprint::User;
-@ISA = qw( openprint::Object );
-use Text::Unaccent;
-use MIME::QuotedPrint;
-
-require openprint::Company;
-require openprint::logs;
-use openprint ();
 use strict;
+package openprint::User;
+our @ISA = qw( openprint::Object );
 
-my $debug = 1;
+require openprint::Object;
+require openprint::User_in_UserGroup;
 
-my %fields = (
-	'company_id'		=>	'companyindex',
-	'salutation'		=>	'strsalutation',
-	'title'				=>	'strtitle',
-	'firstname'			=>	'strfirstname',
-	'lastname'			=>	'strlastname',
-	'email'				=>	'stremail',
-	'phone'				=>	'strphone',
-	'extension'			=>	'strext',
-	'fax'				=>	'strfax',
+use openprint ();
+use vars qw( $log $dbh %config $debug %fields %find_fields %transforms %defaults $table $serial $AUTOLOAD $default_sort );
+*log = \$openprint::log;
+*dbh = \$openprint::dbh;
+*config = \%openprint::config;
+$table = 'users';
+$serial = 'users_id_seq';
+
+$debug = 0;
+
+$default_sort	=	'lower(firstname),lower(lastname)';
+
+%fields = (
+	'id'				=>	'id',
+	'company_id'		=>	'company_id',
+	'salutation'		=>	'salutation',
+	'title'				=>	'title',
+	'firstname'			=>	'firstname',
+	'lastname'			=>	'lastname',
+	'email'				=>	'email',
+	email_valid			=>	'email_valid',
+	'phone'				=>	'phone',
+	'extension'			=>	'extension',
+	'mobile'			=>	'mobile',
+	'sms'				=>	'sms',
+	'fax'				=>	'fax',
 	'mailinglist'		=>	'ysnmailinglist',
-	'greeting'			=>	'strcustomgreeting',
-	'created_on'		=>	'dtmdateentered',
-	'updated_on'		=>	'dtmlastmodified',
-	'type'				=>	'chrtype',
-	'changepassword'	=>	'ysnchangepassword',
+	'greeting'			=>	'greeting',
+	'created_on'		=>	'created_on',
+	'updated_on'		=>	'updated_on',
+	'type'				=>	'type',
+	'change_password'	=>	'ysnchangepassword',
+	'password_changed_on'	=>	'password_changed_on',
 	'commission'		=>	'dblcommission',
+	'wage'				=>	'wage',
 	'administrator'		=>	'ysnadministrator',
-	'password',			=>	'strpassword',
+	'password',			=>	'password',
 	'ftp_active'		=>	'ftp_active',
-	'web_active'		=>	'ysnaccountactivation',
+	ftp_root			=>	'ftp_root',
+	'web_active'		=>	'web_active',
 	'howdidyouhearaboutus'	=>	'howdidyouhearaboutus',
 	'howdidyouhearaboutusother'	=>	'howdidyouhearaboutusother',
+	'quote_level'		=>	'quote_level',
+	'email_quotes_to_myself'        =>      'email_quotes_to_myself',
+	'purchasing_limit'	=>	'purchasing_limit',
+	'purchasing_total_limit'	=>	'purchasing_total_limit',
+	'notes'				=>	'notes',
+	'asset_id'			=>	'asset_id',
+	'deleted'			=>	'deleted',
+	last_Logged_in		=>	undef,
 ); # end %fields
-
-my %transforms = (
-	'commission'		=>	[ 's/[^\d\.\-]//g' ],
-	'email'				=>	[ 'tr/[A-Z]/[a-z]/' ],
-	'created_on'		=> [ 's/.*//g' ],
-	'updated_on'		=> [ 's/.*//g' ],
+%find_fields = (
+	'name'	=>	q`firstname || ' ' || lastname`,
+	'usergroup_id'	=>	'(SELECT usergroup_id FROM users_in_usergroups WHERE user_id=users.id)',
+	'usergroup'		=>	'(SELECT name from usergroups WHERE id IN (SELECT usergroup_id FROM users_in_usergroups WHERE user_id=users.id))',
+	'last_online'	=>	'(SELECT MAX(date_time) FROM logs WHERE user_id=users.id)',
+	'profile_field'	=>	'(SELECT value FROM User_Profiles WHERE user_id=users.id AND field_id=?)',
+	company_deleted	=>	'(SELECT deleted FROM Companies WHERE Companies.id=company_id)',
 );
 
-my %defaults = (
-	'web_active'	=>	'N',
-	'ftp_active'	=>	'N',
-	'created_on'	=>	'NOW()',
-	'updated_on'	=>	'NOW()',
-	'type'			=>	'C',
-	'changepassword'	=>	'N',
-	'administrator'		=>	'N',
-	'commission'		=>	undef,
+%transforms = (
+	id				=>	[ 's/\D//g' ],
+	company_id		=>	[ 's/\D//g' ],
+	commission		=>	[ 's/[^\d\.\-]//g' ],
+	wage				=>	[ 's/[^\d\.]//g' ],
+	email				=>	[ 'tr/[A-Z]/[a-z]/', 's/^\s+//', 's/\s+$//' ],
+	password			=>	[ 's/^\s+//', 's/\s+$//' ],
+	purchasing_limit	=>	[ 's/[^\d\.\-]//g' ],
+	purchasing_total_limit	=>	[ 's/[^\d\.\-]//g' ],
+	created_on		=>	[ 's/.*//g' ],
+	updated_on		=>	[ 's/.*//g' ],
 );
 
-sub get {
-	my $self = shift;
-
-	return @$self{@_};
-} # end sub get
-
-sub load {
-	my ( $self, $data ) = @_;
-
-	my @fields = keys %fields;
-	if ( ! $data ) {
-		$data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM Users WHERE Index=?', {}, $$self{'id'} );
-		if ( ! $data ) {
-			$openprint::log->error( "Error loading User( $$self{'id'} ): " . $openprint::dbh->errstr() );
-		} # end if
-	} # end if
-	@$self{@fields} = @$data{@fields{@fields}};
-} # end sub load
-
-sub set {
-	my ( $self, $params ) = @_;
-	my @set_fields = ();
-	if ( exists $$params{password} and $$params{password} eq '' ) {
-		delete $$params{password};
-	} # end if
-
-	foreach my $field ( keys %{$params} ) {
-		if ( defined $fields{$field} ) {
-
-			foreach my $transform ( @{$transforms{$field}} ) {
-				eval '$params->{$field} =~ ' . $transform;
-			} # end foreach
-
-			if ( $params->{$field} eq '' and exists $defaults{$field} ) {
-				$params->{$field} = $defaults{$field};
-			} # end if
-
-# if valid db field
-			if ( ( ! defined $$self{$field} ) or ($$self{$field} ne $params->{$field}) ) {
-# Only make changes to fields that have changed
-				$$self{$field} = $$params{$field};
-				push @set_fields, $fields{$field}, $$params{$field};	#mark for sql updating
-			} # end if
-		} else {
-			$openprint::log->warn("User::Set::Invalid field requested: ($field)." );
-		} # end if
-	} # end foreach
-	return @set_fields;
-} # end sub set
+%defaults = (
+	web_active				=>	q`'N'`,
+	ftp_active				=>	0,
+	ftp_root				=>	q`''`,
+	created_on				=>	q`'NOW()'`,
+	updated_on				=>	q`'NOW()'`,
+	type					=>	q`'C'`,
+	change_password			=>	q`'N'`,
+	administrator			=>	q`'N'`,
+	commission				=>	undef,
+	quote_level				=>	undef,
+	purchasing_limit		=>	undef,
+	purchasing_total_limit	=>	undef,
+	wage					=>	undef,
+	deleted					=>	0,
+	email_quotes_to_myself	=>	0,
+	asset_id				=>	undef,
+	company_id				=>	undef,
+	password_changed_on		=>	undef,
+	password				=>	'',
+	email_valid				=>	undef,
+);
 
 # if we have previously loaded info for this customer, and it hasn't changed, that field will not be saved.
 # If we have not previously loaded the info, we will just save it whether it has actually changed or not.
 # We do this for efficiency's sake.	
 sub save {
 	my ( $self, $params ) = @_;
+	require MIME::QuotedPrint;
 
-	if ( $params and $$params{type} and $$self{type} and ( $$params{'type'} ne $$self{'type'} ) and ( $$params{'type'} ne 'C' ) ) {
+	if ( exists $$params{password} and $$params{password} eq '' ) {
+		delete $$params{password};
+	} # end if
+
+	my @changes = $self->changes( $params );
+
+	if ( $params and $$params{type} and $$self{type} and ( $$params{type} ne $$self{type} ) and ( $$params{type} ne 'C' ) ) {
 # Notify someone
 		my %info;
-		$info{'User'} = $self;
+		$info{User} = $self;
 		@info{'UserFirstName','UserLastName','UserType'} = @$params{'firstname','lastname','type'};
 
-		$info{'ReplacementText'} = misc::load_file( $openprint::log, $ENV{'DOCUMENT_ROOT'} . '/email_content/usertype_system_notification.html' );
-		$info{'ReplacementText'} = ssi::variable_substitution( undef, $openprint::log, $openprint::dbh, \$info{'ReplacementText'}, \%info );
+		$info{ReplacementText} = ssi::include( '/email_content/usertype_system_notification.html', \%info );
+		my $email_template = ssi::include( '/email_template.html', \%info );
 
-		my $email_template = misc::load_file( $openprint::log, $ENV{'DOCUMENT_ROOT'} . '/email_content/email_template.html' );
-		$email_template = ssi::variable_substitution( undef, $openprint::log, $openprint::dbh, \$email_template, \%info );
-
-		my %mail = (
-				SMTP    => $openprint::config{'Mail Server'},
-				FROM    => $openprint::config{'LoginEmail'},
-				TO      => $openprint::config{'LoginEmail'},
-				SUBJECT => join(' ', @$params{'firstname','lastname'})."'s User Type has changed!"
+		new openprint::Email()->send(
+				FROM    => $openprint::config{LoginEmail},
+				TO      => $openprint::config{LoginEmail},
+				SUBJECT => join(' ', @$params{'firstname','lastname'})."'s User Type has changed!",
+				ATTACHMENTS => [ '', MIME::QuotedPrint::encode_qp($email_template), 'text/html', 'quoted-printable' ],
 				);
-		misc::send_email_with_attachment( $openprint::log, \%mail, ( '', MIME::QuotedPrint::encode_qp($email_template), 'text/html', 'quoted-printable' ) );
 	} # end if
 
-	if ( $params and (defined $$params{'web_active'}) and ( $$self{web_active} ne $$params{'web_active'} ) ) {
+	if ( $params and (defined $$params{web_active} and defined $$self{web_active} ) and ( $$self{web_active} ne $$params{web_active} ) and ( $$params{web_active} eq 'Y' ) ) {
 		my %info;
-		$info{'User'} = $self;
-		$_ = $$params{'web_active'} eq 'Y' ? 'user_account_activated.html' : 'user_account_deactivated.html';
-		$info{'ReplacementText'} = misc::load_file( $openprint::log, $ENV{'DOCUMENT_ROOT'} . "/email_content/$_" );
-		$info{'ReplacementText'} = ssi::variable_substitution( undef, $openprint::log, $openprint::dbh, \$info{'ReplacementText'}, \%info );
-		my $email_template = misc::load_file( $openprint::log, $ENV{'DOCUMENT_ROOT'} . '/email_content/email_template.html' );
-		#$email_template = ssi::variable_substitution( undef, $openprint::log, $openprint::dbh, \$email_template, \%info );
+		$info{User} = $self;
+		$_ = $$params{web_active} eq 'Y' ? 'user_account_activated.html' : 'user_account_deactivated.html';
+		$info{ReplacementText} = ssi::include( $_, \%info );
+		my $email_template = ssi::include( '/email_template.html', \%info  );
 
-		my %mail = (
-				SMTP    => $openprint::config{'Mail Server'},
-				FROM    => $openprint::config{'AdministratorEmail'},
+		new openprint::Email()->send(
+				FROM    => $openprint::config{AdministratorEmail},
 				TO      => sprintf( '"%s %s" <%s>', @$params{'firstame','lastname','email'} ),
 				SUBJECT => 'User account status has changed!',
+				ATTACHMENTS => [ '', MIME::QuotedPrint::encode_qp($email_template), 'text/html', 'quoted-printable' ],
 				);
-		misc::send_email_with_attachment( $openprint::log, \%mail, ( '', MIME::QuotedPrint::encode_qp($email_template), 'text/html', 'quoted-printable' ) );
-    } # end if
-
-	$self->set( $params ) if $params;
-
-    my %sql;
-	foreach my $k ( keys %fields ) {
-		foreach my $transform ( @{$transforms{$k}} ) {
-			eval '$$self{$k} =~ ' . $transform;
-		} # end foreach
-
-		if ( $$self{$k} eq '' and exists $defaults{$k} ) {
-			$$self{$k} = $defaults{$k};
-		} # end if
-		$sql{$fields{$k}} = $$self{$k};
-	} # end foreach
-
-	my $ac = sql::start_transaction( $openprint::dbh );
-	if ( ! $self->{id} ) {
-		@$self{id} = sql::execute( $openprint::log, $openprint::dbh, q{SELECT nextval('Users_Index_seq')} );
-		$sql{index} = $$self{id};
-		if ( my $error = sql::insert( $openprint::log, $openprint::dbh, 'Users', \%sql ) ) {
-			sql::end_transaction( $openprint::dbh, $ac );
-			return $error;
-		} # end if
-	} else {
-		if ( my $error = sql::update( $openprint::log, $openprint::dbh, 'Users', ['Index=?',$$self{id}], \%sql ) ) {
-			sql::end_transaction( $openprint::dbh, $ac );
-			return $error;
-		} # end if
 	} # end if
 
-	if ( $$params{'assistant_ids'} ) {
-		$self->assistant_ids( ref $$params{'assistant_ids'} eq 'ARRAY' ? @{$$params{'assistant_ids'}} : $$params{'assistant_ids'} );
+	my $error = $self->SUPER::save( $params );
+	return $error if $error;
+	(new openprint::Log())->save({action=>'Save User', Object=>$self, note=>join('<br/>', @changes ) } );
+
+	if ( exists $$params{assistant_ids} ) {
+		$self->assistant_ids( $$params{assistant_ids} );
 	} # end if
-	if ( $$params{'csr_ids'} ) {
-		$self->csr_ids( ref $$params{'csr_ids'} eq 'ARRAY' ? @{$$params{'csr_ids'}} : $$params{'csr_ids'} );
+	if ( exists $$params{csr_ids} ) {
+		$self->csr_ids( $$params{csr_ids} );
 	} # end if
-	sql::end_transaction( $openprint::dbh, $ac );
 	return;
 } # end sub save
 
-sub delete {
+sub destroy {
 	my $self = shift;
 
-	my $ac = sql::start_transaction( $openprint::dbh );
-	sql::execute( $openprint::log, $openprint::dbh, 'DELETE FROM Users_in_Marketing_Categories WHERE User_Id=?', $$self{'id'} );
+	my $ac = sql::start_transaction( $dbh );
+	sql::execute( undef, undef, 'DELETE FROM Users_in_Marketing_Categories WHERE User_Id=?', $$self{id} );
 
-	foreach my $Quote ( openprint::Quote::find('user_id'=>$$self{'id'}) ) {
+	foreach my $Quote ( openprint::Quote->find('user_id'=>$$self{id}) ) {
 		$Quote->delete();
 	} # end foreach
-	foreach my $Order ( openprint::Order::find('user_id'=>$$self{'id'}) ) {
+	foreach my $Order ( openprint::Order->find('user_id'=>$$self{id}) ) {
 		$Order->delete();
 	} # end foreach
-	foreach my $Project ( openprint::Project::find('user_id'=>$$self{'id'}) ) {
+	sql::update( undef, undef, 'order_log', ['user_id=?',$$self{id}], 'user_id', undef );
+	foreach my $Project ( openprint::Project->find('user_id'=>$$self{id}) ) {
 		$Project->delete();
 	} # end foreach
-	sql::execute( $openprint::log, $openprint::dbh, 'DELETE FROM users_in_usergroups WHERE user_id=?', $$self{'id'} );
-	sql::execute( $openprint::log, $openprint::dbh, 'DELETE FROM Project_Log WHERE user_id=?', $$self{'id'} );
-	sql::update( undef, undef, 'barcode_log', ['operator_id=?', $$self{'id'} ], 'operator_id', undef );
-	sql::update( undef, undef, 'barcode_log', ['user_id=?',$$self{'id'}], 'user_id', undef );
+	sql::execute( $log, $dbh, 'DELETE FROM users_in_usergroups WHERE user_id=?', $$self{id} );
+	sql::execute( $log, $dbh, 'DELETE FROM Project_Log WHERE user_id=?', $$self{id} );
+	sql::update( undef, undef, 'barcode_log', ['operator_id=?', $$self{id} ], 'operator_id', undef );
+	sql::update( undef, undef, 'barcode_log', ['user_id=?',$$self{id}], 'user_id', undef );
+	sql::update( undef, undef, 'skids', ['created_by_id=?',$$self{id}], 'created_by_id', undef );
 
-	sql::execute( $openprint::log, $openprint::dbh, 'DELETE FROM creditapplications WHERE user_id=?', $$self{'id'} );
-	sql::execute( $openprint::log, $openprint::dbh, 'DELETE FROM helpdesk WHERE user_id=?', $$self{'id'} );
+	sql::execute( $log, $dbh, 'DELETE FROM creditapplications WHERE user_id=?', $$self{id} );
+	sql::execute( $log, $dbh, 'DELETE FROM helpdesk WHERE user_id=?', $$self{id} );
+	sql::execute( undef, undef, 'DELETE FROM Assistants WHERE csr_id=? OR assistant_id=?', @$self{'id','id'} );
+	sql::execute( undef, undef, 'DELETE FROM EmailCampaign_sent WHERE user_id=?', $$self{id} );
+	sql::execute( undef, undef, 'DELETE FROM survey_responses WHERE user_id=?', $$self{id} );
+	sql::execute( undef, undef, 'DELETE FROM uploads WHERE user_id=?', $$self{id} );
+	sql::execute( undef, undef, 'DELETE FROM user_profiles WHERE user_id=?', $$self{id} );
+	sql::execute( undef, undef, 'DELETE FROM Message_to WHERE user_id=?', $$self{id} );
+	sql::execute( undef, undef, 'DELETE FROM Messages WHERE from_id=?', $$self{id} );
+	sql::execute( undef, undef, 'DELETE FROM User_Relationships WHERE user_id1=? OR user_id2=?', @$self{'id','id'} );
 
+	sql::execute( $log, $dbh, 'DELETE FROM Users WHERE id=?', $$self{id} );
 
-	sql::execute( $openprint::log, $openprint::dbh, 'DELETE FROM Users WHERE Index=?', $$self{'id'} );
+	sql::end_transaction( $dbh, $ac );
 
-	sql::end_transaction( $openprint::dbh, $ac );
-
-	openprint::logs::insertLogRecord('14', "User ID: " . $$self{'id'},);
-} # end sub delete
+	(new openprint::Log())->save({action=>'Destroy User',note=>'User ID: ' . $$self{id}});
+} # end sub destroy
 
 sub next {
 	my $self = shift;
 	my %params = @_;
 
-	my $sql = 'SELECT MIN(strFirstName) FROM Users WHERE strFirstName > ?';
+	my $sql = 'SELECT MIN(firstname) FROM users WHERE firstname > ?';
 	my @values = ( $$self{firstname} );
-	if ( $params{'company_id'} ) {
-		$sql .= ' AND companyindex=?';
-		push @values, $params{'company_id'};
+	if ( $params{company_id} ) {
+		$sql .= ' AND company_id=?';
+		push @values, $params{company_id};
 	} # end if
-	if ( $params{'type'} ) {
-		$sql .= ' AND chrtype=?';
-		push @values, $params{'type'};
+	if ( $params{type} ) {
+		$sql .= ' AND type=?';
+		push @values, $params{type};
 	} # end if
 
-	$sql = qq{SELECT Index FROM Users WHERE strFirstName = ($sql)};
-	( $_ ) = sql::execute( $openprint::log, $openprint::dbh, $sql, @values );
+	$sql = qq{SELECT id FROM users WHERE firstname = ($sql)};
+	( $_ ) = sql::execute( $log, $dbh, $sql, @values );
 	return $_;
 }
 sub Next {
@@ -246,123 +227,388 @@ sub prev {
 	my $self = shift;
 	my %params = @_;
 
-	my $sql = 'SELECT MAX(strFirstName) FROM Users WHERE strFirstName < ?';
+	my $sql = 'SELECT MAX(FirstName) FROM Users WHERE FirstName < ?';
 	my @values = ( $$self{firstname} );
-	if ( $params{'company_id'} ) {
-		$sql .= ' AND companyindex=?';
-		push @values, $params{'company_id'};
+	if ( $params{company_id} ) {
+		$sql .= ' AND company_id=?';
+		push @values, $params{company_id};
 	} # end if
-	if ( $params{'type'} ) {
-		$sql .= ' AND chrtype=?';
-		push @values, $params{'type'};
+	if ( $params{type} ) {
+		$sql .= ' AND type=?';
+		push @values, $params{type};
 	} # end if
 
-	$sql = qq{SELECT Index FROM Users WHERE strFirstName = ($sql)};
-	( $_ ) = sql::execute( $openprint::log, $openprint::dbh, $sql, @values );
+	$sql = qq{SELECT id FROM Users WHERE FirstName = ($sql)};
+	( $_ ) = sql::execute( $log, $dbh, $sql, @values );
 	return $_;
 }
 sub Prev {
-	my $self = shift;
-	return new openprint::User( $self->prev(@_) );
+	return new openprint::User( $_[0]->prev(@_) );
 } # end sub Nex
 
 sub Company {
-	my $self = shift;
-	return new openprint::Company( $$self{'company_id'} );
+	if ( ! $_[0]{Company} ) {
+		require openprint::Company;
+		$_[0]{Company} = new openprint::Company( $_[0]{company_id} );
+	} # end if
+	return $_[0]{Company};
 } # end sub Company
 
-sub name {
-	my $self = shift;
-	if ( $$self{'firstname'} and $$self{'lastname'} ) {
-		return join(' ', @$self{'firstname','lastname'} ) 
-	} elsif ( $$self{'firstname'} ) {
-		return $$self{'firstname'};
-	} elsif ( $$self{'lastname'} ) {
-		return $$self{'lastname'};
+sub alias {
+	my $Company = $_[0]->Company();
+	#if ( $_[0]{company_id} == $openprint::session{company_id} ) {
+		#return $_[0]{firstname};
+	#} elsif ( $_[0]->Company()->name() ne ($_[0]{firstname} . ' ' . $_[0]{lastname}) ) {
+	if ( $_[0]{company_id} and ( $_[0]{company_id} != $openprint::session{company_id} ) and ( $Company->name() ne ($_[0]{firstname} . ( $_[0]{lastname} ? ( ' ' . $_[0]{lastname} ) : () ) ) ) ) {
+		return $Company->name() . ($_[0]{firstname} ? ' (' . $_[0]{firstname} . ')' : '' );
+	} elsif ( $_[0]->firstname() or $_[0]->lastname() ) {
+		return $_[0]->name();
+	} else {
+		return $_[0]->email();
 	} # end if
 } # end sub name
 
-sub email {
-	my $self = shift;
-	return $$self{'email'};
-} # end sub email
-
-sub id {
-	my $self = shift;
-	return $$self{'id'};
-} # end sub id
-
-sub find {
-	my %param = @_;
-	if ( $param{'id'} ) {
-		return new openprint::User( $param{'id'} );
+sub name {
+	if ( $_[0]{firstname} and $_[0]{lastname} ) {
+		return join(' ', @{$_[0]}{'firstname','lastname'} );
+	} elsif ( $_[0]{firstname} ) {
+		return $_[0]{firstname};
+	} elsif ( $_[0]{lastname} ) {
+		return $_[0]{lastname};
 	} # end if
-	my $sql = q{SELECT * FROM Users WHERE 1>0};
-	my @values;
-	if ( $param{'type'} ) {
-		if ( ref $param{'type'} eq 'ARRAY' ) {
-			$sql .= q{ AND chrType IN ('} . join("','", @{$param{'type'}}) . q{')};
-		} else {
-			$sql .= q{ AND chrType = ?};
-			push @values, $param{'type'};
-		} # end if
-	} # end if
-	if ( $param{'company_id'} ) {
-		$sql .= q{ AND companyindex=?};
-		push @values, $param{'company_id'};
-	} # end if
-	if ( $param{'usergroup'} ) {
-		$sql .= q{ AND Index IN (SELECT user_id FROM users_in_usergroups WHERE usergroup_id=(SELECT id FROM usergroups WHERE name=?))};
-		push @values, $param{'usergroup'};
-	} # end if
-	if ( $param{'usergroups'} ) {
-		$sql .= q{ AND Index IN (SELECT user_id FROM users_in_usergroups WHERE usergroup_id IN (SELECT id FROM usergroups WHERE name IN ('} . join("','", @{$param{'usergroups'}}) . q{')))};
-	} # end if
-	if ( $param{'email'} ) {
-		$sql .= ' AND strEmail=?';
-		push @values, lc $param{'email'};
-	} # end if
-	if ( $param{'order'} ) {
-		$sql .= " ORDER BY $param{'order'}";
-	} # end if
-	my $data = $openprint::dbh->selectall_arrayref( $sql, { Slice => {} }, @values );
-	if ( ! $data ) {
-		$openprint::log->error( "Error loading Users: ($sql) (@values)" );
-		return;
-	} elsif ( $debug ) {
-		$openprint::log->debug( "loading Users: ($sql) (@values)" );
-	} # end if
-	return map { new openprint::User( $_->{index}, $_ ) } @$data;
-} # end sub find
+	return '';
+}
 
 sub assistant_ids {
 	my $self = shift;
 	if ( @_ ) {
-		my $ac = sql::start_transaction( $openprint::dbh );
+		my $ac = sql::start_transaction( $dbh );
 		sql::execute( undef, undef, 'DELETE FROM Assistants WHERE csr_id=?', $$self{id} );
-		foreach ( @_ ) {
-			sql::insert( undef, undef, 'Assistants', ['csr_id', $$self{id}, 'assistant_id', $_] );
+		foreach ( ( @_ == 1 and ref $_[0] eq 'ARRAY' ) ? @{$_[0]} : @_ ) {
+			sql::insert( undef, undef, 'Assistants', ['csr_id', $$self{id}, 'assistant_id', $_] ) if $_;
 		} # end foreach
-		sql::end_transaction( $openprint::dbh, $ac );
-		return @_;
+		sql::end_transaction( $dbh, $ac );
+		@{$$self{assistant_ids}} = ( @_ == 1 and ref $_[0] eq 'ARRAY' ) ? @{$_[0]} : @_;
 	} # end if
-	return sql::execute( undef, undef, 'SELECT assistant_id FROM Assistants WHERE csr_id=?', $$self{id} );
+	if ( ! $$self{assistant_ids} ) {
+		if ( $$self{id} ) {
+			@{$$self{assistant_ids}} = sql::execute( undef, undef, 'SELECT assistant_id FROM Assistants WHERE csr_id=?', $$self{id} );
+		} else {
+			$$self{assistant_ids} = [];
+		}
+	} # end if
+	return @{$$self{assistant_ids}};
 } # end sub
+
 sub csr_ids {
 	my $self = shift;
 	if ( @_ ) {
-		my $ac = sql::start_transaction( $openprint::dbh );
+		my $ac = sql::start_transaction( $dbh );
 		sql::execute( undef, undef, 'DELETE FROM Assistants WHERE assistant_id=?', $$self{id} );
-		foreach ( @_ ) {
-			sql::insert( undef, undef, 'Assistants', ['assistant_id', $$self{id}, 'csr_id', $_] );
+		foreach ( ( @_ == 1 and ref $_[0] eq 'ARRAY' ) ? @{$_[0]} : @_ ) {
+			sql::insert( undef, undef, 'Assistants', ['assistant_id', $$self{id}, 'csr_id', $_] ) if $_;
 		} # end foreach
-		sql::end_transaction( $openprint::dbh, $ac );
-		return @_;
+		sql::end_transaction( $dbh, $ac );
+		@{$$self{csr_ids}} = ( @_ == 1 and ref $_[0] eq 'ARRAY' ) ? @{$_[0]} : @_;
 	} # end if
-	return sql::execute( undef, undef, 'SELECT csr_id FROM Assistants WHERE assistant_id=?', $$self{id} );
+	if ( ! $$self{csr_ids} ) {
+		if ( $$self{id} ) {
+			@{$$self{csr_ids}} = sql::execute( undef, undef, 'SELECT csr_id FROM Assistants WHERE assistant_id=?', $$self{id} );
+		} else {
+			$$self{csr_ids} = [];
+		}
+	} # end if
+	return @{$$self{csr_ids}};
 } # end sub
 
+sub Groups {
+	require openprint::UserGroup;
+	if ( $_[0]{id} ) {
+		return openprint::UserGroup->find('user_id any'=>$_[0]{id} );
+	} # end if
+	return ();
+} # end sub Groups
+
+sub Notifications {
+	my ( $self ) = @_;
+	
+	require openprint::User_Notification;
+	if ( ! exists $$self{Notifications} ) {
+		if ( ! $$self{id} ) {
+			$$self{Notifications} = [];
+		} else {
+			$$self{Notifications} = [ openprint::User_Notification->find( user_id=>$$self{id} ) ];
+		} # end if
+	} else {
+		$openprint::log->debug("Have notifications");
+	} # end if
+	
+	return @{$$self{Notifications}};
+} # end sub Notifications
+
+sub purchasing_total {
+	require openprint::PurchaseOrder;
+	my $total = 0;
+	foreach my $PO ( openprint::PurchaseOrder->find( authorized=>'N' ) ) {
+		$total += $PO->total();
+	} # end foreach $PO
+} # end sub purchasing_total
+
+sub po_limit {
+	my ( $self, $type_id, $new_value ) = @_;
+
+	if ( ( ! exists $$self{po_limits} ) and $$self{id} ) {
+		if ( $$self{id} ) {
+		%{$$self{po_limits}} = sql::execute( undef, undef, 'SELECT type_id, po_limit FROM User_PurchaseOrder_limits WHERE user_id=?', $$self{id} );
+		} else {
+			$$self{po_limits} = {};
+		} # end if
+	} # end if
+
+	if ( defined $new_value ) {
+		if ( exists $$self{po_limits}{$type_id} ) {
+			sql::update( undef, undef, 'user_purchaseorder_limits', ['user_id=? AND type_id=?', $$self{id},$type_id], 'po_limit', 1*$new_value );
+		} else {
+			sql::insert( undef, undef, 'user_purchaseorder_limits', ['user_id',$$self{id},'type_id', $type_id, 'po_limit', 1*$new_value ] );
+		} # end if
+		$$self{po_limits}{$type_id} = 1*$new_value;
+	} # end if
+
+	return $$self{po_limits}{$type_id};
+} # end sub po_limit
+
+sub Asset {
+	if ( ! $_[0]{Asset} ) {
+		require openprint::Asset;
+		if ( $_[0]{asset_id} ) {
+			$_[0]{Asset} = new openprint::Asset( $_[0]{asset_id} );
+		} else {
+			if ( $_[0]->Profile()->Gender() ) {
+				#$openprint::log->debug("Loading by gender");
+				$_[0]{Asset} = openprint::Asset->find_one('name'=>'Default Profile ' . $_[0]->Profile()->Gender() );
+			} # end if
+			if ( ! $_[0]{Asset} ) {
+				#$openprint::log->debug("Loading by default");
+				$_[0]{Asset} = openprint::Asset->find_one('name'=>'Default Profile' );
+			} # end if
+			if ( $_[0]{id} ) {
+				my @Albums = openprint::Photo_Album->find('user_id'=>$_[0]{id});
+				foreach my $Album ( @Albums ) {
+					my @Photos = $Album->Photos();
+					if ( @Photos ) {
+						$_[0]{Asset} = $Photos[0]->Asset();
+					} # end if
+				} # end foreach Album
+			} # end if
+			if ( ! $_[0]{Asset} ) {
+				$_[0]{Asset} = new openprint::Asset( );
+			} # end if
+		} # end if
+	} # end if
+	return $_[0]{Asset};
+} # end sub Asset
+
+sub Profile {
+	if ( ! exists $_[0]{Profile} ) {
+		require openprint::User_Profile;
+		$_[0]{Profile} = new openprint::User_Profile( $_[0]{id} );
+	} # end if
+	return $_[0]{Profile};
+} # end sub Profile
+
+sub icon {
+	return $_[0]->thumbnail_html();
+} # end sub icon
+
+sub thumbnail_html {
+if ( 0 ) {
+	if ( ! $openprint::session{user_id} ) {
+		return '';
+	} # end if
+} # end if
+	if ( ! $_[0]{icon} ) {
+		$_[0]{icon} = sprintf('<a href="/account/view.html?user_id=%1$d" class="thumbnail"><img src="%2$s" alt="%3$s" title="%3$s"/></a>',
+		#$_[0]{icon} = sprintf('<a href="/account/view.html?user_id=%1$d" class="thumbnail"><img src="%2$s?user_id=%1$d" alt="%3$s" title="%3$s" /></a>',
+		$_[0]{id}, $_[0]->Asset()->sized_url('small'), $_[0]->alias() );
+	} # end if
+	return $_[0]{icon};
+}
+
+sub link {
+	return sprintf('<a href="/account/view.html?user_id=%1$d">%2$s</a>', $_[0]{id}, $_[0]->name() );
+} # end sub link
+
+sub link_to {
+    return sprintf('<a href="/account/view.html?user_id=%1$d">%2$s</a>', $_[0]{id}, @_ > 1 ? $_[1] : $_[0]->name() );
+} # end sub link_to
+sub admin_link_to {
+    return sprintf('<a href="/administrator/managerial/user_profiles.html?user_id=%1$d">%2$s</a>', $_[0]{id}, @_ > 1 ? $_[1] : $_[0]->name() );
+} # end sub admin_link_to
+
+sub html {
+	if ( ! $_[0]{id} ) {
+		$log->error("called html on user without id".$_[0]->to_string() );
+		return '';
+	} # end if
+	my $User = $_[0];
+	my $Profile = $_[1] ? $_[1] : $_[0]->Profile();
+
+	my $age = 0;
+	my $birthday = $Profile->date_of_birth();
+	if ( $birthday and $birthday ne '--' ) {
+		my @Birthday = split('-', $birthday );
+		$age = Date::Calc::check_date( @Birthday ) ? int(Date::Calc::Delta_Days( @Birthday, Date::Calc::Today() )/365) : 0;
+	} # end if
+
+	my $Asset = $User->Asset();
+	my $thumbnail_url = $Asset->sized_url('thumbnail');
+
+	return sprintf(q`
+				<div class="User">
+					<a class="thumbnail" href="/account/view.html?user_id=%1$d"><img src="%3$s" alt="%4$s" /></a>
+					<a href="/account/view.html?user_id=%1$d">
+					<div class="Name">%2$s</div>
+					<div class="Details">%5$s %6$s</div>
+					<div class="Tagline">%7$s</div>
+					</a>
+				</div>`,
+				$User->id(), $User->name(),
+				( $thumbnail_url ? $thumbnail_url : '/images/no_image.gif' ), '',
+				$age ? $age.' year old' : '',
+				$Profile->Gender() ? $Profile->Gender() : '',
+				$Profile->Tagline(),
+			);
+	return sprintf(q`
+				<div class="User">
+					<a href="/account/view.html?user_id=%1$d"><img class="thumbnail" src="%3$s" alt="%4$s" /></a>
+					<div class="Name"><label>Name:</label>%2$s</div>
+					<div class="Age"><label>Age:</label>%5$s</div>
+					<div class="Gender"><label>Gender:</label>%6$s</div>
+					<div class="Joined"><label>Joined:</label>%7$s</div>
+				</div>`,
+				$User->id(), $User->name(),
+				( $_ = $User->Asset()->thumbnail_filename() ? $_ : 'no_image.gif' ), '',
+				$age ? $age : 'old!',
+				$Profile->Gender() ? $Profile->Gender() : 'indeterminate',
+				Date::Format::time2str( $openprint::config{DateFormat}, Date::Parse::str2time( $User->created_on() ) ),
+			);
+} # end sub html
+
+sub last_logged_in {
+	if ( (! $_[0]{last_logged_on} ) and $_[0]{id} ) {
+		# Almost any entry means we were logged in.  
+		my $Log = openprint::Log->find_one(user_id=>$_[0]{id},'order'=>'date_time DESC');
+		if ( $Log ) {
+#$openprint::log->debug("last_Logged_in: " . $Log->to_string() );
+			$_[0]{last_logged_on} = $$Log{date_time};
+		} # end if
+	}
+	return $_[0]{last_logged_on};
+} # end sub last_logged_in
+
+sub AUTOLOAD {
+	my $name = $AUTOLOAD;
+	$name =~ s/.*://;
+$openprint::log->debug("AUTOLOAD $name") if $debug;
+	if ( $fields{$name} ) {
+		if ( @_ > 1 ) {
+$openprint::log->debug("Autoload User $name $_[0]") if $debug;
+			return $_[0]{$name} = $_[1];
+		} else {
+			return $_[0]{$name};
+		} # end if
+	} else {
+		my $Profile = $_[0]->Profile();
+		if ( exists $$Profile{fields}{$name} ) {
+			$openprint::log->warn("PRofile field in User::AUTOLOAD $name") if $debug;
+			if ( @_ > 1 ) {
+				$$Profile{fields}{$name} = $_[1];
+			} # end if
+			return $$Profile{fields}{$name};
+		} else {
+			$openprint::log->warn("Unknown field in User::AUTOLOAD $name");
+		} # end if
+	} # end if
+} # end sub AUTOLOAD
+
+sub DESTROY {
+}
+
+sub can_edit {
+	return 1 if ! $_[0]{id};
+	return 1 if $openprint::session{user_id} == $_[0]{id};
+	return 1 if $openprint::session{user_type} eq 'A';
+	return 1 if ( $openprint::User->administrator() eq 'Y' ) and ( $_[0]{company_id} == $openprint::session{company_id} );
+	my $Company = new openprint::Company( $_[0]{company_id} );
+	return 1 if $Company->salesrep_id() and sets::isin( $Company->salesrep_id(), [ $openprint::session{user_id}, $openprint::User->csr_ids(), $openprint::User->assistant_ids() ] );
+	return 1 if openprint::usergroup::exists('UserManagement') and openprint::usergroup::is_user_in( ['UserManagement'], $openprint::session{user_id} );
+	return 0;
+} # end sub can_edit
+
+sub can_view {
+	return 1 if $openprint::session{user_id} == $_[0]{id};
+	return 1 if $openprint::session{user_type} eq 'A';
+	return 1 if ( $openprint::User->administrator() eq 'Y' ) and ( $_[0]{company_id} == $openprint::session{company_id} );
+	my $Company = new openprint::Company( $_[0]{company_id} );
+	return 1 if $Company->salesrep_id() and sets::isin( $Company->salesrep_id(), [ $openprint::session{user_id}, $openprint::User->csr_ids(), $openprint::User->assistant_ids() ] );
+	require openprint::Blocklist;
+	return 0 if openprint::Blocklist::is_blocked( $openprint::session{user_id},$_[0]{id});
+	return 1;
+} # end sub can_view
+
+sub Location {
+	if ( ! $_[0]{Location} ) {
+		my $Profile = $_[0]->Profile();
+		my $Location;
+		if ( $Profile->postalcode() ) {
+			$Location = openprint::Location->find_one( 'postalcode'=>openprint::Location->transform('postalcode', $Profile->postalcode() ) );
+		} # end if
+		if ( ! $Location and $Profile->city() ) {
+			my $City = new openprint::Location( $Profile->city() );
+			$Location = openprint::Location->find_one( 'type'=>'city', 'name'=>$City->name() );
+		} # end if
+		if ( ! $Location ) {
+			$Location = openprint::Location::google( join('+', $Profile->postalcode(), $Profile->city() ) );
+		} # end if
+		if ( ! $Location ) {
+			$log->error("Still no location");
+			return new openprint::Location();
+		} # endif
+		$_[0]{Location} = $Location;
+	} # end if
+		
+	return $_[0]{Location};
+} # end sub Location
+
+sub code {
+	return join('', substr( $_[0]{firstname}, 0, 1), substr( $_[0]{lastname},0,1) );
+} # end sub code
+
+sub usergroup_ids {
+	return map { $_->usergroup_id() } openprint::User_in_UserGroup->find(user_id=>$_[0]{id}) if $_[0]{id};
+	return;
+} # end sub usergroup_ids
+
+sub save_notifications {
+	my ( $User, $param ) = @_;	
+
+	my @results;
+	foreach my $N ( $User->Notifications() ) {
+		
+		if ( $$N{value} ne $$param{'notification_'.$$N{id}} ) {
+			push @results, 'Notification for ' . $N->Type()->name() . " Creation changed $$N{value} => ".$$param{'notification_'.$$N{id}}.'<br/>';
+			$N->save( { value => $$param{'notification_'.$$N{id}} } );
+		} # end if value changed
+	} # end foreach Notification
+	return @results;
+}
+sub email_valid {
+	if ( ! defined $_[0]{email_valid} ) {
+	require Email::Valid;
+	$_[0]{email_valid} = Email::Valid->address( $_[0]{email} );
+	} 
+	return $_[0]{email_valid};
+}
+
 1;
-
 __END__
-

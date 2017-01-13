@@ -1,5 +1,4 @@
 		<script language="javascript" src="/javascripts/proj/calc_film.js"></script>
-		<script language="javascript" src="/javascripts/proj/misc_prin.js"></script>
 		<script language="javascript">
 			var service = "Film";
 			var projectType = "Film";
@@ -22,9 +21,9 @@
 				</tr>
 			</table>
 			<form name="f1" method="POST" action="/main/project/view.html">
-				<!--#include virtual="/includes/main/proj/film.html"-->
-				<!--#include virtual="/includes/main/proj/add_to_project.html"-->
-				<!--#include virtual="/includes/main/proj/hdn_fields_prepress.html"-->
+				<? echo ( include('/includes/main/proj/film.html'); ) ?>
+				<? echo ( include('/includes/main/proj/add_to_project.html'); ) ?>
+				<? echo ( include('/includes/main/proj/hdn_fields_prepress.html'); ) ?>
 				<input type="hidden" name="FinishCount" value="<?FinishCount?>" />
 			</form>
 	<script language="javascript">

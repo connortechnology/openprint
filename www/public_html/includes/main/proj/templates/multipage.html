@@ -1,73 +1,72 @@
 <div class="templates">
-<? eval ( %{$$variable{'ServiceTypes'}} = map { $_->name(), $_->id() } openprint::ServiceType::find(); ) ?>
+<? eval ( %{$$variable{'ServiceTypes'}} = map { $_->name(), $_->id() } openprint::ServiceType->find(); ) ?>
 <? if ( $$variable{'ServiceTypes'}{'SaddleStitching'} ) ?>
-	<span class="templateOption">
+	<p>
 		<img src="/images/templates/SaddleStitching.gif" alt=""/>
 		<input type="radio" id="rdbTemplateTypeSaddleStitching" name="rdbTemplateType" value="SaddleStitching" onclick="selectProjectTemplate('f1');" <? echo ( 'checked="checked"' if $$variable{'rdbTemplateType'} eq 'SaddleStitching' ) ?> /> 
 		<label for="rdbTemplateTypeSaddleStitching">Saddle Stitching</label>
-	</span>
+	</p>
 <? endif ( $$variable{'ServiceTypes'}{'SaddleStitching'} ) ?>
 <? if ( $$variable{'ServiceTypes'}{'LoopStitching'} ) ?>
-	<span class="templateOption">
+	<p>
 		<img src="/images/templates/LoopStitching.gif" alt=""/>
 		<input type="radio" id="rdbTemplateTypeLoopStitching" name="rdbTemplateType" value="LoopStitching" onclick="selectProjectTemplate('f1');" <? echo ( 'checked="checked"' if $$variable{'rdbTemplateType'} eq 'LoopStitching' ) ?> /> 
 		<label for="rdbTemplateTypeLoopStitching">Loop Stitching<br/>(For 3-Hole Binders)</label>
-	</span>
+	</p>
 <? endif ( $$variable{'ServiceTypes'}{'LoopStitching'} ) ?>
 <? if ( $$variable{'ServiceTypes'}{'CornerStitching'} ) ?>
-	<span class="templateOption">
+	<p>
 		<img src="/images/templates/CornerStitching.gif" alt=""/>
 		<input type="radio" id="rdbTemplateTypeCornerStitching" name="rdbTemplateType" value="CornerStitching" onclick="selectProjectTemplate('f1');" <? echo ( 'checked="checked"' if $$variable{'rdbTemplateType'} eq 'CornerStitching' ) ?> /> 
 		<label for="rdbTemplateTypeCornerStitching">Corner Stitching</label>
-	</span>
+	</p>
 <? endif ( $$variable{'ServiceTypes'}{'CornerStitching'} ) ?>
 <? if ( $$variable{'ServiceTypes'}{'PerfectBound'} ) ?>
-	<span class="templateOption">
+	<p>
 		<img src="/images/templates/PerfectBound.gif" alt=""/>
 		<input type="radio" id="rdbTemplateTypePerfectBound" name="rdbTemplateType" value="PerfectBound" onclick="selectProjectTemplate('f1');" <? echo ( 'checked="checked"' if $$variable{'rdbTemplateType'} eq 'PerfectBound' ) ?> /> 
 		<label for="rdbTemplateTypePerfectBound">Perfect Bound</label>
-	</span>
+	</p>
 <? endif ( $$variable{'ServiceTypes'}{'PerfectBound'} ) ?>
 <? if ( $$variable{'ServiceTypes'}{'SpinePaste'} ) ?>
-	<span class="templateOption">
+	<p>
 		<img src="/images/templates/SpinePaste.gif" alt=""/>
 		<input type="radio" id="rdbTemplateTypeSpinePaste" name="rdbTemplateType" value="SpinePaste" onclick="selectProjectTemplate('f1');" <? echo ( 'checked="checked"' if $$variable{'rdbTemplateType'} eq 'SpinePaste' ) ?> /> 
 		<label for="rdbTemplateTypeSpinePaste">Spine Paste</label>
-	</span>
+	</p>
 <? endif ( $$variable{'ServiceTypes'}{'SpinePaste'} ) ?>
+	<p>
+		<img src="/images/templates/Unbound.gif" alt=""/>
+		<input type="radio" id="rdbTemplateTypeUnbound" name="rdbTemplateType" value="Unbound" onclick="selectProjectTemplate('f1');" <? echo ( 'checked="checked"' if $$variable{'rdbTemplateType'} eq 'Unbound' ) ?> /> 
+		<label for="rdbTemplateTypeUnbound">Unbound</label>
+	</p>
 <? if ( $$variable{'ServiceTypes'}{'Cerlox'} ) ?>
-	<span class="templateOption">
+	<p>
 		<img src="/images/templates/Cerlox.gif" alt=""/>
 		<input type="radio" id="rdbTemplateTypeCerlox" name="rdbTemplateType" value="Cerlox" onclick="selectProjectTemplate('f1');" <? echo ( 'checked="checked"' if $$variable{'rdbTemplateType'} eq 'Cerlox' ) ?> /> 
 		<label for="rdbTemplateTypeCerlox">Cerlox</label>
-	</span>
+	</p>
 <? endif ( $$variable{'ServiceTypes'}{'Cerlox'} ) ?>
 <? if ( $$variable{'ServiceTypes'}{'PlasticCoil'} ) ?>
-	<span class="templateOption">
+	<p>
 		<img src="/images/templates/PlasticCoil.gif" alt=""/>
 		<input type="radio" id="rdbTemplateTypePlasticCoil" name="rdbTemplateType" value="PlasticCoil" onclick="selectProjectTemplate('f1');" <? echo ( 'checked="checked"' if $$variable{'rdbTemplateType'} eq 'PlasticCoil' ) ?> /> 
 		<label for="rdbTemplateTypePlasticCoil">Plastic Coil<br/>(Spiral or Plastikoil)</label>
-	</span>
+	</p>
 <? endif ( $$variable{'ServiceTypes'}{'PlasticCoil'} ) ?>
 <? if ( $$variable{'ServiceTypes'}{'MetalCoil'} ) ?>
-	<span class="templateOption">
+	<p>
 		<img src="/images/templates/MetalCoil.gif" alt=""/>
 		<input type="radio" id="rdbTemplateTypeMetalCoil" name="rdbTemplateType" value="MetalCoil" onclick="selectProjectTemplate('f1');" <? echo ( 'checked="checked"' if $$variable{'rdbTemplateType'} eq 'MetalCoil' ) ?> /> 
 		<label for="rdbTemplateTypeMetalCoil">Metal Spiral Coil</label>
-	</span>
+	</p>
 <? endif ( $$variable{'ServiceTypes'}{'MetalCoil'} ) ?>
 <? if ( $$variable{'ServiceTypes'}{'DoubleLoopWire'} ) ?>
-	<span class="templateOption">
+	<p>
 		<img src="/images/templates/DoubleLoopWire.gif" alt=""/>
 		<input type="radio" id="rdbTemplateTypeDoubleLoopWire" name="rdbTemplateType" value="DoubleLoopWire" onclick="selectProjectTemplate('f1');" <? echo ( 'checked="checked"' if $$variable{'rdbTemplateType'} eq 'DoubleLoopWire' ) ?> />
 		<label for="rdbTemplateTypeDoubleLoopWire">Double Loop Wire<br/>(Wire-O)</label>
-	</span>
+	</p>
 <? endif ( $$variable{'ServiceTypes'}{'DoubleLoopWire'} ) ?>
-	<span class="templateOption">
-		<img src="/images/templates/NoFold.gif" alt=""/>
-		<input type="radio" id="rdbTemplateTypeNoBindery" name="rdbTemplateType" value="NoBindery" onclick="selectProjectTemplate('f1');" <? echo ( 'checked="checked"' if $$variable{'rdbTemplateType'} eq 'NoBindery' ) ?> />
-		<label for="rdbTemplateTypeNoBindery">No Bindery<br/>(Press Sheets Only)</label>
-	</span>
-	<br class="spacer"/>
 </div>
 

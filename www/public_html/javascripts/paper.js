@@ -1,159 +1,119 @@
-function body_onLoad() {
-	var form = getFormObj('f1');
-	jsrsExecute( '/jsrs.htm', cbFillDropDowns, 'openprint::paper::get_paper', get_parameters(form, '', '' ) );
-} // end function body_onLoad();
 
-function get_parameters( form, id, selected ) {
+var filters = new Array( 'Owner', 'Group', 'Manufacturer', 'Brand','Finish','Colour','Weight','Quality', 'Size','Material','type','width','height' );
 
-    var parameters = new Array ( selected, id );
-
-	if ( form.elements['Name'+id] ) 
-		parameters.push( 'Name', get_ddm_value( form.elements['Name'+id] ) ); 
-	if ( form.elements['Finish'+id] ) 
-		parameters.push( 'Finish', get_ddm_value( form.elements['Finish'+id] ) );
-	if ( form.elements['Colour'+id] ) 
-		parameters.push( 'Colour', get_ddm_value( form.elements['Colour'+id] ) );
-	if ( form.elements['Weight'+id] ) 
-		parameters.push( 'Weight', get_ddm_value( form.elements['Weight'+id] ) );
-	return parameters;
-} // end function get_parameters( form )
-
-function Name_onChange( element, id ) {
+function filter_onChange( element, id, selected ) {
 	var form = element.form;
-	form.elements['Name'+id].disabled = true;
-	form.elements['Finish'+id].disabled = true;
-	form.elements['Colour'+id].disabled = true;
-	form.elements['Weight'+id].disabled = true;
-	jsrsExecute( '/jsrs.htm', cbFillDropDowns, 'openprint::paper::get_paper', get_parameters(form, id, 'Name') );
-
+	var h = new Hash();
+	h.set('form', form.id);
+	h.set('id', id );
+	h.set('selected', element.name);
+	for ( var index = 0, len = filters.length; index < len; ++index ) {
+		var filter = form.elements[filters[index]+id];
+		if ( filter ) {
+			h.set(filters[index], get_value( filter ) );
+			if ( filter.type == 'select-one' ) {
+			filter.disabled = true;
+			} // end if
+			filter = form.elements[filters[index]+'_exclude'+id];
+			if ( filter ) {
+				h.set(filter.name, get_value( filter ) );
+			} // end if
+		} // end if filter exists
+		filter = form.elements[filters[index].toLowerCase()+'_id'+id];
+		if ( filter ) {
+			var v = get_value( filter );
+			if ( ! v ) continue;
+			
+			h.set(filter.name, v );
+			if ( filter.type == 'select-one' ) {
+				filter.disabled = true;
+			} // end if
+			filter = form.elements[filters[index].toLowerCase()+'_id_exclude'+id];
+			if ( filter ) {
+				var v = get_value( filter );
+				if ( v ) h.set(filter.name, v );
+			} // end if
+		} // end if filter exists
+	} // end for 
+	new Ajax.Request( '/employee/inventory/_stock.json', { parameters: h, evalScripts: true } );
 } // end function Name_onChange()
 
-function Finish_onChange( element, id ) {
-	var form = element.form;
-	form.elements['Name'+id].disabled = true;
-	form.elements['Finish'+id].disabled = true;
-	form.elements['Colour'+id].disabled = true;
-	form.elements['Weight'+id].disabled = true;
-	jsrsExecute( '/jsrs.htm', cbFillDropDowns, 'openprint::paper::get_paper', get_parameters(form, id, 'Finish') );
-} // end function Finish_onChange();
-
-function Colour_onChange( element, id ) {
-	var form = element.form;
-	form.elements['Name'+id].disabled = true;
-	form.elements['Finish'+id].disabled = true;
-	form.elements['Colour'+id].disabled = true;
-	form.elements['Weight'+id].disabled = true;
-	jsrsExecute( '/jsrs.htm', cbFillDropDowns, 'openprint::paper::get_paper', get_parameters(form, id,'Colour') );
-
-} // end function Colour_onChange();
-
-function Weight_onChange( element, id ) {
-	var form = element.form;
-	form.elements['Name'+id].disabled = true;
-	form.elements['Finish'+id].disabled = true;
-	form.elements['Colour'+id].disabled = true;
-	form.elements['Weight'+id].disabled = true;
-	jsrsExecute( '/jsrs.htm', cbFillDropDowns, 'openprint::paper::get_paper', get_parameters(form, id, 'Weight') );
-} // end function Weight_onChange();
-
-function fill_drop_down( results ) {
-	var form = getFormObj('f1');
-	var id;
-
-    var BrandOptions = new Array();
-    BrandOptions[BrandOptions.length] = create_option( '', 'Please select one' );
-    var FinishOptions = new Array();
-    FinishOptions[FinishOptions.length] = create_option( '', 'Please select one' );
-    var ColourOptions = new Array();
-    ColourOptions[ColourOptions.length] = create_option( '', 'Please select one' );
-    var WeightOptions = new Array();
-    WeightOptions[WeightOptions.length] = create_option( '', 'Please select one' );
-    var SheetSizeOptions = new Array();
-    SheetSizeOptions[SheetSizeOptions.length] = create_option( '', 'Please select one' );
-
-    var aOptionPairs = results.split('|');
-    for ( var i = 0; i < aOptionPairs.length; i++ ){
-        if ( aOptionPairs[i].indexOf('~') != -1 ) {
-            var aOptions = aOptionPairs[i].split('~');
-            switch ( aOptions[0] ) {
-                case 'Brand':
-                    BrandOptions[BrandOptions.length] = create_option( aOptions[1], aOptions[2] );
-                    break;
-                case 'Finish':
-                    FinishOptions[FinishOptions.length] = create_option( aOptions[1], aOptions[2] );
-                    break;
-                case 'Colour':
-                    ColourOptions[ColourOptions.length] = create_option( aOptions[1], aOptions[2] );
-                    break;
-                case 'Weight':
-                    WeightOptions[WeightOptions.length] = create_option( aOptions[1], aOptions[2] );
-                    break;
-                case 'SheetSize':
-                    SheetSizeOptions[SheetSizeOptions.length] = create_option( aOptions[1], aOptions[2] );
-                    break;
-				case 'id':
-					id = aOptions[1];
-					break;
-            } // end switch
-        } // end if
-    } // end for
-	if ( form.elements['Name'+id] ) {
-		if ( BrandOptions.length > 1 ) {
-			var selectedValue = get_ddm_value( form.elements['Name'+id] );
-			fill_ddm( form.elements['Name'+id], BrandOptions, form.elements['Name'+id].onchange );
-			
-			if ( BrandOptions.length == 2 ) {
-				ddm_select_by_index( form.elements['Name'+id], 1 );
-			} else {
-				ddm_select_by_value( form.elements['Name'+id], selectedValue, 0 );
-			} // end if
-		} // end if
-		form.elements['Name'+id].disabled = false;
+function cbStockFillResults( results ) {
+	var form = $(results.get('form'));
+	if ( ! form ) {
+		alert('No form for ' + results.get('form') );
+		return;
 	} // end if
+	results.unset('form');
 
-	if ( form.elements['Finish'+id] ) {
-		if ( FinishOptions.length > 1 ) {
-			var selectedValue = get_ddm_value( form.elements['Finish'+id] );
-			fill_ddm( form.elements['Finish'+id], FinishOptions, form.elements['Finish'+id].onchange );
-			if ( FinishOptions.length == 2 ) {
-				ddm_select_by_index( form.elements['Finish'+id], 1 );
-			} else {
-				ddm_select_by_value( form.elements['Finish'+id], selectedValue, 0 );
-			} // end if
+	var id = '';
+	if ( id = results.get('id') ) {
+		results.unset('id');
+	} else {
+		id = '';
+	}
+
+	var keys = results.keys();
+	for ( var index = 0, len = keys.length; index < len; ++index ) {
+		var key = keys[index];
+		var value = results.get(key);
+
+		var ddm = null;
+		if ( ! ddm ) { ddm = form.elements[key+'_id'+id]; } // end if
+		if ( ! ddm ) { ddm = form.elements[key.toLowerCase()+'_id'+id]; } // end if
+		if ( ! ddm ) { ddm = form.elements[key+id]; } // end if
+		if ( ! ddm ) {
+			//alert('No ddmStock'+key+id );
+			continue;
+		} else if ( ddm.type != 'select-one' ) {
+			//alert('wrong type ddmStock'+key+id + ' type: ' + ddm.type);
+			continue;
+		//} else {
+			//alert(ddm.name);
 		} // end if
-		form.elements['Finish'+id].disabled = false;
-	} // end if
+		var selectedValue = ddm.getValue();
 
-	if ( form.elements['Colour'+id] ) {
-		if ( ColourOptions.length > 1 ) {
-			var selectedValue = get_ddm_value( form.elements['Colour'+id] );
-			fill_ddm( form.elements['Colour'+id], ColourOptions, form.elements['Colour'+id].onchange );
-			if ( ColourOptions.length == 2 ) {
-				ddm_select_by_index( form.elements['Colour'+id], 1 );
-			} else {
-				ddm_select_by_value( form.elements['Colour'+id], selectedValue, 0 );
-			} // end if
+		var options = new Array();
+		options[0] = create_option( '', 'select one' );
+		for ( var ddm_index = 0, ddm_len = value.length; ddm_index < ddm_len; ddm_index += 2 ) {
+			options[options.length] = create_option( value[ddm_index], value[ddm_index+1] );
+		} // end for
+		fill_ddm( ddm, options );
+		if ( options.length == 2 ) {
+			ddm_select_by_index( ddm, 1 );
+		} else {
+			ddm_select_by_value( ddm, selectedValue );
 		} // end if
-		form.elements['Colour'+id].disabled = false;
-	} // end if
+	} // end for each key
 
-	if ( form.elements['Weight'+id] ) {
-		if ( WeightOptions.length > 1 ) {
-			var selectedValue = get_ddm_value( form.elements['Weight'+id] );
-			fill_ddm( form.elements['Weight'+id], WeightOptions, form.elements['Weight'+id].onchange );
-			if ( WeightOptions.length == 2 ) {
-				ddm_select_by_index( form.elements['Weight'+id], 1 );
-			} else {
-				ddm_select_by_value( form.elements['Weight'+id], selectedValue, 0 );
-			} // end if
-		} // end if
-		form.elements['Weight'+id].disabled = false;
-	} // end if
+	// turn drop downs back on
+	for ( var index = 0, len = filters.length; index < len; ++index ) {
+		var filter_name = filters[index];
 
-} // end function fill_drop_down( results ) {
+		var filter = form.elements[filter_name+id];
+		if ( filter ) {
+			filter.disabled = false;
+			continue;
+		} // end if filter exists
 
-function cbFillDropDowns( results ) {
-	fill_drop_down( results );
-	if ( typeof calc == 'function' ) 
-		calc('f1');
-} // end function cbFillDropDowns( results )
+		filter = form.elements[filter_name];
+		if ( filter ) {
+			filter.disabled = false;
+			continue;
+		} // end if filter exists
+		
+		filter_name = filter_name.toLowerCase();
+		filter = form.elements[filter_name+'_id'+id];
+		if ( filter ) {
+			filter.disabled = false;
+			continue;
+		} // end if filter exists
+		filter = form.elements[filter_name+'_id'];
+		if ( filter ) {
+			filter.disabled = false;
+			continue;
+		} // end if filter exists
+		//alert('filter not found ' + filter_name );
+	} // end for 
+	calc(form.name);
+} // end function Stock_Fill

@@ -1,89 +1,84 @@
-<? eval ( 
-	$$variable{'pages'} = POSIX::ceil(@{$$variable{'Skids'}}/3);
-	$$variable{'page'} = 1;
-	my $Skid = new eprint::Skid( $$variable{'Skids'}[0] );
-	$$variable{'total_quantity'} = $$Skid{'Paper'}{$$variable{'paper_id'}}*@{$$variable{'Skids'}};
-	$$variable{'FirstSkid'} = $$variable{'Skids'}[0];
-	$$variable{'LastSkid'} = $$variable{'Skids'}[@{$$variable{'Skids'}}-1];
-) ?>
-<? while ( @{$$variable{'Skids'}} ) ?>
-<p style="padding: 2px;">
-	<span style="float:right;"><b>Page <?page?> of <?pages?></b></span>
-	<span style="float:left;"><b>Manifest</b></span><br class="spacer"/>
-	<span style="float:left;">Received:
-	<? echo ( 
-		$$variable{'page'} += 1;
-		my $Skid = new eprint::Skid( $$variable{'Skids'}[0] );
-		Date::Format::time2str('%d %b %Y %H:%M', Date::Parse::str2time( $Skid->created_on() ) );
-
+<?include(/includes/error_reporting.html)?>
+<? if ( ! $$variable{Manifest}->can_edit() ) ?>
+	You cannot edit this manifest.
+	<? echo ( button( 'Back', { href=>'/employee/inventory/manifest_view.html?manifest_id='.$$variable{Manifest}->id() } ); ) ?>
+<? else ( ! $$variable{Manifest}->can_edit() ) ?>
+<script type="text/javascript" src="<?hash_link(/javascripts/barcode.js)?>"></script>
+<script type="text/javascript" src="<?hash_link(/javascripts/paper.js)?>"></script>
+<script type="text/javascript" src="<?hash_link(/employee/inventory/manifest.js)?>"></script>
+<div class="Manifest">
+	<form name="f1" id="f1" method="post" action="manifest.html" onsubmit="return manifest_onsubmit(this);">
+		<input type="hidden" id="manifest_id" name="manifest_id" value="<? echo ( $$variable{'Manifest'}->id() ) ?>" />
+		<fieldset>
+			<div class="leftColumn">
+				<p><label for="name">Manifest #</label>
+					<input type="text" id="name" name="name" value="<? hecho ( $$variable{Manifest}->name() ) ?>" />
+				</p>
+				<p><label>Vendor</label>
+					<input id="supplier_id_filter" type="text" onkeyup="filterDDM(this, this.form.supplier_id);" class="filter" />
+					<select id="supplier_id" name="supplier_id" onchange="new Ajax.Updater('PurchaseOrders','_manifest_purchase_orders.html', { parameters: { supplier_id: $('supplier_id').value} } );">
+						<option value="">None</option>
+						<? echo ( make_drop_down( [ map { $_->id(), $_->name() } openprint::Company->find( order=>'lower(name)', supplier=>'Y') ], $$variable{Manifest}->supplier_id() ); ) ?>
+					</select>
+				</p>
+			</div>
+			<div class="rightColumn">
+				<p><label>Received On</label>
+				<? eval ( 
+					if ( $$variable{'Manifest'}->received_on() ) {
+						@param{'received_on_year','received_on_month','received_on_day'} = split('-', $$variable{'Manifest'}->received_on() );
+					} else {
+						@param{'received_on_year','received_on_month','received_on_day'} = Date::Calc::Today(); 
+					} # end if
+				) ?>
+<? echo ( date_select( 'received_on', [@param{'received_on_year','received_on_month','received_on_day'}] ); ) ?>
+				</p>
+<? if ( $$variable{Manifest}->id() ) ?>
+				<p><label>Created On</label><? echo ( format_datetime( $$variable{Manifest}->created_on() ); ) ?></p>
+				<p><label>Updated On</label><? echo ( format_datetime( $$variable{Manifest}->updated_on() ); ) ?></p>
+<? endif ( $$variable{Manifest}->id() ) ?>
+			</div>
+		</fieldset>
+		<div id="Types">
+		<? echo (
+			my $html = '';
+			my $ac = sql::start_transaction( $dbh );
+			my $content = slurp_content('/employee/inventory/_manifest_type.html' );
+			$variable{'location_dropdown'} = openprint::Location->dropdown(order=>'parent_id NULLS FIRST, lower(name)', type=>'place');
+			
+			foreach my $Type ( $$variable{'Manifest'}->Types() ) {
+				$$variable{Type} = $Type;
+				$$variable{type_id} = $Type->id();
+				$html .= variable_substitution( \$content, $variable );
+			} # end foreach
+			sql::end_transaction( $dbh, $ac );
+			return $html;
 		) ?>
-	</span><br class="spacer"/>
-</p>
-<div style="border: 1px solid black; margin-bottom: 2px;">
-<? echo ( 
-	my $Paper = new eprint::Paper( $$variable{'paper_id'} );
-	my $Skid = new eprint::Skid( $$variable{'Skids'}[0] );
-	my $html;
-	$html .= '<table style="width:100%; height: 86px; table-layout:fixed;">';
-	$html .= '<tr><td width="40%" rowspan="2">';
-	if ( $Paper->id() ) {
-		my $paper_details = sprintf('%s %s %s ', $Paper->name(), $Paper->finish(), $Paper->colour() );
-		if ( $Paper->type() eq 'Roll' ) {
-		$paper_details .= sprintf('<b>%s %s</b>', $Paper->weight, $Paper->width().'" Roll' );
-		} else {
-		$paper_details .= sprintf('<b>%s %s</b>', $Paper->weight, join('x', $Paper->width(), $Paper->height() ) );
-		} # end if
-		if ( length $paper_details > 80 ) {
-			$html .= '<span style="font-size:x-small;">'.$paper_details.'</span>';
-		} else {
-			$html .= $paper_details;
-		} # end if
-		$html .= '</td>';
-		$html .= '<td width="23%">ID:</td><td width="37%">';
-		$html .= sprintf('<img src="/barcode.png?code=R%1$d+&amp;NoText=1&amp;Height=30" alt="%1$d"/>', $Paper->id() );
-		$html .= '</td></tr>';
-	} else {
-		$html .= '</td><td width="23%">&nbsp;</td><td width="37%">&nbsp;</td></tr>';
-	} # end if
-	$html .= '<tr height="50%"><td>Total Qty:</td><td style="border: 1px solid black;">';
-	if ( $$Skid{'Paper'}{$$variable{'paper_id'}} ) {
-		$html .= $$variable{'total_quantity'};
-		$html .= 'lbs' if $Paper->type() eq 'Roll';
-		$html .= 'sheets' if $Paper->type() eq 'Sheet';
-	} # end if
-	$html .= '</td></tr></table>';
-	return $html;
-) ?>
+		</div>
+		<p class="buttons">
+			<? echo ( my $html;
+				if ( $$variable{Manifest}->id() ) {
+					$html .= button( 'add', { onclick=>"new Ajax.Updater('Types', '_manifest_type.html', { parameters: { manifest_id: '".$$variable{'Manifest'}->id()."', action: 'Add'}, insertion: 'bottom' } );", text=>'Add Another Stock' } );
+					if ( openprint::usergroup::is_user_in( ['InventoryManager'], $session{user_id} ) ) {
+						$html .= button( 'Save', { onclick=>q`f1.btnFunction.value='Save';if(f1.onsubmit())f1.submit();`, title=>'Only save Manifest contents' } );
+						if ( $$variable{Manifest}->deleted() ) {
+							$html .= button( 'UnDelete', { onclick=>q`f1.btnFunction.value='undelete';f1.submit();` } );
+							$html .= button( 'Destroy', { onclick=>q`if( confirm('Are you sure?') ) {f1.btnFunction.value='destroy';f1.submit();}` } );
+						} else {
+							$html .= button( 'Delete', { onclick=>q`f1.btnFunction.value='Delete';f1.submit();` } );
+						} # end if
+					} # end if
+					if ( $$variable{FixStockOnSkids} ) {
+						$html .= button( 'FixStockOnSkids', { onclick=>q`f1.btnFunction.value='ChangePaper';f1.submit();`, text=>'Fix Problems' } );
+					} # end if
+					$html .= button( 'Apply', { onclick=>q`f1.btnFunction.value='Submit';if(f1.onsubmit())f1.submit();`, title=>'Apply Manifest to inventory' } );
+				} else {
+					$html .= button( 'Save', { onclick=>q`f1.btnFunction.value='Save';if(f1.onsubmit())f1.submit();`, title=>'Only save Manifest contents' } );
+				} # end if Manifest->id();
+				return $html;
+			) ?>
+		</p>
+		<input type="hidden" name="btnFunction" />
+	</form>
 </div>
-<p>
-<? echo ( 
-	my $html;
-	$html .= qq`<img style="float: right; margin-bottom: 7px;" src="/barcode.png?code=D$openprint::param{docket}+&amp;NoText=1&amp;Height=30">` if $openprint::param{'docket'};
-	$html .= '<b>Docket:</b>';
-	$html .= qq`<b>$openprint::param{docket}</b><br/>`;
-	return $html;
-) ?>
-</p>
-<? echo (
-	my $Paper = new eprint::Paper( $$variable{'paper_id'} );
-	my $html = '';
-	my @skids = splice @{$$variable{'Skids'}}, 0, 3;
-	foreach my $skid_id ( @skids ) {
-		my $Skid = new eprint::Skid( $skid_id );
-		$html .= '<table style="width:100%;">';
-		$html .= qq`<tr><td width="17%"><b>Skid #:</b></td><td width="33%">$skid_id</td>`;
-		$html .= qq`<td width="50%" rowspan="2" align="right"><img src="/barcode.png?code=I$skid_id+&amp;NoText=1&amp;Height=50"/></td></tr>`;
-		$html .= '<tr><td style="border: 1px solid black;">Qty:</td><td style="border: 1px solid black;">';
-		if ( $$Skid{'Paper'}{$$variable{'paper_id'}} ) {
-			$html .= $$Skid{'Paper'}{$$variable{'paper_id'}};
-			$html .= 'lbs' if $Paper->type() eq 'Roll';
-			$html .= 'sheets' if $Paper->type() eq 'Sheet';
-		} # end if
-		$html .= '</td></tr></table>';
-	} # end foreach skid_id
-	return $html;
-	) ?>
-	<br/>
-	<img src="/barcode.png?code=I<? echo ( join('-', $$variable{'FirstSkid'}, $$variable{'LastSkid'}) ) ?>+&amp;NoText=1&amp;Height=50"/>
-<br class="pagebreak"/>
-<? endwhile ( @{$$variable{'Skids'}} ) ?>
+<? endif ( ! $$variable{Manifest}->can_edit() ) ?>

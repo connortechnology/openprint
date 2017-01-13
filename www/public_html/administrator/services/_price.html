@@ -1,0 +1,40 @@
+<? echo (
+	my $html;
+	my $Price = $$variable{Price};
+
+	$html .= sprintf('<tr id="Price-%d">', $$Price{id} );
+
+	if ( @{$$variable{company_ids}} > 2 ) {
+		$html .= sprintf('<td class="Supplier"><select name="supplier_id-%d"><option value=""> all </option>%s</select></td>',
+		$$Price{id}, make_drop_down( $$variable{company_ids}, $Price->supplier_id() ) );
+	} # end if
+
+	$html .= sprintf('
+			<td class="Period">%1$s<br/>%2$s</td>
+			<td class="Range">%3$s - %4$s</td>
+			<td class="Units">%5$s</td>
+			<td class="Cost">%6$s</td>
+			<td class="Markup">%7$s</td>
+			<td class="Price">%8$s</td>
+			<td class="Discount">%9$s</td>
+			<td class="Mode">%10$s</td>
+			<td class="buttons">%11$s</td>
+		</tr>',
+		date_select( join('-', 'period_start', $$Price{id} ), $$Price{period_start}, { with_today=>1, with_clear=>1 } ),
+		date_select( join('-', 'period_end', $$Price{id} ), $$Price{period_end}, { with_today=>1, with_clear=>1 } ),
+		input( type=>'float', name=>join('-', 'min', $$Price{id} ), value=>$Price->min() ),
+		input( type=>'float', name=>join('-', 'max', $$Price{id} ), value=>$Price->max() ),
+		input( type=>'text', name=>join('-', 'units', $$Price{id} ), value=>$Price->units() ),
+		input( type=>'float', name=>join('-', 'cost', $$Price{id} ), value=>$Price->cost(), onkeyup=>'calc_from_cost(this);', oninput=>'this.onkeyup();' ),
+		input( type=>'float', name=>join('-', 'markup', $$Price{id} ), value=>$Price->markup(), onkeyup=>'calc_from_markup(this);', oninput=>'this.onkeyup();' ),
+		input( type=>'float', name=>join('-', 'price', $$Price{id} ), value=>$Price->price(), onkeyup=>'calc_from_price(this);', oninput=>'this.onkeyup();' ),
+		radio( join('-', 'discountable',$$Price{id} ), [ 'Y', 'Yes', 'N', 'No' ], $Price->discountable(), { default=>'Y' } ),
+		ssi::select( [ '', 'Basic', 'Stepped', 'Stepped', 'Interpolate', 'Interpolate' ], $Price->mode(), { name=>'mode-'.$$Price{id}, id=>'mode-'.$$Price{id} } ),
+		($Price->id() ? 
+		join('', 
+			button( 'x'.$Price->id(), { onclick=>qq`del_price( \$('f1'), '$$variable{Pricelist}{id}', '$$variable{Equipment}{id}', $$Price{id} );`, text=>'X', title=>'Delete' } ),
+			button( 'c'.$Price->id(), { onclick=>qq`copy_price( \$('f1'), '$$variable{Pricelist}{id}', '$$variable{Equipment}{id}', $$Price{id} );`, text=>'C', title=>'Copy' } ),
+			) : ''),
+	);
+	return $html;
+) ?>

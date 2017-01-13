@@ -1,8 +1,8 @@
-package openprint::InstantGate;
 use strict;
+package openprint::InstantGate;
 
 use openprint ();
-my $debug = 1;
+my $debug = 0;
 
 sub find {
 	my %params = @_;
@@ -69,21 +69,21 @@ sub create_job_file {
 		print FH "\n";
 		print FH sprintf("[Prod%3d]\n", $prod_id );
 		#print FH, sprintf("ProdNo=\%d\n", $Project->id() );
-		print FH sprintf("Width=\%d\n", Math::Units::convert($Paper->width(),'in','mm') );
-		print FH sprintf("Height=\%d\n", Math::Units::convert($Paper->height(),'in','mm') );
+		print FH sprintf("Width=\%d\n", $Paper->width()*25.4 ); # in mm
+		print FH sprintf("Height=\%d\n", $Paper->height()*25.4 );
 		print FH sprintf("PaperNameShort=\%s\n", $Paper->name() );
 		print FH sprintf("PaperTypeName=\%s\n", $Paper->finish() );
 		print FH sprintf("PaperGrammage=\%d\n", $Paper->gsm() );
-		print FH sprintf("PaperVolume=\%s\n", (Math::Units::convert($Paper->calliper(),'in','mm')/$Paper->gsm())*1000 );
+		print FH sprintf("PaperVolume=\%s\n", ($Paper->calliper()*25.4/$Paper->gsm())*1000 );
 		print FH "\n";
 		print FH sprintf("[Job%3d]\n", $prod_id );
 		print FH sprintf("JobNo\n", $prod_id );
-		print FH sprintf("JobName\n", $Project->Type()->strid() );
+		print FH sprintf("JobName\n", $Project->Type()->name() );
 		my $sheets = $$sig_specs{'txtPressSheetQty'.$Project->ordered_quantity()};
 		$sheets =~ s/\D//g;
 		print FH sprintf("Volume\n", $sheets );
 
-		my @schedule = openprint::press_schedule::find('project_id'=>$Project->id(),'service_id'=>$sig_id);
+		my @schedule = openprint::press_schedule->find('project_id'=>$Project->id(),'service_id'=>$sig_id);
 		my $schedule = shift @schedule;
 		
 		my ( $year, $month, $day, $hours, $minutes, $seconds ) = $$schedule{'starttime'} =~ /(\d\d\d\d)-(\d\d)-(\d\d) (\d\d):(\d\d):(\d\d)/;

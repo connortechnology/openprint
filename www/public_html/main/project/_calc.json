@@ -1,0 +1,14 @@
+<? echo (
+	my $debug = 0;
+
+	if ( ! $param{ServiceType} ) {
+$log->warn("No servicetype in params in calc");
+		return;
+	} # end if
+
+	my %specs = openprint::main_project::calc( $debug );
+
+	$param{callback} = 'cbFillResults' if ! $param{callback};
+	my $json = JSON->new;
+	return 'var results = new Hash(' . $json->encode( \%specs ) . ");\n$param{callback}(results);";
+) ?>

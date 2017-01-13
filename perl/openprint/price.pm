@@ -53,17 +53,11 @@ sub setEquipment {
 }
 
 sub setMin {
-	my $self = shift;
-	$_ = shift;
-	#$_ =~ s/[\D\-]//g;
-	$self->{min} = $_;
+	$_[0]{min} = $_[1];
 }
 
 sub setMax {
-	my $self = shift;
-	$_ = shift;
-	#$_ =~ s/[\D\-]//g;
-	$self->{max} = $_;
+	$_[0]{max} = $_[1];
 }
 
 sub setUnits {
@@ -72,24 +66,18 @@ sub setUnits {
 }
 
 sub setCost {
-    my $self = shift;
-    $_ = shift;
-    $_ =~ s/([^\d\.])//g;
-    $self->{Cost} = $_;
+    $_[1] =~ s/([^\d\.])//g;
+    $_[0]{Cost} = $_[1];
 }
 
 sub setMarkup {
-    my $self = shift;
-    $_ = shift;
-    $_ =~ s/\%//g;
-    $self->{Markup} = $_;
+    $_[1] =~ s/\%//g;
+    $_[0]{Markup} = $_[1];
 }
 
 sub setPrice {
-    my $self = shift;
-    $_ = shift;
-    $_ =~ s/([^\d\.])//g;
-    $self->{Price} = $_;
+    $_[1] =~ s/([^\d\.])//g;
+    $_[0]->{Price} = $_[1];
 }
 
 sub copy {
@@ -104,6 +92,7 @@ sub copy {
 	setMarkup( $self, $src->{Markup} );
 	setPrice( $self, $src->{Price} );
 	setDiscountable( $self, $src->{Discountable} );
+	$$self{interpolate} = $$src{interpolate};
 } # end sub copy
 
 1;

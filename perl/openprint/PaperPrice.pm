@@ -1,93 +1,142 @@
-package openprint::PaperPrice;
-@ISA = qw(openprint::Object);
-
-my $debug = 1;
-
 use strict;
+package openprint::PaperPrice;
+our @ISA = qw(openprint::Object);
 
-require sql;
+require Math::Round;
+require openprint::Pricelist;
+require openprint::Equipment;
 
-sub find {
-	my %params = @_;
+use vars qw( $debug $table $serial %find_fields %fields %transforms %defaults );
+$debug = 0;
+$table = 'paper_prices';
+$serial = 'paper_prices_id_seq';
 
-	my $sql = q{SELECT * FROM Paper_Prices WHERE 1>0};
-	my @values;
+%fields = (
+	id			=>	'id',
+	pricelist_id	=>	'lnglistindex',
+	paper_id		=>	'lngpaperindex',	
+	min			=>	'lngmin',
+	max			=>	'lngmax',
+	units			=>	'strunits',
+	cost			=>	'dblcost',
+	markup		=>	'dblmarkup',
+	price			=>	'dblprice',
+	discountable	=>	'ysndiscountable',
+	interpolate	=>	'interpolate',
+	service		=>	'service',
+	equipment_id	=>	'equipment_id',
+	stock_id		=>	undef,
+);
+%find_fields = (
+	stock_id	=>	'lngpaperindex',
+);
+%transforms = (
+	min => [ 's/,//g', 's/(\d*)/$1/g' ],
+	max => [ 's/,//g', 's/(\d*)/$1/g' ],
+	cost => [ 's/[^\d\.]//g' ],
+	price => [ 's/[^\d\.]//g' ],
+	markup => [ 's/[^\d\.]//g' ],
+);
+%defaults = (
+	equipment_id	=>	undef,
+	min => undef,
+	max => undef,
+	cost => 0,
+	price => 0,
+	markup => 0,
+	interpolate	=>	'1',
+	discountable	=>	q`'Y'`,
+);
 
-	if ( exists $params{'paper_id'} ) {
-		$sql .= ' AND lngpaperindex=?';
-		push @values, $params{'paper_id'};
-	} # end if
-	if ( $params{'pricelist_id'} ) {
-		$sql .= ' AND lngListindex=?';
-		push @values, $params{'pricelist_id'};
-	} elsif ( $params{'Pricelist'} ) {
-		$sql .= ' AND lngListindex=?';
-		push @values, $params{'Pricelist'}->id();
-	} # end if
-	if ( $params{'order'} ) {
-		$sql .= " ORDER BY $params{'order'}";
-	} # end if
-
-	my $data = $openprint::dbh->selectall_arrayref( $sql, {Slice=>{}}, @values );
-	if ( ! $data ) {
-		$openprint::log->warn("Error loading PaperPrices: ($sql) (@values)" . $openprint::dbh->errstr );
-		return;
-	} elsif ($debug ) {
-		$openprint::log->debug("openprint::PaperPrice::find($sql) (@values)");
-	} # end if
-	return map { new openprint::PaperPrice( $_->{id}, $_ ); } @$data;
-} # end sub find
-
-sub load {
-	my ( $self, $data ) = @_;
-
-	if ( (! $data) and $$self{'id'} ) {
-		$data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM Paper_Prices WHERE id=?', {}, $$self{'id'} );
-		if ( ! $data ) { $openprint::log->debug($openprint::dbh->errstr ); }
-	} # end if
-	@$self{qw/id PricelistIndex PaperIndex Min Max Units Cost Markup Price Discountable/} = 
-		@$data{qw/id lnglistindex lngpaperindex lngmin lngmax strunits dblcost dblmarkup dblprice ysndiscountable/};
-
-} # end sub load
+sub Pricelist {
+	return new openprint::Pricelist( $_[0]{pricelist_id} );
+} # end sub Pricelist
+sub Equipment {
+	return new openprint::Equipment( $_[0]{equipment_id} );
+} # end sub Pricelist
 
 sub delete {
-	my $self = shift;
-    sql::execute( undef, undef, q{DELETE FROM Paper_Prices WHERE id=?}, $$self{'id'} );
+	my $Paper = $_[0]->Paper();
+	delete $$Paper{Prices};
+	return $_[0]->SUPER::delete();
 } # end sub delete
 
-sub save {
-	my ( $self, $param ) = @_;
-
-	$$self{Price} = $$self{Cost} * ( 1+($$self{Markup}/100) ) if ( ! $$self{Price} );
-
-	my @sql = (
-			'lngListIndex',			$$self{'PricelistIndex'},
-			'lngPaperIndex',		$$self{'PaperIndex'},
-			'lngMin',				$$self{'Min'} eq '' ? undef : $$self{'Min'},
-			'lngMax',				$$self{'Max'} eq '' ? undef : $$self{'Max'},
-			'strUnits',				$$self{'Units'},
-			'dblCost',				1*$$self{'Cost'},
-			'dblMarkup',			1*$$self{'Markup'},
-			'dblPrice',				1*$$self{'Price'},
-			'ysnDiscountable',		$$self{'Discountable'},
-			);
-	if ( ! $$self{'id'} ) {
-		@$self{'id'} = sql::execute( undef, undef, q{SELECT nextval('paper_prices_id_seq')});
-		sql::insert( undef, undef, 'Paper_Prices', [ 'id', $$self{'id'}, @sql ] );
-	} else {
-		sql::update( undef, undef, 'Paper_Prices', ['id=?', $$self{'id'}], \@sql );
-	} # end if
-} # end sub save
-
-sub copy {
+sub costperm {
 	my $self = shift;
-	my $new = new openprint::PaperPrice();
-	@$new{keys %$self} = @$self{keys %$self};
-	$$new{'id'} = undef;
-	return $new;
-} # end sub
+	my $Paper = $self->Paper();
+	if ( $Paper->wpsi() ) {
+		# ROll papers won't have an mweight
+		return Math::Round::nearest(0.01, $$self{cost} * $Paper->wpsi() * $Paper->width() * $Paper->height() * 10 );
+	} elsif ( $Paper->mweight() ) {
+		return Math::Round::nearest(0.01, $$self{cost} * $Paper->mweight() / 100 );
+	} # end if
+} # end sub costperm
+
+sub priceperm {
+	my $self = shift;
+	my $Paper = $self->Paper();
+	if ( $Paper->wpsi() ) {
+		# ROll papers won't have an mweight
+		return Math::Round::nearest(0.01, $$self{price} * $Paper->wpsi() * $Paper->width() * $Paper->height() * 10 );
+	} elsif ( $Paper->mweight() ) {
+		return Math::Round::nearest(0.01, $$self{price} * $Paper->mweight() / 100 );
+	} # end if
+} # end sub priceperm
+sub costperfoot {
+	my $self = $_[0];
+	my $Paper = $self->Paper();
+	return Math::Round::nearest(0.01, ($$self{cost}/100 ) * ( $Paper->wpsi() * 144 ) );
+}
+sub priceperfoot {
+	my $self = $_[0];
+	my $Paper = $self->Paper();
+	return Math::Round::nearest(0.01, $$self{price} * ( $Paper->wpsi() * 144 ) /100 );
+}
+
+sub markup {
+	if ( @_ > 1 ) {
+		$_[0]{markup} = $_[1];
+	} # end if
+	return $_[0]{markup};
+} # end sub markup
+
+sub price {
+	if ( @_ > 1 ) {
+		$_[0]{price} = $_[1];
+	} # end if
+	if ( ! defined $_[0]{price} ) {
+		$_[0]{price} = Math::Round::nearest(0.01, $_[0]{cost} * ( 1+($_[0]{markup}/100) ) );
+	} # end if
+	return $_[0]{price};
+}
+
+sub stock_id {
+	if ( @_ > 1 ) {
+		$_[0]{paper_id} = $_[1];
+	} # end if
+	return $_[0]{paper_id};
+} # end sub stock_id
+
+sub Stock {
+	return new openprint::Paper( $_[0]{paper_id} );
+}
+
+sub id_string {
+	my $Price = $_[0];
+	my $price_desc = '';
+	if ( ! ( $Price->min() or $Price->max() ) ) {
+		$price_desc .= 'all quantities';
+	} else {
+		if ( $Price->min() ) {
+			$price_desc .= 1*$Price->min() . ' ';
+		}
+		$price_desc .= 'up';
+		if ( $Price->max() ) {
+			$price_desc .= ' to ' . 1*$Price->max();
+		}
+	} # end if
+	return $Price->Pricelist()->name() . ' '. $price_desc . ' on ' . $Price->Equipment()->strid();
+}
 
 1;
-
 __END__
-~       

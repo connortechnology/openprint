@@ -1,57 +1,46 @@
-<form name="f1" method="post" action="templates.html" enctype="multipart/form-data">
+<script type="text/javascript">
+	function copy_template(id) {
+
+new Ajax.Updater( 'T'+id, '_template_line.html', {
+                parameters: {
+                    template_id:    id,
+                    action:         'C'
+                },
+                insertion: 'after',
+                } );
+}
+function delete_template(id) {
+new Ajax.Updater( 'T'+id, '_template_line.html', {
+                parameters: {
+                    template_id:    id,
+                    action:         'X'
+                }
+                } );
+}
+</script>
+<form id="f1" name="f1" method="post" action="templates.html" enctype="multipart/form-data">
 	<input type="hidden" name="btnFunction" value=""/>
-	<fieldset>
-		<p>
-			<label>Project Type:</label>
-			<select name="ddmProjectType" size="1" onChange="f1.btnFunction.value='';f1.action='templates.html';f1.submit();">
+	<fieldset class="filters">
+		<ul>
+		<li>
+			<label>Project Type</label>
+			<select id="ddmProjectType" name="ddmProjectType" size="1" onchange="LoadContent('Templates','_templates.html', this.form.serialize() );">
 				<option value="">select one</option>
-				<? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::ProjectType::find('order'=>'lower(strname)') ], $openprint::param{'ddmProjectType'} ) ) ?>
+				<? echo ( make_drop_down( [ map { $_->id(), $_->description() } openprint::ProjectType->find( order=>'lower(description)') ], $param{ddmProjectType} ) ) ?>
 			</select>
-		</p>
+		</li>
+		</ul>
 		<p class="buttons">
-<? if ( $openprint::param{'ddmProjectType'} ) ?>
-			<? echo ( ssi::writeButton( $log, $dbh, 'Save','save.gif', "f1.action='templates.html';f1.btnFunction.value='Save';f1.submit();", '', 'Save' ); ) ?>
-			<? echo ( ssi::writeButton( $log, $dbh, 'Reset','reset.gif', "f1.reset();", '', 'Reset' ); ) ?>
-<? endif ( $openprint::param{'ddmProjectType'} ) ?>
 			<input type="file" name="fileImport">
-			<? echo ( ssi::writeButton( $log, $dbh, 'Import','import.gif', "f1.action='templates.html';f1.btnFunction.value='Import Templates';f1.submit();", '', 'Import' ); ) ?>
-			<? echo ( ssi::writeButton( $log, $dbh, 'Export','export.gif', "f1.action='templates.html?Download';f1.btnFunction.value='Export Templates';f1.submit();", '', 'Export' ); ) ?>
+			<? echo ( button( 'Import', { onclick=>"f1.action='templates.html';f1.btnFunction.value='Import Templates';f1.submit();", text=>'Import' } ); ) ?>
+			<? echo ( button( 'Export', { onclick=>"f1.action='templates.html?Download';f1.btnFunction.value='Export Templates';f1.submit();", text=>'Export' } ); ) ?>
 		</p>
 	</fieldset>
-	<? if ( $$variable{'error'} ) ?>
-	The following errors occurred:
-	<div class="error"><?error?></div>
-	<? endif ( $$variable{'error'} ) ?>
-<br class="spacer"/>
-<? if ( $openprint::param{'ddmProjectType'} ) ?>
-	<? eval ( @{$$variable{'Templates'}} = sql::execute( $log, $dbh, q{SELECT Id, type, description, dblFinishedWidth, dblFinishedHeight, dblFlatWidth, dblFlatHeight FROM ProjectTemplate WHERE ProjectType_id = ? ORDER BY lower(type),lower(Description)}, $openprint::param{'ddmProjectType'} ); ) ?>
-<table class="List">
-	<tr>
-		<th>Type</th>
-		<th width="150">Description</th>
-		<th width="75">Finished Width</th>
-		<th width="75">Finished Height</th>
-		<th width="75">Flat Width</th>
-		<th width="75">Flat Height</th>
-	</tr>
-	<? while ( @$variable{'index', 'type', 'description', 'finishedwidth','finishedheight','flatwidth','flatheight'} = ssi::htmlize( splice @{$$variable{'Templates'}},0,7 ) ) ?>
-<tr>
-	<td><input type="text" name="type<?index?>" value="<?type?>" /></td>
-	<td><input type="text" name="description<?index?>" value="<?description?>" /></td>
-	<td><input type="text" name="finishedwidth<?index?>" value="<?finishedwidth?>" /></td>
-	<td><input type="text" name="finishedheight<?index?>" value="<?finishedheight?>" /></td>
-	<td><input type="text" name="flatwidth<?index?>" value="<?flatwidth?>" /></td>
-	<td><input type="text" name="flatheight<?index?>" value="<?flatheight?>" /></td>
-</tr>
-	<? endwhile ( @$variable{'index', 'type', 'description', 'finishedwidth','finishedheight','flatwidth','flatheight'} = ssi::htmlize( splice @{$$variable{'Templates'}},0,7 ) ) ?>
-<tr>
-	<td><input type="text" name="typeNew"/></td>
-	<td><input type="text" name="descriptionNew"/></td>
-	<td><input type="text" name="finishedwidthNew"/></td>
-	<td><input type="text" name="finishedheightNew" value="<?finishedheight?>" /></td>
-	<td><input type="text" name="flatwidthNew"/></td>
-	<td><input type="text" name="flatheightNew"/></td>
-</tr>
-</table>
-<? endif ( $openprint::param{'ddmProjectType'} ) ?>
 </form>
+<?include(/includes/error_reporting.html)?>
+<br class="spacer"/>
+<div id="Templates">
+<? if ( $param{ddmProjectType} ) ?>
+<?include(_templates.html)?>
+<? endif ( $param{ddmProjectType} ) ?>
+</div>

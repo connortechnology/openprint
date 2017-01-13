@@ -1,217 +1,220 @@
-<? eval (
-if ( $openprint::param{'btnFunction'} eq 'Allocate' ) {
-	openprint::employee_inventory::allocate( $variable, @openprint::param{'skid_id','paper_id', 'Quantity','Project','Docket'} );
-} # end if
-) ?>
-<script type="text/javascript" src="/javascripts/barcode.js"></script>
+<script type="text/javascript" src="<?hash_link(/javascripts/paper.js)?>"></script>
 <script type="text/javascript">
-var allocateWin;
-function allocate_window(paper_id) {
-    if (allocateWin != null) {
-		Dialog.alert("Close the allocate window before opening it again!",{width:200, height:130});
-	} else {
-		allocateWin = new Window({maximizable: false, resizable: true, hideEffect:Element.hide, showEffect:Element.show, destroyOnClose: true, className:"alphacube"} );
-		allocateWin.setHTMLContent('Loading... please wait');
-		allocateWin.showCenter();
-		allocateWin.setAjaxContent('/employee/inventory/_allocate_popup2.html?paper_id='+paper_id, null , true);
-		// Set up a windows observer, check ou debug window to get messages
-		myObserver = {
-onDestroy: function(eventName, win) {
-			   if (win == allocateWin) {
-				   allocateWin = null;
-				   Windows.removeObserver(this);
-			   }
-		   }
+	var allocateWin;
+	function allocate_window( paper_id ) {
+		if ( allocateWin == null ) {
+			allocateWin = new Window({maximizable: false, resizable: true, hideEffect:Element.hide, showEffect:Element.show, destroyOnClose: true, className:"alphacube",width:400,height:400} );
+			allocateWin.setHTMLContent('Loading... please wait');
+			allocateWin.showCenter();
+			// Set up a windows observer, check ou debug window to get messages
+			myObserver = {
+				onDestroy: function(eventName, win) {
+					if (win == allocateWin) {
+						allocateWin = null;
+						Windows.removeObserver(this);
+					}
+				}
+			}
+			Windows.addObserver(myObserver);
 		}
-		Windows.addObserver(myObserver);
-	}
-} // end function bug_report
+		allocateWin.setAjaxContent('/employee/inventory/_allocate_popup.html?referer=available_paper.html&paper_id='+paper_id, null , true);
+	} // end function bug_report
 
-function check_inputs(form ) {
-	if ( form.skid_id && form.skid_id.value ) {
-		if ( form.type && get_rdb_value( form.type ) == 'Roll' && form.Quantity.value > 10000 ) {
-			alert( 'Skids cannot contain more than 10000lbs' );
+	function check_inputs(form ) {
+		if ( (form.Docket && form.Docket.value == '') && (form.Project && form.Project.value == '') ) {
+			alert( 'Please enter the docket # or project # to allocate to.' );
 			return false;
 		} // end if
-		if ( form.Units && get_ddm_value( form.Units ) == 'lbs' && form.Quantity.value > 10000 ) {
-			alert( 'Skids cannot contain more than 10000lbs' );
-			return false;
+		if ( form.available_quantity && ( parseInt(form.Quantity.value) > parseInt(form.available_quantity.value) ) ) {
+			if ( form.Units ) {
+				return confirm( 'There are only ' + form.available_quantity.value + get_value( form.Units ) + ' available. Do you want to proceed with the allocation?' );
+			} // end if
+			return confirm( 'There are only ' + form.available_quantity.value + ' available. Do you want to proceed with the allocation?' );
 		} // end if
-	} // end if
-	if ( form.available_quantity && form.Quantity.value > form.available_quantity.value ) {
-		alert( 'There are only ' + form.available_quantity.value + get_ddm_value( form.Units ) + ' available' );
-		return false;
-	} // end if
-	return true;
+		return true;
+	} // end function check_inputs(form)
+	// override this so we don't refresh paper dropdowns on load
+	function calc( formName ) {
+		var f1 = $(formName);
+		if ( ! f1 ) {
+			alert('No form. Tell Isaac about this please.');
+		} 
+		LoadContent( 'Results',	'/employee/inventory/_available_paper.html', f1.serialize() );
+	} // end function calc
 
-}
-	function highlight_paper( results ) {
-		var paper_ids = results.split('|');
-		for ( var i = 0; i < paper_ids.length; i += 1 ){
-			var blah = paper_ids[i].split('~');
-
-			var p = $('Paper'+blah[0]);
-			if ( p )
-				p.style.backgroundColor = blah[1];
-		} // end for
-	} // end function highlight_paper
 </script>
-<? if ( $$variable{'error'} ) ?>
-<p class="error"><?error?></p>
-<? endif ( $$variable{'error'} ) ?>
-<? if ( $$variable{'information'} ) ?>
-<p class="information"><?information?></p>
-<? endif ( $$variable{'information'} ) ?>
+<?include('/includes/error_reporting.html')?>
 Please select a Paper to view/edit.<br>
-<form name="f1" method="post" action="paper.html">
+<form id="f1" name="f1" method="post" action="available_paper.html">
 	<fieldset class="filters"><legend>Search Criteria</legend>
-		<div style="width:48%; float: left;">
-		<p>
-			<label>Manufacturer:</label>
-			<select id="Manufacturer" name="Manufacturer" size="1" onchange="jsrsExecute( '/jsrs.htm',  highlight_paper, 'openprint::employee_inventory::highlight_paper', Serialize(f1) );">
-			<? echo (
-					my @options = ( '', 'select one',
-						sql::execute( $log, $dbh, q{SELECT id, longname FROM Manufacturers ORDER BY lower(longname)} )
-						);
-					return ssi::make_drop_down( \@options, $openprint::param{'Manufacturer'} );
+		<div class="leftColumn">
+			<ul>
+				<li>
+					<label>Owner</label>
+					<select id="owner_id" name="owner_id" size="1" onchange="filter_onChange(this,'');">
+					<option value=""> All </option>
+					<? echo ( 
+						make_drop_down( [ map { $_->id(), $_->name() } openprint::Company->find( id=>[sql::execute(undef, undef, q{SELECT DISTINCT owner_id FROM papers} )], order=>'lower(name)' ) ], $session{'/employee/inventory/available_paper.html?owner_id'} );
 					) ?>
-			</select>
-		</p>
-		<p>
-			<label>Brand:</label>
-			<select name="Name" size="1" onchange="jsrsExecute( '/jsrs.htm',  highlight_paper, 'openprint::employee_inventory::highlight_paper', Serialize(f1) );">
-			<? echo ( 
-					my @options = ( '', 'select one',
-						sql::execute( $log, $dbh, q{SELECT id, longname FROM PaperNames ORDER BY lower(longname)} )
-						);
-					return ssi::make_drop_down( \@options, $openprint::param{'Name'} );
-				) ?>
-			</select>
-		</p>
-		<p>
-			<label>Finish:</label>
-			<select name="Finish" size="1" onchange="jsrsExecute( '/jsrs.htm',  highlight_paper, 'openprint::employee_inventory::highlight_paper', Serialize(f1) );">
-			<? echo (
-					my @options = ( '', 'select one',
-						sql::execute( $log, $dbh, q{SELECT id, longname FROM PaperFinishes ORDER BY lower(longname)} )
-						);
-					return ssi::make_drop_down( \@options, $openprint::param{'Finish'} );
-				) ?>
-			</select>
-		</p>
-		<p>
-			<label>Colour:</label>
-			<select name="Colour" size="1" onchange="jsrsExecute( '/jsrs.htm',  highlight_paper, 'openprint::employee_inventory::highlight_paper', Serialize(f1) );">
-			<? echo (
-					my @options = ( '', 'select one',
-						sql::execute( $log, $dbh, q{SELECT id, longname FROM PaperColours ORDER BY lower(longname)} )
-						);
-					return ssi::make_drop_down( \@options, $openprint::param{'Colour'} );
-				) ?>
-			</select>
-		</p>
-		<p>
-			<label>Weight:</label>
-			<select name="Weight" size="1" onchange="jsrsExecute( '/jsrs.htm',  highlight_paper, 'openprint::employee_inventory::highlight_paper', Serialize(f1) );">
-			<? echo (
-					my @options = ( '', 'select one',
-						sql::execute( $log, $dbh, q{SELECT id, longname FROM PaperWeights ORDER BY lower(longname)} )
-						);
-					return ssi::make_drop_down( \@options, $openprint::param{'Weight'} );
-				) ?>
-			</select>
-		</p>
-		</div>
-		<div style="width: 48%; float: right;">
-		<p><label>Type:</label>
-			<input type="checkbox" id="TypeSheet" name="Type" value="Sheet" checked="checked" onclick="jsrsExecute( '/jsrs.htm',  highlight_paper, 'openprint::employee_inventory::highlight_paper', Serialize(f1) );"/>
-			<label class="radio" for="TypeSheet">Sheet</label>
-			<input type="checkbox" id="TypeRoll" name="Type" value="Roll" checked="checked" onclick="jsrsExecute( '/jsrs.htm',  highlight_paper, 'openprint::employee_inventory::highlight_paper', Serialize(f1) );"/>
-			<label class="radio" for="TypeRoll">Roll</label>
-		</p>
-		<p>
-			<label>Size:</label>
-			<select name="width" size="1" onchange="jsrsExecute( '/jsrs.htm',  highlight_paper, 'openprint::employee_inventory::highlight_paper', Serialize(f1) );" >
-			<? echo ( 
-					my @options = ( '', 'select one',
-						sql::execute( $log, $dbh, q{SELECT DISTINCT width, width FROM Papers ORDER BY width} )
-						);
-				return ssi::make_drop_down( \@options, $openprint::param{'width'} );
-				) ?>
-			</select> x 
-			<select name="height" size="1" onchange="jsrsExecute( '/jsrs.htm',  highlight_paper, 'openprint::employee_inventory::highlight_paper', Serialize(f1) );" >
-			<? echo ( 
-					my @options = ( '', 'select one',
-						sql::execute( $log, $dbh, q{SELECT DISTINCT height, height FROM Papers ORDER BY height} )
-						);
-				return ssi::make_drop_down( \@options, $openprint::param{'height'} );
-				) ?>
-			</select>
-			<input type="checkbox" id="OrLarger" name="OrLarger" value="Y" onclick="jsrsExecute( '/jsrs.htm',  highlight_paper, 'openprint::employee_inventory::highlight_paper', Serialize(f1) );" /><label class="radio" for="OrLarger">or larger</label>
-		</p>
-		<p>
-			<label>Owner:</label>
-			<select name="Owner" size="1" onchange="jsrsExecute( '/jsrs.htm',  highlight_paper, 'openprint::employee_inventory::highlight_paper', Serialize(f1) );">
-			<option value=""> All </option>
-			<? echo ( 
-				make_drop_down( [ map { $_->id(), $_->name() } openprint::Company::find('id'=>[sql::execute(undef, undef, q{SELECT DISTINCT owner_id FROM papers} )], 'order'=>'lower(strName)' ) ], $openprint::param{'Owner'} );
-			) ?>
-			</select>
-		</p>
-		<p>
-			<label>FSC Code:</label>
-			<input type="text" name="fsc_code" style="width: auto;" size="13" onkeyup="jsrsExecute( '/jsrs.htm',  highlight_paper, 'openprint::employee_inventory::highlight_paper', Serialize(f1) );"/>
-		</p>
-		</div>
-	</fieldset>
-<div id="Results">
-<? eval (
-	@{$$variable{'Papers'}} = openprint::Paper::find( 'order_by'=>'manufacturer,name,finish,colour,weight', 'in_stock_start'=>1,);
-) ?>
-<? if ( @{$$variable{'Papers'}} ) ?>
-	<table class="List">
-		<tr>
-			<th align="left">Paper ID</th>
-			<th align="left" width="60">GSM</th>
-			<th align="left" width="60">MWeight</th>
-			<th align="left" width="75">Available</th>
-			<th align="left" width="50">Skids</th>
-			<th align="left" width="110">Age</th>
-			<th width="75" class="unprintable">&nbsp;</th>
-		</tr>
-		<? echo (
-			my $html;
-			my $rowclass;
-			foreach my $Paper ( @{$$variable{'Papers'}} ) {
-				next if $Paper->in_stock() - $Paper->allocated() <= 0;
-				my %skid_age;
-				foreach my $Skid ( $Paper->skids() ) {
-					my ($ss,$mm,$hh,$d,$m,$y,$szone) = Date::Parse::strptime($Skid->created_on());
-					my $days = Date::Calc::Delta_Days($y+1900, $m+1, $d, Date::Calc::Today());
-					$skid_age{$days} += 1;
-				} # end foreach
+					</select>
+					<input type="checkbox" name="owner_id_exclude" id="owner_id_exclude" value="1" onclick="filter_onChange(this,'');" <? echo ( checked( $session{'/employee/inventory/available_paper.html?owner_id_exclude'} ) ) ?> />
+					<label class="radio" for="owner_id_exclude">Exclude</label>
+				</li>
+<? echo (
+	my $html;
 
-				$html .= sprintf( '<tr%s id="Paper%d"><td><a href="paper_details.html?paper_id=%d">%s</a></td><td>%.0f</td><td>%.0f</td><td>%s</td><td>%d</td><td>%s</td>',
-					$rowclass,
-					$$Paper{'id'},
-					$$Paper{'id'},
-					$Paper->to_string(),
-					$Paper->gsm(),
-					$Paper->mweight(),
-					($Paper->in_stock() - $Paper->allocated()) . ($Paper->type() eq 'Roll' ? 'lbs' : 'sheets'),
-					scalar $Paper->skids(),
-					join('<br/>', map { $_.'days - ' . $skid_age{$_} . ' skid'.($skid_age{$_}>1?'s':'') } keys %skid_age),
-					);
-				$html .= '<td align="center" class="unprintable">';
-				$html .= ssi::writeButton( $log, $dbh, 'Allocate'.$Paper->id(), 'allocate.gif', 'allocate_window('.$Paper->id().');', '', 'Allocate' );
-				$html .= '</td>';
-				$html .= '</tr>',
-				$rowclass = $rowclass ? '' : ' class="colRow"';
-			} # end foreach Paper
-			return $html;
-		) ?>
-	</table>
-<? endif ( @{$$variable{'Papers'}} ) ?>
-</div>
+	my %find = (
+			'in_stock null_or_>'	=>	1,
+			( $session{'/employee/inventory/available_paper.html?type'} ? ( type => [ split( ',', $session{'/employee/inventory/available_paper.html?type'} ) ] ) : () ),
+	);
+	if ( $session{'/employee/inventory/available_paper.html?owner_id'} ) {
+		if ( $session{'/employee/inventory/available_paper.html?owner_id_exclude'} ) {
+			$find{'owner_id !='} = $session{'/employee/inventory/available_paper.html?owner_id'};
+		} else {
+			$find{'owner_id'} = $session{'/employee/inventory/available_paper.html?owner_id'};
+		} # end if
+	} # end if
+
+	my @StockOptions = ( 'Manufacturer','Brand','Finish','Colour','Weight','Quality','Material','Group' );
+
+	my @Papers = openprint::Paper->find( %find );
+
+	my %filters;
+	foreach my $option ( @StockOptions ) {
+		eval { 
+			my @values = ('openprint::Stock'.$option)->find();
+		next if @values == 1;
+ };
+		my ( $lower_option, $option_id ) = ( lc $option, lc $option.'_id' );
+		# Validate the filter
+		$session{'/employee/inventory/available_paper.html?'.$option_id} = undef if ! sets::isin( 
+				$session{'/employee/inventory/available_paper.html?'.$option_id}, [ map { $$_{$option_id} } @Papers ] );
+
+		foreach my $Stock ( @Papers ) {
+			# Load up the filter
+			$filters{$option}{$Stock->$lower_option()} = $$Stock{$option_id} if $$Stock{$option_id};
+		} # end foreach $Stock
+		if ( $session{'/employee/inventory/available_paper.html?'.$option_id} ) {
+			@Papers = map { $$_{$option_id} eq $session{'/employee/inventory/available_paper.html?'.$option_id} ? $_ : () } @Papers;
+		} # end if
+	} # end foreach option
+
+	foreach my $option ( @StockOptions ) {
+		next if ! $filters{$option};
+		my ( $lower_option, $option_id ) = ( lc $option, lc $option.'_id' );
+		my @options = map { $filters{$option}{$_}, $_ } ( sort keys %{$filters{$option}} );
+		$session{'/employee/inventory/available_paper.html?'.$option_id} = $options[0] if ( @options == 2 );
+
+		$html .= sprintf(q`<li><label>%1$s</label>
+				<select name="%2$s_id" id="%2$s_id" size="1" onchange="filter_onChange(this,'');">
+				<option value=""> All </option> %3$s </select>
+			</li>`, $option, $lower_option, 
+			make_drop_down( \@options, $session{'/employee/inventory/available_paper.html?'.$option_id} ),
+		);
+	} # end foreach option
+	$$variable{Paper} = \@Papers;
+	return $html;
+) ?>
+			<li>
+				<label>Condition</label>
+				<select name="condition_id"><option value="">select</option>
+				<? echo (
+						make_drop_down( openprint::InventoryCondition->dropdown( order=>'lower(name)'), $session{'/employee/inventory/paper.html?condition_id'} );
+					) ?>
+				</select>
+			</li>
+			</ul>
+		</div>
+		<div class="rightColumn">
+			<ul>
+				<li><label>Type</label>
+					<input type="checkbox" id="typeSheet" name="type" value="Sheet" <? echo ( ssi::checked( sets::isin( 'Sheet', split( ',', $session{'/employee/inventory/available_paper.html?type'} ) ) ); ) ?> onclick="calc('f1');"/>
+					<label class="radio" for="typeSheet">Sheet</label>
+					<input type="checkbox" id="typeRoll" name="type" value="Roll" <? echo ( ssi::checked( sets::isin( 'Roll', split( ',', $session{'/employee/inventory/available_paper.html?type'} ) ) ); ) ?> onclick="calc('f1');"/>
+					<label class="radio" for="typeRoll">Roll</label>
+				</li>
+				<li>
+					<label>Size</label>
+					<select name="width" size="1" onchange="calc(this.form);" >
+						<option value="">All</option>
+					<? echo ( 
+							my %data;
+							my $found = 0;
+							foreach my $Stock ( @{$$variable{'Paper'}} ) {
+								$data{$Stock->width()} = $Stock->width();
+								$found = 1 if $Stock->width() == $session{'/employee/inventory/available_paper.html?width'};
+							} # end foreach
+							$session{'/employee/inventory/available_paper.html?width'} = undef if ! $found;
+							make_drop_down( [map { $_, $_ } sort keys %data ], $session{'/employee/inventory/available_paper.html?width'} );
+						) ?>
+					</select> x 
+					<select name="height" size="1" onchange="calc(this.form);" >
+						<option value="">All</option>
+					<? echo ( 
+							my %data;
+							my $found = 0;
+							foreach my $Stock ( @{$$variable{'Paper'}} ) {
+								$data{$Stock->width()} = $Stock->height();
+								$found = 1 if $Stock->width() == $session{'/employee/inventory/available_paper.html?height'};
+							} # end foreach
+							$session{'/employee/inventory/available_paper.html?height'} = undef if ! $found;
+							make_drop_down( [map { $_, $_ } sort keys %data ], $session{'/employee/inventory/available_paper.html?height'} );
+						) ?>
+					</select>
+					<input type="checkbox" id="OrLarger" name="OrLarger" value="Y" onclick="calc(this.form);" <? echo ( ssi::checked( $session{'/employee/inventory/available_paper.html?OrLarger'} eq 'Y' ); ) ?> /><label class="radio" for="OrLarger">or larger</label>
+				</li>
+				<li>
+					<label>FSC Code</label>
+					<input type="text" name="fsc_code" onkeyup="calc(this.form);"/>
+				</li>
+				<li><label>Exclude Press Feeds</label>
+					<?echo( radio( 'exclude_press_feeds', [ '1', 'Yes','0','No' ], $session{'/employee/inventory/available_paper.html?exclude_press_feeds'}, { onclick=>'calc(this.form);', default=>'0' } ); ) ?>
+				</li>
+				<li>
+					<label>Location</label>
+					<select id="location_id" name="location_id" multiple="multiple" onchange="calc(this.form);">
+					<? echo ( 
+						my @options =	('All','All','Unknown','Unknown', map { $_->id(), $_->name() } openprint::Location->find(type=>'place', order=>'parent_id NULLS FIRST,lower(name)') );
+						$session{'/employee/inventory/available_paper.html?location_id'} = undef if ! sets::isin( $session{'/employee/inventory/available_paper.html?location_id'}, \@options );
+						my @selected = split(',', $session{'/employee/inventory/available_paper.html?location_id'} );
+						if ( ! @selected ) {
+							foreach my $L ( openprint::Location->find( type=>'place' ) ) {
+								next if $L->name() eq 'Missing';
+								next if $L->parent_id() and $L->Parent()->type() eq 'place';
+								push @selected, $L->id();
+							} # end foreach $L
+						} # end if
+						$session{'/employee/inventory/available_paper.html?location_id'} = join(',',sets::intersection( @selected, @options ));
+						make_drop_down( \@options, \@selected );
+					) ?>
+					</select>
+				</li>
+				<li>
+					<label>Last seen</label>
+					<select name="last_seen" onchange="calc('f1');">
+						<? echo (
+							my @options = (
+								'',		'Ever',
+								'14',	'2 Weeks',
+								'31',	'1 Month',
+							);
+							make_drop_down( \@options, $session{'/employee/inventory/available_paper.html?last_seen'} );
+						) ?>
+					</select>
+				</li>
+				<li>
+					<label>Show unmatched stocks</label>
+					<?echo( radio( 'unmatched', ['Y','Yes','N','No'], $session{'/employee/inventory/available_paper.html?unmatched'}, { onclick=>'calc(this.form);', default=>'N' } ); ) ?>
+				</li>
+			</ul>
+		</div>
+		<p class="buttons">
+			<? echo ( join("\n",
+				button( 'ShowResults', { onclick=>"calc('f1');", text=>'Show Results' } ),
+				button( 'Reset', { onclick=>'f1.reset();', text=>'Reset' } ),
+				); ) ?>
+		</p>
+	</fieldset>
 	<input type="hidden" name="btnFunction"/>
 </form>
+<div id="Results"> </div>

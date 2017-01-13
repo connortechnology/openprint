@@ -18,14 +18,15 @@ package openprint::Estimating::CopyDot;
 
 use strict;
 
-require sql;
-require openprint::print;
 require openprint::service;
 
 my @variables = (
+		'alert',
         'txtPrice1', 'txtPrice2', 'txtPrice3',
         'txtNegativeQuantity1', 'txtNegativeQuantity3', 'txtNegativeQuantity2',
-		'chkOverrideNegativeQuantity',
+		'chkOverrideNegativeQuantity1',
+		'chkOverrideNegativeQuantity2',
+		'chkOverrideNegativeQuantity3',
 );
 
 sub variables {
@@ -47,14 +48,15 @@ sub calc {
 	my $status = 'calculated';
 	my $Project = new openprint::Project( $project_index );
 
-	foreach my $qty_index ( 1 .. 3 ) {
+	foreach my $qty_index ( $Project->quantity_indexes() ) {
 		$$specs{"txtQuantity$qty_index"} = $Project->quantity($qty_index) if ! $$specs{"txtQuantity$qty_index"};
-		next if ! $$specs{'txtQuantity'.$qty_index};
-		if ( $$specs{'chkOverrideNegativeQuantity'} ne 'Y' ) {
+		$$specs{'Markup'.$qty_index} =~ s/[^\d\.\-]//g;
+		$$specs{'txtPrice'.$qty_index} =~ s/[^\d\.]//g;
+		if ( $$specs{'chkOverrideNegativeQuantity'.$qty_index} ne 'Y' ) {
 			@no_output = sets::exclude( ['txtNegativeQuantity'.$qty_index], \@no_output );
 			$$specs{'txtNegativeQuantity'.$qty_index} = 0;
 			foreach my $ss_id ( $Project->signatures() ) {
-				my $sig_specs = openprint::service::get_specs_ref( $project_index, $ss_id );
+				my $sig_specs = openprint::service::get_specs_ref( $Project, $ss_id );
 				$$specs{'txtNegativeQuantity'.$qty_index} += $$sig_specs{'txtPlateQuantity'.$qty_index};
 			} # end foreach
 			if ( ! $$specs{'txtNegativeQuantity'.$qty_index} ) {
@@ -64,13 +66,28 @@ sub calc {
 		} else {
 			@no_output = sets::union( 'txtNegativeQuantity'.$qty_index, @no_output );
 		} # end if
-		my $service_price = openprint::service::get_price( $log, $dbh, $variable, 'CopyDot', $$specs{'txtNegativeQuantity'.$qty_index}, undef );
-		$$specs{'txtUnitPrice'.$qty_index} = sprintf('%.2f', $service_price );
-		$$specs{'txtPrice'.$qty_index} = sprintf($openprint::config{'ProjectMoneyFormat'}, $service_price * $$specs{'txtNegativeQuantity'.$qty_index} );
+		my $service_price = openprint::service::get_price( 'CopyDot', $$specs{'txtNegativeQuantity'.$qty_index}, undef );
+		$$specs{'txtUnitPrice'.$qty_index} = sprintf($openprint::config{'UnitPriceFormat'}, $service_price * (1+$Project->markup()/100) );
+		if ( $$specs{'OverridePrice'.$qty_index} ne 'Y' ) {
+			$$specs{'txtPrice'.$qty_index} = sprintf($openprint::config{'ProjectMoneyFormat'}, ($service_price * $$specs{'txtNegativeQuantity'.$qty_index})*(1+$$specs{'Markup'.$qty_index}/100) * (1+$Project->markup()/100) );
+		} else {
+			$$specs{'txtPrice'.$qty_index} = sprintf($openprint::config{'ProjectMoneyFormat'}, $$specs{'txtPrice'.$qty_index} );
+		} # end if
 	} # end foreach
 
 	return $status;
 } # end sub calc
+
+sub summary {
+	my ( $Project, $service_id, $specs, $qty_index ) = @_;
+
+	$specs = openprint::service::get_specs_ref( $Project, $service_id ) if ! $specs;
+	if ( $qty_index ) {
+		return $$specs{'txtNegativeQuantity'.$qty_index}.' negative' . ( $$specs{'txtNegativeQuantity'.$qty_index} == 1 ? '' : 's');
+	} else {
+	} # end if
+	return '';
+} # end sub summary
 
 1;
 __END__

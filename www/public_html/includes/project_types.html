@@ -1,6 +1,21 @@
-<? eval ( @{$$variable{'ProjectTypes'}} = sql::execute( $log, $dbh, q{SELECT lngIndex, strID, strName, strDetailedURL FROM Project_Types ORDER BY lngSort, lower(strName)} ); ) ?>
-<ul class="ProjectTypes">
-<? while ( @$variable{'index','id','name','url'} = splice @{$$variable{'ProjectTypes'}}, 0, 4; ) ?>
-<li><a href="/content/<?url?>?ProjectType=<? echo ( URI::Escape::uri_escape($$variable{'id'}) ) ?>&amp;ProjectTypeName=<? echo ( URI::Escape::uri_escape($$variable{'name'}) ) ?>" title="<?name?>"><?name?></a></li>
-<? endwhile ( @$variable{'index','id','name','url'} = splice @{$$variable{'ProjectTypes'}}, 0, 4; ) ?>
-</ul>
+<? echo ( 
+	require openprint::ProjectTypeCategory;
+	my @ProjectTypeCategories = openprint::ProjectTypeCategory->find('order'=>'sort,lower(name)');
+	my $html = '<ul id="ProjectTypes">';
+	foreach my $ProjectTypeCategory ( @ProjectTypeCategories ) {
+		my @ProjectTypes = openprint::ProjectType->find(category_id=>$$ProjectTypeCategory{id}, order=>'sorting,lower(name)');
+		next if ! @ProjectTypes;
+
+		$html .= sprintf('<li class="Category">%s</li>', $ProjectTypeCategory->name() );
+		foreach my $ProjectType ( @ProjectTypes ) {
+			$html .= sprintf('<li><a href="/content/%4$s?projecttype_id=%1$d" title="%3$s">%2$s</a></li>',
+				$ProjectType->id(), 
+				ssi::htmlize( $ProjectType->description() ),
+				URI::Escape::uri_escape($ProjectType->name()), 
+				( $ProjectType->url() ? $ProjectType->url() : 'prin/Signature.html' )
+				);
+		} # end foreach
+	} # end foreach
+	$html .= "</ul>\n";
+	return $html;
+) ?>

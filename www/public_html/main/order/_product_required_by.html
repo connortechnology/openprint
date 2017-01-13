@@ -7,7 +7,7 @@
 ) ?>
 	
 <p>
-	<label>Required By:</label>
+	<label>Required By</label>
 	<select style="width: auto;" name="ProductDueDateMonth<? echo ( $$variable{'OrderedProduct'}->id(); ) ?>" size="1" onchange="off(this.options[this.selectedIndex]);setDaysDropDown(this.form.ProductDueDateYear<? echo ( $$variable{'OrderedProduct'}->id(); ) ?>.value,this.form.ProductDueDateMonth<? echo ( $$variable{'OrderedProduct'}->id(); ) ?>.value, this.form.ProductDueDateDay<? echo ( $$variable{'OrderedProduct'}->id(); ) ?>, this.form.ProductDueDateDay<? echo ( $$variable{'OrderedProduct'}->id(); ) ?>.value);" onfocus="on(this.options[this.selectedIndex]);on(this)" onblur="off(this.options[this.selectedIndex]);off(this)">
     <? echo ( ssi::getmonths( $$variable{'ProductDueDateMonth'.$$variable{'OrderedProduct'}->id()} ); ) ?>
 	</select>

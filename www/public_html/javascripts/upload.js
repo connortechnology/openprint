@@ -1,4 +1,3 @@
-/* <![CDATA[ */  /* so (X)HTML validators ignore the javascript. */
 var theRequest = false;
 var force_KB_size = 0;
 var force_KB_rate = 0;
@@ -79,8 +78,8 @@ function updateProgress() {
 			} // end if
 			var progressPercent = total_upload_size ? Math.ceil((completed_upload_size/total_upload_size)*100) : 0;
 
-			document.getElementById('progressMeterText').innerHTML = progressPercent + '%';
-			document.getElementById('progressMeterBarDone').style.width = parseInt(progressPercent*3.5) + 'px';
+			$('progressMeterText').innerHTML = progressPercent + '%';
+			$('progressMeterBarDone').style.width = parseInt(progressPercent*3.5) + 'px';
 
 
 			var totaltime = progressPercent ? parseInt((elapsedtime * 100) / progressPercent) : 0;
@@ -100,15 +99,15 @@ function updateProgress() {
 				//document.getElementById('dones').innerHTML = completed_upload_size_forprint;
 				//document.getElementById('donef').innerHTML = numfinishedfiles;
 
-				document.getElementById('leftt').innerHTML = remainingtime_forprint;
-				document.getElementById('lefts').innerHTML = remaining_upload_size_forprint;
+				$('leftt').innerHTML = remainingtime_forprint;
+				$('lefts').innerHTML = remaining_upload_size_forprint;
 				//document.getElementById('leftf').innerHTML = numtotalfiles - numfinishedfiles;
 
-				document.getElementById('totalt').innerHTML = totaltime_forprint;
-				document.getElementById('totals').innerHTML = total_upload_size_forprint;
+				$('totalt').innerHTML = totaltime_forprint;
+				$('totals').innerHTML = total_upload_size_forprint;
 				//document.getElementById('totalf').innerHTML = numtotalfiles;
 
-				document.getElementById('transferRate').innerHTML = 'Upload Rate: ' + transfer_rate + '/s';
+				$('transferRate').innerHTML = 'Upload Rate: ' + transfer_rate + '/s';
 			} // end if
 
 			if ( completeFlag ) {
@@ -205,5 +204,29 @@ function format_timespan_with_unit(num,space) {
 	return num;
 }
 
-/* ]]> */  /* so (X)HTML validators ignore the javascript. */
+function FileUpload(img, file) {  
+	var reader = new FileReader();    
+	this.ctrl = createThrobber(img);  
+	var xhr = new XMLHttpRequest();  
+	this.xhr = xhr;  
 
+	var self = this;  
+	this.xhr.upload.addEventListener("progress", function(e) {  
+			if (e.lengthComputable) {  
+			var percentage = Math.round((e.loaded * 100) / e.total);  
+			self.ctrl.update(percentage);  
+			}  
+			}, false);  
+
+	xhr.upload.addEventListener("load", function(e){  
+			self.ctrl.update(100);  
+			var canvas = self.ctrl.ctx.canvas;  
+			canvas.parentNode.removeChild(canvas);  
+			}, false);  
+	xhr.open("POST", "/paul/demos/resources/webservices/devnull.php");  
+	xhr.overrideMimeType('text/plain; charset=x-user-defined-binary');  
+	reader.onload = function(evt) {  
+		xhr.sendAsBinary(evt.target.result);  
+	};  
+	reader.readAsBinaryString(file);  
+}  

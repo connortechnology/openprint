@@ -1,0 +1,13 @@
+<fieldset><legend>Service Dump</legend>
+<? echo ( 
+	my $html;
+	my $Project = new openprint::Project( $param{project_id} );
+	my $Service = $Project->Service( $param{service_id} );
+	my $specs = $Service->specs();
+
+	foreach my $k ( sort keys %$specs ) {
+		$html .= "$k => $$specs{$k}<br/>\n";
+	}
+	return $html;
+) ?>
+</fieldset>

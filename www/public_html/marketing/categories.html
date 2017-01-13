@@ -1,0 +1,69 @@
+<form id="f1" name="f1" method="post">
+	<fieldset class="filters"><legend>Search</legend>
+		<p>
+			<label>Category</label>
+			<select name="category_id" onchange="if(this.options[this.selectedIndex].value != '') fmCheck(f1);">
+				<option value="">Select a Category</option>
+				<? echo (
+					make_drop_down( openprint::MarketingCategory->dropdown( order=>'lower(name)'), $$variable{Category}->id() );
+				) ?>
+			</select>
+		</p>
+		<p class="buttons">
+				<? echo ( join( '',
+					ssi::button( 'Previous1', { onclick=>"f1.btnFunction.value='<<';fmCheck(f1);", href=>'', text=>'<<' } ),
+					ssi::button( 'Next1', { onclick=>"f1.btnFunction.value='>>';fmCheck(f1);", href=>'', text=>'>>' } ),
+					ssi::button( 'New1', { onclick=>"addCheck(f1);", href=>'', text=>'New' } ),
+					ssi::button( 'Delete1', { onclick=>"f1.btnFunction.value='Delete';fmChange=2;fmCheck(f1);", href=>'', text=>'Delete' } ),
+					ssi::button( 'Save1', { onclick=>"f1.btnFunction.value='Save';fmChange=3;fmCheck(f1);", href=>'', text=>'Save' } ),
+					ssi::button( 'Reset1', { onclick=>'f1.reset();', href=>'', text=>'Reset' } ),
+					); ) ?>
+		</p>
+	</fieldset>
+	<div class="leftColumn">
+		<fieldset><legend>Category Information</legend>
+			<p> 
+				<label>Name</label>
+				<input type="text" name="name" value="<? echo ( ssi::htmlize( $$variable{'Category'}->name() ); ) ?>" />
+			</p>
+			<p> 
+				<label>Description</label>
+				<textarea name="description" rows="5"><? echo ( ssi::htmlize( $$variable{'Category'}->description() ); ) ?></textarea>
+			</p>
+			<p> 
+				<label>Greeting</label>
+				<textarea name="greeting" rows="5"><? echo ( ssi::htmlize( $$variable{'Category'}->greeting() ); ) ?></textarea>
+			</p>
+		</fieldset>
+	</div>
+	<div class="rightColumn">
+		<? if ( $$variable{'Category'}->id() ) ?>
+			<fieldset><legend>Companies in this marketing Category</legend>
+				<? echo (
+					my $html;
+					foreach my $Company ( $$variable{'Category'}->Companies( 'order' => 'lower(name)' ) ) {
+						$html .= sprintf( q{<input type="checkbox" id="chkDelete%1$d" name="chkDelete" value="%1$d" />
+						<label class="radio" for="chkDelete%1$d">%2$s</label><br/>}, $Company->id(), $Company->name() );
+					} # end while
+					return $html;
+				) ?>
+				<p>
+				<? echo ( ssi::button( 'Remove', { onclick=>"f1.btnFunction.value='Remove'; f1.submit();", href=>'', text=>'Remove' } ); ) ?>
+				</p>
+				<hr class="spacer"/>
+				<p>
+					<label>Add Company to Category</label>
+					<select name="Company">
+						<option value=""> select one </option>
+					<? echo ( 
+						return ssi::make_drop_down( [ map { $_->id(), $_->name() } sets::exclude( [$$variable{'Category'}->companies()], [ openprint::Company->find( 'order' => 'lower(name)' ) ] ) ] );
+					) ?>
+					</select>
+					<? echo ( ssi::button( 'Add', { onclick=>"f1.btnFunction.value='Add'; f1.submit();", href=>'', text=>'Add' } ); ) ?>
+				</p>
+			</fieldset>
+		<? endif ( $$variable{'Category'}->id() ) ?>
+	</div>
+	<br class="spacer"/>
+	<input type="hidden" name="btnFunction"/>
+</form>

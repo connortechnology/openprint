@@ -1227,7 +1227,7 @@ var Windows = {
   modalWindows: [],
   observers: [],
   focusedWindow: null,
-  maxZIndex: 0,
+  maxZIndex: 10,
   overlayShowEffectOptions: {duration: 0.5},
   overlayHideEffectOptions: {duration: 0.5},
 

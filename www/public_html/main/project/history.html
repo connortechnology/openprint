@@ -2,122 +2,152 @@
 <h1>PROJECTS</h1>
 <h2>History</h2>
 </div>
+<?include('/includes/error_reporting.html')?>
 <script type="text/javascript">
-<!--
 	function delete_confirm(form) {
 		var number_of_deleted_projects = 0;
-		for ( var index = 0; index < form.elements.length; index += 1 ) {
-			if ( ! form.elements[index].name )
-				continue;
-			if ( form.elements[index].name.substr(0,9) == 'chkDelete' && form.elements[index].checked ) {
+		if ( form.elements['project_id'] ) {
+			if ( form.elements['project_id'].length ) {
+				for ( var index = 0; index < form.elements['project_id'].length; index += 1 ) {
+					if ( form.elements['project_id'][index].checked ) {
+						number_of_deleted_projects += 1;
+					} // end if
+				} // end for
+			} else if ( form.elements['project_id'].checked ) {
 				number_of_deleted_projects += 1;
 			} // end if
-
-		} // end for
+		} // end if
 		if ( number_of_deleted_projects == 0 ) {
 			alert("To Delete Projects, click the checkbox beside the project.");
+		} else if ( number_of_deleted_projects == 1 ) {
+			if ( confirm("Are you sure you wish to delete this project from history?\n") ) {
+				form.btnFunction.value='Delete Project';
+				form.submit();
+			} // end if
 		} else {
 			if ( confirm("Are you sure you wish to delete these " + number_of_deleted_projects + " projects from history?\n") ) {
+				form.btnFunction.value='Delete Project';
 				form.submit();
 			} // end if
 		} // end if
 	}
-	function load_projects( form ) {
-		LoadContent('ProjectList','/main/project/_project_list.html', Serialize( form ) );
+	function load_projects() {
+		var div = $('ProjectList');
+		if ( div ) LoadContent( $('ProjectList'), '/main/project/_history.html', $('f1') );
 	} // end function
-	function initializeDayDropDowns() {
-		if ( typeof(setDaysDropDown) == 'function' ) {
-			setDaysDropDown(document.f1.CreatedStartYear.value,document.f1.CreatedStartMonth.value,document.f1.CreatedStartDay,document.f1.CreatedStartDay.value);
-			setDaysDropDown(document.f1.CreatedEndYear.value,document.f1.CreatedEndMonth.value,document.f1.CreatedEndDay,document.f1.CreatedEndDay.value);
-			setDaysDropDown(document.f1.UpdatedStartYear.value,document.f1.UpdatedStartMonth.value,document.f1.UpdatedStartDay,document.f1.UpdatedStartDay.value);
-			setDaysDropDown(document.f1.UpdatedEndYear.value,document.f1.UpdatedEndMonth.value,document.f1.UpdatedEndDay,document.f1.UpdatedEndDay.value);
-		} // end if
-	}
-	
-	if ( typeof(initializeDayDropDowns) ) 
-		window.onload = initializeDayDropDowns;
--->
 </script>	 
-<? if ( $openprint::session{'user_id'} ) ?>
-<form name="f1" method="post" action="/main/project/history.html">
-   <div class="ProjectHistory">
-		<fieldset class="filters unprintable"><legend>Select Search Criteria:</legend>
-			<div style="float: left; width: 45%;">
-			<p>
-				<label>Project #:</label>
-				<input type="text" name="ProjectID" size="6" onkeyup="load_projects( this.form );" />
-			</p>
-			<p>
-				<label>Reference:</label>
-				<input type="text" name="Reference" onkeyup="load_projects( this.form );" />
-			</p>
-			<p>
-				<label>Status:</label>
-				<select name="ddmStatus" size="1" onchange="load_projects( this.form );">
-					<option value="">All</option>
+<? if ( $session{user_id} ) ?>
+<form id="f1" name="f1" method="post" action="/main/project/history.html">
+   <div class="Project"><div class="History">
+		<fieldset class="filters"><legend>Select Search Criteria</legend>
+			<div class="content">
+			<div class="leftColumn">
+			<ul>
+			<li>
+				<label>Project #</label>
+				<? echo ( join("\n",
+					input( type=>'text', id=>'ProjectID', name=>'ProjectID', onkeydown=>'if(event.keyCode==13){load_projects();};', value=>$param{ProjectID}, pattern=>'[0-9%]*' ),
+					button( 'Go1', { onclick=>q`load_projects();`, text=>'Go' } ), 
+				); ) ?>
+			</li>
+			<li>
+				<label>Reference</label>
+				<input type="text" id="reference" name="reference" value="<? echo ( $param{reference} ) ?>" onkeyup="load_projects();" />
+			</li>
+			<li>
+				<label>Status</label>
+				<select id="ddmStatus" name="ddmStatus" multiple="multiple" size="4" onchange="load_projects();">
 <? echo ( 
-		$_ = q{SELECT name, name FROM Project_Statuses WHERE name != 'Deleted' ORDER BY sort,lower(name)};
-		ssi::make_drop_down( [sql::execute( $log, $dbh, $_ )], $openprint::session{'/main/project/history.html?ddmStatus'} );
+		$_ = q{SELECT name, name FROM Project_Statuses ORDER BY sort,lower(name)};
+		make_drop_down( [ '', 'All', sql::execute( $log, $dbh, $_ )], [ split(',', $session{'/main/project/history.html?ddmStatus'} ) ] );
 ) ?>
 				</select>
-			</p>
-<? eval (
-	if ( ( ! @openprint::session{'/main/project/history.html?CreatedStartYear'} ) or ( time - $openprint::session{'/main/project/history.html?lastupdated'} > 3600 ) ) {
-		@openprint::session{'/main/project/history.html?CreatedStartYear','/main/project/history.html?CreatedStartMonth','/main/project/history.html?CreatedStartDay'} = Date::Calc::Add_Delta_Days( Date::Calc::Today(), -180 );
-		@openprint::session{'/main/project/history.html?CreatedEndYear','/main/project/history.html?CreatedEndMonth','/main/project/history.html?CreatedEndDay'} = Date::Calc::Today();
-	} else {
-		@openprint::session{'/main/project/history.html?CreatedStartYear','/main/project/history.html?CreatedStartMonth','/main/project/history.html?CreatedStartDay'} = ssi::fix_date( @openprint::session{'/main/project/history.html?CreatedStartYear','/main/project/history.html?CreatedStartMonth','/main/project/history.html?CreatedStartDay'} );
-		@openprint::session{'/main/project/history.html?CreatedEndYear','/main/project/history.html?CreatedEndMonth','/main/project/history.html?CreatedEndDay'} = ssi::fix_date( @openprint::session{'/main/project/history.html?CreatedEndYear','/main/project/history.html?CreatedEndMonth','/main/project/history.html?CreatedEndDay'} );
-	} # end if
-	if ( ( ! @openprint::session{'/main/project/history.html?UpdatedStartYear'} ) or ( time - $openprint::session{'/main/project/history.html?lastupdated'} > 3600 ) ) {
-		@openprint::session{'/main/project/history.html?UpdatedStartYear','/main/project/history.html?UpdatedStartMonth','/main/project/history.html?UpdatedStartDay'} = Date::Calc::Add_Delta_Days( Date::Calc::Today(), -14 );
-		@openprint::session{'/main/project/history.html?UpdatedEndYear','/main/project/history.html?UpdatedEndMonth','/main/project/history.html?UpdatedEndDay'} = Date::Calc::Today();
-	} else {
-		@openprint::session{'/main/project/history.html?UpdatedStartYear','/main/project/history.html?UpdatedStartMonth','/main/project/history.html?UpdatedStartDay'} = ssi::fix_date( @openprint::session{'/main/project/history.html?UpdatedStartYear','/main/project/history.html?UpdatedStartMonth','/main/project/history.html?UpdatedStartDay'} );
-		@openprint::session{'/main/project/history.html?UpdatedEndYear','/main/project/history.html?UpdatedEndMonth','/main/project/history.html?UpdatedEndDay'} = ssi::fix_date( @openprint::session{'/main/project/history.html?UpdatedEndYear','/main/project/history.html?UpdatedEndMonth','/main/project/history.html?UpdatedEndDay'} );
-	} # end if
-
-    @$variable{'CreatedStartYears','CreatedStartMonths','CreatedStartDays'} = ssi::get_dates( $log, $dbh, @openprint::session{'/main/project/history.html?CreatedStartYear','/main/project/history.html?CreatedStartMonth','/main/project/history.html?CreatedStartDay'} );
-	@$variable{'CreatedEndYears','CreatedEndMonths','CreatedEndDays'} = ssi::get_dates( $log, $dbh, @openprint::session{'/main/project/history.html?CreatedEndYear','/main/project/history.html?CreatedEndMonth','/main/project/history.html?CreatedEndDay'} );
-
-    @$variable{'UpdatedStartYears','UpdatedStartMonths','UpdatedStartDays'} = ssi::get_dates( $log, $dbh, @openprint::session{'/main/project/history.html?UpdatedStartYear','/main/project/history.html?UpdatedStartMonth','/main/project/history.html?UpdatedStartDay'} );
-	@$variable{'UpdatedEndYears','UpdatedEndMonths','UpdatedEndDays'} = ssi::get_dates( $log, $dbh, @openprint::session{'/main/project/history.html?UpdatedEndYear','/main/project/history.html?UpdatedEndMonth','/main/project/history.html?UpdatedEndDay'} );
+			</li>
+			<li>
+				<label>Type</label>
+				<select id="type_id" name="type_id" onchange="load_projects();">
+					<option value="">All</option>
+					<? echo ( make_drop_down( openprint::ProjectType->dropdown( order=>'lower(name)' ), $session{'/main/project/history.html?type_id'} ); ) ?>
+				</select>
+			</li>
+			</ul>
+			</div>
+			<div class="rightColumn">
+			<ul>
+			<li>
+				<label>Creation Date</label>
+<? echo ( date_select_session( '/main/project/history.html', 'created_on_start', { onchange=>'load_projects();', with_today=>1 } ); ) ?>
+					to 
+<? echo ( date_select_session( '/main/project/history.html', 'created_on_end', { onchange=>'load_projects();', with_today=>1 } ); ) ?>
+			</li>
+			<li>
+				<label>Last Updated</label>
+<? echo ( date_select_session( '/main/project/history.html', 'updated_on_start', { onchange=>'load_projects();', with_today=>1 } ); ) ?>
+					to 
+<? echo ( date_select_session( '/main/project/history.html', 'updated_on_end', { onchange=>'load_projects();', with_today=>1 } ); ) ?>
+			</li>
+<? if ( sets::isin( $session{user_type},[ 'E', 'A' ] ) ) ?>
+			<li><label>Company</label>
+				<input type="text" onkeyup="filter_companies('company_id', {name:this.value,selected_id:get_ddm_value($('company_id'))});" class="filter" />
+				<select id="company_id" name="company_id" onchange="stop_filter_companies();load_projects();">
+					<option value="">All</option>
+<? echo ( make_drop_down( openprint::Company->dropdown(or=>{id=>$openprint::Company->id(),'last_project_id is null'=>0}), $session{'/main/project/history.html?company_id'} ) ) ?>
+				</select>
+			</li>
+<? eval ( 
+	$$variable{CSRdropdown} = openprint::User->dropdown( type=>['E','A'], 'usergroup any'=>['Sales'] );
 ) ?>
+<? if ( @{$$variable{CSRdropdown}} ) ?>
+			<li class="salesrep_id">
+				<label>Sales Reps</label>
+				<select name="salesrep_id" size="1">
+				<option value="">All</option>
+				<? echo ( make_drop_down( $$variable{CSRdropdown}, $session{$r->uri().'?salesrep_id'} ); ) ?>
+				</select>
+			</li>
+<? endif ( @{$$variable{CSRdropdown}} ) ?>
+	<? if ( openprint::Product->find_one() ) ?>
+			<li><label>Predefined</label>
+				<? echo ( radio( 'predefined', [ '1','Yes','0','No','','Both'], $session{'/main/project/history.html?predefined'}, { onclick=>'load_projects();' } ); ) ?>
+			</li>
+	<? endif ( openprint::Product->find_one() ) ?>
+<? endif ( sets::isin( $session{user_type},[ 'E', 'A' ] ) ) ?>
+<? eval ( 
+	$$variable{Users} = [ openprint::User->find(
+		# Defaults to currently logged in company
+		( $session{'/main/project/history.html?company_id'} ? ( company_id=>$session{'/main/project/history.html?company_id'} ) : () ),
+		order=>'lower(firstname),lower(lastname)' ) ] ) ?>
+<? if ( @{$$variable{Users}} > 1 ) ?>
+			<li><label>Created By</label>
+				<select name="user_id" onchange="load_projects();">
+					<option value="">All</option>
+					<? echo (
+						make_drop_down( [ map { $_->id(), $_->name() } @{$$variable{Users}} ], $session{'/main/project/history.html?user_id'} );
+					) ?>
+				</select>
+			</li>
+<? endif ( @{$$variable{Users}} > 1 ) ?>
+			<li><label>Contains</label>
+				<? echo ( ssi::select( openprint::ServiceType->dropdown(order=>'lower(name)'), $session{'/main/project/history.html?servicetype_id'}, { name=>'servicetype_id', prepend=>['','All'], onchange=>'load_projects();' } ); ) ?>
+			</li>
+			</ul>
 			</div>
-			<div style="float: left; width: 50%;">
-			<p>
-				<label>Creation Date:</label>
-				<span class="DateSelector">
-					<select name="CreatedStartDay" onchange="load_projects(this.form);"><?CreatedStartDays?></select>
-					<select name="CreatedStartMonth" onchange="setDaysDropDown(document.f1.CreatedStartYear.value,this.value,document.f1.CreatedStartDay,document.f1.CreatedStartDay.value); load_projects(this.form);"><?CreatedStartMonths?></select>
-					<select name="CreatedStartYear" onchange="setDaysDropDown(this.value,document.f1.CreatedStartMonth.value,document.f1.CreatedStartDay,document.f1.CreatedStartDay.value);load_projects(this.form);"><?CreatedStartYears?></select>
-					to 
-				</span>
-				<span class="DateSelector">
-					<select name="CreatedEndDay" onchange="load_projects(this.form);"><?CreatedEndDays?></select>
-					<select name="CreatedEndMonth" onchange="setDaysDropDown(this.form.CreatedEndYear.value,this.value,this.form.CreatedEndDay,this.form.CreatedEndDay.value);load_projects(this.form);"><?CreatedEndMonths?></select>
-					<select name="CreatedEndYear" onchange="setDaysDropDown(this.value,this.form.CreatedEndMonth.value,this.form.CreatedEndDay,this.form.CreatedEndDay.value);load_projects(this.form);"><?CreatedEndYears?></select>
-				</span>
-			</p>
-			<p>
-				<label>Last Updated:</label>
-				<span class="DateSelector">
-					<select name="UpdatedStartDay" onchange="load_projects(this.form);"><?UpdatedStartDays?></select>
-					<select name="UpdatedStartMonth" onchange="setDaysDropDown(this.form.UpdatedStartYear.value,this.value,this.form.UpdatedStartDay,this.form.UpdatedStartDay.value); load_projects(this.form);"><?UpdatedStartMonths?></select>
-					<select name="UpdatedStartYear" onchange="setDaysDropDown(this.value,this.form.UpdatedStartMonth.value,this.form.UpdatedStartDay,this.form.UpdatedStartDay.value);load_projects(this.form);"><?UpdatedStartYears?></select>
-					to 
-				</span>
-				<span class="DateSelector">
-					<select name="UpdatedEndDay" onchange="load_projects(this.form);"><?UpdatedEndDays?></select>
-					<select name="UpdatedEndMonth" onchange="setDaysDropDown(this.form.UpdatedEndYear.value,this.value,this.form.UpdatedEndDay,this.form.UpdatedEndDay.value);load_projects(this.form);"><?UpdatedEndMonths?></select>
-					<select name="UpdatedEndYear" onchange="setDaysDropDown(this.value,this.form.UpdatedEndMonth.value,this.form.UpdatedEndDay,this.form.UpdatedEndDay.value);load_projects(this.form);"><?UpdatedEndYears?></select>
-				</span>
-			</p>
 			</div>
+			<br class="spacer"/>
+			<p class="buttons">
+				<? echo ( join( "\n",
+					button( 'ShowResults', { onclick=>'f1.submit();', text=>'Show Results' } ),
+					button( 'Create', { href=>'create_edit.html', text=>'Create New' } ),
+					button( 'Reset', { onclick=>q`f1.btnFunction.value='Reset';f1.submit();`, text=>'Reset' } ),
+					button( 'Delete', { onclick=>'delete_confirm(document.f1);' } ),
+				); ) ?>
+			</p>
 		</fieldset>
+		<div id="ProjectList"><? include('_history.html') ?></div>
 	</div>
-		<div id="ProjectList"><!--#include virtual="_project_list.html"--></div>
-	</form>
-<? else ( $openprint::session{'user_id'} ) ?>
-	Only logged in customers have a project history.
-<? endif ( $openprint::session{'user_id'} ) ?>
+	</div>
+	<input type="hidden" name="btnFunction" />
+</form>
+<? else ( $session{user_id} ) ?>
+Only logged in customers have a project history.
+<? endif ( $session{user_id} ) ?>

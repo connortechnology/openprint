@@ -1,47 +1,65 @@
-<form name="f1" method="post" action="currency.html">
-	To set a currency conversion, select the destination currency and the rate, and click Set Conversion.  Existing conversions will be overwritten.
+<script type="text/javascript">
+	function set_conversion( from_id ) {
+		var form = $('f1');
+		var to_id = get_ddm_value(form.elements['to-'+from_id]);
+
+		if ( ! form.elements['amount-'+from_id].value ) {
+			alert('Please enter an amount.');
+			form.elements['amount-'+from_id].focus();
+			return;
+		}
+
+		new Ajax.Updater( 'Conversions'+from_id, '_currency_conversions.html', { 
+				parameters: { 	
+					currency_id: from_id, 
+					to_id: to_id, 
+					amount: form.elements['amount-'+from_id].value, 
+					btnFunction: 'Add'
+				}, onSuccess: function(){ 
+						new Ajax.Updater( 'Conversions'+to_id, '_currency_conversions.html', { parameters: { currency_id: to_id } } );
+					} 
+			});
+	} // end function set_conversion
+</script>
+<form id="f1" name="f1" method="post" action="currency.html">
+	To set a currency conversion, select the destination currency and the rate, and click Set Conversion. The opposite conversion will be automatically calculated.
 	<table class="List">
 		<tr>
-			<th width="100" align="left">Long Name</th>
-			<th width="75" align="left">Short Name</th>
-			<th width="50" align="left">Symbol</th>
-			<th align="left">Conversions</th>
+			<th class="name">Long Name</th>
+			<th class="short">Short Name</th>
+			<th class="symbol">Symbol</th>
+			<th class="conversions">Conversions</th>
 		</tr>
-		<? eval ( @{$$variable{'Currencies'}} = openprint::Currency::find('order'=>'lower(name)'); ) ?>
-		<? while ( $$variable{'Currency'} = shift @{$$variable{'Currencies'}}; ) ?>
-		<tr<?rowclass?>> 
-			<td valign="top"> 
-				<input type="text" name="strName<? echo ( $$variable{'Currency'}->id(); ) ?>" value="<? echo ( $$variable{'Currency'}->name(); ) ?>" />
-			</td>
-			<td valign="top"> 
-				<input type="text" name="strShort<? echo ( $$variable{'Currency'}->id(); ) ?>" value="<? echo ( $$variable{'Currency'}->short(); ) ?>" />
-			</td>
-			<td valign="top"> 
-				<input type="text" name="strSymbol<? echo ( $$variable{'Currency'}->id(); ) ?>" value="<? echo ( $$variable{'Currency'}->symbol(); ) ?>" />
-			</td>
-			<td valign="top">
-				<div id="Conversions<? echo ( $$variable{'Currency'}->id(); ) ?>">
-				<!--#include virtual="_currency_conversions.html"-->
-				</div>
-			</td>
-		</tr>
-		<? eval ( $$variable{'rowclass'} = $$variable{'rowclass'} ? '' : ' class="colRow"'; ) ?>
-		<? endwhile ( $$variable{'Currency'} = shift @{$$variable{'Currencies'}}; ) ?>
-		<tr><th colspan="4"></th></tr>
-		<tr<?rowclass?>> 
-			<td colspan="4"><b>Add a Currency:</b></td>
+		<? echo (
+			my $html;
+			my $rowclass;
+			foreach my $Currency ( openprint::Currency->find('order'=>'lower(name)') ) {
+				$html .= sprintf(q`
+		<tr%1$s> 
+			<td class="name"><input type="text" name="name-%2$d" value="%3$s" /></td>
+			<td class="short"><input type="text" name="short-%2$d" value="%4$s" /></td>
+			<td class="symbol"><input type="text" name="symbol-%2$d" value="%5$s" /></td>
+			<td class="conversions" id="Conversions%2$d">%6$s</td>
+		</tr>`, $rowclass, @$Currency{'id','name','short','symbol'},
+				include('/administrator/managerial/_currency_conversions.html', { Currency=>$Currency } ),
+				);
+			} # end foreach
+			return $html
+		) ?>	
+		<tr class="totals"> 
+			<td colspan="4"><b>Add a Currency</b></td>
 		</tr>
 		<tr> 
-			<td><input type="text" name="strName" /></td>
-			<td><input type="text" name="strShort" /></td>
-			<td><input type="text" name="strSymbol" /></td>
+			<td class="name"><input type="text" name="name"/></td>
+			<td class="short"><input type="text" name="short"/></td>
+			<td class="symbol"><input type="text" name="symbol"/></td>
 			<td>&nbsp;</td>
 		</tr>
 	</table>
 	<p class="buttons">
-			<? echo ( join( '',
-				ssi::writeButton( $log, $dbh, 'Submit','submit.gif',"f1.btnFunction.value='Save';f1.submit();",'','Submit' ),
-				ssi::writeButton( $log, $dbh, 'Reset','reset.gif',"f1.reset();",'','Reset' ),
+			<? echo ( join( "\n",
+				button( 'Submit', { 'onclick'=>"f1.btnFunction.value='Save';f1.submit();"} ),
+				button( 'Reset', { 'onclick'=>"f1.reset();" } ),
 			); ) ?>
 	</p>
 	<input type="hidden" name="btnFunction"/>

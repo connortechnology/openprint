@@ -2,85 +2,130 @@
 <h1>Orders</h1>
 <h2>Information</h2>
 </div>
-<link href="/css/order.css" rel="stylesheet" type="text/css"/>
-<script type="text/javascript">
-<!--
-	function radio_select_by_value( radio, value ) {
-		for ( var index = 0; index < radio.length; index += 1 ) {
-			if ( radio[index].value == value ) {
-				radio[index].checked = true;
-				return;
-			} // end if
-		} // end for
-	} // end function
-	function ddmUsers_onChange( formName ) {
-		var form = getFormObj(formName);
-		jsrsExecute( '/jsrs.htm', cbFillUserFor, 'openprint::order::fill_user_info', form.ddmUsers.options[form.ddmUsers.selectedIndex].value );
-	} // end function
-	function cbFillUserFor( results ) {
-		var form = getFormObj('f1');
-		var pairs = results.split('|');
-		for ( var i = 0; i < pairs.length; i += 1 ){
-			if ( pairs[i].indexOf('~') != -1 ) {
-				var data = pairs[i].split('~');
-
-				if ( form.elements[data[0]] ) {
-					if ( form.elements[data[0]].type == 'select-one' ) {
-						ddm_select_by_value( form.elements[data[0]], data[1] );
-					} else if ( form.elements[data[0]].type == 'text' ) {
-						form.elements[data[0]].value = data[1];
-					} else if ( form.elements[data[0]].type == 'hidden' ) {
-						form.elements[data[0]].value = data[1];
-					} else {
-						radio_select_by_value( form.elements[data[0]], data[1] );
-					} // end if
-				} // end if
-			} // end if
-		} // end for
-	} // end function
--->
-</script>
-<div class="Order">
-	<div class="error"><?error?><?Error?></div>
-
-	<form method="post" name="f1" action="submit.html">
-		If you have a purchase order number please enter it below.<br/>
-		<br/>
-		(Fields marked with an * are required.)
-		<br/>
-		<br/>
-		<div style="float: left; width: 49%; min-width: 320px;">
-			<fieldset>
-				<p> 
-					<label>Purchase Order:</label>
-					<input type="text" name="txtPurchaseOrder" value="<?txtPurchaseOrder?>" />
-				</p>
-			</fieldset>
-			<!--#include virtual="_contact_information.html"-->
-		</div>
-		<div style="float: right; width: 49%; min-width: 320px;">
+<script type="text/javascript" src="<? hash_link( /main/order/order.js ) ?>"></script>
+<div class="Order"><div class="Information">
+<?include('/includes/error_reporting.html') ?>
+	<form method="post" id="f1" name="f1" action="/main/order/submit.html">
+		<div class="Header">
+			<div id="Information">
+				<fieldset>
+					<div class="content">
+						<ul>
+							<li class="order_id"><label>Order ID</label><? echo ( $$variable{Order}->id() ) ?></li>
+							<li class="po_id"> 
+								<label>Purchase Order</label>
+								<input type="text" id="txtPurchaseOrder" name="txtPurchaseOrder" value="<? echo ( $$variable{Order}->po() ) ?>" />
+							</li>
+							<? echo (
+								my $html;
+								my @Suppliers = openprint::Company->find(offers_credit=>1,order=>'id');
+								if ( @Suppliers > 1 ) {
+									if ( sets::isin($session{user_type}, ['A','E'] ) ) {
+										$html .= '<li class="supplier"><label>Supplier</label><select name="supplier_id">';
+										$html .= make_drop_down( [ map { $_->id(), $_->name() } @Suppliers ], $$variable{Order}->supplier_id() );
+										$html .= '</select></li>';
+									} else {
+										$html .= input( type=>'hidden', name=>'supplier_id', value=>$Suppliers[0]->id() );
+									} # end if user_type
+								} # end if @Suppliers > 1 
+								return $html;
+							) ?>
+							<? if ( (! $session{company_id}) and sets::isin($session{user_type}, ['A','E'] ) ) ?>
+							<li class="company_id">
+								<label>Company</label>
+								<span id="CompanyDropDown">
+								<?include('_company_dropdown.html') ?>
+								</span>
+								<? echo ( button( 'AddFromBelow', { onclick=>'save_company();', text=>'Save Company' } ); ) ?>
+							</li>
+							<? endif ( (! $session{company_id}) and sets::isin($session{user_type}, ['A','E'] ) ) ?>
+						</ul>
+					</div>
+				</fieldset>
+			</div><!--Information-->
+			<div id="BillingInformation"><?include(_billing_information.html) ?></div>
+<? if ( $config{PaymentOnOrderInformation} ) ?>
+			<div id="PaymentOptions">
+			<?include(_payment_options.html) ?>
+			</div>
+<? endif ( $config{PaymentOnOrderInformation} ) ?>
 			<? eval ( 
-				@{$$variable{'PROJECTS'}} = sql::execute( $log, $dbh, q{SELECT lngProjectIndex, strProjectReference, intQuantityIndex, shippingtype, intQuantity1, intQuantity2, intQUantity3 FROM Order_Contents, tbl_Projects WHERE lngProjectIndex=Index AND OrderIndex=?}, $$variable{'Order'}->id() );
-				@{$$variable{'PRODUCTS'}} = $$variable{'Order'}->Products();
- ) ?>
-			<? if ( @{$$variable{'PROJECTS'}} or @{$$variable{'PRODUCTS'}} ) ?>
-				<? while ( @$variable{'ProjectIndex','Reference','SelectedQuantityIndex','ShippingType','Quantity1','Quantity2','Quantity3'} = splice @{$$variable{'PROJECTS'}},0,7; ) ?>
-				<? eval ( $$variable{'Project'} = new openprint::Project( $$variable{'ProjectIndex'} ); ) ?>
-				<!--#include virtual="_project_information.html"-->
-				<? endwhile ( @$variable{'ProjectIndex','Reference','SelectedQuantityIndex','ShippingType','Quantity1','Quantity2','Quantity3'} = splice @{$$variable{'PROJECTS'}},0,7; ) ?>
-				<? if ( @{$$variable{'PRODUCTS'}} ) ?>
-				<!--#include virtual="_product_information.html"-->
-				<? endif ( @{$$variable{'PRODUCTS'}} ) ?>
-			<? else ( @{$$variable{'PROJECTS'}} or @{$$variable{'PRODUCTS'}} ) ?>
+				$$variable{Projects} = [ $$variable{Order}->Projects() ];
+				$$variable{Products} = [ $$variable{Order}->Products() ];
+				@{$$variable{Contents}} = ( @{$$variable{Projects}}, @{$$variable{Products}} );
+			) ?>
+<? if ( @{$$variable{Contents}} == 1 ) ?>
+			<div id="ShippingInformation">
+				<? echo (
+					# If there is only 1 thing in the order, then we can condense
+					$$variable{Project} = $$variable{Contents}[0]->Project();
+					my $html;
+					if ( $$variable{Project}->quantity_indexes() > 1 ) {
+						$html .= '<fieldset><legend>Select Quantity</legend><div class="content"><ul>';
+						$html .= include( '/main/order/_quantity_select.html' ).'</ul></div></fieldset>';
+					} else {
+						$html .= input( type=>'hidden', name=>'rdbQuantity'.$$variable{Project}->id(), value=>$$variable{Project}->ordered_quantity_index() );
+					} # end if
+					$html .= include( '/main/order/_shipping_type_select.html' );
+					return $html;
+				) ?>
+			</div><!--Shipping-->
+<? endif ( @{$$variable{Contents}} == 1 ) ?>
+		</div><!--Header-->
+		<div id="Contents">
+			<? if ( ! @{$$variable{Contents}} ) ?>
 				<p>This order appears to be empty.</p>
-			<? endif ( @{$$variable{'PROJECTS'}} or @{$$variable{'PRODUCTS'}} ) ?>
+			<? endif ( ! @{$$variable{Contents}} ) ?>
+				<? if ( @{$$variable{Projects}} ) ?>
+				<div id="Projects">
+					<? echo (
+						my $html;
+						foreach my $Project ( @{$$variable{Projects}} ) {
+							$$variable{Project} = $Project;
+							$html .= '<div class="Project"><h3 class="project_id">'.$Project->link_to('Project '.$Project->id() ).'</h3><p class="buttons">';
+							$html .= button( 'Edit'.$$Project{id}, { href=>$Project->url_to(), text=>'Edit' } );
+							$html .= button( 'Remove'.$$Project{id}, { href=>"information.html?order_id=$$variable{order_id}&amp;action=remove&amp;project_id=$$Project{id}", text=>'Remove' } );
+							$html .= '</p><br class="spacer"/>';
+							$html .= include( '/main/order/_project_information.html' );
+							$html .= '</div>';
+						} # end foreach
+						return $html;
+					) ?>
+				</div>
+				<? endif ( @{$$variable{Projects}} ) ?>
+<?if(openprint::Product->find_one())?>
+				<div id="Products">	
+					<?include(_product_list_edit.html)?>
+					<p class="buttons"><?echo(button('AddProduct', { onclick=>qq`popup_window('_add_product_popup.html', { order_id: $$variable{Order}{id} } );` } ); )?></p>
+				</div>
+<?endif(openprint::Product->find_one())?>
+		</div><!--Contents-->
+		<div id="Totals">
+			<ul>
+				<li id="SubTotal">
+					<label>Sub Total</label>
+					<? echo ( openprint::Currency::format( $$variable{Order}->Currency()->convert_from( $$variable{Order}->subtotal() ) ); ) ?>
+				</li>
+			</ul>
 		</div>
-		<br class="spacer"/>
-		<div style="float: right;">
-			<? echo ( ssi::writeButton( $log, $dbh, 'SaveAndContinue','save_and_continue.gif','f1.submit();','','Save And Continue' ); ) ?>
-		</div>
-		<input type="hidden" name="OrderID" value="<?OrderID?>"/>
+		<p class="buttons">
+			<? echo ( 
+				my $html;
+				my @Projects = $$variable{Order}->Projects();
+				if ( @Projects ) {
+					my $Project = $Projects[0];
+					if ( $Project->mode() eq 'Simple' ) {
+						$html .= button( 'Back',{ href=>'/content/'.$Project->Type()->url().'?project_id='.$$Project{id}} );
+					} else {
+						$html .= button( 'Back', { href=>'/main/project/view.html?ProjectIndex='.$$Project{id} } );
+					} 
+				} # end if
+				$html .= button( 'AddProject', { href=>'/main/project/history.html', text=>'Add Project From History' } ) if $config{OrderMode} ne 'Simple';
+				$html .= button( 'SaveAndContinue', { onclick=>'f1.submit();', text=>'Save And Continue' } ); 
+				return $html;
+			) ?>
+		</p>
+		<input type="hidden" name="order_id" value="<?order_id?>"/>
 		<input type="hidden" name="btnFunction" value="Continue"/>
 	</form>
-</div>
-<br class="spacer"/>
+</div><!--Information--></div><!--class=Order-->

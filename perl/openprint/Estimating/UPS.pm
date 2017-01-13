@@ -7,12 +7,12 @@
 #
 # This program is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.	See the
 # GNU General Public License for more details.
 #
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, write to the Free Software
-# Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA
+# Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA	02110-1301, USA
 
 package openprint::Estimating::UPS;
 use strict;
@@ -20,130 +20,144 @@ use strict;
 
 require XML::LibXML;
 require ups;
-require sql;
 require openprint::service;
 require openprint::Project;
 
-my $debug = 1;
+use vars qw( $log $dbh %variable %config %session );
+*variable = \%openprint::variable;
+*session = \%openprint::session;
+*config = \%openprint::config;
+*log = \$openprint::log;
+*dbh = \$openprint::dbh;
 
-my @variables = (
-	'txtQuantity1', 'txtQuantity2', 'txtQuantity3',
-	'txtPrice1', 'txtPrice2', 'txtPrice3',
-	'txtPackageQuantity1', 'txtPackageQuantity2', 'txtPackageQuantity3',
-	'chkOverridePackageQuantity',
-	'txtTotalWeight1', 'txtTotalWeight2', 'txtTotalWeight3',
-	'txtPackageWeight',
-	'Address1','Address2','City','StateProvince','Country','PostalCode','Phone','Fax',
-	'ddmPickupType','ddmServiceType',
+use constant DEBUG => 0;
+
+my %variables = (
+	'txtQuantity1'=>['save','output'], 'txtQuantity2'=>['save','output'], 'txtQuantity3'=>['save','output'],
+	'txtPrice1'=>['save','output'], 'txtPrice2'=>['save','output'], 'txtPrice3'=>['save','output'],
+	'txtPackageQuantity1'=>['save','output'], 'txtPackageQuantity2'=>['save','output'], 'txtPackageQuantity3'=>['save','output'],
+	'chkOverridePackageQuantity'=>['save'],
+	'txtTotalWeight1'=>['save','output'], 'txtTotalWeight2'=>['save','output'], 'txtTotalWeight3'=>['save','output'],
+	'txtPackageWeight'=>['save','output'],
+	'ddmPickupType'=>['save','output'],'ddmServiceType'=>['save','output'],
+	'alert'=>['save','output'],'Status'=>['output'],
+	'FromCompany'=>['save'],'FromAddress1'=>['save'],'FromAddress2'=>['save'],'FromCity'=>['save'],'FromStateProvince'=>['save'],'FromCountry'=>['save'],'FromPostalCode'=>['save'],'FromPhone'=>['save'],'FromFax'=>['save'],'FromEmail'=>['save'],
+	'ToCompany'=>['save'],'ToAddress1'=>['save'],'ToAddress2'=>['save'],'ToCity'=>['save'],'ToStateProvince'=>['save'],'ToCountry'=>['save'],'ToPostalCode'=>['save'],'ToPhone'=>['save'],'ToFax'=>['save'],'ToEmail'=>['save'],
+	'ServiceTypeDiv'=>['output','save'],'PickupTypeDiv'=>['output','save'],
+	'hdnBreakdown1'=>['output'], 'hdnBreakdown2'=>['output'], 'hdnBreakdown3'=>['output'],
+	'NeedPlainCartons'=>['output'],
 );
-
-my @outputs = (
-	'ServiceTypeDiv','PickupTypeDiv',
-	'txtPackageWeight',
-	'txtPackageQuantity1', 'txtPackageQuantity2', 'txtPackageQuantity3',
-	'txtTotalWeight1', 'txtTotalWeight2', 'txtTotalWeight3',
-	'txtPrice1', 'txtPrice2', 'txtPrice3',
-	'alert', 'Status',
-	'hdnBreakdown1', 'hdnBreakdown2', 'hdnBreakdown3',
-	'NeedPlainCartons',
-);
-
-sub outputs {
-	return @outputs;
-}
 
 sub variables {
-    return @variables;
+	my @v;
+	foreach my $k ( keys %variables ) {
+		push @v, $k, if sets::isin( 'save', $variables{$k} );
+	} # end foreach;
+	return @v;
 }
 
+sub no_outputs {
+	my @v;
+	foreach my $k ( keys %variables ) {
+		push @v, $k, if ! sets::isin( 'output', $variables{$k} );
+	} # end foreach;
+	return @v;
+}
 
-sub calc {
-	my ( $log, $dbh, $variable, $project_index, $service_index, $specs ) = @_;
-
-	my $status = 'calculated';
+sub get_ratings {
+	my ( $Project, $service_index, $specs ) = @_;
 
 $log->debug("UPS!!!!!!!!!!");
-	# Currently there is no equipmnet for collating
-	$$specs{'alert'} = '';
 
-	@$specs{'txtPrice1','txtPrice2','txtPrice3'} = ('','','');
+	my $services = $Project->services();
 
-	my $Project = new openprint::Project( $project_index );
-	my %services = $Project->get_services();
-
-	if ( ! $services{'PlainCartons'} ) {
+	if ( ! ( $$services{'PlainCartons'} and @{$$services{'PlainCartons'}} ) ) {
 		$$specs{'alert'} = 'UPS Shipping requires that the project be packed in cartons.';
 		$$specs{'NeedPlainCartons'} = 1;
-		return 'uncalculated';
+		return $$specs{'Status'} = 'uncalculated';
 	} else {
 		$$specs{'NeedPlainCartons'} = 0;
 	} # end if
-	my $carton_status = openprint::service::get_status( $log, $dbh, $services{'PlainCartons'}[0], $project_index );
+	my $carton_status = openprint::service::status( $Project->id(), $$services{'PlainCartons'}[0] );
 	my $carton_specs;
 $log->debug("Carton Status: $carton_status");
 	if ( sets::isin( $carton_status ,'', 'uncalculated' ) ) {
-		$carton_specs = openprint::service::internal_calc( $log, $dbh, $variable, $project_index, $services{'PlainCartons'}[0], 'Skids' );
+		$carton_specs = openprint::service::internal_calc( $log, $dbh, \%variable, $Project->id(), $$services{'PlainCartons'}[0], 'Skids' );
 	} else {
-		$carton_specs = openprint::service::get_specs_ref( $project_index, $services{'PlainCartons'}[0] );
+		$carton_specs = openprint::service::get_specs_ref( $Project, $$services{'PlainCartons'}[0] );
+	} # end if
+	foreach my $qty_i ( $Project->quantity_indexes() ) {
+		if ( ! $$carton_specs{"txtItemsPerPackage$qty_i"} ) {
+			$$specs{'alert'} .= "Unable to determine the number of items in each package for quantity $qty_i.";
+		} # end if
+	} # end foreach
+	if ( $$specs{'alert'} ) {
+		return $$specs{'Status'} = 'uncalculated';
 	} # end if
 
 	if ( $$specs{'chkOverridePackageWeight'} ne 'Y' ) {
 		# Load from skids or cartons
-		$$specs{"txtPackageWeight"} = $$carton_specs{"txtPackageWeight"};
+		foreach my $qty_i ( $Project->quantity_indexes() ) {
+			$$specs{"txtPackageWeight"} = $$carton_specs{"txtPackageWeight$qty_i"};
+			last;
+		} # end foreach qty
 	} # end if
 
 	my %packages;
 	my $qty_index;
-	foreach my $qty_i ( 1 .. 3 ) {
-		$$specs{"txtQuantity$qty_index"} = $Project->quantity($qty_index) if ! $$specs{"txtQuantity$qty_index"};
-		next if ! $$specs{'txtQuantity'.$qty_i};
-		$$specs{'hdnBreakdown'.$qty_index} = '';
+	foreach my $qty_i ( $Project->quantity_indexes() ) {
+		$$specs{"txtQuantity$qty_i"} = $Project->quantity($qty_i) if ! $$specs{"txtQuantity$qty_i"};
+		$$specs{'hdnBreakdown'.$qty_i} = '';
 		if ( $$specs{"chkOverridePackageQuantity"} ne 'Y' ) {
-			@outputs = sets::union( @outputs, 'chkOverridePackageQuantity' );	
 			$$specs{"txtPackageQuantity$qty_i"} = $$carton_specs{"txtPackageQuantity$qty_i"};
-			my $full_cartons = int ( $$specs{'txtQuantity'.$qty_i} / $$carton_specs{'txtItemsPerPackage'} );
-			my $remaining = $$specs{'txtQuantity'.$qty_i} % $$carton_specs{'txtItemsPerPackage'};
+			my $full_cartons = int ( $$specs{'txtQuantity'.$qty_i} / $$carton_specs{"txtItemsPerPackage$qty_i"} );
+			my $remaining = $$specs{'txtQuantity'.$qty_i} % $$carton_specs{"txtItemsPerPackage$qty_i"};
 			$$specs{"txtTotalWeight$qty_i"} = $full_cartons * $$specs{"txtPackageWeight"} + $remaining * $$carton_specs{'txtFinishedWeight'};;
 		} else {
-			@outputs = sets::exclude( [ 'chkOverridePackageQuantity' ], \@outputs );
 			$$specs{"txtTotalWeight$qty_i"} = $$specs{"txtPackageWeight"} * $$specs{"txtPackageQuantity$qty_i"};
 		} # end if
 		$qty_index = $qty_i if $$specs{"txtPackageQuantity$qty_i"} and ! $qty_index;
 	} # end foreach
-
-	$$specs{'PostalCode'} =~ s/[^0-9A-Za-z]//g;
-	if ( ! $$specs{'PostalCode'} ) {
+	$$specs{'ToPostalCode'} =~ s/[^0-9A-Za-z]//g;
+	if ( ! $$specs{'ToPostalCode'} ) {
 		$$specs{'alert'} = 'Please enter your postal code.';
-		return 'uncalculated';
-	} elsif ( length $$specs{'PostalCode'} < 4 ) {
+		return $$specs{'Status'} = 'uncalculated';
+	} elsif ( length $$specs{'ToPostalCode'} < 4 ) {
 		$$specs{'alert'} = 'Invalid Postal/ZIP Code.';
-		return 'uncalculated';
+		return $$specs{'Status'} = 'uncalculated';
 	} # end if
 
 	my %ups;
-	my $access_code = $openprint::config{'UPSAccessCode'};
-	my $user_id = $openprint::config{'UPSUserID'};
-	my $password = $openprint::config{'UPSPassword'};
+	my $access_code = $config{'UPSAccessCode'};
+	my $user_id = $config{'UPSUserID'};
+	my $password = $config{'UPSPassword'};
 	my $accessRequest = ups::createAccessRequest( $access_code, $user_id, $password );
 
-	my %shipping_fields = (
-			'ShipperCity'           =>  'City',
-			'ShipperStateProvince'  =>  'StateProvince',
-			'ShipperCountry'        =>  'Country',
-			'ShipperPostalCode'     =>  'PostalCode',
-			);
-	my ( $supplier_id ) = sql::execute( $log, $dbh, q{SELECT Index FROM Company WHERE ysnSupplier='Y' ORDER BY Index LIMIT 1} );
-	my $supplier = new openprint::obj_customer( $log, $dbh, $supplier_id );
-	@ups{ keys %shipping_fields } = $supplier->load_shipping( @shipping_fields{ keys %shipping_fields } );
-	@ups{'ShipToPostalCode', 'ShipToCity', 'ShipToStateProvince', 'ShipToCountry','PickupType','ServiceType'} = 
-		@$specs{'PostalCode','City','StateProvince','Country','ddmPickupType','ddmServiceType'};
+	my $Supplier = openprint::Company->find_one('supplier'=>'Y','order'=>'id');
+	if ( $Supplier ) {
+		my %shipping_fields = (
+				'ShipperCity'			=>	'City',
+				'ShipperStateProvince'	=>	'StateProvince',
+				'ShipperCountry'		=>	'Country',
+				'ShipperPostalCode'	 =>	'PostalCode',
+				);
+
+		@ups{ keys %shipping_fields } = $Supplier->load_shipping( @shipping_fields{ keys %shipping_fields } );
+		$ups{ShipperCity} = $Supplier->city() if ! $ups{ShipperCity};
+		$ups{ShipperStateProvince} = $Supplier->state() if ! $ups{ShipperStateProvince};
+		$ups{ShipperCountry} = $Supplier->country() if ! $ups{ShipperCountry};
+		$ups{ShipperPostalCode} = $Supplier->postalcode() if ! $ups{ShipperPostalCode};
+
+	} # end if
+	@ups{'ShipToPostalCode', 'ShipToCity', 'ShipToStateProvince', 'ShipToCountry'} = 
+		@$specs{'ToPostalCode','ToCity','ToStateProvince','ToCountry'};
 
 	# Try to auto-fill as many of the ShipTo fields as we can
-	if ( ! ( $$specs{'PostalCode'} and $$specs{'City'} and $$specs{'StateProvince'} and $$specs{'Country'} ) ) {
+	if ( ! ( $$specs{'ToPostalCode'} and $$specs{'ToCity'} and $$specs{'ToStateProvince'} and $$specs{'ToCountry'} ) ) {
 
 		# If we are logged in, try to load from shipping, then from basic data
-		if ( $openprint::session{'company_id'} ) {
-			my $Company = new openprint::obj_customer( $log, $dbh, $openprint::session{'company_id'} );
+		if ( $session{'company_id'} ) {
+			my $Company = new openprint::Company( $session{'company_id'} );
 			my ( $city, $state, $country, $postalcode ) = $Company->load_shipping( 'City','StateProvince','Country','PostalCode' );
 			$ups{'ShipToCity'} = $city if ! $ups{'ShipToCity'};
 			$ups{'ShipToStateProvince'} = $state if ! $ups{'ShipToStateProvince'};
@@ -151,7 +165,7 @@ $log->debug("Carton Status: $carton_status");
 			$ups{'ShipToPostalCode'} = $postalcode if ! $ups{'ShipToPostalCode'};
 		} # end if
 
-		$ups{'ShipToCountry'} = $openprint::session{'Country'} if ! $ups{'ShipToCountry'};
+		$ups{'ShipToCountry'} = $session{'Country'} if ! $ups{'ShipToCountry'};
 	} # end if
 
 	# Go Shopping
@@ -162,23 +176,57 @@ $log->debug("Carton Status: $carton_status");
 	my $rssRequest = ups::createShoppingRequest(%ups);
 	my $response = ups::sendRequest( $log, 'https://www.ups.com/ups.app/xml/Rate', $accessRequest.$rssRequest );
 	if ( $response eq '' ) {
-		$$specs{'alert'} = 'Could not connect to ups.com.  We were unable to obtain a shipping estimate. Please select an alternate shipping method, or wait five minutes and try again.';
-		return 'uncalculated';
+		return;
 	} # end if
 	my $parser = XML::LibXML->new();
 	my $doc = $parser->parse_string($response);
 	$log->error( "Error parsing: " . $@ ) if $@;
 	my %upsResponse;
+	$upsResponse{'UPS'} = \%ups;
+	$upsResponse{'AccessRequest'} = $accessRequest;
 	ups::extract_RSS( $log, \%upsResponse, $doc );
-	if ( $upsResponse{'UPSErrorDescription'} ) {
-		$$specs{'alert'} = "Unable to retrieve available service types.  UPS returned the following error:\n$upsResponse{'UPSErrorDescription'}";
-		return 'uncalculated';
+	return %upsResponse;
+} # end sub get_ratings
+
+sub calc {
+	my ( $log, $dbh, $variable, $project_index, $service_index, $specs ) = @_;
+
+	my $status = 'calculated';
+	$$specs{'alert'} = '';
+
+	@$specs{'txtPrice1','txtPrice2','txtPrice3'} = ('','','');
+
+	my $Project = new openprint::Project( $project_index );
+	my $services = $Project->services();
+
+    if ( ! ( $$services{'PlainCartons'} and @{$$services{'PlainCartons'}} ) ) {
+        $$specs{'alert'} = 'UPS Shipping requires that the project be packed in cartons.';
+        $$specs{'NeedPlainCartons'} = 1;
+        return $$specs{'Status'} = 'uncalculated';
+    } else {
+        $$specs{'NeedPlainCartons'} = 0;
+    } # end if
+
+	my %upsResponse = get_ratings( $Project, $service_index, $specs );
+	if ( ! %upsResponse ) {
+		$$specs{'alert'} = 'Could not connect to ups.com.	We were unable to obtain a shipping estimate. Please select an alternate shipping method, or wait five minutes and try again.';
+		return $$specs{'Status'} = 'uncalculated';
+	} elsif ( $upsResponse{'UPSErrorDescription'} ) {
+		$$specs{'alert'} = "Unable to retrieve available service types.	UPS returned the following error:\n$upsResponse{'UPSErrorDescription'}";
+		return $$specs{'Status'} = 'uncalculated';
 	} # end if
+	my $ups = $upsResponse{'UPS'};
+	my $accessRequest = $upsResponse{'AccessRequest'};
+
+	my $services = $Project->services();
+	my $carton_status = openprint::service::status( $Project->id(), $$services{'PlainCartons'}[0] );
+	# Will have already been calculated in get_ratings
+	my $carton_specs = openprint::service::get_specs_ref( $Project, $$services{'PlainCartons'}[0] );
 
 	my %bestService;
-	my %services;
+	my %rated_services;
 	while ( my ( $service, $price ) = splice @{$upsResponse{'RatedShipments'}}, 0, 2 ) {
-		$$specs{'hdnBreakdown'.$qty_index} .= ups::get_service_name($service).": $price\n";
+		#$$specs{'hdnBreakdown'.$qty_index} .= ups::get_service_name($service).": $price\n";
 		if ( $$specs{'ddmServiceType'} ) {
 			if ( $$specs{'ddmServiceType'} == $service ) {
 				$bestService{'Price'} = $price;
@@ -190,62 +238,57 @@ $log->debug("Carton Status: $carton_status");
 				$bestService{'Service'} = $service;
 			} # end if
 		} # end if
-		$services{$service} = $price;
+		$rated_services{$service} = $price;
 	} # end while
 	if ( ! $$specs{'ddmServiceType'} ) {
-		$log->debug("Choosing  $$specs{'ddmServiceType'} as the ServiceType") if $debug;
+		$log->debug("Choosing	$bestService{'Service'} as the ServiceType") if DEBUG;
 		$$specs{'ddmServiceType'} = $bestService{'Service'};
 	} # end if
 	if ( ! $$specs{'ddmPickupType'} ) {
 		$$specs{'ddmPickupType'} = ups::get_pickup_type('One Time Pickup');
 	} # end if
-	@ups{'PickupType','ServiceType'} = @$specs{'ddmPickupType','ddmServiceType'};
-
-	$$specs{'ServiceTypeDiv'} = qq{<select name="ddmServiceType" onfocus="on(this.options[this.selectedIndex]);on(this);" onblur="off(this.options[this.selectedIndex]);off(this);" onChange="calc(this.form.name);"><option value=""> Select </option>};
-	foreach my $service ( keys %services ) {
-		$$specs{'ServiceTypeDiv'} .= qq{<option value="$service"} . ( $$specs{'ddmServiceType'} == $service ? ' selected' : '' ) .'>'.ups::get_service_name( $service ) . '</option>';
-	} # end foreach
+	@$ups{'PickupType','ServiceType'} = @$specs{'ddmPickupType','ddmServiceType'};
+$log->debug("Pickup: $$specs{'ddmPickupType'} Service: $$specs{'ddmServiceType'}");
+	$$specs{'ServiceTypeDiv'} = qq{<select name="ddmServiceType" onchange="calc(this.form.name);"><option value=""> Select </option>};
+	$$specs{'ServiceTypeDiv'} .= ssi::make_drop_down( [ map { $_, ups::get_service_name( $_ ) } keys %rated_services ], $$specs{'ddmServiceType'} );
 	$$specs{'ServiceTypeDiv'} .= '</select>';
 
-	$$specs{'PickupTypeDiv'} = qq{<select name="ddmPickupType" onfocus="on(this.options[this.selectedIndex]);on(this);" onblur="off(this.options[this.selectedIndex]);off(this);" onChange="calc(this.form.name);"><option value=""> Select </option>};
-	foreach my $pickup ( ups::get_pickup_types() ) {
-		$$specs{'PickupTypeDiv'} .= sprintf('<option value="%s"%s>%s</option>',ups::get_pickup_type( $pickup ), $$specs{'ddmPickupType'} == ups::get_pickup_type($pickup) ? ' selected' : '', $pickup );
-	} # end while
+	$$specs{'PickupTypeDiv'} = qq{<select name="ddmPickupType" onchange="calc(this.form.name);"><option value=""> Select </option>};
+	$$specs{'PickupTypeDiv'} .= ssi::make_drop_down( [ map { ups::get_pickup_type( $_ ), $_ } ups::get_pickup_types() ], $$specs{'ddmPickupType'} );
 	$$specs{'PickupTypeDiv'} .= '</select>';
 
-	foreach my $qty_index ( 1 .. 3 ) {
+	foreach my $qty_index ( $Project->quantity_indexes() ) {
 		next if ! $$specs{"txtQuantity$qty_index"};
 		next if ! $$specs{"txtPackageQuantity$qty_index"};
 		my %bestPrice;
 
 		if ( $$specs{'ddmPickupType'} and $$specs{'ddmServiceType'} ) {
-			@{$ups{'Packages'}} = ();
+			@{$$ups{'Packages'}} = ();
 
 			if ( $$specs{"chkOverridePackageQuantity"} ne 'Y' ) {
-				@outputs = sets::union( @outputs, 'chkOverridePackageQuantity' );	
-				$$specs{"txtPackageQuantity$qty_index"} = $$carton_specs{"txtPackageQuantity$qty_index"};
-				foreach ( 1 .. int ( $$specs{'txtQuantity'.$qty_index} / $$carton_specs{'txtItemsPerPackage'} ) ) {
+				#@outputs = sets::union( @outputs, 'chkOverridePackageQuantity' );	
+				foreach ( 1 .. int ( $$specs{'txtQuantity'.$qty_index} / $$carton_specs{"txtItemsPerPackage$qty_index"} ) ) {
 					my %package = ('Length' => '','Width' => '','Height' => '', 'Weight' => $$specs{'txtPackageWeight'} );
-					push @{$ups{'Packages'}}, \%package;
+					push @{$$ups{'Packages'}}, \%package;
 				} # end foreach
 
-				if ( my $remaining = $$specs{'txtQuantity'.$qty_index} % $$carton_specs{'txtItemsPerPackage'} ) {
+				if ( my $remaining = $$specs{'txtQuantity'.$qty_index} % $$carton_specs{"txtItemsPerPackage$qty_index"} ) {
 					my %package = ('Length' => '','Width' => '','Height' => '', 'Weight' => $remaining * $$carton_specs{'txtFinishedWeight'} );
-					push @{$ups{'Packages'}}, \%package;
+					push @{$$ups{'Packages'}}, \%package;
 				} # end if
 			} else {
 				foreach my $package_index ( 1 .. $$specs{"txtPackageQuantity$qty_index"} ) {
 					my %package = ('Length' => '','Width' => '','Height' => '', 'Weight' => $$specs{'txtPackageWeight'} );
-					push @{$ups{'Packages'}}, \%package;
+					push @{$$ups{'Packages'}}, \%package;
 				} # end foreach
 			} # end if
 
 
-			my $rssRequest = ups::createRatingServiceSelectionRequest(%ups);
+			my $rssRequest = ups::createRatingServiceSelectionRequest(%$ups);
 			my $response = ups::sendRequest( $log, 'https://www.ups.com/ups.app/xml/Rate', $accessRequest.$rssRequest );
 			if ( $response eq '' ) {
-				$$specs{'alert'} = 'Could not connect to ups.com.  We were unable to obtain a shipping estimate. Please select an alternate shipping method, or wait five minutes and try again.';
-				return 'uncalculated';
+				$$specs{'alert'} = 'Could not connect to ups.com.	We were unable to obtain a shipping estimate. Please select an alternate shipping method, or wait five minutes and try again.';
+				return $$specs{'Status'} = 'uncalculated';
 			} # end if
 			my $parser = XML::LibXML->new();
 			my $doc = $parser->parse_string($response);
@@ -253,49 +296,44 @@ $log->debug("Carton Status: $carton_status");
 			my %upsResponse;
 			ups::extract_RSS( $log, \%upsResponse, $doc );
 			if ( $upsResponse{'UPSErrorDescription'} ) {
-				$$specs{'alert'} = "Unable to retrieve a price.  UPS returned the following error:\n$upsResponse{'UPSErrorDescription'}";
-				return 'uncalculated';
+				$$specs{'alert'} = "Unable to retrieve a price.	UPS returned the following error:\n$upsResponse{'UPSErrorDescription'}";
+				return $$specs{'Status'} = 'uncalculated';
 			} # end if
-
-foreach ( @{$upsResponse{'RatedShipments'}} ) {
-	$log->debug("RS: $_");
-}
 
 			$_ = $upsResponse{'RatedShipments'}[1];
 			$_ =~ /([\d\.]*)(\w*)/;
 			my $cost = $1;
 			my $currency = $2;
-			$log->debug("Currency returned: $currency") if $debug;
-			$currency = 'CDN' if $currency eq 'CAD';
-			my @currencies = openprint::Currency::find( 'short' => $currency );
-			my $UPS_Currency = shift @currencies;
-			my $Project = new openprint::Project( $project_index );
+			$log->debug("Currency returned: $currency") if DEBUG;
+			my $UPS_Currency = openprint::Currency->find_one( short => $currency );
 			my $MY_Currency = $Project->Currency();
-			$log->debug("MY Currency: " . $MY_Currency->id() . ' ' . $MY_Currency->name() ) if $debug;
+			$log->debug("MY Currency: " . $MY_Currency->id() . ' ' . $MY_Currency->name() ) if DEBUG;
 			# Now... we need to do currency conversions
-			if ( $UPS_Currency->{'id'} != $MY_Currency->{'id'} ) {
+			if ( ! $UPS_Currency ) {
+				$$specs{alert} .= 'UPS Currency not found.  Price may be incorrect.<br/>';
+			} elsif ( $UPS_Currency->{'id'} != $MY_Currency->{'id'} ) {
 				my $rate = $UPS_Currency->conversions( $MY_Currency->{'id'} );
 				$cost *= $rate;
 				$$specs{'hdnBreakdown'.$qty_index} .= 'Converting to ' . $MY_Currency->name() . ' using ' .$rate."\%\n";
 			} # end if
-			my %ServicePrice = openprint::service::get_price_object( $log, $dbh, $variable, 'UPS Shipping', $cost, undef );
+			my %ServicePrice = openprint::service::get_price_object( 'UPS Shipping', $cost, undef );
 			if ( $ServicePrice{'Price'} > 0 ) {
-				$ServicePrice{'Total'} = $ServicePrice{'Price'};
+				$ServicePrice{'Total'} = $ServicePrice{'Price'} * (1+$Project->markup()/100);
 			} else {
-				$ServicePrice{'Total'} = $cost * (1 + $ServicePrice{'Markup'}/100);
+				$ServicePrice{'Total'} = $cost * (1 + $ServicePrice{'Markup'}/100) * (1+$Project->markup()/100);
 			} # end if
 
-			$$specs{"txtPrice$qty_index"} = sprintf( '%.2f', $ServicePrice{'Total'} );
+			$$specs{"txtPrice$qty_index"} = Math::Round::nearest( 0.01, $ServicePrice{'Total'} );
 		} # end if pickuptype and servicetype
 
 	} # end foreach qty_index
 
 	$log->debug("UPS!!!!!!!!!!!!!!!!!!");
-	return $status;
+	return $$specs{'Status'} = $status;
 } # end sub calc
 
 sub display {
-    my ( $log, $dbh, $variable, $project_index, $service_index ) = @_;
+	my ( $log, $dbh, $variable, $project_index, $service_index ) = @_;
 $log->debug("UPS::display: $project_index, $service_index");
 
 	my $Project = new openprint::Project( $project_index );
@@ -306,19 +344,25 @@ $log->debug("UPS::display: $project_index, $service_index");
 	$$variable{'Mode'} = $Project->mode();
 	$$variable{'ServiceTypeID'} = 'UPS';
 
+	my $Company = new openprint::Company( $openprint::session{'company_id'} );
 	if ( $openprint::session{'company_id'} and ( ! ( 
-		$$variable{'City'} and $$variable{'PostalCode'} and $$variable{'StateProvince'} and $$variable{'Country'} ) ) ) {
+		$$variable{'ToCity'} and $$variable{'ToPostalCode'} and $$variable{'ToStateProvince'} and $$variable{'ToCountry'} ) ) ) {
 		my %shipping_fields = (
-				'Address1'		=>	'Address1',
-				'Address2'		=>	'Address2',
-				'City'           =>  'City',
-				'StateProvince'  =>  'StateProvince',
-				'Country'        =>  'Country',
-				'PostalCode'     =>  'PostalCode',
+				'ToAddress1'		=>	'Address1',
+				'ToAddress2'		=>	'Address2',
+				'ToCity'			=>	'City',
+				'ToStateProvince'	=>	'StateProvince',
+				'ToCountry'			=>	'Country',
+				'ToPostalCode'	 	=>	'PostalCode',
 				);
 
-		my $company = new openprint::obj_customer( $log, $dbh, $openprint::session{'company_id'} );
-		@$variable{ keys %shipping_fields } = $company->load_shipping( @shipping_fields{ keys %shipping_fields } );
+		my $address = $Company->get_shipping_address();
+		foreach my $k ( keys %shipping_fields ) {
+			$$variable{$k} = $address->get( $shipping_fields{$k} ) if ! $$variable{$k};
+		} # end foreach
+	} # end if
+	if ( ! $$variable{'ToPostalCode'} ) {
+		$$variable{'ToPostalCode'} = $Company->postalcode();
 	} # end if
 
 } # end sub display
@@ -328,15 +372,21 @@ sub summary {
 	if ( $qty_index ) {
 		return sprintf( qq{%d items in %d package%s\nWeighing %.2flbs}, @$specs{'txtQuantity'.$qty_index,'txtPackageQuantity'.$qty_index},( $$specs{'txtPackageQuantity'.$qty_index}==1?'' : 's'), $$specs{'txtTotalWeight'.$qty_index} );
 	} else {
-		return join("\n", 
-			join(',', ups::get_service_name($$specs{'ddmServiceType'}),ups::get_pickup_name($$specs{'ddmPickupType'}) ),
-			join(',', $$specs{'CompanyName'} ) ,
-			join(',', $$specs{'Address1'} , $$specs{'Address2'},
-			@$specs{'City','StateProvince','Country'},
-			@$specs{'PostalCode'} ),
-			);
+		my $html;
+		$html .= join(' ', ups::get_service_name($$specs{'ddmServiceType'}),ups::get_pickup_name($$specs{'ddmPickupType'}) ) . "\n";
+		$html .= ', ' . $$specs{'ToCompanyName'} if $$specs{'ToCompanyName'};
+		$html .= ', ' . $$specs{'ToAddress1'} if $$specs{'ToAddress1'};
+		$html .= ', ' . $$specs{'ToAddress2'} if $$specs{'ToAddress2'};
+		$html .= ', ' . $$specs{'ToCity'} if $$specs{'ToCity'};
+		$html .= ', ' . $$specs{'ToStateProvince'} if $$specs{'ToStateProvince'};
+		$html .= ', ' . $countries::countries{$$specs{'ToCountry'}} if $$specs{'ToCountry'};
+		$html .= ', ' . $$specs{'ToPostalCode'} if $$specs{'ToPostalCode'};
+		return $html;
 	} # end if
 } # end sub summary
+
+sub save {
+} # end sub save
 
 1;
 

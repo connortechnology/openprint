@@ -1,70 +1,46 @@
-<script type="text/javascript" src="/javascripts/service.js"></script>
-<script type="text/javascript">
-function calc( formName ) {
-	if ( gettingNewPrice ) {
-		setTimeout( "calc('" + formName + "');", 1000 );
-	} else {
-		remove_div('AlertDiv');
-		gettingNewPrice = true;
-		var form = getFormObj( formName );
-		jsrsExecute( '/jsrs.htm', cbFillUPSResults, 'openprint::service::external_calc', get_variables( formName, form.ServiceType.value ) );
-	} // end if
-} // end calc()
-function cbFillUPSResults( results ) {
-	cbFillResults( results );
-	var form = getFormObj( 'f1' );
-	if ( ( form.elements['NeedPlainCartons'].value > 0 ) && confirm('Your project must be packed in cartons in order to be shipped.  Would you like to add Plain Cartons to your project?' ) ) {
-		addService( 'f1', 'PlainCartons' );
-	} // end if
-}
-function validate_data(formName) {
-	var form = getFormObj( formName );
-	var text = '';
-	return true;
-} // end function
-</script>
-<? eval (
-    if ( $$variable{'Project'}->quantity1() and $$variable{'Project'}->quantity2() and $$variable{'Project'}->quantity3() ) {
-    $$variable{'Columns'} = 'Three';
-    } else {
-    $$variable{'Columns'} = 'Two';
-    } # end if
-) ?>
+<script type="text/javascript" src="<?hash_link('/javascripts/service.js')?>"></script>
+<script type="text/javascript" src="<?hash_link('shipping.js')?>"></script>
 <div class="Service">
-	<form name="f1" method="post" action="/main/project/view.html">
-		<!--#include virtual="/includes/main/proj/required_fields.html"-->
+	<form id="f1" name="f1" method="post" action="/main/project/view.html">
 		<fieldset><legend>Shipping Services</legend>
-			<!--#include virtual="/includes/main/proj/shipping_address.html"-->
-			<p>
-				<label># of items to ship:</label>
-				<? eval ( $$variable{'QTYIndex'} = 1 ) ?>
-				<? while ( $$variable{'QTYIndex'} <= 3 ) ?>
-				<? if ( $$variable{'txtQuantity'.$$variable{'QTYIndex'}} ) ?>
-				<span class="<?Columns?>Columns">
-				<input type="text" name="txtQuantity<?QTYIndex?>" value="<? echo ( $$variable{'txtQuantity'.$$variable{'QTYIndex'}} ) ?>" size="9" onkeyup="calc(this.form.name);" />
-				</span>
-				<? endif ( $$variable{'txtQuantity'.$$variable{'QTYIndex'}} ) ?>
-				<? eval ( $$variable{'QTYIndex'} += 1 ) ?>
-				<? endwhile ( $$variable{'QTYIndex'} <= 3 ) ?>
+			<div class="leftColumn address">
+			<?include(_shipping_from_address.html)?>
+			</div>
+			<div class="rightColumn address">
+			<?include(_shipping_to_address.html)?>
+			</div>
+			<br class="spacer"/>
+			<fieldset>
+			<ul>
+				<li><label># of items to ship</label>
+					<? echo (
+						my $html = '';
+						foreach my $qty_index ( $$variable{Project}->quantity_indexes() ) {
+							$html .= '<span class="'.$$variable{Columns}.'Columns">';
+							$html .= input(
+								name	=>	'txtQuantity'.$qty_index,
+								value	=>	$$variable{"txtQuantity$qty_index"},
+								type	=>	'cardinal',
+								oninput	=>	'calc(this.form.name);' );
+								$html .= '</span>';
+						} # end foreach qty_index
+						return $html;
+					) ?>
+				</li>
+				<?include(_shipping_packages.html)?>
+				<?include(/includes/main/proj/_service_price.html)?>
+				<?include('/includes/main/proj/_breakdown.html') ?>
+			</ul>
+			</fieldset>
+			<p><label>More Shipping?</label>
+				<? echo ( radio( 'Additional', ['Y','Yes','N','No'], 'N' ); ) ?>
 			</p>
-			<!--#include virtual="/includes/main/proj/shipping_packages.html"-->
-			<p>
-				<label><b>Price:</b></label>
-				<? eval ( $$variable{'QTYIndex'} = 1 ) ?>
-				<? while ( $$variable{'QTYIndex'} <= 3 ) ?>
-				<? if ( $$variable{'txtQuantity'.$$variable{'QTYIndex'}} ) ?>
-				<span class="<?Columns?>Columns">
-				$<input type="text" name="txtPrice<?QTYIndex?>" size="9" value="<? echo ( $$variable{'txtPrice'.$$variable{'QTYIndex'}} ) ?>" <? echo ( 'readonly="readonly" onFocus="this.blur();"' if ! sets::isin($openprint::session{'user_type'},['E','A']); ) ?> />
-				</span>
-				<? endif ( $$variable{'txtQuantity'.$$variable{'QTYIndex'}} ) ?>
-				<? eval ( $$variable{'QTYIndex'} += 1 ) ?>
-				<? endwhile ( $$variable{'QTYIndex'} <= 3 ) ?>
-			</p>
+			
 		</fieldset>
-		<!--#include virtual="/includes/main/proj/add_to_project.html"-->
+		<?include(/includes/main/proj/add_to_project.html)?>
 		<input type="hidden" name="ProjectIndex" value="<?ProjectIndex?>"/>
 		<input type="hidden" name="ServiceIndex" value="<?ServiceIndex?>"/>
-		<input type="hidden" name="ServiceType" value="<?ServiceTypeID?>"/>
+		<input type="hidden" name="ServiceType" value="<?ServiceTypeType?>"/>
 		<input type="hidden" name="btnFunction" value="Save Service"/>
 		<input type="hidden" name="ContinueProject" value="Y" />
 		<input type="hidden" name="NeedPlainCartons" />

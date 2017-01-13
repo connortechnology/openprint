@@ -1,0 +1,5 @@
+check process openprint-syslog with pidfile /run/openprint-syslog.pid
+	start program  "/etc/init.d/openprint-syslog start"
+    stop program "/etc/init.d/openprint-syslog stop"
+    if failed port 10514 type udp then restart
+

@@ -2,80 +2,83 @@
 	<div id="uploadInstructions">
 		Uploading files to <?SiteTitle?> is easy and secure. Simply fill in the fields below and click <b>Upload Files</b>.<br />
 	</div>
-<? if ( $openprint::session{'user_id'} ) ?>
+<? if ( $session{'user_id'} ) ?>
 	<fieldset>
 		<legend>Uploaded Files</legend>
 		<hr class="legendUnderline" />
-		<div id="FileList"> <!--#include virtual="_files.html"--> </div>
+		<div id="FileList"> <? echo ( include('_files.html'); ) ?> </div>
 	</fieldset>
-<? endif ( $openprint::session{'user_id'} ) ?>
-		<? eval ( @$variable{'serial'} = sql::execute( $log, $dbh, q{SELECT nextval('Upload_id_seq')} ); ) ?>
+<? endif ( $session{'user_id'} ) ?>
+	<? eval ( @$variable{'serial'} = sql::execute( $log, $dbh, q{SELECT nextval('uploads_id_seq')} ); ) ?>
 	<form name="upload" method="post" action="upload.htm?serial=<?serial?>" enctype="multipart/form-data" target="UploadFrame">
-<? if ( ! $openprint::session{'user_id'} ) ?>
+<? if ( ! $session{'user_id'} ) ?>
 		<fieldset><legend>Your Information</legend>
 			<hr class="legendUnderline" />
 			<div style="width: 48%; float: left;">
 				<p>
-					<label for="txtCompanyName">Company:</label>
+					<label for="txtCompanyName">Company</label>
 					<input type="text" id="txtCompanyName" name="txtCompanyName" />
 				</p>
 				<p>
-					<label for="txtAddress1">Address:</label>
+					<label for="txtAddress1">Address</label>
 					<input type="text" id="txtAddress1" name="txtAddress1" />
 				</p>
 				<p>
 					<label>&nbsp;</label>
 					<input type="text" id="txtAddress2" name="txtAddress2" />
 				</p>
+				<p>
+					<label>Postal Code</label>
+					<input type="text" id="txtPostalCode" name="txtPostalCode" />
+				</p>
 			</div>
 			<div style="width: 48%; float: right;">
 				<p>
-					<label for="txtContactName">Name:</label>
+					<label for="txtContactName">Name</label>
 					<input type="text" id="txtContactName" name="txtContactName" />
 				</p>
 				<p>
-					<label for="txtEmailAddress">E-mail:</label>
+					<label for="txtEmailAddress">E-mail</label>
 					<input type="text" id="txtEmailAddress" name="txtEmailAddress" />
 				</p>
 				<p>
-					<label for="txtPhoneNumber">Phone #:</label>
+					<label for="txtPhoneNumber">Phone #</label>
 					<input type="text" id="txtPhoneNumber" name="txtPhoneNumber" />
 				</p>
 			</div>
 		</fieldset>
-<? endif ( ! $openprint::session{'user_id'} ) ?>
-<? if ( ! ( $openprint::param{'docket'} or $openprint::param{'project_id'} ) ) ?>
+<? endif ( ! $session{'user_id'} ) ?>
+<? if ( ! ( $param{'docket'} or $param{'project_id'} ) ) ?>
 		<fieldset>
 			<legend>Job Information</legend>
 			<hr class="legendUnderline" />
+<? eval (
+	my $Project;
+	if ( $param{'ProjectIndex'} ) {
+		$Project = new openprint::Project( $param{'ProjectIndex'} );
+		$param{'project_id'} = $Project->id();
+	} elsif ( $session{'project_id'} ) {
+		$Project = new openprint::Project( $session{'project_id'} );
+	} # end if
+	if ( $Project and ( $Project->status() ne 'uncalculated' ) ) {
+		$$variable{'txtQuoteNumber'} = $Project->id();
+	} # end if
+	$$variable{Project} = $Project;
+) ?>
 			<p>
-				<label for="txtQuoteNumber">Quote #:</label>
-				<input type="text" id="txtQuoteNumber" name="txtQuoteNumber" />
+				<label for="txtQuoteNumber">Quote #</label>
+				<? echo ( input( type=>'cardinal', id=>'txtQuoteNumber', name=>'txtQuoteNumber', value=>$$variable{txtQuoteNumber} ); ) ?>
 			</p>
 			<p>
-				<label for="ddmDueDateMonth">Due Date:</label>
-				<select style="width: auto;" name="ddmDueDateMonth" onchange="off(this.options[this.selectedIndex]);setDaysDropDown(document.upload.ddmDueDateYear.value,this.value,document.upload.ddmDueDateDay,document.upload.ddmDueDateDay.value);"><? echo ( ssi::getmonths( undef ); ) ?></select>
-				<select style="width: auto;" name="ddmDueDateDay" onchange="off(this.options[this.selectedIndex]);"><? echo ( ssi::getdays( undef ); ) ?></select>
-				<select style="width: auto;" name="ddmDueDateYear" onchange="off(this.options[this.selectedIndex]);setDaysDropDown(this.value,document.upload.ddmDueDateMonth.value,document.upload.ddmDueDateDay,document.upload.ddmDueDateDay.value);"><? echo ( ssi::return_years( (localtime(time))[5] + 1900, (localtime(time))[5] + 1901, (localtime(time))[5] + 1900 ); ) ?></select>
-			</p>
-			<p>
-				<label>Size:</label>
-				<input type="text" id="Size" name="Size" />
-			</p>
-			<p>
-				<label>Qty:</label>
-				<input type="text" id="Quantity" name="Quantity" />
-			</p>
-			<p>
-				<label>Stock:</label>
-				<input type="text" id="Stock" name="Stock" />
-			</p>
-			<p>
-				<label for="txtJobDescription">Description:</label>
-				<textarea name="txtJobDescription" rows="4"></textarea>
+			<? if ( $$variable{'txtQuoteNumber'} ) ?>
+				<? echo (
+					new openprint::Project( $$variable{'txtQuoteNumber'} )->reference();
+				) ?>
+			<? endif ( $$variable{'txtQuoteNumber'} ) ?>
+				</textarea>
 			</p>
 		</fieldset>
-<? endif ( ! ( $openprint::param{'docket'} or $openprint::param{'project_id'} ) ) ?>
+<? endif ( ! ( $param{'docket'} or $param{'project_id'} ) ) ?>
 		<fieldset>
 			<legend>Choose Files</legend>
 			<hr class="legendUnderline" />
@@ -90,47 +93,47 @@
 				</div>
 			 </div>
 			<br class="spacer"/>
-			<table id="fileSelectionTable" cellpadding="5" cellspacing="0">
+			<table id="fileSelection">
 				<tr>
 					<th width="20">&nbsp;</th>
-					<th width="200" nowrap="nowrap" align="left">Select file(s) to upload:</th>
-					<th nowrap="nowrap" align="left">Description (optional)</th>
+					<th width="200" nowrap="nowrap" align="left">Select file(s) to upload</th>
+					<th class="description" nowrap="nowrap">Description (optional)</th>
 				</tr>
 				<tr>
 					<td>1.</td>
 					<td><input type="file" name="fileUpload1" id="fileUpload1" /></td>
-					<td><input type="text" name="txtDescription1" style="width: 98%;" /></td>
+					<td class="description"><input type="text" name="txtDescription1" /></td>
 				</tr>
 				<tr>
 					<td>2.</td>
 					<td><input type="file" name="fileUpload2" id="fileUpload2" /></td>
-					<td><input type="text" name="txtDescription2" style="width: 98%;" /></td>
+					<td class="description"><input type="text" name="txtDescription2" /></td>
 				</tr>
 				<tr>
 					<td>3.</td>
 					<td><input type="file" name="fileUpload3" id="fileUpload3" /></td>
-					<td><input type="text" name="txtDescription3" style="width: 98%;" /></td>
+					<td class="description"><input type="text" name="txtDescription3" /></td>
 				</tr>
 				<tr>
 					<td>4.</td>
 					<td><input type="file" name="fileUpload4" id="fileUpload4" /></td>
-					<td><input type="text" name="txtDescription4" style="width: 98%;" /></td>
+					<td class="description"><input type="text" name="txtDescription4" /></td>
 				</tr>
 				<tr>
 					<td>5.</td>
 					<td><input type="file" name="fileUpload5" id="fileUpload5" /></td>
-					<td><input type="text" name="txtDescription5" style="width: 98%;" /></td>
+					<td class="description"><input type="text" name="txtDescription5" /></td>
 				</tr>
 			</table>
 			<span style="float: right;">
 				<? echo ( 
-					ssi::writeButton( $log, $dbh, 'Upload', 'uploadFiles.gif', "if ( check_input( upload ) ) { upload.btnFunction.value='Upload Files';startprogress($$variable{serial});upload.submit();}", '', 'Upload Files' );
+					button( 'Upload', { onclick=>"if ( check_input( upload ) ) { upload.btnFunction.value='Upload Files';startprogress($$variable{serial});document.forms['upload'].submit();}", text=>'Upload Files' } );
 				) ?>					
 			</span>
 			<br class="spacer"/>
 		</fieldset>
-		<input type="hidden" name="project_id" value="<? echo($openprint::param{'project_id'}) ?>"/>
-		<input type="hidden" name="docket" value="<? echo($openprint::param{'docket'}) ?>"/>
+		<input type="hidden" name="project_id" value="<? echo($param{'project_id'}) ?>"/>
+		<input type="hidden" name="docket" value="<? echo($param{'docket'}) ?>"/>
 		<input type="hidden" name="btnFunction"/>
 	</form>
 </div><!-- upload files -->

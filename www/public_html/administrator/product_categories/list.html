@@ -1,22 +1,28 @@
 <table class="List">
 	<tr>
-		<th align="left">Name</th>
-		<th align="left">Description</th>
-		<th align="left" width="100">Project Type</th>
-		<th align="left" width="100"># of Products</th>
+		<th class="name">Name</th>
+		<th class="description">Description</th>
+		<th class="projecttype">Project Type</th>
+		<th class="products"># of Products</th>
 	</tr>
-
-<? eval (
-	@{$$variable{'Categories'}} = openprint::ProductCategory::find( 'order' => 'lower(name)' );
-) ?>
-<? while ( $$variable{'Category'} = shift @{$$variable{'Categories'}} ) ?>
-<tr<?rowclass?>>
-	<td><a href="edit.html?category_id=<? echo ( $$variable{'Category'}->id(); ) ?>"><? echo ( $$variable{'Category'}->name(); ) ?></a></td>
-	<td><? echo ( $$variable{'Category'}->description(); ) ?></td>
-	<td><? echo ( $$variable{'Category'}->ProjectType()->name(); ) ?></td>
-	<td><? echo ( $$variable{'Category'}->products(); ) ?></td>
+<? echo (
+	my $html = '';
+	my $rowclass;
+	foreach my $Category ( openprint::Product_Category->find( 'order' => 'lower(name)' ) ) {
+		$html .= sprintf(q`
+<tr%1$s>
+	<td class="name"><a href="edit.html?category_id=%2$d">%3$s</a></td>
+	<td class="description"><a href="edit.html?category_id=%2$d">%4$s</a></td>
+	<td class="projecttype">%5$s</td>
+	<td class="products">%6$d</td>
 </tr>
-<? endwhile ( $$variable{'Category'} = shift @{$$variable{'Categories'}} ) ?>
+`, $rowclass, $Category->id(), ( $Category->name() ? $Category->name() : '(empty)' ), $Category->description(),
+$Category->ProjectType()->name(), scalar $Category->products() );
+
+		$rowclass = $rowclass ? '' : ' class="colRow"';
+	} # end foreach Category
+	delete $param{'category_id'};
+	return $html;
+) ?>
 </table>
-<? eval ( delete $openprint::param{'category_id'}; ) ?>
-<!--#include virtual="edit.html"-->
+<? echo ( include('edit.html'); ) ?>

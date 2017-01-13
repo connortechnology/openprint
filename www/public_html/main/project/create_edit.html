@@ -2,20 +2,20 @@
 <h1>PROJECTS</h1>
 <h2><? echo ( $$variable{'ProjectIndex'} ? 'Edit' : 'Create' ) ?> Project <?ProjectIndex?></h2>
 </div>
-<script type="text/javascript" src="/javascripts/service.js"></script>
-<script type="text/javascript" src="/javascripts/proj/proj_create.js"></script>
-<form name="f1" method="post" action="view.html">
-	<? if ( $$variable{'error'} ) ?>
-	<span class="error"><?error?><br/><?details?></span>
-	<? endif ( $$variable{'error'} ) ?>
+<script type="text/javascript" src="<?hash_link(/javascripts/service.js)?>"></script>
+<script type="text/javascript" src="<?hash_link(/javascripts/proj/proj_create.js)?>"></script>
+<form id="f1" name="f1" method="post" action="/main/project/view.html">
+	<?include('/includes/error_reporting.html') ?>
 	<div class="ProjectCreateEdit">
-		<!--#include virtual="/main/project/_create_edit.html" -->
+		<?include('/main/project/_create_edit.html')?>
 		<p class="buttons">
-			<? echo ( ssi::writeButton( $log, $dbh, 'Save','save_and_continue.gif',"f1.btnFunction.value='Save Project'; submit_handler(f1);",'','Save &amp; Continue' ); ) ?>
-			<? echo ( ssi::writeButton( $log, $dbh, 'Reset','reset.gif',"f1.reset();",'','Reset' ); ) ?>
+			<? echo ( join( "\n",
+						button( 'Save', { onclick=>"f1.btnFunction.value='Save Project'; submit_handler(f1);", text=>'Save &amp; Continue' } ),
+						button( 'Reset', { onclick=>'f1.reset();' }  ),
+			); ) ?>
 		</p>
 	</div>
-	<div id="AlertDiv" class="row" style="display:none;">
+	<div id="AlertDiv" style="display:none;">
 		<span class="label">The following errors occured</span>
 		<span class="input" id="Alert"></span>
 	</div>

@@ -1,7 +1,7 @@
   <? if ( $$variable{'ProjectIndex'} eq '' ) ?>
   There is no current project. 
   <? else ( $$variable{'ProjectIndex'} eq '' ) ?>
-  <!--#include virtual="/includes/project_header.html" -->
+  <? echo ( include('/includes/project_header.html'); ) ?>
   <table class="List">
     <tr> 
       <th align="left">Service</th>

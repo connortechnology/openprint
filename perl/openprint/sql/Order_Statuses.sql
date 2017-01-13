@@ -1,17 +1,18 @@
 create table order_statuses ( 
+	id	SERIAL,
 	name text, 
-	primary key (name)
+	primary key (id)
 );
-insert into order_statuses values ('Incomplete');
-insert into order_statuses values ('Complete');
-insert into order_statuses values ('Cancelled');
-insert into order_statuses values ('In Production');
-insert into order_statuses values ('Order Submitted');
-insert into order_statuses values ('Paid');
-insert into order_statuses values ('Pending Deposit');
-insert into order_statuses values ('Picked Up');
-insert into order_statuses values ('Re-Opened');
-insert into order_statuses values ('Shipped');
-insert into order_statuses values ('Waiting For Customer Approval');
-insert into order_statuses values ('Waiting For Pickup');
+insert into order_statuses (name) values ('Incomplete');
+insert into order_statuses (name) values ('Complete');
+insert into order_statuses (name) values ('Cancelled');
+insert into order_statuses (name) values ('In Production');
+insert into order_statuses (name) values ('Order Submitted');
+insert into order_statuses (name) values ('Paid');
+insert into order_statuses (name) values ('Pending Deposit');
+insert into order_statuses (name) values ('Picked Up');
+insert into order_statuses (name) values ('Re-Opened');
+insert into order_statuses (name) values ('Shipped');
+insert into order_statuses (name) values ('Waiting For Customer Approval');
+insert into order_statuses (name) values ('Waiting For Pickup');
 

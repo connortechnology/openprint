@@ -1,0 +1,127 @@
+<? echo (
+	my $html;
+
+	my $do_not_ordered_since = 1 if Date::Calc::check_date( @session{
+						'/employee/reports/customer_performance.html?not_ordered_on_start_year',
+						'/employee/reports/customer_performance.html?not_ordered_on_start_month',
+						'/employee/reports/customer_performance.html?not_ordered_on_start_day'
+						} ) or Date::Calc::check_date( @session{
+							'/employee/reports/customer_performance.html?not_ordered_on_end_year',
+							'/employee/reports/customer_performance.html?not_ordered_on_end_month',
+							'/employee/reports/customer_performance.html?not_ordered_on_end_day'
+							} );
+
+	my $do_ordered_since = 1 if Date::Calc::check_date( @session{
+                        '/employee/reports/customer_performance.html?ordered_on_start_year',
+                        '/employee/reports/customer_performance.html?ordered_on_start_month',
+                        '/employee/reports/customer_performance.html?ordered_on_start_day'
+                        } ) or Date::Calc::check_date( @session{
+                            '/employee/reports/customer_performance.html?ordered_on_end_year',
+                            '/employee/reports/customer_performance.html?ordered_on_end_month',
+                            '/employee/reports/customer_performance.html?ordered_on_end_day'
+                            } );
+
+	my @status_ids = map { $$_{id} } openprint::Order_Status->find(name=>['Complete','Picked Up', 'Shipped','Waiting For QA Approval', 'Waiting For Customer Approval','Order Submitted','In Production','Waiting For Pickup','Re-Opened','Pending Deposit','Paid','Complete' ]);
+
+	my %orders_by_company;
+	{
+	my @Orders = openprint::Order->find(
+			date_filter( '/employee/reports/customer_performance.html?ordered_on_end', 'created_on <=' ),
+			date_filter( '/employee/reports/customer_performance.html?ordered_on_start', 'created_on >=' ),
+			status_id => \@status_ids,
+			);
+	foreach my $Order ( @Orders ) {
+		$orders_by_company{$$Order{company_id}} = [] if ! $orders_by_company{$$Order{company_id}};
+		push @{ $orders_by_company{$$Order{company_id}} }, $Order;
+	}
+	}
+	my %not_ordered_since;
+
+	my @Orders_Since = openprint::Order->find(
+			date_filter( '/employee/reports/customer_performance.html?not_ordered_on_end', 'created_on <=' ),
+			date_filter( '/employee/reports/customer_performance.html?not_ordered_on_start', 'created_on >=' ),
+			status_id => \@status_ids,
+			);
+	foreach my $Order ( @Orders_Since ) {
+		$not_ordered_since{$$Order{company_id}} = 1;
+	}
+
+	my @csr_ids;
+	if ( ( $session{user_type} ne 'A' ) and ! openprint::usergroup::is_user_in( ['Sales Admin','Reporting'], $session{user_id} ) ) {
+		@csr_ids = ( $session{user_id} );
+	} elsif ( $param{salesrep_id} ) {
+		@csr_ids = ( $param{salesrep_id} );
+	} else {
+		@csr_ids = map { $_->id() } openprint::User->find( type=>['E','A'], 'usergroup any'=>'Sales', company_id=>$config{owner_id} );
+	} # end if
+	foreach my $csr_id ( @csr_ids ) {
+		my $CSR = new openprint::User( $csr_id );
+		$html .= '<h3>Results for ' . $CSR->name() . '</h3>
+<table class="List">
+	<thead>
+		<tr>
+			<th class="company_name">Company</th>
+			<th class="country">Country</th>
+			<th class="contact_name">Contact Name</th>
+			<th class="contact_phone">Contact Phone</th>
+			<th class="contact_email">Contact Email</th>
+			<th class="orders"># of Orders</th>
+			<th class="order_value">Order Value</th>
+			<th class="Date">Date of Last Order</th>
+			<th class="payment_cycle">Payment Cycle</th>
+		</tr>
+	</thead>
+<tbody>
+';
+		my $rowclass;
+
+		foreach my $Company ( openprint::Company->find( salesrep_id=>$csr_id, order=>'lower(name)',
+( $session{'/employee/reports/customer_performance.html?country'} ? ( country=>$session{'/employee/reports/customer_performance.html?country'} ) : () ),
+ ) ) {
+			my $order_total;
+			my $payment_cycle;
+
+			next if ( ! $orders_by_company{$$Company{id}} ) and $do_ordered_since;
+
+			if ( $do_not_ordered_since ) {
+				next if $not_ordered_since{$$Company{id}};
+			} # end if
+
+			foreach my $Order ( @{ $orders_by_company{$$Company{id}} } ) {
+				$order_total += $Order->Currency()->convert_from( $Order->total() );
+				$payment_cycle += $Order->payment_days();
+			} # end foreach Order
+			$payment_cycle = @{ $orders_by_company{$$Company{id}} } ? int( $payment_cycle / scalar @{ $orders_by_company{$$Company{id}} } ) : 0;
+			if ( $param{payment_cycle} ) {
+				if ( $payment_cycle > $param{payment_cycle} ) {
+					next;
+				} # end if
+			} # end if
+
+			my $Contact = openprint::User->find_one( company_id=>$Company->id(), administrator=>1, web_active=>1, order=>'id' );
+			$Contact = openprint::User->find_one( company_id=>$Company->id(), web_active=>1, order=>'id') if ! $Contact;
+			$Contact = openprint::User->find_one( company_id=>$Company->id(), order=>'id') if ! $Contact;
+			$Contact = new openprint::User() if ! $Contact;
+
+			my $LastOrder = $orders_by_company{$$Company{id}}[ @{ $orders_by_company{$$Company{id}} } -1 ] if @{ $orders_by_company{$$Company{id}} };
+
+			$html .= sprintf(q`<tr%1$s><td class="company_name">%2$s</td>
+					<td class="country">%3$s</td>
+					<td class="contact_name">%4$s</td>
+					<td class="contact_phone">%5$s</td>
+					<td class="contact_email">%6$s</td>
+					<td class="orders">%7$s</td><td class="order_value">%8$s</td><td class="Date">%9$s</td><td class="payment_cycle">%10$s days</td></tr>`,
+					$rowclass, $Company->name(), $Company->country(),
+					$Contact->name(), $Contact->phone(), $Contact->email(),
+					Number::Format::format_number( scalar @{ $orders_by_company{$$Company{id}} } ), 
+					openprint::Currency::format( $order_total ),
+					( $LastOrder ? format_date( $LastOrder->created_on() ) : '' ),
+					$payment_cycle,
+					);
+			$rowclass = $rowclass ? '' : ' class="colRow"';
+		} # end foreach Company
+		$html .= '</tbody>';
+		$html .= '</table>';
+	} # end foreach CSR
+	return $html;
+) ?>

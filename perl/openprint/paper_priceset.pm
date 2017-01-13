@@ -1,7 +1,6 @@
-package openprint::paper_priceset;
-@ISA = qw(openprint::priceset);
-
 use strict;
+package openprint::paper_priceset;
+our @ISA = qw(openprint::priceset);
 
 require openprint::paper_price;
 
@@ -35,6 +34,4 @@ sub load {
 }
 
 1;
-
 __END__
-~       

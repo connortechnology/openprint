@@ -1,63 +1,70 @@
-<script type="text/javascript" src="/javascripts/printing.js"></script>
-<script type="text/javascript" src="/javascripts/service.js"></script>
-<script type="text/javascript" src="/javascripts/proj/paper.js"></script>
+<script type="text/javascript" src="<? echo ( hash_link('/javascripts/printing.js') ) ?>"></script>
+<script type="text/javascript" src="<? echo ( hash_link('/javascripts/service.js') ) ?>"></script>
+<script type="text/javascript" src="<? echo ( hash_link('/javascripts/proj/paper.js') ) ?>"></script>
 <script type="text/javascript">
 
 var quantities=new Array();
 <?QUANTITIES?>
 
-var projectType = "MultiPagePublication";
+var projectType = "MultiPage";
 
 function calc( formName, force ) {
 	calc_print( formName, force );
 } // end function
 </script>
 <div class="Service">
-	<form name="f1" method="post" action="/main/project/view.html">
-		<? if ( $$variable{'txtSignatureType'} eq 'Cover Spreads' or $$variable{'txtSignatureType'} eq 'GateFolded Spreads' ) ?>
-			<!--#include virtual="/includes/main/proj/templates/signature_template_select.html"-->
-			<!--#include virtual="/includes/main/proj/templates/signatures.html"-->
-		<? endif ( $$variable{'txtSignatureType'} eq 'Cover Spreads' or $$variable{'txtSignatureType'} eq 'GateFolded Spreads' ) ?>
+	<form id="f1" name="f1" method="post" action="/main/project/view.html">
+		<? if ( $$variable{'txtSignatureType'} eq 'Cover Pages' or $$variable{'txtSignatureType'} eq 'GateFolded Spreads' ) ?>
+			<? echo ( include('/includes/main/proj/templates/signature_template_select.html'); ) ?>
+			<? echo ( include('/includes/main/proj/templates/signatures.html'); ) ?>
+		<? endif ( $$variable{'txtSignatureType'} eq 'Cover Pages' or $$variable{'txtSignatureType'} eq 'GateFolded Spreads' ) ?>
 
 		<fieldset><legend><?txtSignatureType?></legend>
-<p><label>Description:</label><input type="text" name="txtServiceDescription" value="<?txtServiceDescription?>" /></p>
-<p>
-    <label>Spread dimensions:</label>
-        <input name="txtWidth" size="9" value="<?txtWidth?>"  onkeyup="calc('f1');" /> x 
-        <input name="txtHeight" size="9" value="<?txtHeight?>"  onkeyup="calc('f1');"/>
-        (W x H)
-    <? if ( sets::isin( $openprint::session{'user_type'}, ['A','E'] ) ) ?>
-    <input type="checkbox" id="chkOverrideDimensions" name="chkOverrideDimensions" value="Y" onclick="if(!this.checked){calc(this.form.name);}" <? echo ( 'checked="checked"' if $$variable{'chkOverrideDimensions'} eq 'Y' ) ?> />
-    <label class="radio" for="chkOverrideDimensions">Override</label>
-    <? endif ( sets::isin( $openprint::session{'user_type'}, ['A','E'] ) ) ?>
-</p>
-
-			<!--#include virtual="/includes/main/proj/screen_type.html"-->
-			<!--#include virtual="/includes/main/proj/colours_coatings.html"-->		
-			<div id="BleedsColourBars">
-				<fieldset><legend>Bleeds, Colour Bars, Crop Marks</legend>
-					<!--#include virtual="/includes/main/proj/bleed.html"-->
-					<!--#include virtual="/includes/main/proj/colour_bars.html"-->
-					<!--#include virtual="/includes/main/proj/cropmarks.html"-->
-				</fieldset>
+<? if ( $$variable{'Group'} == 1 ) ?>
+			<div class="leftColumn">
+<? endif ( $$variable{'Group'} == 1 ) ?>
+				<p><label>Description</label><input type="text" name="txtServiceDescription" value="<?txtServiceDescription?>" /></p>
+				<p class="dimensions">
+					<label>Spread dimensions</label>
+					<? echo (
+						my $html = sprintf('%s x %s => %s x %s',
+							ssi::input( type=>'float', name=>'txtWidth', value=>$$variable{txtWidth}, onkeyup=>'calc(this.form.name);' ),
+							ssi::input( type=>'float', name=>'txtHeight', value=>$$variable{txtHeight}, onkeyup=>'calc(this.form.name);' ),
+							ssi::input( type=>'float', name=>'txtFinalWidth', value=>$$variable{txtFinalWidth}, onkeyup=>'calc(this.form.name);' ),
+							ssi::input( type=>'float', name=>'txtFinalHeight', value=>$$variable{txtFinalHeight}, onkeyup=>'calc(this.form.name);' ),
+							);
+						if ( sets::isin( $session{'user_type'}, ['A','E'] ) ) {
+							$html .= ssi::write_override( 'chkOverrideDimensions', $$variable{'chkOverrideDimensions'}, '', 'calc(this.form.name);' );
+						} # end if
+						return $html;
+					) ?>
+				</p>
+<? if ( $$variable{'Group'} == 1 ) ?>
 			</div>
-			<!--#include virtual="/includes/main/proj/paper_dropdowns.html"-->
+			<div class="rightColumn" id="PresentationFolderQuestions" <? echo ( ! sets::isin( $$variable{'rdbTemplateType'}, ['2Panel1Pocket','2Panel2Pocket','TriFoldDoublePocket'] ) ? 'style="display:none;"' : '' ) ?> >
+			<? echo (
+				my $html .= misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/includes/main/proj/presentation_folder_printing.html' );
+				return variable_substitution( \$html, $variable );
+			) ?>
+			</div>
+<? endif ( $$variable{'Group'} == 1 ) ?>
+			<br class="spacer"/>
+
+			<? echo ( include('/includes/main/proj/screen_type.html'); ) ?>
+			<? echo ( include('/includes/main/proj/colours_coatings.html'); ) ?>	
+			<? echo ( include('/includes/main/proj/bleeds_colourbars.html'); ) ?>	
+			<? echo ( include('/includes/main/proj/paper_dropdowns.html'); ) ?>
+		<br class="spacer"/>
 		</fieldset>
 		<!-- End of Input - Start of Results -->
 		<fieldset><legend>Results</legend>
-			<!--#include virtual="/includes/main/proj/printing_results.html"-->
+			<? echo ( include('/includes/main/proj/printing_results.html'); ) ?>
 		</fieldset>
 		<hr/>
-		<!--#include virtual="/includes/main/proj/press_approval.html"-->
-		<!--#include virtual="/includes/main/proj/add_to_project.html"-->
-		<!--#include virtual="/includes/main/proj/hdn_fields_printing.html"-->
-		<input type="hidden" name="txtSignatureType" value="<?txtSignatureType?>">
-		<input type="hidden" name="txtSpreadSize" value="<?txtSpreadSize?>">
-		<input type="hidden" name="StitchingImposition1" />
-		<input type="hidden" name="StitchingImposition2" />
-		<input type="hidden" name="StitchingImposition3" />
-		<input type="hidden" name="FoldingImposition1" />
-		<input type="hidden" name="FoldingImposition2" />
-		<input type="hidden" name="FoldingImposition3" />
+		<? echo ( include('/includes/main/proj/press_approval.html'); ) ?>
+		<? echo ( include('/includes/main/proj/add_to_project.html'); ) ?>
+		<? echo ( include('/includes/main/proj/hdn_fields_printing.html'); ) ?>
+		<input type="hidden" name="txtSignatureType" value="<?txtSignatureType?>" />
+		<input type="hidden" name="txtSpreadSize" value="<?txtSpreadSize?>" />
 	</form>
 </div><!--Service-->

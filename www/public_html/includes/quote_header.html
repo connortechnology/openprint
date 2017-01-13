@@ -1,7 +1,21 @@
-<div class="QuoteHeader" id="Information">
-	<fieldset><legend>Quote Information</legend>
-		<p><label>Quote ID:</label><a href="/main/quote/history_details.html?quote_id=<? echo ( $$variable{'Quote'}->id() ) ?>"><? echo ( $$variable{'Quote'}->id() ) ?></a></p>
-		<p><label>Created:</label><? echo ( Date::Format::time2str($openprint::config{'QuoteDateFormat'}, Date::Parse::str2time($$variable{'Quote'}->created_on() ) ); ) ?></p>
-		<p id="Status"><label>Status:</label><? echo ( $$variable{'Quote'}->status(); ) ?></p>
+<div id="Information">
+	<fieldset><legend>Information</legend>
+		<div class="content">
+			<ul>
+				<li><label>Quote ID</label><a href="/main/quote/history_details.html?quote_id=<? echo ( $$variable{'Quote'}->id() ) ?>"><? echo ( $$variable{'Quote'}->id() ) ?></a></li>
+				<li><label>Created</label><? echo ( Date::Format::time2str($config{'QuoteDateFormat'} ? $config{'QuoteDateFormat'} : $config{'DateTimeFormat'}, Date::Parse::str2time($$variable{'Quote'}->created_on() ) ); ) ?></li>
+				<li id="Status"><label>Status</label><? echo ( $$variable{'Quote'}->status(); ) ?></li>
+				<? if ( $$variable{'Quote'}->reference() ) ?>
+				<li class="reference"><label>Reference</label>
+				<? echo ( $$variable{'Quote'}->reference() ) ?>
+				</li>
+				<? endif ( $$variable{'Quote'}->reference() ) ?>
+				<? if ( $$variable{'Quote'}->comments() ) ?>
+				<li class="comments"><label>Comments</label>
+				<? echo ( $$variable{'Quote'}->comments() ) ?>
+				</li>
+				<? endif ( $$variable{'Quote'}->comments() ) ?>
+			</ul>
+		</div>
 	</fieldset>
 </div>

@@ -1,106 +1,149 @@
-<? echo (
-		my $Company = new openprint::Company( $openprint::session{'company_id'} );
-		my $company_name = $Company->name();
-		if ( $openprint::param{'docket'} ) {
-			$openprint::param{'docket'} =~ s/\D//g;
-			@openprint::param{'project_id'} = sql::execute( $log, $dbh, q{SELECT Index FROM tbl_Projects WHERE lngDocketNumber=?}, $openprint::param{'docket'} );
-		} elsif ( $openprint::param{'project_id'} ) {
-			$openprint::param{'project_id'} =~ s/\D//g;
-			@openprint::param{'docket'} = sql::execute( $log, $dbh, q{SELECT lngDocketNumber FROM tbl_Projects WHERE Index=?}, $openprint::param{'project_id'} );
-		} # end if
-        my $destdir = openprint::upload_handler::get_destdir();
+<? eval (
+	my $Company = new openprint::Company( $session{company_id} );
+	my $company_name = $Company->name();
+	$variable{company_name} = $company_name;
 
-		if ( $openprint::param{'btnFunction'} eq 'Delete' ) {
-			my $error = '';
-			foreach my $filename ( ref($openprint::param{'chkFiles'}) =~ /ARRAY/ ? @{$openprint::param{'chkFiles'}} : $openprint::param{'chkFiles'} ) {
-				if ( ! unlink "$openprint::config{'ProjectFilesPath'}/$destdir$filename" ) {
-					$error .= "Error deleting file $destdir$filename ! Reason: $!";
-				} else {
-					sql::execute( $log, $dbh, q{DELETE FROM project_files WHERE project_id=? AND filename=?}, $openprint::param{'project_id'}, $destdir.$filename );
-				} # end if
-			} # end foreach
-			if ( $error ne '' ) {
-				return misc::error( $log, $dbh, $variable, "Errors deleting files.", $error );
+	# if project_id or docket are specified, then destdir will contain them as well.  
+	require handlers::upload;
+
+	my $destdir = $$variable{destdir} = handlers::upload::get_destdir();
+	my $path = $param{path};
+	my @path;
+	if ( $path ) {
+		$path =~ s/\.\.+//g;
+		$path =~ s/\/\/+/\//g;
+		@path = split('/', $path );
+	} # end if
+if ( 0 ) {
+	if ( $param{'docket'} ) {
+		$param{'docket'} =~ s/\D//g;
+		my $Project = openprint::Project->find_one( docket=>$param{docket}, company_id=>$session{company_id} );
+		$path = $Project->docket();
+		if ( ! -e $config{'ProjectFilesPath'}.$destdir.$path ) {
+			mkdir $config{'ProjectFilesPath'}.$destdir.$path;
+		} # end if
+	} elsif ( $param{'project_id'} ) {
+		$param{'project_id'} =~ s/\D//g;
+		my $Project = openprint::Project->find_one( id=>$param{'project_id'}, 'company_id'=>$session{company_id} );
+		$path = $Project->docket();
+		if ( ! -e $config{'ProjectFilesPath'}.$destdir.$path ) {
+			mkdir $config{'ProjectFilesPath'}.$destdir.$path;
+		} # end if
+	} # end if
+} # end if
+
+	if ( $path =~ /^\d+$/ ) {
+		# Looks like a docket #
+	}
+	if ( $param{'filename'} eq '..' ) {
+		pop @path if @path;
+		$path = join('/', @path );
+	} elsif( $param{'filename'} ) {
+		$param{'filename'} =~ s/\.\.+//g;
+		$param{'filename'} =~ s/\/*//g;
+		$path .= '/'.$param{'filename'};
+	} # end if
+	
+	$variable{path} = $path;
+
+	my @filenames;
+	if ( opendir DIRHANDLE, $config{'ProjectFilesPath'}.$destdir.$path ) {
+		@filenames = readdir DIRHANDLE;
+		closedir DIRHANDLE;
+	} else {
+		$log->error("Couldn't open directory ($config{'ProjectFilesPath'}$destdir$path)");
+		$variable{'error'} .= "Couldn't open directory $config{'ProjectFilesPath'}$destdir$path<br/>";
+		push @{$$variable{'PROJECT_FILES'}}, '..', '', '', '';
+		return;
+	} # end if
+	$log->debug("Looking in directory ($config{'ProjectFilesPath'}$destdir$path)");
+
+	my %ProjectFiles = map { $_->filename(), $_ } openprint::File->find('company_id'=>$session{'company_id'}, 'filename like' => $path.'%' );
+
+	my ( @files, @dirs );
+	foreach my $file ( @filenames ) {
+		next if substr($file,0,1) eq '.';
+		if ( -d "$config{'ProjectFilesPath'}$destdir/$path/$file" ) {
+			push @dirs, $file;
+		} elsif ( -f "$config{'ProjectFilesPath'}$destdir/$path/$file" ) {
+			push @files, $file;
+		} else {
+$log->error("Unknown file type $config{'ProjectFilesPath'}$destdir/$path/$file");
+		} # end if
+	} # end foreach file
+
+	@{$$variable{'PROJECT_FILES'}} = ();
+	push @{$$variable{PROJECT_FILES}}, $path, '..', '', '', undef if @path;
+	foreach my $file ( sort { $b <=> $a } @dirs ) {
+		if ( $file =~ /\D/ ) {
+			# A dir, but not a docket
+			push @{$$variable{PROJECT_FILES}}, $path, $file, '', "", undef;
+		} else {
+			if ( openprint::Order->find_one(company_id=>$session{company_id}, docket=>$file ) ) {
+				push @{$$variable{'PROJECT_FILES'}}, $path, $file, undef, "Files for docket $file", undef;
+			} else {
+				push @{$$variable{'PROJECT_FILES'}}, $path, $file, undef, undef, undef;
 			} # end if
 		} # end if
+	} # end foreach dir
 
-		my @filenames;
-        if ( opendir DIRHANDLE, $openprint::config{'ProjectFilesPath'}.$destdir ) {
-            @filenames = readdir DIRHANDLE;
-            closedir DIRHANDLE;
-		} else {
-			$log->error("Couldn't open directory ($openprint::config{'ProjectFilesPath'}$destdir)");
-        } # end if
+	foreach my $file ( sort { $b cmp $a } @files ) {
+		my ($dev,$ino,$mode,$nlink,$uid,$gid,$rdev, $size, $atime,$mtime,$ctime,$blksize,$blocks) = stat("$config{'ProjectFilesPath'}/$destdir/$path/$file");
+		my $description;
+		$description = $ProjectFiles{$destdir.$path.$file} ? $ProjectFiles{$destdir.$path.$file}->description() : '';
+		$description = 'No description given' if ! $description;
+		push @{$$variable{'PROJECT_FILES'}}, $path, $file, $size, $description, $mtime;
+	} # end foreach
+) ?>
+<?include( '/includes/error_reporting.html')?>
+<form id="f1" name="f1" action="upload.html" method="post">
+	<table class="List">
+		<thead>
+			<tr> 
+				<th class="Filename">Filename</th>
+				<th class="size">Size</th>
+				<th class="mtime">When</th>
+				<th class="checkbox"><input type="checkbox" name="checkall" onclick="select_all($('f1'),'chkFiles',this.checked);" /></th>
+			</tr>
+		</thead>
+		<? if ( @{$$variable{'PROJECT_FILES'}} == 0 ) ?>
+		<tr>
+		   <td colspan="4">No files have been uploaded.</td>
+		</tr>
+		<? else ( @{$$variable{'PROJECT_FILES'}} == 0 ) ?>
+			<? echo (
+				my $html;
+				my $rowclass;
 
-        @{$$variable{'PROJECT_FILES'}} = ();
-        foreach my $file ( @filenames ) {
-            next if substr($file,0,1) eq '.';
-			if ( -d "$openprint::config{'ProjectFilesPath'}$destdir/$file" ) {
-				push @{$$variable{'PROJECT_FILES'}}, "/upload/upload_center.html?docket=$file", $file, '', "Files for docket $file";
-			} else {
-				my ($dev,$ino,$mode,$nlink,$uid,$gid,$rdev, $size, $atime,$mtime,$ctime,$blksize,$blocks) = stat("$openprint::config{'ProjectFilesPath'}/$destdir/$file");
-				if ( $size > 1048576 ) {
-					$size = sprintf( '%.3f MB', $size / 1048576 );
-				} elsif ( $size > 1024 ) {
-					$size = sprintf( '%.3f KB', $size / 1024 );
-				} else {
-					$size .= ' B';
-				} # end if
-				my $description;
-				
-				if ( $openprint::param{'project_id'} ) {
-					( $description ) = sql::execute( $log, $dbh, q{SELECT description FROM project_files WHERE project_id=? AND filename=?}, $openprint::param{'project_id'}, $destdir.$file );
-				} else {
-					( $description ) = sql::execute( $log, $dbh, q{SELECT description FROM project_files WHERE filename=?}, $destdir.$file );
-				} # end if
-				$description = 'No description given' if ! $description;
-				push @{$$variable{'PROJECT_FILES'}}, "/project_files/$company_name/$openprint::param{'docket'}/$file", $file, $size, $description;
-			} # end if directory or file
-        } # end foreach
-	) ?>
-		<form name="f1" action="upload.html" method="post">
-			<table class="List">
-				<tr> 
-					<th align="left">Filename</th>
-					<th width="75" align="right">Size</th>
-					<th width="75" align="center"><span style="float: right;"><? echo ( ssi::writeButton( $log, $dbh, 'Delete','delete.gif',"if ( confirm('Are you sure?') ) {f1.btnFunction.value='Delete';LoadContent('FileList', '/upload/_files.html', Serialize(f1));}", '', 'Delete' ); ) ?></span></th>
-				</tr>
+				while ( my ( $path, $filename,$size, $description,$mtime ) = splice @{$$variable{'PROJECT_FILES'}},0,5 ) {
+					$html .= "<tr$rowclass>\n";
+					if ( $filename eq '..' ) {
+						$html .= '<tr><td colspan="4"><a href="/upload/upload_center.html?path='.$path.'&amp;filename=.."><img src="/images/parent-folder.gif" alt="Parent Folder" />..</a></td></tr>';
 
-<? if ( ( $openprint::param{'docket'} or $openprint::param{'project_id'} ) ) ?>
-				<tr>
-				   <td><a href="/upload/upload_center.html"><img src="/images/parent-folder.gif" alt="Parent Folder" border="0" /> ..</a></td>
-				   <td>&nbsp;</td>
-				   <td>&nbsp;</td>
-				</tr>
-<? endif ( ( $openprint::param{'docket'} or $openprint::param{'project_id'} ) ) ?>
-<? if ( @{$$variable{'PROJECT_FILES'}} == 0 ) ?>
-   	<tr>
-   	   <td colspan="3">No files have been uploaded.</td>
-   	</tr>
-<? else ( @{$$variable{'PROJECT_FILES'}} == 0 ) ?>
+					} elsif ( $size ) {
+						$html .= sprintf(q`
+						<td><a href="/project_files/%6$s%1$s/%2$s" title="%3$s">%2$s</a><br/>%3$s</td>
+						<td class="size">%4$s</td>
+						<td class="mtime">%5$s</td>
+						<td class="checkbox"><input type="checkbox" id="chkFiles%3$s" name="chkFiles" value="%2$s"/></td>`,
+							$path,$filename,$description,
+							Number::Format::format_bytes( $size ),
+							Date::Format::time2str( $config{DateTimeFormat}, $mtime ),
+							$$variable{destdir},	
+							);
+					} else {
+						# A dir
+						$html .= sprintf(q`<td colspan="4"><a href="/upload/upload_center.html?path=%1$s/%2$s" title="%3$s"><img src="/images/folder.gif" alt="Folder" />%2$s</a><br/>%3$s</td>`, $path,$filename,$description,$size );
+					} # end if
 
-				<? while ( @$variable{'path','filename','size', 'description'} = splice @{$$variable{'PROJECT_FILES'}},0,4; ) ?>
-				<tr<?rowclass?>> 
-<? if ( $$variable{'size'} ne '' ) ?>
-					<td><a href="/getfile.html?<? if (  $openprint::param{'docket'} ) ?>docket=<? echo( $openprint::param{'docket'} ) ?><? endif (  $openprint::param{'docket'} ) ?><? if (  $openprint::param{'project_id'} ) ?>&project_id=<? echo( $openprint::param{'project_id'} ) ?><? endif (  $openprint::param{'project_id'} ) ?>&filename=<?filename?>" title="<?description?>" target="SendFileFrame"><?filename?></a><br/>
-						<?description?>
-					</td>
-					<td align="right" valign="top"><?size?></td>
-					<td align="center" valign="top"><input type="checkbox" name="chkFiles" value="<?filename?>"/></td>
-<? else ( $$variable{'size'} ne '' ) ?>
-					<td><a href="/upload/upload_center.html?docket=<?filename?>" title="<?description?>"><img src="/images/folder.gif" alt="Parent Folder" border="0" /> <?filename?></a><br/>
-						<?description?>
-					</td>
-					<td align="right" valign="top"><?size?></td>
-					<td align="center" valign="top"></td>
-<? endif ( $$variable{'size'} ne '' ) ?>
-				</tr>
-				<? eval ( $$variable{'rowclass'} = $$variable{'rowclass'} ? '' : ' class="colRow"' ) ?>
-				<? endwhile ( @$variable{'path','filename','size', 'description'} = splice @{$$variable{'PROJECT_FILES'}},0,4; ) ?>
+					$html .= '</tr>';
+					$rowclass = $rowclass ? '' : ' class="colRow"';
+				} # end while
+				return $html;
+			) ?>
 <? endif ( @{$$variable{'PROJECT_FILES'}} == 0 ) ?>
-			</table>
-   		<input type="hidden" name="project_id" value="<? echo($openprint::param{'project_id'}) ?>"/>
-   		<input type="hidden" name="docket" value="<? echo($openprint::param{'docket'}) ?>"/>
-			<input type="hidden" name="btnFunction" />
-		</form>
+	</table>
+	<p class="buttons"><? echo ( button( 'Delete', { onclick=>'delete_files();' } );) ?></p>
+	<input type="hidden" name="btnFunction" />
+</form>
 <iframe scrolling="no" marginwidth="0" marginheight="0" frameborder="0" vspace="0" hspace="0" style="width: 0; height: 0; display:none;" id="SendFileFrame" name="SendFileFrame" src=""></iframe>

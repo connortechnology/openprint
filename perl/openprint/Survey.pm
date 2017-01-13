@@ -1,95 +1,48 @@
-package openprint::Survey;
-@ISA = qw( openprint::Object );
 use strict;
+package openprint::Survey;
+our @ISA = qw( openprint::Object );
 
 require sql;
-require openprint::SurveyQuestion;
+require openprint::usergroup;
+require openprint::Survey_Question;
+require openprint::Survey_Response;
 
-my @fields = (
-	'id',
-	'name',
-	'description',
+use vars qw( $debug $table $serial %fields %transforms %defaults );
+$debug = 0;
+$table = 'Surveys';
+$serial = 'survey_id_seq';
+
+%fields = (
+	'id'			=>	'id',
+	'name'			=>	'name',
+	'description'	=>	'description',
+	'created_on'	=>	'created_on',
+	'created_by'	=>	'created_by',
 );
-
-# Returns a paper object specified by the parameters
-sub find {
-	my %params = @_;
-
-	if ( $params{'id'} ) {
-		return new openprint::Survey( $params{'id'} );
-	} else {
-		my $sql;
-		my @values;
-		$sql = q{SELECT * FROM Surveys WHERE 1>0};
-
-		if ( $params{'name'} ) {
-			$sql .= q{ AND name=?};
-			push @values, $params{'name'};
-		} # end if
-		$sql .= " OR $params{'or'}" if $params{'or'};
-		$sql .= " ORDER BY $params{'order'}" if ( $params{'order'} );
-
-		my $data = $openprint::dbh->selectall_arrayref( $sql, { Slice => {} }, @values );
-		$openprint::log->debug("Error loading Surveys: ".DBI->errstr ) if ! $data;
-		return map { new openprint::Survey( $_->{id}, $_ ) } @$data;
-	} # end if
-} # end sub find
-
-sub load {
-	my ( $self, $data ) = @_;
-	if ( ! $data ) {
-		$data = $openprint::dbh->selectrow_hashref( q{SELECT * FROM Surveys WHERE id=?}, {}, $$self{'id'} );
-        if ( ! $data ) {
-            $openprint::log->error( "Failure to load Surveys $$self{'id'}: Reason: " . $openprint::dbh->errstr );
-            return;
-        } # end if
-    } # end if
-    foreach my $key ( keys %{$data} ) {
-        $$self{$key} = $$data{$key};
-    } # end foreach
-} # end sub load
-
-sub save {
-	my ( $self, $data ) = @_;
-
-	my %sql;
-	foreach ( @fields ) {
-		$$self{$_} = $$data{$_} if $$data{$_};
-		$sql{$_} = $$self{$_};
-	} # end foreach
-
-	my $ac = sql::start_transaction( $openprint::dbh );
-	
-	if ( ! $$self{'id'} ) {
-		@$self{'id'} = @sql{'id'} = sql::execute( undef, undef, q{SELECT nextval('survey_id_seq')} );
-		if ( my $e = sql::insert( undef, undef, 'Surveys', \%sql ) ) {
-            $openprint::dbh->rollback();
-        } # end if
-	} else {
-		if ( my $e = sql::update( $openprint::log, $openprint::dbh, 'Surveys', ['id=?', $$self{'id'}], \%sql ) ) {
-            $openprint::dbh->rollback();
-        } # end i
-	} # end if
-	if ( $$self{Questions} ) {
-        sql::execute( $openprint::dbh, $openprint::dbh, 'DELETE FROM Survey_Questions WHERE survey_id=?', $$self{id} );
-        foreach my $Q ( @{$$self{Questions}} ) {
-            $Q->survey_id( $$self{id} );
-            $Q->save();
-        } # end foreach
-    } # end if
-    sql::end_transaction( $openprint::dbh, $ac );
-
-	$self->load();
-} # end sub save
+%transforms = (
+    'name' => [ 's/^\s+//', 's/\s+$//', 's/\s\s+/ /g' ],
+    'description' => [ 's/^\s+//m', 's/\s+$//m', 's/\s\s+/ /mg' ],
+);
+%defaults = (
+	'id'		=>	undef,
+	'created_on'	=>	q`'NOW()'`,
+	'created_by'	=>	q`$session{user_id}`,
+);
 
 sub delete {
 	my $self = shift;
-	my $ac = sql::start_transaction();
-	sql::execute( undef, undef, q{DELETE FROM Survey_Questions WHERE survey_id=?}, $$self{id} );
+	my $error;
+	my $ac = sql::start_transaction($openprint::dbh);
 	sql::execute( undef, undef, q{DELETE FROM Survey_Responses WHERE survey_id=?}, $$self{id} );
-	sql::execute( undef, undef, q{DELETE FROM Survey_Answers WHERE survey_id=?}, $$self{id} );
+	foreach my $Q ( $self->Questions() ) {
+		foreach my $A ( $Q->Available_Answers() ) {
+			$error .= $A->delete();
+		} # end foreach
+		$error .= $Q->delete();
+	} # end foreach Question
 	sql::execute( undef, undef, q{DELETE FROM Surveys WHERE id=?}, $$self{id} );
-	sql::end_transaction( $ac );
+	sql::end_transaction( $openprint::dbh, $ac );
+	return $error;
 } # end sub delete
 
 sub next {
@@ -105,25 +58,49 @@ sub previous {
 sub Questions {
     my $self = shift;
     if ( ! $$self{Questions} ) {
-        @{$$self{Questions}} = openprint::SurveyQuestion::find('survey_id'=>$$self{id});
+        @{$$self{Questions}} = openprint::Survey_Question->find('survey_id'=>$$self{id},'order'=>'sorting,id');
     } # end if
     return @{$$self{Questions}};
-} # end sub questions
+} # end sub Questions
+
+sub Responses {
+    my $self = shift;
+    if ( ! $$self{Responses} ) {
+        @{$$self{Responses}} = openprint::Survey_Response->find('survey_id'=>$$self{id});
+    } # end if
+    return @{$$self{Responses}};
+} # end sub Responses
 
 sub copy {
     my $self = shift;
     my $new = new openprint::Survey();
     $$new{name} = 'Copy of ' . $$self{name};
     $$new{description} = $$self{description};
-    foreach my $Q ( $self->Questions ) {
-        my $Q2 = $Q->copy();
-        $Q2->survey_id('');
-        push @{$$new{Questions}}, $Q2;
-    } # end foreach
+	my $ac = sql::start_transaction( $openprint::dbh );
     $new->save();
+    foreach my $Q ( $self->Questions() ) {
+        my $Q2 = $Q->copy();
+        $Q2->survey_id($new->id());
+		last if	$Q2->save();
+        push @{$$new{Questions}}, $Q2;
+		foreach my $Available_Answer ( $Q->Available_Answers() ) {
+			my $new_Available_Answer = $Available_Answer->copy();
+			#$new_Available_Answer->question_id( $Q2->id() );
+			last if $new_Available_Answer->save({'question_id'=>$Q2->id()});
+		} # end foreach 
+    } # end foreach
+	sql::end_transaction( $openprint::dbh, $ac );
     return $new;
 } # end sub copy
 
+sub can_edit {
+	return 0 if ! $openprint::session{'user_id'};
+	return 1 if ! $_[0]{'id'};
+	return 1 if $openprint::session{'user_type'} eq 'A';
+	return 1 if ( $openprint::session{'user_id'} == $_[0]{'created_by'} );
+	return 1 if openprint::usergroup::is_user_in( ['Quality Control'], $openprint::session{user_id} );
+	return 0;
+} # end sub can_edit
 
 1;
 __END__

@@ -1,0 +1,55 @@
+<? echo ( include('/includes/error_reporting.html'); ) ?>
+<table>
+	<thead>
+		<tr>
+			<th class="description">Product</th>
+			<th class="quantity">Quantity</th>
+			<th class="cost">Cost</th>
+			<th class="markup">Markup</th>
+			<th class="price">Price</th>
+			<th class="buttons">&nbsp;</th>
+		</tr>
+	</thead>
+	<tbody>
+		<? echo (
+			my $html;
+			my $rowclass;
+			my $sub_total;
+			foreach my $Product ( $$variable{'Quote'}->Products() ) {
+				$html .= sprintf(q`
+<tr%1$s>
+	<td class="description">%3$s<br/><textarea class="mce" id="comments-%2$d" name="comments-%2$d" placeholder="comments">%9$s</textarea></td>
+	<td class="quantity"><input type="number" id="quantity-%2$d" name="quantity-%2$d" value="%4$d" onkeyup="calc_from_quantity(this);"/></td>
+	<td class="price"><input type="number" id="cost-%2$d" value="%5$.2f" name="cost-%2$d" onkeyup="calc_from_cost(this);"/></td>
+	<td class="markup"><input type="number" id="markup-%2$d" name="markup-%2$d" value="%6$.2f" onkeyup="calc_from_markup(this);"/></td>
+	<td class="newprice"><input type="number" id="price-%2$d" name="price-%2$d" value="%7$.2f" /></td>
+	<td class="buttons">%8$s</td>
+</tr>`, $rowclass, $Product->id(), $Product->name() . ' ' . $Product->description(), $Product->quantity(), $Product->cost(), $Product->markup(), $Product->price(),
+ssi::button( 'removeProduct'.$Product->id(), { onclick=>qq`new Ajax.Updater('Products', '_products.html?action=del&amp;product_id=$$Product{id}', { parameters: f1.serialize() } );`, text=>'-', title=>'Remove' } ),
+$Product->comments(),
+);
+				$rowclass = $rowclass ? '' : ' class="colRow"';
+				$sub_total += $Product->price();
+			} # end foreach Product
+			if ( $session{'user_type'} eq 'A' ) {
+				$html .= sprintf(q`<tr%1$s>
+									<td class="description">
+										<select id="product_category_id-" name="product_category_id-" onchange="new Ajax.Updater('product_id-', '_products_dropdown.html', { parameters: { category_id: this.getValue() } } );">%2$s</select>
+										<select id="product_id-" name="product_id-">%3$s</select></td>
+									<td class="quantity"><input type="text" id="quantity-" name="quantity-" /></td>
+									<td class="price"><input type="text" id="cost-" name="cost-" /></td>
+									<td class="markup"><input type="text" id="markup-" name="markup-" /></td>
+									<td class="newprice"><input type="text" id="price-" name="price-" /></td>
+									<td class="buttons">%4$s</td>
+									</tr>`, $rowclass, 
+									ssi::make_drop_down( [ '', 'select', map { $_->id(), $_->name() } openprint::Product_Category->find('order'=>'lower(name)') ] ),
+									ssi::make_drop_down( [ '', 'select', map { $_->id(), $_->name() } openprint::Product->find('order'=>'lower(name)') ] ),
+									ssi::button( 'addProduct', { onclick=>q`new Ajax.Updater('Products', '_products.html?action=add', { parameters: f1.serialize() } );`, text=>'+',title=>'Add' } ),
+					);
+			} # end if
+			$html .= '<tr class="totals"><td colspan="4">Subtotal</td><td class="subtotal" id="products_subtotal">'.openprint::Currency::format($sub_total).'</td><td></td></tr>';
+			
+			return $html;
+		) ?>
+	</tbody>
+</table>

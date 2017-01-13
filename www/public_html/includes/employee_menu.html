@@ -1,0 +1,97 @@
+<ul class="menubar" id="employee_menu">
+	<li id="HomeMenu"><a href="/employee/index.html">Home</a></li>
+<? if ( $session{'user_id'} ) ?>
+	<li id="ProductionMenu"><a href="#" onclick="$('ProductionMenu').toggleClassName('on');return false;">Production</a>
+		<ul>
+			<li><a href="/employee/production/projects.html;NOSSL">Projects</a></li>
+			<li><a href="/employee/production/print_overview.html;NOSSL">Schedule</a></li>
+			<li><a href="/employee/production/prepress_overview.html;NOSSL">PrePress Overview</a></li>
+			<li><a href="/employee/production/prepress_schedule.html;NOSSL">PrePress Schedule</a></li>
+			<li><a href="/employee/production/operator_schedule.html;NOSSL">Operator Schedule</a></li>
+			<li><a href="/employee/production/monthly_schedule.html;NOSSL">Schedule Overview</a></li>
+		</ul>
+	</li>
+	<? if ( $session{user_type} eq 'A' or openprint::usergroup::is_user_in( ['Sales','Reporting'], $session{'user_id'} ) ) ?>
+	<li id="ReportsMenu"><a href="#" onclick="$('ReportsMenu').toggleClassName('on');return false;">Reports</a>
+		<ul>
+			<li><a href="/employee/reports/project_history.html;NOSSL">Project History</a></li>
+			<li><a href="/employee/reports/order_history.html;NOSSL">Order History</a></li>
+			<? if ( openprint::usergroup::is_user_in( ['Reporting'], $session{'user_id'} ) ) ?>
+			<li><a href="/employee/reports/efficiency.html;NOSSL">Efficiency</a></li>
+			<li><a href="/employee/reports/delivery.html;NOSSL">Delivery</a></li>
+			<li><a href="/employee/reports/turnaround.html;NOSSL">Turnaround</a></li>
+			<? endif ( openprint::usergroup::is_user_in( ['Reporting'], $session{'user_id'} ) ) ?>
+			<li><a href="/employee/reports/prepress_overview.html;NOSSL">Prepress Overview</a></li>
+			<li><a href="/employee/reports/stock.html;NOSSL">Stock</a></li>
+			<li><a href="/employee/reports/prepress_productivity.html;NOSSL">Prepress Productivity</a></li>
+			<li><a href="/employee/reports/stock_usage.html;NOSSL">Stock Usage</a></li>
+		</ul>
+	</li>
+	<? endif ( $session{user_type} eq 'A' or openprint::usergroup::is_user_in( ['Sales','Reporting'], $session{'user_id'} ) ) ?>
+	<? if ( $session{user_type} eq 'A' or openprint::usergroup::is_user_in( ['Marketing'], $session{'user_id'} ) ) ?>
+	<li id="MarketingMenu" class="<? echo ( $$variable{'uri'} =~ /marketing/ ? 'on' : '' ) ?>"><a href="#" onclick="$('MarketingMenu').toggleClassName('on');return false;">Marketing</a>
+		<ul>
+			<li><a href="/marketing/categories.html;NOSSL">Marketing Categories</a></li>
+			<li><a href="/marketing/email_templates.html;NOSSL">Email Templates</a></li>
+			<li><a href="/marketing/email_campaigns.html;NOSSL">Email Campaigns</a></li>
+			<li><a href="/marketing/sales_log.html;NOSSL">Sales Log</a></li>
+			<li><a href="/survey/history.html;NOSSL">Surveys</a></li>
+		</ul>
+	</li>
+	<? endif ( $session{user_type} eq 'A' or openprint::usergroup::is_user_in( ['Marketing'], $session{'user_id'} ) ) ?>
+	<? if ( $session{user_type} eq 'A' or openprint::usergroup::is_user_in( ['Inventory'], $session{'user_id'} ) ) ?>
+	<li id="InventoryMenu"
+<? if ( $$variable{uri} =~ /purchase_order/ or $$variable{uri} =~ /inventory/ or $$variable{uri} =~ /claim/ ) ?>
+class="on"
+<? endif ( $$variable{uri} =~ /purchase_order/ or $$variable{uri} =~ /inventory/ or $$variable{uri} =~ /claim/ ) ?>
+><a href="#" onclick="$('InventoryMenu').toggleClassName('on');return false;">Inventory</a>
+		<ul>
+			<li><a href="/employee/purchase_order/history.html;NOSSL">Purchase Orders</a></li>
+			<li><a href="/employee/inventory/manifests.html;NOSSL">Manifests</a></li>
+			<li><a href="/employee/claim/history.html;NOSSL">Claims</a></li>
+			<li><a href="/employee/inventory/available_paper.html;NOSSL">Available Paper</a></li>
+			<li><a href="/employee/inventory/paper.html;NOSSL">Paper</a></li>
+			<li><a href="/employee/inventory/skids.html;NOSSL">Skids/Rolls</a></li>
+			<li><a href="/employee/inventory/allocations.html;NOSSL">Allocations</a></li>
+			<li><a href="/employee/inventory/rfidtags.html;NOSSL">RFID Tags</a></li>
+			<li><a href="/employee/inventory/rfidscanners.html;NOSSL">RFID Scanners</a></li>
+			<li><a href="/employee/inventory/inventory_log.html;NOSSL">Inventory Log</a></li>
+		</ul>
+	</li>
+	<? endif ( $session{user_type} eq 'A' or openprint::usergroup::is_user_in( ['Inventory'], $session{'user_id'} ) ) ?>
+	<li id="ISOMenu" class="<? echo ( $$variable{'uri'} =~ /employee\/iso/ ? 'on' : 'off' ) ?>"><a href="#" onclick="$('ISOMenu').toggleClassName('on');return false;">Iso</a>
+		<ul>
+			<li><a href="/employee/iso/pars.html;NOSSL">Preventive Action Requests</a></li>
+			<li><a href="/employee/iso/cars.html;NOSSL">Corrective Action Requests</a></li>
+		</ul>
+	</li>
+	<li id="ITMenu" class="<? echo ( ( $$variable{'uri'} =~ /employee\/it/ or $$variable{'uri'} =~ /employee\/assets/ ) ? 'on' : 'off' ) ?>"><a href="#" onclick="$('ITMenu').toggleClassName('on');return false;">IT</a>
+		<ul>
+			<li><a href="/employee/it/hosts.html;NOSSL">Hosts</a></li>
+			<li><a href="/employee/assets/history.html;NOSSL">Assets</a></li>
+			<li><a href="/employee/it/licenses.html;NOSSL">Licenses</a></li>
+			<li><a href="/location/search.html;NOSSL">Locations</a></li>
+			<li><a href="/employee/it/logs.html;NOSSL">Login Log</a></li>
+			<li><a href="/employee/it/sessions.html;NOSSL">Sessions</a></li>
+		</ul>
+	</li>
+	<? if ( $session{user_type} eq 'A' or openprint::usergroup::is_user_in( ['Accounting'], $session{'user_id'} ) ) ?>
+	<li id="AccountingMenu"><a href="#" onclick="$('AccountingMenu').toggleClassName('on');return false;">Accounting</a>
+		<ul>
+			<li><a href="/employee/accounting/search.html">Outstanding Orders</a></li>
+			<li><a href="/invoice/history.html">Invoices</a></li>
+			<li><a href="/payment/history.html">Payments</a></li>
+			<li><a href="/employee/accounting/credit.html;NOSSL">Customer Credit</a></li>
+			<li><a href="/employee/accounting/stock.html;NOSSL">Stock</a></li>
+			<li><a href="/employee/accounting/credit_applications.html;NOSSL">Credit Applications</a></li>
+		</ul>
+	</li>
+	<? endif ( $session{user_type} eq 'A' or openprint::usergroup::is_user_in( ['Accounting'], $session{'user_id'} ) ) ?>
+	<li id="SupportMenu"><a href="#" onclick="$('SupportMenu').toggleClassName('on');return false;">Support</a>
+		<ul>
+			<li><a href="/employee/support/helpdesk_search.html;NOSSL">Help Desk</a></li>
+			<li><a href="/employee/support/returns.html;NOSSL">Returns</a></li>
+		</ul>
+	</li>
+<? endif ( $session{'user_id'} ) ?>
+</ul>

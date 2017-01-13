@@ -1,0 +1,75 @@
+<? eval (
+	my $company_ids = [ map { $$_{id} } openprint::Company->find_filtered() ] if $session{user_type} ne 'A';
+
+	@{$$variable{Payments}} = ();
+	$$variable{total} = $$variable{remaining_total} = 0;
+	if ( $session{'/payment/history.html?transaction_id'} ) {
+		my $tr_id = $session{'/payment/history.html?transaction_id'};
+
+		$tr_id = '%'.$tr_id.'%' if ! $tr_id =~ /%/;
+		foreach my $Payment ( openprint::Payment->find( 
+				'transaction_id like' => $tr_id,
+				order				=> 'received_on',
+			) ) {
+			push @{$$variable{Payments}}, $Payment;
+			$$variable{total} += $Payment->amount();
+			$$variable{remaining_total} += $Payment->remaining();
+		} # end foreach Payment
+	} else {
+		foreach my $Payment ( openprint::Payment->find( 
+			ssi::date_filter( '/payment/history.html?received_on_end', 'received_on <=' ),
+			ssi::date_filter( '/payment/history.html?received_on_start', 'received_on >=' ),
+			ssi::date_filter( '/payment/history.html?entered_on_end', 'created_on <=' ),
+			ssi::date_filter( '/payment/history.html?entered_on_start', 'created_on >=' ),
+			( $session{'/payment/history.html?payor_id'} ? ( payor_id => $session{'/payment/history.html?payor_id'} ) : ( $company_ids ? ( payor_id=>$company_ids ) : () ) ),
+			( $session{'/payment/history.html?recipient_id'} ? ( recipient_id => $session{'/payment/history.html?recipient_id'} ) : () ),
+			order				=> 'received_on',
+			) ) {
+			push @{$$variable{Payments}}, $Payment;
+			$$variable{total} += $Payment->amount();
+			$$variable{remaining_total} += $Payment->remaining();
+		} # end foreach Payment
+	} # end if
+
+	$$variable{Currency} = openprint::Currency::get_current() if ! $$variable{Currency};
+) ?>
+
+<? if ( @{$$variable{Payments}} == 0 ) ?>
+	There are no payments which match your search criteria. 
+<? else ( @{$$variable{Payments}} == 0 ) ?>
+	<div class="unprintable">
+		Please click on a <b>Payment ID #</b> to view payment details.<br/>
+		To delete payments from history check the appropriate payment(s) and click delete.<br/>
+	</div>
+	<table class="List">
+		<tr> 
+			<th class="ID">ID</th>
+			<th class="From">From</th>
+			<th class="Method">Method</th>
+			<th class="Date">Received On</th>
+			<th class="TransactionID">Transaction ID</th>
+			<th class="Memo">Memo</th>
+			<th class="Price">Amount</th>
+			<th class="Price">Remaining</th>
+		</tr>
+		<? while ( $$variable{Payment} = shift @{$$variable{Payments}}; ) ?>
+		<tr title="<? echo ( $$variable{Payment}->memo() ) ?>" <?rowclass?>> 
+			<td class="ID"><a href="/payment/edit.html?payment_id=<? echo ( $$variable{Payment}->id(); ) ?>"><? echo ( $$variable{Payment}->id(); ) ?></a></td>
+			<td class="From"><a href="/payment/edit.html?payment_id=<? echo ( $$variable{Payment}->id(); ) ?>"><? hecho ( $$variable{Payment}->Payor()->name(); ) ?></a></td>
+			<td class="Method"><a href="/payment/edit.html?payment_id=<? echo ( $$variable{Payment}->id(); ) ?>"><? hecho ( $$variable{Payment}->method(); ) ?></a></td>
+			<td class="Date"><a href="/payment/edit.html?payment_id=<? echo ( $$variable{Payment}->id(); ) ?>"><? echo ( Date::Format::time2str( $config{DateFormat}, Date::Parse::str2time( $$variable{Payment}->received_on() ) ); ) ?></a></td>
+			<td class="TransactionID"><a href="/payment/edit.html?payment_id=<? echo ( $$variable{Payment}->id(); ) ?>"><? hecho ( $$variable{Payment}->transaction_id(); ) ?></a></td>
+			<td class="Memo"><a href="/payment/edit.html?payment_id=<? echo ( $$variable{Payment}->id(); ) ?>"><? hecho ( $$variable{Payment}->memo(); ) ?></a></td>
+			<td class="Price"><? echo ( openprint::Currency::format( $$variable{Payment}->amount() ); ) ?></td>
+			<td class="Price"><? echo ( openprint::Currency::format( $$variable{Payment}->remaining() ); ) ?></td>
+		</tr>
+		<? eval ( $$variable{rowclass} = $$variable{rowclass} ? '' : ' class="colRow"';) ?>
+		<? endwhile ( $$variable{Payment} = shift @{$$variable{Payments}}; ) ?>
+		<tr class="totals">
+			<td colspan="6">Totals</td>
+			<td class="Price"><? echo ( openprint::Currency::format( $$variable{total} ); ) ?></td>
+			<td class="Price"><? echo ( openprint::Currency::format( $$variable{remaining_total} ); ) ?></td>
+		</tr>
+	</table>
+	<span class="Currency">All prices listed in <? hecho ( new openprint::Currency( $session{Currency_id} )->name(); ) ?></span>
+<? endif ( @{$$variable{Payments}} == 0 ) ?>

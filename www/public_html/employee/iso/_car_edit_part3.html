@@ -1,0 +1,33 @@
+<form name="part3form" id="part3form">
+<h3>Part 3 (To be completed by recipient)</h3>
+<table>
+	<tr><td colspan="4">CORRECTIVE ACTION</td></tr>
+	<tr><td colspan="4"><textarea name="action" rows="5" onkeyup="textarea_resize(this);"><? echo ( $$variable{'CAR'}->action(); ) ?></textarea></td></tr>
+	<tr>
+		<td width="10%">Recipient</td>
+		<td width="40%">
+		<select name="part3_user_id"><? echo ( make_drop_down( openprint::User->dropdown( type=>['E','A'], order=>'lower(firstname),lower(lastname)'), $session{user_id} ) ) ?></select>
+		</td>
+		<td width="10%">Date</td>
+		<td width="40%">
+<? eval (
+if ( $$variable{'CAR'}->part3_signed_on() ) {
+@$variable{'part3_signed_on_years','part3_signed_on_months','part3_signed_on_days','Start'} = ssi::get_dates( $log, $dbh, split('-', $$variable{'CAR'}->part3_signed_on() ) );
+} else {
+@$variable{'part3_signed_on_years','part3_signed_on_months','part3_signed_on_days','Start'} = ssi::get_dates( $log, $dbh, Date::Calc::Today() );
+} # end if
+) ?>
+            <select name="part3_signed_on_year" onchange="setDaysDropDown(this.value,this.form.part3_signed_on_month.value,this.form.part3_signed_on_day,this.form.part3_signed_on_day.value);"><?part3_signed_on_years?></select>
+            <select name="part3_signed_on_month" onchange="setDaysDropDown(this.form.part3_signed_on_year.value,this.value,this.form.part3_signed_on_day,this.form.part3_signed_on_day.value);"><?part3_signed_on_months?></select>
+            <select name="part3_signed_on_day"><?part3_signed_on_days?></select>
+		</td>
+	</tr>
+</table>
+	<input type="hidden" name="car_id" value="<? echo ( $$variable{'CAR'}->id() ) ?>" />
+	<input type="hidden" name="btnFunction" value="Save" />
+</form>
+<p class="buttons">
+	<? echo ( join("\n",
+		button( 'Save', { onclick=>"new Ajax.Updater('Part3','/employee/iso/_car_view_part3.html', {parameters: Form.serialize( \$('part3form') ), evalScripts: true } );", text=>'Save' } ),
+		); ) ?>
+</p>

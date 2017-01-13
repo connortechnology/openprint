@@ -1,43 +1,44 @@
 <? eval (
-	if ( $openprint::param{'btnFunction'} eq 'Save' ) {
-		foreach my $key ( keys %openprint::param ) {
+	if ( $param{'btnFunction'} eq 'Save' ) {
+		foreach my $key ( keys %param ) {
 			if ( $key =~ /LateReason-(\d*)/ ) {
 				my $index = $1;
-				my ( $reason ) = sql::execute( $log, $dbh, q{SELECT description FROM tbl_Project_Log WHERE lngProjectIndex=? AND description LIKE 'Reason for lateness: %' ORDER BY dtmtimestamp DESC LIMIT 1}, $index );
+				my ( $reason ) = sql::execute( $log, $dbh, q{SELECT description FROM Project_Log WHERE project_id=? AND description LIKE 'Reason for lateness: %' ORDER BY dtmtimestamp DESC LIMIT 1}, $index );
 				$reason =~ s/Reason for lateness: (\s*)/$1/;
-				if ( $reason ne $openprint::param{$key} ) {
-					openprint::project::insert_into_log( $log, $dbh, @openprint::session{'company_id', 'user_id'}, $index, "Reason for lateness: $openprint::param{$key}" );
+				if ( $reason ne $param{$key} ) {
+					new openprint::Project( $index )->add_to_log( @session{'company_id', 'user_id'}, "Reason for lateness: $param{$key}" );
 				} # end if
 			} # end if
 		} # end foreach
 	} # end if
 
-	$$variable{'DateStart'} = join('-', @openprint::param{'DateStartYear','DateStartMonth','DateStartDay'} );
-	$$variable{'DateEnd'} = join('-', @openprint::param{'DateEndYear','DateEndMonth','DateEndDay'} );
-	my $sql = "SELECT OrderIndex, tbl_Projects.Index, tbl_Projects.lngDocketNumber,".
-		"to_char(due_date, 'MM/DD/YYYY 17:00'), strStatus ".
-		", (SELECT to_char(MAX(dtmtimestamp),'MM/DD/YYYY HH24:MI') FROM tbl_Project_Log WHERE tbl_Project_log.lngProjectIndex=tbl_Projects.Index and description IN ('Marked Printed','Marked Bindery Complete','Marked Waiting For Pickup' ,'Marked Shipped')) ".
-		"FROM Order_Contents, tbl_Projects WHERE 1>0";
+	$$variable{'DateStart'} = join('-', ssi::fix_date( @param{'DateStartYear','DateStartMonth','DateStartDay'} ) );
+	$$variable{'DateEnd'} = join('-', ssi::fix_date( @param{'DateEndYear','DateEndMonth','DateEndDay'} ) );
+	my $sql = "SELECT OrderIndex, Projects.id, Projects.lngDocketNumber,".
+		"to_char(due_date, 'MM/DD/YYYY 22:00'), strStatus ".
+		", (SELECT to_char(MIN(dtmtimestamp),'MM/DD/YYYY HH24:MI') FROM Project_Log WHERE Project_log.project_id=Projects.id and description IN ('Marked Waiting For Pickup','Added Label/Packing Slip','Added PackingSlip')) ".
+		", (SELECT to_char(MAX(dtmtimestamp),'MM/DD/YYYY HH24:MI') FROM Project_Log WHERE Project_log.project_id=Projects.id and description IN ('Marked Picked Up' ,'Marked Shipped')) ".
+		"FROM Order_Contents, Projects WHERE 1>0";
 	$sql .= " AND ( due_date BETWEEN '$$variable{'DateStart'}' AND '$$variable{'DateEnd'}')";
-	$sql .= " AND Order_Contents.lngProjectIndex = tbl_Projects.Index";
-	if ( $openprint::param{'Status'} ) {
-		if ( ref $openprint::param{'Status'} eq 'ARRAY' ) {
-			$sql .= " AND tbl_Projects.strStatus IN ('".join("','",@{$openprint::param{'Status'}} )."')";
+	$sql .= " AND Order_Contents.lngProjectIndex = Projects.id";
+	if ( $param{'Status'} ) {
+		if ( ref $param{'Status'} eq 'ARRAY' ) {
+			$sql .= " AND Projects.strStatus IN ('".join("','",@{$param{'Status'}} )."')";
 		} else {
-			$sql .= " AND tbl_Projects.strStatus = '$openprint::param{'Status'}'";
+			$sql .= " AND Projects.strStatus IN ('".join("','", split(',', $param{'Status'} ) )."')";
 		} # end if
 	} # end if
-	$sql .= " AND (SELECT lngSalesPerson FROM Company WHERE Company.Index=tbl_Projects.CompanyIndex) = $openprint::param{'CSR'}" if $openprint::param{'CSR'};
+	$sql .= " AND (SELECT lngSalesPerson FROM Companies WHERE Companies.id=Projects.company_id) = $param{'CSR'}" if $param{'CSR'};
 	$sql .= " ORDER BY lngDocketNumber";
 	@{$$variable{'PROJECTS'}} = sql::execute( $log, $dbh, $sql );
 ) ?>
 Results for <? echo ( 
-	if ( $openprint::param{'CSR'} ) {
-		return new openprint::User( $openprpint::param{'CSR'} )->name();
+	if ( $param{'CSR'} ) {
+		return new openprint::User( $param{'CSR'} )->name();
 	} # end if
 	$$variable{'LateCount'} = 0;
 	return '';
-) ?> <?DateStart?> to <?DateEnd?> in <? echo ( ref $openprint::param{'Status'} eq 'ARRAY' ? join(',', @{$openprint::param{'Status'}}) : $openprint::param{'Status'} ) ?><br/>
+) ?> <?DateStart?> to <?DateEnd?> in <? echo ( ref $param{'Status'} eq 'ARRAY' ? join(',', @{$param{'Status'}}) : $param{'Status'} ) ?><br/>
 <? if ( @{$$variable{'PROJECTS'}} ) ?>
 <form name="f2" id="f2">
 	<table class="List">
@@ -49,18 +50,24 @@ Results for <? echo (
 			<th align="left" width="140">Shipped/Ready Date/Time</th>
 			<th align="left">Performance Code</th>
 		</tr>
-		<? while ( @$variable{'OrderID','index', 'docket','duedate', 'status','readytime'} = splice @{$$variable{'PROJECTS'}},0,6; ) ?>
-		<tr<?rowclass?>> 
-			<td><a href="/employee/production/project_view.html?OrderID=<?OrderID?>&ProjectIndex=<?index?>"><?index?></a></td>
-			<td><a href="/employee/production/project_view.html?OrderID=<?OrderID?>&ProjectIndex=<?index?>"><?docket?></a></td>
-			<td><a href="/employee/production/project_view.html?OrderID=<?OrderID?>&ProjectIndex=<?index?>"><?duedate?></a></td>
-			<td><a href="/employee/production/project_view.html?OrderID=<?OrderID?>&ProjectIndex=<?index?>"><?status?></a></td>
-			<td><a href="/employee/production/project_view.html?OrderID=<?OrderID?>&ProjectIndex=<?index?>"><?readytime?></a></td>
-			<td><a href="/employee/production/project_view.html?OrderID=<?OrderID?>&ProjectIndex=<?index?>">
-			<? echo ( 
+		<? while ( @$variable{'OrderID','index', 'docket','duedate', 'status','readytime','shippedtime'} = splice @{$$variable{'PROJECTS'}},0,7; ) ?>
+<? eval (
+				$$variable{'readytime'} = $$variable{'shippedtime'} if ! $$variable{'readytime'};
 				if ( ! $$variable{'readytime'} ) {
-					@$variable{'readytime'} = sql::execute( $log, $dbh, q{SELECT to_char(MAX(dtmtimestamp),'MM/DD/YYYY HH:MM') FROM tbl_Project_Log WHERE lngProjectIndex=?}, $$variable{'index'} );
+					#@$variable{'readytime'} = sql::execute( $log, $dbh, q{SELECT to_char(MAX(dtmtimestamp),'MM/DD/YYYY HH:MM') FROM Project_Log WHERE project_id=?}, $$variable{'index'} );
 				} # end if
+				if ( ! $$variable{'shippedtime'} ) {
+					#@$variable{'shippedtime'} = sql::execute( $log, $dbh, q{SELECT to_char(MAX(dtmtimestamp),'MM/DD/YYYY HH:MM') FROM Project_Log WHERE project_id=?}, $$variable{'index'} );
+				} # end if
+) ?>
+		<tr<?rowclass?>> 
+			<td><a href="/employee/project/view.html?OrderID=<?OrderID?>&ProjectIndex=<?index?>"><?index?></a></td>
+			<td><a href="/employee/project/view.html?OrderID=<?OrderID?>&ProjectIndex=<?index?>"><?docket?></a></td>
+			<td><a href="/employee/project/view.html?OrderID=<?OrderID?>&ProjectIndex=<?index?>"><?duedate?></a></td>
+			<td><a href="/employee/project/view.html?OrderID=<?OrderID?>&ProjectIndex=<?index?>"><?status?></a></td>
+			<td><a href="/employee/project/view.html?OrderID=<?OrderID?>&ProjectIndex=<?index?>"><?readytime?></a></td>
+			<td><a href="/employee/project/view.html?OrderID=<?OrderID?>&ProjectIndex=<?index?>">
+			<? echo ( 
 				if ( $$variable{'readytime'} and $$variable{'duedate'} ) {
 					my ( $dmonth, $dday, $dyear, $dhour, $dminutes ) = $$variable{'duedate'} =~ /(\d\d)\/(\d\d)\/(\d\d\d\d) (\d\d):(\d\d)/;
 					my ( $rmonth, $rday, $ryear, $rhour, $rminutes ) = $$variable{'readytime'} =~ /(\d\d)\/(\d\d)\/(\d\d\d\d) (\d\d):(\d\d)/;
@@ -68,7 +75,7 @@ Results for <? echo (
 					my ($Dd,$Dh,$Dm,$Ds) = Date::Calc::Delta_DHMS($dyear,$dmonth,$dday, $dhour,$dminutes,0,
 	                        		$ryear,$rmonth,$rday, $rhour,$rminutes,0);
 					if ( ($Dd > 0) or ($Dh > 0) or ($Dm > 0) ) {
-						my ( $reason ) = sql::execute( $log, $dbh, q{SELECT description FROM tbl_Project_Log WHERE lngProjectIndex=? AND description LIKE 'Reason for lateness: %' ORDER BY dtmtimestamp DESC LIMIT 1}, $$variable{'index'});
+						my ( $reason ) = sql::execute( $log, $dbh, q{SELECT description FROM project_log WHERE project_id=? AND description LIKE 'Reason for lateness: %' ORDER BY dtmtimestamp DESC LIMIT 1}, $$variable{'index'});
 						$reason =~ s/Reason for lateness: (\s*)/$1/;
 						$$variable{'LateCount'} += 1;
 						return qq`LATE by $Dd days $Dh hours $Dm minutes Reason:<select name="LateReason-$$variable{'index'}">` . ssi::make_drop_down( [ 
@@ -88,22 +95,21 @@ Results for <? echo (
 			$$variable{'rowclass'} = $$variable{'rowclass'} ? '' : ' class="colRow"' ;
 			$$variable{'DocketCount'} += 1;
 		) ?>
-		<? endwhile ( @$variable{'OrderID','index', 'docket','duedate', 'status','readytime'} = splice @{$$variable{'PROJECTS'}},0,6; ) ?>
-<TR><th COLSPAN="6"></th></TR>
-		<tr><TD><B>Totals:</B></TD><TD colspan="2">Selected Dockets: <?DocketCount?></TD><TD>Late:<?LateCount?></TD><TD colspan="2">Late percentage: <? echo ( sprintf('%.0f%',($$variable{'LateCount'}/$$variable{'DocketCount'})*100) ) ?></TD></tr>
+		<? endwhile ( @$variable{'OrderID','index', 'docket','duedate', 'status','readytime','shippedtime'} = splice @{$$variable{'PROJECTS'}},0,7; ) ?>
+		<tr class="totals"><td>Totals</td><td colspan="2">Selected Dockets: <?DocketCount?></td><td>Late:<?LateCount?></td><td colspan="2">Late percentage: <? echo ( sprintf('%.0f%',($$variable{'LateCount'}/$$variable{'DocketCount'})*100) ) ?></td></tr>
 	</table>
-	<span style="float: right;">
-		<? echo ( ssi::writeButton( $log, $dbh, 'Save', 'save.gif', "LoadContent('Results','/employee/reports/_delivery_results.html', Serialize( document.forms['f2'] ) );", '', 'Save Reasons' ); ) ?>
-	</span>
+	<p class="buttons">
+		<? echo ( ssi::button( 'Save', { onclick=>"LoadContent('Results','/employee/reports/_delivery_results.html', Serialize( document.forms['f2'] ) );", href=>'', text=>'Save Reasons' } ); ) ?>
+	</p>
 	<input type="hidden" name="btnFunction" value="Save" />
-	<input type="hidden" name="DateStartYear" value="<? echo ( $openprint::param{'DateStartYear'} ) ?>" />
-	<input type="hidden" name="DateStartMonth" value="<? echo ( $openprint::param{'DateStartMonth'} ) ?>" />
-	<input type="hidden" name="DateStartDay" value="<? echo ( $openprint::param{'DateStartDay'} ) ?>" />
-	<input type="hidden" name="DateEndYear" value="<? echo ( $openprint::param{'DateEndYear'} ) ?>" />
-	<input type="hidden" name="DateEndMonth" value="<? echo ( $openprint::param{'DateEndMonth'} ) ?>" />
-	<input type="hidden" name="DateEndDay" value="<? echo ( $openprint::param{'DateEndDay'} ) ?>" />
-	<input type="hidden" name="Status" value="<? echo ( $openprint::param{'Status'} ) ?>" />
-	<input type="hidden" name="CSR" value="<? echo ( $openprint::param{'CSR'} ) ?>" />
+	<input type="hidden" name="DateStartYear" value="<? echo ( $param{'DateStartYear'} ) ?>" />
+	<input type="hidden" name="DateStartMonth" value="<? echo ( $param{'DateStartMonth'} ) ?>" />
+	<input type="hidden" name="DateStartDay" value="<? echo ( $param{'DateStartDay'} ) ?>" />
+	<input type="hidden" name="DateEndYear" value="<? echo ( $param{'DateEndYear'} ) ?>" />
+	<input type="hidden" name="DateEndMonth" value="<? echo ( $param{'DateEndMonth'} ) ?>" />
+	<input type="hidden" name="DateEndDay" value="<? echo ( $param{'DateEndDay'} ) ?>" />
+	<input type="hidden" name="Status" value="<? echo ( $param{'Status'} ) ?>" />
+	<input type="hidden" name="CSR" value="<? echo ( $param{'CSR'} ) ?>" />
 </form>
 <? else ( @{$$variable{'PROJECTS'}} ) ?>
 There were no results matching your criteria.

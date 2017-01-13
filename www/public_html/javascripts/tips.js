@@ -63,10 +63,12 @@ tips['film stripping'] = new Array(
 "Changes or modifications made to existing pieces of film."
 );
 
+/*
 tips['shipping'] = new Array( 
 "Shipping:",
 "**** NEED DESCRIPTION ****"
 );
+*/
 
 
 // Printing Tips
@@ -344,7 +346,7 @@ tips['form_sets'] = new Array(
 
 tips['folio lip'] = new Array( 
 "Folio Lip:",
-"Excess paper needed to bind an insert."
+"Excess paper needed for binding equipment to grip a folded signature."
 );
 
 tips['gussets'] = new Array( 
@@ -380,11 +382,6 @@ tips['cutting'] = new Array(
 tips['scoring'] = new Array( 
 "Scoring:",
 "Process of spliting a sheet into multiple, smaller sheets of a desired dimension"
-);
-
-tips['drilling'] = new Array( 
-"Drilling:",
-"**** NEED DESCRIPTION ****"
 );
 
 tips['perforation'] = tips['perforations'];
@@ -461,12 +458,16 @@ tips['colour correction'] = new Array(
 );
 
 
-
-document.write( '<div id="tip" class="tipDiv">&nbsp;</div>');
-
-
 function tipOn(tipName,blah,e){
 	var div = $('tip');
+	if ( ! div ) {
+		var attrs = {
+			id : 'tip',
+			'class': 'tipDiv'
+		};
+		div = new Element('div', attrs);
+		document.body.insert( div );
+	}
 	var tip = tips[tipName.toLowerCase()];
 	if ( div && tip ) {
 //alert( 'Tip: ' + tip + ' Head: ' + tip[0] + ' Text: ' + tip[1] );
@@ -476,8 +477,8 @@ function tipOn(tipName,blah,e){
 }
 
 function tipOff(blah) {	
-	hide_div('tip');
-	return 1;
+	$('tip').hide();
+	return true;
 }	
 
 

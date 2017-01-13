@@ -1,0 +1,38 @@
+<? eval (
+	my @sigs = @{$$variable{'Job'}{'service_id'}} if $$variable{'Job'}{'service_id'};
+	my $sig_specs = openprint::service::get_specs_ref( $$variable{'Job'}->Project(), $sigs[0] ) if @sigs;
+	$$variable{'Form'} = $$sig_specs{'SignatureIndex'};
+	$$variable{'Equipment'} = $$variable{'Job'}->Equipment();
+) ?>
+<form id="bump_form" name="bump_form" action="_li_change.json" method="post">
+	<input type="hidden" name="schedule_id" value="<? echo ( $param{'schedule_id'} ) ?>" />
+	<input type="hidden" name="btnFunction" value="BumpJob" />
+	<fieldset>
+	<h3>Bump Docket <? echo ( $$variable{'Job'}->Project()->docket() ) ?> Form <?Form?></h3>
+	<ul>
+		<li><label>Press</label>
+		<select name="equipment_id" onchange="new Ajax.Updater( 'other_servicetypes', '_bump_job_popup_servicetypes.html', { parameters: { equipment_id: this.getValue(), schedule_id: this.form.schedule_id.value} } );">
+			<option value="">Unknown</option>
+			<? echo ( 
+				make_drop_down( openprint::Equipment->dropdown(
+						'useinscheduling'	=>	1,
+						( $$variable{Job}->servicetype_id() ? ( 'servicetype_id any'	=>	$$variable{'Job'}->servicetype_id() ) : () ),
+						order				=>	'lower(strid)'
+					), $$variable{'Job'}->equipment_id() );
+			) ?>
+		</select>
+	</li>
+	</ul>
+	<br/>
+	<div id="other_servicetypes"><?include('_bump_job_popup_servicetypes.html')?></div>
+	<br/>
+	<p class="buttons">
+	<? echo ( 
+		my $html = '';
+		$html .= button( 'BumpOk', { onclick=>"new Ajax.Request( '_li_change.json', {parameters: \$('bump_form').serialize(), evalScripts: true } );popupWin.destroy();", text=>'Ok' } );
+		$html .= button( 'BumpCancel', { onclick=>"popupWin.destroy();", text=>'Cancel' } );
+		return $html;
+	) ?>
+	</p>
+	</fieldset>
+</form>

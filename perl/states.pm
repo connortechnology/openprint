@@ -1,5 +1,7 @@
+use strict;
 package states;
 
+use vars qw( @states %states );
 @states = (
 	'AL', 'Alabama',
 	'AK', 'Alaska',
@@ -55,6 +57,5 @@ package states;
 );
 %states = @states;
 
-1,
-
+1;
 __END__

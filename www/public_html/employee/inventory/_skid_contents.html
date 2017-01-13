@@ -1,38 +1,59 @@
 <fieldset><legend>Current Contents</legend>
-<? if ( ! ( $$variable{'Skid'}{Paper} and %{$$variable{'Skid'}{Paper}} ) ) ?>
+<? if ( ! $$variable{'Skid'}->Contents() ) ?>
 	Skid is empty
-<? else ( ! ( $$variable{'Skid'}{Paper} and %{$$variable{'Skid'}{Paper}} ) ) ?>
+<? else ( ! $$variable{'Skid'}->Contents() ) ?>
 <table class="List">
 	<tr>
-		<th align="left">Paper</th><th width="75" align="right">Quantity</th><th align="right" width="60">Inches</th>
+		<th class="Owner">Owner</th><th class="Quantity">Quantity</th><th class="Condition">Condition</th><th class="Purpose">Purpose</th><th class="inches">Inches</th>
+		<? if ( openprint::usergroup::is_user_in( ['Accounting','InventoryManager'], $session{'user_id'} ) ) ?>
+		<th class="Cost">Cost</th>
+		<th class="Value">Value</th>
+		<? endif ( openprint::usergroup::is_user_in( ['Accounting','InventoryManager'], $session{'user_id'} ) ) ?>
 	</tr>
 <? echo ( 
-		my $html;
-		foreach my $paper_id ( keys %{$$variable{'Skid'}{Paper}} ) {
-			my $Paper = new openprint::Paper( $paper_id );
-			$html .= '<tr>';
-			$html .= qq`<td><a href="paper_details.html?paper_id=$$Paper{'id'}">`;
-			$html .= $Paper->to_string();
-			$html .= '</a></td>';
-			$html .= qq`<td align="right"><a href="paper_details.html?paper_id=$$Paper{'id'}">`;
-			$html .= $$variable{'Skid'}{Paper}{$paper_id};
-			$html .= $Paper->type() eq 'Roll' ? 'lbs' : 'sheets';
-			$html .= '</a></td>';
-			$html .= qq`<td align="right"><a href="paper_details.html?paper_id=$$Paper{'id'}">`;
-			$html .= $Paper->calliper() ? sprintf('%.1f', $$variable{'Skid'}{Paper}{$paper_id}*$Paper->calliper()) : 'unknown';
-			$html .= '</a></td>';
-			$html .= '</tr><tr>';
-			$html .= '<td colspan="3">';
-			$html .= ssi::writeButton( $log, $dbh, "CheckIn$paper_id", 'checkin.gif', sprintf(q{document.forms['checkinform'].action='/employee/inventory/skid_details.html?paper_id=%d&amp;skid_id=%d';document.forms['checkinform'].Quantity.value='%d';ddm_select_by_value(document.forms['checkinform'].Units,'%s');show_div('CheckIn',event);document.forms['checkinform'].Docket.focus();},$paper_id,$$variable{Skid}->id(),$$variable{Skid}{Paper}{$paper_id},$Paper->type() eq 'Roll' ? 'lbs' : 'sheets'), '', 'Check In' );
-            $html .= ssi::writeButton( $log, $dbh, "CheckOut$paper_id", 'checkout.gif', sprintf(q{document.forms['checkoutform'].action='/employee/inventory/skid_details.html?paper_id=%d&amp;skid_id=%d';document.forms['checkoutform'].Quantity.value='%d';document.forms['checkinform'].available_quantity.value='%d';ddm_select_by_value(document.forms['checkoutform'].Units,'%s');show_div('CheckOut',event);document.forms['checkoutform'].Docket.focus();}, $paper_id,$$variable{Skid}->id(),$$variable{Skid}{Paper}{$paper_id},$$variable{Skid}{Paper}{$paper_id},$Paper->type() eq 'Roll' ? 'lbs' : 'sheets'), '', 'Check Out' );
-            $html .= ssi::writeButton( $log, $dbh, "Allocate$paper_id", 'allocate.gif', sprintf(q{document.forms['allocateform'].action='/employee/inventory/skid_details.html?paper_id=%d&amp;skid_id=%d';document.forms['allocateform'].Quantity.value='%d';document.forms['allocateform'].available_quantity.value='%d';ddm_select_by_value(document.forms['allocateform'].Units,'%s');show_div('Allocate',event);document.forms['allocateform'].Docket.focus();},$paper_id,$$variable{Skid}->id(),$$variable{Skid}{Paper}{$paper_id},$$variable{Skid}{Paper}{$paper_id},$Paper->type() eq 'Roll' ? 'lbs' : 'sheets'), '', 'Allocate' );
-			$html .= ssi::writeButton( $log, $dbh, "Delete$paper_id", 'delete.gif', '', sprintf('/employee/inventory/skid_details.html?skid_id=%d&paper_id=%d&btnFunction=DeletePaper', $$variable{Skid}->id(), $paper_id ), 'Delete' );
-			$html .= ssi::writeButton( $log, $dbh, "Select$paper_id", 'select.gif', "if( \$('AddPaper').innerHTML == '' ) {add_div('AddPaper');new Ajax.Updater({success: 'AddPaper'},'/employee/inventory/_add_paper_show.html?paper_id=$paper_id',{method:'get'} );} else {jsrsExecute( '/jsrs.htm',  loadPaper, 'jsrs::execute', new Array('code', 'object_encode( \$log, new openprint::Paper( $paper_id ) );') );}", '', 'Select' );
-			$html .= '</td>';
-			$html .= '</tr>';
+	my $html;
+	foreach my $C ( $$variable{'Skid'}->Contents() ) {
+		my $Paper = $C->Paper();
+		my $paper_id = $Paper->id();
+
+		my $available = 0;
+		foreach my $skid_id ( @{$$variable{'skid_ids'}} ) {
+			my $Skid = new openprint::Skid( $skid_id );
+			$available += $Skid->allocateable($Paper);
 		} # end foreach
-		return $html;
+
+		$html .= '<tr>';
+		if ( openprint::usergroup::is_user_in( ['Accounting','InventoryManager'], $session{'user_id'} ) ) {
+		$html .= sprintf('<td colspan="7"><a href="paper_details.html?paper_id=%1$d">%2$s</a></td>', $Paper->id(), $Paper->to_string() );
+		} else {
+		$html .= sprintf('<td colspan="5"><a href="paper_details.html?paper_id=%1$d">%2$s</a></td>', $Paper->id(), $Paper->to_string() );
+		} # end if
+		$html .= '</tr><tr>';
+		$html .= '<td class="Owner">'.$Paper->Owner()->name().'</td>';
+		$html .= sprintf('<td class="Quantity"><a href="paper_details.html?paper_id=%1$d">%2$s</a></td>', $Paper->id(), (
+			$C->quantity() ? Number::Format::format_number($C->quantity()).$Paper->units() : 'none' ) );
+		$html .= sprintf('<td class="Condition">%s</td>', $C->condition() );
+		$html .= sprintf('<td class="Purpose">%s</td>', $C->purpose() );
+		$html .= sprintf('<td class="inches"><a href="paper_details.html?paper_id=%1$d">%2$s</a></td>', $Paper->id(), (($Paper->type() eq 'Sheet') and $Paper->calliper()) ? sprintf('%.1f', Number::Format::format_number($C->quantity()*$Paper->calliper())) : 'unknown' );
+		if ( openprint::usergroup::is_user_in( ['Accounting','InventoryManager'], $session{'user_id'} ) ) {
+			$html .= '<td class="Cost">' . openprint::Currency::format( 1*$C->cost() ) . '/100lb</td>';
+			$html .= '<td class="Value">' . openprint::Currency::format( 1*$C->value() ).'</td>';
+			$html .= '</tr><tr>';
+			$html .= '<td colspan="7">';
+		} else {
+		$html .= '</tr><tr>';
+		$html .= '<td colspan="5">';
+		} # end if
+		$html .= ssi::button( "CheckIn$$C{id}", { onclick=>"checkin_window( $paper_id, '$$variable{skid_id}' );", href=>'', text=>'Check In' } );
+		$html .= ssi::button( "CheckOut$$C{id}", { onclick=>"checkout_window( $paper_id, '$$variable{skid_id}' );", href=>'', text=>'Check Out' } );
+		$html .= ssi::button( "Allocate$$C{id}", { onclick=>"allocate_window( $paper_id, '$$variable{skid_id}', $available );", href=>'', text=>'Allocate' } );
+		$html .= ssi::button( "Delete$$C{id}", { href=>sprintf('/employee/inventory/skid_details.html?skid_id=%d&amp;content_id=%d&amp;btnFunction=DeletePaper', $$variable{Skid}->id(), $C->id() ), text=>'Delete' } );
+		$html .= ssi::button( "Select$$C{id}", { onclick=>"\$('AddPaper').show();new Ajax.Updater({success: 'AddPaper'},'/employee/inventory/_add_paper_show.html?paper_id=$paper_id&amp;skid_id=$$variable{Skid}{id}',{method:'get'} );", href=>'', text=>'Select' } );
+		$html .= '</td>';
+		$html .= '</tr>';
+	} # end foreach C
+	return $html;
 ) ?>
 	</table>
-<? endif ( ! ( $$variable{'Skid'}{Paper} and %{$$variable{'Skid'}{Paper}} ) ) ?>
+<? endif ( ! $$variable{'Skid'}->Contents() ) ?>
 </fieldset>

@@ -1,69 +1,32 @@
-package openprint::StockWeight;
-@ISA = qw(openprint::Object);
-
 use strict;
+package openprint::StockWeight;
+our @ISA = qw(openprint::Object);
 
-require sql;
+use vars qw( $debug $table $serial %fields %transforms %defaults );
 
-sub find {
-	my %params = @_;
+$debug = 0;
+$table = 'stockweights';
+$serial= 'stockweights_id_seq';
+%fields = (
+	id		=>	'id',
+	name	=>	'name',
+);
+%transforms = (
+	name	=> [ 's/^\s+//', 's/\s+$//', 's/\s\s+/ /g' ],
+);
+%defaults = (
+);
 
-	my $sql = 'SELECT * FROM PaperWeights WHERE 1>0';
-	my @values;
-
-	if ( $params{'papers'} ) {
-		$sql .= ' AND id IN (?)';
-		push @values, [map { $_->name_id(); } @{$params{'papers'}}];
-	} # end if
-	if ( $params{'project_type'} ) {
-		$sql .= ' AND id IN (SELECT DISTINCT name_id FROM papers WHERE id IN (SELECT lngPaperIndex FROM Paper_Recommendations WHERE lngprojecttypeindex=?))';
-		push @values, $params{'project_type'}->id();
-	} # end if
-	$sql .= " ORDER BY $params{'order'}" if $params{'order'};
-	my $data = $openprint::dbh->selectall_arrayref( $sql, {Slice=>{}}, @values );
-	if ( ! $data ) {
-		$openprint::log->debug("openprint::StockWeight::find( $sql)" . $openprint::dbh->errstr);
-	} else {
-		return map { new openprint::StockWeight( $_->{id}, $_ ); } @$data;
-	} # end if
-} # end sub find
-
-sub load {
-	my ( $self, $data ) = @_;
-
-	if ( (! $data) and $$self{'id'} ) {
-		$data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM PaperWeights WHERE id=?', {}, $$self{'id'} );
-		if ( ! $data ) { $openprint::log->debug($openprint::dbh->errstr ); }
-	} # end if
-	@$self{qw/id shortname longname/} = @$data{qw/id shortname longname/};
-
-} # end sub load
-
-sub delete {
-	my $self = shift;
-    sql::execute( undef, undef, q{DELETE FROM PaperWeights WHERE id=?}, $$self{'id'} );
-} # end sub delete
-
-sub save {
-	my ( $self, $param ) = @_;
-
-	if ( ! $$self{'id'} ) {
-		@$self{'id'} = sql::execute( undef, undef, q{SELECT nextval('paper_prices_id_seq')});
-		sql::insert( undef, undef, 'PaperWeights', $self );
-	} else {
-		sql::update( undef, undef, 'PaperWeights', ['id=?', $$self{'id'}], $self );
-	} # end if
-} # end sub save
-
-sub copy {
-	my $self = shift;
-	my $new = new openprint::StockWeight();
-	@$new{keys %$self} = @$self{keys %$self};
-	$$new{'id'} = undef;
-	return $new;
-} # end sub
+sub sort {
+	shift if $_[0] eq 'openprint::StockWeight';
+	return sort { 
+		my $a_name = $$a{'name'};
+		$a_name =~ s/\D//g;
+		my $b_name = $$b{'name'};
+		$b_name =~ s/\D//g;
+		$a_name <=> $b_name
+	} @_;
+}# end sub sort
 
 1;
-
 __END__
-~       

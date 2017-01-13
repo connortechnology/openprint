@@ -1,0 +1,47 @@
+
+DROP TABLE IF EXISTS Claims;
+
+CREATE TABLE CLAIMS (
+	id SERIAL,
+	company_id			INTEGER NOT NULL, FOREIGN KEY (company_id) REFERENCES Companies (id),
+	created_by			INTEGER NOT NULL, FOREIGN KEY (created_by) REFERENCES Users (id),
+	created_on			TIMESTAMP WITH TIME ZONE NOT NULL Default NOW(),
+	updated_on			TIMESTAMP WITH TIME ZONE NOT NULL Default NOW(),
+	filed_on			TIMESTAMP WITH TIME ZONE,
+	sent_to_accounts_on	TIMESTAMP WITH TIME ZONE,
+	invoiced_on			TIMESTAMP WITH TIME ZONE,
+	cancelled_on		TIMESTAMP WITH TIME ZONE,
+	paid_on				DATE,
+	invoice_id			TEXT,
+	po_id				INTEGER, FOREIGN KEY (po_id) REFERENCES PurchaseOrders (id),
+	docket				INTEGER[],
+	supplier_id			INTEGER, FOREIGN KEY (supplier_id) REFERENCES Companies (id),
+	contact_id			INTEGER, FOREIGN KEY (contact_id) REFERENCES Users (id),
+	currency_id			INTEGER, FOREIGN KEY (currency_id) REFERENCES Currencies (id),
+	subtotal			float,
+	total				float,
+	federaltax_rate		float,
+	federaltax			float,
+	federaltax_charge	boolean,
+	statetax_rate		float,
+	statetax			float,
+	statetax_charge		boolean,
+	deleted				boolean default false,
+	reason				text,
+	vendor_contact		text,
+	vendor_name			text,
+	vendor_address1		text,
+	vendor_address2		text,
+	vendor_city			text,
+	vendor_country		text,
+	vendor_state		text,
+	vendor_postalcode	text,
+	vendor_phone		text,
+	vendor_fax			text,
+	vendor_sms			text,
+	vendor_email		text,
+	PRIMARY KEY (id)
+);
+
+create index claims_created_on_idx on claims (created_on);
+create index claims_company_supplier_idx on claims (company_id,supplier_id);

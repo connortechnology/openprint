@@ -1,11 +1,10 @@
-<div class="row"> 
-	<span class="label">Dimensions:</span>
+<p> 
+	<label>Dimensions</label>
 <? echo ( 
 	my $html;
-	foreach my $qty_index ( 1 .. 3 ) {
-		next if ! $$variable{'Project'}{'quantity'.$qty_index};
-		$html .= sprintf('<span class="value">%s x %s<span class="smTbl">(W x H)</span></span>', @$variable{'txtWidth','txtHeight'} );
+	foreach my $qty_index ( $$variable{'Project'}->quantity_indexes() ) {
+		$html .= sprintf('<span class="value">%s x %s (W x H)</span>', @$variable{'txtWidth','txtHeight'} );
 	} # end foreach
 	return $html;
 ) ?>
-</div>
+</p>

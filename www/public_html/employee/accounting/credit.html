@@ -1,104 +1,168 @@
-<div class="error"><?error?></div>
-<form name="f1" method="post" action="credit.html">
-	<fieldset class="filters"><legend>Select Customer:</legend>
-		<p>
-			<label>Account #:</label>
-			<input type="text" name="txtSearchAccountNum" size="13"/>
-			<? echo ( ssi::writeButton( $log, $dbh, 'Go1','go.gif',"f1.btnFunction.value='Go';fmCheck(f1);", '', 'Go' ); ) ?>
-		</p>
-		<p>
-			<label>Customer:&nbsp;</label>
-            <input type="text" onKeyUp="filterDDM(this, f1.ddmCustomer);" size="4"/>
+<?include(/includes/error_reporting.html)?>
+<script type="text/javascript">
+function set_credit(src_id,dst_id) {
+	var form = $('f1');
+	var fields = [ 'denydays', 'warndays','limit','hold','downpayment','cod'];
+	for ( var i= 0; i < fields.length; i += 1 ) {
+		var field = fields[i];
+		if ( ! form.elements[field+'-'+dst_id] ) {
+			alert('No element for dest ' + field);
+		} else if ( ! form.elements[field+'-'+src_id] ) {
+			alert('No element for src ' + field);
+		} // end if
+		//$(field+'-'+dst_id).value = $(field+'-'+src_id).value;
+		if ( form.elements[field+'-'+dst_id].length ) {
+			set_rdb_value( form.elements[field+'-'+dst_id], get_rdb_value( form.elements[field+'-'+src_id] ) );
+		} else {
+			form.elements[field+'-'+dst_id].value = form.elements[field+'-'+src_id].value;
+		}
+	} // end for
+} // end function set_credit
+function swap_credit(src_id,dst_id) {
+	var form = $('f1');
+	var fields = [ 'denydays', 'warndays','limit','hold','downpayment','cod'];
+	for ( var i= 0; i < fields.length; i += 1 ) {
+		var field = fields[i];
+		if ( ! form.elements[field+'-'+dst_id] ) {
+			alert('No element for dest ' + field);
+		} else if ( ! form.elements[field+'-'+src_id] ) {
+			alert('No element for src ' + field);
+		} // end if
+		//$(field+'-'+dst_id).value = $(field+'-'+src_id).value;
+		if ( form.elements[field+'-'+dst_id].length ) {
+			var value = get_rdb_value(form.elements[field+'-'+dst_id]);
+			set_rdb_value( form.elements[field+'-'+dst_id], get_rdb_value( form.elements[field+'-'+src_id] ) );
+			set_rdb_value(form.elements[field+'-'+src_id],value);
+		} else {
+			var value = form.elements[field+'-'+dst_id].value;
+			form.elements[field+'-'+dst_id].value = form.elements[field+'-'+src_id].value;
+			form.elements[field+'-'+src_id].value = value;
+		}
+	} // end for
+} // end function set_credit
+</script>
+<form id="f1" name="f1" method="post" action="credit.html" enctype="multipart/form-data">
+	<fieldset class="filters"><legend>Select Company</legend>
+		<ul>
+		<li>
+			<label>Account #</label>
+			<input type="text" name="txtSearchAccountNum" />
+			<? echo ( button( 'Go1', { onclick=>"f1.btnFunction.value='Go';fmCheck(f1);", text=>'Go' } ); ) ?>
+		</li>
+		<li>
+			<label>Customer</label>
+            <input type="text" oninput="filter_companies(f1.ddmCustomer, { name: this.value } );" class="filter"/>
 			<select name="ddmCustomer" onchange="if(this.options[this.selectedIndex].value != '') { f1.btnFunction.value='Go'; f1.submit();}">
             <option value="">Select a Customer</option>
-			<? echo ( openprint::obj_customer::get_customer_dropdown( $log, $dbh, $openprint::param{'ddmCustomer'} ); ) ?>
+			<? echo ( make_drop_down( openprint::Company->dropdown( 'last_ordered_on is null'=>0), $param{ddmCustomer} ); ) ?>
             </select>
-            <? echo ( ssi::writeButton( $log, $dbh, 'Go2','go.gif',"f1.btnFunction.value='Go';fmCheck(f1);", '', 'Go' ); ) ?>
+            <? echo ( button( 'Go2', { onclick=>q`f1.btnFunction.value='Go';fmCheck(f1);`, text=>'Go' } ); ) ?>
+		</li>
+		</ul>
+		<p class="buttons">
+			<? echo ( join('',
+input( name=>'import', id=>'import', type=>'file' ),
+button('Import',{ onclick=>q`var form = $('f1');form.btnFunction.value='Import';form.submit();` } ),
+button('Export',{ onclick=>q`var form = $('f1');form.btnFunction.value='Export';form.submit();` } ),
+); ) ?>
 		</p>
 	</fieldset>
 <? if ( $$variable{'CompanyIndex'} ) ?>
-<fieldset><legend>Credit Information:</legend>
-    <p>
-        <label>Deny Purchases after:</label>
-		<input type="text" name="txtDenyDays" value="<?txtDenyDays?>" /> Days
-    </p>
-    <p>
-        <label>Warn about credit after:</label>
-		<input type="text" name="txtWarnDays" value="<?txtWarnDays?>" /> Days
-    </p>
-    <p>
-        <label>Credit Account Limit:</label>
-        <input type="text" name="txtCreditLimit" value="<?txtCreditLimit?>" />
-    </p>
-    <p>
-        <label>Current Credit Balance:</label>
-		<?CreditBalance?>
-    </p>
-    <p>
-        <label>Remaining Credit:</label>
-        <?CreditRemaining?>
-    </p>
-	<p>
-        <label>Credit Hold:</label>
-		<input type="radio" id="rdbCreditHoldY" name="rdbCreditHold" value="Y" <? echo ( 'checked' if $$variable{'rdbCreditHold'} eq 'Y' ) ?> />
-		<label class="radio" for="rdbCreditHoldY">Yes</label>
-		<input type="radio" id="rdbCreditHoldN" name="rdbCreditHold" value="N" <? echo ( 'checked' if $$variable{'rdbCreditHold'} ne 'Y' ) ?> />
-		<label class="radio" for="rdbCreditHoldN">No</label>
-    </p>
-    <p>
-        <label>Required Downpayment Amount:</label>
-		<input type="text" name="txtDownpayment" value="<?txtDownpayment?>"/>
-	</p>
+	<fieldset>
+	<?include(/account/_sales_edit.html)?>
+	<?include(/includes/_credit_edit.html)?>
 	<p class="buttons">
 		<? echo ( join('',
-			ssi::writeButton( $log, $dbh, 'Save','save.gif',"f1.btnFunction.value='Save';f1.submit();", '', 'Save' ),
-			ssi::writeButton( $log, $dbh, 'Reset','reset.gif',"f1.reset();", '', 'Reset' ),
+			button( 'Save', { onclick=>"if(!f1.ddmCustomer.value){alert('Please select a customer');}else{f1.btnFunction.value='Save';f1.submit();};" } ),
+			button( 'Reset', { onclick=>"f1.reset();" } ),
 			); ) ?>
     </p>
 </fieldset>
-<? endif ( $$variable{'CompanyIndex'} ) ?>
-<? if ( $$variable{'UnpaidOrders'} ) ?>
 <fieldset><legend>Unpaid Orders</legend>
+<? eval (
+	my %Order_Statuses = map { $_->name(), $$_{id} } openprint::Order_Status->find();
+	$$variable{UnpaidOrders} = [ openprint::Order->find(
+		company_id	=> $param{'ddmCustomer'},
+		'status_id not in'	=>	[ @Order_Statuses{'Cancelled','Deleted','Incomplete'} ],
+		'owing null_or_>'	=>	0,
+		order		=> $openprint::Order::fields{'created_on'},
+		) ];
+
+) ?>
+<? if ( @{$$variable{'UnpaidOrders'}} ) ?>
 	<table class="List">
 		<tr> 
-			<th align="left" width="65">Order ID</th>
-			<th align="left" width="60">Docket</th>
-			<th align="center" width="75">Date</th>
-			<th align="left" width="70">Invoice #</th>
-			<th align="right">P.O. #</th>
-			<th align="right" width="75">Total</th>
-			<th align="right" width="75">Balance</th>
-			<th align="center" width="55"><? echo ( ssi::writeButton( $log, $dbh, 'Pay','pay.gif',"f1.btnFunction.value='Pay';f1.submit();", '', 'Pay' ); ) ?></th>
+			<th class="order_id">Order ID</th>
+			<th class="Docket">Docket</th>
+			<th class="invoice_id">Invoice #</th>
+			<th class="po_id">P.O. #</th>
+			<th class="Date">Date</th>
+			<th class="Status">Status</th>
+			<th class="Price">Total</th>
+			<th class="Price">Balance</th>
+			<th class="checkbox"><input type="checkbox" onclick="select_all(this.form,'PAID',this.checked);"/></th>
 		</tr>
-		<? eval (
-			$$variable{'balance_total'} = 0;
-			$$variable{'total_total'} = 0;
+		<? echo (
+			my $rowclass;
+			my $balance_total = 0;
+			my $total_total = 0;
+			my $html;
+
+			my $ac = sql::start_transaction( $dbh );
+			foreach my $Order ( @{$$variable{UnpaidOrders}} ) {
+				$html .= sprintf( '
+				<tr%1$s> 
+					<td class="order_id"><a href="/employee/accounting/details.html?order_id=%2$d">%2$d</a></td>
+					<td class="Docket"><a href="/employee/accounting/details.html?order_id=%2$d">%3$d</a></td>
+					<td class="invoice_id">%5$s</td>
+					<td class="po_id">%6$s</td>
+					<td class="Date">%4$s</td>
+					<td class="Status">%9$s</td>
+					<td class="Price">%7$s</td>
+					<td class="Price">%8$s</td>
+					<td class="checkbox"><input type="checkbox" name="PAID" value="%2$d"/></td>
+				</tr>
+				', $rowclass, $Order->id(), $Order->docket(), 
+					format_date( $Order->created_on() ),
+					join('<br/>', map { $_->Invoice()->link_to() } $Order->Invoices() ), $Order->po(), 
+					openprint::Currency::format($Order->total()), openprint::Currency::format( $Order->owing() ),
+					$Order->status(),
+					);
+					$rowclass = $rowclass ? '' : ' class="colRow"';
+					$balance_total += $Order->owing();
+					$total_total += $Order->total();
+			} # end foreach Order
+			sql::end_transaction( $dbh, $ac );
+			$html .= sprintf('<tr class="totals">
+				<td colspan="2">%d Orders</td>
+				<td colspan="4">Totals</td>
+				<td class="Price">%s</td>
+				<td class="Price">%s</td>
+				<td>%s</td>
+			</tr>', scalar @{$$variable{'UnpaidOrders'}}, openprint::Currency::format( $total_total ), openprint::Currency::format( $balance_total ),
+			button( 'Pay', { onclick=>"f1.btnFunction.value='Pay';f1.submit();" } ),
+			);
+			return $html;
 		) ?>
-		<? while ( @$variable{'order_id','date','company','ponum','total','balance','docket','invoice_id'} = splice @{$$variable{'UnpaidOrders'}},0,8; ) ?>
-		<tr<?rowclass?>> 
-			<td><a href="/employee/accounting/details.html?order_id=<?order_id?>"><?order_id?></a></td>
-			<td><a href="/employee/accounting/details.html?order_id=<?order_id?>"><?docket?></a></td>
-			<td align="center"><?date?></td>
-			<td align="left">&nbsp;<?invoice_id?></td>
-			<td align="right">&nbsp;<?ponum?></td>
-			<td align="right">$<?total?></td>
-			<td align="right">$<?balance?></td>
-			<td align="center"><input type="checkbox" name="PAID" value="<?order_id?>"/></td>
-		</tr>
-		<? eval ( 
-			$$variable{'rowclass'} = $$variable{'rowclass'} ? '' : ' class="colRow"';
-			$$variable{'balance_total'} += $$variable{'balance'};
-			$$variable{'total_total'} += $$variable{'total'};
-			) ?>
-		<? endwhile ( @$variable{'order_id','date','company','ponum','total','balance','docket','invoice_id'} = splice @{$$variable{'UnpaidOrders'}},0,8; ) ?>
-		<tr class="totals">
-			<td colspan="5" align="right">Totals:</td>
-			<td align="right">$<?total_total?></td>
-			<td align="right">$<?balance_total?></td>
-			<td>&nbsp;</td>
-		</tr>
+	</table>
+<? else ( @{$$variable{'UnpaidOrders'}} ) ?>
+There are no unpaid orders.
+<? endif ( @{$$variable{'UnpaidOrders'}} ) ?>
+</fieldset>
+<fieldset><legend>Credit Change History</legend>
+	<table class="List">
+		<tr><th class="DateTime">When</th><th class="User">Who</th><th class="note">Note</th></tr>
+<? echo ( my $html;
+	foreach my $Log ( openprint::Log->find(action_id=>[104,105], object_type=>'openprint::Company', object_id=>$$variable{CompanyIndex}, order=>'id desc',limit=>5 ) ) {
+		$html .= sprintf(q`<tr><td class="DateTime">%s</td><td class="User">%s</td><td class="note">%s</td></tr>`,
+			 format_datetime( $Log->date_time() ),
+			$Log->User()->name(), $Log->note(),
+		);
+	} # end foreach Log
+	return $html;
+) ?>
 	</table>
 </fieldset>
-	<? endif ( $$variable{'UnpaidOrders'} ) ?>
+<? endif ( $$variable{'CompanyIndex'} ) ?>
 	<input type="hidden" name="btnFunction"/>
 </form>

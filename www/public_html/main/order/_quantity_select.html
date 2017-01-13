@@ -1,50 +1,29 @@
-<p>
-	<label>Quantity:</label>
-	<span style="width: 67%;">
+<? if ( $$variable{'Project'}->quantity_indexes() > 1 ) ?>
+<li>
+	<label>Quantity</label>
 	<table class="List">
 		<tr> 
-			<th width="20"></td>
-			<th align="right">Quantity</th>
+			<th class="checkbox"></th>
+			<th class="Quantity">Quantity</th>
 <!--
 			<th align="right">Unit Price</th>
 -->
-			<th align="right">Price</th>
+			<th class="Price">Price</th>
 		</tr>
-		<? if ( $$variable{'Project'}->quantity1(); ) ?>
-		<tr> 
-			<td><input type="radio" name="rdbQuantity<? echo ( $$variable{'Project'}->id(); ) ?>" value="1"
-				<? echo ( 'checked="checked"' if $$variable{'Project'}->ordered_quantity_index() == 1; ) ?> /></td>
-			<td align="right"><? echo ( $$variable{'Project'}->quantity1() ) ?></td>
-<!--
-			<td align="right">$<? echo ( sprintf('%.2f', $$variable{'Project'}->price1()/$$variable{'Project'}->quantity1() ); ) ?></td>
--->
-			<td align="right">$<? echo ( sprintf('%.2f', $$variable{'Project'}->price1() ); ) ?></td>
-		</tr>
-		<? endif ( $$variable{'Project'}->quantity1(); ) ?>
-		<? if ( $$variable{'Project'}->quantity2(); ) ?>
-		<tr> 
-			<td><input type="radio" name="rdbQuantity<? echo ( $$variable{'Project'}->id(); ) ?>" value="2"
-				<? echo ( 'checked="checked"' if $$variable{'Project'}->ordered_quantity_index() == 2; ) ?>
-			/></td>
-			<td align="right"><? echo ( $$variable{'Project'}->quantity2() ) ?></td>
-<!--
-			<td align="right">$<? echo ( sprintf('%.2f', $$variable{'Project'}->price2()/$$variable{'Project'}->quantity2() ); ) ?></td>
--->
-			<td align="right">$<? echo ( sprintf('%.2f', $$variable{'Project'}->price2() ); ) ?></td>
-		</tr>
-		<? endif ( $$variable{'Project'}->quantity2(); ) ?>
-		<? if ( $$variable{'Project'}->quantity3(); ) ?>
-		<tr> 
-			<td><input type="radio" name="rdbQuantity<? echo ( $$variable{'Project'}->id(); ) ?>" value="3"
-				<? echo ( 'checked="checked"' if $$variable{'Project'}->ordered_quantity_index() == 3; ) ?>
-			/></td>
-			<td align="right"><? echo ( $$variable{'Project'}->quantity3() ) ?></td>
-<!--
-			<td align="right">$<? echo ( sprintf('%.2f', $$variable{'Project'}->price3()/$$variable{'Project'}->quantity3() ); ) ?></td>
--->
-			<td align="right">$<? echo ( sprintf('%.2f', $$variable{'Project'}->price3() ); ) ?></td>
-		</tr>
-		<? endif ( $$variable{'Project'}->quantity3(); ) ?>
+		<? echo ( 
+			my $html = '';
+			foreach my $qty_index ( $$variable{'Project'}->quantity_indexes() ) {
+				$html .= '<tr>';
+				$html .= sprintf(q`<td class="checkbox"><input type="radio" name="rdbQuantity%1$d" value="%2$d" %3$s onclick="new Ajax.Request('_order.json', { parameters: { order_id: '%4$d', project_id: '%1$d', quantity_index: '%2$d', action: 'select_quantity' } } );"/></td>`, $$variable{Project}->id(), $qty_index, checked( $$variable{Project}->ordered_quantity_index() == $qty_index ), $$variable{Order}->id() );
+				$html .= sprintf('<td class="Quantity">%d</td>', $$variable{'Project'}->quantity( $qty_index ) );
+				my $Price = openprint::Currency::convert( $$variable{'Project'}->Price( $qty_index ) );
+				$html .= sprintf('<td class="Price">%1$s</td>', $$variable{'Order'}->Currency()->format( $$Price{'Price'} ) );
+				$html .= '</tr>';
+			} # end foreach qty_index
+			return $html;
+		) ?>
 	</table>
-	</span>
-</p>
+</li>
+<? else ( $$variable{'Project'}->quantity_indexes() > 1 ) ?>
+<? echo ( input( type=>'hidden', name=>'rdbQuantity'.$$variable{Project}->id(), value=>$$variable{'Project'}->ordered_quantity_index() ); ) ?>
+<? endif ( $$variable{'Project'}->quantity_indexes() > 1 ) ?>

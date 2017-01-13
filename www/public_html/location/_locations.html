@@ -1,0 +1,9 @@
+<ul>
+	<? echo ( 
+		my $html;
+		foreach my $Location ( openprint::Location->find({'name ilike'=>openprint::Location->transform('name',$param{'location'}).'%', 'type'=>$param{'type'}, 'limit'=>10, 'order'=>'lower(name)'}) ) {
+			$html .= sprintf(q`<li id="%d">%s<span class="informal">%s</span></li>`, $Location->id(), $Location->name(), join(', ', map { $_->name() } $Location->Parents() ) );
+		} # end foreach Location
+		return $html;
+	) ?>
+</ul>

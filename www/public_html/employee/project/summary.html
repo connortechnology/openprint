@@ -1,0 +1,55 @@
+<div class="PageTitle">
+	<h1>PROJECTS</h1>
+	<h2>Project Summary</h2>
+</div>
+<link href="<?hash_link(/css/project.css)?>" rel="stylesheet" type="text/css"/>
+<style type="text/css">
+<? eval ( 
+	$$variable{QTYS} = scalar $$variable{Project}->quantity_indexes();
+	@{$$variable{quantity_indexes}} = $$variable{Project}->quantity_indexes();
+) ?>
+
+div.ProjectSummary div.row span.label {
+    width: 40%;
+}
+div.ProjectSummary div.row span.value {
+<? if ( $$variable{'QTYS'} == 1 ) ?>
+    width: 57%;
+<? endif ( $$variable{'QTYS'} == 1 ) ?>
+<? if ( $$variable{'QTYS'} == 2 ) ?>
+    width: 24%;
+<? endif ( $$variable{'QTYS'} == 2 ) ?>
+<? if ( $$variable{'QTYS'} == 3 ) ?>
+    width: 18%;
+<? endif ( $$variable{'QTYS'} == 3 ) ?>
+}
+</style>
+<? if ( $$variable{Project}{id} ) ?>
+<? echo ( button( 'Print', { onclick=>'window.print();' } ); ) ?>
+<br class="spacer"/>
+<div class="Project">
+<?include(/includes/project_header.html)?>
+<div class="ProjectSummary">
+	<fieldset><legend>Project Information</legend>
+	<?include(/includes/main/summ/project_create_edit.html)?>
+	</fieldset>
+	<? while ( @$variable{'ServiceIndex','ServiceTypeName','prod_url'} = splice @{$$variable{'SERVICES'}},0,3; ) ?>
+		<? eval ( openprint::print_project::get_service_specifications( $r, $log, $dbh, $variable, $$variable{Project}{id}, $$variable{ServiceIndex} ); ) ?>
+		<fieldset><legend><?ServiceTypeName?> <?txtServiceDescription?></legend>
+			<? echo (
+	
+			if ( $$variable{'prod_url'} ) {
+			return include('/main/summ/'.$$variable{prod_url}).'<br/>';
+			} 
+			return;
+			) ?>
+		</fieldset>
+	<? endwhile ( @$variable{'ServiceIndex','ServiceTypeName','prod_url'} = splice @{$$variable{'SERVICES'}},0,3; ) ?>
+</div><!-- Projct Summary -->
+<? else ( $$variable{Project}{id} ) ?>
+There is no current project. 
+<? endif ( $$variable{Project}{id} ) ?>
+<br/>
+<span style="float: right;">
+  <a href="/employee/project/view.html?ProjectIndex=<?ProjectIndex?>">Return to Project View Page</a>
+</span>

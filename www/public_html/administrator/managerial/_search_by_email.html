@@ -1,0 +1,11 @@
+<? echo (
+	$param{search_email} = openprint::User->transform('email', $param{search_email} );
+	my @Users = openprint::User->find('email like'=> $param{search_email}.'%', order =>'lower(firstname),lower(lastname)', deleted =>[1,0] );
+	
+	if (! @Users ) {
+		return 'No users found.';
+	} elsif ( @Users > 10 ) {
+	} else {
+		return join( '<br/>', map { sprintf('<a href="/administrator/managerial/user_profiles.html?ddmUser=%d">%s %s %s %s</a>', $_->get('id','firstname','lastname','email'), $_->deleted() ? '(deleted)' : '' ); } @Users );
+	} # end if
+) ?>

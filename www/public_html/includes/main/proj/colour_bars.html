@@ -1,11 +1,19 @@
-<? if ( $$variable{'Mode'} eq 'Easy' ) ?>
-<input type="hidden" name="rdbColourBar" value="<?rdbColourBar?>"/>
-<? else ( $$variable{'Mode'} eq 'Easy' ) ?>
-<p id="ColourBars" <? if ( $$variable{'PrintingType'} eq 'Digital' ) ?>style="display:none"<? endif ( $$variable{'PrintingType'} eq 'Digital' ) ?>>
-	<label><? echo ( ssi::writeTip('Colour bar'); ) ?>:</label>
-		<input type="radio" id="rdbColourBarY" name="rdbColourBar" value="Y" onclick="calc('f1');" <? echo ( 'checked' if $$variable{'rdbColourBar'} ne 'N' ) ?> />
-		<label class="radio" for="rdbColourBarY">Yes</label>
-		<input type="radio" id="rdbColourBarN" name="rdbColourBar" value="N" onclick="calc('f1');" <? echo ( 'checked' if $$variable{'rdbColourBar'} eq 'N' ) ?> />
-		<label class="radio" for="rdbColourBarN">No</label>
-</p>
-<? endif ( $$variable{'Mode'} eq 'Easy' ) ?>
+<? echo (
+	if ( $$variable{Mode} eq 'Easy' ) {
+		return input( type=>'hidden', name=>'rdbColourBar'.$$variable{Signature}, value=>$$variable{'rdbColourBar'.$$variable{'Signature'}} ); 
+	} else {
+		my @values = ( 'Y','Yes','N','No','','Auto' );
+		my %values = @values;
+		my $html .= '<li class="ColourBars" ' . ( ( $$variable{PrintingType} eq 'Digital' ) ? 'style="display:none"' : '' ) . '><label>';
+		$html .= writeTip('Colour bar').'</label>';
+		my $Auth = openprint::Authorization->find_one( object_type=>'openprint::ServiceType', setting=>'rdbColourBar' );
+		if ( $Auth and ! $Auth->can_do() ) {
+			$html .= input( type=>'hidden', name=>'rdbColourBar'.$$variable{Signature}, value=>$$variable{'rdbColourBar'.$$variable{Signature}} ).$values{$$variable{'rdbColourBar'.$$variable{Signature}}}; 
+		} else {
+			$html .= radio( 'rdbColourBar'.$$variable{Signature}, \@values, $$variable{'rdbColourBar'.$$variable{'Signature'}}, 
+				{ onclick=>'calc(this.form.name);' } );
+		} # end if
+		$html .= '</li>';
+		return $html;
+	} # end if
+) ?>

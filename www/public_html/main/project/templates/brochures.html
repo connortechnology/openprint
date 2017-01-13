@@ -1,4 +1,3 @@
-		<script language="javascript" src="/javascripts/proj/misc_prin.js"></script>
 		<script language="javascript">
 			var projectType = "<?ProjectTypeID?>";
 
@@ -23,83 +22,83 @@
 
 		</script>
 			<form name="f1" method="POST" action="/main/project/view.html">
-			<!--#include virtual="/includes/main/proj/required_fields.html"-->
-			<!--#include virtual="/includes/main/proj/project_name.html"-->
-			<!--#include virtual="/includes/main/proj/templates/project_template_select.html" -->
+			<? echo ( include('/includes/main/proj/required_fields.html'); ) ?>
+			<? echo ( include('/includes/main/proj/project_name.html'); ) ?>
+			<? echo ( include('/includes/main/proj/templates/project_template_select.html'); ) ?>
 			<? if ( $$variable{'ProjectTypeID'} eq 'Brochures' ) ?>			
-			<!--#include virtual="/includes/main/proj/templates/brochures.html" -->
+			<? echo ( include('/includes/main/proj/templates/brochures.html'); ) ?>
 			<? endif ( $$variable{'ProjectTypeID'} eq 'Brochures' ) ?>
 			<? if ( $$variable{'ProjectTypeID'} eq 'Flyers' ) ?>
-			<!--#include virtual="/includes/main/proj/templates/flyers.html" -->
+			<? echo ( include('/includes/main/proj/templates/flyers.html'); ) ?>
 			<? endif ( $$variable{'ProjectTypeID'} eq 'Flyers' ) ?>
 			<? if ( $$variable{'ProjectTypeID'} eq 'Cards' ) ?>
-			<!--#include virtual="/includes/main/proj/templates/cards.html" -->
+			<? echo ( include('/includes/main/proj/templates/cards.html'); ) ?>
 			<? endif ( $$variable{'ProjectTypeID'} eq 'Cards' ) ?>
 			<? if ( $$variable{'ProjectTypeID'} eq 'Posters' ) ?>
-			<!--#include virtual="/includes/main/proj/templates/posters.html" -->
+			<? echo ( include('/includes/main/proj/templates/posters.html'); ) ?>
 			<? endif ( $$variable{'ProjectTypeID'} eq 'Posters' ) ?>
 			<? if ( $$variable{'ProjectTypeID'} eq 'Pamphlets/Leaflets' ) ?>
-			<!--#include virtual="/includes/main/proj/templates/brochures.html" -->
+			<? echo ( include('/includes/main/proj/templates/brochures.html'); ) ?>
 			<? endif ( $$variable{'ProjectTypeID'} eq 'Pamphlets/Leaflets' ) ?>
 			<? if ( $$variable{'ProjectTypeID'} eq 'NewsLetters' ) ?>
-			<!--#include virtual="/includes/main/proj/templates/newsletters.html" -->
+			<? echo ( include('/includes/main/proj/templates/newsletters.html'); ) ?>
 			<? endif ( $$variable{'ProjectTypeID'} eq 'NewsLetters' ) ?>
 			<? if ( $$variable{'ProjectTypeID'} eq 'BusinessCards' ) ?>
-			<!--#include virtual="/includes/main/proj/templates/business_cards.html" -->
+			<? echo ( include('/includes/main/proj/templates/business_cards.html'); ) ?>
 			<? endif ( $$variable{'ProjectTypeID'} eq 'BusinessCards' ) ?>
 			<? if ( $$variable{'ProjectTypeID'} eq 'Packaging' ) ?>
-			<!--#include virtual="/includes/main/proj/templates/packaging.html" -->
+			<? echo ( include('/includes/main/proj/templates/packaging.html'); ) ?>
 			<? endif ( $$variable{'ProjectTypeID'} eq 'Packaging' ) ?>
 			<? if ( $$variable{'ProjectTypeID'} eq 'PresentationFolders' ) ?>
-			<!--#include virtual="/includes/main/proj/templates/presentation_folders.html" -->
+			<? echo ( include('/includes/main/proj/templates/presentation_folders.html'); ) ?>
 			<? endif ( $$variable{'ProjectTypeID'} eq 'PresentationFolders' ) ?>
 			<? if ( $$variable{'ProjectTypeID'} eq 'Letterhead' ) ?>
-			<!--#include virtual="/includes/main/proj/templates/letterhead.html" -->
+			<? echo ( include('/includes/main/proj/templates/letterhead.html'); ) ?>
 			<? endif ( $$variable{'ProjectTypeID'} eq 'Letterhead' ) ?>
 			<? if ( $$variable{'ProjectTypeID'} eq 'Scratch/WritingPads' ) ?>
-			<!--#include virtual="/includes/main/proj/templates/scratch_pads.html" -->
+			<? echo ( include('/includes/main/proj/templates/scratch_pads.html'); ) ?>
 			<? endif ( $$variable{'ProjectTypeID'} eq 'Scratch/WritingPads' ) ?>
 			<? if ( $$variable{'ProjectTypeID'} eq 'MultiVersion' ) ?>
-			<!--#include virtual="/includes/main/proj/templates/multi_version.html" -->
+			<? echo ( include('/includes/main/proj/templates/multi_version.html'); ) ?>
 			<? endif ( $$variable{'ProjectTypeID'} eq 'MultiVersion' ) ?>
 			<? if ( $$variable{'ProjectTypeID'} eq 'Labels' ) ?>
-			<!--#include virtual="/includes/main/proj/templates/labels.html" -->
+			<? echo ( include('/includes/main/proj/templates/labels.html'); ) ?>
 			<? endif ( $$variable{'ProjectTypeID'} eq 'Labels' ) ?>
 			<? if ( $$variable{'ProjectTypeID'} eq 'Tags/Tickets' ) ?>
-			<!--#include virtual="/includes/main/proj/templates/tags_tickets.html" -->
+			<? echo ( include('/includes/main/proj/templates/tags_tickets.html'); ) ?>
 			<? endif ( $$variable{'ProjectTypeID'} eq 'Tags/Tickets' ) ?>
 			<? if ( $$variable{'ProjectTypeID'} eq 'Maps' ) ?>
-			<!--#include virtual="/includes/main/proj/templates/maps.html" -->
+			<? echo ( include('/includes/main/proj/templates/maps.html'); ) ?>
 			<? endif ( $$variable{'ProjectTypeID'} eq 'Maps' ) ?>
 			<? if ( $$variable{'ProjectTypeID'} eq 'Inserts' ) ?>
-			<!--#include virtual="/includes/main/proj/templates/inserts.html" -->
+			<? echo ( include('/includes/main/proj/templates/inserts.html'); ) ?>
 			<? endif ( $$variable{'ProjectTypeID'} eq 'Inserts' ) ?>
 			<? if ( $$variable{'ProjectTypeID'} eq 'Forms' ) ?>
-			<!--#include virtual="/includes/main/proj/templates/forms.html" -->
+			<? echo ( include('/includes/main/proj/templates/forms.html'); ) ?>
 			<? endif ( $$variable{'ProjectTypeID'} eq 'Forms' ) ?>
 			<? if ( $$variable{'ProjectTypeID'} eq 'Covers' ) ?>
-			<!--#include virtual="/includes/main/proj/templates/covers.html" -->
+			<? echo ( include('/includes/main/proj/templates/covers.html'); ) ?>
 			<? endif ( $$variable{'ProjectTypeID'} eq 'Covers' ) ?>
 			<? if ( $$variable{'ProjectTypeID'} eq 'Books' ) ?>
-			<!--#include virtual="/includes/main/proj/templates/multipage.html" -->
+			<? echo ( include('/includes/main/proj/templates/multipage.html'); ) ?>
 			<? endif ( $$variable{'ProjectTypeID'} eq 'Books' ) ?>
 			<? if ( $$variable{'ProjectTypeID'} eq 'Catalogues' ) ?>
-			<!--#include virtual="/includes/main/proj/templates/multipage.html" -->
+			<? echo ( include('/includes/main/proj/templates/multipage.html'); ) ?>
 			<? endif ( $$variable{'ProjectTypeID'} eq 'Catalogues' ) ?>
 			<? if ( $$variable{'ProjectTypeID'} eq 'Reports' ) ?>
-			<!--#include virtual="/includes/main/proj/templates/multipage.html" -->
+			<? echo ( include('/includes/main/proj/templates/multipage.html'); ) ?>
 			<? endif ( $$variable{'ProjectTypeID'} eq 'Reports' ) ?>
 			<? if ( $$variable{'ProjectTypeID'} eq 'Booklets' ) ?>
-			<!--#include virtual="/includes/main/proj/templates/multipage.html" -->
+			<? echo ( include('/includes/main/proj/templates/multipage.html'); ) ?>
 			<? endif ( $$variable{'ProjectTypeID'} eq 'Booklets' ) ?>
 			<? if ( $$variable{'ProjectTypeID'} eq 'Manuals' ) ?>
-			<!--#include virtual="/includes/main/proj/templates/multipage.html" -->
+			<? echo ( include('/includes/main/proj/templates/multipage.html'); ) ?>
 			<? endif ( $$variable{'ProjectTypeID'} eq 'Manuals' ) ?>
 			<? if ( $$variable{'ProjectTypeID'} eq 'Magazines' ) ?>
-			<!--#include virtual="/includes/main/proj/templates/multipage.html" -->
+			<? echo ( include('/includes/main/proj/templates/multipage.html'); ) ?>
 			<? endif ( $$variable{'ProjectTypeID'} eq 'Magazines' ) ?>
 
-			<!--#include virtual="/includes/main/proj/predefined_projects.html"-->
+			<? echo ( include('/includes/main/proj/predefined_projects.html'); ) ?>
 			
                 <table width="600" border="0" cellspacing="0" cellpadding="0">
                   <tr>

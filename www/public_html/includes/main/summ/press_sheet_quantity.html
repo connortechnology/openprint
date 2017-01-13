@@ -1,47 +1,26 @@
-<!--
-<div class="row"> 
-	<span class="label">Press Sheet Cost:</span>
-<? if ( ( ! $$variable{'OrderedQuantityIndex'} ) or ( $$variable{'OrderedQuantityIndex'} == 1 ) ) ?>
-		<? if ( $$variable{'hdnPaperPrice1'} > 0 ) ?>
-		<span class="value"> $<?hdnPaperPrice1?> </span>
-		<? endif ( $$variable{'hdnPaperPrice1'} > 0 ) ?>
-<? endif ( ( ! $$variable{'OrderedQuantityIndex'} ) or ( $$variable{'OrderedQuantityIndex'} == 1 ) ) ?>
-<? if ( ( ! $$variable{'OrderedQuantityIndex'} ) or ( $$variable{'OrderedQuantityIndex'} == 2 ) ) ?>
-		<? if ( $$variable{'hdnPaperPrice2'} > 0 ) ?>
-		<span class="value"> $<?hdnPaperPrice2?> </span>
-		<? endif ( $$variable{'hdnPaperPrice2'} > 0 ) ?>
-<? endif ( ( ! $$variable{'OrderedQuantityIndex'} ) or ( $$variable{'OrderedQuantityIndex'} == 2 ) ) ?>
-<? if ( ( ! $$variable{'OrderedQuantityIndex'} ) or ( $$variable{'OrderedQuantityIndex'} == 3 ) ) ?>
-		<? if ( $$variable{'hdnPaperPrice3'} > 0 ) ?>
-		<span class="value"> $<?hdnPaperPrice3?> </span>
-		<? endif ( $$variable{'hdnPaperPrice3'} > 0 ) ?>
-<? endif ( ( ! $$variable{'OrderedQuantityIndex'} ) or ( $$variable{'OrderedQuantityIndex'} == 3 ) ) ?>
-	<br class="spacer"/>
-</div>
--->
-<div class="row"> 
-	<span class="label">Stock Quantity:</span>
-	<? if ( $$variable{'Project'}->quantity1() ) ?>
-	<span class="value"> <?txtPressSheetQty1?> </span>
-	<? endif ( $$variable{'Project'}->quantity1() ) ?>
-	<? if ( $$variable{'Project'}->quantity2() ) ?>
-	<span class="value"> <?txtPressSheetQty2?> </span>
-	<? endif ( $$variable{'Project'}->quantity2() ) ?>
-	<? if ( $$variable{'Project'}->quantity3() ) ?>
-	<span class="value"> <?txtPressSheetQty3?> </span>
-	<? endif ( $$variable{'Project'}->quantity3() ) ?>
-</div>
-<!--
-<div class="row"> 
-	<span class="label">Press Sheet Net Quantity:</span>
-	<? if ( $$variable{'Project'}->quantity1() ) ?>
-	<span class="value"> <?hdnNetSheetCount1?> </span>
-	<? endif ( $$variable{'Project'}->quantity1() ) ?>
-	<? if ( $$variable{'Project'}->quantity2() ) ?>
-	<span class="value"> <?hdnNetSheetCount2?> </span>
-	<? endif ( $$variable{'Project'}->quantity2() ) ?>
-	<? if ( $$variable{'Project'}->quantity3() ) ?>
-	<span class="value"> <?hdnNetSheetCount3?> </span>
-	<? endif ( $$variable{'Project'}->quantity3() ) ?>
-</div>
--->
+<p> 
+	<label>Impressions/Gross Stock</label>
+<? echo ( 
+	my $html = '';
+	my $sig_specs = openprint::service::get_specs_ref( @$variable{'Project','ServiceIndex'} );
+	foreach my $qty_index ( $$variable{'Project'}->quantity_indexes() ) {
+		$html .= '<span class="value">';
+		$html .= $$sig_specs{'hdnImpressionQuantity'.$qty_index} .' impressions ';
+
+		my $Paper = openprint::Paper::load_from_signature( $$variable{'Project'}, $sig_specs, $qty_index );
+
+		my $qty = 0;
+		$qty  = $$sig_specs{'txtPressSheetQty'.$qty_index};
+		$qty =~ s/\D//g;
+
+		if ( $Paper->type() eq 'Roll' ) {
+			$html .= sprintf('%dlbs', $qty );
+		} else {
+			$html .= sprintf('%d sheets', $qty );
+		} # end if
+		$html .= ' of ' . $$variable{'ddmStockSheetSize'.$qty_index};
+		$html .= '</span>';
+	} # end foreach qty_index
+	return $html;
+) ?>
+</p>

@@ -1,34 +1,46 @@
-<form name="f1" id="f1" action="list.html" method="post">
-	<input type="hidden" name="category_id" value="<? echo ( $openprint::param{'category_id'} ) ?>" />
+<? eval ( $$variable{'Category'} = new openprint::Product_Category( $param{'category_id'} ) if ! $$variable{'Category'} ) ?>
+<form id="f1" name="f1" method="post" enctype="multipart/form-data" action="list.html">
+	<input type="hidden" name="category_id" value="<? echo ( $param{'category_id'} ) ?>" />
 	<fieldset>
 		<legend>
 		<? echo (
 			return $$variable{Category}->id() ? 'Editing Category ' . $$variable{Category}->id() : 'Add New Category';
 		) ?>
 		</legend>
-		<p>
+		<ul>
+		<li>
 			<label>Name</label>
-			<input type="text" name="name" value="<? hecho ( $$variable{'Category'}->name(); ) ?>"  />
-		</p>
-		<p>
+			<input type="text" name="name" value="<? hecho ( $$variable{'Category'}->name(); ) ?>" />
+		</li>
+<? if ( @{$$variable{ProjectTypes}} = openprint::ProjectType->find( 'order'=>'name' ); ) ?>
+		<li>
 			<label>Project Type</label>
 			<select name="projecttype_id">
 				<option value=""> select </option>
-				<? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::ProjectType::find( 'order'=>'strname' ) ], $$variable{Category}->type_id() ); ) ?>
+				<? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } @{$$variable{ProjectTypes}} ], $$variable{Category}->projecttype_id() ); ) ?>
 			</select>
-		</p>
-		<p>
+		</li>
+<? endif ( @{$$variable{ProjectTypes}} = openprint::ProjectType->find( 'order'=>'name' ); ) ?>
+		<li>
 			<label>Description</label>
-			<textarea name="description" rows="4" ><? echo ( ssi::htmlize($$variable{'Category'}->description()); ) ?></textarea>
-		</p>
-		<br class="spacer"/>
-		<p style="float: right;">
+			<textarea name="description" rows="<? echo ( ssi::count_lines($$variable{'Category'}->description()); ) ?>"><? hecho ( $$variable{'Category'}->description(); ) ?></textarea>
+		</li>
+		</ul>
+		<p class="buttons">
 			<? echo ( join('',
-			ssi::writeButton( $log, $dbh, 'Delete', 'delete.gif', "f1.btnFunction.value='Delete';f1.submit();", '', 'Delete' ),
-			ssi::writeButton( $log, $dbh, 'Save', 'save.gif', "f1.btnFunction.value='Save';f1.submit();", '', 'Save' ),
-			ssi::writeButton( $log, $dbh, 'Copy', 'copy.gif', "f1.btnFunction.value='Copy';f1.action='edit.html';f1.submit();", '', 'Copy' ),
-			ssi::writeButton( $log, $dbh, 'Reset', 'reset.gif', "f1.reset();", '', 'Reset' ),
+			ssi::button( 'Delete', { onclick=>"f1.btnFunction.value='Delete';f1.submit();", href=>'', text=>'Delete' } ),
+			ssi::button( 'Save', { onclick=>"f1.btnFunction.value='Save';f1.submit();", href=>'', text=>'Save' } ),
+			ssi::button( 'Copy', { onclick=>"f1.btnFunction.value='Copy';f1.action='edit.html';f1.submit();", href=>'', text=>'Copy' } ),
+			ssi::button( 'Reset', { onclick=>"f1.reset();", href=>'', text=>'Reset' } ),
 			); ) ?>
+		</p>
+		<p class="buttons">
+				<b>CSV File</b>
+				<input type="file" name="fileImport" />
+	<? echo ( join('',
+				ssi::button( 'Import', { onclick=>"f1.btnFunction.value='Import';f1.action='edit.html';f1.submit();", href=>'', text=>'Import' } ),
+				ssi::button( 'Export', { onclick=>"f1.btnFunction.value='Export';f1.action='edit.html?Download';f1.submit();", href=>'', text=>'Export' } ),
+	); ) ?>
 		</p>
 	</fieldset>
 	<input type="hidden" name="btnFunction" />

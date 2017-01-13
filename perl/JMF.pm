@@ -50,7 +50,7 @@ sub handler {
 			'password'  => $r->dir_config('db_password'),
 			);
 
-	%config = configuration::init_cache( $log, $dbh, $r->dir_config() );
+	%config = configuration::init( $log, $dbh, $r->dir_config() );
 
 	handle_JMF_Message( $doc );
 
@@ -66,7 +66,7 @@ sub handle_JMF_Message {
 	my $SenderID = $JMF->getAttribute('SenderID');
 	my $TimeStamp = $JMF->getAttribute('TimeStamp');
 
-	my @Equipment = openprint::Equipment::find( 'strid'=>$SenderID );
+	my @Equipment = openprint::Equipment->find( 'strid'=>$SenderID );
 	if ( ! @Equipment ) {
 		# Error
 $openprint::log->debug("Equipment $SenderID not found");

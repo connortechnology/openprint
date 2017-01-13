@@ -1,24 +1,12 @@
-<? if ( @{$$variable{'Products'}} = $$variable{'Order'}->Products(); ) ?>
-<table class="List">
-	<tr>
-		<th align="left">Product</th>
-        <th width="120" align="left">Requested Date</th>
-		<th width="75" align="left">Qty</th>
-		<th width="75" align="right">Price</th>
-	</tr>
-	<? while ( $$variable{'Product'} = shift @{$$variable{'Products'}} ) ?>
-	<tr<?rowclass?>> 
-		<td><? echo ( $$variable{'Product'}->Product()->name(); ) ?></td>
-		<td><? echo ( Date::Format::time2str( $openprint::config{'DateFormat'}, Date::Parse::str2time( $$variable{'Product'}->requested_for() ) ); ) ?></td>
-		<td align="left"><? echo ( $$variable{'Product'}->quantity(); ) ?></td>
-		<td align="right">
 <? echo (
-	$$variable{'rowclass'} = $$variable{'rowclass'} ? '' : ' class="colRow"';
-	my $html .= sprintf( '%s%.2f', $$variable{'Currency'}->symbol(), $$variable{'Product'}->price() );
+	my $html;
+	@{$$variable{'Products'}} = $$variable{'Order'}->Products();
+	foreach my $Product ( @{$$variable{'Products'}} ) {
+		$$variable{'Product'} = $Product;
+		$$variable{'Project'} = $$variable{'Product'}->Project();
+		$html .= '<div class="Project">';
+		$html .= ssi::include( $ENV{'DOCUMENT_ROOT'} . '/main/order/_product_information.html' );
+		$html .= '</div>';
+	} # end foreach
 	return $html;
 ) ?>
-	</td>
-</tr>
-	<? endwhile ( $$variable{'Product'} = shift @{$$variable{'Products'}} ) ?>
-</table>
-<? endif ( @{$$variable{'Products'}} = $$variable{'Order'}->Products(); ) ?>

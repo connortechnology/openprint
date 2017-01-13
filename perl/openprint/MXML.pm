@@ -1,9 +1,11 @@
+use strict;
 package openprint::MXML;
 
+require Math::Calc::Units;
 require XML::DOM;
 require openprint::Paper;
 require openprint::Imposition;
-use strict;
+require openprint::Estimating::Printing;
 
 my %runstyles = (
     'Sheet Work', 'Sheetwise',
@@ -55,8 +57,8 @@ sub new {
 	} else {
 	$Product->setAttribute('Type', 'Flat');
 	} # end if
-	$Product->setAttribute('FinishedTrimWidth',Math::Units::convert($$printing_specs{'txtFinalWidth'},'in',$units));
-	$Product->setAttribute('FinishedTrimHeight',Math::Units::convert($$printing_specs{'txtFinalHeight'},'in',$units));
+	$Product->setAttribute('FinishedTrimWidth',Math::Calc::Units::convert($$printing_specs{'txtFinalWidth'}.'in',$units));
+	$Product->setAttribute('FinishedTrimHeight',Math::Calc::Units::convert($$printing_specs{'txtFinalHeight'}.'in',$units));
 	$Product->setAttribute('RequiredQuantity',$P->ordered_quantity());
 
 	my $RGBColor = $ResourcePool->appendChild( $doc->createElement('RGBColor') );
@@ -78,7 +80,7 @@ sub new {
 	my $child_id = 0;
 	my $parent_sig_id = 0;
 
-	my ( $cover_sig_id ) = $P->signatures('Cover Spreads' );
+	my ( $cover_sig_id ) = $P->signatures({'type'=>'Cover Pages'});
 	my @signatures = $P->signatures();
 	$cover_sig_id = shift @signatures if ! $cover_sig_id;
 	@signatures = sets::exclude([$cover_sig_id], \@signatures );
@@ -86,10 +88,14 @@ sub new {
 
 	for ( my $i = 0; $i < @signatures; $i += 1 ) {
 		my $sig_id = $signatures[$i];
-		my $sig_specs = openprint::service::get_specs_ref( $P->id(), $sig_id );
-		$$sig_specs{'txtSignatureSpreadQuantity'.$P->ordered_quantity_index()} = 1 if ! $$sig_specs{'txtSignatureSpreadQuantity'.$P->ordered_quantity_index()};
-		my @equipment = openprint::Equipment::find('strid'=>$$sig_specs{'ddmPress'.$P->ordered_quantity_index()});
-		my $Equipment = shift @equipment;
+		my $sig_specs = openprint::service::get_specs_ref( $P, $sig_id );
+		my @equipment = openprint::Equipment->find('strid'=>$$sig_specs{'ddmPress'.$P->ordered_quantity_index()});
+		my $Equipment;
+		if ( @equipment ) {
+			$Equipment = shift @equipment;
+		} else {
+			$Equipment = new openprint::Equipment();
+		} # end if
 
 		my $PressNode = openprint::JDF::getNode( $ResourcePool, 'Press', 'ID'=>'E'.$Equipment->id() );
 		if ( ! $PressNode ) {
@@ -97,14 +103,13 @@ sub new {
 			$PressNode->setAttribute('ID','E'.$Equipment->id());
 			$PressNode->setAttribute('DeviceID',$Equipment->strid());
 		} # end if
-		
 
 		my $Component = $ComponentPool->appendChild( $doc->createElement( 'Component' ) );
 		$Component->setAttribute('ID', 'Component'.$sig_id );
 		$Component->setAttribute('RequestedNumberOut', $$sig_specs{'txtImposition'.$P->ordered_quantity_index()} );
 		$Component->setAttribute('Priority', 5 );
 		$Component->setAttribute('Active', 'True' );
-		$Component->setAttribute('Cover', $$sig_specs{'txtSignatureType'} eq 'Cover Spreads' ? 'True' : 'False' );
+		$Component->setAttribute('Cover', $$sig_specs{'txtSignatureType'} eq 'Cover Pages' ? 'True' : 'False' );
 		$Component->setAttribute('CombinePages','False');
 
 		if ( $sig_id != $cover_sig_id ) {
@@ -123,7 +128,7 @@ sub new {
 		} else {
 			$Component->setAttribute('FinishedGrain', 'Either' );
 		} # end if
-		if ( $sig_id == $cover_sig_id and $$sig_specs{'txtSignatureType'} ne 'Cover Spreads' ) {
+		if ( $sig_id == $cover_sig_id and $$sig_specs{'txtSignatureType'} ne 'Cover Pages' ) {
 			$Component->setAttribute('ChildIndex', '-1' );
 		} else {
 			if ( $binding eq 'SaddleStitching' ) {
@@ -145,7 +150,7 @@ sub new {
 			$StockNode->setAttribute('Name',$Paper->name());
 			$StockNode->setAttribute('Weight',int($Paper->gsm()));
 			$StockNode->setAttribute('WeightUnit','gsm');
-			$StockNode->setAttribute('Thickness',Math::Units::convert( $Paper->calliper(), 'in', $units) );
+			$StockNode->setAttribute('Thickness',Math::Calc::Units::convert( $Paper->calliper().'in', $units) );
 			$StockNode->setAttribute('Grade',1);
 		} # end if
 
@@ -157,12 +162,12 @@ sub new {
 			$StockSheetNode = $StockNode->appendChild( $doc->createElement( 'StockSheet' ) );
 			$StockSheetNode->setAttribute('ID', 'StockSheet'.$Paper->id() );
 			if ( $Paper->width() > $Paper->height() ) {
-			$StockSheetNode->setAttribute('Width',Math::Units::convert($Paper->width(),'in',$units) );
-			$StockSheetNode->setAttribute('Height',Math::Units::convert($Paper->height(),'in',$units) );
+			$StockSheetNode->setAttribute('Width',Math::Calc::Units::convert($Paper->width().'in',$units) );
+			$StockSheetNode->setAttribute('Height',Math::Calc::Units::convert($Paper->height().'in',$units) );
 			$StockSheetNode->setAttribute('Grain', 'Vertical' );
 			} else {
-			$StockSheetNode->setAttribute('Width',Math::Units::convert($Paper->height(),'in',$units) );
-			$StockSheetNode->setAttribute('Height',Math::Units::convert($Paper->width(),'in',$units) );
+			$StockSheetNode->setAttribute('Width',Math::Calc::Units::convert($Paper->height().'in',$units) );
+			$StockSheetNode->setAttribute('Height',Math::Calc::Units::convert($Paper->width().'in',$units) );
 			$StockSheetNode->setAttribute('Grain', 'Horizontal' );
 			} # end if
 		} # end if
@@ -172,7 +177,7 @@ sub new {
 		if ( $$sig_specs{'rdbTemplateType'} ) {
 			$FoldingScheme->setAttribute('JDFFoldCatalog',$openprint::JDF::folds{$$sig_specs{'rdbTemplateType'}} );
 		} else {
-			$FoldingScheme->setAttribute('JDFFoldCatalog',$openprint::JDF::folds{$$sig_specs{'txtSpreadSize'}*$$sig_specs{'txtSignatureSpreadQuantity'.$P->ordered_quantity_index()}.'PageFold'} );
+			$FoldingScheme->setAttribute('JDFFoldCatalog',$openprint::JDF::folds{$$sig_specs{'PageQuantity'.$P->ordered_quantity_index()}.'PageFold'} );
 		} # end if
 
 		my $FoldingSchemeRef = $Component->appendChild( $doc->createElement('FoldingSchemeRef'));
@@ -182,7 +187,7 @@ sub new {
 		my $Layout = $LayoutPool->appendChild( $doc->createElement( 'Layout' ) );
 		my %Colors;
 		foreach my $side ( 'SideOne','SideTwo' ) {
-			@{$Colors{$side}} = openprint::print_printing::get_colours( $sig_specs, $side );
+			@{$Colors{$side}} = openprint::Estimating::Printing::get_colours( $sig_specs, $side );
 		} # end foreach side
 		
 		if ( @{$Colors{'SideOne'}} and @{$Colors{'SideTwo'}} ) {
@@ -190,7 +195,7 @@ sub new {
 		} else {
 		$Layout->setAttribute('PrintingMethod', 'OneSided' );
 		} # end if
-		$Layout->setAttribute('PageToBleedGap', Math::Units::convert($$sig_specs{'ddmBleedSize'.$P->ordered_quantity_index()},'in',$units ) );
+		$Layout->setAttribute('PageToBleedGap', Math::Calc::Units::convert($$sig_specs{'ddmBleedSize'.$P->ordered_quantity_index()}.'in',$units ) );
 		$$sig_specs{'txtPressSheetQty'.$P->ordered_quantity_index()} =~ s/(\d*).*/$1/g;
 		$Layout->setAttribute('SheetsRequired', $$sig_specs{'txtPressSheetQty'.$P->ordered_quantity_index()} );
 		if ( sets::isin( $$sig_specs{'ddmRunStyle'.$P->ordered_quantity_index()}, ['Work & Turn','Work & Tumble','Perfecting'] ) ) {
@@ -219,25 +224,12 @@ sub new {
 		my $ComponentRef = $ComponentRefPool->appendChild( $doc->createElement( 'ComponentRef' ) );
 		$ComponentRef->setAttribute('rRef','Component'.$sig_id);
 
-		foreach my $spread ( 1 .. $$sig_specs{'txtSignatureSpreadQuantity'.$P->ordered_quantity_index()} ) {
-			if ( $$sig_specs{'txtSpreadSize'} == 4 ) {
-				foreach my $side ( 'SideOne','SideTwo' ) {
-					next if ! @{$Colors{$side}};
-					$PagePool->appendChild( addPage( $doc, $P, $sig_specs, $page, $side, \%Colors, $ResourcePool ) );
-					$page += 1;
-				} # end foreach
-				foreach my $side ( 'SideOne','SideTwo' ) {
-					next if ! @{$Colors{$side}};
-					$PagePool->appendChild( addPage( $doc, $P, $sig_specs, $page, $side, \%Colors, $ResourcePool ) );
-					$page += 1;
-				} # end foreach
-			} else { # SpreadSize==2
-				foreach my $side ( 'SideOne','SideTwo' ) {
-					next if ! @{$Colors{$side}};
-					$PagePool->appendChild( addPage( $doc, $P, $sig_specs, $page, $side, \%Colors, $ResourcePool ) );
-					$page += 1;
-				} # end foreach
-			} # end if
+		foreach my $spread ( 1 .. $$sig_specs{'PageQuantity'.$P->ordered_quantity_index()} ) {
+			foreach my $side ( 'SideOne','SideTwo' ) {
+				next if ! @{$Colors{$side}};
+				$PagePool->appendChild( addPage( $doc, $P, $sig_specs, $page, $side, \%Colors, $ResourcePool ) );
+				$page += 1;
+			} # end foreach
 		} # end foreach
 		$parent_sig_id = $sig_id;
 	} # end foreach signature
@@ -248,7 +240,7 @@ sub new {
 
 		if ( $services{$binding} ) {
 			my $binding_specs = openprint::service::get_specs_ref( $P->id(), $services{$binding}[0] );
-			my @equipment = openprint::Equipment::find('strid'=>$$binding_specs{'ddmEquipment'.$P->ordered_quantity_index()});
+			my @equipment = openprint::Equipment->find('strid'=>$$binding_specs{'ddmEquipment'.$P->ordered_quantity_index()});
 			$Binder = shift @equipment;
 		} # end if
 		if ( $Binder ) {
@@ -294,7 +286,7 @@ sub addPage {
 	$Page->setAttribute('Number',$page);
 	$Page->setAttribute('Folio',$page);
 	foreach my $bleed ( 'Left','Right','Top','Bottom' ) {
-		$Page->setAttribute('Bleed'.$bleed, $$sig_specs{'chkBleed'.$bleed} ? Math::Units::convert($$sig_specs{'ddmBleedSize'.$P->ordered_quantity_index()},'in',$units) : 0 );
+		$Page->setAttribute('Bleed'.$bleed, $$sig_specs{'Bleed'.$bleed} ? Math::Calc::Units::convert($$sig_specs{'ddmBleedSize'.$P->ordered_quantity_index()}.'in',$units) : 0 );
 	} # end foreach bleed
 	foreach my $colour ( @{$$Colors{$side}} ) {
 		my $InkNode = openprint::JDF::getNode( $doc, 'Ink', 'ID'=>'Ink'.$colour );

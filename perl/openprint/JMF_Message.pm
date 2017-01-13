@@ -1,11 +1,11 @@
+use strict;
 package openprint::JMF_Message;
-@ISA = qw(openprint::Object);
+our @ISA = qw(openprint::Object);
 require openprint::Object;
 require openprint::logs;
 
-use strict;
 
-my $debug = 1;
+my $debug = 0;
 
 my $table = 'JMF_Messages';
 

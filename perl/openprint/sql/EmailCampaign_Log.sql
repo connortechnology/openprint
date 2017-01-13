@@ -1,4 +1,4 @@
-DROP TABLE EmailCampaign_Log;
+DROP TABLE IF EXISTS EmailCampaign_Log;
 CREATE TABLE EmailCampaign_Log (
 	campaign_id	INTEGER NOT NULL, FOREIGN KEY (campaign_id) REFERENCES EmailCampaigns (id),
 	log				TEXT,

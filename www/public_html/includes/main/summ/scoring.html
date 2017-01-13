@@ -1,31 +1,23 @@
 <? while ( @$variable{'SignatureIndex','Reference'} = splice @{$$variable{'SignatureGroups'}},0,2; ) ?>
-
-<? if ( $$variable{"txtQty-$$variable{'SignatureIndex'}"} ) ?>
+<? if ( $$variable{"txtVerticalQty-$$variable{'SignatureIndex'}"} or $$variable{"txtHorizontalQty-$$variable{'SignatureIndex'}"} ) ?>
 	<? if ( $$variable{'Reference'} ) ?>
-	<div class="row">Information for <b><?Reference?></b></div>
+	<p>Information for <b><?Reference?></b></p>
 	<? endif ( $$variable{'Reference'} ) ?>
-	<div class="row">
-		<span class="label">Flat dimensions:</span>
+	<p> 
+		<label>Number of scores per item</label>
 <? eval ( $$variable{'QTYIndex'} = 1 ) ?>
 <? while ( $$variable{'QTYIndex'} <= 3 ) ?>
 <? if ( $$variable{'txtQuantity'.$$variable{'QTYIndex'}} ) ?>
-		<span class="value"> <? echo ( $$variable{"txtWidth-$$variable{'SignatureIndex'}"} ) ?>&quot; x <? echo ( $$variable{"txtHeight-$$variable{'SignatureIndex'}"} ) ?>&quot; <span class="smTbl">&nbsp;(W x H)</span> </span>
+		<span class="value">
+<? echo ( int($$variable{"txtVerticalQty-$$variable{'SignatureIndex'}"}) ) ?> Vertical
+<? echo ( int($$variable{"txtHorizontalQty-$$variable{'SignatureIndex'}"}) ) ?> Horizontal
+		</span>
 <? endif ( $$variable{'txtQuantity'.$$variable{'QTYIndex'}} ) ?>
 <? eval ( $$variable{'QTYIndex'} += 1 ) ?>
 <? endwhile ( $$variable{'QTYIndex'} <= 3 ) ?>
-	</div>
-	<div class="row"> 
-		<span class="label">Number of scores per item:</span>
-<? eval ( $$variable{'QTYIndex'} = 1 ) ?>
-<? while ( $$variable{'QTYIndex'} <= 3 ) ?>
-<? if ( $$variable{'txtQuantity'.$$variable{'QTYIndex'}} ) ?>
-		<span class="value"><? echo ( $$variable{"txtQty-$$variable{'SignatureIndex'}"} ) ?></span>
-<? endif ( $$variable{'txtQuantity'.$$variable{'QTYIndex'}} ) ?>
-<? eval ( $$variable{'QTYIndex'} += 1 ) ?>
-<? endwhile ( $$variable{'QTYIndex'} <= 3 ) ?>
-	</div>
-	<div class="row">
-		<span class="label">Imposition:</span>
+	</p>
+	<p>
+		<label>Imposition</label>
 <? eval ( $$variable{'QTYIndex'} = 1 ) ?>
 <? while ( $$variable{'QTYIndex'} <= 3 ) ?>
 <? if ( $$variable{'txtQuantity'.$$variable{'QTYIndex'}} ) ?>
@@ -34,16 +26,16 @@
 <? endif ( $$variable{'txtQuantity'.$$variable{'QTYIndex'}} ) ?>
 <? eval ( $$variable{'QTYIndex'} += 1 ) ?>
 <? endwhile ( $$variable{'QTYIndex'} <= 3 ) ?>
-	</div>
-	<div class="row">
-		<span class="label">Equipment:</span>
+	</p>
+	<p>
+		<label>Equipment</label>
 <? eval ( $$variable{'QTYIndex'} = 1 ) ?>
 <? while ( $$variable{'QTYIndex'} <= 3 ) ?>
 <? if ( $$variable{'txtQuantity'.$$variable{'QTYIndex'}} ) ?>
-		<span class="value"><? echo ( $$variable{"ddmEquipment-$$variable{'SignatureIndex'}-$$variable{'QTYIndex'}"} ) ?></span>
+		<span class="value"><? echo ( new openprint::Equipment( $$variable{"ddmEquipment-$$variable{'SignatureIndex'}-$$variable{'QTYIndex'}"} )->name() ) ?></span>
 <? endif ( $$variable{'txtQuantity'.$$variable{'QTYIndex'}} ) ?>
 <? eval ( $$variable{'QTYIndex'} += 1 ) ?>
 <? endwhile ( $$variable{'QTYIndex'} <= 3 ) ?>
-	</div>
-<? endif ( $$variable{"txtQty-$$variable{'SignatureIndex'}"} ) ?>
+	</p>
+<? endif ( $$variable{"txtVerticalQty-$$variable{'SignatureIndex'}"} or $$variable{"txtHorizontalQty-$$variable{'SignatureIndex'}"} ) ?>
 <? endwhile ( @$variable{'SignatureIndex','Reference'} = splice @{$$variable{'SignatureGroups'}},0,2; ) ?>

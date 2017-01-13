@@ -19,10 +19,12 @@ package openprint::Estimating::ManualLabour;
 use strict;
 
 require sql;
-require openprint::print;
 require openprint::service;
 
 my @variables = (
+	'OverridePrice1', 'OverridePrice2', 'OverridePrice3',
+	'Markup1', 'Markup2', 'Markup3',
+	'MPrice1', 'MPrice2', 'MPrice3',
 	'txtPrice1', 'txtPrice2', 'txtPrice3',
 	'BasePrice', 'Units',
 );
@@ -32,6 +34,8 @@ sub variables {
 } # end sub variables
 
 my @no_output = (
+	'OverridePrice1', 'OverridePrice2', 'OverridePrice3',
+	'Markup1', 'Markup2', 'Markup3',
 	'Hours1', 'Hours2', 'Hours3','Units','BasePrice',
 	'ProjectIndex','ServiceIndex','ServiceType',
 );
@@ -54,21 +58,25 @@ sub calc {
 		return $$specs{'Status'} = 'uncalculated';
 	} # end if
 
-	foreach my $qty_index ( 1 .. 3 ) {
-		next if ! $Project->quantity($qty_index);
+	foreach my $qty_index ( $Project->quantity_indexes() ) {
 
 		my $price;
-		if ( $$specs{'Units'} eq 'Flat' ) {
+		if ( lc $$specs{'Units'} eq 'flat' ) {
 			$price = $$specs{'Price'.$qty_index};
-		} elsif ( $$specs{'Units'} eq 'Per Item' ) {
+		} elsif ( lc $$specs{'Units'} eq 'per item' ) {
 			$price = $$specs{'BasePrice'} * $Project->quantity($qty_index);
-		} elsif ( $$specs{'Units'} eq 'Per M' ) {
+		} elsif ( lc $$specs{'Units'} eq 'per m' ) {
 			$price = $$specs{'BasePrice'} * $Project->quantity($qty_index)/1000;
 		} # end if
-		$$specs{'txtPrice'.$qty_index} = sprintf($openprint::config{'ProjectMoneyFormat'}, $price );
+		if ( $$specs{"OverridePrice$qty_index"} ne 'Y' ) {
+			$$specs{'txtPrice'.$qty_index} = sprintf($openprint::config{'ProjectMoneyFormat'}, $price*(1+$$specs{"Markup$qty_index"}/100) * (1+$Project->markup()/100) );
+		} else {
+			$$specs{'txtPrice'.$qty_index} = sprintf($openprint::config{'ProjectMoneyFormat'}, $$specs{"txtPrice$qty_index"} );
+		} # end if
+		$$specs{'MPrice'.$qty_index} = sprintf($openprint::config{'UnitPriceFormat'}, $$specs{"MPrice$qty_index"} * (1+$$specs{"Markup$qty_index"}/100) * (1+$Project->markup()/100));
 	} # end foreach
 
-	return 'calculated';
+	return $$specs{'Status'} = 'calculated';
 } # end sub calc
 
 

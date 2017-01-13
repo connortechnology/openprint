@@ -1,15 +1,12 @@
-<? if ( $openprint::session{'user_type'} ) ?>
-<!--#include virtual="/includes/_greeting.html"-->
+<? if ( $session{'user_type'} ) ?>
+<? echo ( include('/includes/_greeting.html'); ) ?>
 <br/>
 <?Destination?><br/>
 <br/>
 <b>Has any of your account information changed?</b><br/>
 To change passwords, and add, modify or delete user accounts, please click <a href="/administrator/managerial/user_profiles.html">here</a>. 
-<? else ( $openprint::session{'user_type'} ) ?>
-<p class="error"><b><?error?></b><br/>
-  <br/>
-  <?details?><br/>
-</p>
-<!--#include virtual="/administrator/account/login.html" -->
-<? endif ( $openprint::session{'user_type'} ) ?>
+<? else ( $session{'user_type'} ) ?>
+<? echo ( include('/includes/error_reporting.html'); ) ?>
+<? echo ( include('/administrator/account/login.html'); ) ?>
+<? endif ( $session{'user_type'} ) ?>
 

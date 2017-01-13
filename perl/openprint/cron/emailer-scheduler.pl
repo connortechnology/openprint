@@ -1,55 +1,77 @@
-#!/usr/bin/perl -w
+#!/usr/bin/perl
+use lib "/etc/apache2/lib/perl";
+use strict;
+use utf8;
 
-# Make sure we can get access to the perl modules
-use lib "/etc/apache/lib/perl/";
+use File::Basename qw(basename);
+use Getopt::Long;
 
 require sql;
 require logger;
 require misc;
 require ssi;
-require eprint::EmailCampaign;
+require openprint::Object;
+require openprint::EmailCampaign;
+require configuration;
 
-use MIME::QuotedPrint;
-use Mail::Sendmail;
 use openprint;
-use vars qw( %variable $log $dbh);
+use vars qw( %variable $log $dbh %config %session );
 *variable = \%openprint::variable;
 *log = \$openprint::log;
 *dbh = \$openprint::dbh;
+*config = \%openprint::config;
+*session = \%openprint::session;
 
+my $program = basename($0);
 
-use strict;
+my @args = @ARGV;
 
-$log = logger->new();
-$log->{level} = "warn";
-my %sql_server;
+my $opts = {};
+GetOptions($opts, 'help', 'log_file=s', 'log_level=s',
+    'db_port=s', 'db_name=s', 'db_host=s', 'db_user=s', 'db_pass=s',
+	'config=s', 'campaign_id=s',
+);
 
-my $site_admin_email = 'iconnor@point-one.com';
+if ($opts->{help}) {
+    usage();
+    exit 0;
+}
 
-# This is a bit of a hack, but it allows us to use similar styled code
-# as is found in the apache modules
-$ENV{'DOCUMENT_ROOT'} = '/var/www/point-one/www.point-one.com/';
+$$opts{config} = '/etc/openprint/emailer-scheduler.conf' if ! $$opts{config};
+
+$log = new logger( {level=>'warn'});
+configuration::init();
+configuration::from_file( $$opts{config} );
+configuration::merge( $opts );
+
+# required params
+foreach my $param ( 'db_name','db_user','db_pass' ) {
+	die "$program: missing required --$param parameter" if ! $config{$param};
+} # end foreach required-param
 
 
 $log->info("Opening SQL connection");
-$dbh = sql::open_sql($log, 
-		'database' => 'point-one',
-		'driver'   => 'Pg',
-		'host'     => '192.168.1.203',
-		'login'    => 'point-one',
-		'password' => 'point-1',
-		);
-%openprint::config = configuration::init_cache( $log, $dbh, {
-		'siteURL' => 'http://www.point-one.com',
-		'SecureSiteURL'	=> 'https://www.point-one.com',
-		'ExternalSiteURL'	=> 'http://www.point-one.com',
-		'ExternalSecureSiteURL'	=> 'https://www.point-one.com',
-		}
-		);
+$dbh = sql::open_sql( $log, 
+	port		=> $config{db_port},
+	host		=> $config{db_host},
+	database	=> $config{db_name},
+	driver		=> 'Pg',
+	login		=> $config{db_user},
+	password	=> $config{db_pass},
+);
+die 'Error opening db' if ! $dbh;
+configuration::from_db( );
+configuration::from_file( $$opts{config} );
+configuration::merge( $opts );
+
+$session{company_id} = $config{owner_id};
+$ENV{DOCUMENT_ROOT} = $config{DOCUMENT_ROOT};
+
+openprint::session_init();
 
 # The first query to execute grabs the ids of all of the email campaigns
 # that are currently set to run
-my @campaign_ids = eprint::EmailCampaign::find( 'active' => 'Y', 'misc' => '(lastrun+interval<now() OR lastrun IS NULL ) AND timeofday <= NOW()::time' );
+my @campaign_ids = openprint::EmailCampaign->find( $$opts{campaign_id} ? ( id=>$$opts{campaign_id} ) : (active => 'Y', 'nextrun <' => 'NOW()', 'custom'=>['(timeofday IS NULL) OR (timeofday <= CURRENT_TIME)'] ) );
 
 $log->info("There are ".@campaign_ids." active campaigns\n");
 
@@ -57,12 +79,10 @@ $log->info("There are ".@campaign_ids." active campaigns\n");
 # between the last login time and now (which will be our threshold of concern)
 foreach my $Campaign (@campaign_ids) {
 	$Campaign->send();
-	print "Done campaign " . $Campaign->name() . "\n";
+	#print "Done campaign " . $Campaign->name() . "\n";
 } # foreach campaign_id
 
 $dbh->disconnect();
 
-
 1;
-
 __END__

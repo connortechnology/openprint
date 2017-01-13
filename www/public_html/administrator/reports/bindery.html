@@ -2,11 +2,11 @@
 <fieldset class="filters"><legend>Report Criteria</legend>
 	Choose report criteria and click Show Results.<br/><br/>
 	<p>
-		<label>Employee:</label>
+		<label>Employee</label>
 			<select name="ddmEmployee" size="1">
 				<option value="Bindery">All Bindery Employees</option>
 				<option value="All" <? echo ( 'selected' if $r->param('ddmEmployee') eq 'All' ) ?>>All Employees</option>
-				<? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::User::find( 'type'=>['E','A'], 'order'=>'lower(strfirstname),lower(strlastname)') ], $r->param('ddmEmployee') ); ) ?>
+				<? echo ( make_drop_down( openprint::User->dropdown( type=>['E','A'], order=>'lower(firstname),lower(lastname)'), $param{ddmEmployee} ); ) ?>
 			</select>
 	</p>
 	<? eval (
@@ -24,7 +24,7 @@
 ) ?>
 
 	<p>
-		<label>Ordered Date:</label>
+		<label>Ordered Date</label>
 			<select name="ddmStartYear"><?StartYears?></select>
 			<select name="ddmStartMonth"><?StartMonths?></select>
 			<select name="ddmStartDay"><?StartDays?></select>
@@ -34,56 +34,54 @@
 			<select name="ddmEndDay"><?EndDays?></select>
 	</p>
 	<p class="buttons">
-			<? echo ( ssi::writeButton( $log, $dbh, 'ShowResults', 'showResults.gif', 'f1.submit();', '', 'Show Results' ); ) ?>
-			<? echo ( ssi::writeButton( $log, $dbh, 'Reset', 'reset.gif', 'f1.reset();', '', 'Reset' ); ) ?>
+			<? echo ( button( 'ShowResults', { onclick=>'f1.submit();', text=>'Show Results' } ); ) ?>
+			<? echo ( button( 'Reset', { onclick=>'f1.reset();', text=>'Reset' } ); ) ?>
 	</p>
 </fieldset>
 <? eval ( 
-		my %params = ( 'type'=>['E','A'] );
-		if ( $openprint::param{'ddmEmployee'} eq 'Bindery' ) {
-			$params{'usergroup'} = 'Bindery';
-		} elsif ( $openprint::param{'ddmEmployee'} ne 'All' ) {
-			$params{'id'} = $openprint::param{'ddmEmployee'};
-		} # end if
-		@{$$variable{'Results'}} = %{$$variable{'Employees'}} = map { $_->id(), $_->name() } openprint::User::find( %params );
-		@{$$variable{'Projects'}} = openprint::Project::find( 'ordered_on_start'=>"$$variable{'Start'} 00:00:00", 'ordered_on_end'=>"$$variable{'End'} 23:59:59" );
- ) ?>
- <? if ( @{$$variable{'Projects'}} ) ?>
-	<? eval ( 
-		%{$$variable{'BinderyServices'}} = map { $_->name(), $_->description() } openprint::ServiceType::find('view_visible'=>1,'category'=>'Bindery');
+	$$variable{Projects} = [ openprint::Project->find( 
+		'ordered_on <='=>"$$variable{'End'} 23:59:59",
+		'ordered_on >='=>"$$variable{'Start'} 00:00:00",
+	) ];
+	if ( @{$$variable{'Projects'}} ) {
+		
+		%{$$variable{'BinderyServices'}} = map { $_->type(), $_->description() } openprint::ServiceType->find('view_visible'=>1,'category'=>'Bindery');
 		foreach my $Project ( @{$$variable{'Projects'}} ) {
 			next if sets::isin( $Project->status(), [ 'Incomplete', 'Deleted','Cancelled' ] );
-			my %services = $Project->get_services();
-			my ( $qty_index ) = $Project->ordered_quantity_index();
+			my $services = $Project->services();
+			my $qty_index = $Project->ordered_quantity_index();
 			foreach my $id ( keys %{$$variable{'BinderyServices'}} ) {
-				next if ! $services{$id};
+				next if ! $$services{$id};
 
-				foreach my $s_id ( @{$services{$id}} ) {
-					my %specs = openprint::service::get_specifications_pairs( $log, $dbh, $Project->id(), $s_id );
-					if ( ! $specs{'txtEmployeeName'} ) {
-						my ( $operator_id ) = sql::execute( $log, $dbh, q{SELECT operator_id FROM tbl_Project_Contents WHERE lngProjectIndex=? AND lngServiceIndex=?}, $Project->id(), $s_id );
-						$specs{'txtEmployeeName'} = $$variable{'Employees'}->{$operator_id};
+				foreach my $s_id ( @{$$services{$id}} ) {
+					my $Service = $Project->Service( $s_id );
+
+					my $specs = $Service->specs();
+
+					if ( ! $$specs{'txtEmployeeName'} ) {
+						$$specs{'txtEmployeeName'} = $Service->Operator()->name();
 					} # end if
-					if ( ( ! $specs{'txtEmployeeName'} ) and ( ! sets::isin( $Project, $$variable{'UnassignedProjects'} ) ) ) {
+					if ( ( ! $$specs{'txtEmployeeName'} ) and ( ! sets::isin( $Project, $$variable{'UnassignedProjects'} ) ) ) {
 						push @{$$variable{'UnassignedProjects'}}, $Project;
 					} # end if
 					#$specs{'txtEmployeeName'} = misc::trim( $specs{'txtEmployeeName'} );
-					if ( ! $$variable{$specs{'txtEmployeeName'}} ) {
-						@{$$variable{$specs{'txtEmployeeName'}}->{'Projects'}} = ();
+					if ( ! $$variable{$$specs{'txtEmployeeName'}} ) {
+						@{$$variable{$$specs{'txtEmployeeName'}}->{'Projects'}} = ();
 					} # end if
-					if ( ! sets::isin( $Project, $$variable{$specs{'txtEmployeeName'}}->{'Projects'} ) ) {
-						push @{$$variable{$specs{'txtEmployeeName'}}->{'Projects'}}, $Project;
+					if ( ! sets::isin( $Project, $$variable{$$specs{'txtEmployeeName'}}->{'Projects'} ) ) {
+						push @{$$variable{$$specs{'txtEmployeeName'}}->{'Projects'}}, $Project;
 					} # end if
-					$$variable{$specs{'txtEmployeeName'}}->{$id} += $specs{"txtPrice$qty_index"};
-					$$variable{'Totals'}->{$id} += $specs{"txtPrice$qty_index"};
-				} # end foreach
-			} # end foreach
-		} # end while project_id
-	) ?>
-<table class="List">
+					$$variable{$$specs{'txtEmployeeName'}}->{$id} += $$specs{"txtPrice$qty_index"};
+					$$variable{'Totals'}->{$id} += $$specs{"txtPrice$qty_index"};
+				} # end foreach service_id
+			} # end foreach Bindery Service
+		} # end foreach Project
+	} # end if
+) ?>
+<table class="List sortable">
 	<tr>
-		<th align="left">Employee</th>
-		<th align="right"># of Projects</th>
+		<th class="User">Employee</th>
+		<th class="Projects"># of Projects</th>
 		<? echo (
 			my $html;
 			foreach ( sort keys %{$$variable{'BinderyServices'}} ) {
@@ -92,39 +90,27 @@
 			return $html;
 		) ?>
 	</tr>
-<? while ( @$variable{'user_id','user_name'} = splice @{$$variable{'Results'}},0,2; ) ?>
-	<? eval ( $$variable{'rowclass'} = $$variable{'rowclass'} ? '' : ' class="colRow"' ) ?>
-	<tr<?rowclass?>>
-		<td><?user_name?></td>
-		<td align="right"><? echo ( scalar @{$$variable{$$variable{'user_name'}}->{'Projects'}} ) ?></td>
-		<? echo (
-			my $html;
-			foreach ( sort keys %{$$variable{'BinderyServices'}} ) {
-				$html .= sprintf('<td align="right">$ %.2f</td>', $$variable{$$variable{'user_name'}}->{$_});
-			} # end foreach
-			return $html;
-		) ?>
-	</tr>
-<? endwhile ( @$variable{'user_id','user_name'} = splice @{$$variable{'Results'}},0,2; ) ?>
+<? echo (
+	my $html = '';
+	my %params = ( type=>['E','A'], order=>'lower(firstname),lower(lastname)' );
+	if ( $param{'ddmEmployee'} eq 'Bindery' ) {
+		$params{'usergroup any'} = 'Bindery';
+	} elsif ( $param{'ddmEmployee'} ne 'All' ) {
+		$params{'id'} = $param{'ddmEmployee'};
+	} # end if
+	my @Users = openprint::User->find( %params );
 
-<!--
-<? if ( @{$$variable{''}->{'Projects'}} ) ?>
-	<? eval ( $$variable{'rowclass'} = $$variable{'rowclass'} eq 'colRow' ? '' : 'colRow' ) ?>
-	<tr class="<?rowclass?>">
-		<td>Unassigned</td>
-		<td align="right"><? echo ( scalar @{$$variable{''}->{'Projects'}} ) ?></td>
-		<? echo (
-			my $html;
-			foreach ( sort keys %{$$variable{'BinderyServices'}} ) {
-				$html .= sprintf('<td align="right">$ %.2f</td>', $$variable{''}->{$_});
-			} # end foreach
-			return $html;
-		) ?>
-	</tr>
-<? endif ( @{$$variable{''}->{'Projects'}} ) ?>
--->
-	<? eval ( $$variable{'rowclass'} = $$variable{'rowclass'} ? '' : ' class="colRow"' ) ?>
-	<tr<?rowclass?> style="border-top: 1px solid #353c91;">
+	foreach my $User ( @Users ) {
+		
+		$html .= sprintf('<tr><td>%1$s</td><td align="right">%2$d</td>', $User->name(), $$variable{$User->name()} ? scalar @{$$variable{$User->name()}->{'Projects'}} : 0 );
+		foreach ( sort keys %{$$variable{'BinderyServices'}} ) {
+			$html .= sprintf('<td align="right">$ %.2f</td>', $$variable{$User->name()} ? $$variable{$User->name()}->{$_} : 0 );
+		} # end foreach
+	} # end foreach User
+	$html .= '</tr>';
+	return $html;
+) ?>
+	<tr class="totals">
 		<td>Totals</td>
 		<td align="right"><? echo ( scalar @{$$variable{'Projects'}} ) ?></td>
 		<? echo (
@@ -138,23 +124,21 @@
 </table>
 <? if ( $$variable{'UnassignedProjects'} ) ?>
 <br/>
-	<h3>Unassigned Projects:</h3>
-<table class="List">
+	<h3>Unassigned Projects</h3>
+<table class="List sortable">
 	<tr>
-		<th align="left" width="100">Index</th>
-		<th align="left">Reference</th>
-		<th align="left">Company</th>
-		<th valign="top" align="right" width="100">Ordered On</th>
+		<th class="project_id">Index</th>
+		<th class="reference">Reference</th>
+		<th class="Company">Company</th>
+		<th class="Date">Ordered On</th>
 	</tr>
 <? while ( $$variable{'Project'} = shift @{$$variable{'UnassignedProjects'}} ) ?>
-<? eval ( @$variable{'DateOrdered'} = sql::execute( $log, $dbh, q{SELECT date(dtmOrderDate) FROM Orders WHERE Index = ?}, $$variable{'Project'}->order_id() ); ) ?>
-	<tr<?colrow?>>
-		<td valign="top"><a href="project_view.html?ProjectIndex=<? echo ( $$variable{'Project'}->id() ) ?>"><? echo ( $$variable{'Project'}->id() ) ?></a></td>
-		<td valign="top"><? echo ( ssi::htmlize($$variable{'Project'}->reference()) ) ?></td>
-		<td valign="top"><? echo ( ssi::htmlize($$variable{'Project'}->Company()->name() ); ) ?></td>
-		<td valign="top" align="right"><?DateOrdered?></td>
+	<tr>
+		<td class="project_id"><a href="project_view.html?ProjectIndex=<? echo ( $$variable{'Project'}->id() ) ?>"><? echo ( $$variable{'Project'}->id() ) ?></a></td>
+		<td class="reference"><? echo ( $$variable{'Project'}->reference() ) ?></td>
+		<td class="Company"><? echo ( htmlize($$variable{'Project'}->Company()->name() ); ) ?></td>
+		<td class="Date"><? echo ( format_date( $$variable{'Project'}->Order()->created_on() ) ) ?></td>
 	</tr>
-<? eval ( $$variable{'colrow'} = $$variable{'colrow'} ? '' : ' class="colRow"' ) ?>
 <? endwhile ( $$variable{'Project'} = shift @{$$variable{'UnassignedProjects'}} ) ?>
 </table>
 

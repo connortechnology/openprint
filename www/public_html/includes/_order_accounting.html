@@ -4,12 +4,12 @@
 		<td width="75" height="0"></td>
 	</tr>
 <tr>
-        <td align="right"><b>Amount Paid:</b></td>
+        <td align="right"><b>Amount Paid</b></td>
         <td align="right"><?CurrencySymbol?><?AmountPaid?></td>
     </tr>
     <? if ( $$variable{'DepositDue'} ) ?>
     <tr>
-       <td align="right"><b>Deposit Due immediately:</b></td>
+       <td align="right"><b>Deposit Due immediately</b></td>
         <td align="right"><?CurrencySymbol?><?DepositDue?></td>
     </tr>
     <? else ( $$variable{'DepositDue'} ) ?>
@@ -21,7 +21,7 @@
             <? endif ( $$variable{'Terms'} ) ?>
         </td>
        </tr><tr>
-        <td align="right"><b>Outstanding Balance:</b></td>
+        <td align="right"><b>Outstanding Balance</b></td>
         <td align="right"><?CurrencySymbol?><?AmountOutstanding?></td>
     </tr>
     <? endif ( $$variable{'AmountOutstanding'} > 0 and $$variable{'ORDER_STATUS'} eq 'Complete' ) ?>

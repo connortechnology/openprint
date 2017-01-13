@@ -1,104 +1,101 @@
-<style type="text/css">
-	span.logAction {
-	float: left;
-	width: 175px;
-	}
-</style>
 <form name="searchLog" action="logs.html" method="post">
-	<fieldset class="filters">
-	   <legend>Search</legend>
-		<p><label>Actions:<br/>
-		  <a href="javascript:void(0);" onclick="select_all( searchLog, 'log_actions', true );return false;">Select All</a> | <a href="javascript:void(0);" onclick="select_all( searchLog, 'log_actions', false );return false;">Clear All</a></label>
-		  <? echo(
-				  my $html;
-				  my @sql_results = sql::execute( undef, undef, 'SELECT id, name, description FROM log_actions ORDER BY name' );
-				  while ( @sql_results ) {
-				  my ($id, $name, $description) = splice(@sql_results, 0, 3);
-				  $html .= sprintf('<span class="logAction"><input type="checkbox" name="log_actions" id="log_action-%1$s" value="%1$s" %3$s /><label class="radio" for="log_action-%1$s">%2$s</label></span>', $id, $name, sets::isin( $id, $openprint::param{'log_actions'}) ? 'checked="checked"' : '' );
-
-				  } # end while
-				  return $html;
-				 ) ?>
-		</p>
-		<p>
-			<label>Company:</label>
-			<input type="text" onKeyUp="filterDDM(this, this.form.company_id);" size="4" />
-			<select name="company_id">
-			<option value="">All</option>
-			<? echo ( openprint::Company::get_dropdown( $openprint::param{'company_id'} ); ) ?>
-			</select>
-		</p>		  
-	<? eval (
-		if ( $openprint::param{'StartYear'} ) {
-			@openprint::session{$r->uri().'?StartYear',$r->uri().'?StartMonth',$r->uri().'?StartDay'} =
-				@openprint::param{'StartYear','StartMonth','StartDay'};
-			@openprint::session{$r->uri().'?EndYear',$r->uri().'?EndMonth',$r->uri().'?EndDay'} =
-				@openprint::param{'EndYear','EndMonth','EndDay'};
-		} else {
-			@openprint::session{$r->uri().'?StartYear',$r->uri().'?StartMonth',$r->uri().'?StartDay'} = Date::Calc::Today();
-			@openprint::session{$r->uri().'?EndYear',$r->uri().'?EndMonth',$r->uri().'?EndDay'} = Date::Calc::Today();
-		} # end if
-	) ?>
-		<p>
-			<label>Date:</label>
-			<select name="StartYear"><? echo ( ssi::return_years( undef, undef, $openprint::session{$r->uri().'?StartYear'} ); ) ?></select>
-			<select name="StartMonth"><? echo ( ssi::getmonths( $openprint::session{$r->uri().'?StartMonth'} ); ) ?></select>
-			<select name="StartDay"><? echo ( ssi::getdays( $openprint::session{$r->uri().'?StartDay'} ); ) ?></select>
-			-
-
-			<select name="EndYear"><? echo ( ssi::return_years( undef, undef, $openprint::session{$r->uri().'?EndYear'} ); ) ?></select>
-			<select name="EndMonth"><? echo ( ssi::getmonths( $openprint::session{$r->uri().'?EndMonth'} ); ) ?></select>
-			<select name="EndDay"><? echo ( ssi::getdays( $openprint::session{$r->uri().'?EndDay'} ); ) ?></select>
-		</p>
-		<p>
-	  <label for="resultsLimit">Results per page</label>
-	  <select name="resultsLimit" id="resultsLimit" size="1">
-			<option value="">All</option>
-		 <option value="25">25</option>
-		 <option value="50">50</option>
-		 <option value="100">100</option>
-		 <option value="200">200</option>
-	  </select>
-		</p>
+	<fieldset class="filters"><legend>Search</legend>
+		<div class="content">
+			<ul>
+				<li><label>Actions</label>
+					<input type="checkbox" id="all" name="all" onclick="select_all( searchLog, 'log_actions',this.checked);" />
+					<label class="radio" for="all">All</label><br/>
+					<ul id="logactions">
+					<? echo(
+							my $html;
+							foreach my $Action ( openprint::Log_Action->find('order'=>'lower(name)') ) {
+								$html .= sprintf('<li><input type="checkbox" name="log_actions" id="log_action-%1$s" value="%1$s" %3$s /><label class="radio" for="log_action-%1$s">%2$s</label></li>', 
+									$Action->id(), $Action->name(), ssi::checked( sets::isin( $Action->id(), $param{log_actions} ) ) 
+									);
+							} # end foreach Action
+							return $html;
+						 ) ?>
+					</ul>
+				</li>
+				<li>
+					<label>Company</label>
+					<input type="text" onkeyup="filterDDM(this, this.form.company_id);" size="4" />
+					<select name="company_id" onclick="new Ajax.Request( 'user_id', '/includes/_user_ddm.html', { parameters{ company_id: this.getValue() }} );">
+					<option value="">All</option>
+					<? echo ( make_drop_down( openprint::Company->dropdown(), exists $param{company_id} ? $param{company_id} : $session{company_id} ); ) ?>
+					</select>
+				</li>			
+				<li>
+					<label>User</label>
+					<select name="user_id" id="user_id">
+					<option value="">All</option>
+					<? echo ( make_drop_down( openprint::User->dropdown( company_id=>$param{company_id} ? $param{company_id} : $session{company_id}, order=>'lower(firstname),lower(lastname)'), $param{user_id} ); ) ?>
+					</select>
+				</li>			
+				<li>
+					<label>Date</label>
+					<? echo ( date_select_session( $r->uri(), 'date_start', { with_today=>1, with_clear=>1 } ); ) ?>
+					to
+					<? echo ( date_select_session( $r->uri(), 'date_end', { with_today=>1, with_clear=>1 } ); ) ?>
+				</li>
+			</ul>
+		</div>
 		<p class="buttons">
-	  <? echo ( ssi::writeButton( $log, $dbh, 'Search','',"document.searchLog.submit();", '', 'Search' ); ) ?>
+		<? echo ( button( 'Search', { onclick=>'document.searchLog.submit();' } ); ) ?>
 		</p>
 	</fieldset>
 </form>
 <fieldset>
-   <legend>Last Events</legend>
-   <div style="overflow: auto;">
-	  <table class="List" style="table-layout: auto; overflow: hidden;">
+	<legend>Last Events</legend>
+		<table class="List sortable">
 		<tr>
-		  <th align="left"><div id="actionHeaderIcon"><span id="actionHeader" onclick="setCurrentDateRangeParams();setResultsLimit(getRememberedResultsLimit());setOrderByType();document.searchLog.orderBy.value='action';document.searchLog.submit();return false;">Action</span></div></th>
-	  	 <th align="left"><div id="dateHeaderIcon"><span id="dateHeader" onclick="setCurrentDateRangeParams();setResultsLimit(getRememberedResultsLimit());setOrderByType();document.searchLog.orderBy.value='dateTime';document.searchLog.submit();return false;">When</span></div></th>
-	  	 <th align="left"><div id="ipHeaderIcon"><span id="ipHeader" onclick="setCurrentDateRangeParams();setResultsLimit(getRememberedResultsLimit());setOrderByType();document.searchLog.orderBy.value='ipaddress';document.searchLog.submit();return false;">IP Address</span></div></th>
-	  	 <th align="left"><div id="noteHeaderIcon"><span id="noteHeader" onclick="setCurrentDateRangeParams();setResultsLimit(getRememberedResultsLimit());setOrderByType();document.searchLog.orderBy.value='note';document.searchLog.submit();return false;">Note</span></div></th>
-	  	 <th align="left"><div id="emailHeaderIcon"><span id="emailHeader" onclick="setCurrentDateRangeParams();setResultsLimit(getRememberedResultsLimit());setOrderByType();document.searchLog.orderBy.value='email';document.searchLog.submit();return false;">Email</span></div></th>
-	  	 <th align="left"><div id="nameHeaderIcon"><span id="nameHeader" onclick="setCurrentDateRangeParams();setResultsLimit(getRememberedResultsLimit());setOrderByType();document.searchLog.orderBy.value='name';document.searchLog.submit();return false;">Name</span></div></th>
+			<th class="Action">Action</th>
+			<th class="DateTime">When</th>
+			<th class="ip">IP Address</th>
+			<th class="Note">Note</th>
+			<th class="Email">Email</th>
+			<th class="Name">Name</th>
+			<th class="Company">Company</th>
+			<th class="Object">Object</th>
+			<th class="buttons"></th>
 		</tr>
 			<? echo (
 				my $html = '';
-				my $log_records_arrRef = openprint::logs::getLog();
+				$$variable{Results} = [ openprint::Log->find(
+					date_filter( $r->uri(). '?date_end', 'date_time <=' ),
+					date_filter( $r->uri(). '?date_start', 'date_time >=' ),
+					( $param{company_id} ? ( company_id	=>	$param{company_id} ) : () ),
+					( $param{user_id} ? ( user_id		=>	$param{user_id} ) : () ),
+					action_id	=>	$param{log_actions},
+					) ];
 
-				foreach my $Log (@$log_records_arrRef) {
-					my $dateFormatted = Date::Format::time2str('%Y-%m-%d %H:%M', Date::Parse::str2time($Log->date_time() ) );
-
-					$html .= sprintf(
-						'<tr><td>%s</td><td>%s</td><td>%s</td><td>%s</td><td>%s</td><td>%s, %s</td></tr>',
-						$Log->Action->name(),
-						$dateFormatted,
-						$Log->ip_address(),
+				foreach my $Log ( @{$$variable{'Results'}} ) {
+					$html .= sprintf('<tr id="log_%d">
+							<td class="Action">%s</td>
+							<td class="DateTime">%s</td>
+							<td class="ip" title="%s">%s</td>
+							<td class="Note">%s</td>
+							<td class="Email">%s</td>
+							<td class="Name">%s</td>
+							<td class="Company">%s</td>
+							<td class="Object">%s</td>
+							<td class="buttons">%s</td>
+						</tr>',
+						$Log->id(),
+						$Log->Action()->name(),
+						format_datetime( $Log->date_time() ),
+						$Log->ip_address(), ( $Log->hostname() ? $Log->hostname() : $Log->ip_address() ),
 						$Log->note(),
-						$Log->User->email(),
-						$Log->User->firstname(),
-						$Log->User->lastname(),
+						$Log->User()->link_to( $Log->User()->email() ),
+						$Log->User()->name(),
+						$Log->Company()->name(),
+						( $Log->Object() ? $Log->Object()->link_to( $Log->object_type() ) : '' ),
+						join("\n",
+							button( 'X'.$Log->id(), { onclick=>qq`new Ajax.Request('_logs.json', { parameters: { action: 'delete', log_id: $$Log{id} }, onSuccess: function(){ \$('log_$$Log{id}').remove() } } );`, text=>'-' } ),
+						),
 						);
-					} # end foreach
-					return $html;
-
-				) ?>
-	  </table>
-   </div>
-<? echo ( openprint::logs::getPages() ) ?>
+				} # end foreach
+				return $html;
+			) ?>
+		</table>
 </fieldset>

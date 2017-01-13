@@ -1,67 +1,59 @@
-Choose report criteria and click submit. <br/>
-<br/>
-<form name="f1" method="post" action="returns.html">
-	<fieldset class="filters"><legend>Search:</legend>
-		<p>
-			<label>Customers:</label>
-			<input type="text" onkeyup="filterDDM(this, f1.ddmCustomers);" size="4"/>
-			<select name="ddmCustomers" onchange="if(this.options[this.selectedIndex].value != '') f1.submit();">
-				<option value=""> Select a Customer</option>
-				<? echo ( openprint::Company::get_dropdown( $openprint::param{'ddmCustomers'} ); ) ?>
+<script type="text/javascript">
+	function load_results() {
+		var div = $('Results');
+		if ( div ) {
+			div.innerHTML = 'Please wait. Loading...';
+			new Ajax.Updater( div, '_returns.html', { parameters: $('f1').serialize() } );
+		} // end if
+	} //e nd function load_results
+</script>
+<? echo ( include('/includes/error_reporting.html'); ) ?>
+<form id="f1" name="f1" method="post" action="returns.html">
+	<fieldset class="filters"><legend>Search</legend>
+		<ul>
+			<li><label>RMA #</label>
+				<input type="text" name="rmanumber" value="<? echo ( $param{rmanumber} ) ?>" />
+				<? echo ( button('Go', { onclick=>'load_results();' } ); ) ?>
+			</li>
+		<ul>
+<? if ( $session{user_type} eq 'A' ) ?>
+		<li>
+			<label>Supplier</label>
+			<input type="text" onkeyup="filterDDM(this, f1.supplier_id);" class="filter"/>
+			<select name="supplier_id" onchange="if(this.options[this.selectedIndex].value != '') f1.submit();">
+				<option value=""> All</option>
+				<? echo ( openprint::Company::get_dropdown( $session{'/employee/support/returns.html?supplier_id'}, { supplier=>'Y' } ); ) ?>
 			</select>
-		</p><p>
-			<label>Review Status:</label>
-			<select name="ddmReviewed" size="1">
-				<option value="">All</option>
-				<option value="Y" <?ddmReviewedY?>>Only Reviewed</option>
-				<option value="N" <?ddmReviewedN?>>Only Non-Reviewed</option>
+		</li>
+<? endif ( $session{user_type} eq 'A' ) ?>
+		<li>
+			<label>Customers</label>
+			<input type="text" onkeyup="filterDDM(this, f1.company_id);" class="filter"/>
+			<select name="company_id" onchange="if(this.options[this.selectedIndex].value != '') f1.submit();">
+				<option value=""> All</option>
+				<? echo ( openprint::Company::get_dropdown( $session{'/employee/support/returns.html?company_id'} ); ) ?>
 			</select>
-		</p><p>
-			<label>Start Date:</label>
-			<select name="ddmStartMonth" > <?startmonths?> </select>
-			<select name="ddmStartDay" > <?startdays?> </select>
-			<select name="ddmStartYear" > <?startyears?> </select>
-			to
-			<select name="ddmEndMonth" > <?endmonths?> </select>
-			<select name="ddmEndDay" > <?enddays?> </select>
-			<select name="ddmEndYear" > <?endyears?> </select>
-		</p>
+		</li><li>
+			<label>Status</label>
+			<? echo ( ssi::select( openprint::RMA_Status->dropdown(order=>'sort,lower(name)'), [ split(',',$session{'/employee/support/returns.html?status'}) ], { multiple=>1, name=>'status' } ); ) ?>
+		</li><li>
+			<label>Created On</label>
+<? echo ( ssi::date_select_session( '/employee/support/returns.html', 'created_on_start', { onchange=>'load_results();' } ); ) ?>
+				to 
+<? echo ( ssi::date_select_session( '/employee/support/returns.html', 'created_on_end', { onchange=>'load_results();' } ); ) ?>
+		</li><li>
+			<label>Updated On</label>
+<? echo ( ssi::date_select_session( '/employee/support/returns.html', 'updated_on_start', { onchange=>'load_results();' } ); ) ?>
+				to 
+<? echo ( ssi::date_select_session( '/employee/support/returns.html', 'updated_on_end', { onchange=>'load_results();' } ); ) ?>
+		</li>
+		</ul>
 		<p class="buttons">
-			<? echo ( join('',
-			ssi::writeButton($log, $dbh, 'Submit1','submit.gif',"f1.submit();",'','Submit'),
-			ssi::writeButton($log, $dbh, 'Reset1','reset.gif',"f1.reset();",'','Reset'),
+			<? echo ( join("\n",
+			ssi::button( 'Submit1', { onclick=>"f1.submit();", text=>'Submit' } ),
+			ssi::button( 'Reset1', { onclick=>"f1.reset();", text=>'Reset' } ),
 ); ) ?>
 		</p>
 	</fieldset>
+	<div id="Results"><? echo ( include('_returns.html'); ) ?></div>
 </form>
-<? if ( @{$$variable{'RMAS'}} ) ?>
-<table class="List">
-	<tr>
-		<th align="left">Company</th>
-		<th align="center" width="100">OrderID</th>
-		<th align="center" width="200">Date</th>
-		<th align="right" width="100">Status</th>
-	</tr>
-	<? while ( @$variable{'index','name','order_id','date','status'} = splice @{$$variable{'RMAS'}},0,5; ) ?>
-	<tr>
-		<td align="left"><a href="return.html?rma_id=<?index?>">&nbsp;<?name?></a></td>
-		<td align="center"><a href="return.html?rma_id=<?index?>">&nbsp;<?order_id?></a></td>
-		<td align="center"><a href="return.html?rma_id=<?index?>">&nbsp;<?date?></a></td>
-		<td align="right"><a href="return.html?rma_id=<?index?>">&nbsp;
-<? if ( $$variable{'status'} eq 'Y' ) ?>
-Approved
-<? endif ( $$variable{'status'} eq 'Y' ) ?>
-<? if ( $$variable{'status'} eq 'N' ) ?>
-Declined
-<? endif ( $$variable{'status'} eq 'N' ) ?>
-<? if ( $$variable{'status'} ne 'N' and $$variable{'status'} ne 'Y' ) ?>
-Non-Reviewed
-<? endif ( $$variable{'status'} ne 'N' and $$variable{'status'} ne 'Y' ) ?>
-</a></td>
-	</tr>
-	<? eval ( $$variable{'rowclass'} = $$variable{'rowclass'} ? '' : ' class="colRow"'; ) ?>
-	<? endwhile ( @$variable{'index','name','order_id','date','status'} = splice @{$$variable{'RMAS'}},0,5; ) ?>
-</table>
-<? else ( @{$$variable{'RMAS'}} ) ?>
-There were no results matching your criteria.<br>
-<? endif ( @{$$variable{'RMAS'}} ) ?>

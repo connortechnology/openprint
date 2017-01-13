@@ -10,12 +10,12 @@
 	<? while ( $$variable{'Project'} = shift @{$$variable{'Projects'}}; ) ?>
 	<fieldset>
 		<p>
-			<label>Project:</label>
+			<label>Project</label>
 			<textarea name="Reference<? echo ( $$variable{'Project'}->id(); ) ?>"><? echo ( ssi::htmlize($$variable{'Project'}->reference()); ) ?></textarea>
 		</p>
-		<!--#include virtual="_required_by.html"-->
-		<!--#include virtual="_quantity_select.html"-->
-		<!--#include virtual="_shipping_type_select.html"-->
+		<? echo ( include('_required_by.html'); ) ?>
+		<? echo ( include('_quantity_select.html'); ) ?>
+		<? echo ( include('_shipping_type_select.html'); ) ?>
 		<span style="float: right;">
 			<a href="/main/project/view.html?ProjectIndex=<? echo ( $$variable{'Project'}->id(); ) ?>">Edit</a> /
 			<a href="selection.html?remove=<? echo ( $$variable{'Project'}->id(); ) ?>">Remove</a>
@@ -25,11 +25,11 @@
 	<hr class="spacer"/>
 	<p>
 		<span style="float: left;">
-			<? echo ( ssi::writeButton( $log, $dbh, 'AddProjectFromHistory','add_project_from_history.gif','','/project/history.html','Add Project From History' ); ) ?>
-			<? echo ( ssi::writeButton( $log, $dbh, 'AddNewProject','add_new_project.gif','','/project/create_edit.html','Add New Project' ); ) ?>
+			<? echo ( ssi::button( 'AddProjectFromHistory', { onclick=>'', href=>'/project/history.html', text=>'Add Project From History' } ); ) ?>
+			<? echo ( ssi::button( 'AddNewProject', { onclick=>'', href=>'/project/create_edit.html', text=>'Add New Project' } ); ) ?>
 		</span>
 		<span style="float: right;">
-			<? echo ( ssi::writeButton( $log, $dbh, 'SaveAndContinue','save_and_continue.gif','f1.submit();','','Save And Continue' ); ) ?>
+			<? echo ( ssi::button( 'SaveAndContinue', { onclick=>'f1.submit();', href=>'', text=>'Save And Continue' } ); ) ?>
 		</span>
 		<br class="spacer"/>
 	</p>

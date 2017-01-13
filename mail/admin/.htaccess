@@ -1,0 +1,9 @@
+AuthUserFile /var/www/testing/mail/admin/.htpasswd
+AuthGroupFile /dev/null
+AuthName "Postfix Admin"
+AuthType Basic
+
+<limit GET POST>
+require valid-user
+</limit>
+

@@ -1,15 +1,15 @@
-DROP TABLE Products;
-DROP SEQUENCE Product_id_seq;
-CREATE SEQUENCE Product_id_seq;
+DROP TABLE IF EXISTS Products;
 
 CREATE TABLE Products (
-	id			INTEGER NOT NULL DEFAULT nextval('Product_Id_seq'),
-	Category_Id	INTEGER, FOREIGN KEY (Category_id) REFERENCES Product_Categories (id),
+	id			SERIAL NOT NULL,
+	category_id	INTEGER, FOREIGN KEY (Category_id) REFERENCES Product_Categories (id),
 	name		TEXT,
 	description	TEXT,
 	ysnTaxExempt1 char(1) NOT NULL DEFAULT 'N',
 	ysnTaxExempt2 char(1) NOT NULL DEFAULT 'N',
 	weight	FLOAT,
+	sort		INTEGER,
+	deleted		BOOLEAN NOT NULL DEFAULT false,
 	PRIMARY KEY (id)
 );
  

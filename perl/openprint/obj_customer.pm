@@ -1,5 +1,4 @@
 package openprint::obj_customer;
-use Text::Unaccent;
 
 use strict;
 
@@ -49,11 +48,18 @@ my %fields = (
 	'Supplier'			=>	'ysnSupplier',
 	'CustomGreeting'	=>	'strCustomGreeting',
 	'Website'			=>	'strWebURL',	
-
+	'notes'				=>	'notes',
+	'deleted'			=>	'deleted',
+	'category_id'		=>	'category_id',
+	'offers_credit'		=>	'offers_credit',
 ); # end %fields
 
 my %transforms = (
-	'Name'			=>	[ 's/\.//g' ],
+	'Name'			=>	[ 
+	's/\.//g', 
+	's/^\s+//',
+	's/\s+$//',
+],
 	'PostalCode'	=>	[ 'tr/[a-z]/[A-Z]/', 's/[\W]//g' ],
 	'Discount'		=>	[ 's/[^\d\.\-]//g' ],
 	'TaxNumber1'	=>	[ 's/[\D]//g', 's/(\d\d\d\d\d\d\d\d\d\d\d\d\d\d\d).*/$1/' ],
@@ -69,6 +75,9 @@ my %defaults = (
 	'AccountActivation'	=>	'N',
 	'Reseller'	=>	'N',
 	'Supplier'	=>	'N',
+	'deleted'		=>	0,
+	'category_id'	=>	undef,
+	'offers_credit'	=>	0,
 );
 
 sub new {
@@ -137,7 +146,7 @@ sub set {
 		if ( defined $fields{$field} ) {
 
 			foreach my $transform ( @{$transforms{$field}} ) {
-				eval '$params->{$field} =~ ' . $transform;
+				eval '$$params{$field} =~ ' . $transform .';';
 			} # end foreach
 
 			if ( $params->{$field} eq '' and exists $defaults{$field} ) {

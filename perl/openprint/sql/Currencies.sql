@@ -1,14 +1,12 @@
-DROP TABLE Currencies;
-DROP SEQUENCE Currency_Id_seq;
-CREATE SEQUENCE Currency_Id_seq;
+CREATE SEQUENCE Currency_id_seq;
 
 CREATE TABLE Currencies (
-	Id	INTEGER DEFAULT nextval('Currency_id_seq'),
-	Name		TEXT NOT NULL,
-	Short		TEXT,
-	Symbol		char(1) NOT NULL,
+	id	INTEGER DEFAULT nextval('Currency_id_seq'),
+	name		TEXT NOT NULL,
+	short		TEXT,
+	symbol		char(4) NOT NULL,/* 4 to support unicode */
     PRIMARY KEY ( id )
 );
-INSERT INTO Currencies VALUES (nextval('Currency_Id_seq'),'Canadian Dollars','$');
-INSERT INTO Currencies VALUES (nextval('Currency_Id_seq'),'US Dollars','$');
+INSERT INTO Currencies VALUES (nextval('Currency_id_seq'),'Canadian Dollars','CAD','$');
+INSERT INTO Currencies VALUES (nextval('Currency_id_seq'),'US Dollars','USD','$');
 

@@ -1,77 +1,66 @@
-<? echo (
-	my %parameters;	
-	if ( $openprint::session{'user_type'} ne 'A' and ! openprint::usergroup::is_user_in( ['Sales Admin'], $openprint::session{'user_id'} ) ) {
-		$parameters{'SalesPerson'} = $openprint::session{'user_id'};
-		$parameters{'or'} = "Index=(SELECT CompanyIndex FROM Users WHERE Index=$openprint::session{'user_id'})";
-	} elsif ( $openprint::param{'CSR'} ) {
-		$parameters{'SalesPerson'} = $openprint::param{'CSR'};
-	} # end if
-	#$parameters{'order'} = 'lower(strcompanyname)';
-	my @Companies = openprint::Company::find( %parameters );
-	my %companies = map { int($_->id()), $_->name() } @Companies;
-	if ( %companies ) {
-		@{$$variable{'Projects'}} = openprint::Project::find( 
-			'company_id' => ( ($openprint::param{'company_id'} and exists $companies{$openprint::param{'company_id'}} ) ? $openprint::param{'company_id'} : undef ),
-			'created_on_start' => sprintf('%.4d-%.2d-%.2d 00:00:00', @openprint::param{'DateStartYear','DateStartMonth','DateStartDay'}),
-			'created_on_end' => sprintf('%.4d-%.2d-%.2d 23:59:59', @openprint::param{'DateEndYear','DateEndMonth','DateEndDay'}),
-			'status' =>	$openprint::param{'status'},
-			'value_start' => $openprint::param{'value_start'},
-			'value_end' => $openprint::param{'value_end'},
-			'order' => 'Index',
-			'user_id' => ($openprint::param{'Estimator'} eq 'Non Employee' ? q{NOT IN (SELECT Index FROM Users WHERE chrType IN ('E','A') AND Index IN (SELECT user_id FROM users_in_usergroups WHERE usergroup_id = (SELECT id FROM usergroups WHERE name='Sales')))} : $openprint::param{'Estimator'}),
-			#'limit' => 1,
-		);
-	} else {
-		@{$$variable{'Projects'}} = ();
-		return 'There were no companies to filter on.<br/>';
-	} # end if
-	%{$$variable{'Companies'}} = %companies;
-	$$variable{'ReportCount'} = 0;
-	$$variable{'OrderedCount'} = 0;
-	return '';
-) ?>
+<?include(/includes/error_reporting.html)?>
 <? if ( @{$$variable{'Projects'}} ) ?>
 <table class="List">
 	<tr>
-		<th width="60" align="left">Project #</th>
-		<th width="200" align="left">Customer</th>
-		<th align="left">Project Reference</th>
-		<th width="120" align="left">Date</th>
-		<th width="100" align="left">Status</th>
-		<th width="75" align="right">Price 1</th>
-		<th width="75" align="right">Price 2</th>
-		<th width="75" align="right">Price 3</th>
+		<th class="project_id">Project</th>
+		<th class="User">Created By</th>
+		<th class="Company">Company</th>
+		<th class="DateTime">Created On</th>
+		<th class="status">Status</th>
+		<th class="Price">Price 1</th>
+		<th class="Price">Price 2</th>
+		<th class="Price">Price 3</th>
 	</tr>
-	<? while ( $$variable{'Project'} = shift @{$$variable{'Projects'}} ) ?>
-	<? if ( exists $$variable{'Companies'}{int($$variable{'Project'}->company_id())} ) ?>
-	<tr<?rowclass?>>
-		<td><a href="/employee/production/project_view.html?ProjectIndex=<? echo ( $$variable{'Project'}->id(); ) ?>"><? echo ( $$variable{'Project'}->id(); ) ?></a></td>
-		<td><a href="/employee/production/project_view.html?ProjectIndex=<? echo ( $$variable{'Project'}->id(); ) ?>"><? echo ( ssi::htmlize($$variable{'Project'}->company->name() ); ) ?></a></td>
-		<td><a href="/employee/production/project_view.html?ProjectIndex=<? echo ( $$variable{'Project'}->id(); ) ?>"><? echo ( ssi::htmlize($$variable{'Project'}->reference() ); ) ?></a></td>
-		<td><a href="/employee/production/project_view.html?ProjectIndex=<? echo ( $$variable{'Project'}->id(); ) ?>"><? echo ( Date::Format::time2str('%Y-%m-%d %H:%M', Date::Parse::str2time($$variable{'Project'}->created_on() ) ); ) ?></a></td>
-		<td><a href="/employee/production/project_view.html?ProjectIndex=<? echo ( $$variable{'Project'}->id(); ) ?>"><? echo ( $$variable{'Project'}->status(); ) ?></a></td>
-		<td align="right"><a href="/employee/production/project_view.html?ProjectIndex=<? echo ( $$variable{'Project'}->id(); ) ?>">$<? echo ( $$variable{'Project'}->price1(); ) ?></a></td>
-		<td align="right"><a href="/employee/production/project_view.html?ProjectIndex=<? echo ( $$variable{'Project'}->id(); ) ?>">$<? echo ( $$variable{'Project'}->price2(); ) ?></a></td>
-		<td align="right"><a href="/employee/production/project_view.html?ProjectIndex=<? echo ( $$variable{'Project'}->id(); ) ?>">$<? echo ( $$variable{'Project'}->price3(); ) ?></a></td>
-	</tr>
-	<? eval ( 
-		$$variable{'rowclass'} = $$variable{'rowclass'} ? '' : ' class="colRow"';
-		$$variable{'Total1'} += $$variable{'Project'}->price1();
-		$$variable{'Total2'} += $$variable{'Project'}->price2();
-		$$variable{'Total3'} += $$variable{'Project'}->price3();
-		$$variable{'ReportCount'} += 1;
-		$$variable{'OrderedCount'} += 1 if $$variable{'Project'}->docket();
+	<? echo (
+		my $html = '';
+		my $rowclass;
+		$$variable{'Total1'} = $$variable{'Total2'} = $$variable{'Total3'} = 0;
+		foreach my $Project ( @{$$variable{'Projects'}} ) {
+			next if ! exists $$variable{'Companies'}{$$Project{'company_id'}};
+			$html .= sprintf(q`
+<tr%1$s>
+	<td class="project_id"><a href="/employee/project/view.html?ProjectIndex=%2$d">%2$d</a></td>
+	<td class="User"><a href="/employee/project/view.html?ProjectIndex=%2$d">%3$s</a></td>
+	<td class="Company"><a href="/employee/project/view.html?ProjectIndex=%2$d">%4$s</a></td>
+	<td class="DateTime"><a href="/employee/project/view.html?ProjectIndex=%2$d">%6$s</a></td>
+	<td class="status"><a href="/employee/project/view.html?ProjectIndex=%2$d">%7$s</a></td>
+	<td class="Price"><a href="/employee/project/view.html?ProjectIndex=%2$d">%8$s</a></td>
+	<td class="Price"><a href="/employee/project/view.html?ProjectIndex=%2$d">%9$s</a></td>
+	<td class="Price"><a href="/employee/project/view.html?ProjectIndex=%2$d">%10$s</a></td>
+</tr>
+<tr%1$s>
+	<td colspan="4">%5$s</td>
+	<td colspan="4">%11$s</td>
+</tr>
+`,
+			$rowclass, $Project->id(), $Project->User()->name(), ssi::htmlize($Project->Company()->name()), $Project->reference(),
+			Date::Format::time2str($config{'DateTimeFormat'}, Date::Parse::str2time($Project->created_on())),
+			$Project->status(),
+			openprint::Currency::format(1*$Project->price1()),
+			openprint::Currency::format(1*$Project->price2()),
+			openprint::Currency::format(1*$Project->price3()),
+			$Project->summary(),
+	);
+		
+			$rowclass = $rowclass ? '' : ' class="colRow"';
+			$$variable{'Total1'} += $Project->price1();
+			$$variable{'Total2'} += $Project->price2();
+			$$variable{'Total3'} += $Project->price3();
+			$$variable{'ReportCount'} += 1;
+			$$variable{'OrderedCount'} += 1 if $Project->docket();
+		} # end foreach Project
+		return $html;
 	) ?>
-	<? endif ( exists $$variable{'Companies'}{int($$variable{'Project'}->company_id())} ) ?>
-	<? endwhile ( $$variable{'Project'} = shift @{$$variable{'Projects'}} ) ?>
+	<? if ( $$variable{'ReportCount'} ) ?>
 	<tr class="totals">
-		<td>Counts:</td><td><?ReportCount?> Projects, <?OrderedCount?> Ordered</td>
-		<td>Percentage:</td><td><? echo ( sprintf('%.1f',($$variable{'OrderedCount'}/$$variable{'ReportCount'})*100 ); ) ?>%</td>
-		<td align="right">Totals:</td>
-		<td align="right">$<? echo ( sprintf('%.2f', $$variable{'Total1'} ); ) ?></td>
-		<td align="right">$<? echo ( sprintf('%.2f', $$variable{'Total2'} ); ) ?></td>
-		<td align="right">$<? echo ( sprintf('%.2f', $$variable{'Total3'} ); ) ?></td>
+		<td>Counts</td><td><?ReportCount?> Projects, <?OrderedCount?> Ordered</td>
+		<td>Percentage</td><td><? echo ( Math::Round::nearest(.1,($$variable{'OrderedCount'}/$$variable{'ReportCount'})*100 ); ) ?>%</td>
+		<td>Totals</td>
+		<td class="Price"><? echo ( openprint::Currency::format( $$variable{'Total1'} ); ) ?></td>
+		<td class="Price"><? echo ( openprint::Currency::format( $$variable{'Total2'} ); ) ?></td>
+		<td class="Price"><? echo ( openprint::Currency::format( $$variable{'Total3'} ); ) ?></td>
 	</tr>
+	<? endif ( $$variable{'ReportCount'} ) ?>
 </table>
 <? else ( @{$$variable{'Projects'}} ) ?>
 There were no projects matching your criteria.  Please try again.

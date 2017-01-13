@@ -1,209 +1,201 @@
-<script type="text/javascript" src="/javascripts/service.js"></script>
+<script type="text/javascript" src="<?hash_link('/javascripts/service.js')?>"></script>
 <div class="Service">
-	<form name="f1" method="post" action="/main/project/view.html">
-		<!--#include virtual="/includes/main/proj/required_fields.html"-->
+	<form id="f1" name="f1" method="post" action="/main/project/view.html">
 		<fieldset><legend>Cutting Services</legend>
-
-<? eval (
-	if ( $$variable{'Project'}->quantity1() and $$variable{'Project'}->quantity2() and $$variable{'Project'}->quantity3() ) {
-	$$variable{'Columns'} = 'Three';
-	} else {
-	$$variable{'Columns'} = 'Two';
-	} # end if
-) ?>
-<p>
-		<? eval ( $$variable{'QTYIndex'} = 1 ) ?>
-		<? while ( $$variable{'QTYIndex'} <= 3 ) ?>
-		<? if ( $$variable{'Project'}->{'quantity'.$$variable{'QTYIndex'}} ) ?>
-			<span class="<?Columns?>Columns">
-	<input name="txtQuantity<?QTYIndex?>" value="<? echo ( $$variable{'txtQuantity'.$$variable{'QTYIndex'}} ) ?>" type="text" size="9" onkeyup="calc('f1');" /> 
-</span>
-		<? endif ( $$variable{'Project'}->{'quantity'.$$variable{'QTYIndex'}} ) ?>
-		<? eval ( $$variable{'QTYIndex'} += 1 ) ?>
-		<? endwhile ( $$variable{'QTYIndex'} <= 3 ) ?>
-</p>
+			<ul>
+				<li><label>Quantity</label>
+				<? echo ( my $html = '';
+					foreach my $qty_index ( $$variable{'Project'}->quantity_indexes() ) {
+						$html .= '<span class="'.$$variable{Columns}.'Columns">';
+						$html .= input( name=>"txtQuantity$qty_index", value=>$$variable{'txtQuantity'.$qty_index}, type=>'integer', onkeyup=>"calc('f1');" );
+						$html .= '</span>';
+					} # end foreach
+					return $html;
+				) ?>
+				</li>
+			</ul>
 		</fieldset>
-<? eval ( @{$$variable{'tempCuttingGroups'}} = @{$$variable{'CuttingGroups'}} ) ?>
-<? while ( @$variable{'SignatureServiceIndex','SignatureIndex','Reference'} = splice @{$$variable{'tempCuttingGroups'}},0,3; ) ?>
+	
+<? echo (
+	my $html;
+
+	my $Project = $$variable{Project};
+	my $services = $Project->services();
+	my $paper_service_id = $$services{Paper}[0] if $$services{Paper};
+	my $paper_specs = openprint::service::get_specs_ref( $Project, $paper_service_id ) if $paper_service_id;
+
+	my @All_Stocks = openprint::Estimating::Paper::get_stocks( $Project, $paper_service_id, $paper_specs );
+	my @Cut_Stocks = map { {} } ( 1 .. 3 );
+	my %Press_Sheets;
+
+	my $have_cut_stocks = 0;
+
+	foreach my $qty_index ( $$variable{Project}->quantity_indexes() ) {
+		my $Cut_Stocks = $Cut_Stocks[$qty_index-1];
+
+		foreach my $sig_id ( $$variable{Project}->signatures() ) {
+			my $sig_specs = openprint::service::get_specs_ref( $$variable{Project}, $sig_id );
+			next if ! $$sig_specs{"txtImposition$qty_index"};
+
+			my $PressSheet = openprint::Paper::load_from_signature( $$variable{Project}, $sig_specs, $qty_index );
+			if ( $PressSheet->is_cut() ) {
+				$$Cut_Stocks{$PressSheet->id_string()} += $$sig_specs{"StockQuantity$qty_index"};
+				$have_cut_stocks = 1;
+			} # end if
+			$Press_Sheets{$PressSheet->id_string()} = $PressSheet if ! $Press_Sheets{$PressSheet->id_string()};
+		} # end foreach sig
+	} # end if
+
+	if ( $have_cut_stocks ) {
+		$html .= '<fieldset><legend>Pre-press Stock Cutting</legend><ul>';
+
+		foreach my $Stock_Amount ( @All_Stocks ) {
+			my $Stock = $$Stock_Amount{Stock};
+
+			$html .= '<li><label>'.$Stock->to_string().'</label>';
+			foreach my $qty_index ( $$variable{Project}->quantity_indexes() ) {
+				$html .= sprintf('<span class="%1$sColumns">', $$variable{Columns} );
+				my $Cut_Stocks = $Cut_Stocks[$qty_index-1];
+				foreach my $stock_string ( keys %{$Cut_Stocks} ) {
+					my $Cut_Stock = $Press_Sheets{$stock_string};
+					if ( $Cut_Stock->Supplied()->id_string() eq $Stock->id_string() ) {
+						$html .= ' cut to ' . $Cut_Stock->width() . 'x' . $Cut_Stock->height().'<br/>';
+						$html .= ssi::select( $$variable{StockCutEquipmentArray}, $$variable{"ddmStockCutEquipment-$$Stock_Amount{index}-$qty_index"} , { 
+							name	=>"ddmStockCutEquipment-$$Stock_Amount{index}-$qty_index",
+							id		=>"ddmStockCutEquipment-$$Stock_Amount{index}-$qty_index",
+							onchange=>q`calc('f1');`, 
+							prepend	=> [ '', 'No Cutting' ],
+							} );
+						$html .= write_override( "chkOverrideStockCutEquipment-$$Stock_Amount{index}-$qty_index", $$variable{"chkOverrideStockCutEquipment-$$Stock_Amount{index}-$qty_index"}, '', "calc('f1');" );
+					} # end if
+				} # end foreach stock_String	
+				$html .= '</span>';
+			} # end foreach qty_index
+		} # end foreach Stock
+
+		$html .= '</li><li><label>Price ('.$$variable{CurrencySymbol}.')</label>';
+		foreach my $qty_index ( $Project->quantity_indexes() ) {
+			$html .= sprintf(q`<span class="%1$sColumns"><input type="text" name="txtStockCutPrice-%2$d" readonly="readonly" /></span>`,
+				$$variable{Columns},$qty_index,
+				);
+		} # end foreach qty_index
+		$html .= '</li></ul></fieldset>';
+	} # end if
+
+	foreach my $ss_id ( $Project->signatures({sort=>1}) ) {
+		my $sig_specs = openprint::service::get_specs_ref( $Project, $ss_id );
+
+		$html .= '<fieldset>';
+		if ( $$sig_specs{txtServiceDescription} ) {
+			$html .= '<legend>'.$$sig_specs{txtServiceDescription}.'</legend>';
+		} # end if
+
+		$html .= '<ul><li>' . openprint::service::summary( $$variable{'ProjectIndex'}, $ss_id ).'</li>';
+		$html .= '<li>';
+		foreach my $qty_index ( $Project->quantity_indexes() ) {
+			next if ! $$sig_specs{"txtImposition$qty_index"};
+			$html .= '<span class="'.$$variable{'Columns'}.'Columns">';
+			$html .= openprint::service::summary( $$variable{ProjectIndex}, $ss_id, $qty_index );
+			$html .= '</span>';
+		} # end foreach qty_index
+		$html .= input( name=>"txtStockCalliper-$$sig_specs{SignatureIndex}", type=>'hidden', value=>$$variable{'txtStockCalliper-'.$$sig_specs{SignatureIndex}} );
+		$html .= '</li>';
+		if ( sets::isin( $$variable{ProjectTypeID}, ['PressSheetCombination','NoPrintingRequired']) or sets::isin( $session{'user_type'},['E','A']) ) {
+			$html .= '<li><label>Additional cuts</label>';
+			$html .= input( name=>"txtAdditionalCuts$$sig_specs{SignatureIndex}", value=>$$variable{'txtAdditionalCuts'.$$sig_specs{SignatureIndex}}, onkeyup=>"calc('f1');" );
+			$html .= '</li>';
+		} # end if
+		$html .= ' </ul> </fieldset>';
+		if ( $$services{Folding} ) {
+			$html .= '<fieldset><legend>Pre-Folding Cutting</legend><ul>';
+			$html .= '<li class="foldingcuts"><label>Cuts</label>';
+			foreach my $qty_index ( $$variable{'Project'}->quantity_indexes() ) {
+				next if ! $$sig_specs{"txtImposition$qty_index"};
+				$html .= join("\n",
+						'<span class="'.$$variable{Columns}.'Columns">',
+						input( type=>'cardinal', name=>"FoldingCuts-$$sig_specs{SignatureIndex}-$qty_index", value=>$$variable{"FoldingCuts-$$sig_specs{SignatureIndex}-$qty_index"}, onkeyup=>"calc('f1');" ),
+						write_override( "OverrideFoldingCuts-$$sig_specs{SignatureIndex}-$qty_index", $$variable{"OverrideFoldingCuts-$$sig_specs{SignatureIndex}-$qty_index"}, '', "calc('f1');" ),
+						'</span>',
+					);
+			} # end foreach qty_index
+			$html .= '</li><li><label>Equipment</label>';
+			foreach my $qty_index ( $$variable{Project}->quantity_indexes() ) {
+				next if ! $$sig_specs{"txtImposition$qty_index"};
+				$html .= sprintf(q`<span class="%1$sColumns">
+				<select id="FoldingEquipment-%2$d-%3$d" name="FoldingEquipment-%2$d-%3$d" size="1" onchange="calc('f1');">
+					<option value="">No Cutting</option>%4$s
+				</select>%5$s</span>`,
+				$$variable{'Columns'},$$sig_specs{SignatureIndex}, $qty_index,
+				( $$variable{'EquipmentArray'} ? make_drop_down( $$variable{EquipmentArray}, $$variable{"FoldingEquipment-$$sig_specs{SignatureIndex}-$qty_index"} ) : '' ),
+				write_override( "OverrideFoldingEquipment-$$sig_specs{SignatureIndex}-$qty_index", $$variable{"OverrideFoldingEquipment-$$sig_specs{SignatureIndex}-$qty_index"}, '', "calc('f1');" ),
+);
+			} # end foreach qty_index
+			$html .= '</li><li><label>Pre-Folding price ('.$$variable{CurrencySymbol}.')</label>';
+			foreach my $qty_index ( $$variable{Project}->quantity_indexes() ) {
+				next if ! $$sig_specs{"txtImposition$qty_index"};
+				$html .= sprintf(q`<span class="%1$sColumns"><input id="FoldingCutPrice-%2$d-%3$d" name="FoldingCutPrice-%2$d-%3$d" readonly="readonly" /></span>`,
+					$$variable{Columns},$$sig_specs{SignatureIndex}, $qty_index,
+					);
+			} # end foreach qty_index
+			$html .= '</li></ul></fieldset>';
+		} # end if
+			$html .= '<fieldset><legend>Post-press Cutting</legend><ul>';
+			$html .= '<li class="postpresscuts"><label>Cuts</label>';
+			foreach my $qty_index ( $$variable{'Project'}->quantity_indexes() ) {
+				next if ! $$sig_specs{"txtImposition$qty_index"};
+				$html .= join("\n",
+						'<span class="'.$$variable{Columns}.'Columns">',
+						input( type=>'cardinal', name=>"txtVerticalCuts-$$sig_specs{SignatureIndex}-$qty_index", value=>$$variable{"txtVerticalCuts-$$sig_specs{SignatureIndex}-$qty_index"}, onkeyup=>"calc('f1');" ),
+						' x ',
+						input( type=>'cardinal', name=>"txtHorizontalCuts-$$sig_specs{SignatureIndex}-$qty_index", value=>$$variable{"txtHorizontalCuts-$$sig_specs{SignatureIndex}-$qty_index"}, onkeyup=>"calc('f1');" ),
+						' + ',
+						input( type=>'cardinal', name=>"txtDVerticalCuts-$$sig_specs{SignatureIndex}-$qty_index", value=>$$variable{"txtDVerticalCuts-$$sig_specs{SignatureIndex}-$qty_index"}, onkeyup=>"calc('f1');", title=>'Dutch Vertical Cuts' ),
+						' x ',
+						input( type=>'cardinal', name=>"txtDHorizontalCuts-$$sig_specs{SignatureIndex}-$qty_index", value=>$$variable{"txtDHorizontalCuts-$$sig_specs{SignatureIndex}-$qty_index"}, onkeyup=>"calc('f1');", title=>'Dutch Horizontal Cuts' ),
+						' = ',
+						input( type=>'cardinal', name=>"txtCalculatedCuts-$$sig_specs{SignatureIndex}-$qty_index", value=>$$variable{"txtCalculatedCuts-$$sig_specs{SignatureIndex}-$qty_index"}, onkeyup=>"calc('f1');" ),
+						write_override( "chkOverrideCalculatedCuts-$$sig_specs{SignatureIndex}-$qty_index", $$variable{"chkOverrideCalculatedCuts-$$sig_specs{SignatureIndex}-$qty_index"}, '', "calc('f1');" ),
+						'</span>',
+					);
+			} # end foreach qty_index
+
+			$html .= '</li><li><label>Equipment</label>';
+
+			foreach my $qty_index ( $$variable{'Project'}->quantity_indexes() ) {
+				next if ! $$sig_specs{"txtImposition$qty_index"};
+				$html .= sprintf(q`<span class="%1$sColumns">
+					<select id="ddmEquipment-%2$d-%3$d" name="ddmEquipment-%2$d-%3$d" size="1" onchange="calc('f1');">
+						<option value="">No Cutting</option>%4$s
+					</select>%5$s</span>`,
+					$$variable{'Columns'},$$sig_specs{'SignatureIndex'}, $qty_index,
+					( $$variable{'EquipmentArray'} ?  make_drop_down( $$variable{'EquipmentArray'}, $$variable{"ddmEquipment-$$sig_specs{SignatureIndex}-$qty_index"} ) : '' ),
+					write_override( "chkOverrideEquipment-$$sig_specs{SignatureIndex}-$qty_index", $$variable{"chkOverrideEquipment-$$sig_specs{SignatureIndex}-$qty_index"}, '', "calc('f1');" ),
+	);
+			} # end foreach qty_index
+		$html .= '</li><li><label>Post-press price ('.$$variable{CurrencySymbol}.')</label>';
+		foreach my $qty_index ( $$variable{'Project'}->quantity_indexes() ) {
+			next if ! $$sig_specs{"txtImposition$qty_index"};
+			$html .= sprintf(q`<span class="%1$sColumns"><input id="txtRegularCutPrice-%2$d-%3$d" name="txtRegularCutPrice-%2$d-%3$d" readonly="readonly" /></span>`,
+				$$variable{'Columns'},$$sig_specs{'SignatureIndex'}, $qty_index,
+				);
+		} # end foreach qty_index
+		$html .= '</li></ul></fieldset>';
+	} # end foreach signature
+	return $html;
+) ?>
 <fieldset>
-	<? if ( $$variable{'Reference'} ) ?>
-	<legend><?Reference?></legend><p><? echo ( openprint::service::summary( @$variable{'ProjectIndex','SignatureServiceIndex'} ); ) ?></p>
-	<? endif ( $$variable{'Reference'} ) ?>
-	<input name="txtStockCalliper-<?SignatureIndex?>" type="hidden" value="<? echo ( $$variable{'txtStockCalliper-'.$$variable{'SignatureIndex'}} ) ?>" />
-	<? if ( sets::isin( $$variable{'ProjectTypeID'}, ('PressSheetCombination','NoPrintingRequired')) or sets::isin( $openprint::session{'user_type'},'E','A') ) ?>
-	<p>
-    	<label>Additional cuts:</label>
-        <input name="txtAdditionalCuts<?SignatureIndex?>" size="9" value="<? echo ( $$variable{'txtAdditionalCuts'.$$variable{'SignatureIndex'}} ) ?>"  onkeyup="calc('f1');" />
-	</p>
-</fieldset>
-	<? endif ( sets::isin( $$variable{'ProjectTypeID'}, ('PressSheetCombination','NoPrintingRequired')) or sets::isin( $openprint::session{'user_type'},'E','A') ) ?>
-<? if ( $$variable{"txtSuppliedStockWidth-$$variable{'SignatureIndex'}-$$variable{'QTYIndex'}"} != $$variable{"txtSheetSizeWidth-$$variable{'SignatureIndex'}-$$variable{'QTYIndex'}"} or $$variable{"txtSuppliedStockHeight-$$variable{'SignatureIndex'}-$$variable{'QTYIndex'}"} != $$variable{"txtSheetSizeHeight-$$variable{'SignatureIndex'}-$$variable{'QTYIndex'}"} ) ?>
-<fieldset><legend>Pre-press Stock Cutting</legend>
-	<p>
-		<label>Quantity:</label>
-		<? eval ( $$variable{'QTYIndex'} = 1 ) ?>
-		<? while ( $$variable{'QTYIndex'} <= 3 ) ?>
-		<? if ( $$variable{'Project'}->{'quantity'.$$variable{'QTYIndex'}} ) ?>
-		<span class="<?Columns?>Columns"><? echo ( $$variable{'Project'}->quantity($$variable{'QTYIndex'}) ) ?></span>
-		<? endif ( $$variable{'Project'}->{'quantity'.$$variable{'QTYIndex'}} ) ?>
-		<? eval ( $$variable{'QTYIndex'} += 1 ) ?>
-		<? endwhile ( $$variable{'QTYIndex'} <= 3 ) ?>
-	</p>
-	<p>
-		<label>Supplied press sheet size:</label>
-		<? eval ( $$variable{'QTYIndex'} = 1 ) ?>
-		<? while ( $$variable{'QTYIndex'} <= 3 ) ?>
-		<? if ( $$variable{'Project'}->{'quantity'.$$variable{'QTYIndex'}} ) ?>
-		<span class="<?Columns?>Columns">
-		<input name="txtSuppliedStockWidth-<?SignatureIndex?>-<?QTYIndex?>" value="<? echo ( $$variable{"txtSuppliedStockWidth-$$variable{'SignatureIndex'}-$$variable{'QTYIndex'}"}; ) ?>" size="9" readonly="readonly" />
-		<input name="txtSuppliedStockHeight-<?SignatureIndex?>-<?QTYIndex?>" value="<? echo ( $$variable{"txtSuppliedStockHeight-$$variable{'SignatureIndex'}-$$variable{'QTYIndex'}"}; ) ?>" size="9" readonly="readonly" />
-		</span>
-		<? endif ( $$variable{'Project'}->{'quantity'.$$variable{'QTYIndex'}} ) ?>
-		<? eval ( $$variable{'QTYIndex'} += 1 ) ?>
-		<? endwhile ( $$variable{'QTYIndex'} <= 3 ) ?>
-	</p>
-	<p>
-		<label>Running press sheet size:</label>
-		<? eval ( $$variable{'QTYIndex'} = 1 ) ?>
-		<? while ( $$variable{'QTYIndex'} <= 3 ) ?>
-		<? if ( $$variable{'Project'}->{'quantity'.$$variable{'QTYIndex'}} ) ?>
-		<span class="<?Columns?>Columns">
-		<input name="txtSheetSizeWidth-<?SignatureIndex?>-<?QTYIndex?>" value="<? echo ( $$variable{"txtSheetSizeWidth-$$variable{'SignatureIndex'}-$$variable{'QTYIndex'}"}; ) ?>" size="9" readonly="readonly" />
-		<input name="txtSheetSizeHeight-<?SignatureIndex?>-<?QTYIndex?>" value="<? echo ( $$variable{"txtSheetSizeHeight-$$variable{'SignatureIndex'}-$$variable{'QTYIndex'}"}; ) ?>" size="9" readonly="readonly" />
-		</span>
-		<? endif ( $$variable{'Project'}->{'quantity'.$$variable{'QTYIndex'}} ) ?>
-		<? eval ( $$variable{'QTYIndex'} += 1 ) ?>
-		<? endwhile ( $$variable{'QTYIndex'} <= 3 ) ?>
-	</p>
-	<p>
-		<label><b>Equipment:</b></label>
-		<? eval ( $$variable{'QTYIndex'} = 1 ) ?>
-		<? while ( $$variable{'QTYIndex'} <= 3 ) ?>
-		<? if ( $$variable{'Project'}->{'quantity'.$$variable{'QTYIndex'}} ) ?>
-		<span class="<?Columns?>Columns">
-			<select name="ddmStockCutEquipment-<?SignatureIndex?>-<?QTYIndex?>" size="1" onchange="calc('f1');">
-			<option value="">No Cutting</option>
-			<? echo (
-					if ( $$variable{'StockCutEquipmentArray'} ) {
-					return ssi::make_drop_down( $$variable{'StockCutEquipmentArray'}, $$variable{"ddmStockCutEquipment-$$variable{'SignatureIndex'}-$$variable{'QTYIndex'}"} );
-					}
-			) ?>
-			</select>
-			<input type="checkbox" id="chkOverrideStockCutEquipment-<?SignatureIndex?>-<?QTYIndex?>" name="chkOverrideStockCutEquipment-<?SignatureIndex?>-<?QTYIndex?>"
-				<? echo ( 'checked="checked"' if $$variable{"chkOverrideStockCutEquipment-$$variable{'SignatureIndex'}-$$variable{'QTYIndex'}"} eq 'Y' ) ?>
-				value="Y" onclick="if ( ! this.checked ) calc('f1');" />
-			 <label class="radio" for="chkOverrideStockCutEquipment-<?SignatureIndex?>-<?QTYIndex?>">Override</label>
-		</span>
-		<? endif ( $$variable{'Project'}->{'quantity'.$$variable{'QTYIndex'}} ) ?>
-		<? eval ( $$variable{'QTYIndex'} += 1 ) ?>
-		<? endwhile ( $$variable{'QTYIndex'} <= 3 ) ?>
-	</p>
-	<p>
-		<label>Stock cutting price:</label>
-		$<input name="txtStockCutPrice-<?SignatureIndex?>-<?QTYIndex?>" size="9" readonly="readonly" />
-	</p>
-</fieldset>
-<? endif ( $$variable{"txtSuppliedStockWidth-$$variable{'SignatureIndex'}-$$variable{'QTYIndex'}"} != $$variable{"txtSheetSizeWidth-$$variable{'SignatureIndex'}-$$variable{'QTYIndex'}"} or $$variable{"txtSuppliedStockHeight-$$variable{'SignatureIndex'}-$$variable{'QTYIndex'}"} != $$variable{"txtSheetSizeHeight-$$variable{'SignatureIndex'}-$$variable{'QTYIndex'}"} ) ?>
-<fieldset><legend>Post-press Cutting</legend>
-	<p>
-		<label>Quantity:</label>
-		<? eval ( $$variable{'QTYIndex'} = 1 ) ?>
-		<? while ( $$variable{'QTYIndex'} <= 3 ) ?>
-		<? if ( $$variable{'Project'}->{'quantity'.$$variable{'QTYIndex'}} ) ?>
-		<span class="<?Columns?>Columns"><? echo ( $$variable{'Project'}->quantity($$variable{'QTYIndex'}) ) ?></span>
-		<? endif ( $$variable{'Project'}->{'quantity'.$$variable{'QTYIndex'}} ) ?>
-		<? eval ( $$variable{'QTYIndex'} += 1 ) ?>
-		<? endwhile ( $$variable{'QTYIndex'} <= 3 ) ?>
-	</p>
-	<p>
-		<label>Regular cuts:</label>
-		<? eval ( $$variable{'QTYIndex'} = 1 ) ?>
-		<? while ( $$variable{'QTYIndex'} <= 3 ) ?>
-		<? if ( $$variable{'Project'}->{'quantity'.$$variable{'QTYIndex'}} ) ?>
-		<span class="<?Columns?>Columns">
-		<input name="txtCalculatedCuts-<?SignatureIndex?>-<?QTYIndex?>" size="6" value="<? echo ( $$variable{'txtCalculatedCuts-'.$$variable{Index}.'-'.$$variable{QTYIndex}} ) ?>" onkeyup="calc('f1');" />
-		</span>
-		<? endif ( $$variable{'Project'}->{'quantity'.$$variable{'QTYIndex'}} ) ?>
-		<? eval ( $$variable{'QTYIndex'} += 1 ) ?>
-		<? endwhile ( $$variable{'QTYIndex'} <= 3 ) ?>
-	</p>
-	<p>
-		<label>Equipment:</label>
-		<? eval ( $$variable{'QTYIndex'} = 1 ) ?>
-		<? while ( $$variable{'QTYIndex'} <= 3 ) ?>
-		<? if ( $$variable{'Project'}->{'quantity'.$$variable{'QTYIndex'}} ) ?>
-		<span class="<?Columns?>Columns">
-		<select name="ddmEquipment-<?SignatureIndex?>-<?QTYIndex?>" size="1" onchange="calc('f1');">
-		<option value="">No Cutting</option>
-		<? echo (
-			if ( $$variable{'EquipmentArray'} ) {
-				return ssi::make_drop_down($$variable{'EquipmentArray'}, $$variable{"ddmEquipment-$$variable{'SignatureIndex'}-$$variable{'QTYIndex'}"} );
-			}
-		) ?>
-		</select>
-		<input type="checkbox" id="chkOverrideEquipment-<?SignatureIndex?>-<?QTYIndex?>" name="chkOverrideEquipment-<?SignatureIndex?>-<?QTYIndex?>" value="Y" onclick="if ( ! this.checked ) calc('f1');"
-		<? echo ( 'checked="checked"' if $$variable{"chkOverrideEquipment-$$variable{'SignatureIndex'}-$$variable{'QTYIndex'}"} eq 'Y' ) ?> />
-		 <label class="radio" for="chkOverrideEquipment-<?SignatureIndex?>-<?QTYIndex?>">Override</label>
-		</span>
-		<? endif ( $$variable{'Project'}->{'quantity'.$$variable{'QTYIndex'}} ) ?>
-		<? eval ( $$variable{'QTYIndex'} += 1 ) ?>
-		<? endwhile ( $$variable{'QTYIndex'} <= 3 ) ?>
-	</p>
-	<p>
-		<label>Post-press price:</label>
-		<? eval ( $$variable{'QTYIndex'} = 1 ) ?>
-		<? while ( $$variable{'QTYIndex'} <= 3 ) ?>
-		<? if ( $$variable{'Project'}->{'quantity'.$$variable{'QTYIndex'}} ) ?>
-		<span class="<?Columns?>Columns">
-			$<input name="txtRegularCutPrice-<?SignatureIndex?>-<?QTYIndex?>" size="9" readonly="readonly" />
-		</span>
-		<? endif ( $$variable{'Project'}->{'quantity'.$$variable{'QTYIndex'}} ) ?>
-		<? eval ( $$variable{'QTYIndex'} += 1 ) ?>
-		<? endwhile ( $$variable{'QTYIndex'} <= 3 ) ?>
-	</p>
-</fieldset>
-<? endwhile ( @$variable{'SignatureServiceIndex','SignatureIndex','Reference'} = splice @{$$variable{'tempCuttingGroups'}},0,3; ) ?>
-<fieldset>
-	<p> 
-		<label><b>Unit Price:</b></label>
-		<? eval ( $$variable{'QTYIndex'} = 1 ) ?>
-		<? while ( $$variable{'QTYIndex'} <= 3 ) ?>
-		<? if ( $$variable{'Project'}->{'quantity'.$$variable{'QTYIndex'}} ) ?>
-		<span class="<?Columns?>Columns">
-		$<input name="txtUnitPrice<?QTYIndex?>" size="9" readonly="readonly" onfocus="this.blur();" /> <b><?CurrencyName?></b>
-		</span>
-		<? endif ( $$variable{'Project'}->{'quantity'.$$variable{'QTYIndex'}} ) ?>
-		<? eval ( $$variable{'QTYIndex'} += 1 ) ?>
-		<? endwhile ( $$variable{'QTYIndex'} <= 3 ) ?>
-	</p>
-	<p> 
-		<label><b>Service Price:</b></label>
-		<? eval ( $$variable{'QTYIndex'} = 1 ) ?>
-		<? while ( $$variable{'QTYIndex'} <= 3 ) ?>
-		<? if ( $$variable{'Project'}->{'quantity'.$$variable{'QTYIndex'}} ) ?>
-		<span class="<?Columns?>Columns">
-		$<input name="txtPrice<?QTYIndex?>" size="9" readonly="readonly" onfocus="this.blur();" /> <b><?CurrencyName?></b>
-		</span>
-		<? endif ( $$variable{'Project'}->{'quantity'.$$variable{'QTYIndex'}} ) ?>
-		<? eval ( $$variable{'QTYIndex'} += 1 ) ?>
-		<? endwhile ( $$variable{'QTYIndex'} <= 3 ) ?>
-	</p>
-	<? if ( sets::isin( $openprint::session{'user_type'}, ['A','E'] ) ) ?>
-	<p><label>&nbsp;</label>
-		<? eval ( $$variable{'QTYIndex'} = 1 ) ?>
-		<? while ( $$variable{'QTYIndex'} <= 3 ) ?>
-		<? if ( $$variable{'Project'}->{'quantity'.$$variable{'QTYIndex'}} ) ?>
-		<span class="<?Columns?>Columns">
-	<? echo ( ssi::writeButton( $log, $dbh, 'Breakdown'.$$variable{'QTYIndex'}, 'price_breakdown.gif', "show_breakdown('$$variable{'QTYIndex'}');", '', 'Breakdown' ); ) ?>
-		</span>
-		<? endif ( $$variable{'Project'}->{'quantity'.$$variable{'QTYIndex'}} ) ?>
-		<? eval ( $$variable{'QTYIndex'} += 1 ) ?>
-		<? endwhile ( $$variable{'QTYIndex'} <= 3 ) ?>
-	</p>
-	<? endif ( sets::isin( $openprint::session{'user_type'}, ['A','E'] ) ) ?>
+	<ul>
+	<? echo ( join("\n",
+			include('/includes/main/proj/_markup.html'),
+			include('/includes/main/proj/_unit_price.html'),
+			include('/includes/main/proj/_mprice.html'),
+			include('/includes/main/proj/_service_price.html'),
+			include('/includes/main/proj/_breakdown.html'),
+		); ) ?>
+	</ul>
 </fieldset>
 		<hr/>
-		<!--#include virtual="/includes/main/proj/add_to_project.html"-->
-		<!--#include virtual="/includes/main/proj/hdn_fields_all.html"-->
+		<? echo ( include('/includes/main/proj/add_to_project.html'); ) ?>
+		<? echo ( include('/includes/main/proj/hdn_fields_all.html'); ) ?>
 	</form>
 </div><!--Service-->

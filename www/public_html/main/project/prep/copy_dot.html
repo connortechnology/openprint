@@ -1,4 +1,4 @@
-<script type="text/javascript" src="/javascripts/service.js"></script>
+<script type="text/javascript" src="<? echo ( hash_link('/javascripts/service.js') ) ?>"></script>
 <? eval (
     if ( $$variable{'Project'}->quantity1() and $$variable{'Project'}->quantity2() and $$variable{'Project'}->quantity3() ) {
     $$variable{'Columns'} = 'Three';
@@ -7,15 +7,19 @@
     } # end if
 ) ?>
 <div class="Service">
-	<!--#include virtual="/includes/main/proj/required_fields.html"-->
+	<? echo ( include('/includes/main/proj/required_fields.html'); ) ?>
 	<form name="f1" method="post" action="/main/project/view.html">
 		<fieldset><legend>Copy Dot</legend>
-		<!--#include virtual="/includes/main/proj/negative_quantity.html"-->
+			<ul>
+		<? echo ( include('/includes/main/proj/negative_quantity.html'); ) ?>
+			</ul>
 		</fieldset>
 		<fieldset><legend>Results</legend>
-			<!--#include virtual="/includes/main/proj/prices.html"-->
+			<ul>
+			<? echo ( include('/includes/main/proj/prices.html'); ) ?>
+			</ul>
 		</fieldset>
-		<!--#include virtual="/includes/main/proj/add_to_project.html"-->
-		<!--#include virtual="/includes/main/proj/hdn_fields_prepress.html"-->
+		<? echo ( include('/includes/main/proj/add_to_project.html'); ) ?>
+		<? echo ( include('/includes/main/proj/hdn_fields_prepress.html'); ) ?>
 	</form>
 </div>

@@ -1,11 +1,10 @@
-DROP TABLE Orders;
+DROP TABLE IF EXISTS Orders;
 
 CREATE TABLE Orders (
-	Index		INT4 NOT NULL,
-	strSessionID	varchar(10),
-	CompanyIndex	INT4 NOT NULL, FOREIGN KEY (CompanyIndex) REFERENCES Company (Index),
-	UserIndex		INT4 NOT NULL, FOREIGN KEY (UserIndex) REFERENCES Users (Index),
-	EmployeeIndex	INT4 NOT NULL, FOREIGN KEY (EmployeeIndex) REFERENCES Users (Index),
+	id		SERIAL,
+	company_id	INTEGER NOT NULL, FOREIGN KEY (company_id) REFERENCES companies (id),
+	user_id		INTEGER NOT NULL, FOREIGN KEY (user_id) REFERENCES Users (id),
+	salesrep_id	INTEGER, FOREIGN KEY (salesrep_id) REFERENCES Users (id),
 	curFedTax		NUMERIC(10,2),
 	curHarmTax		NUMERIC(10,2),
 	curProvTax		NUMERIC(10,2),
@@ -53,14 +52,14 @@ CREATE TABLE Orders (
 	strAlsoNotify			TEXT,
 	strStatus				TEXT,
 	dblShippingCost			NUMERIC(10,2),
-	CurrencyIndex			INT4, FOREIGN KEY (CurrencyIndex) REFERENCES Currency (Index),
+	CurrencyIndex			INTEGER, FOREIGN KEY (CurrencyIndex) REFERENCES Currencies (id),
 	strCurrencyName			TEXT,
 	strCurrencySymbol		char(1),
 	strComments				TEXT,
 	strAdministratorComments	TEXT,
 	strAdministratorName		TEXT,
-	lngDocketNumber			INT4,
-	PRIMARY KEY (Index)
+	docket			INTEGER,
+	strsessionid			TEXT,
+	invoice_id				INTEGER, FOREIGN KEY (invoice_id) REFERENCES invoices(id),
+	PRIMARY KEY (id)
 );
-
-create index order_session_idx on orders (strsessionid);

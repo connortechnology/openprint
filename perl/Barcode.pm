@@ -9,7 +9,6 @@ use Apache2::RequestIO ();
 
 use GD::Barcode::UPCE;
 use GD::Barcode;
-use Barcode::Code128;
 use Image::Magick;
 
 use strict;
@@ -37,11 +36,12 @@ sub handler {
 		$code = "*$code*";
 		$barcode = GD::Barcode->new($codetype, $code );
 		if ( ! $barcode ) {
-			$r->log->debug("Error generating barcode: " . $GD::Barcode::errStr );
+			$r->log->error("Error generating barcode for $code: " . $GD::Barcode::errStr );
 			return Apache2::Const::OK;
 		} # end if
 		$blob = $barcode->plot(NoText=>$no_text, Height => $height )->png;
 	} elsif ( $codetype eq 'Code128' ) {
+		require Barcode::Code128;
 		$barcode = new Barcode::Code128;
 		$blob = $barcode->png($code, {'height'=>$height,'border'=>0, 'font_align'=>'center','show_text'=>!$no_text,'transparent_text'=>1});
 	} # end if

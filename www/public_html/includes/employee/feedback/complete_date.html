@@ -1,8 +1,8 @@
 <p>
-	<label>Completion Date:</label>
+	<label>Completion Date</label>
 <? if ( $$variable{'rdbComplete'} ne 'Yes' ) ?>
 <? eval ( @$variable{'CompletionDate'} = sql::execute( $log, $dbh, q{SELECT to_char(NOW(),'YYYY-MM-DD HH24:MI')} ); ) ?>
-	<input type="text" size="18" name="CompletionDate" id="CompletionDate" value="<?CompletionDate?>"/>
+	<input type="text" name="CompletionDate" id="CompletionDate" value="<?CompletionDate?>"/>
 	<img src="/images/calendar.gif" id="CompletionDateButton" style="cursor: pointer;" title="Date selector" />
 	<script type="text/javascript">
 	Calendar.setup({

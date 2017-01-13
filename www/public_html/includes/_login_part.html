@@ -1,0 +1,30 @@
+<div class="Login">
+	<fieldset><legend>Please login</legend>
+		<div class="content">
+			<div class="instruction">Please enter your e-mail address and password.<br/><br/></div>
+			<ul>
+				<li>
+					<label for="email">E-mail</label>
+					<input type="email" id="email" name="email" value="<? echo ( $param{email} ) ?>" onkeydown="if(event.keyCode == 13){checkLoginData( this, LoginForm.password );}" /><br/>
+					<span id="missingLoginMessage" style="display: none;"><img src="/images/smallCurvedArrow.gif" alt=""/> Please enter your email address.</span>
+				</li>
+				<li>
+					<label for="password">Password</label>
+					<input type="password" id="password" name="password" onkeydown="if(event.keyCode == 13){checkLoginData(LoginForm.email, this);}" /><br/>
+					<span id="missingPasswordMessage" style="display: none;"><img src="/images/smallCurvedArrow.gif" alt=""/> Please enter your password.</span>
+				</li>
+				<li>
+					<label>Remember me</label>
+					<? echo ( radio( 'rdbRememberMe', ['Y','Yes','N','No'], ( $param{rdbRememberMe} || $config{rdbRememberMe} || 'N' ) ); ) ?>
+				</li>
+			</ul>
+		</div>
+		<p class="buttons">
+			<? echo ( join("\n",
+						button( 'MainLogin', { onclick=>q`checkLoginData(LoginForm.email,LoginForm.password);`, text=>'Login' } ),
+						button( 'MainForgot', { onclick=>q`checkForgotPasswordData(LoginForm.email);`, text=>'Forgotten Password' } ),
+						); ) ?>
+		</p>
+	</fieldset>
+</div>
+<script type="text/javascript">document.LoginForm.email.focus();</script>

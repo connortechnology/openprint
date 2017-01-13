@@ -4,7 +4,7 @@
 <div class="InstantPricing">
 	<div class="Questions">
 		<h3>Instant Pricing</h3>
-		<form name="f1" method="post" action="/main/order/information.html">
+		<form id="f1" name="f1" method="post" action="/main/order/information.html">
 			<input type="hidden" name="ProjectIndex" value="" />
 			<input type="hidden" name="ProjectType" value="<?ProjectTypeName?>" />
             <input type="hidden" name="PrintingType" value="<?PrintingType?>" />
@@ -17,25 +17,22 @@
 <? endif ( sets::isin( $$variable{'ProjectTypeName'}, 'BusinessCards', 'DoorHangers', 'ScratchPads' ) ) ?>
 <? endif ( 0 ) ?>
             <input type="hidden" name="TemplateType" value="<?TemplateType?>" />
-			<!--#include virtual="/includes/sizes.html"-->
-			<div class="row"><span class="label">Colours:</span>
-				<span class="input">
+			<? echo ( include('_sizes.html'); ) ?>
+			<ul>
+			<li><label>Colours</label>
 				<select name="Colours" onChange="calc(this.form.name);">
 					<option value="4/0">4 Colour One Side</option>
 					<option value="4/4">4 Colour Both Sides</option>
 				</select>
-				</span>
-			</div>
-</br>
-			<!--#include virtual="/includes/aqueous.html"-->
-			<div class="row">
-				<span class="label">Stock Information</span><br/>
-				<!--#include virtual="/includes/paper_dropdowns.html"-->
-			</div>
-<? if ( ! sets::isin( $$variable{'ProjectTypeName'}, 'BusinessCards', 'Door Hangers', 'ScratchPads' ) ) ?>
-		<div class="row">
-			<span class="label">Fold Type:</span>
-			<span class="input">
+			</li>
+			<? echo ( include('_aqueous.html'); ) ?>
+			<li>
+				<label>Stock Information</label><br/>
+				<? echo ( include('_paper_dropdowns.html'); ) ?>
+			</li>
+<? if ( ! sets::isin( $$variable{'ProjectTypeName'}, 'BusinessCards', 'DoorHangers', 'ScratchPads' ) ) ?>
+			<li>
+				<label>Fold Type</span>
 				<select name="FoldType" size="1" onChange="FoldType_onChange( this );">
 					<option value="NoFold">No Fold</option>
 					<option value="2PanelFold">2 Panel Fold</option>
@@ -48,19 +45,17 @@
 					<option value="6PanelFold">6 Panel Fold</option>
 					<option value="6PanelZFold">6 Panel Z Fold</option>
 				</select>
-			</span>
-		</div>
-<? endif ( ! sets::isin( $$variable{'ProjectTypeName'}, 'BusinessCards', 'Door Hangers', 'ScratchPads' ) ) ?>
-			<!--#include virtual="/includes/drilling.html"-->
-			<!--#include virtual="/includes/scoring.html"-->
-			<!--#include virtual="/includes/perfing.html"-->
-			<!--#include virtual="/includes/ups_shipping.html"-->
-			<!--#include virtual="/includes/turnaround.html"-->
-			<br class="spacer"/>
-			<!--#include virtual="/includes/quantity.html"-->
-			<br class="spacer"/>
-			<!--#include virtual="/includes/prices.html"-->
+			</li>
+<? endif ( ! sets::isin( $$variable{'ProjectTypeName'}, 'BusinessCards', 'DoorHangers', 'ScratchPads' ) ) ?>
+			<? echo ( include('_drilling.html'); ) ?>
+			<? echo ( include('_scoring.html'); ) ?>
+			<? echo ( include('_perfing.html'); ) ?>
+			<? echo ( include('_ups_shipping.html'); ) ?>
+			<? echo ( include('_turnaround.html'); ) ?>
+			<? echo ( include('_quantity.html'); ) ?>
+			<? echo ( include('_prices.html'); ) ?>
+			</ul>
 		</form>
 	</div><!--Questions-->
-	<!--#include virtual="<? echo ( '/content/'.$$variable{'ProjectTypeName'}.'.html' ) ?>" -->
+	<? echo ( include('<? echo ( '/content/'.$$variable{'ProjectTypeName'}.'.html' ) ?>'); ) ?>
 </div><!--InstantPricing-->

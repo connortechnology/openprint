@@ -1,0 +1,117 @@
+<div class="PageTitle">
+	<h1>Accounting</h1>
+	<h2>Expenses</h2>
+</div>
+<script type="text/javascript">
+	function delete_confirm(form) {
+		var number_of_deleted_expensess = 0;
+		for ( var index = 0; index < form.elements.length; index += 1 ) {
+			if ( ! form.elements[index].name )
+				continue;
+			if ( form.elements[index].name.substr(0,9) == 'chkDelete' && form.elements[index].checked ) {
+				number_of_deleted_expensess += 1;
+			} // end if
+
+		} // end for
+		if ( number_of_deleted_expensess == 0 ) {
+			alert("To delete Expenses, click the checkbox beside the expenses.");
+		} else {
+			if ( confirm("Are you sure you wish to delete these " + number_of_deleted_expensess + " expensess from history?\n") ) {
+				form.submit();
+			} // end if
+		} // end if
+	}
+	function load_expenses( form ) {
+		LoadContent( 'ExpenseList','_expenses.html', $('f1') );
+	} // end function
+</script>	 
+<? include(/includes/error_reporting.html) ?>
+<form id="f1" name="f1" method="post" action="/employee/accounting/expenses.html">
+	<input type="hidden" name="btnFunction"/>
+	<fieldset class="filters unprintable"><legend>Select Search Criteria</legend>
+		<div class="leftColumn">
+			<div class="content">
+				<ul>
+					<li>
+						<label>Invoiced On</label>
+		<? echo ( date_select_session( '/employee/accounting/expenses.html', 'invoiced_on_start', { onchange=>q`check_time_starting($('f1'), 'invoiced_on_start','invoiced_on_end');load_expenses($('f1'));`, with_today=>1,with_clear=>1 } ); ) ?>
+							to 
+		<? echo ( date_select_session( '/employee/accounting/expenses.html', 'invoiced_on_end', { onchange=>q`load_expenses($('f1'));`, with_today=>1,with_clear=>1 } ); ) ?>
+					</li>
+					<li>
+						<label>Due On</label>
+		<? echo ( date_select_session( '/employee/accounting/expenses.html', 'due_on_start', { onchange=>q`check_time_starting($('f1'), 'due_on_start','due_on_end');load_expenses($('f1'));`, with_today=>1,with_clear=>1 } ); ) ?>
+							to 
+		<? echo ( date_select_session( '/employee/accounting/expenses.html', 'due_on_end', { onchange=>q`load_expenses($('f1'));`, with_today=>1,with_clear=>1 } ); ) ?>
+					</li>
+					<li>
+						<label>Paid On</label>
+		<? echo ( date_select_session( '/employee/accounting/expenses.html', 'paid_on_start', { onchange=>q`check_time_starting($('f1'), 'paid_on_start','paid_on_end');load_expenses($('f1'));`, with_today=>1,with_clear=>1 } ); ) ?>
+							to 
+		<? echo ( date_select_session( '/employee/accounting/expenses.html', 'paid_on_end', { onchange=>q`load_expenses($('f1'));`, with_today=>1,with_clear=>1 } ); ) ?>
+					</li>
+					<li>
+						<label>Entered On</label>
+		<? echo ( date_select_session( '/employee/accounting/expenses.html', 'entered_on_start', { onchange=>q`check_time_starting($('f1'), 'entered_on_start','entered_on_end');load_expenses($('f1'));`, with_today=>1,with_clear=>1 } ); ) ?>
+							to 
+		<? echo ( date_select_session( '/employee/accounting/expenses.html', 'entered_on_end', { onchange=>q`load_expenses($('f1'));`, with_today=>1,with_clear=>1 } ); ) ?>
+					</li>
+				</ul>
+			</div>
+		</div>
+		<div class="rightColumn">
+			<div class="content">
+				<ul>
+					<li>
+						<label>Currency</label>
+						<select name="currency_id" id="currency_id" onchange="load_expenses(this.form);">
+							<option value="">all</option>
+							<? echo ( make_drop_down( openprint::Currency->dropdown( order=>'lower(name)'), $session{'/employee/accounting/expenses.html?currency_id'} ); ) ?>
+						</select>
+					</li>
+					<li>
+						<label>Category</label>
+						<select name="category_id" id="category_id" onchange="load_expenses(this.form);">
+							<option value="">all</option>
+							<? echo ( make_drop_down( openprint::Expense_Category->dropdown('order'=>'lower(name)'), $session{'/employee/accounting/expenses.html?category_id'} ); ) ?>
+						</select>
+					</li>
+					<li>
+						<label>Recipient</label>
+						<select name="recipient_id" id="recipient_id" onchange="load_expenses(this.form);">
+							<option value="">all</option>
+							<? echo ( make_drop_down( openprint::Company->dropdown('order'=>'lower(name)'), $session{'/employee/accounting/expenses.html?recipient_id'} ); ) ?>
+						</select>
+					</li>
+					<li>
+						<label>Account</label>
+						<select name="account_id" id="account_id" onchange="load_expenses(this.form);">
+							<option value="">all</option>
+							<? echo ( make_drop_down( openprint::Expense_Account->dropdown('order'=>'lower(name)'), $session{'/employee/accounting/expenses.html?account_id'} ); ) ?>
+						</select>
+					</li>
+					<li>
+						<label>Attention</label>
+						<? echo ( radio('attention', [ '1', 'Yes','0', 'No', '', 'Both' ], $session{'/employee/accounting/expenses.html?attention'}, { onclick=>'load_expenses(this.form);' } ); ) ?>
+					</li>
+					<li><label>Amount</label>
+						<? echo ( input( type=>'float', name=>'amount', value=>$session{'/employee/accounting/expenses.html?amount'}, oninput=>'load_expenses(this.form);' ); ) ?>
+					</li>
+					<li><label>Total</label>
+						<? echo ( input( type=>'float', name=>'total', value=>$session{'/employee/accounting/expenses.html?total'}, oninput=>'load_expenses(this.form);' ); ) ?>
+					</li>
+				</ul>
+			</div>
+		</div>
+		<br class="spacer"/>
+		<p class="buttons">
+			<? echo ( join("\n",
+				button( 'ShowResults', { onclick=>"load_expenses(\$('f1'));", text=> 'Show Results' } ),
+				button( 'Download', { onclick=>"f1.btnFunction.value='Download';f1.submit();" } ),
+				button( 'Reset', { onclick=>'f1.reset();' } ),
+				button( 'New', { href=>'expense.html', text=>'New Expense' } ),
+				); ) ?>
+		</p>
+	</fieldset>
+	<div id="ExpenseList"><?include('_expenses.html')?></div>
+</form>

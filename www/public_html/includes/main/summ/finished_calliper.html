@@ -1,11 +1,10 @@
-<div class="row"> 
-	<span class="label">Total finished <a href="#" onMouseOver="tipOn('calliper',2,event)" onMouseOut="tipOff('calliper')">calliper</a>:</span>
+<p> 
+	<label>Total finished calliper</label>
    <? eval ( $$variable{'QTYIndex'} = 1 ) ?>
     <? while ( $$variable{'QTYIndex'} <= 3 ) ?>
     <? if ( $$variable{'txtQuantity'.$$variable{'QTYIndex'}} ) ?>
-	<span class="value"><?txtFinishedCalliper?> inches</span>
+	<span class="value"><?txtFinishedCalliper?>&quot;</span>
     <? endif ( $$variable{'txtQuantity'.$$variable{'QTYIndex'}} ) ?>
     <? eval ( $$variable{'QTYIndex'} += 1 ) ?>
     <? endwhile ( $$variable{'QTYIndex'} <= 3 ) ?>
-	<br class="spacer"/>
-</div>
+</p>

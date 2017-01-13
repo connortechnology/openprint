@@ -1,27 +1,8 @@
+<style type="text/css"><?include('/css/order.css')?></style>
 Attached is a copy of an order. Please review all project services and the required 
 by date. Collect production downpayment if required and schedule projects appropriately 
 for production. Arrange shipping if necessary. 
-<br>
-<b>Ordered By:</b><br>
-<?txtSalutation?>
-<?txtFirstName?>
-<?txtLastName?>
-<br>
-<?txtCompanyName?>
-<br>
-<?txtAddress1?>
-<br>
-<? if ( $$variable{'txtAddress2'} ) ?>
-<?txtAddress2?>
-<br>
-<? endif ( $$variable{'txtAddress2'} ) ?>
-<?CCITYPROVCOUNTRY?>
-<br>
-<?txtPostalCode?>
-<br>
-<?txtPhone?>
-<?txtExtension?>
-<br>
-<?txtFax?>
-<br>
-<?txtEmail?>
+<br/>
+<div class="Order">
+<?echo( include('/email_content/sales_order_header.html', $variable ); ) ?>
+</div>

@@ -1,7 +1,6 @@
-package openprint::product_priceset;
-@ISA = qw(openprint::priceset);
-
 use strict;
+package openprint::product_priceset;
+our @ISA = qw(openprint::priceset);
 
 require openprint::product_price;
 require openprint::Pricelist;
@@ -29,7 +28,7 @@ sub load {
 	$_ .= "AND ($self->{qty} :: numeric >= min OR min is NULL) AND ($self->{qty} :: numeric <= max OR max IS NULL)" if $self->{qty};
     my @records = sql::execute( $openprint::log, $openprint::dbh, $_, @$self{'product_index','list_index'} );
     while ( @records ) {
-		my $price = openprint::service_price->new( $self->{log}, $self->{dbh}, $self );
+		my $price = openprint::product_price->new( $self->{log}, $self->{dbh}, $self );
 		$price->set( undef, splice @records, 0, 7 );
 		$$price{'currency_id'} = $Pricelist->currency_id();
 		push @{$self->{prices}}, $price;
@@ -37,6 +36,4 @@ sub load {
 }
 
 1;
-
 __END__
-~       

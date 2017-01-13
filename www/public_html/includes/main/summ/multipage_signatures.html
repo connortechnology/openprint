@@ -1,12 +1,19 @@
-<div class="row">
-	<span class="label">Quantity of spreads on signature:</span>
+<p>
+	<label>Pages on signature</label>
 <? eval ( $$variable{'QTYIndex'} = 1 ) ?>
 <? while ( $$variable{'QTYIndex'} <= 3 ) ?>
 <? if ( $$variable{'txtQuantity'.$$variable{'QTYIndex'}} ) ?>
-	<span class="value"><? echo ( sprintf('%d spread%s => %d pages', $$variable{"txtSignatureSpreadQuantity$$variable{'QTYIndex'}"},
-($$variable{"txtSignatureSpreadQuantity$$variable{'QTYIndex'}"} > 1 ? 's' : '' ), $$variable{"PageQuantity$$variable{'QTYIndex'}"} ); ) ?></span>
+	<span class="value">
+<? echo ( 
+		if ( $$variable{'hdnImageOrientation'.$$variable{'QTYIndex'}} eq 'Vertical' ) {
+			return ($$variable{'SpreadCols'.$$variable{'QTYIndex'}} * $$variable{'txtSpreadSize'}/2) . 'x' . $$variable{'SpreadRows'.$$variable{'QTYIndex'}} . ' = ' . $$variable{'PageQuantity'.$$variable{'QTYIndex'}} . ' pages';
+		} else {
+			return $$variable{'SpreadCols'.$$variable{'QTYIndex'}} . 'x' . ($$variable{'SpreadRows'.$$variable{'QTYIndex'}} * $$variable{'txtSpreadSize'}/2) . ' = ' . $$variable{'PageQuantity'.$$variable{'QTYIndex'}} . ' pages';
+		} # end if
+) ?>
+	</span>
 <? endif ( $$variable{'txtQuantity'.$$variable{'QTYIndex'}} ) ?>
     <? eval ( $$variable{'QTYIndex'} += 1 ) ?>
 <? endwhile ( $$variable{'QTYIndex'} <= 3 ) ?>
 	<br class="spacer"/>
-</div>
+</p>

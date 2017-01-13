@@ -1,12 +1,8 @@
-<? if ( openprint::service::get_index_by_id( $log, $dbh, 'Lamination' ) ) ?>	
-<div class="row"> 
-	<span class="label"><? echo ( ssi::writeTip('Laminating'); ) ?> type:</span>
-	<? eval ( $$variable{'QTYIndex'} = 1 ) ?>
-	<? while ( $$variable{'QTYIndex'} <= 3 ) ?>
-	<? if ( $$variable{'txtQuantity'.$$variable{'QTYIndex'}} ) ?>
-		<span class="value"><?LaminationType?></span>
-	<? endif ( $$variable{'txtQuantity'.$$variable{'QTYIndex'}} ) ?>
-	<? eval ( $$variable{'QTYIndex'} += 1 ) ?>
-	<? endwhile ( $$variable{'QTYIndex'} <= 3 ) ?>
-</div>
-<? endif ( openprint::service::get_index_by_id( $log, $dbh, 'Lamination' ) ) ?>	
+<p> 
+	<label>Type on front</label>
+	<? echo ( join("\n", map { '<span class="value">'.$$variable{TypeFront}.'</span>' } $$variable{Project}->quantity_indexes() ); ) ?>
+</p>
+<p> 
+	<label>Type on back</label>
+	<? echo ( join("\n", map { '<span class="value">'.$$variable{TypeFront}.'</span>' } $$variable{Project}->quantity_indexes() ); ) ?>
+</p>

@@ -1,155 +1,198 @@
-<script type="text/javascript" src="/javascripts/barcode.js"></script>
-<? eval ( 
-	foreach my $key ( 'PaperManufacturer','PaperBrand','PaperFinish','PaperColour','PaperWeight','Type','StartYear','StartMonth','StartDay','EndYear','EndMonth','EndDay','Docket','fsc_code', 'width','height','OrLarger' ) {
-		$openprint::session{'/employee/inventory/paper.html?'.$key} = $openprint::param{$key} if exists $openprint::param{$key};
-	} # end foreach
-	$openprint::session{'/employee/inventory/paper.html?Owner'} = $openprint::session{'company_id'} if ! exists $openprint::session{'/employee/inventory/paper.html?Owner'};
-	if ( ! $openprint::session{'/employee/inventory/paper.html?StartYear'} ) {
-		@openprint::session{'/employee/inventory/paper.html?StartYear','/employee/inventory/paper.html?StartMonth','/employee/inventory/paper.html?StartDay'} = Date::Calc::Add_Delta_Days( Date::Calc::Today(), -7 );
-	} # end if
-	@$variable{'StartYears','StartMonths','StartDays','Start'} = ssi::get_dates( $log, $dbh, 
-		@openprint::session{'/employee/inventory/paper.html?StartYear','/employee/inventory/paper.html?StartMonth','/employee/inventory/paper.html?StartDay'} );
-
-	if ( ! $openprint::session{'/employee/inventory/paper.html?EndYear'} ) {
-		@openprint::session{'/employee/inventory/paper.html?EndYear','/employee/inventory/paper.html?EndMonth','/employee/inventory/paper.html?EndDay'} = Date::Calc::Today();
-	} # end if
-	@$variable{'EndYears','EndMonths','EndDays','End'} = ssi::get_dates( $log, $dbh, 
-		@openprint::session{'/employee/inventory/paper.html?EndYear','/employee/inventory/paper.html?EndMonth','/employee/inventory/paper.html?EndDay'} ); 
-) ?>
-<? if ( $$variable{'information'} ) ?>
-<p class="information"><?information?></p>
-<? endif ( $$variable{'information'} ) ?>
+<script type="text/javascript" src="<?hash_link(/javascripts/barcode.js)?>"></script>
+<script type="text/javascript" src="<?hash_link(/javascripts/paper.js)?>"></script>
+<script type="text/javascript">
+	// override this so we don't refresh paper dropdowns on load
+	function calc( formName ) {
+		var f1 = $(formName);
+		if ( ! f1 ) {
+			alert('No form. Tell Isaac about this please.');
+		} 
+		LoadContent( 'Results',	'/employee/inventory/_paper_results.html', f1 );
+	} // end function calc
+</script>
+<?include('/includes/error_reporting.html')?>
 Please select a Paper to view/edit.<br>
-<form name="f1" method="post" action="paper.html">
+<form id="f1" name="f1" method="post" action="paper.html">
 	<fieldset class="filters"><legend>Search Criteria</legend>
-		<p>
-			<label>Manufacturer:</label>
-			<select id="PaperManufacturer" name="PaperManufacturer" size="1">
-			<? echo (
-					my @options = ( '', 'select one',
-						sql::execute( $log, $dbh, q{SELECT id, longname FROM Manufacturers ORDER BY lower(longname)} )
-						);
-					return ssi::make_drop_down( \@options, $openprint::param{'PaperManufacturer'} );
-					) ?>
-			</select>
-		</p>
-		<p>
-			<label>Brand:</label>
-			<select name="PaperBrand" size="1">
+		<ul>
+		<li>
+			<label>Docket</label>
+			<? echo ( input( type=>'cardinal', id=>'Docket', name=>'Docket', value=>$session{$r->uri().'?Docket'}, onkeypress=>'return input_handler(this,event);', onkeydown=>q`if(event.keyCode==13){LoadContent('Results','/employee/inventory/_paper_results.html',$('f1'));}` ); ) ?>
+		</li>
+		</ul>
+	</fieldset>
+	<fieldset class="filters"><legend>Or</legend>
+		<ul>
+			<li>
+				<label>Owner</label>
+				<select id="owner_id" name="owner_id" size="1" onchange="filter_onChange(this,'');">
+				<option value=""> All </option>
+				<? echo ( 
+					make_drop_down( [ map { $_->id(), $_->name() } openprint::Company->find( id=>[sql::execute(undef, undef, q{SELECT DISTINCT owner_id FROM papers} )], order=>'lower(name)' ) ], $session{$r->uri().'?owner_id'} );
+				) ?>
+				</select>
+				<input type="checkbox" name="owner_id_exclude" id="owner_id_exclude" value="1" onclick="filter_onChange(this,'');" <? echo ( checked( $session{$r->uri().'?owner_id_exclude'} ); ) ?> />
+				<label class="radio" for="owner_id_exclude">Exclude</label>
+			</li>
+<? echo (
+	my $html;
+
+	my %find = (
+			( $session{$r->uri().'?type'} ? ( type => [ split( ',', $session{'/employee/inventory/paper.html?type'} ) ] ) : () ),
+	);
+	if ( $session{$r->uri().'?owner_id'} ) {
+		if ( $session{$r->uri().'?owner_id_exclude'} ) {
+			$find{'owner_id !='} = $session{$r->uri().'?owner_id'};
+		} else {
+			$find{owner_id} = $session{$r->uri().'?owner_id'};
+		} # end if
+	} # end if
+
+	my @StockOptions = ( 'Manufacturer','Brand','Finish','Colour','Weight','Quality','Material','Group' );
+
+	my @Papers = openprint::Paper->find( %find );
+	my %filter_validations;
+
+	foreach my $option ( @StockOptions ) {
+		my $lower_option = lc $option;
+		my $option_id  = $lower_option.'_id';
+
+		if ( $session{$r->uri().'?'.$option_id} ) {
+$log->debug("Looking for $option id => " . $session{$r->uri().'?'.$option_id} );
+			if ( ! ('openprint::Stock'.$option)->find_one( id => $session{$r->uri().'?'.$option_id} ) ) {
+				# Clear filter if it no longer ixists
+$log->debug("Deleting filter because it no longer exists $option id => " . $session{$r->uri().'?'.$option_id} );
+				delete $session{$r->uri().'?'.$option_id};
+			}
+		} else {
+			my @blah = ('openprint::Stock'.$option)->find();
+$log->debug("Caching all $option results:" . @blah );
+		}
+	}
+
+	my %filters;
+	for ( my $stock_index = 0; $stock_index < @Papers; $stock_index += 1 ) {
+		my $Stock = $Papers[$stock_index];
+
+		foreach my $option ( @StockOptions ) {
+			my $lower_option = lc $option;
+			my $option_id  = $lower_option.'_id';
+
+			# Load up the filter
+			$filters{$option}{$Stock->$lower_option()} = $$Stock{$option_id} if $$Stock{$option_id};
+
+			if ( $session{$r->uri().'?'.$option_id} ) {
+				if ( $$Stock{$option_id} eq $session{$r->uri().'?'.$option_id} ) {
+					$filter_validations{$option} = 1;
+				} else {
+					splice @Papers, $stock_index, 1;
+					$stock_index -= 1;
+					last;
+				} # end if
+			} # end if
+		} # end foreach option
+	} # end foreach $Stock
+#$log->debug( Data::Dumper::Dumper( \%filters ) );
+
+	foreach my $option ( @StockOptions ) {
+		next if ! $filters{$option};
+		my $lower_option = lc $option;
+		my $option_id  = $lower_option.'_id';
+		my @options = map { $filters{$option}{$_}, $_ } ( sort { lc $a cmp lc $b } keys %{$filters{$option}} );
+#$log->debug("options : @options ");
+		# Don't do this because even if there is only 1 entry, papers can be unassigned.
+		#$session{$r->uri().'?'.$option} = $options[0] if ( @options == 2 );
+
+		$html .= sprintf(q`<li><label>%1$s</label>
+				<select name="%2$s_id%3$s" id="%2$s_id%3$s" size="1" onchange="filter_onChange(this,'');">
+				<option value=""> All </option> %4$s </select>
+			</li>`, $option, $lower_option, $$variable{Signature},
+			make_drop_down( \@options, $session{$r->uri().'?'.$option_id} ),
+		);
+	} # end foreach option
+	$$variable{Paper} = \@Papers;
+	return $html;
+) ?>
+		<li><label>Size</label>
+		<select name="width" size="1" onchange="calc('f1');">
+			<option value="">All</option>
 			<? echo ( 
-					my @options = ( '', 'select one',
-						sql::execute( $log, $dbh, q{SELECT id, longname FROM PaperNames ORDER BY lower(longname)} )
-						);
-					return ssi::make_drop_down( \@options, $openprint::session{'/employee/inventory/paper.html?PaperBrand'} );
+					my %data;
+					my $found = 0;
+					foreach my $Stock ( @{$$variable{Paper}} ) {
+						$data{$Stock->width()} = $Stock->width();
+						$found = 1 if $Stock->width() == $session{$r->uri().'?width'};
+					} # end foreach
+					$session{$r->uri().'?width'} = undef if ! $found;
+					return make_drop_down( [map { $_, $_ } sort keys %data ], $session{$r->uri().'?width'} );
+				) ?>
+			</select> x
+			<select name="height" size="1" onchange="calc('f1');">
+			<option value="">All</option>
+			<? echo ( 
+					my %data;
+					my $found = 0;
+					foreach my $Stock ( @{$$variable{Paper}} ) {
+						$data{$Stock->width()} = $Stock->height();
+						$found = 1 if $Stock->width() == $session{$r->uri().'?height'};
+					} # end foreach
+					$session{$r->uri().'?height'} = undef if ! $found;
+					return make_drop_down( [map { $_, $_ } sort keys %data ], $session{$r->uri().'?height'} );
 				) ?>
 			</select>
-		</p>
-		<p>
-			<label>Finish:</label>
-			<select name="PaperFinish" size="1">
-			<? echo (
-					my @options = ( '', 'select one',
-						sql::execute( $log, $dbh, q{SELECT id, longname FROM PaperFinishes ORDER BY lower(longname)} )
-						);
-					return ssi::make_drop_down( \@options, $openprint::session{'/employee/inventory/paper.html?PaperFinish'} );
-				) ?>
-			</select>
-		</p>
-		<p>
-			<label>Colour:</label>
-			<select name="PaperColour" size="1">
-			<? echo (
-					my @options = ( '', 'select one',
-						sql::execute( $log, $dbh, q{SELECT id, longname FROM PaperColours ORDER BY lower(longname)} )
-						);
-					return ssi::make_drop_down( \@options, $openprint::session{'/employee/inventory/paper.html?PaperColour'} );
-				) ?>
-			</select>
-		</p>
-		<p>
-			<label>Weight:</label>
-			<select name="PaperWeight" size="1">
-			<? echo (
-					my @options = ( '', 'select one',
-						sql::execute( $log, $dbh, q{SELECT id, longname FROM PaperWeights ORDER BY lower(longname)} )
-						);
-					return ssi::make_drop_down( \@options, $openprint::session{'/employee/inventory/paper.html?PaperWeight'} );
-				) ?>
-			</select>
-		</p>
-		<p><label>Size:</label>
-		<select name="width" size="1" onchange="" >
-            <? echo (
-                    my @options = ( '', 'select one',
-                        sql::execute( $log, $dbh, q{SELECT DISTINCT width, width FROM Papers ORDER BY width} )
-                        );
-                return ssi::make_drop_down( \@options, $openprint::session{'/employee/inventory/paper.html?width'} );
-                ) ?>
-            </select> x
-            <select name="height" size="1" onchange="" >
-            <? echo (
-                    my @options = ( '', 'select one',
-                        sql::execute( $log, $dbh, q{SELECT DISTINCT height, height FROM Papers ORDER BY height} )
-                        );
-                return ssi::make_drop_down( \@options, $openprint::session{'/employee/inventory/paper.html?height'} );
-                ) ?>
-            </select>
-            <input type="checkbox" id="OrLarger" name="OrLarger" value="Y" <? echo ( 'checked="checked"' if $openprint::session{'/employee/inventory/paper.html?OrLarger'} ) ?> /><label class="radio" for="OrLarger">or larger</label>
-		</p>
-		<p>
-			<label>Type:</label>
-			<input type="checkbox" id="TypeSheet" name="Type" value="Sheet" <? echo ( 'checked="checked"' if sets::isin( 'Sheet', $openprint::session{'/employee/inventory/paper.html?Type'} ) or ! $openprint::session{'/employee/inventory/paper.html?Type'}; ) ?> />
-			<label class="radio" for="TypeSheet">Sheet</label>
-			<input type="checkbox" id="TypeRoll" name="Type" value="Roll" <? echo ( 'checked="checked"' if sets::isin( 'Roll', $openprint::session{'/employee/inventory/paper.html?Type'} ) or ! $openprint::session{'/employee/inventory/paper.html?Type'}; ) ?> />
-			<label class="radio" for="TypeRoll">Roll</label>
-        </p>
-		<p>
-			<label>Owner:</label>
-			<select name="Owner" size="1">
-			<option value=""> All </option>
-			<? echo ( openprint::obj_customer::get_customer_dropdown( $log, $dbh, $variable, $openprint::session{'/employee/inventory/paper.html?Owner'} ); ) ?>
-			</select>
-		</p>
-		<p>
-			<label>Date Added:</label>
-			<span class="DateSelector">
-				<select name="StartYear"><?StartYears?></select>
-				<select name="StartMonth"><?StartMonths?></select>
-				<select name="StartDay"><?StartDays?></select>
-			</span>
-			<span class="DateSelector"> - </span>
-			<span class="DateSelector">
-			<select name="EndYear"><?EndYears?></select>
-			<select name="EndMonth"><?EndMonths?></select>
-			<select name="EndDay"><?EndDays?></select>
-			</span>
-		</p>
-		<p>
-			<label>Docket:</label>
-			<input type="text" name="Docket" value="<? echo ( $openprint::session{'/employee/inventory/paper.html?Docket'} ) ?>" style="width: auto;" size="6" onKeyPress="return input_handler( this, event);" />
-		</p>
-		<p>
-			<label>FSC Code:</label>
-			<input type="text" id="fsc_code" name="fsc_code" value="<? echo ( $openprint::session{'/employee/inventory/paper.html?fsc_code'} ) ?>" size="13"  style="width: auto;" />
-		</p>
-		<p>
-        <label>In Stock/Out of Stock?</label>
-        <input type="checkbox" id="instock" name="instock" value="Y" <? echo ( 'checked="checked"' if $openprint::session{'/employee/inventory/paper.html?instock'} eq 'Y'  or ! exists $openprint::session{'/employee/inventory/paper.html?instock'} ) ?> />
-        <label class="radio" for="instock">In Stock</label>
-        <input type="checkbox" id="outofstock" name="outofstock" value="Y" <? echo ( 'checked="checked"' if $openprint::session{'/employee/inventory/skids.html?outofstock'} eq 'Y' ) ?> />
-        <label class="radio" for="outofstock">Out Of Stock</label>
-        </p>
+			<input type="checkbox" id="OrLarger" name="OrLarger" value="Y" <? echo ( checked( $session{$r->uri().'?OrLarger'} ); ) ?> /><label class="radio" for="OrLarger">or larger</label>
+		</li>
+		<li>
+			<label>Type</label>
+			<? echo ( checkboxes( 'type', [ 'Sheet','Sheet','Roll','Roll','Unknown','Unknown' ], [ split(',', $session{$r->uri().'?type'} ) ] ); ) ?>
+		</li>
+		<li>
+			<label>Date Added</label>
+			<? echo ( date_select_session($r->uri().'', 'added_on_start', { with_today=>1, with_clear=>1 } ); ) ?>
+			to 
+			<? echo ( date_select_session($r->uri().'', 'added_on_end', { with_today=>1, with_clear=>1 } ); ) ?>
+		</li>
+		<li>
+			<label>FSC Code</label>
+			<input type="text" id="fsc_code" name="fsc_code" value="<? echo ( $session{$r->uri().'?fsc_code'} ) ?>" />
+		</li>
+		<li>
+			<label>In/Out of Stock</label>
+			<? echo ( radio( 'in_stock', [ '1', 'In Stock', '0', 'Out of Stock', '', 'Both' ], $session{$r->uri().'?in_stock'} ); ) ?>
+		</li>
+		<li><label>Allocated</label>
+			<? echo ( radio( 'allocated', [ '1','Yes','0','No','','Both' ], $session{$r->uri().'?allocated'} ); ) ?>
+		</li>
+		<li><label>Condition</label><? echo ( ssi::select( openprint::InventoryCondition->dropdown(order=>'lower(name)'), $session{$r->uri().'?condition_id'}, { name=>'condition_id', prepend=>['','all'] } ); ) ?>
+		</li>
+		<li>
+			<label>Has Value</label>
+			<? echo ( radio( 'has_value', [ '1', 'Yes', '0', 'No', '', 'Both' ], $session{$r->uri().'?has_value'} ); ) ?>
+		</li>
+		</ul>
 
 		<p class="buttons">
-			<? echo ( join('',
-				ssi::writeButton( $log, $dbh, 'ShowResults', 'showResults.gif', "LoadContent('Results','/employee/inventory/_paper_results.html', Serialize(f1) );", '', 'Show Results' ),
-				ssi::writeButton( $log, $dbh, 'DownloadInventory', 'download.gif', "f1.btnFunction.value='Download Inventory';f1.action='paper.html?Download';f1.submit();", '', 'Download Inventory' ),
-				ssi::writeButton( $log, $dbh, 'DownloadLog', 'download.gif', "f1.btnFunction.value='Download Log';f1.action='paper.html?Download';f1.submit();", '', 'Download Log' ),
-				ssi::writeButton( $log, $dbh, 'Reset', 'reset.gif', 'f1.reset();', '', 'Reset' ),
-				ssi::writeButton( $log, $dbh, 'Add', 'add.gif', '', 'paper_details.html', 'Add New Paper' ),
-				); ) ?>
+			<? echo (
+				my $html = '';
+				$html .= button( 'ShowResults', { onclick=>"LoadContent('Results','/employee/inventory/_paper_results.html', f1.serialize() );", text=>'Show Results' } );
+				$html .= button( 'Add', { onclick=>'', href=>'paper_details.html', text=>'Add New Paper' } );
+				if ( openprint::usergroup::is_user_in( ['InventoryManager','Accounting'], $session{user_id} ) ) {
+					$html .= button( 'DownloadInventory', { onclick=>"f1.btnFunction.value='Download Inventory';f1.action='paper.html?Download';f1.submit();", text=>'Download Inventory' } );
+					$html .= button( 'DownloadLog', { onclick=>"f1.btnFunction.value='Download Log';f1.action='paper.html?Download';f1.submit();", text=>'Download Log' } );
+					$html .= button( 'Consumption', { onclick=>"f1.btnFunction.value='Consumption Report';f1.action='paper.html?Download';f1.submit();", text=>'Consumption Report' } ) if $session{email} =~ /iconnor/;
+				} # end if
+				return $html;
+			) ?>
 		</p>
 	</fieldset>
 	<input type="hidden" name="btnFunction"/>
 </form>
-<div id="Results">Select search criteria and click Show Results.</div>
+<div id="Results">
+<? echo (
+     if ( map { $session{$r->uri().'?'.$_} ? $session{$r->uri().'?'.$_} : () } ( qw{ brand_id finish_id colour_id weight_id } ) ) {
+        return include('/employee/inventory/_paper_results.html');
+    }
+
+) ?>
+
+Select search criteria and click Show Results.</div>

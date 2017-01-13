@@ -1,31 +1,22 @@
-<script type="text/javascript" src="/javascripts/jsrsClient.js"></script>
-<script type="text/javascript" src="/javascripts/popups.js"></script>
-<script type="text/javascript" src="/javascripts/proj/misc_prin.js"></script>
+<script type="text/javascript" src="<?hash_link(/javascripts/production_feedback.js)?>"></script>
 <script type="text/javascript" src="/includes/employee/feedback/paper.js"></script>
-<div class="row"> <b class="lgTxt">Multi-Page Publication - Signatures</b></div>
 <div class="Service">
-    <!--#include virtual="/includes/employee/feedback/line.html"-->
-    <form method="POST" name="f1" action="/employee/production/project_view.html">
-        <div class="row">
-            <b class="lgTxt">Production Feedback
-            <? if ( $$variable{'DocketNumber'} ) ?>
-            for docket #:&nbsp;<?DocketNumber?>
-            <? endif ( $$variable{'DocketNumber'} ) ?>
-            </b>
-        </div>
-		<div class="Signature">
-			<? if ( $$variable{'Reference'} ) ?>
-			<p>Information for: <?Reference?></p>
-			<? endif ( $$variable{'Reference'} ) ?>
-			<? eval ( @{$$variable{'Presses'}} = @{$$variable{"Presses-$$variable{'SignatureIndex'}"}} ) ?>
-			<!--#include virtual="/includes/employee/feedback/press_completion.html"-->
-
-			<div id="ActivitiesDiv">
-			<!--#include virtual="/includes/employee/feedback/press_activities.html"-->
-			</div>
-		</div>
-        <!--#include virtual="/includes/employee/feedback/buttons.html"-->
-        <!--#include virtual="/includes/employee/feedback/hidden_fields.html"-->
-    </form>
+	<fieldset><legend>
+	Production Feedback
+	<? if ( $$variable{'DocketNumber'} ) ?> for docket #:&nbsp;<a href="/employee/project/view.html?project_id=<?ProjectIndex?>"><?DocketNumber?></a><? endif ( $$variable{'DocketNumber'} ) ?>
+	</legend>
+<? echo (
+	my $html;
+	foreach my $s_id ( split(',', $$variable{'ServiceIndex'} ) ) {
+		$$variable{'ServiceIndex'} = $s_id;
+		my $sig_specs = openprint::service::get_specs_ref( $$variable{'Project'}, $s_id );
+		$html .= '<div class="Signature">';
+		$html .= "<p>Information for form $$sig_specs{SignatureIndex}: </p>" if $$variable{Reference};
+$html .= include('/employee/proj/prin/_signature.html');
+		$html .= '</div>';
+	} # end foreach
+	return $html;
+) ?>
+	</fieldset>
 </div>
 

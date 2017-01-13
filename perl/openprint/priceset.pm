@@ -1,4 +1,3 @@
-# This is a blank module, to be copied to another module 
 package openprint::priceset;
 
 use strict;
@@ -7,13 +6,13 @@ require openprint::price;
 require openprint::Pricelist;
 
 sub new {
-	my ( $type, $log, $dbh, $list_index, $product_index, $equipment_index, $qty ) = @_;
+	my ( $type, $log, $dbh, $list_index, $product_index, $equipment_index, $qty, $period ) = @_;
 	my $self = {};
 	bless $self, $type;
 
 	$self->{log} = $log;
 	$self->{dbh} = $dbh;
-
+	$self->{period} = $period;
 	$self->{list_index} = $list_index;
 	$self->{product_index} = $product_index;
 	$self->{equipment_index} = $equipment_index;
@@ -57,7 +56,11 @@ sub load {
 		$sql .= ' AND (? >= lngMin OR lngMin IS NULL) AND (? <= lngMax OR lngMax IS NULL)';
 		push @values, @$self{'qty','qty'};
 	} # end if
-    my @records = sql::execute( undef, undef, $sql, @values );
+	if ( $self->{period} ) {
+		$sql .= ' AND (? >= period_start OR period_start IS NULL) AND (? <= period_end OR period_end IS NULL)';
+		push @values, @$self{'period','period'};
+	} # end if
+    my @records = sql::execute( $self->{log}, undef, $sql, @values );
     while ( @records ) {
 		my $price = openprint::price->new( $self->{log}, $self->{dbh}, $self );
 		$price->set( splice @records, 0, 7 );

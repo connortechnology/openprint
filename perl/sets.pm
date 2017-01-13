@@ -1,42 +1,46 @@
-package sets;
-
 use strict;
+package sets;
 
 sub isin {
 
+	my %h;
     # Takes in a variable, and an array, and checks the array element by
     # element to see if the variable exists inside the array.
-    my $var = shift;
-	if ( @_ == 1 ) {
-		my $thing = shift;
+	if ( @_ == 2 ) {
 #$openprint::log->debug( 'REF' . ref $thing );
-		if ( ref $thing eq 'ARRAY' ) {
-			foreach my $value (@{$thing}) {
-#$openprint::log->debug( 'thing' . $value );
-				return 1 if $value eq $var;
+		if ( ref $_[1] eq 'ARRAY' ) {
+
+			#%h = %{ { map { $_ => 1 } @{$_[1]} } };
+			
+			foreach (@{$_[1]}) {
+				return 1 if $_ eq $_[0];
 			} # end foeach
+			return 1 if $h{$_[0]};
 		} else {
-			return 1 if $thing eq $var;
+			return 1 if $_[1] eq $_[0];
 		} # end if
-	} elsif ( @_ > 1 ) {
-		foreach my $value (@_) {
-			return 1 if $value eq $var;
-		} # end foeach
+	} elsif ( @_ > 2 ) {
+		my $var = shift @_;
+		foreach (@_) {
+			return 1 if $_ eq $var;
+		} # end foreach
 	} # end if
     return 0;
-
 } # end sub isin
 
 sub isin_regx {
 # Takes in a variable, and an array, and checks the array element by
 # element to see if the variable exists inside the array.
 
-	my ($var, @array) = @_;
-	foreach my $value (@array) {
+	my $var = shift;
+	foreach my $value (@_) {
 		$value =~ s/\\\\/\\/g;
 		if ( $var =~ /^($value)$/ ) {
-$openprint::log->debug("isin_regx: matched $value");
+#$openprint::log->debug("isin_regx: matched $value");
 			return 1;
+		#} else {
+#$openprint::log->debug("isin_regx: not matched ($var) ($value)");
+
 		} # end if
 	} # end foeach
 	return 0;
@@ -44,22 +48,23 @@ $openprint::log->debug("isin_regx: matched $value");
 } # end sub inin_regx
 
 sub union {
-	my %hash;
-	foreach ( @_ ) {
-		$hash{$_} = 1;
-	} # end foreach
-	return keys %hash;
+	return keys %{{ map { $_ => 1 } @_ }};
+} # end sub union
+sub object_union {
+	return values %{{ map { $_->id() => $_ } @_ }};
 } # end sub union
 
 sub contains {
 	my ( $setA, $setB ) = @_;
 
-	foreach ( @{$setB} ) {
-		if ( ! isin( $_, @{$setA} ) ) {
-			return 0;
+	my @contains;
+
+	foreach ( @{$setA} ) {
+		if ( isin( $_, $setB ) ) {
+			push @contains, $_;
 		} # end if
 	} # end foreach
-	return 1;
+	return @contains;
 } # end sub contains
 
 sub intersection {
@@ -99,15 +104,60 @@ sub xor {
 # We do it this way to maintain ordering of the input array
 sub exclude {
 	my ( $exclude, $array ) = @_;
-	return if (! $exclude) or (! $array);
+	if ( (! $array) or (! @{$array}) ) {
+		return ();
+	} # end if
+	if ( (! $exclude) or (! @{$exclude}) ) {
+		return @{$array};
+	} # end if
 	my @results;
+	my %exclude = map { $_ => 1 } @{$exclude};
 	foreach my $element ( @{$array} ) {
-		push @results, $element if ( ! sets::isin( $element, $exclude ) );
+		push @results, $element if ! $exclude{$element};
 	} # end foreach
 	return @results;
 } # end sub exclude
 
-1;
+sub max {
+	my $max;
 
+	foreach ( ( ( @_ == 1 ) and ( ref $_[0] eq 'ARRAY' ) ) ? @{$_[0]} : @_ ) {
+		$max = $_ if ( ! defined $max ) or  ($max < $_ );
+	} # end foreach
+	return $max;
+} # end sub max
+
+sub max_index {
+	my $array = ( ( @_ == 1 ) and ( ref $_[0] eq 'ARRAY' ) ) ? $_[0] : \@_;
+	my $max;
+	my $max_index;
+
+	for ( my $index = 0; $index < @$array; $index += 1 ) {
+		if ( ( ! defined $max ) or ($max < $$array[$index] ) ) {
+			$max = $$array[$index];
+			$max_index = $index;
+		} # endif
+	} # end foreach
+	return $max_index;
+} # end sub max_index
+
+sub equal {
+	my ( $array1, $array2 ) = @_;
+	return 0 if @{$array1} != @{$array2};
+	for ( my $i = 0; $i < @{$array1}; $i += 1 ) {
+		return 0 if $$array1[$i] != $$array2[$i];
+	} # end for
+	return 1;
+} # end sub equal
+
+# returns the index matching
+sub index {
+	my $value = shift;
+	for ( my $i = 0; $i < @_; $i += 1 ) {
+		return $i if $_[$i] eq $value;
+	} # end for
+	return -1;
+} # end sub index
+
+1;
 __END__
-~       

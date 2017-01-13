@@ -1,44 +1,39 @@
-<div class="row">
-	<span class="label"><?ServiceTypeName?> Weight:</span>
+<p>
+	<label><?ServiceTypeName?> Weight</label>
 	<? echo ( 
 		my $html;
-		foreach my $qty_index ( 1 .. 3 ) {
-			next if ! $$variable{'Project'}->quantity($qty_index);
+		foreach my $qty_index ( $$variable{'Project'}->quantity_indexes() ) {
 			$html .= '<span class="value">';
-			my $g = Math::Units::convert( $$variable{'txtPackageWeight'}, 'lbs','g' );
+			my $g = $$variable{'txtPackageWeight'.$qty_index}*453.59237;
 			if ( $g > 1000 ) {
-			$html .= sprintf( '%.0flbs (%.0fkg)', $$variable{'txtPackageWeight'}, $g/1000 );
+				$html .= sprintf( '%.0flbs (%.0fkg)', $$variable{'txtPackageWeight'.$qty_index}, $g/1000 );
 			} else {
-			$html .= sprintf( '%.0flbs (%.0fg)', $$variable{'txtPackageWeight'}, $g );
+			$html .= sprintf( '%.0flbs (%.0fg)', $$variable{'txtPackageWeight'.$qty_index}, $g );
 			} # end nif
 			$html .= '</span>';
 		} # end foreach
 		return $html;
 		) ?>
-</div>
-<div class="row">
-    <span class="label">Maximum <?ProjectTypeName?> per <?ServiceTypeName?>:</span>
-   <? eval ( $$variable{'QTYIndex'} = 1 ) ?>
-    <? while ( $$variable{'QTYIndex'} <= 3 ) ?>
-    <? if ( $$variable{'txtQuantity'.$$variable{'QTYIndex'}} ) ?>
-    <span class="value"><?txtItemsPerPackage?></span>
-    <? endif ( $$variable{'txtQuantity'.$$variable{'QTYIndex'}} ) ?>
-    <? eval ( $$variable{'QTYIndex'} += 1 ) ?>
-    <? endwhile ( $$variable{'QTYIndex'} <= 3 ) ?>
-</div>
+</p>
+<p>
+    <label>Maximum <?ProjectTypeName?> per <?ServiceTypeName?></label>
+	<? echo (
+		my $html;
+		foreach my $qty_index ( $$variable{'Project'}->quantity_indexes() ) {
+			$html .= sprintf('<span class="value">%s</span>', $$variable{"txtItemsPerPackage$qty_index"} );
+		} # end foreach qty_index
+		return $html;
+	) ?>
+</p>
 <? if ( $$variable{'txtPackageWidth'} and $$variable{'txtPackageHeight'} and $$variable{'txtPackageDepth'} ) ?>
-<div class="row">
-    <span class="label"><?ServiceTypeName?> dimensions:</span>
+<p>
+    <label><?ServiceTypeName?> dimensions</label>
    <? eval ( $$variable{'QTYIndex'} = 1 ) ?>
     <? while ( $$variable{'QTYIndex'} <= 3 ) ?>
-    <? if ( $$variable{'txtQuantity'.$$variable{'QTYIndex'}} ) ?>
+    <? if ( $$variable{'Project'}->quantity($$variable{'QTYIndex'}) ) ?>
     <span class="value"><?txtPackageWidth?> x <?txtPackageHeight?> x <?txtPackageDepth?></span>
-    <? endif ( $$variable{'txtQuantity'.$$variable{'QTYIndex'}} ) ?>
+    <? endif ( $$variable{'Project'}->quantity($$variable{'QTYIndex'}) ) ?>
     <? eval ( $$variable{'QTYIndex'} += 1 ) ?>
     <? endwhile ( $$variable{'QTYIndex'} <= 3 ) ?>
-</div>
+</p>
 <? endif ( $$variable{'txtPackageWidth'} and $$variable{'txtPackageHeight'} and $$variable{'txtPackageDepth'} ) ?>
-
-
-
-

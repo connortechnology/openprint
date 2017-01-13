@@ -1,12 +1,12 @@
 <p>
-	<label>Stock Type:</label>
+	<label>Stock Type</label>
 	<input type="radio" id="UsedStockType-<?SignatureIndex?>Sheet" name="UsedStockType-<?SignatureIndex?>" value="Sheet" <? echo ( 'checked="checked"' if $$variable{"UsedStockType-$$variable{SignatureIndex}"} eq 'Sheet' ) ?> />
 	<label for="UsedStockType-<?SignatureIndex?>Sheet" class="radio">Sheet</label>
-	<input type="radio" id="UsedStockType-<?SignatureIndex?>Roll" name="UsedStockType-<?SignatureIndex?>" value="Roll" <? echo ( 'checked="checked"' if $$variable{"UsedStockType-$$variable{SignatureIndex}"} eq 'Sheet' ) ?> />
+	<input type="radio" id="UsedStockType-<?SignatureIndex?>Roll" name="UsedStockType-<?SignatureIndex?>" value="Roll" <? echo ( 'checked="checked"' if $$variable{"UsedStockType-$$variable{SignatureIndex}"} eq 'Roll' ) ?> />
 	<label for="UsedStockType-<?SignatureIndex?>Roll" class="radio">Roll</label>
 </p>
 <p>
-	<label>Stock Brand:</label>
+	<label>Stock Brand</label>
 	<select name="UsedStockBrand-<?SignatureIndex?>" size="1" onchange="UsedPaperBrand_onchange('-<?SignatureIndex?>');">
 		<? echo (
 				my @options = ( '', 'select one',
@@ -21,11 +21,12 @@
 	</select>
 </p>
 <p>
-	<label>Stock Finish:</label>
+	<label>Stock Finish</label>
 	<select name="UsedStockFinish-<?SignatureIndex?>" size="1" onchange="UsedPaperFinish_onchange('-<?SignatureIndex?>');">
+		<option value=""> select </option>
 		<? echo (
 				my %finishes;
-				foreach my $Paper ( openprint::Paper::find( 'name'=>$$variable{"UsedStockBrand-$$variable{'SignatureIndex'}"} ?
+				foreach my $Paper ( openprint::Paper->find( 'name'=>$$variable{"UsedStockBrand-$$variable{'SignatureIndex'}"} ?
 						$$variable{"UsedStockBrand-$$variable{'SignatureIndex'}"} :
 						$$variable{"ddmStockBrand"} ) ) {
 					$finishes{$Paper->finish()} = $Paper->finish();
@@ -39,11 +40,12 @@
 	</select>
 </p>
 <p>
-	<label>Stock Colour:</label>
+	<label>Stock Colour</label>
 	<select name="UsedStockColour-<?SignatureIndex?>" size="1" onchange="UsedPaperColour_onchange('-<?SignatureIndex?>');">
+		<option value=""> select </option>
 		<? echo (
 				my %colours;
-				foreach my $Paper ( openprint::Paper::find( 'name'=>
+				foreach my $Paper ( openprint::Paper->find( 'name'=>
 						$$variable{"UsedStockBrand-$$variable{'SignatureIndex'}"} ?
 						$$variable{"UsedStockBrand-$$variable{'SignatureIndex'}"} :
 						$$variable{"ddmStockBrand"},
@@ -63,11 +65,12 @@
 	</select>
 </p>
 <p>
-	<label>Stock Weight:</label>
+	<label>Stock Weight</label>
 	<select name="UsedStockWeight-<?SignatureIndex?>" size="1" onchange="UsedPaperWeight_onchange('-<?SignatureIndex?>');">
+		<option value=""> select </option>
 		<? echo (
 				my %colours;
-				foreach my $Paper ( openprint::Paper::find( 'name'=>
+				foreach my $Paper ( openprint::Paper->find( 'name'=>
 						$$variable{"UsedStockBrand-$$variable{'SignatureIndex'}"} ?
 						$$variable{"UsedStockBrand-$$variable{'SignatureIndex'}"} :
 						$$variable{"ddmStockBrand"},
@@ -91,7 +94,7 @@
 	</select>
 </p>
 <p>
-	<label>Stock Size:</label>
+	<label>Stock Size</label>
 	<select name="UsedStockSheetSize-<?SignatureIndex?>" size="1" onchange="UsedPaperSheetSize_onchange('-<?SignatureIndex?>');">
 		<option value=""> select </option>
 	<? echo (
@@ -106,6 +109,6 @@
 	</select>
 </p>
 <p>
-	<label>Stock Quantity:</label>
+	<label>Stock Quantity</label>
 	<input type="text" name="UsedStockQuantity-<?SignatureIndex?>" value="<? echo ( $$variable{"UsedStockQuantity-$$variable{'SignatureIndex'}"} ) ?>" />
 </p>

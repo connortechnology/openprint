@@ -1,197 +1,94 @@
-<style type="text/css">
-	@media print {
-		.filters {
-			display: none;
-			margin: 0px;
-		}
-	}
-	@media screen {
-		.filters {
-			margin-bottom: 10px;
-		}
-	}
-	.filters .row {
-		margin-top: 10px;
-		margin-right: 10px;
-		float: left;
-		clear: none;
-		width: auto;
-	}
-	.tableheader {
-		width: 100%;
-		clear: both;
-		font-weight: bold;
-	}
-	div.row {
-		width: 100%;
-		font-weight: normal;
-		font-size: 11px;
-		margin-bottom: 4px;
-	}
-
-	@media screen {
-		.Company {
-			float: left;
-			vertical-align: bottom;
-		}
-		.Description {
-			float: right;
-			padding-right: 10px;
-		}
-		.Docket  {
-			width: 50px;
-			float: left;
-		}
-		.Service {
-			width: 60px;
-			float: right;
-		}
-		.DueDate {
-			width: 65px;
-			float: right;
-		}
-    }
-	@media print {
-		div.row {
-			margin-bottom: 40px;
-		}
-		.Company {
-			float: left;
-			vertical-align: bottom;
-			font-size: 11pt;
-		}
-		.Description {
-			float: right;
-			padding-right: 10px;
-			font-size: 11pt;
-		}
-		.Docket  {
-			width: 50px;
-			float: left;
-			font-size: 11pt;
-		}
-		.Service {
-			width: 40px;
-			float: right;
-			font-size: 11pt;
-		}
-		.DueDate {
-			width: 80px;
-			float: right;
-			font-size: 11pt;
-		}
-    }
-
-	hr {
-		clear: both;
-		width: 100%;
-		height: 1px;
-		border: 0px;
-		color: #353c91;
-		background-color: #353c91;
-		margin-top: 2px;
-		margin-bottom: 3px;
-		padding: 0px;
-	}
-	.dark {
-		background-color: #E3E4F0;
-	}
-	.spacer {
-		clear: both;
-		height: 1px;
-	}
-	.label {
-		width: 50px;
-		float: left;
-	}
-	.input {
-		float: left;
-	}
-
-	
-</style>
-<form name="f1" method="post" action="#">
-	<input type="hidden" name="btnFunction" value=""/>
-	<fieldset class="filters"><legend>Filters:</legend>
-		<div style="float: left; width: 47%;">
-		<p>
-			<label>Status:</label>
-				<select name="Status" multiple size="3"><?Status?></select>
-		</p>
-		<p>
-			<label>Sales Rep:</label>
-				<select name="ddmSalesRep" size="1" onChange="off(this.options[this.selectedIndex])" onFocus="on(this.options[this.selectedIndex]);on(this)" onBlur="off(this.options[this.selectedIndex]);off(this)">
-					<option value="">All Employees</option>
-					 <? echo ( 
-							 ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::User::find('type'=>['A','E'],'order'=>'lower(strfirstname),lower(strlastname)' ) ], $openprint::param{'ddmSalesRep'} );
-						) ?>
-				</select>
-		</p>
+<form id="f1" name="f1" method="post" action="/employee/production/bindery_overview.html">
+	<input type="hidden" name="btnFunction"/>
+	<fieldset class="filters"><legend>Filters</legend>
+		<div class="leftColumn">
+			<ul>
+				<li>
+					<label>Status</label>
+					<select name="Status" multiple="multiple" size="3"><?Status?></select>
+				</li>
+				<li>
+					<label>Sales Rep</label>
+					<select name="ddmSalesRep" size="1">
+						<option value="">All Employees</option>
+						 <? echo ( 
+								 make_drop_down( openprint::User->dropdown(company_id=>$config{owner_id}, type=>['A','E'],'usergroup any'=>['Sales'], order=>'lower(firstname),lower(lastname)' ), $param{ddmSalesRep} );
+							) ?>
+					</select>
+				</li>
+			</ul>
 		</div>
-		<div style="float: right; width: 47%;">
-			<p>
-				<label>Due Date:</label>
-				<span class="DateSelector">
-					<select name="ddmStartYear" onChange="off(this.options[this.selectedIndex])" onFocus="on(this.options[this.selectedIndex]);on(this)" onBlur="off(this.options[this.selectedIndex]);off(this)"><?ddmStartYear?></select>
-					<select name="ddmStartMonth" onChange="off(this.options[this.selectedIndex])" onFocus="on(this.options[this.selectedIndex]);on(this)" onBlur="off(this.options[this.selectedIndex]);off(this)"><?ddmStartMonth?></select>
-					<select name="ddmStartDay" onChange="off(this.options[this.selectedIndex])" onFocus="on(this.options[this.selectedIndex]);on(this)" onBlur="off(this.options[this.selectedIndex]);off(this)"><?ddmStartDay?></select>
-				to </span>
-				<span class="DateSelector">
-					<select name="ddmEndYear" onChange="off(this.options[this.selectedIndex])" onFocus="on(this.options[this.selectedIndex]);on(this)" onBlur="off(this.options[this.selectedIndex]);off(this)"><?ddmEndYear?></select>
-					<select name="ddmEndMonth" onChange="off(this.options[this.selectedIndex])" onFocus="on(this.options[this.selectedIndex]);on(this)" onBlur="off(this.options[this.selectedIndex]);off(this)"><?ddmEndMonth?></select>
-					<select name="ddmEndDay" onChange="off(this.options[this.selectedIndex])" onFocus="on(this.options[this.selectedIndex]);on(this)" onBlur="off(this.options[this.selectedIndex]);off(this)"> <?ddmEndDay?></select>
-				</span>
-			</p>
+		<div class="rightColumn">
+			<ul>
+			<li>
+				<label>Due Date</label>
+<? echo ( date_select_session( $r->uri(), 'due_date_start', { with_today=>1, with_clear=>1 } ); ) ?>
+				to
+<? echo ( date_select_session( $r->uri(), 'due_date_end', { with_today=>1, with_clear=>1 } ); ) ?>
+			</li>
+			</ul>
 		</div>
 		<br class="spacer"/>
-		<p>
-			<label>Services:</label>
+		<ul>
+		<li>
+			<label>Services</label>
 				<? eval ( @{$$variable{'temp_services'}} = @{$$variable{'DisplayServices'}} ) ?>
 				<? while ( $$variable{'service_type'} = shift @{$$variable{'temp_services'}}; ) ?>
 				<input type="checkbox" name="chkViewServices<?service_type?>" value="checked" <? echo ( $$variable{'chkViewServices'.$$variable{'service_type'}} ) ?> />
 <?service_type?>
 				<? endwhile ( $$variable{'service_type'} = shift @{$$variable{'temp_services'}}; ) ?>
 				
-		</p>
+		</li>
+		</ul>
 		<p class="buttons">
-			<? echo ( ssi::writeButton( $log, $dbh, 'ShowResults', 'showResults.gif', 'f1.submit();', '', 'Show Results' ); ) ?>
-			<? echo ( ssi::writeButton( $log, $dbh, 'Download', 'downloadCSVFormat.gif', "f1.btnFunction.value='Download in CSV format';f1.submit();", '', 'Download in CSV Format' ); ) ?>
-			<? echo ( ssi::writeButton( $log, $dbh, 'Reset', 'reset.gif', 'f1.reset();', '', 'Reset' ); ) ?>
+			<? echo ( join("\n",
+						button( 'ShowResults', { onclick=>'f1.submit();', text=>'Show Results' } ),
+						button( 'Download', { onclick=>"f1.btnFunction.value='Download in CSV format';f1.submit();", text=>'Download in CSV Format' } ),
+						button( 'Reset', { onclick=>'f1.reset();', text=>'Reset' } ),
+						); ) ?>
 		</p>
 	</fieldset><!--filters-->
-	<br style="clear: both;"/>
+	<br class="spacer"/>
 	Please click on an <b>Project</b> to view details.<br>
-	<? if ( @{$$variable{'Projects'}} ) ?>
-		<div class="tableheader">
-			<div class="Docket">Docket</div>
-			<div class="Company">Company</div>
-			<div class="DueDate">Due Date</div>
-			<? eval ( @{$$variable{'temp_services'}} = @{$$variable{'Services'}} ) ?>
-			<? while ( $$variable{'service_type'} = shift @{$$variable{'temp_services'}}; ) ?>
-			<div class="Service"><?service_type?></div>
-			<? endwhile ( $$variable{'service_type'} = shift @{$$variable{'temp_services'}}; ) ?>
-			<div class="Description">Description</div>
-		</div><!--header-->
-		<hr/>
-		<? while ( @$variable{'index','OrderID','docket','company','description','duedate'} = splice @{$$variable{'Projects'}},0,6; ) ?>
-			<div class="row<?class?>" 
-<? if ( $$variable{'duedate'} lt $$variable{'Today'} ) ?> style="color: #ff0000;"<? endif ( $$variable{'duedate'} lt $$variable{'Today'} ) ?>
->
-				<span class="Docket"><?docket?></span>
-				<span class="Company"><a href="project_view.html?OrderID=<?OrderID?>&ProjectIndex=<?index?>"><?company?></a></span>
-				<span class="DueDate"><?duedate?></span>
-				<? eval ( @{$$variable{'temp_services'}} = @{$$variable{'Services'}} ) ?>
-				<? while ( $$variable{'service_type'} = shift @{$$variable{'temp_services'}}; ) ?>
-					<? eval ( $$variable{'runtime'} = shift @{$$variable{'Projects'}}; ) ?>
-					<span class="Service" <? echo ( 'style="color:#aaaaaa;"' if $$variable{'runtime'} eq 'n/a' ) ?> ><?runtime?></span>
-				<? endwhile ( $$variable{'service_type'} = shift @{$$variable{'temp_services'}}; ) ?>
-				<span class="Description"><?description?></span>
-				<br class="spacer"/>
-			</div>
-			<? eval ( $$variable{'class'} = $$variable{'class'} eq ' dark' ? '' : ' dark'; ) ?>
-		<? endwhile ( @$variable{'index','OrderID','docket','company','description','duedate'} = splice @{$$variable{'Projects'}},0,6; ) ?>
-		<hr />				
-	<? else ( @{$$variable{'Projects'}} ) ?>
+	<? if ( @{$$variable{Projects}} ) ?>
+		<table class="List sortable">
+		<tr>
+			<th class="Docket">Docket</th>
+			<th class="Description">Description</th>
+			<th class="Company">Company</th>
+			<th class="DueDate">Due Date</th>
+			<? echo ( join('', map { '<th class="Service">'.$_.'</th>' } @{$$variable{Services}} ); ) ?>
+		</tr>
+		<? echo (
+			my $html;
+			my $rowclass;
+			while ( my ( $Project,$description ) = splice( @{$$variable{Projects}},0,2) ) {
+				$html .= sprintf( q`<tr class="%2$s%2$s">
+					<td class="Docket"><a href="/employee/project/view.html?OrderID=%5$s&amp;ProjectIndex=%6$d">%3$s</a></td>
+					<td class="Description"><a href="/employee/project/view.html?OrderID=%5$s&amp;ProjectIndex=%6$d">%4$s</a></td>
+					<td class="Company"><a href="/employee/project/view.html?OrderID=%5$s&amp;ProjectIndex=%6$d">%7$s</a></td>
+					<td class="DueDate">%8$s</td>`,
+					$rowclass, 
+					( $Project->due_date() lt $$variable{Today} ? ' late' : '' ),
+					$Project->docket(), 
+					$description,
+					$Project->order_id(), $$Project{id},
+					$Project->Company()->name(), 
+					Date::Format::time2str($config{DateFormat}, Date::Parse::str2time($Project->due_date())),
+				);
+				foreach my $service_type ( @{$$variable{Services}} ) {
+					$html .= '<td class="Service"';
+					my $runtime = shift @{$$variable{Projects}};
+					$html .= ' style="color:#aaaaaa;"' if $runtime eq 'n/a';
+					$html .= '>'.$runtime.'</td>';
+				} # end foreach service_type
+				$html .= '</tr>';
+				$rowclass = $rowclass ? 'colRow' : '';
+			} # end while
+			$html .= '</table>';
+			return $html;
+		) ?>
+	<? else ( @{$$variable{Projects}} ) ?>
 		There were no results matching your criteria.
-	<? endif ( @{$$variable{'Projects'}} ) ?>
+	<? endif ( @{$$variable{Projects}} ) ?>
 </form>

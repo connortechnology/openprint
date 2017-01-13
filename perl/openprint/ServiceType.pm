@@ -1,128 +1,112 @@
-package openprint::ServiceType;
-@ISA = qw(openprint::Object);
-require openprint::Object;
-
 use strict;
+package openprint::ServiceType;
+our @ISA = qw(openprint::Object);
+require openprint::Object;
+require openprint::ServiceType_Category;
+require openprint::ServiceType_Default;
 
-my %fields = (
-	'name'				=> 'name',
-	'description'		=> 'description',
-	'url'				=> 'strdetailedurl',
-	'category'			=> 'category',
-	'sorting'			=> 'sorting',
-	'create_visible'	=> 'create_visible',
-	'view_visible'		=> 'view_visible',
+use vars qw( $debug $table $serial %find_fields %fields %transforms %defaults $cache_field );
+
+$debug = 0;
+$table = 'service_types';
+$serial = 'service_types_id_seq';
+
+%fields = (
+	id				=>	'id',
+	name			=> 'name',
+	description		=> 'description',
+	url				=> 'strdetailedurl',
+	type			=> 'type',
+	category_id		=> 'category_id',
+	sorting			=> 'sorting',
+	create_visible	=> 'create_visible',
+	view_visible	=> 'view_visible',
+	summary_visible	=> 'summary_visible',
+	category		=> undef,
+	allow_delete	=> 'allow_delete',
+	deleted			=> 'deleted',
+);
+%find_fields = (
+	category	=>	'(SELECT name FROM ServiceType_Categories WHERE id=category_id)',
+);
+%transforms = (
+);
+%defaults = (
+	deleted			=>	0,
+	category_id		=>	undef,
+	sorting			=>	undef,
+	summary_visible	=>	1,
+	allow_delete	=>	1,
 );
 
-my $debug = 1;
-
-sub find {
-	my %params = @_;
-	my @values;
-	my $sql = q{SELECT * FROM Service_Types WHERE 1>0};
-	if ( $params{'name'} ) {
-		$sql .= ' AND name=?';
-		push @values, $params{'name'};
-	} # end if
-	if ( $params{'category'} ) {
-		$sql .= ' AND category=?';
-		push @values, $params{'category'};
-	} # end if
-	if ( $params{'create_visible'} ) {
-		$sql .= ' AND create_visible=?';
-		push @values, $params{'create_visible'};
-	} # end if
-	if ( $params{'view_visible'} ) {
-		$sql .= ' AND view_visible=?';
-		push @values, $params{'view_visible'};
-	} # end if
-	$sql .= " ORDER BY $params{'order'}" if $params{'order'};
-	my $data = $openprint::dbh->selectall_arrayref( $sql, {Slice=>{}}, @values );
-	if ( ! $data ) {
-		$openprint::log->error("Error loading ServiceTypes: ($sql) (@values)");
-		return;
-	} elsif ( $debug ) {
-		$openprint::log->debug("Loading ServiceTypes: ($sql) (@values) (".@$data.')');
-	} # end if
-	return map { new openprint::ServiceType( $_->{id}, $_ ); } @$data;
-} # end sub find
-
-sub load {
-	my ( $self, $data ) = @_;
-	if ( ! $data ) {
-		$data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM Service_Types WHERE id=?', {}, $$self{id} );
-	} # end if
-	@$self{keys %fields} = @$data{@fields{keys %fields}};
-} # end sub load
-
-sub save {
-	my ( $self, $params ) = @_;
-
-	my %sql;
-	foreach my $k ( keys %fields ) {
-		if ( exists $$params{$k} ) {
-			$sql{$fields{$k}} = $$params{$k};
-		} else {
-			$sql{$fields{$k}} = $$self{$k};
-		} # end if
-	} # end foreach
-	$sql{'sorting'} = undef if $sql{'sorting'} eq '';
-
-	my $ac = sql::start_transaction( $openprint::dbh );
-	if ( ! $$self{'id'} ) {
-		if ( ! ( @$self{'id'} = sql::execute( $openprint::log, $openprint::dbh, q{SELECT nextval('ServiceTypeIndex')} ) ) ) {
-			sql::end_transaction( $openprint::dbh, $ac );
-			return 'Error allocating new Service Type<br/>';
-		} # end if
-		$sql{'id'} = $$self{'id'};
-		if ( $_ = sql::insert( $openprint::log, $openprint::dbh, 'Service_Types', \%sql ) ) {
-			sql::end_transaction( $openprint::dbh, $ac );
-			return "Error inserting Service Type $$self{'name'} : $_<br>";
-		} # end if
-	} else {
-		if ( $_ = sql::update( $openprint::log, $openprint::dbh, 'Service_Types', ['id=?', $$self{'id'}], \%sql ) ) {
-			sql::end_transaction( $openprint::dbh, $ac );
-			return "Error updating Service Type $$self{'name'} : $_<br>";
-		} # end if
-	} # end if
-	sql::end_transaction( $openprint::dbh, $ac );
-	$self->load();
-} # end sub save
+sub cache_field {
+	return 'name';
+}
+$cache_field = 'name';
 
 sub next {
 	my $self = shift;
-	($_) = sql::execute( $openprint::log, $openprint::dbh, q{SELECT id FROM Service_Types WHERE name = (SELECT MIN(name) FROM Service_Types WHERE name>?)}, $$self{'name'} );
+	($_) = sql::execute( undef, undef, q{SELECT id FROM Service_Types WHERE name = (SELECT MIN(name) FROM Service_Types WHERE name>?)}, $$self{name} );
 	if ( ! $_ ) {
-		( $_ ) = sql::execute( $openprint::log, $openprint::dbh, q{SELECT id FROM Service_Types WHERE name = (SELECT MAX(name) FROM Service_Types WHERE name<?)}, $$self{'name'} );
+		( $_ ) = sql::execute( undef, undef, q{SELECT id FROM Service_Types WHERE name = (SELECT MAX(name) FROM Service_Types WHERE name<?)}, $$self{name} );
 	} # end if
 	return $_;
 } # end sub next
 sub Next {
-	my $self = shift;
-	return new openprint::ServiceType( $self->next() );
+	return new openprint::ServiceType( $_[0]->next() );
 }
 sub prev {
 	my $self = shift;
-	($_) = sql::execute( $openprint::log, $openprint::dbh, q{SELECT id FROM Service_Types WHERE name = (SELECT MAX(name) FROM Service_Types WHERE name<?)}, $$self{'name'} );
+	($_) = sql::execute( undef, undef, q{SELECT id FROM Service_Types WHERE name = (SELECT MAX(name) FROM Service_Types WHERE name<?)}, $$self{name} );
 	if ( ! $_ ) {
-		( $_ ) = sql::execute( $openprint::log, $openprint::dbh, q{SELECT id FROM Service_Types WHERE name = (SELECT MIN(name) FROM Service_Types WHERE name>?)}, $$self{'name'} );
+		( $_ ) = sql::execute( undef, undef, q{SELECT id FROM Service_Types WHERE name = (SELECT MIN(name) FROM Service_Types WHERE name>?)}, $$self{name} );
 	} # end if
 	return $_;
 } # end sub prev
 
 sub Prev {
-	my $self = shift;
-	return new openprint::ServiceType( $self->prev() );
+	return new openprint::ServiceType( $_[0]->prev() );
 }
 
-sub delete {
-	my $self = shift;
-
+sub destroy {
 	my $ac = sql::start_transaction( $openprint::dbh );
-	sql::execute( $openprint::log, $openprint::dbh, q{DELETE FROM tbl_servicetype_defaults WHERE lngServiceTypeIndex=?}, $$self{'id'} );
-	sql::execute( $openprint::log, $openprint::dbh, q{DELETE FROM Service_Types WHERE id=?}, $$self{'id'} );
+	sql::execute( undef, undef, q{DELETE FROM tbl_service_defaults WHERE lngServiceTypeIndex=?}, $_[0]{id} );
+	sql::update( undef, undef, $openprint::Project_Service::table, [ $openprint::Project_Service::fields{servicetype_id} . ' =?', $_[0]{id} ], $openprint::Project_Service::fields{servicetype_id}, undef );
+	sql::execute( undef, undef, q{DELETE FROM Service_Types WHERE id=?}, $_[0]{id} );
 	sql::end_transaction( $openprint::dbh, $ac );
-} # end sub delete
+} # end sub destroy
+
+sub Category {
+	if ( ! $_[0]{Category} ) {
+		$_[0]{Category} = new openprint::ServiceType_Category( $_[0]{category_id} );
+	}
+
+	return $_[0]{Category};
+} # end sub category
+
+sub category {
+	if ( @_ == 2 ) {
+		my $ServiceType_Category = openprint::ServiceType_Category->find_one('name lc'=>lc $_[1]);
+		if ( $ServiceType_Category ) {
+			$_[0]{category_id} = $ServiceType_Category->id();
+		} else {
+			$ServiceType_Category = new openprint::ServiceType_Category();
+			$ServiceType_Category->save({ name=>$_[1] });
+		} # end if
+		$_[0]{Category} = $ServiceType_Category;
+		$_[0]{category_id} = $ServiceType_Category->id();
+	} # end if
+
+	return $_[0]->Category()->name();
+}
+
+sub Defaults {
+	if ( ! $_[0]{Defaults} ) {
+		$_[0]{Defaults} = [ openprint::ServiceType_Default->find( servicetype_id=>$_[0]{id} ) ];
+	}
+	return @{$_[0]{Defaults}};
+} # end sub Defaults
+
 
 1;
 __END__

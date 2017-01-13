@@ -20,6 +20,8 @@ use strict;
 require openprint::service;
 
 my @variables = (
+		'Markup1', 'Markup2', 'Markup3',
+		'OverridePrice1', 'OverridePrice2', 'OverridePrice3',
         'txtPrice', 'txtPrice1', 'txtPrice2', 'txtPrice3',
         'txtRunTime1', 'txtRunTime2', 'txtRunTime3',
 		'txtScanWidth', 'txtScanHeight',
@@ -46,25 +48,30 @@ sub calc {
 	if ( ! $$specs{'txtScanWidthFinal'} or ! $$specs{'txtScanHeightFinal'} or ! $$specs{'txtQuantity'} or ! $$specs{'rdbScanner'} ) {
 		return 'uncalculated';
 	} # end if
+	my $Project = new openprint::Project( $project_index );
 
 	my $size = $$specs{'txtScanWidthFinal'} * $$specs{'txtScanHeightFinal'};
-	my $makeReady = openprint::service::get_price( $log, $dbh, $variable, $$specs{'rdbScanner'}.'ScanningMakeReady', $$specs{'txtQuantity'}, undef );
-	my $runPrice = openprint::service::get_price( $log, $dbh, $variable, 'Scanning', $$specs{'txtQuantity'}, undef );
+	my $makeReady = openprint::service::get_price( $$specs{'rdbScanner'}.'ScanningMakeReady', $$specs{'txtQuantity'}, undef );
+	my $runPrice = openprint::service::get_price( 'Scanning', $$specs{'txtQuantity'}, undef );
 	my $price = int( $makeReady + $runPrice * $size );
 
-	$$specs{"txtUnitPrice"} = sprintf( '%.2f', $price );
+	$$specs{'txtUnitPrice'} = sprintf( $openprint::config{'UnitPriceFormat'}, $price * (1+$Project->markup()/100) );
 	$price *= $$specs{'txtQuantity'};
 
-	$$specs{"txtPrice"} = sprintf( $openprint::config{'ProjectMoneyFormat'}, $price );
-	foreach my $qty_index ( 1 .. 3 ) {
-		$$specs{"txtUnitPrice$qty_index"} = $$specs{"txtUnitPrice"};
-		$$specs{"txtPrice$qty_index"} = $$specs{"txtPrice"};
+	$$specs{'txtPrice'} = sprintf( $openprint::config{'ProjectMoneyFormat'}, $price * (1+$Project->markup()/100) );
+	foreach my $qty_index ( $Project->quantity_indexes() ) {
+		$$specs{"txtUnitPrice$qty_index"} = $$specs{'txtUnitPrice'};
+		if ( $$specs{"OverridePrice$qty_index"} ne 'Y' ) {
+			$$specs{"txtPrice$qty_index"} = sprintf( $openprint::config{'ProjectMoneyFormat'}, $$specs{'txtPrice'} * (1+$$specs{"Markup$qty_index"}) );
+		} else {
+			$$specs{"txtPrice$qty_index"} = sprintf( $openprint::config{'ProjectMoneyFormat'}, $$specs{"txtPrice$qty_index"} );
+		} # end if
 	} # end foreach
 	return $status;
 } # end sub calc
 
 sub display {
-    my ( $log, $dbh, $variable, $project_index, $service_index ) = @_;
+	my ( $log, $dbh, $variable, $project_index, $service_index ) = @_;
 
 	my $specs = openprint::service::get_specs_ref( $project_index, $service_index );
 	foreach my $k ( keys %$specs ) {
@@ -72,6 +79,9 @@ sub display {
 	} # end foreach
 
 } # end sub display
+
+sub summary {
+}
     
 
 1;

@@ -1,177 +1,204 @@
+use strict;
 package openprint::support;
 
-use MIME::QuotedPrint;
-use Mail::Sendmail;
-use Email::Valid;
-use strict;
+require MIME::QuotedPrint;
+require Email::Valid;
+use openprint ();
+use vars qw( $r $log $dbh %variable %param %session %config);
+*r = \$openprint::r;
+*log = \$openprint::log;
+*dbh = \$openprint::dbh;
+*variable = \%openprint::variable;
+*param = \%openprint::param;
+*session = \%openprint::session;
+*config = \%openprint::config;
 
 require sql;
+require openprint::RMA;
+require openprint::RMA_Type;
+require openprint::RMA_Status;
 
-sub confirmation_returns {
-	my ($r, $log, $dbh, $variable) = @_;
+require openprint::Project;
+require openprint::Order;
+require openprint::Company;
+require openprint::Helpdesk;
 
-	my $order_id = $openprint::param{'order_id'};
-	my $prod_id = $openprint::param{'project_id'};
-	my ( $check_order_id, $check_cust_id );
+sub rma {
+	if ( $param{action} eq 'Submit' ) {
 
-	if ( $openprint::param{'docket'} ) {
-		$_ = 'SELECT Index, CompanyIndex FROM Orders WHERE lngDocketNumber=?';
-		( $check_order_id, $check_cust_id ) = sql::execute( $log, $dbh, $_, $openprint::param{'docket'} );
-	} elsif ( $openprint::param{'order_id'} ) {
-		$_ = 'SELECT Index, CompanyIndex FROM Orders WHERE Index=?';
-		( $check_order_id, $check_cust_id ) = sql::execute( $log, $dbh, $_, $order_id );
-	} # end if
+		$param{project_id} = openprint::Project->transform( 'id', $param{project_id} );
+		my $Order;
 
-	if ( $check_order_id eq '' ) {
-		return misc::error( $log, $dbh, $variable, 'Error','Invalid Order ID' );
-	} elsif ( $check_cust_id != $openprint::session{'company_id'} ) {
-		return misc::error( $log, $dbh, $variable, 'Error','You are not the owner of that order.' );
-	} # end if
+		if ( $param{docket} ) {
+			$param{docket} = openprint::Order->transform('docket', $param{docket} );
+			$Order = openprint::Order->find_one(docket=>$param{docket}) if $param{docket};
+		} elsif ( $param{order_id} ) {
+			$param{order_id} = openprint::Order->transform('id', $param{order_id} );
+			$Order = openprint::Order->find_one(id=>$param{order_id}) if $param{order_id};
+		} # end if
 
-	$_ = 'SELECT lngProjectIndex FROM Order_Contents WHERE OrderIndex=? AND lngProjectIndex=?';
-	if ( ! sql::execute( $log, $dbh, $_, $order_id, $prod_id ) ) {
-		return misc::error( $log, $dbh, $variable, 'Error',"Order $order_id does not contain project $prod_id" );
-	} # end if
-	
-	my ( $rma_id ) = sql::execute( $log, $dbh, "SELECT nextval('RMA_Index_seq')" );
-	
-	sql::insert( $log, $dbh, 'tbl_RMA',
-		'lngIndex',			$rma_id,
-		'lngProjectIndex',	$prod_id,
-		'lngCustomerIndex',	$openprint::session{'company_id'},
-		'lngUserIndex',		$openprint::session{'user_id'},
-		'OrderIndex',		$order_id,
-		'chrRMAType',		$openprint::param{'rdbRMAType'},
-		'strDescription',	$openprint::param{'txtDescription'},
-		'ysnApprove',		undef,
-		'dtmRequestDate',	'NOW()',
-	);
+		
+		if ( ! $Order ) {
+			if ( $param{company} ) {
+				my $Company = openprint::Company->find_one('name lc'=>lc openprint::Company->transform($param{company}) );
+				if ( ! $Company ) {
+					$Company = new openprint::Company();
+					$Company->save({name=>$param{company}});
+				} # end if
+			} # end if
+			if ( $config{RMAValidOrder} ne 'Y' ) {
+				$Order = new openprint::Order();
+				$variable{error} .= $Order->save({
+					id		=>	$param{order_id},
+					docket	=>	$param{docket},
+					company_id => ( $param{company_id} ? $param{company_id} : $session{company_id} ),
+				}, 1 );
+			} else {
+				$variable{error} .= 'Invalid Order ID';
+				return;
+			} # end if
+		} elsif ( ( ! sets::isin( $session{user_type}, ['E','A'] ) ) and ( $Order->company_id() != $session{company_id} ) ) {
+			$variable{error} .= 'You are not the owner of that order.';
+			return;
+		} # end if
 
-    my %info;
-    $_ = "SELECT strSalutation, strFirstName, strLastName, strEmail FROM Orders WHERE Index=?";
-    @info{'Salutation','FirstName','LastName','Email'} = sql::execute( $log, $dbh, $_, $order_id );
+		my $Project = new openprint::Project( $param{project_id} );
+		if ( $param{project_id} and ! openprint::OrderedProject->find(order_id=>$$Order{id},project_id=>$param{project_id}) ) {
+			$variable{error} .= qq`Order <a href="/main/order/history_details.html?order_id=$$Order{id}">$$Order{id}</a> does not contain project <a href="/main/project/view.html?project_id=$param{project_id}">$param{project_id}</a>.`;
+			return;
+		} # end if
 
-    $info{'ProjectIndex'} = $prod_id;
-	my $Project = new openprint::Project( $prod_id );
-    @info{'ProjectReference'} = $Project->reference();
-    $info{'OrderID'} = $order_id;
-    $info{'RMAType'} = ( $openprint::param{'rdbRMAType'} eq 'C' ? 'Credit' : 'Reproduction' );
-    $info{'Description'} = $openprint::param{'txtDescription'};
-    $info{'RMAIndex'} = $rma_id;
-	$info{'SecureSiteURL'} = $r->dir_config('SecureSiteURL');
-	$info{'siteURL'} = $r->dir_config('siteURL');
+		my $RMA = new openprint::RMA();
+		$variable{error} .= $RMA->save({
+				project_id		=>	$param{project_id},
+				company_id		=>	( sets::isin( $session{user_type}, ['E','A'] ) ? $param{company_id} : $session{'company_id'} ),
+				user_id			=>	$session{user_id},
+				order_id		=>	$$Order{id},
+				type_id			=>	$param{type_id},
+				description		=>	$param{description},
+				});
+		return if $variable{error};
+		
+		$session{information} .= 'RMA has been saved.';
 
-	my $template = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'}.'/email_content/rma_notification.html' );
-	$template = ssi::variable_substitution( $r, $log, $dbh, $template, \%info );
-
-	my %mail = (
-			SMTP	=> $openprint::config{'Mail Server'},
-			FROM	=> $openprint::config{'RMAEmail'},
-			TO		=> $openprint::config{'RMAEmail'},
-			SUBJECT => 'Online RMA Submission.'
-			);
-	misc::send_email_with_attachment( $log, \%mail, ( '', encode_qp($template), 'text/html', 'quoted-printable' ) );
-
-	$info{'ReplacementText'} = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/email_content/rma_confirmation.html' );
-	$info{'ReplacementText'} = ssi::variable_substitution( $r, $log, $dbh, $info{'ReplacementText'}, \%info );
-    my $email_template = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/email_content/email_template.html' );
-    $email_template = ssi::variable_substitution( $r, $log, $dbh, $email_template, \%info );
-
-	my %mail = (
-		SMTP	=> $openprint::config{'Mail Server'},
-		TO		=> $info{'Email'},
-		FROM	=> $openprint::config{'RMAEmail'},
-		SUBJECT => 'Online RMA Submission.'
+		my %info = (
+			RMA		=>	$RMA,
+			Project	=>	$Project,
+			Order	=>	$Order,
 		);
-	misc::send_email_with_attachment( $log, \%mail, ( '', encode_qp($email_template), 'text/html', 'quoted-printable' ) );
+
+		my $template = ssi::include( '/email_content/rma_notification.html', \%info );
+
+		my $Email = new openprint::Email();
+		$Email->html_body( $template );
+		$Email->send(
+				FROM	=> $config{'RMAEmail'},
+				TO		=> $config{'RMAEmail'},
+				SUBJECT => 'Online RMA Submission.',
+				);
+
+		$info{ReplacementText} = ssi::include( '/email_content/rma_confirmation.html', \%info );
+
+		$template = ssi::include( '/email_template.html', \%info );
+		$Email->html_body( $template );
+		$Email->send(
+				TO		=> $info{'Email'},
+				);
+		$variable{ExternalRedirect} = '/support/returns.html';
+		%param = ();
+	} # end if action
 
 } # end sub rma
 
-sub confirmation_help_desk {
-	my ( $r, $log, $dbh, $variable ) = @_;
+sub help_desk {
 
-	my $error = '';
-	$error .= 'Missing First Name<br>' if $openprint::param{'txtFirstName'} eq '';
-	$error .= 'Missing Last Name<br>' if $openprint::param{'txtLastName'} eq '';
-	$error .= 'Missing Address<br>' if $openprint::param{'txtAddress1'} eq '';
-	$error .= 'Missing City<br>' if $openprint::param{'txtCity'} eq '';
-	$error .= 'Missing Postal Code<br>' if $openprint::param{'txtPostalCode'} eq '';
-	$error .= 'Missing Phone<br>' if $openprint::param{'txtPhone'} eq '';
-	$error .= 'Missing/Invalid E-mail<br>' if ( ! $openprint::param{'txtEmail'} ) or ( ! Email::Valid->address( $openprint::param{'txtEmail'} ) );
-	$error .= 'Missing Question or Comment<br>' if $openprint::param{'txtQuestion-Quote'} eq '';
+	if ( $param{btnSubmit} ) {
+		my $error = '';
+		$error .= 'Missing First Name<br/>' if $param{'txtFirstName'} eq '';
+		$error .= 'Missing Last Name<br/>' if $param{'txtLastName'} eq '';
+		$error .= 'Missing Address<br/>' if $param{'txtAddress1'} eq '';
+		$error .= 'Missing City<br/>' if $param{'txtCity'} eq '';
+		$error .= 'Missing Postal Code<br/>' if $param{'txtPostalCode'} eq '';
+		$error .= 'Missing Phone<br/>' if $param{'txtPhone'} eq '';
+		my $addr = Email::Valid->address( $param{'txtEmail'} );
 
-	if ( $error ) {
-		return misc::error( $log, $dbh, $variable, 'Bad Field', $error );
+		$error .= 'Missing/Invalid E-mail<br/>' if ( ! $param{'txtEmail'} ) or ( ! $addr ) or ( $addr ne $param{'txtEmail'} );
+		$error .= 'Missing Question or Comment<br/>' if $param{'txtQuestion-Quote'} eq '';
+		if ( ! $session{'user_id'} ) {
+			if ( $config{'UseCaptchaOnRegistration'} eq 'Y' ) {
+				# Remove spaces, because some people want to put spaces between the characters, etc.
+				$param{'Captcha'} =~ s/\s//g;
+				require Authen::Captcha;
+				my $Captcha = new Authen::Captcha('data_folder' => '/tmp', 'output_folder' => $config{'SkinPath'}.'/images/captcha');
+				if ( 1 != $Captcha->check_code( $param{'Captcha'}, $param{'MD5SUM'} ) ) {
+					$error .= 'Validation Code incorrect. Please try again.';
+				} # end if
+			} # end if
+		} # end if
+
+		if ( $error ) {
+			$variable{error} = $error;
+			Debug($error);
+			return;
+		} # end if
+
+		my ( $index ) = sql::execute( $log, $dbh, q{SELECT nextval('HelpDesk_Id_seq')} );
+		if ( ! $index ) {
+			return misc::error( $log, $dbh, \%variable, 'System Error', 'Unable to create helpdesk entry.' );
+		} # end if
+
+		sql::insert( $log, $dbh, 'Helpdesk',
+				'Id', $index,
+				'company_id', $session{'company_id'},
+				'user_id',	 $session{'user_id'},
+				'strCompanyName',	$param{'txtCompanyName'},
+				'strTitle',			$param{'txtTitle'},
+				'strFirstName',		$param{'txtFirstName'},
+				'strLastName',		$param{'txtLastName'},
+				'strAddress',		$param{'txtAddress1'},
+				'strAddress2',		$param{'txtAddress2'},
+				'strCity',			$param{'txtCity'},
+				'strStateProv',		$param{'ddmStateProvince'},
+				'strPostalCode',	$param{'txtPostalCode'},
+				'strCountry',		$param{'ddmCountry'},
+				'strPhone',			$param{'txtPhone'},
+				'strExtension',		$param{'txtExtension'},
+				'strEmail',			$param{'txtEmail'},
+				'blbdescription',	$param{'txtQuestion-Quote'},
+				'chrMethod',		$param{'rdbMethod'},
+				'dtmRequestDate',	'NOW()',
+				);
+
+		my %info = ( 
+				'HelpDeskIndex' => $index,
+				'txtSalutation'	=>	$param{'rdbSalutation'},
+				'txtFirstName'	=>	$param{'txtFirstName'},
+				'txtLastName'	=>	$param{'txtLastName'},
+				);
+
+		@info{ keys %param } = values %param;
+
+		my $template = ssi::include( '/email_content/helpdesk_notification.html', \%info );
+
+		my $Email = new openprint::Email();
+		$Email->html_body( $template );
+		$Email->send(
+				FROM	=> sprintf('"%s %s" <%s>', @param{'txtFirstName','txtLastName','txtEmail'} ),
+				TO		=> $config{'HelpdeskEmail'},
+				SUBJECT => 'Online Helpdesk Submission.',
+				);
+
+		%param = ();
+		$variable{information} .= "Thank you for your help desk submission. Your reference # is $index";
+		$variable{ExternalRedirect} = '/support/help_desk.html';
+	} else {
+		# Guess location?
 	} # end if
 
-    my ( $index ) = sql::execute( $log, $dbh, q{SELECT nextval('HelpDesk_Id_seq')} );
-    if ( ! $index ) {
-        return misc::error( $log, $dbh, $variable, 'System Error', 'Unable to create helpdesk entry.' );
-    } # end if
-
-	sql::insert( $log, $dbh, 'Helpdesk',
-			'Id', $index,
-			'company_id', $openprint::session{'company_id'},
-			'user_id',     $openprint::session{'user_id'},
-			'strCompanyName',	$openprint::param{'txtCompanyName'},
-			'strTitle',			$openprint::param{'txtTitle'},
-			'strFirstName',		$openprint::param{'txtFirstName'},
-			'strLastName',		$openprint::param{'txtLastName'},
-			'strAddress',		$openprint::param{'txtAddress1'},
-			'strAddress2',		$openprint::param{'txtAddress2'},
-			'strCity',			$openprint::param{'txtCity'},
-			'strStateProv',		$openprint::param{'ddmStateProvince'},
-			'strPostalCode',	$openprint::param{'txtPostalCode'},
-			'strCountry',		$openprint::param{'ddmCountry'},
-			'strPhone',			$openprint::param{'txtPhone'},
-			'strExtension',		$openprint::param{'txtExtension'},
-			'strEmail',			$openprint::param{'txtEmail'},
-			'blbdescription',	$openprint::param{'txtQuestion-Quote'},
-			'chrMethod',		$openprint::param{'rdbMethod'},
-			'dtmRequestDate',	'NOW()',
-			);
-
-	my %info = ( 
-			'HelpDeskIndex' => $index,
-			'txtSalutation'	=>	$openprint::param{'rdbSalutation'},
-			'txtFirstName'	=>	$openprint::param{'txtFirstName'},
-			'txtLastName'	=>	$openprint::param{'txtLastName'},
-			);
-
-	foreach my $key ( keys %openprint::param ) {
-		$info{$key} = $openprint::param{$key};
-	} # end foreach
-
-    $info{'SecureSiteURL'} = $r->dir_config('ExternalSecureSiteURL');
-    $info{'siteURL'} = $r->dir_config('ExternalSiteURL');
-
-	
-	my $template = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'}.'/email_content/helpdesk_notification.html' );
-	$template = ssi::variable_substitution( $r, $log, $dbh, \$template, \%info );
-
-	my %mail = (
-			SMTP	=> $openprint::config{'Mail Server'},
-			FROM	=> sprintf('"%s %s" <%s>', @openprint::param{'txtFirstName','txtLastName','txtEmail'} ),
-			TO		=> $openprint::config{'HelpdeskEmail'},
-			SUBJECT => 'Online Helpdesk Submission.'
-			);
-	misc::send_email_with_attachment( $log, \%mail, ( '', encode_qp($template), 'text/html', 'quoted-printable' ) );
-
-	$info{'ReplacementText'} = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/email_content/helpdesk_confirmation.html' );
-	$info{'ReplacementText'} = ssi::variable_substitution( $r, $log, $dbh, \$info{'ReplacementText'}, \%info );
-    my $email_template = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/email_content/email_template.html' );
-    $email_template = ssi::variable_substitution( $r, $log, $dbh, \$email_template, \%info );
-
-	my %mail = (
-		SMTP	=> $openprint::config{'Mail Server'},
-		TO		=> sprintf('"%s %s" <%s>', @openprint::param{'txtFirstName','txtLastName','txtEmail'} ),
-		FROM	=> $openprint::config{'HelpdeskEmail'},
-		SUBJECT => 'Online Helpdesk Submission.'
-		);
-	misc::send_email_with_attachment( $log, \%mail, ( '', encode_qp($email_template), 'text/html', 'quoted-printable' ) );
-
-} # end sub helpdesk
+} # end sub help_desk
+sub helpdesk_view {
+	$variable{Helpdesk} = new openprint::Helpdesk($param{helpdesk_id} );
+}
 
 1;
-
 __END__

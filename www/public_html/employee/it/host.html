@@ -1,0 +1,202 @@
+<script type="text/javascript">
+	function delete_interface( id ) {
+		new Ajax.Request( '_host_actions.json', { parameters: { interface_id: id, action: 'delete interface' } } );
+	}
+	function check_inputs( form ) {
+		return true;
+	} //  end function check_inputs
+    var tinymce_options = {
+        mode : "textareas",
+        plugins: "paste",
+        theme : "advanced",
+theme_advanced_buttons1 : "bold,italic,underline,strikethrough,|,fontsizeselect,|,bullist,numlist,|,indent,outdent",
+theme_advanced_buttons2 : '',
+theme_advanced_buttons2 : '',
+cleanup : true
+    };
+
+    tinyMCE.init( tinymce_options );
+</script>
+<div class="Host"><div class="Edit">
+<?include(/includes/error_reporting.html)?>
+<form id="f1" name="f1" method="post" action="/employee/it/host.html" enctype="multipart/form-data">
+	<input type="hidden" id="host_id" name="host_id" value="<? echo ( $$variable{Host}->id() ) ?>" />
+	<input type="hidden" id="action" name="action" />
+	<fieldset><legend>Host <? echo ( $$variable{Host}->link_to( $$variable{Host}->id() ) ) ?></legend>
+		<div class="content leftColumn">
+			<ul>
+				<li>
+					<label>Hostname</label>
+					<input type="text" id="hostname" name="hostname" value="<? echo ( $$variable{Host}->hostname() ) ?>" oninput="to_hostname(this);" />
+				</li>
+				<li><label onclick="toggle_input( $('type_id'), $('type') );">Type</label>
+					<input type="text" id="type" name="type" style="display:none;" onkeyup="ddm_select_by_text( $('type_id'), this.value, 0 );" />
+					<select name="type_id" id="type_id" onchange="$('type').value='';">
+						<option value="">select</option>
+						<? echo ( make_drop_down( openprint::Host_Type->dropdown(order=>'lower(name)'), $$variable{Host}->type_id() ); ) ?>
+					</select>
+				</li>
+				<li>
+					<label>Blacklist</label>
+					<? echo ( radio( 'blacklist', [ '1','Yes','0','No' ], $$variable{Host}->blacklist() ); ) ?>
+				</li>
+				<li>
+					<label>Access violation count</label><input type="text" name="count" id="count" value="<? echo ( $$variable{Host}->count() ) ?>" />
+				</li>
+				<li>
+					<label>Whitelist</label>
+					<? echo ( radio( 'whitelist', [ '1','Yes','0','No' ], $$variable{Host}->whitelist() ); ) ?>
+				</li>
+				<li>
+					<label>Monitor</label>
+					<? echo ( radio( 'monitored', [ '1','Yes','0','No' ], $$variable{Host}->monitored(), { onclick=>q`if(this.value==1){$('offline_seconds').show();}else{$('offline_seconds').hide()};`} ); ) ?>
+				</li>
+				<li id="offline_seconds"<? echo ( $$variable{Host}->monitored() ? '' : ' style="display: none;"' ) ?>><label>Seconds offline before notification</label>
+					<input type="number" name="offline_seconds" value="<? echo ( $$variable{Host}->offline_seconds() ) ?>" />
+				</li>
+				<li>
+					<label>Online</label><? echo ( $$variable{Host}->online() ? 'Yes' : 'No' ) ?>
+				</li>
+				<li><label>Description</label>
+					<textarea id="description" name="description" rows="<? echo (count_lines($$variable{Host}->description()) ) ?>" onkeyup="textarea_resize(this);"><? echo ( $$variable{Host}->description() ) ?></textarea>
+				</li>
+				<li><label>Created On</label><? echo ( format_datetime( $$variable{Host}->created_on() ); ) ?></li>
+				<li><label>Updated On</label><? echo ( format_datetime( $$variable{Host}->updated_on() ); ) ?></li>
+			</ul>
+		</div>
+<? if ( $$variable{Host}->id() ) ?>
+		<div class="content rightColumn">
+			<fieldset><legend>Photos</legend>
+				<div id="assets"><? echo ( include('_assets.html'); ) ?></div>
+			</fieldset>
+			<fieldset><legend>Upload a new Asset</legend>
+				<input type="file" name="filename" />
+				<input type="text" name="asset_name" placeholder="Name"/>
+				<p class="buttons">
+					<? echo ( button( 'Upload', { 'onclick'=>qq`var form = \$('f1');form.action='/employee/it/host.html';form.elements['action'].value='Upload';form.submit();`} ); ) ?>
+				</p>
+			</fieldset>
+			<fieldset><legend>Notifications</legend>
+				<div id="notifications"><?include('_notifications.html')?></div>
+			</fieldset>
+			<fieldset><legend>Information</legend>
+				<div id="information"><?include('_information.html')?></div>
+			</fieldset>
+			<fieldset><legend>Licenses</legend>
+				<div id="licenses"><?include('_host_licenses.html')?></div>
+			</fieldset>
+		</div>
+<? endif ( $$variable{Host}->id() ) ?>
+				<p class="buttons">
+					<? echo ( 
+						my $html;
+						$html .= button( 'Save', { onclick=>"if( check_inputs( f1 ) ){f1.elements['action'].value='Save';f1.submit();}" } );
+						$html .= button( 'Reset', { onclick=>'f1.reset();' } );
+						if ( $$variable{Host}->id() ) {
+							if ( $$variable{Host}->deleted() ) {
+							$html .= button( 'Destroy', { onclick=>"if(confirm('Are you sure?')){f1.elements['action'].value='Destroy';f1.submit();}" } );
+							} else {
+							$html .= button( 'Delete', { onclick=>"if(confirm('Are you sure?')){f1.elements['action'].value='Delete';f1.submit();}" } );
+							}
+						} # end if
+						$html .= button( 'Resolve', { onclick=>"f1.elements['action'].value='Resolve';f1.action='/employee/it/host.html';f1.submit();" } );
+						$html .= button( 'Ping', { onclick=>"f1.elements['action'].value='ping';f1.action='/employee/it/host.html';f1.submit();" } );
+						$html .= button( 'Wake', { onclick=>"f1.elements['action'].value='Wake';f1.action='/employee/it/host.html';f1.submit();" } );
+						$html .= button( 'Reboot', { onclick=>"f1.elements['action'].value='reboot';f1.action='/employee/it/host.html';f1.submit();" } );
+						$html .= button( 'GEOLookup', { onclick=>"f1.elements['action'].value='GEOLookup';f1.action='/employee/it/host.html';f1.submit();" } );
+						#$html .= ssi::writeButton( $log, $dbh, 'clear', 'clear.gif', 'clearForm(f1);', '', 'Clear' );
+						return $html;
+					) ?>
+				</p>
+	</fieldset>
+<fieldset><legend>Interfaces</legend>
+	<table class="List">
+		<tr>
+			<th class="mac">Mac</th>
+			<th class="ip">IP Address</th>
+			<th class="options">Options</th>
+			<th class="comment">Comment</th>
+<? if ( $config{RADIUS_Support} eq 'Y' ) ?>
+	<th class="radius">RADIUS</th>
+<? endif ( $config{RADIUS_Support} eq 'Y' ) ?>
+			<th class="buttons">&nbsp;</th>
+		</tr>
+<? echo (
+	my $html;
+	if ( $config{RADIUS_Support} eq 'Y' ) {
+		openprint::RADIUS_Check->connect();
+		if ( ! $openprint::RADIUS_Check::dbh ) {
+			$html .= 'Unable to connect to RADIUS DB server.';	
+		} # end if
+	} # end if RADIUS
+
+	my $radius_fragment = slurp_content( '/employee/it/_radius_mac_line.html' );
+	#my @macs = map { $_->mac() ? () : '' } $$variable{Host}->Interfaces();
+
+	my $NewHI = new openprint::Host_Interface();
+	$NewHI->mac( $param{mac} ) if ! $$variable{Host}->id();
+
+	foreach my $Interface ( $$variable{Host}->Interfaces(), ( $NewHI ) ) {
+	#foreach my $Interface ( $$variable{Host}->Interfaces(), ( @macs ? () : $NewHI ) ) {
+		$html .= sprintf(q`
+<tr id="hi-%1$d">
+	<td class="mac">%2$s</td>
+	<td class="ip">%3$s</td>
+	<td class="object">monitor %4$s<br/>dhcp %5$s</td>
+	<td class="comment" rowspan="2"><textarea name="comment-%1$s">%6$s</textarea></td>
+`, 
+	$$Interface{id},
+	input( type=>'mac', name=>'mac-'.$$Interface{id}, value=>$$Interface{mac} ),
+	input( type=>'ip', name=>'ip-'.$$Interface{id}, value=>$Interface->ip() ),
+	checkboxes( 'monitor-'.$$Interface{id}, [ 1, '' ], $Interface->monitor() ),
+	checkboxes( 'dhcp-'.$$Interface{id}, [ 1, '' ], $Interface->dhcp() ),
+	$Interface->comment(),
+);
+	
+		if ( $openprint::RADIUS_Check::dbh ) {
+			my $mac = $$Interface{mac};	
+			if ( $mac =~ /^([[:xdigit:]]{2})[\:\-]?([[:xdigit:]]{2})[\:\-]?([[:xdigit:]]{2})[\:\-]?([[:xdigit:]]{2})[\:\-]?([[:xdigit:]]{2})[\:\-]?([[:xdigit:]]{2})$/ ) {
+				$mac = "$1-$2-$3-$4-$5-$6";
+			} # end if
+			$mac = uc $mac;
+			$html .= '<td class="radius" id="mac-'.$mac.'" rowspan="2">';
+
+				$$variable{username} = $mac;
+				$html .= variable_substitution( \$radius_fragment, $variable ) if $mac;
+				$html .= '</td>';
+		} # end if RADIUS
+		$html .= '<td class="buttons">';
+		if ( $$Interface{id} ) {
+			$html .= button( 'DI'.$Interface->id(), { onclick=>qq`delete_interface('$$Interface{id}');`, text=>'X', title=>'Delete Interface' } ),
+		} # end if
+		$html .= '</td></tr><tr><td colspan="2">';
+		if ( $$Interface{mac} ) {
+			$html .= 'Connections:<br/>';
+			if ( $$variable{Host}->is_wap() ) {
+				foreach my $Station_HI ( openprint::Host_Interface->find( connected_to=>$$Interface{mac} ) ) {
+					$html .= $Station_HI->Host()->link_to().'<br/>';
+				}
+			} # end if
+			if ( $$Interface{connected_to} ) {
+				foreach my $Station_HI ( openprint::Host_Interface->find( mac=>$$Interface{connected_to} ) ) {
+					$html .= $Station_HI->Host()->link_to().'<br/>';
+				}
+			}
+		} # end if mac
+		$html .= '</td></tr>';
+	} # end foreach Interface
+	return $html;
+) ?>
+	</table>
+</fieldset>
+<? if ( $$variable{Host}->id() ) ?>
+            <fieldset><legend>Where</legend>
+<? echo ( 
+    $$variable{Location} = $$variable{Host}->Location();
+    return include( '/location/_location_fields.html' );
+) ?>
+            </fieldset>
+<? echo ( include_logs( $$variable{Host} ); ) ?>
+<? endif ( $$variable{Host}->id() ) ?>
+</form>
+</div></div>

@@ -1,13 +1,17 @@
 package openprint::press_schedule;
 use POSIX qw{ceil};
 use strict;
+use openprint ();
+use vars qw( $log $dbh );
+*log = \$openprint::log;
+*dbh = \$openprint::dbh;
 
 require openprint::Project;
 require openprint::Service;
 require openprint::service;
 require Date::Calc;
 
-my $debug = 1;
+my $debug = 0;
 
 sub find {
 	my %params = @_;
@@ -17,12 +21,36 @@ sub find {
 		$sql .= ' AND runtime BETWEEN ( ? AND ? )';
 		push @values, @params{'runtime_start','runtime_end'};
 	} # end if
+	if ( exists $params{'starttime'} ) {
+		$sql .= ' AND starttime = ?';
+		push @values, $params{'starttime'};
+	} # end if
+	if ( exists $params{'starttime is null'} ) {
+		$sql .= ' AND starttime IS ' . ($params{'starttime is null'} ? '' : 'NOT ' ) . ' NULL';
+	} # end if
+	if ( $params{'starttime <'} ) {
+		$sql .= ' AND starttime < ?';
+		push @values, $params{'starttime <'};
+	} # end if
+	if ( $params{'starttime >='} ) {
+		$sql .= ' AND starttime >= ?';
+		push @values, $params{'starttime >='};
+	} # end if
 	if ( $params{'starttime_start'} and $params{'starttime_end'} ) {
 		$sql .= ' AND ( starttime BETWEEN ? AND ? )';
 		push @values, @params{'starttime_start','starttime_end'};
+	} elsif ( $params{'starttime_start'} ) {
+		$sql .= ' AND starttime >= ?';
+		push @values, $params{'starttime_start'};
+	} elsif ( $params{'starttime_end'} ) {
+		$sql .= ' AND starttime <= ?';
+		push @values, $params{'starttime_end'};
 	} elsif ( exists $params{'starttime_start'} and ! $params{'starttime_start'} ) {
 		$sql .= ' AND starttime IS NULL';
+	} elsif ( exists $params{'starttime_end'} and ! $params{'starttime_end'} ) {
+		$sql .= ' AND starttime IS NULL';
 	} # end if
+
 	if ( $params{'service_status'} ) {
 		if ( ref $params{'service_status'} eq 'ARRAY' ) {
 			$sql .= ' AND (SELECT strStatus FROM tbl_Project_Contents WHERE lngProjectIndex=ProjectIndex AND lngServiceIndex=ServiceIndex) IN ('.join(',', map { '?' } @{$params{'service_status'}} ).')';
@@ -35,6 +63,10 @@ sub find {
 	if ( $params{'equipment_id'} ) {
 		$sql .= ' AND equipment_id=?';
 		push @values, $params{'equipment_id'};
+	} # end if
+	if ( $params{'id'} ) {
+		$sql .= ' AND id=?';
+		push @values, $params{'id'};
 	} # end if
 	if ( $params{'project_id'} ) {
 		if ( substr($params{'project_id'},0,1) == '!' ) {
@@ -51,298 +83,95 @@ sub find {
 	} # end if
 
 	$sql .= " ORDER BY $params{'order'}" if $params{'order'};
-	my $data = $openprint::dbh->selectall_arrayref( $sql, {Slice=>{}}, @values );
+	$sql .= " LIMIT $params{'limit'}" if $params{'limit'};
+	my $data = $dbh->selectall_arrayref( $sql, {Slice=>{}}, @values );
 	if ( ! $data ) {
-		$openprint::log->error( "Error loading schedule: ($sql) (@values) : " . $openprint::dbh->errstr() );
+		$log->error( "Error loading schedule: ($sql) (@values) : " . $dbh->errstr() );
 		return;
 	} elsif ( $debug ) {
-		$openprint::log->error( "Loading schedule: ($sql) (@values) : " . @$data ); 
+		$log->debug( "Loading schedule: ($sql) (@values) : " . @$data ); 
 	} # end if
 	return @$data;
 } # end sub find
 
-sub add {
-	my ( $p_id, $s_id, $s_type ) = @_;
-
-	my ( $service_type_id ) = sql::execute( undef, undef, 'SELECT id FROM Service_Types WHERE name=?', $s_type );
-	my ( $start_time ) = sql::execute( undef, undef, 'SELECT MAX(starttime+runtime) FROM Schedule WHERE servicetype_id=?', $service_type_id );
-	( $start_time ) = sql::execute( undef, undef, 'SELECT NOW()' ) if ! $start_time;
-
-	my $runtime = openprint::service::get_runtime( $openprint::log, $openprint::dbh, $p_id, $s_id );
-
-	openprint::service::insert_service_spec( $openprint::log, $openprint::dbh, $p_id, $s_id, 'RunTime', $runtime );
-
-	sql::insert( $openprint::log, $openprint::dbh, 'Schedule',
-			'ProjectIndex', $p_id,
-			'ServiceIndex',	$s_id,
-			'ServiceType_id',	$service_type_id,
-			'StartTime',		$start_time,
-			'RunTime',			join(':', misc::seconds_to_interval( $runtime ) ),
-			);
-
-} # end sub add
-
 sub remove {
-	sql::execute( undef, undef, q{DELETE FROM Schedule WHERE ProjectIndex=? AND ServiceIndex=?}, @_ );
-}
-
-sub get_li {
-	my ( $previous_row, $row, $ul_id ) = @_;
-
-	my $html;
-	my $Project = new openprint::Project( $$row{'projectindex'} );
-	my %specs = openprint::service::get_specifications_pairs( $openprint::log, $openprint::dbh, @$row{'projectindex','serviceindex'} );
-	if ( ! $specs{'txtEmployeeComments'} ) {
-		my @side_one = openprint::print_printing::get_colours( \%specs, 'SideOne' );
-		my @side_two = openprint::print_printing::get_colours( \%specs, 'SideTwo' );
-		$specs{'txtEmployeeComments'} .= sprintf( '%d/%d', scalar @side_one, scalar @side_two );
-
-		my %pms;
-		foreach my $side ( 'SideOne', 'SideTwo' ) {
-			foreach my $index ( 1 .. 8 ) {
-				if ( $specs{'chkSpecial'.$side.'Colour'.$index} ) {
-					if ( $specs{'txtSpecial'.$side.'Colour'.$index} ) {
-						$pms{$index} += 1;
-					} # end if
-				} # end if
-			} # end foreach index
-		} # end foreach side
-		if ( keys %pms ) {
-			$specs{'txtEmployeeComments'} .= '+' . ( keys %pms ) . ' PMS';
-		} # end if
-
-		if ( $specs{'rdbAqueousSideOne'} ne 'None' or $specs{'rdbAqueousSideTwo'} ne 'None' ) {
-			$specs{'txtEmployeeComments'} .= '+AQ';
-		} # end if
-		if (
-				$specs{'chkVarnishSpotGlossSideOne'}
-				or $specs{'chkVarnishSpotMatteSideOne'}
-				or $specs{'chkVarnishOverallGlossSideOne'}
-				or $specs{'chkVarnishOverallMatteSideOne'}
-				or $specs{'chkVarnishSpotGlossSideTwo'}
-				or $specs{'chkVarnishSpotMatteSideTwo'}
-				or $specs{'chkVarnishOverallGlossSideTwo'}
-				or $specs{'chkVarnishOverallMatteSideTwo'}
-			) {
-			$specs{'txtEmployeeComments'} .= '+Varnish';
-		} # end if
-
-		$specs{'txtEmployeeComments'} .= ' on ' . $specs{'ddmStockSheetSize'};
-		openprint::service::insert_service_spec( $openprint::log, $openprint::dbh, @$row{'projectindex','serviceindex'}, 'txtEmployeeComments', $specs{'txtEmployeeComments'} );
-	} # end if
-
-	if ( ! $specs{'SignatureQuantity'} ) {
-		$specs{'SignatureQuantity'} = $specs{'txtSignatureQuantity'} ? $specs{'txtSignatureQuantity'} : 1;
-		openprint::service::insert_service_spec( $openprint::log, $openprint::dbh, @$row{'projectindex', 'serviceindex'}, 'SignatureQuantity', $specs{'SignatureQuantity'} );
-	} # end if
-	if ( ! $specs{'ImpressionQuantity'} ) {
-		my ( $qty_index ) = sql::execute( $openprint::log, $openprint::dbh, q{SELECT intQuantityIndex FROM Order_Contents WHERE lngProjectIndex=?}, $$row{'projectindex'} );
-
-		$specs{'ImpressionQuantity'} = $specs{'hdnImpressionQuantity'.$qty_index};
-		$specs{'ImpressionQuantity'} /= 2 if $specs{'ddmRunStyle'} eq 'Perfecting';
-		openprint::service::insert_service_spec( $openprint::log, $openprint::dbh, @$row{'projectindex', 'serviceindex'}, 'ImpressionQuantity', $specs{'ImpressionQuantity'} );
-
-	} # end if
-	my $colour = 'blue';
-	if ( sets::isin( $Project->status(), 'In Prepress', 'Proofs Out','Waiting For QA Approval' ) ) {
-		$colour = 'green';
-	} elsif ( sets::isin( $Project->status(), 'Printed', 'Complete','Waiting For Pickup', 'Picked Up', 'Shipped' ) ) {
-		$colour = 'pink';
-	} elsif ( sets::isin( $Project->status(), 'Waiting For Customer Approval' ) ) {
-		$colour = 'red';
-	} elsif ( 1 < sql::execute( $openprint::log, $openprint::dbh, q{SELECT DISTINCT equipment_id FROM Schedule WHERE projectindex=?}, $$row{'projectindex'} ) ) {
-		$colour = 'yellow';
-	} # end if
-	$html .= sprintf( '<li id="service_%d" class="%s">', $$row{'serviceindex'}, $colour );
-	if ( ( ! $previous_row ) or ( $$row{'projectindex'} != $$previous_row{'projectindex'} ) ) {
-		$html .= '<div class="Company">';
-		$html .= sprintf( '<a class="docket" href="project_view.html?ProjectIndex=%1$d&Docket=%2$d">%2$d</a>', $$row{'projectindex'}, $Project->docket() );
-		my $n = $Project->Company()->name();
-		$n =~ s/The //gi;
-		$html .= ssi::htmlize( $n );
-		$html .= '</div>';
-		$html .= qq`<span class="DueDate" id="JumpToDate$$row{'serviceindex'}">`;
-		if ( ! $Project->due_date() ) {
-			$html .= 'no duedate</span>';
+	my ( $p_id, $s_id ) = @_;
+	my $error;
+	foreach my $Job ( openprint::ScheduledJob->find(project_id=>$p_id, ( $s_id ? ('service_id @>'=>$s_id) : () ) ) ) {
+		if ( $s_id and ( $Job->service_id() > 1 ) ) {
+			$error .= $Job->save({'service_id'=>[ sets::exclude( [ $s_id ], $Job->service_id() ) ]});
 		} else {
-			my ( $year, $month, $day ) = split('-', $Project->due_date() );
-			if ( $month ) { $html .= '&nbsp;'.substr( Date::Calc::Month_to_Text( $month ),0, 3); } # end if
-				$html .= qq` $day</span>`;
+			$error .= $Job->delete();
+		} # end if
+	} # end foreach
+	return $error;
+} # end sub remove
+
+sub add_project_to_press_schedule {
+	my ( $Project, $service_id ) = @_;
+
+	my $error = '';
+
+	my $ac = sql::start_transaction( $dbh );
+
+	my @sigs = $service_id ? ( $service_id ) : $Project->signatures();
+
+	my $ServiceType = openprint::ServiceType->find_one('name'=>'Signature');
+
+	my @sigs_not_on_schedule;
+	foreach my $s_s_id ( sets::union(@sigs) ) {
+		next if openprint::ScheduledJob->find_one(project_id=>$$Project{id}, 'service_id @>'=>$s_s_id );
+		push @sigs_not_on_schedule, $s_s_id;
+	} # end foreach sig
+
+	while ( my $s_s_id = shift @sigs_not_on_schedule ) {
+
+		my $sig_specs = openprint::service::get_specs_ref( $Project, $s_s_id );
+		$$sig_specs{'UsePress'} = $$sig_specs{'ddmPress'.$Project->ordered_quantity_index()} if ! $$sig_specs{'UsePress'};
+		if ( ! $$sig_specs{'UsePress'} ) {
+			$error .= "No press for signature $$sig_specs{'SignatureIndex'}<br/>";
+			next;
 		} # end if
 
-		if ( openprint::usergroup::is_user_in( ['Scheduling'], $openprint::session{'user_id'} ) ) {
-			$html .= sprintf(q`<input type="hidden" name="ScheduleDate-%1$d" id="ScheduleDate-%1$d" value="%2$s"/>`, $$row{'serviceindex'}, $Project->due_date() );
-			$html .= qq`
-				<script type="text/javascript">
-				Calendar.setup({
-				inputField	 :	"ScheduleDate-$$row{'serviceindex'}",		// id of the input field
-				ifFormat		:	"\%Y-\%m-\%d",		// format of the input field
-				daFormat		:	"\%b \%d",
-				align			:	"Tl",
-				showsTime		:	false,			// will display a time selector
-				displayArea	:	'JumpToDate$$row{'serviceindex'}',
-				singleClick	:	false,			// double-click mode
-				onClose		:	setduedate
-				});
-				</script>
-				`;
+		my @service_ids = ( $s_s_id );
+		my @forms = ( $$sig_specs{'SignatureIndex'} );
+
+		# Merge identical sigs
+		for( my $i = 0; $i < @sigs_not_on_schedule; $i += 1 ) {
+			my $s_id_2 = $sigs_not_on_schedule[$i];
+
+			my $sig_specs2 = openprint::service::get_specs_ref( $Project, $s_id_2 );
+			if ( openprint::Estimating::Printing::compare_signatures( $Project, $sig_specs, $sig_specs2, $Project->ordered_quantity_index() ) ) {
+				push @service_ids, $s_id_2;
+				push @forms, $$sig_specs2{SignatureIndex};
+				splice @sigs_not_on_schedule, $i, 1;
+				$i -= 1;
 			} # end if
-	} # end if
-	if ( openprint::usergroup::is_user_in( ['Scheduling'], $openprint::session{'user_id'} ) ) {
-		$html .= sprintf( '<div id="%2$dComment" class="Comment" onclick="editComment( %1$s, %2$s, \'%3$s\', event );">%3$s</div>', @$row{'projectindex','serviceindex'}, @specs{'txtEmployeeComments'} );
+		} # end foreach
 
-		$html .= sprintf( '<span class="Forms" id="%dForms" onclick="editForms(%s, %s,\'%s\', event );">%d %s</span>', @$row{'serviceindex','projectindex','serviceindex'}, @specs{'SignatureQuantity','SignatureQuantity'}, ($specs{'SignatureQuantity'} > 1 ? ' forms' : ' form') );
-		$html .= sprintf( '<span id="%dImpressions" class="Impressions" onclick="editImpressions(%s, %s,\'%s\', event );">%d imps</span>', @$row{'serviceindex','projectindex','serviceindex'}, @specs{'ImpressionQuantity','ImpressionQuantity'} );
-
-		$html .= '<span class="Buttons">';
-		$html .= ssi::writeButton( $openprint::log, $openprint::dbh, 'Approve'.$$row{'serviceindex'}, '', "if(confirm('Are you sure?')){f1.ProjectIndex.value=$$row{'projectindex'};f1.ServiceIndex.value=$$row{'serviceindex'};f1.btnFunction.value='ApproveJob';f1.submit();}", '', 'A' ) if sets::isin( $Project->status(), 'In Prepress', 'Proofs Out','Waiting For Customer Approval','Waiting For QA Approval' );
-		$html .= ssi::writeButton( $openprint::log, $openprint::dbh, 'Bump'.$$row{'serviceindex'}, '', "if(confirm('Are you sure?')){f1.ProjectIndex.value=$$row{'projectindex'};f1.ServiceIndex.value=$$row{'serviceindex'};f1.btnFunction.value='BumpJob';f1.submit();}", '', 'B' );
-		$html .= ssi::writeButton( $openprint::log, $openprint::dbh, 'Complete'.$$row{'serviceindex'}, '', "if(confirm('Are you sure?')){f1.ProjectIndex.value=$$row{'projectindex'};f1.ServiceIndex.value=$$row{'serviceindex'};f1.btnFunction.value='CompleteJob';f1.submit();}", '', 'C' );
-		$html .= ssi::writeButton( $openprint::log, $openprint::dbh, 'Remove'.$$row{'serviceindex'}, '', "if(confirm('Are you sure?')){f1.ProjectIndex.value=$$row{'projectindex'};f1.ServiceIndex.value=$$row{'serviceindex'};f1.btnFunction.value='RemoveJob';f1.submit();}", '', 'D' );
-		$html .= ssi::writeButton( $openprint::log, $openprint::dbh, 'Split'.$$row{'serviceindex'}, '', "if(confirm('Are you sure?')){split_job($$row{'projectindex'}, $$row{'serviceindex'}, '$ul_id' );}", '', 'S' ) if $specs{'SignatureQuantity'} > 1;
-		$html .= '</span>';
-	} else {
-		$html .= sprintf( '<div class="Comment">%s</div>', ssi::htmlize($specs{'txtEmployeeComments'}) );
-		$html .= sprintf( '<span class="Forms">%d %s</span>', $specs{'SignatureQuantity'}, ($specs{'SignatureQuantity'} > 1 ? ' forms' : ' form') );
-		$html .= sprintf( '<span class="Impressions">%d imps</span>', $specs{'ImpressionQuantity'} );
-	} # end if
-	$html .= '<br/></li>';
-	return $html;
-} # end sub get_li
-
-sub get_ul {
-	my ( $start_time_start, $start_time_end, $equipment_id, $shift ) = @_;
-	my $total_impressions;
-
-	my ( $s, $min, $h, $day, $month, $year );
-	( $s, $min, $h, $day, $month, $year ) = Date::Parse::strptime( $start_time_start ) if $start_time_start;
-	$year += 1900;
-	$month += 1;
-	my $ul_id = sprintf('%d-%.4d-%.2d-%.2d-%s', $equipment_id, $year, $month, $day, $$shift{'name'} );
-
-	my @schedule = find(
-			'starttime_start'	=> $start_time_start,
-			'starttime_end'		=> $start_time_end,
-			'equipment_id'		=> $equipment_id,
-			'order'				=> 'starttime,serviceindex',
-			);
-
-# This is just for caching purposes
-	if ( @schedule ) {
-		my @projects = map { $$_{'projectindex'} } @schedule;
-		if ( @projects ) {
-			my @companies = map { $_->company_id() } openprint::Project::find( 'id'=>\@projects );
-			openprint::Company::find( 'id'=>\@companies );
-		} # end if
-	} # end if
-
-	my $html;
-
-	my $previous_row;
-
-	for ( my $index = 0; $index < @schedule; $index += 1 ) {
-		my $current_row = $schedule[$index];
-
-		$html .= get_li( $previous_row, $current_row, $ul_id );
-		my %specs = openprint::service::get_specifications_pairs( $openprint::log, $openprint::dbh, @$current_row{'projectindex','serviceindex'} );
-		$total_impressions += $specs{'ImpressionQuantity'};
-		$previous_row = $current_row;
-	} # end for
-
-	if ( $$shift{'name'} ) {
-		my $Operator = new openprint::User( sql::execute( undef, undef, q{SELECT operator_id FROM tbl_Project_Contents,Schedule WHERE lngProjectIndex=ProjectIndex AND lngServiceIndex=ServiceIndex AND strStatus != 'Complete' AND equipment_id=? AND ( schedule.starttime between ? AND ? ) LIMIT 1}, $equipment_id, $start_time_start, $start_time_end ) );
-		
-		if ( openprint::usergroup::is_user_in( ['PressManager'], $openprint::session{'user_id'} ) ) {
-			$html = sprintf( '<div class="When"><span style="float: left;">%s %d %.3s %s</span><span class="TotalImpressions">(%d)</span><span class="%s" id="%sOperator" onClick="editOperator(\'%s\', \'%s\', event );">%s</span><br class="spacer"/></div>', Date::Calc::Day_of_Week_Abbreviation( Date::Calc::Day_of_Week($year, $month, $day)), $day, Date::Calc::Month_to_Text( $month ), $$shift{'name'}, $total_impressions, ($Operator->id() ? 'Operator' : 'assign' ),$ul_id, $ul_id, $Operator->id(),($Operator->id() ? $Operator->name() : 'assign') ) . $html;
+		if ( my $Equipment = openprint::Equipment->find_one(strid=>$$sig_specs{UsePress}) ) {
+			my $Job = new openprint::ScheduledJob();
+			$_ = $Job->save({
+				'project_id'	=>	$Project->id(),
+				'equipment_id'	=>	$Equipment->id(),
+				'starttime'		=>	undef,
+				'service_id'	=>	\@service_ids,
+				'pertains_id'	=>	\@service_ids,
+				'servicetype_id'	=>	$ServiceType->id(),
+			});
+			if ( $_ ) {
+				$error .= 'Error adding to press schedule: ' . $_;
+				$Project->add_to_log( @openprint::session{'company_id','user_id'}, "Error Adding Form @forms to pending press schedule." );
+			} else {
+				$Project->add_to_log( @openprint::session{'company_id','user_id'}, "Added Form @forms to pending press schedule for " . $Job->Equipment()->strid() );
+			} # end if
 		} else {
-			$html = sprintf( '<div class="When"><span style="float: left;">%s %d %.3s %s</span><span style="float: right;">%s</span><br class="spacer"/></div>', Date::Calc::Day_of_Week_Abbreviation( Date::Calc::Day_of_Week($year, $month, $day)), $day, Date::Calc::Month_to_Text( $month ), $$shift{'name'}, ( $Operator->id() ? $Operator->name() : 'assign' ) ) . $html;
+			$error .= "Error adding to press schedule: Press not found ($$sig_specs{UsePress}) for signature $$sig_specs{'SignatureIndex'}<br/>";
 		} # end if
-	} # end if
-	return qq{<ul id="$ul_id" class="shift} . (@schedule ? '' : ' Empty' ) .'">' . $html. "</ul>\n";
-} # end sub get_ul
-
-sub apply_sort {
-$openprint::log->debug("Applying Sort");
-	my $ac = sql::start_transaction( $openprint::dbh );
-	my $starttime = $_[0]{starttime};
-	foreach my $row ( @_ ) {
-		sql::update( undef, undef, 'Schedule', "ProjectIndex=$$row{'projectindex'} AND ServiceIndex=$$row{'serviceindex'}", 'starttime', $starttime );
-		( $starttime ) = sql::execute( undef, undef, q{SELECT starttime+runtime FROM Schedule WHERE ProjectIndex=? AND ServiceIndex=?}, @$row{'projectindex','serviceindex'} );
-	} # end foreach
-	sql::end_transaction( $openprint::dbh, $ac );
-} # end sub apply_sort
-
-sub split_job {
-	my ( $project_index, $service_index, $ul_id ) = @_;
-
-	my %specs = openprint::service::get_specifications_pairs( $openprint::log, $openprint::dbh, $project_index, $service_index );
-
-	my $ac = sql::start_transaction( $openprint::dbh );
-
-	my $new_service_index = openprint::print_project::insert_service( $openprint::log, $openprint::dbh, $project_index, 'AdditionalSignature' );
-	my %new_specs = openprint::service::get_specifications_pairs( $openprint::log, $openprint::dbh, $project_index, $new_service_index );
-	$_ = q{SELECT MAX(strValue) FROM tbl_Service_Specifications WHERE lngProjectIndex=? AND strName='SignatureIndex'};
-	@specs{'SignatureIndex'} = sql::execute( $openprint::log, $openprint::dbh, $_, $project_index );
-	$specs{'SignatureIndex'} += 1;
-
-	foreach my $key ( keys %specs ) {
-		next if $key eq 'ServiceIndex';
-		if ( $specs{$key} and ( $specs{$key} ne $new_specs{$key} ) ) {
-			openprint::service::insert_service_spec( $openprint::log, $openprint::dbh, $project_index, $new_service_index, $key, $specs{$key}, exists $new_specs{$key} );
-		} # end if
-	} # end foreach
-
-# Fix everything in the new service
-	openprint::service::insert_service_spec( $openprint::log, $openprint::dbh, $project_index, $new_service_index, 'txtPrice1', ($specs{'txtPrice1'}/$specs{'SignatureQuantity'}) );
-	openprint::service::insert_service_spec( $openprint::log, $openprint::dbh, $project_index, $new_service_index, 'txtPrice2', ($specs{'txtPrice2'}/$specs{'SignatureQuantity'}) );
-	openprint::service::insert_service_spec( $openprint::log, $openprint::dbh, $project_index, $new_service_index, 'txtPrice3', ($specs{'txtPrice3'}/$specs{'SignatureQuantity'}) );
-	openprint::service::insert_service_spec( $openprint::log, $openprint::dbh, $project_index, $new_service_index, 'SignatureQuantity', 1 );
-	openprint::service::insert_service_spec( $openprint::log, $openprint::dbh, $project_index, $new_service_index, 'txtSignatureQuantity', 1 );
-
-# Update source service
-	openprint::service::insert_service_spec( $openprint::log, $openprint::dbh, $project_index, $service_index, 'SignatureQuantity', $specs{'SignatureQuantity'}-1 );
-	openprint::service::insert_service_spec( $openprint::log, $openprint::dbh, $project_index, $service_index, 'txtSignatureQuantity', $specs{'txtSignatureQuantity'}-1 );
-	openprint::service::insert_service_spec( $openprint::log, $openprint::dbh, $project_index, $service_index, 'txtPrice1', $specs{'txtPrice1'}*(($specs{'SignatureQuantity'}-1)/$specs{'SignatureQuantity'}) );
-	openprint::service::insert_service_spec( $openprint::log, $openprint::dbh, $project_index, $service_index, 'txtPrice2', $specs{'txtPrice2'}*(($specs{'SignatureQuantity'}-1)/$specs{'SignatureQuantity'}) );
-	openprint::service::insert_service_spec( $openprint::log, $openprint::dbh, $project_index, $service_index, 'txtPrice3', $specs{'txtPrice3'}*(($specs{'SignatureQuantity'}-1)/$specs{'SignatureQuantity'}) );
-
-	my $status = openprint::service::status( $project_index, $new_service_index, openprint::service::status( $project_index, $service_index ) );
-
-	my @schedule = find( 'project_id'=>$project_index, 'service_id'=>$service_index );
-	my $schedule = shift @schedule;
-	if ( $$schedule{'starttime'} and $$schedule{'runtime'} ) {
-		my ( $year, $month, $day, $hours, $minutes, $seconds ) = $$schedule{'starttime'} =~ /(\d\d\d\d)-(\d\d)-(\d\d) (\d\d):(\d\d):(\d\d)/;
-
-		#( $year, $month, $day, $hours, $minutes, $seconds ) = Date::Calc::Add_Delta_DHMS( ( $year, $month, $day, $hours, $minutes, $seconds, 0, split(':', $$schedule{'runtime'} ) ) );
-		( $year, $month, $day, $hours, $minutes, $seconds ) = Date::Calc::Add_Delta_DHMS( ( $year, $month, $day, $hours, $minutes, $seconds, 0, 0, 0, 1 ) );
-		$$schedule{'starttime'} = sprintf('%.4d-%.2d-%.2d %.2d:%.2d:%.2d', ( $year, $month, $day, $hours, $minutes, $seconds ) );
-	} # end if
-
-	sql::insert( $openprint::log, $openprint::dbh, 'Schedule',
-			'ProjectIndex', $project_index,
-			'ServiceIndex', $new_service_index,
-			'Equipment_id', $$schedule{'equipment_id'},
-			'StartTime',    $$schedule{'starttime'},
-			'RunTime',      $$schedule{'runtime'},
-			);
-
-	sql::end_transaction( $openprint::dbh, $ac );
-
-	my ( $press_index, $year, $month, $day, $shift ) = $ul_id =~ /(\d*)-(\d\d\d\d)-(\d\d)-(\d\d)-(\w*)/;
-	my ( $start_time, $end_time, $Shift );
-# shit is unset when in pending mode
-	if ( $shift ) {
-		$Shift = $openprint::dbh->selectrow_hashref( q{SELECT name, starttime, duration FROM Shifts WHERE equipment_id=? and name=? ORDER BY starttime}, {Slice=>{}}, $press_index, $shift ) or $openprint::log->error( $openprint::dbh->errstr );;
-		$start_time = sprintf('%.4d-%.2d-%.2d %.2d:%.2d:%.2d', $year, $month, $day, split(':', $$Shift{'starttime'} ) );
-		my ( $y, $mon, $d, $h, $min, $s ) = Date::Calc::Add_Delta_DHMS( $year, $month, $day, split(':', $$Shift{'starttime'} ), 0, split(':', $$Shift{'duration'} ) );
-		( $y, $mon, $d, $h, $min, $s ) = Date::Calc::Add_Delta_DHMS( $y, $mon, $d, $h, $min, $s, 0, 0, 0, -1 );
-		$end_time = sprintf('%.4d-%.2d-%.2d %.2d:%.2d:%.2d', ( $y, $mon, $d, $h, $min, $s ) );
-	} # end if shift
-	return "Div~$ul_id~".get_ul( $start_time, $end_time, $press_index, $Shift );
-
-} # end sub split_job
-
-
+	} # end foreach sig
+	sql::end_transaction( $dbh, $ac );
+	return $error;
+} # end sub add_project_to_press_schedule
 
 1;
 __END__

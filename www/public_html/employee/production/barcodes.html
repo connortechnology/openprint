@@ -1,10 +1,10 @@
 <? if ( $r->param('Show') eq 'Operators' ) ?>
-<span style="float:left;">Operators:</span> <script type="text/javascript">writeButton('Show', 'show.gif', '', 'barcodes.html?Show=Actions', 'Show Actions' );</script><br/>
+<span style="float:left;">Operators</span> <? echo ( button('Show', { href=>'barcodes.html?Show=Actions', text=>'Show Actions' } ); ) ?><br/>
 <br/>
 <table cellspacing="10">
 <? echo (
 	my $html;
-	my @operators = sql::execute( $log, $dbh, q{ SELECT lngUserID, strFirstName || ' ' || strLastName FROM tbl_Customer_Users WHERE chrType='E' ORDER By strLastName, strFirstName } );
+	my @operators = map { $_->id(), $_->name() } openprint::User->find('type'=>'E','order'=>'lower(lastname),lower(firstname)');
 	while ( @operators ) {
 		$html .= '<tr>';
 		if ( my ( $id, $name ) = splice @operators, 0, 2 ) {
@@ -24,14 +24,15 @@
 ) ?>
 </table>
 <? else ( $r->param('Show') eq 'Operators' ) ?>
-<span style="float: left;">Actions:</span><script type="text/javascript">writeButton('Show', 'show.gif', '', 'barcodes.html?Show=Operators', 'Show Operators' );</script><br/>
+<span style="float: left;">Actions</span><? echo ( button('Show', { href=>'barcodes.html?Show=Operators', text=>'Show Operators' } ); ) ?><br/>
 <table cellspacing="10">
 	<tr><td><img src="/barcode.png?Code=A00001+"/></td><td>Assign Operator</td></tr>
 	<tr><td><img src="/barcode.png?Code=A00002+"/></td><td>Proofs Out</td></tr>
 	<tr><td><img src="/barcode.png?Code=A00003+"/></td><td>Proofs Approved</td></tr>
+	<tr><td><img src="/barcode.png?Code=A00008+"/></td><td>Service Start</td></tr>
 	<tr><td><img src="/barcode.png?Code=A00004+"/></td><td>Service Complete</td></tr>
 	<tr><td><img src="/barcode.png?Code=A00005+"/></td><td>Project Printed</td></tr>
-	<tr><td><img src="/barcode.png?Code=A00006+"/></td><td>Project Compete</td></tr>
+	<tr><td><img src="/barcode.png?Code=A00006+"/></td><td>Project Complete</td></tr>
 	<tr><td><img src="/barcode.png?Code=A00007+"/></td><td>Project Shipped</td></tr>
 </table>
 <? endif ( $r->param('Show') eq 'Operators' ) ?>

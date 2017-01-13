@@ -1,14 +1,12 @@
-<p> 
-	<label>How many <? echo ( ssi::writeTip( 'negatives' ); ) ?> need <?ServiceTypeName?>:</label>
-	<? eval ( $$variable{'QTYIndex'} = 1 ) ?>
-	<? while ( $$variable{'QTYIndex'} <= 3 ) ?>
-	<? if ( $$variable{'Project'}->{'quantity'.$$variable{'QTYIndex'}} ) ?>
-	<span class="<?Columns?>Columns">
-		<input name="txtNegativeQuantity<?QTYIndex?>" value="<? echo ( $$variable{'txtNegativeQuantity'.$$variable{'QTYIndex'}} ) ?>" type="text" size="9" onkeyup="calc('f1');" />
-		<input type="checkbox" id="chkOverrideNegativeQuantity<?QTYIndex?>" name="chkOverrideNegativeQuantity<?QTYIndex?>" value="Y" <? echo ( 'checked="checked"' if $$variable{'chkOverrideNegativeQuantity'.$$variable{'QTYIndex'}} ) ?> onclick="if (this.checked == false) calc('f1');" />
-		<label class="radio" for="chkOverrideNegativeQuantity<?QTYIndex?>">Override</label>
-	</span>
-	<? endif ( $$variable{'Project'}->{'quantity'.$$variable{'QTYIndex'}} ) ?>
-	<? eval ( $$variable{'QTYIndex'} += 1 ) ?>
-	<? endwhile ( $$variable{'QTYIndex'} <= 3 ) ?>
-</p>
+<li> 
+	<label>How many <? echo ( ssi::writeTip( 'negatives' ); ) ?> need <?ServiceTypeName?></label>
+	<? echo ( my $html;
+		foreach my $qty_index ( $$variable{Project}->quantity_indexes() ) {
+			$html .= '<span class="'.$$variable{Columns}.'Columns">';
+			$html .= input( name=>'txtNegativeQuantity'.$qty_index, value=>$$variable{'txtNegativeQuantity'.$qty_index}, type=>'cardinal', onkeyup=>q`calc('f1');` );
+			$html .= write_override( 'chkOverrideNegativeQuantity'.$qty_index, $$variable{'chkOverrideNegativeQuantity'.$qty_index}, '', q`calc('f1');` );
+			$html .= '</span>';
+		} # end foreach
+		return $html;
+	) ?>
+</li>

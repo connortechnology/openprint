@@ -1,0 +1,10 @@
+<?include('/includes/error_reporting.html')?>
+<form id="f1" name="f1" action="email_campaigns.html">
+<fieldset class="filters">
+	<ul>
+		<li><label>Deleted</label><?echo(radio('deleted', ['1','Yes','0','No','','All'], $session{$r->uri().'?deleted'}, { onclick=>q`LoadContent('Results','_email_campaigns.html', $('f1') );` } ); )?></li>
+		<li><label>Active</label><?echo(radio('active', ['Y','Yes','N','No','','All'], $session{$r->uri().'?active'}, { onclick=>q`LoadContent('Results','_email_campaigns.html', $('f1') );` } ); )?></li>
+	</ul>
+</fieldset>
+</form>
+<div id="Results"><?include(_email_campaigns.html)?></div>

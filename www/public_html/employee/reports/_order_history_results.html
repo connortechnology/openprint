@@ -1,79 +1,62 @@
-<? echo (
-	my %parameters;	
-	if ( $openprint::session{'user_type'} ne 'A' and ! openprint::usergroup::is_user_in( ['Sales Admin'], $openprint::session{'user_id'} ) ) {
-		$parameters{'SalesPerson'} = $openprint::session{'user_id'};
-		$parameters{'or'} = "Index=(SELECT CompanyIndex FROM Users WHERE Index=$openprint::session{'user_id'})";
-	} elsif ( $openprint::param{'CSR'} ) {
-		$parameters{'SalesPerson'} = $openprint::param{'CSR'};
-	} # end if
-	#$parameters{'order'} = 'lower(strname)';
-	my @Companies = openprint::Company::find( %parameters );
-	my %companies = map { int($_->id()), $_->name() } @Companies;
-	if ( %companies ) {
-		@{$$variable{'Orders'}} = openprint::Order::find( 
-			'company_id' => ( ($openprint::param{'company_id'} and exists $companies{$openprint::param{'company_id'}} ) ? $openprint::param{'company_id'} : undef ),
-			'created_on_start' => sprintf('%.4d-%.2d-%.2d 00:00:00', @openprint::param{'DateStartYear','DateStartMonth','DateStartDay'}),
-			'created_on_end' => sprintf('%.4d-%.2d-%.2d 23:59:59', @openprint::param{'DateEndYear','DateEndMonth','DateEndDay'}),
-			'status' =>	$openprint::param{'status'},
-			'value_start' => $openprint::param{'value_start'},
-			'value_end' => $openprint::param{'value_end'},
-			'order' => ($openprint::param{'order'} ? $openprint::param{'order'} : 'Index'),
-			'user_id' => ($openprint::param{'Estimator'} eq 'Non Employee' ? q{NOT IN (SELECT Index FROM Users WHERE chrType IN ('E','A') AND Index IN (SELECT user_id FROM users_in_usergroups WHERE usergroup_id = (SELECT id FROM usergroups WHERE name='Sales')))} : $openprint::param{'Estimator'}),
-			#'limit' => 1,
-		);
-	} else {
-		@{$$variable{'Orders'}} = ();
-		return 'There were no companies to filter on.<br/>';
-	} # end if
-	%{$$variable{'Companies'}} = %companies;
-	return '';
-) ?>
-<? if ( @{$$variable{'Orders'}} ) ?>
-<table class="List">
+<?include('/includes/error_reporting.html')?>
+<? if ( @{$$variable{Orders}} ) ?>
+<? if ( $param{press_id} ) ?>
+The following had one or more signatures that ran on <? echo ( join(': ', new openprint::Equipment( $param{press_id} )->get('strid','name') ); ) ?><br/><br/>
+<? endif ( $param{press_id} ) ?>
+<table class="List sortable">
 	<tr>
-		<th width="60" align="left">Order #</th>
-		<th width="55" align="left">Docket #</th>
-		<th width="200" align="left">Company</th>
-		<th align="left">Project References</th>
-		<th width="120" align="left">Date</th>
-		<th width="120" align="left">Status</th>
-		<th width="75" align="right">Total</th>
+		<th class="order_id">Order #</th>
+		<th class="Docket">Docket</th>
+		<th class="invoice_id">Invoice #</th>
+		<th class="Company">Company</th>
+		<th class="Project">Project References</th>
+		<th class="DateTime">Date</th>
+		<th class="status">Status</th>
+		<th class="Price">Total</th>
 	</tr>
-	<? while ( $$variable{'Order'} = shift @{$$variable{'Orders'}} ) ?>
-	<? if ( exists $$variable{'Companies'}{int($$variable{'Order'}->company_id())} ) ?>
-	<tr<?rowclass?>>
-		<td><a href="/employee/order/view.html?order_id=<? echo ( $$variable{'Order'}->id(); ) ?>"><? echo ( $$variable{'Order'}->id(); ) ?></a></td>
-		<td><a href="/employee/order/view.html?order_id=<? echo ( $$variable{'Order'}->id(); ) ?>"><? echo ( $$variable{'Order'}->docket(); ) ?></a></td>
-		<td><a href="/employee/order/view.html?order_id=<? echo ( $$variable{'Order'}->id(); ) ?>"><? echo ( ssi::htmlize($$variable{'Order'}->company_name() ); ) ?></a></td>
-		<td><a href="/employee/order/view.html?order_id=<? echo ( $$variable{'Order'}->id(); ) ?>">
-		<? echo ( 
-			my $html;
-			foreach my $Project ( $$variable{'Order'}->projects() ) {
-			$html .= ssi::htmlize($Project->reference() ). '<br/>';;
-			} # end foreach
-			return $html;
-			) ?>
-		</a></td>
-		<td><a href="/employee/order/view.html?order_id=<? echo ( $$variable{'Order'}->id(); ) ?>"><? echo ( Date::Format::time2str('%Y-%m-%d %H:%M', Date::Parse::str2time($$variable{'Order'}->created_on() ) ); ) ?></a></td>
-		<td><a href="/employee/order/view.html?order_id=<? echo ( $$variable{'Order'}->id(); ) ?>"><? echo ( $$variable{'Order'}->status(); ) ?></a></td>
-		<td align="right"><a href="/employee/order/view.html?order_id=<? echo ( $$variable{'Order'}->id(); ) ?>">$<? echo ( $$variable{'Order'}->total(); ) ?></a></td>
-	</tr>
-	<? eval ( 
-		$$variable{'rowclass'} = $$variable{'rowclass'} ? '' : ' class="colRow"';
-		$$variable{'Total'} += $$variable{'Order'}->total();
-		$$variable{'Count'} += 1;
+	<? echo (
+		my $html = '';
+		my $rowclass;
+		my $total;
+		foreach my $Order ( @{$$variable{Orders}} ) {
+			my $price;
+			if ( $session{'/employee/reports/order_history.html?currency_id'} ) {
+				$price = $Order->total();
+			} else {
+				$price = $Order->Currency()->convert_from( $Order->total() );
+			}
+			$html .= sprintf(q`
+				<tr%1$s>
+					<td class="order_id"><a href="/employee/order/view.html?order_id=%2$d">%2$d</a></td>
+					<td class="Docket"><a href="/employee/order/view.html?order_id=%2$d">%3$d</a></td>
+					<td class="invoice_id"><a href="/employee/order/view.html?order_id=%2$d">%4$s</a></td>
+					<td class="Company"><a href="/employee/order/view.html?order_id=%2$d">%5$s</a></td>
+					<td class="Project"><a href="/employee/order/view.html?order_id=%2$d">%6$s</a></td>
+					<td class="DateTime"><a href="/employee/order/view.html?order_id=%2$d">%7$s</a></td>
+					<td class="status"><a href="/employee/order/view.html?order_id=%2$d">%8$s</a></td>
+					<td class="Price"><a href="/employee/order/view.html?order_id=%2$d">%9$s</a></td>
+				</tr>
+				`, $rowclass, $Order->id(), $Order->docket(), join('<br/>', map { $_->Invoice()->num() } $Order->Invoices() ),
+				htmlize($Order->company_name() ), join('<br/>', map { $_->reference() } $Order->Projects() ), 
+				format_datetime( $Order->created_on() ), $Order->status(), openprint::Currency::format( $price ),
+			);
+			$rowclass = $rowclass ? '' : ' class="colRow"';
+			$total += $price;
+		} # end foreach Order
+		$html .= sprintf(q`<tr class="totals">
+			<td align="right">Count</td>
+			<td>%d</td>
+			<td></td>
+			<td align="right">Average Value</td>
+			<td>%s</td>
+			<td colspan="2" align="right">Total</td>
+			<td class="Price">%s</td>
+		</tr>`, scalar @{$$variable{Orders}}, openprint::Currency::format( $total/scalar @{$$variable{Orders}} ), openprint::Currency::format( $total ) );
+		return $html;
 	) ?>
-	<? endif ( exists $$variable{'Companies'}{int($$variable{'Order'}->company_id())} ) ?>
-	<? endwhile ( $$variable{'Order'} = shift @{$$variable{'Orders'}} ) ?>
-	<tr class="totals">
-		<td align="right">Count:</td>
-		<td><?Count?></td>
-		<td align="right">Average Value:</td>
-		<td>$<? echo ( sprintf('%.2f', $$variable{'Total'}/$$variable{'Count'} ); ) ?></td>
-		<td colspan="2" align="right">Total:</td>
-		<td align="right">$<? echo ( sprintf('%.2f', $$variable{'Total'} ); ) ?></td>
-	</tr>
 </table>
-<? else ( @{$$variable{'Orders'}} ) ?>
+<span class="Currency">All prices shown are in <? echo ( 
+$session{'/employee/reports/order_history.html?currency_id'} ? new openprint::Currency( $session{'/employee/reports/order_history.html?currency_id'} )->name() : openprint::Currency::get_current()->name() ) ?>.</span>
+<? else ( @{$$variable{Orders}} ) ?>
 There were no orders matching your criteria.  Please try again.
-<? endif ( @{$$variable{'Orders'}} ) ?>
+<? endif ( @{$$variable{Orders}} ) ?>

@@ -4,6 +4,16 @@
 </div>
 <script type="text/javascript" src="/javascripts/barcode.js"></script>
 <script type="text/javascript">
+	function initializeDayDropDowns() {
+        if ( typeof(setDaysDropDown) == 'function' ) {
+            setDaysDropDown(document.f1.TakeOverStartYear.value,document.f1.TakeOverStartMonth.value,document.f1.TakeOverStartDay,document.f1.TakeOverStartDay.value);
+            setDaysDropDown(document.f1.TakeOverEndYear.value,document.f1.TakeOverEndMonth.value,document.f1.TakeOverEndDay,document.f1.TakeOverEndDay.value);
+        } // end if
+    }
+
+    if ( typeof(initializeDayDropDowns) )
+        window.onload = initializeDayDropDowns;
+
 	function load_projects( form ) {
 		LoadContent('ProjectList','/employee/reports/_efficiency.html', Serialize( form ) );
 	} // end function
@@ -12,7 +22,7 @@
 	<fieldset class="filters">
 		<legend>Select By Docket #</legend>
 		<p>
-			<label>Docket #:</label>
+			<label>Docket #</label>
 				<input type="text" name="StartDocket" value="<?StartDocket?>" size="13"  onKeyPress="return input_handler( this, event);" />
 				- <input type="text" name="EndDocket" value="<?EndDocket?>" size="13"  onKeyPress="return input_handler( this, event);" />
 				<? echo ( ssi::writeButton( $log, $dbh, 'Go', 'go.gif', "load_projects( document.f1 );", '', 'Go' ); ) ?>
@@ -35,14 +45,14 @@
 		} # end if
 	) ?>
 		<p>
-			<label>Task Date:</label>
-				<select name="TakeOverStartYear" onChange="load_projects(this.form);"><?TakeOverStartYears?></select>
-				<select name="TakeOverStartMonth" onChange="load_projects(this.form);"><?TakeOverStartMonths?></select>
-				<select name="TakeOverStartDay" onChange="load_projects(this.form);"><?TakeOverStartDays?></select>
-to
-				<select name="TakeOverEndYear" onChange="load_projects(this.form);"><?TakeOverEndYears?></select>
-				<select name="TakeOverEndMonth" onChange="load_projects(this.form);"><?TakeOverEndMonths?></select>
-				<select name="TakeOverEndDay" onChange="load_projects(this.form);"><?TakeOverEndDays?></select>
+			<label>Task Date</label>
+			 <select name="TakeOverStartYear" onchange="setDaysDropDown(this.value,this.form.TakeOverStartMonth.value,this.form.TakeOverStartDay,this.form.TakeOverStartDay.value);load_projects(this.form);"><?TakeOverStartYears?></select>
+			 <select name="TakeOverStartMonth" onchange="setDaysDropDown(this.form.TakeOverStartYear.value,this.value,this.form.TakeOverStartDay,this.form.TakeOverStartDay.value);load_projects(this.form);"><?TakeOverStartMonths?></select>
+			 <select name="TakeOverStartDay" onchange="load_projects(this.form);"><?TakeOverStartDays?></select>
+			to 
+			 <select name="TakeOverEndYear" onchange="setDaysDropDown(this.value,this.form.TakeOverEndMonth.value,this.form.TakeOverEndDay,this.form.TakeOverEndDay.value);load_projects(this.form);"><?TakeOverEndYears?></select>
+			 <select name="TakeOverEndMonth" onchange="setDaysDropDown(this.form.TakeOverEndYear.value,this.value,this.form.TakeOverEndDay,this.form.TakeOverEndDay.value);load_projects(this.form);"><?TakeOverEndMonths?></select>
+			<select name="TakeOverEndDay" onchange="load_projects(this.form);"><?TakeOverEndDays?></select>
 		</p>
 	</fieldset>
 	<hr/>

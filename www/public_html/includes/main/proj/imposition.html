@@ -1,7 +1,7 @@
 <div class="row">
-	<span class="label"><? echo ( ssi::writeTip('Imposition'); ) ?>:<span class="smTbl">(Width x Height in Inches)</span></span>
+	<span class="label"><? echo ( ssi::writeTip('Imposition'); ) ?><span class="smTbl">(Width x Height in Inches)</span></span>
 	<span class="input">
-		<input type="text" name="txtImposition<?QTYIndex?>" value="<? echo ( $$variable{'txtImposition'.$$variable{'QTYIndex'}} ) ?>" size="4"  onkeyup="calc('f1');" />
+		<input type="text" name="txtImposition<?QTYIndex?>" value="<? echo ( $$variable{'txtImposition'.$$variable{'QTYIndex'}} ) ?>" size="3"  onkeyup="calc('f1');" />
 		 Out
 		<input type="checkbox" id="chkOverrideImposition<?QTYIndex?>" name="chkOverrideImposition<?QTYIndex?>" value="Y" onclick="if(!this.checked) calc(this.form.name);" <? echo ( 'checked="checked"' if $$variable{'chkOverrideImposition'.$$variable{'QTYIndex'}} eq 'Y' ) ?>
 />

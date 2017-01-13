@@ -1,31 +1,45 @@
-<div class="QuoteHeader">
-	<fieldset><legend>Prepared For:</legend>
-	<p><label>Contact:</label>
-		<? echo ( ssi::htmlize( $$variable{'Quote'}->for_salutation() ) ) ?>
-		<? echo ( ssi::htmlize( $$variable{'Quote'}->for_firstname() ) ) ?>
-		<? echo ( ssi::htmlize( $$variable{'Quote'}->for_lastname() ) ) ?><br/>
-	</p>
-<? if ( $$variable{'Quote'}->for_companyname(); ) ?>
-	<p><label>Company:</label>
-		<? echo ( ssi::htmlize( $$variable{'Quote'}->for_companyname() ).'<br/>'; ) ?>
-	</p>
-<? endif ( $$variable{'Quote'}->for_companyname(); ) ?>
-	<p><label>Address:</label>
-		<? echo ( ssi::htmlize( $$variable{'Quote'}->for_address1() ).'<br/>' if $$variable{'Quote'}->for_address1(); ) ?>
-		<? echo ( ssi::htmlize( $$variable{'Quote'}->for_address2() ).'<br/>' if $$variable{'Quote'}->for_address2(); ) ?>
-		<? echo ( misc::build_city_prov_country(@$variable{'Quote'}->for_city(),$$variable{'Quote'}->for_state(),$$variable{'Quote'}->for_country() ).'<br/>'; ) ?>
-		<? echo ( ssi::htmlize( $$variable{'Quote'}->for_postalcode() ).'<br/>' if $$variable{'Quote'}->for_postalcode(); ) ?>
-	</p>
-	<p><label>Phone:</label>
-		<? echo ( ssi::htmlize( $$variable{'Quote'}->for_phone() ).'<br/>' if $$variable{'Quote'}->for_phone(); ) ?>
-	</p>
-	<? if ( $$variable{'Quote'}->for_fax() ) ?>
-	<p><label>Fax:</label>
-		<? echo ( ssi::htmlize( $$variable{'Quote'}->for_fax() ); ) ?>
-	</p>
-	<? endif ( $$variable{'Quote'}->for_fax() ) ?>
-	<p><label>Email:</label>
-		<? echo ( ssi::htmlize( $$variable{'Quote'}->for_email() ).'<br/>' if $$variable{'Quote'}->for_email(); ) ?>
-	</p>
+<div id="PreparedFor">
+	<fieldset><legend>Prepared For</legend>
+		<div class="content">
+			<ul>
+<? if ( $$variable{Quote}->for_firstname() or $$variable{Quote}->for_lastname() ) ?>
+	<li><label>Contact</label>
+		<? hecho ( $$variable{Quote}->for_salutation() ) ?>
+		<? hecho ( $$variable{Quote}->for_firstname() ) ?>
+		<? hecho ( $$variable{Quote}->for_lastname() ) ?>
+	</li>
+<? endif ( $$variable{Quote}->for_firstname() or $$variable{Quote}->for_lastname() ) ?>
+<? if ( $$variable{Quote}->for_companyname(); ) ?>
+	<li><label>Company</label>
+		<? hecho ( $$variable{Quote}->for_companyname() ) ?>
+	</li>
+<? endif ( $$variable{Quote}->for_companyname(); ) ?>
+<? if ( $$variable{Quote}->for_address1() or $$variable{Quote}->for_address2() ) ?>
+	<li><label>Address</label>
+		<? echo ( join('<br/>',
+					( $$variable{Quote}->for_address1() ? htmlize( $$variable{Quote}->for_address1() ) : () ),
+					( $$variable{Quote}->for_address2() ? htmlize( $$variable{Quote}->for_address2() ) : () ),
+		htmlize( misc::build_city_prov_country($$variable{Quote}->for_city(),$$variable{Quote}->for_state(),$$variable{Quote}->for_country() ) ),
+		( $$variable{Quote}->for_postalcode() ? htmlize( $$variable{Quote}->for_postalcode() ) : () ),
+); ) ?>
+	</li>
+<? endif ( $$variable{Quote}->for_address1() or $$variable{Quote}->for_address2() ) ?>
+<? if ( $$variable{Quote}->for_phone() ) ?>
+	<li><label>Phone</label>
+		<? hecho ( $$variable{Quote}->for_phone() . ( $$variable{Quote}->for_extension() ? 'x'.$$variable{Quote}->for_extension() : '' ) ) ?>
+	</li>
+<? endif ( $$variable{Quote}->for_phone() ) ?>
+	<? if ( $$variable{Quote}->for_fax() ) ?>
+	<li><label>Fax</label>
+		<? hecho ( $$variable{Quote}->for_fax() ) ?>
+	</li>
+	<? endif ( $$variable{Quote}->for_fax() ) ?>
+	<? if ( $$variable{Quote}->for_email() ) ?>
+	<li><label>Email</label>
+		<? echo ( $$variable{Quote}->for_email().'<br/>' if $$variable{Quote}->for_email(); ) ?>
+	</li>
+	<? endif ( $$variable{Quote}->for_email() ) ?>
+			</ul>
+		</div>
 	</fieldset>
 </div>

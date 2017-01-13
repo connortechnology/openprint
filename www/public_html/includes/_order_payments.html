@@ -1,51 +1,87 @@
-
-<? if ( ( $$variable{'PAYMENTS'} and @{$$variable{'PAYMENTS'}} ) or ! sets::isin( $$variable{'Order'}->status(), ['Incomplete','Cancelled'] ) ) ?>
-<? if ( ( $openprint::session{user_type} eq 'A' ) or ( $openprint::session{user_type} eq 'E' and usergroup::is_user_in( ['Accounting'], $openprint::session{'user_id'} ) ) ) ?>
+<div class="Payments">
 <fieldset><legend>Payments</legend>
+<? echo ( 
+	my $html;
+	my @Payments = openprint::Payment->find(order_id=>$$variable{Order}->id(),completed=>1,order=>'created_on');
+	if ( @Payments or ! sets::isin( $$variable{Order}->status(), ['Incomplete','Cancelled'] ) ) {
+		my $rowclass;
+
+	if ( ( $session{user_type} eq 'A' ) or ( $session{user_type} eq 'E' and openprint::usergroup::is_user_in( ['Accounting'], $session{'user_id'} ) ) ) {
+		$html .= q`
 <table class="List">
-        <tr>
-            <th width="50" align="left">Ref #</th>
-            <th width="70" align="center">Date</th>
-            <th width="100" align="left">Type</th>
-            <th align="left">Description</th>
-            <th width="120" align="right">Amount</th>
-            <th width="60" align="right">&nbsp;</th>
-        </tr>
-        <? if ( $$variable{'PAYMENTS'} ) ?>
-        <? while ( @$variable{'payment_index','date','type','description','amount','currency_id'} = splice @{$$variable{'PAYMENTS'}},0,6; ) ?>
-            <tr<?rowclass?>>
-                <td><?payment_index?></td>
-                <td align="center"><?date?></td>
-                <td>&nbsp;<?type?></td>
-                <td>&nbsp;<?description?></td>
-                <td align="right"><? echo ( new openprint::Currency($$variable{'currency_id'})->symbol(); ) ?> <?amount?></td>
-                <td align="right"><? echo ( ssi::writeButton($log, $dbh,'Delete'.$$variable{'payment_index'},'',"confirm_delete( document.f1, '$$variable{'payment_index'}' );", '', 'Delete' ); ) ?></td>
-            </tr>
-            <? eval ( $$variable{'rowclass'} = $$variable{'rowclass'} ? '' : ' class="colRow"' ) ?>
-        <? endwhile ( @$variable{'payment_index','date','type','description','amount','currency_id'} = splice @{$$variable{'PAYMENTS'}},0,6; ) ?>
-        <? endif ( $$variable{'PAYMENTS'} ) ?>
+	<thead>
+		<tr>
+			<th class="payment_id">Ref #</th>
+			<th class="type">Type</th>
+			<th class="description">Description</th>
+			<th class="DateTime">Received On</th>
+			<th class="Price">Amount</th>
+			<th class="buttons">&nbsp;</th>
+		</tr>
+	</thead>
+	<tbody>
+`;
+		foreach my $Payment ( @Payments ) {
+			$html .= sprintf(q`
+<tr%1$s>
+	<td class="payment_id">%2$d</td>
+	<td class="type">%3$s</td>
+	<td class="description">%4$s</td>
+	<td class="DateTime">%5$s</td>
+	<td class="Price">%6$s</td>
+	<td class="buttons">%7$s</td>
+</tr>
+			`, $rowclass, $Payment->id(), $Payment->method(), $Payment->memo(), 
+			Date::Format::time2str( $config{'DateTimeFormat'}, Date::Parse::str2time( $Payment->created_on() ) ),
+			$Payment->Currency()->format( $Payment->amount() ),
+			button('Delete'.$Payment->id(), { onclick=>qq`confirm_delete( document.f1, '$$Payment{id}' );`, text=>'Delete' } ),
+			);
+            $rowclass = $rowclass ? '' : ' class="colRow"';
+		} # end foreach Payment
+		$html .= sprintf( q`
         <tr class="totals unprintable">
-            <td colspan="3">Add new payment:</td>
-            <td><input type="text" name="Description" style="width: 100%;"/></td>
-            <td align="right"><?CurrencySymbol?><input type="text" name="Amount" style="width:auto;" size="10"/></td>
-            <td><? echo (ssi::writeButton($log, $dbh, 'AddPayment', 'add', "f1.btnFunction.value='Save Payment';f1.submit();",'','Add' ); ) ?></td>
-        </tr>
-    </table>
-	<div class="unprintable">
-    <br class="spacer"/>
-    <div style="float: right;">
-        <span style="float: left;">Invoice ID: <input type="text" id="invoice_id" name="invoice_id" /></span>
-        <? echo ( ssi::writeButton( $log, $dbh, 'Invoice', 'invoice.gif', "f1.btnFunction.value='Invoice';f1.submit();", '', 'Set Invoice ID' ); ) ?>
-    </div>
-    <br class="spacer"/>
-    <div style="float: right;">
-        <? echo ( my $html;
-        $html .= ssi::writeButton( $log, $dbh, 'Pay','pay.gif', "f1.btnFunction.value='Pay';f1.submit();",'','Pay' );
-        return $html;
-        ) ?>
-    </div>
-	</div>
-<? endif ( ( $openprint::session{user_type} eq 'A' ) or ( $openprint::session{user_type} eq 'E' and usergroup::is_user_in( ['Accounting'], $openprint::session{'user_id'} ) ) ) ?>
+            <td colspan="2">Record new payment</td>
+            <td class="description"><input type="text" name="memo" /></td>
+			<td class="DateTime">%s</td>
+            <td class="Price">%s%s</td>
+            <td class="buttons">%s</td>
+        </tr></tbody>`,
+date_select('received_on', [ Date::Calc::Today() ] ),
+ssi::select( [map{$_->id(), $_->symbol().' ' . $_->short() } openprint::Currency->find(order=>'lower(name)') ], $variable{Order}->currency_id(), { name=>'payment_currency_id' } ),
+input( type=>'float', name=>'amount', id=>'amount', value=>$$variable{Order}->owing() ),
+button( 'AddPayment', { onclick=>"f1.btnFunction.value='Save Payment';f1.submit();", text=>'Add' } ),
+);
+} else {
+	$html .= '
+<table class="List">
+	<thead>
+        <tr>
+            <th class="payment_id">Ref #</th>
+            <th class="type">Type</th>
+            <th class="description">Description</th>
+            <th class="DateTime">Date</th>
+            <th class="Price">Amount</th>
+        </tr></thead>';
+		foreach my $Payment ( @Payments ) {
+			$html .= sprintf(q`
+<tr%1$s>
+	<td class="payment_id">%2$d</td>
+	<td class="type">%3$s</td>
+	<td class="description">%4$s</td>
+	<td class="DateTime">%5$s</td>
+	<td class="Price">%6$s</td>
+</tr>
+			`, $rowclass, $Payment->id(), $Payment->method(), $Payment->memo(), 
+			Date::Format::time2str( $config{'DateTimeFormat'}, Date::Parse::str2time( $Payment->created_on() ) ),
+			$Payment->Currency()->format( $Payment->amount() ),
+			);
+            $rowclass = $rowclass ? '' : ' class="colRow"';
+		} # end foreach Payment
+} # end if access granted
+$html .= '</table>';
+} # end if has payments or completed
+return $html;
+) ?>
 </fieldset>
 <input type="hidden" name="payment_id" />
-<? endif ( ( $$variable{'PAYMENTS'} and @{$$variable{'PAYMENTS'}} ) or ! sets::isin( $$variable{'Order'}->status(), ['Incomplete','Cancelled'] ) ) ?>
+</div>

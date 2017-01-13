@@ -1,8 +1,3 @@
-function calc( formName ){
-	gettingNewPrice = true;
-	jsrsExecute( '/jsrs.htm', cbFillResults, 'openprint::service::external_calc', get_variables( formName, 'Packaging' ) );
-} // end calc
-
 function validate_data(formName) {
     var form = getFormObj(formName);
     var text = '';

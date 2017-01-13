@@ -1,14 +1,14 @@
-<!--#include virtual="/includes/employee/feedback/line.html"-->
+<?include('/includes/employee/feedback/line.html')?>
 <div style="color: red;"><?ErrorMessage?></div>
-<form method="post" name="f1" action="/employee/production/project_view.html">
+<form method="post" name="f1" action="/employee/project/view.html">
 	<div class="row"><b class="lgTxt">Production Feedback</b></div>
 <div style="float: left;"/>
-<!--#include virtual="/includes/employee/feedback/employee.html"-->
-<!--#include virtual="/includes/employee/feedback/comments.html"-->
-<!--#include virtual="/includes/employee/feedback/complete.html"-->
-<!--#include virtual="/includes/employee/feedback/complete_date.html"-->
+<?include('/includes/employee/feedback/employee.html') ?>
+<?include('/includes/employee/feedback/comments.html') ?>
+<?include('/includes/employee/feedback/complete.html') ?>
+<?include('/includes/employee/feedback/complete_date.html') ?>
     <div class="row">
-        <span class="label">Due Date:</span>
+        <span class="label">Due Date</span>
         <span class="input">
           <? eval ( $$variable{'days'} = ssi::getdays($$variable{'ddmDueDateDay'}?$$variable{'ddmDueDateDay'}:(localtime(time))[3]); ) ?>
             <? eval ( $$variable{'months'} = ssi::getmonths($$variable{'ddmDueDateMonth'}?$$variable{'ddmDueDateMonth'}:(localtime(time))[4]+1); ) ?>
@@ -23,7 +23,7 @@
 <? while ( @$variable{'SignatureIndex','Reference'} = splice @{$$variable{'Signatures'}}, 0, 2; ) ?>
 <div class="Signature">
     <div class="row">
-        <span class="label" valign="top">Press <? echo ( 'for ' . $$variable{'Reference'} if $$variable{'Reference'} ne '' ) ?>:</span>
+        <span class="label" valign="top">Press <? echo ( 'for ' . $$variable{'Reference'} if $$variable{'Reference'} ne '' ) ?></span>
         <span class="input">
             <? eval ( @{$$variable{'tempPresses'}} = @{$$variable{'Presses'}} ) ?>
             <? while ( @$variable{'id','name'} = splice @{$$variable{"tempPresses"}},0,2; ) ?>
@@ -37,6 +37,6 @@
 <? endwhile ( @$variable{'SignatureIndex','Reference'} = splice @{$$variable{'Signatures'}}, 0, 2; ) ?>
 </div><!-- Column -->
 
-<!--#include virtual="/includes/employee/feedback/buttons.html"-->
-<!--#include virtual="/includes/employee/feedback/hidden_fields.html"-->
+<? echo ( include('/includes/employee/feedback/buttons.html'); ) ?>
+<? echo ( include('/includes/employee/feedback/hidden_fields.html'); ) ?>
 </form>

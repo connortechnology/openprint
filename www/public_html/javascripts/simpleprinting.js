@@ -1,4 +1,4 @@
-function FoldType_onChange( select ) {
+function FoldType_onchange( select ) {
 	var foldtype = get_ddm_value( select );
 	var image = document.images['FoldType'];
 	if ( image ) {
@@ -9,16 +9,22 @@ function FoldType_onChange( select ) {
 			image.style.display = 'none';
 		} // end if
 	} // end if
-	remove_div('OrderButton');
+	Dimensions_onchange( select );
 } // end function
 
-function cbFoldType_onChange( results ) {
-	//var select = jsrs_cbFillDDM( results, 'Custom' );
-	//Dimensions_onChange( select );
-}
+function calc( formName, force ) {
+	var form = $(formName);
+	if ( ! form ) return;
 
-function calc( formName ) {
-	var form = getFormObj(formName);
+	if ( form.txtPrice1 ) {
+		form.txtPrice1.value = '';
+	} // end if
+	if ( form.ProductionPrice1 ) {
+		form.ProductionPrice1.value = '';
+	} // end if
+	if ( form.ShippingPrice1 ) {
+		form.ShippingPrice1.value = '';
+	} // end if
 
 	if ( form.HoleDrilling && ( get_rdb_value( form.HoleDrilling ) == 'Y' ) ) {
 		if ( form.txtHoleQty.value == '' ) {
@@ -26,30 +32,24 @@ function calc( formName ) {
 		} // end if
 	} // end if
 
-	if ( ! form.txtQuantity1 )
-		return;
-	form.txtQuantity1.value = parseInt(1*form.txtQuantity1.value);
-
-	var div = document.getElementById('AlertDiv');
-
-	if ( ! ( form.txtQuantity1.value > 0 ) ) {
-		div.innerHTML = "Please enter a quantity";
-		div.style.display = 'block';
+	var div = $('AlertDiv');
+	if ( ! div ) {
+		//alert('No alert div.');
+	} else {
+		div.hide();
 	} // end if
-	if ( form.txtTotalPageQuantity ) {
-		form.txtTotalPageQuantity.value = parseInt(1*form.txtTotalPageQuantity.value);
-		if ( ! ( form.txtTotalPageQuantity.value > 0 ) ) {
-			div.innerHTML = "Please enter the number of pages";
-			div.style.display = 'block';
-		} // end if
-	} // end if
-	div.style.display = 'none';
 
-	if ( gettingNewPrice ) {
-		setTimeout("calc('"+formName+"');", 1000 );
+	if ( gettingNewPrice && ! force ) {
+		if ( timeout ) clearTimeout( timeout );
+		timeout = setTimeout("calc('"+formName+"');", 1000 );
 		return;
 	} // end if
-	jsrsExecute( '/jsrs.htm', cbCalc, 'openprint::print_project::calc', get_variables( formName ) );
+	timeout = null;
+	gettingNewPrice = true;
+	var h = $H(Form.serialize(form,true));
+	h.set( 'ServiceType', 'Project' );
+	h.set( 'callback', 'cbCalc' );
+	new Ajax.Request( '/main/project/_calc.json', { method: 'post', parameters: h, evalScripts: true } );
 	remove_div('Buttons');
 	add_div('Processing');
 }
@@ -83,15 +83,16 @@ function cbCalc( results ) {
 }
 
 
-function Dimensions_onchange( select ) {
-	//var value = get_ddm_value( select );
-	//if ( value == 'Custom' ) {
-	//add_div('CustomDimensions');
-	//} else {
+function Dimensions_onchange( select, signature ) {
+	var value = get_ddm_value( select );
+	if ( value == 'Custom' ) {
+		$('CustomDimensions').show();
+	} else {
 	//remove_div('CustomDimensions');
-	//} // end if
+	} // end if
 	remove_div('OrderButton');
-	calc( select.form.name );
+	// Refreshes Paper: we do this so that we don't get any stocks in the list that are smaller than our size.
+	Stock_onchange( select, signature );
 } // end if
 
 var contentWin;
@@ -116,3 +117,24 @@ onDestroy: function(eventName, win) {
 	}
 } // end function breakdown_window
 
+function click_order( form ) {
+	if ( ! form.txtPrice1.value ) {
+		alert( "The project is not complete, and so cannot be ordered yet." );
+		return;
+	} // end if
+	form.action='/main/order/information.html';
+	form.btnFunction.value='Process Order';
+	form.submit();
+}
+function click_quote( form ) {
+	if ( ! form.txtPrice1.value ) {
+		alert( "The project is not complete, and so cannot be quoted yet." );
+		return;
+	} // end if 
+	form.action='/main/quote/information.html';
+	form.btnFunction.value='Process Quote';
+	form.submit();
+}
+function click_upload( form ) {
+	window.location = '/upload/upload_center.html?ProjectIndex=' + form.ProjectIndex.value;
+}

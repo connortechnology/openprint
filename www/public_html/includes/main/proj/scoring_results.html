@@ -1,6 +1,13 @@
-<? eval ( @{$$variable{'tempSignatureGroups'}} = @{$$variable{'SignatureGroups'}} ) ?>
-<? while ( @$variable{'SignatureIndex','Reference'} = splice @{$$variable{'tempSignatureGroups'}},0,2; ) ?>
-    <!--#include virtual="/includes/main/proj/signature_imposition_with_override.html"-->
-    <!--#include virtual="/includes/main/proj/signature_equipment.html"-->
-<? endwhile ( @$variable{'SignatureIndex','Reference'} = splice @{$$variable{'tempSignatureGroups'}},0,2; ) ?>
-<br class="spacer"/>
+<? echo (
+	my $html;
+	foreach my $sig_id ( $$variable{Project}->signatures( { sort => 1 } ) ) {
+		my $sig_specs = openprint::service::get_specs_ref( $$variable{Project}, $sig_id );
+		@$variable{'SignatureIndex','Reference'} = @$sig_specs{'SignatureIndex','txtSignatureDescription'};
+		$html .= 'Form ' . $$sig_specs{SignatureIndex} . ( $$sig_specs{txtServiceDescription} ? ' : ' . $$sig_specs{txtServiceDescription} : '' ).'<br/>';
+		$html .= '<ul>';
+		$html .= include('/includes/main/proj/signature_imposition_with_override.html');
+		$html .= include('/includes/main/proj/signature_equipment.html');
+		$html .= '</ul>';
+	} # end foreach
+	return $html;
+) ?>

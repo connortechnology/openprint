@@ -1,40 +1,42 @@
-<form name="f1" method="post" action="defaults_edit.html" enctype="multipart/form-data">
+<form id="f1" name="f1" method="post" action="defaults_edit.html" enctype="multipart/form-data">
 	Default with a specified project type will override default with no project type.  This allows us to do things like
 	set bleeds for everything, and then set no bleeds for Letterhead.  The letterhead setting will override.
-	<br/><hr/><br/>
-	<div class="row">
-        <span class="buttons">
-			<? echo ( ssi::writeButton( $log, $dbh, 'Save','save.gif',"f1.btnFunction.value='Save';fmChange=3;fmCheck(f1);", '', 'Save' ); ) ?>
-			<? echo ( ssi::writeButton( $log, $dbh, 'Reset','reset.gif',"f1.reset()';", '', 'Reset' ); ) ?>
+        <p class="buttons">
+			<? echo ( button( 'Save', { onclick=>"f1.btnFunction.value='Save';fmChange=3;fmCheck(f1);", text=>'Save' } ); ) ?>
+			<? echo ( button( 'Reset', { onclick=>'f1.reset();' } ); ) ?>
 			<input type="file" name="fileImport" >
-			<? echo ( ssi::writeButton( $log, $dbh, 'Import','import.gif',"f1.action='project_defaults.html';f1.btnFunction.value='Import';f1.submit();", '', 'Import' ); ) ?>
-			<? echo ( ssi::writeButton( $log, $dbh, 'Export','export.gif',"f1.action='project_defaults.html?Download';f1.btnFunction.value='Export';f1.submit();", '', 'Export' ); ) ?>
-		</span>
-    </div>
+			<? echo ( button( 'Import', { onclick=>"f1.action='project_defaults.html';f1.btnFunction.value='Import';f1.submit();", text=>'Import' } ); ) ?>
+			<? echo ( button( 'Export', { onclick=>"f1.action='project_defaults.html?Download';f1.btnFunction.value='Export';f1.submit();", text=>'Export' } ); ) ?>
+		</p>
 	<br class="spacer">
 	<table class="List">
 		<tr> 
 			<th>&nbsp;</th>
-			<th width="195" align="left">Project Type</th>
-			<th width="195" align="left">Field Name</th>
-			<th width="195" align="left">Field Value</th>
+			<th class="ProjectType">Project Type</th>
+			<th class="FieldName">Field Name</th>
+			<th class="FieldValue">Field Value</th>
 		</tr>
-		<? while ( @{$$variable{'Defaults'}} ) ?>
-		<? eval ( @$variable{'id','name','value'} = splice @{$$variable{'Defaults'}},0,3; ) ?>
-		<? eval ( $$variable{'index'} = @{$$variable{'Defaults'}}; ) ?>
-		<tr<?rowclass?>> 
-			<td>&nbsp;</td>
-			<td>
-				<select name="txtID-<?index?>">
-					<option value=""> all </option>
-					<? echo ( ssi::make_drop_down( [ map { $_->strid(), $_->name() } openprint::ProjectType::find('order'=>'lower(strname)')], $$variable{'id'} ); ) ?>
-				</select>
-			</td>
-			<td> <input type="text" name="txtName-<?index?>" value="<?name?>"></td>
-			<td> <input type="text" name="txtValue-<?index?>" value="<?value?>"></td>
-		</tr>
-		<? eval ( $$variable{'rowclass'} = $$variable{'rowclass'} ? '' : ' class="colRow"' ) ?>
-		<? endwhile ( @{$$variable{'Defaults'}} ) ?>
+		<? echo ( 
+			my $html = '';
+			my $rowclass;
+
+			my $dropdown_contents = openprint::ProjectType->dropdown( order=>'lower(name)' );
+
+			foreach my $Default ( openprint::ProjectType_Default->find( order=>'projecttype_id NULLS FIRST,name' ) ) {
+				$html .= sprintf(q`
+<tr%1$s> 
+	<td>&nbsp;</td>
+	<td class="ProjectType"><select name="projecttype_id-%2$d"><option value=""> all </option>%3$s</select></td>
+	<td><input type="text" name="name-%2$d" value="%4$s"></td>
+	<td><input type="text" name="value-%2$d" value="%5$s"></td>
+</tr>
+					`, $rowclass, $Default->id(), 
+					make_drop_down( $dropdown_contents, $Default->projecttype_id() ),
+					$Default->name(), $Default->value() );
+				$rowclass = $rowclass ? '' : ' class="colRow"';
+			} # end foreach Default
+			return $html;
+		) ?>
 		<tr> 
 			<td colspan="4"><hr/></td>
 		</tr>
@@ -44,13 +46,13 @@
 		<tr> 
 			<td>&nbsp;</td>
 			<td>
-				<select name="txtID-New">
+				<select name="projecttype_id-New">
 					<option value=""> all </option>
-					<? echo ( ssi::make_drop_down( [ map { $_->strid(), $_->name() } openprint::ProjectType::find('order'=>'lower(strname)')] ); ) ?>
+					<? echo ( make_drop_down( openprint::ProjectType->dropdown( order=>'lower(name)') ); ) ?>
 				</select>
 				</td>
-			<td> <input type="text" name="txtName-New"> </td>
-			<td> <input type="text" name="txtValue-New"> </td>
+			<td><input type="text" name="name-New"></td>
+			<td><input type="text" name="value-New"></td>
 		</tr>
 	</table>
 	<input type="hidden" name="btnFunction"/>

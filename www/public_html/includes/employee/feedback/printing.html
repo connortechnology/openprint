@@ -1,8 +1,8 @@
 <? if ( $$variable{'DocketNumber'} ) ?>
-<p><b>Docket #:</b>&nbsp;<?DocketNumber?></p>
+<p><b>Docket #</b>&nbsp;<?DocketNumber?></p>
 <? endif ( $$variable{'DocketNumber'} ) ?>
-<!--#include virtual="/includes/employee/feedback/line.html"-->
-<form method="POST" name="f1" action="/employee/production/project_view.html">
+<? echo ( include('/includes/employee/feedback/line.html'); ) ?>
+<form method="POST" name="f1" action="/employee/project/view.html">
 	<table width="600" border="0" cellspacing="0" cellpadding="0" cols="3">
 		<tr> 
 			<td width="320" valign="top"><b class="lgTxt">Production Feedback</b></td>
@@ -10,7 +10,7 @@
 			<td width="260" colspan="2"></td>
 		</tr>
 	</table>
-	<!--#include virtual="/includes/employee/feedback/press_completion.html"-->
-	<!--#include virtual="/includes/employee/feedback/buttons.html"-->
-	<!--#include virtual="/includes/employee/feedback/hidden_fields.html"-->
+	<? echo ( include('/includes/employee/feedback/press_completion.html'); ) ?>
+	<? echo ( include('/includes/employee/feedback/buttons.html'); ) ?>
+	<? echo ( include('/includes/employee/feedback/hidden_fields.html'); ) ?>
 </form>

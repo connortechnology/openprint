@@ -1,9 +1,6 @@
-# This is a blank module, to be copied to another module 
-package openprint::service_price;
-@ISA = qw(openprint::price);
 use strict;
-
-require openprint::logs;
+package openprint::service_price;
+our @ISA = qw(openprint::price);
 
 sub save {
 	my $self = shift;
@@ -12,22 +9,26 @@ sub save {
 		$self->{Price} = $self->{Cost} * ( 1 + $self->{Markup}/100 );
 	} # end if
 
-	sql::insert( $self->{log}, $self->{dbh}, 'tbl_Service_Prices',
-		'lngListIndex',			$self->{group}->{list_index},
-		'lngServiceIndex',		$self->{group}->{product_index},
-		'lngEquipmentIndex',	$self->{equipment_index},
-		'lngMin',				( $self->{min} eq '' ? undef : $self->{min} ),
-		'lngMax',				( $self->{max} eq '' ? undef : $self->{max} ),
-		'strUnits',				( $self->{units} eq '' ? undef : $self->{units} ),
-		'dblCost',				( $self->{Cost} eq '' ? undef : $self->{Cost} ),
-		'dblMarkup',			( $self->{Markup} eq '' ? undef : $self->{Markup} ),
-		'dblPrice',				( $self->{Price} eq '' ? undef : $self->{Price} ),
-		'ysnDiscountable',		( $self->{Discountable} eq '' ? 'Y' : $self->{Discountable} )
+	sql::insert( $self->{log}, $self->{dbh}, 'Service_Prices',
+		'pricelist_id',		$self->{group}->{list_index},
+		'service_id',		$self->{group}->{product_index},
+		'equipment_id',		$self->{equipment_index},
+		'supplier_id',		$$self{'supplier_id'},
+		'period_start',		( $self->{period_start} eq '' ? undef : $self->{period_start} ),
+		'period_end',				( $self->{period_end} eq '' ? undef : $self->{period_end} ),
+		'min',				( $self->{min} eq '' ? undef : $self->{min} ),
+		'max',				( $self->{max} eq '' ? undef : $self->{max} ),
+		'units',			( $self->{units} eq '' ? undef : $self->{units} ),
+		'cost',				( $self->{Cost} eq '' ? undef : $self->{Cost} ),
+		'markup',			( $self->{Markup} eq '' ? undef : $self->{Markup} ),
+		'price',			( $self->{Price} eq '' ? undef : $self->{Price} ),
+		'discountable',		( $self->{Discountable} eq '' ? 'Y' : $self->{Discountable} )
 	);
-	openprint::logs::insertLogRecord('29',"Service Index: " . $self->{group}->{product_index});
 } # end sub save
 
-1;
+sub set {
+	@{$_[0]}{'self','service_id','equipment_index','period_start','period_end','min','max','units','Cost','Markup','Price','discountable','mode'} = @_;
+} # end sub set
 
+1;
 __END__
-~       
