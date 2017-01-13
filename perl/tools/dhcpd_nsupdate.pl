@@ -1,4 +1,4 @@
-#!/usr/bin/perl
+#!/usr/bin/perl -wU
 use strict;
 use warnings;
 use lib '/var/www/testing/perl';
@@ -33,7 +33,8 @@ foreach my $default ( keys %defaults ) {
 } # end foreach
 
 configuration::init( );
-configuration::from_file( $$opts{config} );
+$_ = configuration::from_file( $$opts{config} );
+die $_ if $_;
 configuration::merge( $opts );
 
 foreach my $param ( 'db_name','db_user','db_pass' ) {
@@ -42,8 +43,8 @@ foreach my $param ( 'db_name','db_user','db_pass' ) {
 	}
 } # end foreach required-param
 
-$config{log_level} = 'debug' if ! $config{log_level};
-$log = logger->new( { file=>$config{log_file}, level=>$config{log_level}} );
+$openprint::config{log_level} = 'debug' if ! $config{log_level};
+$openprint::log = logger->new( { file=>$config{log_file}, level=>$config{log_level}} );
 
 if ($config{help}) {
     usage();
@@ -54,62 +55,63 @@ my ( $ip, $mac, $hostname ) = @ARGV;
 if ( ! $mac ) {
 	usage();
 	die "You must specify a mac.";
+} elsif ( ! $ip ) {
+	usage();
+	die "You must specify a ip.";
 }
 
-if ( $mac ) {
-	if ( $config{db_name} ) {
-		$dbh = sql::open_sql( $log,
-				host      => $config{db_host},
-				database  => $config{db_name},
-				driver    => 'Pg',
-				login     => $config{db_user},
-				password  => $config{db_pass},
-				);
-		die 'Error opening db' if ! $dbh;
-	} else {
-		$log->error("Must specify database name in order to look up hosts.\n");
-		exit(1);
-	} # end if
-	my @Interfaces = openprint::Host_Interface->find(mac=>$mac);
-	if ( @Interfaces ) {
-		foreach my $Interface ( @Interfaces ) {
-			if ( $Interface->dhcp() ) {
-				if ( $Interface->ip() ne $ip ) {
-					$_ = $Interface->save({ip=>$ip});
-					$log->error($_) if $_;
-					(new openprint::Log())->save( { object_id => $Interface->host_id(), object_type=>'openprint::Host', note=>'IP Address removed because it is taken by host ' . $Interface->Host()->link_to(), action=>'IP Changed' } );
+if ( $config{db_name} ) {
+	$openprint::dbh = sql::open_sql( $log,
+			host      => $config{db_host},
+			database  => $config{db_name},
+			driver    => 'Pg',
+			login     => $config{db_user},
+			password  => $config{db_pass},
+			);
+	die 'Error opening db' if ! $dbh;
+} else {
+	$log->error("Must specify database name in order to look up hosts.\n");
+	exit(1);
+} # end if
+my @Interfaces = openprint::Host_Interface->find(mac=>$mac);
+if ( @Interfaces ) {
+	foreach my $Interface ( @Interfaces ) {
+		if ( $Interface->dhcp() ) {
+			if ( $Interface->ip() ne $ip ) {
+				$_ = $Interface->save({ip=>$ip});
+				$log->error($_) if $_;
+				(new openprint::Log())->save( { object_id => $Interface->host_id(), object_type=>'openprint::Host', note=>'IP Address removed because it is taken by host ' . $Interface->Host()->link_to(), action=>'IP Changed' } );
 
-					my $Host = $Interface->Host();
+				my $Host = $Interface->Host();
 
-					my $hostname = $Host->hostname();
-					if ( $hostname !~ /.internal.point-one.com$/ ) {
-						$log->debug("Transforming $hostname into $hostname.internal.point-one.com");
-						$hostname .= '.internal.point-one.com';
-					}
-				} else {
-					$log->debug("IP unchanged for $mac => $ip => $hostname");
-				} # end if
+				my $hostname = $Host->hostname();
+				if ( $hostname !~ /.internal.point-one.com$/ ) {
+					$log->debug("Transforming $hostname into $hostname.internal.point-one.com");
+					$hostname .= '.internal.point-one.com';
+				}
 			} else {
-				$log->debug("IP not changed because dhcp not set for mac $mac $ip $hostname");
-			} # end if Host->dhcp
-		} # end foreach Interface
-	} else {
-		my $Host = new openprint::Host();
-		$Host->save({ hostname=>$hostname} );
-		my $Interface = new openprint::Host_Interface();
-		$Interface->save({ ip=>$ip, mac => $mac, host_id=>$$Host{id} });
+				$log->debug("IP unchanged for $mac => $ip => $hostname");
+			} # end if
+		} else {
+			$log->debug("IP not changed because dhcp not set for mac $mac $ip $hostname");
+		} # end if Host->dhcp
 
-		$log->debug("Host not found for mac $mac $hostname");
-
-	} # end if Hosts
 		foreach my $I ( openprint::Host_Interface->find( 'mac !=' => $mac, ip=>$ip ) ) {
 			$I->save({ip=>undef});
-			(new openprint::Log())->save( { object_id => $I->host_id(), object_type=>'openprint::Host', note=>'IP Address removed because it is taken by host ' . $I->Host()->link_to(), action=>'IP Changed' } );
+			(new openprint::Log())->save( { Object => $I->Host, note=>'IP Address removed because it is taken by host ' . $Interface->Host()->link_to(), action=>'IP Changed' } );
 		} # end foreach I
-	$dbh->disconnect() if $dbh;
+	} # end foreach Interface
 } else {
-	$log->error("No CALLING_STATION_ID");
-} # end if
+	my $Host = new openprint::Host();
+	$Host->save({ hostname=>$hostname} );
+	my $Interface = new openprint::Host_Interface();
+	$Interface->save({ ip=>$ip, mac => $mac, host_id=>$$Host{id} });
+
+	$log->debug("Host not found for mac $mac $hostname");
+
+} # end if Hosts
+
+$dbh->disconnect() if $dbh;
 exit(0);
 
 sub usage {
