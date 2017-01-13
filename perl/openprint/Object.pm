@@ -1259,10 +1259,10 @@ sub Object {
 	my ( $module ) = $type =~ /openprint::(.*)/;
 	if ( $module ) {
 		eval {
-		require "openprint/$module.pm";
+			require "openprint/$module.pm";
 		};
 		$_ = $type->new( $_[0]{object_id} );
-		$openprint::log->debug( "Returning object of type " . ref $_ ) if $debug;
+		$openprint::log->debug( 'Returning object of type ' . ref $_ ) if $debug;
 		return $_;
 	} else {
 		$log->error("Unvalid object $type");
