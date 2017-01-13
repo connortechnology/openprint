@@ -3,13 +3,12 @@ package openprint::Product;
 our @ISA = qw( openprint::Object );
 
 require openprint::Manufacturer;
-require openprint::Product_Specification;
 require openprint::Product_Category;
 require openprint::Log;
 require sql;
 
-use vars qw( $log $dbh $debug $table $serial %fields %defaults %transforms );
-$debug = 0;
+use vars qw( $log $dbh $debug $table $serial %fields %find_fields %defaults %transforms );
+$debug = 1;
 $table = 'products';
 $serial = 'products_id_seq';
 
@@ -34,21 +33,25 @@ $serial = 'products_id_seq';
 	supplier	=>	undef,
 );
 
+%find_fields = (
+	specification_name =>	q`(SELECT name FROM Object_Specifications WHERE object_id=products.id and object_type_id=(SELECT id FROM object_types WHERE name='openprint::Product'))`
+);
+
 %transforms = (
     name		=> [ 's/^\s+//', 's/\s+$//', 's/\s\s+/ /g' ],
     description => [ 's/^\s+//', 's/\s+$//', 's/\s\s+/ /g' ],
 );
 %defaults = (
-	'weight'		=>	undef,
-	'taxexempt1'	=>	q`'N'`,
-	'taxexempt2'	=>	q`'N'`,
-	'sort'			=>	undef,
-	'category_id'	=>	undef,
-	'project_id'	=>	undef,
-	'owner_id'		=>	q`$session{'company_id'}`,
-	'deleted'		=>	0,
-	'created_on'	=>	q`'NOW()'`,
-	'album_id'		=>	undef,
+	weight			=>	undef,
+	taxexempt1		=>	q`'N'`,
+	taxexempt2		=>	q`'N'`,
+	sort			=>	undef,
+	category_id		=>	undef,
+	project_id		=>	undef,
+	owner_id		=>	q`$session{company_id}`,
+	deleted			=>	0,
+	created_on		=>	q`'NOW()'`,
+	album_id		=>	undef,
 	manufacturer_id	=>	undef,
 	supplier_id		=>	undef,
 );
@@ -56,12 +59,12 @@ $serial = 'products_id_seq';
 sub destroy {
 	my $error = '';
 	my $ac = sql::start_transaction( $openprint::dbh );
-	foreach my $Price ( openprint::ProductPrice->find( 'product_id' => $_[0]{'id'}, 'deleted'=>[0,1] ) ) {
+	foreach my $Price ( openprint::ProductPrice->find( 'product_id' => $_[0]{id}, 'deleted'=>[0,1] ) ) {
 		$error .= $Price->delete();
 	} # end foreach
 
-	sql::execute( undef, undef, q{DELETE FROM Product_Specifications WHERE product_id=?}, $_[0]{'id'} );
-	sql::execute( undef, undef, q{DELETE FROM Products WHERE id=?}, $_[0]{'id'} );
+	sql::execute( undef, undef, q{DELETE FROM Product_Specifications WHERE product_id=?}, $_[0]{id} );
+	sql::execute( undef, undef, q{DELETE FROM Products WHERE id=?}, $_[0]{id} );
 	sql::end_transaction( $openprint::dbh, $ac );
 	
 	# Add record to audit log - action "Delete Product".
@@ -73,19 +76,21 @@ sub copy {
 	my $self = shift;
 	my $Product = new openprint::Product( );
 	@$Product{keys %fields} = @$self{keys %fields};
-	$$Product{'name'} = 'Copy of '.$$Product{'name'};
-	delete $$Product{'id'};
-	delete $$Product{'album_id'};
-	$self->specifications();
-	%{$$Product{'Specifications'}} = %{$$self{'Specifications'}};
+	$$Product{name} = 'Copy of '.$$Product{name};
+	delete $$Product{id};
+	delete $$Product{album_id};
+	@{$$Product{Specifications}} = $self->Specifications();
+	foreach ( @{$$Product{Specifications}} ) {
+		$_->set({ id=>undef, object_id=>undef });
+	}
 	return $Product;
 } # end sub copy
 
 sub prices {
-	if ( ! exists $_[0]{'Prices'} ) {
-		@{$_[0]{'Prices'}} = openprint::ProductPrice->find( product_id=>$_[0]{id}, order=>'min NULLS FIRST' );
+	if ( ! exists $_[0]{Prices} ) {
+		@{$_[0]{Prices}} = openprint::ProductPrice->find( product_id=>$_[0]{id}, order=>'min NULLS FIRST' );
 	} # end if
-	return @{$_[0]{'Prices'}};
+	return @{$_[0]{Prices}};
 } # end sub prices
 
 sub Prices {
@@ -99,16 +104,16 @@ sub category {
 			$Category = new openprint::Product_Category();
 			$Category->save({name=>$_[1]});
 		} # end if
-		$_[0]{'category_id'} = $Category->id();
-		$_[0]{'category'} = $Category->name();
-	} elsif ( ( ! defined $_[0]{'category'} ) and $_[0]{'category_id'} ) {
-		$_[0]{'category'} = $_[0]->Category()->name();
+		$_[0]{category_id} = $Category->id();
+		$_[0]{category} = $Category->name();
+	} elsif ( ( ! defined $_[0]{category} ) and $_[0]{category_id} ) {
+		$_[0]{category} = $_[0]->Category()->name();
 	} # end if
-	return $_[0]{'category'};
+	return $_[0]{category};
 } # end sub category
 
 sub Category {
-	return new openprint::Product_Category( $_[0]{'category_id'} );
+	return new openprint::Product_Category( $_[0]{category_id} );
 } # end sub Category
 
 sub get_price {
@@ -116,10 +121,10 @@ sub get_price {
 
 	$$options{pricelist_id} = openprint::pricing::get_pricelist_id() if ! $$options{pricelist_id};
 
-	my %price = openprint::pricing::get_best_price_object( $openprint::session{'company_id'}, $$self{'id'}, $$options{pricelist_id}, 'openprint::product_priceset', $qty, undef );
+	my %price = openprint::pricing::get_best_price_object( $openprint::session{company_id}, $$self{id}, $$options{pricelist_id}, 'openprint::product_priceset', $qty, undef );
 	#if ( ! %price ) {
 #$log->debug("Looking for a price $qty");
-		##foreach my $Price ( openprint::ProductPrice->find('product_id'=>$$self{'id'},'pricelist_id'=>$list_id,'order'=>'min desc NULLS FIRST') ) {
+		##foreach my $Price ( openprint::ProductPrice->find('product_id'=>$$self{id},'pricelist_id'=>$list_id,'order'=>'min desc NULLS FIRST') ) {
 #$log->debug("Looking at $$Price{min}");
 			#next if $$Price{min} > $qty;
 			#next if $$Price{max} and ( $$Price{max} < $qty );
@@ -132,74 +137,32 @@ sub get_price {
 	return %price;
 } # end sub get_price
 
-sub Specifications {
-	return openprint::Product_Specification->find({'product_id'=>$_[0]{'id'}});
-} # end sub Specifications
-
-sub specifications {
-	my $self = shift;
-	if ( ! exists $$self{'Specifications'} ) {
-		$_ = q{SELECT name, value FROM Product_Specifications WHERE product_id=?};
-		%{$$self{'Specifications'}} = sql::execute( $log, $dbh, $_, $$self{'id'});
-	} # end if
-	return $$self{'Specifications'};
-} # end sub specifications
-
-sub specification {
-	my $self = shift;
-	my $spec = shift;
-	if ( ! exists $$self{'Specifications'} ) {
-		$_ = q{SELECT name, value FROM Product_Specifications WHERE product_id=?};
-		%{$$self{'Specifications'}} = sql::execute( $log, $dbh, $_, $$self{'id'});
-	} # end if
-	return $$self{'Specifications'}{$spec};
-} # end sub
-
-sub add_specification {
-	my $self = shift;
-	my $spec = shift;
-	if ( ! exists $$self{'Specifications'} ) {
-		$_ = q{SELECT name, value FROM Product_Specifications WHERE product_id=?};
-		%{$$self{'Specifications'}} = sql::execute( $log, $dbh, $_, $$self{'id'});
-	} # end if
-	return $$self{'Specifications'}{$spec} = shift;
-} # end sub add_specification
-sub del_specification {
-	my $self = shift;
-	my $spec = shift;
-	if ( ! exists $$self{'Specifications'} ) {
-		$_ = q{SELECT name, value FROM Product_Specifications WHERE product_id=?};
-		%{$$self{'Specifications'}} = sql::execute( $log, $dbh, $_, $$self{'id'});
-	} # end if
-	delete $$self{'Specifications'}{$spec};
-} # end sub del_specification
-
 sub next {
 	my $self = shift;
-	my ( $id ) = sql::execute( undef, undef, q{SELECT id FROM Products WHERE name >= (SELECT name FROM Products WHERE id=?) ORDER BY lower(name) LIMIT 1}, $$self{'id'} );
-	$id = $$self{'id'} if ! $id;
+	my ( $id ) = sql::execute( undef, undef, q{SELECT id FROM Products WHERE name >= (SELECT name FROM Products WHERE id=?) ORDER BY lower(name) LIMIT 1}, $$self{id} );
+	$id = $$self{id} if ! $id;
 	
 	return new openprint::Product( $id );
 } # end sub next 
 sub previous {
 	my $self = shift;
-	my ( $id ) = sql::execute( undef, undef, q{SELECT id FROM Products WHERE name < (SELECT name FROM Products WHERE Id=?) ORDER BY name DESC LIMIT 1}, $$self{'id'} );
-	$id = $$self{'id'} if ! $id;
+	my ( $id ) = sql::execute( undef, undef, q{SELECT id FROM Products WHERE name < (SELECT name FROM Products WHERE Id=?) ORDER BY name DESC LIMIT 1}, $$self{id} );
+	$id = $$self{id} if ! $id;
 	
 	return new openprint::Product( $id );
 } # end sub previous
 
 sub Photos {
-    if ( ! $_[0]{'album_id'} ) {
+    if ( ! $_[0]{album_id} ) {
         return ();
     } # end if
     return $_[0]->Album()->Photos( );
 } # end sub Photos
 
 sub Album {
-	my $Album = new openprint::Photo_Album( $_[0]{'album_id'} );
+	my $Album = new openprint::Photo_Album( $_[0]{album_id} );
 	if ( ! $Album->id() ) {
-		$Album->name('Photos for product '.$_[0]{'name'});
+		$Album->name('Photos for product '.$_[0]{name});
 	} # end if
     return $Album;
 } # end sub Album
@@ -210,29 +173,29 @@ sub thumbnail_id {
 
 sub thumbnail_html {
 	my $self = shift;
-    if ( ! $$self{'thumbnail_html'} ) {
-        my $Album = new openprint::Photo_Album( $$self{'album_id'} );
+    if ( ! $$self{thumbnail_html} ) {
+        my $Album = new openprint::Photo_Album( $$self{album_id} );
         my $Asset;
-		if ( $Album and $$Album{'id'} ) {
+		if ( $Album and $$Album{id} ) {
 			$Asset = $Album->Thumbnail();
 		} else {
 			$openprint::log->debug("No Album for Product $$self{id} $$self{name}");
 		} # end if
-		if ( $Asset and $$Asset{'id'} ) {
-			$$self{'thumbnail_html'} = sprintf('<a href="/product/view.html?product_id=%1$d" class="thumbnail"><img src="%2$s" alt="%3$s" title="%3$s" /></a>',
-					$$self{'id'}, $Asset->sized_url('thumbnail'), $$self{'name'} );
+		if ( $Asset and $$Asset{id} ) {
+			$$self{thumbnail_html} = sprintf('<a href="/product/view.html?product_id=%1$d" class="thumbnail"><img src="%2$s" alt="%3$s" title="%3$s" /></a>',
+					$$self{id}, $Asset->sized_url('thumbnail'), $$self{name} );
 		} else {
 			$openprint::log->debug("No Asset for Product $$self{id} $$self{name}");
 		} # end if
     } # end if
-    return $$self{'thumbnail_html'};
+    return $$self{thumbnail_html};
 } # end sub thumbnail_html
 
 sub upload {
     my $self = shift;
     my $Album = $self->Album();
     if ( ! $Album->id() ) {
-        $Album->save({ 'Images for product: ' . $$self{'name'} });
+        $Album->save({ 'Images for product: ' . $$self{name} });
         $self->save({'album_id'=>$Album->id()});
     } # end if
     return $Album->upload( @_ );
@@ -242,7 +205,7 @@ sub upload {
 sub can_edit {
 	return 1 if $openprint::session{user_type} eq 'A';
 
-    #if ( $_[0]{id} and $openprint::session{'user_type'} eq 'A' ) {
+    #if ( $_[0]{id} and $openprint::session{user_type} eq 'A' ) {
         #return 1;
     #} # end if
     return 0;

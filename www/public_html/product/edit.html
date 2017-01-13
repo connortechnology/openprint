@@ -118,7 +118,7 @@
 					</li>
 					<li> 
 						<label>Description</label>
-						<input type="text" name="description" value="<? hecho ( $$variable{Product}->description(); ) ?>" />
+			<textarea id="description" name="description" rows="<?echo(count_lines($$variable{Product}->description());)?>" onkeyup="textarea_resize(this);"><? hecho ( $$variable{Product}->description(); ) ?></textarea>
 					</li>
 					<li>
 						<label>Sort</label>

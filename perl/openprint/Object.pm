@@ -1445,7 +1445,7 @@ sub keywords {
 sub Specifications {
 	if ( ! $_[0]{Specifications} ) {
 		if ( $_[0]{id} ) {
-			$_[0]{Specifications} = [ openprint::Object_Specification->find( object_type=> ref $_[0], object_id=>$_[0]->id() ) ];
+			$_[0]{Specifications} = [ openprint::Object_Specification->find( object_type=> ref $_[0], object_id=>$_[0]->id(), order=>'lower(name)' ) ];
 		} else {
 			$_[0]{Specifications} = [];
 		} # end if
