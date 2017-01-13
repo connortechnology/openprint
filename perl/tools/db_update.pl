@@ -2130,8 +2130,13 @@ if ( ! sets::isin( 'user_service_defaults', \@tables ) ) {
 if ( ! sets::isin( 'product_categories', \@tables ) ) {
 	$dbh->do( misc::load_file( $log, q{../openprint/sql/Product_Categories.sql}) );
 } else {
-	my $data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM Product_Categories LIMIT 1', {} );
-	$dbh->do('ALTER TABLE Product_Categories ADD deleted boolean') if $data and ! exists $$data{deleted};
+	my $data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='product_categories'", 'column_name');
+	$dbh->do('ALTER TABLE Product_Categories ADD deleted boolean') if ! exists $$data{deleted};
+	if ( ! exists $$data{parent_id} ) {
+		$log->debug("Adding parent_id t product_categories");
+		$dbh->do('ALTER TABLE Product_Categories ADD parent_id INTEGER') or die $dbh->errstr();
+		$dbh->do('ALTER TABLE Product_Categories ADD FOREIGN KEY (parent_id) REFERENCES Product_Categories (id)') or die $dbh->errstr();
+	}
 } # end if
 
 if ( ! sets::isin( 'products', \@tables ) ) {
