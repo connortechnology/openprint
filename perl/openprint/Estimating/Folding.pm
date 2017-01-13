@@ -719,6 +719,8 @@ $openprint::log->debug("folds from sigimpo") if DEBUG;
 				$Breakdown .= 'Perfect Binder can only fold 4pg cover:<br/>';
 				next;
 			} # end if
+		} elsif ( $capable eq 'For Pocket Folders' ) {
+			next if $Project->Type()->name() ne 'PresentationFolders';
 		} elsif ( $capable eq 'When Stitching' ) {
 			$Breakdown .= 'When Stitching:';
 # Means it's a Stitcher, or a Duplo, so can only do covers
@@ -730,18 +732,29 @@ $openprint::log->debug("folds from sigimpo") if DEBUG;
 				$Breakdown .= 'Not stitching:<br/>';
 				next;
 			} # end if
-		} elsif ( $capable eq 'When Printing' ) {
+		} elsif ( $capable =~ /^When Printing( on .*)$/ ) {
 			$Breakdown .= $capable.':';
-			if ( $$Press{id} != $$Equipment{id} ) {
-				$Breakdown .= "Not printing on $$Equipment{name}:<br/>";
-				next;
-			} # end if
-			if ( $perforating ) {
-				if ( $$specs{"chkOverrideEquipment-$form-$qty_index"} ) {
-					$$specs{alert} .= "Perforating while folding inline may cause tearing.<br/>";
-				} else {
-					$Breakdown .= 'not perforating on this piece of equipment.<br/>';
+			if ( $1 ) {
+				my $press = $1;
+				$press =~ s/^ on //;
+				if ( $press ne $Press->strid() ) {
+					$Breakdown .= "Not printing on $$Press{strid}:<br/>";
 					next;
+				}
+			} else {
+				
+				if ( $$Press{id} != $$Equipment{id} ) {
+					$Breakdown .= "Not printing on $$Equipment{name}:<br/>";
+					next;
+				} # end if
+
+				if ( $perforating ) {
+					if ( $$specs{"chkOverrideEquipment-$form-$qty_index"} ) {
+						$$specs{alert} .= "Perforating while folding inline may cause tearing.<br/>";
+					} else {
+						$Breakdown .= 'not perforating on this piece of equipment.<br/>';
+						next;
+					} # end if
 				} # end if
 			} # end if
 		} # end if
@@ -1647,12 +1660,15 @@ sub load_equipment {
 	my ( $Project ) = @_;
 	my $services = $Project->services();
 
-	my @folding_capable = ('Y');
-	push @folding_capable, 'For Pocket Folders' if $Project->Type()->name() eq 'PresentationFolders';
-	push @folding_capable, 'When PerfectBound' if $$services{PerfectBound};
-	push @folding_capable, 'When Stitching' if ( $$services{SaddleStitching} or $$services{LoopStitching} );
-	push @folding_capable, 'When Printing';
-	@equipment = openprint::Equipment->find( 'useinestimating is null or ='=>1, Specifications=>{'Folding Capable'=>\@folding_capable} );
+	my $Service = $Project->Service( $$services{Folding}[0] ) if $$services{Folding};
+	#push @folding_capable, 'For Pocket Folders' if $Project->Type()->name() eq 'PresentationFolders';
+	#push @folding_capable, 'When PerfectBound' if $$services{PerfectBound};
+	#push @folding_capable, 'When Stitching' if ( $$services{SaddleStitching} or $$services{LoopStitching} );
+	#push @folding_capable, 'When Printing';
+	@equipment = openprint::Equipment->find( 'useinestimating is null or ='=>1, 
+'servicetype_id any'=>$Service->servicetype_id(),
+#Specifications=>{'Folding Capable'=>\@folding_capable}
+ ) if $Service;
 } # end sub load_equipment
 
 sub calc {
