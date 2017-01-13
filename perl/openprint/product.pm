@@ -23,6 +23,12 @@ sub view {
 	if ( $param{product_id} and ! $Product->id() ) {
 		$variable{error} .= "Product $param{product_id} not found.<br/>";
 	} # end if
+	if ( $param{btnFunction} eq 'Delete' ) {
+		if ( ! ( $variable{error} .= $Product->delete() ) ) {
+			$variable{information} .= 'Product deleted successfully.';
+			$Product = $variable{Product} = $Product->next();
+		} # end if
+	}
 } # end sub view
 
 sub edit {
@@ -61,14 +67,15 @@ sub edit {
 		my $NewProduct = $Product->copy();
 		$NewProduct->save();
 
-		(new openprint::Log())->save({action=>'Copy Product', note=>'Original Product ID: ' . $param{product_id} . ' Name: ' . $NewProduct->name(), Object=>$NewProduct });
+		(new openprint::Log())->save({action=>'Copy Product', note=>'New Product ID: ' . $NewProduct->id() . ' Name: ' . $NewProduct->name(), Object=>$Product });
+		(new openprint::Log())->save({action=>'Copy Product', note=>'Original Product ID: ' . $param{product_id} . ' Name: ' . $Product->name(), Object=>$NewProduct });
 
-		foreach my $Price ( openprint::ProductPrice->find( 'product_id' => $param{product_id} ) ) {
+		foreach my $Price ( openprint::ProductPrice->find( product_id => $param{product_id} ) ) {
 			$$Price{product_id} = $NewProduct->id();
 			$$Price{id} = undef;
 			$Price->save();
 		} # end foreach
-		foreach ( $Product->Specification() ) {
+		foreach ( $Product->Specifications() ) {
 			my $Spec = $_->copy();
 			$Spec->save({object_id => $$NewProduct{id} });
 		}
@@ -245,7 +252,10 @@ sub _prices_table_body {
 sub categories {
 } # end sub categories
 
-sub category {
+sub category_view {
+    my $Category = $variable{Category} = new openprint::Product_Category( $param{category_id} );
+}
+sub category_edit {
     my $Category = $variable{Category} = new openprint::Product_Category( $param{category_id} );
     if ( $param{btnFunction} eq 'Save' ) {
        my @changes = $Category->changes( \%param );
