@@ -453,10 +453,10 @@ $openprint::log->debug("AQ Equipment $$Equipment{strid}") if DEBUG;
 							) ) {
 #$openprint::log->debug("In Makereadies: $$Equipment{id} $area");
 				} else {
-					my $MRService = openprint::Service->find_one( name=>$type.' MakeReady');
+					my $MRService = openprint::Service->find_one( name=>$$type{name}.' MakeReady');
 					$MRService = $AllAqueousMakeReady if ! $MRService;
 					if ( ! $MRService ) {
-						$$specs{'hdnBreakdown'.$qty_index} = 'No Make Ready Service for ' . $type . '<br/>';
+						$$specs{'hdnBreakdown'.$qty_index} = 'No Make Ready Service for ' . $$type{name} . '<br/>';
 					} else {
 						%setupPrice = $MRService->get_price( $run_qty, $Equipment );
 					} # end if
