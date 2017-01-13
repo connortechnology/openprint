@@ -152,35 +152,8 @@
 			</fieldset>
 		</div><!--left-->
 		<div class="rightColumn" style="overflow: hidden;">
-			<fieldset><legend>Specifications</legend>
-			<? if ( $$variable{Product}->id() ) ?>
-<table class="List" id="specifications">
-	<tr>
-		<th class="name">Name</th>
-		<th class="value">Value</th>
-		<th class="buttons">
-	<? echo ( button( 'AddSpec', { onclick=>"new Ajax.Request('/product/_specifications.json', { parameters:{func:'Add', product_id: $$variable{Product}{id} } } );", text=>'+', title=>'Add' } ); ) ?>
-		</th>
-	</tr>
-<? echo (
-		my $html;
-		my $rowclass;
-		my $Product = $$variable{Product};
-		my $template = slurp_content('/product/_specification.html');
-		foreach my $Spec ( $Product->Specifications() ) {
-			$html .= variable_substitution( \$template, {
-				Spec		=>	$Spec,
-				rowclass	=>	$rowclass,
-				} );
-			$rowclass = $rowclass ? '' : ' class="colRow"';
-		} # end foreach
-		return $html;
-) ?>
-</table>
-			<? else ( $$variable{Product}->id() ) ?>
-					Please save your new Product before setting specifications.
-			<? endif ( $$variable{Product}->id() ) ?>
-			</fieldset>
+		<?eval($$variable{Object} = $$variable{Product}; )?>
+		<?include(/includes/_specifications_container.html)?>
 		</div>
 		<div class="rightColumn">
     <? eval ( $$variable{Album} = $$variable{Product};) ?>
