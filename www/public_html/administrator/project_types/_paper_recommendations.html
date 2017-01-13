@@ -11,11 +11,13 @@
 	openprint::StockFinish->find();	
 	openprint::StockColour->find();	
 	openprint::StockWeight->find();	
+	my $uri = '/administrator/project_types/edit.html';
 
 	if ( $param{recommended} eq '1' or $param{recommended} eq '' ) {
 		my @recommended_papers = openprint::Paper->find( 
 			columns   =>  '*,(select name from stockbrands where id=brand_id) AS brand, (select name from stockfinishes where id=finish_id) AS finish, (select name from stockcolours where id=colour_id) AS colour, (select name from stockweights where id=weight_id) AS weight',
-			'project_type_id any' => $$variable{'ProjectType'}->id(),
+			'project_type_id any' => $$variable{ProjectType}->id(),
+			( map { $session{$uri.'?'.$_} ? ( $_ => $session{$uri.'?'.$_} ) : () } ( 'brand_id', 'finish_id', 'colour_id', 'weight_id', 'group_id', 'material_id' ) ),
 			order	=>'brand,finish,colour,weight,width,height' );
 		foreach my $Paper ( @recommended_papers ) {
 			next if ! $Paper->Prices();
@@ -26,7 +28,8 @@
 	if ( $param{recommended} eq '0' or $param{recommended} eq '' ) {
 		my @all_papers = openprint::Paper->find(
 			columns	=> '*,(select name from stockbrands where id=brand_id) AS brand, (select name from stockfinishes where id=finish_id) AS finish, (select name from stockcolours where id=colour_id) AS colour, (select name from stockweights where id=weight_id) AS weight',
-			'project_type_id not any' => $$variable{'ProjectType'}->id(),
+			'project_type_id not any' => $$variable{ProjectType}->id(),
+			( map { $session{$uri.'?'.$_} ? ( $_ => $session{$uri.'?'.$_} ) : () } ( 'brand_id', 'finish_id', 'colour_id', 'weight_id', 'group_id', 'material_id' ) ),
 			order	=> 'brand,finish,colour,weight,width,height');
 		foreach my $Paper ( @all_papers ) {
 			#next if $Paper->recommendations();

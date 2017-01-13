@@ -5,9 +5,9 @@
 	<label>Stock Format</label>
 	<? echo ( my $html = '';
 		foreach my $qty_index ( $$variable{Project}->quantity_indexes() ) {
-			$html .= sprintf('<span class="%sColumns">', $$variable{'Columns'} );
+			$html .= sprintf('<span class="%sColumns">', $$variable{Columns} );
 			$html .= radio( 'StockType'.$qty_index, ['Sheet','Sheet', 'Roll','Roll'], $$variable{'StockType'.$qty_index}, { onclick=>'calc(this.form.name);' } );
-			if ( sets::isin( $session{'user_type'}, ['A','E'] ) ) {
+			if ( sets::isin( $session{user_type}, ['A','E'] ) ) {
 				$html .= write_override( 'OverrideStockType'.$qty_index, $$variable{'OverrideStockType'.$qty_index}, '', "calc('f1');" );
 			} else {
 				$html .= sprintf('<input type="hidden" name="OverrideStockType%1$d" value="%2$s" />', $qty_index, $$variable{'OverrideStockType'.$qty_index} );
@@ -28,7 +28,7 @@
     my %find = (
         'width is null'			=>	0,
         'project_type_id any'   =>	$$variable{Project}->type_id(),
-        ( $variable{'Supplied'} ? ( 'supplied'          =>  [ undef, $variable{'Supplied'} ] ) : () ),
+        ( $variable{Supplied} ? ( 'supplied'          =>  [ undef, $variable{Supplied} ] ) : () ),
         );
 	foreach ( @options ) {
 		if ( $$variable{'ddmStock'.$_} ) {
@@ -66,9 +66,9 @@
 					"f1.OverrideStockWidth$qty_index.value='';f1.OverrideStockHeight$qty_index.value='';\$('OverrideStockSize$qty_index').hide();calc('f1');" );
 			$html .= sprintf(q`<br/><span id="OverrideStockSize%1$d">`, $qty_index );
 			$html .= join("\n",
-					input( type=>'float', name=>"OverrideStockWidth$qty_index", value=>$$variable{'OverrideStockWidth'.$qty_index}, onkeyup=>"this.form.ddmStockSheetSize$qty_index.selectedIndex=0;calc(this.form.name);", oninput=>'this.onkeyup();' ),
+					input( type=>'float', name=>"OverrideStockWidth$qty_index", value=>$$variable{'OverrideStockWidth'.$qty_index}, oninput=>"this.form.ddmStockSheetSize$qty_index.selectedIndex=0;calc(this.form.name);", oninput=>'this.oninput();' ),
 					' x ',
-					input( type=>'float', name=>"OverrideStockHeight$qty_index", value=>$$variable{'OverrideStockHeight'.$qty_index}, onkeyup=>"this.form.ddmStockSheetSize$qty_index.selectedIndex=0;calc(this.form.name);", oninput=>'this.onkeyup();' ),
+					input( type=>'float', name=>"OverrideStockHeight$qty_index", value=>$$variable{'OverrideStockHeight'.$qty_index}, oninput=>"this.form.ddmStockSheetSize$qty_index.selectedIndex=0;calc(this.form.name);", oninput=>'this.oninput();' ),
 			);
 			$html .= '</span>';
 		} else {
@@ -93,23 +93,23 @@
 ) ?>
 </li>
 <li><label>Minimum Stock Size</label>
-<? eval ( $$variable{'QTYIndex'} = 1 ) ?>
-<? while ( $$variable{'QTYIndex'} <= 3 ) ?>
-<? if ( $$variable{Project}->{'quantity'.$$variable{'QTYIndex'}} ) ?>
+<? eval ( $$variable{QTYIndex} = 1 ) ?>
+<? while ( $$variable{QTYIndex} <= 3 ) ?>
+<? if ( $$variable{Project}->{'quantity'.$$variable{QTYIndex}} ) ?>
 	<span class="<?Columns?>Columns">
 	<span id="minimum_stock_size<?QTYIndex?>"></span>
 	</span>
-<? endif ( $$variable{Project}->{'quantity'.$$variable{'QTYIndex'}} ) ?>
-		<? eval ( $$variable{'QTYIndex'} += 1 ) ?>
-<? endwhile ( $$variable{'QTYIndex'} <= 3 ) ?>
+<? endif ( $$variable{Project}->{'quantity'.$$variable{QTYIndex}} ) ?>
+		<? eval ( $$variable{QTYIndex} += 1 ) ?>
+<? endwhile ( $$variable{QTYIndex} <= 3 ) ?>
 </li>
 <li class="cutoff">
 	<label>Cut Off</label>
 	<? echo (
 		my $html;
 		foreach my $qty_index ( $$variable{Project}->quantity_indexes() ) {
-			$html .= '<span class="'.$$variable{'Columns'}.'Columns">';
-			$html .= input( type=>'float', id=>"CutOff$qty_index", name=>"CutOff$qty_index", value=>$$variable{'CutOff'.$qty_index}, onkeyup=>'calc(this.form.name);' );
+			$html .= '<span class="'.$$variable{Columns}.'Columns">';
+			$html .= input( type=>'float', id=>"CutOff$qty_index", name=>"CutOff$qty_index", value=>$$variable{'CutOff'.$qty_index}, oninput=>'calc(this.form.name);' );
 			$html .= write_override( 'OverrideCutOff'.$qty_index, $$variable{'OverrideCutOff'.$qty_index},'', "calc('f1');" );
 			$html .= '</span>';
 		} # end foreah qty_index
@@ -117,86 +117,86 @@
 	) ?>
 </li>
 <li>
-<? eval ( $$variable{'QTYIndex'} = 1 ) ?>
-<? while ( $$variable{'QTYIndex'} <= 3 ) ?>
-<? if ( $$variable{Project}->{'quantity'.$$variable{'QTYIndex'}} ) ?>
+<? eval ( $$variable{QTYIndex} = 1 ) ?>
+<? while ( $$variable{QTYIndex} <= 3 ) ?>
+<? if ( $$variable{Project}->{'quantity'.$$variable{QTYIndex}} ) ?>
 	<span id="PaperMessage<?QTYIndex?>" class="<?Columns?>Columns"> </span>
-<? endif ( $$variable{Project}->{'quantity'.$$variable{'QTYIndex'}} ) ?>
-		<? eval ( $$variable{'QTYIndex'} += 1 ) ?>
-<? endwhile ( $$variable{'QTYIndex'} <= 3 ) ?>
+<? endif ( $$variable{Project}->{'quantity'.$$variable{QTYIndex}} ) ?>
+		<? eval ( $$variable{QTYIndex} += 1 ) ?>
+<? endwhile ( $$variable{QTYIndex} <= 3 ) ?>
 </li>
-<? if ( ($$variable{'Mode'} eq 'Easy') or $$variable{'txtSignatureType'} or sets::isin( $$variable{'ProjectType'}->name(), ['Envelopes' ] ) ) ?>
+<? if ( ($$variable{Mode} eq 'Easy') or $$variable{txtSignatureType} or sets::isin( $$variable{ProjectType}->name(), ['Envelopes' ] ) ) ?>
 <li>
-<? eval ( $$variable{'QTYIndex'} = 1 ) ?>
-<? while ( $$variable{'QTYIndex'} <= 3 ) ?>
-<? if ( $$variable{Project}->{'quantity'.$$variable{'QTYIndex'}} ) ?>
-	<input type="hidden" name="ddmBleedSize<?QTYIndex?>" value="<? echo ( $$variable{'ddmBleedSize'.$$variable{'QTYIndex'}} ) ?>" />
-<? endif ( $$variable{Project}->{'quantity'.$$variable{'QTYIndex'}} ) ?>
-		<? eval ( $$variable{'QTYIndex'} += 1 ) ?>
-<? endwhile ( $$variable{'QTYIndex'} <= 3 ) ?>
+<? eval ( $$variable{QTYIndex} = 1 ) ?>
+<? while ( $$variable{QTYIndex} <= 3 ) ?>
+<? if ( $$variable{Project}->{'quantity'.$$variable{QTYIndex}} ) ?>
+	<input type="hidden" name="ddmBleedSize<?QTYIndex?>" value="<? echo ( $$variable{'ddmBleedSize'.$$variable{QTYIndex}} ) ?>" />
+<? endif ( $$variable{Project}->{'quantity'.$$variable{QTYIndex}} ) ?>
+		<? eval ( $$variable{QTYIndex} += 1 ) ?>
+<? endwhile ( $$variable{QTYIndex} <= 3 ) ?>
 </li>
-<? else ( ($$variable{'Mode'} eq 'Easy') or $$variable{'txtSignatureType'} or sets::isin( $$variable{'ProjectType'}->name(), ['Envelopes' ] ) ) ?>
+<? else ( ($$variable{Mode} eq 'Easy') or $$variable{txtSignatureType} or sets::isin( $$variable{ProjectType}->name(), ['Envelopes' ] ) ) ?>
 <li>
 	<label>Bleed Size</label>
-<? eval ( $$variable{'QTYIndex'} = 1 ) ?>
-<? while ( $$variable{'QTYIndex'} <= 3 ) ?>
-<? if ( $$variable{Project}->{'quantity'.$$variable{'QTYIndex'}} ) ?>
+<? eval ( $$variable{QTYIndex} = 1 ) ?>
+<? while ( $$variable{QTYIndex} <= 3 ) ?>
+<? if ( $$variable{Project}->{'quantity'.$$variable{QTYIndex}} ) ?>
 	<span class="<?Columns?>Columns">
 		<select name="ddmBleedSize<?QTYIndex?>" size="1" onchange="calc(this.form.name);" >
 <? echo (
 	my @options = ( '', 'No Bleed' );
-	if ( $config{'BleedOptions'} ) {
-		push @options, split(',', $config{'BleedOptions'} );
+	if ( $config{BleedOptions} ) {
+		push @options, split(',', $config{BleedOptions} );
 	} else {
 		push @options, ( 0.25, '1/4"', 0.125, '1/8"', 0.0625, '1/16"' );
 	} # end if
-	return make_drop_down( \@options, $$variable{'ddmBleedSize'.$$variable{'QTYIndex'}}, { encode=>1 } );
+	return make_drop_down( \@options, $$variable{'ddmBleedSize'.$$variable{QTYIndex}}, { encode=>1 } );
 ) ?>
 		</select>
-		<? echo ( write_override( 'chkOverrideBleedSize'.$$variable{'QTYIndex'}, $$variable{'chkOverrideBleedSize'.$$variable{'QTYIndex'}},'',"calc('f1');" ); ) ?>
+		<? echo ( write_override( 'chkOverrideBleedSize'.$$variable{QTYIndex}, $$variable{'chkOverrideBleedSize'.$$variable{QTYIndex}},'',"calc('f1');" ); ) ?>
 	</span>
-<? endif ( $$variable{Project}->{'quantity'.$$variable{'QTYIndex'}} ) ?>
-		<? eval ( $$variable{'QTYIndex'} += 1 ) ?>
-<? endwhile ( $$variable{'QTYIndex'} <= 3 ) ?>
+<? endif ( $$variable{Project}->{'quantity'.$$variable{QTYIndex}} ) ?>
+		<? eval ( $$variable{QTYIndex} += 1 ) ?>
+<? endwhile ( $$variable{QTYIndex} <= 3 ) ?>
 </li>
-<? endif ( ($$variable{'Mode'} eq 'Easy') or $$variable{'txtSignatureType'} or sets::isin( $$variable{'ProjectType'}->name(), ['Envelopes' ] ) ) ?>
+<? endif ( ($$variable{Mode} eq 'Easy') or $$variable{txtSignatureType} or sets::isin( $$variable{ProjectType}->name(), ['Envelopes' ] ) ) ?>
 
-<? if ( $$variable{'Mode'} eq 'Easy' ) ?>
-<? eval ( $$variable{'QTYIndex'} = 1 ) ?>
-<? while ( $$variable{'QTYIndex'} <= 3 ) ?>
-<? if ( $$variable{Project}->{'quantity'.$$variable{'QTYIndex'}} ) ?>
-<input type="hidden" id="ddmRunStyle<?QTYIndex?>" name="ddmRunStyle<?QTYIndex?>" value="<? echo ( $$variable{'ddmRunStyle'.$$variable{'QTYIndex'}} ) ?>"/>
-<? endif ( $$variable{Project}->{'quantity'.$$variable{'QTYIndex'}} ) ?>
-		<? eval ( $$variable{'QTYIndex'} += 1 ) ?>
-<? endwhile ( $$variable{'QTYIndex'} <= 3 ) ?>
-<? else ( $$variable{'Mode'} eq 'Easy' ) ?>
+<? if ( $$variable{Mode} eq 'Easy' ) ?>
+<? eval ( $$variable{QTYIndex} = 1 ) ?>
+<? while ( $$variable{QTYIndex} <= 3 ) ?>
+<? if ( $$variable{Project}->{'quantity'.$$variable{QTYIndex}} ) ?>
+<input type="hidden" id="ddmRunStyle<?QTYIndex?>" name="ddmRunStyle<?QTYIndex?>" value="<? echo ( $$variable{'ddmRunStyle'.$$variable{QTYIndex}} ) ?>"/>
+<? endif ( $$variable{Project}->{'quantity'.$$variable{QTYIndex}} ) ?>
+		<? eval ( $$variable{QTYIndex} += 1 ) ?>
+<? endwhile ( $$variable{QTYIndex} <= 3 ) ?>
+<? else ( $$variable{Mode} eq 'Easy' ) ?>
 <li>
 	<label><? echo ( writeTip( 'Run style' ); ) ?></label>
-<? eval ( $$variable{'QTYIndex'} = 1 ) ?>
-<? while ( $$variable{'QTYIndex'} <= 3 ) ?>
-<? if ( $$variable{Project}->{'quantity'.$$variable{'QTYIndex'}} ) ?>
+<? eval ( $$variable{QTYIndex} = 1 ) ?>
+<? while ( $$variable{QTYIndex} <= 3 ) ?>
+<? if ( $$variable{Project}->{'quantity'.$$variable{QTYIndex}} ) ?>
 	<span class="<?Columns?>Columns">
 		<select name="ddmRunStyle<?QTYIndex?>" size="1" onchange="calc(this.form.name);">
 			<option value="">No runstyle selected</option>
-			<? echo ( make_drop_down( $$variable{'RunStyleOptions'}, $$variable{'ddmRunStyle'.$$variable{'QTYIndex'}} ); ) ?>
+			<? echo ( make_drop_down( $$variable{RunStyleOptions}, $$variable{'ddmRunStyle'.$$variable{QTYIndex}} ); ) ?>
 		</select>
-		<? echo ( write_override( 'chkOverrideRunStyle'.$$variable{'QTYIndex'}, $$variable{'chkOverrideRunStyle'.$$variable{'QTYIndex'}}, '', q`calc('f1');` ); ) ?>
+		<? echo ( write_override( 'chkOverrideRunStyle'.$$variable{QTYIndex}, $$variable{'chkOverrideRunStyle'.$$variable{QTYIndex}}, '', q`calc('f1');` ); ) ?>
 	</span>
-<? endif ( $$variable{Project}->{'quantity'.$$variable{'QTYIndex'}} ) ?>
-<? eval ( $$variable{'QTYIndex'} += 1 ) ?>
-<? endwhile ( $$variable{'QTYIndex'} <= 3 ) ?>
+<? endif ( $$variable{Project}->{'quantity'.$$variable{QTYIndex}} ) ?>
+<? eval ( $$variable{QTYIndex} += 1 ) ?>
+<? endwhile ( $$variable{QTYIndex} <= 3 ) ?>
 </li>
-<? endif ( $$variable{'Mode'} eq 'Easy' ) ?>
+<? endif ( $$variable{Mode} eq 'Easy' ) ?>
 
-<? if ( $$variable{'Mode'} eq 'Easy' ) ?>
-<? eval ( $$variable{'QTYIndex'} = 1 ) ?>
-<? while ( $$variable{'QTYIndex'} <= 3 ) ?>
-<? if ( $$variable{Project}->{'quantity'.$$variable{'QTYIndex'}} ) ?>
-<input type="hidden" id="ddmPress<?QTYIndex?>" name="ddmPress<?QTYIndex?>" value="<? echo ( $$variable{'ddmPress'.$$variable{'QTYIndex'}} ) ?>" />
-<? endif ( $$variable{Project}->{'quantity'.$$variable{'QTYIndex'}} ) ?>
-        <? eval ( $$variable{'QTYIndex'} += 1 ) ?>
-<? endwhile ( $$variable{'QTYIndex'} <= 3 ) ?>
-<? else ( $$variable{'Mode'} eq 'Easy' ) ?>
+<? if ( $$variable{Mode} eq 'Easy' ) ?>
+<? eval ( $$variable{QTYIndex} = 1 ) ?>
+<? while ( $$variable{QTYIndex} <= 3 ) ?>
+<? if ( $$variable{Project}->{'quantity'.$$variable{QTYIndex}} ) ?>
+<input type="hidden" id="ddmPress<?QTYIndex?>" name="ddmPress<?QTYIndex?>" value="<? echo ( $$variable{'ddmPress'.$$variable{QTYIndex}} ) ?>" />
+<? endif ( $$variable{Project}->{'quantity'.$$variable{QTYIndex}} ) ?>
+        <? eval ( $$variable{QTYIndex} += 1 ) ?>
+<? endwhile ( $$variable{QTYIndex} <= 3 ) ?>
+<? else ( $$variable{Mode} eq 'Easy' ) ?>
 <li>
 	<label>Press</label>
 	<? echo (
@@ -204,7 +204,7 @@
 		my @options = map { $_->strid(), $_->name() } openprint::Equipment->find('category any'=>'Printing','useinestimating is null or ='=>1, order=>'lower(strname)');
 		foreach my $qty_index ( $$variable{Project}->quantity_indexes() ) {
 			$html .= sprintf( q`<span class="%sColumns"><select name="ddmPress%d" size="1" onchange="calc(this.form.name);"><option value="">Press Options</option>%s</select>%s</span>`,
-				$$variable{'Columns'}, $qty_index, make_drop_down( \@options, $$variable{"ddmPress$qty_index"}, { encode=>1 } ),
+				$$variable{Columns}, $qty_index, make_drop_down( \@options, $$variable{"ddmPress$qty_index"}, { encode=>1 } ),
 				write_override( 'chkOverridePress'.$qty_index, $$variable{'chkOverridePress'.$qty_index},'',"calc('f1');" ),
 			);
 		} # end foreach qty_index
@@ -225,7 +225,7 @@
 		} # end foreach
 		my $html = '';
 		foreach my $qty_index ( $$variable{Project}->quantity_indexes() ) {
-			$html .= sprintf('<span class="%1$sColumns"><select name="PrintingType%2$d" size="1" onchange="calc(this.form.name);">', $$variable{'Columns'}, $qty_index );
+			$html .= sprintf('<span class="%1$sColumns"><select name="PrintingType%2$d" size="1" onchange="calc(this.form.name);">', $$variable{Columns}, $qty_index );
 			$html .= make_drop_down( [ map { $_, $printingtypes{$_} } sort keys %printingtypes ], $$variable{'PrintingType'.$qty_index} );
 			$html .= '</select>';
 			$html .= write_override( 'OverridePrintingType'.$qty_index, $$variable{'OverridePrintingType'.$qty_index},"calc('f1');","calc('f1');" );
@@ -235,11 +235,11 @@
 	) ?>
 	</li>
 <? endif ( 1 < sql::execute( undef, undef, q{SELECT DISTINCT strValue FROM tbl_Equipment_Specifications WHERE strName='Printing Type' } ) ) ?>
-<? endif ( $$variable{'Mode'} eq 'Easy' ) ?>
+<? endif ( $$variable{Mode} eq 'Easy' ) ?>
 </ul>
 <? echo (
 	my $html;
-	if ( $$variable{'Mode'} eq 'Easy' ) {
+	if ( $$variable{Mode} eq 'Easy' ) {
 		foreach my $qty_index ( $$variable{Project}->quantity_indexes() ) {
 			$html .= input( type=>'hidden', name=>'rdbPlateType'.$qty_index, value=>'CTP' );
 			$html .= input( type=>'hidden', name=>'PlateID'.$qty_index, value=>html_escape($$variable{'PlateID'.$qty_index}) );
@@ -258,7 +258,7 @@
 			foreach my $qty_index ( $$variable{Project}->quantity_indexes() ) {
 				$html .= '<span class="'.$$variable{Columns}.'Columns">';
 				$html .= radio( 'rdbPlateType'.$qty_index, [ map { $_, $_ } @PlateTypes ], html_escape($$variable{'rdbPlateType'.$qty_index}), { onclick=>q`calc('f1');`, default=>'CTP' } );
-				$html .= write_override( 'chkOverridePlateType'.$$variable{'QTYIndex'}, $$variable{'chkOverridePlateType'.$$variable{'QTYIndex'}},'',"calc('f1');" );
+				$html .= write_override( 'chkOverridePlateType'.$$variable{QTYIndex}, $$variable{'chkOverridePlateType'.$$variable{QTYIndex}},'',"calc('f1');" );
 				$html .= '</span>';
 				$html .= input( type=>'hidden', name=>'PlateID'.$qty_index, value=>html_escape($$variable{'PlateID'.$qty_index}) );
 			} # end foreach
@@ -278,8 +278,8 @@
 		<? echo ( 
 			my $html;
 			foreach my $qty_index ( $$variable{Project}->quantity_indexes() ) {
-				$html .= '<span class="'.$$variable{'Columns'}.'Columns">';
-				$html .= input( name=>"txtPlateQuantity$qty_index", value=>$$variable{'txtPlateQuantity'.$qty_index}, type=>'integer', onkeyup=>'calc(this.form.name);', readonly=>1 );
+				$html .= '<span class="'.$$variable{Columns}.'Columns">';
+				$html .= input( name=>"txtPlateQuantity$qty_index", value=>$$variable{'txtPlateQuantity'.$qty_index}, type=>'integer', oninput=>'calc(this.form.name);', readonly=>1 );
 				$html .= input( name=>"BlankPlateQuantity$qty_index", value=>$$variable{'BlankPlateQuantity'.$qty_index}, type=>'hidden' );
 				$html .= '</span>';
 			} # end foreach qty_index
@@ -295,9 +295,9 @@
 			my $group_plate_changes = $$project_specs{"txtPlateChangeQuantity-$$variable{Group}"};
 
 			foreach my $qty_index ( $$variable{Project}->quantity_indexes() ) {
-				$html .= '<span class="'.$$variable{'Columns'}.'Columns">';
+				$html .= '<span class="'.$$variable{Columns}.'Columns">';
 				
-				$html .= input( name=>"txtPlateChangeQuantity$qty_index", value=>$$variable{'txtPlateChangeQuantity'.$qty_index}, type=>'integer', onkeyup=>'calc(this.form.name);' );
+				$html .= input( name=>"txtPlateChangeQuantity$qty_index", value=>$$variable{'txtPlateChangeQuantity'.$qty_index}, type=>'integer', oninput=>'calc(this.form.name);' );
 				$html .=  ( $group_plate_changes ? ' + ' . $group_plate_changes : '' );
 				$html .= '</span>';
 			} # end foreach qty_index
@@ -306,14 +306,14 @@
 	</li>
 </ul>
 <ul>
-<? if ( sets::isin( $session{'user_type'}, [ 'E','A' ] ) ) ?>
+<? if ( sets::isin( $session{user_type}, [ 'E','A' ] ) ) ?>
 <li>
-	<label>Setup</label>
+	<label>Setup Overs</label>
 	<? echo ( 
 		my $html;
 		foreach my $qty_index ( $$variable{Project}->quantity_indexes() ) {
-			$html .= '<span class="'.$$variable{'Columns'}.'Columns">';
-			$html .= input( id=>"OverSetup$qty_index", name=>"OverSetup$qty_index", value=>$$variable{'OverSetup'.$qty_index}, type=>'cardinal', onkeyup=>"calc(this.form.name);" );
+			$html .= '<span class="'.$$variable{Columns}.'Columns">';
+			$html .= input( id=>"OverSetup$qty_index", name=>"OverSetup$qty_index", value=>$$variable{'OverSetup'.$qty_index}, type=>'cardinal', oninput=>"calc(this.form.name);" );
 			$html .= write_override( 'OverrideSetup'.$qty_index, $$variable{'OverrideSetup'.$qty_index},'',"calc('f1');" );
 			$html .= '</span>';
 		} # end foreach qty_index
@@ -321,12 +321,12 @@
 	) ?>
 </li>
 <li>
-	<label>Run</label>
+	<label>Run Overs</label>
 	<? echo ( 
 		my $html;
 		foreach my $qty_index ( $$variable{Project}->quantity_indexes() ) {
-			$html .= '<span class="'.$$variable{'Columns'}.'Columns">';
-			$html .= input( id=>"OverRun$qty_index", name=>"OverRun$qty_index", value=>$$variable{'OverRun'.$qty_index}, type=>'cardinal', onkeyup=>'calc(this.form.name);' );
+			$html .= '<span class="'.$$variable{Columns}.'Columns">';
+			$html .= input( id=>"OverRun$qty_index", name=>"OverRun$qty_index", value=>$$variable{'OverRun'.$qty_index}, type=>'cardinal', oninput=>'calc(this.form.name);' );
 			$html .= write_override( 'OverrideRun'.$qty_index, $$variable{'OverrideRun'.$qty_index},'',"calc('f1');" );
 			$html .= '</span>';
 		} # end foreach qty_index
@@ -334,92 +334,92 @@
 	) ?>
 </li>
 <li>
-	<label>Total</label>
+	<label>Total Overs</label>
 	<? echo ( 
 		my $html;
 		foreach my $qty_index ( $$variable{Project}->quantity_indexes() ) {
-			$html .= '<span class="'.$$variable{'Columns'}.'Columns">';
-			$html .= input( id=>"OverTotal$qty_index", name=>"OverTotal$qty_index", value=>$$variable{'OverTotal'.$qty_index}, type=>'cardinal', onkeyup=>'calc(this.form.name);' );
+			$html .= '<span class="'.$$variable{Columns}.'Columns">';
+			$html .= input( id=>"OverTotal$qty_index", name=>"OverTotal$qty_index", value=>$$variable{'OverTotal'.$qty_index}, type=>'cardinal', oninput=>'calc(this.form.name);' );
 			$html .= '</span>';
 		} # end foreach qty_index
 		return $html;
 	) ?>
 </li>
-<? else ( sets::isin( $session{'user_type'}, [ 'E','A' ] ) ) ?>
-	<? eval ( $$variable{'QTYIndex'} = 1 ) ?>
-	<? while ( $$variable{'QTYIndex'} <= 3 ) ?>
-		<? if ( $$variable{Project}->{'quantity'.$$variable{'QTYIndex'}} ) ?>
+<? else ( sets::isin( $session{user_type}, [ 'E','A' ] ) ) ?>
+	<? eval ( $$variable{QTYIndex} = 1 ) ?>
+	<? while ( $$variable{QTYIndex} <= 3 ) ?>
+		<? if ( $$variable{Project}->{'quantity'.$$variable{QTYIndex}} ) ?>
 
-		<input type="hidden" id="OverSetup<?QTYIndex?>" name="OverSetup<?QTYIndex?>" value="<? echo ( $$variable{'OverSetup'.$$variable{'QTYIndex'}} ) ?>" />
-		<input type="hidden" id="OverrideSetup<?QTYIndex?>" name="OverrideSetup<?QTYIndex?>" value="<? echo (  $$variable{'OverrideSetup'.$$variable{'QTYIndex'}} ) ?>" />
-		<input type="hidden" id="OverBase<?QTYIndex?>" name="OverBase<?QTYIndex?>" value="<? echo ( $$variable{'OverBase'.$$variable{'QTYIndex'}} ) ?>" />
-		<input type="hidden" id="OverrideBase<?QTYIndex?>" name="OverrideBase<?QTYIndex?>" value="<? echo (  $$variable{'OverrideBase'.$$variable{'QTYIndex'}} ) ?>" />
-		<input type="hidden" id="OverRun<?QTYIndex?>" name="OverRun<?QTYIndex?>" value="<? echo ( $$variable{'OverRun'.$$variable{'QTYIndex'}} ) ?>" />
-		<input type="hidden" id="OverrideRun<?QTYIndex?>" name="OverrideRun<?QTYIndex?>" value="<? echo (  $$variable{'OverrideRun'.$$variable{'QTYIndex'}} ) ?>" />
-		<input type="hidden" id="OverTotal<?QTYIndex?>" name="OverTotal<?QTYIndex?>" value="<? echo ( $$variable{'OverTotal'.$$variable{'QTYIndex'}} ) ?>" />
-		<? endif ( $$variable{Project}->{'quantity'.$$variable{'QTYIndex'}} ) ?>
-		<? eval ( $$variable{'QTYIndex'} += 1 ) ?>
-	<? endwhile ( $$variable{'QTYIndex'} <= 3 ) ?>
-<? endif ( sets::isin( $session{'user_type'}, [ 'E','A' ] ) ) ?>
+		<input type="hidden" id="OverSetup<?QTYIndex?>" name="OverSetup<?QTYIndex?>" value="<? echo ( $$variable{'OverSetup'.$$variable{QTYIndex}} ) ?>" />
+		<input type="hidden" id="OverrideSetup<?QTYIndex?>" name="OverrideSetup<?QTYIndex?>" value="<? echo (  $$variable{'OverrideSetup'.$$variable{QTYIndex}} ) ?>" />
+		<input type="hidden" id="OverBase<?QTYIndex?>" name="OverBase<?QTYIndex?>" value="<? echo ( $$variable{'OverBase'.$$variable{QTYIndex}} ) ?>" />
+		<input type="hidden" id="OverrideBase<?QTYIndex?>" name="OverrideBase<?QTYIndex?>" value="<? echo (  $$variable{'OverrideBase'.$$variable{QTYIndex}} ) ?>" />
+		<input type="hidden" id="OverRun<?QTYIndex?>" name="OverRun<?QTYIndex?>" value="<? echo ( $$variable{'OverRun'.$$variable{QTYIndex}} ) ?>" />
+		<input type="hidden" id="OverrideRun<?QTYIndex?>" name="OverrideRun<?QTYIndex?>" value="<? echo (  $$variable{'OverrideRun'.$$variable{QTYIndex}} ) ?>" />
+		<input type="hidden" id="OverTotal<?QTYIndex?>" name="OverTotal<?QTYIndex?>" value="<? echo ( $$variable{'OverTotal'.$$variable{QTYIndex}} ) ?>" />
+		<? endif ( $$variable{Project}->{'quantity'.$$variable{QTYIndex}} ) ?>
+		<? eval ( $$variable{QTYIndex} += 1 ) ?>
+	<? endwhile ( $$variable{QTYIndex} <= 3 ) ?>
+<? endif ( sets::isin( $session{user_type}, [ 'E','A' ] ) ) ?>
 </ul>
-<? endif ( $$variable{'Mode'} eq 'Easy' ) ?>
+<? endif ( $$variable{Mode} eq 'Easy' ) ?>
 <ul>
 <li class="stockquantity">
 	<label>Stock Quantity</label>
-<? eval ( $$variable{'QTYIndex'} = 1 ) ?>
-<? while ( $$variable{'QTYIndex'} <= 3 ) ?>
-<? if ( $$variable{Project}->{'quantity'.$$variable{'QTYIndex'}} ) ?>
+<? eval ( $$variable{QTYIndex} = 1 ) ?>
+<? while ( $$variable{QTYIndex} <= 3 ) ?>
+<? if ( $$variable{Project}->{'quantity'.$$variable{QTYIndex}} ) ?>
 	<span class="<?Columns?>Columns">
 		<input type="text" name="txtPressSheetQty<?QTYIndex?>" readonly="readonly" />
 	</span>
-<? endif ( $$variable{Project}->{'quantity'.$$variable{'QTYIndex'}} ) ?>
-<? eval ( $$variable{'QTYIndex'} += 1 ) ?>
-<? endwhile ( $$variable{'QTYIndex'} <= 3 ) ?>
+<? endif ( $$variable{Project}->{'quantity'.$$variable{QTYIndex}} ) ?>
+<? eval ( $$variable{QTYIndex} += 1 ) ?>
+<? endwhile ( $$variable{QTYIndex} <= 3 ) ?>
 </li>
-<? if ( sets::isin( $$variable{'ProjectType'}->name(), [ 'PresentationFolders','Envelopes' ] ) ) ?>
-<? eval ( $$variable{'QTYIndex'} = 1 ) ?>
-<? while ( $$variable{'QTYIndex'} <= 3 ) ?>
-<? if ( $$variable{Project}->{'quantity'.$$variable{'QTYIndex'}} ) ?>
+<? if ( sets::isin( $$variable{ProjectType}->name(), [ 'PresentationFolders','Envelopes' ] ) ) ?>
+<? eval ( $$variable{QTYIndex} = 1 ) ?>
+<? while ( $$variable{QTYIndex} <= 3 ) ?>
+<? if ( $$variable{Project}->{'quantity'.$$variable{QTYIndex}} ) ?>
 		<input type="hidden" name="rdbGrainDirection<?QTYIndex?>" value="" />
-<? endif ( $$variable{Project}->{'quantity'.$$variable{'QTYIndex'}} ) ?>
-<? eval ( $$variable{'QTYIndex'} += 1 ) ?>
-<? endwhile ( $$variable{'QTYIndex'} <= 3 ) ?>
-<? else ( sets::isin( $$variable{'ProjectType'}->name(), [ 'PresentationFolders','Envelopes' ] ) ) ?>
+<? endif ( $$variable{Project}->{'quantity'.$$variable{QTYIndex}} ) ?>
+<? eval ( $$variable{QTYIndex} += 1 ) ?>
+<? endwhile ( $$variable{QTYIndex} <= 3 ) ?>
+<? else ( sets::isin( $$variable{ProjectType}->name(), [ 'PresentationFolders','Envelopes' ] ) ) ?>
 <li>
 	<label>Grain direction</label>
-<? eval ( $$variable{'QTYIndex'} = 1 ) ?>
-<? while ( $$variable{'QTYIndex'} <= 3 ) ?>
-<? if ( $$variable{Project}->{'quantity'.$$variable{'QTYIndex'}} ) ?>
+<? eval ( $$variable{QTYIndex} = 1 ) ?>
+<? while ( $$variable{QTYIndex} <= 3 ) ?>
+<? if ( $$variable{Project}->{'quantity'.$$variable{QTYIndex}} ) ?>
 	<span class="<?Columns?>Columns">
-		<? if ( $$variable{'txtSignatureType'} eq 'Interior Pages' ) ?>
-		<input type="checkbox" name="MatchGrain<?QTYIndex?>" id="MatchGrain<?QTYIndex?>" value="Y" <? echo ( checked( $$variable{'MatchGrain'.$$variable{'QTYIndex'}} eq 'Y' ); ) ?> onclick="calc(this.form.name);" /><label class="radio" for="MatchGrain<?QTYIndex?>">Match Other <?txtSignatureType?></label><br/>
-		<? endif ( $$variable{'txtSignatureType'} eq 'Interior Pages' ) ?>
+		<? if ( $$variable{txtSignatureType} eq 'Interior Pages' ) ?>
+		<input type="checkbox" name="MatchGrain<?QTYIndex?>" id="MatchGrain<?QTYIndex?>" value="Y" <? echo ( checked( $$variable{'MatchGrain'.$$variable{QTYIndex}} eq 'Y' ); ) ?> onclick="calc(this.form.name);" /><label class="radio" for="MatchGrain<?QTYIndex?>">Match Other <?txtSignatureType?></label><br/>
+		<? endif ( $$variable{txtSignatureType} eq 'Interior Pages' ) ?>
 		<input type="radio" id="rdbGrainDirection<?QTYIndex?>Width" name="rdbGrainDirection<?QTYIndex?>" value="width" onclick="calc(this.form.name);"
-<? echo ( checked( $$variable{'rdbGrainDirection'.$$variable{'QTYIndex'}} eq 'width' ); ) ?>
+<? echo ( checked( $$variable{'rdbGrainDirection'.$$variable{QTYIndex}} eq 'width' ); ) ?>
  />
 		<label class="radio" for="rdbGrainDirection<?QTYIndex?>Width">Width</label>
 		<input type="radio" id="rdbGrainDirection<?QTYIndex?>Height" name="rdbGrainDirection<?QTYIndex?>" value="height" onclick="calc(this.form.name);"
-<? echo ( checked( $$variable{'rdbGrainDirection'.$$variable{'QTYIndex'}} eq 'height' ); ) ?>
+<? echo ( checked( $$variable{'rdbGrainDirection'.$$variable{QTYIndex}} eq 'height' ); ) ?>
  />
 		<label class="radio" for="rdbGrainDirection<?QTYIndex?>Height">Height</label>
 		<br/>
 		<input type="radio" id="rdbGrainDirection<?QTYIndex?>Long" name="rdbGrainDirection<?QTYIndex?>" value="Long" onclick="calc(this.form.name);"
-<? echo ( checked( $$variable{'rdbGrainDirection'.$$variable{'QTYIndex'}} eq 'Long' ); ) ?>
+<? echo ( checked( $$variable{'rdbGrainDirection'.$$variable{QTYIndex}} eq 'Long' ); ) ?>
  />
 		<label class="radio" for="rdbGrainDirection<?QTYIndex?>Long">Long</label>
 		<input type="radio" id="rdbGrainDirection<?QTYIndex?>Short" name="rdbGrainDirection<?QTYIndex?>" value="Short" onclick="calc(this.form.name);"
-<? echo ( checked( $$variable{'rdbGrainDirection'.$$variable{'QTYIndex'}} eq 'Short' ); ) ?>
+<? echo ( checked( $$variable{'rdbGrainDirection'.$$variable{QTYIndex}} eq 'Short' ); ) ?>
  />
 		<label class="radio" for="rdbGrainDirection<?QTYIndex?>Short">Short</label>
-		<? echo ( write_override( 'chkOverrideGrainDirection'.$$variable{'QTYIndex'}, $$variable{'chkOverrideGrainDirection'.$$variable{'QTYIndex'}},'',"calc('f1');" ); ) ?>
+		<? echo ( write_override( 'chkOverrideGrainDirection'.$$variable{QTYIndex}, $$variable{'chkOverrideGrainDirection'.$$variable{QTYIndex}},'',"calc('f1');" ); ) ?>
 	</span>
-<? endif ( $$variable{Project}->{'quantity'.$$variable{'QTYIndex'}} ) ?>
-<? eval ( $$variable{'QTYIndex'} += 1 ) ?>
-<? endwhile ( $$variable{'QTYIndex'} <= 3 ) ?>
+<? endif ( $$variable{Project}->{'quantity'.$$variable{QTYIndex}} ) ?>
+<? eval ( $$variable{QTYIndex} += 1 ) ?>
+<? endwhile ( $$variable{QTYIndex} <= 3 ) ?>
 </li>
-<? endif ( sets::isin( $$variable{'ProjectType'}->name(), [ 'PresentationFolders','Envelopes' ] ) ) ?>
+<? endif ( sets::isin( $$variable{ProjectType}->name(), [ 'PresentationFolders','Envelopes' ] ) ) ?>
 
-<? if ( $$variable{'txtSignatureType'} ) ?>
+<? if ( $$variable{txtSignatureType} ) ?>
 <li class="pagequantity">
 	<label>Page Quantity</label>
 	<input type="hidden" name="GroupPageQuantity" value="<?GroupPageQuantity?>" />
@@ -428,8 +428,8 @@
 		my $html;
 		foreach my $qty_index ( $$variable{Project}->quantity_indexes() ) {
 			$html .= sprintf('<span class="%sColumns">%s Pages %s x %s %s%s%s</span>',
-				$$variable{'Columns'},
-				input( type=>"number", id=>"PageQuantity$qty_index", name=>"PageQuantity$qty_index", value=>$$variable{'PageQuantity'.$qty_index}, onkeyup=>'calc(this.form.name);' ),
+				$$variable{Columns},
+				input( type=>"number", id=>"PageQuantity$qty_index", name=>"PageQuantity$qty_index", value=>$$variable{'PageQuantity'.$qty_index}, oninput=>'calc(this.form.name);' ),
 				input( type=>"number", name=>"page_columns$qty_index", readonly=>"readonly" ),
 				input( type=>"number", name=>"page_rows$qty_index", readonly=>"readonly" ),
 				input( type=>"hidden", name=>"SpreadRows$qty_index", value=>"SpreadRows$qty_index" ),
@@ -440,8 +440,8 @@
 		return $html;
 	) ?>
 </li>
-<? endif ( $$variable{'txtSignatureType'} ) ?>
-<? if ( sets::isin( $$variable{'ProjectType'}->name(), [ 'Envelopes' ] ) ) ?>
+<? endif ( $$variable{txtSignatureType} ) ?>
+<? if ( sets::isin( $$variable{ProjectType}->name(), [ 'Envelopes' ] ) ) ?>
 	<? echo ( 
 join("\n", map {
 	sprintf('
@@ -458,21 +458,21 @@ join("\n", map {
 } ( $$variable{Project}->quantity_indexes() )
 );
 ) ?>
-<? else ( sets::isin( $$variable{'ProjectType'}->name(), [ 'Envelopes' ] ) ) ?>
+<? else ( sets::isin( $$variable{ProjectType}->name(), [ 'Envelopes' ] ) ) ?>
 <li class="imposition">
 	<label><? echo ( writeTip('Imposition'); ) ?></label>
 	<? echo ( my $html = '';
 		foreach my $qty_index ( $$variable{Project}->quantity_indexes() ) {
 
-		if ( $$variable{'txtSignatureType'} ) {
+		if ( $$variable{txtSignatureType} ) {
 		$html .= sprintf( '<span class="%sColumns">%s Out %s<br/> %s x %s + %s x %s%s<br/>%s x %s (W x H)</span>%s%s',
-			$$variable{'Columns'},
-			input( type=>'cardinal', name=>"txtImposition$qty_index", value=>$$variable{'txtImposition'.$qty_index}, onkeyup=>'calc(this.form.name);' ),
+			$$variable{Columns},
+			input( type=>'cardinal', name=>"txtImposition$qty_index", value=>$$variable{'txtImposition'.$qty_index}, oninput=>'calc(this.form.name);' ),
 			write_override( 'chkOverrideImposition'.$qty_index, $$variable{'chkOverrideImposition'.$qty_index},'',"calc('f1');" ),
-			input( type=>'cardinal', name=>"hdnImpositionColumns$qty_index", value=>$$variable{"hdnImpositionColumns$qty_index"}, onkeyup=>q`calc('f1');` ),
-			input( type=>'cardinal', name=>"hdnImpositionRows$qty_index", value=>$$variable{"hdnImpositionRows$qty_index"}, onkeyup=>q`calc('f1');` ),
-			input( type=>'cardinal', name=>"hdnImpositionDutchColumns$qty_index", value=>$$variable{"hdnImpositionDutchColumns$qty_index"}, onkeyup=>q`calc('f1');` ),
-			input( type=>'cardinal', name=>"hdnImpositionDutchRows$qty_index", value=>$$variable{"hdnImpositionDutchRows$qty_index"}, onkeyup=>q`calc('f1');` ),
+			input( type=>'cardinal', name=>"hdnImpositionColumns$qty_index", value=>$$variable{"hdnImpositionColumns$qty_index"}, oninput=>q`calc('f1');` ),
+			input( type=>'cardinal', name=>"hdnImpositionRows$qty_index", value=>$$variable{"hdnImpositionRows$qty_index"}, oninput=>q`calc('f1');` ),
+			input( type=>'cardinal', name=>"hdnImpositionDutchColumns$qty_index", value=>$$variable{"hdnImpositionDutchColumns$qty_index"}, oninput=>q`calc('f1');` ),
+			input( type=>'cardinal', name=>"hdnImpositionDutchRows$qty_index", value=>$$variable{"hdnImpositionDutchRows$qty_index"}, oninput=>q`calc('f1');` ),
 			write_override( 'OverrideImpositionLayout'.$qty_index, $$variable{'OverrideImpositionLayout'.$qty_index},'',"calc('f1');" ),
 			input( type=>'float', readonly=>"readonly", name=>"txtLayoutWidth$qty_index" ),
 			input( type=>'float', readonly=>"readonly", name=>"txtLayoutHeight$qty_index" ),
@@ -481,14 +481,14 @@ join("\n", map {
 			);
 		} else {
 		$html .= sprintf( '<span class="%sColumns">%s Out %s Dutch?: %s <br/> %s x %s + %s x %s%s<br/>%s x %s (W x H)</span>%s%s',
-			$$variable{'Columns'},
-			input( type=>'cardinal', name=>"txtImposition$qty_index", value=>$$variable{'txtImposition'.$qty_index}, onkeyup=>'calc(this.form.name);' ),
+			$$variable{Columns},
+			input( type=>'cardinal', name=>"txtImposition$qty_index", value=>$$variable{'txtImposition'.$qty_index}, oninput=>'calc(this.form.name);' ),
 			write_override( 'chkOverrideImposition'.$qty_index, $$variable{'chkOverrideImposition'.$qty_index},'',"calc('f1');" ),
 			radio( 'dutch'.$qty_index, [ 'Y', 'Yes', 'N', 'No' ], $$variable{'dutch'.$qty_index}, { onclick=>q`calc('f1');` } ),
-			input( type=>'cardinal', name=>"hdnImpositionColumns$qty_index", value=>$$variable{"hdnImpositionColumns$qty_index"}, onkeyup=>q`calc('f1');` ),
-			input( type=>'cardinal', name=>"hdnImpositionRows$qty_index", value=>$$variable{"hdnImpositionRows$qty_index"}, onkeyup=>q`calc('f1');` ),
-			input( type=>'cardinal', name=>"hdnImpositionDutchColumns$qty_index", value=>$$variable{"hdnImpositionDutchColumns$qty_index"}, onkeyup=>q`calc('f1');` ),
-			input( type=>'cardinal', name=>"hdnImpositionDutchRows$qty_index", value=>$$variable{"hdnImpositionDutchRows$qty_index"}, onkeyup=>q`calc('f1');` ),
+			input( type=>'cardinal', name=>"hdnImpositionColumns$qty_index", value=>$$variable{"hdnImpositionColumns$qty_index"}, oninput=>q`calc('f1');` ),
+			input( type=>'cardinal', name=>"hdnImpositionRows$qty_index", value=>$$variable{"hdnImpositionRows$qty_index"}, oninput=>q`calc('f1');` ),
+			input( type=>'cardinal', name=>"hdnImpositionDutchColumns$qty_index", value=>$$variable{"hdnImpositionDutchColumns$qty_index"}, oninput=>q`calc('f1');` ),
+			input( type=>'cardinal', name=>"hdnImpositionDutchRows$qty_index", value=>$$variable{"hdnImpositionDutchRows$qty_index"}, oninput=>q`calc('f1');` ),
 			write_override( 'OverrideImpositionLayout'.$qty_index, $$variable{'OverrideImpositionLayout'.$qty_index},'',"calc('f1');" ),
 			input( type=>'float', readonly=>"readonly", name=>"txtLayoutWidth$qty_index" ),
 			input( type=>'float', readonly=>"readonly", name=>"txtLayoutHeight$qty_index" ),
@@ -500,15 +500,15 @@ join("\n", map {
 		return $html;
 	) ?>
 </li>
-<? endif ( sets::isin( $$variable{'ProjectType'}->name(), [ 'Envelopes' ] ) ) ?>
+<? endif ( sets::isin( $$variable{ProjectType}->name(), [ 'Envelopes' ] ) ) ?>
 <? echo (
 	my $html;
-	if ( sets::isin( $$variable{'ProjectType'}->name(), [ 'BusinessCards' ] ) ) {
+	if ( sets::isin( $$variable{ProjectType}->name(), [ 'BusinessCards' ] ) ) {
 		$html .= '<li class="versions"><label>'. writeTip('Versions'). '</label>';
 		foreach my $qty_index ( $$variable{Project}->quantity_indexes() ) {
 
 			$html .= sprintf( '<span class="%sColumns">%s%s</span>',
-				$$variable{'Columns'},
+				$$variable{Columns},
 				input( type=>'cardinal', name=>"Versions$qty_index", value=>$$variable{"Versions$qty_index"} ),
 				write_override( 'OverrideVersions'.$qty_index, $$variable{'OverrideVersions'.$qty_index},'',"calc('f1');" ),
 			);

@@ -5541,6 +5541,11 @@ if ( ! sets::isin('license_hosts', \@tables ) ) {
 if ( sets::isin('operator_shifts', \@tables ) ) {
 $dbh->do('DROP TABLE operator_shifts');
 }
+if ( ! sets::isin('object_specifications', \@tables ) ) {
+	$log->debug("Adding Object_Specifications");
+	$dbh->do( misc::load_file( $log, q{../openprint/sql/Object_Specifications.sql}) );
+	die if $dbh->errstr();
+} # end if
 print "done.\n";
 $dbh->disconnect();
 1;
