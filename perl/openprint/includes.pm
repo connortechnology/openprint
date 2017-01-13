@@ -134,6 +134,10 @@ sub _specifications {
 		$Object_Type = openprint::Object_Type->find_one( id=>$param{object_type_id} );
 	} elsif ( $param{object_type} ) {
 		$Object_Type = openprint::Object_Type->find_one( name=>$param{object_type} );
+	} elsif ( $param{spec_id} ) {
+		my $Spec = new openprint::Object_Specification($param{spec_id});
+		my $Object = $Spec->Object();
+		$Object_Type = $Object->Object_Type();
 	}
     if ( ! $Object_Type ) {
         $log->error('Object type not found : ' . $param{object_type} );
