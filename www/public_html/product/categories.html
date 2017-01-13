@@ -1,4 +1,7 @@
 <?include('/includes/error_reporting.html')?>
+<p class="buttons">
+<?echo(button('New', { href=>'category.html' } );)?>
+</p>
 <table class="List">
 	<tr>
 		<th class="name">Name</th>
@@ -11,9 +14,9 @@
 	foreach my $Category ( openprint::Product_Category->find( order => 'lower(name)' ) ) {
 		$html .= sprintf(q`
 <tr%1$s>
-	<td class="name"><a href="category.html?category_id=%2$d">%3$s</a></td>
-	<td class="description"><a href="category.html?category_id=%2$d">%4$s</a></td>
-	<td class="num_project_types"><a href="category.html?category_id=%2$d">%5$d</a></td>
+	<td class="name"><a href="category_view.html?category_id=%2$d">%3$s</a></td>
+	<td class="description"><a href="category_view.html?category_id=%2$d">%4$s</a></td>
+	<td class="num_project_types"><a href="category_view.html?category_id=%2$d">%5$d</a></td>
 </tr>
 `, $rowclass, $Category->id(), $Category->name(), $Category->description(), scalar $Category->Products() );
 		$rowclass = $rowclass ? '' : ' class="colRow"';
@@ -22,6 +25,3 @@
 	return $html;
 ) ?>
 </table>
-<p class="buttons">
-<?echo(button('New', { href=>'category.html' } );)?>
-</p>

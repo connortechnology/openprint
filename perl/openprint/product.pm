@@ -56,7 +56,7 @@ sub edit {
 		if ( $param{product_id} ) {
 		# Save the prices
 			_prices();
-			my @spec_changes = openprint::Object_Specification::save_changes();
+			my @spec_changes = openprint::Object_Specification::save_changes( $Product, \%param );
 			push @changes, 'specification changes: ' . join(', ', @spec_changes ) if @spec_changes;
 
 		} # end if
@@ -75,9 +75,8 @@ sub edit {
 			$$Price{id} = undef;
 			$Price->save();
 		} # end foreach
-		foreach ( $Product->Specifications() ) {
-			my $Spec = $_->copy();
-			$Spec->save({object_id => $$NewProduct{id} });
+		foreach ( $NewProduct->Specifications() ) {
+			$_->save({object_id => $$NewProduct{id} });
 		}
 		$Product = $NewProduct;
 
@@ -137,9 +136,8 @@ sub edit {
 	    my @header = ( 'Product', 'Name','Value');
 	    my @data;
 		foreach my $Product ( openprint::Product->find() ) {
-			my %specs = %{$Product->specifications()};
-			foreach my $k ( keys %specs ) {
-				push @data, $Product->name(), $k, $specs{$k};
+			foreach my $Spec ( $Product->Specifications() ) {
+				push @data, $Product->name(), $Spec->name(), $Spec->value();
 			} # end foreach
 		} # end foreach
     	misc::export_csv( $r, $log, \%variable, 'ProductSpecifications.csv', \@header, \@data );
@@ -275,6 +273,19 @@ sub category_edit {
     } # end if
 } # end sub category
 
+sub _category_view_products {
+	my $Category = $variable{Category} = new openprint::Product_Category( $param{category_id} );
+	my @Products = openprint::Product->find( category_id=>$Category->id() );
+	my @product_ids = map { $$_{id} } @Products;
+	@{$variable{Specifications}} = map { $param{"spec_filter-$$_{name}"} ? $$_{name} : () } openprint::Object_Specification->find( object_type => 'openprint::Product', object_id=>\@product_ids );
+$log->debug("specification filters: ".join(',', @{$variable{Specifications}}));
+	if ( $param{quantity} ) {
+		@{$variable{Quantities}} = $param{quantity};
+	} else {
+		my @Prices = openprint::ProductPrice->find( product_id=> \@product_ids );
+		@{$variable{Quantities}} = sort { $a <=> $b } sets::union( map { $_->min() == $_->max() ? $_->min() : () } @Prices );
+	}
+}
 
 1;
 __END__
