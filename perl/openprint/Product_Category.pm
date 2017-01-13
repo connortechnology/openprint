@@ -85,6 +85,9 @@ sub Album {
     return $Album;
 } # end sub Album
 
+sub url_to {
+	return '/product/category_view.html?category_id='.$_[0]{id};
+}
 sub link_to {
 	return sprintf('<a href="/product/category_view.html?category_id=%d">%s</a>', $_[0]{id}, @_ > 1 ? $_[1] : $_[0]{name} );
 }
