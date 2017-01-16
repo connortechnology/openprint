@@ -157,7 +157,6 @@ sub groups {
 
 sub calc {
 	my ( $log, $dbh, $variable, $project_index, $service_index, $specs ) = @_;
-$openprint::log->error("MultiPageCalc");
 	$$specs{Status} = 'calculated';
 	$$specs{alert} = '';
 
