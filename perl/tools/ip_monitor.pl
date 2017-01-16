@@ -119,10 +119,6 @@ while(1) {
 	my @Hosts = openprint::Host->find( monitored=>1 );
 	foreach my $Host ( @Hosts ) {
 
-		$Host->lock();
-		$Host->load(); # these pings can take a long time, and the record could get out of date, so refresh
-		my $was_online = $Host->online();
-		$log->debug( $Host->hostname() . ' was ' . ( $Host->online() ? 'online' : 'offline' ) );
 
 		my $online = undef;
 		my $now = time;
@@ -156,6 +152,10 @@ while(1) {
 			$log->debug( $HI->ip() . ' is now ' . ( $HI->online() ? 'online' : 'offline' ) . ' value of ping was ' . $ping );
 		} # end foreach HI
 
+		$Host->lock();
+		$Host->load(); # these pings can take a long time, and the record could get out of date, so refresh
+		my $was_online = $Host->online();
+		$log->debug( $Host->hostname() . ' was ' . ( $Host->online() ? 'online' : 'offline' ) );
 		if ( $online != $was_online ) {
 			my $notified = $$Host{notified};
 
