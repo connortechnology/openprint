@@ -732,7 +732,7 @@ $openprint::log->debug("folds from sigimpo") if DEBUG;
 				$Breakdown .= 'Not stitching:<br/>';
 				next;
 			} # end if
-		} elsif ( $capable =~ /^When Printing( on .*)$/ ) {
+		} elsif ( $capable =~ /^When Printing( on .*)?$/ ) {
 			$Breakdown .= $capable.':';
 			if ( $1 ) {
 				my $press = $1;
