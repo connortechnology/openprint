@@ -263,12 +263,11 @@ $log->debug("Materials: " . map { $_->name() } @Materials ) if DEBUG;
 
 			$$specs{'hdnBreakdown'.$qty_index} .= sprintf('# of packages: %d<br/>', $package_qty );
 			
-			my $price;
 			my %MaterialPrice = $Material->get_price( $package_qty, undef );
-			$price = $MaterialPrice{Price};
-			my $compare_price = $package_qty * ( $price + $serviceCharge + $packingCharge );
+			my $compare_price = $package_qty * ( $MaterialPrice{Price} + $serviceCharge + $packingCharge );
+
 			if ( $best_price == 0 or $compare_price < $best_price ) {
-				$material_charge = $price;
+				$material_charge = $MaterialPrice{Price};
 				$best_price = $compare_price;
 				@$specs{'ddmPackageType'.$qty_index,'txtItemsPerPackage'.$qty_index} = ( $Material->id(), $items_per_package );
 			} # end if
@@ -290,7 +289,7 @@ $log->debug("Materials: " . map { $_->name() } @Materials ) if DEBUG;
 		} # end if
 
 		my $unitPrice = $material_charge + $serviceCharge + $packingCharge;
-		my $price = $makeReady + $qty * $unitPrice;
+		my $price = $makeReady + ( $qty * $unitPrice );
 $log->debug(" $price = $makeReady + $qty * $unitPrice;");
 
 		$$specs{"txtPackageQuantity$qty_index"} = $qty;
@@ -304,6 +303,7 @@ $log->debug(" $price = $makeReady + $qty * $unitPrice;");
 		if ( $$specs{'OverridePrice'.$qty_index} ne 'Y' ) {
 
 			if ( $$specs{"Markup$qty_index"} ) {
+$log->debug("Marking up " . $$specs{"Markup$qty_index"});
 				$price *= (1+$$specs{"Markup$qty_index"}/100);
 			}
 			
