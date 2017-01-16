@@ -36,7 +36,7 @@ sub edit {
 
 	if ( $param{btnFunction} eq 'Save' ) {
 		if ( (! $param{product_id}) and openprint::Product->find( 'name lc' => lc openprint::Product->transform('name',$param{name}) ) ) {
-			$variable{error} = "A product with name $param{name} already exists.  Please choose another name.";
+			$variable{error} = "A product with name $param{name} already exists.	Please choose another name.";
 			return;
 		} # end if
 		foreach my $field ( 'category', 'manufacturer' ) {
@@ -90,9 +90,9 @@ sub edit {
 	} elsif ( $param{btnFunction} eq '<<' ) {
 		$Product = $Product->previous();
 	} elsif ( $param{btnFunction} eq 'Export Definitions' ) {
-	    my @header = ( 'Name', 'Description','Category', 'Tax Exempt 1','Tax Exempt2', 'Sort Order');
-	    my @data = sql::execute( $log, $dbh, 'SELECT name, description, (SELECT name from product_categories where id=category_id), taxexempt1, taxexempt2, sort FROM Products ORDER BY sort' );
-    	misc::export_csv( $r, $log, \%variable, 'Products.csv', \@header, \@data );
+		my @header = ( 'Name', 'Description','Category', 'Tax Exempt 1','Tax Exempt2', 'Sort Order');
+		my @data = sql::execute( $log, $dbh, 'SELECT name, description, (SELECT name from product_categories where id=category_id), taxexempt1, taxexempt2, sort FROM Products ORDER BY sort' );
+		misc::export_csv( $r, $log, \%variable, 'Products.csv', \@header, \@data );
 	} elsif ( $param{btnFunction} eq 'Import Definitions' ) {
 		my $error = '';
 		if ( $param{fileImport} ) {
@@ -133,14 +133,14 @@ sub edit {
 			return misc::error( $log, $dbh, \%variable, 'Import errors.', $error );
 		} # end if
 	} elsif ( $param{btnFunction} eq 'Export Specifications' ) {
-	    my @header = ( 'Product', 'Name','Value');
-	    my @data;
+		my @header = ( 'Product', 'Name','Value');
+		my @data;
 		foreach my $Product ( openprint::Product->find() ) {
 			foreach my $Spec ( $Product->Specifications() ) {
 				push @data, $Product->name(), $Spec->name(), $Spec->value();
 			} # end foreach
 		} # end foreach
-    	misc::export_csv( $r, $log, \%variable, 'ProductSpecifications.csv', \@header, \@data );
+		misc::export_csv( $r, $log, \%variable, 'ProductSpecifications.csv', \@header, \@data );
 	} elsif ( $param{btnFunction} eq 'Import Specifications' ) {
 		my $error = '';
 		if ( $param{fileImport} ) {
@@ -229,48 +229,60 @@ sub _prices_table_body {
 	my $Price = new openprint::ProductPrice( $param{price_id} );
 
 	my $Product = $variable{Product} = openprint::Product->find_one(id=>$param{product_id} );
-    $variable{Pricelist} =$param{pricelist_id} ?  openprint::Pricelist->find_one(id=>$param{pricelist_id} ) : $Price->Pricelist();
+	$variable{Pricelist} =$param{pricelist_id} ? openprint::Pricelist->find_one(id=>$param{pricelist_id} ) : $Price->Pricelist();
 
-    #$variable{company_ids} = [ map { $_->id(), $_->name() } openprint::Company->find( supplier=>'Y', order=>'lower(name)' ) ];
-    if ( $param{action} eq 'add' ) {
-        my $Price = new openprint::ProductPrice();
-        $variable{error} .= $Price->save({ pricelist_id=>$param{pricelist_id}, product_id=>$param{product_id} });
-        (new openprint::Log())->save({Object=>$Product, action=>'Add Price' }) if ! $variable{error};
+	#$variable{company_ids} = [ map { $_->id(), $_->name() } openprint::Company->find( supplier=>'Y', order=>'lower(name)' ) ];
+	if ( $param{action} eq 'add' ) {
+		my $Price = new openprint::ProductPrice();
+		$variable{error} .= $Price->save({ pricelist_id=>$param{pricelist_id}, product_id=>$param{product_id} });
+		(new openprint::Log())->save({Object=>$Product, action=>'Add Price' }) if ! $variable{error};
 	
-    } elsif ( $param{action} eq 'copy' ) {
-        $Price = $Price->copy();
-        $variable{error} .= $Price->save();
-        (new openprint::Log())->save({Object=>$Product, action=>'Copy Price', note=>$Price->to_string() }) if ! $variable{error};
-    } elsif ( $param{action} eq 'delete' ) {
-        $variable{error} .= $Price->delete();
-        (new openprint::Log())->save({Object=>$Product, action=>'Delete Price', note=>$Price->to_string() }) if ! $variable{error};
-    } # end if
+	} elsif ( $param{action} eq 'copy' ) {
+		$Price = $Price->copy();
+		$variable{error} .= $Price->save();
+		(new openprint::Log())->save({Object=>$Product, action=>'Copy Price', note=>$Price->to_string() }) if ! $variable{error};
+	} elsif ( $param{action} eq 'delete' ) {
+		$variable{error} .= $Price->delete();
+		(new openprint::Log())->save({Object=>$Product, action=>'Delete Price', note=>$Price->to_string() }) if ! $variable{error};
+	} # end if
 }
 
 sub categories {
 } # end sub categories
 
 sub category_view {
-    my $Category = $variable{Category} = new openprint::Product_Category( $param{category_id} );
+	my $Category = $variable{Category} = new openprint::Product_Category( $param{category_id} );
 }
 sub category_edit {
-    my $Category = $variable{Category} = new openprint::Product_Category( $param{category_id} );
-    if ( $param{btnFunction} eq 'Save' ) {
-       my @changes = $Category->changes( \%param );
-        if ( @changes ) {
-            $variable{error} = $Category->save( \%param );
-        }
+	my $Category = $variable{Category} = new openprint::Product_Category( $param{category_id} );
+	if ( $param{btnFunction} eq 'Save' ) {
+		my @changes = $Category->changes( \%param );
+		if ( @changes ) {
+			$variable{error} = $Category->save( \%param );
+		}
 
 		my @spec_changes = openprint::Object_Specification::save_changes( $Category, \%param );
 		push @changes, 'specification changes: ' . join(', ', @spec_changes ) if @spec_changes;
 		( new openprint::Log())->save({Object=>$Category, action=>'Edit', note=>join('<br/>', @changes ) } );
 		$variable{ExternalRedirect} = '/product/categories.html' if ! $variable{error};
-    } elsif ( $param{btnFunction} eq 'Delete' ) {
-        $variable{error} .= $Category->delete();
-        if ( ! $variable{error} ) {
-            $variable{ExternalRedirect} = '/product/categories.html';
-        }
-    } # end if
+	} elsif ( $param{btnFunction} eq 'Copy' ) {
+		my $New = $Category->copy();
+		$New->save();
+
+		(new openprint::Log())->save({action=>'Copy', note=>'New ID: ' . $New->id() . ' Name: ' . $New->name(), Object=>$Category });
+		(new openprint::Log())->save({action=>'Copy', note=>'Original ID: ' . $param{category_id} . ' Name: ' . $Category->name(), Object=>$New });
+
+		foreach ( $New->Specifications() ) {
+			$_->save({object_id => $$New{id} });
+		}
+		$Category = $New;
+
+	} elsif ( $param{btnFunction} eq 'Delete' ) {
+		$variable{error} .= $Category->delete();
+		if ( ! $variable{error} ) {
+			$variable{ExternalRedirect} = '/product/categories.html';
+		}
+	} # end if
 } # end sub category
 
 sub _category_view_products {
