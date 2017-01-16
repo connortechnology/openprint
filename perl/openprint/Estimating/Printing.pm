@@ -2035,10 +2035,17 @@ sub set_size {
                 $$specs{txtSpreadSize} = 1;
                 $variables{txtSpreadSize} = [ sets::union( 'output', @{$variables{txtSpreadSize}} ) ];
             } # end if
-			$$specs{txtWidth} = $$printing_specs{txtWidth};
-			$$specs{txtHeight} = $$printing_specs{txtHeight};
-			$$specs{txtFinalWidth} = $$printing_specs{txtFinalWidth};
-			$$specs{txtFinalHeight} = $$printing_specs{txtFinalHeight};
+		if ( $$specs{ddmProjectSize} ne 'Custom' ) {
+			$$specs{txtWidth} = $$printing_specs{txtWidth} if $$printing_specs{txtWidth};
+			$$specs{txtHeight} = $$printing_specs{txtHeight} if $$printing_specs{txtHeight};
+			$$specs{txtFinalWidth} = $$printing_specs{txtFinalWidth} if $$printing_specs{txtFinalWidth} ;
+			$$specs{txtFinalHeight} = $$printing_specs{txtFinalHeight} if $$printing_specs{txtFinalHeight};
+		} else {
+			$variables{txtWidth} = [ sets::exclude( ['output'], $variables{txtWidth} ) ];
+			$variables{txtHeight} = [ sets::exclude( ['output'], $variables{txtHeight} ) ];
+			$variables{txtFinalWidth} = [ sets::exclude( ['output'], $variables{txtFinalWidth} ) ];
+			$variables{txtFinalHeight} = [ sets::exclude( ['output'], $variables{txtFinalHeight} ) ];
+		}
 
 	} elsif ( $Project->Type()->name() eq 'PresentationFolders' ) {
 		if ( $$specs{ddmProjectSize} ne 'Custom' ) {
