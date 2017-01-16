@@ -290,7 +290,8 @@ $log->debug("Materials: " . map { $_->name() } @Materials ) if DEBUG;
 		} # end if
 
 		my $unitPrice = $material_charge + $serviceCharge + $packingCharge;
-		my $price = $makeReady + $qty * $unitPrice;
+		my $price = $makeReady + $package_qty * $unitPrice;
+$log->debug(" $price = $makeReady + $package_qty * $unitPrice;");
 
 		$$specs{"txtPackageQuantity$qty_index"} = $qty;
 		if ( $Project->markup() ) {
