@@ -6,7 +6,7 @@ package openprint::Product_Category;
 our @ISA = qw( openprint::Object );
 use vars qw( $debug $serial $table %fields %transforms %defaults );
 
-$debug = 0;
+$debug = 1;
 $serial = 'product_categories_id_seq';
 $table = 'Product_Categories';
 
@@ -15,6 +15,7 @@ $table = 'Product_Categories';
 	name			=>	'name',
 	description		=>	'description',
 	projecttype_id	=>	'projecttype_id',
+	parent_id		=>	'parent_id',
 );
 
 %transforms = (
@@ -22,6 +23,7 @@ $table = 'Product_Categories';
     description => [ 's/^\s+//', 's/\s+$//', 's/\s\s+/ /g' ],
 );
 %defaults = (
+	parent_id		=>	undef,
 	projecttype_id	=>	undef,
 );
 
@@ -90,6 +92,9 @@ sub url_to {
 }
 sub link_to {
 	return sprintf('<a href="/product/category_view.html?category_id=%d">%s</a>', $_[0]{id}, @_ > 1 ? $_[1] : $_[0]{name} );
+}
+sub Parent {
+	return new openprint::Product_Category( $_[0]{parent_id} );
 }
 
 1;
