@@ -46,7 +46,7 @@
 <? echo ( 
 	my $html;
 	if ( $config{AllowEmailQuotes} or sets::isin( $session{user_type}, ['E','A'] ) ) {
-		$html .= button( 'Quote', onclick=>'click_quote( document.f1 );', text=> 'Email Quote', class=>'rightarrow'}) ;
+		$html .= button( 'Quote', { onclick=>'click_quote( document.f1 );', text=> 'Email Quote', class=>'rightarrow' } );
 	} # end if
 	$html .= button( 'Order', { onclick=>'click_order( document.f1 );', text=> 'Place Order', class=>'rightarrow'}) if $config{AllowOrdering} ne 'false';
 	return $html;
