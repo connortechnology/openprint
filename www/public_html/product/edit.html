@@ -134,7 +134,7 @@
 						<label>Template</label>
 						<select name="project_id" id="project_id">
 							<option value="">select</option>
-							<? echo ( make_drop_down( [ map { $_->id(), $_->reference() } openprint::Project->find( predefined=>1, order=>'lower(strprojectreference)') ], $$variable{Product}->project_id() ); ) ?>
+							<? echo ( make_drop_down( [ map { $_->id(), join(' ' , $_->Type()->name(), $_->reference()) } openprint::Project->find( predefined=>1, order=>'lower(strprojectreference)') ], $$variable{Product}->project_id() ); ) ?>
 						</select>
 					</li>
 <? endif ( openprint::ProjectType->find_one() ) ?>
