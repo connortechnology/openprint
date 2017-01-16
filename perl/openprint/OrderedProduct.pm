@@ -94,7 +94,13 @@ sub price {
 } # end sub price
 
 sub total {
-	return $_[0]->price() * $_[0]->quantity();
+	my $self = shift;
+	my %Price = $self->Product()->get_price( $$self{quantity} );
+	if ( $Price{units} eq 'total' ) {
+		return $_[0]->price();
+	} else {
+		return $_[0]->price() * $_[0]->quantity();
+	}
 }
 
 sub Currency {
