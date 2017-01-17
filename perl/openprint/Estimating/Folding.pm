@@ -329,14 +329,12 @@ sub has_overrides {
 
 	my @v;
 	if ( $qty_index ) {
-	foreach my $s_s_id ( $Project->signatures() ) {
-		my $sig_specs = openprint::service::get_specs_ref( $Project, $s_s_id );
-		my $form = $$sig_specs{SignatureIndex};
-		#foreach my $qty_index ( $Project->quantity_indexes() ) {
+		foreach my $s_s_id ( $Project->signatures() ) {
+			my $sig_specs = openprint::service::get_specs_ref( $Project, $s_s_id );
+			my $form = $$sig_specs{SignatureIndex};
 			push @v, "chkOverrideEquipment-$form-$qty_index" if $$specs{"chkOverrideEquipment-$form-$qty_index"};
 			push @v, "chkOverrideFold-$form-$qty_index" if $$specs{"chkOverrideFold-$form-$qty_index"};
-		#} # end foreach
-	} # end foreach
+		} # end foreach
 	} # end if
 
 	return @v;
