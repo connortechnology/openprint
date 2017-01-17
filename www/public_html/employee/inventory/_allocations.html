@@ -23,6 +23,7 @@
 		<tr>
 			<th class="checkbox"><input type="checkbox" onclick="select_all( this.form, 'allocation_ids', this.checked );"/></th>
 			<th class="Docket">Docket</th>
+			<th class="status">Status</th>
 			<th class="Company">Company</th>
 			<th class="Stock">Stock</th>
 			<th class="Quantity">Quantity</th>
@@ -110,6 +111,7 @@ $log->debug("Max end: $max_age_end Max Age $max_age");
 				$html .= "<tr class=\"$rowclass $error\">";
 				$html .= qq`<td class="checkbox"><input type="checkbox" name="allocation_ids" value="`.join(',',map { $$_{id} } @{$allocations{$key}} ). '"/></td>';
 				$html .= sprintf( '<td class="Docket"><a href="/employee/project/view.html?docket=%1$d">%1$s</a></td>', $$Allocation{docket} );
+				$html .= sprintf( '<td class="status"><a href="/employee/project/view.html?docket=%1$d">%1$s</a></td>', $Allocation->Order()->status() );
 				$html .= sprintf( '<td class="Company"><a href="allocation.html?allocation_id=%d">%s</a></td>', $$Allocation{id}, $Allocation->Order()->Company()->name() );
 				$html .= sprintf( '<td class="Stock"><a href="paper_details.html?paper_id=%d">%s</a></td>', $$Allocation{paper_id}, $Allocation->Paper()->to_string() );
 				$html .= sprintf( '<td class="Quantity"><a href="skid_details.html?skid_id=%d">%s %s%s</a></td>', $$Allocation{id}, 
