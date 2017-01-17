@@ -198,7 +198,7 @@ sub Location {
 } # end sub Location
 
 sub resolve {
-	foreach my $Interface (  $_[0]->Interfaces() ) {
+	foreach my $Interface (	$_[0]->Interfaces() ) {
 		my $hostname = $Interface->resolve();
 		return $hostname if $hostname;
 	} # end foreach Interface
@@ -279,7 +279,7 @@ sub reboot {
 					my $headers = $response->headers();
 					foreach my $k ( keys %$headers ) {
 						$openprint::log->error("Header $k => $$headers{$k}");
-					}  # end foreach
+					}	# end foreach
 					$openprint::log->error( $response->content );
 					next;
 				} else {
@@ -291,7 +291,7 @@ sub reboot {
 				my $headers = $response->headers();
 				foreach my $k ( keys %$headers ) {
 					$openprint::log->error("Header $k => $$headers{$k}");
-				}  # end foreach
+				}	# end foreach
 				next;
 			} # end if
 		} else {
@@ -318,11 +318,10 @@ sub reboot {
 			if ( @To and ( @To < 10 ) ) {
 				$openprint::log->debug("Emailing: " . join(',', map { $_->email() } @To ) );
 				my $results = (new openprint::Email())->send(
-						TO    =>  \@To,
-						SUBJECT   =>  'Camera rebooted ' . $Host->hostname(),
-						FROM      =>  $openprint::config{TechSupportEmail},
-						BODY      =>  "
-
+						TO			=>	\@To,
+						SUBJECT	=>	'Camera rebooted ' . $Host->hostname(),
+						FROM		=>	$openprint::config{TechSupportEmail},
+						BODY		=>	"
 						Description: $$Host{description}
 						",
 						);
