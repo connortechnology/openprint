@@ -559,6 +559,7 @@ sub cost {
 	return $_[0]{cost};
 } # end sub cost
 
+# We can't load purchase orders directly because POs do not link to a skid. They only have a roughly generic link
 sub PurchaseOrders {
 	if ( @_ > 1 ) {
 		$_[0]{PurchaseOrders} = $_[1];
@@ -577,6 +578,14 @@ sub PurchaseOrders {
 	return @{$_[0]{PurchaseOrders}} if ref $_[0]{PurchaseOrders} eq 'ARRAY';
 	return ();
 } # end sub PurchaseOrders
+
+sub dockets {
+	my $self = shift;
+	if ( ! $$self{dockets} ) {
+		$$self{dockets} = [ sets::union( ( map { $_->Type()->docket() ? $_->Type()->docket() : () } $self->ManifestContents() ) ) ]; 
+	}
+	return @{$$self{dockets}};
+}
 
 sub used {
 	if ( @_ > 1 ) {
