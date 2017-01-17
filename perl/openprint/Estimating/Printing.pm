@@ -2578,6 +2578,7 @@ $log->warn("There are no quantities!");
 		foreach my $index ( $Project->signatures({ Group=>$$specs{Group} }) ) {
 			next if $index >= $service_index;
 			my $sig_specs = openprint::service::get_specs_ref( $Project, $index );
+			$$specs{PreviousPress} = $$sig_specs{'ddmPress'.$qty_index};
 			$$specs{PreviousStockType} = $$sig_specs{'StockType'.$qty_index};
 			$$specs{PreviousGrainDirection} = $$sig_specs{'rdbGrainDirection'.$qty_index};
 			last;
@@ -3110,7 +3111,10 @@ sub calculate_impositions {
 	} # end if
 $openprint::log->debug("Needed pages: $needed_pages") if DEBUG;
 
-	foreach my $strid ( $$sig_specs{"chkOverridePress$qty_index"} eq 'Y' ? ( $$sig_specs{"ddmPress$qty_index"} ) : keys %{$impositions} ) {
+	my $filter_press = $$sig_specs{"ddmPress$qty_index"} if $$sig_specs{"chkOverridePress$qty_index"} eq 'Y';
+	$filter_press = $$sig_specs{PreviousPress} if $$sig_specs{PreviousPress};
+
+	foreach my $strid ( $filter_press ? $filter_press : keys %{$impositions} ) {
 		next if ! ( $$impositions{$strid} and @{$$impositions{$strid}} );
 
 
@@ -4261,9 +4265,11 @@ $openprint::log->error("No proofs>!");
 							$$imp{specs} = $new_specs;
 						} # end if
 						
-						if ( USE_SUBSIG and ( ! ( $$imp{pages} % $$price{upq} ) ) and ( ($Press->specification('Folding Capable') ne 'When Printing') and (! $$new_specs{ServiceIndex} ) or (
-								( ($$new_specs{'chkOverridePageQuantity'.$qty_index} ne 'Y') or ($$new_specs{'PageQuantity'.$qty_index} == $$imp{upq} ) ) and
+						if ( USE_SUBSIG and ( ! ( $$imp{pages} % $$price{upq} ) ) and ( (! $$new_specs{ServiceIndex} ) or (
+								( ($$new_specs{'chkOverridePageQuantity'.$qty_index} ne 'Y') or ($$new_specs{'PageQuantity'.$qty_index} == $$price{upq} ) ) and
+
 								( ($$new_specs{'chkOverrideImposition'.$qty_index} ne 'Y') or ($$new_specs{'txtImposition'.$qty_index} == ($$imp{pages}*$$imp{imposition} / $$price{upq} ) ) ) and
+
 								( ($$new_specs{'chkOverridePress'.$qty_index} ne 'Y') or ($$new_specs{'ddmPress'.$qty_index} eq $Press->strid()) ) and
 								( ($$new_specs{'chkOverrideRunStyle'.$qty_index} ne 'Y') or ($$new_specs{'ddmRunStyle'.$qty_index} eq $$imp{runstyle}) )
 ) ) ) {
@@ -4280,6 +4286,10 @@ $openprint::log->warn("Override subsig values $$imp{pages}pg $$price{upq} upq");
 								$$new_specs{'chkOverrideSheetSize'.$qty_index} = 'Y';
 								$$new_specs{"OverrideStockWidth$qty_index"} = $Paper->width();
 								$$new_specs{"OverrideStockHeight$qty_index"} = $Paper->height();
+						} elsif ( ! ( $$imp{pages} % $$price{upq} ) ) {
+$log->error( 'pq: ' . $$new_specs{'chkOverridePageQuantity'.$qty_index} . ' ' . $$new_specs{'PageQuantity'.$qty_index} . ' ' . $$price{upq} ) if ( ($$new_specs{'chkOverridePageQuantity'.$qty_index} ne 'Y') or ($$new_specs{'PageQuantity'.$qty_index} == $$price{upq} ) );
+$log->error( 'oi: ' . $$new_specs{'chkOverrideImposition'.$qty_index} . ' ' . $$new_specs{'txtImposition'.$qty_index} .' ' . ($$imp{pages}*$$imp{imposition} / $$price{upq} ) ) if ( ($$new_specs{'chkOverrideImposition'.$qty_index} ne 'Y') or ($$new_specs{'txtImposition'.$qty_index} == ($$imp{pages}*$$imp{imposition} / $$price{upq} ) ) );
+$log->error( 'or: ' . $$new_specs{'chkOverrideRunStyle'.$qty_index}. ' ' . $$new_specs{'ddmRunStyle'.$qty_index} . ' ' . $$imp{runstyle}) if ( ($$new_specs{'chkOverrideRunStyle'.$qty_index} ne 'Y') or ($$new_specs{'ddmRunStyle'.$qty_index} eq $$imp{runstyle}) );
 						} # end if
 
 						$do_final_pricing = 0;
@@ -4305,6 +4315,7 @@ $openprint::log->warn("Override subsig values $$imp{pages}pg $$price{upq} upq");
 #$openprint::log->debug("Doing full calc when UPQ: >= Pages:" . $$imp{pages} . ' PageQuantity:' . $$new_specs{'PageQuantity'.$qty_index} ) if $upq >= $$imp{pages} or 0;
 
 								$$new_specs{PrintingTypes} = [ $Press->specification('Printing Type') ];
+								$$new_specs{PreviousPress} = $Press if $$new_specs{'chkOverridePress'.$qty_index} ne 'Y';
 								$$new_specs{PreviousStockType} = $$Paper{type};
 								$$new_specs{PreviousStockWidth} = $$Paper{width};
 								$$new_specs{PreviousGrainDirection} = $imp->grain_direction();
