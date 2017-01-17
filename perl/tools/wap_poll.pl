@@ -1,4 +1,4 @@
-#!/usr/bin/perl -w
+#!/usr/bin/perl 
 use utf8;
 use lib '/var/www/testing/perl';
 use strict;
@@ -237,6 +237,8 @@ foreach my $Host ( @Hosts ) {
 				} else {
 					$log->debug("No assoc_list line from $$Host{hostname} $$HI{ip}");
 				}
+				# Important to log out or else no one else can access the web ui
+				$response = $browser->get('https://'.$$HI{ip}.'/LGO_logout.htm');
 
 
 			} elsif ( $Host->type() eq 'WG602v3' ) {
