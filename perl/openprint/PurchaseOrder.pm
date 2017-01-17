@@ -741,5 +741,13 @@ sub summary {
 	return $_[0]{summary};
 } # end sub summary
 
+sub dockets {
+	my $self = shift;
+	if ( ! $$self{dockets} ) {
+		@{$$self{dockets}} = sets::union( map { $_->docket() ? $_->docket() : () } $self->Contents() );
+	}
+	return @{$$self{dockets}};
+}
+
 1;
 __END__
