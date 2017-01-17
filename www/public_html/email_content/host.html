@@ -23,7 +23,6 @@
 				<li><label>Updated On</label><? echo ( format_datetime( $$variable{Host}->created_on() ); ) ?></li>
 			</ul>
 		</div>
-<? if ( $$variable{Host}->id() ) ?>
 		<div class="content rightColumn">
 			<fieldset><legend>Photos</legend>
 				<div id="assets"><?include('/employee/it/_assets.html')?></div>
@@ -32,9 +31,8 @@
 				<div id="notifications"><?include('/employee/it/_notifications_view.html')?></div>
 			</fieldset>
 		</div>
-<? endif ( $$variable{Host}->id() ) ?>
 	</fieldset>
-<? if ( $$variable{Host}->id() ) ?>
+<?eval($config{RADIUS_Support} == 'N' ) ?>
 	<?include(/employee/it/_interfaces_view.html)?>
-<? endif ( $$variable{Host}->id() ) ?>
+<? echo ( include_logs( $$variable{Host} ); ) ?>
 </div>
