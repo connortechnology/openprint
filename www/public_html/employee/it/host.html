@@ -196,7 +196,9 @@ cleanup : true
     return include( '/location/_location_fields.html' );
 ) ?>
             </fieldset>
-<? echo ( include_logs( $$variable{Host} ); ) ?>
 <? endif ( $$variable{Host}->id() ) ?>
 </form>
+<? if ( $$variable{Host}->id() ) ?>
+<? echo ( include_logs( $$variable{Host} ); ) ?>
+<? endif ( $$variable{Host}->id() ) ?>
 </div></div>

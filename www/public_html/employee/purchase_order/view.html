@@ -118,10 +118,7 @@ Manifest: <a href="/employee/inventory/manifest_view.html?manifest_id=<? echo ( 
 		</div>
 <? endif ( $$variable{PurchaseOrder}->notifications() ) ?>
 		<div id="DocketSummary"><p><label>DOCKET:</label>
-<? echo ( my $html;
-	my @dockets = map { $_->docket() ? $_->docket() : () } $$variable{PurchaseOrder}->Contents();
-	return join('<br/>', sets::union(@dockets) );
-) ?></p>
+<? echo ( join('<br/>', $$variable{PurchaseOrder}->dockets() );) ?></p>
 		</div>
 		<br class="spacer"/><br/>
 		<table class="Shipping">
