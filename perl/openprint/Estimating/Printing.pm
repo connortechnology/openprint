@@ -2578,6 +2578,7 @@ $log->warn("There are no quantities!");
 			next if $index >= $service_index;
 			my $sig_specs = openprint::service::get_specs_ref( $Project, $index );
 			$$specs{PreviousPress} = $$sig_specs{'ddmPress'.$qty_index};
+$log->debug("Have previous press $$specs{PreviousPress} for group $$specs{Group}");
 			$$specs{PreviousStockType} = $$sig_specs{'StockType'.$qty_index};
 			$$specs{PreviousGrainDirection} = $$sig_specs{'rdbGrainDirection'.$qty_index};
 			last;
@@ -3111,7 +3112,10 @@ sub calculate_impositions {
 $openprint::log->debug("Needed pages: $needed_pages") if DEBUG;
 
 	my $filter_press = $$sig_specs{"ddmPress$qty_index"} if $$sig_specs{"chkOverridePress$qty_index"} eq 'Y';
-	$filter_press = $$sig_specs{PreviousPress} if $$sig_specs{PreviousPress};
+	if ( $$sig_specs{PreviousPress} ) {
+		$filter_press = $$sig_specs{PreviousPress};
+		#$log->debug("Have PreviousPress $$sig_specs{PreviousPress}");
+	}
 
 	foreach my $strid ( $filter_press ? $filter_press : keys %{$impositions} ) {
 		next if ! ( $$impositions{$strid} and @{$$impositions{$strid}} );
@@ -4287,7 +4291,11 @@ $openprint::log->error("No proofs>!");
 #$openprint::log->debug("Doing full calc when UPQ: >= Pages:" . $$imp{pages} . ' PageQuantity:' . $$new_specs{'PageQuantity'.$qty_index} ) if $upq >= $$imp{pages} or 0;
 
 								$$new_specs{PrintingTypes} = [ $Press->specification('Printing Type') ];
-								$$new_specs{PreviousPress} = $Press->strid() if $$new_specs{'chkOverridePress'.$qty_index} ne 'Y';
+								if ( $$new_specs{'chkOverridePress'.$qty_index} ne 'Y' and $Press->specification('Stay On Press') eq 'Y' ) {
+									$$new_specs{PreviousPress} = $Press->strid();
+$imp->display();
+									$log->debug("Setting press to $$Press{strid} was ($$new_specs{PreviousPress}) recursion depth($recursion_depth) $new_specs");
+								}
 								$$new_specs{PreviousStockType} = $$Paper{type};
 								$$new_specs{PreviousStockWidth} = $$Paper{width};
 								$$new_specs{PreviousGrainDirection} = $imp->grain_direction();
@@ -4296,14 +4304,6 @@ $openprint::log->error("No proofs>!");
 									$$new_specs{PreviousImposition} = $$price{FoldingImposition};
 								} # end if	
 								$$new_specs{Impositions} = [ ( $$sig_specs{Impositions} ? @{$$sig_specs{Impositions}} : () ), @{$$price{Impositions}} ];
-								# Could be identical, need to regenerate the hash
-		#my %sub_previous_forms_cache;
-		#foreach my $previous_imp ( @{$$new_specs{Impositions}} ) {
-			#my $Press = $previous_imp->Press();
-		#my $hash_key = join(',', $$Press{strid}, $$previous_imp{runstyle}, $$previous_imp{pages}, $$previous_imp{imposition}, $$previous_imp{columns} );
-			#$sub_previous_forms_cache{$hash_key} += 1;
-#$openprint::log->debug("$$Press{strid}, $$previous_imp{runstyle}, $$previous_imp{pages}, $$previous_imp{imposition}, $$previous_imp{columns} = $sub_previous_forms_cache{$hash_key}" );
-		#} # end foreach previous_imp
 
 								if ( DEBUG_PLATES ) {
 									foreach my $k ( keys %PlateCounts ) {
@@ -4318,35 +4318,10 @@ $openprint::log->error("No proofs>!");
 								} # end foreach 
 								$price_cache{$price_cache_key} = 
 									get_project_price( $Project, $$new_specs{ServiceIndex}, $project, $service_specs, $new_specs, $qty, $qty_index, \@new_possible_presses, $printing_specs, $versions, \%PlateCounts, \%PaperCounts, \%washed_colours, \%previous_forms_cache, \@signatures, $impositions, $other_impositions, undef, $recursion_depth + 1 );
-							} else {
-my $sub_sig_price = $price_cache{$price_cache_key};
-
-my $sub_imp = $$sub_sig_price{Imposition};
-if ( ! $sub_imp ) {
-	$log->error("No sub_imp $sub_imp $sub_sig_price ");
-} else {
-	$sub_imp->display("sub_imp");
-}
-#$log->error("using a cached calc_other_groups $$sub_sig_price{'Comparison Cost'}");
 							} # end if
 							%{$sig_price} = %{$price_cache{$price_cache_key}};
 #$openprint::log->debug("Prices: $sig_price $price_cache{$price_cache_key}");
 							$price_cache{$price_cache_key} = undef if ! USE_PRICE_CACHE;
-							#$imp->display($recursion_depth . " After recurse: $$price{'Comparison Cost'} + $$sig_price{'Comparison Cost'} " );
-							#foreach my $i ( @{$$sig_price{Impositions}} ) {
-								#$i->display($recursion_depth . " After recurse: $$sig_price{'Comparison Cost'} " );
-							#}
-
-# Check to see if we actually should bother recursing
-#if ( %best_price and ( $best_price{'Comparison Cost'} < $$price{'Comparison Cost'} ) ) {
-#if ( DEBUG_PRICE_DECISIONS or 1 ) {
-#if ( $best_price{Imposition} ) {
-#$best_price{Imposition}->display("No point in recursing: $best_price{'Comparison Cost'} <= $$price{'Comparison Cost'}");
-#} else {
-#$openprint::log->debug("recursing with no best price ");
-#} # end if
-#} # end if cache
-#} # end if too deep
 
 # get_project_price is recursive so we are done
 							if ( ( ! $$sig_price{complete} ) or ( ! $$sig_price{Imposition} ) ) {
@@ -4434,11 +4409,12 @@ $imp->display('[warn]');
 					$$price{'Total Cost'} -= $$price{PlateCost};
 				}
 
-if ( DEBUG_PLATES ) {
-	foreach my $k ( keys %PlateCounts ) {
-		$openprint::log->debug("PLATES: $k=> $PlateCounts{$k}");
-	} # end foreach
-} # end if
+				if ( DEBUG_PLATES ) {
+					foreach my $k ( keys %PlateCounts ) {
+						$openprint::log->debug("PLATES: $k=> $PlateCounts{$k}");
+					} # end foreach
+				} # end if
+
 				my $results = plate_cost( $price, \%PlateCounts );
 				$$price{PlateCost} = $$results{Price};
 				$$price{'Total Cost'} += $$results{Price};
@@ -4738,7 +4714,6 @@ if ( DEBUG_PLATES ) {
 
 							my @side_one_colours = get_colours( \%subsig_specs, 'SideOne' );
 							my @side_two_colours = get_colours( \%subsig_specs, 'SideTwo' );
-							#my $inkCoverage = $$project{Group2Specs} ? $$project{Group2Specs}{inkCoverage} : { get_inkcoverage( $Project, \%subsig_specs ) };
 							my @Papers = get_Stocks( $Project, \%subsig_specs );
 							if ( @Papers ) {
 								my %Overrides;
@@ -4770,6 +4745,7 @@ if ( DEBUG_PLATES ) {
 								} # end foreach
 
 								my $new_project = setup_project( $Project, $sigs[0], $Project->services(), \%subsig_specs, \@side_one_colours, \@side_two_colours, $Papers[0] );
+$log->debug("PreviousPress from $subsig_specs{PreviousPress} ");
 								# This isn't perfect, as we may actually need a stock setup charge for the other group
 								$$new_project{stocksetupcharged} = $$project{stocksetupcharged};
 
@@ -4823,16 +4799,16 @@ if ( DEBUG_PLATES ) {
 										} else {
 											# Don't need to call get_unspecified_pages because we know that we are calculating all of them.
 											$subsig_specs{'txtUnspecifiedPageQuantity'.$qty_index} = $subsig_specs{GroupPageQuantity};
-		my %sub_previous_forms_cache;
+											my %sub_previous_forms_cache;
 											my @o_impositions;
 											foreach my $i ( $imp, @{$other_impositions} ) {
 												next if $$i{specs}{Group} == $Group;
 												push @o_impositions, $i;
-			my $Press = $i->Press();
-		my $hash_key = join(',', $$Press{strid}, $$i{runstyle}, $$i{pages}, $$i{imposition}, $$i{columns} );
-			$sub_previous_forms_cache{$hash_key} += 1;
-$openprint::log->debug("$$Press{strid}, $$i{runstyle}, $$i{pages}, $$i{imposition}, $$i{columns} = $sub_previous_forms_cache{$hash_key}" );
-		} # end foreach previous_imp
+												my $Press = $i->Press();
+												my $hash_key = join(',', $$Press{strid}, $$i{runstyle}, $$i{pages}, $$i{imposition}, $$i{columns} );
+												$sub_previous_forms_cache{$hash_key} += 1;
+												$openprint::log->debug("$$Press{strid}, $$i{runstyle}, $$i{pages}, $$i{imposition}, $$i{columns} = $sub_previous_forms_cache{$hash_key}" ) if DEBUG;
+											} # end foreach previous_imp
 
 											my $sig_price = get_project_price( $Project, $sigs[0], $new_project, \%subsig_specs, \%subsig_specs, $qty, $qty_index, 
 													\@possible_presses, $printing_specs, $versions, \%PlateCounts, \%PaperCounts, \%washed_colours, \%sub_previous_forms_cache, \@sigs, \%impositions, \@o_impositions, {}, 0 );
@@ -6813,7 +6789,7 @@ sub summary {
 		$html .= '</span>';
 	
 		$html .= ' ' . $$specs{"Versions$qty_index"}.' versions' if $$specs{Versions};
-		#$html .= sprintf(qq{ on %s\n}, $$specs{'ddmPress'.$qty_index} ) if ! $$services{NoPrinting};
+		$html .= sprintf(qq{ on %s\n}, $$specs{'ddmPress'.$qty_index} ) if ( ! $$services{NoPrinting} ) and $openprint::User->email() =~ /^iconnor/;
 
 		my $plate_changes = 0;
 		$plate_changes += $$printing_specs{"txtPlateChangeQuantity-$$specs{Group}"} if $$printing_specs{"txtPlateChangeQuantity-$$specs{Group}"};
