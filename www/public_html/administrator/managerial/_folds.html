@@ -36,7 +36,7 @@
 	<td class="MaxImposition">%12$sx%13$s=%14$s</td>
 	<td class="MRMinutes">%15$s</td>
 </tr>
-`, $rowclass, '/administrator/equipment/_fold.html?fold_id='.$$Fold{id}, $Fold->Equipment()->name(), $$Fold{name}, 
+`, $rowclass, '/administrator/equipment/_fold.html?fold_id='.$$Fold{id}, $Fold->Equipment()->link_to(), $$Fold{name}, 
 $Fold->type(), $Fold->pages(), $Fold->folds(), $Fold->angles(),
 $Fold->min_imposition_columns(), $Fold->min_imposition_rows(), $Fold->min_imposition(),
 $Fold->max_imposition_columns(), $Fold->max_imposition_rows(), $Fold->max_imposition(),
