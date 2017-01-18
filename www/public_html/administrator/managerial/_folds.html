@@ -18,6 +18,7 @@
 			<th class="Angles">Angles</th>
 			<th class="MinImposition">Min Imposition</th>
 			<th class="MaxImposition">Max Imposition</th>
+			<th class="MRMinutes">MR Minutes</th>
 		</tr>
 <? echo (
 	my $html;
@@ -33,11 +34,13 @@
 	<td class="Angles">%8$s</td>
 	<td class="MinImposition">%9$sx%10$s=%11$s</td>
 	<td class="MaxImposition">%12$sx%13$s=%14$s</td>
+	<td class="MRMinutes">%15$s</td>
 </tr>
 `, $rowclass, '/administrator/equipment/_fold.html?fold_id='.$$Fold{id}, $Fold->Equipment()->name(), $$Fold{name}, 
 $Fold->type(), $Fold->pages(), $Fold->folds(), $Fold->angles(),
 $Fold->min_imposition_columns(), $Fold->min_imposition_rows(), $Fold->min_imposition(),
 $Fold->max_imposition_columns(), $Fold->max_imposition_rows(), $Fold->max_imposition(),
+$Fold->makeready_time()
 );
 
 		$rowclass = $rowclass ? '' : ' class="colRow"';
