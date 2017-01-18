@@ -191,7 +191,11 @@ sub get_url {
 	@keys = sets::exclude( [ 'password', 'btnFunction', 'email','select_currency_id','ddmCompany','CompanyFilter','pricelist_id' ], \@keys );
 	my %encoded;
 	foreach my $k ( @keys ) {
-		$encoded{$k} = $$params{$k};
+		if ( ref $$params{$k} eq 'ARRAY' ) {
+			$encoded{$k} = join( ',', @{$$params{$k}} );
+		} else {
+			$encoded{$k} = $$params{$k};
+		}
 		$encoded{$k} =~ s/([^A-Za-z0-9])/sprintf("%%%02X", ord($1))/seg;	
 	} # end foreach
 	if ( $options and $$options{'include'} ) {
