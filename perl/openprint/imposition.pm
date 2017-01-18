@@ -1036,8 +1036,8 @@ $openprint::log->debug("Considering sig size: $signature_size") if DEBUG_CONVERT
 			foreach my $block ( @{$blocks{$signature_size}} ) {
 				my ( $col, $row ) = @$block;
 			
-				next if $imp_cols % 2 and $$spread_size == 2 and $$imp{image_orientation} eq 'Vertical';
-				next if $imp_rows % 2 and $$spread_size == 2 and $$imp{image_orientation} eq 'Horizontal';	
+				next if $imp_cols % 2 and $spread_size == 2 and $$imp{image_orientation} eq 'Vertical';
+				next if $imp_rows % 2 and $spread_size == 2 and $$imp{image_orientation} eq 'Horizontal';	
 
 				$cols = int( $imp_cols / $col );
 				
