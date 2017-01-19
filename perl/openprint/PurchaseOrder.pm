@@ -11,7 +11,7 @@ use vars qw( $debug $log $dbh %config %session $table $serial %fields %find_fiel
 *config = \%openprint::config;
 *session = \%openprint::session;
 
-$debug = 1;
+$debug = 0;
 
 require sql;
 require ssi;
@@ -672,10 +672,10 @@ sub can_see_pricing {
 		return 1;
 	} # end if
 
-	my $User = new openprint::User( $openprint::session{user_id} );
+	my $User = $openprint::User;
 	
 	if ( ( $$User{id} == $_[0]->created_by() ) or ( $$User{type} eq 'A' ) or openprint::usergroup::is_user_in( ['Accounting','SalesAdmin','InventoryManager'], $$User{id} ) ) {
-$log->debug('can see') if $debug;
+		$log->debug('can see') if $debug;
 		return 1;
 	} # end if
 
