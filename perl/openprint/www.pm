@@ -544,14 +544,36 @@ $log->debug("Service: " . $Service->to_string() );
 						openprint::Estimating::ShrinkWrapping::display( \%variable, $variable{Project}, $service_index );
 					} # end if
 				} elsif ($third eq 'shipping') {
-
-					if ( $filename eq 'Shipping.html' ) {
-						require openprint::Estimating::Shipping;
-						openprint::Estimating::Shipping::display( $r, $log, $dbh, \%variable, $project_index, $service_index );
-					} elsif ( $filename eq 'UPS.html' ) {
-						require openprint::Estimating::UPS;
-						openprint::Estimating::UPS::display( $log, $dbh, \%variable, $project_index, $service_index );
-					} # end if
+		
+					if ( $filename =~ /^(\w*).html$/ ) {
+					my $module = $1;
+					eval {
+$log->debug("Require $module");
+						require "openprint/Estimating/$module.pm";
+						if ( my $function = ("openprint::Estimating::$module")->can( 'display' ) ) {
+							$function->( $project_index, $service_index, \%variable );
+						} else {
+$log->debug("No display function $module.pm");
+						}
+					}; 
+				$log->error( "Eval error of require $module Reason: " . $@ ) if $@;
+					} else {
+						if ( -e $ENV{DOCUMENT_ROOT}.$uri ) {
+							my ( $proc ) = $filename =~ /^(.*)\.(html|json)$/;
+							if ( $proc ) {
+								my $module = join('_', ($first, $second, $third));
+								require "openprint/$module.pm";
+								if ( my $function = ('openprint::'.$module)->can($proc) ) {
+									$log->debug("Running openprint::$module->$proc") if Debug;
+									$function->();
+								} else {
+									$log->error( "No function def for $module :: $proc!" );
+								}
+							} else {
+								$log->debug("No proc found for $filename");
+							} # end if
+						} # end if -e $ENV{DOCUMENT_ROOT}.$uri
+					}
 				} # end if main:proj:$third
 			} else {
 				if ( -e $ENV{DOCUMENT_ROOT}.$uri ) {
