@@ -1,4 +1,5 @@
 <fieldset><legend>To</legend>
+	<div class="Address">
        <ul>
         <li class="to_company"><label>Company</label>
 			<input type="text" onkeyup="filter_companies('to_company_id', {name:this.value,selected_id:get_ddm_value($('to_company_id'))});" onkeydown="if(event.keyCode==13){this.form.to_company_id.onchange();}"class="filter" />
@@ -104,4 +105,5 @@
 		<input type="email" id="ToEmail" name="ToEmail" value="<?ToEmail?>" oninput="calc(this.form.name);"/>
 	</li>
 	</ul>
+	</div>
 </fieldset>
