@@ -297,7 +297,7 @@ $openprint::log->debug("Fold pq($$FI{page_quantity}) pages($$FI{pages}) ($$Fold{
 						$total_pages += $$FI{pages};
 
 						if ( $total_pages > $$I{pages} ) {
-							$openprint::log->debug("Already have enough pages $total_pages + $$FI{pages} <= $$I{pages}");
+							$openprint::log->debug("Already have enough pages $total_pages + $$FI{pages} <= $$I{pages}") if DEBUG;
 							next;
 						} else {
 							my $p = $$FI{page_quantity};
