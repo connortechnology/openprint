@@ -145,7 +145,7 @@
 			if ( @manifest_ids > 1000 ) {
 				openprint::Manifest->find();
 			} else {
-				openprint::Manifest->find(id=>\@manifest_ids);
+				openprint::Manifest->find(id=>\@manifest_ids) if @manifest_ids;
 			} # end if
 		} # end if
 		sql::end_transaction( $dbh, $ac );

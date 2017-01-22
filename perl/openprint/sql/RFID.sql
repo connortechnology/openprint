@@ -9,6 +9,8 @@ CREATE TABLE RFIDTagTypes (
 	name	TEXT,
 	PRIMARY KEY (id)
 );
+table create unique index rfidtagtypes_name_idx on rfidtagtypes (name);
+
 CREATE TABLE RFIDTagActions (
 	id	 SERIAL NOT NULL,
 	name	TEXT,

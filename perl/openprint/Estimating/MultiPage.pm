@@ -157,7 +157,6 @@ sub groups {
 
 sub calc {
 	my ( $log, $dbh, $variable, $project_index, $service_index, $specs ) = @_;
-$openprint::log->error("MultiPageCalc");
 	$$specs{Status} = 'calculated';
 	$$specs{alert} = '';
 
@@ -575,7 +574,7 @@ sub status {
 } # end sub status
         
 sub save {
-#$openprint::log->debug("Starting Multipage::save");
+$openprint::log->debug("Starting Multipage::save");
 	my ( $project_index, $service_index, $param ) = @_;
 	my $Project = new openprint::Project( $project_index );	
 	my $Service = $Project->Service($service_index);
@@ -602,6 +601,15 @@ sub save {
             openprint::print_project::delete_service( $Project, $_ );
         } # end foreach
     } # end if Self or Different Cover
+	if ( ! $Project->signatures({type=>'Interior Pages'}) ) {
+            $Project->add_signature( undef, undef, {
+                        txtSignatureType		=> 'Interior Pages',
+                        txtServiceDescription	=> 'Interior Pages',
+                        Group					=>  2,
+                        PrintingType			=> $$param{PrintingType},
+                        txtSpreadSize			=>  4,
+                        } );
+	}
 
 	foreach my $ssid ( $Project->signatures() ) {
 		my $sig_specs = openprint::service::get_specs_ref( $Project, $ssid );

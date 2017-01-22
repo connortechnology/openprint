@@ -145,14 +145,14 @@ sub value {
 		
 		my $Cost = $_[0]->Cost();
 		if ( $Cost ) {
-$openprint::log->debug("cost for $$self{skid_id} $$Cost{units} $$Cost{cost}");
+$openprint::log->debug("cost for $$self{skid_id} $$Cost{units} $$Cost{cost}") if $debug;
 			if ( (!$$Cost{units}) or ($$Cost{units} eq '/100lbs' or $$Cost{units} eq '/cwt') ) {
 				$$self{value} = $$self{quantity} * $$Cost{cost} / 100;
 			} else {
 				$$self{value} = $$self{quantity} * $$Cost{cost};
 			} # end if
 		} else {
-$openprint::log->debug("No cost for $$self{skid_id}");
+$openprint::log->debug("No cost for $$self{skid_id}") if $debug;
 		} # end Cost
 	} # end if ! exists value
 	return $$self{value} if $$self{value};
