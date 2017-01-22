@@ -119,14 +119,14 @@ while(1) {
 	my @Hosts = openprint::Host->find( monitored=>1 );
 	foreach my $Host ( @Hosts ) {
 
-		$Host->lock();
-		$Host->load(); # these pings can take a long time, and the record could get out of date, so refresh
-		my $was_online = $Host->online();
+		
 		$log->debug( $Host->hostname() . ' was ' . ( $Host->online() ? 'online' : 'offline' ) );
 
 		my $online = undef;
 		my $now = time;
+		my $has_monitored_interfaces = 0;
 
+		# First find out current status, then lock & load to find out previous status because we don't want to hold this lock for however long it takes to ping.
 		my @HIs = $Host->Interfaces( undef );
 		foreach my $HI ( @HIs ) {
 			next if ! $HI->monitor();
@@ -134,6 +134,7 @@ while(1) {
 				$log->debug("No ip for " . $HI->to_string() );
 				next;
 			}
+			$has_monitored_interfaces = 1;
 
 			$log->debug( $HI->ip() . ' was ' . ( $HI->online() ? 'online' : 'offline' ) . " " . $HI->to_string() );
 			my @ping = $p->ping($HI->ip());
@@ -154,6 +155,10 @@ while(1) {
 			$log->debug( $HI->ip() . ' is now ' . ( $HI->online() ? 'online' : 'offline' ) . ' value of ping was ' . $ping );
 		} # end foreach HI
 
+		$Host->lock();
+		$Host->load(); # these pings can take a long time, and the record could get out of date, so refresh
+		my $was_online = $Host->online();
+
 		if ( $online != $was_online ) {
 			my $notified = $$Host{notified};
 
@@ -172,17 +177,27 @@ while(1) {
 			}
 		} # end if ionline status change
 
+		if ( ! $has_monitored_interfaces ) {
+			$Host->unlock();
+			$log->error("Host $$Host{hostname} is monitored but none of it's interfaces are.");
+			next;
+		}
+
 		my $since = $now-$$Host{state_changed_on};
 		$log->debug( $Host->hostname() . ' is now ' . ( $Host->online() ? 'online' : 'offline' ) . " $since " );
-		if ( (!$Host->online()) and ( ! $$Host{notified} ) and ( $since > $$Host{offline_seconds} ) ) {
-			$_ = $Host->save({ notified=>1 });
-			if ( $_ ) {
-				$log->error($_);
-				$Host->unlock();
-				next;
+		if ( ! $Host->online() ) {
+			if ( ( ! $$Host{notified} ) and ( $since > $$Host{offline_seconds} ) ) {
+				$_ = $Host->save({ notified=>1 });
+				if ( $_ ) {
+					$log->error($_);
+					$Host->unlock();
+					next;
+				}
+				$log->warn("Sending offline notification");
+				notify( $Host, $online );
+			} else {
+				$log->debug("Host is notified? $$Host{notified} or since($since) <= $$Host{offline_seconds}");
 			}
-			$log->debug("Sending offline notification");
-			notify( $Host, $online );
 		} # end if ! notified
 
 		$Host->unlock();
