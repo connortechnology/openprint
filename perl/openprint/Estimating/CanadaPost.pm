@@ -20,6 +20,7 @@ use strict;
 require Business::CanadaPost;
 require openprint::service;
 require openprint::Project;
+require openprint::Estimating::Shipping;
 
 use vars qw( $log $dbh %variable %config %session );
 *variable = \%openprint::variable;
@@ -287,11 +288,11 @@ sub display {
 sub summary {
 	my ( $Project, $service_id, $specs, $qty_index ) = @_;
 	if ( $qty_index ) {
-		return openprint::Estiamting::Shipping::summary( @_ );
+		return openprint::Estimating::Shipping::summary( @_ );
 	} 
 	my $html;
 	$html .= $$specs{ddmServiceType}. "\n";
-	$html .= openprint::Estiamting::Shipping::summary( @_ );
+	$html .= openprint::Estimating::Shipping::summary( @_ );
 	return $html;
 } # end sub summary
 
