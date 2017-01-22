@@ -127,7 +127,7 @@ while(1) {
 		my $online = undef;
 		my $now = time;
 
-		my @HIs = $Host->Interfaces();
+		my @HIs = $Host->Interfaces( undef );
 		foreach my $HI ( @HIs ) {
 			next if ! $HI->monitor();
 			if ( ! $HI->ip() ) {
@@ -171,10 +171,9 @@ while(1) {
 				notify( $Host, $online );
 			}
 		} # end if ionline status change
-		$log->debug( $Host->hostname() . ' is now ' . ( $Host->online() ? 'online' : 'offline' ) . " $since " );
-
 
 		my $since = $now-$$Host{state_changed_on};
+		$log->debug( $Host->hostname() . ' is now ' . ( $Host->online() ? 'online' : 'offline' ) . " $since " );
 		if ( (!$Host->online()) and ( ! $$Host{notified} ) and ( $since > $$Host{offline_seconds} ) ) {
 			$_ = $Host->save({ notified=>1 });
 			if ( $_ ) {
