@@ -37,58 +37,60 @@ $table = 'purchaseorders';
 $serial = 'purchaseorders_id_seq';
 
 %fields = (
-	id				=>	'id',
-	num					=>	'num',
-	company_id		=>	'company_id',
-	contact_id			=>	'contact_id',
-	'currency_id'		=>	'currency_id',
-	'created_on'		=>	'created_on',
-	'updated_on'		=>	'updated_on',
-	'created_by'		=>	'created_by',
-	'authorized'		=>	'authorized',
-	'authorized_by'		=>	'authorized_by',
-	'authorized_on'		=>	'authorized_on',
-	'delivered_on'		=>	'delivered_on',
+	id									=>	'id',
+	num									=>	'num',
+	company_id					=>	'company_id',
+	contact_id					=>	'contact_id',
+	currency_id					=>	'currency_id',
+	created_on					=>	'created_on',
+	updated_on					=>	'updated_on',
+	created_by					=>	'created_by',
+	authorized					=>	'authorized',
+	authorized_by				=>	'authorized_by',
+	authorized_on				=>	'authorized_on',
+	delivered_on				=>	'delivered_on',
 	delivered_on_switch	=>	'delivered_on_switch',
-	'total'				=>	'total',
-	'subtotal'			=>	'subtotal',
-	'deleted'			=>	'deleted',
-	'supplier_id'		=>	'supplier_id',
-	'shipping_method'	=>	'shipping_method',
-	'shipping_terms'	=>	'shipping_terms',
-	'vendor_contact'	=>	'vendor_contact',
-	contact_id			=>	'contact_id',
-	'vendor_name'		=>	'vendor_name',
-	'vendor_address1'	=>	'vendor_address1',
-	'vendor_address2'	=>	'vendor_address2',
-	'vendor_city'		=>	'vendor_city',
-	'vendor_country'	=>	'vendor_country',
-	'vendor_state'		=>	'vendor_state',
-	'vendor_postalcode'	=>	'vendor_postalcode',
-	'vendor_phone'		=>	'vendor_phone',
-	'vendor_fax'		=>	'vendor_fax',
-	'vendor_sms'		=>	'vendor_sms',
-	'vendor_email'		=>	'vendor_email',
-	'shipto_contact'	=>	'shipto_contact',
-	'shipto_name'		=>	'shipto_name',
-	'shipto_address1'	=>	'shipto_address1',
-	'shipto_address2'	=>	'shipto_address2',
-	'shipto_city'		=>	'shipto_city',
-	'shipto_country'	=>	'shipto_country',
-	'shipto_state'		=>	'shipto_state',
-	'shipto_postalcode'	=>	'shipto_postalcode',
-	'shipto_phone'		=>	'shipto_phone',
-	'shipto_mobile'		=>	'shipto_mobile',
-	'shipto_fax'		=>	'shipto_fax',
-	'shipto_sms'		=>	'shipto_sms',
-	'shipto_email'		=>	'shipto_email',
-	'manifest_id'		=>	'manifest_id',
-	'cancelled'			=>	'cancelled',
+	total								=>	'total',
+	subtotal						=>	'subtotal',
+	deleted							=>	'deleted',
+	supplier_id					=>	'supplier_id',
+	shipping_method			=>	'shipping_method',
+	shipping_terms			=>	'shipping_terms',
+	vendor_contact			=>	'vendor_contact',
+	contact_id					=>	'contact_id',
+	vendor_name					=>	'vendor_name',
+	vendor_address1			=>	'vendor_address1',
+	vendor_address2			=>	'vendor_address2',
+	vendor_city					=>	'vendor_city',
+	vendor_country			=>	'vendor_country',
+	vendor_state				=>	'vendor_state',
+	vendor_postalcode		=>	'vendor_postalcode',
+	vendor_phone				=>	'vendor_phone',
+	vendor_fax					=>	'vendor_fax',
+	vendor_sms					=>	'vendor_sms',
+	vendor_email				=>	'vendor_email',
+	shipto_contact			=>	'shipto_contact',
+	shipto_name					=>	'shipto_name',
+	shipto_address1			=>	'shipto_address1',
+	shipto_address2			=>	'shipto_address2',
+	shipto_city					=>	'shipto_city',
+	shipto_country			=>	'shipto_country',
+	shipto_state				=>	'shipto_state',
+	shipto_postalcode		=>	'shipto_postalcode',
+	shipto_phone				=>	'shipto_phone',
+	shipto_mobile				=>	'shipto_mobile',
+	shipto_fax					=>	'shipto_fax',
+	shipto_sms					=>	'shipto_sms',
+	shipto_email				=>	'shipto_email',
+	manifest_id					=>	'manifest_id',
+	cancelled						=>		'cancelled',
+	#notifications				=>	undef,
 );
 
 %find_fields = (
 	docket	=>	'(SELECT docket FROM PurchaseOrder_Contents WHERE PurchaseOrder_Contents.po_id=PurchaseOrders.id)',
 	item_id	=>	'(SELECT item_id FROM PurchaseOrder_Contents WHERE PurchaseOrder_Contents.po_id=PurchaseOrders.id)',
+	notification_user_id	=>	'(SELECT user_id FROM PurchaseOrder_Notifications WHERE po_id=purchaseorders.id)',
 );
 
 %transforms = (
@@ -391,7 +393,7 @@ sub decline {
 sub notifications {
 	my ( $self, $new ) = @_;
 	if ( $new ) {
-		@{$$self{notifications}} = @{$new};
+		$$self{notifications} = ref $new eq 'ARRAY' ? $new : [ $new ];
 		if ( $$self{id} ) {
 			my $ac = sql::start_transaction( $openprint::dbh );
 			$dbh->do( 'LOCK TABLE PurchaseOrder_Notifications IN ACCESS EXCLUSIVE MODE' ) or $openprint::log->error( DBI->errstr );
@@ -419,7 +421,7 @@ sub update_notifications {
 
 	my @companies = ( $PO->company_id(), $PO->supplier_id() );
 	my @notifications = $PO->notifications(); # returns user_ids
-		my @new_notifications = @notifications;
+	my @new_notifications = @notifications;
 	if ( $PO->is_FSC() or $PO->is_PEFC() ) {
 		@new_notifications = sets::union( @new_notifications, map { $PO->can_view( $_->User() ) ? $_->user_id() : () } openprint::User_Notification->find( type=>'FSC/PEFC Notifications', value=>'Yes', user_company_id=>\@companies, 'company_id is null or ='=>$PO->supplier_id() ) );
 	} # end if
@@ -605,8 +607,8 @@ sub can_view {
 		} # end if
 	} # end foreach C
 
-	if ( $_[0]->notifications() ) {
-		if ( sets::isin( $$User{id}, $_[0]->notifications() ) ) {
+	if ( my @notifications = $_[0]->notifications() ) {
+		if ( sets::isin( $$User{id}, \@notifications ) ) {
 			$log->debug($$User{firstname} . ' can see because in notifications.' ) if $debug;
 			return 1;
 		} # end if
@@ -670,10 +672,10 @@ sub can_see_pricing {
 		return 1;
 	} # end if
 
-	my $User = new openprint::User( $openprint::session{user_id} );
+	my $User = $openprint::User;
 	
 	if ( ( $$User{id} == $_[0]->created_by() ) or ( $$User{type} eq 'A' ) or openprint::usergroup::is_user_in( ['Accounting','SalesAdmin','InventoryManager'], $$User{id} ) ) {
-$log->debug('can see') if $debug;
+		$log->debug('can see') if $debug;
 		return 1;
 	} # end if
 
@@ -693,8 +695,8 @@ $log->debug('can see') if $debug;
 			} # end if
 		} # end foreach C
 	} # end if
-	if ( $_[0]->notifications() ) {
-		if ( sets::isin( $$User{id}, $_[0]->notifications() ) ) {
+	if ( my @notifications = $_[0]->notifications() ) {
+		if ( sets::isin( $$User{id}, \@notifications ) ) {
 			$log->debug($$User{firstname} . ' can see because in notifications.' ) if $debug;
 			return 1;
 		} # end if

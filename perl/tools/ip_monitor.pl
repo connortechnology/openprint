@@ -127,7 +127,7 @@ while(1) {
 		my $has_monitored_interfaces = 0;
 
 		# First find out current status, then lock & load to find out previous status because we don't want to hold this lock for however long it takes to ping.
-		my @HIs = $Host->Interfaces();
+		my @HIs = $Host->Interfaces( undef );
 		foreach my $HI ( @HIs ) {
 			next if ! $HI->monitor();
 			if ( ! $HI->ip() ) {

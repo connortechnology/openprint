@@ -406,6 +406,7 @@ $openprint::log->debug("AQ Equipment $$Equipment{strid}") if DEBUG;
 			my %MakeReadies = $MakeReadies ? %$MakeReadies : ();
 			$$specs{'hdnBreakdown'.$qty_index} .= sprintf('Imposition: %dx%d+%dx%d=%dout %s:', @$imp{'columns','rows','dutch_columns','dutch_rows','imposition','runstyle'} );
 			next if ! $$imp{imposition};
+$openprint::log->debug("impo{columns} $$imposition{columns} / $$imp{columns}");
 			my $width = $imposition->sheet_width() / ( $$imposition{columns}/$$imp{columns} );
 			my $height = $imposition->sheet_height() / ( $$imposition{rows}/$$imp{rows} );
 			$$specs{'hdnBreakdown'.$qty_index} .= $imposition->sheet_width().'x'.$imposition->sheet_height().'=>'.$width.'x'.$height.'<br/>';

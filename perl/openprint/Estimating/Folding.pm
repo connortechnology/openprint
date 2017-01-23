@@ -1024,13 +1024,13 @@ $openprint::log->debug("No Fold") if DEBUG;
 										#page_columns=>	$Imposition->page_rows(),
 										#page_rows	=>	$Imposition->page_columns(),
 									#) ),
-									page_width		=>	$Imposition->page_width(),
-									page_height		=>	$Imposition->page_height(),
+									page_width		=>	$$Imposition{page_width},
+									page_height		=>	$$Imposition{page_height},
 									spine_direction	=>	$$Imposition{image_orientation},
 									stitching		=>	(($$services{SaddleStitching} or $$services{LoopStitching}) ? 1 : 0),
 									perfectbind		=>	($$services{PerfectBound} ? 1 : 0),
 									spinepaste		=>	($$services{SpinePaste} ? 1 : 0),
-									gsm				=>	$Paper->gsm(),
+									gsm				=>	$$Paper{gsm},
 									calliper		=>	$$Paper{calliper},
 									imposition		=>	$$Imposition{imposition},
 									columns		=>	$$Imposition{columns},
@@ -1390,7 +1390,8 @@ $openprint::log->debug("Resulting fold: " . $Fold->to_string() ) if DEBUG;
 				my %setupPrice = openprint::service::get_price_object( $Fold->type().'MakeReady', $imposition, $Equipment );
 				if ( ! %setupPrice ) {
 					$openprint::log->debug("No MakeReady for " . $Fold->type().'MakeReady' . ' ' . $imposition . ' out on ' . $$Equipment{strid} ) if DEBUG;
-					%setupPrice = openprint::service::get_price_object( 'FoldMakeReady', $imposition, $Equipment );
+					%setupPrice = openprint::service::get_price_object( 'FoldingMakeReady', $imposition, $Equipment );
+					%setupPrice = openprint::service::get_price_object( 'FoldMakeReady', $imposition, $Equipment ) if ! %setupPrice;
 				} else {
 					$openprint::log->debug("Got MakeReady for " . $Fold->type().'MakeReady' . ' imp:' . $imposition . " \$$setupPrice{Price} $setupPrice{units}" ) if DEBUG;
 				} # end if
@@ -2391,8 +2392,8 @@ $openprint::log->debug("Has no equipment_id") if DEBUG;
 #pages			=>	$Imposition->pages(),
 #page_columns	=>	$Imposition->page_columns(),
 #page_rows		=>	$Imposition->page_rows(),
-			page_width		=>	$Imposition->page_width(),
-			page_height		=>	$Imposition->page_height(),
+			page_width		=>	$$Imposition{page_width},
+			page_height		=>	$$Imposition{page_height},
 			spine_direction =>	$$Imposition{image_orientation},
 			gsm				=>	$Paper->gsm(),
 			imposition		=>	$$Imposition{imposition},
