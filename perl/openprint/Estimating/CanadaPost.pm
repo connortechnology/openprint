@@ -132,7 +132,7 @@ $log->debug("No supplier");
 } # end if
 
 	if ( ! $config{CanadaPost_MerchantID} ) {
-		$$specs{alert} .= "You have not confidured your Canada Post Merchant ID";
+		$$specs{alert} .= "You have not configured your Canada Post Merchant ID";
 		return $$specs{Status} = 'uncalculated';
 	}
 $log->debug("Shiprequest ");
@@ -276,7 +276,7 @@ $log->debug("Shiprequest $shiprequest");
 } # end sub calc
 
 sub display {
-	my ( $log, $dbh, $variable, $project_index, $service_index ) = @_;
+	my ( $project_index, $service_index, $variable ) = @_;
 
 	my $Project = new openprint::Project( $project_index );
 	$$variable{Mode} = $Project->mode();
