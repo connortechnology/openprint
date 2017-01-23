@@ -40,15 +40,17 @@ my @args = ();
 my @dbs = @ARGV;
 if ( ! @dbs ) {
 	if ( $$opts{user} ) {
-		push @args, "--user=$$opts{user}";
+		push @args, " --user=$$opts{user}";
 	} # end 
 	if ( $$opts{password} ) {
-		push @args, "--password=$$opts{password}";
+		push @args, " --password=$$opts{password}";
 	}
 
 	if ( $$opts{host} and $$opts{host} ne 'local' ) {
-		push @args, "-h $$opts{host}";
+		push @args, " -h $$opts{host}";
 	} 
+	push @args, " --defaults-file=/etc/mysql/debian.cnf"
+
 	$_ = `/usr/bin/mysql -B -N -e 'show databases' @args |grep -viE '(staging|performance_schema|information_schema)'`;
 	die "Can't get db list: ($!)" if $?;
 	@dbs = split "\n", $_;
