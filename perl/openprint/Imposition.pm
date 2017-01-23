@@ -541,7 +541,7 @@ sub page_rows {
 } # end sub page_rows
 
 sub page_width {
-	return $_[0]{spread_size} == 4 ? $_[0]{object_width}/2 : $_[0]{object_width};
+	return $_[0]{object_width}/($_[0]{spread_size}/2);
 }
 sub page_height {
 	return $_[0]{object_height};
