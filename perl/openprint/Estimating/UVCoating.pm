@@ -385,6 +385,7 @@ sub signature_calc {
 		my %minimum = $MinimumCharge->get_price( undef, $Equipment ) if $MinimumCharge;
 		my $BlanketCutPrice;
 		my $runspeed = $Equipment->specification('UVCoatingRunSpeed', $Stock->gsm() );
+		my $equipment_id = $$Equipment{id};
 
 		for ( my $set_index = 0; $set_index < @Sets_Of_Impositions; $set_index += 1 ) {
 			my $impositions = $Sets_Of_Impositions[$set_index];
@@ -404,19 +405,20 @@ sub signature_calc {
 
 			for ( my $imp_index = 0; $imp_index < @$impositions; $imp_index += 1 ) {
 				my $imp = $$impositions[$imp_index];
+				my $wt = ( $$imp{runstyle} eq 'Work & Turn' or $$imp{runstyle} eq 'Work & Tumble' ) ? 1 : 0;
 
 				#$breakdown .= sprintf( '%dx%d+%dx%d=%dout on %sx%s<br/>',$imp->get('columns','rows','dutch_columns','dutch_rows','imposition'), $Stock->width(), $Stock->height() );
 				$breakdown .= '<tr><td colspan="2"><br/>'.$imp->to_string().'</td></tr>';
 				$openprint::log->debug('Trying: ' . $breakdown ) if DEBUG;
 
-				if ( ! ( $imp->rows() * $imp->columns() ) ) {
+				if ( ! ( $$imp{rows} * $$imp{columns} ) ) {
 					$openprint::log->error("Invalid Imposition in UVCoating");
 					$imp->display();
 					$complete = 0;
 					last;
 				} # end if
 
-				if ( (sets::intersection( @front_uv, @back_uv ) != sets::union( @front_uv, @back_uv ) ) and sets::isin($$imp{runstyle},['Work & Turn','Work & Tumble']) and ($Equipment->specification('WT UVCoating') ne 'Y') ) {
+				if ( $wt and (sets::intersection( @front_uv, @back_uv ) != sets::union( @front_uv, @back_uv ) ) and ($Equipment->specification('WT UVCoating') ne 'Y') ) {
 					$breakdown .= '<tr><td colspan="2" class="error">Does not support WT UV Coating</td></tr>';
 					if ( $$services{Cutting} ) {
 						# If we are the last set
@@ -434,9 +436,9 @@ $openprint::log->debug('W&T: ' . $breakdown ) if DEBUG;
 				} # end if
 
 				if ( 
-						( $_ = $Equipment->fits( $imp->sheet_width(), $imp->sheet_height(), $Stock->calliper() ) )
+						( $_ = $Equipment->fits( $imp->sheet_width(), $imp->sheet_height(), $$Stock{calliper} ) )
 						and
-						( $_ = $Equipment->fits( $imp->layout_width(), $imp->layout_height(), $Stock->calliper() ) )
+						( $_ = $Equipment->fits( $imp->layout_width(), $imp->layout_height(), $$Stock{calliper} ) )
 				   ) {
 					$breakdown .= "<tr><td colspan=\"2\" class=\"error\">Doesn't fit. $_</td></tr>";
 $openprint::log->debug('DOESNT: ' . $breakdown ) if DEBUG;
@@ -452,7 +454,7 @@ $openprint::log->debug('DOESNT: ' . $breakdown ) if DEBUG;
 					last;
 				} # end if
 
-				my $run_qty = Math::Round::nearest( 1, $qty * $imp->quantity() / $Imposition->imposition() );
+				my $run_qty = Math::Round::nearest( 1, $qty * $imp->quantity() / $$Imposition{imposition} );
 				$breakdown .= '<tr><td colspan="2">impressions: ' . $run_qty .'</td></tr>';
 		
 				if ( my $Overs = $Equipment->Specification('UVCoating Overs', $run_qty ) ) {
@@ -464,7 +466,7 @@ $openprint::log->debug('DOESNT: ' . $breakdown ) if DEBUG;
 					} # endif
 				} # end if
 				my @types;
-				if ( sets::isin( $imp->runstyle(), ['Work & Turn', 'Work & Tumble'] ) ) {
+				if ( $wt ) {
 # need to merge any overalls into spots
 					foreach my $type ( @different_types ) {
 						if ( ! ( sets::isin( $type, \@front_uv ) and sets::isin( $type, \@back_uv ) ) ) {
@@ -482,9 +484,9 @@ $openprint::log->debug("Types: @types") if DEBUG;
 				foreach my $type ( @types ) {
 					my $type_total = 0;
 					my $setupPrice;
-					if ( $MakeReadies{$Equipment->id()} and (
-								(($$sig_specs{'StockWidth'.$qty_index} * $$sig_specs{'StockHeight'.$qty_index} * 1.10 ) > $MakeReadies{$Equipment->id()} ) and
-								(($$sig_specs{'StockWidth'.$qty_index} * $$sig_specs{'StockHeight'.$qty_index} * .90 ) < $MakeReadies{$Equipment->id()} )
+					if ( $MakeReadies{$equipment_id} and (
+								(($$sig_specs{'StockWidth'.$qty_index} * $$sig_specs{'StockHeight'.$qty_index} * 1.10 ) > $MakeReadies{$equipment_id} ) and
+								(($$sig_specs{'StockWidth'.$qty_index} * $$sig_specs{'StockHeight'.$qty_index} * .90 ) < $MakeReadies{$equipment_id} )
 								) ) {
 						$setupPrice = 0;
 					} else {
