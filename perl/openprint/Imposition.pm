@@ -44,6 +44,8 @@ my @fields = (
 	'equipment_id', 'Equipment',
 	'inkCoverage',
 	'folio_lip',
+	'page_width',
+	'page_height',
 );
 
 # spread_cols and spread_rows are oriented identically to the imposition
@@ -379,14 +381,6 @@ sub load {
 		$$self{spread_rows} = $$specs{'SpreadRows'.$qty_index};
 		$$self{spread_columns} = $$specs{'SpreadCols'.$qty_index};
 
-
-if ( 0 ) {
-		$$self{layout_width} = $$self{spread_columns} * $$self{layout_width};
-		$$self{layout_height} = $$self{spread_rows} * $$self{layout_height};
-		$$self{image_width} = $$self{spread_columns} * $$self{image_width};
-		$$self{image_height} = $$self{spread_rows} * $$self{image_height};
-}
-
 	} else {
 		$$self{spread_rows} = Math::Round::nearest(1,$$specs{txtWidth} / $$specs{txtFinalWidth}) if $$specs{txtFinalWidth};
 		$$self{spread_columns} = Math::Round::nearest(1,$$specs{txtHeight} / $$specs{txtFinalHeight}) if $$specs{txtFinalHeight};
@@ -403,6 +397,8 @@ if ( 0 ) {
 		} # end if
 		$$self{pages} = $$self{spreads} * $$self{spread_size};
 	} # end if
+		$$self{page_width} = $$specs{txtFinalWidth};
+		$$self{page_height} = $$specs{txtFinalHeight};
 	$$self{sheet_width} = $$self{Paper}->width();
 	$$self{sheet_height} = $$self{cut_off} ? $$self{cut_off} : $$self{Paper}->height();
 	if ( ! exists $$specs{"RotateSheet$qty_index"} ) {
@@ -539,13 +535,6 @@ sub page_rows {
 		return $$self{spread_rows};
 	} # end if
 } # end sub page_rows
-
-sub page_width {
-	return $_[0]{object_width}/($_[0]{spread_size}/2);
-}
-sub page_height {
-	return $_[0]{object_height};
-}
 
 sub sheet_width {
 	my $self = shift;
