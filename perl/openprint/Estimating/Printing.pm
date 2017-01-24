@@ -1439,6 +1439,10 @@ $openprint::log->debug("Skipping cuz not $height");
 					$openprint::log->debug("Stock width $$Paper{width} > max sheet width $maximum_sheet_width") if DEBUG;
 					next;
 				} # end if
+				if ( $$Paper{width} < $minimum_sheet_width ) {
+					$openprint::log->debug("Stock width $$Paper{width} < min sheet width $minimum_sheet_width") if DEBUG;
+					next;
+				} # end if
 				if ( $maximum_roll_width and ( $$Paper{width} > $maximum_roll_width ) ) {
 					$openprint::log->debug("Stock width $$Paper{width} > max roll width $maximum_roll_width") if DEBUG;
 					next;
