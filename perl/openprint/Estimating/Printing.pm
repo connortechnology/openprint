@@ -1439,6 +1439,10 @@ $openprint::log->debug("Skipping cuz not $height");
 					$openprint::log->debug("Stock width $$Paper{width} > max sheet width $maximum_sheet_width") if DEBUG;
 					next;
 				} # end if
+				if ( $$Paper{width} < $minimum_sheet_width ) {
+					$openprint::log->debug("Stock width $$Paper{width} < min sheet width $minimum_sheet_width") if DEBUG;
+					next;
+				} # end if
 				if ( $maximum_roll_width and ( $$Paper{width} > $maximum_roll_width ) ) {
 					$openprint::log->debug("Stock width $$Paper{width} > max roll width $maximum_roll_width") if DEBUG;
 					next;
@@ -3113,7 +3117,7 @@ $openprint::log->debug("Needed pages: $needed_pages") if DEBUG;
 
 	my $filter_press = $$sig_specs{"ddmPress$qty_index"} if $$sig_specs{"chkOverridePress$qty_index"} eq 'Y';
 	if ( $$sig_specs{PreviousPress} ) {
-		$filter_press = $$sig_specs{PreviousPress};
+		#$filter_press = $$sig_specs{PreviousPress};
 		#$log->debug("Have PreviousPress $$sig_specs{PreviousPress}");
 	}
 
@@ -4679,7 +4683,9 @@ $imp->display('[warn]');
 					$openprint::log->debug( 'Stitching Calc: ' . sprintf('%.4f', tv_interval($starttime)*1000) . ' msecs' ) if DEBUG;
 
 				} elsif ( $$services{PerfectBound} and $$sig_specs{txtSignatureType} ne 'Cover Pages') {
+					my $starttime = [gettimeofday()] if DEBUG;
 					my $results = openprint::Estimating::PerfectBound::signature_calc( $Project, $$project{HasPerfectBound}, $$project{PerfectBoundSpecs}, $qty_index, \@total_impositions, $project );
+					$openprint::log->debug( 'Perfectbinding Calc: ' . sprintf('%.4f', tv_interval($starttime)*1000) . ' msecs' ) if DEBUG;
 					if ( $$results{Status} eq 'uncalculated' ) {
 						$$price{'PerfectBound Breakdown'} .= "PerfectBound error: $$results{alert}<br/>";
 						$$price{'Comparison Cost'} += 1000000;
@@ -4788,7 +4794,7 @@ $log->debug("PreviousPress from $subsig_specs{PreviousPress} ");
 										# ecause convert will consider all smaller spreadlayouts as well, we really only need to do this once, 	
 										# and can simply filter out any that are larger than we need.
 										foreach my $press ( keys %impositions ) {
-											$impositions{$press} = [ openprint::imposition::convert_impositions( $SpreadLayout, $$project{txtSpreadSize}, $impositions{$press} ) ];
+											$impositions{$press} = [ openprint::imposition::convert_impositions( $SpreadLayout, $$project{txtSpreadSize}, $$project{ProjectSpecs}{spine}, $impositions{$press} ) ];
 										} # end foreach press
 
 										if ( ! %impositions ) {
@@ -5401,7 +5407,9 @@ $openprint::log->warn("No folding equipment");
 
 	my %uv_results;
 	if ( $$project{HasUVCoating} ) {
+		my $starttime = [gettimeofday()] if DEBUG or 1;
 		%uv_results = openprint::Estimating::UVCoating::signature_calc( $Project, @$project{'HasUVCoating','UVCoatingSpecs'}, $service_index, $specs, $qty_index, $Imposition, {} );
+		$openprint::log->debug( 'UVCoating Calc: ' . sprintf('%.4f', tv_interval($starttime)*1000) . ' msecs' ) if DEBUG or 1;
 		if ( $uv_results{Status} eq 'uncalculated' ) {
 			$price{'UVCoating Breakdown'} .= "UV error: $uv_results{alert} $$project{UVCoatingSpecs}{alert} " . $$project{UVCoatingSpecs}{'hdnBreakdown'.$qty_index} . '<br/>';
 			$price{'Comparison Cost'} += 1000000; 
@@ -5915,11 +5923,11 @@ $openprint::log->debug("Area $area = $$Imposition{object_area} * Impressions($co
 
 	# Used to be hasAQ.. but that doesn't make any sense.	Must be NeedAQ.
 	if ( $$project{NeedAqueous} ) {
-		#my $aq_time = [gettimeofday()];
+		my $aq_time = [gettimeofday()];
 		my %aq_results = openprint::Estimating::Aqueous::signature_calc( $Project, $$project{'AqueousSpecs'}, $specs, $qty_index, $Imposition );
 		#my $aq_time = [gettimeofday()];
-#my $aq_elapsed = sprintf('%.4f', tv_interval($aq_time)*1000);
-#$openprint::log->warn("AQ elapsed: $aq_elapsed");
+my $aq_elapsed = sprintf('%.4f', tv_interval($aq_time)*1000);
+$openprint::log->warn("AQ elapsed: $aq_elapsed");
 	#$price{'Aqueous Breakdown'} .= $$project{AqueousSpecs}{'hdnBreakdown'.$qty_index};
 		if ( $aq_results{Status} eq 'uncalculated' ) {
 			$price{'Aqueous Breakdown'} .= "AQ error: $aq_results{alert} $$project{AqueousSpecs}{alert} " . $$project{AqueousSpecs}{'hdnBreakdown'.$qty_index} . '<br/>';
@@ -7227,7 +7235,7 @@ sub convert_impositions {
 	if ( $SpreadLayout > 1 ) {
 # ecause convert will consider all smaller spreadlayouts as well, we really only need to do this once, and can simply filter out any that are larger than we need.
 		foreach my $press ( keys %$impositions ) {
-			$$impositions{$press} = [ openprint::imposition::convert_impositions( $SpreadLayout, $$project{txtSpreadSize}, $$impositions{$press} ) ];
+			$$impositions{$press} = [ openprint::imposition::convert_impositions( $SpreadLayout, $$project{txtSpreadSize}, $$project{ProjectSpecs}{spine}, $$impositions{$press} ) ];
 		} # end foreach press
 	} # end if spreadylayout
 

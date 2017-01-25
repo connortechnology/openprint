@@ -870,7 +870,7 @@ $openprint::log->debug("folds from sigimpo") if DEBUG;
 						push @{$folds{$Imposition->pages().'PageFold-'.$$Imposition{imposition}.'out'}}, $Fold;
 						$openprint::log->debug(sprintf('Found: %dx%d,%dout', $Imposition->page_columns(), $Imposition->page_rows(), $Imposition->imposition() ) ) if DEBUG;
 					} else {
-						$Breakdown .= sprintf('Didnt find fold pages: %dx%d=%d %.3fx%.3f %s, %dout %dgsm<br/>', $Imposition->page_columns(), $Imposition->page_rows(), $Imposition->pages(), $Imposition->page_width(), $Imposition->page_height(), @$Imposition{'image_orientation','imposition'}, $Paper->gsm() );
+						$Breakdown .= sprintf('Didnt find fold pages: %dx%d=%d %.3fx%.3f %s, %dout %dgsm<br/>', $Imposition->page_columns(), $Imposition->page_rows(), $Imposition->pages(), @$Imposition{'page_width','page_height','image_orientation','imposition'}, $Paper->gsm() );
 						$openprint::log->debug(sprintf('Didnt find: %dx%d %s,%dout', $Imposition->page_columns(), $Imposition->page_rows(), @$Imposition{'image_orientation','imposition'} ) ) if DEBUG;
 						%folds = ();
 						# Last because it's on press, can't do any cut impos.	Not actually True.	Webs can slit it and do dual delivery, fold one, sheet the other. FIXME
@@ -1024,13 +1024,13 @@ $openprint::log->debug("No Fold") if DEBUG;
 										#page_columns=>	$Imposition->page_rows(),
 										#page_rows	=>	$Imposition->page_columns(),
 									#) ),
-									page_width		=>	$Imposition->page_width(),
-									page_height		=>	$Imposition->page_height(),
+									page_width		=>	$$Imposition{page_width},
+									page_height		=>	$$Imposition{page_height},
 									spine_direction	=>	$$Imposition{image_orientation},
 									stitching		=>	(($$services{SaddleStitching} or $$services{LoopStitching}) ? 1 : 0),
 									perfectbind		=>	($$services{PerfectBound} ? 1 : 0),
 									spinepaste		=>	($$services{SpinePaste} ? 1 : 0),
-									gsm				=>	$Paper->gsm(),
+									gsm				=>	$$Paper{gsm},
 									calliper		=>	$$Paper{calliper},
 									imposition		=>	$$Imposition{imposition},
 									columns		=>	$$Imposition{columns},
@@ -2389,8 +2389,8 @@ $openprint::log->debug("Has no equipment_id") if DEBUG;
 #pages			=>	$Imposition->pages(),
 #page_columns	=>	$Imposition->page_columns(),
 #page_rows		=>	$Imposition->page_rows(),
-			page_width		=>	$Imposition->page_width(),
-			page_height		=>	$Imposition->page_height(),
+			page_width		=>	$$Imposition{page_width},
+			page_height		=>	$$Imposition{page_height},
 			spine_direction =>	$$Imposition{image_orientation},
 			gsm				=>	$Paper->gsm(),
 			imposition		=>	$$Imposition{imposition},

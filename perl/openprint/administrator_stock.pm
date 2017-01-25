@@ -221,15 +221,20 @@ $openprint::log->debug("Setting: $param{amount} " );
 
 sub stock {
 
-	my $Paper = new openprint::Paper( $param{stock_id} );
+	my $Paper = openprint::Paper->find_one( id=>$param{stock_id} ) if $param{stock_id};
+	if ( $param{btnFunction} and ! $Paper ) {
+		$variable{error} .= "No stock selected for delete.<br/>";
+		$variable{Stock} = new openprint::Paper();
+		return;
+	}
+
 	if ( $param{btnFunction} eq 'Delete' ) {
-		my $new = $Paper->next();
-		$new = $Paper->previous() if $new == $Paper;
-		$Paper->delete();
-		$variable{information} .= 'Stock ' . $Paper->id() . ' has been deleted.';
-		$Paper = $new;
-		$param{stock_id} = $Paper->id();
-		
+			my $new = $Paper->next();
+			$new = $Paper->previous() if $new == $Paper;
+			$Paper->delete();
+			$variable{information} .= 'Stock ' . $Paper->id() . ' has been deleted.';
+			$Paper = $new;
+			$param{stock_id} = $Paper->id();
 	} elsif ( $param{btnFunction} eq 'Copy' ) {
 		$variable{information} .= 'Stock ' . $Paper->link_to( $Paper->id() ) . ' has been copied.';
 		my $NewPaper = $Paper->copy();
