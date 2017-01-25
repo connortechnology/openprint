@@ -1022,7 +1022,7 @@ $openprint::log->debug("Convert Impositions: Desired: $desired_signature_size, S
 		my @imps;
 		my $start = $impo > $desired_signature_size ? $desired_signature_size : $impo;
 $imp->display("Converting From Desired: $desired_signature_size impo: $impo From reverse 1 to $start" ) if DEBUG_CONVERT;
-		foreach my $signature_size ( reverse 2 .. $start ) {
+		foreach my $signature_size ( reverse 1 .. $start ) {
 		#my $a = int($start/3);
 		#$a -= 1 if $a % 3;
 		#foreach my $signature_size ( reverse $a .. $start ) {
@@ -1033,11 +1033,11 @@ $openprint::log->debug("Considering sig size: $signature_size") if DEBUG_CONVERT
 			my $imp_rows = $$imp{rows};
 			my $imp_cols = $$imp{columns};
 				if ( $imp_cols % 2 and $spread_size == 2 and $$imp{image_orientation} eq 'Vertical' ) {
-					$openprint::log->debug("Next because cols $imp_cols % 2 and $spread_size == 2 and $$imp{image_orientation} eq 'Vertical");
+					$openprint::log->debug("Next because cols $imp_cols % 2 and $spread_size == 2 and $$imp{image_orientation} eq 'Vertical") if DEBUG_CONVERT;
 					next;
 				}
 				if ( $imp_rows % 2 and $spread_size == 2 and $$imp{image_orientation} eq 'Horizontal' ) {
-					$openprint::log->debug("Next because rows $imp_rows % 2 and $spread_size == 2 and $$imp{image_orientation} eq 'Horizontal");
+					$openprint::log->debug("Next because rows $imp_rows % 2 and $spread_size == 2 and $$imp{image_orientation} eq 'Horizontal") if DEBUG_CONVERT;
 					next;
 				}
 			foreach my $block ( @{$blocks{$signature_size}} ) {
@@ -1070,15 +1070,16 @@ $openprint::log->debug("Considering sig size: $signature_size") if DEBUG_CONVERT
 				$newimp->spread_columns( $col );
 				$newimp->spread_rows( $row );
 				$newimp->display( 'To: ' ) if DEBUG_CONVERT;
+if ( $spread_size == 2 ) {
 				if ( $spine eq 'width' ) {
 					if ( $$imp{image_orientation} eq 'Vertical' ) {
 						if ( $row % 2 ) {
-							$openprint::log->debug("Next because page_row $row == 1 and $$imp{image_orientation} eq 'Vertical and spine is on the width");
+							$openprint::log->debug("Next because page_row $row == 1 and $$imp{image_orientation} eq 'Vertical and spine is on the width") if DEBUG_CONVERT;
 							next;
 						}
 					} else { 
 						if ( $col % 2 ) {
-							$openprint::log->debug("Next because page_col $col == 1 and $$imp{image_orientation} eq 'Horizontal and spine is on the width");
+							$openprint::log->debug("Next because page_col $col == 1 and $$imp{image_orientation} eq 'Horizontal and spine is on the width") if DEBUG_CONVERT;
 							next;
 						}
 					}
@@ -1086,16 +1087,17 @@ $openprint::log->debug("Considering sig size: $signature_size") if DEBUG_CONVERT
 					if ( $$imp{image_orientation} eq 'Vertical' ) {
 
 						if ( $col % 2 ) {
-							$openprint::log->debug("Next because page_col $col == 1 and $$imp{image_orientation} eq 'Vertntal and spine is on the height");
+							$openprint::log->debug("Next because page_col $col == 1 and $$imp{image_orientation} eq 'Vertntal and spine is on the height") if DEBUG_CONVERT;
 							next;
 						}
 					} else {
 						if ( $row % 2 ) {
-							$openprint::log->debug("Next because page_row $row == 1 and $$imp{image_orientation} eq 'Horizontal and spine is on the height");
+							$openprint::log->debug("Next because page_row $row == 1 and $$imp{image_orientation} eq 'Horizontal and spine is on the height") if DEBUG_CONVERT;
 							next;
 						}
 					}
 				}
+}
 				push @imps, $newimp if ( $newimp->layout_width() < $newimp->sheet_width() and $newimp->layout_height() < $newimp->sheet_height() );
 #$newimp->display();
 			} # end foreach block

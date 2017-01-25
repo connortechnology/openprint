@@ -1495,9 +1495,9 @@ $log->debug($P->id_string());
 #FIXME Whay?
 # So... if loading need to check that it fits the size.... but if we are loading by id.... then we don't need to do this... maybe test the impact of this code.
 		if ( 
-			( ( $Paper->width() != $$specs{'StockWidth'.$qty_index} ) or ($Paper->type() eq 'Sheet' and $Paper->height() != $$specs{'StockHeight'.$qty_index} ) )
+			( ( $$Paper{width} != $$specs{'StockWidth'.$qty_index} ) or ($$Paper{type} eq 'Sheet' and $$Paper{height} != $$specs{'StockHeight'.$qty_index} ) )
 			and
-			( ( $Paper->height() != $$specs{'StockWidth'.$qty_index} ) or ($Paper->type() eq 'Sheet' and $Paper->width() != $$specs{'StockHeight'.$qty_index} ) )
+			( ( $$Paper{height} != $$specs{'StockWidth'.$qty_index} ) or ($$Paper{type} eq 'Sheet' and $$Paper{width} != $$specs{'StockHeight'.$qty_index} ) )
 		   ) {
 #Carp::cluck("Custom size $$specs{'StockWidth'.$qty_index}x$$specs{'StockHeight'.$qty_index}");
 #$openprint::log->debug("Custom size $$Paper{width}x$$Paper{height} => $$specs{'StockWidth'.$qty_index}x$$specs{'StockHeight'.$qty_index}");

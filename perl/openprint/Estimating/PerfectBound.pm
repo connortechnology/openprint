@@ -89,13 +89,13 @@ sub signature_calc {
 	my ( $Project, $service_index, $specs, $qty_index, $Impositions, $calc_hash ) = @_;
 
     my %results = (
-            alert   =>  '',
-			Breakdown => '',
-			Status	=>	'uncalculated',
-            );
- 
+				alert   =>  '',
+				Breakdown => '',
+				Status	=>	'uncalculated',
+				);
+
 	my $services = $Project->services();
-	my $printing_specs = openprint::service::get_specs_ref( $Project, $$services{''}[0] );
+	my $printing_specs = $$calc_hash{ProjectSpecs};
 	my $folding_specs = $$calc_hash{FoldingSpecs};
 
  #Need to figure out which dimension the spine bisects
@@ -116,7 +116,7 @@ sub signature_calc {
 	# FIXME should not include cover
     $$specs{txtCalliper} = $Project->calliper() if ! $$specs{txtCalliper};
 
-	my @printed_impositions;
+	#my %printed_impositions;
 	my $imposition = 2;
 	my $pockets = $$specs{"txtPockets$qty_index"} = 0;
 
@@ -152,11 +152,11 @@ sub signature_calc {
             }
             next;
         }
-		my $sig_specs = $$I{specs};
+				my $sig_specs = $$I{specs};
         my $form = $$sig_specs{SignatureIndex};
-        push @printed_impositions, $$I{imposition};
+        #$printed_impositions{$$I{imposition}} = !undef;
         if ( ! $$I{Folds} ) {
-            $openprint::log->error("No folds in imposition, generating") if DEBUG;
+            $openprint::log->error("No folds in imposition, generating");# if DEBUG;
             $I->display("No Folds") if DEBUG;
             $$I{Folds} = [ openprint::Estimating::Folding::get_Folds( $folding_specs, $I, $qty_index ) ] if $folding_specs;
         } # end if
@@ -196,7 +196,7 @@ $openprint::log->debug("Fold pq($$FI{page_quantity}) pages($$FI{pages}) ($$Fold{
                 $I->display("Setting imposition to 1 due to Horizal and odd cols") if DEBUG or 1;
                 $results{Breakdown} .= "Setting imposition to 1 due to Horizontal and odd cols<br/>";
                 $imposition = 1;
-            } elsif (sets::isin( $$I{runstyle}, ['Work & Turn','Work & Tumble'] ) and ($$I{imposition}%4) ) {
+            } elsif ( ( $$I{runstyle} eq 'Work & Turn' or $$I{runstyle} eq 'Work & Tumble' ) and ($$I{imposition}%4) ) {
                 $I->display("Setting imposition to 1 due to W&T impo not % 4 ") if DEBUG;
                 $imposition = 1;
             } # end if
@@ -229,7 +229,6 @@ $openprint::log->debug("Fold pq($$FI{page_quantity}) pages($$FI{pages}) ($$Fold{
     } # end if
     $results{Breakdown} .= 'Imposition: ' . $imposition . 'out<br/>';
 
-	@printed_impositions = sets::union( @printed_impositions );
 	my %error;
 	my @equipment = ();
 
@@ -396,6 +395,7 @@ sub calc {
 	} # end if
 
 	my $printing_specs = openprint::service::get_specs_ref( $Project, $$services{''}[0] );
+	$$calc_hash{ProjectSpecs} = $printing_specs;
 	my @signatures = $Project->signatures();
 
 	if ( $$specs{OverrideCalliper} ne 'Y' ) {

@@ -49,8 +49,8 @@ if ( ! @dbs ) {
 	if ( $$opts{host} and $$opts{host} ne 'local' ) {
 		push @args, " -h $$opts{host}";
 	} 
-	if ( $$opts{"defaults-file"} ) {
-		push @args, " --defaults-file=".$$opts{default-file};
+	if ( $$opts{'defaults-file'} ) {
+		push @args, " --defaults-file=".$$opts{'defaults-file'};
 	}
 	$_ = `/usr/bin/mysql -B -N -e 'show databases' @args |grep -viE '(staging|performance_schema|information_schema)'`;
 	die "Can't get db list: ($!)" if $?;

@@ -886,6 +886,7 @@ sub barcode {
 sub mark_proofs_approved {
 	my ( $log, $dbh, $variable, $project_index, $service_index, $old_status ) = @_;
 
+
 	my $Project = new openprint::Project( $project_index );
 	if ( ! $service_index ) {
 		my $services = $Project->services();
@@ -893,7 +894,10 @@ sub mark_proofs_approved {
 	} # end if
 	if ( ! $service_index ) {
 		$log->error("Project $project_index has no Proofs service in mark_proofs_approved.");
-	} # end if
+	} elsif ( ! $old_status ) {
+		my $Service = $Project->Service( $service_index );
+		$old_status = $Service->status();
+	}
 
 	$Project->add_to_log( @session{'company_id','user_id'}, "Marked Proofs Approved from $old_status" );
 	$variable{Project} = $Project;
