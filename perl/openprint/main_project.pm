@@ -168,7 +168,7 @@ $log->debug("No project $param{ProjectIndex} found");
 
 sub calc {
 	my $debug = @_ ? $_[0] : 1;
-	my $Project = openprint::Project->find_one( id=>$param{ProjectIndex} ) if $param{ProjectIndex}
+	my $Project = openprint::Project->find_one( id=>$param{ProjectIndex} ) if $param{ProjectIndex};
 	if ( ! $Project ) {
 		$Project = new openprint::Project();
 		$Project->save();
