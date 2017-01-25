@@ -459,6 +459,63 @@ $self->display('After load') if DEBUG;
 	return $self;
 } # end sub load
 
+sub spread_rows {
+	( my $self ) = @_;
+
+	if ( @_ > 1 ) {
+		$$self{spread_rows} = $_[1];
+		if ( $$self{spine} eq 'width'     ) {
+      if ( $$self{image_orientation} eq 'Vertical' ) {
+        $$self{page_rows} = $$self{spread_rows} * ($$self{spread_size}/2);
+        $$self{page_columns} = $$self{spread_columns};
+      } else {
+        $$self{page_rows} = $$self{spread_rows};
+        $$self{page_columns} = $$self{spread_columns} * ($$self{spread_size}/2);
+      }
+    } else {
+      if ( $$self{image_orientation} eq 'Vertical' ) {
+        $$self{page_rows} = $$self{spread_rows};
+        $$self{page_columns} = $$self{spread_columns} * ($$self{spread_size}/2);
+      } else {
+        $$self{page_rows} = $$self{spread_rows} * ($$self{spread_size}/2);
+        $$self{page_columns} = $$self{spread_columns};
+      }
+    }
+		$$self{pages} = $$self{page_rows} * $$self{page_columns} * 2;
+		$$self{spreads} = $$self{spread_rows} * $$self{spread_columns};
+$openprint::log->debug("resulting page_rows/cols $$self{page_columns} / $$self{page_rows}");
+	}
+	return $$self{spread_rows};
+}
+sub spread_columns {
+	( my $self ) = @_;
+  if ( @_ > 1 ) {
+    $$self{spread_columns} = $_[1];
+    if ( $$self{spine} eq 'width'     ) {
+      if ( $$self{image_orientation} eq 'Vertical' ) {
+        $$self{page_rows} = $$self{spread_rows} * ($$self{spread_size}/2);
+        $$self{page_columns} = $$self{spread_columns};
+      } else {
+        $$self{page_rows} = $$self{spread_rows};
+        $$self{page_columns} = $$self{spread_columns} * ($$self{spread_size}/2);
+      }
+    } else {
+      if ( $$self{image_orientation} eq 'Vertical' ) {
+        $$self{page_rows} = $$self{spread_rows};
+        $$self{page_columns} = $$self{spread_columns} * ($$self{spread_size}/2);
+      } else {
+        $$self{page_rows} = $$self{spread_rows} * ($$self{spread_size}/2);
+        $$self{page_columns} = $$self{spread_columns};
+      }
+    }
+		$$self{pages} = $$self{page_rows} * $$self{page_columns} * 2;
+		$$self{spreads} = $$self{spread_rows} * $$self{spread_columns};
+$openprint::log->debug("resulting page_rows/cols $$self{page_columns} / $$self{page_rows}");
+  }
+  return $_[0]{spread_columns};
+}
+
+
 sub save {
 	my ( $self, $specs, $qty_index ) = @_;
 	$$specs{'txtImposition'.$qty_index} = $$self{imposition};
