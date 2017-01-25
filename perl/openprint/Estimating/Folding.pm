@@ -2387,9 +2387,9 @@ $openprint::log->debug("Has no equipment_id") if DEBUG;
 #$Imposition->display();
 		my $find = {
 			type 			=>	$fold_type,
-pages			=>	$Imposition->pages(),
-page_columns	=>	$Imposition->page_columns(),
-page_rows		=>	$Imposition->page_rows(),
+#pages			=>	$Imposition->pages(),
+#page_columns	=>	$Imposition->page_columns(),
+#page_rows		=>	$Imposition->page_rows(),
 			page_width		=>	$$Imposition{page_width},
 			page_height		=>	$$Imposition{page_height},
 			spine_direction =>	$$Imposition{image_orientation},
