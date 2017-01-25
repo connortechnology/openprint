@@ -73,7 +73,7 @@ $serial = 'lngProjectIndex_seq';
 	quantity1	=>	[ 's/\D//g' ],
 	quantity2	=>	[ 's/\D//g' ],
 	quantity3	=>	[ 's/\D//g' ],
-	reference	=>	[ 's/\r\n/<br\/>/mg', 's/\n\r/<br\/>/mg', 's/\n/<br\/>/mg', 's/^\s+//', 's/\s+$//', 's/\s\s+/ /g' ],
+	reference	=>	[ 's/\r\n/<br\/>/mg', 's/\n\r/<br\/>/mg', 's/\n/<br\/>/mg', 's/^\s+//', 's/\s+$//', 's/\s\s+/ /g', 's/\\x([a-f0-9])+/&#x$1/g' ],
 	comments	=>	[ 's/^\s+//', 's/\s+$//', 's/\s\s+/ /g' ],
 );
 %defaults = (
