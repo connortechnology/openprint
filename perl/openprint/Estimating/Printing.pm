@@ -2730,10 +2730,10 @@ $openprint::log->debug(Data::Dumper::Dumper( \%Overrides ) );
 			#next if $$sig_specs{Group} == 1;
 			next if ( ($$sig_specs{Group} == $$specs{Group}) and ($sig_id >= $service_index) );
 			my $I = new openprint::Imposition();
-			$I->load( $sig_specs, $qty_index );
+			$I->load( $sig_specs, $qty_index, $Project );
 			push @other_impositions, $I;					
 			if ( $$project{FoldingSpecs} ) {
-				$$I{Folds} = [ openprint::Estimating::Folding::get_Folds( $$project{FoldingSpecs}, $sig_specs, $qty_index ) ];
+				$$I{Folds} = [ openprint::Estimating::Folding::get_Folds( $$project{FoldingSpecs}, $I, $qty_index ) ];
 			}
 		} # end foreach sig_id
 		if ( DEBUG ) {
@@ -2741,7 +2741,6 @@ $openprint::log->debug(Data::Dumper::Dumper( \%Overrides ) );
 			$I->display("Iniital other_impositions Group $$specs{Group}");
 		}
 		} 
-
 
 		%stitching_cache = ();
 		%price_cache = ();
