@@ -91,7 +91,7 @@ foreach my $db ( @dbs ) {
 				( $$opts{port} ? ( '-p', $$opts{port} ): () ),
 				$db, '|', 'bzip2', '>', "$path/$db/$year-$mon-$mday.sql.new.bz2",
 				);
-		print "running $command\n";
+		#print "running $command\n";
 		system($command);
 		die "Can't dump $db" if $?;
 		if ( ! rename( "$path/$db/$year-$mon-$mday.sql.new.bz2", "$path/$db/$year-$mon-$mday.sql.bz2" ) ) {
