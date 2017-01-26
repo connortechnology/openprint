@@ -849,8 +849,8 @@ $openprint::log->debug("folds from sigimpo") if DEBUG;
 								  #page_columns	=>	$Imposition->page_rows(),
 								  #page_rows		=>	$Imposition->page_columns(),
 								  #) ),
-							page_width		=>	$Imposition->page_width(),
-							page_height		=>	$Imposition->page_height(),
+							page_width		=>	$$Imposition{page_width},
+							page_height		=>	$$Imposition{page_height},
 							spine_direction	=>	$$Imposition{image_orientation},
 							stitching		=>	($$services{SaddleStitching} or $$services{LoopStitching}) ? 1 : 0,
 							perfectbind		=>	$$services{PerfectBound} ? 1 : 0,
@@ -1915,7 +1915,7 @@ sub summary {
 			} # end if
 
 			my $Imposition1 = new openprint::Imposition();
-			$Imposition1->load( $sig_specs, $qty_index );
+			$Imposition1->load( $sig_specs, $qty_index, $Project );
 
 			my $sig_count = 1;
 
@@ -1923,7 +1923,7 @@ sub summary {
 				for ( my $sig_index2 = $sig_index + 1; $sig_index2 < @signatures; $sig_index2 += 1 ) {
 					my $sig_specs2 = openprint::service::get_specs_ref( $Project, $signatures[$sig_index2] );
 					my $Imposition2 = new openprint::Imposition();
-					$Imposition2->load( $sig_specs, $qty_index );
+					$Imposition2->load( $sig_specs, $qty_index, $Project );
 					if ( openprint::Estimating::Printing::compare_signatures( $Project, $sig_specs, $sig_specs2, $qty_index ) 
 						and compare_folds( $specs, $Imposition1, $Imposition2, $qty_index )
 						) {
@@ -2323,7 +2323,7 @@ sub compact_impositions {
 sub save {
 } # end sub save
 
-sub load_Impositions() {
+sub load_Impositions {
 #sub load_Impositions($$$) {
 	my ( $folding_specs, $sig_specs, $qty_index ) = @_;
 
