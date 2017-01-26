@@ -282,9 +282,10 @@ $openprint::log->debug("Other Shipped Quantity: $other_shipped_quantity");
 } # end sub calc
 
 sub display {
-	my ( $r, $log, $dbh, $variable, $project_index, $service_index ) = @_;
+	my ( $project_index, $service_index, $variable ) = @_;
 
 	if ( ! ( $$variable{FromCity} and $$variable{FromPostalCode} and $$variable{FromStateProvince} and $$variable{FromCountry} ) ) {
+$openprint::log->debug("Populating fields");
 		my %shipping_fields = (
 				'FromCompanyName'	=>	'CompanyName',
 				'FromAddress1'		=>	'Address1',
@@ -305,6 +306,13 @@ sub display {
 		foreach my $k ( keys %shipping_fields ) {
 			$$variable{$k} = $address->get( $shipping_fields{$k} ) if ! $$variable{$k};
 		} # end foreach
+		$$variable{FromCompanyName} = $Company->name() if ! $$variable{FromCompanyName};
+		$$variable{FromCompanyAddress1} = $Company->address1() if ! $$variable{FromCompanyAddress1};
+		$$variable{FromCompanyAddress2} = $Company->address2() if ! $$variable{FromCompanyAddress2};
+		$$variable{FromCompanyCity} = $Company->city() if ! $$variable{FromCompanyCity};
+		$$variable{FromCompanyStateProvince} = $Company->state() if ! $$variable{FromCompanyStateProvince};
+		$$variable{FromCompanyCountry} = $Company->country() if ! $$variable{FromCompanyCountry};
+		$$variable{FromCompanyPostalCode} = $Company->postalcode() if ! $$variable{FromCompanyPostalCode};
 	} # end if
 
 	if ( $openprint::session{company_id} and ( ! (
@@ -328,6 +336,13 @@ sub display {
 		foreach my $k ( keys %shipping_fields ) {
 			$$variable{$k} = $address->get( $shipping_fields{$k} ) if ! $$variable{$k};
 		} # end foreach
+		$$variable{ToCompanyName} = $Company->name() if ! $$variable{ToCompanyName};
+		$$variable{ToCompanyAddress1} = $Company->address1() if ! $$variable{ToCompanyAddress1};
+		$$variable{ToCompanyAddress2} = $Company->address2() if ! $$variable{ToCompanyAddress2};
+		$$variable{ToCompanyCity} = $Company->city() if ! $$variable{ToCompanyCity};
+		$$variable{ToCompanyStateProvince} = $Company->state() if ! $$variable{ToCompanyStateProvince};
+		$$variable{ToCompanyCountry} = $Company->country() if ! $$variable{ToCompanyCountry};
+		$$variable{ToCompanyPostalCode} = $Company->postalcode() if ! $$variable{ToCompanyPostalCode};
 	} # end if
 
 } # end sub display

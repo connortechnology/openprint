@@ -36,7 +36,7 @@
 	<td class="MaxImposition">%10$s</td>
 	<td class="MRTime">%11$d</td>
 </tr>
-`, $rowclass, '/administrator/equipment/_fold.html?fold_id='.$$Fold{id}, $Fold->Equipment()->name(), $$Fold{name}, 
+`, $rowclass, '/administrator/equipment/_fold.html?fold_id='.$$Fold{id}, $Fold->Equipment()->link_to(), $$Fold{name}, 
 $Fold->type(), $Fold->pages(), $Fold->folds(), $Fold->angles(),
 join(' ',
 	join('x',

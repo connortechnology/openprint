@@ -44,8 +44,10 @@ sub _project_history_results {
 	);
 	my %parameters; 
 	if ( ( $session{user_type} ne 'A' ) and ! openprint::usergroup::is_user_in( ['Sales Admin','Reporting'], $session{user_id} ) ) {
-		$parameters{salesrep_id} = $session{user_id};
-		$parameters{or} = "id=(SELECT company_id FROM Users WHERE users.id=$session{user_id})";
+		$parameters{or} = {
+			salesrep_id => $session{user_id},
+			id					=> $openprint::User->company_id(),
+		};
 	} elsif ( $session{$page.'?CSR'} ) {
 		$parameters{salesrep_id} = $session{$page.'?CSR'};
 	} # end if

@@ -3,7 +3,7 @@
 	my $html = '';
 	my $to_from = lc $param{to_from};
 
-	$html .= "
+	$html .=qq` 
 		\$('$param{to_from}CompanyName').value = '$$Company{name}';
 		\$('$param{to_from}Address1').value = '$$Company{address1}';
 		\$('$param{to_from}Address2').value = '$$Company{address2}';
@@ -14,9 +14,13 @@
 		\$('$param{to_from}Phone').value = '$$Company{phone}';
 		\$('$param{to_from}Fax').value = '$$Company{fax}';
 		var location_ddm = \$('${to_from}_location_id');
+		if ( location_ddm ) {
 		clear_ddm( location_ddm );
 		add_option( location_ddm, '', 'select' );
-	";
+		} else {
+			console.log("Unable to find location ddm '${to_from}_location_id'");
+		}
+	`;
 
 	my @Locations = openprint::Location->find(company_id=>$$Company{id}, type=>'place' ) if $$Company{id};
 

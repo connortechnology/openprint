@@ -17,7 +17,7 @@ $log->debug("@ of stocks: " . @Papers );
     my @side_two_colours = openprint::Estimating::Printing::get_colours( $specs, 'SideTwo' );
 	my %inkCoverage = openprint::Estimating::Printing::get_inkcoverage( $Project, $specs );
 
-	my $project = openprint::Estimating::Printing::setup_project( $Project, $service_id, $services, $specs, \@side_one_colours, \@side_two_colours, \%inkCoverage, $Papers[0] );
+	my $project = openprint::Estimating::Printing::setup_project( $Project, $service_id, $services, $specs, \@side_one_colours, \@side_two_colours, $Papers[0] );
 	openprint::Estimating::Printing::load_presses();
 	my %presses = openprint::Estimating::Printing::select_presses( $Project, \@Papers, $specs, $project );
 	my @possible_presses;

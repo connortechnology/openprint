@@ -627,15 +627,18 @@ $log->debug("Already have $$ServiceType{name}");
 	} # end if
 
 	$Project->add_to_log( @session{'company_id','user_id'}, 'Edited: ' . join('<br/>', @changes) );
-	my $book_type = openprint::print::get_book_type( $Project );
-	if ( $book_type ) {
-		my $project_specs = openprint::service::get_specs_ref( $Project, $$services{''}[0] );
-		if ( $book_type ne $$project_specs{rdbTemplateType} ) {
-			$Project->add_to_log( @session{'company_id','user_id'}, "Changed book type from $$project_specs{rdbTemplateType} to $book_type" );
-			openprint::service::insert_service_spec( $log, $dbh, $project_index, $$services{''}[0], 'rdbTemplateType', $book_type );
-			$recalculate = 1;	
+
+	if ( $ProjectType->type() eq 'MultiPage' ) {
+		my $book_type = openprint::print::get_book_type( $Project );
+		if ( $book_type ) {
+			my $project_specs = openprint::service::get_specs_ref( $Project, $$services{''}[0] );
+			if ( $book_type ne $$project_specs{rdbTemplateType} ) {
+				$Project->add_to_log( @session{'company_id','user_id'}, "Changed book type from $$project_specs{rdbTemplateType} to $book_type" );
+				openprint::service::insert_service_spec( $log, $dbh, $project_index, $$services{''}[0], 'rdbTemplateType', $book_type );
+				$recalculate = 1;	
+			} # end if
 		} # end if
-	} # end if
+	}
 	
 	if ( $recalculate ) {
 		$Project->recalculate();

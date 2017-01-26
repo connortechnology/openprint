@@ -5550,11 +5550,14 @@ if ( ! sets::isin('object_specifications', \@tables ) ) {
 	$log->debug("Adding Object_Specifications");
 	$dbh->do( misc::load_file( $log, q{../openprint/sql/Object_Specifications.sql}) );
 	die if $dbh->errstr();
+} # end if
 	if ( sets::isin('product_specifications', \@tables ) ) {
+		if ( ! sql::execute( undef, undef, "SELECT id FROM object_types where name='openprint::Product'" ) ) {
+			$dbh->do("INSERT INTO object_types (name,human) values ('openprint::Product', 'Product');") or die $dbh->errstr();
+		}
 		$dbh->do(q`insert into object_specifications ( object_type_id, object_id, name, value ) SELECT (SELECT id from object_types where name='openprint::Product'), product_id, name, value from product_specifications;`) or die $dbh->errstr();
 		$dbh->do('DROP TABLE product_specifications');
 	}
-} # end if
 print "done.\n";
 $dbh->disconnect();
 1;

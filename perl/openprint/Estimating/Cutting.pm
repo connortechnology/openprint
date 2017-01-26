@@ -177,8 +177,8 @@ sub neccessary {
 } # end sub neccessary
 
 sub load_equipment {
-    my ( $Project ) = @_;
-    my $services = $Project->services();
+	my ( $Project ) = @_;
+	my $services = $Project->services();
 
 	my @capabilities = ('Y','When Printing','When Folding');
 	if ( $$services{SaddleStitching} or $$services{LoopStitching} ) {
@@ -187,15 +187,9 @@ sub load_equipment {
 	if ( sets::isin( $Project->Type()->name(), ['Banners','InkjetOutputs'] ) ) {
 		push @capabilities, 'Large Format';
 	} # end if
-if ( 0 ) {
-	my @capabilities = ('Y');
-	if ( sets::isin( $Project->Type()->name(), ['Banners','InkjetOutputs'] ) ) {
-		push @capabilities, 'Large Format';
-	} # end if
-}
 	$log->debug("load_equipment");
 	@equipment = openprint::Equipment->find( Specifications => {'Cutting Capable'=>\@capabilities}, useinestimating=>1, order=>'lower(strName)');
-	@PreFoldingEquipment = openprint::Equipment->find( Specifications => {'Cutting Capable'=>['Y','When Printing']}, 'useinestimating'=>1,'order'=>'lower(strName)');
+	@PreFoldingEquipment = openprint::Equipment->find( Specifications => {'Cutting Capable'=>['Y','When Printing']}, useinestimating=>1, order=>'lower(strName)');
 } # end sub load_equipment
 
 sub signature_calc_stock_cutting {
@@ -1209,7 +1203,7 @@ sub calc {
 				next;
 			} # end if
 			my $Imposition = new openprint::Imposition();
-			$Imposition->load( $sig_specs, $qty_index );
+			$Imposition->load( $sig_specs, $qty_index, $Project );
 			next if ! $$Imposition{imposition};
 			my $Paper = $Imposition->Paper();
 			if ( $$Paper{type} eq 'Sheet' and $Paper->is_cut() ) {

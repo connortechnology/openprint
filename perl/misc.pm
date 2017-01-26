@@ -43,7 +43,7 @@ sub send_email_with_attachment {
 		$$mail{'content-type'} = "multipart/mixed;\r\n	boundary=\"$boundary\"\r\n";
 
 # start with the current body
-		$$mail{'BODY'} .= "This is a multi-part message in MIME format.\n\n";
+		$$mail{BODY} .= "This is a multi-part message in MIME format.\n\n";
 		if ( $message ) {
 			$$mail{BODY} .= "--$boundary\n";
 			$$mail{BODY} .= ($$mail{'content-type'} ? $$mail{'content-type'} : 'Content-Type: text/plain; charset="utf-8"')."\n";
@@ -185,18 +185,22 @@ sub get_destination {
 sub get_url {
 	my ( $uri, $params, $options ) = @_;
 	my @keys = keys %$params;
-	if ( $options and $$options{'exclude'} ) {
-		@keys = sets::exclude( (ref $$options{'exclude'} eq 'ARRAY' ? $$options{'exclude'} : [ $$options{'exclude'} ]), \@keys );
+	if ( $options and $$options{exclude} ) {
+		@keys = sets::exclude( (ref $$options{exclude} eq 'ARRAY' ? $$options{exclude} : [ $$options{exclude} ]), \@keys );
 	} # end if	
 	@keys = sets::exclude( [ 'password', 'btnFunction', 'email','select_currency_id','ddmCompany','CompanyFilter','pricelist_id' ], \@keys );
 	my %encoded;
 	foreach my $k ( @keys ) {
-		$encoded{$k} = $$params{$k};
+		if ( ref $$params{$k} eq 'ARRAY' ) {
+			$encoded{$k} = join( ',', @{$$params{$k}} );
+		} else {
+			$encoded{$k} = $$params{$k};
+		}
 		$encoded{$k} =~ s/([^A-Za-z0-9])/sprintf("%%%02X", ord($1))/seg;	
 	} # end foreach
-	if ( $options and $$options{'include'} ) {
-		foreach my $k ( keys %{$$options{'include'}} ) {
-			$encoded{$k} = $$options{'include'}{$k};
+	if ( $options and $$options{include} ) {
+		foreach my $k ( keys %{$$options{include}} ) {
+			$encoded{$k} = $$options{include}{$k};
 		} # end foreach
 	} # end if	
 
@@ -216,10 +220,10 @@ sub error {
 	$log->debug("Error: $error");
 	$log->debug("Details: $details");
 
-	$$variable{'error'} = $error;
-	$$variable{'details'} = $details;
+	$$variable{error} = $error;
+	$$variable{details} = $details;
 	$$variable{information} = $details;
-	#$$variable{'Redirect'} = $openprint::config{'errorpage'};
+	#$$variable{Redirect} = $openprint::config{errorpage};
 } # end sub error
 
 sub trim {
@@ -409,7 +413,7 @@ sub find_entry {
 		} # end if
 		return;
 	} # end if
-	my $name = $$array[0]{'name'};
+	my $name = $$array[0]{name};
 	$openprint::log->debug("Looking for $name : $range") if $debug;
 
 	my $i = 0;
@@ -417,11 +421,11 @@ sub find_entry {
 	my $y;
 	for ( ; $i < @{$array}; $i += 1 ) {
 		my $Object = $$array[$i];
-	$openprint::log->debug("Examining: min(" . $Object->min() . 	') max(' . $Object->max() . ') value(' . $Object->value() . ') interpolate('.$Object->interpolate() .')') if $debug;
-		return $Object if ( (1*$$Object{min}) <= $range ) and ( ( $$Object{max} eq '' ) or ( $$Object{max} >= $range ) );
+	$openprint::log->debug("Examining: min(" . $$Object{min} . 	') max(' . $$Object{max} . ') value(' . $$Object{value} . ') interpolate('.$$Object{interpolate} .')') if $debug;
+		return $Object if ( $$Object{min} <= $range ) and ( ( $$Object{max} eq '' ) or ( $$Object{max} >= $range ) );
 
 		# first step, find one less than the min
-		last if 1*$$Object{min} > $range;
+		last if $$Object{min} > $range;
 		#last if ( $Object->max() eq '' and ! $Object->interpolate() );
 	} # end if
 	
@@ -435,7 +439,6 @@ $openprint::log->debug("Found spec for $range:" . $x->min() . ' ' . $x->max() . 
 $openprint::log->debug("Couldn't find monimum for $name : $range on " . ( $$array[0]->Equipment() ? $$array[0]->Equipment()->name() : '' ) ) if $debug;
 		return;	
 	}
-
 	for ( ; $i < @{$array}; $i += 1 ) {
 		my $Object = $$array[$i];
 		return $Object if ( (1*$$Object{min}) <= $range ) and ( ( (1*$$Object{max}) >= $range ) or ! (1*$$Object{max}) );

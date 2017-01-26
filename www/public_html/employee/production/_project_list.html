@@ -1,6 +1,6 @@
 <? eval (
 	$$variable{Projects} = [];
-	if ( $param{'StartDocket'} and $param{'EndDocket'}) {
+	if ( $param{StartDocket} and $param{EndDocket}) {
 		$$variable{Projects} = [ openprint::Project->find(
 			'docket <='	=> $param{EndDocket},
 			'docket >=' => $param{StartDocket},
@@ -26,7 +26,7 @@
 	} else {
 		my %filters = (
 				( $session{'/employee/production/projects.html?ddmPress'} ? (	'used_press_name in'	=> $session{'/employee/production/projects.html?ddmPress'} ) : () ),
-				( $session{'/employee/production/projects.html?ddmEmployee'} ? (	'operator_id in'	=> $session{'/employee/production/projects.html?ddmEmployee'} ) : () ),
+				( $session{'/employee/production/projects.html?ddmEmployee'} ? (	'operator_id any'	=> $session{'/employee/production/projects.html?ddmEmployee'} ) : () ),
 				status			=> [ split ',', $session{'/employee/production/projects.html?ProjectStatus'} ],
 				'order_id is null'	=> 0,
 				date_filter( '/employee/production/projects.html?due_date_end', 'due_date is null or <=' ),
@@ -42,16 +42,16 @@
 		$$variable{Projects} = [ openprint::Project->find( %filters ) ];
 	} # end if
 ) ?>
-<? if ( @{$$variable{'Projects'}} ) ?>
+<? if ( @{$$variable{Projects}} ) ?>
 	<table class="List">
 		<tr> 
 			<th class="project_id">Project#</th>
 			<th class="docket">Docket#</th>
 			<th class="Company">Company</th>
 			<th class="reference">Project Name</th>
-	<? if ( ! $param{'ddmEmployee'} ) ?>
+	<? if ( ! $param{ddmEmployee} ) ?>
 			<th class="Operators">Operators</th>
-	<? endif ( ! $param{'ddmEmployee'} ) ?>
+	<? endif ( ! $param{ddmEmployee} ) ?>
 			<th class="duedate">Due Date</th>
 			<th class="status">Status</th>
 		</tr>
@@ -59,10 +59,10 @@
 			my $html = '';
 			my $rowclass;
 
-			foreach my $Project ( @{$$variable{'Projects'}} ) {
+			foreach my $Project ( @{$$variable{Projects}} ) {
 				#next if $session{'/employee/production/projects.html?ddmPress'} and ! sets::isin( $session{'/employee/production/projects.html?ddmPress'}, [ $Project->used_press_names() ] );
 				#my @operators = sql::execute( $log, $dbh, q{SELECT DISTINCT operator_id FROM tbl_Project_Contents WHERE lngProjectIndex=? AND operator_id IS NOT NULL}, $Project->id() );
-				#next if $param{'ddmEmployee'} and sets::isin( $param{'ddmEmployee'}, \@operators );
+				#next if $param{ddmEmployee} and sets::isin( $param{ddmEmployee}, \@operators );
 				$html .= "<tr$rowclass>\n";
 				$html .= sprintf(q`
 						<td class="project_id"><a href="/employee/project/view.html?project_id=%1$d">%1$d</a>&nbsp;</td>
@@ -72,9 +72,9 @@
 			`, $Project->id(), $Project->docket(), $Project->Company()->name(), $Project->reference(),
  );
 
-				if ( ! $param{'ddmEmployee'} ) {
+				if ( ! $param{ddmEmployee} ) {
 					$html .= sprintf(q`<td class="Operators"><a href="/employee/project/view.html?project_id=%1$d">%2$s</a>&nbsp;</td>`, $Project->id(), 
-						join(', ', map { $_->name() } map { new openprint::User( $_ ); } @{$$variable{'operators'}} ) );
+						join(', ', map { $_->name() } map { new openprint::User( $_ ); } @{$$variable{operators}} ) );
 				} # end if
 				$html .= sprintf(q`
 					<td class="duedate"><a href="/employee/project/view.html?project_id=%1$d">%2$s</a>&nbsp;</td>
@@ -87,6 +87,6 @@
 			return $html;
 		) ?>
 	</table>
-<? else ( @{$$variable{'Projects'}} ) ?>
+<? else ( @{$$variable{Projects}} ) ?>
 There were no results matching your criteria.
-<? endif ( @{$$variable{'Projects'}} ) ?>
+<? endif ( @{$$variable{Projects}} ) ?>

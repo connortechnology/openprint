@@ -184,7 +184,7 @@ $log->error("Signature service $sig_id not foudn in project $$Project{id}");
 					my $fold_specs = openprint::service::get_specs_ref( $Project, $$services{Folding}[0] );
 					if ( $$fold_specs{'ddmEquipment-'.$$service_specs{SignatureIndex}.'-'.$Project->ordered_quantity_index()} == $Equipment->id() ) {
 						my $Imposition = new openprint::Imposition();
-						$Imposition->load( $service_specs, $Project->ordered_quantity_index() );
+						$Imposition->load( $service_specs, $Project->ordered_quantity_index(), $Project );
 						my $foldtype = sprintf('%sx%s-%dPage-%sFold', $Imposition->get('spread_columns','spread_rows','pages','image_orientation' ) );
 						$comment .= "($foldtype inline)";
 					} else {
