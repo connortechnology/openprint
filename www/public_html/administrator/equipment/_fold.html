@@ -120,7 +120,7 @@
 	<div class="rightColumn">
 		<fieldset>
 		<p><label>Comments</label>
-			<textarea name="comments" id="comments-<? echo ( $$variable{Fold}->id() ) ?>" rows="<?echo(count_lines($$variable{Fold}->comments());)?>"><? echo ( $$variable{Fold}->comments() ) ?></textarea>
+			<textarea name="comments" id="comments-<? echo ( $$variable{Fold}->id() ) ?>" rows="<?echo(count_lines($$variable{Fold}->comments(), { width=>30 } );)?>" oninput="$('Fold<?echo($$variable{Fold}{id})?>').addClassName('changed');"><? echo ( $$variable{Fold}->comments() ) ?></textarea>
 		</p>
 		</fieldset>
 		<fieldset><legend>Binding Options</legend>

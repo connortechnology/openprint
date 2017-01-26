@@ -313,11 +313,22 @@ $openprint::log->warn("FIXM E");
 		} # end if
 		$sig_specs{GroupPageQuantity} = $$specs{'GroupPageQuantity'.$group_id} = $override_pages{$group_id};
 		openprint::Estimating::Printing::get_inkcoverage( $Project, \%sig_specs, \%variables );
-		openprint::Estimating::Printing::get_colours( \%sig_specs, 'SideOne', \%variables );
-		openprint::Estimating::Printing::get_colours( \%sig_specs, 'SideTwo', \%variables );
+		my @side_one_colours = openprint::Estimating::Printing::get_colours( \%sig_specs, 'SideOne', \%variables );
+		my @side_two_colours = openprint::Estimating::Printing::get_colours( \%sig_specs, 'SideTwo', \%variables );
 
-		openprint::Estimating::Printing::get_Stocks( $Project, \%sig_specs, \%variables );
+		my @Stocks = openprint::Estimating::Printing::get_Stocks( $Project, \%sig_specs, \%variables );
 		openprint::Estimating::Printing::set_size( $Project, \%sig_specs, $specs );
+
+		if ( ! ( @side_one_colours or @side_two_colours ) ) {
+			$$specs{alert} .= "Please choose the colours to be printed for group $group_id " . $$specs{'txtServiceDescription'.$group_id} . ".<br/>";
+			$$specs{Status} = 'uncalculated';
+		} # end if
+
+		if ( ! @Stocks ) {
+			$$specs{alert} .= "There was a problem loading the specified paper for $group_id " . $$specs{'txtServiceDescription'.$group_id} . ".<br/>";
+			$$specs{Status} = 'uncalculated';
+		} # end if
+
 		if ( $$specs{"ddmRunStyle-$group_id"} and $$specs{"ddmPress-$group_id"} ) {
 			my $Press = openprint::Equipment->find_one(strid=>$$specs{"ddmPress-$group_id"});
 			if ( ! sets::isin( $$specs{"ddmRunStyle-$group_id"}, [ split(',', $Press->specification('Runstyles') ) ] ) ) {

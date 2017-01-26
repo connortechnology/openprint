@@ -1203,7 +1203,7 @@ sub calc {
 				next;
 			} # end if
 			my $Imposition = new openprint::Imposition();
-			$Imposition->load( $sig_specs, $qty_index );
+			$Imposition->load( $sig_specs, $qty_index, $Project );
 			next if ! $$Imposition{imposition};
 			my $Paper = $Imposition->Paper();
 			if ( $$Paper{type} eq 'Sheet' and $Paper->is_cut() ) {

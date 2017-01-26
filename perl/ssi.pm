@@ -26,6 +26,7 @@ require Date::Parse;
 require Date::Format;
 require DateTime::Format::Pg;
 require DateTime::TimeZone;
+require POSIX;
 my $parser = 'DateTime::Format::Pg';
 
 #Used for resource hashed links
@@ -776,7 +777,13 @@ sub write_override {
 sub count_lines {
 	if ( $_[0] ) {
 		my @lines = split( "\n", $_[0] );
-		return scalar @lines;
+		my $lines = scalar @lines;
+		if ( $_[1] and $_[1]{width} ) {
+				foreach ( @lines ) {
+					$lines += ( POSIX::ceil( length($_ ) / $_[1]{width} ) ) - 1;
+				}
+		}	
+		return $lines;
 	} else {
 		return 2;
 	} # end if
