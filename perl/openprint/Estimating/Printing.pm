@@ -6724,7 +6724,7 @@ sub runspeed {
 	} # end if
 
 	my $Imposition = new openprint::Imposition();
-	$Imposition->load( $sig_specs, $qty_index );
+	$Imposition->load( $sig_specs, $qty_index, $Project );
 
 	if ( $Equipment->specification('Folding Capable') eq 'When Printing' ) {
 		my $services = $Project->services();
