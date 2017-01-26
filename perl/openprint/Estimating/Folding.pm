@@ -1913,13 +1913,19 @@ sub summary {
 			if ( ! $$sig_specs{"txtImposition$qty_index"} ) {
 				next;
 			} # end if
+
+			my $Imposition1 = new openprint::Imposition();
+			$Imposition1->load( $sig_specs, $qty_index );
+
 			my $sig_count = 1;
 
 			if ( $sig_index < @signatures - 1 ) {
 				for ( my $sig_index2 = $sig_index + 1; $sig_index2 < @signatures; $sig_index2 += 1 ) {
 					my $sig_specs2 = openprint::service::get_specs_ref( $Project, $signatures[$sig_index2] );
+					my $Imposition2 = new openprint::Imposition();
+					$Imposition2->load( $sig_specs, $qty_index );
 					if ( openprint::Estimating::Printing::compare_signatures( $Project, $sig_specs, $sig_specs2, $qty_index ) 
-						and compare_folds( $specs, $sig_specs, $sig_specs2, $qty_index )
+						and compare_folds( $specs, $Imposition1, $Imposition2, $qty_index )
 						) {
 						$sig_count += 1;
 					} else {
