@@ -2672,6 +2672,13 @@ $openprint::log->debug("No stock quantity for form $$sig_specs{SignatureIndex}")
 			} # end if
 		} else {
 			$variables{'ddmPress'.$qty_index} = [ sets::union( 'output', @{$variables{'ddmPress'.$qty_index}} ) ];
+			if ( $$printing_specs{"ddmPress-$$specs{Group}"} ) {
+				my $OverridePress = $Presses{$$printing_specs{"ddmPress-$$specs{Group}"}};
+				if ( $presses{$OverridePress->id()} ) {
+					$$specs{alert} .= 'The press that you have chosen '.$OverridePress->name() . ' is not appropriate for the following reason: ' .$presses{$OverridePress->id()};
+					return $$specs{Status} = 'uncalculated';
+				} # end if
+			}
 		} # end if
 
 		if ( $$specs{'chkOverrideRunStyle'.$qty_index} eq 'Y' ) {
@@ -3115,7 +3122,7 @@ $openprint::log->debug("Needed pages: $needed_pages") if DEBUG;
 
 	my $filter_press = $$sig_specs{"ddmPress$qty_index"} if $$sig_specs{"chkOverridePress$qty_index"} eq 'Y';
 	if ( $$sig_specs{PreviousPress} ) {
-		#$filter_press = $$sig_specs{PreviousPress};
+		$filter_press = $$sig_specs{PreviousPress};
 		#$log->debug("Have PreviousPress $$sig_specs{PreviousPress}");
 	}
 
@@ -4296,8 +4303,8 @@ $openprint::log->error("No proofs>!");
 								if ( $$new_specs{'chkOverridePress'.$qty_index} ne 'Y' ) {
 #and $Press->specification('Stay On Press') eq 'Y' ) {
 									$$new_specs{PreviousPress} = $Press->strid();
-$imp->display();
-									$log->debug("Setting press to $$Press{strid} was ($$new_specs{PreviousPress}) recursion depth($recursion_depth) $new_specs");
+#$imp->display();
+									#$log->debug("Setting press to $$Press{strid} was ($$new_specs{PreviousPress}) recursion depth($recursion_depth) $new_specs");
 								}
 								$$new_specs{PreviousStockType} = $$Paper{type};
 								$$new_specs{PreviousStockWidth} = $$Paper{width};
