@@ -317,11 +317,15 @@ sub load {
 	$$self{versions} = $$specs{'Versions'.$qty_index};
 	$$self{start_columns} = $$self{columns} = $$specs{'hdnImpositionColumns'.$qty_index};
 	$$self{start_rows} = $$self{rows} = $$specs{'hdnImpositionRows'.$qty_index};
+
 	#$$self{columns} = $$self{imposition} / $$self{rows} if $$self{rows} and ! $$self{columns};
 	#$$self{rows} = $$self{imposition} / $$self{columns} if $$self{columns} and ! $$self{rows};
 	$$self{dutch_rows} = $$specs{'hdnImpositionDutchRows'.$qty_index} or 0;
 	$$self{dutch_columns} = $$specs{'hdnImpositionDutchColumns'.$qty_index} or 0;
 	$$self{cut_off} = $$specs{'CutOff'.$qty_index};
+	if ( ( $$self{columns} * $$self{rows} ) + ( $$self{dutch_rows} * $$self{dutch_columns} ) != $$self{imposition} ) {
+		$$self{imposition} = 0;
+	}
 
 
 	#'layout_width','layout_height',
