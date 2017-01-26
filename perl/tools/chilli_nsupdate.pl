@@ -38,7 +38,6 @@ foreach my $default ( keys %defaults ) {
 $openprint::log = logger->new('debug');
 configuration::init( );
 $_ = configuration::from_file( $$opts{config} );
-die $_ if $_;
 configuration::merge( $opts );
 
 foreach my $param ( 'db_name','db_user','db_pass' ) {
@@ -51,7 +50,7 @@ $config{log_level} = 'debug' if ! $config{'log_level'};
 $log = logger->new( {'file'=>$config{'log_file'}, 'level'=>$config{'log_level'}} );
 
 
-if ( $config{'log_level'} eq 'debug' ) {
+if ( 0 and $config{'log_level'} eq 'debug' ) {
 	foreach my $k ( keys %ENV ) {
 		$log->debug("Environment: $k => $ENV{$k}");
 	}
