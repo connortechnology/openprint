@@ -154,7 +154,8 @@ $serial	= 'paper_id_seq';
 	allocated	=>	q`'0'`,
 	in_stock	=>	q`'0'`,
 	bladecleaning	=>	q`'0'`,
-	user_type	=>	q`''`,
+	#user_type	=>	q`''`,
+	user_type	=>	undef,
 	supplied		=>	undef,
 	sheets_per_package	=>	undef,
 	wpsi				=>	undef,
@@ -1496,9 +1497,9 @@ $log->debug($P->id_string());
 #$openprint::log->debug($Paper->to_string() );
 	if ( $qty_index ) {
 		if ( 
-			( ( $Paper->width() != $$specs{'StockWidth'.$qty_index} ) or ($Paper->type() eq 'Sheet' and $Paper->height() != $$specs{'StockHeight'.$qty_index} ) )
+			( ( $$Paper{width} != $$specs{'StockWidth'.$qty_index} ) or ($$Paper{type} eq 'Sheet' and $$Paper{height} != $$specs{'StockHeight'.$qty_index} ) )
 			and
-			( ( $Paper->height() != $$specs{'StockWidth'.$qty_index} ) or ($Paper->type() eq 'Sheet' and $Paper->width() != $$specs{'StockHeight'.$qty_index} ) )
+			( ( $$Paper{height} != $$specs{'StockWidth'.$qty_index} ) or ($$Paper{type} eq 'Sheet' and $$Paper{width} != $$specs{'StockHeight'.$qty_index} ) )
 ) {
 #Carp::cluck("Custom size $$specs{'StockWidth'.$qty_index}x$$specs{'StockHeight'.$qty_index}");
 #$openprint::log->debug("Custom size $$Paper{width}x$$Paper{height} => $$specs{'StockWidth'.$qty_index}x$$specs{'StockHeight'.$qty_index}");
