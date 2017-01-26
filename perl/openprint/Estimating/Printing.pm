@@ -4377,7 +4377,8 @@ $openprint::log->error("No proofs>!");
 #$openprint::log->debug("Doing full calc when UPQ: >= Pages:" . $$imp{pages} . ' PageQuantity:' . $$new_specs{'PageQuantity'.$qty_index} ) if $upq >= $$imp{pages} or 0;
 
 								$$new_specs{PrintingTypes} = [ $Press->specification('Printing Type') ];
-								if ( $$new_specs{'chkOverridePress'.$qty_index} ne 'Y' and $Press->specification('Stay On Press') eq 'Y' ) {
+								if ( $$new_specs{'chkOverridePress'.$qty_index} ne 'Y' ) {
+#and $Press->specification('Stay On Press') eq 'Y' ) {
 									$$new_specs{PreviousPress} = $Press->strid();
 $imp->display();
 									$log->debug("Setting press to $$Press{strid} was ($$new_specs{PreviousPress}) recursion depth($recursion_depth) $new_specs");
@@ -6816,7 +6817,7 @@ sub runspeed {
 	} # end if
 
 	my $Imposition = new openprint::Imposition();
-	$Imposition->load( $sig_specs, $qty_index );
+	$Imposition->load( $sig_specs, $qty_index, $Project );
 
 	if ( $Equipment->specification('Folding Capable') eq 'When Printing' ) {
 		my $services = $Project->services();
