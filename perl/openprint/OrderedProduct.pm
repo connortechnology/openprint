@@ -6,21 +6,22 @@ require openprint::Product;
 require openprint::Project;
 require openprint::Order;
 
-use vars qw( $debug $serial $table $log $dbh %fields %transforms %defaults );
+use vars qw( $debug $serial $table $log $dbh %fields %transforms %defaults @identified_by );
 
 $debug = 0;
 $serial = 'ordered_products_id_seq';
 $table = 'ordered_products';
+@identified_by = ( 'order_id', 'product_id' );
 
 %fields = (
-	id => 'id',
-	order_id => 'order_id',
-	product_id => 'product_id',
-	project_id	=> 'project_id',
-	quantity		=> 'quantity',
-	price			=> 'price',
-	shipping_type	=> 'shipping_type',
-	requested_for	=> 'requested_for',
+	id				=>	'id',
+	order_id		=>	'order_id',
+	product_id		=>	'product_id',
+	project_id		=>	'project_id',
+	quantity		=>	'quantity',
+	price			=>	'price',
+	shipping_type	=>	'shipping_type',
+	requested_for	=>	'requested_for',
 	comments		=>	'comments',
 );
 
@@ -28,19 +29,11 @@ sub delete {
 	my $self = shift;
 
 	my $ac = sql::start_transaction( $openprint::dbh );
-	sql::execute( undef, undef, 'DELETE FROM ORdered_products WHERE id=?', $$self{id} );
+	sql::execute( undef, undef, 'DELETE FROM ordered_products WHERE id=?', $$self{id} );
 	$self->Project()->delete() if $$self{project_id};
 	sql::end_transaction( $openprint::dbh, $ac );
 	return;
 } # end sub delete
-
-sub load {
-	my ( $self, $data ) = @_;
-	if ( ! $data ) {
-		$data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM Ordered_Products WHERE order_id=? AND product_id=?', {}, @$self{'order_id','product_id'} );
-	} # end if
-	@$self{keys %$data} = @$data{keys %$data};
-} # end sub load
 
 sub copy {
 	my ( $self ) = @_;
@@ -94,7 +87,13 @@ sub price {
 } # end sub price
 
 sub total {
-	return $_[0]->price() * $_[0]->quantity();
+	my $self = shift;
+	my %Price = $self->Product()->get_price( $$self{quantity} );
+	if ( $Price{units} eq 'total' ) {
+		return $self->price();
+	} else {
+		return $self->price() * $self->quantity();
+	}
 }
 
 sub Currency {
@@ -156,7 +155,7 @@ sub requested_for {
 } # end sub erquested_for
 
 sub quantity_index {
-return 1;
+	return 1;
 }
 
 1;

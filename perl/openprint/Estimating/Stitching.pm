@@ -18,7 +18,7 @@ package openprint::Estimating::Stitching;
 use strict;
 #use warnings;
 
-use constant DEBUG => 1;
+use constant DEBUG => 0;
 
 require openprint::Equipment;
 require openprint::service;
@@ -297,7 +297,7 @@ $openprint::log->debug("Fold pq($$FI{page_quantity}) pages($$FI{pages}) ($$Fold{
 						$total_pages += $$FI{pages};
 
 						if ( $total_pages > $$I{pages} ) {
-							$openprint::log->debug("Already have enough pages $total_pages + $$FI{pages} <= $$I{pages}");
+							$openprint::log->debug("Already have enough pages $total_pages + $$FI{pages} <= $$I{pages}") if DEBUG;
 							next;
 						} else {
 							my $p = $$FI{page_quantity};

@@ -329,14 +329,12 @@ sub has_overrides {
 
 	my @v;
 	if ( $qty_index ) {
-	foreach my $s_s_id ( $Project->signatures() ) {
-		my $sig_specs = openprint::service::get_specs_ref( $Project, $s_s_id );
-		my $form = $$sig_specs{SignatureIndex};
-		#foreach my $qty_index ( $Project->quantity_indexes() ) {
+		foreach my $s_s_id ( $Project->signatures() ) {
+			my $sig_specs = openprint::service::get_specs_ref( $Project, $s_s_id );
+			my $form = $$sig_specs{SignatureIndex};
 			push @v, "chkOverrideEquipment-$form-$qty_index" if $$specs{"chkOverrideEquipment-$form-$qty_index"};
 			push @v, "chkOverrideFold-$form-$qty_index" if $$specs{"chkOverrideFold-$form-$qty_index"};
-		#} # end foreach
-	} # end foreach
+		} # end foreach
 	} # end if
 
 	return @v;
@@ -719,6 +717,8 @@ $openprint::log->debug("folds from sigimpo") if DEBUG;
 				$Breakdown .= 'Perfect Binder can only fold 4pg cover:<br/>';
 				next;
 			} # end if
+		} elsif ( $capable eq 'For Pocket Folders' ) {
+			next if $Project->Type()->name() ne 'PresentationFolders';
 		} elsif ( $capable eq 'When Stitching' ) {
 			$Breakdown .= 'When Stitching:';
 # Means it's a Stitcher, or a Duplo, so can only do covers
@@ -730,18 +730,29 @@ $openprint::log->debug("folds from sigimpo") if DEBUG;
 				$Breakdown .= 'Not stitching:<br/>';
 				next;
 			} # end if
-		} elsif ( $capable eq 'When Printing' ) {
+		} elsif ( $capable =~ /^When Printing( on .*)?$/ ) {
 			$Breakdown .= $capable.':';
-			if ( $$Press{id} != $$Equipment{id} ) {
-				$Breakdown .= "Not printing on $$Equipment{name}:<br/>";
-				next;
-			} # end if
-			if ( $perforating ) {
-				if ( $$specs{"chkOverrideEquipment-$form-$qty_index"} ) {
-					$$specs{alert} .= "Perforating while folding inline may cause tearing.<br/>";
-				} else {
-					$Breakdown .= 'not perforating on this piece of equipment.<br/>';
+			if ( $1 ) {
+				my $press = $1;
+				$press =~ s/^ on //;
+				if ( $press ne $Press->strid() ) {
+					$Breakdown .= "Not printing on $$Press{strid}:<br/>";
 					next;
+				}
+			} else {
+				
+				if ( $$Press{id} != $$Equipment{id} ) {
+					$Breakdown .= "Not printing on $$Equipment{name}:<br/>";
+					next;
+				} # end if
+
+				if ( $perforating ) {
+					if ( $$specs{"chkOverrideEquipment-$form-$qty_index"} ) {
+						$$specs{alert} .= "Perforating while folding inline may cause tearing.<br/>";
+					} else {
+						$Breakdown .= 'not perforating on this piece of equipment.<br/>';
+						next;
+					} # end if
 				} # end if
 			} # end if
 		} # end if
@@ -859,7 +870,7 @@ $openprint::log->debug("folds from sigimpo") if DEBUG;
 						push @{$folds{$Imposition->pages().'PageFold-'.$$Imposition{imposition}.'out'}}, $Fold;
 						$openprint::log->debug(sprintf('Found: %dx%d,%dout', $Imposition->page_columns(), $Imposition->page_rows(), $Imposition->imposition() ) ) if DEBUG;
 					} else {
-						$Breakdown .= sprintf('Didnt find fold pages: %dx%d=%d %.3fx%.3f %s, %dout %dgsm<br/>', $Imposition->page_columns(), $Imposition->page_rows(), $Imposition->pages(), $Imposition->page_width(), $Imposition->page_height(), @$Imposition{'image_orientation','imposition'}, $Paper->gsm() );
+						$Breakdown .= sprintf('Didnt find fold pages: %dx%d=%d %.3fx%.3f %s, %dout %dgsm<br/>', $Imposition->page_columns(), $Imposition->page_rows(), $Imposition->pages(), @$Imposition{'page_width','page_height','image_orientation','imposition'}, $Paper->gsm() );
 						$openprint::log->debug(sprintf('Didnt find: %dx%d %s,%dout', $Imposition->page_columns(), $Imposition->page_rows(), @$Imposition{'image_orientation','imposition'} ) ) if DEBUG;
 						%folds = ();
 						# Last because it's on press, can't do any cut impos.	Not actually True.	Webs can slit it and do dual delivery, fold one, sheet the other. FIXME
@@ -1013,13 +1024,13 @@ $openprint::log->debug("No Fold") if DEBUG;
 										#page_columns=>	$Imposition->page_rows(),
 										#page_rows	=>	$Imposition->page_columns(),
 									#) ),
-									page_width		=>	$Imposition->page_width(),
-									page_height		=>	$Imposition->page_height(),
+									page_width		=>	$$Imposition{page_width},
+									page_height		=>	$$Imposition{page_height},
 									spine_direction	=>	$$Imposition{image_orientation},
 									stitching		=>	(($$services{SaddleStitching} or $$services{LoopStitching}) ? 1 : 0),
 									perfectbind		=>	($$services{PerfectBound} ? 1 : 0),
 									spinepaste		=>	($$services{SpinePaste} ? 1 : 0),
-									gsm				=>	$Paper->gsm(),
+									gsm				=>	$$Paper{gsm},
 									calliper		=>	$$Paper{calliper},
 									imposition		=>	$$Imposition{imposition},
 									columns		=>	$$Imposition{columns},
@@ -1379,7 +1390,8 @@ $openprint::log->debug("Resulting fold: " . $Fold->to_string() ) if DEBUG;
 				my %setupPrice = openprint::service::get_price_object( $Fold->type().'MakeReady', $imposition, $Equipment );
 				if ( ! %setupPrice ) {
 					$openprint::log->debug("No MakeReady for " . $Fold->type().'MakeReady' . ' ' . $imposition . ' out on ' . $$Equipment{strid} ) if DEBUG;
-					%setupPrice = openprint::service::get_price_object( 'FoldMakeReady', $imposition, $Equipment );
+					%setupPrice = openprint::service::get_price_object( 'FoldingMakeReady', $imposition, $Equipment );
+					%setupPrice = openprint::service::get_price_object( 'FoldMakeReady', $imposition, $Equipment ) if ! %setupPrice;
 				} else {
 					$openprint::log->debug("Got MakeReady for " . $Fold->type().'MakeReady' . ' imp:' . $imposition . " \$$setupPrice{Price} $setupPrice{units}" ) if DEBUG;
 				} # end if
@@ -1649,12 +1661,15 @@ sub load_equipment {
 	my ( $Project ) = @_;
 	my $services = $Project->services();
 
-	my @folding_capable = ('Y');
-	push @folding_capable, 'For Pocket Folders' if $Project->Type()->name() eq 'PresentationFolders';
-	push @folding_capable, 'When PerfectBound' if $$services{PerfectBound};
-	push @folding_capable, 'When Stitching' if ( $$services{SaddleStitching} or $$services{LoopStitching} );
-	push @folding_capable, 'When Printing';
-	@equipment = openprint::Equipment->find( 'useinestimating is null or ='=>1, Specifications=>{'Folding Capable'=>\@folding_capable} );
+	my $Service = $Project->Service( $$services{Folding}[0] ) if $$services{Folding};
+	#push @folding_capable, 'For Pocket Folders' if $Project->Type()->name() eq 'PresentationFolders';
+	#push @folding_capable, 'When PerfectBound' if $$services{PerfectBound};
+	#push @folding_capable, 'When Stitching' if ( $$services{SaddleStitching} or $$services{LoopStitching} );
+	#push @folding_capable, 'When Printing';
+	@equipment = openprint::Equipment->find( 'useinestimating is null or ='=>1, 
+'servicetype_id any'=>$Service->servicetype_id(),
+#Specifications=>{'Folding Capable'=>\@folding_capable}
+ ) if $Service;
 } # end sub load_equipment
 
 sub calc {
@@ -1733,7 +1748,7 @@ sub calc {
 				next;
 			} # end if
 			my $i = new openprint::Imposition();
-			$i->load( $sig_specs, $qty_index );
+			$i->load( $sig_specs, $qty_index, $Project );
 			$$i{Folds} = [ get_Folds( $specs, $i, $qty_index ) ];
 			push @Signature_Impositions, $i;
 $i->display() if DEBUG;
@@ -1949,7 +1964,7 @@ sub runspeed {
 #$openprint::log->debug("Folding runspeed: ($speed)");
 	if ( ! $speed ) {
 		my $Imposition = new openprint::Imposition;
-		$Imposition->load( $sig_specs, $qty_index );
+		$Imposition->load( $sig_specs, $qty_index, $Project );
 		#$openprint::log->debug("Getting fold from imposition: " . $Imposition->pages() );
 		if ( $Imposition->pages() ) {
 			$speed = $Equipment->specification( $Imposition->pages().'PageSignatureFoldRunSpeed' );
@@ -2304,7 +2319,8 @@ sub compact_impositions {
 sub save {
 } # end sub save
 
-sub load_Impositions($$$) {
+sub load_Impositions() {
+#sub load_Impositions($$$) {
 	my ( $folding_specs, $sig_specs, $qty_index ) = @_;
 
 	my $form = $$sig_specs{SignatureIndex};
@@ -2337,6 +2353,7 @@ sub get_Folds {
 		$Source_Imposition = new openprint::Imposition();
 		$Source_Imposition->load( $sig_specs, $qty_index );
 	} # end if
+	return () if !$$Source_Imposition{imposition};
 
 if ( DEBUG ) {
 foreach my $k ( sort { $a cmp $b } keys %$folding_specs ) {
@@ -2373,11 +2390,11 @@ $openprint::log->debug("Has no equipment_id") if DEBUG;
 #$Imposition->display();
 		my $find = {
 			type 			=>	$fold_type,
-#pages			=>	$Imposition->pages(),
-#page_columns	=>	$Imposition->page_columns(),
-#page_rows		=>	$Imposition->page_rows(),
-			page_width		=>	$Imposition->page_width(),
-			page_height		=>	$Imposition->page_height(),
+pages			=>	$Imposition->pages(),
+page_columns	=>	$Imposition->page_columns(),
+page_rows		=>	$Imposition->page_rows(),
+			page_width		=>	$$Imposition{page_width},
+			page_height		=>	$$Imposition{page_height},
 			spine_direction =>	$$Imposition{image_orientation},
 			gsm				=>	$Paper->gsm(),
 			imposition		=>	$$Imposition{imposition},

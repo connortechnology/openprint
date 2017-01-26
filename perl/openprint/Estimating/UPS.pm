@@ -333,38 +333,11 @@ $log->debug("Pickup: $$specs{'ddmPickupType'} Service: $$specs{'ddmServiceType'}
 } # end sub calc
 
 sub display {
-	my ( $log, $dbh, $variable, $project_index, $service_index ) = @_;
-$log->debug("UPS::display: $project_index, $service_index");
+	my ( $project_index, $service_index, $variable ) = @_;
 
 	my $Project = new openprint::Project( $project_index );
-	$$variable{'Project'} = $Project;
-	$$variable{'txtQuantity1'} = $Project->quantity1() if ! exists $$variable{'txtQuantity1'};
-	$$variable{'txtQuantity2'} = $Project->quantity2() if ! exists $$variable{'txtQuantity2'};
-	$$variable{'txtQuantity3'} = $Project->quantity3() if ! exists $$variable{'txtQuantity3'};
 	$$variable{'Mode'} = $Project->mode();
-	$$variable{'ServiceTypeID'} = 'UPS';
-
-	my $Company = new openprint::Company( $openprint::session{'company_id'} );
-	if ( $openprint::session{'company_id'} and ( ! ( 
-		$$variable{'ToCity'} and $$variable{'ToPostalCode'} and $$variable{'ToStateProvince'} and $$variable{'ToCountry'} ) ) ) {
-		my %shipping_fields = (
-				'ToAddress1'		=>	'Address1',
-				'ToAddress2'		=>	'Address2',
-				'ToCity'			=>	'City',
-				'ToStateProvince'	=>	'StateProvince',
-				'ToCountry'			=>	'Country',
-				'ToPostalCode'	 	=>	'PostalCode',
-				);
-
-		my $address = $Company->get_shipping_address();
-		foreach my $k ( keys %shipping_fields ) {
-			$$variable{$k} = $address->get( $shipping_fields{$k} ) if ! $$variable{$k};
-		} # end foreach
-	} # end if
-	if ( ! $$variable{'ToPostalCode'} ) {
-		$$variable{'ToPostalCode'} = $Company->postalcode();
-	} # end if
-
+	openprint::Estimating::Shipping( @_ );
 } # end sub display
 #
 sub summary {

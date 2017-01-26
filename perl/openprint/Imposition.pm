@@ -6,6 +6,7 @@ require Math::Round;
 require Data::Dumper;
 use vars qw( $AUTOLOAD );
 use constant DEBUG => 0;
+use constant DEBUG_PERFORMANCE => 1;
 
 my @fields = (
 	'start_imposition','start_columns','start_rows',
@@ -44,6 +45,11 @@ my @fields = (
 	'equipment_id', 'Equipment',
 	'inkCoverage',
 	'folio_lip',
+	'page_width',
+	'page_height',
+	'page_columns',
+	'page_rows',
+	'spine',
 );
 
 # spread_cols and spread_rows are oriented identically to the imposition
@@ -202,7 +208,7 @@ my ( $caller, undef, $line ) = caller;
 	#@$self{'quantity','start_imposition','columns','rows','dutch_columns','dutch_rows','imposition','spread_columns','spread_rows','spreads'},$self->page_columns(), $self->page_rows(), $self->pages(), $$self{runstyle}, $$self{Paper}->{start_width},$$self{Paper}->{start_height},$self->{Paper}->{width},$self->{Paper}->{height},$$self{Press}->{strid}, @$self{'image_width','image_height','layout_width','layout_height','image_orientation'},$self->grain_direction(), $$self{Paper}->minimum_order() ) );
 my ( $caller, undef, $line ) = caller;
 	$openprint::log->debug(sprintf('Imp %s: %d %dx%d+%dx%d:%dout%s pages:%dx%d=%d %s on: %sx%s->%sx%s=%dsq rotate: %d layout: %sx%s min: %s %s %s versions: %d specs: %s from %s:%d', $prefix,
-	@$self{'quantity','columns','rows','dutch_columns','dutch_rows','imposition','image_orientation'},$self->page_columns(), $self->page_rows(), $self->pages(), $$self{runstyle}, @$Paper{'start_width','start_height'}, $self->sheet_width(), $self->sheet_height(), $Paper->area(), $$self{rotate_sheet}, $self->layout_width(), $self->layout_height(), $$Paper{minimum_order}, $$self{Press}->{strid}, ( $$self{Price} ? $$self{Price} : '' ), $$self{versions}, $$self{specs}, $caller, $line ) );
+	@$self{'quantity','columns','rows','dutch_columns','dutch_rows','imposition','image_orientation','page_columns', 'page_rows', 'pages', 'runstyle'}, @$Paper{'start_width','start_height'}, $self->sheet_width(), $self->sheet_height(), $Paper->area(), $$self{rotate_sheet}, $self->layout_width(), $self->layout_height(), $$Paper{minimum_order}, $$self{Press}->{strid}, ( $$self{Price} ? $$self{Price} : '' ), $$self{versions}, $$self{specs}, $caller, $line ) );
 } # end sub display
 
 sub get {
@@ -373,36 +379,71 @@ sub load {
 		$$self{layout_height} = $dutch_height if $dutch_height > $$self{layout_height};
 	} # end if
 	if ( $$specs{txtSignatureType} ) {
+		if ( ! $$specs{spine} ) {
+			if ( ! $Project ) {
+				if ( $$specs{ProjectIndex} ) {
+					$Project = new openprint::Project( $$specs{ProjectIndex} );
+				} else {
+					$openprint::log->error("No ProjcetIndex in specs");
+foreach my $k ( sort { $a cmp $b } keys %$specs ) {
+$openprint::log->debug("($k) => $$specs{$k}");
+}
+				}
+				my ( $caller, undef, $line ) = caller;
+				$openprint::log->error("No Project passed to Imposition::load from $caller:$line");
+			} 
+			if ( $Project ) {
+				my $services = $Project->services();
+				my $printing_specs = openprint::service::get_specs_ref( $Project, $$services{''}[0] );
+				$$self{spine} = $$printing_specs{spine};
+			}
+			$$self{spine} = 'height' if ! $$self{spine};
+		}
 		$$self{pages} = $$specs{'PageQuantity'.$qty_index};
 		$$self{spread_size} = $$specs{txtSpreadSize};
 		$$self{spreads} = $$self{pages} / $$self{spread_size} if $$self{spread_size};
 		$$self{spread_rows} = $$specs{'SpreadRows'.$qty_index};
 		$$self{spread_columns} = $$specs{'SpreadCols'.$qty_index};
-
-
-if ( 0 ) {
-		$$self{layout_width} = $$self{spread_columns} * $$self{layout_width};
-		$$self{layout_height} = $$self{spread_rows} * $$self{layout_height};
-		$$self{image_width} = $$self{spread_columns} * $$self{image_width};
-		$$self{image_height} = $$self{spread_rows} * $$self{image_height};
-}
-
-	} else {
-		$$self{spread_rows} = Math::Round::nearest(1,$$specs{txtWidth} / $$specs{txtFinalWidth}) if $$specs{txtFinalWidth};
-		$$self{spread_columns} = Math::Round::nearest(1,$$specs{txtHeight} / $$specs{txtFinalHeight}) if $$specs{txtFinalHeight};
-
-		if ( 0 ) {
-			$$self{spreads} = $$self{spread_rows} * $$self{spread_columns};
-			$$self{spread_size} = 2;
+		if ( $$self{spine} eq 'width' 		) {
+			if ( $$self{image_orientation} eq 'Vertical' ) {
+				$$self{page_rows} = $$self{spread_rows} * ($$self{spread_size}/2);
+				$$self{page_columns} = $$self{spread_columns};
+			} else {
+				$$self{page_rows} = $$self{spread_rows};
+				$$self{page_columns} = $$self{spread_columns} * ($$self{spread_size}/2);
+			}
 		} else {
+			if ( $$self{image_orientation} eq 'Vertical' ) {
+				$$self{page_rows} = $$self{spread_rows};
+				$$self{page_columns} = $$self{spread_columns} * ($$self{spread_size}/2);
+			} else {
+				$$self{page_rows} = $$self{spread_rows} * ($$self{spread_size}/2);
+				$$self{page_columns} = $$self{spread_columns};
+			}
+		}
+$openprint::log->debug("have txtSignatureType");
+	} else {
+		# It's a brochure or something, so can't be cut.
+
+		$$self{page_rows} = Math::Round::nearest(1,$$specs{txtWidth} / $$specs{txtFinalWidth}) if $$specs{txtFinalWidth};
+		$$self{page_columns} = Math::Round::nearest(1,$$specs{txtHeight} / $$specs{txtFinalHeight}) if $$specs{txtFinalHeight};
+
+		#if ( 1 ) {
+#20170125 have just gona back to this as it seems like the more correct thing to do
+			#$$self{spreads} = $$self{spread_rows} * $$self{spread_columns};
+			#$$self{spread_size} = 2;
+		#} else {
 			# This is the alternate way of doing it, this makes more sense, but it screws something up.  I can never remember what.
-			$$self{spread_size} = $$self{spread_rows} * $$self{spread_columns} * 2;
+			$$self{spread_size} = $$self{page_rows} * $$self{page_columns} * 2;
 			$$self{spread_rows} = 1;
 			$$self{spread_columns} = 1;
 			$$self{spreads} = 1;
-		} # end if
+		#} # end if
 		$$self{pages} = $$self{spreads} * $$self{spread_size};
+$openprint::log->debug("spread_rows $$self{spread_rows} x $$self{spread_columns} = $$self{spread_size} spreads: $$self{spreads} pages: $$self{pages} ");
 	} # end if
+		$$self{page_width} = $$specs{txtFinalWidth};
+		$$self{page_height} = $$specs{txtFinalHeight};
 	$$self{sheet_width} = $$self{Paper}->width();
 	$$self{sheet_height} = $$self{cut_off} ? $$self{cut_off} : $$self{Paper}->height();
 	if ( ! exists $$specs{"RotateSheet$qty_index"} ) {
@@ -484,68 +525,6 @@ sub layout_area {
 	my $self = shift;
 	return $$self{layout_width} * $$self{layout_height};
 }
-sub page_columns {
-	my $self = shift;
-
-	if ( @_ ) {
-		my $old_spread_columns = $$self{spread_columns};
-		if ( $$self{spread_size} == 4 and $$self{image_orientation} eq 'Vertical' ) {
-			$$self{spread_columns} = $_[0] / 2;
-		} else {
-			$$self{spread_columns} = $_[0];
-		}
-		if ( int($old_spread_columns) and ( $old_spread_columns != $$self{spread_columns} ) ) {
-			# image_* and object_* are not rotated
-			if ( $$self{image_orientation} eq 'Horizontal' ) {
-				$self->image_height( ( $$self{image_height} / $old_spread_columns ) * $$self{spread_columns} );
-			} else {
-				$self->image_width( ( $$self{image_width} / $old_spread_columns ) * $$self{spread_columns} );
-			} # end if
-		}
-		#$self->layout_width(undef);
-		#$self->layout_height(undef);
-	}
-	if ( $$self{spread_size} == 4 and $$self{image_orientation} eq 'Vertical' ) {
-		return $$self{spread_columns} * 2;
-	} else {
-		return $$self{spread_columns};
-	} # end if
-} # end sub page_columns
-
-sub page_rows {
-	my $self = shift;
-
-	if ( @_ ) {
-		my $old_spread_rows = $$self{spread_rows};
-		if ( $$self{spread_size} == 4 and $$self{image_orientation} eq 'Horizontal' ) {
-			$$self{spread_rows} = $_[0] / 2;
-		} else {
-			$$self{spread_rows} = $_[0];
-		}
-		if ( int($old_spread_rows) and ( $old_spread_rows != $$self{spread_rows} ) ) {
-			if ( $$self{image_orientation} eq 'Horizontal' ) {
-				$self->image_height( ( $$self{image_height} / $old_spread_rows ) * $$self{spread_rows} );
-			} else {
-				$self->image_width( ( $$self{image_width} / $old_spread_rows ) * $$self{spread_rows} );
-			}
-		}
-		#$self->layout_width(undef);
-		#$self->layout_height(undef);
-	}
-
-	if ( $$self{spread_size} == 4 and $$self{image_orientation} eq 'Horizontal' ) {
-		return $$self{spread_rows} * 2;
-	} else {
-		return $$self{spread_rows};
-	} # end if
-} # end sub page_rows
-
-sub page_width {
-	return $_[0]{spread_size} == 4 ? $_[0]{object_width}/2 : $_[0]{object_width};
-}
-sub page_height {
-	return $_[0]{object_height};
-}
 
 sub sheet_width {
 	my $self = shift;
@@ -613,12 +592,25 @@ sub sheet_area {
 	return $_[0]->sheet_width() * $_[0]->sheet_height();
 } # end sub sheet_area
 
+if ( ! DEBUG_PERFORMANCE ) {
 sub pages {
 	if ( @_ > 1 ) {
 		$_[0]{pages} = $_[1];
 	} # end if
 	return $_[0]{pages};
-	#return $_[0]{pages} ? $_[0]{pages} : $_[0]{spreads} * $_[0]{spread_size};
+}
+sub page_columns {
+	if ( @_ > 1 ) {
+		$_[0]{page_columns} = $_[1];
+	} # end if
+	return $_[0]{page_columns};
+}
+sub page_rows {
+	if ( @_ > 1 ) {
+		$_[0]{page_rows} = $_[1];
+	} # end if
+	return $_[0]{page_rows};
+}
 }
 
 # Is in relation to the image.

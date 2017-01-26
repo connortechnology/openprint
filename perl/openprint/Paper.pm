@@ -461,8 +461,12 @@ sub to_string {
 			} # end if
 			#$string .= $self->mweight().'M ' if $self->mweight();
 		} # end if
+		if ( $openprint::config{Show_Stock_Calliper} ne 'N' ) {
 		$string .= ' '. Math::Round::nearest( 0.1, 1000*$self->calliper()).'PT' if $self->calliper() and ! ( $self->weight() =~ /PT/ );
+		}
+		if ( $openprint::config{Show_Stock_GSM} ne 'N' ) {
 		$string .= ' '. $self->gsm().'gsm' if $self->gsm();
+		}
 		$string .= ' FSC:' . $$self{fsc_code} if $$self{fsc_code};
 		#$string .= 'Minimum: ' . $$self{minimum_order} if $$self{minimum_order};
 		$$self{to_string} = $string;
@@ -1209,7 +1213,6 @@ sub wpsi {
 		$$self{wpsi} = shift;
 	} # end if
 	if ( ! $$self{wpsi} ) {
-#$openprint::log->debug("Calcing wpsi");
 		if ( $$self{gsm} ) {
 			$$self{wpsi} = $$self{gsm} / 703064.5;
 		} elsif ( $$self{mweight} and ( $$self{type} eq 'Sheet' ) and $$self{width} and $$self{height} ) {
@@ -1218,7 +1221,6 @@ sub wpsi {
 			$$self{wpsi} = ($$self{basis_mweight}/1000)/($self->basis_width()*$self->basis_height());
 		} # end if
 	} # end if
-#$openprint::log->debug("Calcing wpsi $$self{wpsi}");
 	return $$self{wpsi};
 } # end if wpsi
 
@@ -1493,9 +1495,9 @@ $log->debug($P->id_string());
 #FIXME Whay?
 # So... if loading need to check that it fits the size.... but if we are loading by id.... then we don't need to do this... maybe test the impact of this code.
 		if ( 
-			( ( $Paper->width() != $$specs{'StockWidth'.$qty_index} ) or ($Paper->type() eq 'Sheet' and $Paper->height() != $$specs{'StockHeight'.$qty_index} ) )
+			( ( $$Paper{width} != $$specs{'StockWidth'.$qty_index} ) or ($$Paper{type} eq 'Sheet' and $$Paper{height} != $$specs{'StockHeight'.$qty_index} ) )
 			and
-			( ( $Paper->height() != $$specs{'StockWidth'.$qty_index} ) or ($Paper->type() eq 'Sheet' and $Paper->width() != $$specs{'StockHeight'.$qty_index} ) )
+			( ( $$Paper{height} != $$specs{'StockWidth'.$qty_index} ) or ($$Paper{type} eq 'Sheet' and $$Paper{width} != $$specs{'StockHeight'.$qty_index} ) )
 		   ) {
 #Carp::cluck("Custom size $$specs{'StockWidth'.$qty_index}x$$specs{'StockHeight'.$qty_index}");
 #$openprint::log->debug("Custom size $$Paper{width}x$$Paper{height} => $$specs{'StockWidth'.$qty_index}x$$specs{'StockHeight'.$qty_index}");

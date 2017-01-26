@@ -1,0 +1,30 @@
+
+<ul>
+<? echo (
+	my @Categories = openprint::Product_Category->find( order => 'lower(name)', 'parent_id is null'=>1 );
+
+	my $html;
+	foreach my $Category ( @Categories ) {
+		my @Products = $Category->Products( order=>'sort, lower(name)');
+		if ( @Products ) {
+			my $url_to = $Category->url_to();
+
+			$html .= sprintf(q`<li id="ProductCategory%1$d" class="%2$s"><a href="%3$s" onclick="toggleMenu($('ProductCategory%1$d'), 'off', 'on');">%4$s</a>`,
+					$Category->id(), 
+					( $$variable{uri} eq $url_to ? 'on' : 'off' ),
+					$url_to,
+					$Category->name(),
+					);
+if ( 0 ) {
+			$html .= '<ul>';
+			foreach my $Product ( @Products ) {
+				$html .= '<li>' . $Product->link_to() . '</li>';
+			} # end foreach Product
+			$html .= "</ul>\n";
+}
+			$html .= "</li>\n";
+		} # end if Products
+	} # end foreach Category
+	return $html;
+) ?>
+</ul>

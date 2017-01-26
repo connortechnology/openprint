@@ -168,16 +168,28 @@ $log->debug("No project $param{ProjectIndex} found");
 
 sub calc {
 	my $debug = @_ ? $_[0] : 1;
-	my $Project = new openprint::Project( $param{ProjectIndex} );
-	if ( $param{ProjectIndex} and ! $$Project{id} ) {
-		$log->error("Project specified, but not found: $param{ProjectIndex}");
+	my $Project = openprint::Project->find_one( id=>$param{ProjectIndex} ) if $param{ProjectIndex};
+	if ( ! $Project ) {
+		$Project = new openprint::Project();
 		$Project->save();
 	} else {
 		$log->debug("Found proejct $$Project{id}" . $Project->to_string() );
 	}
-	my $module = 'openprint::Estimating::'.( $param{ServiceTypeType} ? $param{ServiceTypeType} : $param{ServiceType} );
-	eval "require $module";
+	my $module;
+	my $Service;
+	if ( $param{ServiceIndex} ) {
+		my $Service = $Project->Service( $param{ServiceIndex} );
+	}
+	if ( ! $Service ) {
+		$Service = new openprint::Project_Service();
+		$Service->set({ project_id=>$Project->id(), service_type=>$param{ServiceType} } );
+	}
+
+	eval {
+		require 'openprint/Estimating/'.$Service->service_type().'.pm';
+	};
 	$log->error("Error requiring $module: $@") if $@;
+	my $module = 'openprint::Estimating::'.$Service->service_type();
 
 	$param{method} = 'calc' if ! $param{method};
 # Not sure this is a good idea, but its neccessary for printing... why is it neccessary?

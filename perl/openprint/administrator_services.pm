@@ -182,7 +182,7 @@ sub _prices_table_body {
 		$variable{error} .= $Price->save();
 	} elsif ( $param{action} eq 'delete' ) {
 		$variable{error} .= $Price->delete();
-		(new openprint::Log())->save({object_id=>$$Service{id},object_type=>ref$Service, action=>'Delete Service Price', note=>$Price->id_string() }) if ! $variable{error};
+		(new openprint::Log())->save({Object=>$Service, action=>'Delete Service Price', note=>$Price->id_string() }) if ! $variable{error};
 	} # end if
 } # end sub _prices_table_body
 

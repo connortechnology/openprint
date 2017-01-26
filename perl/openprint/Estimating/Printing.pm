@@ -38,7 +38,6 @@ use constant DEBUG_PRICE_DECISIONS => 0;
 use constant DEBUG_INKS => 0;
 use constant DEBUG_STOCK => 0;
 use constant COMPARISON_LOG => 0;
-use constant USE_SUBSIG => 0;
 use constant USE_PRICE_CACHE => 1;
 use constant DEBUG_IMPOSITIONS => 0;
 
@@ -423,37 +422,41 @@ sub variables {
 } # end sub variables
 
 sub no_outputs {
-	my ( $project_index, $service_index, $specs, $new_specs, $signature ) = @_;
+	my ( $project_index, $service_index, $specs, $new_specs, $v ) = @_;
+	$v = \%variables if ! $v;
+
 	my @v;
-	$signature = '' if ! $signature;
-	foreach my $k ( keys %variables ) {
-		push @v, $k.$signature if ! sets::isin( 'output', $variables{$k} );
+	foreach my $k ( keys %{$v} ) {
+		push @v, $k if ! grep { $_ eq 'output' } @{ $$v{$k} };
 	} # end foreach
 
 	foreach my $side ( 'SideOne','SideTwo' ) {
 		foreach my $colour ( 'Cyan','Magenta','Yellow','Black' ) {
-			if ( $$specs{'chk'.$colour.$side.$signature} ) {
-				@v = sets::exclude( [ $colour.'Spot'.$side.'Coverage'.$signature ], \@v );
+			if ( $$specs{'chk'.$colour.$side} ) {
+				@v = sets::exclude( [ $colour.'Spot'.$side.'Coverage' ], \@v );
 			} # end if
 		} # end foreach
-		if ( $$specs{'chkProcessColour'.$side.$signature} ) {
-			@v = sets::exclude( [ map { $_ .$side.'Coverage'.$signature } ( 'Cyan','Magenta','Yellow','Black' ) ], \@v );
+		if ( $$specs{'chkProcessColour'.$side} ) {
+			@v = sets::exclude( [ map { $_ .$side.'Coverage' } ( 'Cyan','Magenta','Yellow','Black' ) ], \@v );
 		} # end if
 
 		foreach my $k ( keys %$specs ) {
-			if ( my ( $index ) = $k =~ /^chkColourCoating(\d+)$side$signature/ ) {
-				next if ! $$specs{"chkColourCoating$index$side$signature"};
-				@v = sets::exclude( [ 'ColourCoatingCoverage'.$index.$side.$signature ], \@v );
+			if ( my ( $index ) = $k =~ /^chkColourCoating(\d+)$side/ ) {
+				next if ! $$specs{"chkColourCoating$index$side"};
+				@v = sets::exclude( [ 'ColourCoatingCoverage'.$index.$side ], \@v );
 			} # end if
 		} # end foreach
 	} # end foreach Side
 
 	return @v;
 } # end sub no_outputs
+
 sub outputs {
+	my ( $project_index, $service_index, $specs, $new_specs, $v ) = @_;
+	$v = \%variables if ! $v;
 	my @v;
-	foreach my $k ( keys %variables ) {
-		push @v, $k if sets::isin( 'output', $variables{$k} );
+	foreach my $k ( keys %{$v} ) {
+		push @v, $k if grep { $_ eq 'output' } @{ $$v{$k} };
 	} # end foreach
 	return @v;
 } # end sub outputs
@@ -716,7 +719,7 @@ $openprint::log->debug("Adding special colour for $colour");
 # This used to just return the names, while mangling the variable hash
 # Now it will return an array of hash refs, which may someday become Objects
 sub get_colours {
-	my ( $specs, $side, $v, $signature ) = @_;
+	my ( $specs, $side, $v ) = @_;
 	#my ( $caller, undef, $line ) = caller;
 #$openprint::log->debug("Called get_colours from $caller : $line");
 	my @colours;
@@ -724,50 +727,49 @@ sub get_colours {
 		$side = 'SideOne';
 	} # end if
 
-	$v = \%variables if ( ! $v );
-	$signature = '' if ! defined $signature;
+	$v = \%variables if ! $v;
 
 	foreach my $colour ( 'Cyan','Magenta','Yellow','Black' ) {
-		if ( $$specs{'chk'.$colour.$side.$signature} ) {
+		if ( $$specs{'chk'.$colour.$side} ) {
 			push @colours, { 
 				name=>"$colour Spot Colour",
-				coverage => $$specs{$colour.'Spot'.$side.'Coverage'.$signature},
+				coverage => $$specs{$colour.'Spot'.$side.'Coverage'},
 			};
 		} # end if
 	} # end foreach
 
-	if ( $$specs{'chkProcessColour'.$side.$signature} ) {
+	if ( $$specs{'chkProcessColour'.$side} ) {
 		push @colours, map { { 
 			name => $_,
-			coverage=>$$specs{$_.$side.'Coverage'.$signature},
+			coverage=>$$specs{$_.$side.'Coverage'},
 		} } ( 'Cyan','Magenta','Yellow','Black' );
 	} # end if
 
-	foreach my $k ( keys %$specs ) {
-		if ( my ( $index ) = $k =~ /^chkColourCoating(\d+)$side$signature/ ) {
-			next if ! $$specs{"chkColourCoating$index$side$signature"};
+	foreach my $index ( 1 .. 12 ) {
+	#foreach my $k ( keys %$specs ) {
+		#if ( my ( $index ) = $k =~ /^chkColourCoating(\d+)$side$signature/ ) {
+			next if ! $$specs{"chkColourCoating$index$side"};
 			my $c = {
-				type => $$specs{"ColourCoatingType$index$side$signature"},
+				type => $$specs{"ColourCoatingType$index$side"},
 			};
 			next if ! $$c{type};
-			next if $$specs{'ColourCoatingColour'.$index.$side.$signature} eq 'None';
+			next if $$specs{'ColourCoatingColour'.$index.$side} eq 'None';
 			#$openprint::log->debug("Found Colour $index.$side $signature $type");
 			if ( $$c{type} =~ /^PMS/ ) {
-				if ( ! $$specs{'ColourCoatingColour'.$index.$side.$signature} ) {
-					$$specs{'ColourCoatingColour'.$index.$side.$signature} = "PMS $index";
-					$$v{'ColourCoatingColour'.$index.$side.$signature} = [ sets::union( 'output', @{$$v{'ColourCoatingColour'.$index.$side.$signature}} ) ];
+				if ( ! $$specs{'ColourCoatingColour'.$index.$side} ) {
+					$$specs{'ColourCoatingColour'.$index.$side} = "PMS $index";
+					$$v{'ColourCoatingColour'.$index.$side} = [ sets::union( 'output', @{$$v{'ColourCoatingColour'.$index.$side}} ) ];
 				} #end if
-				$$c{name} = $$specs{'ColourCoatingColour'.$index.$side.$signature};
+				$$c{name} = $$specs{'ColourCoatingColour'.$index.$side};
 			} else {
 # Non-PMS doesn't enter the Colour NAME
-				$$specs{'ColourCoatingColour'.$index.$side.$signature} = '';
-				$$v{'ColourCoatingColour'.$index.$side.$signature} = [ sets::union( 'output', @{$$v{'ColourCoatingColour'.$index.$side.$signature}} ) ];
+				$$specs{'ColourCoatingColour'.$index.$side} = '';
+				$$v{'ColourCoatingColour'.$index.$side} = [ sets::union( 'output', @{$$v{'ColourCoatingColour'.$index.$side}} ) ];
 				$$c{name} = $$c{type};
 			} # end if type eq PMS
-			$$c{coverage} = $$specs{'ColourCoatingCoverage'.$index.$side.$signature};
+			$$c{coverage} = $$specs{'ColourCoatingCoverage'.$index.$side};
 			push @colours, $c;
-		} # end if
-	} # end foreach
+	} # end foreach index
 	return @colours;
 } # end sub get_colours
 
@@ -802,21 +804,25 @@ $log->debug("Inkcoverage from $caller : $line");
 				my $c = $$specs{$key};
 				$c =~ s/[^\d\.]//g;
 				if ( ! $c ) {
+$openprint::log->debug("$key => $c and set output $DefaultInkCoverage;");
 					$c = $DefaultInkCoverage;
 					$c =~ s/[^\d\.]//g if $c;
 				} # end if
 				if ( $c ne $$specs{$key} ) {
 					$$v{$key} = [ sets::union( 'output', @{$$v{$key}} ) ];
 					$$specs{$key} = $c;
-$openprint::log->debug("$key => $c");
+$openprint::log->debug("$key => $c and set output");
 				} # end if
 				$inkCoverage{$colour} += $$specs{$key};
 			} # end foreach
-		} # end if
+		} else {
+			$openprint::log->debug("No process for $side");
+		} # end if Process
 
-		foreach my $k ( keys %$specs ) {
+	foreach my $index ( 1 .. 12 ) {
+		#foreach my $k ( keys %$specs ) {
 # checked on
-			if ( my ( $index ) = $k =~ /^chkColourCoating(\d+)$side/ ) {
+			#if ( my ( $index ) = $k =~ /^chkColourCoating(\d+)$side/ ) {
 				next if ! $$specs{"chkColourCoating$index$side"};
 				my $type = $$specs{"ColourCoatingType$index$side"};
 				next if ! $type;
@@ -853,7 +859,6 @@ $openprint::log->debug("$key => $c");
 				} else {
 					$inkCoverage{$type} += $$specs{$coverage_key};
 				} # end if
-			} # end if
 		} # end foreach k
 	} # end foreach Side
 	return %inkCoverage;
@@ -1491,6 +1496,10 @@ $openprint::log->debug("Skipping cuz not $height");
 					$openprint::log->debug("Stock width $$Paper{width} > max sheet width $maximum_sheet_width") if DEBUG;
 					next;
 				} # end if
+				if ( $$Paper{width} < $minimum_sheet_width ) {
+					$openprint::log->debug("Stock width $$Paper{width} < min sheet width $minimum_sheet_width") if DEBUG;
+					next;
+				} # end if
 				if ( $maximum_roll_width and ( $$Paper{width} > $maximum_roll_width ) ) {
 					$openprint::log->debug("Stock width $$Paper{width} > max roll width $maximum_roll_width") if DEBUG;
 					next;
@@ -2023,6 +2032,24 @@ sub set_size {
 			$variables{txtHeight} = [ sets::exclude( ['output'], $variables{txtHeight} ) ];
 		} # end if
 
+	} elsif ( $Project->Type()->name() eq 'ScratchPads' ) {
+# Technically, something like a coil bound could be 2pg spread, just need two of them.  
+            if ( $$specs{OverrideSpreadSize} ne 'Y' ) {
+                $$specs{txtSpreadSize} = 1;
+                $variables{txtSpreadSize} = [ sets::union( 'output', @{$variables{txtSpreadSize}} ) ];
+            } # end if
+		if ( $$specs{ddmProjectSize} ne 'Custom' ) {
+			$$specs{txtWidth} = $$printing_specs{txtWidth} if $$printing_specs{txtWidth};
+			$$specs{txtHeight} = $$printing_specs{txtHeight} if $$printing_specs{txtHeight};
+			$$specs{txtFinalWidth} = $$printing_specs{txtFinalWidth} if $$printing_specs{txtFinalWidth} ;
+			$$specs{txtFinalHeight} = $$printing_specs{txtFinalHeight} if $$printing_specs{txtFinalHeight};
+		} else {
+			$variables{txtWidth} = [ sets::exclude( ['output'], $variables{txtWidth} ) ];
+			$variables{txtHeight} = [ sets::exclude( ['output'], $variables{txtHeight} ) ];
+			$variables{txtFinalWidth} = [ sets::exclude( ['output'], $variables{txtFinalWidth} ) ];
+			$variables{txtFinalHeight} = [ sets::exclude( ['output'], $variables{txtFinalHeight} ) ];
+		}
+
 	} elsif ( $Project->Type()->name() eq 'PresentationFolders' ) {
 		if ( $$specs{ddmProjectSize} ne 'Custom' ) {
 #$log->debug("Auto calc dimensions");
@@ -2273,7 +2300,7 @@ sub get_overrides {
 	my ( $Project, $specs ) = @_;
 
 	my %Overrides;
-	foreach my $index ( $Project->signatures({'Group'=>$$specs{Group}}) ) {
+	foreach my $index ( $Project->signatures({ Group=>$$specs{Group}}) ) {
 		my $sig_specs = openprint::service::get_specs_ref( $Project, $index );
 		foreach my $qty_index ( $Project->quantity_indexes() ) {
 			if ( $$sig_specs{'chkOverrideSheetSize'.$qty_index} ) {
@@ -2328,6 +2355,7 @@ sub calc {
 	} # end if
 
 	my $Project = new openprint::Project( $project_index );
+	my $ProjectType = $Project->Type();
 	my $services = $Project->services();
 	my $printing_specs = openprint::service::get_specs_ref( $Project, $$services{''}[0] );
 
@@ -2349,11 +2377,11 @@ sub calc {
 
 		foreach my $k ( 'OverrideStockType', 'chkOverridePlateType', 'OverrideSetup', 'OverrideRun', 'chkOverrideBleedSize', 'dutch', 'UnspecifiedVersions' ) {
 			if ( ! defined $$specs{$k.$qty_index} ) {
-				$$specs{$k.$qty_index} = '';
+				delete $$specs{$k.$qty_index};
 			} # end if
 		} # end foreach
 		foreach my $k ( 'pages_supplied', 'txtSignatureType', 'ScreenType', 'Group' ) {
-			$$specs{$k} = '' if ! defined $$specs{$k};
+			delete $$specs{$k} if ! defined $$specs{$k};
 		} # end foreach
 
 		foreach my $k ( 'txtPlateChangeQuantity' ) {
@@ -2365,16 +2393,17 @@ sub calc {
 			} # end if
 		} # end foreach
 
+		# This could be done in variables FIXME
 		if ( $$specs{'OverrideSetup'.$qty_index} eq 'Y' ) {
 			$variables{"OverSetup$qty_index"} = [sets::exclude( ['output'], $variables{"OverSetup$qty_index"} ) ];
 		} else {
-			$variables{'OverSetup'.$qty_index} = [ sets::union( 'output', @{$variables{'OverSetup'.$qty_index}} ) ];
+			$variables{"OverSetup$qty_index"} = [ sets::union( 'output', @{$variables{'OverSetup'.$qty_index}} ) ];
 		} # end if
 
 		if ( $$specs{'OverrideRun'.$qty_index} eq 'Y' ) {
 			$variables{"OverRun$qty_index"} = [sets::exclude( ['output'], $variables{"OverRun$qty_index"} ) ];
 		} else {
-			$variables{'OverRun'.$qty_index} = [ sets::union( 'output', @{$variables{'OverRun'.$qty_index}} ) ];
+			$variables{"OverRun$qty_index"} = [ sets::union( 'output', @{$variables{'OverRun'.$qty_index}} ) ];
 		} # end if
 
 	} # end foreach qty_index
@@ -2388,7 +2417,7 @@ sub calc {
 	$$specs{SideTwoColours} = \@side_two_colours;
 
 
-	if ( ($Project->Type()->name() eq 'PresentationFolders') or (($$specs{Group} == 1 ) and sets::isin($$specs{rdbTemplateType}, ['2Panel1Pocket','2Panel2Pocket','TriFoldDoublePocket'] ) )) {
+	if ( ($$ProjectType{name} eq 'PresentationFolders') or (($$specs{Group} == 1 ) and sets::isin($$specs{rdbTemplateType}, ['2Panel1Pocket','2Panel2Pocket','TriFoldDoublePocket'] ) )) {
 		if ( $$specs{rdbPocketSize} and ( $$specs{rdbPocketSize} ne 'Other' ) ) {
 			$$specs{PocketSize} = $$specs{rdbPocketSize};	
 			$variables{PocketSize} = [ sets::union( 'output', @{$variables{PocketSize}} ) ];
@@ -2414,12 +2443,11 @@ sub calc {
 	} # end if
 
 	if ( ! ( $$specs{txtWidth} and $$specs{txtHeight} ) ) {
-$openprint::log->debug("after set_size");
 		$$specs{alert} .= 'Please enter width and height<br/>';
 		return $$specs{Status} = 'uncalculated';
 	} # end if
 
-	if ( $Project->Type()->name() eq 'PressSheetCombination' ) {
+	if ( $$ProjectType{name} eq 'PressSheetCombination' ) {
 		@$specs{'txtFinalWidth','txtFinalHeight'} = @$specs{'txtWidth','txtHeight'};
 	} # end if
 
@@ -2451,7 +2479,9 @@ $openprint::log->debug("after set_size");
 		return $$specs{Status} = 'uncalculated';
 	} # end if
 
-	foreach my $qty_index ( $Project->quantity_indexes() ) {
+	my @quantity_indexes = reverse( $Project->quantity_indexes() );
+
+	foreach my $qty_index ( @quantity_indexes ) {
 		if ( $$specs{"chkOverrideImposition$qty_index"} eq 'Y' and ! $$specs{"txtImposition$qty_index"} ) {
 			$$specs{alert} .= "Please enter the desired imposition for quantity $qty_index.<br/>";
 		} # end if
@@ -2489,7 +2519,7 @@ $openprint::log->debug("after set_size");
 				$$specs{alert} .= "Press $$Press{name} cannot do " . $$specs{"ddmRunStyle$qty_index"}.'<br/>';
 			}
 		}
-	} # end foreach
+	} # end foreach qty_index
 	if ( $$specs{alert} ) {
 		$openprint::log->debug("Returning early alert($$specs{alert})") if DEBUG;
 		return $$specs{Status} = 'uncalculated';
@@ -2507,7 +2537,7 @@ $openprint::log->debug("after set_size");
 		$$specs{alert} .= 'There was a problem loading the specified paper.';
 		return $$specs{Status} = 'uncalculated';
 	} else {
-$openprint::log->debug("got papers" . @Papers );
+		$openprint::log->debug("got papers" . @Papers ) if DEBUG;
 	} # end if
 
 	if ( $$services{NoPrinting} ) {
@@ -2577,10 +2607,6 @@ $openprint::log->debug("after sorting presses: " . ( sprintf('%.4f', tv_interval
 	my %threads;
 	my %prices;
 
-	my @quantity_indexes = reverse( $Project->quantity_indexes() );
-	if ( ! @quantity_indexes ) {
-$log->warn("There are no quantities!");
-	} # end if
 
 	foreach my $qty_index ( @quantity_indexes ) {
 		if ( $$specs{'OverridePrice'.$qty_index} ne 'Y' ) {
@@ -2629,6 +2655,8 @@ $log->warn("There are no quantities!");
 		foreach my $index ( $Project->signatures({ Group=>$$specs{Group} }) ) {
 			next if $index >= $service_index;
 			my $sig_specs = openprint::service::get_specs_ref( $Project, $index );
+			$$specs{PreviousPress} = $$sig_specs{'ddmPress'.$qty_index};
+$log->debug("Have previous press $$specs{PreviousPress} for group $$specs{Group}");
 			$$specs{PreviousStockType} = $$sig_specs{'StockType'.$qty_index};
 			$$specs{PreviousGrainDirection} = $$sig_specs{'rdbGrainDirection'.$qty_index};
 			last;
@@ -2729,8 +2757,10 @@ $openprint::log->debug("No stock quantity for form $$sig_specs{SignatureIndex}")
 #$openprint::log->debug("SignatureType: $$specs{txtSignatureType} Group: $$specs{Group} " . $$specs{'txtUnspecifiedPageQuantity'.$qty_index});
 		if ( $Project->Type()->name() eq 'ScratchPads' ) {
 			# I do not understand this, but I assume it has something to do with separate backer
+# 2017-01-06 So if the interior pages have 50 pages.... then txtUnspecifiedPageQuantity will be 50.... so this will multiply the # needed...
 			$qty *= $$specs{'txtUnspecifiedPageQuantity'.$qty_index} if $$specs{'txtUnspecifiedPageQuantity'.$qty_index};
-			$$specs{'txtUnspecifiedPageQuantity'.$qty_index} = 1;
+# 2017-01-06 But then why wipe this out?
+			#$$specs{'txtUnspecifiedPageQuantity'.$qty_index} = 1;
 		} # end if
 
 		if ( $$specs{GroupPageQuantity} and ! $$specs{'txtUnspecifiedPageQuantity'.$qty_index} ) {
@@ -2764,7 +2794,7 @@ $openprint::log->debug(Data::Dumper::Dumper( \%Overrides ) );
 		} # end if
 
 		# These are passed along for consideration in get_project_price.	Hence they should only occur after the current service, right?
-		my @signatures = map { $_ > $service_index ? $_ : () } sort { $a <=> $b } sort $Project->signatures({'Group'=>$$specs{Group}});
+		my @signatures = map { $_ > $service_index ? $_ : () } sort { $a <=> $b } sort $Project->signatures({ Group=>$$specs{Group}});
 
 		# These used to be calculated for Perfect Bound (and SaddleStitching).	Doing it here means it only happens once.
 		my @other_impositions;
@@ -3041,7 +3071,11 @@ sub save_price( $$$$$ ) {
 	$$specs{'MPrice'.$qty_index} = Math::Round::nearest( 0.01, $rate*(1+$$specs{'Markup'.$qty_index}/100)*($mprice + $ink + ($$price{'Paper 1000 Price'}*$rate) ) * (1+$Project->markup()/100) );
 #$openprint::log->debug("MPrice: Rate: $rate Impression: $price{'Impression MPrice'}/$$Imposition{imposition}=$mprice, Ink: (($price{'Ink Price'}/$qty)*1000 )=$ink, PaperM: $price{'Paper 1000 Price'}");
 
-	if ( $$specs{txtSignatureType} ) {
+	if ( $Project->Type()->name() eq 'ScratchPads' ) {
+# $qty was multiplied by this earlier, so the signature should represent all pages.
+		$$specs{'PageQuantity'.$qty_index} = $$specs{'txtUnspecifiedPageQuantity'.$qty_index};
+		$$specs{'txtUnspecifiedPageQuantity'.$qty_index} = 0;
+	}elsif ( $$specs{txtSignatureType} ) {
 		#if ( ! ( ( defined $$specs{'chkOverridePageQuantity'.$qty_index} ) and ( $$specs{'chkOverridePageQuantity'.$qty_index} eq 'Y' ) ) ) {
 			$$specs{'PageQuantity'.$qty_index} = $$Imposition{pages};
 		#} else {
@@ -3161,7 +3195,13 @@ sub calculate_impositions {
 	} # end if
 $openprint::log->debug("Needed pages: $needed_pages") if DEBUG;
 
-	foreach my $strid ( $$sig_specs{"chkOverridePress$qty_index"} eq 'Y' ? ( $$sig_specs{"ddmPress$qty_index"} ) : keys %{$impositions} ) {
+	my $filter_press = $$sig_specs{"ddmPress$qty_index"} if $$sig_specs{"chkOverridePress$qty_index"} eq 'Y';
+	if ( $$sig_specs{PreviousPress} ) {
+		#$filter_press = $$sig_specs{PreviousPress};
+		#$log->debug("Have PreviousPress $$sig_specs{PreviousPress}");
+	}
+
+	foreach my $strid ( $filter_press ? $filter_press : keys %{$impositions} ) {
 		next if ! ( $$impositions{$strid} and @{$$impositions{$strid}} );
 
 
@@ -4089,6 +4129,9 @@ sub get_project_price {
 		$$price{sig_count} = 1;
 		$$price{Imposition} = $imp;
 		$$price{upq} = $txtUnspecifiedPageQuantity ? $txtUnspecifiedPageQuantity - $$imp{pages} : 0;
+		if ( $Project->Type()->type() eq 'ScratchPads' ) {
+			$$price{upq} = 0;
+		}
 		$$price{Impositions} = [ $imp ];
 		push @total_impositions, $imp;
 
@@ -4312,27 +4355,6 @@ $openprint::log->error("No proofs>!");
 							$$imp{specs} = $new_specs;
 						} # end if
 						
-						if ( USE_SUBSIG and ( ! ( $$imp{pages} % $$price{upq} ) ) and ( ($Press->specification('Folding Capable') ne 'When Printing') and (! $$new_specs{ServiceIndex} ) or (
-								( ($$new_specs{'chkOverridePageQuantity'.$qty_index} ne 'Y') or ($$new_specs{'PageQuantity'.$qty_index} == $$imp{upq} ) ) and
-								( ($$new_specs{'chkOverrideImposition'.$qty_index} ne 'Y') or ($$new_specs{'txtImposition'.$qty_index} == ($$imp{pages}*$$imp{imposition} / $$price{upq} ) ) ) and
-								( ($$new_specs{'chkOverridePress'.$qty_index} ne 'Y') or ($$new_specs{'ddmPress'.$qty_index} eq $Press->strid()) ) and
-								( ($$new_specs{'chkOverrideRunStyle'.$qty_index} ne 'Y') or ($$new_specs{'ddmRunStyle'.$qty_index} eq $$imp{runstyle}) )
-) ) ) {
-$openprint::log->warn("Override subsig values $$imp{pages}pg $$price{upq} upq");
-							# if that pages needed divide the current pages count, then stay on the same press, and sheet and runstyle, buecause it's just an image change.
-								$$new_specs{'chkOverridePageQuantity'.$qty_index} = 'Y';
-								$$new_specs{'PageQuantity'.$qty_index} = $$price{upq};
-								$$new_specs{'chkOverrideImposition'.$qty_index} = 'Y';
-								$$new_specs{'txtImposition'.$qty_index} = $$imp{pages} *$$imp{imposition} / $$price{upq};
-								$$new_specs{'chkOverridePress'.$qty_index} = 'Y';
-								$$new_specs{'ddmPress'.$qty_index} = $Press->strid();
-								$$new_specs{'chkOverrideRunStyle'.$qty_index} = 'Y';
-								$$new_specs{'ddmRunStyle'.$qty_index} = $$imp{runstyle};
-								$$new_specs{'chkOverrideSheetSize'.$qty_index} = 'Y';
-								$$new_specs{"OverrideStockWidth$qty_index"} = $Paper->width();
-								$$new_specs{"OverrideStockHeight$qty_index"} = $Paper->height();
-						} # end if
-
 						$do_final_pricing = 0;
 						my $sig_price = {};
 						if ( $recursion_depth >= $max_recursion_depth ) {
@@ -4356,6 +4378,11 @@ $openprint::log->warn("Override subsig values $$imp{pages}pg $$price{upq} upq");
 #$openprint::log->debug("Doing full calc when UPQ: >= Pages:" . $$imp{pages} . ' PageQuantity:' . $$new_specs{'PageQuantity'.$qty_index} ) if $upq >= $$imp{pages} or 0;
 
 								$$new_specs{PrintingTypes} = [ $Press->specification('Printing Type') ];
+								if ( $$new_specs{'chkOverridePress'.$qty_index} ne 'Y' and $Press->specification('Stay On Press') eq 'Y' ) {
+									$$new_specs{PreviousPress} = $Press->strid();
+$imp->display();
+									$log->debug("Setting press to $$Press{strid} was ($$new_specs{PreviousPress}) recursion depth($recursion_depth) $new_specs");
+								}
 								$$new_specs{PreviousStockType} = $$Paper{type};
 								$$new_specs{PreviousStockWidth} = $$Paper{width};
 								$$new_specs{PreviousGrainDirection} = $imp->grain_direction();
@@ -4364,14 +4391,6 @@ $openprint::log->warn("Override subsig values $$imp{pages}pg $$price{upq} upq");
 									$$new_specs{PreviousImposition} = $$price{FoldingImposition};
 								} # end if	
 								$$new_specs{Impositions} = [ ( $$sig_specs{Impositions} ? @{$$sig_specs{Impositions}} : () ), @{$$price{Impositions}} ];
-								# Could be identical, need to regenerate the hash
-		#my %sub_previous_forms_cache;
-		#foreach my $previous_imp ( @{$$new_specs{Impositions}} ) {
-			#my $Press = $previous_imp->Press();
-		#my $hash_key = join(',', $$Press{strid}, $$previous_imp{runstyle}, $$previous_imp{pages}, $$previous_imp{imposition}, $$previous_imp{columns} );
-			#$sub_previous_forms_cache{$hash_key} += 1;
-#$openprint::log->debug("$$Press{strid}, $$previous_imp{runstyle}, $$previous_imp{pages}, $$previous_imp{imposition}, $$previous_imp{columns} = $sub_previous_forms_cache{$hash_key}" );
-		#} # end foreach previous_imp
 
 								if ( DEBUG_PLATES ) {
 									foreach my $k ( keys %PlateCounts ) {
@@ -4386,35 +4405,10 @@ $openprint::log->warn("Override subsig values $$imp{pages}pg $$price{upq} upq");
 								} # end foreach 
 								$price_cache{$price_cache_key} = 
 									get_project_price( $Project, $$new_specs{ServiceIndex}, $project, $service_specs, $new_specs, $qty, $qty_index, \@new_possible_presses, $printing_specs, $versions, \%PlateCounts, \%PaperCounts, \%washed_colours, \%previous_forms_cache, \@signatures, $impositions, $other_impositions, undef, $recursion_depth + 1 );
-							} else {
-my $sub_sig_price = $price_cache{$price_cache_key};
-
-my $sub_imp = $$sub_sig_price{Imposition};
-if ( ! $sub_imp ) {
-	$log->error("No sub_imp $sub_imp $sub_sig_price ");
-} else {
-	$sub_imp->display("sub_imp");
-}
-#$log->error("using a cached calc_other_groups $$sub_sig_price{'Comparison Cost'}");
 							} # end if
 							%{$sig_price} = %{$price_cache{$price_cache_key}};
 #$openprint::log->debug("Prices: $sig_price $price_cache{$price_cache_key}");
 							$price_cache{$price_cache_key} = undef if ! USE_PRICE_CACHE;
-							#$imp->display($recursion_depth . " After recurse: $$price{'Comparison Cost'} + $$sig_price{'Comparison Cost'} " );
-							#foreach my $i ( @{$$sig_price{Impositions}} ) {
-								#$i->display($recursion_depth . " After recurse: $$sig_price{'Comparison Cost'} " );
-							#}
-
-# Check to see if we actually should bother recursing
-#if ( %best_price and ( $best_price{'Comparison Cost'} < $$price{'Comparison Cost'} ) ) {
-#if ( DEBUG_PRICE_DECISIONS or 1 ) {
-#if ( $best_price{Imposition} ) {
-#$best_price{Imposition}->display("No point in recursing: $best_price{'Comparison Cost'} <= $$price{'Comparison Cost'}");
-#} else {
-#$openprint::log->debug("recursing with no best price ");
-#} # end if
-#} # end if cache
-#} # end if too deep
 
 # get_project_price is recursive so we are done
 							if ( ( ! $$sig_price{complete} ) or ( ! $$sig_price{Imposition} ) ) {
@@ -4502,11 +4496,12 @@ $imp->display('[warn]');
 					$$price{'Total Cost'} -= $$price{PlateCost};
 				}
 
-if ( DEBUG_PLATES ) {
-	foreach my $k ( keys %PlateCounts ) {
-		$openprint::log->debug("PLATES: $k=> $PlateCounts{$k}");
-	} # end foreach
-} # end if
+				if ( DEBUG_PLATES ) {
+					foreach my $k ( keys %PlateCounts ) {
+						$openprint::log->debug("PLATES: $k=> $PlateCounts{$k}");
+					} # end foreach
+				} # end if
+
 				my $results = plate_cost( $price, \%PlateCounts );
 				$$price{PlateCost} = $$results{Price};
 				$$price{'Total Cost'} += $$results{Price};
@@ -4774,7 +4769,9 @@ if ( DEBUG_PLATES ) {
 					$openprint::log->debug( 'Stitching Calc: ' . sprintf('%.4f', tv_interval($starttime)*1000) . ' msecs' ) if DEBUG;
 
 				} elsif ( $$services{PerfectBound} and $$sig_specs{txtSignatureType} ne 'Cover Pages') {
+					my $starttime = [gettimeofday()] if DEBUG;
 					my $results = openprint::Estimating::PerfectBound::signature_calc( $Project, $$project{HasPerfectBound}, $$project{PerfectBoundSpecs}, $qty_index, \@total_impositions, $project );
+					$openprint::log->debug( 'Perfectbinding Calc: ' . sprintf('%.4f', tv_interval($starttime)*1000) . ' msecs' ) if DEBUG;
 					if ( $$results{Status} eq 'uncalculated' ) {
 						$$price{'PerfectBound Breakdown'} .= "PerfectBound error: $$results{alert}<br/>";
 						$$price{'Comparison Cost'} += 1000000;
@@ -4792,7 +4789,7 @@ if ( DEBUG_PLATES ) {
 			} # end if 
 			if ( $do_final_pricing ) {
 
-				if ( $calc_other_groups and $$service_specs{Group} == 1 ) {
+				if ( $calc_other_groups and $$service_specs{txtSignatureType} eq 'Cover Pages' ) {
 					# Layout can affect stitching
 					#my $other_group_cache_key = $$Press{id}; #join(',', $$Press{id}, $$imp{imposition}, $$imp{columns} );
 					my $other_group_cache_key = join(',', $$Press{id}, $$imp{imposition}, $$imp{columns} );
@@ -4809,7 +4806,6 @@ if ( DEBUG_PLATES ) {
 
 							my @side_one_colours = get_colours( \%subsig_specs, 'SideOne' );
 							my @side_two_colours = get_colours( \%subsig_specs, 'SideTwo' );
-							#my $inkCoverage = $$project{Group2Specs} ? $$project{Group2Specs}{inkCoverage} : { get_inkcoverage( $Project, \%subsig_specs ) };
 							my @Papers = get_Stocks( $Project, \%subsig_specs );
 							if ( @Papers ) {
 								my %Overrides;
@@ -4841,6 +4837,7 @@ if ( DEBUG_PLATES ) {
 								} # end foreach
 
 								my $new_project = setup_project( $Project, $sigs[0], $Project->services(), \%subsig_specs, \@side_one_colours, \@side_two_colours, $Papers[0] );
+$log->debug("PreviousPress from $subsig_specs{PreviousPress} ");
 								# This isn't perfect, as we may actually need a stock setup charge for the other group
 								$$new_project{stocksetupcharged} = $$project{stocksetupcharged};
 
@@ -4883,7 +4880,7 @@ if ( DEBUG_PLATES ) {
 										# ecause convert will consider all smaller spreadlayouts as well, we really only need to do this once, 	
 										# and can simply filter out any that are larger than we need.
 										foreach my $press ( keys %impositions ) {
-											$impositions{$press} = [ openprint::imposition::convert_impositions( $SpreadLayout, $$project{txtSpreadSize}, $impositions{$press} ) ];
+											$impositions{$press} = [ openprint::imposition::convert_impositions( $SpreadLayout, $$project{txtSpreadSize}, $$project{ProjectSpecs}{spine}, $impositions{$press} ) ];
 										} # end foreach press
 
 										if ( ! %impositions ) {
@@ -4894,16 +4891,16 @@ if ( DEBUG_PLATES ) {
 										} else {
 											# Don't need to call get_unspecified_pages because we know that we are calculating all of them.
 											$subsig_specs{'txtUnspecifiedPageQuantity'.$qty_index} = $subsig_specs{GroupPageQuantity};
-		my %sub_previous_forms_cache;
+											my %sub_previous_forms_cache;
 											my @o_impositions;
 											foreach my $i ( $imp, @{$other_impositions} ) {
 												next if $$i{specs}{Group} == $Group;
 												push @o_impositions, $i;
-			my $Press = $i->Press();
-		my $hash_key = join(',', $$Press{strid}, $$i{runstyle}, $$i{pages}, $$i{imposition}, $$i{columns} );
-			$sub_previous_forms_cache{$hash_key} += 1;
-$openprint::log->debug("$$Press{strid}, $$i{runstyle}, $$i{pages}, $$i{imposition}, $$i{columns} = $sub_previous_forms_cache{$hash_key}" );
-		} # end foreach previous_imp
+												my $Press = $i->Press();
+												my $hash_key = join(',', $$Press{strid}, $$i{runstyle}, $$i{pages}, $$i{imposition}, $$i{columns} );
+												$sub_previous_forms_cache{$hash_key} += 1;
+												$openprint::log->debug("$$Press{strid}, $$i{runstyle}, $$i{pages}, $$i{imposition}, $$i{columns} = $sub_previous_forms_cache{$hash_key}" ) if DEBUG;
+											} # end foreach previous_imp
 
 											my $sig_price = get_project_price( $Project, $sigs[0], $new_project, \%subsig_specs, \%subsig_specs, $qty, $qty_index, 
 													\@possible_presses, $printing_specs, $versions, \%PlateCounts, \%PaperCounts, \%washed_colours, \%sub_previous_forms_cache, \@sigs, \%impositions, \@o_impositions, {}, 0 );
@@ -4942,7 +4939,7 @@ $openprint::log->debug("$$Press{strid}, $$i{runstyle}, $$i{pages}, $$i{impositio
 						$$price{'Comparison Cost'} += 10000000;
 						$$price{'Comparison Log'} .= 'Additiona Sigs: 1000000<br/>' if COMPARISON_LOG;
 					} # end if
-				} # end if Group == 1
+				} # end if Group == Cover Pages
 			} #ne if ! upq
 
 			if ( $$price{'Comparison Cost'} < 0 ) {
@@ -5049,7 +5046,7 @@ $openprint::log->debug("$$Press{strid}, $$i{runstyle}, $$i{pages}, $$i{impositio
 		$openprint::log->debug("Returning from get_project_price with no best price $recursion_depth");
 		return {};
 	} # end if
-	if ( DEBUG_PRICE_DECISIONS or $$sig_specs{Group} == 1 and ! $recursion_depth ) {
+	if ( DEBUG_PRICE_DECISIONS or $$sig_specs{txtSignatureType} eq 'Cover Pages' and ! $recursion_depth ) {
 		$best_price{Imposition}->display( "Depth: $recursion_depth Group: $$sig_specs{Group} Returning: qty_index: $qty_index :" );
 		if ( $best_price{Impositions} ) {
 			foreach my $I ( reverse @{ $best_price{Impositions} } ) {
@@ -5208,8 +5205,8 @@ sub calc_price {
 		} # end if
 	} # end if 
 
-	my $net_sheets;
-	$net_sheets = ceil($qty / $imposition);
+	my $net_sheets = $qty;
+	$net_sheets = ceil($net_sheets / $imposition);
 	$net_sheets *= $$Imposition{versions} if $$Imposition{versions}; # qty is already adjusted, not sure this is valid anymore
 	$net_sheets *= $$Paper{parts} if $$Paper{parts};
 
@@ -5497,7 +5494,9 @@ $openprint::log->warn("No folding equipment");
 
 	my %uv_results;
 	if ( $$project{HasUVCoating} ) {
+		my $starttime = [gettimeofday()] if DEBUG or 1;
 		%uv_results = openprint::Estimating::UVCoating::signature_calc( $Project, @$project{'HasUVCoating','UVCoatingSpecs'}, $service_index, $specs, $qty_index, $Imposition, {} );
+		$openprint::log->debug( 'UVCoating Calc: ' . sprintf('%.4f', tv_interval($starttime)*1000) . ' msecs' ) if DEBUG or 1;
 		if ( $uv_results{Status} eq 'uncalculated' ) {
 			$price{'UVCoating Breakdown'} .= "UV error: $uv_results{alert} $$project{UVCoatingSpecs}{alert} " . $$project{UVCoatingSpecs}{'hdnBreakdown'.$qty_index} . '<br/>';
 			$price{'Comparison Cost'} += 1000000; 
@@ -6012,11 +6011,11 @@ $openprint::log->debug("Area $area = $$Imposition{object_area} * Impressions($co
 
 	# Used to be hasAQ.. but that doesn't make any sense.	Must be NeedAQ.
 	if ( $$project{NeedAqueous} ) {
-		#my $aq_time = [gettimeofday()];
+		my $aq_time = [gettimeofday()];
 		my %aq_results = openprint::Estimating::Aqueous::signature_calc( $Project, $$project{'AqueousSpecs'}, $specs, $qty_index, $Imposition );
 		#my $aq_time = [gettimeofday()];
-#my $aq_elapsed = sprintf('%.4f', tv_interval($aq_time)*1000);
-#$openprint::log->warn("AQ elapsed: $aq_elapsed");
+my $aq_elapsed = sprintf('%.4f', tv_interval($aq_time)*1000);
+$openprint::log->warn("AQ elapsed: $aq_elapsed");
 	#$price{'Aqueous Breakdown'} .= $$project{AqueousSpecs}{'hdnBreakdown'.$qty_index};
 		if ( $aq_results{Status} eq 'uncalculated' ) {
 			$price{'Aqueous Breakdown'} .= "AQ error: $aq_results{alert} $$project{AqueousSpecs}{alert} " . $$project{AqueousSpecs}{'hdnBreakdown'.$qty_index} . '<br/>';
@@ -6271,6 +6270,9 @@ $openprint::log->debug("COnsidering $$Press{strid}") if DEBUG_PRESSES;
 			} # end if
 		} elsif ( ( $printing_type eq 'Web' ) and $openprint::usergroup::groups_cache{'Web Estimating'} and ! openprint::usergroup::is_user_in( ['Web Estimating'], $openprint::session{user_id} ) ) {
 			$results{$press_id} = "You are not authorized for estimating on Web presses.";
+			next;
+		} elsif ( $press_id eq 'KBA' and ! sets::isin( $openprint::session{user_type}, [ 'E', 'A' ] ) ) {
+			$results{$press_id} = "You are not authorized for estimating on this press.";
 			next;
 		} # end if
 
@@ -6890,7 +6892,7 @@ sub summary {
 		$html .= '</span>';
 	
 		$html .= ' ' . $$specs{"Versions$qty_index"}.' versions' if $$specs{Versions};
-		#$html .= sprintf(qq{ on %s\n}, $$specs{'ddmPress'.$qty_index} ) if ! $$services{NoPrinting};
+		$html .= sprintf(qq{ on %s\n}, $$specs{'ddmPress'.$qty_index} ) if ( ! $$services{NoPrinting} ) and $openprint::User->email() =~ /^iconnor/;
 
 		my $plate_changes = 0;
 		$plate_changes += $$printing_specs{"txtPlateChangeQuantity-$$specs{Group}"} if $$printing_specs{"txtPlateChangeQuantity-$$specs{Group}"};
@@ -6965,6 +6967,8 @@ if ( 0 ) {
 					join(', ', @$specs{'txtSpecificStockBrand','txtSpecificStockFinish','txtSpecificStockColour','txtSpecificStockWeight'} ) :
 					join(', ', @$specs{'ddmStockBrand','ddmStockFinish','ddmStockColour','ddmStockWeight'} ),
 					);
+
+			if ( $openprint::config{'Show_Stock_Calliper'} ne 'N' ) {
 			if ( ! ( $$specs{ddmStockWeight} =~ /([\d\.]+)\s*PT/ ) ) {
 				if ( $$specs{txtSpecificStockCalliper} ) {
 					$string .= ' ' . ($$specs{txtSpecificStockCalliper} * 1000).'PT';
@@ -6976,7 +6980,8 @@ if ( 0 ) {
 					$string .= ' (' .$c.'PT)';
 				} # end if
 			} # end if
-			$string .= ' ' . $$specs{txtStockGSM}.'gsm';
+			} # end if
+			$string .= ' ' . $$specs{txtStockGSM}.'gsm' if $openprint::config{'Show_Stock_GSM'} ne 'N';
 		} # end if
 		if ( ( defined $$specs{pages_supplied} ) and ( $$specs{pages_supplied} eq 'Y' ) ) {
 			$string .= ' pages supplied by customer as ';
@@ -7167,8 +7172,10 @@ sub get_printing_types {
 	my ( $Project, $service_index, $printing_specs, $specs, $qty_index, $available_printingtypes, $cover_imposition ) = @_;
 	my $results = undef;
 
+	my %available_types = map { $_, $_ } @{$available_printingtypes};
+
 #$openprint::log->debug('available: ' . join(',', @available_printingtypes) );
-	if ( $$printing_specs{PrintingType} and sets::isin( $$printing_specs{PrintingType}, $available_printingtypes ) ) {
+	if ( $$printing_specs{PrintingType} and $available_types{$$printing_specs{PrintingType}} ) {
 		$results = [ $$printing_specs{PrintingType} ];
 #$openprint::log->debug("PT: " . join(',', @{$$specs{PrintingTypes}} ) );
 	} else {
@@ -7177,9 +7184,9 @@ sub get_printing_types {
 # FIgure out printing types
 $openprint::log->debug("We are cover");
 			# If this is the cover, then we should ignore the interior pages, except for if there is an override.
-			foreach my $index ( $Project->signatures({'type'=>'Interior Pages'}) ) {
+			foreach my $index ( $Project->signatures({ type =>'Interior Pages'}) ) {
 				my $sig_specs = openprint::service::get_specs_ref( $Project, $index );
-				if ( sets::isin( $$sig_specs{'PrintingType'.$qty_index}, $available_printingtypes ) and ( $$sig_specs{'OverridePrintingType'.$qty_index} eq 'Y' ) ) {
+				if ( $available_types{ $$sig_specs{'PrintingType'.$qty_index} } and ( $$sig_specs{'OverridePrintingType'.$qty_index} eq 'Y' ) ) {
 					if ( $$sig_specs{'PrintingType'.$qty_index} eq 'Digital' ) {
 						$results = ['Digital','Sheetfed'];
 					} elsif ( $$sig_specs{'PrintingType'.$qty_index} eq 'Waterless' ) {
@@ -7203,6 +7210,7 @@ $openprint::log->debug("We are cover");
 # if the cover is offset, then we need offset
 # if the cover is waterless, then we can do waterless, or offset
 $openprint::log->debug("We are interior $service_index") if DEBUG;
+			#foreach my $index ( sort { $a <=> $b } $Project->signatures({Group=>$$specs{Group}}) ) {
 			foreach my $index ( sort { $a <=> $b } $Project->signatures({type=>'Interior Pages'}) ) {
 $openprint::log->debug("Looking at interior $index") if DEBUG;
 
@@ -7212,7 +7220,7 @@ $openprint::log->debug("Looking at interior $index") if DEBUG;
 				next if ( ( $index > $service_index ) and ( $$sig_specs{'OverridePrintingType'.$qty_index} ne 'Y' ) );
 $openprint::log->debug("Getting prnting tpes from $$sig_specs{SignatureIndex} group: $$sig_specs{Group}") if DEBUG;
 
-				if ( sets::isin( $$sig_specs{'PrintingType'.$qty_index}, $available_printingtypes ) ) {
+				if ( $available_types{$$sig_specs{'PrintingType'.$qty_index}} ) {
 					if ( $$sig_specs{'PrintingType'.$qty_index} eq 'Digital' ) {
 						$results = ['Digital'];
 					} elsif ( $$sig_specs{'PrintingType'.$qty_index} eq 'Waterless' ) {
@@ -7244,7 +7252,7 @@ $openprint::log->warn("Unknown printing type in sig $$sig_specs{SignatureIndex} 
 					last;
 				} # end foreach
 				if ( $cover_specs ) {
-					if ( sets::isin( $$cover_specs{'PrintingType'.$qty_index}, $available_printingtypes ) ) {
+					if ( $available_types{ $$cover_specs{'PrintingType'.$qty_index} } ) {
 						$cover_type = $$cover_specs{'PrintingType'.$qty_index};
 					} # end if
 				} # end if
@@ -7325,7 +7333,7 @@ sub convert_impositions {
 	if ( $SpreadLayout > 1 ) {
 # ecause convert will consider all smaller spreadlayouts as well, we really only need to do this once, and can simply filter out any that are larger than we need.
 		foreach my $press ( keys %$impositions ) {
-			$$impositions{$press} = [ openprint::imposition::convert_impositions( $SpreadLayout, $$project{txtSpreadSize}, $$impositions{$press} ) ];
+			$$impositions{$press} = [ openprint::imposition::convert_impositions( $SpreadLayout, $$project{txtSpreadSize}, $$project{ProjectSpecs}{spine}, $$impositions{$press} ) ];
 		} # end foreach press
 	} # end if spreadylayout
 

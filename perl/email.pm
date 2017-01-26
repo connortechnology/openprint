@@ -16,11 +16,12 @@ sub db_connect {
 # Fairly important to us the config hash.  r->dir_config causes crashes
 		$dbh = sql::open_sql( $openprint::log, 
 				(
-				 'host'		=>	$config{mail_db_hostname},
-				 'database'	=>	$config{mail_db_name},
-				 'login'	=>	$config{mail_db_username},
-				 'password'	=>	$config{mail_db_password},
-				 'driver'	=>	$config{mail_db_driver},
+				 host		=>	$config{mail_db_hostname},
+				 port		=>	$config{mail_db_port},
+				 database	=>	$config{mail_db_name},
+				 login		=>	$config{mail_db_username},
+				 password	=>	$config{mail_db_password},
+				 driver		=>	$config{mail_db_driver},
 				) );
 	} # end if;
 	return $dbh;

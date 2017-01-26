@@ -118,10 +118,7 @@ Manifest: <a href="/employee/inventory/manifest_view.html?manifest_id=<? echo ( 
 		</div>
 <? endif ( $$variable{PurchaseOrder}->notifications() ) ?>
 		<div id="DocketSummary"><p><label>DOCKET:</label>
-<? echo ( my $html;
-	my @dockets = map { $_->docket() ? $_->docket() : () } $$variable{PurchaseOrder}->Contents();
-	return join('<br/>', sets::union(@dockets) );
-) ?></p>
+<? echo ( join('<br/>', $$variable{PurchaseOrder}->dockets() );) ?></p>
 		</div>
 		<br class="spacer"/><br/>
 		<table class="Shipping">
@@ -161,9 +158,9 @@ Manifest: <a href="/employee/inventory/manifest_view.html?manifest_id=<? echo ( 
 			
 		$html .= '<div class="item">';
 		if ( $C->Type()->name() eq 'Roll Stock' ) {
-			$html .= sprintf('<div class="quantity">%s lbs</div>', Number::Format::format_number($C->qty()) );
+			$html .= sprintf('<div class="quantity">%s lbs</div>', Number::Format::format_number(1*$C->qty()) );
 		} elsif ( $C->Type()->name() eq 'Sheet Stock' ) {
-			$html .= sprintf('<div class="quantity">%s sheets</div>', Number::Format::format_number($C->qty()) );
+			$html .= sprintf('<div class="quantity">%s sheets</div>', Number::Format::format_number(1*$C->qty()) );
 		} else {
 			$html .= sprintf('<div class="quantity">%s</div>', Number::Format::format_number(1*$C->qty()) );
 		} # end if
@@ -182,12 +179,12 @@ Manifest: <a href="/employee/inventory/manifest_view.html?manifest_id=<? echo ( 
 		if ( $$variable{PurchaseOrder}->can_see_pricing($C) ) {
 			$html .= '<div class="price">';
 			if ( $C->type() eq 'Roll Stock' ) {
-				$html .= openprint::Currency::format($C->price(),2) . '/100lb';
+				$html .= openprint::Currency::format(1*$C->price(),2) . '/100lb';
 			} elsif ( $C->type() eq 'Sheet Stock' ) {
-				$html .= openprint::Currency::format($C->price(),2) . '/100lb<br/>';
-				$html .= openprint::Currency::format($C->mprice(),2) . '/1000';
+				$html .= openprint::Currency::format(1*$C->price(),2) . '/100lb<br/>';
+				$html .= openprint::Currency::format(1*$C->mprice(),2) . '/1000';
 			} else {
-				$html .= openprint::Currency::format($C->price(),4);
+				$html .= openprint::Currency::format(1*$C->price(),4);
 			} # end if
 			$html .= join('', '</div><div class="line_total">', openprint::Currency::format($C->total()), '</div>' );
 		} # end if can_see_pricing

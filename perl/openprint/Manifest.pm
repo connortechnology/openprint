@@ -17,42 +17,42 @@ $serial = 'manifests_id_seq';
 $debug = 0;
 
 %fields = (
-	id			=>	'id',
-	name		=>	'name',
-	created_on	=>	'created_on',
-	updated_on	=>	'updated_on',
-	received_on	=>	'received_on',
-	supplier_id	=>	'supplier_id',
-	deleted		=>	'deleted',
-);
+		id			=>	'id',
+		name		=>	'name',
+		created_on	=>	'created_on',
+		updated_on	=>	'updated_on',
+		received_on	=>	'received_on',
+		supplier_id	=>	'supplier_id',
+		deleted		=>	'deleted',
+		);
 
 %find_fields = (
-	docket	=>	'(SELECT docket FROM Manifest_Content_Types WHERE manifest_id=manifests.id)',
-	po_id	=>	'(SELECT po_id FROM Manifest_Content_Types WHERE manifest_id=manifests.id)',
-	skid_id	=>	'(SELECT skid_id FROM ManifestContents WHERE manifest_id=manifests.id)',
-	rfidtag_id	=>	'(SELECT rfidtag_id FROM ManifestContents WHERE manifest_id=manifests.id)',
-	manufacturers_id	=>	'(SELECT manufacturers_id FROM ManifestContents WHERE manifest_id=manifests.id)',
-	type		=>	'(SELECT type from Manifest_Content_Types WHERE manifest_id=manifests.id)',
-	po_unconfirmed_type_ids	=>	'(SELECT id FROM Manifest_Content_Types WHERE manifest_id=manifests.id AND po_content_id is NULL)',
-);
+		docket						=>	'(SELECT docket FROM Manifest_Content_Types WHERE manifest_id=manifests.id)',
+		po_id							=>	'(SELECT po_id FROM Manifest_Content_Types WHERE manifest_id=manifests.id)',
+		skid_id						=>	'(SELECT skid_id FROM ManifestContents WHERE manifest_id=manifests.id)',
+		rfidtag_id				=>	'(SELECT rfidtag_id FROM ManifestContents WHERE manifest_id=manifests.id)',
+		manufacturers_id	=>	'(SELECT manufacturers_id FROM ManifestContents WHERE manifest_id=manifests.id)',
+		type							=>	'(SELECT type from Manifest_Content_Types WHERE manifest_id=manifests.id)',
+		po_unconfirmed_type_ids	=>	'(SELECT id FROM Manifest_Content_Types WHERE manifest_id=manifests.id AND po_content_id is NULL)',
+		);
 
 %transforms = (
-    name		=>	[ 's/^\s+//', 's/\s+$//', 's/\s\s+/ /g' ],
-	updated_on	=>	[ 's/.*//g' ],
-	supplier_id	=>	[ 's/\D//g' ],
-);
+		name				=>	[ 's/^\s+//', 's/\s+$//', 's/\s\s+/ /g' ],
+		updated_on	=>	[ 's/.*//g' ],
+		supplier_id	=>	[ 's/\D//g' ],
+		);
 
 %defaults = (
-	'created_on'	=>	q`'NOW()'`,
-	'updated_on'	=>	q`'NOW()'`,
-	'received_on'	=>	q`'NOW()'`,
-	'supplier_id'	=>	undef,
-	deleted	=>	0,
-);
+		created_on	=>	q`'NOW()'`,
+		updated_on	=>	q`'NOW()'`,
+		received_on	=>	q`'NOW()'`,
+		supplier_id	=>	undef,
+		deleted	=>	0,
+		);
 
 sub destroy {
-    my $self = shift;
-    my $ac = sql::start_transaction( $openprint::dbh );
+	my $self = shift;
+	my $ac = sql::start_transaction( $openprint::dbh );
 	foreach my $PO ( openprint::PurchaseOrder->find('manifest_id'=>$$self{id}) ) {
 		$PO->save({'manifest_id'=>undef});
 	} # end foreach $PO
@@ -62,30 +62,30 @@ sub destroy {
 	foreach my $T ( $self->Types() ) {
 		$T->delete();
 	} # end foreach Type
-	
-    sql::execute( undef, undef, q{DELETE FROM Manifests WHERE id=?}, $$self{'id'} );
-    sql::end_transaction( $openprint::dbh, $ac );
+
+	sql::execute( undef, undef, q{DELETE FROM Manifests WHERE id=?}, $$self{id} );
+	sql::end_transaction( $openprint::dbh, $ac );
 	return $openprint::dbh->errstr() if $openprint::dbh->errstr();
-	delete $openprint::Object::cache{'openprint::Manifest'}{$$self{'id'}};
+	delete $openprint::Object::cache{'openprint::Manifest'}{$$self{id}};
 	return '';
 } # end sub destroy
 
 sub Types {
 	my ( $self, %params ) = @_;
-	if ( $$self{'id'} and ! $_[0]{Types} ) {
-		$_[0]{Types} = [ openprint::Manifest_Content_Type->find( manifest_id=>$$self{'id'}, order=>'id' ) ];
+	if ( $$self{id} and ! $_[0]{Types} ) {
+		$_[0]{Types} = [ openprint::Manifest_Content_Type->find( manifest_id=>$$self{id}, order=>'id' ) ];
 	}
 	if ( %params ) {
 		my @results;
-		TYPE: foreach my $Type ( @{$$self{'Types'}} ) {
-			foreach my $key ( keys %params ) {
-				next TYPE if $$Type{$key} ne $params{$key};
+TYPE: foreach my $Type ( @{$$self{Types}} ) {
+				foreach my $key ( keys %params ) {
+					next TYPE if $$Type{$key} ne $params{$key};
+				}
+				push @results, $Type;
 			}
-			push @results, $Type;
-		}
-		return @results;
+			return @results;
 	} # end if
-	return @{$$self{'Types'}} if $$self{'Types'};
+	return @{$$self{Types}} if $$self{Types};
 	return;
 } # end sub Types
 
@@ -94,22 +94,22 @@ sub Contents {
 	if ( ( @_ == 2 ) and ( ref $_[1] eq 'ARRAY' ) ) {
 		$$self{Contents} = $_[1];
 	} elsif ( %params ) {
-		if ( $$self{'id'} ) {
-			return openprint::ManifestContent->find('manifest_id'=>$$self{id}, %params );
+		if ( $$self{id} ) {
+			return openprint::ManifestContent->find( manifest_id=>$$self{id}, %params );
 		} # end if
 	} # end if
-	if ( ! $$self{'Contents'} ) {
-		if ( $$self{'id'} ) {
-			@{$$self{'Contents'}} = openprint::ManifestContent->find('manifest_id'=>$$self{id} );
+	if ( ! $$self{Contents} ) {
+		if ( $$self{id} ) {
+			@{$$self{Contents}} = openprint::ManifestContent->find( manifest_id=>$$self{id} );
 		} # end if
 	} # end if
-	return @{$$self{'Contents'}} if $$self{'Contents'};
+	return @{$$self{Contents}} if $$self{Contents};
 	return;
 } # end sub Contents
 
 sub Vendor {
 	require openprint::Company;
-	return new openprint::Company( $_[0]{'supplier_id'} );
+	return new openprint::Company( $_[0]{supplier_id} );
 } # end sub Vendor
 
 sub po_ids {
@@ -119,7 +119,7 @@ sub dockets {
 	return sets::union( map { $_->docket() } $_[0]->Types() );
 } # end sub dockets
 sub link_to {
-	return '<a href="/employee/inventory/manifest_view.html?manifest_id='.$_[0]{'id'}.'">'.$_[0]{'name'}.'</a>';
+	return '<a href="/employee/inventory/manifest_view.html?manifest_id='.$_[0]{id}.'">'.$_[0]{name}.'</a>';
 } # end sub link_to
 
 sub check {

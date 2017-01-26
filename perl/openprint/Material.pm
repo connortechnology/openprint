@@ -108,11 +108,11 @@ sub New_Specification {
 } # end sub New_Specification
 
 sub Specification {
-	#my ( $self, $name, $range ) = @_;
+	my ( $self, $name, $range ) = @_;
 
 	if ( ! $_[0]{Specifications} ) {
 		foreach my $Spec ( openprint::MaterialSpecification->find( material_id=>$_[0]{id}, order=>'min NULLS FIRST' ) ) {
-			push @{$_[0]{Specifications}{$Spec->name()}}, $Spec;
+			push @{$_[0]{Specifications}{$$Spec{name}}}, $Spec;
 		} # end foreach
 		if ( ! $_[0]{Specifications} ) {
 #$openprint::log->warn("No specfications for " . $self->name() );
@@ -122,7 +122,7 @@ sub Specification {
 	} # end if
 
 	if ( ! $_[0]{Specifications}{$_[1]} ) {
-		#$openprint::log->warn("No specfications for ($name) " . $self->name() );
+		$openprint::log->warn("No specfications for ($name) " . $self->name() );
 		return;
 	}
 
