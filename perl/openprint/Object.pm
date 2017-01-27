@@ -26,7 +26,7 @@ use vars qw( $log $dbh $AUTOLOAD %cache %name_cache %fields %defaults %transform
 
 my $debug = 0;
 use constant DEBUG_ALL => 0;
-use constant DEBUG_CACHE => 0;
+use constant DEBUG_CACHE => 1;
 $no_cache = 0;
 
 sub init_cache {
@@ -86,6 +86,7 @@ sub new {
 
 	$cache{$config{db_name}}{$parent} = {} if ! $cache{$config{db_name}}{$parent};
 	my $sub_cache = $cache{$config{db_name}}{$parent};
+
 	if ( ! $ref ) {
 		if ( $id and (!$dont_cache) and $$sub_cache{$id} ) {
 			if ( $data ) {
