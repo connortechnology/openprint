@@ -182,7 +182,6 @@ $log->debug("Project Index is ($param{ProjectIndex})");
 	} else {
 		$log->debug("Found proejct $$Project{id}" . $Project->to_string() );
 	}
-	my $module;
 	my $Service;
 	if ( $param{ServiceIndex} ) {
 		my $Service = $Project->Service( $param{ServiceIndex} );
