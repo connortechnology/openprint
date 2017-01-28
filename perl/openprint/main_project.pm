@@ -1,5 +1,6 @@
 package openprint::main_project;
 use strict;
+use warnings;
 use openprint ();
 use vars qw( $r $log $dbh %variable %param %session %config );
 *r = \$openprint::r;
@@ -143,11 +144,12 @@ sub create_edit {
 } # end sub create_edit
 
 sub _calc {
-	my $Project = new openprint::Project( $param{ProjectIndex} );
-if ( $param{ProjectIndex} and ! $$Project{id} ) {
-$log->debug("No project $param{ProjectIndex} found");
-}
-    if ( $param{action} eq 'add_service' ) {
+	if ( $param{ProjectIndex} and $param{action} ) {
+		my $Project = new openprint::Project( $param{ProjectIndex} );
+		if ( $param{ProjectIndex} and ! $$Project{id} ) {
+			$log->debug("No project $param{ProjectIndex} found");
+		}
+		if ( $param{action} eq 'add_service' ) {
         my $services = $Project->services();
         foreach my $service_name ( ref $param{service_name} eq 'ARRAY' ? @{$param{service_name}} : $param{service_name} ) {
 
@@ -164,18 +166,19 @@ $log->debug("No project $param{ProjectIndex} found");
             } # end foreach service_id
         } # end foreach service_name
     } # end if
+  } # end if
 } # end sub _calc
 
 sub calc {
 	my $debug = @_ ? $_[0] : 1;
-$log->debug("Project Index is ($param{ProjectIndex}");
+$log->debug("Project Index is ($param{ProjectIndex})");
 	my $Project = undef;
 	if ( $param{ProjectIndex} ) {
 		$Project = openprint::Project->find_one( id=>$param{ProjectIndex} );
 	}
 	if ( ! $Project ) {
 		$Project = new openprint::Project();
-		$Project->save();
+		#$Project->save();
 	} else {
 		$log->debug("Found proejct $$Project{id}" . $Project->to_string() );
 	}
@@ -192,7 +195,7 @@ $log->debug("Project Index is ($param{ProjectIndex}");
 	eval {
 		require 'openprint/Estimating/'.$Service->service_type().'.pm';
 	};
-	$log->error("Error requiring $module: $@") if $@;
+	$log->error("Error requiring $$Service{service_type}: $@") if $@;
 	my $module = 'openprint::Estimating::'.$Service->service_type();
 
 	$param{method} = 'calc' if ! $param{method};
@@ -254,12 +257,12 @@ $log->debug("Project Index is ($param{ProjectIndex}");
 		foreach my $key ( keys %specs ) {
 			next if ref $specs{$key};
 
-			if ( (exists $param{$key}) and ($specs{$key} eq $param{$key}) ) {
+			if ( (exists $param{$key}) and (exists $specs{$key}) and ($specs{$key} eq $param{$key}) ) {
 				delete $specs{$key};
 			} elsif ( ( ! exists $param{$key}) and ! $specs{$key} ) {
 				delete $specs{$key};
-			} elsif ( ref $specs{$key} ) {
-				$log->error("Got a non-scalar in specs! $key => $specs{$key}");
+			} else {
+				$log->debug("Got changed $key => $param{$key} != $specs{$key}");
 				#delete $specs{$key};
 			} # end if
 		} # end foreach

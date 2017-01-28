@@ -937,54 +937,24 @@ $log->warn("unitprice: $$specs{txtUnitPrice1}");
 sub create_calc {
 	my ( $log, $dbh, $variable, $project_index, $service_index, $specs ) = @_;
 
-	# If you havn't selected a type yet... we should still continue
-	#return if ! $$specs{rdbProjectType};
-
-	my $Project = openprint::Project->find_one( id=>$$specs{ProjectIndex} ) if $$specs{ProjectIndex};
-	if ( ! $Project ) {
-		$Project = new openprint::Project();
-		$Project->currency_id( $openprint::session{Currency_id} );
-		$$variable{error} .= $Project->save();
-		if ( $$variable{error} ) {
-			return;
-		}
-		$Project->add_to_log( @openprint::session{'company_id','user_id'}, 'Created' );
-	} else {
-		$Project->currency_id( $openprint::session{Currency_id} ) if ! $Project->currency_id();
-	} # end if
-
-	# Why are we doing this?
-	my %services = $Project->get_services( );
-	foreach my $qty_index ( 1 .. 3 ) {
-		$$specs{"quantity$qty_index"} = openprint::Project->transform( "quantity$qty_index", $$specs{"quantity$qty_index"} );
-# Should not do this
-		if ( $$specs{'quantity'.$qty_index} != $Project->quantity($qty_index) ) {
-if ( 0 ) {
-			foreach my $service_id ( keys %services ) {
-				foreach my $s_id ( @{$services{$service_id}} ) {
-					openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $s_id, 'txtQuantity'.$qty_index, $$specs{'txtQuantity'.$qty_index} );
+	if ( $$specs{rdbProjectType} ) {
+		my $ProjectType = openprint::ProjectType->find_one( name => $$specs{rdbProjectType} );
+		if ( $ProjectType ) {
+			my @required_servicetype_ids = $ProjectType->required_services();
+			if ( @required_servicetype_ids ) {
+				foreach my $ServiceType ( openprint::ServiceType->find( create_visible => 'Y', id=>\@required_servicetype_ids ) ) {
+					$$specs{'chkServices'.$ServiceType->name()} = $ServiceType->name();
 				} # end foreach
-			} # end foreach
-} 
-			$Project->quantity( $qty_index, $$specs{'quantity'.$qty_index} );
-		} # end if
-	} # end foreach qty_index
+			} # end if required_servicetype_ids
+			my @blocked_servicetype_ids = $ProjectType->blocked_services();
+			if ( @blocked_servicetype_ids ) {
+				foreach my $ServiceType ( openprint::ServiceType->find( create_visible => 'Y', id=>\@blocked_servicetype_ids ) ) {
+					$$specs{'chkServices'.$ServiceType->name()} = '';
+				} # end foreach
+			} # end if blocked_servicetype_ids
+		} # end if ProjectType
+	} # end if $$specs{ProjectType}
 
-	my $ProjectType = openprint::ProjectType->find_one( name => $$specs{rdbProjectType} );
-	if ( $ProjectType and ( $Project->type_id() != $ProjectType->id() ) ) {
-		$Project->change_ProjectType( $ProjectType );
-		%services = $Project->get_services( );
-	} # end if ProjectType changed
-
-	foreach my $ServiceType ( openprint::ServiceType->find( create_visible => 'Y' ) ) {
-		if ( $services{$ServiceType->name()} ) {
-			$$specs{'chkServices'.$ServiceType->name()} = $ServiceType->name();
-		} else {
-#push @results, 'chkServices'.$ServiceType->name().'~';
-		} # end if
-	} # end foreach
-
-	$$specs{ProjectIndex} = $Project->id();
 	return $$specs{Status} = 'calculated';
 } # end sub create_calc
 
