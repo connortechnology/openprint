@@ -60,6 +60,7 @@ function load_page() {
 			<label>User Type</label>
 			<? echo ( ssi::select( openprint::User_Type->dropdown(), $session{$r->uri().'?type'}, { name=>'type', prepend=>['','All'], onchange=>'load_page();' } ); ) ?>
 		</li>
+		<li><label>Company Admin?</label><? echo ( radio( 'administrator', [ 'Y','Yes', 'N', 'No', '', 'Both' ], $session{$r->uri().'?administrator'}, {onclick=>"load_page();"} ); ) ?></li>
 		<li><label>Deleted?</label><? echo ( radio( 'deleted', [ '1','Yes', '0', 'No', '', 'Both' ], $session{$r->uri().'?deleted'}, {onclick=>"load_page();"} ); ) ?></li>
 		</ul>
 		<p class="buttons">
