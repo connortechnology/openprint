@@ -45,30 +45,30 @@ sub sign_off {
 
 sub history {
 
-	if ( $param{btnFunction} eq 'Delete Project' ) {
-		if ( $param{project_id} ) {
-		foreach my $project_id ( ref $param{project_id} eq 'ARRAY' ? @{$param{project_id}} : $param{project_id} ) {
-			$variable{error} .= openprint::print_project::try_to_delete_project( $log, $dbh, \%variable, $project_id );
-		} # end foreach project_id
-		} elsif ( $param{ProjectIndex} ) {
-			$variable{error} .= openprint::print_project::try_to_delete_project( $log, $dbh, \%variable, $param{ProjectIndex} );
-		} # end if
-		$variable{ExternalRedirect} = '/main/project/history.html';
-		return;
-	} elsif ( $param{btnFunction} eq 'Reuse Project' ) {
-		foreach my $project_id ( ref $param{project_id} eq 'ARRAY' ? @{$param{project_id}} : $param{project_id} ) {
-			openprint::print_project::reuse_project( $project_id );
-		} # end if
-	} elsif ( $param{btnFunction} eq 'Reset' ) {
-$log->debug("Reset");
-		foreach my $k ( keys %session ) {
-			if ( $k =~ /^\/main\/project\/history.html/ ) {
-$log->debug("Reset $k");
-				delete $session{$k};
+	if ( $param{btnFunction} ) {
+		if ( $param{btnFunction} eq 'Delete Project' ) {
+			if ( $param{project_id} ) {
+				foreach my $project_id ( ref $param{project_id} eq 'ARRAY' ? @{$param{project_id}} : $param{project_id} ) {
+					$variable{error} .= openprint::print_project::try_to_delete_project( $log, $dbh, \%variable, $project_id );
+				} # end foreach project_id
+			} elsif ( $param{ProjectIndex} ) {
+				$variable{error} .= openprint::print_project::try_to_delete_project( $log, $dbh, \%variable, $param{ProjectIndex} );
 			} # end if
-		} # end foreach k
-		%param = ();
-	} # end if
+			$variable{ExternalRedirect} = '/main/project/history.html';
+			return;
+		} elsif ( $param{btnFunction} eq 'Reuse Project' ) {
+			foreach my $project_id ( ref $param{project_id} eq 'ARRAY' ? @{$param{project_id}} : $param{project_id} ) {
+				openprint::print_project::reuse_project( $project_id );
+			} # end if
+		} elsif ( $param{btnFunction} eq 'Reset' ) {
+			foreach my $k ( keys %session ) {
+				if ( $k =~ /^\/main\/project\/history.html/ ) {
+					delete $session{$k};
+				} # end if
+			} # end foreach k
+			%param = ();
+		} # end if
+	} # end if btnfunction
 
 	# Doing it here will set the defaults if neccessary, but then they will get overriden by the saev_params below.	This is neccessary because save_params will update lastupdated.
 	ssi::setup_date_select( '/main/project/history.html', 'created_on_start', -180 );
@@ -139,6 +139,7 @@ sub create_edit {
 
 	my $services = $Project->services();
 	@{$variable{SelectedServices}} = keys %{$services};
+$log->debug("Services: " . join(',',@{$variable{SelectedServices}}) );
 
 	$variable{ProjectIndex} = $$Project{id};
 } # end sub create_edit
@@ -261,7 +262,7 @@ $log->debug("Project Index is ($param{ProjectIndex})");
 			} elsif ( ( ! exists $param{$key}) and ! $specs{$key} ) {
 				delete $specs{$key};
 			} else {
-				$log->debug("Got changed $key => $param{$key} != $specs{$key}");
+				#$log->debug("Got changed $key => $param{$key} != $specs{$key}");
 				#delete $specs{$key};
 			} # end if
 		} # end foreach
