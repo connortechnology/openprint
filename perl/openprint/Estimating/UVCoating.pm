@@ -150,7 +150,7 @@ sub calc {
 				next;
 			} # end if
 			my $Imposition = new openprint::Imposition();
-			$Imposition->load( $sig_specs, $qty_index );
+			$Imposition->load( $sig_specs, $qty_index, $Project );
 			my %results = signature_calc( $Project, $service_index, $specs, $signature_service_index, $sig_specs, $qty_index, $Imposition, \%MakeReadies );
 			$$specs{'hdnBreakdown'.$qty_index} .= $results{Breakdown};
 
@@ -520,9 +520,9 @@ $openprint::log->debug("Types: @types") if DEBUG;
 					if ( ! %ServicePrice ) {
 						$openprint::log->debug("No service price for $type");
 					} else {
-						if ( lc $ServicePrice{units} eq 'per m' ) {
+						if ( $ServicePrice{units} eq 'per m' ) {
 							$ServicePrice{Total} = $ServicePrice{Price}*$run_qty/1000;
-						} elsif ( $ServicePrice{units} eq 'per hour' or $ServicePrice{units} eq '/Hr' ) {
+						} elsif ( $ServicePrice{units} eq 'per hour' or $ServicePrice{units} eq '/Hr' or $ServicePrice{units} eq '/hr' ) {
 							if ( $runspeed ) {
 								$breakdown .= sprintf('<tr><td> %d @ %d/Hr = %.1fhours', $run_qty, $runspeed, $run_qty/$runspeed );
 								$ServicePrice{Total} = $ServicePrice{Price}*$run_qty/$runspeed if $runspeed;
@@ -530,6 +530,8 @@ $openprint::log->debug("Types: @types") if DEBUG;
 								$breakdown .= sprintf('<tr><td>No runspeed for %dgsm. Cant use this price.</td></tr>', $Stock->gsm() );
 								$ServicePrice{Total} = 1000000;
 							} # end if
+						} else {
+$openprint::log->error("Unknown units on Service Price $ServicePrice{Service} $ServicePrice{units}");
 						} # end if
 # Div by imposition, but run_qty is already div by impo
 #$ServicePrice{Total} /= $imp->imposition();
