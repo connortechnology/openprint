@@ -80,7 +80,7 @@
 					if ( $Project_Type->url() ) {
 						$html .= sprintf('<a href="/main/project/%3$s?ProjectIndex=%1$d&amp;ServiceIndex=%2$d">Edit</a><br/>', $Project->id(), $$services{''}[0], $Project_Type->url() );
 if ( $openprint::User->email() =~ /iconnor/ ) {
-								$html .= sprintf(q`<a href="#" onclick="popup_window('/main/project/_service_dump.html', { project_id: %d, service_id: %d } );">Specs</a><br/>`, $Project->id(), $$services{''}[0] );
+	$html .= sprintf(q`<a href="#" onclick="popup_window('/main/project/_service_dump.html', { project_id: %d, service_id: %d } );">Specs</a><br/>`, $Project->id(), $$services{''}[0] );
 }
 					} # end if
 					$html .= '</td>';
@@ -131,10 +131,12 @@ if ( $openprint::User->email() =~ /iconnor/ ) {
 							} # end if MergeSigs
 						} # end if
 					} # end for
+
 					if ( $editable ) {
-						$html .= sprintf('<tr%s><td class="description"><a href="/main/project/%s?ProjectIndex=%d&amp;ServiceIndex=%d"><b>%d %s</b><br/>%s%s</a></td>', $rowclass, 'prin/Signature.html', $Project->id(), $ss_id, $sig_qty, 'Signature' . ($sig_qty > 1 ? 's' : ''),
+						$html .= sprintf('<tr%s><td class="description"><a href="/main/project/%s?ProjectIndex=%d&amp;ServiceIndex=%d"><b>%d %s</b><br/>%s%s%s</a></td>', $rowclass, 'prin/Signature.html', $Project->id(), $ss_id, $sig_qty, 'Signature' . ($sig_qty > 1 ? 's' : ''),
 							openprint::Estimating::Printing::summary($Project, $ss_id, \%sig_specs ),
 							( $SigService->overrides() ? '<br/><span class="Overrides">With Overrides</span>' : '' ),
+							( $sig_specs{alert} ? '<span class="error">'.$sig_specs{alert}.'</span>' : '' ),
 							);
 						foreach my $qty_index ( @quantity_indexes ) {
 							my $price = $ProjectCurrency->convert_from( $sig_specs{'txtPrice'.$qty_index} );
@@ -148,9 +150,10 @@ if ( $openprint::User->email() =~ /iconnor/ ) {
 							$totals[$qty_index] += $price;
 						} # end foreach qty_index
 					} else {
-						$html .= sprintf('<tr%s><td class="description"><b>%d %s</b><br/>%s%s</td>', $rowclass, $sig_qty, 'Signature' . ($sig_qty > 1 ? 's' : ''),
+						$html .= sprintf('<tr%s><td class="description"><b>%d %s</b><br/>%s%s%s</td>', $rowclass, $sig_qty, 'Signature' . ($sig_qty > 1 ? 's' : ''),
 							openprint::Estimating::Printing::summary($Project, $ss_id, \%sig_specs ),
 							( $SigService->overrides() ? '<br/><span class="Overrides">With Overrides</span>' : '' ),
+							( $sig_specs{alert} ? '<span class="error">'.$sig_specs{alert}.'</span>' : '' ),
 							);
 						foreach my $qty_index ( @quantity_indexes ) {
 							my $price = $ProjectCurrency->convert_from( $sig_specs{'txtPrice'.$qty_index} );

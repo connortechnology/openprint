@@ -16,6 +16,9 @@
 	} else {
 		$filters{deleted} = $session{$uri.'?deleted'};
 	}
+	if ( $session{$uri.'?administrator} ne '' ) {
+		$filter{administrator} => $session{$uri.'?administrator};
+	}
 	if ( $session{$uri.'?salesrep_id_exclude'} ) {
 		my @csr_ids = map { $_->id() } openprint::User->find( company_id=>$config{owner_id}, 'usergroup any'=>'Sales' );
 		@csr_ids = sets::exclude( [ split(',', $session{$uri.'?salesrep_id'} ) ], \@csr_ids ) if $session{$uri.'?salesrep_id'};

@@ -1036,7 +1036,7 @@ sub users {
 }
 sub _users {
 	ssi::save_params( '/administrator/managerial/users.html', ( 
-				'salesrep_id', 'marketing_category_id', 'company_id','usergroup_id','deleted','email','type',
+				'salesrep_id', 'marketing_category_id', 'company_id','usergroup_id','deleted','email','type','administrator',
 				( map { 'created_on_start_' . $_ } ( 'year','month','day' ) ),
 				( map { 'created_on_end_' . $_ } ( 'year','month','day' ) ),
 				) );

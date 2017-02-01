@@ -308,10 +308,17 @@ sub stock {
 		$Paper->message( $param{message} );
 		$Paper->user_type( $param{user_type} );
 
+		my @old_recommendations = $Paper->recommendations();
 		@{$$Paper{recommendations}} = ();
 		foreach my $Type ( openprint::ProjectType->find() ) {
 			push @{$$Paper{recommendations}}, $Type->id() if $param{'chkPRF'.$Type->id()};
 		} # end foreach
+		if ( my @additions = sets::exclude( \@old_recommendations, $$Paper{recommendations} ) ) {
+			push @changes, "Recommendations added: " . join(',', map { $$_{name} } openprint::ProjectType->find( id=>\@additions, order=>'lower(name)' ) ).'<br/>';
+		}
+		if ( my @removals = sets::exclude( $$Paper{recommendations}, \@old_recommendations ) ) {
+			push @changes, "Recommendations removed: " . join(',', map { $$_{name} } openprint::ProjectType->find( id=>\@removals, order=>'lower(name)' ) ).'<br/>';
+		}
 
 		my $message = '';
 # Save prices

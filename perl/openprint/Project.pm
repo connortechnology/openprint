@@ -73,8 +73,8 @@ $serial = 'lngProjectIndex_seq';
 	quantity1	=>	[ 's/\D//g' ],
 	quantity2	=>	[ 's/\D//g' ],
 	quantity3	=>	[ 's/\D//g' ],
-	reference	=>	[ 's/\r\n/<br\/>/mg', 's/\n\r/<br\/>/mg', 's/\n/<br\/>/mg', 's/^\s+//', 's/\s+$//', 's/\s\s+/ /g' ],
-	comments	=>	[ 's/^\s+//', 's/\s+$//', 's/\s\s+/ /g' ],
+	reference	=>	[ 's/\r\n/<br\/>/mg', 's/\n\r/<br\/>/mg', 's/\n/<br\/>/mg', 's/^\s+//', 's/\s+$//', 's/\s\s+/ /g', 's/[^[:ascii:]]//g' ],
+	comments	=>	[ 's/^\s+//', 's/\s+$//', 's/\s\s+/ /g', 's/[^[:ascii:]]//g' ],
 );
 %defaults = (
 	created_on	=>	q`'NOW()'`,
@@ -775,7 +775,8 @@ sub servicetype_id {
 		%{$$self{service_types}} = sql::execute( undef, undef, q{SELECT lngserviceindex, servicetype_id FROM tbl_Project_Contents WHERE lngProjectIndex=?}, $$self{id} );
 	} # end if
 	if ( ! exists $$self{service_types}{$s_id} ) {
-		$openprint::log->error("Request for servicetype_id for $s_id, reloading ");
+	my ( $caller, undef, $line ) = caller;
+		$openprint::log->error("Request for servicetype_id for $s_id, reloading from $caller:$line");
 		%{$$self{service_types}} = sql::execute( undef, undef, q{SELECT lngserviceindex, servicetype_id FROM tbl_Project_Contents WHERE lngProjectIndex=?}, $$self{id} );
 		if ( ! $$self{service_types}{$s_id} ) {
 			$openprint::log->error("Request for servicetype_id for $s_id, not found ");

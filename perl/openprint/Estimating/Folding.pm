@@ -849,8 +849,8 @@ $openprint::log->debug("folds from sigimpo") if DEBUG;
 								  #page_columns	=>	$Imposition->page_rows(),
 								  #page_rows		=>	$Imposition->page_columns(),
 								  #) ),
-							page_width		=>	$Imposition->page_width(),
-							page_height		=>	$Imposition->page_height(),
+							page_width		=>	$$Imposition{page_width},
+							page_height		=>	$$Imposition{page_height},
 							spine_direction	=>	$$Imposition{image_orientation},
 							stitching		=>	($$services{SaddleStitching} or $$services{LoopStitching}) ? 1 : 0,
 							perfectbind		=>	$$services{PerfectBound} ? 1 : 0,
@@ -1746,7 +1746,7 @@ sub calc {
 				next;
 			} # end if
 			my $i = new openprint::Imposition();
-			$i->load( $sig_specs, $qty_index );
+			$i->load( $sig_specs, $qty_index, $Project );
 			$$i{Folds} = [ get_Folds( $specs, $i, $qty_index ) ];
 			push @Signature_Impositions, $i;
 $i->display() if DEBUG;
@@ -1913,13 +1913,19 @@ sub summary {
 			if ( ! $$sig_specs{"txtImposition$qty_index"} ) {
 				next;
 			} # end if
+
+			my $Imposition1 = new openprint::Imposition();
+			$Imposition1->load( $sig_specs, $qty_index, $Project );
+
 			my $sig_count = 1;
 
 			if ( $sig_index < @signatures - 1 ) {
 				for ( my $sig_index2 = $sig_index + 1; $sig_index2 < @signatures; $sig_index2 += 1 ) {
 					my $sig_specs2 = openprint::service::get_specs_ref( $Project, $signatures[$sig_index2] );
+					my $Imposition2 = new openprint::Imposition();
+					$Imposition2->load( $sig_specs, $qty_index, $Project );
 					if ( openprint::Estimating::Printing::compare_signatures( $Project, $sig_specs, $sig_specs2, $qty_index ) 
-						and compare_folds( $specs, $sig_specs, $sig_specs2, $qty_index )
+						and compare_folds( $specs, $Imposition1, $Imposition2, $qty_index )
 						) {
 						$sig_count += 1;
 					} else {
@@ -1962,7 +1968,7 @@ sub runspeed {
 #$openprint::log->debug("Folding runspeed: ($speed)");
 	if ( ! $speed ) {
 		my $Imposition = new openprint::Imposition;
-		$Imposition->load( $sig_specs, $qty_index );
+		$Imposition->load( $sig_specs, $qty_index, $Project );
 		#$openprint::log->debug("Getting fold from imposition: " . $Imposition->pages() );
 		if ( $Imposition->pages() ) {
 			$speed = $Equipment->specification( $Imposition->pages().'PageSignatureFoldRunSpeed' );
@@ -2317,7 +2323,8 @@ sub compact_impositions {
 sub save {
 } # end sub save
 
-sub load_Impositions($$$) {
+sub load_Impositions {
+#sub load_Impositions($$$) {
 	my ( $folding_specs, $sig_specs, $qty_index ) = @_;
 
 	my $form = $$sig_specs{SignatureIndex};

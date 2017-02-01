@@ -183,7 +183,13 @@ sub calc {
 			my $form = $$sig_specs{SignatureIndex};
 			$$specs{'hdnBreakdown'.$qty_index} .= "<br/>Signature: $$sig_specs{txtServiceDescription},<br/>" if $$sig_specs{txtServiceDescription};
 			my $Imposition = new openprint::Imposition();
-			$Imposition->load( $sig_specs, $qty_index );
+			$Imposition->load( $sig_specs, $qty_index, $Project );
+			if ( ! $$Imposition{imposition} ) {
+				$$specs{'hdnBreakdown'.$qty_index} .= 'Problem loading the imposition. Unable to calculate a price for it.';
+				$$specs{alert} .= "Problem loading the imposition for $$sig_specs{SignatureIndex} $$sig_specs{txtServiceDescription}<br/>";
+				$status = 'uncalculated';
+				next;
+			}
 			my %results = signature_calc( $Project, $specs, $sig_specs, $qty_index, $Imposition, \%MakeReadies );
 			$MakeReadies{$results{Equipment}->id()} = $Imposition->layout_area() if $results{Equipment};
 			@outputs = sets::union( @outputs, 
@@ -217,9 +223,9 @@ sub calc {
 			if ( $results{Status} eq 'uncalculated' ) {
 				$status = 'uncalculated';
 				if ( $$specs{"chkOverrideEquipment-$form-$qty_index"} eq 'Y' ) {
-					$$specs{alert} = "The selected equipment can not handle your project.  This may be because the stock is too heavy, or too large.";
+					$$specs{alert} .= "The selected equipment can not handle your project.  This may be because the stock is too heavy, or too large.";
 				} else {
-					$$specs{alert} = "No suitable equipment could be found for your project.  This may be because the stock is too heavy, or too large.";
+					$$specs{alert} .= "No suitable equipment could be found for your project.  This may be because the stock is too heavy, or too large.";
 				} # end if
 			} else {
 
@@ -260,6 +266,7 @@ foreach my $equipment_id ( keys %{$MakeReadies} ) {
 $openprint::log->debug("Makereadies $equipment_id $$MakeReadies{$equipment_id}");
 }
 }
+$imposition->display();
 
 	my $form = $$sig_specs{SignatureIndex};
 	my %bestPrice;
@@ -373,7 +380,7 @@ $openprint::log->debug("AQ Equipment $$Equipment{strid}") if DEBUG;
 			my %MakeReadies = $MakeReadies ? %$MakeReadies : ();
 			#$$specs{'hdnBreakdown'.$qty_index} .= sprintf('Imposition: %dx%d+%dx%d=%dout %s:', @$imp{'columns','rows','dutch_columns','dutch_rows','imposition','runstyle'} );
 			#next if ! $$imp{imposition};
-#$openprint::log->debug("impo{columns} $$imposition{columns} / $$imp{columns}");
+
 			my $width = $imposition->sheet_width() / ( $$imposition{columns}/$$imp{columns} );
 			my $height = $imposition->sheet_height() / ( $$imposition{rows}/$$imp{rows} );
 			$$specs{'hdnBreakdown'.$qty_index} .= $imposition->sheet_width().'x'.$imposition->sheet_height().'=>'.$width.'x'.$height.'<br/>';

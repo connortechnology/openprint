@@ -138,6 +138,7 @@ sub get_specs_ref {
 		} # end if
 		%{$specs_cache{$s_id}} = sql::execute( $openprint::log, undef, 
 				'SELECT strName, strValue FROM tbl_Service_Specifications WHERE lngProjectIndex=? AND lngServiceIndex=?', $p_id, $s_id );
+		$specs_cache{$s_id}{ProjectIndex} = $p_id;
 	} # end if
 	return $specs_cache{$s_id};
 } # end sub get_specs_ref
