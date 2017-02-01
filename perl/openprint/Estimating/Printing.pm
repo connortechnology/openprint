@@ -3122,7 +3122,7 @@ $openprint::log->debug("Needed pages: $needed_pages") if DEBUG;
 
 	my $filter_press = $$sig_specs{"ddmPress$qty_index"} if $$sig_specs{"chkOverridePress$qty_index"} eq 'Y';
 	if ( $$sig_specs{PreviousPress} ) {
-		$filter_press = $$sig_specs{PreviousPress};
+		#$filter_press = $$sig_specs{PreviousPress};
 		#$log->debug("Have PreviousPress $$sig_specs{PreviousPress}");
 	}
 
