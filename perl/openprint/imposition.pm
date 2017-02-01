@@ -446,7 +446,7 @@ $openprint::log->debug("Gutters: specs : $$specs{Gutter}, bindery: $bindery_gutt
 
 	# Becomes Printable area
 	$adjusted_paper_height -= $$specs{'Grip Size'} if $$specs{'Add Grip Height'} ne 'N';
-$openprint::log->debug("Adjusted PHeght after grip: $adjusted_paper_height") if DEBUG;
+#n$openprint::log->debug("Adjusted PHeght after grip: $adjusted_paper_height") if DEBUG;
 
 
 # On the web press, we have no paper dimensions, only the maximagesize, so this effectively sets the printing area to the max image size. Theoretically Max Image Size = Cutoff-Grip anyways
@@ -676,7 +676,7 @@ $openprint::log->debug("Using Single wheel space $$specs{'Perfecting Single Gutt
 	# Don't need folio lip if we have enoguh grip
 	$adjusted_paper_height -= $bindery_gutters;
 	}
-	$openprint::log->debug("Height after grip: $adjusted_paper_height ");
+	#$$openprint::log->debug("Height after grip: $adjusted_paper_height ");
 
 	if ( ($adjusted_paper_height<=0) or ( ( $Maximum_Image_Length > 0 ) and ( $adjusted_paper_height > $Maximum_Image_Length ) ) ) {
 		$openprint::log->debug("*** Using Max Image Length2: Before: $adjusted_paper_height After: $Maximum_Image_Length***") if DEBUG;

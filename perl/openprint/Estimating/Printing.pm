@@ -24,7 +24,7 @@ use strict;
 use Data::Dumper;
 package openprint::Estimating::Printing;
 my $threading = 0;
-use threads;
+#use threads;
 use constant DEBUG => 0;
 use constant DEBUG_PLATES => 0;
 use constant DEBUG_VERSIONS => 0;
@@ -1133,7 +1133,7 @@ sub get_impositions {
 	} # end if
 
 # add all the impositions for each press
-$openprint::log->debug("get_impositions: Presses to consider: " . join(',', map { $_->strid() } @$Presses)) if DEBUG;
+$openprint::log->debug("get_impositions: Presses to consider: " . join(',', map { $_->strid() } @$Presses)) if DEBUG_IMPOSITIONS;
 	foreach my $Press ( @$Presses ) {
 		if ( DEBUG_IMPOSITIONS and $$specs{'chkOverridePress'.$qty_index} and $$specs{"ddmPress$qty_index"} ) {
 			if ( $$specs{"ddmPress$qty_index"} ne $Press->strid() ) {
@@ -1145,15 +1145,15 @@ $openprint::log->debug("not Skipping cuz ddmPress$qty_index eq $$Press{strid}");
 		} # end if
 		my $printing_type = $Press->specification('Printing Type');
 		if ( ( $$project{ProjectSpecs}{"PrintingType-$$specs{Group}"} ) and ( $$project{ProjectSpecs}{"PrintingType-$$specs{Group}"} ne $printing_type ) ) {
-			$openprint::log->warn("QTY $qty_index Press $$Press{strid} Printing Type ($printing_type) is not the book overriden type " . $$project{ProjectSpecs}{"PrintingType-$$specs{Group}"} ) if DEBUG;
+			$openprint::log->warn("QTY $qty_index Press $$Press{strid} Printing Type ($printing_type) is not the book overriden type " . $$project{ProjectSpecs}{"PrintingType-$$specs{Group}"} ) if DEBUG_IMPOSITIONS;
 			next;
 		} # en dif
 		if ( ( defined $$specs{'OverridePrintingType'.$qty_index} ) and ( $$specs{'OverridePrintingType'.$qty_index} eq 'Y' ) ) {
 			if ( $printing_type ne $$specs{'PrintingType'.$qty_index} ) {
-				$openprint::log->warn("QTY $qty_index Press $$Press{strid} Printing Type ($printing_type) is not the overriden type " . $$specs{'PrintingType'.$qty_index} ) if DEBUG;
+				$openprint::log->warn("QTY $qty_index Press $$Press{strid} Printing Type ($printing_type) is not the overriden type " . $$specs{'PrintingType'.$qty_index} ) if DEBUG_IMPOSITIONS;
 				next;
 			} else {
-				$openprint::log->warn("QTY $qty_index Press $$Press{strid} Printing Type ($printing_type) IS the overriden type " . $$specs{'PrintingType'.$qty_index} ) if DEBUG;
+				$openprint::log->warn("QTY $qty_index Press $$Press{strid} Printing Type ($printing_type) IS the overriden type " . $$specs{'PrintingType'.$qty_index} ) if DEBUG_IMPOSITIONS;
 			} # end if
 		} else {
 			if ( $$specs{PrintingTypes} and ! sets::isin( $printing_type, $$specs{PrintingTypes} ) ) {
@@ -1162,7 +1162,7 @@ $openprint::log->debug("not Skipping cuz ddmPress$qty_index eq $$Press{strid}");
 				} elsif ( $$specs{'OverridePrintingType'.$qty_index} eq 'Y' and $printing_type eq $$specs{'PrintingType'.$qty_index} ) {
 					$$specs{alert} .= 'Press ' . $$Press{strid} . " Printing Type ($printing_type) is not in PrintingTypes	". join(',', @{$$specs{PrintingTypes}} ) . '<br/>';
 				} else {
-	$openprint::log->debug("Skipping $$Press{strid} because of printintype") if DEBUG;
+	$openprint::log->debug("Skipping $$Press{strid} because of printintype") if DEBUG_IMPOSITIONS;
 					next;
 				} # end if
 			} # end if
@@ -1209,12 +1209,12 @@ $openprint::log->debug("not Skipping cuz ddmPress$qty_index eq $$Press{strid}");
 		my $do_perfecting = 1;
 		if ( $$project{print_sides} == 1 ) {
 			$do_perfecting = 0;
-			$openprint::log->debug("** One sided:	Perfect	***") if DEBUG;
+			$openprint::log->debug("** One sided:	Perfect	***") if DEBUG_IMPOSITIONS;
 		} elsif ( ! sets::isin('Perfecting', [ split(',',$$project{Runstyles} ) ] ) ) {
-			$openprint::log->debug("** $$Press{strid} Can't Perfect - Perfecting not in runstyles ***") if DEBUG;
+			$openprint::log->debug("** $$Press{strid} Can't Perfect - Perfecting not in runstyles ***") if DEBUG_IMPOSITIONS;
 			$do_perfecting = 0;
 		} elsif ( @side_one_colours > int($number_of_colours/2) or @side_two_colours > int($number_of_colours/2) ) {
-			$openprint::log->debug("** Too many colours to	Perfect	***") if DEBUG;
+			$openprint::log->debug("** Too many colours to	Perfect	***") if DEBUG_IMPOSITIONS;
 			$do_perfecting = 0;
 		} elsif ( @side_one_varnishes or @side_two_varnishes  ) {
 			if ( ( $varnish_capable eq '1 Side' ) and (
@@ -1226,12 +1226,12 @@ $openprint::log->debug("not Skipping cuz ddmPress$qty_index eq $$Press{strid}");
 			} else {
 				#$openprint::log->debug(( @side_one_colours - @side_one_varnishes ) . ' <= ' . int($number_of_colours/2)) if DEBUG;
 				#$openprint::log->debug(( @side_two_colours - @side_two_varnishes ) . ' <= ' . int($number_of_colours/2)) if DEBUG;
-				$openprint::log->debug("** Too many colours to	Perfect	***") if DEBUG;
+				$openprint::log->debug("** Too many colours to	Perfect	***") if DEBUG_IMPOSITIONS;
 				$do_perfecting = 0;
 			} 
 		} elsif ( ( $_ = $Press->specification('Maximum Calliper Perfecting') ) and ( $$specs{txtSpecificStockCalliper} > $_ ) ) {
 			$do_perfecting = 0;
-			$openprint::log->debug("** Too thick to:	Perfect	***") if DEBUG;
+			$openprint::log->debug("** Too thick to:	Perfect	***") if DEBUG_IMPOSITIONS;
 		} # end if
 		my $do_work_turn = $$project{print_sides} == 2 ? 1 : 0;
 		if ( $do_work_turn ) {
@@ -1380,7 +1380,7 @@ if ( DEBUG_IMPOSITIONS and $$specs{"chkOverrideRunStyle$qty_index"} ) {
 				} # end if
 			} # end foreach
 			push @Papers, @extra_sheets;
-			if ( DEBUG ) {
+			if ( 0 and DEBUG_IMPOSITIONS ) {
 				foreach my $P ( @extra_sheets ) {
 					$openprint::log->debug("Extra: " . $P->to_string() );
 				} # end foreach P
@@ -1389,7 +1389,7 @@ if ( DEBUG_IMPOSITIONS and $$specs{"chkOverrideRunStyle$qty_index"} ) {
 				} # end foreach P
 			} # end if DEBUG
 		} # end if
-			if ( DEBUG ) {
+			if ( 0 and DEBUG_IMPOSITIONS ) {
 				foreach my $P ( @Papers ) {
 					$openprint::log->debug("Stocks: " . $P->to_string() );
 				} # end foreach P
@@ -1398,28 +1398,28 @@ if ( DEBUG_IMPOSITIONS and $$specs{"chkOverrideRunStyle$qty_index"} ) {
 		foreach my $Paper ( @Papers ) {
 #Paper might have different calliperso# Is this needed anymore
 			#$$project{Calliper} = $$Paper{calliper};
-		if ( DEBUG_IMPOSITIONS and $$Overrides{"chkOverrideSheetSize$qty_index"} and $$specs{"ddmStockSheetSize$qty_index"} ) {
+			if ( DEBUG_IMPOSITIONS and $$Overrides{"chkOverrideSheetSize$qty_index"} and $$specs{"ddmStockSheetSize$qty_index"} ) {
 
-			my ( $width, $height ) = split('x', $$specs{"ddmStockSheetSize$qty_index"} );
-$openprint::log->debug("$width x $height");
-			if ( $width and ( $width != $Paper->width() ) ) {
-$openprint::log->debug("Skipping cuz not $width");
-				next;
+				my ( $width, $height ) = split('x', $$specs{"ddmStockSheetSize$qty_index"} );
+	$openprint::log->debug("$width x $height");
+				if ( $width and ( $width != $Paper->width() ) ) {
+	$openprint::log->debug("Skipping cuz not $width");
+					next;
+				} 
+				if ( $height and ( $height != $Paper->height() ) ) {
+	$openprint::log->debug("Skipping cuz not $height");
+					next;
+				} 
 			} 
-			if ( $height and ( $height != $Paper->height() ) ) {
-$openprint::log->debug("Skipping cuz not $height");
-				next;
-			} 
-		} 
 
 			if ( ( $$project{ProjectSpecs}{"StockType-$$specs{Group}"} ) and ( $$project{ProjectSpecs}{"StockType-$$specs{Group}"} ne $$Paper{type} )) {
-				if ( DEBUG ) {
+				if ( DEBUG_IMPOSITIONS ) {
 					$openprint::log->debug("Not overriden stock stype: " . $Paper->to_string() );
 				} # end if
 				next;
 			} # end if
 			if ( ( $$specs{'OverrideStockType'.$qty_index} eq 'Y' ) and ( $$Paper{type} ne $$specs{'StockType'.$qty_index} ) ) {
-				if ( DEBUG ) {
+				if ( DEBUG_IMPOSITIONS ) {
 					$openprint::log->debug("Not overriden stock stype: " . $Paper->to_string() );
 				} # end if
 				next;
@@ -1430,7 +1430,7 @@ $openprint::log->debug("Skipping cuz not $height");
 			} # end if
 			my @imps;
 			if ( ! $feeds{$$Paper{type}} ) {
-				if ( DEBUG ) {
+				if ( DEBUG_IMPOSITIONS ) {
 					$openprint::log->debug("Not in feeds: " . $Paper->to_string() . ' on ' . $Press->strid() );
 				} # end if
 				next;
@@ -1440,21 +1440,21 @@ $openprint::log->debug("Skipping cuz not $height");
 				
 				$$project{Runstyles} = $runstyles_roll;
 				if ( $$Paper{width} > $maximum_sheet_width ) {
-					$openprint::log->debug("Stock width $$Paper{width} > max sheet width $maximum_sheet_width") if DEBUG;
+					$openprint::log->debug("Stock width $$Paper{width} > max sheet width $maximum_sheet_width") if DEBUG_IMPOSITIONS;
 					next;
 				} # end if
 				if ( $$Paper{width} < $minimum_sheet_width ) {
-					$openprint::log->debug("Stock width $$Paper{width} < min sheet width $minimum_sheet_width") if DEBUG;
+					$openprint::log->debug("Stock width $$Paper{width} < min sheet width $minimum_sheet_width") if DEBUG_IMPOSITIONS;
 					next;
 				} # end if
 				if ( $maximum_roll_width and ( $$Paper{width} > $maximum_roll_width ) ) {
-					$openprint::log->debug("Stock width $$Paper{width} > max roll width $maximum_roll_width") if DEBUG;
+					$openprint::log->debug("Stock width $$Paper{width} > max roll width $maximum_roll_width") if DEBUG_IMPOSITIONS;
 					next;
 				} # end if
 #$openprint::log->debug('blah'.$Paper->to_string());
 				if ( $roll2sheet_minimum_weight and $feeds{Sheet} ) {
 					if ( $$roll2sheet_minimum_weight{units} eq 'gsm' and $$roll2sheet_minimum_weight{value} > $Paper->gsm() ) {
-						$openprint::log->debug("Stock gsm $$Paper{gsm} < min roll2sheet weight $$roll2sheet_minimum_weight{value}") if DEBUG;
+						$openprint::log->debug("Stock gsm $$Paper{gsm} < min roll2sheet weight $$roll2sheet_minimum_weight{value}") if DEBUG_IMPOSITIONS;
 						next;
 					} # end if
 				} # end if
@@ -1471,7 +1471,7 @@ $openprint::log->debug("Skipping cuz not $height");
 						}
 						$$project{'Cut Off'} = $cut_off;
 						my @temp_imps = openprint::imposition::get_imposition( $project, $do_work_turn, $do_perfecting, $$specs{Versions}, $P, $Press );
-if ( DEBUG ) {
+if ( DEBUG_IMPOSITIONS ) {
 $openprint::log->error("Got " . @temp_imps . " for " . $P->to_string() );
 foreach my$i( @temp_imps ) {
 $i->display( 'Returned from get_imposition' );
@@ -1532,7 +1532,7 @@ if ( DEBUG_INITIAL_FILTERING and $$AP{width} == 35 ) {
 				} else {
 					my @temp_imps = openprint::imposition::get_imposition( $project, $do_work_turn, $do_perfecting, $$specs{Versions}, $P, $Press );
 					push @i, @temp_imps;
-if ( DEBUG ) {
+if ( DEBUG_IMPOSITIONS ) {
 $openprint::log->error("Got " . @temp_imps . " for " . $P->to_string() );
 foreach my$i( @temp_imps ) {
 $i->display( 'Returned from get_imposition' );
@@ -1560,10 +1560,10 @@ $i->display( 'Returned from get_imposition' );
 								$i2->columns( $$i2{columns}-1 );
 								openprint::imposition::check_setup( $i2, $project );
 								if ( $minimum_sheet_width and ($$P2{width} < $minimum_sheet_width) ) {
-									$openprint::log->debug("Paper width $$P2{width} < $minimum_sheet_width minimum sheet width") if DEBUG;
+									$openprint::log->debug("Paper width $$P2{width} < $minimum_sheet_width minimum sheet width") if DEBUG_IMPOSITIONS;
 									$i2->columns(0);
 								} elsif ( DEBUG ) {
-									$openprint::log->debug("Paper width $$P2{width} > $minimum_sheet_width minimum sheet width") if DEBUG;
+									$openprint::log->debug("Paper width $$P2{width} > $minimum_sheet_width minimum sheet width") if DEBUG_IMPOSITIONS;
 								}
 								$i2->columns(0) if $minimum_roll_width and ($$P2{width} < $minimum_roll_width);
 								if ( $$i2{imposition} ) {
@@ -1576,13 +1576,13 @@ $i->display( 'Returned from get_imposition' );
 						} # end while
 					} # end foreach
 				} # end if start_width or cut for all sizes
-			} else { # Sheet Fed
+			} else { # Sheet
 				if ( ! ( $$Paper{width} and $$Paper{height} ) ) {
-					$openprint::log->debug($$Press{strid}." : Sheetfed but doesn't have width and height Not using " . $Paper->to_string() ) if DEBUG;
+					$openprint::log->debug($$Press{strid}." : Sheetfed but doesn't have width and height Not using " . $Paper->to_string() ) if DEBUG_IMPOSITIONS;
 					next;
 				}
 				if ( (!$use_cut_stocks) and $Paper->is_cut() ) {
-					$openprint::log->debug($$Press{strid}." : Not using " . $Paper->to_string() . " because its cut." . $use_cut_stocks ) if DEBUG;
+					$openprint::log->debug($$Press{strid}." : Not using " . $Paper->to_string() . " because its cut." . $use_cut_stocks ) if DEBUG_IMPOSITIONS;
 					next;
 				} # end if
 				if ( $printing_type eq 'Digital' and ! $Paper->digital() ) {
@@ -1590,10 +1590,10 @@ $i->display( 'Returned from get_imposition' );
 					next;
 				} # end if
 				if ( %sheetsizes and ! $sheetsizes{join('x', $Paper->width(),$Paper->height())} ) {
-					$openprint::log->debug("Not using " . $Paper->to_string() . " because not in sheetsizes. for $$Press{strid}" ) if DEBUG;
+					$openprint::log->debug("Not using " . $Paper->to_string() . " because not in sheetsizes. for $$Press{strid}" ) if DEBUG_IMPOSITIONS;
 					next;
 				} # end if
-				$openprint::log->debug("using " . $Paper->to_string() . ' is good must be in sheetsizes.' ) if DEBUG;
+				$openprint::log->debug("using " . $Paper->to_string() . ' is good must be in sheetsizes.' ) if DEBUG_IMPOSITIONS;
 
 				$$project{Runstyles} = $runstyles_sheet;
 
@@ -1619,7 +1619,7 @@ $i->display( 'Returned from get_imposition' );
 							( $P->width() > $maximum_sheet_length or $P->height() > $maximum_sheet_width )
 							) {
 						$P->cut();
-$openprint::log->debug("Cutting to " . $P->to_string() ) if DEBUG;
+$openprint::log->debug("Cutting to " . $P->to_string() ) if DEBUG_IMPOSITIONS;
 					} # end while
 				} # end if
 
@@ -1639,6 +1639,12 @@ $openprint::log->debug("Next paper because it's too small for the item" . $P->wi
 					} # end if
 
 					my @i = openprint::imposition::get_imposition( $project, $do_work_turn, $do_perfecting, $$specs{Versions}, $P, $Press );
+if ( DEBUG_IMPOSITIONS ) {
+$openprint::log->error("Got " . @i . " impositions on $$Press{strid} " . $P->to_string() );
+foreach my $i ( @i ) {
+$i->display("initial for $$Press{strid}");
+}
+}
 					last if ! @i;
 					push @imps, @i;
 					foreach my $i ( @i ) {
@@ -2579,6 +2585,7 @@ $openprint::log->debug("after sorting presses: " . ( sprintf('%.4f', tv_interval
 
 #$openprint::log->debug("Master time before Previous Stock Type and Grain: " . ( sprintf('%.4f', tv_interval( [$master_time])*1000) ) .' usecs' );
 		# We have to match the stock type and grain direction of previous sigs
+		delete $$specs{PreviousPress};
 		delete $$specs{PreviousStockType};
 		delete $$specs{PreviousGrainDirection};
 		foreach my $index ( $Project->signatures({ Group=>$$specs{Group} }) ) {
@@ -3109,6 +3116,7 @@ sub breakdown {
 # impositions is a hash of imps for each press
 sub calculate_impositions {
 	my ( $Project, $sig_specs, $qty_index, $qty, $PaperCounts, $versions, $project, $impositions ) = @_;
+	my $filter_time = gettimeofday() if DEBUG_FILTERING;
 
 	my @impositions;
 	my $needed_pages = 0;
@@ -3125,10 +3133,14 @@ sub calculate_impositions {
 	} # end if
 $openprint::log->debug("Needed pages: $needed_pages") if DEBUG;
 
-	my $filter_press = $$sig_specs{"ddmPress$qty_index"} if $$sig_specs{"chkOverridePress$qty_index"} eq 'Y';
-	if ( $$sig_specs{PreviousPress} ) {
+	my $filter_press = '';
+$log->error("Have filter press $filter_press") if $filter_press;
+	if ( $$sig_specs{"chkOverridePress$qty_index"} and ( $$sig_specs{"chkOverridePress$qty_index"} eq 'Y' ) ) {
+		$filter_press = $$sig_specs{"ddmPress$qty_index"};
+		$log->error("Have Override Press " . $$sig_specs{"ddmPress$qty_index"} . " from $$sig_specs{SignatureIndex}");
+	} elsif ( $$sig_specs{PreviousPress} ) {
 		$filter_press = $$sig_specs{PreviousPress};
-		#$log->debug("Have PreviousPress $$sig_specs{PreviousPress}");
+		$log->error("Have PreviousPress $$sig_specs{PreviousPress} from $$sig_specs{SignatureIndex}");
 	}
 
 	foreach my $strid ( $filter_press ? $filter_press : keys %{$impositions} ) {
@@ -3867,7 +3879,7 @@ $I->display("Bumping A paper_factor $paper_factor impo factor: $impo_factor ") i
 	@impositions = map {@{$_}} values %imps;
 
 
-	$log->debug("Press Impositions after filtering: " . @impositions . sprintf(' %.4f', tv_interval( [$master_time])*1000) ) if DEBUG_FILTERING;
+	$log->debug("Press Impositions after filtering: " . @impositions . sprintf(' %.4f', tv_interval( [$filter_time])*1000) ) if DEBUG_FILTERING;
 	if ( $$sig_specs{versions} > 1 and @impositions < 30 ) {
 		$openprint::log->debug("Calling do_versions, # of imps: " . @impositions ) if DEBUG_VERSIONS;
 		@impositions = openprint::imposition::do_versions( $versions, \@impositions );
@@ -3991,6 +4003,7 @@ $openprint::log->error("HAVE TEST");
 		my $Press = $imp->Press();
 		
 		$$imp{specs} = \%sig_specs;
+		#$imp->display("Previous Press $previous_press");
 		$sig_specs{PreviousPress} = $previous_press;
 		$sig_specs{'ddmRunStyle'.$qty_index} = $$imp{runstyle};
 		$sig_specs{'ddmPress'.$qty_index} = $$Press{strid};
@@ -4317,7 +4330,7 @@ $openprint::log->error("No proofs>!");
 								#if ( $$new_specs{'chkOverridePress'.$qty_index} ne 'Y' and $Press->specification('Stay On Press') eq 'Y' ) {
 									$$new_specs{PreviousPress} = $Press->strid();
 #$imp->display();
-									#$log->debug("Setting press to $$Press{strid} was ($$new_specs{PreviousPress}) recursion depth($recursion_depth) $new_specs");
+									$log->debug("Setting press to $$Press{strid} was ($$new_specs{PreviousPress}) recursion depth($recursion_depth) $new_specs");
 								}
 								$$new_specs{PreviousStockType} = $$Paper{type};
 								$$new_specs{PreviousStockWidth} = $$Paper{width};
