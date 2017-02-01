@@ -101,20 +101,20 @@ $log->debug("Loading object $parent $id from cache and populating with data new 
 			}
 		} elsif ( DEBUG_CACHE ) {
 			my ( $caller, undef, $line ) = caller;
-			my $self = {};
-			bless $self, $parent;
-			if ( ( $$self{id} = $id ) or $data ) {
+			#my $self = {};
+			#bless $self, $parent;
+			#if ( ( $$self{id} = $id ) or $data ) {
 #$log->debug("loading $parent $id") if $debug or DEBUG_ALL;
-				$self->load( $data );
-			} # end if
-			$log->debug("from $caller:$line no ref, $parent id: $id, dont_cache: $dont_cache sub $sub_cache $$sub_cache{$id} $$self{name}");
+				#$self->load( $data );
+			#} # end if
+			$log->debug("from $caller:$line no ref, $parent id: $id, dont_cache: $dont_cache sub $sub_cache $$sub_cache{$id}");
 		} # end if
 #$log->debug("Not Loading from cache $parent $id") if $id and ! $data;
 		my $self = {};
 		bless $self, $parent;
 
 		if ( ( $$self{id} = $id ) or $data ) {
-#$log->debug("loading $parent $id") if $debug or DEBUG_ALL;
+$log->debug("loading $parent $id") if $debug or DEBUG_ALL;
 			$self->load( $data );
 		} # end if
 		if ( ! ( $no_cache or $dont_cache ) ) {
