@@ -197,13 +197,13 @@ function calc_print( formName, force, options ) {
 			pendingCalc.transport.abort();
 		} else {
 
-		// This prevents concurrent price getting
-		if ( options ) {
-			timeout = setTimeout("calc_print('f1', 0, " + Object.toJSON( options ) + ");", 1000 );	
-		} else {
-			timeout = setTimeout("calc_print('f1' );", 1000 );	
-		} // end if
-		return;
+			// This prevents concurrent price getting
+			if ( options ) {
+				timeout = setTimeout("calc_print('f1', 0, " + Object.toJSON( options ) + ");", 1000 );	
+			} else {
+				timeout = setTimeout("calc_print('f1' );", 1000 );	
+			} // end if
+			return;
 		}
 	} // end if
 
@@ -245,8 +245,9 @@ function clear_price_data( form ) {
 
 	for ( var qtyNum = 1; qtyNum <= 3; qtyNum += 1 ) {
 		if ( quantities[qtyNum-1] > 0 ) {
-			if ( form.elements['StockType'+qtyNum] ) form.elements["StockType"+qtyNum].value = '';
 			if ( form.elements['txtPrice'+qtyNum] && form.elements['OverridePrice'+qtyNum] && ! get_value(form.elements['OverridePrice'+qtyNum]) ) form.elements["txtPrice"+qtyNum].value = '';
+			continue;
+			if ( form.elements['StockType'+qtyNum] ) form.elements["StockType"+qtyNum].value = '';
 			if ( form.elements['txtUnitPrice'+qtyNum] ) form.elements["txtUnitPrice"+qtyNum].value = '';
 			if ( form.elements['MPrice'+qtyNum] ) form.elements["MPrice"+qtyNum].value = '';
 			if ( form.elements["txtPressSheetQty"+qtyNum] ) form.elements["txtPressSheetQty"+qtyNum].value = '';
@@ -325,43 +326,43 @@ function cbFillPrintResults( results ) {
 	block_calc = false;
 	gettingNewPrice = false;
 
-    var addServices = new Array();
-    var cancelAddFolding = false;
-    if ( form.NeedFolding.value > 0 ) {
-        if ( form.HasFolding.value == 0 ) {
-            if ( FoldingQuestionFlag && confirm("Your project needs folding.  Click OK to automatically add folding to your project.") ) {
-               // addService( 'f1', 'Folding' );
-                addServices[addServices.length] = 'Folding';
-            } else {
-                cancelAddFolding = true;
-            } // end if
-            FoldingQuestionFlag = false;
-        } // end if
-    } // end if
+	var addServices = new Array();
+	var cancelAddFolding = false;
+	if ( form.NeedFolding.value > 0 ) {
+		if ( form.HasFolding.value == 0 ) {
+			if ( FoldingQuestionFlag && confirm("Your project needs folding.  Click OK to automatically add folding to your project.") ) {
+				// addService( 'f1', 'Folding' );
+				addServices[addServices.length] = 'Folding';
+			} else {
+				cancelAddFolding = true;
+			} // end if
+			FoldingQuestionFlag = false;
+		} // end if
+	} // end if
 
-    if ( form.NeedScoring.value > 0 && cancelAddFolding == false ) {
-        if ( form.HasScoring.value == 0 && (form.HasFolding.value > 0 || (form.txtFinalWidth && form.txtFinalHeight) ) ) {
-            if ( ScoringQuestionFlag && confirm("The selected paper needs to be scored before folding, or else the edge will crack.  Click OK to automatically add scoring to your project.") ) {
-             //   addService( 'f1', 'Scoring' );
-                addServices[addServices.length] = 'Scoring';
-            } // end if
-            ScoringQuestionFlag = false;
-        } // end if
-    } // end if
+	if ( form.NeedScoring.value > 0 && cancelAddFolding == false ) {
+		if ( form.HasScoring.value == 0 && (form.HasFolding.value > 0 || (form.txtFinalWidth && form.txtFinalHeight) ) ) {
+			if ( ScoringQuestionFlag && confirm("The selected paper needs to be scored before folding, or else the edge will crack.  Click OK to automatically add scoring to your project.") ) {
+				//   addService( 'f1', 'Scoring' );
+				addServices[addServices.length] = 'Scoring';
+			} // end if
+			ScoringQuestionFlag = false;
+		} // end if
+	} // end if
 
-    if ( form.NeedCutting.value > 0 ) {
-        if ( form.HasCutting.value == 0 ) {
-            if ( CuttingQuestionFlag && confirm("Your project needs cutting.  Click OK to automatically add cutting to your project.") ) {
-             //   addService( 'f1', 'Cutting' );
-                addServices[addServices.length] = 'Cutting';
-            } // end if
-            CuttingQuestionFlag = false;
-        } // end if
-    } // end if
+	if ( form.NeedCutting.value > 0 ) {
+		if ( form.HasCutting.value == 0 ) {
+			if ( CuttingQuestionFlag && confirm("Your project needs cutting.  Click OK to automatically add cutting to your project.") ) {
+				//   addService( 'f1', 'Cutting' );
+				addServices[addServices.length] = 'Cutting';
+			} // end if
+			CuttingQuestionFlag = false;
+		} // end if
+	} // end if
 
-    if ( addServices.length ) {
+	if ( addServices.length ) {
 		calc_print( 'f1', 0, { action: 'add_service', service_name: addServices } );
-    } // end if
+	} // end if
 
 } // end function cbFillPrintResults( results )
 

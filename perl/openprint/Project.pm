@@ -775,7 +775,8 @@ sub servicetype_id {
 		%{$$self{service_types}} = sql::execute( undef, undef, q{SELECT lngserviceindex, servicetype_id FROM tbl_Project_Contents WHERE lngProjectIndex=?}, $$self{id} );
 	} # end if
 	if ( ! exists $$self{service_types}{$s_id} ) {
-		$openprint::log->error("Request for servicetype_id for $s_id, reloading ");
+	my ( $caller, undef, $line ) = caller;
+		$openprint::log->error("Request for servicetype_id for $s_id, reloading from $caller:$line");
 		%{$$self{service_types}} = sql::execute( undef, undef, q{SELECT lngserviceindex, servicetype_id FROM tbl_Project_Contents WHERE lngProjectIndex=?}, $$self{id} );
 		if ( ! $$self{service_types}{$s_id} ) {
 			$openprint::log->error("Request for servicetype_id for $s_id, not found ");

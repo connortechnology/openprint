@@ -40,12 +40,24 @@
 				<br class="spacer"/>
 				<div id="Results-<?SignatureIndex?>">
 					<ul>
+					<li><label>Printed</label><? echo ( 
+            my $html;
+            foreach my $qty_index ( $$variable{Project}->quantity_indexes() ) {
+              $html .= '<span class="'.$$variable{Columns}.'Columns">';
+              my $Imposition = new openprint::Imposition();
+              $Imposition->load( $$variable{sig_specs}, $qty_index, $$variable{Project} );
+              $html .= $Imposition->to_string();
+              $html .= '</span>';
+            } # end foreach
+            return $html;
+          ) ?>
+          </li>
 					<li><label>Make Ready (<?CurrencySymbol?>)</label>
 					<? eval ( $$variable{QTYIndex} = 1 ) ?>
 					<? while ( $$variable{QTYIndex} <= 3 ) ?>
 					<? if ( $$variable{Project}->{'quantity'.$$variable{QTYIndex}} ) ?>
 						<span class="<?Columns?>Columns">
-						<input type="text" name="MakeReadyPrice-<?SignatureIndex?>-<?QTYIndex?>" value="<? echo ( $$variable{"MakeReadyPrice-$$variable{SignatureIndex}-$$variable{QTYIndex}"} ) ?>" size="9" onkeyup="this.value=this.value.replace(/[^\d\.]/,'');calc(this.form.name);" />
+						<input type="text" name="MakeReadyPrice-<?SignatureIndex?>-<?QTYIndex?>" value="<? echo ( $$variable{"MakeReadyPrice-$$variable{SignatureIndex}-$$variable{QTYIndex}"} ) ?>" size="9" oninput="this.value=this.value.replace(/[^\d\.]/,'');calc(this.form.name);" />
 						<input type="checkbox" id="OverrideMakeReadyPrice-<?SignatureIndex?>-<?QTYIndex?>" name="OverrideMakeReadyPrice-<?SignatureIndex?>-<?QTYIndex?>" value="Y" onclick="if(!this.checked){calc(this.form.name);}" <? echo ( $$variable{"OverrideMakeReadyPrice-$$variable{SignatureIndex}-$$variable{QTYIndex}"} eq 'Y' ? 'checked="checked"' : '' ) ?> />
 						<label class="radio" for="OverrideMakeReadyPrice-<?SignatureIndex?>-<?QTYIndex?>">Override</label>
 						</span>
@@ -58,7 +70,7 @@
 					<? while ( $$variable{QTYIndex} <= 3 ) ?>
 					<? if ( $$variable{Project}->{'quantity'.$$variable{QTYIndex}} ) ?>
 						<span class="<?Columns?>Columns">
-						<input type="text" name="BlanketPrice-<?SignatureIndex?>-<?QTYIndex?>" value="<? echo ( $$variable{"BlanketPrice-$$variable{SignatureIndex}-$$variable{QTYIndex}"} ) ?>" size="9" onkeyup="this.value=this.value.replace(/[^\d\.]/,'');calc(this.form.name);" />
+						<input type="text" name="BlanketPrice-<?SignatureIndex?>-<?QTYIndex?>" value="<? echo ( $$variable{"BlanketPrice-$$variable{SignatureIndex}-$$variable{QTYIndex}"} ) ?>" size="9" oninput="this.value=this.value.replace(/[^\d\.]/,'');calc(this.form.name);" />
 						<input type="checkbox" id="OverrideBlanketPrice-<?SignatureIndex?>-<?QTYIndex?>" name="OverrideBlanketPrice-<?SignatureIndex?>-<?QTYIndex?>" value="Y" onclick="if(!this.checked){calc(this.form.name);}" <? echo ( $$variable{"OverrideBlanketPrice-$$variable{SignatureIndex}-$$variable{QTYIndex}"} eq 'Y' ? 'checked="checked"' :'' ) ?> />
 						<label class="radio" for="OverrideBlanketPrice-<?SignatureIndex?>-<?QTYIndex?>">Override</label>
 						</span>
@@ -71,7 +83,7 @@
 					<? while ( $$variable{QTYIndex} <= 3 ) ?>
 					<? if ( $$variable{Project}->{'quantity'.$$variable{QTYIndex}} ) ?>
 						<span class="<?Columns?>Columns">
-						<input type="text" name="ServicePrice-<?SignatureIndex?>-<?QTYIndex?>" value="<? echo ( $$variable{"ServicePrice-$$variable{SignatureIndex}-$$variable{QTYIndex}"} ) ?>" size="9" onkeyup="this.value=this.value.replace(/[^\d\.]/,'');calc(this.form.name);" />
+						<input type="text" name="ServicePrice-<?SignatureIndex?>-<?QTYIndex?>" value="<? echo ( $$variable{"ServicePrice-$$variable{SignatureIndex}-$$variable{QTYIndex}"} ) ?>" size="9" oninput="this.value=this.value.replace(/[^\d\.]/,'');calc(this.form.name);" />
 						<input type="checkbox" id="OverrideServicePrice-<?SignatureIndex?>-<?QTYIndex?>" name="OverrideServicePrice-<?SignatureIndex?>-<?QTYIndex?>" value="Y" onclick="if(!this.checked){calc(this.form.name);}" <? echo ( $$variable{"OverrideServicePrice-$$variable{SignatureIndex}-$$variable{QTYIndex}"} eq 'Y' ? 'checked="checked"' :'' ) ?> />
 						<label class="radio" for="OverrideServicePrice-<?SignatureIndex?>-<?QTYIndex?>">Override</label>
 						</span>
@@ -85,7 +97,7 @@
 					<? while ( $$variable{QTYIndex} <= 3 ) ?>
 					<? if ( $$variable{Project}->{'quantity'.$$variable{QTYIndex}} ) ?>
 						<span class="<?Columns?>Columns">
-						<input type="text" name="MaterialPrice-<?SignatureIndex?>-<?QTYIndex?>" value="<? echo ( $$variable{"MaterialPrice-$$variable{SignatureIndex}-$$variable{QTYIndex}"} ) ?>" size="9" onkeyup="this.value=this.value.replace(/[^\d\.]/,'');calc(this.form.name);" />
+						<input type="text" name="MaterialPrice-<?SignatureIndex?>-<?QTYIndex?>" value="<? echo ( $$variable{"MaterialPrice-$$variable{SignatureIndex}-$$variable{QTYIndex}"} ) ?>" size="9" oninput="this.value=this.value.replace(/[^\d\.]/,'');calc(this.form.name);" />
 						<input type="checkbox" id="OverrideMaterialPrice-<?SignatureIndex?>-<?QTYIndex?>" name="OverrideMaterialPrice-<?SignatureIndex?>-<?QTYIndex?>" value="Y" onclick="if(!this.checked){calc(this.form.name);}" <? echo ( $$variable{"OverrideMaterialPrice-$$variable{SignatureIndex}-$$variable{QTYIndex}"} eq 'Y' ? 'checked="checked"' : '' ) ?> />
 						<label class="radio" for="OverrideMaterialPrice-<?SignatureIndex?>-<?QTYIndex?>">Override</label>
 						</span>
@@ -98,7 +110,7 @@
 					<? while ( $$variable{QTYIndex} <= 3 ) ?>
 					<? if ( $$variable{Project}->{'quantity'.$$variable{QTYIndex}} ) ?>
 						<span class="<?Columns?>Columns">
-						<input type="text" name="SignaturePrice-<?SignatureIndex?>-<?QTYIndex?>" value="<? echo ( $$variable{"SignaturePrice-$$variable{SignatureIndex}-$$variable{QTYIndex}"} ) ?>" size="9" onkeyup="this.value=this.value.replace(/[^\d\.]/,'');calc(this.form.name);" />
+						<input type="text" name="SignaturePrice-<?SignatureIndex?>-<?QTYIndex?>" value="<? echo ( $$variable{"SignaturePrice-$$variable{SignatureIndex}-$$variable{QTYIndex}"} ) ?>" size="9" oninput="this.value=this.value.replace(/[^\d\.]/,'');calc(this.form.name);" />
 						<input type="checkbox" id="OverrideSignaturePrice-<?SignatureIndex?>-<?QTYIndex?>" name="OverrideSignaturePrice-<?SignatureIndex?>-<?QTYIndex?>" value="Y" onclick="if(!this.checked){calc(this.form.name);}" <? echo ( $$variable{"OverrideSignaturePrice-$$variable{SignatureIndex}-$$variable{QTYIndex}"} eq 'Y' ? 'checked="checked"' : '' ) ?> />
 						<label class="radio" for="OverrideSignaturePrice-<?SignatureIndex?>-<?QTYIndex?>">Override</label>
 						</span>
