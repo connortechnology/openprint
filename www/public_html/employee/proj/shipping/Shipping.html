@@ -1,4 +1,4 @@
-<script type="text/javascript" src="/javascripts/service.js?version=1.0"></script>
+<script type="text/javascript" src="<?hash_link(/javascripts/service.js)?>"></script>
 <script type="text/javascript">
 function calc( formName, force ) {
     var form = getFormObj( formName );
@@ -38,10 +38,10 @@ function validate_data(formName) {
 	<form name="f1" method="post" action="/employee/project/view.html">
 		<fieldset><legend>Shipping Services</legend>
 			<div class="leftColumn">
-				<? echo ( include('/includes/main/proj/shipping_from_address.html'); ) ?>
+				<?include('/main/project/shipping/_shipping_from_address_view.html')?>
 			</div>
 			<div class="rightColumn">
-				<? echo ( include('/includes/main/proj/shipping_to_address.html'); ) ?>
+				<?include('/main/project/shipping/_shipping_to_address_view.html')?>
 			</div>
 			<br class="spacer"/>
 			<fieldset>
@@ -56,7 +56,7 @@ function validate_data(formName) {
 					<input type="text" name="txtQuantityUsed" value="<? echo ( $$variable{'txtQuantityUsed'} ) ?>" onkeyup="this.value=this.value.replace(/\D/g,'');calc(this.form.name);" />
 					</span>
 				</p>
-				<? echo ( include('_shipping_packages.html'); ) ?>
+				<?include('_shipping_packages.html'); ) ?>
 				<? if ( openprint::usergroup::is_user_in( ['Accounting'], $session{'user_id'} ) ) ?>
 				<p>
 					<label><b>Price (<? echo ( $$variable{'Project'}->Currency()->symbol() ) ?>)</b></label>
@@ -67,11 +67,10 @@ function validate_data(formName) {
 				</p>
 				<? endif ( openprint::usergroup::is_user_in( ['Accounting'], $session{'user_id'} ) ) ?>
 				<hr/>
-				<? echo ( include('/includes/employee/feedback/complete.html'); ) ?>
-				<? echo ( include('/includes/employee/feedback/complete_date.html'); ) ?>
+				<?include('/includes/employee/feedback/complete.html') ?>
+				<?include('/includes/employee/feedback/complete_date.html') ?>
 			</fieldset>
-				<? echo ( include('_signatures.html'); ) ?>
-			
+			<?include('_signatures.html')?>
 		</fieldset>
 		<? echo ( include('/includes/main/proj/add_to_project.html'); ) ?>
 		<input type="hidden" name="qty_index" value="Used" />
