@@ -223,7 +223,9 @@ sub reboot {
 
 		if ( sets::isin( $_[0]->type(), [ 'AIC500', 'AIC500W', 'AIC777W', 'AIC747W' ] ) ) {
 			$url = 'http://'.$HI->ip().'/admin/reboot.cgi?type=0';
-		} elsif( $_[0]->type() eq 'M8640' ) {
+		} elsif ( $_[0]->type() eq 'AIC250W' ) {
+			$url = 'http://'.$HI->ip().'/Reply.htm?Reset=Yes';
+		} elsif ( $_[0]->type() eq 'M8640' ) {
 			$url = 'http://'.$HI->ip().'/cgi-bin/reboot.cgi';
 		} elsif ( $_[0]->type() eq 'TL-WPA4220' ) {
 			$url = 'http://'.$HI->ip().'/userRpm/SysRebootRpm.htm?Reboot=Reboot';
@@ -245,7 +247,7 @@ sub reboot {
 			$url = 'http://'.$HI->ip().'/setSystemReboot';
 			$method = 'post';
 			$args = {
-				RepySuccessPage=>'reboot.htm',
+				ReplySuccessPage=>'reboot.htm',
 				ReplyErrorPage	=>	'reboot.htm',
 				Reset => 'Reboot the Device',
 			};

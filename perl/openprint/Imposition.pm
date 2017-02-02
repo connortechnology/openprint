@@ -317,11 +317,15 @@ sub load {
 	$$self{versions} = $$specs{'Versions'.$qty_index};
 	$$self{start_columns} = $$self{columns} = $$specs{'hdnImpositionColumns'.$qty_index};
 	$$self{start_rows} = $$self{rows} = $$specs{'hdnImpositionRows'.$qty_index};
+
 	#$$self{columns} = $$self{imposition} / $$self{rows} if $$self{rows} and ! $$self{columns};
 	#$$self{rows} = $$self{imposition} / $$self{columns} if $$self{columns} and ! $$self{rows};
 	$$self{dutch_rows} = $$specs{'hdnImpositionDutchRows'.$qty_index} or 0;
 	$$self{dutch_columns} = $$specs{'hdnImpositionDutchColumns'.$qty_index} or 0;
 	$$self{cut_off} = $$specs{'CutOff'.$qty_index};
+	if ( ( $$self{columns} * $$self{rows} ) + ( $$self{dutch_rows} * $$self{dutch_columns} ) != $$self{imposition} ) {
+		$$self{imposition} = 0;
+	}
 
 
 	#'layout_width','layout_height',
@@ -421,7 +425,6 @@ $openprint::log->debug("($k) => $$specs{$k}");
 				$$self{page_columns} = $$self{spread_columns};
 			}
 		}
-$openprint::log->debug("have txtSignatureType");
 	} else {
 		# It's a brochure or something, so can't be cut.
 
@@ -483,7 +486,7 @@ sub spread_rows {
     }
 		$$self{pages} = $$self{page_rows} * $$self{page_columns} * 2;
 		$$self{spreads} = $$self{spread_rows} * $$self{spread_columns};
-$openprint::log->debug("resulting page_rows/cols $$self{page_columns} / $$self{page_rows}");
+#$openprint::log->debug("resulting page_rows/cols $$self{page_columns} / $$self{page_rows}");
 	}
 	return $$self{spread_rows};
 }
@@ -510,7 +513,7 @@ sub spread_columns {
     }
 		$$self{pages} = $$self{page_rows} * $$self{page_columns} * 2;
 		$$self{spreads} = $$self{spread_rows} * $$self{spread_columns};
-$openprint::log->debug("resulting page_rows/cols $$self{page_columns} / $$self{page_rows}");
+#$openprint::log->debug("resulting page_rows/cols $$self{page_columns} / $$self{page_rows}");
   }
   return $_[0]{spread_columns};
 }
@@ -587,24 +590,25 @@ sub sheet_width {
 	my $self = shift;
 	$$self{start_columns} = $$self{columns} if ! $$self{start_columns};
 	$$self{start_rows} = $$self{rows} if ! $$self{start_rows};
-if ( ! $$self{Paper} ) {
-	my ( $caller, undef, $line ) = caller;
-	$openprint::log->error("No Paper in Imposition::sheet_width $caller: $line");
-	return 0;
-}
+
+	if ( ! $$self{Paper} ) {
+		my ( $caller, undef, $line ) = caller;
+		$openprint::log->error("No Paper in Imposition::sheet_width $caller: $line");
+		return 0;
+	}
 	if ( $$self{rotate_sheet} ) {
 		$$self{Paper}->height( @_ ) if @_;
 		if ( $$self{start_columns} and $$self{columns} and $$self{start_columns} != $$self{columns} ) {
-			return Math::Round::nearest( 0.0001, $$self{Paper}->height() / ( $$self{start_columns} / $$self{columns} ) );
+			return Math::Round::nearest( 0.0001, $$self{Paper}{height} / ( $$self{start_columns} / $$self{columns} ) );
 		} else {
 			return $$self{Paper}->height();
 		} # end if
 	} else {
 		$$self{Paper}->width( @_ ) if @_;
 		if ( $$self{start_columns} and $$self{columns} and $$self{start_columns} != $$self{columns} ) {
-			return Math::Round::nearest( 0.0001, $$self{Paper}->width() / ( $$self{start_columns} / $$self{columns} ) );
+			return Math::Round::nearest( 0.0001, $$self{Paper}{width} / ( $$self{start_columns} / $$self{columns} ) );
 		} else {
-			return $$self{Paper}->width();
+			return $$self{Paper}{width};
 		} # end if
 	} # end if
 } # end sub sheet_width
@@ -613,23 +617,24 @@ sub sheet_height {
 	my $self = shift;
 	$$self{start_columns} = $$self{columns} if ! $$self{start_columns};
 	$$self{start_rows} = $$self{rows} if ! $$self{start_rows};
-if ( ! $$self{Paper} ) {
-my ( $caller, undef, $line ) = caller;
-	$openprint::log->error("No Paper in Imposition::sheet_height from $caller:$line");
-	return 0;
-}
+
+	if ( ! $$self{Paper} ) {
+		my ( $caller, undef, $line ) = caller;
+		$openprint::log->error("No Paper in Imposition::sheet_height from $caller:$line");
+		return 0;
+	}
 	if ( $$self{rotate_sheet} ) {
 		# I don't like the following line
 		$$self{Paper}->width( @_ ) if @_;
 
 		if ( $$self{start_rows} and $$self{rows} and $$self{start_rows} != $$self{rows} ) {
-			return Math::Round::nearest( 0.0001, $self->Paper()->width() / ( $$self{start_rows} / $$self{rows} ) );
+			return Math::Round::nearest( 0.0001, $$self{Paper}{width} / ( $$self{start_rows} / $$self{rows} ) );
 		} else {
-			return $self->Paper()->width();
+			return $$self{Paper}{width};
 		} # end if
 	} else {
 		$$self{Paper}->height( @_ ) if @_;
-		if ( ! $self->Paper()->height() ) {
+		if ( ! $$self{Paper}{height} ) {
 			if ( $$self{start_rows} and $$self{rows} and $$self{start_rows} != $$self{rows} ) {
 			return Math::Round::nearest( 0.0001, $$self{cut_off} / ( $$self{start_rows} / $$self{rows} ) );
 			} else {
@@ -637,9 +642,9 @@ my ( $caller, undef, $line ) = caller;
 			} # end if
 		} else {
 			if ( $$self{start_rows} and $$self{rows} and $$self{start_rows} != $$self{rows} ) {
-				return Math::Round::nearest( 0.0001, $self->Paper()->height() / ( $$self{start_rows} / $$self{rows} ) );
+				return Math::Round::nearest( 0.0001, $$self{Paper}{height} / ( $$self{start_rows} / $$self{rows} ) );
 			} else {
-			return $self->Paper()->height();
+				return $$self{Paper}{height};
 			} 
 		} # end if
 	} # end if

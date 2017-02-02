@@ -16,14 +16,17 @@
 		var h = $H(form.serialize(true));
 		h.each(function(pair) {
 				if ( pair.value == '' )
-				h.unset(pair.key);
+					h.unset(pair.key);
+				if ( pair.key == 'alert' ) 
+					h.unset(pair.key);
 				if ( pair.key == 'btnFunction' ) 
-				h.unset(pair.key);
+					h.unset(pair.key);
 				});
 		h.set('ServiceType','MultiPage');
 		h.set('callback','cbBookResults');
 		new Ajax.Request( '/main/project/_calc.json', { method: 'post', parameters: h, evalScripts: true } );
 	}
+
 	function cbBookResults( results ) {
 		cbFillResults(results);
 		var form = getFormObj('f1');
@@ -32,35 +35,7 @@
 		} else {
 			$('SignatureGroup1').show();
 		} // end if
-if ( 0 ) {
-		var Groups = form.groups.value.split(',');
-		for ( var i = 0; i < Groups.length; i += 1 ) {
-			var group_id = Groups[i];
-			if ( ! group_id ) {
-				next;
-			} // end if
-			if ( ! $('SignatureGroup'+group_id) ) {
-				new Ajax.Updater( 'alert', '/main/project/prin/_signature.html', {
-						parameters: { 
-							'project_id' : form.ProjectIndex.value,
-							'group_id' : group_id, },
-						onSuccess: function(response){new Insertion.Bottom($('SignatureGroups'), response.responseText);if($('SignatureGroup'+group_id)){calc(form.name);}}
-						//onSuccess: function(response){new Insertion.Bottom($('SignatureGroups'), response.responseText);}
-					 } );
-			} // end if Group exists
-		} // end for each group
-}
-
-if ( 0 ) {
-		if ( ( form.remaining_pages.value > 0 ) && ! $('SignatureGroup'+form.next_group_id.value) ) {
-			new Ajax.Updater( 'alert', '/main/project/prin/_signature.html', {
-					parameters: { 'next_group_id' : form.next_group_id.value, },
-					onSuccess: function(response){new Insertion.Bottom($('SignatureGroups'), response.responseText);if($('SignatureGroup'+form.next_group_id.value)){calc(form.name);}}
-					//onSuccess: function(response){new Insertion.Bottom($('SignatureGroups'), response.responseText);}
-				 } );
-		} // end if
 	} // end function cbBookResults
-} 
 
 	function validate_data(formName) {
 		var form = getFormObj(formName);

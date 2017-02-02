@@ -158,7 +158,7 @@ sub signature_calc {
         if ( ! $$I{Folds} ) {
             $openprint::log->error("No folds in imposition, generating");# if DEBUG;
             $I->display("No Folds") if DEBUG;
-            $$I{Folds} = [ openprint::Estimating::Folding::get_Folds( $folding_specs, $I, $qty_index ) ] if $folding_specs;
+            $$I{Folds} = [ openprint::Estimating::Folding::get_Folds( $folding_specs, $I, $qty_index, $Project ) ] if $folding_specs;
         } # end if
 
         if ( ! ( $$I{Folds} and @{$$I{Folds}} ) ) {
@@ -464,6 +464,7 @@ sub calc {
 			next if ! $$sig_specs{"txtImposition$qty_index"};
 			my $Imposition = new openprint::Imposition();
 			$Imposition->load( $sig_specs, $qty_index, $Project );
+			$$Imposition{Folds} = [ openprint::Estimating::Folding::get_Folds( $$calc_hash{FoldingSpecs}, $Imposition, $qty_index ) ];
 			push @Impositions, $Imposition;
 		} # end foreach signature_service_index
 

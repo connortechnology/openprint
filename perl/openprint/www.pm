@@ -422,7 +422,6 @@ $log->debug("Running openprint::$module->$proc") if Debug;
 	} elsif ( $first eq 'main' ) { # main
 		if ( $second eq 'project' ) {
 			require openprint::print;
-			require openprint::main_project;
 			require openprint::print_project;
 			if ( ( defined $third ) or sets::isin( $filename , ['Paper.html' ,'Bundling.html','HStands.html' ] ) ) {
 				if ( $param{ServiceIndex} and ! $variable{ServiceIndex} ) {
