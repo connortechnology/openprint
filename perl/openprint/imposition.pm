@@ -1060,14 +1060,6 @@ $openprint::log->debug("Considering sig size: $signature_size") if DEBUG_CONVERT
 			my ( $rows, $cols );
 			my $imp_rows = $$imp{rows};
 			my $imp_cols = $$imp{columns};
-				if ( $imp_cols % 2 and $spread_size == 2 and $$imp{image_orientation} eq 'Vertical' ) {
-					$openprint::log->debug("Next because cols $imp_cols % 2 and $spread_size == 2 and $$imp{image_orientation} eq 'Vertical") if DEBUG_CONVERT;
-					next;
-				}
-				if ( $imp_rows % 2 and $spread_size == 2 and $$imp{image_orientation} eq 'Horizontal' ) {
-					$openprint::log->debug("Next because rows $imp_rows % 2 and $spread_size == 2 and $$imp{image_orientation} eq 'Horizontal") if DEBUG_CONVERT;
-					next;
-				}
 			foreach my $block ( @{$blocks{$signature_size}} ) {
 				my ( $col, $row ) = @$block;
 			
@@ -1101,12 +1093,12 @@ $openprint::log->debug("Considering sig size: $signature_size") if DEBUG_CONVERT
 if ( $spread_size == 2 ) {
 				if ( $spine eq 'width' ) {
 					if ( $$imp{image_orientation} eq 'Vertical' ) {
-						if ( $row % 2 ) {
+						if ( $row < 2 ) {
 							$openprint::log->debug("Next because page_row $row == 1 and $$imp{image_orientation} eq 'Vertical and spine is on the width") if DEBUG_CONVERT;
 							next;
 						}
 					} else { 
-						if ( $col % 2 ) {
+						if ( $col < 2 ) {
 							$openprint::log->debug("Next because page_col $col == 1 and $$imp{image_orientation} eq 'Horizontal and spine is on the width") if DEBUG_CONVERT;
 							next;
 						}
@@ -1114,12 +1106,12 @@ if ( $spread_size == 2 ) {
 				} else {
 					if ( $$imp{image_orientation} eq 'Vertical' ) {
 
-						if ( $col % 2 ) {
+						if ( $col < 2 ) {
 							$openprint::log->debug("Next because page_col $col == 1 and $$imp{image_orientation} eq 'Vertntal and spine is on the height") if DEBUG_CONVERT;
 							next;
 						}
 					} else {
-						if ( $row % 2 ) {
+						if ( $row < 2 ) {
 							$openprint::log->debug("Next because page_row $row == 1 and $$imp{image_orientation} eq 'Horizontal and spine is on the height") if DEBUG_CONVERT;
 							next;
 						}
