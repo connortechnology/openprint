@@ -4853,7 +4853,7 @@ $imp->display('[warn]');
 
 			if ( $do_final_pricing ) {
 
-				if ( $calc_other_groups and $$service_specs{txtSignatureType} eq 'Cover Pages' ) {
+				if ( $calc_other_groups and $sig_specs{txtSignatureType} eq 'Cover Pages' ) {
 					# Layout can affect stitching
 					#my $other_group_cache_key = $$Press{id}; #join(',', $$Press{id}, $$imp{imposition}, $$imp{columns} );
 					my $other_group_cache_key = join(',', $$Press{id}, $$imp{imposition}, $$imp{columns} );
@@ -5077,7 +5077,7 @@ $$sig_price{Imposition}->display("ERROR got " . $$sig_price{'Comparison Cost'});
 		$openprint::log->debug("Returning from get_project_price with no best price $recursion_depth");
 		return {};
 	} # end if
-	if ( DEBUG_PRICE_DECISIONS or $$sig_specs{txtSignatureType} eq 'Cover Pages' and ! $recursion_depth ) {
+	if ( DEBUG_PRICE_DECISIONS or $sig_specs{txtSignatureType} eq 'Cover Pages' and ! $recursion_depth ) {
 		$best_price{Imposition}->display( "Depth: $recursion_depth Group: $$source_sig_specs{Group} Returning: qty_index: $qty_index :" );
 		if ( $best_price{Impositions} ) {
 			foreach my $I ( reverse @{ $best_price{Impositions} } ) {
