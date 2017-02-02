@@ -996,7 +996,7 @@ sub reset_session($) {
 		} #end if
 	} # end foreach
 	%param = ();
-	$variable{ExternalRedirect} = $_[0];
+	#$variable{ExternalRedirect} = $_[0];
 } # end sub reset_session
 
 

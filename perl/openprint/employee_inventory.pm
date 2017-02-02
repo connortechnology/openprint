@@ -2346,7 +2346,16 @@ sub move_skids_window {
 } # end sub move_skids_window
 
 sub allocations {
+	if ( $param{action} ) {
+		if ( $param{action} eq 'Reset' ) {
+			ssi::reset_session($variable{uri});
+		}
+	}
 	_allocations();
+	if ( ! exists $session{$variable{uri}.'?Type'} ) {
+		$session{$variable{uri}.'?Type'} = 'Roll,Sheet';
+	}
+		
 } # end sub allocations
 
 sub _allocations {
