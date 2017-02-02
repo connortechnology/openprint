@@ -86,6 +86,7 @@ sub new {
 
 	$cache{$config{db_name}}{$parent} = {} if ! $cache{$config{db_name}}{$parent};
 	my $sub_cache = $cache{$config{db_name}}{$parent};
+
 	if ( ! $ref ) {
 		if ( $id and (!$dont_cache) and $$sub_cache{$id} ) {
 			if ( $data ) {
