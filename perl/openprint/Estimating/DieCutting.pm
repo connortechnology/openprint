@@ -16,13 +16,13 @@
 
 package openprint::Estimating::DieCutting;
 use strict;
-#use warnings;
+use warnings;
 use POSIX qw( ceil );
 use constant DEBUG => 1;
 
 require openprint::Equipment;
 require openprint::service;
-use openprint;
+
 use vars qw( $log $dbh );
 *log = \$openprint::log;
 *dbh = \$openprint::dbh;
