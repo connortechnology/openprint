@@ -242,11 +242,12 @@ $log->debug("Project Index is ($param{ProjectIndex})");
 			if ( (exists $param{$key}) and ($specs{$key} eq $param{$key}) ) {
 				$log->debug("Deleting $key cuz it's the same $key = $param{$key}");
 				delete $specs{$key};
-			} elsif ( ( ! exists $param{$key}) and ! $specs{$key} ) {
-				$log->debug("Deleting $key cuz it's not in params and its empty");
-				delete $specs{$key};
-			} elsif ( ref $specs{$key} ) {
-				$log->error("Got a non-scalar in specs! $key => $specs{$key}");
+# This prevents us from turning off services in create_calc
+			#} elsif ( ( ! exists $param{$key}) and ! $specs{$key} ) {
+				#$log->debug("Deleting $key cuz it's not in params and its empty");
+				#delete $specs{$key};
+			#} elsif ( ref $specs{$key} ) {
+				#$log->error("Got a non-scalar in specs! $key => $specs{$key}");
 				#delete $specs{$key};
 			} # end if
 		} # end foreach
@@ -259,8 +260,10 @@ $log->debug("Project Index is ($param{ProjectIndex})");
 
 			if ( (exists $param{$key}) and (exists $specs{$key}) and ($specs{$key} eq $param{$key}) ) {
 				delete $specs{$key};
-			} elsif ( ( ! exists $param{$key}) and ! $specs{$key} ) {
-				delete $specs{$key};
+# This prevents us from turning off services in create_calc
+			#} elsif ( ( ! exists $param{$key}) and ! $specs{$key} ) {
+				#delete $specs{$key};
+
 			} else {
 				#$log->debug("Got changed $key => $param{$key} != $specs{$key}");
 				#delete $specs{$key};
