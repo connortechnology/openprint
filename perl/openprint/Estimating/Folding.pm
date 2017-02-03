@@ -900,15 +900,15 @@ $openprint::log->debug("Templatetype: $$sig_specs{rdbTemplateType}") if DEBUG;
 									#page_columns	=>	$Imposition->page_rows(),
 									#page_rows		=>	$Imposition->page_columns(),
 								#) ),
-								page_width		=>	$$sig_specs{txtFinalWidth},
-								page_height		=>	$$sig_specs{txtFinalHeight},
-								type			=>	$$sig_specs{rdbTemplateType},
-								gsm				=>	$Paper->gsm(),
-								calliper		=>	$$Paper{calliper},
-								imposition		=>	$$Imposition{imposition},
-								columns			=>	$$Imposition{columns},
-								rows			=>	$$Imposition{rows},
-								printing_type	=>	$ppt,
+								page_width			=>	$$sig_specs{txtFinalWidth},
+								page_height			=>	$$sig_specs{txtFinalHeight},
+								type						=>	$$sig_specs{rdbTemplateType},
+								gsm							=>	$Paper->gsm(),
+								calliper				=>	$$Paper{calliper},
+								imposition			=>	$$Imposition{imposition},
+								columns					=>	$$Imposition{columns},
+								rows						=>	$$Imposition{rows},
+								printing_type		=>	$ppt,
 								spine_direction	=>	$$Imposition{image_orientation},
 								});
 						if ( $Fold ) {
@@ -926,7 +926,7 @@ $openprint::log->debug("Has a fold, doing extra checks") if DEBUG;
 									$width_size = $$Imposition{object_width};
 									$height_size = $$Imposition{object_height};
 	
-								} elsif ( $Imposition->image_orientation() eq 'Vertical' ) {
+								} elsif ( $$Imposition{image_orientation} eq 'Vertical' ) {
 									$width_size = $$SignatureImposition{columns} != $$Imposition{columns} ? $Imposition->layout_width() : $Imposition->sheet_width();
 									$height_size = $$SignatureImposition{rows} != $$Imposition{rows} ? $Imposition->layout_height() : $Imposition->sheet_height();
 								} else {
@@ -980,7 +980,7 @@ $openprint::log->debug("Has a fold, doing extra checks") if DEBUG;
 $openprint::log->debug("Got Fold: " . $Fold->to_string() ) if DEBUG;
 								$Fold = $Fold->clone();
 								#$Fold->Imposition( $Imposition );
-								$Imposition->Fold( $Fold );
+								$$Imposition{Fold} = $Fold;
 								push @{$folds{$$sig_specs{rdbTemplateType}.'-'.$$Imposition{imposition}.'out'}}, $Fold;
 								next;
 							} elsif ( @my_equipment == 1 ) {
