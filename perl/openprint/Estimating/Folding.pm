@@ -16,7 +16,7 @@
 
 package openprint::Estimating::Folding;
 use strict;
-#use warnings;
+use warnings;
 use Data::Dumper;
 
 require POSIX;
@@ -1735,7 +1735,8 @@ sub calc {
 
 		my $previous_imposition;
 
-		my @signatures = $Project->signatures( { sort => 1 });
+		my @signatures = $Project->signatures( { sort => 1 } );
+$openprint::log->debug("Signatures: @signatures") if DEBUG;
 		my @Signature_Impositions;
 		my %Impositions;
 		foreach my $sig_id ( @signatures ) {
@@ -1781,18 +1782,21 @@ $i->display() if DEBUG;
 
 			if ( ! $$sig_specs{'txtImposition'.$qty_index} ) {
 				$$specs{'hdnBreakdown'.$qty_index} .= 'No imposition.<br/>';
+$openprint::log->debug("No impositionf for form $form") if DEBUG;
 				next;
 			} # endif
 
 			if ( (! signature_needs( $Project, $sig_specs, $qty_index ) ) and ( $$specs{"chkOverrideFold-$form-$qty_index"} ne 'Y' ) ) {
 				$$specs{'hdnBreakdown'.$qty_index} .= 'Not needed.<br/>';
+$openprint::log->debug("Not needed for form $form") if DEBUG;
 				next;
 			} # end if
 
 			my $Imposition = $Impositions{$signature_service_index};
 			$$specs{'hdnBreakdown'.$qty_index} .= $Imposition->to_string();
 
-			if ( ( ! exists $$sig_specs{'PageQuantity'.$qty_index} ) or $$sig_specs{'PageQuantity'.$qty_index} ) {
+			# What the hellis the point of this line?  Brochures don't have pages..
+			#if ( ( ! exists $$sig_specs{'PageQuantity'.$qty_index} ) or $$sig_specs{'PageQuantity'.$qty_index} ) {
 
 				my %results = signature_calc( $Project, $sig_specs, $specs, $qty_index, $Imposition, \@Signature_Impositions, $calc_hash );
 				#my %results = signature_calc( $Project, $sig_specs, $specs, $qty_index, $Imposition, [ sets::exclude( [ $Imposition ], \@Signature_Impositions ) ], $calc_hash );
@@ -1845,7 +1849,7 @@ $i->display() if DEBUG;
 				if ( (!$previous_imposition) and ( new openprint::Equipment( $$specs{"ddmEquipment-$form-$qty_index"} )->strid() eq $$sig_specs{'ddmPress'.$qty_index} ) ) {
 					$previous_imposition = $$sig_specs{'txtImposition'.$qty_index};
 				} # end if
-			} # end if has pages
+			#} # end if has pages
 			$$specs{'hdnBreakdown'.$qty_index} .= '</fieldset>';
 		} # end foreach signature
 		if ( $status eq 'uncalculated' and ! $$specs{alert} ) {
