@@ -1,6 +1,11 @@
 <?include('/includes/error_reporting.html')?>
 <? echo ( 
-	return if ! $$variable{Object}->can_view();
+	if ( ! $$variable{Object} ) {
+foreach my $k ( keys %{$variable} ) {
+$log->debug("$k=>$$variable{$k}");
+}
+	}
+	return if ! ( $$variable{Object} and $$variable{Object}->can_view() );
 	my $html;
 	my @Landscape;
 	my @Portrait;

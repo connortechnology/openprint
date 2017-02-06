@@ -11,7 +11,7 @@ use vars qw( $debug $serial $table $log $dbh %fields %transforms %defaults @iden
 $debug = 0;
 $serial = 'ordered_products_id_seq';
 $table = 'ordered_products';
-@identified_by = ( 'order_id', 'product_id' );
+#@identified_by = ( 'order_id', 'product_id' );
 
 %fields = (
 	id				=>	'id',
@@ -49,21 +49,24 @@ sub Project {
 	if ( $$self{project_id} ) {
 		return new openprint::Project( $$self{project_id} );
 	} # end if
-	if ( $self->Product()->project_id() ) {
-		$openprint::log->debug("Creating proejct from template: " . $self->Product()->project_id() );
-		my $Project = new openprint::Project( $self->Product()->project_id() )->copy();
+	my $Product = $self->Product();
+	if ( $Product->project_id() ) {
+		$openprint::log->debug("Creating proejct from template: " . $Product->project_id() );
+		my $Project = new openprint::Project( $Product->project_id() )->copy();
 		$Project->predefined(0);
-		$Project->reference( $self->Product()->name() );
+		$Project->reference( $Product->name() );
 		$Project->user_id( $openprint::session{user_id} );
 		$Project->company_id( $openprint::session{company_id} );
 		$Project->currency_id( $self->Order()->currency_id() );
 		$Project->status('Unordered'); # To prevent deleted status
-			$Project->save();
+		$Project->save();
 		$$self{project_id} = $Project->id();
 		my $e = $self->save();
 		$openprint::log->error( $e ) if $e;
 		return $Project;
 	} # end if
+	$openprint::log->error("Product $$Product{id} $$Product{name} $$Product{project_id} does not have a template");
+	return;
 } # end sub Project
 
 sub Order {
@@ -71,7 +74,11 @@ sub Order {
 } # end sub Order
 
 sub Product {
-	return new openprint::Product( $_[0]{product_id} );
+	if ( ! $_[0]{Product} ) {
+		$_[0]{Product} = new openprint::Product( $_[0]{product_id} );
+	}
+$openprint::log->debug("Product: " . $_[0]{Product}->to_string() );
+	return $_[0]{Product};
 } # end sub Product
 
 sub price {

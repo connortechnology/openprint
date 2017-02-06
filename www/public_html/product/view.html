@@ -1,7 +1,8 @@
 <script type="text/javascript" src="<?hash_link(/javascripts/pricing.js)?>"></script>
 <?include(/includes/error_reporting.html)?>
 <div class="Product">
-	<form name="f1" id="f1" method="post" enctype="multipart/form-data" action="edit.html">
+	<form name="f1" id="f1" method="post" enctype="multipart/form-data" action="view.html">
+		<input type="hidden" name="product_id" value="<?echo($$variable{Product}->id())?>"/>
 			<p class="buttons">
 				<? echo ( join( "\n", 
 					( $$variable{Product}->can_edit() ? (

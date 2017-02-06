@@ -17,21 +17,27 @@
 				<textarea id="description" name="description" rows="4" onkeyup="textarea_resize(this);"><? hecho ( $$variable{Category}->description(); ) ?></textarea>
 			</li>
 			<li><label>Parent Category</label>
-				<? echo ( ssi::select( openprint::Product_Category->dropdown('id !='=>$$variable{Category}->id()), $$variable{Category}->parent_id(), { name=>'parent_id', prepend=>['','None'] } ); ) ?>
+				<? echo ( ssi::select( 
+							openprint::Product_Category->dropdown(
+								( $$variable{Category}->id() ? ( 'id !='=>$$variable{Category}->id()) : () ) ), $$variable{Category}->parent_id(), { name=>'parent_id', prepend=>['','None'] } ); ) ?>
 			</li>
 			<li>
 				<label>Sort</label>
 				<? echo ( input( type=>"integer", id=>"sort", name=>"sort", value=>$$variable{Category}->sort() ); ) ?>
 			</li>
 		</ul>
+<? if ( $$variable{Category}->can_edit() ) ?>
 		<p class="buttons">
 			<? echo ( join("\n",
+( $$variable{Category}->id() ? (
 			button( 'Copy', { onclick=>"f1.btnFunction.value='Copy';f1.submit();" } ),
 			button( 'Delete', { onclick=>"f1.btnFunction.value='Delete';f1.submit();" } ),
+) : () ),
 			button( 'Save', { onclick=>"f1.btnFunction.value='Save';f1.submit();" } ),
 			button( 'Reset', { onclick=>'f1.reset();' } ),
 			); ) ?>
 		</p>
+<? endif ( $$variable{Category}->can_edit() ) ?>
 		</div>
 		<div class="rightColumn" style="overflow: hidden;">
 		<?eval($$variable{Object}=$$variable{Category};)?>
