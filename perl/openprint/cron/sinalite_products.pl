@@ -201,6 +201,11 @@ foreach my $category ( $tree->look_down('class','all-products') ) {
 		if ( $text =~ /var objData=([^;]+);'/ ) {
 			$objData = decode_json( $1 );
 			last;
+		} elsif ( $text =~ /price_template\.init\('\w+', '([^']+)/m ) {
+			$objData = decode_json( $1 );
+			last;
+		} elsif ( $text =~ /price_template/ ) {
+			print $text."\n";
 		}
 	} # end foreach script
 	if ( $objData ) {
@@ -213,10 +218,19 @@ foreach my $category ( $tree->look_down('class','all-products') ) {
 
 		my $fields = $$blah{fields};
 		my $product = $$fields{Product};
+		if ( $$fields{Product} ) {
+			$product = $$fields{Product};
+		} elsif ( $$fields{Stock} ) {
+			$product = $$fields{Stock};
+		}	
 
 		foreach my $name_key ( keys %{$product} ) {
-			$name_key =~ /Product_(.*)/;
-			my $name = $1;
+			my $name;
+			if ( $name_key =~ /Product_(.*)/ ) {
+				$name = $1;
+			} elsif ( $name_key =~ /Stock_(.*)/ ) {
+				$name = $1;
+			}
 			
 			my $option_hash = $$product{$name_key};
 
@@ -228,7 +242,7 @@ foreach my $category ( $tree->look_down('class','all-products') ) {
 						my ( $size ) = $size_key =~ /size_(.*)/;
 						
 						my $product_name = join(' ', $name, $size );;
-						my $Product = openprint::Product->find_one( name=>$product_name );
+						my $Product = openprint::Product->find_one( name=>openprint::Product->transform(name=>$product_name) );
 						if ( ! $Product ) {
 							print "Add Product $product_name ? (Y|n)";
 							$input = <STDIN>;
@@ -259,7 +273,7 @@ print "qty_key $qty_key $qty\n";
 								chomp $input;
 								if ( $input eq 'Y' or $input eq '' ) {
 									$Price = new openprint::ProductPrice();
-									$Price->save({product_id=>$Product->id(), min=>$qty, max=>$qty, units=>$units, cost=>$cost, pricelist_id=>$$Pricelist{id}, owner_id=>$config{owner_id} });
+									$Price->save({product_id=>$Product->id(), min=>$qty, max=>$qty, units=>$units, cost=>$cost, pricelist_id=>$$Pricelist{id}, owner_id=>$config{owner_id}, price=>$cost });
 								} else {
 									next;
 								}
@@ -270,7 +284,7 @@ print "qty_key $qty_key $qty\n";
 									$input = <STDIN>;
 									chomp $input;
 									if ( $input eq 'Y' or $input eq '' ) {
-										$Price->save({ units=>$units, cost=>$cost });
+										$Price->save({ units=>$units, cost=>$cost, price=>$cost*$$Price{markup} });
 									}
 								}
 
