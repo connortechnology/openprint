@@ -1,8 +1,11 @@
-<table>
-	<tr><th>Product</th><th class="Price"><?echo( join('</th><th class="Price">', @{$$variable{Quantities}} ) ) ?></tr>
 <? echo (
-	my $html = '';
+	my @Products = $$variable{Category}->Products(order=>'lower(name)');
+	return if ! @Products;
+
 	my @specs = map { $param{"spec_filter-$_"} ? $_ : () } @{$$variable{Specifications}};
+	my $Currency = $openprint::Pricelist->Currency();
+	my $html .= '<table><tr><th>Product</th><th class="Price">'. join('</th><th class="Price">', @{$$variable{Quantities}} ) .'</tr>';
+
 	foreach my $Product ( $$variable{Category}->Products(order=>'lower(name)') ) {
 		my @Specifications = $Product->Specifications();
 		my %Specifications = map { $$_{name}, $_ } @Specifications;
@@ -19,7 +22,8 @@ $log->debug("Filter due to spec $spec on $$Product{name}");
 		my %Prices = map { $_->min() == $_->max() ? ( $_->min() => $_ ) : () } $Product->Prices();
 
 		$html .= sprintf('<tr><td>%s</td><td class="Price">', $Product->link_to() );
-		$html .= join('</td><td class="Price">', map { $Prices{$_} ? $openprint::Currency->format( $Prices{$_}->price() ) : '' } @{$$variable{Quantities}} );
+		$html .= join('</td><td class="Price">', map { $Prices{$_} ? 
+				sprintf('<a href="/main/order/information.html?product_id=%d&amp;quantity=%d">%s</a>',$$Product{id}, $_, $openprint::Currency->format( $Currency->convert_from( $Prices{$_}->price() ) ) ) : '' } @{$$variable{Quantities}} );
 		$html .= '</tr>';
 	} # end foreach
 	$html .= '</table>';

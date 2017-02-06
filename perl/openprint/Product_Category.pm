@@ -97,5 +97,12 @@ sub Parent {
 	return new openprint::Product_Category( $_[0]{parent_id} );
 }
 
+sub Categories {
+	if ( ! $_[0]{Categories} ) {
+		$_[0]{Categories} = [ openprint::Product_Category->find( parent_id=>$_[0]{id} ) ];
+	}
+	return @{$_[0]{Categories}};
+} # end sub Categories
+
 1;
 __END__

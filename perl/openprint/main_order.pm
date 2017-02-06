@@ -107,6 +107,9 @@ sub information {
 	} elsif ( $param{Product} and $param{Quantity} ) {
 $log->debug("Adding product $param{Product}");
 		( $order_id, $error ) = openprint::order::add_product( $order_id, @param{'Product','Quantity'} );
+	} elsif ( $param{product_id} and $param{quantity} ) {
+$log->debug("Adding product $param{product_id}");
+		( $order_id, $error ) = openprint::order::add_product( $order_id, @param{'product_id','quantity'} );
 	} # end if
 
 	if ( $error ) {

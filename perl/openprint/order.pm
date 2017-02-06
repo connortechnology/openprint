@@ -76,31 +76,37 @@ sub add_product {
 	$order_id = create_order( ) if ! $order_id;
 	my $Order = new openprint::Order( $order_id );
 
-	my $Product;
+	my $Ordered_Product;
 	if ( my @Products = openprint::OrderedProduct->find( order_id=>$order_id, product_id=>$product_id ) ) {
-		$Product = shift @Products;
+		$Ordered_Product = shift @Products;
 		# The logic here used to be that we would increase the quantity, but now we are thinking that we will reset the quantity.  Since this would really only happen on a reload anyways.  
 	} else {
-		$Product = new openprint::OrderedProduct();
-		$Product->product_id( $product_id );
-		$Product->order_id( $order_id );
+		my $Product = openprint::Product->find_one(id=>$product_id);
+		if ( ! $Product ) {
+			return ( $order_id, "Product $product_id not found." );
+		}
+		$Ordered_Product = new openprint::OrderedProduct();
+		$Ordered_Product->product_id( $product_id );
+		$Ordered_Product->order_id( $order_id );
 	} # end if	
-	$Product->quantity( $quantity );
-	$error .= $Product->save();
+	$Ordered_Product->quantity( $quantity );
+	$error .= $Ordered_Product->save();
 
 	# Make the object reload its stored cache of Products
 	$Order->Products(undef);
 
-	my $Project = $Product->Project();
-	$Project->order_id( $order_id );
-	$Project->quantity1( $Product->quantity() );
-	foreach my $service_index ( sql::execute( undef, undef, q{SELECT lngServiceIndex FROM tbl_Project_Contents WHERE lngProjectIndex=?}, $Project->id() ) ) {
-		openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $service_index, 'txtQuantity1', $Project->quantity1() );
-	} # end foreach
-	$error .= $Project->recalculate();
-$log->debug("E: $error") if $error;
-	if ( $Project->status() ne 'Unordered' ) {
-		return ( $order_id, 'There is a problem with this product.  Please contact customer support.' );
+	my $Project = $Ordered_Product->Project();
+	if ( $Project ) {
+		$Project->order_id( $order_id );
+		$Project->quantity1( $Ordered_Product->quantity() );
+		foreach my $service_index ( sql::execute( undef, undef, q{SELECT lngServiceIndex FROM tbl_Project_Contents WHERE lngProjectIndex=?}, $Project->id() ) ) {
+			openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $service_index, 'txtQuantity1', $Project->quantity1() );
+		} # end foreach
+		$error .= $Project->recalculate();
+	$log->debug("E: $error") if $error;
+		if ( $Project->status() ne 'Unordered' ) {
+			return ( $order_id, 'There is a problem with this product.  Please contact customer support.' );
+		} # end if
 	} # end if
 
 	return ( $order_id, $error );
