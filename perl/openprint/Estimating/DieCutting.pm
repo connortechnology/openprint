@@ -87,7 +87,7 @@ sub calc_price {
 	my $form = $$sig_specs{SignatureIndex};
 
 	my $MakeReadyService = openprint::Service->find_one( name => 'DieCutting-'.$$specs{'MakeReadyComplexity-'.$form}.'MakeReady' ) if $$specs{'MakeReadyComplexity-'.$form};
-	$MakeReadyService = openprint::Service->find_one( name => 'DieCutting-'.$$specs{'rbDieCutting-'.$form}.'MakeReady' ) if (!$MakeReadyService) and $$specs{'rdbDieCutting-'.$form};
+	$MakeReadyService = openprint::Service->find_one( name => 'DieCutting-'.$$specs{'rdbDieCutting-'.$form}.'MakeReady' ) if (!$MakeReadyService) and $$specs{'rdbDieCutting-'.$form};
 	$MakeReadyService = openprint::Service->find_one( name => 'DieCuttingMakeReady' ) if ! $MakeReadyService;
 
 	if ( $MakeReadyService ) {
