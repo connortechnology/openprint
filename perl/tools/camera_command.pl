@@ -80,7 +80,7 @@ my $p = Net::Ping->new('icmp',10);
 
 my @Hosts = openprint::Host->find(
 	monitored=>1,
-	( $$opts{type} ? ( type=>[ split(',',$$opts{type})] ) : ( 'type in'=>[ 'AIC500', 'AIC500W', 'AIC777W', 'AIC747W','AIC250','AIC250W', 'DLink DCS-910' ] ) ),
+	( $$opts{type} ? ( type=>[ split(',',$$opts{type})] ) : ( type=>[ 'AIC500', 'AIC500W', 'AIC777W', 'AIC747W','AIC250','AIC250W', 'DLink DCS-910' ] ) ),
 	( $$opts{hostname} ? ( hostname=>$$opts{hostname} ) : () ),
 	);
 if ( ! @Hosts ) {
@@ -137,7 +137,18 @@ The purpose of this script is to reboot or move cameras.
 
 Command-line options:
 
-	--help		Displays this message.
+		--db_name=s
+		--db_host=s
+		--db_user=s
+		--db_pass=s
+		--debug=s
+		--command=s
+		--position=s
+		--type=s
+		--hostname=s
+		--log_level=s
+		--log_file=s
+		--help		Displays this message.
 
 EOH
 } # end sub usage

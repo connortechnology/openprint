@@ -39,6 +39,9 @@ if ( ! -d $path ) {
 my @args = ();
 my @dbs = @ARGV;
 if ( ! @dbs ) {
+	if ( $$opts{'defaults-file'} ) {
+		push @args, " --defaults-file=".$$opts{'defaults-file'};
+	}
 	if ( $$opts{user} ) {
 		push @args, " --user=$$opts{user}";
 	} # end 
@@ -49,10 +52,8 @@ if ( ! @dbs ) {
 	if ( $$opts{host} and $$opts{host} ne 'local' ) {
 		push @args, " -h $$opts{host}";
 	} 
-	if ( $$opts{'defaults-file'} ) {
-		push @args, " --defaults-file=".$$opts{'defaults-file'};
-	}
-	$_ = `/usr/bin/mysql -B -N -e 'show databases' @args |grep -viE '(staging|performance_schema|information_schema)'`;
+
+	$_ = `/usr/bin/mysql @args -B -N -e 'show databases' | grep -viE '(staging|performance_schema|information_schema)'`;
 	die "Can't get db list: ($!)" if $?;
 	@dbs = split "\n", $_;
 } # end if

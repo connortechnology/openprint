@@ -687,7 +687,7 @@ sub calc {
 		if ( $results{Status} eq 'calculated' ) {
 			$$specs{"ddmEquipment$qty_index"} = $results{Equipment}->id();
 			$$specs{'Imposition'.$qty_index} = $results{Imposition};
-			$$specs{'hdnBreakdown'.$qty_index} .= "Imposition: $price{Imposition}out<br/>";
+			#$$specs{'hdnBreakdown'.$qty_index} .= "Imposition: $price{Imposition}out<br/>";
 
 			if ( $price{PocketMakeReady} ) {
 				my $mr_time = Math::Round::nearest( 0.1, $price{Pockets} * $price{PocketMakeReady}{value} / 60 ); # assume minutes
@@ -942,7 +942,7 @@ sub get_price {
 
 		my $MakeReadyPrice;
 		if ( $MakeReadyService ) {
-			$MakeReadyPrice = $MakeReadyService->get_Price( $neededPockets, $Equipment );
+			$MakeReadyPrice = $MakeReadyService->get_Price( $neededPockets + ( $plusCover ? 1 : 0 ), $Equipment );
 			if ( $MakeReadyPrice ) {
 				$$MakeReadyPrice{Total} = $$MakeReadyPrice{Price};
 				$pass{MakeReadyPrice} = $MakeReadyPrice;

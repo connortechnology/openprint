@@ -65,6 +65,7 @@ $openprint::log->debug("Module is: $module");
 # We cannot locak tbl_service_specifications or tbl_project_contents.  Just too nasty.  So use tbl_Projects as the contention point.
 	# make this fast by doing it in one transaction, locking does the tranasaction for us
 	$Project->lock();
+	my @changes;
 	foreach my $key (@variables) {
 #$log->debug("Key: $key ($openprint::param{$key}) ( $$specs{$key})");
 		if ( ref $openprint::param{$key} eq 'ARRAY' ) {
@@ -73,6 +74,7 @@ $openprint::log->debug("Module is: $module");
 			delete_service_spec( $project_index, $service_index, $key );
 		} else {
 			s/^\s+//, s/\s+$// for $openprint::param{$key};
+			push @changes, "$key : $$specs{$key} => $openprint::param{$key}" if $$specs{$key} ne $openprint::param{$key};;
 			insert_service_spec( $log, $dbh, $project_index, $service_index, $key, $openprint::param{$key}, 0 );
 		} # end if
 	} # end foreach
@@ -85,6 +87,7 @@ $openprint::log->debug("Module is: $module");
 	if ( $openprint::param{Additional} eq 'Y' or $openprint::param{additional_service} eq 'Y' ) {
 		$Project->add_service( $service_type );
 	} # end if
+	$Project->add_to_log( @openprint::session{'company_id','user_id'}, join('<br/>', @changes ) ) if @changes;
 
 	$log->debug("***** END  OF  save_service ************");
 } # end sub save_service

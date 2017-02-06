@@ -1,5 +1,6 @@
 <?include('/includes/error_reporting.html')?>
 <script type="text/javascript" src="<?hash_link(/javascripts/pricing.js)?>"></script>
+<div class="Service">
 <form id="f1" name="f1" method="get" enctype="multipart/form-data" action="edit.html">
 	<input type="hidden" name="btnFunction"/>
 	<fieldset class="filters"><legend>Search</legend>
@@ -115,6 +116,7 @@
 	<? endif ( $$variable{Service}->id() ) ?>
 	<input type="hidden" name="btnFunction"/>
 </form>
+</div>
 <? if ( $$variable{Service}->id() ) ?>
 <? echo ( include_logs( $$variable{Service} ); ) ?>
 <? endif ( $$variable{Service}->id() ) ?>

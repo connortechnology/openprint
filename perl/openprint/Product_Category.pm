@@ -6,7 +6,7 @@ package openprint::Product_Category;
 our @ISA = qw( openprint::Object );
 use vars qw( $debug $serial $table %fields %transforms %defaults );
 
-$debug = 1;
+$debug = 0;
 $serial = 'product_categories_id_seq';
 $table = 'Product_Categories';
 

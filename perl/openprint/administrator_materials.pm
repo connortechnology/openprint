@@ -1,4 +1,5 @@
 use strict;
+use warnings;
 package openprint::administrator_materials;
 
 require Text::CSV_XS;
@@ -23,14 +24,15 @@ sub edit {
 	require openprint::Equipment;
 
 	my $Material = $variable{Material} = new openprint::Material( $param{ddmMaterial} );
+	ssi::save_params($variable{uri}, ( 'ddmSearchCategory' ) );
 
 	if ( $param{btnFunction} eq '<<' ) {
-		$Material = $Material->Previous( 'category_id'=>$param{ddmSearchCategory} );
+		$Material = $Material->Previous( category_id=>$param{ddmSearchCategory} );
 	} elsif ( $param{btnFunction} eq '>>' ) {
-		$Material = $Material->Next( 'category_id'=>$param{ddmSearchCategory} );
+		$Material = $Material->Next( category_id=>$param{ddmSearchCategory} );
 	} elsif ( $param{btnFunction} eq 'Delete' ) {
 		$Material->delete();
-		$Material = $Material->Next( 'category_id'=>$param{ddmSearchCategory} );
+		$Material = $Material->Next( category_id=>$param{ddmSearchCategory} );
 	} elsif ( $param{btnFunction} eq 'Export' ) {
 		my @header = ( 'Material Name', 'Description','Category', 'Activity Code', 'Manufacturer', 'Supplier','Fed Tax Exempt', 'State Tax Exempt' );
 
@@ -89,7 +91,7 @@ $log->debug("$name, $description, $category, $activity_code, $manufacturer, $sup
 
 	} elsif ( $param{btnFunction} eq 'Save' ) {
 		if ( $param{new_category} ) {
-			if ( my @Categories = openprint::MaterialCategory->find('name'=>$param{new_category} ) ) {
+			if ( my @Categories = openprint::MaterialCategory->find(name=>$param{new_category} ) ) {
 				$param{category_id} = $Categories[0]->id();
 			} else {
 				my $Category = new openprint::MaterialCategory();
@@ -221,7 +223,7 @@ $log->debug("$name, $description, $category, $activity_code, $manufacturer, $sup
         if ( $_ = $NewMaterial->save() ) {
 			$variable{error} .= $_;
 		} else {
-			(new openprint::Log())->save({'action'=>'Copy Material', 'Object'=>$NewMaterial } );
+			(new openprint::Log())->save({action=>'Copy Material', Object=>$NewMaterial } );
 			foreach my $price ( @prices ) {
 				$$price{material_id} = $$NewMaterial{id};
 				delete $$price{id};

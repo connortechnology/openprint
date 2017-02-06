@@ -28,30 +28,30 @@ my %Specification_cache;
 
 $debug = 0;
 %fields = (
-	'id'	=>	'id',
-	'strid'	=>	'strid',
-	'name'	=>	'strname',
-	'description'		=>	'strdescription',
-	'category_id'		=>	'category_id',
-	'supplier'			=>	'strsupplier',
-	'useinestimating'	=>	'useinestimating',
-	'useinscheduling'	=>	'useinscheduling',
-	'image'				=>	'image',
-	'jmf_enabled'		=>	'jmf_enabled',
-	'instantgate_enabled'		=>	'instantgate_enabled',
-	'cost_center'		=>	'cost_center',
-	'jdf_id'			=> 	'jdf_id',
-	'jdf_name'			=> 	'jdf_name',
-	'location_id'		=>	'location_id',
-	'cip3_in'			=>	'cip3_in',
-	'cip3_out'			=>	'cip3_out',
-	'cip3_hold'			=>	'cip3_hold',
-	'cip3_merge'		=>	'cip3_merge',
-	'cip3_monitor'		=>	'cip3_monitor',
-	'smartscheduling'	=>	'smartscheduling',
-	'servicetype_id'	=>	'servicetype_id',
-	'sorting'			=>	'sorting',
-	'message'			=>	'message',
+	id					=>	'id',
+	strid				=>	'strid',
+	name				=>	'strname',
+	description			=>	'strdescription',
+	category_id			=>	'category_id',
+	supplier			=>	'strsupplier',
+	useinestimating		=>	'useinestimating',
+	useinscheduling		=>	'useinscheduling',
+	image				=>	'image',
+	jmf_enabled			=>	'jmf_enabled',
+	instantgate_enabled	=>	'instantgate_enabled',
+	cost_center			=>	'cost_center',
+	jdf_id				=> 	'jdf_id',
+	jdf_name			=> 	'jdf_name',
+	location_id			=>	'location_id',
+	cip3_in				=>	'cip3_in',
+	cip3_out			=>	'cip3_out',
+	cip3_hold			=>	'cip3_hold',
+	cip3_merge			=>	'cip3_merge',
+	cip3_monitor		=>	'cip3_monitor',
+	smartscheduling		=>	'smartscheduling',
+	servicetype_id		=>	'servicetype_id',
+	sorting				=>	'sorting',
+	message				=>	'message',
 	deleted				=>	'deleted',
 );
 %find_fields = (
@@ -137,7 +137,7 @@ sub fits {
 sub Folds {
 	if ( ! $_[0]{Folds} ) {
 		%{$_[0]{Folds}} = ();
-		foreach my $F ( openprint::Fold->find( 'equipment_id'=>$_[0]{id}, 'order'=>'pages,page_columns' ) ) {
+		foreach my $F ( openprint::Fold->find( equipment_id=>$_[0]{id}, order=>'pages,page_columns' ) ) {
 			push @{$_[0]{Folds}{$F->pages()}}, $F;
 		} # end foreach;
 	} # end if
@@ -380,8 +380,8 @@ sub copy {
 				] );
 	} # end while
 	# Equipment_shifts
-	foreach my $ES ( openprint::Equipment_Shift->find('equipment_id'=>$$self{id}) ) {
-		$ES->copy()->save({'equipment_id'=>$$new{id}});
+	foreach my $ES ( openprint::Equipment_Shift->find(equipment_id=>$$self{id}) ) {
+		$ES->copy()->save({equipment_id=>$$new{id}});
 	} # end foreach $ES
 	sql::end_transaction( $openprint::dbh, $ac );
 
@@ -426,8 +426,8 @@ sub update_schedule {
 
     my $starttime_seconds = Date::Parse::str2time( sql::execute( undef, undef, q{SELECT NOW()} ) );
 	my $runtime;
-	foreach my $Job ( openprint::ScheduledJob( 'equipment_id'=>$$self{id}, 'order'=>'starttime', 'starttime is null'=>0 ) ) {
-		$Job->save({'starttime_seconds'	=> $starttime_seconds });
+	foreach my $Job ( openprint::ScheduledJob( equipment_id=>$$self{id}, order=>'starttime', 'starttime is null'=>0 ) ) {
+		$Job->save({starttime_seconds	=> $starttime_seconds });
 		$runtime = $Job->runtime_seconds();
 	} # end foreach Job
 
@@ -478,17 +478,18 @@ sub Shifts {
 
 sub Stock_Setting {
 	if ( ! $_[0]{Stock_Settings} ) {
-		%{$_[0]{Stock_Settings}} = map { $_->stock_id(), $_ } openprint::Equipment_Stock_Setting->find('equipment_id'=>$_[0]{id});
+		%{$_[0]{Stock_Settings}} = map { $_->stock_id(), $_ } openprint::Equipment_Stock_Setting->find(equipment_id=>$_[0]{id});
 	} # end if
 	return $_[0]{Stock_Settings}{$_[1]{id}} if exists $_[0]{Stock_Settings}{$_[1]{id}};
 	return;
 } # end sub Stock_Setting
 sub Stock_Settings {
 	if ( ! $_[0]{Stock_Settings} ) {
-		%{$_[0]{Stock_Settings}} = map { $_->stock_id(), $_ } openprint::Equipment_Stock_Setting->find('equipment_id'=>$_[0]{id});
+		%{$_[0]{Stock_Settings}} = map { $_->stock_id(), $_ } openprint::Equipment_Stock_Setting->find(equipment_id=>$_[0]{id});
 	} # end if
 	return values %{$_[0]{Stock_Settings}};
 } # end sub Stock_Settings
+
 sub servicetype_id {
 	my ( $self ) = @_;
 	return [] if ! $$self{servicetype_id};

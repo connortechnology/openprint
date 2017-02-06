@@ -4,6 +4,7 @@ our @ISA = qw( openprint::Object );
 
 require openprint::Manufacturer;
 require openprint::Product_Category;
+require openprint::ProductPrice;
 require openprint::Log;
 require sql;
 

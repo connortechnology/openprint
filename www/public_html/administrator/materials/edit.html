@@ -8,7 +8,7 @@
 			<label>Category</label>
 			<select name="ddmSearchCategory" onchange="f1.btnFunction.value='';f1.submit();">
 				<option value="">All Categories</option>
-				<? echo ( make_drop_down( openprint::MaterialCategory->dropdown( order=>'lower(name)'), $param{ddmSearchCategory} ); ) ?>
+				<? echo ( make_drop_down( openprint::MaterialCategory->dropdown( order=>'lower(name)'), $session{$$variable{uri}.'?ddmSearchCategory'} ); ) ?>
 			</select>
 		</li>
 		<li>
@@ -30,7 +30,7 @@
 				<? echo ( 
 						make_drop_down( [ map { $_->id(), $_->name() . ' : ' . $_->description() } openprint::Material->find(
 								order=>'lower(name)', 
-								( $param{ddmSearchCategory} ? ( 'category_id'=>$param{ddmSearchCategory} ) : () ),
+								( $session{$$variable{uri}.'?ddmSearchCategory'} ? ( category_id=>$session{$$variable{uri}.'?ddmSearchCategory'} ) : () ),
 								( $param{equipment_id} ? ( 'equipment_id any' => $param{equipment_id} ) : () ),
 								) ], $$variable{Material}->id() );
 						) ?>
@@ -40,26 +40,27 @@
 	</fieldset>
 </form>
 <form name="f2" id="f2" method="post" enctype="multipart/form-data" action="edit.html">
-		<p class="buttons">
-			<? echo ( join("\n",
-				button( 'New', { href=>'/administrator/materials/edit.html', text=>'New' } ),
-				button( 'Save', { onclick=>"f2.btnFunction.value='Save';f2.submit();", text=>'Save' } ),
-				( $$variable{Material}->id() ? (
-					button( 'Copy', { onclick=>"f2.btnFunction.value='Copy';fmCheck(f2);", text=>'Copy' } ),
-					button( 'Delete', { onclick=>"if(confirm('Are you sure?')){f1.btnFunction.value='Delete';f2.submit();};", text=>'Delete' } ),
-				) : () ),
-				button( 'Reset', { onclick=>'f2.reset();', text=>'Reset' } ),
-	);
-			) ?>
-		</p>
+	<input type="hidden" name="ddmMaterial" value="<?echo($$variable{Material}->id())?>"/>
+	<p class="buttons">
+		<? echo ( join("\n",
+			button( 'New', { href=>'/administrator/materials/edit.html', text=>'New' } ),
+			button( 'Save', { onclick=>"f2.btnFunction.value='Save';f2.submit();", text=>'Save' } ),
+			( $$variable{Material}->id() ? (
+				button( 'Copy', { onclick=>"f2.btnFunction.value='Copy';fmCheck(f2);", text=>'Copy' } ),
+				button( 'Delete', { onclick=>"if(confirm('Are you sure?')){f2.btnFunction.value='Delete';f2.submit();};", text=>'Delete' } ),
+			) : () ),
+			button( 'Reset', { onclick=>'f2.reset();', text=>'Reset' } ),
+);
+		) ?>
+	</p>
 <? if ( $openprint::User->email() eq 'iconnor@connortechnology.com' ) ?>
-		<p class="buttons">
-            <input type="file" name="file"/>
-            <? echo ( join("\n",
-            button( 'Import', { onclick=>"f2.btnFunction.value='Import';f2.submit();", text=>'Import' } ),
-            button( 'Export', { onclick=>"f2.btnFunction.value='Export';f2.submit();", text=>'Export' } ),
-            ); ) ?>
-        </p>
+	<p class="buttons">
+		<input type="file" name="file"/>
+		<? echo ( join("\n",
+		button( 'Import', { onclick=>"f2.btnFunction.value='Import';f2.submit();", text=>'Import' } ),
+		button( 'Export', { onclick=>"f2.btnFunction.value='Export';f2.submit();", text=>'Export' } ),
+		); ) ?>
+	</p>
 <? endif ( $openprint::User->email() eq 'iconnor@connortechnology.com' ) ?>
 	<div class="leftColumn">
 	<fieldset><legend>Material Information (<? echo ( $$variable{Material}->id() ) ?>)</legend>

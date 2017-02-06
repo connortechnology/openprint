@@ -100,16 +100,16 @@ function calc( formName, force, options ) {
 			var data = Form.serialize(form,true);
 			var h = $H(data);
 			h.each(function(pair) {
-			if ( options ) {
-				h.merge( options );
-			}
-		if ( pair.value == '' ) 
-			h.unset(pair.key);
-		if ( pair.key == 'btnFunction' ) 
-			h.unset(pair.key);
-		if ( pair.key == 'alert' ) 
-			h.unset(pair.key);
-	});
+					if ( options ) {
+						h.merge( options );
+					}
+					if ( pair.value == '' ) 
+						h.unset(pair.key);
+					if ( pair.key == 'btnFunction' ) 
+						h.unset(pair.key);
+					if ( pair.key == 'alert' ) 
+						h.unset(pair.key);
+					});
 			new Ajax.Request( '/main/project/_calc.json', { method: 'post', parameters: h, evalScripts: true } );
 		} // end if
 	} // end if
@@ -117,7 +117,7 @@ function calc( formName, force, options ) {
 
 function cbFillResults( results ) {
 	block_calc = true;
-    var form = getFormObj('f1');
+	var form = getFormObj('f1');
 	var AlertDiv = $('AlertDiv');
 	if ( AlertDiv ) {
 		AlertDiv.innerHTML = '';
@@ -130,7 +130,6 @@ function cbFillResults( results ) {
 	for ( var index = 0, leni = keys.length; index < leni; index += 1 ) {
 		var key = keys[index];
 		var value = results.get(keys[index]);
-	
 		if ( key == 'alert') {
 			if (value != '') {
 				var div = $('AlertDiv');

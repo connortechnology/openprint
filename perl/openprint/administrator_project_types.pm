@@ -48,6 +48,11 @@ sub edit {
 		} # end foreach
 		$variable{ExternalRedirect} = '/administrator/project_types/edit.html?ddmProjectType='.$ProjectType->id();
 	} elsif ( $param{btnFunction} eq 'Save' ) {
+		if ( $param{category} ) {
+			delete $param{category_id};
+		} else {
+			delete $param{category};
+		}
 		my @changes = $ProjectType->changes( \%param );
 		$variable{error} .= $ProjectType->save( \%param );
 		(new openprint::Log())->save({ object_type=>(ref $ProjectType), object_id=>$$ProjectType{id}, action=>($param{ddmProjectType}?'Edited ProjectType':'Saved ProjectType'), note=>join('<br/>', @changes) });

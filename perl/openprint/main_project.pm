@@ -1,5 +1,6 @@
 package openprint::main_project;
 use strict;
+use warnings;
 use openprint ();
 use vars qw( $r $log $dbh %variable %param %session %config );
 *r = \$openprint::r;
@@ -44,30 +45,30 @@ sub sign_off {
 
 sub history {
 
-	if ( $param{btnFunction} eq 'Delete Project' ) {
-		if ( $param{project_id} ) {
-		foreach my $project_id ( ref $param{project_id} eq 'ARRAY' ? @{$param{project_id}} : $param{project_id} ) {
-			$variable{error} .= openprint::print_project::try_to_delete_project( $log, $dbh, \%variable, $project_id );
-		} # end foreach project_id
-		} elsif ( $param{ProjectIndex} ) {
-			$variable{error} .= openprint::print_project::try_to_delete_project( $log, $dbh, \%variable, $param{ProjectIndex} );
-		} # end if
-		$variable{ExternalRedirect} = '/main/project/history.html';
-		return;
-	} elsif ( $param{btnFunction} eq 'Reuse Project' ) {
-		foreach my $project_id ( ref $param{project_id} eq 'ARRAY' ? @{$param{project_id}} : $param{project_id} ) {
-			openprint::print_project::reuse_project( $project_id );
-		} # end if
-	} elsif ( $param{btnFunction} eq 'Reset' ) {
-$log->debug("Reset");
-		foreach my $k ( keys %session ) {
-			if ( $k =~ /^\/main\/project\/history.html/ ) {
-$log->debug("Reset $k");
-				delete $session{$k};
+	if ( $param{btnFunction} ) {
+		if ( $param{btnFunction} eq 'Delete Project' ) {
+			if ( $param{project_id} ) {
+				foreach my $project_id ( ref $param{project_id} eq 'ARRAY' ? @{$param{project_id}} : $param{project_id} ) {
+					$variable{error} .= openprint::print_project::try_to_delete_project( $log, $dbh, \%variable, $project_id );
+				} # end foreach project_id
+			} elsif ( $param{ProjectIndex} ) {
+				$variable{error} .= openprint::print_project::try_to_delete_project( $log, $dbh, \%variable, $param{ProjectIndex} );
 			} # end if
-		} # end foreach k
-		%param = ();
-	} # end if
+			$variable{ExternalRedirect} = '/main/project/history.html';
+			return;
+		} elsif ( $param{btnFunction} eq 'Reuse Project' ) {
+			foreach my $project_id ( ref $param{project_id} eq 'ARRAY' ? @{$param{project_id}} : $param{project_id} ) {
+				openprint::print_project::reuse_project( $project_id );
+			} # end if
+		} elsif ( $param{btnFunction} eq 'Reset' ) {
+			foreach my $k ( keys %session ) {
+				if ( $k =~ /^\/main\/project\/history.html/ ) {
+					delete $session{$k};
+				} # end if
+			} # end foreach k
+			%param = ();
+		} # end if
+	} # end if btnfunction
 
 	# Doing it here will set the defaults if neccessary, but then they will get overriden by the saev_params below.	This is neccessary because save_params will update lastupdated.
 	ssi::setup_date_select( '/main/project/history.html', 'created_on_start', -180 );
@@ -138,16 +139,18 @@ sub create_edit {
 
 	my $services = $Project->services();
 	@{$variable{SelectedServices}} = keys %{$services};
+$log->debug("Services: " . join(',',@{$variable{SelectedServices}}) );
 
 	$variable{ProjectIndex} = $$Project{id};
 } # end sub create_edit
 
 sub _calc {
-	my $Project = new openprint::Project( $param{ProjectIndex} );
-if ( $param{ProjectIndex} and ! $$Project{id} ) {
-$log->debug("No project $param{ProjectIndex} found");
-}
-    if ( $param{action} eq 'add_service' ) {
+	if ( $param{ProjectIndex} and $param{action} ) {
+		my $Project = new openprint::Project( $param{ProjectIndex} );
+		if ( $param{ProjectIndex} and ! $$Project{id} ) {
+			$log->debug("No project $param{ProjectIndex} found");
+		}
+		if ( $param{action} eq 'add_service' ) {
         my $services = $Project->services();
         foreach my $service_name ( ref $param{service_name} eq 'ARRAY' ? @{$param{service_name}} : $param{service_name} ) {
 
@@ -164,18 +167,22 @@ $log->debug("No project $param{ProjectIndex} found");
             } # end foreach service_id
         } # end foreach service_name
     } # end if
+  } # end if
 } # end sub _calc
 
 sub calc {
 	my $debug = @_ ? $_[0] : 1;
-	my $Project = openprint::Project->find_one( id=>$param{ProjectIndex} ) if $param{ProjectIndex};
+$log->debug("Project Index is ($param{ProjectIndex})");
+	my $Project = undef;
+	if ( $param{ProjectIndex} ) {
+		$Project = openprint::Project->find_one( id=>$param{ProjectIndex} );
+	}
 	if ( ! $Project ) {
 		$Project = new openprint::Project();
-		$Project->save();
+		#$Project->save();
 	} else {
 		$log->debug("Found proejct $$Project{id}" . $Project->to_string() );
 	}
-	my $module;
 	my $Service;
 	if ( $param{ServiceIndex} ) {
 		my $Service = $Project->Service( $param{ServiceIndex} );
@@ -188,7 +195,7 @@ sub calc {
 	eval {
 		require 'openprint/Estimating/'.$Service->service_type().'.pm';
 	};
-	$log->error("Error requiring $module: $@") if $@;
+	$log->error("Error requiring $$Service{service_type}: $@") if $@;
 	my $module = 'openprint::Estimating::'.$Service->service_type();
 
 	$param{method} = 'calc' if ! $param{method};
@@ -235,11 +242,12 @@ sub calc {
 			if ( (exists $param{$key}) and ($specs{$key} eq $param{$key}) ) {
 				$log->debug("Deleting $key cuz it's the same $key = $param{$key}");
 				delete $specs{$key};
-			} elsif ( ( ! exists $param{$key}) and ! $specs{$key} ) {
-				$log->debug("Deleting $key cuz it's not in params and its empty");
-				delete $specs{$key};
-			} elsif ( ref $specs{$key} ) {
-				$log->error("Got a non-scalar in specs! $key => $specs{$key}");
+# This prevents us from turning off services in create_calc
+			#} elsif ( ( ! exists $param{$key}) and ! $specs{$key} ) {
+				#$log->debug("Deleting $key cuz it's not in params and its empty");
+				#delete $specs{$key};
+			#} elsif ( ref $specs{$key} ) {
+				#$log->error("Got a non-scalar in specs! $key => $specs{$key}");
 				#delete $specs{$key};
 			} # end if
 		} # end foreach
@@ -250,12 +258,14 @@ sub calc {
 		foreach my $key ( keys %specs ) {
 			next if ref $specs{$key};
 
-			if ( (exists $param{$key}) and ($specs{$key} eq $param{$key}) ) {
+			if ( (exists $param{$key}) and (exists $specs{$key}) and ($specs{$key} eq $param{$key}) ) {
 				delete $specs{$key};
-			} elsif ( ( ! exists $param{$key}) and ! $specs{$key} ) {
-				delete $specs{$key};
-			} elsif ( ref $specs{$key} ) {
-				$log->error("Got a non-scalar in specs! $key => $specs{$key}");
+# This prevents us from turning off services in create_calc
+			#} elsif ( ( ! exists $param{$key}) and ! $specs{$key} ) {
+				#delete $specs{$key};
+
+			} else {
+				#$log->debug("Got changed $key => $param{$key} != $specs{$key}");
 				#delete $specs{$key};
 			} # end if
 		} # end foreach
