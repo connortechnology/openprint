@@ -208,8 +208,16 @@ sub signature_needs {
 		return 0;
 	} # end if
 
-	if ( $$specs{rdbTemplateType} eq 'NoFold' ) {
-		return 0;
+	if ( $$specs{rdbTemplateType} ) {
+		if ( $$specs{rdbTemplateType} eq 'NoFold' ) {
+			return 0;
+		}
+		if ( $fold_types{$$specs{rdbTemplateType}} ) {
+			$openprint::log->warn("FOLDING NEEDED got templatetype!") if DEBUG_NEEDS;
+			return 1;
+		} else {
+			$openprint::log->warn("FOLDING NEEDED $$specs{rdbTemplateType} $fold_types{$$specs{rdbTemplateType}}!") if DEBUG_NEEDS;
+		} # end if
 	}
 		
 	my $services = $Project->services();
@@ -217,7 +225,6 @@ sub signature_needs {
 		$openprint::log->debug("Folding::signature_needs: NoBidner") if DEBUG_NEEDS;
 		return 0;
 	} # end if
-	my $printing_specs = openprint::service::get_specs_ref( $Project, $$services{''}[0] ) if $$services{''}[0] and @{$$services{''}};
 	if ( $$services{CornerStitching} ) {
 		$openprint::log->debug("Folding::signature_needs: CornerStitched") if DEBUG_NEEDS;
 		return 0;
@@ -240,14 +247,9 @@ sub signature_needs {
 		} # end if
 	} # end if
 
-	if ( $fold_types{$$specs{rdbTemplateType}} ) {
-		$openprint::log->warn("FOLDING NEEDED got templatetype!") if DEBUG_NEEDS;
-		return 1;
-	} else {
-		$openprint::log->warn("FOLDING NEEDED $$specs{rdbTemplateType} $fold_types{$$specs{rdbTemplateType}}!") if DEBUG_NEEDS;
-	} # end if
 
 	if ( $$specs{txtSignatureType} ) {
+		my $printing_specs = openprint::service::get_specs_ref( $Project, $$services{''}[0] ) if $$services{''}[0] and @{$$services{''}};
 		if ( $$specs{txtSpreadSize} == 1 ) {
 			$openprint::log->warn("Folding not needed: spreadsize==1: $$specs{txtSpreadSize}") if DEBUG_NEEDS;
 			return 0;
@@ -1094,7 +1096,7 @@ if ( 1 ) {
 												$Fold = undef;
 											} # end if
 										} # end if
-									} elsif ( ( $height_folds and ! $width_folds ) or ( $height_folds == $$Fold{folds} and $width_folds == $$Fold{angles} ) ) {
+									} elsif ( ( $height_folds and ! $width_folds ) or ( (!defined $$Fold{folds}) or ($height_folds == $$Fold{folds}) and ((!defined $$Fold{angles}) or ($width_folds == $$Fold{angles}) ) ) {
 										if ( $$Imposition{image_orientation} eq 'Vertical' ) {
 											if ( $Imposition->layout_width() >= $max_feed_width ) {
 												$fits = "Fold no good due to max feed width ($max_feed_width). $width_folds x $height_folds size: ($$Imposition{layout_width}).";
