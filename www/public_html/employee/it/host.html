@@ -52,7 +52,10 @@ cleanup : true
 					<? echo ( radio( 'monitored', [ '1','Yes','0','No' ], $$variable{Host}->monitored(), { onclick=>q`if(this.value==1){$('offline_seconds').show();}else{$('offline_seconds').hide()};`} ); ) ?>
 				</li>
 				<li id="offline_seconds"<? echo ( $$variable{Host}->monitored() ? '' : ' style="display: none;"' ) ?>><label>Seconds offline before notification</label>
-					<input type="number" name="offline_seconds" value="<? echo ( $$variable{Host}->offline_seconds() ) ?>" />
+					<? echo ( input( type=>'cardinal', name=>'offline_seconds', value=>$$variable{Host}->offline_seconds() ); ) ?>
+				</li>
+				<li id="notify_frequency"<? echo ( $$variable{Host}->monitored() ? '' : ' style="display: none;"' ) ?>><label>Seconds until re-notification</label>
+					<? echo ( input( type=>'cardinal', name=>'notify_frequency', value=>$$variable{Host}->notify_frequency() ); ) ?>
 				</li>
 				<li>
 					<label>Online</label><? echo ( $$variable{Host}->online() ? 'Yes' : 'No' ) ?>
