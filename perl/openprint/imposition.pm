@@ -6,6 +6,7 @@ use Carp;
 require openprint::Imposition;
 
 use constant DEBUG => 0;
+use constant DEBUG_DUTCH => 0;
 use constant DEBUG_CONVERT => 0;
 
 # The various way we can group spreads
@@ -59,12 +60,12 @@ sub calc_setup {
 	my $cols = $object_width > 0 ? int(($space_width / $object_width)) : 0;
 	my $rows = $object_height > 0 ? int(($space_height / $object_height)) : 0;
 
-	$setup->set('imposition'=>$rows * $cols, 'rows'=>$rows, 'columns'=>$cols );
+	$setup->set(imposition=>$rows * $cols, rows=>$rows, columns=>$cols );
 } # end sub calc_setup
 
 sub calc_dutch {
 	my ( $setup, $space_width, $space_height, $specs ) = @_;
-#$openprint::log->debug("Trying dutch:") if DEBUG;
+$setup->display("Trying dutch from:") if DEBUG_DUTCH;
 	my ( $image_width, $image_height );
 	if ( $$setup{image_orientation} eq 'Vertical' ) {
 		( $image_width, $image_height ) = @$setup{'image_width','image_height'};
@@ -75,7 +76,7 @@ sub calc_dutch {
 	my @dutch_imps;
 	my $previous_dutch_imp = 0;
 	# So now we have a non-dutch imp, now
-	foreach my $col_delta ( 0 .. int ( $$setup{columns} / 2 ) ) {
+	foreach my $col_delta ( 1 .. int ( $$setup{columns} / 2 ) ) {
 
 		my $col_space = $space_width - ( ($$setup{columns} -$col_delta) * $image_width );
 		my $dutch_cols = int($col_space / $image_height);
@@ -83,23 +84,36 @@ sub calc_dutch {
 		
 		my $dutch_imp = $setup->copy();
 		$dutch_imp->set(
-				'dutch_columns'	=>	$dutch_cols,
-				'dutch_rows'	=>	$dutch_rows,
-				'columns'		=>	$$setup{columns} - $col_delta,
-				'imposition'	=>	($$setup{columns} - $col_delta) * $$setup{rows} + ( $dutch_cols * $dutch_rows ),
-				'dutch_orientation'	=>	'width',
+				dutch_columns	=>	$dutch_cols,
+				dutch_rows		=>	$dutch_rows,
+				columns				=>	$$setup{columns} - $col_delta,
+				start_columns =>	$$setup{columns} - $col_delta,
+				#imposition		=>	($$setup{columns} - $col_delta) * $$setup{rows} + ( $dutch_cols * $dutch_rows ),
+				dutch_orientation	=>	'width',
 				);
-		next if $$dutch_imp{imposition} <= $$setup{imposition};
-		next if $$dutch_imp{imposition} <= $previous_dutch_imp;
-		if ( ! $dutch_imp->Paper()->start_width() ) {
-			$openprint::log->debug("Setting dutch paper width to " . $dutch_imp->used_width() );
-			$dutch_imp->Paper()->width( $dutch_imp->used_width() );
+		if ( $$dutch_imp{imposition} <= $$setup{imposition} ) {
+			$dutch_imp->display(" <= setup $$setup{imposition} skipping") if DEBUG_DUTCH;
+			next;
 		}
-		$dutch_imp->Paper()->height( $dutch_imp->used_height() ) if ! $dutch_imp->Paper()->height();
+		if ( $$dutch_imp{imposition} <= $previous_dutch_imp ) {
+			$dutch_imp->display( " <= previous $previous_dutch_imp skipping") if DEBUG_DUTCH;
+			next ;
+		}
+	my $Paper = $dutch_imp->Paper();
+		if ( ! $Paper->start_width() ) {
+			$openprint::log->debug("Setting dutch paper width to " . $dutch_imp->used_width() );
+			$Paper->width( $dutch_imp->used_width() );
+		}
+		if ( ! $Paper->height() ) {
+			$openprint::log->debug("Setting Paper height... " . $Paper->height() . " to " . $dutch_imp->used_height() );
+			$Paper->height( $dutch_imp->used_height() );
+		}
 
 		if ( check_setup( $dutch_imp, $specs ) ) {
 			push @dutch_imps, $dutch_imp;
 			$previous_dutch_imp = $$dutch_imp{imposition};
+		} else {
+			$dutch_imp->display("Failed check_setup");
 		} # end if
 	} # end foreach
 
@@ -114,18 +128,34 @@ sub calc_dutch {
 		$dutch_imp->set(
 				dutch_columns		=>	$dutch_cols,
 				dutch_rows			=>	$dutch_rows,
-				rows				=>	$$setup{rows} - $row_delta,
-				imposition			=>	($$setup{rows} - $row_delta) * $$setup{columns} + ( $dutch_cols * $dutch_rows ),
+				rows						=>	$$setup{rows} - $row_delta,
+				start_rows			=>	$$setup{rows} - $row_delta,
+				#imposition			=>	($$setup{rows} - $row_delta) * $$setup{columns} + ( $dutch_cols * $dutch_rows ),
 				dutch_orientation	=>	'height',
 				);
-		next if $$dutch_imp{imposition} <= $$setup{imposition};
-		next if $$dutch_imp{imposition} <= $previous_dutch_imp;
-		$dutch_imp->Paper()->width( $dutch_imp->used_width() ) if ! $dutch_imp->Paper()->start_width();
-		$dutch_imp->Paper()->height( $dutch_imp->used_height() ) if ! $dutch_imp->Paper()->height();
+		if ( $$dutch_imp{imposition} <= $$setup{imposition} ) {
+			$dutch_imp->display(" <= setup $$setup{imposition}");
+			next;
+		}
+		if ( $$dutch_imp{imposition} <= $previous_dutch_imp ) {
+			$dutch_imp->display(" <= previous $previous_dutch_imp");
+			next;
+		}
+		my $Paper = $dutch_imp->Paper();
+		if ( ! $Paper->start_width() ) {
+			$openprint::log->debug("Setting Paper width.... " . $Paper->start_width() . " to " . $dutch_imp->used_width() );
+			$Paper->width( $dutch_imp->used_width() );
+		} # end if
+		if ( ! $Paper->height() ) {
+			$openprint::log->debug("Setting Paper height... " . $Paper->height() . " to " . $dutch_imp->used_height() );
+			$Paper->height( $dutch_imp->used_height() );
+		}
 
 		if ( check_setup( $dutch_imp, $specs ) ) {
 			push @dutch_imps, $dutch_imp;
 			$previous_dutch_imp = $$dutch_imp{imposition};
+		} else {
+			$dutch_imp->display("Failed check_setup");
 		} # end if
 	} # end foreach
 	return @dutch_imps;
@@ -164,6 +194,7 @@ $$setup{perfecting_wheel_space} ) {
 
 	$openprint::log->debug("Checking used_width against sheetwidth " . $setup->used_width() . ' <=> ' . $setup->sheet_width() ) if DEBUG;
 	if ( $setup->used_width() > $setup->sheet_width() ) {
+	$openprint::log->debug("Checking used_width against sheetwidth " . $setup->used_width() . ' <=> ' . $setup->sheet_width() ) if DEBUG;
 		return 0;
 	} # end if
 
@@ -906,7 +937,7 @@ sub add_imposition {
 			} # end if
 			# this is usually evelopes or forms
 			$openprint::log->debug(" ** Creating No Cut Imposition ** $$project{BleedSize}");
-			#push @impositions, {'Imposition' => 1, 'Rows' => 1, 'Cols' => 1 };
+			#push @impositions, {Imposition => 1, Rows => 1, Cols => 1 };
 			foreach my $bleed_size ( $$project{BleedSize} ? split(',', $$project{BleedSize} ) : 0 ) {
 				foreach my $i ( calc_setup_object( $project, @$project{'image_width','image_height'}, $Paper, $run_style, $Press, $bleed_size ) ) {
 					next if $$i{imposition} != 1;
@@ -1060,14 +1091,6 @@ $openprint::log->debug("Considering sig size: $signature_size") if DEBUG_CONVERT
 			my ( $rows, $cols );
 			my $imp_rows = $$imp{rows};
 			my $imp_cols = $$imp{columns};
-				if ( $imp_cols % 2 and $spread_size == 2 and $$imp{image_orientation} eq 'Vertical' ) {
-					$openprint::log->debug("Next because cols $imp_cols % 2 and $spread_size == 2 and $$imp{image_orientation} eq 'Vertical") if DEBUG_CONVERT;
-					next;
-				}
-				if ( $imp_rows % 2 and $spread_size == 2 and $$imp{image_orientation} eq 'Horizontal' ) {
-					$openprint::log->debug("Next because rows $imp_rows % 2 and $spread_size == 2 and $$imp{image_orientation} eq 'Horizontal") if DEBUG_CONVERT;
-					next;
-				}
 			foreach my $block ( @{$blocks{$signature_size}} ) {
 				my ( $col, $row ) = @$block;
 			
@@ -1101,12 +1124,12 @@ $openprint::log->debug("Considering sig size: $signature_size") if DEBUG_CONVERT
 if ( $spread_size == 2 ) {
 				if ( $spine eq 'width' ) {
 					if ( $$imp{image_orientation} eq 'Vertical' ) {
-						if ( $row % 2 ) {
+						if ( $row < 2 ) {
 							$openprint::log->debug("Next because page_row $row == 1 and $$imp{image_orientation} eq 'Vertical and spine is on the width") if DEBUG_CONVERT;
 							next;
 						}
 					} else { 
-						if ( $col % 2 ) {
+						if ( $col < 2 ) {
 							$openprint::log->debug("Next because page_col $col == 1 and $$imp{image_orientation} eq 'Horizontal and spine is on the width") if DEBUG_CONVERT;
 							next;
 						}
@@ -1114,12 +1137,12 @@ if ( $spread_size == 2 ) {
 				} else {
 					if ( $$imp{image_orientation} eq 'Vertical' ) {
 
-						if ( $col % 2 ) {
+						if ( $col < 2 ) {
 							$openprint::log->debug("Next because page_col $col == 1 and $$imp{image_orientation} eq 'Vertntal and spine is on the height") if DEBUG_CONVERT;
 							next;
 						}
 					} else {
-						if ( $row % 2 ) {
+						if ( $row < 2 ) {
 							$openprint::log->debug("Next because page_row $row == 1 and $$imp{image_orientation} eq 'Horizontal and spine is on the height") if DEBUG_CONVERT;
 							next;
 						}

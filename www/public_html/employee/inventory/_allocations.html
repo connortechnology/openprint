@@ -125,10 +125,10 @@ $log->debug("Max end: $max_age_end Max Age $max_age");
 				$html .= '</tr>';
 				$rowclass = $rowclass ? '' : 'colRow';
 			} # end foreach key "docket-paper_id"
-			$html .= '<tr class="totals"><td colspan="4">Totals</td><td class="Quantity">';
+			$html .= '<tr class="totals"><td colspan="5">Totals</td><td class="Quantity">';
 			$html .= Number::Format::format_number($total_allocations) . 'allocations ' . Number::Format::format_number($total_sheets) . 'sheets<br/>' if $total_allocations;
 			$html .= Number::Format::format_number($total_rolls) . 'rolls ' . Number::Format::format_number($total_weight) . 'lbs<br/>' if $total_rolls;
-			$html .= '</td><td></td><td></td><td></td></tr>';
+			$html .= '</td><td class="Available"></td><td class="Date"></td><td class="Date"></td></tr>';
 			return $html;
 		) ?>
 	</table>
