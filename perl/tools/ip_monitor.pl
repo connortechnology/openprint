@@ -176,7 +176,7 @@ while(1) {
 				notify( $Host, $online );
 			}
 		} else {
-			if ( ( ! $online ) and $$Host{notify_frequency} > ( $$Host{state_changed_on}-$now ) ) {
+			if ( ( ! $online ) and $$Host{notify_frequency} and ( $$Host{notify_frequency} > ( $$Host{state_changed_on}-$now ) ) ) {
 				notify( $Host, $online );
 				$Host->save({state_changed_on => $now });
 			}
