@@ -35,14 +35,14 @@ my @equipment;
 my @PreFoldingEquipment;
 
 my @variables = (
-        'txtPrice1', 'txtPrice2', 'txtPrice3',
+		'txtPrice1', 'txtPrice2', 'txtPrice3',
 		'Markup1','Markup2','Markup3',
 		'OverridePrice1', 'OverridePrice2', 'OverridePrice3',
-        'MPrice1', 'MPrice2', 'MPrice3',
-        'txtQuantity1', 'txtQuantity2', 'txtQuantity3',
-        'txtRunTime1', 'txtRunTime2', 'txtRunTime3',
+		'MPrice1', 'MPrice2', 'MPrice3',
+		'txtQuantity1', 'txtQuantity2', 'txtQuantity3',
+		'txtRunTime1', 'txtRunTime2', 'txtRunTime3',
 		'txtFinishedCalliper',
-        );
+		);
 
 sub variables {
 	my @v = @variables;
@@ -389,7 +389,8 @@ sub signature_calc_folding_cutting {
 	my ( $Project, $sig_specs, $specs, $qty_index, $Paper, $I, $fold_specs, $calc_hash ) = @_;
 
 	my %results = (
-			Status	=> 'calculated',
+			alert		=>	'',
+			Status	=>	'calculated',
 			);
 
 	my $services = $Project->services();
