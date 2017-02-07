@@ -80,7 +80,7 @@ sub session_init {
 
 	return if ! $dbh;
 
-	if ( sets::isin( $session{user_type}, ['E','A'] ) ) {
+	if ( $param{btnFunction} and sets::isin( $session{user_type}, ['E','A'] ) ) {
 		if ( $param{'btnFunction'} eq 'SelectCompany' ) {
 			if ( $param{'ddmCompany'} != $session{company_id} ) {
 				my $C = new openprint::Company( $param{'ddmCompany'} );
