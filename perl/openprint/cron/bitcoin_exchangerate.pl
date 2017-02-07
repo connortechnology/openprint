@@ -29,7 +29,7 @@ my @args = @ARGV;
 
 my $opts = {};
 GetOptions($opts, 'help', 'log_file=s', 'log_level=s',
-	'db_name=s', 'db_host=s', 'db_user=s', 'db_pass=s',
+	'db_port=s', 'db_name=s', 'db_host=s', 'db_user=s', 'db_pass=s',
 	'config=s',
  );
 
@@ -52,11 +52,12 @@ foreach my $param ( 'db_name','db_user','db_pass' ) {
 	} # end if
 } # end foreach required-param
 $openprint::dbh = sql::open_sql( $log, 
-	'host'		=> $config{'db_host'},
-	'database'	=> $config{'db_name'},
-	'driver'	=> 'Pg',
-	'login'		=> $config{'db_user'},
-	'password'	=> $config{'db_pass'},
+	port		=> $config{db_port},
+	host		=> $config{db_host},
+	database	=> $config{db_name},
+	driver		=> 'Pg',
+	login		=> $config{db_user},
+	password	=> $config{db_pass},
 );
 die 'Error opening db' if ! $dbh;
 configuration::init();

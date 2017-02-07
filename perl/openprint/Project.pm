@@ -26,21 +26,21 @@ require openprint::Estimating::MultiPage;
 require openprint::service;
 require openprint::Project_Log;
 
-$debug = 0;
+$debug = 1;
 
 $table = 'projects';
 $serial = 'lngProjectIndex_seq';
 
 %fields = (
-	'id'	=>	'id',
-	'docket'	=>	'lngdocketnumber',
-	'company_id'	=>	'company_id',
-	'user_id'		=>	'user_id',
-	'reference'		=>	'strprojectreference',
-	'comments'		=>	'strcomments',
-	'design'		=>	'strdesign',
-	'created_on'	=>	'dtmcreationdate',
-	'updated_on'	=>	'dtmlastmodified',
+	id			=>	'id',
+	docket		=>	'lngdocketnumber',
+	company_id	=>	'company_id',
+	user_id		=>	'user_id',
+	reference		=>	'strprojectreference',
+	comments		=>	'strcomments',
+	design		=>	'strdesign',
+	created_on	=>	'dtmcreationdate',
+	updated_on	=>	'dtmlastmodified',
 	calculated_on	=>	'calculated_on',
 	'quantity1'		=>	'intquantity1',
 	'quantity2'		=>	'intquantity2',
@@ -73,8 +73,8 @@ $serial = 'lngProjectIndex_seq';
 	quantity1	=>	[ 's/\D//g' ],
 	quantity2	=>	[ 's/\D//g' ],
 	quantity3	=>	[ 's/\D//g' ],
-	reference	=>	[ 's/\r\n/<br\/>/mg', 's/\n\r/<br\/>/mg', 's/\n/<br\/>/mg', 's/^\s+//', 's/\s+$//', 's/\s\s+/ /g' ],
-	comments	=>	[ 's/^\s+//', 's/\s+$//', 's/\s\s+/ /g' ],
+	reference	=>	[ 's/\r\n/<br\/>/mg', 's/\n\r/<br\/>/mg', 's/\n/<br\/>/mg', 's/^\s+//', 's/\s+$//', 's/\s\s+/ /g', 's/[^[:ascii:]]//g' ],
+	comments	=>	[ 's/^\s+//', 's/\s+$//', 's/\s\s+/ /g', 's/[^[:ascii:]]//g' ],
 );
 %defaults = (
 	created_on	=>	q`'NOW()'`,
@@ -1555,7 +1555,7 @@ sub calliper {
 
 		my $printing_specs = openprint::service::get_specs_ref( $Project, $$services{''}[0] );
 
-		my $finished_calliper;
+		my $finished_calliper = 0;
 
 		my @quantity_indexes = $Project->quantity_indexes() ;
 		if ( $project_type eq 'MultiPage' ) {
@@ -1631,7 +1631,7 @@ sub calliper {
 				$pages = 4;
 			} elsif ( sets::isin( $$sig_specs{rdbTemplateType}, ['5PanelFold', '5PanelZFold'] ) ) {
 				$pages = 5;
-			} elsif ( sets::isin( $$sig_specs{rdbTemplateType}, ['6PanelFold', '6PanelZFold','12pg3PanelRollFold'] ) ) {
+			} elsif ( sets::isin( $$sig_specs{rdbTemplateType}, ['6PanelFold', '6PanelZFold','12pg3PanelRollFold', '12pg3PanelZFold'] ) ) {
 				$pages = 6;
 			} elsif ( $$sig_specs{rdbTemplateType} eq 'SingleGateFold' ) {
 				$pages = 3;
@@ -1860,6 +1860,27 @@ $openprint::log->error("Unable to get sig_weight for signature $$sig_specs{Signa
     # This 1.1 was actually requested by Amin.  So it was pretty random, but then I thought abotu it, and our weight calculations don't take into account the weight of the ink, etc... so it may actually be not too off.... would love to see some real figures on it.
     return $project_weight * (1+$openprint::config{WeightMarkup}/100);
 } # end sub get_finished_weight
+
+sub can_view {
+	if ( ! $_[0]{id} ) {
+		$openprint::log->debug("can_view 1 cuz no id") if $debug;
+		return 1;
+	}
+	if ( $openprint::session{user_type} eq 'A' ) {
+		$openprint::log->debug("can_view 1 cuz admin") if $debug;
+		return 1 
+	}
+	if ( $openprint::session{company_id} == $_[0]{company_id} ) {
+		$openprint::log->debug("can_view 1 cuz i am the company") if $debug;
+		return 1;
+	}
+
+	if ( sets::isin( $_[0]{user_id}, [ $openprint::User{id}, $openprint::User->assistant_ids(), $openprint::User->csr_ids() ] ) ) {
+		$log->debug("$openprint::User{firstname} Either created it or is an assistant") if $debug;
+		return 1;
+	} # end if
+	return 0;
+}
 
 
 1;

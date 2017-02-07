@@ -21,6 +21,7 @@ function load_page() {
 		</li>
 		<li>
 			<label>Name</label>
+			<? echo ( input( type=>'text', name=>'equipment_name', oninput=>'load_page();', onkeydown=>"if(event.keyCode==13){f1.submit();}", value=>$session{$r->uri().'?equipment_id'} ); ) ?>
 			<? echo ( button( 'Go2',{ onclick=>"f1.action='edit.html';f1.submit();", text=> 'Go' } ); ) ?>	
 		</li>
 		<li> 
@@ -34,6 +35,7 @@ function load_page() {
 		<p class="buttons">
 			<? echo ( join("\n",
 				button( 'ShowResults', { onclick=>'load_page();', text=>'Show Results' } ),
+				button( 'New', { href=>'/administrator/equipment/edit.html', text=>'New' } ),
 				button( 'Reset', { onclick=>'f1.reset();', text=>'Reset' } ),
 ); ) ?>
 		</p>

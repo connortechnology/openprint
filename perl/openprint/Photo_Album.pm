@@ -30,6 +30,9 @@ $table = 'photo_albums';
 	thumbnail_id	=>	undef,
 	deleted			=>	0,
 );
+%transforms = (
+	id			=>	[ 's/\D//g', '<2147483647' ],
+);
 
 sub created_by {
 	return $_[0]{user_id};

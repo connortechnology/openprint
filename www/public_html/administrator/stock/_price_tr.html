@@ -16,12 +16,12 @@
 				<td class="Price">%7$s</td>
 			`,
 			$Price->id(), 
-			input( type=>'float', name=>'min-'.$Price->id(), value=> $Price->min(), onkeyup=>'check_price(this);' ),
-			input( type=>'float', name=>'max-'.$Price->id(), value=> $Price->max(), onkeyup=>'check_price(this);' ),
-			input( type=>'text', name=>'units-'.$Price->id(), value=>$Price->units(), onkeyup=>'check_price(this);' ),
-			input( type=>'float', name=>'cost-'.$Price->id(), value=>$Price->cost(), onkeyup=>'calc_price(this);check_price(this);' ),
-			input( type=>'float', name=>'markup-'.$Price->id(), value=>$Price->markup(), onkeyup=>'calc_price(this);check_price(this);' ),
-			input( type=>'float', name=>'price-'.$Price->id(), value=>$Price->price(), onkeyup=>'calc_price(this);check_price(this);' ),
+			input( type=>'float', name=>'min-'.$Price->id(), value=> $Price->min(), oninput=>'check_price(this);' ),
+			input( type=>'float', name=>'max-'.$Price->id(), value=> $Price->max(), oninput=>'check_price(this);' ),
+			input( type=>'text', name=>'units-'.$Price->id(), value=>$Price->units(), oninput=>'check_price(this);' ),
+			input( type=>'float', name=>'cost-'.$Price->id(), value=>$Price->cost(), oninput=>'calc_price(this);check_price(this);' ),
+			input( type=>'float', name=>'markup-'.$Price->id(), value=>$Price->markup(), oninput=>'calc_price(this);check_price(this);' ),
+			input( type=>'float', name=>'price-'.$Price->id(), value=>$Price->price(), oninput=>'calc_price(this);check_price(this);' ),
 			make_drop_down( [ map { $_->id(), $_->name() } @{$$variable{Equipment}} ], $Price->equipment_id() ),
 			$Price->service(),
 		);
@@ -32,54 +32,45 @@
 				<td class="Units">%4$s</td>
 				<td class="Cost">%5$s</td>`,
 				$Price->id(), 
-				input( type=>'float', name=>'min-'.$Price->id(), value=>$Price->min(), onkeyup=>'check_price(this);' ),
-				input( type=>'float', name=>'max-'.$Price->id(), value=>$Price->max(), onkeyup=>'check_price(this);' ),
-				input( type=>'text', name=>'units-'.$Price->id(), value=>$Price->units(), onkeyup=>'check_price(this);' ),
-				input( type=>'float', name=>'cost-'.$Price->id(), value=>$Price->cost(), onkeyup=>'calc_price(this);check_price(this);' ),
+				input( type=>'float', name=>'min-'.$Price->id(), value=>$Price->min(), oninput=>'check_price(this);' ),
+				input( type=>'float', name=>'max-'.$Price->id(), value=>$Price->max(), oninput=>'check_price(this);' ),
+				input( type=>'text', name=>'units-'.$Price->id(), value=>$Price->units(), oninput=>'check_price(this);' ),
+				input( type=>'float', name=>'cost-'.$Price->id(), value=>$Price->cost(), oninput=>'calc_price(this);check_price(this);' ),
 			);
 
 		if ( $$variable{Stock}->type() ne 'Roll' ) {
 			$html .= '<td class="Cost">'.
-				input( type=>'float', name=>'costperm-'.$Price->id(), value=>$Price->costperm(), onkeyup=>'calc_price(this);check_price(this);' ).
+				input( type=>'float', name=>'costperm-'.$Price->id(), value=>$Price->costperm(), oninput=>'calc_price(this);check_price(this);' ).
 				'</td>';
 		} else {
 			$html .= '<td class="Cost">'.
-				input( type=>'float', name=>'costperfoot-'.$Price->id(), value=>$Price->costperfoot(), onkeyup=>'calc_price(this);check_price(this);' ).
+				input( type=>'float', name=>'costperfoot-'.$Price->id(), value=>$Price->costperfoot(), oninput=>'calc_price(this);check_price(this);' ).
 				'</td>';
 		} # end if
 		$html .= sprintf(q`
 				<td class="Markup">%2$s</td>
 				<td class="Price">%3$s</td>
 				`, $Price->id(),
-				input( type=>'float', name=>'markup-'.$Price->id(), value=>$Price->markup(), onkeyup=>'calc_price(this);check_price(this);' ),
-				input( type=>'float', name=>'price-'.$Price->id(), value=>$Price->price(), onkeyup=>'calc_price(this);check_price(this);' ),
+				input( type=>'float', name=>'markup-'.$Price->id(), value=>$Price->markup(), oninput=>'calc_price(this);check_price(this);' ),
+				input( type=>'float', name=>'price-'.$Price->id(), value=>$Price->price(), oninput=>'calc_price(this);check_price(this);' ),
 			);
 
 		if ( $$variable{Stock}->type() ne 'Roll' ) {
 			$html .= '<td class="Price">'.
-				input( type=>'float', name=>'priceperm-'.$Price->id(), value=>$Price->priceperm(), onkeyup=>'calc_price(this);check_price(this);' ).
+				input( type=>'float', name=>'priceperm-'.$Price->id(), value=>$Price->priceperm(), oninput=>'calc_price(this);check_price(this);' ).
 				'</td>';
 		} else {
 			$html .= '<td class="Price">'.
-				input( type=>'float', name=>'priceperfoot-'.$Price->id(), value=>$Price->priceperfoot(), onkeyup=>'calc_price(this);check_price(this);' ).
+				input( type=>'float', name=>'priceperfoot-'.$Price->id(), value=>$Price->priceperfoot(), oninput=>'calc_price(this);check_price(this);' ).
 				'</td>';
 		} # end if
 	} # end if
-	$html .= sprintf(q`
-			<td class="Discount">
-				<input class="radio" type="radio" id="discountable-%1$dY" name="discountable-%1$d" value='Y' %2$s onclick="check_price(this);" />
-				<label class="radio" for="discountable-%1$dY">Yes</label>
-				<input class="radio" type="radio" id="discountable-%1$dN" name="discountable-%1$d" value='N' %3$s onclick="check_price(this);" />
-				<label class="radio" for="discountable-%1$dN">No</label>
-			</td>
-			<td class="buttons">%4$s</td>
-		</tr>`,
-			$Price->id(), 
-			( $Price->discountable() eq 'Y' ? ( 'checked="checked"', '' ) : ( '', 'checked="checked"' ) ),
-			join('', 
+	$html .= '<td class="Discount">'.radio('discountable-'.$Price->id(), ['Y','Yes','N','No'], $Price->discountable(), { onclick=>'check_price(this);' } ).'</td>';
+	$html .= '<td class="buttons">'.
+			join("\n", 
 				button( 'x'.$Price->id(), { onclick=>qq`delPrice( $$Price{id} );`, text=>'X' } ),
 				button( 'c'.$Price->id(), { onclick=>qq`copyPrice( $$Price{id} );`, text=>'C' } ),
-				),
-		);
+				).'</td>';
+		$html .= '</tr>';
 	return $html;
 ) ?>

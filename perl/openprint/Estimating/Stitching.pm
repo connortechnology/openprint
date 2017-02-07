@@ -297,7 +297,7 @@ $openprint::log->debug("Fold pq($$FI{page_quantity}) pages($$FI{pages}) ($$Fold{
 						$total_pages += $$FI{pages};
 
 						if ( $total_pages > $$I{pages} ) {
-							$openprint::log->debug("Already have enough pages $total_pages + $$FI{pages} <= $$I{pages}");
+							$openprint::log->debug("Already have enough pages $total_pages + $$FI{pages} <= $$I{pages}") if DEBUG;
 							next;
 						} else {
 							my $p = $$FI{page_quantity};
@@ -644,7 +644,7 @@ sub calc {
 				$openprint::log->debug("Overrode folding to nothing.");
 			} # end if
 			my $Imposition = new openprint::Imposition();
-			$Imposition->load( $sig_specs, $qty_index );
+			$Imposition->load( $sig_specs, $qty_index, $Project );
 			push @Impositions, $Imposition;
 			if ( $folding_specs ) {
 				$$Imposition{Folds} = [ openprint::Estimating::Folding::get_Folds( $folding_specs, $Imposition, $qty_index ) ];
@@ -687,7 +687,7 @@ sub calc {
 		if ( $results{Status} eq 'calculated' ) {
 			$$specs{"ddmEquipment$qty_index"} = $results{Equipment}->id();
 			$$specs{'Imposition'.$qty_index} = $results{Imposition};
-			$$specs{'hdnBreakdown'.$qty_index} .= "Imposition: $price{Imposition}out<br/>";
+			#$$specs{'hdnBreakdown'.$qty_index} .= "Imposition: $price{Imposition}out<br/>";
 
 			if ( $price{PocketMakeReady} ) {
 				my $mr_time = Math::Round::nearest( 0.1, $price{Pockets} * $price{PocketMakeReady}{value} / 60 ); # assume minutes
@@ -942,7 +942,7 @@ sub get_price {
 
 		my $MakeReadyPrice;
 		if ( $MakeReadyService ) {
-			$MakeReadyPrice = $MakeReadyService->get_Price( $neededPockets, $Equipment );
+			$MakeReadyPrice = $MakeReadyService->get_Price( $neededPockets + ( $plusCover ? 1 : 0 ), $Equipment );
 			if ( $MakeReadyPrice ) {
 				$$MakeReadyPrice{Total} = $$MakeReadyPrice{Price};
 				$pass{MakeReadyPrice} = $MakeReadyPrice;

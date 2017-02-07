@@ -30,10 +30,10 @@ MAILPROTO=smtp
 DOMAIN=`cat /etc/mailname`
 
 # From address
-MAILFROM=mail1@point-one.com
+MAILFROM=`cat /etc/hostname`
 
 # Recipient (this address should not route to the local postfix installation, for obvious reasons)
-MAILTO="iconnor@connortechnology.com"
+MAILTO="support@connortechnology.com"
 
 # Email subject
 MAILSUBJECT="Postfix queue length alert for ${DOMAIN}"

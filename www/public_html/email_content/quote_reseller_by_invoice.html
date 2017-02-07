@@ -1,11 +1,11 @@
-<style type="text/css"><? echo ( misc::load_file( $log, $config{'SkinPath'} . '/css/quote.css' ); ) ?></style>
+<style type="text/css"><? echo ( misc::load_file( $log, $config{SkinPath} . '/css/quote.css' ); ) ?></style>
 <div class="Quote">
 	<div class="Header">
 		<?include('/includes/quote_header.html')?>
 		<?include('/includes/quote_prepared_by.html')?>
 		<?include('/includes/quote_prepared_for.html')?>
 	</div>
-<? if ( $$variable{'Quote'}->Quoted_Projects() ) ?>
+<? if ( $$variable{Quote}->Quoted_Projects() ) ?>
 <table class="List">
 	<tr> 
 		<th class="project_id">ID</th>
@@ -20,33 +20,32 @@
 		my $html;
 		my $rowclass;
 
-		foreach my $QP ( $$variable{'Quote'}->Quoted_Projects() ) {
+		foreach my $QP ( $$variable{Quote}->Quoted_Projects() ) {
 			my $Project = $QP->Project();
 			my $services = $Project->services();
 
 			$html .= sprintf(q`<tr%1$s> 
-				<td><a href="%5$s/main/project/view.html?ProjectIndex=%2$d">%2$d</a></td>
-				<td class="description"><a href="%5$s/main/project/view.html?ProjectIndex=%2$d">%3$s%4$s</a></td>
+				<td><a href="%4$s/main/project/view.html?ProjectIndex=%2$d">%2$d</a></td>
+				<td class="reference"><a href="%5$s/main/project/view.html?ProjectIndex=%2$d">%3$s</a></td>
 				<td colspan="5">
 				<table>`, $rowclass, $QP->project_id(),
 				( $Project->reference() ? $Project->reference() . '<br/>' : '' ),
-				( $config{'ShowProjectSummaryOnQuote'} ne 'N' ? $Project->summary() : '' ),
 				$config{ExternalSiteURL},
 				);
 
 				foreach my $qty_index ( $Project->quantity_indexes() ) {	
 
 					my $weight;
-					if ( $$services{'BulkSkids'} ) {
-						my $specs = openprint::service::get_specs_ref( $Project, $$services{'BulkSkids'}[0] );
+					if ( $$services{BulkSkids} ) {
+						my $specs = openprint::service::get_specs_ref( $Project, $$services{BulkSkids}[0] );
 						$weight = $$specs{'totalWeight'.$qty_index};
-					} elsif ( $$services{'PlainCartons'} ) {
-						my $specs = openprint::service::get_specs_ref( $Project, $$services{'PlainCartons'}[0] );
+					} elsif ( $$services{PlainCartons} ) {
+						my $specs = openprint::service::get_specs_ref( $Project, $$services{PlainCartons}[0] );
 						$weight = $$specs{'totalWeight'.$qty_index};
 					} else {
 						$weight = openprint::print::get_finished_weight( $Project->id() ) * $Project->quantity($qty_index);
 					} # end if
-					my $g = $weight * 453.59237;
+					my $g = Math::Round::nearest(1,$weight * 453.59237);
 					if ( $g > 1000 ) {
 						$weight = sprintf( '%.0flbs (%.0fkg)', $weight, $g/1000 );
 					} else {
@@ -63,15 +62,18 @@
 					);
 				} # end foreach
 				$html .= "</table>\n</td>\n</tr>\n";
+				if ( $config{ShowProjectSummaryOnQuote} ne 'N' ) {
+				$html .= '<tr><td></td><td class="description" colspan="5">'.$Project->summary().'</td><td></td></tr>';
+				}
 			} # end foreach QP
 			return $html;
 		) ?>
 </table>
-<? endif ( $$variable{'Quote'}->Quoted_Projects() ) ?>
+<? endif ( $$variable{Quote}->Quoted_Projects() ) ?>
 	<?include('/email_content/_quote_products_by.html')?>
-<span class="Currency">All prices are in <b><? echo ( $$variable{'Quote'}->Currency->name() ) ?></b> and are subject to applicable taxes.</span>
-		<? if ( $$variable{'AdministratorName'} ) ?><b>Administrator Name</b><?AdministratorName?><br/><? endif ( $$variable{'AdministratorName'} ) ?>
-		<? if ( $$variable{'AdministratorComments'} ) ?><b>Administrator Comments</b><?AdministratorComments?><br/><? endif ( $$variable{'AdministratorComments'} ) ?>
-<br class="spacer"/>
-<? echo ( $config{'QuoteViewDisclaimer'} ) ?>
+<span class="Currency">All prices are in <b><? echo ( $$variable{Quote}->Currency->name() ) ?></b> and are subject to applicable taxes.</span>
+		<? if ( $$variable{AdministratorName} ) ?><b>Administrator Name</b><?AdministratorName?><br/><? endif ( $$variable{AdministratorName} ) ?>
+		<? if ( $$variable{AdministratorComments} ) ?><b>Administrator Comments</b><?AdministratorComments?><br/><? endif ( $$variable{AdministratorComments} ) ?>
+<br class="pagebreak"/>
+<? echo ( $config{QuoteViewDisclaimer} ) ?>
 </div>

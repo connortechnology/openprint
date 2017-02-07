@@ -154,7 +154,8 @@ $serial	= 'paper_id_seq';
 	allocated	=>	q`'0'`,
 	in_stock	=>	q`'0'`,
 	bladecleaning	=>	q`'0'`,
-	user_type	=>	q`''`,
+	#user_type	=>	q`''`,
+	user_type	=>	undef,
 	supplied		=>	undef,
 	sheets_per_package	=>	undef,
 	wpsi				=>	undef,
@@ -162,7 +163,7 @@ $serial	= 'paper_id_seq';
 	available_to_order	=>	undef,
 	department_id		=>	undef,
 	inventory_number	=>	undef,
-	full_packages		=>	undef,
+	full_packages		=>	q`'0'`,
 	minimum_order		=>	undef,
 	parts				=>	undef,
 	digital				=>	undef,
@@ -426,19 +427,19 @@ sub id_string {
 	} # end if
 	if ( ! $$self{id_string} ) {
 		my $string = join(' ', ( $self->manufacturer(), $self->brand(), $self->finish(), $self->colour(), $self->weight() ) );
-		if ( $self->type() eq 'Roll' ) {
-			$string .= ' ' . $self->width.'"' if $self->width();
+		if ( $$self{type} eq 'Roll' ) {
+			$string .= ' ' . $$self{width}.'"' if $$self{width};
 			$string .= ' Roll ';
 		} else {
-			if ( $self->start_width() and ( ( $self->width() != $self->start_width() ) or ( $self->height() != $self->start_height() ) ) ) {
-				$string .= ' ' . $self->start_width().'x'.$self->start_height() . ' => '. $self->width().'x'.$self->height() . ' ';
+			if ( $$self{start_width} and ( ( $$self{width} != $$self{start_width} ) or ( $$self{height} != $$self{start_height} ) ) ) {
+				$string .= ' ' . $$self{start_width}.'x'.$$self{start_height} . ' => '. $$self{width}.'x'.$$self{height} . ' ';
 			} else {
-				$string .= ' ' . $self->width().'x'.$self->height() . ' ';
+				$string .= ' ' . $$self{width}.'x'.$$self{height} . ' ';
 			} # end if
 			#$string .= $self->mweight().'M ' if $self->mweight();
 		} # end if
-		$string .= sprintf('%.1fPT ', 1000*$self->calliper()) if $self->calliper();
-		$string .= $self->gsm().'gsm ' if $self->gsm();
+		$string .= sprintf('%.1fPT ', 1000*$$self{calliper}) if $self->calliper();
+		$string .= $$self{gsm}.'gsm ' if $self->gsm();
 		$string .= 'FSC:' . $$self{fsc_code} if $$self{fsc_code};
 		$string .= 'Minimum: ' . $$self{minimum_order} if $$self{minimum_order};
 		$$self{id_string} = $string;
@@ -454,13 +455,13 @@ sub to_string {
 	if ( ! $$self{to_string} ) {
 		my $string = ($$self{id} ? '' : 'Custom: ').join(' ', ( $self->manufacturer(), $self->brand(), $self->finish(), $self->colour(), $self->weight() ) );
 		if ( $self->type() eq 'Roll' ) {
-			$string .= ' ' . $self->width.'"' if $self->width();
+			$string .= ' ' . $self->width.'"' if $$self{width};
 			$string .= ' Roll ';
 		} else {
-			if ( $self->start_width() and ( ( $self->width() != $self->start_width() ) or ( $self->height() != $self->start_height() ) ) ) {
-				$string .= ' ' . $self->start_width().'x'.$self->start_height() . ' => '. $self->width().'x'.$self->height();
+			if ( $$self{start_width} and ( ( $$self{width} != $$self{start_width} ) or ( $$self{height} != $$self{start_height} ) ) ) {
+				$string .= ' ' . $$self{start_width}.'x'.$$self{start_height} . ' => '. $$self{width}.'x'.$$self{height};
 			} else {
-				$string .= ' ' . $self->width().'x'.$self->height();
+				$string .= ' ' . $$self{width}.'x'.$$self{height};
 			} # end if
 			#$string .= $self->mweight().'M ' if $self->mweight();
 		} # end if
@@ -512,7 +513,10 @@ sub group {
 } # end sub group
 
 sub Brand {
-	return openprint::StockBrand( $_[0]{brand_id} );
+	if ( ! $_[0]{Brand} ) {
+		$_[0]{Brand} = new openprint::StockBrand( $_[0]{brand_id} );
+	} 
+	return $_[0]{Brand};
 }
 
 sub brand {
@@ -530,7 +534,8 @@ sub brand {
 			$_[0]{brand_id} = undef;
 		} # end if
 	} elsif ( $_[0]{brand_id} and ! $_[0]{brand} ) {
-		$_[0]{brand} = new openprint::StockBrand( $_[0]{brand_id} )->name();
+		$_[0]{Brand} = new openprint::StockBrand( $_[0]{brand_id} );
+		$_[0]{brand} = $_[0]{Brand}->name();
 	} # end if
 	return $_[0]{brand};
 } # end sub brand
@@ -1111,8 +1116,8 @@ sub get_price {
 			$$price{'100lb'} = $$price{price};
 			$$price{'100lb Cost'} = $$price{cost};
 			$$price{'100lb Price'} = $$price{price};
-			#$price{Cost} *= $$self{wpsi} * $self->width() * $self->height();
-			#$price{Price} *= $$self{wpsi} * $self->width() * $self->height();
+			#$price{Cost} *= $$self{wpsi} * $$self{width} * $$self{height};
+			#$price{Price} *= $$self{wpsi} * $$self{width} * $$self{height};
 		#} else {
 			#$$price{'100lb'} = $$price{price};
 			#$$price{'100lb Cost'} = $$price{cost};
@@ -1197,7 +1202,7 @@ sub gsm {
 			$$self{gsm} = Math::Round::nearest( 0.01, $$self{wpsi} * 703064.5 );
 		} else { 
 			$$self{gsm} = 'unknown';
-			$openprint::log->warn("Can't calculate gsm for " . $self->to_string() ) if $$self{brand};
+			$openprint::log->warn("Can't calculate gsm for " . $$self{id} . ' ' . $$self{to_string} ) if $$self{brand};
 		} # end if
 	} # end if
 	return $$self{gsm};
@@ -1492,9 +1497,9 @@ $log->debug($P->id_string());
 #$openprint::log->debug($Paper->to_string() );
 	if ( $qty_index ) {
 		if ( 
-			( ( $Paper->width() != $$specs{'StockWidth'.$qty_index} ) or ($Paper->type() eq 'Sheet' and $Paper->height() != $$specs{'StockHeight'.$qty_index} ) )
+			( ( $$Paper{width} != $$specs{'StockWidth'.$qty_index} ) or ($$Paper{type} eq 'Sheet' and $$Paper{height} != $$specs{'StockHeight'.$qty_index} ) )
 			and
-			( ( $Paper->height() != $$specs{'StockWidth'.$qty_index} ) or ($Paper->type() eq 'Sheet' and $Paper->width() != $$specs{'StockHeight'.$qty_index} ) )
+			( ( $$Paper{height} != $$specs{'StockWidth'.$qty_index} ) or ($$Paper{type} eq 'Sheet' and $$Paper{width} != $$specs{'StockHeight'.$qty_index} ) )
 ) {
 #Carp::cluck("Custom size $$specs{'StockWidth'.$qty_index}x$$specs{'StockHeight'.$qty_index}");
 #$openprint::log->debug("Custom size $$Paper{width}x$$Paper{height} => $$specs{'StockWidth'.$qty_index}x$$specs{'StockHeight'.$qty_index}");
@@ -1610,7 +1615,8 @@ sub basis_mweight {
 		} elsif ( ( $$self{weight} =~ /^(\d+)lb/i ) or ( $$self{weight} =~ /^(\d+)#/i ) ) {
 			$$self{basis_mweight} = 2*$1;
 		} else {
-			$openprint::log->error("Unable to calculated basis_mweight" . $self->to_string() );
+			#$$self{basis_mweight} = 'Unknown';
+			$openprint::log->error("Unable to calculated basis_mweight" . $$self{id} );
 		} # end if
 	} # end if
 	return $$self{basis_mweight};

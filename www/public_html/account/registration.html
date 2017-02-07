@@ -55,15 +55,15 @@ function howdidyouhearaboutus_onchange(e) {
 					<ul>
 						<li class="company_name<? echo ( $$variable{RequiredFields}{company_name} ? ' required' : '' ) ?>"> 
 							<label for="company_name">Company/Billing Name</label>
-							<input type="text" id="company_name" name="company_name" value="<? echo ( ssi::htmlize($param{company_name}) ) ?>"  />
+							<input type="text" id="company_name" name="company_name" value="<? echo ( htmlize($param{company_name}) ) ?>"  />
 						</li>
 						<li class="address1<? echo ( $$variable{RequiredFields}{address1} ? ' required' : '' ) ?>"> 
 							<label for="address1">Address Line 1</label>
-							<input type="text" id="address1" name="address1" value="<? echo ( ssi::htmlize($param{address1}) ) ?>"  />
+							<input type="text" id="address1" name="address1" value="<? echo ( htmlize($param{address1}) ) ?>"  />
 						</li>
 						<li class="address2 <? echo ( $$variable{RequiredFields}{address2} ? ' required' : '' ) ?>">
 							<label for="address2">Address Line 2</label>
-							<input type="text" id="address2" name="address2" value="<? echo ( ssi::htmlize($param{address2}); ) ?>"  />
+							<input type="text" id="address2" name="address2" value="<? echo ( htmlize($param{address2}); ) ?>"  />
 						</li>
 						<li class="country <? echo ( $$variable{RequiredFields}{country} ? ' required' : '' ) ?>"> 
 							<label for="country">Country</label>
@@ -95,7 +95,7 @@ function howdidyouhearaboutus_onchange(e) {
 						</li>
 						<li class="city<? echo ( $$variable{RequiredFields}{city} ? ' required' : '' ) ?>"> 
 							<label for="city">City</label>
-							<input type="text" id="city" name="city" value="<? echo ( ssi::htmlize($param{city}); ) ?>"  />
+							<input type="text" id="city" name="city" value="<? echo ( htmlize($param{city}); ) ?>"  />
 						</li>
 						<li class="postalcode<? echo ( $$variable{RequiredFields}{postalcode} ? ' required' : '' ) ?>"> 
 							<label for="postalcode"><? echo (
@@ -107,7 +107,7 @@ function howdidyouhearaboutus_onchange(e) {
 										   return 'Zip/Postal Code';
 								   } # end if
 								) ?></label>
-							<input type="text" id="postalcode" name="postalcode" value="<? echo ( ssi::htmlize($param{postalcode}); ) ?>"  />
+							<input type="text" id="postalcode" name="postalcode" value="<? echo ( htmlize($param{postalcode}); ) ?>"  />
 						</li>
 						<li class="phone<? echo ( $$variable{RequiredFields}{phone} ? ' required' : '' ) ?>"> 
 							<label for="phone">Phone</label>
@@ -116,10 +116,6 @@ function howdidyouhearaboutus_onchange(e) {
 						<li class="fax<? echo ( $$variable{RequiredFields}{fax} ? ' required' : '' ) ?>"> 
 							<label for="fax">Fax</label>
 							<input type="tel" id="fax" name="fax" value="<? hecho ( $param{fax} ) ?>" />
-						</li>
-						<li class="url<? echo ( $$variable{RequiredFields}{url} ? ' required' : '' ) ?>">
-							<label for="url">Web Site URL</label>
-							<input type="url" id="url" name="url" value="<? hecho ( $param{url} ) ?>"  />
 						</li>
                 <? echo (
                     my $html;
@@ -142,7 +138,7 @@ function howdidyouhearaboutus_onchange(e) {
 			<div class="content"><ul>
 			<li class="business_type<? echo ( $$variable{RequiredFields}{business_type} ? ' required' : '' ) ?>">
 				<label for="business_type">Business Type</label>
-				<input type="text" name="business_type" id="business_type" value="<? echo ( ssi::htmlize($param{business_type}); ) ?>" />
+				<input type="text" name="business_type" id="business_type" value="<? echo ( htmlize($param{business_type}); ) ?>" />
 			</li>
 			<li class="reasonforpurchase<? echo ( $$variable{RequiredFields}{reasonforpurchase} ? ' required' : '' ) ?>"> 
 				<label>Reason For Purchase</label>
@@ -151,14 +147,14 @@ function howdidyouhearaboutus_onchange(e) {
 			<li class="howdidyouhearaboutus<? echo ( $$variable{RequiredFields}{howdidyouhearaboutus} ? ' required' : '' ) ?>">
 				<label>How did you hear about us?</label>
 				<select name="howdidyouhearaboutus" id="howdidyouhearaboutus" onchange="howdidyouhearaboutus_onchange(this);">
-<? echo ( ssi::make_drop_down( [ '', 'select one','CSR','Contacted by CSR - please select who:', 'Internet','Internet','Tradeshow','Tradeshow','Magazine Ad','Magazine Ad','Word of Mouth','Word of Mouth','Other','Other - please enter:' ], $param{howdidyouhearaboutus} ); ) ?>
+<? echo ( make_drop_down( [ '', 'select one','CSR','Contacted by CSR - please select who:', 'Internet','Internet','Tradeshow','Tradeshow','Magazine Ad','Magazine Ad','Word of Mouth','Word of Mouth','Other','Other - please enter:' ], $param{howdidyouhearaboutus} ); ) ?>
 				</select>
 				<select name="salesrep_id" id="salesrep_id" style="<? echo ( 'display:none;' if !$param{howdidyouhearaboutus} or ! sets::isin( $param{howdidyouhearaboutus}, ['','CSR'] ) ) ?>">
 					<? echo (
 						make_drop_down( ['', 'Other - please enter who:', @{ openprint::User->dropdown('usergroup any'=>'Sales', company_id=>$config{owner_id} ) } ], $param{salesrep_id} );
 					) ?>
 				</select>
-				<input id="Other" style="<? echo ( 'display:none;' if !$param{howdidyouhearaboutus} or ! sets::isin( $param{howdidyouhearaboutus}, ['','Other','CSR'] ) ) ?>" type="text" name="howdidyouhearaboutusother" value="<? echo ( ssi::htmlize($param{howdidyouhearaboutusother}); ) ?>" />
+				<input id="Other" style="<? echo ( 'display:none;' if !$param{howdidyouhearaboutus} or ! sets::isin( $param{howdidyouhearaboutus}, ['','Other','CSR'] ) ) ?>" type="text" name="howdidyouhearaboutusother" value="<? echo ( htmlize($param{howdidyouhearaboutusother}); ) ?>" />
 			</li>
 			<li class="mailinglist<? echo ( $$variable{RequiredFields}{mailinglist} ? ' required' : '' ) ?>">
 				<label>Add to our mailing list?</label>
@@ -178,19 +174,19 @@ function howdidyouhearaboutus_onchange(e) {
 				</li>
 				<li class="firstname<? echo ( $$variable{RequiredFields}{firstname} ? ' required' : '' ) ?>">
 					<label>First Name</label>
-					<input type="text" name="firstname" value="<? echo ( ssi::htmlize($param{firstname}); ) ?>" />
+					<input type="text" name="firstname" value="<? echo ( htmlize($param{firstname}); ) ?>" />
 				</li>
 				<li class="lastname<? echo ( $$variable{RequiredFields}{lastname} ? ' required' : '' ) ?>">
 					<label>Last Name</label>
-					<input type="text" name="lastname" value="<? echo ( ssi::htmlize($param{lastname}); ) ?>" />
+					<input type="text" name="lastname" value="<? echo ( htmlize($param{lastname}); ) ?>" />
 				</li>
 				<li class="title<? echo ( $$variable{RequiredFields}{title} ? ' required' : '' ) ?>">
 					<label>Position</label>
-					<input type="text" name="title" value="<? echo ( ssi::htmlize($param{title}); ) ?>" />
+					<input type="text" name="title" value="<? echo ( htmlize($param{title}); ) ?>" />
 				</li>
 				<li class="email<? echo ( $$variable{RequiredFields}{email} ? ' required' : '' ) ?>">
 					<label>E-mail</label>
-					<input type="email" name="email" value="<? echo ( ssi::htmlize($param{email}); ) ?>"  />
+					<input type="email" name="email" value="<? echo ( htmlize($param{email}); ) ?>"  />
 				</li>
                 <? echo (
                     my $html;
@@ -206,12 +202,12 @@ function howdidyouhearaboutus_onchange(e) {
 				<li><?include('/includes/password_requirements.html')?></li>
 				<li class="password<? echo ( $$variable{RequiredFields}{password} ? ' required' : '' ) ?>">
 					<label for="password">Password</label>
-					<input type="password" id="password" name="password" onkeyup="updateStrength(this.value);check_passwords(this.form.password, this);" value="<? echo ( ssi::htmlize($param{password}); ) ?>" />
+					<input type="password" id="password" name="password" onkeyup="updateStrength(this.value);check_passwords(this.form.password, this);" value="<? echo ( htmlize($param{password}); ) ?>" />
 					<span id="password_strength">Strength <span id="psContainer"><span id="psStrength"></span></span></span>
 				</li>
 				<li class="verifypassword<? echo ( $$variable{RequiredFields}{verifypassword} ? ' required' : '' ) ?>">
 					<label for="verifypassword">Verify Password</label>
-					<input type="password" id="verifypassword" name="verifypassword" onkeyup="check_passwords(this.form.password, this);" value="<? echo ( ssi::htmlize($param{verifypassword}); ) ?>" />
+					<input type="password" id="verifypassword" name="verifypassword" onkeyup="check_passwords(this.form.password, this);" value="<? echo ( htmlize($param{verifypassword}); ) ?>" />
 					<span id="password_alert"></span>
 				</li>
 			</ul>

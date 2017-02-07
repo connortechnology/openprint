@@ -40,7 +40,7 @@ my $opts = {};
 Getopt::Long::GetOptions($opts, 'attach-file', 'fifo=s', 'from=s', 'help', 'ignore-users=s',
 	'log_file=s', 'log_level=s',
 	'recipient=s', 'sleep=s', 'smtp-server=s', 'subject=s',
-	'watch-users=s','pid_file=s', 'db_name=s', 'db_host=s', 'db_user=s', 'db_pass=s',
+	'watch-users=s','pid_file=s', 'db_port=s', 'db_name=s', 'db_host=s', 'db_user=s', 'db_pass=s',
 	'skin_path=s', 'document_root=s', 'file_path=s','site_title=s', 'site_url=s',
 	'scoreboard=s','max_files=s', 'config=s',
 );
@@ -92,6 +92,7 @@ if ( $config{pid_file} ) {
 $log = logger->new( { file=>$config{log_file}, level=>$config{log_level}} );
 $log->info("Opening SQL connection $config{db_host} $config{db_name}");
 $openprint::dbh = sql::open_sql( $log, 
+	port		=> $config{db_port},
 	host		=> $config{db_host},
 	database	=> $config{db_name},
 	driver		=> 'Pg',
@@ -281,7 +282,7 @@ $log->debug("data: $client $remote_user $user_name $curr_time $xfer_type $path $
 						complete	=> 1,
 					};
 				} # end if send email
-			} elsif ($line =~ /^(\S+)\s+(\S+)\s+(\S+)\s+\[([^\]]+)\]\s+"([^"]*)"\s+(\d+)\s+([\-\d]+)\s+([\.\d]+)$/o) {
+			} elsif ($line =~ /^(\S+)\s+(\S+)\s+(\S+)\s+\[([^\]]+)\]\s+"([^"]*)"\s+(\d+)\s+([\-\d]+)\s+([\.\d\-]+)$/o) {
 #LogFormat IQFormat "%h %l %u %t \"%f\" %s %b %T"
 
 				my $client = $1;
@@ -293,18 +294,30 @@ $log->debug("data: $client $remote_user $user_name $curr_time $xfer_type $path $
 				my $response_code = $6;
 				my $nbytes = $7;
 				my $xfer_nsecs = $8;
-$log->debug("Got IQFormat extended line: $line");
-$log->debug("data: $client $remote_user $user_name $curr_time $path $response_code $nbytes");
-if ( $nbytes eq '-' ) {
-$log->debug("Not an upload, ignoring");
-next;
-} elsif ( $response_code != 226 ) {
-	$log->debug("Not an upload, response_code: $response_code");
-	next;
-} elsif ( $path eq '-' ) {
-	$log->debug("Not an upload, response_code: $response_code path was $path");
-	next;
-}
+				$log->debug("Got IQFormat extended line: $line");
+				$log->debug("data: $client $remote_user $user_name $curr_time $path $response_code $nbytes");
+				if ( $response_code == 331 ) {
+#Username OK, need password
+					next;
+				} elsif ( $response_code == 230 ) {
+# Successful login
+					my $User = openprint::User->find_one( email => $user_name, ftp_active => 1 );
+					if ( ! $User ) {
+						$log->error("Unable to load user for a valid ftp account.");
+						next;
+					}
+					(new openprint::Log())->save({Object=>$User, action=>'Login', note=>'Successful FTP Login' } );
+					next;
+				} elsif ( $nbytes eq '-' ) {
+					$log->debug("Not an upload, ignoring");
+					next;
+				} elsif ( $response_code != 226 ) {
+					$log->debug("Not an upload, response_code: $response_code");
+					next;
+				} elsif ( $path eq '-' ) {
+					$log->debug("Not an upload, response_code: $response_code path was $path");
+					next;
+				}
 
 				# Note that any spaces or control characters will be replaced in this
 				# path with underscores.	This can make finding the actual file, as for
@@ -583,11 +596,13 @@ $log->debug("regexp: $regexp");
 		} else {
 			if ( $Company->salesrep_id() ) {
 				my $CSR = $Company->CSR();
-				if ( openprint::User_Notification->find_one( type=>'CSR Client File Uploads', 'value !=' => 'No', user_company_id=>[ $config{owner_id}, $Company->id() ] ) ) {
+				my $Notification = openprint::User_Notification->find_one( type=>'CSR Client File Uploads', 'value !=' => 'No', user_company_id=>[ $config{owner_id}, $Company->id() ] );
+
+				if ( $Notification ) {
 					@to = ( $CSR );
 					$log->debug("Adding CSR $$CSR{email}");
 				} else {
-					$log->debug("Not Adding CSR $$CSR{email} : notifications etting:" . $CSR->notification('CSR Client File Uploads') );
+					$log->debug("Not Adding CSR $$CSR{email} : notifications etting:" );
 				} # end if
 			} # end if
 			push @to, map { $_->User() } openprint::User_Notification->find( type=>'Client File Uploads',value=>'Yes', 'company_id is null or ='=>$Company->id(), company_id=>[ $config{owner_id}, $Company->id() ] );

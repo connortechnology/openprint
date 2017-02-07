@@ -366,7 +366,7 @@ sub confirmation {
 
 			$Order->update_status();
 	# send out email notifications
-			$Order->send_sales_order( ) if $param{btnFunction} eq 'Complete';
+			$variable{information} .= $Order->send_sales_order( ) if $param{btnFunction} eq 'Complete';
 
 	# *************************** WE are going to manually invoice for now *******************
 			if ( $variable{Downpayment} > 0 ) {
@@ -481,8 +481,7 @@ sub history_details {
 			} # end if
 		} # end if
 	} elsif ( $param{btnFunction} eq 'Resend') {
-		$Order->send_sales_order( );
-		$variable{information} .= "Order emails sent.<br/>";
+		$variable{information} .= $Order->send_sales_order( );
 		$variable{ExternalRedirect} = '/main/order/history_details.html?order_id='.$Order->id();
 	} # end if
 	openprint::order::display_order( $order_id );

@@ -1,6 +1,6 @@
 <?include(/includes/error_reporting.html)?>
 <?eval(
-	$variable{'location_dropdown'} = openprint::Location->dropdown(order=>'parent_id NULLS FIRST, lower(name)', type=>'place') if ! exists $variable{'location_dropdown'};
+	$variable{location_dropdown} = openprint::Location->dropdown(order=>'parent_id NULLS FIRST, lower(name)', type=>'place') if ! exists $variable{location_dropdown};
 )?>
 <table id="Contents-<?type_id?>" class="List sortable">
 	<tr>
@@ -49,7 +49,7 @@ input( type=>'cardinal', id=>'qty_sheets-'.$$variable{type_id}.'-', name=>'qty_s
 ) ?>
 		<td class="in_stock">&nbsp;</td>
 		<td class="last_seen">&nbsp;</td>
-		<td class="Location"><? echo ( ssi::select( $variable{'location_dropdown'}, $variable{'location_id-'.$$variable{type_id}.'-'}, { name=>'location_id-'.$$variable{type_id}.'-', id=>'location_id-'.$$variable{type_id}.'-', prepend=>['','select'] } ))?></td>
+		<td class="Location"><? echo ( ssi::select( $variable{location_dropdown}, $variable{'location_id-'.$$variable{type_id}.'-'}, { name=>'location_id-'.$$variable{type_id}.'-', id=>'location_id-'.$$variable{type_id}.'-', prepend=>['','select'] } ))?></td>
 		<td colspan="2" class="buttons"><? echo ( button( 'Add'.$$variable{type_id}, { onclick=>"add_content( \$('f1'), $$variable{type_id} );", text=>'Add' } ); ) ?></td>
 	</tr>
 	<? echo (

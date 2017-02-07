@@ -7,6 +7,27 @@
 		date_filter( $variable{uri}.'?log_created_on_start', 'date_time >=' ),
 		order =>'date_time DESC',
 	);
+	if ( ! @Logs ) {
+		@Logs = openprint::Log->find(
+				object_type_id  =>  $$variable{Object}->Object_Type()->id(),
+				object_id       =>  $$variable{Object}->id(),
+				order =>'date_time DESC',
+				limit	=> 1,
+				);
+		if ( @Logs ) {
+			my ( $year, $month, $day ) = ( $Logs[0]{date_time} =~ /(\d\d\d\d)-(\d\d)-(\d\d)/ );
+			$session{$variable{uri}.'?log_created_on_start_year'} = $year;
+			$session{$variable{uri}.'?log_created_on_start_month'} = $month;
+			$session{$variable{uri}.'?log_created_on_start_day'} = $day;
+			@Logs = openprint::Log->find(
+					object_type_id	=>	$$variable{Object}->Object_Type()->id(),
+					object_id		=>	$$variable{Object}->id(),
+					date_filter( $variable{uri}.'?log_created_on_end', 'date_time <=' ),
+					date_filter( $variable{uri}.'?log_created_on_start', 'date_time >=' ),
+					order =>'date_time DESC',
+			);
+		}
+	}
 	return if ! @Logs;
 	
 	my $rowclass = '';

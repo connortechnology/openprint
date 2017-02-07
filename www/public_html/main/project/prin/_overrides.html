@@ -16,7 +16,9 @@
 		<label>Press</label>
 		<select name="ddmPress-<?Signature?>" size="1" onchange="calc(this.form.name);">
 			<option value="">Auto</option>
-			<? echo ( make_drop_down( [ map { $_->strid(), $_->name() } openprint::Equipment->find('category any'=>'Printing',useinestimating=>1, order=>'lower(strname)') ], $$variable{"ddmPress-$$variable{Signature}"} ); ) ?>
+			<? echo ( make_drop_down( [ map { $_->strid(), $_->name() } openprint::Equipment->find('category any'=>'Printing',
+'useinestimating is null or ='=>1,
+ order=>'lower(strname)') ], $$variable{"ddmPress-$$variable{Signature}"} ); ) ?>
 		</select>
 	</li>
 	<li>

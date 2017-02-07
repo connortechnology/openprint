@@ -77,17 +77,23 @@ sub destroy {
 } # end sub destroy
 
 sub Category {
-	return new openprint::ServiceType_Category( $_[0]{category_id} );
+	if ( ! $_[0]{Category} ) {
+		$_[0]{Category} = new openprint::ServiceType_Category( $_[0]{category_id} );
+	}
+
+	return $_[0]{Category};
 } # end sub category
+
 sub category {
 	if ( @_ == 2 ) {
-		my $ServiceType_Category = openprint::ServiceType_Category->find_one('name'=>$_[1]);
+		my $ServiceType_Category = openprint::ServiceType_Category->find_one('name lc'=>lc $_[1]);
 		if ( $ServiceType_Category ) {
 			$_[0]{category_id} = $ServiceType_Category->id();
 		} else {
 			$ServiceType_Category = new openprint::ServiceType_Category();
-			$ServiceType_Category->save({'name'=>$_[1]});
+			$ServiceType_Category->save({ name=>$_[1] });
 		} # end if
+		$_[0]{Category} = $ServiceType_Category;
 		$_[0]{category_id} = $ServiceType_Category->id();
 	} # end if
 
@@ -95,8 +101,12 @@ sub category {
 }
 
 sub Defaults {
-	return openprint::ServiceType_Default->find('servicetype_id'=>$_[0]{id});
+	if ( ! $_[0]{Defaults} ) {
+		$_[0]{Defaults} = [ openprint::ServiceType_Default->find( servicetype_id=>$_[0]{id} ) ];
+	}
+	return @{$_[0]{Defaults}};
 } # end sub Defaults
+
 
 1;
 __END__

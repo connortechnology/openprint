@@ -1,4 +1,5 @@
 use strict;
+use warnings;
 package openprint;
 use vars qw( $r %variable %session %param %config $log $dbh $User $Company $TZ $Owner );
 
@@ -20,8 +21,8 @@ sub session_init {
 	my $cookie;
 	if ( $r ) {
 		$cookies = Apache2::Cookie->fetch( $r );
-		if ( $$cookies{'_session_id'} ) {
-			$cookie = $$cookies{'_session_id'};
+		if ( $$cookies{_session_id} ) {
+			$cookie = $$cookies{_session_id};
 			$cookie = $cookie->value if $cookie;
 		} else {
 			if ( $r->param('_session_id') ) {
@@ -45,9 +46,9 @@ sub session_init {
 					} # end if
 				} # end if
 				# Store this, will be useful
-				$session{'ip'} = $ENV{'REMOTE_ADDR'};
-				$session{'lastupdated'} = time;
-				$session{'HTTP_USER_AGENT'} = $ENV{'HTTP_USER_AGENT'};
+				$session{ip} = $ENV{REMOTE_ADDR};
+				$session{lastupdated} = time;
+				$session{HTTP_USER_AGENT} = $ENV{HTTP_USER_AGENT};
 			} # end if
 
 			if ( $cookie ne $session{_session_id} ) {
@@ -66,53 +67,54 @@ sub session_init {
 		} else {
 			%session = ();
 		} # end if
-
-		$session{ip} = $ENV{REMOTE_ADDR} if $ENV{REMOTE_ADDR} and ! $session{ip};
-
-	# Now set some defaults right away, if we can, FIXME namespace colision
-		if ( $r->param('Country') ) {
-			$session{'Country'} = $r->param('Country');
-		} elsif ( ! $session{'Country'} ) {
-			$session{'Country'} = $r->dir_config('Country');
-		} # end if
-
-		return if ! $dbh;
-
-		if ( sets::isin( $session{'user_type'}, ['E','A'] ) ) {
-			if ( $r->param('btnFunction') eq 'SelectCompany' ) {
-				if ( $r->param('ddmCompany') != $session{'company_id'} ) {
-					my $C = new openprint::Company( $r->param('ddmCompany') );
-					if ( ! $C->id() ) {
-						$variable{'error'} .= 'Unknown company selected.  Please try again.';
-					} else {
-						switch_company( $C );
-					} # end if
-				} # end if
-			} elsif ( $r->param('btnFunction') eq 'SelectPricelist' ) {
-				my $Pricelist = new openprint::Pricelist( $r->param('pricelist_id') );
-				if ( ! $Pricelist->id() ) {
-					$Pricelist = openprint::Pricelist::get_current();
-				} # end if
-				$session{'Pricelist_id'} = $Pricelist->id() if $Pricelist->id();
-			} # end if
-		} # end if
-
-		if ( $r->param('Currency') ) {
-			my $short = $r->param('Currency');
-			$short = substr( $short, 0, 3 );
-			$_ = openprint::Currency->find_one( short => $short );
-			$session{'Currency_id'} = $_->id() if $_;
-		} elsif ( $param{select_currency_id} ) {
-			$param{select_currency_id} = openprint::Currency->transform( id=>$param{select_currency_id} );
-			if ( $param{select_currency_id} ) {
-				my $Currency = new openprint::Currency( $param{select_currency_id} );
-				$session{'Currency_id'} = $Currency->id();
-			} # end if
-		} elsif ( ! $session{'Currency_id'} ) {
-			$_ = openprint::Currency->find_one( 'short' => $r->dir_config('Currency') );
-			$session{'Currency_id'} = $_->id() if $_;
-		} # end if
 	} # end if $r
+
+	$session{ip} = $ENV{REMOTE_ADDR} if $ENV{REMOTE_ADDR} and ! $session{ip};
+
+# Now set some defaults right away, if we can, FIXME namespace colision
+	if ( $param{'Country'} ) {
+		$session{Country} = $param{'Country'};
+	} elsif ( ! $session{Country} ) {
+		$session{Country} = $config{'Country'};
+	} # end if
+
+	return if ! $dbh;
+
+	if ( $param{btnFunction} and sets::isin( $session{user_type}, ['E','A'] ) ) {
+		if ( $param{'btnFunction'} eq 'SelectCompany' ) {
+			if ( $param{'ddmCompany'} != $session{company_id} ) {
+				my $C = new openprint::Company( $param{'ddmCompany'} );
+				if ( ! $C->id() ) {
+					$variable{error} .= 'Unknown company selected.  Please try again.';
+				} else {
+					switch_company( $C );
+				} # end if
+			} # end if
+		} elsif ( $param{'btnFunction'} eq 'SelectPricelist' ) {
+			my $Pricelist = new openprint::Pricelist( $param{'pricelist_id'} );
+			if ( ! $Pricelist->id() ) {
+				$Pricelist = openprint::Pricelist::get_current();
+			} # end if
+			$session{Pricelist_id} = $Pricelist->id() if $Pricelist->id();
+		} # end if
+	} # end if
+
+	if ( $param{'Currency'} ) {
+		my $short = $param{'Currency'};
+		$short = substr( $short, 0, 3 );
+		$_ = openprint::Currency->find_one( short => $short );
+		$session{Currency_id} = $_->id() if $_;
+	} elsif ( $param{select_currency_id} ) {
+		$param{select_currency_id} = openprint::Currency->transform( id=>$param{select_currency_id} );
+		if ( $param{select_currency_id} ) {
+			my $Currency = new openprint::Currency( $param{select_currency_id} );
+			$session{Currency_id} = $Currency->id();
+		} # end if
+	}
+	if ( ! $session{Currency_id} ) {
+		$_ = openprint::Currency->find_one( short => $config{Currency} );
+		$session{Currency_id} = $_->id() if $_;
+	} # end if
 
 	$User = new openprint::User( $session{user_id} );
 	$Company = new openprint::Company( $session{company_id} );
@@ -140,18 +142,18 @@ sub session_init {
 
 sub switch_company {
 	my ( $Company ) = @_;
-	$session{'company_id'} = $Company->id();
+	$session{company_id} = $Company->id();
 	$openprint::Company = $Company;
 	(new openprint::Log())->save({'action'=>'Switch Company'});
 
 	if ( $Company->currency_id() ) {
-		$session{'Currency_id'} = $Company->currency_id();
+		$session{Currency_id} = $Company->currency_id();
 	} elsif ( $Company->country() eq 'US' ) {
 		$_ = openprint::Currency->find_one('short'=>'USD');
-		$session{'Currency_id'} = $_->id() if $_;
+		$session{Currency_id} = $_->id() if $_;
 	} elsif ( $Company->country() eq 'CA' ) {
 		$_ = openprint::Currency->find_one('short'=>'CAD');
-		$session{'Currency_id'} = $_->id() if $_;
+		$session{Currency_id} = $_->id() if $_;
 	} # end if
 	require openprint::Order;
 	foreach my $Order ( openprint::Order->find(session_id=>$session{_session_id} ) ) {

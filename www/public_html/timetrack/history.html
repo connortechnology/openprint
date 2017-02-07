@@ -3,7 +3,6 @@
 <h2>History</h2>
 </div>
 <script type="text/javascript">
-<!--
 	function delete_confirm(form) {
 		var number_of_deleted_timetracks = 0;
 		for ( var index = 0; index < form.elements.length; index += 1 ) {
@@ -22,78 +21,76 @@
 			} // end if
 		} // end if
 	}
-	function load_timetracks( form ) {
-		$('TimetrackList').innerHTML = 'Please wait...';
-		new Ajax.Updater('TimetrackList','_history.html', {method:'get',parameters:Form.serialize(form)});
+	function load_timetracks() {
+		LoadContent('TimetrackList','_history.html', $('f1') );
 	} // end function
--->
 </script>	 
-<? echo ( include('/includes/error_reporting.html'); ) ?>
-<? if ( $session{'user_id'} ) ?>
+<?include('/includes/error_reporting.html')?>
+<? if ( $session{user_id} ) ?>
 <div class="Timetrack"><div class="History">
 	<form id="f1" name="f1" method="post" action="/timetrack/history.html">
 		<fieldset class="filters unprintable"><legend>Select Search Criteria</legend>
 			<div class="leftColumn">
 				<ul>
-<? if ( sets::isin( $session{'user_type'}, ['E','A'] ) ) ?>
+<? if ( sets::isin( $session{user_type}, ['E','A'] ) ) ?>
 			<li>
 				<label>Company</label>
-				<select name="company_id" id="company_id" onchange="load_timetracks(this.form);">
+				<select name="company_id" id="company_id" onchange="load_timetracks();">
 					<option value="">All</option>
 					<? echo ( openprint::Company::get_dropdown( $session{'/timetrack/history.html?company_id'} ); ) ?>
 				</select>
 			</li>
-<? else ( sets::isin( $session{'user_type'}, ['E','A'] ) ) ?>
-<input type="hidden" name="company_id" value="<? echo ( $session{'company_id'} ) ?>" />
-<? endif ( sets::isin( $session{'user_type'}, ['E','A'] ) ) ?>
+<? else ( sets::isin( $session{user_type}, ['E','A'] ) ) ?>
+<input type="hidden" name="company_id" value="<? echo ( $session{company_id} ) ?>" />
+<? endif ( sets::isin( $session{user_type}, ['E','A'] ) ) ?>
 			<li>
 				<label>Dates</label>
-<? echo ( ssi::date_select_session( '/timetrack/history.html', 'starting_start', {onchange=>q`load_timetracks($('f1'));`,'with_clear'=>1,'with_today'=>1} ); ) ?>
+<? echo ( date_select_session( '/timetrack/history.html', 'starting_start', {onchange=>q`load_timetracks();`, with_clear=>1, with_today=>1} ); ) ?>
 					to 
-<? echo ( ssi::date_select_session( '/timetrack/history.html', 'starting_end', {onchange=>q`load_timetracks($('f1'));`, 'with_clear'=>1,'with_today'=>1} ); ) ?>
+<? echo ( date_select_session( '/timetrack/history.html', 'starting_end', {onchange=>q`load_timetracks();`, with_clear=>1, with_today=>1} ); ) ?>
 			</li>
 			<li>
 				<label>Service</label>
-				<select name="service_id" id="service_id" onchange="load_timetracks(this.form);">
+				<select name="service_id" id="service_id" onchange="load_timetracks();">
 					<option value="">All</option>
-					<? echo ( ssi::make_drop_down( openprint::Service->dropdown(), $session{'/timetrack/history.html?service_id'} ); ) ?>
+					<? echo ( make_drop_down( openprint::Service->dropdown(order=>'lower(name)'), $session{'/timetrack/history.html?service_id'} ); ) ?>
 				</select>
 			</li>
 			<li><label>Contains</label>
-				<input type="text" name="contains" value="<? echo ( $session{'/timetrack/history.html?contains'} ) ?>" onkeyup="load_timetracks(this.form);"/>
+				<input type="text" name="contains" value="<? echo ( $session{'/timetrack/history.html?contains'} ) ?>" onkeyup="load_timetracks();"/>
 			</li>
 			<li><label>Keywords</label>
-				<input type="text" name="keywords" value="<? echo ( $session{'/timetrack/history.html?keywords'} ) ?>" onkeyup="load_timetracks(this.form);"/>
+				<input type="text" name="keywords" value="<? echo ( $session{'/timetrack/history.html?keywords'} ) ?>" onkeyup="load_timetracks();"/>
 			</li>
 				</ul>
 			</div>
 			<div class="rightColumn">
 				<ul>
-					<li><label>Billable</label><? echo ( radio( 'billable', [ 1, 'Yes', 0, 'No', '', 'Both' ], $session{'/timetrack/history.html?billable'}, { onclick=>'load_timetracks(this.form);' } ); ) ?></li>
+					<li><label>Billable</label><? echo ( radio( 'billable', [ 1, 'Yes', 0, 'No', '', 'Both' ], $session{'/timetrack/history.html?billable'}, { onclick=>'load_timetracks();' } ); ) ?></li>
 					<li><label>Invoiced?</label>
-					<? echo ( radio( 'invoiced', [ 1, 'Yes', 0, 'No', '0,1', 'Both' ], $session{'/timetrack/history.html?invoiced'}, { onclick=>'load_timetracks(this.form);' } ); ) ?>
+					<? echo ( radio( 'invoiced', [ 1, 'Yes', 0, 'No', '0,1', 'Both' ], $session{'/timetrack/history.html?invoiced'}, { onclick=>'load_timetracks();' } ); ) ?>
 					</li>
 					<li><label>Paid?</label>
-					<? echo ( radio( 'paid', [ 1, 'Yes', 0, 'No', '0,1', 'Both' ], $session{'/timetrack/history.html?paid'}, { onclick=>'load_timetracks(this.form);' } ); ) ?>
+					<? echo ( radio( 'paid', [ 1, 'Yes', 0, 'No', '0,1', 'Both' ], $session{'/timetrack/history.html?paid'}, { onclick=>'load_timetracks();' } ); ) ?>
 			</li>
 					<li><label>Travel Associated</label>
-					<? echo ( radio( 'travel_associated', [ '1', 'Yes', '0', 'No', '', 'Both' ], $session{'/timetrack/history.html?travel_associated'}, { onclick=>'load_timetracks(this.form);' } ); ) ?>
+					<? echo ( radio( 'travel_associated', [ '1', 'Yes', '0', 'No', '', 'Both' ], $session{'/timetrack/history.html?travel_associated'}, { onclick=>'load_timetracks();' } ); ) ?>
 			</li>
-<? if ( sets::isin( $session{'user_type'}, ['E','A'] ) ) ?>
+<? if ( sets::isin( $session{user_type}, ['E','A'] ) ) ?>
 			<li>
 				<label>Employee</label>
-				<select name="user_id" id="user_id" onchange="load_timetracks(this.form);">
+				<select name="user_id" id="user_id" onchange="load_timetracks();">
 					<option value="">All</option>
 					<? echo ( make_drop_down( openprint::User->dropdown( company_id=>$session{company_id}, type=>['A','E'], order=>'lower(firstname),lower(lastname)'), $session{'/timetrack/history.html?user_id'} ); ) ?>
 				</select>
 			</li>
-<? endif ( sets::isin( $session{'user_type'}, ['E','A'] ) ) ?>
+<? endif ( sets::isin( $session{user_type}, ['E','A'] ) ) ?>
 				</ul>
 			</div>
 			<br class="spacer"/>
 			<p class="buttons">
-				<? echo ( join('',
-					button( 'ShowResults', { onclick=> "load_timetracks(f1);", text=>'Show Results' } ),
+				<? echo ( join("\n",
+					button( 'ShowResults', { onclick=> "load_timetracks();", text=>'Show Results' } ),
 					button( 'Reset', { href => '/timetrack/history.html?func=reset' } ),
 					button( 'New', { href => '/timetrack/edit.html', text => 'New Timetrack' } ),
 					button( 'Download', { onclick=>q`var form=$('f1');form.action='/timetrack/history.html?func=Download';form.submit();` } ),
@@ -104,6 +101,6 @@
 	</form>
 	</div>
 </div>
-<? else ( $session{'user_id'} ) ?>
+<? else ( $session{user_id} ) ?>
 	Only logged in customers have a timetrack history.
-<? endif ( $session{'user_id'} ) ?>
+<? endif ( $session{user_id} ) ?>

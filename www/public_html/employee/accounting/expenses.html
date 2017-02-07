@@ -22,8 +22,7 @@
 		} // end if
 	}
 	function load_expenses( form ) {
-		$('ExpenseList').innerHTML = 'Please wait...';
-		new Ajax.Updater('ExpenseList','_expenses.html', {method:'get',parameters:Form.serialize(form)});
+		LoadContent( 'ExpenseList','_expenses.html', $('f1') );
 	} // end function
 </script>	 
 <? include(/includes/error_reporting.html) ?>
@@ -63,6 +62,13 @@
 		<div class="rightColumn">
 			<div class="content">
 				<ul>
+					<li>
+						<label>Currency</label>
+						<select name="currency_id" id="currency_id" onchange="load_expenses(this.form);">
+							<option value="">all</option>
+							<? echo ( make_drop_down( openprint::Currency->dropdown( order=>'lower(name)'), $session{'/employee/accounting/expenses.html?currency_id'} ); ) ?>
+						</select>
+					</li>
 					<li>
 						<label>Category</label>
 						<select name="category_id" id="category_id" onchange="load_expenses(this.form);">

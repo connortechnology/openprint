@@ -24,19 +24,19 @@ require sql;
 require sets;
 
 my %variables = (
-	'txtPrice1'=>['save','output'], 'txtPrice2'=>['save','output'], 'txtPrice3'=>['save','output'],'txtPriceUsed'=>['save'],
+	txtPrice1=>['save','output'], txtPrice2=>['save','output'], txtPrice3=>['save','output'],txtPriceUsed=>['save'],
 	OverridePrice1	=>	['save'], OverridePrice2	=>	['save'], OverridePrice3	=>	['save'],
-	'txtQuantity1'=>['save','output'], 'txtQuantity2'=>['save','output'], 'txtQuantity3'=>['save','output'],'txtQuantityUsed'=>['save'],
-	'txtPackageQuantity1'=>['save','output'], 'txtPackageQuantity2'=>['save','output'], 'txtPackageQuantity3'=>['save','output'],'txtPackageQuantityUsed'=>['save','output'],
-    'chkOverridePackageQuantity' => ['save'],
-	'txtTotalWeight1'=>['save','output'], 'txtTotalWeight2'=>['save','output'], 'txtTotalWeight3'=>['save','output'],'txtTotalWeightUsed'=>['save','output'],
-    'txtPackageWeight1'=>['save','output'], 'txtPackageWeight2'=>['save','output'], 'txtPackageWeight3'=>['save','output'],'txtPackageWeightUsed'=>['save','output'],
+	txtQuantity1=>['save','output'], txtQuantity2=>['save','output'], txtQuantity3=>['save','output'],txtQuantityUsed=>['save'],
+	txtPackageQuantity1=>['save','output'], txtPackageQuantity2=>['save','output'], txtPackageQuantity3=>['save','output'],txtPackageQuantityUsed=>['save','output'],
+	chkOverridePackageQuantity => ['save'],
+	txtTotalWeight1=>['save','output'], txtTotalWeight2=>['save','output'], txtTotalWeight3=>['save','output'],txtTotalWeightUsed=>['save','output'],
+	txtPackageWeight1=>['save','output'], txtPackageWeight2=>['save','output'], txtPackageWeight3=>['save','output'],txtPackageWeightUsed=>['save','output'],
 
-	'FromCompanyName'=>['save'],'FromAddress1'=>['save'],'FromAddress2'=>['save'],'FromCity'=>['save'],'FromStateProvince'=>['save'],'FromCountry'=>['save'],'FromPostalCode'=>['save'],'FromPhone'=>['save'],'FromFax'=>['save'],'FromEmail'=>['save'],
-	'ToCompanyName'=>['save'],'ToAddress1'=>['save'],'ToAddress2'=>['save'],'ToCity'=>['save'],'ToStateProvince'=>['save'],'ToCountry'=>['save'],'ToPostalCode'=>['save'],'ToPhone'=>['save'],'ToFax'=>['save'],'ToEmail'=>['save'],
-	'FromFirstName'=>['save'],'FromLastName'=>['save'],
-	'ToFirstName'=>['save'],'ToLastName'=>['save'],
-	'alert'=>['save','output'],
+	FromCompanyName=>['save'],FromAddress1=>['save'],FromAddress2=>['save'],FromCity=>['save'],FromStateProvince=>['save'],FromCountry=>['save'],FromPostalCode=>['save'],FromPhone=>['save'],FromFax=>['save'],FromEmail=>['save'],
+	ToCompanyName=>['save'],ToAddress1=>['save'],ToAddress2=>['save'],ToCity=>['save'],ToStateProvince=>['save'],ToCountry=>['save'],ToPostalCode=>['save'],ToPhone=>['save'],ToFax=>['save'],ToEmail=>['save'],
+	FromFirstName=>['save'],FromLastName=>['save'],
+	ToFirstName=>['save'],ToLastName=>['save'],
+	alert=>['save','output'],
 	to_company_id	=>	['save'],
 	from_company_id	=>	['save'],
 );
@@ -78,14 +78,14 @@ sub has_overrides {
 
 
 sub calc {
-	my ( $log, $dbh, $variable, $project_index, $service_index, $specs, $qty_index ) = @_;
+	my ( $log, $dbh, $variable, $project_index, $service_index, $specs ) = @_;
 
 	my $Project = new openprint::Project( $project_index );
 	my $Project_Service = $Project->Service( $service_index );
 	my $services = $Project->services();
 	$$specs{alert} = '';
 	my $status = 'calculated';
-	my $carton_service_index = $$services{PlainCartons}[0] if $$services{PlainCartons}[0];
+	my $carton_service_index = $$services{PlainCartons}[0] if $$services{PlainCartons} and @{$$services{PlainCartons}};
 	if ( ! $carton_service_index ) {
 		if( $openprint::config{NeedCartonsForShipping} ) {
 			$$specs{alert} = 'Shipping requires that the project be packed in cartons.';
@@ -101,6 +101,7 @@ sub calc {
 
 	if ( $carton_service_index ) {
 		my $carton_status = openprint::service::status( $project_index, $carton_service_index );
+$openprint::log->debug("Status of cartons is $carton_status");
 		if ( sets::isin( $carton_status,['', 'uncalculated'] ) ) {
 			openprint::service::internal_calc( $log, $dbh, $variable, $project_index, $carton_service_index, 'Skids' );
 		} # end if
@@ -120,61 +121,71 @@ sub calc {
 		#return $$specs{Status} = 'uncalculated';
 	} # end if
 	my @shipping_services;
-	foreach my $ServiceType ( openprint::ServiceType->find('category'=>'Shipping') ) {
+	foreach my $ServiceType ( openprint::ServiceType->find(category=>'Shipping') ) {
 		next if ! $$services{$ServiceType->name()};
 		foreach ( @{$$services{$ServiceType->name()}} ) {
 			push @shipping_services, $_ if $_ != $service_index;
 		} # end foreach
 	} # end foreach ServiceType
 
-	foreach $qty_index ( $qty_index ? $qty_index : $Project->quantity_indexes() ) {
+	foreach my $qty_index ( $$specs{qty_index} ? $$specs{qty_index} : $Project->quantity_indexes() ) {
 		$$specs{"txtPrice$qty_index"} =~ s/[^\-\.\d]//g if $$specs{"txtPrice$qty_index"};
 		$$specs{"txtQuantity$qty_index"} =~ s/\D//g if $$specs{"txtQuantity$qty_index"};
 		$$specs{"txtQuantity$qty_index"} = $Project->quantity($qty_index) if ! $$specs{"txtQuantity$qty_index"};
 		if ( ! $$specs{"txtQuantity$qty_index"} ) {
 			$log->debug("No qty");
 		} # end if
+		my $carton_qty_index = $$specs{qty_index} ? $Project->ordered_quantity_index() : $qty_index;
 
 		if ( (!$$specs{'chkOverridePackageWeight'.$qty_index}) or ($$specs{'chkOverridePackageWeight'.$qty_index} ne 'Y') ) {
 	# Load from skids or cartons
-			$$specs{"txtPackageWeight".$qty_index} = $$carton_specs{"txtPackageWeight".$qty_index};
+			$$specs{"txtPackageWeight".$qty_index} = $$carton_specs{"txtPackageWeight".$carton_qty_index};
 		} # end if
-		if ( $carton_service_index and ! $$carton_specs{'txtItemsPerPackage'.$qty_index} ) {
+		if ( $carton_service_index and ! $$carton_specs{'txtItemsPerPackage'.$carton_qty_index} ) {
 			# XXX DEPRECATE
 			if ( $$carton_specs{txtItemsPerPackage} ) {
-				$$carton_specs{'txtItemsPerPackage'.$qty_index} = $$carton_specs{txtItemsPerPackage};
+				$$carton_specs{'txtItemsPerPackage'.$carton_qty_index} = $$carton_specs{txtItemsPerPackage};
 			} else {
-				$$specs{alert} = 'Unable to determine how many items per carton for qty '. $qty_index;
+				$$specs{alert} = 'Unable to determine how many items per carton for qty '. $carton_qty_index;
 			} # end if
 		} # end if
 
-        my $other_shipped_quantity = 0;
-        foreach my $sid ( @shipping_services ) {
-            my $service_specs = openprint::service::get_specs_ref( $Project, $sid );
-            $other_shipped_quantity += $$service_specs{'txtQuantity'.$qty_index};
-        } # end foreach sid
-$openprint::log->debug("Other Shipped Quantity: $other_shipped_quantity");
+		my $other_shipped_quantity = 0;
+		foreach my $sid ( @shipping_services ) {
+			my $service_specs = openprint::service::get_specs_ref( $Project, $sid );
+			$other_shipped_quantity += $$service_specs{'txtQuantity'.$qty_index};
+		} # end foreach sid
+		$openprint::log->debug("Other Shipped Quantity: $other_shipped_quantity");
 
-        if ( $$specs{'txtQuantity'.$qty_index} == $Project->quantity($qty_index) ) {
-            $$specs{'txtQuantity'.$qty_index} = $Project->quantity($qty_index) - $other_shipped_quantity;
+		if ( $$specs{'txtQuantity'.$qty_index} == $Project->quantity($qty_index) ) {
+			$$specs{'txtQuantity'.$qty_index} = $Project->quantity($qty_index) - $other_shipped_quantity;
 		} # end if
 
-        if ( $other_shipped_quantity + $$specs{'txtQuantity'.$qty_index} > $Project->quantity( $qty_index ) ) {
-            $$specs{alert} .= 'There are more items being shipped or picked up than are being produced. Please edit the quantities being shipped or picked up. Recommended amount: ' . ($Project->quantity($qty_index) - $other_shipped_quantity) . '<br/>';
-            $status = 'uncalculated';
-        } # end if
+		if ( $other_shipped_quantity + $$specs{'txtQuantity'.$qty_index} > $Project->quantity( $qty_index ) ) {
+			$$specs{alert} .= 'There are more items being shipped or picked up than are being produced. Please edit the quantities being shipped or picked up. Recommended amount: ' . ($Project->quantity($qty_index) - $other_shipped_quantity) . '<br/>';
+			$status = 'uncalculated';
+		} # end if
 
+		my $items_per_package = 0;	
 		if ( $$carton_specs{'txtItemsPerPackage'.$qty_index} ) {
-			if ( (!$$specs{chkOverridePackageQuantity}) or ( $$specs{chkOverridePackageQuantity} ne 'Y' ) ) {
-				$$specs{'txtPackageQuantity'.$qty_index} = ceil( $$specs{'txtQuantity'.$qty_index}/$$carton_specs{'txtItemsPerPackage'.$qty_index} );
-			} # end if
-			$$specs{"txtTotalWeight$qty_index"} = sprintf('%.2f', (int( $$specs{'txtQuantity'.$qty_index}/$$carton_specs{'txtItemsPerPackage'.$qty_index} ) * $$specs{'txtPackageWeight'.$qty_index}) + (($$specs{'txtQuantity'.$qty_index} % $$carton_specs{'txtItemsPerPackage'.$qty_index} ) * $$carton_specs{txtFinishedWeight}) );
-		
+			$items_per_package = $$carton_specs{'txtItemsPerPackage'.$qty_index};
+		} else {
+			$items_per_package = $$carton_specs{'txtItemsPerPackage'.$carton_qty_index};
+		}
+		if ( ! $items_per_package ) {
+			$$specs{alert} .= "Unable to determine the # of items per package.<br/>";
+			return $$specs{Status} = 'uncalculated';	
+		}	
+
+		if ( (!$$specs{chkOverridePackageQuantity}) or ( $$specs{chkOverridePackageQuantity} ne 'Y' ) ) {
+			$$specs{'txtPackageQuantity'.$qty_index} = ceil( $$specs{'txtQuantity'.$qty_index}/$items_per_package );
 		} # end if
+
+		$$specs{"txtTotalWeight$qty_index"} = sprintf('%.2f', (int( $$specs{'txtQuantity'.$qty_index}/$items_per_package ) * $$specs{'txtPackageWeight'.$qty_index}) + (($$specs{'txtQuantity'.$qty_index} % $items_per_package ) * $$carton_specs{txtFinishedWeight}) );
 
 		if ( ! $$specs{"OverridePrice$qty_index"} or $$specs{"OverridePrice$qty_index"} ne 'Y' ) {
-            $$specs{"txtPrice$qty_index"} = 0;
-        } # end if
+			$$specs{"txtPrice$qty_index"} = 0;
+		} # end if
 
 		my $FromCountry = openprint::Location->find_one(type=>'country', short=>$$specs{FromCountry});
 		$FromCountry = openprint::Location->find_one(type=>'country', name=>$$specs{FromCountry}) if ! $FromCountry;
@@ -276,7 +287,7 @@ $openprint::log->debug("Other Shipped Quantity: $other_shipped_quantity");
 		if ( ! $$specs{"OverridePrice$qty_index"} or $$specs{"OverridePrice$qty_index"} ne 'Y' ) {
 			$$specs{"txtPrice$qty_index"} = sprintf('%.2f', $$specs{"txtPrice$qty_index"});
 		} # end if
-	} # end foreach
+	} # end foreach qty_index
 	return $$specs{Status} = $status;
 } # end sub calc
 
@@ -285,17 +296,17 @@ sub display {
 
 	if ( ! ( $$variable{FromCity} and $$variable{FromPostalCode} and $$variable{FromStateProvince} and $$variable{FromCountry} ) ) {
 		my %shipping_fields = (
-				'FromCompanyName'	=>	'CompanyName',
-				'FromAddress1'		=>	'Address1',
-				'FromAddress2'		=>	'Address2',
-				'FromCity'			=>	'City',
-				'FromStateProvince'	=>	'StateProvince',
-				'FromCountry'		=>	'Country',
-				'FromPostalCode'	=>	'PostalCode',
-				'FromPhone'			=>	'Phone',
-				'FromExtension'		=>	'Extension',
-				'FromFax'			=>	'Fax',
-				'FromEmail'			=>	'Email',
+				FromCompanyName	=>	'CompanyName',
+				FromAddress1		=>	'Address1',
+				FromAddress2		=>	'Address2',
+				FromCity			=>	'City',
+				FromStateProvince	=>	'StateProvince',
+				FromCountry		=>	'Country',
+				FromPostalCode	=>	'PostalCode',
+				FromPhone			=>	'Phone',
+				FromExtension		=>	'Extension',
+				FromFax			=>	'Fax',
+				FromEmail			=>	'Email',
 				);
 
 		
@@ -309,17 +320,17 @@ sub display {
 	if ( $openprint::session{company_id} and ( ! (
 		$$variable{ToCity} and $$variable{ToPostalCode} and $$variable{ToStateProvince} and $$variable{ToCountry} ) ) ) {
 		my %shipping_fields = (
-				'ToCompanyName'		=>	'CompanyName',
-				'ToAddress1'		=>	'Address1',
-				'ToAddress2'		=>	'Address2',
-				'ToCity'			=>	'City',
-				'ToStateProvince'	=>	'StateProvince',
-				'ToCountry'			=>	'Country',
-				'ToPostalCode'		=>	'PostalCode',
-				'ToPhone'			=>	'Phone',
-				'ToExtension'		=>	'Extension',
-				'ToFax'				=>	'Fax',
-				'ToEmail'			=>	'Email',
+				ToCompanyName		=>	'CompanyName',
+				ToAddress1		=>	'Address1',
+				ToAddress2		=>	'Address2',
+				ToCity			=>	'City',
+				ToStateProvince	=>	'StateProvince',
+				ToCountry			=>	'Country',
+				ToPostalCode		=>	'PostalCode',
+				ToPhone			=>	'Phone',
+				ToExtension		=>	'Extension',
+				ToFax				=>	'Fax',
+				ToEmail			=>	'Email',
 				);
 
 		my $Company = new openprint::Company( $openprint::session{company_id} );
@@ -358,8 +369,10 @@ sub summary {
 				} else {
 					return sprintf( qq{%d items in %d package%s\nweighing %.2flbs}, @$specs{'txtQuantity'.$qty_index,'txtPackageQuantity'.$qty_index},( $$specs{'txtPackageQuantity'.$qty_index}==1?'' : 's'), $$specs{'txtTotalWeight'.$qty_index} );
 				} # end if
-			} else {
+			} elsif ( $$specs{'txtQuantity'.$qty_index} ) {
 				return sprintf( q{%d items}, $$specs{'txtQuantity'.$qty_index} ) if $$specs{"txtPrice$qty_index"};
+			} else {
+				return 'none';
 			} # end if
 		} # end if Used or index
 	} else {

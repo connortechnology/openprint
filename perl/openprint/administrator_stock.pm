@@ -221,17 +221,22 @@ $openprint::log->debug("Setting: $param{amount} " );
 
 sub stock {
 
-	my $Paper = new openprint::Paper( $param{stock_id} );
+	my $Paper = openprint::Paper->find_one( id=>$param{stock_id} ) if $param{stock_id};
+	if ( $param{btnFunction} and ! $Paper ) {
+		$variable{error} .= "No stock selected for delete.<br/>";
+		$variable{Stock} = new openprint::Paper();
+		return;
+	}
+
 	if ( $param{btnFunction} eq 'Delete' ) {
-		my $new = $Paper->next();
-		$new = $Paper->previous() if $new == $Paper;
-		$Paper->delete();
-		$variable{information} .= 'Stock ' . $Paper->id() . ' has been deleted.';
-		$Paper = $new;
-		$param{stock_id} = $Paper->id();
-		
+			my $new = $Paper->next();
+			$new = $Paper->previous() if $new == $Paper;
+			$Paper->delete();
+			$variable{information} .= 'Stock ' . $Paper->id() . ' has been deleted.';
+			$Paper = $new;
+			$param{stock_id} = $Paper->id();
 	} elsif ( $param{btnFunction} eq 'Copy' ) {
-		$variable{information} .= 'Stock ' . $Paper->id() . ' has been copied.';
+		$variable{information} .= 'Stock ' . $Paper->link_to( $Paper->id() ) . ' has been copied.';
 		my $NewPaper = $Paper->copy();
 		$NewPaper->save();
 		foreach my $Setting ( openprint::Equipment_Stock_Setting->find('stock_id'=>$Paper->id()) ) {
@@ -303,10 +308,17 @@ sub stock {
 		$Paper->message( $param{message} );
 		$Paper->user_type( $param{user_type} );
 
+		my @old_recommendations = $Paper->recommendations();
 		@{$$Paper{recommendations}} = ();
 		foreach my $Type ( openprint::ProjectType->find() ) {
 			push @{$$Paper{recommendations}}, $Type->id() if $param{'chkPRF'.$Type->id()};
 		} # end foreach
+		if ( my @additions = sets::exclude( \@old_recommendations, $$Paper{recommendations} ) ) {
+			push @changes, "Recommendations added: " . join(',', map { $$_{name} } openprint::ProjectType->find( id=>\@additions, order=>'lower(name)' ) ).'<br/>';
+		}
+		if ( my @removals = sets::exclude( $$Paper{recommendations}, \@old_recommendations ) ) {
+			push @changes, "Recommendations removed: " . join(',', map { $$_{name} } openprint::ProjectType->find( id=>\@removals, order=>'lower(name)' ) ).'<br/>';
+		}
 
 		my $message = '';
 # Save prices
@@ -332,7 +344,7 @@ sub stock {
 		$variable{error} .= $Paper->save();
 		(new openprint::Log())->save({ object_type=>(ref $Paper), object_id=>$$Paper{id}, action=>($param{stock_id}?'Edited stock':'Saved stock'), note=>join('<br/>', @changes) });
 		if ( ! $variable{error} ) {
-			$variable{information} .= 'Stock ' . $Paper->id() . ' has been saved.';
+			$variable{information} .= 'Stock ' . $Paper->link_to( $$Paper{id} ) . ' has been saved.';
 			$variable{ExternalRedirect} = '/administrator/stock/stock.html?stock_id='.$$Paper{id};
 		} # end if
 	} elsif ( $param{btnFunction} eq 'Prev' ) {
@@ -352,6 +364,7 @@ sub _prices {
 	if ( $param{action} eq 'Delete' ) {
 		my $PaperPrice = new openprint::PaperPrice( $param{price_id} );
 		$PaperPrice->delete();
+		(new openprint::Log())->save({action=>'Delete Price', Object=>$PaperPrice->Stock(), note=>$PaperPrice->id_string()});
 	} elsif ( $param{action} eq 'Add' ) {
 		my $PaperPrice = new openprint::PaperPrice( );
 		$PaperPrice->paper_id( $param{stock_id} );
@@ -367,11 +380,13 @@ sub _prices {
 sub import_export {
 
 	if ( $param{btnFunction} eq 'Export Stock' ) {
-		my @header = ( 'ID', 'Owner','Manufacturer','Supplier', 'Group','Brand', 'Finish', 'Colour', 'Weight', 'Quality', 'MWeight', 'gsm','Calliper', 'Type','Width', 'Height', 'Basis Width','Basis Height', 'Grain Direction','Supplier','DoubleSided?','Cuttable?','Multiple Parts?','Perfecting','Scoring Required?','Blade Cleaning Required?','Grade','Sheets Per Package','Supplied', 'Digital','Full Packages','Minimum Order','Inventory #','Material Type','Message', 'Recommendations');
+		my @header = ( 'ID', 'Owner','Manufacturer','Supplier', 'Group','Brand', 'Finish', 'Colour', 'Weight', 'Quality', 'MWeight', 'gsm','Calliper', 'Type','Width', 'Height', 'Basis Width','Basis Height', 'Grain Direction','DoubleSided?','Cuttable?','Multiple Parts?','Perfecting','Scoring Required?','Blade Cleaning Required?','Grade','Sheets Per Package','Supplied', 'Digital','Full Packages','Minimum Order','Inventory #','Material Type','Message', 'Recommendations');
 		my @data;
 
 		foreach my $Paper ( openprint::Paper->find( order=>'brand,finish,colour,weight,width,height', 
 					columns=>'*,(SELECT name FROM StockBrands WHERE Stockbrands.id=brand_id) AS brand,(SELECT name FROM StockFinishes WHERE StockFinishes.id=finish_id) AS finish,(SELECT name FROM StockColours WHERE StockColours.id=colour_id) AS colour,(SELECT name FROM StockWeights WHERE StockWeights.id=weight_id) AS weight ') ) {
+			next if ! $Paper->recommendations();
+
 			push @data, $Paper->id(), $Paper->owner(), $Paper->manufacturer(), $Paper->Supplier()->name(), $Paper->group(), $Paper->brand(), $Paper->finish(), $Paper->colour(), $Paper->weight(), $Paper->quality(), 
 			$Paper->mweight(), $Paper->gsm(), $Paper->calliper(), $Paper->type(), $Paper->width(), $Paper->height(), $Paper->basis_width(), $Paper->basis_height(), $Paper->grain_direction(), $Paper->doublesided(), $Paper->cuttable(), $Paper->multipart(), $Paper->perfecting(), $Paper->score_required(), $Paper->bladecleaning(), $openprint::Paper::grades{$Paper->grade()}, $Paper->sheets_per_package(), $Paper->supplied(), $Paper->digital(), $Paper->full_packages(), $Paper->minimum_order(), $Paper->inventory_number(), $Paper->material(), $Paper->message();
 			push @data, join(',', map { new openprint::ProjectType($_)->name() } $Paper->recommendations());
@@ -423,7 +438,10 @@ sub import_export {
 				my $Paper = $papers{$paper_id} ? $papers{$paper_id} : new openprint::Paper();
 				$Paper->owner_id( $owners{$owner} ? $owners{$owner} : $session{company_id} );
 				$Paper->manufacturer( $manufacturer );
-				$Paper->supplier( $supplier );
+				if ( $supplier ) {
+				my $supplier_id = openprint::Supplier::get_or_create( $supplier );
+				$Paper->supplier_id( $supplier_id );
+				}
 				$Paper->group( $group );
 				$Paper->brand( $brand );
 				$Paper->finish( $finish );
@@ -459,7 +477,7 @@ sub import_export {
 				if ( $rc ) {
 					$error .= "Error adding Stock: $rc<br>";
 					$error .= Data::Dumper::Dumper( $Paper );
-					next;
+					last;
 				} # end if
 				$import_count += 1;
 		

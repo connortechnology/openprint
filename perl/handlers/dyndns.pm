@@ -46,6 +46,7 @@ sub handler {
 	$request->push_handlers(PerlCleanupHandler => \&cleanup);
 
 	$dbh = sql::open_sql( $log, 
+			port		=> $r->dir_config('db_port'),
 			database	=> $r->dir_config('db_name'),
 			driver		=> $r->dir_config('db_driver'), 
 			host		=> $r->dir_config('db_host'),

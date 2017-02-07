@@ -27,10 +27,10 @@ name=>'invoicer_id', prepend=>['','select']
 					<input type="text" name="invoicee" id="invoicee" style="display: none;"/>
 				</li>
 				<li class="posted_on"><label>Posted On</label>
-				<? echo ( date_select( 'posted_on', $$variable{Invoice}->posted_on() ); ) ?>
+				<? echo ( date_select( 'posted_on', $$variable{Invoice}->posted_on(), { with_today=>1 } ); ) ?>
 				</li>
 				<li class="due_on"><label>Due On</label>
-				<? echo ( date_select( 'due_on', $$variable{Invoice}->due_on() ); ) ?>
+				<? echo ( date_select( 'due_on', $$variable{Invoice}->due_on(), { with_today=>1 } ); ) ?>
 				</li>
 				<li class="monthly_interest"><label for="monthly_interest">Interest Rate</label>
 					<? echo ( input( type=>'float', name=>'monthly_interest', id=>'monthly_interest', value=>($$variable{Invoice}->id() ? $$variable{Invoice}->monthly_interest() : $config{'Default Interest'}) ); ) ?>%
@@ -41,7 +41,7 @@ name=>'invoicer_id', prepend=>['','select']
 								ssi::select( [ 'percent', 'Percent', 'amount', 'Amount' ], $$variable{Invoice}->early_payment_units(), { name=>'early_payment_units', id=>'early_payment_units' } ),
 					); ) ?>
 				<li class="early_payment_date"><label>Early Payment Date</label>
-				<? echo ( date_select( 'early_payment_date', $$variable{Invoice}->early_payment_date() ); ) ?>
+				<? echo ( date_select( 'early_payment_date', $$variable{Invoice}->early_payment_date(), { with_today=>1 } ); ) ?>
 				</li>
 			</ul>
 		</div>
@@ -116,7 +116,7 @@ name=>'invoicer_id', prepend=>['','select']
 </div>
 <?eval( $$variable{Object} = $$variable{Invoice} ) ?>
 <?include(/employee/assets/_asset_upload.html)?>
-<?include('_logs.html')?>
+<? echo ( include_logs( $$variable{Invoice} ); ) ?>
 <? endif ( $$variable{Invoice}->id() ) ?>
 </form>
 </div></div>

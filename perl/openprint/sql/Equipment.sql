@@ -13,7 +13,7 @@ CREATE TABLE tbl_Equipment (
 	strSupplier			TEXT,
 	image				TEXT, /* Relative to /images/equipment */
 	useinscheduling		boolean,
-	useinestimation		boolean,
+	useinestimating		boolean,
 	jmf_enabled			boolean,
 	instantgate_enabled	boolean,
 	cost_center				TEXT, 

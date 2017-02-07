@@ -274,6 +274,8 @@ sub view {
 		$variable{ExternalRedirect} = '/employee/purchase_order/view.html?po_id='.$PO->id();
 	} elsif ( $param{btnFunction} eq 'Received' ) {
 	} elsif ( $param{btnFunction} eq 'Copy' ) {
+		my @notifications = $PO->notifications();
+
 		my $New = $PO->copy();
 		if ( ! ( $variable{error} = $New->save() ) ) {
 			foreach my $C ( $PO->Contents() ) {
@@ -281,21 +283,14 @@ sub view {
 				$C->po_id( $New->id() );
 				$C->save();
 			} # end foreach
-			$New->update_notifications();
+			$New->notifications( \@notifications );
+			$New->update_notifications( );
 			$New->save();
-			$variable{information} .= 'PO ' . $PO->id() . ' copied to PO ' . $New->id() .'<br/>';
+			$variable{information} .= 'PO ' . $PO->link_to() . ' copied to PO ' . $New->link_to() .'<br/>';
 			my $L = new openprint::PurchaseOrder_Log();
-			$L->save({
-					'user_id'	=>	$session{user_id},
-					'po_id'		=>	$New->id(),
-					'reason'	=>	'Copied from PO '. $PO->id(),
-					});
+			$L->save({ user_id	=>	$session{user_id}, po_id		=>	$New->id(), reason	=>	'Copied from PO '. $PO->id(), });
 			$L = new openprint::PurchaseOrder_Log();
-			$L->save({
-					'user_id'	=>	$session{user_id},
-					'po_id'		=>	$PO->id(),
-					'reason'	=>	'Copied to PO '. $New->id(),
-					});
+			$L->save({ user_id	=>	$session{user_id}, po_id		=>	$PO->id(), reason	=>	'Copied to PO '. $New->id(), });
 			$PO = $New;
 			if ( $PO->total() ) {
 				if ( $PO->can_authorize() ) {
@@ -619,11 +614,19 @@ sub history {
 			} # end if
 		} # end foreach po_id
 		delete $param{po_id};
+	} elsif ( $param{btnFunction} eq 'reset' ) {
+		my $uri = $r->uri();
+		foreach my $key ( keys %session ) {
+			if ( $key =~ /^$uri/ ) {
+$log->error("$key deleted");
+				delete $session{$key};
+			}
+		} # end foreach
 	} # end if
 	_history();
-	ssi::setup_date_select( '/employee/purchase_order/history.html', 'starting_start', -7 );
-	ssi::setup_date_select( '/employee/purchase_order/history.html', 'starting_end', '' );
-	$session{'/employee/purchase_order/history.html?cancelled'} = '0' if ! exists $session{'/employee/purchase_order/history.html?cancelled'};
+	ssi::setup_date_select( $r->uri(), 'starting_start', -7 );
+	ssi::setup_date_select( $r->uri(), 'starting_end', '' );
+	$session{$r->uri().'?cancelled'} = '0' if ! exists $session{$r->uri().'?cancelled'};
 
 } # end sub history
 

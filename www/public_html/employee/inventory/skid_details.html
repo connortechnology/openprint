@@ -111,7 +111,7 @@
 				<select id="ddmLocation" name="ddmLocation">
 					<option value="">select</option>
 					<? echo ( 
-						make_drop_down( openprint::Location->dropdown(type=>'place', order=>'parent_id NULLS FIRST,lower(name)'), $$variable{Skid} ? $$variable{Skid}->location_id() : $param{ddmLocation} );
+						make_drop_down( openprint::Location->dropdown(type=>'place', order=>'parent_id NULLS FIRST,lower(name)', company_id=>$openprint::Owner->id()), $$variable{Skid} ? $$variable{Skid}->location_id() : $param{ddmLocation} );
 						) ?>
 				</select>
 				<? echo ( join('',
@@ -131,14 +131,7 @@
 			</li>
 			<li>
 				<label>Purchase Order</label>
-				<? echo (
-					my $html = '';
-					my @po_ids = sets::union( map { $_->po_id() } openprint::Manifest_Content_Type->find( 'skid_id any'=>$$variable{Skid}->id() ) );
-					foreach my $po_id ( @po_ids ) {
-						$html .= sprintf('<a href="/employee/purchase_order/view.html?po_id=%1$s">%1$s</a><br/>', $po_id );
-					} # end foreach MCT
-					return $html;
-				) ?>
+				<? echo ( return join('<br/>', map { $_->link_to() } $$variable{Skid}->PurchaseOrders() );) ?>
 			</li>
 <? endif ( $$variable{Skid}->id() ) ?>
 			<li>

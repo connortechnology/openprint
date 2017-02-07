@@ -1,22 +1,15 @@
 Click on the image to stop streaming.
 <ul>
 	<? echo (
-		if ( ! $$variable{'Monitors'} ) {
-			my $zm_dbh = sql::open_sql( $log,
-				  'database'  => $config{'zm_db_name'},
-				  'driver'    => $config{'zm_db_driver'},
-				  'host'      => $config{'zm_db_hostname'},
-				  'login'     => $config{'zm_db_username'},
-				  'password'  => $config{'zm_db_password'},
-				);
-			return 'Unable to connect to ZM database<br/>' if ! $zm_dbh;
-			require openprint::ZM_Monitor;
-			@{$$variable{'Monitors'}} = openprint::ZM_Monitor->find('dbh'=>$zm_dbh, 'order'=>'Sequence', 'function !=' => 'None', enabled=>1 );
-			$zm_dbh->disconnect();
-		} # end if
+		require openprint::ZM_Monitor;
+
+		my $zm_dbh = openprint::ZM_Monitor->connect();
+		return 'Unable to connect to ZM database<br/>' if ! $zm_dbh;
+
+		@{$$variable{Monitors}} = openprint::ZM_Monitor->find( dbh=>$zm_dbh, order=>'Sequence', 'function !=' => 'None', enabled=>1 );
 		my $html;
-		my @monitor_ids = split(',', $session{'cameras_viewing'} );
-		foreach my $Monitor ( @{$$variable{'Monitors'}} ) {
+		my @monitor_ids = split(',', $session{cameras_viewing} );
+		foreach my $Monitor ( @{$$variable{Monitors}} ) {
 			next if ! sets::isin( $Monitor->id(), \@monitor_ids );
 			next if ! $Monitor->can_view();
 

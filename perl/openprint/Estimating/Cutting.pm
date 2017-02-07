@@ -35,14 +35,14 @@ my @equipment;
 my @PreFoldingEquipment;
 
 my @variables = (
-        'txtPrice1', 'txtPrice2', 'txtPrice3',
+		'txtPrice1', 'txtPrice2', 'txtPrice3',
 		'Markup1','Markup2','Markup3',
 		'OverridePrice1', 'OverridePrice2', 'OverridePrice3',
-        'MPrice1', 'MPrice2', 'MPrice3',
-        'txtQuantity1', 'txtQuantity2', 'txtQuantity3',
-        'txtRunTime1', 'txtRunTime2', 'txtRunTime3',
+		'MPrice1', 'MPrice2', 'MPrice3',
+		'txtQuantity1', 'txtQuantity2', 'txtQuantity3',
+		'txtRunTime1', 'txtRunTime2', 'txtRunTime3',
 		'txtFinishedCalliper',
-        );
+		);
 
 sub variables {
 	my @v = @variables;
@@ -177,8 +177,8 @@ sub neccessary {
 } # end sub neccessary
 
 sub load_equipment {
-    my ( $Project ) = @_;
-    my $services = $Project->services();
+	my ( $Project ) = @_;
+	my $services = $Project->services();
 
 	my @capabilities = ('Y','When Printing','When Folding');
 	if ( $$services{SaddleStitching} or $$services{LoopStitching} ) {
@@ -187,15 +187,9 @@ sub load_equipment {
 	if ( sets::isin( $Project->Type()->name(), ['Banners','InkjetOutputs'] ) ) {
 		push @capabilities, 'Large Format';
 	} # end if
-if ( 0 ) {
-	my @capabilities = ('Y');
-	if ( sets::isin( $Project->Type()->name(), ['Banners','InkjetOutputs'] ) ) {
-		push @capabilities, 'Large Format';
-	} # end if
-}
 	$log->debug("load_equipment");
 	@equipment = openprint::Equipment->find( Specifications => {'Cutting Capable'=>\@capabilities}, useinestimating=>1, order=>'lower(strName)');
-	@PreFoldingEquipment = openprint::Equipment->find( Specifications => {'Cutting Capable'=>['Y','When Printing']}, 'useinestimating'=>1,'order'=>'lower(strName)');
+	@PreFoldingEquipment = openprint::Equipment->find( Specifications => {'Cutting Capable'=>['Y','When Printing']}, useinestimating=>1, order=>'lower(strName)');
 } # end sub load_equipment
 
 sub signature_calc_stock_cutting {
@@ -395,7 +389,8 @@ sub signature_calc_folding_cutting {
 	my ( $Project, $sig_specs, $specs, $qty_index, $Paper, $I, $fold_specs, $calc_hash ) = @_;
 
 	my %results = (
-			Status	=> 'calculated',
+			alert		=>	'',
+			Status	=>	'calculated',
 			);
 
 	my $services = $Project->services();
@@ -510,6 +505,12 @@ sub signature_calc {
 		$results{alert} = $Paper->to_string() . ': Stock is not cuttable.';
 		return %results;
 	} # end if
+	if ( ! $$Imposition{imposition} ) {
+		$openprint::log->error("Have empty imposition in Cutting.");
+		$results{alert} = 'Imposition was empty.';
+		$results{Status} = 'uncalculated';
+		return %results;
+	}
 	my $services = $Project->services();
 	my $printing_specs = openprint::service::get_specs_ref( $Project, $$services{''}[0] ) if $$services{''} and @{$$services{''}};
 
@@ -727,6 +728,8 @@ $openprint::log->debug("Folding impositions: " . @folding_impositions ) if DEBUG
 				next;
 			} # end if
 		} # end if
+
+			
 
 		my $sheets = ceil( $$sig_specs{'txtQuantity'.$qty_index} / $$I{imposition} );
 		$sheets *= $$sig_specs{PageQuantity} if $$sig_specs{PageQuantity};
@@ -1201,7 +1204,7 @@ sub calc {
 				next;
 			} # end if
 			my $Imposition = new openprint::Imposition();
-			$Imposition->load( $sig_specs, $qty_index );
+			$Imposition->load( $sig_specs, $qty_index, $Project );
 			next if ! $$Imposition{imposition};
 			my $Paper = $Imposition->Paper();
 			if ( $$Paper{type} eq 'Sheet' and $Paper->is_cut() ) {

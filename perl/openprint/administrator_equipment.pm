@@ -79,18 +79,18 @@ sub export_specs {
 	my @header = ( 'Equipment ID', 'Field Name','Min', 'Max', 'Units', 'Value','Interpolate' );
 
 	my @data;
-	foreach my $Spec ( openprint::EquipmentSpecification->find( 'equipment_id'=>$Equipment->id(), 'order'=>'strName, dblmin' ) ) {
-		push @data, $Spec->Equipment()->strid(), $Spec->name(), $Spec->min(), $Spec->max(), $Spec->units(), $Spec->value(), $Spec->interpolate();
+	foreach my $Spec ( openprint::EquipmentSpecification->find( equipment_id=>$Equipment->id(), order=>'strName, dblmin' ) ) {
+		push @data, $Equipment->strid(), $Spec->name(), $Spec->min(), $Spec->max(), $Spec->units(), $Spec->value(), $Spec->interpolate();
 	} # end foreach
 
 	misc::export_csv( $r, $log, \%variable, 'equipment_specifications'.($Equipment->id()?'_'.$Equipment->strid():'').'.csv', \@header, \@data );
-	openprint::logs::insertLogRecord('38',);
 } # end sub export_specs
 
 sub edit {
-	my $Equipment = new openprint::Equipment( $param{ddmEquipment} );
-	if ( $param{ddmEquipment} and ! $$Equipment{id} ) {
-		$variable{error} .= "Equipment $param{ddmEquipment} not found.<br/>";
+	my $Equipment = $variable{Equipment} = openprint::Equipment->find_one( id=>$param{ddmEquipment} );
+	if ( ! $Equipment ) {
+		$variable{error} .= "Equipment $param{ddmEquipment} not found.<br/>" if $param{ddmEquipment};
+		$Equipment = new openprint::Equipment();
 	}
 
 	if ( $param{btnFunction} eq 'Next' ) {
@@ -126,17 +126,122 @@ sub edit {
 	} elsif ( $param{btnFunction} eq 'Export Specifications' ) {
 		export_specs( $Equipment );
 	} elsif ( $param{btnFunction} eq 'Export Folds' ) {
-		my @header = ( 'Equipment ID', 'Fold Type', 'Description', 'Pages', 'Horizontal Pages', 'Vertical Pages', 'Folds', 'Angles', 'Spine Direction', 'Min Imposition', 'Max Imposition', 'Min Page Width', 'Max Page Width', 'Min Page Height', 'Max Page Height', 'Min Calliper', 'Max Calliper', 'Printing Type', 'Make Ready Time', 'Make Ready Overs', 'Make Ready Units', 'Run Overs', 'Run Overs Units', 'Inline Cutting', 'When Stitching', 'When Perfect Binding', 'Spine Pasting', 'Min Weight', 'Max Weight', 'Units', 'Speed' );
+		my @header = ( 'Equipment ID', 'Fold Type', 'Description', 'Pages', 'Horizontal Pages', 'Vertical Pages', 'Folds', 'Angles', 'Spine Direction', 'Min Imposition', 'Max Imposition', 'Min Page Width', 'Max Page Width', 'Min Page Height', 'Max Page Height', 'Min Calliper', 'Max Calliper', 'Printing Type', 'Make Ready Time', 'Make Ready Overs', 'Make Ready Units', 'Run Overs', 'Run Overs Units', 'Inline Cutting', 'When Stitching', 'When Perfect Binding', 'Spine Pasting');
 
+		my $max_speeds = 0;
 		my @data;
-		foreach my $Fold ( openprint::Fold->find( equipment_id=>$Equipment->id(), order=>'type, pages' ) ) {
-			foreach my $Speed ( $Fold->Specifications() ) {
-				push @data, $Fold->Equipment()->strid(), $Fold->type(), $Fold->name(), $Fold->pages(), $Fold->page_columns(), $Fold->page_rows(), $Fold->folds(), $Fold->angles(), $Fold->spine_direction(), $Fold->min_imposition(), $Fold->max_imposition(), $Fold->min_width(), $Fold->max_width(), $Fold->min_height(), $Fold->max_height(), $Fold->min_calliper(), $Fold->max_calliper(), $Fold->printing_type(), $Fold->makeready_time(), $Fold->makeready_overs(), $Fold->makeready_overs_units(), $Fold->run_overs(), $Fold->run_overs_units(), $Fold->cutting(), $Fold->stitching(), $Fold->perfectbind(), $Fold->spinepaste(), $Speed->min_weight(), $Speed->max_weight(), $Speed->weight_units(), $Speed->runspeed();
-			} # end foreach	
-		} # end foreach
+		my @Folds = openprint::Fold->find( equipment_id=>$Equipment->id(), order=>'type, pages' );
+		foreach my $Fold ( @Folds ) {
+			my @Speeds = $Fold->Specifications();
+			$max_speeds = scalar @Speeds if scalar @Speeds > $max_speeds;
+		}
+		foreach ( 1 .. $max_speeds ) {
+			push @header, ( 'Min Weight', 'Max Weight', 'Units', 'Speed', 'Interpolate' );
+		}
+
+		foreach my $Fold ( @Folds ) {
+				push @data, $Fold->Equipment()->strid(), $Fold->type(), $Fold->name(), 
+					 $Fold->pages(), $Fold->page_columns(), $Fold->page_rows(), 
+					 $Fold->folds(), $Fold->angles(), $Fold->spine_direction(), 
+					 $Fold->min_imposition(), $Fold->max_imposition(), 
+					 $Fold->min_width(), $Fold->max_width(), $Fold->min_height(), $Fold->max_height(), $Fold->min_calliper(), $Fold->max_calliper(), 
+					 $Fold->printing_type(), $Fold->makeready_time(), $Fold->makeready_overs(), $Fold->makeready_overs_units(), 
+					 $Fold->run_overs(), $Fold->run_overs_units(), 
+					 $Fold->cutting(), $Fold->stitching(), $Fold->perfectbind(), $Fold->spinepaste();
+			my @Speeds = $Fold->Specifications();
+			my $speeds = scalar @Speeds;
+
+			foreach my $Speed ( @Speeds ) {
+				push @data, $Speed->min_weight(), $Speed->max_weight(), $Speed->weight_units(), $Speed->runspeed(), $Speed->interpolate();
+			} # end foreach	Speed
+			foreach ( 1 .. ($max_speeds - $speeds ) ) {
+				push @data, '','','','','';
+			}
+		} # end foreach Fold
 
 		misc::export_csv( $r, $log, \%variable, 'fold_definitionss'.($Equipment->id()?'_'.$Equipment->strid():'').'.csv', \@header, \@data );
 		(new openprint::Log())->save({ action=>'Export Fold Definitions' });
+	} elsif ( $param{btnFunction} eq 'Import Folds' ) {
+		my %equipment = map { $_->strid(), $_->id() } openprint::Equipment->find();
+# if ! $Equipment->id();
+
+		my $error = '';
+		if ( ! $param{fileFolds} ) {
+			$variable{error} .= 'No file given to upload.<br>';
+			return;
+		} # end if
+
+		my $ac = sql::start_transaction( $dbh );
+
+        sql::execute( undef, undef, 'DELETE FROM Folds' . ( $Equipment->id()?' WHERE equipment_id=' . $Equipment->id():''));
+
+        my $upload = $r->upload( 'fileFolds' );
+        my $io = $upload->io();
+        $_ = <$io>;
+
+        my $csv = Text::CSV_XS->new();
+
+        while (<$io>) {
+			my $status = $csv->parse($_);
+			my ( $equipment_strid, $type, $name, $pages, $page_columns, $page_rows, $folds, $angles, $spine_direction, 
+					$min_imposition, $max_imposition, $min_width, $max_width, $min_height, $max_height, 
+					$min_calliper, $max_calliper, 
+					$printing_type, $makeready_time, $makeready_overs, $makeready_overs_units, $run_overs, $run_overs_units, $cutting, $stitching, $perfectbind, $spinepaste, @speeds )
+
+				= misc::trim( $csv->fields() );
+
+			if ( ! $equipment{$equipment_strid} ) {
+				$error .= "Equipment $equipment_strid not found.<br>";
+$log->error($error);
+				next;
+			} 
+			my $Fold = new openprint::Fold();
+			$error .= $Fold->save({
+					equipment_id          =>  $equipment{$equipment_strid},
+					type                  =>  $type,
+					name                  =>  $name,
+					min_width             =>  $min_width,
+					max_width             =>  $max_width,
+					min_height            =>  $min_height,
+					max_height            =>  $max_height,
+					min_calliper          =>  $min_calliper,
+					max_calliper          =>  $max_calliper,
+					pages                 =>  $pages,
+					page_columns          =>  $page_columns,
+					page_rows             =>  $page_rows,
+					min_imposition        =>  $min_imposition,
+					max_imposition        =>  $max_imposition,
+					cutting               =>  $cutting,
+					stitching             =>  $stitching,
+					perfectbind           =>  $perfectbind,
+					spinepaste            =>  $spinepaste,
+					spine_direction       =>  $spine_direction,
+					makeready_time        =>  $makeready_time,
+					makeready_overs       =>  $makeready_overs,
+					makeready_overs_units =>  $makeready_overs_units,
+					run_overs_units       =>  $run_overs_units,
+					run_overs             =>  $run_overs,
+					folds                 =>  $folds,
+					angles                =>  $angles,
+					printing_type         =>  $printing_type,
+			});
+			while ( my ( $min_weight, $max_weight, $weight_units, $runspeed, $interpolate ) = splice @speeds, 0, 5 ) {
+				next if ! $runspeed;
+				my $Speed =  new openprint::FoldSpecification();
+				$error .= $Speed->save({
+						fold_id       =>  $$Fold{id},
+						min_weight    =>  $min_weight,
+						max_weight    =>  $max_weight,
+						weight_units  =>  $weight_units,
+						runspeed      =>  $runspeed,
+						interpolate   =>  $interpolate,
+						});
+
+			} # end while speeds
+
+		} # end while IO
+        sql::end_transaction( $dbh, $ac );
+	$variable{error} = $error;
 	} # end if
 
 	$variable{Equipment} = $Equipment;
@@ -292,7 +397,7 @@ sub list {
 sub _list {
     ssi::save_params( '/administrator/equipment/list.html', (
                 ( map { 'created_on_start_' . $_ } ( 'year','month','day' ) ),
-				'deleted',
+				'deleted', 'equipment_name',
                 ) );
 }
 

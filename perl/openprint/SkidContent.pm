@@ -68,11 +68,11 @@ sub delete {
 } # end sub delete
 
 sub allocateable {
-	if ( ! exists $_[0]{'allocateable'} ) {
-		$_[0]{'allocateable'} = $_[0]->quantity() - $_[0]->allocated();
-		$_[0]{'allocateable'} = 0 if $_[0]{'allocateable'} < 0;
+	if ( ! exists $_[0]{allocateable} ) {
+		$_[0]{allocateable} = $_[0]->quantity() - $_[0]->allocated();
+		$_[0]{allocateable} = 0 if $_[0]{allocateable} < 0;
 	} # end if
-	return $_[0]{'allocateable'};
+	return $_[0]{allocateable};
 } # end sub allocateable
 
 sub allocated {
@@ -93,10 +93,10 @@ sub condition {
 			$Condition->save({'name'=>$condition});
 		} # end if
         @$self{'condition_id','condition'} = @$Condition{'id','name'};
-    } elsif ( $$self{'condition_id'} and ! $$self{'condition'} ) {
-        $$self{'condition'} = new openprint::InventoryCondition( $$self{'condition_id'} )->name();
+    } elsif ( $$self{condition_id} and ! $$self{condition} ) {
+        $$self{condition} = new openprint::InventoryCondition( $$self{condition_id} )->name();
     } # end if
-    return $$self{'condition'};
+    return $$self{condition};
 } # end sub condition
 
 sub Condition {
@@ -104,72 +104,67 @@ sub Condition {
 	return new openprint::InventoryCondition( $_[0]{condition_id} );
 } # end sub Condition
 
-# Looks to find a PO matching this stock and pulls the value from it.
-# SKids can have multiple manifests, but only one PO
-sub cost {
+sub Cost {
 	my $self = $_[0];
-	if ( ! exists $$self{'cost'} ) {
-		require openprint::ManifestContent;
-		my @MCS = openprint::ManifestContent->find('skid_id'=>$$self{'skid_id'});
-		foreach my $MC ( @MCS ) {
+	if ( ! exists $$self{Cost} ) {
+		foreach my $MC ( $_[0]->Manifest_Contents() ) {
 			my $Type = $MC->Type();
 			if ( $Type->cost() ) {
-				$$self{'cost'} = $Type->cost();
-			} else {
-				my $POC = $Type->PurchaseOrder_Content();
-				return if ! $POC;
-				my $POCurrency = $POC->PurchaseOrder()->Currency();
-				if ( $POCurrency ) {
-					$$self{'cost'} = $POCurrency->convert_from( $POC->price() );
-				} else {
-					$$self{'cost'} = $POC->price();
-				} # end if
-			} # end if
-			last if $$self{cost};
-		} # end foreach MC
-	} # end if ! exists cost
-    return $$self{'cost'};
-} # end sub cost
-
-# Looks to find a PO matching this stock and pulls the value from it.
-sub value {
-	my $self = $_[0];
-	if ( ! exists $$self{'value'} ) {
-		require openprint::ManifestContent;
-		my @MCS = openprint::ManifestContent->find( skid_id=>$$self{'skid_id'});
-		foreach my $MC ( @MCS ) {
-			my $Type = $MC->Type();
-
-			my ( $cost, $units );
-			if ( $Type->cost() ) {
-				$cost = $Type->cost();
-				$units = $Type->cost_units();
+				$$self{Cost} = {
+					cost	=>	$Type->cost(),
+					units	=>	$Type->cost_units(),
+				};
 			} else {
 				my $POC = $Type->PurchaseOrder_Content();
 				next if ! $POC;
 				my $POCurrency = $POC->PurchaseOrder()->Currency();
 				if ( $POCurrency ) {
-					$cost = $POCurrency->convert_from( $POC->price() );
+					$$self{Cost}{cost} = $POCurrency->convert_from( $POC->price() );
 				} else {
-					$cost = $POC->price();
+					$$self{Cost}{cost} = $POC->price();
 				} # end if
-				$units = $POC->price_units();
+				$$self{Cost}{units} = $POC->price_units();
 			} # end if
-			if ( (!$units) or sets::isin( $units, ['/100lbs', '', '/cwt' ] ) ) {
-				$$self{'value'} = $$self{'quantity'} * $cost / 100;
-			} else {
-				$$self{'value'} = $$self{'quantity'} * $cost;
-			} # end if
-			last if $$self{'value'};
+			last if $$self{Cost};
 		} # end foreach MC
+	} # end if ! exists cost
+	return $$self{Cost};
+}
+# Looks to find a PO matching this stock and pulls the value from it.
+# SKids can have multiple manifests, but only one PO
+sub cost {
+	my $Cost = $_[0]->Cost();
+	return $$Cost{cost} if $Cost;
+	return;
+} # end sub cost
+
+# Looks to find a PO matching this stock and pulls the value from it.
+sub value {
+	my $self = $_[0];
+	if ( ! exists $$self{value} ) {
+		
+		my $Cost = $_[0]->Cost();
+		if ( $Cost ) {
+$openprint::log->debug("cost for $$self{skid_id} $$Cost{units} $$Cost{cost}") if $debug;
+			if ( (!$$Cost{units}) or ($$Cost{units} eq '/100lbs' or $$Cost{units} eq '/cwt') ) {
+				$$self{value} = $$self{quantity} * $$Cost{cost} / 100;
+			} else {
+				$$self{value} = $$self{quantity} * $$Cost{cost};
+			} # end if
+		} else {
+$openprint::log->debug("No cost for $$self{skid_id}") if $debug;
+		} # end Cost
 	} # end if ! exists value
-    return $$self{'value'};
+	return $$self{value} if $$self{value};
+	return;
 } # end sub value
 
 sub Manifest_Contents {
-	require openprint::ManifestContent;
-    my @MCS = openprint::ManifestContent->find( skid_id=>$_[0]{skid_id}, order=>'id' );
-	return @MCS;
+	if ( ! $_[0]{ManifestContents} ) {
+		require openprint::ManifestContent;
+		$_[0]{ManifestContents} = [ openprint::ManifestContent->find( skid_id=>$_[0]{skid_id}, order=>'id' ) ];
+	}
+	return @{$_[0]{ManifestContents}};
 }
 
 sub checked_out {
