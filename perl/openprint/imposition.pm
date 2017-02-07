@@ -104,8 +104,8 @@ $setup->display("Trying dutch from:") if DEBUG_DUTCH;
 			$openprint::log->debug("Setting dutch paper width to " . $dutch_imp->used_width() );
 			$Paper->width( $dutch_imp->used_width() );
 		}
-		if ( ! $Paper->height() ) {
-			$openprint::log->debug("Setting Paper height... " . $Paper->height() . " to " . $dutch_imp->used_height() );
+		if ( ! $$Paper{height} ) {
+			$openprint::log->debug("Setting Paper height... " . $$Paper{height} . " to " . $dutch_imp->used_height() );
 			$Paper->height( $dutch_imp->used_height() );
 		}
 
@@ -146,8 +146,8 @@ $setup->display("Trying dutch from:") if DEBUG_DUTCH;
 			$openprint::log->debug("Setting Paper width.... " . $Paper->start_width() . " to " . $dutch_imp->used_width() );
 			$Paper->width( $dutch_imp->used_width() );
 		} # end if
-		if ( ! $Paper->height() ) {
-			$openprint::log->debug("Setting Paper height... " . $Paper->height() . " to " . $dutch_imp->used_height() );
+		if ( ! $$Paper{height} ) {
+			$openprint::log->debug("Setting Paper height... " . $$Paper{height} . " to " . $dutch_imp->used_height() );
 			$Paper->height( $dutch_imp->used_height() );
 		}
 
@@ -275,9 +275,9 @@ sub calc_setup_object {
 	if ( my $amount = $Press->specification($run_style.' Pre-trim stock') ) {
 $openprint::log->debug("Pretrimming by $amount") if DEBUG;
 		$Paper = $Paper->clone();
-		$Paper->cut( $Paper->width() - $amount, $Paper->height() - $amount );
-		$Paper->width( 0 ) if $Paper->width() < 0;
-		$Paper->height( 0 ) if $Paper->height() < 0;
+		$Paper->cut( $$Paper{width} - $amount, $$Paper{height} - $amount );
+		$Paper->width( 0 ) if $$Paper{width} < 0;
+		$Paper->height( 0 ) if $$Paper{height} < 0;
 	} else {
 $openprint::log->debug("Not Pretrimming on $$Press{strid}") if DEBUG;
 	} # end if
@@ -314,21 +314,21 @@ $openprint::log->debug("Not Pretrimming on $$Press{strid}") if DEBUG;
 	$setup1->colour_bar_orientation( $$specs{'Colour Bar Orientation'} );
 
 
-	$setup2->quantity( 1 );
+	$$setup2{quantity} = 1;
 	$$setup2{sides} = $$specs{print_sides};
-	$setup2->Paper( $Paper->clone() );
-	$setup2->runstyle( $run_style );
-	$setup2->image_orientation('Horizontal');
-	$setup2->bleed_size( $bleed_size );
-	$setup2->spread_size( $$specs{txtSpreadSize} );
-	$setup2->spread_rows( 1 );
-	$setup2->spread_columns( 1 );
-	$setup2->page_rows( Math::Round::nearest( 1, $$specs{txtHeight}/$$specs{txtFinalHeight} ) );
-	$setup2->page_columns( Math::Round::nearest( 1, $$specs{txtWidth}/$$specs{txtFinalWidth}) );
+	$$setup2{Paper} = $Paper->clone();
+	$$setup2{runstyle} = $run_style;
+	$$setup2{image_orientation} = 'Horizontal';
+	$$setup2{bleed_size} = $bleed_size;
+	$$setup2{spread_size} = $$specs{txtSpreadSize};
+	$$setup2{spread_rows} = 1;
+	$$setup2{spread_columns} = 1;
+	$$setup2{page_rows} = Math::Round::nearest( 1, $$specs{txtHeight}/$$specs{txtFinalHeight} );
+	$$setup2{page_columns} = Math::Round::nearest( 1, $$specs{txtWidth}/$$specs{txtFinalWidth});
 	$setup2->object_width( $image_width );
 	$setup2->object_height( $image_height );
-	$setup2->Press( $Press );
-	$setup2->printing_type( $Press->specification('Printing Type') );
+	$$setup2{Press} = $Press;
+	$$setup2{printing_type} = $Press->specification('Printing Type');
 	$setup2->colour_bar_orientation( $$specs{'Colour Bar Orientation'} );
 
 	# Grain is on the second dimension by default (according to Rick)
@@ -336,29 +336,29 @@ $openprint::log->debug("Not Pretrimming on $$Press{strid}") if DEBUG;
 	#		we need to rotate the sheet because that is what would physically happen when running the job, width will always be
 	#		the largest dimension when running the paper on the press. 'rotate_sheet' is used to track grain direction.
 	if ( $$specs{Orientation} eq 'Portrait' ) {
-		if ( 1*$Paper->width() > 1*$Paper->height() ) {
+		if ( $$Paper{width} > $$Paper{height} ) {
 			$setup1->rotate_sheet(1);
 			$setup2->rotate_sheet(1);
-			$paper_width = $Paper->height();
-			$paper_height = $Paper->width();
+			$paper_width = $$Paper{height};
+			$paper_height = $$Paper{width};
 		} else {
 			$setup1->rotate_sheet(0);
 			$setup2->rotate_sheet(0);
-			$paper_width = $Paper->width();
-			$paper_height = $Paper->height();
+			$paper_width = $$Paper{width};
+			$paper_height = $$Paper{height};
 		} # end if
 	} else {
 		# default to landscape
-		if ( 1*$Paper->width() < 1*$Paper->height() ) {
+		if ( $$Paper{width} < $$Paper{height} ) {
 			$setup1->rotate_sheet(1);
 			$setup2->rotate_sheet(1);
-			$paper_width = $Paper->height();
-			$paper_height = $Paper->width();
+			$paper_width = $$Paper{height};
+			$paper_height = $$Paper{width};
 		} else {
 			$setup1->rotate_sheet(0);
 			$setup2->rotate_sheet(0);
-			$paper_width = $Paper->width();
-			$paper_height = $Paper->height();
+			$paper_width = $$Paper{width};
+			$paper_height = $$Paper{height};
 		} # end if
 	} # end if
 	$setup1->sheet_width( $paper_width );
