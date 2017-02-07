@@ -19,9 +19,14 @@ $log->debug("Filter due to spec $spec on $$Product{name}");
 		}
 		next if $spec_filter;
 			
-		my %Prices = map { $_->min() == $_->max() ? ( $_->min() => $_ ) : () } $Product->Prices();
+		my @Prices = $Product->Prices();
+		
+		my %Prices = map { $_->min() == $_->max() ? ( $_->min() => $_ ) : () } @Prices if @Prices < 10;
 
-		$html .= sprintf('<tr><td>%s</td><td class="Price">', $Product->link_to() );
+		my $name = $Product->name();
+		$name =~ s/$$variable{Category}{name}//g;
+
+		$html .= sprintf('<tr><td>%s</td><td class="Price">', $Product->link_to( $name ) );
 		$html .= join('</td><td class="Price">', map { $Prices{$_} ? 
 				sprintf('<a href="/main/order/information.html?product_id=%d&amp;quantity=%d">%s</a>',$$Product{id}, $_, $openprint::Currency->format( $Currency->convert_from( $Prices{$_}->price() ) ) ) : '' } @{$$variable{Quantities}} );
 		$html .= '</tr>';

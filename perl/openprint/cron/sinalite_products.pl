@@ -209,14 +209,17 @@ foreach my $category ( $tree->look_down('class','all-products') ) {
 		}
 	} # end foreach script
 	if ( $objData ) {
-		print Data::Dumper::Dumper( $objData ) . "\n";
 	} else {
-		print "No objData\n";
+		print "No objData press any key to continue\n";
+		<STDIN>;
+		next;
 	}
 	foreach my $type ( keys %{$objData} ) {
 		my $blah = $$objData{$type};
 
 		my $fields = $$blah{fields};
+		print Data::Dumper::Dumper( $fields ) . "\n";
+		
 		my $product = $$fields{Product};
 		if ( $$fields{Product} ) {
 			$product = $$fields{Product};
@@ -234,12 +237,36 @@ foreach my $category ( $tree->look_down('class','all-products') ) {
 			
 			my $option_hash = $$product{$name_key};
 
-			foreach my $option ( keys %{$option_hash} ) {
+			my %options;
+
+			foreach my $o ( 'size', 'Printing', 'Stock' ) {
+			if ( $$option_hash{$_} ) {
+				@{$options{$_}} = map { $_ =~ /${_}_(.*)/ ? $1 : () } keys %{$$option_hash{$_}};
+			}
+			}
+			my @options = sets::exclude( [ 'Base price', 'total weight', 'Units Per Box', 'weight per box', 'box size', 'number of boxes', 'size' ], [ keys %{$option_hash} ] );
+
+			foreach my $option ( @options ) {
 			
 				print "Option $option\n";
-				if ( $option eq 'size' ) {
-					foreach my $size_key ( keys %{$$option_hash{$option}} ) {
-						my ( $size ) = $size_key =~ /size_(.*)/;
+				foreach my $key ( keys %{$$option_hash{$option}} ) {
+					my ( $o ) = $key =~ /${option}_(.*)/;
+					if ( ! $options{$o} ) {
+						$options{$o} = [ $o ];
+					} else {
+						$options{$o} = [ sets::union( @{$options{$o}}, $o ) ];
+					}
+				}
+			}
+
+			my @options_specs = map { @{$options{$o}} > 1 ? $o : () } keys %options;
+			print "Options to filter @options_specs\n";
+
+			foreach my $option ( @options_specs ) {
+				if ( $$option_hash{$option} ) {
+					
+				
+						my %product_options;
 						
 						my $product_name = join(' ', $name, $size );;
 						my $Product = openprint::Product->find_one( name=>openprint::Product->transform(name=>$product_name) );
@@ -257,16 +284,19 @@ foreach my $category ( $tree->look_down('class','all-products') ) {
 						my %product_specs = map {$$_{name} => $_} $Product->Specifications();
 						my %product_prices = map { $$_{min} => $_ } $Product->Prices();
 						my $units = $$option_hash{$option}{$size_key}{eachorlot};
+						if ( ! $product_specs{Size} ) {
+							my $New_Spec = new openprint::Object_Specification();
+							$New_Spec->save({Object=>$Product, name=>'Size', value=>$size });
+						}
 
 						my $qty_hash = $$option_hash{$option}{$size_key}{qty};
 						foreach my $qty_key ( keys %{$qty_hash} ) {
 							next if $qty_key eq 'eachorlot';
 							my ( $qty ) = $qty_key =~ /qty_(\d+)/;
-print "qty_key $qty_key $qty\n";
 							my $Price;
 							my $cost = $$qty_hash{$qty_key};
 
-							if ( ! $product_prices{$qty} ) {
+							if ( ! $Product->get_price( $qty ) ) {
 	
 								print "Add Price for $qty $units $cost on $product_name ? (Y|n)";
 								$input = <STDIN>;
