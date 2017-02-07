@@ -233,7 +233,8 @@ sub set {
 
 sub copy {
 	my $src = $_[0];
-	my $copy = new openprint::Imposition();
+	my $copy = {};
+	bless $copy, 'openprint::Imposition';
 	@$copy{@fields} = @$src{@fields};
 	$$copy{Paper} = $$copy{Paper}->clone() if $$copy{Paper};
 	return $copy

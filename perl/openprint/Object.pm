@@ -488,7 +488,8 @@ sub copy {
 } # end sub copy
 
 sub clone {
-	my $new = new ref $_[0];
+	my $new = {};
+	bless $new, ref $_[0];
 	my @keys = keys %{$_[0]};
 	@$new{@keys} = @{$_[0]}{@keys};
 	return $new;
