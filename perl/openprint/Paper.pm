@@ -427,19 +427,19 @@ sub id_string {
 	} # end if
 	if ( ! $$self{id_string} ) {
 		my $string = join(' ', ( $self->manufacturer(), $self->brand(), $self->finish(), $self->colour(), $self->weight() ) );
-		if ( $self->type() eq 'Roll' ) {
-			$string .= ' ' . $self->width.'"' if $self->width();
+		if ( $$self{type} eq 'Roll' ) {
+			$string .= ' ' . $$self{width}.'"' if $$self{width};
 			$string .= ' Roll ';
 		} else {
-			if ( $self->start_width() and ( ( $self->width() != $self->start_width() ) or ( $self->height() != $self->start_height() ) ) ) {
-				$string .= ' ' . $self->start_width().'x'.$self->start_height() . ' => '. $self->width().'x'.$self->height() . ' ';
+			if ( $$self{start_width} and ( ( $$self{width} != $$self{start_width} ) or ( $$self{height} != $$self{start_height} ) ) ) {
+				$string .= ' ' . $$self{start_width}.'x'.$$self{start_height} . ' => '. $$self{width}.'x'.$$self{height} . ' ';
 			} else {
-				$string .= ' ' . $self->width().'x'.$self->height() . ' ';
+				$string .= ' ' . $$self{width}.'x'.$$self{height} . ' ';
 			} # end if
 			#$string .= $self->mweight().'M ' if $self->mweight();
 		} # end if
-		$string .= sprintf('%.1fPT ', 1000*$self->calliper()) if $self->calliper();
-		$string .= $self->gsm().'gsm ' if $self->gsm();
+		$string .= sprintf('%.1fPT ', 1000*$$self{calliper}) if $self->calliper();
+		$string .= $$self{gsm}.'gsm ' if $self->gsm();
 		$string .= 'FSC:' . $$self{fsc_code} if $$self{fsc_code};
 		$string .= 'Minimum: ' . $$self{minimum_order} if $$self{minimum_order};
 		$$self{id_string} = $string;
@@ -455,13 +455,13 @@ sub to_string {
 	if ( ! $$self{to_string} ) {
 		my $string = ($$self{id} ? '' : 'Custom: ').join(' ', ( $self->manufacturer(), $self->brand(), $self->finish(), $self->colour(), $self->weight() ) );
 		if ( $self->type() eq 'Roll' ) {
-			$string .= ' ' . $self->width.'"' if $self->width();
+			$string .= ' ' . $self->width.'"' if $$self{width};
 			$string .= ' Roll ';
 		} else {
-			if ( $self->start_width() and ( ( $self->width() != $self->start_width() ) or ( $self->height() != $self->start_height() ) ) ) {
-				$string .= ' ' . $self->start_width().'x'.$self->start_height() . ' => '. $self->width().'x'.$self->height();
+			if ( $$self{start_width} and ( ( $$self{width} != $$self{start_width} ) or ( $$self{height} != $$self{start_height} ) ) ) {
+				$string .= ' ' . $$self{start_width}.'x'.$$self{start_height} . ' => '. $$self{width}.'x'.$$self{height};
 			} else {
-				$string .= ' ' . $self->width().'x'.$self->height();
+				$string .= ' ' . $$self{width}.'x'.$$self{height};
 			} # end if
 			#$string .= $self->mweight().'M ' if $self->mweight();
 		} # end if
@@ -1116,8 +1116,8 @@ sub get_price {
 			$$price{'100lb'} = $$price{price};
 			$$price{'100lb Cost'} = $$price{cost};
 			$$price{'100lb Price'} = $$price{price};
-			#$price{Cost} *= $$self{wpsi} * $self->width() * $self->height();
-			#$price{Price} *= $$self{wpsi} * $self->width() * $self->height();
+			#$price{Cost} *= $$self{wpsi} * $$self{width} * $$self{height};
+			#$price{Price} *= $$self{wpsi} * $$self{width} * $$self{height};
 		#} else {
 			#$$price{'100lb'} = $$price{price};
 			#$$price{'100lb Cost'} = $$price{cost};
