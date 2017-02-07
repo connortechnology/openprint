@@ -70,14 +70,9 @@ cleanup : true
 <? if ( $$variable{Host}->id() ) ?>
 		<div class="content rightColumn">
 			<fieldset><legend>Photos</legend>
-				<div id="assets"><? echo ( include('_assets.html'); ) ?></div>
-			</fieldset>
-			<fieldset><legend>Upload a new Asset</legend>
-				<input type="file" name="filename" />
-				<input type="text" name="asset_name" placeholder="Name"/>
-				<p class="buttons">
-					<? echo ( button( 'Upload', { 'onclick'=>qq`var form = \$('f1');form.action='/employee/it/host.html';form.elements['action'].value='Upload';form.submit();`} ); ) ?>
-				</p>
+				<? echo (
+$$variable{Object} = $$variable{Host};
+ include('/employee/assets/_asset_upload.html'); ) ?>
 			</fieldset>
 			<fieldset><legend>Notifications</legend>
 				<div id="notifications"><?include('_notifications.html')?></div>
