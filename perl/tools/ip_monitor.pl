@@ -175,6 +175,11 @@ while(1) {
 				$log->debug("Sending online notification");
 				notify( $Host, $online );
 			}
+		} else {
+			if ( ( ! $online ) and $$Host{notify_frequency} > ( $$host{state_changed_on}-$now ) ) {
+				notify( $Host, $online );
+				$Host->save({state_changed_on => $now });
+			}
 		} # end if ionline status change
 
 		if ( ! $has_monitored_interfaces ) {
@@ -311,6 +316,7 @@ sub notify {
 				HTML_BODY	=>	$html_body,
 				);
 	} # end if @To > 10
+	(new openprint::Log())->save({ Object=>$Host, action=>'Emailed', note=>$results });
 	return $results;
 }
 

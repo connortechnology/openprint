@@ -54,6 +54,7 @@ $serial = 'hosts_id_seq';
 	offline_seconds	=>	'offline_seconds',
 	state_changed_on	=>	'state_changed_on',
 	notified			=>	'notified',
+	notify_frequency	=>	'notify_frequency',
 	location_id			=>	'location_id',
 );
 %find_fields = (
@@ -63,6 +64,7 @@ $serial = 'hosts_id_seq';
 );
 %transforms = (
 	id			=>	[ 's/\D//g' ],
+	notify_frequency	=>	[ 's/\D//g' ],
 	hostname	=>	[ 's/\s//g' ],
 	description	=>	[ 's/^\s+//', 's/\s+$//', 's/\s\s+/ /g' ],
 );
@@ -82,6 +84,7 @@ $serial = 'hosts_id_seq';
 	'offline_seconds'	=>	undef,
 	'notified'=>	0,
 	location_id		=>	undef,
+	notify_frequency	=>	undef,
 );
 
 sub destroy {

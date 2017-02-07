@@ -3304,6 +3304,10 @@ if ( ! sets::isin( 'hosts', \@tables ) ) {
 	if ( ! exists $$hosts_table{resolved_on} ) {
 		$dbh->do('ALTER TABLE hosts ADD resolved_on TIMESTAMP WITH TIME ZONE');
 	} # end if
+	if ( ! exists $$hosts_table{notify_frequency} ) {
+		$log->debug("Add notify_frequency to hosts");
+		$dbh->do('ALTER TABLE hosts ADD notify_frequency INTEGER');
+	} # end if
 }
 
 if ( ! sets::isin( 'host_interfaces', \@tables ) ) {
