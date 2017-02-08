@@ -7,7 +7,7 @@ use Date::Calc ();
 use constant DAYS_TO_KEEP_TRASH => 60*60*24*90*1;
 use constant DEBUG => 0;
 
-my $amavis_home = '/usr/lib/amavis';
+my $amavis_home = '/var/lib/amavis';
 
 
 my $domain = $ARGV[0] ? $ARGV[0] : '';
@@ -24,6 +24,9 @@ if ( $ARGV[1] ) {
 	print "Cannot open spool dir $spool_path \n";
 	die;
 } # end if
+if ( ! @users ) {
+	die "There are no users in $domain\n";
+}
 my $DAYS_TO_KEEP_JUNK = $ARGV[2] ? $ARGV[2] : 7;
 my $SECONDS_TO_KEEP_JUNK = $DAYS_TO_KEEP_JUNK*60*60*24;
 
@@ -34,7 +37,7 @@ my $postfix_gid = getgrnam('postfix');
 
 foreach my $user ( @users ) {
 	next if $user =~ /^\./;
-
+print "Checking $user\n" if DEBUG;
 	my $update_spamassassin = 0;
 	foreach my $folder ( '.Junk', '.SpamKiller', '.Junk E-mail' ) {
 		if ( ! -e "$spool_path$user/$folder" ) {

@@ -1405,16 +1405,18 @@ $openprint::log->debug("Resulting fold: " . $Fold->to_string() ) if DEBUG;
 				} elsif ( ! $makereadies{$$Equipment{id}}{$$Fold{type}} ) {
 					if ( $setupPrice{units} eq 'per imposition' ) {
 						$setupPrice{Total} = $setupPrice{Price} * $imposition;
+						$Breakdown .= sprintf( '($%1$.2f%2$s * %4$d out =$%3$.2f)', @setupPrice{'Price','units','Total'}, $imposition );
 					} elsif ( $setupPrice{units} eq 'per hour' ) {
 						if ( ! $$Fold{makeready_time} ) {
 $openprint::log->error("No makeready_time on " . $Fold->to_string() );
 						}
 						$setupPrice{Total} = $setupPrice{Price} * $$Fold{makeready_time} / 60;
+						$Breakdown .= sprintf( '($%1$.2f%2$s * %4$d minutes = $%3$.2f)', @setupPrice{'Price','units','Total'}, $$Fold{makeready_time} );
 					} else {
 #$openprint::log->error("No units set on Fold MR " . $setupPrice{Service}->name() . ' on ' . $Equipment->name() );
 						$setupPrice{Total} = $setupPrice{Price};
-					} # end if
 					$Breakdown .= sprintf( '($%1$.2f%2$s=$%3$.2f)', @setupPrice{'Price','units','Total'} );
+					} # end if
 					$total_MR += $setupPrice{Total};
 
 					if ( $$Fold{folds} and $FoldingFoldMakeReadyService ) {
@@ -1565,12 +1567,18 @@ $openprint::log->debug("Runspeed: $$Fold{type}(".$Fold->name().") : " . $Equipme
 				} # end if
 			} # end if has stitching
 			$comparison_cost += $totalPrice + $stitching_part + $cutting_results{Price};
+
 			if ( $$calc_hash{ScoringSpecs} and openprint::Estimating::Scoring::signature_needs( $Project, $$calc_hash{ScoringSpecs}, $sig_specs, $Paper ) ) {
 				$$calc_hash{FoldingSpecs} = \%fold_specs;
 				my %scoring_results = openprint::Estimating::Scoring::signature_calc( $Project, $$calc_hash{ScoringSpecs}, $sig_specs, $qty_index, $SignatureImposition, $calc_hash );
-				#$Breakdown .= "<tr><td>Scoring cost on $scoring_results{Equipment}{name}</td><td class=\"Price\">\$$scoring_results{Price}</a>";
-				$Breakdown .= "<tr><td>Scoring cost on $scoring_results{Equipment}{name}<br/>$scoring_results{Breakdown}</td><td class=\"Price\">\$$scoring_results{Price}</a>";
-				$comparison_cost += $scoring_results{Price};	
+				if ( $scoring_results{Status} eq 'uncalculated' ) {
+					$Breakdown .= "<tr><td>Scoring uncalculated $scoring_results{alert}</td><td class=\"Price\">\$1000000</a>";
+					$comparison_cost += 1000000;
+				} else {
+#$Breakdown .= "<tr><td>Scoring cost on $scoring_results{Equipment}{name}</td><td class=\"Price\">\$$scoring_results{Price}</a>";
+					$Breakdown .= "<tr><td>Scoring cost on $scoring_results{Equipment}{name}<br/>$scoring_results{Breakdown}</td><td class=\"Price\">\$$scoring_results{Price}</a>";
+					$comparison_cost += $scoring_results{Price};	
+				}
 			} # end if
 
 			if ( $cutting_results{Equipment} ) {
@@ -2379,6 +2387,7 @@ sub get_Folds {
 		$Source_Imposition = new openprint::Imposition();
 		$Source_Imposition->load( $sig_specs, $qty_index );
 	} # end if
+	return () if !$$Source_Imposition{imposition};
 
 if ( DEBUG ) {
 foreach my $k ( sort { $a cmp $b } keys %$folding_specs ) {

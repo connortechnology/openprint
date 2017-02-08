@@ -2,10 +2,12 @@
 <script type="text/javascript" src="<?hash_link('/javascripts/proj/paper.js')?>"></script>
 <script type="text/javascript" src="<?hash_link('/javascripts/printing.js')?>"></script>
 <script type="text/javascript">
-	function calc( formName ) {
-		if ( gettingNewPrice ) {
-			if ( timeout )
-				clearTimeout( timeout );
+ function calc( formName, force ) {
+        if ( gettingNewPrice && ! force ) {
+            if ( timeout ) {
+                clearTimeout( timeout );
+            } // end if
+
 			setTimeout( "calc('"+formName+"');", 1000 );
 			return;
 		} // end if
@@ -32,7 +34,7 @@
 			$('SignatureGroup1').show();
 		} // end if
 		if ( ( form.remaining_pages.value > 0 ) && ! $('SignatureGroup'+form.next_group_id.value) ) {
-			new Ajax.Updater( 'alert', '/main/project/prin/_signature.html', { method: 'get',
+			new Ajax.Updater( 'alert', '/main/project/prin/_signature.html', { 
 					parameters: { 'next_group_id' : form.next_group_id.value, },
 					onSuccess: function(response){new Insertion.Bottom($('SignatureGroups'), response.responseText);if($('SignatureGroup'+form.next_group_id.value)){calc(form.name);}}
 					//onSuccess: function(response){new Insertion.Bottom($('SignatureGroups'), response.responseText);}
@@ -49,7 +51,7 @@
 		return 1;
 	} // end function
 </script>
-<? echo ( include('/main/project/prin/_templates.html'); ) ?>
+<?include('/main/project/prin/_templates.html')?>
 <div class="Service">
 	<form id="f1" name="f1" method="post" action="/main/project/view.html">
 		<fieldset><legend><?ProjectTypeName?></legend>
@@ -63,37 +65,33 @@
 </div>
 			<br class="spacer"/>
 			<fieldset><legend>Pad Specifications</legend>
-				<p id="NotepadPages">
+				<ul>
+				<li id="NotepadPages">
 					<label># of pages per pad</label>
 					<? echo ( input( type=>'cardinal', name=>'PageQuantity', value=>$$variable{PageQuantity}, onkeyup=>'calc(this.form.name);' ); ) ?>
-				</p>
-<input type="hidden" name="txtTotalPageQuantity" value="2" />
-				<p>
-					<label>Backing</label>
-					<input type="radio" id="BackingCardboard" name="Backing" value="Cardboard" onclick="$('SignatureGroup1').hide();calc(this.form.name);" <? echo ( ssi::checked( $$variable{'Backing'} eq 'Cardboard' ); ) ?> />
-					<label class="radio" for="BackingCardboard">Cardboard</label>
-					<input type="radio" id="BackingPrinted" name="Backing" value="Printed" onclick="$('SignatureGroup1').show();calc(this.form.name);" <? echo ( ssi::checked( $$variable{'Backing'} eq 'Printed' ); ) ?> />
-					<label class="radio" for="BackingPrinted">Printed</label>
-					<input type="radio" id="BackingNone" name="Backing" value="None" onclick="$('SignatureGroup1').hide();calc(this.form.name);" <? echo ( ssi::checked( $$variable{'Backing'} eq 'None' ); ) ?> />
-					<label class="radio" for="BackingNone">None</label>
-				</p>
+				</li>
+				<input type="hidden" name="txtTotalPageQuantity" value="2" />
+				<li><label>Backing</label>
+					<? echo ( radio( 'Backing', [ map { $_, $_ } ( 'Cardboard', 'Printed', 'None' ) ], $$variable{Backing}, { onclick=>q`if(this.value=='Cardboard' || this.value=='None'){$('SignatureGroup1').hide();}else{$('SignatureGroup1').show();};calc(this.form.name);` } ); ) ?>
+				</li>
+				</ul>
 			</fieldset>
 			<br class="spacer"/>
 			<div id="SignatureGroups">
 			<? echo (
-				my @Groups = sql::execute( undef, undef, 'SELECT DISTINCT strvalue FROM tbl_Service_Specifications WHERE lngProjectIndex=? AND strname=? ORDER BY strvalue', $$variable{'ProjectIndex'}, 'Group' );
+				my @Groups = sql::execute( undef, undef, 'SELECT DISTINCT strvalue FROM tbl_Service_Specifications WHERE lngProjectIndex=? AND strname=? ORDER BY strvalue', $$variable{ProjectIndex}, 'Group' );
 				if ( ! sets::isin( 1, \@Groups ) ) {
 					# Unshift so that cover is always first
 					unshift @Groups, 1;
 					# Load Defaults
 					if ( my $ServiceType = openprint::ServiceType->find_one('name'=>'Signature') ) {
-						foreach my $Default ( openprint::ServiceType_Default->find('servicetype_id'=>$ServiceType->id(), 'projecttype_id'=>$$variable{'Project'}->type_id() ) ) {
+						foreach my $Default ( openprint::ServiceType_Default->find('servicetype_id'=>$ServiceType->id(), 'projecttype_id'=>$$variable{Project}->type_id() ) ) {
 							$$variable{$Default->name().'1'} = $Default->value();
 						} # end while
 					} # end if
-					$$variable{'txtServiceDescription1'} = 'Backing';
+					$$variable{txtServiceDescription1} = 'Backing';
 				} # end if
-				$$variable{'txtSignatureType1'} = 'Cover Pages';
+				$$variable{txtSignatureType1} = 'Cover Pages';
 
 				if ( ! sets::isin( 2, \@Groups ) ) {
 					# Ensure 1 interior pages
@@ -104,14 +102,14 @@
 							$$variable{$Default->name().'2'} = $Default->value();
 						} # end while
 					} # end if
-					$$variable{'txtServiceDescription2'} = 'Pad Pages';
-					$$variable{'txtSignatureType2'} = 'Interior Pages';
+					$$variable{txtServiceDescription2} = 'Pad Pages';
+					$$variable{txtSignatureType2} = 'Interior Pages';
 				} # end if
 				my $html = '';
-				my $h .= misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/main/project/prin/_signature.html' );
+				my $h = slurp_content( '/main/project/prin/_signature.html' );
 				foreach my $Group ( @Groups ) {
-					$$variable{'Group'} = $Group;
-					$$variable{'Signature'} = $Group;
+					$$variable{Group} = $Group;
+					$$variable{Signature} = $Group;
 					$html .= variable_substitution( \$h, $variable );
 				} # end foreach
 				return $html;
@@ -122,13 +120,8 @@
 		<input type="hidden" name="ProjectIndex" value="<?ProjectIndex?>"/>
 		<input type="hidden" name="ServiceIndex" value="<?ServiceIndex?>"/>
 		<input type="hidden" name="btnFunction" value="Save Service"/>
-		<input type="hidden" name="txtPrice1" value="n/a"/>
-		<input type="hidden" name="txtPrice2" value="n/a"/>
-		<input type="hidden" name="txtPrice3" value="n/a"/>
 		<input type="hidden" name="ContinueProject" value="Y"/>
-		<input type="hidden" name="ServiceType" value="ScratchPads"/>
 		<input type="hidden" name="remaining_pages" />
 		<input type="hidden" name="next_group_id" />
-		<input type="hidden" name="txtSpreadSize" value="1" />
 	</form>
 </div><!--Service-->

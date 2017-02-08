@@ -289,10 +289,9 @@ sub inventory_report {
 
 	my @skid_ids = map { $$_{id} } @Skids;
 	my %SkidContents;
-	foreach my $SC ( openprint::SkidContent->find( skid_id => \@skid_ids ) ) {
-		push @{$SkidContents{$$SC{skid_id}}}, $SC;
-		$SC->Skid()->Contents( $SkidContents{$$SC{skid_id}} );
-	} # end foreach SC
+	#foreach my $SC ( openprint::SkidContent->find( skid_id => \@skid_ids ) ) {
+		#push @{$SkidContents{$$SC{skid_id}}}, $SC;
+	#} # end foreach SC
 
 	my %Allocations;
 	foreach my $Allocation ( openprint::PaperAllocation->find( 'skid_ids !=' => [] ) ) {
@@ -304,6 +303,7 @@ sub inventory_report {
 
 	my $total_value = 0;
 	foreach my $Skid ( @Skids ) {
+		$Skid->Contents( $SkidContents{$$Skid{id}} );
 		if ( ! $$Skid{type} ) {
 			$Skid->save({type=>undef});
 		}
@@ -351,14 +351,14 @@ sub inventory_report {
 					$Paper->gsm(),
 					$$Skid{id},
 					$Skid->RFIDTag()->id_short(),
-					ssi::format_datetime( $$Skid{received_on} ),
-					ssi::format_datetime( $$Skid{created_on} ),
-					ssi::format_datetime( $$Skid{updated_on} ),
+					ssi::format_csv_date( $$Skid{received_on} ),
+					ssi::format_csv_date( $$Skid{created_on} ),
+					ssi::format_csv_date( $$Skid{updated_on} ),
 					$Skid->Location()->name(),
 					$Paper->type() eq 'Sheet' ? $C->quantity() : '',
 					$weight,
 					$C->condition(),
-					ssi::format_datetime( $Skid->updated_on() ),#FIXME
+					ssi::format_csv_date( $Skid->updated_on() ),#FIXME
 					1*$C->cost(),
 					1*$C->value(),
 					( $Allocations{$Skid->id} ? join(',', @{$Allocations{$Skid->id}}) : '' ),
@@ -368,7 +368,7 @@ sub inventory_report {
 		} # end foreach C
 	} # end foreach Skid
 	my $date = Date::Format::time2str('%Y-%m-%d %H:%M', time );
-	push @data, ( 'Report generated',$date,'Count:',$count,undef,undef,undef,undef, undef,undef,undef, undef, undef, undef, undef, undef, undef, undef, undef, undef,undef, 'Total Weight (lbs):', $total_weight, undef, $total_value, undef, undef );
+	push @data, ( 'Report generated',$date,'Count:',$count,undef,undef,undef,undef, undef,undef,undef, undef, undef, undef, undef, undef, undef, undef, undef, undef,undef, 'Total Weight (lbs):', $total_weight, undef, undef, undef, $total_value, undef, undef );
 	return ( \@header, \@data );
 } # end sub inventory_report
 

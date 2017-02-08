@@ -77,7 +77,7 @@ sub add_product {
 	my $Order = new openprint::Order( $order_id );
 
 	my $Product;
-	if ( my @Products = openprint::OrderedProduct->find( 'order_id'=>$order_id, 'product_id'=>$product_id ) ) {
+	if ( my @Products = openprint::OrderedProduct->find( order_id=>$order_id, product_id=>$product_id ) ) {
 		$Product = shift @Products;
 		# The logic here used to be that we would increase the quantity, but now we are thinking that we will reset the quantity.  Since this would really only happen on a reload anyways.  
 	} else {
@@ -363,17 +363,17 @@ sub create_order {
 	$dbh->do( 'LOCK TABLE Orders IN SHARE ROW EXCLUSIVE MODE' ) or $log->error( DBI->errstr );
 
 	my $Order = new openprint::Order();
-	$Order->save({
+	$_ = $Order->save({
 		user_id		=>	$session{user_id},
 		company_id	=>	$session{company_id},
 		session_id	=>	$session{_session_id},
 		created_on	=>	'NOW()',
 		status		=>	'Incomplete',
-		salesrep_id	=>	new openprint::Company( $session{company_id} )->salesrep_id(),
-		currency_id	=>	openprint::Currency::get_current()->id(),
+		salesrep_id	=>	$openprint::Company->salesrep_id(),
+		currency_id	=>	$openprint::Currency->id(),
 		});
 
-	$Order->add_log( 'Created' );
+	$Order->add_log( 'Created' ) if ! $_;
 
 # unlock database
 	sql::end_transaction( $dbh, $ac );

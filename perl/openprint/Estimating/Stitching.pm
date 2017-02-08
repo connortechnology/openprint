@@ -802,7 +802,7 @@ sub equipment_fits {
         } # end if
 
 	} else {
-		$openprint::log->warn("No calliper in Stitching::get_equipment");
+		$openprint::log->error("No calliper in Stitching::get_equipment");
 	} # end if
 	return;
 }

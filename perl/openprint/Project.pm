@@ -775,7 +775,8 @@ sub servicetype_id {
 		%{$$self{service_types}} = sql::execute( undef, undef, q{SELECT lngserviceindex, servicetype_id FROM tbl_Project_Contents WHERE lngProjectIndex=?}, $$self{id} );
 	} # end if
 	if ( ! exists $$self{service_types}{$s_id} ) {
-		$openprint::log->error("Request for servicetype_id for $s_id, reloading ");
+	my ( $caller, undef, $line ) = caller;
+		$openprint::log->error("Request for servicetype_id for $s_id, reloading from $caller:$line");
 		%{$$self{service_types}} = sql::execute( undef, undef, q{SELECT lngserviceindex, servicetype_id FROM tbl_Project_Contents WHERE lngProjectIndex=?}, $$self{id} );
 		if ( ! $$self{service_types}{$s_id} ) {
 			$openprint::log->error("Request for servicetype_id for $s_id, not found ");
@@ -1640,6 +1641,12 @@ sub calliper {
 			} elsif ( $$sig_specs{rdbTemplateType} eq 'DifficultFold' ) {
 				$pages = 6;
 			} elsif ( $$sig_specs{rdbTemplateType} eq '8PageFold' ) {
+				$pages = 4;
+			} elsif ( $$sig_specs{rdbTemplateType} eq '2Panel1Pocket' ) {
+# FIXME: GUTTERS
+				$pages = 3;
+			} elsif ( $$sig_specs{rdbTemplateType} eq '3Panel1Pocket' ) {
+# FIXME: GUTTERS
 				$pages = 4;
 			} else {
 				$log->error("Unknown template type n calliper $$sig_specs{rdbTemplateType}");

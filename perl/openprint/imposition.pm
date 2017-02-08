@@ -1,6 +1,5 @@
 use strict;
 package openprint::imposition;
-use POSIX qw{ ceil };
 use Carp;
 
 use openprint::Imposition;
@@ -1138,7 +1137,7 @@ if ( $spread_size == 2 ) {
 					if ( $$imp{image_orientation} == openprint::Imposition::Vertical ) {
 
 						if ( $col < 2 ) {
-							$openprint::log->debug("Next because page_col $col == 1 and $$imp{image_orientation} eq Vertntal and spine is on the height") if DEBUG_CONVERT;
+							$openprint::log->debug("Next because page_col $col == 1 and $$imp{image_orientation} eq Vertical and spine is on the height") if DEBUG_CONVERT;
 							next;
 						}
 					} else {

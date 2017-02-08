@@ -1,6 +1,9 @@
 <?include('/includes/error_reporting.html')?>
 <? echo ( 
-	return if ! $$variable{Album}->can_view();
+	if ( ! $$variable{Album}->can_view() ) {
+$log->debug("Cant view");
+	return ;
+	}
 	my $html;
 	my @Landscape;
 	my @Portrait;

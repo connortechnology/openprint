@@ -1,0 +1,27 @@
+<table>
+	<tr><th>Product</th><th class="Price"><?echo( join('</th><th class="Price">', @{$$variable{Quantities}} ) ) ?></tr>
+<? echo (
+	my $html = '';
+	my @specs = map { $param{"spec_filter-$_"} ? $_ : () } @{$$variable{Specifications}};
+	foreach my $Product ( $$variable{Category}->Products(order=>'lower(name)') ) {
+		my @Specifications = $Product->Specifications();
+		my %Specifications = map { $$_{name}, $_ } @Specifications;
+		my $spec_filter = 0;
+		
+		foreach my $spec ( @{$$variable{Specifications}} ) {
+			if ( ( ! exists $Specifications{$spec} ) or ( $Specifications{$spec}->value() ne $param{"spec_filter-$spec"} ) ) {
+$log->debug("Filter due to spec $spec on $$Product{name}");
+				$spec_filter = 1;
+			}
+		}
+		next if $spec_filter;
+			
+		my %Prices = map { $_->min() == $_->max() ? ( $_->min() => $_ ) : () } $Product->Prices();
+
+		$html .= sprintf('<tr><td>%s</td><td class="Price">', $Product->link_to() );
+		$html .= join('</td><td class="Price">', map { $Prices{$_} ? $openprint::Currency->format( $Prices{$_}->price() ) : '' } @{$$variable{Quantities}} );
+		$html .= '</tr>';
+	} # end foreach
+	$html .= '</table>';
+	return $html;
+) ?>

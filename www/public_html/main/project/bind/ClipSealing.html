@@ -4,14 +4,14 @@
 		<fieldset><legend><?ServiceTypeName?></legend>
 			<ul>
 			<li><label># of seals</label>
-				<? echo ( input( type=>'cardinal', id=>'SealQuantity', name=>'SealQuantity', value=>$$variable{SealQuantity}, onkeyup=>'calc(this.form.name);' ); ) ?>
+				<? echo ( input( type=>'cardinal', id=>'SealQuantity', name=>'SealQuantity', value=>$$variable{SealQuantity}, oninput=>'calc(this.form.name);' ); ) ?>
 			</li>
 			<li><label>Seal type</label>
 			<? echo (
 				my @Types = openprint::Material->find( category=>'Clip Seal Types', order=>'lower(name)' );
 				if ( @Types > 1 ) {
 					return ssi::select( 
-						[ map { $_->id(), $_->description() } @Types ], $$variable{'SealType_id'}, { name=>'SealType_id', id=>'SealType_id', prepend=>['','select'] } );
+						[ map { $_->id(), $_->description() } @Types ], $$variable{SealType_id}, { name=>'SealType_id', id=>'SealType_id', prepend=>['','select'] } );
 				} elsif ( @Types == 1 ) {
 					return input( type=>'hidden', name=>'SealType_id', value=>$Types[0]{id} ) . $Types[0]->description();
 				} # end if
@@ -26,7 +26,7 @@
 		<input type="hidden" name="btnFunction" value="Save Service"/>
 		<input type="hidden" name="ProjectIndex" value="<?ProjectIndex?>">
 		<input type="hidden" name="ServiceIndex" value="<?ServiceIndex?>">
-		<input type="hidden" name="ServiceType" value="<?ServiceType?>">
+		<input type="hidden" name="ServiceType" value="<?ServiceTypeType?>">
 		<input type="hidden" name="ContinueProject" value="Y" />
 		<input type="hidden" name="Status" />
 	</form>

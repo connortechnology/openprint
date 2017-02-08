@@ -79,6 +79,7 @@ $serial = 'companies_id_seq';
 	marketing_category_id	=>	'(SELECT category_id FROM companies_in_marketing_categories WHERE company_id=companies.id)',
 	profile_field	=>	'(SELECT value FROM Company_Profiles WHERE company_id=companies.id AND field_id=?)',
 	last_article_id	=>	'(SELECT MAX(id) FROM Articles WHERE company_id=companies.id)',
+	last_timetrack_id	=>	'(SELECT MAX(id) FROM timetracks WHERE company_id=companies.id)',
 );
 %transforms = (
 	address1		=>	[ 's/^\s+//', 's/\s+$//' ],

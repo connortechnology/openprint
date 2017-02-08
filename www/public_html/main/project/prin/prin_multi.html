@@ -86,7 +86,6 @@
 		<input type="hidden" name="groups" />
 		<fieldset><legend><?ProjectTypeName?></legend>
 			<div class="ProjectSpecifications">
-			<?include('/includes/main/proj/templates/project_template_select.html')?>
 			<?include('/includes/main/proj/templates/multipage.html')?>
 			<div class="BookSpecifications">
 			<fieldset><legend>Book Specifications</legend>
@@ -107,10 +106,7 @@
 				); ) ?>
 				</p>
 				<p><label>Spine</label>
-					<?echo(
-$log->debug("Spine: " . $$variable{spine} );
-radio('spine', [ map { $_, $_ } 'height', 'width' ], $$variable{spine}, { default=>'height', onclick=>'calc(this.form.name);' } ); ) ?>
-				</p>
+					<?echo( radio('spine', [ map { $_, $_ } 'height', 'width' ], $$variable{spine}, { default=>'height', onclick=>'calc(this.form.name);' } ); ) ?> </p>
 				<p><label>Spread</label>
                 <? echo ( join( "\n",
 				
@@ -127,10 +123,7 @@ radio('spine', [ map { $_, $_ } 'height', 'width' ], $$variable{spine}, { defaul
 				</p>
 				<p>
 					<label>Cover</label>
-					<input type="radio" id="rdbCoverSelf" name="rdbCover" value="Self" onclick="$('SignatureGroup1').hide();calc(this.form.name);" <? echo ( ssi::checked( $$variable{'rdbCover'} eq 'Self' ); ) ?> />
-					<label class="radio" for="rdbCoverSelf">Self Cover</label>
-					<input type="radio" id="rdbCoverDifferent" name="rdbCover" value="Different" onclick="$('SignatureGroup1').show();calc(this.form.name);" <? echo ( ssi::checked( $$variable{'rdbCover'} eq 'Different' ); ) ?> />
-					<label class="radio" for="rdbCoverDifferent">Different Cover</label>
+					<? echo ( radio( 'rdbCover', [ map { $_, $_ . ' Cover' } ( 'Self', 'Different' ) ], $$variable{rdbCover}, { onclick=>q`if(this.value=='Self'){$('SignatureGroup1').hide();}else{$('SignatureGroup1').show();};calc(this.form.name);` } ); ) ?>
 				</p>
 				</div>
 				<div id="GateInsert">
@@ -217,7 +210,6 @@ radio('spine', [ map { $_, $_ } 'height', 'width' ], $$variable{spine}, { defaul
 		<input type="hidden" name="btnFunction" value="Save Service"/>
 		<input type="hidden" name="ContinueProject" value="Y"/>
 		<input type="hidden" name="NewBook" value="Y"/>
-		<!--<input type="hidden" name="ServiceType" value="MultiPage"/>_-->
 		<input type="hidden" name="remaining_pages" />
 		<input type="hidden" name="next_group_id" />
 	</form>

@@ -1103,17 +1103,17 @@ $openprint::log->debug("Not a book") if DEBUG;
 			if ( $CuttingMakeReady ) {
 				my %setup = $CuttingMakeReady->get_price( undef, $Equipment );
 				if ( ! %setup ) {
-					$log->error("No Cutting Makready for $$Equipment{strid}");
+					$log->error("No Cutting Makeready for $$Equipment{strid}");
 				} else {
 					if ( $setup{units} eq 'per cut' ) {
 						%setup = $CuttingMakeReady->get_price( $cuts, $Equipment );
 						$setup{Total} = $setup{Price} * $cuts;
 						$results{Breakdown} .= sprintf('Make Ready: $%1$.2f%2$s * %4$d cuts = $%3$.2f<br/>', @setup{'Price','units','Total'}, $cuts );
-					$totalPrice += $setup{Total};
+						$totalPrice += $setup{Total};
 					} else {
 						$openprint::log->debug("unknown units on $$CuttingMakeReady{units}") if DEBUG;
 						$results{Breakdown} .= sprintf('Make Ready: $%.2f<br/>', $setup{Price} );
-					$totalPrice += $setup{Price};
+						$totalPrice += $setup{Price};
 					} # end if
 				} # end if has setup or not
 			} # end if

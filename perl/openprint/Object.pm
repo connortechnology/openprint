@@ -16,6 +16,7 @@ require openprint::Opinion_Availability;
 require openprint::Object_Asset;
 require openprint::Keyword;
 require openprint::Object_Keyword;
+require openprint::Object_Specification;
 require openprint::Log;
 use vars qw( $log $dbh $AUTOLOAD %cache %name_cache %fields %defaults %transforms $no_cache %session %config );
 
@@ -1260,10 +1261,10 @@ sub Object {
 	my ( $module ) = $type =~ /openprint::(.*)/;
 	if ( $module ) {
 		eval {
-		require "openprint/$module.pm";
+			require "openprint/$module.pm";
 		};
 		$_ = $type->new( $_[0]{object_id} );
-		$openprint::log->debug( "Returning object of type " . ref $_ ) if $debug;
+		$openprint::log->debug( 'Returning object of type ' . ref $_ ) if $debug;
 		return $_;
 	} else {
 		$log->error("Unvalid object $type");
@@ -1350,7 +1351,7 @@ sub View {
 	my $View = openprint::Object_View->find_one( object_id=>$_[0]{id}, object_type=>ref $_[0], user_id=>$session{user_id} );
 	if ( ! $View ) {
 		$View = new openprint::Object_View();
-		$View->save({object_id=>$_[0]{id}, object_type=>ref $_[0], 'user_id'=>$session{user_id}});
+		$View->save({object_id=>$_[0]{id}, object_type=>ref $_[0], user_id=>$session{user_id}});
 	} # end if
 	return $View;
 } # end sub View
@@ -1368,7 +1369,8 @@ sub lock {
 		$_[0]{ac} = sql::start_transaction( $openprint::dbh );
 		$openprint::log->debug("LOCKING $type for $_[0]{id} ac: $_[0]{ac} caller: $caller line: $line object ref:" . $_[0]) if DEBUG_ALL;
 		my $table = eval '$'.$type.'::table';
-		$dbh->do( "LOCK TABLE $table IN EXCLUSIVE MODE" ) or $log->error( DBI->errstr );
+		$dbh->do( "SELECT * FROM $table WHERE id=".$_[0]{id}. ' FOR UPDATE' ) or $log->error( $dbh->errstr );;
+		#$dbh->do( "LOCK TABLE $table IN EXCLUSIVE MODE" ) or $log->error( DBI->errstr );
 	} # end if
 
 } # end sub lock
@@ -1386,9 +1388,8 @@ sub unlock {
 	} # end if
 	if ( $_[0]{ac} == 1 ) {
 		sql::end_transaction( $openprint::dbh, $_[0]{ac} );
-	} else {
-		$_[0]{ac} -= 1;
 	} # end if
+	$_[0]{ac} -= 1;
 } # end sub unlock
 
 sub Keywords {
@@ -1442,6 +1443,17 @@ sub keywords {
 	} # end if
 	return $_[0]{keywords};
 } # end sub keywords
+
+sub Specifications {
+	if ( ! $_[0]{Specifications} ) {
+		if ( $_[0]{id} ) {
+			$_[0]{Specifications} = [ openprint::Object_Specification->find( object_type=> ref $_[0], object_id=>$_[0]->id(), order=>'lower(name)' ) ];
+		} else {
+			$_[0]{Specifications} = [];
+		} # end if
+	} # end if
+	return @{$_[0]{Specifications}};
+}
 
 sub upload {
 	return openprint::Object_Asset::upload(@_);

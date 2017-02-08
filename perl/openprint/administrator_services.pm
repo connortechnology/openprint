@@ -20,8 +20,7 @@ use vars qw( $r $log $dbh %param %variable );
 
 sub edit {
 
-
-	my $Service = new openprint::Service( $param{ddmService} );
+	my $Service = new openprint::Service( $param{service_id} );
 
 	if ( $param{btnFunction} eq '<<' ) {
 		$Service = $Service->Previous( {category_id=>$param{ddmSearchCategory}} );
@@ -140,7 +139,7 @@ sub edit {
 		} # end if not error
 		sql::end_transaction( $dbh, $ac );
 		if ( ! $variable{error} ) {
-			$variable{ExternalRedirect} = '/administrator/services/edit.html?ddmService='.$Service->id();
+			$variable{ExternalRedirect} = '/administrator/services/edit.html?service_id='.$Service->id();
 			if ( $param{ddmServiceCategory} ) {
 				$variable{ExternalRedirect} .= '&ddmServiceCategory='.$param{ddmServiceCategory};
 			}
@@ -175,7 +174,7 @@ sub _prices_table_body {
 	my $Service = $variable{Service} = $Price->Service();
 	$variable{company_ids} = [ map { $_->id(), $_->name() } openprint::Company->find( supplier=>'Y', order=>'lower(name)' ) ];
 	if ( $param{action} eq 'add' ) {
-		my $Service = $variable{Service} = new openprint::Service( $param{ddmService} );
+		my $Service = $variable{Service} = new openprint::Service( $param{service_id} );
 		my $Price = $variable{Price} = new openprint::ServicePrice();
 		$variable{error} .= $Price->save({ equipment_id=>$param{equipment_id}, pricelist_id=>$param{pricelist_id}, service_id=>$$Service{id} });
 	} elsif ( $param{action} eq 'copy' ) {
@@ -183,7 +182,7 @@ sub _prices_table_body {
 		$variable{error} .= $Price->save();
 	} elsif ( $param{action} eq 'delete' ) {
 		$variable{error} .= $Price->delete();
-		(new openprint::Log())->save({object_id=>$$Service{id},object_type=>ref$Service, action=>'Delete Service Price', note=>$Price->id_string() }) if ! $variable{error};
+		(new openprint::Log())->save({Object=>$Service, action=>'Delete Service Price', note=>$Price->id_string() }) if ! $variable{error};
 	} # end if
 } # end sub _prices_table_body
 

@@ -43,14 +43,14 @@ if ( ! @dbs ) {
 		push @args, " --defaults-file=".$$opts{'defaults-file'};
 	}
 	if ( $$opts{user} ) {
-		push @args, "--user=$$opts{user}";
+		push @args, " --user=$$opts{user}";
 	} # end 
 	if ( $$opts{password} ) {
-		push @args, "--password=$$opts{password}";
+		push @args, " --password=$$opts{password}";
 	}
 
 	if ( $$opts{host} and $$opts{host} ne 'local' ) {
-		push @args, "-h $$opts{host}";
+		push @args, " -h $$opts{host}";
 	} 
 
 	$_ = `/usr/bin/mysql @args -B -N -e 'show databases' | grep -viE '(staging|performance_schema|information_schema)'`;

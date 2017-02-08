@@ -32,15 +32,27 @@
 	<td class="Pages">%6$s</td>
 	<td class="Folds">%7$s</td>
 	<td class="Angles">%8$s</td>
-	<td class="MinImposition">%9$sx%10$s=%11$s</td>
-	<td class="MaxImposition">%12$sx%13$s=%14$s</td>
-	<td class="MRMinutes">%15$s</td>
+	<td class="MinImposition">%9$s</td>
+	<td class="MaxImposition">%10$s</td>
+	<td class="MRTime">%11$d</td>
 </tr>
 `, $rowclass, '/administrator/equipment/_fold.html?fold_id='.$$Fold{id}, $Fold->Equipment()->link_to(), $$Fold{name}, 
 $Fold->type(), $Fold->pages(), $Fold->folds(), $Fold->angles(),
-$Fold->min_imposition_columns(), $Fold->min_imposition_rows(), $Fold->min_imposition(),
-$Fold->max_imposition_columns(), $Fold->max_imposition_rows(), $Fold->max_imposition(),
-$Fold->makeready_time()
+join(' ',
+	join('x',
+		( $Fold->min_imposition_columns() ? $Fold->min_imposition_columns() : () ),
+		( $Fold->min_imposition_rows()?  $Fold->min_imposition_rows() : () ),
+		),
+ ( $Fold->min_imposition() ?  $Fold->min_imposition() : () ),
+),
+join(' ',
+	join('x',
+		( $Fold->max_imposition_columns() ? $Fold->max_imposition_columns() : () ),
+		( $Fold->max_imposition_rows()?  $Fold->max_imposition_rows() : () ),
+		) ,
+ ( $Fold->max_imposition() ? $Fold->max_imposition() : () ),
+),
+$Fold->makeready_time(),
 );
 
 		$rowclass = $rowclass ? '' : ' class="colRow"';

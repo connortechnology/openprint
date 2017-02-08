@@ -532,7 +532,7 @@ sub save {
 	$$specs{'hdnImpositionColumns'.$qty_index} = $$self{columns};
 	$$specs{'hdnImpositionDutchRows'.$qty_index} = $$self{dutch_rows};
 	$$specs{'hdnImpositionDutchColumns'.$qty_index} = $$self{dutch_columns};
-	$$specs{'hdnImageOrientation'.$qty_index} = $$self{image_orientation};
+	$$specs{'hdnImageOrientation'.$qty_index} = $$self{image_orientation} == Vertical ? 'Vertical' : 'Horizontal';
 	$$specs{'page_columns'.$qty_index} = $self->page_columns();
 	$$specs{'page_rows'.$qty_index} = $self->page_rows();
 	$$specs{'SpreadRows'.$qty_index} = $$self{spread_rows};
@@ -830,5 +830,10 @@ sub DESTROY {
 sub dump {
 	$openprint::log->debug( Data::Dumper::Dumper( $_[0] ) );
 }
+
+sub image_orientation_text {
+	return $_[0]{image_orientation} == Vertical ? 'Vertical' : 'Horizontal';
+}
+
 1;
 __END__

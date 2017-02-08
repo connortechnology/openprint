@@ -8,11 +8,11 @@
 <legend>Information for <? echo ( $$variable{'txtServiceDescription'.$$variable{Signature}} ? $$variable{'txtServiceDescription'.$$variable{Signature}} : ( $$variable{Signature} == 1 ? 'Cover' : 'Other Pages' ) ) ?></legend>
 	<div class="leftColumn">
 		<ul>
-<?if($$variable{Project}->Type()->type() eq 'MultiPage' ) ?>
+<?if($$variable{Project}->Type()->type() eq 'MultiPage' or $$variable{Project}->Type()->type() eq 'ScratchPads' ) ?>
 		<li id="GroupPageQuantity<?echo($$variable{Signature})?>_container"<?echo( if ($$variable{'OverrideGroupPageQuantity'.$$variable{Signature}} and ! $$variable{'GroupPageQuantity'.$$variable{Signature}} ) { return ' class="error"' }; ) ?>>
 			<label># of Pages</label>
 			<? echo ( join("\n",
-				input( type=>'cardinal', name=>'GroupPageQuantity'.$$variable{Signature}, value=>$$variable{'GroupPageQuantity'.$$variable{Signature}}, onkeyup=>'calc(this.form.name);' ),
+				input( type=>'cardinal', name=>'GroupPageQuantity'.$$variable{Signature}, value=>$$variable{'GroupPageQuantity'.$$variable{Signature}}, oninput=>'calc(this.form.name);' ),
 				write_override( 'OverrideGroupPageQuantity'.$$variable{Signature}, $$variable{'OverrideGroupPageQuantity'.$$variable{Signature}}, '', q`calc('f1');` ),
 			); ) ?>
 		</li>
@@ -20,18 +20,17 @@
 			<label>Description</label>
 			<input type="text" name="txtServiceDescription<?Signature?>" value="<? echo ( $$variable{'txtServiceDescription'.$$variable{Signature}} ) ?>" />
 		</li>
-<?else($$variable{Project}->Type()->type() eq 'MultiPage' ) ?>
-<?endif($$variable{Project}->Type()->type() eq 'MultiPage' ) ?>
+<?endif($$variable{Project}->Type()->type() eq 'MultiPage' or $$variable{Project}->Type()->type() eq 'ScratchPads' ) ?>
 		<li class="Dimensions">
 			<label>Flat => Final Size</label>
-			<? echo ( return join('',
-				input( type=>'float', id=>'txtWidth'.$$variable{Signature}, name=>'txtWidth'.$$variable{Signature}, value=>$$variable{'txtWidth'.$$variable{Signature}}, onkeyup=>'calc(this.form.name);' ),
+			<? echo ( return join("\n",
+				input( type=>'float', id=>'txtWidth'.$$variable{Signature}, name=>'txtWidth'.$$variable{Signature}, value=>$$variable{'txtWidth'.$$variable{Signature}}, oninput=>'calc(this.form.name);' ),
 				'x',
-				input( type=>'float', id=>'txtHeight'.$$variable{Signature}, name=>'txtHeight'.$$variable{Signature}, value=>$$variable{'txtHeight'.$$variable{Signature}}, onkeyup=>'calc(this.form.name);' ),
+				input( type=>'float', id=>'txtHeight'.$$variable{Signature}, name=>'txtHeight'.$$variable{Signature}, value=>$$variable{'txtHeight'.$$variable{Signature}}, oninput=>'calc(this.form.name);' ),
 				'=>',
-				input( type=>'float', id=>'txtFinalWidth'.$$variable{Signature}, name=>'txtFinalWidth'.$$variable{Signature}, value=>$$variable{'txtFinalWidth'.$$variable{Signature}}, onkeyup=>'calc(this.form.name);' ),
+				input( type=>'float', id=>'txtFinalWidth'.$$variable{Signature}, name=>'txtFinalWidth'.$$variable{Signature}, value=>$$variable{'txtFinalWidth'.$$variable{Signature}}, oninput=>'calc(this.form.name);' ),
 				'x',
-				input( type=>'float', id=>'txtFinalHeight'.$$variable{Signature}, name=>'txtFinalHeight'.$$variable{Signature}, value=>$$variable{'txtFinalHeight'.$$variable{Signature}}, onkeyup=>'calc(this.form.name);' ),
+				input( type=>'float', id=>'txtFinalHeight'.$$variable{Signature}, name=>'txtFinalHeight'.$$variable{Signature}, value=>$$variable{'txtFinalHeight'.$$variable{Signature}}, oninput=>'calc(this.form.name);' ),
 				write_override( 'chkOverrideDimensions'.$$variable{Signature}, $$variable{'chkOverrideDimensions'.$$variable{Signature}}, '', q`calc('f1');` ),
 			); ) ?>
 		</li>
@@ -97,7 +96,7 @@
 		<? echo ( my $html;
 			foreach my $qty_index ( $$variable{Project}->quantity_indexes() ) {
 				$html .= '<span class="'.$$variable{Columns}.'Columns">';
-				$html .= input( type=>'cardinal', id=>'txtQuantity'.$qty_index.$$variable{Signature}, name=>'txtQuantity'.$qty_index.$$variable{Signature}, value=>$$variable{'txtQuantity'.$qty_index.$$variable{Signature}}, onkeyup=>'calc(this.form.name);' );
+				$html .= input( type=>'cardinal', id=>'txtQuantity'.$qty_index.$$variable{Signature}, name=>'txtQuantity'.$qty_index.$$variable{Signature}, value=>$$variable{'txtQuantity'.$qty_index.$$variable{Signature}}, oninput=>'calc(this.form.name);' );
 				$html .= '</span>';
 			} # end foreach qty_index
 			return $html;

@@ -1,7 +1,7 @@
 use strict;
 use warnings;
 package openprint;
-use vars qw( $r %variable %session %param %config $log $dbh $User $Company $TZ $Owner );
+use vars qw( $r %variable %session %param %config $log $dbh $User $Company $TZ $Owner $Pricelist $Currency );
 
 
 sub session_init {
@@ -119,6 +119,7 @@ sub session_init {
 	$User = new openprint::User( $session{user_id} );
 	$Company = new openprint::Company( $session{company_id} );
 	$Owner = new openprint::Company( $config{owner_id} );
+	$Currency = new openprint::Currency( $session{Currency_id} );
 
 	if ( $config{Pricelist} ) {
 		if ( ! $session{Pricelist_id} ) {
@@ -137,6 +138,7 @@ sub session_init {
 			$session{Pricelist_id} = $Pricelist->id() if $Pricelist->id();
 		} # end if
 	} # end if
+	$Pricelist = new openprint::Pricelist( $session{Pricelist_id} ) if $session{Pricelist_id};
 
 } # end sub session_init
 
@@ -144,7 +146,7 @@ sub switch_company {
 	my ( $Company ) = @_;
 	$session{company_id} = $Company->id();
 	$openprint::Company = $Company;
-	(new openprint::Log())->save({'action'=>'Switch Company'});
+	(new openprint::Log())->save({action=>'Switch Company', Object=>$openprint::Company});
 
 	if ( $Company->currency_id() ) {
 		$session{Currency_id} = $Company->currency_id();

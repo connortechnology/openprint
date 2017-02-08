@@ -1,10 +1,10 @@
-<script type="text/javascript" src="<? echo ( hash_link('/javascripts/proj/spiral.js') ) ?>"></script>
-<script type="text/javascript" src="<? echo ( hash_link('/javascripts/service.js') ) ?>"></script>
+<script type="text/javascript" src="<?hash_link('/javascripts/proj/spiral.js')?>"></script>
+<script type="text/javascript" src="<?hash_link('/javascripts/service.js')?>"></script>
 <div class="Service">
 	<form id="f1" name="f1" method="post" action="/main/project/view.html">
-		<? echo ( include('/includes/main/proj/required_fields.html'); ) ?>
+		<?include('/includes/main/proj/required_fields.html')?>
 		<fieldset><legend><?ServiceTypeName?></legend>
-		<? echo ( include('/includes/main/proj/finished_dimensions.html'); ) ?>
+		<?include('/includes/main/proj/finished_dimensions.html')?>
 		</fieldset>
 		<? eval ( $$variable{'QTYIndex'} = 1 ) ?>
 		<? while ( $$variable{'QTYIndex'} <= 3 ) ?>
@@ -13,15 +13,11 @@
 		<? endif ( $$variable{'txtQuantity'.$$variable{'QTYIndex'}} ) ?>
 		<? eval ( $$variable{'QTYIndex'} += 1 ) ?>
 		<? endwhile ( $$variable{'QTYIndex'} <= 3 ) ?>
-
-		<? echo ( include('/includes/main/proj/add_to_project.html'); ) ?>
-		<input type="hidden" name="ServiceType" value="<?ServiceType?>"/>
+		<?include('/includes/main/proj/add_to_project.html')?>
+		<input type="hidden" name="ServiceType" value="<?ServiceTypeType?>"/>
         <input type="hidden" name="btnFunction" value="Save Service"/>
         <input type="hidden" name="ProjectIndex" value="<?ProjectIndex?>"/>
         <input type="hidden" name="ServiceIndex" value="<?ServiceIndex?>"/>
         <input type="hidden" name="ContinueProject" value="Y" />
-        <input type="hidden" name="hdnBreakdown1" />
-        <input type="hidden" name="hdnBreakdown2" />
-        <input type="hidden" name="hdnBreakdown3" />
 	</form>
 </div>
