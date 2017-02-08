@@ -22,7 +22,7 @@ my @whitelist = (
 
         q`^\[\w{3} \w{3} [ .:0-9]+\] \[mpm_prefork:notice\] \[pid [0-9]+\] AH[[:digit:]]{5}: caught SIGTERM, shutting down$`,
 		q`^\[\w{3} \w{3} [ .:0-9]{23}\] \[core:notice\] \[pid [0-9]+\] AH[[:digit:]]{5}: Command line: '\/usr\/sbin\/apache2'$`,
-		q`^\[\w{3} \w{3} [ .:0-9]{23}\] \[core:notice\] \[pid [0-9]+\] AH[[:digit:]]{5}: Graceful restart requested, doing restart$`,
+		q`^\[\w{3} \w{3} [ .:0-9]{23}\] \[(core|mpm_prefork):notice\] \[pid [0-9]+\] AH[[:digit:]]{5}: Graceful restart requested, doing restart$`,
 		q`^QFont::setPixelSize: Pixel size <= 0 \(0\)`,
 );
  
