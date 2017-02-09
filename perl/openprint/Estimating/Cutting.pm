@@ -197,6 +197,8 @@ sub signature_calc_stock_cutting {
 
 	my %results = (
 			Status	=> 'calculated',
+			alert		=>	'',
+			Breakdown	=> 	'',
 			);
 
 	my @my_equipment;
@@ -205,7 +207,7 @@ sub signature_calc_stock_cutting {
 		@my_equipment = ( new openprint::Equipment( $$specs{"ddmStockCutEquipment-$qty_index"} ) );
     } else {
 		load_equipment( $Project ) if ! @equipment;
-        @my_equipment = @equipment;
+		@my_equipment = @equipment;
 	} # end if
 
 	if ( ! @my_equipment ) {
@@ -733,6 +735,7 @@ $openprint::log->debug("Folding impositions: " . @folding_impositions ) if DEBUG
 
 		my $sheets = ceil( $$sig_specs{'txtQuantity'.$qty_index} / $$I{imposition} );
 		$sheets *= $$sig_specs{PageQuantity} if $$sig_specs{PageQuantity};
+
 		if ( my $Spec = $Equipment->Specification('Cutting Overs') ) {
 			if ( $$Spec{units} eq 'Sheets' ) {
 				$sheets += $$Spec{value};
@@ -1145,8 +1148,9 @@ $openprint::log->debug("Not a book") if DEBUG;
 	$results{Price}		= $bestPrice;
 	$results{MPrice}	= ($bestM/$$specs{'txtQuantity'.$qty_index})*1000;
 	$results{Equipment}	= $bestEquipment;
+	$results{Overs} = 0;
 	if ( $bestEquipment and ( my $Spec = $bestEquipment->Specification('Cutting Overs') ) ) {
-		if ( $$Spec{units} eq 'Sheets' ) {
+		if ( ( $$Spec{units} eq 'Sheets' ) and $$Spec{value}) {
 			$results{Overs} = $$Spec{value};
 		} # end if
 	} # end if

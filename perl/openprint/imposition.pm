@@ -288,11 +288,12 @@ $openprint::log->debug("Not Pretrimming on $$Press{strid}") if DEBUG;
 	my $paper_height;
 	my $cropmarkspace;
 
-	$setup1->quantity( 1 );
+	$$setup1{quantity} = 1;
 	$$setup1{sides} = $$specs{print_sides};
-	$setup1->Paper( $Paper->clone() );
-	$setup1->runstyle( $run_style );
+	$$setup1{Paper} = $Paper->clone();
+	$$setup1{runstyle} = $run_style;
 	$setup1->image_orientation(openprint::Imposition::Vertical);
+	$setup1->image_orientation_text();
 	$setup1->spread_size( $$specs{txtSpreadSize} );
 	$setup1->bleed_size( $bleed_size );
 	$setup1->spread_rows( 1 );
@@ -301,6 +302,8 @@ $openprint::log->debug("Not Pretrimming on $$Press{strid}") if DEBUG;
 	$setup1->page_columns( Math::Round::nearest( 1, $$specs{txtWidth}/$$specs{txtFinalWidth}) );
 	$setup1->object_width( $image_width );
 	$setup1->object_height( $image_height );
+	$$setup1{page_width} = $$specs{txtFinalWidth};
+	$$setup1{page_height} = $$specs{txtFinalHeight};
 	$setup1->Press( $Press );
 	$setup1->printing_type( $Press->specification('Printing Type') );
 	if ( $run_style eq 'Perfecting' ) {
@@ -311,6 +314,7 @@ $openprint::log->debug("Not Pretrimming on $$Press{strid}") if DEBUG;
 		$setup2->colour_bar_size( $$specs{colour_bar_size} );
 	} # end if
 	$setup1->colour_bar_orientation( $$specs{'Colour Bar Orientation'} );
+	$setup1->grain_direction();
 
 
 	$$setup2{quantity} = 1;
@@ -318,17 +322,21 @@ $openprint::log->debug("Not Pretrimming on $$Press{strid}") if DEBUG;
 	$$setup2{Paper} = $Paper->clone();
 	$$setup2{runstyle} = $run_style;
 	$$setup2{image_orientation} = openprint::Imposition::Horizontal;
+	$setup2->image_orientation_text();
 	$$setup2{bleed_size} = $bleed_size;
 	$$setup2{spread_size} = $$specs{txtSpreadSize};
 	$$setup2{spread_rows} = 1;
 	$$setup2{spread_columns} = 1;
 	$$setup2{page_rows} = Math::Round::nearest( 1, $$specs{txtHeight}/$$specs{txtFinalHeight} );
 	$$setup2{page_columns} = Math::Round::nearest( 1, $$specs{txtWidth}/$$specs{txtFinalWidth});
+	$$setup2{page_width} = $$specs{txtFinalWidth};
+	$$setup2{page_height} = $$specs{txtFinalHeight};
 	$setup2->object_width( $image_width );
 	$setup2->object_height( $image_height );
 	$$setup2{Press} = $Press;
 	$$setup2{printing_type} = $Press->specification('Printing Type');
 	$setup2->colour_bar_orientation( $$specs{'Colour Bar Orientation'} );
+	$setup2->grain_direction();
 
 	# Grain is on the second dimension by default (according to Rick)
 	

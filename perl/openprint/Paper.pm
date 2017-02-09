@@ -86,6 +86,7 @@ $serial	= 'paper_id_seq';
 		manufacturers_name		=>	'manufacturers_name',
 		available_to_order		=>	'available_to_order',
 		department_id			=>	'department_id',
+		Supplied					=>	undef,
 		);
 %find_fields = (
 		#'manufacturer'	=>	'(SELECT name FROM manufacturers WHERE manufacturers.id=papers.manufacturer_id)',
@@ -169,11 +170,11 @@ $serial	= 'paper_id_seq';
 );
 
 %grades = (
-1	=>	'1 Gloss-coated stock',
-2	=>	'2 Matte-coated stock',
-3	=>	'3 Gloss-coated, web stock', 
-4	=>	'4 Uncoated, white stock', 
-5	=>	'5 Uncoated, yellow stock'
+		1	=>	'1 Gloss-coated stock',
+		2	=>	'2 Matte-coated stock',
+		3	=>	'3 Gloss-coated, web stock', 
+		4	=>	'4 Uncoated, white stock', 
+		5	=>	'5 Uncoated, yellow stock'
 );
 sub load {
 	my ( $self, $data ) = @_;
@@ -184,7 +185,7 @@ sub load {
 	if ( exists $$data{allocated} ) {
 		$$self{allocated} = $$data{allocated}
 	}
-	@$self{'start_width','start_height'} = @$self{'width','height'};
+	@$self{'start_width','start_height','Supplied'} = ( @$self{'width','height'}, $self );
 } # end sub load
 
 # Returns a copy of the paper object.
@@ -1175,8 +1176,10 @@ sub minimum_order_weight {
 	return $$self{minimum_order_weight};
 } # end sub minimum_order_weight
 
+# Factor is an integer because it is the # of useable sheets we can get out of the supplied sheet.
 sub factor {
 	my $factor = int($_[0]{start_width} / $_[0]{width} ) * int( $_[0]{start_height} / $_[0]{height} ) if $_[0]{width} and $_[0]{height};
+	#my $factor = Math::Round::nearest(0.1,$_[0]{start_width} / $_[0]{width} ) * Math::Round::nearest(0.1, $_[0]{start_height} / $_[0]{height} ) if $_[0]{width} and $_[0]{height};
 	return 1 if ! $factor;
 	return $factor;
 } # end sub factor
@@ -1672,10 +1675,12 @@ sub types {
 sub Supplied {
 	my ( $self ) = @_;
 	if ( ! $$self{Supplied} ) {
+$openprint::log->error("POpulating SUPLIED");
 		my $Supplied = $self->clone();
 		$$Supplied{width} = $$self{start_width} ? $$self{start_width} : $$self{width};
 		$$Supplied{height} = $$self{start_height} ? $$self{start_height} : $$self{height};
 		delete $$Supplied{to_string};
+		delete $$Supplied{id_string};
 		$Supplied->mweight(0); # force recalc
 		$$self{Supplied} = $Supplied;
 	} # end if

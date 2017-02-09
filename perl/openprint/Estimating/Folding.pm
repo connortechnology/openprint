@@ -446,7 +446,7 @@ $openprint::log->error("No finished width and height, cannot continue $$Project{
 	my $services = $Project->services();
 	my $form = $$sig_specs{SignatureIndex};
 
-	my $bestM;
+	my $bestM = 0;
 	my $bestPrice = undef;
 	my $bestComparison;
 	my $bestRunPrice = 0;
@@ -872,8 +872,9 @@ $openprint::log->debug("folds from sigimpo") if DEBUG;
 						push @{$folds{$Imposition->pages().'PageFold-'.$$Imposition{imposition}.'out'}}, $Fold;
 						$openprint::log->debug(sprintf('Found: %dx%d,%dout', $Imposition->page_columns(), $Imposition->page_rows(), $Imposition->imposition() ) ) if DEBUG;
 					} else {
-						$Breakdown .= sprintf('Didnt find fold pages: %dx%d=%d %.3fx%.3f %s, %dout %dgsm<br/>', $Imposition->page_columns(), $Imposition->page_rows(), $Imposition->pages(), @$Imposition{'page_width','page_height','image_orientation','imposition'}, $Paper->gsm() );
-						$openprint::log->debug(sprintf('Didnt find: %dx%d %s,%dout', $Imposition->page_columns(), $Imposition->page_rows(), @$Imposition{'image_orientation','imposition'} ) ) if DEBUG;
+						$Breakdown .= sprintf('Didnt find fold pages: %dx%d=%d %.3fx%.3f %s, %dout %dgsm<br/>', $Imposition->page_columns(), $Imposition->page_rows(), $Imposition->pages(), @$Imposition{'page_width','page_height','image_orientation_text','imposition'}, $Paper->gsm() );
+						$openprint::log->debug(sprintf('Didnt find: %dx%d %.3fx%.3f %s,%dout', $Imposition->page_columns(), $Imposition->page_rows(), @$Imposition{'page_width','page_height','image_orientation_text','imposition'} ) ) if 1 or DEBUG;
+$Imposition->display();
 						%folds = ();
 						# Last because it's on press, can't do any cut impos.	Not actually True.	Webs can slit it and do dual delivery, fold one, sheet the other. FIXME
 						$complete =0;
@@ -1314,7 +1315,8 @@ $openprint::log->debug("Overriden Pages were found in the set: $pages pages qty:
 				# Because the next equi[pment will override the folds array
 				@Used_Impositions = map { $_->copy() } @{$Set_Of_Impositions};
 			} # end if override
-			my $totalTime = $Equipment->specification('Station Make Ready') * 60;
+			my $mr_time = $Equipment->specification('Station Make Ready');
+			my $totalTime = $mr_time ? $mr_time * 60 : 0;
 
 			my $comparison_cost = 0;
 			my $totalPrice;
@@ -1398,7 +1400,9 @@ $openprint::log->debug("Resulting fold: " . $Fold->to_string() ) if DEBUG;
 					$openprint::log->debug("Got MakeReady for " . $Fold->type().'MakeReady' . ' imp:' . $imposition . " \$$setupPrice{Price} $setupPrice{units}" ) if DEBUG;
 				} # end if
 				$Breakdown .= '<table><tr><td class="Description">MR: ';
-				if ( $setupPrice{units} eq 'per form' ) {
+				if ( ! $setupPrice{units} ) {
+					$Breakdown .= 'No Makeready</td><td></td></tr>';
+				} elsif ( $setupPrice{units} eq 'per form' ) {
 					$setupPrice{Total} = $setupPrice{Price};
 					$total_MR += $setupPrice{Total};
 					$Breakdown .= sprintf( '($%1$.2f%2$s=$%3$.2f)<br/>', @setupPrice{'Price','units','Total'} );
@@ -1438,7 +1442,7 @@ $openprint::log->error("No makeready_time on " . $Fold->to_string() );
 					} # end if
 					$Breakdown .= sprintf( ' =</td><td class="Price">$%.2f</td></tr>', $total_MR );
 				} else {
-					$Breakdown .= 'No Makeready</td><td></td></tr>';
+					$Breakdown .= "Unknown Makeready units($setupPrice{units})</td><td></td></tr>";
 				} # end if
 				$totalPrice += $total_MR;
 
@@ -1475,7 +1479,7 @@ $openprint::log->debug("Runspeed: $$Fold{type}(".$Fold->name().") : " . $Equipme
 						$Adjustment = $$Base{runspeed}/$runspeed;
 						$servicePrice{Total} = $servicePrice{Price} * ( $run_qty/1000 ) * ($Adjustment);
 	#$openprint::log->debug("Adjusting: Base: " . $$Base{runspeed} . ' actual: ' . $runspeed . ' calculated: ' . $Adjustment );
-						$Breakdown .= sprintf('<tr><td>Run: $%.2f%s * %d * %d% runspeed adjustment =</td><td>$%.2f</td></tr>', @servicePrice{'Price','units'}, $run_qty, $Adjustment*100, $servicePrice{Total} );
+						$Breakdown .= sprintf('<tr><td>Run: $%.2f%s * %d * %d%% runspeed adjustment =</td><td>$%.2f</td></tr>', @servicePrice{'Price','units'}, $run_qty, $Adjustment*100, $servicePrice{Total} );
 					} else {
 						$servicePrice{Total} = $servicePrice{Price} * ( $run_qty/1000 ) * $Adjustment;
 						$Breakdown .= sprintf('<tr><td>Run: $%.2f%s * %d =</td><td>$%.2f</td></tr>', @servicePrice{'Price','units'}, $run_qty, $servicePrice{Total} );
@@ -1909,23 +1913,25 @@ sub signature_summary {
 	$sig_specs = openprint::service::get_specs_ref( $Project, $s_id ) if ! $sig_specs;
 	my $form = $$sig_specs{SignatureIndex};
 	if ( $qty_index ) {
-	if ( ! $$sig_specs{"txtImposition$qty_index"} ) {
-		return '';
-	} # end if
+		if ( ! $$sig_specs{"txtImposition$qty_index"} ) {
+			return '';
+		} # end if
 		my @folds;
 		if ( ( defined $$specs{"chkOverrideEquipment-$form-$qty_index"} ) and ( $$specs{"chkOverrideEquipment-$form-$qty_index"} eq 'Y' ) and ! $$specs{"ddmEquipment-$form-$qty_index"} ) {
 			return 'not folded';
 		} elsif ( $$specs{"ddmEquipment-$form-$qty_index"} ) {
-		my $Equipment = new openprint::Equipment( $$specs{"ddmEquipment-$form-$qty_index"} );
-		foreach my $fold_index ( 1 .. 4 ) {
-			next if ! $$specs{"FoldQty-$form-$qty_index-$fold_index"};
-			push @folds, sprintf('%1$d %3$s %2$dout', @$specs{"FoldQty-$form-$qty_index-$fold_index",
-					"FoldImposition-$form-$qty_index-$fold_index",
-					"FoldType-$form-$qty_index-$fold_index"} );
-		} # end foreach
-		return join('<br/>', ( ' on ' . $Equipment->name() ), sort { $a cmp $b } @folds);
+			my $Equipment = new openprint::Equipment( $$specs{"ddmEquipment-$form-$qty_index"} );
+			foreach my $fold_index ( 1 .. 4 ) {
+				next if ! $$specs{"FoldQty-$form-$qty_index-$fold_index"};
+				push @folds, sprintf('%1$d %3$s %2$dout', @$specs{
+						"FoldQty-$form-$qty_index-$fold_index",
+						"FoldImposition-$form-$qty_index-$fold_index",
+						"FoldType-$form-$qty_index-$fold_index"} );
+			} # end foreach
+			return join('<br/>', ( ' on ' . $Equipment->name() ), sort { $a cmp $b } @folds);
 		} # end if
 	} # end if
+	return '';
 } # end sub signature_summary
 
 sub summary {
@@ -2355,6 +2361,7 @@ sub save {
 
 sub load_Impositions {
 #sub load_Impositions($$$) {
+$openprint::log->error("Called load_Impositions");
 	my ( $folding_specs, $sig_specs, $qty_index ) = @_;
 
 	my $form = $$sig_specs{SignatureIndex};
@@ -2486,7 +2493,7 @@ sub compare_folds {
 		return 0 
 	}
 		
-	if ( $FoldsA[0]{Folder}{id} != $FoldsB[0]{Folder}{id} ) {
+	if ( $FoldsA[0]{Folder} and $FoldsB[0]{Folder} and ( $FoldsA[0]{Folder}{id} != $FoldsB[0]{Folder}{id} ) ) {
 		$openprint::log->debug("Folder different") if DEBUG;
 		return 0 ;
 	} else {

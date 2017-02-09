@@ -23,7 +23,7 @@ my @fields = (
 	'runstyle',
 	'spread_rows','spread_columns','spreads','spread_size',
 	'grip','gutters',
-	'image_orientation',
+	'image_orientation','image_orientation_text',
 	'Paper',
 	'Press',
 	'grain_direction','rotate_sheet',
@@ -60,6 +60,11 @@ my @fields = (
 sub new {
 	my $self = {};
 	bless $self, $_[0];
+
+	$$self{rows} = 0;
+	$$self{columns} = 0;
+	$$self{dutch_rows} = 0;
+	$$self{dutch_columns} = 0;
 
 	return $self;
 } # end sub new
@@ -211,7 +216,7 @@ my ( $caller, undef, $line ) = caller;
 	#@$self{'quantity','start_imposition','columns','rows','dutch_columns','dutch_rows','imposition','spread_columns','spread_rows','spreads'},$self->page_columns(), $self->page_rows(), $self->pages(), $$self{runstyle}, $$self{Paper}->{start_width},$$self{Paper}->{start_height},$self->{Paper}->{width},$self->{Paper}->{height},$$self{Press}->{strid}, @$self{'image_width','image_height','layout_width','layout_height','image_orientation'},$self->grain_direction(), $$self{Paper}->minimum_order() ) );
 my ( $caller, undef, $line ) = caller;
 	$openprint::log->debug(sprintf('Imp %s: %d %dx%d+%dx%d:%dout%s pages:%dx%d=%d %s on: %sx%s->%sx%s=%dsq rotate: %d layout: %sx%s min: %s %s %s versions: %d specs: %s from %s:%d', $prefix,
-	@$self{'quantity','columns','rows','dutch_columns','dutch_rows','imposition','image_orientation','page_columns', 'page_rows', 'pages', 'runstyle'}, @$Paper{'start_width','start_height'}, $self->sheet_width(), $self->sheet_height(), $Paper->area(), $$self{rotate_sheet}, $self->layout_width(), $self->layout_height(), $$Paper{minimum_order}, $$self{Press}->{strid}, ( $$self{Price} ? $$self{Price} : '' ), $$self{versions}, $$self{specs}, $caller, $line ) );
+	@$self{'quantity','columns','rows','dutch_columns','dutch_rows','imposition'},$self->image_orientation_text(),@$self{'page_columns', 'page_rows', 'pages', 'runstyle'}, @$Paper{'start_width','start_height'}, $self->sheet_width(), $self->sheet_height(), $Paper->area(), $$self{rotate_sheet}, $self->layout_width(), $self->layout_height(), $$Paper{minimum_order}, $$self{Press}->{strid}, ( $$self{Price} ? $$self{Price} : '' ), $$self{versions}, $$self{specs}, $caller, $line ) );
 } # end sub display
 
 sub get {
@@ -366,7 +371,6 @@ sub load {
 		$dutch_width = $$self{dutch_columns} * $$self{image_height};
 		$dutch_height = $$self{dutch_rows} * $$self{image_width};
 	} else {
-	#} elsif ( $$self{image_orientation} eq Horizontal ) {
 		$$self{layout_width} = $$self{columns} * $$self{image_height};
 		$$self{layout_height} = $$self{rows} * $$self{image_width};
 		$dutch_width = $$self{dutch_columns} * $$self{image_width};
@@ -721,15 +725,15 @@ sub to_string {
 	if ( ! $_[0]{to_string} ) {
 		if ( $_[0]{Paper} ) {
 			my $Paper = $_[0]{Paper};
-		$_[0]{to_string} = sprintf('%s %dx%d+%dx%d=%dout %s %dx%d=%dpages on %sx%s%s->%sx%s %s', ( $_[0]{Press} ? $_[0]{Press}->strid() : 'unknown equipment' ), 
-				@$self{'columns','rows','dutch_columns','dutch_rows','imposition','runstyle'},$_[0]->page_columns(), $_[0]->page_rows(),$_[0]{'pages'}, 
-				@$Paper{'width','height', 'type'},
-				$_[0]->sheet_width(),$_[0]->sheet_height(), $_[0]{'image_orientation'} );
+			$_[0]{to_string} = sprintf('%s %dx%d+%dx%d=%dout %s %dx%d=%dpages %.2fx%.2f on %sx%s%s->%sx%s %s', ( $_[0]{Press} ? $_[0]{Press}{strid}: 'unknown equipment' ),
+					@$self{'columns','rows','dutch_columns','dutch_rows','imposition','runstyle'},$_[0]->page_columns(), $_[0]->page_rows(),@$self{'pages','page_width','page_height'},
+					@$Paper{'start_width','start_height', 'type','width','height'},
+					$_[0]->image_orientation_text() );
 		} else {
 			if ( $_[0]{quantity} > 1 ) {
-			$_[0]{to_string} = sprintf('%s %d @ %dx%d+%dx%d=%dout %s %dx%d=%dpages %s', ( $_[0]{Press} ? $_[0]->Press()->strid() : 'unknown equipment' ), $_[0]->get('quantity','columns','rows','dutch_columns','dutch_rows','imposition','runstyle','page_columns','page_rows','pages', 'sheet_width','sheet_height', 'image_orientation') );
+			$_[0]{to_string} = sprintf('%s %d @ %dx%d+%dx%d=%dout %s %dx%d=%dpages %s', ( $_[0]{Press} ? $_[0]->Press()->strid() : 'unknown equipment' ), $_[0]->get('quantity','columns','rows','dutch_columns','dutch_rows','imposition','runstyle','page_columns','page_rows','pages', 'sheet_width','sheet_height', 'image_orientation_text') );
 			} else {
-			$_[0]{to_string} = sprintf('%s %dx%d+%dx%d=%dout %s %dx%d=%dpages %s', ( $_[0]{Press} ? $_[0]->Press()->strid() : 'unknown equipment' ), $_[0]->get('columns','rows','dutch_columns','dutch_rows','imposition','runstyle','page_columns','page_rows','pages', 'sheet_width','sheet_height', 'image_orientation') );
+			$_[0]{to_string} = sprintf('%s %dx%d+%dx%d=%dout %s %dx%d=%dpages %s', ( $_[0]{Press} ? $_[0]->Press()->strid() : 'unknown equipment' ), $_[0]->get('columns','rows','dutch_columns','dutch_rows','imposition','runstyle','page_columns','page_rows','pages', 'sheet_width','sheet_height', 'image_orientation_text') );
 			}
 		} # end if
 	}
@@ -832,7 +836,10 @@ sub dump {
 }
 
 sub image_orientation_text {
-	return $_[0]{image_orientation} == Vertical ? 'Vertical' : 'Horizontal';
+	if ( ! $_[0]{image_orientation_text} ) {
+		$_[0]{image_orientation_text} = $_[0]{image_orientation} == Vertical ? 'Vertical' : 'Horizontal';
+	};
+	return $_[0]{image_orientation_text};
 }
 
 1;
