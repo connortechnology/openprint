@@ -75,10 +75,10 @@
 							[ map { $_, $_ } @{$specifications{$name}} ], undef, 
 							{ name=>'spec_filter-'.$name, onchange=>'filter_products();', prepend=>['','All'] } ).'</li>';
 				}
-			my @Prices = openprint::ProductPrice->find( product_id=> \@product_ids );
-			my @quantities = @{$$variable{Quantities}} = sort { $a <=> $b } sets::union( map { $_->min() == $_->max() ? $_->min() : () } @Prices );
-			$html .= '<li><label>Quantity</label>'.ssi::select( [ map { $_, $_ } @quantities ], undef, 
-					{ name => 'quantity', onchange=>'filter_products();', prepend=>['','All'] } );
+				my @Prices = openprint::ProductPrice->find( product_id=> \@product_ids );
+				my @quantities = @{$$variable{Quantities}} = sort { $a <=> $b } sets::union( map { $_->min() == $_->max() ? $_->min() : () } @Prices );
+				$html .= '<li><label>Quantity</label>'.ssi::select( [ map { $_, $_ } @quantities ], undef, 
+						{ name => 'quantity', onchange=>'filter_products();', prepend=>['','All'] } );
 				
 			}
 			return '<ul>'.$html.'</ul>' if $html;
