@@ -18,7 +18,7 @@
 			</li>
 			<li><label>Parent Category</label>
 				<? echo ( ssi::select( 
-							openprint::Product_Category->dropdown(
+							openprint::Product_Category->dropdown( order=>'lower(name)',
 								( $$variable{Category}->id() ? ( 'id !='=>$$variable{Category}->id()) : () ) ), $$variable{Category}->parent_id(), { name=>'parent_id', prepend=>['','None'] } ); ) ?>
 			</li>
 			<li>
