@@ -57,13 +57,14 @@
 			<input type="text" id="description" name="description" value="<? echo ( $$variable{ProjectType}->description(); ) ?>" /> 
 		</li>
 		<li>
-			<label>Category</label>
-			<select id="category_id" name="category_id">
+			<label onclick="$('category_id').toggle();$('category').toggle();">Category</label>
+			<select id="category_id" name="category_id" onchange="$('category').value='';">
 				<option value=""> none </option>
 				<? echo (
 					make_drop_down( $$variable{Categories}, $$variable{ProjectType}->category_id() );
 			) ?>
 			</select>
+			<input type="text" name="category" id="category" style="display:none;" oninput="ddm_select_by_value($('category_id'), '' );"/>
 		</li>
 <? if ( $openprint::User->email() =~ /iconnor/ ) ?>
 		<li> 
@@ -107,7 +108,7 @@
 		<ul> 
 <? echo (
 		return checkboxes('required_services', 
-			[ map { $_->id(), $_->description() } openprint::ServiceType->find('order'=>'lower(name)') ],
+			[ map { $_->id(), $_->description() } openprint::ServiceType->find( order=>'lower(name)') ],
 			[ $$variable{ProjectType}->required_services() ],
 			{ container=>['<li>','</li>'] }
 			);
@@ -120,7 +121,7 @@
 		<ul> 
 <? echo (
 		return checkboxes('blocked_services', 
-			[ map { $_->id(), $_->description() } openprint::ServiceType->find('order'=>'lower(name)') ],
+			[ map { $_->id(), $_->description() } openprint::ServiceType->find( order=>'lower(name)') ],
 			[ $$variable{ProjectType}->blocked_services() ],
 			{ container=>['<li>','</li>'] }
 			);

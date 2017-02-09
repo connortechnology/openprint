@@ -9,6 +9,8 @@
 	my $html = '';
 
 	foreach my $Pricelist ( @Pricelists ) {
+		my $Currency = $Pricelist->Currency();
+
 		$html .= '<fieldset>';
 		$html .= "<legend>Prices for Price List: $$Pricelist{name}</legend>" if $admin;
 		my @Prices = openprint::ProductPrice->find( 'product_id' => $$variable{Product}->id(), 'pricelist_id' => $Pricelist->id(), 'order' => 'min NULLS FIRST' );
@@ -53,9 +55,9 @@
 					  ( $Price->max() ne '' ? Number::Format::format_number( $Price->max(), 0, 0 ) : '' ),
 				) ),
 				$Price->units(), 
-				openprint::Currency::format( $Price->cost() ),
+				openprint::Currency::format( $Currency->convert_from( $Price->cost() ) ),
 				$Price->markup(),
-				openprint::Currency::format( $Price->price() ),
+				openprint::Currency::format( $Currency->convert_from( $Price->price() ) ),
 				$Price->discountable() ? 'Yes' : 'No',
 join("\n",
 button('Order'.$$Price{id}, { text=>'Order', href=>'/main/order/information.html?Product='.$$variable{Product}->id().'&amp;Quantity='.$Price->min(),
@@ -78,7 +80,7 @@ button('Customize'.$$Price{id}, { text=>'Customize' } ),
 				( $Price->max() ne '' ? Number::Format::format_number( $Price->max(), 0, 0 ) : '' ),
 				) ),
 				$Price->units(), 
-				openprint::Currency::format( $Price->price() ),
+				openprint::Currency::format( $Currency->convert_from( $Price->price() ) ),
 join("\n",
 button('Order'.$$Price{id}, { text=>'Order' } ),
 button('Customize'.$$Price{id}, { text=>'Customize' } ),

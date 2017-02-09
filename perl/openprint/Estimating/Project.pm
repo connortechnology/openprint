@@ -41,15 +41,9 @@ my @no_outputs = (
 	'chkOverrideScoreQty',
 	'h_stands','grommets',
 );
-sub outputs {
-} # end sub outputs
 sub no_outputs {
 	return @no_outputs;
 } # end sub
-
-sub outputs {
-	return ('txtPrice1' );
-}
 
 # creates a new project, first clearing out any previous projects
 sub calc {
@@ -950,13 +944,13 @@ sub create_calc {
 		if ( $ProjectType ) {
 			my @required_servicetype_ids = $ProjectType->required_services();
 			if ( @required_servicetype_ids ) {
-				foreach my $ServiceType ( openprint::ServiceType->find( create_visible => 'Y', id=>\@required_servicetype_ids ) ) {
+				foreach my $ServiceType ( openprint::ServiceType->find( create_visible => 1, id=>\@required_servicetype_ids ) ) {
 					$$specs{'chkServices'.$ServiceType->name()} = $ServiceType->name();
 				} # end foreach
 			} # end if required_servicetype_ids
 			my @blocked_servicetype_ids = $ProjectType->blocked_services();
 			if ( @blocked_servicetype_ids ) {
-				foreach my $ServiceType ( openprint::ServiceType->find( create_visible => 'Y', id=>\@blocked_servicetype_ids ) ) {
+				foreach my $ServiceType ( openprint::ServiceType->find( create_visible => 1, id=>\@blocked_servicetype_ids ) ) {
 					$$specs{'chkServices'.$ServiceType->name()} = '';
 				} # end foreach
 			} # end if blocked_servicetype_ids

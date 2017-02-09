@@ -14,7 +14,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA
 
-package openprint::Estimating::DieCutting;
+package openprint::Estimating::Embossing;
 use strict;
 use warnings;
 use POSIX qw( ceil );
@@ -47,9 +47,9 @@ sub variables {
 		my $sig_specs = openprint::service::get_specs_ref( $Project, $ss_id );
 		my $form = $$sig_specs{SignatureIndex};
 		push @v, map { "$_-$form" } ( 'txtWidth', 'txtHeight', 
-			 'rdbDieCutting' ,'Needed', 'MakeReadyComplexity',
-			 'rdbSuppliedDie','txtDieCutPunches',
-			 'txtSteelRuleLength', 'txtDieCutBends', 'txtHoleClearingHoles' );
+			 'Embossing' ,'Needed', 'MakeReadyComplexity',
+			 'rdbSuppliedDie','Foil',
+			 );
 		foreach my $qty_index ( $Project->quantity_indexes() ) {
 			push @v,map { "$_-$form-$qty_index" } (
 				 'ddmEquipment', 'chkOverrideEquipment',
@@ -86,9 +86,9 @@ sub calc_price {
 	my %Total = ( Imposition => $Imposition, Status => 'calculated', alert=>'' );
 	my $form = $$sig_specs{SignatureIndex};
 
-	my $MakeReadyService = openprint::Service->find_one( name => 'DieCutting-'.$$specs{'MakeReadyComplexity-'.$form}.'MakeReady' ) if $$specs{'MakeReadyComplexity-'.$form};
-	$MakeReadyService = openprint::Service->find_one( name => 'DieCutting-'.$$specs{'rdbDieCutting-'.$form}.'MakeReady' ) if (!$MakeReadyService) and $$specs{'rdbDieCutting-'.$form};
-	$MakeReadyService = openprint::Service->find_one( name => 'DieCuttingMakeReady' ) if ! $MakeReadyService;
+	my $MakeReadyService = openprint::Service->find_one( name => 'Embossing-'.$$specs{'MakeReadyComplexity-'.$form}.'MakeReady' ) if $$specs{'MakeReadyComplexity-'.$form};
+	$MakeReadyService = openprint::Service->find_one( name => 'Embossing-'.$$specs{'rdbEmbossing-'.$form}.'MakeReady' ) if (!$MakeReadyService) and $$specs{'rdbEmbossing-'.$form};
+	$MakeReadyService = openprint::Service->find_one( name => 'EmbossingMakeReady' ) if ! $MakeReadyService;
 
 	if ( $MakeReadyService ) {
 		my $MakeReady = $MakeReadyService->get_Price( undef, $Equipment );
@@ -123,37 +123,17 @@ sub calc_price {
 				%DiePrice = $Material->get_price( undef, $Equipment );
 			} # end if
 		} # end if
-		if ( ( ! %DiePrice ) and $$specs{'rdbDieCutting-'.$form} ) {
-			if ( my $Material = openprint::Material->find_one( name=>$$specs{'rdbDieCutting-'.$form}.'Die') ) {
+		if ( ( ! %DiePrice ) and $$specs{'rdbEmbossing-'.$form} ) {
+			if ( my $Material = openprint::Material->find_one( name=>'Embossing'.$$specs{'rdbEmbossing-'.$form}.'Die') ) {
 				%DiePrice = $Material->get_price( undef, $Equipment );
 			} # end if
 		} # end if
-			
 		if ( ! %DiePrice ) {
-			my %BendingPrice = openprint::service::get_price_object( 'DieCutRuleBending',$$specs{txtDieCutBends}*$$Imposition{imposition}, undef );
-			$BendingPrice{Total} = $BendingPrice{Price} * $$specs{txtDieCutBends} * $$Imposition{imposition};
-			$DiePrice{Price} += $BendingPrice{Total};
-#$die_price += $bending_price;
-#$log->debug(" ** Adding Bending Cost: $bending_price For $$specs{txtDieCutBends} Bends, MakeReady Total: $make_ready ** ");
-			if ( my $Material = openprint::Material->find_one('name'=>'DieCuttingDieRule') ) {
-				my %SteelRulePrice = $Material->get_price( $$specs{'txtSteelRuleLength-'.$form}*$$Imposition{imposition}, undef );
-				$SteelRulePrice{Total} = $SteelRulePrice{Price} * $$specs{'txtSteelRuleLength-'.$form}*$$Imposition{imposition};
-				$DiePrice{Price} += $SteelRulePrice{Total};
-			} # end if
-#$die_price += $steel_rule_price;
-#$log->debug(" ** Adding Rule Cost: $steel_rule_price For $$specs{txtSteelRuleLength} Inches, MakeReady Total: $make_ready ** ");
-#
-			if ( $$specs{txtDieCutPunches} > 0 ) {
-##punches are optional
-				if ( my $Material = openprint::Material->find_one('name'=>'DieCutPunch'.$$specs{'rdbDieCutting-'.$form}) ) {
-					my %PunchPrice = $Material->get_price( $$specs{'txtDieCutPunches-'.$form}*$$Imposition{imposition}, $Equipment );
-					$PunchPrice{Total} = $PunchPrice{Price} * $$specs{'txtDieCutPunches-'.$form} * $$Imposition{imposition};
-					$DiePrice{Price} += $PunchPrice{Total};
-				} # end if
-#$die_price += $punch_price;
-#$log->debug(" ** Adding Punch Cost: $punch_price For $$specs{txtDieCutPunches} Punches, MakeReady Total: $make_ready ** ");
-			} # end if punches
-		} # end if rule & bend 
+			if ( my $Material = openprint::Material->find_one( name=>'EmbossingDie') ) {
+                %DiePrice = $Material->get_price( undef, $Equipment );
+            } # end if
+		}
+			
 		if ( (defined $$specs{'OverrideDiePrice'.$qty_index}) and ( $$specs{'OverrideDiePrice'.$qty_index} eq 'Y' ) ) {
 			$DiePrice{Price} = $$specs{'DiePrice'.$qty_index};
 		} # end if
@@ -167,11 +147,9 @@ sub calc_price {
 
 	$Total{DiePrice} = \%DiePrice;
 
-	# Why 1.28, overs I assume
 	my $impressions = ceil( ( $$specs{"txtQuantity$qty_index"} / $$Signature_Imposition{imposition} ) ) * $Imposition->quantity();
-# * $$Imposition{imposition});
 	
-	if ( my $Overs = $Equipment->Specification('DieCutting Overs') ) {
+	if ( my $Overs = $Equipment->Specification('Embossing Overs') ) {
 		my $overs;
 		if ( $$Overs{units} eq 'Percent' ) {
 			$overs = int( $impressions * ($$Overs{value}/100) );
@@ -183,11 +161,11 @@ sub calc_price {
 	} # end if
 	$Total{Impressions} = $impressions;
 
-# this is the price for actual die cutting, priced by impressions.
-	my %ServicePrice = openprint::service::get_price_object( 'DieCutting'.$$specs{'rdbDieCutting-'.$form}, $impressions, $Equipment );
-	if ( ! %ServicePrice ) {
-		%ServicePrice = openprint::service::get_price_object( 'DieCutting', $impressions, $Equipment );
-	} # end if
+# this is the price for actual embossing, priced by impressions.
+	my $Service = openprint::Service->find_one( name=>'Embossing'.$$specs{'rdbEmbossing-'.$form} );
+	$Service = openprint::Service->find_one( name=>'Embossing' ) if ! $Service;
+
+	my %ServicePrice = $Service->get_price( $impressions, $Equipment );
 	if ( $ServicePrice{units} eq 'per m' ) {
 		$ServicePrice{Total} = $impressions * $ServicePrice{Price} / 1000;
 	} elsif ( $ServicePrice{units} eq 'per hour' ) {
@@ -200,29 +178,37 @@ sub calc_price {
 			$Total{alert} .= 'No runspeed for calliper ' . $Imposition->Paper()->calliper() . ' on '  . $Equipment->name() . '<br/>';
 			$openprint::log->error($$specs{alert});
 		} # end if
+	} else {
+		$$specs{alert} .= "Invalid units on Service price for $$Service{name}<br/>";
 	} # end if
 
 	$Total{ServicePrice} = \%ServicePrice;
 	$Total{Total} += $ServicePrice{Total};
 	$Total{MPrice} += ( $ServicePrice{Total} / $impressions ) * 1000;
-# the extra services are priced by qty, not impressions.
-#if ( $folding eq 'Y' ) {
-#my $folding_price =  openprint::service::get_price( 'HandFolding'.$die_complexity ,$qty, '') / 1000; 
-#$run_price += $qty * $folding_price;
-#} # end fi
 
-	if ( ( defined $$specs{'txtHoleClearingHoles-'.$form} ) and ( $$specs{'txtHoleClearingHoles-'.$form} > 0 ) ) {
-		my $hole_qty = $$specs{'txtHoleClearingHoles-'.$form} * $$Imposition{imposition};
-		my %HoleClearingPrice = openprint::service::get_price_object( 'HoleClearing', $$specs{'txtHoleClearingHoles-'.$form} * $$specs{"txtQuantity$qty_index"}, $Equipment ); 
-		$HoleClearingPrice{Total} = $impressions * $HoleClearingPrice{Price} * $hole_qty;
-		if ( lc $HoleClearingPrice{units} eq 'per m' ) {
-			$HoleClearingPrice{Total} /= 1000;
-		} # end if
-		$Total{HoleClearingPrice} = \%HoleClearingPrice;
-		$Total{Total} += $HoleClearingPrice{Total};
-		$Total{MPrice} += ( $HoleClearingPrice{Total} * $$specs{'txtHoleClearingHoles-'.$form} / $impressions ) * 1000;
-		#$$specs{'hdnBreakdown'.$qty_index} .= sprintf('&nbsp;&nbsp;Hole Clearing: $%.2f %s * %d impressions * %d holes = $%.2f<br/>', @HoleClearingPrice{'Price','units'}, $impressions, $hole_qty, $HoleClearingPrice{Total});
-	} # end if
+
+	if ( $$specs{Foil} ) {
+		my $Material = openprint::Material->find_one(name=>$$specs{Foil} );
+		if ($Material ) {
+			my %FoilPrice = $Material->get_price( $impressions );
+			if ( %FoilPrice ) {
+				if ( $FoilPrice{units} eq 'per m' ) {
+					$FoilPrice{Total} = $FoilPrice{Price} * $impressions / 1000;
+				} elsif ( $FoilPrice{units} eq 'each' ) {
+					$FoilPrice{Total} = $FoilPrice{Price} * $impressions;
+				} else {
+					$Total{alert} .= "Invalid units on Foil price<br/>";
+				}
+				$Total{FoilPrice} = \%FoilPrice;
+				$Total{Total} += $FoilPrice{Total};
+				$Total{MPrice} += ( $FoilPrice{Total} / $impressions ) * 1000;
+			} else {
+				$Total{alert} .= "No price found for $impressions on $$Material{name}<br/>";
+			}
+		} else {
+			$Total{alert} .= "Foil material not found.<br/>";
+		}
+	}
 
 	$Total{UnitPrice} = $Total{Total} / $$specs{"txtQuantity$qty_index"} if $$specs{"txtQuantity$qty_index"};
     return %Total;
@@ -254,7 +240,7 @@ sub calc {
 		} # end if
 			
 		if ( $$specs{"Needed-$form"} eq '' ) {
-			$$specs{alert} .= 'Please select whether die cutting is required for signature ' . $form . '.<br/>';
+			$$specs{alert} .= 'Please select whether embossing is required for signature ' . $form . '.<br/>';
 			return $$specs{Status} = 'uncalculated';
 		} elsif ( $$specs{"Needed-$form"} eq 'N' ) {
 			next;
@@ -268,16 +254,16 @@ sub calc {
 			$$specs{alert} .= 'Please select whether the die is to be supplied by the customer or not for signature ' . $form . '.<br/>';
 			return $$specs{Status} = 'uncalculated';
 		} # end if
-		if ( ! $$specs{'rdbDieCutting-'.$form} ) {
+		if ( ! $$specs{'rdbEmbossing-'.$form} ) {
 			if ( $$sig_specs{rdbTemplateType} eq '2Panel2Pocket' ) {
-				$$specs{'rdbDieCutting-'.$form} = 'Average';
+				$$specs{'rdbEmbossing-'.$form} = 'Average';
 			} elsif ( $$sig_specs{rdbTemplateType} eq '2Panel1Pocket' ) {
-				$$specs{'rdbDieCutting-'.$form} = 'Simple';
+				$$specs{'rdbEmbossing-'.$form} = 'Simple';
 			} else {
-				$$specs{'rdbDieCutting-'.$form} = 'Complex';
+				$$specs{'rdbEmbossing-'.$form} = 'Complex';
 			} # end if
 		} # end if
-		if ( ( $$specs{'rdbSuppliedDie-'.$form} eq 'N' ) and ( ! $$specs{'rdbDieCutting-'.$form} ) ) {
+		if ( ( $$specs{'rdbSuppliedDie-'.$form} eq 'N' ) and ( ! $$specs{'rdbEmbossing-'.$form} ) ) {
 			$$specs{alert} .= 'Please select the complexity of the die.<br/>';
 			return 'uncalculated';
 		} # end if
@@ -286,19 +272,6 @@ sub calc {
 		} # end if
 		if ( ! ( $$specs{'txtDieWidth-'.$form} or $$specs{'txtDieHeight-'.$form} ) ) {
 			$$specs{alert} .= 'Please enter the die dimensions.<br/>';
-			return 'uncalculated';
-		} # end if
-# now we have to make a custom die
-		if ( $$specs{'rdbDieCutting-'.$form} eq 'Simple' ) {
-			$$specs{'txtSteelRuleLength-'.$form} = 6;
-		} elsif ( $$specs{'rdbDieCutting-'.$form} eq 'Average' ) {
-			$$specs{'txtSteelRuleLength-'.$form} = 9;
-		} elsif ( $$specs{'rdbDieCutting-'.$form} eq 'Complex' ) {
-			$$specs{'txtSteelRuleLength-'.$form} = 12;
-		} # end if
-
-		if ( ! $$specs{'txtSteelRuleLength-'.$form} ) {
-			$log->debug(" ** Required Data Missing for Custom Die, Rule Length: $$specs{'txtSteelRuleLength-'.$form} Bends: $$specs{'txtDieCutBends-'.$form} ** ");
 			return 'uncalculated';
 		} # end if
 	} # end foreach signature
@@ -353,8 +326,10 @@ sub calc {
 					$$specs{'hdnBreakdown'.$qty_index} .= sprintf('<tr><td>Service: $%1$.2f%2$s * (%4$d impressions/%5$d per hour) = </td><td class="Price">$%3$.2f</td></tr>', @{$$Price{ServicePrice}}{'Price','units','Total'}, $$Price{Impressions}, $$Price{Runspeed}{value} );
 					} else {
 						$$specs{'hdnBreakdown'.$qty_index} .= sprintf('<tr><td>Service: $%1$.2f%2$s * %4$d impressions = </td><td class="Price">$%3$.2f</td></tr>', @{$$Price{ServicePrice}}{'Price','units','Total'}, $$Price{Impressions} );
-					} # en dif
-					$$specs{'hdnBreakdown'.$qty_index} .= sprintf('<tr><td>Hole Clearing: $%1$.2f%2$s * %5$d holes * %6$dout * %4$d impressions = </td><td class="Price">$%3$.2f</td></tr>', @{$$Price{HoleClearingPrice}}{'Price','units','Total'}, $$Price{Impressions}, $$specs{"txtHoleClearingHoles-$form"}, $I->imposition() ) if exists $$Price{HoleClearingPrice};
+					} # end if
+					if ( $$Price{FoilPrice} ) {
+						$$specs{'hdnBreakdown'.$qty_index} .= sprintf('<tr><td>%5$s: $%1$.2f%2$s * %4$d impressions = </td><td class="Price">$%3$.2f</td></tr>', @{$$Price{FoilPrice}}{'Price','units','Total'}, $$Price{Impressions}, $$specs{Foil} );
+					}
 
 					$totalUnitPrice += $Price->{UnitPrice};
 					$totalMPrice += $Price->{MPrice};
@@ -426,13 +401,13 @@ sub signature_needs {
 		if ( sets::isin( $$sig_specs{rdbTemplateType}, ['2Panel1Pocket','2Panel2Pocket','TriFoldDoublePocket'] ) ) {
 			return 1;
 		} # end if
-		my $ServiceType = openprint::ServiceType->find_one('type'=>'DieCutting');
+		my $ServiceType = openprint::ServiceType->find_one(type=>'Embossing');
 		if ( $ServiceType ) {
 			if ( sets::isin( $ServiceType->id(), [ $Project->Type()->required_services() ] ) ) {
 				return 1;
 			} # end if
 		} else {
-			$openprint::log->error("No ServiceType for DieCutting");
+			$openprint::log->error("No ServiceType for Embossing");
 		}
 	} # end if
 	return $$specs{"Needed-$form"} eq 'Y' ? 1 : 0;
@@ -484,11 +459,6 @@ sub signature_calc {
 	} # end if Overrides
 
 	foreach my $Equipment ( @equipment ) {
-		if ( (defined $$specs{"txtHoleClearingHoles-$form"} ) and ( $$specs{"txtHoleClearingHoles-$form"} > 0 ) and ( $Equipment->specification('HoleClearing Capable') ne 'Y') ) {
-			$results{breakdown} .= 'Doesnt do hole clearing.<br/>';
-			next;
-		} # end if
-
 		for ( my $Set_index = 0; $Set_index < @Sets_of_Impositions; $Set_index += 1 ) {
 			my $Set_of_Impositions =  $Sets_of_Impositions[$Set_index];
 			my @Impositions = openprint::imposition::sort( @{$Set_of_Impositions} );
@@ -534,12 +504,8 @@ sub signature_calc {
 sub display {
 	my ( $log, $dbh, $variable, $project_index, $service_index ) = @_;	
 
-	$$variable{Equipment} = [ openprint::Equipment->find(order=>'lower(strname)', useinestimating=>1,Specifications=>{'Die Cutting Capable'=>'Y'} ) ];
-
-	if ( $$variable{rdbTemplateTypePresentationFolderStandard1Pocket} ne '' or $$variable{rdbTemplateTypePresentationFolderStandard2Pocket} ne '' ) {
-		$$variable{ShowPresentationFolderDieCutting} = 'Y';
-	} # end if
-
+	my $ServiceType = openprint::ServiceType->find_one(type=>'Embossing');
+	$$variable{Equipment} = [ openprint::Equipment->find(order=>'lower(strname)', useinestimating=>1,'servicetype_id @>'=>$ServiceType->id() ) ];
 } # end sub display
 
 sub signature_summary {
@@ -613,6 +579,9 @@ sub summary {
 			} else {
 				$summary .= $Owner->name() . ' supplies die'.( @signatures > 1 ? ' for form '.$form : '' ).'<br/>';
 			} # end if
+			if ( $$specs{"Foil-$form"} ) {
+				$summary .= 'with ' . $$specs{"Foil-$form"} . '<br/>';
+			}
 		} # end foreach
 		return $summary;
 	} # end if

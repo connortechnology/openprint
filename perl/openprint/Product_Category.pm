@@ -6,7 +6,7 @@ package openprint::Product_Category;
 our @ISA = qw( openprint::Object );
 use vars qw( $debug $serial $table %fields %transforms %defaults );
 
-$debug = 1;
+$debug = 0;
 $serial = 'product_categories_id_seq';
 $table = 'Product_Categories';
 
@@ -96,6 +96,13 @@ sub link_to {
 sub Parent {
 	return new openprint::Product_Category( $_[0]{parent_id} );
 }
+
+sub Categories {
+	if ( ! $_[0]{Categories} ) {
+		$_[0]{Categories} = [ openprint::Product_Category->find( parent_id=>$_[0]{id} ) ];
+	}
+	return @{$_[0]{Categories}};
+} # end sub Categories
 
 1;
 __END__

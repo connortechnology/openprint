@@ -9,8 +9,12 @@
 		<?if($$variable{Category}->can_edit())?>
 		<p class="buttons">
 			<? echo ( join("\n",
-			button( 'Delete', { onclick=>"f1.btnFunction.value='Delete';f1.submit();" } ),
-			button( 'Edit', { href=>'/product/category_edit.html?category_id='.$$variable{Category}->id() } ),
+			( $$variable{Category}->id() ? (
+				button( 'Delete', { onclick=>"f1.btnFunction.value='Delete';f1.submit();" } ),
+				button( 'Edit', { href=>'/product/category_edit.html?category_id='.$$variable{Category}->id() } ),
+				) : () ),
+			
+				button( 'New', { href=>'/product/category_edit.html' } ),
 			); ) ?>
 		</p>
 		<?endif($$variable{Category}->can_edit())?>
@@ -27,14 +31,14 @@
 		</li>
 		</ul>
 		</div>
+		<?eval( $$variable{Object} = $$variable{Category};)?>
 <?if($$variable{Category}->Specifications())?>
 		<div class="Specifications">
-		<?eval($$variable{Object}=$$variable{Category};)?>
 		<?include(/includes/_specifications_view.html)?>
         </div>
 <?endif($$variable{Category}->Specifications())?>
         <div class="rightColumn">
-		<? eval ( $$variable{Album} = $$variable{Category}; ) ?>
+		<? eval ( $$variable{Album} = $$variable{Category};) ?>
 		<?include(/employee/assets/_assets.html)?>
         </div>
 		<? echo (
