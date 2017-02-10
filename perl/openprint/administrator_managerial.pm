@@ -961,6 +961,8 @@ sub promo_codes {
 } # end sub promo_codes
 
 sub logs {
+	ssi::setup_date_select( $r->uri, 'date_start', -7 );
+	ssi::setup_date_select( $r->uri, 'date_end', '' );
 } # end sub logs
 sub _logs {
 	if ( $param{action} eq 'delete' ) {

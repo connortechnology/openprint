@@ -135,26 +135,6 @@ sub type {
 	return $_[0]{type};
 } # end sub type
 
-sub Assets {
-	require openprint::Object_Asset;
-	if ( $_[1] ) {
-		$_[1]{object_id} = $_[0]{id};
-		$_[1]{object_type} = 'openprint::Host';
-		$_[1]{order} = 'created_on' if ! $_[1]{order};
-
-		return openprint::Object_Asset->find(%{$_[1]});
-	} # end if
-
-	if ( ! defined $_[0]{Assets} ) {
-		@{$_[0]{Assets}} = openprint::Object_Asset->find(
-				'object_type'	=>	'openprint::Host',
-				'object_id'		=>	$_[0]{id}, 
-				'order'			=>	'created_on'
-				);
-	} # end if
-	return @{$_[0]{Assets}};
-} # end sub Assets
-
 sub Notifications {
 	if ( ! $_[0]{Notifications} ) {
 		@{$_[0]{Notifications}} = openprint::Host_Notification->find(

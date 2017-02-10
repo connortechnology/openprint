@@ -105,6 +105,10 @@ BEGIN {
 	use provinces;
 	use Text::Unidecode;
 
+	use openprint::Estimating::Printing;
+	use openprint::Estimating::Folding;
+	use openprint::Imposition;
+
 }
 
 1;

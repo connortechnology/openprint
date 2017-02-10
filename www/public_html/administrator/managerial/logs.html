@@ -17,47 +17,28 @@
 						 ) ?>
 					</ul>
 				</li>
-		<li>
-			<label>Company</label>
-			<input type="text" onkeyup="filterDDM(this, this.form.company_id);" size="4" />
-			<select name="company_id" onclick="new Ajax.Request( 'user_id', '/includes/_user_ddm.html', { parameters{ company_id: this.getValue() }} );">
-			<option value="">All</option>
-			<? echo ( openprint::Company::get_dropdown( exists $param{company_id} ? $param{company_id} : $session{company_id} ); ) ?>
-			</select>
-		</li>			
-		<li>
-			<label>User</label>
-			<select name="user_id" id="user_id">
-			<option value="">All</option>
-			<? echo ( make_drop_down( openprint::User->dropdown( company_id=>$param{company_id} ? $param{company_id} : $session{company_id}, order=>'lower(firstname),lower(lastname)'), $param{user_id} ); ) ?>
-			</select>
-		</li>			
-	<? eval (
-		if ( $param{'StartYear'} ) {
-			@session{$r->uri().'?StartYear',$r->uri().'?StartMonth',$r->uri().'?StartDay'} =
-				@param{'StartYear','StartMonth','StartDay'};
-			@session{$r->uri().'?EndYear',$r->uri().'?EndMonth',$r->uri().'?EndDay'} =
-				@param{'EndYear','EndMonth','EndDay'};
-		} else {
-			@session{$r->uri().'?StartYear',$r->uri().'?StartMonth',$r->uri().'?StartDay'} = Date::Calc::Today();
-			@session{$r->uri().'?EndYear',$r->uri().'?EndMonth',$r->uri().'?EndDay'} = Date::Calc::Today();
-		} # end if
-	) ?>
-		<li>
-			<label>Date</label>
-			<span class="DateSelector">
-			<select name="StartYear"><? echo ( ssi::return_years( undef, undef, $session{$r->uri().'?StartYear'} ); ) ?></select>
-			<select name="StartMonth"><? echo ( ssi::getmonths( $session{$r->uri().'?StartMonth'} ); ) ?></select>
-			<select name="StartDay"><? echo ( ssi::getdays( $session{$r->uri().'?StartDay'} ); ) ?></select>
-			</span>
-			to
-			<span class="DateSelector">
-			<select name="EndYear"><? echo ( ssi::return_years( undef, undef, $session{$r->uri().'?EndYear'} ); ) ?></select>
-			<select name="EndMonth"><? echo ( ssi::getmonths( $session{$r->uri().'?EndMonth'} ); ) ?></select>
-			<select name="EndDay"><? echo ( ssi::getdays( $session{$r->uri().'?EndDay'} ); ) ?></select>
-			</span>
-		</li>
-		</ul>
+				<li>
+					<label>Company</label>
+					<input type="text" onkeyup="filterDDM(this, this.form.company_id);" size="4" />
+					<select name="company_id" onclick="new Ajax.Request( 'user_id', '/includes/_user_ddm.html', { parameters{ company_id: this.getValue() }} );">
+					<option value="">All</option>
+					<? echo ( make_drop_down( openprint::Company->dropdown(), exists $param{company_id} ? $param{company_id} : $session{company_id} ); ) ?>
+					</select>
+				</li>			
+				<li>
+					<label>User</label>
+					<select name="user_id" id="user_id">
+					<option value="">All</option>
+					<? echo ( make_drop_down( openprint::User->dropdown( company_id=>$param{company_id} ? $param{company_id} : $session{company_id}, order=>'lower(firstname),lower(lastname)'), $param{user_id} ); ) ?>
+					</select>
+				</li>			
+				<li>
+					<label>Date</label>
+					<? echo ( date_select_session( $r->uri(), 'date_start', { with_today=>1, with_clear=>1 } ); ) ?>
+					to
+					<? echo ( date_select_session( $r->uri(), 'date_end', { with_today=>1, with_clear=>1 } ); ) ?>
+				</li>
+			</ul>
 		</div>
 		<p class="buttons">
 		<? echo ( button( 'Search', { onclick=>'document.searchLog.submit();' } ); ) ?>
@@ -81,8 +62,8 @@
 			<? echo (
 				my $html = '';
 				$$variable{Results} = [ openprint::Log->find(
-					'date_time <='	=>	sprintf('%.4d-%.2d-%.2d 23:59:59', @session{$r->uri().'?EndYear',$r->uri().'?EndMonth', $r->uri().'?EndDay'} ),
-					'date_time >='	=>	sprintf('%.4d-%.2d-%.2d 00:00:00', @session{$r->uri().'?StartYear',$r->uri().'?StartMonth', $r->uri().'?StartDay'} ),
+					date_filter( $r->uri(). '?date_end', 'date_time <=' ),
+					date_filter( $r->uri(). '?date_start', 'date_time >=' ),
 					( $param{company_id} ? ( company_id	=>	$param{company_id} ) : () ),
 					( $param{user_id} ? ( user_id		=>	$param{user_id} ) : () ),
 					action_id	=>	$param{log_actions},
@@ -112,7 +93,7 @@
 						$Log->Company()->name(),
 						( $Object ? $Object->link_to( $Log->object_type() ) : '' ),
 						join("\n",
-							button( 'X'.$Log->id(), { 'onclick'=>qq`new Ajax.Request('_logs.json', { parameters: { action: 'delete', log_id: $$Log{id} }, onSuccess: function(){ \$('log_$$Log{id}').remove() } } );`, 'text'=>'X' } ),
+							button( 'X'.$Log->id(), { onclick=>qq`new Ajax.Request('_logs.json', { parameters: { action: 'delete', log_id: $$Log{id} }, onSuccess: function(){ \$('log_$$Log{id}').remove() } } );`, text=>'-' } ),
 						),
 						);
 				} # end foreach

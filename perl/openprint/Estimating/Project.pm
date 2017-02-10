@@ -171,7 +171,12 @@ $openprint::log->debug("In Project::calc");
         } # end i
 	}
 
-	if ( ! sets::isin( $$specs{Dimensions}, ['', 'Custom'] ) ) {
+	if ( ! sets::isin( $$specs{Dimensions}, [ 'Custom'] ) ) {
+		if ( ! $$specs{Dimensions} ) {
+			$$specs{alert} .= 'Please select the Size<br/>';
+			
+		} else {
+		
 		my ( $width, $height, $type ) = $$specs{Dimensions} =~ /([\d\.]*)x([\d\.]*)(\w*)/;
 		my @args = ( $$specs{projecttype_id}, $width, $height );
 
@@ -224,6 +229,7 @@ $log->debug("Presentation folder sizes $$specs{chkPocketLeft} $$specs{chkPocketR
             } # end if
             $$specs{txtHeight} = $$specs{txtFinalHeight} + $$specs{rdbPocketSize};
 		} # end if
+		}
 	} elsif ( ( $ProjectType->name() eq 'Envelopes' ) and ( exists $$specs{ddmStockSize} ) ) {
 		@$specs{'txtWidth','txtHeight'} = $$specs{ddmStockSize} =~ /^([\d\.]+)"?\s*x?\s*([\d\.]+)?"?\s*$/;
 		@$specs{'txtFinalWidth','txtFinalHeight'} = @$specs{'txtWidth','txtHeight'};
@@ -934,6 +940,8 @@ $log->warn("unitprice: $$specs{txtUnitPrice1}");
 	return $$specs{Status};
 } # end sub calc
 
+
+# This should not alter the db
 sub create_calc {
 	my ( $log, $dbh, $variable, $project_index, $service_index, $specs ) = @_;
 

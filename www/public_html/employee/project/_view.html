@@ -363,7 +363,9 @@ $log->warn("Lookup up stock price, cuz it's not in the paper service: cost-$stoc
 			<? if ( $$variable{checkboxes} ) ?>
 			<td class="checkbox">&nbsp;</td>
 			<? endif ( $$variable{checkboxes} ) ?>
-			<td class="Service"><input type="text" name="txtServiceName" /></td>
+			<td class="Service">
+<select name="servicetype_category_id"><option value="">select one</option><?echo(make_drop_down( openprint::ServiceType_Category->dropdown() ); ) ?></select>
+			<input type="text" name="txtServiceName" /></td>
 			<td class="Price"><? echo ( input( type=>'float', name=>'txtPrice' ); )?></td>
 			<td class="status">
 			<? echo ( button( 'AddToProject'.$$variable{Project}{id}, { onclick=>qq`form_submit('$$variable{formname}','Add Service');`, text=>'Add Custom Service' } ); ) ?>

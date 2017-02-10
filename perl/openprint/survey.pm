@@ -262,7 +262,7 @@ sub _latest_survey_question {
 		question_id	=>	$$Question{id},
 		company_id	=>	$session{company_id},
 		user_id		=>	$session{user_id},
-		answer_ids	=>	( ref $param{answer_id} eq 'ARRAY' ? $param{answer_id} : [ $param{answer_id} ] ),
+		answer_ids	=>	( ref $param{"answer_id-$param{question_id}"} eq 'ARRAY' ? $param{"answer_id-$param{question_id}"} : [ $param{"answer_id-$param{question_id}"} ] ),
 		answer		=>	$param{answer},
 		survey_id	=>	$$Question{survey_id},
 	});

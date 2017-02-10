@@ -4,15 +4,19 @@ our @ISA = qw( openprint::Object );
 
 use vars qw( $debug $table %fields %transforms %defaults $serial );
 
-$debug = 0;
+$debug = 1;
 $table = 'object_types';
 $serial = 'object_types_id_seq';
 %fields = (
-	'id'		=>	'id',
-	'name'		=>	'name',
-	'human'		=>	'human',
+	id		=>	'id',
+	name	=>	'name',
+	human	=>	'human',
 );
 %defaults = (
+);
+%transforms = (
+		name  => [ 's/^\s+//', 's/\s+$//', 's/\s\s+/ /g' ],
+		human => [ 's/^\s+//', 's/\s+$//', 's/\s\s+/ /g' ],
 );
 
 sub Object {

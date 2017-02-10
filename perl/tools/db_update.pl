@@ -1468,6 +1468,13 @@ if ( ! sets::isin( 'skids', \@tables ) ) {
 
 if ( ! sets::isin( 'paper_allocations', \@tables ) ) {
 	$dbh->do( misc::load_file( $log, '../openprint/sql/Paper_Allocations.sql' ) ) or die;
+} else {
+	$data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='paper_allocations'", 'column_name');
+	if ( ! exists $$data{docket} ) {
+		$log->debug("Adding docket column to paper_allocations");
+		$dbh->do('ALTER TABLE paper_allocations ADD docket INTEGER') or die $dbh->errstr();
+		$dbh->do('CREATE INDEX paper_allocations_docket_idx on paper_allocations (docket)') or die $dbh->errstr();
+	}
 }
 
 if ( ! sets::isin( 'tbl_service_defaults', \@tables ) ) {
@@ -1502,6 +1509,11 @@ if ( sets::isin( 'services', \@tables ) ) {
 	} # end if
 	if ( ! exists $$data{activity_code} ) {
 		$dbh->do('ALTER TABLE Services ADD activity_code TEXT');
+	} # end if
+	if ( ! exists $$data{servicetype_id} ) {
+		$log->debug("Adding servicetype_id to Services");
+		$dbh->do('ALTER TABLE Services ADD servicetype_id  INTEGER');
+		$dbh->do('ALTER TABLE Services ADD FOREIGN KEY (servicetype_id) REFERENCES service_types (id)');
 	} # end if
 } else {
 	$dbh->do( misc::load_file( $log, q{../openprint/sql/Services.sql}) );
@@ -2118,8 +2130,13 @@ if ( ! sets::isin( 'user_service_defaults', \@tables ) ) {
 if ( ! sets::isin( 'product_categories', \@tables ) ) {
 	$dbh->do( misc::load_file( $log, q{../openprint/sql/Product_Categories.sql}) );
 } else {
-	my $data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM Product_Categories LIMIT 1', {} );
-	$dbh->do('ALTER TABLE Product_Categories ADD deleted boolean') if $data and ! exists $$data{deleted};
+	my $data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='product_categories'", 'column_name');
+	$dbh->do('ALTER TABLE Product_Categories ADD deleted boolean') if ! exists $$data{deleted};
+	if ( ! exists $$data{parent_id} ) {
+		$log->debug("Adding parent_id t product_categories");
+		$dbh->do('ALTER TABLE Product_Categories ADD parent_id INTEGER') or die $dbh->errstr();
+		$dbh->do('ALTER TABLE Product_Categories ADD FOREIGN KEY (parent_id) REFERENCES Product_Categories (id)') or die $dbh->errstr();
+	}
 } # end if
 
 if ( ! sets::isin( 'products', \@tables ) ) {
@@ -4056,8 +4073,8 @@ if ( ! sets::isin( 'inventory_checks', \@tables ) ) {
 	my $data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='inventory_checks'", 'column_name');
 	if ( ! exists $$data{location_id} ) {
 		$log->debug("Adding location_id to Invengtory_Checks");
-		$dbh->do( 'alter table inventory_checks add location_id INTEGER') or die $dbh->errstr();
-		$dbh->do( 'ater table inventory_checks add foreign key (location_id) REFERENCES Locations (id);') die $dbh->errstr();
+		$dbh->do( 'ALTER TABLE inventory_checks add location_id INTEGER') or die $dbh->errstr();
+		$dbh->do( 'ALTER TABLE inventory_checks add foreign key (location_id) REFERENCES Locations (id);') or die $dbh->errstr();
 	}
 }
 if ( ! sets::isin( 'helpdesk', \@tables ) ) {
@@ -5533,6 +5550,18 @@ if ( ! sets::isin('license_hosts', \@tables ) ) {
 if ( sets::isin('operator_shifts', \@tables ) ) {
 $dbh->do('DROP TABLE operator_shifts');
 }
+if ( ! sets::isin('object_specifications', \@tables ) ) {
+	$log->debug("Adding Object_Specifications");
+	$dbh->do( misc::load_file( $log, q{../openprint/sql/Object_Specifications.sql}) );
+	die if $dbh->errstr();
+} # end if
+	if ( sets::isin('product_specifications', \@tables ) ) {
+		if ( ! sql::execute( undef, undef, "SELECT id FROM object_types where name='openprint::Product'" ) ) {
+			$dbh->do("INSERT INTO object_types (name,human) values ('openprint::Product', 'Product');") or die $dbh->errstr();
+		}
+		$dbh->do(q`insert into object_specifications ( object_type_id, object_id, name, value ) SELECT (SELECT id from object_types where name='openprint::Product'), product_id, name, value from product_specifications;`) or die $dbh->errstr();
+		$dbh->do('DROP TABLE product_specifications');
+	}
 print "done.\n";
 $dbh->disconnect();
 1;

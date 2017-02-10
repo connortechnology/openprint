@@ -202,7 +202,7 @@ $openprint::log->debug("Setting: $param{amount} " );
 				$variable{ExternalRedirect} = '/administrator/stock/list.html';
 			} elsif ( $param{mode} eq 'other' ) {
 				my $changed = 0;
-				foreach my $field ( 'score_required' ) {
+				foreach my $field ( 'score_required', 'gsm' ) {
 					if ( $param{$field} ne '' and $Paper->$field() ne $param{$field} ) {
 						$Paper->$field( $param{$field} );
 						$changed = 1;

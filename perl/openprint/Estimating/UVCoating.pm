@@ -15,8 +15,13 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA
 
 package openprint::Estimating::UVCoating;
+use vars qw( %ServicePrices );
 use strict;
 #use warnings;
+%ServicePrices = (
+	UVCoatingMinimumCharge => {},
+	'UV(.*)MakeReady' => {},
+);
 
 require openprint::service;
 require openprint::Material;
@@ -257,7 +262,7 @@ $i1->display('Cut to 1');
 		my $i2 = $I->copy();
 		$i2->rows( $$I{dutch_rows} );
 		$i2->columns( $$I{dutch_columns} );
-		$i2->image_orientation( $$I{image_orientation} eq 'Vertical' ? 'Horizontal' : 'Vertical' );
+		$i2->image_orientation( $$I{image_orientation} == openprint::Imposition::Vertical ? openprint::Imposition::Horizontal : openprint::Imposition::Vertical );
 		$i2->dutch_rows( 0 );
 		$i2->dutch_columns( 0 );
 $i1->display('Cut to 1');
@@ -514,8 +519,7 @@ $openprint::log->debug("Types: @types") if DEBUG;
 								) ) {
 						$setupPrice = 0;
 					} else {
-						$setupPrice = openprint::service::get_price( $type.'MakeReady', $run_qty, $Equipment );
-						$setupPrice = openprint::service::get_price( 'UVCoating'.$type.'MakeReady', $run_qty, $Equipment ) if ! $setupPrice;
+						$setupPrice = openprint::service::get_price( 'UV'.$type.'MakeReady', $run_qty, $Equipment );
 						$setupPrice = openprint::service::get_price( 'UVCoatingMakeReady', $run_qty, $Equipment ) if ! $setupPrice;
 						if ( ! $setupPrice ) {
 							$openprint::log->debug("No setup price for $type");

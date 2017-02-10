@@ -16,6 +16,22 @@
 
 package openprint::Estimating::Aqueous;
 use strict;
+use vars qw( %ServicePrices );
+%ServicePrices = (
+	AqueousMinimumCharge	=> { },
+	AqueousMakeReady		=> { },
+	'AqueousBlanketCutW&T'	=> { },
+	AqueousBlanketCut	=> { },
+	BlanketCut	=> { },
+	'Aqueous Satin Overall'	=> { units => [ 'per 1000 impressions', 'per m', 'per hour' ] },
+	'Aqueous Satin W&T'	=> { units => [ 'per 1000 impressions', 'per m', 'per hour' ] },
+	'Aqueous Gloss Overall'	=> {units => [ 'per 1000 impressions', 'per m', 'per hour' ] },
+	'Aqueous Gloss W&T'	=> { units => [ 'per 1000 impressions', 'per m', 'per hour' ] },
+	'Aqueous Matte W&T'	=> { units => [ 'per 1000 impressions', 'per m', 'per hour' ] },
+	'Aqueous Matte Overall'	=> { units => [ 'per 1000 impressions', 'per m', 'per hour' ] },
+	'Aqueous Soft Touch W&T'	=> { units => [ 'per 1000 impressions', 'per m', 'per hour' ] },
+	'Aqueous Soft Touch Overall'	=> { units => [ 'per 1000 impressions', 'per m', 'per hour' ] },
+);
 #use warnings;
 
 require sql;
@@ -355,6 +371,7 @@ $openprint::log->debug("Impressions: $impressions") if DEBUG;
 
 	my $AllAqueousMakeReady = openprint::Service->find_one( name=>'AqueousMakeReady');
 	my $AqueousMinimumCharge = openprint::Service->find_one( name=>'AqueousMinimumCharge');
+
 	my $BlanketCutService = openprint::Service->find_one( name => 'AqueousBlanketCut');
 	$BlanketCutService = openprint::Service->find_one( name => 'BlanketCut') if ! $BlanketCutService;
 	my $BlanketCutServiceWT = openprint::Service->find_one( name => 'AqueousBlanketCutW&T');
@@ -428,10 +445,10 @@ $openprint::log->debug("AQ Equipment $$Equipment{strid}") if DEBUG;
 							) ) {
 #$openprint::log->debug("In Makereadies: $$Equipment{id} $area");
 				} else {
-					my $MRService = openprint::Service->find_one( name=>$type.' MakeReady');
+					my $MRService = openprint::Service->find_one( name=>$$type{name}.' MakeReady');
 					$MRService = $AllAqueousMakeReady if ! $MRService;
 					if ( ! $MRService ) {
-						$$specs{'hdnBreakdown'.$qty_index} = 'No Make Ready Service for ' . $type . '<br/>';
+						$$specs{'hdnBreakdown'.$qty_index} = 'No Make Ready Service for ' . $$type{name} . '<br/>';
 					} else {
 						%setupPrice = $MRService->get_price( $run_qty, $Equipment );
 					} # end if
@@ -601,5 +618,4 @@ sub has_overrides {
 
 
 1;
-
 __END__

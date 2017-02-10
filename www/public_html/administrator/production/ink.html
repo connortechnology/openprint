@@ -5,7 +5,7 @@
 			<label>Ink</label>
 			<select name="ink_id" onchange="if(this.options[this.selectedIndex].value != ''){this.form.btnFunction.value='';this.form.submit();}">
 				<option value="">Select an Ink</option>
-				<? echo ( make_drop_down( [ map { $_->id(), $_->pmsid() . ' : ' . $_->name() } openprint::Ink->find('order'=>'pmsid') ], $$variable{Ink}->id() ); ) ?>
+				<? echo ( make_drop_down( [ map { $_->id(), $_->pmsid() . ' : ' . $_->name() } openprint::Ink->find( order=>'pmsid' ) ], $$variable{Ink}->id() ); ) ?>
 			</select>
 		</p>
 		<p class="buttons">
@@ -40,6 +40,7 @@
 					<option value="">none</option>
 					<? echo ( make_drop_down( openprint::Material->dropdown( order=>'lower(name)'), $$variable{Ink}->material_id() ); ) ?>
 				</select>
+				<?echo( button('MaterialGo', { onclick=>q`window.location='/administrator/materials/edit.html?service_id='+f1.material_id.value;`, text=>'Go' } ); ) ?>
 			</li>
 			<li>
 				<label>Service Charge</label>
@@ -47,6 +48,7 @@
 					<option value="">none</option>
 					<? echo ( make_drop_down( openprint::Service->dropdown( order=>'lower(name)'), $$variable{Ink}->service_id() ); ) ?>
 				</select>
+				<?echo(button('ServiceGo', { onclick=>q`window.location='/administrator/services/edit.html?service_id='+f1.service_id.value;`, text=>'Go' } ); ) ?>
 			</li>
 			<li>
 				<label>Mix Charge</label>
@@ -54,6 +56,7 @@
 					<option value="">none</option>
 					<? echo ( make_drop_down( openprint::Service->dropdown( order=>'lower(name)'), $$variable{Ink}->mix_service_id() ); ) ?>
 				</select>
+				<?echo(button('MixGo', { onclick=>q`window.location='/administrator/services/edit.html?service_id='+f1.mix_service_id.value;`, text=>'Go' } ); ) ?>
 			</li>
 			<li>
 				<label>Washups</label>

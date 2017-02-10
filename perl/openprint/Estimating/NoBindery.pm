@@ -18,10 +18,6 @@ package openprint::Estimating::NoBindery;
 
 use strict;
 
-require sql;
-require openprint::print;
-require openprint::service;
-
 my @variables = (
 );
 
@@ -53,6 +49,8 @@ sub summary {
 	return '';
 
 } # end sub summary
+sub has_overrides {
+}
 
 1;
 __END__

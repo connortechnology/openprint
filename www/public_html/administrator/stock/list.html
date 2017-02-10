@@ -51,9 +51,9 @@
 
     stock_filter_ajax = new Ajax.Updater('Stocks','/administrator/stock/_stocks.html', {
 				onLoading:function(){ $('Stocks').innerHTML='Loading...'; },
-				onSuccess:function(){ TableKit.Sortable.reload('StocksTable'); },
-				parameters:Form.serialize($(formName))});
-				//evalScripts:true, 
+				parameters:Form.serialize($(formName)),
+				evalScripts:true 
+});
 	}
 	function body_onLoad() {
 	}

@@ -95,7 +95,6 @@ sub variables {
 	foreach my $k ( keys %variables ) {
 		push @v, $k if sets::isin( 'save', $variables{$k} );
 	} # end foreach;
-	my @Groups = sql::execute( undef, undef, 'SELECT DISTINCT strvalue FROM tbl_Service_Specifications WHERE lngProjectIndex=? AND strName=?', $project_id, 'Group' );
 	foreach my $group_id ( groups( $project_id, $incoming_specs ) ) {
 		push @v, map { join('', $_,$group_id) } @signature_variables;
 	} # end foreach group
@@ -158,7 +157,6 @@ sub groups {
 
 sub calc {
 	my ( $log, $dbh, $variable, $project_index, $service_index, $specs ) = @_;
-
 	$$specs{Status} = 'calculated';
 	$$specs{alert} = '';
 
@@ -191,21 +189,7 @@ sub calc {
 		$$specs{Status} = 'uncalculated';
 	} # end if
 
-	my @Groups = sql::execute( undef, undef, 'SELECT DISTINCT strvalue FROM tbl_Service_Specifications WHERE lngProjectIndex=? AND strName=?', $project_index, 'Group' );
-	if ( $$specs{rdbCover} eq 'Different' ) {
-		if ( ! sets::isin( 1, \@Groups ) ) {
-			push @Groups, 1;
-		} # end if
-	} else {
-		@Groups = sets::exclude( [1], \@Groups );
-	} # end if
-	if ( ! sets::isin( 2, \@Groups ) ) {
-		push @Groups, 2;
-	} # end if
-	if ( $$specs{txtGateFoldedSpreadQuantity} and ! sets::isin( 3, \@Groups ) ) {
-		push @Groups, 3;
-	} # end if
-	@Groups = sort { $a <=> $b } @Groups;
+	my @Groups = sort { $a <=> $b } groups( $project_index, $specs );
 
 	my $Project = new openprint::Project( $project_index );
 	if ( ! $$Project{id} ) {
@@ -320,7 +304,7 @@ $openprint::log->warn("FIXM E");
 
 	foreach my $group_id ( @Groups ) {
 		$openprint::log->debug("Group: $group_id, remaining: $remaining_pages, override: $override_pages{$group_id}") if DEBUG;
-		my %sig_specs =  map { $_, $$specs{$_.$group_id } } @signature_variables;
+		my %sig_specs = map { $$specs{$_.$group_id} ? ( $_, $$specs{$_.$group_id } ) : () } @signature_variables;
 		if ( ! exists $override_pages{$group_id} ) {
 			$override_pages{$group_id} = $remaining_pages;
 
@@ -399,6 +383,7 @@ $openprint::log->debug("********************************************************
 	my @signatures = sort $Project->signatures({'type'=>'Interior Pages'});
 	push @signatures, sort $Project->signatures({'type'=>'Cover Pages'});
 	push @signatures, sort $Project->signatures({'type'=>'Gate Folded Pages'});
+	push @signatures, sort $Project->signatures({'type'=>'Backing Pages'});
 	@signatures = $Project->signatures() if ! @signatures;
 	$openprint::log->debug( "Signatures: @signatures");
 	return 'uncalculated' if ! @signatures;
@@ -600,7 +585,7 @@ sub status {
 } # end sub status
         
 sub save {
-#$openprint::log->debug("Starting Multipage::save");
+$openprint::log->debug("Starting Multipage::save");
 	my ( $project_index, $service_index, $param ) = @_;
 	my $Project = new openprint::Project( $project_index );	
 	my $Service = $Project->Service($service_index);
@@ -609,7 +594,7 @@ sub save {
 	if ( $$specs{rdbCover} eq 'Different' ) {
 		# now add a cover spread if we need one.
 		# First, see if we have one.
-        if ( ! $Project->signatures({'type'=>'Cover Pages'}) ) {
+        if ( ! $Project->signatures({ type=>'Cover Pages'}) ) {
             $Project->add_signature( undef, undef, {
                         txtSignatureType		=> 'Cover Pages',
                         txtServiceDescription	=> 'Cover',
@@ -627,18 +612,23 @@ sub save {
             openprint::print_project::delete_service( $Project, $_ );
         } # end foreach
     } # end if Self or Different Cover
-	my @variables = openprint::Estimating::Printing::variables();
+	if ( ! $Project->signatures({type=>'Interior Pages'}) ) {
+            $Project->add_signature( undef, undef, {
+                        txtSignatureType		=> 'Interior Pages',
+                        txtServiceDescription	=> 'Interior Pages',
+                        Group					=>  2,
+                        PrintingType			=> $$param{PrintingType},
+                        txtSpreadSize			=>  4,
+                        } );
+	}
 
 	foreach my $ssid ( $Project->signatures() ) {
 		my $sig_specs = openprint::service::get_specs_ref( $Project, $ssid );
-		my %new_specs = %$sig_specs;
-#$openprint::log->debug("Spreadsize for sig $$sig_specs{SignatureIndex} orig: $new_specs{txtSpreadSize} new: $$sig_specs{txtSpreadSize}");
-		openprint::Estimating::Printing::set_size( $Project, \%new_specs, $Service->specs() );
-#$openprint::log->debug("Spreadsize for sig $$sig_specs{SignatureIndex} orig: $new_specs{txtSpreadSize} new: $$sig_specs{txtSpreadSize}");
-		foreach my $v ( @variables ) {
-			if ( $new_specs{$v} ne $$sig_specs{$v} ) {
+		my $group_id = $$sig_specs{Group};
+		foreach my $v ( @signature_variables ) {
+			if ( $$specs{$v.$group_id} ne $$sig_specs{$v} ) {
 $openprint::log->debug("Saving $v") if DEBUG;
-				openprint::service::insert_service_spec( $openprint::log, $openprint::dbh, $Project->id(), $ssid, $v, $new_specs{$v} );
+				openprint::service::insert_service_spec( $openprint::log, $openprint::dbh, $Project->id(), $ssid, $v, $$specs{$v.$group_id} );
 			} else {
 $openprint::log->debug("Not Saving $v") if DEBUG;
 			} # end if
@@ -655,7 +645,7 @@ sub check {
 	my $total_pages = $$specs{txtTotalPageQuantity};
 	my %specified_pages;
 	my %needed_pages;
-	foreach my $ssid ( $Project->signatures({ sort=>1}) ) {
+	foreach my $ssid ( $Project->signatures({ sort=>1 }) ) {
 		my $sig_specs = openprint::service::get_specs_ref( $Project, $ssid );
 		my $Group = $$sig_specs{Group};
 
@@ -674,6 +664,7 @@ sub check {
 			} # end foreach
 		}
 	} # end foreach
+
 	if ( $qty_index ) {
 		foreach my $Group ( sort keys %needed_pages ) {
 			$openprint::log->debug( "Grouup $Group needed $needed_pages{$Group} specd: $specified_pages{$Group}" );
@@ -684,7 +675,6 @@ sub check {
 			} # end if
 		} # end foreach
 	}
-$openprint::log->debug("check: $error (".$$specs{"alert$qty_index"} );
 	if ( $error ) {
 		if ( $error ne $$specs{"alert$qty_index"} ) {
 			openprint::service::insert_service_spec( $openprint::log, $openprint::dbh, $Project->id(), $Service->service_id(), 'alert'.$qty_index, $error ) if $error;

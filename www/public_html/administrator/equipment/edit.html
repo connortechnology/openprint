@@ -155,11 +155,6 @@ new Ajax.Request('/administrator/equipment/_specification.html?action=copy&amp;i
 				<? echo ( radio( 'useinestimating', [ '1', 'Yes', '0', 'No', '', 'By Override' ], $$variable{Equipment}->useinestimating(), { default=>'0' } ); ) ?>
 			</p>
 			<p>
-				<label>Use in scheduling</label>
-				<? echo ( radio( 'useinscheduling', [ '1', 'Yes', '0', 'No' ], $$variable{Equipment}->useinscheduling(), { default=>'0', onclick=>q`if(this.value=='1'){$('schedulingoptions').show();}else{$('schedulingoptions').hide();}` } ); ) ?>
-			</p>
-	<div id="schedulingoptions" <? echo ( $$variable{Equipment}->useinscheduling() ? '' : 'style="display:none;"' ) ?>>
-			<p>
 				<label>Services</label>
 				<select name="servicetype_id" id="servicetype_id" multiple="multiple" size="4">
 					<? echo ( make_drop_down(
@@ -168,6 +163,11 @@ new Ajax.Request('/administrator/equipment/_specification.html?action=copy&amp;i
 						); ) ?>
 				</select>
 			</p>
+			<p>
+				<label>Use in scheduling</label>
+				<? echo ( radio( 'useinscheduling', [ '1', 'Yes', '0', 'No' ], $$variable{Equipment}->useinscheduling(), { default=>'0', onclick=>q`if(this.value=='1'){$('schedulingoptions').show();}else{$('schedulingoptions').hide();}` } ); ) ?>
+			</p>
+	<div id="schedulingoptions" <? echo ( $$variable{Equipment}->useinscheduling() ? '' : 'style="display:none;"' ) ?>>
 			<p>
 				<label>Smart Scheduling</label>
 				<? echo ( radio( 'smartscheduling', [ '1', 'Yes', '0', 'No' ], $$variable{Equipment}->smartscheduling() ); ) ?>

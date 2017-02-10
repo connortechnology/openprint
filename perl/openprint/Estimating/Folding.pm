@@ -64,10 +64,8 @@ sub variables {
 						'FoldPageQty', 'FoldQty', 'FoldImposition', 'FoldColumns', 'FoldRows', 'FoldType', 'FoldFolds', 'FoldAngles', 'FoldRunspeed', 'FoldImpressions',
 				);
 			} # end foreach
-#foreach my $fold_type ( keys %fold_types ) {
-#} # end foreach
-		} # end foreach
-	} # end foreach
+		} # end foreach qty_index
+	} # end foreach signature
 
 	return @v;
 } # end sub variables
@@ -94,8 +92,12 @@ sub no_outputs {
 					if ( $$incoming_specs{"FoldRunspeed-$form-$qty_index-$fold_index"} ) {
 						push @v, "FoldRunspeed-$form-$qty_index-$fold_index";
 					} # end if
+
 				} # end foraech fold
 			} # end if override
+			if ( $$incoming_specs{"chkOverrideEquipment-$form-$qty_index"} eq 'Y' ) {
+				push @v, "ddmEquipment-$form-$qty_index";
+			} # end if
 		} # end foreach qty
 	} # end foreach sig
 	return @v;
@@ -208,8 +210,16 @@ sub signature_needs {
 		return 0;
 	} # end if
 
-	if ( $$specs{rdbTemplateType} eq 'NoFold' ) {
-		return 0;
+	if ( $$specs{rdbTemplateType} ) {
+		if ( $$specs{rdbTemplateType} eq 'NoFold' ) {
+			return 0;
+		}
+		if ( $fold_types{$$specs{rdbTemplateType}} ) {
+			$openprint::log->warn("FOLDING NEEDED got templatetype!") if DEBUG_NEEDS;
+			return 1;
+		} else {
+			$openprint::log->warn("FOLDING NEEDED $$specs{rdbTemplateType} $fold_types{$$specs{rdbTemplateType}}!") if DEBUG_NEEDS;
+		} # end if
 	}
 		
 	my $services = $Project->services();
@@ -217,7 +227,6 @@ sub signature_needs {
 		$openprint::log->debug("Folding::signature_needs: NoBidner") if DEBUG_NEEDS;
 		return 0;
 	} # end if
-	my $printing_specs = openprint::service::get_specs_ref( $Project, $$services{''}[0] ) if $$services{''}[0] and @{$$services{''}};
 	if ( $$services{CornerStitching} ) {
 		$openprint::log->debug("Folding::signature_needs: CornerStitched") if DEBUG_NEEDS;
 		return 0;
@@ -240,14 +249,9 @@ sub signature_needs {
 		} # end if
 	} # end if
 
-	if ( $fold_types{$$specs{rdbTemplateType}} ) {
-		$openprint::log->warn("FOLDING NEEDED got templatetype!") if DEBUG_NEEDS;
-		return 1;
-	} else {
-		$openprint::log->warn("FOLDING NEEDED $$specs{rdbTemplateType} $fold_types{$$specs{rdbTemplateType}}!") if DEBUG_NEEDS;
-	} # end if
 
 	if ( $$specs{txtSignatureType} ) {
+		my $printing_specs = openprint::service::get_specs_ref( $Project, $$services{''}[0] ) if $$services{''}[0] and @{$$services{''}};
 		if ( $$specs{txtSpreadSize} == 1 ) {
 			$openprint::log->warn("Folding not needed: spreadsize==1: $$specs{txtSpreadSize}") if DEBUG_NEEDS;
 			return 0;
@@ -375,10 +379,10 @@ sub impositions {
 	$Fold = $Imposition->Press()->Fold(\%find);
 	return @imps if ! $Fold;
 
-	if ( $Fold->min_width() and $Fold->min_width() > ( $$Imposition{image_orientation} eq 'Vertical' ? $Imposition->image_width() : $Imposition->image_height() ) ) {
+	if ( $Fold->min_width() and $Fold->min_width() > ( $$Imposition{image_orientation} == openprint::Imposition::Vertical ? $Imposition->image_width() : $Imposition->image_height() ) ) {
 		my $I = $Imposition->copy();
 
-		if ( $$I{image_orientation} eq 'Vertical' ) {
+		if ( $$I{image_orientation} == openprint::Imposition::Vertical ) {
 			my $space = $Fold->min_width() - $I->image_width();
 			$I->cropmark_left(0) if $space >= $I->cropmark_left();
 			$I->cropmark_right(0) if $space >= $I->cropmark_right();
@@ -419,21 +423,21 @@ sub signature_calc {
 	if ( ! $$SignatureImposition{imposition} ) {
 		Carp::cluck( 'Invalid Imposition');
 		$results{Breakdown}	 = 'Invalid Signature passed to Folding';
-		return %results;
+		return \%results;
 	} # end if
 
 	if ( $$sig_specs{txtSignatureType} and ( $SignatureImposition->pages() == 2 ) ) {
 		# Does not need folding
 		$results{Status}		= 'calculated';
 		$results{Breakdown}		= '2 page does not require folding';
-		return %results;
+		return \%results;
 	} # end if
 
 	if ( ! ( $$sig_specs{txtFinalWidth} and $$sig_specs{txtFinalHeight} ) ) {
 $openprint::log->error("No finished width and height, cannot continue $$Project{id} $qty_index");
 		# Does not need folding
 		$results{Breakdown}		= 'No finished width and height, cannot continue';
-		return %results;
+		return \%results;
 	} # end if
 
 	my $Paper = $SignatureImposition->Paper();
@@ -442,7 +446,7 @@ $openprint::log->error("No finished width and height, cannot continue $$Project{
 	my $services = $Project->services();
 	my $form = $$sig_specs{SignatureIndex};
 
-	my $bestM;
+	my $bestM = 0;
 	my $bestPrice = undef;
 	my $bestComparison;
 	my $bestRunPrice = 0;
@@ -475,10 +479,8 @@ $openprint::log->error("No finished width and height, cannot continue $$Project{
 					Folds		=> '',
 					Breakdown	=> 'Folding Equipment override to nothing',
 				);
-			push @no_outputs, "ddmEquipment-$form-$qty_index";
-			return %results;
+			return \%results;
 		} # end if
-		push @no_outputs, "ddmEquipment-$form-$qty_index";
 	} else {
 		if ( $Press->specification('Sheeter') eq 'Y' ) {
 			if ( $$calc_hash{'Folding::signature_calc::equipment'} ) {
@@ -531,7 +533,7 @@ $openprint::log->debug("Not adding because previousimposition != sigImposition")
 
 	if ( ! @my_equipment ) {
 		$$specs{alert} .= 'There is no Folding capable equipment.';
-		return;
+		return {};
 	} # end if
 
 	#$openprint::log->debug("Makereadies...");
@@ -595,7 +597,7 @@ $openprint::log->debug("folds from sigimpo") if DEBUG;
 	if ( $$sig_specs{txtSignatureType} and $$sig_specs{txtSpreadSize} == 2 ) {
 
 		# Is this right? What does the orientation have to do with the fold direction? Not much, but the last fold is the spine
-		if ( $$SignatureImposition{image_orientation} eq 'Vertical' ) {
+		if ( $$SignatureImposition{image_orientation} == openprint::Imposition::Vertical ) {
 			$width_folds = 1;
 		} else {
 			$height_folds = 1;
@@ -654,7 +656,7 @@ $openprint::log->debug("folds from sigimpo") if DEBUG;
 					$i->dutch_columns(0);
 					$i->dutch_rows(0);
 					$i->quantity(1);
-					$i->image_orientation($$I{image_orientation} eq 'Vertical' ? 'Horizontal' : 'Vertical');
+					$i->image_orientation($$I{image_orientation} == openprint::Imposition::Vertical ? openprint::Imposition::Horizontal : openprint::Imposition::Vertical);
 					push @Impositions, $i;
 				}
 				$modified = 1;
@@ -807,11 +809,11 @@ $openprint::log->debug("folds from sigimpo") if DEBUG;
 						$openprint::log->debug("Can't do that impo cuz impo > 3 cols > 1 and rows > 1") if DEBUG;
 						$complete = 0;
 						last;
-					} elsif ( ( $$Imposition{columns} > 1 ) and ( $$Imposition{image_orientation} eq 'Vertical' ) ) {
+					} elsif ( ( $$Imposition{columns} > 1 ) and ( $$Imposition{image_orientation} == openprint::Imposition::Vertical ) ) {
 						$openprint::log->debug("Can't do that impovertical and columns $$Imposition{columns} > 1") if DEBUG;
 						$complete = 0;
 						last;
-					} elsif ( $$Imposition{rows} > 1 and ( $$Imposition{image_orientation} eq 'Horizontal' ) ) {
+					} elsif ( $$Imposition{rows} > 1 and ( $$Imposition{image_orientation} == openprint::Imposition::Horizontal ) ) {
 						$openprint::log->debug("Can't do that impo horizontal and rows $$Imposition{rows} > 1") if DEBUG;
 						$complete = 0;
 						last;
@@ -842,7 +844,7 @@ $openprint::log->debug("folds from sigimpo") if DEBUG;
 
 					my $Fold = $Equipment->Fold( {
 							pages			=>	$Imposition->pages(),
-							#( $$Imposition{image_orientation} eq 'Vertical' ? (
+							#( $$Imposition{image_orientation} == openprint::Imposition::Vertical ? (
 								   page_columns	=>	$Imposition->page_columns(),
 								   page_rows	=>	$Imposition->page_rows(),
 								  #) : (
@@ -870,8 +872,9 @@ $openprint::log->debug("folds from sigimpo") if DEBUG;
 						push @{$folds{$Imposition->pages().'PageFold-'.$$Imposition{imposition}.'out'}}, $Fold;
 						$openprint::log->debug(sprintf('Found: %dx%d,%dout', $Imposition->page_columns(), $Imposition->page_rows(), $Imposition->imposition() ) ) if DEBUG;
 					} else {
-						$Breakdown .= sprintf('Didnt find fold pages: %dx%d=%d %.3fx%.3f %s, %dout %dgsm<br/>', $Imposition->page_columns(), $Imposition->page_rows(), $Imposition->pages(), @$Imposition{'page_width','page_height','image_orientation','imposition'}, $Paper->gsm() );
-						$openprint::log->debug(sprintf('Didnt find: %dx%d %s,%dout', $Imposition->page_columns(), $Imposition->page_rows(), @$Imposition{'image_orientation','imposition'} ) ) if DEBUG;
+						$Breakdown .= sprintf('Didnt find fold pages: %dx%d=%d %.3fx%.3f %s, %dout %dgsm<br/>', $Imposition->page_columns(), $Imposition->page_rows(), $Imposition->pages(), @$Imposition{'page_width','page_height','image_orientation_text','imposition'}, $Paper->gsm() );
+						$openprint::log->debug(sprintf('Didnt find: %dx%d %.3fx%.3f %s,%dout', $Imposition->page_columns(), $Imposition->page_rows(), @$Imposition{'page_width','page_height','image_orientation_text','imposition'} ) ) if 1 or DEBUG;
+$Imposition->display();
 						%folds = ();
 						# Last because it's on press, can't do any cut impos.	Not actually True.	Webs can slit it and do dual delivery, fold one, sheet the other. FIXME
 						$complete =0;
@@ -893,7 +896,7 @@ $openprint::log->debug("Templatetype: $$sig_specs{rdbTemplateType}") if DEBUG;
 						} # end if
 							
 						my $Fold = $Equipment->Fold({
-							#( $$Imposition{image_orientation} eq 'Vertical' ? (
+							#( $$Imposition{image_orientation} == openprint::Imposition::Vertical ? (
 									page_columns	=>	$Imposition->page_columns(),
 									page_rows		=>	$Imposition->page_rows(),
 								#) : (
@@ -926,7 +929,7 @@ $openprint::log->debug("Has a fold, doing extra checks") if DEBUG;
 									$width_size = $$Imposition{object_width};
 									$height_size = $$Imposition{object_height};
 	
-								} elsif ( $$Imposition{image_orientation} eq 'Vertical' ) {
+								} elsif ( $$Imposition{image_orientation} == openprint::Imposition::Vertical ) {
 									$width_size = $$SignatureImposition{columns} != $$Imposition{columns} ? $Imposition->layout_width() : $Imposition->sheet_width();
 									$height_size = $$SignatureImposition{rows} != $$Imposition{rows} ? $Imposition->layout_height() : $Imposition->sheet_height();
 								} else {
@@ -1017,7 +1020,7 @@ $openprint::log->debug("No Fold") if DEBUG;
 							$openprint::log->debug("Fits") if DEBUG;
 							my $Fold = $Equipment->Fold({
 									pages			=>	$Imposition->pages(),
-									#( $$Imposition{image_orientation} eq 'Vertical' ? (
+									#( $$Imposition{image_orientation} == openprint::Imposition::Vertical ? (
 									   page_columns	=>	$Imposition->page_columns(),
 									   page_rows	=>	$Imposition->page_rows(),
 									#) : (
@@ -1082,7 +1085,7 @@ if ( 1 ) {
 # decide whether it's running portrait or landscape basessd on which way the folds go
 									$openprint::log->debug("Has max feed width width_folds: $width_folds height_folds: $height_folds final_width $$sig_specs{txtWidth} final_heigh $$sig_specs{txtHeight} max_feed $max_feed_width") if DEBUG;
 									if ( ( $width_folds and ! $height_folds ) or ( ((!defined $$Fold{folds}) or ($width_folds == $$Fold{folds})) and ((!defined $$Fold{angles}) or ($height_folds == $$Fold{angles})) and ( $width_folds < $height_folds ) ) ) {
-										if ( $$Imposition{image_orientation} eq 'Vertical' ) {
+										if ( $$Imposition{image_orientation} == openprint::Imposition::Vertical ) {
 # If folds are on width, we grip on height...
 											if ( $Imposition->layout_height() >= $max_feed_width ) {
 												$fits = "Fold no good due to max feed width ($max_feed_width). $width_folds x $height_folds size: ($$Imposition{layout_height}).";
@@ -1094,8 +1097,8 @@ if ( 1 ) {
 												$Fold = undef;
 											} # end if
 										} # end if
-									} elsif ( ( $height_folds and ! $width_folds ) or ( $height_folds == $$Fold{folds} and $width_folds == $$Fold{angles} ) ) {
-										if ( $$Imposition{image_orientation} eq 'Vertical' ) {
+									} elsif ( ( $height_folds and ! $width_folds ) or ( (!defined $$Fold{folds}) or ($height_folds == $$Fold{folds})) and ((!defined $$Fold{angles}) or ($width_folds == $$Fold{angles}) ) ) {
+										if ( $$Imposition{image_orientation} == openprint::Imposition::Vertical ) {
 											if ( $Imposition->layout_width() >= $max_feed_width ) {
 												$fits = "Fold no good due to max feed width ($max_feed_width). $width_folds x $height_folds size: ($$Imposition{layout_width}).";
 												$Fold = undef;
@@ -1312,7 +1315,8 @@ $openprint::log->debug("Overriden Pages were found in the set: $pages pages qty:
 				# Because the next equi[pment will override the folds array
 				@Used_Impositions = map { $_->copy() } @{$Set_Of_Impositions};
 			} # end if override
-			my $totalTime = $Equipment->specification('Station Make Ready') * 60;
+			my $mr_time = $Equipment->specification('Station Make Ready');
+			my $totalTime = $mr_time ? $mr_time * 60 : 0;
 
 			my $comparison_cost = 0;
 			my $totalPrice;
@@ -1396,23 +1400,27 @@ $openprint::log->debug("Resulting fold: " . $Fold->to_string() ) if DEBUG;
 					$openprint::log->debug("Got MakeReady for " . $Fold->type().'MakeReady' . ' imp:' . $imposition . " \$$setupPrice{Price} $setupPrice{units}" ) if DEBUG;
 				} # end if
 				$Breakdown .= '<table><tr><td class="Description">MR: ';
-				if ( $setupPrice{units} eq 'per form' ) {
+				if ( ! $setupPrice{units} ) {
+					$Breakdown .= 'No Makeready</td><td></td></tr>';
+				} elsif ( $setupPrice{units} eq 'per form' ) {
 					$setupPrice{Total} = $setupPrice{Price};
 					$total_MR += $setupPrice{Total};
 					$Breakdown .= sprintf( '($%1$.2f%2$s=$%3$.2f)<br/>', @setupPrice{'Price','units','Total'} );
 				} elsif ( ! $makereadies{$$Equipment{id}}{$$Fold{type}} ) {
 					if ( $setupPrice{units} eq 'per imposition' ) {
 						$setupPrice{Total} = $setupPrice{Price} * $imposition;
+						$Breakdown .= sprintf( '($%1$.2f%2$s * %4$d out =$%3$.2f)', @setupPrice{'Price','units','Total'}, $imposition );
 					} elsif ( $setupPrice{units} eq 'per hour' ) {
 						if ( ! $$Fold{makeready_time} ) {
 $openprint::log->error("No makeready_time on " . $Fold->to_string() );
 						}
 						$setupPrice{Total} = $setupPrice{Price} * $$Fold{makeready_time} / 60;
+						$Breakdown .= sprintf( '($%1$.2f%2$s * %4$d minutes = $%3$.2f)', @setupPrice{'Price','units','Total'}, $$Fold{makeready_time} );
 					} else {
 #$openprint::log->error("No units set on Fold MR " . $setupPrice{Service}->name() . ' on ' . $Equipment->name() );
 						$setupPrice{Total} = $setupPrice{Price};
-					} # end if
 					$Breakdown .= sprintf( '($%1$.2f%2$s=$%3$.2f)', @setupPrice{'Price','units','Total'} );
+					} # end if
 					$total_MR += $setupPrice{Total};
 
 					if ( $$Fold{folds} and $FoldingFoldMakeReadyService ) {
@@ -1434,7 +1442,7 @@ $openprint::log->error("No makeready_time on " . $Fold->to_string() );
 					} # end if
 					$Breakdown .= sprintf( ' =</td><td class="Price">$%.2f</td></tr>', $total_MR );
 				} else {
-					$Breakdown .= 'No Makeready</td><td></td></tr>';
+					$Breakdown .= "Unknown Makeready units($setupPrice{units})</td><td></td></tr>";
 				} # end if
 				$totalPrice += $total_MR;
 
@@ -1471,7 +1479,7 @@ $openprint::log->debug("Runspeed: $$Fold{type}(".$Fold->name().") : " . $Equipme
 						$Adjustment = $$Base{runspeed}/$runspeed;
 						$servicePrice{Total} = $servicePrice{Price} * ( $run_qty/1000 ) * ($Adjustment);
 	#$openprint::log->debug("Adjusting: Base: " . $$Base{runspeed} . ' actual: ' . $runspeed . ' calculated: ' . $Adjustment );
-						$Breakdown .= sprintf('<tr><td>Run: $%.2f%s * %d * %d% runspeed adjustment =</td><td>$%.2f</td></tr>', @servicePrice{'Price','units'}, $run_qty, $Adjustment*100, $servicePrice{Total} );
+						$Breakdown .= sprintf('<tr><td>Run: $%.2f%s * %d * %d%% runspeed adjustment =</td><td>$%.2f</td></tr>', @servicePrice{'Price','units'}, $run_qty, $Adjustment*100, $servicePrice{Total} );
 					} else {
 						$servicePrice{Total} = $servicePrice{Price} * ( $run_qty/1000 ) * $Adjustment;
 						$Breakdown .= sprintf('<tr><td>Run: $%.2f%s * %d =</td><td>$%.2f</td></tr>', @servicePrice{'Price','units'}, $run_qty, $servicePrice{Total} );
@@ -1563,12 +1571,18 @@ $openprint::log->debug("Runspeed: $$Fold{type}(".$Fold->name().") : " . $Equipme
 				} # end if
 			} # end if has stitching
 			$comparison_cost += $totalPrice + $stitching_part + $cutting_results{Price};
+
 			if ( $$calc_hash{ScoringSpecs} and openprint::Estimating::Scoring::signature_needs( $Project, $$calc_hash{ScoringSpecs}, $sig_specs, $Paper ) ) {
 				$$calc_hash{FoldingSpecs} = \%fold_specs;
 				my %scoring_results = openprint::Estimating::Scoring::signature_calc( $Project, $$calc_hash{ScoringSpecs}, $sig_specs, $qty_index, $SignatureImposition, $calc_hash );
-				#$Breakdown .= "<tr><td>Scoring cost on $scoring_results{Equipment}{name}</td><td class=\"Price\">\$$scoring_results{Price}</a>";
-				$Breakdown .= "<tr><td>Scoring cost on $scoring_results{Equipment}{name}<br/>$scoring_results{Breakdown}</td><td class=\"Price\">\$$scoring_results{Price}</a>";
-				$comparison_cost += $scoring_results{Price};	
+				if ( $scoring_results{Status} eq 'uncalculated' ) {
+					$Breakdown .= "<tr><td>Scoring uncalculated $scoring_results{alert}</td><td class=\"Price\">\$1000000</a>";
+					$comparison_cost += 1000000;
+				} else {
+#$Breakdown .= "<tr><td>Scoring cost on $scoring_results{Equipment}{name}</td><td class=\"Price\">\$$scoring_results{Price}</a>";
+					$Breakdown .= "<tr><td>Scoring cost on $scoring_results{Equipment}{name}<br/>$scoring_results{Breakdown}</td><td class=\"Price\">\$$scoring_results{Price}</a>";
+					$comparison_cost += $scoring_results{Price};	
+				}
 			} # end if
 
 			if ( $cutting_results{Equipment} ) {
@@ -1659,7 +1673,7 @@ $openprint::log->debug("Quitting, all:found: $all_found, undesired: $undesired")
 		}
 	} # end foreach
 	
-	return %results;
+	return \%results;
 } # end sub signature_calc
 
 sub load_equipment { 
@@ -1805,23 +1819,23 @@ $openprint::log->debug("Not needed for form $form") if DEBUG;
 			# What the hellis the point of this line?  Brochures don't have pages..
 			#if ( ( ! exists $$sig_specs{'PageQuantity'.$qty_index} ) or $$sig_specs{'PageQuantity'.$qty_index} ) {
 
-				my %results = signature_calc( $Project, $sig_specs, $specs, $qty_index, $Imposition, \@Signature_Impositions, $calc_hash );
+				my $results = signature_calc( $Project, $sig_specs, $specs, $qty_index, $Imposition, \@Signature_Impositions, $calc_hash );
 				#my %results = signature_calc( $Project, $sig_specs, $specs, $qty_index, $Imposition, [ sets::exclude( [ $Imposition ], \@Signature_Impositions ) ], $calc_hash );
-				$$specs{'hdnBreakdown'.$qty_index} .= $results{Breakdown};
-				$$specs{'hdnBreakdown'.$qty_index} .= sprintf('MR Waste: %d, Run Waste: %d<br/>', @results{'MakeReadyOvers','RunOvers'} );
-				$$specs{"Price-$form-$qty_index"} = $results{Price};
-				$price += $results{Price};
-				$mprice += $results{MPrice};
-				if ( $results{Equipment} ) {
+				$$specs{'hdnBreakdown'.$qty_index} .= $$results{Breakdown};
+				$$specs{'hdnBreakdown'.$qty_index} .= sprintf('MR Waste: %d, Run Waste: %d<br/>', @$results{'MakeReadyOvers','RunOvers'} );
+				$$specs{"Price-$form-$qty_index"} = $$results{Price};
+				$price += $$results{Price};
+				$mprice += $$results{MPrice};
+				if ( $$results{Equipment} ) {
 					if ( (!$$specs{"chkOverrideEquipment-$form-$qty_index"}) or ($$specs{"chkOverrideEquipment-$form-$qty_index"} ne 'Y') ) {
-						$$specs{"ddmEquipment-$form-$qty_index"} = $results{Equipment}->id();
+						$$specs{"ddmEquipment-$form-$qty_index"} = $$results{Equipment}->id();
 					} else {
 						@no_outputs = sets::exclude( [ "ddmEquipment-$form-$qty_index" ], \@no_outputs );
 					} # end if
 
 					my $index = 1;
-					$$Imposition{Folds} = $results{FoldedImpositions};
-					foreach my $FI ( @{$results{FoldedImpositions}} ) {
+					$$Imposition{Folds} = $$results{FoldedImpositions};
+					foreach my $FI ( @{$$results{FoldedImpositions}} ) {
 						my $Fold = $$FI{Fold};
 						my $fold_type = $Fold->type();
 
@@ -1845,12 +1859,11 @@ $openprint::log->debug("Not needed for form $form") if DEBUG;
 					if ( $$specs{"chkOverrideEquipment-$form-$qty_index"} ne 'Y' ) {
 						$$specs{"ddmEquipment-$form-$qty_index"} = '';
 					} elsif ( $$specs{"ddmEquipment-$form-$qty_index"} ) {
-						@no_outputs = sets::exclude( [ "ddmEquipment-$form-$qty_index" ], \@no_outputs );
 						$status = 'uncalculated';
 						$$specs{alert} .= "Unable to fold form $form qty $qty_index<br/>";
 					} # end if
 				} # end if
-				if ( $results{Status} eq 'uncalculated' ) {
+				if ( $$results{Status} eq 'uncalculated' ) {
 					$status = 'uncalculated';
 				} # end if
 				if ( (!$previous_imposition) and ( new openprint::Equipment( $$specs{"ddmEquipment-$form-$qty_index"} )->strid() eq $$sig_specs{'ddmPress'.$qty_index} ) ) {
@@ -1900,23 +1913,25 @@ sub signature_summary {
 	$sig_specs = openprint::service::get_specs_ref( $Project, $s_id ) if ! $sig_specs;
 	my $form = $$sig_specs{SignatureIndex};
 	if ( $qty_index ) {
-	if ( ! $$sig_specs{"txtImposition$qty_index"} ) {
-		return '';
-	} # end if
+		if ( ! $$sig_specs{"txtImposition$qty_index"} ) {
+			return '';
+		} # end if
 		my @folds;
 		if ( ( defined $$specs{"chkOverrideEquipment-$form-$qty_index"} ) and ( $$specs{"chkOverrideEquipment-$form-$qty_index"} eq 'Y' ) and ! $$specs{"ddmEquipment-$form-$qty_index"} ) {
 			return 'not folded';
 		} elsif ( $$specs{"ddmEquipment-$form-$qty_index"} ) {
-		my $Equipment = new openprint::Equipment( $$specs{"ddmEquipment-$form-$qty_index"} );
-		foreach my $fold_index ( 1 .. 4 ) {
-			next if ! $$specs{"FoldQty-$form-$qty_index-$fold_index"};
-			push @folds, sprintf('%1$d %3$s %2$dout', @$specs{"FoldQty-$form-$qty_index-$fold_index",
-					"FoldImposition-$form-$qty_index-$fold_index",
-					"FoldType-$form-$qty_index-$fold_index"} );
-		} # end foreach
-		return join('<br/>', ( ' on ' . $Equipment->name() ), sort { $a cmp $b } @folds);
+			my $Equipment = new openprint::Equipment( $$specs{"ddmEquipment-$form-$qty_index"} );
+			foreach my $fold_index ( 1 .. 4 ) {
+				next if ! $$specs{"FoldQty-$form-$qty_index-$fold_index"};
+				push @folds, sprintf('%1$d %3$s %2$dout', @$specs{
+						"FoldQty-$form-$qty_index-$fold_index",
+						"FoldImposition-$form-$qty_index-$fold_index",
+						"FoldType-$form-$qty_index-$fold_index"} );
+			} # end foreach
+			return join('<br/>', ( ' on ' . $Equipment->name() ), sort { $a cmp $b } @folds);
 		} # end if
 	} # end if
+	return '';
 } # end sub signature_summary
 
 sub summary {
@@ -2057,7 +2072,7 @@ sub reduce_impositions {
 					my $mod_cols = $$I2{columns} % 2;
 					my $mod_rows = $$I2{rows} % 2;
 
-					if ( ( ( $$I2{image_orientation} eq 'Horizontal' ) and ( $$I2{rows} > 1 ) ) or ( $$I2{columns} == 1 ) ) {
+					if ( ( ( $$I2{image_orientation} == openprint::Imposition::Horizontal ) and ( $$I2{rows} > 1 ) ) or ( $$I2{columns} == 1 ) ) {
 						if ( ! $mod_rows ) {	
 							$I2->rows( $$I2{rows}/2 );
 							$I2->quantity( $$I2{quantity} * 2 );
@@ -2140,14 +2155,14 @@ sub reduce_pages {
 
 sub cut_imposition {
 	my ( $I ) = @_;
-	if ( ( $$I{spread_size} >= 4 ) and ( $$I{image_orientation} eq 'Horizontal' ) and ( $$I{rows} > 1 ) ) {
-		$openprint::log->error(sprintf("1 Cutting imposition down from %dx%d=%dout to %d %dx1=%d ", @$I{'columns','rows','imposition'}, @$I{'rows','columns','columns'} ) ) if DEBUG;
+	if ( ( $$I{spread_size} >= 4 ) and ( $$I{image_orientation} == openprint::Imposition::Horizontal ) and ( $$I{rows} > 1 ) ) {
+		$openprint::log->debug(sprintf("1 Cutting imposition down from %dx%d=%dout to %d %dx1=%d ", @$I{'columns','rows','imposition'}, @$I{'rows','columns','columns'} ) ) if DEBUG;
 		# For folding purposes, can only fold where spines are aligned
 		return map { my $i = $I->copy(); $i->rows(1); $i; } ( 1 .. $$I{rows} );
-	} elsif ( ( $$I{spread_size} >= 4 ) and ( $$I{image_orientation} eq 'Vertical' ) and ( $$I{columns} > 1 ) ) {
-		$openprint::log->error(sprintf("2 Cutting imposition down from %dx%d=%dout to %d 1x%d=%d ", @$I{'columns','rows','imposition'}, @$I{'columns','rows','rows'} ) ) if DEBUG;
+	} elsif ( ( $$I{spread_size} >= 4 ) and ( $$I{image_orientation} == openprint::Imposition::Vertical ) and ( $$I{columns} > 1 ) ) {
+		$openprint::log->debug(sprintf("2 Cutting imposition down from %dx%d=%dout to %d 1x%d=%d ", @$I{'columns','rows','imposition'}, @$I{'columns','rows','rows'} ) ) if DEBUG;
 		return map { my $i = $I->copy(); $i->columns(1); $i; } ( 1 .. $$I{columns} );
-	} elsif ( ( $$I{columns} > $$I{rows} ) or ( ( $$I{columns} == $$I{rows} ) and ( $$I{image_orientation} eq 'Vertical' ) ) ) {
+	} elsif ( ( $$I{columns} > $$I{rows} ) or ( ( $$I{columns} == $$I{rows} ) and ( $$I{image_orientation} == openprint::Imposition::Vertical ) ) ) {
 		my ( $i1, $i2 ) = ( $I->copy(), $I->copy );
 		$i1->columns(int($$I{columns}/2 ));
 		$i2->columns( $$I{columns} - $$i1{columns} );
@@ -2168,7 +2183,7 @@ sub cut_spreads {
 	my @results;
 
 	# Something like doing 16pg as 2 8pgs
-	if ( $$I{image_orientation} eq 'Vertical' and $$I{spread_rows} % 2 == 0 ) {
+	if ( $$I{image_orientation} == openprint::Imposition::Vertical and $$I{spread_rows} % 2 == 0 ) {
 		my $i1 = $I->copy();
 		$i1->spread_rows( $$i1{spread_rows} / 2 );
 		$i1->rows( $$i1{rows} * 2 );
@@ -2182,17 +2197,17 @@ sub cut_spreads {
 	}
 
 	if ( ( $$I{spread_rows} > 1 ) and 
-		( ( $$I{image_orientation} eq 'Horizontal' ) or ( $$I{spread_rows} >= ($$I{spread_size}/2) ) )
+		( ( $$I{image_orientation} == openprint::Imposition::Horizontal ) or ( $$I{spread_rows} >= ($$I{spread_size}/2) ) )
 	   ) {
 	#if ( $I->spread_rows() > $I->spread_columns() ) {
-$openprint::log->debug("Cutting rows $$I{spread_rows} > ( $$I{image_orientation} eq 'Horizontal' ? ($$I{spread_size}/2)-1 : 1 )" ) if DEBUG;
+$openprint::log->debug("Cutting rows $$I{spread_rows} > ( $$I{image_orientation} == openprint::Imposition::Horizontal ? ($$I{spread_size}/2)-1 : 1 )" ) if DEBUG;
 		
 		if ( $$I{spread_rows} % 2 ) {
 			my $i1 = $I->copy();
 			$i1->spread_rows(1);
 			$i1->quantity( $$i1{quantity} * $$I{spread_rows} );
 			$i1->page_quantity( $i1->page_quantity() * $$I{spread_rows} );
-			if ( $$I{image_orientation} eq 'Vertical' ) {
+			if ( $$I{image_orientation} == openprint::Imposition::Vertical ) {
 				$i1->image_height( $$I{image_height}/$$I{spread_rows} );
 			} else {
 				$i1->image_width( $$I{image_width}/$$I{spread_rows} );
@@ -2209,7 +2224,7 @@ $openprint::log->debug("Cutting rows $$I{spread_rows} > ( $$I{image_orientation}
 				my $i3 = $I->copy();
 				$i3->spread_rows( $$I{spread_rows} - ( $$i2{spread_rows} * $i2_quantity ) );
 #$i3->quantity( $I->quantity() * int($I->spread_rows()/$i2->spread_rows()) );
-				if ( $$I{image_orientation} eq 'Vertical' ) {
+				if ( $$I{image_orientation} == openprint::Imposition::Vertical ) {
 					$i2->image_height( $$I{image_height}*$$i2{spread_rows}/$$I{spread_rows} );
 					$i3->image_height( $$I{image_height}*$$i3{spread_rows} );
 				} else {
@@ -2224,7 +2239,7 @@ $openprint::log->debug("Cutting rows $$I{spread_rows} > ( $$I{image_orientation}
 		} else {
 			my $i1 = $I->copy();
 			$i1->spread_rows( $$i1{spread_rows}/2 );
-			if ( $$I{image_orientation} eq 'Vertical' ) {
+			if ( $$I{image_orientation} == openprint::Imposition::Vertical ) {
 				$i1->image_height( $$i1{image_height}/2 );
 			} else {
 				$i1->image_width( $$i1{image_width}/2 );
@@ -2239,7 +2254,7 @@ $openprint::log->debug("Cutting rows $$I{spread_rows} > ( $$I{image_orientation}
 if ( 0 ) {
 			my $i2 = $I->copy();
 			$i2->spread_rows( $$i2{spread_rows}/2 );
-			if ( $$I{image_orientation} eq 'Vertical' ) {
+			if ( $$I{image_orientation} == openprint::Imposition::Vertical ) {
 				$i2->image_height( $$i2{image_height}/2 );
 			} else {
 				$i2->image_width( $$i2{image_width}/2 );
@@ -2248,7 +2263,7 @@ if ( 0 ) {
 }
 		} # end if
 	}  # end if rows > 1
-		#if ( $I->image_orientation() eq 'Vertical' ) {
+		#if ( $I->image_orientation() == openprint::Imposition::Vertical ) {
 			# Assume spread columns are multiple of 2
 			#if ( ( $I->spread_columns() > 2 ) and ( $I->spread_columns() % 2 ) ) {
 				#my $i1 = $I->copy();
@@ -2263,14 +2278,14 @@ if ( 0 ) {
 
 
 	if ( ( $$I{spread_columns} > 1 ) and 
-		( ( $$I{image_orientation} eq 'Horizontal' ) or ( $$I{spread_columns} >= ($$I{spread_size}/2) )
+		( ( $$I{image_orientation} == openprint::Imposition::Horizontal ) or ( $$I{spread_columns} >= ($$I{spread_size}/2) )
 		) ) {
 		if ( $$I{spread_columns} % 2 ) {
 			my $i1 = $I->copy();
 			$i1->spread_columns(1);
 			$i1->quantity( $i1->quantity() * $$I{spread_columns} );
 			$i1->page_quantity( $i1->page_quantity() * $$I{spread_columns} );
-			if ( $$I{image_orientation} eq 'Vertical' ) {
+			if ( $$I{image_orientation} == openprint::Imposition::Vertical ) {
 				$i1->image_width( $$I{image_width}/$$I{spread_columns} );
 			} else {
 				$i1->image_height( $$I{image_height}/$$I{spread_columns} );
@@ -2288,8 +2303,8 @@ if ( 0 ) {
 				$openprint::log->debug(sprintf('2237 Cutting pages down from q%d x %d pages to q%d x %d pages', $I->quantity(), $I->pages(), $i2->quantity(), $i2->pages() ) ) if DEBUG;
 				my $i3 = $I->copy();
 				$i3->spread_columns( $$I{spread_columns} - ( $$i2{spread_columns} * $i2_quantity ) );
-				$openprint::log->debug(sprintf('2248 Cutting pages down from q%d x %d pages to q%d x %d pages', $I->quantity(), $I->pages(), $i3->quantity(), $i3->pages() ) ) if DEBUG;
-				if ( $$I{image_orientation} eq 'Vertical' ) {
+				$openprint::log->debug(sprintf('Cutting pages down from q%d x %d pages to q%d x %d pages', $I->quantity(), $I->pages(), $i3->quantity(), $i3->pages() ) ) if DEBUG;
+				if ( $$I{image_orientation} == openprint::Imposition::Vertical ) {
 					$i2->image_width( $$I{image_width}*$$i2{spread_columns}/$$I{spread_columns} );
 					$i3->image_width( $$I{image_width}*$$i3{spread_columns} );
 				} else {
@@ -2303,7 +2318,7 @@ if ( 0 ) {
 			$i1->spread_columns( $$i1{spread_columns}/2 );
 
 			# Image width is not rotated, it is relative to the object, not the sheet
-			#if ( $$I{image_orientation} eq 'Vertical' ) {
+			#if ( $$I{image_orientation} == openprint::Imposition::Vertical ) {
 				$i1->image_width( $$i1{image_width}/2 );
 			#} else {
 				#$i1->image_height( $$i1{image_height}/2 );
@@ -2346,6 +2361,7 @@ sub save {
 
 sub load_Impositions {
 #sub load_Impositions($$$) {
+$openprint::log->error("Called load_Impositions");
 	my ( $folding_specs, $sig_specs, $qty_index ) = @_;
 
 	my $form = $$sig_specs{SignatureIndex};
@@ -2378,6 +2394,7 @@ sub get_Folds {
 		$Source_Imposition = new openprint::Imposition();
 		$Source_Imposition->load( $sig_specs, $qty_index );
 	} # end if
+	return () if !$$Source_Imposition{imposition};
 
 if ( DEBUG ) {
 foreach my $k ( sort { $a cmp $b } keys %$folding_specs ) {
@@ -2441,7 +2458,7 @@ $openprint::log->debug("Has no equipment_id") if DEBUG;
 		} else {
 			$openprint::log->debug("Got FOld: " . $Fold->to_string() ) if DEBUG;
 			$$Imposition{Fold} = $Fold;
-			if ( $$Imposition{image_orientation} eq 'Vertical' ) {
+			if ( $$Imposition{image_orientation} == openprint::Imposition::Vertical ) {
 				$Imposition->page_rows( $Fold->page_rows() );
 				$Imposition->page_columns( $Fold->page_columns() );
 			} else {
@@ -2476,7 +2493,7 @@ sub compare_folds {
 		return 0 
 	}
 		
-	if ( $FoldsA[0]{Folder}{id} != $FoldsB[0]{Folder}{id} ) {
+	if ( $FoldsA[0]{Folder} and $FoldsB[0]{Folder} and ( $FoldsA[0]{Folder}{id} != $FoldsB[0]{Folder}{id} ) ) {
 		$openprint::log->debug("Folder different") if DEBUG;
 		return 0 ;
 	} else {

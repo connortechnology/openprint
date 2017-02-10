@@ -6,19 +6,32 @@ This feature is under development.<br/>
 
 	my $Project = new openprint::Project( $param{ProjectIndex} );
 	my $service_id = $param{ServiceIndex};
+	my $qty_index = $param{qty_index};
+	if ( ! $qty_index ) {
+		return 'No qty index given.';
+	} 
 
-	my $specs = openprint::service::get_specs_ref( $Project, $service_id );
+	#my $specs = openprint::service::get_specs_ref( $Project, $service_id );
+	my $specs = \%param;
 	my $services = $Project->services();
 	my $printing_specs = openprint::service::get_specs_ref( $Project, $$services{''}[0] );
 
 	my @Papers = openprint::Estimating::Printing::get_Stocks( $Project, $specs );
 $log->debug("@ of stocks: " . @Papers );
-    my @side_one_colours = openprint::Estimating::Printing::get_colours( $specs, 'SideOne' );
-    my @side_two_colours = openprint::Estimating::Printing::get_colours( $specs, 'SideTwo' );
+	my @side_one_colours = openprint::Estimating::Printing::get_colours( $specs, 'SideOne' );
+	my @side_two_colours = openprint::Estimating::Printing::get_colours( $specs, 'SideTwo' );
 	my %inkCoverage = openprint::Estimating::Printing::get_inkcoverage( $Project, $specs );
 
 	my $project = openprint::Estimating::Printing::setup_project( $Project, $service_id, $services, $specs, \@side_one_colours, \@side_two_colours, $Papers[0] );
 	openprint::Estimating::Printing::load_presses();
+
+    $$project{roll2sheetcharged} = 0;
+    my %previous_forms_cache;
+    my %PaperCounts;
+    my %PlateCounts;
+#$openprint::log->debug("Master time after platecounts,roll2sheetsetup,etc, previous forms cache: " . ( sprintf('%.4f', tv_interval( [$master_time])*1000) ) .' usecs' );
+    openprint::Estimating::Printing::setup_counts( $Project, $service_id, $specs, $qty_index, $project, \%previous_forms_cache, \%PaperCounts, \%PlateCounts );
+
 	my %presses = openprint::Estimating::Printing::select_presses( $Project, \@Papers, $specs, $project );
 	my @possible_presses;
 	foreach my $press_id ( keys %presses ) {
@@ -32,10 +45,6 @@ $log->debug("@ of stocks: " . @Papers );
 	$log->debug("@ of Presses: " . @possible_presses );
 
 	my %Overrides = openprint::Estimating::Printing::get_overrides( $Project, $specs );
-	my $qty_index = $param{qty_index};
-	if ( ! $qty_index ) {
-		return 'No qty index given.';
-	} 
 	my %Impositions = openprint::Estimating::Printing::get_impositions( $Project, $specs, $project, $param{"txtQuantity$qty_index"}, $qty_index, \@possible_presses, \@Papers, \%Overrides );
 	my @Impositions = map { @{$Impositions{$_}} } keys %Impositions;
 	$html .= '<br/><br/>These are the impositions before filtering. There are ' . @Impositions .'<br/>';
@@ -54,7 +63,7 @@ $log->debug("Converting if " . $$specs{'txtUnspecifiedPageQuantity'.$qty_index} 
 		$log->debug("NOt a book" );
 	} # end if
 
-	@Impositions = openprint::Estimating::Printing::calculate_impositions( $Project, $specs, $qty_index, $param{"txtQuantity$qty_index"}, {}, {}, $project, \%Impositions );
+	@Impositions = openprint::Estimating::Printing::calculate_impositions( $Project, $specs, $qty_index, $param{"txtQuantity$qty_index"}, \%PaperCounts, {}, $project, \%Impositions );
 	$html .= '<br/><br/>These are the impositions that will be considered after filtering. There are ' . @Impositions .'<br/>';
 	$html .= join('<br/>', map { $_->to_string() } openprint::imposition::sort( @Impositions ) );
 

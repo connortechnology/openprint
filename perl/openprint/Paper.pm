@@ -12,10 +12,7 @@ use vars qw( $log %variable %config );
 *log = \$openprint::log;
 
 require sql;
-require ssi;
 require misc;
-require configuration;
-require openprint::logs;
 require openprint::Manufacturer;
 require openprint::PaperPrice;
 require openprint::Skid;
@@ -89,6 +86,7 @@ $serial	= 'paper_id_seq';
 		manufacturers_name		=>	'manufacturers_name',
 		available_to_order		=>	'available_to_order',
 		department_id			=>	'department_id',
+		Supplied					=>	undef,
 		);
 %find_fields = (
 		#'manufacturer'	=>	'(SELECT name FROM manufacturers WHERE manufacturers.id=papers.manufacturer_id)',
@@ -172,11 +170,11 @@ $serial	= 'paper_id_seq';
 );
 
 %grades = (
-1	=>	'1 Gloss-coated stock',
-2	=>	'2 Matte-coated stock',
-3	=>	'3 Gloss-coated, web stock', 
-4	=>	'4 Uncoated, white stock', 
-5	=>	'5 Uncoated, yellow stock'
+		1	=>	'1 Gloss-coated stock',
+		2	=>	'2 Matte-coated stock',
+		3	=>	'3 Gloss-coated, web stock', 
+		4	=>	'4 Uncoated, white stock', 
+		5	=>	'5 Uncoated, yellow stock'
 );
 sub load {
 	my ( $self, $data ) = @_;
@@ -187,7 +185,7 @@ sub load {
 	if ( exists $$data{allocated} ) {
 		$$self{allocated} = $$data{allocated}
 	}
-	@$self{'start_width','start_height'} = @$self{'width','height'};
+	@$self{'start_width','start_height','Supplied'} = ( @$self{'width','height'}, $self );
 } # end sub load
 
 # Returns a copy of the paper object.
@@ -427,19 +425,19 @@ sub id_string {
 	} # end if
 	if ( ! $$self{id_string} ) {
 		my $string = join(' ', ( $self->manufacturer(), $self->brand(), $self->finish(), $self->colour(), $self->weight() ) );
-		if ( $self->type() eq 'Roll' ) {
-			$string .= ' ' . $self->width.'"' if $self->width();
+		if ( $$self{type} eq 'Roll' ) {
+			$string .= ' ' . $$self{width}.'"' if $$self{width};
 			$string .= ' Roll ';
 		} else {
-			if ( $self->start_width() and ( ( $self->width() != $self->start_width() ) or ( $self->height() != $self->start_height() ) ) ) {
-				$string .= ' ' . $self->start_width().'x'.$self->start_height() . ' => '. $self->width().'x'.$self->height() . ' ';
+			if ( $$self{start_width} and ( ( $$self{width} != $$self{start_width} ) or ( $$self{height} != $$self{start_height} ) ) ) {
+				$string .= ' ' . $$self{start_width}.'x'.$$self{start_height} . ' => '. $$self{width}.'x'.$$self{height} . ' ';
 			} else {
-				$string .= ' ' . $self->width().'x'.$self->height() . ' ';
+				$string .= ' ' . $$self{width}.'x'.$$self{height} . ' ';
 			} # end if
 			#$string .= $self->mweight().'M ' if $self->mweight();
 		} # end if
-		$string .= sprintf('%.1fPT ', 1000*$self->calliper()) if $self->calliper();
-		$string .= $self->gsm().'gsm ' if $self->gsm();
+		$string .= sprintf('%.1fPT ', 1000*$$self{calliper}) if $self->calliper();
+		$string .= $$self{gsm}.'gsm ' if $self->gsm();
 		$string .= 'FSC:' . $$self{fsc_code} if $$self{fsc_code};
 		$string .= 'Minimum: ' . $$self{minimum_order} if $$self{minimum_order};
 		$$self{id_string} = $string;
@@ -455,18 +453,22 @@ sub to_string {
 	if ( ! $$self{to_string} ) {
 		my $string = ($$self{id} ? '' : 'Custom: ').join(' ', ( $self->manufacturer(), $self->brand(), $self->finish(), $self->colour(), $self->weight() ) );
 		if ( $self->type() eq 'Roll' ) {
-			$string .= ' ' . $self->width.'"' if $self->width();
+			$string .= ' ' . $self->width.'"' if $$self{width};
 			$string .= ' Roll ';
 		} else {
-			if ( $self->start_width() and ( ( $self->width() != $self->start_width() ) or ( $self->height() != $self->start_height() ) ) ) {
-				$string .= ' ' . $self->start_width().'x'.$self->start_height() . ' => '. $self->width().'x'.$self->height();
+			if ( $$self{start_width} and ( ( $$self{width} != $$self{start_width} ) or ( $$self{height} != $$self{start_height} ) ) ) {
+				$string .= ' ' . $$self{start_width}.'x'.$$self{start_height} . ' => '. $$self{width}.'x'.$$self{height};
 			} else {
-				$string .= ' ' . $self->width().'x'.$self->height();
+				$string .= ' ' . $$self{width}.'x'.$$self{height};
 			} # end if
 			#$string .= $self->mweight().'M ' if $self->mweight();
 		} # end if
+		if ( $openprint::config{Show_Stock_Calliper} ne 'N' ) {
 		$string .= ' '. Math::Round::nearest( 0.1, 1000*$self->calliper()).'PT' if $self->calliper() and ! ( $self->weight() =~ /PT/ );
+		}
+		if ( $openprint::config{Show_Stock_GSM} ne 'N' ) {
 		$string .= ' '. $self->gsm().'gsm' if $self->gsm();
+		}
 		$string .= ' FSC:' . $$self{fsc_code} if $$self{fsc_code};
 		#$string .= 'Minimum: ' . $$self{minimum_order} if $$self{minimum_order};
 		$$self{to_string} = $string;
@@ -1028,14 +1030,14 @@ sub get_price {
 	my $price;
 	my $qty = $params{weight} ? $params{weight} : $params{sheets};
 	my $lookup_qty = $params{lookup_weight} ? $params{lookup_weight} : $qty;
-	if ( ($params{service} eq 'Material') and ! $lookup_qty ) {
+	if ( (!$lookup_qty) and ($params{service} eq 'Material') ) {
 		Carp::cluck("Paper qty lookup with no qty");
 		$openprint::log->error("Paper qty lookup with no qty");
 	} #end if
 
 	if ( $$self{Price} and ($params{service} eq 'Material') ) {
 		# If custom paper
-		$price = { 'price' => $$self{Price}, 'cost'=>$$self{Price}, 'units'=>$$self{Units} };
+		$price = { price => $$self{Price}, cost=>$$self{Price}, units=>$$self{Units} };
 #$openprint::log->debug("Usnig custom price $$self{Price}$$self{Units}");
 	} elsif ( $$self{id} ) {
 		my @Prices = $self->Prices( );
@@ -1116,8 +1118,8 @@ sub get_price {
 			$$price{'100lb'} = $$price{price};
 			$$price{'100lb Cost'} = $$price{cost};
 			$$price{'100lb Price'} = $$price{price};
-			#$price{Cost} *= $$self{wpsi} * $self->width() * $self->height();
-			#$price{Price} *= $$self{wpsi} * $self->width() * $self->height();
+			#$price{Cost} *= $$self{wpsi} * $$self{width} * $$self{height};
+			#$price{Price} *= $$self{wpsi} * $$self{width} * $$self{height};
 		#} else {
 			#$$price{'100lb'} = $$price{price};
 			#$$price{'100lb Cost'} = $$price{cost};
@@ -1153,14 +1155,13 @@ sub cut {
 } # end sub cut
 
 sub minimum_order {
-	my $self = shift;
-	if ( @_ ) {
-		$$self{minimum_order} = shift;
+	if ( @_ > 1 ) {
+		$_[0]{minimum_order} = $_[1];
 	} # end if
 
 #$openprint::log->debug("SPP: $$self{start_width} / $$self{width} ) * int( $$self{start_height} / $$self{height} * spp $$self{sheets_per_package} * $factor;");
-	return 0 if ! $$self{minimum_order};
-	return $$self{minimum_order} * $self->factor();
+	return 0 if ! $_[0]{minimum_order};
+	return $_[0]{minimum_order} * $_[0]->factor();
 } # end minimum_order 
 
 sub minimum_order_weight {
@@ -1175,8 +1176,10 @@ sub minimum_order_weight {
 	return $$self{minimum_order_weight};
 } # end sub minimum_order_weight
 
+# Factor is an integer because it is the # of useable sheets we can get out of the supplied sheet.
 sub factor {
 	my $factor = int($_[0]{start_width} / $_[0]{width} ) * int( $_[0]{start_height} / $_[0]{height} ) if $_[0]{width} and $_[0]{height};
+	#my $factor = Math::Round::nearest(0.1,$_[0]{start_width} / $_[0]{width} ) * Math::Round::nearest(0.1, $_[0]{start_height} / $_[0]{height} ) if $_[0]{width} and $_[0]{height};
 	return 1 if ! $factor;
 	return $factor;
 } # end sub factor
@@ -1214,7 +1217,6 @@ sub wpsi {
 		$$self{wpsi} = shift;
 	} # end if
 	if ( ! $$self{wpsi} ) {
-#$openprint::log->debug("Calcing wpsi");
 		if ( $$self{gsm} ) {
 			$$self{wpsi} = $$self{gsm} / 703064.5;
 		} elsif ( $$self{mweight} and ( $$self{type} eq 'Sheet' ) and $$self{width} and $$self{height} ) {
@@ -1223,7 +1225,6 @@ sub wpsi {
 			$$self{wpsi} = ($$self{basis_mweight}/1000)/($self->basis_width()*$self->basis_height());
 		} # end if
 	} # end if
-#$openprint::log->debug("Calcing wpsi $$self{wpsi}");
 	return $$self{wpsi};
 } # end if wpsi
 
@@ -1378,9 +1379,8 @@ sub load_from_signature {
 	} else {
 
 		if ( $qty_index and $$specs{'paper_id'.$qty_index} ) {
-			$Paper = new openprint::Paper( $$specs{'paper_id'.$qty_index} );
-			if ( ! $Paper->id() ) {
-				$Paper = undef;
+			$Paper = openprint::Paper->find_one( id=>$$specs{'paper_id'.$qty_index} );
+			if ( ! $Paper ) {
 				$openprint::log->warn("Loading by paper id but not found: " . $$specs{'paper_id'.$qty_index} );
 			} # end if
 		}
@@ -1496,11 +1496,13 @@ $log->debug($P->id_string());
 	$Paper = $Paper->clone();
 #$openprint::log->debug($Paper->to_string() );
 	if ( $qty_index ) {
+#FIXME Whay?
+# So... if loading need to check that it fits the size.... but if we are loading by id.... then we don't need to do this... maybe test the impact of this code.
 		if ( 
 			( ( $$Paper{width} != $$specs{'StockWidth'.$qty_index} ) or ($$Paper{type} eq 'Sheet' and $$Paper{height} != $$specs{'StockHeight'.$qty_index} ) )
 			and
 			( ( $$Paper{height} != $$specs{'StockWidth'.$qty_index} ) or ($$Paper{type} eq 'Sheet' and $$Paper{width} != $$specs{'StockHeight'.$qty_index} ) )
-) {
+		   ) {
 #Carp::cluck("Custom size $$specs{'StockWidth'.$qty_index}x$$specs{'StockHeight'.$qty_index}");
 #$openprint::log->debug("Custom size $$Paper{width}x$$Paper{height} => $$specs{'StockWidth'.$qty_index}x$$specs{'StockHeight'.$qty_index}");
 			$$Paper{Supplied} = $P;
@@ -1538,7 +1540,7 @@ $log->debug($P->id_string());
 				} # end if
 			} # end if
 		} # end if
-	} # end if
+	} # end if qty_index
 #$openprint::log->debug($Paper->to_string() );
 	return $Paper;
 
@@ -1673,10 +1675,12 @@ sub types {
 sub Supplied {
 	my ( $self ) = @_;
 	if ( ! $$self{Supplied} ) {
+$openprint::log->error("POpulating SUPLIED");
 		my $Supplied = $self->clone();
 		$$Supplied{width} = $$self{start_width} ? $$self{start_width} : $$self{width};
 		$$Supplied{height} = $$self{start_height} ? $$self{start_height} : $$self{height};
 		delete $$Supplied{to_string};
+		delete $$Supplied{id_string};
 		$Supplied->mweight(0); # force recalc
 		$$self{Supplied} = $Supplied;
 	} # end if

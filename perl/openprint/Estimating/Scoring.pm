@@ -26,7 +26,7 @@ require openprint::Paper;
 require openprint::Estimating::Folding;
 require openprint::Equipment;
 
-use constant DEBUG => 0;
+use constant DEBUG => 1;
 
 my @variables = (
 	'txtQuantity',
@@ -324,8 +324,9 @@ $log->debug("Setting imposition cuz " . $$specs{"chkOverrideImposition-$form-$qt
 sub signature_calc {
 	my ( $Project, $specs, $sig_specs, $qty_index, $SignatureImposition, $calc_hash ) = @_;
 	my %Results = (
-		Status		=> 'calculated',
-		Breakdown	=> '',
+		Status		=>	'calculated',
+		Breakdown	=>	'',
+		alert			=>	'',
 	);
 	my $form = $$sig_specs{SignatureIndex};
 
@@ -336,10 +337,10 @@ if ( 0 ) {
 } # end if
 
 	my $score_qty = $$specs{"txtVerticalQty-$form"} + $$specs{"txtHorizontalQty-$form"};
-	@$specs{"txtWidth-$form", "txtHeight-$form"} = @$sig_specs{'txtWidth','txtHeight'};
 	$Results{Breakdown} .= "# of Scores: $score_qty<br/>";
 	return %Results if ! $score_qty;
 
+	@$specs{"txtWidth-$form", "txtHeight-$form"} = @$sig_specs{'txtWidth','txtHeight'};
 	$Results{Status} = 'uncalculated';
 	my $qty = $$specs{"txtQuantity$qty_index"};
 	if ( $$specs{txtPressSheetComboItems} ) {
@@ -365,9 +366,8 @@ if ( 0 ) {
 		} 
 	} # end nif
 
-	$Results{Status} = 'uncalculated';
 	my @equipment;	
-	if ( $$specs{"chkOverrideEquipment-$form-$qty_index"} eq 'Y' ) {
+	if ( $$specs{"chkOverrideEquipment-$form-$qty_index"} and ($$specs{"chkOverrideEquipment-$form-$qty_index"} eq 'Y') ) {
 		@equipment = openprint::Equipment->find( id=>$$specs{"ddmEquipment-$form-$qty_index"} );
 		$openprint::log->debug("Overriding Equipment to: " . $$specs{"ddmEquipment-$form-$qty_index"} );
 	} else {
@@ -388,7 +388,7 @@ if ( 0 ) {
 	if ( ! $$SignatureImposition{imposition} ) {
 $openprint::log->error("Scoring passed an invalid imposition");
 		$Results{alert} .= "Unable to load the imposition.  This likely is because printing has not finished calculating.<br/>";
-		return $Results{Status} = 'uncalculated';
+		return $Results{Status};
 	} # end if
 
 	#if ( $$specs{"chkOverrideImposition-$$sig_specs{SignatureIndex}-$qty_index"} eq 'Y' ) {
@@ -467,7 +467,7 @@ $openprint::log->error("Scoring passed an invalid imposition");
 						$i->dutch_columns(0);
 						$i->dutch_rows(0);
 						$$i{quantity} = 1;
-						$i->image_orientation($$I{image_orientation} eq 'Vertical' ? 'Horizontal' : 'Vertical');
+						$i->image_orientation($$I{image_orientation} == openprint::Imposition::Vertical ? openprint::Imposition::Horizontal : openprint::Imposition::Vertical);
 						push @Impositions, $i;
 					}
 					$modified = 1;
@@ -651,7 +651,7 @@ sub get_price {
 	my $vertical_length = 0;
 	my %vertical_price;
 
-	if ( $$I{image_orientation} eq 'Vertical' ) {
+	if ( $$I{image_orientation} == openprint::Imposition::Vertical ) {
 		if ( $vertical ) {
 			$vertical_rule = $vertical * $$I{columns};
 			$vertical_length = $vertical_rule * $$I{layout_height};
@@ -660,7 +660,7 @@ sub get_price {
 			$horizontal_rule = $horizontal * $$I{rows};
 			$horizontal_length = $horizontal_rule * $I->layout_width();
 		} # end if
-	} elsif ( $$I{image_orientation} eq 'Horizontal' ) {
+	} elsif ( $$I{image_orientation} == openprint::Imposition::Horizontal ) {
 		if ( $horizontal ) {
 			$vertical_rule = $horizontal * $$I{rows};
 			$vertical_length = $vertical_rule * $I->layout_width();
@@ -809,54 +809,59 @@ sub get_scores {
 		if ( sets::isin( $$sig_specs{rdbTemplateType}, 'Portrait', 'Landscape' ) ) {
 # needs no folding
 		} elsif ( sets::isin( $$sig_specs{rdbTemplateType}, ['4PageSignatureFold','2PanelFold','BusCardLandscapeFold','BusCardPortraitFold']) ) {
-			$$specs{"txtVerticalQty-$$sig_specs{SignatureIndex}"} = 1;
-			$$specs{"txtHorizontalQty-$$sig_specs{SignatureIndex}"} = 0;
+			$$specs{"txtVerticalQty-$form"} = 1;
+			$$specs{"txtHorizontalQty-$form"} = 0;
 		} elsif ( sets::isin( $$sig_specs{rdbTemplateType}, '3PanelFold', '3PanelZFold' ) ) {
-			$$specs{"txtVerticalQty-$$sig_specs{SignatureIndex}"} = $width_folds;
-			$$specs{"txtHorizontalQty-$$sig_specs{SignatureIndex}"} = $height_folds;
+			$$specs{"txtVerticalQty-$form"} = $width_folds;
+			$$specs{"txtHorizontalQty-$form"} = $height_folds;
 		} elsif ( sets::isin( $$sig_specs{rdbTemplateType}, 'AccordianFold') ) {
-			$$specs{"txtVerticalQty-$$sig_specs{SignatureIndex}"} = $width_folds;
-			$$specs{"txtHorizontalQty-$$sig_specs{SignatureIndex}"} = $height_folds;
+			$$specs{"txtVerticalQty-$form"} = $width_folds;
+			$$specs{"txtHorizontalQty-$form"} = $height_folds;
 		} elsif ( sets::isin( $$sig_specs{rdbTemplateType}, '4PanelFold','4PanelZFold', 'AccordianFold4Panel') ) {
 			if ( $width_folds ) {
-				$$specs{"txtVerticalQty-$$sig_specs{SignatureIndex}"} = 3;
+				$$specs{"txtVerticalQty-$form"} = 3;
 			} else {
-				$$specs{"txtHorizontalQty-$$sig_specs{SignatureIndex}"} = 3;
+				$$specs{"txtHorizontalQty-$form"} = 3;
 			} # end if
 		} elsif ( sets::isin( $$sig_specs{rdbTemplateType}, '5PanelFold', '5PanelZFold') ) {
-			$$specs{"txtVerticalQty-$$sig_specs{SignatureIndex}"} = $width_folds;
-			$$specs{"txtHorizontalQty-$$sig_specs{SignatureIndex}"} = $height_folds;
+			$$specs{"txtVerticalQty-$form"} = $width_folds;
+			$$specs{"txtHorizontalQty-$form"} = $height_folds;
 		} elsif ( sets::isin( $$sig_specs{rdbTemplateType}, '6PanelFold', '6PanelZFold' ) ) {
-			$$specs{"txtVerticalQty-$$sig_specs{SignatureIndex}"} = $width_folds;
-			$$specs{"txtHorizontalQty-$$sig_specs{SignatureIndex}"} = $height_folds;
+			$$specs{"txtVerticalQty-$form"} = $width_folds;
+			$$specs{"txtHorizontalQty-$form"} = $height_folds;
 		} elsif ( sets::isin( $$sig_specs{rdbTemplateType}, 'SingleGateFold' ) ) {
-			$$specs{"txtVerticalQty-$$sig_specs{SignatureIndex}"} = 2;
-			$$specs{"txtHorizontalQty-$$sig_specs{SignatureIndex}"} = 0;
+			$$specs{"txtVerticalQty-$form"} = 2;
+			$$specs{"txtHorizontalQty-$form"} = 0;
 		} elsif ( sets::isin( $$sig_specs{rdbTemplateType}, 'DoubleGateFold' ) ) {
-			$$specs{"txtVerticalQty-$$sig_specs{SignatureIndex}"} = 3;
-			$$specs{"txtHorizontalQty-$$sig_specs{SignatureIndex}"} = 0;
+			$$specs{"txtVerticalQty-$form"} = 3;
+			$$specs{"txtHorizontalQty-$form"} = 0;
 		} elsif ( sets::isin( $$sig_specs{rdbTemplateType}, 'PF1Pocket', 'PF2Pocket' ) ) {
-			$$specs{"txtVerticalQty-$$sig_specs{SignatureIndex}"} = 2;
-			$$specs{"txtHorizontalQty-$$sig_specs{SignatureIndex}"} = 0;
+			$$specs{"txtVerticalQty-$form"} = 2;
+			$$specs{"txtHorizontalQty-$form"} = 0;
 		} elsif ( sets::isin( $$sig_specs{rdbTemplateType}, '2Panel2Pocket', '2Panel1Pocket' ) ) {
-			$$specs{"txtVerticalQty-$$sig_specs{SignatureIndex}"} = 1;
-			$$specs{"txtHorizontalQty-$$sig_specs{SignatureIndex}"} = 1;
+			$$specs{"txtVerticalQty-$form"} = 1;
+			$$specs{"txtHorizontalQty-$form"} = 1;
 		} else {
+$openprint::log->debug("No template($$sig_specs{rdbTemplateType}) width_folds:$width_folds height_folds:$height_folds") if DEBUG;
 			if ( $width_folds or $height_folds ) {
-			$$specs{"txtVerticalQty-$$sig_specs{SignatureIndex}"} = $width_folds;
-			$$specs{"txtHorizontalQty-$$sig_specs{SignatureIndex}"} = $height_folds;
+				$$specs{"txtVerticalQty-$form"} = $width_folds;
+				$$specs{"txtHorizontalQty-$form"} = $height_folds;
 			} elsif ( $$specs{txtFinalWidth} ) {
 				my $cols = $$sig_specs{txtWidth} / $$specs{txtFinalWidth};
 				my $mod_cols = $$sig_specs{txtWidth} % $$specs{txtFinalWidth};
 				if ( $cols and ! $mod_cols ) {
-					$$specs{"txtVerticalQty-$$sig_specs{SignatureIndex}"} = 2;
+					$$specs{"txtVerticalQty-$form"} = 2;
 				} elsif ( $$specs{txtFinalHeight} ) {
 					my $rows = $$sig_specs{txtHeight} / $$specs{txtFinalHeight};
 					my $mod_rows = $$sig_specs{txtHeight} % $$specs{txtFinalHeight};
 					if ( $rows and ! $mod_rows ) {
-						$$specs{"txtHorizontalQty-$$sig_specs{SignatureIndex}"} = 0;
+						$$specs{"txtHorizontalQty-$form"} = 0;
 					} # end if
 				} # end if
+			} elsif ( ! $$specs{"chkOverrideQty-$form"} ) {
+				$openprint::log->debug("Not setting scores");
+				$$specs{"txtVerticalQty-$form"} = 0;
+				$$specs{"txtHorizontalQty-$form"} = 0;
 			} # end if
 
 		} # end if
@@ -976,7 +981,7 @@ sub fits_on_equipment {
 			if ( $vertical_scores and $horizontal_scores ) {
 # Do nothing, we already know it fits on the machine, and it has to go one way or another.
 			} elsif ( $vertical_scores ) {
-				if ( $I->image_orientation() eq 'Vertical' ) {
+				if ( $I->image_orientation() == openprint::Imposition::Vertical ) {
 					if ( $height >= $max_feed_width ) {
 						return "Scoring no good due to max feed width($max_feed_width) on height (".$height.").<br/>";
 					} # end if
@@ -986,7 +991,7 @@ sub fits_on_equipment {
 					} # end if
 				} # end if
 			} elsif ( $horizontal_scores ) {
-				if ( $I->image_orientation() eq 'Vertical' ) {
+				if ( $I->image_orientation() == openprint::Imposition::Vertical ) {
 					if ( $width >= $max_feed_width ) {
 						return "Scoring no good due to max feed width($max_feed_width) on width (".$width.").<br/>";
 					} # end if

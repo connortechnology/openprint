@@ -6,7 +6,7 @@ package openprint::Product_Category;
 our @ISA = qw( openprint::Object );
 use vars qw( $debug $serial $table %fields %transforms %defaults );
 
-$debug = 0;
+$debug = 1;
 $serial = 'product_categories_id_seq';
 $table = 'Product_Categories';
 
@@ -15,6 +15,7 @@ $table = 'Product_Categories';
 	name			=>	'name',
 	description		=>	'description',
 	projecttype_id	=>	'projecttype_id',
+	parent_id		=>	'parent_id',
 );
 
 %transforms = (
@@ -22,6 +23,7 @@ $table = 'Product_Categories';
     description => [ 's/^\s+//', 's/\s+$//', 's/\s\s+/ /g' ],
 );
 %defaults = (
+	parent_id		=>	undef,
 	projecttype_id	=>	undef,
 );
 
@@ -70,9 +72,30 @@ sub Products {
 	return openprint::Product->find( %params );
 } # end sub products
 
-sub ProjectType {
-	return new openprint::ProjectType( $_[0]{projecttype_id} );
-} # end sub Type
+sub Photos {
+    if ( ! $_[0]{'album_id'} ) {
+        return ();
+    } # end if
+    return $_[0]->Album()->Photos( );
+} # end sub Photos
+
+sub Album {
+    my $Album = new openprint::Photo_Album( $_[0]{'album_id'} );
+    if ( ! $Album->id() ) {
+        $Album->name('Photos for product '.$_[0]{'name'});
+    } # end if
+    return $Album;
+} # end sub Album
+
+sub url_to {
+	return '/product/category_view.html?category_id='.$_[0]{id};
+}
+sub link_to {
+	return sprintf('<a href="/product/category_view.html?category_id=%d">%s</a>', $_[0]{id}, @_ > 1 ? $_[1] : $_[0]{name} );
+}
+sub Parent {
+	return new openprint::Product_Category( $_[0]{parent_id} );
+}
 
 1;
 __END__

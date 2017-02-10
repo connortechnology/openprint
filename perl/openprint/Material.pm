@@ -5,7 +5,7 @@ our @ISA = qw( openprint::Object );
 require sql;
 require openprint::Object;
 
-require openprint::logs;
+require openprint::Log;
 require openprint::MaterialSpecification;
 require openprint::MaterialCategory;
 require openprint::Manufacturer;
@@ -64,10 +64,9 @@ sub delete {
 	sql::execute( undef, undef, q{DELETE FROM Material_Specifications WHERE material_id=?}, $$self{id} );
 	sql::execute( undef, undef, q{DELETE FROM tbl_Material_Prices WHERE lngMaterialIndex=?}, $$self{id} );
 	sql::execute( undef, undef, q{DELETE FROM Materials WHERE id=?}, $$self{id} );
-	openprint::logs::insertLogRecord('8', "Material Id: $$self{id} Material Name: $$self{name}" );
+	(new openprint::Log())->save({action=>'Delete', Object=>$self, note=>"Material Id: $$self{id} Material Name: $$self{name}"});
 	sql::end_transaction( $dbh, $ac );
 
-	init_cache();
 } # end sub delete
 
 sub prices {
@@ -109,11 +108,11 @@ sub New_Specification {
 } # end sub New_Specification
 
 sub Specification {
-	#my ( $self, $name, $range ) = @_;
+	my ( $self, $name, $range ) = @_;
 
 	if ( ! $_[0]{Specifications} ) {
 		foreach my $Spec ( openprint::MaterialSpecification->find( material_id=>$_[0]{id}, order=>'min NULLS FIRST' ) ) {
-			push @{$_[0]{Specifications}{$Spec->name()}}, $Spec;
+			push @{$_[0]{Specifications}{$$Spec{name}}}, $Spec;
 		} # end foreach
 		if ( ! $_[0]{Specifications} ) {
 #$openprint::log->warn("No specfications for " . $self->name() );
@@ -123,7 +122,7 @@ sub Specification {
 	} # end if
 
 	if ( ! $_[0]{Specifications}{$_[1]} ) {
-		#$openprint::log->warn("No specfications for ($name) " . $self->name() );
+		$openprint::log->warn("No specfications for ($name) " . $self->name() );
 		return;
 	}
 
@@ -146,12 +145,12 @@ sub get_price {
 	return if ! $_[0]{id};
 	my ( $self, $quantity, $Equipment ) = @_;
 
-	my $Pricelist = openprint::Pricelist::get_current();
+	my $Pricelist = $openprint::Pricelist ? $openprint::Pricelist : openprint::Pricelist::get_current();
 	my %price = openprint::pricing::get_best_price_object( $session{company_id}, $$self{id}, $$Pricelist{id}, 'openprint::material_priceset', $quantity, $$Equipment{id} );
 	return if ! %price;
 
 	$price{currency_id} = $Pricelist->currency_id();
-	openprint::Currency::convert( \%price );
+	openprint::Currency::convert( \%price ) if $$Pricelist{currency_id} != $openprint::session{Pricelist_id};
 
 	return %price;
 } # end sub get_price
@@ -160,12 +159,12 @@ sub get_Price {
 	return if ! $_[0]{id};
 	my ( $self, $quantity, $Equipment ) = @_;
 
-	my $Pricelist = openprint::Pricelist::get_current();
+	my $Pricelist = $openprint::Pricelist ? $openprint::Pricelist : openprint::Pricelist::get_current();
 	my %price = openprint::pricing::get_best_price_object( $session{company_id}, $$self{id}, $$Pricelist{id}, 'openprint::material_priceset', $quantity, $$Equipment{id} );
 	return if ! %price;
 
 	$price{currency_id} = $Pricelist->currency_id();
-	openprint::Currency::convert( \%price );
+	openprint::Currency::convert( \%price ) if $$Pricelist{currency_id} != $openprint::session{Pricelist_id};
 
 	return \%price;
 }
