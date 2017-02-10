@@ -378,7 +378,7 @@ function selectProjectTemplate( formName ) {
 		var selected_size = get_value( form.ddmProjectSize );
 		clear_ddm(ddm);
 		add_option( form.ddmProjectSize, 'Custom','Custom' );
-		if ( TemplateType != '' ) {
+		if ( TemplateType ) {
 			if ( options[TemplateType] ) {
 				if ( options[TemplateType][0].message ) {
 					alert(options[TemplateType][0].message);
