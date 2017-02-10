@@ -95,7 +95,7 @@ sub no_outputs {
 
 				} # end foraech fold
 			} # end if override
-			if ( $$incoming_specs{"chkOverrideEquipment-$form-$qty_index"} eq 'Y' ) {
+			if ( $$incoming_specs{"chkOverrideEquipment-$form-$qty_index"} and ( $$incoming_specs{"chkOverrideEquipment-$form-$qty_index"} eq 'Y' ) ) {
 				push @v, "ddmEquipment-$form-$qty_index";
 			} # end if
 		} # end foreach qty
@@ -1417,6 +1417,7 @@ $openprint::log->error("No makeready_time on " . $Fold->to_string() );
 						$setupPrice{Total} = $setupPrice{Price} * $$Fold{makeready_time} / 60;
 						$Breakdown .= sprintf( '($%1$.2f%2$s * %4$d minutes = $%3$.2f)', @setupPrice{'Price','units','Total'}, $$Fold{makeready_time} );
 					} else {
+					$Breakdown .= "Unknown Makeready units($setupPrice{units})</td><td></td></tr>";
 #$openprint::log->error("No units set on Fold MR " . $setupPrice{Service}->name() . ' on ' . $Equipment->name() );
 						$setupPrice{Total} = $setupPrice{Price};
 					$Breakdown .= sprintf( '($%1$.2f%2$s=$%3$.2f)', @setupPrice{'Price','units','Total'} );
@@ -1442,7 +1443,7 @@ $openprint::log->error("No makeready_time on " . $Fold->to_string() );
 					} # end if
 					$Breakdown .= sprintf( ' =</td><td class="Price">$%.2f</td></tr>', $total_MR );
 				} else {
-					$Breakdown .= "Unknown Makeready units($setupPrice{units})</td><td></td></tr>";
+					$Breakdown .= "Already made ready from another form.</td><td></td></tr>";
 				} # end if
 				$totalPrice += $total_MR;
 
@@ -1469,9 +1470,12 @@ $openprint::log->debug("Runspeed: $$Fold{type}(".$Fold->name().") : " . $Equipme
 				my %AnglePrice = openprint::service::get_price_object( 'FoldingAngle'.$imposition.'up', $run_qty, $Equipment );
 				%AnglePrice = openprint::service::get_price_object( 'FoldingAngle', $imposition, $Equipment ) if ! %AnglePrice;
 
-				if ( $servicePrice{units} eq 'per hour' ) {
+				if ( ! $servicePrice{units} ) {
+					$Breakdown .= qq`<tr><td colspan="2">No Units given for `.$Fold->name().' on '.$Equipment->name().'</td></tr>';
+					$servicePrice{Total} += 1000000;
+				} elsif ( $servicePrice{units} eq 'per hour' ) {
 					$servicePrice{Total} = $servicePrice{Price} * $runTime;
-					$Breakdown .= sprintf('<tr><td>Run: $%.2f%s * %.2d:%.2d:%.2d =</td><td>$%.2f</td></tr>', @servicePrice{'Price','units'}, misc::seconds_to_interval(int $runTime*3600), $servicePrice{Total} );
+					$Breakdown .= sprintf('<tr><td>Run: $%.2f%s * %.2d:%.2d:%.2d =</td><td class="Price">$%.2f</td></tr>', @servicePrice{'Price','units'}, misc::seconds_to_interval(int $runTime*3600), $servicePrice{Total} );
 				} elsif ( $servicePrice{units} eq 'per m' or $servicePrice{units} eq 'per 1000' ) {
 					# Need adjustment
 					my $Adjustment = 1;
@@ -1482,7 +1486,7 @@ $openprint::log->debug("Runspeed: $$Fold{type}(".$Fold->name().") : " . $Equipme
 						$Breakdown .= sprintf('<tr><td>Run: $%.2f%s * %d * %d%% runspeed adjustment =</td><td>$%.2f</td></tr>', @servicePrice{'Price','units'}, $run_qty, $Adjustment*100, $servicePrice{Total} );
 					} else {
 						$servicePrice{Total} = $servicePrice{Price} * ( $run_qty/1000 ) * $Adjustment;
-						$Breakdown .= sprintf('<tr><td>Run: $%.2f%s * %d =</td><td>$%.2f</td></tr>', @servicePrice{'Price','units'}, $run_qty, $servicePrice{Total} );
+						$Breakdown .= sprintf('<tr><td>Run: $%.2f%s * %d =</td><td class="Price">$%.2f</td></tr>', @servicePrice{'Price','units'}, $run_qty, $servicePrice{Total} );
 					} # end if
 				} elsif ( $servicePrice{units} eq 'per inch per m' ) {
 					$servicePrice{Total} = $servicePrice{Price} * $width * $run_qty / 1000;
@@ -1493,7 +1497,7 @@ $openprint::log->debug("Runspeed: $$Fold{type}(".$Fold->name().") : " . $Equipme
 						$AnglePrice{Total} = $AnglePrice{Price} * $width * $run_qty / 1000;
 					} # end if
 
-					$Breakdown .= sprintf('<tr><td>Run: ($%1$.4f%4$s * %4$s&quot;=$%3$.2f) + (%5$.4f%8$s * %4$s&quot;=%7$.2f) =</td><td>$%8$.2f</td></tr>', @servicePrice{'Price','units','Total'}, $width, @AnglePrice{'Price','units','Total'}, $servicePrice{Total} );
+					$Breakdown .= sprintf('<tr><td>Run: ($%1$.4f%4$s * %4$s&quot;=$%3$.2f) + (%5$.4f%8$s * %4$s&quot;=%7$.2f) =</td><td class="Price">$%8$.2f</td></tr>', @servicePrice{'Price','units','Total'}, $width, @AnglePrice{'Price','units','Total'}, $servicePrice{Total} );
 					$servicePrice{Total} += $AnglePrice{Total};
 				} elsif ( $servicePrice{units} eq 'per inch of width per m' ) {
 					$servicePrice{Total} = $servicePrice{Price} * $Imposition->image_width() * $run_qty / 1000;
@@ -1504,16 +1508,16 @@ $openprint::log->debug("Runspeed: $$Fold{type}(".$Fold->name().") : " . $Equipme
 						$AnglePrice{Total} = $AnglePrice{Price} * $Imposition->image_width() * $run_qty / 1000;
 					} # end if
 
-					$Breakdown .= sprintf('<tr><td>Run: ($%3$.4f%4$s * %6$s&quot;=$%5$.2f) + (%7$.4f%8$s * %6$s&quot;=%9$.2f) =</td><td>$%10$.2f</td></tr>', undef, $Fold->name(), @servicePrice{'Price','units','Total'}, $$Imposition{image_width}, @AnglePrice{'Price','units','Total'}, $servicePrice{Total}+$AnglePrice{Total} );
+					$Breakdown .= sprintf('<tr><td>Run: ($%3$.4f%4$s * %6$s&quot;=$%5$.2f) + (%7$.4f%8$s * %6$s&quot;=%9$.2f) =</td><td class="Price">$%10$.2f</td></tr>', undef, $Fold->name(), @servicePrice{'Price','units','Total'}, $$Imposition{image_width}, @AnglePrice{'Price','units','Total'}, $servicePrice{Total}+$AnglePrice{Total} );
 					$servicePrice{Total} += $AnglePrice{Total};
 				} elsif ( $servicePrice{units} eq 'per inch per hour' ) {
 					$servicePrice{Total} = $servicePrice{Price} * $$sig_specs{txtWidth} * $runTime;
-					$Breakdown .= sprintf('<tr><td>Run: $%.4f%s * %d folds * %s&quot; + %d folds * %s&quot; =</td><td>$%.2f</td></tr>',$Fold->name(), @servicePrice{'Price','units'}, $width_folds, $$sig_specs{txtWidth}, $height_folds, $$sig_specs{txtHeight}, $servicePrice{Total} );
+					$Breakdown .= sprintf('<tr><td>Run: $%.4f%s * %d folds * %s&quot; + %d folds * %s&quot; =</td><td class="Price">$%.2f</td></tr>',$Fold->name(), @servicePrice{'Price','units'}, $width_folds, $$sig_specs{txtWidth}, $height_folds, $$sig_specs{txtHeight}, $servicePrice{Total} );
 				} elsif ( %servicePrice ) {
 					$Breakdown .= qq`<tr><td>No Units ($servicePrice{units}) given for `.$Fold->name().' on '.$Equipment->name().',</td></tr>';
 					$servicePrice{Total} += 1000000;
 				} else {
-					$Breakdown .= qq`<tr><td>No Price given for `.$$Fold{type}.' on '.$$Equipment{name}.'</td></tr>';
+					$Breakdown .= qq`<tr><td colspan="2">No Price given for `.$$Fold{type}.' on '.$$Equipment{name}.'</td></tr>';
 				} # end if
 
 				$mprice += $servicePrice{Total};
@@ -1802,13 +1806,13 @@ $i->display() if DEBUG;
 			$$sig_specs{PreviousImposition} = $previous_imposition;
 
 			if ( ! $$sig_specs{'txtImposition'.$qty_index} ) {
-				$$specs{'hdnBreakdown'.$qty_index} .= 'No imposition.<br/>';
+				$$specs{'hdnBreakdown'.$qty_index} .= 'No imposition.</fieldset>';
 $openprint::log->debug("No impositionf for form $form") if DEBUG;
 				next;
 			} # endif
 
 			if ( (! signature_needs( $Project, $sig_specs, $qty_index ) ) and ( $$specs{"chkOverrideFold-$form-$qty_index"} ne 'Y' ) ) {
-				$$specs{'hdnBreakdown'.$qty_index} .= 'Not needed.<br/>';
+				$$specs{'hdnBreakdown'.$qty_index} .= 'Not needed.</fieldset>';
 $openprint::log->debug("Not needed for form $form") if DEBUG;
 				next;
 			} # end if
