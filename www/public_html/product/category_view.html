@@ -29,7 +29,7 @@
 			<label>Description</label>
 			<? hecho ( $$variable{Category}->description(); ) ?>
 		</li>
-		<li><label>Category</label><?echo($$variable{Category}->category_id() ? $$variable{Category}->Parent()->name() : 'none'; ) ?></li>
+		<li><label>Category</label><?echo($$variable{Category}->parent_id() ? $$variable{Category}->Parent()->name() : 'none'; ) ?></li>
 		
 		</ul>
 		</div>
