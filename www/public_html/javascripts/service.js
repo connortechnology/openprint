@@ -158,6 +158,9 @@ function cbFillResults( results ) {
 		} // end if
 
 		var element = form.elements[key];
+if ( element.onchange ) {
+console.log(element.onchange);
+}
 		if ( element ) {
 			if ( element.type == 'select-one' ) {
 				ddm_select_by_value( element, value, -1 );
@@ -165,12 +168,18 @@ function cbFillResults( results ) {
 				if ( element.value == value ) {
 					if ( ! element.checked ) {
 						element.checked = true;
-						if ( element.onchange ) element.onchange();
+						if ( element.onchange ) {
+							console.log("Calling onchange of checkbox " . element.name );
+							element.onchange();
+						}
 					} // endif
 				} else {
 					if ( element.checked ) {
 						element.checked = false;
-						if ( element.onchange ) element.onchange();
+						if ( element.onchange ) {
+							console.log("Calling onchange of checkbox " . element.name );
+							element.onchange();
+						}
 					} // endif
 				} // end if
 			} else if ( element.type == 'radio' ) {
@@ -179,8 +188,11 @@ function cbFillResults( results ) {
 				if ( element.value != value ) {
 					if ( ! element.gotFocus ) {
 						element.value = value;
+						if ( element.onchange ) {
+							element.onchange();
+							console.log("Calling onchange of unfocused input  " . element.name );
+						}
 					} 
-					if ( element.onchange ) element.onchange();
 				} // end if
 			} else if ( element.type == 'hidden' ) {
 				element.value = value;
@@ -190,12 +202,18 @@ function cbFillResults( results ) {
 					if ( elements[j].value == value ) {
 						if ( ! elements[j].checked ) {
 							elements[j].checked = true;
-							if ( elements[j].onchange ) { elements[j].onchange(); }
+							if ( elements[j].onchange ) { 
+								console.log("Calling onchange of checkbox " . elements[j].name );
+								elements[j].onchange();
+							}
 						} // endif
 					} else {
 						if ( elements[j].checked ) {
 							elements[j].checked = false;
-							if ( elements[j].onchange ) { elements[j].onchange(); }
+							if ( elements[j].onchange ) { 
+								console.log("Calling onchange of checkbox " . elements[j].name );
+								elements[j].onchange();
+							}
 						} // endif
 					} // end if
 				} // end for

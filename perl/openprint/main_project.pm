@@ -243,9 +243,11 @@ $log->debug("Project Index is ($param{ProjectIndex})");
 				$log->debug("Deleting $key cuz it's the same $key = $param{$key}");
 				delete $specs{$key};
 # This prevents us from turning off services in create_calc
+			} elsif ( ! defined $specs{$key} ) {
+				# Send back empty strings, but not nulls
 			#} elsif ( ( ! exists $param{$key}) and ! $specs{$key} ) {
 				#$log->debug("Deleting $key cuz it's not in params and its empty");
-				#delete $specs{$key};
+				delete $specs{$key};
 			#} elsif ( ref $specs{$key} ) {
 				#$log->error("Got a non-scalar in specs! $key => $specs{$key}");
 				#delete $specs{$key};
@@ -260,6 +262,9 @@ $log->debug("Project Index is ($param{ProjectIndex})");
 
 			if ( (exists $param{$key}) and (exists $specs{$key}) and ($specs{$key} eq $param{$key}) ) {
 				delete $specs{$key};
+			} elsif ( ! defined $specs{$key} ) {
+				delete $specs{$key};
+				# Send back empty strings, but not nulls
 # This prevents us from turning off services in create_calc
 			#} elsif ( ( ! exists $param{$key}) and ! $specs{$key} ) {
 				#delete $specs{$key};

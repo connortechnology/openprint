@@ -1113,5 +1113,24 @@ sub include_logs_view {
 	return include('/includes/_logs_contents_view.html');
 }
 
+sub do_css_links {
+    my @html;
+    my $css = shift;
+    $css =~ s/^\///;
+    $css =~ s/\..+$//;
+    my @parts = split '/', $css;
+    
+    while ( @parts ) {
+        $css = join('_', @parts ) . '.css';
+        if ( -e $config{SkinPath}.'/css/'.$css ) {
+            push @html, '<link type="text/css" rel="stylesheet" href="'.hash_link('/css/'.$css).'"/>';
+		} else {
+			$log->debug("Does not exist at " . $config{SkinPath}.'/css/'.$css);
+        } # end if
+        pop @parts;
+    } # end while
+    return join("\n", reverse @html );
+}
+
 1;
 __END__

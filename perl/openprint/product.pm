@@ -177,7 +177,11 @@ sub categories {
 	if ( $param{btnFunction} eq 'Save' ) {
 	} elsif ( $param{btnFunction} eq 'Delete' ) {
 	} # end if
+	_categories();
 } # end sub categories
+sub _categories {
+	ssi::save_params( '/product/categories.html', ( 'category_id' ) );
+}
 
 sub _prices {
 	my $Product = new openprint::Product( $param{product_id} );
@@ -246,9 +250,6 @@ sub _prices_table_body {
 		(new openprint::Log())->save({Object=>$Product, action=>'Delete Price', note=>$Price->to_string() }) if ! $variable{error};
 	} # end if
 }
-
-sub categories {
-} # end sub categories
 
 sub category_view {
 	my $Category = $variable{Category} = new openprint::Product_Category( $param{category_id} );
