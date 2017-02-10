@@ -51,7 +51,7 @@ sub session_init {
 				$session{HTTP_USER_AGENT} = $ENV{HTTP_USER_AGENT};
 			} # end if
 
-			if ( $cookie ne $session{_session_id} ) {
+			if ( (!$cookie) or ( $cookie ne $session{_session_id} ) {
 				my $Cookie = Apache2::Cookie->new($r,
 						-name	=> '_session_id',
 						-value => $session{_session_id},
