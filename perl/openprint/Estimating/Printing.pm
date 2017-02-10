@@ -3209,6 +3209,10 @@ sub calculate_impositions {
 		} else {
 			$needed_pages = $$sig_specs{'txtUnspecifiedPageQuantity'.$qty_index};
 		} # end if
+		if ( ! $needed_pages ) {
+			$openprint::log->debug("calculate_impositions with no needed_pages!!!! " . $$sig_specs{'txtUnspecifiedPageQuantity'.$qty_index} );
+			return ();
+		}
 	} # end if
 	$openprint::log->debug("Needed pages: $needed_pages") if DEBUG;
 
@@ -7215,7 +7219,7 @@ sub get_colour_description {
 
 			my $type = $$specs{"ColourCoatingType$index$side"};
 			next if ! $type;
-			next if $$specs{"chkColourCoatingColour$index$side"} eq 'None';
+			next if $$specs{"chkColourCoatingColour$index$side"} and ( $$specs{"chkColourCoatingColour$index$side"} eq 'None' );
 			if ( $type =~ /Aqueous/ or $type =~ /Varnish/ or $type =~ /UV/ ) {
 				
 				push @front_coatings , $$specs{"ColourCoatingType$index$side"};
