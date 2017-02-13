@@ -30,8 +30,8 @@ use constant DEBUG_PLATES => 0;
 use constant DEBUG_VERSIONS => 0;
 use constant DEBUG_PRESSES => 0;
 use constant DEBUG_FILTERING => 0;
-use constant DEBUG_INITIAL_FILTERING => 1;
-use constant DEBUG_AFTER_FILTERING => 0;
+use constant DEBUG_INITIAL_FILTERING => 0;
+use constant DEBUG_AFTER_FILTERING => 1;
 use constant DEBUG_PRICE_DECISIONS => 0;
 use constant DEBUG_INKS => 0;
 use constant DEBUG_STOCK => 0;
@@ -392,6 +392,30 @@ my %variables = (
 	'HemWidth'	=>	['save'],
 );
 
+my @qty_override_keys = (
+				'chkOverrideBleedSize',
+				'chkOverridePageQuantity',
+				'chkOverrideImposition',
+				'OverrideImpositionLayout',
+				'chkOverrideRunStyle',
+				'OverrideCutOff',
+				'chkOverrideSheetSize',
+				'chkOverridePress',
+				'OverridePrintingType',
+				'OverrideStockType',
+				'chkOverrideGrainDirection',
+				'OverrideVersions',
+				'OverridePrice',
+				'OverrideSetup',
+				'OverrideRun',
+				'chkOverridePlateType',
+);
+my @override_keys = (
+				'chkOverrideDimensions',
+				'OverrideAddGrip',
+				'OverrideSpreadSize',
+);
+
 sub variables {
 	my ( $project_index, $service_index, $specs, $new_specs ) = @_;
 
@@ -577,9 +601,9 @@ sub setup_project {
 	foreach my $index ( $Project->signatures() ) {
 		next if $index >= $service_index;
 		my $sig_specs = openprint::service::get_specs_ref( $Project, $index );
-		next if $$sig_specs{pages_supplied} eq 'Y';
+		next if $$sig_specs{pages_supplied};
 
-		if ( ! exists $project{"Group$$sig_specs{Group}Specs"} ) {
+		if ( $$sig_specs{Group} and ! exists $project{"Group$$sig_specs{Group}Specs"} ) {
 			my $group_specs = $project{"Group$$sig_specs{Group}Specs"} = {};
 
 			my @sig_side_one_colours = get_colours( $sig_specs, 'SideOne' );
@@ -766,7 +790,7 @@ sub get_colours {
 				type => $$specs{"ColourCoatingType$index$side"},
 			};
 			next if ! $$c{type};
-			next if $$specs{'ColourCoatingColour'.$index.$side} eq 'None';
+			next if $$specs{'ColourCoatingColour'.$index.$side} and ( $$specs{'ColourCoatingColour'.$index.$side} eq 'None' );
 			#$openprint::log->debug("Found Colour $index.$side $signature $type");
 			if ( $$c{type} =~ /^PMS/ ) {
 				if ( ! $$specs{'ColourCoatingColour'.$index.$side} ) {
@@ -1045,7 +1069,7 @@ sub get_Stocks {
 	} # end if
 
 	foreach my $qty_index ( $Project->quantity_indexes() ) {
-		next if $$specs{'chkOverrideSheetSize'.$qty_index} ne 'Y';
+		next if ! $$specs{'chkOverrideSheetSize'.$qty_index};
 
 		if ( ! ( $$specs{'OverrideStockWidth'.$qty_index} or $$specs{'OverrideStockHeight'.$qty_index} ) ) {
 			@$specs{'OverrideStockWidth'.$qty_index, 'OverrideStockHeight'.$qty_index} = split( 'x', $$specs{'ddmStockSheetSize'.$qty_index} );
@@ -1190,11 +1214,11 @@ sub get_impositions {
 	$$project{Quantity} = $qty;
 
 	# This is interesting
-	if ( sets::isin( $openprint::session{user_type}, [ 'A','E' ] ) ) {
-		if ( $$specs{'chkOverrideRunStyle'.$qty_index} and ( $$specs{'chkOverrideRunStyle'.$qty_index} eq 'Y' ) ) {
+	if ( $openprint::session{user_type} eq 'A' or $openprint::session{user_type} eq 'E' ) {
+		if ( $$specs{'chkOverrideRunStyle'.$qty_index} ) {
 			$$project{OverrideRunStyle} = $$specs{'ddmRunStyle'.$qty_index} 
 		} # end if
-		if ( $$specs{'chkOverrideImposition'.$qty_index} and ( $$specs{'chkOverrideImposition'.$qty_index} eq 'Y' ) ) {
+		if ( $$specs{'chkOverrideImposition'.$qty_index} ) {
 			$$project{OverrideImposition} = $$specs{"txtImposition".$qty_index};
 		} # end if
 	} # end if
@@ -1224,9 +1248,9 @@ $openprint::log->debug("not Skipping cuz ddmPress$qty_index eq $$Press{strid}");
 			} # end if
 		} else {
 			if ( $$specs{PrintingTypes} and ! sets::isin( $printing_type, $$specs{PrintingTypes} ) ) {
-				if ( $$specs{'chkOverridePress'.$qty_index} and ( $$specs{'chkOverridePress'.$qty_index} eq 'Y' ) and ( $$specs{'ddmPress'.$qty_index} eq $$Press{strid} ) ) {
+				if ( $$specs{'chkOverridePress'.$qty_index} and ( $$specs{'ddmPress'.$qty_index} eq $$Press{strid} ) ) {
 					$$specs{alert} .= 'Press ' . $$Press{strid} . " Printing Type ($printing_type) is not in PrintingTypes	". join(',', @{$$specs{PrintingTypes}} ) . '<br/>';
-				} elsif ( $$specs{'OverridePrintingType'.$qty_index} eq 'Y' and $printing_type eq $$specs{'PrintingType'.$qty_index} ) {
+				} elsif ( $$specs{'OverridePrintingType'.$qty_index} and ( $printing_type eq $$specs{'PrintingType'.$qty_index} ) ) {
 					$$specs{alert} .= 'Press ' . $$Press{strid} . " Printing Type ($printing_type) is not in PrintingTypes	". join(',', @{$$specs{PrintingTypes}} ) . '<br/>';
 				} else {
 	$openprint::log->debug("Skipping $$Press{strid} because of printintype") if DEBUG_IMPOSITIONS;
@@ -1235,7 +1259,7 @@ $openprint::log->debug("not Skipping cuz ddmPress$qty_index eq $$Press{strid}");
 			} # end if
 		} # end if
 # If we have a plate type override, then make sure that this press can do it.
-		if ( ( $$specs{'chkOverridePlateType'.$qty_index} and ( $$specs{'chkOverridePlateType'.$qty_index} eq 'Y' ) ) and ( $Press->specification('Plate Type') ne $$specs{'rdbPlateType'.$qty_index} ) ) {
+		if ( $$specs{'chkOverridePlateType'.$qty_index} and ( $Press->specification('Plate Type') ne $$specs{'rdbPlateType'.$qty_index} ) ) {
 			$openprint::log->warn("Press Plate Type ");
 			next;
 		} # end if
@@ -1269,6 +1293,9 @@ $openprint::log->debug("not Skipping cuz ddmPress$qty_index eq $$Press{strid}");
 		} # end if
 		my $number_of_colours = $Press->specification('Number of Colours');
 		$$project{Runstyles} = $Press->specification('Runstyles');
+		if ( ! $$project{Runstyles} ) {
+			$log->warning("NO runstyles set on $$Press{strid}");
+		}
 		if ( DEBUG_IMPOSITIONS and $$specs{"chkOverrideRunStyle$qty_index"} ) {
 			$$project{Runstyles} = $$specs{"ddmRunStyle$qty_index"};
 		} 
@@ -1319,7 +1346,7 @@ $openprint::log->debug("not Skipping cuz ddmPress$qty_index eq $$Press{strid}");
 		if ( ! sets::isin( $ProjectTypeName, [ 'Envelopes', 'NCR' ] ) ) {
 			$$project{Grip} = $Press->specification('Grip') if ! $$specs{OverrideAddGrip};
 			$$project{Gutter} = $Press->specification('Gutter') if ! $$specs{OverrideAddGrip};
-			if ( $$specs{'chkOverrideBleedSize'.$qty_index} and ( $$specs{'chkOverrideBleedSize'.$qty_index} eq 'Y' ) ) {
+			if ( $$specs{'chkOverrideBleedSize'.$qty_index} ) {
 				$$project{BleedSize} = $$specs{'ddmBleedSize'.$qty_index};
 				$variables{'ddmBleedSize'.$qty_index} = [ sets::exclude( ['output'], $variables{'ddmBleedSize'.$qty_index} ) ];
 			} else {
@@ -1861,7 +1888,8 @@ $imp->display(" Less than $max_imposition") if DEBUG_INITIAL_FILTERING;
 			my $str = join(',', @$imp{'columns','rows','dutch_columns','dutch_rows','runstyle','image_orientation','bleed_size'}, $$A{digital}, $$A{type} );
 			#my $str = sprintf('%dx%d+%dx%d-%s-%s-%s-%s', @$imp{'columns','rows','dutch_columns','dutch_rows','runstyle','image_orientation','bleed_size'}, $$A{digital} );
 #$openprint::log->error("A $$A{width}x$$A{height} " . join(',', @{$$Overrides{"OverrideStockWidth$qty_index"}} ) . ' heights: ' . join(',', @{$$Overrides{"OverrideStockHeight$qty_index"}} ) );
-			if ( ($$Overrides{'chkOverrideSheetSize'.$qty_index} eq 'Y') and sets::isin( $$A{width}, $$Overrides{"OverrideStockWidth$qty_index"} )
+			if ( $$Overrides{'chkOverrideSheetSize'.$qty_index} 
+					and sets::isin( $$A{width}, $$Overrides{"OverrideStockWidth$qty_index"} )
 					and ( ( $$A{type} eq 'Roll' ) or sets::isin( $$A{height}, $$Overrides{"OverrideStockHeight$qty_index"} ) )
 				) {
 # If it matches the override, the consider it no matter what
@@ -1985,7 +2013,7 @@ if ( 0 ) {
 		@impositions = map {@{$_}} values %imps;
 }
 		%imps = ();
-		if ( DEBUG_INITIAL_FILTERING or 1 ) {
+		if ( DEBUG_INITIAL_FILTERING ) {
 			$openprint::log->debug("Afgter filtering by Perfecting vs Sheetwork");
 			foreach my $I ( openprint::imposition::sort ( @impositions ) ) {
 				$I->display("After filtering by paper and runstyle");
@@ -2002,7 +2030,7 @@ if ( 0 ) {
 		} # end if
 
 		if ( ! @impositions ) {
-			if ( ( $$specs{'chkOverridePress'.$qty_index} eq 'Y' ) and ( $$Press{strid} eq $$specs{'ddmPress'.$qty_index} ) ) {
+			if ( $$specs{'chkOverridePress'.$qty_index} and ( $$Press{strid} eq $$specs{'ddmPress'.$qty_index} ) ) {
 				if ( $Press->specification('Printing Type') eq 'Digital' ) {
 					my $digital = 0;
 					foreach my $P (@$Papers) {
@@ -2115,7 +2143,7 @@ sub set_size {
 	} elsif ( $$specs{txtSignatureType} ) {
 		if ( $$specs{txtSignatureType} eq 'Gate Folded Pages' ) {
 			if ( $$specs{rdbTemplateType} eq 'SingleGateFold' ) {
-				if ( $$specs{chkOverrideDimensions} ne 'Y' ) {
+				if ( ! $$specs{chkOverrideDimensions} ) {
 					if ( ! $$specs{txtWidth} ) {
 						$$specs{txtWidth} = $$printing_specs{txtWidth}*1.5;
 						$variables{txtWidth} = [ sets::union( 'output', @{$variables{txtWidth}} ) ];
@@ -2134,7 +2162,7 @@ sub set_size {
 					$variables{txtSpreadSize} = [ sets::union( 'output', @{$variables{txtSpreadSize}} ) ];
 				} # end if
 			} elsif ( $$specs{rdbTemplateType} eq 'DoubleGateFold' ) {
-				if ( $$specs{chkOverrideDimensions} ne 'Y' ) {
+				if ( ! $$specs{chkOverrideDimensions} ) {
 					if ( ! $$specs{txtWidth} ) {
 						$$specs{txtWidth} = $$printing_specs{txtWidth}*2;
 						$variables{txtWidth} = [ sets::union( 'output', @{$variables{txtWidth}} ) ];
@@ -2164,7 +2192,7 @@ sub set_size {
 				} # end if
 			} # end if
 			#$openprint::log->debug("SpreadSize: $$specs{txtSpreadSize}");
-			if ( ( ! defined $$specs{chkOverrideDimensions} ) or ( $$specs{chkOverrideDimensions} ne 'Y' ) ) {
+			if ( ! $$specs{chkOverrideDimensions} ) {
 				if ( sets::isin($$specs{rdbTemplateType}, ['2Panel1Pocket','2Panel2Pocket','TriFoldDoublePocket'] ) ) {
 					$$specs{txtWidth} = $$printing_specs{txtFinalWidth} * $$specs{rdbPanels};
 					my $pockets = 0;
@@ -2250,7 +2278,7 @@ $log->debug("Using spine ehgiht");
 				$variables{txtSpreadSize} = [ sets::union( 'output', @{$variables{txtSpreadSize}} ) ];
 			} # end if
 
-			if ( ( ! defined $$specs{chkOverrideDimensions} ) or ( $$specs{chkOverrideDimensions} ne 'Y' ) ) {
+			if ( !$$specs{chkOverrideDimensions} ) {
 				if ( $$specs{txtSpreadSize} == 4 ) {
 					if ( $$printing_specs{spine} eq 'height' ) {
 						$$specs{txtWidth} = $$printing_specs{txtFinalWidth} * 2;
@@ -2313,7 +2341,7 @@ $openprint::log->debug("Using spine height");
 		@$specs{'txtFinalWidth','txtFinalHeight'} = @$specs{'txtWidth','txtHeight'};
 	} # end if
 
-	if ( ( ! defined $$specs{chkOverrideDimensions} ) or ( $$specs{chkOverrideDimensions} ne 'Y' ) ) {
+	if ( ! $$specs{chkOverrideDimensions} ) {
 		$variables{txtWidth} = [ sets::union( 'output', @{$variables{txtWidth}} ) ];
 		$variables{txtHeight} = [ sets::union( 'output', @{$variables{txtHeight}} ) ];
 		$variables{txtFinalWidth} = [ sets::union( 'output', @{$variables{txtFinalWidth}} ) ];
@@ -2405,12 +2433,25 @@ sub calc {
 			$variables{"txtQuantity$qty_index"} = [sets::exclude( ['output'], $variables{"txtQuantity$qty_index"} ) ];
 		} # end if
 
-		foreach my $k ( 'OverrideStockType', 'chkOverridePlateType', 'OverrideSetup', 'OverrideRun', 'chkOverrideBleedSize', 'dutch', 'UnspecifiedVersions' ) {
+		# Go through every override and delete it if it isn't a Y
+		foreach my $k ( @qty_override_keys, 'dutch', 'UnspecifiedVersions' ) {
+			if ( ( ! defined $$specs{$k.$qty_index} ) or ( $$specs{$k.$qty_index} ne 'Y' ) ) {
+				delete $$specs{$k.$qty_index};
+			} # end if
+		} # end foreach
+		foreach my $k ( 'pages_supplied' ) {
+			if ( ( ! defined $$specs{$k} ) or ( $$specs{$k} ne 'Y' ) ) {
+				delete $$specs{$k};
+			} # end if
+		} # end foreach
+
+		foreach my $k ( 'UnspecifiedVersions' ) {
 			if ( ! defined $$specs{$k.$qty_index} ) {
 				delete $$specs{$k.$qty_index};
 			} # end if
 		} # end foreach
-		foreach my $k ( 'pages_supplied', 'txtSignatureType', 'ScreenType', 'Group' ) {
+
+		foreach my $k ( 'txtSignatureType', 'ScreenType', 'Group', @override_keys ) {
 			delete $$specs{$k} if ! defined $$specs{$k};
 		} # end foreach
 
@@ -2426,14 +2467,14 @@ sub calc {
 		} # end foreach
 
 		# This could be done in variables FIXME
-		if ( $$specs{'OverrideSetup'.$qty_index} and ( $$specs{'OverrideSetup'.$qty_index} eq 'Y' ) ) {
+		if ( $$specs{'OverrideSetup'.$qty_index} ) {
 			$variables{"OverSetup$qty_index"} = [sets::exclude( ['output'], $variables{"OverSetup$qty_index"} ) ];
 		} else {
 			$$specs{'OverrideSetup'.$qty_index} = '';
 			$variables{"OverSetup$qty_index"} = [ sets::union( 'output', @{$variables{'OverSetup'.$qty_index}} ) ];
 		} # end if
 
-		if ( $$specs{'OverrideRun'.$qty_index} and ( $$specs{'OverrideRun'.$qty_index} eq 'Y' ) ) {
+		if ( $$specs{'OverrideRun'.$qty_index} ) {
 			$variables{"OverRun$qty_index"} = [sets::exclude( ['output'], $variables{"OverRun$qty_index"} ) ];
 		} else {
 			$$specs{'OverrideRun'.$qty_index} = '';	
@@ -2516,10 +2557,10 @@ sub calc {
 	my @quantity_indexes = reverse( $Project->quantity_indexes() );
 
 	foreach my $qty_index ( @quantity_indexes ) {
-		if ( $$specs{"chkOverrideImposition$qty_index"} eq 'Y' and ! $$specs{"txtImposition$qty_index"} ) {
+		if ( $$specs{"chkOverrideImposition$qty_index"} and ! $$specs{"txtImposition$qty_index"} ) {
 			$$specs{alert} .= "Please enter the desired imposition for quantity $qty_index.<br/>";
 		} # end if
-		if ( $$specs{"OverrideImpositionLayout$qty_index"} eq 'Y' ) {
+		if ( $$specs{"OverrideImpositionLayout$qty_index"} ) {
 			
 			$variables{"hdnImpositionColumns$qty_index"} = [ sets::exclude( ['output'], $variables{"hdnImpositionColumns$qty_index"} ) ];
 			$variables{"hdnImpositionRows$qty_index"} = [ sets::exclude( ['output'], $variables{"hdnImpositionRows$qty_index"} ) ];
@@ -2528,7 +2569,7 @@ sub calc {
 			if ( ! ( $$specs{"hdnImpositionColumns$qty_index"} and $$specs{"hdnImpositionRows$qty_index"} ) ) {
 				$$specs{alert} .= "Please enter the desired imposition layout for quantity $qty_index.<br/>";
 			} # end if
-			if ( $$specs{"chkOverrideImposition$qty_index"} eq 'Y' ) {
+			if ( $$specs{"chkOverrideImposition$qty_index"} ) {
 				if ( $$specs{"hdnImpositionColumns$qty_index"} * $$specs{"hdnImpositionRows$qty_index"} + $$specs{"hdnImpositionDutchColumns$qty_index"} * $$specs{"hdnImpositionDutchRows$qty_index"} != $$specs{"txtImposition$qty_index"} ) {
 
 					$$specs{alert} .= "Overriden layout must add up to overriden Imposition.<br/>";
@@ -2540,14 +2581,7 @@ sub calc {
 			$variables{"hdnImpositionDutchColumns$qty_index"} = [ sets::union( 'output', @{$variables{"hdnImpositionDutchColumns$qty_index"}} ) ];
 			$variables{"hdnImpositionDutchRows$qty_index"} = [ sets::union( 'output', @{$variables{"hdnImpositionDutchRows$qty_index"}} ) ];
 		} # end if
-		if ( 
-				( $$specs{"chkOverrideRunStyle$qty_index"} eq 'Y' ) 
-				and
-				$$specs{"ddmRunStyle$qty_index"} 
-				and 
-				( $$specs{"chkOverridePress$qty_index"} eq 'Y' )
-				and 
-				$$specs{"ddmPress$qty_index"} ) {
+		if ( $$specs{"chkOverrideRunStyle$qty_index"} and $$specs{"ddmRunStyle$qty_index"} and $$specs{"chkOverridePress$qty_index"} and $$specs{"ddmPress$qty_index"} ) {
 			my $Press = openprint::Equipment->find_one(strid=>$$specs{"ddmPress$qty_index"});
 			if ( ! sets::isin( $$specs{"ddmRunStyle$qty_index"}, [ split(',', $Press->specification('Runstyles') ) ] ) ) {
 				$$specs{alert} .= "Press $$Press{name} cannot do " . $$specs{"ddmRunStyle$qty_index"}.'<br/>';
@@ -2670,7 +2704,7 @@ $openprint::log->debug("after sorting presses: " . ( sprintf('%.4f', tv_interval
 #$openprint::log->debug("Master time before get_unspecified_pages: " . ( sprintf('%.4f', tv_interval( [$master_time])*1000) ) .' usecs' );
 			$$specs{'txtUnspecifiedPageQuantity'.$qty_index} = get_unspecified_pages( $Project, $service_index, $specs, $qty_index );
 #$openprint::log->debug("Master time after get_unspecified_pages: " . ( sprintf('%.4f', tv_interval( [$master_time])*1000) ) .' usecs' );
-			if ( ( $$specs{txtSpreadSize} == 4 and $$specs{'txtUnspecifiedSpreadQuantity'.$qty_index} > 500 ) or ( $$specs{'txtUnspecifiedSpreadQuantity'.$qty_index} > 1000 ) ) {
+			if ( $$specs{'txtUnspecifiedPageQuantity'.$qty_index} > 1000 ) {
 				$$specs{alert} .= 'There are far too many pages required. We will not be able to calculate this.<br/>';
 				return $$specs{Status} = 'uncalculated';
 			} # end if
@@ -2714,7 +2748,7 @@ $log->warn("Have previous press $$specs{PreviousPress} for group $$specs{Group}"
 #$openprint::log->debug("Master time after platecounts,roll2sheetsetup,etc, previous forms cache: " . ( sprintf('%.4f', tv_interval( [$master_time])*1000) ) .' usecs' );
 		setup_counts( $Project, $service_index, $specs, $qty_index, $project, \%previous_forms_cache, \%PaperCounts, \%PlateCounts );
 
-		if ( $$specs{'chkOverridePress'.$qty_index} eq 'Y' ) {
+		if ( $$specs{'chkOverridePress'.$qty_index} ) {
 			$variables{'ddmPress'.$qty_index} = [ sets::exclude( ['output'], $variables{'ddmPress'.$qty_index} ) ];
 			if ( ! $$specs{'ddmPress'.$qty_index} ) {
 #$openprint::log->error("No overriden press!");
@@ -2743,7 +2777,7 @@ $log->warn("Have previous press $$specs{PreviousPress} for group $$specs{Group}"
 			}
 		} # end if
 
-		if ( $$specs{'chkOverrideRunStyle'.$qty_index} and ( $$specs{'chkOverrideRunStyle'.$qty_index} eq 'Y' ) ) {
+		if ( $$specs{'chkOverrideRunStyle'.$qty_index} ) {
 			$variables{'ddmRunStyle'.$qty_index} = [ sets::exclude( ['output'], $variables{'ddmRunStyle'.$qty_index} ) ];
 		} else {
 			$variables{'ddmRunStyle'.$qty_index} = [ sets::union( 'output', @{$variables{'ddmRunStyle'.$qty_index}} ) ];
@@ -2945,7 +2979,7 @@ if ( 1 ) {
 
 		save_price( $Project, $specs, $best_price, $Imposition, $qty_index );
 		if ( $$specs{txtSignatureType} ) {
-			if ( ( defined $$specs{'chkOverridePageQuantity'.$qty_index} ) and ( $$specs{'chkOverridePageQuantity'.$qty_index} eq 'Y' ) ) {
+			if ( $$specs{'chkOverridePageQuantity'.$qty_index} ) {
 				$variables{'PageQuantity'.$qty_index} = [ sets::exclude( ['output'], $variables{'PageQuantity'.$qty_index} ) ];
 			} else {
 				$variables{'PageQuantity'.$qty_index} = [ sets::union( 'output', @{$variables{'PageQuantity'.$qty_index}} ) ];
@@ -3052,7 +3086,7 @@ sub save_price( $$$$$ ) {
 	$$specs{'Runspeed'.$qty_index} = $$price{Runspeed};
 
 	if ( ( ! defined $$specs{'OverridePrice'.$qty_index} ) or $$specs{'OverridePrice'.$qty_index} ne 'Y' ) {
-		if ( $$specs{pages_supplied} and ( $$specs{pages_supplied} eq 'Y' ) ) {
+		if ( $$specs{pages_supplied} ) {
 			$$specs{'txtPrice'.$qty_index} = sprintf($openprint::config{ProjectMoneyFormat}, 0 );
 		} else {
 			my $total_price = $$price{'Total Cost'};
@@ -3202,7 +3236,8 @@ sub calculate_impositions {
 	if ( $Project->Type()->name() eq 'ScratchPads' ) {
 		$needed_pages = 0;
 	} elsif ( $$sig_specs{txtSignatureType} ) {
-		if ( $$sig_specs{'chkOverridePageQuantity'.$qty_index} and (  $$sig_specs{'chkOverridePageQuantity'.$qty_index} eq 'Y' ) ) {
+$openprint::log->debug("Project Specs $$project{ProjectSpecs} Gruop $$sig_specs{Group} wanted: " . $$project{ProjectSpecs}{"PageQuantity-$$sig_specs{Group}"} );
+		if ( $$sig_specs{'chkOverridePageQuantity'.$qty_index} ) {
 			$needed_pages = int( $$sig_specs{'PageQuantity'.$qty_index} );
 		} elsif ( $$project{ProjectSpecs}{"PageQuantity-$$sig_specs{Group}"} and ( $$project{ProjectSpecs}{"PageQuantity-$$sig_specs{Group}"} <= $$sig_specs{'txtUnspecifiedPageQuantity'.$qty_index} ) ) {
 			$needed_pages = $$project{ProjectSpecs}{"PageQuantity-$$sig_specs{Group}"};
@@ -3213,13 +3248,17 @@ sub calculate_impositions {
 			$openprint::log->debug("calculate_impositions with no needed_pages!!!! " . $$sig_specs{'txtUnspecifiedPageQuantity'.$qty_index} );
 			return ();
 		}
+		if ( $needed_pages <= 2 ) {
+			$openprint::log->warn("Bailing early cuz can't do a 2pg signature");
+			return ();
+		}
 	} # end if
 	$openprint::log->debug("Needed pages: $needed_pages") if DEBUG;
 
 	my $filter_press;
 	$log->error("Have filter press $filter_press") if $filter_press;
 	$filter_press = '';
-	if ( $$sig_specs{"chkOverridePress$qty_index"} and ( $$sig_specs{"chkOverridePress$qty_index"} eq 'Y' ) ) {
+	if ( $$sig_specs{"chkOverridePress$qty_index"} ) {
 		$filter_press = $$sig_specs{"ddmPress$qty_index"};
 		#$log->debug("Have Override Press " . $$sig_specs{"ddmPress$qty_index"} . " from $$sig_specs{SignatureIndex}");
 	} elsif ( $$sig_specs{PreviousPress} ) {
@@ -3244,7 +3283,7 @@ sub calculate_impositions {
 		} # end if
 
 		if ( (!defined $$Press{useinestimating}) and (
-					($$sig_specs{"chkOverridePress$qty_index"} ne 'Y') and ( ! ( $$project{ProjectSpecs}{"ddmPress-$$sig_specs{Group}"}  and ( $$project{ProjectSpecs}{"ddmPress-$$sig_specs{Group}"} eq $strid ) ) )
+					(!$$sig_specs{"chkOverridePress$qty_index"}) and ( ! ( $$project{ProjectSpecs}{"ddmPress-$$sig_specs{Group}"}  and ( $$project{ProjectSpecs}{"ddmPress-$$sig_specs{Group}"} eq $strid ) ) )
 )
 ) {
 			$openprint::log->debug("Not doing $$Press{strid} because it is not overriden") if DEBUG;
@@ -3252,9 +3291,9 @@ sub calculate_impositions {
 		}
 
 		if ( $$sig_specs{PrintingTypes} 
-			and ( ( !$$sig_specs{"chkOverridePress$qty_index"}) or ( $$sig_specs{"chkOverridePress$qty_index"} ne 'Y' ) )
-			and ( ( !$$sig_specs{"OverridePrintingType$qty_index"} ) or ( $$sig_specs{"OverridePrintingType$qty_index"} ne 'Y' ) )
-) {
+			and ( !$$sig_specs{"chkOverridePress$qty_index"} )
+			and ( !$$sig_specs{"OverridePrintingType$qty_index"} )
+			) {
 			my $printing_type = $Press->specification('Printing Type');
 			if ( $printing_type and ! sets::isin( $printing_type, $$sig_specs{PrintingTypes} ) ) {
 				next;
@@ -3262,18 +3301,6 @@ sub calculate_impositions {
 		} # end if
 
 		my @press_impositions = @{ $$impositions{$strid} };
-		if ( $needed_pages > 0 ) {
-			if ( my $dont_do_pages = $Press->specification('DontDoPages') ) {
-				my %dont_do_pages = map { $_,	$_ } split(',', $dont_do_pages);
-				if ( %dont_do_pages ) {
-					@press_impositions = map { $dont_do_pages{$$_{pages}} ? () : $_ } sort { $$b{pages} <=> $$a{pages} } @press_impositions;
-				} # end if
-			} # end if
-			if ( ! @press_impositions ) {
-				$openprint::log->debug("Press $$Press{strid} " );
-				$openprint::log->debug("Press $$Press{strid} " . scalar @{$$impositions{$strid}} ) if $$impositions{$strid};
-			} 
-		} # end if
 		if ( DEBUG_FILTERING ) {
 			$openprint::log->debug("QTY_index: $qty_index before filtering impositions count:" . @press_impositions . ' on press: ' . $Press->strid());
 			foreach my $imp ( openprint::imposition::sort( @press_impositions ) ) {
@@ -3284,17 +3311,27 @@ sub calculate_impositions {
 		if ( $needed_pages ) {
 			my %max_impositions;
 			foreach my $I ( @press_impositions ) {
+$I->display("need $needed_pages");
 				next if $needed_pages < $$I{pages};
 				$max_impositions{$$I{pages}} = $$I{imposition} if (!exists $max_impositions{$$I{pages}}) or $$I{imposition} > $max_impositions{$$I{pages}};
 			} # end foreach
-			my $max_pages = sets::max( keys %max_impositions );
-$openprint::log->debug(" needed pages $needed_pages max: $max_pages $$project{txtSpreadSize} press $$Press{strid} impositions: " . @press_impositions);
-			$max_pages = Math::Round::nearest(1, $max_pages / 3 );
-			$max_pages = $$project{txtSpreadSize} if $max_pages < $$project{txtSpreadSize};
-			$openprint::log->debug("Max pages: $max_pages") if DEBUG_FILTERING;
-			foreach my $pages ( keys %max_impositions ) {
+			my @keys = keys %max_impositions;
+			my $max_pages;
+			if ( @keys ) {
+				$max_pages = sets::max( @keys );
+				$openprint::log->debug(" needed pages $needed_pages max: $max_pages spreadsize: $$project{txtSpreadSize} press $$Press{strid} impositions: " . @press_impositions);
+				$max_pages = Math::Round::nearest(1, $max_pages / 3 );
+				$max_pages = $$project{txtSpreadSize} if $max_pages < $$project{txtSpreadSize};
+				$openprint::log->debug("Max pages: $max_pages") if DEBUG_FILTERING;
+			} else {
+				$max_pages = $$project{txtSpreadSize};
+				$openprint::log->warn("No Max pages setting to $max_pages");
+			}
+
+			foreach my $pages ( @keys ) {
 				$max_impositions{$pages} = int($max_impositions{$pages} / 4 );
 			} # end foreach
+
 			foreach my $I ( @press_impositions ) {
 				next if $needed_pages < $$I{pages};
 				if ( $max_impositions{$$I{pages}} > $$I{imposition}) {
@@ -3302,7 +3339,7 @@ $openprint::log->debug(" needed pages $needed_pages max: $max_pages $$project{tx
 					$I->display("Ma imposition! for $$I{pages} is $max_impositions{$$I{pages}} > $$I{imposition} ") if DEBUG_FILTERING;
 					next;
 				} 
-				if (($max_pages > $$I{pages}) and ( (!$$sig_specs{'chkOverridePageQuantity'.$qty_index}) or ($$sig_specs{'chkOverridePageQuantity'.$qty_index} ne 'Y' ) ) ) {
+				if (($max_pages > $$I{pages}) and ( !$$sig_specs{'chkOverridePageQuantity'.$qty_index}) ) {
 					$I->display("Max pages: max $max_pages >= imp " . $$I{pages} ) if DEBUG_FILTERING;
 					next;
 				} # end if
@@ -3319,7 +3356,7 @@ $openprint::log->debug(" needed pages $needed_pages max: $max_pages $$project{tx
 		return ();
 	} 
 
-	if ( $$sig_specs{'chkOverrideSheetSize'.$qty_index} and ( $$sig_specs{'chkOverrideSheetSize'.$qty_index} eq 'Y' ) ) {
+	if ( $$sig_specs{'chkOverrideSheetSize'.$qty_index} ) {
 		if ( ! $$sig_specs{"ddmStockSheetSize$qty_index"} ) {
 			$openprint::log->debug("NO ddm Stock SheetSize for $qty_index!") if DEBUG_FILTERING;
 		} elsif ( ! $$sig_specs{"OverrideStockWidth$qty_index"} ) {
@@ -3338,7 +3375,7 @@ $openprint::log->debug(" needed pages $needed_pages max: $max_pages $$project{tx
 
 	if ( $$sig_specs{txtSpreadSize} == 2 ) {
 		foreach my $imp ( @impositions ) {
-			if ( $needed_pages % $$imp{imposition} == 2 ) {
+			if ( $needed_pages % $$imp{pages} == 2 ) {
 				if ( DEBUG_FILTERING ) {
 					$imp->display("DROPPING BECUASE it leaves a 2pg");
 				}
@@ -3353,7 +3390,6 @@ $openprint::log->debug(" needed pages $needed_pages max: $max_pages $$project{tx
 			@results = ();
 		}
 	}			
-
 
 	my %grain_direction_imps;
 
@@ -4519,7 +4555,7 @@ $openprint::log->debug("Doing full calc when UPQ: >= Pages:" . $$imp{pages} . ' 
 
 # get_project_price is recursive so we are done
 							if ( ( ! $$sig_price{complete} ) or ( ! $$sig_price{Imposition} ) ) {
-$openprint::log->warn("Unable to calculate additional signatures  imp pages: " . $$imp{pages} . ' of upq: ' . $$price{upq}. ' alert: ' . $$sig_price{alert} );
+$openprint::log->warn("Unable to calculate additional signatures  imp pages: " . $$imp{pages} . ' of upq: ' . $$price{upq}. ' alert: ' . ($$sig_price{alert}?$$sig_price{alert}:'') );
 $imp->display('[warn]');
 								$$price{complete} = 0;
 								$$price{'Comparison Cost'} += 10000000;
@@ -5864,15 +5900,15 @@ $openprint::log->warn("No folding equipment");
 			'Total Overs'				=>	$total_overs,
 			Weight					=>	$weight,
 			'FM Overs'					=>	$fm_overs,
-			#'FoldingMakeReadyOvers'		=>	$$folding_results{MakeReadyOvers},
-			#'FoldingRunOvers'			=>	$$folding_results{RunOvers},
-			#'ScoringOvers'				=>	$scoring_results{Overs},
-			#'DieCuttingOvers'			=>	$diecutting_results{Overs},
-			#UVOvers					=>	$uv_results{Overs},
-			#'BinderyOvers'				=>	$bindery_overs,
-			#'CuttingOvers'				=>	$price{'Cutting Overs'},
-			#'Minimum Overs'				=>	$min_overs,
-			#'Plate Changes'				=>	$plate_changes,
+			'FoldingMakeReadyOvers'		=>	$$folding_results{MakeReadyOvers},
+			'FoldingRunOvers'			=>	$$folding_results{RunOvers},
+			'ScoringOvers'				=>	$scoring_results{Overs},
+			'DieCuttingOvers'			=>	$diecutting_results{Overs},
+			UVOvers					=>	$uv_results{Overs},
+			'BinderyOvers'				=>	$bindery_overs,
+			'CuttingOvers'				=>	$price{'Cutting Overs'},
+			'Minimum Overs'				=>	$min_overs,
+			'Plate Changes'				=>	$plate_changes,
 			);
 	$price{'Stock Quantity'} = \%sheet_qty;
 	$price{'Gross Sheet Count'} = $sheet_qty{'Gross Sheet Count'};
@@ -6384,6 +6420,9 @@ $openprint::log->debug("COnsidering $$Press{strid}") if DEBUG_PRESSES;
 		} # end if
 
 		my $number_of_colours = $Press->specification('Number of Colours');
+		if ( ! $number_of_colours ) {
+			$openprint::log->error("Press $$Press{strid} has no Number of Colours");
+		}
 
 		if ( ( @$side_one_colours > $number_of_colours or @$side_two_colours > $number_of_colours ) and ( $_ = $Press->specification('Multipass', $Paper->gsm()) and ( $_ ne 'Y' ) ) ) {
 			$results{$press_id} = "Too many colours and no multipass.";
@@ -7099,7 +7138,7 @@ if ( 0 ) {
 			$string .= ' ' . $$specs{txtStockGSM}.'gsm' if $openprint::config{Show_Stock_GSM} ne 'N';
 		} # end if ! NoPrinting
 
-		if ( ( defined $$specs{pages_supplied} ) and ( $$specs{pages_supplied} eq 'Y' ) ) {
+		if ( $$specs{pages_supplied} ) {
 			$string .= ' pages supplied by customer as ';
 			if ( $$specs{supplied_format} eq 'Sheets' ) {
 				$string .= ' flat sheets.';
@@ -7389,6 +7428,7 @@ $openprint::log->warn("Unknown printing type in sig $$sig_specs{SignatureIndex} 
 	} # end if printing_specs{PrintingType}
 	return $results;
 } # end sub get_printing_types
+
  
 sub has_overrides {
 	my ( $Project, $service_id, $specs, $qty_index ) = @_;
@@ -7396,31 +7436,10 @@ sub has_overrides {
 
 	if ( $qty_index ) {
 		return () if (exists $$specs{'txtUnspecifiedPageQuantity'.$qty_index} and ($$specs{'txtUnspecifiedPageQuantity'.$qty_index} <= 0 ) ) and ! $$specs{"txtImposition$qty_index"};
-		return map { (defined $$specs{$_.$qty_index} and ( $$specs{$_.$qty_index} eq 'Y' ) ) ? $_ : () } (
-				'chkOverrideBleedSize',
-				'chkOverridePageQuantity',
-				'chkOverrideImposition',
-				'OverrideImpositionLayout',
-				'chkOverrideRunStyle',
-				'OverrideCutOff',
-				'chkOverrideSheetSize',
-				'chkOverridePress',
-				'OverridePrintingType',
-				'OverrideStockType',
-				'chkOverrideGrainDirection',
-				'OverrideVersions',
-				'OverridePrice',
-				'OverrideSetup',
-				'OverrideRun',
-				);
+		return map { (defined $$specs{$_.$qty_index} and ( $$specs{$_.$qty_index} eq 'Y' ) ) ? $_ : () } @qty_override_keys;
 	} else {
-		return map { (defined $$specs{$_} and ( $$specs{$_} eq 'Y' ) ) ? $_ : () } (
-				'chkOverrideDimensions',
-				'OverrideAddGrip',
-				'OverrideSpreadSize',
-				);
+		return map { (defined $$specs{$_} and ( $$specs{$_} eq 'Y' ) ) ? $_ : () } @override_keys;
 	} # end if
-
 } # end sub has_overrides
 
 sub convert_impositions {
@@ -7449,6 +7468,14 @@ sub convert_impositions {
 # ecause convert will consider all smaller spreadlayouts as well, we really only need to do this once, and can simply filter out any that are larger than we need.
 		foreach my $press ( keys %$impositions ) {
 			$$impositions{$press} = [ openprint::imposition::convert_impositions( $SpreadLayout, $$project{txtSpreadSize}, $$project{ProjectSpecs}{spine}, $$impositions{$press} ) ];
+
+			if ( my $dont_do_pages = $Presses{$press}->specification('DontDoPages') ) {
+        my %dont_do_pages = map { $_, $_ } split(',', $dont_do_pages);
+        if ( %dont_do_pages ) {
+          $$impositions{$press} = [ map { $dont_do_pages{$$_{pages}} ? () : $_ } @{$$impositions{$press}} ];
+        } # end if
+      } # end ifo
+
 		} # end foreach press
 	} # end if spreadylayout
 

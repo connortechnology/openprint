@@ -158,10 +158,13 @@ function cbFillResults( results ) {
 		} // end if
 
 		var element = form.elements[key];
-if ( element.onchange ) {
-console.log(element.onchange);
-}
 		if ( element ) {
+
+//if ( element.onchange ) {
+//console.log(element.name + element.onchange);
+//} else {
+//console.log(element.name + ' ' + element.type + ' no onchange' );
+//}
 			if ( element.type == 'select-one' ) {
 				ddm_select_by_value( element, value, -1 );
 			} else if ( element.type == 'checkbox' ) {
@@ -169,7 +172,7 @@ console.log(element.onchange);
 					if ( ! element.checked ) {
 						element.checked = true;
 						if ( element.onchange ) {
-							console.log("Calling onchange of checkbox " . element.name );
+							console.log("Calling onchange of checkbox " + element.name );
 							element.onchange();
 						}
 					} // endif
@@ -177,20 +180,21 @@ console.log(element.onchange);
 					if ( element.checked ) {
 						element.checked = false;
 						if ( element.onchange ) {
-							console.log("Calling onchange of checkbox " . element.name );
+							console.log("Calling onchange of checkbox " + element.name );
 							element.onchange();
 						}
 					} // endif
 				} // end if
 			} else if ( element.type == 'radio' ) {
+console.log(element.name + " is a radio... which we don't handle");
 			} else if ( element.type == 'text' || element.type == 'number' || element.type == 'email' ) {
 
 				if ( element.value != value ) {
 					if ( ! element.gotFocus ) {
 						element.value = value;
 						if ( element.onchange ) {
+							console.log("Calling onchange of unfocused input  " + element.name );
 							element.onchange();
-							console.log("Calling onchange of unfocused input  " . element.name );
 						}
 					} 
 				} // end if
@@ -203,7 +207,7 @@ console.log(element.onchange);
 						if ( ! elements[j].checked ) {
 							elements[j].checked = true;
 							if ( elements[j].onchange ) { 
-								console.log("Calling onchange of checkbox " . elements[j].name );
+								console.log("Calling onchange of checkbox " + elements[j].name );
 								elements[j].onchange();
 							}
 						} // endif
@@ -211,7 +215,7 @@ console.log(element.onchange);
 						if ( elements[j].checked ) {
 							elements[j].checked = false;
 							if ( elements[j].onchange ) { 
-								console.log("Calling onchange of checkbox " . elements[j].name );
+								console.log("Calling onchange of checkbox " + elements[j].name );
 								elements[j].onchange();
 							}
 						} // endif
@@ -228,16 +232,16 @@ console.log(element.onchange);
 					div.removeClassName( value.removeClassName );
 				}
 			} else {
-			//alert('filling: ' + data[0] + ' with: ' + data[1] );
+			//console.log('filling: ' + key + ' with: ' + value );
 			//div.hide();
 			div.innerHTML = value;
 			//d//iv.show();
 			}
 		} else {
-			//alert('didnt find: ' + data[0]);
+			//console.log("didnt find " + key );
 		} // end if
 	} // end for each 
-    gettingNewPrice = false;
+	gettingNewPrice = false;
 	block_calc = false;
 } // end function cbFillResults
 

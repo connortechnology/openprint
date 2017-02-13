@@ -1018,6 +1018,7 @@ $openprint::log->debug("No Fold") if DEBUG;
 						$_ = $Equipment->fits( $Imposition->layout_width(), $Imposition->layout_height(), $$Paper{calliper} );
 						if ( ! $_ )	{
 							$openprint::log->debug("Fits") if DEBUG;
+							my $fits;
 							my $Fold = $Equipment->Fold({
 									pages			=>	$Imposition->pages(),
 									#( $$Imposition{image_orientation} == openprint::Imposition::Vertical ? (
@@ -1042,29 +1043,28 @@ $openprint::log->debug("No Fold") if DEBUG;
 									});
 							if ( $Fold and $max_feed_width ) {
 
-if ( $$Fold{page_columns} and $$Fold{page_rows} ) {
-$width_folds = $$Fold{page_columns}-1;
-$height_folds = $$Fold{page_rows}-1;
-$openprint::log->debug("Got new folds $width_folds x $height_folds from Fold") if DEBUG;
-} else {
-	$openprint::log->debug("Fold does not have page_rows and page_columns filled in" . $Fold->to_string() ) if DEBUG;
-	$openprint::log->debug("old: $width_folds x $height_folds source: $$sig_specs{txtWidth}/$$sig_specs{txtFinalWidth} x $$sig_specs{txtHeighth}/$$sig_specs{txtFinalHeight} ") if DEBUG;
-if ( 1 ) {
-	$width_folds = Math::Round::nearest( 1, $$Imposition{layout_width} / $$Imposition{object_width} )-1;
-	if ( $width_folds < 0 ) {
-		$openprint::log->debug("Got negative width_folkds from Math::Round::nearest( 1, $$sig_specs{txtWidth}/$$sig_specs{txtFinalWidth})-1");
-		$width_folds = 0;
-	} # end if
-	$height_folds = Math::Round::nearest( 1, $$Imposition{layout_height}/ $$Imposition{object_height} )-1;
-	if ( $height_folds < 0 ) {
-		$openprint::log->debug("Got negative width_folkds from Math::Round::nearest( 1, $$sig_specs{txtHeighth}/$$sig_specs{txtFinalHeight})-1");
-		$height_folds = 0;
-	} # end if
-	$openprint::log->debug("new: $width_folds x $height_folds x $$Imposition{layout_width} / $$Imposition{object_width} x $$Imposition{layout_height}/ $$Imposition{object_height}") if DEBUG;
-	}
-	
-}
-								my $fits;
+								if ( $$Fold{page_columns} and $$Fold{page_rows} ) {
+									$width_folds = $$Fold{page_columns}-1;
+									$height_folds = $$Fold{page_rows}-1;
+									$openprint::log->debug("Got new folds $width_folds x $height_folds from Fold") if DEBUG;
+								} else {
+									$openprint::log->debug("Fold does not have page_rows and page_columns filled in" . $Fold->to_string() ) if DEBUG;
+									$openprint::log->debug("old: $width_folds x $height_folds source: $$sig_specs{txtWidth}/$$sig_specs{txtFinalWidth} x $$sig_specs{txtHeighth}/$$sig_specs{txtFinalHeight} ") if DEBUG;
+									if ( 1 ) {
+										$width_folds = Math::Round::nearest( 1, $$Imposition{layout_width} / $$Imposition{object_width} )-1;
+										if ( $width_folds < 0 ) {
+											$openprint::log->debug("Got negative width_folkds from Math::Round::nearest( 1, $$sig_specs{txtWidth}/$$sig_specs{txtFinalWidth})-1");
+											$width_folds = 0;
+										} # end if
+										$height_folds = Math::Round::nearest( 1, $$Imposition{layout_height}/ $$Imposition{object_height} )-1;
+										if ( $height_folds < 0 ) {
+											$openprint::log->debug("Got negative width_folkds from Math::Round::nearest( 1, $$sig_specs{txtHeighth}/$$sig_specs{txtFinalHeight})-1");
+											$height_folds = 0;
+										} # end if
+										$openprint::log->debug("new: $width_folds x $height_folds x $$Imposition{layout_width} / $$Imposition{object_width} x $$Imposition{layout_height}/ $$Imposition{object_height}") if DEBUG;
+									}
+
+								}
 								if ( $orientation ) {
 									if (
 											( $orientation eq 'Portrait' and $Imposition->layout_width() <= $Imposition->layout_height() ) or
@@ -1125,7 +1125,7 @@ if ( 1 ) {
 								next;
 							} elsif ( @my_equipment == 1 ) {
 								$Imposition->display('Didnt find:' ) if DEBUG;
-								$Breakdown .= sprintf('Didnt find: %dx%d=%dpages %s,%dout<br/>', $Imposition->page_columns(), $Imposition->page_rows(), $Imposition->pages(), @$Imposition{'image_orientation','imposition'} );
+								$Breakdown .= sprintf('Didnt find: %dx%d=%dpages %s,%dout %s<br/>', $Imposition->page_columns(), $Imposition->page_rows(), $Imposition->pages(), @$Imposition{'image_orientation','imposition'}, $fits );
 								$complete = 0;
 							} elsif ( DEBUG ) {
 								$Imposition->display('Didnt find fold:' );
@@ -2210,7 +2210,7 @@ $openprint::log->debug("Cutting rows $$I{spread_rows} > ( $$I{image_orientation}
 			my $i1 = $I->copy();
 			$i1->spread_rows(1);
 			$i1->quantity( $$i1{quantity} * $$I{spread_rows} );
-			$i1->page_quantity( $i1->page_quantity() * $$I{spread_rows} );
+			$$i1{page_quantity} = $$i1{page_quantity} * $$I{spread_rows};
 			if ( $$I{image_orientation} == openprint::Imposition::Vertical ) {
 				$i1->image_height( $$I{image_height}/$$I{spread_rows} );
 			} else {

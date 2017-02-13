@@ -57,53 +57,53 @@ $serial	= 'paper_id_seq';
 		doublesided	=>	'doublesided', 
 		perfecting	=>	'perfecting', 
 		score_required	=>	'score_required',
-		'die_score_required'	=>	'die_score_required',
-		'width'				=>	'width',
-		'height'			=>	'height',
-		'mweight'			=>	'mweight',
-		'sheets_per_package'	=>	'sheets_per_package',
-		'gsm'					=>	'gsm',
-		'wpsi'					=>	'wpsi',
-		'digital'				=>	'digital',
-		'type'					=>	'type',
-		'basis_width'			=>	'basis_width',
-		'basis_height'			=>	'basis_height',
-		'basis_mweight'			=>	'basis_mweight',
-		'bladecleaning'			=>	'bladecleaning',
-		'grade'					=>	'grade',
-		'grain_direction'		=>	'grain_direction',
-		'fsc_code'				=>	'fsc_code',
-		'supplied'				=>	'supplied',
-		'minimum_order'			=>	'minimum_order',
-		'inventory_number'		=>	'inventory_number',
-		'full_packages'			=>	'full_packages',
-		'message'				=>	'message',
-		'in_stock'				=>	'in_stock',
-		'allocated'				=>	'allocated',
-		'parts'					=>	'parts',
-		'material_id'			=>	'material_id',
-		'user_type'				=>	'user_type',
+		die_score_required	=>	'die_score_required',
+		width				=>	'width',
+		height			=>	'height',
+		mweight			=>	'mweight',
+		sheets_per_package	=>	'sheets_per_package',
+		gsm					=>	'gsm',
+		wpsi					=>	'wpsi',
+		digital				=>	'digital',
+		type					=>	'type',
+		basis_width			=>	'basis_width',
+		basis_height			=>	'basis_height',
+		basis_mweight			=>	'basis_mweight',
+		bladecleaning			=>	'bladecleaning',
+		grade					=>	'grade',
+		grain_direction		=>	'grain_direction',
+		fsc_code				=>	'fsc_code',
+		supplied				=>	'supplied',
+		minimum_order			=>	'minimum_order',
+		inventory_number		=>	'inventory_number',
+		full_packages			=>	'full_packages',
+		message				=>	'message',
+		in_stock				=>	'in_stock',
+		allocated				=>	'allocated',
+		parts					=>	'parts',
+		material_id			=>	'material_id',
+		user_type				=>	'user_type',
 		manufacturers_name		=>	'manufacturers_name',
 		available_to_order		=>	'available_to_order',
 		department_id			=>	'department_id',
 		Supplied					=>	undef,
 		);
 %find_fields = (
-		#'manufacturer'	=>	'(SELECT name FROM manufacturers WHERE manufacturers.id=papers.manufacturer_id)',
+		#manufacturer	=>	'(SELECT name FROM manufacturers WHERE manufacturers.id=papers.manufacturer_id)',
 		manufacturer	=>	'manufacturer_id = (SELECT id FROM manufacturers WHERE name=?)',
-		#'group'	=>	'(SELECT name FROM stockgroups WHERE stockgroups.id=papers.group_id)',
+		#group	=>	'(SELECT name FROM stockgroups WHERE stockgroups.id=papers.group_id)',
 		group	=>	'group_id = (SELECT id FROM stockgroups WHERE name=?)',
-		#'material'	=>	'(SELECT name FROM stockmaterials WHERE stockmaterials.id=papers.material_id)',
+		#material	=>	'(SELECT name FROM stockmaterials WHERE stockmaterials.id=papers.material_id)',
 		material	=>	'material_id = (SELECT id FROM stockmaterials WHERE name=?)',
-		#'brand'	=>	'(SELECT name FROM stockbrands WHERE stockbrands.id=papers.brand_id)',
+		#brand	=>	'(SELECT name FROM stockbrands WHERE stockbrands.id=papers.brand_id)',
 		brand	=>	'brand_id = (SELECT id FROM stockbrands WHERE name=?)',
-		#'finish'	=>	'(SELECT name FROM stockfinishes WHERE stockfinishes.id=papers.finish_id)',
+		#finish	=>	'(SELECT name FROM stockfinishes WHERE stockfinishes.id=papers.finish_id)',
 		finish	=>	'finish_id = (SELECT id FROM stockfinishes WHERE name=?)',
-		#'colour'	=>	'(SELECT name FROM stockcolours WHERE stockcolours.id=papers.colour_id)',
+		#colour	=>	'(SELECT name FROM stockcolours WHERE stockcolours.id=papers.colour_id)',
 		colour	=>	'colour_id = (SELECT id FROM stockcolours WHERE name=?)',
-		#'weight'	=>	'(SELECT name FROM stockweights WHERE stockweights.id=papers.weight_id)',
+		#weight	=>	'(SELECT name FROM stockweights WHERE stockweights.id=papers.weight_id)',
 		weight	=>	'weight_id = (SELECT id FROM stockweights WHERE name=?)',
-		#'quality'	=>	'(SELECT name FROM stockqualities WHERE stockqualities.id=papers.quality_id)',
+		#quality	=>	'(SELECT name FROM stockqualities WHERE stockqualities.id=papers.quality_id)',
 		quality	=>	'quality_id = (SELECT id FROM stockqualities WHERE name=?)',
 		size		=>	q`width || '" x ' || height || '"'`,
 		sheetsize		=>	q`width || '" x ' || height || '"'`,
@@ -162,7 +162,7 @@ $serial	= 'paper_id_seq';
 	department_id		=>	undef,
 	inventory_number	=>	undef,
 	full_packages		=>	q`'0'`,
-	minimum_order		=>	undef,
+	minimum_order		=>	q`'0'`,
 	parts				=>	undef,
 	digital				=>	undef,
 	message				=>	undef,
@@ -231,7 +231,7 @@ sub save {
 		my $Material = openprint::StockMaterial->find_one('name lc'=>lc openprint::StockMaterial->transform( 'name', $$self{material} ) );
 		if ( ! $Material ) {
 			$Material = new openprint::StockMaterial();
-			if ( $_ = $Material->save( {'name'=>$$self{material}} ) ) {
+			if ( $_ = $Material->save( {name=>$$self{material}} ) ) {
 				return $_;
 			} # end if
 		} # end if
@@ -241,7 +241,7 @@ sub save {
 		my $Brand = openprint::StockBrand->find_one('name lc'=>lc openprint::StockBrand->transform( 'name', $$self{brand} ) );
 		if ( ! $Brand ) {
 			$Brand = new openprint::StockBrand();
-			if ( $_ = $Brand->save({'name'=>$$self{brand}}) ) {
+			if ( $_ = $Brand->save({name=>$$self{brand}}) ) {
 				return $_;
 			} # end if
 		} # end if
@@ -251,7 +251,7 @@ sub save {
 		my $Finish = openprint::StockFinish->find_one('name lc'=>lc openprint::StockFinish->transform( 'name', $$self{finish} ) );
 		if ( ! $Finish ) {
 			$Finish = new openprint::StockFinish();
-			if ( $_ = $Finish->save({'name'=>$$self{finish}}) ) {
+			if ( $_ = $Finish->save({name=>$$self{finish}}) ) {
 				return $_;
 			} # end if
 		} # end if
@@ -261,7 +261,7 @@ sub save {
 		my $Colour = openprint::StockColour->find_one('name lc'=>lc openprint::StockColour->transform( 'name', $$self{colour} ) );
 		if ( ! $Colour ) {
 			$Colour = new openprint::StockColour();
-			if ( $_ = $Colour->save({'name'=>$$self{colour}}) ) {
+			if ( $_ = $Colour->save({name=>$$self{colour}}) ) {
 				return $_;
 			} # end if
 		} # end if
@@ -282,7 +282,7 @@ sub save {
 		my $Quality = openprint::StockQuality->find_one('name lc'=>lc $$self{quality});
 		if ( ! $Quality ) {
 			$Quality = new openprint::StockQuality();
-			if ( $_ = $Quality->save({'name'=>$$self{quality}}) ) {
+			if ( $_ = $Quality->save({name=>$$self{quality}}) ) {
 				return $_;
 			} # end if
 		} # end if
@@ -292,7 +292,7 @@ sub save {
 		my $Manufacturer = openprint::Manufacturer->find_one('name lc'=>lc openprint::Manufacturer->transform( 'name', $$self{manufacturer} ) );
 		if ( ! $Manufacturer ) {
 			$Manufacturer = new openprint::Manufacturer();
-			if ( $_ = $Manufacturer->save({'name'=>$$self{manufacturer}}) ) {
+			if ( $_ = $Manufacturer->save({name=>$$self{manufacturer}}) ) {
 				return $_;
 			} # end if
 		} # end if
@@ -771,7 +771,7 @@ sub owner {
 	my $self = shift;
 	my $Company;
 	if ( @_ and $_[0] ) {
-		my @Companies = openprint::Company->find('name'=>$_[0]);
+		my @Companies = openprint::Company->find(name=>$_[0]);
 		if ( ! @Companies ) {
 			$Company = new openprint::Company();
 			$Company->name( $_[0] );
@@ -989,8 +989,8 @@ sub skids {
 sub previous {
 	my $self = shift;
 	my @papers = openprint::Paper->find( 
-'columns'   =>  '*,(select name from stockbrands where id=brand_id) AS brand, (select name from stockfinishes where id=finish_id) AS finish, (select name from stockcolours where id=colour_id) AS colour, (select name from stockweights where id=weight_id) AS weight',
-'order'=>'brand,finish,colour,weight,width,height' );
+columns   =>  '*,(select name from stockbrands where id=brand_id) AS brand, (select name from stockfinishes where id=finish_id) AS finish, (select name from stockcolours where id=colour_id) AS colour, (select name from stockweights where id=weight_id) AS weight',
+order=>'brand,finish,colour,weight,width,height' );
 	for ( my $i = 0; $i < @papers; $i += 1 ) {
 		return $papers[$i-1] if ($papers[$i] == $self )and ($i > 0);
 	} # end if
@@ -1002,7 +1002,7 @@ sub next {
 	
 	my @papers = openprint::Paper->find_one( 
 			columns   =>  '*,(select name from stockbrands where id=brand_id) AS brand, (select name from stockfinishes where id=finish_id) AS finish, (select name from stockcolours where id=colour_id) AS colour, (select name from stockweights where id=weight_id) AS weight',
-'order'=>'brand,finish,colour,weight,width,height' );
+order=>'brand,finish,colour,weight,width,height' );
 	for ( my $i = 0; $i < @papers; $i += 1 ) {
 		return $papers[$i+1] if ($papers[$i] == $self )and ($i < @papers);
 	} # end if
@@ -1397,7 +1397,7 @@ sub load_from_signature {
 					weight	=> $$specs{ddmStockWeight},
 					( $Project ? ( 'project_type_id any'=> $Project->type_id() ) : () ),
 # FIXME
-					( $$specs{'PrintingType'.$qty_index} eq 'Digital' ? ( 'digital'=>1 ) : () ),
+					( $$specs{'PrintingType'.$qty_index} eq 'Digital' ? ( digital=>1 ) : () ),
 					order		=>	'minimum_order',
 					);
 			if ( $qty_index and $$specs{'hdnSuppliedStockWidth'.$qty_index} ) {
