@@ -140,7 +140,7 @@ if ( 0 ) {
 	} # end if
 }
 	sql::end_transaction( $dbh, $ac );
-	return;
+	return '';
 } # end sub save
 
 sub delete {
