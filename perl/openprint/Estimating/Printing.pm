@@ -31,7 +31,7 @@ use constant DEBUG_VERSIONS => 0;
 use constant DEBUG_PRESSES => 0;
 use constant DEBUG_FILTERING => 0;
 use constant DEBUG_INITIAL_FILTERING => 0;
-use constant DEBUG_AFTER_FILTERING => 1;
+use constant DEBUG_AFTER_FILTERING => 0;
 use constant DEBUG_PRICE_DECISIONS => 0;
 use constant DEBUG_INKS => 0;
 use constant DEBUG_STOCK => 0;
@@ -3217,8 +3217,8 @@ $log->debug("$_ $$stock_qty{$_}");
 			( defined $$price{'Aqueous Breakdown'} ? $$price{'Aqueous Breakdown'} : '' ),
 			( defined $$price{'Cutting Breakdown'} ? $$price{'Cutting Breakdown'} : '' ),
 			( defined	$$price{'Numbering Breakdown'} ? $$price{'Numbering Breakdown'} : '' ),
-			( defined $$price{'DieCutting Breakdown'} ? $$price{'DieCutting Breakdown'}: '' ),
-			$$price{'Folding Breakdown'},
+			( defined $$price{'DieCutting Breakdown'} ? $$price{'DieCutting Breakdown'} : '' ),
+			( defined $$price{'Folding Breakdown'} ? $$price{'Folding Breakdown'} : '' ),,
 			( defined $$price{'Scoring Breakdown'} ? 'Scoring: '.$$price{'Scoring Breakdown'} : '' ),
 			( defined $$price{'Perforating Breakdown'} ? $$price{'Perforating Breakdown'} : '' ),
 			);
@@ -7399,9 +7399,9 @@ $openprint::log->warn("Unknown printing type in sig $$sig_specs{SignatureIndex} 
 			my $cover_type;
 			if ( $cover_imposition ) {
 				$cover_type = $cover_imposition->Press()->specification('Printing Type');
-			} elsif ( ( ! $$specs{PrintingTypes} ) and ( $$specs{'OverridePrintingType'.$qty_index} ne 'Y' ) ) {
+			} elsif ( ! ( $$specs{PrintingTypes} and $$specs{'OverridePrintingType'.$qty_index} ) ) {
 				my $cover_specs;
-				foreach my $index ( $Project->signatures({'type'=>'Cover Pages'}) ) {
+				foreach my $index ( $Project->signatures({ type=>'Cover Pages'}) ) {
 					$cover_specs = openprint::service::get_specs_ref( $Project, $index );
 					last;
 				} # end foreach
