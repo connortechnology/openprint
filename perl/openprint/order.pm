@@ -415,13 +415,6 @@ sub save_project_information {
 		} # end if
 	} # end if
 
-	if ( $param{'ddmDueDateYear'.$project_index} and $param{'ddmDueDateMonth'.$project_index} and $param{'ddmDueDateDay'.$project_index} ) {
-
-		if ( ! Date::Calc::check_date(1*$param{'ddmDueDateYear'.$project_index},1*$param{'ddmDueDateMonth'.$project_index},1*$param{'ddmDueDateDay'.$project_index})) {
-			return q{Date is not valid. Please select a correct date.};
-		} # end if
-		$OP->requested_for( sprintf('%.4d-%.2d-%.2d', @param{'ddmDueDateYear'.$project_index,'ddmDueDateMonth'.$project_index,'ddmDueDateDay'.$project_index} ) );
-	} # end if
 
 
 	# If we are specifying the Shipping Type
@@ -493,6 +486,14 @@ sub save_project_information {
 		} elsif ( $quantity_shipped < 0 ) {
 			$error .= $quantity_shipped . ' more items are being shipped or picked up than are being ordered.';	
 		} # end if
+	} # end if
+
+	if ( $param{'requested_for'.$project_index.'_year'} and $param{'requested_for'.$project_index.'_month'} and $param{'requested_for'.$project_index.'_day'} ) {
+
+		if ( ! Date::Calc::check_date( map { 1*$param{join('','requested_for',$project_index,'_',$_)} } ( 'year','month','day' ) ) ) {
+			return q{Date is not valid. Please select a correct date.};
+		} # end if
+		$OP->requested_for( sprintf('%.4d-%.2d-%.2d', map { @param{'requested_for'.$project_index.'_'.$_} } ( 'year','month','day' ) ) );
 	} # end if
 
 	$error .= $Project->save({reference=> $param{"Reference$project_index"}} ) if $param{"Reference$project_index"} and $param{"Reference$project_index"} ne $Project->reference();

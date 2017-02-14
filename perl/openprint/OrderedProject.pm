@@ -31,7 +31,11 @@ $serial = 'order_contents_id_seq';
 );
 
 sub Project {
-	return new openprint::Project( $_[0]{'project_id'} );
+	if ( ! $_[0]{Project} ) {
+		$_[0]{Project} = new openprint::Project( $_[0]{'project_id'} );
+		$_[0]{Project}{OrderedProject} = $_[0];
+	}
+	return $_[0]{Project};
 } # end sub Project
 
 sub cost {
