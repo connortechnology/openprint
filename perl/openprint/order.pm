@@ -1,4 +1,5 @@
 use strict;
+use warnings;
 package openprint::order;
 
 require Email::Valid;
@@ -421,19 +422,12 @@ sub save_project_information {
 		} # end if
 	} # end if
 
-	if ( $param{'ddmDueDateYear'.$project_index} and $param{'ddmDueDateMonth'.$project_index} and $param{'ddmDueDateDay'.$project_index} ) {
-
-		if ( ! Date::Calc::check_date(1*$param{'ddmDueDateYear'.$project_index},1*$param{'ddmDueDateMonth'.$project_index},1*$param{'ddmDueDateDay'.$project_index})) {
-			return q{Date is not valid. Please select a correct date.};
-		} # end if
-		$OP->requested_for( sprintf('%.4d-%.2d-%.2d', @param{'ddmDueDateYear'.$project_index,'ddmDueDateMonth'.$project_index,'ddmDueDateDay'.$project_index} ) );
-	} # end if
 
 
 	# If we are specifying the Shipping Type
 	if ( $param{'ShippingType'.$project_index} ) {
 		my $quantity_shipped = $Project->ordered_quantity();
-		my @ServiceTypes = openprint::ServiceType->find('category'=>'Shipping');
+		my @ServiceTypes = openprint::ServiceType->find( category=>'Shipping');
 		my $services = $Project->services();
 		my $ProjectCurrency = $Project->Currency();
 		$log->debug("ServiceTypes: " . join(',',map { $_->name() } @ServiceTypes )) if DEBUG;
@@ -499,6 +493,17 @@ sub save_project_information {
 		} elsif ( $quantity_shipped < 0 ) {
 			$error .= $quantity_shipped . ' more items are being shipped or picked up than are being ordered.';	
 		} # end if
+	} # end if
+
+	if ( $param{'ddmDueDateYear'.$project_index} and $param{'ddmDueDateMonth'.$project_index} and $param{'ddmDueDateDay'.$project_index} ) {
+
+		if ( ! Date::Calc::check_date(1*$param{'ddmDueDateYear'.$project_index},1*$param{'ddmDueDateMonth'.$project_index},1*$param{'ddmDueDateDay'.$project_index})) {
+			return q{Date is not valid. Please select a correct date.};
+		} # end if
+		$log->debug("Setting requested for to " . sprintf('%.4d-%.2d-%.2d', @param{'ddmDueDateYear'.$project_index,'ddmDueDateMonth'.$project_index,'ddmDueDateDay'.$project_index} ) );
+		$OP->requested_for( sprintf('%.4d-%.2d-%.2d', @param{'ddmDueDateYear'.$project_index,'ddmDueDateMonth'.$project_index,'ddmDueDateDay'.$project_index} ) );
+	} else {
+		$log->debug("NO due date given: " . join(',',@param{'ddmDueDateYear'.$project_index,'ddmDueDateMonth'.$project_index,'ddmDueDateDay'.$project_index} ) );
 	} # end if
 
 	$error .= $Project->save({reference=> $param{"Reference$project_index"}} ) if $param{"Reference$project_index"} and $param{"Reference$project_index"} ne $Project->reference();
