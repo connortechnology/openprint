@@ -926,6 +926,13 @@ sub requested_date {
 	} # end if
 	return $$OP{requested_for};
 } # end sub requested_date
+sub requested_for {
+	my $OP = $_[0]->Ordered_Project();
+	if ( @_ > 1 ) {
+		$$OP{requested_for} = $_[1];
+	} # end if
+	return $$OP{requested_for};
+} # end sub requested_for
 
 sub shippingtype {
 	my $OP = $_[0]->Ordered_Project();
