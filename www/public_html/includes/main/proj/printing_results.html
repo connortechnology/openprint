@@ -429,11 +429,11 @@
 		foreach my $qty_index ( $$variable{Project}->quantity_indexes() ) {
 			$html .= sprintf('<span class="%sColumns">%s Pages %s x %s %s%s%s</span>',
 				$$variable{Columns},
-				input( type=>"number", id=>"PageQuantity$qty_index", name=>"PageQuantity$qty_index", value=>$$variable{'PageQuantity'.$qty_index}, oninput=>'calc(this.form.name);' ),
-				input( type=>"number", name=>"page_columns$qty_index", readonly=>"readonly" ),
-				input( type=>"number", name=>"page_rows$qty_index", readonly=>"readonly" ),
-				input( type=>"hidden", name=>"SpreadRows$qty_index", value=>"SpreadRows$qty_index" ),
-				input( type=>"hidden", name=>"SpreadCols$qty_index", value=>"SpreadCols$qty_index" ),
+				input( type=>'cardinal', id=>"PageQuantity$qty_index", name=>"PageQuantity$qty_index", value=>$$variable{'PageQuantity'.$qty_index}, oninput=>'calc(this.form.name);' ),
+				input( type=>'cardinal', name=>"page_columns$qty_index", readonly=>'readonly' ),
+				input( type=>'cardinal', name=>"page_rows$qty_index", readonly=>'readonly' ),
+				input( type=>'hidden', name=>"SpreadRows$qty_index", value=>"SpreadRows$qty_index" ),
+				input( type=>'hidden', name=>"SpreadCols$qty_index", value=>"SpreadCols$qty_index" ),
 				write_override( 'chkOverridePageQuantity'.$qty_index, $$variable{'chkOverridePageQuantity'.$qty_index},'',"calc('f1');" ),
 				);
 		} # end foreach
@@ -465,37 +465,37 @@ join("\n", map {
 		foreach my $qty_index ( $$variable{Project}->quantity_indexes() ) {
 
 		if ( $$variable{txtSignatureType} ) {
-		$html .= sprintf( '<span class="%sColumns">%s Out %s<br/> %s x %s + %s x %s%s<br/>%s x %s (W x H)</span>%s%s',
-			$$variable{Columns},
-			input( type=>'cardinal', name=>"txtImposition$qty_index", value=>$$variable{'txtImposition'.$qty_index}, oninput=>'calc(this.form.name);' ),
-			write_override( 'chkOverrideImposition'.$qty_index, $$variable{'chkOverrideImposition'.$qty_index},'',"calc('f1');" ),
-			input( type=>'cardinal', name=>"hdnImpositionColumns$qty_index", value=>$$variable{"hdnImpositionColumns$qty_index"}, oninput=>q`calc('f1');` ),
-			input( type=>'cardinal', name=>"hdnImpositionRows$qty_index", value=>$$variable{"hdnImpositionRows$qty_index"}, oninput=>q`calc('f1');` ),
-			input( type=>'cardinal', name=>"hdnImpositionDutchColumns$qty_index", value=>$$variable{"hdnImpositionDutchColumns$qty_index"}, oninput=>q`calc('f1');` ),
-			input( type=>'cardinal', name=>"hdnImpositionDutchRows$qty_index", value=>$$variable{"hdnImpositionDutchRows$qty_index"}, oninput=>q`calc('f1');` ),
-			write_override( 'OverrideImpositionLayout'.$qty_index, $$variable{'OverrideImpositionLayout'.$qty_index},'',"calc('f1');" ),
-			input( type=>'float', readonly=>"readonly", name=>"txtLayoutWidth$qty_index" ),
-			input( type=>'float', readonly=>"readonly", name=>"txtLayoutHeight$qty_index" ),
-			input( type=>"hidden", name=>"txtImageWidth$qty_index" ),
-			input( type=>"hidden", name=>"txtImageHeight$qty_index" ),
-			);
+			$html .= sprintf( '<span class="%sColumns">%s Out %s<br/> %s x %s + %s x %s%s<br/>%s x %s (W x H)</span>%s%s',
+				$$variable{Columns},
+				input( type=>'cardinal', name=>"txtImposition$qty_index", value=>$$variable{'txtImposition'.$qty_index}, oninput=>'calc(this.form.name);' ),
+				write_override( 'chkOverrideImposition'.$qty_index, $$variable{'chkOverrideImposition'.$qty_index},'',"calc('f1');" ),
+				input( type=>'cardinal', name=>"hdnImpositionColumns$qty_index", value=>$$variable{"hdnImpositionColumns$qty_index"}, oninput=>q`calc('f1');` ),
+				input( type=>'cardinal', name=>"hdnImpositionRows$qty_index", value=>$$variable{"hdnImpositionRows$qty_index"}, oninput=>q`calc('f1');` ),
+				input( type=>'cardinal', name=>"hdnImpositionDutchColumns$qty_index", value=>$$variable{"hdnImpositionDutchColumns$qty_index"}, oninput=>q`calc('f1');` ),
+				input( type=>'cardinal', name=>"hdnImpositionDutchRows$qty_index", value=>$$variable{"hdnImpositionDutchRows$qty_index"}, oninput=>q`calc('f1');` ),
+				write_override( 'OverrideImpositionLayout'.$qty_index, $$variable{'OverrideImpositionLayout'.$qty_index},'',"calc('f1');" ),
+				input( type=>'float', readonly=>'readonly', name=>"txtLayoutWidth$qty_index" ),
+				input( type=>'float', readonly=>'readonly', name=>"txtLayoutHeight$qty_index" ),
+				input( type=>'hidden', name=>"txtImageWidth$qty_index" ),
+				input( type=>'hidden', name=>"txtImageHeight$qty_index" ),
+				);
 		} else {
-		$html .= sprintf( '<span class="%sColumns">%s Out %s Dutch?: %s <br/> %s x %s + %s x %s%s<br/>%s x %s (W x H)</span>%s%s',
-			$$variable{Columns},
-			input( type=>'cardinal', name=>"txtImposition$qty_index", value=>$$variable{'txtImposition'.$qty_index}, oninput=>'calc(this.form.name);' ),
-			write_override( 'chkOverrideImposition'.$qty_index, $$variable{'chkOverrideImposition'.$qty_index},'',"calc('f1');" ),
-			radio( 'dutch'.$qty_index, [ 'Y', 'Yes', 'N', 'No' ], $$variable{'dutch'.$qty_index}, { onclick=>q`calc('f1');` } ),
-			input( type=>'cardinal', name=>"hdnImpositionColumns$qty_index", value=>$$variable{"hdnImpositionColumns$qty_index"}, oninput=>q`calc('f1');` ),
-			input( type=>'cardinal', name=>"hdnImpositionRows$qty_index", value=>$$variable{"hdnImpositionRows$qty_index"}, oninput=>q`calc('f1');` ),
-			input( type=>'cardinal', name=>"hdnImpositionDutchColumns$qty_index", value=>$$variable{"hdnImpositionDutchColumns$qty_index"}, oninput=>q`calc('f1');` ),
-			input( type=>'cardinal', name=>"hdnImpositionDutchRows$qty_index", value=>$$variable{"hdnImpositionDutchRows$qty_index"}, oninput=>q`calc('f1');` ),
-			write_override( 'OverrideImpositionLayout'.$qty_index, $$variable{'OverrideImpositionLayout'.$qty_index},'',"calc('f1');" ),
-			input( type=>'float', readonly=>"readonly", name=>"txtLayoutWidth$qty_index" ),
-			input( type=>'float', readonly=>"readonly", name=>"txtLayoutHeight$qty_index" ),
-			input( type=>"hidden", name=>"txtImageWidth$qty_index" ),
-			input( type=>"hidden", name=>"txtImageHeight$qty_index" ),
-			);
-		} # end if
+			$html .= sprintf( '<span class="%sColumns">%s Out %s Dutch?: %s <br/> %s x %s + %s x %s%s<br/>%s x %s (W x H)</span>%s%s',
+				$$variable{Columns},
+				input( type=>'cardinal', name=>"txtImposition$qty_index", value=>$$variable{'txtImposition'.$qty_index}, oninput=>'calc(this.form.name);' ),
+				write_override( 'chkOverrideImposition'.$qty_index, $$variable{'chkOverrideImposition'.$qty_index},'',"calc('f1');" ),
+				radio( 'dutch'.$qty_index, [ 'Y', 'Yes', 'N', 'No' ], $$variable{'dutch'.$qty_index}, { onclick=>q`calc('f1');` } ),
+				input( type=>'cardinal', name=>"hdnImpositionColumns$qty_index", value=>$$variable{"hdnImpositionColumns$qty_index"}, oninput=>q`calc('f1');` ),
+				input( type=>'cardinal', name=>"hdnImpositionRows$qty_index", value=>$$variable{"hdnImpositionRows$qty_index"}, oninput=>q`calc('f1');` ),
+				input( type=>'cardinal', name=>"hdnImpositionDutchColumns$qty_index", value=>$$variable{"hdnImpositionDutchColumns$qty_index"}, oninput=>q`calc('f1');` ),
+				input( type=>'cardinal', name=>"hdnImpositionDutchRows$qty_index", value=>$$variable{"hdnImpositionDutchRows$qty_index"}, oninput=>q`calc('f1');` ),
+				write_override( 'OverrideImpositionLayout'.$qty_index, $$variable{'OverrideImpositionLayout'.$qty_index},'',"calc('f1');" ),
+				input( type=>'float', readonly=>'readonly', name=>"txtLayoutWidth$qty_index" ),
+				input( type=>'float', readonly=>'readonly', name=>"txtLayoutHeight$qty_index" ),
+				input( type=>'hidden', name=>"txtImageWidth$qty_index" ),
+				input( type=>'hidden', name=>"txtImageHeight$qty_index" ),
+				);
+			} # end if
 		} # end foreach
 		return $html;
 	) ?>
