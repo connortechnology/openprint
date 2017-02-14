@@ -620,7 +620,7 @@ sub calc {
 	} # end if
 
 	foreach my $qty_index ( $Project->quantity_indexes() ) {
-		$$specs{'txtPrice'.$qty_index} =~ s/[^\d\.]//g;
+		$$specs{'txtPrice'.$qty_index} =~ s/[^\d\.]//g if $$specs{'txtPrice'.$qty_index};
 		$$specs{'txtQuantity'.$qty_index} =~ s/[^\d\.]//g;
 		$$specs{'txtQuantity'.$qty_index} = $Project->quantity($qty_index) if ! $$specs{'txtQuantity'.$qty_index};
 
@@ -640,7 +640,10 @@ sub calc {
 			my $sig_specs = openprint::service::get_specs_ref( $Project, $signature_service_index );
 			next if ! $$sig_specs{"txtImposition$qty_index"};
 			my $form = $$sig_specs{SignatureIndex};
-			if ( $folding_specs and $$folding_specs{"chkOverrideEquipment-$form-$qty_index"} eq 'Y' and ! $$folding_specs{"ddmEquipment-$form-$qty_index"} ) {
+			if ( $folding_specs and 
+					( ! $$folding_specs{"ddmEquipment-$form-$qty_index"} ) and 
+					( $$folding_specs{"chkOverrideEquipment-$form-$qty_index"} )
+				 ) {
 				$openprint::log->debug("Overrode folding to nothing.");
 			} # end if
 			my $Imposition = new openprint::Imposition();
@@ -847,7 +850,7 @@ sub get_price {
 	my $MakeReadyService = openprint::Service->find_one( name=>join('',$$ServiceType{name},'MakeReady',$price{Imposition},'out' ) );
 	$MakeReadyService = openprint::Service->find_one( name=>join('',$$ServiceType{name},'MakeReady') ) if ! $MakeReadyService;
 
-	my $maxPockets = 1*$Equipment->specification( 'Number of Pockets', undef );
+	my $maxPockets = $Equipment->specification( 'Number of Pockets', undef );
 	my $neededPockets = $pockets;
 	my $PocketMakeReady = $Equipment->Specification( 'Pocket Make Ready', undef );
 
@@ -947,6 +950,8 @@ sub get_price {
 				$$MakeReadyPrice{Total} = $$MakeReadyPrice{Price};
 				$pass{MakeReadyPrice} = $MakeReadyPrice;
 				$price{MakeReadyTotal} += $$MakeReadyPrice{Total}
+			} else {
+				$openprint::log->debug("No Makeready Price on $$Equipment{strid}" . $MakeReadyService->to_string() );
 			}
 		} elsif ( DEBUG ) {
 			$openprint::log->debug("No Makeready Service");
@@ -1041,13 +1046,14 @@ sub get_price {
 		} # end if Exact } # end if requires exact or not
 #FIXME
 	#if ( $Project->signatures({'type'=>'Gate Folded Pages'}) ) {
+	if ( $$specs{'txtSignatureQtySingleGateFolded'.$qty_index} or $$specs{'txtSignatureQtyDoubleGateFolded'.$qty_index} ) {
 		my $gateFolds = $$specs{'txtSignatureQtySingleGateFolded'.$qty_index} + $$specs{'txtSignatureQtyDoubleGateFolded'.$qty_index};
 		if ( ( $gateFolds > 0 ) and ( $$specs{rdbGateFoldFit} eq 'Exact' ) ) {
 			$price{Service} += openprint::service::get_price( $$ServiceType{name}, $gateFolds, $Equipment );
 			my $GateFoldFitMakeReady = $MakeReadyService->get_Price( $gateFolds, $Equipment );
 			$price{MakeReady} += $$GateFoldFitMakeReady{Price};
 		} # end if
-	#} # end if
+	} # end if
 
 	if ( $price{'Calliper Markup'} = $Equipment->specification( 'Calliper Price Adjustment', $$specs{txtCalliper} ) ) {
 		$price{Service} *= ( 1 + $price{'Calliper Markup'}/100);
@@ -1069,7 +1075,7 @@ sub get_price {
 	} # end if
 
 	$price{Price} = Math::Round::nearest(0.01,$price{MakeReadyTotal} + $price{Service} + $price{Insert});
-	$openprint::log->debug($price{Imposition} . 'out on ' .$Equipment->name() . ' Discount: ' . $price{'Imposition Discount'} ) if DEBUG;
+	$openprint::log->debug($price{Imposition} . 'out on ' .$Equipment->name() . ($price{'Imposition Discount'} ?' Discount: ' . $price{'Imposition Discount'}:'') ) if DEBUG;
 	return \%price;
 } # end sub get_price
 
