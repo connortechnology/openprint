@@ -341,7 +341,12 @@ sub load {
 #,'rotate_sheet',
 	$$self{runstyle} = $$specs{'ddmRunStyle'.$qty_index};
 	$$self{runstyle} = 'Sheet Work' if ! $$self{runstyle};
-	$$self{image_orientation} = $$specs{'hdnImageOrientation'.$qty_index};
+	$$self{image_orientation_text} = $$specs{'hdnImageOrientation'.$qty_index};
+	if ( $$self{image_orientation_text} eq 'Vertical' ) {
+		$$self{image_orientation} = Vertical;
+	} else {
+		$$self{image_orientation} = Horizontal;
+	}
 	$$self{grain_direction} = $$specs{'rdbGrainDirection'.$qty_index};
 	$$self{bleed_size} = $$specs{'ddmBleedSize'.$qty_index};
 	$$self{rotate_sheet} = $$specs{"RotateSheet$qty_index"};
