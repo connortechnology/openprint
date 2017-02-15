@@ -806,12 +806,12 @@ sub get_scores {
 		my $width_folds = Math::Round::nearest( 1, $$sig_specs{txtWidth}/$$sig_specs{txtFinalWidth})-1 if $$sig_specs{txtFinalWidth};
 		my $height_folds = Math::Round::nearest( 1, $$sig_specs{txtHeight}/$$sig_specs{txtFinalHeight})-1 if $$sig_specs{txtFinalHeight};
 		$openprint::log->debug("Width folds: $width_folds height folds: $height_folds template $$sig_specs{rdbTemplateType} $$sig_specs{txtWidth}/$$sig_specs{txtFinalWidth} $$sig_specs{txtHeight}/$$sig_specs{txtFinalHeight}") if DEBUG;
-		if ( sets::isin( $$sig_specs{rdbTemplateType}, 'Portrait', 'Landscape' ) ) {
+		if ( ( $$sig_specs{rdbTemplateType} eq 'Portrait' ) or ( $$sig_specs{rdbTemplateType} eq 'Landscape' ) ) {
 # needs no folding
 		} elsif ( sets::isin( $$sig_specs{rdbTemplateType}, ['4PageSignatureFold','2PanelFold','BusCardLandscapeFold','BusCardPortraitFold']) ) {
 			$$specs{"txtVerticalQty-$form"} = 1;
 			$$specs{"txtHorizontalQty-$form"} = 0;
-		} elsif ( sets::isin( $$sig_specs{rdbTemplateType}, '3PanelFold', '3PanelZFold' ) ) {
+		} elsif ( $$sig_specs{rdbTemplateType} =~ /3PanelZ?Fold/ ) {
 			$$specs{"txtVerticalQty-$form"} = $width_folds;
 			$$specs{"txtHorizontalQty-$form"} = $height_folds;
 		} elsif ( sets::isin( $$sig_specs{rdbTemplateType}, 'AccordianFold') ) {
@@ -823,16 +823,16 @@ sub get_scores {
 			} else {
 				$$specs{"txtHorizontalQty-$form"} = 3;
 			} # end if
-		} elsif ( sets::isin( $$sig_specs{rdbTemplateType}, '5PanelFold', '5PanelZFold') ) {
+		} elsif ( $$sig_specs{rdbTemplateType} =~ /5PanelZ?Fold/ ) {
 			$$specs{"txtVerticalQty-$form"} = $width_folds;
 			$$specs{"txtHorizontalQty-$form"} = $height_folds;
-		} elsif ( sets::isin( $$sig_specs{rdbTemplateType}, '6PanelFold', '6PanelZFold' ) ) {
+		} elsif ( $$sig_specs{rdbTemplateType} =~ /6PanelZ?Fold/ ) {
 			$$specs{"txtVerticalQty-$form"} = $width_folds;
 			$$specs{"txtHorizontalQty-$form"} = $height_folds;
-		} elsif ( sets::isin( $$sig_specs{rdbTemplateType}, 'SingleGateFold' ) ) {
+		} elsif ( $$sig_specs{rdbTemplateType} eq 'SingleGateFold' ) {
 			$$specs{"txtVerticalQty-$form"} = 2;
 			$$specs{"txtHorizontalQty-$form"} = 0;
-		} elsif ( sets::isin( $$sig_specs{rdbTemplateType}, 'DoubleGateFold' ) ) {
+		} elsif ( $$sig_specs{rdbTemplateType} eq 'DoubleGateFold' ) {
 			$$specs{"txtVerticalQty-$form"} = 3;
 			$$specs{"txtHorizontalQty-$form"} = 0;
 		} elsif ( sets::isin( $$sig_specs{rdbTemplateType}, 'PF1Pocket', 'PF2Pocket' ) ) {
@@ -963,7 +963,6 @@ sub fits_on_equipment {
 
 	if ( $max_feed_width ) {
 
-
 		if ( $orientation ) {
 			if (
 					( $orientation eq 'Portrait' and $I->layout_width() <= $I->layout_height() ) or
@@ -981,17 +980,17 @@ sub fits_on_equipment {
 			if ( $vertical_scores and $horizontal_scores ) {
 # Do nothing, we already know it fits on the machine, and it has to go one way or another.
 			} elsif ( $vertical_scores ) {
-				if ( $I->image_orientation() == openprint::Imposition::Vertical ) {
+				if ( $$I{image_orientation} == openprint::Imposition::Vertical ) {
 					if ( $height >= $max_feed_width ) {
-						return "Scoring no good due to max feed width($max_feed_width) on height (".$height.").<br/>";
+						return "Scoring no good due to max feed width($max_feed_width) on height ($height).<br/>";
 					} # end if
 				} else {
 					if ( $width >= $max_feed_width ) {
-						return "Scoring no good due to max feed width($max_feed_width) on width (".$width.").<br/>";
+						return "Scoring no good due to max feed width($max_feed_width) on width ($width).<br/>";
 					} # end if
 				} # end if
 			} elsif ( $horizontal_scores ) {
-				if ( $I->image_orientation() == openprint::Imposition::Vertical ) {
+				if ( $$I{image_orientation} == openprint::Imposition::Vertical ) {
 					if ( $width >= $max_feed_width ) {
 						return "Scoring no good due to max feed width($max_feed_width) on width (".$width.").<br/>";
 					} # end if
@@ -1004,7 +1003,7 @@ sub fits_on_equipment {
 				return 'Running ' . $height . ' on feed of ' . $max_feed_width . '<br/>';
 			} # end if
 		} # end if orientation or not
-	} # end if max_feed)wudetg
+	} # end if max_feed
 	if ( ( $_ = $Equipment->specification('Maximum Imposition') ) and ( $_ < $$I{imposition} ) ) {
 		return "Imposition $$I{imposition}out too high. Maximum: $_<br/>";
 	} # end if
