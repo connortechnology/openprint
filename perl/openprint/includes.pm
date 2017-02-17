@@ -169,5 +169,7 @@ sub _specification {
 	my $Spec = $variable{Spec} = new openprint::Object_Specification($param{spec_id});
 } # end sub _specification
 
+sub _location_ddm {
+}
 1;
 __END__

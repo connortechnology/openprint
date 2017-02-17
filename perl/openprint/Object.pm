@@ -371,7 +371,7 @@ $log->debug("No serial") if $debug;
 #$log->debug("after delete");
 	eval 'if ( %'.$type.'::find_cache ) { %'.$type.'::find_cache = (); }';
 #$log->debug("after clear cache");
-	return;
+	return '';
 } # end sub save
 
 sub get {

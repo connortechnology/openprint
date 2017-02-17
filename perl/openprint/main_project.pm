@@ -172,7 +172,6 @@ sub _calc {
 
 sub calc {
 	my $debug = @_ ? $_[0] : 1;
-$log->debug("Project Index is ($param{ProjectIndex})");
 	my $Project = undef;
 	if ( $param{ProjectIndex} ) {
 		$Project = openprint::Project->find_one( id=>$param{ProjectIndex} );
@@ -260,7 +259,7 @@ $log->debug("Project Index is ($param{ProjectIndex})");
 		foreach my $key ( keys %specs ) {
 			next if ref $specs{$key};
 
-			if ( (exists $param{$key}) and (exists $specs{$key}) and ($specs{$key} eq $param{$key}) ) {
+			if ( (exists $param{$key}) and (exists $specs{$key}) and ( ( (!$specs{$key}) and (!$param{$key}) ) or ( $specs{$key} eq $param{$key} ) ) ) {
 				delete $specs{$key};
 			} elsif ( ! defined $specs{$key} ) {
 				delete $specs{$key};

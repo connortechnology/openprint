@@ -601,7 +601,7 @@ sub setup_project {
 	foreach my $index ( $Project->signatures() ) {
 		next if $index >= $service_index;
 		my $sig_specs = openprint::service::get_specs_ref( $Project, $index );
-		next if $$sig_specs{pages_supplied};
+		next if $$sig_specs{pages_supplied} and ($$sig_specs{pages_supplied} eq 'Y');
 
 		if ( $$sig_specs{Group} and ! exists $project{"Group$$sig_specs{Group}Specs"} ) {
 			my $group_specs = $project{"Group$$sig_specs{Group}Specs"} = {};
@@ -733,10 +733,18 @@ $openprint::log->debug("Adding special colour for $colour");
 	if ( $$services{SaddleStitching} ) {
 		%{$project{StitchingSpecs}} = %{openprint::service::get_specs_ref( $Project, $$services{SaddleStitching}[0] )};
 		$project{HasStitching} = $$services{SaddleStitching}[0];
+
+
 	} elsif ( $$services{LoopStitching} ) {
 		%{$project{StitchingSpecs}} = %{openprint::service::get_specs_ref( $Project, $$services{LoopStitching}[0] )};
 		$project{HasStitching} = $$services{LoopStitching}[0];
 	} # end if
+	if ( $project{HasStitching} ) {
+		%{$project{FoldingStitchingSpecs}} = %{$project{StitchingSpecs}};
+    $project{FoldingStitchingSpecs}{"chkOverrideEquipment1"} = 'Y';
+    $project{FoldingStitchingSpecs}{"chkOverrideEquipment2"} = 'Y';
+    $project{FoldingStitchingSpecs}{"chkOverrideEquipment3"} = 'Y';
+	}
 
 	%{$project{SpinePasteSpecs}} = %{openprint::service::get_specs_ref( $Project, $$services{SpinePaste}[0] )} if $$services{SpinePaste};
 	if ( $$services{PerfectBound} ) {
@@ -2092,7 +2100,7 @@ sub set_size {
 
 	} elsif ( $Project->Type()->name() eq 'ScratchPads' ) {
 # Technically, something like a coil bound could be 2pg spread, just need two of them.  
-            if ( $$specs{OverrideSpreadSize} ne 'Y' ) {
+            if ( ! $$specs{OverrideSpreadSize} ) {
                 $$specs{txtSpreadSize} = 1;
                 $variables{txtSpreadSize} = [ sets::union( 'output', @{$variables{txtSpreadSize}} ) ];
             } # end if
@@ -2183,7 +2191,7 @@ sub set_size {
 		} elsif ( $$specs{txtSignatureType} eq 'Cover Pages' ) {
 
 			# Technically, something like a coil bound could be 2pg spread, just need two of them.	
-			if ( $$specs{OverrideSpreadSize} ne 'Y' ) {
+			if ( ! $$specs{OverrideSpreadSize} ) {
 				$$specs{txtSpreadSize} = ( $$specs{GroupPageQuantity} > 6 ? 4 : $$specs{GroupPageQuantity} );
 				$variables{txtSpreadSize} = [ sets::union( 'output', @{$variables{txtSpreadSize}} ) ];
 			} else {
@@ -2251,7 +2259,7 @@ $log->debug("Using spine ehgiht");
 			$$specs{txtFinalWidth} = $$printing_specs{txtFinalWidth};
 			$$specs{txtFinalHeight} = $$printing_specs{txtFinalHeight};
 		} else { # not folder, not cover
-			if ( (!$$specs{OverrideSpreadSize}) or ($$specs{OverrideSpreadSize} ne 'Y') ) {
+			if ( !$$specs{OverrideSpreadSize} ) {
 				if ( $Project->Type()->name() eq 'ScratchPads' ) {
 					$$specs{txtSpreadSize} = 1;
 				} else {
@@ -3086,7 +3094,7 @@ sub save_price( $$$$$ ) {
 	$$specs{'Runspeed'.$qty_index} = $$price{Runspeed};
 
 	if ( ( ! defined $$specs{'OverridePrice'.$qty_index} ) or $$specs{'OverridePrice'.$qty_index} ne 'Y' ) {
-		if ( $$specs{pages_supplied} ) {
+		if ( $$specs{pages_supplied} and ( $$specs{pages_supplied} eq 'Y' ) ) {
 			$$specs{'txtPrice'.$qty_index} = sprintf($openprint::config{ProjectMoneyFormat}, 0 );
 		} else {
 			my $total_price = $$price{'Total Cost'};
@@ -3108,7 +3116,7 @@ sub save_price( $$$$$ ) {
 	if ( $_ = $$specs{'Markup'.$qty_index} ) {
 		$mprice *= (1+($_/100));
 	}
-	if ( $_ = $Project->markup($qty_index) ) {
+	if ( $_ = $Project->markup() ) {
 		$mprice *= (1+($_/100));
 	}
 
@@ -3311,7 +3319,6 @@ $openprint::log->debug("Project Specs $$project{ProjectSpecs} Gruop $$sig_specs{
 		if ( $needed_pages ) {
 			my %max_impositions;
 			foreach my $I ( @press_impositions ) {
-$I->display("need $needed_pages");
 				next if $needed_pages < $$I{pages};
 				$max_impositions{$$I{pages}} = $$I{imposition} if (!exists $max_impositions{$$I{pages}}) or $$I{imposition} > $max_impositions{$$I{pages}};
 			} # end foreach
@@ -4180,6 +4187,7 @@ sub get_project_price {
 #$base_imp->display("Starting");
 # But if we alraedy know how to fold this impo... then.....
 		$$base_imp{Project} = $Project;
+$base_imp->display("ERROR SPINE DIRECTION base_imp " . $$base_imp{spine_direction} );
 		my $imp = $base_imp->copy();
 		my $Press = $imp->Press();
 		
@@ -4903,7 +4911,7 @@ $imp->display('[warn]');
 					} else {
 						my $Price = $$results{Price};
 						$$price{'Stitching Breakdown'} .= sprintf('Stitching (%s) (%s) %dout on %s Price: $%.2f<br/>', @$results{'Status','alert','Imposition'},$$results{Equipment}{strid}, $$Price{Price} );
-						#$$price{'Stitching Breakdown'} .= $$results{Breakdown};
+						$$price{'Stitching Breakdown'} .= "breakdown($$results{Breakdown})";
 						$$price{'Stitching Cost'} = $$Price{Price};
 						$$price{'Comparison Cost'} += $$Price{Price};
 						$$price{'Comparison Log'} .= 'Stitching: ' .	$$Price{Price} . '<br/>';
@@ -5447,6 +5455,7 @@ sub calc_price {
 			$openprint::log->debug("Using cached folding");
 		} else {
 #my @all_impositions = ( @{$other_impositions}, $Imposition );
+$Imposition->display("SPINE DIRECTION ebfore folding " . $$Imposition{spine_direction} );
 			$folding_results = openprint::Estimating::Folding::signature_calc( $Project, $specs, $$project{FoldingSpecs}, $qty_index, $Imposition, $other_impositions, $project );
 			$price{folding_results} = $$Imposition{folding_results} = $folding_results;
 		} # end if
@@ -6849,8 +6858,8 @@ sub compare_signatures_no_results {
 			'Group', 'rdbSuppliedStock','rdbSpecificStock','txtEmployeeComments',
 			) {
 		next if $exclude and sets::isin( $key, $exclude );
-		if ( ! ( (!$$sig1{$key} and ! $$sig2{$key} ) or ( $$sig1{$key} and $$sig2{$key} and $$sig1{$key} eq $$sig2{$key} ) ) ) {
-$openprint::log->debug("Not the same $key $$sig1{ServiceIndex} $$sig2{ServiceIndex} $$sig1{$key} ne $$sig2{$key}");
+		if ( ! ( (!$$sig1{$key} and ! $$sig2{$key} ) or ( $$sig1{$key} and $$sig2{$key} and ( $$sig1{$key} eq $$sig2{$key} ) ) ) ) {
+$openprint::log->debug("Not the same $key $$sig1{ServiceIndex} $$sig2{ServiceIndex} $$sig1{$key} ne $$sig2{$key}") if DEBUG;
 			return 0;
 		} # end if
 	} # end foreach
@@ -7138,7 +7147,7 @@ if ( 0 ) {
 			$string .= ' ' . $$specs{txtStockGSM}.'gsm' if $openprint::config{Show_Stock_GSM} ne 'N';
 		} # end if ! NoPrinting
 
-		if ( $$specs{pages_supplied} ) {
+		if ( $$specs{pages_supplied} and ( $$specs{pages_supplied} eq 'Y' ) ) {
 			$string .= ' pages supplied by customer as ';
 			if ( $$specs{supplied_format} eq 'Sheets' ) {
 				$string .= ' flat sheets.';
@@ -7287,7 +7296,7 @@ sub get_colour_description {
 				next if ! $$specs{"chkColourCoating$index$side"};
 				my $type = $$specs{"ColourCoatingType$index$side"};
 				next if ! $type;
-				next if $$specs{"chkColourCoatingColour$index$side"} eq 'None';
+				next if $$specs{"chkColourCoatingColour$index$side"} and ( $$specs{"chkColourCoatingColour$index$side"} eq 'None' );
 
 				if ( $type =~ /Aqueous/ or $type =~ /Varnish/ or $type =~ /UV/ ) {
 #Changes made on june-19-2008
@@ -7486,7 +7495,7 @@ sub setup_counts {
 		foreach my $index ( $Project->signatures( { sort=>1 } ) ) {
 # Get plates in each previous signature, so we can get qty discounts
 			my $sig_specs = openprint::service::get_specs_ref( $Project, $index );
-			if ( $$sig_specs{pages_supplied} and ( $$sig_specs{pages_supplied} eq 'Y' ) ) {
+			if ( $$sig_specs{pages_supplied} ) {
 				$openprint::log->debug("pages supplied");
 				next;
 			}

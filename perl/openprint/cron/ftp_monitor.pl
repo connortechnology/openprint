@@ -2,7 +2,7 @@
 use utf8;
 use lib '/etc/apache2/lib/perl';
 use strict;
-#use warnings;
+use warnings;
 
 require configuration;
 require sql;
@@ -13,6 +13,8 @@ require openprint::User;
 require Email::Valid;
 require openprint::Email;
 require openprint::User_Notification;
+require openprint::Host;
+require openprint::Host_Interface;
 require logger;
 require openprint::Upload;
 require openprint;
@@ -867,14 +869,19 @@ sub take_evasive_action {
 		sleep(1);
 	} # enw hwhile no db connection
 
-	my $User = openprint::User->find_one('email lc'=>lc $username, ftp_active=>'Y' );
+	my $User = openprint::User->find_one('email lc'=>lc $username, ftp_active=>1 );
+	if ( ! $User ) {
+		$log->warn("unable to load ftpable user account for $username");
+		return;
+	} # end if
+	$User = openprint::User->find_one('email lc'=>lc $username );
 	if ( ! $User ) {
 		$log->warn("unable to load insecure user account for $username");
 		return;
 	} # end if
 
 	my $Company = $User->Company();
-	my @To = ( $config{TechSupportEmail} );
+	my @To = ( $config{TechSupportEmail}, $username );
 
 	if ( $Company->salesrep_id() ) {
 		push @To, $Company->CSR();
@@ -883,19 +890,21 @@ sub take_evasive_action {
 	my %variable;
 	$variable{Company} = $Company;
 	$variable{User} = $User;
+$log->debug("Email sent to @To from $config{TechSupportEmail}");
 
 	$variable{ReplacementText} = ssi::include( '/email_content/ftp_account_compromised.html', \%variable );
 	if ( $variable{ReplacementText} ) {
-		my $email_template = misc::load_file( $log, $config{skin_path} . '/email_template.html' );
-		my $body = ssi::variable_substitution( undef, $log, $dbh, \$email_template, \%variable );
+		my $email_template = ssi::slurp_content( '/email_template.html' );
+		my $body = ssi::variable_substitution( \$email_template, \%variable );
 		my $Mail = new openprint::Email();
-		$Mail->send(
+		$Mail->html_body( $body );
+		$_ = $Mail->send(
 				FROM    =>	$config{TechSupportEmail},
 				TO      =>	\@To,
 				SUBJECT =>	'FTP Account compromised',
-				ATTACHMENTS => [ '', encode_qp(Encode::encode('utf-8',$body)), 'text/html', 'quoted-printable' ]
 			);
-		$_ = $User->save({ ftp_active=>'N', change_password=>'Y' });
+		$log->debug("Email sent to $_");
+		$_ = $User->save({ ftp_active=>0, change_password=>'Y' });
 		$log->error($_) if $_;
 	} else {
 		$log->error("No email content for 'ftp_account_compromised.html'");
@@ -922,6 +931,7 @@ sub take_evasive_action {
 						$log->error($_) if $_;
 					} # end if
 					(new openprint::Log())->save({
+							Object		=>	$Host,
 							action	=> 'Intrusion', 
 							note		=> "FTP violation. User account $username",
 							host_id		=> $$Host{id},
@@ -931,7 +941,7 @@ sub take_evasive_action {
 				} # end foreach  Interface
 			} else {
 				my $Host = new openprint::Host();
-				$Host->save({} );
+				$Host->save({});
 				my $Interface = new openprint::Host_Interface();
 				$Interface->save({ ip=>$ip, host_id=>$$Host{id} });
 			} # end if

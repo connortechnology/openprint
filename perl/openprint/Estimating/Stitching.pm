@@ -438,10 +438,10 @@ EQUIPMENT:foreach my $Equipment ( @equipment ) {
 			$openprint::log->debug("Printed impo: @printed_impositions, sitched: $imposition type: $type $$Equipment{strid}") if DEBUG;
 			if ( $type eq 'Press' ) {
 				if ( @printed_impositions > 1 ) {
-					$results{Breakdown} .= sprintf('Printed and stitched imposition must match.<br/>');
+					$results{Breakdown} .= sprintf($$Equipment{strid}. ': Printed and stitched imposition must match.<br/>');
 					next;
 				} # end if
-				if ( $Press->id() != $Equipment->id() ) {
+				if ( $$Press{id} != $$Equipment{id} ) {
 					$results{Breakdown} .= "Press not the same: " . $I->Press()->id() . ' != ' . $Equipment->id() if DEBUG;
 					next;
 				} # end if

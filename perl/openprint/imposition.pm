@@ -292,7 +292,7 @@ $openprint::log->debug("Not Pretrimming on $$Press{strid}") if DEBUG;
 	$$setup1{sides} = $$specs{print_sides};
 	$$setup1{Paper} = $Paper->clone();
 	$$setup1{runstyle} = $run_style;
-	$setup1->image_orientation(openprint::Imposition::Vertical);
+	$$setup1{image_orientation} = openprint::Imposition::Vertical;
 	$setup1->image_orientation_text();
 	$setup1->spread_size( $$specs{txtSpreadSize} );
 	$setup1->bleed_size( $bleed_size );
@@ -315,6 +315,8 @@ $openprint::log->debug("Not Pretrimming on $$Press{strid}") if DEBUG;
 	} # end if
 	$setup1->colour_bar_orientation( $$specs{'Colour Bar Orientation'} );
 	$setup1->grain_direction();
+	$$setup1{spine} = $$specs{ProjectSpecs}{spine};
+	$setup1->spine_direction();
 
 
 	$$setup2{quantity} = 1;
@@ -337,6 +339,8 @@ $openprint::log->debug("Not Pretrimming on $$Press{strid}") if DEBUG;
 	$$setup2{printing_type} = $Press->specification('Printing Type');
 	$setup2->colour_bar_orientation( $$specs{'Colour Bar Orientation'} );
 	$setup2->grain_direction();
+	$$setup2{spine} = $$specs{ProjectSpecs}{spine};
+	$setup2->spine_direction();
 
 	# Grain is on the second dimension by default (according to Rick)
 	
@@ -875,7 +879,7 @@ $openprint::log->debug("Using Single wheel space $$specs{'Perfecting Single Gutt
 					$imp->columns( $$imp{columns} * 2 );
 					$imp->dutch_columns( $$imp{dutch_columns} * 2 );
 					$imp->Paper()->width( $imp->used_width() ) if ! $imp->Paper()->start_width();
-					$openprint::log->debug( sprintf('CHECK 2 Work&Turn Dutch Using Paper %sx%s -> %sx%s Image: %s x %s Imposition: %dout:%dx%d+%dx%d',$paper_width, $paper_height, $adjusted_paper_width, $adjusted_paper_height/2, $setup2->image_height(), $setup2->image_width(), $imp->imposition(), $imp->columns(), $imp->rows(), $imp->dutch_columns(), $imp->dutch_rows() ) ) if DEBUG;
+					#$openprint::log->debug( sprintf('CHECK 2 Work&Turn Dutch Using Paper %sx%s -> %sx%s Image: %s x %s Imposition: %dout:%dx%d+%dx%d',$paper_width, $paper_height, $adjusted_paper_width, $adjusted_paper_height/2, $setup2->image_height(), $setup2->image_width(), $imp->imposition(), $imp->columns(), $imp->rows(), $imp->dutch_columns(), $imp->dutch_rows() ) ) if DEBUG;
 					push @results, $imp;
 				} # end foreach
 			} # end if grain_direction
@@ -1109,7 +1113,6 @@ $openprint::log->debug("Considering sig size: $signature_size") if DEBUG_CONVERT
 				next if ! ( $rows and $cols );
 				next if ( $cols % 2 and $$imp{runstyle} eq 'Work & Turn' );
 				next if ( $rows % 2 and $$imp{runstyle} eq 'Work & Tumble' );
-
 
 				my $newimp = $imp->copy();
 

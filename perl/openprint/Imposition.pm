@@ -4,12 +4,16 @@ use Carp qw( cluck );
 package openprint::Imposition;
 require Math::Round;
 require Data::Dumper;
-use vars qw( $AUTOLOAD );
+use vars qw( $AUTOLOAD %Orientations);
 use constant DEBUG => 0;
 use constant DEBUG_PERFORMANCE => 1;
 
 use constant Vertical => 0;
 use constant Horizontal => 1;
+%Orientations = (
+	0	=>	'Vertical',
+	1	=>	'Horizontal',
+);
 
 my @fields = (
 	'start_imposition','start_columns','start_rows',
@@ -52,7 +56,8 @@ my @fields = (
 	'page_height',
 	'page_columns',
 	'page_rows',
-	'spine',
+	# spine is relative to the image width/height, spine_direction is to the imposition so vertical or horizontal
+	'spine','spine_direction',
 );
 
 # spread_cols and spread_rows are oriented identically to the imposition
@@ -242,7 +247,7 @@ sub set {
 sub copy {
 	my $src = $_[0];
 	my $copy = {};
-	bless $copy, 'openprint::Imposition';
+	bless $copy, ref $src;
 	@$copy{@fields} = @$src{@fields};
 	$$copy{Paper} = $$copy{Paper}->clone() if $$copy{Paper};
 	return $copy
@@ -341,26 +346,18 @@ sub load {
 #,'rotate_sheet',
 	$$self{runstyle} = $$specs{'ddmRunStyle'.$qty_index};
 	$$self{runstyle} = 'Sheet Work' if ! $$self{runstyle};
-	$$self{image_orientation} = $$specs{'hdnImageOrientation'.$qty_index};
+	$$self{image_orientation_text} = $$specs{'hdnImageOrientation'.$qty_index};
+	if ( $$self{image_orientation_text} eq 'Vertical' ) {
+		$$self{image_orientation} = Vertical;
+	} else {
+		$$self{image_orientation} = Horizontal;
+	}
 	$$self{grain_direction} = $$specs{'rdbGrainDirection'.$qty_index};
 	$$self{bleed_size} = $$specs{'ddmBleedSize'.$qty_index};
 	$$self{rotate_sheet} = $$specs{"RotateSheet$qty_index"};
 	$$self{printing_type} = $$specs{"PrintingType$qty_index"};
 
 	my $Paper = $$self{Paper};
-
-	if ( ! $$self{image_orientation} ) {
-		# Guess the image orientation
-		if ( 
-				( $$self{image_width} * $$self{columns} < $$Paper{width} )
-				and 
-				( $$self{image_height} * $$self{rows} < $$Paper{height} )
-		   ) {
-			$$self{image_orientation} = Vertical;
-		} else {
-			$$self{image_orientation} = Horizontal;
-		} # end if
-	} # end if
 
 	my ( $dutch_width, $dutch_height );
 
@@ -467,6 +464,7 @@ $openprint::log->debug("spread_rows $$self{spread_rows} x $$self{spread_columns}
 	} else {
 		$$self{rotate_sheet} = $$specs{"RotateSheet$qty_index"};
 	} # end if
+	$self->spine_direction();
 $self->display('After load') if DEBUG;
 	return $self;
 } # end sub load
@@ -731,9 +729,11 @@ sub to_string {
 					$_[0]->image_orientation_text() );
 		} else {
 			if ( $_[0]{quantity} > 1 ) {
-			$_[0]{to_string} = sprintf('%s %d @ %dx%d+%dx%d=%dout %s %dx%d=%dpages %s', ( $_[0]{Press} ? $_[0]->Press()->strid() : 'unknown equipment' ), $_[0]->get('quantity','columns','rows','dutch_columns','dutch_rows','imposition','runstyle','page_columns','page_rows','pages', 'sheet_width','sheet_height', 'image_orientation_text') );
+			$_[0]{to_string} = sprintf('%s %d @ %dx%d+%dx%d=%dout %s %dx%d=%dpages %s spine %s', ( $_[0]{Press} ? $_[0]->Press()->strid() : 'unknown equipment' ), $_[0]->get('quantity','columns','rows','dutch_columns','dutch_rows','imposition','runstyle','page_columns','page_rows','pages', 'sheet_width','sheet_height'), 
+					@Orientations{@$self{'image_orientation_text','spine_direction'}} );
 			} else {
-			$_[0]{to_string} = sprintf('%s %dx%d+%dx%d=%dout %s %dx%d=%dpages %s', ( $_[0]{Press} ? $_[0]->Press()->strid() : 'unknown equipment' ), $_[0]->get('columns','rows','dutch_columns','dutch_rows','imposition','runstyle','page_columns','page_rows','pages', 'sheet_width','sheet_height', 'image_orientation_text') );
+			$_[0]{to_string} = sprintf('%s %dx%d+%dx%d=%dout %s %dx%d=%dpages %s spine %s', ( $_[0]{Press} ? $_[0]->Press()->strid() : 'unknown equipment' ), $_[0]->get('columns','rows','dutch_columns','dutch_rows','imposition','runstyle','page_columns','page_rows','pages', 'sheet_width','sheet_height'),
+					@Orientations{@$self{'image_orientation_text','spine_direction'}} );
 			}
 		} # end if
 	}
@@ -837,9 +837,21 @@ sub dump {
 
 sub image_orientation_text {
 	if ( ! $_[0]{image_orientation_text} ) {
-		$_[0]{image_orientation_text} = $_[0]{image_orientation} == Vertical ? 'Vertical' : 'Horizontal';
+		$_[0]{image_orientation_text} = $Orientations{$_[0]{image_orientation}};
 	};
 	return $_[0]{image_orientation_text};
+}
+
+sub spine_direction {
+	if ( ! defined $_[0]{spine_direction} ) {
+$openprint::log->debug("Setting spine direction uusing $_[0]{spine}");
+		if ( $_[0]{spine} eq 'height' ) {
+			$_[0]{spine_direction} = $_[0]{image_orientation};
+		} else { # width
+			$_[0]{spine_direction} = $_[0]{image_orientation} == Vertical ? Horizontal : Vertical;
+		}
+	} 
+	return $_[0]{spine_direction};
 }
 
 1;

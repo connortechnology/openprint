@@ -42,28 +42,28 @@ $serial = 'lngProjectIndex_seq';
 	created_on	=>	'dtmcreationdate',
 	updated_on	=>	'dtmlastmodified',
 	calculated_on	=>	'calculated_on',
-	'quantity1'		=>	'intquantity1',
-	'quantity2'		=>	'intquantity2',
-	'quantity3'		=>	'intquantity3',
-	'status'		=>	'strstatus',
-	'mode'			=>	'strmode',
-	'programs'		=>	'strprograms',
-	'other_programs'	=>	'strotherprograms',
-	'currency_id'	=>	'currency_id',
-	'type_id'		=>	'type_id',
-	'price1'		=>	'price1',
-	'price2'		=>	'price2',
-	'price3'		=>	'price3',
-	'order_id'		=>	'order_id',
-	'due_date'		=>	'due_date',
-	'externalrefnumber'	=>	'externalrefnumber',
-	'reprint_reason'	=>	'reprint_reason',
-	'reprint'			=>	'reprint',
-	'predefined'		=>	'predefined',
-	'rush'				=>	'rush',
-	'style_id'			=>	'style_id',
-	'summary'			=>	'summary',
-	'markup'			=>	'markup',
+	quantity1=>	'intquantity1',
+	quantity2=>	'intquantity2',
+	quantity3=>	'intquantity3',
+	status=>	'strstatus',
+	mode=>	'strmode',
+	programs=>	'strprograms',
+	other_programs=>	'strotherprograms',
+	currency_id=>	'currency_id',
+	type_id=>	'type_id',
+	price1=>	'price1',
+	price2=>	'price2',
+	price3=>	'price3',
+	order_id=>	'order_id',
+	due_date=>	'due_date',
+	externalrefnumber=>	'externalrefnumber',
+	reprint_reason=>	'reprint_reason',
+	reprint=>	'reprint',
+	predefined=>	'predefined',
+	rush=>	'rush',
+	style_id=>	'style_id',
+	summary=>	'summary',
+	markup=>	'markup',
 	priority			=>	'priority',
 	production_comments	=>	'production_comments',
 );
@@ -128,13 +128,13 @@ sub undelete {
 sub destroy {
 	my $self = shift;
 	my $ac = sql::start_transaction( $openprint::dbh );
-	foreach my $Product ( openprint::OrderedProduct->find( 'project_id'=>$$self{id} ) ) {
-		$Product->save({'project_id'=>undef});
+	foreach my $Product ( openprint::OrderedProduct->find( project_id=>$$self{id} ) ) {
+		$Product->save({project_id=>undef});
 	} # end foreach Product
-	foreach my $Todo ( openprint::Todo->find( 'project_id'=>$$self{id} ) ) {
-		$Todo->save({'project_id'=>undef});
+	foreach my $Todo ( openprint::Todo->find( project_id=>$$self{id} ) ) {
+		$Todo->save({project_id=>undef});
 	} # end foreach Todo
-	foreach my $B ( openprint::Bug->find( 'project_id'=>$$self{id} ) ) {
+	foreach my $B ( openprint::Bug->find( project_id=>$$self{id} ) ) {
 		$B->destroy();
 	} # end foreach bug
 	sql::execute( $openprint::log, $openprint::dbh, q{DELETE FROM tbl_Service_Specifications WHERE lngProjectIndex=?}, $$self{id} );
@@ -258,7 +258,7 @@ sub jdf {
 
 # Hack: Add a PlateMaker
 	if ( 0 ) {
-		my $Device = openprint::JDF::getNode( $doc, 'Device','DeviceID'=>'PLA1001' );
+		my $Device = openprint::JDF::getNode( $doc, 'Device',DeviceID=>'PLA1001' );
 		if ( ! $Device ) {
 			$Device = $ProductResourcePool->appendChild( $doc->createElement('Device') );
 			$Device->setAttribute('Class','Implementation' );
@@ -301,8 +301,8 @@ sub jdf {
 		my @side_one_colours = openprint::Estimating::Printing::get_colours( $sig_specs,'SideOne' );
 		my @side_two_colours = openprint::Estimating::Printing::get_colours( $sig_specs,'SideTwo' );
 		my %SideColours = (
-				'Front'=>\@side_one_colours,
-				'Back'=>\@side_two_colours,
+				Front=>\@side_one_colours,
+				Back=>\@side_two_colours,
 				);
 
 		my $SigInk = $Ink->appendChild( $doc->createElement('Ink') );
@@ -708,7 +708,7 @@ sub copy {
 	@$new{@keys} = @$self{@keys};
 
 	delete $$new{Services};
-	$new->save({'id'=>undef, 'created_on'=>undef,'production_comments'=>undef, order_id=>undef, docket=>undef} );
+	$new->save({id=>undef, created_on=>undef,production_comments=>undef, order_id=>undef, docket=>undef} );
 
 # Make this all one transaction... Don't need locking because a reload would get a different projectindex
 	my $ac = sql::start_transaction( $openprint::dbh );
@@ -838,7 +838,7 @@ sub summary {
 				$summary .= sprintf( '%s&quot;x%s&quot; ', 1*$$printing_specs{txtFinalWidth},1*$$printing_specs{txtFinalHeight});
 				if ( $$printing_specs{rdbCover} eq 'Different' ) {
 					my $cover_pages = 0;
-					foreach my $ss_id ( $self->signatures({'Group'=>1}) ) {
+					foreach my $ss_id ( $self->signatures({Group=>1}) ) {
 						my $sig_specs = openprint::service::get_specs_ref( $self, $ss_id );
 						$cover_pages += $$sig_specs{GroupPageQuantity};
 						last;
@@ -879,9 +879,9 @@ sub summary {
 			} # end foreach Group
 		} # end if
 
-		foreach my $Category ( openprint::ServiceType_Category->find('order'=>'sorting') ) {
+		foreach my $Category ( openprint::ServiceType_Category->find(order=>'sorting') ) {
 			next if sets::isin( $Category->name(), [ 'Printing','Coatings' ] );
-			foreach my $ServiceType ( openprint::ServiceType->find('category_id'=>$Category->id()) ) {
+			foreach my $ServiceType ( openprint::ServiceType->find(category_id=>$Category->id()) ) {
 				next if ! $$services{$ServiceType->name()};
 				next if ! $ServiceType->summary_visible();
 				foreach my $service_id ( @{$$services{$ServiceType->name()}} ) {
@@ -926,6 +926,13 @@ sub requested_date {
 	} # end if
 	return $$OP{requested_for};
 } # end sub requested_date
+sub requested_for {
+	my $OP = $_[0]->Ordered_Project();
+	if ( @_ > 1 ) {
+		$$OP{requested_for} = $_[1];
+	} # end if
+	return $$OP{requested_for};
+} # end sub requested_for
 
 sub shippingtype {
 	my $OP = $_[0]->Ordered_Project();
@@ -935,7 +942,7 @@ sub shippingtype {
 	} # end if
 	if ( ! $$OP{shipping_type} ) {
 		my $services = $_[0]->services();
-		$$OP{shipping_type} = join(',', map { $_->ServiceType()->name() } openprint::Project_Service->find('project_id'=>$_[0]{id},'category'=>'Shipping') );
+		$$OP{shipping_type} = join(',', map { $_->ServiceType()->name() } openprint::Project_Service->find(project_id=>$_[0]{id},category=>'Shipping') );
 	} # end if
 	return $$OP{shipping_type};
 } # end sub shippingtype
@@ -973,7 +980,7 @@ sub ordered_price {
 
 sub ordered_Price {
 	my $price = $_[0]->ordered_price();
-	return { 'Cost'=>$price, 'currency_id'=>$_[0]{currency_id}, 'Price'=>$price };
+	return { Cost=>$price, currency_id=>$_[0]{currency_id}, Price=>$price };
 } # end sub ordered_Price
 
 sub prices {
@@ -1021,7 +1028,7 @@ sub m_price {
 
 sub Price {
 	my ( $self, $index ) = @_;
-	return { 'Cost'=>$$self{'price'.$index}, 'currency_id'=>$$self{currency_id}, 'Price'=>$$self{'price'.$index} };
+	return { Cost=>$$self{'price'.$index}, currency_id=>$$self{currency_id}, Price=>$$self{'price'.$index} };
 } # end sub price
 
 sub Order {
@@ -1088,7 +1095,7 @@ sub status_change {
 		foreach my $s_id ( openprint::print_project::get_services_in_category( $openprint::log, $openprint::dbh, $$self{id}, 'Bindery' ) ) {
 			openprint::service::status( $$self{id}, $s_id, 'Complete' );
 		} # end foreach
-		foreach my $Job ( openprint::ScheduledJob->find('project_id'=>$$self{id}) ) {
+		foreach my $Job ( openprint::ScheduledJob->find(project_id=>$$self{id}) ) {
 			$Job->delete();
 		} # end foreach
 		$self->update_status();
@@ -1175,7 +1182,7 @@ sub get_due_date {
 	foreach my $signature_service_index ( $self->signatures() ) {
 		my $sig_specs = openprint::service::get_specs_ref( $self, $signature_service_index );
 # Lookup how many days to add to due date
-		if ( my @Equipment = openprint::Equipment->find( 'strid'=>$$sig_specs{UsePress} ) ) {
+		if ( my @Equipment = openprint::Equipment->find( strid=>$$sig_specs{UsePress} ) ) {
 			( $_ ) = $Equipment[0]->specification('DueDateDays');
 			if ( $_ > $duedatedays ) {
 				$duedatedays = int $_;
@@ -1199,7 +1206,7 @@ sub get_due_date {
 sub Ordered_Product {
 	my ( $self ) = @_;
 	if ( ! exists $$self{Ordered_Product} ) {
-		my @Products = openprint::OrderedProduct->find( 'project_id'=>$$self{id} );
+		my @Products = openprint::OrderedProduct->find( project_id=>$$self{id} );
 		if ( @Products == 1 ) {
 			$$self{Ordered_Product} = $Products[0];
 		} elsif ( @Products ) {
@@ -1211,7 +1218,7 @@ sub Ordered_Product {
 
 sub Ordered_Project {
 	if ( ! exists $_[0]{Ordered_Project} ) {
-		$_[0]{Ordered_Project} = openprint::OrderedProject->find_one('order_id'=>$_[0]{order_id}, 'project_id'=>$_[0]{id} ) if $_[0]{order_id};
+		$_[0]{Ordered_Project} = openprint::OrderedProject->find_one(order_id=>$_[0]{order_id}, project_id=>$_[0]{id} ) if $_[0]{order_id};
 	} # end if
 
 	if ( ! $_[0]{Ordered_Project} ) {
@@ -1458,7 +1465,7 @@ sub delivery_cost {
 
 	if ( ! exists $$self{delivery_cost} ) {
 		my $services = $self->services();
-		foreach my $ServiceType ( openprint::ServiceType->find('category'=>'Shipping') ) {
+		foreach my $ServiceType ( openprint::ServiceType->find(category=>'Shipping') ) {
 			next if ! $$services{$ServiceType->name()};
 			foreach ( @{$$services{$ServiceType->name()}} ) {
 				my $specs = openprint::service::get_specs_ref( $self, $_ );
@@ -1474,7 +1481,7 @@ sub production_cost {
 
 
 	if ( ! exists $$self{production_cost} ) {
-		my @Shipping_Services = map { $_->name() } openprint::ServiceType->find('category'=>'Shipping');
+		my @Shipping_Services = map { $_->name() } openprint::ServiceType->find(category=>'Shipping');
 		my $services = $self->services();
 		foreach my $ServiceType ( keys %$services ) {
 			next if sets::isin( $ServiceType, \@Shipping_Services );
