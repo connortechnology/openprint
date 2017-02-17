@@ -4,12 +4,16 @@ use Carp qw( cluck );
 package openprint::Imposition;
 require Math::Round;
 require Data::Dumper;
-use vars qw( $AUTOLOAD );
+use vars qw( $AUTOLOAD %Orientations);
 use constant DEBUG => 0;
 use constant DEBUG_PERFORMANCE => 1;
 
 use constant Vertical => 0;
 use constant Horizontal => 1;
+%Orientations = (
+	Vertical	=>	'Vertical',
+	Horizontal	=>	'Horizontal',
+);
 
 my @fields = (
 	'start_imposition','start_columns','start_rows',
@@ -724,9 +728,11 @@ sub to_string {
 					$_[0]->image_orientation_text() );
 		} else {
 			if ( $_[0]{quantity} > 1 ) {
-			$_[0]{to_string} = sprintf('%s %d @ %dx%d+%dx%d=%dout %s %dx%d=%dpages %s', ( $_[0]{Press} ? $_[0]->Press()->strid() : 'unknown equipment' ), $_[0]->get('quantity','columns','rows','dutch_columns','dutch_rows','imposition','runstyle','page_columns','page_rows','pages', 'sheet_width','sheet_height', 'image_orientation_text') );
+			$_[0]{to_string} = sprintf('%s %d @ %dx%d+%dx%d=%dout %s %dx%d=%dpages %s spine %s', ( $_[0]{Press} ? $_[0]->Press()->strid() : 'unknown equipment' ), $_[0]->get('quantity','columns','rows','dutch_columns','dutch_rows','imposition','runstyle','page_columns','page_rows','pages', 'sheet_width','sheet_height'), 
+					@Orientations{@$self{'image_orientation_text','spine_direction'}} );
 			} else {
-			$_[0]{to_string} = sprintf('%s %dx%d+%dx%d=%dout %s %dx%d=%dpages %s', ( $_[0]{Press} ? $_[0]->Press()->strid() : 'unknown equipment' ), $_[0]->get('columns','rows','dutch_columns','dutch_rows','imposition','runstyle','page_columns','page_rows','pages', 'sheet_width','sheet_height', 'image_orientation_text') );
+			$_[0]{to_string} = sprintf('%s %dx%d+%dx%d=%dout %s %dx%d=%dpages %s spine %s', ( $_[0]{Press} ? $_[0]->Press()->strid() : 'unknown equipment' ), $_[0]->get('columns','rows','dutch_columns','dutch_rows','imposition','runstyle','page_columns','page_rows','pages', 'sheet_width','sheet_height'),
+					@Orientations{@$self{'image_orientation_text','spine_direction'}} );
 			}
 		} # end if
 	}
