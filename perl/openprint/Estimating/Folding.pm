@@ -408,16 +408,16 @@ sub signature_calc {
 	my ( $Project, $sig_specs, $specs, $qty_index, $SignatureImposition, $Signature_Impositions, $calc_hash ) = @_;
 
 	my %results = (
-			Price		=> 0,
-			MPrice		=> 0,
-			Equipment	=> undef,
-			Status		=> 'uncalculated',
-			Folds		=> {},
+			Price							=>	0,
+			MPrice						=>	0,
+			Equipment					=>	undef,
+			Status						=>	'uncalculated',
+			Folds							=>	{},
 			FoldedImpositions	=>	[],
-			Breakdown		=> '',
-			MakeReadyOvers	=>	0,
-			RunOvers		=>	0,
-			MakeReadyTime	=>	0,
+			Breakdown					=>	'',
+			MakeReadyOvers		=>	0,
+			RunOvers					=>	0,
+			MakeReadyTime			=>	0,
 	);
 	
 	if ( ! $$SignatureImposition{imposition} ) {
@@ -440,8 +440,8 @@ $openprint::log->error("No finished width and height, cannot continue $$Project{
 		return \%results;
 	} # end if
 
-	my $Paper = $SignatureImposition->Paper();
-	my $Press = $SignatureImposition->Press();
+	my $Paper = $$SignatureImposition{Paper};
+	my $Press = $$SignatureImposition{Press};
 	my $ppt = $Press->specification('Printing Type');
 	my $services = $Project->services();
 	my $form = $$sig_specs{SignatureIndex};
@@ -2218,9 +2218,10 @@ sub cut_spreads {
 
 	my @results;
 	my $min_spread_size = $$I{spread_size}/2 > 3 ? $$I{spread_size}/2 : 3;
+$I->display("Min spread size: $min_spread_size dir($$I{spine_direction}) " . $openprint::Imposition::Orientations{$$I{spine_direction}} );
 
 	# Something like doing 16pg as 2 8pgs
-	if ( $$I{spine_direction} == openprint::Imposition::Vertical and $$I{spread_rows} % 2 == 0 ) {
+	if ( $$I{spine_direction} == openprint::Imposition::Vertical and ( $$I{spread_rows} % 2 == 0 ) ) {
 		my $i1 = $I->copy();
 		$i1->spread_rows( $$i1{spread_rows} / 2 );
 		$i1->rows( $$i1{rows} * 2 );
