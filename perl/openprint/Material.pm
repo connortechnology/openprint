@@ -150,7 +150,8 @@ sub get_price {
 	return if ! %price;
 
 	$price{currency_id} = $Pricelist->currency_id();
-	openprint::Currency::convert( \%price ) if $$Pricelist{currency_id} != $openprint::session{Pricelist_id};
+$openprint::log->error("Pricelist currency is $$Pricelist{currency_id} != $openprint::session{Currency_id} ");
+	openprint::Currency::convert( \%price ) if $$Pricelist{currency_id} != $openprint::session{Currency_id};
 
 	return %price;
 } # end sub get_price
@@ -164,7 +165,7 @@ sub get_Price {
 	return if ! %price;
 
 	$price{currency_id} = $Pricelist->currency_id();
-	openprint::Currency::convert( \%price ) if $$Pricelist{currency_id} != $openprint::session{Pricelist_id};
+	openprint::Currency::convert( \%price ) if $$Pricelist{currency_id} != $openprint::session{Currency_id};
 
 	return \%price;
 }
