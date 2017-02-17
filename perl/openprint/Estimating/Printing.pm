@@ -601,7 +601,7 @@ sub setup_project {
 	foreach my $index ( $Project->signatures() ) {
 		next if $index >= $service_index;
 		my $sig_specs = openprint::service::get_specs_ref( $Project, $index );
-		next if $$sig_specs{pages_supplied};
+		next if $$sig_specs{pages_supplied} and ($$sig_specs{pages_supplied} eq 'Y');
 
 		if ( $$sig_specs{Group} and ! exists $project{"Group$$sig_specs{Group}Specs"} ) {
 			my $group_specs = $project{"Group$$sig_specs{Group}Specs"} = {};
@@ -3116,7 +3116,7 @@ sub save_price( $$$$$ ) {
 	if ( $_ = $$specs{'Markup'.$qty_index} ) {
 		$mprice *= (1+($_/100));
 	}
-	if ( $_ = $Project->markup($qty_index) ) {
+	if ( $_ = $Project->markup() ) {
 		$mprice *= (1+($_/100));
 	}
 
@@ -6856,8 +6856,8 @@ sub compare_signatures_no_results {
 			'Group', 'rdbSuppliedStock','rdbSpecificStock','txtEmployeeComments',
 			) {
 		next if $exclude and sets::isin( $key, $exclude );
-		if ( ! ( (!$$sig1{$key} and ! $$sig2{$key} ) or ( $$sig1{$key} and $$sig2{$key} and $$sig1{$key} eq $$sig2{$key} ) ) ) {
-$openprint::log->debug("Not the same $key $$sig1{ServiceIndex} $$sig2{ServiceIndex} $$sig1{$key} ne $$sig2{$key}");
+		if ( ! ( (!$$sig1{$key} and ! $$sig2{$key} ) or ( $$sig1{$key} and $$sig2{$key} and ( $$sig1{$key} eq $$sig2{$key} ) ) ) ) {
+$openprint::log->debug("Not the same $key $$sig1{ServiceIndex} $$sig2{ServiceIndex} $$sig1{$key} ne $$sig2{$key}") if DEBUG;
 			return 0;
 		} # end if
 	} # end foreach
@@ -7145,7 +7145,7 @@ if ( 0 ) {
 			$string .= ' ' . $$specs{txtStockGSM}.'gsm' if $openprint::config{Show_Stock_GSM} ne 'N';
 		} # end if ! NoPrinting
 
-		if ( $$specs{pages_supplied} ) {
+		if ( $$specs{pages_supplied} and ( $$specs{pages_supplied} eq 'Y' ) ) {
 			$string .= ' pages supplied by customer as ';
 			if ( $$specs{supplied_format} eq 'Sheets' ) {
 				$string .= ' flat sheets.';
@@ -7493,7 +7493,7 @@ sub setup_counts {
 		foreach my $index ( $Project->signatures( { sort=>1 } ) ) {
 # Get plates in each previous signature, so we can get qty discounts
 			my $sig_specs = openprint::service::get_specs_ref( $Project, $index );
-			if ( $$sig_specs{pages_supplied} and ( $$sig_specs{pages_supplied} eq 'Y' ) ) {
+			if ( $$sig_specs{pages_supplied} ) {
 				$openprint::log->debug("pages supplied");
 				next;
 			}
