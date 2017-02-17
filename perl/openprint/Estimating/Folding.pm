@@ -360,7 +360,7 @@ sub impositions {
 			page_rows			=>	$Imposition->page_rows(),
 			page_width		=>	$Imposition->page_width(),
 			page_height		=>	$Imposition->page_height(),
-			spine_direction	=>	$$Imposition{image_orientation_text},
+			spine_direction	=>	$openprint::Imposition::Orientations{$$Imposition{spine_direction}},
 			stitching		=>	($$services{SaddleStitching} or $$services{LoopStitching}) ? 1 : 0,
 			perfectbind		=>	$$services{PerfectBound} ? 1 : 0,
 			spinepaste		=>	$$services{SpinePaste} ? 1 : 0,
@@ -543,7 +543,7 @@ $openprint::log->debug("folds from sigimpo") if DEBUG;
 				foreach my $key ( keys %$Folds ) {
 					my ( $fold_type, $imposition ) = $key =~ /(.*)-(\d+)out$/;
 					$makereadies{$$SigImpo{folding_results}{Equipment}->id()} = {} if ! $makereadies{$$SigImpo{folding_results}{Equipment}->id()};
-					$makereadies{$$SigImpo{folding_results}{Equipment}->id()}{$fold_type} = 1;
+					$makereadies{$$SigImpo{folding_results}{Equipment}->id()}{$fold_type.$imposition} = 1;
 				} # end foreach
 			} elsif ( DEBUG ) {
 				$openprint::log->error("No folds from sigimpo so can't detect makereadies");
@@ -557,7 +557,7 @@ $openprint::log->debug("folds from sigimpo") if DEBUG;
 			foreach my $fold_index ( 1 .. 4 ) {
 				if ( $$specs{"FoldQty-$$s_specs{SignatureIndex}-$qty_index-$fold_index"} ) {
 					$makereadies{$$specs{"ddmEquipment-$$s_specs{SignatureIndex}-$qty_index"}} = {} if ! $makereadies{$$specs{"ddmEquipment-$$s_specs{SignatureIndex}-$qty_index"}};
-					$makereadies{$$specs{"ddmEquipment-$$s_specs{SignatureIndex}-$qty_index"}}{ $$specs{"FoldType-$$s_specs{SignatureIndex}-$qty_index-$fold_index"} } = 1;
+					$makereadies{$$specs{"ddmEquipment-$$s_specs{SignatureIndex}-$qty_index"}}{ $$specs{"FoldType-$$s_specs{SignatureIndex}-$qty_index-$fold_index"}.$$specs{"FoldImposition-$$s_specs{SignatureIndex}-$qty_index-$fold_index"} } = 1;
 				} # end if
 			} # end foreach fold_index
 		} # end if
@@ -802,17 +802,17 @@ $openprint::log->debug("folds from sigimpo") if DEBUG;
 					$Imposition->display('trying ');
 				} # end if
 
-# Web has dual delivery
+				# THis checks to see if the folds line up, should probably be using spine_direction instead
 				if ( $$Equipment{id} != $$Press{id} ) {
 					if ( $$Imposition{imposition} > 3 and ( $$Imposition{columns} > 1 and $$Imposition{rows} > 1 ) ) {
 						$openprint::log->debug("Can't do that impo cuz impo > 3 cols > 1 and rows > 1") if DEBUG;
 						$complete = 0;
 						last;
-					} elsif ( ( $$Imposition{columns} > 1 ) and ( $$Imposition{image_orientation} == openprint::Imposition::Vertical ) ) {
+					} elsif ( ( $$Imposition{columns} > 1 ) and ( $$Imposition{spine_direction} == openprint::Imposition::Vertical ) ) {
 						$openprint::log->debug("Can't do that impovertical and columns $$Imposition{columns} > 1") if DEBUG;
 						$complete = 0;
 						last;
-					} elsif ( $$Imposition{rows} > 1 and ( $$Imposition{image_orientation} == openprint::Imposition::Horizontal ) ) {
+					} elsif ( $$Imposition{rows} > 1 and ( $$Imposition{spine_direction} == openprint::Imposition::Horizontal ) ) {
 						$openprint::log->debug("Can't do that impo horizontal and rows $$Imposition{rows} > 1") if DEBUG;
 						$complete = 0;
 						last;
@@ -852,7 +852,7 @@ $openprint::log->debug("folds from sigimpo") if DEBUG;
 								  #) ),
 							page_width		=>	$$Imposition{page_width},
 							page_height		=>	$$Imposition{page_height},
-							spine_direction	=>	$$Imposition{image_orientation_text},
+							spine_direction	=>	$openprint::Imposition::Orientations{$$Imposition{spine_direction}},
 							stitching		=>	($$services{SaddleStitching} or $$services{LoopStitching}) ? 1 : 0,
 							perfectbind		=>	$$services{PerfectBound} ? 1 : 0,
 							spinepaste		=>	$$services{SpinePaste} ? 1 : 0,
@@ -911,7 +911,7 @@ $openprint::log->debug("Templatetype: $$sig_specs{rdbTemplateType}") if DEBUG;
 								columns					=>	$$Imposition{columns},
 								rows						=>	$$Imposition{rows},
 								printing_type		=>	$ppt,
-								spine_direction	=>	$$Imposition{image_orientation_text},
+								spine_direction	=>	$openprint::Imposition::Orientations{$$Imposition{spine_direction}},
 								});
 						if ( $Fold ) {
 # Need to check feed width
@@ -960,14 +960,17 @@ $openprint::log->debug("Has a fold, doing extra checks") if DEBUG;
 											$Fold = undef;
 										} # end if
 
-									} elsif ( ( $width_folds and ! $height_folds ) or ( $width_folds == $$Fold{folds} and $height_folds == $$Fold{angles} ) ) {
+									} elsif ( ( $width_folds and ! $height_folds ) ) {
+#
+#or ( $width_folds == $$Fold{folds} and $height_folds == $$Fold{angles} ) ) {
 										
 # If folds are on width, we grip on height...
 										if ( $height_size > $max_feed_width ) {
 											$failure_reason = "Fold no good due to max feed height $height_size > $max_feed_width on height ($$sig_specs{txtHeight}).";
 											$Fold = undef;
 										} # end if
-									} elsif ( ( $height_folds and ! $width_folds ) or ( $height_folds == $$Fold{folds} and $height_folds == $$Fold{angles} ) ) {
+									} elsif ( ( $height_folds and ! $width_folds ) ) {
+#or ( $height_folds == $$Fold{folds} and $height_folds == $$Fold{angles} ) ) {
 										if ( $width_size > $max_feed_width ) {
 											$Fold = undef;
 											$failure_reason = "Fold no good due to max feed width $width_size > $max_feed_width on width ($$sig_specs{txtWidth}).";
@@ -1030,7 +1033,7 @@ $openprint::log->debug("No Fold") if DEBUG;
 									#) ),
 									page_width		=>	$$Imposition{page_width},
 									page_height		=>	$$Imposition{page_height},
-									spine_direction	=>	$$Imposition{image_orientation_text},
+								spine_direction	=>	$openprint::Imposition::Orientations{$$Imposition{spine_direction}},
 									stitching		=>	(($$services{SaddleStitching} or $$services{LoopStitching}) ? 1 : 0),
 									perfectbind		=>	($$services{PerfectBound} ? 1 : 0),
 									spinepaste		=>	($$services{SpinePaste} ? 1 : 0),
@@ -1084,27 +1087,33 @@ $openprint::log->debug("No Fold") if DEBUG;
 
 # decide whether it's running portrait or landscape basessd on which way the folds go
 									$openprint::log->debug("Has max feed width width_folds: $width_folds height_folds: $height_folds final_width $$sig_specs{txtWidth} final_heigh $$sig_specs{txtHeight} max_feed $max_feed_width") if DEBUG;
-									if ( ( $width_folds and ! $height_folds ) or ( ((!defined $$Fold{folds}) or ($width_folds == $$Fold{folds})) and ((!defined $$Fold{angles}) or ($height_folds == $$Fold{angles})) and ( $width_folds < $height_folds ) ) ) {
+									if ( 
+											( $width_folds and ! $height_folds )
+											#or ( ((!defined $$Fold{folds}) or ($width_folds == $$Fold{folds})) and ((!defined $$Fold{angles}) or ($height_folds == $$Fold{angles})) and ( $width_folds < $height_folds ) ) 
+										 ) {
 										if ( $$Imposition{image_orientation} == openprint::Imposition::Vertical ) {
 # If folds are on width, we grip on height...
-											if ( $Imposition->layout_height() >= $max_feed_width ) {
+											if ( $$Imposition{layout_height} >= $max_feed_width ) {
 												$fits = "Fold no good due to max feed width ($max_feed_width). $width_folds x $height_folds size: ($$Imposition{layout_height}).";
 												$Fold = undef;
 											} # end if
 										} else {
-											if ( $Imposition->layout_width() >= $max_feed_width ) {
+											if ( $$Imposition{layout_width} >= $max_feed_width ) {
 												$fits = "Fold no good due to max feed width ($max_feed_width). $width_folds x $height_folds size: ($$Imposition{layout_width}).";
 												$Fold = undef;
 											} # end if
 										} # end if
-									} elsif ( ( $height_folds and ! $width_folds ) or ( (!defined $$Fold{folds}) or ($height_folds == $$Fold{folds})) and ((!defined $$Fold{angles}) or ($width_folds == $$Fold{angles}) ) ) {
+									} elsif ( 
+											( $height_folds and ! $width_folds ) 
+#or ( (!defined $$Fold{folds}) or ($height_folds == $$Fold{folds})) and ((!defined $$Fold{angles}) or ($width_folds == $$Fold{angles}) ) 
+											) {
 										if ( $$Imposition{image_orientation} == openprint::Imposition::Vertical ) {
-											if ( $Imposition->layout_width() >= $max_feed_width ) {
+											if ( $$Imposition{layout_width} >= $max_feed_width ) {
 												$fits = "Fold no good due to max feed width ($max_feed_width). $width_folds x $height_folds size: ($$Imposition{layout_width}).";
 												$Fold = undef;
 											} # end if
 										} else {
-											if ( $Imposition->layout_height() >= $max_feed_width ) {
+											if ( $$Imposition{layout_height} >= $max_feed_width ) {
 												$fits = "Fold no good due to max feed width ($max_feed_width). $width_folds x $height_folds size: ($$Imposition{layout_height}).";
 												$Fold = undef;
 											} # end if
@@ -1408,7 +1417,7 @@ $openprint::log->debug("Resulting fold: " . $Fold->to_string() ) if DEBUG;
 					$setupPrice{Total} = $setupPrice{Price};
 					$total_MR += $setupPrice{Total};
 					$Breakdown .= sprintf( '($%1$.2f%2$s=$%3$.2f)<br/>', @setupPrice{'Price','units','Total'} );
-				} elsif ( ! $makereadies{$$Equipment{id}}{$$Fold{type}} ) {
+				} elsif ( ! $makereadies{$$Equipment{id}}{$$Fold{type}.$imposition} ) {
 					if ( $setupPrice{units} eq 'per imposition' ) {
 						$setupPrice{Total} = $setupPrice{Price} * $imposition;
 						$Breakdown .= sprintf( '($%1$.2f%2$s * %4$d out =$%3$.2f)', @setupPrice{'Price','units','Total'}, $imposition );
@@ -1565,14 +1574,14 @@ $openprint::log->debug("Runspeed: $$Fold{type}(".$Fold->name().") : " . $Equipme
 						my $Price = $$stitching_results{Price};
 						$stitching_part = $$Price{Price};
 						$Breakdown .= '<tr><td>'.$$stitching_results{Breakdown}.'</td></tr>' if DEBUG;
-						$Breakdown .= "<tr><td>Stitching cost on $$stitching_results{Equipment}{name}</td><td class=\"Price\">\$$stitching_part</td></tr>";
+						$Breakdown .= sprintf('<tr><td>Stitching cost on %s</td><td class="Price">$%.2f</td></tr>', $$stitching_results{Equipment}{name}, $stitching_part );
 					} # end if
 					#$Breakdown .= $$results{Breakdown}.'<br/>';
 				} elsif ( $$specs{StitchingEquipment}->id() != $Equipment->id() and $Equipment->specification('Folding Capable') eq 'When Stitching' ) {
 					$Breakdown .= '<tr><td>Not stitching on ' . $Equipment->strid().' stitching on '.$$specs{StitchingEquipment}->strid() .'.</td></tr>';
 				} else {
 					$stitching_part = $$specs{StitchingCost};
-					$Breakdown .= "<tr><td>Stitching cost on $$specs{StitchingEquipment}{name}</td><td class=\"Price\">\$$stitching_part</td></tr>";
+					$Breakdown .= sprintf('<tr><td>Stitching cost on %s</td><td class="Price">$%.2f</td></tr>', $$specs{StitchingEquipment}{name}, $stitching_part );
 				} # end if
 			} # end if has stitching
 			$comparison_cost += $totalPrice + $stitching_part + $cutting_results{Price};
@@ -1596,7 +1605,7 @@ $openprint::log->debug("Runspeed: $$Fold{type}(".$Fold->name().") : " . $Equipme
 				$Breakdown .= qq`<tr><td>No Cutting: $cutting_results{alert} $cutting_results{Breakdown}</td><td class="Price">$cutting_results{Price}</td></tr>`;
 			} # end if
 
-			$Breakdown .= '<tr><td>comparison :</td><td class="Price">' . Math::Round::nearest(0.01,$comparison_cost) . ' </td></tr>';
+			$Breakdown .= '<tr><td>comparison :</td><td class="Price">' . sprintf('%.2f', Math::Round::nearest(0.01,$comparison_cost) ). ' </td></tr>';
 			$Breakdown .= '</table><br/>';
 
 			if ( ( ! defined $bestComparison ) or ( $comparison_cost < $bestComparison ) ) {
@@ -1890,11 +1899,13 @@ $openprint::log->debug("Not needed for form $form") if DEBUG;
 
 		if ( $$specs{'Markup'.$qty_index} ) {
 			my $markup = 1+$$specs{'Markup'.$qty_index}/100;
+$openprint::log->warn("Applying markup: $markup from specs " . $$specs{'Markup'.$qty_index} );
 			$price *= $markup;
 			$mprice *= $markup;
 		}
 		if ( $Project->markup() ) {
 			my $markup = 1+$Project->markup()/100;
+$openprint::log->warn("Applying markup: $markup from project $$Project{markup}");
 			$price *= $markup;
 			$mprice *= $markup;
 		}
@@ -2446,7 +2457,7 @@ $openprint::log->debug("Has no equipment_id") if DEBUG;
 ( $$Imposition{page_rows} ? ( page_rows		=>	$$Imposition{page_rows} ) : () ),
 			page_width		=>	$$Imposition{page_width},
 			page_height		=>	$$Imposition{page_height},
-			spine_direction =>	$$Imposition{image_orientation_text},
+			spine_direction	=>	$openprint::Imposition::Orientations{$$Imposition{spine_direction}},
 			gsm							=>	$Paper->gsm(),
 			imposition			=>	$$Imposition{imposition},
 			columns					=>	$$Imposition{columns},
