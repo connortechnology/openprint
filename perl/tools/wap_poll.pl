@@ -282,7 +282,7 @@ sub update_connections {
 			}
 			foreach my $station_HI ( @WIS ) {
 				if ( (!defined $$station_HI{connected_to}) or ( uc $$station_HI{connected_to} ne uc $$wap_HI{mac} ) ) {
-					$log->debug("Updating connection of ".$station_HI->Host()->hostname() ? $station_HI->Host()->hostname() : '' );
+					$log->debug("Updating connection of ".($station_HI->Host()->hostname() ? $station_HI->Host()->hostname() : '' ));
 					$station_HI->save({connected_to=>$$wap_HI{mac}});
 					(new openprint::Log())->save({action=>'Update', Object=>$station_HI->Host(), note=>'Connection to ' . $wap_HI->Host()->link_to() });
 					(new openprint::Log())->save({action=>'Update', Object=>$wap_HI->Host(), note=>'Connection to ' . $station_HI->Host()->link_to() });
