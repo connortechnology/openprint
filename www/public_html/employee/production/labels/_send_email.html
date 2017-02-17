@@ -10,12 +10,12 @@ return;
 ) ?>" /></li>
 			<li><label>Subject</label><input type="text" name="subject" id="subject" value="<? echo ( $$variable{'Label'}->Type()->name() . ' for docket ' . $$variable{'Label'}->docket() ) ?>" /></li>
 			<li><label>Body</label><textarea name="body" id="body" onkeyup="textarea_resize(this);"></textarea></li>
-			<li class="buttons">
-				<? echo ( join('',
-					button( 'Send', { onclick=>q`$('send_email_form').submit();` } ),
-					button( 'Cancel', { onclick=>'popupWin.destroy();' } ),	
-				); ) ?>
-			</li>
 		</ul>
+		<p class="buttons">
+			<? echo ( join("\n",
+				button( 'Send', { onclick=>q`$('send_email_form').submit();` } ),
+				button( 'Cancel', { onclick=>'popupWin.destroy();' } ),	
+			); ) ?>
+		</p>
 	</fieldset>
 </form>
