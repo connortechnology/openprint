@@ -172,7 +172,6 @@ sub _calc {
 
 sub calc {
 	my $debug = @_ ? $_[0] : 1;
-$log->debug("Project Index is ($param{ProjectIndex})");
 	my $Project = undef;
 	if ( $param{ProjectIndex} ) {
 		$Project = openprint::Project->find_one( id=>$param{ProjectIndex} );
