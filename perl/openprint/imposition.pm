@@ -317,7 +317,6 @@ $openprint::log->debug("Not Pretrimming on $$Press{strid}") if DEBUG;
 	$setup1->grain_direction();
 	$$setup1{spine} = $$specs{ProjectSpecs}{spine};
 	$setup1->spine_direction();
-$setup1->display( "SETUP1 spine_direction:$$setup1{spine_direction}" );
 
 
 	$$setup2{quantity} = 1;
@@ -342,7 +341,6 @@ $setup1->display( "SETUP1 spine_direction:$$setup1{spine_direction}" );
 	$setup2->grain_direction();
 	$$setup2{spine} = $$specs{ProjectSpecs}{spine};
 	$setup2->spine_direction();
-$setup2->display( "SETUP2 spine_direciton:$$setup2{spine_direction}" );
 
 	# Grain is on the second dimension by default (according to Rick)
 	
@@ -971,7 +969,6 @@ sub add_imposition {
 					} # end if
 				} # end if
 
-$i->display("ERROR SPINE DIRECTION I " . $$i{spine_direction} );
 				push @impositions, $i;
 			} # end foreach i
 		} # end foreach bleed
