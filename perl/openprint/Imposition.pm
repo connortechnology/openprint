@@ -52,7 +52,8 @@ my @fields = (
 	'page_height',
 	'page_columns',
 	'page_rows',
-	'spine',
+	# spine is relative to the image width/height, spine_direction is to the imposition so vertical or horizontal
+	'spine','spine_direction',
 );
 
 # spread_cols and spread_rows are oriented identically to the imposition
@@ -353,19 +354,6 @@ sub load {
 	$$self{printing_type} = $$specs{"PrintingType$qty_index"};
 
 	my $Paper = $$self{Paper};
-
-	if ( ! $$self{image_orientation} ) {
-		# Guess the image orientation
-		if ( 
-				( $$self{image_width} * $$self{columns} < $$Paper{width} )
-				and 
-				( $$self{image_height} * $$self{rows} < $$Paper{height} )
-		   ) {
-			$$self{image_orientation} = Vertical;
-		} else {
-			$$self{image_orientation} = Horizontal;
-		} # end if
-	} # end if
 
 	my ( $dutch_width, $dutch_height );
 
@@ -845,6 +833,16 @@ sub image_orientation_text {
 		$_[0]{image_orientation_text} = $_[0]{image_orientation} == Vertical ? 'Vertical' : 'Horizontal';
 	};
 	return $_[0]{image_orientation_text};
+}
+
+sub spine_direction {
+	if ( ! $_[0]{spine_direction} ) {
+		if ( $_[0]{spine} eq 'height' ) {
+			$_[0]{spine_direction} = $_[0]{image_orientation};
+		} else { # width
+			$_[0]{spine_direction} = ! $_[0]{image_orientation};
+		}
+	} 
 }
 
 1;
