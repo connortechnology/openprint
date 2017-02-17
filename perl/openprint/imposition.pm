@@ -292,7 +292,7 @@ $openprint::log->debug("Not Pretrimming on $$Press{strid}") if DEBUG;
 	$$setup1{sides} = $$specs{print_sides};
 	$$setup1{Paper} = $Paper->clone();
 	$$setup1{runstyle} = $run_style;
-	$setup1->image_orientation(openprint::Imposition::Vertical);
+	$$setup1{image_orientation} = openprint::Imposition::Vertical;
 	$setup1->image_orientation_text();
 	$setup1->spread_size( $$specs{txtSpreadSize} );
 	$setup1->bleed_size( $bleed_size );
@@ -315,6 +315,9 @@ $openprint::log->debug("Not Pretrimming on $$Press{strid}") if DEBUG;
 	} # end if
 	$setup1->colour_bar_orientation( $$specs{'Colour Bar Orientation'} );
 	$setup1->grain_direction();
+	$$setup1{spine} = $$specs{ProjectSpecs}{spine};
+	$setup1->spine_direction();
+$setup1->display( "SETUP1 spine_direction:$$setup1{spine_direction}" );
 
 
 	$$setup2{quantity} = 1;
@@ -337,6 +340,9 @@ $openprint::log->debug("Not Pretrimming on $$Press{strid}") if DEBUG;
 	$$setup2{printing_type} = $Press->specification('Printing Type');
 	$setup2->colour_bar_orientation( $$specs{'Colour Bar Orientation'} );
 	$setup2->grain_direction();
+	$$setup2{spine} = $$specs{ProjectSpecs}{spine};
+	$setup2->spine_direction();
+$setup2->display( "SETUP2 spine_direciton:$$setup2{spine_direction}" );
 
 	# Grain is on the second dimension by default (according to Rick)
 	
@@ -965,6 +971,7 @@ sub add_imposition {
 					} # end if
 				} # end if
 
+$i->display("ERROR SPINE DIRECTION I " . $$i{spine_direction} );
 				push @impositions, $i;
 			} # end foreach i
 		} # end foreach bleed

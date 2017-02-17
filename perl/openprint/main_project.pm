@@ -259,7 +259,7 @@ sub calc {
 		foreach my $key ( keys %specs ) {
 			next if ref $specs{$key};
 
-			if ( (exists $param{$key}) and (exists $specs{$key}) and ($specs{$key} eq $param{$key}) ) {
+			if ( (exists $param{$key}) and (exists $specs{$key}) and ( ( (!$specs{$key}) and (!$param{$key}) ) or ( $specs{$key} eq $param{$key} ) ) ) {
 				delete $specs{$key};
 			} elsif ( ! defined $specs{$key} ) {
 				delete $specs{$key};

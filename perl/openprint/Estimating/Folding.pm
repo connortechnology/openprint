@@ -28,7 +28,7 @@ require openprint::Estimating::Perforating;
 
 use vars qw( @folds %fold_types );
 
-use constant DEBUG => 0;
+use constant DEBUG => 1;
 use constant DEBUG_NEEDS => 0;
 
 my @equipment;
@@ -406,6 +406,8 @@ sub impositions {
 
 sub signature_calc {
 	my ( $Project, $sig_specs, $specs, $qty_index, $SignatureImposition, $Signature_Impositions, $calc_hash ) = @_;
+
+$openprint::log->error("Spine Direction: $$SignatureImposition{spine_direction}");
 
 	my %results = (
 			Price							=>	0,
@@ -843,13 +845,8 @@ $openprint::log->debug("folds from sigimpo") if DEBUG;
 
 					my $Fold = $Equipment->Fold( {
 							pages			=>	$Imposition->pages(),
-							#( $$Imposition{image_orientation} == openprint::Imposition::Vertical ? (
-								   page_columns	=>	$Imposition->page_columns(),
-								   page_rows	=>	$Imposition->page_rows(),
-								  #) : (
-								  #page_columns	=>	$Imposition->page_rows(),
-								  #page_rows		=>	$Imposition->page_columns(),
-								  #) ),
+							page_columns	=>	$Imposition->page_columns(),
+							page_rows	=>	$Imposition->page_rows(),
 							page_width		=>	$$Imposition{page_width},
 							page_height		=>	$$Imposition{page_height},
 							spine_direction	=>	$openprint::Imposition::Orientations{$$Imposition{spine_direction}},
@@ -1554,6 +1551,7 @@ $openprint::log->debug("Runspeed: $$Fold{type}(".$Fold->name().") : " . $Equipme
 						# Make a copy of the specs so we don't clobber the real specs.  Set the override to this stitcher and see how it calcs.
 						$stitching_specs = $$calc_hash{FoldingStitchingSpecs};
 						$$stitching_specs{"ddmEquipment$qty_index"} = $Equipment->id();
+$openprint::log->error("Using temp stitching specs " . $$calc_hash{StitchingSpecs}{"chkOverrideEquipment$qty_index"} . ' override: ' . $$stitching_specs{"chkOverrideEquipment$qty_index"});
 					} else {
 						$stitching_specs = $$calc_hash{StitchingSpecs};
 					} # end if
@@ -1574,7 +1572,8 @@ $openprint::log->debug("Runspeed: $$Fold{type}(".$Fold->name().") : " . $Equipme
 						my $Price = $$stitching_results{Price};
 						$stitching_part = $$Price{Price};
 						$Breakdown .= '<tr><td>'.$$stitching_results{Breakdown}.'</td></tr>' if DEBUG;
-						$Breakdown .= sprintf('<tr><td>Stitching cost on %s</td><td class="Price">$%.2f</td></tr>', $$stitching_results{Equipment}{name}, $stitching_part );
+						$Breakdown .= sprintf('<tr><td>Stitching cost on %s %dout</td><td class="Price">$%.2f</td></tr>', 
+								$$stitching_results{Equipment}{name}, $$stitching_results{Imposition}, $stitching_part );
 					} # end if
 					#$Breakdown .= $$results{Breakdown}.'<br/>';
 				} elsif ( $$specs{StitchingEquipment}->id() != $Equipment->id() and $Equipment->specification('Folding Capable') eq 'When Stitching' ) {

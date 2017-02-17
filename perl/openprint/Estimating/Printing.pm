@@ -4187,6 +4187,7 @@ sub get_project_price {
 #$base_imp->display("Starting");
 # But if we alraedy know how to fold this impo... then.....
 		$$base_imp{Project} = $Project;
+$base_imp->display("ERROR SPINE DIRECTION base_imp " . $$base_imp{spine_direction} );
 		my $imp = $base_imp->copy();
 		my $Press = $imp->Press();
 		
@@ -4910,7 +4911,7 @@ $imp->display('[warn]');
 					} else {
 						my $Price = $$results{Price};
 						$$price{'Stitching Breakdown'} .= sprintf('Stitching (%s) (%s) %dout on %s Price: $%.2f<br/>', @$results{'Status','alert','Imposition'},$$results{Equipment}{strid}, $$Price{Price} );
-						#$$price{'Stitching Breakdown'} .= $$results{Breakdown};
+						$$price{'Stitching Breakdown'} .= "breakdown($$results{Breakdown})";
 						$$price{'Stitching Cost'} = $$Price{Price};
 						$$price{'Comparison Cost'} += $$Price{Price};
 						$$price{'Comparison Log'} .= 'Stitching: ' .	$$Price{Price} . '<br/>';
@@ -5454,6 +5455,7 @@ sub calc_price {
 			$openprint::log->debug("Using cached folding");
 		} else {
 #my @all_impositions = ( @{$other_impositions}, $Imposition );
+$Imposition->display("SPINE DIRECTION ebfore folding " . $$Imposition{spine_direction} );
 			$folding_results = openprint::Estimating::Folding::signature_calc( $Project, $specs, $$project{FoldingSpecs}, $qty_index, $Imposition, $other_impositions, $project );
 			$price{folding_results} = $$Imposition{folding_results} = $folding_results;
 		} # end if

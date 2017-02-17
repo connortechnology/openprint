@@ -247,7 +247,7 @@ sub set {
 sub copy {
 	my $src = $_[0];
 	my $copy = {};
-	bless $copy, 'openprint::Imposition';
+	bless $copy, ref $src;
 	@$copy{@fields} = @$src{@fields};
 	$$copy{Paper} = $$copy{Paper}->clone() if $$copy{Paper};
 	return $copy
@@ -837,19 +837,21 @@ sub dump {
 
 sub image_orientation_text {
 	if ( ! $_[0]{image_orientation_text} ) {
-		$_[0]{image_orientation_text} = $_[0]{image_orientation} == Vertical ? 'Vertical' : 'Horizontal';
+		$_[0]{image_orientation_text} = $Orientations{$_[0]{image_orientation}};
 	};
 	return $_[0]{image_orientation_text};
 }
 
 sub spine_direction {
-	if ( ! $_[0]{spine_direction} ) {
+	if ( ! defined $_[0]{spine_direction} ) {
+$openprint::log->debug("Setting spine direction uusing $_[0]{spine}");
 		if ( $_[0]{spine} eq 'height' ) {
 			$_[0]{spine_direction} = $_[0]{image_orientation};
 		} else { # width
-			$_[0]{spine_direction} = ! $_[0]{image_orientation};
+			$_[0]{spine_direction} = $_[0]{image_orientation} == Vertical ? Horizontal : Vertical;
 		}
 	} 
+	return $_[0]{spine_direction};
 }
 
 1;
