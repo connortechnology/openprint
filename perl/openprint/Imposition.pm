@@ -11,8 +11,8 @@ use constant DEBUG_PERFORMANCE => 1;
 use constant Vertical => 0;
 use constant Horizontal => 1;
 %Orientations = (
-	Vertical	=>	'Vertical',
-	Horizontal	=>	'Horizontal',
+	0	=>	'Vertical',
+	1	=>	'Horizontal',
 );
 
 my @fields = (
@@ -464,6 +464,7 @@ $openprint::log->debug("spread_rows $$self{spread_rows} x $$self{spread_columns}
 	} else {
 		$$self{rotate_sheet} = $$specs{"RotateSheet$qty_index"};
 	} # end if
+	$self->spine_direction();
 $self->display('After load') if DEBUG;
 	return $self;
 } # end sub load
