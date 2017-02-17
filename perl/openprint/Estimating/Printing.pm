@@ -733,10 +733,18 @@ $openprint::log->debug("Adding special colour for $colour");
 	if ( $$services{SaddleStitching} ) {
 		%{$project{StitchingSpecs}} = %{openprint::service::get_specs_ref( $Project, $$services{SaddleStitching}[0] )};
 		$project{HasStitching} = $$services{SaddleStitching}[0];
+
+
 	} elsif ( $$services{LoopStitching} ) {
 		%{$project{StitchingSpecs}} = %{openprint::service::get_specs_ref( $Project, $$services{LoopStitching}[0] )};
 		$project{HasStitching} = $$services{LoopStitching}[0];
 	} # end if
+	if ( $project{HasStitching} ) {
+		%{$project{FoldingStitchingSpecs}} = %{$project{StitchingSpecs}};
+    $project{FoldingStitchingSpecs}{"chkOverrideEquipment1"} = 'Y';
+    $project{FoldingStitchingSpecs}{"chkOverrideEquipment2"} = 'Y';
+    $project{FoldingStitchingSpecs}{"chkOverrideEquipment3"} = 'Y';
+	}
 
 	%{$project{SpinePasteSpecs}} = %{openprint::service::get_specs_ref( $Project, $$services{SpinePaste}[0] )} if $$services{SpinePaste};
 	if ( $$services{PerfectBound} ) {
@@ -2092,7 +2100,7 @@ sub set_size {
 
 	} elsif ( $Project->Type()->name() eq 'ScratchPads' ) {
 # Technically, something like a coil bound could be 2pg spread, just need two of them.  
-            if ( $$specs{OverrideSpreadSize} ne 'Y' ) {
+            if ( ! $$specs{OverrideSpreadSize} ) {
                 $$specs{txtSpreadSize} = 1;
                 $variables{txtSpreadSize} = [ sets::union( 'output', @{$variables{txtSpreadSize}} ) ];
             } # end if
@@ -2183,7 +2191,7 @@ sub set_size {
 		} elsif ( $$specs{txtSignatureType} eq 'Cover Pages' ) {
 
 			# Technically, something like a coil bound could be 2pg spread, just need two of them.	
-			if ( $$specs{OverrideSpreadSize} ne 'Y' ) {
+			if ( ! $$specs{OverrideSpreadSize} ) {
 				$$specs{txtSpreadSize} = ( $$specs{GroupPageQuantity} > 6 ? 4 : $$specs{GroupPageQuantity} );
 				$variables{txtSpreadSize} = [ sets::union( 'output', @{$variables{txtSpreadSize}} ) ];
 			} else {
@@ -2251,7 +2259,7 @@ $log->debug("Using spine ehgiht");
 			$$specs{txtFinalWidth} = $$printing_specs{txtFinalWidth};
 			$$specs{txtFinalHeight} = $$printing_specs{txtFinalHeight};
 		} else { # not folder, not cover
-			if ( (!$$specs{OverrideSpreadSize}) or ($$specs{OverrideSpreadSize} ne 'Y') ) {
+			if ( !$$specs{OverrideSpreadSize} ) {
 				if ( $Project->Type()->name() eq 'ScratchPads' ) {
 					$$specs{txtSpreadSize} = 1;
 				} else {
@@ -3311,7 +3319,6 @@ $openprint::log->debug("Project Specs $$project{ProjectSpecs} Gruop $$sig_specs{
 		if ( $needed_pages ) {
 			my %max_impositions;
 			foreach my $I ( @press_impositions ) {
-$I->display("need $needed_pages");
 				next if $needed_pages < $$I{pages};
 				$max_impositions{$$I{pages}} = $$I{imposition} if (!exists $max_impositions{$$I{pages}}) or $$I{imposition} > $max_impositions{$$I{pages}};
 			} # end foreach
