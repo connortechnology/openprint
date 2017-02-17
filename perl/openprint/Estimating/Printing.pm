@@ -3094,7 +3094,7 @@ sub save_price( $$$$$ ) {
 	$$specs{'Runspeed'.$qty_index} = $$price{Runspeed};
 
 	if ( ( ! defined $$specs{'OverridePrice'.$qty_index} ) or $$specs{'OverridePrice'.$qty_index} ne 'Y' ) {
-		if ( $$specs{pages_supplied} ) {
+		if ( $$specs{pages_supplied} and ( $$specs{pages_supplied} eq 'Y' ) ) {
 			$$specs{'txtPrice'.$qty_index} = sprintf($openprint::config{ProjectMoneyFormat}, 0 );
 		} else {
 			my $total_price = $$price{'Total Cost'};
