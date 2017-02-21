@@ -4770,7 +4770,7 @@ my %config_actions = (
 	'Add Currency'			=>	76,
 	'Update Configuration' => 77,
 	'Login Failed'	=> 78,
-	'Switch Company'	=>	79,
+	'Select Company'	=>	79,
 	'Login'		=>	2,
 	'Logout'	=>	3,
 	'Service Copy'	=>	27,
@@ -4791,7 +4791,7 @@ my %config_actions = (
 	'Intrusion'		=>	202,
 );
 foreach my $config_action ( keys %config_actions ) {
-	my $Action = openprint::Log_Action->find_one('name'=>$config_action);
+	my $Action = openprint::Log_Action->find_one( name=>$config_action);
 	if ( $Action ) {
 		if ( $Action->id() != $config_actions{$config_action} ) {
 			$log->debug("Must renumber the action: $config_action want $config_actions{$config_action} have $$Action{id}");
