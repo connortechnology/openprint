@@ -86,11 +86,12 @@ foreach my $db ( @dbs ) {
 			} # end if
 		} # end if
 		my $command = join(' ',
-				'pg_dump -b -Fc ',
-				( $$opts{host} and $$opts{host} ne 'local' ? ( '-h', $$opts{host} ) : () ),
+				'pg_dump -b -Fc',
+				( ( $$opts{host} and $$opts{host} ne 'local' ) ? ( '-h', $$opts{host} ) : () ),
 				( $$opts{port} ? ( '-p', $$opts{port} ): () ),
 				$db, '|', 'bzip2', '>', "$path/$db/$year-$mon-$mday.sql.new.bz2",
 				);
+		#print "running $command\n";
 		system($command);
 		die "Can't dump $db" if $?;
 		if ( ! rename( "$path/$db/$year-$mon-$mday.sql.new.bz2", "$path/$db/$year-$mon-$mday.sql.bz2" ) ) {

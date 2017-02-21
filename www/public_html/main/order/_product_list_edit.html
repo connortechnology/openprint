@@ -14,7 +14,7 @@
 			$html .= '<div class="Product"><p class="buttons">';
 			$html .= button( 'Remove'.$$Product{id}, { href=>"information.html?order_id=$$variable{order_id}&amp;action=remove&amp;product_id=$$Product{id}", text => 'Remove' } );
 			$html .= '</p><br class="spacer"/>';
-			$html .= include( '/main/order/_product_information.html' );
+			$html .= include( '/main/order/_product_list.html' );
 			$html .= '</div>';
 		} # end if
 	} # end foreach

@@ -26,6 +26,7 @@ require Date::Parse;
 require Date::Format;
 require DateTime::Format::Pg;
 require DateTime::TimeZone;
+require POSIX;
 my $parser = 'DateTime::Format::Pg';
 
 #Used for resource hashed links
@@ -776,7 +777,13 @@ sub write_override {
 sub count_lines {
 	if ( $_[0] ) {
 		my @lines = split( "\n", $_[0] );
-		return scalar @lines;
+		my $lines = scalar @lines;
+		if ( $_[1] and $_[1]{width} ) {
+				foreach ( @lines ) {
+					$lines += ( POSIX::ceil( length($_ ) / $_[1]{width} ) ) - 1;
+				}
+		}	
+		return $lines;
 	} else {
 		return 2;
 	} # end if
@@ -989,7 +996,7 @@ sub reset_session($) {
 		} #end if
 	} # end foreach
 	%param = ();
-	$variable{ExternalRedirect} = $_[0];
+	#$variable{ExternalRedirect} = $_[0];
 } # end sub reset_session
 
 
@@ -1080,6 +1087,12 @@ sub format_date {
 sub format_datetime {
 	return $_[0] ? Date::Format::time2str( $config{DateTimeFormat}, Date::Parse::str2time( $_[0] ) ) : '';
 } # end sub format_datetime
+sub format_csv_datetime {
+	return $_[0] ? Date::Format::time2str( '%Y-%m-%d %H:%M:%S', Date::Parse::str2time( $_[0] ) ) : '';
+} # end sub format_datetime
+sub format_csv_date {
+	return $_[0] ? Date::Format::time2str( '%Y-%m-%d', Date::Parse::str2time( $_[0] ) ) : '';
+} # end sub format_datetime
 
 sub link {
 	return '<link rel="stylesheet" type="text/css" href="'.hash_link($_[0]).'"/>';
@@ -1098,6 +1111,25 @@ sub include_logs_view {
 	setup_date_select( $variable{uri}, 'log_created_on_start', -31 );
 	setup_date_select( $variable{uri}, 'log_created_on_end', '' );
 	return include('/includes/_logs_contents_view.html');
+}
+
+sub do_css_links {
+    my @html;
+    my $css = shift;
+    $css =~ s/^\///;
+    $css =~ s/\..+$//;
+    my @parts = split '/', $css;
+    
+    while ( @parts ) {
+        $css = join('_', @parts ) . '.css';
+        if ( -e $config{SkinPath}.'/css/'.$css ) {
+            push @html, '<link type="text/css" rel="stylesheet" href="'.hash_link('/css/'.$css).'"/>';
+		} else {
+			$log->debug("Does not exist at " . $config{SkinPath}.'/css/'.$css);
+        } # end if
+        pop @parts;
+    } # end while
+    return join("\n", reverse @html );
 }
 
 1;

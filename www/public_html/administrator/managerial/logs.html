@@ -70,6 +70,8 @@
 					) ];
 
 				foreach my $Log ( @{$$variable{'Results'}} ) {
+					my $Object = $Log->Object();
+
 					$html .= sprintf('<tr id="log_%d">
 							<td class="Action">%s</td>
 							<td class="DateTime">%s</td>
@@ -89,7 +91,7 @@
 						$Log->User()->link_to( $Log->User()->email() ),
 						$Log->User()->name(),
 						$Log->Company()->name(),
-						( $Log->Object() ? $Log->Object()->link_to( $Log->object_type() ) : '' ),
+						( $Object ? $Object->link_to( $Log->object_type() ) : '' ),
 						join("\n",
 							button( 'X'.$Log->id(), { onclick=>qq`new Ajax.Request('_logs.json', { parameters: { action: 'delete', log_id: $$Log{id} }, onSuccess: function(){ \$('log_$$Log{id}').remove() } } );`, text=>'-' } ),
 						),

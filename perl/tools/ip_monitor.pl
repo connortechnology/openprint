@@ -119,12 +119,14 @@ while(1) {
 	my @Hosts = openprint::Host->find( monitored=>1 );
 	foreach my $Host ( @Hosts ) {
 
+		$log->debug( $Host->hostname() . ' was ' . ( $Host->online() ? 'online' : 'offline' ) );
 
 		my $online = undef;
 		my $now = time;
 		my $has_monitored_interfaces = 0;
 
-		my @HIs = $Host->Interfaces();
+		# First find out current status, then lock & load to find out previous status because we don't want to hold this lock for however long it takes to ping.
+		my @HIs = $Host->Interfaces( undef );
 		foreach my $HI ( @HIs ) {
 			next if ! $HI->monitor();
 			if ( ! $HI->ip() ) {
@@ -155,7 +157,6 @@ while(1) {
 		$Host->lock();
 		$Host->load(); # these pings can take a long time, and the record could get out of date, so refresh
 		my $was_online = $Host->online();
-		$log->debug( $Host->hostname() . ' was ' . ( $Host->online() ? 'online' : 'offline' ) );
 		if ( $online != $was_online ) {
 			my $notified = $$Host{notified};
 
@@ -171,6 +172,12 @@ while(1) {
 # We are now online and an offline notification went out. So send an online notification
 				$log->debug("Sending online notification");
 				notify( $Host, $online );
+			}
+		} else {
+			if ( ( ! $online ) and $$Host{notify_frequency} and ( $$Host{notify_frequency} < ( $now - $$Host{state_changed_on} ) ) ) {
+			$log->error("( ! $online ) and $$Host{notify_frequency} and ( $$Host{notify_frequency} < ( $now - $$Host{state_changed_on}-$now ) ) " . ($now-$$Host{state_changed_on} ));
+				notify( $Host, $online );
+				$Host->save({state_changed_on => $now });
 			}
 		} # end if ionline status change
 
@@ -308,6 +315,7 @@ sub notify {
 				HTML_BODY	=>	$html_body,
 				);
 	} # end if @To > 10
+	(new openprint::Log())->save({ Object=>$Host, action=>'Emailed', note=>$results });
 	return $results;
 }
 

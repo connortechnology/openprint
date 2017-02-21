@@ -54,6 +54,7 @@ $serial = 'hosts_id_seq';
 	offline_seconds	=>	'offline_seconds',
 	state_changed_on	=>	'state_changed_on',
 	notified			=>	'notified',
+	notify_frequency	=>	'notify_frequency',
 	location_id			=>	'location_id',
 );
 %find_fields = (
@@ -63,6 +64,7 @@ $serial = 'hosts_id_seq';
 );
 %transforms = (
 	id			=>	[ 's/\D//g' ],
+	notify_frequency	=>	[ 's/\D//g' ],
 	hostname	=>	[ 's/\s//g' ],
 	description	=>	[ 's/^\s+//', 's/\s+$//', 's/\s\s+/ /g' ],
 );
@@ -82,6 +84,7 @@ $serial = 'hosts_id_seq';
 	'offline_seconds'	=>	undef,
 	'notified'=>	0,
 	location_id		=>	undef,
+	notify_frequency	=>	undef,
 );
 
 sub destroy {
@@ -132,26 +135,6 @@ sub type {
 	return $_[0]{type};
 } # end sub type
 
-sub Assets {
-	require openprint::Object_Asset;
-	if ( $_[1] ) {
-		$_[1]{object_id} = $_[0]{id};
-		$_[1]{object_type} = 'openprint::Host';
-		$_[1]{order} = 'created_on' if ! $_[1]{order};
-
-		return openprint::Object_Asset->find(%{$_[1]});
-	} # end if
-
-	if ( ! defined $_[0]{Assets} ) {
-		@{$_[0]{Assets}} = openprint::Object_Asset->find(
-				'object_type'	=>	'openprint::Host',
-				'object_id'		=>	$_[0]{id}, 
-				'order'			=>	'created_on'
-				);
-	} # end if
-	return @{$_[0]{Assets}};
-} # end sub Assets
-
 sub Notifications {
 	if ( ! $_[0]{Notifications} ) {
 		@{$_[0]{Notifications}} = openprint::Host_Notification->find(
@@ -198,7 +181,7 @@ sub Location {
 } # end sub Location
 
 sub resolve {
-	foreach my $Interface (  $_[0]->Interfaces() ) {
+	foreach my $Interface (	$_[0]->Interfaces() ) {
 		my $hostname = $Interface->resolve();
 		return $hostname if $hostname;
 	} # end foreach Interface
@@ -223,7 +206,9 @@ sub reboot {
 
 		if ( sets::isin( $_[0]->type(), [ 'AIC500', 'AIC500W', 'AIC777W', 'AIC747W' ] ) ) {
 			$url = 'http://'.$HI->ip().'/admin/reboot.cgi?type=0';
-		} elsif( $_[0]->type() eq 'M8640' ) {
+		} elsif ( $_[0]->type() eq 'AIC250W' ) {
+			$url = 'http://'.$HI->ip().'/Reply.htm?Reset=Yes';
+		} elsif ( $_[0]->type() eq 'M8640' ) {
 			$url = 'http://'.$HI->ip().'/cgi-bin/reboot.cgi';
 		} elsif ( $_[0]->type() eq 'TL-WPA4220' ) {
 			$url = 'http://'.$HI->ip().'/userRpm/SysRebootRpm.htm?Reboot=Reboot';
@@ -245,7 +230,7 @@ sub reboot {
 			$url = 'http://'.$HI->ip().'/setSystemReboot';
 			$method = 'post';
 			$args = {
-				RepySuccessPage=>'reboot.htm',
+				ReplySuccessPage=>'reboot.htm',
 				ReplyErrorPage	=>	'reboot.htm',
 				Reset => 'Reboot the Device',
 			};
@@ -279,7 +264,7 @@ sub reboot {
 					my $headers = $response->headers();
 					foreach my $k ( keys %$headers ) {
 						$openprint::log->error("Header $k => $$headers{$k}");
-					}  # end foreach
+					}	# end foreach
 					$openprint::log->error( $response->content );
 					next;
 				} else {
@@ -291,7 +276,7 @@ sub reboot {
 				my $headers = $response->headers();
 				foreach my $k ( keys %$headers ) {
 					$openprint::log->error("Header $k => $$headers{$k}");
-				}  # end foreach
+				}	# end foreach
 				next;
 			} # end if
 		} else {
@@ -318,11 +303,10 @@ sub reboot {
 			if ( @To and ( @To < 10 ) ) {
 				$openprint::log->debug("Emailing: " . join(',', map { $_->email() } @To ) );
 				my $results = (new openprint::Email())->send(
-						TO    =>  \@To,
-						SUBJECT   =>  'Camera rebooted ' . $Host->hostname(),
-						FROM      =>  $openprint::config{TechSupportEmail},
-						BODY      =>  "
-
+						TO			=>	\@To,
+						SUBJECT	=>	'Camera rebooted ' . $Host->hostname(),
+						FROM		=>	$openprint::config{TechSupportEmail},
+						BODY		=>	"
 						Description: $$Host{description}
 						",
 						);

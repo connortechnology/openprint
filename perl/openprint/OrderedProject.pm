@@ -6,11 +6,10 @@ require openprint::Object;
 require openprint::Project;
 require openprint::Project_Service;
 require openprint::Order;
-require sql;
 
 use vars qw( $debug $table $serial %fields %transforms %defaults );
 
-$debug = 0;
+$debug = 1;
 $table = 'order_contents';
 $serial = 'order_contents_id_seq';
 
@@ -31,7 +30,11 @@ $serial = 'order_contents_id_seq';
 );
 
 sub Project {
-	return new openprint::Project( $_[0]{'project_id'} );
+	if ( ! $_[0]{Project} ) {
+		$_[0]{Project} = new openprint::Project( $_[0]{project_id} );
+		$_[0]{Project}{OrderedProject} = $_[0];
+	}
+	return $_[0]{Project};
 } # end sub Project
 
 sub cost {
@@ -73,6 +76,7 @@ sub delete {
 	my $self = shift;
 
 	my $error;
+	require sql;
 	my $ac = sql::start_transaction( $openprint::dbh );
 	my $Project = $self->Project();
 	$Project->add_to_log( @openprint::session{'company_id','user_id'}, "Removed from order $$self{order_id}" );
@@ -89,23 +93,23 @@ sub delete {
 sub shippingtype {
 	my ( $self, $new ) = @_;
 	if ( $new ) {
-		$$self{'shippingtype'} = $new;
+		$$self{shippingtype} = $new;
 	} # end if
-	if ( ! $$self{'shippingtype'} ) {
+	if ( ! $$self{shippingtype} ) {
 		my $services = $self->Project()->services();
-		$$self{'shippingtype'} = join(',', map { $_->ServiceType()->name() } openprint::Project_Service->find('project_id'=>$$self{'project_id'},'category'=>'Shipping') );
+		$$self{shippingtype} = join(',', map { $_->ServiceType()->name() } openprint::Project_Service->find('project_id'=>$$self{project_id},'category'=>'Shipping') );
 	} # end if
-	return $$self{'shippingtype'};
+	return $$self{shippingtype};
 } # end sub shippingtype
 
 sub description { 
 	if ( @_ > 1 ) {
-		$_[0]{'description'} = $_[1];
+		$_[0]{description} = $_[1];
 	} # end if
-	if ( ! $_[0]{'description'} ) {
-		$_[0]{'description'} = $_[0]->Project()->reference();
+	if ( ! $_[0]{description} ) {
+		$_[0]{description} = $_[0]->Project()->reference();
 	} # end if
-	return $_[0]{'description'};
+	return $_[0]{description};
 } # end sub description
 
 1;

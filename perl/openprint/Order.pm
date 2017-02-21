@@ -20,7 +20,7 @@ require openprint::Payment;
 require openprint::Tax;
 require openprint::Order_Notification;
 
-$debug = 0;
+$debug = 1;
 
 $table = 'orders';
 $serial = 'orders_id_seq';
@@ -140,7 +140,7 @@ if ( 0 ) {
 	} # end if
 }
 	sql::end_transaction( $dbh, $ac );
-	return;
+	return '';
 } # end sub save
 
 sub delete {

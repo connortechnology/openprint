@@ -57,52 +57,53 @@ $serial	= 'paper_id_seq';
 		doublesided	=>	'doublesided', 
 		perfecting	=>	'perfecting', 
 		score_required	=>	'score_required',
-		'die_score_required'	=>	'die_score_required',
-		'width'				=>	'width',
-		'height'			=>	'height',
-		'mweight'			=>	'mweight',
-		'sheets_per_package'	=>	'sheets_per_package',
-		'gsm'					=>	'gsm',
-		'wpsi'					=>	'wpsi',
-		'digital'				=>	'digital',
-		'type'					=>	'type',
-		'basis_width'			=>	'basis_width',
-		'basis_height'			=>	'basis_height',
-		'basis_mweight'			=>	'basis_mweight',
-		'bladecleaning'			=>	'bladecleaning',
-		'grade'					=>	'grade',
-		'grain_direction'		=>	'grain_direction',
-		'fsc_code'				=>	'fsc_code',
-		'supplied'				=>	'supplied',
-		'minimum_order'			=>	'minimum_order',
-		'inventory_number'		=>	'inventory_number',
-		'full_packages'			=>	'full_packages',
-		'message'				=>	'message',
-		'in_stock'				=>	'in_stock',
-		'allocated'				=>	'allocated',
-		'parts'					=>	'parts',
-		'material_id'			=>	'material_id',
-		'user_type'				=>	'user_type',
+		die_score_required	=>	'die_score_required',
+		width				=>	'width',
+		height			=>	'height',
+		mweight			=>	'mweight',
+		sheets_per_package	=>	'sheets_per_package',
+		gsm					=>	'gsm',
+		wpsi					=>	'wpsi',
+		digital				=>	'digital',
+		type					=>	'type',
+		basis_width			=>	'basis_width',
+		basis_height			=>	'basis_height',
+		basis_mweight			=>	'basis_mweight',
+		bladecleaning			=>	'bladecleaning',
+		grade					=>	'grade',
+		grain_direction		=>	'grain_direction',
+		fsc_code				=>	'fsc_code',
+		supplied				=>	'supplied',
+		minimum_order			=>	'minimum_order',
+		inventory_number		=>	'inventory_number',
+		full_packages			=>	'full_packages',
+		message				=>	'message',
+		in_stock				=>	'in_stock',
+		allocated				=>	'allocated',
+		parts					=>	'parts',
+		material_id			=>	'material_id',
+		user_type				=>	'user_type',
 		manufacturers_name		=>	'manufacturers_name',
 		available_to_order		=>	'available_to_order',
 		department_id			=>	'department_id',
+		Supplied					=>	undef,
 		);
 %find_fields = (
-		#'manufacturer'	=>	'(SELECT name FROM manufacturers WHERE manufacturers.id=papers.manufacturer_id)',
+		#manufacturer	=>	'(SELECT name FROM manufacturers WHERE manufacturers.id=papers.manufacturer_id)',
 		manufacturer	=>	'manufacturer_id = (SELECT id FROM manufacturers WHERE name=?)',
-		#'group'	=>	'(SELECT name FROM stockgroups WHERE stockgroups.id=papers.group_id)',
+		#group	=>	'(SELECT name FROM stockgroups WHERE stockgroups.id=papers.group_id)',
 		group	=>	'group_id = (SELECT id FROM stockgroups WHERE name=?)',
-		#'material'	=>	'(SELECT name FROM stockmaterials WHERE stockmaterials.id=papers.material_id)',
+		#material	=>	'(SELECT name FROM stockmaterials WHERE stockmaterials.id=papers.material_id)',
 		material	=>	'material_id = (SELECT id FROM stockmaterials WHERE name=?)',
-		#'brand'	=>	'(SELECT name FROM stockbrands WHERE stockbrands.id=papers.brand_id)',
+		#brand	=>	'(SELECT name FROM stockbrands WHERE stockbrands.id=papers.brand_id)',
 		brand	=>	'brand_id = (SELECT id FROM stockbrands WHERE name=?)',
-		#'finish'	=>	'(SELECT name FROM stockfinishes WHERE stockfinishes.id=papers.finish_id)',
+		#finish	=>	'(SELECT name FROM stockfinishes WHERE stockfinishes.id=papers.finish_id)',
 		finish	=>	'finish_id = (SELECT id FROM stockfinishes WHERE name=?)',
-		#'colour'	=>	'(SELECT name FROM stockcolours WHERE stockcolours.id=papers.colour_id)',
+		#colour	=>	'(SELECT name FROM stockcolours WHERE stockcolours.id=papers.colour_id)',
 		colour	=>	'colour_id = (SELECT id FROM stockcolours WHERE name=?)',
-		#'weight'	=>	'(SELECT name FROM stockweights WHERE stockweights.id=papers.weight_id)',
+		#weight	=>	'(SELECT name FROM stockweights WHERE stockweights.id=papers.weight_id)',
 		weight	=>	'weight_id = (SELECT id FROM stockweights WHERE name=?)',
-		#'quality'	=>	'(SELECT name FROM stockqualities WHERE stockqualities.id=papers.quality_id)',
+		#quality	=>	'(SELECT name FROM stockqualities WHERE stockqualities.id=papers.quality_id)',
 		quality	=>	'quality_id = (SELECT id FROM stockqualities WHERE name=?)',
 		size		=>	q`width || '" x ' || height || '"'`,
 		sheetsize		=>	q`width || '" x ' || height || '"'`,
@@ -151,7 +152,8 @@ $serial	= 'paper_id_seq';
 	allocated	=>	q`'0'`,
 	in_stock	=>	q`'0'`,
 	bladecleaning	=>	q`'0'`,
-	user_type	=>	q`''`,
+	#user_type	=>	q`''`,
+	user_type	=>	undef,
 	supplied		=>	undef,
 	sheets_per_package	=>	undef,
 	wpsi				=>	undef,
@@ -160,7 +162,7 @@ $serial	= 'paper_id_seq';
 	department_id		=>	undef,
 	inventory_number	=>	undef,
 	full_packages		=>	q`'0'`,
-	minimum_order		=>	undef,
+	minimum_order		=>	q`'0'`,
 	parts				=>	undef,
 	digital				=>	undef,
 	message				=>	undef,
@@ -168,11 +170,11 @@ $serial	= 'paper_id_seq';
 );
 
 %grades = (
-1	=>	'1 Gloss-coated stock',
-2	=>	'2 Matte-coated stock',
-3	=>	'3 Gloss-coated, web stock', 
-4	=>	'4 Uncoated, white stock', 
-5	=>	'5 Uncoated, yellow stock'
+		1	=>	'1 Gloss-coated stock',
+		2	=>	'2 Matte-coated stock',
+		3	=>	'3 Gloss-coated, web stock', 
+		4	=>	'4 Uncoated, white stock', 
+		5	=>	'5 Uncoated, yellow stock'
 );
 sub load {
 	my ( $self, $data ) = @_;
@@ -183,7 +185,7 @@ sub load {
 	if ( exists $$data{allocated} ) {
 		$$self{allocated} = $$data{allocated}
 	}
-	@$self{'start_width','start_height'} = @$self{'width','height'};
+	@$self{'start_width','start_height','Supplied'} = ( @$self{'width','height'}, $self );
 } # end sub load
 
 # Returns a copy of the paper object.
@@ -229,7 +231,7 @@ sub save {
 		my $Material = openprint::StockMaterial->find_one('name lc'=>lc openprint::StockMaterial->transform( 'name', $$self{material} ) );
 		if ( ! $Material ) {
 			$Material = new openprint::StockMaterial();
-			if ( $_ = $Material->save( {'name'=>$$self{material}} ) ) {
+			if ( $_ = $Material->save( {name=>$$self{material}} ) ) {
 				return $_;
 			} # end if
 		} # end if
@@ -239,7 +241,7 @@ sub save {
 		my $Brand = openprint::StockBrand->find_one('name lc'=>lc openprint::StockBrand->transform( 'name', $$self{brand} ) );
 		if ( ! $Brand ) {
 			$Brand = new openprint::StockBrand();
-			if ( $_ = $Brand->save({'name'=>$$self{brand}}) ) {
+			if ( $_ = $Brand->save({name=>$$self{brand}}) ) {
 				return $_;
 			} # end if
 		} # end if
@@ -249,7 +251,7 @@ sub save {
 		my $Finish = openprint::StockFinish->find_one('name lc'=>lc openprint::StockFinish->transform( 'name', $$self{finish} ) );
 		if ( ! $Finish ) {
 			$Finish = new openprint::StockFinish();
-			if ( $_ = $Finish->save({'name'=>$$self{finish}}) ) {
+			if ( $_ = $Finish->save({name=>$$self{finish}}) ) {
 				return $_;
 			} # end if
 		} # end if
@@ -259,7 +261,7 @@ sub save {
 		my $Colour = openprint::StockColour->find_one('name lc'=>lc openprint::StockColour->transform( 'name', $$self{colour} ) );
 		if ( ! $Colour ) {
 			$Colour = new openprint::StockColour();
-			if ( $_ = $Colour->save({'name'=>$$self{colour}}) ) {
+			if ( $_ = $Colour->save({name=>$$self{colour}}) ) {
 				return $_;
 			} # end if
 		} # end if
@@ -280,7 +282,7 @@ sub save {
 		my $Quality = openprint::StockQuality->find_one('name lc'=>lc $$self{quality});
 		if ( ! $Quality ) {
 			$Quality = new openprint::StockQuality();
-			if ( $_ = $Quality->save({'name'=>$$self{quality}}) ) {
+			if ( $_ = $Quality->save({name=>$$self{quality}}) ) {
 				return $_;
 			} # end if
 		} # end if
@@ -290,7 +292,7 @@ sub save {
 		my $Manufacturer = openprint::Manufacturer->find_one('name lc'=>lc openprint::Manufacturer->transform( 'name', $$self{manufacturer} ) );
 		if ( ! $Manufacturer ) {
 			$Manufacturer = new openprint::Manufacturer();
-			if ( $_ = $Manufacturer->save({'name'=>$$self{manufacturer}}) ) {
+			if ( $_ = $Manufacturer->save({name=>$$self{manufacturer}}) ) {
 				return $_;
 			} # end if
 		} # end if
@@ -423,19 +425,19 @@ sub id_string {
 	} # end if
 	if ( ! $$self{id_string} ) {
 		my $string = join(' ', ( $self->manufacturer(), $self->brand(), $self->finish(), $self->colour(), $self->weight() ) );
-		if ( $self->type() eq 'Roll' ) {
-			$string .= ' ' . $self->width.'"' if $self->width();
+		if ( $$self{type} eq 'Roll' ) {
+			$string .= ' ' . $$self{width}.'"' if $$self{width};
 			$string .= ' Roll ';
 		} else {
-			if ( $self->start_width() and ( ( $self->width() != $self->start_width() ) or ( $self->height() != $self->start_height() ) ) ) {
-				$string .= ' ' . $self->start_width().'x'.$self->start_height() . ' => '. $self->width().'x'.$self->height() . ' ';
+			if ( $$self{start_width} and ( ( $$self{width} != $$self{start_width} ) or ( $$self{height} != $$self{start_height} ) ) ) {
+				$string .= ' ' . $$self{start_width}.'x'.$$self{start_height} . ' => '. $$self{width}.'x'.$$self{height} . ' ';
 			} else {
-				$string .= ' ' . $self->width().'x'.$self->height() . ' ';
+				$string .= ' ' . $$self{width}.'x'.$$self{height} . ' ';
 			} # end if
 			#$string .= $self->mweight().'M ' if $self->mweight();
 		} # end if
-		$string .= sprintf('%.1fPT ', 1000*$self->calliper()) if $self->calliper();
-		$string .= $self->gsm().'gsm ' if $self->gsm();
+		$string .= sprintf('%.1fPT ', 1000*$$self{calliper}) if $self->calliper();
+		$string .= $$self{gsm}.'gsm ' if $self->gsm();
 		$string .= 'FSC:' . $$self{fsc_code} if $$self{fsc_code};
 		$string .= 'Minimum: ' . $$self{minimum_order} if $$self{minimum_order};
 		$$self{id_string} = $string;
@@ -451,18 +453,22 @@ sub to_string {
 	if ( ! $$self{to_string} ) {
 		my $string = ($$self{id} ? '' : 'Custom: ').join(' ', ( $self->manufacturer(), $self->brand(), $self->finish(), $self->colour(), $self->weight() ) );
 		if ( $self->type() eq 'Roll' ) {
-			$string .= ' ' . $self->width.'"' if $self->width();
+			$string .= ' ' . $self->width.'"' if $$self{width};
 			$string .= ' Roll ';
 		} else {
-			if ( $self->start_width() and ( ( $self->width() != $self->start_width() ) or ( $self->height() != $self->start_height() ) ) ) {
-				$string .= ' ' . $self->start_width().'x'.$self->start_height() . ' => '. $self->width().'x'.$self->height();
+			if ( $$self{start_width} and ( ( $$self{width} != $$self{start_width} ) or ( $$self{height} != $$self{start_height} ) ) ) {
+				$string .= ' ' . $$self{start_width}.'x'.$$self{start_height} . ' => '. $$self{width}.'x'.$$self{height};
 			} else {
-				$string .= ' ' . $self->width().'x'.$self->height();
+				$string .= ' ' . $$self{width}.'x'.$$self{height};
 			} # end if
 			#$string .= $self->mweight().'M ' if $self->mweight();
 		} # end if
+		if ( $openprint::config{Show_Stock_Calliper} ne 'N' ) {
 		$string .= ' '. Math::Round::nearest( 0.1, 1000*$self->calliper()).'PT' if $self->calliper() and ! ( $self->weight() =~ /PT/ );
+		}
+		if ( $openprint::config{Show_Stock_GSM} ne 'N' ) {
 		$string .= ' '. $self->gsm().'gsm' if $self->gsm();
+		}
 		$string .= ' FSC:' . $$self{fsc_code} if $$self{fsc_code};
 		#$string .= 'Minimum: ' . $$self{minimum_order} if $$self{minimum_order};
 		$$self{to_string} = $string;
@@ -765,7 +771,7 @@ sub owner {
 	my $self = shift;
 	my $Company;
 	if ( @_ and $_[0] ) {
-		my @Companies = openprint::Company->find('name'=>$_[0]);
+		my @Companies = openprint::Company->find(name=>$_[0]);
 		if ( ! @Companies ) {
 			$Company = new openprint::Company();
 			$Company->name( $_[0] );
@@ -983,8 +989,8 @@ sub skids {
 sub previous {
 	my $self = shift;
 	my @papers = openprint::Paper->find( 
-'columns'   =>  '*,(select name from stockbrands where id=brand_id) AS brand, (select name from stockfinishes where id=finish_id) AS finish, (select name from stockcolours where id=colour_id) AS colour, (select name from stockweights where id=weight_id) AS weight',
-'order'=>'brand,finish,colour,weight,width,height' );
+columns   =>  '*,(select name from stockbrands where id=brand_id) AS brand, (select name from stockfinishes where id=finish_id) AS finish, (select name from stockcolours where id=colour_id) AS colour, (select name from stockweights where id=weight_id) AS weight',
+order=>'brand,finish,colour,weight,width,height' );
 	for ( my $i = 0; $i < @papers; $i += 1 ) {
 		return $papers[$i-1] if ($papers[$i] == $self )and ($i > 0);
 	} # end if
@@ -996,7 +1002,7 @@ sub next {
 	
 	my @papers = openprint::Paper->find_one( 
 			columns   =>  '*,(select name from stockbrands where id=brand_id) AS brand, (select name from stockfinishes where id=finish_id) AS finish, (select name from stockcolours where id=colour_id) AS colour, (select name from stockweights where id=weight_id) AS weight',
-'order'=>'brand,finish,colour,weight,width,height' );
+order=>'brand,finish,colour,weight,width,height' );
 	for ( my $i = 0; $i < @papers; $i += 1 ) {
 		return $papers[$i+1] if ($papers[$i] == $self )and ($i < @papers);
 	} # end if
@@ -1112,8 +1118,8 @@ sub get_price {
 			$$price{'100lb'} = $$price{price};
 			$$price{'100lb Cost'} = $$price{cost};
 			$$price{'100lb Price'} = $$price{price};
-			#$price{Cost} *= $$self{wpsi} * $self->width() * $self->height();
-			#$price{Price} *= $$self{wpsi} * $self->width() * $self->height();
+			#$price{Cost} *= $$self{wpsi} * $$self{width} * $$self{height};
+			#$price{Price} *= $$self{wpsi} * $$self{width} * $$self{height};
 		#} else {
 			#$$price{'100lb'} = $$price{price};
 			#$$price{'100lb Cost'} = $$price{cost};
@@ -1170,8 +1176,10 @@ sub minimum_order_weight {
 	return $$self{minimum_order_weight};
 } # end sub minimum_order_weight
 
+# Factor is an integer because it is the # of useable sheets we can get out of the supplied sheet.
 sub factor {
 	my $factor = int($_[0]{start_width} / $_[0]{width} ) * int( $_[0]{start_height} / $_[0]{height} ) if $_[0]{width} and $_[0]{height};
+	#my $factor = Math::Round::nearest(0.1,$_[0]{start_width} / $_[0]{width} ) * Math::Round::nearest(0.1, $_[0]{start_height} / $_[0]{height} ) if $_[0]{width} and $_[0]{height};
 	return 1 if ! $factor;
 	return $factor;
 } # end sub factor
@@ -1209,7 +1217,6 @@ sub wpsi {
 		$$self{wpsi} = shift;
 	} # end if
 	if ( ! $$self{wpsi} ) {
-#$openprint::log->debug("Calcing wpsi");
 		if ( $$self{gsm} ) {
 			$$self{wpsi} = $$self{gsm} / 703064.5;
 		} elsif ( $$self{mweight} and ( $$self{type} eq 'Sheet' ) and $$self{width} and $$self{height} ) {
@@ -1218,7 +1225,6 @@ sub wpsi {
 			$$self{wpsi} = ($$self{basis_mweight}/1000)/($self->basis_width()*$self->basis_height());
 		} # end if
 	} # end if
-#$openprint::log->debug("Calcing wpsi $$self{wpsi}");
 	return $$self{wpsi};
 } # end if wpsi
 
@@ -1391,7 +1397,7 @@ sub load_from_signature {
 					weight	=> $$specs{ddmStockWeight},
 					( $Project ? ( 'project_type_id any'=> $Project->type_id() ) : () ),
 # FIXME
-					( $$specs{'PrintingType'.$qty_index} eq 'Digital' ? ( 'digital'=>1 ) : () ),
+					( $$specs{'PrintingType'.$qty_index} eq 'Digital' ? ( digital=>1 ) : () ),
 					order		=>	'minimum_order',
 					);
 			if ( $qty_index and $$specs{'hdnSuppliedStockWidth'.$qty_index} ) {
@@ -1493,9 +1499,9 @@ $log->debug($P->id_string());
 #FIXME Whay?
 # So... if loading need to check that it fits the size.... but if we are loading by id.... then we don't need to do this... maybe test the impact of this code.
 		if ( 
-			( ( $Paper->width() != $$specs{'StockWidth'.$qty_index} ) or ($Paper->type() eq 'Sheet' and $Paper->height() != $$specs{'StockHeight'.$qty_index} ) )
+			( ( $$Paper{width} != $$specs{'StockWidth'.$qty_index} ) or ($$Paper{type} eq 'Sheet' and $$Paper{height} != $$specs{'StockHeight'.$qty_index} ) )
 			and
-			( ( $Paper->height() != $$specs{'StockWidth'.$qty_index} ) or ($Paper->type() eq 'Sheet' and $Paper->width() != $$specs{'StockHeight'.$qty_index} ) )
+			( ( $$Paper{height} != $$specs{'StockWidth'.$qty_index} ) or ($$Paper{type} eq 'Sheet' and $$Paper{width} != $$specs{'StockHeight'.$qty_index} ) )
 		   ) {
 #Carp::cluck("Custom size $$specs{'StockWidth'.$qty_index}x$$specs{'StockHeight'.$qty_index}");
 #$openprint::log->debug("Custom size $$Paper{width}x$$Paper{height} => $$specs{'StockWidth'.$qty_index}x$$specs{'StockHeight'.$qty_index}");
@@ -1669,10 +1675,12 @@ sub types {
 sub Supplied {
 	my ( $self ) = @_;
 	if ( ! $$self{Supplied} ) {
+$openprint::log->error("POpulating SUPLIED");
 		my $Supplied = $self->clone();
 		$$Supplied{width} = $$self{start_width} ? $$self{start_width} : $$self{width};
 		$$Supplied{height} = $$self{start_height} ? $$self{start_height} : $$self{height};
 		delete $$Supplied{to_string};
+		delete $$Supplied{id_string};
 		$Supplied->mweight(0); # force recalc
 		$$self{Supplied} = $Supplied;
 	} # end if

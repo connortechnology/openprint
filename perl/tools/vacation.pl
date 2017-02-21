@@ -104,8 +104,10 @@ sub find_real_address {
 
    # Recipient has vacation
    if ($sth->rows == 1) {
+	   $sth->finish();
 	   return ( 1, $email );
    } elsif ( $vacation_for_aliases ) {
+	  $sth->finish();
       $sth = do_query( 'SELECT goto FROM alias WHERE address=?', $email );
       # Recipient is an alias, check if mailbox has vacation
       if ($sth->rows == 1) { 
@@ -115,9 +117,11 @@ sub find_real_address {
 
          # Alias has vacation
          if ($sth->rows == 1) {
+			$sth->finish();
             return ( 1, $alias );
          } # end if
       } # end if
+	  $sth->finish();
    } # end if
 } # end sub
 
@@ -137,6 +141,7 @@ sub send_vacation_email {
 			do_mail ($orig_from, $orig_from, 'Vacation set with empty body and subject! Please either turn off your vacation auto-responder or enter a message to be sent to people while you are away.', '' );
 		} # end if
 	} # end if
+	$sth->finish();
 
 } # end sub send_vacation_email
 
@@ -191,6 +196,7 @@ for (@search_array) {
 		do_debug ("[DID NOT FIND VACATION]: ", $messageid, $from, $to, $email, $subject);
 	} # end if
 }
+$dbh->disconnect();
 
 0;
 __END__

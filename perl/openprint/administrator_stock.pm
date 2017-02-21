@@ -202,7 +202,7 @@ $openprint::log->debug("Setting: $param{amount} " );
 				$variable{ExternalRedirect} = '/administrator/stock/list.html';
 			} elsif ( $param{mode} eq 'other' ) {
 				my $changed = 0;
-				foreach my $field ( 'score_required' ) {
+				foreach my $field ( 'score_required', 'gsm' ) {
 					if ( $param{$field} ne '' and $Paper->$field() ne $param{$field} ) {
 						$Paper->$field( $param{$field} );
 						$changed = 1;
@@ -221,15 +221,20 @@ $openprint::log->debug("Setting: $param{amount} " );
 
 sub stock {
 
-	my $Paper = new openprint::Paper( $param{stock_id} );
+	my $Paper = openprint::Paper->find_one( id=>$param{stock_id} ) if $param{stock_id};
+	if ( $param{btnFunction} and ! $Paper ) {
+		$variable{error} .= "No stock selected for delete.<br/>";
+		$variable{Stock} = new openprint::Paper();
+		return;
+	}
+
 	if ( $param{btnFunction} eq 'Delete' ) {
-		my $new = $Paper->next();
-		$new = $Paper->previous() if $new == $Paper;
-		$Paper->delete();
-		$variable{information} .= 'Stock ' . $Paper->id() . ' has been deleted.';
-		$Paper = $new;
-		$param{stock_id} = $Paper->id();
-		
+			my $new = $Paper->next();
+			$new = $Paper->previous() if $new == $Paper;
+			$Paper->delete();
+			$variable{information} .= 'Stock ' . $Paper->id() . ' has been deleted.';
+			$Paper = $new;
+			$param{stock_id} = $Paper->id();
 	} elsif ( $param{btnFunction} eq 'Copy' ) {
 		$variable{information} .= 'Stock ' . $Paper->link_to( $Paper->id() ) . ' has been copied.';
 		my $NewPaper = $Paper->copy();
@@ -303,10 +308,17 @@ sub stock {
 		$Paper->message( $param{message} );
 		$Paper->user_type( $param{user_type} );
 
+		my @old_recommendations = $Paper->recommendations();
 		@{$$Paper{recommendations}} = ();
 		foreach my $Type ( openprint::ProjectType->find() ) {
 			push @{$$Paper{recommendations}}, $Type->id() if $param{'chkPRF'.$Type->id()};
 		} # end foreach
+		if ( my @additions = sets::exclude( \@old_recommendations, $$Paper{recommendations} ) ) {
+			push @changes, "Recommendations added: " . join(',', map { $$_{name} } openprint::ProjectType->find( id=>\@additions, order=>'lower(name)' ) ).'<br/>';
+		}
+		if ( my @removals = sets::exclude( $$Paper{recommendations}, \@old_recommendations ) ) {
+			push @changes, "Recommendations removed: " . join(',', map { $$_{name} } openprint::ProjectType->find( id=>\@removals, order=>'lower(name)' ) ).'<br/>';
+		}
 
 		my $message = '';
 # Save prices

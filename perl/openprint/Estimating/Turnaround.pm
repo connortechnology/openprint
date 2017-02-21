@@ -84,6 +84,7 @@ sub save {
 } # end sub save
 sub has_overrides {
 	my ( $Project, $service_id, $specs, $qty_index ) = @_;
+	return;
 }
 1;
 __END__

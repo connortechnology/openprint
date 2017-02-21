@@ -1,10 +1,11 @@
 <script type="text/javascript" src="<?hash_link(/javascripts/pricing.js)?>"></script>
 <?include(/includes/error_reporting.html)?>
 <div class="Product">
-	<form name="f1" id="f1" method="post" enctype="multipart/form-data" action="edit.html">
+	<form name="f1" id="f1" method="post" enctype="multipart/form-data" action="view.html">
+		<input type="hidden" name="product_id" value="<?echo($$variable{Product}->id())?>"/>
 			<p class="buttons">
 				<? echo ( join( "\n", 
-					($session{user_type} eq 'A' ? (
+					( $$variable{Product}->can_edit() ? (
 						button( 'Edit',{ href=>'/product/edit.html?product_id='.$$variable{Product}->id() } ),
 						button( 'Delete', { onclick=>"f1.btnFunction.value='Delete';fmChange=2;fmCheck(f1);" } ),
 						button( 'New',{ href=>'/product/edit.html' } ),
@@ -36,41 +37,22 @@
 			</fieldset>
 		</div>
 		<div class="rightColumn">
-			<fieldset><legend>Specifications</legend>
-				<div id="Specifications">
-
-<table class="List">
-<? echo (
-		my $html;
-		my $rowclass;
-		my $Product = $$variable{Product};
-		foreach my $Spec ( $Product->Specifications() ) {
-			$html .= sprintf('
-<tr%1$s>
-	<td class="name">%2$s</td>
-	<td class="value">%3$s</td>
-</tr>',
-				$rowclass, htmlize( $Spec->name(), $Spec->value() ) );
-			$rowclass = $rowclass ? '' : ' class="colRow"';
-		} # end foreach
-		return $html;
-) ?>
-</table>
+			<?eval($$variable{Object} = $$variable{Product}; )?>
+			<?include(/includes/_specifications_view.html)?>
+		</div>
+		<div class="Photos">
+			<fieldset><legend>Photos</legend>
+			<? eval ( $$variable{Album} = $$variable{Product} ) ?>
+			<?include('/photo_albums/_album_photos.html')?>
+			</fieldset>
+		</div>
+		<br class="spacer"/>
+		<div class="Prices">
+			<fieldset><legend>Prices</legend>
+				<div id="Prices"><?include('_prices_view.html')?>
 				</div>
 			</fieldset>
 		</div>
-<div class="Photos">
-<fieldset><legend>Photos</legend>
-<? eval ( $$variable{Album} = $$variable{Product} ) ?>
-<?include('/photo_albums/_album_photos.html')?>
-</div>
-		<br class="spacer"/>
-<div class="Prices">
-		<fieldset><legend>Prices</legend>
-			<div id="Prices"><?include('_prices_view.html')?>
-			</div>
-		</fieldset>
-</div>
 		<input type="hidden" name="btnFunction"/>
 	</form>
 </div>

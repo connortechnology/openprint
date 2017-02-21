@@ -51,9 +51,9 @@ sub init_cache {
 
 sub get_pricelist_id {
 
-	if ( $openprint::session{'Pricelist_id'} ) {
+	if ( $openprint::session{Pricelist_id} ) {
 		# Validity of session variables is the job of openprint.pm, so it is done once per hit
-		return $openprint::session{'Pricelist_id'};
+		return $openprint::session{Pricelist_id};
 	} # end if
 
 	my $list_id;
@@ -65,15 +65,15 @@ sub get_pricelist_id {
 			$list_id = $openprint::config{'Default'.$Company->country().'Pricelist'};
 		} # end if
 	} # end if
-	if ( ( ! $list_id ) and $openprint::session{'Country'} ) {
-		$list_id = $openprint::config{'Default'.$openprint::session{'Country'}.'Pricelist'};
+	if ( ( ! $list_id ) and $openprint::session{Country} ) {
+		$list_id = $openprint::config{'Default'.$openprint::session{Country}.'Pricelist'};
 	}  # end if
-	$list_id = $openprint::config{'DefaultPricelist'} if ! $list_id;
+	$list_id = $openprint::config{DefaultPricelist} if ! $list_id;
 	if ( ! $list_id ) {
-		$openprint::log->debug("No pricelist to be had! Country: $openprint::session{'Country'}" );
+		$openprint::log->debug("No pricelist to be had! Country: $openprint::session{Country}" );
 	} # end if
 	
-	$openprint::session{'Pricelist_id'} = $list_id;
+	$openprint::session{Pricelist_id} = $list_id;
 	return $list_id;
 } # end sub get_pricelist_id
 
@@ -180,8 +180,10 @@ sub get_best_prices {
 	my ( $cust_id, $prod_index, $list_id, $Object, $equipment, $qty, $period ) = @_;
 
 	if ( ! $list_id ) {
-		$log->error("Not specifying pricelist to get_best_prices is deprecated");
-		Carp::cluck("Not specifying pricelist to get_best_prices is deprecated");
+		my ( $caller, undef, $line ) = caller;
+		$log->error("Not specifying pricelist to get_best_prices is deprecated from $caller:$line");
+
+		Carp::cluck("Not specifying pricelist to get_best_prices is deprecated from $caller:$line");
 # figure out which price list we select from, because the caller didn't specify.
 		$list_id = get_pricelist_id();
 	} # end if
@@ -193,6 +195,10 @@ sub get_best_prices {
 		@pricing = @{$price_cache{$config{db_name}}{$list_id}{$price_type}{$$Object{id}}};
 	} else {
 #$log->warn("Request for old style price for $Object");
+#if ( $Object eq 'openprint::service_priceset' ) {
+#my $Service = new openprint::Service( $prod_index );
+#$log->warn("Loading price for $Object $prod_index $equipment $qty " . $Service->to_string() );
+#}
 		my $priceGroup = $Object->new( $log, $dbh, $list_id, $prod_index, $equipment, $qty, $period );
 		$priceGroup->load();	
 		push @pricing, @{$priceGroup->{prices}};
@@ -209,7 +215,7 @@ $log->debug("Price service_id:$$p{service_id} interpolate:$$p{interpolate};");
 	if ( $cust_id != 0 ) {
 		my $Company = new openprint::Company( $cust_id );
 
-		my $pricingpercent = $Company->discount();
+		my $pricingpercent = $$Company{discount};
 		if ( $pricingpercent ) {
 			$pricingpercent = 1 - ($pricingpercent/100);
 			for ( my $index = 0; $index < @pricing; $index += 1 ) {
@@ -223,9 +229,9 @@ $log->debug("Price service_id:$$p{service_id} interpolate:$$p{interpolate};");
 			} # end for
 		} # end if
 	} # end if
-	if ( $openprint::config{'ApplyMarkup'} ) {
-#$openprint::log->debug("Apply Markup: $openprint::config{'ApplyMarkup'}");	
-		my $pricingpercent = $openprint::config{'ApplyMarkup'};
+	if ( $openprint::config{ApplyMarkup} ) {
+#$openprint::log->debug("Apply Markup: $openprint::config{ApplyMarkup}");	
+		my $pricingpercent = $openprint::config{ApplyMarkup};
 		$pricingpercent =~ s/[^\d\.\-]//g;
 		$pricingpercent /= 100;
 		$pricingpercent += 1;
@@ -298,9 +304,7 @@ sub get_Price {
 
 	if ( $Price and $$Price{price} ) {
 		if ( $openprint::session{company_id} != 0 ) {
-			my $Company = new openprint::Company( $openprint::session{company_id} );
-
-			my $pricingpercent = $Company->discount();
+			my $pricingpercent = $$openprint::Company{discount};
 			if ( $pricingpercent ) {
 				$pricingpercent = 1 - ($pricingpercent/100);
 				if ( $Price->{discountable} ne 'N' ) {
@@ -311,9 +315,9 @@ sub get_Price {
 			} # end if
 		} # end if
 
-		if ( $openprint::config{'ApplyMarkup'} ) {
-#$openprint::log->debug("Apply Markup: $openprint::config{'ApplyMarkup'}"); 
-			my $pricingpercent = $openprint::config{'ApplyMarkup'};
+		if ( $openprint::config{ApplyMarkup} ) {
+#$openprint::log->debug("Apply Markup: $openprint::config{ApplyMarkup}"); 
+			my $pricingpercent = $openprint::config{ApplyMarkup};
 			$pricingpercent =~ s/[^\d\.\-]//g;
 			$pricingpercent /= 100;
 			$pricingpercent += 1;
@@ -344,13 +348,13 @@ sub get_best_price {
 sub get_best_price_object {
 	my ( $cust_id, $prod_index, $list_id, $pricesetclass, $qty, $equipment, $period ) = @_;
 	my $prices = get_best_prices( $cust_id, $prod_index, $list_id, $pricesetclass, $equipment, $qty, $period );
-if ( DEBUG ) {
-	$openprint::log->debug("Prices in get_best_price_obejct for $qty " . @$prices);
-	foreach my $price ( @$prices ) {
-		$openprint::log->debug("service: $$price{service_id} min: $$price{min} max: $$price{max} price:$$price{Price} interpolate: $$price{interpolate}");
-	} # end foreach
-	
-}
+	if ( DEBUG ) {
+		$openprint::log->debug("Prices in get_best_price_obejct for $qty " . @$prices);
+		foreach my $price ( @$prices ) {
+			$openprint::log->debug("service: $$price{service_id} min: $$price{min} max: $$price{max} price:$$price{Price} interpolate: $$price{interpolate}");
+		} # end foreach
+	}
+
 	for ( my $i = 0; $i < @$prices; $i += 1 ) {
 		my $price = $$prices[$i];
 		if ( $price and ( 
@@ -359,7 +363,7 @@ if ( DEBUG ) {
 					 ( ( $price->{min} eq '' or ! defined $price->{min} ) or 1*$price->{min} <= $qty ) and 
 					 ( ( $price->{max} eq '' or ! defined $price->{max} ) or 1*$price->{max} >= $qty )
 					)
-) ) {
+					) ) {
 			if ( $$price{mode} eq 'Interpolate' ) {
 $log->error("Using interpolate $$price{max}");
 				if ( $$price{max} and $i <= ( @$prices - 1 ) ) {
@@ -377,7 +381,6 @@ $log->error("Using interpolate $price->{Price} = $ya + ($yb - $ya)*( ($qty - $xa
 				# Store these for later processing
 				$$price{index} = $i;
 				$$price{prices} = $prices;
-				
 			}
 			return %$price;
 		} # end if
@@ -387,14 +390,14 @@ $log->error("Using interpolate $price->{Price} = $ya + ($yb - $ya)*( ($qty - $xa
 
 sub adjust_price {
 	my ( $Price, $options ) = @_;
-	if ( $openprint::config{'ApplyMarkup'} ) {
-#$openprint::log->debug("Apply Markup: $openprint::config{'ApplyMarkup'}");	
-		my $pricingpercent = $openprint::config{'ApplyMarkup'};
+	if ( $openprint::config{ApplyMarkup} ) {
+#$openprint::log->debug("Apply Markup: $openprint::config{ApplyMarkup}");	
+		my $pricingpercent = $openprint::config{ApplyMarkup};
 		$pricingpercent =~ s/[^\d\.\-]//g;
 		$pricingpercent /= 100;
 # the if here is to preserve empty pricing.	if pricei s empty, we display call, instead of 0.00.
-		if ( $$Price{'Price'} ne '' ) {
-			$$Price{'Price'} *= ( 1 + $pricingpercent );
+		if ( $$Price{Price} ne '' ) {
+			$$Price{Price} *= ( 1 + $pricingpercent );
 		} # end if
 	} # end if
 	return openprint::Currency::convert( $Price );

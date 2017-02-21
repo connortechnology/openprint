@@ -100,16 +100,16 @@ function calc( formName, force, options ) {
 			var data = Form.serialize(form,true);
 			var h = $H(data);
 			h.each(function(pair) {
-			if ( options ) {
-				h.merge( options );
-			}
-		if ( pair.value == '' ) 
-			h.unset(pair.key);
-		if ( pair.key == 'btnFunction' ) 
-			h.unset(pair.key);
-		if ( pair.key == 'alert' ) 
-			h.unset(pair.key);
-	});
+					if ( options ) {
+						h.merge( options );
+					}
+					if ( pair.value == '' ) 
+						h.unset(pair.key);
+					if ( pair.key == 'btnFunction' ) 
+						h.unset(pair.key);
+					if ( pair.key == 'alert' ) 
+						h.unset(pair.key);
+					});
 			new Ajax.Request( '/main/project/_calc.json', { method: 'post', parameters: h, evalScripts: true } );
 		} // end if
 	} // end if
@@ -117,7 +117,7 @@ function calc( formName, force, options ) {
 
 function cbFillResults( results ) {
 	block_calc = true;
-    var form = getFormObj('f1');
+	var form = getFormObj('f1');
 	var AlertDiv = $('AlertDiv');
 	if ( AlertDiv ) {
 		AlertDiv.innerHTML = '';
@@ -130,7 +130,6 @@ function cbFillResults( results ) {
 	for ( var index = 0, leni = keys.length; index < leni; index += 1 ) {
 		var key = keys[index];
 		var value = results.get(keys[index]);
-	
 		if ( key == 'alert') {
 			if (value != '') {
 				var div = $('AlertDiv');
@@ -160,28 +159,44 @@ function cbFillResults( results ) {
 
 		var element = form.elements[key];
 		if ( element ) {
+
+//if ( element.onchange ) {
+//console.log(element.name + element.onchange);
+//} else {
+//console.log(element.name + ' ' + element.type + ' no onchange' );
+//}
 			if ( element.type == 'select-one' ) {
 				ddm_select_by_value( element, value, -1 );
 			} else if ( element.type == 'checkbox' ) {
 				if ( element.value == value ) {
 					if ( ! element.checked ) {
 						element.checked = true;
-						if ( element.onchange ) element.onchange();
+						if ( element.onchange ) {
+							console.log("Calling onchange of checkbox " + element.name );
+							element.onchange();
+						}
 					} // endif
 				} else {
 					if ( element.checked ) {
 						element.checked = false;
-						if ( element.onchange ) element.onchange();
+						if ( element.onchange ) {
+							console.log("Calling onchange of checkbox " + element.name );
+							element.onchange();
+						}
 					} // endif
 				} // end if
 			} else if ( element.type == 'radio' ) {
+console.log(element.name + " is a radio... which we don't handle");
 			} else if ( element.type == 'text' || element.type == 'number' || element.type == 'email' ) {
 
 				if ( element.value != value ) {
 					if ( ! element.gotFocus ) {
 						element.value = value;
+						if ( element.onchange ) {
+							console.log("Calling onchange of unfocused input  " + element.name );
+							element.onchange();
+						}
 					} 
-					if ( element.onchange ) element.onchange();
 				} // end if
 			} else if ( element.type == 'hidden' ) {
 				element.value = value;
@@ -191,12 +206,18 @@ function cbFillResults( results ) {
 					if ( elements[j].value == value ) {
 						if ( ! elements[j].checked ) {
 							elements[j].checked = true;
-							if ( elements[j].onchange ) { elements[j].onchange(); }
+							if ( elements[j].onchange ) { 
+								console.log("Calling onchange of checkbox " + elements[j].name );
+								elements[j].onchange();
+							}
 						} // endif
 					} else {
 						if ( elements[j].checked ) {
 							elements[j].checked = false;
-							if ( elements[j].onchange ) { elements[j].onchange(); }
+							if ( elements[j].onchange ) { 
+								console.log("Calling onchange of checkbox " + elements[j].name );
+								elements[j].onchange();
+							}
 						} // endif
 					} // end if
 				} // end for
@@ -211,16 +232,16 @@ function cbFillResults( results ) {
 					div.removeClassName( value.removeClassName );
 				}
 			} else {
-			//alert('filling: ' + data[0] + ' with: ' + data[1] );
+			//console.log('filling: ' + key + ' with: ' + value );
 			//div.hide();
 			div.innerHTML = value;
 			//d//iv.show();
 			}
 		} else {
-			//alert('didnt find: ' + data[0]);
+			//console.log("didnt find " + key );
 		} // end if
 	} // end for each 
-    gettingNewPrice = false;
+	gettingNewPrice = false;
 	block_calc = false;
 } // end function cbFillResults
 

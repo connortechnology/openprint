@@ -95,6 +95,50 @@ You may use a barcode scanner.  Simply scan the code and click Go.<br/>
 	</fieldset>
 </form>
 <div class="Index">
+<div class="Widgets">
+<?echo ( 
+		my @POs = openprint::PurchaseOrder->find( 
+			'authorized'=>0,
+			'notification_user_id contains'	=>	$session{user_id},
+			order => 'id DESC',
+			limit	=>	5,
+			);
+		my $html;
+	
+		if ( @POs ) {
+			$html .= '<div class="PurchaseOrders"><br/>The following POs need review/authorizing by you.<br/>
+<table id="ResultsTable" class="List sortable">
+  <tr>
+    <th class="po_id">ID</th>
+    <th class="DateTime">Date</th>
+    <th class="Company">Supplier</th>
+    <th class="User">Created By</th>
+    <th class="Manifest">Manifest</th>
+    <th class="Docket">Docket</th>
+    <th class="Price">Total</th>
+  </tr>
+';
+		$html .= join("\n", map { 
+sprintf(q`<tr id="tr-%1$d">
+		<td class="po_id"><a href="/employee/purchase_order/view.html?po_id=%1$d">%1$d</a></td>
+        <td class="DateTime"><a href="/employee/purchase_order/view.html?po_id=%1$d">%2$s</a></td>
+        <td class="Company"><a href="/employee/purchase_order/view.html?po_id=%1$d">%3$s</a></td>
+        <td class="User"><a href="/employee/purchase_order/view.html?po_id=%1$d">%4$s</a></td>
+        <td class="Manifest"><a href="/employee/purchase_order/view.html?po_id=%1$d">%5$s</a></td>
+        <td class="Docket"><a href="/employee/purchase_order/view.html?po_id=%1$d">%6$s</a></td>
+        <td class="Price">%7$s</td>
+      </tr>`, $_->id(), 
+			format_datetime($_->created_on()), $_->Supplier()->name(), $_->Creator()->name(),
+        $_->Manifest()->name(),
+        join( '<br/>', sets::exclude( [''], [ sets::union( map { $_->docket() } $_->Contents() ) ] ) ),
+        openprint::Currency::format( $_->total() ),
+        );
+} @POs );
+		$html .= '</table></div><br/>';
+	}
+	return $html;
+) ?>
+</div>
 <div class="News">
     <ul>
     <? echo (

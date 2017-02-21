@@ -1,4 +1,5 @@
 use strict;
+use warnings;
 package openprint::order;
 
 require Email::Valid;
@@ -76,31 +77,37 @@ sub add_product {
 	$order_id = create_order( ) if ! $order_id;
 	my $Order = new openprint::Order( $order_id );
 
-	my $Product;
-	if ( my @Products = openprint::OrderedProduct->find( 'order_id'=>$order_id, 'product_id'=>$product_id ) ) {
-		$Product = shift @Products;
+	my $Ordered_Product;
+	if ( my @Products = openprint::OrderedProduct->find( order_id=>$order_id, product_id=>$product_id ) ) {
+		$Ordered_Product = shift @Products;
 		# The logic here used to be that we would increase the quantity, but now we are thinking that we will reset the quantity.  Since this would really only happen on a reload anyways.  
 	} else {
-		$Product = new openprint::OrderedProduct();
-		$Product->product_id( $product_id );
-		$Product->order_id( $order_id );
+		my $Product = openprint::Product->find_one(id=>$product_id);
+		if ( ! $Product ) {
+			return ( $order_id, "Product $product_id not found." );
+		}
+		$Ordered_Product = new openprint::OrderedProduct();
+		$Ordered_Product->product_id( $product_id );
+		$Ordered_Product->order_id( $order_id );
 	} # end if	
-	$Product->quantity( $quantity );
-	$error .= $Product->save();
+	$Ordered_Product->quantity( $quantity );
+	$error .= $Ordered_Product->save();
 
 	# Make the object reload its stored cache of Products
 	$Order->Products(undef);
 
-	my $Project = $Product->Project();
-	$Project->order_id( $order_id );
-	$Project->quantity1( $Product->quantity() );
-	foreach my $service_index ( sql::execute( undef, undef, q{SELECT lngServiceIndex FROM tbl_Project_Contents WHERE lngProjectIndex=?}, $Project->id() ) ) {
-		openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $service_index, 'txtQuantity1', $Project->quantity1() );
-	} # end foreach
-	$error .= $Project->recalculate();
-$log->debug("E: $error") if $error;
-	if ( $Project->status() ne 'Unordered' ) {
-		return ( $order_id, 'There is a problem with this product.  Please contact customer support.' );
+	my $Project = $Ordered_Product->Project();
+	if ( $Project ) {
+		$Project->order_id( $order_id );
+		$Project->quantity1( $Ordered_Product->quantity() );
+		foreach my $service_index ( sql::execute( undef, undef, q{SELECT lngServiceIndex FROM tbl_Project_Contents WHERE lngProjectIndex=?}, $Project->id() ) ) {
+			openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $service_index, 'txtQuantity1', $Project->quantity1() );
+		} # end foreach
+		$error .= $Project->recalculate();
+	$log->debug("E: $error") if $error;
+		if ( $Project->status() ne 'Unordered' ) {
+			return ( $order_id, 'There is a problem with this product.  Please contact customer support.' );
+		} # end if
 	} # end if
 
 	return ( $order_id, $error );
@@ -363,17 +370,17 @@ sub create_order {
 	$dbh->do( 'LOCK TABLE Orders IN SHARE ROW EXCLUSIVE MODE' ) or $log->error( DBI->errstr );
 
 	my $Order = new openprint::Order();
-	$Order->save({
+	$_ = $Order->save({
 		user_id		=>	$session{user_id},
 		company_id	=>	$session{company_id},
 		session_id	=>	$session{_session_id},
 		created_on	=>	'NOW()',
 		status		=>	'Incomplete',
-		salesrep_id	=>	new openprint::Company( $session{company_id} )->salesrep_id(),
-		currency_id	=>	openprint::Currency::get_current()->id(),
+		salesrep_id	=>	$openprint::Company->salesrep_id(),
+		currency_id	=>	$openprint::Currency->id(),
 		});
 
-	$Order->add_log( 'Created' );
+	$Order->add_log( 'Created' ) if ! $_;
 
 # unlock database
 	sql::end_transaction( $dbh, $ac );
@@ -415,19 +422,12 @@ sub save_project_information {
 		} # end if
 	} # end if
 
-	if ( $param{'ddmDueDateYear'.$project_index} and $param{'ddmDueDateMonth'.$project_index} and $param{'ddmDueDateDay'.$project_index} ) {
-
-		if ( ! Date::Calc::check_date(1*$param{'ddmDueDateYear'.$project_index},1*$param{'ddmDueDateMonth'.$project_index},1*$param{'ddmDueDateDay'.$project_index})) {
-			return q{Date is not valid. Please select a correct date.};
-		} # end if
-		$OP->requested_for( sprintf('%.4d-%.2d-%.2d', @param{'ddmDueDateYear'.$project_index,'ddmDueDateMonth'.$project_index,'ddmDueDateDay'.$project_index} ) );
-	} # end if
 
 
 	# If we are specifying the Shipping Type
 	if ( $param{'ShippingType'.$project_index} ) {
 		my $quantity_shipped = $Project->ordered_quantity();
-		my @ServiceTypes = openprint::ServiceType->find('category'=>'Shipping');
+		my @ServiceTypes = openprint::ServiceType->find( category=>'Shipping');
 		my $services = $Project->services();
 		my $ProjectCurrency = $Project->Currency();
 		$log->debug("ServiceTypes: " . join(',',map { $_->name() } @ServiceTypes )) if DEBUG;
@@ -493,6 +493,14 @@ sub save_project_information {
 		} elsif ( $quantity_shipped < 0 ) {
 			$error .= $quantity_shipped . ' more items are being shipped or picked up than are being ordered.';	
 		} # end if
+	} # end if
+
+	if ( $param{'requested_for'.$project_index.'_year'} and $param{'requested_for'.$project_index.'_month'} and $param{'requested_for'.$project_index.'_day'} ) {
+
+		if ( ! Date::Calc::check_date( map { 1*$param{join('','requested_for',$project_index,'_',$_)} } ( 'year','month','day' ) ) ) {
+			return q{Date is not valid. Please select a correct date.};
+		} # end if
+		$OP->requested_for( sprintf('%.4d-%.2d-%.2d', map { @param{'requested_for'.$project_index.'_'.$_} } ( 'year','month','day' ) ) );
 	} # end if
 
 	$error .= $Project->save({reference=> $param{"Reference$project_index"}} ) if $param{"Reference$project_index"} and $param{"Reference$project_index"} ne $Project->reference();

@@ -15,6 +15,7 @@ CREATE TABLE hosts (
 	state_changed_on	INTEGER,
 	offline_seconds		INTEGER,
 	notified			BOOLEAN NOT NULL DEFAULT FALSE,
+	notify_frequency	INTEGER,
 	location_id			INTEGER, FOREIGN KEY (location_id) REFERENCES Locations (id),
 	PRIMARY KEY (id)
 );

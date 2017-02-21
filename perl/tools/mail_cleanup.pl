@@ -24,6 +24,9 @@ if ( $ARGV[1] ) {
 	print "Cannot open spool dir $spool_path \n";
 	die;
 } # end if
+if ( ! @users ) {
+	die "There are no users in $domain\n";
+}
 my $DAYS_TO_KEEP_JUNK = $ARGV[2] ? $ARGV[2] : 7;
 my $SECONDS_TO_KEEP_JUNK = $DAYS_TO_KEEP_JUNK*60*60*24;
 
@@ -34,7 +37,7 @@ my $postfix_gid = getgrnam('postfix');
 
 foreach my $user ( @users ) {
 	next if $user =~ /^\./;
-
+print "Checking $user\n" if DEBUG;
 	my $update_spamassassin = 0;
 	foreach my $folder ( '.Junk', '.SpamKiller', '.Junk E-mail' ) {
 		if ( ! -e "$spool_path$user/$folder" ) {

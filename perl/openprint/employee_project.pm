@@ -7,7 +7,6 @@ use openprint ();
 
 require openprint::Project;
 require openprint::order;
-require openprint::main_project;
 require openprint::service;
 require openprint::Equipment;
 require openprint::employee_schedule;
@@ -718,17 +717,19 @@ sub send_proofs_approved_email {
 		push @Users, $CSR if ( ! $Notification );
 	} # end if
 
+	my $results;
 	foreach my $User ( @Users ) {
 		next if $User->id() == $session{user_id};
 		next if $User->deleted();
 		
-		$Email->send(
+		$results .= $Email->send(
 				FROM	=> $openprint::User,
 				TO	  => $User,
 				SUBJECT => "Docket $info{DocketNumber} $$Order{company_name} - Proofs Approved",
 				ATTACHMENTS	=>	\@body,
 				);
 	} # end if
+	$Project->add_to_log( @session{'company_id','user_id'}, "Proofs approved email sent to $results" );
 } # end sub send_proofs_approved_email
 
 sub send_duedate_change_notification {

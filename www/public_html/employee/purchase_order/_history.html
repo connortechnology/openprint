@@ -66,11 +66,25 @@
 			} # end if
 
 
-			next if $session{'/employee/purchase_order/history.html?authorized'} eq 'Y' and $PO->authorized() ne '1';
-			next if $session{'/employee/purchase_order/history.html?authorized'} eq 'N' and $PO->authorized() ne '0';
-			next if $session{'/employee/purchase_order/history.html?authorized'} eq 'U' and $PO->authorized() ne '';
+			if ( $session{'/employee/purchase_order/history.html?authorized'} eq 'Y' and $PO->authorized() ne '1' ) {
+				$log->debug("Next want authd but isn't");
+				next;
+			}
+
+			if ( $session{'/employee/purchase_order/history.html?authorized'} eq 'N' and $PO->authorized() ne '0' ) {
+				$log->debug("Next want not authd but is");
+				next;
+			}
+			if ( $session{'/employee/purchase_order/history.html?authorized'} eq 'U' and $PO->authorized() ne '' ) {
+				$log->debug("Next want unauthd but is");
+				next;
+			}
+
 			next if $session{'/employee/purchase_order/history.html?vendor_category_id'} and $PO->Supplier()->category_id() != $session{'/employee/purchase_order/history.html?vendor_category_id'};
-			next if ! $PO->can_view();
+			if ( ! $PO->can_view() ) {
+				$log->debug("! can_view");
+				next;
+			}
 
 			if ( $session{'/employee/purchase_order/history.html?docket'} ) {
 				my $next = 1;
@@ -82,7 +96,10 @@
 						last;
 					} # end if
 				} # end foreach
-				next if $next;
+				if ( $next ) {
+					$log->debug("Next cuz $next contains $docket");
+					next ;
+				}
 			} # end if
 
 			if ( $param{contains} ) {
@@ -99,6 +116,7 @@
 				next if $next;
 			} # end if
 			if ( $session{'/employee/purchase_order/history.html?types'} ) {
+				$log->debug("looking for " . $session{'/employee/purchase_order/history.html?types'} );
 				my @types = sets::union( map{ $_->type_id() } $PO->Contents() );
 				if ( ! @types ) {
 					next if ! sets::isin( ' ', [ split(',',$session{'/employee/purchase_order/history.html?types'} ) ] );
@@ -117,7 +135,8 @@
 		if ( @{$$variable{PurchaseOrders}} > 100 ) {
 			my @po_ids = map { $$_{id} } @{$$variable{PurchaseOrders}};
 
-			openprint::Company->find( id=>[ sets::union( map { $$_{supplier_id} ? $$_{supplier_id} : () } @{$$variable{PurchaseOrders}} ) ] );
+			my @supplier_ids = sets::union( map { $$_{supplier_id} ? $$_{supplier_id} : () } @{$$variable{PurchaseOrders}} );
+			openprint::Company->find( id=> \@supplier_ids ) if @supplier_ids;
 
 			my %Payments;
 			foreach my $Payment ( openprint::Object_Payment->find( object_type=>'openprint::PurchaseOrder', object_id=>\@po_ids ) ) {
@@ -145,7 +164,7 @@
 			if ( @manifest_ids > 1000 ) {
 				openprint::Manifest->find();
 			} else {
-				openprint::Manifest->find(id=>\@manifest_ids);
+				openprint::Manifest->find(id=>\@manifest_ids) if @manifest_ids;
 			} # end if
 		} # end if
 		sql::end_transaction( $dbh, $ac );

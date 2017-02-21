@@ -32,6 +32,7 @@ function get_value( obj ) {
 				value[value.length] = obj[x].value;
 			} // end if
 		}
+		if ( value.length == 0 ) return;
 		if ( value.length == 1 ) return value[0];
 		return value;
 	} else {

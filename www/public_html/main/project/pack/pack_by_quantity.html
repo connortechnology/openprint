@@ -12,7 +12,7 @@
 			</li>
 <? endif ( $$variable{ServiceTypeID} ne 'ShrinkWrap' ) ?>
 		<? echo ( 
-			my @Materials = openprint::Material->find( category=>$$variable{ServiceType}, order=>'lower(name)' );
+			my @Materials = openprint::Material->find( category=>$$variable{ServiceTypeID}, order=>'lower(name)' );
 			if ( @Materials ) {
 				return '<li><label>Type</label>'.ssi::select( 
 				[ map{ $_->id(), $_->name() } @Materials ], $$variable{type_id}, { name=>'type_id', onchange=>'calc(this.form.name);' } ).'</li>';

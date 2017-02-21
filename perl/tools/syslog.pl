@@ -79,6 +79,7 @@ my @re = (
 		'^(\w{3} [ :0-9]{11}) [\._a-zA-Z0-9\-]+ sshd\[[0-9]+\]: pam_\w+\(sshd:auth\): authentication failure; logname= uid=0 euid=0 tty=ssh ruser= rhost=(?<IP>[\._a-zA-Z0-9\-]+)\s*',
 		'^(\w{3} [ :0-9]{11}) [\._a-zA-Z0-9\-]+ sshd\[[0-9]+\]: Bad protocol version identification \'[^\']+\' from (?<IP>[\._a-zA-Z0-9\-]+)( port [[:digit:]]+)?$',
 		'^(\w{3} [ :0-9]{11}) [\._a-zA-Z0-9\-]+ sshd\[[0-9]+\]: pam_\w+\(sshd:auth\): authentication failure; logname= uid=0 euid=0 tty=ssh ruser= rhost=(?<IP>[\._a-zA-Z0-9\-]+)\s+user\=\w+$',
+		'^(\w{3} [ :0-9]{11}) [\._a-zA-Z0-9\-]+ sshd\[[0-9]+\]: fatal: Unable to negotiate with (?<IP>[\._a-zA-Z0-9\-]+) port [0-9]+',
 		'^(\w{3} [ :0-9]{11}) [\._a-zA-Z0-9\-]+ sshd\[[0-9]+\]: Failed password for [\._a-zA-Z0-9\-]+ from (?<IP>[\._a-zA-Z0-9\-]+) port [0-9]+ ssh2$',
 		'^(\w{3} [ :0-9]{11}) [\._a-zA-Z0-9\-]+ sshd\[[0-9]+\]: Failed password for (invalid|illegal) user [\._a-zA-Z0-9\-]+ from (?<IP>[\._a-zA-Z0-9\-]+) port [0-9]+ ssh2$',
 		'^(\w{3} [ :0-9]{11}) [\._a-zA-Z0-9\-]+ sshd\[[0-9]+\]: error: PAM: Authentication failure for (illegal user root|[\._a-zA-Z0-9\-]+) from (?<IP>[\._a-zA-Z0-9\-]+)$',
@@ -88,6 +89,7 @@ my @re = (
 		'^(\w{3} [ :0-9]{11}) [\._a-zA-Z0-9\-]+ sshd\[[0-9]+\]: Invalid user \w+ from (?<IP>[0-9.]+)$',
 		'^(\w{3} [ :0-9]{11}) [\._a-zA-Z0-9\-]+ sshd\[[0-9]+\]: Connection closed by (?<IP>[0-9.]+):? \[preauth\]$',
 		'^(\w{3} [ :0-9]{11}) [\._a-zA-Z0-9\-]+ sshd\[[0-9]+\]: Received disconnect from (?<IP>[0-9.]+) (port [[:digit:]]+:)?[[:digit:]]+:[ \.,/:[:alnum:]]+\[preauth\]$',
+		'^(\w{3} [ :0-9]{11}) [\._a-zA-Z0-9\-]+ sshd\[[0-9]+\]: Protocol major versions differ for (?<IP>[0-9.]+) ',
 		'^(\w{3} [ :0-9]{11}) [\._a-zA-Z0-9\-]+ sshd\[[0-9]+\]: User \w+ from (?<IP>[0-9.]+) not allowed because (account is locked|not listed in AllowUsers)$',
 		'^(\w{3} [ :0-9]{11}) [\._a-zA-Z0-9\-]+ proftpd\[[0-9]+\]: [\.\-A-Za-z0-9]+ \([\.\-A-Za-z0-9]+\[(?<IP>[.:a-zA-Z0-9]+)\]\) \- Maximum login attempts \([0-9]+\) exceeded, connection refused$',
 		'^(\w{3} [ :0-9]{11}) [\._a-zA-Z0-9\-]+ proftpd\[[0-9]+\]: [\.\-A-Za-z0-9]+ \([\.\-A-Za-z0-9]+\[(?<IP>[.:a-zA-Z0-9]+)\]\) \- USER [\.\-A-Za-z0-9]+: no such user found from [0-9.]+\[[0-9.]+\] to [.:a-zA-Z0-9]+$',
@@ -298,7 +300,13 @@ $log->debug("coutn for $ip is $host_counts{$ip}{count}");
 			$log->debug( "# of entries in host_counts: " . keys %host_counts ) if $config{debug};
 			foreach my $ip ( sort keys %host_counts ) {
 				next if ! $host_counts{$ip}{update};
-				next if $host_counts{$ip}{whitelist};
+				my $count = $host_counts{$ip}{count};
+				$host_counts{$ip}->load();
+				if ( $host_counts{$ip}{whitelist} ) {
+					delete $host_counts{$ip};
+					next;
+				}
+				$host_counts{$ip}{count} = $count;
 				
 				if ( $ip eq '127.0.0.1' ) {
 					$log->warn("WTF blacklistint localhost?!");

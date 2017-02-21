@@ -22,6 +22,7 @@ $serial = 'project_types_id_seq';
 	'sorting'		=>	'sorting',
 	'type'			=>	'type',
 	'please_call'	=>	'please_call',
+	category		=>	undef,
 );
 %transforms = (
 	id			=>	[ 's/\D//g', '<2147483647' ],

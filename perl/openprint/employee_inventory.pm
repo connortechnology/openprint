@@ -235,7 +235,7 @@ sub skids {
 
 sub inventory_report {
 	my %param = @_;
-	my @header = ('Paper ID','Type','Owner','Manufacturer','Name','Finish','Colour','Weight','Material','Group','Width','Height','Quality', 'MWeight','GSM','Skid#','RFIDTag #','Received On', 'Date Added','Last Updated', 'Location', 'In Stock (sheets)','In Stock(lbs)', 'Condition', 'Last Seen', 'Cost', 'Value' );
+	my @header = ('Paper ID','Type','Owner','Manufacturer','Name','Finish','Colour','Weight','Material','Group','Width','Height','Quality', 'MWeight','GSM','Skid#','RFIDTag #','Received On', 'Date Added','Last Updated', 'Location', 'In Stock (sheets)','In Stock(lbs)', 'Condition', 'Last Seen', 'Cost', 'Value', 'Allocated to Docket', 'Dockets' );
 
 	my @data;
 	my $count = 0;
@@ -293,6 +293,14 @@ sub inventory_report {
 		#push @{$SkidContents{$$SC{skid_id}}}, $SC;
 	#} # end foreach SC
 
+	my %Allocations;
+	foreach my $Allocation ( openprint::PaperAllocation->find( 'skid_ids !=' => [] ) ) {
+		foreach my $skid_id ( @{$Allocation->skid_ids()} ) {
+			$Allocations{$skid_id} = [] if ! $Allocations{$skid_id};
+			push @{$Allocations{$skid_id}}, $Allocation->docket();
+		}
+	}
+
 	my $total_value = 0;
 	foreach my $Skid ( @Skids ) {
 		$Skid->Contents( $SkidContents{$$Skid{id}} );
@@ -302,15 +310,15 @@ sub inventory_report {
 		foreach my $C ( $Skid->Contents() ) {
 			next if ! $C;
 			if ( $param{in_stock} eq '1' and ! $C->quantity() ) {
-				$log->debug("Skid $$Skid{id} skipped because  no quantity");
+				$log->debug("Skid $$Skid{id} skipped because no quantity") if DEBUG;
 				next;
 			}
 			if ( $param{has_value} eq '1' and ! $C->cost() ) {
-				$log->debug("Skid $$Skid{id} skipped because no cost");
+				$log->debug("Skid $$Skid{id} skipped because no cost") if DEBUG;
 				next ;
 			}
 			if ( $param{has_value} eq '0' and $C->cost() ) {
-				$log->debug("Skid $$Skid{id} skipped because has cost");
+				$log->debug("Skid $$Skid{id} skipped because has cost") if DEBUG;
 				next ;
 			}
 
@@ -343,22 +351,24 @@ sub inventory_report {
 					$Paper->gsm(),
 					$$Skid{id},
 					$Skid->RFIDTag()->id_short(),
-					ssi::format_datetime( $$Skid{received_on} ),
-					ssi::format_datetime( $$Skid{created_on} ),
-					ssi::format_datetime( $$Skid{updated_on} ),
+					ssi::format_csv_date( $$Skid{received_on} ),
+					ssi::format_csv_date( $$Skid{created_on} ),
+					ssi::format_csv_date( $$Skid{updated_on} ),
 					$Skid->Location()->name(),
 					$Paper->type() eq 'Sheet' ? $C->quantity() : '',
 					$weight,
 					$C->condition(),
-					ssi::format_datetime( $Skid->updated_on() ),#FIXME
+					ssi::format_csv_date( $Skid->updated_on() ),#FIXME
 					1*$C->cost(),
 					1*$C->value(),
+					( $Allocations{$Skid->id} ? join(',', @{$Allocations{$Skid->id}}) : '' ),
+					join(',', $Skid->dockets() ),
 					);
 			$total_value += $C->value();
 		} # end foreach C
 	} # end foreach Skid
 	my $date = Date::Format::time2str('%Y-%m-%d %H:%M', time );
-	push @data, ( 'Report generated',$date,'Count:',$count,undef,undef,undef,undef, undef,undef,undef, undef, undef, undef, undef, undef, undef, undef, undef, undef,undef, 'Total Weight (lbs):', $total_weight, undef, undef, undef,$total_value );
+	push @data, ( 'Report generated',$date,'Count:',$count,undef,undef,undef,undef, undef,undef,undef, undef, undef, undef, undef, undef, undef, undef, undef, undef,undef, 'Total Weight (lbs):', $total_weight, undef, undef, undef, $total_value, undef, undef );
 	return ( \@header, \@data );
 } # end sub inventory_report
 
@@ -2336,7 +2346,16 @@ sub move_skids_window {
 } # end sub move_skids_window
 
 sub allocations {
+	if ( $param{action} ) {
+		if ( $param{action} eq 'Reset' ) {
+			ssi::reset_session($variable{uri});
+		}
+	}
 	_allocations();
+	if ( ! exists $session{$variable{uri}.'?Type'} ) {
+		$session{$variable{uri}.'?Type'} = 'Roll,Sheet';
+	}
+		
 } # end sub allocations
 
 sub _allocations {

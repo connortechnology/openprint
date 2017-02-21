@@ -2,6 +2,8 @@
 use utf8;
 use lib '/var/www/testing/perl';
 use strict;
+use warnings;
+
 use LWP;
 
 require configuration;
@@ -124,6 +126,10 @@ foreach my $Host ( @Hosts ) {
 				};
 
 				my $response = $browser->get( $initial_url );
+				if ( ( ! $response->is_success ) and $response->status_line() ne '403 Forbidden' ) {
+					$log->error("Failed talking to $$Host{name} at $$HI{ip} " . $response->status_line() . ' ' . $response->content() );
+					next;
+				}
 				my $headers = $response->headers();
 #foreach my $k ( keys %{$headers} ) {
 #$openprint::log->debug("Header $k => $$headers{$k}");
@@ -159,40 +165,22 @@ foreach my $Host ( @Hosts ) {
 
 									my $wap_HI = $HI;
 									if ( $$HI{mac} ne $$network{bssid} ) {
+										$log->debug( "HI{mac} $$HI{mac} ne network{bssid} $$network{bssid}");
 										$wap_HI = openprint::Host_Interface->find_one( mac=>$$network{bssid} );
 										if ( ! $wap_HI ) {
 											$wap_HI = new openprint::Host_Interface();
 											$wap_HI->save({mac=>$$network{bssid}, host_id=>$$Host{id} });
 										} # end if
 									}
+									my @macs;
 
 									if ( ref $$network{assoclist} eq 'ARRAY' ) {
-										foreach my $mac ( @{$$network{assoclist}} ) {
-											my @WIS = openprint::Host_Interface->find( mac=>$mac ) ;
-											if ( ! @WIS ) {
-												$log->warning("NO Host found for mac $mac");
-											}
-											foreach my $station_HI ( @WIS ) {
-												if ( (!defined $$station_HI{connected_to}) or ( uc $$station_HI{connected_to} ne uc $$HI{mac} ) ) {
-													$log->debug("Updating connection of ".$station_HI->Host()->hostname() );
-													$station_HI->save({connected_to=>$$wap_HI{mac}});
-									(new openprint::Log())->save({action=>'Update', Object=>$station_HI->Host(), note=>'Connection to ' . $Host->link_to() });
-									(new openprint::Log())->save({action=>'Update', Object=>$Host, note=>'Connection to ' . $station_HI->Host()->link_to() });
-												}
-											} # end foreach station_HI
-										} # end foreach mac
+										@macs = @{$$network{assoclist}};
 									} elsif ( ref $$network{assoclist} eq 'HASH' ) {
-										foreach my $mac ( keys %{$$network{assoclist}} ) {
-											foreach my $station_HI ( openprint::Host_Interface->find( mac=>$mac ) ) {
-												if ( (!defined $$station_HI{connected_to}) or ( uc $$station_HI{connected_to} ne uc $$HI{mac} ) ) {
-													$log->debug("Updating connection of ".$station_HI->Host()->hostname() );
-													$station_HI->save({connected_to=>$$wap_HI{mac}});
-									(new openprint::Log())->save({action=>'Update', Object=>$station_HI->Host(), note=>'Connection to ' . $Host->link_to() });
-									(new openprint::Log())->save({action=>'Update', Object=>$Host, note=>'Connection to ' . $station_HI->Host()->link_to() });
-												}
-											} # end foreach station_HI
-										} # end foreach mac
+										@macs = keys %{$$network{assoclist}};
 									}
+									update_connections( $wap_HI, @macs );
+
 								} else {
 									$log->debug( 'No assoclist' . Dumper( $network ) );
 								} # end fi assocllist
@@ -217,27 +205,21 @@ foreach my $Host ( @Hosts ) {
 					$response = $HI->authenticate( $browser, $response, $method, '443', $url, $args );
 				} # end if
 
+				my @macs;
 				my ( $assoc_list_line ) = $response->content() =~ /<tr>(.*)<\/tr>/m;
 				if ( $assoc_list_line ) {
 					my @lines = split( '</tr><tr>', $assoc_list_line );
 					$log->debug("@ of connections: from $assoc_list_line #" . @lines );
 					foreach my $line ( @lines ) {
 						my ( $mac ) = $line =~ /<td align="center"><span class="thead">\d+<\/span><\/td><td align="center" noWrap><span class="ttext">([:[:xdigit:]]+)<\/span><\/td><td align="center" noWrap><span class="ttext">UNKNOWN<\/span><\/td><td align="center" noWrap><span class="ttext">Associated<\/span><\/td>/;
-						if ( $mac ) {
-							foreach my $station_HI ( openprint::Host_Interface->find( mac=>$mac ) ) {
-								if ( (!defined $$station_HI{connected_to}) or ( uc $$station_HI{connected_to} ne uc $$HI{mac} ) ) {
-									$log->debug("Updating connection of ".$station_HI->Host()->hostname() );
-									$station_HI->save({connected_to=>$$HI{mac}});
-									(new openprint::Log())->save({action=>'Update', Object=>$station_HI->Host(), note=>'Connection to ' . $Host->link_to() });
-									(new openprint::Log())->save({action=>'Update', Object=>$Host, note=>'Connection to ' . $station_HI->Host()->link_to() });
-								}
-							} # end foreach station_HI
-						} # end if mac
+						push @macs, $mac if $mac;
 					} # end foreach station mac
 				} else {
 					$log->debug("No assoc_list line from $$Host{hostname} $$HI{ip}");
 				}
-
+				# Important to log out or else no one else can access the web ui
+				$response = $browser->get('https://'.$$HI{ip}.'/LGO_logout.htm');
+				update_connections( $HI, @macs );
 
 			} elsif ( $Host->type() eq 'WG602v3' ) {
 				$url = 'http://'.$$HI{ip}.'/cgi-bin/stalist.html';
@@ -247,6 +229,7 @@ foreach my $Host ( @Hosts ) {
 					$response = $HI->authenticate( $browser, $response, $method, '80', $url, $args );
 				}
 
+				my @macs;
 				if ( ! $response->is_success ) {
 					$log->error("Should have worked. $$HI{ip} $$Host{name} $url ");
 					$openprint::log->error( $response->status_line );
@@ -259,22 +242,14 @@ foreach my $Host ( @Hosts ) {
 					my ( $assoc_list_line ) = $response->content() =~ /var assoc_list='([^']*)';/m;
 					if ( $assoc_list_line ) {
 						$assoc_list_line =~ s/assoclist //g;
-						my @macs = split(' ', $assoc_list_line );
-						foreach my $mac ( @macs ) {
-							foreach my $station_HI ( openprint::Host_Interface->find( mac=>$mac ) ) {
-								if ( (!defined $$station_HI{connected_to}) or ( uc $$station_HI{connected_to} ne uc $$HI{mac} ) ) {
-									$log->debug("Updating connection of ".$station_HI->Host()->hostname() );
-									$station_HI->save({connected_to=>$$HI{mac}});
-									(new openprint::Log())->save({action=>'Update', Object=>$station_HI->Host(), note=>'Connection to ' . $Host->link_to() });
-									(new openprint::Log())->save({action=>'Update', Object=>$Host, note=>'Connection to ' . $station_HI->Host()->link_to() });
-								}
-							} # end foreach station_HI
-						} # end foreach station mac
+						@macs = split(' ', $assoc_list_line );
 					} else {
 						$log->debug("No assoc_list line from $$Host{hostname} $$HI{ip}");
 					}
-
 				}
+				# Important to log out or else no one else can access the web ui
+				$response = $browser->get('http://'.$$HI{ip}.'/cgi-bin/logout.html');
+				update_connections( $HI, @macs );
 
 			} else { 
 				$log->error("Unknown Host type ($$Host{type})");
@@ -287,6 +262,43 @@ foreach my $Host ( @Hosts ) {
 $p->close();
 $dbh->disconnect() if $dbh;
 exit 0;
+
+sub update_connections {
+	my ( $wap_HI, @macs ) = @_;
+	openprint::Host_Interface->lock();
+	my %OldConnections = map { uc $$_{mac}, $_ } openprint::Host_Interface->find( connected_to=>$$wap_HI{mac} );
+
+	foreach my $mac ( map { uc $_ } @macs ) {
+		if ( $OldConnections{$mac} ) {
+			# Already connected
+
+			# Theoretically this mac should only be listed once, so deleting it from the hash should leave us with a hash of disconnected clients.
+			delete $OldConnections{$mac};
+		} else {
+			my @WIS = openprint::Host_Interface->find( mac=>$mac ) ;
+			if ( ! @WIS ) {
+				$log->error("NO Host found for mac $mac");
+				my $Host = new openprint::Host();
+				$Host->save({ hostname=>$mac});
+				my $HI = new openprint::Host_Interface();
+				$HI->save({ host_id=>$$Host{id}, mac=>$mac });
+				push @WIS, $HI;
+			}
+			foreach my $station_HI ( @WIS ) {
+				if ( (!defined $$station_HI{connected_to}) or ( uc $$station_HI{connected_to} ne uc $$wap_HI{mac} ) ) {
+					$log->debug("Updating connection of ".($station_HI->Host()->hostname() ? $station_HI->Host()->hostname() : '' ));
+					$station_HI->save({connected_to=>$$wap_HI{mac}});
+					(new openprint::Log())->save({action=>'Update', Object=>$station_HI->Host(), note=>'Connection to ' . $wap_HI->Host()->link_to() });
+					(new openprint::Log())->save({action=>'Update', Object=>$wap_HI->Host(), note=>'Connection to ' . $station_HI->Host()->link_to() });
+				}
+			} # end foreach station_HI
+		}
+	} # end foreach mac
+	foreach my $mac ( keys %OldConnections ) {
+		$OldConnections{$mac}->save({connected_to=>undef});
+	}
+	openprint::Host_Interface->unlock();
+} # end sub update_connections
 
 sub usage {
 	print <<EOH;

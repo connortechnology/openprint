@@ -211,16 +211,21 @@ sub continue_project {
 		if ( ! $service_index ) {
 			my $Project = new openprint::Project( $project_index );
 			foreach my $qty_index ( $Project->quantity_indexes() ) {
-				if ( $_ = openprint::Estimating::MultiPage::status( $project_index, undef, $qty_index ) ) {
-					$log->debug("Multipage status says we need another sig of type $_");
-					my @sigs = $Project->signatures({'Group'=>$_});
-					my $src_id = pop @sigs;
-					my $src_specs = openprint::service::get_specs_ref( $Project, $src_id );
-					$service_index = $Project->copy_signature( $src_specs );
-					( $service_index, $redirect ) = choose_service( $log, $dbh, $project_index );
-					last;
+				my $module = 'openprint::Estimating::'.$Project->Type()->type();
+				if ( my $function = $module->can('status') ) {
+					if ( $_ = $function->( $project_index, undef, $qty_index ) ) {
+						$log->debug($Project->Type()->type(). " status says we need another sig of type $_");
+						my @sigs = $Project->signatures({'Group'=>$_});
+						my $src_id = pop @sigs;
+						my $src_specs = openprint::service::get_specs_ref( $Project, $src_id );
+						$service_index = $Project->copy_signature( $src_specs );
+						( $service_index, $redirect ) = choose_service( $log, $dbh, $project_index );
+						last;
+					} else {
+						$log->debug("Multpage status says we ok");
+					} # end if
 				} else {
-					$log->debug("Multpage status says we ok");
+					$log->debug("Dont have a status function for $module");
 				} # end if
 			} # end foreach
 		} # end if
@@ -622,15 +627,18 @@ $log->debug("Already have $$ServiceType{name}");
 	} # end if
 
 	$Project->add_to_log( @session{'company_id','user_id'}, 'Edited: ' . join('<br/>', @changes) );
-	my $book_type = openprint::print::get_book_type( $Project );
-	if ( $book_type ) {
-		my $project_specs = openprint::service::get_specs_ref( $Project, $$services{''}[0] );
-		if ( $book_type ne $$project_specs{rdbTemplateType} ) {
-			$Project->add_to_log( @session{'company_id','user_id'}, "Changed book type from $$project_specs{rdbTemplateType} to $book_type" );
-			openprint::service::insert_service_spec( $log, $dbh, $project_index, $$services{''}[0], 'rdbTemplateType', $book_type );
-			$recalculate = 1;	
+
+	if ( $ProjectType->type() eq 'MultiPage' ) {
+		my $book_type = openprint::print::get_book_type( $Project );
+		if ( $book_type ) {
+			my $project_specs = openprint::service::get_specs_ref( $Project, $$services{''}[0] );
+			if ( $book_type ne $$project_specs{rdbTemplateType} ) {
+				$Project->add_to_log( @session{'company_id','user_id'}, "Changed book type from $$project_specs{rdbTemplateType} to $book_type" );
+				openprint::service::insert_service_spec( $log, $dbh, $project_index, $$services{''}[0], 'rdbTemplateType', $book_type );
+				$recalculate = 1;	
+			} # end if
 		} # end if
-	} # end if
+	}
 	
 	if ( $recalculate ) {
 		$Project->recalculate();

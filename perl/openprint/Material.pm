@@ -108,11 +108,11 @@ sub New_Specification {
 } # end sub New_Specification
 
 sub Specification {
-	#my ( $self, $name, $range ) = @_;
+	my ( $self, $name, $range ) = @_;
 
 	if ( ! $_[0]{Specifications} ) {
 		foreach my $Spec ( openprint::MaterialSpecification->find( material_id=>$_[0]{id}, order=>'min NULLS FIRST' ) ) {
-			push @{$_[0]{Specifications}{$Spec->name()}}, $Spec;
+			push @{$_[0]{Specifications}{$$Spec{name}}}, $Spec;
 		} # end foreach
 		if ( ! $_[0]{Specifications} ) {
 #$openprint::log->warn("No specfications for " . $self->name() );
@@ -122,7 +122,7 @@ sub Specification {
 	} # end if
 
 	if ( ! $_[0]{Specifications}{$_[1]} ) {
-		#$openprint::log->warn("No specfications for ($name) " . $self->name() );
+		$openprint::log->warn("No specfications for ($name) " . $self->name() );
 		return;
 	}
 
@@ -150,7 +150,8 @@ sub get_price {
 	return if ! %price;
 
 	$price{currency_id} = $Pricelist->currency_id();
-	openprint::Currency::convert( \%price ) if $$Pricelist{currency_id} != $openprint::session{Pricelist_id};
+$openprint::log->error("Pricelist currency is $$Pricelist{currency_id} != $openprint::session{Currency_id} ");
+	openprint::Currency::convert( \%price ) if $$Pricelist{currency_id} != $openprint::session{Currency_id};
 
 	return %price;
 } # end sub get_price
@@ -164,7 +165,7 @@ sub get_Price {
 	return if ! %price;
 
 	$price{currency_id} = $Pricelist->currency_id();
-	openprint::Currency::convert( \%price ) if $$Pricelist{currency_id} != $openprint::session{Pricelist_id};
+	openprint::Currency::convert( \%price ) if $$Pricelist{currency_id} != $openprint::session{Currency_id};
 
 	return \%price;
 }

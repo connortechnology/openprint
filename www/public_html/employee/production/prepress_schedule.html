@@ -90,10 +90,10 @@
 	my $html = '<select name="statuses" multiple="multiple" size="'. @statuses.'">';
 	if ( $session{'/employee/production/prepress_schedule.html?statuses'} ) {
 		@{$$variable{statuses}} = split( ',', $session{'/employee/production/prepress_schedule.html?statuses'} );
-		$html .= ssi::make_drop_down( [ map { $_, $_ } @statuses ], $$variable{statuses} ); 
+		$html .= make_drop_down( [ map { $_, $_ } @statuses ], $$variable{statuses} ); 
 	} else {
 		@{$$variable{statuses}} = @statuses;
-		$html .= ssi::make_drop_down( [ map { $_, $_ } @statuses ], [ map { $_ } @statuses ] );
+		$html .= make_drop_down( [ map { $_, $_ } @statuses ], [ map { $_ } @statuses ] );
 	} # end if
 	return $html;
 )?>
@@ -137,7 +137,7 @@
 			
 			my %sql = (
 				status		=>	$status, 
-				order		=>	'lngdocketnumber',
+				order			=>	'lngdocketnumber',
 				date_filter( '/employee/production/prepress_schedule.html?takenover_on_end', 'takenover_on <=' ),
 				date_filter( '/employee/production/prepress_schedule.html?takenover_on_start', 'takenover_on >=' ),
 				);
@@ -146,7 +146,9 @@
 			my %Schedule;
 			
 			if ( @Projects ) {
-				foreach my $S ( openprint::ScheduledJob->find( project_id=>[ map { $_->id() } @Projects ], 'starttime is null'=>0 ) ) {
+				# Used to load by project_id, but locking can cause troubles, and theoretically the schedule isn't that big, so just load it all.
+				foreach my $S ( openprint::ScheduledJob->find( 'starttime is null'=>0 ) ) {
+					next if ! $$S{project_id};
 					push @{$Schedule{$$S{project_id}}}, $S;
 				} # end foreach
 			} # end if Projects
@@ -219,7 +221,7 @@
 						$html .= '<span class="Service nobindery">nobindery</span>' if $$services{NoBindery};
 						$html .= '</span>';
 					} else {
-						$html .= sprintf( '<div class="Comment">%3$s</div>', ssi::htmlize( $Project->summary() ) );
+						$html .= sprintf( '<div class="Comment">%3$s</div>', htmlize( $Project->summary() ) );
 						$html .= sprintf( '<span class="Forms">%d %s</span>', $forms, $forms > 1 ? ' forms' : ' form' );
 						$html .= sprintf( '<span class="Impressions">%d imps</span>', $impressions );
 					} # end if
