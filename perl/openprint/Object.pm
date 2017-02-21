@@ -1407,7 +1407,7 @@ sub unlock {
 		} # end if
 	} else {
 		$type = $_[0];
-		sql::end_transaction( $openprint::dbh, 0 );
+		sql::end_transaction( $openprint::dbh, 1 );
 	}
 } # end sub unlock
 
