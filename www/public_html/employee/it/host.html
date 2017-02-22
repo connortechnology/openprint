@@ -129,13 +129,16 @@ $$variable{Object} = $$variable{Host};
 	} # end if RADIUS
 
 	my $radius_fragment = slurp_content( '/employee/it/_radius_mac_line.html' );
-	#my @macs = map { $_->mac() ? () : '' } $$variable{Host}->Interfaces();
 
-	my $NewHI = new openprint::Host_Interface();
-	$NewHI->mac( $param{mac} ) if ! $$variable{Host}->id();
+	my @Interfaces = $$variable{Host}->Interfaces();
+	if ( 
+		( scalar @Interfaces != 1 ) 
+		or ( defined $Interfaces[0]{id} ) ) {
+		push @Interfaces, new openprint::Host_Interface();
+	};
 
-	foreach my $Interface ( $$variable{Host}->Interfaces(), ( $NewHI ) ) {
-	#foreach my $Interface ( $$variable{Host}->Interfaces(), ( @macs ? () : $NewHI ) ) {
+
+	foreach my $Interface ( @Interfaces ) {
 		$html .= sprintf(q`
 <tr id="hi-%1$d">
 	<td class="mac">%2$s</td>
@@ -158,11 +161,11 @@ $$variable{Object} = $$variable{Host};
 			} # end if
 			$mac = uc $mac;
 			$html .= '<td class="radius" id="mac-'.$mac.'" rowspan="2">';
-
-				$$variable{username} = $mac;
-				$html .= variable_substitution( \$radius_fragment, $variable ) if $mac;
-				$html .= '</td>';
+			$$variable{username} = $mac;
+			$html .= variable_substitution( \$radius_fragment, $variable ) if $mac;
+			$html .= '</td>';
 		} # end if RADIUS
+
 		$html .= '<td class="buttons">';
 		if ( $$Interface{id} ) {
 			$html .= button( 'DI'.$Interface->id(), { onclick=>qq`delete_interface('$$Interface{id}');`, text=>'X', title=>'Delete Interface' } ),
