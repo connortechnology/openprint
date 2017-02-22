@@ -120,9 +120,7 @@ sub _jobs_by_csr_popup {
 sub print_overview {
 	if ( %param ) {
 		if ( $param{btnFunction} eq 'Reset' ) {
-			foreach my $param ( 'Equipment','schedule_start_year','schedule_start_month','schedule_start_day','schedule_end_year','schedule_end_month','schedule_end_day','pending','pending_approved', 'scale', 'category_id', 'show_feedback' ) {
-				delete $session{'/employee/production/print_overview.html?'.$param};
-			} # end if
+			ssi::reset_session{$r->uri()};
 		} else {
 			ssi::save_params( '/employee/production/print_overview.html', ( 'Equipment','schedule_start_year','schedule_start_month','schedule_start_day','schedule_end_year','schedule_end_month','schedule_end_day', 'scale', 'category_id', 'show_feedback' ) );
 		} # end if
@@ -156,9 +154,7 @@ sub print_overview {
 '/employee/production/print_overview.html?schedule_end_day'} = Date::Calc::Add_Delta_Days(Date::Calc::Today(),6);
 		} # end if
 	} elsif ( ( time - $session{'/employee/production/print_overview.html?lastupdated'} ) > DAY ) {
-		foreach my $param ( 'Equipment','schedule_start_year','schedule_start_month','schedule_start_day','schedule_end_year','schedule_end_month','schedule_end_day','pending','pending_approved', 'scale', 'category_id', 'show_feedback' ) {
-			delete $session{'/employee/production/print_overview.html?'.$param};
-		} # end if
+		ssi::reset_session{$r->uri()};
 	} # end if
 	$session{'/employee/production/print_overview.html?lastupdated'} = time;
 	$session{'/employee/production/print_overview.html?show_feedback'} = 0 if ! exists $session{'/employee/production/print_overview.html?show_feedback'};
