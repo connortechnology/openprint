@@ -172,11 +172,13 @@
 	@{$$variable{Equipment}} = ();
 	my @presses = openprint::Equipment->find(
 		( $session{'/employee/production/print_overview.html?category_id'} ? 
-		  ( 'category_id <@' => [ split(',', $session{'/employee/production/print_overview.html?category_id'} ) ] ) : ()
+		  ( 'category_id @>' => [ split(',', $session{'/employee/production/print_overview.html?category_id'} ) ] ) : ()
 		),
 		 useinscheduling=>1, order=>'sorting,lower(strname)'
 		);
 	my @selected_equipment = sets::intersection( ( map { $_->id() } @presses) , split(',', $session{'/employee/production/print_overview.html?Equipment'} ) );
+$log->debug("PRESSESD equipment @selected_equipment ");
+$log->debug("SELECTED equipment @selected_equipment ");
 	if ( ! @selected_equipment ) {
 		@selected_equipment = map { $_->id() } @presses;
 		$session{'/employee/production/print_overview.html?Equipment'} = join(',', @selected_equipment );
