@@ -1393,14 +1393,13 @@ $openprint::log->debug("not Skipping cuz ddmPress$qty_index eq $$Press{strid}");
 			$$project{colour_bar_size} = 0;
 		} # end if Envelopes
 		$$project{Orientation} = $Press->specification('Orientation');
+		$$project{dutch} = 1; # default to on
 		if ( $$specs{"dutch$qty_index"} and ( $$specs{"dutch$qty_index"} eq 'N' ) ) {
-			$$project{dutch} = 'N';
+			$$project{dutch} = 0;
 		} elsif ( $_ = $Press->Specification('Dutch') and $$_{value} eq 'N' ) {
-			$$project{dutch} = 'N';
+			$$project{dutch} = 0;
 		} elsif ($$specs{txtSignatureType} or $$project{HasDieCutting} or $$project{HasPerforating} or $$project{HasScoring}) {
-			$$project{dutch} = 'N';
-		} else {
-			delete $$project{dutch};
+			$$project{dutch} = 0;
 		} # end if
 		$$project{PerfectingDutchByDefault} = $Press->specification('PerfectingDutchByDefault');
 
@@ -2442,7 +2441,7 @@ sub calc {
 		} # end if
 
 		# Go through every override and delete it if it isn't a Y
-		foreach my $k ( @qty_override_keys, 'dutch', 'UnspecifiedVersions' ) {
+		foreach my $k ( @qty_override_keys, 'UnspecifiedVersions' ) {
 			if ( ( ! defined $$specs{$k.$qty_index} ) or ( $$specs{$k.$qty_index} ne 'Y' ) ) {
 				delete $$specs{$k.$qty_index};
 			} # end if

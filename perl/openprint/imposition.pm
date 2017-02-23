@@ -632,7 +632,7 @@ $openprint::log->debug("Using Single wheel space $$specs{'Perfecting Single Gutt
 			if ( check_setup( $setup1, $specs ) ) {
 				$openprint::log->debug("Success CHECK 1 $run_style Using Paper $paper_width x $paper_height -> $adjusted_paper_width x $adjusted_paper_height Gutter: $gutters, Image: $$setup1{image_width} x $$setup1{image_height} Imposition: " . $$setup1{imposition}. ":".$$setup1{columns} . 'x' . $$setup1{rows}. " $run_style " . $setup1->layout_width() . 'x' . $setup1->layout_height() ) if DEBUG;
 				push @results, $setup1;
-				if ( ( $$specs{dutch} ne 'N' ) and ( $run_style ne 'Perfecting' or $Paper->perfecting() or $$specs{PerfectingDutchByDefault} or ( $$specs{OverrideRunStyle} and $$specs{OverrideImposition} ) ) ) {
+				if ( $$specs{dutch} and ( $run_style ne 'Perfecting' or $Paper->perfecting() or $$specs{PerfectingDutchByDefault} or ( $$specs{OverrideRunStyle} and $$specs{OverrideImposition} ) ) ) {
 					# Too hard to figure space for rollers
 	$openprint::log->debug("add dutches");
 					push @results, calc_dutch( $setup1, $adjusted_paper_width, $adjusted_paper_height, $specs );
@@ -646,7 +646,7 @@ $openprint::log->debug("Using Single wheel space $$specs{'Perfecting Single Gutt
 		$openprint::log->debug( sprintf('CHECK 1 Work&Turn Using Paper %sx%s -> %s x %s Image: %s x %s Imposition: %dout:%dx%d ',$paper_width, $paper_height, $adjusted_paper_width/2, $adjusted_paper_height, $setup1->image_width(), $setup1->image_height(), $setup1->imposition(), $setup1->columns(), $setup1->rows() ) ) if DEBUG;
 
 		if ( $$setup1{imposition} ) {
-			if ( $$specs{dutch} ne 'N' ) {
+			if ( $$specs{dutch} ) {
 				foreach my $imp ( calc_dutch( $setup1, $adjusted_paper_width/2, $adjusted_paper_height, $specs ) ) {
 					$imp->columns( $$imp{columns} * 2 );
 					$imp->dutch_columns( $$imp{dutch_columns} * 2 );
@@ -667,7 +667,7 @@ $openprint::log->debug("Using Single wheel space $$specs{'Perfecting Single Gutt
 		$openprint::log->debug( sprintf('CHECK 1 Work&TumbleUsing Paper %sx%s -> %sx%s Image: %s x %s Imposition: %dout:%dx%d ',$paper_width, $paper_height, $adjusted_paper_width, $adjusted_paper_height/2, @$setup1{'image_width','image_height','imposition', 'columns','rows'} ) ) if DEBUG;
 		if ( $$setup1{imposition} ) {
 
-			if ( $$specs{dutch} ne 'N' ) {
+			if ( $$specs{dutch} ) {
 				foreach my $imp ( calc_dutch( $setup1, $adjusted_paper_width, $adjusted_paper_height/2, $specs ) ) {
 					$imp->rows( $$imp{rows} * 2 );
 					$imp->dutch_rows( $$imp{dutch_rows} * 2 );
@@ -862,7 +862,7 @@ $openprint::log->debug("Using Single wheel space $$specs{'Perfecting Single Gutt
 
 #	Rotating sheet reverses the grain direction, so grain width + rotated sheet is the same as grain height + non rotated sheet.
 #	if no grain direction is specified, then use the larger imposition
-				if ( ( $$specs{dutch} ne 'N' ) and ( $run_style ne 'Perfecting' or $Paper->perfecting() or $$specs{PerfectingDutchByDefault} or ( $$specs{OverrideRunStyle} and $$specs{OverrideImposition}  ) ) ) {
+				if ( $$specs{dutch} and ( $run_style ne 'Perfecting' or $Paper->perfecting() or $$specs{PerfectingDutchByDefault} or ( $$specs{OverrideRunStyle} and $$specs{OverrideImposition}  ) ) ) {
 					push @results, calc_dutch( $setup2, $adjusted_paper_width, $adjusted_paper_height, $specs );
 				} # end if
 				push @results, $setup2;
@@ -874,7 +874,7 @@ $openprint::log->debug("Using Single wheel space $$specs{'Perfecting Single Gutt
 		calc_setup( $setup2, @$setup2{'image_height','image_width'}, $adjusted_paper_width/2, $adjusted_paper_height );
 		$openprint::log->debug( sprintf('CHECK 2 Work&Turn Using Paper %sx%s -> %sx%s Image: %s x %s Imposition: %dout:%dx%d',$paper_width, $paper_height, $adjusted_paper_width/2, $adjusted_paper_height, @$setup2{'image_height','image_width','imposition','columns','rows'} ) ) if DEBUG;
 		if ( $$setup2{imposition} ) {
-			if ( $$specs{dutch} ne 'N' ) {
+			if ( $$specs{dutch} ) {
 				foreach my $imp ( calc_dutch( $setup2, $adjusted_paper_width/2, $adjusted_paper_height, $specs ) ) {
 					$imp->columns( $$imp{columns} * 2 );
 					$imp->dutch_columns( $$imp{dutch_columns} * 2 );
@@ -893,7 +893,7 @@ $openprint::log->debug("Using Single wheel space $$specs{'Perfecting Single Gutt
 		$openprint::log->debug( sprintf('CHECK 2 Work&Tumble Using Paper %sx%s -> %sx%s Image: %s x %s Imposition: %dout:%dx%d ',$paper_width, $paper_height, $adjusted_paper_width, $adjusted_paper_height/2, $setup2->image_height(), $setup2->image_width(), $setup2->imposition(), $setup2->columns(), $setup2->rows()) ) if DEBUG;
 		if ( $$setup2{imposition} ) {
 
-			if ( $$specs{dutch} ne 'N' ) {
+			if ( $$specs{dutch} ) {
 				foreach my $imp ( calc_dutch( $setup2, $adjusted_paper_width, $adjusted_paper_height/2, $specs ) ) {
 					$imp->rows( $$imp{rows} * 2 );
 					$imp->dutch_rows( $$imp{dutch_rows} * 2 );
