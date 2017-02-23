@@ -5705,7 +5705,7 @@ $openprint::log->warn("No folding equipment");
 	if ( $max_impressions ) { $max_impressions = int($max_impressions); } else { $max_impressions = 250000; }
 	my $plate_runs = ceil($impressions/$max_impressions);
 
-	my $plate_id = $plate_size and $plate_size ? $plate_size . '-' . $plate_type . 'Plate' : '';
+	my $plate_id = ( $plate_size and $plate_size ) ? $plate_size . '-' . $plate_type . 'Plate' : '';
 	my %plate_setup = (
 			'Plate Type', ($plate_type?$plate_type:''),
 			'Plate ID', $plate_id, 
@@ -5783,7 +5783,7 @@ $openprint::log->warn("No folding equipment");
 			$price{'Setup Breakdown'} .= sprintf('%d units * $%.2f%s = $%.2f<br/>', @$press_setup_front{'Unit Count','Price','units','Total'} );
 			$price{'Plate Total'} += $$press_setup_front{'Plate Total'};
 			@price{'Plate Setup Price','Plate Setup Count','Plate Setup Units'} = @$press_setup_front{'Plate Price','Plate Count','Plate Units'};
-			if ( $$press_setup_front{units} ne 'total' ) {
+			if ( ( !$$press_setup_front{units} ) or ( $$press_setup_front{units} ne 'total' ) ) {
 				my $back_press_setup = press_setup_cost( 0, $plate_setup{'Plate Runs'}, $$project{side_two_colours}, $$Paper{calliper}, $qty_index, $Imposition );
 				$press_setup += $$back_press_setup{Total};
 				$price{'Setup Breakdown'} .= sprintf('%d units * $%.2f%s = $%.2f<br/>', @$back_press_setup{'Unit Count','Price','units','Total'} );
@@ -6751,6 +6751,7 @@ sub press_setup_cost {
 		#$Price{Total} *= $plate_change_qty if $plate_change_qty;
 	} # end if
 	$Price{'Press Setup'} = $Price{Total};
+	$Price{'Plate Count'} = $plates;
 	# No on is using these at this time. We can re-enable when someone does.
 	#my %PlateSetupPrice = openprint::service::get_price_object( 'PlateMakeReady'.$$Imposition{runstyle}.$$Imposition{sides}.'Sided', undef, $Press );
 	#%PlateSetupPrice = openprint::service::get_price_object( 'PlateMakeReady'.$$Imposition{runstyle}, undef, $Press ) if ! %PlateSetupPrice;
@@ -6760,7 +6761,6 @@ sub press_setup_cost {
 		my $plates = $setup_count;
 		$plates *= $plate_runs if $plate_runs;
 		$plates += $plate_change_qty if $plate_change_qty;
-		$Price{'Plate Count'} = $plates;
 		my $units = $PlateSetupPrice{units};
 		if ( $units eq 'per hour' ) {
 			my $time = $Press->specification('Plate Setup Time') * $plates / 60;
