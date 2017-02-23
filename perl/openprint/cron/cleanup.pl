@@ -156,26 +156,15 @@ if ( ( exists $config{RFID} ) and $config{RFID} ) {
 } # end if
 }
 
-if ( 1 ) {
-# Resolve any unresolved IP's
-my @Hosts = openprint::Host->find(
-		'hostname is null'=>1, 
-		'resolved_on null_or_<='	=>	sprintf('%.4d-%.2d-%.2d', Date::Calc::Add_Delta_Days( Date::Calc::Today(), -30 ) ),
-);
-$log->debug("# of hosts needing resolving: " . @Hosts );
-foreach my $Host ( @Hosts ) {
-		my $host = $Host->resolve();
-		if ( $host ) {
-			$Host->hostname( $host );
-		}
-		$Host->save({
-				resolved_on	=> 'NOW()',
-				});
-} # end foreach Host
-}
 
 # Paper maintenance
-foreach my $Paper ( openprint::Paper->find() ) {
+foreach my $Paper ( openprint::Paper->find( 'project_type_id exists' => 1 ) ) {
+	my $check = $Paper->check();
+	if ( $check ) {
+		$log->error($Paper->to_string() . ' ' . $check . " id:$$Paper{id}");
+		#sleep 1;
+	}
+
 	my $old_wpsi = $Paper->wpsi();
 	$old_wpsi = '' if ! defined $old_wpsi;
 	next if ! $Paper->wpsi(undef);
@@ -237,6 +226,22 @@ foreach my $Skid ( openprint::Skid->find(
     } # end if
 } # end foreach Skid
 $log->warn("Deleted $deleted_skids skids");
+
+if ( 1 ) {
+	# Resolve any unresolved IP's
+	my @Hosts = openprint::Host->find(
+			'hostname is null'=>1, 
+			'resolved_on null_or_<='	=>	sprintf('%.4d-%.2d-%.2d', Date::Calc::Add_Delta_Days( Date::Calc::Today(), -30 ) ),
+	);
+	$log->debug("# of hosts needing resolving: " . @Hosts );
+	foreach my $Host ( @Hosts ) {
+			my $host = $Host->resolve();
+			if ( $host ) {
+				$Host->hostname( $host );
+			}
+			$Host->save({ resolved_on	=> 'NOW()' });
+	} # end foreach Host
+}
 
 $dbh->disconnect();
 
