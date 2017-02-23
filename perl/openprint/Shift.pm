@@ -222,7 +222,7 @@ sub get_ul {
 	my $total_impressions = 0;
 
 	my @Jobs = $Shift->Schedule();
-$log->debug("Have schedule" . @Jobs );
+#$log->debug("Have schedule" . @Jobs );
 	openprint::Project->find(id=>[ map { $$_{project_id} } @Jobs ]) if @Jobs;
 	foreach my $Job ( @Jobs ) {
 		if ( $filters ) {

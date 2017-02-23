@@ -682,10 +682,9 @@ sub height {
 } # end if
 
 sub mweight {
-	my ( $self, $mweight ) = @_;
-	if ( defined $mweight ) {
-		$mweight =~ s/[^\d\.]//g;
-		$$self{mweight} = 1*$mweight;
+	my $self = shift;
+	if ( @_ ) {
+		$$self{mweight} = $self->transform(mweight=>shift);
 		$self->wpsi(undef) if $$self{mweight};
 	} # end if
 	if ( ! $$self{mweight} ) {
@@ -1198,7 +1197,11 @@ sub gsm {
 	my $self = shift;
 	if ( @_ ) {
 		$$self{gsm} = shift;
-		$self->wpsi(undef) if $$self{gsm};
+		if ( $$self{gsm} ) {
+			$self->wpsi(undef);
+			$self->mweight(undef);
+			$self->basis_mweight(undef);
+		}
 	} 
 	if ( ! $$self{gsm} ) {
 		if ( $self->wpsi(undef) ) {
@@ -1214,11 +1217,14 @@ sub gsm {
 sub wpsi {
 	my $self = shift;
 	if ( @_ ) {
+$log->debug("Setting wpsi to $$self{wpsi}") if 1;
 		$$self{wpsi} = shift;
+$log->debug("Setting wpsi to $$self{wpsi}") if 1;
 	} # end if
 	if ( ! $$self{wpsi} ) {
 		if ( $$self{gsm} ) {
 			$$self{wpsi} = $$self{gsm} / 703064.5;
+$log->debug("Setting wpsi to $$self{gsm} / 703064.5 = $$self{wpsi}");
 		} elsif ( $$self{mweight} and ( $$self{type} eq 'Sheet' ) and $$self{width} and $$self{height} ) {
 			$$self{wpsi} = ($$self{mweight} / 1000)/($$self{width}*$$self{height});
 		} elsif ( $$self{basis_mweight} ) {
@@ -1605,10 +1611,9 @@ sub is_cut {
 } # end sub is_cut
 
 sub basis_mweight {
-	my ( $self, $mweight ) = @_;
-	if ( defined $mweight ) {
-		$mweight =~ s/[^\d\.]//g;
-		$$self{basis_mweight} = $mweight;
+	my $self = shift;
+	if ( @_ ) {
+		$$self{basis_mweight} = $self->transform( 'basis_mweight', shift );
 	} # end if
 	if ( ! $$self{basis_mweight} ) {
 		my $wpsi = $self->wpsi();
@@ -1798,6 +1803,21 @@ sub printing_types {
 $openprint::log->debug( "Types @types for " . $self->to_string() );
 	return sets::union( @types );
 }
+
+sub check {
+	my $Paper = shift;
+	my $Copy = $Paper->clone();
+
+	my $results;
+  if ( abs( POSIX::ceil($Paper->gsm()) - POSIX::ceil($Copy->gsm(undef)) ) - 1 > 0 ) {
+		return "may have invalid gsm current:$$Paper{gsm} != calculated:$$Copy{gsm} ";
+  }
+  $Copy = $Paper->clone();
+  if ( Math::Round::nearest_ceil(1,$Paper->basis_mweight()) != Math::Round::nearest_ceil(1,$Copy->basis_mweight(undef)) ) {
+    return "may have invalid mweight current:$$Paper{basis_mweight} != calculated:$$Copy{basis_mweight}";
+  }
+	return;
+} # end sub check
 
 1;
 __END__

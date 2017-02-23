@@ -34,7 +34,7 @@ sub _stocks {
 			'colour_id','weight_id','fsc_code','material_id', 'Types', 'recommendations',
 			'grain_direction', 'digital', 'width','height', 'scoring', 'setup_prices', 
 			'material_prices', 'customer_supplied', 'has_message', 'has_minimum_order',
-			'calliper', );
+			'calliper', 'has_problems' );
 		$session{'/administrator/stock/list.html?OrLarger'} = $param{OrLarger};
 	} # end if
 } # end sub _stocks
@@ -201,14 +201,17 @@ $openprint::log->debug("Setting: $param{amount} " );
 				$variable{error} .= $Paper->save();
 				$variable{ExternalRedirect} = '/administrator/stock/list.html';
 			} elsif ( $param{mode} eq 'other' ) {
-				my $changed = 0;
+				my $Changed = $Paper->clone();
+
 				foreach my $field ( 'score_required', 'gsm' ) {
-					if ( $param{$field} ne '' and $Paper->$field() ne $param{$field} ) {
-						$Paper->$field( $param{$field} );
-						$changed = 1;
-					}
+						$Changed->$field( $param{$field} );
 				} # end foreach field
-				$Paper->save() if $changed;
+				my @changes = $Paper->changes( $Changed );
+
+				if ( @changes ) {
+					$Changed->save();
+					(new openprint::Log())->save({ Object=>$Paper, action=>'Edit', note=>join(',',@changes) } );
+				}
 			} else {
 				$log->error("Unknown mode in apply changes");
 			} # end if
