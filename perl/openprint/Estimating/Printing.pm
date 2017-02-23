@@ -541,14 +541,14 @@ sub setup_project {
 			'Add Grip Width'=>	$$specs{GripWidth},
 			'Add Grip Height'=>	$$specs{GripHeight},
 			'Add Colour Bar'=>	$$specs{rdbColourBar},
-			image_width		=>		$$specs{txtWidth},
-			image_height	=>		$$specs{txtHeight},
-			txtWidth		=>		$$specs{txtWidth},
-			txtHeight	=>		$$specs{txtHeight},
-			txtFinalWidth		=>		$$specs{txtFinalWidth},
-			txtFinalHeight	=>		$$specs{txtFinalHeight},
+			image_width		=>	$$specs{txtWidth},
+			image_height	=>	$$specs{txtHeight},
+			txtWidth		=>	$$specs{txtWidth},
+			txtHeight		=>	$$specs{txtHeight},
+			txtFinalWidth	=>	$$specs{txtFinalWidth},
+			txtFinalHeight	=>	$$specs{txtFinalHeight},
 			BleedLocations	=>	join(',', @$specs{'BleedBottom','BleedTop','BleedLeft','BleedRight'}),
-			Calliper		=>			$$specs{txtSpecificStockCalliper},
+			Calliper		=>	$$specs{txtSpecificStockCalliper},
 			CropMarkSpace	=>	$$specs{txtCropMarkSpace},
 			);
 
@@ -2500,7 +2500,12 @@ sub calc {
 	$$specs{SideTwoColours} = \@side_two_colours;
 
 
-	if ( ($$ProjectType{name} eq 'PresentationFolders') or (($$specs{Group} == 1 ) and sets::isin($$specs{rdbTemplateType}, ['2Panel1Pocket','2Panel2Pocket','TriFoldDoublePocket'] ) )) {
+	if ( ($$ProjectType{name} eq 'PresentationFolders') 
+			or ( 
+				( $$specs{Group} and ( $$specs{Group} == 1 ) ) 
+				and ( $$specs{rdbTemplateType} and sets::isin($$specs{rdbTemplateType}, ['2Panel1Pocket','2Panel2Pocket','TriFoldDoublePocket'] ) )
+			   ) 
+	   ) {
 		if ( $$specs{rdbPocketSize} and ( $$specs{rdbPocketSize} ne 'Other' ) ) {
 			$$specs{PocketSize} = $$specs{rdbPocketSize};	
 			$variables{PocketSize} = [ sets::union( 'output', @{$variables{PocketSize}} ) ];
@@ -7129,11 +7134,11 @@ if ( 0 ) {
 		if ( ! $$services{NoPrinting} ) {
 			$string .= sprintf( ' %s on %s %s',
 					get_colour_description( $specs ),
-					$$specs{rdbSuppliedStock} eq 'Y' ? '<b>Customer Supplied</b>' : '',
-					$$specs{rdbSpecificStock} eq 'Y' ? '<b>Custom:</b>'.
+					( ( $$specs{rdbSuppliedStock} and ( $$specs{rdbSuppliedStock} eq 'Y' ) ) ? '<b>Customer Supplied</b>' : '' ),
+					( ( $$specs{rdbSpecificStock} and ( $$specs{rdbSpecificStock} eq 'Y' ) ) ? '<b>Custom:</b>' .
 					join(', ', @$specs{'txtSpecificStockBrand','txtSpecificStockFinish','txtSpecificStockColour','txtSpecificStockWeight'} ) :
 					join(', ', @$specs{'ddmStockBrand','ddmStockFinish','ddmStockColour','ddmStockWeight'} ),
-					);
+					) );
 
 			if ( $openprint::config{Show_Stock_Calliper} ne 'N' ) {
 			if ( ! ( $$specs{ddmStockWeight} =~ /([\d\.]+)\s*PT/ ) ) {
@@ -7337,6 +7342,8 @@ sub filter_coatings_from_colours {
 
 sub get_printing_types {
 	my ( $Project, $service_index, $printing_specs, $specs, $qty_index, $available_printingtypes, $cover_imposition ) = @_;
+	# Generally only care if having different signature groups.  
+	return if ! $$specs{txtSignatureType};
 	my $results = undef;
 
 	my %available_types = map { $_, $_ } @{$available_printingtypes};
@@ -7347,13 +7354,13 @@ sub get_printing_types {
 #$openprint::log->debug("PT: " . join(',', @{$$specs{PrintingTypes}} ) );
 	} else {
 
-		if ( $$specs{txtSignatureType} eq 'Cover Pages' ) {
+			if ( $$specs{txtSignatureType} eq 'Cover Pages' ) {
 # FIgure out printing types
 $openprint::log->debug("We are cover");
 			# If this is the cover, then we should ignore the interior pages, except for if there is an override.
-			foreach my $index ( $Project->signatures({ type =>'Interior Pages'}) ) {
+			foreach my $index ( $Project->signatures({ type =>'Interior Pages' }) ) {
 				my $sig_specs = openprint::service::get_specs_ref( $Project, $index );
-				if ( $available_types{ $$sig_specs{'PrintingType'.$qty_index} } and ( $$sig_specs{'OverridePrintingType'.$qty_index} and ( $$sig_specs{'OverridePrintingType'.$qty_index} eq 'Y' ) ) ) {
+				if ( $$sig_specs{'PrintingType'.$qty_index} and $available_types{ $$sig_specs{'PrintingType'.$qty_index} } and ( $$sig_specs{'OverridePrintingType'.$qty_index} and ( $$sig_specs{'OverridePrintingType'.$qty_index} eq 'Y' ) ) ) {
 					if ( $$sig_specs{'PrintingType'.$qty_index} eq 'Digital' ) {
 						$results = ['Digital','Sheetfed'];
 					} elsif ( $$sig_specs{'PrintingType'.$qty_index} eq 'Waterless' ) {

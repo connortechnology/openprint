@@ -17,9 +17,9 @@
 			$$variable{Currency} = openprint::Currency::get_current() if ! $$variable{Currency};
 			my @Invoices;
 			foreach my $I ( openprint::Invoice->find(
-				'invoicer_id'=>$session{company_id},
-				'invoicee_id'=>$$variable{Payment}->payor_id(),
-				'order'=>'id',
+				invoicer_id =>$session{company_id},
+				invoicee_id =>$$variable{Payment}->payor_id(),
+				order =>'id',
 			) ) {
 				push @Invoices, $I if $I->owing() > 0;
 			} # end foreach $I
@@ -27,6 +27,7 @@
 			foreach my $I ( @Invoices ) {
 				my $total = $I->Currency()->convert_from( $I->total() );
 				my $owing = $I->Currency()->convert_from( $I->owing() );
+$log->debug("total: $$I{total} $total");
 				$total_total += $total;
 				$owing_total += $owing;
 		

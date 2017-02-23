@@ -75,7 +75,6 @@ $openprint::dbh = sql::open_sql( $log,
 	password	=> $config{db_pass},
 );
 die 'Error opening db' if ! $dbh;
-$openprint::Object::no_cache = 1;
 
 configuration::init( \%config );
 
