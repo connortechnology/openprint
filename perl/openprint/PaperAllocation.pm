@@ -21,7 +21,7 @@ require openprint::Manufacturer;
 require openprint::Email;
 require openprint::InventoryCondition;
 
-$debug = 1;
+$debug = 0;
 
 $table = 'paper_allocations';
 $serial = 'paper_allocation_id_seq';

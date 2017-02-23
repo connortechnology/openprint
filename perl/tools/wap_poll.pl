@@ -126,6 +126,10 @@ foreach my $Host ( @Hosts ) {
 				};
 
 				my $response = $browser->get( $initial_url );
+				if ( ( ! $response->is_success ) and $response->status_line() ne '403 Forbidden' ) {
+					$log->error("Failed talking to $$Host{name} at $$HI{ip} " . $response->status_line() . ' ' . $response->content() );
+					next;
+				}
 				my $headers = $response->headers();
 #foreach my $k ( keys %{$headers} ) {
 #$openprint::log->debug("Header $k => $$headers{$k}");
@@ -275,7 +279,7 @@ sub update_connections {
 			if ( ! @WIS ) {
 				$log->error("NO Host found for mac $mac");
 				my $Host = new openprint::Host();
-				$Host->save({ hostname=>''});
+				$Host->save({ hostname=>$mac});
 				my $HI = new openprint::Host_Interface();
 				$HI->save({ host_id=>$$Host{id}, mac=>$mac });
 				push @WIS, $HI;

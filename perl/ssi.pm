@@ -1103,6 +1103,7 @@ sub include_logs {
 	$variable{Object} = $Object;
 	setup_date_select( $variable{uri}, 'log_created_on_start', -31 );
 	setup_date_select( $variable{uri}, 'log_created_on_end', '' );
+	$session{$variable{uri}.'?log_limit'} = 50 if ! exists $session{$variable{uri}.'?log_limit'};
 	return include('/includes/_logs_container.html');
 }
 sub include_logs_view {

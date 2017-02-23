@@ -1365,14 +1365,16 @@ sub lock {
 	if ( $type ) {
 		# Row lock
 		if ( $_[0]{ac} ) {
-			#already locked
+			#already locked, actually a zero value could mean that a transaction was already in progress, just not on this object.
 			$openprint::log->debug("ALREADY LOCKED $type for $_[0]{id} ac: $_[0]{ac} caller: $caller line: $line object ref:" . $_[0]) if DEBUG_ALL;
 			$_[0]{ac} += 1;
 		} else {
+			# Should return 1, which was the previous state of the AutoCommit which is now 0
+			# Could return 0 if we were already in a transaction
 			$_[0]{ac} = sql::start_transaction( $openprint::dbh );
 			$openprint::log->debug("LOCKING $type for $_[0]{id} ac: $_[0]{ac} caller: $caller line: $line object ref:" . $_[0]) if DEBUG_ALL;
 			my $table = eval '$'.$type.'::table';
-			$dbh->do( "SELECT * FROM $table WHERE id=".$_[0]{id}. ' FOR UPDATE' ) or $log->error( $dbh->errstr );;
+			$dbh->do( "SELECT * FROM $table WHERE id=".$_[0]{id}. ' FOR UPDATE' ) or $log->error( $dbh->errstr );
 			#$dbh->do( "LOCK TABLE $table IN EXCLUSIVE MODE" ) or $log->error( DBI->errstr );
 		} # end if
 		$ac = $_[0]{ac};
@@ -1394,6 +1396,7 @@ sub unlock {
 	if ( $type ) {
 		$openprint::log->debug("UNLOCKING $type for $_[0]{id} ac: $_[0]{ac} caller: $caller line: $line" . $_[0]) if DEBUG_ALL;
 		if ( ! exists $_[0]{ac} ) {
+			# THis doesn't work.  If we were in a transaction, then AutoCommit is 0
 			$_[0]{ac} = $openprint::dbh->{AutoCommit};
 		} # end if
 		if ( ! $_[0]{ac} ) {
@@ -1402,12 +1405,11 @@ sub unlock {
 		} # end if
 		if ( $_[0]{ac} == 1 ) {
 			sql::end_transaction( $openprint::dbh, $_[0]{ac} );
-		} else {
-			$_[0]{ac} -= 1;
 		} # end if
+		$_[0]{ac} -= 1;
 	} else {
 		$type = $_[0];
-		sql::end_transaction( $openprint::dbh, 0 );
+		sql::end_transaction( $openprint::dbh, 1 );
 	}
 } # end sub unlock
 
