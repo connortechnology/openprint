@@ -201,15 +201,15 @@ $openprint::log->debug("Setting: $param{amount} " );
 				$variable{error} .= $Paper->save();
 				$variable{ExternalRedirect} = '/administrator/stock/list.html';
 			} elsif ( $param{mode} eq 'other' ) {
-				my @changes;
+				my $Changed = $Paper->clone();
+
 				foreach my $field ( 'score_required', 'gsm' ) {
-					if ( $param{$field} ne '' and $Paper->$field() ne $param{$field} ) {
-						push @changes, $field . ':'.$Paper->$field() . ' => ' . $param{$field};
-						$Paper->$field( $param{$field} );
-					}
+						$Changed->$field( $param{$field} );
 				} # end foreach field
+				my @changes = $Paper->changes( $Changed );
+
 				if ( @changes ) {
-					$Paper->save();
+					$Changed->save();
 					(new openprint::Log())->save({ Object=>$Paper, action=>'Edit', note=>join(',',@changes) } );
 				}
 			} else {
