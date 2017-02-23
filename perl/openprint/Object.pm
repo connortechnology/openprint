@@ -596,6 +596,8 @@ my $add_placeholder = ( ! ( $field =~ /\?/ ) ) ?  1 : 0;
 		} else {
 			return ( $field.$type.' ' . $operator . ' ?', [ $value ] );
 		} # end if
+	} elsif ( $operator eq 'exists' ) {
+			return 'EXISTS ' . $field.$type;
 	} elsif ( sets::isin( $operator, [ 'in', 'not in' ] ) ) {
 		if ( ref $value eq 'ARRAY' ) {
 			return ( $field.$type.' ' . $operator . ' ('. join(',', map { '?' } @{$value} ) . ')', @{$value} );
