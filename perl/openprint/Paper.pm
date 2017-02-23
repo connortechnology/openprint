@@ -1199,6 +1199,7 @@ sub gsm {
 	if ( @_ ) {
 		$$self{gsm} = shift;
 		$self->wpsi(undef) if $$self{gsm};
+		$self->mweight(undef) if $$self{gsm};
 	} 
 	if ( ! $$self{gsm} ) {
 		if ( $self->wpsi(undef) ) {
