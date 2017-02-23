@@ -201,14 +201,17 @@ $openprint::log->debug("Setting: $param{amount} " );
 				$variable{error} .= $Paper->save();
 				$variable{ExternalRedirect} = '/administrator/stock/list.html';
 			} elsif ( $param{mode} eq 'other' ) {
-				my $changed = 0;
+				my @changes;
 				foreach my $field ( 'score_required', 'gsm' ) {
 					if ( $param{$field} ne '' and $Paper->$field() ne $param{$field} ) {
+						push @changes, $field . ':'.$Paper->$field() . ' => ' . $param{$field};
 						$Paper->$field( $param{$field} );
-						$changed = 1;
 					}
 				} # end foreach field
-				$Paper->save() if $changed;
+				if ( @changes ) {
+					$Paper->save();
+					(new openprint::Log())->save({ Object=>$Paper, action=>'Edit', note=>join(',',@changes) } );
+				}
 			} else {
 				$log->error("Unknown mode in apply changes");
 			} # end if
