@@ -106,7 +106,7 @@ You may use a barcode scanner.  Simply scan the code and click Go.<br/>
 		my $html;
 	
 		if ( @POs ) {
-			$html .= '<div class="PurchaseOrders"><br/>The following POs need review/authorizing by you.<br/>
+			$html .= '<div class="PurchaseOrders"><br/>The following POs need review/authorizing by you. Click <a href="/employee/purchase_order/history.html">here</a> for more.<br/>
 <table id="ResultsTable" class="List sortable">
   <tr>
     <th class="po_id">ID</th>
@@ -119,7 +119,7 @@ You may use a barcode scanner.  Simply scan the code and click Go.<br/>
   </tr>
 ';
 		$html .= join("\n", map { 
-sprintf(q`<tr id="tr-%1$d">
+sprintf(q`<tr id="tr-%1$d" class="unauthorized">
 		<td class="po_id"><a href="/employee/purchase_order/view.html?po_id=%1$d">%1$d</a></td>
         <td class="DateTime"><a href="/employee/purchase_order/view.html?po_id=%1$d">%2$s</a></td>
         <td class="Company"><a href="/employee/purchase_order/view.html?po_id=%1$d">%3$s</a></td>
