@@ -4782,15 +4782,15 @@ $imp->display('[warn]');
 							$do_stock_cutting = 1;
 						} # end if
 						$supplied_sheets = ceil($PaperCounts{$paper_string}/$Paper->factor());
-						$supplied_weight = Math::Round::nearest( 0.1, $supplied_sheets * $Supplied->sheet_weight() );
+						$supplied_weight = Math::Round::nearest( 0.1, $supplied_sheets * Math::Round::nearest(0.001, $Supplied->sheet_weight() ) );
 						if ( ! $supplied_weight ) {
-							$openprint::log->debug("Sheet No supplied wight: $supplied_sheets $paper_string factor: " . $Paper->factor() . ' sheet weight: ' . $Supplied->sheet_weight() );
+							$openprint::log->error("Sheet No supplied wight: $supplied_sheets $paper_string factor: " . $Paper->factor() . ' sheet weight: ' . $Supplied->sheet_weight() );
 						} # end if
 						$paper_price = $Supplied->get_price( sheets=>$supplied_sheets, service=>'Material' );
 					} else {
 						$supplied_weight = Math::Round::nearest( 0.1, $PaperCounts{$paper_string}/$Paper->factor() );
 						$paper_price = $Supplied->get_price( weight=>$supplied_weight, service=>'Material' );
-					} # en dif
+					} # end if
 
 					$$paper_price{Total} = Math::Round::nearest( 0.01, $$paper_price{'100lb Price'} * $supplied_weight / 100 );
 					$$price{'Comparison Cost'} += $$paper_price{Total};
@@ -6605,12 +6605,12 @@ sub get_run_price {
 		if ( $std_speed and ( $$std_speed{units} =~ /^Per (.+) Per Hour$/ ) ) {
 			my $unit = $1;
 			if ( $unit =~ /([\d\.]+)x([\d\.]+)/ ) {
-				#$openprint::log->debug("Have unit $1 $2");
 				my $area = $1*$2;
 				if ( ! $$Imposition{object_width} * $$Imposition{object_height} ) {
 					$openprint::log->debug("Runspeed for $$Imposition{object_width} * $$Imposition{object_height} on $$Press{id}");
 				} else {
 					$run_speed = int( $$std_speed{value} * $area/($$Imposition{object_width} * $$Imposition{object_height}) );
+					#$openprint::log->debug("Runspeed = $$std_speed{value} $$std_speed{units} * $area / ( $$Imposition{object_width} * $$Imposition{object_height}) = $run_speed");
 				} # end if
 				#$openprint::log->debug("Have runspeed $$std_speed{value}, area: $area, $run_speed");
 			} else {
@@ -6751,6 +6751,9 @@ sub press_setup_cost {
 		#$Price{Total} *= $plate_change_qty if $plate_change_qty;
 	} # end if
 	$Price{'Press Setup'} = $Price{Total};
+	my $plates = $setup_count;
+	$plates *= $plate_runs if $plate_runs;
+	$plates += $plate_change_qty if $plate_change_qty;
 	$Price{'Plate Count'} = $plates;
 	# No on is using these at this time. We can re-enable when someone does.
 	#my %PlateSetupPrice = openprint::service::get_price_object( 'PlateMakeReady'.$$Imposition{runstyle}.$$Imposition{sides}.'Sided', undef, $Press );
@@ -6758,9 +6761,6 @@ sub press_setup_cost {
 	#%PlateSetupPrice = openprint::service::get_price_object( 'PlateMakeReady', undef, $Press ) if ! %PlateSetupPrice;
 	my %PlateSetupPrice = openprint::service::get_price_object( 'PlateMakeReady', undef, $Press );
 	if ( %PlateSetupPrice ) {
-		my $plates = $setup_count;
-		$plates *= $plate_runs if $plate_runs;
-		$plates += $plate_change_qty if $plate_change_qty;
 		my $units = $PlateSetupPrice{units};
 		if ( $units eq 'per hour' ) {
 			my $time = $Press->specification('Plate Setup Time') * $plates / 60;
