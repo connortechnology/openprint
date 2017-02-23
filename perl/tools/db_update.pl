@@ -4942,7 +4942,7 @@ if ( ! sets::isin( 'currencies_id_seq', \@sequences ) ) {
 foreach my $thingy ( 'names','finishes','colours', 'weights','qualities' ) {
 if ( sets::isin( 'paper'.$thingy, \@tables ) ) {
 $log->warn("Renaming paper$thingy");
-	$dbh->do("ALTER TABLE Paper$thingy rename to Stock$thingy");
+	$dbh->do("ALTER TABLE paper$thingy rename to Stock$thingy");
 	$dbh->do("ALTER TABLE stock$thingy rename column shortname to name");
 	$dbh->do("ALTER TABLE stock$thingy drop column longname");
 	if ( sets::isin( $thingy.'_id_seq' ) ) {
