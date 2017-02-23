@@ -2240,6 +2240,8 @@ $I->display("Min spread size: $min_spread_size dir($$I{spine_direction}) " . $op
 		) {
 		
 		if ( $$I{spread_rows} % 2 ) {
+
+			# First option, all singletons, since we are going to be called recursively... is this neccessary?
 			my $i1 = $I->copy();
 			$i1->spread_rows(1);
 			$i1->quantity( $$i1{quantity} * $$I{spread_rows} );
@@ -2249,30 +2251,36 @@ $I->display("Min spread size: $min_spread_size dir($$I{spine_direction}) " . $op
 			} else {
 				$i1->image_width( $$I{image_width}/$$I{spread_rows} );
 			} # endif
+
 			$openprint::log->debug(sprintf('2232 Cutting pages down from %d@%d pages to %d@%d pages pq(%d) by cutting spread_rows from %d to 1', $I->quantity(), $I->pages(), $i1->quantity(), $i1->pages(), @$I{'page_quantity','spread_rows'} ) ) if DEBUG;
 			push @results, [ $i1 ];
 
 			my $i2 = $I->copy();
 			$i2->spread_rows( int($$i2{spread_rows} / 2) );
 			if ( $$i2{spread_rows} > 1 ) {
-				my $i2_quantity = int($$I{spread_rows}/$$i2{spread_rows});
-				$i2->quantity( $I->quantity() * $i2_quantity );
-				$i2->page_quantity( $I->page_quantity() * $i2_quantity );
+				#my $i2_quantity = int($$I{spread_rows}/$$i2{spread_rows});
+				#$i2->quantity( $I->quantity() * $i2_quantity );
+				#$i2->page_quantity( $I->page_quantity() * $i2_quantity );
 				my $i3 = $I->copy();
-				$i3->spread_rows( $$I{spread_rows} - ( $$i2{spread_rows} * $i2_quantity ) );
+				$i3->spread_rows( $$I{spread_rows} - $$i2{spread_rows} ); #* $i2_quantity ) );
 #$i3->quantity( $I->quantity() * int($I->spread_rows()/$i2->spread_rows()) );
 				if ( $$I{image_orientation} == openprint::Imposition::Vertical ) {
 					$i2->image_height( $$I{image_height}*$$i2{spread_rows}/$$I{spread_rows} );
-					$i3->image_height( $$I{image_height}*$$i3{spread_rows} );
+					$i3->image_height( $$I{image_height}*$$i3{spread_rows}/$$I{spread_rows} );
 				} else {
 					$i2->image_width( $$I{image_width}*$$i2{spread_rows}/$$I{spread_rows} );
-					$i3->image_width( $$I{image_width}*$$i3{spread_rows} );
+					$i3->image_width( $$I{image_width}*$$i3{spread_rows}/$$I{spread_rows} );
 				} # endif
-				$openprint::log->debug(sprintf('2251 Cutting pages down from q%d x %d pages to q%d x %d pages', $I->quantity(), $I->pages(), $i2->quantity(), $i2->pages() ) ) if DEBUG;
+				$openprint::log->debug(sprintf('2251 Cutting pages down from q%d@%dpg to q%d@%dpg and ',
+							$I->quantity(), $I->pages(), 
+							$i2->quantity(), $i2->pages(),
+							$i3->quantity(), $i3->pages(),
+							) ) if DEBUG;
 				push @results, [ $i2, $i3 ];
 			} # end if
 
 		} else {
+			# Just cut in half
 			my $i1 = $I->copy();
 			$i1->spread_rows( $$i1{spread_rows}/2 );
 			if ( $$I{image_orientation} == openprint::Imposition::Vertical ) {
@@ -2315,20 +2323,23 @@ $I->display("Min spread size: $min_spread_size dir($$I{spine_direction}) " . $op
 			my $i2 = $I->copy();
 			$i2->spread_columns( int($$i2{spread_columns} / 2) );
 			if ( $$i2{spread_columns} > 1 ) {
-# Just duplicating the singleton case
-				my $i2_quantity = int($$I{spread_columns}/$$i2{spread_columns});
-				$i2->quantity( $$I{quantity} * $i2_quantity );
-				$i2->page_quantity( $$I{page_quantity} * $i2_quantity );
-				$openprint::log->debug(sprintf('2292 Cutting pages down from q%d x %d pages to q%d x %d pages', $I->quantity(), $I->pages(), $i2->quantity(), $i2->pages() ) ) if DEBUG;
+				# Not Just duplicating the singleton case
+				#my $i2_quantity = int($$I{spread_columns}/$$i2{spread_columns});
+				#$i2->quantity( $$I{quantity} * $i2_quantity );
+				#$$i2{page_quantity} = $$I{page_quantity} * $i2_quantity;
 				my $i3 = $I->copy();
-				$i3->spread_columns( $$I{spread_columns} - ( $$i2{spread_columns} * $i2_quantity ) );
-				$openprint::log->debug(sprintf('Cutting pages down from q%d x %d pages to q%d x %d pages', $I->quantity(), $I->pages(), $i3->quantity(), $i3->pages() ) ) if DEBUG;
+				$i3->spread_columns( $$I{spread_columns} - $$i2{spread_columns} ); #* $i2_quantity ) );
+				$openprint::log->debug(sprintf('2324 Cutting pages down from q%d x %d pages to q%d x %d pages and q%d x %d pages', 
+							$I->quantity(), $I->pages(), 
+							$i2->quantity(), $i2->pages(),
+							$i3->quantity(), $i3->pages(),
+							) ) if DEBUG;
 				if ( $$I{image_orientation} == openprint::Imposition::Vertical ) {
 					$i2->image_width( $$I{image_width}*$$i2{spread_columns}/$$I{spread_columns} );
-					$i3->image_width( $$I{image_width}*$$i3{spread_columns} );
+					$i3->image_width( $$I{image_width}*$$i3{spread_columns}/$$I{spread_columns} );
 				} else {
 					$i2->image_height( $$I{image_height}*$$i2{spread_columns}/$$I{spread_columns} );
-					$i3->image_height( $$I{image_height}*$$i3{spread_columns} );
+					$i3->image_height( $$I{image_height}*$$i3{spread_columns}/$$I{spread_columns} );
 				} # end if
 				push @results, [ $i2, $i3 ];
 			} # end if
