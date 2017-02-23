@@ -22,6 +22,19 @@ function check_price( element ) {
 	} // end if
 }
 
+function basis_weight_to_gsm( form ) {
+	var basis_weight = parseFloat(1*form.elements['basis_mweight'].value);
+	var basis_width = parseFloat(1*form.elements['basis_width'].value);
+	var basis_height = parseFloat(1*form.elements['basis_height'].value);
+	var width = parseFloat(1*form.elements['width'].value);
+	var height = parseFloat(1*form.elements['height'].value);
+
+  var gsm = Math.round((basis_weight/1000)/(basis_width*basis_height)*70306450)/100;
+  form.elements['gsm'].value = gsm;
+	form.elements['mweight'].value = Math.round((gsm/703064.5)*(width*height)*100000)/100;
+  form.elements['wpsi'].value = gsm / 703064.5;
+  recalc_prices( form );
+}
 function mweight_to_gsm( form ) {
 	var mweight;
 	var width;

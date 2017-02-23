@@ -222,7 +222,7 @@
 				</p>
 				<p id="BasisSize">
 					<label>Basis MWeight</label>
-					<? echo ( input(type=>'float', id=>'basis_mweight', name=>'basis_mweight', value=>$$variable{Stock}->basis_mweight(),  oninput=>'mweight_to_gsm( this.form );' ); ) ?>
+					<? echo ( input(type=>'float', id=>'basis_mweight', name=>'basis_mweight', value=>$$variable{Stock}->basis_mweight(),  oninput=>'basis_weight_to_gsm( this.form );' ); ) ?>
 					<br/>
 					<label>Basis Size</label>
 					<? echo ( join(' x ',
