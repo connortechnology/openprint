@@ -1800,5 +1800,20 @@ $openprint::log->debug( "Types @types for " . $self->to_string() );
 	return sets::union( @types );
 }
 
+sub check {
+	my $Paper = shift;
+	my $Copy = $Paper->clone();
+
+	my $results;
+  if ( Math::Round::nearest(1,$Paper->gsm()) != Math::Round::nearest(1,$Copy->gsm(undef)) ) {
+		return "may have invalid gsm current:$$Paper{gsm} != calculated:$$Copy{gsm}";
+  }
+  $Copy = $Paper->clone();
+  if ( Math::Round::nearest(1,$Paper->basis_mweight()) != Math::Round::nearest(1,$Copy->basis_mweight(undef)) ) {
+    return "may have invalid mweight current:$$Paper{basis_mweight} != calculated:$$Copy{basis_mweight}";
+  }
+	return;
+} # end sub check
+
 1;
 __END__
