@@ -25,6 +25,7 @@
 			( $session{'/administrator/stock/list.html?customer_supplied'} ne '' ? ( supplied=>$session{'/administrator/stock/list.html?customer_supplied'} ) : () ),
 			( $session{'/administrator/stock/list.html?has_message'} ne '' ? ( 'message is not null' => $session{'/administrator/stock/list.html?has_message'} ) : () ),
 			( $session{'/administrator/stock/list.html?has_minimum_order'} ne '' ? ( 'minimum_order is not null' => $session{'/administrator/stock/list.html?has_minimum_order'} ) : () ),
+			( $session{'/administrator/stock/list.html?recommendations'} ne '' ? ( 'project_type_id exists'=> $session{'/administrator/stock/list.html?recommendations'} ) : () ),
 			order		=> 'brand,finish,colour,weight, width, height'
 		);
 		if ( $session{'/administrator/stock/list.html?calliper'} ) {
@@ -37,8 +38,8 @@
 			}
 		}
 		foreach my $Stock ( openprint::Paper->find( %sql) ) {
-		next if $session{'/administrator/stock/list.html?recommendations'} eq '0' and $Stock->recommendations();
-		next if $session{'/administrator/stock/list.html?recommendations'} eq '1' and ! $Stock->recommendations();
+		next if $session{'/administrator/stock/list.html?has_problems'} eq '1' and ! $Stock->check();
+		next if $session{'/administrator/stock/list.html?has_problems'} eq '0' and $Stock->check();
 		if ( $session{'/administrator/stock/list.html?setup_prices'} eq '1' ) {
 			next if ! openprint::PaperPrice->find_one(paper_id=>$$Stock{id}, service=>'Setup');
 		} elsif ( $session{'/administrator/stock/list.html?setup_prices'} eq '0' ) {

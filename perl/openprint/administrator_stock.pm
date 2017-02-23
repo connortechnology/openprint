@@ -34,7 +34,7 @@ sub _stocks {
 			'colour_id','weight_id','fsc_code','material_id', 'Types', 'recommendations',
 			'grain_direction', 'digital', 'width','height', 'scoring', 'setup_prices', 
 			'material_prices', 'customer_supplied', 'has_message', 'has_minimum_order',
-			'calliper', );
+			'calliper', 'has_problems' );
 		$session{'/administrator/stock/list.html?OrLarger'} = $param{OrLarger};
 	} # end if
 } # end sub _stocks
