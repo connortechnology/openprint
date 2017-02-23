@@ -847,8 +847,10 @@ sub spine_direction {
 $openprint::log->debug("Setting spine direction uusing $_[0]{spine}");
 		if ( $_[0]{spine} eq 'height' ) {
 			$_[0]{spine_direction} = $_[0]{image_orientation};
-		} else { # width
+		} elsif ( $_[0]{spine} eq 'width' ) {
 			$_[0]{spine_direction} = $_[0]{image_orientation} == Vertical ? Horizontal : Vertical;
+		} else {
+			$_[0]{spine_direction} = $_[0]{image_orientation};
 		}
 	} 
 	return $_[0]{spine_direction};
