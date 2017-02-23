@@ -811,7 +811,7 @@ $openprint::log->debug("folds from sigimpo") if DEBUG;
 						$complete = 0;
 						last;
 					} elsif ( ( $$Imposition{columns} > 1 ) and ( $$Imposition{spine_direction} == openprint::Imposition::Vertical ) ) {
-						$openprint::log->debug("Can't do that impovertical and columns $$Imposition{columns} > 1") if DEBUG;
+						$openprint::log->debug("Can't do that impovertical and columns $$Imposition{columns} > 1 and spine direction $$Imposition{spine_direction} ==" . openprint::Imposition::Vertical ) if DEBUG;
 						$complete = 0;
 						last;
 					} elsif ( $$Imposition{rows} > 1 and ( $$Imposition{spine_direction} == openprint::Imposition::Horizontal ) ) {
