@@ -3220,7 +3220,8 @@ $log->debug("$_ $$stock_qty{$_}");
 	$breakdown .= $$price{'Ink breakdown'};
 	$breakdown .= sprintf('Ink Total: $%.2f<br/>', $$price{'Ink Price'} );
 	$breakdown .= sprintf('Total: $%.2f<br/>', $$price{'Total Cost'} );
-	$breakdown .= join('', $$price{'Proofs Breakdown'},
+	$breakdown .= join('', 
+			( defined $$price{'Proofs Breakdown'} ? $$price{'Proofs Breakdown'} : '' ),
 			( defined $$price{'UVCoating Breakdown'} ? $$price{'UVCoating Breakdown'} : '' ),
 			( defined $$price{'Aqueous Breakdown'} ? $$price{'Aqueous Breakdown'} : '' ),
 			( defined $$price{'Cutting Breakdown'} ? $$price{'Cutting Breakdown'} : '' ),
@@ -5699,8 +5700,11 @@ $openprint::log->warn("No folding equipment");
 	if ( $max_impressions ) { $max_impressions = int($max_impressions); } else { $max_impressions = 250000; }
 	my $plate_runs = ceil($impressions/$max_impressions);
 
-	my $plate_id = $plate_size . '-' . $plate_type . 'Plate' if $plate_size and $plate_size;
-	my %plate_setup = ( 'Plate Type', $plate_type, 'Plate ID', $plate_id, 'Plate Runs', $plate_runs ); # if $plate_size and $plate_type;
+	my $plate_id = $plate_size and $plate_size ? $plate_size . '-' . $plate_type . 'Plate' : '';
+	my %plate_setup = (
+			'Plate Type', ($plate_type?$plate_type:''),
+			'Plate ID', $plate_id, 
+			'Plate Runs', $plate_runs ); # if $plate_size and $plate_type;
 	
 	my @colours_no_coatings = filter_coatings_from_colours(\@colours);
 
