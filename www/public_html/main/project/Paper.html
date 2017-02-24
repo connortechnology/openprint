@@ -127,6 +127,8 @@ function calc_weight_from_sheets(e) {
 				$html .= ' = '. $$variable{Currency}->symbol();
 				$html .= input( type=>'float', id=>"price-$key", name=>"price-$key", value=>$$variable{"price-$key"}, onkeyup=>'calc(this.form.name);' );
 				$html .= '</span>';
+			} else {
+			 $html .= '<b>Supplied by Customer</b>';
 			} # end if
 			$html .= '</span>';
 		} # end foreach qty_index
