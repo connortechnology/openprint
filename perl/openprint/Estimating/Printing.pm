@@ -1540,17 +1540,19 @@ if ( DEBUG_IMPOSITIONS and $$specs{"chkOverrideRunStyle$qty_index"} ) {
 			if ( $$Paper{type} eq 'Roll' ) {
 				
 				$$project{Runstyles} = $runstyles_roll;
-				if ( $maximum_sheet_width and ( $$Paper{width} > $maximum_sheet_width ) ) {
-					$openprint::log->debug("Stock width $$Paper{width} > max sheet width $maximum_sheet_width") if DEBUG_IMPOSITIONS;
-					next;
-				} # end if
-				if ( $$Paper{width} < $minimum_sheet_width ) {
-					$openprint::log->debug("Stock width $$Paper{width} < min sheet width $minimum_sheet_width") if DEBUG_IMPOSITIONS;
-					next;
-				} # end if
-				if ( $maximum_roll_width and ( $$Paper{width} > $maximum_roll_width ) ) {
-					$openprint::log->debug("Stock width $$Paper{width} > max roll width $maximum_roll_width") if DEBUG_IMPOSITIONS;
-					next;
+				if ( $$Paper{width} ) {
+					if ( $maximum_sheet_width and ( $$Paper{width} > $maximum_sheet_width ) ) {
+						$openprint::log->debug("Stock width $$Paper{width} > max sheet width $maximum_sheet_width") if DEBUG_IMPOSITIONS;
+						next;
+					} # end if
+					if ( $$Paper{width} < $minimum_sheet_width ) {
+						$openprint::log->debug("Stock width $$Paper{width} < min sheet width $minimum_sheet_width") if DEBUG_IMPOSITIONS;
+						next;
+					} # end if
+					if ( $maximum_roll_width and ( $$Paper{width} > $maximum_roll_width ) ) {
+						$openprint::log->debug("Stock width $$Paper{width} > max roll width $maximum_roll_width") if DEBUG_IMPOSITIONS;
+						next;
+					} # end if
 				} # end if
 #$openprint::log->debug('blah'.$Paper->to_string());
 				if ( $roll2sheet_minimum_weight and $feeds{Sheet} ) {
