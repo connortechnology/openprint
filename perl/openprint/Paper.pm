@@ -1217,14 +1217,14 @@ sub gsm {
 sub wpsi {
 	my $self = shift;
 	if ( @_ ) {
-$log->debug("Setting wpsi to $$self{wpsi}") if 1;
+#$log->debug("Setting wpsi to $$self{wpsi}") if 1;
 		$$self{wpsi} = shift;
-$log->debug("Setting wpsi to $$self{wpsi}") if 1;
+#$log->debug("Setting wpsi to $$self{wpsi}") if 1;
 	} # end if
 	if ( ! $$self{wpsi} ) {
 		if ( $$self{gsm} ) {
 			$$self{wpsi} = $$self{gsm} / 703064.5;
-$log->debug("Setting wpsi to $$self{gsm} / 703064.5 = $$self{wpsi}");
+#$log->debug("Setting wpsi to $$self{gsm} / 703064.5 = $$self{wpsi}");
 		} elsif ( $$self{mweight} and ( $$self{type} eq 'Sheet' ) and $$self{width} and $$self{height} ) {
 			$$self{wpsi} = ($$self{mweight} / 1000)/($$self{width}*$$self{height});
 		} elsif ( $$self{basis_mweight} ) {
@@ -1813,7 +1813,7 @@ sub check {
 		return "may have invalid gsm current:$$Paper{gsm} != calculated:$$Copy{gsm} ";
   }
   $Copy = $Paper->clone();
-  if ( Math::Round::nearest_ceil(1,$Paper->basis_mweight()) != Math::Round::nearest_ceil(1,$Copy->basis_mweight(undef)) ) {
+  if ( abs( POSIX::ceil( $Paper->basis_mweight()) - POSIX::ceil( $Copy->basis_mweight(undef)) ) -1 > 0 ) {
     return "may have invalid mweight current:$$Paper{basis_mweight} != calculated:$$Copy{basis_mweight}";
   }
 	return;
