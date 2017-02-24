@@ -807,7 +807,7 @@ $openprint::log->debug("folds from sigimpo") if DEBUG;
 				# THis checks to see if the folds line up, should probably be using spine_direction instead
 				if ( $$Equipment{id} != $$Press{id} ) {
 					if ( $$Imposition{imposition} > 3 and ( $$Imposition{columns} > 1 and $$Imposition{rows} > 1 ) ) {
-						$openprint::log->debug("Can't do that impo cuz impo > 3 cols > 1 and rows > 1") if DEBUG;
+						$openprint::log->debug("Can't do that impo cuz impo > 3 columns > 1 and rows > 1") if DEBUG;
 						$complete = 0;
 						last;
 					} elsif ( ( $$Imposition{columns} > 1 ) and ( $$Imposition{spine_direction} == openprint::Imposition::Vertical ) ) {
@@ -2219,18 +2219,31 @@ sub cut_spreads {
 	my $min_spread_size = $$I{spread_size}/2 > 3 ? $$I{spread_size}/2 : 3;
 $I->display("Min spread size: $min_spread_size dir($$I{spine_direction}) " . $openprint::Imposition::Orientations{$$I{spine_direction}} );
 
-	# Something like doing 16pg as 2 8pgs
+	# Something like doing 16pg as 2 8pgs, why are we not handling the horizontal case?
 	if ( $$I{spine_direction} == openprint::Imposition::Vertical and ( $$I{spread_rows} % 2 == 0 ) ) {
 		my $i1 = $I->copy();
+
+		# So becomes pages/2, imposition * 2, page quantity * 2, meaning if it is now 4pg 2out, it is in fact 8pages.
 		$i1->spread_rows( $$i1{spread_rows} / 2 );
 		$i1->rows( $$i1{rows} * 2 );
-
-		#$i1->page_quantity( $i1->page_quantity() / 2 );
+		$i1->page_quantity( $i1->page_quantity() * 2 );
 		$i1->image_height( $$I{image_height}/$$I{spread_rows} );
 		$openprint::log->debug(sprintf('SPECIAL Cutting pages down from quantity %d x %d pages %dout to q%d x %d pages %dout pq(%d)', 
 					$I->quantity(), $I->pages(), $$I{imposition},
 					$i1->quantity(), $i1->pages(), $$i1{imposition}, $$I{page_quantity} ) ) if DEBUG;
 		push @results, [ $i1 ];
+	} elsif ( $$I{spine_direction} == openprint::Imposition::Horizontal and ( $$I{spread_columns} % 2 == 0 ) ) {
+		my $i1 = $I->copy();
+
+    # So becomes pages/2, imposition * 2, page quantity * 2, meaning if it is now 4pg 2out, it is in fact 8pages.
+    $i1->spread_columns( $$i1{spread_columns} / 2 );
+    $i1->columns( $$i1{columns} * 2 );
+    $i1->page_quantity( $i1->page_quantity() * 2 );
+    $i1->image_height( $$I{image_height}/$$I{spread_columns} );
+    $openprint::log->debug(sprintf('SPECIAL Cutting pages down from quantity %d x %d pages %dout to q%d x %d pages %dout pq(%d)',
+          $I->quantity(), $I->pages(), $$I{imposition},
+          $i1->quantity(), $i1->pages(), $$i1{imposition}, $$I{page_quantity} ) ) if DEBUG;
+    push @results, [ $i1 ];
 	}
 
 	if ( 
