@@ -702,13 +702,27 @@ $openprint::log->debug("folds from sigimpo") if DEBUG;
 	} # end if have pages
 
 	if ( $$specs{"chkOverrideFold-$form-$qty_index"} and ( $$specs{"chkOverrideFold-$form-$qty_index"} eq 'Y' ) ) {
-$openprint::log->error("Checking for Overriden folds") if DEBUG;
-		my @New_All_Impositions;
+		$openprint::log->error("Checking for Overriden folds") if DEBUG;
 
+		if ( $$sig_specs{txtSignatureType} ) {
+			my $override_pages = 0;
+			foreach my $index ( 1 .. 4 ) {
+				next if ! ( $$specs{"FoldQty-$form-$qty_index-$index"} 
+						and $$specs{"FoldType-$form-$qty_index-$index"}
+						and $$specs{"FoldImposition-$form-$qty_index-$index"} );
+				my ( $pages ) = $$specs{"FoldType-$form-$qty_index-$index"} =~ /(\d+)PageFold/;
+				$override_pages += $$specs{"FoldQty-$form-$qty_index-$index"} * $pages * $$specs{"FoldImposition-$form-$qty_index-$index"};
+			}
+			if ( $override_pages > $$SignatureImposition{imposition} * $SignatureImposition->pages() ) {
+				$$specs{alert} .= "You seem to be specifying more pages for folding than were printed for form $form quantity $qty_index<br/>";
+			} elsif ( $override_pages < $$SignatureImposition{imposition} * $SignatureImposition->pages() ) {
+				$$specs{alert} .= "You seem to be specifying fewer pages for folding than were printed for form $form quantity $qty_index<br/>";
+			} # end if
+		} # end if SignatureType need to test for too many pages
+
+		my @New_All_Impositions;
 SET:		foreach my $Set_Of_Impositions ( @All_Impositions ) {
 
-			my $remaining_pages = $SignatureImposition->pages();
-			my $override_pages = 0;
 			# Find out if folds satisfies the overrides
 			my %found;
 			foreach my $index ( 1 .. 4 ) {
@@ -718,43 +732,33 @@ SET:		foreach my $Set_Of_Impositions ( @All_Impositions ) {
 						and $$specs{"FoldImposition-$form-$qty_index-$index"} );
 
 					my $pages;
-					my $this_pages;
 
 					if ( $$sig_specs{txtSignatureType} ) {
 						( $pages ) = $$specs{"FoldType-$form-$qty_index-$index"} =~ /(\d+)PageFold/;
-						$this_pages = $$specs{"FoldQty-$form-$qty_index-$index"} * $pages * $$specs{"FoldImposition-$form-$qty_index-$index"};
-						$override_pages += $this_pages;
 					} else {
 						if ( $$specs{"FoldImposition-$form-$qty_index-$index"} > $SignatureImposition->imposition() ) {
 							$$specs{alert} .= "You seem to be specifying a higher imposition for folding than was printed for form $form quantity $qty_index<br/>";
 						}
 					} # end if
 					$found{$index} = 0;
-					if ( DEBUG ) {
-						$openprint::log->debug("LOOKING for overriden fold $index, have $override_pages pages");
-						foreach my $FI ( @$Set_Of_Impositions ) {
-							$FI->display("FIs $$FI{found}");
-						}
-					}
 					foreach my $FI ( @$Set_Of_Impositions ) {
 						next if $found{$FI};
-						my $Fold = $$FI{Fold};
 
 						$FI->display();
 						$openprint::log->debug(qq`Overriden $$specs{"FoldQty-$form-$qty_index-$index"} $$specs{"FoldImposition-$form-$qty_index-$index"}out $$specs{"FoldType-$form-$qty_index-$index"}`) if DEBUG;
 
 						if ($pages and ( $$FI{pages} != $pages ) ) {
-$openprint::log->debug(qq`Wrong type: $$specs{"FoldType-$form-$qty_index-$index"} ne $$FI{pages}`) if DEBUG;
+							$openprint::log->debug(qq`Wrong type: $$specs{"FoldType-$form-$qty_index-$index"} ne $$FI{pages}`) if DEBUG;
 							next;
 
 						} elsif ( $$specs{rdbTemplateType} and $fold_types{$$specs{rdbTemplateType}} and ( $$specs{"FoldType-$form-$qty_index-$index"} ne $$specs{rdbTemplateType} ) ) {
-$openprint::log->debug(qq`Wrong type: $$specs{"FoldType-$form-$qty_index-$index"} ne $$specs{rdbTemplateType}`) if DEBUG;
+							$openprint::log->debug(qq`Wrong type: $$specs{"FoldType-$form-$qty_index-$index"} ne $$specs{rdbTemplateType}`) if DEBUG;
 							next;
 						} elsif ( $$specs{"FoldQty-$form-$qty_index-$index"} != $$FI{quantity} ) {
-$openprint::log->debug(qq`Wrong qty: $$specs{"FoldQty-$form-$qty_index-$index"} != $$FI{quantity}`) if DEBUG;
+							$openprint::log->debug(qq`Wrong qty: $$specs{"FoldQty-$form-$qty_index-$index"} != $$FI{quantity}`) if DEBUG;
 							next;
 						} elsif ( $$specs{"FoldImposition-$form-$qty_index-$index"} != $$FI{imposition} ) {
-$openprint::log->debug(qq`Wrong imposition: $$specs{"FoldImposition-$form-$qty_index-$index"} != $$FI{imposition}`) if DEBUG;
+							$openprint::log->debug(qq`Wrong imposition: $$specs{"FoldImposition-$form-$qty_index-$index"} != $$FI{imposition}`) if DEBUG;
 							next;
 						} # end if
 						$FI->display("Found") if DEBUG;
@@ -764,7 +768,6 @@ $openprint::log->debug(qq`Wrong imposition: $$specs{"FoldImposition-$form-$qty_i
 						# Didn't find one of the folds.  Give up for now, move on to the next set.
 						next SET;
 					}
-					$remaining_pages -= $this_pages;
 				} # end foreach index
 
 				# If we got here, then we matched the override
@@ -775,7 +778,6 @@ $openprint::log->debug(qq`Wrong imposition: $$specs{"FoldImposition-$form-$qty_i
 # Look for some generic matches and create a new imp 
 				foreach my $index ( 1 .. 4 ) {
 				}
-			
 			}
 		@All_Impositions = @New_All_Impositions;
 	} # end if chkOverrideFOlds
@@ -832,14 +834,6 @@ $openprint::log->debug(qq`Wrong imposition: $$specs{"FoldImposition-$form-$qty_i
 					#my $FI = $new_folded_impositions[@new_folded_impositions-1];
 #$openprint::log->debug("Overriden Pages were found in the set: $pages pages qty: $$FI{quantity} pq: $$FI{page_quantity}");
 					#} # end if ! found
-				#if ( $$sig_specs{txtSignatureType} ) {
-					#if ( $override_pages > $$SignatureImposition{imposition} * $SignatureImposition->pages() ) {
-						#$$specs{alert} .= "You seem to be specifying more pages for folding than were printed for form $form quantity $qty_index<br/>";
-					#} elsif ( $override_pages < $$SignatureImposition{imposition} * $SignatureImposition->pages() ) {
-						#$$specs{alert} .= "You seem to be specifying fewer pages for folding than were printed for form $form quantity $qty_index<br/>";
-					#} else {
-						#
-					#} # end if
 				#} # endif
 
 				#$all_found = ( map { $$_{found} ? $$_{found} : () } @{$Set_Of_Impositions} ) == @{$Set_Of_Impositions};
