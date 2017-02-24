@@ -250,7 +250,5 @@
 			return $html;
 		) ?>
 	</p>
-<script type="text/javascript">
-TableKit.Sortable.init('ResultsTable');
-</script>
+<script type="text/javascript"> TableKit.reloadTable('ResultsTable'); </script>
 <? endif ( @{$$variable{PurchaseOrders}} == 0 ) ?>

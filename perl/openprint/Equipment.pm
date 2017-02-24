@@ -27,7 +27,7 @@ sub cache_field {
 my %Specification_cache;
 
 $debug = 0;
-use constant DEBUG_FOLDING => 0;
+use constant DEBUG_FOLDING => 1;
 
 %fields = (
 	id					=>	'id',
