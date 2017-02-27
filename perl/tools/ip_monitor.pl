@@ -2,7 +2,7 @@
 use utf8;
 use lib '/var/www/testing/perl';
 use strict;
-#use warnings;
+use warnings;
 
 require configuration;
 require sql;
@@ -153,11 +153,16 @@ while(1) {
 			}
 			$log->debug( $HI->ip() . ' is now ' . ( $HI->online() ? 'online' : 'offline' ) . ' value of ping was ' . $ping );
 		} # end foreach HI
+		if ( ! defined $online ) {
+			# No information
+			$log->error("Unable to ping $$Host{id} $$Host{hostname}");
+			next;
+		}
 
 		$Host->lock();
 		$Host->load(); # these pings can take a long time, and the record could get out of date, so refresh
 		my $was_online = $Host->online();
-		if ( $online != $was_online ) {
+		if ( ( ! defined $was_online) or ($online != $was_online) ) {
 			my $notified = $$Host{notified};
 
 # Have a change, so it should get logged, only email notifications should use the offline seconds
@@ -187,7 +192,7 @@ while(1) {
 			next;
 		}
 
-		my $since = $now-$$Host{state_changed_on};
+		my $since = $now-($$Host{state_changed_on} ? $$Host{state_changed_on} : 0 );
 		$log->debug( $Host->hostname() . ' is now ' . ( $Host->online() ? 'online' : 'offline' ) . " $since seconds ago" );
 		if ( ! $Host->online() ) {
 			if ( ( ! $$Host{notified} ) and ( $since > $$Host{offline_seconds} ) ) {
@@ -199,8 +204,8 @@ while(1) {
 				}
 				$log->warn("Sending offline notification");
 				notify( $Host, $online );
-			} else {
-				$log->debug("Host is notified? $$Host{notified} or since($since) <= $$Host{offline_seconds}");
+			#} else {
+				#$log->debug("Host is notified? $$Host{notified} or since($since) <= $$Host{offline_seconds}");
 			}
 		} # end if ! notified
 
@@ -307,7 +312,7 @@ sub notify {
 		$info{ReplacementText} = ssi::include("/email_content/host.html", \%info );
 
 		my $html_body = ssi::include( '/email_template.html', \%info );
-		my $results = (new openprint::Email())->send(
+		$results .= (new openprint::Email())->send(
 				TO			=>	\@To,
 				#TO	=> 'iconnor@point-one.com',
 				SUBJECT		=>	'Host has gone ' . ($online?'online':'offline') . ': ' . $Host->hostname(),
