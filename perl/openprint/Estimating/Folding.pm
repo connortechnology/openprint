@@ -28,7 +28,7 @@ require openprint::Estimating::Perforating;
 
 use vars qw( @folds %fold_types );
 
-use constant DEBUG => 1;
+use constant DEBUG => 0;
 use constant DEBUG_NEEDS => 0;
 
 my @equipment;
@@ -1477,7 +1477,7 @@ $openprint::log->error("No makeready_time on " . $Fold->to_string() );
 				$runTime = Math::Round::nearest( 0.0001, $run_qty / $runspeed ) if $runspeed; # in hours
 				$Breakdown .= sprintf('<tr><td>Runspeed: %d @ %d/HR = %d:%d:%d</td></tr>', $run_qty, $runspeed, misc::seconds_to_interval( int( 3600*$runTime ) ) );
 				$$Imposition{runspeed} = $runspeed;
-$openprint::log->debug("Runspeed: $$Fold{type}(".$Fold->name().") : " . $Equipment->name() . ' ' . $runspeed .' ' . $Paper->gsm() ) if DEBUG;
+$openprint::log->debug("Runspeed: $$Fold{type}($$Fold{name}) : $$Equipment{name} $runspeed $$Paper{gsm}" ) if DEBUG;
 				
 #$Breakdown .= sprintf( '&nbsp;Folds: QTY: %d, %dout Runspeed: %d/Hr = %.2f hours<br/>', $qty, $imposition, $$RunSpeed{runspeed}, $runTime );
 # We are assumin at this point, that all these folds are posible on this equipment, so any errors are soft errors
@@ -1485,14 +1485,14 @@ $openprint::log->debug("Runspeed: $$Fold{type}(".$Fold->name().") : " . $Equipme
 				if ( ! %servicePrice ) {
 					%servicePrice = openprint::service::get_price_object( $$Fold{type}, $run_qty, $Equipment );
 					if ( ! %servicePrice ) {
-						%servicePrice = openprint::service::get_price_object( 'Folding',$imposition, $Equipment );
+						%servicePrice = openprint::service::get_price_object( 'Folding', $imposition, $Equipment );
 					} # end if
 				} # end if
 				my %AnglePrice = openprint::service::get_price_object( 'FoldingAngle'.$imposition.'up', $run_qty, $Equipment );
 				%AnglePrice = openprint::service::get_price_object( 'FoldingAngle', $imposition, $Equipment ) if ! %AnglePrice;
 
 				if ( ! $servicePrice{units} ) {
-					$Breakdown .= qq`<tr><td colspan="2">No Units given for `.$Fold->name().' on '.$Equipment->name().'</td></tr>';
+					$Breakdown .= qq`<tr><td colspan="2">No Units given for `.$$Fold{name}.' on '.$$Equipment{name}.'</td></tr>';
 					$servicePrice{Total} += 1000000;
 				} elsif ( $servicePrice{units} eq 'per hour' ) {
 					$servicePrice{Total} = $servicePrice{Price} * $runTime;
@@ -1502,7 +1502,7 @@ $openprint::log->debug("Runspeed: $$Fold{type}(".$Fold->name().") : " . $Equipme
 					my $Adjustment = 1;
 					if ( my $Base = $Fold->RunSpeed( 0 ) ) {
 						$Adjustment = $$Base{runspeed}/$runspeed;
-						$servicePrice{Total} = $servicePrice{Price} * ( $run_qty/1000 ) * ($Adjustment);
+						$servicePrice{Total} = $servicePrice{Price} * ( $run_qty/1000 ) * $Adjustment;
 	#$openprint::log->debug("Adjusting: Base: " . $$Base{runspeed} . ' actual: ' . $runspeed . ' calculated: ' . $Adjustment );
 						$Breakdown .= sprintf('<tr><td>Run: $%.2f%s * %d * %d%% runspeed adjustment =</td><td>$%.2f</td></tr>', @servicePrice{'Price','units'}, $run_qty, $Adjustment*100, $servicePrice{Total} );
 					} else {
@@ -1529,13 +1529,13 @@ $openprint::log->debug("Runspeed: $$Fold{type}(".$Fold->name().") : " . $Equipme
 						$AnglePrice{Total} = $AnglePrice{Price} * $Imposition->image_width() * $run_qty / 1000;
 					} # end if
 
-					$Breakdown .= sprintf('<tr><td>Run: ($%3$.4f%4$s * %6$s&quot;=$%5$.2f) + (%7$.4f%8$s * %6$s&quot;=%9$.2f) =</td><td class="Price">$%10$.2f</td></tr>', undef, $Fold->name(), @servicePrice{'Price','units','Total'}, $$Imposition{image_width}, @AnglePrice{'Price','units','Total'}, $servicePrice{Total}+$AnglePrice{Total} );
+					$Breakdown .= sprintf('<tr><td>Run: ($%3$.4f%4$s * %6$s&quot;=$%5$.2f) + (%7$.4f%8$s * %6$s&quot;=%9$.2f) =</td><td class="Price">$%10$.2f</td></tr>', undef, $$Fold{name}, @servicePrice{'Price','units','Total'}, $$Imposition{image_width}, @AnglePrice{'Price','units','Total'}, $servicePrice{Total}+$AnglePrice{Total} );
 					$servicePrice{Total} += $AnglePrice{Total};
 				} elsif ( $servicePrice{units} eq 'per inch per hour' ) {
 					$servicePrice{Total} = $servicePrice{Price} * $$sig_specs{txtWidth} * $runTime;
-					$Breakdown .= sprintf('<tr><td>Run: $%.4f%s * %d folds * %s&quot; + %d folds * %s&quot; =</td><td class="Price">$%.2f</td></tr>',$Fold->name(), @servicePrice{'Price','units'}, $width_folds, $$sig_specs{txtWidth}, $height_folds, $$sig_specs{txtHeight}, $servicePrice{Total} );
+					$Breakdown .= sprintf('<tr><td>Run: $%.4f%s * %d folds * %s&quot; + %d folds * %s&quot; =</td><td class="Price">$%.2f</td></tr>',$$Fold{name}, @servicePrice{'Price','units'}, $width_folds, $$sig_specs{txtWidth}, $height_folds, $$sig_specs{txtHeight}, $servicePrice{Total} );
 				} elsif ( %servicePrice ) {
-					$Breakdown .= qq`<tr><td>No Units ($servicePrice{units}) given for `.$Fold->name().' on '.$Equipment->name().',</td></tr>';
+					$Breakdown .= qq`<tr><td>No Units ($servicePrice{units}) given for `.$$Fold{name}.' on '.$$Equipment{name}.',</td></tr>';
 					$servicePrice{Total} += 1000000;
 				} else {
 					$Breakdown .= qq`<tr><td colspan="2">No Price given for `.$$Fold{type}.' on '.$$Equipment{name}.'</td></tr>';
@@ -1563,7 +1563,7 @@ $openprint::log->debug("Runspeed: $$Fold{type}(".$Fold->name().") : " . $Equipme
 					if ( $capable eq 'When Stitching' and (!($$calc_hash{StitchingSpecs}{"chkOverrideEquipment$qty_index"})) ) {
 						# Make a copy of the specs so we don't clobber the real specs.  Set the override to this stitcher and see how it calcs.
 						$stitching_specs = $$calc_hash{FoldingStitchingSpecs};
-						$$stitching_specs{"ddmEquipment$qty_index"} = $Equipment->id();
+						$$stitching_specs{"ddmEquipment$qty_index"} = $$Equipment{id};
 $openprint::log->error("Using temp stitching specs " . $$calc_hash{StitchingSpecs}{"chkOverrideEquipment$qty_index"} . ' override: ' . $$stitching_specs{"chkOverrideEquipment$qty_index"});
 					} else {
 						$stitching_specs = $$calc_hash{StitchingSpecs};
@@ -1576,8 +1576,8 @@ $openprint::log->error("Using temp stitching specs " . $$calc_hash{StitchingSpec
 
 						$stitching_part = 1000000;
 						#$totalPrice += 1000000;
-					} elsif ( $$stitching_results{Equipment}->id() != $Equipment->id() and $capable eq 'When Stitching' ) {
-						$Breakdown .= 'Not stitching on ' . $Equipment->strid().' stitching on '.$$stitching_results{Equipment}->strid() .'.<br/>';
+					} elsif ( $$stitching_results{Equipment}{id} != $$Equipment{id} and ( $capable eq 'When Stitching' ) ) {
+						$Breakdown .= 'Not stitching on ' . $$Equipment{strid}.' stitching on '.$$stitching_results{Equipment}{strid} .'.<br/>';
 						$Breakdown .= $$stitching_results{Breakdown} . '<br/>' . $$stitching_results{alert};
 						$stitching_part = 1000000;
 						$totalPrice += 1000000;
@@ -1589,8 +1589,8 @@ $openprint::log->error("Using temp stitching specs " . $$calc_hash{StitchingSpec
 								$$stitching_results{Equipment}{name}, $$stitching_results{Imposition}, $stitching_part );
 					} # end if
 					#$Breakdown .= $$results{Breakdown}.'<br/>';
-				} elsif ( $$specs{StitchingEquipment}->id() != $Equipment->id() and $Equipment->specification('Folding Capable') eq 'When Stitching' ) {
-					$Breakdown .= '<tr><td>Not stitching on ' . $Equipment->strid().' stitching on '.$$specs{StitchingEquipment}->strid() .'.</td></tr>';
+				} elsif ( $$specs{StitchingEquipment}{id} != $$Equipment{id} and $Equipment->specification('Folding Capable') eq 'When Stitching' ) {
+					$Breakdown .= '<tr><td>Not stitching on ' . $$Equipment{strid}.' stitching on '.$$specs{StitchingEquipment}{strid} .'.</td></tr>';
 				} else {
 					$stitching_part = $$specs{StitchingCost};
 					$Breakdown .= sprintf('<tr><td>Stitching cost on %s</td><td class="Price">$%.2f</td></tr>', $$specs{StitchingEquipment}{name}, $stitching_part );
@@ -1640,12 +1640,8 @@ $openprint::log->error("Using temp stitching specs " . $$calc_hash{StitchingSpec
 		} # end foreach set of Impositions
 
 		# The idea is that if we find a price on the press, then we are done, cuz nothing else will be better.... 
-		# Can't do this... case of digital cover on offset interioer, stitched... the stitcher does the cover
+		# Can't quit early ... case of digital cover on offset interioer, stitched... the stitcher does the cover
 		#last if $bestPrice and ( $Equipment->strid() eq $$sig_specs{'ddmPress'.$qty_index} );
-		if ( 0 and defined $bestPrice and ! $bestPrice ) {
-			$openprint::log->debug("Quitting at $$Equipment{strid}") if DEBUG;
-			last;
-		} # end if
 	} # end foreach Equipment
 
 	%results = (
@@ -1671,8 +1667,8 @@ $openprint::log->error("Using temp stitching specs " . $$calc_hash{StitchingSpec
 		$FI->Equipment( $Fold->Equipment() );
 		my $printed_sheets = (($$specs{'txtQuantity'.$qty_index}/$$FI{imposition})/$$SignatureImposition{imposition});
 
-		$results{MakeReadyTime} = $Fold->makeready_time() if $results{MakeReadyTime} < $Fold->makeready_time();
-		if ( $Fold->makeready_overs() ) {
+		$results{MakeReadyTime} = $$Fold{makeready_time} if $results{MakeReadyTime} < $$Fold{makeready_time};
+		if ( $$Fold{makeready_overs} ) {
 			if ( $$Fold{makeready_overs_units} eq 'Percent' ) {
 				my $new_overs_percent = Math::Round::nearest( 0.01, $printed_sheets * $$Fold{makeready_overs} /100 );
 				$results{MakeReadyOvers} = $new_overs_percent if $results{MakeReadyOvers} < $new_overs_percent;
@@ -1699,8 +1695,7 @@ sub load_equipment {
 	#push @folding_capable, 'When PerfectBound' if $$services{PerfectBound};
 	#push @folding_capable, 'When Stitching' if ( $$services{SaddleStitching} or $$services{LoopStitching} );
 	#push @folding_capable, 'When Printing';
-	@equipment = openprint::Equipment->find( 'useinestimating is null or ='=>1, 
-'servicetype_id any'=>$Service->servicetype_id(),
+	@equipment = openprint::Equipment->find( 'useinestimating is null or ='=>1, 'servicetype_id any'=>$Service->servicetype_id(),
 #Specifications=>{'Folding Capable'=>\@folding_capable}
  ) if $Service;
 } # end sub load_equipment

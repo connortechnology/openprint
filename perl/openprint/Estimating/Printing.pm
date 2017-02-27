@@ -3511,7 +3511,7 @@ $$sig_specs{PreviousGrainDirection} and ( $imp->grain_direction() ne $$sig_specs
 		$openprint::log->debug("Override Imposition: $qty_index, " . $$sig_specs{'txtImposition'.$qty_index}) if DEBUG_FILTERING;
 
 		my @results2;
-		foreach my $strid ( $$sig_specs{"chkOverridePress$qty_index"} eq 'Y' ? ( $$sig_specs{"ddmPress$qty_index"} ) : keys %{$impositions} ) {
+		foreach my $strid ( $$sig_specs{"chkOverridePress$qty_index"} ? ( $$sig_specs{"ddmPress$qty_index"} ) : keys %{$impositions} ) {
 
 			my @press_impositions = map { $$_{Press}{strid} eq $strid ? $_ : ()  } @results;
 
@@ -3608,7 +3608,7 @@ $$sig_specs{PreviousGrainDirection} and ( $imp->grain_direction() ne $$sig_specs
 
 	# Filter by press value, so... all other things being the same, just size of press.
 	my %imps = ();
-	if ( ( (!$$sig_specs{"chkOverridePress$qty_index"}) or ( $$sig_specs{"chkOverridePress$qty_index"} ne 'Y' ) ) and ( @results > 1 ) ) {
+	if ( (!$$sig_specs{"chkOverridePress$qty_index"}) and ( @results > 1 ) ) {
 		my $bump_count = 0;
 		foreach my $I ( @results ) {
 			my $Paper = $$I{Paper};
@@ -5447,8 +5447,9 @@ sub calc_price {
 		$$specs{"Runspeed$qty_index"} = $$specs{Runspeed} = $price{Runspeed} = $Press->specification( $$std_speed{name}, $$Paper{calliper} );
 #$openprint::log->debug("Runspeed by calliper($$Paper{calliper}): $run_speed on $$Press{strid}");
 	} else {
-		$$specs{"Runspeed$qty_index"} = $$specs{Runspeed} = $price{Runspeed} = $Press->specification( $$std_speed{name}, $Paper->gsm() );
+		$$specs{"Runspeed$qty_index"} = $$specs{Runspeed} = $price{Runspeed} = $Press->specification( $$std_speed{name}, $$Paper{gsm} );
 	} # end if
+	$$Imposition{runspeed} = $$specs{Runspeed};
 #$run_speed = $$std_speed{value} if ! $run_speed;
 #$openprint::log->debug("Initial Runspeed: $run_speed, standard: $$std_speed{value}$$std_speed{units}");
 
@@ -6618,9 +6619,8 @@ sub get_run_price {
 				$openprint::log->warn("Unknown Per setting $unit");
 			} # end if
 		} else {
-
 	# Only load this if not already specified by some inline bindery service
-			$run_speed = $Press->specification( $$std_speed{name}, (lc $$std_speed{units} eq 'calliper' ? $$Paper{calliper} : $Paper->gsm()) ) if ! $run_speed;
+			$run_speed = $Press->specification( $$std_speed{name}, (lc $$std_speed{units} eq 'calliper' ? $$Paper{calliper} : $$Paper{gsm} ) ) if ! $run_speed;
 			if ( ! $run_speed ) {
 				$openprint::log->debug("No run sped on $$Press{strid} for $$std_speed{units} " . ($$std_speed{units} eq 'Calliper' ? $$Paper{calliper} : $Paper->gsm() ) ) if DEBUG or 0;
 				$run_speed = $$std_speed{value};
@@ -6631,7 +6631,7 @@ sub get_run_price {
 		$openprint::log->debug("No standard speed on $$Press{strid}") if DEBUG;
 	} # end if
 
-	if ( $$Imposition{runstyle} eq 'Perfecting' and ! $Paper->perfecting() ) {
+	if ( $$Imposition{runstyle} eq 'Perfecting' and ! $$Paper{perfecting} ) {
 		my $Outside_Wheel_Size = $Press->specification( 'Outside Slow Down Wheel Size' );
 $openprint::log->debug("Checking for slowdown wheel size: $Outside_Wheel_Size ") if DEBUG;
 		if ( $Outside_Wheel_Size ) {
@@ -6696,7 +6696,8 @@ $openprint::log->error("Unknown units on Outside Wheel Slow Down ($$Slow_Down{un
 # This is called once perside, or just once for W&T
 sub press_setup_cost {
 	my ( $plate_change_qty, $plate_runs, $colours, $calliper, $qty_index, $Imposition ) = @_;
-	my $Press = $Imposition->Press();
+
+	my $Press = $$Imposition{Press};
 
 	# These are pre-filtered in setup_project now
 	my $setup_count = @$colours;
@@ -7519,7 +7520,7 @@ sub setup_counts {
 			} elsif ( DEBUG ) {
 					$openprint::log->debug("Not Next sug $index >= $service_index and $$specs{Group} == $$sig_specs{Group} $$sig_specs{txtSignatureType} ");
 			} # end if
-			$$PlateCounts{$$sig_specs{'PlateID'.$qty_index}} += $$sig_specs{'txtPlateQuantity'.$qty_index};
+			$$PlateCounts{$$sig_specs{'PlateID'.$qty_index}} += $$sig_specs{'txtPlateQuantity'.$qty_index} if $$sig_specs{'txtPlateQuantity'.$qty_index};
 			$$PlateCounts{'Blank'.$$sig_specs{'PlateID'.$qty_index}} += $$sig_specs{'BlankPlateQuantity'.$qty_index} if $$sig_specs{'BlankPlateQuantity'.$qty_index};
 			$$project{roll2sheetcharged} = 1 if $$sig_specs{'Roll2SheetCharge'.$qty_index};
 			$$project{stocksetupcharged} = 1 if $$sig_specs{'StockSetupCharge'.$qty_index};

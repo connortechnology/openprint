@@ -19,6 +19,7 @@
 			<th class="MinImposition">Min Imposition</th>
 			<th class="MaxImposition">Max Imposition</th>
 			<th class="MRMinutes">MR Minutes</th>
+			<th class="Speed">Speed</th>
 		</tr>
 <? echo (
 	my $html;
@@ -35,6 +36,7 @@
 	<td class="MinImposition">%9$s</td>
 	<td class="MaxImposition">%10$s</td>
 	<td class="MRTime">%11$d</td>
+	<td class="Speed">%12$s</td>
 </tr>
 `, $rowclass, '/administrator/equipment/_fold.html?fold_id='.$$Fold{id}, $Fold->Equipment()->link_to(), $$Fold{name}, 
 $Fold->type(), $Fold->pages(), $Fold->folds(), $Fold->angles(),
@@ -53,6 +55,7 @@ join(' ',
  ( $Fold->max_imposition() ? $Fold->max_imposition() : () ),
 ),
 $Fold->makeready_time(),
+join( '<br/>', map { sprintf('%s to %s gsm => %d/Hr', $_->min_weight(), $_->max_weight(), $_->runspeed() ) } $Fold->Specifications() ),
 );
 
 		$rowclass = $rowclass ? '' : ' class="colRow"';
