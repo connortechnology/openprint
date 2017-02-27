@@ -67,6 +67,13 @@
 </script>
 <?include('/includes/error_reporting.html')?>
 <div class="Stock">
+<? echo (
+$_ = $$variable{Stock}->check();
+if ( $_ ) {
+	return '<div class="error">'.$_.'</div>';
+}
+return '';
+) ?>
 <form id="f1" name="f1" method="post" action="stock.html?stock_id=<? echo ( $$variable{Stock}->id(); ) ?>">
 	<p class="buttons">
 		<? echo ( join('',
