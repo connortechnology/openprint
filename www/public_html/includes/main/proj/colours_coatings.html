@@ -57,6 +57,9 @@
 					$$variable{index} = $index;
 					$html .= variable_substitution( \$fragment, $variable );
 				} # end foreach
+				if ( ! $html ) {
+					$$variable{index} = 0;
+				}
 				$$variable{index} += 1;
 				$html .= variable_substitution( \$fragment, $variable );
 				return $html;
@@ -124,6 +127,9 @@
 					$$variable{index} = $index;
 					$html .= variable_substitution( \$fragment, $variable );
 				} # end foreach
+				if ( ! $html ) {
+					$$variable{index} = 0;
+				}
 				$$variable{index} += 1;
 				$html .= variable_substitution( \$fragment, $variable );
 				return $html;
