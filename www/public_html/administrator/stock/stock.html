@@ -67,6 +67,13 @@
 </script>
 <?include('/includes/error_reporting.html')?>
 <div class="Stock">
+<? echo (
+$_ = $$variable{Stock}->check();
+if ( $_ ) {
+	return '<div class="error">'.$_.'</div>';
+}
+return '';
+) ?>
 <form id="f1" name="f1" method="post" action="stock.html?stock_id=<? echo ( $$variable{Stock}->id(); ) ?>">
 	<p class="buttons">
 		<? echo ( join('',
@@ -195,10 +202,10 @@
 					<label>Calliper</label>
 					<? echo ( input(type=>'float', id=>'calliper', name=>'calliper', 
 								value=> $$variable{Stock}->calliper(), 
-								oninput=>q`$('calliper_mm').value=do_decimals(this.value*25.4,1);`,
+								oninput=>q`$('calliper_mm').value=do_decimals(this.value*25.4,3);`,
 								); ) ?> inches
 					<? echo ( input(type=>'float', id=>'calliper_mm', name=>'calliper_mm', 
-									value => Math::Round::nearest( .1, $$variable{Stock}->calliper()*25.4),
+									value => Math::Round::nearest( .001, $$variable{Stock}->calliper()*25.4),
 									oninput =>q`$('calliper').value=do_decimals( this.value*0.0393701, 4 );`,
 								); ) ?> mm
 				</p>

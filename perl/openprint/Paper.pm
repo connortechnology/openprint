@@ -1217,7 +1217,7 @@ sub gsm {
 sub wpsi {
 	my $self = shift;
 	if ( @_ ) {
-#$log->debug("Setting wpsi to $$self{wpsi}") if 1;
+#$log->debug("Setting wpsi was $$self{wpsi}") if 1;
 		$$self{wpsi} = shift;
 #$log->debug("Setting wpsi to $$self{wpsi}") if 1;
 	} # end if
@@ -1227,8 +1227,12 @@ sub wpsi {
 #$log->debug("Setting wpsi to $$self{gsm} / 703064.5 = $$self{wpsi}");
 		} elsif ( $$self{mweight} and ( $$self{type} eq 'Sheet' ) and $$self{width} and $$self{height} ) {
 			$$self{wpsi} = ($$self{mweight} / 1000)/($$self{width}*$$self{height});
+#$log->debug("Setting wpsi to mweight ($$self{mweight} / 1000)/($$self{width}*$$self{height})");
 		} elsif ( $$self{basis_mweight} ) {
 			$$self{wpsi} = ($$self{basis_mweight}/1000)/($self->basis_width()*$self->basis_height());
+#$log->debug("Setting wpsi to basisweight ($$self{basis_mweight}/1000)/($self->basis_width()*$self->basis_height()");
+		#} else {
+#$log->debug("Nothing to set wpsi from");
 		} # end if
 	} # end if
 	return $$self{wpsi};
@@ -1816,6 +1820,10 @@ sub check {
   if ( abs( POSIX::ceil( $Paper->basis_mweight()) - POSIX::ceil( $Copy->basis_mweight(undef)) ) -1 > 0 ) {
     return "may have invalid mweight current:$$Paper{basis_mweight} != calculated:$$Copy{basis_mweight}";
   }
+ if ( $Paper->brand() =~ /cover/i or $Paper->weight() =~ /cover/i and ( $Paper->basis_width() != 20 or $Paper->basis_height() != 26 ) ) {
+        "may have has wrong basis size.";
+    }
+
 	return;
 } # end sub check
 
