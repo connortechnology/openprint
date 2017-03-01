@@ -535,6 +535,7 @@ EQUIPMENT:foreach my $Equipment ( @equipment ) {
 		$results{Equipment} = $bestEquipment;
 		$results{Status} = 'calculated';
 		$results{Price} = $bestPrice;
+		$results{pockets} = $pockets;
 	} else {
 		$results{Status} = 'uncalculated';
 	} # end if
