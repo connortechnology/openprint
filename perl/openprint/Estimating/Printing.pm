@@ -26,7 +26,7 @@ use vars qw( %ServicePrices );
 my $threading = 0;
 #use threads;
 use constant DEBUG => 0;
-use constant DEBUG_PLATES => 0;
+use constant DEBUG_PLATES => 1;
 use constant DEBUG_VERSIONS => 0;
 use constant DEBUG_PRESSES => 0;
 use constant DEBUG_FILTERING => 0;
@@ -790,7 +790,7 @@ sub get_colours {
 		} } ( 'Cyan','Magenta','Yellow','Black' );
 	} # end if
 
-	foreach my $index ( 1 .. 12 ) {
+	foreach my $index ( 1 .. $config{SpecialColourQuantity} ) {
 	#foreach my $k ( keys %$specs ) {
 		#if ( my ( $index ) = $k =~ /^chkColourCoating(\d+)$side$signature/ ) {
 			next if ! $$specs{"chkColourCoating$index$side"};
@@ -864,7 +864,7 @@ $openprint::log->debug("$key => $c and set output");
 			$openprint::log->debug("No process for $side");
 		} # end if Process
 
-	foreach my $index ( 1 .. 12 ) {
+	foreach my $index ( 1 .. $config{SpecialColourQuantity} ) {
 		#foreach my $k ( keys %$specs ) {
 # checked on
 			#if ( my ( $index ) = $k =~ /^chkColourCoating(\d+)$side/ ) {
@@ -7284,11 +7284,13 @@ sub get_colour_description {
 				push @front_coatings , $$specs{"ColourCoatingType$index$side"};
 			} elsif ( $type =~ /PMS/i ) {
 				$front_pms += 1;
+$log->debug("Adding PMS for $type chkColourCoating$index$side");
 			} else {
 				push @front_coatings, $$specs{"ColourCoatingType$index$side"}; 	#line added to show other types june-18-2008
 			} # end if
 		} # end if
 	} # end foreach
+
 		if ( $front_pms ) {
 			unshift @front_coatings, $front_pms.'PMS';
 		} # end if
