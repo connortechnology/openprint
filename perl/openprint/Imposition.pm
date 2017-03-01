@@ -702,6 +702,7 @@ sub grain_direction {
 				$$self{grain_direction} = $self->Paper()->grain_direction() eq 'width' ? 'height' : 'width';
 			} # end if
 		} # end if
+$self->display("Setting grain direction rotate($$self{rotate_sheet}) orientation($Orientations{$$self{image_orientation}}) paper grain:" . $self->Paper()->grain_direction() . " got $$self{grain_direction}" );
 	} # end if
 	return $$self{grain_direction};
 } # end sub grain_direction
