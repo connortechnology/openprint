@@ -28,7 +28,7 @@ require openprint::Estimating::Perforating;
 
 use vars qw( @folds %fold_types );
 
-use constant DEBUG => 0;
+use constant DEBUG => 1;
 use constant DEBUG_NEEDS => 0;
 
 my @equipment;
@@ -689,7 +689,8 @@ $openprint::log->debug("folds from sigimpo") if DEBUG;
 	} # end if debug
 	
 	if ( $SignatureImposition->pages() > $$SignatureImposition{spread_size} ) {
-		@All_Impositions = reduce_pages( \@All_Impositions );
+		@All_Impositions = reduce_pages( \@All_Impositions, 
+				( ( $$specs{"chkOverrideFold-$form-$qty_index"} and ( $$specs{"chkOverrideFold-$form-$qty_index"} eq 'Y' ) ) ? 1 : 0 ) );
 		if ( DEBUG ) {
 			$openprint::log->debug("Sets of Maximum Impositions: # of sets: " . @All_Impositions);
 			foreach my $Set ( @All_Impositions ) {
@@ -1595,8 +1596,8 @@ $openprint::log->error("Using temp stitching specs " . $$calc_hash{StitchingSpec
 						my $Price = $$stitching_results{Price};
 						$stitching_part = $$Price{Price};
 						$Breakdown .= '<tr><td>'.$$stitching_results{Breakdown}.'</td></tr>' if DEBUG;
-						$Breakdown .= sprintf('<tr><td>Stitching cost on %s %dout</td><td class="Price">$%.2f</td></tr>', 
-								$$stitching_results{Equipment}{name}, $$stitching_results{Imposition}, $stitching_part );
+						$Breakdown .= sprintf('<tr><td>Stitching cost on %s %dout %dpockets</td><td class="Price">$%.2f</td></tr>', 
+								$$stitching_results{Equipment}{name}, @$stitching_results{'Imposition','pockets'}, $stitching_part );
 					} # end if
 					#$Breakdown .= $$results{Breakdown}.'<br/>';
 				} elsif ( $$specs{StitchingEquipment}{id} != $$Equipment{id} and $Equipment->specification('Folding Capable') eq 'When Stitching' ) {
@@ -1627,7 +1628,7 @@ $openprint::log->error("Using temp stitching specs " . $$calc_hash{StitchingSpec
 				$Breakdown .= qq`<tr><td>No Cutting: $cutting_results{alert} $cutting_results{Breakdown}</td><td class="Price">$cutting_results{Price}</td></tr>`;
 			} # end if
 
-			$Breakdown .= '<tr><td>comparison :</td><td class="Price">' . sprintf('%.2f', Math::Round::nearest(0.01,$comparison_cost) ). ' </td></tr>';
+			$Breakdown .= '<tr><td>comparison :</td><td class="Price">$' . sprintf('%.2f', Math::Round::nearest(0.01,$comparison_cost) ). ' </td></tr>';
 			$Breakdown .= '</table><br/>';
 
 			if ( ( ! defined $bestComparison ) or ( $comparison_cost < $bestComparison ) ) {
@@ -2156,7 +2157,7 @@ sub reduce_impositions {
 } # end sub reduce_impositions
 
 sub reduce_pages {
-	my ( $sets_of_impositions ) = @_;
+	my ( $sets_of_impositions, $override ) = @_;
 
 	# First include the original sets
 	my @results = @$sets_of_impositions;
@@ -2167,7 +2168,7 @@ sub reduce_pages {
 		my $set = $results[$index];
 		for ( my $i = 0; $i < @$set; $i += 1 ) {
 			if ( ( $$set[$i]{pages} / $$set[$i]{spread_size} ) > 1 ) {
-				my @cut = cut_spreads( $$set[$i] );
+				my @cut = cut_spreads( $$set[$i], $override );
 				if ( 0 and DEBUG ) {
 $openprint::log->debug("# of sets in results " . @cut);
 					foreach my $Set ( @cut ) {
@@ -2220,7 +2221,7 @@ sub cut_imposition {
 } # end sub cut_imposition
 
 sub cut_spreads {
-	my ( $I ) = @_;
+	my ( $I, $override ) = @_;
 
 	my @results;
 
@@ -2317,7 +2318,7 @@ $I->display("Min spread size: $min_spread_size dir($$I{spine_direction}) " . $op
 						$I->quantity(),$I->pages(), $$I{page_quantity}, $i1->quantity(), $i1->pages(), $$i1{page_quantity} ) ) if DEBUG;
 			push @results, [ $i1 ];
 			
-			if ( $$I{quantity} == 2 ) {
+			if ( $override and ( $$I{quantity} == 2 ) ) {
 				my $i3 = $I->copy();
 				$i3->quantity( $i3->quantity()/2 );
 				$$i3{page_quantity} /= 2;
@@ -2397,7 +2398,7 @@ $I->display("Min spread size: $min_spread_size dir($$I{spine_direction}) " . $op
 			}
 			push @results, [ $i1 ];
 
-			if ( $$I{quantity} == 2 ) {
+			if ( $override and ( $$I{quantity} == 2 ) ) {
         my $i3 = $I->copy();
         $i3->quantity( $i3->quantity()/2 );
 				$$i3{page_quantity} /= 2;
