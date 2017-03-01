@@ -1684,7 +1684,8 @@ sub types {
 sub Supplied {
 	my ( $self ) = @_;
 	if ( ! $$self{Supplied} ) {
-$openprint::log->error("POpulating SUPLIED");
+my ( $caller, undef, $line ) = caller;
+$openprint::log->error("POpulating SUPLIED from $caller:$line");
 		my $Supplied = $self->clone();
 		$$Supplied{width} = $$self{start_width} ? $$self{start_width} : $$self{width};
 		$$Supplied{height} = $$self{start_height} ? $$self{start_height} : $$self{height};
