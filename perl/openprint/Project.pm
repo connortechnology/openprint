@@ -1743,37 +1743,6 @@ sub production_link_to {
 	return sprintf('<a href="/employee/proj/view.html?project_id=%1$d">%2$s</a>', $_[0]{id}, ( $_[1] ? $_[1] : $_[0]{id} ) );
 } # end sub production_link_to
 
-sub lock {
-	my ( $caller, undef, $line ) = caller;
-	if ( $_[0]{ac} ) {
-		#already locked
-		$openprint::log->debug("ALREADY LOCKED Projects for project $_[0]{id} ac: $_[0]{ac} caller: $caller line: $line project ref:" . $_[0]) if $debug;
-		$_[0]{ac} += 1;
-	} else {
-		$_[0]{ac} = sql::start_transaction( $openprint::dbh );
-		$openprint::log->debug("LOCKING Projects for project $_[0]{id} ac: $_[0]{ac} caller: $caller line: $line project ref:" . $_[0]) if $debug;
-		$openprint::dbh->do( "SELECT * FROM Projects WHERE id=".$_[0]{id}. ' FOR UPDATE' );
-		#$openprint::dbh->do( 'SET CONSTRAINTS ALL DEFERRED' );
-	} # end if
-
-} # end sub lock
-
-sub unlock {
-	my ( $caller, undef, $line ) = caller;
-	$openprint::log->debug("UNLOCKING Projects for project $_[0]{id} ac: $_[0]{ac} caller: $caller line: $line" . $_[0]) if $debug;
-	if ( ! exists $_[0]{ac} ) {
-		$_[0]{ac} = $openprint::dbh->{AutoCommit};
-	} # end if
-	if ( ! $_[0]{ac} ) {
-		$openprint::log->debug("unlock with no AC!");
-		return;
-	} # end if
-	if ( $_[0]{ac} == 1 ) {
-		sql::end_transaction( $openprint::dbh, $_[0]{ac} );
-	} # end if
-	$_[0]{ac} -= 1;
-} # end sub unlock
-
 sub check_for_order {
 	my ( $Project, $OP ) = @_;
 
