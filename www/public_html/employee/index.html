@@ -1,4 +1,4 @@
-<? if ( $session{'user_id'} ) ?>
+<? if ( $session{user_id} ) ?>
 <script type="text/javascript" src="<?hash_link(/javascripts/barcode.js)?>"></script>
 <script type="text/javascript">
 	function submit_handler( form ) {
@@ -136,9 +136,51 @@ sprintf(q`<tr id="tr-%1$d" class="unauthorized">
 } @POs );
 		$html .= '</table></div><br/>';
 	}
+
+	my ( $y, $m, $d ) = Date::Calc::Today();
+  ($y,$m,$d) = Date::Calc::Add_Delta_Days($y,$m,$d, 4 * -30 );
+	my @OldOrders = openprint::Order->find(
+			salesrep_id=>$session{user_id},
+			status			=>['In Production','Waiting For Customer Approval','Waiting For Pickup','Waiting For QA Approval'],
+			'updated_on <=' => sprintf('%.4d-%.2d-%.2d 00:00:00', $y, $m, $d ),
+			order =>	'id desc',
+			limit	=>	10,
+			);
+	if ( @OldOrders ) {
+		$html .= '<div class="error OldOrders"><br/>The following orders are old but are still in production. Please update their status:<br/><br/>
+<table class="List sortable">
+  <thead>
+		<tr>
+			<th class="order_id">Order</th>
+			<th class="docket">Docket</th>
+			<th class="Company">Company</th>
+			<th class="Status">Status</th>
+			<th class="Date">Last Updated</th>
+		</tr>
+	</thead>
+	<tbody>
+';
+		foreach my $Order ( @OldOrders ) {
+			$html .= sprintf('
+<tr>
+	<td class="order_id"><a href="/employee/project/view.html?docket=%2$d">%1$d</a></td>
+	<td class="docket"><a href="/employee/project/view.html?docket=%2$d">%2$d</a></td>
+	<td class="CompanyName"><a href="/employee/project/view.html?docket=%2$d">%3$s</a></td>
+	<td class="Status"><a href="/employee/project/view.html?docket=%2$d">%4$s</a></td>
+	<td class="Date"><a href="/employee/project/view.html?docket=%2$d">%5$s</a></td>
+</tr>',
+$Order->id(), 
+$Order->docket(), 
+$Order->Company()->name(), 
+$Order->status(), 
+format_date( $$Order{updated_on} ) );
+		}
+		$html .= '</tbody></table></div>';
+	} # end if
 	return $html;
 ) ?>
 </div>
+<br/>
 <div class="News">
     <ul>
     <? echo (
@@ -172,6 +214,6 @@ sprintf(q`<tr id="tr-%1$d" class="unauthorized">
 </div>
 </div>
 <script type="text/javascript">document.f1.StartDocket.focus();</script>
-<? else ( $session{'user_id'} ) ?>
+<? else ( $session{user_id} ) ?>
 <? echo ( include('/employee/account/login.html'); ) ?>
-<? endif ( $session{'user_id'} ) ?>
+<? endif ( $session{user_id} ) ?>

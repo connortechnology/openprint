@@ -844,7 +844,7 @@ sub image_orientation_text {
 
 sub spine_direction {
 	if ( ! defined $_[0]{spine_direction} ) {
-$openprint::log->debug("Setting spine direction uusing $_[0]{spine}");
+#$openprint::log->debug("Setting spine direction uusing $_[0]{spine}");
 		if ( $_[0]{spine} eq 'height' ) {
 			$_[0]{spine_direction} = $_[0]{image_orientation};
 		} elsif ( $_[0]{spine} eq 'width' ) {
