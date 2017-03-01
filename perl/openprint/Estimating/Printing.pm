@@ -3186,13 +3186,13 @@ sub breakdown {
 	$breakdown .= sprintf('Plate Make Ready: $%.2f%s * %dplates * %d runs = $%.2f<br/>', @$price{'Plate Setup Price','Plate Setup Units','Plate Setup Count', 'Plate Runs', 'Plate Total'} );
 	$breakdown .= sprintf('Setup Total: $%.2f<br/><b>Run Charges:</b><br/>', $$price{'Setup Total'} );
 	$breakdown .= sprintf('Roll2Sheet Charge: $%1$.2f%2$s=%3$.2f<br/>', @$price{'Roll2SheetRunCost','Roll2SheetUnits','Roll2SheetRunCharge'} ) if $$price{Roll2SheetRunCharge};
-	if ( my $run_price = $$price{'Run Price'} ) {
+	foreach my $run_price ( @{$$price{'Run Prices'}} ) {
 		if ( $_ = $Press->Specification('Charge for setup overs') and $$_{value} eq 'N' ) {
-			$breakdown .= sprintf('Impression Charge: %d/(%d Per Hour) * $%.2f%s = $%.2f<br/>', ( $$run_price{impressions}-$$stock_qty{'Setup Overs'} ),@$price{Runspeed}, @$run_price{'Cost','units','Price'} );
+			$breakdown .= sprintf('%s %s %d/(%d Per Hour) * $%.2f%s = $%.2f<br/>', @$run_price{'side','ServiceName'}, ( $$run_price{impressions}-$$stock_qty{'Setup Overs'} ),@$run_price{'run_speed','Price','units','Total'} );
 		} else {
-			$breakdown .= sprintf('Impression Charge: %d/(%d Per Hour) * $%.2f%s = $%.2f<br/>', $$run_price{impressions},@$price{Runspeed},@$run_price{'Cost','units','Price'} );
+			$breakdown .= sprintf('%s %s %d/(%d Per Hour) * $%.2f%s = $%.2f<br/>', @$run_price{'side','ServiceName','impressions','run_speed','Price','units','Total'} );
 		} # end if
-	} # end if
+	} # end foreach run price /pass
 
 	$breakdown .= sprintf('Minimum Run Charge: $%.2f<br/>', $$price{'Minimum Run Charge'} ) if $$price{'Minimum Run Charge'} and ( $$price{'Minimum Run Charge'} == $$price{'Run Total'} );
 	$breakdown .= sprintf('Run Charge Total:$%.2f<br/>', $$price{'Run Total'} );
@@ -6194,14 +6194,14 @@ $log->warn("Something wrong in AQ");
 		$setup_cost += $price{'Press Wash Total'};
 	} # end if
 
-	my $run_price;
+	my $run_prices;
 	if ( $is_wt ) {
 		#my @c = filter_coatings_from_colours( \@colours );
-		$run_price = get_run_price( $impressions, scalar(@{$$project{filtered_colours}}), 0, $Imposition, $Press, $price{Runspeed} ); 
+		$run_prices = get_run_prices( $impressions, scalar(@{$$project{filtered_colours}}), 0, $Imposition, $Press, $price{Runspeed} ); 
 	} else {
-		$run_price = get_run_price( $impressions, scalar @{$$project{side_one_colours}}, scalar @{$$project{side_two_colours}}, $Imposition, $Press, $price{Runspeed} );
+		$run_prices = get_run_prices( $impressions, scalar @{$$project{side_one_colours}}, scalar @{$$project{side_two_colours}}, $Imposition, $Press, $price{Runspeed} );
 	} # end if
-	$price{Runspeed} = $$specs{Runspeed} = $$run_price{run_speed};
+	#$price{Runspeed} = $$specs{Runspeed} = $$run_price{run_speed};
 
 	my $PreviousForms = $$specs{'PreviousForms'.$qty_index} ? $$specs{'PreviousForms'.$qty_index}+1 : 1;
 
@@ -6230,11 +6230,11 @@ $log->warn("Something wrong in AQ");
 
 	$price{'Press Setup'} = $press_setup;
 
-	my $run_cost = $$run_price{Price};
-	$price{'Run Price'} = $run_price;
+	my $run_cost = misc::sum( map { $$_{Total} } @{$run_prices} );
+	$price{'Run Prices'} = $run_prices;
 
 	$price{Impressions} = $impressions;
-	$price{'Impression MPrice'} = $$run_price{MPrice};
+	$price{'Impression MPrice'} = misc::sum( map { $$_{MPrice} } @{$run_prices} );
 
 	$price{'Minimum Run Charge'} = openprint::service::get_price( 'PressRunChargeMinimum',undef,$Press );
 
@@ -6516,15 +6516,14 @@ $log->debug("COnsidering $$Press{strid}") if DEBUG_PRESSES;
 	return %results;
 } # end sub select_press
 
-sub get_run_price {
+sub get_run_prices {
 	my ( $impressions, $side_one_colours, $side_two_colours, $Imposition, $Press, $run_speed ) = @_;
 
-	my %run_price;
-	my $running_price = 0;
+	my @run_prices;
 	my $max_colours = $Press->specification('Number of Colours');
 	if ( ! $max_colours ) {
 		$log->error(" ***** FATAL ERROR: Could Not Get 'Number of Colours' for Press: $$Press{strid} ***********");
-		return \%run_price;
+		return \@run_prices;
 	} # end if
 	my $impression_service = 'ColourImpression';
 
@@ -6541,66 +6540,60 @@ sub get_run_price {
 				$RunPrice = $Impression_Service->get_Price( $impressions, $Press ) if $Impression_Service;
 			} # end if
 		} # end if
-		$run_price{units} = $$RunPrice{units};
-		$running_price = $$RunPrice{Price};
+		$$RunPrice{side} = 'Front & Back';
+		$$RunPrice{impressions} = $impressions;
+		push @run_prices, $RunPrice;
+		
 	} else {
 		if ( $side_one_colours ) {
 			my $full_runs = int($side_one_colours / $max_colours);
 			if ( $full_runs ) {
 				my $run_colours = $side_one_colours > $max_colours ? $max_colours : $side_one_colours;
-				my %RunPrice = openprint::service::get_price_object( $run_colours.$impression_service, $impressions, $Press );
-				$run_price{units} = $RunPrice{units};
-				$running_price = $RunPrice{Price} * $full_runs;
-$log->debug("**** RUN PRICE 2 : $running_price = $full_runs full runs * $RunPrice{Price}  ** side1 colours: $side_one_colours") if DEBUG or 1 ;
+				my $Impression_Service = $Services{$run_colours.$impression_service};
+				my $RunPrice = $Impression_Service->get_Price( $impressions, $Press );
+				$$RunPrice{Passes} = $full_runs;
+				$$RunPrice{impressions} = $impressions;
+				$$RunPrice{side} = 'Front';
+				foreach ( 1 .. $full_runs ) {
+					push @run_prices, $RunPrice;
+				}
 			} # end if
 
 			my $mod_colours = $side_one_colours % $max_colours;
 			if ( $mod_colours ) {
-				my %RunPrice = openprint::service::get_price_object( $mod_colours.$impression_service, $impressions, $Press );
-				#if ( $RunPrice{mode} eq 'Stepped' ) {
-					#openprint::pricing::get_stepped( \%RunPrice );
-				#}
-				$running_price += $RunPrice{Price};
-				$run_price{units} = $RunPrice{units} if ! $run_price{units};
-$log->debug("**** RUN PRICE 3 : $running_price **") if DEBUG or 1;
-				$impressions *= ($full_runs + 1);
-			} else {
-				$impressions *= $full_runs;
-			} # end if
-		} # end if
-$log->debug(" ** SIDE ONE RUNNING PRICE $running_price **");
+				my $Impression_Service = $Services{$mod_colours.$impression_service};
+				my $RunPrice = $Impression_Service->get_Price( $impressions, $Press );
+				$$RunPrice{Passes} = 1;
+				$$RunPrice{impressions} = $impressions;
+		$$RunPrice{side} = 'Front';
+				push @run_prices, $RunPrice;
+			} # end if mod_colours
+		} # end if side one colours
+
+#$log->debug(" ** SIDE ONE RUNNING PRICE $running_price **");
 		if ( $side_two_colours ) {
 			my $full_runs = int($side_two_colours / $max_colours);
 			if ( $full_runs ) {
 				my $run_colours = $side_two_colours > $max_colours ? $max_colours : $side_two_colours;
-				my %RunPrice = openprint::service::get_price_object( $run_colours.$impression_service, $impressions, $Press );
-				$running_price += $RunPrice{Price} * $full_runs;
-				$run_price{units} = $RunPrice{units} if ! $run_price{units};
+				my $Impression_Service = $Services{$run_colours.$impression_service};
+				my $RunPrice = $Impression_Service->get_Price( $impressions, $Press );
+				$$RunPrice{impressions} = $impressions;
+		$$RunPrice{side} = 'Back';
+				foreach ( 1 .. $full_runs ) {
+				push @run_prices, $RunPrice;
+				}
 			} # end if
-$log->debug("**** RUN PRICE 4 : $running_price **") if DEBUG or 1;
 #
 			my $mod_colours = $side_two_colours % $max_colours;
 			if ( $mod_colours ) {
-				my %RunPrice = openprint::service::get_price_object( $mod_colours.$impression_service, $impressions, $Press );
-				$running_price += $RunPrice{Price};
-				$run_price{units} = $RunPrice{units} if ! $run_price{units};
-				$impressions *= ($full_runs + 1);
-			} else {
-				$impressions *= $full_runs;
+				my $Impression_Service = $Services{$mod_colours.$impression_service};
+				my $RunPrice = $Impression_Service->get_Price( $impressions, $Press );
+				$$RunPrice{impressions} = $impressions;
+		$$RunPrice{side} = 'Back';
+				push @run_prices, $RunPrice;
 			} # end if
-			if ( $side_one_colours ) {
-# This is here beacuse impressions are doubled
-				$running_price /= 2;
-$log->debug("**** RUN PRICE 5 : $running_price **") if DEBUG or 1;
-			} # end if
-		} # end if
-	} # end if
-	$run_price{impressions} = $impressions;
-	if ( $side_one_colours > $max_colours or $side_two_colours > $max_colours ) {
-		$run_price{'MultiPass Run'} = 1;
-	} else {
-		$run_price{'MultiPass Run'} = 0;
-	} # end if
+		} # end if side_two_colours
+	} # end if web perfecting or other
 
 # now work out the press run speed
 
@@ -6659,47 +6652,45 @@ $log->error("Unknown units on Outside Wheel Slow Down ($$Slow_Down{units})");
 
 	if ( $std_speed and ( $run_speed != $$std_speed{value} ) ) {
 		$speed_mod = Math::Round::nearest( .001, $$std_speed{value} / $run_speed );
-		$log->debug("1Press ".$$Press{strid}." Calliper: $$Paper{calliper} gsm: $$Paper{gsm} ($running_price) ($run_price{units}) STD: ($$std_speed{value}) RUN ($run_speed), mod: $speed_mod,	std/run: " . ( $speed_mod ? $run_speed/$speed_mod : $std_speed/$run_speed ) ) if DEBUG;
+		#$log->debug("1Press ".$$Press{strid}." Calliper: $$Paper{calliper} gsm: $$Paper{gsm} ($running_price) ($run_price{units}) STD: ($$std_speed{value}) RUN ($run_speed), mod: $speed_mod,	std/run: " . ( $speed_mod ? $run_speed/$speed_mod : $std_speed/$run_speed ) ) if DEBUG;
 	}
-	$run_price{run_speed} = $run_speed;
+	foreach my $run_price ( @run_prices ) {
+		$$run_price{run_speed} = $run_speed;
 
-	if ( sets::isin( $run_price{units}, ['per m','per 1000 impressions', 'per 1000'] ) ) {
+	if ( sets::isin( $$run_price{units}, ['per m','per 1000 impressions', 'per 1000'] ) ) {
 		if ( $speed_mod ) {
-			$running_price *= $speed_mod;
+			$$run_price{Price} *= $speed_mod;
 		} # end if
 #$log->warn(" ** FINAL	RUNNING PRICE $running_price **") if DEBUG or 1;
-		$run_price{Cost} = $running_price;
-		$run_price{Price} = ($run_price{Cost} * $impressions)/1000;
-		$run_price{MPrice} = $run_price{Cost};
-
-	} elsif ( $run_price{units} eq 'per impression' ) {
+		$$run_price{Total} = ($$run_price{Price} * $impressions)/1000;
+		$$run_price{MPrice} = $$run_price{Price};
+	} elsif ( $$run_price{units} eq 'per impression' ) {
 		if ( $speed_mod ) {
-			$running_price *= $speed_mod;
+			$$run_price{Price} *= $speed_mod;
 		} # end if
 #$log->warn(" ** FINAL	RUNNING PRICE $running_price **") if DEBUG or 1;
-		$run_price{Cost} = $running_price;
-		$run_price{Price} = ($run_price{Cost} * $impressions);
-		$run_price{MPrice} = $run_price{Cost} * 1000;
+		$$run_price{Total} = ($$run_price{Price} * $impressions);
+		$$run_price{MPrice} = $$run_price{Price} * 1000;
 
-	} elsif ( $run_price{units} eq 'per hour' ) {
+	} elsif ( $$run_price{units} eq 'per hour' ) {
 		if ( $run_speed ) {
 			if ( int($run_speed) ) {
 	# In Minutes, not hours
-				$run_price{RunHours} = $impressions / $run_speed;
-				$run_price{RunTime} = int ( 60 * $impressions / $run_speed );
+				$$run_price{RunHours} = $impressions / $run_speed;
+				$$run_price{RunTime} = int ( 60 * $impressions / $run_speed );
 			} else {
 				$log->error(" Bogus value for runspeed: $run_speed in get_run_price on $$Press{strid}");
 			} # end if
 		} # end if
-		$run_price{Cost} = $running_price;
-		$run_price{Price} = $running_price * $run_price{RunHours};
-		$run_price{MPrice} = ( $run_price{Price} / $impressions ) * 1000;
+		$$run_price{Total} = $$run_price{Price} * $$run_price{RunHours};
+		$$run_price{MPrice} = ( $$run_price{Total} / $impressions ) * 1000;
 	} else {
-		$log->warn("Unknown Units for $$Imposition{runstyle} ($side_one_colours/$side_two_colours) $impression_service: ($impressions imps) ($run_price{units}) on " . $$Press{strid} );
+		$log->warn("Unknown Units for $$Imposition{runstyle} ($side_one_colours/$side_two_colours) $impression_service: ($impressions imps) ($$run_price{units}) on " . $$Press{strid} );
 	} # end if
+	} # end foreach run_price
 #$log->debug("Impresion price: $run_price{Cost} $run_price{units} = $run_price{Price}");
-	return \%run_price;
-} # end sub get_run_price
+	return \@run_prices;
+} # end sub get_run_prices
 
 # This is called once perside, or just once for W&T
 sub press_setup_cost {
