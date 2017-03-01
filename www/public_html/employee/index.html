@@ -140,7 +140,7 @@ sprintf(q`<tr id="tr-%1$d" class="unauthorized">
 	my ( $y, $m, $d ) = Date::Calc::Today();
   ($y,$m,$d) = Date::Calc::Add_Delta_Days($y,$m,$d, 4 * -30 );
 	my @OldOrders = openprint::Order->find(
-			salresrep_id=>$session{user_id},
+			salesrep_id=>$session{user_id},
 			status			=>['In Production','Waiting For Customer Approval','Waiting For Pickup','Waiting For QA Approval'],
 			'updated_on <=' => sprintf('%.4d-%.2d-%.2d 00:00:00', $y, $m, $d ),
 			order =>	'id desc',
@@ -180,6 +180,7 @@ format_date( $$Order{updated_on} ) );
 	return $html;
 ) ?>
 </div>
+<br/>
 <div class="News">
     <ul>
     <? echo (
