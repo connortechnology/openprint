@@ -776,7 +776,17 @@ SET:		foreach my $Set_Of_Impositions ( @All_Impositions ) {
 			if ( ! @New_All_Impositions ) {
 				$openprint::log->error("Didn't find any matching folds for the override");
 # Look for some generic matches and create a new imp 
+				my $Set;
+				my $Override_pages;
 				foreach my $index ( 1 .. 4 ) {
+					next if ! ( $$specs{"FoldQty-$form-$qty_index-$index"}
+							and $$specs{"FoldType-$form-$qty_index-$index"}
+							and $$specs{"FoldImposition-$form-$qty_index-$index"} );
+					my ( $pages ) = $$specs{"FoldType-$form-$qty_index-$index"} =~ /(\d+)PageFold/;
+						my $FI = $SignatureImposition->copy();
+						$$FI{pages} = $pages;
+						$$FI{imposition} = $$specs{"FoldImposition-$form-$qty_index-$index"};
+						$$FI{quantity} = $$specs{"FoldQuantity-$form-$qty_index-$index"};
 				}
 			}
 		@All_Impositions = @New_All_Impositions;
@@ -2213,8 +2223,11 @@ sub cut_spreads {
 	my ( $I ) = @_;
 
 	my @results;
-	my $min_spread_size = $$I{spread_size}/2 > 3 ? $$I{spread_size}/2 : 3;
-$I->display("Min spread size: $min_spread_size dir($$I{spine_direction}) " . $openprint::Imposition::Orientations{$$I{spine_direction}} );
+
+
+	my $min_spread_size = $$I{spread_size}/2 > 1 ? $$I{spread_size}/2 : 4;
+
+$I->display("Min spread size: $min_spread_size dir($$I{spine_direction}) " . $openprint::Imposition::Orientations{$$I{spine_direction}} . " spread cols: $$I{spread_columns} spread_rows $$I{spread_rows}" );
 
 	# Something like doing 16pg as 2 8pgs, why are we not handling the horizontal case?
 	if ( $$I{spine_direction} == openprint::Imposition::Vertical and ( $$I{spread_rows} % 2 == 0 ) ) {
@@ -2235,7 +2248,7 @@ $I->display("Min spread size: $min_spread_size dir($$I{spine_direction}) " . $op
     # So becomes pages/2, imposition * 2, page quantity * 2, meaning if it is now 4pg 2out, it is in fact 8pages.
     $i1->spread_columns( $$i1{spread_columns} / 2 );
     $i1->columns( $$i1{columns} * 2 );
-    $i1->page_quantity( $i1->page_quantity() * 2 );
+    $i1->page_quantity( $$i1{page_quantity} * 2 );
     $i1->image_height( $$I{image_height}/$$I{spread_columns} );
     $openprint::log->debug(sprintf('SPECIAL Cutting pages down from quantity %d x %d pages %dout to q%d x %d pages %dout pq(%d)',
           $I->quantity(), $I->pages(), $$I{imposition},
@@ -2246,7 +2259,7 @@ $I->display("Min spread size: $min_spread_size dir($$I{spine_direction}) " . $op
 	if ( 
 		( ( $$I{spine_direction} == openprint::Imposition::Vertical ) and ( $$I{spread_rows} > 1 ) )
 		or 
-		( $$I{spread_rows} > $min_spread_size ) 
+		( $$I{spread_rows} >= $min_spread_size ) 
 		) {
 		
 		if ( $$I{spread_rows} % 2 ) {
@@ -2303,13 +2316,24 @@ $I->display("Min spread size: $min_spread_size dir($$I{spine_direction}) " . $op
 			$openprint::log->debug(sprintf('2265 Cutting pages down from qty %d*%d,pq:%d to %d*%d,pq:%d', 
 						$I->quantity(),$I->pages(), $$I{page_quantity}, $i1->quantity(), $i1->pages(), $$i1{page_quantity} ) ) if DEBUG;
 			push @results, [ $i1 ];
+			
+			if ( $$I{quantity} == 2 ) {
+				my $i3 = $I->copy();
+				$i3->quantity( $i3->quantity()/2 );
+				$$i3{page_quantity} /= 2;
+				my $i4 = $i1->copy();
+				$i4->quantity( $I->quantity() );
+				$$i4{page_quantity} = $$i4{page_quantity} / 2;
+				push @results, [ $i3, $i4 ];
+			}
+			# Now do just cutting one of them in half
 		} # end if
 	}  # end if rows > 1
 
 	if ( 
 		( ( $$I{spine_direction} == openprint::Imposition::Horizontal ) and ( $$I{spread_columns} > 1 ) )
 		or 
-		( $$I{spread_columns} > $min_spread_size )
+		( $$I{spread_columns} >= $min_spread_size )
 		) {
 		if ( $$I{spread_columns} % 2 ) {
 
@@ -2372,6 +2396,24 @@ $I->display("Min spread size: $min_spread_size dir($$I{spine_direction}) " . $op
 				$i1->display();
 			}
 			push @results, [ $i1 ];
+
+			if ( $$I{quantity} == 2 ) {
+        my $i3 = $I->copy();
+        $i3->quantity( $i3->quantity()/2 );
+				$$i3{page_quantity} /= 2;
+
+        my $i4 = $i1->copy();
+        $i4->quantity( $I->quantity() );
+				$$i4{page_quantity} /= 2;
+        push @results, [ $i3, $i4 ];
+				if ( DEBUG ) {
+					$openprint::log->error(sprintf('Cutting pages down uneven pages %d to %d by cutting spread columns %d to %d', 
+								$i3->pages(), $i4->pages(), $$i3{spread_columns}, $$i4{spread_columns} ) );
+					$i3->display();
+					$i4->display();
+				}
+      }
+			
 		} # end if
 	} # end if
 	return @results;
