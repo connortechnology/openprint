@@ -287,7 +287,7 @@ $log->debug("# of entries in Object_name_cache: " . keys %{$openprint::Object::n
 					$host_counts{$ip}{count} += 1;
 $log->debug("coutn for $ip is $host_counts{$ip}{count}");
 					$host_counts{$ip}{update} = 1;
-					$changed = 1;
+					$changed = $ip;
 				#} else {
 					#$log->debug( "Not counting because too old " . $host_counts{$ip}{updated_on} . " >= $when " ) if $config{debug};
 					#$log->debug( "Not counting because too old " . $updated_on_dt->epoch() . " >= " . $now_dt->epoch() ) if $config{debug};
@@ -297,9 +297,10 @@ $log->debug("coutn for $ip is $host_counts{$ip}{count}");
 		} # end foreach re
 
 		if ( $changed ) {
+			my $ip = $changed;
 			$log->debug( "# of entries in host_counts: " . keys %host_counts ) if $config{debug};
-			foreach my $ip ( sort keys %host_counts ) {
-				next if ! $host_counts{$ip}{update};
+			#foreach my $ip ( sort keys %host_counts ) {
+				#next if ! $host_counts{$ip}{update};
 				my $count = $host_counts{$ip}{count};
 				$host_counts{$ip}->load();
 				if ( $host_counts{$ip}{whitelist} ) {
@@ -336,7 +337,7 @@ $log->debug("coutn for $ip is $host_counts{$ip}{count}");
 					$log->debug("Dropping $ip");
 					`shorewall drop $ip`;
 				} # end if wasn't blacklisted, but now is
-			} # end foreach ip
+			#} # end foreach ip
 			$changed = 0;
 		} elsif ( $config{debug} ) {
 			$log->debug("No match or changes for $line") if $config{debug};
