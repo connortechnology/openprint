@@ -438,6 +438,7 @@ function dimensions_onChange( form ) {
 function Stock_onchange( element, id ) {
     var form = element.form;
     if ( gettingNewPrice ) {
+console.log("Waiting....");
         if ( timeout ) clearTimeout( timeout );
         timeout = setTimeout( 'Stock_onchange(document.' + form.name + '.elements["' + element.name + '"],"' + id + '");', 1000 );
         return;

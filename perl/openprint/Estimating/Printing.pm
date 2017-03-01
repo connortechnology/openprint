@@ -547,7 +547,7 @@ sub setup_project {
 			txtHeight		=>	$$specs{txtHeight},
 			txtFinalWidth	=>	$$specs{txtFinalWidth},
 			txtFinalHeight	=>	$$specs{txtFinalHeight},
-			BleedLocations	=>	join(',', @$specs{'BleedBottom','BleedTop','BleedLeft','BleedRight'}),
+			BleedLocations	=>	join(',', map { $$specs{$_} ? $$specs{$_} : () } ('BleedBottom','BleedTop','BleedLeft','BleedRight')),
 			Calliper		=>	$$specs{txtSpecificStockCalliper},
 			CropMarkSpace	=>	$$specs{txtCropMarkSpace},
 			);
@@ -1513,11 +1513,13 @@ if ( DEBUG_IMPOSITIONS and $$specs{"chkOverrideRunStyle$qty_index"} ) {
 				} 
 			} 
 
-			if ( ( $$project{ProjectSpecs}{"StockType-$$specs{Group}"} ) and ( $$project{ProjectSpecs}{"StockType-$$specs{Group}"} ne $$Paper{type} )) {
-				if ( DEBUG_IMPOSITIONS ) {
-					$openprint::log->debug("Not overriden stock stype: " . $Paper->to_string() );
+			if ( $$specs{Group} ) {
+				if ( ( $$project{ProjectSpecs}{"StockType-$$specs{Group}"} ) and ( $$project{ProjectSpecs}{"StockType-$$specs{Group}"} ne $$Paper{type} )) {
+					if ( DEBUG_IMPOSITIONS ) {
+						$openprint::log->debug("Not overriden stock stype: " . $Paper->to_string() );
+					} # end if
+					next;
 				} # end if
-				next;
 			} # end if
 			if ( ( $$specs{'OverrideStockType'.$qty_index} and ( $$specs{'OverrideStockType'.$qty_index} eq 'Y' ) ) and ( $$Paper{type} ne $$specs{'StockType'.$qty_index} ) ) {
 				if ( DEBUG_IMPOSITIONS ) {
@@ -3193,7 +3195,7 @@ sub breakdown {
 		} # end if
 	} # end if
 
-	$breakdown .= sprintf('Minimum Run Charge: $%.2f<br/>', $$price{'Minimum Run Charge'} ) if $$price{'Minimum Run Charge'} == $$price{'Run Total'};
+	$breakdown .= sprintf('Minimum Run Charge: $%.2f<br/>', $$price{'Minimum Run Charge'} ) if $$price{'Minimum Run Charge'} and ( $$price{'Minimum Run Charge'} == $$price{'Run Total'} );
 	$breakdown .= sprintf('Run Charge Total:$%.2f<br/>', $$price{'Run Total'} );
 	$breakdown .= '<b>Material Charges:</b><br/>';
 	if ( my $plate_costs = $$price{'Plate Costs'} ) { 
@@ -3984,7 +3986,7 @@ $imp->display("qty: $qty unspec ". $$sig_specs{"txtUnspecifiedPageQuantity$qty_i
 		$openprint::log->debug("Bumped $bump_count for Ppppreeccting vs Sheet Work") if DEBUG_FILTERING;
 	} # end if
 
-	if ( $third_level_filtering and (!$$sig_specs{"chkOverrideImposition$qty_index"}) or ( $$sig_specs{"chkOverrideImposition$qty_index"} ne 'Y' ) ) {
+	if ( $third_level_filtering and !$$sig_specs{"chkOverrideImposition$qty_index"} ) {
 		@results = map {@{$_}} values %imps;
 		if ( DEBUG_FILTERING ) {
 			foreach my $I ( @results ) {
@@ -3997,7 +3999,7 @@ $imp->display("qty: $qty unspec ". $$sig_specs{"txtUnspecifiedPageQuantity$qty_i
 # Can also look at cases where same roll width, different cut off... but less impo... seems to me we want to maximuize plate usage
 		foreach my $I ( @results ) {
 			my $Paper = $$I{Paper};
-			my $key = join('-',$Paper->width(),$Paper->height(),$Paper->minimum_order(), $I->pages(),$I->image_orientation(),$I->runstyle());
+			my $key = join('-',@$Paper{'width','height','minimum_order'}, @$I{'pages','image_orientation','runstyle'} );
 
 			if ( ! ( $imps{$key} and @{$imps{$key}} ) ) {
 				$imps{$key} = [ $I ];
@@ -5920,8 +5922,8 @@ $openprint::log->warn("No folding equipment");
 			'Total Overs'				=>	$total_overs,
 			Weight					=>	$weight,
 			'FM Overs'					=>	$fm_overs,
-			'FoldingMakeReadyOvers'		=>	$$folding_results{MakeReadyOvers},
-			'FoldingRunOvers'			=>	$$folding_results{RunOvers},
+			'FoldingMakeReadyOvers'		=>	( $$folding_results{MakeReadyOvers} ? $$folding_results{MakeReadyOvers} : 0 ),
+			'FoldingRunOvers'			=>	( $$folding_results{RunOvers} ? $$folding_results{RunOvers} : 0 ),
 			'ScoringOvers'				=>	$scoring_results{Overs},
 			'DieCuttingOvers'			=>	$diecutting_results{Overs},
 			UVOvers					=>	$uv_results{Overs},
