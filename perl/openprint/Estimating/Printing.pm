@@ -5429,7 +5429,8 @@ sub calc_price {
 	$overs = $min_overs if $overs < $min_overs;
 
 	my $impressions = $net_sheets + $overs;
-	$impressions *= 2 if $$project{print_sides} == 2 and ( $is_wt or ( $$Imposition{runstyle} eq 'Sheet Work' ) );
+	$impressions *= 2 if $$project{print_sides} == 2 and $is_wt;
+# or ( $$Imposition{runstyle} eq 'Sheet Work' ) );
 
 	my $max_impression_quantity = $Press->specification('Maximum Impression Quantity', $$Paper{calliper} );
 	if ( $max_impression_quantity and ($max_impression_quantity < $impressions ) ) {
@@ -5689,7 +5690,8 @@ $log->warn("No folding equipment");
 	my $gross_sheets = $net_sheets + $overs;
 	$impressions = $gross_sheets;
 #$log->debug("Imperssions : gross sheets: $gross_sheets") if DEBUG;
-	$impressions *= 2 if $$Imposition{sides} == 2 and ( $is_wt or ( $$Imposition{runstyle} eq 'Sheet Work' ) );
+	$impressions *= 2 if $$Imposition{sides} == 2 and $is_wt;
+# or ( $$Imposition{runstyle} eq 'Sheet Work' ) );
 #$log->debug("Imperssions $impressions : gross sheets: $gross_sheets");
 
 	my $min_impression_quantity = $Press->specification('Minimum Impression Quantity', $$Paper{calliper} );
@@ -5888,8 +5890,8 @@ $log->warn("No folding equipment");
 # Same sheets, go through twice, colours merged.
 		$colour_impressions *= 2;
 		$impressions *= 2;
-	} elsif ( $$Imposition{sides} == 2 and $$Imposition{runstyle} eq 'Sheet Work' ) {
-		$impressions *= 2;
+	#} elsif ( $$Imposition{sides} == 2 and $$Imposition{runstyle} eq 'Sheet Work' ) {
+		#$impressions *= 2;
 	}
 
 	if ( $max_impression_quantity and ($max_impression_quantity < $impressions ) ) {
