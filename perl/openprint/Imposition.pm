@@ -689,6 +689,10 @@ sub grain_direction {
 		$$self{grain_direction} = $_[1];
 	} # end if
 	if ( ! $$self{grain_direction} ) {
+		if ( ! defined $$self{rotate_sheet} ) {
+			my ( $caller, undef, $line ) = caller;
+			$openprint::log->error("grain_direction called from $caller:$line without defined rotate_sheet");
+		}
 		if ( $$self{rotate_sheet} ) {
 			if ( $$self{image_orientation} == Vertical ) {
 				$$self{grain_direction} = $self->Paper()->grain_direction() eq 'width' ? 'height' : 'width';
