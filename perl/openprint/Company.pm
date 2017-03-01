@@ -79,6 +79,7 @@ $serial = 'companies_id_seq';
 	marketing_category_id	=>	'(SELECT category_id FROM companies_in_marketing_categories WHERE company_id=companies.id)',
 	profile_field	=>	'(SELECT value FROM Company_Profiles WHERE company_id=companies.id AND field_id=?)',
 	last_article_id	=>	'(SELECT MAX(id) FROM Articles WHERE company_id=companies.id)',
+	last_timetrack_id	=>	'(SELECT MAX(id) FROM timetracks WHERE company_id=companies.id)',
 );
 %transforms = (
 	address1		=>	[ 's/^\s+//', 's/\s+$//' ],
@@ -237,19 +238,16 @@ sub dropdown {
 	my %sql = @_;
 
 	if ( $openprint::session{user_id} and ( $openprint::session{user_type} ne 'A' ) and ! openprint::usergroup::is_user_in( ['Estimating','Prepress','Accounting','Shipping','Inventory'], $openprint::session{user_id} ) ) {
-		if ( (!$sql{salesrep_id}) or ( ! sets::isin( $sql{salesrep_id}, [ $openprint::session{user_id}, $openprint::User->csr_ids() ] ) ) ) {
-			$sql{salesrep_id} = [ $openprint::session{user_id}, $openprint::User->csr_ids() ];
-		}
-		if ( ! $sql{or} ) {
-			$sql{or} = 'id=' . $$openprint::User{company_id};
-		} elsif ( ref $sql{or} eq 'SCALAR' ) {
-			$log->error("BAH");
-		} elsif ( ref $sql{or} eq 'HASH' ) {
-			$sql{or}{id} = $$openprint::User{company_id};
-		} else {
-my ( $caller, undef, $line ) = caller;
-			$log->error("BLAH from $caller $line or is $sql{or} " . ref $sql{or});
-		}
+
+		my %new_sql = ( and => [
+			or => {
+			salesrep_id => [ $openprint::session{user_id}, $openprint::User->csr_ids() ],
+			id => $$openprint::User{company_id},
+			},
+			%sql,	
+			],
+		);
+		%sql = %new_sql;
 	} else {
 $log->debug("Not adding filter");
 	} # end if
@@ -374,10 +372,12 @@ sub find_filtered {
     return openprint::Company->find(order=>'lower(name)',@_) if $openprint::session{user_type} eq 'A';
 
     return openprint::Company->find(
+        or		=> {
+			id	=>	$openprint::User->company_id(),
 			( ! openprint::usergroup::is_user_in( ['Estimating','Prepress','Accounting','Shipping','Inventory'], $openprint::session{user_id} ) ? (
-        salesrep_id => [ $openprint::session{user_id}, $openprint::User->csr_ids() ],
-        ) : () ),
-        (or		=> 'id='.$openprint::User->company_id()),
+																																				   salesrep_id => [ $openprint::session{user_id}, $openprint::User->csr_ids() ],
+																																			  ) : () ),
+		},
         order	=>'lower(name)',
 		@_,
     );
@@ -421,32 +421,34 @@ sub AUTOLOAD {
         } # end if
     } else {
         my $Profile = $_[0]->Profile();
-		my $thing = $Profile->value( $name );
-$openprint::log->debug("Profile field $name thing $thing " . ref $thing) if $debug;
-        if ( exists $$Profile{fields}{$name} ) {
-            if ( @_ > 1 ) {
-                $$Profile{fields}{$name} = $_[1];
-            } # end if
-$openprint::log->debug("Profile field $name " . ref $$Profile{fields}{$name} ) if $debug;
-            return $$Profile{fields}{$name};
-		} elsif ( openprint::Company_Profile_Field->find_one(name=>$name) ) {
-            if ( @_ > 1 ) {
-                $$Profile{fields}{$name} = $_[1];
-            } # end if
-            return $$Profile{fields}{$name};
-        } else {
-            $openprint::log->warn("Unknown field in Company::AUTOLOAD $name") if $debug;
-        } # end if
-    } # end if
+
+		# Entry will be created if it is a valid field, but not saved
+		my $Entry = $Profile->Field( $name );
+		if ( defined $Entry ) {
+			if ( @_ > 1 ) {
+				$Entry->save({value=>$_[1]});
+			}
+			return $Entry;
+		} else {
+			return;
+
+# This is superflous;
+
+			if ( @_ > 1 ) {
+$openprint::log->error("Profile field setting $name when not exists " );
+			}
+
+		} # end if ! Entry
+	} # end if in fields on in profile
 	return;
 } # end sub AUTOLOAD
 
 sub Profile {
-    if ( ! exists $_[0]{Profile} ) {
-        require openprint::Company_Profile;
-        $_[0]{Profile} = new openprint::Company_Profile( $_[0]{id} );
-    } # end if
-    return $_[0]{Profile};
+	if ( ! exists $_[0]{Profile} ) {
+		require openprint::Company_Profile;
+		$_[0]{Profile} = new openprint::Company_Profile( $_[0]{id} );
+	} # end if
+	return $_[0]{Profile};
 } # end sub Profile
 
 sub tax_code {

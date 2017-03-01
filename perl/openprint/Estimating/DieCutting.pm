@@ -16,13 +16,13 @@
 
 package openprint::Estimating::DieCutting;
 use strict;
-#use warnings;
+use warnings;
 use POSIX qw( ceil );
 use constant DEBUG => 1;
 
 require openprint::Equipment;
 require openprint::service;
-use openprint;
+
 use vars qw( $log $dbh );
 *log = \$openprint::log;
 *dbh = \$openprint::dbh;
@@ -87,7 +87,7 @@ sub calc_price {
 	my $form = $$sig_specs{SignatureIndex};
 
 	my $MakeReadyService = openprint::Service->find_one( name => 'DieCutting-'.$$specs{'MakeReadyComplexity-'.$form}.'MakeReady' ) if $$specs{'MakeReadyComplexity-'.$form};
-	$MakeReadyService = openprint::Service->find_one( name => 'DieCutting-'.$$specs{'rbDieCutting-'.$form}.'MakeReady' ) if (!$MakeReadyService) and $$specs{'rdbDieCutting-'.$form};
+	$MakeReadyService = openprint::Service->find_one( name => 'DieCutting-'.$$specs{'rdbDieCutting-'.$form}.'MakeReady' ) if (!$MakeReadyService) and $$specs{'rdbDieCutting-'.$form};
 	$MakeReadyService = openprint::Service->find_one( name => 'DieCuttingMakeReady' ) if ! $MakeReadyService;
 
 	if ( $MakeReadyService ) {

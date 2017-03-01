@@ -4,7 +4,7 @@
 </div>
 <script type="text/javascript" src="<? hash_link( /main/order/order.js ) ?>"></script>
 <div class="Order"><div class="Information">
-<?include('/includes/error_reporting.html') ?>
+	<?include('/includes/error_reporting.html') ?>
 	<form method="post" id="f1" name="f1" action="/main/order/submit.html">
 		<div class="Header">
 			<div id="Information">
@@ -93,10 +93,12 @@
 					) ?>
 				</div>
 				<? endif ( @{$$variable{Projects}} ) ?>
+<?if(openprint::Product->find_one())?>
 				<div id="Products">	
 					<?include(_product_list_edit.html)?>
 					<p class="buttons"><?echo(button('AddProduct', { onclick=>qq`popup_window('_add_product_popup.html', { order_id: $$variable{Order}{id} } );` } ); )?></p>
 				</div>
+<?endif(openprint::Product->find_one())?>
 		</div><!--Contents-->
 		<div id="Totals">
 			<ul>

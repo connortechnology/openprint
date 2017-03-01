@@ -23,7 +23,7 @@ CREATE	TABLE	Projects	(
 	strMode					TEXT,
 	strPrograms				TEXT,
 	strOtherPrograms		TEXT,
-	type_id					INTEGER NOT NULL, FOREIGN KEY (type_id) REFERENCES Project_Types (id),
+	type_id					INTEGER, FOREIGN KEY (type_id) REFERENCES Project_Types (id),
 	price1					NUMERIC(10,2),
 	price2					NUMERIC(10,2),
 	price3					NUMERIC(10,2),

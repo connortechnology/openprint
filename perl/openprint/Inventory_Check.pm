@@ -16,6 +16,7 @@ $serial= 'inventory_checks_id_seq';
 	ended_on	=>	'ended_on',
 	scanner_id	=>	'scanner_id',
 	deleted		=>	'deleted',
+	location_id	=>	'location_id',
 );
 %transforms = (
 	name	=> [ 's/^\s+//', 's/\s+$//', 's/\s\s+/ /g' ],
@@ -24,6 +25,7 @@ $serial= 'inventory_checks_id_seq';
 	created_on	=>	q`'NOW()'`,
 	started_on	=>	q`'NOW()'`,
 	scanner_id	=>	undef,
+	location_id	=>	undef,
 	deleted		=>	'0',
 );
 
@@ -72,6 +74,21 @@ $openprint::log->debug("check_for_duplicates: $$ICE{rfidtag_id} " . $_[0]{rfid_i
 	return 1 if $$ICE{rfidtag_id} and $_[0]{rfid_ids}{$$ICE{rfidtag_id}} and @{$_[0]{rfid_ids}{$$ICE{rfidtag_id}}} > 1;
 	return 0;
 } # end sub check_for_duplicates
+
+sub Location {
+	return new openprint::Location( $_[0]{location_id} );
+}
+sub location {
+	return new openprint::Location( $_[0]{location_id} )->name();
+}
+sub location_ids { 
+	if ( $_[0]{location_id} and ! $_[0]{location_ids} ) {
+		$_[0]{location_ids} = [map { $$_{id} } $_[0]->Location()->get_all_children()];
+	} else {
+		$_[0]{location_ids} = [];
+	}
+	return @{$_[0]{location_ids}};
+}
 
 
 1;

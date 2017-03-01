@@ -22,6 +22,16 @@
 		name	=>	'FoldPageQty-'.$blah,
 		value	=>	$$variable{'FoldPageQty-'.$blah},
 		);
+	$html .= input(
+		type	=>	'hidden',
+		name	=>	'FoldPageColumns-'.$blah,
+		value	=>	$$variable{'FoldPageColumns-'.$blah},
+		);
+	$html .= input(
+		type	=>	'hidden',
+		name	=>	'FoldPageRows-'.$blah,
+		value	=>	$$variable{'FoldPageRows-'.$blah},
+		);
 	$html .= '</td><td class="Imp">';
 	$html .= input(
 		type	=>	'cardinal',

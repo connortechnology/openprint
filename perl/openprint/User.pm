@@ -291,7 +291,11 @@ sub assistant_ids {
 		@{$$self{assistant_ids}} = ( @_ == 1 and ref $_[0] eq 'ARRAY' ) ? @{$_[0]} : @_;
 	} # end if
 	if ( ! $$self{assistant_ids} ) {
-		 @{$$self{assistant_ids}} = sql::execute( undef, undef, 'SELECT assistant_id FROM Assistants WHERE csr_id=?', $$self{id} );
+		if ( $$self{id} ) {
+			@{$$self{assistant_ids}} = sql::execute( undef, undef, 'SELECT assistant_id FROM Assistants WHERE csr_id=?', $$self{id} );
+		} else {
+			$$self{assistant_ids} = [];
+		}
 	} # end if
 	return @{$$self{assistant_ids}};
 } # end sub
@@ -308,7 +312,11 @@ sub csr_ids {
 		@{$$self{csr_ids}} = ( @_ == 1 and ref $_[0] eq 'ARRAY' ) ? @{$_[0]} : @_;
 	} # end if
 	if ( ! $$self{csr_ids} ) {
-		@{$$self{csr_ids}} = sql::execute( undef, undef, 'SELECT csr_id FROM Assistants WHERE assistant_id=?', $$self{id} );
+		if ( $$self{id} ) {
+			@{$$self{csr_ids}} = sql::execute( undef, undef, 'SELECT csr_id FROM Assistants WHERE assistant_id=?', $$self{id} );
+		} else {
+			$$self{csr_ids} = [];
+		}
 	} # end if
 	return @{$$self{csr_ids}};
 } # end sub
@@ -341,7 +349,7 @@ sub Notifications {
 sub purchasing_total {
 	require openprint::PurchaseOrder;
 	my $total = 0;
-	foreach my $PO ( openprint::PurchaseOrder->find('authorized'=>'N') ) {
+	foreach my $PO ( openprint::PurchaseOrder->find( authorized=>'N' ) ) {
 		$total += $PO->total();
 	} # end foreach $PO
 } # end sub purchasing_total
@@ -349,7 +357,7 @@ sub purchasing_total {
 sub po_limit {
 	my ( $self, $type_id, $new_value ) = @_;
 
-	if ( ! exists $$self{po_limits} ) {
+	if ( ( ! exists $$self{po_limits} ) and $$self{id} ) {
 		if ( $$self{id} ) {
 		%{$$self{po_limits}} = sql::execute( undef, undef, 'SELECT type_id, po_limit FROM User_PurchaseOrder_limits WHERE user_id=?', $$self{id} );
 		} else {
@@ -433,6 +441,9 @@ sub link {
 sub link_to {
     return sprintf('<a href="/account/view.html?user_id=%1$d">%2$s</a>', $_[0]{id}, @_ > 1 ? $_[1] : $_[0]->name() );
 } # end sub link_to
+sub admin_link_to {
+    return sprintf('<a href="/administrator/managerial/user_profiles.html?user_id=%1$d">%2$s</a>', $_[0]{id}, @_ > 1 ? $_[1] : $_[0]->name() );
+} # end sub admin_link_to
 
 sub html {
 	if ( ! $_[0]{id} ) {
@@ -574,7 +585,8 @@ sub code {
 } # end sub code
 
 sub usergroup_ids {
-	return map { $_->usergroup_id() } openprint::User_in_UserGroup->find(user_id=>$_[0]{id});
+	return map { $_->usergroup_id() } openprint::User_in_UserGroup->find(user_id=>$_[0]{id}) if $_[0]{id};
+	return;
 } # end sub usergroup_ids
 
 sub save_notifications {
@@ -589,6 +601,13 @@ sub save_notifications {
 		} # end if value changed
 	} # end foreach Notification
 	return @results;
+}
+sub email_valid {
+	if ( ! defined $_[0]{email_valid} ) {
+	require Email::Valid;
+	$_[0]{email_valid} = Email::Valid->address( $_[0]{email} );
+	} 
+	return $_[0]{email_valid};
 }
 
 1;

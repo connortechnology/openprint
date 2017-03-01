@@ -20,7 +20,7 @@ function load_page() {
 		<ul>
 		<li>
 			<label>Equipment</label>
-			<select id="equipment_id" name="equipment_id" onchange="page_load();">
+			<select id="equipment_id" name="equipment_id" onchange="load_page();">
 				<option value="">All Equipment</option>
 <? echo (
     make_drop_down( [ map { $_->id(), $_->strid().': ' . $_->name() } openprint::Equipment->find( order => 'lower(strID)', 'servicetype any'=>'Folding' ) ], $param{equipment_id} );
@@ -28,7 +28,7 @@ function load_page() {
 			</select>
 		</li>
 		<li><label>Type</label>
-			<select id="type" name="type" onchange="page_load();">
+			<select id="type" name="type" onchange="load_page();">
 				<option value="">All</option>
 <? echo ( 
 	make_drop_down( [ map { $_, $openprint::Estimating::Folding::fold_types{$_} } sort keys %openprint::Estimating::Folding::fold_types ] );
@@ -36,12 +36,12 @@ function load_page() {
 			</select>
 		</ul>
 		<p class="buttons">
-			<? echo ( join('',
+			<? echo ( join("\n",
 				button( 'ShowResults', { onclick=>'load_page();', text=>'Show Results' } ),
 			button( 'AddFold', { onclick=>"new Ajax.Request('/administrator/equipment/_fold.html?action=add', { onSuccess: function(response){new Insertion.Top(\$('Folds'), response.responseText);SortableTable.load();} } );", text=>'Add' } ),
 			button( 'ExportFolds', { onclick=>"f1.btnFunction.value='Export Folds';f1.submit();", text=>'Export Folds' } ),
 ); ) ?>
 		</p>
 	</fieldset>
-	<div id="Folds">Click Show Results</div>
+	<div id="Folds"><?include(_folds.html)?></div>
 </form>

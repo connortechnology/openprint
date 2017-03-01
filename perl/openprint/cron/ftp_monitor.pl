@@ -2,7 +2,7 @@
 use utf8;
 use lib '/etc/apache2/lib/perl';
 use strict;
-#use warnings;
+use warnings;
 
 require configuration;
 require sql;
@@ -13,6 +13,8 @@ require openprint::User;
 require Email::Valid;
 require openprint::Email;
 require openprint::User_Notification;
+require openprint::Host;
+require openprint::Host_Interface;
 require logger;
 require openprint::Upload;
 require openprint;
@@ -40,7 +42,7 @@ my $opts = {};
 Getopt::Long::GetOptions($opts, 'attach-file', 'fifo=s', 'from=s', 'help', 'ignore-users=s',
 	'log_file=s', 'log_level=s',
 	'recipient=s', 'sleep=s', 'smtp-server=s', 'subject=s',
-	'watch-users=s','pid_file=s', 'db_name=s', 'db_host=s', 'db_user=s', 'db_pass=s',
+	'watch-users=s','pid_file=s', 'db_port=s', 'db_name=s', 'db_host=s', 'db_user=s', 'db_pass=s',
 	'skin_path=s', 'document_root=s', 'file_path=s','site_title=s', 'site_url=s',
 	'scoreboard=s','max_files=s', 'config=s',
 );
@@ -92,6 +94,7 @@ if ( $config{pid_file} ) {
 $log = logger->new( { file=>$config{log_file}, level=>$config{log_level}} );
 $log->info("Opening SQL connection $config{db_host} $config{db_name}");
 $openprint::dbh = sql::open_sql( $log, 
+	port		=> $config{db_port},
 	host		=> $config{db_host},
 	database	=> $config{db_name},
 	driver		=> 'Pg',
@@ -281,7 +284,7 @@ $log->debug("data: $client $remote_user $user_name $curr_time $xfer_type $path $
 						complete	=> 1,
 					};
 				} # end if send email
-			} elsif ($line =~ /^(\S+)\s+(\S+)\s+(\S+)\s+\[([^\]]+)\]\s+"([^"]*)"\s+(\d+)\s+([\-\d]+)\s+([\.\d]+)$/o) {
+			} elsif ($line =~ /^(\S+)\s+(\S+)\s+(\S+)\s+\[([^\]]+)\]\s+"([^"]*)"\s+(\d+)\s+([\-\d]+)\s+([\.\d\-]+)$/o) {
 #LogFormat IQFormat "%h %l %u %t \"%f\" %s %b %T"
 
 				my $client = $1;
@@ -293,18 +296,30 @@ $log->debug("data: $client $remote_user $user_name $curr_time $xfer_type $path $
 				my $response_code = $6;
 				my $nbytes = $7;
 				my $xfer_nsecs = $8;
-$log->debug("Got IQFormat extended line: $line");
-$log->debug("data: $client $remote_user $user_name $curr_time $path $response_code $nbytes");
-if ( $nbytes eq '-' ) {
-$log->debug("Not an upload, ignoring");
-next;
-} elsif ( $response_code != 226 ) {
-	$log->debug("Not an upload, response_code: $response_code");
-	next;
-} elsif ( $path eq '-' ) {
-	$log->debug("Not an upload, response_code: $response_code path was $path");
-	next;
-}
+				$log->debug("Got IQFormat extended line: $line");
+				$log->debug("data: $client $remote_user $user_name $curr_time $path $response_code $nbytes");
+				if ( $response_code == 331 ) {
+#Username OK, need password
+					next;
+				} elsif ( $response_code == 230 ) {
+# Successful login
+					my $User = openprint::User->find_one( email => $user_name, ftp_active => 1 );
+					if ( ! $User ) {
+						$log->error("Unable to load user for a valid ftp account.");
+						next;
+					}
+					(new openprint::Log())->save({Object=>$User, action=>'Login', note=>'Successful FTP Login' } );
+					next;
+				} elsif ( $nbytes eq '-' ) {
+					$log->debug("Not an upload, ignoring");
+					next;
+				} elsif ( $response_code != 226 ) {
+					$log->debug("Not an upload, response_code: $response_code");
+					next;
+				} elsif ( $path eq '-' ) {
+					$log->debug("Not an upload, response_code: $response_code path was $path");
+					next;
+				}
 
 				# Note that any spaces or control characters will be replaced in this
 				# path with underscores.	This can make finding the actual file, as for
@@ -583,11 +598,13 @@ $log->debug("regexp: $regexp");
 		} else {
 			if ( $Company->salesrep_id() ) {
 				my $CSR = $Company->CSR();
-				if ( openprint::User_Notification->find_one( type=>'CSR Client File Uploads', 'value !=' => 'No', user_company_id=>[ $config{owner_id}, $Company->id() ] ) ) {
+				my $Notification = openprint::User_Notification->find_one( type=>'CSR Client File Uploads', 'value !=' => 'No', user_company_id=>[ $config{owner_id}, $Company->id() ] );
+
+				if ( $Notification ) {
 					@to = ( $CSR );
 					$log->debug("Adding CSR $$CSR{email}");
 				} else {
-					$log->debug("Not Adding CSR $$CSR{email} : notifications etting:" . $CSR->notification('CSR Client File Uploads') );
+					$log->debug("Not Adding CSR $$CSR{email} : notifications etting:" );
 				} # end if
 			} # end if
 			push @to, map { $_->User() } openprint::User_Notification->find( type=>'Client File Uploads',value=>'Yes', 'company_id is null or ='=>$Company->id(), company_id=>[ $config{owner_id}, $Company->id() ] );
@@ -852,14 +869,19 @@ sub take_evasive_action {
 		sleep(1);
 	} # enw hwhile no db connection
 
-	my $User = openprint::User->find_one('email lc'=>lc $username, ftp_active=>'Y' );
+	my $User = openprint::User->find_one('email lc'=>lc $username, ftp_active=>1 );
+	if ( ! $User ) {
+		$log->warn("unable to load ftpable user account for $username");
+		return;
+	} # end if
+	$User = openprint::User->find_one('email lc'=>lc $username );
 	if ( ! $User ) {
 		$log->warn("unable to load insecure user account for $username");
 		return;
 	} # end if
 
 	my $Company = $User->Company();
-	my @To = ( $config{TechSupportEmail} );
+	my @To = ( $config{TechSupportEmail}, $username );
 
 	if ( $Company->salesrep_id() ) {
 		push @To, $Company->CSR();
@@ -868,19 +890,21 @@ sub take_evasive_action {
 	my %variable;
 	$variable{Company} = $Company;
 	$variable{User} = $User;
+$log->debug("Email sent to @To from $config{TechSupportEmail}");
 
 	$variable{ReplacementText} = ssi::include( '/email_content/ftp_account_compromised.html', \%variable );
 	if ( $variable{ReplacementText} ) {
-		my $email_template = misc::load_file( $log, $config{skin_path} . '/email_template.html' );
-		my $body = ssi::variable_substitution( undef, $log, $dbh, \$email_template, \%variable );
+		my $email_template = ssi::slurp_content( '/email_template.html' );
+		my $body = ssi::variable_substitution( \$email_template, \%variable );
 		my $Mail = new openprint::Email();
-		$Mail->send(
+		$Mail->html_body( $body );
+		$_ = $Mail->send(
 				FROM    =>	$config{TechSupportEmail},
 				TO      =>	\@To,
 				SUBJECT =>	'FTP Account compromised',
-				ATTACHMENTS => [ '', encode_qp(Encode::encode('utf-8',$body)), 'text/html', 'quoted-printable' ]
 			);
-		$_ = $User->save({ ftp_active=>'N', change_password=>'Y' });
+		$log->debug("Email sent to $_");
+		$_ = $User->save({ ftp_active=>0, change_password=>'Y' });
 		$log->error($_) if $_;
 	} else {
 		$log->error("No email content for 'ftp_account_compromised.html'");
@@ -907,6 +931,7 @@ sub take_evasive_action {
 						$log->error($_) if $_;
 					} # end if
 					(new openprint::Log())->save({
+							Object		=>	$Host,
 							action	=> 'Intrusion', 
 							note		=> "FTP violation. User account $username",
 							host_id		=> $$Host{id},
@@ -916,7 +941,7 @@ sub take_evasive_action {
 				} # end foreach  Interface
 			} else {
 				my $Host = new openprint::Host();
-				$Host->save({} );
+				$Host->save({});
 				my $Interface = new openprint::Host_Interface();
 				$Interface->save({ ip=>$ip, host_id=>$$Host{id} });
 			} # end if

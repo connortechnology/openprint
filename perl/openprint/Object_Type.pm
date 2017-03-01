@@ -8,11 +8,15 @@ $debug = 0;
 $table = 'object_types';
 $serial = 'object_types_id_seq';
 %fields = (
-	'id'		=>	'id',
-	'name'		=>	'name',
-	'human'		=>	'human',
+	id		=>	'id',
+	name	=>	'name',
+	human	=>	'human',
 );
 %defaults = (
+);
+%transforms = (
+		name  => [ 's/^\s+//', 's/\s+$//', 's/\s\s+/ /g' ],
+		human => [ 's/^\s+//', 's/\s+$//', 's/\s\s+/ /g' ],
 );
 
 sub Object {

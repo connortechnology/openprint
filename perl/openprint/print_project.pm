@@ -211,16 +211,21 @@ sub continue_project {
 		if ( ! $service_index ) {
 			my $Project = new openprint::Project( $project_index );
 			foreach my $qty_index ( $Project->quantity_indexes() ) {
-				if ( $_ = openprint::Estimating::MultiPage::status( $project_index, undef, $qty_index ) ) {
-					$log->debug("Multipage status says we need another sig of type $_");
-					my @sigs = $Project->signatures({'Group'=>$_});
-					my $src_id = pop @sigs;
-					my $src_specs = openprint::service::get_specs_ref( $Project, $src_id );
-					$service_index = $Project->copy_signature( $src_specs );
-					( $service_index, $redirect ) = choose_service( $log, $dbh, $project_index );
-					last;
+				my $module = 'openprint::Estimating::'.$Project->Type()->type();
+				if ( my $function = $module->can('status') ) {
+					if ( $_ = $function->( $project_index, undef, $qty_index ) ) {
+						$log->debug($Project->Type()->type(). " status says we need another sig of type $_");
+						my @sigs = $Project->signatures({'Group'=>$_});
+						my $src_id = pop @sigs;
+						my $src_specs = openprint::service::get_specs_ref( $Project, $src_id );
+						$service_index = $Project->copy_signature( $src_specs );
+						( $service_index, $redirect ) = choose_service( $log, $dbh, $project_index );
+						last;
+					} else {
+						$log->debug("Multpage status says we ok");
+					} # end if
 				} else {
-					$log->debug("Multpage status says we ok");
+					$log->debug("Dont have a status function for $module");
 				} # end if
 			} # end foreach
 		} # end if
@@ -576,7 +581,7 @@ if ( 0 ) {
 	$ProjectType = openprint::ProjectType->find_one( id => $param{project_type_id} ) if $param{project_type_id};
 	my $OldProjectType = $Project->Type();
 # Handle ProjectType
-	if ( $OldProjectType->id() != $ProjectType->id() ) {
+	if ( (!$OldProjectType) or ( $ProjectType and ( $OldProjectType->id() != $ProjectType->id() ) ) ) {
 		$recalculate = 1;
 		$error .= $Project->change_ProjectType( $ProjectType );
 	} else {
@@ -589,16 +594,20 @@ if ( 0 ) {
 	} # end if
 
 	my %statuses = sql::execute( $log, $dbh, 'SELECT lngserviceindex, strstatus FROM tbl_Project_Contents WHERE lngprojectindex=?', $project_index );
-
-	foreach my $ServiceType ( openprint::ServiceType->find( create_visible=>'Y') ) {
+$log->debug("Doing services");
+	foreach my $ServiceType ( openprint::ServiceType->find( create_visible=>1) ) {
+$log->debug("Looking at $$ServiceType{name}");
 		if ( $ServiceType->type() eq 'CustomService' ) {
 			$log->error("CustomService is visible in project create.");
 			next;
 		} # end if
 		if ( $param{'chkServices'.$ServiceType->name()} eq $ServiceType->name() ) {
 			if ( ! $$services{$ServiceType->name()} ) {	
+$log->debug("Adding $$ServiceType{name}");
 				push @{$$services{$ServiceType->name()}}, $Project->add_service($ServiceType->name());
 				$recalculate = 1;
+			} else {
+$log->debug("Already have $$ServiceType{name}");
 			} # end if
 		} else {
 			if ( $$services{$ServiceType->name()} ) {
@@ -618,15 +627,18 @@ if ( 0 ) {
 	} # end if
 
 	$Project->add_to_log( @session{'company_id','user_id'}, 'Edited: ' . join('<br/>', @changes) );
-	my $book_type = openprint::print::get_book_type( $Project );
-	if ( $book_type ) {
-		my $project_specs = openprint::service::get_specs_ref( $Project, $$services{''}[0] );
-		if ( $book_type ne $$project_specs{rdbTemplateType} ) {
-			$Project->add_to_log( @session{'company_id','user_id'}, "Changed book type from $$project_specs{rdbTemplateType} to $book_type" );
-			openprint::service::insert_service_spec( $log, $dbh, $project_index, $$services{''}[0], 'rdbTemplateType', $book_type );
-			$recalculate = 1;	
+
+	if ( $ProjectType->type() eq 'MultiPage' ) {
+		my $book_type = openprint::print::get_book_type( $Project );
+		if ( $book_type ) {
+			my $project_specs = openprint::service::get_specs_ref( $Project, $$services{''}[0] );
+			if ( $book_type ne $$project_specs{rdbTemplateType} ) {
+				$Project->add_to_log( @session{'company_id','user_id'}, "Changed book type from $$project_specs{rdbTemplateType} to $book_type" );
+				openprint::service::insert_service_spec( $log, $dbh, $project_index, $$services{''}[0], 'rdbTemplateType', $book_type );
+				$recalculate = 1;	
+			} # end if
 		} # end if
-	} # end if
+	}
 	
 	if ( $recalculate ) {
 		$Project->recalculate();
@@ -638,22 +650,21 @@ if ( 0 ) {
 
 sub del_service {
 	# THis is an external wrapper 
-	my ( $r, $log, $dbh, $variable, $project_index, $service_id ) = @_;
-	my $Project = new openprint::Project( $project_index );
+	my ( $r, $log, $dbh, $variable, $project_id, $service_name ) = @_;
+	my $Project = new openprint::Project( $project_id );
 	my $services = $Project->services();
-	if ( $$services{$service_id} ) {
-		foreach my $service_index ( @{$$services{$service_id}} ) {
-			delete_service( $Project, $service_index );
+	if ( $$services{$service_name} ) {
+		foreach my $service_id ( @{$$services{$service_name}} ) {
+			delete_service( $Project, $service_id );
 		} # end foreach
 	} # end if
 } # end sub del_service
 
 sub delete_service {
-	my ( $Project, $service_index ) = @_;
-	my $Service = $Project->Service( $service_index );
+	my ( $Project, $service_id ) = @_;
+	my $Service = $Project->Service( $service_id );
 	return $Service->delete();
 } # end sub delete_service
-
 
 sub reuse_project {
 	my ( $project_index ) = @_;

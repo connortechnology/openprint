@@ -22,6 +22,7 @@ $serial = 'project_types_id_seq';
 	'sorting'		=>	'sorting',
 	'type'			=>	'type',
 	'please_call'	=>	'please_call',
+	category		=>	undef,
 );
 %transforms = (
 	id			=>	[ 's/\D//g', '<2147483647' ],
@@ -130,7 +131,8 @@ sub blocked_services {
 } # end sub blocked_services
 
 sub blocked_ServiceTypes {
-	return openprint::ServiceType->find( id=>[ $_[0]->blocked_services() ] );
+	return openprint::ServiceType->find( id=>[ $_[0]->blocked_services() ] ) if $_[0]->blocked_services();
+	return ();
 } # end sub blocked_ServiceTypes
 
 sub delete {
@@ -156,7 +158,31 @@ sub Templates {
 } # end sub Templates
 
 sub category {
-	return new openprint::ProjectTypeCategory( $_[0]{category_id} )->name();
+	if ( @_ > 1 ) {
+		$_[0]{category} = $_[1];
+		if ( defined $_[1] ) {
+			my $Category = openprint::ProjectTypeCategory->find_one( 'name lc' => lc $_[1] );
+			if ( ! $Category ) {
+				$Category = new openprint::ProjectTypeCategory();
+				$Category->save({name=>$_[1]});
+			}
+			$_[0]{Category} = $Category;
+			$_[0]{category_id} = $$Category{id};
+		} else {
+			delete $_[0]{Category};
+			undef $$_[0]{category_id};
+		}
+	}
+
+	if ( ! exists $_[0]{category} ) {
+		if ( ( ! exists $_[0]{Category} ) and $_[0]{category_id} ) {
+			$_[0]{Category} = new openprint::ProjectTypeCategory( $_[0]{category_id} );
+		}
+		if ( $_[0]{Category} ) {
+			$_[0]{category} = $_[0]{Category}->name();
+		}
+	}
+	return $_[0]{category};
 } # end sub category
 
 1;

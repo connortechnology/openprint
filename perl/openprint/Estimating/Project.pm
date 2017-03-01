@@ -41,15 +41,9 @@ my @no_outputs = (
 	'chkOverrideScoreQty',
 	'h_stands','grommets',
 );
-sub outputs {
-} # end sub outputs
 sub no_outputs {
 	return @no_outputs;
 } # end sub
-
-sub outputs {
-	return ('txtPrice1' );
-}
 
 # creates a new project, first clearing out any previous projects
 sub calc {
@@ -171,7 +165,12 @@ $openprint::log->debug("In Project::calc");
         } # end i
 	}
 
-	if ( ! sets::isin( $$specs{Dimensions}, ['', 'Custom'] ) ) {
+	if ( ! sets::isin( $$specs{Dimensions}, [ 'Custom'] ) ) {
+		if ( ! $$specs{Dimensions} ) {
+			$$specs{alert} .= 'Please select the Size<br/>';
+			
+		} else {
+		
 		my ( $width, $height, $type ) = $$specs{Dimensions} =~ /([\d\.]*)x([\d\.]*)(\w*)/;
 		my @args = ( $$specs{projecttype_id}, $width, $height );
 
@@ -224,6 +223,7 @@ $log->debug("Presentation folder sizes $$specs{chkPocketLeft} $$specs{chkPocketR
             } # end if
             $$specs{txtHeight} = $$specs{txtFinalHeight} + $$specs{rdbPocketSize};
 		} # end if
+		}
 	} elsif ( ( $ProjectType->name() eq 'Envelopes' ) and ( exists $$specs{ddmStockSize} ) ) {
 		@$specs{'txtWidth','txtHeight'} = $$specs{ddmStockSize} =~ /^([\d\.]+)"?\s*x?\s*([\d\.]+)?"?\s*$/;
 		@$specs{'txtFinalWidth','txtFinalHeight'} = @$specs{'txtWidth','txtHeight'};
@@ -275,6 +275,8 @@ $log->debug("Presentation folder sizes $$specs{chkPocketLeft} $$specs{chkPocketR
 				$$specs{alert} .= 'Please select an interior stock ' . lc $option .'.';
 				$Project->unlock();
 				return $$specs{Status} = 'uncalculated';
+			} else {
+				openprint::service::insert_service_spec( $log, $dbh, $$Project{id}, $$services{''}[0], 'ddmStock'.$option.'2', $$specs{'ddmStock'.$option.'2'} );
 			} # end if
 		} # end foreach option
 
@@ -932,54 +934,29 @@ $log->warn("unitprice: $$specs{txtUnitPrice1}");
 	return $$specs{Status};
 } # end sub calc
 
+
+# This should not alter the db
 sub create_calc {
 	my ( $log, $dbh, $variable, $project_index, $service_index, $specs ) = @_;
 
-	return if ! $$specs{rdbProjectType};
-
-# Sanitize input
-	foreach my $qty_index ( 1 .. 3 ) {
-		$$specs{"quantity$qty_index"} =~ s/\D//g;
-	} # end foreach qty_index
-
-	my $Project = new openprint::Project( $$specs{ProjectIndex} );
-	$Project->currency_id( $openprint::session{Currency_id} ) if ! $Project->currency_id();
-	if ( ! $Project->id() ) {
-		$Project->save();
-		$Project->add_to_log( @openprint::session{'company_id','user_id'}, 'Created' );
-	} # end if
-
-	# Why are we doing this?
-	my %services = $Project->get_services( );
-	foreach my $qty_index ( 1 .. 3 ) {
-# Should not do this
-		if ( $$specs{'quantity'.$qty_index} != $Project->quantity($qty_index) ) {
-if ( 0 ) {
-			foreach my $service_id ( keys %services ) {
-				foreach my $s_id ( @{$services{$service_id}} ) {
-					openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $s_id, 'txtQuantity'.$qty_index, $$specs{'txtQuantity'.$qty_index} );
+	if ( $$specs{rdbProjectType} ) {
+		my $ProjectType = openprint::ProjectType->find_one( name => $$specs{rdbProjectType} );
+		if ( $ProjectType ) {
+			my @required_servicetype_ids = $ProjectType->required_services();
+			if ( @required_servicetype_ids ) {
+				foreach my $ServiceType ( openprint::ServiceType->find( create_visible => 1, id=>\@required_servicetype_ids ) ) {
+					$$specs{'chkServices'.$ServiceType->name()} = $ServiceType->name();
 				} # end foreach
-			} # end foreach
-} 
-			$Project->quantity( $qty_index, $$specs{'quantity'.$qty_index} );
-		} # end if
-	} # end foreach qty_index
+			} # end if required_servicetype_ids
+			my @blocked_servicetype_ids = $ProjectType->blocked_services();
+			if ( @blocked_servicetype_ids ) {
+				foreach my $ServiceType ( openprint::ServiceType->find( create_visible => 1, id=>\@blocked_servicetype_ids ) ) {
+					$$specs{'chkServices'.$ServiceType->name()} = '';
+				} # end foreach
+			} # end if blocked_servicetype_ids
+		} # end if ProjectType
+	} # end if $$specs{ProjectType}
 
-	my $ProjectType = openprint::ProjectType->find_one( name => $$specs{rdbProjectType} );
-	if ( $Project->type_id() != $ProjectType->id() ) {
-		$Project->change_ProjectType( $ProjectType );
-		%services = $Project->get_services( );
-	} # end if ProjectType changed
-
-	foreach my $ServiceType ( openprint::ServiceType->find( create_visible => 'Y' ) ) {
-		if ( $services{$ServiceType->name()} ) {
-			$$specs{'chkServices'.$ServiceType->name()} = $ServiceType->name();
-		} else {
-#push @results, 'chkServices'.$ServiceType->name().'~';
-		} # end if
-	} # end foreach
-
-	$$specs{ProjectIndex} = $Project->id();
 	return $$specs{Status} = 'calculated';
 } # end sub create_calc
 

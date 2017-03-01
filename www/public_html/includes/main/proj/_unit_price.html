@@ -1,12 +1,8 @@
 <li class="unitprice">
 	<label>Unit Price (<?CurrencySymbol?>)</label>
-	<? eval ( $$variable{'QTYIndex'} = 1 ) ?>
-	<? while ( $$variable{'QTYIndex'} <= 3 ) ?>
-	<? if ( $$variable{'Project'}->{'quantity'.$$variable{'QTYIndex'}} ) ?>
-	<span class="<?Columns?>Columns">
-		<input type="number" name="txtUnitPrice<?QTYIndex?>" readonly="readonly" onfocus="this.blur();" />
-	</span>
-	<? endif ( $$variable{'Project'}->{'quantity'.$$variable{'QTYIndex'}} ) ?>
-	<? eval ( $$variable{'QTYIndex'} += 1 ) ?>
-	<? endwhile ( $$variable{'QTYIndex'} <= 3 ) ?>
+		<?echo( join("\n", map {
+	'<span class="'.$$variable{Columns}.'Columns">'.
+	input( type=>'float', name=>'txtUnitPrice'.$_, value=>$$variable{"txtUnitPrice$_"}, readonly=>'readonly', onfocus=>'this.blur();' ).
+	'</span>' } $$variable{Project}->quantity_indexes() );
+	) ?>
 </li>

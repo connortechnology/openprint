@@ -19,10 +19,12 @@ $table = 'object_keywords';
 	object_type	=>	'(SELECT name FROM object_types WHERE id=object_type_id)',
 );
 
+sub word {
+	return $_[0]->Keyword()->word();
+} # end sub word
 
 sub Keyword {
-	return new openprint::Keyword( $_[0]{keyword_id} );
+	return new openprint::Keyword( $_[0]{'keyword_id'} );
 } # end sub Keyword
-
 1;
 __END__

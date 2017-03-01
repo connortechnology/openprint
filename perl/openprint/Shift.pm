@@ -222,7 +222,7 @@ sub get_ul {
 	my $total_impressions = 0;
 
 	my @Jobs = $Shift->Schedule();
-$log->debug("Have schedule" . @Jobs );
+#$log->debug("Have schedule" . @Jobs );
 	openprint::Project->find(id=>[ map { $$_{project_id} } @Jobs ]) if @Jobs;
 	foreach my $Job ( @Jobs ) {
 		if ( $filters ) {
@@ -397,6 +397,7 @@ $log->debug("while Last_dt: $last_dt < $end_dt");
 			my $Shift = $ES->emanantise( $start_dt->epoch() );
 			if ( ! $Shift ) {
 				$log->error("failed to emanantise");
+				last;
 			} elsif ( ref $Shift ne 'openprint::Shift' ) {
 				$log->error("emanantise returned crap $Shift");
 			} # end if

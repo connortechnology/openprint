@@ -9,12 +9,14 @@
 					id: $(type).value, 
 					name: $(type+'_name').value,
 					message: $(type+'_message').value,
+					action: 'Save',
 				}, evalScripts: true } );
 		} else {
 			new Ajax.Request( '_filters_save.json', { method: 'post', parameters: { 
 					type: type, 
 					id: $(type).value, 
 					name: $(type+'_name').value,
+					action: 'Save',
 				}, evalScripts: true } );
 		} 
 	} // end function save(e)
@@ -57,9 +59,9 @@
 				<label>Message</label><textarea name="%1$s_message" id="%1$s_message" /></textarea><br/>
 				%3$s
 			</p>`, $type,
-			ssi::make_drop_down( ('openprint::'.$type)->dropdown( order=>'lower(name)') ),
-			ssi::button( $type.'Save', { onclick=>"save('$type');", 'text'=>'Save' } ),
-			ssi::button( $type.'Delete', { onclick=>"destroy('$type');", text=>'Delete' } ),
+			make_drop_down( ('openprint::'.$type)->dropdown( order=>'lower(name)') ),
+			button( $type.'Save', { onclick=>"save('$type');", 'text'=>'Save' } ),
+			button( $type.'Delete', { onclick=>"destroy('$type');", text=>'Delete' } ),
 			);
 	} # end foreach type
 	return $html;

@@ -1,12 +1,11 @@
-<? echo ( include('/includes/error_reporting.html'); ) ?>
+<?include('/includes/error_reporting.html')?>
 <script type="text/javascript">
 	function load_ddm( type, ink_id ) {
 		new Ajax.Updater( type+'_id-'+ink_id, '_'+type+'_id_ddm.html', { parameters: { ink_id: ink_id } } );
 		$(type+'_id-'+ink_id).onclick="";
 	} // end function load_ddm
 	function load_results() {
-		$('Results').innerHTML = 'Loading... please wait.';
-		new Ajax.Updater('Results','_inks.html', { parameters: $('f2').serialize() } );
+		LoadContent('Results','_inks.html', $('f2') );
 	}
 </script>
 <div class="PageTitle">
@@ -28,9 +27,9 @@
 			</li>
 		</ul>
 		<p class="buttons">
-			<? echo ( join('',
-				button( 'DeleteBottom', { onclick=>"f1.btnFunction.value='Delete';f1.submit();", text=>'Delete Checked' } ),
-				button( 'NewBottom', { href=>'ink.html', text=>'Add New' } ),
+			<? echo ( join("\n",
+				button( 'DeleteTop', { onclick=>"f1.btnFunction.value='Delete';f1.submit();", text=>'Delete Checked' } ),
+				button( 'NewTop', { href=>'ink.html', text=>'Add New' } ),
 				); ) ?>
 		</p>
 		</div>
@@ -41,7 +40,7 @@
 		<div id="Results"><?include('_inks.html')?>
 		</div>
 		<p class="buttons">
-			<? echo ( join('',
+			<? echo ( join("\n",
 				button( 'DeleteBottom', { onclick=>"f1.btnFunction.value='Delete';f1.submit();", text=>'Delete Checked' } ),
 				button( 'NewBottom', { href=>'ink.html', text=>'Add New' } ),
 				); ) ?>
@@ -69,7 +68,7 @@
 			<input type="file" name="fileColour"/>
 		</p>
 		<p class="buttons">
-			<? echo ( join('',
+			<? echo ( join("\n",
 				button('Import', { onclick=>"f1.action='inks.html';f1.btnFunction.value='Import Colours';f1.submit();", text=> 'Import' } ),
 				button('Export', { onclick=>"f1.action='inks.html?Download';f1.btnFunction.value='Export Colours';f1.submit();", text=> 'Export' } ),
 			); ) ?>

@@ -72,7 +72,8 @@ $serial = 'locations_id_seq';
 );
 
 sub children {
-	return openprint::Location->find( parent_id => $_[0]{id} );
+	return openprint::Location->find( parent_id => $_[0]{id} ) if $_[0]{id};
+	return ();
 } # end sub children
 
 sub get_all_children {
@@ -238,10 +239,15 @@ sub longitude {
 
 # Does a google lookup on some string and returns a Location object based on what it returns
 sub google {
-require Geo::Coder::Googlev3;
+	require Geo::Coder::Googlev3;
 	my $string = $_[0];
 	$string .= ' ' . $_[1] if @_ > 1;
 	$string =~ s/ /+/g;
+	if ( ! $string ) {
+		my ( $caller, undef, $line ) = caller;
+		$openprint::log->debug("No location to search google for from $caller:$line");
+		return;
+	}
 	my $coder = Geo::Coder::Googlev3->new();
 	my $location;
 	eval {

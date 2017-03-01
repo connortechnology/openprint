@@ -1,3 +1,4 @@
+<?include(/main/order/_product_list.html)?>
 <? if ( @{$$variable{Projects}} = $$variable{Order}->Ordered_Projects() ) ?>
 <table class="List">
 	<tr> 
@@ -21,13 +22,21 @@
 		foreach my $ServiceType ( @ShippingServices ) {
 			if ( $services{$ServiceType->name()} ) {
 				foreach my $service_index ( @{$services{$ServiceType->name()}} ) {
-					my $specs = openprint::service::get_specs_ref( $Project->id(), $service_index );
+					my $Service = $Project->Service( $service_index );
+					my $specs = $Service->specs();
 					my $price = $Project->Currency()->convert_to( $$variable{Order}->Currency(), $$specs{'txtPrice'.$Project->ordered_quantity_index()} );
 					$project_price -= $price;
-					eval(' require openprint::Estimating::'.$ServiceType->name().';' );
-					my $summary = eval('openprint::Estimating::'.$ServiceType->name().'::summary( $Project, $service_index, $specs, $Project->ordered_quantity_index() );') . ' to<br/>'.eval('openprint::Estimating::'.$ServiceType->name().'::summary( $Project, $service_index, $specs );');
-					$openprint::log->error("Error ". $@) if $@;
-					$shipping_html .= qq`<tr$$variable{rowclass}><td class="project_id">`.$ServiceType->description().qq`</td><td class="reference" colspan="2">$summary</td><td class="quantity">$$specs{'alert'}</td><td class="Price">`. $$variable{Currency}->format($price).'</td></tr>';
+		
+					# First gives # of items, the second the destination
+					my $summary = $Service->summary( $Project->ordered_quantity_index() );
+					$_ = $Service->summary( );
+					$summary .= ' to<br/>' . $_ if $_;
+					$shipping_html .= qq`<tr$$variable{rowclass}>
+<td class="project_id">`.$ServiceType->description().qq`</td>
+<td class="reference" colspan="2">$summary</td>
+<td class="quantity">$$specs{'alert'}</td>
+<td class="Price">`. $$variable{Currency}->format($price).'</td>
+</tr>';
 				} # end foreach
 			} # end if
 		} # end foreach

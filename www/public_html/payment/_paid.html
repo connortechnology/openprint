@@ -1,6 +1,7 @@
 <?include('/includes/error_reporting.html')?>
 <fieldset><legend>Invoices paid by this payment</legend>
 	<table class="List sortable">
+		<thead>
 		<tr>
 			<th>Invoice</th>
 			<th class="Price">Total</th>	
@@ -9,6 +10,7 @@
 			<th class="Price">Remaining</th>
 			<th class="buttons">&nbsp;</th>
 		</tr>
+		<thead><tbody>
 	<? echo (
 		my $html = '';
 		my $total = 0;
@@ -26,7 +28,7 @@
 			$html .= "</script>\n";
 			$total += $IP->amount();
 		} # end foreach Invoice
-		$html .= sprintf('<tr class="totals"><td colspan="3">&nbsp;</td><td class="Price">%s</td><td class="Price">%s</td><td>&nbsp;</td></tr>', 
+		$html .= sprintf('</tbody><tfoot><tr class="totals"><td colspan="3">&nbsp;</td><td class="Price">%s</td><td class="Price">%s</td><td>&nbsp;</td></tr></tfoot>', 
 			openprint::Currency::format( $total ), 
 			openprint::Currency::format( $$variable{Payment}->remaining() )
 			);

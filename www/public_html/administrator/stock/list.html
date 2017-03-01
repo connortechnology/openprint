@@ -5,7 +5,7 @@
 	if ( ! exists $session{'/administrator/stock/list.html?recommendations'} ) {
 		$session{'/administrator/stock/list.html?recommendations'} = join(',', 1,0 );
 	} # end if
-	$session{'/administrator/stock/list.html?Owner'} = $session{'company_id'} if ! exists $session{'/administrator/stock/list.html?Owner'};
+	$session{'/administrator/stock/list.html?Owner'} = $session{company_id} if ! exists $session{'/administrator/stock/list.html?Owner'};
 ) ?>
 <script type="text/javascript" src="<?hash_link(/javascripts/paper.js)?>"></script>
 <script type="text/javascript" src="<?hash_link(/administrator/stock/stock.js)?>"></script>
@@ -45,12 +45,15 @@
 		popupWin.setAjaxContent(url, null , true);
 	} // end function popup_window
 
+	var stock_filter_ajax = null;
 	function calc(formName) {
-		new Ajax.Updater('Stocks','/administrator/stock/_stocks.html', {
+		if ( stock_filter_ajax ) { stock_filter_ajax.transport.abort(); }
+
+    stock_filter_ajax = new Ajax.Updater('Stocks','/administrator/stock/_stocks.html', {
 				onLoading:function(){ $('Stocks').innerHTML='Loading...'; },
-				onSuccess:function(){ TableKit.Sortable.reload('StocksTable'); },
-				parameters:Form.serialize($(formName))});
-				//evalScripts:true, 
+				parameters:Form.serialize($(formName)),
+				evalScripts:true 
+});
 	}
 	function body_onLoad() {
 	}
@@ -84,17 +87,17 @@
 				) ?>
 			</select>
 		</li>
-<? if ( @{$$variable{'Groups'}} = openprint::StockGroup->find('order'=>'lower(name)') ) ?>
+<? if ( @{$$variable{Groups}} = openprint::StockGroup->find('order'=>'lower(name)') ) ?>
 		<li>
 			<label>Group</label>
 			<select id="group_id" name="group_id" size="1" onchange="calc(this.form.name);">
 				<option value="">select</option>
 				<? echo (
-					make_drop_down( [ map { $_->id(), $_->name() } @{$$variable{'Groups'}} ], $session{'/administrator/stock/list.html?group_id'} );
+					make_drop_down( [ map { $_->id(), $_->name() } @{$$variable{Groups}} ], $session{'/administrator/stock/list.html?group_id'} );
 					) ?>
 			</select>
 		</li>
-<? endif ( @{$$variable{'Groups'}} = openprint::StockGroup->find('order'=>'lower(name)') ) ?>
+<? endif ( @{$$variable{Groups}} = openprint::StockGroup->find('order'=>'lower(name)') ) ?>
 		<li>
 			<label>Manufacturer</label>
 			<select id="manufacturer_id" name="manufacturer_id" size="1" onchange="calc(this.form.name);">
@@ -163,10 +166,6 @@
 	}# end foreach option
 	return $html;
 ) ?>
-			</ul>
-		</div>
-		<div class="rightColumn">
-			<ul>
 		<li> 
 			<label>Type</label>
 			<? echo ( checkboxes( 'Types', ['Sheet','Sheet','Roll','Roll'], [ split(',', $session{'/administrator/stock/list.html?Types'} ) ], { onclick=>'calc(this.form.name);' } ); ) ?>
@@ -181,6 +180,10 @@ checkboxes( 'OrLarger', [1,'Or Larger'], $session{'/administrator/stock/list.htm
 ); ) ?>
 			
 		</li>
+			</ul>
+		</div>
+		<div class="rightColumn">
+			<ul>
 		<li class="calliper"><label>Calliper (Use &lt; and &gt;)</label>
 		<? echo ( join("\n",
 					input( type=>'text', name=>'calliper', id=>'calliper', value=>$session{'/administrator/stock/list.html?calliper'},
@@ -231,6 +234,9 @@ checkboxes( 'OrLarger', [1,'Or Larger'], $session{'/administrator/stock/list.htm
 		</li>
 		<li><label>Has minimum order</label>
 			<? echo ( radio( 'has_minimum_order', [ '1','Yes','0','No', '', 'All' ], $session{'/administrator/stock/list.html?has_minimum_order'}, { onclick=>'calc(this.form.name);' } ); ) ?>
+		</li>
+		<li><label>Has problems</label>
+			<? echo ( radio( 'has_problems', [ '1','Yes','0','No', '', 'All' ], $session{'/administrator/stock/list.html?has_problems'}, { onclick=>'calc(this.form.name);' } ); ) ?>
 		</li>
 
 		</ul>

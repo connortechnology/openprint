@@ -11,6 +11,8 @@ CREATE TABLE Services (
 	strUrl			TEXT,
 	lngSortOrder	INTEGER,
 	activity_code	TEXT,
+	servicetype_id	INTEGER, FOREIGN KEY (servicetype_id) REFERENCES service_types (id),
+	owner_id		INTEGER, FOREIGN KEY (owner_id) REFERENCES Companies(id),
 	PRIMARY KEY (id)
 );
  

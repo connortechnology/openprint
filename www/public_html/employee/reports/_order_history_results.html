@@ -1,8 +1,8 @@
 <?include('/includes/error_reporting.html')?>
-<? if ( @{$$variable{'Orders'}} ) ?>
-<? if ( $param{'press_id'} ) ?>
-The following had one or more signatures that ran on <? echo ( join(': ', new openprint::Equipment( $param{'press_id'} )->get('strid','name') ); ) ?><br/><br/>
-<? endif ( $param{'press_id'} ) ?>
+<? if ( @{$$variable{Orders}} ) ?>
+<? if ( $param{press_id} ) ?>
+The following had one or more signatures that ran on <? echo ( join(': ', new openprint::Equipment( $param{press_id} )->get('strid','name') ); ) ?><br/><br/>
+<? endif ( $param{press_id} ) ?>
 <table class="List sortable">
 	<tr>
 		<th class="order_id">Order #</th>
@@ -18,8 +18,13 @@ The following had one or more signatures that ran on <? echo ( join(': ', new op
 		my $html = '';
 		my $rowclass;
 		my $total;
-		foreach my $Order ( @{$$variable{'Orders'}} ) {
-			my $price = $Order->Currency()->convert_from( $Order->total() );
+		foreach my $Order ( @{$$variable{Orders}} ) {
+			my $price;
+			if ( $session{'/employee/reports/order_history.html?currency_id'} ) {
+				$price = $Order->total();
+			} else {
+				$price = $Order->Currency()->convert_from( $Order->total() );
+			}
 			$html .= sprintf(q`
 				<tr%1$s>
 					<td class="order_id"><a href="/employee/order/view.html?order_id=%2$d">%2$d</a></td>
@@ -46,11 +51,12 @@ The following had one or more signatures that ran on <? echo ( join(': ', new op
 			<td>%s</td>
 			<td colspan="2" align="right">Total</td>
 			<td class="Price">%s</td>
-		</tr>`, scalar @{$$variable{'Orders'}}, openprint::Currency::format( $total/scalar @{$$variable{'Orders'}} ), openprint::Currency::format( $total ) );
+		</tr>`, scalar @{$$variable{Orders}}, openprint::Currency::format( $total/scalar @{$$variable{Orders}} ), openprint::Currency::format( $total ) );
 		return $html;
 	) ?>
 </table>
-<span class="Currency">All prices shown are in <? echo ( openprint::Currency::get_current()->name() ) ?>.</span>
-<? else ( @{$$variable{'Orders'}} ) ?>
+<span class="Currency">All prices shown are in <? echo ( 
+$session{'/employee/reports/order_history.html?currency_id'} ? new openprint::Currency( $session{'/employee/reports/order_history.html?currency_id'} )->name() : openprint::Currency::get_current()->name() ) ?>.</span>
+<? else ( @{$$variable{Orders}} ) ?>
 There were no orders matching your criteria.  Please try again.
-<? endif ( @{$$variable{'Orders'}} ) ?>
+<? endif ( @{$$variable{Orders}} ) ?>

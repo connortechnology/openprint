@@ -1,6 +1,9 @@
 <?include('/includes/error_reporting.html')?>
 <? echo ( 
-	return if ! $$variable{Object}->can_view();
+	if ( ! ( $$variable{Object} and $$variable{Object}->can_view() ) ) {
+		$log->warn("Can't view");
+		return;
+	}
 	my $html;
 	my @Landscape;
 	my @Portrait;
