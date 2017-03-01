@@ -565,7 +565,6 @@ EQUIPMENT: foreach my $Equipment ( @equipment ) {
 
 # FIXME, needs to be same folder
 		 if ( ( $type eq 'Folder' ) and @Folds ) {
-			 my $impressions;
 			 my $parts = 0;
 			 foreach my $Fold ( @Folds ) {
 				 $parts += $$Fold{imposition} * $$Fold{quantity};

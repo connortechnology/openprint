@@ -19,7 +19,7 @@
 
 package openprint::Estimating::Printing;
 use strict;
-use warnings;
+#use warnings;
 use Data::Dumper;
 use POSIX qw(ceil);
 use openprint ();

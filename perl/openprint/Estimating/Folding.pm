@@ -28,7 +28,7 @@ require openprint::Estimating::Perforating;
 
 use vars qw( @folds %fold_types );
 
-use constant DEBUG => 1;
+use constant DEBUG => 0;
 use constant DEBUG_NEEDS => 0;
 
 my @equipment;
@@ -745,7 +745,7 @@ SET:		foreach my $Set_Of_Impositions ( @All_Impositions ) {
 					foreach my $FI ( @$Set_Of_Impositions ) {
 						next if $found{$FI};
 
-						$FI->display();
+						$FI->display() if DEBUG;
 						$openprint::log->debug(qq`Overriden $$specs{"FoldQty-$form-$qty_index-$index"} $$specs{"FoldImposition-$form-$qty_index-$index"}out $$specs{"FoldType-$form-$qty_index-$index"}`) if DEBUG;
 
 						if ($pages and ( $$FI{pages} != $pages ) ) {
@@ -2228,7 +2228,7 @@ sub cut_spreads {
 
 	my $min_spread_size = $$I{spread_size}/2 > 1 ? $$I{spread_size}/2 : 4;
 
-$I->display("Min spread size: $min_spread_size dir($$I{spine_direction}) " . $openprint::Imposition::Orientations{$$I{spine_direction}} . " spread cols: $$I{spread_columns} spread_rows $$I{spread_rows}" );
+#$I->display("Min spread size: $min_spread_size dir($$I{spine_direction}) " . $openprint::Imposition::Orientations{$$I{spine_direction}} . " spread cols: $$I{spread_columns} spread_rows $$I{spread_rows}" );
 
 	# Something like doing 16pg as 2 8pgs, why are we not handling the horizontal case?
 	if ( $$I{spine_direction} == openprint::Imposition::Vertical and ( $$I{spread_rows} % 2 == 0 ) ) {
