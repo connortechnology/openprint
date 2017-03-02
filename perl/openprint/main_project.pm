@@ -36,11 +36,10 @@ sub sign_off {
 		} else {
 			$variable{Name} = $param{Name};
 			$variable{error} = 'Validation Code incorrect.	Please try again.';
-			$variable{Redirect} = '/main/project/sign_off.html';
+			$variable{ExternalRedirect} = '/main/project/sign_off.html?ProjectIndex='.$param{ProjectIndex};
 		} # end if
 	} # end if
-	openprint::main_project::view( $param{ProjectIndex} );
-	$variable{ProjectIndex} = $param{ProjectIndex};
+	$variable{ExternalRedirect} = '/main/project/view.html?ProjectIndex='.$param{ProjectIndex};
 } # end sub sign_off
 
 sub history {
@@ -96,7 +95,7 @@ sub _history {
 } # end sub _history 
 
 sub view {
-	my ( $project_index ) = @_;
+	my $project_index = $param{ProjectIndex};
 
 	if ( exists $param{ShowAllSignatures} ) {
 		$session{ShowAllSignatures} = $param{ShowAllSignatures};
@@ -113,7 +112,7 @@ sub view {
 	if ( $save ) {
 		$Project->save();
 	} # end if
-	openprint::print::view_services( $r, $log, $dbh, \%variable );
+	openprint::print::view_services();
 } # end sub view
 
 sub _copy_popup {
