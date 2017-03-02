@@ -182,6 +182,7 @@ sub signature_calc {
 		$results{Status} = 'uncalculated';
 		return \%results;
 	} # end if
+
 	if ( ! $printing_specs ) {
 		Carp::cluck ('No printing_specs');
 		$results{alert} .= 'No books specifications!<br/>';
@@ -244,7 +245,7 @@ $I->display('In Stitching:') if DEBUG and 0;
 				$$I{Folds} = [ openprint::Estimating::Folding::get_Folds( $folding_specs, $I, $qty_index ) ];
 				if ( DEBUG ) {
 					foreach my $F ( @{$$I{Folds}} ) {
-						$F->display();
+						$F->display( 'pq:'.$$F{page_quantity} );
 					} # end foreach F
 				} # end if
 			} # end if
@@ -301,7 +302,7 @@ $openprint::log->debug("Fold pq($$FI{page_quantity}) pages($$FI{pages}) ($$Fold{
 							next;
 						} else {
 							my $p = $$FI{page_quantity};
-							$p *= $$FI{imposition} / $$I{imposition} if $$FI{imposition} > $$I{imposition};
+							#$p *= $$FI{imposition} / $$I{imposition} if $$FI{imposition} > $$I{imposition};
 							$$specs{join('','txtSignatureQty',$Fold->pages(),'Page-',$qty_index)} += $p;
 							$pockets += $p;
 						}
