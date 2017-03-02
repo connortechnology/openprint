@@ -411,8 +411,6 @@ sub impositions {
 sub signature_calc {
 	my ( $Project, $sig_specs, $specs, $qty_index, $SignatureImposition, $Signature_Impositions, $calc_hash ) = @_;
 
-$openprint::log->error("Spine Direction: $$SignatureImposition{spine_direction}");
-
 	my %results = (
 			Price							=>	0,
 			MPrice						=>	0,
@@ -687,22 +685,23 @@ $openprint::log->debug("folds from sigimpo") if DEBUG;
 		} # end foreach set
 		$openprint::log->debug(sprintf('Original Sign info: %dx%d*%d,%dout', @$SignatureImposition{'spread_columns','spread_rows','spread_size','imposition'} ) );
 	} # end if debug
+
+	my $override_folds = ( $$specs{"chkOverrideFold-$form-$qty_index"} and ( $$specs{"chkOverrideFold-$form-$qty_index"} eq 'Y' ) ) ? 1 : 0;
 	
 	if ( $SignatureImposition->pages() > $$SignatureImposition{spread_size} ) {
-		@All_Impositions = reduce_pages( \@All_Impositions, 
-				( ( $$specs{"chkOverrideFold-$form-$qty_index"} and ( $$specs{"chkOverrideFold-$form-$qty_index"} eq 'Y' ) ) ? 1 : 0 ) );
+		@All_Impositions = reduce_pages( \@All_Impositions, $override_folds );
 		if ( DEBUG ) {
 			$openprint::log->debug("Sets of Maximum Impositions: # of sets: " . @All_Impositions);
 			foreach my $Set ( @All_Impositions ) {
 				$openprint::log->debug("Impositions in set: " . @$Set);
 				foreach my $I ( @$Set ) {
-					$I->display('quantity '.$I->quantity() );
+					$I->display( 'pq:' . $$I{page_quantity} );
 				} # end foreach I
 			} # end foreach set
 		} # end if debug
 	} # end if have pages
 
-	if ( $$specs{"chkOverrideFold-$form-$qty_index"} and ( $$specs{"chkOverrideFold-$form-$qty_index"} eq 'Y' ) ) {
+	if ( $override_folds ) {
 		$openprint::log->error("Checking for Overriden folds") if DEBUG;
 
 		if ( $$sig_specs{txtSignatureType} ) {
@@ -725,7 +724,8 @@ $openprint::log->debug("folds from sigimpo") if DEBUG;
 SET:		foreach my $Set_Of_Impositions ( @All_Impositions ) {
 
 			# Find out if folds satisfies the overrides
-			my %found;
+			my %found_by_index;
+			my %found_by_FI;
 			foreach my $index ( 1 .. 4 ) {
 #$openprint::log->debug("OverrideFOld $form-$qty_index-$index (".$$specs{"FoldQty-$form-$qty_index-$index"}.")");
 				next if ! ( $$specs{"FoldQty-$form-$qty_index-$index"} 
@@ -741,35 +741,43 @@ SET:		foreach my $Set_Of_Impositions ( @All_Impositions ) {
 							$$specs{alert} .= "You seem to be specifying a higher imposition for folding than was printed for form $form quantity $qty_index<br/>";
 						}
 					} # end if
-					$found{$index} = 0;
+					$found_by_index{$index} = 0;
 					foreach my $FI ( @$Set_Of_Impositions ) {
-						next if $found{$FI};
+						next if $found_by_FI{$FI};
 
 						$FI->display() if DEBUG;
 						$openprint::log->debug(qq`Overriden $$specs{"FoldQty-$form-$qty_index-$index"} $$specs{"FoldImposition-$form-$qty_index-$index"}out $$specs{"FoldType-$form-$qty_index-$index"}`) if DEBUG;
 
 						if ($pages and ( $$FI{pages} != $pages ) ) {
-							$openprint::log->debug(qq`Wrong type: $$specs{"FoldType-$form-$qty_index-$index"} ne $$FI{pages}`) if DEBUG;
+							#$openprint::log->debug(qq`Wrong type: $$specs{"FoldType-$form-$qty_index-$index"} ne $$FI{pages}`) if DEBUG;
 							next;
 
 						} elsif ( $$specs{rdbTemplateType} and $fold_types{$$specs{rdbTemplateType}} and ( $$specs{"FoldType-$form-$qty_index-$index"} ne $$specs{rdbTemplateType} ) ) {
-							$openprint::log->debug(qq`Wrong type: $$specs{"FoldType-$form-$qty_index-$index"} ne $$specs{rdbTemplateType}`) if DEBUG;
+							#$openprint::log->debug(qq`Wrong type: $$specs{"FoldType-$form-$qty_index-$index"} ne $$specs{rdbTemplateType}`) if DEBUG;
 							next;
 						} elsif ( $$specs{"FoldQty-$form-$qty_index-$index"} != $$FI{quantity} ) {
-							$openprint::log->debug(qq`Wrong qty: $$specs{"FoldQty-$form-$qty_index-$index"} != $$FI{quantity}`) if DEBUG;
+							#$openprint::log->debug(qq`Wrong qty: $$specs{"FoldQty-$form-$qty_index-$index"} != $$FI{quantity}`) if DEBUG;
 							next;
 						} elsif ( $$specs{"FoldImposition-$form-$qty_index-$index"} != $$FI{imposition} ) {
-							$openprint::log->debug(qq`Wrong imposition: $$specs{"FoldImposition-$form-$qty_index-$index"} != $$FI{imposition}`) if DEBUG;
+							#$openprint::log->debug(qq`Wrong imposition: $$specs{"FoldImposition-$form-$qty_index-$index"} != $$FI{imposition}`) if DEBUG;
 							next;
 						} # end if
-						$FI->display("Found") if DEBUG;
-						$found{$index} = $FI;
+						#$FI->display("Found") if DEBUG;
+						$found_by_index{$index} = $FI;
+						$found_by_FI{$FI} = $index;
+
 					} # end foreach my FI
-					if ( ! $found{$index} ) {
+					if ( ! $found_by_index{$index} ) {
 						# Didn't find one of the folds.  Give up for now, move on to the next set.
 						next SET;
 					}
 				} # end foreach index
+					foreach my $FI ( @$Set_Of_Impositions ) {
+						if ( ! $found_by_FI{$FI} ) {
+# Didn't find all of the folds.  Give up for now, move on to the next set.
+							next SET;
+						}
+					}
 
 				# If we got here, then we matched the override
 				push @New_All_Impositions, $Set_Of_Impositions;
