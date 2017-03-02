@@ -429,6 +429,7 @@ $log->debug("Running openprint::$module->$proc") if Debug;
 					$variable{ServiceIndex} = $service_ids[0];
 				} # end if
 				$variable{ProjectIndex} = $openprint::param{ProjectIndex} if ! $variable{ProjectIndex};
+				$variable{ProjectIndex} = $openprint::param{project_id} if ! $variable{ProjectIndex};
 				$variable{ProjectIndex} = $openprint::session{project_id} if ! $variable{ProjectIndex};
 				$variable{Project} = new openprint::Project( $variable{ProjectIndex} );
 				my $Currency = openprint::Currency::get_current();
