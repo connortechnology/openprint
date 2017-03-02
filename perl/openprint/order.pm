@@ -616,7 +616,7 @@ sub get_misc {
 
 	if ( $Order->status() ne 'Cancelled' ) {
 		$$variable{AmountOutstanding} = Math::Round::nearest( 0.01, $Order->total() - $Order->paid() );
-		$$variable{DepositDue} = Math::Round::nearest( 0.01, $Order->downpayment() - $Order->paid() ) if $Order->paid() < $Order->downpayment();
+		$$variable{DepositDue} = Math::Round::nearest( 0.01, $Order->downpayment() - $Order->paid() ) if $Order->downpayment() and ( $Order->paid() < $Order->downpayment() );
 	} # end if
 
 	$$variable{AmountPaid} = Math::Round::nearest( 0.01, $Order->paid() );
