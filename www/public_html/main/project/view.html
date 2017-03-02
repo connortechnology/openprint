@@ -30,7 +30,7 @@
 				<? echo ( my $html;
 
 				if ( sets::isin( $session{user_type}, ['E','A'] ) ) {
-					$html .= button( 'Summary', { href=>'/main/project/summary.html?ProjectIndex='.$$variable{ProjectIndex} } );
+					$html .= button( 'Summary', { href=>'/main/project/summary.html?ProjectIndex='.$$variable{Project}{id} } );
 				} # end if
 				if ( ( ! $$variable{Project}->order_id() ) or ( sets::isin( $$variable{Project}->Order->status(), ['Re-Opened','Incomplete'] ) ) ) {
 					$html .= join("\n",
@@ -83,7 +83,7 @@
 				} # end if
 				$html .= button( 'Print', { onclick=>'window.print();' } );
 				if ( sets::isin( $session{user_type}, ['A','E'] ) ) {
-					$html .= button( 'JDF', { href=>'/main/project/view.html?btnFunction=Export%20JDF&amp;ProjectIndex='.$$variable{ProjectIndex} } ) if $$variable{Project}->docket();
+					$html .= button( 'JDF', { href=>'/main/project/view.html?btnFunction=Export%20JDF&amp;ProjectIndex='.$$variable{Project}{id} } ) if $$variable{Project}->docket();
 					$html .= button( 'Log', { onclick=>qq`popup_window('_view_log.html?project_id=$$variable{Project}{id}', '', { width:800, height:600 } );`, text=>'View Log' } );
 				} # end if
 				return $html;
