@@ -1529,12 +1529,12 @@ $log->debug(" NO NEXT ES: "  );
 
 sub _li_change {
 
-	openprint::JobSchedule->lock();
+	openprint::ScheduledJob->lock();
 
 	my $Job = new openprint::ScheduledJob($param{schedule_id});
 	if ( ! $Job->id() ) {
 		$variable{alert} .= 'Unable to load job.  It must have been removed from the schedule.';
-		openprint::JobSchedule->unlock();
+		openprint::ScheduledJob->unlock();
 		return;
 	} # end if
 	my $Equipment = $Job->Equipment();
@@ -1542,7 +1542,7 @@ sub _li_change {
 	if ( $param{action} eq 'setduedate' ) {
 
 		# Do this here, to prevent deadlock
-		openprint::JobSchedule->unlock();
+		openprint::ScheduledJob->unlock();
 		if ( $$Job{project_id} ) {
 			my $Project = $Job->Project();
 			if ( ! $$Project{id} ) {
@@ -1720,7 +1720,7 @@ sub _li_change {
 		my $Job = new openprint::ScheduledJob( $param{schedule_id} );
 		if ( ! $$Job{id} ) {
 			$variable{error} .= 'Job was not found in db. Maybe you should refresh the schedule.';
-			openprint::JobSchedule->unlock();
+			openprint::ScheduledJob->unlock();
 			return;
 		} # end if
 		my @Jobs = openprint::ScheduledJob->find( 'starttime is null'=>0, equipment_id=>$$Job{equipment_id}, order=>'starttime' );
@@ -1745,14 +1745,14 @@ sub _li_change {
 			if ( ( $index < @Jobs -1 ) and $Jobs[$index+1]->locked() ) {
 $log->debug("second job can't move");
 				$variable{error} .= "Cant move locked job " . $Jobs[$index+1]->Project()->docket();
-				openprint::JobSchedule->unlock();
+				openprint::ScheduledJob->unlock();
 				return;
 			} elsif ( $index < @Jobs-1 ) {
 				my $switch_index = $index+1;
 				while ( ( $switch_index < @Jobs ) and $Jobs[$switch_index]->locked() ) { $switch_index += 1; }
 				if ( $switch_index < 0 ) {
 					$variable{error} .= "Cant move locked jobs";
-					openprint::JobSchedule->unlock();
+					openprint::ScheduledJob->unlock();
 					return;
 				} # end if
 				$_ = $Jobs[$switch_index];
@@ -1760,7 +1760,7 @@ $log->debug("second job can't move");
 				$Jobs[$index] = $_;
 			} else {
 				$variable{error} .= "Job already at the end";
-				openprint::JobSchedule->unlock();
+				openprint::ScheduledJob->unlock();
 				return;
 			} # end if
 			reorder_jobs( @Jobs );
@@ -1791,7 +1791,7 @@ $log->debug("second job can't move");
 		my $Job = new openprint::ScheduledJob( $param{schedule_id} );
 		if ( ! $$Job{id} ) {
 			$variable{error} .= 'Job was not found in db. Maybe you should refresh the schedule.';
-			openprint::JobSchedule->unlock();
+			openprint::ScheduledJob->unlock();
 			return;
 		} # end if
 		my @Jobs = openprint::ScheduledJob->find( 'starttime is null'=>0, equipment_id=>$$Job{equipment_id}, order=>'starttime' );
@@ -1816,14 +1816,14 @@ $log->debug("second job can't move");
 			if ( $index == 1 and $Jobs[$index-1]->locked() ) {
 $log->debug("second job can't move");
 				$variable{error} .= "Cant move locked job " . $Jobs[$index-1]->Project()->docket();
-				openprint::JobSchedule->unlock();
+				openprint::ScheduledJob->unlock();
 				return;
 			} elsif ( $index > 0 ) {
 				my $switch_index = $index-1;
 				while ( ( $switch_index >= 0 ) and $Jobs[$switch_index]->locked() ) { $switch_index -= 1; }
 				if ( $switch_index < 0 ) {
 					$variable{error} .= "Cant move locked jobs";
-					openprint::JobSchedule->unlock();
+					openprint::ScheduledJob->unlock();
 					return;
 				} # end if
 				$_ = $Jobs[$switch_index];
@@ -1878,7 +1878,7 @@ $log->debug("second job can't move");
 		
 		
 	} # end if param{action}
-	openprint::JobSchedule->unlock();
+	openprint::ScheduledJob->unlock();
 } # end sub _li_change
 
 sub _shift_popup {
