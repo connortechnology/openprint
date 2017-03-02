@@ -2873,6 +2873,7 @@ $log->warn("Have previous press $$specs{PreviousPress} for group $$specs{Group}"
 		%stitching_cache = ();
 		%price_cache = ();
 		%other_group_cache = ();
+
 		my @versions = get_versions( $specs, $qty_index ) if $$specs{versions};
 #$log->debug("versions: @versions");
 # Only thread qtys 2 and 3
@@ -3252,7 +3253,7 @@ sub calculate_impositions {
 	if ( $Project->Type()->name() eq 'ScratchPads' ) {
 		$needed_pages = 0;
 	} elsif ( $$sig_specs{txtSignatureType} ) {
-$log->debug("Project Specs $$project{ProjectSpecs} Gruop $$sig_specs{Group} wanted: " . $$project{ProjectSpecs}{"PageQuantity-$$sig_specs{Group}"} );
+$log->debug("Gruop $$sig_specs{Group} unspecd " . $$sig_specs{'txtUnspecifiedPageQuantity'.$qty_index} . " wanted: " . $$project{ProjectSpecs}{"PageQuantity-$$sig_specs{Group}"} );
 		if ( $$sig_specs{'chkOverridePageQuantity'.$qty_index} ) {
 			$needed_pages = int( $$sig_specs{'PageQuantity'.$qty_index} );
 		} elsif ( $$project{ProjectSpecs}{"PageQuantity-$$sig_specs{Group}"} and ( $$project{ProjectSpecs}{"PageQuantity-$$sig_specs{Group}"} <= $$sig_specs{'txtUnspecifiedPageQuantity'.$qty_index} ) ) {
@@ -3334,7 +3335,7 @@ $log->debug("Project Specs $$project{ProjectSpecs} Gruop $$sig_specs{Group} want
 			my $max_pages;
 			if ( @keys ) {
 				$max_pages = sets::max( @keys );
-				$log->debug(" needed pages $needed_pages max: $max_pages spreadsize: $$project{txtSpreadSize} press $$Press{strid} impositions: " . @press_impositions);
+				#$log->debug(" needed pages $needed_pages max: $max_pages spreadsize: $$project{txtSpreadSize} press $$Press{strid} impositions: " . @press_impositions);
 				$max_pages = Math::Round::nearest(1, $max_pages / 3 );
 				$max_pages = $$project{txtSpreadSize} if $max_pages < $$project{txtSpreadSize};
 				$log->debug("Max pages: $max_pages") if DEBUG_FILTERING;
@@ -4180,6 +4181,7 @@ sub get_project_price {
 
 	my $previous_press = $$source_sig_specs{PreviousPress};
 	my %sig_specs = %{$source_sig_specs};
+$log->debug("txtSignature Type is: $sig_specs{txtSignatureType}");
 
 	#my @Is = openprint::imposition::sort( calculate_impositions( $Project, $sig_specs, $qty_index, $qty, $PaperCounts, $versions, $project, $impositions ) );
 	my @Is = calculate_impositions( $Project, $source_sig_specs, $qty_index, $qty, $PaperCounts, $versions, $project, $impositions );
@@ -4195,7 +4197,6 @@ sub get_project_price {
 #$base_imp->display("Starting");
 # But if we alraedy know how to fold this impo... then.....
 		$$base_imp{Project} = $Project;
-$base_imp->display("ERROR SPINE DIRECTION base_imp " . $$base_imp{spine_direction} );
 		my $imp = $base_imp->copy();
 		my $Press = $imp->Press();
 		
@@ -4943,8 +4944,8 @@ $imp->display('[warn]');
 						$$price{'Comparison Cost'} += $$results{total};
 						$$price{'Comparison Log'} .= 'PerfectBound: ' . $$results{total} . '<br/>';
 					} # end if
-				} elsif ( DEBUG ) {
-					$log->debug("NO Stitching or PerfectBinding");
+				#} elsif ( DEBUG ) {
+					#$log->debug("NO Stitching or PerfectBinding");
 				} # end if PerfectBound
 			} # end if 
 
@@ -4953,11 +4954,15 @@ $imp->display('[warn]');
 				if ( $calc_other_groups and $sig_specs{txtSignatureType} eq 'Cover Pages' ) {
 					# Layout can affect stitching
 					#my $other_group_cache_key = $$Press{id}; #join(',', $$Press{id}, $$imp{imposition}, $$imp{columns} );
-					my $other_group_cache_key = join(',', $$Press{id}, $$imp{imposition}, $$imp{columns} );
+					my $other_group_cache_key = join(',', $$Press{id}, @$imp{'imposition','columns'} );
 					if ( ! $other_group_cache{$other_group_cache_key} ) {
 		# When doing the cover, need to calc additional sigs as well.
 		# Add calculations for other Groups
-						$log->debug("Calculating Additional Signatures for other group") if DEBUG;
+						$log->debug("Calculating Additional Signatures for other group $other_group_cache_key group $sig_specs{Group}") if DEBUG;
+$log->error(" %other_group_cache ");
+foreach my $k ( keys %other_group_cache ) {
+$log->debug("$k => ");
+}
 						my @sigs = sort $Project->signatures({Group=>2});
 						if ( @sigs ) {
 							my $Group = 2;
@@ -4967,8 +4972,12 @@ $imp->display('[warn]');
 								$Setup = $Estimating_Setup{$Group};
 
 								my $Service = $$Setup{Service} = $Project->Service( $sigs[0] );
+
 								%{$$Setup{specs}} = %{$Service->specs()};
 								my $subsig_specs = $$Setup{specs};
+if ( $$subsig_specs{txtSignatureType} eq 'Cover Pages' ) {
+$log->error("subsig type: $$subsig_specs{txtSignatureType}");
+} else {
 								set_size( $Project, $$Setup{specs}, $printing_specs );
 								$$Setup{side_one_colours} = [ get_colours( $$Setup{specs}, 'SideOne' ) ];
 								$$Setup{side_two_colours} = [ get_colours( $$Setup{specs}, 'SideTwo' ) ];
@@ -5026,9 +5035,13 @@ convert_impositions( $Project, @$Setup{'project','specs'}, $qty_index, \%sub_imp
 									} # end if possible_presses
 								} # end if has Stocks
 
+} # end if inside is also cover
+
 							} # end if have Estimating_Setup
 							$Setup = $Estimating_Setup{$Group};
 #$log->error(Data::Dumper::Dumper( $Setup ) );
+
+if ( $Setup ) {
 
 							if ( ! ($$Setup{impositions} and %{$$Setup{impositions}} ) ) {
 								$$price{Breakdown} .= 'Unable to calculate impositions for additional signatures.<br/>';
@@ -5041,14 +5054,19 @@ convert_impositions( $Project, @$Setup{'project','specs'}, $qty_index, \%sub_imp
 									my $sig_price = get_project_price( $Project, $sigs[0], @$Setup{'project', 'specs'}, $qty, $qty_index,
 											$$Setup{possible_presses}, $printing_specs, $versions, \%PlateCounts, \%PaperCounts, \%washed_colours, $$Setup{previous_forms_cache}, \@sigs, @$Setup{'impositions','other_impositions'}, {}, 0 );
 									$other_group_cache{$other_group_cache_key} = $sig_price;
+$log->error(" Setting " . %other_group_cache);
+foreach my $k ( keys %other_group_cache ) {
+$log->debug("$k => ");
+}
 								} else {	
 									$$price{'Comparison Log'} .= 'Additiona Sigs due to no papers: 1000000<br/>' if COMPARISON_LOG;
 									$$price{'Comparison Cost'} += 1000000;
 									$log->warn("Unable to calculate impositions for additional signatures.<br/>");
 								} # end if
 							}
+} 
 						} else {
-							$log->debug("No sigs for group 2?");
+							$log->warn("No sigs for group 2?");
 						} # end if has other sigs
 					} elsif ( DEBUG ) {
 						$log->debug("Using cached price");
@@ -5465,7 +5483,6 @@ sub calc_price {
 			$log->debug("Using cached folding");
 		} else {
 #my @all_impositions = ( @{$other_impositions}, $Imposition );
-$Imposition->display("SPINE DIRECTION ebfore folding " . $$Imposition{spine_direction} );
 			$folding_results = openprint::Estimating::Folding::signature_calc( $Project, $specs, $$project{FoldingSpecs}, $qty_index, $Imposition, $other_impositions, $project );
 			$price{folding_results} = $$Imposition{folding_results} = $folding_results;
 		} # end if
@@ -5676,8 +5693,8 @@ $log->warn("No folding equipment");
 			$price{'Comparison Log'} .= "Cutting : $cutting_results{Price} total: $price{'Comparison Cost'}<br/>";
 			$price{'Cutting Overs'} = $cutting_results{Overs};
 		} # end if
-	} else {
-		$log->debug("Has no cutting") if DEBUG;
+	#} else {
+		#$log->debug("Has no cutting") if DEBUG;
 	} # end if
 
 	# Now we know the bindery overs
@@ -7364,7 +7381,7 @@ sub get_printing_types {
 
 			if ( $$specs{txtSignatureType} eq 'Cover Pages' ) {
 # FIgure out printing types
-$log->debug("We are cover");
+#$log->debug("We are cover");
 			# If this is the cover, then we should ignore the interior pages, except for if there is an override.
 			foreach my $index ( $Project->signatures({ type =>'Interior Pages' }) ) {
 				my $sig_specs = openprint::service::get_specs_ref( $Project, $index );
