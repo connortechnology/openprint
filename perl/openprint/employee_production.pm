@@ -1534,7 +1534,7 @@ sub _li_change {
 	my $Job = new openprint::ScheduledJob($param{schedule_id});
 	if ( ! $Job->id() ) {
 		$variable{alert} .= 'Unable to load job.  It must have been removed from the schedule.';
-		sql::end_transaction( $dbh, $ac );
+		openprint::JobSchedule->unlock();
 		return;
 	} # end if
 	my $Equipment = $Job->Equipment();
