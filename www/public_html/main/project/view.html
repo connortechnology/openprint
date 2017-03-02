@@ -34,7 +34,7 @@
 				} # end if
 				if ( ( ! $$variable{Project}->order_id() ) or ( sets::isin( $$variable{Project}->Order->status(), ['Re-Opened','Incomplete'] ) ) ) {
 					$html .= join("\n",
-						button( 'Edit', { href=>'/main/project/create_edit.html?ProjectIndex='.$$variable{ProjectIndex} } ),
+						button( 'Edit', { href=>'/main/project/create_edit.html?ProjectIndex='.$$variable{Project}{id} } ),
 						( $$variable{Project}->deleted() ?
 							button( 'UnDelete', { onclick=>"f1.btnFunction.value='Undelete Project';f1.submit();", text=>'Undelete' } )
 							:
@@ -53,17 +53,17 @@
 						$html .= button( 'RecalculateProject', { onclick=>"f1.action='/main/project/view.html';f1.btnFunction.value='Recalculate Project';f1.submit();", text=>'Recalculate' } );
 					} # end if
 					if ( $session{ShowAllSignatures} ) {
-						$html .= button( 'HideAll', { href=>qq`/main/project/view.html?project_id=$$variable{ProjectIndex}&amp;ShowAllSignatures=0`, text=>'Hide Similar Signatures' } );
+						$html .= button( 'HideAll', { href=>qq`/main/project/view.html?project_id=$$variable{Project}{id}&amp;ShowAllSignatures=0`, text=>'Hide Similar Signatures' } );
 					} else {
-						$html .= button( 'ShowAll', { href=>qq`/main/project/view.html?project_id=$$variable{ProjectIndex}&amp;ShowAllSignatures=1`, text=>'Show All Signatures' } );
+						$html .= button( 'ShowAll', { href=>qq`/main/project/view.html?project_id=$$variable{Project}{id}&amp;ShowAllSignatures=1`, text=>'Show All Signatures' } );
 					} # end if
 					if ( ( ! sets::isin( $$variable{Project}->status(), [ 'uncalculated', 'Calculating' ] ) ) and ! $$variable{Project}->order_id() ) {
 						my $last_calculated = Date::Parse::str2time( $$variable{Project}->calculated_on() );
 						if ( $config{QuoteValidDays} and ( time - $last_calculated ) > $config{QuoteValidDays} * 24*60*60 ) {
 							$$variable{error} = 'This quote is too old.  It will have to be recalculated before it can be ordered or quoted again.<br/>';
 						} else {
-							$html .= button( 'AddToQuote', { onclick=>"f1.action='/main/quote/information.html';f1.btnFunction.value='Process Quote';f1.submit();", href=>'', text=>'Add To Quote' } );
-							$html .= button( 'AddToOrder', { onclick=>"f1.action='/main/order/information.html';f1.btnFunction.value='Process Order';f1.submit();", href=>'', text=>'Add To Order' } );
+							$html .= button( 'AddToQuote', { onclick=>"f1.action='/main/quote/information.html';f1.btnFunction.value='Process Quote';f1.submit();", text=>'Add To Quote' } );
+							$html .= button( 'AddToOrder', { onclick=>"f1.action='/main/order/information.html';f1.btnFunction.value='Process Order';f1.submit();", text=>'Add To Order' } );
 						} # end if
 						if ( ( $session{user_type} eq 'A' ) and ! $$variable{Project}->predefined() ) {
 							$html .= button( 'Predefined', { onclick=>"f1.action='view.html';f1.btnFunction.value='Make Predefined';f1.submit();", text=>'Make into a Product' } );
