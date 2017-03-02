@@ -42,7 +42,7 @@
 						)
 					);
 				} # end if
-				$html .= button( 'Reuse', { href=>'/main/project/reuse.html?ProjectIndex='.$$variable{ProjectIndex} } );
+				$html .= button( 'Reuse', { href=>'/main/project/reuse.html?project_id='.$$variable{Project}{id} } );
 				return $html;
 			) ?>
 			</div>

@@ -279,12 +279,12 @@ sub calc {
 
 sub reuse {
 
-	$variable{Project} = new openprint::Project( $param{ProjectIndex} );
+	$variable{Project} = new openprint::Project( $param{project_id} );
 	$variable{ProjectIndex} = $variable{Project}->id();
 	if ( $variable{Project}->reference() ) {
 		$variable{Project}->reference( 'Copy of ' . $variable{Project}->reference() );
 	} else {
-		$variable{Project}->reference( 'Copy of project # ' . $param{ProjectIndex} );
+		$variable{Project}->reference( 'Copy of project # ' . $param{project_id} );
 	} # end if
 	
 } # end sub
