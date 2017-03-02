@@ -545,17 +545,17 @@ $log->debug("Service: " . $Service->to_string() );
 				} elsif ($third eq 'shipping') {
 		
 					if ( $filename =~ /^(\w*).html$/ ) {
-					my $module = $1;
-					eval {
-$log->debug("Require $module");
-						require "openprint/Estimating/$module.pm";
-						if ( my $function = ("openprint::Estimating::$module")->can( 'display' ) ) {
-							$function->( $project_index, $service_index, \%variable );
-						} else {
-$log->debug("No display function $module.pm");
-						}
-					}; 
-				$log->error( "Eval error of require $module Reason: " . $@ ) if $@;
+						my $module = $1;
+						eval {
+							$log->debug("Require $module");
+							require "openprint/Estimating/$module.pm";
+							if ( my $function = ("openprint::Estimating::$module")->can( 'display' ) ) {
+								$function->( $project_index, $service_index, \%variable );
+							} else {
+								$log->debug("No display function $module.pm");
+							}
+						}; 
+						$log->error( "Eval error of require $module Reason: " . $@ ) if $@;
 					} else {
 						if ( -e $ENV{DOCUMENT_ROOT}.$uri ) {
 							my ( $proc ) = $filename =~ /^(.*)\.(html|json)$/;
