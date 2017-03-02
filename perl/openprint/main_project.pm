@@ -113,6 +113,7 @@ sub view {
 	if ( $save ) {
 		$Project->save();
 	} # end if
+	openprint::print::view_services( $r, $log, $dbh, \%variable );
 } # end sub view
 
 sub _copy_popup {

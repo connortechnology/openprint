@@ -62,6 +62,7 @@ sub view_services {
 
 	$log->debug(" **** STARTING VIEW SERVICES FUNCTION * Project $project_index( $$Project{id} ) *** $openprint::session{company_id}");
 
+	# FIXME SHOULD USE can_edit
 	if ( ( $Project->company_id() == $openprint::session{company_id} ) or sets::isin( $openprint::session{user_type}, ['E','A'] ) ) {
 
 		if ( defined $openprint::param{btnFunction} ) {
