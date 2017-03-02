@@ -1374,6 +1374,7 @@ sub lock {
 		} else {
 			# Should return 1, which was the previous state of the AutoCommit which is now 0
 			# Could return 0 if we were already in a transaction
+			# If we were already in a stransaction, then when we go to unlock... it won't actually unlock...
 			$_[0]{ac} = sql::start_transaction( $openprint::dbh );
 			$openprint::log->debug("LOCKING $type for $_[0]{id} ac: $_[0]{ac} caller: $caller line: $line object ref:" . $_[0]) if DEBUG_LOCKS;
 			my $table = eval '$'.$type.'::table';

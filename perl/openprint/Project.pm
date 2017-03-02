@@ -1256,6 +1256,7 @@ foreach my $k ( keys %{$$self{Services}} ) {
 	my $Service = new openprint::Project_Service();
 	$Service->save({ project_id=>$$self{id}, ( status=>$$options{status} ? $$options{status} : 'uncalculated' ), servicetype_id=>$ServiceType->id()});
 	my $service_index = $$Service{service_id};
+	$openprint::log->debug("Added Service $$ServiceType{name} at $service_index");
 
 	# Do this so that it doesn't try to load the specs, saving 1 db call.
 	$openprint::service::specs_cache{$service_index} = {};
