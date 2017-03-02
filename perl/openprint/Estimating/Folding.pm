@@ -16,6 +16,11 @@
 
 package openprint::Estimating::Folding;
 use strict;
+use vars qw( %config $log $dbh %ServicePrices @folds %fold_types );
+
+*config = \%openprint::config;
+*log = \$openprint::log;
+*dbh = \$openprint::dbh;
 #use warnings;
 use Data::Dumper;
 
@@ -25,8 +30,6 @@ require openprint::Project;
 require openprint::service;
 require openprint::ServiceType;
 require openprint::Estimating::Perforating;
-
-use vars qw( @folds %fold_types );
 
 use constant DEBUG => 0;
 use constant DEBUG_NEEDS => 0;
@@ -2180,6 +2183,7 @@ sub reduce_pages {
 				if ( 0 and DEBUG ) {
 $openprint::log->debug("# of sets in results " . @cut);
 					foreach my $Set ( @cut ) {
+						$log->debug("# in set: " . @{$Set});
 						foreach my $I ( @{$Set} ) {
 							$I->display("Results from cut_spreads");
 						} # end foreach I
@@ -2188,12 +2192,17 @@ $openprint::log->debug("# of sets in results " . @cut);
 				foreach my $cut ( @cut ) {
 					my @new = @$set;
 					splice @new, $i, 1, @$cut;
-					$i += @$cut-1;
+					#$i += @$cut-1;
 					@new = compact_impositions( @new );
-					my $key = join(',',map{$_->to_string()} openprint::imposition::sort(@new));
+#foreach ( @new ) {
+	#$_->display('new set');
+#}
+					my $key = join("\n",map{$_->to_string()} openprint::imposition::sort(@new));
 					if ( ! exists $results{$key} ) {
 						$results{$key} = 1;
 						push @results, \@new;
+#} elsif ( DEBUG ) {
+#$openprint::log->debug("Skipping $key");
 					}
 				}
 			} # end if
@@ -2232,7 +2241,6 @@ sub cut_spreads {
 	my ( $I, $override ) = @_;
 
 	my @results;
-
 
 	my $min_spread_size = $$I{spread_size}/2 > 1 ? $$I{spread_size}/2 : 4;
 
@@ -2326,14 +2334,41 @@ sub cut_spreads {
 						$I->quantity(),$I->pages(), $$I{page_quantity}, $i1->quantity(), $i1->pages(), $$i1{page_quantity} ) ) if DEBUG;
 			push @results, [ $i1 ];
 			
-			if ( $override and ( $$I{quantity} == 2 ) ) {
-				my $i3 = $I->copy();
-				$i3->quantity( $i3->quantity()/2 );
-				$$i3{page_quantity} /= 2;
-				my $i4 = $i1->copy();
-				$i4->quantity( $I->quantity() );
-				$$i4{page_quantity} = $$i4{page_quantity} / 2;
-				push @results, [ $i3, $i4 ];
+			if ( $override and ( $$I{quantity} >= 2 ) ) {
+				if ( $$I{quantity} % 2 ) {
+					# Cut in roughly half, or just break one off? maybe both
+					my $i3 = $I->copy();
+					my $amount = int( $I->quantity() / 2 );
+					$i3->quantity( $amount );
+					$$i3{page_quantity} = $amount;
+
+					my $i4 = $i1->copy();
+					$i4->quantity( $I->quantity() - (  $amount* 2 ) );
+					$$i4{page_quantity} = $$i4{page_quantity} - ( 2 * $amount );
+					push @results, [ $i3, $i4 ];
+					if ( DEBUG ) {
+						$openprint::log->error(sprintf('Cutting pages down uneven pages %d to %d by cutting spread columns %d to %d', 
+									$i3->pages(), $i4->pages(), $$i3{spread_columns}, $$i4{spread_columns} ) );
+						$i3->display();
+						$i4->display();
+					}
+					
+				} else {
+					my $i3 = $I->copy();
+					$i3->quantity( $i3->quantity()/2 );
+					$$i3{page_quantity} /= 2;
+
+					my $i4 = $i1->copy();
+					$i4->quantity( $I->quantity() );
+					$$i4{page_quantity} = $$i4{page_quantity} / 2;
+					push @results, [ $i3, $i4 ];
+					if ( DEBUG ) {
+						$openprint::log->error(sprintf('Cutting pages down uneven pages %d to %d by cutting spread columns %d to %d', 
+									$i3->pages(), $i4->pages(), $$i3{spread_columns}, $$i4{spread_columns} ) );
+						$i3->display();
+						$i4->display();
+					}
+				}
 			}
 			# Now do just cutting one of them in half
 		} # end if
@@ -2406,21 +2441,58 @@ sub cut_spreads {
 			}
 			push @results, [ $i1 ];
 
-			if ( $override and ( $$I{quantity} == 2 ) ) {
-        my $i3 = $I->copy();
-        $i3->quantity( $i3->quantity()/2 );
-				$$i3{page_quantity} /= 2;
+			if ( $override and ( $$I{quantity} >= 2 ) ) {
+				if ( $$I{quantity} % 2 ) {
+# Cut in roughly half, or just break one off? maybe both
+					my $i3 = $I->copy();
+					my $amount = int( $$I{quantity} / 2 );
+					$i3->quantity( $amount );
+					$$i3{page_quantity} = $amount;
 
-        my $i4 = $i1->copy();
-        $i4->quantity( $I->quantity() );
-				$$i4{page_quantity} /= 2;
-        push @results, [ $i3, $i4 ];
-				if ( DEBUG ) {
-					$openprint::log->error(sprintf('Cutting pages down uneven pages %d to %d by cutting spread columns %d to %d', 
-								$i3->pages(), $i4->pages(), $$i3{spread_columns}, $$i4{spread_columns} ) );
-					$i3->display();
-					$i4->display();
-				}
+					my $i4 = $i1->copy();
+					$i4->quantity( $$i4{quantity} - ( $amount * 2 ) );
+					$$i4{page_quantity} = $$i4{page_quantity} - ( 2 * $amount );
+					push @results, [ $i3, $i4 ];
+					if ( DEBUG ) {
+						$openprint::log->error(sprintf('Cutting pages down uneven pages %d to %d by cutting spread columns %d to %d',
+									$i3->pages(), $i4->pages(), $$i3{spread_columns}, $$i4{spread_columns} ) );
+						$i3->display();
+						$i4->display();
+					}
+
+					my $i3 = $I->copy();
+					$amount = $i3->quantity() - $amount;
+          $i3->quantity( $amount );
+          $$i3{page_quantity} = $amount;
+
+          my $i4 = $i1->copy();
+          $i4->quantity( $$i4{quantity} - ( $amount* 2 ) );
+          $$i4{page_quantity} = $$i4{page_quantity} - ( 2 * $amount );
+          push @results, [ $i3, $i4 ];
+          if ( DEBUG ) {
+            $openprint::log->error(sprintf('Cutting pages down uneven pages %d to %d by cutting spread columns %d to %d',
+                  $i3->pages(), $i4->pages(), $$i3{spread_columns}, $$i4{spread_columns} ) );
+            $i3->display();
+            $i4->display();
+          }
+
+				} else {
+
+					my $i3 = $I->copy();
+					$i3->quantity( $i3->quantity()/2 );
+					$$i3{page_quantity} /= 2;
+
+					my $i4 = $i1->copy();
+					$i4->quantity( $I->quantity() );
+					$$i4{page_quantity} /= 2;
+					push @results, [ $i3, $i4 ];
+					if ( DEBUG ) {
+						$openprint::log->error(sprintf('Cutting pages down uneven pages %d to %d by cutting spread columns %d to %d', 
+									$i3->pages(), $i4->pages(), $$i3{spread_columns}, $$i4{spread_columns} ) );
+						$i3->display();
+						$i4->display();
+					}
+				} # end if even quantity
       }
 			
 		} # end if
