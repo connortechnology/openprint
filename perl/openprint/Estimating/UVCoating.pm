@@ -693,6 +693,7 @@ sub has_overrides {
 
     my @v;
     if ( $qty_index ) {
+			push @v, map { $$specs{$_.$qty_index} ? $_.$qty_index : () } ( 'OverridePrice' );
         foreach my $s_s_id ( $Project->signatures() ) {
             my $sig_specs = openprint::service::get_specs_ref( $Project, $s_s_id );
             my $form = $$sig_specs{SignatureIndex};
