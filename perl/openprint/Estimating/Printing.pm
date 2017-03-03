@@ -4963,7 +4963,7 @@ $log->error(" %other_group_cache ");
 foreach my $k ( keys %other_group_cache ) {
 $log->debug("$k => ");
 }
-						my @sigs = sort $Project->signatures({Group=>2});
+						my @sigs = sort $Project->signatures({Group=>2, sort=>1});
 						if ( @sigs ) {
 							my $Group = 2;
 							my $Setup;
@@ -6063,9 +6063,9 @@ $log->debug("Varnish $real_colour") if DEBUG_INKS;
 				$price{'Ink breakdown'} .= 'unknown units for '.$real_colour;
 				$log->error('unknown units for ' . $real_colour );
 			} # end if
-			$price{'Ink breakdown'} .= sprintf(' Run: $%1$.2f%2$s * %4$d/1000 = $%3$.2f', @InkService{'Price','units','Total'}, $colour_impressions );
 			$ink_price{ServicePrice} = \%InkService;
 			$ink_price{Total} += $InkService{Total};
+			$price{'Ink breakdown'} .= sprintf(' Run: $%1$.2f%2$s * %4$d/1000 = $%3$.2f = $%4$.2f', @InkService{'Price','units','Total'}, $colour_impressions );
 		} # end if
 
 # Washed_colours contains each colour used in the other signatures
@@ -6132,7 +6132,7 @@ $log->debug("Area $area = $$Imposition{object_area} * Impressions($colour_impres
 					$ink_price{Material} = \%material_price;
 					$material_price{Total} += Math::Round::nearest( 0.01, $material_price{Price} * $qty );
 					$ink_price{Total} += $material_price{Total};
-					$price{'Ink breakdown'} .= sprintf(' mileage: %d sq in per cartridge, %.2fsq in means %.4f * $%s%s=$%.2f', $$Coverage{value}, $area, $qty, @material_price{'Price','units','Total'});
+					$price{'Ink breakdown'} .= sprintf(' mileage: %d sq in per cartridge, %.2fsq in means %.4f * $%s%s=$%.2f = $%.2f', $$Coverage{value}, $area, $qty, @material_price{'Price','units','Total'}, $ink_price{Total});
 				} elsif ( $material_price{units} eq 'per kg' ) {
 					my $Coverage = $InkMaterial->New_Specification('Coverage', { range=>$grade, equipment_id=>$$Press{id}} );
 					if ( ( ! $Coverage ) or ! $$Coverage{value} ) {
@@ -6143,7 +6143,7 @@ $log->debug("Area $area = $$Imposition{object_area} * Impressions($colour_impres
 					$material_price{Total} += Math::Round::nearest( 0.01, $material_price{Price} * $qty );
 					$ink_price{Material} = \%material_price;
 					$ink_price{Total} += $material_price{Total};
-					$price{'Ink breakdown'} .= sprintf(' %d%% = %d square inches, mileage: %dsquare inches/kg = %.2fkg * $%s%s=$%.2f', $coverage*100, $area, $$Coverage{value}, $qty, @material_price{'Price','units','Total'});
+					$price{'Ink breakdown'} .= sprintf(' %d%% = %d square inches, mileage: %dsquare inches/kg = %.2fkg * $%s%s=$%.2f = $%.2f', $coverage*100, $area, $$Coverage{value}, $qty, @material_price{'Price','units','Total'}, $ink_price{Total});
 				} elsif ( $material_price{units} eq 'per square foot' ) {
 					$area /= 144;
 					$material_price{Total} += Math::Round::nearest( 0.01, $material_price{Price} * $area );
@@ -6153,11 +6153,11 @@ $log->debug("Area $area = $$Imposition{object_area} * Impressions($colour_impres
 					my $sheets_per_ink_unit = 750000;
 					my $p = Math::Round::nearest( 0.01, $material_price{Price} * ($area/$sheets_per_ink_unit) / $$project{print_sides} );
 					$ink_price{Total} += $p;
-					$price{'Ink breakdown'} .= sprintf(' %d%% %s sq inches * $%s%s / %d sheets per unit = $%.2f', $coverage*100, Number::Format::format_number($area), @material_price{'Price','units'}, $sheets_per_ink_unit, $p );
+					$price{'Ink breakdown'} .= sprintf(' %d%% %s sq inches * $%s%s / %d sheets per unit = $%.2f = $%.2f', $coverage*100, Number::Format::format_number($area), @material_price{'Price','units'}, $sheets_per_ink_unit, $p, $ink_price{Total} );
 				} elsif ( $material_price{units} eq 'per square inch' ) {
 					my $p = Math::Round::nearest( 0.01, $material_price{Price} * $area );
 					$ink_price{Total} += $p;
-					$price{'Ink breakdown'} .= sprintf(' Grade: %d, %d sq inches * $%s%s = $%.2f', $grade, $area, @material_price{'Price','units'}, $p );
+					$price{'Ink breakdown'} .= sprintf(' Grade: %d, %d sq inches * $%s%s = $%.2f = $%.2f', $grade, $area, @material_price{'Price','units'}, $p, $ink_price{Total} );
 				} elsif ( $material_price{units} eq 'per m' ) {
 					my $p = Math::Round::nearest( 0.01, $material_price{Price} * $impressions/1000 );
 					$ink_price{Total} += $p;
