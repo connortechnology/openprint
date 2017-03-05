@@ -17,5 +17,6 @@ CREATE TABLE hosts (
 	notified			BOOLEAN NOT NULL DEFAULT FALSE,
 	notify_frequency	INTEGER,
 	location_id			INTEGER, FOREIGN KEY (location_id) REFERENCES Locations (id),
+	owner_id			INTEGER, FOREIGN KEY (owner_id) REFERENCES Companies (id),
 	PRIMARY KEY (id)
 );
