@@ -237,39 +237,28 @@ sub signature_calc_stock_cutting {
 			next;
 		} # end if
 # Add cutting the sheet prior to printing
-		if ( ! ( $Paper->width() and $Paper->height() ) ) {
+		if ( ! ( $$Paper{width} and $$Paper{height} ) ) {
 			$results{alert} .= "Paper does not have width and height for " . $paper_string.'<br/>';
 			$openprint::log->error("Paper does not have width and height for " . $paper_string );
 			next;
 		} # end if
-		if ( ($Paper->width() == $Paper->start_width()) and ($Paper->height() == $Paper->start_height() ) ) {
+		if ( ($$Paper{width} == $$Paper{start_width}) and ($$Paper{height} == $$Paper{start_height} ) ) {
 			$results{alert} .= "Paper does not need cutting " . $paper_string.'<br/>';
 			$openprint::log->error("Paper does not need cutting for " . $paper_string );
 			next;
 		} # end if
-		my $calliper = $Paper->calliper();
+		my $calliper = $$Paper{calliper};
 		if ( ! $calliper ) {
 			$results{alert} .= "Calliper is unknown for Stock . " . $Paper->to_string().'<br/>';
 		} # end if
 
 		my ( $start_width, $start_height, $width, $height );
 
-		if ( ($Paper->start_width() >= $Paper->width()) and ($Paper->start_height() >= $Paper->height()) ) {
-			( $start_width, $start_height, $width, $height ) = 
-				( 
-				 ( $Paper->start_width() ? $Paper->start_width() : $Paper->width() ),
-				 ( $Paper->start_height() ? $Paper->start_height() : $Paper->height() ), 
-				 $Paper->width(), 
-				 $Paper->height()
-				);
+# We already tested that it has height and width... so in order for start > not start... it must be defined...
+		if ( ($$Paper{start_width} >= $$Paper{width}) and ($$Paper{start_height} >= $$Paper{height}) ) {
+			( $start_width, $start_height, $width, $height ) = @$Paper{'start_width','start_height','width','height'};
 		} else {
-			( $start_width, $start_height, $width, $height ) = 
-				( 
-				 ( $Paper->start_width() ? $Paper->start_width() : $Paper->height() ),
-				 ( $Paper->start_height() ? $Paper->start_height() : $Paper->width() ), 
-				 $Paper->height(), 
-				 $Paper->width()
-				);
+			( $start_width, $start_height, $width, $height ) = @$Paper{'start_width','start_height','height','width'};
 		} # end if
 
 		$results{Breakdown} .= sprintf('<b>Cutting prior to printing: %s</b><br/>', $Paper->to_string() );
