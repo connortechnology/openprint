@@ -63,6 +63,16 @@ cleanup : true
 				<li><label>Description</label>
 					<textarea id="description" name="description" rows="<? echo (count_lines($$variable{Host}->description()) ) ?>" onkeyup="textarea_resize(this);"><? echo ( $$variable{Host}->description() ) ?></textarea>
 				</li>
+				<li><label>Owner</label>
+				<input type="text" onkeyup="filter_companies('owner_id', {name:this.value,selected_id:get_ddm_value($('owner_id'))});" class="filter" />
+                <select id="owner_id" name="owner_id" onchange="stop_filter_companies();">
+                    <option value="">None</option>
+<? echo ( 
+my @owner_ids = sql::execute( undef, undef, 'SELECT DISTINCT owner_id FROM Hosts');
+make_drop_down( openprint::Company->dropdown(id=>[ @owner_ids, $openprint::Company->id() ]), $$variable{Host}->owner_id() );
+) ?>
+                </select>
+				</li>
 				<li><label>Created On</label><? echo ( format_datetime( $$variable{Host}->created_on() ); ) ?></li>
 				<li><label>Updated On</label><? echo ( format_datetime( $$variable{Host}->updated_on() ); ) ?></li>
 			</ul>
