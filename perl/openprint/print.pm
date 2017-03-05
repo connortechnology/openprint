@@ -549,7 +549,7 @@ sub get_book_type {
 	} # end foreach
 	if ( $$services{''} and @{$$services{''}} ) {
 		my $printing_specs = openprint::service::get_specs_ref( $Project, $$services{''}[0] );
-		if ( $$printing_specs{rdbTemplateType} eq 'PerfectBound' ) {
+		if ( $$printing_specs{rdbTemplateType} and ( $$printing_specs{rdbTemplateType} eq 'PerfectBound' ) ) {
 			return 'PerfectBound';
 		} # end if
 	} # end if
