@@ -740,7 +740,7 @@ SET:		foreach my $Set_Of_Impositions ( @All_Impositions ) {
 					if ( $$sig_specs{txtSignatureType} ) {
 						( $pages ) = $$specs{"FoldType-$form-$qty_index-$index"} =~ /(\d+)PageFold/;
 					} else {
-						if ( $$specs{"FoldImposition-$form-$qty_index-$index"} > $SignatureImposition->imposition() ) {
+						if ( $$specs{"FoldImposition-$form-$qty_index-$index"} > $$SignatureImposition{imposition} ) {
 							$$specs{alert} .= "You seem to be specifying a higher imposition for folding than was printed for form $form quantity $qty_index<br/>";
 						}
 					} # end if
@@ -1156,30 +1156,22 @@ $openprint::log->debug("Got Fold: " . $Fold->to_string() ) if DEBUG;
 								next;
 							} elsif ( @my_equipment == 1 ) {
 
-								$Breakdown .= sprintf( '%s: %d*%dout %s layout: %sx%s StockWeight %.2fgsm calliper:%.4f<br/>', $$sig_specs{rdbTemplateType}, $Imposition->quantity(), $Imposition->get('imposition','image_orientation','layout_width', 'layout_height'), $Paper->gsm(), $Paper->calliper() );
+								$Breakdown .= sprintf( '%s: %d*%dout %s layout: %sx%s StockWeight %.2fgsm calliper:%.4f<br/>', $$sig_specs{rdbTemplateType}, @$Imposition{'quantity','imposition'},
+										$openprint::Imposition::Orientations{$$Imposition{image_orientation}},
+										@$Imposition{'layout_width', 'layout_height'},
+										@$Paper{'gsm', 'calliper'} );
 								$Breakdown .= "Can't fold that , $failure_reason:<br/>
-									gsm				=>	".$Paper->gsm()."<br/>
-									calliper		=>	".$$Paper{calliper}."<br/>
+									gsm				=>	$$Paper{gsm}<br/>
+									calliper		=>	$$Paper{calliper}<br/>
 									imposition		=>	$$Imposition{imposition}<br/>";
 							} # end if Fold passwes extra shceks
 $openprint::log->debug("No Fold") if DEBUG;
 						} # end if Fold found
 						$complete = 0;
-						if ( $set_index < @All_Impositions-1 ) {
-# if we aren't the last set, then do nothing because we assume that this set has already been cut down.
-#$openprint::log->debug("$set_index < " . ( @All_Impositions-1 ) );
-						} elsif ( $$Imposition{spreads} > 1 ) {
-							foreach my $cuts ( cut_spreads( $Imposition ) ) {
-								my @new_impositions = @$Set_Of_Impositions;
-								splice @new_impositions, $imp_index, 1, @$cuts;
-								@new_impositions = compact_impositions( @new_impositions ) if @new_impositions > 2;
-								push @All_Impositions, \@new_impositions;
-							} # end foreach cuts
-						} # end if
 
 					} else { # No template, might be a book
 						#$Imposition->display("Trying: $$Equipment{name}") if DEBUG;
-						$openprint::log->debug(sprintf('Trying %dx%d=%dout spreads: %dx%d=%d %sx%s',@$Imposition{'columns','rows','imposition','spread_columns','spread_rows','spreads','image_width','image_height'} ).' on ' . $Equipment->name()) if DEBUG;
+						$openprint::log->debug(sprintf('Trying %dx%d=%dout spreads: %dx%d=%d %sx%s',@$Imposition{'columns','rows','imposition','spread_columns','spread_rows','spreads','image_width','image_height'} ).' on ' . $$Equipment{name}) if DEBUG;
 
 #$Imposition->display('fitting');
 						# See if it fits
@@ -1317,23 +1309,7 @@ $openprint::log->debug("No Fold") if DEBUG;
 
 						$complete = 0;
 						# If we get here, then we couldn't find the fold
-						if ( $set_index < @All_Impositions-1 ) {
-							# if we aren't the last set, then do nothing because we assume that this set has already been cut down.
-$openprint::log->debug("Couldnt find fold, set_index:$set_index < all_impositions: " . ( @All_Impositions-1 ) ) if DEBUG;
-# Cut spreads first because simpler folds are better and 2out is better than 1 out
-						} elsif ( $$Imposition{spreads} > 1 ) {
-							foreach my $cuts ( cut_spreads( $Imposition ) ) {
-								my @new_impositions = @$Set_Of_Impositions;
-								splice @new_impositions, $imp_index, 1, @$cuts;
-								@new_impositions = compact_impositions( @new_impositions ) if @new_impositions > 2;
-								push @All_Impositions, \@new_impositions;
-							} # end foreach cuts
-						} elsif ( $$Imposition{imposition} > 1 ) {
-							my @new_impositions = @$Set_Of_Impositions;
-							splice @new_impositions, $imp_index, 1, cut_imposition( $Imposition );
-							@new_impositions = compact_impositions( @new_impositions );
-							push @All_Impositions, \@new_impositions;
-						} # end if
+						$openprint::log->debug("Couldnt find fold, set_index:$set_index < all_impositions: " . ( @All_Impositions-1 ) ) if DEBUG;
 					} # end if template or book
 
 					if ( ! $complete ) {
@@ -1678,7 +1654,8 @@ $openprint::log->error("Using temp stitching specs " . $$calc_hash{StitchingSpec
 		MakeReadyTime			=>	0,
 		MakeReadyOvers		=>	0,
 		RunOvers					=>	0,
-		) if defined $bestPrice;
+		);
+# if defined $bestPrice;
 
 	foreach my $FI ( @{$bestImpositions} ) {
 		my $Fold = $$FI{Fold};
@@ -1862,7 +1839,7 @@ $openprint::log->debug("Not needed for form $form") if DEBUG;
 			#$openprint::log->debug( Data::Dumper::Dumper($results) );
 				#my %results = signature_calc( $Project, $sig_specs, $specs, $qty_index, $Imposition, [ sets::exclude( [ $Imposition ], \@Signature_Impositions ) ], $calc_hash );
 				$$specs{'hdnBreakdown'.$qty_index} .= $$results{Breakdown};
-				$$specs{'hdnBreakdown'.$qty_index} .= sprintf('MR Waste: %d, Run Waste: %d<br/>', @$results{'MakeReadyOvers','RunOvers'} );
+				$$specs{'hdnBreakdown'.$qty_index} .= sprintf('<br/>MR Waste: %d, Run Waste: %d<br/>', @$results{'MakeReadyOvers','RunOvers'} );
 				$$specs{"Price-$form-$qty_index"} = $$results{Price};
 				$price += $$results{Price};
 				$mprice += $$results{MPrice};
