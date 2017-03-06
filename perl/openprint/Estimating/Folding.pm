@@ -2259,7 +2259,7 @@ sub cut_spreads {
     # So becomes pages/2, imposition * 2, page quantity * 2, meaning if it is now 4pg 2out, it is in fact 8pages.
     $i1->spread_columns( $$i1{spread_columns} / 2 );
     $i1->columns( $$i1{columns} * 2 );
-    $i1->page_quantity( $$i1{page_quantity} * 2 );
+    $$i1{page_quantity} = $$i1{page_quantity} * 2;
     $i1->image_height( $$I{image_height}/$$I{spread_columns} );
     $openprint::log->debug(sprintf('SPECIAL Cutting pages down from quantity %d x %d pages %dout to q%d x %d pages %dout pq(%d)',
           $I->quantity(), $I->pages(), $$I{imposition},
@@ -2373,6 +2373,7 @@ sub cut_spreads {
 		or 
 		( $$I{spread_columns} >= $min_spread_size )
 		) {
+
 		if ( $$I{spread_columns} % 2 ) {
 
 			# Cut into singles
@@ -2448,8 +2449,8 @@ sub cut_spreads {
 					$$i4{page_quantity} = $$i4{page_quantity} - ( 2 * $amount );
 					push @results, [ $i3, $i4 ];
 					if ( DEBUG ) {
-						$openprint::log->error(sprintf('Cutting pages down uneven pages %d to %d by cutting spread columns %d to %d',
-									$i3->pages(), $i4->pages(), $$i3{spread_columns}, $$i4{spread_columns} ) );
+						$openprint::log->error(sprintf('Cutting pages down uneven pages pq(%s) %d to pq(%s) %d by cutting spread columns %d to %d',
+									$$i3{page_quantity}, $i3->pages(), $$i4{page_quantity}, $i4->pages(), $$i3{spread_columns}, $$i4{spread_columns} ) );
 						$i3->display();
 						$i4->display();
 					}
@@ -2474,20 +2475,20 @@ sub cut_spreads {
 
 					my $i3 = $I->copy();
 					$i3->quantity( $i3->quantity()/2 );
-					$$i3{page_quantity} /= 2;
+					$$i3{page_quantity} /= 2 if $$i3{page_quantity} > 1;
 
 					my $i4 = $i1->copy();
 					$i4->quantity( $I->quantity() );
-					$$i4{page_quantity} /= 2;
+					$$i4{page_quantity} /= 2 if $$i4{page_quantity} > 1;
 					push @results, [ $i3, $i4 ];
 					if ( DEBUG ) {
-						$openprint::log->error(sprintf('Cutting pages down uneven pages %d to %d by cutting spread columns %d to %d', 
-									$i3->pages(), $i4->pages(), $$i3{spread_columns}, $$i4{spread_columns} ) );
+						$openprint::log->error(sprintf('Cutting pages down uneven pages pq(%s) %d to pq(%s) %d by cutting spread columns %d to %d', 
+									$$i3{page_quantity}, $i3->pages(), $$i4{page_quantity}, $i4->pages(), $$i3{spread_columns}, $$i4{spread_columns} ) );
 						$i3->display();
 						$i4->display();
 					}
 				} # end if even quantity
-      }
+      } # end if override and quantity >= 2
 			
 		} # end if
 	} # end if
@@ -2581,7 +2582,7 @@ $openprint::log->debug("Has no equipment_id") if DEBUG;
 		$$Imposition{page_rows} = $$folding_specs{"FoldPageRows-$form-$qty_index-$fold_index"};
 
 		$$Imposition{impressions} = $$folding_specs{"FoldImpressions-$form-$qty_index-$fold_index"};
-		$$Imposition{impressions} = ( $$folding_specs{"txtQuantity$qty_index"} / $$Source_Imposition{imposition} ) * ( $$Imposition{quantity} ) if ! $$Imposition{impressions};
+		$$Imposition{impressions} = ( ( $$folding_specs{"txtQuantity$qty_index"} / $$Source_Imposition{imposition} ) * $$Imposition{quantity} ) if ! $$Imposition{impressions};
 		my $Folder = new openprint::Equipment( $$folding_specs{"ddmEquipment-$form-$qty_index"} );
 		$$Imposition{Folder} = $Folder;
 		$Imposition->Press( $Folder );
@@ -2629,24 +2630,24 @@ if ( 0 ) {
 			} else {
 			}
 }
-if ( $$Imposition{page_columns} and $$Imposition{page_rows} ) {
-if ( $$Imposition{image_orientation} == openprint::Imposition::Vertical ) {
-	#$openprint::log->debug("adjusting image_width from $$Imposition{image_width} / ( $$Source_Imposition{page_columns} / $$Imposition{page_columns} )");
-	$Imposition->image_width( $$Imposition{image_width} / ( $$Source_Imposition{page_columns} / $$Imposition{page_columns} ) );
-	#$openprint::log->debug("adjusting image_height from $$Imposition{image_height} / ( $$Source_Imposition{page_rows} / $$Imposition{page_rows} )");
-	$Imposition->image_height( $$Imposition{image_height} / ( $$Source_Imposition{page_rows} / $$Imposition{page_rows} ) );
-} else {
-	#$openprint::log->debug("Horizontal adjusting image_width from $$Imposition{image_width} / ( $$Source_Imposition{page_rows} / $$Imposition{page_rows} )");
-	$Imposition->image_width( $$Imposition{image_width} / ( $$Source_Imposition{page_rows} / $$Imposition{page_rows} ) );
-	#$openprint::log->debug("adjusting image_height from $$Imposition{image_height} / ( $$Source_Imposition{page_columns} / $$Imposition{page_columns} )");
-	$Imposition->image_height( $$Imposition{image_height} / ( $$Source_Imposition{page_columns} / $$Imposition{page_columns} ) );
-}
-} else {
-$openprint::log->warn("Unable to adjust image size");
-}
+			if ( $$Imposition{page_columns} and $$Imposition{page_rows} ) {
+				if ( $$Imposition{image_orientation} == openprint::Imposition::Vertical ) {
+			#$openprint::log->debug("adjusting image_width from $$Imposition{image_width} / ( $$Source_Imposition{page_columns} / $$Imposition{page_columns} )");
+					$Imposition->image_width( $$Imposition{image_width} / ( $$Source_Imposition{page_columns} / $$Imposition{page_columns} ) );
+			#$openprint::log->debug("adjusting image_height from $$Imposition{image_height} / ( $$Source_Imposition{page_rows} / $$Imposition{page_rows} )");
+					$Imposition->image_height( $$Imposition{image_height} / ( $$Source_Imposition{page_rows} / $$Imposition{page_rows} ) );
+				} else {
+			#$openprint::log->debug("Horizontal adjusting image_width from $$Imposition{image_width} / ( $$Source_Imposition{page_rows} / $$Imposition{page_rows} )");
+					$Imposition->image_width( $$Imposition{image_width} / ( $$Source_Imposition{page_rows} / $$Imposition{page_rows} ) );
+			#$openprint::log->debug("adjusting image_height from $$Imposition{image_height} / ( $$Source_Imposition{page_columns} / $$Imposition{page_columns} )");
+					$Imposition->image_height( $$Imposition{image_height} / ( $$Source_Imposition{page_columns} / $$Imposition{page_columns} ) );
+				}
+			} else {
+				$openprint::log->warn("Unable to adjust image size");
+			}
 
 			if ( $Fold->pages() ) {
-				$$Imposition{pages} = $Fold->pages();
+				$$Imposition{pages} = $$Fold{pages};
 				$$Imposition{page_quantity} = $$folding_specs{"FoldPageQty-$form-$qty_index-$fold_index"};
 				if ( ! $$Imposition{page_quantity} ) {
 					$$Imposition{page_quantity} = $Source_Imposition->pages() / $Fold->pages();
