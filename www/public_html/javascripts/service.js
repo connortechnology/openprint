@@ -38,6 +38,8 @@ function submit_handler( formName ) {
 	if ( AlertDiv && AlertDiv.innerHTML ) {
 		var alert_content = AlertDiv.innerHTML;
 		alert_content = alert_content.replace(/<br\/?>/g, "\n" );
+		alert_content = alert_content.replace(/&lt;/g, '<' );
+		alert_content = alert_content.replace(/&gt;/g, '>' );
 		if ( ! confirm( "There are unresolved errors:\n\n" + alert_content + "\n\n Click OK to continue saving, or Cancel to stop and fix the problem." ) ) {
 			return false;
 		} // end if
