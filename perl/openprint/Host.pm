@@ -56,6 +56,7 @@ $serial = 'hosts_id_seq';
 	notified			=>	'notified',
 	notify_frequency	=>	'notify_frequency',
 	location_id			=>	'location_id',
+	owner_id			=>	'owner_id',
 );
 %find_fields = (
 	type	=>	'type_id = (SELECT id FROM Host_types WHERE host_types.name = ?)',
@@ -85,6 +86,7 @@ $serial = 'hosts_id_seq';
 	'notified'=>	0,
 	location_id		=>	undef,
 	notify_frequency	=>	undef,
+	owner_id			=>	undef,
 );
 
 sub destroy {

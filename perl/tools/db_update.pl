@@ -3325,6 +3325,11 @@ if ( ! sets::isin( 'hosts', \@tables ) ) {
 		$log->debug("Add notify_frequency to hosts");
 		$dbh->do('ALTER TABLE hosts ADD notify_frequency INTEGER');
 	} # end if
+	if ( ! exists $$hosts_table{owner_id} ) {
+		$log->debug("Adding owner_id to hosts");
+		$dbh->do('ALTER TABLE hosts add owner_id INTEGER');
+		$dbh->do('ALTER TABLE hosts add FOREIGN KEY (owner_id) REFERENCES Companies (id)');
+	} # end if
 }
 
 if ( ! sets::isin( 'host_interfaces', \@tables ) ) {
