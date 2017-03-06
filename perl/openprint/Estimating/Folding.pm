@@ -2350,11 +2350,11 @@ sub cut_spreads {
 				} else {
 					my $i3 = $I->copy();
 					$i3->quantity( $i3->quantity()/2 );
-					$$i3{page_quantity} /= 2;
+					$$i3{page_quantity} /= 2 if $$i3{page_quantity} > 1;
 
 					my $i4 = $i1->copy();
 					$i4->quantity( $I->quantity() );
-					$$i4{page_quantity} = $$i4{page_quantity} / 2;
+					$$i4{page_quantity} = $$i4{page_quantity} / 2 if $$i4{page_quantity} > 1;
 					push @results, [ $i3, $i4 ];
 					if ( DEBUG ) {
 						$openprint::log->error(sprintf('Cutting pages down uneven pages %d to %d by cutting spread columns %d to %d', 
