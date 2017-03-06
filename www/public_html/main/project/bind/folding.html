@@ -23,6 +23,8 @@
 				h.unset(pair.key);
 			if ( pair.key == 'btnFunction' )
 				h.unset(pair.key);
+			if ( pair.key == 'alert' ) 
+				h.unset(pair.key);
 		});
 
 		new Ajax.Request( '/main/project/_calc.json', { method: 'post', parameters: h, evalScripts: true } );
@@ -142,9 +144,16 @@ if ( 0 ) {
 					$html .= '<div class="'.$$variable{Columns}.'Columns">';
 					if ( $$sig_specs{"txtImposition$qty_index"} ) {
 						if ( sets::isin( $session{user_type}, ['A','E'] ) ) {
-							$html .= sprintf('<input type="checkbox" id="chkOverrideFold-%1$d-%2$d" name="chkOverrideFold-%1$d-%2$d" %3$s value="Y" onclick="if ( ! this.checked ) { calc(this.form.name);}else{show_extra_fold(%1$d,%2$d);};" /><label class="radio" for="chkOverrideFold-%1$d-%2$d">Override Folds</label><br/>', $$sig_specs{SignatureIndex}, $qty_index, $$variable{"chkOverrideFold-$$sig_specs{SignatureIndex}-$qty_index"} eq 'Y' ? 'checked="checked"' : '' );
-						} elsif ( $$variable{"chkOverrideFold-$$sig_specs{SignatureIndex}-$qty_index"} eq 'Y' ) {
-							$html .= sprintf('<input type="hidden" name="chkOverrideFold-%1$d-%2$d" value="Y" /> Overriden<br/>', $$sig_specs{SignatureIndex}, $qty_index );
+							$html .= sprintf('<input type="checkbox" id="chkOverrideFold-%1$d-%2$d" name="chkOverrideFold-%1$d-%2$d" %3$s value="Y" onclick="if ( ! this.checked ) { calc(this.form.name);}else{show_extra_fold(%1$d,%2$d);};" /><label class="radio" for="chkOverrideFold-%1$d-%2$d">Override Folds</label>', $$sig_specs{SignatureIndex}, $qty_index, $$variable{"chkOverrideFold-$$sig_specs{SignatureIndex}-$qty_index"} eq 'Y' ? 'checked="checked"' : '' );
+							$html .= sprintf('<input type="checkbox" id="chkOverrideLimits-%1$d-%2$d" name="chkOverrideLimits-%1$d-%2$d" %3$s value="Y" onclick="calc(this.form.name);" /><label class="radio" for="chkOverrideLimits-%1$d-%2$d">Ignore Equipment Limits</label><br/>', $$sig_specs{SignatureIndex}, $qty_index, $$variable{"chkOverrideLimits-$$sig_specs{SignatureIndex}-$qty_index"} eq 'Y' ? 'checked="checked"' : '' );
+						} else {
+							if ( $$variable{"chkOverrideFold-$$sig_specs{SignatureIndex}-$qty_index"} eq 'Y' ) {
+								$html .= sprintf('<input type="hidden" name="chkOverrideFold-%1$d-%2$d" value="Y" /> Folds Overriden', $$sig_specs{SignatureIndex}, $qty_index );
+							}
+							if ( $$variable{"chkOverrideLimits-$$sig_specs{SignatureIndex}-$qty_index"} eq 'Y' ) {
+								$html .= sprintf('<input type="hidden" name="chkOverrideLimits-%1$d-%2$d" value="Y" /> Equipment Limits Ignored', $$sig_specs{SignatureIndex}, $qty_index );
+							}
+							$html .= '<br/>';	
 						} # end if
 						$$variable{SignatureIndex} = $$sig_specs{SignatureIndex};
 						$$variable{QTYIndex} = $qty_index;
