@@ -43,6 +43,7 @@
 			<th class="Company">Company</th>
 			<th class="UserType">Type</th>
 			<th class="Date">Created</th>
+			<th class="Date">Last Login</th>
 		</tr>
 <? echo (
 	my $html;
@@ -56,6 +57,7 @@
 	<td class="Company">%6$s</td>
 	<td class="UserType">%7$s</td>
 	<td class="Date">%5$s</td>
+	<td class="Date">%8$s</td>
 </tr>
 `, $rowclass, 
 	$User->admin_link_to( $$User{id} ),
@@ -63,6 +65,7 @@
 	$User->admin_link_to( $User->email() ), 
 format_date( $$User{created_on} ), $User->Company()->name(),
 	$User->type(),
+	format_date( $User->last_logged_in() ),
  );
 
 		$rowclass = $rowclass ? '' : ' class="colRow"';

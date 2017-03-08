@@ -31,7 +31,7 @@ require openprint::service;
 require openprint::ServiceType;
 require openprint::Estimating::Perforating;
 
-use constant DEBUG => 0;
+use constant DEBUG => 1;
 use constant DEBUG_NEEDS => 0;
 
 my @equipment;
@@ -838,7 +838,7 @@ SET:		foreach my $Set_Of_Impositions ( @All_Impositions ) {
 	# Foreach equipment, figure out which folds are required.
 	foreach my $Equipment ( @my_equipment ) {
 
-		$Breakdown .= '<br/><b>Equipment '.$$Equipment{name}.':</b><br/>';
+		$Breakdown .= '<tr><td><br/><b>Equipment '.$$Equipment{name}.':</b>';
 		if ( (!$$Equipment{useinestimating}) and ( $$specs{"chkOverrideEquipment-$form-$qty_index"} ne 'Y' ) ) {
 			$Breakdown .= 'Can only be used by override';
 			next;
@@ -1029,13 +1029,8 @@ $openprint::log->debug("Templatetype: $$sig_specs{rdbTemplateType}") if DEBUG;
 						} # end if
 							
 						my $Fold = $Equipment->Fold({
-							#( $$Imposition{image_orientation} == openprint::Imposition::Vertical ? (
 									page_columns	=>	$Imposition->page_columns(),
 									page_rows		=>	$Imposition->page_rows(),
-								#) : (
-									#page_columns	=>	$Imposition->page_rows(),
-									#page_rows		=>	$Imposition->page_columns(),
-								#) ),
 								page_width			=>	$$sig_specs{txtFinalWidth},
 								page_height			=>	$$sig_specs{txtFinalHeight},
 								type						=>	$$sig_specs{rdbTemplateType},
@@ -1117,10 +1112,10 @@ $openprint::log->debug("Has a fold, doing extra checks") if DEBUG;
 									$$specs{alert} .= "Warning: $failure_reason<br/>";
 								}
 
-								$Breakdown .= sprintf( '%s: %d*%dout %s layout: %sx%s StockWeight %.2fgsm calliper:%.4f<br/>', $$sig_specs{rdbTemplateType}, @$Imposition{'quantity','imposition'},
+								$Breakdown .= sprintf( '%s: %d*%dout %s layout: %sx%s ', $$sig_specs{rdbTemplateType}, @$Imposition{'quantity','imposition'},
 										$openprint::Imposition::Orientations{$$Imposition{image_orientation}},
 										@$Imposition{'layout_width', 'layout_height'},
-										@$Paper{'gsm', 'calliper'} );
+ );
 								$Breakdown .= "Can't fold that , $failure_reason:<br/>
 									gsm				=>	$$Paper{gsm}<br/>
 									calliper		=>	$$Paper{calliper}<br/>
@@ -1151,11 +1146,11 @@ $openprint::log->debug("Got Fold: " . $Fold->to_string() ) if DEBUG;
 							my $fits = '';;
 							my $Fold = $Equipment->Fold({
 									pages			=>	$Imposition->pages(),
-									   page_columns	=>	$Imposition->page_columns(),
-									   page_rows	=>	$Imposition->page_rows(),
+									page_columns	=>	$Imposition->page_columns(),
+									page_rows	=>	$Imposition->page_rows(),
 									page_width		=>	$$Imposition{page_width},
 									page_height		=>	$$Imposition{page_height},
-								spine_direction	=>	$openprint::Imposition::Orientations{$$Imposition{spine_direction}},
+									spine_direction	=>	$openprint::Imposition::Orientations{$$Imposition{spine_direction}},
 									stitching		=>	(($$services{SaddleStitching} or $$services{LoopStitching}) ? 1 : 0),
 									perfectbind		=>	($$services{PerfectBound} ? 1 : 0),
 									spinepaste		=>	($$services{SpinePaste} ? 1 : 0),
@@ -1350,7 +1345,6 @@ $openprint::log->debug("Resulting fold: " . $Fold->to_string() ) if DEBUG;
 
 				$fold_specs{"FoldType-$form-$qty_index-$fold_index"} = $$Fold{type};
 				$fold_specs{"FoldQty-$form-$qty_index-$fold_index"} = $$Imposition{quantity};
-				#$Imposition->page_quantity( int($SignatureImposition->pages()/$Imposition->pages() ) );
 				$fold_specs{"FoldPageQty-$form-$qty_index-$fold_index"} = $$Imposition{page_quantity};
 				$fold_specs{"FoldImposition-$form-$qty_index-$fold_index"} = $$Imposition{imposition};
 				$fold_specs{"FoldColumns-$form-$qty_index-$fold_index"} = $$Imposition{columns};
@@ -1383,18 +1377,17 @@ $openprint::log->debug("Resulting fold: " . $Fold->to_string() ) if DEBUG;
 				} # end if
 				my $width = $Imposition->layout_width();
 
-				$Breakdown .= sprintf( '%s: %d*%dout %s layout: %sx%s qty: %d StockWeight %.2fgsm calliper:%.4f<br/>', $$Fold{name}, $impo_qty, @$Imposition{'imposition','image_orientation', 'layout_width', 'layout_height'}, $run_qty, @$Paper{'gsm','calliper'} );
+				$Breakdown .= sprintf( '</td></tr><tr><td>%s: %d*%dout %s layout: %sx%s qty: %d <br/>MR: ', $$Fold{name}, $impo_qty, @$Imposition{'imposition','image_orientation', 'layout_width', 'layout_height'}, $run_qty );
 
 				my $total_MR = 0;
-				my %setupPrice = openprint::service::get_price_object( $Fold->type().'MakeReady', $imposition, $Equipment );
+				my %setupPrice = openprint::service::get_price_object( $$Fold{type}.'MakeReady', $imposition, $Equipment );
 				if ( ! %setupPrice ) {
-					$openprint::log->debug("No MakeReady for " . $Fold->type().'MakeReady' . ' ' . $imposition . ' out on ' . $$Equipment{strid} ) if DEBUG;
+					$openprint::log->debug("No MakeReady for " . $$Fold{type}.'MakeReady' . ' ' . $imposition . ' out on ' . $$Equipment{strid} ) if DEBUG;
 					%setupPrice = openprint::service::get_price_object( 'FoldingMakeReady', $imposition, $Equipment );
 					%setupPrice = openprint::service::get_price_object( 'FoldMakeReady', $imposition, $Equipment ) if ! %setupPrice;
 				} else {
 					$openprint::log->debug("Got MakeReady for " . $Fold->type().'MakeReady' . ' imp:' . $imposition . " \$$setupPrice{Price} $setupPrice{units}" ) if DEBUG;
 				} # end if
-				$Breakdown .= '<table><tr><td class="Description">MR: ';
 				if ( ! $setupPrice{units} ) {
 					$Breakdown .= 'No Makeready</td><td></td></tr>';
 				} elsif ( $setupPrice{units} eq 'per form' ) {
@@ -1412,17 +1405,17 @@ $openprint::log->error("No makeready_time on " . $Fold->to_string() );
 						$setupPrice{Total} = $setupPrice{Price} * $$Fold{makeready_time} / 60;
 						$Breakdown .= sprintf( '($%1$.2f%2$s * %4$d minutes = $%3$.2f)', @setupPrice{'Price','units','Total'}, $$Fold{makeready_time} );
 					} else {
-					$Breakdown .= "Unknown Makeready units($setupPrice{units})</td><td></td></tr>";
+						$Breakdown .= "Unknown Makeready units($setupPrice{units})</td><td></td></tr>";
 #$openprint::log->error("No units set on Fold MR " . $setupPrice{Service}->name() . ' on ' . $Equipment->name() );
 						$setupPrice{Total} = $setupPrice{Price};
-					$Breakdown .= sprintf( '($%1$.2f%2$s=$%3$.2f)', @setupPrice{'Price','units','Total'} );
+						$Breakdown .= sprintf( '($%1$.2f%2$s=$%3$.2f)', @setupPrice{'Price','units','Total'} );
 					} # end if
 					$total_MR += $setupPrice{Total};
 
 					if ( $$Fold{folds} and $FoldingFoldMakeReadyService ) {
 						my %FoldMakeReady = $FoldingFoldMakeReadyService->get_price( undef, $Equipment );
 						if ( $FoldMakeReady{units} eq 'per fold' ) {
-							$FoldMakeReady{Total} = $FoldMakeReady{Price} * ($width_folds);
+							$FoldMakeReady{Total} = $FoldMakeReady{Price} * $width_folds;
 							$total_MR += $FoldMakeReady{Total};
 						} # end if
 						$Breakdown .= sprintf( ' + FMR: ($%1$.2f%2$s=$%3$.2f)', @FoldMakeReady{'Price','units','Total'} );
@@ -1431,7 +1424,7 @@ $openprint::log->error("No makeready_time on " . $Fold->to_string() );
 					if ( $$Fold{angles} and $FoldingAngleMakeReadyService ) {
 						my %AngleMakeReady = $FoldingAngleMakeReadyService->get_price( undef, $Equipment );
 						if ( $AngleMakeReady{units} eq 'per angle' ) {
-							$AngleMakeReady{Total} = $AngleMakeReady{Price} * ($height_folds);
+							$AngleMakeReady{Total} = $AngleMakeReady{Price} * $height_folds;
 							$total_MR += $AngleMakeReady{Total};
 						} # end if
 						$Breakdown .= sprintf( ' + AMR: ($%1$.2f%2$s=$%3$.2f)', @AngleMakeReady{'Price','units','Total'} );
@@ -1449,7 +1442,7 @@ $openprint::log->error("No makeready_time on " . $Fold->to_string() );
 					$runspeed = 1;
 				} # end if
 				$runTime = Math::Round::nearest( 0.0001, $run_qty / $runspeed ) if $runspeed; # in hours
-				$Breakdown .= sprintf('<tr><td>Runspeed: %d @ %d/HR = %d:%d:%d</td></tr>', $run_qty, $runspeed, misc::seconds_to_interval( int( 3600*$runTime ) ) );
+				$Breakdown .= sprintf('<tr><td colspan="2">Runspeed: %d @ %d/HR = %d:%d:%d</td></tr>', $run_qty, $runspeed, misc::seconds_to_interval( int( 3600*$runTime ) ) );
 				$$Imposition{runspeed} = $runspeed;
 $openprint::log->debug("Runspeed: $$Fold{type}($$Fold{name}) : $$Equipment{name} $runspeed $$Paper{gsm}" ) if DEBUG;
 				
@@ -1538,17 +1531,15 @@ $openprint::log->debug("Runspeed: $$Fold{type}($$Fold{name}) : $$Equipment{name}
 				$$calc_hash{FoldingSpecs} = \%fold_specs;
 				my %scoring_results = openprint::Estimating::Scoring::signature_calc( $Project, $$calc_hash{ScoringSpecs}, $sig_specs, $qty_index, $SignatureImposition, $calc_hash );
 				if ( $scoring_results{Status} eq 'uncalculated' ) {
-					$Breakdown .= "<tr><td>Scoring uncalculated $scoring_results{alert}</td><td class=\"Price\">\$1000000</a>";
+					$Breakdown .= "<tr><td>Scoring uncalculated $scoring_results{alert}</td><td class=\"Price\">\$1000000</td></tr>";
 					$comparison_cost += 1000000;
 				} else {
 #$Breakdown .= "<tr><td>Scoring cost on $scoring_results{Equipment}{name}</td><td class=\"Price\">\$$scoring_results{Price}</a>";
-					$Breakdown .= "<tr><td>Scoring cost on $scoring_results{Equipment}{name}<br/>$scoring_results{Breakdown}</td><td class=\"Price\">\$$scoring_results{Price}</a>";
+					$Breakdown .= "<tr><td>Scoring cost on $scoring_results{Equipment}{name}<br/>$scoring_results{Breakdown}</td><td class=\"Price\">\$$scoring_results{Price}</td></tr>";
 					$comparison_cost += $scoring_results{Price};	
 				}
 			} # end if
 
-			$Breakdown .= '<tr><td>comparison :</td><td class="Price">$' . sprintf('%.2f', Math::Round::nearest(0.01,$comparison_cost) ). ' </td></tr>';
-			$Breakdown .= '</table><br/>';
 
 			my %r = (
 				Comparison		=>	$comparison_cost,
@@ -1620,7 +1611,7 @@ sub permutate {
 		} # end while
 		if ( @sigs ) {
 			foreach my $po ( permutate( $sig_results, $similar, @sigs ) ) {
-$openprint::log->debug( "Po from permutations: $po "  . join(',', map { $_ } @$po ));
+#$openprint::log->debug( "Po from permutations: $po "  . join(',', map { $_ } @$po ));
 				push @results, [ @Os, @$po ];
 			} # end foreach
 		} else {
@@ -1720,7 +1711,7 @@ sub calc {
 			} # end if
 			my $i = new openprint::Imposition();
 			$i->load( $sig_specs, $qty_index, $Project );
-			$$i{Folds} = [ get_Folds( $specs, $i, $qty_index ) ];
+			#$$i{Folds} = [ get_Folds( $specs, $i, $qty_index ) ];
 			$$i{needs_scoring} = openprint::Estimating::Scoring::signature_needs( $Project, $$calc_hash{ScoringSpecs}, $sig_specs, $i->Paper() ) if $$calc_hash{ScoringSpecs};
 			$$i{has_perforating} = openprint::Estimating::Perforating::signature_has_perforation( $$calc_hash{PerforatingSpecs}, $sig_specs ) if $$calc_hash{PerforatingSpecs};
 
@@ -1760,12 +1751,9 @@ sub calc {
 		} # end foreach signature
 
 		for ( my $sig_index = 0; $sig_index < @signatures; $sig_index += 1 ) {
-            my $signature_service_index = $signatures[$sig_index];
+			my $signature_service_index = $signatures[$sig_index];
 			my $sig_specs = openprint::service::get_specs_ref( $Project, $signature_service_index );
 			my $form = $$sig_specs{SignatureIndex};
-			$$specs{'hdnBreakdown'.$qty_index} .= "<fieldset><legend>Signature: $form $$sig_specs{txtSignatureType} Ref: $$sig_specs{txtServiceDescription}:</legend>";
-			$$specs{'hdnBreakdown'.$qty_index} .= openprint::service::summary( $Project, $signature_service_index ) . '<br/>';
-			#$$specs{'hdnBreakdown'.$qty_index} .= openprint::service::summary( $Project, $signature_service_index, $qty_index ) . '<br/>';
 
 			if ( ! $$sig_specs{'txtImposition'.$qty_index} ) {
 				$$specs{'hdnBreakdown'.$qty_index} .= 'No imposition.</fieldset>';
@@ -1780,7 +1768,6 @@ $openprint::log->debug("Not needed for form $form") if DEBUG;
 			} # end if
 
 			my $Imposition = $Impositions{$signature_service_index};
-			$$specs{'hdnBreakdown'.$qty_index} .= $Imposition->to_string();
 
 			# If it is the same as the previous, then just copy the results.
 
@@ -1809,15 +1796,17 @@ foreach my $k ( keys %Signature_Results ) {
 }
 
 		my $bestPerm = undef;
+		my @Permutations;
 		# Adds stitching cost to the options
 		if ( $$calc_hash{HasStitching} ) {
 			my @all_Permutations = permutate( \%Signature_Results, \%similar_sigs, @signatures );
 			$openprint::log->debug(" # of permitations: " . @all_Permutations );
 			
 			my $breakdown;
-			foreach my $Perm ( @all_Permutations ) {
+			foreach my $Options ( @all_Permutations ) {
+				my $Perm = {};
 				my $comparison_cost = 0;
-				foreach my $o ( @{$Perm} ) {
+				foreach my $o ( @{$Options} ) {
 					$openprint::log->debug("Folding price: $$o{Price} comp: $$o{Comparison} # of Folded impositions: " . @{$$o{FoldedImpositions}} );
 					foreach my $I ( @{$$o{FoldedImpositions}} ) {
 						$I->display();
@@ -1825,7 +1814,7 @@ foreach my $k ( keys %Signature_Results ) {
 					$comparison_cost += $$o{Comparison};
 				}
 				my $results = openprint::Estimating::Stitching::signature_calc( $Project, @$calc_hash{'HasStitching','StitchingSpecs'}, $qty_index, 
-						[ map { $$_{Imposition} } @{$Perm} ], $calc_hash );
+						[ map { $$_{Imposition} } @{$Options} ], $calc_hash );
 				my $stitching_part;
 				if ( $$results{Status} eq 'uncalculated' ) {
 					$stitching_part = 100000;
@@ -1836,12 +1825,14 @@ foreach my $k ( keys %Signature_Results ) {
 				$breakdown .= '<tr><td>'.$$results{Breakdown}.'</td></tr>' if DEBUG;
 				$breakdown .= sprintf('<tr><td>Stitching cost on %s %dout %dpockets</td><td class="Price">$%.2f</td></tr>',
 						$$results{Equipment}{name}, @$results{'Imposition','pockets'}, $stitching_part );
+				$$Perm{Breakdown} .= $breakdown;
+				$$Perm{Options} = $Options;
+				$$Perm{comparison_cost} = $comparison_cost;
+				push @Permutations, $Perm;
 
 				$openprint::log->debug("Stitching cost: $$results{Price}{Price} alert:$$results{alert}, comparison = $comparison_cost breakdowN: $$results{Breadown}");
 				if ( ( ! defined $bestPerm ) or ( $$bestPerm{comparison_cost} > $comparison_cost ) ) {
-					$$bestPerm{Options} = $Perm;
-					$$bestPerm{comparison_cost} = $comparison_cost;
-					$$bestPerm{StitchingBreakdown} = $breakdown;
+					$bestPerm = $Perm;
 				} # endif
 			} # end foreach Permutation
 			$openprint::log->debug("Best permutation chose: cost: $$bestPerm{comparison_cost}");
@@ -1869,7 +1860,20 @@ foreach my $k ( keys %Signature_Results ) {
 			} # end for each signature
 			$$bestPerm{Options} = \@options;
 			$$bestPerm{comparison_cost} = misc::sum( map { $$_{comparison_cost} } @options );
+			push @Permutations, $bestPerm;
 		} # end if Stitching or not
+	
+		# Now have all the pricing details and bestPerm selected, so now we can generate the breakdown
+		foreach my $Perm (@Permutations) {
+			$$specs{"hdnBreakdown$qty_index"} .= '<br/>Option :<br/>';
+			$$specs{"hdnBreakdown$qty_index"} .= '<table><tr><td class="Description">';
+			foreach my $o ( @{$$Perm{Options}} ) {
+				$$specs{"hdnBreakdown$qty_index"} .= $$o{Breakdown};
+			} # end foreach my $o
+			$$specs{"hdnBreakdown$qty_index"} .= $$Perm{StitchingBreakdown} if $$Perm{StitchingBreakdown};
+			$$specs{"hdnBreakdown$qty_index"} .= '<tr><td>comparison :</td><td class="Price">$' . sprintf('%.2f', Math::Round::nearest(0.01,$$Perm{comparison_cost}) ). ' </td></tr>';
+			$$specs{"hdnBreakdown$qty_index"} .= '</table><br/>';
+		} # end foreach
 			
 		my $price;
 		my $mprice;
@@ -1879,7 +1883,6 @@ foreach my $k ( keys %Signature_Results ) {
 			my $sig_specs = $$o{SigSpecs};
 			#$$specs{'hdnBreakdown'.$qty_index} .= "<fieldset><legend>Signature: $form $$sig_specs{txtSignatureType} Ref: $$sig_specs{txtServiceDescription}:</legend>";
 			#$$specs{'hdnBreakdown'.$qty_index} .= openprint::service::summary( $Project, $signature_service_index ) . '<br/>';
-			$$specs{"hdnBreakdown$qty_index"} .= $$o{Breakdown};
 					
 			$$specs{"Price-$form-$qty_index"} = $$o{Price};
 			$price += $$o{Price};
@@ -1898,7 +1901,7 @@ foreach my $k ( keys %Signature_Results ) {
 					$openprint::log->debug("Foldtype: $fold_type " . $$Imposition{imposition} . "out $$Fold{name} $$Fold{folds} $$Fold{angles}" ) if DEBUG;
 					$$specs{"FoldType-$form-$qty_index-$index"} = $fold_type;
 					$$specs{"FoldQty-$form-$qty_index-$index"} = $Imposition->quantity();
-					$$specs{"FoldPageQty-$form-$qty_index-$index"} = $Imposition->page_quantity();
+					$$specs{"FoldPageQty-$form-$qty_index-$index"} = $$Imposition{page_quantity};
 					$$specs{"FoldPageColumns-$form-$qty_index-$index"} = $Imposition->page_columns();
 					$$specs{"FoldPageRows-$form-$qty_index-$index"} = $Imposition->page_rows();
 					$$specs{"FoldImposition-$form-$qty_index-$index"} = $$Imposition{imposition};
@@ -1921,9 +1924,7 @@ foreach my $k ( keys %Signature_Results ) {
 			#if ( $results{Status} eq 'uncalculated' ) {
 				#$status = 'uncalculated';
 			#} # end if
-			#$$specs{"hdnBreakdown$qty_index"} .= '</fieldset>';
 		} # end foreach option
-		$$specs{"hdnBreakdown$qty_index"} .= $$bestPerm{StitchingBreakdown} if $$bestPerm{StitchingBreakdown};
 		if ( $status eq 'uncalculated' and ! $$specs{alert} ) {
 			$$specs{alert} = 'Unable to fold.';
 		} # end if

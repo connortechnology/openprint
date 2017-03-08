@@ -231,8 +231,8 @@ sub update {
 } # end sub update
 
 sub start_transaction {
-	#my ( $caller, undef, $line ) = caller;
-#$openprint::log->debug("Called start_transaction from $caller : $line");
+	my ( $caller, undef, $line ) = caller;
+$openprint::log->debug("Called start_transaction from $caller : $line");
 	my $d = shift;
 	$d = $dbh if ! $d;
 	my $ac = $d->{AutoCommit};

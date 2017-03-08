@@ -219,12 +219,6 @@ $log->warn("Paper was supplied");
 					my $impressions = $$sig_specs{'hdnImpressionQuantity'.$qty_index};
 					if ( sets::isin( $$sig_specs{'ddmRunStyle'.$qty_index}, ['Work & Turn','Work & Tumble'] ) ) {
 						$impressions /= 2
-					} elsif ( $$sig_specs{'ddmRunStyle'.$qty_index} eq 'Sheet Work' ) {
-						my @side_one_colours = openprint::Estimating::Printing::get_colours( $sig_specs, 'SideOne' );
-						my @side_two_colours = openprint::Estimating::Printing::get_colours( $sig_specs, 'SideTwo' );
-						if ( @side_one_colours and @side_two_colours ) {
-							$impressions /= 2
-						} # end if
 					} # end if
 
 					if ( $Paper->type() eq 'Roll' ) {
