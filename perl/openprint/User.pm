@@ -54,7 +54,7 @@ $default_sort	=	'lower(firstname),lower(lastname)';
 	'notes'				=>	'notes',
 	'asset_id'			=>	'asset_id',
 	'deleted'			=>	'deleted',
-	last_Logged_in		=>	undef,
+	last_logged_in		=>	undef,
 ); # end %fields
 %find_fields = (
 	'name'	=>	q`firstname || ' ' || lastname`,
@@ -495,15 +495,15 @@ sub html {
 } # end sub html
 
 sub last_logged_in {
-	if ( (! $_[0]{last_logged_on} ) and $_[0]{id} ) {
+	if ( (! $_[0]{last_logged_in} ) and $_[0]{id} ) {
 		# Almost any entry means we were logged in.  
-		my $Log = openprint::Log->find_one(user_id=>$_[0]{id},'order'=>'date_time DESC');
+		my $Log = openprint::Log->find_one(user_id=>$_[0]{id}, order=>'date_time DESC');
 		if ( $Log ) {
 #$openprint::log->debug("last_Logged_in: " . $Log->to_string() );
-			$_[0]{last_logged_on} = $$Log{date_time};
+			$_[0]{last_logged_in} = $$Log{date_time};
 		} # end if
 	}
-	return $_[0]{last_logged_on};
+	return $_[0]{last_logged_in};
 } # end sub last_logged_in
 
 sub AUTOLOAD {
