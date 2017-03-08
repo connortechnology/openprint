@@ -161,7 +161,6 @@ sub signature_calc {
 
 	my %results = (
 		alert	=>	'',
-		Price	=>	0,
 		Status	=>	'uncalcalated',
 	);
 	my $services = $Project->services();
@@ -300,7 +299,7 @@ $openprint::log->debug("Fold pq($$FI{page_quantity}) pages($$FI{pages}) ($$Fold{
 							#next;
 						} 
 							my $p = $$FI{page_quantity};
-							$p *= $$FI{quantity} if ( $$FI{page_quantity} == 1 ) and $$FI{quantity};
+							#$p *= $$FI{quantity} if ( $$FI{page_quantity} == 1 ) and $$FI{quantity};
 							$$specs{join('','txtSignatureQty',$$Fold{pages},'Page-',$qty_index)} += $p;
 							$pockets += $p;
 					}
@@ -450,7 +449,7 @@ EQUIPMENT:foreach my $Equipment ( @equipment ) {
 
 # Need to look at all sigs...
 				foreach my $I ( @$Impositions ) {
-					if ( $I->Press()->id() != $Equipment->id() ) {
+					if ( $$I{Press}{id} != $$Equipment{id} ) {
 						$results{Breakdown} .= "All sigs must be printed on this stitcher.<br/>";
 						next EQUIPMENT;
 					} # end if
@@ -594,7 +593,7 @@ sub calc {
 	foreach my $service ( 'Scoring', 'Folding' ) {
 		if ( $$services{$service} and @{$$services{$service}} ) {
 			$$calc_hash{"Has$service"} = $$services{$service}[0];
-			$$calc_hash{"${service}Specs"} = openprint::service::get_specs_ref( $Project, $$services{Scoring}[0] );
+			$$calc_hash{"${service}Specs"} = openprint::service::get_specs_ref( $Project, $$services{$service}[0] );
 		} # end if service
 	} # end foreach service
 	my $folding_specs = $$calc_hash{FoldingSpecs};
