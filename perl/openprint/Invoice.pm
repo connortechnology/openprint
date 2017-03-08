@@ -11,7 +11,6 @@ use vars qw( %config $log %session );
 require openprint::Currency;
 require openprint::Company;
 require openprint::Service;
-require openprint::InvoiceLog;
 require openprint::Tax;
 require openprint::Invoiced_Product;
 require openprint::Invoiced_Project;
@@ -256,19 +255,8 @@ sub Payments {
 } # end sub Payments
 
 sub Logs {
-	return openprint::InvoiceLog->find('invoice_id'=>$_[0]{id},'order'=>'created_on');
+	return openprint::Log->find(object_id=>$_[0]{id},object_type=>'openprint::Invoice', order=>'date_time');
 } # end sub Logs
-
-sub add_to_log {
-	my ( $self, $desc, $user_id ) = @_;
-	my $Log = new openprint::InvoiceLog();
-	$Log->save({
-		invoice_id	=> $$self{id},
-		user_id		=> $user_id ? $user_id : $session{user_id},
-		description	=> $desc,
-	} );
-	
-} # end sub add_to_log
 
 sub send {
 	my ( $self, $To ) = @_;
@@ -310,13 +298,13 @@ sub send {
 	my $Email = new openprint::Email();
 	$results = $Email->send(
 		BCC			=>	new openprint::User( $session{user_id} ),
-		#'TO'			=>	new openprint::User( $session{user_id} ),
+		#TO			=>	new openprint::User( $session{user_id} ),
 		TO			=>	( $To ? $To : [$self->Invoicee()->AccountingContacts()] ),
 		FROM		=>	$config{AccountingEmail},
 		ATTACHMENTS	=>	\@attachments,
 		SUBJECT		=>	sprintf('Your Invoice (%1$d) is now available.', $$self{id} ),
 	);
-	$self->add_to_log( $results );
+	(new openprint::Log())->save({Object=>$self, action=>'Invoice Sent', note=>$results});
 	return $results;
 } # end sub send
 
@@ -410,22 +398,31 @@ sub can_edit {
 } # end sub can_edit
 
 sub can_view {
+	if ( $openprint::session{user_type} eq 'A' ) {
 	return 1;
+	}
+	if ( $openprint::session{user_type} eq 'E' ) {
+		if ( $_[0]->Invoicee()->salesrep_id() == $openprint::session{user_id} ) {
+			return 1;
+		}
+	}
+	return 0;
+		
 } # end sub can_view
 
 sub can_send {
-	return 1 if ! $_[0]{id};
-	my $User = $_[1] ? $_[1] : new openprint::User( $openprint::session{user_id} );
+	my $User = $_[1] ? $_[1] : $openprint::User;
 
 	if ( $$User{type} eq 'A' ) {
 		$log->debug("$$User{firstname} Is administrator") if $debug;
 		return 1;
 	} # end if
 
-        if ( openprint::usergroup::is_user_in( ['Accounting'], $$User{id} ) )  {
-                $log->debug("$$User{firstname} Is in Accounting'") if $debug;
-                return 1;
-        } # end i
+	if ( openprint::usergroup::is_user_in( ['Accounting'], $$User{id} ) )  {
+		$log->debug("$$User{firstname} Is in Accounting'") if $debug;
+		return 1;
+	} # end i
+	return 0;
 } # end sub can_send
 
 sub upload {

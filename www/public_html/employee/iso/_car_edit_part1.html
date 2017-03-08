@@ -18,23 +18,23 @@
 		<td colspan="1">Assigned To</td>
 		<td colspan="4">
 <? if ( $session{user_type} eq 'A' or openprint::usergroup::is_user_in( ['Quality Control'], $session{user_id} ) ) ?>
-<select id="issued_to_id" name="issued_to_id"><option value="">select</option><? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::User->find('type'=>['E','A'],'order'=>'lower(firstname),lower(lastname)') ], $$variable{CAR}->issued_to_id() ); ) ?></select>
+<select id="issued_to_id" name="issued_to_id"><option value="">select</option><? echo ( make_drop_down( openprint::User->dropdown( type=>['E','A']), $$variable{CAR}->issued_to_id() ); ) ?></select>
 <? else ( $session{user_type} eq 'A' or openprint::usergroup::is_user_in( ['Quality Control'], $session{user_id} ) ) ?>
 <? echo ( $$variable{CAR}->issued_to()->name() ) ?>
 <? endif ( $session{user_type} eq 'A' or openprint::usergroup::is_user_in( ['Quality Control'], $session{user_id} ) ) ?>
 
 		</td>
 		<td colspan="1">Issued By</td>
-		<td colspan="4"><select name="issued_by_id"><? echo ( make_drop_down( [ map { $_->id(), $_->name() } openprint::User->find( type=>['E','A'], order=>'lower(firstname),lower(lastname)') ], $$variable{CAR}->issued_by_id() ? $$variable{CAR}->issued_by_id() : $session{user_id} ); ) ?></select></td>
+		<td colspan="4"><select name="issued_by_id"><? echo ( make_drop_down( openprint::User->dropdown( type=>['E','A'] ), $$variable{CAR}->issued_by_id() ? $$variable{CAR}->issued_by_id() : $session{user_id} ); ) ?></select></td>
 	</tr>
 	<tr>
 		<td colspan="1">Issue Date</td>
 		<td colspan="4">
 <? eval (
 	if ( $$variable{CAR}->issued_on() ) {
-	@$variable{'issued_on_years','issued_on_months','issued_on_days','Start'} = ssi::get_dates( $log, $dbh, split('-',$$variable{CAR}->issued_on()) );
+	@$variable{'issued_on_years','issued_on_months','issued_on_days','Start'} = get_dates( $log, $dbh, split('-',$$variable{CAR}->issued_on()) );
 	} else {
-	@$variable{'issued_on_years','issued_on_months','issued_on_days','Start'} = ssi::get_dates( $log, $dbh, Date::Calc::Today() );
+	@$variable{'issued_on_years','issued_on_months','issued_on_days','Start'} = get_dates( $log, $dbh, Date::Calc::Today() );
 	} # end if
 ) ?>
             <select name="issued_on_year" onchange="setDaysDropDown(this.value,this.form.issued_on_month.value,this.form.issued_on_day,this.form.issued_on_day.value);"><?issued_on_years?></select>
@@ -46,9 +46,9 @@
 <? if ( $session{user_type} eq 'A' or openprint::usergroup::is_user_in( ['Quality Control'], $session{user_id} ) ) ?>
 <? eval (
 	if ( $$variable{CAR}->reply_by() ) {
-@$variable{'reply_by_years','reply_by_months','reply_by_days','Start'} = ssi::get_dates( $log, $dbh, split('-',$$variable{CAR}->reply_by() ) );
+@$variable{'reply_by_years','reply_by_months','reply_by_days','Start'} = get_dates( $log, $dbh, split('-',$$variable{CAR}->reply_by() ) );
 	} else {
-@$variable{'reply_by_years','reply_by_months','reply_by_days','Start'} = ssi::get_dates( $log, $dbh, Date::Calc::Add_Delta_Days( Date::Calc::Today(), 14 ) );
+@$variable{'reply_by_years','reply_by_months','reply_by_days','Start'} = get_dates( $log, $dbh, Date::Calc::Add_Delta_Days( Date::Calc::Today(), 14 ) );
 } # end if
 ) ?>
             <select name="reply_by_year" onchange="setDaysDropDown(this.value,this.form.reply_by_month.value,this.form.reply_by_day,this.form.reply_by_day.value);"><?reply_by_years?></select>
@@ -138,9 +138,9 @@
 <? if ( $session{user_id} == $$variable{CAR}->Company()->salesrep_id() ) ?>
 <? eval (
 if ( $$variable{CAR}->reprint_on() ) {
-@$variable{'reprint_on_years','reprint_on_months','reprint_on_days','Start'} = ssi::get_dates( $log, $dbh, split('-', $$variable{CAR}->reprint_on() ) );
+@$variable{'reprint_on_years','reprint_on_months','reprint_on_days','Start'} = get_dates( $log, $dbh, split('-', $$variable{CAR}->reprint_on() ) );
 } else {
-@$variable{'reprint_on_years','reprint_on_months','reprint_on_days','Start'} = ssi::get_dates( $log, $dbh, Date::Calc::Today() );
+@$variable{'reprint_on_years','reprint_on_months','reprint_on_days','Start'} = get_dates( $log, $dbh, Date::Calc::Today() );
 } # end if
 ) ?>
             <select name="reprint_on_year" onchange="setDaysDropDown(this.value,this.form.reprint_on_month.value,this.form.reprint_on_day,this.form.reprint_on_day.value);"><?reprint_on_years?></select>
@@ -221,7 +221,7 @@ if ( $$variable{CAR}->reprint_on() ) {
 	<input type="hidden" name="btnFunction" value="Save" />
 </form>
 <p class="buttons">
-	<? echo ( join('',
+	<? echo ( join("\n",
 		button( 'Save', { onclick=>"if(check_part1(\$('part1form'))){new Ajax.Updater('Part1','/employee/iso/_car_view_part1.html',
 		{
 			parameters: \$('part1form').serialize(),

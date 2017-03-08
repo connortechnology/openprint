@@ -136,19 +136,9 @@ if ( ! $$self{project_id} ) {
 	$openprint::log->error("Attempt to delete a Project Service with no project.");
 	return;
 } # end if
-	my $ac = sql::start_transaction( $openprint::dbh );
-	my $Project = $self->Project();
-	$Project->lock();
-	my $specs = $self->specs();
-$openprint::log->warn("Deleting " . $self->service_type() . ' ' . $self->to_string() );
-	sql::execute( undef, $openprint::dbh, q{DELETE FROM tbl_Service_Specifications WHERE lngProjectIndex=? AND lngServiceIndex=?}, @$self{'project_id','service_id'} );
-	sql::execute( undef, $openprint::dbh, q{DELETE FROM tbl_Project_Contents WHERE lngProjectIndex=? AND lngServiceIndex=?}, @$self{'project_id', 'service_id'} );
-$openprint::log->warn("Deleting Service from " . $Project->to_string() );
-	delete $$Project{'Services'};
-	delete $$Project{'signatures'};
-	delete $$Project{'Signature'};
-	delete $$Project{'service_types'};
-	$Project->unlock();
+
+	# Lock all schedule
+	openprint::ScheduledJob->lock();
 	foreach my $Job ( openprint::ScheduledJob->find( project_id=>$$self{project_id}, 'service_id any'=>$$self{service_id} ) ) {
 		$Job->save( { 
 				service_id => [ sets::exclude( [ $$self{service_id} ], $Job->service_id() ) ],
@@ -160,9 +150,23 @@ $openprint::log->warn("Deleting Service from " . $Project->to_string() );
 				pertains_id => [ sets::exclude( [ $$self{service_id} ], $Job->pertains_id() ) ],
 				} );
 	} # end foreach Job
+	openprint::ScheduledJob->unlock();
 
-	$Project->add_to_log( @openprint::session{'company_id','user_id'}, "Deleted service ".$self->ServiceType()->type() . " $$specs{ServiceName} ($$self{service_id})." );
-	sql::end_transaction( $openprint::dbh, $ac );
+	my $Project = $self->Project();
+	$Project->lock();
+	my $specs = $self->specs();
+$openprint::log->warn("Deleting " . $self->service_type() . ' ' . $self->to_string() );
+	sql::execute( undef, $openprint::dbh, q{DELETE FROM tbl_Service_Specifications WHERE lngProjectIndex=? AND lngServiceIndex=?}, @$self{'project_id','service_id'} );
+	sql::execute( undef, $openprint::dbh, q{DELETE FROM tbl_Project_Contents WHERE lngProjectIndex=? AND lngServiceIndex=?}, @$self{'project_id', 'service_id'} );
+$openprint::log->warn("Deleting Service from " . $Project->to_string() );
+	delete $$Project{'Services'};
+	delete $$Project{'signatures'};
+	delete $$Project{'Signature'};
+	delete $$Project{'service_types'};
+
+	$Project->unlock();
+
+	$Project->add_to_log( @openprint::session{'company_id','user_id'}, "Deleted service ".$self->ServiceType()->type() . " $$specs{ServiceName} " . join(' $', map { $$specs{"txtPrice$_"} } $Project->quantity_indexes() ). "." );
 	return;
 } # end sub delete
 
@@ -187,5 +191,37 @@ sub overrides {
 	} # end if
 	return ();
 } # end sub overrides
+
+sub summary {
+	my ( $qty_index ) = @_;
+
+	my $Project = $_[0]->Project();
+	my $services = $Project->services();
+	my $ServiceType = $_[0]->ServiceType( $_[0]{service_id} );
+	return '' if ! $ServiceType->summary_visible();
+
+	my $specs = $_[0]->specs;
+	if ( $$specs{ServiceType} eq 'Signature' or ( $$specs{ServiceType} eq '' and ! $$specs{txtTotalPageQuantity}  ) ) {
+		require openprint::Estimating::Printing;
+		return openprint::Estimating::Printing::summary($Project, $_[0]{service_id}, $specs, $qty_index );
+	} elsif ( sets::isin( $$specs{ServiceType}, ['ShrinkWrap','KraftWrap','Bundling','Banding','CrossBanding'] ) ) {
+		require openprint::Estimating::Packaging;
+		return openprint::Estimating::Packaging::summary($Project, $_[0]{service_id}, $specs, $qty_index );
+	} elsif ( sets::isin( $$specs{ServiceType}, ['SaddleStitching','LoopStitching'] ) ) {
+		require openprint::Estimating::Stitching;
+		return openprint::Estimating::Stitching::summary($Project, $_[0]{service_id}, $specs, $qty_index );
+	} else {
+		my $ServiceTypeType = $ServiceType->type();
+		return if ! $ServiceTypeType;
+
+		eval('require openprint::Estimating::'.$ServiceTypeType.';' );
+		$openprint::log->error("ERror requiring openprint::Estimating::$ServiceTypeType ::summary: $@)") if $@;
+		my $summary = eval('openprint::Estimating::'.$ServiceTypeType.'::summary( $Project, $_[0]{service_id}, $specs, $qty_index );' );
+		$openprint::log->error("ERror evalling openprint::Estimating:: $ServiceTypeType ::summary: $@)") if $@;
+		return $summary;
+	} # end if
+	return;
+} # end sub summary
+
 1;
 __END__

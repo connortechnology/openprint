@@ -61,12 +61,13 @@
 	</fieldset>
 <? else ( @{$$variable{Modes}} > 1 ) ?>
 	<? echo ( 
-		$$variable{rdbMode} = $$variable{Modes}[0];
-		return '<input type="hidden" name="rdbMode" value="' . (shift @{$$variable{Modes}}) . '" />' if @{$$variable{Modes}} == 1;
+		$$variable{rdbMode} = $$variable{Modes}[0] if @{$$variable{Modes}};
+		$$variable{rdbMode} = 'Detailed' if ! $$variable{rdbMode};
+		return '<input type="hidden" name="rdbMode" value="' . $$variable{rdbMode} . '" />';
 	) ?>
 <? endif ( @{$$variable{Modes}} > 1 ) ?>
 
-<? eval (  @{$$variable{OptionServiceTypes}} = openprint::ServiceType->find('category'=>'Options','create_visible'=>1,'order'=>'sorting,lower(description)'); ) ?>
+<? eval (  @{$$variable{OptionServiceTypes}} = openprint::ServiceType->find( category=>'Options', create_visible=>1, order=>'sorting,lower(description)'); ) ?>
 <? if ( @{$$variable{OptionServiceTypes}} ) ?>
 <fieldset><legend>Options</legend>
 	<ul>
@@ -96,7 +97,7 @@
 				<input type="checkbox" name="chkServices%1$s" id="chkServices%1$s" value="%1$s" onclick="service_onclick( this );" %3$s />
 				<label for="chkServices%1$s">%2$s</label>
 			</li>
-		`, $ServiceType->name(), ssi::writeTip( $ServiceType->description() ), ssi::checked( sets::isin( $ServiceType->id(), $$variable{SelectedServices} ) ) );
+		`, $ServiceType->name(), ssi::writeTip( $ServiceType->description() ), ssi::checked( sets::isin( $ServiceType->name(), $$variable{SelectedServices} ) ) );
 	} # end foreach
 	return $html;
 ) ?>
@@ -112,7 +113,7 @@
 				<input type="checkbox" name="chkServices%1$s" id="chkServices%1$s" value="%1$s" onclick="service_onclick( this );" %3$s />
 				<label for="chkServices%1$s">%2$s</label>
 			</li>
-		`, $ServiceType->name(), ssi::writeTip( $ServiceType->description() ), ssi::checked( sets::isin( $ServiceType->id(), $$variable{SelectedServices} ) ) );
+		`, $ServiceType->name(), ssi::writeTip( $ServiceType->description() ), ssi::checked( sets::isin( $ServiceType->name(), $$variable{SelectedServices} ) ) );
 	} # end foreach
 	return $html;
 ) ?>
@@ -130,7 +131,7 @@
 				<input type="checkbox" name="chkServices%1$s" id="chkServices%1$s" value="%1$s" onclick="service_onclick( this );" %3$s />
 				<label for="chkServices%1$s">%2$s</label>
 			</li>
-		`, $ServiceType->name(), ssi::writeTip( $ServiceType->description() ), ssi::checked( sets::isin( $ServiceType->id(), $$variable{SelectedServices} ) ) );
+		`, $ServiceType->name(), ssi::writeTip( $ServiceType->description() ), ssi::checked( sets::isin( $ServiceType->name(), $$variable{SelectedServices} ) ) );
 	} # end foreach
 	return $html;
 ) ?>
@@ -152,7 +153,7 @@
 					<input type="checkbox" name="chkServices%1$s" id="chkServices%1$s" value="%1$s" onclick="service_onclick( this );" %3$s />
 					<label for="chkServices%1$s">%2$s</label>
 				</li>
-			`, $ServiceType->name(), ssi::writeTip( $ServiceType->description() ), ssi::checked( sets::isin( $ServiceType->id(), $$variable{SelectedServices} ) ) );
+			`, $ServiceType->name(), ssi::writeTip( $ServiceType->description() ), ssi::checked( sets::isin( $ServiceType->name(), $$variable{SelectedServices} ) ) );
 		} # end foreach
 		$html .= '</ul></fieldset>';
 	} # end if
@@ -172,7 +173,7 @@
 					<input type="checkbox" name="chkServices%1$s" id="chkServices%1$s" value="%1$s" onclick="service_onclick( this );" %3$s />
 					<label for="chkServices%1$s">%2$s</label>
 				</li>
-			`, $ServiceType->name(), ssi::writeTip( $ServiceType->description() ), ssi::checked( sets::isin( $ServiceType->id(), $$variable{SelectedServices} ) ) );
+			`, $ServiceType->name(), ssi::writeTip( $ServiceType->description() ), ssi::checked( sets::isin( $ServiceType->name(), $$variable{SelectedServices} ) ) );
 		} # end foreach
 		$html .= '</ul></fieldset>';
 	} # end if

@@ -1,13 +1,14 @@
 <?include(/includes/error_reporting.html)?>
 <script type="text/javascript" src="<?hash_link(/javascripts/pricing.js)?>"></script>
-<form name="f1" id="f1" method="post" enctype="multipart/form-data" action="edit.html">
+<form name="f1" id="f1" method="post" action="edit.html">
+	<input type="hidden" name="btnFunction"/>
 	<fieldset class="filters"><legend>Search</legend>
 		<ul>
 		<li> 
 			<label>Category</label>
-			<select name="ddmSearchCategory" onchange="form.btnFunction.value='';f1.submit();">
+			<select name="ddmSearchCategory" onchange="f1.btnFunction.value='';f1.submit();">
 				<option value="">All Categories</option>
-				<? echo ( make_drop_down( openprint::MaterialCategory->dropdown( order=>'lower(name)'), $param{ddmSearchCategory} ); ) ?>
+				<? echo ( make_drop_down( openprint::MaterialCategory->dropdown( order=>'lower(name)'), $session{$$variable{uri}.'?ddmSearchCategory'} ); ) ?>
 			</select>
 		</li>
 		<li>
@@ -29,53 +30,67 @@
 				<? echo ( 
 						make_drop_down( [ map { $_->id(), $_->name() . ' : ' . $_->description() } openprint::Material->find(
 								order=>'lower(name)', 
-								( $param{'ddmSearchCategory'} ? ( 'category_id'=>$param{'ddmSearchCategory'} ) : () ),
-								( $param{'equipment_id'} ? ( 'equipment_id any' => $param{'equipment_id'} ) : () ),
-								) ], $$variable{'Material'}->id() );
+								( $session{$$variable{uri}.'?ddmSearchCategory'} ? ( category_id=>$session{$$variable{uri}.'?ddmSearchCategory'} ) : () ),
+								( $param{equipment_id} ? ( 'equipment_id any' => $param{equipment_id} ) : () ),
+								) ], $$variable{Material}->id() );
 						) ?>
 			</select>
 		</li>
 		</ul>
-		<p class="buttons">
-			<? echo ( 
-				my $html = '';
-				$html .= button( 'Prev1', { onclick=>"f1.btnFunction.value='&lt;&lt;';fmCheck(f1);", href=>'', text=>'<<' } );
-				$html .= button( 'Next1', { onclick=>"f1.btnFunction.value='>>';fmCheck(f1);", href=>'', text=>'>>' } );
-				$html .= button( 'New1', { onclick=>"addCheck(f1);", href=>'', text=>'New' } );
-				$html .= button( 'Save1', { onclick=>"f1.btnFunction.value='Save';f1.submit();", text=>'Save' } );
-				if ( $$variable{'Material'}->id() ) {
-					$html .= button( 'Copy1', { onclick=>"f1.btnFunction.value='Copy';fmCheck(f1);", href=>'', text=>'Copy' } );
-					$html .= button( 'Delete1', { onclick=>"f1.btnFunction.value='Delete';fmChange=2;fmCheck(f1);", href=>'', text=>'Delete' } );
-				} # end if
-				$html .= button( 'Reset1', { onclick=>'f1.reset();', href=>'', text=>'Reset' } );
-				return $html;
-			) ?>
-		</p>
 	</fieldset>
-	<fieldset class="leftColumn"><legend>Material Information (<? echo ( $$variable{'Material'}->id() ) ?>)</legend>
-		<p> 
+</form>
+<form name="f2" id="f2" method="post" enctype="multipart/form-data" action="edit.html">
+	<input type="hidden" name="ddmMaterial" value="<?echo($$variable{Material}->id())?>"/>
+	<p class="buttons">
+		<? echo ( join("\n",
+			button( 'New', { href=>'/administrator/materials/edit.html', text=>'New' } ),
+			button( 'Save', { onclick=>"f2.btnFunction.value='Save';f2.submit();", text=>'Save' } ),
+			( $$variable{Material}->id() ? (
+				button( 'Copy', { onclick=>"f2.btnFunction.value='Copy';fmCheck(f2);", text=>'Copy' } ),
+				button( 'Delete', { onclick=>"if(confirm('Are you sure?')){f2.btnFunction.value='Delete';f2.submit();};", text=>'Delete' } ),
+			) : () ),
+			button( 'Reset', { onclick=>'f2.reset();', text=>'Reset' } ),
+);
+		) ?>
+	</p>
+<? if ( $openprint::User->email() eq 'iconnor@connortechnology.com' ) ?>
+	<p class="buttons">
+		<input type="file" name="file"/>
+		<? echo ( join("\n",
+		button( 'Import', { onclick=>"f2.btnFunction.value='Import';f2.submit();", text=>'Import' } ),
+		button( 'Export', { onclick=>"f2.btnFunction.value='Export';f2.submit();", text=>'Export' } ),
+		); ) ?>
+	</p>
+<? endif ( $openprint::User->email() eq 'iconnor@connortechnology.com' ) ?>
+	<div class="leftColumn">
+	<fieldset><legend>Material Information (<? echo ( $$variable{Material}->id() ) ?>)</legend>
+		<ul>
+		<li> 
 			<label>Material Name</label>
-			<input type="text" name="name" value="<? hecho ( $$variable{'Material'}->name(); ) ?>" onchange="if(!$('description').value){$('description').value=this.value;}"/>
-		</p>
-		<p> 
+			<input type="text" name="name" value="<? hecho ( $$variable{Material}->name(); ) ?>" onchange="if(!$('description').value){$('description').value=this.value;}"/>
+		</li>
+		<li> 
 			<label onclick="$('new_category').value='';$('new_category').toggle();$('category_id').selectedIndex=0;$('category_id').toggle()">Category</label>
 			<input style="display:none;" type="text" id="new_category" name="new_category" value=""/>	
 			<select id="category_id" name="category_id">
 				<option value="">Select a category</option>
-				<? echo ( make_drop_down( openprint::MaterialCategory->dropdown( order=>'lower(name)'), $$variable{'Material'}->category_id() ); ) ?>
+				<? echo ( make_drop_down( openprint::MaterialCategory->dropdown( order=>'lower(name)'), $$variable{Material}->category_id() ); ) ?>
 			</select>
-		</p>
-		<p> 
+		</li>
+		<li> 
 			<label>Description</label>
-			<input type="text" id="description" name="description" value="<? hecho ( $$variable{'Material'}->description(); ) ?>" />
-		</p>
-		<p> 
+			<input type="text" id="description" name="description" value="<? hecho ( $$variable{Material}->description(); ) ?>" />
+		</li>
+		<li> 
 			<label>Activity Code</label>
 			<input type="text" id="activity_code" name="activity_code" value="<? echo ( $$variable{Material}->activity_code() ) ?>" />
-		</p>
+		</li>
+		</ul>
 	</fieldset>
-	<fieldset class="rightColumn"><legend>Purchasing Information</legend>
-		<p>
+</div><div class="rightColumn">
+	<fieldset><legend>Purchasing Information</legend>
+		<ul>
+		<li>
 			<label for="manufacturer" onclick="$('manufacturer_Id').toggle();$('manufacturer').toggle();">Manufacturer</label>
 			<select id="manufacturer_id" name="manufacturer_id" size="1">
 				<option value="">select</option>
@@ -84,55 +99,34 @@
 					) ?>
 			</select>
 			<input style="display: none;" type="text" id="manufacturer" name="manufacturer" onfocus="if(!this.value){this.value=get_ddm_text(f1.manufacturer_id);}ddm_select_by_index( f1.manufacturer_id, 0 );" />
-		</p>
-		<p> 
+		</li>
+		<li> 
 			<label>Supplier</label>
 			<select name="ddmSupplier">
 				<option value="">Select a supplier</option>
-<? echo ( make_drop_down( openprint::Company->dropdown( supplier=>'Y', order=>'lower(name)'), $$variable{'Material'}->supplier_id() ); ) ?>
+<? echo ( make_drop_down( openprint::Company->dropdown( supplier=>'Y', order=>'lower(name)'), $$variable{Material}->supplier_id() ); ) ?>
 			</select>
-		</p>
-		<p> 
+		</li>
+		<li> 
 			<label>Federal Tax Exempt?</label>
-			<input type="radio" id="taxexempt1Y" name="taxexempt1" value="Y" <? echo ( 'checked="checked"' if $$variable{'Material'}->taxexempt1() eq 'Y' ) ?> />
-			<label class="radio" for="taxexempt1Y">Yes</label>
-			<input type="radio" id="taxexempt1N" name="taxexempt1" value="N" <? echo ( 'checked="checked"' if $$variable{'Material'}->taxexempt1() eq 'N' ) ?> />
-			<label class="radio" for="taxexempt1N">No</label>
-		</p>
-		<p> 
+			<? echo (radio('taxexempt1', [ 'Y', 'Yes', 'N', 'No' ], $$variable{Material}->taxexempt1(), { default=>'N' } ); ) ?>
+		</li>
+		<li> 
 			<label>State/Province Exempt?</label>
-			<input type="radio" id="taxexempt2Y" name="taxexempt2" value="Y" <? echo ( 'checked="checked"' if $$variable{'Material'}->taxexempt2() eq 'Y' ) ?> />
-			<label class="radio" for="taxexempt2Y">Yes</label>
-			<input type="radio" id="taxexempt2N" name="taxexempt2" value="N" <? echo ( 'checked="checked"' if $$variable{'Material'}->taxexempt2() eq 'N' ) ?> />
-			<label class="radio" for="taxexempt2N">No</label>
-		</p>
+			<? echo (radio('taxexempt2', [ 'Y', 'Yes', 'N', 'No' ], $$variable{Material}->taxexempt1(), { default=>'N' } ); ) ?>
+		</li>
+		</ul>
 	</fieldset>
+</div>
 	<br class="spacer"/>
-	<? if ( $$variable{'Material'}->id() ) ?>
+	<? if ( $$variable{Material}->id() ) ?>
 		<div id="Prices">
 			<?include(_prices.html)?>
 		</div>
 		<?include(_specifications.html)?>
-<fieldset><legend>Logs</legend>
-        <ul>
-            <li><label>Date</label>
-                <? echo ( join( ' to ',
-                        datetime_select_session( $r->uri(),'log_created_on_start', {
-                            onchange    =>q`new Ajax.Updater( 'Logs', '_logs.html', { parameters: $('f1').serialize() } );`,
-                            with_today=>1,
-                            with_clear=>1,
-                            } ),
-                        datetime_select_session( $r->uri(),'log_created_on_end', {
-                            onchange    =>q`new Ajax.Updater( 'Logs', '_logs.html', { parameters: $('f1').serialize() } );`,
-                            with_today=>1,
-                            with_clear=>1,
-                            } ),
-                    ); ) ?>
-                <? echo ( button( 'LoadLog', { onclick=>q`new Ajax.Updater( 'Logs', '_logs.html', { parameters: $('f1').serialize() } );`, text=>'Load' } ); ) ?>
-            </li>
-        </ul>
-        <div id="Logs"><?include('_logs.html')?></div>
-    </fieldset>
-	<? endif ( $$variable{'Material'}->id() ) ?>
+	<? endif ( $$variable{Material}->id() ) ?>
 	<input type="hidden" name="btnFunction"/>
 </form>
+<? if ( $$variable{Material}->id() ) ?>
+<? echo ( include_logs( $$variable{Material} ); ) ?>
+<? endif ( $$variable{Material}->id() ) ?>

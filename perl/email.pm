@@ -16,11 +16,12 @@ sub db_connect {
 # Fairly important to us the config hash.  r->dir_config causes crashes
 		$dbh = sql::open_sql( $openprint::log, 
 				(
-				 'host'		=>	$config{mail_db_hostname},
-				 'database'	=>	$config{mail_db_name},
-				 'login'	=>	$config{mail_db_username},
-				 'password'	=>	$config{mail_db_password},
-				 'driver'	=>	$config{mail_db_driver},
+				 host		=>	$config{mail_db_hostname},
+				 port		=>	$config{mail_db_port},
+				 database	=>	$config{mail_db_name},
+				 login		=>	$config{mail_db_username},
+				 password	=>	$config{mail_db_password},
+				 driver		=>	$config{mail_db_driver},
 				) );
 	} # end if;
 	return $dbh;
@@ -74,12 +75,12 @@ sub start_vacation {
 	sql::execute( $log, $dbh, q{DELETE FROM vacation_cache WHERE to_email=?}, $email );
 	sql::execute( $log, $dbh, q{DELETE FROM vacation WHERE email=?}, $email );
 	sql::insert( $log, $dbh, 'vacation', 
-		'email',	$email,
-		'subject',	$subject,
-		'body',		$message,
-		'domain',	$autoreply_address,
-		'system_emails',	$system_emails,
-		'created',	'NOW()',
+		email		=>	$email,
+		subject	=>	$subject,
+		body		=>	$message,
+		domain	=>	$autoreply_address,
+		system_emails	=>	$system_emails,
+		created	=>	'NOW()',
 		);
 	my @aliases;
 	( $_ ) = sql::execute( $log, $dbh, q{SELECT goto FROM alias WHERE address=?}, $email );

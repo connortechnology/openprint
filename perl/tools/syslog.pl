@@ -27,7 +27,7 @@ my $program = basename($0);
 my $opts = {};
 Getopt::Long::GetOptions($opts, 'fifo=s', 'help', 'config=s',
 	'log_file=s', 'log_level=s',
-	'pid_file=s', 'db_name=s', 'db_host=s', 'db_user=s', 'db_pass=s',
+	'pid_file=s', 'db_port=s', 'db_name=s', 'db_host=s', 'db_user=s', 'db_pass=s',
 	'port=s','debug=s',
 );
 
@@ -59,13 +59,16 @@ foreach my $param ( 'db_name','db_user','db_pass' ) {
 
 $log = new logger( {file=>$config{log_file}, level=>$config{log_level}} );
 $log->info("Opening SQL connection");
-$dbh = sql::open_sql( $log,
+my %db_connect_info = (
+	port		=> $config{db_port},
 	host		=> $config{db_host},
 	database	=> $config{db_name},
 	driver		=> 'Pg',
 	login	 	=> $config{db_user},
 	password	=> $config{db_pass},
 );
+
+$dbh = sql::open_sql( $log, %db_connect_info );
 die "Couldn't connect to db: $$dbh{errstr}" if ! $dbh;
 configuration::init();
 configuration::from_file($$opts{config});
@@ -73,30 +76,35 @@ configuration::merge($opts);
 
 @SIG{qw(HUP)} = \&sig_handler;
 my @re = (
-		'^(\w{3} [ :0-9]{11}) [\._a-zA-Z0-9\-]+ sshd\[[0-9]+\]: pam_\w+\(sshd:auth\): authentication failure; logname= uid=0 euid=0 tty=ssh ruser= rhost=(?<IP>[\._a-zA-Z0-9\-]+)\s*$',
+		'^(\w{3} [ :0-9]{11}) [\._a-zA-Z0-9\-]+ sshd\[[0-9]+\]: pam_\w+\(sshd:auth\): authentication failure; logname= uid=0 euid=0 tty=ssh ruser= rhost=(?<IP>[\._a-zA-Z0-9\-]+)\s*',
 		'^(\w{3} [ :0-9]{11}) [\._a-zA-Z0-9\-]+ sshd\[[0-9]+\]: Bad protocol version identification \'[^\']+\' from (?<IP>[\._a-zA-Z0-9\-]+)( port [[:digit:]]+)?$',
 		'^(\w{3} [ :0-9]{11}) [\._a-zA-Z0-9\-]+ sshd\[[0-9]+\]: pam_\w+\(sshd:auth\): authentication failure; logname= uid=0 euid=0 tty=ssh ruser= rhost=(?<IP>[\._a-zA-Z0-9\-]+)\s+user\=\w+$',
+		'^(\w{3} [ :0-9]{11}) [\._a-zA-Z0-9\-]+ sshd\[[0-9]+\]: fatal: Unable to negotiate with (?<IP>[\._a-zA-Z0-9\-]+) port [0-9]+',
 		'^(\w{3} [ :0-9]{11}) [\._a-zA-Z0-9\-]+ sshd\[[0-9]+\]: Failed password for [\._a-zA-Z0-9\-]+ from (?<IP>[\._a-zA-Z0-9\-]+) port [0-9]+ ssh2$',
 		'^(\w{3} [ :0-9]{11}) [\._a-zA-Z0-9\-]+ sshd\[[0-9]+\]: Failed password for (invalid|illegal) user [\._a-zA-Z0-9\-]+ from (?<IP>[\._a-zA-Z0-9\-]+) port [0-9]+ ssh2$',
 		'^(\w{3} [ :0-9]{11}) [\._a-zA-Z0-9\-]+ sshd\[[0-9]+\]: error: PAM: Authentication failure for (illegal user root|[\._a-zA-Z0-9\-]+) from (?<IP>[\._a-zA-Z0-9\-]+)$',
-		'^(\w{3} [ :0-9]{11}) [\._a-zA-Z0-9\-]+ sshd\[[0-9]+\]: (error: )?PAM: [[:digit:]]+ more authentication failures?; logname= uid=0 euid=0 tty=ssh ruser= rhost=(?<IP>[\._a-zA-Z0-9\-]+)(\s+user\=\w+)?$',
+		'^(\w{3} [ :0-9]{11}) [\._a-zA-Z0-9\-]+ sshd\[[0-9]+\]: (error: )?PAM: [[:digit:]]+ more authentication failures?; logname= uid=0 euid=0 tty=ssh ruser= rhost=(?<IP>[\._a-zA-Z0-9\-]+)(\s+user=\w+)?$',
 		'^(\w{3} [ :0-9]{11}) [\._a-zA-Z0-9\-]+ sshd\[[0-9]+\]: Disconnecting: Too many authentication failures for (invalid user )?[^[:space:]]* from (?<IP>[.[:digit:]]+) port [[:digit:]]+ ssh2 \[preauth\]$',
-		'^(\w{3} [ :0-9]{11}) [\._a-zA-Z0-9\-]+ sshd\[[0-9]+\]: error: maximum authentication attempts exceeded for (invalid user )?root from (?<IP>[.[:digit:]]+) port [[:digit:]]+ ssh2 \[preauth\]$',
+		'^(\w{3} [ :0-9]{11}) [\._a-zA-Z0-9\-]+ sshd\[[0-9]+\]: error: maximum authentication attempts exceeded for (invalid user )?[[:alnum:]]+ from (?<IP>[.[:digit:]]+) port [[:digit:]]+ ssh2 \[preauth\]$',
 		'^(\w{3} [ :0-9]{11}) [\._a-zA-Z0-9\-]+ sshd\[[0-9]+\]: Invalid user \w+ from (?<IP>[0-9.]+)$',
 		'^(\w{3} [ :0-9]{11}) [\._a-zA-Z0-9\-]+ sshd\[[0-9]+\]: Connection closed by (?<IP>[0-9.]+):? \[preauth\]$',
-		'^(\w{3} [ :0-9]{11}) [\._a-zA-Z0-9\-]+ sshd\[[0-9]+\]: Received disconnect from (?<IP>[0-9.]+) (port [[:digit:]]+:)?[[:digit:]]+: [ \.,/:[:alnum:]]* \[preauth\]$',
+		'^(\w{3} [ :0-9]{11}) [\._a-zA-Z0-9\-]+ sshd\[[0-9]+\]: Received disconnect from (?<IP>[0-9.]+) (port [[:digit:]]+:)?[[:digit:]]+:[ \.,/:[:alnum:]]+\[preauth\]$',
+		'^(\w{3} [ :0-9]{11}) [\._a-zA-Z0-9\-]+ sshd\[[0-9]+\]: Protocol major versions differ for (?<IP>[0-9.]+) ',
 		'^(\w{3} [ :0-9]{11}) [\._a-zA-Z0-9\-]+ sshd\[[0-9]+\]: User \w+ from (?<IP>[0-9.]+) not allowed because (account is locked|not listed in AllowUsers)$',
 		'^(\w{3} [ :0-9]{11}) [\._a-zA-Z0-9\-]+ proftpd\[[0-9]+\]: [\.\-A-Za-z0-9]+ \([\.\-A-Za-z0-9]+\[(?<IP>[.:a-zA-Z0-9]+)\]\) \- Maximum login attempts \([0-9]+\) exceeded, connection refused$',
 		'^(\w{3} [ :0-9]{11}) [\._a-zA-Z0-9\-]+ proftpd\[[0-9]+\]: [\.\-A-Za-z0-9]+ \([\.\-A-Za-z0-9]+\[(?<IP>[.:a-zA-Z0-9]+)\]\) \- USER [\.\-A-Za-z0-9]+: no such user found from [0-9.]+\[[0-9.]+\] to [.:a-zA-Z0-9]+$',
 		'^(\w{3} [ :0-9]{11}) [\._a-zA-Z0-9\-]+ sshd\[[0-9]+\]: Failed keyboard-interactive/pam for invalid user [\.\-A-Za-z0-9]+ from (?<IP>[.:a-zA-Z0-9]+) port [0-9]+ ssh2$',
-		'^(\w{3} [ :0-9]{11}) [\._a-zA-Z0-9\-]+ dovecot: pop3\-login: Disconnected \(auth failed, 1 attempts\): user=<[a-zA-Z@\.0-9]*>, method=PLAIN, rip=(?<IP>[\.0-9]+), lip=[\.0-9]+?$',
-		'^(\w{3} [ :0-9]{11}) [\._a-zA-Z0-9\-]+ dovecot: pop3\-login: Disconnected \(auth failed, [0-9]+ attempts in [0-9]+ secs\): user=<[a-zA-Z@\.0-9]*>, method=PLAIN, rip=(?<IP>[\.0-9]+), lip=[\.0-9]+, session=<[^>]+>$',
+		'^(\w{3} [ :0-9]{11}) [\._a-zA-Z0-9\-]+ dovecot: (imap|pop3)\-login: Disconnected \(auth failed, 1 attempts\): user=<[a-zA-Z@\.0-9]*>, method=PLAIN, rip=(?<IP>[\.0-9]+), lip=[\.0-9]+?$',
+		'^(\w{3} [ :0-9]{11}) [\._a-zA-Z0-9\-]+ dovecot: (imap|pop3)\-login: Disconnected \(auth failed, [0-9]+ attempts in [0-9]+ secs\): user=<[a-zA-Z@\.0-9]*>, method=PLAIN, rip=(?<IP>[\.0-9]+), lip=[\.0-9]+, session=<[^>]+>$',
+		q`^(\w{3} [ :0-9]{11}) [\._a-zA-Z0-9\-]+ dovecot: imap\-login: Disconnected \(((auth failed, [0-9]+|no) attempts in|client didn't finish SASL auth, waited) [0-9]+ secs\): user=<[a-zA-Z@\.0-9]*>, (method=PLAIN, )?rip=(?<IP>[\.0-9]+), lip=[\.0-9]+, (TLS handshaking: SSL_accept\(\) failed: Unknown error, )?session=<[^>]+>$`,
 		'^(\w{3} [ :0-9]{11}) [\._a-zA-Z0-9\-]+ dovecot: pop3\-login: Aborted (l|L)ogin \(auth failed, [0-9]+ attempts in [0-9]+ secs\): user=<[a-zA-Z@\.0-9]*>, method=PLAIN, rip=(?<IP>[\.0-9]+), lip=[\.0-9]+, session=<[^>]+>$',
 		q`^(\w{3} [ :0-9]{11}) [\._a-zA-Z0-9\-]+ named\[[0-9]+\]: client (?<IP>[0-9.]+)#[0-9]+: (view [A-Za-z0-9]+: )?query \(cache\) '[./[:alnum:]]+' denied$`,
 		q`^(\w{3} [ :0-9]{11}) [\._a-zA-Z0-9\-]+ pam-abl\[[0-9]+\]: Blocking access from (?<IP>[0-9.]+) to service sshd, user root$`,
-		q`^(\w{3} [ :0-9]{11}) [\._a-zA-Z0-9\-]+ postfix\/smtpd\[[0-9]+\]: warning: [\.\-A-Za-z0-9]+\[(?<IP>[0-9.]+)\]: SASL LOGIN authentication failed:`,
+		q`^(\w{3} [ :0-9]{11}) [\._a-zA-Z0-9\-]+ postfix\/(submission\/)?smtpd\[[0-9]+\]: warning: [\.\-A-Za-z0-9]+\[(?<IP>[0-9.]+)\]: SASL (CRAM\-MD5|LOGIN|PLAIN) authentication failed:`,
 		q`^(\w{3} [ :0-9]{11}) [\._a-zA-Z0-9\-]+ pdns\[[0-9]+\]: Received a malformed qdomain from (?<IP>[0-9.]+), '[^']+': sending servfail$`,
 		q`^(\w{3} [ :0-9]{11}) [\._a-zA-Z0-9\-]+ ovpn\-server\[[0-9]+\]: (?<IP>[0-9.]+):[0-9]+ WARNING Bad encapsulated packet length from peer \([[:digit:]]+\), which must be > 0 and <= 1547 \-\- please ensure that \-\-tun\-mtu or \-\-link\-mtu is equal on both peers \-\- this condition could also indicate a possible active attack on the TCP link \-\- \[Attempting restart\.\.\.\]$`,
+		q`^(\w{3} [ :0-9]{11}) [\._a-zA-Z0-9\-]+ kernel: \[[0-9]+\.[0-9]+\] Shorewall:logflags:DROP:IN=[a-z]+[0-9] OUT= MAC= SRC=(?<IP>[0-9.]+) DST=[0-9\.]+ LEN=40 TOS=0x00 PREC=0x00 TTL=[0-9]+ ID=[0-9]+ DF PROTO=TCP SPT=443 DPT=21 WINDOW=8192 RES=0x00 URGP=0$`,
+		q`^(\w{3} [ :0-9]{11}) [\._a-zA-Z0-9\-]+ kernel: \[[0-9]+\.[0-9]+\] Shorewall:logflags:DROP:IN=[a-z]+[0-9] OUT= MAC= SRC=(?<IP>[0-9.]+)`,
 );
 
 
@@ -128,13 +136,7 @@ my %host_counts;
 
 while(1) {
 	if ( ! ($dbh and $dbh->ping() ) ) {
-		$dbh = sql::open_sql( $log,
-				host		=> $config{db_host},
-				database	=> $config{db_name},
-				driver		=> 'Pg',
-				login		=> $config{db_user},
-				password	=> $config{db_pass},
-				);
+		$dbh = sql::open_sql( $log, %db_connect_info );
 		if ( ! $dbh ) {
 			$log->error("Cannot connect to db! Sleeping");
 			sleep(10);
@@ -285,7 +287,7 @@ $log->debug("# of entries in Object_name_cache: " . keys %{$openprint::Object::n
 					$host_counts{$ip}{count} += 1;
 $log->debug("coutn for $ip is $host_counts{$ip}{count}");
 					$host_counts{$ip}{update} = 1;
-					$changed = 1;
+					$changed = $ip;
 				#} else {
 					#$log->debug( "Not counting because too old " . $host_counts{$ip}{updated_on} . " >= $when " ) if $config{debug};
 					#$log->debug( "Not counting because too old " . $updated_on_dt->epoch() . " >= " . $now_dt->epoch() ) if $config{debug};
@@ -295,10 +297,17 @@ $log->debug("coutn for $ip is $host_counts{$ip}{count}");
 		} # end foreach re
 
 		if ( $changed ) {
+			my $ip = $changed;
 			$log->debug( "# of entries in host_counts: " . keys %host_counts ) if $config{debug};
-			foreach my $ip ( sort keys %host_counts ) {
-				next if ! $host_counts{$ip}{update};
-				next if $host_counts{$ip}{whitelist};
+			#foreach my $ip ( sort keys %host_counts ) {
+				#next if ! $host_counts{$ip}{update};
+				my $count = $host_counts{$ip}{count};
+				$host_counts{$ip}->load();
+				if ( $host_counts{$ip}{whitelist} ) {
+					delete $host_counts{$ip};
+					next;
+				}
+				$host_counts{$ip}{count} = $count;
 				
 				if ( $ip eq '127.0.0.1' ) {
 					$log->warn("WTF blacklistint localhost?!");
@@ -328,7 +337,7 @@ $log->debug("coutn for $ip is $host_counts{$ip}{count}");
 					$log->debug("Dropping $ip");
 					`shorewall drop $ip`;
 				} # end if wasn't blacklisted, but now is
-			} # end foreach ip
+			#} # end foreach ip
 			$changed = 0;
 		} elsif ( $config{debug} ) {
 			$log->debug("No match or changes for $line") if $config{debug};

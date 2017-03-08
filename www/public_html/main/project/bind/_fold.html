@@ -22,6 +22,16 @@
 		name	=>	'FoldPageQty-'.$blah,
 		value	=>	$$variable{'FoldPageQty-'.$blah},
 		);
+	$html .= input(
+		type	=>	'hidden',
+		name	=>	'FoldPageColumns-'.$blah,
+		value	=>	$$variable{'FoldPageColumns-'.$blah},
+		);
+	$html .= input(
+		type	=>	'hidden',
+		name	=>	'FoldPageRows-'.$blah,
+		value	=>	$$variable{'FoldPageRows-'.$blah},
+		);
 	$html .= '</td><td class="Imp">';
 	$html .= input(
 		type	=>	'cardinal',
@@ -76,6 +86,11 @@
 		value	=>	$$variable{'FoldRunspeed-'.$blah},
 		onkeyup	=>	$onkeyup,
 	);
+	$html .= write_override( 'OverrideRunspeed-'.$blah,
+			$$variable{'OverrideRunspeed-'.$blah},
+			'', 
+			qq`Fold_onchange(e, '$$variable{SignatureIndex}', '$$variable{QTYIndex}', '$$variable{index}' );`,
+			);
 	$html .= '</td>';
 return $html;
 ) ?>

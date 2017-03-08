@@ -23,7 +23,7 @@ require openprint::Estimating::Printing;
 require openprint::service;
 require sets;
 
-use constant DEBUG => 0;
+use constant DEBUG => 1;
 
 use vars qw{ @signature_variables };
 
@@ -48,25 +48,9 @@ my %variables = (
 
 @signature_variables = (
 'chkCyanSideOne','chkMagentaSideOne','chkYellowSideOne','chkBlackSideOne', 'chkProcessColourSideOne',
-                'chkColourCoating1SideOne', 'ColourCoatingType1SideOne', 'ColourCoatingColour1SideOne','ColourCoatingCoverage1SideOne',
-                'chkColourCoating2SideOne', 'ColourCoatingType2SideOne', 'ColourCoatingColour2SideOne','ColourCoatingCoverage2SideOne',
-                'chkColourCoating3SideOne', 'ColourCoatingType3SideOne', 'ColourCoatingColour3SideOne','ColourCoatingCoverage3SideOne',
-                'chkColourCoating4SideOne', 'ColourCoatingType4SideOne', 'ColourCoatingColour4SideOne','ColourCoatingCoverage4SideOne',
-                'chkColourCoating5SideOne', 'ColourCoatingType5SideOne', 'ColourCoatingColour5SideOne','ColourCoatingCoverage5SideOne',
-                'chkColourCoating6SideOne', 'ColourCoatingType6SideOne', 'ColourCoatingColour6SideOne','ColourCoatingCoverage6SideOne',
-                'chkColourCoating7SideOne', 'ColourCoatingType7SideOne', 'ColourCoatingColour7SideOne','ColourCoatingCoverage7SideOne',
-                'chkColourCoating8SideOne', 'ColourCoatingType8SideOne', 'ColourCoatingColour8SideOne','ColourCoatingCoverage8SideOne',
-                'chkColourCoating9SideOne', 'ColourCoatingType9SideOne', 'ColourCoatingColour9SideOne','ColourCoatingCoverage9SideOne',
+( map { ( "chkColourCoating${_}SideOne", "ColourCoatingType${_}SideOne", "ColourCoatingColour${_}SideOne", "ColourCoatingCoverage${_}SideOne" ) } ( 1 .. 20 ) ),
+( map { ( "chkColourCoating${_}SideTwo", "ColourCoatingType${_}SideTwo", "ColourCoatingColour${_}SideTwo", "ColourCoatingCoverage${_}SideTwo" ) } ( 1 .. 20 ) ),
                 'chkCyanSideTwo','chkMagentaSideTwo','chkYellowSideTwo','chkBlackSideTwo', 'chkProcessColourSideTwo',
-                'chkColourCoating1SideTwo', 'ColourCoatingType1SideTwo', 'ColourCoatingColour1SideTwo','ColourCoatingCoverage1SideTwo',
-                'chkColourCoating2SideTwo', 'ColourCoatingType2SideTwo', 'ColourCoatingColour2SideTwo','ColourCoatingCoverage2SideTwo',
-                'chkColourCoating3SideTwo', 'ColourCoatingType3SideTwo', 'ColourCoatingColour3SideTwo','ColourCoatingCoverage3SideTwo',
-                'chkColourCoating4SideTwo', 'ColourCoatingType4SideTwo', 'ColourCoatingColour4SideTwo','ColourCoatingCoverage4SideTwo',
-                'chkColourCoating5SideTwo', 'ColourCoatingType5SideTwo', 'ColourCoatingColour5SideTwo','ColourCoatingCoverage5SideTwo',
-                'chkColourCoating6SideTwo', 'ColourCoatingType6SideTwo', 'ColourCoatingColour6SideTwo','ColourCoatingCoverage6SideTwo',
-                'chkColourCoating7SideTwo', 'ColourCoatingType7SideTwo', 'ColourCoatingColour7SideTwo','ColourCoatingCoverage7SideTwo',
-                'chkColourCoating8SideTwo', 'ColourCoatingType8SideTwo', 'ColourCoatingColour8SideTwo','ColourCoatingCoverage8SideTwo',
-                'chkColourCoating9SideTwo', 'ColourCoatingType9SideTwo', 'ColourCoatingColour9SideTwo','ColourCoatingCoverage9SideTwo',
                 'CyanSpotSideOneCoverage', 'MagentaSpotSideOneCoverage', 'YellowSpotSideOneCoverage', 'BlackSpotSideOneCoverage',
                 'CyanSideOneCoverage', 'MagentaSideOneCoverage', 'YellowSideOneCoverage', 'BlackSideOneCoverage',
                 'CyanSpotSideTwoCoverage', 'MagentaSpotSideTwoCoverage', 'YellowSpotSideTwoCoverage', 'BlackSpotSideTwoCoverage',
@@ -87,6 +71,7 @@ my %variables = (
 		'CustomStockPrice', 'StockPricePerM', 'txtStockGSM','CustomSheetDoubleSided',
 		'cuttable', 'perfecting', 'StockGrade', 'minimum_order','sheets_per_package','full_packages',
 		'sides_the_same','rdbPressProof','PressApproval',
+		'pages_supplied','supplied_format',
 		);
 
 sub variables {
@@ -95,8 +80,7 @@ sub variables {
 	foreach my $k ( keys %variables ) {
 		push @v, $k if sets::isin( 'save', $variables{$k} );
 	} # end foreach;
-	my @Groups = sql::execute( undef, undef, 'SELECT DISTINCT strvalue FROM tbl_Service_Specifications WHERE lngProjectIndex=? AND strName=?', $project_id, 'Group' );
-	foreach my $group_id ( @Groups ) {
+	foreach my $group_id ( groups( $project_id, $incoming_specs ) ) {
 		push @v, map { join('', $_,$group_id) } @signature_variables;
 	} # end foreach group
 	return @v;
@@ -158,7 +142,6 @@ sub groups {
 
 sub calc {
 	my ( $log, $dbh, $variable, $project_index, $service_index, $specs ) = @_;
-
 	$$specs{Status} = 'calculated';
 	$$specs{alert} = '';
 
@@ -191,21 +174,7 @@ sub calc {
 		$$specs{Status} = 'uncalculated';
 	} # end if
 
-	my @Groups = sql::execute( undef, undef, 'SELECT DISTINCT strvalue FROM tbl_Service_Specifications WHERE lngProjectIndex=? AND strName=?', $project_index, 'Group' );
-	if ( $$specs{rdbCover} eq 'Different' ) {
-		if ( ! sets::isin( 1, \@Groups ) ) {
-			push @Groups, 1;
-		} # end if
-	} else {
-		@Groups = sets::exclude( [1], \@Groups );
-	} # end if
-	if ( ! sets::isin( 2, \@Groups ) ) {
-		push @Groups, 2;
-	} # end if
-	if ( $$specs{txtGateFoldedSpreadQuantity} and ! sets::isin( 3, \@Groups ) ) {
-		push @Groups, 3;
-	} # end if
-	@Groups = sort { $a <=> $b } @Groups;
+	my @Groups = sort { $a <=> $b } groups( $project_index, $specs );
 
 	my $Project = new openprint::Project( $project_index );
 	if ( ! $$Project{id} ) {
@@ -216,41 +185,50 @@ sub calc {
 	my $remaining_pages = $$specs{txtTotalPageQuantity};
 	my %override_pages;
 	foreach my $group_id ( @Groups ) {
-		if ( exists $$specs{'OverrideGroupPageQuantity'.$group_id} ) {
-			if ( $$specs{'OverrideGroupPageQuantity'.$group_id} eq 'Y' ) {
-				$override_pages{$group_id} = $$specs{'GroupPageQuantity'.$group_id};
-				$log->debug("Setting override pages for group $group_id to " . $$specs{'GroupPageQuantity'.$group_id} );
+		if ( exists $$specs{'OverrideGroupPageQuantity'.$group_id} and $$specs{'OverrideGroupPageQuantity'.$group_id} eq 'Y' ) {
+			if ( ! $$specs{'GroupPageQuantity'.$group_id} ) {
+# We still set override so that it doesn't auto-fill	
+				$$specs{alert} .= 'You have override the # of pages in group ' . $$specs{"txtSignatureType$group_id"} . ' but not entered the # of pages.<br/>';
+				$$specs{Status} = 'uncalculated';
+				$$specs{'GroupPageQuantity'.$group_id.'_container'} = { addClassName=>'error' };
+			} else {
+				$$specs{'GroupPageQuantity'.$group_id.'_container'} = { removeClassName=>'error' };
+			}
+			$override_pages{$group_id} = $$specs{'GroupPageQuantity'.$group_id};
+			$log->debug("Setting override pages for group $group_id to " . $$specs{'GroupPageQuantity'.$group_id} );
+			if ( $$specs{'txtSignatureType'.$group_id} eq 'PerfReplyCard' ) {
+				$override_pages{$group_id} = 2;
+				if ( $$specs{'txtServiceDescription'.$group_id} eq 'Interior Pages' ) {
+					$$specs{'txtServiceDescription'.$group_id} = 'Perforated Reply Card';
+				} # end if
+			} else {
+				if ( ! $group_id ) {
+					$log->warn("NO GROUP ID $group_id");
+				}
+				my @g_signatures = $Project->signatures({Group=>$group_id});
+				if ( ! @g_signatures ) {
+
+# calc shouldn't really alter the project.
+					$Project->add_signature( undef, undef, {
+							Group=>$group_id,
+							( $group_id == 1 ? ( 'txtSignatureType'=>'Cover Pages', 'txtServiceDescription'=>'Cover' ) : () ),
+							( $group_id == 2 ? ( 'txtSignatureType'=>'Interior Pages', 'txtServiceDescription'=>'Interior Pages' ) : () ),
+							( $group_id == 3 ? ( 'txtSignatureType'=>'Gate Folded Pages', 'txtServiceDescription'=>'Gate Folded Pages' ) : () ),
+							} );
+				} # end if
+#foreach my $sig_id ( $Project->signatures({'Group'=>$group_id}) ) {
+#my $sig_specs = openprint::service::get_specs_ref( $Project, $sig_id );
+#$override_pages{$group_id} = $$sig_specs{GroupPageQuantity} if $$sig_specs{OverrideGroupPageQuantity} eq 'Y';
+#last if $override_pages{$group_id};
+#} # end foreach signature
 			} # end if
-		} elsif ( $$specs{'txtSignatureType'.$group_id} eq 'PerfReplyCard' ) {
-			$override_pages{$group_id} = 2;
-			if ( $$specs{'txtServiceDescription'.$group_id} eq 'Interior Pages' ) {
-				$$specs{'txtServiceDescription'.$group_id} = 'Perforated Reply Card';
+			$remaining_pages -= $override_pages{$group_id};
+			if ( $$specs{"PageQuantity-$group_id"} and ( $$specs{"PageQuantity-$group_id"} > $$specs{'GroupPageQuantity'.$group_id} ) ) {
+				$$specs{alert} .= "You have specified to print more pages per signature than are required for group $group_id.<br/>";
 			} # end if
 		} else {
-			if ( ! $group_id ) {
-				$log->warn("NO GROUP ID $group_id");
-			}
-			my @g_signatures = $Project->signatures({Group=>$group_id});
-			if ( ! @g_signatures ) {
-
-				# calc shouldn't really alter the project.
-				$Project->add_signature( undef, undef, {
-						Group=>$group_id,
-						( $group_id == 1 ? ( 'txtSignatureType'=>'Cover Pages', 'txtServiceDescription'=>'Cover' ) : () ),
-						( $group_id == 2 ? ( 'txtSignatureType'=>'Interior Pages', 'txtServiceDescription'=>'Interior Pages' ) : () ),
-						( $group_id == 3 ? ( 'txtSignatureType'=>'Gate Folded Pages', 'txtServiceDescription'=>'Gate Folded Pages' ) : () ),
-						} );
-			} # end if
-			#foreach my $sig_id ( $Project->signatures({'Group'=>$group_id}) ) {
-				#my $sig_specs = openprint::service::get_specs_ref( $Project, $sig_id );
-				#$override_pages{$group_id} = $$sig_specs{GroupPageQuantity} if $$sig_specs{OverrideGroupPageQuantity} eq 'Y';
-				#last if $override_pages{$group_id};
-			#} # end foreach signature
-		} # end if
-		$remaining_pages -= $override_pages{$group_id};
-		if ( $$specs{"PageQuantity-$group_id"} and ( $$specs{"PageQuantity-$group_id"} > $$specs{'GroupPageQuantity'.$group_id} ) ) {
-			$$specs{alert} .= "You have specified to print more pages per signature than are required for group $group_id.<br/>";
-		} # end if
+			$$specs{'GroupPageQuantity'.$group_id.'_container'} = { removeClassName=>'error' };
+		} # end if override
 	} # end foreach group
 
 	# if there is a cover, then force it to be non-zero
@@ -277,8 +255,10 @@ $openprint::log->warn("FIXM E");
 		$$specs{Status} = 'uncalculated';
 	} # end if
 
-	if ( $$specs{remaining_pages} ) {
-		$$specs{alert} .= 'There are ' . $$specs{remaining_pages} . ' unspecified pages.<br/>';
+	my @overrides = keys %override_pages;
+#$openprint::log->debug("Overrides: @overrides . " . @overrides . ' Groups: ' . @Groups );
+	if ( $remaining_pages and ( @overrides >= @Groups ) ) {
+		$$specs{alert} .= 'There are ' . $remaining_pages . ' unspecified pages.<br/>';
 		$$specs{Status} = 'uncalculated';
 	} # end if
 
@@ -309,17 +289,31 @@ $openprint::log->warn("FIXM E");
 
 	foreach my $group_id ( @Groups ) {
 		$openprint::log->debug("Group: $group_id, remaining: $remaining_pages, override: $override_pages{$group_id}") if DEBUG;
-		my %sig_specs =  map { $_, $$specs{$_.$group_id } } @signature_variables;
+		my %sig_specs = map { $$specs{$_.$group_id} ? ( $_, $$specs{$_.$group_id } ) : () } @signature_variables;
 		if ( ! exists $override_pages{$group_id} ) {
 			$override_pages{$group_id} = $remaining_pages;
+
+		# THe purpose of calling this here, is to do auto-population of coverage, etc.
 			$remaining_pages = 0;
 		} # end if
 		$sig_specs{GroupPageQuantity} = $$specs{'GroupPageQuantity'.$group_id} = $override_pages{$group_id};
-		openprint::Estimating::Printing::get_colours( $specs, 'SideOne', \%variables, $group_id );
-		openprint::Estimating::Printing::get_colours( $specs, 'SideTwo', \%variables, $group_id );
-		openprint::Estimating::Printing::get_inkcoverage( $Project, $specs, \%variables, $group_id );
-		openprint::Estimating::Printing::get_Stocks( $Project, \%sig_specs, \%variables );
+		openprint::Estimating::Printing::get_inkcoverage( $Project, \%sig_specs, \%variables );
+		my @side_one_colours = openprint::Estimating::Printing::get_colours( \%sig_specs, 'SideOne', \%variables );
+		my @side_two_colours = openprint::Estimating::Printing::get_colours( \%sig_specs, 'SideTwo', \%variables );
+
+		my @Stocks = openprint::Estimating::Printing::get_Stocks( $Project, \%sig_specs, \%variables );
 		openprint::Estimating::Printing::set_size( $Project, \%sig_specs, $specs );
+
+		if ( ! ( @side_one_colours or @side_two_colours ) ) {
+			$$specs{alert} .= "Please choose the colours to be printed for group $group_id " . $$specs{'txtServiceDescription'.$group_id} . ".<br/>";
+			$$specs{Status} = 'uncalculated';
+		} # end if
+
+		if ( ! @Stocks ) {
+			$$specs{alert} .= "There was a problem loading the specified paper for $group_id " . $$specs{'txtServiceDescription'.$group_id} . ".<br/>";
+			$$specs{Status} = 'uncalculated';
+		} # end if
+
 		if ( $$specs{"ddmRunStyle-$group_id"} and $$specs{"ddmPress-$group_id"} ) {
 			my $Press = openprint::Equipment->find_one(strid=>$$specs{"ddmPress-$group_id"});
 			if ( ! sets::isin( $$specs{"ddmRunStyle-$group_id"}, [ split(',', $Press->specification('Runstyles') ) ] ) ) {
@@ -358,8 +352,6 @@ $openprint::log->warn("FIXM E");
 	} # end if
 	$$specs{groups} = join(',', @Groups );
 
-
-
 	return $$specs{Status};
 } # end sub calc
 
@@ -376,6 +368,7 @@ $openprint::log->debug("********************************************************
 	my @signatures = sort $Project->signatures({'type'=>'Interior Pages'});
 	push @signatures, sort $Project->signatures({'type'=>'Cover Pages'});
 	push @signatures, sort $Project->signatures({'type'=>'Gate Folded Pages'});
+	push @signatures, sort $Project->signatures({'type'=>'Backing Pages'});
 	@signatures = $Project->signatures() if ! @signatures;
 	$openprint::log->debug( "Signatures: @signatures");
 	return 'uncalculated' if ! @signatures;
@@ -577,7 +570,7 @@ sub status {
 } # end sub status
         
 sub save {
-#$openprint::log->debug("Starting Multipage::save");
+$openprint::log->debug("Starting Multipage::save");
 	my ( $project_index, $service_index, $param ) = @_;
 	my $Project = new openprint::Project( $project_index );	
 	my $Service = $Project->Service($service_index);
@@ -586,7 +579,7 @@ sub save {
 	if ( $$specs{rdbCover} eq 'Different' ) {
 		# now add a cover spread if we need one.
 		# First, see if we have one.
-        if ( ! $Project->signatures({'type'=>'Cover Pages'}) ) {
+        if ( ! $Project->signatures({ type=>'Cover Pages'}) ) {
             $Project->add_signature( undef, undef, {
                         txtSignatureType		=> 'Cover Pages',
                         txtServiceDescription	=> 'Cover',
@@ -604,18 +597,23 @@ sub save {
             openprint::print_project::delete_service( $Project, $_ );
         } # end foreach
     } # end if Self or Different Cover
-	my @variables = openprint::Estimating::Printing::variables();
+	if ( ! $Project->signatures({type=>'Interior Pages'}) ) {
+            $Project->add_signature( undef, undef, {
+                        txtSignatureType		=> 'Interior Pages',
+                        txtServiceDescription	=> 'Interior Pages',
+                        Group					=>  2,
+                        PrintingType			=> $$param{PrintingType},
+                        txtSpreadSize			=>  4,
+                        } );
+	}
 
 	foreach my $ssid ( $Project->signatures() ) {
 		my $sig_specs = openprint::service::get_specs_ref( $Project, $ssid );
-		my %new_specs = %$sig_specs;
-#$openprint::log->debug("Spreadsize for sig $$sig_specs{SignatureIndex} orig: $new_specs{txtSpreadSize} new: $$sig_specs{txtSpreadSize}");
-		openprint::Estimating::Printing::set_size( $Project, \%new_specs, $Service->specs() );
-#$openprint::log->debug("Spreadsize for sig $$sig_specs{SignatureIndex} orig: $new_specs{txtSpreadSize} new: $$sig_specs{txtSpreadSize}");
-		foreach my $v ( @variables ) {
-			if ( $new_specs{$v} ne $$sig_specs{$v} ) {
+		my $group_id = $$sig_specs{Group};
+		foreach my $v ( @signature_variables ) {
+			if ( $$specs{$v.$group_id} ne $$sig_specs{$v} ) {
 $openprint::log->debug("Saving $v") if DEBUG;
-				openprint::service::insert_service_spec( $openprint::log, $openprint::dbh, $Project->id(), $ssid, $v, $new_specs{$v} );
+				openprint::service::insert_service_spec( $openprint::log, $openprint::dbh, $Project->id(), $ssid, $v, $$specs{$v.$group_id} );
 			} else {
 $openprint::log->debug("Not Saving $v") if DEBUG;
 			} # end if
@@ -630,32 +628,50 @@ sub check {
 	my $specs = $Service->specs();
 
 	my $total_pages = $$specs{txtTotalPageQuantity};
-    my %specified_pages;
-    my %needed_pages;
-    foreach my $ssid ( $Project->signatures({ sort=>1}) ) {
-        my $sig_specs = openprint::service::get_specs_ref( $Project, $ssid );
-        $specified_pages{$$sig_specs{Group}} += $$sig_specs{"PageQuantity$qty_index"};
-        $needed_pages{$$sig_specs{Group}} = $$specs{'GroupPageQuantity'.$$sig_specs{Group}};
-    } # end foreach
-    foreach my $Group ( sort keys %needed_pages ) {
-$openprint::log->debug( "Grouup $Group needed $needed_pages{$Group} specd: $specified_pages{$Group}" );
-        if ( $needed_pages{$Group} > $specified_pages{$Group} ) {
-            $error .= 'Group ' . $Group . ' ' . $$specs{'txtSignatureType'.$Group} . ' needs another ' . ( $needed_pages{$Group} - $specified_pages{$Group} ) . ' pages.<br/>';
-		} elsif ( $needed_pages{$Group} < $specified_pages{$Group} ) {
-            $error .= 'Group ' . $Group . ' ' . $$specs{'txtSignatureType'.$Group} . ' has ' . ( $specified_pages{$Group} - $needed_pages{$Group} ) . ' too many pages.<br/>';
-        } # end if
-    } # end foreach
+	my %specified_pages;
+	my %needed_pages;
+	foreach my $ssid ( $Project->signatures({ sort=>1 }) ) {
+		my $sig_specs = openprint::service::get_specs_ref( $Project, $ssid );
+		my $Group = $$sig_specs{Group};
+
+		if ( $qty_index ) {
+			$specified_pages{$Group} += $$sig_specs{"PageQuantity$qty_index"};
+			$needed_pages{$Group} = $$specs{'GroupPageQuantity'.$Group};
+		} else {
+
+			foreach my $ddm ( 'Brand','Finish','Colour','Weight' ) {
+#$openprint::log->debug("no qty_index $ddm " . $$sig_specs{"ddmStock$ddm"} . " " .  $$specs{"ddmStock$ddm$$sig_specs{Group}"} );
+
+# In the olden days, we weren't saving the stock type in the book service, now we are
+				if ( $$specs{"ddmStock$ddm$$sig_specs{Group}"} and ( $$sig_specs{"ddmStock$ddm"} ne $$specs{"ddmStock$ddm$$sig_specs{Group}"} ) ) {
+					$error .= "Stock $ddm for form $$sig_specs{SignatureIndex} " . $$sig_specs{"ddmStock$ddm"} . " does not match book specs " . $$specs{"ddmStock$ddm$$sig_specs{Group}"} ." group $$sig_specs{Group}.<br/>";
+				}
+			} # end foreach
+		}
+	} # end foreach
+
+	if ( $qty_index ) {
+		foreach my $Group ( sort keys %needed_pages ) {
+			$openprint::log->debug( "Grouup $Group needed $needed_pages{$Group} specd: $specified_pages{$Group}" );
+			if ( $needed_pages{$Group} > $specified_pages{$Group} ) {
+				$error .= 'Group ' . $Group . ' ' . $$specs{'txtSignatureType'.$Group} . ' needs another ' . ( $needed_pages{$Group} - $specified_pages{$Group} ) . ' pages.<br/>';
+			} elsif ( $needed_pages{$Group} < $specified_pages{$Group} ) {
+				$error .= 'Group ' . $Group . ' ' . $$specs{'txtSignatureType'.$Group} . ' has ' . ( $specified_pages{$Group} - $needed_pages{$Group} ) . ' too many pages.<br/>';
+			} # end if
+		} # end foreach
+	}
 	if ( $error ) {
-		if ( $error ne $$specs{alert} ) {
-			openprint::service::insert_service_spec( $openprint::log, $openprint::dbh, $Project->id(), $Service->service_id(), 'alert', $error ) if $error;
+		if ( $error ne $$specs{"alert$qty_index"} ) {
+			openprint::service::insert_service_spec( $openprint::log, $openprint::dbh, $Project->id(), $Service->service_id(), 'alert'.$qty_index, $error ) if $error;
 		} # end if
 	} else {
-		if ( $$specs{alert} =~ /^Group/ ) {
-			openprint::service::insert_service_spec( $openprint::log, $openprint::dbh, $Project->id(), $Service->service_id(), 'alert', $error );
+# Clears it, but leaves alert messages from elsewhere
+		if ( $$specs{"alert$qty_index"} =~ /^Group/ or $$specs{"alert$qty_index"} =~ /^Stock/ ) {
+			openprint::service::insert_service_spec( $openprint::log, $openprint::dbh, $Project->id(), $Service->service_id(), 'alert'.$qty_index, $error );
 		} # end if
 	} # end if
-	
-    return $error;
+
+	return $error;
 } # end sub check
 
 sub summary {
@@ -677,6 +693,7 @@ sub summary {
 			} # end if
 		} # end foreach group
 	} # end if
+	check( $Project, $Project->Service( $service_index ), $qty_index );
 	return $html;
 } # end sub summary
 

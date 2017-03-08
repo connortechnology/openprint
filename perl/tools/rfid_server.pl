@@ -91,9 +91,9 @@ sub process_request {
 
 	my @last_seen;
 
-	if ( my $User = openprint::User->find_one('email'=>'rfid') ) {
-		$openprint::session{'user_id'} = $User->id();
-		$openprint::session{'company_id'} = $User->company_id();
+	if ( my $User = openprint::User->find_one( email=>'rfid') ) {
+		$openprint::session{user_id} = $User->id();
+		$openprint::session{company_id} = $User->company_id();
 	} else {
 		$self->log( 1, "Error finding rfid user!" );
 	} # end if
@@ -101,7 +101,7 @@ sub process_request {
 	$stats{$ip_addr} = {};
 
 	eval {
-		local $SIG{'ALRM'} = sub { die "Timed Out!\n" };
+		local $SIG{ALRM} = sub { die "Timed Out!\n" };
 		my $timeout = 120;
 
 		my $previous_alarm = alarm($timeout);
@@ -132,9 +132,9 @@ sub process_request {
 			} # end if
 
 # Make sure our record is up to date, this shouldn't be a big hit, because the db server will cache this
-			if ( $$Scanner{'lastseen_seconds'} < ( $time - 600 ) ) {
+			if ( $$Scanner{lastseen_seconds} < ( $time - 600 ) ) {
 				$Scanner->load();
-				$$Scanner{'lastseen_seconds'} = $time;
+				$$Scanner{lastseen_seconds} = $time;
 			} # end if
 
 			$date = Date::Format::time2str('%Y-%m-%d %H:%M', $time );
@@ -334,12 +334,21 @@ sub sig_handler {
 		foreach my $ip_addr ( keys %stats ) {
 			print "$ip_addr => " . $stats{$ip_addr}{count} . "/sec\n";
 		}
+	} elsif ( $signame eq 'HUP' ) {
+		%CheckedOutSkids = ();
+		%Scanners = ();
+		%stats = ();
+
 	} # end if
 	#die "Somebody sent me a SIG$signame";
 } # end sub sig_handler
 
-register_sig( USR1 => \&sig_handler );
+register_sig( 
+		USR1 => \&sig_handler,
+		HUP => \&sig_handler,
+		);
 
 __PACKAGE__->run( ipv => 4 );
+
 1;
 __END__

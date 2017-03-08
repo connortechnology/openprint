@@ -7,18 +7,19 @@
 		<ul>
 			<li><label>Date</label>
 				<? echo ( join( ' to ',
-						datetime_select_session( $r->uri(),'log_created_on_start', {
+						datetime_select_session( $$variable{uri},'log_created_on_start', {
 							onchange	=>q`new Ajax.Updater( 'Logs', '/includes/_logs_contents.html', { parameters: $('logs_form').serialize() } );`,
 							with_today=>1,
 							with_clear=>1,
 							} ),
-						datetime_select_session( $r->uri(),'log_created_on_end', {
+						datetime_select_session( $$variable{uri},'log_created_on_end', {
 							onchange	=>q`new Ajax.Updater( 'Logs', '/includes/_logs_contents.html', { parameters: $('logs_form').serialize() } );`,
 							with_today=>1,
 							with_clear=>1,
 							} ),
 					); ) ?>
-				<? echo ( button( 'LoadLog', { onclick=>q`new Ajax.Updater( 'Logs', '/includes/_logs_contents.html', { parameters: $('logs_form').serialize() } );`, text=>'Load' } ); ) ?>
+				<? echo ( ssi::select( [ 10, 10, 20, 20, 50, 50, '', 'All' ], $session{$$variable{uri}.'?log_limit'}, { name=>'log_limit', onchange=>q`new Ajax.Updater( 'Logs', '/includes/_logs_contents.html', { parameters: $('logs_form').serialize() } );` } ); ) ?>
+				<? echo ( button( 'LoadLog', { onclick=>q`LoadContent( 'Logs', '/includes/_logs_contents.html', $('logs_form') );`, text=>'Load' } ); ) ?>
 			</li>
 		</ul>
 		<div id="Logs"><?include('/includes/_logs_contents.html')?></div>

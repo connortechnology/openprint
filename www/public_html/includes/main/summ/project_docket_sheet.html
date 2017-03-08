@@ -1,3 +1,5 @@
+<html>
+<body>
 <table width="100%" border="1" cellspacing="0" cellpadding="0">
 	<tr> 
 		<td width="20%" valign="top"><table cellspacing="0" cellpadding="0" border="0" width="100%">
@@ -39,7 +41,7 @@
 					<td width="50%" class="headerText"><b>COD?</b></td>
 					<td width="50%" class="docketText"><? echo ( 
 					my $cod = $$variable{Project}->Company()->Credit($config{Owner})->cod();
-					return $cod ? $cod . '%' : 'NO';
+					return $cod ? '<span style="color:red;">'.$cod . '%</span>' : 'NO';
 					) ?></td>
 				</tr>
 			</table></td>
@@ -616,3 +618,5 @@ $log->debug("Binder: @BinderyServiceNames");
 		<td class="docketText"><input type="checkbox" /> Bindery</td>
 	</tr>
 </table>
+</body>
+</html>

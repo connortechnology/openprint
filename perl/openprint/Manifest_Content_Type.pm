@@ -41,7 +41,7 @@ $serial = 'manifest_content_types_id_seq';
 	item_count		=> [ 's/\D//g' ],
 	docket			=> [ 's/\D//g' ],
 	cost			=> [ 's/[^\d\.]//g' ],
-    type			=> [ 's/^\s+//', 's/\s+$//', 's/\s\s+/ /g' ],
+	type			=> [ 's/^\s+//', 's/\s+$//', 's/\s\s+/ /g' ],
 );
 
 %defaults = (
@@ -57,7 +57,7 @@ $serial = 'manifest_content_types_id_seq';
 );
 
 sub Paper {
-require openprint::Paper;
+	require openprint::Paper;
 	return new openprint::Paper( $_[0]{paper_id} );
 } # end sub Paper
 

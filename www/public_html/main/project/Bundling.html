@@ -9,7 +9,7 @@
 			my $html;
 			my @Materials;
 			my @CrossMaterials;
-			foreach my $M ( openprint::Material->find( category=>$$variable{ServiceType}, order=>'lower(name)' ) ) {
+			foreach my $M ( openprint::Material->find( category=>$$variable{ServiceType}->name(), order=>'lower(name)' ) ) {
 				if ( $M->name() =~ /cross/i ) {
 					push @CrossMaterials, $M;
 				} else {
@@ -21,10 +21,10 @@
 				$html .= '<li class="bands_per_bundle"><label>#';
 				if ( @Materials == 1 ) {
 					$html .= ' of ' . $Materials[0]->description() . '</label>';
-					$html .= input( name=>'bands_per_package', value=>$$variable{bands_per_package}, type=>'cardinal', onkeyup=>'calc(this.form.name);' );
+					$html .= input( name=>'bands_per_package', value=>$$variable{bands_per_package}, type=>'cardinal', oninput=>'calc(this.form.name);' );
 				} else {
 					$html .= ' and type of bands</label>';
-					$html .= input( name=>'bands_per_package', value=>$$variable{bands_per_package}, type=>'cardinal', onkeyup=>'calc(this.form.name);' );
+					$html .= input( name=>'bands_per_package', value=>$$variable{bands_per_package}, type=>'cardinal', oninput=>'calc(this.form.name);' );
 					$html .= ssi::select( 
 					[ map{ $_->id(), $_->description() } @Materials ], $$variable{type_id}, { name=>'type_id', onchange=>'calc(this.form.name);' } ).'</li>';
 				} # end if
@@ -34,10 +34,10 @@
 				$html .= '<li class="cross_bands_per_bundle"><label>#';
 				if ( @CrossMaterials == 1 ) {
 					$html .= ' of ' . $CrossMaterials[0]->description() . '</label>';
-					$html .= input( name=>'cross_bands_per_package', value=>$$variable{cross_bands_per_package}, type=>'cardinal', onkeyup=>'calc(this.form.name);' );
+					$html .= input( name=>'cross_bands_per_package', value=>$$variable{cross_bands_per_package}, type=>'cardinal', oninput=>'calc(this.form.name);' );
 				} else {
 					$html .= ' and Type of cross bands</label>';
-					$html .= input( name=>'cross_bands_per_package', value=>$$variable{cross_bands_per_package}, type=>'cardinal', onkeyup=>'calc(this.form.name);' );
+					$html .= input( name=>'cross_bands_per_package', value=>$$variable{cross_bands_per_package}, type=>'cardinal', oninput=>'calc(this.form.name);' );
 					$html .= ssi::select( [ map{ $_->id(), $_->description() } @CrossMaterials ], $$variable{cross_type_id}, { name=>'cross_type_id', onchange=>'calc(this.form.name);' } );
 				} # end if
 				$html .= '</li>';

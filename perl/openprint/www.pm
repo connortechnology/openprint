@@ -39,7 +39,7 @@ use vars qw( $r %variable %session %param %config $log $dbh $starttime );
 *r = \$openprint::r;
 
 sub warn {
-	$log->warn("Warning: $_[0]");
+	$log->error("Warning: $_[0]");
 
 }
 
@@ -422,7 +422,6 @@ $log->debug("Running openprint::$module->$proc") if Debug;
 	} elsif ( $first eq 'main' ) { # main
 		if ( $second eq 'project' ) {
 			require openprint::print;
-			require openprint::main_project;
 			require openprint::print_project;
 			if ( ( defined $third ) or sets::isin( $filename , ['Paper.html' ,'Bundling.html','HStands.html' ] ) ) {
 				if ( $param{ServiceIndex} and ! $variable{ServiceIndex} ) {
@@ -430,6 +429,7 @@ $log->debug("Running openprint::$module->$proc") if Debug;
 					$variable{ServiceIndex} = $service_ids[0];
 				} # end if
 				$variable{ProjectIndex} = $openprint::param{ProjectIndex} if ! $variable{ProjectIndex};
+				$variable{ProjectIndex} = $openprint::param{project_id} if ! $variable{ProjectIndex};
 				$variable{ProjectIndex} = $openprint::session{project_id} if ! $variable{ProjectIndex};
 				$variable{Project} = new openprint::Project( $variable{ProjectIndex} );
 				my $Currency = openprint::Currency::get_current();
@@ -452,6 +452,7 @@ $log->debug("Service: " . $Service->to_string() );
 	$log->debug("ServiceType: $variable{ServiceTypeType}");
 						my $specs = $Service->specs();
 						@variable{keys %$specs} = values %$specs;
+						$variable{ServiceType} = $Service->ServiceType();
 					} # end if
 				} # end if
 				$variable{ProjectType} = $variable{Project}->Type();
@@ -543,14 +544,36 @@ $log->debug("Service: " . $Service->to_string() );
 						openprint::Estimating::ShrinkWrapping::display( \%variable, $variable{Project}, $service_index );
 					} # end if
 				} elsif ($third eq 'shipping') {
-
-					if ( $filename eq 'Shipping.html' ) {
-						require openprint::Estimating::Shipping;
-						openprint::Estimating::Shipping::display( $r, $log, $dbh, \%variable, $project_index, $service_index );
-					} elsif ( $filename eq 'UPS.html' ) {
-						require openprint::Estimating::UPS;
-						openprint::Estimating::UPS::display( $log, $dbh, \%variable, $project_index, $service_index );
-					} # end if
+		
+					if ( $filename =~ /^(\w*).html$/ ) {
+						my $module = $1;
+						eval {
+							$log->debug("Require $module");
+							require "openprint/Estimating/$module.pm";
+							if ( my $function = ("openprint::Estimating::$module")->can( 'display' ) ) {
+								$function->( $project_index, $service_index, \%variable );
+							} else {
+								$log->debug("No display function $module.pm");
+							}
+						}; 
+						$log->error( "Eval error of require $module Reason: " . $@ ) if $@;
+					} else {
+						if ( -e $ENV{DOCUMENT_ROOT}.$uri ) {
+							my ( $proc ) = $filename =~ /^(.*)\.(html|json)$/;
+							if ( $proc ) {
+								my $module = join('_', ($first, $second, $third));
+								require "openprint/$module.pm";
+								if ( my $function = ('openprint::'.$module)->can($proc) ) {
+									$log->debug("Running openprint::$module->$proc") if Debug;
+									$function->();
+								} else {
+									$log->error( "No function def for $module :: $proc!" );
+								}
+							} else {
+								$log->debug("No proc found for $filename");
+							} # end if
+						} # end if -e $ENV{DOCUMENT_ROOT}.$uri
+					}
 				} # end if main:proj:$third
 			} else {
 				if ( -e $ENV{DOCUMENT_ROOT}.$uri ) {
@@ -569,7 +592,6 @@ $log->debug("No proc found for $filename");
 					} # end if
 				} # end if -e $ENV{DOCUMENT_ROOT}.$uri 
 
-				openprint::print::view_services( $r, $log, $dbh, \%variable )					if $filename eq 'view.html';
 				openprint::print_project::view_pdfs( $r, $log, $dbh, \%variable )				if $filename eq 'proj_view_pdf.html';
 				openprint::print_project::summary( $r, $log, $dbh, \%variable )					if $filename eq 'summary.html';
 				openprint::print_project::summary( $r, $log, $dbh, \%variable )					if $filename eq 'docket_sheet.html';

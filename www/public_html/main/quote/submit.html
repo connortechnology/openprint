@@ -37,7 +37,7 @@ Please review the quote below to ensure accuracy.  When ready, click "Submit Quo
 		<br class="spacer"/>
 		<? echo ( ! sets::isin( $session{user_type}, ['A', 'E'] ) ? $config{QuoteViewDisclaimer} : '' ) ?>
 <? echo (
-	my $html = '';
+	my $html = '<style>'.include('/css/project.css').'</style>';
 	if ( sets::isin( $session{user_type}, ['A','E'] ) ) {
 		foreach my $Project ( $$variable{Quote}->Quoted_Projects() ) {
 			$html .= 'Include detailed project description for the following project:';

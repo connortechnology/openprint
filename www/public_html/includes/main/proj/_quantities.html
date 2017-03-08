@@ -3,9 +3,9 @@
 <? echo ( my $html;
 	foreach my $qty_index ( $$variable{'Project'}->quantity_indexes() ) {
 		$html .= '<span class="'.$$variable{Columns}.'Columns">';
-		$html .= ssi::input( name=>"txtQuantity$qty_index",
+		$html .= input( name=>"txtQuantity$qty_index",
 			value=>$$variable{'txtQuantity'.$qty_index},
-			type=>'number',
+			type=>'cardinal',
 			onkeyup=>q`calc(this.form.name);`,
 		);
 		$html .= '</span>';

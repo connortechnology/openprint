@@ -1,45 +1,47 @@
 <? eval (
 
-	if ( $session{'/employee/inventory/skids.html?Docket'} ) {
+	my $uri = '/employee/inventory/skids.html';
+
+	if ( $session{$uri.'?Docket'} ) {
 		$$variable{Skids} = [ openprint::Skid->find( 
-			allocated_to_docket	=>	$session{'/employee/inventory/skids.html?Docket'},
+			allocated_to_docket	=>	$session{$uri.'?Docket'},
 			order		=>	'id',
 			) ];
-	} elsif ( $session{'/employee/inventory/skids.html?skid_id'} ) {
-		my $skid_id = $session{'/employee/inventory/skids.html?skid_id'};
+	} elsif ( $session{$uri.'?skid_id'} ) {
+		my $skid_id = $session{$uri.'?skid_id'};
 		if ( openprint::Skid->transform( id=>$skid_id ) ne $skid_id ) {
 			$variable{error} .= 'Invalid skid/roll id<br/>';
 			$variable{Skids} = [];
 			return;
 		}
 		$$variable{Skids} = [ openprint::Skid->find( 
-			( $session{'/employee/inventory/skids.html?skid_id'} =~ /%/ ? 
-			( 'id ilike'	=>	$session{'/employee/inventory/skids.html?skid_id'} ) :
-			( id	=>	$session{'/employee/inventory/skids.html?skid_id'} ) ),
+			( $session{$uri.'?skid_id'} =~ /%/ ? 
+			( 'id ilike'	=>	$session{$uri.'?skid_id'} ) :
+			( id	=>	$session{$uri.'?skid_id'} ) ),
 			order	=>	'id',
 			deleted =>	[0,1,undef],
 			) ];
-	} elsif ( $session{'/employee/inventory/skids.html?rfid_id'} ) {
+	} elsif ( $session{$uri.'?rfid_id'} ) {
 		$$variable{Skids} = [ openprint::Skid->find( 
-			( $session{'/employee/inventory/skids.html?rfid_id'} =~ /%/ ? 
-			( 'rfidtag_id ilike'	=>	$session{'/employee/inventory/skids.html?rfid_id'} ) :
-			( 'rfidtag_id ilike'	=>	'%'.$session{'/employee/inventory/skids.html?rfid_id'} ) ),
+			( $session{$uri.'?rfid_id'} =~ /%/ ? 
+			( 'rfidtag_id ilike'	=>	$session{$uri.'?rfid_id'} ) :
+			( 'rfidtag_id ilike'	=>	'%'.$session{$uri.'?rfid_id'} ) ),
 			order	=>	'id',
-			( $session{'/employee/inventory/skids.html?deleted'} ? ( deleted => [ split(',', $session{'/employee/inventory/skids.html?deleted'} ) ] ) : () ),
+			( $session{$uri.'?deleted'} ? ( deleted => [ split(',', $session{$uri.'?deleted'} ) ] ) : () ),
 			) ];
-	} elsif ( $session{'/employee/inventory/skids.html?manufacturers_id'} ) {
+	} elsif ( $session{$uri.'?manufacturers_id'} ) {
 		
 		$$variable{Skids} = [ openprint::Skid->find( 
 			'manufacturers_id ilike'	=>	(
-				$session{'/employee/inventory/skids.html?manufacturers_id'} =~ /%/ ?
-				$session{'/employee/inventory/skids.html?manufacturers_id'} : 
-				$session{'/employee/inventory/skids.html?manufacturers_id'} .'%' ),
+				$session{$uri.'?manufacturers_id'} =~ /%/ ?
+				$session{$uri.'?manufacturers_id'} : 
+				$session{$uri.'?manufacturers_id'} .'%' ),
 			order	=>	'id',
-			( $session{'/employee/inventory/skids.html?deleted'} ? ( deleted => [ split(',', $session{'/employee/inventory/skids.html?deleted'} ) ] ) : () ),
+			( $session{$uri.'?deleted'} ? ( deleted => [ split(',', $session{$uri.'?deleted'} ) ] ) : () ),
 			) ];
-	} elsif ( $session{'/employee/inventory/skids.html?verification_code'} ) {
+	} elsif ( $session{$uri.'?verification_code'} ) {
 		$$variable{Skids} = [ openprint::Skid->find( 
-			verification_code	=>	$session{'/employee/inventory/skids.html?verification_code'},
+			verification_code	=>	$session{$uri.'?verification_code'},
 			order				=>	'id',
 			) ];
 	} else {
@@ -48,59 +50,60 @@
 		my %stock_ids;
 
 		my %sql = (
-				( $session{'/employee/inventory/paper.html?fsc_code'} ? ( fsc_code  =>  $session{'/employee/inventory/paper.html?fsc_code'} ) : () ),
-				( $param{width} ? ( ($param{'OrLarger'} ? 'width >=' : 'width') => $param{'width'} ) : () ),
-				( $param{height} ? ( ($param{'OrLarger'} ? 'height >=' : 'height') => $param{'height'} ) : () ),
+				( $session{$uri.'?fsc_code'} ? ( fsc_code  =>  $session{$uri.'?fsc_code'} ) : () ),
+				( $param{width} ? ( ($param{OrLarger} ? 'width >=' : 'width') => $param{width} ) : () ),
+				( $param{height} ? ( ($param{OrLarger} ? 'height >=' : 'height') => $param{height} ) : () ),
 				);  
 
 		foreach my $filter ( 'owner_id', 'manufacturer_id','brand_id','finish_id','colour_id','weight_id','group_id','quality_id','material_id' ) {
-			next if ! $session{'/employee/inventory/skids.html?'.$filter};
-            if ( $session{'/employee/inventory/skids.html?'.$filter.'_id_exclude'} ) {
-                $sql{$filter.' !='} = $session{'/employee/inventory/skids.html?'.$filter};
-            } else {
-                $sql{$filter} = $session{'/employee/inventory/skids.html?'.$filter};
-            } # end if
-        } # end foreach filter
+			next if ! $session{$uri.'?'.$filter};
+			if ( $session{$uri.'?'.$filter.'_id_exclude'} ) {
+				$sql{$filter.' !='} = $session{$uri.'?'.$filter};
+			} else {
+				$sql{$filter} = $session{$uri.'?'.$filter};
+			} # end if
+		} # end foreach filter
 		if ( %sql ) {
 			@Stocks = openprint::Paper->find(%sql);
 			%stock_ids = map { $_->id(), $_ } @Stocks;
-        } # end if
-
+		} # end if
 
 		%sql = (
 			( %stock_ids ? (paper_id => [ keys %stock_ids ] ) : () ),
-			date_filter( '/employee/inventory/skids.html?created_on_end', 'created_on <=' ),
-			date_filter( '/employee/inventory/skids.html?created_on_start', 'created_on >=' ),
-			date_filter( '/employee/inventory/skids.html?updated_on_end', 'updated_on <=' ),
-			date_filter( '/employee/inventory/skids.html?updated_on_start', 'updated_on >=' ),
-			date_filter( '/employee/inventory/skids.html?received_on_end', 'received_on <=' ),
-			date_filter( '/employee/inventory/skids.html?received_on_start', 'received_on >=' ),
-			date_filter( '/employee/inventory/skids.html?last_seen_end', 'last_seen <=' ),
-			date_filter( '/employee/inventory/skids.html?last_seen_start', 'last_seen >=' ),
-			( defined $session{'/employee/inventory/skids.html?Owner'} ? ( owner_id=>$session{'/employee/inventory/skids.html?Owner'} ) : () ),
-			( $session{'/employee/inventory/skids.html?fsc_code'} ? ( fsc_code => $session{'/employee/inventory/skids.html?fsc_code'} ) : () ),
-			( $session{'/employee/inventory/skids.html?purpose_id'} ? ( purpose_id => $session{'/employee/inventory/skids.html?purpose_id'} ) : () ),
+			date_filter( $uri.'?created_on_end', 'created_on <=' ),
+			date_filter( $uri.'?created_on_start', 'created_on >=' ),
+			date_filter( $uri.'?updated_on_end', 'updated_on <=' ),
+			date_filter( $uri.'?updated_on_start', 'updated_on >=' ),
+			date_filter( $uri.'?received_on_end', 'received_on <=' ),
+			date_filter( $uri.'?received_on_start', 'received_on >=' ),
+			date_filter( $uri.'?last_seen_end', 'last_seen <=' ),
+			date_filter( $uri.'?last_seen_start', 'last_seen >=' ),
+
+			( defined $session{$uri.'?Owner'} ? ( owner_id=>$session{$uri.'?Owner'} ) : () ),
+			( $session{$uri.'?fsc_code'} ? ( fsc_code => $session{$uri.'?fsc_code'} ) : () ),
+			( $session{$uri.'?purpose_id'} ? ( purpose_id => $session{$uri.'?purpose_id'} ) : () ),
+			( $session{$uri.'?deleted'} ? ( deleted => [ split(',', $session{$uri.'?deleted'} ) ] ) : () ),
 			order		=>	'id',
-			( $session{'/employee/inventory/skids.html?deleted'} ? ( deleted => [ split(',', $session{'/employee/inventory/skids.html?deleted'} ) ] ) : () ),
 		);
-		$sql{'manifest_id exists'} = 1 if $session{'/employee/inventory/skids.html?hasmanifest'} eq 'Y';
-		$sql{'manifest_id exists'} = 0 if $session{'/employee/inventory/skids.html?hasmanifest'} eq 'N';
-		if ( $session{'/employee/inventory/skids.html?hasmanufacturers'} eq 'N' ) {
+		$sql{'manifest_id exists'} = 1 if $session{$uri.'?hasmanifest'} eq 'Y';
+		$sql{'manifest_id exists'} = 0 if $session{$uri.'?hasmanifest'} eq 'N';
+		if ( $session{$uri.'?hasmanufacturers'} eq 'N' ) {
 			$sql{'manufacturers_id is null'} = 1;
 		}
-		if ( $session{'/employee/inventory/skids.html?hasmanufacturers'} eq 'Y' ) {
+		if ( $session{$uri.'?hasmanufacturers'} eq 'Y' ) {
 			$sql{'manufacturers_id is null'} = 0;
 		}
-		if ( $session{'/employee/inventory/skids.html?inventory_check_id'} ) {
-			if ( $session{'/employee/inventory/skids.html?inventory_check_id_exclude'}  ) {
-				$sql{'inventory_check_id not'} = $session{'/employee/inventory/skids.html?inventory_check_id'};
+
+		if ( $session{$uri.'?inventory_check_id'} ) {
+			if ( $session{$uri.'?inventory_check_id_exclude'}  ) {
+				$sql{'inventory_check_id not'} = $session{$uri.'?inventory_check_id'};
 			} else {
-				$sql{inventory_check_id} = $session{'/employee/inventory/skids.html?inventory_check_id'};
+				$sql{inventory_check_id} = $session{$uri.'?inventory_check_id'};
 			}	
 		}
 		
-		if ( $session{'/employee/inventory/skids.html?type'} ) {
-			my @types = split(',',$session{'/employee/inventory/skids.html?type'} );
+		if ( $session{$uri.'?type'} ) {
+			my @types = split(',',$session{$uri.'?type'} );
 			if ( @types ) {
 				if ( sets::isin( 'Unknown', \@types ) ) {
 					my @others = sets::exclude( [ 'Unknown' ], \@types ) ;
@@ -114,27 +117,29 @@
 				} # end if
 			} # end if
 		}
-		$sql{'condition_id any'} = $session{'/employee/inventory/skids.html?condition_id'} if $session{'/employee/inventory/skids.html?condition_id'};
+		$sql{'condition_id any'} = $session{$uri.'?condition_id'} if $session{$uri.'?condition_id'};
 
-		if ( $session{'/employee/inventory/skids.html?location_id'} ) {
-			if ( $session{'/employee/inventory/skids.html?location_id'} eq 'None' ) {
-				$sql{'location_id'} = [];
+		if ( $session{$uri.'?location_id'} ) {
+			if ( $session{$uri.'?location_id'} eq 'None' ) {
+				$sql{location_id} = [];
 			} else {
-				my $Location = new openprint::Location( $session{'/employee/inventory/skids.html?location_id'} );
-				$sql{'location_id'} = [ map { $_->id() } ( $Location, $Location->get_all_children() ) ];
+				my $Location = new openprint::Location( $session{$uri.'?location_id'} );
+				$sql{location_id} = [ map { $$_{id} } ( $Location, $Location->get_all_children() ) ];
 			} # end if
 		} # end if
-		if ( $session{'/employee/inventory/skids.html?empty'} eq 'Y' ) {
+		if ( $session{$uri.'?empty'} eq 'Y' ) {
 			$sql{'quantity is null or ='} = 0;
-		} elsif ( $session{'/employee/inventory/skids.html?empty'} eq 'N' ) {
+		} elsif ( $session{$uri.'?empty'} eq 'N' ) {
 			$sql{'quantity >='} = 1;
 		}
 
 		$$variable{Skids} = [ openprint::Skid->find( %sql ) ];
 
 	} # end if
-	if ( @{$$variable{'Skids'}} > 100 ) {
-		openprint::Location->find( type=>'place' );
+
+$log->debug("# of SKids" . @{$$variable{Skids}} );
+	openprint::Location->find( type=>'place', company_id=>$openprint::Owner->id() );
+	if ( @{$$variable{Skids}} > 100 ) {
 		openprint::Manufacturer->find();
 		openprint::StockBrand->find();
 		openprint::StockFinish->find();
@@ -143,7 +148,7 @@
 	} # end if
 ) ?>
 <?include(/includes/error_reporting.html)?>
-<? if ( @{$$variable{'Skids'}} ) ?>
+<? if ( @{$$variable{Skids}} ) ?>
 <form id="SkidResults" name="SkidResults" action="skids.html" method="post">
 	<table class="List">
 		<tr>
@@ -158,12 +163,14 @@
 			<th class="Location">Location</th>
 			<th class="Dockets">Dockets</th>
 			<th class="Condition">Condition</th>
-			<? if ( openprint::usergroup::is_user_in( ['InventoryManager'], $session{'user_id'} ) ) ?>
+			<? if ( openprint::usergroup::is_user_in( ['InventoryManager'], $session{user_id} ) ) ?>
+			<th class="Price">Cost</th>
 			<th class="Price">Value</th>
-			<? endif ( openprint::usergroup::is_user_in( ['InventoryManager'], $session{'user_id'} ) ) ?>
+			<? endif ( openprint::usergroup::is_user_in( ['InventoryManager'], $session{user_id} ) ) ?>
 		</tr>
 		<? echo (
-my $debug = 1;
+				my $uri = '/employee/inventory/skids.html';
+				my $debug = 1;
 			my $html;
 			my $rowclass;
 			my $total_rolls;
@@ -172,6 +179,8 @@ my $debug = 1;
 			my $total_sheets;
 			my $total_value;
 			my %Allocations;
+
+			my $can_see_prices = openprint::usergroup::is_user_in( ['InventoryManager'], $session{user_id} );
 			
 			# I think this is ok, because there are never that many allocations at any given time
 			# This is because skids_ids is an array type... need to make this better.
@@ -180,7 +189,7 @@ my $debug = 1;
 					push @{$Allocations{$$Skid{id}}}, $Allocation;
 				} # end 
 			} # end foreach
-			my @skid_ids = map { $$_{id} } @{$$variable{'Skids'}};
+			my @skid_ids = map { $$_{id} } @{$$variable{Skids}};
 			my %SkidContents;
 $log->debug("Loading SkidContent" ) if $debug;
 			foreach my $SC ( openprint::SkidContent->find( skid_id => \@skid_ids ) ) {
@@ -188,48 +197,78 @@ $log->debug("Loading SkidContent" ) if $debug;
 			} # end foreach SC
 $log->debug("Done Loading SkidContent" ) if $debug;
 
-			foreach my $Skid ( @{$$variable{'Skids'}} ) {
+			foreach my $Skid ( @{$$variable{Skids}} ) {
 				$Skid->Contents( $SkidContents{$$Skid{id}} ? $SkidContents{$$Skid{id}} : [] );
-				if ( $session{'/employee/inventory/skids.html?contents'} eq 'Y' ) {
-                    next if ! $Skid->Contents();
-                } # end if
-                if ( $session{'/employee/inventory/skids.html?contents'} eq 'N' ) {
-                    next if $Skid->Contents();
-                } # end if
-				if ( $session{'/employee/inventory/skids.html?checked_out'} eq 'Y' ) {
-                    next if ! $Skid->checked_out();
-                } # end if
-                if ( $session{'/employee/inventory/skids.html?checked_out'} eq 'N' ) {
-                    next if $Skid->checked_out();
-                } # end if
+				if ( $session{$uri.'?contents'} eq 'Y' ) {
+					if ( ! $Skid->Contents() ) {
+						$log->debug("Skipping $$Skid{id} because no contents");
+						next;
+					}
+				} elsif ( $session{$uri.'?contents'} eq 'N' ) {
+					if ( $Skid->Contents() ) {
+						$log->debug("Skipping $$Skid{id} because contents");
+						next;
+					}
+				} # end if
+
+				if ( $session{$uri.'?checked_out'} eq 'Y' ) {
+					if ( ! $Skid->checked_out() ) {
+						$log->debug("Skipping $$Skid{id} because not checked out");
+						next ;
+					} # end if
+				} elsif ( $session{$uri.'?checked_out'} eq 'N' ) {
+					if ( $Skid->checked_out() ) {
+						$log->debug("Skipping $$Skid{id} because checked out");
+						next;
+					} # end if
+				} # end if
+
+				if ( $session{$uri.'?has_value'} ne '' ) {
+					my $has_value = 0;
+					foreach my $C (  $Skid->Contents() ) {
+						if ($C->cost()) {
+							$has_value = 1;
+							last;
+						}
+					}
+					if ( $has_value and ($session{$uri.'?has_value'} eq '0') ) {
+						$log->debug("Skip $$Skid{id} because has value");
+						next;
+					} elsif ( (!$has_value) and ($session{$uri.'?has_value'} eq '1') ) {
+						$log->debug("Skip $$Skid{id} because has no value");
+						next;
+					}	
+				}
 	
 				my @Allocations;
-				if ( $Allocations{$Skid->id()} ) {
+				if ( $Allocations{ $$Skid{id} } ) {
 					@Allocations = @{$Allocations{$Skid->id()}};
 				} # end if
-				if ( $session{'/employee/inventory/skids.html?allocated'} ) {
-					if ( $session{'/employee/inventory/skids.html?allocated'} eq 'Y' ) {
+				if ( $session{$uri.'?allocated'} ) {
+					if ( $session{$uri.'?allocated'} eq 'Y' ) {
 						next if ! @Allocations;
-					} elsif ( $session{'/employee/inventory/skids.html?allocated'} eq 'N' ) {
+					} elsif ( $session{$uri.'?allocated'} eq 'N' ) {
 						next if @Allocations;
 					} # end if	
 				} # end if
 
-				next if $Skid->rfidtag_id() and $session{'/employee/inventory/skids.html?rfid'} eq 'N';
-				next if ( ! $Skid->rfidtag_id() ) and $session{'/employee/inventory/skids.html?rfid'} eq 'Y';
+				if ( $session{$uri.'?rfid'} ) {
+					next if $Skid->rfidtag_id() and $session{$uri.'?rfid'} eq 'N';
+					next if ( ! $Skid->rfidtag_id() ) and $session{$uri.'?rfid'} eq 'Y';
+				}
 				my $RFIDTag = $Skid->RFIDTag();
-				if ( $RFIDTag->id() ) {
-					if ( ! $RFIDTag->is_invalid_id() ) {
-						next if ! $session{'/employee/inventory/skids.html?rfid_valid'} eq 'N';
-					} else {
-						next if ! $session{'/employee/inventory/skids.html?rfid_valid'} eq 'Y';
+				if ( $session{$uri.'?rfid_valid'} ) {
+					if ( $RFIDTag->id() ) {
+						if ( ! $RFIDTag->is_invalid_id() ) {
+							next if $session{$uri.'?rfid_valid'} eq 'N';
+						} else {
+							next if $session{$uri.'?rfid_valid'} eq 'Y';
+						} # end if
 					} # end if
 				} # end if
-$log->debug("Done Getting RFIDTAG");
-				
 
 				$html .= sprintf('<tr%1$s>
-					<td class="checkbox unprintable"><input type="checkbox" name="skids" value="%2$d"/></td>
+				<td class="checkbox unprintable"><input type="checkbox" name="skids" value="%2$d"/></td>
 				<td class="Skid"><a href="/employee/inventory/skid_details.html?skid_id=%2$d">%2$d</a></td>
 				<td class="RFID"><a href="/employee/inventory/skid_details.html?skid_id=%2$d" title="%10$s">%7$s</a></td>
 				<td class="ManufacturersID"><a href="/employee/inventory/skid_details.html?skid_id=%2$d">%9$s</a></td>
@@ -242,7 +281,7 @@ $log->debug("Done Getting RFIDTAG");
 format_date( $Skid->received_on() ),
 format_datetime( $Skid->created_on() ),
 format_datetime( $Skid->updated_on() ),
-$Skid->rfidtag_id()? format_datetime( $Skid->RFIDTag()->updated_on() ) : 'no rfid',
+$Skid->rfidtag_id()? format_datetime( $RFIDTag->updated_on() ) : 'no rfid',
 $RFIDTag->id_short(),
 $Skid->Location()->name(),
 $Skid->manufacturers_id(),
@@ -252,14 +291,15 @@ $RFIDTag->id(),
 				$html .= '<td class="Dockets" rowspan="2">';
 				foreach my $PA ( @Allocations ) {
 					$html .= sprintf( '<a href="/employee/inventory/skid_details.html?skid_id=%d">%d - %d%s</a><br/>',
-					$$Skid{'id'},
+					$$Skid{id},
 					$PA->docket(),
 					$PA->quantity(),
 					$PA->Paper()->units(),	
 					);
 				} # end while
 				$html .= '</td><td rowspan="2" class="Condition">'. join('<br/>', map { $_->condition() } $Skid->Contents() ) . '</td>';
-				if ( openprint::usergroup::is_user_in( ['InventoryManager'], $session{'user_id'} ) ) {
+				if ( $can_see_prices ) {
+					$html .= '<td rowspan="2" class="Price">'.$Skid->cost().'</td>';
 					$html .= '<td rowspan="2" class="Price">'.openprint::Currency::format($Skid->value()).'</td>';
 					$total_value += $Skid->value();
 				} # end if
@@ -299,7 +339,8 @@ $RFIDTag->id(),
 			$html .= Number::Format::format_number($total_skids) . 'skids ' . Number::Format::format_number($total_sheets) . 'sheets<br/>' if $total_skids;
 			$html .= Number::Format::format_number($total_rolls) . 'rolls ' . Number::Format::format_number($total_weight) . 'lbs<br/>' if $total_rolls;
 			$html .= '</td><td colspan="4">&nbsp;</td>';
-			if ( openprint::usergroup::is_user_in( ['InventoryManager'], $session{'user_id'} ) ) {
+			if ( $can_see_prices ) {
+				$html .= '<td class="Price"></td>';
 				$html .= '<td class="Price">'.openprint::Currency::format($total_value).'</td>';
 			} # end if
 			$html .= '</tr>';
@@ -308,7 +349,7 @@ $RFIDTag->id(),
 	</table>
 	<input type="hidden" name="btnFunction"/>
 	<p class="buttons">
-		<? echo ( join('',
+		<? echo ( join("\n",
 					button( 'move', { onclick=>"popup_window('/employee/inventory/_move_skids_window.html?skid_id='+\$A(SkidResults.skids).filter(function(e){return e.checked}).map(function(e){return e.value}).join(',') ) ;", text=>'Move To' } ),
 					button( 'manifest', { onclick=>"open_window('/employee/inventory/paper_label_window.html?skid_id='+\$A(SkidResults.skids).filter(function(e){return e.checked}).map(function(e){return e.value}).join(','), 'label', 'toolbar=no,width=400,height=400,location=no,resizeable=no,scrollbars=yes,status=no');", text=>'Print Labels' } ),
 					button( 'CheckOut', { onclick=>"SkidResults.btnFunction.value='CheckOut';SkidResults.submit();", text=>'Checkout Checked' } ),
@@ -318,6 +359,6 @@ $RFIDTag->id(),
 			); ) ?>
 	</p>
 </form>
-<? else ( @{$$variable{'Skids'}} ) ?>
+<? else ( @{$$variable{Skids}} ) ?>
 There were no skids matching your search criteria.
-<? endif ( @{$$variable{'Skids'}} ) ?>
+<? endif ( @{$$variable{Skids}} ) ?>

@@ -5,8 +5,7 @@
 	$html .= sprintf(q`$('%s_name').value = '%s';`, $param{type}, $Object->name() );
 	$html .= sprintf(q`$('%s_message').value = '%s';`, $param{type}, $Object->message() );
 	} else {
-	$html .= sprintf(q`$('%s_shortname').value = '%s';`, $param{type}, $Object->shortname() );
-	$html .= sprintf(q`$('%s_longname').value = '%s';`, $param{type}, $Object->longname() );
+	$html .= sprintf(q`$('%s_name').value = '%s';`, $param{type}, $Object->name() );
 	} 
 	return $html;
 ) ?>

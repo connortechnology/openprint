@@ -9,7 +9,7 @@
 //
 //error_reporting  (E_NOTICE | E_ERROR | E_WARNING | E_PARSE);
 
-if (ereg ("functions.inc.php", $_SERVER['PHP_SELF']))
+if (preg_match ("/functions\.inc\.php/", $_SERVER['PHP_SELF']))
 {
    header ("Location: login.php");
    exit;
@@ -631,7 +631,7 @@ function pacrypt ($pw, $pw_db="")
 
    if ($CONF['encrypt'] == 'system')
    {
-      if (ereg ("\$1\$", $pw_db))
+      if (preg_match ("/\$1\$/", $pw_db))
       {
          $split_salt = preg_split ('/\$/', $pw_db);
          $salt = $split_salt[2];
@@ -898,7 +898,7 @@ function db_query ($query)
    // database prefix workaround
    if (!empty ($CONF['database_prefix']))
    {
-      if (eregi ("^SELECT", $query))
+      if (preg_match ("/^SELECT/i", $query))
       {
          $query = substr ($query, 0, 14) . $CONF['database_prefix'] . substr ($query, 14);
       }
@@ -912,7 +912,7 @@ function db_query ($query)
    if ($CONF['database_type'] == "mysqli") $result = @mysqli_query ($link, $query) or die ("<p />DEBUG INFORMATION:<br />Invalid query: " . mysqli_error() . "$DEBUG_TEXT");
    if ($CONF['database_type'] == "pgsql")
    {
-      if (eregi ("LIMIT", $query)) 
+      if (preg_match ("/LIMIT/i", $query)) 
       { 
          $search = "/LIMIT (\w+), (\w+)/";
          $replace = "LIMIT \$2 OFFSET \$1";
@@ -921,7 +921,7 @@ function db_query ($query)
       $result = @pg_query ($link, $query) or die ("<p />DEBUG INFORMATION:<br />Invalid query: $query " . pg_last_error() . "$DEBUG_TEXT");
    } 
 
-   if (eregi ("^SELECT", $query))
+   if (preg_match ("/^SELECT/i", $query))
    {
       // if $query was a SELECT statement check the number of rows with [database_type]_num_rows ().
       if ($CONF['database_type'] == "mysql") $number_rows = mysql_num_rows ($result);

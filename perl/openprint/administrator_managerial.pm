@@ -226,6 +226,7 @@ sub _currency_conversions {
 sub user_profiles {
 
 	my $user_id = $param{ddmUser} ? openprint::User->transform( 'id', $param{ddmUser} ) : undef;
+	$user_id = $param{user_id} ? openprint::User->transform( 'id', $param{user_id} ) : undef if ! $user_id;
 	my $User = $variable{User} = new openprint::User( $user_id );
 
 	my $user_role = $param{ddmUserRole};
@@ -249,6 +250,10 @@ $log->error("PReventing customer change");
 		$User = $User->Prev( 'type'=>$param{ddmUserRole}, 'company_id'=>$param{ddmCustomer} );
 	} elsif ($param{btnFunction} eq '>>') {
 		$User = $User->Next( 'type'=>$param{ddmUserRole}, 'company_id'=>$param{ddmCustomer} );
+    } elsif ( $param{btnFunction} eq 'copy' ) {
+		$User = $User->copy();
+		$User->save({});
+		$user_id = $User->id();
     } elsif ( $param{btnFunction} eq 'merge' ) {
 		if ( $$User{id} == $openprint::param{merge_user_id} ) {
 			$variable{error} .= 'Choose a different user to merge into.';
@@ -289,6 +294,7 @@ $log->error("PReventing customer change");
 			return misc::error( $log, $dbh, \%variable, "Passwords don't match.", "Your password and verify password fields do not match.");
 		} # end if
 
+if ( 0 ) {
 		my @Users = openprint::User->find( 'email lc' => lc $param{email} ) if $param{email};
 		if ( @Users > 1 or ( ( @Users == 1 ) and ( $Users[0]->id() != $User->id() ) ) ) {
 $log->debug("User ids not match " . $Users[0]->id()  . ' != ' . $User->id() );
@@ -299,6 +305,7 @@ $log->debug("User ids not match " . $Users[0]->id()  . ' != ' . $User->id() );
 		
 			return misc::error( $log, $dbh, \%variable, 'User already exists.', $error);
 		} # end if
+}
 
 		if ( ! $param{password} ) {
 			delete $param{password};
@@ -954,6 +961,8 @@ sub promo_codes {
 } # end sub promo_codes
 
 sub logs {
+	ssi::setup_date_select( $r->uri, 'date_start', -7 );
+	ssi::setup_date_select( $r->uri, 'date_end', '' );
 } # end sub logs
 sub _logs {
 	if ( $param{action} eq 'delete' ) {
@@ -1022,6 +1031,19 @@ sub _user_logs {
 			( map { 'log_created_on_end_' . $_ } ( 'year','month','day','hour','minute' ) ),
 	);
 } # end sub _logs
+
+sub users {
+	$session{$r->uri().'?company_id'} = $session{company_id} if ! exists $session{$r->uri().'?company_id'};
+
+}
+sub _users {
+	ssi::save_params( '/administrator/managerial/users.html', ( 
+				'salesrep_id', 'marketing_category_id', 'company_id','usergroup_id','deleted','email','type','administrator',
+				( map { 'created_on_start_' . $_ } ( 'year','month','day' ) ),
+				( map { 'created_on_end_' . $_ } ( 'year','month','day' ) ),
+				) );
+	$session{$r->uri().'?salesrep_id_exclude'} = $param{salesrep_id_exclude};
+}
 
 1;
 __END__

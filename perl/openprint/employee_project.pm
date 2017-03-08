@@ -7,7 +7,6 @@ use openprint ();
 
 require openprint::Project;
 require openprint::order;
-require openprint::main_project;
 require openprint::service;
 require openprint::Equipment;
 require openprint::employee_schedule;
@@ -718,16 +717,19 @@ sub send_proofs_approved_email {
 		push @Users, $CSR if ( ! $Notification );
 	} # end if
 
+	my $results;
 	foreach my $User ( @Users ) {
 		next if $User->id() == $session{user_id};
+		next if $User->deleted();
 		
-		$Email->send(
+		$results .= $Email->send(
 				FROM	=> $openprint::User,
 				TO	  => $User,
 				SUBJECT => "Docket $info{DocketNumber} $$Order{company_name} - Proofs Approved",
 				ATTACHMENTS	=>	\@body,
 				);
 	} # end if
+	$Project->add_to_log( @session{'company_id','user_id'}, "Proofs approved email sent to $results" );
 } # end sub send_proofs_approved_email
 
 sub send_duedate_change_notification {
@@ -746,7 +748,7 @@ sub send_duedate_change_notification {
 	my $User = new openprint::User( $session{user_id} );
 	@info{'EmployeeFirstName','EmployeeLastName','EmployeeEmail','EmployeeExtension'} = ( $User->firstname(), $User->lastname(), $User->email(), $User->extension() );
 	my $CSR = new openprint::User( $Order->salesrep_id() );
-	if ( $CSR->email() ) {
+	if ( $CSR->email() and ! $CSR->deleted() ) {
 		my $notification = $CSR->notification('Docket Due Date Changes');
 		if ( ( ! $notification ) or $notification ne 'No' ) {
 			my $email_template = ssi::slurp_content( '/email_template.html' );
@@ -889,6 +891,19 @@ sub _production_feedback {
 
 sub _stock_allocations {
 	$variable{Order} = openprint::Order->find_one( docket=>$param{docket} );
+	if ( $param{action} eq 'delete' ) {
+		foreach my $Allocation ( openprint::PaperAllocation->find( id=>[ split(',', $param{allocation_id} ) ] ) ) {
+			if ( $Allocation->can_delete() ) {
+				if ( $_ = $Allocation->delete() ) {
+					$variable{error} .= $_.'<br/>';
+				} else {
+					$variable{information} .= "Allocation $$Allocation{id} deleted successfully.<br/>";
+				}
+			} else {
+				$variable{error} .= 'You are not authorized to delete this allocation.<br/>';
+			}
+		}
+	}
 }
 
 sub _signaturecapture {

@@ -1,74 +1,75 @@
 <? eval (
-	@{$$variable{'Stocks'}} = ();
+	@{$$variable{Stocks}} = ();
 	my $uri = '/administrator/stock/list.html';
 	my %suppliers;
 	my %sql = (
 			columns	=>	'*,(select name from stockbrands where id=brand_id) AS brand, (select name from stockfinishes where id=finish_id) AS finish, (select name from stockcolours where id=colour_id) AS colour, (select name from stockweights where id=weight_id) AS weight',
 			( $session{$uri.'?group_id'} ? ( group_id		=> $session{$uri.'?group_id'} ) : () ),
-			( $session{'/administrator/stock/list.html?owner_id'} ? ( 'owner_id'		=> $session{'/administrator/stock/list.html?owner_id'} ) : () ),
-			( $session{'/administrator/stock/list.html?manufacturer_id'} ? ( manufacturer_id	=> $session{'/administrator/stock/list.html?manufacturer_id'} ) : () ),
-			( $session{'/administrator/stock/list.html?supplier_id'} ? ( supplier_id		=> $session{'/administrator/stock/list.html?supplier_id'} ) : () ),
-			( $session{'/administrator/stock/list.html?brand_id'} ? ( 'brand_id'	=> $session{'/administrator/stock/list.html?brand_id'} ) : () ),
-			( $session{'/administrator/stock/list.html?finish_id'} ? ( 'finish_id'	=> $session{'/administrator/stock/list.html?finish_id'} ) : () ),
-			( $session{'/administrator/stock/list.html?colour_id'} ? ( 'colour_id'	=> $session{'/administrator/stock/list.html?colour_id'} ) : () ),
-			( $session{'/administrator/stock/list.html?weight_id'} ? ( 'weight_id'	=> $session{'/administrator/stock/list.html?weight_id'} ) : () ), 
-			( $session{'/administrator/stock/list.html?quality_id'} ? ( 'quality_id'	=> $session{'/administrator/stock/list.html?quality_id'} ) : () ),
-			( $session{'/administrator/stock/list.html?material_id'} ? ( 'material_id'	=> $session{'/administrator/stock/list.html?material_id'} ) : () ),
-			( $session{'/administrator/stock/list.html?Types'} ? ( 'type'		=> [ split(',', $session{'/administrator/stock/list.html?Types'} ) ] ) : () ),
-			( $session{'/administrator/stock/list.html?fsc_code'} ? ( 'fsc_code'	=> $session{'/administrator/stock/list.html?fsc_code'} ) : () ),
-			( $session{'/administrator/stock/list.html?width'} ? ( 
-				$session{'/administrator/stock/list.html?OrLarger'} ? ( 'width >=' => $session{'/administrator/stock/list.html?width'} ) : ( width => $session{'/administrator/stock/list.html?width'} ) ) : () ),
-			( $session{'/administrator/stock/list.html?height'} ? ( 'height'=>$session{'/administrator/stock/list.html?height'} ) : () ),
-			( $session{'/administrator/stock/list.html?grain_direction'} ? ( 'grain_direction' => $session{'/administrator/stock/list.html?grain_direction'} ) : () ),
-			( $session{'/administrator/stock/list.html?digital'} ne '' ? ( digital=>$session{'/administrator/stock/list.html?digital'} ) : () ),
-			( $session{'/administrator/stock/list.html?scoring'} ne '' ? ( score_required=>$session{'/administrator/stock/list.html?scoring'} ) : () ),
-			( $session{'/administrator/stock/list.html?customer_supplied'} ne '' ? ( supplied=>$session{'/administrator/stock/list.html?customer_supplied'} ) : () ),
-			( $session{'/administrator/stock/list.html?has_message'} ne '' ? ( 'message is not null' => $session{'/administrator/stock/list.html?has_message'} ) : () ),
-			( $session{'/administrator/stock/list.html?has_minimum_order'} ne '' ? ( 'minimum_order is not null' => $session{'/administrator/stock/list.html?has_minimum_order'} ) : () ),
+			( $session{$uri.'?owner_id'} ? ( 'owner_id'		=> $session{'/administrator/stock/list.html?owner_id'} ) : () ),
+			( $session{$uri.'?manufacturer_id'} ? ( manufacturer_id	=> $session{'/administrator/stock/list.html?manufacturer_id'} ) : () ),
+			( $session{$uri.'?supplier_id'} ? ( supplier_id		=> $session{'/administrator/stock/list.html?supplier_id'} ) : () ),
+			( $session{$uri.'?brand_id'} ? ( brand_id	=> $session{'/administrator/stock/list.html?brand_id'} ) : () ),
+			( $session{$uri.'?finish_id'} ? ( finish_id	=> $session{'/administrator/stock/list.html?finish_id'} ) : () ),
+			( $session{$uri.'?colour_id'} ? ( colour_id	=> $session{'/administrator/stock/list.html?colour_id'} ) : () ),
+			( $session{$uri.'?weight_id'} ? ( weight_id	=> $session{'/administrator/stock/list.html?weight_id'} ) : () ), 
+			( $session{$uri.'?quality_id'} ? ( quality_id	=> $session{'/administrator/stock/list.html?quality_id'} ) : () ),
+			( $session{$uri.'?material_id'} ? ( material_id	=> $session{'/administrator/stock/list.html?material_id'} ) : () ),
+			( $session{$uri.'?Types'} ? ( 'type'		=> [ split(',', $session{'/administrator/stock/list.html?Types'} ) ] ) : () ),
+			( $session{$uri.'?fsc_code'} ? ( 'fsc_code'	=> $session{'/administrator/stock/list.html?fsc_code'} ) : () ),
+			( $session{$uri.'?width'} ? ( 
+				$session{$uri.'?OrLarger'} ? ( 'width >=' => $session{'/administrator/stock/list.html?width'} ) : ( width => $session{'/administrator/stock/list.html?width'} ) ) : () ),
+			( $session{$uri.'?height'} ? ( 'height'=>$session{'/administrator/stock/list.html?height'} ) : () ),
+			( $session{$uri.'?grain_direction'} ? ( 'grain_direction' => $session{'/administrator/stock/list.html?grain_direction'} ) : () ),
+			( $session{$uri.'?digital'} ne '' ? ( digital=>$session{'/administrator/stock/list.html?digital'} ) : () ),
+			( $session{$uri.'?scoring'} ne '' ? ( score_required=>$session{'/administrator/stock/list.html?scoring'} ) : () ),
+			( $session{$uri.'?customer_supplied'} ne '' ? ( supplied=>$session{'/administrator/stock/list.html?customer_supplied'} ) : () ),
+			( $session{$uri.'?has_message'} ne '' ? ( 'message is not null' => $session{'/administrator/stock/list.html?has_message'} ) : () ),
+			( $session{$uri.'?has_minimum_order'} ne '' ? ( 'minimum_order is not null' => $session{'/administrator/stock/list.html?has_minimum_order'} ) : () ),
+			( $session{$uri.'?recommendations'} ne '' ? ( 'project_type_id exists'=> $session{'/administrator/stock/list.html?recommendations'} ) : () ),
 			order		=> 'brand,finish,colour,weight, width, height'
 		);
-		if ( $session{'/administrator/stock/list.html?calliper'} ) {
-			if ( $session{'/administrator/stock/list.html?calliper'} =~ /<([\.0-9]*)/ ) { 
-				$sql{'calliper <='} = $1;
-			} elsif ( $session{'/administrator/stock/list.html?calliper'} =~ />([\.0-9]*)/ ) { 
-				$sql{'calliper >='} = $1;
-			} else {
-				$sql{calliper} = $session{'/administrator/stock/list.html?calliper'};
-			}
+	if ( $session{$uri.'?calliper'} ) {
+		if ( $session{$uri.'?calliper'} =~ /<([\.0-9]*)/ ) { 
+			$sql{'calliper <='} = $1;
+		} elsif ( $session{$uri.'?calliper'} =~ />([\.0-9]*)/ ) { 
+			$sql{'calliper >='} = $1;
+		} else {
+			$sql{calliper} = $session{$uri.'?calliper'};
 		}
-		foreach my $Stock ( openprint::Paper->find( %sql) ) {
-		next if $session{'/administrator/stock/list.html?recommendations'} eq '0' and $Stock->recommendations();
-		next if $session{'/administrator/stock/list.html?recommendations'} eq '1' and ! $Stock->recommendations();
-		if ( $session{'/administrator/stock/list.html?setup_prices'} eq '1' ) {
+	}
+	foreach my $Stock ( openprint::Paper->find( %sql ) ) {
+		next if $session{$uri.'?has_problems'} eq '1' and ! $Stock->check();
+		next if $session{$uri.'?has_problems'} eq '0' and $Stock->check();
+		if ( $session{$uri.'?setup_prices'} eq '1' ) {
 			next if ! openprint::PaperPrice->find_one(paper_id=>$$Stock{id}, service=>'Setup');
-		} elsif ( $session{'/administrator/stock/list.html?setup_prices'} eq '0' ) {
+		} elsif ( $session{$uri.'?setup_prices'} eq '0' ) {
 			next if openprint::PaperPrice->find_one(paper_id=>$$Stock{id}, service=>'Setup');
 		} # end if
-		if ( $session{'/administrator/stock/list.html?material_prices'} eq '1' ) {
+		if ( $session{$uri.'?material_prices'} eq '1' ) {
 			$_ = openprint::PaperPrice->find_one(paper_id=>$$Stock{id}, service=>'Material');
 			$log->debug("Got $_");
 			next if ! $_;
-		} elsif ( $session{'/administrator/stock/list.html?material_prices'} eq '0' ) {
+		} elsif ( $session{$uri.'?material_prices'} eq '0' ) {
 			next if openprint::PaperPrice->find_one(paper_id=>$$Stock{id}, service=>'Material');
 		} # end if
 		$suppliers{$Stock->Supplier()->name()} = 1 if $$Stock{suppier_id};
-		push @{$$variable{'Stocks'}}, $Stock;
+		push @{$$variable{Stocks}}, $Stock;
 	} # end foreach
-	@{$$variable{'Groups'}} = openprint::StockGroup->find();
-	@{$$variable{'InventoryNumbers'}} = sets::union( map { $_->inventory_number() } @{$$variable{'Stocks'}} );
+	@{$$variable{Groups}} = openprint::StockGroup->find();
+	@{$$variable{InventoryNumbers}} = sets::union( map { $_->inventory_number() } @{$$variable{Stocks}} );
 	@{$$variable{suppliers}} = keys %suppliers;
 ) ?>
-<? if ( @{$$variable{'Stocks'}} ) ?>
-	<table class="List sortable" style="table-layout: auto;">
-		<thead>
+<? if ( @{$$variable{Stocks}} ) ?>
+	<table id="StocksTable" class="List sortable" style="table-layout: auto;">
+			<thead>
 			<tr>
 				<th class="checkbox"><input type="checkbox" onclick="select_all(document.f1, 'chkStock', this.checked );"/></th>
-				<? if ( @{$$variable{'InventoryNumbers'}} > 1 ) ?>
+				<? if ( @{$$variable{InventoryNumbers}} > 1 ) ?>
 				<th class="inventory">Inventory #</th>
-				<? endif ( @{$$variable{'InventoryNumbers'}} > 1 ) ?>
-				<? if ( @{$$variable{'Groups'}} ) ?>
+				<? endif ( @{$$variable{InventoryNumbers}} > 1 ) ?>
+				<? if ( @{$$variable{Groups}} ) ?>
 				<th class="group">Group</th>
-				<? endif ( @{$$variable{'Groups'}} ) ?>
+				<? endif ( @{$$variable{Groups}} ) ?>
 				<th class="manufacturer">Manufacturer</th>
 <? if ( @{$$variable{suppliers}} ) ?>
 				<th class="supplier">Supplier</th>
@@ -87,44 +88,79 @@
 			</tr>
 		</thead>
 		<tbody>
-<? while ( $$variable{Stock} = shift @{$$variable{'Stocks'}} ) ?>
-	<tr>
-		<td class="checkbox"><input type="checkbox" id="chkStock<? echo ( $$variable{Stock}{id} ) ?>" name="chkStock" value="<? echo ( $$variable{Stock}{'id'} ) ?>"/></td>
-		<? if ( @{$$variable{'InventoryNumbers'}} > 1 ) ?>
-		<td class="inventory"><a href="stock.html?stock_id=<? echo ( $$variable{Stock}{'id'} ) ?>"><? hecho ( $$variable{Stock}->inventory_number() ) ?></a></td>
-		<? endif ( @{$$variable{'InventoryNumbers'}} > 1 ) ?>
-		<? if ( @{$$variable{'Groups'}} ) ?>
-		<td class="group"><a href="stock.html?stock_id=<? echo ( $$variable{Stock}{'id'} ) ?>"><? echo ( $$variable{Stock}->group() ) ?></a></td>
-		<? endif ( @{$$variable{'Groups'}} ) ?>
-		<td class="manufacturer"><a href="stock.html?stock_id=<? echo ( $$variable{Stock}{'id'} ) ?>"><? echo ( $$variable{Stock}->manufacturer() ) ?></a></td>
-<? if ( @{$$variable{suppliers}} ) ?>
-		<td class="supplier"><a href="stock.html?stock_id=<? echo ( $$variable{Stock}{'id'} ) ?>"><? echo ( $$variable{Stock}->Supplier()->name() ) ?></a></td>
-<? endif ( @{$$variable{suppliers}} ) ?>
-		<td class="brand"><a href="stock.html?stock_id=<? echo ( $$variable{Stock}{'id'} ) ?>"><? echo ( $$variable{Stock}->brand() ) ?></a></td>
-		<td class="finish"><a href="stock.html?stock_id=<? echo ( $$variable{Stock}{'id'} ) ?>"><? echo ( $$variable{Stock}->finish() ) ?></a></td>
-		<td class="colour"><a href="stock.html?stock_id=<? echo ( $$variable{Stock}{'id'} ) ?>"><? echo ( $$variable{Stock}->colour() ) ?></a></td>
-		<td class="weight"><a href="stock.html?stock_id=<? echo ( $$variable{Stock}{'id'} ) ?>"><? echo ( $$variable{Stock}->weight() ) ?></a></td>
-		<td class="quality"><a href="stock.html?stock_id=<? echo ( $$variable{Stock}{'id'} ) ?>"><? echo ( $$variable{Stock}->quality() ) ?></a></td>
-		<td class="size"><a href="stock.html?stock_id=<? echo ( $$variable{Stock}{'id'} ) ?>"><? echo ( $$variable{Stock}->size() ) ?></a></td>
-		<td class="calliper"><a href="stock.html?stock_id=<? echo ( $$variable{Stock}{'id'} ) ?>"><? echo ( $$variable{Stock}->calliper() ) ?></a></td>
-		<td class="mweight"><a href="stock.html?stock_id=<? echo ( $$variable{Stock}{'id'} ) ?>"><? echo ( 
-			$$variable{Stock}->type() eq 'Roll' ? Math::Round::nearest(1,$$variable{Stock}->basis_mweight()) : Math::Round::nearest(1,$$variable{Stock}->mweight()) . '/' .  Math::Round::nearest(1,$$variable{Stock}{basis_mweight} ); ) ?></a></td>
-		<td class="gsm"><a href="stock.html?stock_id=<? echo ( $$variable{Stock}{'id'} ) ?>"><? echo ( sprintf('%.2f', $$variable{Stock}->gsm() ); ) ?></a></td>
-		<td class="spp_min"><a href="stock.html?stock_id=<? echo ( $$variable{Stock}{'id'} ) ?>"><? echo ( $$variable{Stock}->sheets_per_package().'/'.$$variable{Stock}->minimum_order() ) ?></a></td>
-		<td class="pricing"><a href="stock.html?stock_id=<? echo ( $$variable{Stock}{'id'} ) ?>">
-<? echo ( 
-join('<br/>', map { sprintf('%s %s %s $%s*%s%=$%s', $_->Pricelist()->name(), $_->service(), 
-join(' ', 
-( $_->min() ? '>'.$_->min() : '' ),
-( $_->max() ? '<'.$_->max() : '' ),
-),
-1*$_->cost(), 1*$_->markup(), 1*$_->price() ) } 
-openprint::PaperPrice->find(paper_id=>$$variable{Stock}->id(), 'order'=>$openprint::PaperPrice::fields{'pricelist_id'}.',service' ) );
-) ?></a></td>
+<? echo (
+	my $html;
+
+	foreach my $Stock ( @{$$variable{Stocks}} ) {
+		my $check = $Stock->check();
+
+		my $columns = 13;
+
+		$html .= sprintf('<tr%2$s><td class="checkbox"><input type="checkbox" id="chkStock%1$d" name="chkStock" value="%1$d"/></td>', 
+				$$Stock{id},
+				( $check ? ' class="warning"' : '' ),
+				);
+
+		if ( @{$$variable{InventoryNumbers}} > 1 ) {
+			$html .= sprintf('<td class="inventory"><a href="stock.html?stock_id=%1$d">%2$s</a></td>',
+					$$Stock{id}, $Stock->inventory_number(),
+					);
+			$columns += 1;
+		}
+		if ( @{$$variable{Groups}} ) {
+			$html .= sprintf('<td class="group"><a href="stock.html?stock_id=%1$d">%2$s</a></td>',
+					$$Stock{id}, $Stock->group(),
+					);
+			$columns += 1;
+		}
+		$html .= sprintf('<td class="manufacturer"><a href="stock.html?stock_id=%1$d">%2$s</a></td>', 
+				$$Stock{id}, $Stock->manufacturer(),
+				);
+		if ( @{$$variable{suppliers}} ) {
+			$html .= sprintf('<td class="supplier"><a href="stock.html?stock_id=%1$d">%2$s</a></td>',
+					$$Stock{id}, $Stock->Supplier()->name()
+				);
+			$columns += 1;
+		}
+		$html .= sprintf('
+		<td class="brand"><a href="stock.html?stock_id=%1$d">%2$s</a></td>
+		<td class="finish"><a href="stock.html?stock_id=%1$d">%3$s</a></td>
+		<td class="colour"><a href="stock.html?stock_id=%1$d">%4$s</a></td>
+		<td class="weight"><a href="stock.html?stock_id=%1$d">%5$s</a></td>
+		<td class="quality"><a href="stock.html?stock_id=%1$d">%6$s</a></td>
+		<td class="size"><a href="stock.html?stock_id=%1$d">%7$s</a></td>
+		<td class="calliper"><a href="stock.html?stock_id=%1$d">%8$s</a></td>
+		<td class="mweight"><a href="stock.html?stock_id=%1$d">%9$s</a></td>
+		<td class="gsm"><a href="stock.html?stock_id=%1$d">%10$s</a></td>
+		<td class="spp_min"><a href="stock.html?stock_id=%1$d">%11$s</a></td>
+		<td class="pricing"><a href="stock.html?stock_id=%1$d">%12$s</a></td>
 	</tr>
-<? endwhile ( $$variable{Stock} = shift @{$$variable{'Stocks'}} ) ?>
+',
+					$$Stock{id},
+					$Stock->brand(),
+					$Stock->finish(),
+					$Stock->colour(),
+					$Stock->weight(),
+					$Stock->quality(),
+					$Stock->size(),
+					$Stock->calliper(),
+					( $Stock->type() eq 'Roll' ? Math::Round::nearest(1,$Stock->basis_mweight()) : Math::Round::nearest(1,$Stock->mweight()) . '/' .  Math::Round::nearest(1,$$Stock{basis_mweight} ) ),
+					sprintf('%.2f', Math::Round::nearest(0.01,$Stock->gsm() ) ),
+					$Stock->sheets_per_package().'/'.$Stock->minimum_order(),
+					join('<br/>', map { 
+							sprintf('%s %s %s $%s*%s%=$%s', $_->Pricelist()->name(), $_->service(), join(' ', ( $_->min() ? '>'.$_->min() : '' ), ( $_->max() ? '&lt;'.$_->max() : '' ) ),
+								1*$_->cost(), 1*$_->markup(), 1*$_->price() ) } 
+							openprint::PaperPrice->find(paper_id=>$Stock->id(), order=>$openprint::PaperPrice::fields{pricelist_id}.',service' ) ),
+			);
+			if ( $check ) {
+				$html .= '<tr><td colspan="'.$columns.'" class="warning">'.$check.'</td></tr>';
+			}
+		} # end foreach Stock
+		return $html;
+	) ?>
 		</tbody>
 	</table>
-<? else ( @{$$variable{'Stocks'}} ) ?>
+<? else ( @{$$variable{Stocks}} ) ?>
 There were no matching stocks.
-<? endif ( @{$$variable{'Stocks'}} ) ?>
+<? endif ( @{$$variable{Stocks}} ) ?>
+<script type="text/javascript"> TableKit.reloadTable('StocksTable'); </script>

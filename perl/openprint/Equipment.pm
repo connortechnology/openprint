@@ -27,31 +27,33 @@ sub cache_field {
 my %Specification_cache;
 
 $debug = 0;
+use constant DEBUG_FOLDING => 0;
+
 %fields = (
-	'id'	=>	'id',
-	'strid'	=>	'strid',
-	'name'	=>	'strname',
-	'description'		=>	'strdescription',
-	'category_id'		=>	'category_id',
-	'supplier'			=>	'strsupplier',
-	'useinestimating'	=>	'useinestimating',
-	'useinscheduling'	=>	'useinscheduling',
-	'image'				=>	'image',
-	'jmf_enabled'		=>	'jmf_enabled',
-	'instantgate_enabled'		=>	'instantgate_enabled',
-	'cost_center'		=>	'cost_center',
-	'jdf_id'			=> 	'jdf_id',
-	'jdf_name'			=> 	'jdf_name',
-	'location_id'		=>	'location_id',
-	'cip3_in'			=>	'cip3_in',
-	'cip3_out'			=>	'cip3_out',
-	'cip3_hold'			=>	'cip3_hold',
-	'cip3_merge'		=>	'cip3_merge',
-	'cip3_monitor'		=>	'cip3_monitor',
-	'smartscheduling'	=>	'smartscheduling',
-	'servicetype_id'	=>	'servicetype_id',
-	'sorting'			=>	'sorting',
-	'message'			=>	'message',
+	id					=>	'id',
+	strid				=>	'strid',
+	name				=>	'strname',
+	description			=>	'strdescription',
+	category_id			=>	'category_id',
+	supplier			=>	'strsupplier',
+	useinestimating		=>	'useinestimating',
+	useinscheduling		=>	'useinscheduling',
+	image				=>	'image',
+	jmf_enabled			=>	'jmf_enabled',
+	instantgate_enabled	=>	'instantgate_enabled',
+	cost_center			=>	'cost_center',
+	jdf_id				=> 	'jdf_id',
+	jdf_name			=> 	'jdf_name',
+	location_id			=>	'location_id',
+	cip3_in				=>	'cip3_in',
+	cip3_out			=>	'cip3_out',
+	cip3_hold			=>	'cip3_hold',
+	cip3_merge			=>	'cip3_merge',
+	cip3_monitor		=>	'cip3_monitor',
+	smartscheduling		=>	'smartscheduling',
+	servicetype_id		=>	'servicetype_id',
+	sorting				=>	'sorting',
+	message				=>	'message',
 	deleted				=>	'deleted',
 );
 %find_fields = (
@@ -60,6 +62,9 @@ $debug = 0;
 	servicetype		=>	'(SELECT name FROM service_types WHERE id = ANY(servicetype_id))',
 );
 %transforms = (
+	id			=>	[ 's/\D//g', '<2147483647' ],
+	strid		=>	[ 's/^\s+//', 's/\s+$//', 's/\s\s+/ /g' ],
+	description	=>	[ 's/^\s+//', 's/\s+$//', 's/\s\s+/ /g' ],
 );
 %defaults = (
 	deleted			=>	0,
@@ -81,7 +86,7 @@ sub fits {
 
 		if ( $max_width and $max_length ) {
 			my $imp = openprint::imposition::fit( $width, $height, $max_width, $max_length );
-	#$log->debug("Impo: $$imp{'imposition'} $$imp{'rows'}x$$imp{'columns'} on $$self{'strid'}");
+	#$log->debug("Impo: $$imp{imposition} $$imp{rows}x$$imp{columns} on $$self{strid}");
 			if ( ! $$imp{imposition} ) {
 				return sprintf('Too big %s x %s on %s x %s', $width, $height, $max_width, $max_length );
 			} # end if
@@ -132,153 +137,157 @@ sub fits {
 } # end sub fits
 
 sub Folds {
-	if ( ! $_[0]{'Folds'} ) {
-		%{$_[0]{'Folds'}} = ();
-		foreach my $F ( openprint::Fold->find( 'equipment_id'=>$_[0]{'id'}, 'order'=>'pages,page_columns' ) ) {
-			push @{$_[0]{'Folds'}{$F->pages()}}, $F;
+	if ( ! $_[0]{Folds} ) {
+		%{$_[0]{Folds}} = ();
+		foreach my $F ( openprint::Fold->find( equipment_id=>$_[0]{id} ) ) {
+			push @{$_[0]{Folds}{$$F{type}}}, $F;
 		} # end foreach;
 	} # end if
-	return %{$_[0]{'Folds'}};
+	return %{$_[0]{Folds}};
 } # end sub Folds
 
 sub Fold {
 	my ( $self, $params ) = @_;
 
-	$self->Folds() if ! $$self{'Folds'};
-if ( $debug ) {
-$openprint::log->debug("Param" . ref $params );
-foreach my $k ( keys %$params ) {
-$openprint::log->debug("Param: $k => $$params{$k}");
-}
-foreach my $F ( @{$$self{'Folds'}{$$params{pages}}} ) {
-$openprint::log->debug("Fold for $$params{pages} " . $F->to_string() );
-}
-}
+	$self->Folds() if ! $$self{Folds};
+	if ( DEBUG_FOLDING ) {
+		$openprint::log->debug("Param" . ref $params );
+		foreach my $k ( keys %$params ) {
+			$openprint::log->debug("Param: $k => $$params{$k}");
+		}
+		foreach my $F ( @{$$self{Folds}{$$params{type}}} ) {
+			$openprint::log->debug("Fold for $$params{type} " . $F->to_string() );
+		}
+	}
 
-	foreach my $Fold ( $$params{pages} ? @{$$self{'Folds'}{$$params{pages}}} : map { @{$$self{'Folds'}{$_}} } keys %{$$self{'Folds'}} ) {
+	if ( ( ! $$params{type} ) and $$params{pages} ) {
+		$$params{type} = $$params{pages}.'PageFold';
+	}
+
+	foreach my $Fold ( $$params{type} ? @{$$self{Folds}{$$params{type}}} : map { @{$$self{Folds}{$_}} } keys %{$$self{Folds}} ) {
 		if ( $$params{type} and ( $$Fold{type} ne $$params{type} ) ) {
-			$openprint::log->debug("Looking at fold: " . $Fold->name() ) if $debug;
+			$openprint::log->debug("Wrong type at fold: " . $Fold->name() ) if DEBUG_FOLDING;
 			next;
 		} else {
-			$openprint::log->debug("Found fold: " . $Fold->name() ) if $debug;
+			$openprint::log->debug("Found fold: " . $Fold->name() . ' ... examining') if DEBUG_FOLDING;
 		} # end if
-		if ( $$params{gsm} and ( ( $Fold->min_gsm() and ($$params{gsm} < $Fold->min_gsm()) ) or ( $Fold->max_gsm() and ($$params{'gsm'} > $Fold->max_gsm()) ) ) ) {
-			$openprint::log->debug("Wanted gsm: $$params{gsm}, have ($$Fold{min_gsm}) ($$Fold{max_gsm})") if $debug;
+		if ( $$params{gsm} and ( ( $Fold->min_gsm() and ($$params{gsm} < $Fold->min_gsm()) ) or ( $Fold->max_gsm() and ($$params{gsm} > $Fold->max_gsm()) ) ) ) {
+			$openprint::log->debug("Wanted gsm: $$params{gsm}, have ($$Fold{min_gsm}) ($$Fold{max_gsm})") if DEBUG_FOLDING;
 			next;
 		} # end if
 
 		if ( $$params{stitching} ) {
 			if ( ( defined $$Fold{stitching} ) and ! $$Fold{stitching} ) {
-				$openprint::log->debug("Wanted stitching: $$params{stitching}, have $$Fold{stitching}") if $debug;
+				$openprint::log->debug("Wanted stitching: $$params{stitching}, have $$Fold{stitching}") if DEBUG_FOLDING;
 				next;
 			} # end if
 		} elsif ( $$Fold{stitching} ) {
-			$openprint::log->debug("Wanted stitching: $$params{stitching}, have $$Fold{stitching}") if $debug;
+			$openprint::log->debug("Wanted stitching: $$params{stitching}, have $$Fold{stitching}") if DEBUG_FOLDING;
 			next;
 		} # end if
 
 		if ( $$params{perfectbind} ) {
 			if ( defined $$Fold{perfectbind} and ! $$Fold{perfectbind} ) {
-				$openprint::log->debug("Wanted perfectbind: $$params{perfectbind}, have $$Fold{perfectbind}") if $debug;
+				$openprint::log->debug("Wanted perfectbind: $$params{perfectbind}, have $$Fold{perfectbind}") if DEBUG_FOLDING;
 				next;
 			} #end if
 		} elsif ( $$Fold{perfectbind} ) {
-			$openprint::log->debug("Wanted perfectbind: $$params{perfectbind}, have $$Fold{perfectbind}") if $debug;
+			$openprint::log->debug("Wanted perfectbind: $$params{perfectbind}, have $$Fold{perfectbind}") if DEBUG_FOLDING;
 			next;
 		} # end if
 
 		if ( $$params{spinepaste} ) {
 			if ( ( defined $$Fold{spinepaste} ) and ! $$Fold{spinepaste} ) {
-				$openprint::log->debug("Wanted spinepaste: $$params{spinepaste}, have $$Fold{spinepaste}") if $debug;
+				$openprint::log->debug("Wanted spinepaste: $$params{spinepaste}, have $$Fold{spinepaste}") if DEBUG_FOLDING;
 				next;
 			} # end if
 		} elsif ( $$Fold{spinepaste} ) {
-			$openprint::log->debug("Wanted spinepaste: $$params{spinepaste}, have $$Fold{spinepaste}") if $debug;
+			$openprint::log->debug("Wanted spinepaste: $$params{spinepaste}, have $$Fold{spinepaste}") if DEBUG_FOLDING;
 			next;
 		} # end if
 
 		if ( $$Fold{folds} and $$params{folds} and ($$Fold{folds} != $$params{folds} ) ) {
-			$openprint::log->debug("Wanted folds: $$params{folds}, have $$Fold{folds}") if $debug;
+			$openprint::log->debug("Wanted folds: $$params{folds}, have $$Fold{folds}") if DEBUG_FOLDING;
 			next;
 		} # end if
 		if ( $$Fold{angles} and $$params{angles} and ($$Fold{angles} != $$params{angles} ) ) {
-			$openprint::log->debug("Wanted angles: $$params{angles}, have $$Fold{angles}") if $debug;
+			$openprint::log->debug("Wanted angles: $$params{angles}, have $$Fold{angles}") if DEBUG_FOLDING;
 			next;
 		} # end if
 		if ( $$Fold{page_columns} and $$params{page_columns} and ($$Fold{page_columns} != $$params{page_columns} ) ) {
-			$openprint::log->debug("Wanted Page_columns: $$params{page_columns}, have $$Fold{page_columns}") if $debug;
+			$openprint::log->debug("Wanted Page_columns: $$params{page_columns}, have $$Fold{page_columns}") if DEBUG_FOLDING;
 			next;
 		} # end if
 		if ( $$Fold{page_rows} and $$params{page_rows} and ($$Fold{page_rows} != $$params{page_rows} ) ) {
-			$openprint::log->debug("Wanted Page_rows: $$params{page_rows}, have $$Fold{page_rows}") if $debug;
+			$openprint::log->debug("Wanted Page_rows: $$params{page_rows}, have $$Fold{page_rows}") if DEBUG_FOLDING;
 			next;
 		} # end if
 
 		if ( $$params{page_width} and (
-				( $$Fold{min_width} and $$Fold{min_width} > $$params{page_width} ) or
-				( $$Fold{max_width} and $$Fold{max_width} < $$params{page_width} )
+				( $$Fold{min_width} and ( $$Fold{min_width} > $$params{page_width} ) ) or
+				( $$Fold{max_width} and ( $$Fold{max_width} < $$params{page_width} ) )
 				)) {
-			$openprint::log->debug("Wanted Page_width: $$params{page_width}, have min:$$Fold{min_width} max:$$Fold{max_width}") if $debug;
+			$openprint::log->debug("Wanted Page_width: $$params{page_width}, have min:$$Fold{min_width} max:$$Fold{max_width}") if DEBUG_FOLDING;
 			next;
 		} # end if
 		if ( $$params{page_height} and (
 				( $$Fold{min_height} and $$Fold{min_height} > $$params{page_height} ) or
 				( $$Fold{max_height} and $$Fold{max_height} < $$params{page_height} )
 				) ) {
-			$openprint::log->debug("Wanted Page_height: $$params{page_height}, have min:$$Fold{min_height} max:$$Fold{max_height}") if $debug;
+			$openprint::log->debug("Wanted Page_height: $$params{page_height}, have min:$$Fold{min_height} max:$$Fold{max_height}") if DEBUG_FOLDING;
 			next;
 		} # end if
 		if ( $$params{calliper} and (
 				( $$Fold{min_calliper} and $$Fold{min_calliper} > $$params{calliper} ) or
 				( $$Fold{max_calliper} and $$Fold{max_calliper} < $$params{calliper} )
 				) ) {
-			$openprint::log->debug("Wanted Calliper: $$params{calliper}, have min:$$Fold{min_calliper} max:$$Fold{max_calliper}") if $debug;
+			$openprint::log->debug("Wanted Calliper: $$params{calliper}, have min:$$Fold{min_calliper} max:$$Fold{max_calliper}") if DEBUG_FOLDING;
 			next;
 		} # end if
-		if ( defined $$Fold{'min_imposition'} and $$params{'imposition'} and ($$Fold{'min_imposition'} > $$params{'imposition'}) ) {
-			$openprint::log->debug("Wanted imposition: $$params{'imposition'}, have $$Fold{'min_imposition'} x $$Fold{'max_imposition'}") if $debug;
+		if ( defined $$Fold{min_imposition} and $$params{imposition} and ($$Fold{min_imposition} > $$params{imposition}) ) {
+			$openprint::log->debug("Wanted imposition: $$params{imposition}, have $$Fold{min_imposition} x $$Fold{max_imposition}") if DEBUG_FOLDING;
 			next;
 		} # end if
-		if ( defined $$Fold{'max_imposition'} and $$params{'imposition'} and ($$Fold{'max_imposition'} < $$params{'imposition'}) ) {
-			$openprint::log->debug("Wanted imposition: $$params{'imposition'}, have $$Fold{'min_imposition'} x $$Fold{'max_imposition'}") if $debug;
+		if ( defined $$Fold{max_imposition} and $$params{imposition} and ($$Fold{max_imposition} < $$params{imposition}) ) {
+			$openprint::log->debug("Wanted imposition: $$params{imposition}, have $$Fold{min_imposition} x $$Fold{max_imposition}") if DEBUG_FOLDING;
 			next;
 		} # end if
-		if ( defined $$Fold{'min_imposition_columns'} and $$params{'columns'} and ($$Fold{'min_imposition_columns'} > $$params{'columns'}) ) {
-			$openprint::log->debug("Wanted imposition columns: $$params{'columns'}, have $$Fold{'min_imposition_columns'} x $$Fold{'max_imposition_columns'}") if $debug;
+		if ( defined $$Fold{min_imposition_columns} and $$params{columns} and ($$Fold{min_imposition_columns} > $$params{columns}) ) {
+			$openprint::log->debug("Wanted imposition columns: $$params{columns}, have $$Fold{min_imposition_columns} x $$Fold{max_imposition_columns}") if DEBUG_FOLDING;
 			next;
 		} # end if
-		if ( defined $$Fold{'max_imposition_columns'} and $$params{columns} and ($$Fold{'max_imposition_columns'} < $$params{'imposition'}) ) {
-			$openprint::log->debug("Wanted imposition: $$params{columns}, have $$Fold{'min_imposition_columns'} x $$Fold{'max_imposition_columns'}") if $debug;
+		if ( defined $$Fold{max_imposition_columns} and $$params{columns} and ($$Fold{max_imposition_columns} < $$params{imposition}) ) {
+			$openprint::log->debug("Wanted imposition: $$params{columns}, have $$Fold{min_imposition_columns} x $$Fold{max_imposition_columns}") if DEBUG_FOLDING;
 			next;
 		} # end if
-		if ( defined $$Fold{'min_imposition_rows'} and $$params{rows} and ($$Fold{min_imposition_rows} > $$params{rows}) ) {
-			$openprint::log->debug("Wanted imposition columns: $$params{rows}, have $$Fold{'min_imposition_rows'} x $$Fold{'max_imposition_rows'}") if $debug;
+		if ( defined $$Fold{min_imposition_rows} and $$params{rows} and ($$Fold{min_imposition_rows} > $$params{rows}) ) {
+			$openprint::log->debug("Wanted imposition columns: $$params{rows}, have $$Fold{min_imposition_rows} x $$Fold{max_imposition_rows}") if DEBUG_FOLDING;
 			next;
 		} # end if
-		if ( defined $$Fold{'max_imposition_rows'} and $$params{rows} and ($$Fold{'max_imposition_rows'} < $$params{rows}) ) {
-			$openprint::log->debug("Wanted imposition: $$params{rows}, have $$Fold{'min_imposition_rows'} x $$Fold{'max_imposition_rows'}") if $debug;
+		if ( defined $$Fold{max_imposition_rows} and $$params{rows} and ($$Fold{max_imposition_rows} < $$params{rows}) ) {
+			$openprint::log->debug("Wanted imposition: $$params{rows}, have $$Fold{min_imposition_rows} x $$Fold{max_imposition_rows}") if DEBUG_FOLDING;
 			next;
 		} # end if
-		if ( $$Fold{'spine_direction'} and $$params{'spine_direction'} and ($$Fold{'spine_direction'} ne $$params{'spine_direction'} ) ) {
-			$openprint::log->debug("Wanted spinedirection: $$params{'spine_direction'}, have $$Fold{'spine_direction'}") if $debug;
+		if ( $$Fold{spine_direction} and $$params{spine_direction} and ($$Fold{spine_direction} ne $$params{spine_direction} ) ) {
+			$openprint::log->debug("Wanted spinedirection: $$params{spine_direction}, have $$Fold{spine_direction}") if DEBUG_FOLDING;
 			next;
 		} # end if
 
-		if ( $$params{'printing_type'} and $$Fold{'printing_type'} and ! sets::isin( $$params{'printing_type'}, [ split(',', $$Fold{'printing_type'}) ] ) ) {
-            $openprint::log->debug("Fold no good due to PrintingType ($$params{'printing_type'}) != " . $$Fold{'printing_type'} ) if $debug;
-            next;
-        } # end if
-		if ( exists $$params{'gsm'} ) {
-			#$openprint::log->debug("Wanted gsm: $$params{'gsm'}") if $debug;
-			my $RunSpeed = $Fold->RunSpeed( $$params{'gsm'} );
+		if ( $$params{printing_type} and $$Fold{printing_type} and ! sets::isin( $$params{printing_type}, [ split(',', $$Fold{printing_type}) ] ) ) {
+			$openprint::log->debug("Fold no good due to PrintingType ($$params{printing_type}) != " . $$Fold{printing_type} ) if DEBUG_FOLDING;
+			next;
+		} # end if
+		if ( exists $$params{gsm} ) {
+			#$openprint::log->debug("Wanted gsm: $$params{gsm}") if $debug;
+			my $RunSpeed = $Fold->RunSpeed( $$params{gsm} );
 			if ( ! $RunSpeed ) {
-$openprint::log->debug("Didn't find runspeed for $$params{gsm}gsm(" . openprint::Paper::gsm_to_weight($$params{'gsm'})."lbs) on fold " . $Fold->name() . ' on ' . $self->name() ) if $debug;
+				$openprint::log->debug("Didn't find runspeed for $$params{gsm}gsm(" . openprint::Paper::gsm_to_weight($$params{gsm})."lbs) on fold " . $Fold->name() . ' on ' . $self->name() ) if DEBUG_FOLDING;
 				next;
 			#} else {
 #$openprint::log->debug("Got runspeed $$RunSpeed{runspeed}") if $debug;
 			} # end if
 		} # end if
-#$openprint::log->debug("Got fold" . $Fold->description()) if $debug;
+$openprint::log->debug("Got fold" . $Fold->to_string()) if DEBUG_FOLDING;
 		return $Fold;
 #$openprint::log->debug("NEVER Got fold" . $Fold->description()) if $debug;
 	} # end foreach Fold
@@ -335,13 +344,17 @@ sub copy {
 	delete $$new{id};
 	$$new{deleted} = 0;
 	$$new{name} = 'Copy of ' . $$new{name};
-	$new->save();
+	$_ = $new->save();
+	return if $_;
 
 	my $ac = sql::start_transaction( $openprint::dbh );
 
 	foreach my $ES ( openprint::EquipmentSpecification->find( equipment_id=>$$self{id} ) ) {
 		$ES->copy()->save({ equipment_id=>$$new{id} });
 	} # end foreach
+	foreach my $Fold ( openprint::Fold->find( equipment_id=>$$self{id} ) ) {
+		$Fold->copy()->save({ equipment_id=>$$new{id} });
+	}
 
 # Now do pricing, start with Service Prices
 	my @prices = sql::execute( undef, undef, q{SELECT pricelist_id, service_id, min, max, units, cost, markup, price FROM Service_Prices WHERE equipment_id=?}, $$self{id} );
@@ -373,8 +386,8 @@ sub copy {
 				] );
 	} # end while
 	# Equipment_shifts
-	foreach my $ES ( openprint::Equipment_Shift->find('equipment_id'=>$$self{id}) ) {
-		$ES->copy()->save({'equipment_id'=>$$new{id}});
+	foreach my $ES ( openprint::Equipment_Shift->find(equipment_id=>$$self{id}) ) {
+		$ES->copy()->save({equipment_id=>$$new{id}});
 	} # end foreach $ES
 	sql::end_transaction( $openprint::dbh, $ac );
 
@@ -412,15 +425,15 @@ sub destroy {
 sub update_schedule {
 	my $self = shift;
 
-	if ( $openprint::config{'Smart_Schedule'} ne 'Y' ) {
+	if ( $openprint::config{Smart_Schedule} ne 'Y' ) {
 		$openprint::log->debug("Not using Smart Schedule.  Not Updating Press Schedule");
 		return;
 	} # end if
 
     my $starttime_seconds = Date::Parse::str2time( sql::execute( undef, undef, q{SELECT NOW()} ) );
 	my $runtime;
-	foreach my $Job ( openprint::ScheduledJob( 'equipment_id'=>$$self{'id'}, 'order'=>'starttime', 'starttime is null'=>0 ) ) {
-		$Job->save({'starttime_seconds'	=> $starttime_seconds });
+	foreach my $Job ( openprint::ScheduledJob( equipment_id=>$$self{id}, order=>'starttime', 'starttime is null'=>0 ) ) {
+		$Job->save({starttime_seconds	=> $starttime_seconds });
 		$runtime = $Job->runtime_seconds();
 	} # end foreach Job
 
@@ -429,7 +442,7 @@ sub update_schedule {
 sub next {
 	my ($self, $params) = shift;
 	my $sql = q{SELECT min(strid) FROM tbl_Equipment WHERE strid > ?};
-	my @values = ($$self{'name'});
+	my @values = ($$self{name});
 	if ( $params and $$params{category_id} ) {
 		$sql .= ' AND category=?';
 		push @values, $$params{category_id};
@@ -447,7 +460,7 @@ sub Next {
 sub prev {
 	my ( $self, $params ) = shift;
 	my $sql = q{SELECT max(strid) FROM tbl_Equipment WHERE strid < ?};
-	my @values = ($$self{'name'});
+	my @values = ($$self{name});
 	if ( $params and $$params{category_id} ) {
 		$sql .= ' AND category=?';
 		push @values, $$params{category_id};
@@ -470,27 +483,28 @@ sub Shifts {
 } # end sub
 
 sub Stock_Setting {
-	if ( ! $_[0]{'Stock_Settings'} ) {
-		%{$_[0]{'Stock_Settings'}} = map { $_->stock_id(), $_ } openprint::Equipment_Stock_Setting->find('equipment_id'=>$_[0]{'id'});
+	if ( ! $_[0]{Stock_Settings} ) {
+		%{$_[0]{Stock_Settings}} = map { $_->stock_id(), $_ } openprint::Equipment_Stock_Setting->find(equipment_id=>$_[0]{id});
 	} # end if
-	return $_[0]{'Stock_Settings'}{$_[1]{'id'}} if exists $_[0]{'Stock_Settings'}{$_[1]{'id'}};
+	return $_[0]{Stock_Settings}{$_[1]{id}} if exists $_[0]{Stock_Settings}{$_[1]{id}};
 	return;
 } # end sub Stock_Setting
 sub Stock_Settings {
-	if ( ! $_[0]{'Stock_Settings'} ) {
-		%{$_[0]{'Stock_Settings'}} = map { $_->stock_id(), $_ } openprint::Equipment_Stock_Setting->find('equipment_id'=>$_[0]{'id'});
+	if ( ! $_[0]{Stock_Settings} ) {
+		%{$_[0]{Stock_Settings}} = map { $_->stock_id(), $_ } openprint::Equipment_Stock_Setting->find(equipment_id=>$_[0]{id});
 	} # end if
-	return values %{$_[0]{'Stock_Settings'}};
+	return values %{$_[0]{Stock_Settings}};
 } # end sub Stock_Settings
+
 sub servicetype_id {
 	my ( $self ) = @_;
-	return [] if ! $$self{'servicetype_id'};
-	return $$self{'servicetype_id'};
+	return [] if ! $$self{servicetype_id};
+	return $$self{servicetype_id};
 } # end sub servicetype_id
 
 sub ServiceTypes {
-	return () if ! $_[0]{'servicetype_id'};
-	return map { new openprint::ServiceType( $_ ); } @{$_[0]{'servicetype_id'}};
+	return () if ! $_[0]{servicetype_id};
+	return map { new openprint::ServiceType( $_ ); } @{$_[0]{servicetype_id}};
 } # end sub ServiceTypes
 
 sub Equipment_Shifts {

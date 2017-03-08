@@ -1,15 +1,5 @@
 <ul class="menubar" id="employee_menu">
 	<li id="HomeMenu"><a href="/employee/index.html">Home</a></li>
-	<li id="EmployeeAccountMenu"><a href="#" onclick="$('EmployeeAccountMenu').toggleClassName('on');return false;">Account</a>
-		<ul>
-<? if ( $session{'user_id'} ) ?>
-			<li><a href="/employee/account/logout.html">Logout</a></li>
-			<li><a href="/employee/account/profile.html">Profile</a></li>
-<? else ( $session{'user_id'} ) ?>
-			<li><a href="/employee/account/login.html">Login</a></li>
-<? endif ( $session{'user_id'} ) ?>
-		</ul>
-	</li>
 <? if ( $session{'user_id'} ) ?>
 	<li id="ProductionMenu"><a href="#" onclick="$('ProductionMenu').toggleClassName('on');return false;">Production</a>
 		<ul>

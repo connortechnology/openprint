@@ -36,30 +36,32 @@ sub cache_field {
 sub conversions {
 	my ( $self, $to ) = @_;
 	return 1 if $$self{id} == $to;
-	if ( ! exists $$self{'Conversions'} ) {
-		if ( $$self{'id'} ) {
-			%{$$self{'Conversions'}} = sql::execute( undef, undef, q{SELECT to_id, rate FROM Currency_Conversions WHERE from_id=? AND period_end IS NULL}, $$self{'id'} );
+	if ( ! exists $$self{Conversions} ) {
+		if ( $$self{id} ) {
+			%{$$self{Conversions}} = sql::execute( undef, undef, q{SELECT to_id, rate FROM Currency_Conversions WHERE from_id=? AND period_end IS NULL}, $$self{id} );
 		} else {
-			%{$$self{'Conversions'}} = ();
+			%{$$self{Conversions}} = ();
 		} # end if
 	} # end if
 	if ( $to ) {
-		if ( $$self{'Conversions'}{$to} ) {
-			return $$self{'Conversions'}{$to};
+		if ( $$self{Conversions}{$to} ) {
+			return $$self{Conversions}{$to};
 		} else {
 			my $To = new openprint::Currency( $to );
 			if ( $To->id() ) {
-				if ( ! exists $$To{'Conversions'} ) {
-					%{$$To{'Conversions'}} = sql::execute( undef, undef, q{SELECT to_id, rate FROM Currency_Conversions WHERE from_id=? AND period_end IS NULL}, $$To{'id'} );
+				if ( ! exists $$To{Conversions} ) {
+					%{$$To{Conversions}} = sql::execute( undef, undef, q{SELECT to_id, rate FROM Currency_Conversions WHERE from_id=? AND period_end IS NULL}, $$To{id} );
 				} # end if
-				if ( my $rate = $$To{'Conversions'}{$$self{'id'}} ) {
-					return 1/$rate if $rate;
+				if ( my $rate = $$To{Conversions}{$$self{id}} ) {
+					return 1/$rate;
+				} else {
+$openprint::log->error("No conversion rate set for $$self{name} to $$To{name}");
 				} # end if
 				return;
 			} # end if
 		} # end if
 	} # end if
-	return %{$$self{'Conversions'}};
+	return %{$$self{Conversions}};
 } # end sub conversions
 
 sub set_conversion {
@@ -89,7 +91,7 @@ sub convert_from {
 	if ( $DST_Currency->id() != $$self{id} ) {
 		my $rate = $self->conversions( $DST_Currency->id() );
 		my $new = $value * $rate;
-		$log->debug("Converting $value in $$self{'name'} to $$DST_Currency{'name'} using rate $rate $new") if $debug;
+		$log->debug("Converting $value in $$self{name} to $$DST_Currency{name} using rate $rate $new") if $debug;
 		return $new;
 	} # end if
 	return $value;
@@ -116,20 +118,20 @@ sub convert_to {
 
 # Takes a ref to a price
 # The price has a currency_id
-# if $$price{'currency_id'} is not the Session's Currency, then convert it , and return
+# if $$price{currency_id} is not the Session's Currency, then convert it , and return
 sub convert {
 	my $Price = $_[0];
 
 	# Get display_currency
 	my $DST_Currency = get_current();
 	if ( $DST_Currency ) {
-		if ( $$DST_Currency{'id'} != $$Price{'currency_id'} ) {
-			my $SRC_Currency = new openprint::Currency( $$Price{'currency_id'} );
+		if ( $$DST_Currency{id} != $$Price{currency_id} ) {
+			my $SRC_Currency = new openprint::Currency( $$Price{currency_id} );
 			my $rate = $SRC_Currency->conversions( $DST_Currency->id() );
-			$$Price{'Price'} *= $rate if $rate;
-			$$Price{'price'} *= $rate if $rate;
-#$log->debug("Converting $$Price{'Price'} in $$SRC_Currency{'name'} to $$DST_Currency{'name'}") if $debug;
-			$$Price{'currency_id'} = $DST_Currency->id();
+			$$Price{Price} *= $rate if $rate;
+			$$Price{price} *= $rate if $rate;
+#$log->debug("Converting $$Price{Price} in $$SRC_Currency{name} to $$DST_Currency{name}") if $debug;
+			$$Price{currency_id} = $DST_Currency->id();
 		} # end if
 	} # end if
 	return $Price;
@@ -137,30 +139,30 @@ sub convert {
 
 sub get_current {
 
-	if ( $openprint::session{'Currency_id'} ) {
-		return new openprint::Currency( $openprint::session{'Currency_id'} );
+	if ( $openprint::session{Currency_id} ) {
+		return new openprint::Currency( $openprint::session{Currency_id} );
 	} # end if
 
-	if ( ( ! $openprint::session{'Currency_id'} ) and $openprint::session{'company_id'} ) {
-		my $Company = new openprint::Company( $openprint::session{'company_id'} );
-		$openprint::session{'Currency_id'} = $Company->currency_id();
+	if ( ( ! $openprint::session{Currency_id} ) and $openprint::session{company_id} ) {
+		my $Company = new openprint::Company( $openprint::session{company_id} );
+		$openprint::session{Currency_id} = $Company->currency_id();
 	} # end if
 
-	if ( ! $openprint::session{'Currency_id'} ) {
+	if ( ! $openprint::session{Currency_id} ) {
 		my $list_id = openprint::pricing::get_pricelist_id( );
 		my $Pricelist = new openprint::Pricelist( $list_id );
-		$openprint::session{'Currency_id'} = $Pricelist->currency_id();
+		$openprint::session{Currency_id} = $Pricelist->currency_id();
 	} # end if
-	if ( ! $openprint::session{'Currency_id'} ) {
-		if ( $openprint::config{'Currency'} ) {
-			my @Currencies = openprint::Currency->find('short'=>$openprint::config{'Currency'});
+	if ( ! $openprint::session{Currency_id} ) {
+		if ( $openprint::config{Currency} ) {
+			my @Currencies = openprint::Currency->find('short'=>$openprint::config{Currency});
 			if ( @Currencies ) {
-				$openprint::session{'Currency_id'} = $Currencies[0]->id();
+				$openprint::session{Currency_id} = $Currencies[0]->id();
 			} # end if
 		} # end if
 	} # end if
-	if ( $openprint::session{'Currency_id'} ) {
-		return new openprint::Currency( $openprint::session{'Currency_id'} );
+	if ( $openprint::session{Currency_id} ) {
+		return new openprint::Currency( $openprint::session{Currency_id} );
 	} # end if
 	return new openprint::Currency();
 

@@ -7,7 +7,7 @@
 		( $session{warning} ? '<div class="warning">'.$session{warning}.'</div>' : '' ),
 		( $session{information} ? '<div class="information">'.$session{information}.'</div>' : '' ),
 	);
-	@$variable{'error','information','warning'} = ();
-	@session{'error','information','warning'} = ();
+	delete @$variable{'error','information','warning'};
+	delete @session{'error','information','warning'};
 	return $_;
 ) ?>
