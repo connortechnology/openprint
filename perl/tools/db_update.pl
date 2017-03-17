@@ -1317,8 +1317,10 @@ if ( ! sets::isin( 'papers', \@tables ) ) {
 	$dbh->do('alter table papers add grade integer') if ! exists $$data{grade};
 	$dbh->do('alter table papers add die_score_required  BOOLEAN NOT NULL default false') if ! exists $$data{die_score_required};
 	if ( ! exists $$data{user_type} ) {
-		$dbh->do(q`ALTER TABLE papers add user_type char(1) NOT NULL default ''`);
-	} # end nif
+		$dbh->do(q`ALTER TABLE papers add user_type char(1) default ''`);
+	} else {
+		$dbh->do(q`ALTER TABLE papers ALTER user_type DROP NOT NULL`);
+	} # end if
 	if ( ! exists $$data{supplier_id} ) {
 		print "Adding supplier_id to Papers\n";
 		$dbh->do(q`ALTER TABLE papers add supplier_id INTEGER`);
