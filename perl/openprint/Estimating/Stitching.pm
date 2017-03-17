@@ -303,12 +303,12 @@ $openprint::log->debug("Fold pq($$FI{page_quantity}) pages($$FI{pages}) ($$Fold{
 							#next;
 						} 
 							my $p = $$FI{page_quantity};
-							$p *= $$FI{quantity} if ( $$FI{page_quantity} == 1 ) and $$FI{quantity};
+							$p *= $$FI{quantity} if ( $$FI{page_quantity} == 1 ) and $$FI{quantity} and ( $$FI{pages} < $$I{pages} );
 							$$specs{join('','txtSignatureQty',$$Fold{pages},'Page-',$qty_index)} += $p;
 							$pockets += $p;
 					}
 				}
-$openprint::log->debug("Fold pq($$FI{page_quantity}) pages($$FI{pages}) ($$Fold{name}) Pockets: $pockets") if DEBUG;
+$openprint::log->debug("Fold pq($$FI{quantity} * pq$$FI{page_quantity}) pages($$FI{pages}) ($$Fold{name}) Pockets: $pockets") if DEBUG;
 			} # end foreach Fold
 		}
 

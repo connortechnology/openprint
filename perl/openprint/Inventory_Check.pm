@@ -68,9 +68,9 @@ sub check_for_duplicates {
 
 	$_[0]->Entries() if ! $_[0]{Entries};
 
-$openprint::log->debug("check_for_duplicates: $$ICE{skid_id} " . $_[0]{skid_ids}{$$ICE{skid_id}} . ' # of entries ' . ( $_[0]{skid_ids}{$$ICE{skid_id}} ? @{$_[0]{skid_ids}{$$ICE{skid_id}}} : '' ) );
+#$openprint::log->debug("check_for_duplicates: $$ICE{skid_id} " . $_[0]{skid_ids}{$$ICE{skid_id}} . ' # of entries ' . ( $_[0]{skid_ids}{$$ICE{skid_id}} ? @{$_[0]{skid_ids}{$$ICE{skid_id}}} : '' ) );
 	return 1 if $$ICE{skid_id} and $_[0]{skid_ids}{$$ICE{skid_id}} and @{$_[0]{skid_ids}{$$ICE{skid_id}}} > 1;
-$openprint::log->debug("check_for_duplicates: $$ICE{rfidtag_id} " . $_[0]{rfid_ids}{$$ICE{rfidtag_id}} . ' # of entries ' . ( $_[0]{rfid_ids}{$$ICE{rfidtag_id}} ? @{$_[0]{rfid_ids}{$$ICE{rfidtag_id}}} : '' ) );
+#$openprint::log->debug("check_for_duplicates: $$ICE{rfidtag_id} " . $_[0]{rfid_ids}{$$ICE{rfidtag_id}} . ' # of entries ' . ( $_[0]{rfid_ids}{$$ICE{rfidtag_id}} ? @{$_[0]{rfid_ids}{$$ICE{rfidtag_id}}} : '' ) );
 	return 1 if $$ICE{rfidtag_id} and $_[0]{rfid_ids}{$$ICE{rfidtag_id}} and @{$_[0]{rfid_ids}{$$ICE{rfidtag_id}}} > 1;
 	return 0;
 } # end sub check_for_duplicates
