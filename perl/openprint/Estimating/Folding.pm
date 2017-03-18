@@ -1068,13 +1068,8 @@ $openprint::log->debug("Templatetype: $$sig_specs{rdbTemplateType}") if DEBUG;
 						} # end if
 							
 						my $Fold = $Equipment->Fold({
-							#( $$Imposition{image_orientation} == openprint::Imposition::Vertical ? (
 									page_columns	=>	$Imposition->page_columns(),
 									page_rows		=>	$Imposition->page_rows(),
-								#) : (
-									#page_columns	=>	$Imposition->page_rows(),
-									#page_rows		=>	$Imposition->page_columns(),
-								#) ),
 								page_width			=>	$$sig_specs{txtFinalWidth},
 								page_height			=>	$$sig_specs{txtFinalHeight},
 								type						=>	$$sig_specs{rdbTemplateType},
@@ -1086,6 +1081,18 @@ $openprint::log->debug("Templatetype: $$sig_specs{rdbTemplateType}") if DEBUG;
 								printing_type		=>	$ppt,
 								spine_direction	=>	$openprint::Imposition::Orientations{$$Imposition{spine_direction}},
 								});
+						$Fold = $Equipment->Fold({
+								page_width			=>	$$sig_specs{txtFinalWidth},
+								page_height			=>	$$sig_specs{txtFinalHeight},
+								type						=>	$$sig_specs{rdbTemplateType},
+								gsm							=>	$$Paper{gsm},
+								calliper				=>	$$Paper{calliper},
+								imposition			=>	$$Imposition{imposition},
+								columns					=>	$$Imposition{columns},
+								rows						=>	$$Imposition{rows},
+								printing_type		=>	$ppt,
+								spine_direction	=>	$openprint::Imposition::Orientations{$$Imposition{spine_direction}},
+								}) if ! $Fold;
 						if ( $Fold ) {
 # Need to check feed width
 $openprint::log->debug("Has a fold, doing extra checks") if DEBUG;
