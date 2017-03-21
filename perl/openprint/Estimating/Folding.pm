@@ -1039,7 +1039,7 @@ SET:		foreach my $Set_Of_Impositions ( @All_Impositions ) {
 					if ( $Fold ) {
 						# Do we need to clone it? we used to set the impo in it, but we don't do that anymore.
 						$Fold = $Fold->clone();
-						$Imposition->Fold( $Fold );
+						$$Imposition{Fold} = $Fold;
 						
 						push @{$folds{$Imposition->pages().'PageFold-'.$$Imposition{imposition}.'out'}}, $Fold;
 						$openprint::log->debug(sprintf('Found: %dx%d,%dout', $Imposition->page_columns(), $Imposition->page_rows(), $Imposition->imposition() ) ) if DEBUG;
@@ -2396,8 +2396,6 @@ sub cut_spreads {
 			}
 			$openprint::log->debug(sprintf('2279 Cutting pages down from %d@%dpg to %d@%dpg by cutting spread columns from %d to 1',
 						$I->quantity(), $I->pages(), $i1->quantity(), $i1->pages(), $$I{spread_columns} ) ) if DEBUG;
-			$openprint::log->debug(sprintf('2279 Cutting pages down from %d@%dpg to %d@%dpg by cutting spread columns from %d to 1',
-						$I->quantity(), $I->pages(), $i1->quantity(), $i1->pages(), $$I{spread_columns} ) ) if $$I{image_orientation} == openprint::Imposition::Horizontal;
 			push @results, [ $i1 ];
 
 			# Cut in half unevenly
