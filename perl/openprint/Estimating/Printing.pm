@@ -103,6 +103,7 @@ my %folding_cache;
 my %Papers;
 my %Presses;
 my %Press_Values;
+
 sub load_presses {
 	%Presses = map { $$_{strid}, $_ } openprint::Equipment->find( 'category any'=>'Printing', 'useinestimating is null or ='=>1 );
 	%Press_Values = map { $_->specification('Value') ? ( $$_{id} => $_->specification('Value') ) : () } values %Presses;
@@ -2641,6 +2642,7 @@ $log->debug("No printing");
 	%Materials = map { $$_{name}, $_ } openprint::Material->find();
 	$openprint::Material::cached = 1;
 
+	load_presses();
 	my $project = setup_project( $Project, $service_index, $services, $specs, \@side_one_colours, \@side_two_colours, $Papers[0] );
 	if ( $$project{NeedFolding} ) {
 		if ( (
@@ -3639,12 +3641,12 @@ $$sig_specs{PreviousGrainDirection} and ( $imp->grain_direction() ne $$sig_specs
 							last;
 						} # end if
 					} else {
-						$log->error("No Value set for $$Press{strid}");
+						$log->error("1 No Value set for $$BPress{strid}");
 					} # end if	
 					
 				} # end for B
 			} else {
-				$log->error("No Value set for $$Press{strid}");
+				$log->error("2 No Value set for $$Press{strid}");
 			} # en dif
 			if ( $add ) {
 				push @{$imps{$key}}, $I;
@@ -4181,7 +4183,6 @@ sub get_project_price {
 
 	my $previous_press = $$source_sig_specs{PreviousPress};
 	my %sig_specs = %{$source_sig_specs};
-$log->debug("txtSignature Type is: $sig_specs{txtSignatureType}");
 
 	#my @Is = openprint::imposition::sort( calculate_impositions( $Project, $sig_specs, $qty_index, $qty, $PaperCounts, $versions, $project, $impositions ) );
 	my @Is = calculate_impositions( $Project, $source_sig_specs, $qty_index, $qty, $PaperCounts, $versions, $project, $impositions );
