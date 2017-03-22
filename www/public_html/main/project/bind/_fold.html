@@ -86,6 +86,11 @@
 		value	=>	$$variable{'FoldRunspeed-'.$blah},
 		onkeyup	=>	$onkeyup,
 	);
+	$html .= write_override( 'OverrideRunspeed-'.$blah,
+			$$variable{'OverrideRunspeed-'.$blah},
+			'', 
+			qq`Fold_onchange(e, '$$variable{SignatureIndex}', '$$variable{QTYIndex}', '$$variable{index}' );`,
+			);
 	$html .= '</td>';
 return $html;
 ) ?>

@@ -131,14 +131,18 @@ sub calc_price {
 			
 		if ( ! %DiePrice ) {
 			my %BendingPrice = openprint::service::get_price_object( 'DieCutRuleBending',$$specs{txtDieCutBends}*$$Imposition{imposition}, undef );
-			$BendingPrice{Total} = $BendingPrice{Price} * $$specs{txtDieCutBends} * $$Imposition{imposition};
-			$DiePrice{Price} += $BendingPrice{Total};
+			if ( %BendingPrice ) {
+				$BendingPrice{Total} = $BendingPrice{Price} * $$specs{txtDieCutBends} * $$Imposition{imposition};
+				$DiePrice{Price} += $BendingPrice{Total};
+			}
 #$die_price += $bending_price;
 #$log->debug(" ** Adding Bending Cost: $bending_price For $$specs{txtDieCutBends} Bends, MakeReady Total: $make_ready ** ");
-			if ( my $Material = openprint::Material->find_one('name'=>'DieCuttingDieRule') ) {
+			if ( my $Material = openprint::Material->find_one( name=>'DieCuttingDieRule') ) {
 				my %SteelRulePrice = $Material->get_price( $$specs{'txtSteelRuleLength-'.$form}*$$Imposition{imposition}, undef );
-				$SteelRulePrice{Total} = $SteelRulePrice{Price} * $$specs{'txtSteelRuleLength-'.$form}*$$Imposition{imposition};
-				$DiePrice{Price} += $SteelRulePrice{Total};
+				if ( %SteelRulePrice ) {
+					$SteelRulePrice{Total} = $SteelRulePrice{Price} * $$specs{'txtSteelRuleLength-'.$form}*$$Imposition{imposition};
+					$DiePrice{Price} += $SteelRulePrice{Total};
+				}
 			} # end if
 #$die_price += $steel_rule_price;
 #$log->debug(" ** Adding Rule Cost: $steel_rule_price For $$specs{txtSteelRuleLength} Inches, MakeReady Total: $make_ready ** ");
@@ -591,10 +595,13 @@ sub summary {
             }
             my $summary = signature_summary( $Project, $service_id, undef, $qty_index, $s_s_id, undef );
             if ( $sig_count > 1 ) {
-                $html .= ($sig_count) . ' Forms ' . $$sig_specs{txtServiceDescription} ;
+                $html .= ($sig_count) . ' Forms';
             } else {
-                $html .= 'Form ' . $form . ' ' . $$sig_specs{txtServiceDescription};
+                $html .= 'Form ' . $form;
             } # end if
+			if ( $$sig_specs{txtServiceDescription} ) {
+				$html .= ' ' . $$sig_specs{txtServiceDescription};
+			}
 			$html .= $summary . "\n";
         } # end foreach
         return $html;

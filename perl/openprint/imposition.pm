@@ -314,7 +314,6 @@ $openprint::log->debug("Not Pretrimming on $$Press{strid}") if DEBUG;
 		$setup2->colour_bar_size( $$specs{colour_bar_size} );
 	} # end if
 	$setup1->colour_bar_orientation( $$specs{'Colour Bar Orientation'} );
-	$setup1->grain_direction();
 	$$setup1{spine} = $$specs{ProjectSpecs}{spine};
 	$setup1->spine_direction();
 
@@ -338,7 +337,6 @@ $openprint::log->debug("Not Pretrimming on $$Press{strid}") if DEBUG;
 	$$setup2{Press} = $Press;
 	$$setup2{printing_type} = $Press->specification('Printing Type');
 	$setup2->colour_bar_orientation( $$specs{'Colour Bar Orientation'} );
-	$setup2->grain_direction();
 	$$setup2{spine} = $$specs{ProjectSpecs}{spine};
 	$setup2->spine_direction();
 
@@ -348,34 +346,37 @@ $openprint::log->debug("Not Pretrimming on $$Press{strid}") if DEBUG;
 	#		the largest dimension when running the paper on the press. 'rotate_sheet' is used to track grain direction.
 	if ( $$specs{Orientation} eq 'Portrait' ) {
 		if ( $$Paper{width} > $$Paper{height} ) {
-			$setup1->rotate_sheet(1);
-			$setup2->rotate_sheet(1);
+			$$setup1{rotate_sheet} = 1;
+			$$setup2{rotate_sheet} = 1;
 			$paper_width = $$Paper{height};
 			$paper_height = $$Paper{width};
 		} else {
-			$setup1->rotate_sheet(0);
-			$setup2->rotate_sheet(0);
+			$$setup1{rotate_sheet} = 0;
+			$$setup2{rotate_sheet} = 0;
 			$paper_width = $$Paper{width};
 			$paper_height = $$Paper{height};
 		} # end if
 	} else {
 		# default to landscape
 		if ( $$Paper{width} < $$Paper{height} ) {
-			$setup1->rotate_sheet(1);
-			$setup2->rotate_sheet(1);
+			$$setup1{rotate_sheet} = 1;
+			$$setup2{rotate_sheet} = 1;
 			$paper_width = $$Paper{height};
 			$paper_height = $$Paper{width};
 		} else {
-			$setup1->rotate_sheet(0);
-			$setup2->rotate_sheet(0);
+			$$setup1{rotate_sheet} = 0;
+			$$setup2{rotate_sheet} = 0;
 			$paper_width = $$Paper{width};
 			$paper_height = $$Paper{height};
 		} # end if
 	} # end if
 	$setup1->sheet_width( $paper_width );
 	$setup1->sheet_height( $paper_height );
+	$setup1->grain_direction();
+
 	$setup2->sheet_width( $paper_width );
 	$setup2->sheet_height( $paper_height );
+	$setup2->grain_direction();
 
 	my $bindery_gutters = 0;
 	my $bindery_bleed = 0;

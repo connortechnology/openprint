@@ -2686,16 +2686,16 @@ sub check {
 
 	my $Check = $variable{Check} = new openprint::Inventory_Check( $param{check_id} );
 	if ( $param{action} eq 'Delete' ) {
-        $variable{error} .= $Check->delete();
-        $variable{ExternalRedirect} = '/employee/inventory/checks.html' if ! $variable{error};
+		$variable{error} .= $Check->delete();
+		$variable{ExternalRedirect} = '/employee/inventory/checks.html' if ! $variable{error};
 	} elsif ( $param{action} eq 'Clear' ) {
 		foreach my $ICE ( $Check->Entries() ) {
 			$variable{error} .= $ICE->delete();
 		}
-        $variable{ExternalRedirect} = '/employee/inventory/checks.html' if ! $variable{error};
+		$variable{ExternalRedirect} = '/employee/inventory/checks.html' if ! $variable{error};
 	} elsif ( $param{action} eq 'Destroy' ) {
-        $variable{error} .= $Check->destroy();
-        $variable{ExternalRedirect} = '/employee/inventory/checks.html' if ! $variable{error};
+		$variable{error} .= $Check->destroy();
+		$variable{ExternalRedirect} = '/employee/inventory/checks.html' if ! $variable{error};
 	} elsif ( $param{action} eq 'Download' ) {
 		my %p;
 		$p{skid_ids} = [ map { $_->skid_id() } $Check->Entries() ];
@@ -2772,7 +2772,7 @@ $log->debug("No duplicate fuond for $$ICE{rfidtag_id}, previous rags: " . $rfidt
 		if ( $Check->location_id() ) {
 			@location_ids = map { $$_{id} } $Check->Location()->get_all_children();
 		}
-	openprint::Skid->find(id=>[ keys %Skids ] );
+		openprint::Skid->find(id=>[ keys %Skids ] );
 
 		my $check_time = Date::Parse::str2time( $Check->started_on() );
 
@@ -2826,6 +2826,8 @@ $log->debug("Skid $$Skid{id} CHeck time $check_time PI time $pi_time "  );
 							next;
 						}
 					}
+				#} else {
+					#$variable{information} .= "Not checking back in " . $Paper->to_string() . ' on ' . $Skid->link_to() . ' cuz checked out after the inventory check?<br/>';
 				}
 			} else {
 
@@ -2884,7 +2886,8 @@ $log->debug("Skid $$Skid{id} CHeck time $check_time PI time $pi_time "  );
 					( @location_ids ? ( location_id=>\@location_ids ) : () ),
 					'inventory_check_id not'=>$Check->id(),
 					) ) {
-			if ( 0 and ! $$Skid{type} ) {
+			if ( ! $$Skid{type} ) {
+if ( 0 ) {
 				if ( $Skid->type() ) {
 					$Skid->save();
 				}
@@ -2893,13 +2896,17 @@ $log->debug("Skid $$Skid{id} CHeck time $check_time PI time $pi_time "  );
 				} else {
 					$variable{information} .= 'Failed to update Skid type ' . $Skid->link_to() . ' to be ' . $Skid->type() . '<br/>';
 				}
+} else {
+		$variable{error} .= 'Skid ' . $Skid->link_to() . ' has no type!<br/>';
+}
 			}
+			#next if it was in the inventory check
 			next if $Skids{$$Skid{id}};
-			if ( openprint::Inventory_Check_Entry->find_one(skid_id=>$$Skid{id}) ) {
+			if ( openprint::Inventory_Check_Entry->find_one( ic_id=>$$Check{id}, skid_id=>$$Skid{id} ) ) {
 				$log->error("Didn't find skid $$Skid{id} in skid cache, but did find it in the check.");
 				next;
 			} 
-			if ( $Skid->rfidtag_id() and openprint::Inventory_Check_Entry->find_one(rfidtag_id=>$Skid->rfidtag_id() ) ) {
+			if ( $Skid->rfidtag_id() and openprint::Inventory_Check_Entry->find_one(ic_id=>$$Check{id}, rfidtag_id=>$Skid->rfidtag_id() ) ) {
 				$log->error("Didn't find skid $$Skid{id} in skid cache, but did find it in the check by rfid.");
 				next;
 			} 

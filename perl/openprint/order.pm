@@ -205,21 +205,13 @@ $log->debug("NOT Creating order $order_id");
 	} # end if
 
 	my %sql = (
-		'OrderIndex'		=>	$order_id,
-		'lngProjectIndex'	=>	$$Project{id},
+		OrderIndex		=>	$order_id,
+		lngProjectIndex	=>	$$Project{id},
 		);
 
-	my $qty_index;
-	my $num_qtys;
-	my @qtys = $Project->quantities();
-	foreach ( 0 .. 2 ) {
-		if ( $qtys[$_] ) {
-			$qty_index = $_ + 1;
-			$num_qtys += 1;
-		} # end if
-	} # end foreach
-	if ( $num_qtys == 1 ) {
-		$sql{intQuantityIndex}=$qty_index;
+	my @qtys = $Project->quantity_indexes();
+	if ( 1 == scalar @qtys ) {
+		$sql{intQuantityIndex} = $qtys[0];
 	} # end if
 	my $services = $Project->services();
 	if ( $$services{Turnaround} ) {
@@ -616,7 +608,7 @@ sub get_misc {
 
 	if ( $Order->status() ne 'Cancelled' ) {
 		$$variable{AmountOutstanding} = Math::Round::nearest( 0.01, $Order->total() - $Order->paid() );
-		$$variable{DepositDue} = Math::Round::nearest( 0.01, $Order->downpayment() - $Order->paid() ) if $Order->paid() < $Order->downpayment();
+		$$variable{DepositDue} = Math::Round::nearest( 0.01, $Order->downpayment() - $Order->paid() ) if $Order->downpayment() and ( $Order->paid() < $Order->downpayment() );
 	} # end if
 
 	$$variable{AmountPaid} = Math::Round::nearest( 0.01, $Order->paid() );

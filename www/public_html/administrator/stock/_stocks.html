@@ -5,51 +5,51 @@
 	my %sql = (
 			columns	=>	'*,(select name from stockbrands where id=brand_id) AS brand, (select name from stockfinishes where id=finish_id) AS finish, (select name from stockcolours where id=colour_id) AS colour, (select name from stockweights where id=weight_id) AS weight',
 			( $session{$uri.'?group_id'} ? ( group_id		=> $session{$uri.'?group_id'} ) : () ),
-			( $session{'/administrator/stock/list.html?owner_id'} ? ( 'owner_id'		=> $session{'/administrator/stock/list.html?owner_id'} ) : () ),
-			( $session{'/administrator/stock/list.html?manufacturer_id'} ? ( manufacturer_id	=> $session{'/administrator/stock/list.html?manufacturer_id'} ) : () ),
-			( $session{'/administrator/stock/list.html?supplier_id'} ? ( supplier_id		=> $session{'/administrator/stock/list.html?supplier_id'} ) : () ),
-			( $session{'/administrator/stock/list.html?brand_id'} ? ( 'brand_id'	=> $session{'/administrator/stock/list.html?brand_id'} ) : () ),
-			( $session{'/administrator/stock/list.html?finish_id'} ? ( 'finish_id'	=> $session{'/administrator/stock/list.html?finish_id'} ) : () ),
-			( $session{'/administrator/stock/list.html?colour_id'} ? ( 'colour_id'	=> $session{'/administrator/stock/list.html?colour_id'} ) : () ),
-			( $session{'/administrator/stock/list.html?weight_id'} ? ( 'weight_id'	=> $session{'/administrator/stock/list.html?weight_id'} ) : () ), 
-			( $session{'/administrator/stock/list.html?quality_id'} ? ( 'quality_id'	=> $session{'/administrator/stock/list.html?quality_id'} ) : () ),
-			( $session{'/administrator/stock/list.html?material_id'} ? ( 'material_id'	=> $session{'/administrator/stock/list.html?material_id'} ) : () ),
-			( $session{'/administrator/stock/list.html?Types'} ? ( 'type'		=> [ split(',', $session{'/administrator/stock/list.html?Types'} ) ] ) : () ),
-			( $session{'/administrator/stock/list.html?fsc_code'} ? ( 'fsc_code'	=> $session{'/administrator/stock/list.html?fsc_code'} ) : () ),
-			( $session{'/administrator/stock/list.html?width'} ? ( 
-				$session{'/administrator/stock/list.html?OrLarger'} ? ( 'width >=' => $session{'/administrator/stock/list.html?width'} ) : ( width => $session{'/administrator/stock/list.html?width'} ) ) : () ),
-			( $session{'/administrator/stock/list.html?height'} ? ( 'height'=>$session{'/administrator/stock/list.html?height'} ) : () ),
-			( $session{'/administrator/stock/list.html?grain_direction'} ? ( 'grain_direction' => $session{'/administrator/stock/list.html?grain_direction'} ) : () ),
-			( $session{'/administrator/stock/list.html?digital'} ne '' ? ( digital=>$session{'/administrator/stock/list.html?digital'} ) : () ),
-			( $session{'/administrator/stock/list.html?scoring'} ne '' ? ( score_required=>$session{'/administrator/stock/list.html?scoring'} ) : () ),
-			( $session{'/administrator/stock/list.html?customer_supplied'} ne '' ? ( supplied=>$session{'/administrator/stock/list.html?customer_supplied'} ) : () ),
-			( $session{'/administrator/stock/list.html?has_message'} ne '' ? ( 'message is not null' => $session{'/administrator/stock/list.html?has_message'} ) : () ),
-			( $session{'/administrator/stock/list.html?has_minimum_order'} ne '' ? ( 'minimum_order is not null' => $session{'/administrator/stock/list.html?has_minimum_order'} ) : () ),
-			( $session{'/administrator/stock/list.html?recommendations'} ne '' ? ( 'project_type_id exists'=> $session{'/administrator/stock/list.html?recommendations'} ) : () ),
+			( $session{$uri.'?owner_id'} ? ( 'owner_id'		=> $session{'/administrator/stock/list.html?owner_id'} ) : () ),
+			( $session{$uri.'?manufacturer_id'} ? ( manufacturer_id	=> $session{'/administrator/stock/list.html?manufacturer_id'} ) : () ),
+			( $session{$uri.'?supplier_id'} ? ( supplier_id		=> $session{'/administrator/stock/list.html?supplier_id'} ) : () ),
+			( $session{$uri.'?brand_id'} ? ( brand_id	=> $session{'/administrator/stock/list.html?brand_id'} ) : () ),
+			( $session{$uri.'?finish_id'} ? ( finish_id	=> $session{'/administrator/stock/list.html?finish_id'} ) : () ),
+			( $session{$uri.'?colour_id'} ? ( colour_id	=> $session{'/administrator/stock/list.html?colour_id'} ) : () ),
+			( $session{$uri.'?weight_id'} ? ( weight_id	=> $session{'/administrator/stock/list.html?weight_id'} ) : () ), 
+			( $session{$uri.'?quality_id'} ? ( quality_id	=> $session{'/administrator/stock/list.html?quality_id'} ) : () ),
+			( $session{$uri.'?material_id'} ? ( material_id	=> $session{'/administrator/stock/list.html?material_id'} ) : () ),
+			( $session{$uri.'?Types'} ? ( 'type'		=> [ split(',', $session{'/administrator/stock/list.html?Types'} ) ] ) : () ),
+			( $session{$uri.'?fsc_code'} ? ( 'fsc_code'	=> $session{'/administrator/stock/list.html?fsc_code'} ) : () ),
+			( $session{$uri.'?width'} ? ( 
+				$session{$uri.'?OrLarger'} ? ( 'width >=' => $session{'/administrator/stock/list.html?width'} ) : ( width => $session{'/administrator/stock/list.html?width'} ) ) : () ),
+			( $session{$uri.'?height'} ? ( 'height'=>$session{'/administrator/stock/list.html?height'} ) : () ),
+			( $session{$uri.'?grain_direction'} ? ( 'grain_direction' => $session{'/administrator/stock/list.html?grain_direction'} ) : () ),
+			( $session{$uri.'?digital'} ne '' ? ( digital=>$session{'/administrator/stock/list.html?digital'} ) : () ),
+			( $session{$uri.'?scoring'} ne '' ? ( score_required=>$session{'/administrator/stock/list.html?scoring'} ) : () ),
+			( $session{$uri.'?customer_supplied'} ne '' ? ( supplied=>$session{'/administrator/stock/list.html?customer_supplied'} ) : () ),
+			( $session{$uri.'?has_message'} ne '' ? ( 'message is not null' => $session{'/administrator/stock/list.html?has_message'} ) : () ),
+			( $session{$uri.'?has_minimum_order'} ne '' ? ( 'minimum_order is not null' => $session{'/administrator/stock/list.html?has_minimum_order'} ) : () ),
+			( $session{$uri.'?recommendations'} ne '' ? ( 'project_type_id exists'=> $session{'/administrator/stock/list.html?recommendations'} ) : () ),
 			order		=> 'brand,finish,colour,weight, width, height'
 		);
-		if ( $session{'/administrator/stock/list.html?calliper'} ) {
-			if ( $session{'/administrator/stock/list.html?calliper'} =~ /<([\.0-9]*)/ ) { 
-				$sql{'calliper <='} = $1;
-			} elsif ( $session{'/administrator/stock/list.html?calliper'} =~ />([\.0-9]*)/ ) { 
-				$sql{'calliper >='} = $1;
-			} else {
-				$sql{calliper} = $session{'/administrator/stock/list.html?calliper'};
-			}
+	if ( $session{$uri.'?calliper'} ) {
+		if ( $session{$uri.'?calliper'} =~ /<([\.0-9]*)/ ) { 
+			$sql{'calliper <='} = $1;
+		} elsif ( $session{$uri.'?calliper'} =~ />([\.0-9]*)/ ) { 
+			$sql{'calliper >='} = $1;
+		} else {
+			$sql{calliper} = $session{$uri.'?calliper'};
 		}
-		foreach my $Stock ( openprint::Paper->find( %sql) ) {
-		next if $session{'/administrator/stock/list.html?has_problems'} eq '1' and ! $Stock->check();
-		next if $session{'/administrator/stock/list.html?has_problems'} eq '0' and $Stock->check();
-		if ( $session{'/administrator/stock/list.html?setup_prices'} eq '1' ) {
+	}
+	foreach my $Stock ( openprint::Paper->find( %sql ) ) {
+		next if $session{$uri.'?has_problems'} eq '1' and ! $Stock->check();
+		next if $session{$uri.'?has_problems'} eq '0' and $Stock->check();
+		if ( $session{$uri.'?setup_prices'} eq '1' ) {
 			next if ! openprint::PaperPrice->find_one(paper_id=>$$Stock{id}, service=>'Setup');
-		} elsif ( $session{'/administrator/stock/list.html?setup_prices'} eq '0' ) {
+		} elsif ( $session{$uri.'?setup_prices'} eq '0' ) {
 			next if openprint::PaperPrice->find_one(paper_id=>$$Stock{id}, service=>'Setup');
 		} # end if
-		if ( $session{'/administrator/stock/list.html?material_prices'} eq '1' ) {
+		if ( $session{$uri.'?material_prices'} eq '1' ) {
 			$_ = openprint::PaperPrice->find_one(paper_id=>$$Stock{id}, service=>'Material');
 			$log->debug("Got $_");
 			next if ! $_;
-		} elsif ( $session{'/administrator/stock/list.html?material_prices'} eq '0' ) {
+		} elsif ( $session{$uri.'?material_prices'} eq '0' ) {
 			next if openprint::PaperPrice->find_one(paper_id=>$$Stock{id}, service=>'Material');
 		} # end if
 		$suppliers{$Stock->Supplier()->name()} = 1 if $$Stock{suppier_id};

@@ -560,7 +560,7 @@ $log->debug("regexp: $regexp");
 		my $error = $Upload->save({
 			(company_id	=>	$Company ? $Company->id() : undef),
 			(user_id		=>	$User ? $User->id() : undef ),
-			company		=>	$$upload{company_name},
+			company			=>	$$upload{company_name},
 			size			=>	$upload->{size},
 			total			=>	$upload->{size},
 			finished		=>	$upload->{timestamp},
@@ -667,7 +667,7 @@ EOT
 			smtp => $config{smtp_server},
 			From => $config{from},
 			To => $config{recipient},
-			BCC	=>	'iconnor@connortechnology.com',
+			#BCC	=>	'iconnor@connortechnology.com',
 			Subject => $subject,
 		};
 

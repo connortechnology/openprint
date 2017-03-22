@@ -166,10 +166,6 @@
 	}# end foreach option
 	return $html;
 ) ?>
-			</ul>
-		</div>
-		<div class="rightColumn">
-			<ul>
 		<li> 
 			<label>Type</label>
 			<? echo ( checkboxes( 'Types', ['Sheet','Sheet','Roll','Roll'], [ split(',', $session{'/administrator/stock/list.html?Types'} ) ], { onclick=>'calc(this.form.name);' } ); ) ?>
@@ -184,6 +180,10 @@ checkboxes( 'OrLarger', [1,'Or Larger'], $session{'/administrator/stock/list.htm
 ); ) ?>
 			
 		</li>
+			</ul>
+		</div>
+		<div class="rightColumn">
+			<ul>
 		<li class="calliper"><label>Calliper (Use &lt; and &gt;)</label>
 		<? echo ( join("\n",
 					input( type=>'text', name=>'calliper', id=>'calliper', value=>$session{'/administrator/stock/list.html?calliper'},
@@ -257,10 +257,10 @@ checkboxes( 'OrLarger', [1,'Or Larger'], $session{'/administrator/stock/list.htm
 	<br/>
 	<div id="Stocks">
 <? echo (
-	 if ( map { $session{'/administrator/stock/list.html?'.$_} ? $session{'/administrator/stock/list.html?'.$_} : () } ( qw{ brand_id finish_id colour_id weight_id calliper } ) ) {
+	if ( map { $session{'/administrator/stock/list.html?'.$_} ? $session{'/administrator/stock/list.html?'.$_} : () } ( qw{ brand_id finish_id colour_id weight_id calliper has_problems } ) ) {
 		return include('/administrator/stock/_stocks.html');
 	}
-
+	return 'Select filters or click Show';
 ) ?>
 	</div>
 	<input type="hidden" name="btnFunction"/>

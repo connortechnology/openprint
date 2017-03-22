@@ -252,20 +252,22 @@ sub make_drop_down {
 		$check_array = [ $checkval ];
 	} # end if
 
+	my %selected = map { $_ => $_ } @$check_array;
+
 	my $temp = '';
 	if ( $$options{prepend} ) {
-		for ( my $n = 0; $n < @{$$options{prepend}}; $n += 2) {
+		for ( my $n = 0; $n < @{$$options{prepend}}; $n += 2 ) {
 			$temp .= sprintf('<option value="%s"%s>%s</option>',
 					( $$options{encode} ? HTML::Entities::encode_entities(Encode::encode('utf-8',$$options{prepend}[$n])) : $$options{prepend}[$n] ),
-					( sets::isin( $$options{prepend}[$n], $check_array ) ? ' selected="selected"' : '' ),
+					( $selected{ $$options{prepend}[$n] } ? ' selected="selected"' : '' ),
 					( $$options{encode} ? HTML::Entities::encode_entities( Encode::encode('utf-8',$$options{length} ? substr($$options{prepend}[$n + 1],0, $$options{length}) : $$options{prepend}[$n + 1] ) ) : $$options{length} ? substr($$options{prepend}[$n + 1],0, $$options{length}) : $$options{prepend}[$n + 1] ),
 					);
 		} # end for
 	} # end if
-	for ( my $n = 0; $n < @{$search_data}; $n += 2) {
+	for ( my $n = 0; $n < @{$search_data}; $n += 2 ) {
 		$temp .= sprintf('<option value="%s"%s>%s</option>',
 			( $$options{encode} ? HTML::Entities::encode_entities(Encode::encode('utf-8',$$search_data[$n])) : $$search_data[$n] ),
-			( sets::isin( $$search_data[$n], $check_array ) ? ' selected="selected"' : '' ),
+			( $selected{ $$search_data[$n] } ? ' selected="selected"' : '' ),
 			( $$options{encode} ? HTML::Entities::encode_entities( Encode::encode('utf-8',$$options{length} ? substr($$search_data[$n + 1],0, $$options{length}) : $$search_data[$n + 1] ) ) : ( $$options{length} ? substr($$search_data[$n + 1],0, $$options{length}) : $$search_data[$n + 1] ) ),
 		);
 	} # end for
@@ -1111,6 +1113,7 @@ sub include_logs_view {
 	$variable{Object} = $Object;
 	setup_date_select( $variable{uri}, 'log_created_on_start', -31 );
 	setup_date_select( $variable{uri}, 'log_created_on_end', '' );
+	$session{$variable{uri}.'?log_limit'} = 50 if ! exists $session{$variable{uri}.'?log_limit'};
 	return include('/includes/_logs_contents_view.html');
 }
 

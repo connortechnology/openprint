@@ -8,27 +8,27 @@
 	</tr>
 	<? eval ( 
 		$_ = q{SELECT company_id, user_id, to_char(dtmTimestamp,'HH12:MIpm MM/DD/YYYY'), Description FROM Project_Log WHERE project_id=? ORDER BY dtmTimestamp DESC};
-		@{$$variable{'ProjectLog'}} = sql::execute( $log, $dbh, $_, $openprint::param{'project_id'} );
+		@{$$variable{ProjectLog}} = sql::execute( $log, $dbh, $_, $param{project_id} );
 	) ?>
-	<? while ( @$variable{'CustomerIndex','UserIndex','When','Description'} = splice @{$$variable{'ProjectLog'}},0,4; ) ?>
+	<? while ( @$variable{'CustomerIndex','UserIndex','When','Description'} = splice @{$$variable{ProjectLog}},0,4; ) ?>
 		<? eval ( 
-			if ( $$variable{'Description'} =~ /^Reused from project (\d+)$/ ) {
-				$$variable{'Description'} = "Reused from project <a href=\"/main/project/view.html?ProjectIndex=$1\">$1</a>";
-			} elsif ( $$variable{'Description'} =~ /^Reused to project (\d+)$/ ) {
-				$$variable{'Description'} = "Reused to project <a href=\"/main/project/view.html?ProjectIndex=$1\">$1</a>";
-			} elsif ( $$variable{'Description'} =~ /^Add to Order (\d+)$/ ) {
-				$$variable{'Description'} = "Add to order <a href=\"/main/order/history_details.html?order_id=$1\">$1</a>";
-			} elsif ( $$variable{'Description'} =~ /^Add to quote (\d+) (.+)$/ ) {
-				$$variable{'Description'} = "Add to quote <a href=\"/main/quote/history_details.html?quote_id=$1\">$1</a> $2";
+			if ( $$variable{Description} =~ /^Reused from project (\d+)$/ ) {
+				$$variable{Description} = "Reused from project <a href=\"/main/project/view.html?ProjectIndex=$1\">$1</a>";
+			} elsif ( $$variable{Description} =~ /^Reused to project (\d+)$/ ) {
+				$$variable{Description} = "Reused to project <a href=\"/main/project/view.html?ProjectIndex=$1\">$1</a>";
+			} elsif ( $$variable{Description} =~ /^Add to Order (\d+)$/ ) {
+				$$variable{Description} = "Add to order <a href=\"/main/order/history_details.html?order_id=$1\">$1</a>";
+			} elsif ( $$variable{Description} =~ /^Add to quote (\d+) (.+)$/ ) {
+				$$variable{Description} = "Add to quote <a href=\"/main/quote/history_details.html?quote_id=$1\">$1</a> $2";
 			} # end if
 		) ?>
 	<tr<?rowclass?>>
-	<td><? echo ( new openprint::Company( $$variable{'CustomerIndex'} )->name(); ) ?></td>
-	<td><? echo ( new openprint::User( $$variable{'UserIndex'} )->name(); ) ?></td>
+	<td><? echo ( new openprint::Company( $$variable{CustomerIndex} )->name(); ) ?></td>
+	<td><? echo ( new openprint::User( $$variable{UserIndex} )->name(); ) ?></td>
 	<td width="150"><?When?></td>
-	<td><? echo ( $$variable{'Description'} ) ?></td>
+	<td><? echo ( $$variable{Description} ) ?></td>
 	</tr>
-	<? eval ( $$variable{'rowclass'} = $$variable{'rowclass'} ? '' : ' class="colRow"'; ) ?>
-	<? endwhile ( @$variable{'CustomerIndex','UserIndex','When','Description'} = splice @{$$variable{'ProjectLog'}},0,4; ) ?>
+	<? eval ( $$variable{rowclass} = $$variable{rowclass} ? '' : ' class="colRow"'; ) ?>
+	<? endwhile ( @$variable{'CustomerIndex','UserIndex','When','Description'} = splice @{$$variable{ProjectLog}},0,4; ) ?>
 	</table>
 </fieldset>

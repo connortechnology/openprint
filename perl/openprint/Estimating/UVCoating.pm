@@ -159,7 +159,7 @@ sub calc {
 			my %results = signature_calc( $Project, $service_index, $specs, $signature_service_index, $sig_specs, $qty_index, $Imposition, \%MakeReadies );
 			$$specs{'hdnBreakdown'.$qty_index} .= $results{Breakdown};
 
-			$MakeReadies{$results{Equipment}->id()} = $$sig_specs{'StockWidth'.$qty_index} * $$sig_specs{'StockHeight'.$qty_index} if $results{Equipment};
+			$MakeReadies{$results{Equipment}{id}} = $$sig_specs{'StockWidth'.$qty_index} * $$sig_specs{'StockHeight'.$qty_index} if $results{Equipment};
 			@outputs = sets::union( @outputs, 
 					"ddmEquipment-$form-$qty_index", 
 					"MakeReadyPrice-$form-$qty_index",
@@ -483,7 +483,7 @@ $openprint::log->debug('DOESNT: ' . $breakdown ) if DEBUG;
 					last;
 				} # end if
 
-				my $run_qty = Math::Round::nearest( 1, $qty * $imp->quantity() / $$Imposition{imposition} );
+				my $run_qty = Math::Round::nearest( 1, $qty * $$imp{quantity} / $$Imposition{imposition} );
 				$breakdown .= '<tr><td colspan="2">impressions: ' . $run_qty .'</td></tr>';
 		
 				if ( my $Overs = $Equipment->Specification('UVCoating Overs', $run_qty ) ) {
@@ -693,6 +693,7 @@ sub has_overrides {
 
     my @v;
     if ( $qty_index ) {
+			push @v, map { $$specs{$_.$qty_index} ? $_.$qty_index : () } ( 'OverridePrice' );
         foreach my $s_s_id ( $Project->signatures() ) {
             my $sig_specs = openprint::service::get_specs_ref( $Project, $s_s_id );
             my $form = $$sig_specs{SignatureIndex};
@@ -719,7 +720,7 @@ sub equipment_fits {
 	}
 	if ( ( my $minimum_calliper ) = $Equipment->specification( 'Minimum Calliper', $I->sheet_width()*$I->sheet_height()) ) {
 		if ( $minimum_calliper > $$Stock{calliper} ) {
-			return 'Calliper too thin.';
+			return "Calliper too thin stock calliper $$Stock{calliper} < minimum($minimum_calliper).";
 		}
 	}
 }

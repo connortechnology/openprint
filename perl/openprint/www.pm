@@ -429,6 +429,7 @@ $log->debug("Running openprint::$module->$proc") if Debug;
 					$variable{ServiceIndex} = $service_ids[0];
 				} # end if
 				$variable{ProjectIndex} = $openprint::param{ProjectIndex} if ! $variable{ProjectIndex};
+				$variable{ProjectIndex} = $openprint::param{project_id} if ! $variable{ProjectIndex};
 				$variable{ProjectIndex} = $openprint::session{project_id} if ! $variable{ProjectIndex};
 				$variable{Project} = new openprint::Project( $variable{ProjectIndex} );
 				my $Currency = openprint::Currency::get_current();
@@ -545,17 +546,17 @@ $log->debug("Service: " . $Service->to_string() );
 				} elsif ($third eq 'shipping') {
 		
 					if ( $filename =~ /^(\w*).html$/ ) {
-					my $module = $1;
-					eval {
-$log->debug("Require $module");
-						require "openprint/Estimating/$module.pm";
-						if ( my $function = ("openprint::Estimating::$module")->can( 'display' ) ) {
-							$function->( $project_index, $service_index, \%variable );
-						} else {
-$log->debug("No display function $module.pm");
-						}
-					}; 
-				$log->error( "Eval error of require $module Reason: " . $@ ) if $@;
+						my $module = $1;
+						eval {
+							$log->debug("Require $module");
+							require "openprint/Estimating/$module.pm";
+							if ( my $function = ("openprint::Estimating::$module")->can( 'display' ) ) {
+								$function->( $project_index, $service_index, \%variable );
+							} else {
+								$log->debug("No display function $module.pm");
+							}
+						}; 
+						$log->error( "Eval error of require $module Reason: " . $@ ) if $@;
 					} else {
 						if ( -e $ENV{DOCUMENT_ROOT}.$uri ) {
 							my ( $proc ) = $filename =~ /^(.*)\.(html|json)$/;
@@ -591,7 +592,6 @@ $log->debug("No proc found for $filename");
 					} # end if
 				} # end if -e $ENV{DOCUMENT_ROOT}.$uri 
 
-				openprint::print::view_services( $r, $log, $dbh, \%variable )					if $filename eq 'view.html';
 				openprint::print_project::view_pdfs( $r, $log, $dbh, \%variable )				if $filename eq 'proj_view_pdf.html';
 				openprint::print_project::summary( $r, $log, $dbh, \%variable )					if $filename eq 'summary.html';
 				openprint::print_project::summary( $r, $log, $dbh, \%variable )					if $filename eq 'docket_sheet.html';

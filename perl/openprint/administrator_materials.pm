@@ -26,84 +26,86 @@ sub edit {
 	my $Material = $variable{Material} = new openprint::Material( $param{ddmMaterial} );
 	ssi::save_params($variable{uri}, ( 'ddmSearchCategory' ) );
 
-	if ( $param{btnFunction} eq '<<' ) {
-		$Material = $Material->Previous( category_id=>$param{ddmSearchCategory} );
-	} elsif ( $param{btnFunction} eq '>>' ) {
-		$Material = $Material->Next( category_id=>$param{ddmSearchCategory} );
-	} elsif ( $param{btnFunction} eq 'Delete' ) {
-		$Material->delete();
-		$Material = $Material->Next( category_id=>$param{ddmSearchCategory} );
-	} elsif ( $param{btnFunction} eq 'Export' ) {
-		my @header = ( 'Material Name', 'Description','Category', 'Activity Code', 'Manufacturer', 'Supplier','Fed Tax Exempt', 'State Tax Exempt' );
+	if ( $param{btnFunction} ) {
+		if ( $param{btnFunction} eq '<<' ) {
+			$Material = $Material->Previous( category_id=>$param{ddmSearchCategory} );
+		} elsif ( $param{btnFunction} eq '>>' ) {
+			$Material = $Material->Next( category_id=>$param{ddmSearchCategory} );
+		} elsif ( $param{btnFunction} eq 'Delete' ) {
+			$Material->delete();
+			$Material = $Material->Next( category_id=>$param{ddmSearchCategory} );
+		} elsif ( $param{btnFunction} eq 'Export' ) {
+			my @header = ( 'Material Name', 'Description','Category', 'Activity Code', 'Manufacturer', 'Supplier','Fed Tax Exempt', 'State Tax Exempt' );
 
-		my @data;
-		foreach my $Material ( openprint::Material->find( order=>'name' ) ) {
-			push @data, $Material->get( 'name', 'description', 'category', 'activity_code', 'manufacturer','supplier','taxexempt1','taxexempt2' );
-		} # end foreach
+			my @data;
+			foreach my $Material ( openprint::Material->find( order=>'name' ) ) {
+				push @data, $Material->get( 'name', 'description', 'category', 'activity_code', 'manufacturer','supplier','taxexempt1','taxexempt2' );
+			} # end foreach
 
-		misc::export_csv( $openprint::r, $log, \%variable, 'materials.csv', \@header, \@data );
-	} elsif ( $param{btnFunction} eq 'Import' ) {
+			misc::export_csv( $openprint::r, $log, \%variable, 'materials.csv', \@header, \@data );
+		} elsif ( $param{btnFunction} eq 'Import' ) {
 
-		my $error = '';
-		if ( $param{file} ) {
-			my $ac = sql::start_transaction( $dbh );
-			my %Materials = map { $$_{name}, $_ } openprint::Material->find();
+			my $error = '';
+			if ( $param{file} ) {
+				my $ac = sql::start_transaction( $dbh );
+				my %Materials = map { $$_{name}, $_ } openprint::Material->find();
 
-			my $upload = $r->upload( 'file' );
-			my $io = $upload->io();
-			$_ = <$io>;
+				my $upload = $r->upload( 'file' );
+				my $io = $upload->io();
+				$_ = <$io>;
 
-			my $csv = Text::CSV_XS->new();
+				my $csv = Text::CSV_XS->new();
 
-			while (<$io>) {
-				my $status = $csv->parse($_);
-				my ( $name, $description, $category, $activity_code, $manufacturer, $supplier, $tax1, $tax2 ) = misc::trim( $csv->fields() );
-$log->debug("$name, $description, $category, $activity_code, $manufacturer, $supplier, $tax1, $tax2");
-				next if $name eq '';
-				if ( $Materials{$name} ) {
-					$error .= "Not importing $name because it already exists at " . $Materials{$name}->link_to().'<br/>';
-					next;
-				}
-				my $Material = new openprint::Material();
-				$_ = $Material->save({
-						name	=>	$name,
-						description	=>	$description,
-						category	=>	$category,
-						activity_code	=>	$activity_code,
-						manufacturer	=>	$manufacturer,
-						supplier		=>	$supplier,
-						taxexempt1		=>	$tax1,
-						taxexempt2		=>	$tax2,
-						});
-				if ( $_ ) {
-					$error .= $_;
-					$dbh->rollback();
-					last;
-				} else {
-					$Materials{$name} = $Material;
-				}
-			} # end while
-			sql::end_transaction( $dbh, $ac );
-		} else {
-			$error .= 'No file given to upload.<br>';
-		} # end if
-		$variable{error} = $error; 
-
-	} elsif ( $param{btnFunction} eq 'Save' ) {
-		if ( $param{new_category} ) {
-			if ( my @Categories = openprint::MaterialCategory->find(name=>$param{new_category} ) ) {
-				$param{category_id} = $Categories[0]->id();
+				while (<$io>) {
+					my $status = $csv->parse($_);
+					my ( $name, $description, $category, $activity_code, $manufacturer, $supplier, $tax1, $tax2 ) = misc::trim( $csv->fields() );
+	$log->debug("$name, $description, $category, $activity_code, $manufacturer, $supplier, $tax1, $tax2");
+					next if $name eq '';
+					if ( $Materials{$name} ) {
+						$error .= "Not importing $name because it already exists at " . $Materials{$name}->link_to().'<br/>';
+						next;
+					}
+					my $Material = new openprint::Material();
+					$_ = $Material->save({
+							name	=>	$name,
+							description	=>	$description,
+							category	=>	$category,
+							activity_code	=>	$activity_code,
+							manufacturer	=>	$manufacturer,
+							supplier		=>	$supplier,
+							taxexempt1		=>	$tax1,
+							taxexempt2		=>	$tax2,
+							});
+					if ( $_ ) {
+						$error .= $_;
+						$dbh->rollback();
+						last;
+					} else {
+						$Materials{$name} = $Material;
+					}
+				} # end while
+				sql::end_transaction( $dbh, $ac );
 			} else {
-				my $Category = new openprint::MaterialCategory();
-				$Category->name( $param{new_category} );
-				if ( $_ = $Category->save() ) {
-					$variable{error} .= $_;
-					return;
+				$error .= 'No file given to upload.<br>';
+			} # end if
+			$variable{error} = $error; 
+
+		} elsif ( $param{btnFunction} eq 'Save' ) {
+			if ( $param{new_category} ) {
+				if ( my @Categories = openprint::MaterialCategory->find(name=>$param{new_category} ) ) {
+					$param{category_id} = $Categories[0]->id();
 				} else {
-					$param{category_id} = $Category->id();
+					my $Category = new openprint::MaterialCategory();
+					$Category->name( $param{new_category} );
+					if ( $_ = $Category->save() ) {
+						$variable{error} .= $_;
+						return;
+					} else {
+						$param{category_id} = $Category->id();
+					} # end if
 				} # end if
 			} # end if
-		} # end if
+		} # end if btnFunction
 		my @changes = $Material->changes( \%param );
 
 		if ( @changes or ! $$Material{id} ) {	

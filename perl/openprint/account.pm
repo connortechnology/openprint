@@ -713,6 +713,7 @@ sub credit_application {
 
 sub view {
 	$variable{Me} = new openprint::User( $session{user_id} );
+	$param{user_id} = openprint::User->transform( id=>$param{user_id} );
 	$variable{User} = new openprint::User( $param{user_id} ? $param{user_id} : $session{user_id} );
 	if ( ! $variable{User}->can_view() ) {
 		$variable{User} = new openprint::User();
@@ -727,15 +728,15 @@ sub view {
 		} # end if
 		if ( exists $param{relationship_type_id} ) {
 			if ( $variable{User}->id() == $variable{Me}->id() ) {
-				$variable{error} .= "We already know you love yourself.  Frequently.";
+				$variable{error} .= "We already know you love yourself.";
 				return;
 			} # endif
-			my $Relationship = openprint::User_Relationship->find_one('user_id1'=>$session{user_id}, 'user_id2'=>$variable{User}->id() );
+			my $Relationship = openprint::User_Relationship->find_one( user_id1=>$session{user_id}, user_id2=>$variable{User}->id() );
 			if ( ! $Relationship ) {
 				$Relationship = new openprint::User_Relationship();
-				$Relationship->set({'user_id1'=>$session{user_id}, 'user_id2'=>$variable{User}->id()});
+				$Relationship->set({ user_id1=>$session{user_id}, user_id2=>$variable{User}->id()});
 			} # end if
-			$variable{error} .= $Relationship->save({'type_id'=>$param{relationship_type_id}});
+			$variable{error} .= $Relationship->save({ type_id=>$param{relationship_type_id}});
 		} # end if
 	} # end if
 } # end sub view
