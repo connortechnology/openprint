@@ -17,7 +17,6 @@ require openprint::Company;
 require openprint::Company_Profile;
 require openprint::Tax;
 require openprint::Email;
-require openprint::Email_Account;
 require openprint::UserGroup;
 require openprint::Invoice;
 require openprint::Payment;
@@ -695,24 +694,42 @@ sub payment_options {
 		$variable{ExternalRedirect} = '/administrator/managerial/payment_options.html' if ! $variable{error};
 	} # end if
 } # end sub payment_options
+
 sub emails {
+	require openprint::Email_Account;
+	require openprint::Email_Alias;
+
 	my $mail_dbh = email::db_connect();
-	$openprint::Email::dbh = $mail_dbh;
+	$openprint::Email_Account::dbh = $mail_dbh;
  
-	if ( $param{action} eq 'Delete' ) {
-		foreach my $Email ( openprint::Email_Account->find('id'=>$param{id}) ) {
-			$variable{error} .= $Email->delete();
-		} # end foreach Email
-	} elsif ( $param{action} eq 'Save' ) {
+	if ( $param{action} ) {
+		if ( $param{action} eq 'Delete' ) {
+			foreach my $Email ( openprint::Email_Account->find(username=>$param{username}) ) {
+				$variable{error} .= $Email->delete();
+			} # end foreach Email
+		} # end if
 	} # end if
 } # end sub emails
 
 sub email {
+	require openprint::Email_Account;
+	require openprint::Email_Alias;
+
 	my $mail_dbh = email::db_connect();
 	if ( $mail_dbh ) {
 		$openprint::Email_Account::dbh = $mail_dbh;
-		$variable{Email} = new openprint::Email_Account( $param{id} );
-	} # end if
+		my $Email = $variable{Email} = openprint::Email_Account->find_one( username=>$param{username} );
+		if ( $param{action} ) {
+			if ( $param{action} eq 'Delete' ) {
+				$variable{error} .= $Email->delete();
+			} elsif ( $param{action} eq 'Save' ) {
+				$variable{error} .= $Email->save( \%param );
+			} # end if
+			$variable{ExternalRedirect} = '/administrator/managerial/emails.html' if ! $variable{error};
+		} # end if action
+	} else {
+		$variable{error} .= "No connection to mail db.<br/>";
+	} # end if have maildb connection
 } # end sub email
 
 sub usergroups {
