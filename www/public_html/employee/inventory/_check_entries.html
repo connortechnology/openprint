@@ -3,7 +3,8 @@
 	my $uri = '/employee/inventory/check.html';
 	my $html;
 	my $rowclass;
-	my $total_weight;
+	my $total_weight = 0;
+	my $total_value = 0;
 
 	openprint::StockBrand->find();
 	openprint::StockFinish->find();
@@ -16,29 +17,33 @@
 		($session{$uri.'?scanner_id'} ? ( scanner_id=>$session{$uri.'?scanner_id'} ) : () ),
 		order=>$session{$uri.'?sort'} );
 
+	$$variable{can_see_pricing} = openprint::Skid->can_see_pricing();
 	$html .= q` 
 	# of items in check: `.(scalar @Contents).q`<br/>
 	<table class="List">
 	<tr>
 	<th class="Skid" onclick="load_entries('sort=skid_id,rfidtag_id,created_on');">Skid/Roll</th>
 	<th class="RFIDTag" onclick="load_entries('sort=rfidtag_id,skid_id,created_on');">RFIDTag</th>
-	<th class="Width">Width</th>
 	<th class="Diameter">Diameter</th>
 	<th class="Quantity">Weight(lbs)</th>
 	<th class="DateTime" onclick="load_entries('sort=created_on,rfidtag_id,skid_id');">When</th>
 	<th class="Location" onclick="load_entries('sort=location_id,created_on,rfidtag_id,skid_id');">Location</th>
 	<th class="Notes">Notes</th>
 	<th class="RFIDScanner" onclick="load_entries('sort=scanner_id,rfidtag_id,skid_id');">Scanner</th>
+	`;
+	if ( $$variable{can_see_pricing} ) {
+		$html .= '<th class="Price">Price/Value</th>';
+	}
+	$html .= '
 	<th class="buttons"></th>
-	</tr>`;
+	</tr>';
 
 	$variable{location_dropdown} = openprint::Location->dropdown(order=>'parent_id NULLS FIRST, lower(name)', type=>'place') if ! exists $variable{location_dropdown};
 
 	$html .= '<tr id="tr">';
 	$html .= '<td class="Skid">'.input(type=>'cardinal',name=>'skid_id', id=>'skid_id', oninput=>'lookup_item(this);').'</td>';
 	$html .= '<td class="RFID">'.input(type=>'text', name=>'rfidtag_id', oninput=>'lookup_item(this);').'</td>';
-	$html .= '<td></td>';
-	$html .= '<td></td>';
+	$html .= '<td class="Diameter">'.input( type=>'positivefloat', id=>'dimension2', name=>'dimension2' ).'</td>';
 	$html .= '<td class="qty_lbs">'.input( type=>'positivefloat', id => 'qty_lbs', name	=> 'qty_lbs', oninput => "from_lbs(this,'','');" ) . '</td>';
 	#$html .= '<td class="qty_kgs">'.input( type=>'positivefloat', id => 'qty_kgs', name => 'qty_kgs', oninput => "from_kg(this,'','');" ) . '</td>';
 	#$html .= '<td class="qty_sheets">'.input( type=>'positivefloat', id => 'qty_sheets', name => 'qty_sheets', oninput => "from_sheets(this,'','');" ) . '</td>';
@@ -46,6 +51,9 @@
 	$html .= '<td class="Location">'.ssi::select( $variable{location_dropdown}, undef, { name=>'location_id', prepend=>['','select'] } ).'</td>';
 	$html .= '<td><textarea name="notes"></textarea></td>';
 	$html .= '<td></td>';
+	if ( $$variable{can_see_pricing} ) {
+		$html .= '<td></td>';
+	}
 
 	$html .= '<td class="buttons">' . join("\n",
 			button('Add', { onclick=>q`new Ajax.Updater( 'Entries', '_check_entries.html', { parameters:getValues( 'f2', [ 'rfidtag_id', 'skid_id', 'qty_lbs','qty_kgs', 'qty_sheets', 'location_id' ], { action: 'add', check_id: `.$$variable{Check}->id().q` } ) } );` } ),
@@ -97,38 +105,48 @@
 
 	
 		$html .= sprintf('
-<tr class="%13$s%1$s" id="entry-%12$d" title="entry %12$d">
-	<td class="Skid">%2$s</td>
-	<td class="RFIDTag">%3$s</td>
-	<td class="Width">%5$s</td>
+<tr class="%1$s%2$s" id="entry-%3$d" title="entry %3$d">
+	<td class="Skid">%4$s</td>
+	<td class="RFIDTag">%5$s</td>
 	<td class="Diameter">%6$s</td>
-	<td class="Quantity">%4$s</td>
-	<td class="DateTime">%17$s</td>
-	<td class="Location" rowspan="2">%11$s</td>
-	<td class="Notes" rowspan="2">%7$s<br/>%14$s</td>
-	<td class="RFIDScanner/User" rowspan="2">%15$s %16$s</td>
-	<td class="buttons" rowspan="2">%10$s</td>
-</tr><tr class="%13$s%1$s"><td colspan="4">%8$s</td><td class="Quantity">%9$s</td><td></td></tr>',
-		$rowclass,
+	<td class="Quantity">%7$s</td>
+	<td class="DateTime">%13$s</td>
+	<td class="Location" rowspan="2">%10$s</td>
+	<td class="Notes" rowspan="2">%8$s<br/>%9$s</td>
+	<td class="RFIDScanner/User" rowspan="2">%11$s %12$s</td>',
+
+		$rowclass, ($check ? 'warning' : '' ),
+		$ICE->id(),
 		$Skid->link_to(),
 		$ICE->RFIDTag()->link_to(),
+		( $ICE->dimension2() ? $ICE->dimenion2() : Math::Round::nearest( 1, $Skid->diameter() ) . '?' ),
 		Number::Format::format_number( $ICE->quantity() ). $Skid->units(),
-		$ICE->dimension1(),
-		$ICE->dimension2(),
-		$ICE->notes(),
-		join('<br/>', map { $_->Paper()->to_string() } $Skid->Contents() ),
-		join('<br/>', map { Number::Format::format_number( $_->quantity() ) . $_->Paper()->units() } $Skid->Contents() ),
-		join("\n",
-			button( 'x'.$$ICE{id}, { onclick=>"del_entry($$ICE{id});", title=>'Delete', text=>'X' } ),
-		),
-
+		$ICE->notes(), $check,
 		( $ICE->location_id() != $ICE->Skid()->location_id() ? $ICE->Location()->name() . ' was ' . $ICE->Skid()->Location()->name() : $ICE->Location()->name() ),
-		$ICE->id(),
-		($check ? 'warning' : '' ),
-		$check,
 		$ICE->Scanner()->name(), $ICE->User()->name(),
 		format_datetime( $ICE->created_on() ),
 		);
+
+		if ( $$variable{can_see_pricing} ) {
+			my $Cost = $Skid->Cost();
+			$html .= '<td rowspan="2" class="Price">';
+			if ( $Cost ) {
+				$html .= openprint::Currency::format($$Cost{cost}).$$Cost{units}.'<br/>'.openprint::Currency::format($Skid->value());
+				$total_value += $Skid->value();
+			} 
+			$html .= '</td>';
+		} # end if
+
+		$html .= sprintf('
+	<td class="buttons" rowspan="2">%3$s</td>
+</tr><tr class="%1$s%2$s"><td colspan="3">%4$s</td><td class="Quantity">%5$s</td><td></td></tr>',
+		$rowclass, ($check ? 'warning' : '' ),
+		join("\n",
+			button( 'x'.$$ICE{id}, { onclick=>"del_entry($$ICE{id});", title=>'Delete', text=>'X' } ),
+		),
+		join('<br/>', map { $_->Paper()->to_string() } $Skid->Contents() ),
+		join('<br/>', map { Number::Format::format_number( $_->quantity() ) . $_->Paper()->units() } $Skid->Contents() ),
+	);
 
 		$total_weight += $ICE->quantity();
 		
@@ -137,7 +155,11 @@
 
 
 
-	$html.='<tr class="totals"><td colspan="4"># of items in check: ' . scalar @Contents . '</td><td class="Quantity">'.Number::Format::format_number(int($total_weight)).'lbs</td><td></td><td class="Location"></td><td class="notes"></td><td></td><td class="buttons"></td></tr></table>';
+	$html.='<tr class="totals"><td colspan="3"># of items in check: ' . scalar @Contents . '</td><td class="Quantity">'.Number::Format::format_number(int($total_weight)).'lbs</td><td></td><td class="Location"></td><td class="notes"></td><td></td>';
+		if ( $$variable{can_see_pricing} ) {
+			$html .= '<td class="Price">'.$total_value.'</td>';
+		}
+	$html .= '<td class="buttons"></td></tr></table>';
 	return $html;
 ) ?>
 

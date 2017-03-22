@@ -146,6 +146,8 @@ $log->debug("# of SKids" . @{$$variable{Skids}} );
 		openprint::StockColour->find();
 		openprint::StockWeight->find();
 	} # end if
+
+	$$variable{can_see_pricing} = openprint::Skid->can_see_pricing();
 ) ?>
 <?include(/includes/error_reporting.html)?>
 <? if ( @{$$variable{Skids}} ) ?>
@@ -163,10 +165,10 @@ $log->debug("# of SKids" . @{$$variable{Skids}} );
 			<th class="Location">Location</th>
 			<th class="Dockets">Dockets</th>
 			<th class="Condition">Condition</th>
-			<? if ( openprint::usergroup::is_user_in( ['InventoryManager'], $session{user_id} ) ) ?>
+			<? if ( $$variable{can_see_pricing} ) ?>
 			<th class="Price">Cost</th>
 			<th class="Price">Value</th>
-			<? endif ( openprint::usergroup::is_user_in( ['InventoryManager'], $session{user_id} ) ) ?>
+			<? endif ( $$variable{can_see_pricing} ) ?>
 		</tr>
 		<? echo (
 				my $uri = '/employee/inventory/skids.html';
@@ -180,8 +182,6 @@ $log->debug("# of SKids" . @{$$variable{Skids}} );
 			my $total_value;
 			my %Allocations;
 
-			my $can_see_prices = openprint::usergroup::is_user_in( ['InventoryManager'], $session{user_id} );
-			
 			# I think this is ok, because there are never that many allocations at any given time
 			# This is because skids_ids is an array type... need to make this better.
 			foreach my $Allocation ( openprint::PaperAllocation->find() ) {
@@ -298,7 +298,7 @@ $RFIDTag->id(),
 					);
 				} # end while
 				$html .= '</td><td rowspan="2" class="Condition">'. join('<br/>', map { $_->condition() } $Skid->Contents() ) . '</td>';
-				if ( $can_see_prices ) {
+				if ( $$variable{can_see_pricing} ) {
 					$html .= '<td rowspan="2" class="Price">'.$Skid->cost().'</td>';
 					$html .= '<td rowspan="2" class="Price">'.openprint::Currency::format($Skid->value()).'</td>';
 					$total_value += $Skid->value();
@@ -339,7 +339,7 @@ $RFIDTag->id(),
 			$html .= Number::Format::format_number($total_skids) . 'skids ' . Number::Format::format_number($total_sheets) . 'sheets<br/>' if $total_skids;
 			$html .= Number::Format::format_number($total_rolls) . 'rolls ' . Number::Format::format_number($total_weight) . 'lbs<br/>' if $total_rolls;
 			$html .= '</td><td colspan="4">&nbsp;</td>';
-			if ( $can_see_prices ) {
+			if ( $$variable{can_see_pricing} ) {
 				$html .= '<td class="Price"></td>';
 				$html .= '<td class="Price">'.openprint::Currency::format($total_value).'</td>';
 			} # end if
