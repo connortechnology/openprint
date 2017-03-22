@@ -2686,16 +2686,16 @@ sub check {
 
 	my $Check = $variable{Check} = new openprint::Inventory_Check( $param{check_id} );
 	if ( $param{action} eq 'Delete' ) {
-        $variable{error} .= $Check->delete();
-        $variable{ExternalRedirect} = '/employee/inventory/checks.html' if ! $variable{error};
+		$variable{error} .= $Check->delete();
+		$variable{ExternalRedirect} = '/employee/inventory/checks.html' if ! $variable{error};
 	} elsif ( $param{action} eq 'Clear' ) {
 		foreach my $ICE ( $Check->Entries() ) {
 			$variable{error} .= $ICE->delete();
 		}
-        $variable{ExternalRedirect} = '/employee/inventory/checks.html' if ! $variable{error};
+		$variable{ExternalRedirect} = '/employee/inventory/checks.html' if ! $variable{error};
 	} elsif ( $param{action} eq 'Destroy' ) {
-        $variable{error} .= $Check->destroy();
-        $variable{ExternalRedirect} = '/employee/inventory/checks.html' if ! $variable{error};
+		$variable{error} .= $Check->destroy();
+		$variable{ExternalRedirect} = '/employee/inventory/checks.html' if ! $variable{error};
 	} elsif ( $param{action} eq 'Download' ) {
 		my %p;
 		$p{skid_ids} = [ map { $_->skid_id() } $Check->Entries() ];
