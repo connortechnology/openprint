@@ -2067,10 +2067,6 @@ sub summary {
 			$html .= ' ' . ( $summary eq 'not folded' ? $summary : ' ' . $summary ) . "\n";
 		} # end foreach
 		return $html;
-	} else {
-		if ( $$specs{alert} ) {
-			return '<div class="warning">'.$$specs{alert}.'</div>';
-		} # end if
 	} # end if
 
 	return '';
