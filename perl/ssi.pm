@@ -252,7 +252,7 @@ sub make_drop_down {
 		$check_array = [ $checkval ];
 	} # end if
 
-	my %selected = map { $_ => $_ } @$check_array
+	my %selected = map { $_ => $_ } @$check_array;
 
 	my $temp = '';
 	if ( $$options{prepend} ) {
