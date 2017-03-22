@@ -1215,15 +1215,16 @@ $openprint::log->debug("Got Fold: " . $Fold->to_string() ) if DEBUG;
 
 #$Imposition->display('fitting');
 						# See if it fits
-						if ( $_ )	{
+						my $rc = $Equipment->fits( $Imposition->layout_width(), $Imposition->layout_height(), $$Paper{calliper} );
+						if ( $rc )	{
 							if ( $$specs{"chkOverrideLimits-$form-$qty_index"} ne 'Y' ) {
 								if ( @my_equipment == 1 ) {
-									$Breakdown .= $Imposition->to_string()."Doesn't fit $_.<br/>";
+									$Breakdown .= $Imposition->to_string()."Doesn't fit $rc.<br/>";
 								}
 								$complete =0;
 								last;
 							} else {
-								$Breakdown .= $Imposition->to_string()."Doesn't fit $_.<br/>";
+								$Breakdown .= $Imposition->to_string()."Doesn't fit $rc.<br/>";
 								$$specs{alert} .= "Fold for form $form may exceed equipment specifications.<br/>";
 							}
 						} # end if fits
