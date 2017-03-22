@@ -34,6 +34,9 @@ sub name {
 		$_[0]{name} = $_[1];
 	}
 	if ( ! $_[0]{name} ) {
+		if ( ! $_[0]{id} ) {
+			return 'Inventory check for ' . join('-', Date::Calc::Today() );
+		}
 		return $_[0]{id};
 	}
 	return $_[0]{name};
