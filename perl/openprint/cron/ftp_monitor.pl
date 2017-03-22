@@ -912,6 +912,7 @@ $log->debug("Email sent to @To from $config{TechSupportEmail}");
 	if ( $client ) {
 		$log->debug("Blacklisting client $client");
 		my $ip;
+		# FIXME someday this will have to be updated to detect ipv6
 		if ( $client =~ /[^\d\.]/ ) {
 			$_ = gethostbyname($client);
 			if ( defined $_ ) {
@@ -926,10 +927,6 @@ $log->debug("Email sent to @To from $config{TechSupportEmail}");
 			if ( @Interfaces ) {
 				foreach my $Interface ( @Interfaces ) {
 					my $Host = $Interface->Host();	
-					if ( ! ( $Host->blacklist() or $Host->whitelist() ) ) {
-						$_ = $Host->save({blacklist=>1});
-						$log->error($_) if $_;
-					} # end if
 					(new openprint::Log())->save({
 							Object		=>	$Host,
 							action	=> 'Intrusion', 
@@ -938,6 +935,14 @@ $log->debug("Email sent to @To from $config{TechSupportEmail}");
 							user_id		=> $$User{id},
 							company_id	=> $$User{company_id},
 							} );
+					if ( ! ( $Host->blacklist() or $Host->whitelist() ) ) {
+						$_ = $Host->save({blacklist=>1});
+						if ( $_ ) {
+							$log->error($_);
+						} else {
+							last;
+						} # end if
+					} # end if
 				} # end foreach  Interface
 			} else {
 				my $Host = new openprint::Host();

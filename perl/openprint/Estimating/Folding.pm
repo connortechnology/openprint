@@ -1039,7 +1039,7 @@ SET:		foreach my $Set_Of_Impositions ( @All_Impositions ) {
 					if ( $Fold ) {
 						# Do we need to clone it? we used to set the impo in it, but we don't do that anymore.
 						$Fold = $Fold->clone();
-						$Imposition->Fold( $Fold );
+						$$Imposition{Fold} = $Fold;
 						
 						push @{$folds{$Imposition->pages().'PageFold-'.$$Imposition{imposition}.'out'}}, $Fold;
 						$openprint::log->debug(sprintf('Found: %dx%d,%dout', $Imposition->page_columns(), $Imposition->page_rows(), $Imposition->imposition() ) ) if DEBUG;
@@ -1055,7 +1055,8 @@ $Imposition->display();
 				} else { # Not the press
 					my $max_feed_width = $Equipment->specification('Maximum Feed Width', $$Imposition{imposition} );
 # FIgure out the fold.	Because this isn't the press, we have to figure out how it cuts...
-					if ( $$sig_specs{rdbTemplateType} and $fold_types{$$sig_specs{rdbTemplateType}} ) {
+					
+					if ( (!$$sig_specs{txtSignatureType}) and $$sig_specs{rdbTemplateType} and $fold_types{$$sig_specs{rdbTemplateType}} ) {
 $openprint::log->debug("Templatetype: $$sig_specs{rdbTemplateType}") if DEBUG;
 						my $rc = $Equipment->fits( $Imposition->layout_width(), $Imposition->layout_height(), $$Paper{calliper} );
 						$openprint::log->debug("Trying to fit " . $Imposition->layout_width() . 'x' . $Imposition->layout_height() . ' on ' . $Equipment->strid(). ' (' . ($rc ? $rc : '' ).')' ) if DEBUG;
@@ -1068,13 +1069,8 @@ $openprint::log->debug("Templatetype: $$sig_specs{rdbTemplateType}") if DEBUG;
 						} # end if
 							
 						my $Fold = $Equipment->Fold({
-							#( $$Imposition{image_orientation} == openprint::Imposition::Vertical ? (
 									page_columns	=>	$Imposition->page_columns(),
 									page_rows		=>	$Imposition->page_rows(),
-								#) : (
-									#page_columns	=>	$Imposition->page_rows(),
-									#page_rows		=>	$Imposition->page_columns(),
-								#) ),
 								page_width			=>	$$sig_specs{txtFinalWidth},
 								page_height			=>	$$sig_specs{txtFinalHeight},
 								type						=>	$$sig_specs{rdbTemplateType},
@@ -1086,6 +1082,18 @@ $openprint::log->debug("Templatetype: $$sig_specs{rdbTemplateType}") if DEBUG;
 								printing_type		=>	$ppt,
 								spine_direction	=>	$openprint::Imposition::Orientations{$$Imposition{spine_direction}},
 								});
+						$Fold = $Equipment->Fold({
+								page_width			=>	$$sig_specs{txtFinalWidth},
+								page_height			=>	$$sig_specs{txtFinalHeight},
+								type						=>	$$sig_specs{rdbTemplateType},
+								gsm							=>	$$Paper{gsm},
+								calliper				=>	$$Paper{calliper},
+								imposition			=>	$$Imposition{imposition},
+								columns					=>	$$Imposition{columns},
+								rows						=>	$$Imposition{rows},
+								printing_type		=>	$ppt,
+								spine_direction	=>	$openprint::Imposition::Orientations{$$Imposition{spine_direction}},
+								}) if ! $Fold;
 						if ( $Fold ) {
 # Need to check feed width
 $openprint::log->debug("Has a fold, doing extra checks") if DEBUG;
@@ -1577,7 +1585,7 @@ $openprint::log->debug("Runspeed: $$Fold{type}($$Fold{name}) : $$Equipment{name}
 						# Make a copy of the specs so we don't clobber the real specs.  Set the override to this stitcher and see how it calcs.
 						$stitching_specs = $$calc_hash{FoldingStitchingSpecs};
 						$$stitching_specs{"ddmEquipment$qty_index"} = $$Equipment{id};
-$openprint::log->error("Using temp stitching specs " . $$calc_hash{StitchingSpecs}{"chkOverrideEquipment$qty_index"} . ' override: ' . $$stitching_specs{"chkOverrideEquipment$qty_index"});
+#$openprint::log->error("Using temp stitching specs " . $$calc_hash{StitchingSpecs}{"chkOverrideEquipment$qty_index"} . ' override: ' . $$stitching_specs{"chkOverrideEquipment$qty_index"});
 					} else {
 						$stitching_specs = $$calc_hash{StitchingSpecs};
 					} # end if
@@ -2388,8 +2396,6 @@ sub cut_spreads {
 			}
 			$openprint::log->debug(sprintf('2279 Cutting pages down from %d@%dpg to %d@%dpg by cutting spread columns from %d to 1',
 						$I->quantity(), $I->pages(), $i1->quantity(), $i1->pages(), $$I{spread_columns} ) ) if DEBUG;
-			$openprint::log->debug(sprintf('2279 Cutting pages down from %d@%dpg to %d@%dpg by cutting spread columns from %d to 1',
-						$I->quantity(), $I->pages(), $i1->quantity(), $i1->pages(), $$I{spread_columns} ) ) if $$I{image_orientation} == openprint::Imposition::Horizontal;
 			push @results, [ $i1 ];
 
 			# Cut in half unevenly

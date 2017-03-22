@@ -38,24 +38,24 @@ $debug = 0;
 $table = 'papers';
 $serial	= 'paper_id_seq';
 %fields = (
-		id			=>	'id', 
-		created_on	=>	'created_on',
+		id				=>	'id', 
+		created_on		=>	'created_on',
 		group_id		=>	'group_id',
 		owner_id		=>	'owner_id',
-		supplier_id	=>	'supplier_id',
+		supplier_id		=>	'supplier_id',
 		manufacturer_id	=>	'manufacturer_id',
 		brand_id		=>	'brand_id',
 		colour_id		=>	'colour_id',
 		finish_id		=>	'finish_id',
 		weight_id		=>	'weight_id',
-		quality_id	=>	'quality_id',
+		quality_id		=>	'quality_id',
 		calliper		=>	'calliper',
-		taxexempt1	=>	'taxexempt1',
-		taxexempt2	=>	'taxexempt2',
+		taxexempt1		=>	'taxexempt1',
+		taxexempt2		=>	'taxexempt2',
 		cuttable		=>	'cuttable', 
 		multipart		=>	'multipart', 
-		doublesided	=>	'doublesided', 
-		perfecting	=>	'perfecting', 
+		doublesided		=>	'doublesided', 
+		perfecting		=>	'perfecting', 
 		score_required	=>	'score_required',
 		die_score_required	=>	'die_score_required',
 		width				=>	'width',
@@ -63,30 +63,30 @@ $serial	= 'paper_id_seq';
 		mweight			=>	'mweight',
 		sheets_per_package	=>	'sheets_per_package',
 		gsm					=>	'gsm',
-		wpsi					=>	'wpsi',
+		wpsi				=>	'wpsi',
 		digital				=>	'digital',
-		type					=>	'type',
+		type				=>	'type',
 		basis_width			=>	'basis_width',
-		basis_height			=>	'basis_height',
-		basis_mweight			=>	'basis_mweight',
-		bladecleaning			=>	'bladecleaning',
-		grade					=>	'grade',
+		basis_height		=>	'basis_height',
+		basis_mweight		=>	'basis_mweight',
+		bladecleaning		=>	'bladecleaning',
+		grade				=>	'grade',
 		grain_direction		=>	'grain_direction',
-		fsc_code				=>	'fsc_code',
-		supplied				=>	'supplied',
-		minimum_order			=>	'minimum_order',
-		inventory_number		=>	'inventory_number',
-		full_packages			=>	'full_packages',
+		fsc_code			=>	'fsc_code',
+		supplied			=>	'supplied',
+		minimum_order		=>	'minimum_order',
+		inventory_number	=>	'inventory_number',
+		full_packages		=>	'full_packages',
 		message				=>	'message',
-		in_stock				=>	'in_stock',
-		allocated				=>	'allocated',
-		parts					=>	'parts',
+		in_stock			=>	'in_stock',
+		allocated			=>	'allocated',
+		parts				=>	'parts',
 		material_id			=>	'material_id',
-		user_type				=>	'user_type',
-		manufacturers_name		=>	'manufacturers_name',
-		available_to_order		=>	'available_to_order',
-		department_id			=>	'department_id',
-		Supplied					=>	undef,
+		user_type			=>	'user_type',
+		manufacturers_name	=>	'manufacturers_name',
+		available_to_order	=>	'available_to_order',
+		department_id		=>	'department_id',
+		Supplied			=>	undef,
 		);
 %find_fields = (
 		#manufacturer	=>	'(SELECT name FROM manufacturers WHERE manufacturers.id=papers.manufacturer_id)',
@@ -116,8 +116,10 @@ $serial	= 'paper_id_seq';
 %transforms = (
 	id			=>	[ 's/\D//g', '<2147483647' ],
 	manufacturers_name => [ 's/^\s+//', 's/\s+$//', 's/\s\s+$/ /g' ],
-	gsm	=>	 [ 's/[^\d\.]//g' ],
-	fsc_code => [ 's/^\s+//', 's/\s+$//', 's/\s\s+$/ /g' ],
+	gsm				=>	 [ 's/[^\d\.]//g' ],
+	basis_mweight	=>	 [ 's/[^\d\.]//g' ],
+	mweight			=>	 [ 's/[^\d\.]//g' ],
+	fsc_code		=> [ 's/^\s+//', 's/\s+$//', 's/\s\s+$/ /g' ],
 );
 
 %defaults = (
@@ -1814,15 +1816,15 @@ sub check {
 	my $Copy = $Paper->clone();
 
 	my $results;
-  if ( abs( POSIX::ceil($Paper->gsm()) - POSIX::ceil($Copy->gsm(undef)) ) - 1 > 0 ) {
+  if ( abs( POSIX::ceil($Paper->gsm()) - POSIX::ceil($Copy->gsm(undef)) ) - 3 > 0 ) {
 		return "may have invalid gsm current:$$Paper{gsm} != calculated:$$Copy{gsm} ";
   }
   $Copy = $Paper->clone();
   if ( abs( POSIX::ceil( $Paper->basis_mweight()) - POSIX::ceil( $Copy->basis_mweight(undef)) ) -1 > 0 ) {
-    return "may have invalid mweight current:$$Paper{basis_mweight} != calculated:$$Copy{basis_mweight}";
+    return "may have invalid basis weight current:$$Paper{basis_mweight} != calculated:$$Copy{basis_mweight}";
   }
- if ( $Paper->brand() =~ /cover/i or $Paper->weight() =~ /cover/i and ( $Paper->basis_width() != 20 or $Paper->basis_height() != 26 ) ) {
-        "may have has wrong basis size.";
+  if ( $Paper->brand() =~ /cover/i or $Paper->weight() =~ /cover/i and ( $Paper->basis_width() != 20 or $Paper->basis_height() != 26 ) ) {
+	  "may have has wrong basis size.";
     }
 
 	return;

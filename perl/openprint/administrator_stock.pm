@@ -278,13 +278,13 @@ sub stock {
 			$Paper->width( $param{width} );
 			$Paper->height( $param{height} );
 		} # end if
-		$Paper->mweight( $param{mweight} );
 
+		$Paper->gsm( $param{gsm} );
 		$Paper->basis_mweight( $param{basis_mweight} );
 		$Paper->basis_width( $param{basis_width} );
 		$Paper->basis_height( $param{basis_height} );
+		#$Paper->mweight( $param{mweight} );
 
-		$Paper->gsm( $param{gsm} );
 		$Paper->calliper( $param{calliper} );
 		$Paper->sheets_per_package( $param{sheets_per_package} );
 		$Paper->full_packages( $param{full_packages} );

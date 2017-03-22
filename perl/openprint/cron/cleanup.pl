@@ -160,11 +160,25 @@ if ( ( exists $config{RFID} ) and $config{RFID} ) {
 # Paper maintenance
 foreach my $Paper ( openprint::Paper->find( 'project_type_id exists' => 1 ) ) {
 	if ( (! $$Paper{basis_mweight} ) and $Paper->basis_mweight() ) {
+				$log->debug("Updating basis_weight");
 		$Paper->save();
 	}
 	
 	my $check = $Paper->check();
 	if ( $check ) {
+		if ( $check =~ /basis/ ) {
+			if ( $Paper->weight() =~ /(\d+)lb/ ) {
+				$log->debug("Updating based on basis_mweight");
+				$$Paper{gsm} = undef;
+				$$Paper{wpsi} = undef;
+				$$Paper{mweight} = undef;
+				$Paper->gsm();
+				$Paper->mweight();
+				$Paper->basis_mweight( 2*$1 );
+				$Paper->save();
+			}
+	$check = $Paper->check();
+		}
 		$log->error($Paper->to_string() . ' ' . $check . " id:$$Paper{id}");
 		#sleep 1;
 	}
