@@ -1302,7 +1302,7 @@ $log->debug("not Skipping cuz ddmPress$qty_index eq $$Press{strid}");
 		my $number_of_colours = $Press->specification('Number of Colours');
 		$$project{Runstyles} = $Press->specification('Runstyles');
 		if ( ! $$project{Runstyles} ) {
-			$log->warning("NO runstyles set on $$Press{strid}");
+			$log->warn("NO runstyles set on $$Press{strid}");
 		}
 		if ( DEBUG_IMPOSITIONS and $$specs{"chkOverrideRunStyle$qty_index"} ) {
 			$$project{Runstyles} = $$specs{"ddmRunStyle$qty_index"};

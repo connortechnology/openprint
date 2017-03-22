@@ -94,7 +94,7 @@ sub view_services {
 				my $recalc = 0;	
 				my $ServiceType = $Service->ServiceType();
 
-				if ( $ServiceType and ( $ServiceType->name() eq 'Proofs' ) ) {
+				if ( $ServiceType->id() and ( $ServiceType->name() eq 'Proofs' ) ) {
 					openprint::Estimating::Proofs::save_proof_specs( $r, $log, $dbh, \%variable, $Project->id(), $service_index );
 				} else {
 					openprint::service::save_service( $r, $log, $dbh, $Project->id(), $service_index );
