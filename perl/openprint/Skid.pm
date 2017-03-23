@@ -769,11 +769,14 @@ sub diameter {
 				my $Paper = $C->Paper();
 				next if ! $$Paper{width};
 				next if ! $Paper->wpsi();
-				my $length = ( $C->quantity() / $C->Paper()->wpsi() ) / $C->Paper()->width();
+				next if ! $Paper->calliper();
+				next if ! $C->quantity();
+				my $length = ( $C->quantity() / $Paper->wpsi() ) / $Paper->width();
 
 				# length = pi( r1^2 - r0^2 ) / calliper;
 				my $radius = sqrt( ( $length * $$Paper{calliper} / $pi ) + 28.8906525 );
 				$_[0]{diameter} = $radius * 2;
+$openprint::log->debug("Diameter $_[0]{diameter} length: $length inches before sqrt: " . ( ( ( $length * $$Paper{calliper} / $pi ) ) ) );
 				last;
 			} #end foreach content
 		} # end if Roll
