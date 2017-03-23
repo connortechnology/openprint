@@ -767,6 +767,8 @@ sub diameter {
 			my $pi = 3.14;
 			foreach my $C ( $_[0]->Contents() ) {
 				my $Paper = $C->Paper();
+				next if ! $$Paper{width};
+				next if ! $Paper->wpsi();
 				my $length = ( $C->quantity() / $C->Paper()->wpsi() ) / $C->Paper()->width();
 
 				# length = pi( r1^2 - r0^2 ) / calliper;
