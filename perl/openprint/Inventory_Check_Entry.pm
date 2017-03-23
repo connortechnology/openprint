@@ -183,6 +183,7 @@ sub value {
 		my $C = $self->SkidContent();
 		if ( $C ) {
 			my $Cost = $C->Cost();
+			openprint::Currency::convert( $Cost );
 			if ( $Cost ) {
 				$openprint::log->debug("cost for $$self{skid_id} $$Cost{units} $$Cost{cost}") if $debug;
 				if ( (!$$Cost{units}) or ($$Cost{units} eq '/100lbs' or $$Cost{units} eq '/cwt') ) {
