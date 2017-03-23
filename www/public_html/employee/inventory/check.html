@@ -94,6 +94,9 @@ function lookup_item(e) {
 		<ul>
 			<li><label>Has Skid/Roll?</label><?echo(radio('has_skid', ['1','Yes','0','No','','Both'], $session{$r->uri().'?has_skid'}, { onclick=>'load_entries();' } );)?></li>
 			<li><label>Has Quantity?</label><?echo(radio('has_quantity', ['1','Yes','0','No','','Both'], $session{$r->uri().'?has_quantity'}, { onclick=>'load_entries();' } );)?></li>
+<?if( openprint::Skid->can_see_pricing() ) ?>
+			<li><label>Has Price?</label><?echo(radio('has_price', ['1','Yes','0','No','','Both'], $session{$r->uri().'?has_price'}, { onclick=>'load_entries();' } );)?></li>
+<?endif( openprint::Skid->can_see_pricing() ) ?>
 			<li><label>Scanner</label>
 				<?echo(ssi::select( openprint::RFIDScanner->dropdown(), $session{$r->uri().'?scanner_id'}, { 
 					name=>'scanner_id',
