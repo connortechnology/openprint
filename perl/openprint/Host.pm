@@ -345,5 +345,9 @@ sub online {
 	return $_[0]{online};
 }
 
+sub Owner {
+	return new openprint::Company( $_[0]{owner_id} );
+}
+
 1;
 __END__
