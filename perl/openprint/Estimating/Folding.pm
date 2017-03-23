@@ -2653,6 +2653,10 @@ $openprint::log->debug("Has no equipment_id") if DEBUG;
 #printing_type	=>	$ppt,
 		};
 		my $Fold = $Folder->Fold( $find );
+		if ( (!$Fold) and ( $$folding_specs{"chkOverrideLimits-$form-$qty_index"} eq 'Y' ) ) {
+			delete $$find{calliper};
+			$Fold = $Folder->Fold( $find );
+		}
 		if ( ! $Fold ) {
 			if ( $$folding_specs{"chkOverrideFold-$form-$qty_index"} eq 'Y' ) {
 				$openprint::log->debug("Was overriden");
