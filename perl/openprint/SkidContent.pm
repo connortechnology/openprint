@@ -116,6 +116,13 @@ sub Cost {
 				};
 			} else {
 				my $POC = $Type->PurchaseOrder_Content();
+				if ( ( ! $POC ) and $$Type{docket} ) {
+					# Look again without a docket
+					$POC = $Type->PurchaseOrder_Content({ ignore_docket=>1 });
+				}
+				if ( ! $POC ) {
+					$POC = $Type->PurchaseOrder_Content({ ignore_docket=>1, ignore_fsc=>1 });	
+				}
 				next if ! $POC;
 				my $POCurrency = $POC->PurchaseOrder()->Currency();
 				if ( $POCurrency ) {
