@@ -103,6 +103,17 @@
 		my $Skid = $ICE->Skid();
 		my $check = $ICE->check();
 
+		my $location_message;
+		if ( $$ICE{location_id} ) {
+			 $location_message = $ICE->Location()->name();
+
+			if ( $ICE->location_id() != $ICE->Skid()->location_id() ) {
+				$location_message .= ' was ' . $ICE->Skid()->Location()->name();
+			} 
+		} else {
+			$location_message = $ICE->Skid()->Location()->name();
+		}
+				
 	
 		$html .= sprintf('
 <tr class="%1$s%2$s" id="entry-%3$d" title="entry %3$d">
@@ -119,10 +130,10 @@
 		$ICE->id(),
 		$Skid->link_to(),
 		$ICE->RFIDTag()->link_to(),
-		( $ICE->dimension2() ? $ICE->dimenion2() : Math::Round::nearest( 1, $Skid->diameter() ) . '?' ),
+		( $ICE->dimension2() ? $ICE->dimenion2() : Math::Round::nearest( 1, $ICE->diameter() ) . '?' ),
 		Number::Format::format_number( $ICE->quantity() ). $Skid->units(),
 		$ICE->notes(), $check,
-		( $ICE->location_id() != $ICE->Skid()->location_id() ? $ICE->Location()->name() . ' was ' . $ICE->Skid()->Location()->name() : $ICE->Location()->name() ),
+		$location_message,
 		$ICE->Scanner()->name(), $ICE->User()->name(),
 		format_datetime( $ICE->created_on() ),
 		);
@@ -131,8 +142,8 @@
 			my $Cost = $Skid->Cost();
 			$html .= '<td rowspan="2" class="Price">';
 			if ( $Cost ) {
-				$html .= openprint::Currency::format($$Cost{cost}).$$Cost{units}.'<br/>'.openprint::Currency::format($Skid->value());
-				$total_value += $Skid->value();
+				$html .= openprint::Currency::format($$Cost{cost}).$$Cost{units}.'<br/>'.openprint::Currency::format($ICE->value());
+				$total_value += $ICE->value();
 			} 
 			$html .= '</td>';
 		} # end if
@@ -157,7 +168,7 @@
 
 	$html.='<tr class="totals"><td colspan="3"># of items in check: ' . scalar @Contents . '</td><td class="Quantity">'.Number::Format::format_number(int($total_weight)).'lbs</td><td></td><td class="Location"></td><td class="notes"></td><td></td>';
 		if ( $$variable{can_see_pricing} ) {
-			$html .= '<td class="Price">'.$total_value.'</td>';
+			$html .= '<td class="Price">$'. Number::Format::format_number( $total_value ).'</td>';
 		}
 	$html .= '<td class="buttons"></td></tr></table>';
 	return $html;
