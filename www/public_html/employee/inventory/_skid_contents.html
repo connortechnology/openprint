@@ -47,6 +47,7 @@
 
 		if ( $$variable{can_see_pricing} ) {
 			my $Cost = $C->Cost();
+			openprint::Currency::convert( $Cost );
 			$html .= '<td class="Cost">' . openprint::Currency::format( 1*$$Cost{cost} ) . $$Cost{units}.'</td>';
 			$html .= '<td class="Value">' . openprint::Currency::format( 1*$C->value() ).'</td>';
 			$html .= '</tr><tr>';
