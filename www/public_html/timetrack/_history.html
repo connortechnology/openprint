@@ -43,7 +43,7 @@
 		$$variable{elapsed_total} += $Timetrack->elapsed();
 		$$variable{value_total} += $Timetrack->value();
 		$$variable{wage_total} += $Timetrack->wage();
-		$$variable{distance_total} += $Timetrack->distance();
+		$$variable{distance_total} += $Timetrack->distance() if $Timetrack->distance();
 	} # end foreach Timetrack
 
 	$$variable{Currency} = openprint::Currency::get_current() if ! $$variable{Currency};
@@ -90,7 +90,8 @@
 	<td class="Price">%14$s</td>
 	<td class="Price">%15$s</td>
 </tr>
-`, $rowclass, Encode::encode('utf8',$hs->parse($T->description())), $T->id(), html_escape( $T->User()->name() ),
+`, $rowclass, 
+( $T->description() ? Encode::encode('utf8',$hs->parse($T->description())) : ''), $T->id(), html_escape( $T->User()->name() ),
 html_escape( $T->Company()->name() ),
 Date::Format::time2str(($T->time_associated() ? $config{DateTimeFormat} : $config{DateFormat}), Date::Parse::str2time($T->starting())),
 Date::Format::time2str(($T->time_associated() ? $config{DateTimeFormat} : $config{DateFormat}), Date::Parse::str2time($T->ending())),
