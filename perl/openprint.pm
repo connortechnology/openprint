@@ -72,26 +72,26 @@ sub session_init {
 	$session{ip} = $ENV{REMOTE_ADDR} if $ENV{REMOTE_ADDR} and ! $session{ip};
 
 # Now set some defaults right away, if we can, FIXME namespace colision
-	if ( $param{'Country'} ) {
-		$session{Country} = $param{'Country'};
+	if ( $param{Country} ) {
+		$session{Country} = $param{Country};
 	} elsif ( ! $session{Country} ) {
-		$session{Country} = $config{'Country'};
+		$session{Country} = $config{Country};
 	} # end if
 
 	return if ! $dbh;
 
 	if ( $param{btnFunction} and sets::isin( $session{user_type}, ['E','A'] ) ) {
-		if ( $param{'btnFunction'} eq 'SelectCompany' ) {
-			if ( $param{'ddmCompany'} != $session{company_id} ) {
-				my $C = new openprint::Company( $param{'ddmCompany'} );
+		if ( $param{btnFunction} eq 'SelectCompany' ) {
+			if ( $param{ddmCompany} != $session{company_id} ) {
+				my $C = new openprint::Company( $param{ddmCompany} );
 				if ( ! $C->id() ) {
 					$variable{error} .= 'Unknown company selected.  Please try again.';
 				} else {
 					switch_company( $C );
 				} # end if
 			} # end if
-		} elsif ( $param{'btnFunction'} eq 'SelectPricelist' ) {
-			my $Pricelist = new openprint::Pricelist( $param{'pricelist_id'} );
+		} elsif ( $param{btnFunction} eq 'SelectPricelist' ) {
+			my $Pricelist = new openprint::Pricelist( $param{pricelist_id} );
 			if ( ! $Pricelist->id() ) {
 				$Pricelist = openprint::Pricelist::get_current();
 			} # end if
@@ -99,8 +99,8 @@ sub session_init {
 		} # end if
 	} # end if
 
-	if ( $param{'Currency'} ) {
-		my $short = $param{'Currency'};
+	if ( $param{Currency} ) {
+		my $short = $param{Currency};
 		$short = substr( $short, 0, 3 );
 		$_ = openprint::Currency->find_one( short => $short );
 		$session{Currency_id} = $_->id() if $_;

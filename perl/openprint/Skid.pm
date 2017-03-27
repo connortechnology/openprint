@@ -545,13 +545,21 @@ sub value {
 	return $$self{value};
 } # end sub value
 
+sub Cost {
+	if ( ! $_[0]{Cost} ) {
+		foreach my $SC ( $_[0]->Contents() ) {
+			if ( $SC->Cost() ) {
+				$_[0]{Cost} = $SC->Cost();
+				last;
+			}
+		}
+	} # end if
+	return $_[0]{Cost};
+} # end sub Cost
+
 sub cost {
 	if ( ! $_[0]{cost} ) {
-		my $Cost;
-		foreach my $SC ( $_[0]->Contents() ) {
-			$Cost = $SC->Cost();
-			last if $Cost;
-		}
+		my $Cost = $_[0]->Cost();
 		if ( $Cost ) {
 			$_[0]{cost} = $$Cost{cost}.$$Cost{units};
 		}
@@ -744,6 +752,36 @@ sub Unit_Cost {
 		return $C->Paper()->Unit_Cost();
 	}
 	return ();
+}
+
+sub can_see_pricing {
+	return 1 if $openprint::session{user_type} eq 'A';
+	return 1 if openprint::usergroup::is_user_in( ['InventoryManager'], $openprint::session{user_id} );
+	return 0;
+}
+
+sub diameter {
+	if ( ! $_[0]{diameter} ) {
+		if ( $_[0]{type} eq 'Roll' ) {
+			my $core_radius = 5.375;
+			my $pi = 3.14;
+			foreach my $C ( $_[0]->Contents() ) {
+				my $Paper = $C->Paper();
+				next if ! $$Paper{width};
+				next if ! $Paper->wpsi();
+				next if ! $Paper->calliper();
+				next if ! $C->quantity();
+				my $length = ( $C->quantity() / $Paper->wpsi() ) / $Paper->width();
+
+				# length = pi( r1^2 - r0^2 ) / calliper;
+				my $radius = sqrt( ( $length * $$Paper{calliper} / $pi ) + 28.8906525 );
+				$_[0]{diameter} = $radius * 2;
+$openprint::log->debug("Diameter $_[0]{diameter} length: $length inches before sqrt: " . ( ( ( $length * $$Paper{calliper} / $pi ) ) ) );
+				last;
+			} #end foreach content
+		} # end if Roll
+	} # end if ! diameter
+	return $_[0]{diameter};
 }
 
 1;

@@ -146,6 +146,7 @@ $openprint::log->debug("PurchaseOrder::Save AC: $ac");
 sub Currency {
 	my ( $self ) = @_;
 	if ( ! $$self{currency_id} ) {
+$openprint::log->debug("Defaulting PO currency to current");
 		$$self{currency_id} = openprint::Currency::get_current()->id();
 	} # end if
 	return new openprint::Currency( $_[0]{currency_id} );

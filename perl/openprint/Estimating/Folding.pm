@@ -1061,11 +1061,16 @@ $openprint::log->debug("Templatetype: $$sig_specs{rdbTemplateType}") if DEBUG;
 						my $rc = $Equipment->fits( $Imposition->layout_width(), $Imposition->layout_height(), $$Paper{calliper} );
 						$openprint::log->debug("Trying to fit " . $Imposition->layout_width() . 'x' . $Imposition->layout_height() . ' on ' . $Equipment->strid(). ' (' . ($rc ? $rc : '' ).')' ) if DEBUG;
 						if ( $rc ) {
-							if ( @my_equipment == 1 ) {
+							if ( $$specs{"chkOverrideLimits-$form-$qty_index"} ne 'Y' ) {
+								if ( @my_equipment == 1 ) {
+									$Breakdown .= $Imposition->to_string() . "Doesn't fit: $rc<br/>";
+								} # end if
+								%folds = ();
+								last;
+							} else {
 								$Breakdown .= $Imposition->to_string() . "Doesn't fit: $rc<br/>";
-							} # end if
-							%folds = ();
-							last;
+								$$specs{alert} .= "Fold for form $form may exceed equipment specifications.<br/>";
+							}
 						} # end if
 							
 						my $Fold = $Equipment->Fold({
@@ -1082,18 +1087,36 @@ $openprint::log->debug("Templatetype: $$sig_specs{rdbTemplateType}") if DEBUG;
 								printing_type		=>	$ppt,
 								spine_direction	=>	$openprint::Imposition::Orientations{$$Imposition{spine_direction}},
 								});
-						$Fold = $Equipment->Fold({
-								page_width			=>	$$sig_specs{txtFinalWidth},
-								page_height			=>	$$sig_specs{txtFinalHeight},
-								type						=>	$$sig_specs{rdbTemplateType},
-								gsm							=>	$$Paper{gsm},
-								calliper				=>	$$Paper{calliper},
-								imposition			=>	$$Imposition{imposition},
-								columns					=>	$$Imposition{columns},
-								rows						=>	$$Imposition{rows},
-								printing_type		=>	$ppt,
-								spine_direction	=>	$openprint::Imposition::Orientations{$$Imposition{spine_direction}},
-								}) if ! $Fold;
+
+						if ( ! $Fold ) {
+							if ( $$specs{"chkOverrideLimits-$form-$qty_index"} ne 'Y' ) {
+							$Fold = $Equipment->Fold({
+									page_width			=>	$$sig_specs{txtFinalWidth},
+									page_height			=>	$$sig_specs{txtFinalHeight},
+									type						=>	$$sig_specs{rdbTemplateType},
+									gsm							=>	$$Paper{gsm},
+									calliper				=>	$$Paper{calliper},
+									imposition			=>	$$Imposition{imposition},
+									columns					=>	$$Imposition{columns},
+									rows						=>	$$Imposition{rows},
+									printing_type		=>	$ppt,
+									spine_direction	=>	$openprint::Imposition::Orientations{$$Imposition{spine_direction}},
+									});
+							} else {
+							$Fold = $Equipment->Fold({
+									page_width			=>	$$sig_specs{txtFinalWidth},
+									page_height			=>	$$sig_specs{txtFinalHeight},
+									type						=>	$$sig_specs{rdbTemplateType},
+									gsm							=>	$$Paper{gsm},
+									imposition			=>	$$Imposition{imposition},
+									columns					=>	$$Imposition{columns},
+									rows						=>	$$Imposition{rows},
+									printing_type		=>	$ppt,
+									spine_direction	=>	$openprint::Imposition::Orientations{$$Imposition{spine_direction}},
+									});
+								$$specs{alert} .= "Fold for form $form may exceed equipment specifications.<br/>" if ! $$specs{alert};
+							}
+						} # end if ! Fold
 						if ( $Fold ) {
 # Need to check feed width
 $openprint::log->debug("Has a fold, doing extra checks") if DEBUG;
@@ -1192,27 +1215,58 @@ $openprint::log->debug("Got Fold: " . $Fold->to_string() ) if DEBUG;
 
 #$Imposition->display('fitting');
 						# See if it fits
-						$_ = $Equipment->fits( $Imposition->layout_width(), $Imposition->layout_height(), $$Paper{calliper} );
-						if ( ! $_ )	{
+						my $rc = $Equipment->fits( $Imposition->layout_width(), $Imposition->layout_height(), $$Paper{calliper} );
+						if ( $rc )	{
+							if ( $$specs{"chkOverrideLimits-$form-$qty_index"} ne 'Y' ) {
+								if ( @my_equipment == 1 ) {
+									$Breakdown .= $Imposition->to_string()."Doesn't fit $rc.<br/>";
+								}
+								$complete =0;
+								last;
+							} else {
+								$Breakdown .= $Imposition->to_string()."Doesn't fit $rc.<br/>";
+								$$specs{alert} .= "Fold for form $form may exceed equipment specifications.<br/>";
+							}
+						} # end if fits
+
 							$openprint::log->debug("Fits") if DEBUG;
 							my $fits = '';;
 							my $Fold = $Equipment->Fold({
 									pages			=>	$Imposition->pages(),
-									   page_columns	=>	$Imposition->page_columns(),
-									   page_rows	=>	$Imposition->page_rows(),
+									page_columns	=>	$Imposition->page_columns(),
+									page_rows	=>	$Imposition->page_rows(),
 									page_width		=>	$$Imposition{page_width},
 									page_height		=>	$$Imposition{page_height},
-								spine_direction	=>	$openprint::Imposition::Orientations{$$Imposition{spine_direction}},
+									spine_direction	=>	$openprint::Imposition::Orientations{$$Imposition{spine_direction}},
 									stitching		=>	(($$services{SaddleStitching} or $$services{LoopStitching}) ? 1 : 0),
 									perfectbind		=>	($$services{PerfectBound} ? 1 : 0),
 									spinepaste		=>	($$services{SpinePaste} ? 1 : 0),
 									gsm						=>	$$Paper{gsm},
-									calliper			=>	$$Paper{calliper},
+									calliper				=>	$$Paper{calliper},
 									imposition		=>	$$Imposition{imposition},
 									columns				=>	$$Imposition{columns},
 									rows					=>	$$Imposition{rows},
 									printing_type	=>	$ppt,
 									});
+							if ( ( ! $Fold ) and ( $$specs{"chkOverrideLimits-$form-$qty_index"} eq 'Y' ) ) {
+							$Fold = $Equipment->Fold({
+									pages			=>	$Imposition->pages(),
+									page_columns	=>	$Imposition->page_columns(),
+									page_rows	=>	$Imposition->page_rows(),
+									page_width		=>	$$Imposition{page_width},
+									page_height		=>	$$Imposition{page_height},
+									spine_direction	=>	$openprint::Imposition::Orientations{$$Imposition{spine_direction}},
+									stitching		=>	(($$services{SaddleStitching} or $$services{LoopStitching}) ? 1 : 0),
+									perfectbind		=>	($$services{PerfectBound} ? 1 : 0),
+									spinepaste		=>	($$services{SpinePaste} ? 1 : 0),
+									gsm						=>	$$Paper{gsm},
+									imposition		=>	$$Imposition{imposition},
+									columns				=>	$$Imposition{columns},
+									rows					=>	$$Imposition{rows},
+									printing_type	=>	$ppt,
+									});
+								$$specs{alert} .= "Fold for form $form may exceed equipment specifications.<br/>";
+							}
 							if ( $Fold and $max_feed_width ) {
 
 								if ( $$Fold{page_columns} and $$Fold{page_rows} ) {
@@ -1310,14 +1364,6 @@ $openprint::log->debug("Got Fold: " . $Fold->to_string() ) if DEBUG;
 								$Imposition->display('Didnt find fold:' );
 								$complete = 0;
 							} # end if
-						} elsif ( DEBUG ) {
-							if ( @my_equipment == 1 ) {
-								$Breakdown .= $Imposition->to_string()."Doesn't fit $_.<br/>";
-							} else {
-								$Imposition->display('Didnt fiit:'.$_ );
-							}
-							$complete =0;
-						} # end if fits
 
 						$complete = 0;
 						# If we get here, then we couldn't find the fold
@@ -2022,10 +2068,6 @@ sub summary {
 			$html .= ' ' . ( $summary eq 'not folded' ? $summary : ' ' . $summary ) . "\n";
 		} # end foreach
 		return $html;
-	} else {
-		if ( $$specs{alert} ) {
-			return '<div class="warning">'.$$specs{alert}.'</div>';
-		} # end if
 	} # end if
 
 	return '';
@@ -2611,6 +2653,10 @@ $openprint::log->debug("Has no equipment_id") if DEBUG;
 #printing_type	=>	$ppt,
 		};
 		my $Fold = $Folder->Fold( $find );
+		if ( (!$Fold) and ( $$folding_specs{"chkOverrideLimits-$form-$qty_index"} eq 'Y' ) ) {
+			delete $$find{calliper};
+			$Fold = $Folder->Fold( $find );
+		}
 		if ( ! $Fold ) {
 			if ( $$folding_specs{"chkOverrideFold-$form-$qty_index"} eq 'Y' ) {
 				$openprint::log->debug("Was overriden");

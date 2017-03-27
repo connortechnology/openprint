@@ -1838,11 +1838,15 @@ sub apply_Manifest {
 
 # Run through, and warn if the PO is not satisfied
 				my $PO_Content = $Type->PurchaseOrder_Content();
-				if ( $PO_Content->qty() > $total_qty ) {
-					$variable{warning} .= 'There is not enough stock to satisfy PO ' . $PO->id().'<br/>
-						Manifest has ' . $total_qty . $Type->Paper()->units() . ' of '. $Paper->to_string()	.'<br/>
-						PO wants ' . $PO_Content->qty() . $PO_Content->units() . ' of ' . $PO_Content->item().'<br/>';
-				} # end if	
+				if ( $PO_Content ) {
+					if ( $PO_Content->qty() > $total_qty ) {
+						$variable{warning} .= 'There is not enough stock to satisfy PO ' . $PO->id().'<br/>
+							Manifest has ' . $total_qty . $Type->Paper()->units() . ' of '. $Paper->to_string()	.'<br/>
+							PO wants ' . $PO_Content->qty() . $PO_Content->units() . ' of ' . $PO_Content->item().'<br/>';
+					} # end if	
+				} else {
+					$error .= 'No matching line found in Purchase Order ' . $param{'po_id-'.$Type->id()} . '.<br/>';
+				} # end if POC
 			} else {
 				$error .= 'Purchase Order ' . $param{'po_id-'.$Type->id()} . ' was not found in the system.<br/>';
 			} # end if
@@ -2794,7 +2798,7 @@ $log->debug("No duplicate fuond for $$ICE{rfidtag_id}, previous rags: " . $rfidt
 				my $PI = $SC->checked_out();
 				my $pi_time = Date::Parse::str2time( $PI->updated_on() );
 				if ( ! $pi_time ) {
-					$log>error("Invalid pi_time");
+					$log->error("Invalid pi_time");
 					die;
 				}
 
@@ -2867,7 +2871,7 @@ $log->debug("Skid $$Skid{id} CHeck time $check_time PI time $pi_time "  );
 						$Skid->save({location_id=>$$ICE{location_id}});
 					} # end if
 				}
-			} elsif ( $Skid->location_id() and ! sets::isin( $Skid->location_id(), [ $Check->location_ids() ] ) ) {
+			} elsif ( $$Check{location_id} and $Skid->location_id() and ! sets::isin( $Skid->location_id(), [ $Check->location_ids() ] ) ) {
 					if ( $param{action} eq 'Test' ) {
 						$variable{information} .= 'Would adjust the location of ' . $Skid->link_to() . ' from ' . $Skid->location() . ' to ' . $Check->Location()->name() . '<br/>';
 					} else {
@@ -2986,7 +2990,7 @@ sub _check_entries {
 				map { $param{$_} ? ( $_ => $param{$_} ) : () } ( 'skid_id','rfidtag_id','quantity','notes','location_id' ),
 				} );
 	} # end if
-	ssi::save_params( '/employee/inventory/check.html', ( 'has_skid' , 'has_quantity', 'sort', 'scanner_id', 'user_id', 'auto_refresh',) );
+	ssi::save_params( '/employee/inventory/check.html', ( 'has_skid' , 'has_quantity', 'has_price', 'sort', 'scanner_id', 'user_id', 'auto_refresh',) );
 }
 sub _check_system_contents {
 	ssi::save_params( '/employee/inventory/check.html', ( ) );

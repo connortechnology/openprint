@@ -283,7 +283,7 @@ $log->debug("No serial") if $debug;
 			my @keys = keys %sql;
 			my $command = "INSERT INTO $table (" . join(',', @keys ) . ') VALUES (' . join(',', map { '?' } @sql{@keys} ) . ')';
 			if ( ! ( ( $_ = $local_dbh->prepare($command) ) and $_->execute( @sql{@keys} ) ) ) {
-				my $error = $dbh->errstr;
+				my $error = $local_dbh->errstr;
 				$command =~ s/\?/\%s/g;
 				$log->error('SQL statement execution failed: ('.sprintf($command, , map { defined $_ ? $_ : 'undef' } ( @sql{@keys}) ).'):' . $local_dbh->errstr);
 				$local_dbh->rollback();
@@ -424,25 +424,25 @@ sub set {
 	my @set_fields = ();
 
 	my $type = ref $self;
-	my $fields = eval ('\%'.$type.'::fields');
-	if ( ! $fields ) {
-$log->warn('Object::set called on an object with no fields');
+	my %fields = eval ('%'.$type.'::fields');
+	if ( ! %fields ) {
+		$log->warn('Object::set called on an object with no fields');
 	} # end if
 	my %defaults = eval('%'.$type.'::defaults');
-if ( ref $params ne 'HASH' ) {
-	my ( $caller, undef, $line ) = caller;
-$openprint::log->error("$type -> set called with non-hash params from $caller $line");
-}
+	if ( ref $params ne 'HASH' ) {
+		my ( $caller, undef, $line ) = caller;
+		$openprint::log->error("$type -> set called with non-hash params from $caller $line");
+	}
 
-	foreach my $field ( keys %$fields ) {
+	foreach my $field ( keys %fields ) {
 $log->debug("field: $field, param: ".$$params{$field}) if $debug;
 		if ( exists $$params{$field} ) {
 $openprint::log->debug("field: $field, $$self{$field} =? param: ".$$params{$field}) if $debug;
 			if ( ( ! defined $$self{$field} ) or ($$self{$field} ne $params->{$field}) ) {
 # Only make changes to fields that have changed
-				if ( defined $$fields{$field} ) {
-					$$self{$field} = $$params{$field} if defined $$fields{$field};
-					push @set_fields, $$fields{$field}, $$params{$field};	#mark for sql updating
+				if ( defined $fields{$field} ) {
+					$$self{$field} = $$params{$field} if defined $fields{$field};
+					push @set_fields, $fields{$field}, $$params{$field};	#mark for sql updating
 				} # end if
 $openprint::log->debug("Running $field with $$params{$field}") if $debug;
 				if ( my $func = $self->can( $field ) ) {
@@ -451,29 +451,32 @@ $openprint::log->debug("Running $field with $$params{$field}") if $debug;
 			} # end if
 		} # end if
 
-		if ( defined $$fields{$field} ) {
+		if ( defined $fields{$field} ) {
 			if ( $$self{$field} ) {
 				$$self{$field} = transform( $type, $field, $$self{$field} );
 			} # end if $$self{field}
+		}
+	} # end foreach field
 
-			if ( ( ( ! exists $$self{$field} ) or (!defined $$self{$field}) or ( $$self{$field} eq '' ) ) and exists $defaults{$field} ) {
-				$log->debug("Setting default ($field) ($$self{$field}) ($defaults{$field}) ") if $debug;
-				if ( defined $defaults{$field} ) {
-					$log->debug("Default $field is defined: $defaults{$field}") if $debug;
-					if ( $defaults{$field} eq 'NOW()' ) {
-						$$self{$field} = 'NOW()';
-					} else {
+	foreach my $field ( keys %defaults ) {
+
+		if ( ( ! exists $$self{$field} ) or (!defined $$self{$field}) or ( $$self{$field} eq '' ) ) {
+			$log->debug("Setting default ($field) ($$self{$field}) ($defaults{$field}) ") if $debug;
+			if ( defined $defaults{$field} ) {
+				$log->debug("Default $field is defined: $defaults{$field}") if $debug;
+				if ( $defaults{$field} eq 'NOW()' ) {
+					$$self{$field} = 'NOW()';
+				} else {
 					$$self{$field} = eval($defaults{$field});
 					$log->error( "Eval error of object default $field default ($defaults{$field}) Reason: " . $@ ) if $@;
-					} # end if
-				} else {
-					$$self{$field} = $defaults{$field};
 				} # end if
-#$$self{$field} = ( defined $defaults{$field} ) ? eval($defaults{$field}) : $defaults{$field};
-				$log->debug("Setting default ($field) ($$self{$field}) ($defaults{$field}) ") if $debug;
+			} else {
+				$$self{$field} = $defaults{$field};
 			} # end if
+#$$self{$field} = ( defined $defaults{$field} ) ? eval($defaults{$field}) : $defaults{$field};
+			$log->debug("Setting default for ($field) using ($defaults{$field}) to ($$self{$field}) ") if $debug;
 		} # end if
-	} # end foreach
+	} # end foreach default
 	return @set_fields;
 } # end sub set
 

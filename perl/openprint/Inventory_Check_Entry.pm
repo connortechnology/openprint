@@ -107,18 +107,26 @@ sub quantity {
 		if ( $$Skid{id} ) {
 			my @C = $Skid->Contents();
 			if ( @C == 1 ) {
+				# IF we have some dimension measurements, then we can calculate the current weight.
 				if ( $_[0]{dimension2} and $_[0]{dimension1} ) {
 					my $Paper = $C[0]->Paper();
 					if ( $Paper->type() ne 'Sheet' ) {
+						# dimension2 is radius or diameter
+						# I think this was a weird formula given by Rick.
+						
 						$_[0]{quantity} = Math::Round::nearest(1, $_[0]{dimension2} * $_[0]{dimension2} - 9 * $_[0]{dimension1} * 0.37 );
 					} # end if
-				} else {
+				} elsif ( $C[0]{quantity} ) {
+					# Else if there is still some in the system, assume that is correct.
 					$_[0]{quantity} = $C[0]{quantity};
+				} else {
+					# Otherwise, lookup the pre-checked out quantity, and use that
+					my $PI = $C[0]->checked_out();
+					$_[0]{quantity} = -1*$$PI{delta} if $PI;
 				}
 			} # end if only 1 stock
 		} else {
 			$_[0]{quantity} = Math::Round::nearest( 1, $_[0]{dimension2} * $_[0]{dimension2} - 9 * $_[0]{dimension1} * 0.37 );
-
 		} # skid was found
 	}
 	return $_[0]{quantity};
@@ -145,7 +153,7 @@ sub Check {
 
 sub check {
 	return 'No Skid.' if ! $_[0]->Skid()->id();
-	return 'Quantity not the same: Check has ' . $_[0]->quantity() . ' Skid has ' . $_[0]->Skid()->quantity() if $_[0]->quantity() != $_[0]->Skid()->quantity();
+	return 'Quantity not the same: Check has ' . $_[0]->quantity() . ' ' . $_[0]{Skid}->type() . ' has ' . $_[0]->Skid()->quantity() if $_[0]->quantity() != $_[0]->Skid()->quantity();
 	return 'Item is in the check more than once<br/>' if $_[0]->Check()->check_for_duplicates( $_[0] );
 	return '';
 }
@@ -153,6 +161,72 @@ sub check {
 sub User {
 	return new openprint::User( $_[0]{operator_id} );
 }
+
+sub SkidContent {
+	my ( $self ) = @_;
+	if ( ! $$self{SkidContent} ) {
+		my $Skid = $self->Skid();
+		if ( $$Skid{id} ) {
+			my @C = $Skid->Contents();
+			if ( @C == 1 ) {
+				$$self{SkidContent} = $C[0];
+			}
+		}
+	}
+	return $$self{SkidContent};
+}
+
+sub value {
+	my ( $self ) = @_;
+
+	if ( ! $$self{value} ) {
+		my $C = $self->SkidContent();
+		if ( $C ) {
+			my $Cost = $C->Cost();
+			openprint::Currency::convert( $Cost );
+			if ( $Cost ) {
+				$openprint::log->debug("cost for $$self{skid_id} $$Cost{units} $$Cost{cost}") if $debug;
+				if ( (!$$Cost{units}) or ($$Cost{units} eq '/100lbs' or $$Cost{units} eq '/cwt') ) {
+					$$self{value} = $self->quantity() * $$Cost{cost} / 100;
+				} else {
+					$$self{value} = $self->quantity() * $$Cost{cost};
+				} # end if
+			} else {
+				$openprint::log->debug("No cost for $$self{skid_id}") if $debug;
+			} # end Cost
+		} # end if Skid
+  } # end if ! exists value
+  return $$self{value} if $$self{value};
+  return;
+} # end sub value
+
+sub diameter {
+	my ( $self ) = @_;
+
+	if ( ( ! $_[0]{diameter} ) and $_[0]->quantity() ) {
+		my $Skid = $self->Skid();
+		if ( $$Skid{id} ) {
+			my $C = $self->SkidContent();
+			if ( $C ) {
+
+				if ( $$Skid{type} eq 'Roll' ) {
+					my $core_radius = 5.375;
+					my $pi = 3.14;
+					my $Paper = $C->Paper();
+					return if ( ! ( $$Paper{width} and $Paper->wpsi() and $$Paper{calliper} ) );
+					my $length = ( $self->quantity() / $Paper->wpsi() ) / $Paper->width();
+
+# length = pi( r1^2 - r0^2 ) / calliper;
+					my $radius = sqrt( ( $length * $$Paper{calliper} / $pi ) + 28.8906525 );
+					$_[0]{diameter} = $radius * 2;
+					$openprint::log->debug("Diameter $_[0]{diameter} length: $length inches before sqrt: " . ( ( ( $length * $$Paper{calliper} / $pi ) ) ) );
+				} # end if Roll
+			} # end if C
+		} # end if Skid
+	} # end if ! diameter
+  return $_[0]{diameter};
+}
+
 
 1;
 __END__
