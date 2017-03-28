@@ -322,7 +322,7 @@ sub calc {
 			next if ! $$sig_specs{'txtImposition'.$qty_index};
 			my $form = $$sig_specs{SignatureIndex};
 
-			$$specs{'hdnBreakdown'.$qty_index} .= "Form $form: $$sig_specs{txtServiceDescription}<br/>";
+			$$specs{'hdnBreakdown'.$qty_index} .= "Form $form: ".( $$sig_specs{txtServiceDescription} ? $$sig_specs{txtServiceDescription} : '' ) .'<br/>';
 			my $Imposition = new openprint::Imposition();
 			$Imposition->load( $sig_specs, $qty_index );
 			$$specs{'hdnBreakdown'.$qty_index} .= 'Printed: ' . $Imposition->to_string() . '<br/>';
@@ -349,9 +349,11 @@ sub calc {
 					} else {
 						$$specs{'hdnBreakdown'.$qty_index} .= sprintf('<tr><td>MakeReady: </td><td class="Price">$%.2f</td></tr>', $$Price{MakeReady}{Price});
 					} # endif
-					if ( $$Price{DiePrice} ) {
+					if ( $$Price{DiePrice} and $$Price{DiePrice}{Price} ) {
 						$$specs{'hdnBreakdown'.$qty_index} .= sprintf('<tr><td>DiePrice: </td><td class="Price">$%.2f</td></tr>', $$Price{DiePrice}{Price});
 						$totalDiePrice += $Price->{DiePrice}{Price};
+					} else {
+						$$specs{'hdnBreakdown'.$qty_index} .= '<tr><td>DiePrice: </td><td class="Price">$0.00</td></tr>';
 					} # end if
 					if ( $$Price{ServicePrice}{units} eq 'per hour' ) {
 					$$specs{'hdnBreakdown'.$qty_index} .= sprintf('<tr><td>Service: $%1$.2f%2$s * (%4$d impressions/%5$d per hour) = </td><td class="Price">$%3$.2f</td></tr>', @{$$Price{ServicePrice}}{'Price','units','Total'}, $$Price{Impressions}, $$Price{Runspeed}{value} );
