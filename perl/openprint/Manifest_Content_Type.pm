@@ -24,7 +24,7 @@ $serial = 'manifest_content_types_id_seq';
 	manifest_id		=>	'manifest_id',
 	paper_id			=>	'paper_id',
 	supplier_invoice	=>	'supplier_invoice',
-	item_count			=>	'item_count',
+	item_count		=>	'item_count',
 	type					=>	'type',
 	manufacturers_name	=>	'manufacturers_name',
 	condition_id	=>	'condition_id',
@@ -74,7 +74,9 @@ sub PurchaseOrder_Content {
 
 	if ( ! exists $_[0]{PurchaseOrder_Content} ) {
 		require openprint::PurchaseOrder_Content;
-		if ( ( ! $_[0]{po_content_id} ) and ( $_[0]{po_id} ) ) {
+		if ( $_[0]{po_content_id} ) {
+			$_[0]{PurchaseOrder_Content} = new openprint::PurchaseOrder_Content($_[0]{po_content_id});
+		} elsif ( $_[0]{po_id} ) {
 			my $PO = new openprint::PurchaseOrder( $_[0]{po_id} );
 			my $Paper = $_[0]->Paper();
 			foreach my $POC ( $PO->Contents() ) {
@@ -92,7 +94,7 @@ sub PurchaseOrder_Content {
 				my ( $weight ) = $POC->item() =~ /(\d+)\w*lb/i;
 				if ( $weight ) {
 					$weight = Math::Round::nearest(1,$weight*2);
-$openprint::log->debug("Looking for $weight basis_weight");
+					#$openprint::log->debug("Looking for $weight basis_weight") if $debug;
 					if( $Paper->basis_mweight() ) {
 						my $basis_weight = Math::Round::nearest(1,$Paper->basis_mweight());
 						if ( $weight != $basis_weight ) {
@@ -146,10 +148,8 @@ $openprint::log->debug("Looking for $weight basis_weight");
 				last;
 			} # end foreach POC
 			#$_[0]{PurchaseOrder_Content} = new openprint::PurchaseOrder_Content() if ! $_[0]{PurchaseOrder_Content};
-		} else {
-			$_[0]{PurchaseOrder_Content} = new openprint::PurchaseOrder_Content($_[0]{po_content_id});
-		} # end if
-	} # end if
+		} # end if if ( ( ! $_[0]{po_content_id} ) and ( $_[0]{po_id} ) )
+	} # end if ! exists $_[0]{PurchaseOrder_Content}
 	return $_[0]{PurchaseOrder_Content}; 
 } # end sub PurchaseOrder_Content
 
@@ -206,6 +206,22 @@ sub Order {
 	return new openprint::Order();
 		
 } # end sub Order
+
+sub Currency {
+	if ( ! $_[0]{Currency} ) {
+		my $Manifest = $_[0]->Manifest();
+		if ( ! $$Manifest{currency_id} ) {
+# Try to guess
+			my $POC = $_[0]->PurchaseOrder_Content();
+			if ( $POC ) {
+				$$Manifest{currency_id} = $POC->PurchaseOrder()->Currency()->id();
+				$Manifest->save();
+			}
+		}
+		$_[0]{Currency} = $Manifest->Currency();	
+	}
+	return $_[0]{Currency};
+} # end sub Currency
 
 1;
 __END__

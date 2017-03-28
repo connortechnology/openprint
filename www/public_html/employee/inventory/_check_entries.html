@@ -114,6 +114,15 @@
 			$location_message = $ICE->Skid()->Location()->name();
 		}
 				
+		my $Cost;
+		if ( $$variable{can_see_pricing} ) {
+			$Cost = $Skid->Cost();
+			if ( $session{$uri.'?has_price'} eq '1' and ! $Cost ) {
+				next;
+			} elsif ( $session{$uri.'?has_price'} eq '0' and $Cost ) {
+				next;
+			}
+		}
 	
 		$html .= sprintf('
 <tr class="%1$s%2$s" id="entry-%3$d" title="entry %3$d">
@@ -139,10 +148,20 @@
 		);
 
 		if ( $$variable{can_see_pricing} ) {
-			my $Cost = $Skid->Cost();
 			$html .= '<td rowspan="2" class="Price">';
+
 			if ( $Cost ) {
-				$html .= openprint::Currency::format($$Cost{cost}).$$Cost{units}.'<br/>'.openprint::Currency::format($ICE->value());
+				if ( ! $$Cost{currency_id} ) {
+					$openprint::log->error("Skid $$Skid{id} has no currency");
+					$html .= 'Price has no currency!<br/>';
+				} elsif ( $$Cost{currency_id} != $$openprint::Currency{id} ) {
+
+					$html .= openprint::Currency::format($$Cost{price}).$$Cost{Currency}->short().$$Cost{units}.'<br/>';
+					openprint::Currency::convert( $Cost );
+				}
+				$html .= openprint::Currency::format($$Cost{price}).$$Cost{units}.'<br/>';
+				$html .= $openprint::Currency->format($ICE->value());
+				# value is already converted.
 				$total_value += $ICE->value();
 			} 
 			$html .= '</td>';

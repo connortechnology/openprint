@@ -53,6 +53,15 @@ $serial = 'PurchaseOrder_Contents_id_seq';
 	object_id		=>	undef,
 );
 
+sub Cost { 
+	return {
+		cost				=>	$_[0]{price}, 
+		price				=>	$_[0]{price}, 
+		units				=>	$_[0]{price_units},
+		currency_id	=>	$_[0]->PurchaseOrder()->currency_id(),
+		Currency		=>  $_[0]->PurchaseOrder()->Currency(),
+	};
+}
 sub PurchaseOrder {
 	return new openprint::PurchaseOrder( $_[0]{po_id} );
 } # end sub Supplier

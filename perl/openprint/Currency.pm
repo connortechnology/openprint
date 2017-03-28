@@ -96,6 +96,7 @@ sub convert_from {
 	} # end if
 	return $value;
 } # end sub convert_from
+
 sub convert_to {
 	my ( $From, $To, $value ) = @_;
 	if ( ! ref $To ) {
@@ -126,12 +127,16 @@ sub convert {
 	my $DST_Currency = get_current();
 	if ( $DST_Currency ) {
 		if ( $$DST_Currency{id} != $$Price{currency_id} ) {
-			my $SRC_Currency = new openprint::Currency( $$Price{currency_id} );
+			my $SRC_Currency = $$Price{Currency} ? $$Price{Currency} : new openprint::Currency( $$Price{currency_id} );
 			my $rate = $SRC_Currency->conversions( $DST_Currency->id() );
-			$$Price{Price} *= $rate if $rate;
-			$$Price{price} *= $rate if $rate;
+			if ( $rate ) {
+				$$Price{Price} *= $rate;
+				$$Price{price} *= $rate;
+				$$Price{cost} *= $rate;
+			}
 #$log->debug("Converting $$Price{Price} in $$SRC_Currency{name} to $$DST_Currency{name}") if $debug;
 			$$Price{currency_id} = $DST_Currency->id();
+			$$Price{Currency} = $DST_Currency;
 		} # end if
 	} # end if
 	return $Price;

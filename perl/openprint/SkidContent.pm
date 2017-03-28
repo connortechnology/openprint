@@ -1,4 +1,5 @@
 use strict;
+use warnings;
 package openprint::SkidContent;
 our @ISA = qw(openprint::Object);
 
@@ -110,9 +111,15 @@ sub Cost {
 		foreach my $MC ( $_[0]->Manifest_Contents() ) {
 			my $Type = $MC->Type();
 			if ( $Type->cost() ) {
+				my $Currency = $Type->Currency();
 				$$self{Cost} = {
-					cost	=>	$Type->cost(),
-					units	=>	$Type->cost_units(),
+					cost				=>	$$Type{cost},
+					price				=>	$$Type{cost},
+					units				=>	$Type->cost_units(),
+					( $Currency ? (
+					currency_id	=>	$$Currency{id},
+					Currency		=>	$Currency,
+					) : () )
 				};
 			} else {
 				my $POC = $Type->PurchaseOrder_Content();
@@ -124,13 +131,7 @@ sub Cost {
 					$POC = $Type->PurchaseOrder_Content({ ignore_docket=>1, ignore_fsc=>1 });	
 				}
 				next if ! $POC;
-				my $POCurrency = $POC->PurchaseOrder()->Currency();
-				if ( $POCurrency ) {
-					$$self{Cost}{cost} = $POCurrency->convert_from( $POC->price() );
-				} else {
-					$$self{Cost}{cost} = $POC->price();
-				} # end if
-				$$self{Cost}{units} = $POC->price_units();
+				$$self{Cost} = $POC->Cost();
 			} # end if
 			last if $$self{Cost};
 		} # end foreach MC
@@ -141,7 +142,9 @@ sub Cost {
 # SKids can have multiple manifests, but only one PO
 sub cost {
 	my $Cost = $_[0]->Cost();
-	return $$Cost{cost} if $Cost;
+	if ( $Cost ) {
+		return openprint::Currency::convert( $$Cost{cost} );
+	}
 	return;
 } # end sub cost
 
@@ -151,6 +154,7 @@ sub value {
 	if ( ! exists $$self{value} ) {
 		
 		my $Cost = $_[0]->Cost();
+		openprint::Currency::convert( $Cost );
 		if ( $Cost ) {
 $openprint::log->debug("cost for $$self{skid_id} $$Cost{units} $$Cost{cost}") if $debug;
 			if ( (!$$Cost{units}) or ($$Cost{units} eq '/100lbs' or $$Cost{units} eq '/cwt') ) {
