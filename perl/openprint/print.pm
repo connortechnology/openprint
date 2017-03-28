@@ -174,7 +174,7 @@ sub view_services {
 						( $param{txtPrice3} ? ( txtPrice3 => $conversion_rate * misc::moneyfilter($param{txtPrice3} ) ) : () ),
 						ServiceName => $service_name }, { status=>'calculated' } );
  
-					$Project->add_to_log( @session{'company_id','user_id'}, sprintf( 'Adding Custom Line: %s, (%.2f, %.2f, %.2f)', $service_name, @param{'txtPrice1','txtPrice2','txtPrice3'} ) );
+					$Project->add_to_log( @session{'company_id','user_id'}, sprintf( 'Adding Custom Line: %s, (%s)', $service_name, join(',', map { $param{$_} ? $param{$_} : () } ('txtPrice1','txtPrice2','txtPrice3') ) ) );
 
 				} # end if has Customer Service type
 
