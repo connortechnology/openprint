@@ -107,10 +107,6 @@ my %Press_Values;
 sub load_presses {
 	%Presses = map { $$_{strid}, $_ } openprint::Equipment->find( 'category any'=>'Printing', 'useinestimating is null or ='=>1 );
 	%Press_Values = map { $_->specification('Value') ? ( $$_{id} => $_->specification('Value') ) : () } values %Presses;
-	$log->error("Perss BValues");
-	foreach my $k ( keys %Press_Values ) {
-		$log->debug("Press Values: $k => $Press_Values{$k}");
-	}
 }
 #Indexed by group
 my %Estimating_Setup;
