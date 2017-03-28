@@ -334,7 +334,7 @@ $log->debug("coutn for $ip is $host_counts{$ip}{count}");
 						`shorewall drop $ip`;
 					}
 				} elsif ( $host_counts{$ip}{count} > 20 ) {
-					$log->debug("Dropping $ip");
+					$log->debug("Dropping $ip beacuse $host_counts{$ip}{count} > 20");
 					`shorewall drop $ip`;
 				} # end if wasn't blacklisted, but now is
 			#} # end foreach ip
