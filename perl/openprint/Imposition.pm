@@ -449,7 +449,7 @@ $openprint::log->debug("($k) => $$specs{$k}");
 			$$self{spreads} = 1;
 		#} # end if
 		$$self{pages} = $$self{spreads} * $$self{spread_size};
-$openprint::log->debug("spread_rows $$self{spread_rows} x $$self{spread_columns} = $$self{spread_size} spreads: $$self{spreads} pages: $$self{pages} ");
+#$openprint::log->debug("spread_rows $$self{spread_rows} x $$self{spread_columns} = $$self{spread_size} spreads: $$self{spreads} pages: $$self{pages} ");
 	} # end if
 		$$self{page_width} = $$specs{txtFinalWidth};
 		$$self{page_height} = $$specs{txtFinalHeight};
