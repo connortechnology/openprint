@@ -9,7 +9,7 @@ require openprint::Order;
 
 use vars qw( $debug $table $serial %fields %transforms %defaults );
 
-$debug = 1;
+$debug = 0;
 $table = 'order_contents';
 $serial = 'order_contents_id_seq';
 
