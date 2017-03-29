@@ -160,23 +160,28 @@ sub comment {
 
 				foreach my $sig_id ( @{$self->pertains_id()} ) {
 					my $SignatureService = $Project->Service( $sig_id );
-if ( ! $$SignatureService{service_id} ) {
-$log->error("Signature service $sig_id not foudn in project $$Project{id}");
-} # end if
+					if ( ! $$SignatureService{service_id} ) {
+						$log->error("Signature service $sig_id not foudn in project $$Project{id}");
+					} # end if
 					my $sig_specs = $SignatureService->specs();
 
-					foreach my $fold_type ( keys %openprint::Estimating::Folding::fold_types ) {
-
-						if ( $$specs{"$fold_type-Qty-$$sig_specs{SignatureIndex}-$qty_index"} ) {
-							$comment .= $$specs{"$fold_type-Qty-$$sig_specs{SignatureIndex}-$qty_index"} . ' ' . $fold_type . '<br/>';
-						} # end if
-					} # end foreach
+					my $Imposition = new openprint::Imposition();
+					$Imposition->load( $sig_specs, $Project->ordered_quantity_index(), $Project );
+					my @Folds = openprint::Estimating::Folding::get_Folds( $specs, $Imposition, $Project->ordered_quantity_index() );
+					foreach my $FI ( @Folds ) {
+						$comment .= 'Form ' .$$sig_specs{SignatureIndex} . ': ' . $FI->quantity() . ' ' . $FI->imposition() . 'out ' . $$FI{Fold}->type() . '<br/>';
+					} # end foreach For
 				} # end foreach sig_id
 				$comment = 'unknown fold' if ! $comment;
 			} # end foreach service_index
 
 		} elsif ( $ServiceType->name() eq 'Cutting' ) {
 		} elsif ( $ServiceType->name() eq 'SaddleStitching' ) {
+			my $services = $Project->services();
+
+			$comment .= openprint::Estimating::MultiPage::schedule_summary( $Project, openprint::service::get_specs_ref( $Project, $$services{''}[0] ), $Project->ordered_quantity_index() ).'<br/>';
+			my $service_specs = openprint::service::get_specs_ref( $Project, $$self{service_id}[0] );
+			$comment .= openprint::Estimating::Stitching::schedule_summary( $Project, $$self{service_id}[0], $service_specs, $Project->ordered_quantity_index() )
 		} else {
 			my $service_specs = openprint::service::get_specs_ref( $Project, $$self{service_id}[0] );
 			$comment = openprint::Estimating::Printing::get_colour_description( $service_specs );
@@ -189,7 +194,7 @@ $log->error("Signature service $sig_id not foudn in project $$Project{id}");
 					if ( $$fold_specs{'ddmEquipment-'.$$service_specs{SignatureIndex}.'-'.$Project->ordered_quantity_index()} == $Equipment->id() ) {
 						my $Imposition = new openprint::Imposition();
 						$Imposition->load( $service_specs, $Project->ordered_quantity_index(), $Project );
-						my $foldtype = sprintf('%sx%s-%dPage-%sFold', $Imposition->get('spread_columns','spread_rows','pages','image_orientation' ) );
+						my $foldtype = sprintf('%sx%s-%dPage-%sFold', @$Imposition{'spread_columns','spread_rows','pages'}, $openprint::Imposition::Orientations{$$Imposition{'image_orientation'}} );
 						$comment .= "($foldtype inline)";
 					} else {
 						$comment .= '(sheeted)';
@@ -744,6 +749,9 @@ sub bump {
 			$error .= $self->save({ starttime_seconds=>$starttime_seconds });
 		} else {
 			my $NextShift = $self->Shift()->Next();
+			while ( $NextShift->starttime_seconds() < time ) {
+				$NextShift= $NextShift->Next();
+			}
 			my @NextSchedule = $NextShift->Schedule();
 			if ( @NextSchedule ) {
 				my $LastJob = pop @NextSchedule;
