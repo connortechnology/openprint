@@ -1081,6 +1081,7 @@ sub _drop {
 		} # end if
 
 		if ( $param{action} ne 'add_services' ) {
+			# Detect whether we need to do a popup to ask which services to add
 			my @servicetypes_to_add;
 			foreach my $row_id ( @order ) {
 				my $Job = new openprint::ScheduledJob( $row_id );
@@ -1132,10 +1133,13 @@ sub _drop {
 #$log->debug("Bindery:, servicetypes different");
 				my $services = $Project->services();
 				foreach my $servicetype_id ( @{$Equipment->servicetype_id()} ) {
+					# If dragging from folding, don't add folding.
+					next if $servicetype_id == $$Job{servicetype_id};
 					my $ST = new openprint::ServiceType( $servicetype_id );
 					next if ( ! $$services{$ST->name()} ) or ! @{$$services{$ST->name()}};
 					# Get all already existing jobs for this servicetype
 					foreach my $service_id ( @{$$services{$ST->name()}} ) {
+					
 						my @J = openprint::ScheduledJob->find( project_id=>$Project->id(),'service_id @>'=>$service_id );
 						if ( ! @J ) {
 							# Create a new Job
