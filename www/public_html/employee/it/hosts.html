@@ -26,6 +26,16 @@ Please select a host to view/edit.<br/>
 		<li><label>Type</label>
 			<? echo ( ssi::select( openprint::Host_Type->dropdown(order=>'lower(name)'), $session{'/employee/it/hosts.html?type_id'}, { name=>'type_id', prepend=>['','All'] } ); ) ?>
 		</li>
+		<li><label>Owner</label>
+                <input type="text" onkeyup="filter_companies('owner_id', {name:this.value,selected_id:get_ddm_value($('owner_id'))});" class="filter" />
+                <select id="owner_id" name="owner_id" onchange="stop_filter_companies();">
+                    <option value="">All</option>
+<? echo ( 
+my @owner_ids = sql::execute( undef, undef, 'SELECT DISTINCT owner_id FROM Hosts');
+make_drop_down( openprint::Company->dropdown(id=>[ @owner_ids, $openprint::Company->id() ]), $session{'/employee/it/hosts.html?owner_id'} );
+) ?>
+                </select>
+                </li>
 		<li>
 			<label>Date Added</label>
 <? echo ( date_select_session( '/employee/it/hosts.html', 'created_on_start', { with_today => 1, with_clear=>1 } ); ) ?>

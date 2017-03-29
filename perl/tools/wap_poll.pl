@@ -119,10 +119,9 @@ foreach my $Host ( @Hosts ) {
 				$initial_url = $protocol.'://'.$$HI{ip}.'/cgi-bin/luci';
 				$url = $protocol.'://'.$$HI{ip}.'/cgi-bin/luci/;stok=7633201666a3f5dd7f25acea43449f5e/admin/status/overview?status=1&_=0.6478539785164518';
 				$args = {
-					'luci_username'=>'root',
-					'luci_password'=>'p1GraPHic',
-					'submit' => 'Login',
-
+					luci_username=> $Host->info('username'),
+					luci_password=> $Host->info('password'),
+					submit => 'Login',
 				};
 
 				my $response = $browser->get( $initial_url );

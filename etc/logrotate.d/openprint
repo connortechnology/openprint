@@ -1,5 +1,6 @@
 /var/log/openprint-syslog.log
 /var/log/openprint-syslog-apache.log
+/var/log/wap-poll.log
 {
 	rotate 7
 	daily
@@ -8,7 +9,7 @@
 	delaycompress
 	compress
 }
-/var/log/ip_monitor.log 
+/var/log/ip_monitor*.log 
 {
 	rotate 7
 	daily
