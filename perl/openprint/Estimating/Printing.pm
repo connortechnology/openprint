@@ -7013,7 +7013,7 @@ sub runspeed {
 		if ( $$services{Folding} ) {
 			my $fold_specs = openprint::service::get_specs_ref( $Project, $$services{Folding}[0] );
 			if ( $$fold_specs{'ddmEquipment-'.$$sig_specs{SignatureIndex}.'-'.$qty_index} == $Equipment->id() ) {
-				my $foldtype = sprintf('%sx%s-%dPage-%sSignatureFold', $Imposition->get('spread_columns','spread_rows','pages','image_orientation' ) );
+				my $foldtype = sprintf('%sx%s-%dPage-%sSignatureFold', @$Imposition{'spread_columns','spread_rows','pages'}, $openprint::Imposition::Orientations{$$Imposition{'image_orientation'}} );
 				$runspeed = int( $Equipment->specification($foldtype.'RunSpeed', $$Imposition{Paper}->gsm() ) );
 #$log->debug("Foudn runspeed for fold $foldtype: $runspeed");
 			} # end if
