@@ -2,6 +2,7 @@
 	<input type="hidden" name="schedule_id" value="<? echo ( $param{schedule_id} ) ?>" />
 	<fieldset><legend>Job Scheduling Information</legend>
 		<ul>
+		<li><label>Service</label><?echo( $$variable{Job}->ServiceType()->name() )?></li>
 		<li>
 			<label onclick="tinymce_on('comment');">Comment</label>
 			<div id="comment" onclick="tinymce_on('comment');"><? echo ( $$variable{Job}->comment() ) ?></div>
