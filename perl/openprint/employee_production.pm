@@ -1333,6 +1333,7 @@ if ( 0 ) {
 } # en dif
 } # end sub _drop.json
 
+# reorder reorders the list of jobs starting with NOW
 sub reorder_jobs {
 	my ( @order ) = @_;
 
@@ -1361,7 +1362,9 @@ sub reorder_jobs {
 	my $start_time = time;
 #$log->debug("Reordering from $start_time");
 	my $row = $order[0];
-	push @{$variable{changed}}, $row->Shift()->ul_id();
+	if ( my $Shift = $row->Shift() ) {
+		push @{$variable{changed}}, $Shift->ul_id();
+	}
 
 	# This is if there is a job currently running, then use it's start time as the beginning of the schedule
 	if ( $row->locked() and ( $row->endtime_seconds() < $start_time ) ) {
@@ -1593,6 +1596,7 @@ sub _li_change {
 
 		# Job->forms uses pertains_id, param{forms} is a simple count.  
 		if ( (exists $param{forms}) and ( $param{forms} != $Job->forms() ) ) {
+$log->debug("Adjusting forms from $$Job{forms} to $param{forms}");
 			my $Project = $Job->Project();
 
 			my @service_ids = $$Job{pertains_id} ? @{$$Job{pertains_id}} : ();
@@ -1655,15 +1659,15 @@ sub _li_change {
 			$sql{runtime} = $param{runtime};
 		} # end if
 		if ( exists $param{'starttime_year'} ) {
-		if ( Date::Calc::check_date( map { $_ => $param{'starttime_'.$_} } ( 'year', 'month', 'day' ) ) ) {
-			my $old_starttime_dt = DateTime::Format::Pg->parse_datetime( $Job->starttime() );
-			my $new_starttime_dt = DateTime->new( time_zone=>$openprint::TZ, map { $_ => $param{'starttime_'.$_} } ( 'year', 'month', 'day', 'hour', 'minute' ) );
-			if ( $old_starttime_dt != $new_starttime_dt ) {
-				$sql{starttime} = DateTime::Format::Pg->format_datetime( $new_starttime_dt );
+			if ( Date::Calc::check_date( map { $_ => $param{'starttime_'.$_} } ( 'year', 'month', 'day' ) ) ) {
+				my $old_starttime_dt = DateTime::Format::Pg->parse_datetime( $Job->starttime() );
+				my $new_starttime_dt = DateTime->new( time_zone=>$openprint::TZ, map { $_ => $param{'starttime_'.$_} } ( 'year', 'month', 'day', 'hour', 'minute' ) );
+				if ( $old_starttime_dt != $new_starttime_dt ) {
+					$sql{starttime} = DateTime::Format::Pg->format_datetime( $new_starttime_dt );
+				} # end if
+			} else {
+				$variable{error} .= "Invalid date specified.<br/>";
 			} # end if
-		} else {
-			$variable{error} .= "Invalid date specified.<br/>";
-		} # end if
 		} # end if
 		$sql{locked} = $param{locked} if exists $param{locked} and $param{locked} != $$Job{locked};
 		$sql{comment} = $param{comment} if (exists $param{comment}) and ( $param{comment} ne $Job->comment() );
