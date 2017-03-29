@@ -22,7 +22,7 @@ require openprint::ProductionFeedback;
 
 my $parser = 'DateTime::Format::Pg';
 
-$debug = 0;
+$debug = 1;
 $table = 'schedule';
 $serial = 'schedule_id_seq';
 
@@ -86,6 +86,7 @@ sub starttime {
 	if ( @_ > 1 ) {
 		$_[0]{starttime} = $_[1];
 		delete $_[0]{Shift};
+		$_[0]->endtime(undef);
 	} # end if
 	return $_[0]{starttime};
 } # end sub starttime
@@ -94,15 +95,15 @@ sub starttime_seconds {
 	my $starttime_dt;
 
 	if ( @_ > 1 ) {
-		if ( $_[1] < ( time -10 ) ) {
-		$starttime_dt = DateTime->from_epoch( epoch=>$_[1], time_zone=>$openprint::TZ );
+		if ( $_[1] < ( time - 10 ) ) {
+			$starttime_dt = DateTime->from_epoch( epoch=>$_[1], time_zone=>$openprint::TZ );
 			$log->error( 'ScheduledJob: startime_seconds < NOW() ' . $parser->format_datetime( $starttime_dt ) );
 		} # end if
 $openprint::log->debug("Setting starttime_seconds to $_[1]");
 		$starttime_dt = DateTime->from_epoch( epoch=>$_[1], time_zone=>$openprint::TZ );
-		$_[0]{starttime} = $parser->format_datetime( $starttime_dt );
+		$_[0]->starttime( $parser->format_datetime( $starttime_dt ) );
 $openprint::log->debug("Got $starttime_dt = $_[0]{starttime}");
-		delete $_[0]{Shift};
+		
 	} elsif ( $_[0]{starttime} ) {
 		
 		$starttime_dt = $parser->parse_datetime( $_[0]{starttime} );
@@ -118,6 +119,9 @@ sub startdate_seconds {
 } # end sub startdate_seconds
 
 sub endtime {
+	if ( @_ > 1 ) {
+		$_[0]{endtime} = $_[1];
+	}
 	if ( ! $_[0]{endtime} ) {
 		$_[0]{endtime} = Date::Format::time2str( '%Y-%m-%d %H:%M:%S%z', $_[0]->starttime_seconds() + $_[0]->runtime_seconds() );
 	} # end if
@@ -574,29 +578,31 @@ sub Shift {
 $openprint::log->debug("Getting shift for " . $self->to_string() );
 			# There should only ever be 1
 			my @Shifts = openprint::Shift->find({
-					equipment_id	=>	$$self{equipment_id}, 
-					'endtime >'		=>	$$self{starttime}, 
+					equipment_id		=>	$$self{equipment_id}, 
+					'endtime >'			=>	$$self{starttime}, 
 					'starttime <='	=>	$$self{starttime},
 					#limit			=>	1,
 					});
 			if ( ! @Shifts ) {
 				$openprint::log->debug("No shift for " . $self->to_string() );
-				@Shifts = openprint::Shift::get_Shifts( $self->Equipment(), 
-					DateTime->from_epoch( epoch=>$self->starttime_seconds(), time_zone=>$openprint::TZ ),
-					DateTime->from_epoch( epoch=>$self->endtime_seconds(), time_zone=>$openprint::TZ ),
-				);
+
+				my $limit = 12; # Only go forward 12 hours at most. 
 				if ( ! @Shifts ) {
-					while( ! ( @Shifts = openprint::Shift::get_Shifts( $self->Equipment(),
+					# This attempts to instantiate a shift by adding an hour to the starttime.
+					while( $limit and ! ( @Shifts = openprint::Shift::get_Shifts( $self->Equipment(),
                     DateTime->from_epoch( epoch=>$self->starttime_seconds(), time_zone=>$openprint::TZ ),
                     DateTime->from_epoch( epoch=>$self->endtime_seconds(), time_zone=>$openprint::TZ ), 
                 ) ) ) {
 						$self->starttime_seconds( $self->starttime_seconds() + 60*60 );
+						$limit -= 1;
+					} # end while
+					if ( ! @Shifts ) {
+						$openprint::log->warn( "No shift for $$self{starttime}" );
+						return;
 					}
-					$openprint::log->warn( "No shift for $$self{starttime}" );
-					return;
-				}
+				} # end if still ! @Shifts
 				
-			} # end if
+			} # end if if ! @Shifts
 
 			if ( @Shifts > 1 ) {
 				$log->error("Should delete duplicate shifts! " . @Shifts );
@@ -732,6 +738,7 @@ sub bump {
 			if ( ! $self->Shift() ) {
 				$openprint::log->debug("No shift");
 				# Fell into a spot where there are not Shifts.
+				# So we should 
 			} # end if
 
 			$error .= $self->save({ starttime_seconds=>$starttime_seconds });
