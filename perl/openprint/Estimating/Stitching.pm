@@ -32,13 +32,13 @@ my %specifications = (
 	'Minimum Finished Width'	=>	{},
 	'Minimum Finished Height'	=>	{},
 );
-
+my @possible_pages = ( 4, 6, 8, 12, 16, 20, 24, 32, 36, 40, 48, 64 );
 # This is an array of all the variables that need to be saved to the database for this service.
 my %variables = (
-        'ProjectIndex'=>[],'ServiceIndex'=>[],
+		'ProjectIndex'=>[],'ServiceIndex'=>[],
 		'hdnBreakdown1'=>['output'],'hdnBreakdown2'=>['output'],'hdnBreakdown3'=>['output'],
-        'txtQuantity1'=>['save'], 'txtQuantity2'=>['save'], 'txtQuantity3'=>['save'],
-        'ServiceType'=>[],
+		'txtQuantity1'=>['save'], 'txtQuantity2'=>['save'], 'txtQuantity3'=>['save'],
+		'ServiceType'=>[],
 		'alert'=>['save','output'],'Status'=>['output'],
 		'txtInsertQuantity'=>['save','output'],'chkOverrideInsertQuantity'=>['save'],
 		'txtCalliper'=>['save','output'],
@@ -214,7 +214,7 @@ sub signature_calc {
 
 	my $override_pockets = 0;
 	if ( ( defined $$specs{'OverridePockets'.$qty_index}) and ($$specs{'OverridePockets'.$qty_index} eq 'Y') ) {
-		foreach my $pages ( 4, 6, 8, 12, 16, 20, 24, 32, 36, 40, 48, 64 ) {
+		foreach my $pages ( @possible_pages ) {
 			$pockets += $$specs{join('','txtSignatureQty',$pages,'Page-',$qty_index)};
 		}
 		$override_pockets = 1;
@@ -303,12 +303,12 @@ $openprint::log->debug("Fold pq($$FI{page_quantity}) pages($$FI{pages}) ($$Fold{
 							#next;
 						} 
 							my $p = $$FI{page_quantity};
-							$p *= $$FI{quantity} if ( $$FI{page_quantity} == 1 ) and $$FI{quantity};
+							$p *= $$FI{quantity} if ( $$FI{page_quantity} == 1 ) and $$FI{quantity} and ( $$FI{pages} < $$I{pages} );
 							$$specs{join('','txtSignatureQty',$$Fold{pages},'Page-',$qty_index)} += $p;
 							$pockets += $p;
 					}
 				}
-$openprint::log->debug("Fold pq($$FI{page_quantity}) pages($$FI{pages}) ($$Fold{name}) Pockets: $pockets") if DEBUG;
+$openprint::log->debug("Fold pq($$FI{quantity} * pq$$FI{page_quantity}) pages($$FI{pages}) ($$Fold{name}) Pockets: $pockets") if DEBUG;
 			} # end foreach Fold
 		}
 
@@ -631,7 +631,7 @@ sub calc {
 		$$specs{'hdnBreakdown'.$qty_index} .= "Face Trim: $$specs{Width} Spine Length: $$specs{Height}<br/>";
 
 		if ( (!defined $$specs{'OverridePockets'.$qty_index}) or ($$specs{'OverridePockets'.$qty_index} ne 'Y') ) {
-			foreach my $pages ( 4, 6, 8, 12, 16, 20, 24, 32, 36, 40, 48, 64 ) {
+			foreach my $pages ( @possible_pages ) {
 				$$specs{'txtSignatureQty'.$pages.'Page-'.$qty_index} = 0;
 			} # end foreach
 		} # end if
@@ -1099,6 +1099,18 @@ sub summary {
 	} # end if
 	return $summary;
 } # end sub summary
+
+sub schedule_summary {
+  my ( $Project, $service_id, $specs, $qty_index ) = @_;
+
+	 return join(' ',  
+			$$specs{'Imposition'.$qty_index} .'out',
+			misc::sum( map {$$specs{"txtSignatureQty${_}Page-$qty_index"} ? $$specs{"txtSignatureQty${_}Page-$qty_index"} : () } @possible_pages ) . ' pockets',
+
+			( $$specs{rdbGateFoldFit} ? 'Gate Fold Fit = ' . $$specs{rdbGateFoldFit} : () ),
+			( $$specs{CoverFit} ? 'Cover Fit = ' . $$specs{CoverFit} : () ),
+	);
+}
 
 sub runtime {
 	my ( $Project, $Service, $Equipment, $qty_index, $speed ) = @_;

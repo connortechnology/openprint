@@ -71,7 +71,7 @@ sub rma {
 		my $RMA = new openprint::RMA();
 		$variable{error} .= $RMA->save({
 				project_id		=>	$param{project_id},
-				company_id		=>	( sets::isin( $session{user_type}, ['E','A'] ) ? $param{company_id} : $session{'company_id'} ),
+				company_id		=>	( sets::isin( $session{user_type}, ['E','A'] ) ? $param{company_id} : $session{company_id} ),
 				user_id			=>	$session{user_id},
 				order_id		=>	$$Order{id},
 				type_id			=>	$param{type_id},
@@ -92,8 +92,8 @@ sub rma {
 		my $Email = new openprint::Email();
 		$Email->html_body( $template );
 		$Email->send(
-				FROM	=> $config{'RMAEmail'},
-				TO		=> $config{'RMAEmail'},
+				FROM	=> $config{RMAEmail},
+				TO		=> $config{RMAEmail},
 				SUBJECT => 'Online RMA Submission.',
 				);
 
@@ -102,7 +102,7 @@ sub rma {
 		$template = ssi::include( '/email_template.html', \%info );
 		$Email->html_body( $template );
 		$Email->send(
-				TO		=> $info{'Email'},
+				TO		=> $info{Email},
 				);
 		$variable{ExternalRedirect} = '/support/returns.html';
 		%param = ();
@@ -114,23 +114,23 @@ sub help_desk {
 
 	if ( $param{btnSubmit} ) {
 		my $error = '';
-		$error .= 'Missing First Name<br/>' if $param{'txtFirstName'} eq '';
-		$error .= 'Missing Last Name<br/>' if $param{'txtLastName'} eq '';
-		$error .= 'Missing Address<br/>' if $param{'txtAddress1'} eq '';
-		$error .= 'Missing City<br/>' if $param{'txtCity'} eq '';
-		$error .= 'Missing Postal Code<br/>' if $param{'txtPostalCode'} eq '';
-		$error .= 'Missing Phone<br/>' if $param{'txtPhone'} eq '';
-		my $addr = Email::Valid->address( $param{'txtEmail'} );
+		$error .= 'Missing First Name<br/>' if $param{txtFirstName} eq '';
+		$error .= 'Missing Last Name<br/>' if $param{txtLastName} eq '';
+		$error .= 'Missing Address<br/>' if $param{txtAddress1} eq '';
+		$error .= 'Missing City<br/>' if $param{txtCity} eq '';
+		$error .= 'Missing Postal Code<br/>' if $param{txtPostalCode} eq '';
+		$error .= 'Missing Phone<br/>' if $param{txtPhone} eq '';
+		my $addr = Email::Valid->address( $param{txtEmail} );
 
-		$error .= 'Missing/Invalid E-mail<br/>' if ( ! $param{'txtEmail'} ) or ( ! $addr ) or ( $addr ne $param{'txtEmail'} );
+		$error .= 'Missing/Invalid E-mail<br/>' if ( ! $param{txtEmail} ) or ( ! $addr ) or ( $addr ne $param{txtEmail} );
 		$error .= 'Missing Question or Comment<br/>' if $param{'txtQuestion-Quote'} eq '';
-		if ( ! $session{'user_id'} ) {
-			if ( $config{'UseCaptchaOnRegistration'} eq 'Y' ) {
+		if ( ! $session{user_id} ) {
+			if ( $config{UseCaptchaOnRegistration} eq 'Y' ) {
 				# Remove spaces, because some people want to put spaces between the characters, etc.
-				$param{'Captcha'} =~ s/\s//g;
+				$param{Captcha} =~ s/\s//g;
 				require Authen::Captcha;
-				my $Captcha = new Authen::Captcha('data_folder' => '/tmp', 'output_folder' => $config{'SkinPath'}.'/images/captcha');
-				if ( 1 != $Captcha->check_code( $param{'Captcha'}, $param{'MD5SUM'} ) ) {
+				my $Captcha = new Authen::Captcha(data_folder => '/tmp', output_folder => $config{SkinPath}.'/images/captcha');
+				if ( 1 != $Captcha->check_code( $param{Captcha}, $param{MD5SUM} ) ) {
 					$error .= 'Validation Code incorrect. Please try again.';
 				} # end if
 			} # end if
@@ -138,7 +138,7 @@ sub help_desk {
 
 		if ( $error ) {
 			$variable{error} = $error;
-			Debug($error);
+			$log->debug($error);
 			return;
 		} # end if
 
@@ -149,31 +149,31 @@ sub help_desk {
 
 		sql::insert( $log, $dbh, 'Helpdesk',
 				'Id', $index,
-				'company_id', $session{'company_id'},
-				'user_id',	 $session{'user_id'},
-				'strCompanyName',	$param{'txtCompanyName'},
-				'strTitle',			$param{'txtTitle'},
-				'strFirstName',		$param{'txtFirstName'},
-				'strLastName',		$param{'txtLastName'},
-				'strAddress',		$param{'txtAddress1'},
-				'strAddress2',		$param{'txtAddress2'},
-				'strCity',			$param{'txtCity'},
-				'strStateProv',		$param{'ddmStateProvince'},
-				'strPostalCode',	$param{'txtPostalCode'},
-				'strCountry',		$param{'ddmCountry'},
-				'strPhone',			$param{'txtPhone'},
-				'strExtension',		$param{'txtExtension'},
-				'strEmail',			$param{'txtEmail'},
+				'company_id', $session{company_id},
+				'user_id',	 $session{user_id},
+				'strCompanyName',	$param{txtCompanyName},
+				'strTitle',			$param{txtTitle},
+				'strFirstName',		$param{txtFirstName},
+				'strLastName',		$param{txtLastName},
+				'strAddress',		$param{txtAddress1},
+				'strAddress2',		$param{txtAddress2},
+				'strCity',			$param{txtCity},
+				'strStateProv',		$param{ddmStateProvince},
+				'strPostalCode',	$param{txtPostalCode},
+				'strCountry',		$param{ddmCountry},
+				'strPhone',			$param{txtPhone},
+				'strExtension',		$param{txtExtension},
+				'strEmail',			$param{txtEmail},
 				'blbdescription',	$param{'txtQuestion-Quote'},
-				'chrMethod',		$param{'rdbMethod'},
+				'chrMethod',		$param{rdbMethod},
 				'dtmRequestDate',	'NOW()',
 				);
 
 		my %info = ( 
-				'HelpDeskIndex' => $index,
-				'txtSalutation'	=>	$param{'rdbSalutation'},
-				'txtFirstName'	=>	$param{'txtFirstName'},
-				'txtLastName'	=>	$param{'txtLastName'},
+				HelpDeskIndex => $index,
+				txtSalutation	=>	$param{rdbSalutation},
+				txtFirstName	=>	$param{txtFirstName},
+				txtLastName	=>	$param{txtLastName},
 				);
 
 		@info{ keys %param } = values %param;
@@ -184,7 +184,7 @@ sub help_desk {
 		$Email->html_body( $template );
 		$Email->send(
 				FROM	=> sprintf('"%s %s" <%s>', @param{'txtFirstName','txtLastName','txtEmail'} ),
-				TO		=> $config{'HelpdeskEmail'},
+				TO		=> $config{HelpdeskEmail},
 				SUBJECT => 'Online Helpdesk Submission.',
 				);
 

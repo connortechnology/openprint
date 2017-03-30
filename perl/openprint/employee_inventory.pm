@@ -1838,11 +1838,15 @@ sub apply_Manifest {
 
 # Run through, and warn if the PO is not satisfied
 				my $PO_Content = $Type->PurchaseOrder_Content();
-				if ( $PO_Content->qty() > $total_qty ) {
-					$variable{warning} .= 'There is not enough stock to satisfy PO ' . $PO->id().'<br/>
-						Manifest has ' . $total_qty . $Type->Paper()->units() . ' of '. $Paper->to_string()	.'<br/>
-						PO wants ' . $PO_Content->qty() . $PO_Content->units() . ' of ' . $PO_Content->item().'<br/>';
-				} # end if	
+				if ( $PO_Content ) {
+					if ( $PO_Content->qty() > $total_qty ) {
+						$variable{warning} .= 'There is not enough stock to satisfy PO ' . $PO->id().'<br/>
+							Manifest has ' . $total_qty . $Type->Paper()->units() . ' of '. $Paper->to_string()	.'<br/>
+							PO wants ' . $PO_Content->qty() . $PO_Content->units() . ' of ' . $PO_Content->item().'<br/>';
+					} # end if	
+				} else {
+					$error .= 'No matching line found in Purchase Order ' . $param{'po_id-'.$Type->id()} . '.<br/>';
+				} # end if POC
 			} else {
 				$error .= 'Purchase Order ' . $param{'po_id-'.$Type->id()} . ' was not found in the system.<br/>';
 			} # end if
@@ -2686,16 +2690,16 @@ sub check {
 
 	my $Check = $variable{Check} = new openprint::Inventory_Check( $param{check_id} );
 	if ( $param{action} eq 'Delete' ) {
-        $variable{error} .= $Check->delete();
-        $variable{ExternalRedirect} = '/employee/inventory/checks.html' if ! $variable{error};
+		$variable{error} .= $Check->delete();
+		$variable{ExternalRedirect} = '/employee/inventory/checks.html' if ! $variable{error};
 	} elsif ( $param{action} eq 'Clear' ) {
 		foreach my $ICE ( $Check->Entries() ) {
 			$variable{error} .= $ICE->delete();
 		}
-        $variable{ExternalRedirect} = '/employee/inventory/checks.html' if ! $variable{error};
+		$variable{ExternalRedirect} = '/employee/inventory/checks.html' if ! $variable{error};
 	} elsif ( $param{action} eq 'Destroy' ) {
-        $variable{error} .= $Check->destroy();
-        $variable{ExternalRedirect} = '/employee/inventory/checks.html' if ! $variable{error};
+		$variable{error} .= $Check->destroy();
+		$variable{ExternalRedirect} = '/employee/inventory/checks.html' if ! $variable{error};
 	} elsif ( $param{action} eq 'Download' ) {
 		my %p;
 		$p{skid_ids} = [ map { $_->skid_id() } $Check->Entries() ];
@@ -2772,7 +2776,7 @@ $log->debug("No duplicate fuond for $$ICE{rfidtag_id}, previous rags: " . $rfidt
 		if ( $Check->location_id() ) {
 			@location_ids = map { $$_{id} } $Check->Location()->get_all_children();
 		}
-	openprint::Skid->find(id=>[ keys %Skids ] );
+		openprint::Skid->find(id=>[ keys %Skids ] );
 
 		my $check_time = Date::Parse::str2time( $Check->started_on() );
 
@@ -2794,7 +2798,7 @@ $log->debug("No duplicate fuond for $$ICE{rfidtag_id}, previous rags: " . $rfidt
 				my $PI = $SC->checked_out();
 				my $pi_time = Date::Parse::str2time( $PI->updated_on() );
 				if ( ! $pi_time ) {
-					$log>error("Invalid pi_time");
+					$log->error("Invalid pi_time");
 					die;
 				}
 
@@ -2826,6 +2830,8 @@ $log->debug("Skid $$Skid{id} CHeck time $check_time PI time $pi_time "  );
 							next;
 						}
 					}
+				#} else {
+					#$variable{information} .= "Not checking back in " . $Paper->to_string() . ' on ' . $Skid->link_to() . ' cuz checked out after the inventory check?<br/>';
 				}
 			} else {
 
@@ -2865,7 +2871,7 @@ $log->debug("Skid $$Skid{id} CHeck time $check_time PI time $pi_time "  );
 						$Skid->save({location_id=>$$ICE{location_id}});
 					} # end if
 				}
-			} elsif ( $Skid->location_id() and ! sets::isin( $Skid->location_id(), [ $Check->location_ids() ] ) ) {
+			} elsif ( $$Check{location_id} and $Skid->location_id() and ! sets::isin( $Skid->location_id(), [ $Check->location_ids() ] ) ) {
 					if ( $param{action} eq 'Test' ) {
 						$variable{information} .= 'Would adjust the location of ' . $Skid->link_to() . ' from ' . $Skid->location() . ' to ' . $Check->Location()->name() . '<br/>';
 					} else {
@@ -2884,7 +2890,8 @@ $log->debug("Skid $$Skid{id} CHeck time $check_time PI time $pi_time "  );
 					( @location_ids ? ( location_id=>\@location_ids ) : () ),
 					'inventory_check_id not'=>$Check->id(),
 					) ) {
-			if ( 0 and ! $$Skid{type} ) {
+			if ( ! $$Skid{type} ) {
+if ( 0 ) {
 				if ( $Skid->type() ) {
 					$Skid->save();
 				}
@@ -2893,13 +2900,17 @@ $log->debug("Skid $$Skid{id} CHeck time $check_time PI time $pi_time "  );
 				} else {
 					$variable{information} .= 'Failed to update Skid type ' . $Skid->link_to() . ' to be ' . $Skid->type() . '<br/>';
 				}
+} else {
+		$variable{error} .= 'Skid ' . $Skid->link_to() . ' has no type!<br/>';
+}
 			}
+			#next if it was in the inventory check
 			next if $Skids{$$Skid{id}};
-			if ( openprint::Inventory_Check_Entry->find_one(skid_id=>$$Skid{id}) ) {
+			if ( openprint::Inventory_Check_Entry->find_one( ic_id=>$$Check{id}, skid_id=>$$Skid{id} ) ) {
 				$log->error("Didn't find skid $$Skid{id} in skid cache, but did find it in the check.");
 				next;
 			} 
-			if ( $Skid->rfidtag_id() and openprint::Inventory_Check_Entry->find_one(rfidtag_id=>$Skid->rfidtag_id() ) ) {
+			if ( $Skid->rfidtag_id() and openprint::Inventory_Check_Entry->find_one(ic_id=>$$Check{id}, rfidtag_id=>$Skid->rfidtag_id() ) ) {
 				$log->error("Didn't find skid $$Skid{id} in skid cache, but did find it in the check by rfid.");
 				next;
 			} 
@@ -2979,7 +2990,7 @@ sub _check_entries {
 				map { $param{$_} ? ( $_ => $param{$_} ) : () } ( 'skid_id','rfidtag_id','quantity','notes','location_id' ),
 				} );
 	} # end if
-	ssi::save_params( '/employee/inventory/check.html', ( 'has_skid' , 'has_quantity', 'sort', 'scanner_id', 'user_id', 'auto_refresh',) );
+	ssi::save_params( '/employee/inventory/check.html', ( 'has_skid' , 'has_quantity', 'has_price', 'sort', 'scanner_id', 'user_id', 'auto_refresh',) );
 }
 sub _check_system_contents {
 	ssi::save_params( '/employee/inventory/check.html', ( ) );

@@ -133,6 +133,7 @@ sub fits {
 			return "Project is too thick. Project Calliper: $calliper Inches, Equipment Max Calliper: " . $self->specification("Maximum$service Calliper") .' Inches.';
 		} # end if
 	} # end if
+	return '';
 
 } # end sub fits
 

@@ -18,7 +18,7 @@ use vars qw( $log $dbh %config);
 *log = \$openprint::log;
 *dbh = \$openprint::dbh;
 *config = \%openprint::config;
-$log = logger->new();
+$openprint::log = logger->new();
 $log->{level} = 'debug';
 
 use Getopt::Long;
@@ -49,7 +49,7 @@ configuration::from_file( $$opts{config} );
 configuration::merge( $opts );
 
 foreach my $param ( 'db_name','db_user','db_pass','from','recipient','smtp-server' ) {
-	if ( ! $config{$param} ) {
+	if ( ! $openprint::config{$param} ) {
 		die "$program: missing required --$param parameter";
 	}
 } # end foreach required-param
@@ -91,7 +91,7 @@ $openprint::Object::no_cache = 0;
 while(1) {
 	if ( ! ( $dbh and $dbh->ping ) ) {
 		$log->debug("Connecting to db");	
-		$dbh = sql::open_sql( $log,
+		$openprint::dbh = sql::open_sql( $log,
 				port		=> $config{db_port},
 				host		=> $config{db_host},
 				database	=> $config{db_name},
@@ -109,13 +109,13 @@ while(1) {
 		configuration::merge( $opts );
 	} elsif ( $hup ) {
 		configuration::init( );
-		configuration::from_file($$opts{config});
-		configuration::merge($opts);
+		configuration::from_file( $$opts{config} );
+		configuration::merge( $opts );
 		$log->hup();
 		$hup = 0;
 	} # end if ! dbh
 
-	$log->debug( "Getting hosts" );
+	$log->debug( 'Getting hosts' );
 	my @Hosts = openprint::Host->find( monitored=>1 );
 	foreach my $Host ( @Hosts ) {
 
@@ -146,6 +146,8 @@ while(1) {
 			} elsif ( $ping and ( $ping[1] > 1 ) ) {
 				(new openprint::Log())->save({Object=>$Host, action=>'Long response time', ip_address=>$HI->ip(), host_id=>$$Host{id}, note=>sprintf('Response time %s seconds.<a href="/employee/it/host.html?host_id=%d">%s</a>', $ping[1], @$Host{'id','hostname'}) });
 			} # end if
+
+			# The idea is if any ip is pingable... then the host is up
 			$online = $ping if ! $online;
 
 			if ( ( $HI->online() and ! $ping ) or ( $ping and !$HI->online() ) ) {
@@ -153,6 +155,10 @@ while(1) {
 			}
 			$log->debug( $HI->ip() . ' is now ' . ( $HI->online() ? 'online' : 'offline' ) . ' value of ping was ' . $ping );
 		} # end foreach HI
+		if ( ! $has_monitored_interfaces ) {
+			$log->error("Host $$Host{hostname} is monitored but none of it's interfaces are.");
+			next;
+		}
 		if ( ! defined $online ) {
 			# No information
 			$log->error("Unable to ping $$Host{id} $$Host{hostname}");
@@ -180,17 +186,11 @@ while(1) {
 			}
 		} else {
 			if ( ( ! $online ) and $$Host{notify_frequency} and ( $$Host{notify_frequency} < ( $now - $$Host{state_changed_on} ) ) ) {
-			$log->error("( ! $online ) and $$Host{notify_frequency} and ( $$Host{notify_frequency} < ( $now - $$Host{state_changed_on}-$now ) ) " . ($now-$$Host{state_changed_on} ));
+				$log->debug("( ! $online ) and $$Host{notify_frequency} and ( $$Host{notify_frequency} < ( $now - $$Host{state_changed_on}-$now ) ) " . ($now-$$Host{state_changed_on} ));
 				notify( $Host, $online );
-				$Host->save({state_changed_on => $now });
+				$Host->save({ state_changed_on => $now });
 			}
-		} # end if ionline status change
-
-		if ( ! $has_monitored_interfaces ) {
-			$Host->unlock();
-			$log->error("Host $$Host{hostname} is monitored but none of it's interfaces are.");
-			next;
-		}
+		} # end if online status change
 
 		my $since = $now-($$Host{state_changed_on} ? $$Host{state_changed_on} : 0 );
 		$log->debug( $Host->hostname() . ' is now ' . ( $Host->online() ? 'online' : 'offline' ) . " $since seconds ago" );
@@ -285,7 +285,9 @@ while(1) {
 			} # end if
 		} # end if online
 	} # end foreach Host
-	sleep $config{sleep};
+	
+	$log->debug("Sleeping for $config{sleep} seconds");
+	sleep $config{sleep} if $config{sleep};
 } # end while
 $p->close();
 $dbh->disconnect() if $dbh;

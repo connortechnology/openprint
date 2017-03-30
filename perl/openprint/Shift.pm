@@ -17,7 +17,7 @@ require openprint::Equipment_Shift;
 require openprint::User;
 require openprint::ScheduledJob;
 
-$debug = 0;
+$debug = 1;
 
 $table = 'shifts';
 $serial = 'shifts_id_seq';
@@ -325,7 +325,10 @@ sub get_Shifts {
 	my ( $Equipment, $start_dt, $end_dt, @Equipment_Shifts ) = @_;
 
 	@Equipment_Shifts = $Equipment->Equipment_Shifts() if ! @Equipment_Shifts;
-	return () if ! @Equipment_Shifts;
+	if ( ! @Equipment_Shifts ) {
+		$openprint::log->error("THere are no shifts for " . $Equipment->to_string() );
+		return ();
+	}
 	my @Shifts;
 	# Three cases, no shifts, shifts before, shifts after.
 
@@ -335,35 +338,47 @@ sub get_Shifts {
 			'starttime <'	=>	$parser->format_datetime( $start_dt ),
 			order			=>	'starttime DESC',
 			) ) {
+		$openprint::log->debug("Found a previous shift " . $LastShift->to_string() );
 		# This is going to be thie most common
 		my $last_dt = $LastShift->endtime_dt() + DateTime::Duration->new( seconds => 1 );
+
+		if ( $LastShift->starttime_dt() < $start_dt and $last_dt > $start_dt ) {
+			# This can happen because we may call this with successive start_dt to adjust the start to the start of a shift
+			$openprint::log->debug("Have a Shift for the given start time $last_dt < $start_dt ");
+			return ( $LastShift );
+		}
 		my $ES_index = 0;
+
+		# Find the index of the matching shift.
 		for ( $ES_index = 0; $ES_index < @Equipment_Shifts; $ES_index += 1 ) { 
 			if ( $Equipment_Shifts[$ES_index]{id} == $$LastShift{shift_id} ) {
 				last;
 			}
-		};
+		}
+
 		if ( $ES_index == @Equipment_Shifts ) {
 			$log->error("Unable to find ES $$LastShift{shift_id} in Equipment_Shifts");
 			$ES_index = 0;
 		} else {
-$log->debug("Found ES for last shift: " . $Equipment_Shifts[$ES_index]->to_string() );
+$log->debug("Found ES for last shift: " . $Equipment_Shifts[$ES_index]->to_string() . " at index $ES_index" );
 			$ES_index += 1;
 			$ES_index = 0 if $ES_index == @Equipment_Shifts;
 		}
 		
 		# The ordering of the Shifts is important for multi-day schedules
 		while ( $last_dt < $end_dt ) {
-$log->debug("Last_dt: $last_dt < $end_dt");
+$log->debug("Last_dt: $last_dt < job end time: $end_dt");
 			while ( $Equipment_Shifts[$ES_index]->compare( $last_dt ) ) {
 				# Add by hours until we fit into a shift again.
 				$last_dt += DateTime::Duration->new( seconds => 3600 );
 $log->debug("while Last_dt: $last_dt < $end_dt");
 				last if $last_dt > $end_dt;
 			} # end if
+
 			if ( $last_dt > $end_dt ) {
+				# Found a shift after the requested time period.  So give up.
 				$log->debug("last cuz Last_dt: $last_dt > $end_dt");
-				last ;
+				last;
 			}
 
 			# Need to start on the correct shift.
@@ -379,6 +394,7 @@ $log->debug("while Last_dt: $last_dt < $end_dt");
 			$ES_index += 1;
 			$ES_index = 0 if $ES_index == @Equipment_Shifts;
 		} # end while last_dt < end_dt
+
 	} elsif ( my $NextShift = openprint::Shift->find_one(
 			equipment_id	=>	$Equipment->id(),
 			'starttime >'	=> $parser->format_datetime( $start_dt ),

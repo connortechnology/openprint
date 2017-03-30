@@ -417,6 +417,7 @@ if ( 1 ) {
 
 sub get_quantities {
 	my $self = shift;
+$openprint::log->error("DEPRECATED call to get_quantities");
 	return @$self{'quantity1','quantity2','quantity3'};
 } # end sub get_quantities
 
@@ -643,7 +644,8 @@ sub quantity_indexes {
 
 sub quantities {
 	my $self = shift;
-	return @$self{'quantity1','quantity2','quantity3'};
+$openprint::log->error("DEPRECATED call to quantities");
+	return @$self{map { $$self{"quantity$_"} ? "quantity$_" : () } ( 1 .. 3 )};
 } # end sub quantities
 
 sub quantity {

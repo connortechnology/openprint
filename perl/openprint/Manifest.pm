@@ -17,13 +17,14 @@ $serial = 'manifests_id_seq';
 $debug = 0;
 
 %fields = (
-		id			=>	'id',
-		name		=>	'name',
+		id					=>	'id',
+		name				=>	'name',
 		created_on	=>	'created_on',
 		updated_on	=>	'updated_on',
 		received_on	=>	'received_on',
 		supplier_id	=>	'supplier_id',
-		deleted		=>	'deleted',
+		deleted			=>	'deleted',
+		currency_id	=>	'currency_id',
 		);
 
 %find_fields = (
@@ -47,6 +48,7 @@ $debug = 0;
 		updated_on	=>	q`'NOW()'`,
 		received_on	=>	q`'NOW()'`,
 		supplier_id	=>	undef,
+		currency_id	=>	undef,
 		deleted	=>	0,
 		);
 
@@ -169,6 +171,10 @@ sub can_see_pricing {
 	return 1 if openprint::usergroup::is_user_in( ['Accounting','InventoryManager'], $openprint::session{user_id} );
 	return 0;
 } # end sub can_see_pricing
+
+sub Currency {
+	return new openprint::Currency( $_[0]{currency_id} );
+}
 
 1;
 __END__

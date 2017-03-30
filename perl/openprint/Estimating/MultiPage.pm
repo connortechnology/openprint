@@ -674,6 +674,44 @@ sub check {
 	return $error;
 } # end sub check
 
+sub schedule_summary {
+	my ( $Project, $specs, $qty_index ) = @_;
+
+	my $summary = '';
+	if ( $$specs{Versions} ) {
+		$summary .= $$specs{Versions} .= ' versions ';
+	} # end if
+	if ( $$specs{PageQuantity} ) {
+		$summary .= $$specs{PageQuantity} .= 'pg ';
+	} # end if
+
+	if ( $Project->Type()->name() eq 'PresentationFolders' ) {
+		$summary .= $$specs{rdbPanels} . ' Panel ' . $$specs{PocketSize} . '&quot; ';
+	} # end if
+
+	if ( $$specs{txtTotalPageQuantity} ) {
+		$summary .= sprintf( '%s&quot;x%s&quot; ', 1*$$specs{txtFinalWidth},1*$$specs{txtFinalHeight});
+		if ( $$specs{rdbCover} eq 'Different' ) {
+			my $cover_pages = 0;
+			foreach my $ss_id ( $Project->signatures({Group=>1}) ) {
+				my $sig_specs = openprint::service::get_specs_ref( $Project, $ss_id );
+				$cover_pages += $$sig_specs{GroupPageQuantity};
+				last;
+			} # end foreach
+			$summary .= sprintf('%dpg+Cover ', $$specs{txtTotalPageQuantity} - $cover_pages );
+		} else {
+			$summary .= sprintf('%dpg ', $$specs{txtTotalPageQuantity} );
+			$summary .= $$specs{rdbCover}.' Cover';
+		} # end if
+		if ( $$specs{rdbTemplateType} eq 'Unbound' ) {
+			$summary .= ' Unbound';
+		} # end if
+
+		$summary .= '<br/>';
+	} # end if
+	return $summary;
+}
+
 sub summary {
 	my ( $Project, $service_index, $specs, $qty_index ) = @_;
 	my @Groups = groups( $$Project{id}, $specs );

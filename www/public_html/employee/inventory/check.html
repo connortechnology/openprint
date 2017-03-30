@@ -33,29 +33,29 @@ function lookup_item(e) {
 	<fieldset><legend>Edit Inventory Check</legend>
 		<div class="column">
 			<ul>
-			<li class="started_on"><label>Started On</label>
-			<? echo ( date_select( 'started_on', $$variable{Check}->started_on() ? $$variable{Check}->started_on() : [ Date::Calc::Today() ] ); ) ?>
-			</li>
-			<li class="ended_on"><label>Ended On</label>
-			<? echo ( date_select( 'ended_on', $$variable{Check}->ended_on() ? $$variable{Check}->ended_on() : [ Date::Calc::Today() ] ); ) ?>
-			</li>
-			<li><label>Name</label><input type="text" name="name" value="<?echo($$variable{Check}->name())?>"/></li>
-			<li><label>Contains</label><? echo ( checkboxes( 'contains', [ map { $_, $_.'s' } ( 'Roll', 'Sheet' ) ], [split(',',$$variable{Check}->contains())] ); ) ?>
-			<li><label>Scanner</label>
-				<?echo(ssi::select( openprint::RFIDScanner->dropdown(), $$variable{Check}->scanner_id(), { 
-					name=>'scanner_id',
-					prepend=>['','All'],
-					} );
-				) ?>
-			</li>
-			<li><label>Location</label>
-<select id="location_id" name="location_id" multiple="multiple" onchange="calc(this.form);">
-                    <? echo ( 
-                        my @options =   ('','All', map { $_->id(), $_->name() } openprint::Location->find(type=>'place', company_id=>$openprint::Owner->id(), order=>'parent_id NULLS FIRST,lower(name)') );
-                        make_drop_down( \@options, $$variable{Check}->location_id() );
-                    ) ?>
-                    </select>
-			</li>
+				<li class="started_on"><label>Started On</label>
+				<? echo ( date_select( 'started_on', $$variable{Check}->started_on() ? $$variable{Check}->started_on() : [ Date::Calc::Today() ] ); ) ?>
+				</li>
+				<li class="ended_on"><label>Ended On</label>
+				<? echo ( date_select( 'ended_on', $$variable{Check}->ended_on() ? $$variable{Check}->ended_on() : [ Date::Calc::Today() ] ); ) ?>
+				</li>
+				<li class="name"><label>Name</label><input type="text" name="name" value="<?echo($$variable{Check}->name())?>"/></li>
+				<li><label>Contains</label><? echo ( checkboxes( 'contains', [ map { $_, $_.'s' } ( 'Roll', 'Sheet' ) ], [split(',',$$variable{Check}->contains())] ); ) ?>
+				<li><label>Scanner</label>
+					<?echo(ssi::select( openprint::RFIDScanner->dropdown(), $$variable{Check}->scanner_id(), { 
+						name=>'scanner_id',
+						prepend=>['','None','All','All'],
+						} );
+					) ?>
+				</li>
+				<li><label>Location</label>
+					<select id="location_id" name="location_id" multiple="multiple" onchange="calc(this.form);">
+						<? echo ( 
+								my @options =   ('','All', map { $_->id(), $_->name() } openprint::Location->find(type=>'place', company_id=>$openprint::Owner->id(), order=>'parent_id NULLS FIRST,lower(name)') );
+								make_drop_down( \@options, $$variable{Check}->location_id() );
+						) ?>
+						</select>
+				</li>
 			</ul>
 		</div><!-- column -->
 		<p class="buttons">
@@ -94,6 +94,9 @@ function lookup_item(e) {
 		<ul>
 			<li><label>Has Skid/Roll?</label><?echo(radio('has_skid', ['1','Yes','0','No','','Both'], $session{$r->uri().'?has_skid'}, { onclick=>'load_entries();' } );)?></li>
 			<li><label>Has Quantity?</label><?echo(radio('has_quantity', ['1','Yes','0','No','','Both'], $session{$r->uri().'?has_quantity'}, { onclick=>'load_entries();' } );)?></li>
+<?if( openprint::Skid->can_see_pricing() ) ?>
+			<li><label>Has Price?</label><?echo(radio('has_price', ['1','Yes','0','No','','Both'], $session{$r->uri().'?has_price'}, { onclick=>'load_entries();' } );)?></li>
+<?endif( openprint::Skid->can_see_pricing() ) ?>
 			<li><label>Scanner</label>
 				<?echo(ssi::select( openprint::RFIDScanner->dropdown(), $session{$r->uri().'?scanner_id'}, { 
 					name=>'scanner_id',

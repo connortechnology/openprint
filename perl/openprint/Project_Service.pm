@@ -134,7 +134,7 @@ sub delete {
 	my ( $self ) = @_;
 if ( ! $$self{project_id} ) {
 	$openprint::log->error("Attempt to delete a Project Service with no project.");
-	return;
+	return '';
 } # end if
 
 	# Lock all schedule
@@ -167,7 +167,7 @@ $openprint::log->warn("Deleting Service from " . $Project->to_string() );
 	$Project->unlock();
 
 	$Project->add_to_log( @openprint::session{'company_id','user_id'}, "Deleted service ".$self->ServiceType()->type() . " $$specs{ServiceName} " . join(' $', map { $$specs{"txtPrice$_"} } $Project->quantity_indexes() ). "." );
-	return;
+	return '';
 } # end sub delete
 
 sub ordered_price {

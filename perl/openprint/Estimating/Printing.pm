@@ -103,13 +103,10 @@ my %folding_cache;
 my %Papers;
 my %Presses;
 my %Press_Values;
+
 sub load_presses {
 	%Presses = map { $$_{strid}, $_ } openprint::Equipment->find( 'category any'=>'Printing', 'useinestimating is null or ='=>1 );
 	%Press_Values = map { $_->specification('Value') ? ( $$_{id} => $_->specification('Value') ) : () } values %Presses;
-	$log->error("Perss BValues");
-	foreach my $k ( keys %Press_Values ) {
-		$log->debug("Press Values: $k => $Press_Values{$k}");
-	}
 }
 #Indexed by group
 my %Estimating_Setup;
@@ -1301,7 +1298,7 @@ $log->debug("not Skipping cuz ddmPress$qty_index eq $$Press{strid}");
 		my $number_of_colours = $Press->specification('Number of Colours');
 		$$project{Runstyles} = $Press->specification('Runstyles');
 		if ( ! $$project{Runstyles} ) {
-			$log->warning("NO runstyles set on $$Press{strid}");
+			$log->warn("NO runstyles set on $$Press{strid}");
 		}
 		if ( DEBUG_IMPOSITIONS and $$specs{"chkOverrideRunStyle$qty_index"} ) {
 			$$project{Runstyles} = $$specs{"ddmRunStyle$qty_index"};
@@ -2641,6 +2638,7 @@ $log->debug("No printing");
 	%Materials = map { $$_{name}, $_ } openprint::Material->find();
 	$openprint::Material::cached = 1;
 
+	load_presses();
 	my $project = setup_project( $Project, $service_index, $services, $specs, \@side_one_colours, \@side_two_colours, $Papers[0] );
 	if ( $$project{NeedFolding} ) {
 		if ( (
@@ -3639,12 +3637,12 @@ $$sig_specs{PreviousGrainDirection} and ( $imp->grain_direction() ne $$sig_specs
 							last;
 						} # end if
 					} else {
-						$log->error("No Value set for $$Press{strid}");
+						$log->error("1 No Value set for $$BPress{strid}");
 					} # end if	
 					
 				} # end for B
 			} else {
-				$log->error("No Value set for $$Press{strid}");
+				$log->error("2 No Value set for $$Press{strid}");
 			} # en dif
 			if ( $add ) {
 				push @{$imps{$key}}, $I;
@@ -4181,7 +4179,6 @@ sub get_project_price {
 
 	my $previous_press = $$source_sig_specs{PreviousPress};
 	my %sig_specs = %{$source_sig_specs};
-$log->debug("txtSignature Type is: $sig_specs{txtSignatureType}");
 
 	#my @Is = openprint::imposition::sort( calculate_impositions( $Project, $sig_specs, $qty_index, $qty, $PaperCounts, $versions, $project, $impositions ) );
 	my @Is = calculate_impositions( $Project, $source_sig_specs, $qty_index, $qty, $PaperCounts, $versions, $project, $impositions );
@@ -7016,7 +7013,7 @@ sub runspeed {
 		if ( $$services{Folding} ) {
 			my $fold_specs = openprint::service::get_specs_ref( $Project, $$services{Folding}[0] );
 			if ( $$fold_specs{'ddmEquipment-'.$$sig_specs{SignatureIndex}.'-'.$qty_index} == $Equipment->id() ) {
-				my $foldtype = sprintf('%sx%s-%dPage-%sSignatureFold', $Imposition->get('spread_columns','spread_rows','pages','image_orientation' ) );
+				my $foldtype = sprintf('%sx%s-%dPage-%sSignatureFold', @$Imposition{'spread_columns','spread_rows','pages'}, $openprint::Imposition::Orientations{$$Imposition{'image_orientation'}} );
 				$runspeed = int( $Equipment->specification($foldtype.'RunSpeed', $$Imposition{Paper}->gsm() ) );
 #$log->debug("Foudn runspeed for fold $foldtype: $runspeed");
 			} # end if

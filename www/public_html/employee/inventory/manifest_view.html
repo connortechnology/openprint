@@ -24,6 +24,7 @@
 				<ul>
 				<li><label>Manifest #</label><? hecho ( $$variable{Manifest}->name() ) ?></li>
 				<li><label>Vendor</label><?echo($$variable{Manifest}->Vendor()->name() ) ?></li>
+				<li><label>Currency</label><?echo( $$variable{Manifest}->Currency()->name();)?></li>
 				</ul>
 			</div>
 			<div class="rightColumn">
@@ -51,7 +52,14 @@
 			`, $Paper->id(), $Paper->to_string(), $Type->supplier_invoice(), $Type->docket(), $Type->po_id() ? $Type->PurchaseOrder()->link_to() : '' );
 
 			if ( $$variable{Manifest}->can_see_pricing() ) {
-				$html .= '<li><label>Cost (/CWT)</label>'.($Type->cost()).'</li>';
+				$html .= '<li><label>Cost (/CWT)</label>'.$Type->cost();
+				my $POC = $Type->PurchaseOrder_Content();
+				if ( $POC ) {
+					my $PO_Cost = $POC->Cost();
+					$html .= '<br/>' if $Type->cost();
+					$html .= 'From PO: ' . $POC->PurchaseOrder()->Currency()->format( $$PO_Cost{cost} ) . $$PO_Cost{units};
+				}
+				$html .= '</li>';
 			} # end if
 			$html .= sprintf(q`
 						<li><label>Manufacturers Name</label>%s</li>

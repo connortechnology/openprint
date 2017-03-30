@@ -94,7 +94,7 @@ sub view_services {
 				my $recalc = 0;	
 				my $ServiceType = $Service->ServiceType();
 
-				if ( $ServiceType and ( $ServiceType->name() eq 'Proofs' ) ) {
+				if ( $ServiceType->id() and ( $ServiceType->name() eq 'Proofs' ) ) {
 					openprint::Estimating::Proofs::save_proof_specs( $r, $log, $dbh, \%variable, $Project->id(), $service_index );
 				} else {
 					openprint::service::save_service( $r, $log, $dbh, $Project->id(), $service_index );
@@ -174,7 +174,7 @@ sub view_services {
 						( $param{txtPrice3} ? ( txtPrice3 => $conversion_rate * misc::moneyfilter($param{txtPrice3} ) ) : () ),
 						ServiceName => $service_name }, { status=>'calculated' } );
  
-					$Project->add_to_log( @session{'company_id','user_id'}, sprintf( 'Adding Custom Line: %s, (%.2f, %.2f, %.2f)', $service_name, @param{'txtPrice1','txtPrice2','txtPrice3'} ) );
+					$Project->add_to_log( @session{'company_id','user_id'}, sprintf( 'Adding Custom Line: %s, (%s)', $service_name, join(',', map { $param{$_} ? $param{$_} : () } ('txtPrice1','txtPrice2','txtPrice3') ) ) );
 
 				} # end if has Customer Service type
 
@@ -261,25 +261,15 @@ sub view_services {
 
 } # end sub view_services
 
-sub get_project_quantities {
-	my ( $log, $dbh, $project_index ) = @_;
-
-	my $Project = new openprint::Project( $project_index );
-	my @qtys;
-	push @qtys, $Project->quantity1() if $Project->quantity1();
-	push @qtys, $Project->quantity2() if $Project->quantity2();
-	push @qtys, $Project->quantity3() if $Project->quantity3();
-	return @qtys;
-} # end sub get_project_quantities
-
-
 sub print_prices {
 	my ( $r, $log, $dbh, $cookie, $variable ) = @_;
 
 	my $service_index = $$variable{ServiceIndex};
 	$service_index = $param{ServiceIndex} if ! $service_index;
-	my @service_ids = split(',', $service_index);
-	$service_index = $service_ids[0];
+	if ( $service_index ) {
+		my @service_ids = split(',', $service_index);
+		$service_index = $service_ids[0];
+	}
 	my $project_index = $$variable{ProjectIndex};
 	$project_index = $param{ProjectIndex} if ! $project_index;
 	$project_index = $session{project_id} if ! $project_index;
@@ -676,17 +666,20 @@ sub get_quantities {
 	my ( $variable, $project_index) = @_;
 	if ( ! $$variable{QUANTITIES} ) {
 		my $Project = new openprint::Project( $project_index );
-		my @qtys = $Project->quantities();
-		my $columns = 0;
-		for ( my $index = 0; $index < @qtys; $index += 1 ) {
-			$$variable{QUANTITIES} .= " quantities[$index] = '$qtys[$index]'; \n";
-			$$variable{'QUANTITY'.($index+1)} = $qtys[$index];
-			$$variable{'txtQuantity'.($index+1)} = $qtys[$index];
-			$columns += 1 if $qtys[$index];
+		my @qty_indexes = $Project->quantity_indexes();
+		foreach my $qty_index ( @qty_indexes ) {
+			$$variable{QUANTITIES} .= " quantities[$qty_index] = '".$$Project{"quantity$qty_index"}."'; \n";
+			$$variable{"QUANTITY$qty_index"} = $$Project{"quantity$qty_index"};
+			$$variable{"txtQuantity$qty_index"} = $$Project{"quantity$qty_index"};
 		} # end for
-		$$variable{Columns} = 'One' if $columns == 1;
-		$$variable{Columns} = 'Two' if $columns == 2;
-		$$variable{Columns} = 'Three' if $columns == 3;
+		
+		if ( @qty_indexes == 1 ) {
+			$$variable{Columns} = 'One';
+		} elsif ( @qty_indexes == 2 ) {
+			$$variable{Columns} = 'Two';
+		} elsif ( @qty_indexes == 3 ) {
+			$$variable{Columns} = 'Three';
+		} # end if
 	} # end if
 } # end sub get_quantities
 
