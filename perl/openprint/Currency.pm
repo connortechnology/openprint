@@ -123,6 +123,11 @@ sub convert_to {
 sub convert {
 	my $Price = $_[0];
 
+	if ( ref $Price ne 'HASH' ) {
+		Carp::cluck("Non hash price passed to Currency::convert from");
+		return;
+	}
+
 	# Get display_currency
 	my $DST_Currency = get_current();
 	if ( $DST_Currency ) {
