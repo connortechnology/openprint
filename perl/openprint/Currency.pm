@@ -123,7 +123,7 @@ sub convert_to {
 sub convert {
 	my $Price = $_[0];
 
-	if ( ref $Price ne 'HASH' ) {
+	if ( ref $Price eq 'ARRAY' or ref $Price eq '' ) {
 		Carp::cluck("Non hash price passed to Currency::convert from");
 		return;
 	}
