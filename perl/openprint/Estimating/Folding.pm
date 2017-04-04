@@ -1358,7 +1358,7 @@ $openprint::log->debug("Got Fold: " . $Fold->to_string() ) if DEBUG;
 								next;
 							} elsif ( @my_equipment == 1 ) {
 								$Imposition->display('Didnt find:' ) if DEBUG;
-								$Breakdown .= sprintf('Didnt find: %dx%d=%dpages %s,%dout %s<br/>', $Imposition->page_columns(), $Imposition->page_rows(), $Imposition->pages(), @$Imposition{'image_orientation','imposition'}, $fits );
+								$Breakdown .= sprintf('Didnt find: %dx%d=%dpages %s,%dout %s<br/>', $Imposition->page_columns(), $Imposition->page_rows(), $Imposition->pages(), $openprint::Imposition::Orientations{$$Imposition{spine_direction}}, $$Imposition{imposition}, $fits );
 								$complete = 0;
 							} elsif ( DEBUG ) {
 								$Imposition->display('Didnt find fold:' );
@@ -2270,13 +2270,13 @@ sub cut_imposition {
 		my ( $i1, $i2 ) = ( $I->copy(), $I->copy );
 		$i1->columns(int($$I{columns}/2 ));
 		$i2->columns( $$I{columns} - $$i1{columns} );
-		$openprint::log->error(sprintf("3 Cutting imposition down from %dx%d=%dout to %dx%d=%d and %dx%d=%d", @$I{'columns','rows','imposition'}, @$i1{'columns','rows','imposition'}, @$i2{'columns','rows','imposition'} ) ) if DEBUG;
+		$openprint::log->debug(sprintf("3 Cutting imposition down from %dx%d=%dout to %dx%d=%d and %dx%d=%d", @$I{'columns','rows','imposition'}, @$i1{'columns','rows','imposition'}, @$i2{'columns','rows','imposition'} ) ) if DEBUG;
 		return ( $i1, $i2 );
 	} else {
 		my ( $i1, $i2 ) = ( $I->copy(), $I->copy );
 		$i1->rows(int $$I{rows}/2);
 		$i2->rows( $$I{rows} - $$i1{rows} );
-		$openprint::log->error(sprintf("4 Cutting imposition down from %dx%d=%dout to %dx%d=%d and %dx%d=%d", @$I{'columns','rows','imposition'}, @$i1{'columns','rows','imposition'}, @$i2{'columns','rows','imposition'} ) ) if DEBUG;
+		$openprint::log->debug(sprintf("4 Cutting imposition down from %dx%d=%dout to %dx%d=%d and %dx%d=%d", @$I{'columns','rows','imposition'}, @$i1{'columns','rows','imposition'}, @$i2{'columns','rows','imposition'} ) ) if DEBUG;
 		return ( $i1, $i2 );
 	} # end if
 } # end sub cut_imposition
@@ -2288,7 +2288,7 @@ sub cut_spreads {
 
 	my $min_spread_size = $$I{spread_size}/2 > 1 ? $$I{spread_size}/2 : 4;
 
-#$I->display("Min spread size: $min_spread_size dir($$I{spine_direction}) " . $openprint::Imposition::Orientations{$$I{spine_direction}} . " spread cols: $$I{spread_columns} spread_rows $$I{spread_rows}" );
+$I->display("Min spread size: $min_spread_size dir($$I{spine_direction}) " . $openprint::Imposition::Orientations{$$I{spine_direction}} . " spread cols: $$I{spread_columns} spread_rows $$I{spread_rows}" );
 
 	# Something like doing 16pg as 2 8pgs, why are we not handling the horizontal case?
 	if ( $$I{spine_direction} == openprint::Imposition::Vertical and ( $$I{spread_rows} % 2 == 0 ) ) {
@@ -2299,7 +2299,7 @@ sub cut_spreads {
 		$i1->rows( $$i1{rows} * 2 );
 		$$i1{page_quantity} = $$i1{page_quantity} * 2;
 		$i1->image_height( $$I{image_height}/$$I{spread_rows} );
-		$openprint::log->debug(sprintf('SPECIAL Cutting pages down from quantity %d x %d pages %dout to q%d x %d pages %dout pq(%d)', 
+		$openprint::log->debug(sprintf('SPECIAL Cutting Vertical pages down from quantity q%d x %d pages %dout to q%d x %d pages %dout pq(%d)', 
 					$I->quantity(), $I->pages(), $$I{imposition},
 					$i1->quantity(), $i1->pages(), $$i1{imposition}, $$I{page_quantity} ) ) if DEBUG;
 		push @results, [ $i1 ];
@@ -2311,7 +2311,7 @@ sub cut_spreads {
     $i1->columns( $$i1{columns} * 2 );
     $$i1{page_quantity} = $$i1{page_quantity} * 2;
     $i1->image_height( $$I{image_height}/$$I{spread_columns} );
-    $openprint::log->debug(sprintf('SPECIAL Cutting pages down from quantity %d x %d pages %dout to q%d x %d pages %dout pq(%d)',
+    $openprint::log->debug(sprintf('SPECIAL Cutting Horizontal pages down from quantity %d x %d pages %dout to q%d x %d pages %dout pq(%d)',
           $I->quantity(), $I->pages(), $$I{imposition},
           $i1->quantity(), $i1->pages(), $$i1{imposition}, $$I{page_quantity} ) ) if DEBUG;
     push @results, [ $i1 ];
@@ -2426,19 +2426,21 @@ sub cut_spreads {
 
 		if ( $$I{spread_columns} % 2 ) {
 
-			# Cut into singles
-			my $i1 = $I->copy();
-			$i1->spread_columns(1);
-			$i1->quantity( $i1->quantity() * $$I{spread_columns} );
-			$$i1{page_quantity} = $$i1{page_quantity} * $$I{spread_columns};
-			if ( $$I{image_orientation} == openprint::Imposition::Vertical ) {
-				$i1->image_width( $$I{image_width}/$$I{spread_columns} );
-			} else {
-				$i1->image_height( $$I{image_height}/$$I{spread_columns} );
+			if ( openprint::Imposition::Horizontal == $$I{spine_direction} ) {
+				# Cut into singles
+				my $i1 = $I->copy();
+				$i1->spread_columns(1);
+				$i1->quantity( $i1->quantity() * $$I{spread_columns} );
+				$$i1{page_quantity} = $$i1{page_quantity} * $$I{spread_columns};
+				if ( $$I{image_orientation} == openprint::Imposition::Vertical ) {
+					$i1->image_width( $$I{image_width}/$$I{spread_columns} );
+				} else {
+					$i1->image_height( $$I{image_height}/$$I{spread_columns} );
+				}
+				$openprint::log->debug(sprintf('2279 Cutting pages down from %d@%dpg to %d@%dpg by cutting spread columns from %d to 1',
+							$I->quantity(), $I->pages(), $i1->quantity(), $i1->pages(), $$I{spread_columns} ) ) if DEBUG;
+				push @results, [ $i1 ];
 			}
-			$openprint::log->debug(sprintf('2279 Cutting pages down from %d@%dpg to %d@%dpg by cutting spread columns from %d to 1',
-						$I->quantity(), $I->pages(), $i1->quantity(), $i1->pages(), $$I{spread_columns} ) ) if DEBUG;
-			push @results, [ $i1 ];
 
 			# Cut in half unevenly
 			my $i2 = $I->copy();
