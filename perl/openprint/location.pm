@@ -33,10 +33,10 @@ sub edit {
 		}	
 		my $parent_id;
 		if ( $param{country} ) {
-			my $Country = openprint::Location->find_one('name lc'=> lc $param{country}, 'type'=>'country' );
+			my $Country = openprint::Location->find_one('name lc'=> lc $param{country}, type=>'country' );
 			if ( ! $Country ) {
 				$Country = new openprint::Location();
-				$variable{error} .= $Country->save({'name'=>$param{country}, 'type'=>'country'});
+				$variable{error} .= $Country->save({name=>$param{country}, type=>'country'});
 			} # end if
 			$parent_id = $param{country_id} = $Country->id();
 		} # end if
@@ -50,10 +50,10 @@ sub edit {
 		} # end if
 
 		if ( $param{state} ) {
-			my $State = openprint::Location->find_one('name lc'=> lc $param{state}, 'type'=>['state','province']);
+			my $State = openprint::Location->find_one('name lc'=> lc $param{state}, type=>['state','province']);
 			if ( ! $State ) {
 				$State = new openprint::Location();
-				$variable{error} .= $State->save({'name'=>$param{state}, 'type'=>'state', 'parent_id'=>$param{country_id}});
+				$variable{error} .= $State->save({name=>$param{state}, type=>'state', parent_id=>$param{country_id}});
 			} # end if
 			$param{state_id} = $State->id();
 		} # end if
@@ -61,7 +61,7 @@ sub edit {
 			my $State = new openprint::Location($param{state_id});
 			if ( $State->id() ) {
 				if ( $parent_id and ! $State->parent_id() ) {
-					$State->save({'parent_id'=>$parent_id});
+					$State->save({parent_id=>$parent_id});
 				} # end if
 				$parent_id = $param{state_id};
 			} else {
@@ -69,10 +69,10 @@ sub edit {
 			} # end if
 		} # end if
 		if ( $param{city} ) {
-			my $City = openprint::Location->find_one('name lc'=> lc $param{city}, 'type'=>'city');
+			my $City = openprint::Location->find_one('name lc'=> lc $param{city}, type=>'city');
 			if ( ! $City ) {
 				$City = new openprint::Location();
-				$variable{error} .= $City->save({'name'=>$param{city}, 'type'=>'city', 'parent_id'=>$param{state_id}});
+				$variable{error} .= $City->save({name=>$param{city}, type=>'city', parent_id=>$param{state_id}});
 			} # end if
 			$param{city_id} = $City->id();
 		} # end if
@@ -80,7 +80,7 @@ sub edit {
 			my $City = new openprint::Location($param{city_id});
 			if ( $City->id() ) {
 				if ( $parent_id and ! $City->parent_id() ) {
-					$City->save({'parent_id'=>$parent_id});
+					$City->save({parent_id=>$parent_id});
 				} # end if
 				$parent_id = $param{city_id};
 			} else {
@@ -151,8 +151,8 @@ sub view {
 	} elsif ( $param{filename} ) {
 		my $Album = $Location->Album();
 		if ( ! $Album->id() ) {
-			$variable{error} .= $Album->save({'name'=>'Photos for ' . $Location->name()});
-			$variable{error} .= $Location->save({'album_id'=>$Album->id()});
+			$variable{error} .= $Album->save({name=>'Photos for ' . $Location->name()});
+			$variable{error} .= $Location->save({album_id=>$Album->id()});
 		} # end if
 		$variable{error} = $Album->upload( 'filename' );
 		if ( ! $variable{error} ) {
@@ -164,7 +164,7 @@ sub view {
 sub _photos {
 	my $Location = $variable{Location} = new openprint::Location( $param{location_id} );
 	if ( $param{action} eq 'delete' ) {
-		my $Photo = openprint::Photo_in_Album->find_one( {'album_id'=>$$Location{album_id}, 'asset_id'=>$param{asset_id} } );
+		my $Photo = openprint::Photo_in_Album->find_one( {album_id=>$$Location{album_id}, asset_id=>$param{asset_id} } );
 		$variable{error} .= $Photo->delete() if $Photo->id();
 	} # end if
 } # end sub _photos
@@ -182,8 +182,8 @@ sub search {
 		$Location = openprint::Location::from_ip();
 	} # end if
 	if ( $Location and $Location->id() ) {
-		my $Country = $Location->ancestor('type'=>'country');
-		my $State = $Location->ancestor('type'=>'state');
+		my $Country = $Location->ancestor(type=>'country');
+		my $State = $Location->ancestor(type=>'state');
 		$session{'/location/search.html?state_id'} = $State->id() if $State and ! exists $session{'/location/search.html?state_id'};
 		$session{'/location/search.html?country_id'} = $Country->id() if $Country and ! exists $session{'/location/search.html?country_id'};
 	} # end if
@@ -194,9 +194,10 @@ sub _search {
 		ssi::save_params( '/location/search.html', ( 
 				#'starting_on_start_year','starting_on_start_month','starting_on_start_day',
 				#'starting_on_end_year','starting_on_end_month','starting_on_end_day',
-				'type_id', 'user_id', 'category_id', 'country_id', 'state_id', 'city_id' ) );
+				'type_id', 'user_id', 'category_id', 'country_id', 'state_id', 'city_id',
+				'company_id', ) );
 	} # end if
-	#$session{'/location/search.html?type_id'} = openprint::Location_Type->find_one('name'=>'place')->id() if ! exists $session{'/location/search.html?type_id'};
+	#$session{'/location/search.html?type_id'} = openprint::Location_Type->find_one(name=>'place')->id() if ! exists $session{'/location/search.html?type_id'};
 } # end sub _search
 
 sub _ddm {

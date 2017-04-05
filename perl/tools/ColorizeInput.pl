@@ -30,12 +30,13 @@ my @warning_tokens = ('warn',"Warning", "WARNING", "WARN");
 #	 30		black foreground
 #	 31		red foreground
 #	 32		green foreground
-#	 33		brown foreground
+#	 33		yellow foreground
 #	 34		blue foreground
 #	 35		magenta (purple) foreground
 #	 36		cyan (light blue) foreground
 #	 37		gray foreground
 #
+#  39   default
 #	 40		black background
 #	 41		red background
 #	 42		green background
@@ -46,7 +47,7 @@ my @warning_tokens = ('warn',"Warning", "WARNING", "WARN");
 #	 47		white background
 #
 my $error_color = "40;31";
-my $warning_color = "40;38";
+my $warning_color = "40;33";
 
 
 ############################################

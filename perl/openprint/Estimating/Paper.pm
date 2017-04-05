@@ -472,27 +472,27 @@ sub se_price_summary {
 # The order of stocks is important... thing is, it can change if the brand changes for example.
 # So it needs to be inorder of appearance.
 sub get_stocks {
-    my ( $Project ) = @_;
-    my %Papers;
+	my ( $Project ) = @_;
+	my %Papers;
 	my $stock_id = 1;
-    foreach my $ss_id ( $Project->signatures( { sort=> 1 } ) ) {
-        my $sig_specs = openprint::service::get_specs_ref( $Project, $ss_id );
-        foreach my $q_index ( $Project->quantity_indexes() ) {
-            next if ! $$sig_specs{'txtImposition'.$q_index};
-            my $Paper = openprint::Paper::load_from_signature( $Project, $sig_specs, $q_index )->Supplied();
-            #next if ! ( $Paper->id() or $$Paper{custom} );
+	foreach my $ss_id ( $Project->signatures( { sort=> 1 } ) ) {
+		my $sig_specs = openprint::service::get_specs_ref( $Project, $ss_id );
+		foreach my $q_index ( $Project->quantity_indexes() ) {
+			next if ! $$sig_specs{'txtImposition'.$q_index};
+			my $Paper = openprint::Paper::load_from_signature( $Project, $sig_specs, $q_index )->Supplied();
+#next if ! ( $Paper->id() or $$Paper{custom} );
 			if ( ! $Papers{$Paper->id_string()} ) {
 				$Papers{$Paper->id_string()} = { Project => $Project, Stock=>$Paper, index=>$stock_id, key=>$Paper->id_string() };
 				$stock_id += 1;
 			} # end if
-        } # end foreach qty_index
-    } # end foreach
+		} # end foreach qty_index
+	} # end foreach
 	my @Results;
 	foreach my $key ( sort { 
 			my $P1 = $Papers{$a};
 			my $P2 = $Papers{$b};
 			return $$P1{index} <=> $$P2{index};
-		} keys %Papers ) {
+			} keys %Papers ) {
 		push @Results, $Papers{$key};
 	} # end foreach
 	return @Results;
