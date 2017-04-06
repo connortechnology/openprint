@@ -3,6 +3,7 @@ CREATE TABLE Project_Log (
 	project_id	INTEGER	NOT NULL, FOREIGN KEY(project_id) REFERENCES Projects (id),
 	company_id	INTEGER, FOREIGN KEY(company_id) REFERENCES Companies (id),
 	user_id		INTEGER, FOREIGN KEY(user_id) REFERENCES Users (id),
+	host_id		INTEGER, FOREIGN KEY (host_id) REFERENCES Hosts (id),
 	dtmTimestamp		timestamp with time zone NOT NULL default(NOW()),
 	Description			TEXT
 );
