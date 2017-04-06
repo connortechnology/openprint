@@ -23,7 +23,7 @@
 					} else {
 						$html .= button( 'Delete', { onclick => "if(confirm('Are you sure?')){f1.btnFunction.value='Delete';f1.submit();};" } );
 					} # end if
-						$html .= button( 'Edit', { 'href' => '/photo_albums/edit.html?album_id='.$$variable{Album}->id() } );
+						$html .= button( 'Edit', { href => '/photo_albums/edit.html?album_id='.$$variable{Album}->id() } );
 				} # end if
 				return $html;
 			) ?>

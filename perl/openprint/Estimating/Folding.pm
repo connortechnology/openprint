@@ -2684,7 +2684,7 @@ if ( 0 ) {
 			} else {
 			}
 }
-			if ( $$Imposition{page_columns} and $$Imposition{page_rows} ) {
+			if ( $$Source_Imposition{page_columns} and $$Source_Imposition{page_rows} and $$Imposition{page_columns} and $$Imposition{page_rows} ) {
 				if ( $$Imposition{image_orientation} == openprint::Imposition::Vertical ) {
 			#$openprint::log->debug("adjusting image_width from $$Imposition{image_width} / ( $$Source_Imposition{page_columns} / $$Imposition{page_columns} )");
 					$Imposition->image_width( $$Imposition{image_width} / ( $$Source_Imposition{page_columns} / $$Imposition{page_columns} ) );
