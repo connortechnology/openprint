@@ -37,7 +37,7 @@
 		<select name="operator_id" size="1" onchange="load_projects();">
 			<option value="">All Employees</option>
 <? echo (
-	make_drop_down( openprint::User->dropdown( 'usergroup any'=>['Prepress'], type=>['E','A'], company_id=>$config{owner_id} ),
+	make_drop_down( openprint::User->dropdown( type=>['E','A'], company_id=>$config{owner_id} ),
 	$session{$r->uri().'?operator_id'} );
 )?>
 			</select>
@@ -58,9 +58,9 @@
 	</li>
 	<li>
 		<label>Action Date</label>
-<? echo ( date_select_session( $r->uri(), 'action_date_start', { onchange=>'load_projects();', with_today=>1, with_clear=>1 } ); ) ?>
+<? echo ( datetime_select_session( $r->uri(), 'action_date_start', { onchange=>'load_projects();', with_today=>1, with_clear=>1 } ); ) ?>
 			to
-<? echo ( date_select_session( $r->uri(), 'action_date_end', { onchange=>'load_projects();', with_today=>1, with_clear=>1 } ); ) ?>
+<? echo ( datetime_select_session( $r->uri(), 'action_date_end', { onchange=>'load_projects();', with_today=>1, with_clear=>1 } ); ) ?>
 	</li>
 	</ul>
 	<p class="buttons">
