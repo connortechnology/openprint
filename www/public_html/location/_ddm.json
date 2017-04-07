@@ -9,7 +9,6 @@
 		$Parent = openprint::Location->find_one( id=>$param{parent_id} ) if $param{parent_id};
 	} # end if
 	my $type = $param{type} ? $param{type} : $$Parent{type};
-#$log->debug("Looking for $type parent name is $param{parent_element}");
 
 	my $json = JSON->new;
 	my $js = 'var ddm; var selected;';
@@ -30,11 +29,16 @@ if ( ddm ) {
 ";
 
 } else {
-	my ($ddm_name_start, $ddm_name_end) = $param{'parent_element'} =~ /^(.*)$type(.*)$/;
+	my ($ddm_name_start, $ddm_name_end) = $param{parent_element} =~ /^(.*)$type(.*)$/;
 	my @parent_ids = ( $$Parent{id} ) if $Parent;
 	# Goes through each child type, populating the dropdowns.
 	while ( $type = openprint::Location->child_type($type) ) {
-		my @Options = openprint::Location->find( parent_id=>\@parent_ids, type=>( $type eq 'state' and $$Parent{name} eq 'Canada' ? ['state','province'] : $type ) ) if @parent_ids;
+		my @Options = openprint::Location->find( 
+				(@parent_ids ? ( parent_id=>\@parent_ids ) : () ),
+				type=>( ( $type eq 'state' and $$Parent{name} eq 'Canada' ) ? ['state','province'] : $type ),
+				);
+# Beacuse... can't get all states otherwise
+# if @parent_ids or $type;
 		my $options = [ map { $_->id(), $_->name() } @Options ];
 		@parent_ids = map { $_->parent_id() } @Options;
 

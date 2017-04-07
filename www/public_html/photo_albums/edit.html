@@ -3,8 +3,8 @@
 <?include(/includes/error_reporting.html)?>
 <div class="PhotoAlbum">
 	<div class="Edit">
-<? if ( $$variable{'Album'}->can_edit() ) ?>
-		<form id="f1" name="f1" action="/photo_albums/edit.html?album_id=<? echo ( $$variable{'Album'}->id() ) ?>" enctype="multipart/form-data" method="post">
+<? if ( $$variable{Album}->can_edit() ) ?>
+		<form id="f1" name="f1" action="/photo_albums/edit.html?album_id=<? echo ( $$variable{Album}->id() ) ?>" enctype="multipart/form-data" method="post">
 			<input type="hidden" name="btnFunction" />
 			<p class="buttons">
 			<? echo (
@@ -17,15 +17,15 @@
 			<fieldset>
 				<div class="content">
 					<ul>
-						<li><label>Name</label><input type="text" name="name" id="name" value="<? echo ( $$variable{'Album'}->name() ) ?>" /></li>
-						<li><label>Description</label><textarea name="description" id="description"><? echo ( $$variable{'Album'}->description() ) ?></textarea></li>
-<? if ( $session{'user_type'} eq 'A' ) ?>
+						<li><label>Name</label><input type="text" name="name" id="name" value="<? echo ( $$variable{Album}->name() ) ?>" /></li>
+						<li><label>Description</label><textarea name="description" id="description"><? echo ( $$variable{Album}->description() ) ?></textarea></li>
+<? if ( $session{user_type} eq 'A' ) ?>
 						<li><label>Company</label>
 							<select name="company_id" id="company_id" onchange="new Ajax.Updater('user_id', '/includes/_users.html', { parameters: { company_id: this.getValue() } } );">
 								<option value="">no one</option>
 								<? echo (
 	$$variable{company_id} = $param{company_id} ? $param{company_id} : 
-		( $$variable{Album}->id() ? $$variable{'Album'}->User()->company_id() : $session{company_id} );
+		( $$variable{Album}->id() ? $$variable{Album}->User()->company_id() : $session{company_id} );
  make_drop_down( openprint::Company->dropdown( ), $$variable{company_id} ); ) ?>
 							</select>
 							
@@ -39,21 +39,21 @@ make_drop_down( openprint::User->dropdown( company_id => $$variable{company_id},
 ) ?>
 							</select>
 						</li>
-<? endif ( $session{'user_type'} eq 'A' ) ?>
+<? endif ( $session{user_type} eq 'A' ) ?>
 						<?include(/includes/_privacy_widget.html)?>
 					</ul>
 				</div>
 			</fieldset>
-			<? if ( $$variable{'Album'}->id() ) ?>
+			<? if ( $$variable{Album}->id() ) ?>
 			<?include(_album_upload.html)?>
-			<? endif ( $$variable{'Album'}->id() ) ?>
+			<? endif ( $$variable{Album}->id() ) ?>
 			</fieldset>
 		</form>
 	<? if ( $$variable{Album}->id() ) ?>
 	<? echo ( include_logs( $$variable{Album} ); ) ?>
 	<? endif ( $$variable{Album}->id() ) ?>
-<? else ( $$variable{'Album'}->can_edit() ) ?>
+<? else ( $$variable{Album}->can_edit() ) ?>
 	You do not have rights to edit this album.
-<? endif ( $$variable{'Album'}->can_edit() ) ?>
+<? endif ( $$variable{Album}->can_edit() ) ?>
 	</div>
 </div>

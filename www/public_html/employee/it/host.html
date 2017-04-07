@@ -153,7 +153,7 @@ $$variable{Object} = $$variable{Host};
 <tr id="hi-%1$d">
 	<td class="mac">%2$s</td>
 	<td class="ip">%3$s</td>
-	<td class="object">monitor %4$s<br/>dhcp %5$s</td>
+	<td class="object">monitor %4$s<br/>dhcp %5$s<br/>%7$s</td>
 	<td class="comment" rowspan="2"><textarea name="comment-%1$s">%6$s</textarea></td>
 `, 
 	$$Interface{id},
@@ -162,6 +162,7 @@ $$variable{Object} = $$variable{Host};
 	checkboxes( 'monitor-'.$$Interface{id}, [ 1, '' ], $Interface->monitor() ),
 	checkboxes( 'dhcp-'.$$Interface{id}, [ 1, '' ], $Interface->dhcp() ),
 	$Interface->comment(),
+	( defined($$Interface{online}) ? ( $$Interface{online} ? 'online' : 'offline' ) : '' ),
 );
 	
 		if ( $openprint::RADIUS_Check::dbh ) {
