@@ -143,7 +143,8 @@ sub Cost {
 sub cost {
 	my $Cost = $_[0]->Cost();
 	if ( $Cost ) {
-		return openprint::Currency::convert( $$Cost{cost} );
+		openprint::Currency::convert( $Cost );
+		return $$Cost{cost};
 	}
 	return;
 } # end sub cost
@@ -154,8 +155,8 @@ sub value {
 	if ( ! exists $$self{value} ) {
 		
 		my $Cost = $_[0]->Cost();
-		openprint::Currency::convert( $Cost );
 		if ( $Cost ) {
+			openprint::Currency::convert( $Cost );
 $openprint::log->debug("cost for $$self{skid_id} $$Cost{units} $$Cost{cost}") if $debug;
 			if ( (!$$Cost{units}) or ($$Cost{units} eq '/100lbs' or $$Cost{units} eq '/cwt') ) {
 				$$self{value} = $$self{quantity} * $$Cost{cost} / 100;

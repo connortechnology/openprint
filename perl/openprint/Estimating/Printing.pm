@@ -60,14 +60,14 @@ use constant DEBUG_IMPOSITIONS => 0;
 	Film	=> { },
 	'Version Setup'	=> { units=> [ 'each', 'total' ],
 		},
-	'BlanketCut'	=> { },
-	'Washup'		=> { units=> [ 'each' ] },
-	'WebSetup'	=> { units => [ ] },
-	'PerfectingSetup'	=> { units => [ ] },
+	BlanketCut	=> { },
+	Washup		=> { units=> [ 'each' ] },
+	WebSetup	=> { units => [ ] },
+	PerfectingSetup	=> { units => [ ] },
 	'Work & TurnSetup'	=> { units => [ ] },
 	'Work & TumbleSetup'	=>	{ units=> [] },
 	'Sheet WorkSetup'		=>	{ units=> [] },
-	'PressRunChargeMinimum'	=>	{ units=> [] },
+	PressRunChargeMinimum	=>	{ units=> [] },
 	'1ColourImpression'		=>	{ units=> [ 'per impression', 'per hour' ] },
 	'2ColourImpression'		=>	{ units=> [ 'per impression', 'per hour' ] },
 	'3ColourImpression'		=>	{ units=> [ 'per impression', 'per hour' ] },
@@ -78,18 +78,18 @@ use constant DEBUG_IMPOSITIONS => 0;
 	'8ColourImpression'		=>	{ units=> [ 'per impression', 'per hour' ] },
 	'9ColourImpression'		=>	{ units=> [ 'per impression', 'per hour' ] },
 	'10ColourImpression'		=>	{ units=> [ 'per impression', 'per hour' ] },
-	'PressUnitMakeReady'		=>	{ units => [ 'stock calliper - per plate', 'per job', 'per form', 'total', 'per side'] },
-	'PressUnitMakeReadyWeb'		=>	{ units => [ 'stock calliper - per plate', 'per job', 'per form', 'total', 'per side'] },
-	'PressUnitMakeReadyPerfecting'		=>	{ units => [ 'stock calliper - per plate', 'per job', 'per form', 'total', 'per side'] },
+	PressUnitMakeReady		=>	{ units => [ 'stock calliper - per plate', 'per job', 'per form', 'total', 'per side'] },
+	PressUnitMakeReadyWeb		=>	{ units => [ 'stock calliper - per plate', 'per job', 'per form', 'total', 'per side'] },
+	PressUnitMakeReadyPerfecting		=>	{ units => [ 'stock calliper - per plate', 'per job', 'per form', 'total', 'per side'] },
 	'PressUnitMakeReadyWork & Turn'		=>	{ units => [ 'stock calliper - per plate', 'per job', 'per form', 'total', 'per side'] },
 	'PressUnitMakeReadyWork & Tumble'		=>	{ units => [ 'stock calliper - per plate', 'per job', 'per form', 'total', 'per side'] },
 	'PressUnitMakeReadySheet Work'		=>	{ units => [ 'stock calliper - per plate', 'per job', 'per form', 'total', 'per side'] },
-	'PlateMakeReady'					=>	{ units => [ 'per hour', 'per plate' ] },
+	PlateMakeReady					=>	{ units => [ 'per hour', 'per plate' ] },
 	# Re-enable when someone uses
-	#'PlateMakeReadyWeb'					=>	{ units => [ 'per hour', 'per plate' ] },
-	#'PlateMakeReadyWeb1Sided'					=>	{ units => [ 'per hour', 'per plate' ] },
-	#'PlateMakeReadyWeb2Sided'					=>	{ units => [ 'per hour', 'per plate' ] },
-	#'PlateMakeReadyPerfecting'					=>	{ units => [ 'per hour', 'per plate' ] },
+	#PlateMakeReadyWeb					=>	{ units => [ 'per hour', 'per plate' ] },
+	#PlateMakeReadyWeb1Sided					=>	{ units => [ 'per hour', 'per plate' ] },
+	#PlateMakeReadyWeb2Sided					=>	{ units => [ 'per hour', 'per plate' ] },
+	#PlateMakeReadyPerfecting					=>	{ units => [ 'per hour', 'per plate' ] },
 	#'PlateMakeReadyWork & Turn'					=>	{ units => [ 'per hour', 'per plate' ] },
 	#'PlateMakeReadyWork & Tumble'					=>	{ units => [ 'per hour', 'per plate' ] },
 	#'PlateMakeReadySheet Work'					=>	{ units => [ 'per hour', 'per plate' ] },
@@ -164,228 +164,228 @@ my @process_colours = ( 'Cyan','Magenta','Yellow','Black','Cyan Spot Colour','Ye
 # There are other values in teh actual specs hash, but htey are either transitory or should never be changed
 my %variables = (
 	alert=>['save','output'],
-	'ProjectIndex'=>[], 'ServiceIndex'=>[], 'ServiceType'=>[], 'btnFunction'=>[], 'callback'=>[],'SignatureIndex'=>[],
-	'Impositions'=>[], 'Additional Impositions1'=>[], 'Additional Impositions2'=>[], 'Additional Impositions3'=>[],
-	'hdnBreakdown1'=>['save','output'], 'hdnBreakdown2'=>['save','output'], 'hdnBreakdown3'=>['save','output'],
-	'txtSignatureType' => ['save'],
-	'txtServiceDescription'	=> ['save'],
-	'txtEmployeeComments'	=>	['save'],
-	'txtPrice1' => ['save','output'], 'txtPrice2' => ['save','output'], 'txtPrice3' => ['save','output'],
-	'Markup1' => ['save'], 'Markup2' => ['save'], 'Markup3' => ['save'],
-	'OverridePrice1' => ['save'], 'OverridePrice2' => ['save'], 'OverridePrice3' => ['save'],
-	'MPrice1' => ['save','output'], 'MPrice2' => ['save','output'], 'MPrice3' => ['save','output'],
+	ProjectIndex=>[], ServiceIndex=>[], ServiceType=>[], btnFunction=>[], callback=>[],SignatureIndex=>[],
+	Impositions=>[], 'Additional Impositions1'=>[], 'Additional Impositions2'=>[], 'Additional Impositions3'=>[],
+	hdnBreakdown1=>['save','output'], hdnBreakdown2=>['save','output'], hdnBreakdown3=>['save','output'],
+	txtSignatureType => ['save'],
+	txtServiceDescription	=> ['save'],
+	txtEmployeeComments	=>	['save'],
+	txtPrice1 => ['save','output'], txtPrice2 => ['save','output'], txtPrice3 => ['save','output'],
+	Markup1 => ['save'], Markup2 => ['save'], Markup3 => ['save'],
+	OverridePrice1 => ['save'], OverridePrice2 => ['save'], OverridePrice3 => ['save'],
+	MPrice1 => ['save','output'], MPrice2 => ['save','output'], MPrice3 => ['save','output'],
 	SideOneColours		=>	 [],
 	SideTwoColours		=>	 [],
-	'chkCyanSideOne' => ['save'],
-	'chkMagentaSideOne' => ['save'],
-	'chkYellowSideOne'	=> ['save'],
-	'chkBlackSideOne' 	=> ['save'],
-	'chkProcessColourSideOne' 		=>	['save'],
-	'CyanSpotSideOneCoverage'		=>	['save'],
-	'MagentaSpotSideOneCoverage'	=>	['save'],
-	'YellowSpotSideOneCoverage'		=>	['save'],
-	'BlackSpotSideOneCoverage'		=>	['save'],
+	chkCyanSideOne => ['save'],
+	chkMagentaSideOne => ['save'],
+	chkYellowSideOne	=> ['save'],
+	chkBlackSideOne 	=> ['save'],
+	chkProcessColourSideOne 		=>	['save'],
+	CyanSpotSideOneCoverage		=>	['save'],
+	MagentaSpotSideOneCoverage	=>	['save'],
+	YellowSpotSideOneCoverage		=>	['save'],
+	BlackSpotSideOneCoverage		=>	['save'],
 
-	'CyanSideOneCoverage'	=>	['save'],
-	'MagentaSideOneCoverage'	=>	['save'],
-	'YellowSideOneCoverage'	=>	['save'],
-	'BlackSideOneCoverage'	=>	['save'],
-	'chkColourCoating1SideOne' => ['save'], 'ColourCoatingType1SideOne' => ['save'], 'ColourCoatingColour1SideOne' => ['save'],'ColourCoatingCoverage1SideOne' => ['save'],
-	'ColourCoatingPrice1SideOne' => ['save'], 'ColourCoatingMileage1SideOne' => ['save'],
+	CyanSideOneCoverage	=>	['save'],
+	MagentaSideOneCoverage	=>	['save'],
+	YellowSideOneCoverage	=>	['save'],
+	BlackSideOneCoverage	=>	['save'],
+	chkColourCoating1SideOne => ['save'], ColourCoatingType1SideOne => ['save'], ColourCoatingColour1SideOne => ['save'],ColourCoatingCoverage1SideOne => ['save'],
+	ColourCoatingPrice1SideOne => ['save'], ColourCoatingMileage1SideOne => ['save'],
 
-	'chkColourCoating2SideOne' => ['save'], 'ColourCoatingType2SideOne' => ['save'], 'ColourCoatingColour2SideOne' => ['save'],'ColourCoatingCoverage2SideOne' => ['save'],
-	'ColourCoatingPrice2SideOne' => ['save'], 'ColourCoatingMileage2SideOne' => ['save'],
-	'chkColourCoating3SideOne' => ['save'], 'ColourCoatingType3SideOne' => ['save'], 'ColourCoatingColour3SideOne' => ['save'],'ColourCoatingCoverage3SideOne' => ['save'],
-	'ColourCoatingPrice3SideOne' => ['save'], 'ColourCoatingMileage3SideOne' => ['save'],
-	'chkColourCoating4SideOne' => ['save'], 'ColourCoatingType4SideOne' => ['save'], 'ColourCoatingColour4SideOne' => ['save'],'ColourCoatingCoverage4SideOne' => ['save'],
-	'ColourCoatingPrice4SideOne' => ['save'], 
-	'ColourCoatingMileage4SideOne' => ['save'],
-	'chkColourCoating5SideOne' => ['save'], 'ColourCoatingType5SideOne' => ['save'], 'ColourCoatingColour5SideOne' => ['save'],'ColourCoatingCoverage5SideOne' => ['save'],
-	'ColourCoatingPrice5SideOne' => ['save'], 
-	'ColourCoatingMileage5SideOne' => ['save'],
-	'chkColourCoating6SideOne' => ['save'], 'ColourCoatingType6SideOne' => ['save'], 'ColourCoatingColour6SideOne' => ['save'],'ColourCoatingCoverage6SideOne' => ['save'],
-	'ColourCoatingPrice6SideOne' => ['save'], 
-	'ColourCoatingMileage6SideOne' => ['save'],
-	'chkColourCoating7SideOne' => ['save'], 'ColourCoatingType7SideOne' => ['save'], 'ColourCoatingColour7SideOne' => ['save'],'ColourCoatingCoverage7SideOne' => ['save'],
-	'ColourCoatingPrice7SideOne' => ['save'], 
-	'ColourCoatingMileage7SideOne' => ['save'],
-	'chkColourCoating8SideOne' => ['save'], 'ColourCoatingType8SideOne' => ['save'], 'ColourCoatingColour8SideOne' => ['save'],'ColourCoatingCoverage8SideOne' => ['save'],
-	'ColourCoatingPrice8SideOne' => ['save'], 
-	'ColourCoatingMileage8SideOne' => ['save'],
-	'chkColourCoating9SideOne' => ['save'], 'ColourCoatingType9SideOne' => ['save'], 'ColourCoatingColour9SideOne' => ['save'],'ColourCoatingCoverage9SideOne' => ['save'],
-	'ColourCoatingPrice9SideOne' => ['save'], 
-	'ColourCoatingMileage9SideOne' => ['save'],
+	chkColourCoating2SideOne => ['save'], ColourCoatingType2SideOne => ['save'], ColourCoatingColour2SideOne => ['save'],ColourCoatingCoverage2SideOne => ['save'],
+	ColourCoatingPrice2SideOne => ['save'], ColourCoatingMileage2SideOne => ['save'],
+	chkColourCoating3SideOne => ['save'], ColourCoatingType3SideOne => ['save'], ColourCoatingColour3SideOne => ['save'],ColourCoatingCoverage3SideOne => ['save'],
+	ColourCoatingPrice3SideOne => ['save'], ColourCoatingMileage3SideOne => ['save'],
+	chkColourCoating4SideOne => ['save'], ColourCoatingType4SideOne => ['save'], ColourCoatingColour4SideOne => ['save'],ColourCoatingCoverage4SideOne => ['save'],
+	ColourCoatingPrice4SideOne => ['save'], 
+	ColourCoatingMileage4SideOne => ['save'],
+	chkColourCoating5SideOne => ['save'], ColourCoatingType5SideOne => ['save'], ColourCoatingColour5SideOne => ['save'],ColourCoatingCoverage5SideOne => ['save'],
+	ColourCoatingPrice5SideOne => ['save'], 
+	ColourCoatingMileage5SideOne => ['save'],
+	chkColourCoating6SideOne => ['save'], ColourCoatingType6SideOne => ['save'], ColourCoatingColour6SideOne => ['save'],ColourCoatingCoverage6SideOne => ['save'],
+	ColourCoatingPrice6SideOne => ['save'], 
+	ColourCoatingMileage6SideOne => ['save'],
+	chkColourCoating7SideOne => ['save'], ColourCoatingType7SideOne => ['save'], ColourCoatingColour7SideOne => ['save'],ColourCoatingCoverage7SideOne => ['save'],
+	ColourCoatingPrice7SideOne => ['save'], 
+	ColourCoatingMileage7SideOne => ['save'],
+	chkColourCoating8SideOne => ['save'], ColourCoatingType8SideOne => ['save'], ColourCoatingColour8SideOne => ['save'],ColourCoatingCoverage8SideOne => ['save'],
+	ColourCoatingPrice8SideOne => ['save'], 
+	ColourCoatingMileage8SideOne => ['save'],
+	chkColourCoating9SideOne => ['save'], ColourCoatingType9SideOne => ['save'], ColourCoatingColour9SideOne => ['save'],ColourCoatingCoverage9SideOne => ['save'],
+	ColourCoatingPrice9SideOne => ['save'], 
+	ColourCoatingMileage9SideOne => ['save'],
 
-	'CyanSpotSideTwoCoverage'	=>	['save'],
-	'MagentaSpotSideTwoCoverage'	=>	['save'],
-	'YellowSpotSideTwoCoverage'	=>	['save'],
-	'BlackSpotSideTwoCoverage'	=>	['save'],
+	CyanSpotSideTwoCoverage	=>	['save'],
+	MagentaSpotSideTwoCoverage	=>	['save'],
+	YellowSpotSideTwoCoverage	=>	['save'],
+	BlackSpotSideTwoCoverage	=>	['save'],
 
-	'CyanSideTwoCoverage'	=>	['save'],
-	'MagentaSideTwoCoverage'	=>	['save'],
-	'YellowSideTwoCoverage'	=>	['save'],
-	'BlackSideTwoCoverage'	=>	['save'],
+	CyanSideTwoCoverage	=>	['save'],
+	MagentaSideTwoCoverage	=>	['save'],
+	YellowSideTwoCoverage	=>	['save'],
+	BlackSideTwoCoverage	=>	['save'],
 
-	'chkCyanSideTwo' => ['save'],'chkMagentaSideTwo' => ['save'],'chkYellowSideTwo' => ['save'],'chkBlackSideTwo' => ['save'],
-	'chkProcessColourSideTwo' => ['save'],
-	'chkColourCoating1SideTwo' => ['save'], 'ColourCoatingType1SideTwo' => ['save'], 'ColourCoatingColour1SideTwo' => ['save'],'ColourCoatingCoverage1SideTwo' => ['save'],
-	'ColourCoatingPrice1SideTwo' => ['save'], 
-	'ColourCoatingMileage1Sidetwo' => ['save'],
-	'chkColourCoating2SideTwo' => ['save'], 'ColourCoatingType2SideTwo' => ['save'], 'ColourCoatingColour2SideTwo' => ['save'],'ColourCoatingCoverage2SideTwo' => ['save'],
-	'ColourCoatingPrice2SideTwo' => ['save'], 
-	'ColourCoatingMileage2Sidetwo' => ['save'],
-	'chkColourCoating3SideTwo' => ['save'], 'ColourCoatingType3SideTwo' => ['save'], 'ColourCoatingColour3SideTwo' => ['save'],'ColourCoatingCoverage3SideTwo' => ['save'],
-	'ColourCoatingPrice3SideTwo' => ['save'], 
-	'ColourCoatingMileage3Sidetwo' => ['save'],
-	'chkColourCoating4SideTwo' => ['save'], 'ColourCoatingType4SideTwo' => ['save'], 'ColourCoatingColour4SideTwo' => ['save'],'ColourCoatingCoverage4SideTwo' => ['save'],
-	'ColourCoatingPrice4SideTwo' => ['save'], 
-	'ColourCoatingMileage4Sidetwo' => ['save'],
-	'chkColourCoating5SideTwo' => ['save'], 'ColourCoatingType5SideTwo' => ['save'], 'ColourCoatingColour5SideTwo' => ['save'],'ColourCoatingCoverage5SideTwo' => ['save'],
-	'ColourCoatingPrice5SideTwo' => ['save'], 
-	'ColourCoatingMileage5Sidetwo' => ['save'],
-	'chkColourCoating6SideTwo' => ['save'], 'ColourCoatingType6SideTwo' => ['save'], 'ColourCoatingColour6SideTwo' => ['save'],'ColourCoatingCoverage6SideTwo' => ['save'],
-	'ColourCoatingPrice6SideTwo' => ['save'], 
-	'ColourCoatingMileage6Sidetwo' => ['save'],
-	'chkColourCoating7SideTwo' => ['save'], 'ColourCoatingType7SideTwo' => ['save'], 'ColourCoatingColour7SideTwo' => ['save'],'ColourCoatingCoverage7SideTwo' => ['save'],
-	'ColourCoatingPrice7SideTwo' => ['save'], 
-	'ColourCoatingMileage7Sidetwo' => ['save'],
-	'chkColourCoating8SideTwo' => ['save'], 'ColourCoatingType8SideTwo' => ['save'], 'ColourCoatingColour8SideTwo' => ['save'],'ColourCoatingCoverage8SideTwo' => ['save'],
-	'ColourCoatingPrice8SideTwo' => ['save'], 
-	'ColourCoatingMileage8Sidetwo' => ['save'],
-	'chkColourCoating9SideTwo' => ['save'], 'ColourCoatingType9SideTwo' => ['save'], 'ColourCoatingColour9SideTwo' => ['save'],'ColourCoatingCoverage9SideTwo' => ['save'],
-	'ColourCoatingPrice9SideTwo' => ['save'], 
-	'ColourCoatingMileage9Sidetwo' => ['save'],
-	'sides_the_same'	=> ['save'],
-	'ddmBleedSize1' => ['save','output'], 'ddmBleedSize2' => ['save','output'], 'ddmBleedSize3' => ['save','output'],
-	'chkOverrideBleedSize1'=>['save'], 'chkOverrideBleedSize2'=>['save'], 'chkOverrideBleedSize3'=>['save'],
-	'OverrideAddGrip'	=> ['save'],
+	chkCyanSideTwo => ['save'],chkMagentaSideTwo => ['save'],chkYellowSideTwo => ['save'],chkBlackSideTwo => ['save'],
+	chkProcessColourSideTwo => ['save'],
+	chkColourCoating1SideTwo => ['save'], ColourCoatingType1SideTwo => ['save'], ColourCoatingColour1SideTwo => ['save'],ColourCoatingCoverage1SideTwo => ['save'],
+	ColourCoatingPrice1SideTwo => ['save'], 
+	ColourCoatingMileage1Sidetwo => ['save'],
+	chkColourCoating2SideTwo => ['save'], ColourCoatingType2SideTwo => ['save'], ColourCoatingColour2SideTwo => ['save'],ColourCoatingCoverage2SideTwo => ['save'],
+	ColourCoatingPrice2SideTwo => ['save'], 
+	ColourCoatingMileage2Sidetwo => ['save'],
+	chkColourCoating3SideTwo => ['save'], ColourCoatingType3SideTwo => ['save'], ColourCoatingColour3SideTwo => ['save'],ColourCoatingCoverage3SideTwo => ['save'],
+	ColourCoatingPrice3SideTwo => ['save'], 
+	ColourCoatingMileage3Sidetwo => ['save'],
+	chkColourCoating4SideTwo => ['save'], ColourCoatingType4SideTwo => ['save'], ColourCoatingColour4SideTwo => ['save'],ColourCoatingCoverage4SideTwo => ['save'],
+	ColourCoatingPrice4SideTwo => ['save'], 
+	ColourCoatingMileage4Sidetwo => ['save'],
+	chkColourCoating5SideTwo => ['save'], ColourCoatingType5SideTwo => ['save'], ColourCoatingColour5SideTwo => ['save'],ColourCoatingCoverage5SideTwo => ['save'],
+	ColourCoatingPrice5SideTwo => ['save'], 
+	ColourCoatingMileage5Sidetwo => ['save'],
+	chkColourCoating6SideTwo => ['save'], ColourCoatingType6SideTwo => ['save'], ColourCoatingColour6SideTwo => ['save'],ColourCoatingCoverage6SideTwo => ['save'],
+	ColourCoatingPrice6SideTwo => ['save'], 
+	ColourCoatingMileage6Sidetwo => ['save'],
+	chkColourCoating7SideTwo => ['save'], ColourCoatingType7SideTwo => ['save'], ColourCoatingColour7SideTwo => ['save'],ColourCoatingCoverage7SideTwo => ['save'],
+	ColourCoatingPrice7SideTwo => ['save'], 
+	ColourCoatingMileage7Sidetwo => ['save'],
+	chkColourCoating8SideTwo => ['save'], ColourCoatingType8SideTwo => ['save'], ColourCoatingColour8SideTwo => ['save'],ColourCoatingCoverage8SideTwo => ['save'],
+	ColourCoatingPrice8SideTwo => ['save'], 
+	ColourCoatingMileage8Sidetwo => ['save'],
+	chkColourCoating9SideTwo => ['save'], ColourCoatingType9SideTwo => ['save'], ColourCoatingColour9SideTwo => ['save'],ColourCoatingCoverage9SideTwo => ['save'],
+	ColourCoatingPrice9SideTwo => ['save'], 
+	ColourCoatingMileage9Sidetwo => ['save'],
+	sides_the_same	=> ['save'],
+	ddmBleedSize1 => ['save','output'], ddmBleedSize2 => ['save','output'], ddmBleedSize3 => ['save','output'],
+	chkOverrideBleedSize1=>['save'], chkOverrideBleedSize2=>['save'], chkOverrideBleedSize3=>['save'],
+	OverrideAddGrip	=> ['save'],
 
-	'BleedLeft' => ['save'], 'BleedRight' => ['save'], 'BleedTop' => ['save'], 'BleedBottom' => ['save'],
-	'rdbColourBar' => ['save','output'], 'txtCropMarkSpace' => ['save'],
-	'ddmStockQuality'	=>	['save'],
-	'ddmStockGroup'	=>	['save'],
-	'ddmStockBrand' => ['save'], 'txtSpecificStockBrand' => ['save'], 
-	'ddmStockFinish' => ['save'], 'txtSpecificStockFinish' => ['save'], 
-	'ddmStockColour' => ['save'], 'txtSpecificStockColour' => ['save'],
-	'ddmStockWeight' => ['save'], 'txtSpecificStockWeight'=>['save'],
-	'txtSpecificStockCalliper' => ['save','output'], 'txtSpecificStockWidth' => ['save'], 'txtSpecificStockHeight' => ['save'], 'CustomSheetDoubleSided' => ['save'], 'CustomStockPrice' => ['save'],'txtCustomMWeight' => ['save'],'txtStockGSM' => ['save','output'],
-	'perfecting'=>['save'],
-	'basis_width'=>['save'],'basis_height'=>['save'],'basis_mweight'=>['save'],
-	'StockGrade'	=> ['save'],	
-	'txtUnspecifiedPageQuantity1' => ['output'], 'PageQuantity1' => ['save','output'],
-	'txtUnspecifiedPageQuantity2' => ['output'], 'PageQuantity2' => ['save','output'],
-	'txtUnspecifiedPageQuantity3' => ['output'], 'PageQuantity3' => ['save','output'],
-	'minimum_order'=>['save'],'sheets_per_package'=>['save'],'full_packages'=>['save'],
-	'chkOverridePageQuantity1' => ['save'], 'chkOverridePageQuantity2' => ['save'], 'chkOverridePageQuantity3' => ['save'],
-	'SpreadRows1' => ['save','output'],'SpreadCols1' => ['save','output'],
-	'SpreadRows2' => ['save','output'],'SpreadCols2' => ['save','output'],
-	'SpreadRows3' => ['save','output'],'SpreadCols3' => ['save','output'],
-	'ddmStockSheetSize' => ['save'],'ddmStockSheetSize1' => ['save','output'], 'ddmStockSheetSize2' => ['save','output'], 'ddmStockSheetSize3' => ['save','output'],
-	'ddmStockSize'	=>	['save'],
-	'ddmRunStyle'=>['save'],'ddmRunStyle1' => ['save','output'], 'ddmRunStyle2' => ['save','output'], 'ddmRunStyle3' => ['save','output'],
-	'ddmPress1' => ['save','output'], 'ddmPress2' => ['save','output'], 'ddmPress3' => ['save','output'], 
-	'PrintingType1' => ['save','output'], 'PrintingType2' => ['save','output'], 'PrintingType3' => ['save','output'], 
-	'PrintingTypes' => [],
+	BleedLeft => ['save'], BleedRight => ['save'], BleedTop => ['save'], BleedBottom => ['save'],
+	rdbColourBar => ['save','output'], txtCropMarkSpace => ['save'],
+	ddmStockQuality	=>	['save'],
+	ddmStockGroup	=>	['save'],
+	ddmStockBrand => ['save'], txtSpecificStockBrand => ['save'], 
+	ddmStockFinish => ['save'], txtSpecificStockFinish => ['save'], 
+	ddmStockColour => ['save'], txtSpecificStockColour => ['save'],
+	ddmStockWeight => ['save'], txtSpecificStockWeight=>['save'],
+	txtSpecificStockCalliper => ['save','output'], txtSpecificStockWidth => ['save'], txtSpecificStockHeight => ['save'], CustomSheetDoubleSided => ['save'], CustomStockPrice => ['save'],txtCustomMWeight => ['save'],txtStockGSM => ['save','output'],
+	perfecting=>['save'],
+	basis_width=>['save'],basis_height=>['save'],basis_mweight=>['save'],
+	StockGrade	=> ['save'],	
+	txtUnspecifiedPageQuantity1 => ['output'], PageQuantity1 => ['save','output'],
+	txtUnspecifiedPageQuantity2 => ['output'], PageQuantity2 => ['save','output'],
+	txtUnspecifiedPageQuantity3 => ['output'], PageQuantity3 => ['save','output'],
+	minimum_order=>['save'],sheets_per_package=>['save'],full_packages=>['save'],
+	chkOverridePageQuantity1 => ['save'], chkOverridePageQuantity2 => ['save'], chkOverridePageQuantity3 => ['save'],
+	SpreadRows1 => ['save','output'],SpreadCols1 => ['save','output'],
+	SpreadRows2 => ['save','output'],SpreadCols2 => ['save','output'],
+	SpreadRows3 => ['save','output'],SpreadCols3 => ['save','output'],
+	ddmStockSheetSize => ['save'],ddmStockSheetSize1 => ['save','output'], ddmStockSheetSize2 => ['save','output'], ddmStockSheetSize3 => ['save','output'],
+	ddmStockSize	=>	['save'],
+	ddmRunStyle=>['save'],ddmRunStyle1 => ['save','output'], ddmRunStyle2 => ['save','output'], ddmRunStyle3 => ['save','output'],
+	ddmPress1 => ['save','output'], ddmPress2 => ['save','output'], ddmPress3 => ['save','output'], 
+	PrintingType1 => ['save','output'], PrintingType2 => ['save','output'], PrintingType3 => ['save','output'], 
+	PrintingTypes => [],
 
-	'rdbPlateType1' => ['save','output'], 'rdbPlateType2' => ['save','output'], 'rdbPlateType3' => ['save','output'],
-	'PlateID1' => ['save','output'], 'PlateID2' => ['save','output'], 'PlateID3' => ['save','output'],
-	'txtPlateQuantity1' => ['save','output'], 'txtPlateQuantity2' => ['save','output'], 'txtPlateQuantity3' => ['save','output'], 
-	'BlankPlateQuantity1' => ['save','output'], 'BlankPlateQuantity2' => ['save','output'], 'BlankPlateQuantity3' => ['save','output'], 
-	'txtPlateChangeQuantity1' => ['save'], 'txtPlateChangeQuantity2' => ['save'], 'txtPlateChangeQuantity3' => ['save'], 
+	rdbPlateType1 => ['save','output'], rdbPlateType2 => ['save','output'], rdbPlateType3 => ['save','output'],
+	PlateID1 => ['save','output'], PlateID2 => ['save','output'], PlateID3 => ['save','output'],
+	txtPlateQuantity1 => ['save','output'], txtPlateQuantity2 => ['save','output'], txtPlateQuantity3 => ['save','output'], 
+	BlankPlateQuantity1 => ['save','output'], BlankPlateQuantity2 => ['save','output'], BlankPlateQuantity3 => ['save','output'], 
+	txtPlateChangeQuantity1 => ['save'], txtPlateChangeQuantity2 => ['save'], txtPlateChangeQuantity3 => ['save'], 
 #
-	'PerPlateCost1' => ['save','output'], 'PerPlateCost2' => ['save','output'], 'PerPlateCost3' => ['save','output'],
-	'PlateTotalCost1' => ['save','output'], 'PlateTotalCost2'	=> ['save','output'], 'PlateTotalCost3' => ['save','output'],
-	'PlateMakeReady1' =>	['save','output'], 'PlateMakeReady2' => ['save','output'], 'PlateMakeReady3' => ['save','output'],
-	'PerPlateMkRd1' =>	['save','output'], 'PerPlateMkRd2' => ['save','output'], 'PerPlateMkRd3' => ['save','output'],
-	'RunChargeTotal1' =>	['save','output'], 'RunChargeTotal2' => ['save','output'], 'RunChargeTotal3' => ['save','output'],
-	'OverSetup1' =>	['save','output'], 'OverSetup2' => ['save','output'], 'OverSetup3' => ['save','output'],
-	'OverrideSetup1' =>	['save'], 'OverrideSetup2' => ['save'], 'OverrideSetup3' => ['save'],
-	'OverRun1' =>	['save','output'], 'OverRun2' => ['save','output'], 'OverRun3' => ['save','output'],
-	'OverrideRun1' =>	['save'], 'OverrideRun2' => ['save'], 'OverrideRun3' => ['save'],
-	'OverTotal1' =>	['save','output'], 'OverTotal2' => ['save','output'], 'OverTotal3' => ['save','output'],
-	'PressWashPrice1' =>	['save','output'], 'PressWashPrice2' => ['save','output'], 'PressWashPrice3' => ['save','output'],
-	'PressWashCharge1' =>	['save','output'], 'PressWashCharge2' => ['save','output'], 'PressWashCharge3' => ['save','output'],
-	'PressWashes1' =>	['save','output'], 'PressWashes2' => ['save','output'], 'PressWashes3' => ['save','output'],
-	'ImpositionCharge1' =>	['save','output'], 'ImpositionCharge2' => ['save','output'], 'ImpositionCharge3' => ['save','output'],
-	'PageCharge1' =>	['save','output'], 'PageCharge2' => ['save','output'], 'PageCharge3' => ['save','output'],
-	'SteppingCharge1' =>	['save','output'], 'SteppingCharge2' => ['save','output'], 'SteppingCharge3' => ['save','output'],
-	'InkTotalCharge1' =>	['save','output'], 'InkTotalCharge2' => ['save','output'], 'InkTotalCharge3' => ['save','output'],
-	'StockSetupCharge1'	=> ['save','output'], 'StockSetupCharge2'	=> ['save','output'], 'StockSetupCharge3'	=> ['save','output'],
+	PerPlateCost1 => ['save','output'], PerPlateCost2 => ['save','output'], PerPlateCost3 => ['save','output'],
+	PlateTotalCost1 => ['save','output'], PlateTotalCost2	=> ['save','output'], PlateTotalCost3 => ['save','output'],
+	PlateMakeReady1 =>	['save','output'], PlateMakeReady2 => ['save','output'], PlateMakeReady3 => ['save','output'],
+	PerPlateMkRd1 =>	['save','output'], PerPlateMkRd2 => ['save','output'], PerPlateMkRd3 => ['save','output'],
+	RunChargeTotal1 =>	['save','output'], RunChargeTotal2 => ['save','output'], RunChargeTotal3 => ['save','output'],
+	OverSetup1 =>	['save','output'], OverSetup2 => ['save','output'], OverSetup3 => ['save','output'],
+	OverrideSetup1 =>	['save'], OverrideSetup2 => ['save'], OverrideSetup3 => ['save'],
+	OverRun1 =>	['save','output'], OverRun2 => ['save','output'], OverRun3 => ['save','output'],
+	OverrideRun1 =>	['save'], OverrideRun2 => ['save'], OverrideRun3 => ['save'],
+	OverTotal1 =>	['save','output'], OverTotal2 => ['save','output'], OverTotal3 => ['save','output'],
+	PressWashPrice1 =>	['save','output'], PressWashPrice2 => ['save','output'], PressWashPrice3 => ['save','output'],
+	PressWashCharge1 =>	['save','output'], PressWashCharge2 => ['save','output'], PressWashCharge3 => ['save','output'],
+	PressWashes1 =>	['save','output'], PressWashes2 => ['save','output'], PressWashes3 => ['save','output'],
+	ImpositionCharge1 =>	['save','output'], ImpositionCharge2 => ['save','output'], ImpositionCharge3 => ['save','output'],
+	PageCharge1 =>	['save','output'], PageCharge2 => ['save','output'], PageCharge3 => ['save','output'],
+	SteppingCharge1 =>	['save','output'], SteppingCharge2 => ['save','output'], SteppingCharge3 => ['save','output'],
+	InkTotalCharge1 =>	['save','output'], InkTotalCharge2 => ['save','output'], InkTotalCharge3 => ['save','output'],
+	StockSetupCharge1	=> ['save','output'], StockSetupCharge2	=> ['save','output'], StockSetupCharge3	=> ['save','output'],
 #
 
-	'txtPressSheetQty1' => ['save','output'], 'txtPressSheetQty2' => ['save','output'], 'txtPressSheetQty3' => ['save','output'],
-	'Roll2SheetMakeReady1' => ['save','output'], 'Roll2SheetMakeReady2'	=> ['save','output'], 'Roll2SheetMakeReady3'	=> ['save','output'],
-	'Roll2SheetRunCharge1' => ['save','output'], 'Roll2SheetRunCharge2'	=> ['save','output'], 'Roll2SheetRunCharge3'	=> ['save','output'],
-	'dutch1'=> ['save'], 'dutch2' => ['save'], 'dutch3' => ['save' ],
-	'chkOverrideImposition1' => ['save'], 'chkOverrideImposition2' => ['save'], 'chkOverrideImposition3' => ['save'],
-	'OverrideImpositionLayout1' => ['save'], 'OverrideImpositionLayout2' => ['save'], 'OverrideImpositionLayout3' => ['save'],
-	'txtImposition'=>['save'],'txtImposition1' => ['save','output'], 'txtImposition2' => ['save','output'], 'txtImposition3' => ['save','output'],
-	'txtImageWidth1' => ['save','output'], 'txtImageWidth2' => ['save','output'], 'txtImageWidth3' => ['save','output'],
-	'txtImageHeight1' => ['save','output'], 'txtImageHeight2' => ['save','output'], 'txtImageHeight3' => ['save','output'],
-	'txtLayoutWidth1' => ['save','output'], 'txtLayoutWidth2' => ['save','output'], 'txtLayoutWidth3' => ['save','output'],
-	'txtLayoutHeight1' => ['save','output'], 'txtLayoutHeight2' => ['save','output'], 'txtLayoutHeight3' => ['save','output'],
-	'hdnImpositionRows'=>['save'],'hdnImpositionRows1' => ['save','output'], 'hdnImpositionRows2' => ['save','output'], 'hdnImpositionRows3' => ['save','output'],
-	'hdnImpositionColumns'=>['save'],'hdnImpositionColumns1' => ['save','output'], 'hdnImpositionColumns2' => ['save','output'], 'hdnImpositionColumns3' => ['save','output'],
-	'hdnImpositionDutchRows'=>['save'],'hdnImpositionDutchRows1' => ['save','output'], 'hdnImpositionDutchRows2' => ['save','output'], 'hdnImpositionDutchRows3' => ['save','output'],
-	'hdnImpositionDutchColumns'=>['save'],'hdnImpositionDutchColumns1' => ['save','output'], 'hdnImpositionDutchColumns2' => ['save','output'], 'hdnImpositionDutchColumns3' => ['save','output'],
-	'dutch_orientation1'	=>	['save'],
-	'dutch_orientation2'	=>	['save'],
-	'dutch_orientation3'	=>	['save'],
-	'txtQuantity1' => ['save'], 'txtQuantity2' => ['save'], 'txtQuantity3' => ['save'], 
-	'hdnImpressionQuantity1' => ['save','output'], 'hdnImpressionQuantity2' => ['save','output'], 'hdnImpressionQuantity3' => ['save','output'], 
-	'rdbPressProof' => ['save'],
-	'PressApproval' => ['save'],
-	'txtMWeight1' => ['save','output'], 'txtMWeight2' => ['save','output'], 'txtMWeight3' => ['save','output'],
-	'paper_id1'	=>	['save','output'], 'paper_id2'	=>	['save','output'], 'paper_id3'	=> ['save','output'],
-	'hdnSuppliedStockWidth1' => ['save','output'], 'hdnSuppliedStockWidth2' => ['save','output'], 'hdnSuppliedStockWidth3' => ['save','output'],
-	'hdnSuppliedStockHeight1' => ['save','output'], 'hdnSuppliedStockHeight2' => ['save','output'], 'hdnSuppliedStockHeight3' => ['save','output'],
-	'StockWidth'=>['save'],'StockWidth1' => ['save','output'], 'StockWidth2' => ['save','output'], 'StockWidth3' => ['save','output'],
-	'StockHeight'=>['save'],'StockHeight1' => ['save','output'], 'StockHeight2' => ['save','output'], 'StockHeight3' => ['save','output'],
-	'OverrideStockWidth1' => ['save'], 'OverrideStockWidth2' => ['save'], 'OverrideStockWidth3' => ['save'],
-	'OverrideStockHeight1' => ['save'], 'OverrideStockHeight2' => ['save'], 'OverrideStockHeight3' => ['save'],
-	'RotateSheet1' => ['save'], 'RotateSheet3' => ['save'], 'RotateSheet2' => ['save'],
-	'CutOff1' => ['save','output'], 'CutOff2' => ['save','output'], 'CutOff3' => ['save','output'],
-	'OverrideCutOff1' => ['save'], 'OverrideCutOff2' => ['save'], 'OverrideCutOff3' => ['save'],
-	'StockType' => ['save','output'],'StockType1' => ['save','output'], 'StockType2' => ['save','output'], 'StockType3' => ['save','output'],
-	'OverrideStockType1'	=>	['save'], 'OverrideStockType2'	=>	['save'], 'OverrideStockType3'	=>	['save'],
-	'hdnImageOrientation1' => ['save','output'], 'hdnImageOrientation2' => ['save','output'], 'hdnImageOrientation3' => ['save','output'], 
-	'hdnNetSheetCount1' => ['save','output'], 'hdnNetSheetCount2' => ['save','output'], 'hdnNetSheetCount3' => ['save','output'],
-	'StockQuantity1' => ['save','output'], 'StockQuantity2' => ['save','output'], 'StockQuantity3' => ['save','output'],
-	'Runspeed1' => ['save','output'], 'Runspeed2' => ['save','output'], 'Runspeed3' => ['save','output'],
-	'RunTime1' => ['save','output'], 'RunTime2' => ['save','output'], 'RunTime3' => ['save','output'],
-	'txtWidth' => ['save'], 'txtHeight' => ['save'], 'txtFinalWidth' => ['save'], 'txtFinalHeight' => ['save'],
-	'chkOverrideDimensions'	=> ['save'],
-	'txtFinishedCalliper' => ['save','output'], 
-	'PageQuantity' => ['save'], # for Scratch Pads
+	txtPressSheetQty1 => ['save','output'], txtPressSheetQty2 => ['save','output'], txtPressSheetQty3 => ['save','output'],
+	Roll2SheetMakeReady1 => ['save','output'], Roll2SheetMakeReady2	=> ['save','output'], Roll2SheetMakeReady3	=> ['save','output'],
+	Roll2SheetRunCharge1 => ['save','output'], Roll2SheetRunCharge2	=> ['save','output'], Roll2SheetRunCharge3	=> ['save','output'],
+	dutch1=> ['save'], dutch2 => ['save'], dutch3 => ['save' ],
+	chkOverrideImposition1 => ['save'], chkOverrideImposition2 => ['save'], chkOverrideImposition3 => ['save'],
+	OverrideImpositionLayout1 => ['save'], OverrideImpositionLayout2 => ['save'], OverrideImpositionLayout3 => ['save'],
+	txtImposition=>['save'],txtImposition1 => ['save','output'], txtImposition2 => ['save','output'], txtImposition3 => ['save','output'],
+	txtImageWidth1 => ['save','output'], txtImageWidth2 => ['save','output'], txtImageWidth3 => ['save','output'],
+	txtImageHeight1 => ['save','output'], txtImageHeight2 => ['save','output'], txtImageHeight3 => ['save','output'],
+	txtLayoutWidth1 => ['save','output'], txtLayoutWidth2 => ['save','output'], txtLayoutWidth3 => ['save','output'],
+	txtLayoutHeight1 => ['save','output'], txtLayoutHeight2 => ['save','output'], txtLayoutHeight3 => ['save','output'],
+	hdnImpositionRows=>['save'],hdnImpositionRows1 => ['save','output'], hdnImpositionRows2 => ['save','output'], hdnImpositionRows3 => ['save','output'],
+	hdnImpositionColumns=>['save'],hdnImpositionColumns1 => ['save','output'], hdnImpositionColumns2 => ['save','output'], hdnImpositionColumns3 => ['save','output'],
+	hdnImpositionDutchRows=>['save'],hdnImpositionDutchRows1 => ['save','output'], hdnImpositionDutchRows2 => ['save','output'], hdnImpositionDutchRows3 => ['save','output'],
+	hdnImpositionDutchColumns=>['save'],hdnImpositionDutchColumns1 => ['save','output'], hdnImpositionDutchColumns2 => ['save','output'], hdnImpositionDutchColumns3 => ['save','output'],
+	dutch_orientation1	=>	['save'],
+	dutch_orientation2	=>	['save'],
+	dutch_orientation3	=>	['save'],
+	txtQuantity1 => ['save'], txtQuantity2 => ['save'], txtQuantity3 => ['save'], 
+	hdnImpressionQuantity1 => ['save','output'], hdnImpressionQuantity2 => ['save','output'], hdnImpressionQuantity3 => ['save','output'], 
+	rdbPressProof => ['save'],
+	PressApproval => ['save'],
+	txtMWeight1 => ['save','output'], txtMWeight2 => ['save','output'], txtMWeight3 => ['save','output'],
+	paper_id1	=>	['save','output'], paper_id2	=>	['save','output'], paper_id3	=> ['save','output'],
+	hdnSuppliedStockWidth1 => ['save','output'], hdnSuppliedStockWidth2 => ['save','output'], hdnSuppliedStockWidth3 => ['save','output'],
+	hdnSuppliedStockHeight1 => ['save','output'], hdnSuppliedStockHeight2 => ['save','output'], hdnSuppliedStockHeight3 => ['save','output'],
+	StockWidth=>['save'],StockWidth1 => ['save','output'], StockWidth2 => ['save','output'], StockWidth3 => ['save','output'],
+	StockHeight=>['save'],StockHeight1 => ['save','output'], StockHeight2 => ['save','output'], StockHeight3 => ['save','output'],
+	OverrideStockWidth1 => ['save'], OverrideStockWidth2 => ['save'], OverrideStockWidth3 => ['save'],
+	OverrideStockHeight1 => ['save'], OverrideStockHeight2 => ['save'], OverrideStockHeight3 => ['save'],
+	RotateSheet1 => ['save'], RotateSheet3 => ['save'], RotateSheet2 => ['save'],
+	CutOff1 => ['save','output'], CutOff2 => ['save','output'], CutOff3 => ['save','output'],
+	OverrideCutOff1 => ['save'], OverrideCutOff2 => ['save'], OverrideCutOff3 => ['save'],
+	StockType => ['save','output'],StockType1 => ['save','output'], StockType2 => ['save','output'], StockType3 => ['save','output'],
+	OverrideStockType1	=>	['save'], OverrideStockType2	=>	['save'], OverrideStockType3	=>	['save'],
+	hdnImageOrientation1 => ['save','output'], hdnImageOrientation2 => ['save','output'], hdnImageOrientation3 => ['save','output'], 
+	hdnNetSheetCount1 => ['save','output'], hdnNetSheetCount2 => ['save','output'], hdnNetSheetCount3 => ['save','output'],
+	StockQuantity1 => ['save','output'], StockQuantity2 => ['save','output'], StockQuantity3 => ['save','output'],
+	Runspeed1 => ['save','output'], Runspeed2 => ['save','output'], Runspeed3 => ['save','output'],
+	RunTime1 => ['save','output'], RunTime2 => ['save','output'], RunTime3 => ['save','output'],
+	txtWidth => ['save'], txtHeight => ['save'], txtFinalWidth => ['save'], txtFinalHeight => ['save'],
+	chkOverrideDimensions	=> ['save'],
+	txtFinishedCalliper => ['save','output'], 
+	PageQuantity => ['save'], # for Scratch Pads
 # Presentation Folders
-	'rdbPanels' => ['save'],'PocketSize' => ['save'],'chkPocketLeft' => ['save'],'chkPocketCenter' => ['save'],'chkPocketRight' => ['save'],
-	'rdbSuppliedStock' => ['save'], 'rdbSpecificStock' => ['save'],'rdbTemplateType' => ['save'],
-	'chkOverrideRunStyle1' => ['save'], 'chkOverrideRunStyle2' => ['save'], 'chkOverrideRunStyle3' => ['save'],
-	'chkOverrideSheetSize1' => ['save'], 'chkOverrideSheetSize2' => ['save'], 'chkOverrideSheetSize3' => ['save'],
-	'chkOverridePress1' => ['save'], 'chkOverridePress2' => ['save'], 'chkOverridePress3' => ['save'],
-	'OverridePrintingType1' => ['save'], 'OverridePrintingType2' => ['save'], 'OverridePrintingType3' => ['save'],
-	'Versions' => ['save'],'Versions1'=>['save','output'], 'Versions2'=>['save','output'], 'Versions3'=>['save','output'],
-	'OverrideVersions1'=>['save'], 'OverrideVersions2'=>['save'], 'OverrideVersions3'=>['save'],
-	'versions' => ['save'],
-	'ddmProjectSize' => ['save'],
-	'ScreenType' => ['save'],
-	'rdbGrainDirection1' => ['save','output'], 'rdbGrainDirection2' => ['save','output'], 'rdbGrainDirection3' => ['save','output'],
-	'MatchGrain1' => ['save'], 'MatchGrain2' => ['save'], 'MatchGrain3' => ['save'], 
-	'chkOverrideGrainDirection1' => ['save'], 'chkOverrideGrainDirection2' => ['save'], 'chkOverrideGrainDirection3' => ['save'],
-	'txtPressSheetComboItems'=>['save'],
-	'txtSpreadSize' => ['save'],'OverrideSpreadSize' => ['save'],
-	'Group' => ['save'], 'GroupPageQuantity' => ['save'], OverrideGroupPageQuantity => [ 'save' ],
-	'PaperMessage1'=>['output'], 'PaperMessage2'=>['output'], 'PaperMessage3'=>['output'],
+	rdbPanels => ['save'],PocketSize => ['save'],chkPocketLeft => ['save'],chkPocketCenter => ['save'],chkPocketRight => ['save'],
+	rdbSuppliedStock => ['save'], rdbSpecificStock => ['save'],rdbTemplateType => ['save'],
+	chkOverrideRunStyle1 => ['save'], chkOverrideRunStyle2 => ['save'], chkOverrideRunStyle3 => ['save'],
+	chkOverrideSheetSize1 => ['save'], chkOverrideSheetSize2 => ['save'], chkOverrideSheetSize3 => ['save'],
+	chkOverridePress1 => ['save'], chkOverridePress2 => ['save'], chkOverridePress3 => ['save'],
+	OverridePrintingType1 => ['save'], OverridePrintingType2 => ['save'], OverridePrintingType3 => ['save'],
+	Versions => ['save'],Versions1=>['save','output'], Versions2=>['save','output'], Versions3=>['save','output'],
+	OverrideVersions1=>['save'], OverrideVersions2=>['save'], OverrideVersions3=>['save'],
+	versions => ['save'],
+	ddmProjectSize => ['save'],
+	ScreenType => ['save'],
+	rdbGrainDirection1 => ['save','output'], rdbGrainDirection2 => ['save','output'], rdbGrainDirection3 => ['save','output'],
+	MatchGrain1 => ['save'], MatchGrain2 => ['save'], MatchGrain3 => ['save'], 
+	chkOverrideGrainDirection1 => ['save'], chkOverrideGrainDirection2 => ['save'], chkOverrideGrainDirection3 => ['save'],
+	txtPressSheetComboItems=>['save'],
+	txtSpreadSize => ['save'],OverrideSpreadSize => ['save'],
+	Group => ['save'], GroupPageQuantity => ['save'], OverrideGroupPageQuantity => [ 'save' ],
+	PaperMessage1=>['output'], PaperMessage2=>['output'], PaperMessage3=>['output'],
 
 # These two are for when the customer is supplying the pages. The first just says whether the pages are supplied, the second tells us whether they are supplying sheets or folded signatures.
-	'pages_supplied'=>['save'],
-	'supplied_format'=>['save'],
+	pages_supplied=>['save'],
+	supplied_format=>['save'],
 # Banners
-	'grommets' => ['save'], grommeting => ['save'],
-	'pockets'	=>	['save'],
-	'hemmed'	=>	['save'],
-	'EdgeLeft' => ['save'], 'EdgeRight' => ['save'], 'EdgeTop' => ['save'], 'EdgeBottom'=>['save'],
-	'HemWidth'	=>	['save'],
+	grommets => ['save'], grommeting => ['save'],
+	pockets	=>	['save'],
+	hemmed	=>	['save'],
+	EdgeLeft => ['save'], EdgeRight => ['save'], EdgeTop => ['save'], EdgeBottom=>['save'],
+	HemWidth	=>	['save'],
 );
 
 my @qty_override_keys = (
@@ -911,9 +911,9 @@ sub get_versions {
 	foreach my $version ( 1 .. $$specs{versions} ) {
 		push @versions, 
 			 {
-				 'index' 		=> $version,
-				 'description'	=> $$specs{"version-$version-description"},
-				 'quantity'		=> $$specs{"version-$version-quantity$qty_index"},
+				 index 		=> $version,
+				 description	=> $$specs{"version-$version-description"},
+				 quantity		=> $$specs{"version-$version-quantity$qty_index"},
 			 };
 	} # end foreach version
 	@versions = sort { $$a{quantity} <=> $$b{quantity} } @versions;
@@ -1035,8 +1035,8 @@ sub get_Stocks {
 				( $$specs{ddmStockColour} ? ( colour=>$$specs{ddmStockColour} ) : () ),
 				( $$specs{ddmStockWeight} ? ( weight=>$$specs{ddmStockWeight} ) : () ),
 				( $$specs{ddmStockQuality} ? ( quality=>$$specs{ddmStockQuality} ) : () ),
-				( exists $$specs{ddmStockWidth} ? ( 'width'=>$$specs{ddmStockWidth} ) : () ),
-				( exists $$specs{ddmStockHeight} ? ( 'height'=>$$specs{ddmStockHeight} ) : () ),
+				( exists $$specs{ddmStockWidth} ? ( width=>$$specs{ddmStockWidth} ) : () ),
+				( exists $$specs{ddmStockHeight} ? ( height=>$$specs{ddmStockHeight} ) : () ),
 				'project_type_id any'=>$Project->type_id(),
 				);
 
@@ -1572,12 +1572,12 @@ if ( DEBUG_IMPOSITIONS and $$specs{"chkOverrideRunStyle$qty_index"} ) {
 						}
 						$$project{'Cut Off'} = $cut_off;
 						my @temp_imps = openprint::imposition::get_imposition( $project, $do_work_turn, $do_perfecting, $$specs{Versions}, $P, $Press );
-if ( DEBUG_IMPOSITIONS ) {
-$log->error("Got " . @temp_imps . " for " . $P->to_string() );
-foreach my$i( @temp_imps ) {
-$i->display( 'Returned from get_imposition' );
-}
-}
+#if ( DEBUG_IMPOSITIONS ) {
+#$log->error("Got " . @temp_imps . " for " . $P->to_string() );
+#foreach my$i( @temp_imps ) {
+#$i->display( 'Returned from get_imposition' );
+#}
+#}
 						foreach my $i ( @temp_imps ) {
 							my $AP = $$i{Paper};
 							if ( $maximum_roll_width and ( $$AP{width} > $maximum_roll_width ) ) {
@@ -2498,7 +2498,6 @@ sub calc {
 	$$specs{SideOneColours} = \@side_one_colours;
 	$$specs{SideTwoColours} = \@side_two_colours;
 
-
 	if ( ($$ProjectType{name} eq 'PresentationFolders') 
 			or ( 
 				( $$specs{Group} and ( $$specs{Group} == 1 ) ) 
@@ -2733,7 +2732,7 @@ $log->debug("after sorting presses: " . ( sprintf('%.4f', tv_interval( [$master_
 		delete $$specs{PreviousPress};
 		delete $$specs{PreviousStockType};
 		delete $$specs{PreviousGrainDirection};
-		foreach my $index ( $Project->signatures({ Group=>$$specs{Group} }) ) {
+		foreach my $index ( $Project->signatures({ type=>$$specs{txtSignatureType} }) ) {
 			next if $index >= $service_index;
 			my $sig_specs = openprint::service::get_specs_ref( $Project, $index );
 			$$specs{PreviousPress} = $$sig_specs{'ddmPress'.$qty_index};
@@ -2880,13 +2879,13 @@ $log->warn("Have previous press $$specs{PreviousPress} for group $$specs{Group}"
 			#$openprint::dbh->disconnect();
 			#$log->debug('stacksize:'.(threads->get_stack_size()));
 			#threads->set_stack_size(64*4096);
-			$threads{$qty_index} = threads->create( { 'stack_size' => 4096*4096 }, sub { 
+			$threads{$qty_index} = threads->create( { stack_size => 4096*4096 }, sub { 
 					$openprint::dbh = sql::open_sql( $log, 
-						'database'	=> $openprint::r->dir_config('db_name'),
-						'driver'	=> $openprint::r->dir_config('db_driver'), 
-						'host'		=> $openprint::r->dir_config('db_host'),
-						'login'		=> $openprint::r->dir_config('db_user'),
-						'password'	=> $openprint::r->dir_config('db_password'),
+						database	=> $openprint::r->dir_config('db_name'),
+						driver	=> $openprint::r->dir_config('db_driver'), 
+						host		=> $openprint::r->dir_config('db_host'),
+						login		=> $openprint::r->dir_config('db_user'),
+						password	=> $openprint::r->dir_config('db_password'),
 						);
 					my $return = get_project_price( $Project, $service_index, $project, \%sig_specs, $qty, $qty_index, \@possible_presses, $printing_specs, \@versions, \%PlateCounts, \%PaperCounts, $$project{washed_colours}, \%previous_forms_cache, \@signatures, \%impositions, \@other_impositions, undef, 0 );
 					#$openprint::dbh->disconnect();
@@ -2894,11 +2893,11 @@ $log->warn("Have previous press $$specs{PreviousPress} for group $$specs{Group}"
 					} );
 if ( 0 ) {
 					$openprint::dbh = sql::open_sql( $log, 
-						'database'	=> $openprint::r->dir_config('db_name'),
-						'driver'	=> $openprint::r->dir_config('db_driver'), 
-						'host'		=> $openprint::r->dir_config('db_host'),
-						'login'		=> $openprint::r->dir_config('db_user'),
-						'password'	=> $openprint::r->dir_config('db_password'),
+						database	=> $openprint::r->dir_config('db_name'),
+						driver	=> $openprint::r->dir_config('db_driver'), 
+						host		=> $openprint::r->dir_config('db_host'),
+						login		=> $openprint::r->dir_config('db_user'),
+						password	=> $openprint::r->dir_config('db_password'),
 						);
 }
 		} else {
@@ -3205,9 +3204,9 @@ sub breakdown {
 
 	if ( $stock_qty ) {
 		$breakdown .= sprintf( 'Overs: Base:%s Initial Setups: %d*%d=%d, Additional Setups: %d*%d=%d Run: %.2f%% = %s FM:%s Additional Plate:%d * %d changes = %s Bindery: %d (FoldMakeReady: %d FoldRun: %d', @$stock_qty{'Net Sheet Count','Initial Setup Rate','Initial Setup Count','Initial Setup Overs','Additional Setup Rate','Additional Setup Count','Additional Setup Overs','Run Overs Rate', 'Run Overs','FM Overs','Additional Plate Overs Rate','Plate Changes','Additional Plate Overs', 'BinderyOvers', 'FoldingMakeReadyOvers','FoldingRunOvers'} );
-foreach ( 'Net Sheet Count','Initial Setup Rate','Initial Setup Count','Initial Setup Overs','Additional Setup Rate','Additional Setup Count','Additional Setup Overs','Run Overs Rate', 'Run Overs','FM Overs','Additional Plate Overs Rate','Plate Changes','Additional Plate Overs', 'BinderyOvers', 'FoldingMakeReadyOvers','FoldingRunOvers' ) {
-$log->debug("$_ $$stock_qty{$_}");
-}
+#foreach ( 'Net Sheet Count','Initial Setup Rate','Initial Setup Count','Initial Setup Overs','Additional Setup Rate','Additional Setup Count','Additional Setup Overs','Run Overs Rate', 'Run Overs','FM Overs','Additional Plate Overs Rate','Plate Changes','Additional Plate Overs', 'BinderyOvers', 'FoldingMakeReadyOvers','FoldingRunOvers' ) {
+#$log->debug("$_ $$stock_qty{$_}");
+#}
 		$breakdown .= ' Cutting: ' . $$stock_qty{CuttingOvers} if $$stock_qty{CuttingOvers};
 		$breakdown .= $$stock_qty{ScoringOvers} if $$stock_qty{ScoringOvers};
 		$breakdown .= ' DieCutting: ' . $$stock_qty{DieCuttingOvers} if $$stock_qty{DieCuttingOvers};
@@ -5937,13 +5936,13 @@ $log->warn("No folding equipment");
 			'Total Overs'				=>	$total_overs,
 			Weight					=>	$weight,
 			'FM Overs'					=>	$fm_overs,
-			'FoldingMakeReadyOvers'		=>	( $$folding_results{MakeReadyOvers} ? $$folding_results{MakeReadyOvers} : 0 ),
-			'FoldingRunOvers'			=>	( $$folding_results{RunOvers} ? $$folding_results{RunOvers} : 0 ),
-			'ScoringOvers'				=>	$scoring_results{Overs},
-			'DieCuttingOvers'			=>	$diecutting_results{Overs},
+			FoldingMakeReadyOvers		=>	( $$folding_results{MakeReadyOvers} ? $$folding_results{MakeReadyOvers} : 0 ),
+			FoldingRunOvers			=>	( $$folding_results{RunOvers} ? $$folding_results{RunOvers} : 0 ),
+			ScoringOvers				=>	$scoring_results{Overs},
+			DieCuttingOvers			=>	$diecutting_results{Overs},
 			UVOvers					=>	$uv_results{Overs},
-			'BinderyOvers'				=>	$bindery_overs,
-			'CuttingOvers'				=>	$price{'Cutting Overs'},
+			BinderyOvers				=>	$bindery_overs,
+			CuttingOvers				=>	$price{'Cutting Overs'},
 			'Minimum Overs'				=>	$min_overs,
 			'Plate Changes'				=>	$plate_changes,
 			);
@@ -6300,7 +6299,7 @@ sub select_presses {
 			$aqueous = 1;
 		} # end if
 	} # end if
-	#my $CoatingsCategory = openprint::ServiceCategory->find_one( 'name' => 'Coating' );
+	#my $CoatingsCategory = openprint::ServiceCategory->find_one( name => 'Coating' );
 	#my @Coatings = map { $_->name() } $CoatingsCategory->Services() if $CoatingsCategory;
 	#my @side_one_colours = sets::exclude( \@Coatings, $side_one_colours );
 	#my @side_two_colours = sets::exclude( \@Coatings, $side_one_colours );
@@ -6955,7 +6954,7 @@ sub runtime {
 		if ( ! $$specs{UsePress} ) {
 			$$specs{UsePress} = $$specs{'ddmPress'.$qty_index};
 		} # end if
-		$Equipment = openprint::Equipment->find_one( 'strid'=>$$specs{UsePress} );
+		$Equipment = openprint::Equipment->find_one( strid=>$$specs{UsePress} );
 	} # end if
 	if ( ! $Equipment ) {
 		$log->error("No equipment found for $$specs{UsePress}");
@@ -6998,7 +6997,7 @@ sub runspeed {
 			$log->error( "No equipmnet in sig for qty $qty_index" );
 			return;
 		} # end if
-		$Equipment = openprint::Equipment->find_one('strid'=>$equipment_name);
+		$Equipment = openprint::Equipment->find_one(strid=>$equipment_name);
 		if ( ! $Equipment ) {
 			$log->error( "Equipment $equipment_name not found in runspeed" );
 			return;
@@ -7569,7 +7568,7 @@ $log->debug("No stock quantity for form $$sig_specs{SignatureIndex}");
 		}
 		if ( ! $$project{stocksetupcharged} ) {
 			# Check to see if there even are any stock setup prices.	If not, don't both estimating them later
-			if ( ! openprint::PaperPrice->find('service'=>'Setup') ) {
+			if ( ! openprint::PaperPrice->find(service=>'Setup') ) {
 				$$project{stocksetupcharged} = 1;
 			} # end if
 		} # end if

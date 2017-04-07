@@ -1394,6 +1394,8 @@ sub load_from_signature {
 			$Paper = openprint::Paper->find_one( id=>$$specs{'paper_id'.$qty_index} );
 			if ( ! $Paper ) {
 				$openprint::log->warn("Loading by paper id but not found: " . $$specs{'paper_id'.$qty_index} );
+			} else {
+				$$Paper{Supplied} = $Paper->clone();
 			} # end if
 		}
 		if ( ! ( $$specs{ddmStockBrand} and $$specs{ddmStockFinish} and $$specs{ddmStockColour} and $$specs{ddmStockWeight} ) ) {

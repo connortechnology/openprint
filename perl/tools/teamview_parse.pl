@@ -64,7 +64,7 @@ if ( ! $dbh ) {
 $log->debug("Connected to db");
 
 
-my $filename = '.local/share/teamviewer12/logfiles/Connections.txt';
+my $filename = '/home/iconnor/.local/share/teamviewer12/logfiles/Connections.txt';
 if ( ! open( FH, '<'.$filename ) ) {
 	die "Can't open $filename: $!";
 }
@@ -102,64 +102,76 @@ foreach my $line (<FH>) {
       $log->warn("Unable to parse start/end time.");
       next;
     }
- if ( $$opts{starting} ) {
-    if ( $starttime < $$opts{starting} ) {
+    if ( $$opts{starting} ) {
+      if ( $starttime < $$opts{starting} ) {
         $log->debug("Next because  $starttime < $$opts{starting}");
-      next;
-    } else {
+        next;
+      } else {
         $log->debug("Not Next because  $starttime < $$opts{starting}");
-    
-    } 
-  }
-  
+      } 
+    }
 
-	my $Host_Info = openprint::Host_Info->find_one( name=>'Teamviewer ID', value=>$id );
-	if ( $Host_Info ) {
-		my $Host = $Host_Info->Host();
-    print "Found Host " . $Host->hostname() . "\n";
+    my $Host_Info = openprint::Host_Info->find_one( name=>'Teamviewer ID', value=>$id );
+    if ( $Host_Info ) {
+      my $Host = $Host_Info->Host();
+      print "Found Host " . $Host->hostname() . " belonging to " . $Host->Owner()->name()."\n";
 
 
-		my $start_DT = DateTime->from_epoch( epoch=>$starttime, time_zone=>$openprint::TZ );
-		my $end_DT = DateTime->from_epoch( epoch=>$endtime, time_zone=>$openprint::TZ );
+      my $start_DT = DateTime->from_epoch( epoch=>$starttime, time_zone=>$openprint::TZ );
+      my $end_DT = DateTime->from_epoch( epoch=>$endtime, time_zone=>$openprint::TZ );
 
-		my @Employees = openprint::User->find( 'email ilike' => "$user@%" );;
-		my $Employee = $Employees[0];
-			
-		my $parser = 'DateTime::Format::Pg';
-		if ( ! openprint::Timetrack->find( 
-					starting	=>	$parser->format_datetime( $start_DT ), 
-					ending		=>	$parser->format_datetime( $end_DT ),
-					company_id	=>	$Host->owner_id(),
-					user_id		=>	$$Employee{id},
-					) ) {
-      $log->info("No Timetrack found. Add?");
-      $_ = <STDIN>;
-      chomp;
-      if ( $_ eq 'Y' or $_ eq 'y' ) { 
-        my $Timetrack = new openprint::Timetrack();
-        $_ = $Timetrack->save({
-            starting			=>	$parser->format_datetime( $start_DT ), 
-            ending				=>	$parser->format_datetime( $end_DT ),
-            company_id		=>	$Host->owner_id(),
-            user_id				=>	$$Employee{id},
-            service_id			=>	$$Service{id},
-            time_associated		=>	1,
-            travel_associated	=>	0,
-            currency_id			=>	$Host->Owner()->currency_id(),	
-            description     =>  'Teamview connection to ' . $Host->hostname(),
-            
-        });
-  $log->error($_) if $_;
-      }
-		} # TImetrack not found
+      my @Employees = openprint::User->find( 'email ilike' => "$user@%" );;
+      my $Employee = $Employees[0];
 
-	} else {
-		$log->error("No host found for id $id");
-	}
+      my $parser = 'DateTime::Format::Pg';
+      if ( ! openprint::Timetrack->find( 
+            'starting <='	=>	$parser->format_datetime( $start_DT ), 
+            'ending <='	=>	$parser->format_datetime( $end_DT ),
+            company_id	=>	$Host->owner_id(),
+            user_id		=>	$$Employee{id},
+            ) ) {
+        $log->info("No Timetrack found. Add?");
+        $_ = <STDIN>;
+        chomp;
+        if ( $_ eq 'Y' or $_ eq 'y' or $_ eq '' ) { 
+          my $Timetrack = new openprint::Timetrack();
+          $_ = $Timetrack->save({
+              starting			=>	$parser->format_datetime( $start_DT ), 
+              ending				=>	$parser->format_datetime( $end_DT ),
+              company_id		=>	$Host->owner_id(),
+              user_id				=>	$$Employee{id},
+              service_id			=>	$$Service{id},
+              time_associated		=>	1,
+              travel_associated	=>	0,
+              currency_id			=>	$Host->Owner()->currency_id(),	
+              description     =>  'Teamview connection to ' . $Host->hostname(),
+
+              });
+          $log->error($_) if $_;
+        }
+      } # TImetrack not found
+
+    } else {
+      $log->error("No host found for id $id");
+    }
 } # end foreach line
 close(FH);
 
 $dbh->disconnect();
+exit(0);
+sub usage {
+  print <<EOH;
+
+usage: teamview_parse.pl [--help] 
+
+The purpose of this script is to parse teamviewer logs
+
+Command-line options:
+
+  --help    Displays this message.
+
+EOH
+} # end sub usage
 
 1;
 __END__

@@ -6,7 +6,7 @@ use openprint::Imposition;
 
 use constant DEBUG => 0;
 use constant DEBUG_DUTCH => 0;
-use constant DEBUG_CONVERT => 0;
+use constant DEBUG_CONVERT => 1;
 
 # The various way we can group spreads
 use vars qw( %blocks );
@@ -17,7 +17,7 @@ use vars qw( %blocks );
 		4	=>	[ [1,4], [4,1], [2,2] ],
 		5	=>	[ [1,5], [5,1] ],
 		6	=>	[ [2,3], [3,2], [1,6], [6,1] ],
-		7	=>	[ [7,1], ],
+		7	=>	[ [7,1], [1,7] ],
 		8	=>	[ [2,4], [4,2] ],
 		9	=>	[ [3,3] ],
 		10	=>	[ [5,2], [2,5], ],
@@ -298,8 +298,10 @@ $openprint::log->debug("Not Pretrimming on $$Press{strid}") if DEBUG;
 	$setup1->bleed_size( $bleed_size );
 	$setup1->spread_rows( 1 );
 	$setup1->spread_columns( 1 );
+
 	$setup1->page_rows( Math::Round::nearest( 1, $$specs{txtHeight}/$$specs{txtFinalHeight} ) );
 	$setup1->page_columns( Math::Round::nearest( 1, $$specs{txtWidth}/$$specs{txtFinalWidth}) );
+
 	$setup1->object_width( $image_width );
 	$setup1->object_height( $image_height );
 	$$setup1{page_width} = $$specs{txtFinalWidth};
@@ -328,8 +330,8 @@ $openprint::log->debug("Not Pretrimming on $$Press{strid}") if DEBUG;
 	$$setup2{spread_size} = $$specs{txtSpreadSize};
 	$$setup2{spread_rows} = 1;
 	$$setup2{spread_columns} = 1;
-	$$setup2{page_rows} = Math::Round::nearest( 1, $$specs{txtHeight}/$$specs{txtFinalHeight} );
-	$$setup2{page_columns} = Math::Round::nearest( 1, $$specs{txtWidth}/$$specs{txtFinalWidth});
+	$$setup2{page_columns} = Math::Round::nearest( 1, $$specs{txtHeight}/$$specs{txtFinalHeight} );
+	$$setup2{page_rows} = Math::Round::nearest( 1, $$specs{txtWidth}/$$specs{txtFinalWidth});
 	$$setup2{page_width} = $$specs{txtFinalWidth};
 	$$setup2{page_height} = $$specs{txtFinalHeight};
 	$setup2->object_width( $image_width );

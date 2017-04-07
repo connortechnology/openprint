@@ -414,7 +414,7 @@ $openprint::log->debug("($k) => $$specs{$k}");
 		$$self{spreads} = $$self{pages} / $$self{spread_size} if $$self{spread_size};
 		$$self{spread_rows} = $$specs{'SpreadRows'.$qty_index};
 		$$self{spread_columns} = $$specs{'SpreadCols'.$qty_index};
-		if ( $$self{spine} eq 'width' 		) {
+		if ( $$self{spine} eq 'width' ) {
 			if ( $$self{image_orientation} == Vertical ) {
 				$$self{page_rows} = $$self{spread_rows} * ($$self{spread_size}/2);
 				$$self{page_columns} = $$self{spread_columns};
@@ -474,7 +474,7 @@ sub spread_rows {
 
 	if ( @_ > 1 ) {
 		$$self{spread_rows} = $_[1];
-		if ( $$self{spine} eq 'width'     ) {
+		if ( $$self{spine} eq 'width' ) {
       if ( $$self{image_orientation} == Vertical ) {
         $$self{page_rows} = $$self{spread_rows} * ($$self{spread_size}/2);
         $$self{page_columns} = $$self{spread_columns};
@@ -728,7 +728,7 @@ sub to_string {
 	if ( ! $_[0]{to_string} ) {
 		if ( $_[0]{Paper} ) {
 			my $Paper = $_[0]{Paper};
-			$_[0]{to_string} = sprintf('%s %d@ %dx%d+%dx%d=%dout %s %dx%d=%dpages %.2fx%.2f on %sx%s%s->%sx%s %s', ( $_[0]{Press} ? $_[0]{Press}{strid}: 'unknown equipment' ),
+			$_[0]{to_string} = sprintf('%s %d@ %dx%d+%dx%d=%dout %s %dx%d=%dpages %sx%s on %sx%s%s->%sx%s %s', ( $_[0]{Press} ? $_[0]{Press}{strid}: 'unknown equipment' ),
 					@$self{'quantity','columns','rows','dutch_columns','dutch_rows','imposition','runstyle'},$_[0]->page_columns(), $_[0]->page_rows(),@$self{'pages','page_width','page_height'},
 					@$Paper{'start_width','start_height', 'type','width','height'},
 					$_[0]->image_orientation_text() );

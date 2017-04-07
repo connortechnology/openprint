@@ -11,20 +11,20 @@ $debug = 0;
 $table = 'logs';
 $serial = 'logs_id_seq';
 %fields = (
-	'id'	=>	'id',
-	'user_id'		=>	'user_id',
-	'company_id'	=>	'company_id',
-	'date_time'		=>	'date_time',	
-	'action_id'	=>	'action_id',
-	'action'			=>	undef,
-	'note'			=>	'note',
-	'host_id'		=>	'host_id',
-	'ip_address'	=>	undef,
-	'url'			=>	'url',
-	'object_type_id'		=>	'object_type_id',
-	'object_type'	=>	undef,
-	'object_id'		=>	'object_id',
-	'Object'		=>	undef,
+	id	=>	'id',
+	user_id		=>	'user_id',
+	company_id	=>	'company_id',
+	date_time		=>	'date_time',	
+	action_id	=>	'action_id',
+	action			=>	undef,
+	note			=>	'note',
+	host_id		=>	'host_id',
+	ip_address	=>	undef,
+	url			=>	'url',
+	object_type_id		=>	'object_type_id',
+	object_type	=>	undef,
+	object_id		=>	'object_id',
+	Object		=>	undef,
 );
 %find_fields = (
 	action		=>	'(SELECT name FROM log_actions WHERE log_actions.id = logs.action_id)',
@@ -32,13 +32,13 @@ $serial = 'logs_id_seq';
 	ip_address	=>	'(SELECT ip FROM Host_Interfaces where host_interfaces.host_id=host_id)',
 );
 %defaults = (
-	'date_time'	=>	"'NOW()'",
-	'user_id'	=>	q`$openprint::session{user_id}`,
-	'company_id'	=>	q`$openprint::session{company_id}`,
-	'url'           =>  q`$ENV{SERVER_NAME} . $ENV{REQUEST_URI}`,
-	'host_id'		=>	q`$self->ip_address( $ENV{REMOTE_ADDR} );return $$self{host_id};`,
-	'object_type_id'		=>	q`undef`,
-	'object_id'		=>	q`undef`,
+	date_time	=>	"'NOW()'",
+	user_id	=>	q`$openprint::session{user_id}`,
+	company_id	=>	q`$openprint::session{company_id}`,
+	url           =>  q`$ENV{SERVER_NAME} . $ENV{REQUEST_URI}`,
+	host_id		=>	q`$self->ip_address( $ENV{REMOTE_ADDR} );return $$self{host_id};`,
+	object_type_id		=>	q`undef`,
+	object_id		=>	q`undef`,
 );
 
 sub User {
@@ -60,7 +60,7 @@ sub hostname {
 	my $Host = $self->Host();
 
 	if ( defined $new ) {
-		$Host->save({'hostname'=>$new});
+		$Host->save({hostname=>$new});
 	} # end if
 	return $Host->hostname();
 } # end sub hostname
@@ -108,10 +108,10 @@ sub Host {
 
 sub action {
 	if ( @_ > 1 ) {
-		my $Action = openprint::Log_Action->find_one( 'name'=>$_[1] );
+		my $Action = openprint::Log_Action->find_one( name=>$_[1] );
 		if ( $_[1] and ! $Action ) {
 			$Action = new openprint::Log_Action();
-			$Action->save({'name'=>$_[1], 'description'=>$_[1]});
+			$Action->save({name=>$_[1], description=>$_[1]});
 		} # end if
 		$_[0]{Action} = $Action;
 		$_[0]{action_id} = $Action->id();

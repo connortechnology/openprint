@@ -1032,6 +1032,13 @@ if ( ! sets::isin( 'tbl_service_specifications', \@tables ) ) {
 }
 if ( ! sets::isin( 'project_log', \@tables ) ) {
 	$dbh->do( misc::load_file( $log, '../openprint/sql/Project_Log.sql' ) ) or die;
+} else {
+	my $data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='project_log'", 'column_name');
+	if ( ! exists $$data{host_id} ) {
+		$log->debug("Adding host_id to project_log");
+		$dbh->do('ALTER TABLE project_log add host_id INTEGER');
+		$dbh->do('ALTER TABLE project_log ADD FOREIGN KEY (host_id) REFERENCES Hosts (id)');
+	}
 }
 if ( ! sets::isin( 'barcode_log', \@tables ) ) {
 	$dbh->do( misc::load_file( $log, '../openprint/sql/Barcode_Log.sql' ) ) or die;

@@ -117,7 +117,7 @@ sub upload {
 			$error .= $Photo->save({ asset_id=>$$Asset{id}, album_id=>$_[0]->id() });   
 			$error .= new openprint::Log()->save({'action'=>'Upload Photo', 'Object'=>$Photo});
 		} else {
-			$error .= 'Photo already exists in album.';
+			#$error .= 'Photo already exists in album.';
 		} # end if
 	} else {
 		$error .= "Failed to upload photo: $Asset";
