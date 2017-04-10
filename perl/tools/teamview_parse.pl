@@ -64,7 +64,7 @@ if ( ! $dbh ) {
 $log->debug("Connected to db");
 
 
-my $filename = '.local/share/teamviewer12/logfiles/Connections.txt';
+my $filename = '/home/iconnor/.local/share/teamviewer12/logfiles/Connections.txt';
 if ( ! open( FH, '<'.$filename ) ) {
 	die "Can't open $filename: $!";
 }
@@ -125,15 +125,15 @@ foreach my $line (<FH>) {
 
       my $parser = 'DateTime::Format::Pg';
       if ( ! openprint::Timetrack->find( 
-            starting	=>	$parser->format_datetime( $start_DT ), 
-            ending		=>	$parser->format_datetime( $end_DT ),
+            'starting <='	=>	$parser->format_datetime( $start_DT ), 
+            'ending <='	=>	$parser->format_datetime( $end_DT ),
             company_id	=>	$Host->owner_id(),
             user_id		=>	$$Employee{id},
             ) ) {
         $log->info("No Timetrack found. Add?");
         $_ = <STDIN>;
         chomp;
-        if ( $_ eq 'Y' or $_ eq 'y' ) { 
+        if ( $_ eq 'Y' or $_ eq 'y' or $_ eq '' ) { 
           my $Timetrack = new openprint::Timetrack();
           $_ = $Timetrack->save({
               starting			=>	$parser->format_datetime( $start_DT ), 
