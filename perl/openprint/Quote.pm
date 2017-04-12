@@ -356,7 +356,7 @@ $log->debug("SEnding quote to myself");
 			$results .= $Email->send(
 					FROM    => sprintf('"%s %s" <%s>', @$self{'by_firstname','by_lastname','by_email'}),
 					#BCC		=>	'iconnor@connortechnology.com',
-					TO      => sprintf('"%s %s" <%s>', @$self{'by_firstname','by_lastname','by_email'}),
+					TO      => ( @_ ? $_[0] : sprintf('"%s %s" <%s>', @$self{'by_firstname','by_lastname','by_email'}) ),
 					SUBJECT => sprintf('Quote %d for %s : ', $$self{id}, $self->for_companyname(), $self->reference() ),
 					);
 			$Email->attachments(undef);
@@ -396,7 +396,7 @@ $log->debug("SEnding quote to myself");
 			$results .= $Email->send(
 					FROM    => sprintf('"%s %s" <%s>', @$self{'by_firstname','by_lastname','by_email'}),
 					#BCC		=>	'iconnor@connortechnology.com',
-					TO      => sprintf('"%s %s" <%s>', @$self{'for_firstname','for_lastname','for_email'}),
+					TO      => ( @_ ? $_[0] : sprintf('"%s %s" <%s>', @$self{'for_firstname','for_lastname','for_email'}) ),
 					SUBJECT => "Quote $$self{id} : " . $self->reference(),
 					);
 			$Email->attachments(undef);
@@ -416,14 +416,14 @@ $log->debug("SEnding quote to myself");
 		$results .= $Email->send(
 				FROM    => sprintf('"%s %s" <%s>', @$self{'by_firstname','by_lastname','by_email'}),
 				#TO    => sprintf('"%s %s" <%s>', @$self{'by_firstname','by_lastname','by_email'}),
-				TO      => sprintf('"%s %s" <%s>', @$self{'for_firstname','for_lastname','for_email'}),
+				TO      => ( @_ ? $_[0] : sprintf('"%s %s" <%s>', @$self{'for_firstname','for_lastname','for_email'}) ),
 					#nnBCC		=>	'iconnor@connortechnology.com',
 				SUBJECT => "$openprint::config{SiteTitle}:Quote $$self{id}",
 				);
 		$Email->attachments(undef);
 	} # end if reseller or admin
 
-	if ( $openprint::config{SendQuoteToAdmin} eq 'Y' ) {
+	if ( $openprint::config{SendQuoteToAdmin} eq 'Y' and ! @_ ) {
 $log->debug("Sending quote to admin");
 # Send one to the admin
 		if ( $email_template ) {
