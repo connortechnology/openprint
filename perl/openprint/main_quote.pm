@@ -165,6 +165,16 @@ sub history_details {
 			$variable{error} .= "Can't resend quote.<br/>";
 		} # end if
 		$variable{ExternalRedirect} = '/main/quote/history_details.html?quote_id='.$Quote->id();
+		return;
+	} elsif ( $param{btnFunction} eq 'SendToMe' ) {
+		if ( $Quote->can_view( ) ) {
+			my $results = $Quote->send( $openprint::User );
+			$variable{information} .= 'Quote Sent To Me. Results: '. $results;
+		} else {
+			$variable{error} .= "Can't send quote. You are not allowed to view it.<br/>";
+		} # end if
+		$variable{ExternalRedirect} = '/main/quote/history_details.html?quote_id='.$Quote->id();
+		return;
 	} # end if
 	openprint::quote::get_finished_quote_contents( $log, $dbh, \%variable, $$Quote{id} ) if $param{quote_id};
 } # end sub history_details
