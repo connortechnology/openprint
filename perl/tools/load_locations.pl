@@ -109,7 +109,7 @@ foreach my $state ( keys %provinces::provinces ) {
 } # end foreach state
 } # end if
 
-foreach my $Company ( openprint::Company->find( 'last_order_id is null'=>0 ) ) {
+foreach my $Company ( openprint::Company->find( 'last_order_id is null'=>0, 'address1 !='=>'' ) ) {
 	$log->debug("Doing location for $$Company{name} $$Company{address1} $$Company{address2}");
 	# Assume Country and State already exist. Start with city
 	my $Country = openprint::Location->find_one( type=>'country', short=>$$Company{country} );
