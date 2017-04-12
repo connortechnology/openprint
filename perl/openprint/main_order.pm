@@ -289,12 +289,12 @@ sub confirmation {
 
 			# Commit Project Information
 			foreach my $OP ( $Order->Ordered_Projects() ) {
+				my $Project = $OP->Project();
 				$variable{error} .= $OP->save({
-					reference	=> $OP->Project()->reference(),
-					price		=> undef,
+					reference	=> $Project->reference(),
+					price	  	=> undef,
 					quantity	=> undef,
 				});
-				my $Project = $OP->Project();
 				$variable{error} .= $Project->check_for_order( $OP );
 			} # end foreach Project
 			$variable{error} = check_for_errors( $Order ) if ! $variable{error};
@@ -306,7 +306,7 @@ sub confirmation {
 
 			my $sub_total = $Order->subtotal(undef);
 			foreach my $Tax ( $Order->Taxes() ) {
-				$Tax->save({'amount'=>undef});
+				$Tax->save({ amount => undef });
 			} # end foreach Tax
 			my $total = $Order->total(undef);
 
