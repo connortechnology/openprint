@@ -593,7 +593,7 @@ sub where_link {
 } # end sub where_link
 
 sub link_to {
-	return join('', '<a href="/location/view.html?location_id=', $_[0]{id}, '">', $_[0]{name}, '</a>' );
+	return join('', '<a href="/location/view.html?location_id=', $_[0]{id}, '">', ( @_ > 1 ? $_[1] : $_[0]{name} ), '</a>' );
 } # end sub link_to
 
 # Takes a hash, probably %param, and does all the saving neccessary, returns a Location object.
