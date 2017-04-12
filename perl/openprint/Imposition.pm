@@ -861,5 +861,14 @@ sub spine_direction {
 	return $_[0]{spine_direction};
 }
 
+sub to_svg {
+	my ( $self ) = @_;
+
+	my $svg = '<svg>';
+	$svg .= '<rect width="'.$$self{sheet_width}.'" height="'.$$self{sheet_height}.'" />';
+	$svg .= '</svg>';
+	return $svg;
+}
+
 1;
 __END__
