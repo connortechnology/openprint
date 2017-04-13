@@ -18,7 +18,7 @@ package openprint::Estimating::Stitching;
 use strict;
 #use warnings;
 
-use constant DEBUG => 0;
+use constant DEBUG => 1;
 
 require openprint::Equipment;
 require openprint::service;
@@ -1094,7 +1094,7 @@ sub summary {
 				foreach my $sig_id ( $Project->signatures() ) {
 					my $sig_specs = openprint::service::get_specs_ref( $Project, $sig_id );
 					my $Press = openprint::Equipment->find_one( strid=>$$sig_specs{"ddmPress$qty_index"} );
-					if ( $Press->specification('Stitching Capable') eq 'When Printing' ) {
+					if ( $Press and ( $Press->specification('Stitching Capable') eq 'When Printing' ) ) {
 						$show_offline = 1;
 						last;
 					}
