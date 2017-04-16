@@ -542,7 +542,7 @@ sub display {
 
 	$$variable{Equipment} = [ openprint::Equipment->find(order=>'lower(strname)', useinestimating=>1,Specifications=>{'Die Cutting Capable'=>'Y'} ) ];
 
-	if ( $$variable{rdbTemplateTypePresentationFolderStandard1Pocket} ne '' or $$variable{rdbTemplateTypePresentationFolderStandard2Pocket} ne '' ) {
+	if ( $$variable{rdbTemplateTypePresentationFolderStandard1Pocket} or $$variable{rdbTemplateTypePresentationFolderStandard2Pocket} ) {
 		$$variable{ShowPresentationFolderDieCutting} = 'Y';
 	} # end if
 
