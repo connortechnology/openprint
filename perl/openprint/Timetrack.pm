@@ -18,6 +18,8 @@ $serial = 'timetracks_id_seq';
 	id				=> 'id',
 	starting		=>	'starting',
 	ending			=>	'ending',
+	starting_dt		=>	undef,
+	ending_dt		=>	undef,
 	duration		=>	'duration',
 	duration_override	=>	'duration_override',
 	company_id		=>	'company_id',
@@ -64,6 +66,29 @@ $serial = 'timetracks_id_seq';
 	billable			=>	q`1`,
 	duration_override	=>	0,
 );
+
+my $parser = 'DateTime::Format::Pg';
+
+sub starting_dt {
+	if ( @_ > 1 ) {
+		$_[0]{starting_dt} = $_[1];
+		$_[0]{starting} = $parser->format_datetime( $_[0]{starting_dt} ) if $_[0]{starting_dt};
+	}
+	if ( ! $_[0]{starting_dt} ) {
+		$_[0]{starting_dt} = $parser->parse_datetime( $_[0]{starting} );
+	}
+	return $_[0]{starting_dt};
+}
+sub ending_dt {
+	if ( @_ > 1 ) {
+		$_[0]{ending_dt} = $_[1];
+		$_[0]{ending} = $parser->format_datetime( $_[0]{ending_dt} ) if $_[0]{ending_dt};
+	}
+	if ( ! $_[0]{ending_dt} ) {
+		$_[0]{ending_dt} = $parser->parse_datetime( $_[0]{ending} );
+	}
+	return $_[0]{ending_dt};
+}
 
 sub duration {
 	if ( @_ > 1 ) {
