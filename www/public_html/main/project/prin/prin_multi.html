@@ -91,11 +91,11 @@
 			<fieldset><legend>Book Specifications</legend>
 				<p><label>Dimensions</label>
             <select id="ddmProjectSize" name="ddmProjectSize" size="1" onchange="ddmProjectSize_onChange(this.form);">
-<? if ( $$variable{'ddmProjectSize'} ) ?>
+<? if ( $$variable{ddmProjectSize} ) ?>
                 <option value="<?ddmProjectSize?>"><?ddmProjectSize?></option>
-<? else ( $$variable{'ddmProjectSize'} ) ?>
+<? else ( $$variable{ddmProjectSize} ) ?>
                 <option value="custom">custom</option>
-<? endif ( $$variable{'ddmProjectSize'} ) ?>
+<? endif ( $$variable{ddmProjectSize} ) ?>
             </select>
 				</p>
 				<p><label>Finished</label>
@@ -159,7 +159,7 @@
 			</div><!--ProjectSpecifications-->
 			<div id="SignatureGroups">
 			<? echo (
-				my @Groups = sql::execute( undef, undef, 'SELECT DISTINCT strvalue FROM tbl_Service_Specifications WHERE lngProjectIndex=? AND strname=? ORDER BY strvalue', $$variable{'ProjectIndex'}, 'Group' );
+				my @Groups = sql::execute( undef, undef, 'SELECT DISTINCT strvalue FROM tbl_Service_Specifications WHERE lngProjectIndex=? AND strname=? ORDER BY strvalue', $$variable{ProjectIndex}, 'Group' );
 				my $ServiceType = openprint::ServiceType->find_one( name=>'Signature');
 
 				if ( ! sets::isin( 1, \@Groups ) ) {
@@ -174,8 +174,8 @@
 							$$variable{$Default->name().'1'} = $Default->value();
 						} # end while
 					} # end if
-					$$variable{'txtServiceDescription1'} = 'Cover Pages';
-					$$variable{'txtSignatureType1'} = 'Cover Pages';
+					$$variable{txtServiceDescription1} = 'Cover Pages';
+					$$variable{txtSignatureType1} = 'Cover Pages';
 				} # end if
 
 				if ( ! sets::isin( 2, \@Groups ) ) {
@@ -190,13 +190,13 @@
 							$$variable{$Default->name().'2'} = $Default->value();
 						} # end while
 					} # end if
-					$$variable{'txtServiceDescription2'} = 'Interior Pages';
-					$$variable{'txtSignatureType2'} = 'Interior Pages';
+					$$variable{txtServiceDescription2} = 'Interior Pages';
+					$$variable{txtSignatureType2} = 'Interior Pages';
 				} # end if
 				my $html = '';
 				my $h = slurp_content( '/main/project/prin/_signature.html' );
 				foreach my $Group ( @Groups ) {
-					$$variable{'Group'} = $$variable{'Signature'} = $Group;
+					$$variable{Group} = $$variable{Signature} = $Group;
 					$html .= variable_substitution( \$h, $variable );
 				} # end foreach
 				return $html;

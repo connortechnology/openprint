@@ -60,14 +60,14 @@
 						<? echo ( 
 							my $html = $$variable{Location}->where_link();
 							if ( $session{user_id} ) {
-								my $MyLocation = new openprint::User($session{user_id})->Location();
-								if ( ! ( $MyLocation->latitude() and $MyLocation->longitude() ) ) {
+								my $MyLocation = $openprint::User->Location();
+								if ( $MyLocation and $MyLocation->id() and ! ( $MyLocation->latitude() and $MyLocation->longitude() ) ) {
 									$MyLocation->get_latitude_and_longitude();
-								} # en dif
+								} # end if
 								if ( $MyLocation and $MyLocation->latitude() and $MyLocation->longitude() and $$variable{Location}->latitude() and $$variable{Location}->longitude() ) {
 									my $distance = openprint::Location::distance( $$variable{Location}->latitude(), $$variable{Location}->longitude(), $MyLocation->latitude(), $MyLocation->longitude(), 'K' );
 									if ( $distance ) {
-									$html .= '<br/>'.int($distance).'km from you.';
+										$html .= '<br/>'.int($distance).'km from you.';
 									} # end if
 								} # end if
 							} # end if

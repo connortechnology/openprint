@@ -565,13 +565,13 @@ sub Location {
 		} # end if
 		if ( ! $Location and $Profile->city() ) {
 			my $City = new openprint::Location( $Profile->city() );
-			$Location = openprint::Location->find_one( 'type'=>'city', 'name'=>$City->name() );
+			$Location = openprint::Location->find_one( type=>'city', name=>$City->name() );
+			if ( ! $Location ) {
+				$Location = openprint::Location::google( join('+', $Profile->postalcode(), $Profile->city() ) );
+			} # end if
 		} # end if
 		if ( ! $Location ) {
-			$Location = openprint::Location::google( join('+', $Profile->postalcode(), $Profile->city() ) );
-		} # end if
-		if ( ! $Location ) {
-			$log->error("Still no location");
+			$log->debug("no location for User $_[0]{email}");
 			return new openprint::Location();
 		} # endif
 		$_[0]{Location} = $Location;

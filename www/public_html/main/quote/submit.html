@@ -11,6 +11,7 @@ Please review the quote below to ensure accuracy.  When ready, click "Submit Quo
 			<? echo ( join("\n",
 					button( 'Back', { href=>'/main/quote/information.html?quote_id='.$$variable{Quote}->id(), text=>'Back' } ),
 					button( 'SubmitQuote', { onclick=>"f1.btnFunction.value='Submit Quote';f1.submit();", href=>'', text=>'Submit Quote' } ),
+					button( 'SendToMe', { onclick=>"f1.action='/main/quote/submit.html';f1.btnFunction.value='SendToMe';f1.submit();", text=>'Send To Me' } ),
 					); ) ?>
 		</p>
 		<div class="Header">
@@ -58,6 +59,7 @@ Please review the quote below to ensure accuracy.  When ready, click "Submit Quo
 		<? echo ( join("\n",
 					button( 'BackBottom', { href=>'/main/quote/information.html?quote_id='.$$variable{Quote}->id(), text=>'Back' } ),
 					button( 'SubmitQuoteBottom', { onclick=>"f1.btnFunction.value='Submit Quote';f1.submit();", text=>'Submit Quote' } ),
+					button( 'SendToMe', { onclick=>"f1.action='/main/quote/submit.html';f1.btnFunction.value='SendToMe';f1.submit();", text=>'Send To Me' } ),
 					); ) ?>
 	</p>
 	<input type="hidden" name="btnFunction"/>

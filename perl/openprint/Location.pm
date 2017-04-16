@@ -350,11 +350,11 @@ sub google {
 } # end sub google
 
 sub get_latitude_and_longitude {
-require Geo::Coder::Googlev3;
+	require Geo::Coder::Googlev3;
 	my $coder = Geo::Coder::Googlev3->new();
-my $string = join(',',$_[0]->name(),$_[0]->address(), $_[0]->postalcode(), map{$_->name()}$_[0]->Parents()) if $_[0]->name();
-$string =~ s/ /+/g;
-$openprint::log->debug('Get: ' . $string );
+	my $string = join(',',$_[0]->name(),$_[0]->address(), $_[0]->postalcode(), map{$_->name()}$_[0]->Parents()) if $_[0]->address();
+	$string =~ s/ /+/g;
+	$openprint::log->debug('Get: ' . $string );
 	return 0 if ! $string;
 	my $location = $coder->geocode( location => $string );
 	if ( ! $location ) {
@@ -496,6 +496,7 @@ sub Photos {
 sub Album {
 	return new openprint::Photo_Album( $_[0]{album_id} );
 } # end sub Album
+
 sub can_edit {
 	if ( ! $_[0]{id} ) {
 		return 0;
@@ -506,6 +507,12 @@ sub can_edit {
 	if ( $openprint::session{user_id} == $_[0]{created_by} or $openprint::session{user_type} eq 'A' ) {
 		return 1;
 	} # end if
+	if ( $_[0]{company_id} ) {
+		my $Company = $_[0]->Company();
+		if ( $Company->can_edit() ) {
+			return 1;
+		}
+	}
 	return 0;
 } # end sub can_edit
 
@@ -593,7 +600,7 @@ sub where_link {
 } # end sub where_link
 
 sub link_to {
-	return join('', '<a href="/location/view.html?location_id=', $_[0]{id}, '">', $_[0]{name}, '</a>' );
+	return join('', '<a href="/location/view.html?location_id=', $_[0]{id}, '">', ( @_ > 1 ? $_[1] : $_[0]{name} ), '</a>' );
 } # end sub link_to
 
 # Takes a hash, probably %param, and does all the saving neccessary, returns a Location object.

@@ -28,20 +28,20 @@ use constant DEBUG => 1;
 use vars qw{ @signature_variables };
 
 my %variables = (
-	'ddmProjectSize'=>['save','output'],
-	'txtFinalWidth'=>['save'],'txtFinalHeight'=>['save'], 
-	'txtWidth'=>['save','output'],'txtHeight'=>['save','output'], 
-	'txtTotalPageQuantity'=>['save'], 
-	'rdbCover'=>['save','output'],
-	'txtGateFoldedSpreadQuantity'=>['save','output'],
-	'txtInsertQuantity'=>['save'],
-	'TippingQuantity'=>['save'],
-	'BlowingQuantity'=>['save'],
-	'ReplyCardQuantity'=>['save'],
-	'PrintingType'=>['save'],'rdbTemplateType'=>['save'],
-	'help'=>['output'],'alert'=>['output','save'],
-	'ProjectIndex'=>[], 'ServiceIndex'=>[], 'ServiceType'=>[], 'NewBook'=>[],
-	'remaining_pages'=>['output'],'next_group_id'=>['output'],'groups'=>['output','save'],
+	ddmProjectSize=>['save','output'],
+	txtFinalWidth=>['save'],txtFinalHeight=>['save'], 
+	txtWidth=>['save','output'],txtHeight=>['save','output'], 
+	txtTotalPageQuantity=>['save'], 
+	rdbCover=>['save','output'],
+	txtGateFoldedSpreadQuantity=>['save','output'],
+	txtInsertQuantity=>['save'],
+	TippingQuantity=>['save'],
+	BlowingQuantity=>['save'],
+	ReplyCardQuantity=>['save'],
+	PrintingType=>['save'],rdbTemplateType=>['save'],
+	help=>['output'],alert=>['output','save'],
+	ProjectIndex=>[], ServiceIndex=>[], ServiceType=>[], NewBook=>[],
+	remaining_pages=>['output'],next_group_id=>['output'],groups=>['output','save'],
 	spine	=>	 ['save'],
 
 	);
@@ -211,12 +211,12 @@ sub calc {
 # calc shouldn't really alter the project.
 					$Project->add_signature( undef, undef, {
 							Group=>$group_id,
-							( $group_id == 1 ? ( 'txtSignatureType'=>'Cover Pages', 'txtServiceDescription'=>'Cover' ) : () ),
-							( $group_id == 2 ? ( 'txtSignatureType'=>'Interior Pages', 'txtServiceDescription'=>'Interior Pages' ) : () ),
-							( $group_id == 3 ? ( 'txtSignatureType'=>'Gate Folded Pages', 'txtServiceDescription'=>'Gate Folded Pages' ) : () ),
+							( $group_id == 1 ? ( txtSignatureType=>'Cover Pages', txtServiceDescription=>'Cover' ) : () ),
+							( $group_id == 2 ? ( txtSignatureType=>'Interior Pages', txtServiceDescription=>'Interior Pages' ) : () ),
+							( $group_id == 3 ? ( txtSignatureType=>'Gate Folded Pages', txtServiceDescription=>'Gate Folded Pages' ) : () ),
 							} );
 				} # end if
-#foreach my $sig_id ( $Project->signatures({'Group'=>$group_id}) ) {
+#foreach my $sig_id ( $Project->signatures({Group=>$group_id}) ) {
 #my $sig_specs = openprint::service::get_specs_ref( $Project, $sig_id );
 #$override_pages{$group_id} = $$sig_specs{GroupPageQuantity} if $$sig_specs{OverrideGroupPageQuantity} eq 'Y';
 #last if $override_pages{$group_id};
@@ -365,10 +365,10 @@ $openprint::log->debug("********************************************************
 
 	my $printing_specs = openprint::service::get_specs_ref( $Project, $$services{''}[0] );
 
-	my @signatures = sort $Project->signatures({'type'=>'Interior Pages'});
-	push @signatures, sort $Project->signatures({'type'=>'Cover Pages'});
-	push @signatures, sort $Project->signatures({'type'=>'Gate Folded Pages'});
-	push @signatures, sort $Project->signatures({'type'=>'Backing Pages'});
+	my @signatures = sort $Project->signatures({type=>'Interior Pages'});
+	push @signatures, sort $Project->signatures({type=>'Cover Pages'});
+	push @signatures, sort $Project->signatures({type=>'Gate Folded Pages'});
+	push @signatures, sort $Project->signatures({type=>'Backing Pages'});
 	@signatures = $Project->signatures() if ! @signatures;
 	$openprint::log->debug( "Signatures: @signatures");
 	return 'uncalculated' if ! @signatures;
@@ -437,21 +437,21 @@ $openprint::log->debug("Removing impo cuz wrong group") if DEBUG;
 				if ( ! @sigs ) {
 
 					push @sigs, $Project->copy_signature( $sig_specs, {
-							'chkOverrideImposition1' => '',
-							'chkOverrideImposition2' => '',
-							'chkOverrideImposition3' => '',
-							'chkOverridePageQuantity1' => '',
-							'chkOverridePageQuantity2' => '',
-							'chkOverridePageQuantity3' => '',
-							'chkOverridePress1' => '',
-							'chkOverridePress2' => '',
-							'chkOverridePress3' => '',
-							'chkOverrideRunStyle1' => '',
-							'chkOverrideRunStyle2' => '',
-							'chkOverrideRunStyle3' => '',
-							'chkOverrideSheetSize1' => '',
-							'chkOverrideSheetSize2' => '',
-							'chkOverrideSheetSize3' => '',
+							chkOverrideImposition1 => '',
+							chkOverrideImposition2 => '',
+							chkOverrideImposition3 => '',
+							chkOverridePageQuantity1 => '',
+							chkOverridePageQuantity2 => '',
+							chkOverridePageQuantity3 => '',
+							chkOverridePress1 => '',
+							chkOverridePress2 => '',
+							chkOverridePress3 => '',
+							chkOverrideRunStyle1 => '',
+							chkOverrideRunStyle2 => '',
+							chkOverrideRunStyle3 => '',
+							chkOverrideSheetSize1 => '',
+							chkOverrideSheetSize2 => '',
+							chkOverrideSheetSize3 => '',
 					},'calculated' );
 
 				} # endif
@@ -577,40 +577,43 @@ $openprint::log->debug("Starting Multipage::save");
 
 	my $specs = $Service->specs();
 	if ( $$specs{rdbCover} eq 'Different' ) {
-		# now add a cover spread if we need one.
-		# First, see if we have one.
-        if ( ! $Project->signatures({ type=>'Cover Pages'}) ) {
-            $Project->add_signature( undef, undef, {
-                        txtSignatureType		=> 'Cover Pages',
-                        txtServiceDescription	=> 'Cover',
-                        Group					=>  1,
-                        PrintingType			=> $$param{PrintingType},
-                        txtSpreadSize			=>  4,
-                        } );
-        } # end if
-    } else {
+# now add a cover spread if we need one.
+# First, see if we have one.
+		if ( ! $Project->signatures({ type=>'Cover Pages'}) ) {
+			$Project->add_signature( undef, undef, {
+					txtSignatureType		=> 'Cover Pages',
+					txtServiceDescription	=> 'Cover',
+					Group					=>  1,
+					PrintingType			=> $$param{PrintingType},
+					txtSpreadSize			=>  4,
+					} );
+		} # end if
+	} else {
 # Don't need a cover, so get rid of it
-        foreach ( $Project->signatures({'type'=>'Cover Pages'}) ) {
-            openprint::print_project::delete_service( $Project, $_ );
-        } # end foreach
-        foreach ( $Project->signatures({'Group'=>1}) ) {
-            openprint::print_project::delete_service( $Project, $_ );
-        } # end foreach
-    } # end if Self or Different Cover
+		foreach ( $Project->signatures({type=>'Cover Pages'}) ) {
+			openprint::print_project::delete_service( $Project, $_ );
+		} # end foreach
+		foreach ( $Project->signatures({Group=>1}) ) {
+			openprint::print_project::delete_service( $Project, $_ );
+		} # end foreach
+	} # end if Self or Different Cover
 	if ( ! $Project->signatures({type=>'Interior Pages'}) ) {
-            $Project->add_signature( undef, undef, {
-                        txtSignatureType		=> 'Interior Pages',
-                        txtServiceDescription	=> 'Interior Pages',
-                        Group					=>  2,
-                        PrintingType			=> $$param{PrintingType},
-                        txtSpreadSize			=>  4,
-                        } );
+		$Project->add_signature( undef, undef, {
+				txtSignatureType		=> 'Interior Pages',
+				txtServiceDescription	=> 'Interior Pages',
+				Group					=>  2,
+				PrintingType			=> $$param{PrintingType},
+				txtSpreadSize			=>  4,
+				} );
 	}
 
 	foreach my $ssid ( $Project->signatures() ) {
 		my $sig_specs = openprint::service::get_specs_ref( $Project, $ssid );
 		my $group_id = $$sig_specs{Group};
 		foreach my $v ( @signature_variables ) {
+
+			# Special case, should never change the type of cover or interior pages.
+			next if ( $v eq 'txtSignatureType' ) and ( $group_id == 1 or $group_id == 2 );
 			if ( $$specs{$v.$group_id} ne $$sig_specs{$v} ) {
 $openprint::log->debug("Saving $v") if DEBUG;
 				openprint::service::insert_service_spec( $openprint::log, $openprint::dbh, $Project->id(), $ssid, $v, $$specs{$v.$group_id} );
