@@ -39,6 +39,7 @@ $serial = 'products_id_seq';
 );
 
 %transforms = (
+	id			=>	[ 's/\D//g', '<2147483647' ],
     name		=> [ 's/^\s+//', 's/\s+$//', 's/\s\s+/ /g' ],
     description => [ 's/^\s+//', 's/\s+$//', 's/\s\s+/ /g' ],
 );

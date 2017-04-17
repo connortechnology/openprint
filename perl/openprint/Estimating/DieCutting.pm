@@ -490,7 +490,7 @@ sub signature_calc {
 	} # end if Overrides
 
 	foreach my $Equipment ( @equipment ) {
-		if ( (defined $$specs{"txtHoleClearingHoles-$form"} ) and ( $$specs{"txtHoleClearingHoles-$form"} > 0 ) and ( $Equipment->specification('HoleClearing Capable') ne 'Y') ) {
+		if ( $$specs{"txtHoleClearingHoles-$form"} and ( $$specs{"txtHoleClearingHoles-$form"} > 0 ) and ( $Equipment->specification('HoleClearing Capable') ne 'Y') ) {
 			$results{breakdown} .= 'Doesnt do hole clearing.<br/>';
 			next;
 		} # end if
@@ -542,7 +542,7 @@ sub display {
 
 	$$variable{Equipment} = [ openprint::Equipment->find(order=>'lower(strname)', useinestimating=>1,Specifications=>{'Die Cutting Capable'=>'Y'} ) ];
 
-	if ( $$variable{rdbTemplateTypePresentationFolderStandard1Pocket} ne '' or $$variable{rdbTemplateTypePresentationFolderStandard2Pocket} ne '' ) {
+	if ( $$variable{rdbTemplateTypePresentationFolderStandard1Pocket} or $$variable{rdbTemplateTypePresentationFolderStandard2Pocket} ) {
 		$$variable{ShowPresentationFolderDieCutting} = 'Y';
 	} # end if
 

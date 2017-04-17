@@ -58,7 +58,7 @@
 	</div>
 	<table class="List">
 		<tr> 
-      <th class="timetrack_id"><input type="checkbox" onclick="select_all($('f1'),'timetrack_id',this.checked);"</th>
+			<th class="timetrack_id"><input type="checkbox" onclick="select_all($('f1'),'timetrack_id',this.checked);"</th>
 			<th class="EmployeeName">Employee</th>
 			<th class="Company">Company</th>
 			<th class="DateTime">Start</th>
@@ -78,6 +78,7 @@
 			foreach my $T ( @{$$variable{Timetracks}} ) {
 				$html .= sprintf(q`
 <tr title="%2$s"%1$s>
+	<td class="timetrack_id"><input type="checkbox" name="timetrack_id" value="%3$d"/></td>
 	<td class="EmployeeName"><a href="/timetrack/edit.html?timetrack_id=%3$d">%4$s</a></td>
 	<td class="Company"><a href="/timetrack/edit.html?timetrack_id=%3$d">%5$s</a></td>
 	<td class="DateTime">%6$s</td>
@@ -122,4 +123,10 @@ openprint::Currency::format( $T->value() ),
 	</table>
 	<span class="Currency">All prices listed in <? hecho ( new openprint::Currency( $session{Currency_id} )->name(); ) ?></span>
 	<br class="spacer"/>
+<p class="buttons">
+<? echo ( join("\n",
+			button( 'merge', { onclick=>q`new Ajax.Updater( 'TimetrackList','_history.html?func=merge', { parameters: { timetrack_id: get_value( $('f1').elements['timetrack_id'] ) } } );`, text=>'Merge Checked' } ),
+			button( 'delete', { onclick=>q`new Ajax.Updater( 'TimetrackList','_history.html?func=delete', { parameters: { timetrack_id: get_value( $('f1').elements['timetrack_id'] ) } } );`, text=>'Delete Checked' } ),
+); ) ?>
+</p>
 <? endif ( @{$$variable{Timetracks}} == 0 ) ?>

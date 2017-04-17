@@ -80,6 +80,43 @@ sub history {
 sub _history {
 	if ( ! $param{func} ) {
 		ssi::save_params( '/timetrack/history.html', ( 'starting_start_year','starting_start_month','starting_start_day','starting_end_year','starting_end_month','starting_end_day','invoiced','paid','user_id','company_id', 'service_id', 'billable','travel_associated','contains', 'keywords' ) );
+	} else {
+		if ( $param{func} eq 'merge' ) {
+			my $start = undef;
+			my $end = undef;
+			my $desc = '';
+			my $NewTimetrack;
+			foreach my $Timetrack ( openprint::Timetrack->find(id=>ref $param{timetrack_id} eq 'ARRAY' ? $param{timetrack_id} : [ split(',', $param{timetrack_id}) ] ) ) {
+				next if ! $Timetrack->can_edit();
+				if ( ! $NewTimetrack ) {
+					$NewTimetrack = $Timetrack->copy();
+				} else {
+					if ( $NewTimetrack->company_id() != $Timetrack->company_id() ) {
+						$variable{error} .= "Timetracks must be from same company.";
+						return;
+					}
+					if ( $NewTimetrack->user_id() != $Timetrack->user_id() ) {
+						$variable{error} .= "Timetracks must be from same user.";
+						return;
+					}
+				}
+				if ( (!$start) or $Timetrack->starting_dt() < $start ) {
+					$start = $Timetrack->starting_dt();
+				}
+				if ( (!$end) or $Timetrack->ending_dt() > $end ) {
+					$end = $Timetrack->ending_dt();
+				}
+				$desc .= $Timetrack->starting_dt() . ' to ' . $Timetrack->ending_dt() . ': ' . $Timetrack->description() . '<br/>';
+			}
+			if ( $NewTimetrack ) {
+				$variable{error} .= $NewTimetrack->save({ starting_dt=>$start, ending_dt=>$end, description=>$desc });
+			}
+		} elsif ( $param{func} eq 'delete' ) {
+			foreach my $Timetrack ( openprint::Timetrack->find(id=>ref $param{timetrack_id} eq 'ARRAY' ? $param{timetrack_id} : [ split(',', $param{timetrack_id}) ] ) ) {
+				next if ! $Timetrack->can_edit();
+				$variable{error} .= $Timetrack->delete();
+			}
+		}
 	} # end if
 } # end sub _history
 
