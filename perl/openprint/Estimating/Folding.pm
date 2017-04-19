@@ -31,7 +31,7 @@ require openprint::service;
 require openprint::ServiceType;
 require openprint::Estimating::Perforating;
 
-use constant DEBUG => 1;
+use constant DEBUG => 0;
 use constant DEBUG_NEEDS => 0;
 
 my @equipment;
