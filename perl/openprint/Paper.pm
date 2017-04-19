@@ -1428,8 +1428,6 @@ $log->debug("Didn't find specific paper $params{width} x $params{height} $$specs
 				delete $params{width};
 				delete $params{height};
 				@Papers = openprint::Paper->find( %params );
-			} else {
-				$$Paper{Supplied} = $Paper->clone();
 			} # end if
 			if ( ! @Papers ) {
 				$openprint::log->warn("No papers found for brnad($$specs{ddmStockBrand}) finish($$specs{ddmStockFinish}) color($$specs{ddmStockColour}) weight($$specs{ddmStockWeight})");
