@@ -714,7 +714,7 @@ sub send_proofs_approved_email {
 
 	if ( ! sets::isin( $CSR->id(), [ map { $_->id() } @Users ] ) ) {
 		my $Notification = $CSR->notification('Proofs Approval Notifications');
-		push @Users, $CSR if ( ! $Notification );
+		push @Users, $CSR if $Notification and ( $Notification ne 'No' );
 	} # end if
 
 	my $results;
@@ -745,20 +745,21 @@ sub send_duedate_change_notification {
 	my $Project = new openprint::Project( $project_index );
 	$info{DueDate} = Date::Format::time2str( $config{DateFormat}, Date::Parse::str2time( $Project->due_date() ) );
 
-	my $User = new openprint::User( $session{user_id} );
+	my $User = $openprint::User;
 	@info{'EmployeeFirstName','EmployeeLastName','EmployeeEmail','EmployeeExtension'} = ( $User->firstname(), $User->lastname(), $User->email(), $User->extension() );
 	my $CSR = new openprint::User( $Order->salesrep_id() );
 	if ( $CSR->email() and ! $CSR->deleted() ) {
 		my $notification = $CSR->notification('Docket Due Date Changes');
-		if ( ( ! $notification ) or $notification ne 'No' ) {
+		if ( $notification and ( $notification ne 'No' ) ) {
 			my $email_template = ssi::slurp_content( '/email_template.html' );
 			$info{ReplacementText} = ssi::include( '/email_content/proofs_duedate_change-sales_rep.html', \%info );
-			new openprint::Email()->send(
+			my $results = (new openprint::Email())->send(
 					FROM	=> $User,
 					TO	  => $CSR,
 					SUBJECT => "Docket $info{DocketNumber} DueDate Changed",
-					ATTACHMENTS	=>	['', encode_qp( Encode::encode('utf-8', ssi::variable_substitution( \$email_template, \%info ) ) ), 'text/html', 'quoted-printable'],
+					HTML_BODY 	=> ssi::variable_substitution( \$email_template, \%info ),
 					);
+			$Project->add_to_log( @session{'company_id','user_id'}, "due date changed email sent to $results" );
 		} # end if Notifications
 	} # end if
 } # end sub send_duedate_change_notification
