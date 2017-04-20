@@ -349,8 +349,8 @@ sub Notifications {
 sub notification {
 	my ( $self, $type ) = @_;
 	foreach my $Notification ( $self->Notifications() ) {
-		if ( $$Notification->type() eq $type ) {
-			return $$Notification->value();
+		if ( $Notification->type() eq $type ) {
+			return $Notification->value();
 		}
 	}
 	return;
