@@ -809,16 +809,17 @@ if ( 0 ) {
 					} # end if
 				} # end if Project 2 or 3
 			} # end if
+}
 			foreach my $service_id ( @service_ids ) {
 				openprint::service::insert_service_spec( $log, $dbh, $NewProject->id(), $service_id, 'txtQuantity3', $NewProject->quantity3() );
 			} # end foreach
-}
 		} # end if
 	} # end if
 	sql::end_transaction( $dbh, $ac );
 
-
-	if ( ( $NewProject->quantity1() and ( $Project->quantity1() != $NewProject->quantity1() ) )
+	if ( 
+			( $NewProject->currency_id() != $openprint::Currency->id() )
+			or ( $NewProject->quantity1() and ( $Project->quantity1() != $NewProject->quantity1() ) )
 			or ( $NewProject->quantity2() and ( $Project->quantity2() != $NewProject->quantity2() ) )
 			or ( $NewProject->quantity3() and ( $Project->quantity3() != $NewProject->quantity3() ) )
 			or ( $param{recalculate} == 1 )
