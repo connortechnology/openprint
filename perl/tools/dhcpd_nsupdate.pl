@@ -85,7 +85,7 @@ if ( @Interfaces ) {
 				my $Host = $Interface->Host();
 
 				my $hostname = $Host->hostname();
-				if ( $hostname !~ /.internal.point-one.com$/ ) {
+				if ( $hostname !~ /\./ ) {
 					$log->debug("Transforming $hostname into $hostname.internal.point-one.com");
 					$hostname .= '.internal.point-one.com';
 				}
