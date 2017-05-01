@@ -116,8 +116,9 @@ if ( ! $all_products_content ) {
 }
 
 print "parsing...";
-my $tree = HTML::TreeBuilder->new;
-$tree->parse_content($all_products_content);
+my $tree = HTML::TreeBuilder->new ( p_strict=>1, warn=>1 );
+$tree->parse($all_products_content);
+$tree->eof();
 $tree->elementify();
 print "done\n";
 
