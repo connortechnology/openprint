@@ -2141,10 +2141,14 @@ if ( ! sets::isin( 'product_categories', \@tables ) ) {
 } else {
 	my $data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='product_categories'", 'column_name');
 	$dbh->do('ALTER TABLE Product_Categories ADD deleted boolean') if ! exists $$data{deleted};
-	if ( ! exists $$data{parent_id} ) {
-		$log->debug("Adding parent_id t product_categories");
-		$dbh->do('ALTER TABLE Product_Categories ADD parent_id INTEGER') or die $dbh->errstr();
-		$dbh->do('ALTER TABLE Product_Categories ADD FOREIGN KEY (parent_id) REFERENCES Product_Categories (id)') or die $dbh->errstr();
+	if ( ! exists $$data{parent_ids} ) {
+		$log->debug("Adding parent_ids t product_categories");
+		$dbh->do('ALTER TABLE Product_Categories ADD parent_ids INTEGER[]') or die $dbh->errstr();
+	}
+	if ( exists $$data{parent_id} ) {
+		$log->debug("Adding  parent_id t product_categories");
+    $log->debug("UPDATE product_categories set parent_ids = ARRAY[parent_id]") or die $dbh->errstr();
+    $log->debug("ALTER TABLE Product_Categories DROP parent_id");
 	}
 } # end if
 

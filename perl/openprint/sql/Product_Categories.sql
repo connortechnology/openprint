@@ -6,6 +6,6 @@ CREATE TABLE Product_Categories (
 	projecttype_id	INTEGER, FOREIGN KEY (projecttype_id) REFERENCES Project_Types (id),
 	description		TEXT,
 	deleted			BOOLEAN default false,
-	parent_id		INTEGER, FOREIGN KEY (parent_id) REFERENCES Product_Categories (id),
+	parent_ids		INTEGER[],
 	PRIMARY KEY (id)
 );
