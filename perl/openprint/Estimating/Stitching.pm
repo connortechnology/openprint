@@ -89,6 +89,7 @@ sub outputs {
 	} # end foreach;
 	return @v;
 }
+
 sub no_outputs {
 	my ( $p_id, $s_id, $specs, $param ) = @_;
 	my $Project = new openprint::Project( $p_id );
@@ -302,12 +303,13 @@ $openprint::log->debug("Fold pq($$FI{page_quantity}) pages($$FI{pages}) ($$Fold{
 							$openprint::log->debug("Already have enough pages $total_pages + $$FI{pages} <= $$I{pages}") if DEBUG;
 							#next;
 						} 
-							my $p = $$FI{page_quantity};
-							$p *= $$FI{quantity} if ( $$FI{page_quantity} == 1 ) and $$FI{quantity} and ( $$FI{pages} < $$I{pages} );
-							$$specs{join('','txtSignatureQty',$$Fold{pages},'Page-',$qty_index)} += $p;
-							$pockets += $p;
+
+            my $p = $$FI{page_quantity};
+            $p *= $$FI{quantity} if ( $$FI{page_quantity} == 1 ) and $$FI{quantity} and ( $$FI{pages} < $$I{pages} );
+            $$specs{join('','txtSignatureQty',$$Fold{pages},'Page-',$qty_index)} += $p;
+            $pockets += $p;
 					}
-				}
+				} # end if ! override_pockets
 $openprint::log->debug("Fold pq($$FI{quantity} * pq$$FI{page_quantity}) pages($$FI{pages}) ($$Fold{name}) Pockets: $pockets") if DEBUG;
 			} # end foreach Fold
 		}
