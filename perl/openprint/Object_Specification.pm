@@ -22,7 +22,7 @@ $table = 'object_specifications';
 );
 %transforms = (
 		name  => [ 's/^\s+//', 's/\s+$//', 's/\s\s+/ /g' ],
-		value => [ 's/^\s+//', 's/\s+$//', 's/\s\s+/ /g' ],
+		value => [ 's/^\s+//', 's/\s+$//', 's/\s\s+/ /g','s/[^[:ascii:]]//g' ],
 );
 
 %defaults = (
