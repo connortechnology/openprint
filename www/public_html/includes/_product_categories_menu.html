@@ -1,6 +1,6 @@
 <ul>
 <? echo (
-	my @Categories = openprint::Product_Category->find( order => 'lower(name)', 'parent_id is null'=>1 );
+	my @Categories = openprint::Product_Category->find( order => 'lower(name)', 'parent_ids'=>undef );
 
 	my $html;
 	foreach my $Category ( @Categories ) {

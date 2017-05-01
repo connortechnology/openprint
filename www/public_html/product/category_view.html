@@ -18,20 +18,13 @@
 			); ) ?>
 		</p>
 		<?endif($$variable{Category}->can_edit())?>
-<div class="Category">
+	<div class="Category">
 		<div class="Information">
-		<ul>
-		<li>
-			<label>Name</label>
-			<? hecho ( $$variable{Category}->name(); ) ?>
-		</li>
-		<li>
-			<label>Description</label>
-			<? hecho ( $$variable{Category}->description(); ) ?>
-		</li>
-		<li><label>Category</label><?echo($$variable{Category}->parent_id() ? $$variable{Category}->Parent()->name() : 'none'; ) ?></li>
-		
-		</ul>
+			<ul>
+				<li><label>Name</label><? hecho ( $$variable{Category}->name(); ) ?></li>
+				<li><label>Description</label><? hecho ( $$variable{Category}->description(); ) ?></li>
+				<li><label>Categories</label><?echo( $$variable{Category}->parent_ids() and @{ $$variable{Category}->parent_ids() } ? join('<br/>', map { $_->name() } $$variable{Category}->Parents() ) : 'none'; ) ?></li>
+			</ul>
 		</div>
 		<?eval( $$variable{Object} = $$variable{Category};)?>
 <?if($$variable{Category}->Specifications())?>
@@ -43,9 +36,10 @@
 		<? eval ( $$variable{Album} = $$variable{Category};) ?>
 		<?include(/employee/assets/_assets.html)?>
         </div>
+		<br class="spacer"/>
 		<? echo (
 			my $html;
-			my @Subs = openprint::Product_Category->find( parent_id=>$$variable{Category}->id() );
+			my @Subs = $$variable{Category}->Categories();
 			if ( @Subs ) {
 				$html .= '<ul class="SubCategories">';
 				foreach my $SubCategory ( @Subs ) {

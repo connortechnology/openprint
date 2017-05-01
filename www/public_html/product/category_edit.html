@@ -16,10 +16,14 @@
 				<label>Description</label>
 				<textarea id="description" name="description" rows="4" onkeyup="textarea_resize(this);"><? hecho ( $$variable{Category}->description(); ) ?></textarea>
 			</li>
-			<li><label>Parent Category</label>
+			<li><label>Parent Categories</label>
 				<? echo ( ssi::select( 
-							openprint::Product_Category->dropdown( order=>'lower(name)',
-								( $$variable{Category}->id() ? ( 'id !='=>$$variable{Category}->id()) : () ) ), $$variable{Category}->parent_id(), { name=>'parent_id', prepend=>['','None'] } ); ) ?>
+							openprint::Product_Category->dropdown( order=>'lower(name)', ( $$variable{Category}->id() ? ( 'id !='=>$$variable{Category}->id()) : () ) ),
+							$$variable{Category}->parent_ids(),
+							{
+								name=>'parent_ids',
+								multiple=>'multiple',
+							} ); ) ?>
 			</li>
 			<li>
 				<label>Sort</label>

@@ -9,7 +9,7 @@ require openprint::Log;
 require sql;
 
 use vars qw( $log $dbh $debug $table $serial %fields %find_fields %defaults %transforms );
-$debug = 1;
+$debug = 0;
 $table = 'products';
 $serial = 'products_id_seq';
 
