@@ -43,7 +43,7 @@ function load_page() {
 			<? echo ( join("\n",
 				button( 'ShowResults', { onclick=>'load_page();', text=>'Show Results' } ),
 				button( 'New', { href=>'/administrator/managerial/company_profiles.html', text=>'New' } ),
-				#button( 'DownloadCSV', { onclick=>"f1.action='projects.html?Download';f1.btnFunction.value='Download in CSV format';f1.submit();", href=>'', text=>'Download in CSV Format' } ),
+				button( 'DownloadCSV', { onclick=>"f1.btnFunction.value='Download in CSV format';f1.submit();", text=>'Download in CSV Format' } ),
 				button( 'Reset', { onclick=>'f1.reset();', text=>'Reset' } ),
 ); ) ?>
 		</p>

@@ -1,5 +1,7 @@
 use strict;
 package openprint::www;
+use utf8;
+use open ( ":encoding(UTF-8)", ":std" );
 
 use constant Debug => 1;
 
@@ -99,6 +101,8 @@ sub handler {
 			#$log->debug("Parameter $key is ARRAY(" . join(',',@{$param{$key}}) . ')' );
 		} else {
 			$param{$key} = $values[0];
+utf8::decode($param{$key});
+#utf8::encode($values[0]);
 			#$log->debug("Parameter $key is (" . $param{$key} . ") ref: " . ref $param{$key} );
 		} # end if
 	} # end foreach
@@ -106,7 +110,8 @@ sub handler {
 		if ( ref $param{$key} eq 'ARRAY' ) {
 			$log->debug("Parameter $key is ARRAY(" . join(',',@{$param{$key}}) . ')' );
 		} else {
-			$log->debug("Parameter $key is (" . $param{$key} . ")" );
+			$log->debug("Parameter $key is (" . $param{$key} . ")" . (utf8::is_utf8($param{$key})||0) );
+			#$log->debug("Parameter $key is (" . $param{$key} . ")" . (utf8::is_utf8($param{$key})||0) );
 		} # end if
 	}	# end foreach
 
@@ -158,6 +163,7 @@ sub handler {
 		# Just does timeout
 		openprint::login::verify_user( $r, $log, $dbh, $session{_session_id}, \%variable );
 		$page = $variable{Redirect} if $variable{Redirect};	
+
 
 		while ( $page and $lastpage ne $page ) {
 			# This is for loop detection

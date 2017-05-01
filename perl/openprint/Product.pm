@@ -9,7 +9,7 @@ require openprint::Log;
 require sql;
 
 use vars qw( $log $dbh $debug $table $serial %fields %find_fields %defaults %transforms );
-$debug = 1;
+$debug = 0;
 $table = 'products';
 $serial = 'products_id_seq';
 
@@ -39,6 +39,7 @@ $serial = 'products_id_seq';
 );
 
 %transforms = (
+	id			=>	[ 's/\D//g', '<2147483647' ],
     name		=> [ 's/^\s+//', 's/\s+$//', 's/\s\s+/ /g' ],
     description => [ 's/^\s+//', 's/\s+$//', 's/\s\s+/ /g' ],
 );

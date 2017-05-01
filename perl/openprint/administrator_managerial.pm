@@ -1016,6 +1016,27 @@ sub _authorizations {
 
 sub companies {
 	_companies();
+	if ( $param{btnFunction} ) {
+		if ( $param{btnFunction} eq 'Download' ) {
+			my $uri = $r->uri();
+    my %filters = (
+    order =>  'lower(name)',
+    ( $session{$uri.'?salesrep_id'} ? ( salesrep_id => $session{$uri.'?salesrep_id'} ) : () ),
+    ( $session{$uri.'?company_name'} ? ( 'name ilike' => '%'.$session{$uri.'?company_name'}.'%' ) : () ),
+    ( $session{$uri.'?deleted'} ne '' ? ( deleted => $session{$uri.'?deleted'} ) : () ),
+    date_filter( $uri.'?created_on_end', 'created_on <=' ),
+    date_filter( $uri.'?created_on_start', 'created_on >=' ),
+		);
+		if ( $session{$uri.'?salesrep_id_exclude'} ) {
+			my @csr_ids = map { $_->id() } openprint::User->find( company_id=>$config{owner_id}, 'usergroup any'=>'Sales' );
+			@csr_ids = sets::exclude( [ split(',', $session{$uri.'?salesrep_id'} ) ], \@csr_ids ) if $session{$uri.'?salesrep_id'};
+			$filters{'salesrep_id not in'} = \@csr_ids;
+		} # end if
+
+		my @Companies = openprint::Company->find( %filters );
+			
+		}
+	}
 } # end sub companies
 sub _companies {
 	ssi::save_params( '/administrator/managerial/companies.html', ( 

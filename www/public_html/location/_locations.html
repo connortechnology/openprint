@@ -1,8 +1,18 @@
 <ul>
 	<? echo ( 
 		my $html;
-		foreach my $Location ( openprint::Location->find({'name ilike'=>openprint::Location->transform('name',$param{'location'}).'%', 'type'=>$param{'type'}, 'limit'=>10, 'order'=>'lower(name)'}) ) {
-			$html .= sprintf(q`<li id="%d">%s<span class="informal">%s</span></li>`, $Location->id(), $Location->name(), join(', ', map { $_->name() } $Location->Parents() ) );
+		foreach my $Location ( openprint::Location->find(
+				( $param{location} ? ( 'name ilike'	=>	openprint::Location->transform(name=>$param{location}).'%' ) : () ),
+				( $param{type} ? ( type	=>$param{type} ) : () ),
+				limit	=>10,
+				order	=>'lower(name)',
+				( $$variable{Company} ? ( company_id => $$variable{Company}{id} ) : () ),
+				) ) {
+			$html .= sprintf(q`<li id="%d">%s<span class="informal">%s</span></li>`, 
+					$Location->id(), 
+					$Location->link_to( $Location->name() ), 
+					$Location->link_to( join(', ', map { $_->name() } $Location->Parents() ) ), 
+					);
 		} # end foreach Location
 		return $html;
 	) ?>

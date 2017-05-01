@@ -82,5 +82,5 @@
 	</tbody>
 </table>
 <p class="buttons">
-<? echo ( button( 'delete', { onclick=> "new Ajax.Updater( 'Results','/employee/it/_sessions.html?action=Delete', { parameters: { session_id: \$F('session_id') } } );", text=>'Delete Checked' } ); ) ?>
+<? echo ( button( 'delete', { onclick=>q`new Ajax.Updater( 'Results','/employee/it/_sessions.html?action=Delete', { parameters: { session_id: get_value( $('f1').elements['session_id'] ) } } );`, text=>'Delete Checked' } ); ) ?>
 </p>

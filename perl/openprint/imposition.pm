@@ -6,7 +6,7 @@ use openprint::Imposition;
 
 use constant DEBUG => 0;
 use constant DEBUG_DUTCH => 0;
-use constant DEBUG_CONVERT => 1;
+use constant DEBUG_CONVERT => 0;
 
 # The various way we can group spreads
 use vars qw( %blocks );

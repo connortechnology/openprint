@@ -165,6 +165,16 @@ sub history_details {
 			$variable{error} .= "Can't resend quote.<br/>";
 		} # end if
 		$variable{ExternalRedirect} = '/main/quote/history_details.html?quote_id='.$Quote->id();
+		return;
+	} elsif ( $param{btnFunction} eq 'SendToMe' ) {
+		if ( $Quote->can_view( ) ) {
+			my $results = $Quote->send( $openprint::User );
+			$variable{information} .= 'Quote Sent To Me. Results: '. $results;
+		} else {
+			$variable{error} .= "Can't send quote. You are not allowed to view it.<br/>";
+		} # end if
+		$variable{ExternalRedirect} = '/main/quote/history_details.html?quote_id='.$Quote->id();
+		return;
 	} # end if
 	openprint::quote::get_finished_quote_contents( $log, $dbh, \%variable, $$Quote{id} ) if $param{quote_id};
 } # end sub history_details
@@ -387,17 +397,26 @@ $log->debug("Session: For$k". $session{'/main/quote/information.html?For'.$k} );
 sub submit {
 	if ( %param ) {
 		foreach my $k ( 'CompanyName','Address1','Address2','City','StateProvince','PostalCode','Country','Phone','Extension','Fax','FirstName','LastName','Title','Email','Salutation' ) {
-			$session{'/main/quote/information.html?For'.$k} = $param{'For'.$k};
+			$session{'/main/quote/information.html?For'.$k} = $param{'For'.$k} if exists $param{'For'.$k};
 		} # end foreach
 	} # end if
 
-    my $quote_id = $param{quote_id};
+	my $quote_id = $param{quote_id};
 	$quote_id = $session{quote_id} if ! $quote_id;
-    my $Quote = $variable{Quote} = new openprint::Quote( $quote_id );
+	my $Quote = $variable{Quote} = new openprint::Quote( $quote_id );
 	$Quote->save() if ! $Quote->id();
 	$session{quote_id} = $Quote->id();
 
-    if ( $param{btnFunction} eq 'Continue' ) {
+	if ( $param{btnFunction} eq 'SendToMe' ) {
+		if ( $Quote->can_view( ) ) {
+			my $results = $Quote->send( $openprint::User );
+			$variable{information} .= 'Quote Sent To Me. Results: '. $results;
+		} else {
+			$variable{error} .= "Can't send quote. You are not allowed to view it.<br/>";
+		} # end if
+		$variable{ExternalRedirect} = '/main/quote/submit.html?quote_id='.$Quote->id();
+		return;
+	} elsif ( $param{btnFunction} eq 'Continue' ) {
 		my %by;
 		my %for;
 		foreach my $key ( %param ) {
@@ -438,7 +457,11 @@ sub submit {
 			} # end foreach
 		} # end if
 
-		$Quote->save({'reference'=>$param{reference},'comments'=>$param{comments},status=>'Incomplete'});
+		$Quote->save({
+				reference=>$param{reference},
+				comments=>$param{comments},
+				status=>'Incomplete',
+				});
 		$Quote->store_user_by_info( \%by );
 		$Quote->store_user_for_info( \%for );
 # store fields from recalculate, we only store the markup, the NewPrices will calculate on the fly
@@ -454,19 +477,21 @@ sub submit {
 		} # end foreach
 		foreach my $QP ( $Quote->Products() ) {
 				$variable{error} .= $QP->save({
-						cost		=> $param{'cost-'.$QP->id()},
+						cost			=> $param{'cost-'.$QP->id()},
 						markup		=> $param{'markup-'.$QP->id()},
 						quantity	=> $param{'quantity-'.$QP->id()},
 						comments	=> $param{'comments-'.$QP->id()},
 				});
 		} # end foreach
-    } # end if btnFunction eq Continue
+		$variable{ExternalRedirect} = '/main/quote/submit.html?quote_id='.$Quote->id();
+		return;
+	} # end if btnFunction eq Continue
 
-    if ( sets::isin( $session{user_type}, [ 'A', 'E' ] ) ) {
-        $variable{AdministratorName} = new openprint::User( $session{user_id} )->name();
-    } # end if
+	if ( sets::isin( $session{user_type}, [ 'A', 'E' ] ) ) {
+		$variable{AdministratorName} = new openprint::User( $session{user_id} )->name();
+	} # end if
 
-    openprint::quote::get_unfinished_quote_contents( $log, $dbh, \%variable, $quote_id );
+	openprint::quote::get_unfinished_quote_contents( $log, $dbh, \%variable, $quote_id );
 
 } # end submit
 

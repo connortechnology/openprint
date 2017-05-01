@@ -2017,7 +2017,12 @@ sub signature_summary {
 						"FoldImposition-$form-$qty_index-$fold_index",
 						"FoldType-$form-$qty_index-$fold_index"} );
 			} # end foreach
-			return join('<br/>', ( ' on ' . $Equipment->name() ), sort { $a cmp $b } @folds);
+			my $html = join('<br/>', ( ' on ' . $Equipment->name() ), sort { $a cmp $b } @folds);
+			my $Press = openprint::Equipment->find_one( strid=>$$sig_specs{"ddmPress$qty_index"} );
+			if ( $Press and ( $$Press{id} != $$Equipment{id} ) and ($Press->specification('Folding Capable') eq 'When Printing' ) ) {
+				$html .= '<br/><span class="warning">Folding Offline</span>';
+			}
+			return $html;
 		} # end if
 	} # end if
 	return '';

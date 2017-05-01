@@ -257,7 +257,7 @@ sub Fold {
 			$openprint::log->debug("Wanted imposition columns: $$params{columns}, have $$Fold{min_imposition_columns} x $$Fold{max_imposition_columns}") if DEBUG_FOLDING;
 			next;
 		} # end if
-		if ( defined $$Fold{max_imposition_columns} and $$params{columns} and ($$Fold{max_imposition_columns} < $$params{imposition}) ) {
+		if ( defined $$Fold{max_imposition_columns} and $$params{columns} and ($$Fold{max_imposition_columns} < $$params{columns}) ) {
 			$openprint::log->debug("Wanted imposition: $$params{columns}, have $$Fold{min_imposition_columns} x $$Fold{max_imposition_columns}") if DEBUG_FOLDING;
 			next;
 		} # end if

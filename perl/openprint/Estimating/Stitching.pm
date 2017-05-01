@@ -18,7 +18,7 @@ package openprint::Estimating::Stitching;
 use strict;
 #use warnings;
 
-use constant DEBUG => 0;
+use constant DEBUG => 1;
 
 require openprint::Equipment;
 require openprint::service;
@@ -1089,8 +1089,24 @@ sub summary {
 	my $summary = '';
 	if ( $qty_index ) {
 		if ( $$specs{'Imposition'.$qty_index} and $$specs{'ddmEquipment'.$qty_index} ) {
-			return $$specs{'Imposition'.$qty_index} .'out on ' . new openprint::Equipment( $$specs{'ddmEquipment'.$qty_index} )->name();
-		} # en dif
+			my $Equipment = new openprint::Equipment( $$specs{'ddmEquipment'.$qty_index} );
+			$summary = $$specs{'Imposition'.$qty_index} .'out on ' . $Equipment->name();
+			if ( $Equipment->specification('Type') eq 'Stitcher' ) {
+				my $show_offline = 0;
+				foreach my $sig_id ( $Project->signatures() ) {
+					my $sig_specs = openprint::service::get_specs_ref( $Project, $sig_id );
+					my $Press = openprint::Equipment->find_one( strid=>$$sig_specs{"ddmPress$qty_index"} );
+					if ( $Press and ( $Press->specification('Stitching Capable') eq 'When Printing' ) ) {
+						$show_offline = 1;
+						last;
+					}
+				}
+				if ( $show_offline ) {
+					$summary .= '<br/><span class="warning">Stitching Offline</span>';
+				}
+      }
+
+		} # end if
 	} else {
 		if ( $$specs{rdbGateFoldFit} ) {
 			$summary .= 'Gate Fold Fit = ' . $$specs{rdbGateFoldFit} . '<br/>';

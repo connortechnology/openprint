@@ -5525,8 +5525,6 @@ sub calc_price {
 				} # end foreach
 				$price{'Folding Breakdown'} .= sprintf('Folding total: $%.2f<br/>', $$folding_results{Price} ) if @{$$folding_results{FoldedImpositions}} > 1;
 				#$price{'Folding Breakdown'} .= $$folding_results{Breakdown};
-			} else {
-$log->warn("No folding equipment");
 			} # end if
 			$price{'Comparison Cost'} += $$folding_results{Price};
 		} # end if

@@ -26,10 +26,12 @@
 
 			$html .= sprintf(q`<tr%1$s> 
 				<td><a href="%4$s/main/project/view.html?ProjectIndex=%2$d">%2$d</a></td>
-				<td class="reference"><a href="%5$s/main/project/view.html?ProjectIndex=%2$d">%3$s</a></td>
+				<td class="description">
+					<div class="reference"><a href="%5$s/main/project/view.html?ProjectIndex=%2$d">%3$s</a></div>
+				</td>
 				<td colspan="5">
 				<table>`, $rowclass, $QP->project_id(),
-				( $Project->reference() ? $Project->reference() . '<br/>' : '' ),
+				( $Project->reference() ? $Project->reference() : '' ),
 				$config{ExternalSiteURL},
 				);
 

@@ -15,7 +15,7 @@ $table = 'Product_Categories';
 	name			=>	'name',
 	description		=>	'description',
 	projecttype_id	=>	'projecttype_id',
-	parent_id		=>	'parent_id',
+	parent_ids		=>	'parent_ids',
 );
 
 %transforms = (
@@ -23,7 +23,7 @@ $table = 'Product_Categories';
     description => [ 's/^\s+//', 's/\s+$//', 's/\s\s+/ /g' ],
 );
 %defaults = (
-	parent_id		=>	undef,
+	parent_ids	=>	[],
 	projecttype_id	=>	undef,
 );
 
@@ -93,13 +93,16 @@ sub url_to {
 sub link_to {
 	return sprintf('<a href="/product/category_view.html?category_id=%d">%s</a>', $_[0]{id}, @_ > 1 ? $_[1] : $_[0]{name} );
 }
-sub Parent {
-	return new openprint::Product_Category( $_[0]{parent_id} );
+sub Parents {
+	if ( ! $_[0]{Parents} ) {
+		$_[0]{Parents} = [ openprint::Product_Category->find( 'parent_ids @>'=>$_[0]{parent_ids} ) ];
+	}
+	return @{$_[0]{Parents}};
 }
 
 sub Categories {
 	if ( ! $_[0]{Categories} ) {
-		$_[0]{Categories} = [ openprint::Product_Category->find( parent_id=>$_[0]{id} ) ];
+		$_[0]{Categories} = [ openprint::Product_Category->find( 'parent_ids @>'=>$_[0]{id} ) ];
 	}
 	return @{$_[0]{Categories}};
 } # end sub Categories

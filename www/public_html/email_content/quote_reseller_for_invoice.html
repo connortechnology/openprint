@@ -20,7 +20,11 @@
 			foreach my $QP ( $$variable{Quote}->Quoted_Projects() ) {
 				my $Project = $QP->Project();
 				my $services = $Project->services();
-				$html .= sprintf(q`<tr%1$s><td class="project_id">%2$d</td><td class="description">%3$s%4$s</td><td colspan="3"><table>`,
+				$html .= sprintf(q`
+<tr%1$s>
+	<td class="project_id">%2$d</td>
+	<td class="description"><div class="reference">%3$s</div><div class="summary">%4$s</a></td>
+	<td colspan="3"><table>`,
 					$rowclass, $Project->id(),
 					( $Project->reference() ? $Project->reference() . '<br/>' : '' ),
 					( $config{ShowProjectSummaryOnQuote} ne 'N' ? $Project->summary() : '' ),
