@@ -110,21 +110,23 @@ if ( -e "/tmp/all-products.html" ) {
 	$all_products_content = read_file( "/tmp/all-products.html", ,err_mode => 'carp' );
 } 
 if ( ! $all_products_content ) {
+	print "Not Using cached content...\n";
 	$mech->get($host.'/en_ca/all-products.html');
-	$all_products_content = encode( 'utf8', $mech->content() );
+	$all_products_content = encode( 'utf-8', $mech->content() );
 	write_file( '/tmp/all-products.html', { atomic => 1, err_mode=>'carp', binmode => ':raw' }, $all_products_content );
 }
 
 print "parsing...";
 my $tree = HTML::TreeBuilder->new;
-$tree->parse_content($all_products_content);
+$tree->parse($all_products_content);
+$tree->eof();
 $tree->elementify();
 print "done\n";
 
 # First step: Setup all the categories from the mnu
 foreach my $menu ( $tree->look_down(_tag=>'ul', class=>'em-catalog-navigation') ) {
 	print "Have menu " . $menu->as_HTML() . "\n";
-  my @items = $tree->look_down( _tag=>'li', sub { my $class = $_[0]->attr('class'); if ( $class ) { return $class =~ /level0/; } return; } );
+  my @items = $menu->look_down( _tag=>'li', sub { $_[0]->attr('class') =~ /level0/; } );
 	print "Found " . @items . " menu items\n";
 
 	foreach my $item ( @items ) {
@@ -169,11 +171,11 @@ foreach my $menu ( $tree->look_down(_tag=>'ul', class=>'em-catalog-navigation') 
 			} # end foreach product
 		} # end foreach subitem
 	} # end foreach item
-  confirm('Each menu');
+  confirm();
+  #last; # We only want the first ul with that class
 }
 
 foreach my $category ( $tree->look_down('class','all-products') ) {
-	#$category->dump();
 	my $product_name_h2 = $category->look_down('class','product-name');
 	my $product_name_a = $product_name_h2->look_down(_tag=>'a');
 	my $url = $product_name_a->attr_get_i('href');
@@ -220,11 +222,10 @@ foreach my $category ( $tree->look_down('class','all-products') ) {
 $log->debug(" $$Category{name} $$Category{id} ");
 	my %category_specs = map { $$_{name} => $_ } $Category->Specifications();
 
-	foreach my $spec ( $first_div->look_down(id=>'product-spec') ) {
+	foreach my $spec ( $first_div->look_down( id=>'product-spec' ) ) {
 
-		my $title_div = $spec->look_down(id=>'spec-title');
-		my $title = Encode::encode('utf-8', $title_div->look_down(_tag=>'p')->as_text() ) if $title_div;
-    $log->debug("Spec $title" );
+		my $title_div = $spec->look_down( id=>'spec-title' );
+		my $title = Encode::encode('utf-8', $title_div->look_down( _tag=>'p' )->as_text() ) if $title_div;
 		my $value_div = $spec->look_down(id=>'spec-info');
 		if ( ! $value_div ) {
 			print "No value_div for $title\n";
@@ -254,6 +255,7 @@ $log->debug(" $$Category{name} $$Category{id} ");
             }
 		} else {
 			$Spec = $category_specs{$title};
+      $Spec->save();
 			if ( $$Spec{value} ne $value ) {
 				if ( confirm( "Change specification $title from\n\n$$Spec{value}\n\nto\n\n$value\n\n ? (Y|n)" ) ) {
 					$Spec->save({ value=>$value });
@@ -314,7 +316,7 @@ $log->debug(" $$Category{name} $$Category{id} ");
 				$name = $1;
 			}
 
-			parse_tree( $name, {}, $$product{$name_key} );
+			parse_tree( $Category, $name, {}, $$product{$name_key} );
 
 		} # end foreach product_type
 	} # end foreach product_name
@@ -322,7 +324,7 @@ $log->debug(" $$Category{name} $$Category{id} ");
 } # end foreach post
 
 sub parse_tree {
-	my ( $name, $product, $tree ) = @_;
+	my ( $Category, $name, $product, $tree ) = @_;
 	
 	print 'tree: ' . join(',', keys %{$tree} ) . "\n";
 	
@@ -339,6 +341,17 @@ $log->debug("Have qty/eachorlot $key product $product_name");
 				} else {
 					return;
 				}
+      } else {
+        if ( ! $Product->category_id() ) {
+          $log->debug("Setting category on $$Product{id} $$Product{Name} ");
+          $Product->save({ category_id => $Category->id() });
+        } elsif ( $Product->category_id() != $$Category{id} ) {
+          if ( confirm("Update category on product $$Product{id} $$Product{name} from " . $Product->Category()->name() . " to " . $Category->name() ) ) {
+            $Product->save({ category_id => $Category->id() });
+          }
+        } else {
+          $log->debug("Setting category on $$Product{id} $$Product{Name} ");
+        }
 			}
 			my %product_specs = map {$$_{name} => $_} $Product->Specifications();
 			foreach my $spec ( keys %{$product} ) {
@@ -351,7 +364,8 @@ $log->debug("Have qty/eachorlot $key product $product_name");
 						$product_specs{$spec} = $Spec;
 					}
         } else {
-$log->debug("Already have spec $spec => " . $Spec->value() );
+          utf8::decode($$product{$spec});
+$log->debug("Already have spec $spec => $$product{$spec}" );
           if ( $Spec->value() ne $$product{$spec} ) {
             if ( confirm( "Update spec $spec from $$Spec{value} to $$product{$spec}" ) ) {
               $Spec->save({ value => $$product{$spec} });
@@ -363,7 +377,6 @@ $log->debug("Already have spec $spec => " . $Spec->value() );
 			my $qty_hash = $$tree{qty};
 			my %product_prices = map { $$_{min} => $_ } $Product->Prices();
 			foreach my $qty_key ( keys %{$qty_hash} ) {
-$log->debug("Qty $qty_key $$qty_hash{$qty_key}");
 				my ( $qty ) = $qty_key =~ /^qty_(\d+)$/;
 				my $cost = $$qty_hash{$qty_key};
 				if ( $cost != Math::Round::nearest( 0.01, $cost ) ) {
@@ -380,12 +393,12 @@ $log->debug("Qty $qty_key $$qty_hash{$qty_key}");
 						$Price->save({product_id=>$Product->id(), min=>$qty, max=>$qty, units=>$$tree{eachorlot}, cost=>$cost, pricelist_id=>$$openprint::Pricelist{id}, owner_id=>$config{owner_id}, price=>$cost });
 					}
 				} else {
-					if ( $$Price{cost} != $cost ) {
+					if ( 1*$$Price{cost} != 1*$cost ) {
 						if ( confirm( "Price has changed $product_name for $qty from ($$Price{cost})$$Price{units} to ($cost) $$tree{eachorlot} Update? (Y|n)" ) ) {
 							$Price->save({ units=>$$tree{eachorlot}, cost=>$cost, price=>$cost*$$Price{markup} });
 						}
-          } else {
-            $log->debug("No need to update pricing");
+          #} else {
+            #$log->debug("No need to update pricing");
 					}
 
 				} # end if no prices
@@ -404,7 +417,7 @@ $log->debug("Qty $qty_key $$qty_hash{$qty_key}");
 				print "Got $value for $option\n";
 				$$product{$key} = $value;
         print Data::Dumper::Dumper( $$tree{$key}{$option} ) . "\n";
-				parse_tree( $name, $product, $$tree{$key}{$option} );
+				parse_tree( $Category, $name, $product, $$tree{$key}{$option} );
 			}
 		} # end if it's the qty
 		
