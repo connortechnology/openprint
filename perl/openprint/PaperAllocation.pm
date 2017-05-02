@@ -15,9 +15,6 @@ require openprint::Skid;
 require openprint::User;
 require openprint::Project;
 require openprint::Order;
-require openprint::PaperPrice;
-require openprint::logs;
-require openprint::Manufacturer;
 require openprint::Email;
 require openprint::InventoryCondition;
 
@@ -148,7 +145,7 @@ sub send_notification {
 
 	my @recipients = map { $_->notification('Stock Allocations') eq 'Yes' ? $_ : () } openprint::User->find( company_id=>$openprint::config{owner_id}, 'usergroup any'=>'InventoryManager' );
 
-    my $offsite = 0;
+  my $offsite = 0;
 	my $nolocation = 0;
 	foreach my $Project ( $Order->Projects() ) {
 		foreach my $sig_id ( $Project->signatures() ) {

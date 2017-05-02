@@ -21,7 +21,7 @@
 	<td class="num_products"><a href="category_view.html?category_id=%2$d">%6$d</a></td>
 </tr>
 `, $rowclass, $Category->id(), $Category->name(), $Category->description(),
-join('<br/>', map { $_->name() } @Categories->Parents() ), scalar $Category->Products() );
+join('<br/>', map { $_->name() } $Category->Parents() ), scalar $Category->Products() );
 		$rowclass = $rowclass ? '' : ' class="colRow"';
 	} # end foreach
 
