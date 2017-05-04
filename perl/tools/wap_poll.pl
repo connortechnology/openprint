@@ -126,7 +126,7 @@ foreach my $Host ( @Hosts ) {
 
 				my $response = $browser->get( $initial_url );
 				if ( ( ! $response->is_success ) and $response->status_line() ne '403 Forbidden' ) {
-					$log->error("Failed talking to $$Host{name} at $$HI{ip} " . $response->status_line() . ' ' . $response->content() );
+					$log->error("Failed talking to $$Host{hostname} at $$HI{ip} " . $response->status_line() . ' ' . $response->content() );
 					next;
 				}
 				my $headers = $response->headers();
@@ -231,7 +231,7 @@ foreach my $Host ( @Hosts ) {
 
 				my @macs;
 				if ( ! $response->is_success ) {
-					$log->error("Should have worked. $$HI{ip} $$Host{name} $url ");
+					$log->error("Should have worked. $$HI{ip} $$Host{hostname} $url ");
 					$openprint::log->error( $response->status_line );
 					$openprint::log->error( $response->content );
 					my $headers = $response->headers();
