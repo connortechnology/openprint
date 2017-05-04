@@ -18,6 +18,8 @@
 			date_filter( $url.'?updated_on_start', 'updated_on >=' ),
 			date_filter( $url.'?updated_on_end', 'updated_on <=' ),
 			( $session{$url.'?employee_id'} ? ( user_id=>$session{$url.'?employee_id'} ) : () ),
+				( $session{$url.'?delta_upper'} ? ( 'delta <=' => $session{$url.'?delta_upper'} ) : () ),
+				( $session{$url.'?delta_lower'} ? ( 'delta >=' => $session{$url.'?delta_lower'} ) : () ),
 			order	=>	'updated_on',
 			);
 		if ( $param{docket} ) {
@@ -34,20 +36,20 @@
 		my $total = 0;
 		foreach my $PI ( openprint::PaperInventory->find(%sql) ) {
 			if ( $PI->delta < 0 and ! $session{$url.'?outs'} ) {
-				$log->debug("Next cut it's an out." . $PI->to_string() );
+				$log->debug("Next cuz it's an out." . $PI->to_string() );
 				next;
 			} # end if
 			if ( $PI->delta > 0 and ! $session{$url.'?ins'} ) {
-				$log->debug("Next cut it's an out." . $PI->to_string() );
+				$log->debug("Next cuz it's an out." . $PI->to_string() );
 				next;
 			} # end if
 			my $Paper = $PI->Paper();
 			if ( $Paper->type() and ! $types{ $Paper->type() } ) {
-				$log->debug("Next cit type not in types" . join(',', keys %types ) );
+				$log->debug("Next cuz type not in types" . join(',', keys %types ) );
 				next;
 			}
 			if ( ( ! $Paper->type() ) and ! $types{Unknown} ) {
-				$log->debug("Next cit not type in types");
+				$log->debug("Next cuz not type in types");
 				next;
 			} # end if
 			my $Skid = $PI->Skid();
