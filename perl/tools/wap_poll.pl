@@ -145,13 +145,14 @@ foreach my $Host ( @Hosts ) {
 				$response = $browser->post( $initial_url, $args );
 				$headers = $response->headers();
 				if ( ! $$headers{location} ) {
-					$log->error("Got no location for $$Host{name} at $$HI{ip} from $initial_url");
-				}
-				$url = $protocol.'://'.$$HI{ip}.$$headers{location}.'/admin/status/overview?status=1';
-				$response = $browser->get( $url );
-				if ( ! $response->is_success ) {
-					$log->error("Failed talkingt o $$Host{name} at $$HI{ip} " . $response->status_line() . ' ' . $response->content() );
-					next;
+					$log->error("Got no location for $$Host{hostname} at $$HI{ip} from $initial_url");
+				} else {
+					$url = $protocol.'://'.$$HI{ip}.$$headers{location}.'/admin/status/overview?status=1';
+					$response = $browser->get( $url );
+					if ( ! $response->is_success ) {
+						$log->error("Failed talkingt o $$Host{hostname} at $$HI{ip} " . $response->status_line() . ' ' . $response->content() );
+						next;
+					}
 				}
 
 				my $json = decode_json( $response->content() );

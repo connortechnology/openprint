@@ -151,12 +151,14 @@ sub switch_company {
 
 	if ( $Company->currency_id() ) {
 		$session{Currency_id} = $Company->currency_id();
-	} elsif ( $Company->country() eq 'US' ) {
-		$_ = openprint::Currency->find_one('short'=>'USD');
-		$session{Currency_id} = $_->id() if $_;
-	} elsif ( $Company->country() eq 'CA' ) {
-		$_ = openprint::Currency->find_one('short'=>'CAD');
-		$session{Currency_id} = $_->id() if $_;
+	} elsif ( $Company->country() ) {
+		if ( $Company->country() eq 'US' ) {
+			$_ = openprint::Currency->find_one( short=>'USD');
+			$session{Currency_id} = $_->id() if $_;
+		} elsif ( $Company->country() eq 'CA' ) {
+			$_ = openprint::Currency->find_one( short=>'CAD');
+			$session{Currency_id} = $_->id() if $_;
+		} # end if
 	} # end if
 	require openprint::Order;
 	foreach my $Order ( openprint::Order->find(session_id=>$session{_session_id} ) ) {

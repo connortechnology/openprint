@@ -15,7 +15,9 @@ $table = 'Product_Categories';
 	name			=>	'name',
 	description		=>	'description',
 	projecttype_id	=>	'projecttype_id',
-	parent_id		=>	'parent_id',
+	parent_ids		=>	'parent_ids',
+	sorting			=>	'sorting',
+	deleted			=>	'deleted',
 );
 
 %transforms = (
@@ -23,17 +25,22 @@ $table = 'Product_Categories';
     description => [ 's/^\s+//', 's/\s+$//', 's/\s\s+/ /g' ],
 );
 %defaults = (
-	parent_id		=>	undef,
+	deleted			=>	0,
+	parent_ids	=>	[],
 	projecttype_id	=>	undef,
+	sorting			=>	undef,
 );
 
 
-sub delete {
+sub destroy {
 	my $self = shift;
-	return if ! $$self{'id'};
+	return if ! $$self{id};
 	my $error = '';
 	my $ac = sql::start_transaction( $openprint::dbh );
-	foreach my $Product ( openprint::Product->find( 'category_id' => $$self{'id'},'deleted'=>[0,1] ) ) {
+	foreach my $Category ( $self->Categories() ) {
+		$error .= $Category->save({ parent_ids=>sets::exclude( [ $Category->id() ], $Category->parent_ids() ) });
+	}
+	foreach my $Product ( openprint::Product->find( 'category_id' => $$self{id},'deleted'=>[0,1] ) ) {
 		$error .= $Product->save({'category_id'=>undef});
 	} # end foreach
 	$error .= $self->SUPER::delete();
@@ -42,14 +49,14 @@ sub delete {
 	# Add record to audit log - action "Delete Product Category".
 	new openprint::Log()->save({'action'=>'Delete Product Category', 'note'=> "Product Category ID: $$self{id} Name: $$self{name}"});
 	return $error;
-} # end sub delete
+} # end sub destroy
 
 sub destroy {
 	my $self = shift;
-	return if ! $$self{'id'};
+	return if ! $$self{id};
 	my $error = '';
 	my $ac = sql::start_transaction( $openprint::dbh );
-	foreach my $Product ( openprint::Product->find( 'category_id' => $$self{'id'},'deleted'=>[0,1] ) ) {
+	foreach my $Product ( openprint::Product->find( 'category_id' => $$self{id},'deleted'=>[0,1] ) ) {
 		$error .= $Product->save({'category_id'=>undef});
 	} # end foreach
 	$error .= $self->SUPER::destroy();
@@ -73,16 +80,16 @@ sub Products {
 } # end sub products
 
 sub Photos {
-    if ( ! $_[0]{'album_id'} ) {
+    if ( ! $_[0]{album_id} ) {
         return ();
     } # end if
     return $_[0]->Album()->Photos( );
 } # end sub Photos
 
 sub Album {
-    my $Album = new openprint::Photo_Album( $_[0]{'album_id'} );
+    my $Album = new openprint::Photo_Album( $_[0]{album_id} );
     if ( ! $Album->id() ) {
-        $Album->name('Photos for product '.$_[0]{'name'});
+        $Album->name('Photos for product '.$_[0]{name});
     } # end if
     return $Album;
 } # end sub Album
@@ -93,13 +100,16 @@ sub url_to {
 sub link_to {
 	return sprintf('<a href="/product/category_view.html?category_id=%d">%s</a>', $_[0]{id}, @_ > 1 ? $_[1] : $_[0]{name} );
 }
-sub Parent {
-	return new openprint::Product_Category( $_[0]{parent_id} );
+sub Parents {
+	if ( ! $_[0]{Parents} ) {
+		$_[0]{Parents} = [ openprint::Product_Category->find( 'parent_ids @>'=>$_[0]{parent_ids} ) ];
+	}
+	return @{$_[0]{Parents}};
 }
 
 sub Categories {
 	if ( ! $_[0]{Categories} ) {
-		$_[0]{Categories} = [ openprint::Product_Category->find( parent_id=>$_[0]{id} ) ];
+		$_[0]{Categories} = [ openprint::Product_Category->find( 'parent_ids @>'=>$_[0]{id} ) ];
 	}
 	return @{$_[0]{Categories}};
 } # end sub Categories

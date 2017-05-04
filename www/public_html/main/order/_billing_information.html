@@ -1,6 +1,6 @@
 <? eval (
-	if ( $param{'company_id'} ) {
-		my $Company = new openprint::Company( $param{'company_id'} );
+	if ( $param{company_id} ) {
+		my $Company = new openprint::Company( $param{company_id} );
 		@$variable{'company_name',
 			 'address1',
 			 'address2',
@@ -17,10 +17,10 @@
 		 order	=>'lower(firstname),lower(lastname)'
 	);
 	if ( scalar @Users == 1 ) {
-		$param{'ddmUsers'} = $Users[0]->id();
+		$param{ddmUsers} = $Users[0]->id();
 		@$variable{'salutation','firstname','lastname','email'} = $Users[0]->get('salutation','firstname','lastname','email');
 	} elsif ( $$variable{Order}->email() ) {
-		my $SelectedUser = openprint::User->find_one( company_id=>$param{'company_id'} ? $param{'company_id'} : $session{'company_id'}, email=>$$variable{Order}->email() );
+		my $SelectedUser = openprint::User->find_one( company_id=>$param{company_id} ? $param{company_id} : $session{company_id}, email=>$$variable{Order}->email() );
 
 		$param{ddmUsers} = $SelectedUser->id() if $SelectedUser;
 	} # end if
@@ -32,19 +32,19 @@
 				<label>Company Name</label>
 				<input type="text" id="company_name" name="company_name" value="<?company_name?>"/>
 			</li>
-		<? if ( sets::isin( $session{'user_type'}, [ 'A','E'] ) ) ?>
+		<? if ( sets::isin( $session{user_type}, [ 'A','E'] ) ) ?>
 			<li> 
 				<label>Name</label>
 				<select name="ddmUsers" onchange="ddmUsers_onchange(this.form);">
 					<option value="">Please Select</option>
 					<? echo ( 
-						make_drop_down( [ map { $_->id(), $_->name() } @{$$variable{'Users'}} ],
-								$param{'ddmUsers'} ? $param{'ddmUsers'} : $session{'user_id'} 
+						make_drop_down( [ map { $_->id(), $_->name() } @{$$variable{Users}} ],
+								$param{ddmUsers} ? $param{ddmUsers} : $session{user_id} 
 						);
 					) ?>
 				</select>
 			</li>
-		<? endif ( sets::isin( $session{'user_type'}, [ 'A','E'] ) ) ?>
+		<? endif ( sets::isin( $session{user_type}, [ 'A','E'] ) ) ?>
 			<li> 
 				<label>Salutation</label>
 				<? echo ( radio( 'salutation', [ map { $_,$_} ( 'Mr.','Mrs.','Ms.','Miss' ) ], $$variable{salutation} ); ) ?>
@@ -68,15 +68,15 @@
 					<option value=""> Select </option>
 					<? echo ( 
 						require countries;
-						make_drop_down( \@countries::countries, $$variable{'country'} );
+						make_drop_down( \@countries::countries, $$variable{country} );
 					) ?> 
 				</select>
 			</li>
 			<li class="required">
 				<label><span id="country_state"><? echo (
-if ( $$variable{'country'} eq 'US' ) {
+if ( $$variable{country} eq 'US' ) {
 	return 'State';
-} elsif ( $$variable{'country'} eq 'CA' ) {
+} elsif ( $$variable{country} eq 'CA' ) {
 	return 'Province';
 } else {
 	return 'State/Province';
@@ -86,17 +86,17 @@ if ( $$variable{'country'} eq 'US' ) {
 				<select name="state" id="state">
 					<option value=""> Select </option>
 					<? echo ( 
-					if ( $$variable{'country'} eq 'US' ) {
+					if ( $$variable{country} eq 'US' ) {
 					require states;
-						return make_drop_down( \@states::states, $$variable{'state'} );
-					} elsif ( $$variable{'country'} eq 'CA' ) {
+						return make_drop_down( \@states::states, $$variable{state} );
+					} elsif ( $$variable{country} eq 'CA' ) {
 						require provinces;
-						return make_drop_down( \@provinces::provinces, $$variable{'state'} );
+						return make_drop_down( \@provinces::provinces, $$variable{state} );
 					}
 					require states;
 					join("\n",
-						make_drop_down( \@states::states, $$variable{'state'} ),
-						make_drop_down( \@provinces::provinces, $$variable{'state'} ),
+						make_drop_down( \@states::states, $$variable{state} ),
+						make_drop_down( \@provinces::provinces, $$variable{state} ),
 					); 
 					) ?> 
 				</select>
@@ -108,9 +108,9 @@ if ( $$variable{'country'} eq 'US' ) {
 			</li>
 			<li class="required"> 
 				<label><span id="country_postal"><? echo (
-						if ( $$variable{'country'} eq 'US' ) {
+						if ( $$variable{country} eq 'US' ) {
 							return 'Zip Code:';
-						} elsif ( $$variable{'country'} eq 'CA' ) {
+						} elsif ( $$variable{country} eq 'CA' ) {
 							return 'Postal Code:';
 						} else {
 							return 'Zip/Postal Code:';
