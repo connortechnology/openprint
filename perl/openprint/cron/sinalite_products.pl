@@ -117,21 +117,30 @@ if ( ! $all_products_content ) {
 }
 
 print "parsing...";
-my $tree = HTML::TreeBuilder->new;
+my $tree = HTML::TreeBuilder->new ( p_strict=>1, warn=>1, implicit_tags=>0 );
 $tree->parse($all_products_content);
 $tree->eof();
 $tree->elementify();
 print "done\n";
 
+my $Root = openprint::Product_Category->find_one(name=>'Products');
+if ( ! $Root ) {
+	$Root = new openprint::Product_Category();
+	$Root->save({name=>'Products'});
+}
+
+my $menu_order = 0;
 # First step: Setup all the categories from the mnu
 foreach my $menu ( $tree->look_down(_tag=>'ul', class=>'em-catalog-navigation') ) {
 	print "Have menu " . $menu->as_HTML() . "\n";
-  my @items = $menu->look_down( _tag=>'li', sub { $_[0]->attr('class') =~ /level0/; } );
+	my @items = $menu->look_down( _tag=>'li', sub { $_[0]->attr('class') =~ /level0/; } );
 	print "Found " . @items . " menu items\n";
+	$menu_order += 1;
 
 	foreach my $item ( @items ) {
 		my $name = $item->look_down( _tag=>'span' )->as_text();
-    print "Have item $name\n";
+		next if $name eq '>';
+		print "Have item $name\n";
 		my $MainCategory = openprint::Product_Category->find_one(name=>openprint::Product_Category->transform(name=>$name));
 		if ( ! $MainCategory ) {
 			if ( confirm( "Add main category $name ? (Y|n)" ) ) {
@@ -140,11 +149,15 @@ foreach my $menu ( $tree->look_down(_tag=>'ul', class=>'em-catalog-navigation') 
 			} else {
 				next;
 			}
+		} else {
+			if ( ! ( $MainCategory->parent_ids() and sets::isin( $Root->id(), $MainCategory->parent_ids() ) ) ) {
+				$MainCategory->save({parent_ids=>[ ( $MainCategory->parent_ids() ? @{$MainCategory->parent_ids()} : () ), $Root->id() ] });
+			}
 		} 
 		foreach my $subitem ( $item->look_down( _tag=>'li', sub { $_[0]->attr('class') =~ /level1/ }) ) {
 			my $subname = $subitem->look_down( _tag=>'span' )->as_text();
 			my $SubCategory = openprint::Product_Category->find_one(name=>openprint::Product_Category->transform(name=>$subname) );
-      $log->debug("Sub Category $subname");
+			$log->debug("Sub Category $subname");
 			if ( ! $SubCategory ) {
 				if ( confirm( "Add sub category $subname ? (Y|n)" ) ) {
 					$SubCategory = new openprint::Product_Category();
@@ -156,7 +169,7 @@ foreach my $menu ( $tree->look_down(_tag=>'ul', class=>'em-catalog-navigation') 
 
 			foreach my $product_item ( $subitem->look_down( _tag=>'li', sub { $_[0]->attr('class') =~ /level2/ } ) ) {
 				my $product_name = $product_item->look_down( _tag=>'span' )->as_text();
-      $log->debug("Product $product_name");
+				$log->debug("Product $product_name");
 				my $Product = openprint::Product->find_one(name=>openprint::Product->transform(name=>$product_name) );
 				if ( ! $Product ) {
 					if ( confirm( "Add product $product_name ? (Y|n)" ) ) {
@@ -171,8 +184,8 @@ foreach my $menu ( $tree->look_down(_tag=>'ul', class=>'em-catalog-navigation') 
 			} # end foreach product
 		} # end foreach subitem
 	} # end foreach item
-  confirm();
-  #last; # We only want the first ul with that class
+  #confirm();
+  last; # We only want the first ul with that class
 }
 
 foreach my $category ( $tree->look_down('class','all-products') ) {
@@ -241,6 +254,7 @@ $log->debug(" $$Category{name} $$Category{id} ");
 			print "Had value_p for $title, using the html version of p content\n$value\n";
 		}
 		$value =~ s/”/"/g;
+		$value =~ s/–/-/g;
 		$value = Encode::encode('utf8', $value );
 
 		$title = openprint::Object_Specification->transform(name=>$title);
@@ -327,12 +341,13 @@ sub parse_tree {
 	my ( $Category, $name, $product, $tree ) = @_;
 	
 	print 'tree: ' . join(',', keys %{$tree} ) . "\n";
+
 	
 	foreach my $key ( keys %{$tree} ) {
 
 		if ( $key eq 'qty' or $key eq 'eachorlot' ) {			
 			my $product_name = join(' ', $name, @$product{sort { $a cmp $b } keys %{$product} } );
-$log->debug("Have qty/eachorlot $key product $product_name");
+			$log->debug("Have qty/eachorlot $key product $product_name");
 			my $Product = openprint::Product->find_one( name=>openprint::Product->transform(name=>$product_name) );
 			if ( ! $Product ) {
 				if ( confirm( "Add Product $product_name ? (Y|n)" ) ) {
@@ -378,24 +393,32 @@ $log->debug("Already have spec $spec => $$product{$spec}" );
 			my %product_prices = map { $$_{min} => $_ } $Product->Prices();
 			foreach my $qty_key ( keys %{$qty_hash} ) {
 				my ( $qty ) = $qty_key =~ /^qty_(\d+)$/;
-				my $cost = $$qty_hash{$qty_key};
-				if ( $cost != Math::Round::nearest( 0.01, $cost ) ) {
-					print "Rounding cost from $cost to " . Math::Round::nearest( 0.01, $cost  ) . "\n";
-					$cost = Math::Round::nearest( 0.01, $cost );
-				}
+				my $cost = Math::Round::nearest( 0.01, $$qty_hash{$qty_key} );
+
+	my $units;
+	if ( $$tree{eachorlot} ) {
+		$units = $$tree{eachorlot}
+  } elsif ( $$tree{qty_each_lot} ) {
+    $units = $$tree{qty_each_lot}{$qty_key};
+	}
+				#if ( $cost != Math::Round::nearest( 0.01, $cost ) ) {
+					#print "Rounding cost from $cost to " . Math::Round::nearest( 0.01, $cost  ) . "\n";
+					#$cost = Math::Round::nearest( 0.01, $cost );
+				#}
 
 				my $Price = $product_prices{$qty};
 				#$Price = $Product->get_Price( $qty ) and ! $Price;
+$$Price{cost} = 1*$$Price{cost};
 			
 				if ( ! $Price ) {
-					if ( confirm( "Add Price for $qty $$tree{eachorlot} $cost on $product_name ? (Y|n)" ) ) {
+					if ( confirm( "Add Price for $qty $units $cost on $product_name ? (Y|n)" ) ) {
 						$Price = new openprint::ProductPrice();
-						$Price->save({product_id=>$Product->id(), min=>$qty, max=>$qty, units=>$$tree{eachorlot}, cost=>$cost, pricelist_id=>$$openprint::Pricelist{id}, owner_id=>$config{owner_id}, price=>$cost });
+						$Price->save({product_id=>$Product->id(), min=>$qty, max=>$qty, units=>$units, cost=>$cost, pricelist_id=>$$openprint::Pricelist{id}, owner_id=>$config{owner_id}, price=>$cost });
 					}
 				} else {
-					if ( 1*$$Price{cost} != 1*$cost ) {
-						if ( confirm( "Price has changed $product_name for $qty from ($$Price{cost})$$Price{units} to ($cost) $$tree{eachorlot} Update? (Y|n)" ) ) {
-							$Price->save({ units=>$$tree{eachorlot}, cost=>$cost, price=>$cost*$$Price{markup} });
+					if ( ( $$Price{cost} != $cost ) or ( $$Price{units} ne $units ) ) {
+						if ( confirm( "Price has changed $product_name for $qty from ($$Price{cost})$$Price{units} to ($cost) $units Update? (Y|n)" ) ) {
+							$Price->save({ units=>$units, cost=>$cost, price=>$cost*$$Price{markup} });
 						}
           #} else {
             #$log->debug("No need to update pricing");
@@ -409,7 +432,7 @@ $log->debug("Already have spec $spec => $$product{$spec}" );
 			# It' something other than qty or eachorlot
 			foreach my $option ( keys %{$$tree{$key}} ) {
 				if ( ref $$tree{$key}{$option} ne 'HASH' ) {
-					print "Not recursing because there is no subtree for $option $$tree{$key}{$option}\n";
+					#print "Not recursing because there is no subtree for $option $$tree{$key}{$option}\n";
 					next;
 				}
 		

@@ -18,9 +18,15 @@ LoadContent( 'Log', '_inventory_log.html', $('LogForm').serialize() );
 				<input type="checkbox" name="outs" id="outs" <? echo ( $session{'/employee/inventory/inventory_log.html?outs'} ? 'checked="checked"' : '' ) ?> onclick="calc();"/>
 				<label class="radio" for="outs">Check Outs</label>
 			</li>
-		<li><label>Type</label>
-			<? echo ( checkboxes( 'Type', [ 'Sheet', 'Sheet', 'Roll','Roll','Unknown','Unknown' ], [ split(',',$session{'/employee/inventory/inventory_log.html?Type'}) ],  {onclick=>'calc();' } ); ) ?>
-        </li>
+			<li><label>Type</label>
+				<? echo ( checkboxes( 'Type', [ 'Sheet', 'Sheet', 'Roll','Roll','Unknown','Unknown' ], [ split(',',$session{'/employee/inventory/inventory_log.html?Type'}) ],  {onclick=>'calc();' } ); ) ?>
+      </li>
+			<li><label>Amount</label>
+					<?echo( join(' to ',
+								input(type=>'integer', name=>'delta_lower', value=>$session{$r->uri().'?delta_lower'}, oninput=>'calc();' ),
+								input(type=>'integer', name=>'delta_upper', value=>$session{$r->uri().'?delta_upper'}, oninput=>'calc();' ),
+								); ) ?>
+			</li>
 		<li>
 		<label>User</label>
 		<select name="employee_id" onchange="calc();">

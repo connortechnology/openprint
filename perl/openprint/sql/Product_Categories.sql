@@ -5,7 +5,8 @@ CREATE TABLE Product_Categories (
 	name			TEXT,
 	projecttype_id	INTEGER, FOREIGN KEY (projecttype_id) REFERENCES Project_Types (id),
 	description		TEXT,
-	deleted			BOOLEAN default false,
+	deleted			BOOLEAN NOT NULL default false,
 	parent_ids		INTEGER[],
+	sorting			INTEGER,
 	PRIMARY KEY (id)
 );

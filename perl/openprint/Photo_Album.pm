@@ -159,7 +159,7 @@ sub slider {
 	my ( $Album, $size ) = @_;
 	$size = 'medium' if ! $size;
 
-    my @Assets = map { $_->Asset() } $_[0]->Photos();
+  my @Assets = map { $_->Asset() } $_[0]->Photos();
 	return openprint::Asset::slider( \@Assets, $size );
 } # end sub slider
 

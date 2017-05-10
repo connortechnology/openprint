@@ -2147,8 +2147,16 @@ if ( ! sets::isin( 'product_categories', \@tables ) ) {
 	}
 	if ( exists $$data{parent_id} ) {
 		$log->debug("Adding  parent_id t product_categories");
-    $log->debug("UPDATE product_categories set parent_ids = ARRAY[parent_id]") or die $dbh->errstr();
-    $log->debug("ALTER TABLE Product_Categories DROP parent_id");
+		$dbh->do("UPDATE product_categories set parent_ids = ARRAY[parent_id]") or die $dbh->errstr();
+		$dbh->do("ALTER TABLE Product_Categories DROP parent_id");
+	}
+	if ( ! exists $$data{deleted} ) {
+		$log->debug("Add deleted to Product_Categories");
+		$dbh->do('ALTER TABLE Product_Categories ADD deleted BOOLEAN NOT NULL default false') or die $dbh->errstr();
+	}
+	if ( ! exists $$data{sorting} ) {
+		$log->debug("Add sorting to Product_Categories");
+		$dbh->do('ALTER TABLE Product_Categories ADD sorting INTEGER') or die $dbh->errstr();
 	}
 } # end if
 

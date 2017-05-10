@@ -4,7 +4,7 @@
 
 	my @specs = map { $param{"spec_filter-$_"} ? $_ : () } @{$$variable{Specifications}};
 	my $Currency = $openprint::Pricelist->Currency();
-	return "Please use the filters to reduce the # of products to list." if @{$$variable{Quantities}} > 5;
+	return "Please use the filters to reduce the # of products to list." if @{$$variable{Quantities}} > 10;
 	my $html .= '<table><tr><th>Product</th><th class="Price">'. join('</th><th class="Price">', @{$$variable{Quantities}} ) .'</tr>';
 
 	foreach my $Product ( $$variable{Category}->Products(order=>'lower(name)') ) {

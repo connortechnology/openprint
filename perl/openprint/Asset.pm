@@ -788,34 +788,39 @@ sub content_type {
 } # end sub content_type
 
 sub slider {
-    my ( $Assets, $size ) = @_;
-    $size = 'medium' if ! $size;
+  my ( $Assets, $size ) = @_;
+  $size = 'medium' if ! $size;
 
-	if ( ! ( $Assets and @{$Assets} ) ) {
-		return;
-	}
+  if ( ! ( $Assets and @{$Assets} ) ) {
+    return;
+  }
 
-    my $html = '<ul class="slider" style="background-image:url(/images/loading.gif); height: '.$$Assets[0]->height().'px;">';
-    my @slider_images;
+  my $html = '<ul class="slider">';
+  my @slider_images;
 
+  if ( @$Assets > 1 ) {
     for ( my $i = 0; $i < @$Assets ; $i += 1 ) {
-        my $Asset = $$Assets[$i];
-        push @slider_images, 'image'.$i;
-        if ( ! $i ) {
-            $html .= sprintf('<li id="image%d"><img onclick="GoNext();" src="%s"/></li>', $i, $Asset->sized_url( $size ) );
-        } else {
-            $html .= sprintf('<li id="image%d" style="display:none;"><img onclick="GoNext();" src="%s"/></li>', $i, $Asset->sized_url( $size ) );
-        }
+      my $Asset = $$Assets[$i];
+      push @slider_images, 'image'.$i;
+      if ( ! $i ) {
+        $html .= sprintf('<li id="image%d"><img onclick="GoNext();" src="%s"/></li>', $i, $Asset->sized_url( $size ) );
+      } else {
+        $html .= sprintf('<li id="image%d" style="display:none;"><img onclick="GoNext();" src="%s"/></li>', $i, $Asset->sized_url( $size ) );
+      }
     } # end for
     $html .= '</ul>';
-
-$html .= q`<script type="text/javascript">
-image_slide = new Array( '`. join("','", @slider_images ) .q`' );
-StartSlideShow();
+    $html .= q`
+<script type="text/javascript">
+  image_slide = new Array( '`. join("','", @slider_images ) .q`' );
+  StartSlideShow();
 </script>`;
-    return $html;
-
-}
+  } else {
+      my $Asset = $$Assets[0];
+    $html .= sprintf('<li><img src="%s"/></li>', $Asset->sized_url( $size ) );
+    $html .= '</ul>';
+  }
+  return $html;
+} # end sub slider
 
 1;
 __END__

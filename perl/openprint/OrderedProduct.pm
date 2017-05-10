@@ -77,7 +77,7 @@ sub Product {
 	if ( ! $_[0]{Product} ) {
 		$_[0]{Product} = new openprint::Product( $_[0]{product_id} );
 	}
-$openprint::log->debug("Product: " . $_[0]{Product}->to_string() );
+#$$openprint::log->debug("Product: " . $_[0]{Product}->to_string() );
 	return $_[0]{Product};
 } # end sub Product
 
@@ -96,7 +96,7 @@ sub price {
 sub total {
 	my $self = shift;
 	my %Price = $self->Product()->get_price( $$self{quantity} );
-	if ( $Price{units} eq 'total' ) {
+	if ( ( $Price{units} eq 'total' ) or ( $Price{units} eq 'lot' ) ) {
 		return $self->price();
 	} else {
 		return $self->price() * $self->quantity();

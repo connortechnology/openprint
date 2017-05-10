@@ -907,6 +907,15 @@ sub lastname {
 	return $_[0]{lastname};
 }
 
+sub address_html {
+  my ( $self ) = @_;
+  return join('<br/>', 
+    ( map { $$self{$_} ? ssi::html_escape( $$self{$_} ) : () } ( 'address1','address2' ) ),
+    join(', ', map { $self->$_() ? $self->$_() : () } ( 'city','state','postalcode' ) ),
+    ( map { $self->$_() ? $countries::countries{$$self{$_}} : () } ( 'country' ) ),
+  );
+}
+
 
 1;
 __END__

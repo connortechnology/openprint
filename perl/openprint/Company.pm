@@ -248,8 +248,8 @@ sub dropdown {
 			],
 		);
 		%sql = %new_sql;
-	} else {
-$log->debug("Not adding filter");
+	#} else {
+#$log->debug("Not adding filter to Company dropdown");
 	} # end if
 	
 	return openprint::Company->SUPER::dropdown( %sql );
