@@ -725,7 +725,6 @@ sub send_proofs_approved_email {
 				FROM	=> $openprint::User,
 				TO	  => $User,
 				SUBJECT => "Docket $info{DocketNumber} $$Order{company_name} - Proofs Approved",
-				ATTACHMENTS	=>	\@body,
 				);
 	} # end if
 	$Project->add_to_log( @session{'company_id','user_id'}, "Proofs approved email sent to $results" );
