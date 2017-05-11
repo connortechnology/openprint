@@ -67,6 +67,7 @@
 				<? if ( @{$$variable{InventoryNumbers}} > 1 ) ?>
 				<th class="inventory">Inventory #</th>
 				<? endif ( @{$$variable{InventoryNumbers}} > 1 ) ?>
+        <th class="grade">Grade</th>
 				<? if ( @{$$variable{Groups}} ) ?>
 				<th class="group">Group</th>
 				<? endif ( @{$$variable{Groups}} ) ?>
@@ -81,9 +82,9 @@
 				<th class="quality">Quality</th>
 				<th class="size">Size</th>
 				<th class="calliper">Calliper</th>
-				<th class="mweight">MWeight/Basis</th>
+				<th class="mweight">MWeight / Basis</th>
 				<th class="gsm">GSM</th>
-				<th class="spp_min">SPP/Min</th>
+				<th class="spp_min">SPP / Min</th>
 				<th class="pricing">Pricing CWT</th>
 			</tr>
 		</thead>
@@ -94,7 +95,7 @@
 	foreach my $Stock ( @{$$variable{Stocks}} ) {
 		my $check = $Stock->check();
 
-		my $columns = 13;
+		my $columns = 14;
 
 		$html .= sprintf('<tr%2$s><td class="checkbox"><input type="checkbox" id="chkStock%1$d" name="chkStock" value="%1$d"/></td>', 
 				$$Stock{id},
@@ -107,6 +108,7 @@
 					);
 			$columns += 1;
 		}
+    $html .= sprintf('<td class="grade"><a href="stock.html?stock_id=%1$d">%2$s</a></td>',$$Stock{id}, $openprint::Paper::grades{$Stock->grade()} );
 		if ( @{$$variable{Groups}} ) {
 			$html .= sprintf('<td class="group"><a href="stock.html?stock_id=%1$d">%2$s</a></td>',
 					$$Stock{id}, $Stock->group(),
@@ -144,9 +146,11 @@
 					$Stock->quality(),
 					$Stock->size(),
 					$Stock->calliper(),
-					( $Stock->type() eq 'Roll' ? Math::Round::nearest(1,$Stock->basis_mweight()) : Math::Round::nearest(1,$Stock->mweight()) . '/' .  Math::Round::nearest(1,$$Stock{basis_mweight} ) ),
+					( $Stock->type() eq 'Roll' ? Math::Round::nearest(1,$Stock->basis_mweight()) : Math::Round::nearest(1,$Stock->mweight()) . ' / ' .  Math::Round::nearest(1,$$Stock{basis_mweight} ) )
+.' @ ' . join('x',$Stock->basis_width(), $Stock->basis_height() ) ,
+          
 					sprintf('%.2f', Math::Round::nearest(0.01,$Stock->gsm() ) ),
-					$Stock->sheets_per_package().'/'.$Stock->minimum_order(),
+					$Stock->sheets_per_package().' / '.$Stock->minimum_order(),
 					join('<br/>', map { 
 							sprintf('%s %s %s $%s*%s%=$%s', $_->Pricelist()->name(), $_->service(), join(' ', ( $_->min() ? '>'.$_->min() : '' ), ( $_->max() ? '&lt;'.$_->max() : '' ) ),
 								1*$_->cost(), 1*$_->markup(), 1*$_->price() ) } 

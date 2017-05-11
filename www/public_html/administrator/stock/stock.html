@@ -83,7 +83,7 @@ return '';
 		button( 'Add1', { onclick=>"f1.action='stock.html';f1.btnFunction.value='';f1.submit();", text=>'Add New' } ),
 		button( 'Delete1', { onclick=>"f1.btnFunction.value='Delete';fmChange=2;fmCheck(f1);", text=>'Delete' } ),
 		button( 'Copy1', { onclick=>"f1.btnFunction.value='Copy';f1.submit();", text=>'Copy' } ),
-		button( 'Save1', { onclick=>"f1.btnFunction.value='Save';fmChange=3;fmCheck(f1);", text=>'Save' } ),
+		button( 'Save1', { onclick=>"f1.btnFunction.value='Save';f1.submit();", text=>'Save' } ),
 		button( 'Reset1', { onclick=>'f1.reset();', text=>'Reset' } ),
 ); ) ?>
 	</p>
@@ -228,10 +228,9 @@ return '';
 					<? echo ( input(type=>'float', id=>'mweight', name=>'mweight', value=>$$variable{Stock}->mweight(),  oninput=>'mweight_to_gsm( this.form );' ); ) ?>
 				</p>
 				<p id="BasisSize">
-					<label>Basis MWeight</label>
+					<label>Basis Weight</label>
 					<? echo ( input(type=>'float', id=>'basis_mweight', name=>'basis_mweight', value=>$$variable{Stock}->basis_mweight(),  oninput=>'basis_weight_to_gsm( this.form );' ); ) ?>
-					<br/>
-					<label>Basis Size</label>
+					@
 					<? echo ( join(' x ',
 								input(type=>'float', id=>'basis_width', name=>'basis_width', value=>( $$variable{Stock}->basis_width() ? $$variable{Stock}->basis_width() : 25 ),  oninput=>'gsm_to_mweight( this.form );' ),
 								input(type=>'float', id=>'basis_height', name=>'basis_height', value=>( $$variable{Stock}->basis_height() ? $$variable{Stock}->basis_height() : 38 ),  oninput=>'gsm_to_mweight( this.form );' ),
