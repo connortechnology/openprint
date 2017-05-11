@@ -395,7 +395,7 @@ $log->debug("Already have spec $spec => $$product{$spec}" );
 				my ( $qty ) = $qty_key =~ /^qty_(\d+)$/;
 				my $cost = Math::Round::nearest( 0.01, $$qty_hash{$qty_key} );
 
-	my $units;
+	my $units = '';
 	if ( $$tree{eachorlot} ) {
 		$units = $$tree{eachorlot}
   } elsif ( $$tree{qty_each_lot} ) {

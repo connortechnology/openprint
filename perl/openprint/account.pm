@@ -113,12 +113,27 @@ sub registration {
 			$log->error("No MD5SUM, there must have been a problem creating the png!");
 		} else {
 			require Authen::Captcha;
-			my $Captcha = new Authen::Captcha('data_folder' => '/tmp', 'output_folder' => $config{SkinPath}.'/images/captcha');
+			my $Captcha = new Authen::Captcha( data_folder => '/tmp/'.$config{db_name}, output_folder => $config{SkinPath}.'/images/captcha');
 			# Remove spaces, because some people want to put spaces between the characters, etc.
 			$param{Captcha} =~ s/\s//g;
-			if ( 1 != $Captcha->check_code( @param{'Captcha','MD5SUM'} ) ) {
+			my $rc = $Captcha->check_code( @param{'Captcha','MD5SUM'} );
+			if ( $rc == 1 ) {
+				# Passed
+			} elsif ( $rc == 0 ) {
+				# File error, log and carry on
+				$log->error("Captcha file error");
+			} elsif ( $rc == -1 ) {
+				$log->debug("Failed: code expired");
+				$error .= 'Captcha validation code has expired.  Please try again.';
+			} elsif ( $rc == -2 ) {
+				$log->debug("Failed: invalid code (not in db)");
 				$error .= 'Captcha validation code incorrect.  Please try again.';
-			} # end if
+			} elsif ( $rc == -3 ) {
+				$log->debug("Failed: invalid code (does not match token)");
+				$error .= 'Captcha validation code incorrect.  Please try again.';
+			} else {
+				$log->error("unknown return code $rc from Authen::Captcha");
+			}
 		} # end if
 	} # end if
 

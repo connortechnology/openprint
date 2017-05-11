@@ -2735,11 +2735,13 @@ $log->debug("after sorting presses: " . ( sprintf('%.4f', tv_interval( [$master_
 		foreach my $index ( $Project->signatures({ type=>$$specs{txtSignatureType} }) ) {
 			next if $index >= $service_index;
 			my $sig_specs = openprint::service::get_specs_ref( $Project, $index );
-			$$specs{PreviousPress} = $$sig_specs{'ddmPress'.$qty_index};
-$log->warn("Have previous press $$specs{PreviousPress} for group $$specs{Group}") if $$specs{PreviousPress};
-			$$specs{PreviousStockType} = $$sig_specs{'StockType'.$qty_index};
-			$$specs{PreviousGrainDirection} = $$sig_specs{'rdbGrainDirection'.$qty_index};
-			last;
+			if ( compare_signatures_no_results( $Project, $sig_specs, $specs ) ) {
+				$$specs{PreviousPress} = $$sig_specs{'ddmPress'.$qty_index};
+				$log->warn("Have previous press $$specs{PreviousPress} for group $$specs{Group}") if $$specs{PreviousPress};
+				$$specs{PreviousStockType} = $$sig_specs{'StockType'.$qty_index};
+				$$specs{PreviousGrainDirection} = $$sig_specs{'rdbGrainDirection'.$qty_index};
+				last;
+			}
 		} # end foreach
 #$log->debug("Master time after Previous Stock Type and Grain: " . ( sprintf('%.4f', tv_interval( [$master_time])*1000) ) .' usecs' );
 

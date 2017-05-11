@@ -980,8 +980,14 @@ sub promo_codes {
 sub logs {
 	ssi::setup_date_select( $r->uri, 'date_start', -7 );
 	ssi::setup_date_select( $r->uri, 'date_end', '' );
+  _logs();
 } # end sub logs
+
 sub _logs {
+	ssi::save_params( '/administrator/managerial/logs.html', ( 
+        'log_actions', 'user_id', 'company_id',
+				( map { 'date_start_' . $_ } ( 'year','month','day' ) ),
+				) );
 	if ( $param{action} eq 'delete' ) {
 		my $Log = new openprint::Log( $param{log_id} );
 		$Log->delete();
@@ -990,6 +996,7 @@ sub _logs {
 
 sub bitcoin {
 } # end sub bitcoin
+
 sub authorizations {
 	require openprint::Authorization;
 	require openprint::Object_Type;

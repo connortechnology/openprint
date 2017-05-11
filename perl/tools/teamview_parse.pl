@@ -23,7 +23,7 @@ $log = logger->new( 'debug' );
 
 my $opts = {};
 GetOptions( $opts, 'help',
-        'db_name=s', 'db_host=s', 'db_user=s', 'db_pass=s', 'debug=s', 'config=s', 'filename=s', 'commit=s', 'starting=s',
+        'db_name=s', 'db_host=s', 'db_user=s', 'db_pass=s', 'debug=s', 'config=s', 'filename=s', 'starting=s', 'interactive=s',
         );
 
 if ($opts->{help}) {
@@ -62,7 +62,6 @@ if ( ! $dbh ) {
     die "Error opening db. $!";
 } # end if
 $log->debug("Connected to db");
-
 
 my $filename = '/home/iconnor/.local/share/teamviewer12/logfiles/Connections.txt';
 if ( ! open( FH, '<'.$filename ) ) {
@@ -104,7 +103,7 @@ foreach my $line (<FH>) {
     }
     if ( $$opts{starting} ) {
       if ( $starttime < $$opts{starting} ) {
-        $log->debug("Next because  $starttime < $$opts{starting}");
+        $log->debug("Next because  $starttime < $$opts{starting} => " . Date::Format::time2str( $config{DateTimeFormat}, $starttime ) . ' < ' . Date::Format::time2str( $config{DateTimeFormat}, $$opts{starting} ) );
         next;
       } else {
         $log->debug("Not Next because  $starttime < $$opts{starting}");
@@ -125,15 +124,12 @@ foreach my $line (<FH>) {
 
       my $parser = 'DateTime::Format::Pg';
       if ( ! openprint::Timetrack->find( 
-            'starting <='	=>	$parser->format_datetime( $start_DT ), 
+            'starting >='	=>	$parser->format_datetime( $start_DT ), 
             'ending <='	=>	$parser->format_datetime( $end_DT ),
             company_id	=>	$Host->owner_id(),
             user_id		=>	$$Employee{id},
             ) ) {
-        $log->info("No Timetrack found. Add?");
-        $_ = <STDIN>;
-        chomp;
-        if ( $_ eq 'Y' or $_ eq 'y' or $_ eq '' ) { 
+        if ( confirm( "No Timetrack found. Add?" ) ) {
           my $Timetrack = new openprint::Timetrack();
           $_ = $Timetrack->save({
               starting			=>	$parser->format_datetime( $start_DT ), 
@@ -145,14 +141,13 @@ foreach my $line (<FH>) {
               travel_associated	=>	0,
               currency_id			=>	$Host->Owner()->currency_id(),	
               description     =>  'Teamview connection to ' . $Host->hostname(),
-
               });
           $log->error($_) if $_;
         }
       } # TImetrack not found
 
     } else {
-      $log->error("No host found for id $id");
+      confirm("No host found for id $id");
     }
 } # end foreach line
 close(FH);
@@ -168,10 +163,35 @@ The purpose of this script is to parse teamviewer logs
 
 Command-line options:
 
-  --help    Displays this message.
+  --help     Displays this message.
+  --db_name  Database Name
+  --db_host  Database Host
+  --db_user  Database User
+  --db_pass  Database Password
+  --debug    
+  --config
+  --filename
+  --starting  Date to start processing from
+
 
 EOH
 } # end sub usage
+sub confirm {
+  if ( $$opts{interactive} ) {
+    my $input;
+    print $_[0];
+    $input = <STDIN>;
+    chomp $input;
+    if ( $input eq 'Y' or $input eq '' ) {
+      return 1;
+    }
+    return 0;
+  } else {
+    return 1;
+  }
+  return 0;
+}
+
 
 1;
 __END__

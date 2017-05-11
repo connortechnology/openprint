@@ -17,7 +17,7 @@
 			my $sub_html = '<ul>';
 			foreach my $SubCategory ( @Categories ) {
 				$on = 1 if $SubCategory->id() == $param{category_id};
-$log->debug($SubCategory->url_to() . ' ' . $$variable{uri} );
+#$log->debug($SubCategory->url_to() . ' ' . $$variable{uri} );
 				$sub_html .= '<li>' . $SubCategory->link_to() . '</li>';
 			} # end foreach $SubCategory
 			$sub_html .= "</ul>\n";

@@ -1828,6 +1828,9 @@ sub check {
   if ( $Paper->brand() =~ /cover/i or $Paper->weight() =~ /cover/i and ( $Paper->basis_width() != 20 or $Paper->basis_height() != 26 ) ) {
 	  "may have has wrong basis size.";
     }
+  if ( ( $Paper->finish() =~ /1 side/i ) and ( $Paper->doublesided() ) ) {
+    "appears to be C1S, but is marked double sided.";
+  }
 
 	return;
 } # end sub check

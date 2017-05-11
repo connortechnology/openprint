@@ -8,7 +8,7 @@
 					<ul id="logactions">
 					<? echo(
 							my $html;
-							foreach my $Action ( openprint::Log_Action->find('order'=>'lower(name)') ) {
+							foreach my $Action ( openprint::Log_Action->find( order=>'lower(name)') ) {
 								$html .= sprintf('<li><input type="checkbox" name="log_actions" id="log_action-%1$s" value="%1$s" %3$s /><label class="radio" for="log_action-%1$s">%2$s</label></li>', 
 									$Action->id(), $Action->name(), ssi::checked( sets::isin( $Action->id(), $param{log_actions} ) ) 
 									);
