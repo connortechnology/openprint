@@ -86,7 +86,8 @@ sub _history {
 			my $end = undef;
 			my $desc = '';
 			my $NewTimetrack;
-			foreach my $Timetrack ( openprint::Timetrack->find(id=>ref $param{timetrack_id} eq 'ARRAY' ? $param{timetrack_id} : [ split(',', $param{timetrack_id}) ] ) ) {
+      my @Src_Timetracks = openprint::Timetrack->find(id=>ref $param{timetrack_id} eq 'ARRAY' ? $param{timetrack_id} : [ split(',', $param{timetrack_id}) ] );
+			foreach my $Timetrack ( @Src_Timetracks ) {
 				next if ! $Timetrack->can_edit();
 				if ( ! $NewTimetrack ) {
 					$NewTimetrack = $Timetrack->copy();
@@ -107,9 +108,16 @@ sub _history {
 					$end = $Timetrack->ending_dt();
 				}
 				$desc .= $Timetrack->starting_dt() . ' to ' . $Timetrack->ending_dt() . ': ' . $Timetrack->description() . '<br/>';
-			}
+			} # end foreach Source Timetrack
 			if ( $NewTimetrack ) {
+        
 				$variable{error} .= $NewTimetrack->save({ starting_dt=>$start, ending_dt=>$end, description=>$desc });
+        if ( ! $variable{error} ) {
+          foreach my $T ( @Src_Timetracks ) {
+            next if ! $T->can_edit();
+            $T->delete();
+          }
+        }
 			}
 		} elsif ( $param{func} eq 'delete' ) {
 			foreach my $Timetrack ( openprint::Timetrack->find(id=>ref $param{timetrack_id} eq 'ARRAY' ? $param{timetrack_id} : [ split(',', $param{timetrack_id}) ] ) ) {

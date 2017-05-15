@@ -222,7 +222,7 @@ sub continue_project {
 						( $service_index, $redirect ) = choose_service( $log, $dbh, $project_index );
 						last;
 					} else {
-						$log->debug("Multpage status says we ok");
+						$log->debug("Multpage status says we ok for qty $qty_index");
 					} # end if
 				} else {
 					$log->debug("Dont have a status function for $module");
