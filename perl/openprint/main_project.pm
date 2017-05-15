@@ -112,7 +112,6 @@ sub view {
 	my $project_id = $param{ProjectIndex};
 	$project_id = $param{project_id} if $param{project_id} and ! $param{ProjectIndex};
 
-
 	if ( exists $param{ShowAllSignatures} ) {
 		$session{ShowAllSignatures} = $param{ShowAllSignatures};
 	} # end if
@@ -123,7 +122,7 @@ sub view {
 		if ( $$Project{'price'.$qty_index} != $Project->price($qty_index,undef) ) {
 			$save = 1;
 			last;
-		} # endif
+		} # end if
 	} # end foreach
 	if ( $save ) {
 		$Project->save();
@@ -144,10 +143,6 @@ sub create_edit {
 			$variable{error} .= "Project $param{ProjectIndex} was not found.  A new Project will be created.<br/>";
 		}
 	}
-
-	@{$variable{ProjectTypes}} = map { $_->name(), $_->description() } openprint::ProjectType->find( order=>'sorting, lower(name)' );
-	# Check the appropriate button for project type
-	$variable{SelectedProjectType} = $Project->Type()->name();
 
 	@variable{'txtProjectReference','ddmDesign','txtComments','txtQuantity1','txtQuantity2','txtQuantity3','rdbMode','chkPrograms','txtOtherPrograms'} = (
 		$Project->reference(), $Project->design(), $Project->comments(), $Project->quantity1(), $Project->quantity2(), $Project->quantity3(), $Project->mode(), $Project->programs(), $Project->other_programs() 
