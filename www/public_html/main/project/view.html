@@ -118,6 +118,11 @@ name and then make changes. If you have any questions please click on our <a hre
 
 </form>
 <div class="Disclaimer"><? echo ( $config{ProjectViewDisclaimer} ) ?></div>
+<? if ( $$variable{Project}->can_edit() ) ?>
+<script type="text/javascript">
+new Ajax.InPlaceEditor( 'reference', '/main/project/_update.html?project_id=<?echo($$variable{Project}->id())?>&action=update&field=reference',{okButton:true,cancelLink:true,submitOnBlur:false,rows:1});
+</script>
+<? endif ( $$variable{Project}->can_edit() ) ?>
 	<? else ( $$variable{Project}->can_view() ) ?>
 		<div class="error">You may not view this project.</div>
 	<? endif ( $$variable{Project}->can_view() ) ?>
