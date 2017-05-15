@@ -94,14 +94,30 @@ sub _history {
 			);
 } # end sub _history 
 
+sub _update {
+	my $project_id = $param{project_id} if $param{project_id} and ! $param{ProjectIndex};
+	my $Project = $variable{Project} = new openprint::Project( $project_id );
+	if ( $param{action} ) {
+		if ( $param{action} eq 'update' ) {
+			if ( $param{field} eq 'reference' ) {
+				if ( ! $Project->save( { reference => $param{value} } ) ) {
+					$variable{PageContent} = $Project->reference();
+				} # end if successful save
+			} #end if reference
+		} # end if update
+	} # end if action
+} # end sub _update
+
 sub view {
-	my $project_index = $param{ProjectIndex};
+	my $project_id = $param{ProjectIndex};
+	$project_id = $param{project_id} if $param{project_id} and ! $param{ProjectIndex};
+
 
 	if ( exists $param{ShowAllSignatures} ) {
 		$session{ShowAllSignatures} = $param{ShowAllSignatures};
 	} # end if
-	$variable{ProjectIndex} = $project_index;
-	my $Project = $variable{Project} = new openprint::Project( $project_index );
+	$variable{ProjectIndex} = $project_id;
+	my $Project = $variable{Project} = new openprint::Project( $project_id );
 	my $save = 0;
 	foreach my $qty_index ( $Project->quantity_indexes() ) {
 		if ( $$Project{'price'.$qty_index} != $Project->price($qty_index,undef) ) {
