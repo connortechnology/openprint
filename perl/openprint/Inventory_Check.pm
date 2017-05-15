@@ -17,6 +17,7 @@ $serial= 'inventory_checks_id_seq';
 	scanner_id	=>	'scanner_id',
 	deleted		=>	'deleted',
 	location_id	=>	'location_id',
+	item_count	=>	'item_count',
 );
 %transforms = (
 	name	=> [ 's/^\s+//', 's/\s+$//', 's/\s\s+/ /g' ],
@@ -27,6 +28,7 @@ $serial= 'inventory_checks_id_seq';
 	scanner_id	=>	undef,
 	location_id	=>	undef,
 	deleted		=>	'0',
+	item_count	=>	undef,
 );
 
 sub name {
@@ -93,6 +95,18 @@ sub location_ids {
 	return @{$_[0]{location_ids}};
 }
 
+sub item_count {
+	if ( @_ > 1 ) {
+		$_[0]{item_count} = $_[1];
+	}
+	if ( ( ! $_[0]{item_count} ) and $_[0]{id} ) {
+		( $_[0]{item_count} ) = sql::execute( undef, undef, 'SELECT count(id) FROM Inventory_Check_Entries WHERE ic_id=?', $_[0]{id} );
+	}	
+	return $_[0]{item_count};
+}
+sub save {
+	
+}
 
 1;
 __END__
