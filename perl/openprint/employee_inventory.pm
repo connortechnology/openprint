@@ -2723,9 +2723,9 @@ sub check {
 			$variable{error} .= $DST_ICE->save({ic_id=>$$Check{id}});
 		}
 		$variable{information} .= 'Check ' . $SRC_Check->name() . ' merged.';
-    } elsif ( $param{action} eq 'Undelete' ) {
-        $variable{error} .= $Check->undelete();
-        $variable{ExternalRedirect} = '/employee/inventory/checks.html' if ! $variable{error};
+	} elsif ( $param{action} eq 'Undelete' ) {
+		$variable{error} .= $Check->undelete();
+		$variable{ExternalRedirect} = '/employee/inventory/checks.html' if ! $variable{error};
 	} elsif ( $param{action} eq 'Save' ) {
 		
 		if ( Date::Calc::check_date( @param{map{'started_on_'.$_}('year','month','day')} ) ) {
@@ -2766,8 +2766,10 @@ $log->debug("No duplicate fuond for $$ICE{rfidtag_id}, previous rags: " . $rfidt
 		}
 		if ( ! $variable{information} ) {
 			$variable{information} = 'No duplicates were found.<br/>';
+		} else {
+			$variable{error} .= $Check->save() if ! $variable{error};
 		}
-        $variable{ExternalRedirect} = '/employee/inventory/check.html?check_id='.$$Check{id};
+		$variable{ExternalRedirect} = '/employee/inventory/check.html?check_id='.$$Check{id};
 	} elsif ( $param{action} eq 'Apply' or $param{action} eq 'Test' ) {
 
 		my $ac = sql::start_transaction( $dbh );
@@ -2977,6 +2979,7 @@ $log->debug("Have skid not in check: " . $Skid->to_string() );
 					notes		=>	$notes,
 					( ( $location and $Locations{$location} ) ? ( location_id	=>	$Locations{$location}->id() ) : () ),
 				} );
+				$variable{error} .= $Check->save() if ! $variable{error};
 			} # end while line = <IO>
 		} # end if upload
 
@@ -2992,6 +2995,7 @@ sub _check_entries {
 				ic_id		=>	$Check->id(),
 				map { $param{$_} ? ( $_ => $param{$_} ) : () } ( 'skid_id','rfidtag_id','quantity','notes','location_id' ),
 				} );
+		$variable{error} .= $Check->save() if ! $variable{error};
 	} # end if
 	ssi::save_params( '/employee/inventory/check.html', ( 'has_skid' , 'has_quantity', 'has_price', 'sort', 'scanner_id', 'user_id', 'auto_refresh',) );
 }
