@@ -703,18 +703,17 @@ sub send_proofs_approved_email {
 	$info{CompletionDate} = Date::Format::time2str( $config{DateTimeFormat}, time );
 
 	$info{ReplacementText} = ssi::include( '/email_content/proofs_approved-sales_rep.html', \%info );
-	$_ = encode_qp( Encode::encode('utf-8', ssi::include( '/email_template.html', \%info ) ) );
-	my @body = ('', $_, 'text/html', 'quoted-printable');
 	my $Email = new openprint::Email();
+	$Email->html_body( ssi::include( '/email_template.html', \%info ) );
 
-	my $CSR = new openprint::User( $Order->salesrep_id() );
+	my $CSR = $Order->CSR();
 	my @Users = map { $_->User() } openprint::User_Notification->find( type =>'Proofs Approval Notifications', value =>'Yes',
 			'company_id is null or ='	=> $Project->company_id(),
 			user_company_id=>[$Project->company_id(), $openprint::User->company_id(), ( $CSR->id() ? $CSR->company_id() : () ) ] );
 
 	if ( ! sets::isin( $CSR->id(), [ map { $_->id() } @Users ] ) ) {
 		my $Notification = $CSR->notification('Proofs Approval Notifications');
-		push @Users, $CSR if $Notification and ( $Notification ne 'No' );
+		push @Users, $CSR if (!$Notification) or ( $Notification ne 'No' );
 	} # end if
 
 	my $results;
@@ -726,7 +725,6 @@ sub send_proofs_approved_email {
 				FROM	=> $openprint::User,
 				TO	  => $User,
 				SUBJECT => "Docket $info{DocketNumber} $$Order{company_name} - Proofs Approved",
-				ATTACHMENTS	=>	\@body,
 				);
 	} # end if
 	$Project->add_to_log( @session{'company_id','user_id'}, "Proofs approved email sent to $results" );
