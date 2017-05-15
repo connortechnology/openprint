@@ -6248,6 +6248,9 @@ $log->warn("Something wrong in AQ");
 	my $run_cost = misc::sum( map { $$_{Total} } @{$run_prices} );
 	$price{'Run Prices'} = $run_prices;
 
+	if ( $$Imposition{sides} == 2 and $$Imposition{runstyle} eq 'Sheet Work' ) {
+		$impressions *= 2;
+	}
 	$price{Impressions} = $impressions;
 	$price{'Impression MPrice'} = misc::sum( map { $$_{MPrice} } @{$run_prices} );
 
