@@ -12,10 +12,11 @@
         $html .= sprintf('<div class="Category"><h3>%s</h3><ul>', $ProjectTypeCategory->name() );
 		$html .= radio( 'rdbProjectType', 
 					[ map { $_->name(), ssi::htmlize( $_->description() ) } @ProjectTypes ],
-					$$variable{SelectedProjectType},
+					$$variable{Project}->Type()->name(),
 					{ 
 						onclick=>q`project_type_alert(f1, this);calc('f1');`, 
-						container=>['<li>','</li>'] } );
+						container=>['<li>','</li>'],
+					} );
 		$html .= '</ul></div>';
     } # end foreach Category
     $html .= "</div>\n";
