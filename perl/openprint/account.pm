@@ -50,7 +50,9 @@ sub select_user {
 			return;
 		} # end if
 		my $User = $variable{User} = new openprint::User( $param{user_id} );
-		@session{'company_id','user_id','user_type'} = $User->get('company_id','id','type');
+		if ( $User ) {
+			@session{'company_id','user_id','user_type'} = @$User{'company_id','id','type'};
+		}
 	} # end if user_id
 } # end sub select_user
 

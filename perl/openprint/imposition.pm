@@ -542,13 +542,13 @@ $openprint::log->debug("Colour bar is now $colour_bar") if DEBUG;
 		$cropmarkspace -= $bleed_size if $bleed_locations{Top};
 		$cropmarkspace = 0 if $cropmarkspace < 0;
 		$adjusted_paper_height -= $cropmarkspace;
-		$setup1->cropmark_top( $cropmarkspace );
+		$$setup1{cropmark_top} = $cropmarkspace;
 
 		$cropmarkspace = $$specs{CropMarkSpace};
 		$cropmarkspace -= $bleed_size if $bleed_locations{Bottom};
 		$cropmarkspace = 0 if $cropmarkspace < 0;
 		$adjusted_paper_height -= $cropmarkspace;
-		$setup1->cropmark_bottom( $cropmarkspace );
+		$$setup1{cropmark_bottom} = $cropmarkspace;
 	} # end if
 
 	$adjusted_paper_height = 0 if $adjusted_paper_height < 0;
@@ -559,12 +559,12 @@ $openprint::log->debug("Colour bar is now $colour_bar") if DEBUG;
 		$cropmarkspace = $$specs{CropMarkSpace};
 		$cropmarkspace -= $bleed_size if $bleed_locations{Left};
 		$cropmarkspace = 0 if $cropmarkspace < 0;
-		$setup1->cropmark_left( $cropmarkspace );
+		$$setup1{cropmark_left} = $cropmarkspace;
 		$gutters -= $cropmarkspace;
 		$cropmarkspace = $$specs{CropMarkSpace};
 		$cropmarkspace -= $bleed_size if $bleed_locations{Right};
 		$cropmarkspace = 0 if $cropmarkspace < 0;
-		$setup1->cropmark_right( $cropmarkspace );
+		$$setup1{cropmark_right} = $cropmarkspace;
 		$gutters -= $cropmarkspace;
 		$gutters = 0 if $gutters < 0;
 	} # end if

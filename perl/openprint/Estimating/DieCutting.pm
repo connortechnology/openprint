@@ -490,7 +490,8 @@ sub signature_calc {
 	} # end if Overrides
 
 	foreach my $Equipment ( @equipment ) {
-		if ( $$specs{"txtHoleClearingHoles-$form"} and ( $$specs{"txtHoleClearingHoles-$form"} > 0 ) and ( $Equipment->specification('HoleClearing Capable') ne 'Y') ) {
+		if ( $$specs{"txtHoleClearingHoles-$form"} and ( $$specs{"txtHoleClearingHoles-$form"} > 0 ) and 
+        ( ( $_ = $Equipment->specification('HoleClearing Capable') ) and ( $_ ne 'Y' ) ) ) {
 			$results{breakdown} .= 'Doesnt do hole clearing.<br/>';
 			next;
 		} # end if

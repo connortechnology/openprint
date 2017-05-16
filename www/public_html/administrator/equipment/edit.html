@@ -53,11 +53,14 @@ function filter_onChange( element, id, selected ) {
 				parameters: { action: 'add', equipment_id: equipment_id, user_id: user_id } } );
 	}
 	function delete_spec( id ) {
-new Ajax.Request('/administrator/equipment/_specification.html?action=delete&amp;id='+id, { onSuccess: function(){var tr = $('S'+id); tr.parentNode.removeChild(tr);SortableTable.load();} } );
+    new Ajax.Request('/administrator/equipment/_specification.html?action=delete&amp;id='+id, { onSuccess: function(){var tr = $('S'+id); tr.parentNode.removeChild(tr);SortableTable.load();} } );
 	}
 	function copy_spec( id ) {
-new Ajax.Request('/administrator/equipment/_specification.html?action=copy&amp;id='+id, { onSuccess: function(response){ $('S'+id).insert( {after: response.responseText } ); SortableTable.load();} } );
+    new Ajax.Request('/administrator/equipment/_specification.html?action=copy&amp;id='+id, { onSuccess: function(response){ $('S'+id).insert( {after: response.responseText } ); SortableTable.load();} } );
 	}
+  function delete_fold_spec( id ) {
+    new Ajax.Request('/administrator/equipment/_fold_specification.html?action=delete&amp;id='+id, { onSuccess: function(){var tr = \$('FoldSpecification-'+id); tr.parentNode.removeChild(tr);} } );
+  } // end function delete_fold_spec
 </script>
 <form id="f1" name="f1" method="post" enctype="multipart/form-data" action="edit.html">
 	<fieldset class="filters"><legend>Search Information</legend>
@@ -294,12 +297,11 @@ new Ajax.Request('/administrator/equipment/_specification.html?action=copy&amp;i
 				<option value="">select</option>
 				<option value="all">All</option>
 <? echo ( 
-	return make_drop_down( [ map { $_, $openprint::Estimating::Folding::fold_types{$_} } sort keys %openprint::Estimating::Folding::fold_types ] );
-	my %types;
-	foreach ( openprint::Fold->find( equipment_id=>$$variable{Equipment}->id()) ) {
-		$types{$_->type()} = $openprint::Estimating::Folding::fold_types{$_->type()};
-	}
-	make_drop_down( [ map { $_, $types{$_} } sort keys %types ] );
+	return make_drop_down( [ map { $_, $openprint::Estimating::Folding::fold_types{$_} } sort {
+        ($a =~ /^(\d+)/)[0] <=> ($b =~ /^(\d+)/)[0]
+                            ||
+                    $a  cmp  $b
+} keys %openprint::Estimating::Folding::fold_types ] );
 ) ?>
 			</select>
 <? echo ( join("\n",

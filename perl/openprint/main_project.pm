@@ -94,20 +94,35 @@ sub _history {
 			);
 } # end sub _history 
 
+sub _update {
+	my $project_id = $param{project_id} if $param{project_id} and ! $param{ProjectIndex};
+	my $Project = $variable{Project} = new openprint::Project( $project_id );
+	if ( $param{action} ) {
+		if ( $param{action} eq 'update' ) {
+			if ( $param{field} eq 'reference' ) {
+				if ( ! $Project->save( { reference => $param{value} } ) ) {
+					$variable{PageContent} = $Project->reference();
+				} # end if successful save
+			} #end if reference
+		} # end if update
+	} # end if action
+} # end sub _update
+
 sub view {
-	my $project_index = $param{ProjectIndex};
+	my $project_id = $param{ProjectIndex};
+	$project_id = $param{project_id} if $param{project_id} and ! $param{ProjectIndex};
 
 	if ( exists $param{ShowAllSignatures} ) {
 		$session{ShowAllSignatures} = $param{ShowAllSignatures};
 	} # end if
-	$variable{ProjectIndex} = $project_index;
-	my $Project = $variable{Project} = new openprint::Project( $project_index );
+	$variable{ProjectIndex} = $project_id;
+	my $Project = $variable{Project} = new openprint::Project( $project_id );
 	my $save = 0;
 	foreach my $qty_index ( $Project->quantity_indexes() ) {
 		if ( $$Project{'price'.$qty_index} != $Project->price($qty_index,undef) ) {
 			$save = 1;
 			last;
-		} # endif
+		} # end if
 	} # end foreach
 	if ( $save ) {
 		$Project->save();
@@ -128,10 +143,6 @@ sub create_edit {
 			$variable{error} .= "Project $param{ProjectIndex} was not found.  A new Project will be created.<br/>";
 		}
 	}
-
-	@{$variable{ProjectTypes}} = map { $_->name(), $_->description() } openprint::ProjectType->find( order=>'sorting, lower(name)' );
-	# Check the appropriate button for project type
-	$variable{SelectedProjectType} = $Project->Type()->name();
 
 	@variable{'txtProjectReference','ddmDesign','txtComments','txtQuantity1','txtQuantity2','txtQuantity3','rdbMode','chkPrograms','txtOtherPrograms'} = (
 		$Project->reference(), $Project->design(), $Project->comments(), $Project->quantity1(), $Project->quantity2(), $Project->quantity3(), $Project->mode(), $Project->programs(), $Project->other_programs() 

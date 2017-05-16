@@ -104,8 +104,8 @@
 <div class="Notes">
 	<fieldset><legend>Notes</legend>
         <table class="List">
-            <tr><td class="Date">Posted On</td><td><? echo ( Date::Format::time2str( $config{'DateFormat'}, Date::Parse::str2time($$variable{Invoice}->posted_on() ) ); ) ?></td></tr>
-            <tr><td><b>Due On</b></td><td><b><? echo ( Date::Format::time2str( $config{'DateFormat'}, Date::Parse::str2time( $$variable{Invoice}->due_on() ) ); ) ?></b></td></tr>
+            <tr><td class="Date">Posted On</td><td><? echo ( date_format( $$variable{Invoice}->posted_on() ); ) ?></td></tr>
+            <tr><td><b>Due On</b></td><td><b><? echo ( date_format( $$variable{Invoice}->due_on() ); ) ?></b></td></tr>
             <tr><td>Notes</td><td><? echo ( $$variable{Invoice}->external_notes() ) ?></td></tr>
             <tr><td><b>Invoice Terms</b></td>
 			<td><b>Net 15 days. Interest on overdue amounts will acrue at the rate of <? echo ( $$variable{Invoice}->monthly_interest() ) ?>% per month from the due date.</b></td></tr>

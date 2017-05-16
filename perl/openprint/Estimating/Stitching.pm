@@ -720,6 +720,9 @@ sub calc {
 				$pass_count += 1;
 			} # end while pass
 			$$specs{'hdnBreakdown'.$qty_index} .= sprintf('Calliper Markup %d%<br/>', $price{'Calliper Markup'} ) if $price{'Calliper Markup'};
+				if ( my $CoverPrice = $price{CoverPrice} ) {
+					$$specs{'hdnBreakdown'.$qty_index} .= sprintf('&nbsp;Cover: $%.2f%s=$%.2f<br/>', @$CoverPrice{'Price','units','Total'});
+				}
 			$$specs{'hdnBreakdown'.$qty_index} .= 'Run Discount' . $price{'RunCost Discount'}.'%<br/>' if $price{'RunCost Discount'};
 			$$specs{'hdnBreakdown'.$qty_index} .= 'Imposition Discount: '. $price{'Imposition Discount'} .'%<br/>' if $price{'Imposition Discount'};
 			$$specs{'hdnBreakdown'.$qty_index} .= 'Spine Length Discount: ' . $price{'SpineLength Discount'} . '%<br/>' if $price{'SpineLength Discount'};
@@ -1066,6 +1069,19 @@ sub get_price {
 	if ( $price{'RunCost Discount'} = $Equipment->specification( 'RunCost Discount', $$specs{"txtQuantity$qty_index"} ) ) {
 		$price{Service} *= ( 1 - $price{'RunCost Discount'}/100);
 	} # end if
+
+	if ( $plusCover ) {
+		my $StitchingCoverService = openprint::Service->find_one(name=>$$ServiceType{name}.'Cover');
+		if ( $StitchingCoverService ) {
+		my $StitchingCoverPrice = $StitchingCoverService->get_Price( $qty, $Equipment );
+			if ( $StitchingCoverPrice ) {
+					$price{CoverService} = $StitchingCoverService;
+					$price{CoverPrice} = $StitchingCoverPrice;
+					$$StitchingCoverPrice{Total} = $$StitchingCoverPrice{Price} * $qty;
+					$price{Service} += $$StitchingCoverPrice{Total};
+			}
+		}
+	}
 
 	$price{'Imposition Discount'} = $Equipment->specification( 'Imposition Discount', $price{Imposition} );
 	$price{Service} *= ( 1 - $price{'Imposition Discount'}/100) if $price{'Imposition Discount'};

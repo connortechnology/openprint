@@ -4102,6 +4102,10 @@ if ( ! sets::isin( 'inventory_checks', \@tables ) ) {
 		$dbh->do( 'ALTER TABLE inventory_checks add location_id INTEGER') or die $dbh->errstr();
 		$dbh->do( 'ALTER TABLE inventory_checks add foreign key (location_id) REFERENCES Locations (id);') or die $dbh->errstr();
 	}
+	if ( ! exists $$data{item_count} ) {
+		$log->debug("Adding item_count to inventory_checks");
+		$dbh->do('ALTER TABLE inventory_checks ADD item_count INTEGER') or die $dbh->errstr();
+	}
 }
 if ( ! sets::isin( 'helpdesk', \@tables ) ) {
 	$log->debug("Creating HelpDesk Table");

@@ -181,7 +181,8 @@ $log->debug("Materials: " . map { $_->name() } @Materials ) if DEBUG;
 			if ( $$specs{'OverrideItemsPerPackage'.$qty_index} ne 'Y'  ) {
 # Make sure it's not too heavy
 				$items_by_weight = int ( $Material->specification('Maximum Weight') / $$specs{txtFinishedWeight} );
-				$$specs{'hdnBreakdown'.$qty_index} .= sprintf('Items by weight: %d<br/>', $items_by_weight );
+				$$specs{'hdnBreakdown'.$qty_index} .= sprintf('Items by weight: Max %d / project weight %.3f = %d per package<br/>',
+						$Material->specification('Maximum Weight'), $$specs{txtFinishedWeight}, $items_by_weight );
 
 				my $width = $Material->specification('Width');
 				my $height = $Material->specification('Height');
