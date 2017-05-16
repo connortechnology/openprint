@@ -321,8 +321,8 @@ sub notify {
 				FROM		=>	$config{TechSupportEmail},
 				HTML_BODY	=>	$html_body,
 				);
+		(new openprint::Log())->save({ Object=>$Host, action=>'Emailed', note=>$results });
 	} # end if @To > 10
-	(new openprint::Log())->save({ Object=>$Host, action=>'Emailed', note=>$results });
 	return $results;
 }
 
