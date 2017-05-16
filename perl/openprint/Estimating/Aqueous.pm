@@ -290,7 +290,7 @@ $imposition->display();
 
 	my @front_aq;
 	my %front_aq;
-    $$sig_specs{SideOneColours} = [openprint::Estimating::Printing::get_colours( $sig_specs, 'SideOne' )] if ! $$sig_specs{SideOneColours};
+	$$sig_specs{SideOneColours} = [openprint::Estimating::Printing::get_colours( $sig_specs, 'SideOne' )] if ! $$sig_specs{SideOneColours};
 	foreach ( @{$$sig_specs{SideOneColours}} ) {
 #$openprint::log->debug("blah  $$_{name}");
 		if ( $$_{name} =~ /Aqueous/ ) {
@@ -302,7 +302,7 @@ $imposition->display();
 
 	my @back_aq;
 	my %back_aq;
-    $$sig_specs{SideTwoColours} = [openprint::Estimating::Printing::get_colours( $sig_specs, 'SideTwo' )] if ! $$sig_specs{SideTwoColours};
+	$$sig_specs{SideTwoColours} = [openprint::Estimating::Printing::get_colours( $sig_specs, 'SideTwo' )] if ! $$sig_specs{SideTwoColours};
 	foreach ( @{$$sig_specs{SideTwoColours}} ) {
 		if ( $$_{name} =~ /Aqueous/ ) {
 			push @back_aq, $_;
@@ -323,6 +323,9 @@ $imposition->display();
 	# Should include overs
 	my $impressions = $$sig_specs{"hdnImpressionQuantity$qty_index"} ? $$sig_specs{"hdnImpressionQuantity$qty_index"} : $$specs{"txtQuantity$qty_index"};
 $openprint::log->debug("Impressions: " . $$sig_specs{"hdnImpressionQuantity$qty_index"} . " qty: " . $$specs{"txtQuantity$qty_index"} ) if DEBUG;
+	if ( $$imposition{runstyle} eq 'Sheet Work' and @{$$sig_specs{SideTwoColours}} and @{$$sig_specs{SideOneColours}} ) {
+		$impressions /= 2;
+	}
 
 	# Why would it be multiplied by the # of items per sheet? That doesn't make any sense at all.
 	#if ( $$specs{txtPressSheetComboItems} ) {
