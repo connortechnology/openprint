@@ -83,6 +83,7 @@ $openprint::log->debug("Host: " . $r->param('host') );
 		
 	$record = $dbh->selectrow_hashref( 'SELECT * FROM records WHERE name=? AND content=? AND type=?', {}, $hostname, $addr, 'A' );
 	if ( $record ) {
+    $log->debug("No change.");
 		$r->print('nochg');
 	} else {
 		$log->debug("Record not found for $hostname $addr A");

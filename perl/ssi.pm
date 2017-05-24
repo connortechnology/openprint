@@ -1128,8 +1128,8 @@ sub do_css_links {
         $css = join('_', @parts ) . '.css';
         if ( -e $config{SkinPath}.'/css/'.$css ) {
             push @html, '<link type="text/css" rel="stylesheet" href="'.hash_link('/css/'.$css).'"/>';
-		} else {
-			$log->debug("Does not exist at " . $config{SkinPath}.'/css/'.$css);
+        } elsif ( Debug ) {
+          $log->debug("Does not exist at " . $config{SkinPath}.'/css/'.$css);
         } # end if
         pop @parts;
     } # end while
