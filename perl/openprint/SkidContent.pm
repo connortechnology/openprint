@@ -187,7 +187,7 @@ sub checked_out {
 } # end sub checked_out
 
 sub to_string {
-	return sprintf('%s%s of %s', Number::Format::format_number( $_[0]{quantity} ), $_[0]->units(), $_[0]->Paper()->to_string() );
+	return sprintf('%s%s of %s', ( $_[0]{quantity} ? Number::Format::format_number( $_[0]{quantity} ) : 'unknown'), $_[0]->units(), $_[0]->Paper()->to_string() );
 }
 
 1;
