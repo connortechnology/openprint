@@ -1074,23 +1074,26 @@ $openprint::log->debug("Templatetype: $$sig_specs{rdbTemplateType}") if DEBUG;
 						} # end if
 							
 						my $Fold = $Equipment->Fold({
-									page_columns	=>	$Imposition->page_columns(),
-									page_rows		=>	$Imposition->page_rows(),
-								page_width			=>	$$sig_specs{txtFinalWidth},
-								page_height			=>	$$sig_specs{txtFinalHeight},
-								type						=>	$$sig_specs{rdbTemplateType},
-								gsm							=>	$$Paper{gsm},
-								calliper				=>	$$Paper{calliper},
-								imposition			=>	$$Imposition{imposition},
-								columns					=>	$$Imposition{columns},
-								rows						=>	$$Imposition{rows},
-								printing_type		=>	$ppt,
-								spine_direction	=>	$openprint::Imposition::Orientations{$$Imposition{spine_direction}},
-								});
+							page_columns		=>	$Imposition->page_columns(),
+							page_rows				=>	$Imposition->page_rows(),
+							page_width			=>	$$sig_specs{txtFinalWidth},
+							page_height			=>	$$sig_specs{txtFinalHeight},
+							type						=>	$$sig_specs{rdbTemplateType},
+							gsm							=>	$$Paper{gsm},
+							calliper				=>	$$Paper{calliper},
+							imposition			=>	$$Imposition{imposition},
+							columns					=>	$$Imposition{columns},
+							rows						=>	$$Imposition{rows},
+							printing_type		=>	$ppt,
+							spine_direction	=>	$openprint::Imposition::Orientations{$$Imposition{spine_direction}},
+							});
 
 						if ( ! $Fold ) {
 							if ( $$specs{"chkOverrideLimits-$form-$qty_index"} ne 'Y' ) {
+# Don't do this, because we may be printing a 2x2 8pg fold, but this will allow us to fold a parallel 8pg
+if ( 0 ) {
 							$Fold = $Equipment->Fold({
+
 									page_width			=>	$$sig_specs{txtFinalWidth},
 									page_height			=>	$$sig_specs{txtFinalHeight},
 									type						=>	$$sig_specs{rdbTemplateType},
@@ -1102,6 +1105,7 @@ $openprint::log->debug("Templatetype: $$sig_specs{rdbTemplateType}") if DEBUG;
 									printing_type		=>	$ppt,
 									spine_direction	=>	$openprint::Imposition::Orientations{$$Imposition{spine_direction}},
 									});
+}
 							} else {
 							$Fold = $Equipment->Fold({
 									page_width			=>	$$sig_specs{txtFinalWidth},

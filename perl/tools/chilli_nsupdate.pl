@@ -106,7 +106,7 @@ if ( @Interfaces ) {
 					} # end if 
 				} # end if 
 			} else {
-				$log->debug("IP unchanged");
+				$log->debug("IP unchanged ($ENV{'FRAMED_IP_ADDRESS'} for $$Interface{mac}");
 			} # end if
 		} else {
 			$log->debug("IP not changed because dhcp not set for mac $ENV{'CALLING_STATION_ID'} $ENV{'FRAMED_IP_ADDRESS'}");

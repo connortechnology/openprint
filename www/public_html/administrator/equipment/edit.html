@@ -48,6 +48,7 @@ function filter_onChange( element, id, selected ) {
 		new Ajax.Updater('Operators','/administrator/equipment/_operators.html', {
 				parameters: { action: 'delete', equipment_id: equipment_id, user_id: user_id } } );
 	} // end function del_operator
+
 	function add_operator(user_id) {
 		new Ajax.Updater('Operators','/administrator/equipment/_operators.html', {
 				parameters: { action: 'add', equipment_id: equipment_id, user_id: user_id } } );
@@ -59,7 +60,7 @@ function filter_onChange( element, id, selected ) {
     new Ajax.Request('/administrator/equipment/_specification.html?action=copy&amp;id='+id, { onSuccess: function(response){ $('S'+id).insert( {after: response.responseText } ); SortableTable.load();} } );
 	}
   function delete_fold_spec( id ) {
-    new Ajax.Request('/administrator/equipment/_fold_specification.html?action=delete&amp;id='+id, { onSuccess: function(){var tr = \$('FoldSpecification-'+id); tr.parentNode.removeChild(tr);} } );
+    new Ajax.Request('/administrator/equipment/_fold_specification.html?action=delete&amp;id='+id, { onSuccess: function(){var tr = $('FoldSpecification-'+id); tr.parentNode.removeChild(tr);} } );
   } // end function delete_fold_spec
 </script>
 <form id="f1" name="f1" method="post" enctype="multipart/form-data" action="edit.html">

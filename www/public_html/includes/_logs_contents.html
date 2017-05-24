@@ -5,10 +5,11 @@
 		object_id		=>	$$variable{Object}->id(),
 		date_filter( $variable{uri}.'?log_created_on_end', 'date_time <=' ),
 		date_filter( $variable{uri}.'?log_created_on_start', 'date_time >=' ),
+		( $session{$variable{uri}.'?log_action_id'} ? ( action_id => $session{$variable{uri}.'?log_action_id'} ) : () ),
 		( $session{$variable{uri}.'?log_limit'} ? ( limit => $session{$variable{uri}.'?log_limit'} ) : () ),
 		order =>'date_time DESC',
 	);
-	if ( ! @Logs ) {
+	if ( ( ! @Logs ) and ! ( $session{$variable{uri}.'?log_action_id'} ) ) {
 		@Logs = openprint::Log->find(
 				object_type_id  =>  $$variable{Object}->Object_Type()->id(),
 				object_id       =>  $$variable{Object}->id(),

@@ -6179,28 +6179,7 @@ $log->debug("Area $area = $$Imposition{object_area} * Impressions($colour_impres
 	if ( $_ = $Press->specification('Charge for setup overs') and $$_{value} eq 'N' ) {
 		$impressions -= $setup_overs;
 	} # end if
-	$$specs{'hdnImpressionQuantity'.$qty_index} = $impressions;
-	$$specs{'ddmPress'.$qty_index} = $$Press{strid};
 
-	# Used to be hasAQ.. but that doesn't make any sense.	Must be NeedAQ.
-	if ( $$project{NeedAqueous} ) {
-		my $aq_time = gettimeofday();
-		my %aq_results = openprint::Estimating::Aqueous::signature_calc( $Project, $$project{AqueousSpecs}, $specs, $qty_index, $Imposition );
-		#my $aq_time = [gettimeofday()];
-my $aq_elapsed = sprintf('%.4f seconds', (gettimeofday() - $aq_time)*1000);
-$log->warn("AQ elapsed: $aq_elapsed");
-	#$price{'Aqueous Breakdown'} .= $$project{AqueousSpecs}{'hdnBreakdown'.$qty_index};
-		if ( $aq_results{Status} eq 'uncalculated' ) {
-			$price{'Aqueous Breakdown'} .= "AQ error: $aq_results{alert} $$project{AqueousSpecs}{alert} " . $$project{AqueousSpecs}{'hdnBreakdown'.$qty_index} . '<br/>';
-			$price{'Comparison Cost'} += 1000000; 
-		} elsif ( $aq_results{Equipment} ) {
-			$price{'Aqueous Breakdown'} = sprintf('Aqueous Price: %dout MR $%.2f + BC: $%.2f + Service $%.2f + Material $%.2f = $%.2f on %s<br/>', $aq_results{Imposition}{imposition}, @aq_results{'MakeReady','BlanketCut','Service','Material','Total'}, $aq_results{Equipment}->name() );
-			$price{'Comparison Cost'} += $aq_results{Total};
-			$price{'Press Washes'} += $aq_results{washups};
-		} else {
-$log->warn("Something wrong in AQ");
-		} # end if
-	} # end if Aqueous
 
 #$price{'Press Washes'} += $varnish_price{'Press Washes'};
 	if ( $price{'Press Washes'} ) {
@@ -6252,6 +6231,27 @@ $log->warn("Something wrong in AQ");
 		$impressions *= 2;
 	}
 	$price{Impressions} = $impressions;
+	$$specs{'hdnImpressionQuantity'.$qty_index} = $impressions;
+	$$specs{'ddmPress'.$qty_index} = $$Press{strid};
+	# Used to be hasAQ.. but that doesn't make any sense.	Must be NeedAQ.
+	if ( $$project{NeedAqueous} ) {
+		my $aq_time = gettimeofday();
+		my %aq_results = openprint::Estimating::Aqueous::signature_calc( $Project, $$project{AqueousSpecs}, $specs, $qty_index, $Imposition );
+		#my $aq_time = [gettimeofday()];
+my $aq_elapsed = sprintf('%.4f seconds', (gettimeofday() - $aq_time)*1000);
+$log->warn("AQ elapsed: $aq_elapsed");
+	#$price{'Aqueous Breakdown'} .= $$project{AqueousSpecs}{'hdnBreakdown'.$qty_index};
+		if ( $aq_results{Status} eq 'uncalculated' ) {
+			$price{'Aqueous Breakdown'} .= "AQ error: $aq_results{alert} $$project{AqueousSpecs}{alert} " . $$project{AqueousSpecs}{'hdnBreakdown'.$qty_index} . '<br/>';
+			$price{'Comparison Cost'} += 1000000; 
+		} elsif ( $aq_results{Equipment} ) {
+			$price{'Aqueous Breakdown'} = sprintf('Aqueous Price: %dout MR $%.2f + BC: $%.2f + Service $%.2f + Material $%.2f = $%.2f on %s<br/>', $aq_results{Imposition}{imposition}, @aq_results{'MakeReady','BlanketCut','Service','Material','Total'}, $aq_results{Equipment}->name() );
+			$price{'Comparison Cost'} += $aq_results{Total};
+			$price{'Press Washes'} += $aq_results{washups};
+		} else {
+$log->warn("Something wrong in AQ");
+		} # end if
+	} # end if Aqueous
 	$price{'Impression MPrice'} = misc::sum( map { $$_{MPrice} } @{$run_prices} );
 
 	$price{'Minimum Run Charge'} = openprint::service::get_price( 'PressRunChargeMinimum',undef,$Press );

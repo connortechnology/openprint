@@ -60,7 +60,11 @@ $log->debug("Removing group $param{group_id}");
 		$Project->lock();
 		$_ = q{SELECT MAX(strValue::integer) FROM tbl_Service_Specifications WHERE lngProjectIndex=? AND strName='Group'};
 		( $variable{Group} ) = sql::execute( $log, $dbh, $_, $Project->id() );
-		$variable{Group} += 1;
+		if ( ! $variable{Group} ) {
+			$variable{Group} = 3;
+		} else {
+			$variable{Group} += 1;
+		}
 		$variable{Signature} = $variable{Group};
 
 		my $print_service_index = $Project->add_service( 'Signature' );

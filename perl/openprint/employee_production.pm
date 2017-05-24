@@ -1915,13 +1915,13 @@ sub _shift_change {
 		my $TZ = DateTime::TimeZone->new( name => $openprint::config{Timezone} );
 		my $new_start_datetime = DateTime->new(
 				year      => $param{starttime_year}, month  => $param{starttime_month}, day => $param{starttime_day},
-				hour      => $param{starttime_hour}, minute => $param{starttime_minute},
+				hour      => $param{starttime_hour}, minute => ( $param{starttime_minute} ? $param{starttime_minute} : 0 ),
 				time_zone => $TZ,
 				);
 
 		my $new_end_datetime = DateTime->new(
 				year      => $param{endtime_year}, month  => $param{endtime_month}, day => $param{endtime_day},
-				hour      => $param{endtime_hour}, minute => $param{endtime_minute},
+				hour      => $param{endtime_hour}, minute => ( $param{endtime_minute} ? $param{endtime_minute} : 0 ),
 				time_zone => $TZ,
 				);
 
