@@ -104,9 +104,11 @@ sub item_count {
 	}	
 	return $_[0]{item_count};
 }
-sub save {
-	
-}
 
+sub save {
+	my ( $self, $data ) = @_;
+	$self->item_count( undef ) if $$self{id};
+	return $self->SUPER::save( $data );
+}
 1;
 __END__
