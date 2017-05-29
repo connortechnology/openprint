@@ -52,6 +52,7 @@ sub select_user {
 		my $User = $variable{User} = new openprint::User( $param{user_id} );
 		if ( $User ) {
 			@session{'company_id','user_id','user_type'} = @$User{'company_id','id','type'};
+			openprint::usergroup::init_cache();
 		}
 	} # end if user_id
 } # end sub select_user
