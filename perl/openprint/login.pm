@@ -287,7 +287,7 @@ require Authen::Passphrase::BlowfishCrypt;
 	} # end if
 	
 	if ( $openprint::param{txtNewPassword} eq $User->password() ) {
-		$variable{error} = 'The new password you entered was the same as your current password. Please try again.</br>';
+		$variable{error} = 'The new password you entered was the same as your current password. Please try again.<br/>';
 		$variable{Redirect} = '/account/change_password.html';
 		return;
 	} # end if
