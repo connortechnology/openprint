@@ -2705,10 +2705,73 @@ sub check {
 			$variable{error} .= $Check->destroy();
 			$variable{ExternalRedirect} = '/employee/inventory/checks.html' if ! $variable{error};
 		} elsif ( $param{action} eq 'Download' ) {
-			my %p;
-			$p{skid_ids} = [ map { $_->skid_id() } $Check->Entries() ];
-			my ( $header, $data ) = inventory_report( %p );
-			misc::export_csv( $r, $log, \%variable, "InventoryCheck_$$Check{name}.csv", $header, $data );
+			my $total_value = 0;
+			my $total_weight = 0;
+			my $count = 0;
+
+			my @header = ('Paper ID','Type','Owner','Manufacturer','Name','Finish','Colour','Weight','Material','Group','Width','Height','Quality', 'MWeight','GSM','Skid#','RFIDTag #','Received On', 'Date Added','Last Updated', 'Location', 'In Stock (sheets)','In Stock(lbs)', 'Condition', 'Last Seen', 'Cost', 'Value', 'Allocated to Docket', 'Dockets' );
+			my @data;
+
+			my %Allocations;
+			foreach my $Allocation ( openprint::PaperAllocation->find( 'skid_ids !=' => [] ) ) {
+				foreach my $skid_id ( @{$Allocation->skid_ids()} ) {
+					$Allocations{$skid_id} = [] if ! $Allocations{$skid_id};
+					push @{$Allocations{$skid_id}}, $Allocation->docket();
+				}
+			}
+
+			foreach my $ICE ( $Check->Entries() ) {
+				my $Skid = $ICE->Skid();
+				my $C = $ICE->SkidContent();
+				$C = new openprint::SkidContent() if ! $C;
+				my $Paper = $ICE->Paper();
+				my $weight = 0;
+				if ( $Paper->type() eq 'Roll' ) {
+					$weight = $ICE->quantity();
+				} elsif ( $Paper->type() eq 'Sheet' ) {
+					$weight += $Paper->sheet_weight() * $ICE->quantity();
+				} else {
+					$log->error("Unknown stock type! " . $Paper->to_string() );
+				} # end if
+				$total_weight += $weight;
+				$count += 1;
+$log->debug("blah");
+				push @data,(
+						$$Paper{id},
+						$Skid->type() ? $Skid->type() : 'unknown',
+						new openprint::Company($Paper->owner_id())->name(),
+						$Paper->manufacturer(),
+						$Paper->brand() ? $Paper->brand() : 'unknown',
+						$Paper->finish() ? $Paper->finish() : 'unknown',
+						$Paper->colour() ? $Paper->colour() : 'unknown',
+						$Paper->weight() ? $Paper->weight() : 'unknown',
+						$Paper->material() ? $Paper->material() : 'unknown',
+						$Paper->group(),
+						$Paper->width(),
+						$Paper->height(),
+						$Paper->quality(),
+						$Paper->mweight(),
+						$Paper->gsm(),
+						$ICE->skid_id(),
+						$ICE->RFIDTag()->id_short(),
+						ssi::format_csv_date( $$Skid{received_on} ),
+						ssi::format_csv_date( $$Skid{created_on} ),
+						ssi::format_csv_date( $$Skid{updated_on} ),
+						$ICE->Location()->name(),
+						$Paper->type() eq 'Sheet' ? $C->quantity() : '',
+						$weight,
+						$C->condition(),
+						ssi::format_csv_date( $$Skid{updated_on} ),#FIXME
+						1*$C->cost(),
+						1*$C->value(),
+						( $Allocations{$Skid->id()} ? join(',', @{$Allocations{$Skid->id()}}) : '' ),
+						join(',', $Skid->dockets() ),
+						);
+				$total_value += $C->value();
+		} # end foreach ICE
+		my $date = Date::Format::time2str('%Y-%m-%d %H:%M', time );
+		push @data, ( 'Report generated',$date,'Count:',$count,undef,undef,undef,undef, undef,undef,undef, undef, undef, undef, undef, undef, undef, undef, undef, undef,undef, 'Total Weight (lbs):', $total_weight, undef, undef, undef, $total_value, undef, undef );
+			misc::export_csv( $r, $log, \%variable, "InventoryCheck_$$Check{name}.csv", \@header, \@data );
 		} elsif ( $param{action} eq 'Merge' ) {
 			if ( ! $param{merge_check_id} ) {
 				$variable{error} .= 'No check to merge specified.<br/>';
