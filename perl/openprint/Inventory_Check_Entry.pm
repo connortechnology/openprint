@@ -38,47 +38,47 @@ $serial= 'inventory_check_entries_id_seq';
 );
 
 sub skid_id {
-    if ( @_ > 1 ) {
-        $_[0]{skid_id} = $_[1] ? $_[1] : undef;
-        delete $_[0]{Skid};
-    } # end if
-    if ( ( ! $_[0]{skid_id} ) and $_[0]{rfidtag_id} and ( ! $_[0]{Skid} ) ) {
-        my $Tag = $_[0]->RFIDTag();
-        $_[0]{Skid} = $Tag->Skid() if $Tag->skid_id();
-    } # end if
-    return $_[0]{Skid}->id() if ( ! $_[0]{skid_id} ) and $_[0]{Skid};
-    return $_[0]{skid_id};
+	if ( @_ > 1 ) {
+		$_[0]{skid_id} = $_[1] ? $_[1] : undef;
+		delete $_[0]{Skid};
+	} # end if
+	if ( ( ! $_[0]{skid_id} ) and $_[0]{rfidtag_id} and ( ! $_[0]{Skid} ) ) {
+		my $Tag = $_[0]->RFIDTag();
+		$_[0]{Skid} = $Tag->Skid() if $Tag->skid_id();
+	} # end if
+	return $_[0]{Skid}->id() if ( ! $_[0]{skid_id} ) and $_[0]{Skid};
+	return $_[0]{skid_id};
 } # end sub skid_id
 
 sub Skid {
-    if ( @_ > 1 ) {
-        $_[0]{Skid} = $_[1];
-        $_[0]{skid_id} = ref $_[0]{Skid} eq 'openprint::Skid' ? $_[0]{Skid}{id} : undef;
-        $_[0]{skid_id} = undef if ! $_[0]{skid_id};
-    } # end if
-    if ( ! $_[0]{Skid} ) {
-        $_[0]{Skid} = new openprint::Skid( $_[0]->skid_id() );
-    } # end if
-    return $_[0]{Skid};
+	if ( @_ > 1 ) {
+		$_[0]{Skid} = $_[1];
+		$_[0]{skid_id} = ref $_[0]{Skid} eq 'openprint::Skid' ? $_[0]{Skid}{id} : undef;
+		$_[0]{skid_id} = undef if ! $_[0]{skid_id};
+	} # end if
+	if ( ! $_[0]{Skid} ) {
+		$_[0]{Skid} = new openprint::Skid( $_[0]->skid_id() );
+	} # end if
+	return $_[0]{Skid};
 } # end sub Skid
 
 sub RFIDTag {
-    if ( @_ > 1 ) {
-        $_[0]{RFIDTag} = $_[1];
-        #$_[0]{rfidtag_id} = ref $_[0]{RFIDTag} eq 'openprint::RFIDTag' ? $_[0]{RFIDTag}{id} : undef;
-    } # end if
-    if ( ! $_[0]{RFIDTag} ) {
-        if ( $_[0]{rfidtag_id} ) {
-            $_[0]{RFIDTag} = new openprint::RFIDTag( $_[0]->rfidtag_id() );
-            if ( ! $_[0]{RFIDTag}->id() ) {
-                $_[0]{RFIDTag} = new openprint::RFIDTag();
-                $_[0]{RFIDTag}->id( $_[0]->rfidtag_id() );
-            } # end if
-        } else {
-            $_[0]{RFIDTag} = $_[0]->Skid()->RFIDTag();
-        } # end if
-    } # end if
-    return $_[0]{RFIDTag};
+	if ( @_ > 1 ) {
+		$_[0]{RFIDTag} = $_[1];
+#$_[0]{rfidtag_id} = ref $_[0]{RFIDTag} eq 'openprint::RFIDTag' ? $_[0]{RFIDTag}{id} : undef;
+	} # end if
+	if ( ! $_[0]{RFIDTag} ) {
+		if ( $_[0]{rfidtag_id} ) {
+			$_[0]{RFIDTag} = new openprint::RFIDTag( $_[0]->rfidtag_id() );
+			if ( ! $_[0]{RFIDTag}->id() ) {
+				$_[0]{RFIDTag} = new openprint::RFIDTag();
+				$_[0]{RFIDTag}->id( $_[0]->rfidtag_id() );
+			} # end if
+		} else {
+			$_[0]{RFIDTag} = $_[0]->Skid()->RFIDTag();
+		} # end if
+	} # end if
+	return $_[0]{RFIDTag};
 } # end sub RFIDTag
 
 sub Scanner {
@@ -97,39 +97,48 @@ sub rfidtag_id {
 #$openprint::log->debug("Formatting: $_[0]{rfidtag_id} to 2" . sprintf('%014d', $_[0]{rfidtag_id} ) );
 		$_[0]{rfidtag_id} = '2'.sprintf('%014d', $_[0]{rfidtag_id} );
 	}
-	
+
 	return $_[0]{rfidtag_id};
 }
 
 sub quantity {
 	if ( ! $_[0]{quantity} ) {
-		my $Skid = $_[0]->Skid();
-		if ( $$Skid{id} ) {
-			my @C = $Skid->Contents();
-			if ( @C == 1 ) {
-				# IF we have some dimension measurements, then we can calculate the current weight.
-				if ( $_[0]{dimension2} and $_[0]{dimension1} ) {
-					my $Paper = $C[0]->Paper();
-					if ( $Paper->type() ne 'Sheet' ) {
-						# dimension2 is radius or diameter
-						# I think this was a weird formula given by Rick.
-						
-						$_[0]{quantity} = Math::Round::nearest(1, $_[0]{dimension2} * $_[0]{dimension2} - 9 * $_[0]{dimension1} * 0.37 );
-					} # end if
-				} elsif ( $C[0]{quantity} ) {
-					# Else if there is still some in the system, assume that is correct.
-					$_[0]{quantity} = $C[0]{quantity};
-				} else {
-					# Otherwise, lookup the pre-checked out quantity, and use that
-					my $PI = $C[0]->checked_out();
-					$_[0]{quantity} = -1*$$PI{delta} if $PI;
-				}
-			} # end if only 1 stock
-		} else {
-			$_[0]{quantity} = Math::Round::nearest( 1, $_[0]{dimension2} * $_[0]{dimension2} - 9 * $_[0]{dimension1} * 0.37 );
-		} # skid was found
+		$_[0]{quantity} = $_[0]->system_quantity();
+		if ( ! $_[0]{quantity} ) {
+			$_[0]{quantity} = int(rand(2000));
+			$_[0]{quantity} = 400 if $_[0]{quantity} < 400;
+		}
 	}
 	return $_[0]{quantity};
+}
+
+sub system_quantity {
+	my $Skid = $_[0]->Skid();
+	if ( $$Skid{id} ) {
+		my @C = $Skid->Contents();
+		if ( @C == 1 ) {
+# IF we have some dimension measurements, then we can calculate the current weight.
+			if ( $_[0]{dimension2} and $_[0]{dimension1} ) {
+				my $Paper = $C[0]->Paper();
+				if ( $Paper->type() ne 'Sheet' ) {
+# dimension2 is radius or diameter
+# I think this was a weird formula given by Rick.
+
+					$_[0]{system_quantity} = Math::Round::nearest(1, $_[0]{dimension2} * $_[0]{dimension2} - 9 * $_[0]{dimension1} * 0.37 );
+				} # end if
+			} elsif ( $C[0]{quantity} ) {
+# Else if there is still some in the system, assume that is correct.
+				$_[0]{system_quantity} = $C[0]{quantity};
+			} else {
+# Otherwise, lookup the pre-checked out quantity, and use that
+				my $PI = $C[0]->checked_out();
+				$_[0]{system_quantity} = -1*$$PI{delta} if $PI;
+			}
+		} # end if only 1 stock
+	} else {
+		$_[0]{system_quantity} = Math::Round::nearest( 1, $_[0]{dimension2} * $_[0]{dimension2} - 9 * $_[0]{dimension1} * 0.37 );
+	} # skid was found
+	return $_[0]{system_quantity};
 }
 
 sub Location {
@@ -176,6 +185,15 @@ sub SkidContent {
 	return $$self{SkidContent};
 }
 
+sub Paper {
+	my $SC = $_[0]->SkidContent();
+	my $Paper;
+	if ( ( ! $SC ) or ! ( $Paper=$SC->Paper() ) ) {
+		$Paper = new openprint::Paper();
+	}
+	return $Paper;
+}
+
 sub value {
 	my ( $self ) = @_;
 
@@ -195,9 +213,9 @@ sub value {
 				$openprint::log->debug("No cost for $$self{skid_id}") if $debug;
 			} # end Cost
 		} # end if Skid
-  } # end if ! exists value
-  return $$self{value} if $$self{value};
-  return;
+	} # end if ! exists value
+	return $$self{value} if $$self{value};
+	return;
 } # end sub value
 
 sub diameter {
@@ -224,7 +242,7 @@ sub diameter {
 			} # end if C
 		} # end if Skid
 	} # end if ! diameter
-  return $_[0]{diameter};
+	return $_[0]{diameter};
 }
 
 
