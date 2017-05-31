@@ -102,7 +102,7 @@ if ( @Interfaces ) {
 	my $Host = new openprint::Host();
 	$Host->save({ hostname=>$hostname} );
 	my $Interface = new openprint::Host_Interface();
-	$Interface->save({ ip=>$ip, mac => $mac, host_id=>$$Host{id} });
+	$Interface->save({ ip=>$ip, mac => $mac, host_id=>$$Host{id}, dhcp=>1 });
 
 	$log->debug("Host not found for mac $mac $hostname");
 
