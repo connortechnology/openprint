@@ -223,5 +223,10 @@ sub summary {
 	return;
 } # end sub summary
 
+sub link_to {
+	my ( $self, $text ) = @_;
+	return sprintf('<a href="/main/project/view.html?ProjectIndex=%1$d&amp;ServiceIndex=%2$d">%3$s</a>', $self->Project()->id(), $self->id(), ( $text ? $text : $self->ServiceType()->name() ) );
+} # end sub link_to
+
 1;
 __END__
