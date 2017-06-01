@@ -153,7 +153,7 @@ sub Fold {
 	$self->Folds() if ! $$self{Folds};
 	if ( DEBUG_FOLDING ) {
 		$openprint::log->debug("Param" . ref $params );
-		foreach my $k ( keys %$params ) {
+		foreach my $k ( sort { $a cmp $b } keys %$params ) {
 			$openprint::log->debug("Param: $k => $$params{$k}");
 		}
 		foreach my $F ( @{$$self{Folds}{$$params{type}}} ) {
@@ -245,13 +245,15 @@ sub Fold {
 			$openprint::log->debug("Wanted Calliper: $$params{calliper}, have min:$$Fold{min_calliper} max:$$Fold{max_calliper}") if DEBUG_FOLDING;
 			next;
 		} # end if
-		if ( defined $$Fold{min_imposition} and $$params{imposition} and ($$Fold{min_imposition} > $$params{imposition}) ) {
-			$openprint::log->debug("Wanted imposition: $$params{imposition}, have $$Fold{min_imposition} x $$Fold{max_imposition}") if DEBUG_FOLDING;
-			next;
-		} # end if
-		if ( defined $$Fold{max_imposition} and $$params{imposition} and ($$Fold{max_imposition} < $$params{imposition}) ) {
-			$openprint::log->debug("Wanted imposition: $$params{imposition}, have $$Fold{min_imposition} x $$Fold{max_imposition}") if DEBUG_FOLDING;
-			next;
+		if ( $$params{imposition} ) {
+			if ( defined $$Fold{min_imposition} and ($$Fold{min_imposition} > $$params{imposition}) ) {
+				$openprint::log->debug("Wanted imposition: $$params{imposition}, have min $$Fold{min_imposition} x max $$Fold{max_imposition}") if DEBUG_FOLDING;
+				next;
+			} # end if
+			if ( defined $$Fold{max_imposition} and ($$Fold{max_imposition} < $$params{imposition}) ) {
+				$openprint::log->debug("Wanted imposition: $$params{imposition}, have min $$Fold{min_imposition} x max $$Fold{max_imposition}") if DEBUG_FOLDING;
+				next;
+			} # end if
 		} # end if
 		if ( defined $$Fold{min_imposition_columns} and $$params{columns} and ($$Fold{min_imposition_columns} > $$params{columns}) ) {
 			$openprint::log->debug("Wanted imposition columns: $$params{columns}, have $$Fold{min_imposition_columns} x $$Fold{max_imposition_columns}") if DEBUG_FOLDING;

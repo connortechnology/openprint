@@ -877,7 +877,7 @@ sub summary {
 				if ( $$printing_specs{"PrintingType-$group_id"} ) { 
 					$summary .= ', '. '<span class="Sheetfed">Printed '.$$printing_specs{"PrintingType-$group_id"}.'</span>,';
 				} #endif Web
-				$summary .= '</br>';
+				$summary .= '<br/>';
 			} # end foreach Group
 		} # end if
 

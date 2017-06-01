@@ -449,12 +449,12 @@ $openprint::log->debug("($k) => $$specs{$k}");
 			$$self{spreads} = 1;
 		#} # end if
 		$$self{pages} = $$self{spreads} * $$self{spread_size};
-#$openprint::log->debug("spread_rows $$self{spread_rows} x $$self{spread_columns} = $$self{spread_size} spreads: $$self{spreads} pages: $$self{pages} ");
+		$openprint::log->debug("spread_rows $$self{spread_rows} x $$self{spread_columns} = $$self{spread_size} spreads: $$self{spreads} pages: $$self{pages} ");
 	} # end if
-		$$self{page_width} = $$specs{txtFinalWidth};
-		$$self{page_height} = $$specs{txtFinalHeight};
-	$$self{sheet_width} = $$self{Paper}->width();
-	$$self{sheet_height} = $$self{cut_off} ? $$self{cut_off} : $$self{Paper}->height();
+	$$self{page_width} = $$specs{txtFinalWidth};
+	$$self{page_height} = $$specs{txtFinalHeight};
+	$$self{sheet_width} = $$self{Paper}{width};
+	$$self{sheet_height} = $$self{cut_off} ? $$self{cut_off} : $$self{Paper}{height};
 	if ( ! exists $$specs{"RotateSheet$qty_index"} ) {
 		if ( $$self{layout_width} > $$self{Paper}->width() or $$self{layout_height} > $$self{sheet_height} ) {
 			$$self{rotate_sheet} = 1;

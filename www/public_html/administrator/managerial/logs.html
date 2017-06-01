@@ -67,6 +67,7 @@
 					( $param{company_id} ? ( company_id	=>	$param{company_id} ) : () ),
 					( $param{user_id} ? ( user_id		=>	$param{user_id} ) : () ),
 					action_id	=>	$param{log_actions},
+          order => 'date_time',
 					) ];
 
 				foreach my $Log ( @{$$variable{'Results'}} ) {
@@ -91,7 +92,7 @@
 						$Log->User()->link_to( $Log->User()->email() ),
 						$Log->User()->name(),
 						$Log->Company()->name(),
-						( $Object ? $Object->link_to( $Log->object_type() ) : '' ),
+						( $Object ? $Object->link_to( $Log->Object_Type()->human() ) : '' ),
 						join("\n",
 							button( 'X'.$Log->id(), { onclick=>qq`new Ajax.Request('_logs.json', { parameters: { action: 'delete', log_id: $$Log{id} }, onSuccess: function(){ \$('log_$$Log{id}').remove() } } );`, text=>'-' } ),
 						),

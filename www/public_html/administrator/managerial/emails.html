@@ -1,5 +1,8 @@
 <?include(/includes/error_reporting.html)?>
 <form id="f1" name="f1" action="/administrator/managerial/emails.html">
+<? if ( ! $openprint::Email_Account::dbh ) ?>
+<div class="error">Failed to connect to Mail Server DB</div>
+<? else ( ! $openprint::Email_Account::dbh ) ?>
 <p class="buttons">
 <? echo (
 		join("\n",
@@ -53,4 +56,5 @@
 			return $html;
 		) ?>
 	</table>
+<? endif ( ! $openprint::Email_Account::dbh ) ?>
 </form>
