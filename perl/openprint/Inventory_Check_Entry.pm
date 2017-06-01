@@ -104,9 +104,9 @@ sub rfidtag_id {
 sub quantity {
 	if ( ! $_[0]{quantity} ) {
 		$_[0]{quantity} = $_[0]->system_quantity();
-		if ( ! $_[0]{quantity} ) {
-			$_[0]{quantity} = int(rand(2000));
-			$_[0]{quantity} = 400 if $_[0]{quantity} < 400;
+		if ( 0 and ! $_[0]{quantity} ) {
+			$_[0]{quantity} = int(rand(3000));
+			$_[0]{quantity} = 2000 if $_[0]{quantity} < 2000;
 		}
 	}
 	return $_[0]{quantity};
