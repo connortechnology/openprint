@@ -324,7 +324,7 @@ sub check_credit {
 			} # end if
 		} else {
 			if ( my @orders = $Credit->denied_orders() ) {
-				my $error = 'You have orders that are more than ' . $Credit->denydays() . ' days overdue.	Please arrange payment before purchasing further.<br/><br/>The following orders are currently overdue:</br><br/>';
+				my $error = 'You have orders that are more than ' . $Credit->denydays() . ' days overdue.	Please arrange payment before purchasing further.<br/><br/>The following orders are currently overdue:<br/><br/>';
 				$error .=	list_orders( $log, $dbh, @orders );
 				return misc::error( $log, $dbh, \%variable, 'Overdue Orders', $error );
 			} # end if

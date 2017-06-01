@@ -117,7 +117,7 @@ if ( @Interfaces ) {
 	my $Host = new openprint::Host();
 	$Host->save({hostname=>'unknown ' . $ENV{'CALLING_STATION_ID'}});
 	my $HI = new openprint::Host_Interface();
-	$HI->save({ mac=>$ENV{'CALLING_STATION_ID'}, address=>$ENV{'FRAMED_IP_ADDRESS'}, host_id=>$Host->id(), dhcp=>1 });
+	$HI->save({ mac=>$ENV{'CALLING_STATION_ID'}, ip=>$ENV{'FRAMED_IP_ADDRESS'}, host_id=>$Host->id(), dhcp=>1 });
 } # end if Hosts
 $dbh->disconnect() if $dbh;
 exit(0);
