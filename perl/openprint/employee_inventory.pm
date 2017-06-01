@@ -2732,6 +2732,7 @@ sub check {
 					$weight += $Paper->sheet_weight() * $ICE->quantity();
 				} else {
 					$log->error("Unknown stock type! " . $Paper->to_string() );
+					$weight = $ICE->quantity();
 				} # end if
 				$total_weight += $weight;
 				$count += 1;
@@ -2757,7 +2758,7 @@ $log->debug("blah");
 						ssi::format_csv_date( $$Skid{received_on} ),
 						ssi::format_csv_date( $$Skid{created_on} ),
 						ssi::format_csv_date( $$Skid{updated_on} ),
-						$ICE->Location()->name(),
+						( $ICE->location_id() ? $ICE->Location()->name() : $Skid->Location()->name() ),
 						$Paper->type() eq 'Sheet' ? $C->quantity() : '',
 						$weight,
 						$C->condition(),
@@ -2819,7 +2820,7 @@ $log->debug("blah");
 			my %paper_ids;
 
 			foreach my $ICE ( openprint::Inventory_Check_Entry->find( ic_id=>$$Check{id}, order=>'skid_id,rfidtag_id' ) ) {
-				if ( $$ICE{rfidtag_id} and $rfidtag_ids{$ICE->rfidtag_id()} and $ICE->skid_id() and $skid_ids{$ICE->skid_id()} ) {
+				if ( $$ICE{rfidtag_id} and $rfidtag_ids{$ICE->rfidtag_id()} and $skid_ids{$ICE->skid_id()} ) {
 					$variable{information} .= "Deleting duplicate $$ICE{id} RFID: $$ICE{rfidtag_id} ID: " . $ICE->skid_id() . ".<br/>";
 					$variable{error} .= $ICE->destroy();
 				} else {
@@ -3005,31 +3006,52 @@ $log->debug("blah");
 			}
 			if ( my $upload = $r->upload('import') ) {
 				my %Locations = map { $$_{name}, $_ } openprint::Location->find();
+				my @ICE = openprint::Inventory_Check_Entry->find( ic_id=>$$Check{id}, order=>'skid_id,rfidtag_id' );
+				my %Skids = map { $$_{skid_id} ? ( $$_{skid_id} => $_ ) : () } @ICE;
+				my %RFID = map { $$_{rfidtag_id}, $_ } @ICE;
+
+
 				require Text::CSV_XS;
 				my $csv = Text::CSV_XS->new();
 				my $io =$upload->io();
 				while ( my $line = <$io> ) {
 					my $status = $csv->parse($line);        # parse a CSV string into fields
 					my ( $id, $rfid, $quantity, $dimension1, $dimension2, $notes, $location ) = $csv->fields();
-					next if $id =~ /\D/;
-					next if ! ( $id or $rfid );
+					$id =~ s/\D//g;
+					if ( ! ( $id or $rfid ) ) {
+						$log->debug("Line $line rejected due to no id or rfid");
+						next;
+					} # end if
 
 					if ( $rfid =~ /R(\d+)/ ) {
 						$rfid = $1;
 					}
 
 					if ( $rfid ) {
-						my @RFID = openprint::RFIDTag->find('id like'=>'%'.$rfid);
-						if ( @RFID==1 ) {
-							$rfid = $RFID[0]->id();
+						$rfid = sprintf('2%.14d', $rfid );
+						my $RFID = openprint::RFIDTag::from_id( $rfid );
+						if ( ! $RFID ) {
+							$log->debug("Unable to find tag from $rfid");
+							$variable{error} .= "Unable to find tag from $rfid<br/>";
+						} else {
+							$log->debug("Found a more precise rfid for $rfid = $$RFID{id}");
+							$rfid = $RFID->id();
 						}
 					}
 
-					if ( $location =~ /^(\w\w)(\d\d)$/ ) {
+					if ( $location and ( $location =~ /^(\w\w)(\d\d)$/ ) ) {
 						$location = $1.$2.($2-1);
 					}
 					if ( $location and ! $Locations{$location} ) {
 						$variable{error} .= "Location $location for $id $rfid not in system.<br/>";	
+					}
+
+					if ( $RFID{$rfid} ) {
+						$variable{error} .= "Not adding $rfid because it is already in the check.<br/>"; 
+						next;
+					} elsif ( $id and  $Skids{$id} ) {
+						$variable{error} .= "Not adding rfid:$rfid id:$id because it is already in the check.<br/>"; 
+						next;
 					}
 
 					my $ICE = new openprint::Inventory_Check_Entry();
@@ -3045,9 +3067,10 @@ $log->debug("blah");
 					} );
 					$variable{error} .= $Check->save() if ! $variable{error};
 				} # end while line = <IO>
+				$variable{ExternalRedirect} = $Check->url_to();
 			} # end if upload
 
-		} # end if
+		} # end if actions
 	} # end if param{action}
 
 } # end sub check
