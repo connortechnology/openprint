@@ -949,6 +949,9 @@ $openprint::log->debug("Not a book") if DEBUG;
 				if ( $ServicePrice{units} eq 'per inch' ) {
 					$price = ( $piles * $vertical_cuts *$ServicePrice{Price} * $$I{image_height} );
 					$results{Breakdown} .= sprintf('%d Vertical cuts on %d sheets in %d piles * %.2f inches: %.2f%s=%.2f<br/>', $vertical_cuts, $sheets, $piles, $$I{image_height}, @ServicePrice{'Price','units'}, $price );
+				} elsif ( $ServicePrice{units} eq 'per m' ) {
+					$price = ( $piles * $vertical_cuts * $ServicePrice{Price} * ( $sheets/1000 ) );
+					$results{Breakdown} .= sprintf('%d Vertical cuts on %d sheets in %d piles: %.2f%s=%.2f<br/>', $vertical_cuts, $sheets, $piles, @ServicePrice{'Price','units'}, $price );
 				} else {
 					$price = ( $piles * $vertical_cuts * $ServicePrice{Price} );
 					$results{Breakdown} .= sprintf('%d Vertical cuts on %d sheets in %d piles: %.2f%s=%.2f<br/>', $vertical_cuts, $sheets, $piles, @ServicePrice{'Price','units'}, $price );
@@ -961,6 +964,9 @@ $openprint::log->debug("Not a book") if DEBUG;
 				if ( $ServicePrice{units} eq 'per inch' ) {
 					$price = ( $piles * $horizontal_cuts *$ServicePrice{Price} * $$I{image_width} );
 					$results{Breakdown} .= sprintf("%d Horizontal cuts on %d sheets in %d piles * %.2f inches: %.2f%s=%.2f<br/>", $horizontal_cuts, $sheets, $piles, $$I{image_width}, @ServicePrice{'Price','units'}, $price );
+				} elsif ( $ServicePrice{units} eq 'per m' ) {
+					$price = ( $piles * $horizontal_cuts * $ServicePrice{Price} * ( $sheets/1000 ) );
+					$results{Breakdown} .= sprintf("%d Horizontal cuts on %d sheets in %d piles: %.2f%s=%.2f<br/>", $horizontal_cuts, $sheets, $piles, @ServicePrice{'Price','units'}, $price );
 				} else {
 					$price = ( $piles * $horizontal_cuts * $ServicePrice{Price} );
 					$results{Breakdown} .= sprintf("%d Horizontal cuts on %d sheets in %d piles: %.2f%s=%.2f<br/>", $horizontal_cuts, $sheets, $piles, @ServicePrice{'Price','units'}, $price );
@@ -970,6 +976,9 @@ $openprint::log->debug("Not a book") if DEBUG;
 				if ( $ServicePrice{units} eq 'per inch' ) {
 					$price = ( $piles * $horizontal_cuts *$ServicePrice{Price} * $$I{image_width} );
 					$results{Breakdown} .= sprintf("%d Horizontal cuts on %d sheets in %d piles * %.2f inches: %.2f%s=%.2f<br/>", $horizontal_cuts, $sheets, $piles, $$I{image_width}, @ServicePrice{'Price','units'}, $price );
+				} elsif ( $ServicePrice{units} eq 'per m' ) {
+					$price = ( $piles * $horizontal_cuts * $ServicePrice{Price} * ($sheets/1000) );
+					$results{Breakdown} .= sprintf("%d Horizontal cuts on %d sheets in %d piles: %.2f%s=%.2f<br/>", $horizontal_cuts, $sheets, $piles, @ServicePrice{'Price','units'}, $price );
 				} else {
 					$price = ( $piles * $horizontal_cuts * $ServicePrice{Price} );
 					$results{Breakdown} .= sprintf("%d Horizontal cuts on %d sheets in %d piles: %.2f%s=%.2f<br/>", $horizontal_cuts, $sheets, $piles, @ServicePrice{'Price','units'}, $price );
@@ -982,6 +991,9 @@ $openprint::log->debug("Not a book") if DEBUG;
 				if ( $ServicePrice{units} eq 'per inch' ) {
 					$price = ( $piles * $vertical_cuts *$ServicePrice{Price} * $$I{image_height} );
 					$results{Breakdown} .= sprintf("%d Vertical cuts on %d sheets in %d piles * %.2f inches: %.2f<br/>", $vertical_cuts, $sheets, $piles, $$I{image_height}, $price );
+				} elsif ( $ServicePrice{units} eq 'per m' ) {
+					$price = ( $piles * $vertical_cuts * $ServicePrice{Price} * ($sheets/1000) );
+					$results{Breakdown} .= sprintf('%d Vertical cuts on %d sheets in %d piles: $%.2f%s=$%.2f<br/>', $vertical_cuts, $sheets, $piles, @ServicePrice{'Price','units'}, $price );
 				} else {
 					$price = ( $piles * $vertical_cuts * $ServicePrice{Price} );
 					$results{Breakdown} .= sprintf('%d Vertical cuts on %d sheets in %d piles: $%.2f%s=$%.2f<br/>', $vertical_cuts, $sheets, $piles, @ServicePrice{'Price','units'}, $price );
