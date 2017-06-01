@@ -25,12 +25,12 @@
 	<tr>
 	<th class="Skid" onclick="load_entries('sort=skid_id,rfidtag_id,created_on');">Skid/Roll</th>
 	<th class="RFIDTag" onclick="load_entries('sort=rfidtag_id,skid_id,created_on');">RFIDTag</th>
+	<th class="DateTime" onclick="load_entries('sort=created_on,rfidtag_id,skid_id');">When</th>
 	<th class="Diameter">Diameter</th>
 	<th class="Quantity">Weight(lbs)</th>
-	<th class="DateTime" onclick="load_entries('sort=created_on,rfidtag_id,skid_id');">When</th>
 	<th class="Location" onclick="load_entries('sort=location_id,created_on,rfidtag_id,skid_id');">Location</th>
 	<th class="Notes">Notes</th>
-	<th class="RFIDScanner" onclick="load_entries('sort=scanner_id,rfidtag_id,skid_id');">Scanner</th>
+	<th class="RFIDScanner User" onclick="load_entries('sort=scanner_id,rfidtag_id,skid_id');">Scanner</th>
 	`;
 	if ( $$variable{can_see_pricing} ) {
 		$html .= '<th class="Price">Price/Value</th>';
@@ -44,11 +44,11 @@
 	$html .= '<tr id="tr">';
 	$html .= '<td class="Skid">'.input(type=>'cardinal',name=>'skid_id', id=>'skid_id', oninput=>'lookup_item(this);').'</td>';
 	$html .= '<td class="RFID">'.input(type=>'text', name=>'rfidtag_id', oninput=>'lookup_item(this);').'</td>';
+	$html .= '<td class="DateTime"></td>';
 	$html .= '<td class="Diameter">'.input( type=>'positivefloat', id=>'dimension2', name=>'dimension2' ).'</td>';
 	$html .= '<td class="qty_lbs">'.input( type=>'positivefloat', id => 'qty_lbs', name	=> 'qty_lbs', oninput => "from_lbs(this,'','');" ) . '</td>';
 	#$html .= '<td class="qty_kgs">'.input( type=>'positivefloat', id => 'qty_kgs', name => 'qty_kgs', oninput => "from_kg(this,'','');" ) . '</td>';
 	#$html .= '<td class="qty_sheets">'.input( type=>'positivefloat', id => 'qty_sheets', name => 'qty_sheets', oninput => "from_sheets(this,'','');" ) . '</td>';
-	$html .= '<td></td>';
 	$html .= '<td class="Location">'.ssi::select( $variable{location_dropdown}, undef, { name=>'location_id', prepend=>['','select'] } ).'</td>';
 	$html .= '<td><textarea name="notes"></textarea></td>';
 	$html .= '<td></td>';
@@ -129,20 +129,20 @@
 <tr class="%1$s%2$s" id="entry-%3$d" title="entry %3$d">
 	<td class="Skid">%4$s</td>
 	<td class="RFIDTag">%5$s</td>
+	<td class="DateTime">%13$s</td>
 	<td class="Diameter">%6$s</td>
 	<td class="Quantity">%7$s</td>
-	<td class="DateTime">%13$s</td>
 	<td class="Location" rowspan="2">%10$s</td>
-	<td class="Notes" rowspan="2">%8$s<br/>%9$s</td>
-	<td class="RFIDScanner/User" rowspan="2">%11$s %12$s</td>',
+	<td class="Notes">%8$s</td>
+	<td class="RFIDScanner User" rowspan="2">%11$s %12$s</td>',
 
-		$rowclass, ($check ? 'warning' : '' ),
+		$rowclass, ($check ? ' warning' : '' ),
 		$ICE->id(),
 		$Skid->link_to(),
 		$ICE->RFIDTag()->link_to(),
 		( $ICE->dimension2() ? $ICE->dimenion2() : Math::Round::nearest( 1, $ICE->diameter() ) . '?' ),
 		Number::Format::format_number( $ICE->quantity() ). $Skid->units(),
-		$ICE->notes(), $check,
+		$ICE->notes(), '',
 		$location_message,
 		$ICE->Scanner()->name(), $ICE->User()->name(),
 		format_datetime( $ICE->created_on() ),
@@ -170,19 +170,23 @@
 
 		$html .= sprintf('
 	<td class="buttons" rowspan="2">%3$s</td>
-</tr><tr class="%1$s%2$s"><td colspan="3">%4$s</td><td class="Quantity">%5$s</td><td></td></tr>',
-		$rowclass, ($check ? 'warning' : '' ),
+</tr><tr class="%1$s%2$s"><td></td><td colspan="3">%4$s</td><td class="Quantity">%5$s</td>
+		<td class="Notes" colspan="2">%6$s</td>
+	</tr>',
+		$rowclass, ($check ? ' warning' : '' ),
 		join("\n",
 			button( 'x'.$$ICE{id}, { onclick=>"del_entry($$ICE{id});", title=>'Delete', text=>'X' } ),
 		),
 		join('<br/>', map { $_->Paper()->to_string() } $Skid->Contents() ),
 		join('<br/>', map { Number::Format::format_number( $_->quantity() ) . $_->Paper()->units() } $Skid->Contents() ),
+	$check,
+		
 	);
 
 		$total_system_weight += $ICE->system_quantity();
 		$total_weight += $ICE->quantity();
 		
-		$rowclass = $rowclass ? '' : ' colRow';
+		$rowclass = $rowclass ? '' : 'colRow';
 	} # end foreach ICE
 
 
