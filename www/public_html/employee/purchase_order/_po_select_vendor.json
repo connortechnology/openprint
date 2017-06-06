@@ -1,5 +1,5 @@
 <? echo (
-	my $Vendor = new openprint::Company( $param{'supplier_id'} );
+	my $Vendor = new openprint::Company( $param{supplier_id} );
 	my $html = '';
 	$html .= "
 		\$('vendor_name').value = '$$Vendor{name}';
@@ -15,7 +15,7 @@
 		clear_ddm( contact_ddm );
 		add_option( contact_ddm, '', 'select' );
 	";
-	my @Users = openprint::User->find('company_id'=>$param{'supplier_id'},'order'=>'lower(firstname),lower(lastname)' ) if $$Vendor{id};
+	my @Users = openprint::User->find( company_id=>$param{supplier_id} ) if $$Vendor{id};
 	my $selected = $Users[0]->id() if @Users == 1;
 	foreach my $User ( @Users ) {
 		my $name = $User->name();
@@ -33,8 +33,8 @@
 	} # end if
 	$html .= "
 		\$('contacts').show();
-		update_taxes( contact_ddm.form );
+		if ( po_id ) 
+			update_taxes( contact_ddm.form );
 	";
-
 	return $html;
 ) ?>
