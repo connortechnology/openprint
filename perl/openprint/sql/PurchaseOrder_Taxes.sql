@@ -4,7 +4,7 @@ CREATE TABLE PurchaseOrder_Taxes (
     tax_id      INTEGER NOT NULL, FOREIGN KEY (tax_id) REFERENCES Taxes (id),
     rate        float,
     amount      float,
-	charge		boolean,
+		charge		boolean,
     PRIMARY KEY (id)
 );
 
