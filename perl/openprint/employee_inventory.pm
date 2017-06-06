@@ -3017,6 +3017,7 @@ $log->debug("blah");
 				while ( my $line = <$io> ) {
 					my $status = $csv->parse($line);        # parse a CSV string into fields
 					my ( $id, $rfid, $quantity, $dimension1, $dimension2, $notes, $location ) = $csv->fields();
+$log->debug("Got $id, $rfid, $quantity, $dimension1, $dimension2, $notes, $location");
 					$id =~ s/\D//g;
 					if ( ! ( $id or $rfid ) ) {
 						$log->debug("Line $line rejected due to no id or rfid");
@@ -3055,15 +3056,18 @@ $log->debug("blah");
 					}
 
 					my $ICE = new openprint::Inventory_Check_Entry();
-					$variable{error} .= $ICE->save( {
+					$ICE->set( {
 						ic_id		=>	$Check->id(),
-						skid_id		=>	$id,
-						rfidtag_id	=>	$rfid,
-						quantity	=>	$quantity,
+						( $id ? ( skid_id		=>	$id ) : () ),
+						( $rfid ? ( rfidtag_id	=>	$rfid ) : () ),
 						dimension1	=>	$dimension1,
 						dimension2	=>	$dimension2,
 						notes		=>	$notes,
 						( ( $location and $Locations{$location} ) ? ( location_id	=>	$Locations{$location}->id() ) : () ),
+					} );
+					# Quantity can do auto-calcing, so needs to be done after other things are set
+					$variable{error} .= $ICE->save( {
+						quantity	=>	$quantity,
 					} );
 					$variable{error} .= $Check->save() if ! $variable{error};
 				} # end while line = <IO>
