@@ -501,16 +501,16 @@ sub clone {
 } # end sub clone
 
 sub delete {
-    my ( $self ) = @_;
-    my $type = ref $self;
-	
-    my $table = eval '$'.$type.'::table';
+	my ( $self ) = @_;
+	my $type = ref $self;
+
+	my $table = eval '$'.$type.'::table';
 	my $debug = eval '$'.$type.'::debug';
 	my %fields = eval '%'.$type.'::fields';
 	my @identified_by = eval '@'.$type.'::identified_by';
 	@identified_by = ( 'id' ) if ! @identified_by;
 	if ( ! $$self{$identified_by[0]} ) {
-		$log->error("Called delete on object with no id of type $type : " . $self->to_string());
+		$log->error("Called delete on object with no id (@identified_by) of type $type : " . $self->to_string());
 		return "Object::delete: No id in object: " . $self->to_string();
 	} # end if
 
