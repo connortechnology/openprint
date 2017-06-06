@@ -926,7 +926,7 @@ sub _taxes_edit {
 					});
 			sql::end_transaction( $openprint::dbh, $ac );
 		} elsif ( $param{action} eq 'reset' ) {
-			$variable{error} .= $PO->set( \%param );
+			$PO->set( \%param );
 			# Reload $PO->Taxes() with current set
 			$PO->default_Taxes();
 			$variable{error} .= $PO->save();

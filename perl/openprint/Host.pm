@@ -216,6 +216,13 @@ sub reboot {
 			$url = 'http://'.$HI->ip().'/userRpm/SysRebootRpm.htm?Reboot=Reboot';
 		} elsif( $_[0]->type() eq 'D-Link DAP1522' ) {
 			$url = 'http://'.$HI->ip().'/sys_cfg_valid.xgi?&exeshell=submit REBOOT';
+		} elsif( $_[0]->type() eq 'DGS-1224T' ) {
+			$initial_url = 'http://'.$HI->ip();
+			$url = '/cgi_device';
+			$args = {
+			post_url => 'cgi_reboot.',
+			};
+			$method = 'post';
 		} elsif( $_[0]->type() eq 'DLink DCS-910' ) {
 			$initial_url = 'http://'.$HI->ip();
 			$url = 'http://'.$HI->ip().'/ReplyF.htm';
