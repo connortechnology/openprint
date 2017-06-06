@@ -6,7 +6,7 @@ require openprint::Location;
 
 use vars qw( $debug $table $serial %fields %transforms %defaults );
 
-$debug = 0;
+$debug = 1;
 $table = 'inventory_check_entries';
 $serial= 'inventory_check_entries_id_seq';
 %fields = (
@@ -25,6 +25,9 @@ $serial= 'inventory_check_entries_id_seq';
 );
 %transforms = (
 	notes	=> [ 's/^\s+//', 's/\s+$//', 's/\s\s+/ /g' ],
+	quantity	=>	[ 's/\D//g' ],
+	dimension1	=>	[ 's/\D//g' ],
+	dimension2	=>	[ 's/\D//g' ],
 );
 %defaults = (
 	created_on	=>	q`'NOW()'`,
@@ -102,11 +105,14 @@ sub rfidtag_id {
 }
 
 sub quantity {
+	if ( @_ > 1 ) {
+		$_[0]{quantity} = $_[0]->transform( quantity=>$_[1] );
+	}
 	if ( ! $_[0]{quantity} ) {
 		$_[0]{quantity} = $_[0]->system_quantity();
-		if ( 0 and ! $_[0]{quantity} ) {
-			$_[0]{quantity} = int(rand(3000));
-			$_[0]{quantity} = 2000 if $_[0]{quantity} < 2000;
+		if ( 1 and ! $_[0]{quantity} ) {
+			$_[0]{quantity} = int(rand(1000)) + 1000;
+$openprint::log->debug("No system quantity found for $_[0]{id}, grabbing random, got $_[0]{quantity}");
 		}
 	}
 	return $_[0]{quantity};
@@ -130,6 +136,7 @@ sub system_quantity {
 # Else if there is still some in the system, assume that is correct.
 				$_[0]{system_quantity} = $C[0]{quantity};
 			} else {
+$openprint::log->debug("Looking up checked out qty for $_[0]{id}");
 # Otherwise, lookup the pre-checked out quantity, and use that
 				my $PI = $C[0]->checked_out();
 				$_[0]{system_quantity} = -1*$$PI{delta} if $PI;
