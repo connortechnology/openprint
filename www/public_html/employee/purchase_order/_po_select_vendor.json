@@ -31,10 +31,10 @@
 			\$('vendor_email').value = '$$User{email}';
 		";
 	} # end if
-	$html .= "
-		\$('contacts').show();
+	$html .= q`
+		$('contacts').show();
 		if ( po_id ) 
 			update_taxes( contact_ddm.form );
-	";
+	`;
 	return $html;
 ) ?>

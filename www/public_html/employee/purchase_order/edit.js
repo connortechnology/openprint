@@ -148,7 +148,7 @@ function delete_tax( tax_id ) {
 }
 function update_taxes( form ) {
 	if ( po_id ) {
-	  new Ajax.Request( '_taxes_edit.html?action=reset&po_id='+po_id, { parameters: form.serialize() } );
+	  new Ajax.Updater( 'Taxes', '_taxes_edit.html?action=reset&po_id='+po_id, { parameters: form.serialize() } );
 	}
 } // end function update_taxes
 
