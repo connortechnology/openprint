@@ -78,8 +78,8 @@ sub set_conversion {
 } # end sub add_conversion
 
 sub convert_from {
-	my ( $self, $value ) = @_;
-	my $DST_Currency = get_current();
+	my ( $self, $value, $DST_Currency ) = @_;
+	$DST_Currency = get_current() if ! $DST_Currency;
 	if ( ! ( $DST_Currency and $$DST_Currency{id} ) ) {
 		$log->error("Invalid destiation currency in convert_from");
 		return $value;
