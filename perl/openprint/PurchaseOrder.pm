@@ -120,7 +120,7 @@ $openprint::log->debug("PurchaseOrder::Save AC: $ac");
 	$dbh->do( "LOCK TABLE $openprint::PurchaseOrder_Tax::table IN EXCLUSIVE MODE" ) or $log->error( DBI->errstr );
 	# force recalculation
 	$self->subtotal(undef);
-	foreach my $Tax ( $self->Taxes(1) ) {
+	foreach my $Tax ( $self->Taxes() ) {
 		$Tax->PurchaseOrder( $self );
 		$Tax->amount(undef);
 	} # end foreach Tax
@@ -135,9 +135,12 @@ $openprint::log->debug("PurchaseOrder::Save AC: $ac");
 	foreach my $T ( $self->Taxes() ) {
 		$error .= $T->save({purchaseorder_id=>$$self{id}, PurchaseOrder=>$self});
 	} # end foreach
+if ( 0 ) {
+	# No longer doing this
 	foreach my $T ( $self->old_Taxes() ) {
 		$T->delete();
 	} # end foreach T
+}
 	sql::end_transaction( $openprint::dbh, $ac );
 
 	return $error;
@@ -471,8 +474,12 @@ sub Manifest {
 # We don't make any db changes here.  That only happens on PO saving
 sub Taxes {
 	my ( $self ) = @_;
+	if ( @_ > 1 ) {
+		$$self{Taxes} = $_[1];
+	}
 	@{$$self{Taxes}} = openprint::PurchaseOrder_Tax->find(purchaseorder_id=>$$self{id}) if $$self{id} and ! $$self{Taxes};
 
+if ( 0 ) {
 	my $Supplier = $self->Supplier();
 	my $country = $Supplier->country() ? $Supplier->country() : $$self{vendor_country};
 	my $state = $Supplier->state() ? $Supplier->state() : $$self{vendor_state};
@@ -491,13 +498,21 @@ sub Taxes {
 				tax_id			=>	$$Tax{id},
 				rate			=>	$$Tax{rate},
 			});
-			#if ( $$self{id} ) {
-				#$T->save({'purchaseorder_id'	=>	$$self{id}});
-			#} # end if
 			push @{$$self{Taxes}}, $T;
 		} # end foreach Tax
 	} # end if
-	if ( @_ > 1 and $$self{id} ) {
+}
+	return $$self{Taxes} ? @{$$self{Taxes}} : ();
+} # end sub Taxes
+
+sub default_Taxes {
+	my ( $self ) = @_;
+	@{$$self{Taxes}} = openprint::PurchaseOrder_Tax->find(purchaseorder_id=>$$self{id}) if $$self{id} and ! $$self{Taxes};
+	my $Supplier = $self->Supplier();
+	my $country = $Supplier->country() ? $Supplier->country() : $$self{vendor_country};
+	my $state = $Supplier->state() ? $Supplier->state() : $$self{vendor_state};
+	my $created_on = $$self{created_on} ? $$self{created_on} : 'NOW()';
+	if ( $$self{id} ) {
 		my @new_taxes = openprint::Tax->find(
 				'period_start null_or_<='	=>	$created_on,
 				'period_end null_or_>='	 	=>	$created_on,
@@ -509,22 +524,22 @@ sub Taxes {
 		# Clear out any no longer valid taxes
 		for ( my $i = 0; $i < @{$$self{Taxes}}; $i += 1 ) {
 			my $Tax = $$self{Taxes}[$i];
-			if ( ! $new_tax_ids{$Tax->tax_id()} ) {
-				#$Tax->delete();
+			if ( ! $new_tax_ids{$$Tax{tax_id}} ) {
+				$Tax->delete() if $Tax->id();
 				splice @{$$self{Taxes}}, $i, 1; $i -= 1;
 			} # end if
 		} # end foreach old Tax
-		#@{$$self{Taxes}} = openprint::PurchaseOrder_Tax->find('purchaseorder_id'=>$$self{id});
 		if ( @new_taxes != @{$$self{Taxes}} ) {
-			my @tax_ids = map { $_->tax_id() } @{$$self{Taxes}};
+			my %tax_ids = map { $_->tax_id(), $_ } @{$$self{Taxes}};
 			foreach my $Tax ( @new_taxes ) {
-				if ( ! sets::isin( $Tax->id(), \@tax_ids ) ) {
+				if ( ! $tax_ids{$$Tax{id}} ) {
 					my $T = new openprint::PurchaseOrder_Tax();
 					$T->set({
 							PurchaseOrder	=>	$self,
 							tax_id			=>	$$Tax{id},
 							rate			=>	$$Tax{rate},
 							});
+					$T->save() if $$self{id};
 					push @{$$self{Taxes}}, $T;
 				} # end if
 			} # end foreach Tax	
@@ -536,7 +551,7 @@ sub Taxes {
 sub old_Taxes {
 	my ( $self ) = @_;
 	my @old_Taxes;
-	my @new_Taxes = $self->Taxes(1);
+	my @new_Taxes = $self->default_Taxes();
 	my %new_tax_ids = map { $_->tax_id(), $_->tax_id() } @new_Taxes;
 	
 	foreach my $old_Tax ( openprint::PurchaseOrder_Tax->find(purchaseorder_id=>$$self{id}) ) {
@@ -548,7 +563,7 @@ sub old_Taxes {
 } # end sub old_Taxes
 
 sub Tax {
-    my $result = openprint::PurchaseOrder_Tax->find_one('purchaseorder_id'=>$_[0]{id}, 'tax_id'=>$_[1]->id() ) if $_[0]{id};
+    my $result = openprint::PurchaseOrder_Tax->find_one( purchaseorder_id=>$_[0]{id}, tax_id=>$_[1]->id() ) if $_[0]{id};
     if ( ! $result ) {
         return new openprint::PurchaseOrder_Tax();
     } # end if
