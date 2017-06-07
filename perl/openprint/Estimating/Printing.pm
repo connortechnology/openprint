@@ -6453,7 +6453,7 @@ $log->debug("COnsidering $$Press{strid}") if DEBUG_PRESSES;
 		} elsif ( ( $printing_type eq 'Web' ) and $openprint::usergroup::groups_cache{'Web Estimating'} and ! openprint::usergroup::is_user_in( ['Web Estimating'], $openprint::session{user_id} ) ) {
 			$results{$press_id} = "You are not authorized for estimating on Web presses.";
 			next;
-		} elsif ( $press_id eq 'KBA' and ! sets::isin( $openprint::session{user_type}, [ 'E', 'A' ] ) ) {
+		} elsif ( $press_id == 108 and ! sets::isin( $openprint::session{user_type}, [ 'E', 'A' ] ) ) {
 			$results{$press_id} = "You are not authorized for estimating on this press.";
 			next;
 		} # end if
