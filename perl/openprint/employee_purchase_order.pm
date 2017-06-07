@@ -634,7 +634,7 @@ sub _history {
 				( map { 'starting_start_'.$_ } ( 'year', 'month','day' ) ),
 				( map { 'starting_end_'.$_ } ( 'year', 'month','day' ) ),
 				'authorized', 'supplier_id','created_by','deleted','types', 'item_id', 'cancelled', 'vendor_category_id', 'department_id', 'docket',
-				'currency_id',
+				'currency_id', 'has_manifest',
 				) );
 } # end sub _purchase_orders
 

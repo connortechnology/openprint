@@ -1,5 +1,7 @@
 <? eval (
 	$$variable{PurchaseOrders} = [];
+
+	my $uri = '/employee/purchase_order/history.html';
 	if ( $param{po_id} ) {
 		my $po_id = openprint::PurchaseOrder->transform('id',$param{po_id});
 
@@ -25,21 +27,24 @@
 	} else {
 		my %search = (
 			company_id	=>	$openprint::User->company_id(),
-			date_filter( '/employee/purchase_order/history.html?starting_end', 'created_on <=' ),
-			date_filter( '/employee/purchase_order/history.html?starting_start', 'created_on >=' ),
+			date_filter( $uri.'?starting_end', 'created_on <=' ),
+			date_filter( $uri.'?starting_start', 'created_on >=' ),
 			order		=>	'id desc',
 		);
-		$search{deleted} = $session{'/employee/purchase_order/history.html?deleted'} if exists $session{'/employee/purchase_order/history.html?deleted'};
-		$search{supplier_id} = $session{'/employee/purchase_order/history.html?supplier_id'} if $session{'/employee/purchase_order/history.html?supplier_id'};
+		$search{deleted} = $session{$uri.'?deleted'} if exists $session{'/employee/purchase_order/history.html?deleted'};
+		$search{supplier_id} = $session{$uri.'?supplier_id'} if $session{'/employee/purchase_order/history.html?supplier_id'};
 		if ( $session{user_type} eq 'A' or openprint::usergroup::is_user_in( ['Accounting','Shipping','Inventory'], $session{user_id} ) ) { 
-			if ( $session{'/employee/purchase_order/history.html?created_by'} ) {
-				$search{created_by} = $session{'/employee/purchase_order/history.html?created_by'};
+			if ( $session{$uri.'?created_by'} ) {
+				$search{created_by} = $session{$uri.'?created_by'};
 			} # end if
 		} else {
 			#$search{created_by} = [ sets::union( $session{user_id}, new openprint::User($session{user_id})->assistant_ids(), new openprint::User($session{user_id})->csr_ids() ) ];
 		} # end if
-		$search{cancelled} = $session{'/employee/purchase_order/history.html?cancelled'} if $session{'/employee/purchase_order/history.html?cancelled'} ne '';
-		$search{'item_id any'} = $session{'/employee/purchase_order/history.html?item_id'} if $session{'/employee/purchase_order/history.html?item_id'};
+		if ( $session{$uri.'?has_manifest'} ne '' ) {
+			$search{'manifest_id is null'} = $session{$uri.'?has_manifest'} eq '1' ? 0 : 1;
+		}
+		$search{cancelled} = $session{$uri.'?cancelled'} if $session{'/employee/purchase_order/history.html?cancelled'} ne '';
+		$search{'item_id any'} = $session{$uri.'?item_id'} if $session{'/employee/purchase_order/history.html?item_id'};
 
 		@{$$variable{PurchaseOrders}} = ();
 		my $ac = sql::start_transaction( $dbh );
@@ -66,29 +71,29 @@
 			} # end if
 
 
-			if ( $session{'/employee/purchase_order/history.html?authorized'} eq 'Y' and $PO->authorized() ne '1' ) {
+			if ( $session{$uri.'?authorized'} eq 'Y' and $PO->authorized() ne '1' ) {
 				$log->debug("Next want authd but isn't");
 				next;
 			}
 
-			if ( $session{'/employee/purchase_order/history.html?authorized'} eq 'N' and $PO->authorized() ne '0' ) {
+			if ( $session{$uri.'?authorized'} eq 'N' and $PO->authorized() ne '0' ) {
 				$log->debug("Next want not authd but is");
 				next;
 			}
-			if ( $session{'/employee/purchase_order/history.html?authorized'} eq 'U' and $PO->authorized() ne '' ) {
+			if ( $session{$uri.'?authorized'} eq 'U' and $PO->authorized() ne '' ) {
 				$log->debug("Next want unauthd but is");
 				next;
 			}
 
-			next if $session{'/employee/purchase_order/history.html?vendor_category_id'} and $PO->Supplier()->category_id() != $session{'/employee/purchase_order/history.html?vendor_category_id'};
+			next if $session{$uri.'?vendor_category_id'} and $PO->Supplier()->category_id() != $session{'/employee/purchase_order/history.html?vendor_category_id'};
 			if ( ! $PO->can_view() ) {
 				$log->debug("! can_view");
 				next;
 			}
 
-			if ( $session{'/employee/purchase_order/history.html?docket'} ) {
+			if ( $session{$uri.'?docket'} ) {
 				my $next = 1;
-				my $docket = $session{'/employee/purchase_order/history.html?docket'};
+				my $docket = $session{$uri.'?docket'};
 
 				foreach my $C ($PO->Contents()) {
 					if ( $C->docket() =~ /$docket/i ) {
@@ -115,17 +120,17 @@
 				} # end foreach
 				next if $next;
 			} # end if
-			if ( $session{'/employee/purchase_order/history.html?types'} ) {
-				$log->debug("looking for " . $session{'/employee/purchase_order/history.html?types'} );
+			if ( $session{$uri.'?types'} ) {
+				$log->debug("looking for " . $session{$uri.'?types'} );
 				my @types = sets::union( map{ $_->type_id() } $PO->Contents() );
 				if ( ! @types ) {
-					next if ! sets::isin( ' ', [ split(',',$session{'/employee/purchase_order/history.html?types'} ) ] );
+					next if ! sets::isin( ' ', [ split(',',$session{$uri.'?types'} ) ] );
 				} else {
-					next if ! sets::intersection( @types, split(',', $session{'/employee/purchase_order/history.html?types'} ) );
+					next if ! sets::intersection( @types, split(',', $session{$uri.'?types'} ) );
 				} # end if
 			} # end if
-			if ( $session{'/employee/purchase_order/history.html?department_id'} ) {
-				next if ! sets::isin( $session{'/employee/purchase_order/history.html?department_id'}, [ map { $_->department_id() } $PO->Contents() ] );
+			if ( $session{$uri.'?department_id'} ) {
+				next if ! sets::isin( $session{$uri.'?department_id'}, [ map { $_->department_id() } $PO->Contents() ] );
 			} # end if
 
 			push @{$$variable{PurchaseOrders}}, $PO;

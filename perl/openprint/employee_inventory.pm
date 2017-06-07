@@ -1554,23 +1554,31 @@ sub _rfidtags_results {
 } # end sub _rfidtags_results
 
 sub rfidtag_details {
-	if ( $param{btnFunction} eq 'Go' ) {
 		if ( $param{rfidtag_id} =~ /^\s*\((.*)\)\s*$/ ) {
 			$param{rfidtag_id} = hex( $1 );
+		} else {
+			$param{rfidtag_id} = openprint::RFIDTag->transform( id=>$param{rfidtag_id} );
 		} # end if
+
 		if ( $param{rfidtag_id} ) {
-			my @Tags = openprint::RFIDTag->find('id like'=>( $param{rfidtag_id} =~ /%/ ? $param{rfidtag_id} : '%'.$param{rfidtag_id} ) );
-			if ( ! @Tags ) {
-				$variable{error} .= 'Tag ID not found.';
-			} elsif ( @Tags > 1 ) {
-				@{$variable{Tags}} = @Tags;
+			my $rfid = $param{rfidtag_id};
+			$rfid = sprintf('2%.14d', $rfid );
+			my $RFIDTag = openprint::RFIDTag::from_id( $rfid );
+			if ( $RFIDTag ) {
+				$param{rfidtag_id} = $RFIDTag->id();
 			} else {
-				$param{rfidtag_id} = $Tags[0]->id();
-			} # end if
+				my @Tags = openprint::RFIDTag->find('id like'=>( $param{rfidtag_id} =~ /%/ ? $param{rfidtag_id} : '%'.$param{rfidtag_id} ) );
+				if ( ! @Tags ) {
+					$variable{error} .= 'Tag ID not found.';
+				} elsif ( @Tags > 1 ) {
+					@{$variable{Tags}} = @Tags;
+				} else {
+					$param{rfidtag_id} = $Tags[0]->id();
+				} # end if
+			}
 		} else {
 			$variable{error} .= 'Please specify an id (or part).<br/>';
 		} # end if
-	} # end if
 		
 	my $RFIDTag = new openprint::RFIDTag( $param{rfidtag_id} );
 	$RFIDTag->id( $param{rfidtag_id} ) if ! $RFIDTag->id();
@@ -3073,6 +3081,18 @@ $log->debug("Got $id, $rfid, $quantity, $dimension1, $dimension2, $notes, $locat
 				} # end while line = <IO>
 				$variable{ExternalRedirect} = $Check->url_to();
 			} # end if upload
+
+		} elsif ( $param{action} eq 'Fudge' ) {
+			my @ICE = openprint::Inventory_Check_Entry->find( ic_id=>$$Check{id}, order=>'skid_id,rfidtag_id' );
+			foreach my $ICE ( @ICE ) {
+				if ( $ICE->rfidtag_id() ) {
+					my $RFID = openprint::RFIDTag->find_one( id=>$ICE->rfidtag_id() );
+					if ( ! $RFID ) {
+						$RFID = new openprint::RFIDTag();
+						$RFID->save({id=>$ICE->rfidtag_id()});
+					}
+				}
+			}
 
 		} # end if actions
 	} # end if param{action}
