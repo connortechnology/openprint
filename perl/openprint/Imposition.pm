@@ -864,8 +864,23 @@ sub spine_direction {
 sub to_svg {
 	my ( $self ) = @_;
 
-	my $svg = '<svg>';
-	$svg .= '<rect width="'.$$self{sheet_width}.'" height="'.$$self{sheet_height}.'" />';
+	# So let's assume that we might want to print this on an 8.5x11 sheet of paper. The source dimensions might be 28x40"
+
+	my $target_width = 3; # inches
+	my $target_height = 2; # inches;
+
+	my $margin = 1; #inch
+
+	# So we need to calculate the scale factor... in pixels.
+	#my $width_scale = ( 40/$target_width * 96 ); # 96 dots per inch?
+	#my $height_scale = ( 28/$target_height * 96 );
+	my $width_scale = ( ($target_width/40) * 96 ); # 96 dots per inch?
+	my $height_scale = ( ($target_height/28) * 96 );
+
+	my $svg = '<svg class="Imposition">';
+	
+	$svg .= '<rect class="background" width="'.int(($self->sheet_width()+(2*$margin))*$width_scale).'" height="'.int(($self->sheet_height()+(2*$margin))*$height_scale).'" />';
+	$svg .= '<rect class="sheet" x="'.int($margin*$width_scale).'" y="'.int($margin*$height_scale).'" width="'.int($self->sheet_width()*$width_scale).'" height="'.int($self->sheet_height()*$height_scale).'" style="fill:rgb(255,255,255);stroke-width:1;stroke:rgb(0,0,0);"/>';
 	$svg .= '</svg>';
 	return $svg;
 }
