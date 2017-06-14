@@ -6,38 +6,40 @@ require openprint::Location;
 
 use vars qw( $debug $table $serial %fields %transforms %defaults );
 
-$debug = 1;
+$debug = 0;
 $table = 'inventory_check_entries';
 $serial= 'inventory_check_entries_id_seq';
 %fields = (
-	id			=>	'id',
-	ic_id		=>	'ic_id',
-	skid_id		=>	'skid_id',
+	id					=>	'id',
+	ic_id				=>	'ic_id',
+	skid_id			=>	'skid_id',
 	rfidtag_id	=>	'rfidtag_id',
 	scanner_id	=>	'scanner_id',
 	created_on	=>	'created_on',
 	operator_id	=>	'operator_id',
-	quantity	=>	'quantity',
+	quantity		=>	'quantity',
 	dimension1	=>	'dimension1',
 	dimension2	=>	'dimension2',
-	notes		=>	'notes',	
+	notes				=>	'notes',	
 	location_id	=>	'location_id',
+	paper_id		=>	'paper_id',
 );
 %transforms = (
-	notes	=> [ 's/^\s+//', 's/\s+$//', 's/\s\s+/ /g' ],
-	quantity	=>	[ 's/\D//g' ],
+	notes				=> [ 's/^\s+//', 's/\s+$//', 's/\s\s+/ /g' ],
+	quantity		=>	[ 's/\D//g' ],
 	dimension1	=>	[ 's/\D//g' ],
 	dimension2	=>	[ 's/\D//g' ],
 );
 %defaults = (
 	created_on	=>	q`'NOW()'`,
 	operator_id	=>	undef,
-	skid_id		=>	undef,
+	skid_id			=>	undef,
 	rfidtag_id	=>	undef,
 	dimension1	=>	undef,
 	dimension2	=>	undef,
-	quantity	=>	undef,
+	quantity		=>	undef,
 	location_id	=>	undef,
+	paper_id		=>	undef,
 );
 
 sub skid_id {
@@ -136,7 +138,7 @@ sub system_quantity {
 # Else if there is still some in the system, assume that is correct.
 				$_[0]{system_quantity} = $C[0]{quantity};
 			} else {
-$openprint::log->debug("Looking up checked out qty for $_[0]{id}");
+$openprint::log->debug("Looking up checked out qty for $_[0]{id}") if $debug;
 # Otherwise, lookup the pre-checked out quantity, and use that
 				my $PI = $C[0]->checked_out();
 				$_[0]{system_quantity} = -1*$$PI{delta} if $PI;
@@ -192,15 +194,6 @@ sub SkidContent {
 	return $$self{SkidContent};
 }
 
-sub Paper {
-	my $SC = $_[0]->SkidContent();
-	my $Paper;
-	if ( ( ! $SC ) or ! ( $Paper=$SC->Paper() ) ) {
-		$Paper = new openprint::Paper();
-	}
-	return $Paper;
-}
-
 sub value {
 	my ( $self ) = @_;
 
@@ -244,7 +237,7 @@ sub diameter {
 # length = pi( r1^2 - r0^2 ) / calliper;
 					my $radius = sqrt( ( $length * $$Paper{calliper} / $pi ) + 28.8906525 );
 					$_[0]{diameter} = $radius * 2;
-					$openprint::log->debug("Diameter $_[0]{diameter} length: $length inches before sqrt: " . ( ( ( $length * $$Paper{calliper} / $pi ) ) ) );
+					$openprint::log->debug("Diameter $_[0]{diameter} length: $length inches before sqrt: " . ( ( ( $length * $$Paper{calliper} / $pi ) ) ) ) if $debug;
 				} # end if Roll
 			} # end if C
 		} # end if Skid
@@ -252,6 +245,25 @@ sub diameter {
 	return $_[0]{diameter};
 }
 
+sub paper_id {
+	if ( @_ > 1 ) {
+		$_[0]{paper_id} = $_[1];
+	}
+	if ( ! $_[0]{paper_id} ) {
+		my @Contents = $_[0]->Skid()->Contents();
+		if ( @Contents == 1 ) {
+			return $Contents[0]->paper_id();
+		}
+	}
+	return $_[0]{paper_id};
+}
+sub Paper {
+	if ( ! $_[0]{paper_id} ) {
+		return new openprint::Paper( $_[0]->paper_id() );
+	} else {
+		return new openprint::Paper( $_[0]{paper_id} );
+	}	
+}
 
 1;
 __END__
