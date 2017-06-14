@@ -152,7 +152,7 @@ sub skid_id {
 		return;
 	} # end if
 	if ( ! $$self{skid_id} ) {
-		my @Skids = openprint::Skid->find('rfidtag_id'=>$$self{id},'deleted'=>[0,1]);
+		my @Skids = openprint::Skid->find( rfidtag_id=>$$self{id}, deleted=>[0,1] );
 		if ( @Skids ) {
 			$$self{skid_id} = $Skids[0]->id();
 		} # end if
@@ -208,21 +208,21 @@ sub is_invalid_id {
 
 # Does a better of figuring out what has been entered as an id
 sub from_id {
-	my ( $tag_id ) = @_;
+	my ( $tag_id, $p_type ) = @_;
 
 	my ( $type, $id );
 
 	if ( ( $type, $id ) = $tag_id =~ /^R?(\d)(\d{14})$/ ) {
-		my @RFID = openprint::RFIDTag->find( id=>sprintf('%d%.14d', $type, $id ) );
+		my @RFID = openprint::RFIDTag->find( id=>sprintf( '%d%.14d', $type, $id ) );
 		if ( @RFID == 1 ) {
 			return $RFID[0];
 		} else {
-			$openprint::log->debug("Got too many rfids for $type $id");
+			$openprint::log->debug("Got too many rfids for $type $id from a full id");
 		} # end if
 	} elsif ( ( $id ) = $tag_id =~ /^(\d+)$/ ) {
 		
-		my @RFID = openprint::RFIDTag->find( 'id ilike'=>'%'.sprintf('%.14d', $id ) );
-		@RFID = openprint::RFIDTag->find( 'id ilike'=>'%'.$id ) if ! @RFID;
+		my @RFID = openprint::RFIDTag->find( 'id ilike'=>($p_type?$p_type:'').'%'.sprintf( '%.14d', $id ) );
+		@RFID = openprint::RFIDTag->find( 'id ilike'=>($p_type?$p_type:'').'%'.$id ) if ! @RFID;
 		if ( @RFID == 1 ) {
 			return $RFID[0];
 		} else {
