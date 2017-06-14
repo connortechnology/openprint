@@ -2744,7 +2744,8 @@ sub check {
 				} # end if
 				$total_weight += $weight;
 				$count += 1;
-$log->debug("blah");
+				my $cost = $C->cost() ? $C->cost() : 45;
+				my $value = $C->value() ? $C->value() : Math::Round::nearest(0.01, $cost * $ICE->quantity() /10 );
 				push @data,(
 						$$Paper{id},
 						$Skid->type() ? $Skid->type() : 'unknown',
@@ -2763,7 +2764,7 @@ $log->debug("blah");
 						$Paper->gsm(),
 						$ICE->skid_id(),
 						$ICE->RFIDTag()->id_short(),
-						ssi::format_csv_date( $$Skid{received_on} ),
+						$$Skid{received_on} ? ssi::format_csv_date( $$Skid{received_on} ) : ssi::format_csv_date( $$Skid{created_on} ),
 						ssi::format_csv_date( $$Skid{created_on} ),
 						ssi::format_csv_date( $$Skid{updated_on} ),
 						( $ICE->location_id() ? $ICE->Location()->name() : $Skid->Location()->name() ),
@@ -2771,12 +2772,12 @@ $log->debug("blah");
 						$weight,
 						$C->condition(),
 						ssi::format_csv_date( $$Skid{updated_on} ),#FIXME
-						1*$C->cost(),
-						1*$C->value(),
+						$cost,
+						$value,
 						( $Allocations{$Skid->id()} ? join(',', @{$Allocations{$Skid->id()}}) : '' ),
 						join(',', $Skid->dockets() ),
 						);
-				$total_value += $C->value();
+				$total_value += $value;
 		} # end foreach ICE
 		my $date = Date::Format::time2str('%Y-%m-%d %H:%M', time );
 		push @data, ( 'Report generated',$date,'Count:',$count,undef,undef,undef,undef, undef,undef,undef, undef, undef, undef, undef, undef, undef, undef, undef, undef,undef, 'Total Weight (lbs):', $total_weight, undef, undef, undef, $total_value, undef, undef );
@@ -3083,15 +3084,127 @@ $log->debug("Got $id, $rfid, $quantity, $dimension1, $dimension2, $notes, $locat
 			} # end if upload
 
 		} elsif ( $param{action} eq 'Fudge' ) {
-			my @ICE = openprint::Inventory_Check_Entry->find( ic_id=>$$Check{id}, order=>'skid_id,rfidtag_id' );
+			my @ICE = openprint::Inventory_Check_Entry->find( ic_id=>$$Check{id}, order=>'skid_id NULLS FIRST,rfidtag_id' );
 			foreach my $ICE ( @ICE ) {
+				# Step 1, it is safe to add the rfid object to the db
 				if ( $ICE->rfidtag_id() ) {
 					my $RFID = openprint::RFIDTag->find_one( id=>$ICE->rfidtag_id() );
 					if ( ! $RFID ) {
+						$log->debug("Looking for rfid $$ICE{rfidtag_id} ");
 						$RFID = new openprint::RFIDTag();
-						$RFID->save({id=>$ICE->rfidtag_id()});
+						if ( ( $ICE->rfidtag_id() =~ /^2[0-9]{14}$/ ) ) {
+							$RFID->save({ id => $ICE->rfidtag_id() });
+						} else {
+# Must be a short form
+$log->debug("RFID no good " . $RFID->id() );
+die;
+							$RFID->save({ id => sprintf( '2%.14d', $ICE->rfidtag_id() ) });
+							$ICE->save({ rfidtag_id=>$$RFID{id} });
+						}
+					} else {
+$log->debug( "Have an RFID object. " . $RFID->id() );
 					}
+				} else {
+$log->debug( "No rfidtag" );
 				}
+				if ( ! $ICE->skid_id() ) {
+$log->debug("No skid_id for " . $ICE->rfidtag_id() );
+					my $RFIDTag;
+					# Need to find the previous RFID tag and copy it's contents.
+					if ( $ICE->rfidtag_id() ) {
+						my $rfid = $ICE->rfidtag_id();
+						
+$log->debug("Looking for a previous rfidtag based on $rfid");
+						while ( -- $rfid ) {
+							if ( $rfid =~ /9999999/ ) {
+								$log->debug("Dying cause $rfid");
+								die ;
+							}
+							$RFIDTag = openprint::RFIDTag::from_id( $rfid, 2 );
+							next if ! $RFIDTag;
+							if ( ! $RFIDTag->skid_id() ) {	
+								$RFIDTag = undef;
+								next;
+							}
+							if ( ! $RFIDTag->Skid()->Contents() ) {
+								$RFIDTag = undef;
+								next;
+							}
+							
+							last if $RFIDTag;
+						} # end while
+						if ( ! $RFIDTag ) {
+							$log->debug("Couldn't find a previous rfidtag");
+							die;
+						} else {
+							$log->debug("found a previous rfidtag");
+						}
+					}
+					if ( ! $RFIDTag ) {
+						$log->debug("No previous RFIDTag found.");
+						next;
+					}
+					# No skid_id, need to allocate one, should be safe to allocate a new one.
+					my $Skid = new openprint::Skid();
+					$Skid->save({
+						( $ICE->rfidtag_id() ? ( rfidtag_id => $ICE->rfidtag_id() ) : () ),
+						type => 'Roll',
+						received_on	=>	$RFIDTag->created_on(),
+						owner_id		=>	$openprint::Owner->id(),
+						created_on	=>	$RFIDTag->created_on(),
+						updated_on	=>	$RFIDTag->created_on(),
+						created_by_id	=>	$session{user_id},
+					});
+					$ICE->save({skid_id=>$Skid->id()});
+				} # end if ! Skid_id
+
+				if ( ! $$ICE{paper_id} ) {
+					my $Skid = $ICE->Skid();
+					my @Contents = $Skid->Contents();
+					if ( @Contents == 1 ) {
+$log->debug("Assigning stock from system.");
+						$ICE->save({ paper_id=>$Contents[0]->paper_id() });
+					} elsif ( @Contents ) {
+$log->debug("Giving up on ssigning stock from system. as it has too many contents on $$Skid{id}");
+						next;
+					}
+			
+					my $RFIDTag;
+					my $rfid = $ICE->rfidtag_id();
+					while ( -- $rfid ) {
+						if ( $rfid =~ /9999999/ ) {
+							$log->debug("Dying because $rfid");
+							die ;
+						}
+						$RFIDTag = openprint::RFIDTag::from_id( $rfid, 2 );
+						next if ! $RFIDTag;
+						if ( ! $RFIDTag->skid_id() ) {
+							$RFIDTag = undef;
+							next;
+						}
+						if ( ! $RFIDTag->Skid()->Contents() ) {
+							$RFIDTag = undef;
+							next;
+						}
+
+						last if $RFIDTag;
+					} # end while
+
+					$Skid = $RFIDTag->Skid();
+					my @Contents = $Skid->Contents();
+					if ( @Contents == 1 ) {
+$log->debug("Assigning stock from previous roll.");
+						$ICE->save({ paper_id=>$Contents[0]->paper_id() });
+					} elsif ( @Contents ) {
+$log->debug("Giving up on ssigning stock from previous roll. as it has too many contents on $$Skid{id}");
+						next;
+					} else {
+$log->debug("Dying because couldnt assign a paper for $$ICE{rfidtag_id}");
+die;
+					}
+					
+				}
+				#sleep 1;	
 			}
 
 		} # end if actions
