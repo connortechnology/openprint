@@ -32,7 +32,7 @@
 				if ( sets::isin( $session{user_type}, ['E','A'] ) ) {
 					$html .= button( 'Summary', { href=>'/main/project/summary.html?ProjectIndex='.$$variable{Project}{id} } );
 				} # end if
-				if ( ( ! $$variable{Project}->order_id() ) or ( sets::isin( $$variable{Project}->Order->status(), ['Re-Opened','Incomplete'] ) ) ) {
+				if ( $$variable{Project}->can_edit() and ( ( ! $$variable{Project}->order_id() ) or ( sets::isin( $$variable{Project}->Order->status(), ['Re-Opened','Incomplete'] ) ) ) ) {
 					$html .= join("\n",
 						button( 'Edit', { href=>'/main/project/create_edit.html?ProjectIndex='.$$variable{Project}{id} } ),
 						( $$variable{Project}->deleted() ?
@@ -49,7 +49,7 @@
 			<div style="float: right;">
 				<? echo (
 					my $html = '';
-					if ( sets::isin( $$variable{Project}->status(), ['Unordered','uncalculated','Calculating'] ) or $$variable{Project}->Order()->status() eq 'Re-Opened' ) {
+					if ( ( sets::isin( $$variable{Project}->status(), ['Unordered','uncalculated','Calculating'] ) or $$variable{Project}->Order()->status() eq 'Re-Opened' ) and $$variable{Project}->can_edit() ) {
 						$html .= button( 'RecalculateProject', { onclick=>"f1.action='/main/project/view.html';f1.btnFunction.value='Recalculate Project';f1.submit();", text=>'Recalculate' } );
 					} # end if
 					if ( $session{ShowAllSignatures} ) {
@@ -133,6 +133,10 @@ var tinymce_options = {
   };
 tinyMCE.init(tinymce_options);
 new Ajax.InPlaceRichEditor( 'reference', '/main/project/_update.html?project_id=<?echo($$variable{Project}->id())?>&action=update&field=reference',{okButton:true,cancelLink:true,submitOnBlur:false, tinymceToElementSize: true}, tinymce_options );
+</script>
+<? else ( $$variable{Project}->can_edit() ) ?>
+<script type="text/javascript">
+console.log("Can't edit");
 </script>
 <? endif ( $$variable{Project}->can_edit() ) ?>
 	<? else ( $$variable{Project}->can_view() ) ?>
