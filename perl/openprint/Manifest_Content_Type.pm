@@ -82,12 +82,12 @@ sub PurchaseOrder_Content {
 			foreach my $POC ( $PO->Contents() ) {
 				$openprint::log->debug('POC desc: ' . $POC->item()) if $debug;
 				if ( $POC->type() ne $Paper->type().' Stock' ) {
-					$openprint::log->debug("not the right type POC: $$POC{type} != $$Paper{type} Stock");
+					$openprint::log->debug("not the right type POC: $$POC{type} != $$Paper{type} Stock") if $debug;
 					next;
 				} # en dif
 				if ( ! $$options{ignore_docket} ) {
 					if ( $POC->docket() and $_[0]{docket} ) {
-						$openprint::log->debug("not the right docet POC: $$POC{docket} != $_[0]{docket}");
+						$openprint::log->debug("not the right docet POC: $$POC{docket} != $_[0]{docket}") if $debug;
 						next if $POC->docket() ne $_[0]{docket};
 					}
 				}
