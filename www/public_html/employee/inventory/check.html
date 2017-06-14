@@ -66,6 +66,7 @@ function lookup_item(e) {
 				(
 				 button( 'Apply', { onclick=>"if(confirm('Warning, this will adjust inventory to match this check.')){f1.elements['action'].value='Apply';f1.submit();};" } ),
 				 button( 'Download', { onclick=>"f1.elements['action'].value='Download';f1.submit();", text=>'Download' } ),
+				 button( 'Fudge', { onclick=>"f1.elements['action'].value='Fudge';f1.submit();", text=>'Fudge' } ),
 				 button( 'Test', { onclick=>"f1.elements['action'].value='Test';f1.submit();" } ),
 					#if ( $$variable{Check}->deleted() ) {
 						#$html .= button( 'Destroy', { onclick=>"f1.elements['action'].value='Destroy';f1.submit();" } );
