@@ -507,6 +507,7 @@ sub create_edit_process {
 	my $project_index = $session{project_id} = $Project->id();
 	$Project->lock();
 	my @changes = $Project->changes( \%param );
+	$Project->quantity_indexes(undef);
 
 	my $services = $Project->services();
 	my @service_ids = sort map { $$services{$_} ? @{$$services{$_}} : () } keys %$services;
