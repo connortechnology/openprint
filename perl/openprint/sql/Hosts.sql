@@ -15,7 +15,8 @@ CREATE TABLE hosts (
 	state_changed_on	INTEGER,
 	offline_seconds		INTEGER,
 	notified			BOOLEAN NOT NULL DEFAULT FALSE,
+	notify_frequency	INTEGER,
 	location_id			INTEGER, FOREIGN KEY (location_id) REFERENCES Locations (id),
+	owner_id			INTEGER, FOREIGN KEY (owner_id) REFERENCES Companies (id),
 	PRIMARY KEY (id)
 );
-CREATE INDEX hosts_ip_idx on Hosts (ip);

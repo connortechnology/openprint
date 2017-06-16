@@ -116,6 +116,11 @@ sub stock_id {
 	} # end if
 	return $_[0]{paper_id};
 } # end sub stock_id
+
+sub Stock {
+	return new openprint::Paper( $_[0]{paper_id} );
+}
+
 sub id_string {
 	my $Price = $_[0];
 	my $price_desc = '';

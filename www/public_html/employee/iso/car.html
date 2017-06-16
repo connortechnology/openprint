@@ -1,8 +1,8 @@
 <div class="PageTitle">
 <h1>CORRECTIVE ACTION REQUEST (CAR)</h1>
-<? if ( $$variable{'CAR'}->reprint() eq 'Yes' ) ?>
+<? if ( $$variable{CAR}->reprint() eq 'Yes' ) ?>
 <h2>(Re-print Job Request)</h2>
-<? endif ( $$variable{'CAR'}->reprint() eq 'Yes' ) ?>
+<? endif ( $$variable{CAR}->reprint() eq 'Yes' ) ?>
 </div>
 <script type="text/javascript">
 	function check_part1( form ) {
@@ -46,19 +46,17 @@
 	} // end function area_id_onchange(e)
 </script>
 <div id="CAR">
-	<? if ( $param{'car_id'} and ! $$variable{'CAR'}->id() ) ?>
+	<? if ( $param{car_id} and ! $$variable{CAR}->id() ) ?>
 	Invalid CAR # specified.
-	<? else ( $param{'car_id'} and ! $$variable{'CAR'}->id() ) ?>
+	<? else ( $param{car_id} and ! $$variable{CAR}->id() ) ?>
 
-		<? echo ( ssi::button( 'Print', { onclick=>'window.print();' } ) ) ?>
-		<? echo ( ssi::button( 'Send', { 'href'=>'/employee/iso/car.html?action=Send&amp;car_id='.$$variable{'CAR'}->id() } ); ) ?>
-		<h3>CAR ID: <span id="car_id"><? echo ( $$variable{'CAR'}->id() ) ?></span></h3>
+		<? echo ( button( 'Print', { onclick=>'window.print();' } ) ) ?>
+		<? echo ( button( 'Send', { 'href'=>'/employee/iso/car.html?action=Send&amp;car_id='.$$variable{CAR}->id() } ); ) ?>
+		<h3>CAR ID: <span id="car_id"><? echo ( $$variable{CAR}->id() ) ?></span></h3>
 		<? echo (
 			my $html;
-			if ( ( ! $param{'car_id'} ) ) {
-				$html .= '<div id="Part1">';
-				$html .= misc::load_file( $log, $ENV{'DOCUMENT_ROOT'}.'/employee/iso/_car_edit_part1.html' );
-				$html .= '</div>';
+			if ( ( ! $param{car_id} ) ) {
+				$html .= '<div id="Part1">'.include('/employee/iso/_car_edit_part1.html' ).'</div>';
 				$html .= '<div id="Part1">';
 				$html .= '</div>';
 				$html .= '<div id="Part2">';
@@ -68,20 +66,12 @@
 				$html .= '<div id="Part4">';
 				$html .= '</div>';
 			} else {
-				$html .= '<div id="Part1">';
-				$html .= misc::load_file( $log, $ENV{'DOCUMENT_ROOT'}.'/employee/iso/_car_view_part1.html' );
-				$html .= '</div>';
-				$html .= '<div id="Part2">';
-				$html .= misc::load_file( $log, $ENV{'DOCUMENT_ROOT'}.'/employee/iso/_car_view_part2.html' );
-				$html .= '</div>';
-				$html .= '<div id="Part3">';
-				$html .= misc::load_file( $log, $ENV{'DOCUMENT_ROOT'}.'/employee/iso/_car_view_part3.html' );
-				$html .= '</div>';
-				$html .= '<div id="Part4">';
-				$html .= misc::load_file( $log, $ENV{'DOCUMENT_ROOT'}.'/employee/iso/_car_view_part4.html' );
-				$html .= '</div>';
+				$html .= '<div id="Part1">'.include('/employee/iso/_car_view_part1.html' ).'</div>';
+				$html .= '<div id="Part2">'.include('/employee/iso/_car_view_part2.html' ).'</div>';
+				$html .= '<div id="Part3">'.include('/employee/iso/_car_view_part3.html' ).'</div>';
+				$html .= '<div id="Part4">'.include('/employee/iso/_car_view_part4.html' ).'</div>';
 			} # end if
-			return ssi::variable_substitution( \$html, $variable );
+			return variable_substitution( \$html, $variable );
 		) ?>
-	<? endif ( $param{'car_id'} and ! $$variable{'CAR'}->id() ) ?>
+	<? endif ( $param{car_id} and ! $$variable{CAR}->id() ) ?>
 </div>

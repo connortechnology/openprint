@@ -19,15 +19,15 @@ $table = 'survey_responses';
 );
 
 %defaults = (
-	'created_on'	=>	q`'NOW()'`,
+	created_on	=>	q`'NOW()'`,
 	answer_ids	=>	undef,
 	company_id	=>	undef,
-	survey_id		=>	undef,
+	survey_id	=>	undef,
 	answer		=>	undef,
 );
 
 sub Answers {
-	return map { $_ ? new openprint::Survey_Answer( $_ ) : () } ( $_[0]{'answer_ids'} ? @{$_[0]{'answer_ids'}} : () );
+	return map { $_ ? new openprint::Survey_Answer( $_ ) : () } ( $_[0]{answer_ids} ? @{$_[0]{answer_ids}} : () );
 } # end sub Answers
 
 1;

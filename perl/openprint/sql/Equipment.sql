@@ -10,10 +10,11 @@ CREATE TABLE tbl_Equipment (
 	strDescription		TEXT,
 	strCategory			TEXT,
 	category_id			INTEGER[],
+	servicetype_id		INTEGER[],
 	strSupplier			TEXT,
 	image				TEXT, /* Relative to /images/equipment */
 	useinscheduling		boolean,
-	useinestimation		boolean,
+	useinestimating		boolean,
 	jmf_enabled			boolean,
 	instantgate_enabled	boolean,
 	cost_center				TEXT, 

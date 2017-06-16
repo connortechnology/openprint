@@ -42,11 +42,11 @@
 				$html .= sprintf(q` 
 				<tr title="%2$s" %8$s> 
 					<td class="checkbox"><input type="checkbox" name="article_id" value="%1$d"/></td>
-					<td class="Author"><a href="/article/edit.html?article_id=%1$d">%3$s</a></td>
-					<td class="Category"><a href="/article/edit.html?article_id=%1$d">%4$s</a></td>
-					<td class="DateTime"><a href="/article/edit.html?article_id=%1$d">%5$s</a></td>
-					<td class="DateTime"><a href="/article/edit.html?article_id=%1$d">%6$s</a></td>
-					<td class="Title"><a href="/article/edit.html?article_id=%1$d">%7$s</a></td>
+					<td class="Author"><a href="/article/view.html?article_id=%1$d">%3$s</a></td>
+					<td class="Category"><a href="/article/view.html?article_id=%1$d">%4$s</a></td>
+					<td class="DateTime"><a href="/article/view.html?article_id=%1$d">%5$s</a></td>
+					<td class="DateTime"><a href="/article/view.html?article_id=%1$d">%6$s</a></td>
+					<td class="Title"><a href="/article/view.html?article_id=%1$d">%7$s</a></td>
 				</tr>
 				`, $Article->id(), html_escape($Article->summary()),
 				( $Author->name() ? htmlize( $Author->name() ) : ' ' ),

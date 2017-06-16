@@ -5,6 +5,8 @@
 		date_filter( '/invoice/history.html?created_on_start', 'period_end null_or_>=' ),
 		order		=>	'period_start,name',
 	) ];
+	my $company_ids = [ map { $$_{id} } openprint::Company->find_filtered() ] if $session{user_type} ne 'A';
+
 	my @Invoices = @{$$variable{Invoices}} = ();
 	if ( $param{invoice_id} ) {
 		@Invoices = openprint::Invoice->find( id => $param{invoice_id},
@@ -25,11 +27,11 @@
 		foreach my $Invoice ( openprint::Invoice->find( 
 			date_filter( '/invoice/history.html?created_on_end', 'created_on <=' ),
 			date_filter( '/invoice/history.html?created_on_start', 'created_on >=' ),
-			date_filter( '/invoice/history.html?due_on_end', 'due_on <=' ),
-			date_filter( '/invoice/history.html?due_on_start', 'due_on >=' ),
+			date_filter( '/invoice/history.html?due_on_end', 'due_on is null or <=' ),
+			date_filter( '/invoice/history.html?due_on_start', 'due_on is null or >=' ),
 
 			( sets::isin( $session{user_type}, ['E','A'] ) ? (
-				( $session{'/invoice/history.html?company_id'} ? ( invoicee_id => $session{'/invoice/history.html?company_id'} ) : () ),
+				( $session{'/invoice/history.html?company_id'} ? ( invoicee_id => $session{'/invoice/history.html?company_id'} ) : ( $company_ids ? ( invoicee_id => $company_ids ) : () ) ),
 				invoicer_id		=> $openprint::User->company_id(),
 			) : (
 				( invoicee_id	=>	$session{company_id} ),
@@ -57,6 +59,7 @@
 
 	foreach my $Invoice ( @Invoices ) {
 		push @{$$variable{Invoices}}, $Invoice;
+		next if ! $Invoice->can_view();
 		$$variable{subtotal} += $Invoice->subtotal();
 		$$variable{total} += $Invoice->total();
 		$$variable{interest_total} += $Invoice->interest();
@@ -87,7 +90,7 @@
 			<th class="Company">Company</th>
 			<th class="Price">SubTotal</th>
 			<? echo ( 
-				return join('', map { exists $$variable{tax_totals}{$_->id()} ? sprintf('<th class="Price">%s (%d%)</th>', $_->name(), $_->rate() ) : () } @{$$variable{Taxes}} );
+				return join("\n", map { exists $$variable{tax_totals}{$_->id()} ? sprintf('<th class="Price">%s (%d%)</th>', $_->name(), $_->rate() ) : () } @{$$variable{Taxes}} );
 			) ?>
 			<th class="Price">Total</th>
 			<th class="Interest Price">Interest</th>
@@ -97,27 +100,44 @@
 			my $html;
 			my $rowclass;
 			foreach my $Invoice ( @{$$variable{Invoices}} ) {
+				if ( ! $Invoice->can_view() ) {
+				$html .= sprintf(q`<tr%1$s title="%4$s">
+						<td class="invoice_id"><a href="/invoice/view.html?invoice_id=%2$d">%2$d</a></td>
+						<td class="invoice_num"><a href="/invoice/view.html?invoice_id=%2$d">%3$s</a></td>
+						<td class="Date"><a href="/invoice/view.html?invoice_id=%2$d">%5$s</a></td>
+						<td class="Date"><a href="/invoice/view.html?invoice_id=%2$d">%6$s</a></td>
+						<td class="Company"><a href="/invoice/view.html?invoice_id=%2$d">%7$s</a></td>
+						<td colspan="%8$d">You may not see any further details</td>
+						</tr>`,
+						$rowclass, $Invoice->id(), $Invoice->num(), $Invoice->internal_notes().$Invoice->external_notes(),
+						format_date( $Invoice->created_on() ),
+						format_date( $Invoice->due_on() ),
+						htmlize( $Invoice->Invoicee()->name() ),
+					4 + scalar @{$$variable{Taxes}},
+						);
+				}  else {
 				$html .= sprintf(q`<tr%1$s title="%4$s"> 
-					<td class="invoice_id"><a href="/invoice/view.html?invoice_id=%2$d">%2$d</a></td>
-					<td class="invoice_num"><a href="/invoice/view.html?invoice_id=%2$d">%3$s</a></td>
-					<td class="Date"><a href="/invoice/view.html?invoice_id=%2$d">%5$s</a></td>
-					<td class="Date"><a href="/invoice/view.html?invoice_id=%2$d">%6$s</a></td>
-					<td class="Company"><a href="/invoice/view.html?invoice_id=%2$d">%7$s</a></td>
-					<td class="Price">%8$s</td>
-					%9$s
-					<td class="Price">%10$s</td>
-					<td class="Interest Price">%11$s</td>
-					<td class="Owing Price">%12$s</td>
-				</tr>`, $rowclass, $Invoice->id(), $Invoice->num(), $Invoice->internal_notes().$Invoice->external_notes(), 
-				format_date( $Invoice->created_on() ),
-				format_date( $Invoice->due_on() ),
-				htmlize( $Invoice->Invoicee()->name() ),
-				openprint::Currency::format( $Invoice->subtotal() ),
-				join('', map { exists $$variable{tax_totals}{$_->id()} ? sprintf('<td class="Price">%s</td>', openprint::Currency::format( $Invoice->Tax( $_ )->amount() ) ) : () } @{$$variable{Taxes}} ),
-				openprint::Currency::format( $Invoice->total() ),
-				openprint::Currency::format( $Invoice->interest() ),
-				openprint::Currency::format( $Invoice->owing() ),
-);
+						<td class="invoice_id"><a href="/invoice/view.html?invoice_id=%2$d">%2$d</a></td>
+						<td class="invoice_num"><a href="/invoice/view.html?invoice_id=%2$d">%3$s</a></td>
+						<td class="Date"><a href="/invoice/view.html?invoice_id=%2$d">%5$s</a></td>
+						<td class="Date"><a href="/invoice/view.html?invoice_id=%2$d">%6$s</a></td>
+						<td class="Company"><a href="/invoice/view.html?invoice_id=%2$d">%7$s</a></td>
+						<td class="Price">%8$s</td>
+						%9$s
+						<td class="Price">%10$s</td>
+						<td class="Interest Price">%11$s</td>
+						<td class="Owing Price">%12$s</td>
+						</tr>`, $rowclass, $Invoice->id(), $Invoice->num(), $Invoice->internal_notes().$Invoice->external_notes(), 
+						format_date( $Invoice->created_on() ),
+						format_date( $Invoice->due_on() ),
+						htmlize( $Invoice->Invoicee()->name() ),
+						openprint::Currency::format( $Invoice->subtotal() ),
+						join('', map { exists $$variable{tax_totals}{$_->id()} ? sprintf('<td class="Price">%s</td>', openprint::Currency::format( $Invoice->Tax( $_ )->amount() ) ) : () } @{$$variable{Taxes}} ),
+						openprint::Currency::format( $Invoice->total() ),
+						openprint::Currency::format( $Invoice->interest() ),
+						openprint::Currency::format( $Invoice->owing() ),
+						);
+				} # end if can view
 				$rowclass = $rowclass ? '' : ' class="colRow"';
 			} # end foreach
 			return $html;

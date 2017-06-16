@@ -105,8 +105,7 @@ sub email_campaign {
     } elsif ( $param{btnFunction} eq 'Download Recipients' ) {
         my @header = ( 'Company','Name','Email','Phone','Last Sent On','Number of Times Sent');
         my @data;
-		foreach my $user_id ( $Campaign->recipients() ) {
-			my $User = new openprint::User( $user_id );
+		foreach my $User ( $Campaign->Recipients() ) {
 			push @data, $User->Company()->name(), $User->name(), $User->email(), $User->phone();
 			my ( $last_sent, $num_times ) = sql::execute( undef, undef, 'SELECT emailsenton, numemailsent FROM emailcampaign_sent WHERE campaign_id=? AND user_id=? ORDER BY emailsenton DESC LIMIT 1', $Campaign->id(), $User->id() );
 			push @data, $last_sent, $num_times;
@@ -149,6 +148,7 @@ sub email_template {
 	if ( $param{btnFunction} eq 'Run' ) {
 		$variable{Results} = $Template->send();
 	} elsif ( $param{btnFunction} eq 'Copy' ) {
+		$Template = $Template->copy();
 		$variable{error} .= $Template->save( { name => 'Copy of ' . $Template->name() } );
 	} elsif ( $param{btnFunction} eq 'Save' ) {
 		$Template->save( \%param );
@@ -310,6 +310,9 @@ sub get_clients {
 		$variable{ExternalRedirect} .= '/marketing/get_clients.html';
 	} # end if
 } # end sub get_clients
+sub _recipients {
+	$variable{Campaign} = new openprint::EmailCampaign( $param{campaign_id} );
+}
 
 1;
 __END__

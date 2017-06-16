@@ -9,14 +9,14 @@
 			<th class="state">State/Province</th>
 			<th class="rate">Rate (%)</th>
 		</tr>
-		<? eval ( $$variable{TAXES} = [ openprint::Tax->find(order=>'period_start, lower(state)') ]; ) ?>
+		<? eval ( $$variable{TAXES} = [ openprint::Tax->find(order=>'lower(state),period_start') ]; ) ?>
 		<? while ( $$variable{Tax} = shift @{$$variable{TAXES}}; ) ?>
 		<tr>
 			<td class="checkbox"><input type="checkbox" id="tax_ids<? echo ( $$variable{Tax}->id() ) ?>" name="tax_ids" value="<? echo ( $$variable{Tax}->id() ) ?>" /></td>
 			<td class="name"><input type="text" id="name-<? echo ( $$variable{Tax}->id() ) ?>" name="name-<? echo ( $$variable{Tax}->id() ) ?>" value="<? echo ( $$variable{Tax}->name() ) ?>" /></td>
 			<td class="period">
-				<? echo ( date_select( 'period_start-'.$$variable{Tax}->id(), [ split('-',$$variable{Tax}->period_start())] ); ) ?> to 
-				<? echo ( date_select( 'period_end-'.$$variable{Tax}->id(), [ split('-',$$variable{Tax}->period_end())] ); ) ?>
+				<? echo ( date_select( 'period_start-'.$$variable{Tax}->id(), [ split('-',$$variable{Tax}->period_start())], { with_today=>1 } ); ) ?> to 
+				<? echo ( date_select( 'period_end-'.$$variable{Tax}->id(), [ split('-',$$variable{Tax}->period_end())], { with_today=>1 } ); ) ?>
 			</td>
 			<td class="country"><? echo ( $countries::countries{$$variable{Tax}->country()} ? $countries::countries{$$variable{Tax}->country()} : $$variable{Tax}->country() ) ?></td>
 			<td class="state"><? echo (
@@ -35,12 +35,12 @@
 			<td class="checkbox">&nbsp;</td>
 			<td class="name"><input type="text" id="name-New" name="name-New" /></td>
 			<td class="period">
-				<? echo (date_select( 'period_start-New',[] ); ) ?> to 
-				<? echo (date_select( 'period_end-New',[] ); ) ?>
+				<? echo (date_select( 'period_start-New',[], { with_today=>1 } ); ) ?> to 
+				<? echo (date_select( 'period_end-New',[], { with_today=>1 } ); ) ?>
 			</td>
 			<td class="country"><select name="country-New" onchange="new Ajax.Updater('state-New', '/includes/_states_provinces.html', { parameters: { country: this.getValue() } } );">
-				<?echo(return_countries($param{'country-New'} ? $param{'country-New'} : $openprint::Company->country() );)?></select></td>
-			<td class="state"><select name="state-New" id="state-New">
+				<option value="">select</option><?echo(return_countries($param{'country-New'} ? $param{'country-New'} : $openprint::Company->country() );)?></select></td>
+			<td class="state"><select name="state-New" id="state-New"><option value="">select</option>
 				<? echo (
 						if ( $param{'country-New'} ) {
 							if ( $param{'country-New'} eq 'CA' ) {

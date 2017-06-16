@@ -1,9 +1,9 @@
 <? echo (
 	if ( $session{'/employee/purchase_order/history.html?supplier_id'} ) {
 		return '<option value="">All</option>' . 
-				make_drop_down( [ map { $_->id(), $_->name() } openprint::PurchaseOrder_Item->find( 
-						'order'=>'lower(name)', 
-						'vendor_id'=>$session{'/employee/purchase_order/history.html?supplier_id'}) ], 
+				make_drop_down( openprint::PurchaseOrder_Item->dropdown( 
+						order=>'lower(name)', 
+						vendor_id=>$session{'/employee/purchase_order/history.html?supplier_id'}), 
 					$session{'/employee/purchase_order/history.html?item_id'} 
 					); 
 	} # end if

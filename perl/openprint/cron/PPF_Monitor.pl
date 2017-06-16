@@ -103,6 +103,7 @@ foreach my $Equipment ( @Equipment ) {
 			# Will ignore ., .., any hidden file
 		$log->warn("File... $file" ) if $debug;
 			next if $file =~ /^\./; 
+			next if -d $Equipment->cip3_in().'/'.$file;
 			my ( $file_base, $side, $extension ) = $file =~ /^(.*)([AB])\.(ppf)$/i;
 $log->warn("Parsed to $file_base, $side, $extension from $file") if $debug;
 			if ( $side ne 'B' ) {
@@ -215,7 +216,7 @@ if ( $mangle ) {
 			close $A;
 
 			if ( ! $complete ) {
-				$log->error("File was not complete! $file_base");
+				$log->error("File was not complete! ".$Equipment->cip3_in()."/$file");
 				next;
 			} # end if
 			if ( ! $data ) {
@@ -244,6 +245,7 @@ $dbh->disconnect();
 	foreach my $file ( @filenames ) {
 		# Will ignore ., .., any hidden file
 		next if $file =~ /^\./; 
+		next if -d $Equipment->cip3_in().'/'.$file;
 
         # CHeck AGE
 		my $mtime = ( stat $file )[9];
@@ -298,7 +300,7 @@ if ( $mangle ) {
 		} # end while
 		close IN;
 		if ( ! $complete ) {
-			$log->error("File was not complete! $file_base");
+			$log->error("File was not complete! ".$Equipment->cip3_in()."/$file");
 			next;
 		} # end if
 $dbh = sql::open_sql( $log,

@@ -4,7 +4,7 @@
 		#ssi::date_filter( '/administrator/service_types/index.html?created_on_end','created_on <=' ),
 		#ssi::date_filter( '/administrator/service_types/index.html?created_on_start','created_on >=' ),
 			( $session{'/administrator/service_types/index.html?category_id'} ? ( category_id => $session{'/administrator/service_types/index.html?category_id'} ) : () ),
-			order				=> 'sorting,lower(name)',
+			order				=> 'lower(name)',
 		) ) {
 		push @{$$variable{Service_Types}}, $Service_Type;
 	} # end foreach Service_Types
@@ -29,7 +29,7 @@ $html .= '<div class="Service_Type header">
 						<div class="Description"><a href="/administrator/service_types/edit.html?ServiceType_id=%1$d">%3$s</a></div>
 						<div class="Category"><a href="/administrator/service_types/edit.html?ServiceType_id=%1$d">%4$s</a></div>
 					</div>
-					`, $Service_Type->id(), ssi::html_escape($Service_Type->name()), ssi::html_escape($Service_Type->description()),
+					`, $Service_Type->id(), html_escape($Service_Type->name()), html_escape($Service_Type->description()),
 					$Service_Type->Category()->name(),
 				);
 			} # end foreach Service_Types

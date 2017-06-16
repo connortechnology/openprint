@@ -155,7 +155,7 @@ Object.extend(TableKit, {
 		stripe : true,
 		sortable : true,
 		resizable : true,
-		editable : true,
+		editable : false,
 		rowEvenClass : 'roweven',
 		rowOddClass : 'rowodd',
 		sortableSelector : ['table.sortable'],

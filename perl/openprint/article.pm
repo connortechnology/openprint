@@ -400,9 +400,9 @@ sub view {
 	my $Article = $variable{Article} = new openprint::Article( $param{article_id} );
 	
 	# WHy?
-	$Article->set( \%param );
+	#$Article->set( \%param );
 
-	# This will save the view as well.
+	# This will save the view as well. This is tracking when a user views an article
 	$Article->View();
 } # end sub view
 

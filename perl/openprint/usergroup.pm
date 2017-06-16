@@ -2,11 +2,12 @@ use strict;
 package openprint::usergroup;
 require sql;
 
-use vars qw( %cache %groups_cache );
+use vars qw( %cache %groups_cache %groups_by_id );
 
 sub init_cache {
     %cache = ();
     %groups_cache = sql::execute( undef, undef, q{SELECT name, id FROM usergroups} );
+		#%groups_by_id = sql::execute( undef, undef, q{SELECT id, name FROM usergroups} );
 }
 
 
@@ -38,18 +39,20 @@ sub is_user_in {
 	return if ! $user_id;
 
 	if ( ! exists $cache{$user_id} ) {
-        @{$cache{$user_id}} = sql::execute(undef, undef, 'SELECT usergroup_id FROM users_in_usergroups WHERE user_id=?', $user_id );
-    } # end if
+		@{$cache{$user_id}} = sql::execute( undef, undef, 'SELECT usergroup_id FROM users_in_usergroups WHERE user_id=?', $user_id );
+	} # end if
 	if ( ! %groups_cache ) {
 		%groups_cache = sql::execute( undef, undef, q{SELECT name, id FROM usergroups} );
 	} # end if
 
 	# If the groups don't exist, then default to true
 	if ( ! @groups_cache{@$groups} ) {
+		$openprint::log->debug("Non of the groups @$groups were in the cache");
 		return @$groups;
 	} # end if
+#$openprint::log->debug("Groups for $user_id " . join(',', @{$cache{$user_id}} ) . '=>' . join(',', @groups_by_id{ @{$cache{$user_id}} } ) );
 	
-    return sets::intersection( @{$cache{$user_id}}, @groups_cache{@$groups} );
+	return sets::intersection( @{$cache{$user_id}}, @groups_cache{@$groups} );
 } # end if
 
 sub users_in {

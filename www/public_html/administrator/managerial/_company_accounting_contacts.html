@@ -5,7 +5,7 @@
 	
 	my $html;
 	foreach my $User ( @Users ) {
-		$html .= sprintf('&quot;%s&quot; &lt;%s&gt;', $User->name(), $User->email() );
+		$html .= $User->link_to( sprintf('&quot;%s&quot; &lt;%s&gt;', $User->name(), $User->email() ) );
 		$html .= button( 'X'.$User->id(), { onclick=>qq`
 			new Ajax.Updater('AccountingContacts','_company_accounting_contacts.html?action=delete', { parameters: { company_id: '$$variable{Company}{id}', user_id: $$User{id} } } );"
 `, text=>'X' } );

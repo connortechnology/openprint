@@ -94,6 +94,18 @@
 <? echo ( make_drop_down( openprint::Company->dropdown(or=>{id=>$openprint::Company->id(),'last_project_id is null'=>0}), $session{'/main/project/history.html?company_id'} ) ) ?>
 				</select>
 			</li>
+<? eval ( 
+	$$variable{CSRdropdown} = openprint::User->dropdown( type=>['E','A'], 'usergroup any'=>['Sales'] );
+) ?>
+<? if ( @{$$variable{CSRdropdown}} ) ?>
+			<li class="salesrep_id">
+				<label>Sales Reps</label>
+				<select name="salesrep_id" size="1">
+				<option value="">All</option>
+				<? echo ( make_drop_down( $$variable{CSRdropdown}, $session{$r->uri().'?salesrep_id'} ); ) ?>
+				</select>
+			</li>
+<? endif ( @{$$variable{CSRdropdown}} ) ?>
 	<? if ( openprint::Product->find_one() ) ?>
 			<li><label>Predefined</label>
 				<? echo ( radio( 'predefined', [ '1','Yes','0','No','','Both'], $session{'/main/project/history.html?predefined'}, { onclick=>'load_projects();' } ); ) ?>

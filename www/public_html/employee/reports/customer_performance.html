@@ -5,39 +5,35 @@
 <form id="f1" name="f1" method="post" action="customer_performance.html">
 	<input type="hidden" name="btnFunction" />
 	<fieldset class="filters"><legend>Report Criteria</legend>
-		 <p>
-			 <label>Ordered On</label>
+		<ul>
+		 <li><label>Ordered On</label>
 			<? echo ( date_select_session( '/employee/reports/customer_performance.html', 'ordered_on_start', { with_today=>1,with_clear=>1 } ); ) ?>
 			to 
 			<? echo ( date_select_session( '/employee/reports/customer_performance.html', 'ordered_on_end', { with_today=>1,with_clear=>1 } ); ) ?>
-		</p>
-		 <p>
-			 <label>Not Ordered Since</label>
+		</li>
+		 <li><label>Not Ordered Since</label>
 			<? echo ( date_select_session( '/employee/reports/customer_performance.html', 'not_ordered_on_start', { with_today=>1,with_clear=>1 } ); ) ?>
 			to 
 			<? echo ( date_select_session( '/employee/reports/customer_performance.html', 'not_ordered_on_end', { with_today=>1,with_clear=>1 } ); ) ?>
-		</p>
-		<p>
-			<label>Marketing Category</label>
+		</li>
+		<li><label>Marketing Category</label>
 			<select name="marketingcategory_id" onchange="if(this.options[this.selectedIndex].value != '') fmCheck(f1);">
 				<option value="">Select a Category</option>
 				<? echo (
 					make_drop_down( openprint::MarketingCategory->dropdown( order=>'lower(name)'), $session{'/employee/reports/customer_performance.html?marketingcategory_id'} );
 				) ?>
 			</select>
-		</p>
-		<p>
-			<label>Payment Cycle</label>
+		</li>
+		<li><label>Payment Cycle</label>
 			<select name="payment_cycle">
 				<option value="">All</option>
 				<? echo (
 					make_drop_down( [ map { $_, 'Less than ' . $_ . ' Days' } ( 30, 60, 90 ) ], $session{'/employee/reports/customer_performance.html?payment_cycle'} );
 				) ?>
 			</select>
-		</p>
-		<? if ( $session{'user_type'} eq 'A' or openprint::usergroup::is_user_in( ['Sales Admin','Reporting'], $session{'user_id'} ) ) ?>
-		<p>
-			<label>CSR</label>
+		</li>
+		<? if ( $session{user_type} eq 'A' or openprint::usergroup::is_user_in( ['Sales Admin','Reporting'], $session{user_id} ) ) ?>
+		<li><label>CSR</label>
 			<select name="salesrep_id" size="1">
 			<? echo (
 					my @options = ( '', 'All' );
@@ -46,8 +42,16 @@
 					) ?>
 
 			 </select>
-		</p>
-		<? endif ( $session{'user_type'} eq 'A' or openprint::usergroup::is_user_in( ['Sales Admin','Reporting'], $session{'user_id'} ) ) ?>
+		</li>
+		<? endif ( $session{user_type} eq 'A' or openprint::usergroup::is_user_in( ['Sales Admin','Reporting'], $session{user_id} ) ) ?>
+		<li><label>Country</label>
+			<select id="country" name="country">
+				<option value=""> Select </option>
+				<? echo ( make_drop_down( \@countries::countries, $session{'/employee/reports/customer_performance.html?country'} ); ) ?>
+			</select>
+		</li>
+			
+		</ul>
 		 <p class="buttons">
 			<? echo ( 
 				my $html;

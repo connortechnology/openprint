@@ -231,7 +231,7 @@ sub status {
 			return 'uncalculated';
 		} # end if
 	} # end if
-	return 'calculated';
+	return;
 } # end sub status
 
 sub save {

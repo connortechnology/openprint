@@ -50,7 +50,10 @@ sub select_user {
 			return;
 		} # end if
 		my $User = $variable{User} = new openprint::User( $param{user_id} );
-		@session{'company_id','user_id','user_type'} = $User->get('company_id','id','type');
+		if ( $User ) {
+			@session{'company_id','user_id','user_type'} = @$User{'company_id','id','type'};
+			openprint::usergroup::init_cache();
+		}
 	} # end if user_id
 } # end sub select_user
 
@@ -113,12 +116,27 @@ sub registration {
 			$log->error("No MD5SUM, there must have been a problem creating the png!");
 		} else {
 			require Authen::Captcha;
-			my $Captcha = new Authen::Captcha('data_folder' => '/tmp', 'output_folder' => $config{SkinPath}.'/images/captcha');
+			my $Captcha = new Authen::Captcha( data_folder => '/tmp/'.$config{db_name}, output_folder => $config{SkinPath}.'/images/captcha');
 			# Remove spaces, because some people want to put spaces between the characters, etc.
 			$param{Captcha} =~ s/\s//g;
-			if ( 1 != $Captcha->check_code( @param{'Captcha','MD5SUM'} ) ) {
+			my $rc = $Captcha->check_code( @param{'Captcha','MD5SUM'} );
+			if ( $rc == 1 ) {
+				# Passed
+			} elsif ( $rc == 0 ) {
+				# File error, log and carry on
+				$log->error("Captcha file error");
+			} elsif ( $rc == -1 ) {
+				$log->debug("Failed: code expired");
+				$error .= 'Captcha validation code has expired.  Please try again.';
+			} elsif ( $rc == -2 ) {
+				$log->debug("Failed: invalid code (not in db)");
 				$error .= 'Captcha validation code incorrect.  Please try again.';
-			} # end if
+			} elsif ( $rc == -3 ) {
+				$log->debug("Failed: invalid code (does not match token)");
+				$error .= 'Captcha validation code incorrect.  Please try again.';
+			} else {
+				$log->error("unknown return code $rc from Authen::Captcha");
+			}
 		} # end if
 	} # end if
 
@@ -222,7 +240,7 @@ $log->warn("registration errors $error");
 		$User = new openprint::User() if ! $User;
 		$User->set( \%param );
 		$User->company_id( $Company->id() );
-		$User->ftp_active( 'Y' );
+		$User->ftp_active( 1 );
 		$User->type( 'C' );
 		$User->change_password( 'N' );
 		$User->howdidyouhearaboutus( $param{howdidyouhearaboutus} );
@@ -713,6 +731,7 @@ sub credit_application {
 
 sub view {
 	$variable{Me} = new openprint::User( $session{user_id} );
+	$param{user_id} = openprint::User->transform( id=>$param{user_id} );
 	$variable{User} = new openprint::User( $param{user_id} ? $param{user_id} : $session{user_id} );
 	if ( ! $variable{User}->can_view() ) {
 		$variable{User} = new openprint::User();
@@ -727,15 +746,15 @@ sub view {
 		} # end if
 		if ( exists $param{relationship_type_id} ) {
 			if ( $variable{User}->id() == $variable{Me}->id() ) {
-				$variable{error} .= "We already know you love yourself.  Frequently.";
+				$variable{error} .= "We already know you love yourself.";
 				return;
 			} # endif
-			my $Relationship = openprint::User_Relationship->find_one('user_id1'=>$session{user_id}, 'user_id2'=>$variable{User}->id() );
+			my $Relationship = openprint::User_Relationship->find_one( user_id1=>$session{user_id}, user_id2=>$variable{User}->id() );
 			if ( ! $Relationship ) {
 				$Relationship = new openprint::User_Relationship();
-				$Relationship->set({'user_id1'=>$session{user_id}, 'user_id2'=>$variable{User}->id()});
+				$Relationship->set({ user_id1=>$session{user_id}, user_id2=>$variable{User}->id()});
 			} # end if
-			$variable{error} .= $Relationship->save({'type_id'=>$param{relationship_type_id}});
+			$variable{error} .= $Relationship->save({ type_id=>$param{relationship_type_id}});
 		} # end if
 	} # end if
 } # end sub view

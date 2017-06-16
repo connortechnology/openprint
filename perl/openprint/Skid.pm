@@ -46,7 +46,7 @@ $serial = 'skid_id_seq';
 	fsc_code			=>	'id IN ( SELECT skid_id FROM skid_contents WHERE paper_id=(SELECT id FROM papers WHERE fsc_code=?))',
 	purpose_id 			=>	'id IN ( SELECT skid_id FROM skid_contents WHERE purpose_id=?)',
 	condition_id 		=>	'(SELECT condition_id FROM skid_contents WHERE skid_contents.skid_id=skids.id )',
-	inventory_check_id	=>	'id IN (SELECT skid_id FROM inventory_check_entries WHERE ic_id=?)',
+	inventory_check_id	=>	'exists (SELECT skid_id FROM inventory_check_entries WHERE ic_id=? and skid_id=skids.id)',
 );
 
 %transforms = (
@@ -235,7 +235,6 @@ sub location_id {
 			} # end if
 		} # end if
 	} # end if
-
 
 	if ( ! $_[0]{location_id} ) {
 		if ( $_[0]{rfidtag_id} ) {
@@ -518,11 +517,20 @@ sub Manifest {
 } # end sub Manifest
 
 sub ManifestContent {
+$log->error("DEPRECATED CALL TO ManfiestContent");
 	if ( ! $_[0]{ManifestContent} ) {
 		require openprint::ManifestContent;
 		$_[0]{ManifestContent} = openprint::ManifestContent->find_one('skid_id'=>$_[0]{id});
 	} # end if
 	return $_[0]{ManifestContent};
+} # end sub ManifestContents
+
+sub ManifestContents {
+	if ( ! $_[0]{ManifestContents} ) {
+		require openprint::ManifestContent;
+		$_[0]{ManifestContents} = [ openprint::ManifestContent->find( skid_id=>$_[0]{id} ) ];
+	} # end if
+	return @{$_[0]{ManifestContents}};
 } # end sub ManifestContents
 
 sub manifest_id {
@@ -532,31 +540,34 @@ sub manifest_id {
 sub value {
 	my $self = $_[0];
 	if ( ! $$self{value} ) {
-		$$self{value} = misc::sum( map { $_->value() } ($self->Contents()) );
+		$$self{value} = misc::sum( map { $_->value() } $self->Contents() );
 	} # end if
 	return $$self{value};
 } # end sub value
 
+sub Cost {
+	if ( ! $_[0]{Cost} ) {
+		foreach my $SC ( $_[0]->Contents() ) {
+			if ( $SC->Cost() ) {
+				$_[0]{Cost} = $SC->Cost();
+				last;
+			}
+		}
+	} # end if
+	return $_[0]{Cost};
+} # end sub Cost
+
 sub cost {
 	if ( ! $_[0]{cost} ) {
-		my $ManifestContent = $_[0]->ManifestContent();
-		return undef if ! $ManifestContent;
-		my $ManifestType = $ManifestContent->Type();
-		my ( $cost, $units );
-		if ( $ManifestType->cost() ) {
-			$cost = $ManifestType->cost();
-			$units = $ManifestType->cost_units();
-		} else {
-			my $POC = $ManifestType->PurchaseOrder_Content();
-			return undef if ! $POC;
-			$cost = $POC->price();
-			$units = $POC->price_units();
-		} # end if
-		$_[0]{cost} = $cost.$units;
+		my $Cost = $_[0]->Cost();
+		if ( $Cost ) {
+			$_[0]{cost} = $$Cost{cost}.$$Cost{units};
+		}
 	} # end if
 	return $_[0]{cost};
 } # end sub cost
 
+# We can't load purchase orders directly because POs do not link to a skid. They only have a roughly generic link
 sub PurchaseOrders {
 	if ( @_ > 1 ) {
 		$_[0]{PurchaseOrders} = $_[1];
@@ -575,6 +586,14 @@ sub PurchaseOrders {
 	return @{$_[0]{PurchaseOrders}} if ref $_[0]{PurchaseOrders} eq 'ARRAY';
 	return ();
 } # end sub PurchaseOrders
+
+sub dockets {
+	my $self = shift;
+	if ( ! $$self{dockets} ) {
+		$$self{dockets} = [ sets::union( ( map { $_->Type()->docket() ? $_->Type()->docket() : () } $self->ManifestContents() ) ) ]; 
+	}
+	return @{$$self{dockets}};
+}
 
 sub used {
 	if ( @_ > 1 ) {
@@ -733,6 +752,36 @@ sub Unit_Cost {
 		return $C->Paper()->Unit_Cost();
 	}
 	return ();
+}
+
+sub can_see_pricing {
+	return 1 if $openprint::session{user_type} eq 'A';
+	return 1 if openprint::usergroup::is_user_in( ['InventoryManager'], $openprint::session{user_id} );
+	return 0;
+}
+
+sub diameter {
+	if ( ! $_[0]{diameter} ) {
+		if ( $_[0]{type} eq 'Roll' ) {
+			my $core_radius = 5.375;
+			my $pi = 3.14;
+			foreach my $C ( $_[0]->Contents() ) {
+				my $Paper = $C->Paper();
+				next if ! $$Paper{width};
+				next if ! $Paper->wpsi();
+				next if ! $Paper->calliper();
+				next if ! $C->quantity();
+				my $length = ( $C->quantity() / $Paper->wpsi() ) / $Paper->width();
+
+				# length = pi( r1^2 - r0^2 ) / calliper;
+				my $radius = sqrt( ( $length * $$Paper{calliper} / $pi ) + 28.8906525 );
+				$_[0]{diameter} = $radius * 2;
+$openprint::log->debug("Diameter $_[0]{diameter} length: $length inches before sqrt: " . ( ( ( $length * $$Paper{calliper} / $pi ) ) ) );
+				last;
+			} #end foreach content
+		} # end if Roll
+	} # end if ! diameter
+	return $_[0]{diameter};
 }
 
 1;

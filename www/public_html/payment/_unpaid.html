@@ -1,5 +1,6 @@
 <fieldset><legend>Unpaid Invoices</legend>
 	<table class="List sortable">
+		<thead>
 		<tr>
 			<th class="Invoice">Invoice</th>
 			<th class="Date">Early Payment Date</th>
@@ -9,14 +10,16 @@
 			<th class="Price">Remaining</th>
 			<th class="buttons">&nbsp;</th>
 		</tr>
+			</thead>
+		<tbody>
 		<? echo (
 			my $html = '';
 			$$variable{Currency} = openprint::Currency::get_current() if ! $$variable{Currency};
 			my @Invoices;
 			foreach my $I ( openprint::Invoice->find(
-				'invoicer_id'=>$session{company_id},
-				'invoicee_id'=>$$variable{Payment}->payor_id(),
-				'order'=>'id',
+				invoicer_id =>$session{company_id},
+				invoicee_id =>$$variable{Payment}->payor_id(),
+				order =>'id',
 			) ) {
 				push @Invoices, $I if $I->owing() > 0;
 			} # end foreach $I
@@ -24,6 +27,7 @@
 			foreach my $I ( @Invoices ) {
 				my $total = $I->Currency()->convert_from( $I->total() );
 				my $owing = $I->Currency()->convert_from( $I->owing() );
+$log->debug("total: $$I{total} $total");
 				$total_total += $total;
 				$owing_total += $owing;
 		
@@ -45,7 +49,7 @@
 	button( 'add'.$I->id(), { onclick=>'pay_invoice('.$I->id().');', text=>'+', title=>'Add to Payment' } ),
 );
 			} # end foreach $I
-			$html .= sprintf('<tr class="totals"><td colspan="4">Totals</td><td class="Price">%s</td><td class="Price">%s</td><td>&nbsp;</td></tr>',
+			$html .= sprintf('</tbody><tfoot><tr class="totals"><td colspan="4">Totals</td><td class="Price">%s</td><td class="Price">%s</td><td>&nbsp;</td></tr></tfoot>',
 				openprint::Currency::format($total_total),
 				openprint::Currency::format($owing_total),
 				);

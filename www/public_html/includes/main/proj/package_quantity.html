@@ -1,6 +1,6 @@
 <li>
 	<label><? echo (
-	if ( $$variable{'ServiceTypeName'} eq 'Banding' ) {
+	if ( $$variable{ServiceTypeName} eq 'Banding' ) {
 		return 'Band quantity';
 	} else {
 		return 'Package quantity';
@@ -9,7 +9,7 @@
 	<? echo ( my $html;
 		foreach my $qty_index ( $$variable{Project}->quantity_indexes() ) {
 			$html .= '<span class="'.$$variable{Columns}.'Columns">';
-			$html .= input( name=>'txtPackageQuantity'.$qty_index, type=>'cardinal', value=>$$variable{'txtPackageQuantity'.$qty_index}, onkeyup=>'calc(this.form.name);' );
+			$html .= input( name=>'txtPackageQuantity'.$qty_index, type=>'cardinal', value=>$$variable{'txtPackageQuantity'.$qty_index}, oninput=>'calc(this.form.name);' );
 			$html .= '</span>';
 		} # end foreach
 		return $html;

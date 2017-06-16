@@ -138,7 +138,7 @@ sub test_emanantise {
 	if ( ref $requested_dt ne 'DateTime' ) {
 		$requested_dt = DateTime->from_epoch( epoch=>$requested_dt, time_zone=>$openprint::TZ );
 	}
-	$log->debug("Emanentise: Date: " . $parser->format_datetime( $requested_dt ) );
+	$log->debug("Emanentise: Date: " . $parser->format_datetime( $requested_dt ) ) if $debug;
 	# The point is to drop any additional time part, but how can that be right? What we want to do is jump gaps
 
 	my $shift_start_time_dt = DateTime::Duration->new( seconds => $self->starttime_seconds() % DAY );
@@ -152,10 +152,10 @@ sub test_emanantise {
 #$log->debug("adding an hour for DST");
 		$date_part_dt += DateTime::Duration->new( hours=>1 );
 	} # end if
-	$log->debug("Date Part: " . $parser->format_datetime( $date_part_dt ) );
+	$log->debug("Date Part: " . $parser->format_datetime( $date_part_dt ) ) if $debug;
 
 	my $st = $date_part_dt + $shift_start_time_dt;
-	$log->debug("initial st: " . $parser->format_datetime( $st ) . ' requested: ' . $parser->format_datetime( $requested_dt ) );
+	$log->debug("initial st: " . $parser->format_datetime( $st ) . ' requested: ' . $parser->format_datetime( $requested_dt ) ) if $debug;
 	#if ( $st < $requested_dt ) {
 		# Need to add a day
 		# Who	y?because a shift may go into the next day.  
@@ -202,12 +202,12 @@ sub test_emanantise {
 # We presume that normally date_seconds is teh starttie + 1 of the previous shift -> why? why not endtime?  I don't kn ow.
 sub emanantise {
 	my ( $self, $requested_dt ) = @_;
-	$log->debug("Emanantise: " . $self->to_string() );
+	$log->debug("Emanantise: " . $self->to_string() ) if $debug;
 
 	if ( ref $requested_dt ne 'DateTime' ) {
 		$requested_dt = DateTime->from_epoch( epoch=>$requested_dt, time_zone=>$openprint::TZ );
 	}
-	$log->debug("Emanentise: Date: " . $parser->format_datetime( $requested_dt ) );
+	$log->debug("Emanentise: Date: " . $parser->format_datetime( $requested_dt ) ) if $debug;
 	# The point is to drop any additional time part, but how can that be right? What we want to do is jump gaps
 
 	my $shift_start_time_dt = DateTime::Duration->new( seconds => $self->starttime_seconds() % DAY );
@@ -221,10 +221,10 @@ sub emanantise {
 #$log->debug("adding an hour for DST");
 		$date_part_dt += DateTime::Duration->new( hours=>1 );
 	} # end if
-	$log->debug("Date Part: " . $parser->format_datetime( $date_part_dt ) );
+	$log->debug("Date Part: " . $parser->format_datetime( $date_part_dt ) ) if $debug;
 
 	my $st = $date_part_dt + $shift_start_time_dt;
-	$log->debug("initial st: " . $parser->format_datetime( $st ) . ' requested: ' . $parser->format_datetime( $requested_dt ) );
+	$log->debug("initial st: " . $parser->format_datetime( $st ) . ' requested: ' . $parser->format_datetime( $requested_dt ) ) if $debug;
 	#if ( $st < $requested_dt ) {
 		# Need to add a day
 		# Who	y?because a shift may go into the next day.  

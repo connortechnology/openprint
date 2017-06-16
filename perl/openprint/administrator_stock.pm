@@ -34,7 +34,7 @@ sub _stocks {
 			'colour_id','weight_id','fsc_code','material_id', 'Types', 'recommendations',
 			'grain_direction', 'digital', 'width','height', 'scoring', 'setup_prices', 
 			'material_prices', 'customer_supplied', 'has_message', 'has_minimum_order',
-			'calliper', );
+			'calliper', 'has_problems' );
 		$session{'/administrator/stock/list.html?OrLarger'} = $param{OrLarger};
 	} # end if
 } # end sub _stocks
@@ -201,14 +201,17 @@ $openprint::log->debug("Setting: $param{amount} " );
 				$variable{error} .= $Paper->save();
 				$variable{ExternalRedirect} = '/administrator/stock/list.html';
 			} elsif ( $param{mode} eq 'other' ) {
-				my $changed = 0;
-				foreach my $field ( 'score_required' ) {
-					if ( $param{$field} ne '' and $Paper->$field() ne $param{$field} ) {
-						$Paper->$field( $param{$field} );
-						$changed = 1;
-					}
+				my $Changed = $Paper->clone();
+
+				foreach my $field ( 'score_required', 'gsm' ) {
+						$Changed->$field( $param{$field} );
 				} # end foreach field
-				$Paper->save() if $changed;
+				my @changes = $Paper->changes( $Changed );
+
+				if ( @changes ) {
+					$Changed->save();
+					(new openprint::Log())->save({ Object=>$Paper, action=>'Edit', note=>join(',',@changes) } );
+				}
 			} else {
 				$log->error("Unknown mode in apply changes");
 			} # end if
@@ -221,137 +224,171 @@ $openprint::log->debug("Setting: $param{amount} " );
 
 sub stock {
 
-	my $Paper = new openprint::Paper( $param{stock_id} );
-	if ( $param{btnFunction} eq 'Delete' ) {
-		my $new = $Paper->next();
-		$new = $Paper->previous() if $new == $Paper;
-		$Paper->delete();
-		$variable{information} .= 'Stock ' . $Paper->id() . ' has been deleted.';
-		$Paper = $new;
-		$param{stock_id} = $Paper->id();
-		
-	} elsif ( $param{btnFunction} eq 'Copy' ) {
-		$variable{information} .= 'Stock ' . $Paper->id() . ' has been copied.';
-		my $NewPaper = $Paper->copy();
-		$NewPaper->save();
-		foreach my $Setting ( openprint::Equipment_Stock_Setting->find('stock_id'=>$Paper->id()) ) {
-			$Setting = $Setting->copy();
-			$Setting->save({'stock_id'=>$NewPaper->id()});
-		} # end foreach
-		$Paper = $NewPaper;
-		$param{stock_id} = $Paper->id();
-	} elsif ( $param{btnFunction} eq 'Save' ) {
+  my $Paper = openprint::Paper->find_one( id=>$param{stock_id} ) if $param{stock_id};
+  if ( $param{btnFunction} ) {
 
-		my @changes = $Paper->changes( \%param );
-		$Paper->owner_id( $param{ddmOwner} );
-		$Paper->manufacturer( $param{txtManufacturer} ) if $param{txtManufacturer};
-		$Paper->manufacturer_id( $param{ddmManufacturer} ) if ! $param{txtManufacturer};
-		$param{ddmSupplier} = openprint::Supplier::get_or_create( $param{txtSupplier} ) if $param{txtSupplier} and ! $param{ddmSupplier};
-		$Paper->supplier_id( $param{ddmSupplier} );
-		$Paper->group( $param{txtGroup} ) if $param{txtGroup};
-		$Paper->group_id( $param{Group} ) if ! $param{txtGroup};
-		$Paper->brand( $param{txtBrand} ) if $param{txtBrand};
-		$Paper->brand_id( $param{ddmBrand} ) if ! $param{txtBrand};
-		$Paper->finish( $param{txtFinish} ) if $param{txtFinish};
-		$Paper->finish_id( $param{ddmFinish} ) if ! $param{txtFinish};
-		$Paper->colour( $param{txtColour} ) if $param{txtColour};
-		$Paper->colour_id( $param{ddmColour} ) if ! $param{txtColour};
-		$Paper->weight( $param{txtWeight} ) if $param{txtWeight};
-		$Paper->weight_id( $param{ddmWeight} ) if ! $param{txtWeight};
-		$Paper->quality( $param{txtQuality} ) if $param{txtQuality};
-		$Paper->quality_id( $param{ddmQuality} ) if ! $param{txtQuality};
-		$Paper->material( $param{material} );
-		$Paper->material_id( $param{material_id} ) if $param{material_id};
-		if ( $param{ddmPaperSize} ) {
-			my ( $width, $height ) = split 'x', $param{ddmPaperSize};
-			$Paper->width( $width );
-			$Paper->height( $height );
-		} else {
-			$Paper->width( $param{width} );
-			$Paper->height( $param{height} );
-		} # end if
-		$Paper->mweight( $param{mweight} );
+    if ( $param{btnFunction} eq 'Delete' ) {
+      if ( ! $Paper ) {
+        $variable{error} .= "No stock selected for delete.<br/>";
+        $variable{Stock} = new openprint::Paper();
+        return;
+      }
+      my $new = $Paper->next();
+      $new = $Paper->previous() if $new == $Paper;
+      $Paper->delete();
+      $variable{information} .= 'Stock ' . $Paper->id() . ' has been deleted.';
+      $Paper = $new;
+      $param{stock_id} = $Paper->id();
+    } elsif ( $param{btnFunction} eq 'Copy' ) {
+      if ( ! $Paper ) {
+        $variable{error} .= "No stock selected for copy.<br/>";
+        $variable{Stock} = new openprint::Paper();
+        return;
+      }
+      $variable{information} .= 'Stock ' . $Paper->link_to( $Paper->id() ) . ' has been copied.';
+      my $NewPaper = $Paper->copy();
+      $NewPaper->save();
+      foreach my $Setting ( openprint::Equipment_Stock_Setting->find('stock_id'=>$Paper->id()) ) {
+        $Setting = $Setting->copy();
+        $Setting->save({'stock_id'=>$NewPaper->id()});
+      } # end foreach
+      $Paper = $NewPaper;
+      $param{stock_id} = $Paper->id();
+    } elsif ( $param{btnFunction} eq 'Save' ) {
 
-		$Paper->basis_mweight( $param{basis_mweight} );
-		$Paper->basis_width( $param{basis_width} );
-		$Paper->basis_height( $param{basis_height} );
+      $Paper = new openprint::Paper() if ! $Paper;
+      my @changes = $Paper->changes( \%param );
+      $Paper->owner_id( $param{ddmOwner} );
+      $Paper->manufacturer( $param{txtManufacturer} ) if $param{txtManufacturer};
+      $Paper->manufacturer_id( $param{ddmManufacturer} ) if ! $param{txtManufacturer};
+      $param{ddmSupplier} = openprint::Supplier::get_or_create( $param{txtSupplier} ) if $param{txtSupplier} and ! $param{ddmSupplier};
+      $Paper->supplier_id( $param{ddmSupplier} );
+      $Paper->group( $param{txtGroup} ) if $param{txtGroup};
+      $Paper->group_id( $param{Group} ) if ! $param{txtGroup};
+      $Paper->brand( $param{txtBrand} ) if $param{txtBrand};
+      $Paper->brand_id( $param{ddmBrand} ) if ! $param{txtBrand};
+      $Paper->finish( $param{txtFinish} ) if $param{txtFinish};
+      $Paper->finish_id( $param{ddmFinish} ) if ! $param{txtFinish};
+      $Paper->colour( $param{txtColour} ) if $param{txtColour};
+      $Paper->colour_id( $param{ddmColour} ) if ! $param{txtColour};
+      $Paper->weight( $param{txtWeight} ) if $param{txtWeight};
+      $Paper->weight_id( $param{ddmWeight} ) if ! $param{txtWeight};
+      $Paper->quality( $param{txtQuality} ) if $param{txtQuality};
+      $Paper->quality_id( $param{ddmQuality} ) if ! $param{txtQuality};
+      $Paper->material( $param{material} );
+      $Paper->material_id( $param{material_id} ) if $param{material_id};
+      if ( $param{ddmPaperSize} ) {
+        my ( $width, $height ) = split 'x', $param{ddmPaperSize};
+        $Paper->width( $width );
+        $Paper->height( $height );
+      } else {
+        $Paper->width( $param{width} );
+        $Paper->height( $param{height} );
+      } # end if
 
-		$Paper->gsm( $param{gsm} );
-		$Paper->calliper( $param{calliper} );
-		$Paper->sheets_per_package( $param{sheets_per_package} );
-		$Paper->full_packages( $param{full_packages} );
-		$Paper->minimum_order( $param{minimum_order} );
-		$Paper->available_to_order( $param{available_to_order} );
-		$Paper->cuttable( $param{cuttable} );
-		$Paper->doublesided( $param{doublesided} );
-		$Paper->multipart( $param{multipart} );
-		$Paper->perfecting( $param{perfecting} );
-		$Paper->score_required( $param{score_required} );
-		$Paper->die_score_required( $param{die_score_required} );
-		$Paper->digital( $param{digital} );
-		$Paper->bladecleaning( $param{bladecleaning} );
-		$Paper->grade( $param{grade} );
-		$Paper->type( $param{type} );
-		$Paper->supplied( $param{supplied} );
-		$Paper->grain_direction( $param{grain_direction} );
-		$Paper->taxexempt1( $param{taxexempt1} );
-		$Paper->taxexempt2( $param{taxexempt2} );
-		$Paper->fsc_code( $param{fsc_code} );
-		$Paper->inventory_number( $param{inventory_number} );
-		$Paper->minimum_order( $param{minimum_order} );
-		$Paper->full_packages( $param{full_packages} );
-		$Paper->message( $param{message} );
-		$Paper->user_type( $param{user_type} );
+      $Paper->gsm( $param{gsm} );
+      $Paper->basis_mweight( $param{basis_mweight} );
+      $Paper->basis_width( $param{basis_width} );
+      $Paper->basis_height( $param{basis_height} );
+#$Paper->mweight( $param{mweight} );
 
-		@{$$Paper{recommendations}} = ();
-		foreach my $Type ( openprint::ProjectType->find() ) {
-			push @{$$Paper{recommendations}}, $Type->id() if $param{'chkPRF'.$Type->id()};
-		} # end foreach
+      $Paper->calliper( $param{calliper} );
+      $Paper->sheets_per_package( $param{sheets_per_package} );
+      $Paper->full_packages( $param{full_packages} );
+      $Paper->minimum_order( $param{minimum_order} );
+      $Paper->available_to_order( $param{available_to_order} );
+      $Paper->cuttable( $param{cuttable} );
+      $Paper->doublesided( $param{doublesided} );
+      $Paper->multipart( $param{multipart} );
+      $Paper->perfecting( $param{perfecting} );
+      $Paper->score_required( $param{score_required} );
+      $Paper->die_score_required( $param{die_score_required} );
+      $Paper->digital( $param{digital} );
+      $Paper->bladecleaning( $param{bladecleaning} );
+      $Paper->grade( $param{grade} );
+      $Paper->type( $param{type} );
+      $Paper->supplied( $param{supplied} );
+      $Paper->grain_direction( $param{grain_direction} );
+      $Paper->taxexempt1( $param{taxexempt1} );
+      $Paper->taxexempt2( $param{taxexempt2} );
+      $Paper->fsc_code( $param{fsc_code} );
+      $Paper->inventory_number( $param{inventory_number} );
+      $Paper->minimum_order( $param{minimum_order} );
+      $Paper->full_packages( $param{full_packages} );
+      $Paper->message( $param{message} );
+      $Paper->user_type( $param{user_type} );
 
-		my $message = '';
+      my @old_recommendations = $Paper->recommendations();
+      @{$$Paper{recommendations}} = ();
+      foreach my $Type ( openprint::ProjectType->find() ) {
+        push @{$$Paper{recommendations}}, $Type->id() if $param{'chkPRF'.$Type->id()};
+      } # end foreach
+      if ( my @additions = sets::exclude( \@old_recommendations, $$Paper{recommendations} ) ) {
+        push @changes, "Recommendations added: " . join(',', map { $$_{name} } openprint::ProjectType->find( id=>\@additions, order=>'lower(name)' ) ).'<br/>';
+      }
+      if ( my @removals = sets::exclude( $$Paper{recommendations}, \@old_recommendations ) ) {
+        push @changes, "Recommendations removed: " . join(',', map { $$_{name} } openprint::ProjectType->find( id=>\@removals, order=>'lower(name)' ) ).'<br/>';
+      }
+
+      my $message = '';
 # Save prices
-		foreach my $Price ( $Paper->Prices() ) {
+      foreach my $Price ( $Paper->Prices() ) {
 
-			my $new_values = {
-					equipment_id	=> $param{"equipment_id-$$Price{id}"},
-					min				=> $param{"min-$$Price{id}"},
-					max				=> $param{"max-$$Price{id}"},
-					units			=> $param{"units-$$Price{id}"},
-					cost			=> $param{"cost-$$Price{id}"},
-					markup			=> $param{"markup-$$Price{id}"},
-					price			=> $param{"price-$$Price{id}"},
-					discountable	=> $param{"discountable-$$Price{id}"},
-			};
-			my @price_changes = $Price->changes( $new_values );
-			if ( @price_changes ) {
-				push @changes, ( 'Change price for ' .$Price->id_string() . ': ' .  join(', ', map { $_ } @price_changes ) );
-				$variable{error} .= $Price->save( $new_values );
-			} # end if Price has changed
-		} # end foreach Price
+        my $new_values = {
+          equipment_id	=> $param{"equipment_id-$$Price{id}"},
+          min				=> $param{"min-$$Price{id}"},
+          max				=> $param{"max-$$Price{id}"},
+          units			=> $param{"units-$$Price{id}"},
+          cost			=> $param{"cost-$$Price{id}"},
+          markup			=> $param{"markup-$$Price{id}"},
+          price			=> $param{"price-$$Price{id}"},
+          discountable	=> $param{"discountable-$$Price{id}"},
+        };
+        my @price_changes = $Price->changes( $new_values );
+        if ( @price_changes ) {
+          push @changes, ( 'Change price for ' .$Price->id_string() . ': ' .  join(', ', map { $_ } @price_changes ) );
+          $variable{error} .= $Price->save( $new_values );
+        } # end if Price has changed
+      } # end foreach Price
 
-		$variable{error} .= $Paper->save();
-		(new openprint::Log())->save({ object_type=>(ref $Paper), object_id=>$$Paper{id}, action=>($param{stock_id}?'Edited stock':'Saved stock'), note=>join('<br/>', @changes) });
-		if ( ! $variable{error} ) {
-			$variable{information} .= 'Stock ' . $Paper->id() . ' has been saved.';
-			$variable{ExternalRedirect} = '/administrator/stock/stock.html?stock_id='.$$Paper{id};
-		} # end if
-	} elsif ( $param{btnFunction} eq 'Prev' ) {
-		$Paper = $Paper->previous();
-		$param{stock_id} = $Paper->id();
-	} elsif ( $param{btnFunction} eq 'Next' ) {
-		$Paper = $Paper->next();
-		$param{stock_id} = $Paper->id();
-	} # end if
+      $variable{error} .= $Paper->save();
+      (new openprint::Log())->save({ object_type=>(ref $Paper), object_id=>$$Paper{id}, action=>($param{stock_id}?'Edited stock':'Saved stock'), note=>join('<br/>', @changes) });
+      if ( ! $variable{error} ) {
+        $variable{information} .= 'Stock ' . $Paper->link_to( $$Paper{id} ) . ' has been saved.';
+        $variable{ExternalRedirect} = '/administrator/stock/stock.html?stock_id='.$$Paper{id};
+      } # end if
+    } elsif ( $param{btnFunction} eq 'Prev' ) {
+      if ( ! $Paper ) {
+        $variable{error} .= "No stock selected for previous.<br/>";
+        $variable{Stock} = new openprint::Paper();
+        return;
+      }
+      $Paper = $Paper->previous();
+      $param{stock_id} = $Paper->id();
+    } elsif ( $param{btnFunction} eq 'Next' ) {
+      if ( ! $Paper ) {
+        $variable{error} .= "No stock selected for previous.<br/>";
+        $variable{Stock} = new openprint::Paper();
+        return;
+      }
+      $Paper = $Paper->next();
+      $param{stock_id} = $Paper->id();
+    } # end if
+  } elsif ( ! $Paper ) {
+    $Paper = new openprint::Paper();
+  }
 
 	$variable{Stock} = $Paper;
 	$variable{stock_id} = $Paper->id();
 
+$log->debug("Stock: " . $Paper->to_string() );
 } # end sub stock
 
 sub _prices {
 	if ( $param{action} eq 'Delete' ) {
 		my $PaperPrice = new openprint::PaperPrice( $param{price_id} );
 		$PaperPrice->delete();
+		(new openprint::Log())->save({action=>'Delete Price', Object=>$PaperPrice->Stock(), note=>$PaperPrice->id_string()});
 	} elsif ( $param{action} eq 'Add' ) {
 		my $PaperPrice = new openprint::PaperPrice( );
 		$PaperPrice->paper_id( $param{stock_id} );
@@ -367,11 +404,13 @@ sub _prices {
 sub import_export {
 
 	if ( $param{btnFunction} eq 'Export Stock' ) {
-		my @header = ( 'ID', 'Owner','Manufacturer','Supplier', 'Group','Brand', 'Finish', 'Colour', 'Weight', 'Quality', 'MWeight', 'gsm','Calliper', 'Type','Width', 'Height', 'Basis Width','Basis Height', 'Grain Direction','Supplier','DoubleSided?','Cuttable?','Multiple Parts?','Perfecting','Scoring Required?','Blade Cleaning Required?','Grade','Sheets Per Package','Supplied', 'Digital','Full Packages','Minimum Order','Inventory #','Material Type','Message', 'Recommendations');
+		my @header = ( 'ID', 'Owner','Manufacturer','Supplier', 'Group','Brand', 'Finish', 'Colour', 'Weight', 'Quality', 'MWeight', 'gsm','Calliper', 'Type','Width', 'Height', 'Basis Width','Basis Height', 'Grain Direction','DoubleSided?','Cuttable?','Multiple Parts?','Perfecting','Scoring Required?','Blade Cleaning Required?','Grade','Sheets Per Package','Supplied', 'Digital','Full Packages','Minimum Order','Inventory #','Material Type','Message', 'Recommendations');
 		my @data;
 
 		foreach my $Paper ( openprint::Paper->find( order=>'brand,finish,colour,weight,width,height', 
 					columns=>'*,(SELECT name FROM StockBrands WHERE Stockbrands.id=brand_id) AS brand,(SELECT name FROM StockFinishes WHERE StockFinishes.id=finish_id) AS finish,(SELECT name FROM StockColours WHERE StockColours.id=colour_id) AS colour,(SELECT name FROM StockWeights WHERE StockWeights.id=weight_id) AS weight ') ) {
+			next if ! $Paper->recommendations();
+
 			push @data, $Paper->id(), $Paper->owner(), $Paper->manufacturer(), $Paper->Supplier()->name(), $Paper->group(), $Paper->brand(), $Paper->finish(), $Paper->colour(), $Paper->weight(), $Paper->quality(), 
 			$Paper->mweight(), $Paper->gsm(), $Paper->calliper(), $Paper->type(), $Paper->width(), $Paper->height(), $Paper->basis_width(), $Paper->basis_height(), $Paper->grain_direction(), $Paper->doublesided(), $Paper->cuttable(), $Paper->multipart(), $Paper->perfecting(), $Paper->score_required(), $Paper->bladecleaning(), $openprint::Paper::grades{$Paper->grade()}, $Paper->sheets_per_package(), $Paper->supplied(), $Paper->digital(), $Paper->full_packages(), $Paper->minimum_order(), $Paper->inventory_number(), $Paper->material(), $Paper->message();
 			push @data, join(',', map { new openprint::ProjectType($_)->name() } $Paper->recommendations());
@@ -423,7 +462,10 @@ sub import_export {
 				my $Paper = $papers{$paper_id} ? $papers{$paper_id} : new openprint::Paper();
 				$Paper->owner_id( $owners{$owner} ? $owners{$owner} : $session{company_id} );
 				$Paper->manufacturer( $manufacturer );
-				$Paper->supplier( $supplier );
+				if ( $supplier ) {
+				my $supplier_id = openprint::Supplier::get_or_create( $supplier );
+				$Paper->supplier_id( $supplier_id );
+				}
 				$Paper->group( $group );
 				$Paper->brand( $brand );
 				$Paper->finish( $finish );
@@ -459,7 +501,7 @@ sub import_export {
 				if ( $rc ) {
 					$error .= "Error adding Stock: $rc<br>";
 					$error .= Data::Dumper::Dumper( $Paper );
-					next;
+					last;
 				} # end if
 				$import_count += 1;
 		

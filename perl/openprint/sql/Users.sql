@@ -40,3 +40,5 @@ CREATE TABLE Users (
 CREATE INDEX users_email_idx ON Users (email);
 ALTER TABLE users ADD FOREIGN KEY (company_id) REFERENCES Companies (Id);
 ALTER TABLE Companies ADD FOREIGN KEY (salesrep_id) REFERENCES Users (id);
+
+INSERT INTO Users (company_id, email, email_valid, password, firstName, lastname, web_active, ysnAdministrator, type ) values ( 1, 'iconnor@connortechnology.com', true, 'XV35me', 'Isaac', 'Connor', 'Y', 'Y', 'A' );

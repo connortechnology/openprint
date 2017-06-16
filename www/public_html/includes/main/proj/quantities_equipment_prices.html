@@ -18,6 +18,8 @@ $log->error("Should deprecate use of fill_dropdown");
 		$html .= fill_drop_down( $log, $dbh, "SELECT strID, strName FROM tbl_Equipment WHERE lngIndex IN (".join(',', @{$$variable{'EquipmentArray'}}).") ORDER BY lower(strName)", $$variable{"ddmEquipment-$$variable{'SignatureIndex'}-$qty_index"} ); 
 	} elsif ( $$variable{'ddmEquipment'} ) {
 		$html .= $$variable{'ddmEquipment'};
+	} else {
+		$html .= make_drop_down( openprint::Equipment->dropdown( 'servicetype_id any'=>$$variable{ServiceType}->id(), useinestimating=>1), $$variable{'ddmEquipment'.$qty_index} );
 	}
 	$html .= '</select>';
 	$html .= write_override( 'chkOverrideEquipment'.$qty_index, $$variable{"chkOverrideEquipment$qty_index"}, '', q`calc('f1');` );

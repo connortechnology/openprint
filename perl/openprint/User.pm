@@ -18,50 +18,50 @@ $debug = 0;
 $default_sort	=	'lower(firstname),lower(lastname)';
 
 %fields = (
-	'id'				=>	'id',
-	'company_id'		=>	'company_id',
-	'salutation'		=>	'salutation',
-	'title'				=>	'title',
-	'firstname'			=>	'firstname',
-	'lastname'			=>	'lastname',
-	'email'				=>	'email',
+	id							=>	'id',
+	company_id		=>	'company_id',
+	salutation		=>	'salutation',
+	title				=>	'title',
+	firstname			=>	'firstname',
+	lastname			=>	'lastname',
+	email				=>	'email',
 	email_valid			=>	'email_valid',
-	'phone'				=>	'phone',
-	'extension'			=>	'extension',
-	'mobile'			=>	'mobile',
-	'sms'				=>	'sms',
-	'fax'				=>	'fax',
-	'mailinglist'		=>	'ysnmailinglist',
-	'greeting'			=>	'greeting',
-	'created_on'		=>	'created_on',
-	'updated_on'		=>	'updated_on',
-	'type'				=>	'type',
-	'change_password'	=>	'ysnchangepassword',
-	'password_changed_on'	=>	'password_changed_on',
-	'commission'		=>	'dblcommission',
-	'wage'				=>	'wage',
-	'administrator'		=>	'ysnadministrator',
+	phone				=>	'phone',
+	extension			=>	'extension',
+	mobile			=>	'mobile',
+	sms				=>	'sms',
+	fax				=>	'fax',
+	mailinglist		=>	'ysnmailinglist',
+	greeting			=>	'greeting',
+	created_on		=>	'created_on',
+	updated_on		=>	'updated_on',
+	type				=>	'type',
+	change_password	=>	'ysnchangepassword',
+	password_changed_on	=>	'password_changed_on',
+	commission		=>	'dblcommission',
+	wage				=>	'wage',
+	administrator		=>	'ysnadministrator',
 	'password',			=>	'password',
-	'ftp_active'		=>	'ftp_active',
+	ftp_active		=>	'ftp_active',
 	ftp_root			=>	'ftp_root',
-	'web_active'		=>	'web_active',
-	'howdidyouhearaboutus'	=>	'howdidyouhearaboutus',
-	'howdidyouhearaboutusother'	=>	'howdidyouhearaboutusother',
-	'quote_level'		=>	'quote_level',
-	'email_quotes_to_myself'        =>      'email_quotes_to_myself',
-	'purchasing_limit'	=>	'purchasing_limit',
-	'purchasing_total_limit'	=>	'purchasing_total_limit',
-	'notes'				=>	'notes',
-	'asset_id'			=>	'asset_id',
-	'deleted'			=>	'deleted',
-	last_Logged_in		=>	undef,
+	web_active		=>	'web_active',
+	howdidyouhearaboutus	=>	'howdidyouhearaboutus',
+	howdidyouhearaboutusother	=>	'howdidyouhearaboutusother',
+	quote_level		=>	'quote_level',
+	email_quotes_to_myself        =>      'email_quotes_to_myself',
+	purchasing_limit	=>	'purchasing_limit',
+	purchasing_total_limit	=>	'purchasing_total_limit',
+	notes				=>	'notes',
+	asset_id			=>	'asset_id',
+	deleted			=>	'deleted',
+	last_logged_in		=>	undef,
 ); # end %fields
 %find_fields = (
-	'name'	=>	q`firstname || ' ' || lastname`,
-	'usergroup_id'	=>	'(SELECT usergroup_id FROM users_in_usergroups WHERE user_id=users.id)',
-	'usergroup'		=>	'(SELECT name from usergroups WHERE id IN (SELECT usergroup_id FROM users_in_usergroups WHERE user_id=users.id))',
-	'last_online'	=>	'(SELECT MAX(date_time) FROM logs WHERE user_id=users.id)',
-	'profile_field'	=>	'(SELECT value FROM User_Profiles WHERE user_id=users.id AND field_id=?)',
+	name	=>	q`firstname || ' ' || lastname`,
+	usergroup_id	=>	'(SELECT usergroup_id FROM users_in_usergroups WHERE user_id=users.id)',
+	usergroup		=>	'(SELECT name from usergroups WHERE id IN (SELECT usergroup_id FROM users_in_usergroups WHERE user_id=users.id))',
+	last_online	=>	'(SELECT MAX(date_time) FROM logs WHERE user_id=users.id)',
+	profile_field	=>	'(SELECT value FROM User_Profiles WHERE user_id=users.id AND field_id=?)',
 	company_deleted	=>	'(SELECT deleted FROM Companies WHERE Companies.id=company_id)',
 );
 
@@ -165,14 +165,14 @@ sub destroy {
 	my $ac = sql::start_transaction( $dbh );
 	sql::execute( undef, undef, 'DELETE FROM Users_in_Marketing_Categories WHERE User_Id=?', $$self{id} );
 
-	foreach my $Quote ( openprint::Quote->find('user_id'=>$$self{id}) ) {
+	foreach my $Quote ( openprint::Quote->find(user_id=>$$self{id}) ) {
 		$Quote->delete();
 	} # end foreach
-	foreach my $Order ( openprint::Order->find('user_id'=>$$self{id}) ) {
+	foreach my $Order ( openprint::Order->find(user_id=>$$self{id}) ) {
 		$Order->delete();
 	} # end foreach
 	sql::update( undef, undef, 'order_log', ['user_id=?',$$self{id}], 'user_id', undef );
-	foreach my $Project ( openprint::Project->find('user_id'=>$$self{id}) ) {
+	foreach my $Project ( openprint::Project->find(user_id=>$$self{id}) ) {
 		$Project->delete();
 	} # end foreach
 	sql::execute( $log, $dbh, 'DELETE FROM users_in_usergroups WHERE user_id=?', $$self{id} );
@@ -291,7 +291,11 @@ sub assistant_ids {
 		@{$$self{assistant_ids}} = ( @_ == 1 and ref $_[0] eq 'ARRAY' ) ? @{$_[0]} : @_;
 	} # end if
 	if ( ! $$self{assistant_ids} ) {
-		 @{$$self{assistant_ids}} = sql::execute( undef, undef, 'SELECT assistant_id FROM Assistants WHERE csr_id=?', $$self{id} );
+		if ( $$self{id} ) {
+			@{$$self{assistant_ids}} = sql::execute( undef, undef, 'SELECT assistant_id FROM Assistants WHERE csr_id=?', $$self{id} );
+		} else {
+			$$self{assistant_ids} = [];
+		}
 	} # end if
 	return @{$$self{assistant_ids}};
 } # end sub
@@ -308,7 +312,11 @@ sub csr_ids {
 		@{$$self{csr_ids}} = ( @_ == 1 and ref $_[0] eq 'ARRAY' ) ? @{$_[0]} : @_;
 	} # end if
 	if ( ! $$self{csr_ids} ) {
-		@{$$self{csr_ids}} = sql::execute( undef, undef, 'SELECT csr_id FROM Assistants WHERE assistant_id=?', $$self{id} );
+		if ( $$self{id} ) {
+			@{$$self{csr_ids}} = sql::execute( undef, undef, 'SELECT csr_id FROM Assistants WHERE assistant_id=?', $$self{id} );
+		} else {
+			$$self{csr_ids} = [];
+		}
 	} # end if
 	return @{$$self{csr_ids}};
 } # end sub
@@ -338,10 +346,20 @@ sub Notifications {
 	return @{$$self{Notifications}};
 } # end sub Notifications
 
+sub notification {
+	my ( $self, $type ) = @_;
+	foreach my $Notification ( $self->Notifications() ) {
+		if ( $Notification->type() eq $type ) {
+			return $Notification->value();
+		}
+	}
+	return;
+}
+
 sub purchasing_total {
 	require openprint::PurchaseOrder;
 	my $total = 0;
-	foreach my $PO ( openprint::PurchaseOrder->find('authorized'=>'N') ) {
+	foreach my $PO ( openprint::PurchaseOrder->find( authorized=>'N' ) ) {
 		$total += $PO->total();
 	} # end foreach $PO
 } # end sub purchasing_total
@@ -349,7 +367,7 @@ sub purchasing_total {
 sub po_limit {
 	my ( $self, $type_id, $new_value ) = @_;
 
-	if ( ! exists $$self{po_limits} ) {
+	if ( ( ! exists $$self{po_limits} ) and $$self{id} ) {
 		if ( $$self{id} ) {
 		%{$$self{po_limits}} = sql::execute( undef, undef, 'SELECT type_id, po_limit FROM User_PurchaseOrder_limits WHERE user_id=?', $$self{id} );
 		} else {
@@ -377,14 +395,14 @@ sub Asset {
 		} else {
 			if ( $_[0]->Profile()->Gender() ) {
 				#$openprint::log->debug("Loading by gender");
-				$_[0]{Asset} = openprint::Asset->find_one('name'=>'Default Profile ' . $_[0]->Profile()->Gender() );
+				$_[0]{Asset} = openprint::Asset->find_one(name=>'Default Profile ' . $_[0]->Profile()->Gender() );
 			} # end if
 			if ( ! $_[0]{Asset} ) {
 				#$openprint::log->debug("Loading by default");
-				$_[0]{Asset} = openprint::Asset->find_one('name'=>'Default Profile' );
+				$_[0]{Asset} = openprint::Asset->find_one(name=>'Default Profile' );
 			} # end if
 			if ( $_[0]{id} ) {
-				my @Albums = openprint::Photo_Album->find('user_id'=>$_[0]{id});
+				my @Albums = openprint::Photo_Album->find(user_id=>$_[0]{id});
 				foreach my $Album ( @Albums ) {
 					my @Photos = $Album->Photos();
 					if ( @Photos ) {
@@ -433,6 +451,9 @@ sub link {
 sub link_to {
     return sprintf('<a href="/account/view.html?user_id=%1$d">%2$s</a>', $_[0]{id}, @_ > 1 ? $_[1] : $_[0]->name() );
 } # end sub link_to
+sub admin_link_to {
+    return sprintf('<a href="/administrator/managerial/user_profiles.html?user_id=%1$d">%2$s</a>', $_[0]{id}, @_ > 1 ? $_[1] : $_[0]->name() );
+} # end sub admin_link_to
 
 sub html {
 	if ( ! $_[0]{id} ) {
@@ -484,15 +505,15 @@ sub html {
 } # end sub html
 
 sub last_logged_in {
-	if ( (! $_[0]{last_logged_on} ) and $_[0]{id} ) {
+	if ( (! $_[0]{last_logged_in} ) and $_[0]{id} ) {
 		# Almost any entry means we were logged in.  
-		my $Log = openprint::Log->find_one(user_id=>$_[0]{id},'order'=>'date_time DESC');
+		my $Log = openprint::Log->find_one(user_id=>$_[0]{id}, order=>'date_time DESC');
 		if ( $Log ) {
 #$openprint::log->debug("last_Logged_in: " . $Log->to_string() );
-			$_[0]{last_logged_on} = $$Log{date_time};
+			$_[0]{last_logged_in} = $$Log{date_time};
 		} # end if
 	}
-	return $_[0]{last_logged_on};
+	return $_[0]{last_logged_in};
 } # end sub last_logged_in
 
 sub AUTOLOAD {
@@ -515,7 +536,8 @@ $openprint::log->debug("Autoload User $name $_[0]") if $debug;
 			} # end if
 			return $$Profile{fields}{$name};
 		} else {
-			$openprint::log->warn("Unknown field in User::AUTOLOAD $name");
+			my ( $caller, undef, $line ) = caller;
+			$openprint::log->error("Unknown field in User::AUTOLOAD $name from $caller:$line");
 		} # end if
 	} # end if
 } # end sub AUTOLOAD
@@ -550,17 +572,17 @@ sub Location {
 		my $Profile = $_[0]->Profile();
 		my $Location;
 		if ( $Profile->postalcode() ) {
-			$Location = openprint::Location->find_one( 'postalcode'=>openprint::Location->transform('postalcode', $Profile->postalcode() ) );
+			$Location = openprint::Location->find_one( postalcode=>openprint::Location->transform('postalcode', $Profile->postalcode() ) );
 		} # end if
 		if ( ! $Location and $Profile->city() ) {
 			my $City = new openprint::Location( $Profile->city() );
-			$Location = openprint::Location->find_one( 'type'=>'city', 'name'=>$City->name() );
+			$Location = openprint::Location->find_one( type=>'city', name=>$City->name() );
+			if ( ! $Location ) {
+				$Location = openprint::Location::google( join('+', $Profile->postalcode(), $Profile->city() ) );
+			} # end if
 		} # end if
 		if ( ! $Location ) {
-			$Location = openprint::Location::google( join('+', $Profile->postalcode(), $Profile->city() ) );
-		} # end if
-		if ( ! $Location ) {
-			$log->error("Still no location");
+			$log->debug("no location for User $_[0]{email}");
 			return new openprint::Location();
 		} # endif
 		$_[0]{Location} = $Location;
@@ -574,7 +596,8 @@ sub code {
 } # end sub code
 
 sub usergroup_ids {
-	return map { $_->usergroup_id() } openprint::User_in_UserGroup->find(user_id=>$_[0]{id});
+	return map { $_->usergroup_id() } openprint::User_in_UserGroup->find(user_id=>$_[0]{id}) if $_[0]{id};
+	return;
 } # end sub usergroup_ids
 
 sub save_notifications {
@@ -589,6 +612,13 @@ sub save_notifications {
 		} # end if value changed
 	} # end foreach Notification
 	return @results;
+}
+sub email_valid {
+	if ( ! defined $_[0]{email_valid} ) {
+	require Email::Valid;
+	$_[0]{email_valid} = Email::Valid->address( $_[0]{email} );
+	} 
+	return $_[0]{email_valid};
 }
 
 1;

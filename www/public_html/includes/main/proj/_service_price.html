@@ -1,9 +1,9 @@
 <li class="serviceprice">
 	<label>Service Price (<?CurrencySymbol?>)</label>
 	<? echo ( my $html;
-		foreach my $qty_index ( $$variable{'Project'}->quantity_indexes() ) {
+		foreach my $qty_index ( $$variable{Project}->quantity_indexes() ) {
 			$html .= '<span class="'.$$variable{Columns}.'Columns">';
-			if ( openprint::usergroup::is_user_in( ['Price Overrides'], $session{'user_id'} ) ) {
+			if ( openprint::usergroup::is_user_in( ['Price Overrides'], $session{user_id} ) ) {
 				$html .= input( type=>'float', name=>"txtPrice$qty_index",
 					value=>$$variable{'txtPrice'.$qty_index}, 
 					onkeyup=>q`calc(this.form.name);`, step=>'0.01' );

@@ -5,7 +5,7 @@
 		<?include('/includes/quote_prepared_by.html') ?>
 		<?include('/includes/quote_prepared_for.html') ?>
 	</div>
-<? if ( $$variable{'Quote'}->Quoted_Projects() ) ?>
+<? if ( $$variable{Quote}->Quoted_Projects() ) ?>
 <table class="List">
 	<tr> 
 		<th class="project_id">ID</th>
@@ -22,18 +22,21 @@
 		my $subtotal;
 		my $newsubtotal;
 
-		foreach my $QP ( $$variable{'Quote'}->Quoted_Projects() ) {
+		foreach my $QP ( $$variable{Quote}->Quoted_Projects() ) {
 			my $Project = $QP->Project();
 			$html .= sprintf(q`
 	<tr%1$s> 
 		<td class="project_id"><a href="%2$s/employee/project/view.html?ProjectIndex=%3$d">%3$d</a></td>
-		<td class="description"><a href="%2$s/employee/project/view.html?ProjectIndex=%3$d">%4$s</a></td>
+		<td class="description">
+			<div class="reference"><a href="%2$s/employee/project/view.html?ProjectIndex=%3$d">%4$s</a></div>
+			<div class="summary"><a href="%2$s/employee/project/view.html?ProjectIndex=%3$d">%5$s</a></div>
+		</td>
 		<td colspan="5">
 			<table>
-			`, $rowclass, $config{'ExternalSiteURL'}, $QP->project_id(),
+			`, $rowclass, $config{ExternalSiteURL}, $QP->project_id(),
 			(
-			 ( $Project->reference() ? $Project->reference() . '<br/>' : '' ) .
-			 ( $config{'ShowProjectSummaryOnQuote'} ne 'N' ? $Project->summary() : '' ),
+			 ( $Project->reference() ? $Project->reference() : '' ) .
+			 ( $config{ShowProjectSummaryOnQuote} ne 'N' ? $Project->summary() : '' ),
 			),
 			);
 			my $services = $Project->services();
@@ -42,11 +45,11 @@
 				$html .= '<tr><td class="weight">';
 				my $weight;
 
-				if ( $$services{'BulkSkids'} ) {
-					my $specs = openprint::service::get_specs_ref( $Project, $$services{'BulkSkids'}[0] );
+				if ( $$services{BulkSkids} ) {
+					my $specs = openprint::service::get_specs_ref( $Project, $$services{BulkSkids}[0] );
 					$weight = $$specs{'totalWeight'.$qty_index};
-				} elsif ( $$services{'PlainCartons'} ) {
-					my $specs = openprint::service::get_specs_ref( $Project, $$services{'PlainCartons'}[0] );
+				} elsif ( $$services{PlainCartons} ) {
+					my $specs = openprint::service::get_specs_ref( $Project, $$services{PlainCartons}[0] );
 					$weight = $$specs{'totalWeight'.$qty_index};
 				} else {
 					$weight = openprint::print::get_finished_weight( $Project->id() ) * $Project->quantity($qty_index);
@@ -78,8 +81,8 @@
 		return $html;
 	) ?>
 </table>
-<? endif ( $$variable{'Quote'}->Quoted_Projects() ) ?>
-<? if ( $$variable{'Quote'}->Products() ) ?>
+<? endif ( $$variable{Quote}->Quoted_Projects() ) ?>
+<? if ( $$variable{Quote}->Products() ) ?>
 <table>
 	<thead>
 		<tr>
@@ -94,7 +97,7 @@
 		<? echo (
 			my $html;
 			my $rowclass;
-			foreach my $Product ( $$variable{'Quote'}->Products() ) {
+			foreach my $Product ( $$variable{Quote}->Products() ) {
 				$html .= sprintf('
 <tr%1$s>
 	<td class="description">%3$s</td>
@@ -113,10 +116,10 @@ openprint::Currency::format($Product->price()),
 		) ?>
 	</tbody>
 </table>
-<? endif ( $$variable{'Quote'}->Products() ) ?>
+<? endif ( $$variable{Quote}->Products() ) ?>
 
-<span class="Currency">All prices are in <? echo ( $$variable{'Quote'}->Currency()->name() ) ?> and are subject to applicable taxes.</span>
+<span class="Currency">All prices are in <? echo ( $$variable{Quote}->Currency()->name() ) ?> and are subject to applicable taxes.</span>
 <br/>
-<? if ( $$variable{'AdministratorName'} ) ?><b>Administrator Name</b><?AdministratorName?><br/><? endif ( $$variable{'AdministratorName'} ) ?>
-<? if ( $$variable{'AdministratorComments'} ) ?><b>Administrator Comments</b> <?AdministratorComments?><br/><? endif ( $$variable{'AdministratorComments'} ) ?>
+<? if ( $$variable{AdministratorName} ) ?><b>Administrator Name</b><?AdministratorName?><br/><? endif ( $$variable{AdministratorName} ) ?>
+<? if ( $$variable{AdministratorComments} ) ?><b>Administrator Comments</b> <?AdministratorComments?><br/><? endif ( $$variable{AdministratorComments} ) ?>
 </div>

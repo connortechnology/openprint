@@ -21,7 +21,7 @@ use vars qw($log $dbh %config);
 my $program = 'count_sessions.pl';
 $log = logger->new('warn');
 my $opts = {};
-GetOptions($opts, 'help', 'db_name=s', 'db_host=s', 'db_user=s', 'db_pass=s','output=s','debug=s');
+GetOptions($opts, 'help', 'db_port=s', 'db_name=s', 'db_host=s', 'db_user=s', 'db_pass=s','output=s','debug=s');
 
 if ($opts->{help}) {
     usage();
@@ -39,6 +39,7 @@ $opts->{db_user} = $opts->{db_name} if ! $opts->{db_user};
 $opts->{db_pass} = $opts->{db_name} if ! $opts->{db_pass};
 
 $dbh = sql::open_sql( $log,
+		port		=>	$$opts{db_port},
         'host'      => $opts->{db_host},
         'database'  => $opts->{db_name},
         'driver'    => 'Pg',

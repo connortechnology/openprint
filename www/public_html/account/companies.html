@@ -43,7 +43,9 @@ function load_page() {
             <? echo ( date_select_session( $r->uri(), 'last_called_on_end', { with_today=>1,with_clear=>1 } ); ) ?>
         </li>
 		<li><label>Deleted?</label><? echo ( radio( 'deleted', [ '1','Yes', '0', 'No', '', 'Both' ], $session{$r->uri().'?deleted'}, {onclick=>'load_page();'} ); ) ?></li>
+		<? if ( openprint::MarketingCategory->find_one() ) ?>
 		<li><label>Marketing Category</label><? echo ( ssi::select( openprint::MarketingCategory->dropdown(), $session{$r->uri().'?marketing_category_id'}, { onclick=>'load_page();', name=>'marketing_category_id' } ); ) ?></li>
+		<? endif ( openprint::MarketingCategory->find_one() ) ?>
 		<li><label>Country</label><? echo ( ssi::select( [ map { $_->id(), $_->name() } openprint::Location->find(type=>'country', order=>'lower(name)') ], $session{$r->uri().'?country'}, { name=>'country_id', prepend=>['','All'] } ); ) ?></li>
 	
 		</ul>

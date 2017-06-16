@@ -31,6 +31,14 @@
             <? echo ( openprint::Currency::format( $$variable{DepositDue} ); ) ?>
         </li>
         <? endif ( $$variable{DepositDue} ) ?>
+		<? if ( $$variable{Order}->cod_owing() ) ?>
+        <li class="cod">
+            <label>COD Owing</label>
+            <? echo ( 
+                        return openprint::Currency::format( $$variable{Currency}->convert_from( $$variable{Order}->cod_owing() ) );
+             ) ?>
+        </li>
+        <? endif ( $$variable{Order}->cod_owing() ) ?>
         <li class="amount_owing">
             <label>Amount Owing</label>
             <? echo ( openprint::Currency::format( $$variable{Order}->owing() ); ) ?>

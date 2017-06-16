@@ -1,0 +1,20 @@
+<table id="recipients" class="List sortable">
+	<tr><th class="Company">Company</th><th class="User">Name</th><th class="Email">Email</th><th>Password?</th><th class="DateTime">Last Login</th></tr>
+<? echo (
+my @Recipients = $variable{Campaign}->Recipients();
+my $html .= 'There are ' . @Recipients . ' recipients.<br/><br/>';
+$html .= join("\n", map { 
+	sprintf('<tr><td class="Company">%s</td><td class="User">%s</td><td class="Email">%s</td><td>%s</td><td class="DateTime">%s</td></tr>', 
+			$_->Company()->link_to(), $_->link_to( $_->name() ), $_->link_to( $_->email() ),
+			( $_->password() ? 'yes' : 'no' ),
+			$_->last_logged_in(),
+ )
+
+	} $variable{Campaign}->Recipients() );
+return $html;
+) ?>
+</table>
+<?
+<script type="text/javascript">
+TableKit.Sortable.init('recipients');
+</script>

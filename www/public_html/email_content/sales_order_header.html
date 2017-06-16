@@ -27,15 +27,10 @@
 	<fieldset><legend>Billing Information</legend>
 		<div class="content"><ul>
 			<? if ( $$variable{Order}->company_name() ) ?>
-			<li><label>Company Name</label><? hecho ( $$variable{Order}->company_name() ) ?><br/></li>
+			<li><label>Company</label><? hecho ( $$variable{Order}->company_name() ) ?><br/></li>
 			<? endif ( $$variable{Order}->company_name() ) ?>
 <? if ( $$variable{Order}->address1() or $$variable{Order}->address2() ) ?>
-			<li><label>Address</label>
-			<? if ( $$variable{Order}->address1() ) ?><? hecho ( $$variable{Order}->address1() ) ?><br/><? endif ( $$variable{Order}->address1() ) ?>
-			<? if ( $$variable{Order}->address2() ) ?><? hecho ( $$variable{Order}->address2() ) ?><br/><? endif ( $$variable{Order}->address2() ) ?>
-			<? echo ( misc::build_city_prov_country($$variable{Order}->get('city','state','country') ); ) ?><br/>
-			<? if ( $$variable{Order}->postalcode() ) ?><? echo ( $$variable{Order}->postalcode() ) ?><br/><? endif ( $$variable{Order}->postalcode() ) ?>
-			</li>
+			<li><label>Address</label><? echo ( $$variable{Order}->address_html(); ) ?></li>
 <? endif ( $$variable{Order}->address1() or $$variable{Order}->address2() ) ?>
 			<? if ( $$variable{Order}->firstname() or $$variable{Order}->lastname() ) ?>
 			<li><label>Name</label><? echo ( join(' ', $$variable{Order}->get('salutation','firstname','lastname') ); ) ?><br/></li>

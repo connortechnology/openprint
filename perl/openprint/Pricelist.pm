@@ -28,6 +28,11 @@ $serial = 'pricelists_id_seq';
 	'deleted'	=>	0,
 	'currency_id'	=>	undef,
 );
+%transforms = (
+	id			=>	[ 's/\D//g', '<2147483647' ],
+	name		=>	[ 's/^\s+//', 's/\s+$//', 's/\s\s+/ /g' ],
+	description		=>	[ 's/^\s+//', 's/\s+$//', 's/\s\s+/ /g' ],
+);
 
 sub destroy {
 	my $self = shift;

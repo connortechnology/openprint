@@ -1,4 +1,5 @@
 use strict;
+use warnings;
 package openprint::SkidContent;
 our @ISA = qw(openprint::Object);
 
@@ -35,6 +36,15 @@ $debug = 0;
 $table = 'Skid_Contents';
 $serial = 'skid_contents_id_seq';
 
+sub units {
+	$_[0]{units} = $_[1] if @_ > 1;
+
+	if ( ! $_[0]{units} ) {
+		$_[0]{units} = $_[0]->Paper()->units();
+	}
+	return $_[0]{units};
+}
+
 sub purpose {
 	return $_[0]->Purpose()->name();
 } # end sub purpose
@@ -68,11 +78,11 @@ sub delete {
 } # end sub delete
 
 sub allocateable {
-	if ( ! exists $_[0]{'allocateable'} ) {
-		$_[0]{'allocateable'} = $_[0]->quantity() - $_[0]->allocated();
-		$_[0]{'allocateable'} = 0 if $_[0]{'allocateable'} < 0;
+	if ( ! exists $_[0]{allocateable} ) {
+		$_[0]{allocateable} = $_[0]->quantity() - $_[0]->allocated();
+		$_[0]{allocateable} = 0 if $_[0]{allocateable} < 0;
 	} # end if
-	return $_[0]{'allocateable'};
+	return $_[0]{allocateable};
 } # end sub allocateable
 
 sub allocated {
@@ -93,10 +103,10 @@ sub condition {
 			$Condition->save({'name'=>$condition});
 		} # end if
         @$self{'condition_id','condition'} = @$Condition{'id','name'};
-    } elsif ( $$self{'condition_id'} and ! $$self{'condition'} ) {
-        $$self{'condition'} = new openprint::InventoryCondition( $$self{'condition_id'} )->name();
+    } elsif ( $$self{condition_id} and ! $$self{condition} ) {
+        $$self{condition} = new openprint::InventoryCondition( $$self{condition_id} )->name();
     } # end if
-    return $$self{'condition'};
+    return $$self{condition};
 } # end sub condition
 
 sub Condition {
@@ -104,72 +114,78 @@ sub Condition {
 	return new openprint::InventoryCondition( $_[0]{condition_id} );
 } # end sub Condition
 
+sub Cost {
+	my $self = $_[0];
+	if ( ! exists $$self{Cost} ) {
+		foreach my $MC ( $_[0]->Manifest_Contents() ) {
+			my $Type = $MC->Type();
+			if ( $Type->cost() ) {
+				my $Currency = $Type->Currency();
+				$$self{Cost} = {
+					cost				=>	$$Type{cost},
+					price				=>	$$Type{cost},
+					units				=>	$Type->cost_units(),
+					( $Currency ? (
+					currency_id	=>	$$Currency{id},
+					Currency		=>	$Currency,
+					) : () )
+				};
+			} else {
+				my $POC = $Type->PurchaseOrder_Content();
+				if ( ( ! $POC ) and $$Type{docket} ) {
+					# Look again without a docket
+					$POC = $Type->PurchaseOrder_Content({ ignore_docket=>1 });
+				}
+				if ( ! $POC ) {
+					$POC = $Type->PurchaseOrder_Content({ ignore_docket=>1, ignore_fsc=>1 });	
+				}
+				next if ! $POC;
+				$$self{Cost} = $POC->Cost();
+			} # end if
+			last if $$self{Cost};
+		} # end foreach MC
+	} # end if ! exists cost
+	return $$self{Cost};
+}
 # Looks to find a PO matching this stock and pulls the value from it.
 # SKids can have multiple manifests, but only one PO
 sub cost {
-	my $self = $_[0];
-	if ( ! exists $$self{'cost'} ) {
-		require openprint::ManifestContent;
-		my @MCS = openprint::ManifestContent->find('skid_id'=>$$self{'skid_id'});
-		foreach my $MC ( @MCS ) {
-			my $Type = $MC->Type();
-			if ( $Type->cost() ) {
-				$$self{'cost'} = $Type->cost();
-			} else {
-				my $POC = $Type->PurchaseOrder_Content();
-				return if ! $POC;
-				my $POCurrency = $POC->PurchaseOrder()->Currency();
-				if ( $POCurrency ) {
-					$$self{'cost'} = $POCurrency->convert_from( $POC->price() );
-				} else {
-					$$self{'cost'} = $POC->price();
-				} # end if
-			} # end if
-			last if $$self{cost};
-		} # end foreach MC
-	} # end if ! exists cost
-    return $$self{'cost'};
+	my $Cost = $_[0]->Cost();
+	if ( $Cost ) {
+		openprint::Currency::convert( $Cost );
+		return $$Cost{cost};
+	}
+	return;
 } # end sub cost
 
 # Looks to find a PO matching this stock and pulls the value from it.
 sub value {
 	my $self = $_[0];
-	if ( ! exists $$self{'value'} ) {
-		require openprint::ManifestContent;
-		my @MCS = openprint::ManifestContent->find( skid_id=>$$self{'skid_id'});
-		foreach my $MC ( @MCS ) {
-			my $Type = $MC->Type();
-
-			my ( $cost, $units );
-			if ( $Type->cost() ) {
-				$cost = $Type->cost();
-				$units = $Type->cost_units();
+	if ( ! exists $$self{value} ) {
+		
+		my $Cost = $_[0]->Cost();
+		if ( $Cost ) {
+			openprint::Currency::convert( $Cost );
+$openprint::log->debug("cost for $$self{skid_id} $$Cost{units} $$Cost{cost}") if $debug;
+			if ( (!$$Cost{units}) or ($$Cost{units} eq '/100lbs' or $$Cost{units} eq '/cwt') ) {
+				$$self{value} = $$self{quantity} * $$Cost{cost} / 100;
 			} else {
-				my $POC = $Type->PurchaseOrder_Content();
-				next if ! $POC;
-				my $POCurrency = $POC->PurchaseOrder()->Currency();
-				if ( $POCurrency ) {
-					$cost = $POCurrency->convert_from( $POC->price() );
-				} else {
-					$cost = $POC->price();
-				} # end if
-				$units = $POC->price_units();
+				$$self{value} = $$self{quantity} * $$Cost{cost};
 			} # end if
-			if ( (!$units) or sets::isin( $units, ['/100lbs', '', '/cwt' ] ) ) {
-				$$self{'value'} = $$self{'quantity'} * $cost / 100;
-			} else {
-				$$self{'value'} = $$self{'quantity'} * $cost;
-			} # end if
-			last if $$self{'value'};
-		} # end foreach MC
+		} else {
+$openprint::log->debug("No cost for $$self{skid_id}") if $debug;
+		} # end Cost
 	} # end if ! exists value
-    return $$self{'value'};
+	return $$self{value} if $$self{value};
+	return;
 } # end sub value
 
 sub Manifest_Contents {
-	require openprint::ManifestContent;
-    my @MCS = openprint::ManifestContent->find( skid_id=>$_[0]{skid_id}, order=>'id' );
-	return @MCS;
+	if ( ! $_[0]{ManifestContents} ) {
+		require openprint::ManifestContent;
+		$_[0]{ManifestContents} = [ openprint::ManifestContent->find( skid_id=>$_[0]{skid_id}, order=>'id' ) ];
+	}
+	return @{$_[0]{ManifestContents}};
 }
 
 sub checked_out {
@@ -180,7 +196,7 @@ sub checked_out {
 } # end sub checked_out
 
 sub to_string {
-	return sprintf('%s%s of %s', Number::Format::format_number( $_[0]{quantity} ), $_[0]->units(), $_[0]->Paper()->to_string() );
+	return sprintf('%s%s of %s', ( $_[0]{quantity} ? Number::Format::format_number( $_[0]{quantity} ) : 'unknown'), $_[0]->units(), $_[0]->Paper()->to_string() );
 }
 
 1;

@@ -7,7 +7,6 @@ use openprint ();
 
 require openprint::Project;
 require openprint::order;
-require openprint::main_project;
 require openprint::service;
 require openprint::Equipment;
 require openprint::employee_schedule;
@@ -704,30 +703,31 @@ sub send_proofs_approved_email {
 	$info{CompletionDate} = Date::Format::time2str( $config{DateTimeFormat}, time );
 
 	$info{ReplacementText} = ssi::include( '/email_content/proofs_approved-sales_rep.html', \%info );
-	$_ = encode_qp( Encode::encode('utf-8', ssi::include( '/email_template.html', \%info ) ) );
-	my @body = ('', $_, 'text/html', 'quoted-printable');
 	my $Email = new openprint::Email();
+	$Email->html_body( ssi::include( '/email_template.html', \%info ) );
 
-	my $CSR = new openprint::User( $Order->salesrep_id() );
+	my $CSR = $Order->CSR();
 	my @Users = map { $_->User() } openprint::User_Notification->find( type =>'Proofs Approval Notifications', value =>'Yes',
 			'company_id is null or ='	=> $Project->company_id(),
 			user_company_id=>[$Project->company_id(), $openprint::User->company_id(), ( $CSR->id() ? $CSR->company_id() : () ) ] );
 
 	if ( ! sets::isin( $CSR->id(), [ map { $_->id() } @Users ] ) ) {
 		my $Notification = $CSR->notification('Proofs Approval Notifications');
-		push @Users, $CSR if ( ! $Notification );
+		push @Users, $CSR if (!$Notification) or ( $Notification ne 'No' );
 	} # end if
 
+	my $results;
 	foreach my $User ( @Users ) {
 		next if $User->id() == $session{user_id};
+		next if $User->deleted();
 		
-		$Email->send(
+		$results .= $Email->send(
 				FROM	=> $openprint::User,
 				TO	  => $User,
 				SUBJECT => "Docket $info{DocketNumber} $$Order{company_name} - Proofs Approved",
-				ATTACHMENTS	=>	\@body,
 				);
 	} # end if
+	$Project->add_to_log( @session{'company_id','user_id'}, "Proofs approved email sent to $results" );
 } # end sub send_proofs_approved_email
 
 sub send_duedate_change_notification {
@@ -743,20 +743,21 @@ sub send_duedate_change_notification {
 	my $Project = new openprint::Project( $project_index );
 	$info{DueDate} = Date::Format::time2str( $config{DateFormat}, Date::Parse::str2time( $Project->due_date() ) );
 
-	my $User = new openprint::User( $session{user_id} );
+	my $User = $openprint::User;
 	@info{'EmployeeFirstName','EmployeeLastName','EmployeeEmail','EmployeeExtension'} = ( $User->firstname(), $User->lastname(), $User->email(), $User->extension() );
 	my $CSR = new openprint::User( $Order->salesrep_id() );
-	if ( $CSR->email() ) {
+	if ( $CSR->email() and ! $CSR->deleted() ) {
 		my $notification = $CSR->notification('Docket Due Date Changes');
-		if ( ( ! $notification ) or $notification ne 'No' ) {
+		if ( $notification and ( $notification ne 'No' ) ) {
 			my $email_template = ssi::slurp_content( '/email_template.html' );
 			$info{ReplacementText} = ssi::include( '/email_content/proofs_duedate_change-sales_rep.html', \%info );
-			new openprint::Email()->send(
+			my $results = (new openprint::Email())->send(
 					FROM	=> $User,
 					TO	  => $CSR,
 					SUBJECT => "Docket $info{DocketNumber} DueDate Changed",
-					ATTACHMENTS	=>	['', encode_qp( Encode::encode('utf-8', ssi::variable_substitution( \$email_template, \%info ) ) ), 'text/html', 'quoted-printable'],
+					HTML_BODY 	=> ssi::variable_substitution( \$email_template, \%info ),
 					);
+			$Project->add_to_log( @session{'company_id','user_id'}, "due date changed email sent to $results" );
 		} # end if Notifications
 	} # end if
 } # end sub send_duedate_change_notification
@@ -889,6 +890,19 @@ sub _production_feedback {
 
 sub _stock_allocations {
 	$variable{Order} = openprint::Order->find_one( docket=>$param{docket} );
+	if ( $param{action} eq 'delete' ) {
+		foreach my $Allocation ( openprint::PaperAllocation->find( id=>[ split(',', $param{allocation_id} ) ] ) ) {
+			if ( $Allocation->can_delete() ) {
+				if ( $_ = $Allocation->delete() ) {
+					$variable{error} .= $_.'<br/>';
+				} else {
+					$variable{information} .= "Allocation $$Allocation{id} deleted successfully.<br/>";
+				}
+			} else {
+				$variable{error} .= 'You are not authorized to delete this allocation.<br/>';
+			}
+		}
+	}
 }
 
 sub _signaturecapture {
@@ -980,8 +994,8 @@ sub _modification_history {
 		my $Project = $variable{Project} = new openprint::Project($param{project_id});
 	}
 		ssi::save_params('/employee/project/modification_log.html', 'project_id', 'operator_id', 'salesrep_id','StartDocket',
-			( map { 'action_date_start_'.$_ } ( 'year', 'month', 'day' ) ),
-			( map { 'action_date_end_'.$_ } ( 'year', 'month', 'day' ) ),
+			( map { 'action_date_start_'.$_ } ( 'year', 'month', 'day', 'hour','minute' ) ),
+			( map { 'action_date_end_'.$_ } ( 'year', 'month', 'day', 'hour','minute' ) ),
 				);
 } # end sub _modification_history
 

@@ -4,6 +4,7 @@
 		<th class="docket">Docket</th>
 		<th class="project_id">Project</th>
 <? endif ( ! $$variable{Project} ) ?>
+		<th class="Host">Host</th>
 		<th class="User">User</th>
 		<th class="DateTime">When</th>
 		<th class="Description">Description</th>
@@ -33,6 +34,7 @@ if ( $session{$uri.'?StartDocket'} ) {
 					date_filter( $uri.'?action_date_end', 'created_on <=' ),
 					date_filter( $uri.'?action_date_start', 'created_on >=' ),
 					( $session{$uri.'?operator_id'} ? ( user_id=>$session{$uri.'?operator_id'} ) : () ),
+					( $session{$uri.'?host_id'} ? ( host_id=>$session{$uri.'?host_id'} ) : () ),
 					( $session{$uri.'?salesrep_id'} ? ( salesrep_id=>$session{$uri.'?salesrep_id'} ) : () ),
 					( $session{$uri.'?company_id'} ? ( company_id=>$session{$uri.'?company_id'} ) : () ),
 					( @Companies ? ( company_id=>[ map { $_->id() } @Companies ] ) : () ),
@@ -63,6 +65,7 @@ if ( $session{$uri.'?StartDocket'} ) {
 				$html .= sprintf( '<td class="docket"><a href="/employee/project/view.html?docket=%1$d">%1$d</a></td>', $Log->Project()->docket() );
 				$html .= sprintf( '<td class="project_id"><a href="/employee/project/view.html?project_id=%1$d">%1$d</a></td>', $Log->project_id() );
 			} 
+				$html .= sprintf( '<td class="Host">%1$s</td>', $Log->Host()->hostname() );
 				$html .= sprintf( '<td class="User">%1$s</td><td class="DateTime">%2$s</td><td class="Description">%3$s</td></tr>', 
 					new openprint::User( $Log->user_id )->name(), format_datetime( $Log->created_on() ), $Log->description_html() );
 			$rowclass = $rowclass ? '' : ' class="colRow"';

@@ -36,7 +36,8 @@
 							<li><label>Description</label>
 							<? echo ( $$variable{Asset}->description() ) ?>
 							</li>
-							<li><table><tr><th>Version</th><th>URL</th><th class="size">File Size</th></tr>
+							</ul>
+							<table><tr><th>Version</th><th>URL</th><th class="size">File Size</th></tr>
 							<? echo (
 								my $html;
 								foreach my $size ( '', 'large','medium','small', 'thumbnail' ) {
@@ -48,8 +49,6 @@
 								return $html;
 							) ?>
 							</table>
-							</li>
-						</ul>
 					</div>
 					<div class="rightColumn">
 						<ul>

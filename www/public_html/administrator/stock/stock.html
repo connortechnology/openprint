@@ -67,6 +67,13 @@
 </script>
 <?include('/includes/error_reporting.html')?>
 <div class="Stock">
+<? echo (
+$_ = $$variable{Stock}->check();
+if ( $_ ) {
+	return '<div class="error">'.$_.'</div>';
+}
+return '';
+) ?>
 <form id="f1" name="f1" method="post" action="stock.html?stock_id=<? echo ( $$variable{Stock}->id(); ) ?>">
 	<p class="buttons">
 		<? echo ( join('',
@@ -76,7 +83,7 @@
 		button( 'Add1', { onclick=>"f1.action='stock.html';f1.btnFunction.value='';f1.submit();", text=>'Add New' } ),
 		button( 'Delete1', { onclick=>"f1.btnFunction.value='Delete';fmChange=2;fmCheck(f1);", text=>'Delete' } ),
 		button( 'Copy1', { onclick=>"f1.btnFunction.value='Copy';f1.submit();", text=>'Copy' } ),
-		button( 'Save1', { onclick=>"f1.btnFunction.value='Save';fmChange=3;fmCheck(f1);", text=>'Save' } ),
+		button( 'Save1', { onclick=>"f1.btnFunction.value='Save';f1.submit();", text=>'Save' } ),
 		button( 'Reset1', { onclick=>'f1.reset();', text=>'Reset' } ),
 ); ) ?>
 	</p>
@@ -195,10 +202,10 @@
 					<label>Calliper</label>
 					<? echo ( input(type=>'float', id=>'calliper', name=>'calliper', 
 								value=> $$variable{Stock}->calliper(), 
-								oninput=>q`$('calliper_mm').value=do_decimals(this.value*25.4,1);`,
+								oninput=>q`$('calliper_mm').value=do_decimals(this.value*25.4,3);`,
 								); ) ?> inches
 					<? echo ( input(type=>'float', id=>'calliper_mm', name=>'calliper_mm', 
-									value => Math::Round::nearest( .1, $$variable{Stock}->calliper()*25.4),
+									value => Math::Round::nearest( .001, $$variable{Stock}->calliper()*25.4),
 									oninput =>q`$('calliper').value=do_decimals( this.value*0.0393701, 4 );`,
 								); ) ?> mm
 				</p>
@@ -221,10 +228,9 @@
 					<? echo ( input(type=>'float', id=>'mweight', name=>'mweight', value=>$$variable{Stock}->mweight(),  oninput=>'mweight_to_gsm( this.form );' ); ) ?>
 				</p>
 				<p id="BasisSize">
-					<label>Basis MWeight</label>
-					<? echo ( input(type=>'float', id=>'basis_mweight', name=>'basis_mweight', value=>$$variable{Stock}->basis_mweight(),  oninput=>'mweight_to_gsm( this.form );' ); ) ?>
-					<br/>
-					<label>Basis Size</label>
+					<label>Basis Weight</label>
+					<? echo ( input(type=>'float', id=>'basis_mweight', name=>'basis_mweight', value=>$$variable{Stock}->basis_mweight(),  oninput=>'basis_weight_to_gsm( this.form );' ); ) ?>
+					@
 					<? echo ( join(' x ',
 								input(type=>'float', id=>'basis_width', name=>'basis_width', value=>( $$variable{Stock}->basis_width() ? $$variable{Stock}->basis_width() : 25 ),  oninput=>'gsm_to_mweight( this.form );' ),
 								input(type=>'float', id=>'basis_height', name=>'basis_height', value=>( $$variable{Stock}->basis_height() ? $$variable{Stock}->basis_height() : 38 ),  oninput=>'gsm_to_mweight( this.form );' ),

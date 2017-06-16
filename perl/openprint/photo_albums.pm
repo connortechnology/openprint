@@ -70,7 +70,12 @@ sub _list {
 } # end sub _list
 
 sub view {
-	my $Album = $variable{Album} = new openprint::Photo_Album( $param{album_id} );
+	my $album_id = openprint::Photo_Album->transform( id => $param{album_id} );
+	my $Album = $variable{Album} = openprint::Photo_Album->find_one( id=>$album_id );
+	if ( ! $Album ) {
+		$variable{Album} = new openprint::Photo_Album();
+		$variable{error} .= "No album found for id $album_id<br/>";
+	}
 } # end sub view
 
 sub edit {

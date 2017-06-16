@@ -447,7 +447,7 @@ sub signature_calc {
 # Do nothing, we already know it fits on the machine, and it has to go one way or another.
                         $Results{Breakdown} .= 'Running either way because scores both ways.<br/>';
                     } elsif ( $$specs{"txtVerticalQty-$form"} ) {
-                        if ( $$I{image_orientation} eq 'Vertical' ) {
+                        if ( $$I{image_orientation} == openprint::Imposition::Vertical ) {
                             $Results{Breakdown} .= 'Running ' . $I->layout_width() . ' ' . $$I{image_orientation} . ' on feed of ' . $max_feed_width . '<br/>';
                             if ( $I->layout_width() >= $max_feed_width ) {
                                 $Results{Breakdown} .= "Perf no good due to max feed width($max_feed_width) on width (".$I->layout_width().").<br/>";
@@ -457,7 +457,7 @@ sub signature_calc {
                             $Results{Breakdown} .= 'Running ' . $I->layout_height() . ' on feed of ' . $max_feed_width . '<br/>';
                         } # end if
                     } elsif ( $$specs{"txtHorizontalQty-$form"} ) {
-                        if ( $$I{image_orientation} eq 'Horizontal' ) {
+                        if ( $$I{image_orientation} == openprint::Imposition::Horizontal ) {
                             $Results{Breakdown} .= 'Running ' . $I->layout_height() . ' on feed of ' . $max_feed_width . '<br/>';
                             if ( $I->layout_height() >= $max_feed_width ) {
                                 $Results{Breakdown} .= "Perf no good due to max feed width($max_feed_width) on width (".$I->layout_height().").<br/>";
@@ -535,14 +535,14 @@ sub signature_calc {
 			my %horizontal_price;
 			my $remaining_inches = 0;
 
-			if ( $$I{image_orientation} eq 'Vertical' and $$specs{"txtHorizontalQty-$form"} ) {
+			if ( $$I{image_orientation} == openprint::Imposition::Vertical and $$specs{"txtHorizontalQty-$form"} ) {
 				$horizontal_rules = $$specs{"txtHorizontalQty-$form"} * $$I{rows};
 				$horizontal_length = $horizontal_rules * $width;
 				$horizontal_length *= $CylinderCount if $CylinderCount;
 
 				$Results{Breakdown} .= $$specs{"txtHorizontalQty-$form"} . ' x ' . $$I{rows} . ' rows = ' . $horizontal_rules . ' horizontal rules * ' . $width . ' = ' . $horizontal_length . 'inches of rule.<br/>';
 
-			} elsif ( $$I{image_orientation} eq 'Horizontal' and  $$specs{"txtVerticalQty-$form"} ) {
+			} elsif ( $$I{image_orientation} == openprint::Imposition::Horizontal and  $$specs{"txtVerticalQty-$form"} ) {
 				$horizontal_rules = $$specs{"txtVerticalQty-$form"} * $$I{rows};
 				$horizontal_length = $horizontal_rules * $width;
 				$horizontal_length *= $CylinderCount if $CylinderCount;
@@ -553,12 +553,12 @@ sub signature_calc {
 			my $vertical_length = 0;
 			my %vertical_price;
 			
-			if ( $$I{image_orientation} eq 'Vertical' and  $$specs{"txtVerticalQty-$form"} ) {
+			if ( $$I{image_orientation} == openprint::Imposition::Vertical and  $$specs{"txtVerticalQty-$form"} ) {
 				$vertical_rules = $$specs{"txtVerticalQty-$form"} * $$I{columns};
 				$vertical_length = $vertical_rules * $height;
 				$vertical_length *= $CylinderCount if $CylinderCount;
 				$Results{Breakdown} .= $$specs{"txtVerticalQty-$form"} . ' x ' . $$I{columns} . ' columns = ' . $vertical_rules . ' vertical rules * ' . $height . 'inches = ' . $vertical_length . 'inches of rule.<br/>';
-			} elsif ( $$I{image_orientation} eq 'Horizontal' and $$specs{"txtHorizontalQty-$form"} ) {
+			} elsif ( $$I{image_orientation} == openprint::Imposition::Horizontal and $$specs{"txtHorizontalQty-$form"} ) {
 				$vertical_rules = $$specs{"txtHorizontalQty-$form"} * $$I{columns};
 				$vertical_length = $vertical_rules * $height;
 				$vertical_length *= $CylinderCount if $CylinderCount;

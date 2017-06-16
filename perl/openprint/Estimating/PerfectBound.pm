@@ -89,13 +89,13 @@ sub signature_calc {
 	my ( $Project, $service_index, $specs, $qty_index, $Impositions, $calc_hash ) = @_;
 
     my %results = (
-            alert   =>  '',
-			Breakdown => '',
-			Status	=>	'uncalculated',
-            );
- 
+				alert   =>  '',
+				Breakdown => '',
+				Status	=>	'uncalculated',
+				);
+
 	my $services = $Project->services();
-	my $printing_specs = openprint::service::get_specs_ref( $Project, $$services{''}[0] );
+	my $printing_specs = $$calc_hash{ProjectSpecs};
 	my $folding_specs = $$calc_hash{FoldingSpecs};
 
  #Need to figure out which dimension the spine bisects
@@ -116,7 +116,7 @@ sub signature_calc {
 	# FIXME should not include cover
     $$specs{txtCalliper} = $Project->calliper() if ! $$specs{txtCalliper};
 
-	my @printed_impositions;
+	#my %printed_impositions;
 	my $imposition = 2;
 	my $pockets = $$specs{"txtPockets$qty_index"} = 0;
 
@@ -152,13 +152,13 @@ sub signature_calc {
             }
             next;
         }
-		my $sig_specs = $$I{specs};
+				my $sig_specs = $$I{specs};
         my $form = $$sig_specs{SignatureIndex};
-        push @printed_impositions, $$I{imposition};
+        #$printed_impositions{$$I{imposition}} = !undef;
         if ( ! $$I{Folds} ) {
-            $openprint::log->error("No folds in imposition, generating") if DEBUG;
+            $openprint::log->error("No folds in imposition, generating");# if DEBUG;
             $I->display("No Folds") if DEBUG;
-            $$I{Folds} = [ openprint::Estimating::Folding::get_Folds( $folding_specs, $I, $qty_index ) ] if $folding_specs;
+            $$I{Folds} = [ openprint::Estimating::Folding::get_Folds( $folding_specs, $I, $qty_index, $Project ) ] if $folding_specs;
         } # end if
 
         if ( ! ( $$I{Folds} and @{$$I{Folds}} ) ) {
@@ -188,15 +188,15 @@ $openprint::log->debug("Fold pq($$FI{page_quantity}) pages($$FI{pages}) ($$Fold{
                 $I->display("Setting imposition to 1 due to odd impositions") if DEBUG;
                 $results{Breakdown} .= "Setting imposition to 1 due to odd impositions<br/>";
                 $imposition = 1;
-            } elsif ($$I{image_orientation} eq 'Vertical' and $$I{rows} % 2 ) {
+            } elsif ($$I{image_orientation} == openprint::Imposition::Vertical and $$I{rows} % 2 ) {
                 $I->display("Setting imposition to 1 due to Vertial and odd rows") if DEBUG;
                 $results{Breakdown} .= "Setting imposition to 1 due to vertical and odd rows<br/>";
                 $imposition = 1;
-            } elsif ( ($$I{image_orientation} eq 'Horizontal' ) and ( $$I{columns} % 2 ) ) {
+            } elsif ( ($$I{image_orientation} == openprint::Imposition::Horizontal ) and ( $$I{columns} % 2 ) ) {
                 $I->display("Setting imposition to 1 due to Horizal and odd cols") if DEBUG or 1;
                 $results{Breakdown} .= "Setting imposition to 1 due to Horizontal and odd cols<br/>";
                 $imposition = 1;
-            } elsif (sets::isin( $$I{runstyle}, ['Work & Turn','Work & Tumble'] ) and ($$I{imposition}%4) ) {
+            } elsif ( ( $$I{runstyle} eq 'Work & Turn' or $$I{runstyle} eq 'Work & Tumble' ) and ($$I{imposition}%4) ) {
                 $I->display("Setting imposition to 1 due to W&T impo not % 4 ") if DEBUG;
                 $imposition = 1;
             } # end if
@@ -214,10 +214,10 @@ $openprint::log->debug("Fold pq($$FI{page_quantity}) pages($$FI{pages}) ($$Fold{
                 if ( $$I{imposition} % 2 ) {
                     $results{alert} .= ' imposition not multiple of 2out<br/>';
                 } # end if
-                if ( ($$I{image_orientation} eq 'Vertical' and $$I{rows} % 2 ) ) {
+                if ( ($$I{image_orientation} == openprint::Imposition::Vertical and $$I{rows} % 2 ) ) {
                     $results{alert} .= ' vertical and rows not multiple of 2out<br/>';
                 } # end if
-                if ( $$I{image_orientation} eq 'Horizontal' and $$I{columns} % 2 ) {
+                if ( $$I{image_orientation} == openprint::Imposition::Horizontal and $$I{columns} % 2 ) {
                     $results{alert} .= ' horizontal and cols not multiple of 2out<br/>';
                 } # end if
             } # end foreach
@@ -229,7 +229,6 @@ $openprint::log->debug("Fold pq($$FI{page_quantity}) pages($$FI{pages}) ($$Fold{
     } # end if
     $results{Breakdown} .= 'Imposition: ' . $imposition . 'out<br/>';
 
-	@printed_impositions = sets::union( @printed_impositions );
 	my %error;
 	my @equipment = ();
 
@@ -396,6 +395,7 @@ sub calc {
 	} # end if
 
 	my $printing_specs = openprint::service::get_specs_ref( $Project, $$services{''}[0] );
+	$$calc_hash{ProjectSpecs} = $printing_specs;
 	my @signatures = $Project->signatures();
 
 	if ( $$specs{OverrideCalliper} ne 'Y' ) {
@@ -464,6 +464,7 @@ sub calc {
 			next if ! $$sig_specs{"txtImposition$qty_index"};
 			my $Imposition = new openprint::Imposition();
 			$Imposition->load( $sig_specs, $qty_index, $Project );
+			$$Imposition{Folds} = [ openprint::Estimating::Folding::get_Folds( $$calc_hash{FoldingSpecs}, $Imposition, $qty_index ) ];
 			push @Impositions, $Imposition;
 		} # end foreach signature_service_index
 
@@ -581,7 +582,7 @@ sub get_price {
 	my $maxPockets = $Equipment->specification( 'Number of Pockets' );
 	my $neededPockets = $$specs{"txtPockets$qty_index"};
 	$price{RunTime} += $neededPockets * $Equipment->specification( 'Pocket Make Ready' );
-$openprint::log->debug("Needed Pockets: $neededPockets");
+$openprint::log->debug("Needed Pockets: $neededPockets") if DEBUG;
 # Calculate Full Passes
 	if ( $maxPockets and ( $neededPockets > $maxPockets ) ) {
 # Loaded here, so we don't do it in the loop many times
@@ -598,6 +599,9 @@ $openprint::log->debug("Needed Pockets: $neededPockets");
 		while ( $neededPockets > $maxPockets ) {
 			if ( $servicePrice{units} eq 'per m' ) {
 				$servicePrice{Total} = $servicePrice{Price} * $qty/1000;
+				$price{Service} += $servicePrice{Total};
+			} elsif ( $servicePrice{units} eq 'each' ) {
+				$servicePrice{Total} = $servicePrice{Price} * $qty;
 				$price{Service} += $servicePrice{Total};
 			} elsif ( $servicePrice{units} =~ /per hour/i ) {
 				$servicePrice{Total} = $servicePrice{Price} * $runtime;
@@ -626,6 +630,9 @@ $openprint::log->debug("Needed Pockets: $neededPockets");
 		$price{RunTime} += $runtime * 360;
 		if ( $servicePrice{units} eq 'per m' ) {
 			$servicePrice{Total} = $servicePrice{Price} * $qty/1000;
+			$price{Service} += $servicePrice{Total};
+		} elsif ( $servicePrice{units} eq 'each' ) {
+			$servicePrice{Total} = $servicePrice{Price} * $qty;
 			$price{Service} += $servicePrice{Total};
 		} elsif ( $servicePrice{units} =~ /per hour/i ) {
 			$servicePrice{Total} = $servicePrice{Price} * $runtime;

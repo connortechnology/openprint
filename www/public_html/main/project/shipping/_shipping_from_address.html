@@ -1,7 +1,8 @@
 <fieldset><legend>From</legend>
+	<div class="Address">
       <ul>
         <li class="from_company"><label>Company</label>
-            <input type="text" onkeyup="filterDDM(this, this.form.from_company_id);" onkeydown="if(event.keyCode==13){this.form.from_company_id.onchange();}" class="filter" />
+			<input type="text" onkeyup="filter_companies('from_company_id', {name:this.value,selected_id:get_ddm_value($('from_company_id'))});" onkeydown="if(event.keyCode==13){this.form.from_company_id.onchange();}" class="filter" />
             <select id="from_company_id" name="from_company_id" onchange="new Ajax.Request('_select_company.json', { parameters: { to_from: 'From', company_id: this.value } } );">
                 <option value="">select</option>
                 <? echo ( 
@@ -94,4 +95,5 @@
 		<input type="email" id="FromEmail" name="FromEmail" value="<?FromEmail?>" oninput="calc(this.form.name);"/>
 	</li>
 	</ul>
+	</div>
 </fieldset>

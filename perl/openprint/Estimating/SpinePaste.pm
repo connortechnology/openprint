@@ -94,7 +94,7 @@ sub signature_calc {
 				$openprint::log->debug('Too many Pages ' . $I->pages() . '>' . $Equipment->specification('SpinePaste Maximum Pages') . " for " . $Equipment->strid() . '<br/>' );
 				next;
 			} # end if
-			if ( $I->image_orientation() ne 'Vertical' ) {
+			if ( $I->image_orientation() ne openprint::Imposition::Vertical ) {
 				$openprint::log->debug('Can only spine paste a vertical spine. <br/>' );
 				next;
 			} # end if
@@ -229,7 +229,7 @@ sub calc {
 					$$specs{'hdnBreakdown'.$qty_index} .= "Too many pages for " . $Equipment->strid() . '<br/>';
 					next;
 				} # end if
-				if ( $I->image_orientation() ne 'Vertical' ) {
+				if ( $I->image_orientation() ne openprint::Imposition::Vertical ) {
 					$$specs{'hdnBreakdown'.$qty_index} .= 'Can only spine paste a vertical spine. <br/>';
 					next;
 				} # end if

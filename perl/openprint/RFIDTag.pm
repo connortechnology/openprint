@@ -220,7 +220,9 @@ sub from_id {
 			$openprint::log->debug("Got too many rfids for $type $id");
 		} # end if
 	} elsif ( ( $id ) = $tag_id =~ /^(\d+)$/ ) {
-		my @RFID = openprint::RFIDTag->find( 'id ilike'=>'%'.$id );
+		
+		my @RFID = openprint::RFIDTag->find( 'id ilike'=>'%'.sprintf('%.14d', $id ) );
+		@RFID = openprint::RFIDTag->find( 'id ilike'=>'%'.$id ) if ! @RFID;
 		if ( @RFID == 1 ) {
 			return $RFID[0];
 		} else {

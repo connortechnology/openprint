@@ -1,5 +1,6 @@
 use strict;
 require openprint::Object;
+require openprint::Host;
 
 package openprint::Host_Info;
 our @ISA = qw( openprint::Object );
@@ -20,6 +21,10 @@ $serial = 'host_info_id_seq';
 	name	=>	[ 's/^\s+//', 's/\s+$//', 's/\s\s+/ /g' ],
 	value	=>	[ 's/^\s+//', 's/\s+$//' ],
 );
+
+sub Host {
+	return new openprint::Host( $_[0]{host_id} );
+}
 
 1;
 __END__

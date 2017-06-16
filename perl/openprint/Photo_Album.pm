@@ -30,6 +30,9 @@ $table = 'photo_albums';
 	thumbnail_id	=>	undef,
 	deleted			=>	0,
 );
+%transforms = (
+	id			=>	[ 's/\D//g', '<2147483647' ],
+);
 
 sub created_by {
 	return $_[0]{user_id};
@@ -114,7 +117,7 @@ sub upload {
 			$error .= $Photo->save({ asset_id=>$$Asset{id}, album_id=>$_[0]->id() });   
 			$error .= new openprint::Log()->save({'action'=>'Upload Photo', 'Object'=>$Photo});
 		} else {
-			$error .= 'Photo already exists in album.';
+			#$error .= 'Photo already exists in album.';
 		} # end if
 	} else {
 		$error .= "Failed to upload photo: $Asset";
@@ -156,7 +159,7 @@ sub slider {
 	my ( $Album, $size ) = @_;
 	$size = 'medium' if ! $size;
 
-    my @Assets = map { $_->Asset() } $_[0]->Photos();
+  my @Assets = map { $_->Asset() } $_[0]->Photos();
 	return openprint::Asset::slider( \@Assets, $size );
 } # end sub slider
 

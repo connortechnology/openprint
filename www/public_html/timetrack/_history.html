@@ -43,7 +43,7 @@
 		$$variable{elapsed_total} += $Timetrack->elapsed();
 		$$variable{value_total} += $Timetrack->value();
 		$$variable{wage_total} += $Timetrack->wage();
-		$$variable{distance_total} += $Timetrack->distance();
+		$$variable{distance_total} += $Timetrack->distance() if $Timetrack->distance();
 	} # end foreach Timetrack
 
 	$$variable{Currency} = openprint::Currency::get_current() if ! $$variable{Currency};
@@ -58,6 +58,7 @@
 	</div>
 	<table class="List">
 		<tr> 
+			<th class="timetrack_id"><input type="checkbox" onclick="select_all($('f1'),'timetrack_id',this.checked);"</th>
 			<th class="EmployeeName">Employee</th>
 			<th class="Company">Company</th>
 			<th class="DateTime">Start</th>
@@ -77,6 +78,7 @@
 			foreach my $T ( @{$$variable{Timetracks}} ) {
 				$html .= sprintf(q`
 <tr title="%2$s"%1$s>
+	<td class="timetrack_id"><input type="checkbox" name="timetrack_id" value="%3$d"/></td>
 	<td class="EmployeeName"><a href="/timetrack/edit.html?timetrack_id=%3$d">%4$s</a></td>
 	<td class="Company"><a href="/timetrack/edit.html?timetrack_id=%3$d">%5$s</a></td>
 	<td class="DateTime">%6$s</td>
@@ -90,7 +92,8 @@
 	<td class="Price">%14$s</td>
 	<td class="Price">%15$s</td>
 </tr>
-`, $rowclass, Encode::encode('utf8',$hs->parse($T->description())), $T->id(), html_escape( $T->User()->name() ),
+`, $rowclass, 
+( $T->description() ? Encode::encode('utf8',$hs->parse($T->description())) : ''), $T->id(), html_escape( $T->User()->name() ),
 html_escape( $T->Company()->name() ),
 Date::Format::time2str(($T->time_associated() ? $config{DateTimeFormat} : $config{DateFormat}), Date::Parse::str2time($T->starting())),
 Date::Format::time2str(($T->time_associated() ? $config{DateTimeFormat} : $config{DateFormat}), Date::Parse::str2time($T->ending())),
@@ -109,7 +112,7 @@ openprint::Currency::format( $T->value() ),
 	return $html;
 ) ?>
 		<tr class="totals">
-			<td colspan="4">Totals</td>
+			<td colspan="5">Totals</td>
 			<td class="Time"><? echo ( misc::seconds_to_pretty_interval( $$variable{elapsed_total} ); ) ?></td>
 			<td colspan="3">&nbsp;</td>
 			<td class="Distance"><? echo ( 1*$$variable{distance_total} ) ?>km</td>
@@ -120,4 +123,10 @@ openprint::Currency::format( $T->value() ),
 	</table>
 	<span class="Currency">All prices listed in <? hecho ( new openprint::Currency( $session{Currency_id} )->name(); ) ?></span>
 	<br class="spacer"/>
+<p class="buttons">
+<? echo ( join("\n",
+			button( 'merge', { onclick=>q`new Ajax.Updater( 'TimetrackList','_history.html?func=merge', { parameters: { timetrack_id: get_value( $('f1').elements['timetrack_id'] ) } } );`, text=>'Merge Checked' } ),
+			button( 'delete', { onclick=>q`new Ajax.Updater( 'TimetrackList','_history.html?func=delete', { parameters: { timetrack_id: get_value( $('f1').elements['timetrack_id'] ) } } );`, text=>'Delete Checked' } ),
+); ) ?>
+</p>
 <? endif ( @{$$variable{Timetracks}} == 0 ) ?>
