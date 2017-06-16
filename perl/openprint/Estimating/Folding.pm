@@ -279,8 +279,9 @@ sub signature_needs {
 			} # end if	
 		} else {
 			foreach my $qty_index ( $Project->quantity_indexes() ) {
-				if ( $$specs{'PageQuantity'.$qty_index} == 2 ) {
-					$openprint::log->warn("Folding not needed: PageQuantity: $$specs{'PageQuantity'.$qty_index}") if DEBUG_NEEDS;
+				my $page_quantity = $$specs{'PageQuantity'.$qty_index};
+				if ( $page_quantity == 2 ) {
+					$openprint::log->warn("Folding not needed: PageQuantity: $page_quantity") if DEBUG_NEEDS;
 					return 0;
 				} # end if	
 			} # end foreah qty_index
@@ -650,7 +651,7 @@ $openprint::log->debug("folds from sigimpo") if DEBUG;
 			} else {
 				push @Impositions, $I;
 			} # end if
-		} # end foreach
+		} # end foreach I
 
 		@Set_Of_Impositions = @Impositions;
 		if ( DEBUG ) {
@@ -798,69 +799,6 @@ SET:		foreach my $Set_Of_Impositions ( @All_Impositions ) {
 		@All_Impositions = @New_All_Impositions;
 	} # end if chkOverrideFolds
 
-					#if ( ! $found{$index} ) {
-						#if ( DEBUG ) {
-							#$openprint::log->debug("Not found trying generic for index $index");
-						#}
-## Replace with a generic one
-						#my $Fold = openprint::Fold->find_one( 
-									#'spine_direction is null or ='=>	$openprint::Imposition::Orientations{$$SignatureImposition{spine_direction}},
-								#(	$$specs{"FoldImposition-$form-$qty_index-$index"} ? (
-									##'min_imposition null_or_<='	=>	$$specs{"FoldImposition-$form-$qty_index-$index"},
-									#'max_imposition null_or_>='	=>	$$specs{"FoldImposition-$form-$qty_index-$index"},
-								#) : () ),
-									#type			=>	$$specs{"FoldType-$form-$qty_index-$index"},
-									#equipment_id	=>	$Equipment->id(),
-									#( $pages ? ( pages			=>	$pages ) : () ),
-									#) if $$specs{"FoldType-$form-$qty_index-$index"};
-						#if ( $Fold ) {
-							#$openprint::log->debug("found the fold trying generic runspeed is $$Fold{runspeed}") if DEBUG;
-							#$$Fold{runspeed} = $$specs{"FoldRunspeed-$form-$qty_index-$index"} if $$specs{"FoldRunspeed-$form-$qty_index-$index"};
-						#} else {
-							#$openprint::log->debug("did not found the fold trying really generic");
-							#$Fold = new openprint::Fold();
-							#$$Fold{equipment_id} = $$Equipment{id};
-							#$$Fold{pages} = $pages if $pages;
-							#$$Fold{type} = $$specs{"FoldType-$form-$qty_index-$index"};
-#
-							#$$Fold{runspeed} = $$specs{"FoldRunspeed-$form-$qty_index-$index"} if $$specs{"FoldRunspeed-$form-$qty_index-$index"};
-						#} # end if
-						#my $FI = $SignatureImposition->copy();
-						#push @new_folded_impositions, $FI;
-						#if ( $$FI{imposition} != $$specs{"FoldImposition-$form-$qty_index-$index"} ) {
-							#$FI->rows(1);
-							#$FI->columns( $$specs{"FoldImposition-$form-$qty_index-$index"} );
-						#} # end if
-#
-						##$$FI{page_quantity} = $SignatureImposition->pages * $SignatureImposition->imposition() / $$specs{"FoldQty-$form-$qty_index-$index"} * $pages * $FI->imposition();
-						#$$FI{quantity} = $$specs{"FoldQty-$form-$qty_index-$index"};
-						#if ( $pages ) {
-#$openprint::log->debug("Overriden pages: $pages $$FI{quantity} <= $remaining_pages") if DEBUG;
-							#if ( $pages * $$FI{quantity} <= $remaining_pages ) {
-								#$$FI{page_quantity} = $$FI{quantity};
-							#} else {
-								## If overriding to too many pages, this could go negative which screws up stitching
-								#$remaining_pages = 0 if $remaining_pages < 0;
-								#$$FI{page_quantity} = int($remaining_pages / $pages);
-							#} # end if
-						#} # end if
-						#$$FI{Fold} = $Fold;
-						#$$Fold{undesired} = 1;
-						#$$FI{undesired} = 1;
-					#} else {
-					#my $FI = $new_folded_impositions[@new_folded_impositions-1];
-#$openprint::log->debug("Overriden Pages were found in the set: $pages pages qty: $$FI{quantity} pq: $$FI{page_quantity}");
-					#} # end if ! found
-				#} # endif
-
-				#$all_found = ( map { $$_{found} ? $$_{found} : () } @{$Set_Of_Impositions} ) == @{$Set_Of_Impositions};
-				#@Used_Impositions = @new_folded_impositions;	
-			#} else {
-				## I don't see why we need to be copying
-				## Because the next equi[pment will override the folds array
-				#@Used_Impositions = map { $_->copy() } @{$Set_Of_Impositions};
-			#} # end if override
-#
 	my $FoldingFoldMakeReadyService = openprint::Service->find_one(name=>'FoldingFoldMakeReady');
 	my $FoldingAngleMakeReadyService = openprint::Service->find_one(name=>'FoldingAngleMakeReady');
 
