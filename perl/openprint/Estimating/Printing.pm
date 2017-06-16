@@ -3011,6 +3011,7 @@ if ( 1 ) {
 			} # end if
 			$$specs{'PaperMessage'.$qty_index} = $paper_message;
 		} # end if
+		$$specs{"ImpositionImage$qty_index"} = $Imposition->to_svg();
 $log->debug("Master time after qty: $qty_index" . ( sprintf('%.4f', tv_interval( [$master_time])*1000) ) .' usecs' ) if DEBUG;
 	} # end foreach quantity
 	$$specs{NeedCutting} = openprint::Estimating::Cutting::signature_needs( $Project, $$project{CuttingSpecs}, $specs ) if ! $$project{HasCutting};
