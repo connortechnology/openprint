@@ -530,7 +530,7 @@ $openprint::log->error("No finished width and height, cannot continue $$Project{
 	}
 
 	if ( ! @my_equipment ) {
-		$$specs{alert} .= 'There is no Folding capable equipment.<br/>';
+		$results{alert} .= 'There is no Folding capable equipment.<br/>';
 		return \%results;
 	} # end if
 
@@ -592,16 +592,7 @@ $openprint::log->debug("folds from sigimpo") if DEBUG;
 	} # end if
 	@$SignatureImposition{'width_folds','height_folds'} = ( $width_folds, $height_folds );
 	$openprint::log->debug("FOlds: $width_folds x $height_folds from $$sig_specs{txtWidth}/$$sig_specs{txtFinalWidth} and height: $$sig_specs{txtHeight}/$$sig_specs{txtFinalHeight}") if DEBUG;
-	if ( $$sig_specs{txtSignatureType} and $$sig_specs{txtSpreadSize} == 2 ) {
 
-		# Is this right? What does the orientation have to do with the fold direction? Not much, but the last fold is the spine
-		if ( $$SignatureImposition{image_orientation} == openprint::Imposition::Vertical ) {
-			$width_folds = 1;
-		} else {
-			$height_folds = 1;
-		} # end if
-		$openprint::log->debug("FOlds: $width_folds x $height_folds") if DEBUG;
-	} # end if
 	if ( ( ! $width_folds ) and ( $$sig_specs{txtWidth} != $$sig_specs{txtFinalWidth} ) ) {
 		$width_folds = 1;
 	} 
@@ -637,7 +628,6 @@ $openprint::log->debug("folds from sigimpo") if DEBUG;
 	# Get rid of dutches, which I think can happen on books now.
 	if ( $$SignatureImposition{dutch_columns} ) {
 		my @Impositions = ();
-		my $modified = 0;
 		foreach my $I ( @Set_Of_Impositions ) {
 			if ( $$I{dutch_columns} ) {
 				{
@@ -657,13 +647,12 @@ $openprint::log->debug("folds from sigimpo") if DEBUG;
 					$i->image_orientation($$I{image_orientation} == openprint::Imposition::Vertical ? openprint::Imposition::Horizontal : openprint::Imposition::Vertical);
 					push @Impositions, $i;
 				}
-				$modified = 1;
 			} else {
 				push @Impositions, $I;
 			} # end if
 		} # end foreach
 
-		@Set_Of_Impositions = @Impositions if $modified;
+		@Set_Of_Impositions = @Impositions;
 		if ( DEBUG ) {
 			foreach my $I ( @Impositions ) {
 				$I->display('Results from dutch cuts');
