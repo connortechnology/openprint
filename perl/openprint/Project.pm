@@ -1872,6 +1872,10 @@ sub can_edit {
   return 0 if ! $_[0]->can_view();
 
   return 1 if $_[0]{user_id} == $openprint::session{user_id};
+	if ( $openprint::session{user_type} eq 'A' ) {
+		$openprint::log->debug("can_edit 1 cuz admin") if $debug;
+		return 1 
+	}
 	if ( sets::isin( $_[0]{user_id}, [ $openprint::User{id}, $openprint::User->assistant_ids(), $openprint::User->csr_ids() ] ) ) {
 		$log->debug("$openprint::User{firstname} Either created it or is an assistant") if $debug;
 		return 1;
