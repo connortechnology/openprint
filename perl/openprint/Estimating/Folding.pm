@@ -582,10 +582,6 @@ $openprint::log->debug("folds from sigimpo") if DEBUG;
 		}
 	}
 
-	# What we do is build a set of pieces of the imposition, all of which can be folded. We don't worry about optimality, just possibility.
-	my @Set_Of_Impositions;
-	my @Initial_Impositions;
-
 	my $width_folds = Math::Round::nearest( 1, $$sig_specs{txtWidth}/$$sig_specs{txtFinalWidth})-1;
 	if ( $width_folds < 0 ) {
 		$openprint::log->debug("Got negative width_folkds from Math::Round::nearest( 1, $$sig_specs{txtWidth}/$$sig_specs{txtFinalWidth})-1");
@@ -599,19 +595,6 @@ $openprint::log->debug("folds from sigimpo") if DEBUG;
 	@$SignatureImposition{'width_folds','height_folds'} = ( $width_folds, $height_folds );
 	$openprint::log->debug("FOlds: $width_folds x $height_folds from $$sig_specs{txtWidth}/$$sig_specs{txtFinalWidth} and height: $$sig_specs{txtHeight}/$$sig_specs{txtFinalHeight}") if DEBUG;
 
-# This code is wrong.  It sets every spreadsize=2 sig into a 4pg fold.
-if ( 0 ) {
-	if ( $$sig_specs{txtSignatureType} and $$sig_specs{txtSpreadSize} == 2 ) {
-
-		# Is this right? What does the orientation have to do with the fold direction? Not much, but the last fold is the spine
-		if ( $$SignatureImposition{image_orientation} == openprint::Imposition::Vertical ) {
-			$width_folds = 1;
-		} else {
-			$height_folds = 1;
-		} # end if
-		$openprint::log->debug("FOlds: $width_folds x $height_folds") if DEBUG;
-	} # end if
-}
 	if ( ( ! $width_folds ) and ( $$sig_specs{txtWidth} != $$sig_specs{txtFinalWidth} ) ) {
 		$width_folds = 1;
 	} 
@@ -676,8 +659,8 @@ if ( 0 ) {
 
 	@All_Impositions = reduce_impositions( \@Set_Of_Impositions );
 	if ( DEBUG ) {
-		$openprint::log->debug("Sets of Maximum Impositions: " . @Initial_Impositions);
-		foreach my $Set ( @Initial_Impositions ) {
+		$openprint::log->debug("Sets of Maximum Impositions: " . @All_Impositions);
+		foreach my $Set ( @All_Impositions ) {
 			$openprint::log->debug("Impositions in set: " . @$Set);
 			foreach my $I ( @$Set ) {
 				$I->display('quantity '.$I->quantity() );
@@ -943,63 +926,10 @@ SET:		foreach my $Set_Of_Impositions ( @All_Impositions ) {
 		my $type = $Equipment->specification('Type');
 		if ( $type eq 'Press' ) {
 			@My_All_Impositions = @Initial_Impositions;
-		} elsif ( $type eq 'Folder' ) {
-			@My_All_Impositions = @All_Impositions;
-		} elsif ( $type eq 'Stitcher' ) {
-			@My_All_Impositions = @All_Impositions;
-			my $max_imposition = $Equipment->specification('Maximum Imposition');
-			if ( DEBUG and 0 ) {
-				$openprint::log->debug("Impositions before max comparison: $max_imposition" );
-				for ( my $set_index = 0; $set_index < @My_All_Impositions; $set_index += 1 ) {
-					my $Set_Of_Impositions = $My_All_Impositions[$set_index];
-					$openprint::log->debug("Impositions before max comparison in this set: " . @$Set_Of_Impositions );
-					for ( my $imp_index = 0; $imp_index < @$Set_Of_Impositions; $imp_index += 1 ) {
-						my $Imposition = $$Set_Of_Impositions[$imp_index];
-						$Imposition->display();
-					} #end for
-				} #end for
-			} # end if
-			if ( $max_imposition ) {
-				for ( my $set_index = 0; $set_index < @My_All_Impositions; $set_index += 1 ) {
-					my $Set_Of_Impositions = $My_All_Impositions[$set_index];
-					for ( my $imp_index = 0; $imp_index < @$Set_Of_Impositions; $imp_index += 1 ) {
-						my $Imposition = $$Set_Of_Impositions[$imp_index];
-						if ( $$Imposition{imposition} > $max_imposition ) {
-$openprint::log->debug("Removing " . $Imposition->to_string() . " because impo greater than max $max_imposition" );
-							splice @My_All_Impositions, $set_index, 1;
-							$set_index -= 1;
-							last;
-						} # end if
-					} # end for
-				} # end foreach set
-			} # end if
-		} else {
-			$openprint::log->debug("Unknonw equipment type in Folding for $$Equipment{name}");
+    } else {
 			@My_All_Impositions = @All_Impositions;
 		} # end if equipment type
 		$openprint::log->debug("Folding: Impositions sets on $$Equipment{name} before filtering: " . @My_All_Impositions );
-
-		# Remove duplicate sets
-		my %sets;
-		for ( my $set_index = 0; $set_index < @My_All_Impositions; $set_index += 1 ) {
-			my $Set_Of_Impositions = $My_All_Impositions[$set_index];
-			my $id = join(',', sort{ $a cmp $b } map { $$_{quantity}.'x'.$$_{imposition}.'='.$$_{columns} } @$Set_Of_Impositions );
-			if ( $sets{$id} ) {
-				splice @My_All_Impositions, $set_index, 1;
-				$set_index -= 1;
-				next;
-			} 
-			$sets{$id} = 1;
-		} # end foreach
-		$openprint::log->debug("Impositions sets after filtering: " . @My_All_Impositions );
-if ( 0 ) {
-	foreach my $set ( @My_All_Impositions ) {
-$openprint::log->debug("Imps in this set: " . @$set );
-		foreach my $i ( @{$set} ) {
-	$i->display();
-		}
-	} # end foreachj o
-}
 
 		if ( ! @My_All_Impositions ) {
 			$openprint::log->debug("No imposition sets for $$Equipment{strid}");
@@ -1645,7 +1575,7 @@ $openprint::log->debug("Runspeed: $$Fold{type}($$Fold{name}) : $$Equipment{name}
 						$servicePrice{Total} = $servicePrice{Price} * ( $run_qty/1000 ) * $Adjustment;
 						$Breakdown .= sprintf('<tr><td>Run: $%.2f%s * %d =</td><td class="Price">$%.2f</td></tr>', @servicePrice{'Price','units'}, $run_qty, $servicePrice{Total} );
 					} # end if
-				} elsif ( sets::isin( lc $servicePrice{units}, ['per inch per m'] ) ) {
+				} elsif ( $servicePrice{units} eq 'per inch per m' ) {
 					$servicePrice{Total} = $servicePrice{Price} * $width * $run_qty / 1000;
 					if ( $height_folds ) {
 						if ( ! %AnglePrice ) {
@@ -1683,17 +1613,6 @@ $openprint::log->debug("Runspeed: $$Fold{type}($$Fold{name}) : $$Equipment{name}
 				$totalTime += $runTime * 3600;
 				$$Imposition{price} = $totalPrice;
 			} # end foreach folded Imposition
-			my %cutting_results = ( alert => '', Breakdown=>'', Price=>0 );
-			if ( $$calc_hash{HasCutting} ) {
-				my %cutting_results;
-#%cutting_results = openprint::Estimating::Cutting::signature_calc_folding_cutting( $Project, $sig_specs, $$calc_hash{cutting_specs}, $qty_index, $Paper, $SignatureImposition, \%fold_specs, $calc_hash );
-				if ( $cutting_results{Equipment} ) {
-					$Breakdown .= "<tr><td>Cutting on $cutting_results{Equipment}{name}</td><td>$cutting_results{Price}</td></tr>";
-				} else { 
-					$Breakdown .= "<tr><td>No Cutting: $cutting_results{alert} $cutting_results{Breakdown}</td><td class=\"Price\">$cutting_results{Price}</td></tr>";
-				} # end if
-				$comparison_cost += $cutting_results{Price};
-			} # end if
 			$Breakdown .= '<tr><td>Folding total:</td><td class="Price">$' . sprintf($openprint::config{ProjectMoneyFormat}, $totalPrice ) . '</td></tr>'  ;
 			my $stitching_part = 0;
 			$$SignatureImposition{Folds} = \@Used_Impositions;
