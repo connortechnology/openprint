@@ -79,7 +79,6 @@ sub variables {
 	return @v;
 } # end sub variables
 
-
 my @no_outputs = (
 	'ProjectIndex','ServiceIndex',
 	'txtQuantity1', 'txtQuantity2', 'txtQuantity3',
@@ -1796,7 +1795,7 @@ $i->display() if DEBUG;
 
 			if ( (!$$specs{"chkOverrideFold-$form-$qty_index"}) or ($$specs{"chkOverrideFold-$form-$qty_index"} ne 'Y') ) {
 				foreach my $index ( 1 .. 4 ) {
-					delete @$specs{
+					foreach my $k (
 					"FoldType-$form-$qty_index-$index",
 					"FoldQty-$form-$qty_index-$index",
 					"FoldPageQty-$form-$qty_index-$index",
@@ -1807,11 +1806,16 @@ $i->display() if DEBUG;
 					"FoldRows-$form-$qty_index-$index",
 					"FoldFolds-$form-$qty_index-$index",
 					"FoldAngles-$form-$qty_index-$index",
+					) {
+$$specs{$k} = '';
 				};
-				delete $$specs{"FoldRunspeed-$form-$qty_index-$index"} if $$specs{"OverrideRunspeed-$form-$qty_index-$index"} ne 'Y';
+				$$specs{"FoldRunspeed-$form-$qty_index-$index"} = '' if $$specs{"OverrideRunspeed-$form-$qty_index-$index"} ne 'Y';
 				} # end for
 			} # end if
 		} # end foreach signature
+foreach my $k ( sort { $a cmp $b } keys %{$specs} ) {
+$log->debug("Cleared: $k => $$specs{$k}");
+}
 
 		foreach my $signature_service_index ( @signatures ) {
 			my $sig_specs = openprint::service::get_specs_ref( $Project, $signature_service_index );
@@ -1855,6 +1859,7 @@ $openprint::log->debug("Not needed for form $form") if DEBUG;
 
 					my $index = 1;
 					$$Imposition{Folds} = $$results{FoldedImpositions};
+$log->debug("# of FOlded Impositions in results" . @{$$results{FoldedImpositions}} );
 					foreach my $FI ( @{$$results{FoldedImpositions}} ) {
 						my $Fold = $$FI{Fold};
 						my $fold_type = $Fold->type();
@@ -1891,6 +1896,9 @@ $openprint::log->debug("Not needed for form $form") if DEBUG;
 			#} # end if has pages
 			$$specs{'hdnBreakdown'.$qty_index} .= '</fieldset>';
 		} # end foreach signature
+foreach my $k ( sort { $a cmp $b } keys %{$specs} ) {
+$log->debug("$k => $$specs{$k}");
+}
 		if ( $status eq 'uncalculated' and ! $$specs{alert} ) {
 			$$specs{alert} = 'Unable to fold.';
 		} # end if
@@ -2168,9 +2176,10 @@ sub cut_imposition {
     }
   }
 	
-	if ( ( $$I{columns} > $$I{rows} ) or ( ( $$I{columns} == $$I{rows} ) and ( $$I{image_orientation} == openprint::Imposition::Vertical ) ) ) {
+	if ( $$I{columns} > 1 ) {
+##( $$I{columns} > $$I{rows} ) or ( ( $$I{columns} == $$I{rows} ) and ( $$I{image_orientation} == openprint::Imposition::Vertical ) ) ) {
 		my ( $i1, $i2 ) = ( $I->copy(), $I->copy() );
-		if ( ! $$I{columns} % 2 ) {
+		if ( ! ( $$I{columns} % 2 ) ) {
 			$i1->columns($$I{columns}/2);
 			$i1->quantity( $i1->quantity() * 2 );
 			push @results, [ $i1 ];
@@ -2188,7 +2197,8 @@ sub cut_imposition {
 			$openprint::log->debug(sprintf("4 Cutting imposition down from %dx%d=%dout to %dx%d=%d and %dx%d=%d", @$I{'columns','rows','imposition'}, @$i1{'columns','rows','imposition'}, @$i2{'columns','rows','imposition'} ) ) if DEBUG;
 			push @results, [ $i1, $i2 ];
 		}
-  } else {
+  } 
+	if ( $$I{rows} > 1 ) {
     my ( $i1, $i2 ) = ( $I->copy(), $I->copy() );
 		if ( ! ( $$I{rows} % 2 ) ) {
 			$i1->rows($$I{rows}/2);
