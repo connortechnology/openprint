@@ -322,8 +322,6 @@ sub signature_calc {
 		} # endif
 	} # while ! bestPrice and imposition
 
-
-	my %results;
 	if ( $bestPrice ) {
 		$results{Imposition} = $$bestPrice{Imposition};
 		$results{Equipment} = $bestEquipment;
