@@ -730,6 +730,7 @@ sub calc {
 			$$specs{'hdnBreakdown'.$qty_index} .= 'Total: $'. sprintf('%.2f', Math::Round::nearest(0.01,$price{Price})).'<br/><br/>';
 			$$specs{'hdnBreakdown'.$qty_index} .= 'Comparison: $'. sprintf('%.2f', Math::Round::nearest(0.01,$price{ComparisonPrice})).'<br/><br/>';
 		} else {
+			$$specs{alert} = $results{'Breakdown'};
 			foreach my $press_id ( keys %error ) {
 				my $Equipment = new openprint::Equipment( $press_id );
 				$$specs{'hdnBreakdown'.$qty_index} .= 'For ' . $Equipment->name() . ': ' .  $error{$press_id};
