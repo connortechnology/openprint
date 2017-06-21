@@ -1629,10 +1629,11 @@ $openprint::log->debug("Runspeed: $$Fold{type}($$Fold{name}) : $$Equipment{name}
 				$bestImpositions = \@Used_Impositions;
 
 				# folding could be free, in which case, we can probably just give up now.
-				if ( ! $bestPrice ) {
-					$openprint::log->debug("Quiting because we got a free price.") if DEBUG;
-					last;
-				} # end if
+				# No cannot give up.  ANother free imposition may allow 2up stitching for example.
+				#if ( ! $bestPrice ) {
+					#$openprint::log->debug("Quiting because we got a free price.") if DEBUG;
+					#last;
+				#} # end if
 			} # end if
 
 		} # end foreach set of Impositions
@@ -2085,61 +2086,16 @@ sub reduce_impositions {
 
 	if ( $max_impo > 1 ) {
 		my @new = @$impositions;
-		my $extra = 0;
-		if ( ! ( $max_impo % 2 ) ) {
-			for ( my $i = 0; $i < @new; $i += 1 ) {
-				if ( $new[$i]{imposition} == $max_impo ) {
-					my $I2 = $new[$i]->copy();
-					my $mod_cols = $$I2{columns} % 2;
-					my $mod_rows = $$I2{rows} % 2;
-
-					if ( ( ( $$I2{image_orientation} == openprint::Imposition::Horizontal ) and ( $$I2{rows} > 1 ) ) or ( $$I2{columns} == 1 ) ) {
-						if ( ! $mod_rows ) {	
-							$I2->rows( $$I2{rows}/2 );
-							$I2->quantity( $$I2{quantity} * 2 );
-							$extra = 1;
-							splice @new, $i, 1, $I2;
-						} else {
-							$I2->quantity( $$I2{quantity} * $$I2{rows} );
-							$I2->rows(1);
-							$extra = 1;
-							splice @new, $i, 1, $I2;
-						} # end if
-					} elsif ( $$I2{columns} > 1 ) {
-						if ( ! $mod_cols ) {
-							$I2->columns( $$I2{columns}/2 );
-							$I2->quantity( $$I2{quantity} * 2 );
-							$extra = 1;
-							splice @new, $i, 1, $I2;
-						} else {
-							$I2->quantity( $$I2{quantity} * $$I2{columns} );
-							$I2->columns(1);
-							$extra = 1;
-							splice @new, $i, 1, $I2;
-						} # end if
-					} # end if
-				} # end if
-			} # end foreach I
-		} # end if
-		if ( $extra ) {
-			@new = compact_impositions( @new );
-			push @results, reduce_impositions( \@new );
-			$extra = 0;
-		} else {
-			for ( my $i = 0; $i < @new; $i += 1 ) {
-				if ( $new[$i]{imposition} == $max_impo ) {
-					my @cut = cut_imposition( $new[$i] );
-					splice @new, $i, 1, @cut;
-					$i += @cut-1;
-					$extra = 1;
-				} # end if
-			} # end foreach I
-			if ( $extra ) {
-				@new = compact_impositions( @new );
-				push @results, reduce_impositions( \@new );
-				$extra = 0;
+		for ( my $i = 0; $i < @new; $i += 1 ) {
+			if ( $new[$i]{imposition} == $max_impo ) {
+				foreach my $cuts ( cut_imposition( $new[$i] ) ) {
+					my @new_impositions = @new;
+					splice @new_impositions, $i, 1, @$cuts;
+					@new_impositions = compact_impositions( @new_impositions ) if @new_impositions > 1;
+					push @results, reduce_impositions( \@new_impositions );
+				} # end foreach cuts
 			} # end if
-		} # end if
+		} # end foreach I
 
 	} # end if
 
@@ -2194,27 +2150,66 @@ $openprint::log->debug("# of sets in results " . @cut);
 } # end sub reduce_pages
 
 sub cut_imposition {
-	my ( $I ) = @_;
-	if ( ( $$I{spread_size} >= 4 ) and ( $$I{image_orientation} == openprint::Imposition::Horizontal ) and ( $$I{rows} > 1 ) ) {
-		$openprint::log->debug(sprintf("1 Cutting imposition down from %dx%d=%dout to %d %dx1=%d ", @$I{'columns','rows','imposition'}, @$I{'rows','columns','columns'} ) ) if DEBUG;
-		# For folding purposes, can only fold where spines are aligned
-		return map { my $i = $I->copy(); $i->rows(1); $i; } ( 1 .. $$I{rows} );
-	} elsif ( ( $$I{spread_size} >= 4 ) and ( $$I{image_orientation} == openprint::Imposition::Vertical ) and ( $$I{columns} > 1 ) ) {
-		$openprint::log->debug(sprintf("2 Cutting imposition down from %dx%d=%dout to %d 1x%d=%d ", @$I{'columns','rows','imposition'}, @$I{'columns','rows','rows'} ) ) if DEBUG;
-		return map { my $i = $I->copy(); $i->columns(1); $i; } ( 1 .. $$I{columns} );
-	} elsif ( ( $$I{columns} > $$I{rows} ) or ( ( $$I{columns} == $$I{rows} ) and ( $$I{image_orientation} == openprint::Imposition::Vertical ) ) ) {
-		my ( $i1, $i2 ) = ( $I->copy(), $I->copy );
-		$i1->columns(int($$I{columns}/2 ));
-		$i2->columns( $$I{columns} - $$i1{columns} );
-		$openprint::log->debug(sprintf("3 Cutting imposition down from %dx%d=%dout to %dx%d=%d and %dx%d=%d", @$I{'columns','rows','imposition'}, @$i1{'columns','rows','imposition'}, @$i2{'columns','rows','imposition'} ) ) if DEBUG;
-		return ( $i1, $i2 );
-	} else {
-		my ( $i1, $i2 ) = ( $I->copy(), $I->copy );
-		$i1->rows(int $$I{rows}/2);
-		$i2->rows( $$I{rows} - $$i1{rows} );
-		$openprint::log->debug(sprintf("4 Cutting imposition down from %dx%d=%dout to %dx%d=%d and %dx%d=%d", @$I{'columns','rows','imposition'}, @$i1{'columns','rows','imposition'}, @$i2{'columns','rows','imposition'} ) ) if DEBUG;
-		return ( $i1, $i2 );
-	} # end if
+  my ( $I ) = @_;
+
+  my @results;
+	$openprint::log->debug(sprintf("0 Cutting imposition down from %dx%d=%dout", @$I{'columns','rows','imposition'}) ) if DEBUG;
+
+  if ( $$I{spread_size} >= 4 ) {
+    if ( ( $$I{image_orientation} == openprint::Imposition::Horizontal ) and ( $$I{rows} > 1 ) ) {
+      $openprint::log->debug(sprintf("1 Cutting imposition down from %dx%d=%dout to %d %dx1=%d ", @$I{'columns','rows','imposition'}, @$I{'rows','columns','columns'} ) ) if DEBUG;
+# For folding purposes, can only fold where spines are aligned
+      push @results, [ map { my $i = $I->copy(); $i->rows(1); $i; } ( 1 .. $$I{rows} ) ];
+    }
+
+    if ( ( $$I{image_orientation} == openprint::Imposition::Vertical ) and ( $$I{columns} > 1 ) ) {
+      $openprint::log->debug(sprintf("2 Cutting imposition down from %dx%d=%dout to %d 1x%d=%d ", @$I{'columns','rows','imposition'}, @$I{'columns','rows','rows'} ) ) if DEBUG;
+      push @results, [ map { my $i = $I->copy(); $i->columns(1); $i; } ( 1 .. $$I{columns} ) ];
+    }
+  }
+	
+	if ( ( $$I{columns} > $$I{rows} ) or ( ( $$I{columns} == $$I{rows} ) and ( $$I{image_orientation} == openprint::Imposition::Vertical ) ) ) {
+		my ( $i1, $i2 ) = ( $I->copy(), $I->copy() );
+		if ( ! $$I{columns} % 2 ) {
+			$i1->columns($$I{columns}/2);
+			$i1->quantity( $i1->quantity() * 2 );
+			push @results, [ $i1 ];
+
+			my $pieces = $$I{columns} / 2;
+			if ( $pieces > 2 ) {
+				$i2->columns($$I{columns}/$pieces);
+				$i2->quantity( $i2->quantity() * $pieces );
+				$openprint::log->debug(sprintf("3 Cutting imposition down from %dx%d=%dout to %dx%d=%d and %dx%d=%d", @$I{'columns','rows','imposition'}, @$i1{'columns','rows','imposition'}, @$i2{'columns','rows','imposition'} ) ) if DEBUG;
+				push @results, [ $i2 ];
+			}
+		} else {
+			$i1->columns(int($$I{columns}/2 ));
+			$i2->columns( $$I{columns} - $$i1{columns} );
+			$openprint::log->debug(sprintf("4 Cutting imposition down from %dx%d=%dout to %dx%d=%d and %dx%d=%d", @$I{'columns','rows','imposition'}, @$i1{'columns','rows','imposition'}, @$i2{'columns','rows','imposition'} ) ) if DEBUG;
+			push @results, [ $i1, $i2 ];
+		}
+  } else {
+    my ( $i1, $i2 ) = ( $I->copy(), $I->copy() );
+		if ( ! ( $$I{rows} % 2 ) ) {
+			$i1->rows($$I{rows}/2);
+			$i1->quantity( $i1->quantity() * 2 );
+			push @results, [ $i1 ];
+
+			my $pieces = $$I{rows} / 2;
+			if ( $pieces > 2 ) {
+				$i2->rows( $$I{rows} / $pieces );
+				$i2->quantity( $i2->quantity() * $pieces );
+				$openprint::log->debug(sprintf("5 Cutting imposition down from %dx%d=%dout to %dx%d=%d and %dx%d=%d", @$I{'columns','rows','imposition'}, @$i1{'columns','rows','imposition'}, @$i2{'columns','rows','imposition'} ) ) if DEBUG;
+				push @results, [ $i2 ];
+			}
+		} else {
+			$i1->rows(int $$I{rows}/2);
+			$i2->rows( $$I{rows} - $$i1{rows} );
+			$openprint::log->debug(sprintf("6 Cutting imposition down from %dx%d=%dout to %dx%d=%d and %dx%d=%d", @$I{'columns','rows','imposition'}, @$i1{'columns','rows','imposition'}, @$i2{'columns','rows','imposition'} ) ) if DEBUG;
+			push @results, [ $i1, $i2 ];
+		}
+  } # end if
+  return @results;
 } # end sub cut_imposition
 
 sub cut_spreads {
@@ -2224,7 +2219,7 @@ sub cut_spreads {
 
 	my $min_spread_size = $$I{spread_size}/2 > 1 ? $$I{spread_size}/2 : 4;
 
-$I->display("Min spread size: $min_spread_size dir($$I{spine_direction}) " . $openprint::Imposition::Orientations{$$I{spine_direction}} . " spread cols: $$I{spread_columns} spread_rows $$I{spread_rows}" );
+$I->display("Min spread size: $min_spread_size dir($$I{spine_direction}) " . $openprint::Imposition::Orientations{$$I{spine_direction}} . " spread cols: $$I{spread_columns} spread_rows $$I{spread_rows}" ) if DEBUG;
 
 	# Something like doing 16pg as 2 8pgs, why are we not handling the horizontal case?
 	if ( $$I{spine_direction} == openprint::Imposition::Vertical and ( $$I{spread_rows} % 2 == 0 ) ) {
