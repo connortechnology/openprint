@@ -213,6 +213,8 @@ sub signature_calc {
 	my $imposition = 2;
 	my $pockets = $$specs{"txtPockets$qty_index"} = 0;
 
+	$pockets += int( $$specs{txtInsertQuantity} );
+
 	my $override_pockets = 0;
 	if ( ( defined $$specs{'OverridePockets'.$qty_index}) and ($$specs{'OverridePockets'.$qty_index} eq 'Y') ) {
 		foreach my $pages ( @possible_pages ) {
@@ -574,11 +576,13 @@ sub calc {
 # Figure out whether we need a cover
 	my $printing_specs = $$calc_hash{ProjectSpecs} = openprint::service::get_specs_ref( $Project, $$services{''}[0] );
 	@$specs{'txtPageQuantity','txtFinalWidth','txtFinalHeight'} = @$printing_specs{'txtTotalPageQuantity','txtFinalWidth','txtFinalHeight'};
+
 	if ( (defined $$specs{chkOverrideInsertQuantity}) and ( $$specs{chkOverrideInsertQuantity} eq 'Y' ) ) {
 		$variables{txtInsertQuantity} = [ sets::exclude( ['output'], $variables{txtInsertQuantity} ) ];
 	} else {
 		$variables{txtInsertQuantity} = [ sets::union( 'output', @{$variables{txtInsertQuantity}} ) ];
 		$$specs{txtInsertQuantity} = $$printing_specs{txtInsertQuantity};
+$log->debug("Insert qty: $$specs{txtInsertQuantity}");
 	} # end if
 
 	if ( $$specs{txtPageQuantity} <= 0 ) {
