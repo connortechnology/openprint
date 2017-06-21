@@ -1813,9 +1813,6 @@ $$specs{$k} = '';
 				} # end for
 			} # end if
 		} # end foreach signature
-foreach my $k ( sort { $a cmp $b } keys %{$specs} ) {
-$log->debug("Cleared: $k => $$specs{$k}");
-}
 
 		foreach my $signature_service_index ( @signatures ) {
 			my $sig_specs = openprint::service::get_specs_ref( $Project, $signature_service_index );
@@ -1896,9 +1893,6 @@ $log->debug("# of FOlded Impositions in results" . @{$$results{FoldedImpositions
 			#} # end if has pages
 			$$specs{'hdnBreakdown'.$qty_index} .= '</fieldset>';
 		} # end foreach signature
-foreach my $k ( sort { $a cmp $b } keys %{$specs} ) {
-$log->debug("$k => $$specs{$k}");
-}
 		if ( $status eq 'uncalculated' and ! $$specs{alert} ) {
 			$$specs{alert} = 'Unable to fold.';
 		} # end if
