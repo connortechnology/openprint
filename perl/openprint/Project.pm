@@ -1869,9 +1869,19 @@ sub can_view {
 }
 
 sub can_edit {
-  return 0 if ! $_[0]->can_view();
+	if ( ! $_[0]{id} ) {
+		$openprint::log->debug("can_view 1 cuz no id") if $debug;
+		return 1;
+	}
 
-  return 1 if $_[0]{user_id} == $openprint::session{user_id};
+  if ( $_[0]{user_id} == $openprint::session{user_id} ) {
+		$openprint::log->debug("can_view 1 cuz i am the creator") if $debug;
+		return 1;
+	}
+	if ( $openprint::session{company_id} == $_[0]{company_id} ) {
+		$openprint::log->debug("can_view 1 cuz i am the company") if $debug;
+		return 1;
+	}
 	if ( $openprint::session{user_type} eq 'A' ) {
 		$openprint::log->debug("can_edit 1 cuz admin") if $debug;
 		return 1 
