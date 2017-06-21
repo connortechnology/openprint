@@ -2593,6 +2593,7 @@ $openprint::log->debug("Has no equipment_id") if DEBUG;
 			columns					=>	$$Imposition{columns},
 			rows						=>	$$Imposition{rows},
 			calliper				=>	$$Paper{calliper},
+			stitching				=>	( $$sig_specs{spread_size} % 4 ? 0 : 1 ),
 #printing_type	=>	$ppt,
 		};
 		my $Fold = $Folder->Fold( $find );
