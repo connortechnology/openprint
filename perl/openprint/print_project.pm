@@ -567,8 +567,8 @@ if ( 0 ) {
 		} # end if quantity change
 	} # end foreach qty_index
 
-	$Project->reference( $param{txtProjectReference} );
-	$Project->comments( $param{txtComments} );
+	$Project->reference( $param{reference} );
+	$Project->comments( $param{comments} );
 	$Project->mode( $param{rdbMode} );
 	$Project->design( $param{ddmDesign} );
 	$Project->programs( $param{chkPrograms} );
