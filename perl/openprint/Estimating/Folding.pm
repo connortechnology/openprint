@@ -2544,6 +2544,7 @@ foreach my $k ( sort { $a cmp $b } keys %$folding_specs ) {
 	$openprint::log->debug("$k=>$$folding_specs{$k}");
 }
 }
+	my $services = $$Source_Imposition{Project}->services();
 	my $form = $$sig_specs{SignatureIndex};
 	if ( ! $$folding_specs{"ddmEquipment-$form-$qty_index"} ) {
 $openprint::log->debug("Has no equipment_id") if DEBUG;
@@ -2587,7 +2588,9 @@ $openprint::log->debug("Has no equipment_id") if DEBUG;
 			columns					=>	$$Imposition{columns},
 			rows						=>	$$Imposition{rows},
 			calliper				=>	$$Paper{calliper},
-			stitching				=>	( $$sig_specs{spread_size} % 4 ? 0 : 1 ),
+			stitching		=>	($$services{SaddleStitching} or $$services{LoopStitching}) ? 1 : 0,
+			perfectbind		=>	$$services{PerfectBound} ? 1 : 0,
+			spinepaste		=>	$$services{SpinePaste} ? 1 : 0,
 #printing_type	=>	$ppt,
 		};
 		my $Fold = $Folder->Fold( $find );

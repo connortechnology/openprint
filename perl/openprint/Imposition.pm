@@ -388,22 +388,18 @@ sub load {
 		$$self{layout_width} += $dutch_width;
 		$$self{layout_height} = $dutch_height if $dutch_height > $$self{layout_height};
 	} # end if
+
+	if ( ! $Project ) {
+		my ( $caller, undef, $line ) = caller;
+		$openprint::log->error("No Project passed to Imposition::load from $caller:$line");
+		$Project = new openprint::Project( $$specs{ProjectIndex} );
+	}
+	$$self{Project} = $Project;
+
 	if ( $$specs{txtSignatureType} ) {
 		if ( ! $$specs{spine} ) {
-			if ( ! $Project ) {
-				if ( $$specs{ProjectIndex} ) {
-					$Project = new openprint::Project( $$specs{ProjectIndex} );
-				} else {
-					$openprint::log->error("No ProjcetIndex in specs");
-foreach my $k ( sort { $a cmp $b } keys %$specs ) {
-$openprint::log->debug("($k) => $$specs{$k}");
-}
-				}
-				my ( $caller, undef, $line ) = caller;
-				$openprint::log->error("No Project passed to Imposition::load from $caller:$line");
-			} 
-			if ( $Project ) {
-				my $services = $Project->services();
+			my $services = $Project->services();
+			if ( $$services{''} and @{$$services{''}} ) {
 				my $printing_specs = openprint::service::get_specs_ref( $Project, $$services{''}[0] );
 				$$self{spine} = $$printing_specs{spine};
 			}
