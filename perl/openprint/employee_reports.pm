@@ -797,18 +797,56 @@ sub _production_performance {
 					push @Data, $invoiced_on;
 				}
 				if ( $columns{stock} ) {
+
+
+					my $stock_sheets = 0;
+					my $stock_weight = 0;
 					my $stock_cost = 0;	
+					my %skids;
 					foreach my $PI ( openprint::PaperInventory->find( docket=>$Order->docket(), 'skid_id is null'=>0 ) ) {
+						$skids{$$PI{skid_id}} = 1;
+						if ( $PI->Paper()->units() eq 'Roll' ) {
+							$stock_weight += -1*$$PI{delta};
+						} else {
+							$stock_sheets += -1*$$PI{delta};
+						}
 						my $Cost = $PI->Value();
 						$stock_cost += $$Cost{value};
 					}
-					push @Data, $stock_cost;
+					foreach my $MT ( openprint::Manifest_Content_Type->find( docket=>$Order->docket() ) ) {
+						foreach my $MC ( openprint::ManifestContent->find( type_id=>$$MT{id} ) ) {
+							next if $skids{$$MC{skid_id}};
+							if ( $MT->Paper()->type() eq 'Roll' ) {
+								$stock_weight += $MC->quantity();
+							} else {
+								$stock_sheets += $MC->quantity();
+							}
+							$stock_cost += $MC->value();
+						}
+					}	
+					push @Data, $stock_sheets, $stock_weight, $stock_cost;
 					if ( $$services{Paper} and @{$$services{Paper}} ) {
 						my $Service = $Project->Service( $$services{Paper}[0] );
-						
-						push @Data, $Service->ordered_price($qty_index);
+
+						my $stock_sheets_quoted = 0;
+						my $stock_weight_quoted = 0;
+						my $stock_specs = $Service->specs();
+						my @stocks_and_quantities = openprint::Estimating::Paper::get_stocks_and_quantities( $Project, $$services{Paper}[0], $stock_specs, $qty_index );
+						my $stock_index = 1;
+						foreach my $SQ ( @stocks_and_quantities ) {
+							my ( $Stock, $qty ) = @$SQ{'Stock','quantity'};
+							next if ! $qty;
+
+							if ( $Stock->type() eq 'Sheet' ) {
+								$stock_sheets_quoted += $qty;
+							} else {
+								$stock_weight_quoted += $qty;
+							} # end if
+						}
+
+						push @Data, $stock_sheets_quoted, $stock_weight_quoted, $Service->ordered_price($qty_index);
 					} else {
-						push @Data, 0;
+						push @Data, 0,0,0;
 					}
 				}
 
@@ -819,7 +857,7 @@ sub _production_performance {
 	$variable{Header} = [ 'Order ID', 'Docket', 'Project ID', 'Company', 'Created On',
 				( $columns{plates} ? ( 'Plates', 'Plate Cost', 'Plate Total' ) : () ),
 				( $columns{production} ? ( 'Operator Assigned', 'Printed On', 'Completed On', 'Invoiced On' ) : () ),
-				( $columns{stock} ? ( 'Stock Cost' ) : () ),
+				( $columns{stock} ? ( 'Used Stock Sheets', 'Used Stock Weight', 'Stock Cost', 'Quoted Stock Sheets', 'Quoted Stock Weight', 'Stock Quoted Price' ) : () ),
 				'Status', 'Project Value' ];
 
 	$variable{Data} = \@Data;
