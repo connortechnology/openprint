@@ -814,6 +814,7 @@ $log->debug("Selecting default $$options{default} for radio $name");
 	} # end foreach value
 	return $html;
 } # end sub radio
+
 sub checkboxes {
 	my ( $name, $values, $selected, $options ) = @_;
 

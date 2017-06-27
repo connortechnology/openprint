@@ -672,6 +672,7 @@ sub width {
 	} # end if
 	return $$self{width};
 } # end if
+
 sub height {
 	my ( $self, $height ) = @_;
 	if ( defined $height ) {

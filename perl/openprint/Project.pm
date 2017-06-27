@@ -1329,6 +1329,7 @@ sub takeover_on {
 	} # end if
 	return $$self{takeover_on};
 } # end sub takeover_on
+
 sub takeover_on_seconds {
 	return Date::Parse::str2time( $_[0]->takeover_on() );
 } # end sub takeover_on_seconds
@@ -1340,6 +1341,7 @@ sub prepress_start_on {
 	} # end if
 	return $$self{prepress_start_on};
 } # end sub prepress_start_on
+
 sub prepress_start_on_seconds {
 	return Date::Parse::str2time( $_[0]->prepress_start_on() );
 } # end sub prepress_start_on_seconds
@@ -1373,10 +1375,18 @@ sub completed_on_seconds {
 sub printed_on {
 	my ( $self ) = @_;
 	if ( ! exists $$self{printed_on} ) {
-		@$self{printed_on} = sql::execute( undef, undef, q`SELECT MAX(dtmtimestamp) FROM Project_Log WHERE project_id=? AND description IN ('Marked Printed')`, $$self{id} );
+		@$self{printed_on} = sql::execute( undef, undef, q`SELECT MAX(dtmtimestamp) FROM Project_Log WHERE project_id=? AND description LIKE 'Marked Printed%'`, $$self{id} );
 	} # end if
 	return $$self{printed_on};
 } # end sub printed_on
+
+sub shipped_on {
+	my ( $self ) = @_;
+	if ( ! exists $$self{shipped_on} ) {
+		@$self{shipped_on} = sql::execute( undef, undef, q`SELECT MAX(dtmtimestamp) FROM Project_Log WHERE project_id=? AND description IN ('Marked Shipped','Marked Picked Up')`, $$self{id} );
+	} # end if
+	return $$self{shipped_on};
+}
 
 sub printed_on_seconds {
 	return Date::Parse::str2time( $_[0]->printed_on() );
