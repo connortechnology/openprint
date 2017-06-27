@@ -792,7 +792,9 @@ sub _production_performance {
 					push @Data, $plate_qty, $plate_cost, $plate_price;
 				} # end if include plate info
 				if ( $columns{production} ) {
-					push @Data, $Project->takeover_on(), $Project->printed_on(), $Project->completed_on(), $Order->invoiced_on();
+					push @Data, $Project->takeover_on(), $Project->printed_on(), $Project->completed_on();
+					my $invoiced_on = $Order->invoiced_on();
+					push @Data, $invoiced_on;
 				}
 				if ( $columns{stock} ) {
 					my $stock_cost = 0;	
@@ -810,10 +812,7 @@ sub _production_performance {
 					}
 				}
 
-				push @Data, (
-					 $Project->status(),
-					 $Project->ordered_price(),
-					 );
+				push @Data, ( $Project->status(), $Project->ordered_price(),);
 		} # end foreach Project
 	} # end foreach Order
 
