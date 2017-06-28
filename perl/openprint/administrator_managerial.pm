@@ -718,7 +718,9 @@ sub email {
 	my $mail_dbh = email::db_connect();
 	if ( $mail_dbh ) {
 		$openprint::Email_Account::dbh = $mail_dbh;
+		$openprint::Email_Alias::dbh = $mail_dbh;
 		my $Email = $variable{Email} = openprint::Email_Account->find_one( username=>$param{username} );
+		$Email = $variable{Email} = new openprint::Email_Account() if ! $Email;
 		if ( $param{action} ) {
 			if ( $param{action} eq 'Delete' ) {
 				$variable{error} .= $Email->delete();
