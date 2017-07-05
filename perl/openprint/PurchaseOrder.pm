@@ -98,16 +98,16 @@ $serial = 'purchaseorders_id_seq';
 );
 
 %defaults = (
-	created_on	=> q`'NOW()'`,
-	updated_on	=> q`'NOW()'`,
-	deleted		=>	0,
-	currency_id	=> q`$session{Currency_id}`,
-	total			=>	0,
+	created_on	=>	q`'NOW()'`,
+	updated_on	=>	q`'NOW()'`,
+	deleted			=>	0,
+	currency_id	=>	q`$session{Currency_id}`,
+	total				=>	0,
 	subtotal		=>	0,
 	manifest_id	=>	undef,
 	cancelled		=>	0,
-	supplier_id		=>	undef,
-	contact_id		=>	undef,
+	supplier_id	=>	undef,
+	contact_id	=>	undef,
 );
 
 sub save {
@@ -115,25 +115,26 @@ sub save {
 
 	$self->set( $param ? $param : {} );
 
-	my $ac = sql::start_transaction( $openprint::dbh );
-$openprint::log->debug("PurchaseOrder::Save AC: $ac");
-	$dbh->do( "LOCK TABLE $openprint::PurchaseOrder_Tax::table IN EXCLUSIVE MODE" ) or $log->error( DBI->errstr );
+	#openprint::PurchaseOrder_Tax->lock();
 	# force recalculation
 	$self->subtotal(undef);
 	foreach my $Tax ( $self->Taxes() ) {
+$openprint::log->debug("setting tax amount");
 		$Tax->PurchaseOrder( $self );
 		$Tax->amount(undef);
 	} # end foreach Tax
 	$self->total(undef);
 	if ( ! $$self{currency_id} ) {
+		# Default to current currency
 		my $Currency = openprint::Currency::get_current();
 		$$self{currency_id} = $Currency->id() if $Currency;
 	} # end if
 	my $error = $self->SUPER::save({}, $force_insert );
 
 	# Taxes
-	foreach my $T ( $self->Taxes() ) {
-		$error .= $T->save({purchaseorder_id=>$$self{id}, PurchaseOrder=>$self});
+	foreach my $Tax ( $self->Taxes() ) {
+$openprint::log->debug("Saving taxes".$Tax->to_string());
+		$error .= $Tax->save({purchaseorder_id=>$$self{id}, PurchaseOrder=>$self});
 	} # end foreach
 if ( 0 ) {
 	# No longer doing this
@@ -141,7 +142,7 @@ if ( 0 ) {
 		$T->delete();
 	} # end foreach T
 }
-	sql::end_transaction( $openprint::dbh, $ac );
+	#openprint::PurchaseOrder_Tax->unlock();
 
 	return $error;
 } # end sub save
