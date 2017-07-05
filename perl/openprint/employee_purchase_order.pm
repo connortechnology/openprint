@@ -433,8 +433,8 @@ $log->debug("Creating PO $$PO{id} from label $variable{error}");
 		} # end if
 
 		# We start locking here, because we load the taxes here. Taxes are where the locking becomes important.
-		my $ac = sql::start_transaction( $dbh );
-		$dbh->do( "LOCK TABLE $openprint::PurchaseOrder_Tax::table IN EXCLUSIVE MODE" ) or $log->error( DBI->errstr );
+		$PO->lock();
+
 		$PO->set( \%param );
 		if ( ! $param{po_id} ) {
 			$PO->default_Taxes();
@@ -457,7 +457,7 @@ $log->debug("Creating PO $$PO{id} from label $variable{error}");
 					} );
 		} # end if
 
-		sql::end_transaction( $dbh, $ac );
+		$PO->unlock();
 
 		if ( ( ! $variable{error} ) and $param{reason} ) {
 			my $L = new openprint::PurchaseOrder_Log();
