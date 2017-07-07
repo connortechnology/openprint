@@ -120,7 +120,7 @@ sub signature_calc {
 	my $imposition = 2;
 	my $pockets = $$specs{"txtPockets$qty_index"} = 0;
 
-	if ( $$specs{override_glue_id} eq 'Y' ) {
+	if ( $$specs{override_glue_id} and ( $$specs{override_glue_id} eq 'Y' ) ) {
 	} else {
 		my @Materials = openprint::Material->find( category=>'PerfectBound Glue');
 		if ( @Materials ) {
