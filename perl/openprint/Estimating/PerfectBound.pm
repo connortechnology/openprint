@@ -78,7 +78,7 @@ sub neccessary {
 
   my $printing_specs = openprint::service::get_specs_ref( $Project, $$services{''}[0] ) if $$services{''} and $$services{''}[0];
 
-	if ( $$printing_specs{rdbTemplateType} eq 'PerfectBound' ) {
+	if ( $$printing_specs{rdbTemplateType} and ( $$printing_specs{rdbTemplateType} eq 'PerfectBound' ) ) {
 		return 1;
   } # end if
 

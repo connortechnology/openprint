@@ -35,12 +35,14 @@ $openprint::log->debug("Setting PO Tax amount to $_[1]");
 		$_[0]{amount} = $_[1];
 	} # end if
 	if ( ! defined $_[0]{amount} ) {
-$openprint::log->debug("caculating amount: $_[0]{purchaseorder_id}" .$_[0]->PurchaseOrder()->subtotal().' charge: ' . $_[0]->charge() );
+		my $subtotal = $_[0]->PurchaseOrder()->subtotal();
+		$openprint::log->debug("caculating amount for po $_[0]{purchaseorder_id} subtotal:" .$subtotal.' charge: ' . $_[0]->charge() . ' tax: ' . $_[0]->name() );
 		if ( $_[0]->charge() ) {
-			$_[0]{amount} = Math::Round::nearest( 0.01, ($_[0]{rate}/100) * $_[0]->PurchaseOrder()->subtotal() );
+			$_[0]{amount} = Math::Round::nearest( 0.01, ($_[0]->rate()/100) * $subtotal );
 		} # end if
+		$openprint::log->debug("caculating amount for po $_[0]{purchaseorder_id} subtotal:" .$subtotal.' charge: ' . $_[0]->charge() . ' tax: ' . $_[0]->name() . ' amount: ' . $_[0]{amount} );
 	} else {
-$openprint::log->debug("NOT caculating amount: $_[0]{purchaseorder_id} " .$_[0]->PurchaseOrder()->subtotal().' charge: ' . $_[0]->charge() . ' ' . $_[0]{amount} );
+		$openprint::log->debug("NOT caculating amount: $_[0]{purchaseorder_id} charge: " . $_[0]->charge() . ' ' . $_[0]{amount} . ' tax: ' . $_[0]->name() );
 	} # end if
 	return $_[0]{amount};
 } # end sub amount

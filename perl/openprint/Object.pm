@@ -1404,6 +1404,7 @@ sub unlock {
 		$openprint::log->debug("UNLOCKING $type for $_[0]{id} ac: $_[0]{ac} caller: $caller line: $line" . $_[0]) if DEBUG_LOCKS;
 		if ( ! exists $_[0]{ac} ) {
 			# THis doesn't work.  If we were in a transaction, then AutoCommit is 0
+$openprint::log->debug("UNLOCKING $type for $_[0]{id} ac: $_[0]{ac} caller: $caller line: $line" . $_[0] . ' does not exist ac' );
 			$_[0]{ac} = $openprint::dbh->{AutoCommit};
 		} # end if
 		if ( ! $_[0]{ac} ) {
