@@ -66,7 +66,7 @@ $default_sort	=	'lower(firstname),lower(lastname)';
 );
 
 %transforms = (
-	id				=>	[ 's/\D//g' ],
+	id				=>	[ 's/\D//g', '<2147483647' ],
 	company_id		=>	[ 's/\D//g' ],
 	commission		=>	[ 's/[^\d\.\-]//g' ],
 	wage				=>	[ 's/[^\d\.]//g' ],
