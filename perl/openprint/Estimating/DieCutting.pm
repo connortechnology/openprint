@@ -441,7 +441,7 @@ sub signature_needs {
 			$openprint::log->error("No ServiceType for DieCutting");
 		}
 	} # end if
-	return $$specs{"Needed-$form"} eq 'Y' ? 1 : 0;
+	return ($$specs{"Needed-$form"} and ( $$specs{"Needed-$form"} eq 'Y' ) ) ? 1 : 0;
 } # end sub signature_needs
 
 sub signature_calc {
