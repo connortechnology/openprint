@@ -280,6 +280,7 @@ sub view {
 						if ( $status ne 'Waiting For QA Approval' ) {
 							$Project->add_to_log( @session{'company_id','user_id'}, "Marked Proofs Waiting for QA Approval from $status" );
 							openprint::service::status( $project_index, $service_index, 'Waiting For QA Approval' );
+							send_proofs_client_approved_email( $project_index, $order_id );
 						} # end if
 					} # end if
 					$param{rdbApproved} = 'N';
@@ -682,6 +683,52 @@ sub send_proofs_complete_email {
 #misc::send_email_with_attachment( $log, \%mail, @body );
 #} # end if
 } # end sub send_proofs_complete_email
+
+sub send_proofs_client_approved_email {
+  my ( $project_index, $order_id ) = @_;
+# Send email to sales rep
+  my %info;
+  $info{SecureSiteURL} = $config{ExternalSecureSiteURL};
+  $info{siteURL} = $config{ExternalSiteURL};
+
+  my $Project = new openprint::Project( $project_index );
+  $order_id = $Project->order_id() if ! $order_id;
+  @info{'DocketNumber','ProjectReference','ProjectIndex','OrderID'} = ( $Project->docket(), $Project->reference(), $project_index, $order_id );
+
+  my $Order = new openprint::Order( $order_id );
+  @info{'CustomerFirstName','CustomerLastName','CustomerEmail'} = ( $Order->firstname(), $Order->lastname(), $Order->email() );
+
+  @info{'EmployeeFirstName','EmployeeLastName','EmployeeEmail','EmployeeExtension'} = $openprint::User->get(qw(firstname lastname email extension) );
+
+  $info{CompletionDate} = Date::Format::time2str( $config{DateTimeFormat}, time );
+
+  $info{ReplacementText} = ssi::include( '/email_content/proofs_client_approved-sales_rep.html', \%info );
+  my $Email = new openprint::Email();
+  $Email->html_body( ssi::include( '/email_template.html', \%info ) );
+
+  my $CSR = $Order->CSR();
+  my @Users = map { $_->User() } openprint::User_Notification->find( type =>'Proofs Client Approval Notifications', value =>'Yes',
+      'company_id is null or =' => $Project->company_id(),
+      user_company_id=>[$Project->company_id(), $openprint::User->company_id(), ( $CSR->id() ? $CSR->company_id() : () ) ] );
+
+  if ( ! sets::isin( $CSR->id(), [ map { $_->id() } @Users ] ) ) {
+    my $Notification = $CSR->notification('Proofs Client Approval Notifications');
+    push @Users, $CSR if (!$Notification) or ( $Notification ne 'No' );
+  } # end if
+
+  my $results;
+  foreach my $User ( @Users ) {
+    next if $User->id() == $session{user_id};
+    next if $User->deleted();
+
+    $results .= $Email->send(
+        FROM  => $openprint::User,
+        TO    => $User,
+        SUBJECT => "Docket $info{DocketNumber} $$Order{company_name} - Proofs Client Approved",
+        );
+  } # end if
+  $Project->add_to_log( @session{'company_id','user_id'}, "Proofs client approved email sent to $results" );
+} # end sub send_proofs_client_approved_email
 
 sub send_proofs_approved_email {
 	my ( $project_index, $order_id ) = @_;
