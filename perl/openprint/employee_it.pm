@@ -189,28 +189,27 @@ sub host {
 			$variable{information} .= 'Host did not respond to ping.';
 		} # end if	
 	} elsif ( $param{action} eq 'Upload' ) {
-        # Save any changes made to Article
 		$param{mac} = [ map { split( ',', $_ ) } split("\n", $param{mac}) ];
 		if ( $param{type_id} ) {
 			delete $param{type};
 		} else {
 			delete $param{type_id};
 		} # end if
-        $variable{error} .= $Host->save(\%param);
-        my $Asset = openprint::Asset::upload( 'filename' );
-        if ( ref $Asset ne 'openprint::Asset' ) {
-            $variable{error} .= $Asset;
-        } else {
-            my $Object_Asset = new openprint::Object_Asset();
-            $variable{error} .= $Object_Asset->save({
+		$variable{error} .= $Host->save(\%param);
+		my $Asset = openprint::Asset::upload( 'filename' );
+		if ( ref $Asset ne 'openprint::Asset' ) {
+			$variable{error} .= $Asset;
+		} else {
+			my $Object_Asset = new openprint::Object_Asset();
+			$variable{error} .= $Object_Asset->save({
 					asset_id	=>	$Asset->id(),
 					object_id	=>	$Host->id(),
 					object_type	=>	'openprint::Host',
 					});
-            if ( $param{asset_name} and ! $Asset->name() ) {
-                $Asset->save({'name'=>$param{asset_name}});
-            } # end if
-        } # end if
+			if ( $param{asset_name} and ! $Asset->name() ) {
+				$Asset->save({'name'=>$param{asset_name}});
+			} # end if
+		} # end if
 	} # end if
 	if ( ( ! $Host->id() ) and ( $param{ip} or $param{mac} or $param{hostname} ) ) {
 		my $I = new openprint::Host_Interface();
@@ -240,7 +239,7 @@ sub host {
 			$variable{error} .= 'Unable to connect to RADIUS DB server.';
 			return;
 		} # end if
-    } # end if
+  } # end if
 
 } # end sub view_host
 
@@ -290,10 +289,10 @@ sub _radius_mac_line {
 		} else {
 			$log->warn("Re didn't match $param{username}");
 		} # end if
-		if ( ! $param{value} ) {
-			if ( $param{attribute} eq 'Cleartext-Password' ) {
-				$param{value} = $param{username};
-			} elsif ( $param{attribute} eq 'Framed-IP-Address' ) {
+		if ( $param{attribute} eq 'Cleartext-Password' ) {
+			$param{value} = $param{username};
+		} elsif ( $param{attribute} eq 'Framed-IP-Address' ) {
+			if ( ! $param{value} ) {
 				my $Host = openprint::Host->find_one('mac any'=>$param{username});
 				if ( $Host ) {
 					$param{value} = $Host->ip();
