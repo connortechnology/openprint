@@ -311,7 +311,7 @@ sub check_credit {
 	my ( $amount ) = @_;
 	my $Credit = new openprint::Company_Credit( { 'company_id'=>$openprint::session{company_id}, 'supplier_id'=>$openprint::config{owner_id} } );
 
-	if ( $Credit->hold() eq 'Y' ) {
+	if ( $Credit->hold() and ( $Credit->hold() eq 'Y' ) ) {
 		return misc::error( $log, $dbh, \%variable, 'Credit on hold', 'Your credit account is on hold, you will not be able to place orders.' );
 	} # end if
 
