@@ -695,7 +695,7 @@ sub quantity3 {
 
 my @dont_copy = (
 		'ServiceIndex','ProjectIndex','TemplateType',
-		'txtEmployeeComments','rdbComplete','rdbApproved','ddmApprovalDateMonth','ddmApprovalDateDay','ddmApprovalDateYear',
+		'txtEmployeeComments','rdbComplete','rdbApproved','rdbClientApproved', 'ddmApprovalDateMonth','ddmApprovalDateDay','ddmApprovalDateYear',
 		'ddmCompletionDate.*','txtRunHours','txtDowntimeHours',
 		'ddmPressCompletionDate.*', 'UsePress.*', 'rdbPressComplete.*',
 		'UsedPaper.*',
