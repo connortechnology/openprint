@@ -88,7 +88,9 @@
 			<li><label>Bad Debt?</label>
 				<? echo ( radio( 'bad_debt', [ '1','Yes','0','No','','Both'], $session{'/invoice/history.html?bad_debt'}, { onclick=>'load_invoices(this.form);' } ); ) ?>
 			</li>
+<? if ( openprint::Product->find_one() ) ?>
 			<li><label>Contains Product</label><? echo ( ssi::select( openprint::Product->dropdown(order=>'lower(name)'), $session{$r->uri().'?product_id'}, { name=>'product_id', onchange=>'load_invoices(this.form);',prepend=>['','All'] } ); ) ?></li>
+<? endif ( openprint::Product->find_one() ) ?>
 			</ul>
 		</div>
 		<br class="spacer"/>
@@ -99,7 +101,9 @@
 				$html .= button( 'Download', { onclick=>"f1.btnFunction.value='Download';f1.submit();", text=>'Download' } );
 				$html .= button( 'Reset', { onclick=>'f1.reset();', text=>'Reset' } );
 				$html .= button( 'New', { href=>'edit.html', text=>'New Invoice' } );
+				if ( openprint::Invoice->can_send() ) {
 				$html .= button( 'AccountStatement', { onclick=>"if(!\$('company_id').value){alert('Please select a company');} else {f1.btnFunction.value='Account Statement';f1.submit();}", text=>'Account Statement' } );
+				}
 				return $html;
 			) ?>
 		</p>

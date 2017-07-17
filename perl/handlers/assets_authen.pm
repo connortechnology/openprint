@@ -48,6 +48,7 @@ sub access_handler {
 
     $dbh = sql::open_sql( $log,
             database  => $r->dir_config('db_name'),
+			port		=>	$r->dir_config('db_port'),
             driver    => $r->dir_config('db_driver'),
             host      => $r->dir_config('db_host'),
             login     => $r->dir_config('db_user'),

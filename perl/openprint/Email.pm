@@ -25,9 +25,6 @@ $debug = 0;
 
 sub html_body {
 	my ( $self, $html ) = @_;
-	#$$self{boundary} = "====" . time() . "====" if ! $$self{boundary};
-	#$$self{BODY} .= "$$self{boundary}\nContent-Type: text/html;\n";
-	#$$self{BODY} .= "Content-Transfer-Encoding: quoted-printable\n";
 	$$self{HTML_BODY} = $html;
 } # end sub html_body
 
@@ -83,13 +80,8 @@ sub send {
 		my $message = $mail{BODY};
 
         $mail{"MIME-Version"} = "1.0";
-		if ( @attachments ) {
-			$mail{'content-type'} = "multipart/mixed;\n  boundary=\"$mail{BOUNDARY}\"\n";
-        } else {
-			$mail{'content-type'} = "multipart/alternative;\n  boundary=\"$mail{BOUNDARY}\"\n";
-        }
 
-		$mail{BODY} .= "\nThis is a message with multiple parts in MIME format.\n";
+		$mail{BODY} = "\nThis is a message with multiple parts in MIME format.\n";
 
 # start with the current body
         if ( $message ) {
@@ -97,6 +89,12 @@ sub send {
             $mail{BODY} .= 'Content-Type: ' . ($mail{'content-type'} ? $mail{'content-type'} : 'text/plain' ). '; charset="utf-8"; format="fixed"'."\n";
             $mail{BODY} .= "Content-Transfer-Encoding: quoted-printable\n";
             $mail{BODY} .= "\n".MIME::QuotedPrint::encode_qp( Encode::encode('utf-8', $message ) ) . "\n";
+        }
+
+		if ( @attachments ) {
+			$mail{'content-type'} = "multipart/mixed;\n  boundary=\"$mail{BOUNDARY}\"\n";
+        } else {
+			$mail{'content-type'} = "multipart/alternative;\n  boundary=\"$mail{BOUNDARY}\"\n";
         }
 
 		if ( $params{HTML_BODY} ) {
@@ -233,10 +231,21 @@ sub to {
 	return ();
 } # end sub to
 
+sub attachments {
+	if ( @_ > 1 ) {
+		$_[0]{ATTACHMENTS} = $_[1];
+	}
+	if ( ! $_[0]{ATTACHMENTS} ) {
+		$_[0]{ATTACHMENTS} = [];
+	}
+	return @{$_[0]{ATTACHMENTS}};
+}
+
 sub add_pdf_attachment_from_html {
 	my ( $self, $name, $html ) = @_;
 
 	my @attachments;
+	$html = Encode::encode('utf-8',$html);
 	if ( File::Slurp::write_file('/tmp/'.$name.'.html', { atomic => 1, err_mode=>'carp' }, \$html ) ) {
         `wkhtmltopdf -q "/tmp/$name.html" "/tmp/$name.pdf"`;
         my $pdf = File::Slurp::read_file( "/tmp/$name.pdf", err_mode => 'carp' );
@@ -260,7 +269,7 @@ sub add_pdf_attachment_from_html {
 
 sub add_html_attachment {
 	my ( $self, $name, $html ) = @_;
-	push @{$$self{ATTACHMENTS}}, ($name, MIME::QuotedPrint::encode_qp($html), 'text/html', 'quoted-printable');
+	push @{$$self{ATTACHMENTS}}, ($name, MIME::QuotedPrint::encode_qp(Encode::encode('utf-8',$html)), 'text/html', 'quoted-printable');
 }
 1;
 __END__

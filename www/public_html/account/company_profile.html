@@ -19,28 +19,28 @@ Your company profile can be modified using the fields below. Use the <b>Save</b>
 				<ul>
 					<li> 
 						<label for="companyname">Company Name</label>
-						<input type="text" id="companyname" name="companyname" value="<? hecho ( $$variable{'Company'}->name() ) ?>" />
+						<input type="text" id="companyname" name="companyname" value="<? hecho ( $$variable{Company}->name() ) ?>" />
 					</li>
 					<li class="address1"> 
 						<label for="address1">Address</label>
-						<input type="text" id="address1" name="address1" value="<? hecho ( $$variable{'Company'}->address1() ) ?>" />
+						<input type="text" id="address1" name="address1" value="<? hecho ( $$variable{Company}->address1() ) ?>" />
 					</li>
 					<li class="address2"> 
 						<label for="address2">&nbsp;</label>
-						<input type="text" id="address2" name="address2" value="<? hecho ( $$variable{'Company'}->address2() ) ?>" />
+						<input type="text" id="address2" name="address2" value="<? hecho ( $$variable{Company}->address2() ) ?>" />
 					</li>
 					<li> 
 						<label>Country</label>
 						<select id="country" name="country" onchange="Country_onchange( this, this.form.state );">
 							<option value=""> Select </option>
-							<? echo ( make_drop_down( \@countries::countries, $$variable{'Company'}->country() ); ) ?>
+							<? echo ( make_drop_down( \@countries::countries, $$variable{Company}->country() ); ) ?>
 						</select>
 					</li>
 					<li> 
 						<label for="state" id="country_state"><? echo (
-							if ( $$variable{'Company'}->country() eq 'US' ) {
+							if ( $$variable{Company}->country() eq 'US' ) {
 								return 'State';
-							} elsif ( $$variable{'Company'}->country() eq 'CA' ) {
+							} elsif ( $$variable{Company}->country() eq 'CA' ) {
 								return 'Province';
 							} else {
 								return 'State/Province';
@@ -49,46 +49,47 @@ Your company profile can be modified using the fields below. Use the <b>Save</b>
 						<select id="state" name="state">
 							<option value=""> Select </option>
 							<? echo ( join("\n",
-								make_drop_down( \@states::states, $$variable{'Company'}->state() ),
-								make_drop_down( \@provinces::provinces, $$variable{'Company'}->state() ),
+								make_drop_down( \@states::states, $$variable{Company}->state() ),
+								make_drop_down( \@provinces::provinces, $$variable{Company}->state() ),
 );) ?>
 						</select>
 					</li>
 					<li> 
 						<label for="city">City</label>
-						<input type="text" id="city" name="city" value="<? hecho ( $$variable{'Company'}->city() ) ?>" />
+						<input type="text" id="city" name="city" value="<? hecho ( $$variable{Company}->city() ) ?>" />
 					</li>
 					<li> 
 						<label for="postalcode" id="country_postal"><? echo (
-							   if ( $$variable{'Company'}->country() eq 'US' ) {
+							   if ( $$variable{Company}->country() eq 'US' ) {
 									   return 'Zip Code';
-							   } elsif ( $$variable{'Company'}->country() eq 'CA' ) {
+							   } elsif ( $$variable{Company}->country() eq 'CA' ) {
 									   return 'Postal Code';
 							   } else {
 									   return 'Zip/Postal Code';
 							   } # end if
 							) ?></label>
-						<input type="text" id="postalcode" name="postalcode" value="<? hecho ( $$variable{'Company'}->postalcode() ) ?>" />
+						<input type="text" id="postalcode" name="postalcode" value="<? hecho ( $$variable{Company}->postalcode() ) ?>" />
 					</li>
 					<li> 
 						<label for="phone">Phone</label>
-						<input type="tel" id="phone" name="phone" value="<? hecho ( $$variable{'Company'}->phone() ) ?>" /> x
-						<input type="tel" id="extension" name="extension" value="<? hecho ( $$variable{'Company'}->extension() ) ?>" />
+						<input type="tel" id="phone" name="phone" value="<? hecho ( $$variable{Company}->phone() ) ?>" /> x
+						<input type="tel" id="extension" name="extension" value="<? hecho ( $$variable{Company}->extension() ) ?>" />
 					</li>
 					<li> 
 						<label for="fax">Fax</label>
-						<input type="tel" id="fax" name="fax" value="<? hecho ( $$variable{'Company'}->fax() ) ?>" />
+						<input type="tel" id="fax" name="fax" value="<? hecho ( $$variable{Company}->fax() ) ?>" />
 					</li>
 				</ul>
 			</fieldset>
 		</div>
 		<?include(/account/_business_information.html)?>
 		<?include(/account/_company_account_information.html)?>
+		<?include(/location/_locations_container.html)?>
 		<?include(/includes/_credit_view.html)?>
 		<?include(_company_profile_edit.html)?>
-		<? if ( sets::isin( $session{'user_type'}, ['A','E'] ) ) ?>
+		<? if ( sets::isin( $session{user_type}, ['A','E'] ) ) ?>
 		<?include(_sales_edit.html)?>
-		<? endif ( sets::isin( $session{'user_type'}, ['A','E'] ) ) ?>
+		<? endif ( sets::isin( $session{user_type}, ['A','E'] ) ) ?>
 		<?include(/account/_bank_information.html)?>
 		<?include(/account/_trade_references.html)?>
 		<div class="Preferences">
@@ -101,12 +102,12 @@ Your company profile can be modified using the fields below. Use the <b>Save</b>
 						<? echo ( make_drop_down( openprint::Currency->dropdown( order=>'lower(name)' ), $$variable{Company}->currency_id() ); ) ?>
 					</select>
 				</li>
-	<? if ( sets::isin( $session{'user_type'}, ['A','E'] ) ) ?>
+	<? if ( sets::isin( $session{user_type}, ['A','E'] ) ) ?>
 				<li>
 					<label>Include project breakdown with quote?</label>
-					<? echo ( radio( 'quote_project_breakdown', [ 'Y','Yes','N','No'], $$variable{'Company'}->quote_project_breakdown() ); ) ?>
+					<? echo ( radio( 'quote_project_breakdown', [ 'Y','Yes','N','No'], $$variable{Company}->quote_project_breakdown() ); ) ?>
 				</li>
-	<? endif ( sets::isin( $session{'user_type'}, ['A','E'] ) ) ?>
+	<? endif ( sets::isin( $session{user_type}, ['A','E'] ) ) ?>
 </ul>
 			</fieldset>
 		</div>

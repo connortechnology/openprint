@@ -19,10 +19,14 @@
 			$$variable{Equipment} = $Equipment;
 			$html .= variable_substitution( \$prices_per_equipment );
 		} # end foreach Equipment
-		$html .= '</div><p><label>New Price</label>';
-		$html .= ssi::select( \@equipment_dropdown, undef, { name=>"equipment_id-$$Pricelist{id}", id=>"equipment_id-$$Pricelist{id}", prepend=>['','All'] } );
-		$html .= button( 'a'.$$Pricelist{id}.'new', { onclick=>qq`add_new_price( $$variable{Service}{id}, $$Pricelist{id}, get_ddm_value( \$('equipment_id-$$Pricelist{id}') ) );`, text=>'+', title=>'Add New Price' } );
-		$html .= '</p>';
+
+		$html .= '</div>';
+		if ( ! $param{equipment_id} ) {
+			$html .= '<p><label>New Price</label>';
+			$html .= ssi::select( \@equipment_dropdown, undef, { name=>"equipment_id-$$Pricelist{id}", id=>"equipment_id-$$Pricelist{id}", prepend=>['','All'] } );
+			$html .= button( 'a'.$$Pricelist{id}.'new', { onclick=>qq`add_new_price( $$variable{Service}{id}, $$Pricelist{id}, get_ddm_value( \$('equipment_id-$$Pricelist{id}') ) );`, text=>'+', title=>'Add New Price' } );
+			$html .= '</p>';
+		}
 		$html .= '</fieldset><!--Pricelist-->';
 	} # end foreach Pricelist
 	return $html;

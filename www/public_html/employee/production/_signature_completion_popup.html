@@ -1,23 +1,40 @@
+<?include(/includes/error_reporting.html)?>
+<? if ( $$variable{Job}->id() ) ?>
 <form id="completion_form" name="completion_form" action="print_overview.html" method="post">
 	<input type="hidden" name="btnFunction" value="CompleteJob" />
-	<input type="hidden" name="schedule_id" value="<? echo ( $param{'schedule_id'} ) ?>" />
+	<input type="hidden" name="schedule_id" value="<? echo ( $param{schedule_id} ) ?>" />
 	<fieldset><legend>Signature Completion</legend>
 		<p>
 			<label>Operator</label>
 			<select name="operator_id" id="operator_id">
 				<option value="">select</option>
 				<? echo ( 
-					my $operator_id = $$variable{'Job'}->operator_id();
-					$operator_id = $session{'user_id'} if ! $operator_id;
+					my $operator_id = $$variable{Job}->operator_id();
+					$operator_id = $session{user_id} if ! $operator_id;
 
-					my @Usergroups = openprint::UserGroup->find( name=> [ $$variable{Job}->Equipment()->categories()] );
-					my @Usersin = openprint::User_in_UserGroup->find( usergroup_id=>[ map { $$_{id} } @Usergroups] );
+					$log->debug("Popup for " . $$variable{Job}->to_string() );
+
+					my @categories = $$variable{Job}->Equipment()->categories();
+					if ( ! @categories ) {
+						$log->error("No categories for " . $$variable{Job}->Equipment()->name()  . $$variable{Job}->to_string() );
+						return;
+					}
+					my @Usergroups = openprint::UserGroup->find( name=> \@categories );
+					if ( ! @Usergroups ) {
+						$log->error("No usergroups found for categories @categories");
+						return;
+					}
+					my @Usersin = openprint::User_in_UserGroup->find( usergroup_id=>[ map { $$_{id} } @Usergroups ] );
+					if ( ! @Usersin ) {
+						$log->error("No users found for groups: " . join(',', map { $$_{id} } @Usergroups ) );
+						return;
+					}
 					make_drop_down( openprint::User->dropdown(id=>[ map { $$_{user_id} } @Usersin], order=>'lower(firstname),lower(lastname)'), $operator_id );
 				) ?>
 			</select>
 		</p>
 		<p class="buttons">
-			<? echo ( join('',
+			<? echo ( join("\n",
 				button( 'Submit', { onclick=>"new Ajax.Request('_li_change.json', {parameters:\$('completion_form').serialize(), onSuccess: function(){popupWin.destroy();} } );" } ),
 				button( 'Cancel', { onclick=>'popupWin.destroy();' } ),
 
@@ -25,3 +42,6 @@
 		</p>
 	</fieldset>
 </form>
+<? else ( $$variable{Job}->id() ) ?>
+<? echo ( button( 'Close', { onclick=>'popupWin.destroy();' } ); ) ?>
+<? endif ( $$variable{Job}->id() ) ?>

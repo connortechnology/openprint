@@ -28,25 +28,31 @@ sub _label {
 			$param{value} =~ s/<br\/>/\n/ig;
 			$Label->set_data($param{field}=>$param{value});
 		} elsif ( exists $param{location_id} ) {
-			my $old = $Label->get_data( $param{field} );
-$log->debug("Ol is $old");
 
-			my $OldLocation = openprint::Location->find_one(id=>$Label->get_data($param{field}.'_location_id')) if $Label->get_data($param{field}.'_location_id');
-$log->debug("OldLocation is " . $OldLocation->to_string() ) if $OldLocation;
-			my $NewLocation = openprint::Location->find_one(id=>$param{location_id});
-$log->debug("NewLocation is " . $NewLocation->to_string() ) if $NewLocation;
-			if ( $NewLocation ) {
-				if ( $OldLocation ) {
-					my $oldaddress = $OldLocation->address_formatted();
-					my ( $first, $last ) = $old =~ /(.*)$oldaddress(.*)/m;
-$log->debug("Got first ($first) and last ($last) from $old oldaddress($oldaddress)");
-					my $newfrom = $1.$NewLocation->address_formatted().$2;
-					$Label->set_data($param{field}=>$newfrom);
+			my $old_location_id = $Label->get_data($param{field}.'_location_id');
+			$Label->set_data( $param{field}.'_location_id' => $param{location_id} );
+
+			if ( $param{location_id} ) {
+
+				my $OldLocation = openprint::Location->find_one( id=>$old_location_id ) if $old_location_id;
+				my $NewLocation = openprint::Location->find_one(id=>$param{location_id});
+				if ( $NewLocation ) {
+					if ( $OldLocation ) {
+						my $old = $Label->get_data( $param{field} );
+						my $oldaddress = $OldLocation->address_formatted();
+						$oldaddress =~ s/\n/<br\/>/g;
+						my ( $first, $last ) = $old =~ /(.*)$oldaddress(.*)/m;
+						my $newaddress = $1.$NewLocation->address_formatted().$2;
+						$newaddress =~ s/\n/<br\/>/g;
+						$Label->set_data($param{field}=>$newaddress);
+					} else {
+						my $newaddress = $NewLocation->address_formatted();
+						$newaddress =~ s/\n/<br\/>/g;
+						$Label->set_data($param{field}=>$newaddress);
+					}
 				} else {
-					$Label->set_data($param{field}=>$NewLocation->address_formatted());
+					$variable{error} .= 'Location not found.';
 				}
-			} else {
-				$variable{error} .= 'Location not found.';
 			}
 		} # end if
 

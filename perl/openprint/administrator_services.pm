@@ -20,8 +20,7 @@ use vars qw( $r $log $dbh %param %variable );
 
 sub edit {
 
-
-	my $Service = new openprint::Service( $param{ddmService} );
+	my $Service = new openprint::Service( $param{service_id} );
 
 	if ( $param{btnFunction} eq '<<' ) {
 		$Service = $Service->Previous( {category_id=>$param{ddmSearchCategory}} );
@@ -33,6 +32,59 @@ sub edit {
 		} # end foreach T
 		$variable{error} .= $Service->delete() if ! $variable{error};
 		$Service = $Service->Next( {category_id=>$param{ddmSearchCategory}} ) if ! $variable{error};
+	} elsif ( $param{btnFunction} eq 'Export' ) {
+		my @header = ( 'Service Name', 'Description','Category', 'Activity Code', 'Fed Tax Exempt', 'State Tax Exempt' );
+
+		my @data;
+		foreach ( openprint::Service->find( order=>'name' ) ) {
+			push @data, $_->get( 'name', 'description', 'category', 'activity_code', 'taxexempt1','taxexempt2' );
+		} # end foreach
+
+		misc::export_csv( $openprint::r, $log, \%variable, 'services.csv', \@header, \@data );
+	} elsif ( $param{btnFunction} eq 'Import' ) {
+
+		my $error = '';
+		if ( $param{file} ) {
+			my $ac = sql::start_transaction( $dbh );
+			my %Services = map { $$_{name}, $_ } openprint::Service->find();
+
+			my $upload = $r->upload( 'file' );
+			my $io = $upload->io();
+			$_ = <$io>;
+
+			my $csv = Text::CSV_XS->new();
+
+			while (<$io>) {
+				my $status = $csv->parse($_);
+				my ( $name, $description, $category, $activity_code, $tax1, $tax2 ) = misc::trim( $csv->fields() );
+				next if $name eq '';
+				if ( $Services{$name} ) {
+					$error .= "Not importing $name because it already exists at " . $Services{$name}->link_to().'<br/>';
+					next;
+				}
+				my $Service = new openprint::Service();
+				$_ = $Service->save({
+						name			=>	$name,
+						description		=>	$description,
+						category		=>	$category,
+						activity_code	=>	$activity_code,
+						taxexempt1		=>	$tax1,
+						taxexempt2		=>	$tax2,
+						});
+				if ( $_ ) {
+					$error .= $_;
+					$dbh->rollback();
+					last;
+				} else {
+					$variable{information} .= "$name successfully imported.<br/>";
+					$Services{$name} = $Service;
+				}
+			} # end while
+			sql::end_transaction( $dbh, $ac );
+		} else {
+			$error .= 'No file given to upload.<br>';
+		} # end if
+		$variable{error} = $error; 
 	} elsif ( $param{btnFunction} eq 'Save' ) {
 		if ( $param{new_category} ) {
 			if ( my @Categories = openprint::ServiceCategory->find(name=>$param{new_category} ) ) {
@@ -87,7 +139,7 @@ sub edit {
 		} # end if not error
 		sql::end_transaction( $dbh, $ac );
 		if ( ! $variable{error} ) {
-			$variable{ExternalRedirect} = '/administrator/services/edit.html?ddmService='.$Service->id();
+			$variable{ExternalRedirect} = '/administrator/services/edit.html?service_id='.$Service->id();
 			if ( $param{ddmServiceCategory} ) {
 				$variable{ExternalRedirect} .= '&ddmServiceCategory='.$param{ddmServiceCategory};
 			}
@@ -122,7 +174,7 @@ sub _prices_table_body {
 	my $Service = $variable{Service} = $Price->Service();
 	$variable{company_ids} = [ map { $_->id(), $_->name() } openprint::Company->find( supplier=>'Y', order=>'lower(name)' ) ];
 	if ( $param{action} eq 'add' ) {
-		my $Service = $variable{Service} = new openprint::Service( $param{ddmService} );
+		my $Service = $variable{Service} = new openprint::Service( $param{service_id} );
 		my $Price = $variable{Price} = new openprint::ServicePrice();
 		$variable{error} .= $Price->save({ equipment_id=>$param{equipment_id}, pricelist_id=>$param{pricelist_id}, service_id=>$$Service{id} });
 	} elsif ( $param{action} eq 'copy' ) {
@@ -130,7 +182,7 @@ sub _prices_table_body {
 		$variable{error} .= $Price->save();
 	} elsif ( $param{action} eq 'delete' ) {
 		$variable{error} .= $Price->delete();
-		(new openprint::Log())->save({object_id=>$$Service{id},object_type=>ref$Service, action=>'Delete Service Price', note=>$Price->id_string() }) if ! $variable{error};
+		(new openprint::Log())->save({Object=>$Service, action=>'Delete Service Price', note=>$Price->id_string() }) if ! $variable{error};
 	} # end if
 } # end sub _prices_table_body
 

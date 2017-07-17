@@ -1,7 +1,7 @@
-<? echo ( include('/includes/error_reporting.html'); ) ?>
+<?include('/includes/error_reporting.html')?>
 <p class="buttons">
-	<? echo ( join( '',
-		ssi::button( 'New', { href=>'/administrator/managerial/usergroup.html' } ),
+	<? echo ( join( "\n",
+		button( 'New', { href=>'/administrator/managerial/usergroup.html' } ),
 	); ) ?>
 </p>
 <table class="List">
@@ -9,9 +9,9 @@
 	<tbody>
 	<? echo (
 	my $html;
-	foreach my $UG ( openprint::UserGroup->find('order'=>'lower(name)') ) {
-		$html .= sprintf(q`<tr><td><a href="/administrator/managerial/usergroup.html?id=%1$d">%2$s</a></td><td class="duration">%3$s</td><td>%4$d</td></tr>`, 
-			$UG->id(), $UG->name(), $UG->duration(), scalar $UG->Users()
+	foreach my $UG ( openprint::UserGroup->find( order=>'lower(name)' ) ) {
+		$html .= sprintf(q`<tr title="%5$s"><td><a href="/administrator/managerial/usergroup.html?id=%1$d">%2$s</a></td><td class="duration">%3$s</td><td>%4$d</td></tr>`, 
+			$UG->id(), $UG->name(), $UG->duration(), scalar $UG->Users(), $UG->description(),
 			);
 	} # end foreach UG
 	return $html;

@@ -28,7 +28,7 @@ use vars qw( $log $dbh );
 $log = new logger( 'debug' );
 my %CheckedOutSkids;
 my %Scanners;
-my $debug = 0;
+my $debug = 1;
 my $location_cache_size = 10;
 my %stats;
 
@@ -65,13 +65,13 @@ sub Checkout_Skid {
 sub process_request {
 	my $self = shift;
 
-	$dbh = sql::open_sql( $log, ('database'=>'point-one', 'driver'=>'Pg','login'=>'point-one', 'password'=>'point-one','host'=>'database') );
+	$dbh = sql::open_sql( $log, (database=>'point-one', driver=>'Pg',login=>'point-one', password=>'point-one',host=>'database') );
 
 	# Have to reload scanner here
 
 	my $date = Date::Format::time2str('%Y-%m-%d %H:%M', time );
 
-	my @checkout_tags = openprint::RFIDTag->find('type'=>'Checkout');
+	my @checkout_tags = openprint::RFIDTag->find(type=>'Checkout');
 
 	$self->get_client_info();
 	%Scanners = map { $_->ipaddr(), $_ } openprint::RFIDScanner->find();
@@ -81,19 +81,19 @@ sub process_request {
 	if ( ! $Scanner ) {
 		# Have a new one, add it
 		$Scanner = new openprint::RFIDScanner();
-		$Scanner->save( {'ipaddr'=>$ip_addr} );
+		$Scanner->save( {ipaddr=>$ip_addr} );
 		$Scanners{$ip_addr} = $Scanner;
 	} # end if
 	$self->log(1, sprintf('%s : %s : %s',$date, $ip_addr, 'connect ' . $Scanner->name() ));
-	if ( my $error = $Scanner->save({'lastseen_on'=>'NOW()'}) ) {
+	if ( my $error = $Scanner->save({lastseen_on=>'NOW()'}) ) {
 		$self->log(1, sprintf('%s : %s : error saving scanner: %s', $date, $ip_addr, $error ));
 	} # end if
 
 	my @last_seen;
 
-	if ( my $User = openprint::User->find_one('email'=>'rfid') ) {
-		$openprint::session{'user_id'} = $User->id();
-		$openprint::session{'company_id'} = $User->company_id();
+	if ( my $User = openprint::User->find_one( email=>'rfid') ) {
+		$openprint::session{user_id} = $User->id();
+		$openprint::session{company_id} = $User->company_id();
 	} else {
 		$self->log( 1, "Error finding rfid user!" );
 	} # end if
@@ -101,7 +101,7 @@ sub process_request {
 	$stats{$ip_addr} = {};
 
 	eval {
-		local $SIG{'ALRM'} = sub { die "Timed Out!\n" };
+		local $SIG{ALRM} = sub { die "Timed Out!\n" };
 		my $timeout = 120;
 
 		my $previous_alarm = alarm($timeout);
@@ -110,7 +110,7 @@ sub process_request {
 		my $tag = '';
 		while ( read(STDIN, $data, 40) ) {
 			while ( ! ( $dbh and $dbh->ping() ) ) {
-				$dbh = sql::open_sql( $log, ('database'=>'point-one', 'driver'=>'Pg','login'=>'point-one', 'password'=>'point-one','host'=>'database') );
+				$dbh = sql::open_sql( $log, (database=>'point-one', driver=>'Pg',login=>'point-one', password=>'point-one',host=>'database') );
 				if ( ! $dbh ) {
 					$self->log("No connection to db.  Sleeping.");
 					sleep 10;
@@ -132,15 +132,15 @@ sub process_request {
 			} # end if
 
 # Make sure our record is up to date, this shouldn't be a big hit, because the db server will cache this
-			if ( $$Scanner{'lastseen_seconds'} < ( $time - 600 ) ) {
+			if ( $$Scanner{lastseen_seconds} < ( $time - 600 ) ) {
 				$Scanner->load();
-				$$Scanner{'lastseen_seconds'} = $time;
+				$$Scanner{lastseen_seconds} = $time;
 			} # end if
 
 			$date = Date::Format::time2str('%Y-%m-%d %H:%M', $time );
 			# if not seen in 10 minutes, then update scanner last seen time
 			if ( ($time - Date::Parse::str2time($Scanner->lastseen_on())) > 600 ) {
-				if ( my $error = $Scanner->save({'lastseen_on'=>'NOW()'}) ) {
+				if ( my $error = $Scanner->save({lastseen_on=>'NOW()'}) ) {
 					$self->log(1, sprintf('%s : %s : error saving scanner: %s', $date, $ip_addr, $error ));
 				} # end if
 			} # end if
@@ -189,7 +189,7 @@ sub process_request {
 			} elsif ( $Scanner->type() eq 'Mobile' ) {
 				if ( sets::isin( $Tag->type(), ['Location','Checkout'] ) ) {
 					if ( $Tag->valid() ) {
-						@last_seen = map {$_->location_id()} openprint::RFIDScannerHistory->find('scanner_id'=>$Scanner->id(),'order'=>'updated_on DESC','limit'=>$location_cache_size) if ! @last_seen;
+						@last_seen = map {$_->location_id()} openprint::RFIDScannerHistory->find(scanner_id=>$Scanner->id(),order=>'updated_on DESC',limit=>$location_cache_size) if ! @last_seen;
 						if ( ( ! @last_seen ) or ! sets::isin( $Tag->location_id(), \@last_seen ) ) {
 							$Scanner->location_id( $Tag->location_id(), $Tag->id() );
 							shift @last_seen if @last_seen > $location_cache_size;
@@ -207,6 +207,8 @@ sub process_request {
 						$self->log(1, sprintf('%s : %s : error saving tag %s', $date, $ip_addr, $_ ));
 					} # end if
 					foreach my $IC ( openprint::Inventory_Check->find(
+								# 0 is the value for All
+								scanner_id => [ 0, $$Scanner{id} ],
 								'started_on <=' => 'NOW()',
 								'ended_on >=' => 'NOW()' 
 								) ) {
@@ -233,6 +235,8 @@ sub process_request {
 					} # end if
 				} # End if
 				foreach my $IC ( openprint::Inventory_Check->find(
+								# 0 is the value for All
+					scanner_id => [ 0, $$Scanner{id} ],
 					'started_on <=' => 'NOW()',
 					'ended_on >=' => 'NOW()' 
 					) ) {
@@ -265,7 +269,7 @@ sub process_request {
 			} elsif ( $Scanner->type() eq 'Truck Location' ) {
 				if ( sets::isin( $Tag->type(), ['Location','Checkout'] ) ) {
 					if ( $Tag->valid() ) {
-						@last_seen = map {$_->location_id()} openprint::RFIDScannerHistory->find('scanner_id'=>$Scanner->id(),'order'=>'updated_on DESC','limit'=>8) if ! @last_seen;
+						@last_seen = map {$_->location_id()} openprint::RFIDScannerHistory->find(scanner_id=>$Scanner->id(),order=>'updated_on DESC',limit=>8) if ! @last_seen;
 						if ( ! sets::isin( $Tag->location_id(), \@last_seen ) ) {
 #$self->log(1, sprintf('%s : %s : truck moving to %s : %s', $date, $ip_addr, $Tag->id(), $Tag->Location()->name() ));
 							$Scanner->location_id( $Tag->location_id(), $Tag->id() );
@@ -295,7 +299,7 @@ sub process_request {
 					$self->log(1, sprintf('%s : %s : error saving skid: %s', $date, $ip_addr, $error )) if $error;
 					$self->log(1, sprintf('%s : %s : updating location of tag %s to %s', $date, $ip_addr, $Tag->id(), $Scanner->Location()->name() ));
 					$Tag->location_id( $Scanner->location_id(), $Scanner->id() );
-					my $error = $Tag->save({'id'=>$tag_id});
+					my $error = $Tag->save({id=>$tag_id});
 					$self->log(1, sprintf('%s : %s : error %s', $date, $ip_addr, $error )) if $error;
 					$self->log(1, sprintf('%s : %s : done updating location of tag %s to %s', $date, $ip_addr, $Tag->id(), $Scanner->Location()->name() ));
 				} elsif ( $Tag->type() eq 'Location' ) {
@@ -334,12 +338,21 @@ sub sig_handler {
 		foreach my $ip_addr ( keys %stats ) {
 			print "$ip_addr => " . $stats{$ip_addr}{count} . "/sec\n";
 		}
+	} elsif ( $signame eq 'HUP' ) {
+		%CheckedOutSkids = ();
+		%Scanners = ();
+		%stats = ();
+
 	} # end if
 	#die "Somebody sent me a SIG$signame";
 } # end sub sig_handler
 
-register_sig( USR1 => \&sig_handler );
+register_sig( 
+		USR1 => \&sig_handler,
+		HUP => \&sig_handler,
+		);
 
-__PACKAGE__->run();
+__PACKAGE__->run( ipv => 4 );
+
 1;
 __END__

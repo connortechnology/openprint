@@ -3,6 +3,7 @@ package openprint::Survey_Question;
 our @ISA = qw( openprint::Object );
 
 require openprint::Survey_Question_Available_Answer;
+require openprint::Survey_Response;
 
 use vars qw( $debug $table $serial %fields %find_fields %transforms %defaults );
 $debug = 0;

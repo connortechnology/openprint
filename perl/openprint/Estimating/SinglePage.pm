@@ -167,7 +167,7 @@ $openprint::log->debug( "Signature: @signatures");
 					} # end if
 					$specs{'txtUnitPrice'.$qty_index} = sprintf($openprint::config{'UnitPriceFormat'}, 0 );
 					$Imposition = new openprint::Imposition();
-					$$Imposition{paper} = new openprint::Paper();
+					$$Imposition{Paper} = new openprint::Paper();
 				} else {
 					$Imposition = shift @{$$sig_specs{'Additional Impositions'.$qty_index}};
 				} # end if
@@ -231,7 +231,7 @@ sub status {
 			return 'uncalculated';
 		} # end if
 	} # end if
-	return 'calculated';
+	return;
 } # end sub status
 
 sub save {

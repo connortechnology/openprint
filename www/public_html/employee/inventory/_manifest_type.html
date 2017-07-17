@@ -1,6 +1,6 @@
 <fieldset>
 	<? eval (
-		$variable{location_dropdown} = openprint::Location->dropdown(order=>'parent_id NULLS FIRST, lower(name)',type=>'place') if ! exists $variable{location_dropdown};
+		$variable{location_dropdown} = openprint::Location->dropdown(company_id=>$openprint::Owner->id(), order=>'parent_id NULLS FIRST, lower(name)',type=>'place') if ! exists $variable{location_dropdown};
 		if ( ! $$variable{"location_id-$$variable{type_id}-"} ) {
 			my $default_Location = openprint::Location->find_one( name=>'POGI' );
 			$$variable{"location_id-$$variable{type_id}-"} = $default_Location->id() if $default_Location;

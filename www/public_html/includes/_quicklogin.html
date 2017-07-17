@@ -3,13 +3,13 @@
 	<fieldset><legend>Quick Login</legend>
 		<ul>
 			<li><label>Email</label>
-			<input type="email" name="email" id="email" onkeydown="if(event.keyCode == 13){checkLoginData( this, this.form.password );}"/>
-					<span id="missingLoginMessage" style="display: none;"><img src="/images/smallCurvedArrow.gif" alt="" width="12" height="8" /> Please enter your email address.</span>
-			<? echo ( ssi::button( 'QuickLoginButton', { onclick=>q`QuickLoginForm.btnFunction.value='Login';QuickLoginForm.submit();`, text=>'Login' } ); ) ?>
+				<input type="email" name="email" id="email" onkeydown="if(event.keyCode == 13){checkLoginData( this, this.form.password );}"placeholder="email address" />
+				<span id="missingLoginMessage" style="display: none;"><img src="/images/smallCurvedArrow.gif" alt="" width="12" height="8" /> Please enter your email address.</span>
+			<? echo ( button( 'QuickLoginButton', { onclick=>q`QuickLoginForm.btnFunction.value='Login';QuickLoginForm.submit();`, text=>'Login' } ); ) ?>
 			</li>
-			<li><label>Password</label><input type="password" name="password" id="password" onkeydown="if(event.keyCode == 13){checkLoginData(this.form.email, this);}"/>
-<span id="missingPasswordMessage" style="display: none;"><img src="/images/smallCurvedArrow.gif" alt="" width="12" height="8" /> Please enter your password.</span>
-				<? echo ( ssi::button( 'QuickRegistration', { href=>'/account/registration.html', text=>'Register Now' } ); ) ?>
+			<li><label>Password</label><input type="password" name="password" id="password" onkeydown="if(event.keyCode == 13){checkLoginData(this.form.email, this);}"placeholder="password" />
+				<span id="missingPasswordMessage" style="display: none;"><img src="/images/smallCurvedArrow.gif" alt="" width="12" height="8" /> Please enter your password.</span>
+				<? echo ( button( 'QuickRegistration', { href=>'/account/registration.html', text=>'Register' } ); ) ?>
 			</li>
 			<li>
 				<label>Remember</label>

@@ -44,7 +44,7 @@ Thank you for using <? echo ( new openprint::User( $session{user_id} )->Company(
 		$$variable{owing_total} += $Invoice->paid();
 
 		if ( ( time - Date::Parse::str2time( $Invoice->due_on() ) ) > ( 60*60*24*30*3 ) ) {
-			$$variable{3monthwarning} = 1;
+			$$variable{'3monthwarning'} = 1;
 		} # end if
 	} # end foreach Invoice
 
@@ -100,9 +100,9 @@ Thank you for using <? echo ( new openprint::User( $session{user_id} )->Company(
 <br class="spacer"/><br/>
 Payments received after <? echo ( Date::Format::time2str( $config{DateFormat}, time ); ) ?> will not be shown.  Please make payment immediately.  <br/>
 <br/>
-<? if ( $$variable{3monthwarning} ) ?>
+<? if ( $$variable{'3monthwarning'} ) ?>
 <b>
 Please note that at least one of these Invoices is 3 months overdue. No further service will be given until the account is brought up to date.<br/> 
 You expect prompt service from us, and we expect prompt payment from you.  Please take care of this matter immediately.
 </b>
-<? endif ( $$variable{3monthwarning} ) ?>
+<? endif ( $$variable{'3monthwarning'} ) ?>

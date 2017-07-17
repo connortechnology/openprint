@@ -17,7 +17,6 @@ require openprint::Company;
 require openprint::Company_Profile;
 require openprint::Tax;
 require openprint::Email;
-require openprint::Email_Account;
 require openprint::UserGroup;
 require openprint::Invoice;
 require openprint::Payment;
@@ -226,6 +225,7 @@ sub _currency_conversions {
 sub user_profiles {
 
 	my $user_id = $param{ddmUser} ? openprint::User->transform( 'id', $param{ddmUser} ) : undef;
+	$user_id = $param{user_id} ? openprint::User->transform( 'id', $param{user_id} ) : undef if ! $user_id;
 	my $User = $variable{User} = new openprint::User( $user_id );
 
 	my $user_role = $param{ddmUserRole};
@@ -249,6 +249,10 @@ $log->error("PReventing customer change");
 		$User = $User->Prev( 'type'=>$param{ddmUserRole}, 'company_id'=>$param{ddmCustomer} );
 	} elsif ($param{btnFunction} eq '>>') {
 		$User = $User->Next( 'type'=>$param{ddmUserRole}, 'company_id'=>$param{ddmCustomer} );
+    } elsif ( $param{btnFunction} eq 'copy' ) {
+		$User = $User->copy();
+		$User->save({});
+		$user_id = $User->id();
     } elsif ( $param{btnFunction} eq 'merge' ) {
 		if ( $$User{id} == $openprint::param{merge_user_id} ) {
 			$variable{error} .= 'Choose a different user to merge into.';
@@ -289,6 +293,7 @@ $log->error("PReventing customer change");
 			return misc::error( $log, $dbh, \%variable, "Passwords don't match.", "Your password and verify password fields do not match.");
 		} # end if
 
+if ( 0 ) {
 		my @Users = openprint::User->find( 'email lc' => lc $param{email} ) if $param{email};
 		if ( @Users > 1 or ( ( @Users == 1 ) and ( $Users[0]->id() != $User->id() ) ) ) {
 $log->debug("User ids not match " . $Users[0]->id()  . ' != ' . $User->id() );
@@ -299,6 +304,7 @@ $log->debug("User ids not match " . $Users[0]->id()  . ' != ' . $User->id() );
 		
 			return misc::error( $log, $dbh, \%variable, 'User already exists.', $error);
 		} # end if
+}
 
 		if ( ! $param{password} ) {
 			delete $param{password};
@@ -685,26 +691,47 @@ sub payment_options {
 		$variable{error} .= $variable{PaymentType}->save(\%param);
 	} elsif ( $param{btnFunction} eq 'Delete' ) {
 		$variable{error} .= $variable{PaymentType}->delete();
+		$variable{ExternalRedirect} = '/administrator/managerial/payment_options.html' if ! $variable{error};
 	} # end if
 } # end sub payment_options
+
 sub emails {
+	require openprint::Email_Account;
+	require openprint::Email_Alias;
+
 	my $mail_dbh = email::db_connect();
-	$openprint::Email::dbh = $mail_dbh;
+	$openprint::Email_Account::dbh = $mail_dbh;
  
-	if ( $param{action} eq 'Delete' ) {
-		foreach my $Email ( openprint::Email_Account->find('id'=>$param{id}) ) {
-			$variable{error} .= $Email->delete();
-		} # end foreach Email
-	} elsif ( $param{action} eq 'Save' ) {
+	if ( $param{action} ) {
+		if ( $param{action} eq 'Delete' ) {
+			foreach my $Email ( openprint::Email_Account->find(username=>$param{username}) ) {
+				$variable{error} .= $Email->delete();
+			} # end foreach Email
+		} # end if
 	} # end if
 } # end sub emails
 
 sub email {
+	require openprint::Email_Account;
+	require openprint::Email_Alias;
+
 	my $mail_dbh = email::db_connect();
 	if ( $mail_dbh ) {
 		$openprint::Email_Account::dbh = $mail_dbh;
-		$variable{Email} = new openprint::Email_Account( $param{id} );
-	} # end if
+		$openprint::Email_Alias::dbh = $mail_dbh;
+		my $Email = $variable{Email} = openprint::Email_Account->find_one( username=>$param{username} );
+		$Email = $variable{Email} = new openprint::Email_Account() if ! $Email;
+		if ( $param{action} ) {
+			if ( $param{action} eq 'Delete' ) {
+				$variable{error} .= $Email->delete();
+			} elsif ( $param{action} eq 'Save' ) {
+				$variable{error} .= $Email->save( \%param );
+			} # end if
+			$variable{ExternalRedirect} = '/administrator/managerial/emails.html' if ! $variable{error};
+		} # end if action
+	} else {
+		$variable{error} .= "No connection to mail db.<br/>";
+	} # end if have maildb connection
 } # end sub email
 
 sub usergroups {
@@ -953,8 +980,16 @@ sub promo_codes {
 } # end sub promo_codes
 
 sub logs {
+	ssi::setup_date_select( $r->uri, 'date_start', -7 );
+	ssi::setup_date_select( $r->uri, 'date_end', '' );
+  _logs();
 } # end sub logs
+
 sub _logs {
+	ssi::save_params( '/administrator/managerial/logs.html', ( 
+        'log_actions', 'user_id', 'company_id',
+				( map { 'date_start_' . $_ } ( 'year','month','day' ) ),
+				) );
 	if ( $param{action} eq 'delete' ) {
 		my $Log = new openprint::Log( $param{log_id} );
 		$Log->delete();
@@ -963,6 +998,7 @@ sub _logs {
 
 sub bitcoin {
 } # end sub bitcoin
+
 sub authorizations {
 	require openprint::Authorization;
 	require openprint::Object_Type;
@@ -989,6 +1025,27 @@ sub _authorizations {
 
 sub companies {
 	_companies();
+	if ( $param{btnFunction} ) {
+		if ( $param{btnFunction} eq 'Download' ) {
+			my $uri = $r->uri();
+    my %filters = (
+    order =>  'lower(name)',
+    ( $session{$uri.'?salesrep_id'} ? ( salesrep_id => $session{$uri.'?salesrep_id'} ) : () ),
+    ( $session{$uri.'?company_name'} ? ( 'name ilike' => '%'.$session{$uri.'?company_name'}.'%' ) : () ),
+    ( $session{$uri.'?deleted'} ne '' ? ( deleted => $session{$uri.'?deleted'} ) : () ),
+    date_filter( $uri.'?created_on_end', 'created_on <=' ),
+    date_filter( $uri.'?created_on_start', 'created_on >=' ),
+		);
+		if ( $session{$uri.'?salesrep_id_exclude'} ) {
+			my @csr_ids = map { $_->id() } openprint::User->find( company_id=>$config{owner_id}, 'usergroup any'=>'Sales' );
+			@csr_ids = sets::exclude( [ split(',', $session{$uri.'?salesrep_id'} ) ], \@csr_ids ) if $session{$uri.'?salesrep_id'};
+			$filters{'salesrep_id not in'} = \@csr_ids;
+		} # end if
+
+		my @Companies = openprint::Company->find( %filters );
+			
+		}
+	}
 } # end sub companies
 sub _companies {
 	ssi::save_params( '/administrator/managerial/companies.html', ( 
@@ -1021,6 +1078,19 @@ sub _user_logs {
 			( map { 'log_created_on_end_' . $_ } ( 'year','month','day','hour','minute' ) ),
 	);
 } # end sub _logs
+
+sub users {
+	$session{$r->uri().'?company_id'} = $session{company_id} if ! exists $session{$r->uri().'?company_id'};
+
+}
+sub _users {
+	ssi::save_params( '/administrator/managerial/users.html', ( 
+				'salesrep_id', 'marketing_category_id', 'company_id','usergroup_id','deleted','email','type','administrator',
+				( map { 'created_on_start_' . $_ } ( 'year','month','day' ) ),
+				( map { 'created_on_end_' . $_ } ( 'year','month','day' ) ),
+				) );
+	$session{$r->uri().'?salesrep_id_exclude'} = $param{salesrep_id_exclude};
+}
 
 1;
 __END__

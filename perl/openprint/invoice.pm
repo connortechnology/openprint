@@ -24,6 +24,9 @@ sub history {
 		my $Invoice = openprint::Invoice->find_one( 'id'=>$param{invoice_id} );
 		if ( ! $Invoice ) {
 			$variable{error} .= "Invoice $param{invoice_id} not found";
+		} elsif ( ! $Invoice->can_send() ) {
+			$variable{error} .= "You are not authorized to send this invoice.<br/>";
+
 		} else {
 			$variable{error} .= $Invoice->send();
 			$variable{information} .= 'Invoice ' . $Invoice->id() . ' sent.<br/>';
@@ -115,12 +118,20 @@ sub history {
 			next if $Invoice->is_paid();
 			next if $Invoice->bad_debt();
 			next if ! $Invoice->posted();
+			next if ! $Invoice->can_send();
 
 			$data{uri} = 'invoice';
 			$data{Invoice} = $Invoice;
 			$data{ReplacementText} = ssi::include( '/email_content/invoice.html', \%data );
 			push @attachments, 'Invoice '.$$Invoice{id}.'.html', MIME::QuotedPrint::encode_qp( Encode::encode('utf-8',ssi::variable_substitution( \$email_template, \%data ) ) ), 'text/html', 'quoted-printable';
 		} # end foreach Invoice
+		if ( @attachments <= 4 ) {
+			$variable{error} .= "There were no invoices to include in this statement.";
+			if ( @Invoices ) {
+				$variable{error} .= "You may not be authorized to send them.";
+			}
+			return;
+		}
 
 		my @Recipients = new openprint::Company($param{company_id})->AccountingContacts();
 		(new openprint::Email())->send(
@@ -175,36 +186,25 @@ sub edit {
 		} else {
 			delete $param{invoicee};
 		} # end if
+		my @changes = $Invoice->changes( \%param );
+		$Invoice->subtotal_override( $param{subtotal_override} );
 		$variable{error} .= $variable{Invoice}->save(\%param);
 		foreach my $Product ( $Invoice->Products() ) {
-			$variable{error} .= $Product->save({
+			my %p_changes = (
 				description	=>	$param{'product-description-'.$Product->id()},
 				price		=>	$param{'product-price-'.$Product->id()},
 				quantity	=>	$param{'product-quantity-'.$Product->id()},
 				po			=>	$param{'product-po-'.$Product->id()},
-				});
+				);
+			my @p_changes = $Product->changes( \%p_changes );
+		 	push @changes, 'product changed: ' . join(',',@p_changes) if @p_changes;
+
+			$variable{error} .= $Product->save( \%p_changes );
 		} # end foreach Product
+		(new openprint::Log())->save({ Object =>$Invoice, action=>'Invoice Edit', note=>join('<br/>', @changes)});
 		if ( $param{invoice_id} and ! $variable{error} ) {
 			$variable{information} .= 'Invoice saved.<br/>';
 			$variable{ExternalRedirect} = '/invoice/view.html?invoice_id='.$Invoice->id();
-		} # end if
-	} elsif ( $param{btnFunction} eq 'Post' ) {
-		if ( ! ( $variable{error} .= $Invoice->save({posted=>1,posted_on=>'NOW()'}) ) ) {
-			$Invoice->add_to_log( 'Invoice posted.' );
-			$variable{information} .= 'Invoice posted.<br/>';
-			delete $param{invoice_id};
-			if ( $session{'/invoice/history.html?company_id'} and ( $session{'/invoice/history.html?company_id'} != $Invoice->invoicee_id() ) ) {
-				delete $session{'/invoice/history.html?company_id'};
-			} # end if
-			$variable{ExternalRedirect} = '/invoice/view.html?invoice_id='.$Invoice->id();
-			return;
-		} # end if
-	} elsif ( $param{btnFunction} eq 'UnPost' ) {
-		if ( ! ( $variable{error} .= $Invoice->save({'posted'=>0}) ) ) {
-			$Invoice->add_to_log( 'Invoice unposted.' );
-			$variable{information} .= 'Invoice unposted.<br/>';
-			$variable{ExternalRedirect} = '/invoice/view.html?invoice_id='.$Invoice->id();
-			return;
 		} # end if
 	} # end if
 	if ( ! $variable{Invoice}->id() ) {
@@ -266,11 +266,10 @@ sub view {
 							compounded_on	=>	sprintf('%.4d-%.2d-%.2d', $year, $month, $day ),
 							});
 					if ( ! $_ ) {
-						$Invoice->add_to_log(sprintf('Added %s%.2f interest for %s', 
-									$Invoice->Currency()->symbol(), 
-									$I->amount(),
-									$date_string,
-									));
+						(new openprint::Log())->save({
+							Object	=>	$Invoice,
+							note	=>	sprintf('Added %s%.2f interest for %s', $Invoice->Currency()->symbol(), $I->amount(), $date_string),
+							action	=>	'Invoice Interest Added'});
 					} else {
 						$variable{error} .= $_;
 						last;
@@ -289,6 +288,24 @@ sub view {
 			$Invoice->interest();
 			$Invoice->save();
 		} # e,nd if
+	} elsif ( $param{btnFunction} eq 'Post' ) {
+		if ( ! ( $variable{error} .= $Invoice->save({posted=>1,posted_on=>'NOW()'}) ) ) {
+			(new openprint::Log())->save({ Object=>$Invoice, action => 'Invoice Posted'});
+			$variable{information} .= 'Invoice posted.<br/>';
+			delete $param{invoice_id};
+			if ( $session{'/invoice/history.html?company_id'} and ( $session{'/invoice/history.html?company_id'} != $Invoice->invoicee_id() ) ) {
+				delete $session{'/invoice/history.html?company_id'};
+			} # end if
+			$variable{ExternalRedirect} = '/invoice/view.html?invoice_id='.$Invoice->id();
+			return;
+		} # end if
+	} elsif ( $param{btnFunction} eq 'UnPost' ) {
+		if ( ! ( $variable{error} .= $Invoice->save({ posted=>0 }) ) ) {
+			(new openprint::Log())->save({ Object=>$Invoice, action => 'Invoice Unposted'});
+			$variable{information} .= 'Invoice unposted.<br/>';
+			$variable{ExternalRedirect} = '/invoice/view.html?invoice_id='.$Invoice->id();
+			return;
+		} # end if
 	} elsif ( $param{btnFunction} eq 'Delete' ) {
 		if ( ! ( $variable{error} .= $Invoice->delete() ) ) {
 			$variable{information} .= 'Invoice ' . $Invoice->id() . ' deleted.<br/>';
@@ -300,10 +317,14 @@ sub view {
 			$variable{ExternalRedirect} = '/invoice/history.html';
 		} # end if
 	} elsif ( $param{btnFunction} eq 'Send' ) {
-		$variable{error} .= $Invoice->send();
-		$variable{information} .= 'Invoice ' . $Invoice->id() . ' sent.<br/>';
-		$variable{ExternalRedirect} = $Invoice->url_to();
-		return;
+		if ( ! $Invoice->can_send() ) {
+			$variable{error} .= "You are not authorized to send this invoice.<br/>";
+		} else {
+			$variable{error} .= $Invoice->send();
+			$variable{information} .= 'Invoice ' . $Invoice->id() . ' sent.<br/>';
+			$variable{ExternalRedirect} = $Invoice->url_to();
+			return;
+		}
 	} elsif ( $param{btnFunction} eq 'Send To Me' ) {
 		$variable{error} .= $Invoice->send( new openprint::User( $session{user_id} ) );
 		$variable{information} .= 'Invoice ' . $Invoice->id() . ' sent.<br/>';

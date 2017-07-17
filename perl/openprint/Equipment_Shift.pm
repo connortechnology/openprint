@@ -55,6 +55,10 @@ $serial = 'equipment_shifts_id_seq';
 	'name'			=>	q`'Shift'`,
 );
 
+sub to_string {
+	return sprintf("EquipmentShift: %s %s %s", $_[0]->Equipment()->name(), $_[0]->name(), misc::seconds_to_JDF_interval( $_[0]{duration} ) );
+}
+
 my $dtfd = DateTime::Format::Duration->new(
 		pattern => '%Y years, %m months, %e days, '.
 		'%H hours, %M minutes, %S seconds'
@@ -71,7 +75,7 @@ sub starttime_seconds {
 		$_[0]{endtime_seconds} = $_[0]{starttime_seconds} + $_[0]{duration_seconds};
 	} # end if
 	return $_[0]{starttime_seconds};
-} # end sub endtime_seconds
+} # end sub starttime_seconds
 
 sub endtime {
 	if ( ! $_[0]{endtime} ) {
@@ -134,7 +138,7 @@ sub test_emanantise {
 	if ( ref $requested_dt ne 'DateTime' ) {
 		$requested_dt = DateTime->from_epoch( epoch=>$requested_dt, time_zone=>$openprint::TZ );
 	}
-	$log->debug("Emanentise: Date: " . $parser->format_datetime( $requested_dt ) );
+	$log->debug("Emanentise: Date: " . $parser->format_datetime( $requested_dt ) ) if $debug;
 	# The point is to drop any additional time part, but how can that be right? What we want to do is jump gaps
 
 	my $shift_start_time_dt = DateTime::Duration->new( seconds => $self->starttime_seconds() % DAY );
@@ -148,10 +152,10 @@ sub test_emanantise {
 #$log->debug("adding an hour for DST");
 		$date_part_dt += DateTime::Duration->new( hours=>1 );
 	} # end if
-	$log->debug("Date Part: " . $parser->format_datetime( $date_part_dt ) );
+	$log->debug("Date Part: " . $parser->format_datetime( $date_part_dt ) ) if $debug;
 
 	my $st = $date_part_dt + $shift_start_time_dt;
-	$log->debug("initial st: " . $parser->format_datetime( $st ) . ' requested: ' . $parser->format_datetime( $requested_dt ) );
+	$log->debug("initial st: " . $parser->format_datetime( $st ) . ' requested: ' . $parser->format_datetime( $requested_dt ) ) if $debug;
 	#if ( $st < $requested_dt ) {
 		# Need to add a day
 		# Who	y?because a shift may go into the next day.  
@@ -198,12 +202,12 @@ sub test_emanantise {
 # We presume that normally date_seconds is teh starttie + 1 of the previous shift -> why? why not endtime?  I don't kn ow.
 sub emanantise {
 	my ( $self, $requested_dt ) = @_;
-	$log->debug("Emanantise: " . $self->to_string() );
+	$log->debug("Emanantise: " . $self->to_string() ) if $debug;
 
 	if ( ref $requested_dt ne 'DateTime' ) {
 		$requested_dt = DateTime->from_epoch( epoch=>$requested_dt, time_zone=>$openprint::TZ );
 	}
-	$log->debug("Emanentise: Date: " . $parser->format_datetime( $requested_dt ) );
+	$log->debug("Emanentise: Date: " . $parser->format_datetime( $requested_dt ) ) if $debug;
 	# The point is to drop any additional time part, but how can that be right? What we want to do is jump gaps
 
 	my $shift_start_time_dt = DateTime::Duration->new( seconds => $self->starttime_seconds() % DAY );
@@ -217,10 +221,10 @@ sub emanantise {
 #$log->debug("adding an hour for DST");
 		$date_part_dt += DateTime::Duration->new( hours=>1 );
 	} # end if
-	$log->debug("Date Part: " . $parser->format_datetime( $date_part_dt ) );
+	$log->debug("Date Part: " . $parser->format_datetime( $date_part_dt ) ) if $debug;
 
 	my $st = $date_part_dt + $shift_start_time_dt;
-	$log->debug("initial st: " . $parser->format_datetime( $st ) . ' requested: ' . $parser->format_datetime( $requested_dt ) );
+	$log->debug("initial st: " . $parser->format_datetime( $st ) . ' requested: ' . $parser->format_datetime( $requested_dt ) ) if $debug;
 	#if ( $st < $requested_dt ) {
 		# Need to add a day
 		# Who	y?because a shift may go into the next day.  
@@ -351,9 +355,11 @@ sub delete {
 
 	my $ac = sql::start_transaction( $openprint::dbh );
 
-	foreach my $Shift ( openprint::Shift->find('shift_id'=>$_[0]{id}, 'starttime <='=> $now ) ) {
+	foreach my $Shift ( openprint::Shift->find( shift_id=>$_[0]{id}, 'starttime <='=> $now ) ) {
 		if ( $$Shift{shift_id} == $_[0]{id} ) {
-			$error .= $Shift->save({ shift_id=>undef });
+			# Shifts aren't that special
+			$error .= $Shift->delete();
+			#$error .= $Shift->save({ shift_id=>undef });
 		} else {
 			$openprint::log->error("Equipment_Shift::delete deleting a shift that isn't ours!");
 		} # end if
@@ -430,8 +436,10 @@ sub duration_seconds {
 sub distance {
 	my ( $self, $Next ) = @_;
 	$Next = $self->Next() if ! $Next;
-	if ( $$Next{starttime_seconds} >= $$self{starttime_seconds} ) {
-		return $$Next{starttime_seconds} - $$self{starttime_seconds};
+	if ( $$Next{starttime_seconds} > $$self{starttime_seconds} ) {
+		return $$Next{starttime_seconds} - $self->endtime_seconds();
+	} elsif ( $$self{starttime_seconds} == $$Next{starttime_seconds} ) {
+		return DAY - $$self{duration_seconds};
 	} else {
 		# Wrap around
 		my $endtime = $self->endtime_seconds() % DAY;

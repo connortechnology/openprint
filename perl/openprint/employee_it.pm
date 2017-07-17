@@ -12,6 +12,7 @@ use vars qw( %variable %session %param %config $log $dbh $r );
 *r = \$openprint::r;
 
 require openprint::Host;
+require openprint::Host_Info;
 require openprint::RADIUS_Check;
 require openprint::RADIUS_Reply;
 require openprint::User_Type;
@@ -71,7 +72,7 @@ sub _hosts {
 			'updated_on_end_year', 'updated_on_end_month', 'updated_on_end_day', 
 			'has_hostname', 'monitored','whitelisted','blacklisted','online',
 			'ip','hostname','mac','type_id',
-			'radius_auth', 'order', 'deleted',
+			'radius_auth', 'order', 'deleted', 'owner_id',
 			);
 	if ( $config{'RADIUS_Support'} eq 'Y' ) {
 		$openprint::RADIUS_Reply::dbh = $openprint::RADIUS_Check::dbh = sql::open_sql( $log,
@@ -100,6 +101,13 @@ sub host {
 		} # end foreach
 	} elsif ( $param{action} eq 'Delete' ) {
 		$variable{error} .= $Host->delete();
+		if ( ! $variable{error} ) {
+			$variable{ExternalRedirect} = '/employee/it/hosts.html';
+			return;
+		} # end if
+		%param = ();
+	} elsif ( $param{action} eq 'Destroy' ) {
+		$variable{error} .= $Host->destroy();
 		if ( ! $variable{error} ) {
 			$variable{ExternalRedirect} = '/employee/it/hosts.html';
 			return;
@@ -150,19 +158,26 @@ sub host {
 			delete $param{type_id};
 		} # end if
 		my $Location = openprint::Location::save_location( \%param );
-		$param{location_id} = $Location->id() if $Location->id();
-		$variable{error} .= $Host->save(\%param);
+		$param{location_id} = $Location->id() if $Location and $Location->id();
+		my @changes = $Host->changes(\%param);
+
+		$variable{error} .= $Host->save(\%param) if @changes;
 		foreach my $I ( $Host->Interfaces(), new openprint::Host_Interface() ) {
 			if ( $param{"mac-$$I{id}"} or $param{"ip-$$I{id}"} or $param{"comment-$$I{id}"} ) {
-				$variable{error} .= $I->save({
-					host_id=>$$Host{id},
-					map { $_, $param{"$_-$$I{id}"} } ( 'mac', 'ip', 'dhcp', 'comment' )
-				});
+				my %c =map { $_, $param{"$_-$$I{id}"} } ( 'mac', 'ip', 'dhcp', 'monitor', 'comment' );
+				my @c = $I->changes( \%c );
+				if ( @c ) {
+					$c{host_id} = $$Host{id};
+					$variable{error} .= $I->save(\%c);
+					push @changes, 'Interface changed: ' . join(',', @c ) . '<br/>' if ! $variable{error};
+				}
 			} else {
 				$variable{error} .= $I->delete() if $$I{id};
 			} # end if
 		} # end foreach Interface
+		
 		if ( ! $variable{error} ) {
+			(new openprint::Log())->save({Object=>$Host, action=>'Edit', note=>join('<br/>', @changes) });
 			$variable{ExternalRedirect} = '/employee/it/hosts.html';
 			return;
 		} # end if
@@ -174,28 +189,27 @@ sub host {
 			$variable{information} .= 'Host did not respond to ping.';
 		} # end if	
 	} elsif ( $param{action} eq 'Upload' ) {
-        # Save any changes made to Article
 		$param{mac} = [ map { split( ',', $_ ) } split("\n", $param{mac}) ];
 		if ( $param{type_id} ) {
 			delete $param{type};
 		} else {
 			delete $param{type_id};
 		} # end if
-        $variable{error} .= $Host->save(\%param);
-        my $Asset = openprint::Asset::upload( 'filename' );
-        if ( ref $Asset ne 'openprint::Asset' ) {
-            $variable{error} .= $Asset;
-        } else {
-            my $Object_Asset = new openprint::Object_Asset();
-            $variable{error} .= $Object_Asset->save({
+		$variable{error} .= $Host->save(\%param);
+		my $Asset = openprint::Asset::upload( 'filename' );
+		if ( ref $Asset ne 'openprint::Asset' ) {
+			$variable{error} .= $Asset;
+		} else {
+			my $Object_Asset = new openprint::Object_Asset();
+			$variable{error} .= $Object_Asset->save({
 					asset_id	=>	$Asset->id(),
 					object_id	=>	$Host->id(),
 					object_type	=>	'openprint::Host',
 					});
-            if ( $param{asset_name} and ! $Asset->name() ) {
-                $Asset->save({'name'=>$param{asset_name}});
-            } # end if
-        } # end if
+			if ( $param{asset_name} and ! $Asset->name() ) {
+				$Asset->save({'name'=>$param{asset_name}});
+			} # end if
+		} # end if
 	} # end if
 	if ( ( ! $Host->id() ) and ( $param{ip} or $param{mac} or $param{hostname} ) ) {
 		my $I = new openprint::Host_Interface();
@@ -225,7 +239,7 @@ sub host {
 			$variable{error} .= 'Unable to connect to RADIUS DB server.';
 			return;
 		} # end if
-    } # end if
+  } # end if
 
 } # end sub view_host
 
@@ -275,10 +289,10 @@ sub _radius_mac_line {
 		} else {
 			$log->warn("Re didn't match $param{username}");
 		} # end if
-		if ( ! $param{value} ) {
-			if ( $param{attribute} eq 'Cleartext-Password' ) {
-				$param{value} = $param{username};
-			} elsif ( $param{attribute} eq 'Framed-IP-Address' ) {
+		if ( $param{attribute} eq 'Cleartext-Password' ) {
+			$param{value} = $param{username};
+		} elsif ( $param{attribute} eq 'Framed-IP-Address' ) {
+			if ( ! $param{value} ) {
 				my $Host = openprint::Host->find_one('mac any'=>$param{username});
 				if ( $Host ) {
 					$param{value} = $Host->ip();
@@ -345,7 +359,7 @@ sub _radius {
 	} # end if
 	if ( $param{action} eq 'Delete' ) {
 		foreach my $id ( ref $param{record_id} eq 'ARRAY' ? @{$param{record_id}} : $param{record_id} ) {
-			my $Record = new openprint::openprint::RADIUS_Check( $id );
+			my $Record = new openprint::RADIUS_Check( $id );
 			$variable{error} .= $Record->delete();
 		} # end foreach host_id
 	} # end if
@@ -379,7 +393,7 @@ sub _sessions {
 			'created_on_end_year', 'created_on_end_month','created_on_end_day',
 			'updated_on_start_year', 'updated_on_start_month','updated_on_start_day',
 			'updated_on_end_year', 'updated_on_end_month','updated_on_end_day',
-			'company_id','user_type','user_id',
+			'company_id','user_type','user_id','ip',
 	);
 } # end sub _sessions
 

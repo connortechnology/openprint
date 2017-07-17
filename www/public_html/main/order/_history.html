@@ -63,7 +63,8 @@
 				<th class="docket">Docket</th>
 				<th class="invoices">Invoices</th>
 				<th class="User">Ordered By</th>
-				<th class="Date">Date</th>
+				<th class="Date">Created</th>
+				<th class="Date">Requested For</th>
 				<th class="Status">Status</th>
 				<th class="Price">Total</th>
 				<th class="Price">Balance</th>
@@ -93,16 +94,19 @@
 	<td class="order_id"><a href="history_details.html?order_id=%2$d">%2$d</a></td>
 	<td class="docket"><a href="history_details.html?order_id=%2$d">%3$s</a></td>
 	<td class="invoices"><a href="history_details.html?order_id=%2$d">%4$s</a></td>
-	<td align="left"><a href="history_details.html?order_id=%2$d">%5$s</a></td>
+	<td class="User"><a href="history_details.html?order_id=%2$d">%5$s</a></td>
 	<td class="Date"><a href="history_details.html?order_id=%2$d">%6$s</a></td>
-	<td class="Status"><a href="history_details.html?order_id=%2$d">%7$s</a></td>
-	<td class="Price"><a href="history_details.html?order_id=%2$d">%8$s</a></td>
+	<td class="Date"><a href="history_details.html?order_id=%2$d">%7$s</a></td>
+	<td class="Status"><a href="history_details.html?order_id=%2$d">%8$s</a></td>
 	<td class="Price"><a href="history_details.html?order_id=%2$d">%9$s</a></td>
+	<td class="Price"><a href="history_details.html?order_id=%2$d">%10$s</a></td>
 </tr>
 <tr%1$s>
 	<td colspan="3">&nbsp;</td>
-	<td colspan="5">%10$s</td>
-</tr>`, $rowclass, $Order->id(), $Order->docket(), join('<br/>', map { $_->Invoice()->num() } $Order->Invoices() ), $Order->name(), format_date( $Order->created_on() ),
+	<td colspan="6">%11$s</td>
+</tr>`, $rowclass, $Order->id(), $Order->docket(), join('<br/>', map { $_->Invoice()->num() } $Order->Invoices() ), $Order->name(), 
+format_date( $Order->created_on() ),
+join('<br/>', map { $$_{requested_for} ? format_date( $$_{requested_for} ) : () } $Order->Ordered_Projects() ),
 $Order->status(), 
 openprint::Currency::format( $$variable{total} ),
 openprint::Currency::format( $$variable{balance} ),
@@ -113,7 +117,7 @@ join('<br/>', map { $_->reference() ? $_->reference() : $_->summary() } $Order->
 		return $html;
 	) ?>
 		<tr class="totals">
-			<td colspan="6" align="right"><b>Report Totals</b></td>
+			<td colspan="7" align="right"><b>Report Totals</b></td>
 			<td class="Price"><? echo ( openprint::Currency::format( $$variable{ReportTotal} ); ) ?></td>
 			<td class="Price"><? echo ( openprint::Currency::format( $$variable{ReportBalance} ); ) ?></td>
 		</tr>

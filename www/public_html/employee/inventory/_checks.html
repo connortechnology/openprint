@@ -13,6 +13,8 @@
 	<table class="List">
 		<tr>
 			<th class="Name">Name</th>
+			<th class="Items"># of Items</th>
+			<th class="Date">Created On</th>
 			<th class="Date">Date Started</th>
 			<th class="Date">Date Ended</th>
 		</tr>
@@ -28,9 +30,15 @@
 				$html .= sprintf('
 <tr class="%1$s">
 	<td class="Name"><a href="check.html?check_id=%2$d">%3$s</a></td>
-	<td class="Date"><a href="check.html?check_id=%2$d">%4$s</a></td>
+	<td class="Name"><a href="check.html?check_id=%2$d">%4$s</a></td>
 	<td class="Date"><a href="check.html?check_id=%2$d">%5$s</a></td>
-</tr>', $rowclass, $$Check{id}, $Check->name(), format_date( $Check->started_on() ), format_date( $Check->ended_on() ) );
+	<td class="Date"><a href="check.html?check_id=%2$d">%6$s</a></td>
+	<td class="Date"><a href="check.html?check_id=%2$d">%7$s</a></td>
+</tr>', $rowclass, $$Check{id}, $Check->name(), 
+$Check->item_count(),
+format_date( $Check->created_on() ),
+format_date( $Check->started_on() ),
+format_date( $Check->ended_on() ) );
 				$rowclass = $rowclass ? '' : 'colRow';
 			} # end foreach Check
 			return $html;

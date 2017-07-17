@@ -1,22 +1,18 @@
-<? if ( openprint::usergroup::is_user_in( ['Price Overrides'], $session{'user_id'} ) ) ?>
+<? if ( openprint::usergroup::is_user_in( ['Price Overrides'], $session{user_id} ) ) ?>
 	<li class="markup">
 		<label>Markup</label>
 	<? echo ( my $html;
-		foreach my $qty_index ( $$variable{'Project'}->quantity_indexes() ) {
+		foreach my $qty_index ( $$variable{Project}->quantity_indexes() ) {
 	$html .= '<span class="'.$$variable{Columns}.'Columns">';
-	$html .= ssi::input( type=>'number', name=>"Markup$qty_index", value=>$$variable{'Markup'.$qty_index}, onkeyup=>q`floatize(this);calc(this.form.name);` ).'%';
+	$html .= input( type=>'float', name=>"Markup$qty_index", value=>$$variable{'Markup'.$qty_index}, onkeyup=>q`calc(this.form.name);` ).'%';
 		$html .= '</span>';
 	} # end foreach
 	return $html;
 ) ?>
 	</li>
-<? else ( openprint::usergroup::is_user_in( ['Price Overrides'], $session{'user_id'} ) ) ?>
-			
-	<? eval ( $$variable{'QTYIndex'} = 1 ) ?>
-	<? while ( $$variable{'QTYIndex'} <= 3 ) ?>
-	<? if ( $$variable{'Project'}->{'quantity'.$$variable{'QTYIndex'}} ) ?>
-	<input type="hidden" name="Markup<?QTYIndex?>" value="<? echo ( $$variable{'Markup'.$$variable{'QTYIndex'}} ) ?>" />
-	<? endif ( $$variable{'Project'}->{'quantity'.$$variable{'QTYIndex'}} ) ?>
-	<? eval ( $$variable{'QTYIndex'} += 1 ) ?>
-	<? endwhile ( $$variable{'QTYIndex'} <= 3 ) ?>
-<? endif ( openprint::usergroup::is_user_in( ['Price Overrides'], $session{'user_id'} ) ) ?>
+<? else ( openprint::usergroup::is_user_in( ['Price Overrides'], $session{user_id} ) ) ?>
+	<?echo( join("\n", map {
+	qq`<input type="hidden" name="Markup$_" value="`.$$variable{'Markup'.$_}.'" />'
+} $$variable{Project}->quantity_indexes() );
+ ) ?>
+<? endif ( openprint::usergroup::is_user_in( ['Price Overrides'], $session{user_id} ) ) ?>

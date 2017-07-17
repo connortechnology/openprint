@@ -32,6 +32,7 @@ function get_value( obj ) {
 				value[value.length] = obj[x].value;
 			} // end if
 		}
+		if ( value.length == 0 ) return;
 		if ( value.length == 1 ) return value[0];
 		return value;
 	} else {
@@ -519,6 +520,10 @@ function clearForm(form) {
 	} // end for
 } // end function clearForm(form)
 
+function update_changed( element ) {
+	if ( element_changed(element) ) {
+	}
+}
 function element_changed( element ) {
 	if ( ! element ) {
 //alert('Null element passed to element_changed');
@@ -1375,6 +1380,8 @@ function getValues( form, element_names, more_values ) {
 			var form_element = form.elements[element_names[index-1]];
 			if ( form_element ) {
 				results.set(element_names[index-1], get_value( form_element ) );
+			} else {
+				console.log(element_names[index-1] + ' was not found in form' );
 			} // end if
 		} // end for
 	} else if ( element_names.constructor == RegExp ) {

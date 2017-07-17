@@ -36,7 +36,7 @@
 		if ( div ) LoadContent( $('ProjectList'), '/main/project/_history.html', $('f1') );
 	} // end function
 </script>	 
-<? if ( $session{'user_id'} ) ?>
+<? if ( $session{user_id} ) ?>
 <form id="f1" name="f1" method="post" action="/main/project/history.html">
    <div class="Project"><div class="History">
 		<fieldset class="filters"><legend>Select Search Criteria</legend>
@@ -52,7 +52,7 @@
 			</li>
 			<li>
 				<label>Reference</label>
-				<input type="text" id="reference" name="reference" value="<? echo ( $param{'reference'} ) ?>" onkeyup="load_projects();" />
+				<input type="text" id="reference" name="reference" value="<? echo ( $param{reference} ) ?>" onkeyup="load_projects();" />
 			</li>
 			<li>
 				<label>Status</label>
@@ -94,6 +94,18 @@
 <? echo ( make_drop_down( openprint::Company->dropdown(or=>{id=>$openprint::Company->id(),'last_project_id is null'=>0}), $session{'/main/project/history.html?company_id'} ) ) ?>
 				</select>
 			</li>
+<? eval ( 
+	$$variable{CSRdropdown} = openprint::User->dropdown( type=>['E','A'], 'usergroup any'=>['Sales'] );
+) ?>
+<? if ( @{$$variable{CSRdropdown}} ) ?>
+			<li class="salesrep_id">
+				<label>Sales Reps</label>
+				<select name="salesrep_id" size="1">
+				<option value="">All</option>
+				<? echo ( make_drop_down( $$variable{CSRdropdown}, $session{$r->uri().'?salesrep_id'} ); ) ?>
+				</select>
+			</li>
+<? endif ( @{$$variable{CSRdropdown}} ) ?>
 	<? if ( openprint::Product->find_one() ) ?>
 			<li><label>Predefined</label>
 				<? echo ( radio( 'predefined', [ '1','Yes','0','No','','Both'], $session{'/main/project/history.html?predefined'}, { onclick=>'load_projects();' } ); ) ?>
@@ -136,6 +148,6 @@
 	</div>
 	<input type="hidden" name="btnFunction" />
 </form>
-<? else ( $session{'user_id'} ) ?>
+<? else ( $session{user_id} ) ?>
 Only logged in customers have a project history.
-<? endif ( $session{'user_id'} ) ?>
+<? endif ( $session{user_id} ) ?>

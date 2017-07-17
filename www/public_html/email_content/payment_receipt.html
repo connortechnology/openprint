@@ -13,7 +13,7 @@ Thank you for your payment!<br/>
 	my @IPs = $$variable{Payment}->Invoices();
 	return '' if ! @IPs;
 	my $rowclass;
-	my $html = 'This payment has been applied to the following invoices:<br/>
+	my $html = '<br/><br/>This payment has been applied to the following invoices:<br/>
 		<table class="List"><tr><th class="invoice_id">Invoice</th><th class="Date">Posted On</th><th class="Price Total">Invoice Total</th><th class="Price Owing">Remaining Owing</th></tr>
 	';
 	foreach my $IP ( @IPs ) {

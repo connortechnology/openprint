@@ -135,6 +135,10 @@ sub calc {
 		$minimumCharge = openprint::service::get_price( 'PaddingChargeMinimum' );
 	} # end if
 
+	my $Service = openprint::Service->find_one(name=>'Padding'.$ProjectType->name());
+	$Service = openprint::Service->find_one(name=>'Padding') if ! $Service;
+	my $Material = openprint::Material->find_one( name=>'CardboardBacking') if $$specs{Backing} eq 'Cardboard';
+
 	foreach my $qty_index ( $Project->quantity_indexes() ) {
 		$$specs{'txtPrice'.$qty_index} = '';
 		$$specs{"txtQuantity$qty_index"} = $Project->quantity($qty_index) if ! $$specs{"txtQuantity$qty_index"};
@@ -160,10 +164,7 @@ sub calc {
 			$$specs{'hdnBreakdown'.$qty_index} .= sprintf('MakeReady: $%.2f%s=$%.2f<br/>', @MR{'Price','units','Total'});
 		} # end if
 
-		my %ServicePrice;
-		if ( ! ( %ServicePrice = openprint::service::get_price_object( 'Padding'.$ProjectType->name(), $qty, undef ) ) ) {
-			%ServicePrice = openprint::service::get_price_object( 'Padding', $qty, undef );
-		} # end if
+		my %ServicePrice = $Service->get_price( $qty ) if $Service;
 		if ( ! %ServicePrice ) {
 			$log->debug('No price');
 			$status = 'uncalculated';
@@ -171,10 +172,10 @@ sub calc {
 			$$specs{"txtPrice$qty_index"} = sprintf( '%.2f', 0 );
 			$$specs{"txtUnitPrice$qty_index"} = sprintf( $openprint::config{UnitPriceFormat}, 0 );
 			next;
-		} elsif ( sets::isin( lc $ServicePrice{units}, [ 'per pad', 'each' ] ) ) {
+		} elsif ( sets::isin( $ServicePrice{units}, [ 'per pad', 'each' ] ) ) {
 			$ServicePrice{Total} = $ServicePrice{Price} * $qty;
 			$$specs{'hdnBreakdown'.$qty_index} .= sprintf('ServicePrice: $%1$.2f%2$s * %4$d = $%3$.2f<br/>', @ServicePrice{'Price','units','Total'}, $qty );
-		} elsif ( lc $ServicePrice{units} eq 'per m' ) {
+		} elsif ( $ServicePrice{units} eq 'per m' ) {
 			$ServicePrice{Total} = $ServicePrice{Price} * $qty / 1000;
 			$$specs{'hdnBreakdown'.$qty_index} .= sprintf('ServicePrice: $%1$.2f%2$s * %4$d = $%3$.2f<br/>', @ServicePrice{'Price','units','Total'}, $qty );
 		} else {
@@ -182,20 +183,19 @@ sub calc {
 		} # end if
 		$price += $ServicePrice{Total};
 			
-		if ( $$specs{Backing} eq 'Cardboard' ) {
-			if ( my $Material = openprint::Material->find_one('name'=>'CardboardBacking') ) {
-				my %CardboardPrice = $Material->get_price( $qty, undef );
-				if ( $CardboardPrice{units} eq 'per square inch' ) {
-					$CardboardPrice{Total} = Math::Round::nearest( 0.01, $CardboardPrice{Price} * $$printing_specs{txtFinalWidth} * $$printing_specs{txtFinalHeight} * $$specs{"txtQuantity$qty_index"} );
-				} elsif ( $CardboardPrice{units} eq 'per square foot' ) {
-					$CardboardPrice{Total} = Math::Round::nearest( 0.01, $CardboardPrice{Price} * ($$printing_specs{txtFinalWidth} * $$printing_specs{txtFinalHeight}/144) * $$specs{"txtQuantity$qty_index"} );
-				} elsif ( $CardboardPrice{units} eq 'per pad' ) {
-					$CardboardPrice{Total} = $qty * $CardboardPrice{Price};
-				} # end if
-				$$specs{'hdnBreakdown'.$qty_index} .= sprintf('Cardboard Price: $%1$.2f%2$s * %4$sx%5$s = $%3$.2f<br/>', @CardboardPrice{'Price','units','Total'}, @$printing_specs{'txtFinalWidth','txtFinalHeight'} );
-				$price += $CardboardPrice{Total};
+		if ( $Material ) {
+			my %CardboardPrice = $Material->get_price( $qty, undef );
+			if ( $CardboardPrice{units} eq 'per square inch' ) {
+				$CardboardPrice{Total} = Math::Round::nearest( 0.01, $CardboardPrice{Price} * $$printing_specs{txtFinalWidth} * $$printing_specs{txtFinalHeight} * $$specs{"txtQuantity$qty_index"} );
+			} elsif ( $CardboardPrice{units} eq 'per square foot' ) {
+				$CardboardPrice{Total} = Math::Round::nearest( 0.01, $CardboardPrice{Price} * ($$printing_specs{txtFinalWidth} * $$printing_specs{txtFinalHeight}/144) * $$specs{"txtQuantity$qty_index"} );
+			} elsif ( $CardboardPrice{units} eq 'per pad' ) {
+				$CardboardPrice{Total} = $qty * $CardboardPrice{Price};
 			} # end if
-		} # end if
+			$$specs{'hdnBreakdown'.$qty_index} .= sprintf('Cardboard Price: $%1$.2f%2$s * %4$sx%5$s = $%3$.2f<br/>', @CardboardPrice{'Price','units','Total'}, @$printing_specs{'txtFinalWidth','txtFinalHeight'} );
+			$price += $CardboardPrice{Total};
+		} # end if Material
+
 		if ( $$specs{rdbDTape} eq 'Y' ) {
 			if ( my $Material = openprint::Material->find_one('name'=>'DTape') ) {
 				my %DTapePrice = $Material->get_price( $qty, undef );

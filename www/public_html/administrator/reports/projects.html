@@ -7,21 +7,21 @@
 		<p>
 			<label>Project ID</label>
 			<input type="number" name="ProjectIndex" onkeydown="if(event.keyCode == 13){f1.submit();}" onkeyup="this.value=this.value.replace(/\D/g,'');" />
-			<? echo ( ssi::writeButton( $log, $dbh, 'Go1','go.gif',"f1.action='/main/project/view.html';f1.submit();", '', 'Go' ); ) ?>	
+			<? echo ( writeButton( $log, $dbh, 'Go1','go.gif',"f1.action='/main/project/view.html';f1.submit();", '', 'Go' ); ) ?>	
 		</p>
 		<p>
 			<label>Company</label>
 			<input type="text" onkeyup="filterDDM(this, f1.ddmCustomers);" class="filter" />
 			<select name="ddmCustomers" onchange="if(this.options[this.selectedIndex].value != '') f1.submit();" >
 				<option value=""> Select a Customer</option>
-				<? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::Company->find('order'=>'lower(name)')], $param{'ddmCustomers'} ); ) ?>
+				<? echo ( make_drop_down( [ map { $_->id(), $_->name() } openprint::Company->find('order'=>'lower(name)')], $param{'ddmCustomers'} ); ) ?>
 			</select>
 		</p>
 		<p>
 			<label>Estimator</label>
 			<select name="ddmEstimator" size="1"> 
 				<option value="">All Estimators</option>
-				<? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::User->find('type'=>['E','A'], 'order'=>'lower(firstname),lower(lastname)') ], $$variable{'ddmEstimator'} ); ) ?>
+				<? echo ( make_drop_down( [ map { $_->id(), $_->name() } openprint::User->find('type'=>['E','A'], 'order'=>'lower(firstname),lower(lastname)') ], $$variable{'ddmEstimator'} ); ) ?>
 			</select>
 		</p>
 		<p> 
@@ -29,7 +29,7 @@
 			<select name="ddmStatus" size="1">
 				<option value="">All</option>
 <? echo ( 
-    ssi::fill_drop_down( $log, $dbh, 'SELECT name,name FROM Project_statuses ORDER BY sort,name', $param{'ddmStatus'} );
+    fill_drop_down( $log, $dbh, 'SELECT name,name FROM Project_statuses ORDER BY sort,name', $param{'ddmStatus'} );
 ) ?>
 			</select>
 		</p>
@@ -50,7 +50,7 @@
 			</select>
 		</p>
 <? eval (
-ssi::get_start_end_dates( $log, $dbh, $variable, @param{'ddmStartYear','ddmStartMonth','ddmStartDay','ddmEndYear','ddmEndMonth','ddmEndDay'} );
+get_start_end_dates( $log, $dbh, $variable, @param{'ddmStartYear','ddmStartMonth','ddmStartDay','ddmEndYear','ddmEndMonth','ddmEndDay'} );
 ) ?>
 		<p> 
 			<label>Created Date</label>
@@ -65,13 +65,13 @@ ssi::get_start_end_dates( $log, $dbh, $variable, @param{'ddmStartYear','ddmStart
 				<select name="ddmEndYear" onchange="setDaysDropDown(this.value,this.form.ddmEndMonth.value,this.form.ddmEndDay,this.form.ddmEndDay.value);"><?endyears?></select>
 			</span>
 		</p>
-		<p><label>Limit</label><select name="limit"><? echo ( ssi::make_drop_down( [ ( 100, 100, '', 'All' ) ], $param{'limit'} ); ) ?></select>
+		<p><label>Limit</label><select name="limit"><? echo ( make_drop_down( [ ( 100, 100, '', 'All' ) ], $param{'limit'} ); ) ?></select>
 		</p>
 		<p class="buttons">
 			<? echo ( join('',
-				ssi::writeButton( $log, $dbh, 'ShowResults', 'showResults.gif', "new Ajax.Updater( 'Results', '_projects.html', { parameters: \$('f1').serialize() } );", '', 'Show Results' ),
-				ssi::writeButton( $log, $dbh, 'DownloadCSV', 'downloadCSVFormat.gif', "f1.action='projects.html?Download';f1.btnFunction.value='Download in CSV format';f1.submit();", '', 'Download in CSV Format' ),
-				ssi::writeButton( $log, $dbh, 'Reset', 'reset.gif', "f1.reset();", '', 'Reset' ),
+				writeButton( $log, $dbh, 'ShowResults', 'showResults.gif', "new Ajax.Updater( 'Results', '_projects.html', { parameters: \$('f1').serialize() } );", '', 'Show Results' ),
+				writeButton( $log, $dbh, 'DownloadCSV', 'downloadCSVFormat.gif', "f1.action='projects.html?Download';f1.btnFunction.value='Download in CSV format';f1.submit();", '', 'Download in CSV Format' ),
+				writeButton( $log, $dbh, 'Reset', 'reset.gif', "f1.reset();", '', 'Reset' ),
 ); ) ?>
 		</p>
 	</fieldset>

@@ -1,5 +1,3 @@
-DROP TABLE IF EXISTS Companies;
-
 CREATE TABLE Companies (
 	id SERIAL NOT NULL,
 	ysnSupplier		CHAR(1) default 'N',
@@ -53,5 +51,7 @@ FOREIGN KEY (Salesrep_id) REFERENCES Users (id),
 	notes					text,
 	deleted					BOOLEAN NOT NULL default false,
 	offers_credit			BOOLEAN NOT NULL DEFAULT FALSE,
+	category_id	  			INTEGER, FOREIGN KEY (category_id) REFERENCES company_categories (id),
 	PRIMARY KEY (id)
 );
+INSERT INTO Companies (ysnAccountActivation,name) values ('Y','ConnorTechnology');

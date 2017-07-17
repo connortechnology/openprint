@@ -65,7 +65,7 @@ if ( ! $param{ddmEstimator} ) {
 		$html .= sprintf('
 			<td colspan="2">&nbsp;</td>
 			<td colspan="6"><a href="/main/project/view.html?ProjectIndex=%1$d">%2$s</a></td>
-		</tr>', $Project->id(), $Project->references() );
+		</tr>', $Project->id(), $Project->reference() );
 			$$variable{rowclass} = $$variable{rowclass} ? '' : ' class="colRow"';
 			$$variable{Total1} += $Project->price1();
 			$$variable{Total2} += $Project->price2();

@@ -4,7 +4,7 @@ CREATE TABLE Orders (
 	id		SERIAL,
 	company_id	INTEGER NOT NULL, FOREIGN KEY (company_id) REFERENCES companies (id),
 	user_id		INTEGER NOT NULL, FOREIGN KEY (user_id) REFERENCES Users (id),
-	EmployeeIndex	INTEGER NOT NULL, FOREIGN KEY (EmployeeIndex) REFERENCES Users (id),
+	salesrep_id	INTEGER, FOREIGN KEY (salesrep_id) REFERENCES Users (id),
 	curFedTax		NUMERIC(10,2),
 	curHarmTax		NUMERIC(10,2),
 	curProvTax		NUMERIC(10,2),

@@ -7,6 +7,8 @@ create table log_actions (
 	description TEXT,
 	PRIMARY KEY (id)
 );
+alter table log_actions add constraint log_actions_name_key UNIQUE (name);
+
 CREATE TABLE Logs (
 	id SERIAL,
 	action_id	INTEGER NOT NULL, FOREIGN KEY (action_id) REFERENCES log_actions (id),

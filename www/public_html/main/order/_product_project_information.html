@@ -24,17 +24,17 @@
 <table class="List">
 	<thead>
 		<tr>
-			<th align="left">Product</th>
-			<th width="120" align="left">Requested Date</th>
-			<th width="75" align="left">Qty</th>
+			<th class="ProductName">Product</th>
+			<th class="Date Requested">Requested Date</th>
+			<th class="Quantity">Qty</th>
 			<th class="Price">Price</th>
 		</tr>
 	</thead>
     <? while ( $$variable{Product} = shift @{$$variable{Products}} ) ?>
     <tr<?rowclass?>>
-        <td><? echo ( $$variable{Product}->Product()->name(); ) ?></td>
-        <td><? echo ( Date::Format::time2str( $config{DateFormat}, Date::Parse::str2time( $$variable{Product}->requested_for() ) ); ) ?></td>
-        <td align="left"><? echo ( $$variable{Product}->quantity(); ) ?></td>
+        <td class="ProductName"><? echo ( $$variable{Product}->Product()->name(); ) ?></td>
+        <td class="Date Requested"><? echo ( format_date( $$variable{Product}->requested_for() ); ) ?></td>
+        <td class="Quantity"><? echo ( $$variable{Product}->quantity(); ) ?></td>
         <td class="Price">
 <? echo (
     $$variable{price} = $$variable{Order}->Currency()->convert_from( $$variable{Product}->price() );
@@ -51,7 +51,7 @@
 				my $price = $$variable{Project}->Currency()->convert_from( $$specs{txtPrice1} );
 
 				$$variable{price} -= $price;
-	;
+	
 				eval('require openprint::Estimating::'.$ServiceType->name().';' );
 				my $summary = eval('openprint::Estimating::'.$ServiceType->name().'::summary( $$variable{Project}, $service_index, $specs, 1 );') . '<br/>';
 

@@ -16,8 +16,8 @@ require openprint::ScheduledJob;
 
 sub update_late_jobs {
 	# Make sure that we don't lose any jobs to the past.
-	foreach my $Job ( openprint::ScheduledJob->find('endtime'=>Date::Format::time2str('%Y-%m-%d %H:%M:%S', time ),'order'=>'starttime' ) ) {
-		$Job->save({'starttime_seconds'=>time});
+	foreach my $Job ( openprint::ScheduledJob->find(endtime=>Date::Format::time2str('%Y-%m-%d %H:%M:%S', time ),order=>'starttime' ) ) {
+		$Job->save({starttime_seconds=>time});
 	} # end while
 } # end sub update_late_jobs
 
@@ -34,12 +34,12 @@ sub insert {
 
 	my $Job = new openprint::ScheduledJob();
 	$Job->save({
-			'project_id'		=>	$project_index,
-			'service_id'		=>	[ $service_index ],
-			'pertains_id'		=>	[ $service_index ],
-			'equipment_id'		=>	$equipment_id,
-			'starttime'			=>	$start_time,
-			'runtime_seconds'	=>	$runtime,
+			project_id		=>	$project_index,
+			service_id		=>	[ $service_index ],
+			pertains_id		=>	[ $service_index ],
+			equipment_id		=>	$equipment_id,
+			starttime			=>	$start_time,
+			runtime_seconds	=>	$runtime,
 			});
 	sql::end_transaction( $dbh, $ac );
 } # end sub insert
@@ -50,7 +50,7 @@ sub remove {
 	my $ac = sql::start_transaction( $dbh );
 
 	my @equipment_ids = ();
-	foreach my $Job ( openprint::ScheduledJob->find('project_id'=>$project_index, 'service_id @>'=>$service_index) ) {
+	foreach my $Job ( openprint::ScheduledJob->find(project_id=>$project_index, 'service_id @>'=>$service_index) ) {
 		push @equipment_ids, $Job->equipment_id();
 		$Job->delete();
 	} # end foreach Job

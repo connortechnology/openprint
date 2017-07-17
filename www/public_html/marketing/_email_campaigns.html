@@ -7,6 +7,7 @@
 		my $html;
 		my $rowclass;
 		foreach my $Campaign ( openprint::EmailCampaign->find(
+				( $session{'/marketing/email_campaigns.html?active'} ne '' ? (active=>$session{'/marketing/email_campaigns.html?active'}): () ),
 				( $session{'/marketing/email_campaigns.html?deleted'} ne '' ? (deleted=>$session{'/marketing/email_campaigns.html?deleted'}):(deleted=>[0,1]) ),
 				order => 'lower(name)' ) ) {
 			$html .= sprintf(q`
@@ -17,8 +18,8 @@
 				<td class="active"><a href="email_campaign.html?campaign_id=%1$d">%5$s</a></td>
 			</tr>
 `, $Campaign->id(), $Campaign->name(),
-$Campaign->lastrun() ? Date::Format::time2str( $config{'DateTimeFormat'}, Date::Parse::str2time( $Campaign->lastrun() ) ) : 'never',
-$Campaign->nextrun() ? Date::Format::time2str( $config{'DateTimeFormat'}, Date::Parse::str2time( $Campaign->nextrun() ) ) : 'never',
+$Campaign->lastrun() ? Date::Format::time2str( $config{DateTimeFormat}, Date::Parse::str2time( $Campaign->lastrun() ) ) : 'never',
+$Campaign->nextrun() ? Date::Format::time2str( $config{DateTimeFormat}, Date::Parse::str2time( $Campaign->nextrun() ) ) : 'never',
 $Campaign->active(), $rowclass );
 			$rowclass = $rowclass ? '' : ' class="colRow"';
 		} # end foreach Campaign

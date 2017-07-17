@@ -47,6 +47,7 @@ sub handler {
 	#$log->debug( "Beginning of UPLOAD Request: Time (seconds) : $starttime" );
 
 	$dbh = sql::open_sql( $log, 
+			port		=>	$request->dir_config('db_port'),
 			database	=> $request->dir_config('db_name'),
 			driver		=> $request->dir_config('db_driver'),
 			host		=> $request->dir_config('db_host'),

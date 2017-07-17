@@ -28,7 +28,7 @@ my @args = @ARGV;
 
 my $opts = {};
 GetOptions($opts, 'help', 'log_file=s', 'log_level=s',
-    'db_name=s', 'db_host=s', 'db_user=s', 'db_pass=s',
+    'db_port=s', 'db_name=s', 'db_host=s', 'db_user=s', 'db_pass=s',
 	'config=s', 'campaign_id=s',
 );
 
@@ -52,10 +52,11 @@ foreach my $param ( 'db_name','db_user','db_pass' ) {
 
 $log->info("Opening SQL connection");
 $dbh = sql::open_sql( $log, 
-	host		=> $config{db_host},
+	port			=> $config{db_port},
+	host			=> $config{db_host},
 	database	=> $config{db_name},
 	driver		=> 'Pg',
-	login		=> $config{db_user},
+	login			=> $config{db_user},
 	password	=> $config{db_pass},
 );
 die 'Error opening db' if ! $dbh;
@@ -70,6 +71,7 @@ openprint::session_init();
 
 # The first query to execute grabs the ids of all of the email campaigns
 # that are currently set to run
+openprint::EmailCampaign->lock();
 my @campaign_ids = openprint::EmailCampaign->find( $$opts{campaign_id} ? ( id=>$$opts{campaign_id} ) : (active => 'Y', 'nextrun <' => 'NOW()', 'custom'=>['(timeofday IS NULL) OR (timeofday <= CURRENT_TIME)'] ) );
 
 $log->info("There are ".@campaign_ids." active campaigns\n");
@@ -77,9 +79,11 @@ $log->info("There are ".@campaign_ids." active campaigns\n");
 # For each campaign, we need to get the associated query and interval of
 # between the last login time and now (which will be our threshold of concern)
 foreach my $Campaign (@campaign_ids) {
+	
 	$Campaign->send();
 	#print "Done campaign " . $Campaign->name() . "\n";
 } # foreach campaign_id
+openprint::EmailCampaign->unlock();
 
 $dbh->disconnect();
 

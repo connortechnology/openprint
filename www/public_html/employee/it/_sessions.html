@@ -46,6 +46,9 @@
 		if ( $session{'/employee/it/sessions.html?user_id'} and $s{user_id} != $session{'/employee/it/sessions.html?user_id'} ) {
 			next;
 		} # end if
+		if ( $session{'/employee/it/sessions.html?ip'} and $s{ip} ne $session{'/employee/it/sessions.html?ip'} ) {
+			next;
+		} # end if
 		next if $updated_start and $updated_start > $s{lastupdated};
 		next if $updated_end and $updated_end < $s{lastupdated};
 
@@ -79,5 +82,5 @@
 	</tbody>
 </table>
 <p class="buttons">
-<? echo ( button( 'delete', { onclick=> "new Ajax.Updater( 'Results','/employee/it/_sessions.html?action=Delete', { parameters: { session_id: \$F('session_id') } } );", text=>'Delete Checked' } ); ) ?>
+<? echo ( button( 'delete', { onclick=>q`new Ajax.Updater( 'Results','/employee/it/_sessions.html?action=Delete', { parameters: { session_id: get_value( $('f1').elements['session_id'] ) } } );`, text=>'Delete Checked' } ); ) ?>
 </p>

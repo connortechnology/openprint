@@ -16,7 +16,7 @@
 					</select>
 				</li>
 				<li><label>Category</label>
-					<input type="text" id="new_category" name="new_category" onkeyup="ddm_select_by_index( $('category'), 0 );"/>
+					<input type="text" id="new_category" name="new_category" onkeyup="ddm_select_by_index( $('category'), 0 );" placeholder="enter new or select existing"/>
 					<select name="category" id="category" onchange="$('new_category').value='';">
 						<option value="">create new</option>
 						<? echo ( make_drop_down( [ map { $_, $_ } sql::execute( $log, $dbh, 'SELECT DISTINCT category FROM configuration ORDER BY category' ) ], $$variable{Entry}{category} ); ) ?>

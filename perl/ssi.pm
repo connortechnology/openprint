@@ -22,8 +22,11 @@ use vars qw( $r %variable %session %param %config $log $dbh );
 *dbh = \$openprint::dbh;
 *r = \$openprint::r;
 
+require Date::Parse;
+require Date::Format;
 require DateTime::Format::Pg;
 require DateTime::TimeZone;
+require POSIX;
 my $parser = 'DateTime::Format::Pg';
 
 #Used for resource hashed links
@@ -249,20 +252,22 @@ sub make_drop_down {
 		$check_array = [ $checkval ];
 	} # end if
 
+	my %selected = map { $_ => $_ } @$check_array;
+
 	my $temp = '';
 	if ( $$options{prepend} ) {
-		for ( my $n = 0; $n < @{$$options{prepend}}; $n += 2) {
+		for ( my $n = 0; $n < @{$$options{prepend}}; $n += 2 ) {
 			$temp .= sprintf('<option value="%s"%s>%s</option>',
 					( $$options{encode} ? HTML::Entities::encode_entities(Encode::encode('utf-8',$$options{prepend}[$n])) : $$options{prepend}[$n] ),
-					( sets::isin( $$options{prepend}[$n], $check_array ) ? ' selected="selected"' : '' ),
+					( $selected{ $$options{prepend}[$n] } ? ' selected="selected"' : '' ),
 					( $$options{encode} ? HTML::Entities::encode_entities( Encode::encode('utf-8',$$options{length} ? substr($$options{prepend}[$n + 1],0, $$options{length}) : $$options{prepend}[$n + 1] ) ) : $$options{length} ? substr($$options{prepend}[$n + 1],0, $$options{length}) : $$options{prepend}[$n + 1] ),
 					);
 		} # end for
 	} # end if
-	for ( my $n = 0; $n < @{$search_data}; $n += 2) {
+	for ( my $n = 0; $n < @{$search_data}; $n += 2 ) {
 		$temp .= sprintf('<option value="%s"%s>%s</option>',
 			( $$options{encode} ? HTML::Entities::encode_entities(Encode::encode('utf-8',$$search_data[$n])) : $$search_data[$n] ),
-			( sets::isin( $$search_data[$n], $check_array ) ? ' selected="selected"' : '' ),
+			( $selected{ $$search_data[$n] } ? ' selected="selected"' : '' ),
 			( $$options{encode} ? HTML::Entities::encode_entities( Encode::encode('utf-8',$$options{length} ? substr($$search_data[$n + 1],0, $$options{length}) : $$search_data[$n + 1] ) ) : ( $$options{length} ? substr($$search_data[$n + 1],0, $$options{length}) : $$search_data[$n + 1] ) ),
 		);
 	} # end for
@@ -758,7 +763,7 @@ $openprint::log->debug("Storing ($_) (".$session{"$url?$_"}.")") if Debug;
 
 sub boolean_override {
 	my ( $for, $value, $locked_js, $unlocked_js ) = @_;
-	return sprintf(q`<input type="hidden" id="%1$s" name="%1$s" value="%2$s"/><img class="Override" src="/images/%3$s.gif" onclick="var e=$('%1$s');if(e.value){e.value='0';this.src='/images/unlocked.gif';%5$s} else {e.value='1';this.src='/images/locked.gif';%4$s}" alt=""/>`, 
+	return sprintf(q`<input type="hidden" id="%1$s" name="%1$s" value="%2$s"/><img class="Override" src="/images/%3$s.gif" onclick="var e=$('%1$s');if(e.value!='0'){e.value='0';this.src='/images/unlocked.gif';%5$s} else {e.value='1';this.src='/images/locked.gif';%4$s}" alt=""/>`, 
 			$for, 1*$value, ($value ? 'locked' : 'unlocked'), $locked_js, $unlocked_js );
 }
 sub write_override {
@@ -774,7 +779,13 @@ sub write_override {
 sub count_lines {
 	if ( $_[0] ) {
 		my @lines = split( "\n", $_[0] );
-		return scalar @lines;
+		my $lines = scalar @lines;
+		if ( $_[1] and $_[1]{width} ) {
+				foreach ( @lines ) {
+					$lines += ( POSIX::ceil( length($_ ) / $_[1]{width} ) ) - 1;
+				}
+		}	
+		return $lines;
 	} else {
 		return 2;
 	} # end if
@@ -794,7 +805,7 @@ $log->debug("Selecting default $$options{default} for radio $name");
 		$html .= $$options{container}[0] if $$options{container};
 		$html .= sprintf(q`
 				<input type="radio" name="%1$s" value="%2$s" id="%1$s%6$s%2$s" %4$s%5$s />
-				<label class="radio" for="%1$s%2$s">%3$s</label>
+				<label class="radio" for="%1$s%6$s%2$s">%3$s</label>
 				`, $name, $value, $label, checked( $value eq $selected ), 
 				( $onclick ? ' onclick="'.$onclick.'"' : '' ),
 				$$options{id},
@@ -803,6 +814,7 @@ $log->debug("Selecting default $$options{default} for radio $name");
 	} # end foreach value
 	return $html;
 } # end sub radio
+
 sub checkboxes {
 	my ( $name, $values, $selected, $options ) = @_;
 
@@ -887,10 +899,10 @@ sub input {
 	} elsif ( $options{type} eq 'integer' ) {
 		if ( $ENV{HTTP_USER_AGENT} =~ /ip(ad|od|hone)/i ) {
 			$options{type} = 'text';
-			$options{pattern} = '\-?[0-9]*' if ! $options{pattern};
+			$options{pattern} = '^-?\d*' if ! $options{pattern};
 		} elsif ( $ENV{HTTP_USER_AGENT} =~ /Firefox/ ) {
 			$options{type} = 'text';
-			$options{pattern} = '\-?[0-9]*' if ! $options{pattern};
+			$options{pattern} = '^-?\d*' if ! $options{pattern};
 			delete $options{step};
 		} else {
 			$options{type} = 'number';
@@ -901,10 +913,10 @@ sub input {
 		$options{step} = 'any' if ! exists $options{step};
 		if ( $ENV{HTTP_USER_AGENT} =~ /ip(ad|od|hone)/i ) {
 			$options{type} = 'text';
-			$options{pattern} = '[\+\-.0-9]*' if ! $options{pattern};
+			$options{pattern} = '[\+\-]?[.0-9]*' if ! $options{pattern};
 		} elsif ( $ENV{HTTP_USER_AGENT} =~ /Firefox/ ) {
 			$options{type} = 'text';
-			$options{pattern} = '[\+\-.0-9]*' if ! $options{pattern};
+			$options{pattern} = '^[\+\-]?[.0-9]*' if ! $options{pattern};
 			delete $options{step};
 		} else {
 			$options{type} = 'number';
@@ -937,6 +949,16 @@ sub input {
 		} # end if
 		$options{step} = 'any' if ! exists $options{step};
 		$options{oninput} = 'floatize_calculator(this);'.$options{oninput};
+	} elsif ( $options{type} eq 'ip' ) {
+		$options{pattern} = '[0-9\/\.:a-fA-F]*' if ! $options{pattern};
+		$options{type} = 'text';
+		$options{step} = 'any' if ! exists $options{step};
+		$options{oninput} = q`this.value=this.value.replace(/[^\.\d%\/\*a-fA-F:]/g,'');`.$options{oninput};
+	} elsif ( $options{type} eq 'mac' ) {
+		$options{pattern} = '[0-9\-:a-fA-F]*' if ! $options{pattern};
+		$options{type} = 'text';
+		$options{step} = 'any' if ! exists $options{step};
+		$options{oninput} = q`this.value=this.value.replace(/[^\-\d%\/\*a-fA-F:]/g,'');`.$options{oninput};
 	} # end if
 	$html .= ' value="'.html_escape($options{value}).'"' if $options{value} ne '';
 
@@ -977,7 +999,7 @@ sub reset_session($) {
 		} #end if
 	} # end foreach
 	%param = ();
-	$variable{ExternalRedirect} = $_[0];
+	#$variable{ExternalRedirect} = $_[0];
 } # end sub reset_session
 
 
@@ -1068,6 +1090,12 @@ sub format_date {
 sub format_datetime {
 	return $_[0] ? Date::Format::time2str( $config{DateTimeFormat}, Date::Parse::str2time( $_[0] ) ) : '';
 } # end sub format_datetime
+sub format_csv_datetime {
+	return $_[0] ? Date::Format::time2str( '%Y-%m-%d %H:%M:%S', Date::Parse::str2time( $_[0] ) ) : '';
+} # end sub format_datetime
+sub format_csv_date {
+	return $_[0] ? Date::Format::time2str( '%Y-%m-%d', Date::Parse::str2time( $_[0] ) ) : '';
+} # end sub format_datetime
 
 sub link {
 	return '<link rel="stylesheet" type="text/css" href="'.hash_link($_[0]).'"/>';
@@ -1078,7 +1106,35 @@ sub include_logs {
 	$variable{Object} = $Object;
 	setup_date_select( $variable{uri}, 'log_created_on_start', -31 );
 	setup_date_select( $variable{uri}, 'log_created_on_end', '' );
+	$session{$variable{uri}.'?log_limit'} = 50 if ! exists $session{$variable{uri}.'?log_limit'};
 	return include('/includes/_logs_container.html');
+}
+sub include_logs_view {
+	my $Object = $_[0];
+	$variable{Object} = $Object;
+	setup_date_select( $variable{uri}, 'log_created_on_start', -31 );
+	setup_date_select( $variable{uri}, 'log_created_on_end', '' );
+	$session{$variable{uri}.'?log_limit'} = 50 if ! exists $session{$variable{uri}.'?log_limit'};
+	return include('/includes/_logs_contents_view.html');
+}
+
+sub do_css_links {
+    my @html;
+    my $css = shift;
+    $css =~ s/^\///;
+    $css =~ s/\..+$//;
+    my @parts = split '/', $css;
+    
+    while ( @parts ) {
+        $css = join('_', @parts ) . '.css';
+        if ( -e $config{SkinPath}.'/css/'.$css ) {
+            push @html, '<link type="text/css" rel="stylesheet" href="'.hash_link('/css/'.$css).'"/>';
+        } elsif ( Debug ) {
+          $log->debug("Does not exist at " . $config{SkinPath}.'/css/'.$css);
+        } # end if
+        pop @parts;
+    } # end while
+    return join("\n", reverse @html );
 }
 
 1;

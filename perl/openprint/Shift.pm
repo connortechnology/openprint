@@ -23,31 +23,31 @@ $table = 'shifts';
 $serial = 'shifts_id_seq';
 
 %fields = (
-	'id'				=>	'id',
-	'starttime'			=>	'starttime',
-	'endtime'			=>	'endtime',
-	'operator_id'		=>	'operator_id',
-	'shift_id'			=>	'shift_id',
-	'equipment_id'		=>	'equipment_id',
-	'starttime_seconds'	=>	undef,
-	'endtime_seconds'	=>	undef,
-	'created_on'		=>	'created_on',
-	'updated_on'		=>	'updated_on',
+	id					=>	'id',
+	starttime			=>	'starttime',
+	endtime				=>	'endtime',
+	operator_id			=>	'operator_id',
+	shift_id			=>	'shift_id',
+	equipment_id		=>	'equipment_id',
+	starttime_seconds	=>	undef,
+	endtime_seconds		=>	undef,
+	created_on			=>	'created_on',
+	updated_on			=>	'updated_on',
 );
 %find_fields = (
-	'name'		=>	'(SELECT name FROM equipment_shifts WHERE shift_id=equipment_shifts.id)',
-	'startdate'	=>	'date(starttime)',
+	name		=>	'(SELECT name FROM equipment_shifts WHERE shift_id=equipment_shifts.id)',
+	startdate	=>	'date(starttime)',
 );
 
 %transforms = (
-	'id'			=>	[ 's/\D//g' ],
-	'operator_id'	=>	[ 's/\D//g' ],
+	id			=>	[ 's/\D//g' ],
+	operator_id	=>	[ 's/\D//g' ],
 );
 
 %defaults = (
-	'operator_id'		=>	undef,
-	'created_on'		=>	q`'NOW()'`,
-	'updated_on'		=>	q`'NOW()'`,
+	operator_id		=>	undef,
+	created_on		=>	q`'NOW()'`,
+	updated_on		=>	q`'NOW()'`,
 );
 
 my $parser = 'DateTime::Format::Pg';
@@ -155,12 +155,10 @@ sub Equipment {
 sub to_string {
 	my ( $self ) = @_;
 	if ( ! exists $$self{to_string} ) {
-$openprint::log->debug("Getting to_string");
 		$$self{to_string} = sprintf('%s %s %s to %s op:(%s)', $self->Equipment()->name(), $self->name(), 
 			$self->starttime() ? $parser->format_datetime( $self->starttime_dt ) : '',
 			$self->endtime() ? $parser->format_datetime( $self->endtime_dt ) : '',
 			$self->Operator()->name() );
-$openprint::log->debug("Getting to_string");
 	} # end if
 	return $$self{to_string};
 } # end sub to_string
@@ -224,7 +222,7 @@ sub get_ul {
 	my $total_impressions = 0;
 
 	my @Jobs = $Shift->Schedule();
-$log->debug("Have schedule" . @Jobs );
+#$log->debug("Have schedule" . @Jobs );
 	openprint::Project->find(id=>[ map { $$_{project_id} } @Jobs ]) if @Jobs;
 	foreach my $Job ( @Jobs ) {
 		if ( $filters ) {
@@ -327,7 +325,10 @@ sub get_Shifts {
 	my ( $Equipment, $start_dt, $end_dt, @Equipment_Shifts ) = @_;
 
 	@Equipment_Shifts = $Equipment->Equipment_Shifts() if ! @Equipment_Shifts;
-	return () if ! @Equipment_Shifts;
+	if ( ! @Equipment_Shifts ) {
+		$openprint::log->error("THere are no shifts for " . $Equipment->to_string() );
+		return ();
+	}
 	my @Shifts;
 	# Three cases, no shifts, shifts before, shifts after.
 
@@ -337,35 +338,47 @@ sub get_Shifts {
 			'starttime <'	=>	$parser->format_datetime( $start_dt ),
 			order			=>	'starttime DESC',
 			) ) {
+		$openprint::log->debug("Found a previous shift " . $LastShift->to_string() );
 		# This is going to be thie most common
 		my $last_dt = $LastShift->endtime_dt() + DateTime::Duration->new( seconds => 1 );
+
+		if ( $LastShift->starttime_dt() < $start_dt and $last_dt > $start_dt ) {
+			# This can happen because we may call this with successive start_dt to adjust the start to the start of a shift
+			$openprint::log->debug("Have a Shift for the given start time $last_dt < $start_dt ");
+			return ( $LastShift );
+		}
 		my $ES_index = 0;
+
+		# Find the index of the matching shift.
 		for ( $ES_index = 0; $ES_index < @Equipment_Shifts; $ES_index += 1 ) { 
 			if ( $Equipment_Shifts[$ES_index]{id} == $$LastShift{shift_id} ) {
 				last;
 			}
-		};
+		}
+
 		if ( $ES_index == @Equipment_Shifts ) {
 			$log->error("Unable to find ES $$LastShift{shift_id} in Equipment_Shifts");
 			$ES_index = 0;
 		} else {
-$log->debug("Found ES for last shift: " . $Equipment_Shifts[$ES_index]->to_string() );
+$log->debug("Found ES for last shift: " . $Equipment_Shifts[$ES_index]->to_string() . " at index $ES_index" );
 			$ES_index += 1;
 			$ES_index = 0 if $ES_index == @Equipment_Shifts;
 		}
 		
 		# The ordering of the Shifts is important for multi-day schedules
 		while ( $last_dt < $end_dt ) {
-$log->debug("Last_dt: $last_dt < $end_dt");
+$log->debug("Last_dt: $last_dt < job end time: $end_dt");
 			while ( $Equipment_Shifts[$ES_index]->compare( $last_dt ) ) {
 				# Add by hours until we fit into a shift again.
 				$last_dt += DateTime::Duration->new( seconds => 3600 );
 $log->debug("while Last_dt: $last_dt < $end_dt");
 				last if $last_dt > $end_dt;
 			} # end if
+
 			if ( $last_dt > $end_dt ) {
+				# Found a shift after the requested time period.  So give up.
 				$log->debug("last cuz Last_dt: $last_dt > $end_dt");
-				last ;
+				last;
 			}
 
 			# Need to start on the correct shift.
@@ -381,6 +394,7 @@ $log->debug("while Last_dt: $last_dt < $end_dt");
 			$ES_index += 1;
 			$ES_index = 0 if $ES_index == @Equipment_Shifts;
 		} # end while last_dt < end_dt
+
 	} elsif ( my $NextShift = openprint::Shift->find_one(
 			equipment_id	=>	$Equipment->id(),
 			'starttime >'	=> $parser->format_datetime( $start_dt ),
@@ -399,6 +413,7 @@ $log->debug("while Last_dt: $last_dt < $end_dt");
 			my $Shift = $ES->emanantise( $start_dt->epoch() );
 			if ( ! $Shift ) {
 				$log->error("failed to emanantise");
+				last;
 			} elsif ( ref $Shift ne 'openprint::Shift' ) {
 				$log->error("emanantise returned crap $Shift");
 			} # end if

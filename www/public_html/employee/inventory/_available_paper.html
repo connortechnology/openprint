@@ -43,9 +43,12 @@
 	} openprint::Paper->find( %sql ) ];
 	my @paper_ids = @{$$variable{paper_ids}} = map { $$_{id} } @{$$variable{Papers}};
 	my %SkidContents;
-	foreach my $SC ( openprint::SkidContent->find( paper_id=>\@paper_ids, 'quantity >' => 1 ) ) {
-		push @{$SkidContents{$$SC{paper_id}}}, $SC;
-	} # end foreach
+
+	if ( @paper_ids ) {
+		foreach my $SC ( openprint::SkidContent->find( paper_id=>\@paper_ids, 'quantity >' => 1 ) ) {
+			push @{$SkidContents{$$SC{paper_id}}}, $SC;
+		} # end foreach
+	}
 	foreach my $Paper ( @{$$variable{Papers}}  ) {
 		$Paper->SkidContents( $SkidContents{$$Paper{id}} );
 	} # end foreach Paper

@@ -440,7 +440,7 @@ sub _expenses {
 				'due_on_end_year','due_on_end_month','due_on_end_day',
 				'paid_on_start_year','paid_on_start_month','paid_on_start_day',
 				'paid_on_end_year','paid_on_end_month','paid_on_end_day',
-				'category_id', 'recipient_id', 'account_id','attention',
+				'category_id', 'recipient_id', 'account_id','attention', 'currency_id',
 				'amount','total',
 				) );
 } # end sub _expenses
@@ -467,8 +467,8 @@ $log->debug("Calcing amount: $param{amount}");
 $log->debug("Calcing amount: $param{amount}");
 		} # end if
 		$param{owner_id} = $session{company_id} if ! $param{owner_id};
-		$param{due_on} = sprintf('%.4d-%.2d-%.2d', @param{'due_on_year','due_on_month','due_on_day'} );
-		$param{paid_on} = sprintf('%.4d-%.2d-%.2d', @param{'paid_on_year','paid_on_month','paid_on_day'} );
+		$param{due_on} = sprintf('%.4d-%.2d-%.2d', @param{'due_on_year','due_on_month','due_on_day'} ) if Date::Calc::check_date( @param{'due_on_year','due_on_month','due_on_day'} );
+		$param{paid_on} = sprintf('%.4d-%.2d-%.2d', @param{'paid_on_year','paid_on_month','paid_on_day'} ) if Date::Calc::check_date( @param{'paid_on_year','paid_on_month','paid_on_day'} );
 		$param{invoiced_on} = sprintf('%.4d-%.2d-%.2d', @param{'invoiced_on_year','invoiced_on_month','invoiced_on_day'} );
 		if ( ! $param{recipient_id} ) {
 			my $Recipient = openprint::Company->find_one('name lc'=>lc $param{recipient});

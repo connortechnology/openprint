@@ -14,7 +14,7 @@ use constant PI => atan2(1,1)*4;
 # 3.14159265358979;
 
 use vars qw( $debug $table $serial %fields %find_fields %transforms %defaults $default_sort $cache_field $cached );
-$debug = 1;
+$debug = 0;
 $cached = 0;
 $cache_field='short';
 $default_sort = 'lower(name)';
@@ -72,7 +72,8 @@ $serial = 'locations_id_seq';
 );
 
 sub children {
-	return openprint::Location->find( parent_id => $_[0]{id} );
+	return openprint::Location->find( parent_id => $_[0]{id} ) if $_[0]{id};
+	return ();
 } # end sub children
 
 sub get_all_children {
@@ -133,11 +134,16 @@ sub Type {
 
 sub type {
 	if ( @_ > 1 ) {
-		my $Type = openprint::Location_Type->find_one('name lc'=>lc openprint::Location_Type->transform('name',$_[1]));
-		if ( ! $Type ) {
+		my $Type;
+		if ( $_[1] ) {
+			$Type = openprint::Location_Type->find_one('name lc'=>lc openprint::Location_Type->transform('name',$_[1]));
+			if ( ! $Type ) {
+				$Type = new openprint::Location_Type();
+				$Type->save({'name'=>$_[1]});
+			} # end if
+		} else {
 			$Type = new openprint::Location_Type();
-			$Type->save({'name'=>$_[1]});
-		} # end if
+		} 
 #$openprint::log->debug("Type: " . $Type->to_string() );
 		$_[0]{type_id} = $Type->id();
 		$_[0]{type} = $Type->name();
@@ -233,10 +239,15 @@ sub longitude {
 
 # Does a google lookup on some string and returns a Location object based on what it returns
 sub google {
-require Geo::Coder::Googlev3;
+	require Geo::Coder::Googlev3;
 	my $string = $_[0];
 	$string .= ' ' . $_[1] if @_ > 1;
 	$string =~ s/ /+/g;
+	if ( ! $string ) {
+		my ( $caller, undef, $line ) = caller;
+		$openprint::log->debug("No location to search google for from $caller:$line");
+		return;
+	}
 	my $coder = Geo::Coder::Googlev3->new();
 	my $location;
 	eval {
@@ -327,8 +338,8 @@ require Geo::Coder::Googlev3;
 	
 	my $Location = new openprint::Location();
 	$Location->save({
-		name=>$_[0],
-		parent	=>	$parent,
+		name		=>	$_[0],
+		parent		=>	$parent,
 		latitude	=>	$latitude,
 		longitude	=>	$longitude,
 		postalcode	=>	$postalcode,
@@ -339,11 +350,11 @@ require Geo::Coder::Googlev3;
 } # end sub google
 
 sub get_latitude_and_longitude {
-require Geo::Coder::Googlev3;
+	require Geo::Coder::Googlev3;
 	my $coder = Geo::Coder::Googlev3->new();
-my $string = join(',',$_[0]->name(),$_[0]->address(), $_[0]->postalcode(), map{$_->name()}$_[0]->Parents()) if $_[0]->name();
-$string =~ s/ /+/g;
-$openprint::log->debug('Get: ' . $string );
+	my $string = join(',',$_[0]->name(),$_[0]->address(), $_[0]->postalcode(), map{$_->name()}$_[0]->Parents()) if $_[0]->address();
+	$string =~ s/ /+/g;
+	$openprint::log->debug('Get: ' . $string );
 	return 0 if ! $string;
 	my $location = $coder->geocode( location => $string );
 	if ( ! $location ) {
@@ -485,6 +496,7 @@ sub Photos {
 sub Album {
 	return new openprint::Photo_Album( $_[0]{album_id} );
 } # end sub Album
+
 sub can_edit {
 	if ( ! $_[0]{id} ) {
 		return 0;
@@ -495,6 +507,12 @@ sub can_edit {
 	if ( $openprint::session{user_id} == $_[0]{created_by} or $openprint::session{user_type} eq 'A' ) {
 		return 1;
 	} # end if
+	if ( $_[0]{company_id} ) {
+		my $Company = $_[0]->Company();
+		if ( $Company->can_edit() ) {
+			return 1;
+		}
+	}
 	return 0;
 } # end sub can_edit
 
@@ -582,7 +600,7 @@ sub where_link {
 } # end sub where_link
 
 sub link_to {
-	return join('', '<a href="/location/view.html?location_id=', $_[0]{id}, '">', $_[0]{name}, '</a>' );
+	return join('', '<a href="/location/view.html?location_id=', $_[0]{id}, '">', ( @_ > 1 ? $_[1] : $_[0]{name} ), '</a>' );
 } # end sub link_to
 
 # Takes a hash, probably %param, and does all the saving neccessary, returns a Location object.

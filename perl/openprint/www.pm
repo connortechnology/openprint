@@ -1,5 +1,7 @@
 use strict;
 package openprint::www;
+use utf8;
+use open ( ":encoding(UTF-8)", ":std" );
 
 use constant Debug => 1;
 
@@ -37,6 +39,13 @@ use vars qw( $r %variable %session %param %config $log $dbh $starttime );
 *log = \$openprint::log;
 *dbh = \$openprint::dbh;
 *r = \$openprint::r;
+
+sub warn {
+	$log->error("Warning: $_[0]");
+
+}
+
+$SIG{__WARN__} = \&warn;
 
 sub cleanup {
 	if ( $r->connection->aborted( ) ) {
@@ -84,14 +93,14 @@ sub handler {
 	%param = ();
 	# Here we copy the param data into a hash that is sligthly more useful to use.	Wish we didn't have to do this.
 	foreach my $key ( $r->param ) {
-	#foreach my $key ( sets::union( $r->param ) ) {
 		my @values = $r->param($key);
-		#next unless scalar @values;
 		if ( @values > 1 ) {
 			$param{$key} = \@values;
 			#$log->debug("Parameter $key is ARRAY(" . join(',',@{$param{$key}}) . ')' );
 		} else {
 			$param{$key} = $values[0];
+utf8::decode($param{$key});
+#utf8::encode($values[0]);
 			#$log->debug("Parameter $key is (" . $param{$key} . ") ref: " . ref $param{$key} );
 		} # end if
 	} # end foreach
@@ -99,7 +108,8 @@ sub handler {
 		if ( ref $param{$key} eq 'ARRAY' ) {
 			$log->debug("Parameter $key is ARRAY(" . join(',',@{$param{$key}}) . ')' );
 		} else {
-			$log->debug("Parameter $key is (" . $param{$key} . ")" );
+			$log->debug("Parameter $key is (" . $param{$key} . ")" . (utf8::is_utf8($param{$key})||0) );
+			#$log->debug("Parameter $key is (" . $param{$key} . ")" . (utf8::is_utf8($param{$key})||0) );
 		} # end if
 	}	# end foreach
 
@@ -107,6 +117,7 @@ sub handler {
 			database	=> $r->dir_config('db_name'),
 			driver		=> $r->dir_config('db_driver'), 
 			host		=> $r->dir_config('db_host'),
+			port		=> $r->dir_config('db_port'),
 			login		=> $r->dir_config('db_user'),
 			password	=> $r->dir_config('db_password'),
 			);
@@ -150,6 +161,7 @@ sub handler {
 		# Just does timeout
 		openprint::login::verify_user( $r, $log, $dbh, $session{_session_id}, \%variable );
 		$page = $variable{Redirect} if $variable{Redirect};	
+
 
 		while ( $page and $lastpage ne $page ) {
 			# This is for loop detection
@@ -324,7 +336,7 @@ sub parse_page {
 			require openprint::print;
 			require openprint::print_project;
 			require openprint::employee_production;
-			openprint::print_project::get_service_specifications( $r, $log, $dbh, \%variable, @param{'ProjectIndex','ServiceIndex'} ) if $filename ne 'multipage_signatures.html';
+			openprint::print_project::get_service_specifications( $r, $log, $dbh, \%variable, @param{'ProjectIndex','ServiceIndex'} ) if $param{ServiceIndex} and $filename ne 'multipage_signatures.html';
 			@variable{'ProjectIndex','ServiceIndex','OrderID'} = @param{'ProjectIndex','ServiceIndex','OrderID'};
 			
 			$variable{Project} = new openprint::Project( $variable{ProjectIndex} );
@@ -414,7 +426,6 @@ $log->debug("Running openprint::$module->$proc") if Debug;
 	} elsif ( $first eq 'main' ) { # main
 		if ( $second eq 'project' ) {
 			require openprint::print;
-			require openprint::main_project;
 			require openprint::print_project;
 			if ( ( defined $third ) or sets::isin( $filename , ['Paper.html' ,'Bundling.html','HStands.html' ] ) ) {
 				if ( $param{ServiceIndex} and ! $variable{ServiceIndex} ) {
@@ -422,6 +433,7 @@ $log->debug("Running openprint::$module->$proc") if Debug;
 					$variable{ServiceIndex} = $service_ids[0];
 				} # end if
 				$variable{ProjectIndex} = $openprint::param{ProjectIndex} if ! $variable{ProjectIndex};
+				$variable{ProjectIndex} = $openprint::param{project_id} if ! $variable{ProjectIndex};
 				$variable{ProjectIndex} = $openprint::session{project_id} if ! $variable{ProjectIndex};
 				$variable{Project} = new openprint::Project( $variable{ProjectIndex} );
 				my $Currency = openprint::Currency::get_current();
@@ -444,6 +456,7 @@ $log->debug("Service: " . $Service->to_string() );
 	$log->debug("ServiceType: $variable{ServiceTypeType}");
 						my $specs = $Service->specs();
 						@variable{keys %$specs} = values %$specs;
+						$variable{ServiceType} = $Service->ServiceType();
 					} # end if
 				} # end if
 				$variable{ProjectType} = $variable{Project}->Type();
@@ -535,14 +548,36 @@ $log->debug("Service: " . $Service->to_string() );
 						openprint::Estimating::ShrinkWrapping::display( \%variable, $variable{Project}, $service_index );
 					} # end if
 				} elsif ($third eq 'shipping') {
-
-					if ( $filename eq 'Shipping.html' ) {
-						require openprint::Estimating::Shipping;
-						openprint::Estimating::Shipping::display( $r, $log, $dbh, \%variable, $project_index, $service_index );
-					} elsif ( $filename eq 'UPS.html' ) {
-						require openprint::Estimating::UPS;
-						openprint::Estimating::UPS::display( $log, $dbh, \%variable, $project_index, $service_index );
-					} # end if
+		
+					if ( $filename =~ /^(\w*).html$/ ) {
+						my $module = $1;
+						eval {
+							$log->debug("Require $module");
+							require "openprint/Estimating/$module.pm";
+							if ( my $function = ("openprint::Estimating::$module")->can( 'display' ) ) {
+								$function->( $project_index, $service_index, \%variable );
+							} else {
+								$log->debug("No display function $module.pm");
+							}
+						}; 
+						$log->error( "Eval error of require $module Reason: " . $@ ) if $@;
+					} else {
+						if ( -e $ENV{DOCUMENT_ROOT}.$uri ) {
+							my ( $proc ) = $filename =~ /^(.*)\.(html|json)$/;
+							if ( $proc ) {
+								my $module = join('_', ($first, $second, $third));
+								require "openprint/$module.pm";
+								if ( my $function = ('openprint::'.$module)->can($proc) ) {
+									$log->debug("Running openprint::$module->$proc") if Debug;
+									$function->();
+								} else {
+									$log->error( "No function def for $module :: $proc!" );
+								}
+							} else {
+								$log->debug("No proc found for $filename");
+							} # end if
+						} # end if -e $ENV{DOCUMENT_ROOT}.$uri
+					}
 				} # end if main:proj:$third
 			} else {
 				if ( -e $ENV{DOCUMENT_ROOT}.$uri ) {
@@ -561,7 +596,6 @@ $log->debug("No proc found for $filename");
 					} # end if
 				} # end if -e $ENV{DOCUMENT_ROOT}.$uri 
 
-				openprint::print::view_services( $r, $log, $dbh, \%variable )					if $filename eq 'view.html';
 				openprint::print_project::view_pdfs( $r, $log, $dbh, \%variable )				if $filename eq 'proj_view_pdf.html';
 				openprint::print_project::summary( $r, $log, $dbh, \%variable )					if $filename eq 'summary.html';
 				openprint::print_project::summary( $r, $log, $dbh, \%variable )					if $filename eq 'docket_sheet.html';

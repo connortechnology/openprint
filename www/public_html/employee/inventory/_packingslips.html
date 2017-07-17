@@ -40,7 +40,7 @@
 				<td class="Type"><a href="/employee/production/labels/label.html?id=%2$d">%6$s</a></td>
 				<td class="DateTime"><a href="/employee/production/labels/label.html?id=%2$d">%7$s</a></td>
 				</tr>`, $rowclass, $$Label{id}, $Label->docket(), $Label->Project()->Company()->name(),  $Label->reference(), $Label->Type()->name(), 
-				Date::Format::time2str($config{DateTimeFormat}, Date::Parse::str2time($Label->created_on()) ),
+				format_datetime( $Label->created_on() ),
  );
 				$rowclass = $rowclass ? '' : ' class="colRow"';
 			} # end foreach Label

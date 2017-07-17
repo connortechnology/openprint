@@ -46,6 +46,7 @@ sub handler {
 	$request->push_handlers(PerlCleanupHandler => \&cleanup);
 
 	$dbh = sql::open_sql( $log, 
+			port		=> $r->dir_config('db_port'),
 			database	=> $r->dir_config('db_name'),
 			driver		=> $r->dir_config('db_driver'), 
 			host		=> $r->dir_config('db_host'),
@@ -82,6 +83,7 @@ $openprint::log->debug("Host: " . $r->param('host') );
 		
 	$record = $dbh->selectrow_hashref( 'SELECT * FROM records WHERE name=? AND content=? AND type=?', {}, $hostname, $addr, 'A' );
 	if ( $record ) {
+    $log->debug("No change.");
 		$r->print('nochg');
 	} else {
 		$log->debug("Record not found for $hostname $addr A");

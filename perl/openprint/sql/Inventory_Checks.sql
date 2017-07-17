@@ -6,6 +6,7 @@ CREATE TABLE Inventory_Checks (
 	started_on	date,
 	ended_on	date,
 	scanner_id	INTEGER, FOREIGN KEY (scanner_id) REFERENCES RFIDScanners (id),
+	location_id	INTEGER, FOREIGN KEY (location_id) REFERENCES Locations (id),
 	deleted		BOOLEAN NOT NULL DEFAULT false,
 	PRIMARY KEY (id)
 );

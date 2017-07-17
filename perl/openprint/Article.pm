@@ -272,11 +272,11 @@ sub upload {
 	if ( ref $Asset ne 'openprint::Asset' ) {
 		return $Asset;
 	} # end if
-	my $Article_Asset = new openprint::Article_Asset({'asset_id'=>$Asset->id(), 'article_id'=>$_[0]->id()});
+	my $Article_Asset = new openprint::Article_Asset({ asset_id=>$Asset->id(), article_id=>$_[0]->id() });
 	if ( $Article_Asset->asset_id() ) {
 		return 'Asset already in article.';
 	} else {
-		return $Article_Asset->save({'asset_id'=>$Asset->id(), 'article_id'=>$_[0]->id()});
+		return $Article_Asset->save({ asset_id=>$Asset->id(), article_id=>$_[0]->id() });
 	} # end if
 } # end sub upload
 

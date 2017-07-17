@@ -12,8 +12,8 @@ $table = 'paycheques_timetracks';
 @identified_by = ( 'timetrack_id', 'paycheque_id' );
 
 %fields = (
-	'paycheque_id'	=>	'paycheque_id',
-	'timetrack_id'	=>	'timetrack_id',
+	paycheque_id	=>	'paycheque_id',
+	timetrack_id	=>	'timetrack_id',
 );
 
 %transforms = (

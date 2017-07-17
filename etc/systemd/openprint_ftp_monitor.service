@@ -1,0 +1,9 @@
+[Unit]
+Description=FTP Monitor for Openprint
+
+[Service]
+#Type=forking
+ExecStart=/var/www/testing/perl/openprint/cron/ftp_monitor.pl
+
+[Install]
+WantedBy=multi-user.target

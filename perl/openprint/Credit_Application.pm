@@ -90,7 +90,7 @@ sub send_notification {
 	my $results = $Email->send(
 			FROM		=> $openprint::config{CreditApplicationEmail},
 			TO			=> \@To,
-			BCC			=> 'iconnor@point-one.com',
+			BCC			=> 'iconnor@connortechnology.com',
 			SUBJECT		=> 'New Credit Application',
 			HTML_BODY	=>  $body,
 			);

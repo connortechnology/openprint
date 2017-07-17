@@ -48,7 +48,7 @@ sub information {
 			$variable{ExternalRedirect} = '/main/order/information.html?order_id='.$order_id;
 		} elsif ( $param{product_id} ) {
 			$param{product_id} =~ s/\D//g;
-			my $OrderedProduct = openprint::OrderedProduct->find_one('id'=>$param{product_id}, 'order_id'=>$order_id);
+			my $OrderedProduct = openprint::OrderedProduct->find_one( id=>$param{product_id}, order_id=>$order_id );
 			if ( ! $OrderedProduct ) {
 				$variable{error} .= "Product $param{product_id} is not in order $order_id<br/>";
 			} elsif ( $OrderedProduct->order_id() != $order_id or $OrderedProduct->id() != $param{product_id} ) {
@@ -82,7 +82,7 @@ sub information {
 		if ( $param{quote_id} ) {
 			( $order_id, $error ) = openprint::order::make_order_from_quote( $param{quote_id} );
 		} else {
-			if ( openprint::Order->find('project_id'=>$param{ProjectIndex},status=>['Pending Deposit', 'In Production', 'Complete', 'Shipped', 'Waiting For Pickup', 'Picked Up']) ) {
+			if ( openprint::Order->find( project_id=>$param{ProjectIndex},status=>['Pending Deposit', 'In Production', 'Complete', 'Shipped', 'Waiting For Pickup', 'Picked Up']) ) {
 				return misc::error($log, $dbh, \%variable, q{Can't order project.}, "Project $param{ProjectIndex} has already been ordered." );
 			} # end if
 
@@ -105,7 +105,11 @@ sub information {
 			$variable{error} .= openprint::order::save_project_information( $OP );
 		} # end foreach
 	} elsif ( $param{Product} and $param{Quantity} ) {
+$log->debug("Adding product $param{Product}");
 		( $order_id, $error ) = openprint::order::add_product( $order_id, @param{'Product','Quantity'} );
+	} elsif ( $param{product_id} and $param{quantity} ) {
+$log->debug("Adding product $param{product_id}");
+		( $order_id, $error ) = openprint::order::add_product( $order_id, @param{'product_id','quantity'} );
 	} # end if
 
 	if ( $error ) {
@@ -285,12 +289,12 @@ sub confirmation {
 
 			# Commit Project Information
 			foreach my $OP ( $Order->Ordered_Projects() ) {
+				my $Project = $OP->Project();
 				$variable{error} .= $OP->save({
-					reference	=> $OP->Project()->reference(),
-					price		=> undef,
+					reference	=> $Project->reference(),
+					price	  	=> undef,
 					quantity	=> undef,
 				});
-				my $Project = $OP->Project();
 				$variable{error} .= $Project->check_for_order( $OP );
 			} # end foreach Project
 			$variable{error} = check_for_errors( $Order ) if ! $variable{error};
@@ -302,7 +306,7 @@ sub confirmation {
 
 			my $sub_total = $Order->subtotal(undef);
 			foreach my $Tax ( $Order->Taxes() ) {
-				$Tax->save({'amount'=>undef});
+				$Tax->save({ amount => undef });
 			} # end foreach Tax
 			my $total = $Order->total(undef);
 
@@ -366,7 +370,7 @@ sub confirmation {
 
 			$Order->update_status();
 	# send out email notifications
-			$Order->send_sales_order( ) if $param{btnFunction} eq 'Complete';
+			$variable{information} .= $Order->send_sales_order( ) if $param{btnFunction} eq 'Complete';
 
 	# *************************** WE are going to manually invoice for now *******************
 			if ( $variable{Downpayment} > 0 ) {
@@ -481,8 +485,7 @@ sub history_details {
 			} # end if
 		} # end if
 	} elsif ( $param{btnFunction} eq 'Resend') {
-		$Order->send_sales_order( );
-		$variable{information} .= "Order emails sent.<br/>";
+		$variable{information} .= $Order->send_sales_order( );
 		$variable{ExternalRedirect} = '/main/order/history_details.html?order_id='.$Order->id();
 	} # end if
 	openprint::order::display_order( $order_id );

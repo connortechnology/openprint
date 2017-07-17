@@ -1,4 +1,4 @@
-<? if ( $session{'user_id'} ) ?>
+<? if ( $session{user_id} ) ?>
 <script type="text/javascript" src="<?hash_link(/javascripts/barcode.js)?>"></script>
 <script type="text/javascript">
 	function submit_handler( form ) {
@@ -29,7 +29,7 @@ To jump directly to a project, enter it's Docket # or Project #, and click Go.<b
 You may use a barcode scanner.  Simply scan the code and click Go.<br/>
 <form id="f1" name="f1" action="/employee/production/projects.html" method="post">
 	<input type="hidden" name="btnFunction" value="Go"/>
-	<fieldset>
+	<fieldset class="filters">
 		<div class="content">
 		<ul>
 		<li>
@@ -95,6 +95,92 @@ You may use a barcode scanner.  Simply scan the code and click Go.<br/>
 	</fieldset>
 </form>
 <div class="Index">
+<div class="Widgets">
+<?echo ( 
+		my @POs = map { $_->can_authorize() ? $_ : () } openprint::PurchaseOrder->find( 
+			authorized=>0,
+			'notification_user_id contains'	=>	$session{user_id},
+			order => 'id DESC',
+			limit	=>	5,
+			);
+		my $html;
+	
+		if ( @POs ) {
+			$html .= '<div class="PurchaseOrders"><br/>The following POs need review/authorizing by you. Click <a href="/employee/purchase_order/history.html">here</a> for more.<br/>
+<table id="ResultsTable" class="List sortable">
+  <tr>
+    <th class="po_id">ID</th>
+    <th class="DateTime">Date</th>
+    <th class="Company">Supplier</th>
+    <th class="User">Created By</th>
+    <th class="Manifest">Manifest</th>
+    <th class="Docket">Docket</th>
+    <th class="Price">Total</th>
+  </tr>
+';
+		$html .= join("\n", map { 
+sprintf(q`<tr id="tr-%1$d" class="unauthorized">
+		<td class="po_id"><a href="/employee/purchase_order/view.html?po_id=%1$d">%1$d</a></td>
+        <td class="DateTime"><a href="/employee/purchase_order/view.html?po_id=%1$d">%2$s</a></td>
+        <td class="Company"><a href="/employee/purchase_order/view.html?po_id=%1$d">%3$s</a></td>
+        <td class="User"><a href="/employee/purchase_order/view.html?po_id=%1$d">%4$s</a></td>
+        <td class="Manifest"><a href="/employee/purchase_order/view.html?po_id=%1$d">%5$s</a></td>
+        <td class="Docket"><a href="/employee/purchase_order/view.html?po_id=%1$d">%6$s</a></td>
+        <td class="Price">%7$s</td>
+      </tr>`, $_->id(), 
+			format_datetime($_->created_on()), $_->Supplier()->name(), $_->Creator()->name(),
+        $_->Manifest()->name(),
+        join( '<br/>', sets::exclude( [''], [ sets::union( map { $_->docket() } $_->Contents() ) ] ) ),
+        openprint::Currency::format( $_->total() ),
+        );
+} @POs );
+		$html .= '</table></div><br/>';
+	}
+
+	my ( $y, $m, $d ) = Date::Calc::Today();
+  ($y,$m,$d) = Date::Calc::Add_Delta_Days($y,$m,$d, 4 * -30 );
+	my @OldOrders = openprint::Order->find(
+			salesrep_id=>$session{user_id},
+			status			=>['In Production','Waiting For Customer Approval','Waiting For Pickup','Waiting For QA Approval'],
+			'updated_on <=' => sprintf('%.4d-%.2d-%.2d 00:00:00', $y, $m, $d ),
+			order =>	'id desc',
+			limit	=>	10,
+			);
+	if ( @OldOrders ) {
+		$html .= '<div class="error OldOrders"><br/>The following orders are old but are still in production. Please update their status:<br/><br/>
+<table class="List sortable">
+  <thead>
+		<tr>
+			<th class="order_id">Order</th>
+			<th class="docket">Docket</th>
+			<th class="Company">Company</th>
+			<th class="Status">Status</th>
+			<th class="Date">Last Updated</th>
+		</tr>
+	</thead>
+	<tbody>
+';
+		foreach my $Order ( @OldOrders ) {
+			$html .= sprintf('
+<tr>
+	<td class="order_id"><a href="/employee/project/view.html?docket=%2$d">%1$d</a></td>
+	<td class="docket"><a href="/employee/project/view.html?docket=%2$d">%2$d</a></td>
+	<td class="CompanyName"><a href="/employee/project/view.html?docket=%2$d">%3$s</a></td>
+	<td class="Status"><a href="/employee/project/view.html?docket=%2$d">%4$s</a></td>
+	<td class="Date"><a href="/employee/project/view.html?docket=%2$d">%5$s</a></td>
+</tr>',
+$Order->id(), 
+$Order->docket(), 
+$Order->Company()->name(), 
+$Order->status(), 
+format_date( $$Order{updated_on} ) );
+		}
+		$html .= '</tbody></table></div>';
+	} # end if
+	return $html;
+) ?>
+</div>
+<br/>
 <div class="News">
     <ul>
     <? echo (
@@ -128,6 +214,6 @@ You may use a barcode scanner.  Simply scan the code and click Go.<br/>
 </div>
 </div>
 <script type="text/javascript">document.f1.StartDocket.focus();</script>
-<? else ( $session{'user_id'} ) ?>
+<? else ( $session{user_id} ) ?>
 <? echo ( include('/employee/account/login.html'); ) ?>
-<? endif ( $session{'user_id'} ) ?>
+<? endif ( $session{user_id} ) ?>

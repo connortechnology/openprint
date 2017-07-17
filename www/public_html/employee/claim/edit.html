@@ -289,7 +289,7 @@ Remarks:<br/>
 			Currency:
 			<select name="currency_id">
 				<option value=""> select one </option>
-				<? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::Currency->find() ], $$variable{Claim}->currency_id() ? $$variable{Claim}->currency_id() : $session{Currency_id} ); ) ?>
+				<? echo ( make_drop_down( openprint::Currency->dropdown(), $$variable{Claim}->currency_id() ? $$variable{Claim}->currency_id() : $session{Currency_id} ); ) ?>
 			</select>
 			<br class="spacer"/>
 		</div>

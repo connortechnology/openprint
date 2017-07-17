@@ -11,11 +11,11 @@
 		$html .= include( '/main/order/_project_information.html', $variable );
 		$html .= '</div>';
 	} # end foreach
-	foreach my $Product ( @{$$variable{'Products'}} ) {
-		$$variable{'Product'} = $Product;
-		$$variable{'Project'} = $$variable{'Product'}->Project();
+	foreach my $Product ( @{$$variable{Products}} ) {
+		$$variable{Product} = $Product;
+		$$variable{Project} = $$variable{Product}->Project();
 		$html .= '<div class="Project">';
-		$html .= include( '/main/order/_product_information.html', $variable );
+		$html .= include( '/main/order/_product_list.html', $variable );
 		$html .= '</div>';
 	} # end foreach
 	return $html;

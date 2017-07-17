@@ -8,8 +8,8 @@
 	$html .= '<li>'.
 			join("\n",
 				ssi::select( openprint::User->dropdown( type=>'E', 
-( @EOs ? ( 'id not in'=>[map { $_->user_id() } @EOs] ) : () ),
-,order=>'lower(firstname),lower(lastname)' ), '', { name=>'operator_id', id=>'operator_id' } ),
+						( @EOs ? ( 'id not in'=>[map { $_->user_id() } @EOs] ) : () ),
+						 ), '', { name=>'operator_id', id=>'operator_id', prepend=>[ '', 'select'] } ),
 				'<span class="buttons">',
 				button( 'addoperator', { onclick=>q`add_operator($('operator_id').value);`, title=>'Add', text=>'+' } ),
 				'</span>',

@@ -1,15 +1,15 @@
 <? eval (
 	@{$$variable{Paycheques}} = ();
 	$$variable{Total} = 0;
+	$$variable{TimetrackTotal} = 0;
 	foreach my $Paycheque ( openprint::Paycheque->find( 
 			date_filter( '/paycheque/history.html?paid_on_end', 'paid_on <=' ),
 			date_filter( '/paycheque/history.html?paid_on_start', 'paid_on >=' ),
 		( $session{'/paycheque/history.html?employer_id'} ? ( employer_id => $session{'/paycheque/history.html?employer_id'} ) : () ),
 		( $session{'/paycheque/history.html?employee_id'} ? ( employee_id => $session{'/paycheque/history.html?employee_id'} ) : () ),
-		'order'				=> 'id',
+		order				=> 'paid_on,id',
 		) ) {
 		push @{$$variable{Paycheques}}, $Paycheque;
-		$$variable{Total} += $Paycheque->total();
 	} # end foreach Paycheque
 
 	$$variable{Currency} = openprint::Currency::get_current() if ! $$variable{Currency};
@@ -28,6 +28,7 @@
 			<th class="Date">When</th>
 			<th class="CompanyName">Employer</th>
 			<th class="User">Employee</th>
+			<th class="Price">Timetrack Total</th>
 			<th class="Price">Amount</th>
 		</tr>
 		<? echo ( 
@@ -35,25 +36,32 @@
 			my $rowclass;
 			foreach my $Paycheque ( @{$$variable{Paycheques}} ) {
 				my $conversion_rate = $Paycheque->Currency()->conversions( $session{Currency_id} );
+				my @Timetracks = $Paycheque->Timetracks();
 				$html .= sprintf(q`
 <tr title="%3$s"%1$s>
 	<td class="paycheque_id"><a href="/paycheque/edit.html?paycheque_id=%2$d">%2$d</a></td>
 	<td class="Date"><a href="/paycheque/edit.html?paycheque_id=%2$d">%4$s</a></td>
 	<td class="CompanyName"><a href="/paycheque/edit.html?paycheque_id=%2$d">%5$s</a></td>
 	<td class="User"><a href="/paycheque/edit.html?paycheque_id=%2$d">%6$s</a></td>
-	<td class="Price">%7$s</td>
+	<td class="Price"><a href="/paycheque/edit.html?paycheque_id=%2$d">%7$s</a></td>
+	<td class="Price">%8$s</td>
 </tr>`,
 			$rowclass, $Paycheque->id(), html_escape( $Paycheque->external_notes() ), 
 			Date::Format::time2str( $config{DateFormat}, Date::Parse::str2time( $Paycheque->paid_on() ) ),
 			html_escape( $Paycheque->Employer()->name() ), html_escape( $Paycheque->Employee()->name() ),
+
+			( scalar @Timetracks . ' = ' . openprint::Currency::format( $Paycheque->timetrack_total() ) ),
 			openprint::Currency::format( 1*$Paycheque->total() ),
 );
 				$rowclass = $rowclass ? '' : ' class="colRow"';
+				$$variable{Total} += $Paycheque->total();
+				$$variable{TimetrackTotal} += $Paycheque->timetrack_total();
 			} # end foreach Paycheque
 			return $html;
 		) ?>
 		<tr class="totals">
 			<td colspan="4">Totals</td>
+			<td class="Price"><? echo ( openprint::Currency::format($$variable{TimetrackTotal}); ) ?></td>
 			<td class="Price"><? echo ( openprint::Currency::format($$variable{Total}); ) ?></td>
 		</tr>
 	</table>

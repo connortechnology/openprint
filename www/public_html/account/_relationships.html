@@ -1,5 +1,5 @@
 <?include('/includes/error_reporting.html')?>
-<form id="f1" name="f1" action="/account/view.html?user_id=<? echo ( $$variable{'User'}->id() ) ?>" method="post">
+<form id="f1" name="f1" action="/account/view.html?user_id=<? echo ( $$variable{User}->id() ) ?>" method="post">
 	<? echo (
 		my $html;
 
@@ -10,12 +10,18 @@
 			return;
 		} # end if
 		my @Relationships = openprint::User_Relationship->find({ 
-			'custom'=>['user_id1 IN ('.join(',',map { '?' } @ids ).') OR user_id2 IN ('.join(',', map { '?' } @ids ).')',@ids,@ids],
+			or => {
+			user_id1 => \@ids,
+			user_id2 => \@ids},
 			});
-		if ( $$variable{'User'} == $session{'user_id'} and ! @Relationships ) {
-			return q`You have no relationships.  Visit another user's profile to request a relationship with them.`;
+		if ( ! @Relationships ) {
+			if ( $$variable{User} == $session{user_id} ) {
+				return q`You have no relationships.  Visit another user's profile to request a relationship with them.`;
+			} else {
+				return;
+			} # end if
 		} # end if
-		my @Types = openprint::User_Relationship_Type->find('id'=>[sets::union( map { $_->type_id() } @Relationships )], 'order'=>'lower(name)' );
+		my @Types = openprint::User_Relationship_Type->find( id=>[sets::union( map { $_->type_id() } @Relationships )], order=>'lower(name)' );
 
 		my %Approved;
 		my %My_Requests;
@@ -27,7 +33,7 @@
 				next if $R->type_id() != $Type->id();
 				if ( $R->approved() ) {
 					push @{$Approved{$$Type{id}}}, $R;
-				} elsif ( $R->user_id1() == $session{'user_id'} ) {
+				} elsif ( $R->user_id1() == $session{user_id} ) {
 					push @{$My_Requests{$$Type{id}}}, $R;
 				} else {
 					push @{$Other_Requests{$$Type{id}}}, $R;
@@ -41,18 +47,18 @@
 				next if ! ( $Approved{$$Type{id}} and @{$Approved{$$Type{id}}} );
 				$html .= "<h2>$$Type{name}</h2><ul>";
 				if ( @{$Approved{$$Type{id}}} > 10 ) {
-					$html .= '<li>'.@{$Approved{$$Type{id}}} . ' people are ' . $Type->name() .' '. ( $$variable{'User'}->id() == $session{'user_id'} ? 'you' : $$variable{'User'}->firstname() ). '</li>';
+					$html .= '<li>'.@{$Approved{$$Type{id}}} . ' people are ' . $Type->name() .' '. ( $$variable{User}->id() == $session{user_id} ? 'you' : $$variable{User}->firstname() ). '</li>';
 				} # end if
 				for ( my $i = 0; $i < @{$Approved{$$Type{id}}} and $i < 10; $i += 1 ) {
 				
 
 					my $R = $Approved{$$Type{id}}[$i];
 					$html .= sprintf('<li>%s<span class="buttons">%s</span></li>',
-							( $$variable{'User'}->id() == $R->user_id1() ? 
+							( $$variable{User}->id() == $R->user_id1() ? 
 							  ( $R->User2()->thumbnail_html() ) :
 							  ( $R->User1()->thumbnail_html() ) 
 							),
-							( sets::isin( $session{'user_id'}, @$R{'user_id1','user_id2'} ) ? ssi::button( 'Delete'.$R->user_id1().'-'.$R->user_id2(), { 'onclick'=>qq`new Ajax.Updater( 'Relationships', '_relationships.html', { parameters: { user_id1: $$R{user_id1}, user_id: $$variable{User}{id}, user_id2: $$R{user_id2}, type_id: $$R{type_id}, action: 'delete' } } );`, 'text'=>'X', 'title'=>'Remove Relationship'} ) : () ),
+							( sets::isin( $session{user_id}, @$R{'user_id1','user_id2'} ) ? ssi::button( 'Delete'.$R->user_id1().'-'.$R->user_id2(), { 'onclick'=>qq`new Ajax.Updater( 'Relationships', '_relationships.html', { parameters: { user_id1: $$R{user_id1}, user_id: $$variable{User}{id}, user_id2: $$R{user_id2}, type_id: $$R{type_id}, action: 'delete' } } );`, 'text'=>'X', 'title'=>'Remove Relationship'} ) : () ),
 					
 						);
 				} # end for
@@ -104,13 +110,13 @@ if ( ! $$variable{Company} ) {
 				} # end foreach $Type
 			} # end if %My_Requests
 			$html .= '</div>';
-		} elsif ( $session{user_id} ) { # if ( $session{'user_id'} != $$variable{'User'}->id() ) 
+		} elsif ( $session{user_id} ) { # if ( $session{user_id} != $$variable{User}->id() ) 
 			@Relationships = map { sets::isin( $session{user_id}, [ $_->user_id1(), $_->user_id2() ] ) ? $_ : () } @Relationships;
 			$html .= sprintf(q`<div class="add">You want to be <select name="relationship_type_id" id="relationship_type_id"><option value="">select</option>%1$s</select>%2$s<p class="buttons">%3$s</p></div>`,
 				ssi::make_drop_down( openprint::User_Relationship_Type->dropdown('order'=>'sort,lower(name)', 
 					( @Relationships ? ( 'id not in'=>[ map { $_->type_id() } @Relationships ] ) : () ),
 					) ),
-				$$variable{'User'}->name(),
+				$$variable{User}->name(),
 				ssi::button( 'AddRelationship', { 'onclick'=>qq`new Ajax.Updater( 'Relationships', '_relationships.html', { parameters: { user_id: '$$variable{User}{id}', user_id1: '$session{user_id}', user_id2: '$$variable{User}{id}', type_id: \$('relationship_type_id').getValue(), action: 'add' } } );`, 'text' => 'Add' } ),
 				);
 		} # end if viewing me or not

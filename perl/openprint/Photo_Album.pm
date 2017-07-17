@@ -30,30 +30,33 @@ $table = 'photo_albums';
 	thumbnail_id	=>	undef,
 	deleted			=>	0,
 );
+%transforms = (
+	id			=>	[ 's/\D//g', '<2147483647' ],
+);
 
 sub created_by {
-	return $_[0]{'user_id'};
+	return $_[0]{user_id};
 } # end sub
 
 sub Thumbnail {
-	if ( ! $_[0]{'Thumbnail'} ) {
-		if ( ! $_[0]{'thumbnail_id'} ) {
+	if ( ! $_[0]{Thumbnail} ) {
+		if ( ! $_[0]{thumbnail_id} ) {
 	#$openprint::log->debug("Album $_[0]{id} No thumbnail assigned, showing first.");
 			my @Photos = $_[0]->Photos();
 	#$openprint::log->debug("Album $_[0]{id} $_[0]{name} No thumbnail assigned");
 			if ( @Photos ) {
 #$openprint::log->debug(", showing first. $Photos[0]{asset_id}");
-			$_[0]{'Thumbnail'} = $Photos[0];
+			$_[0]{Thumbnail} = $Photos[0];
 			} # end if
 		} else {
-			$_[0]{'Thumbnail'} = openprint::Photo_in_Album->find_one( 'asset_id'=>$_[0]{'thumbnail_id'}, 'album_id'=>$_[0]{'id'} );
+			$_[0]{Thumbnail} = openprint::Photo_in_Album->find_one( 'asset_id'=>$_[0]{thumbnail_id}, 'album_id'=>$_[0]{id} );
 		} # end if
-		if ( ! $_[0]{'Thumbnail'} ) {
-			$_[0]{'Thumbnail'} = new openprint::Photo_in_Album();
-			$_[0]{'Thumbnail'}->set( { 'album_id'=>$_[0]{'id'} } );
+		if ( ! $_[0]{Thumbnail} ) {
+			$_[0]{Thumbnail} = new openprint::Photo_in_Album();
+			$_[0]{Thumbnail}->set( { 'album_id'=>$_[0]{id} } );
 		} # end if
 	} # end if
-	return $_[0]{'Thumbnail'};
+	return $_[0]{Thumbnail};
 } # end sub Thumbnail
 
 sub thumbnail_url {
@@ -75,7 +78,7 @@ sub thumbnail_html {
 		return sprintf('<a class="thumbnail" href="/photo_albums/view.html?album_id=%1$d" title="%3$s"><img src="%2$s" alt="%3$s" /></a>', $_[0]{id}, $Photo->thumbnail_url(), $_[0]->name() );
 	} # end if
 #$openprint::log->debug("Photo no asset"  );
-	return sprintf('<a class="thumbnail" href="/photo_albums/view.html?album_id=%d" title="%s">Empty</a>', $_[0]{id}, $_[0]{'name'} );
+	return sprintf('<a class="thumbnail" href="/photo_albums/view.html?album_id=%d" title="%s">Empty</a>', $_[0]{id}, $_[0]{name} );
 } # end sub thumbnail_html
 
 sub asset_html {
@@ -85,14 +88,14 @@ $openprint::log->debug("Photo has asset" . $Photo->to_string() );
 		return sprintf('<a class="asset" href="/photo_albums/view.html?album_id=%1$d" title="%3$s"><img src="%2$s" alt="%3$s" /></a>', $_[0]{id}, $Photo->url(), $_[0]->name() );
 	} # end if
 $openprint::log->debug("Photo no asset"  );
-	return sprintf('<a class="thumbnail" href="/photo_albums/view.html?album_id=%d" title="%s">Empty</a>', $_[0]{id}, $_[0]{'name'} );
+	return sprintf('<a class="thumbnail" href="/photo_albums/view.html?album_id=%d" title="%s">Empty</a>', $_[0]{id}, $_[0]{name} );
 } # end sub asset_html
 
 sub Photos {
-	if ( @_ > 1 or ! $_[0]{'Photos'} ) {
-		@{$_[0]{'Photos'}} = openprint::Photo_in_Album->find( album_id=>$_[0]{id}, order=>'asset_id') if $_[0]{id};
+	if ( @_ > 1 or ! $_[0]{Photos} ) {
+		@{$_[0]{Photos}} = openprint::Photo_in_Album->find( album_id=>$_[0]{id}, order=>'asset_id') if $_[0]{id};
 	} # end if
-	return $_[0]{'Photos'} ? @{$_[0]{'Photos'}} : ();
+	return $_[0]{Photos} ? @{$_[0]{Photos}} : ();
 } # end sub Photos
 
 sub destroy {
@@ -114,7 +117,7 @@ sub upload {
 			$error .= $Photo->save({ asset_id=>$$Asset{id}, album_id=>$_[0]->id() });   
 			$error .= new openprint::Log()->save({'action'=>'Upload Photo', 'Object'=>$Photo});
 		} else {
-			$error .= 'Photo already exists in album.';
+			#$error .= 'Photo already exists in album.';
 		} # end if
 	} else {
 		$error .= "Failed to upload photo: $Asset";
@@ -123,22 +126,22 @@ sub upload {
 } # end sub upload
 
 sub User {
-	return new openprint::User( $_[0]{'user_id'} );
+	return new openprint::User( $_[0]{user_id} );
 } # end sub User
 
 sub can_edit {
-	return 1 if ! $_[0]{'id'};
-	return 1 if $openprint::session{'user_type'} eq 'A';
-	return 1 if $openprint::session{'user_id'} and ( $_[0]{'user_id'} == $openprint::session{'user_id'} );
+	return 1 if ! $_[0]{id};
+	return 1 if $openprint::session{user_type} eq 'A';
+	return 1 if $openprint::session{user_id} and ( $_[0]{user_id} == $openprint::session{user_id} );
 	return 0;
 } # end sub can_edit
 
 sub can_view {
-	return 1 if ! $_[0]{'id'};
-	return 1 if $openprint::session{'user_type'} eq 'A';
-	return 1 if $_[0]{'user_id'} == $openprint::session{'user_id'};
+	return 1 if ! $_[0]{id};
+	return 1 if $openprint::session{user_type} eq 'A';
+	return 1 if $_[0]{user_id} == $openprint::session{user_id};
 	my $Privacy = $_[0]->Privacy();
-	return 1 if ! $$Privacy{'id'};
+	return 1 if ! $$Privacy{id};
 	return $Privacy->can_view();
 } # end sub can_view
 
@@ -156,7 +159,7 @@ sub slider {
 	my ( $Album, $size ) = @_;
 	$size = 'medium' if ! $size;
 
-    my @Assets = map { $_->Asset() } $_[0]->Photos();
+  my @Assets = map { $_->Asset() } $_[0]->Photos();
 	return openprint::Asset::slider( \@Assets, $size );
 } # end sub slider
 

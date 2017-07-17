@@ -13,6 +13,7 @@ $serial= 'usergroups_id_seq';
 %fields = (
 	id			=>	'id',
 	name		=>	'name',
+	description	=>	'description',
 	duration	=>	'duration',
 	asset_id	=>	'asset_id',
 );
@@ -21,7 +22,8 @@ $serial= 'usergroups_id_seq';
 );
 
 %transforms = (
-	name	=> [ 's/^\s+//', 's/\s+$//', 's/\s\s+/ /g' ],
+	name		=> [ 's/^\s+//', 's/\s+$//', 's/\s\s+/ /g' ],
+	description	=> [ 's/^\s+//', 's/\s+$//', 's/\s\s+/ /g' ],
 );
 %defaults = (
 	duration	=>	undef,
@@ -30,15 +32,15 @@ $serial= 'usergroups_id_seq';
 
 sub Users {
 	my ( $self, %param ) = @_;
-	return () if ! $$self{'id'};
+	return () if ! $$self{id};
 	if ( %param ) {
-		$param{'usergroup_id any'} = $$self{'id'};
+		$param{'usergroup_id any'} = $$self{id};
 		return openprint::User->find( %param );	
-	} elsif ( ! $$self{'Users'} ) {
-		$param{'usergroup_id any'} = $$self{'id'};
+	} elsif ( ! $$self{Users} ) {
+		$param{'usergroup_id any'} = $$self{id};
 		$$self{Users} = [ openprint::User->find( %param ) ];
 	} # end if
-	return @{$$self{'Users'}};
+	return @{$$self{Users}};
 } # end sub Users
 
 1;

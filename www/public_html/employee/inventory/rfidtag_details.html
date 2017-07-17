@@ -50,7 +50,7 @@
 	<fieldset><legend>
 		<? if ( $$variable{RFIDTag}->created_on() ) ?>
 			<input type="hidden" name="rfidtag_id" value="<? echo ( $$variable{RFIDTag}->id() ) ?>" />
-		RFIDTag ID: <? echo ( $$variable{RFIDTag}->id() ) ?>
+		RFIDTag ID: <? echo ( sprintf('%d (%x)', $$variable{RFIDTag}->id(), substr($$variable{RFIDTag}{id},1,15) ); )?>
 		<? else ( $$variable{RFIDTag}->created_on() ) ?>
 		New RFIDTag
 		<? endif ( $$variable{RFIDTag}->created_on() ) ?>
