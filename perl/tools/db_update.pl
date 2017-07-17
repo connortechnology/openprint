@@ -5598,6 +5598,13 @@ if ( ! sets::isin('object_specifications', \@tables ) ) {
 		$dbh->do(q`insert into object_specifications ( object_type_id, object_id, name, value ) SELECT (SELECT id from object_types where name='openprint::Product'), product_id, name, value from product_specifications;`) or die $dbh->errstr();
 		$dbh->do('DROP TABLE product_specifications');
 	}
+
+if ( ! sets::isin('backups', \@tables ) ) {
+  $log->debug("Adding Backups");
+  $dbh->do( misc::load_file( $log, q{../openprint/sql/Backups.sql}) );
+  die if $dbh->errstr();
+} # end if
+
 print "done.\n";
 $dbh->disconnect();
 1;

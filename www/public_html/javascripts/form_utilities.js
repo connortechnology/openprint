@@ -1478,7 +1478,7 @@ function integerize(e) {
 }
 function to_hostname(e) {
 	if ( e.value.match(/\s/) ) {
-		e.value = parseFloat(e.value.replace(/\s/g,''));
+		e.value = e.value.replace(/\s/g,'');
 	} 
 }
 function floatize(e) {

@@ -11,6 +11,7 @@ use vars qw( %variable %session %param %config $log $dbh $r );
 *dbh = \$openprint::dbh;
 *r = \$openprint::r;
 
+require openprint::Backup;
 require openprint::Host;
 require openprint::Host_Info;
 require openprint::RADIUS_Check;
@@ -35,13 +36,6 @@ sub _logs {
 } # end sub _logs
 
 sub hosts {
-	if ( $param{action} eq 'Delete' ) {
-		foreach my $host_id ( ref $param{host_id} eq 'ARRAY' ? @{$param{host_id}} : $param{host_id} ) {
-			my $Host = new openprint::Host( $host_id );
-			$variable{error} .= $Host->delete();
-		} # end foreach host_id
-		%param = ();
-	} # end if
 	_hosts();
 	ssi::setup_date_select( '/employee/it/hosts.html', 'created_on_start', '' );
 	ssi::setup_date_select( '/employee/it/hosts.html', 'created_on_end', '' );
@@ -64,6 +58,7 @@ sub _hosts {
 			my $Host = new openprint::Host( $host_id );
 			$variable{error} .= $Host->delete();
 		} # end foreach host_id
+		%param = ();
 	} # end if
 	ssi::save_params( '/employee/it/hosts.html', 
 			'created_on_start_year', 'created_on_start_month', 'created_on_start_day', 
@@ -562,6 +557,80 @@ sub _information {
 } # end sub _information
 sub _host_actions {
 } # end sub _host_actions
+
+sub backups {
+  _hosts();
+  my $uri = $r->uri();
+  ssi::setup_date_select( $uri, 'created_on_start', '' );
+  ssi::setup_date_select( $uri, 'created_on_end', '' );
+  ssi::setup_date_select( $uri, 'updated_on_start', '' );
+  ssi::setup_date_select( $uri, 'updated_on_end', '' );
+  if ( ! exists $session{$uri.'?has_hostname'} ) {
+    $session{$uri.'?has_hostname'} = 1;
+  } # end if
+  if ( ! exists $session{$uri.'?assigned'} ) {
+    $session{$uri.'?assigned'} = 1;
+  } # end if
+  if ( ! exists $session{$uri.'?notassigned'} ) {
+    $session{$uri.'?notassigned'} = 1;
+  } # end if
+}
+
+sub _backups {
+  if ( $param{action} ) {
+    if ( $param{action} eq 'Delete' ) {
+      foreach my $id ( ref $param{backup_id} eq 'ARRAY' ? @{$param{backup_id}} : $param{backup_id} ) {
+        my $Backup = new openprint::Backup( $id );
+        $variable{error} .= $Backup->delete();
+      } # end foreach id
+      %param = ();
+    } # end if
+  } # end if
+ ssi::save_params( '/employee/it/backups.html',
+      'created_on_start_year', 'created_on_start_month', 'created_on_start_day',
+      'created_on_end_year', 'created_on_end_month', 'created_on_end_day',
+      'updated_on_start_year', 'updated_on_start_month', 'updated_on_start_day',
+      'updated_on_end_year', 'updated_on_end_month', 'updated_on_end_day',
+      'enabled',
+      'name','type_id',
+      'order', 'deleted', 'owner_id',
+      );
+
+}
+sub backup {
+  my $Backup = $variable{Backup} = new openprint::Backup( $param{backup_id} );
+  if ( $param{action} eq 'Delete' ) {
+    $variable{error} .= $Backup->delete();
+    if ( ! $variable{error} ) {
+      $variable{ExternalRedirect} = '/employee/it/backups.html';
+      return;
+    } # end if
+    %param = ();
+  } elsif ( $param{action} eq 'Destroy' ) {
+    $variable{error} .= $Backup->destroy();
+    if ( ! $variable{error} ) {
+      $variable{ExternalRedirect} = '/employee/it/backups.html';
+      return;
+    } # end if
+    %param = ();
+  } elsif ( $param{action} eq 'Save' ) {
+    if ( $param{type_id} ) {
+      delete $param{type};
+    } else {
+      delete $param{type_id};
+    } # end if
+    my @changes = $Backup->changes(\%param);
+    $variable{error} .= $Backup->save(\%param) if @changes;
+
+    if ( ! $variable{error} ) {
+      (new openprint::Log())->save({Object=>$Backup, action=>'Edit', note=>join('<br/>', @changes) });
+      $variable{ExternalRedirect} = '/employee/it/backups.html';
+      return;
+    } # end if
+    %param = ();
+  }
+
+}
 
 1;
 __END__

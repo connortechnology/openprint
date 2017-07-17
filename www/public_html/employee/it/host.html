@@ -80,20 +80,10 @@ make_drop_down( openprint::Company->dropdown(id=>[ @owner_ids, $openprint::Compa
 <? if ( $$variable{Host}->id() ) ?>
 		<div class="content rightColumn">
 			<fieldset><legend>Photos</legend>
-<<<<<<< HEAD
-				<div id="assets"><?include('_assets.html')?></div>
-			</fieldset>
-			<fieldset><legend>Upload a new Asset</legend>
-				<input type="file" name="filename" />
-				<input type="text" name="asset_name" placeholder="Name"/>
-				<p class="buttons">
-					<? echo ( button( 'Upload', { onclick=>qq`var form = jQuery('#f1')[0];form.action='/employee/it/host.html';form.elements['action'].value='Upload';form.submit();`} ); ) ?>
-				</p>
-=======
 				<? echo (
-$$variable{Object} = $$variable{Host};
- include('/employee/assets/_asset_upload.html'); ) ?>
->>>>>>> master
+            $$variable{Object} = $$variable{Host};
+            include('/employee/assets/_asset_upload.html');
+            ) ?>
 			</fieldset>
 			<fieldset><legend>Notifications</legend>
 				<div id="notifications"><?include('_notifications.html')?></div>
@@ -141,19 +131,8 @@ $$variable{Object} = $$variable{Host};
 		</tr>
 <? echo (
 	my $html;
-<<<<<<< HEAD
-	 if ( $config{RADIUS_Support} eq 'Y' ) {
-		$openprint::RADIUS_Check::dbh = sql::open_sql( $log,
-			database	=> $config{RADIUS_DB_Name},
-			driver		=> $config{RADIUS_DB_Driver},
-			host		=> $config{RADIUS_DB_Server},
-			login		=> $config{RADIUS_DB_Username},
-			password	=> $config{RADIUS_DB_Password},
-		);
-=======
 	if ( $config{RADIUS_Support} eq 'Y' ) {
 		openprint::RADIUS_Check->connect();
->>>>>>> master
 		if ( ! $openprint::RADIUS_Check::dbh ) {
 			$html .= 'Unable to connect to RADIUS DB server.';	
 		} # end if
@@ -230,10 +209,7 @@ $$variable{Object} = $$variable{Host};
     $$variable{Location} = $$variable{Host}->Location();
     return include( '/location/_location_fields.html' );
 ) ?>
-<<<<<<< HEAD
-=======
             </fieldset>
->>>>>>> master
 <? endif ( $$variable{Host}->id() ) ?>
             </fieldset>
 </form>
