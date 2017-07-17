@@ -1,9 +1,11 @@
 [Unit]
-Description=Openprint IP Monitor
+Description=Openprint IP Monitor for %i
 
 [Service]
 #Type=forking
-ExecStart=/var/www/testing/perl/tools/ip_monitor.pl --config=/etc/openprint/ip_monitor.conf
+ExecStart=/var/www/testing/perl/tools/ip_monitor.pl --config=/etc/openprint/ip_monitor.%i.conf
+Restart=always
+RestartSec=0
 
 [Install]
 WantedBy=multi-user.target
