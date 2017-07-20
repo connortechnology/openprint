@@ -29,7 +29,7 @@ $log->{level} = 'debug';
 
 my $program = 'TIFMerge.pl';
 my $opts = {};
-GetOptions($opts, 'help', 'base_path=s','merge_path=s', 'debug=s', 'pid_file=s');
+GetOptions($opts, 'help', 'base_path=s','merge_path=s', 'debug=s', 'pid_file=s', 'config=s');
 
 if ($opts->{help}) {
 	usage();
@@ -45,7 +45,9 @@ if (my $err = configuration::from_file($$opts{config})) {
     die $err;
 }
 
-db_connect();
+	#$openprint::log->debug( Data::Dumper::Dumper( \%config ) );
+die if ! db_connect();
+
 configuration::from_db();
 configuration::merge( $opts );
 
@@ -61,7 +63,6 @@ if ( $config{pid_file} ) {
 
 while ( 1 ) {
 	sleep 1;
-	$openprint::log->debug( Data::Dumper::Dumper( \%config ) );
 
 	my ( @base_filenames, @imprint_filenames );
 	if ( ! open(S, "> $config{base_path}/.lock.lck") ) {
@@ -110,7 +111,7 @@ while ( 1 ) {
 			next if -d $config{base_path}.'/'.$imprint_file;
 			next if $imprint_file eq "${file_base}M.$colour.TIF";
 
-			if ( $imprint_file =~ /^$file_base(_FM)?/ ) {
+			if ( $imprint_file =~ /^$file_base(_FM_\d+)?/ ) {
 				my ( $imprint_file_base, $form, $side, $colour, $extension ) = $imprint_file =~ /^(.*)\.(\d)([AB])\.(\w)\.(TIF)$/i;
 
 				my $dest_file = "$config{merged_path}/${imprint_file_base}.$form$side.$colour.M.TIF";
