@@ -11,10 +11,10 @@ use vars qw( $debug %fields %find_fields %transforms %defaults $table %serial @i
 
 $debug = 0;
 %fields = (
-	service_id	=>	'lngserviceindex',
-	project_id	=>	'lngprojectindex',
-	operator_id	=>	'operator_id',
-	status		=>	'strstatus',
+	service_id		=>	'lngserviceindex',
+	project_id		=>	'lngprojectindex',
+	operator_id		=>	'operator_id',
+	status			=>	'strstatus',
 	servicetype_id	=>	'servicetype_id',
 	service_type	=>	undef,
 	created_on		=>	'dtmlastmodified',
@@ -42,6 +42,13 @@ sub Project {
 sub Operator {
 	return new openprint::User( $_[0]{operator_id} );
 } # end sub Operator
+
+sub Operators {
+	if ( ! $_[0]{Operators} ) {
+		$_[0]{Operators} = [ openprint::User->find(id=>$_[0]{operator_id}) ];
+	}
+	return @{$_[0]{Operators}};
+}
 
 sub specs {
 	if ( ! $_[0]{specs} ) {
