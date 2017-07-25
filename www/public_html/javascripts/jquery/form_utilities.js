@@ -729,7 +729,7 @@ function Country_onchange( country_ddm, state ) {
 	var onchange = state.getAttribute('onchange');
 	if ( country == 'US' ) {
 		$(state.name+'_container').innerHTML = '<select name="' + state.name + '" id="' + state.id + '"' + ( onchange ? ' onchange="' + onchange + '"' : '' ) + '/>';
-		$( state ).load( '/includes/_states.html' );
+		$j( state ).load( '/includes/_states.html' );
 		if ( state_label ) state_label.innerHTML='State';
 		if ( postal_label ) postal_label.innerHTML='ZIP Code';
 	} else if ( country == 'CA' ) {

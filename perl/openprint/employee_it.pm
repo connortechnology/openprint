@@ -613,6 +613,8 @@ sub backup {
       return;
     } # end if
     %param = ();
+  } elsif ( $param{action} eq 'Run' ) {
+    $variable{information} .= $Backup->run(); 
   } elsif ( $param{action} eq 'Save' ) {
     if ( $param{type_id} ) {
       delete $param{type};

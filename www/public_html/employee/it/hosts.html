@@ -1,7 +1,7 @@
 <script type="text/javascript">
 function load_host( form, options ) {
-	form = $(form);
-	var div = $('#Results');
+	form = $j(form);
+	var div = $j('#Results');
 	div.innerHTML = 'Loading... Please wait.';
 	var p = form.serialize(true);
 	if ( options && options.order )
@@ -10,7 +10,7 @@ function load_host( form, options ) {
 	div.load('/employee/it/_hosts.html', p );
 } // end function load
 </script>
-<? echo ( include('/includes/error_reporting.html'); ) ?>
+<?include('/includes/error_reporting.html')?>
 Please select a host to view/edit.<br/>
 <form id="f1" name="f1" method="post" action="hosts.html">
 	<input type="hidden" name="action"/>
@@ -96,11 +96,11 @@ make_drop_down( openprint::Company->dropdown(id=>[ @owner_ids, $openprint::Compa
 		</p>
 	</fieldset>
 	<div id="Results">
-<? if ( map { $session{'/employee/it/hosts.html?'.$_} ? $_ : () } ( 'ip','hostname','mac' ) ) ?>
+<? if ( map { $session{'/employee/it/hosts.html?'.$_} ? $_ : () } ( 'ip','hostname','mac','monitored' ) ) ?>
 <?include('/employee/it/_hosts.html')?>
-<? else ( map { $session{'/employee/it/hosts.html?'.$_} ? $_ : () } ( 'ip','hostname','mac' ) ) ?>
+<? else ( map { $session{'/employee/it/hosts.html?'.$_} ? $_ : () } ( 'ip','hostname','mac','monitored' ) ) ?>
  Choose criteria and click Show Results
-<? endif ( map { $session{'/employee/it/hosts.html?'.$_} ? $_ : () } ( 'ip','hostname','mac' ) ) ?>
+<? endif ( map { $session{'/employee/it/hosts.html?'.$_} ? $_ : () } ( 'ip','hostname','mac','monitored' ) ) ?>
 </div>
 </form>
 <script type="text/javascript">document.f1.ip.focus();</script>

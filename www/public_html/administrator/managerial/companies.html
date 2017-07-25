@@ -3,11 +3,8 @@
 <h2>Companies</h2>
 </div>
 <script type="text/javascript">
-var openprint_load_content_ajax = null;
-
 function load_page() {
-	if ( openprint_load_content_ajax ) { openprint_load_content_ajax.transport.abort(); }
-	openprint_load_content_ajax = $jQuery('#Results').load( '_companies.html', $('f1').serialize() );
+  LoadContent( 'Results', '_companies.html', $j('f1') );
 } 
 </script>
 <form id="f1" name="f1" method="post" action="companies.html">
@@ -23,14 +20,22 @@ function load_page() {
 			<? echo ( input( type=>'text', name=>'company_name', onkeydown=>'if(event.keyCode==13){f1.submit();}', oninput=>'load_page();' ); ) ?>
 			<? echo ( button( 'Go2',{ onclick=>"f1.action='company_profiles.html';f1.submit();", text=> 'Go' } ); ) ?>	
 		</li>
-		<li>
-			<label>Sales Rep</label>
-			<select name="salesrep_id" size="1" onchange="load_page();"> 
-				<option value="">All</option>
-				<? echo ( make_drop_down( openprint::User->dropdown( type=>['E','A'], 'usergroup any'=>'Sales' ), $session{$r->uri().'?salesrep_id'} ); ) ?>
-			</select>
-			<? echo ( checkboxes( 'salesrep_id_exclude', [ 1, 'Not in this list' ], $session{$r->uri().'?salesrep_id_exclude'}, { onclick=>'load_page();' } ); ) ?>
-		</li>
+<? echo (
+  my $users = openprint::User->dropdown( type=>['E','A'], 'usergroup any'=>'Sales' );
+  if ( @{$users} ) {
+    return join("\n",
+        '<li><label>Sales Rep</label>',
+        ssi::select( $users, $session{$r->uri().'?salesrep_id'} , {
+          name=>'salesrep_id', 
+          onchange=>'load_page();',
+          prepend=>[ '', 'All' ],
+          } ),
+        checkboxes( 'salesrep_id_exclude', [ 1, 'Not in this list' ], $session{$r->uri().'?salesrep_id_exclude'}, { onclick=>'load_page();' } ),
+        '</li>',
+        );
+  }
+  return;
+) ?>
 		<li> 
 			<label>Created Date</label>
 			<? echo ( date_select_session( $r->uri(), 'created_on_start', { with_today=>1, with_clear=>1, onchange=>'load_page();' } ); ) ?>
