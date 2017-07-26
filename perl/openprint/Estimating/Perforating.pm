@@ -154,7 +154,7 @@ sub calc {
 			my $form = $$sig_specs{SignatureIndex};
 
 			my $Imposition = new openprint::Imposition();
-			$Imposition->load( $sig_specs, $qty_index );
+			$Imposition->load( $sig_specs, $qty_index, $Project );
 			$$specs{'hdnBreakdown'.$qty_index} .= "Signature: $form " . ( $$sig_specs{txtServiceDescription} ? $$sig_specs{txtServiceDescription} : '' ) . '<br/>';
 			$$specs{'hdnBreakdown'.$qty_index} .=  $Imposition->to_string() . '<br/>';
 			$$specs{'hdnBreakdown'.$qty_index} .=  $Imposition->Paper()->to_string() . '<br/>';
