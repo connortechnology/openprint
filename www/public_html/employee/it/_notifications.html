@@ -7,7 +7,7 @@
 			foreach my $U ( @Notifications ) {
 				$html .= sprintf( q`<li id="notification_%d"><span class="name">%s</span><span class="buttons">%s</span></li>`, 
 					$U->user_id(), $U->User()->link_to(), 
-					button( 'd'.$U->user_id(), { onclick=>qq`$('notifications').load('_notifications.html', { action: 'delete', host_id: '$$variable{Host}{id}', user_id: $$U{user_id}} );`, text=>'X' } ),
+					button( 'd'.$U->user_id(), { onclick=>qq`\$j('#notifications').load('_notifications.html', { action: 'delete', host_id: '$$variable{Host}{id}', user_id: $$U{user_id}} );`, text=>'X' } ),
 					);
 			} # end foreach User in Notifications
 		} else {
@@ -19,15 +19,15 @@
 		<select name="new_notification_id" id="new_notification_id">
 			<option value=""> select one </option>
 		<? echo ( 
-			return make_drop_down( openprint::User->dropdown(
-					id=>[ sets::exclude(
-						[ map { $_->user_id() } $$variable{Host}->Notifications()], 
-						[ map { $_->id() } openprint::User->find( company_id=>$openprint::User->company_id() ) ]
-					) ],
-				) );
+      my @users = sets::exclude(
+            [ map { $_->user_id() } $$variable{Host}->Notifications() ],
+            [ map { $_->id() } openprint::User->find( company_id=>$openprint::User->company_id() ) ]
+          );
+			return make_drop_down( openprint::User->dropdown( id=>\@users ) ) if @users;
+      return;
 		) ?>
 		</select>
 		<? echo ( button( 'AddNotification', { 
-					onclick=>qq`var user_id=jQuery('#new_notification_id').val();if( user_id ) { jQuery('#notifications').load( '_notifications.html', { action: 'add', host_id: '$$variable{Host}{id}', user_id: user_id } );}else{alert('Select a user');};`, text=>'Add' } ); ) ?>
+					onclick=>qq`var user_id=\$j('#new_notification_id').val();if( user_id ) { \$j('#notifications').load( '_notifications.html', { action: 'add', host_id: '$$variable{Host}{id}', user_id: user_id } );}else{alert('Select a user');};`, text=>'Add' } ); ) ?>
 	</li>
 </ul>

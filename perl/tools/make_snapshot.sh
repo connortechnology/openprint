@@ -130,6 +130,7 @@ else
 fi
 if [ $? != 0 -a $? != 24 ]; then
     echo "rsync return non-zero code. ($?)"
+rc=$?
 
 	# Only mark it bad if we already haev a scuccessful backup
 	if [ -e "$DEST$TYPE.0" ] ; then
@@ -143,7 +144,7 @@ if [ $? != 0 -a $? != 24 ]; then
 		$TOUCH "$DEST$TYPE.bad"
 		NEWDU=`$DU -b -sh "$DEST$TYPE.bad" |$AWK '{print $1}'`
 		echo $NEWDU > "$DEST$TYPE.bad.du"
-		exit $?
+		exit $rc
 	fi
 fi;
 

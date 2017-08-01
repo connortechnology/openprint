@@ -85,127 +85,129 @@ sub _hosts {
 
 sub host {
 	my $Host = $variable{Host} = new openprint::Host( $param{host_id} );
-	if ( $param{action} eq 'Resolve' ) {
-		foreach my $I ( $Host->Interfaces() ) {
-			if ( ! $I->ip() ) {
-				$variable{error} .= 'For ' . $I->mac() . ': No ip.  Cant resolve without an ip.';
-			} else {
-				$variable{error} .= $Host->save({ hostname	=> $Host->resolve() });
-				$variable{error} .= $I->save({ mac		=> $I->get_mac(), });
-			} # end if
-		} # end foreach
-	} elsif ( $param{action} eq 'Delete' ) {
-		$variable{error} .= $Host->delete();
-		if ( ! $variable{error} ) {
-			$variable{ExternalRedirect} = '/employee/it/hosts.html';
-			return;
-		} # end if
-		%param = ();
-	} elsif ( $param{action} eq 'Destroy' ) {
-		$variable{error} .= $Host->destroy();
-		if ( ! $variable{error} ) {
-			$variable{ExternalRedirect} = '/employee/it/hosts.html';
-			return;
-		} # end if
-		%param = ();
-	} elsif ( $param{action} eq 'reboot' ) {
-		if ( $Host->reboot() ) {
-			$variable{information} .= 'Host successfully rebooted';
-		} else {
-			$variable{error} .= 'Host failed to reboot. Check logs';
-		}
-	} elsif ( $param{action} eq 'Wake' ) {
-		foreach my $I ( $Host->Interfaces() ) {
-			next if ! $I->mac();
-			if ( $I->ip() ) {
-				$_ = `wakeonlan -i $$I{ip} $$I{mac} 2>&1`;
-				if ( defined $_ ) {
-					$variable{information} .= "running wakeonlan -i $$I{ip} $$I{mac}<br/>Output: $_<br/>";
-				} else {
-					$variable{error} .= "Error running wakeonlan -i $$I{ip} $$I{mac}<br/>";
-				}
-			} # end if ip
-			$_ = `wakeonlan $$I{mac} 2>&1`;
-			if ( defined $_ ) {
-				$variable{information} .= "running wakeonlan -i $$I{ip} $$I{mac}<br/>Output: $_<br/>";
-			} else {
-				$variable{error} .= "Error running wakeonlan -i $$I{ip} $$I{mac}<br/>";
-			}
-		} # end foraech
-	} elsif ( $param{action} eq 'GEOLookup' ) {
-		foreach my $I ( $Host->interfaces() ) {
-			if ( ! $I->ip() ) {
-				$variable{error} .= "Interface $$I{mac} does not have an ip.<br/>";
-			} else {
-				my $Location = openprint::Location::from_ip( $I->ip() );
-				if ( ! $Location ) {
-					$variable{error} .= 'No Location found from ip.';
-				} else {
-					$$Host{location_id} = $Location->id();
-				} # end if
-			} # end if
-		} # end foreach I
-		
-	} elsif ( $param{action} eq 'Save' ) {
-		if ( $param{type_id} ) {
-			delete $param{type};
-		} else {
-			delete $param{type_id};
-		} # end if
-		my $Location = openprint::Location::save_location( \%param );
-		$param{location_id} = $Location->id() if $Location and $Location->id();
-		my @changes = $Host->changes(\%param);
+  if ( $param{action} ) {
+    if ( $param{action} eq 'Resolve' ) {
+      foreach my $I ( $Host->Interfaces() ) {
+        if ( ! $I->ip() ) {
+          $variable{error} .= 'For ' . $I->mac() . ': No ip.  Cant resolve without an ip.';
+        } else {
+          $variable{error} .= $Host->save({ hostname	=> $Host->resolve() });
+          $variable{error} .= $I->save({ mac		=> $I->get_mac(), });
+        } # end if
+      } # end foreach
+    } elsif ( $param{action} eq 'Delete' ) {
+      $variable{error} .= $Host->delete();
+      if ( ! $variable{error} ) {
+        $variable{ExternalRedirect} = '/employee/it/hosts.html';
+        return;
+      } # end if
+      %param = ();
+    } elsif ( $param{action} eq 'Destroy' ) {
+      $variable{error} .= $Host->destroy();
+      if ( ! $variable{error} ) {
+        $variable{ExternalRedirect} = '/employee/it/hosts.html';
+        return;
+      } # end if
+      %param = ();
+    } elsif ( $param{action} eq 'reboot' ) {
+      if ( $Host->reboot() ) {
+        $variable{information} .= 'Host successfully rebooted';
+      } else {
+        $variable{error} .= 'Host failed to reboot. Check logs';
+      }
+    } elsif ( $param{action} eq 'Wake' ) {
+      foreach my $I ( $Host->Interfaces() ) {
+        next if ! $I->mac();
+        if ( $I->ip() ) {
+          $_ = `wakeonlan -i $$I{ip} $$I{mac} 2>&1`;
+          if ( defined $_ ) {
+            $variable{information} .= "running wakeonlan -i $$I{ip} $$I{mac}<br/>Output: $_<br/>";
+          } else {
+            $variable{error} .= "Error running wakeonlan -i $$I{ip} $$I{mac}<br/>";
+          }
+        } # end if ip
+        $_ = `wakeonlan $$I{mac} 2>&1`;
+        if ( defined $_ ) {
+          $variable{information} .= "running wakeonlan -i $$I{ip} $$I{mac}<br/>Output: $_<br/>";
+        } else {
+          $variable{error} .= "Error running wakeonlan -i $$I{ip} $$I{mac}<br/>";
+        }
+      } # end foraech
+    } elsif ( $param{action} eq 'GEOLookup' ) {
+      foreach my $I ( $Host->interfaces() ) {
+        if ( ! $I->ip() ) {
+          $variable{error} .= "Interface $$I{mac} does not have an ip.<br/>";
+        } else {
+          my $Location = openprint::Location::from_ip( $I->ip() );
+          if ( ! $Location ) {
+            $variable{error} .= 'No Location found from ip.';
+          } else {
+            $$Host{location_id} = $Location->id();
+          } # end if
+        } # end if
+      } # end foreach I
+      
+    } elsif ( $param{action} eq 'Save' ) {
+      if ( $param{type_id} ) {
+        delete $param{type};
+      } else {
+        delete $param{type_id};
+      } # end if
+      my $Location = openprint::Location::save_location( \%param );
+      $param{location_id} = $Location->id() if $Location and $Location->id();
+      my @changes = $Host->changes(\%param);
 
-		$variable{error} .= $Host->save(\%param) if @changes;
-		foreach my $I ( $Host->Interfaces(), new openprint::Host_Interface() ) {
-			if ( $param{"mac-$$I{id}"} or $param{"ip-$$I{id}"} or $param{"comment-$$I{id}"} ) {
-				my %c =map { $_, $param{"$_-$$I{id}"} } ( 'mac', 'ip', 'dhcp', 'monitor', 'comment' );
-				my @c = $I->changes( \%c );
-				if ( @c ) {
-					$c{host_id} = $$Host{id};
-					$variable{error} .= $I->save(\%c);
-					push @changes, 'Interface changed: ' . join(',', @c ) . '<br/>' if ! $variable{error};
-				}
-			} else {
-				$variable{error} .= $I->delete() if $$I{id};
-			} # end if
-		} # end foreach Interface
-		
-		if ( ! $variable{error} ) {
-			(new openprint::Log())->save({Object=>$Host, action=>'Edit', note=>join('<br/>', @changes) });
-			$variable{ExternalRedirect} = '/employee/it/hosts.html';
-			return;
-		} # end if
-		%param = ();
-	} elsif ( $param{action} eq 'ping' ) {
-		if ( $Host->ping() ) {
-			$variable{information} .= 'Host is alive.';
-		} else {
-			$variable{information} .= 'Host did not respond to ping.';
-		} # end if	
-	} elsif ( $param{action} eq 'Upload' ) {
-		$param{mac} = [ map { split( ',', $_ ) } split("\n", $param{mac}) ];
-		if ( $param{type_id} ) {
-			delete $param{type};
-		} else {
-			delete $param{type_id};
-		} # end if
-		$variable{error} .= $Host->save(\%param);
-		my $Asset = openprint::Asset::upload( 'filename' );
-		if ( ref $Asset ne 'openprint::Asset' ) {
-			$variable{error} .= $Asset;
-		} else {
-			my $Object_Asset = new openprint::Object_Asset();
-			$variable{error} .= $Object_Asset->save({
-					asset_id	=>	$Asset->id(),
-					object_id	=>	$Host->id(),
-					object_type	=>	'openprint::Host',
-					});
-			if ( $param{asset_name} and ! $Asset->name() ) {
-				$Asset->save({'name'=>$param{asset_name}});
-			} # end if
-		} # end if
-	} # end if
+      $variable{error} .= $Host->save(\%param) if @changes;
+      foreach my $I ( $Host->Interfaces(), new openprint::Host_Interface() ) {
+        if ( $param{"mac-$$I{id}"} or $param{"ip-$$I{id}"} or $param{"comment-$$I{id}"} ) {
+          my %c =map { $_, $param{"$_-$$I{id}"} } ( 'mac', 'ip', 'dhcp', 'monitor', 'comment' );
+          my @c = $I->changes( \%c );
+          if ( @c ) {
+            $c{host_id} = $$Host{id};
+            $variable{error} .= $I->save(\%c);
+            push @changes, 'Interface changed: ' . join(',', @c ) . '<br/>' if ! $variable{error};
+          }
+        } else {
+          $variable{error} .= $I->delete() if $$I{id};
+        } # end if
+      } # end foreach Interface
+      
+      if ( ! $variable{error} ) {
+        (new openprint::Log())->save({Object=>$Host, action=>'Edit', note=>join('<br/>', @changes) });
+        $variable{ExternalRedirect} = '/employee/it/hosts.html';
+        return;
+      } # end if
+      %param = ();
+    } elsif ( $param{action} eq 'ping' ) {
+      if ( $Host->ping() ) {
+        $variable{information} .= 'Host is alive.';
+      } else {
+        $variable{information} .= 'Host did not respond to ping.';
+      } # end if	
+    } elsif ( $param{action} eq 'Upload' ) {
+      $param{mac} = [ map { split( ',', $_ ) } split("\n", $param{mac}) ];
+      if ( $param{type_id} ) {
+        delete $param{type};
+      } else {
+        delete $param{type_id};
+      } # end if
+      $variable{error} .= $Host->save(\%param);
+      my $Asset = openprint::Asset::upload( 'filename' );
+      if ( ref $Asset ne 'openprint::Asset' ) {
+        $variable{error} .= $Asset;
+      } else {
+        my $Object_Asset = new openprint::Object_Asset();
+        $variable{error} .= $Object_Asset->save({
+            asset_id	=>	$Asset->id(),
+            object_id	=>	$Host->id(),
+            object_type	=>	'openprint::Host',
+            });
+        if ( $param{asset_name} and ! $Asset->name() ) {
+          $Asset->save({'name'=>$param{asset_name}});
+        } # end if
+      } # end if
+    } # end if
+	} # end if param{action}
 	if ( ( ! $Host->id() ) and ( $param{ip} or $param{mac} or $param{hostname} ) ) {
 		my $I = new openprint::Host_Interface();
 		$I->set({ ip=>$param{ip}, mac=>$param{mac} });
@@ -599,37 +601,44 @@ sub _backups {
 }
 sub backup {
   my $Backup = $variable{Backup} = new openprint::Backup( $param{backup_id} );
-  if ( $param{action} eq 'Delete' ) {
-    $variable{error} .= $Backup->delete();
-    if ( ! $variable{error} ) {
-      $variable{ExternalRedirect} = '/employee/it/backups.html';
-      return;
-    } # end if
-    %param = ();
-  } elsif ( $param{action} eq 'Destroy' ) {
-    $variable{error} .= $Backup->destroy();
-    if ( ! $variable{error} ) {
-      $variable{ExternalRedirect} = '/employee/it/backups.html';
-      return;
-    } # end if
-    %param = ();
-  } elsif ( $param{action} eq 'Run' ) {
-    $variable{information} .= $Backup->run(); 
-  } elsif ( $param{action} eq 'Save' ) {
-    if ( $param{type_id} ) {
-      delete $param{type};
-    } else {
-      delete $param{type_id};
-    } # end if
-    my @changes = $Backup->changes(\%param);
-    $variable{error} .= $Backup->save(\%param) if @changes;
+  if ( $param{action} ) {
+    if ( $param{action} eq 'Delete' ) {
+      $variable{error} .= $Backup->delete();
+      if ( ! $variable{error} ) {
+        $variable{ExternalRedirect} = '/employee/it/backups.html';
+        return;
+      } # end if
+      %param = ();
+    } elsif ( $param{action} eq 'Destroy' ) {
+      $variable{error} .= $Backup->destroy();
+      if ( ! $variable{error} ) {
+        $variable{ExternalRedirect} = '/employee/it/backups.html';
+        return;
+      } # end if
+      %param = ();
+    } elsif ( $param{action} eq 'Run' ) {
+      $variable{information} .= $Backup->run(); 
+      $variable{ExternalRedirect} = '/employee/it/backup.html?backup_id='.$Backup->id();
+    } elsif ( $param{action} eq 'Save' ) {
+      if ( $param{type_id} ) {
+        delete $param{type};
+      } else {
+        delete $param{type_id};
+      } # end if
+      my @changes = $Backup->changes(\%param);
+      $variable{error} .= $Backup->save(\%param) if @changes;
 
-    if ( ! $variable{error} ) {
-      (new openprint::Log())->save({Object=>$Backup, action=>'Edit', note=>join('<br/>', @changes) });
-      $variable{ExternalRedirect} = '/employee/it/backups.html';
-      return;
-    } # end if
-    %param = ();
+      if ( ! $variable{error} ) {
+        (new openprint::Log())->save({Object=>$Backup, action=>'Edit', note=>join('<br/>', @changes) });
+        $variable{ExternalRedirect} = '/employee/it/backups.html';
+        return;
+      } # end if
+      %param = ();
+    }
+  }
+  if ( ! $$Backup{id} ) {
+    # set defaults
+    $$Backup{owner_id} = $$openprint::Owner{id};
   }
 
 }

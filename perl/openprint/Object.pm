@@ -1347,7 +1347,7 @@ sub Assets {
 	$param{order}	= 'asset_id' if ! $param{order};
 	$param{object_type} = ref $_[0];
 	my @Assets = openprint::Object_Asset->find(%param);	
-$openprint::log->debug("# of Assets: " . scalar @Assets );
+$openprint::log->debug("# of Assets: " . scalar @Assets ) if $debug;
 	return @Assets;
 } # end sub Assets
 

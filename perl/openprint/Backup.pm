@@ -109,11 +109,13 @@ sub Host {
 
 sub dest_path {
   if ( ! $_[0]{dest_path} ) {
+  my $path = $_[0]{path};
+  $path =~ s/\//_/g;
     $_[0]{dest_path} = join('/', 
         DEST_PATH,
-        $openprint::Owner->name(),
         ( $_[0]->owner_id() ? $_[0]->Owner()->name() : () ),
         $_[0]{name},
+        $path,
         '',
         );
   }
@@ -144,15 +146,15 @@ sub run {
   foreach my $ip ( ( map { $$_{ip} ? $$_{ip} : () } $_[0]->Host()->Interfaces() ), $_[0]->Host()->hostname() ) {
     my $stdout;
     my $stderr;
+    my $log;
 
     my $command = qq`/var/www/testing/perl/tools/make_snapshot.sh -T -t $type -n $keep "$_[0]{username}\@$ip:$_[0]{path}" "$dest"`;
 
     $openprint::log->debug("Command: $command");
-    IPC::Run3::run3( $command, undef, $stdout, $stderr );
-    my $log;
+    IPC::Run3::run3( $command, undef, \$stdout, \$stderr );
+    if ( $? ) {
     #my $log = File::Slurp::read_file("$dest.$type.0.log",err_mode => 'carp' );
     $results .= join( "\n", map { $_ ? $_ : () } ( $stdout , $stderr, $log ) );
-    if ( $? ) {
       $openprint::log->error("ERror running backup. Reason: ($?) stdout($stdout) stderr($stderr)");
   (new openprint::Log())->save({
       Object  =>  $_[0],
@@ -161,6 +163,9 @@ sub run {
     }); 
       next;
     } # end if
+    $openprint::log->error("Ran backup. Reason: ($?) stdout($stdout) stderr($stderr)");
+    #my $log = File::Slurp::read_file("$dest.$type.0.log",err_mode => 'carp' );
+    $results .= join( "\n", map { $_ ? $_ : () } ( $stdout , $stderr, $log ) );
     $_[0]->save({lastran_on=>'NOW()'});
     (new openprint::Log())->save({
         Object  =>  $_[0],

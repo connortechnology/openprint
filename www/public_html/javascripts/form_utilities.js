@@ -1,4 +1,4 @@
-function isin ( array, value ) {
+function isin( array, value ) {
 	if ( array ) {
 		for ( var i = 0; i < array.length; i += 1 ) {
 			if ( array[i] == value ) 
@@ -281,10 +281,19 @@ function ddm_select_by_value( ddm, value, defaultValue ) {
 	} // end if
 	return false;
 } // end function ddm_select_by_value( ddm, value );
+
 function ddm_select_by_text( ddm, value, defaultValue ) {
 	if ( ddm ) {
-		for ( var index = 0, len = ddm.options.length; index < len; index += 1 ) {
-			if ( ddm.options[index].text == value ) {
+    var options;
+    if ( ddm.options )
+      options = ddm.options;
+    else if ( ddm[0].options ) {
+      options = ddm[0].options;
+      ddm = ddm[0];
+    }
+
+		for ( var index = 0, len = options.length; index < len; index += 1 ) {
+			if ( options[index].text == value ) {
 				ddm_select_by_index( ddm, index );
 				return;
 			} // end if
@@ -294,6 +303,7 @@ function ddm_select_by_text( ddm, value, defaultValue ) {
 		alert( "null ddm passed to ddm_select_by_text" );
 	} // end if
 } // end function ddm_select_by_text( ddm, value );
+
 function ddm_select_by_text_case_insensitive( ddm, value, defaultValue ) {
 	var lowervalue = value.toLowerCase();
 	if ( ddm ) {
@@ -1363,14 +1373,28 @@ onDestroy: function(eventName, win) {
 function toggle_input( ddm, txt ) {
 	ddm.toggle();
 	txt.toggle();
-	if ( ddm.visible() ) {
-		ddm.focus();
-		txt.value = '';
-	} 
-	if ( txt.visible() ) {
-		txt.focus();
-		ddm.selectedIndex = -1;
-	}
+  if ( ddm.visible ) {
+    if ( ddm.visible() ) {
+      ddm.focus();
+      txt.value = '';
+    } 
+    if ( txt.visible() ) {
+      txt.focus();
+      ddm.selectedIndex = -1;
+    }
+  } else {
+console.log("Using jquery visible");
+    if ( ddm.is(':visible') ) {
+console.log("ddm is visible");
+      ddm.focus();
+      txt.value = '';
+    } 
+    if ( txt.is(':visible') ) {
+console.log("txt is visible");
+      txt.focus();
+      ddm.prop('selectedIndex', 0 );
+    }
+  }
 }
 function getValues( form, element_names, more_values ) {
 	form = $(form);
