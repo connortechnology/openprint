@@ -700,8 +700,10 @@ sub _production_performance {
 
 	my %parameters; 
 	if ( ( $session{user_type} ne 'A' ) and ! openprint::usergroup::is_user_in( ['Sales Admin','Reporting','Accounting'], $session{user_id} ) ) {
-		$parameters{salesrep_id} = $session{user_id};
-		$parameters{or} = "id=(SELECT company_id FROM Users WHERE users.id=$session{user_id})";
+		$parameters{or} = {
+			id =>$$openprint::User{company_id},
+			salesrep_id	=>	$session{user_id},
+			};
 	} elsif ( $param{csr_id} ) {
 		$parameters{salesrep_id} = $param{csr_id};
 	} # end if
