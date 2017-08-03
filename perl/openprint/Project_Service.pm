@@ -6,14 +6,16 @@ require openprint;
 require openprint::Project;
 require openprint::User;
 require openprint::ServiceType;
+require openprint::Project_Service_Operator;
 
 use vars qw( $debug %fields %find_fields %transforms %defaults $table %serial @identified_by );
 
-$debug = 0;
+$debug = 1;
 %fields = (
 	service_id		=>	'lngserviceindex',
 	project_id		=>	'lngprojectindex',
 	operator_id		=>	'operator_id',
+	operator_ids		=>	undef,
 	status			=>	'strstatus',
 	servicetype_id	=>	'servicetype_id',
 	service_type	=>	undef,
@@ -28,7 +30,7 @@ $debug = 0;
 );
 %defaults = (
 	service_id	=>	undef,
-	operator_id	=>	undef,
+	#operator_ids	=>	[],
 	created_on	=>	q`'NOW()'`,
 );
 $table = 'tbl_project_contents';
@@ -39,15 +41,28 @@ sub Project {
 	return new openprint::Project( $_[0]{project_id} );
 } # end sub Project
 
+sub operator_id {
+	my ( $caller, undef, $line ) = caller;
+	$openprint::log->debug("deprecated call to Project_Service::operator_id FROM $caller:$line");
+	return $_[0]{operator_id};
+}
 sub Operator {
+	my ( $caller, undef, $line ) = caller;
+	$openprint::log->debug("deprecated call to Project_Service::Operator FROM $caller:$line");
 	return new openprint::User( $_[0]{operator_id} );
 } # end sub Operator
 
 sub Operators {
 	if ( ! $_[0]{Operators} ) {
-		$_[0]{Operators} = [ openprint::User->find(id=>$_[0]{operator_id}) ];
+		$_[0]{Operators} = [ openprint::Project_Service_Operator->find(service_id=>$_[0]{service_id}) ];
 	}
 	return @{$_[0]{Operators}};
+}
+sub operator_ids {
+	if ( ! $_[0]{operator_ids} ) {
+		 $_[0]{operator_ids} = [ map { $$_{user_id} } $_[0]->Operators() ];
+	}
+	return $_[0]{operator_ids};
 }
 
 sub specs {

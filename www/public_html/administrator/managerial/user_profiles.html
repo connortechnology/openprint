@@ -238,6 +238,8 @@ Please select a company or user to obtain login information.<br/>
 						<label>Wage</label>
 						<? echo ( input( type=>'float', name=>'wage', value=>$$variable{User}->wage() ); ) ?> /Hr
 					</li>
+				</ul>
+				<ul class="Purchasing">
 					<li class="purchasing_limit">
 						<label>Purchasing Limit (per PO)</label>
 						<? echo ( input( type=>'cardinal', name=>'purchasing_limit', value=>$$variable{User}->purchasing_limit() ); ) ?>
@@ -252,6 +254,11 @@ Please select a company or user to obtain login information.<br/>
 							'<li><label>Limit for ' . $_->name() . '</label>'.input( type=>'cardinal', name=>'po_limit-'.$_->id(), value=>$$variable{User}->po_limit( $_->id() ) ).'</li>' } openprint::PurchaseOrder_ContentType->find( order=>'lower(name)')
 							);
 					) ?>
+				</ul>
+			</div>
+		</fieldset>
+		<fieldset><legend>Assistants</legend>
+				<ul class="Assistants">
 					<? if ( @{$$variable{csr_ids}} = openprint::User->find('id !='=>$$variable{User}->id(), company_id=>$config{owner_id}, type=>['E','A'], 'usergroup any'=>'Sales' ) ) ?>
 					<li class="csr_ids">
 						<label>Assistant to</label>
@@ -268,7 +275,8 @@ Please select a company or user to obtain login information.<br/>
 					<? endif ( @{$$variable{csr_ids}} = openprint::User->find('id !='=>$$variable{User}->id(), company_id=>$config{owner_id}, type=>['E','A'], 'usergroup any'=>'Sales' ) ) ?>
 					<? endif ( sets::isin( $$variable{User}->type(), ['E','A'] ) ) ?>
 				</ul>
-			</div>
+			</fieldset>
+
 			<div class="rightColumn">
 				<ul>
 					<? if ( @{$$variable{user_categories}} = openprint::MarketingCategory->find('order'=>'lower(name)') ) ?>

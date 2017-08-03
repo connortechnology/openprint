@@ -50,6 +50,13 @@ function load_page() {
 				<? echo ( make_drop_down( openprint::UserGroup->dropdown(), $session{$r->uri().'?usergroup_id'} ); ) ?>
 			</select>
 		</li>
+		<li><label>Notifications</label>
+			<? echo ( ssi::select( openprint::User_Notification_Type->dropdown(), $session{$r->uri().'?notification_type_id'}, {
+						name=>'notification_type_id',
+						prepend=>['','All'],
+						onchange=>'load_page();',
+						} ); ) ?>
+		</li>
 		<li> 
 			<label>Created Date</label>
 			<? echo ( date_select_session( $r->uri(), 'created_on_start', { with_today=>1, with_clear=>1, onchange=>'load_page();' } ); ) ?>
