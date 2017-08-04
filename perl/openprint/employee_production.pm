@@ -829,7 +829,7 @@ sub barcode {
 		$message = sprintf('Marked project %d Approved from %s<br/>Notified CSR', $Project->id(), $$Service{status} );
 		$Project->due_date( $Project->get_due_date() );
 		$Project->save();
-		mark_proofs_approved( $log, $dbh, \%variable, $Project->id(), @$Service{'id', 'status'} );
+		mark_proofs_approved( $Project, $Service );
 		openprint::employee_project::send_proofs_approved_email( $Project->id(), $param{Order} );
 	} elsif ( $param{Action} == 4 ) { # Unassign Operator
 		my $Service = $Project->Service( $services{Proofs} ? $services{Proofs} : $services{FilmStripping} );
@@ -884,30 +884,24 @@ sub barcode {
 } # end sub barcode
 
 sub mark_proofs_approved {
-	my ( $log, $dbh, $variable, $project_index, $service_index, $old_status ) = @_;
+	my ( $Project, $Service ) = @_;
 
 
-	my $Project = new openprint::Project( $project_index );
-	if ( ! $service_index ) {
+	if ( ! $Service ) {
 		my $services = $Project->services();
-		$service_index = $$services{Proofs} ? $$services{Proofs}[0] : $$services{FilmStripping}[0];
+		$Service = $Project->Service( $$services{Proofs} ? $$services{Proofs}[0] : $$services{FilmStripping}[0] );
 	} # end if
-	if ( ! $service_index ) {
-		$log->error("Project $project_index has no Proofs service in mark_proofs_approved.");
-	} elsif ( ! $old_status ) {
-		my $Service = $Project->Service( $service_index );
-		$old_status = $Service->status();
+	if ( ! $Service ) {
+		$log->error("Project $$Project{id} has no Proofs service in mark_proofs_approved.");
 	}
 
-	$Project->add_to_log( @session{'company_id','user_id'}, "Marked Proofs Approved from $old_status" );
-	$variable{Project} = $Project;
+	$Project->add_to_log( @session{'company_id','user_id'}, "Marked Proofs Approved from $$Service{status}" );
+	$Service->save({status=>'Approved'});
 # Mark Service as Approved
-	sql::update( $log, $dbh, 'tbl_Project_Contents', ['lngProjectIndex=? AND lngServiceIndex=?', $project_index, $service_index], 'strStatus', 'Approved' );
 
 	my $approval_date = sprintf('%.4d-%.2d-%.2d %.2d:%.2d:%.2d', Date::Calc::Today_and_Now() );
-	openprint::service::insert_service_spec( $log, $dbh, $project_index, $service_index, 'ApprovalDate', $approval_date );
+	openprint::service::insert_service_spec( $log, $dbh, $$Project{id}, $$Service{service_id}, 'ApprovalDate', $approval_date );
 } # end sub mark_proofs_approved
-
 
 sub add_to_barcode_log {
 	my ( $log, $dbh, $variable, $project_id, $docket, $operator_id, $desc ) = @_;

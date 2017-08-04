@@ -264,7 +264,7 @@ $log->debug("Sig complete: $complete");
 					} # end if due date is specified
 
 					if ( (!$variable{error}) and ($status ne 'Approved') ) {
-						openprint::employee_production::mark_proofs_approved( $log, $dbh, \%variable, $project_index, $service_index, $status );
+						openprint::employee_production::mark_proofs_approved( $Project, $Service );
 						send_proofs_approved_email( $project_index, $order_id );
 					} # end if
 				} elsif ( $param{rdbClientApproved} eq 'Y' ) {

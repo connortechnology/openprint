@@ -960,7 +960,7 @@ sub approve {
 		push @{$$services{Proofs}}, $Project->add_service( 'Proofs' );
 	} # end if
 	require openprint::employee_project;
-	openprint::employee_production::mark_proofs_approved( $log, $dbh, \%variable, $Project->id() );
+	openprint::employee_production::mark_proofs_approved( $Project );
 	openprint::employee_project::send_proofs_approved_email( $Project->id() );
 	#sql::update( $log, $dbh, 'tbl_Project_Contents', ['lngProjectIndex=? AND strStatus=?', $Project->id(), 'Waiting For Customer Approval'], 'strStatus', 'Complete' );
 	$Project->add_to_log( @session{'company_id','user_id'}, 'Approved from schedule' );
