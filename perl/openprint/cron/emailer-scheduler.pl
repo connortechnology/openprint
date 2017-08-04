@@ -1,4 +1,4 @@
-#!/usr/bin/perl
+#!/usr/bin/perl -w
 use lib "/etc/apache2/lib/perl";
 use strict;
 use utf8;
@@ -49,7 +49,6 @@ foreach my $param ( 'db_name','db_user','db_pass' ) {
 	die "$program: missing required --$param parameter" if ! $config{$param};
 } # end foreach required-param
 
-
 $log->info("Opening SQL connection");
 $dbh = sql::open_sql( $log, 
 	port			=> $config{db_port},
@@ -63,6 +62,8 @@ die 'Error opening db' if ! $dbh;
 configuration::from_db( );
 configuration::from_file( $$opts{config} );
 configuration::merge( $opts );
+$config{log_level} = 'debug' if ! $config{log_level};
+$log = logger->new( {file=>$config{log_file}, level=>$config{log_level}} );
 
 $session{company_id} = $config{owner_id};
 $ENV{DOCUMENT_ROOT} = $config{DOCUMENT_ROOT};

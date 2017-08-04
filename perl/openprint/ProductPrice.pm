@@ -77,7 +77,7 @@ sub save {
 } # end sub save
 sub price {
 	if ( @_ > 1 ) {
-		$_[0]{'price'} = @_[1];
+		$_[0]{'price'} = $_[1];
 	} # end if
 	if ( ! defined $_[0]{price} ) {
 		$_[0]{'price'} = Math::Round::nearest( 0.01, $_[0]{cost} * ( 1+($_[0]{markup}/100) ) );
