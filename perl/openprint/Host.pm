@@ -33,7 +33,7 @@ package openprint::Host;
 our @ISA = qw( openprint::Object );
 
 use vars qw( $debug $table $serial %fields %find_fields %transforms %defaults %types );
-$debug = 0;
+$debug = 1;
 $table = 'hosts';
 $serial = 'hosts_id_seq';
 %fields = (

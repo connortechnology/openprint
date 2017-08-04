@@ -410,6 +410,10 @@ sub status {
 
 sub operator_id {
 	my ( $project_index, $service_index, $operator_id ) = @_;
+
+my ( $caller, undef, $line ) = caller;
+$openprint::log->debug("Deprecated call to service::operator_id from $caller:$line");
+
 	if ( defined $operator_id ) {
 		sql::update( undef, undef, 'tbl_Project_Contents', ['lngProjectIndex=? AND lngServiceIndex=?', $project_index, $service_index], 'operator_id', $operator_id );
 		return $operator_id;

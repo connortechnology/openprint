@@ -272,6 +272,8 @@ sub view {
 	} elsif ( $param{btnFunction} eq 'Email Me' ) {
 		$variable{error} = $PO->send_to_me();
 		$variable{ExternalRedirect} = '/employee/purchase_order/view.html?po_id='.$PO->id();
+	} elsif ( $param{btnFunction} eq 'Debug' ) {
+		$variable{information} .= $PO->debug();
 	} elsif ( $param{btnFunction} eq 'Received' ) {
 	} elsif ( $param{btnFunction} eq 'Copy' ) {
 		my @notifications = $PO->notifications();
