@@ -266,7 +266,7 @@ exit 0;
 sub update_connections {
 	my ( $wap_HI, @macs ) = @_;
 	openprint::Host_Interface->lock();
-	my %OldConnections = map { uc $$_{mac}, $_ } openprint::Host_Interface->find( connected_to=>$$wap_HI{mac} );
+	my %OldConnections = map { ( $$_{mac} ? uc $$_{mac} : $$_{mac} ), $_ } openprint::Host_Interface->find( connected_to=>$$wap_HI{mac} );
 
 	foreach my $mac ( map { uc $_ } @macs ) {
 		if ( $OldConnections{$mac} ) {

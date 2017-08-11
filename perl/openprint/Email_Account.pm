@@ -27,6 +27,7 @@ $table = 'mailbox';
 	maildir		=>	q`$self->maildir();`,
 	created_on	=>	'NOW()',
 	updated_on	=>	'NOW()',
+	quota				=>	-1,
 );
 
 
@@ -47,7 +48,7 @@ sub domain {
 sub maildir {
 	if ( ( ! $_[0]{maildir} ) and $_[0]{username} ) {
 		my ( $local_part, $domain ) = split( '@', $_[0]{username} );
-		$_[0]{maildir} = join( '/', $domain, $local_part );
+		$_[0]{maildir} = join( '/', $domain, $local_part, '' );
 $openprint::log->debug("Setting maildir");
 	} else {
 $openprint::log->debug("not Setting maildir");
@@ -58,10 +59,10 @@ sub save {
 	my ( $self, $hash ) = @_;
 	my $rc  = $self->SUPER::save( $hash );
 	if ( ! $rc ) {
-		my $Alias = openprint::Email_Alias->find_one( address=>$$self{username} );
+		my $Alias = openprint::Email_Alias->find_one( address=>$$self{username}, dbh=>$dbh );
 		if ( ! $Alias ) {
 			$Alias = new openprint::Email_Alias();
-			$rc .= $Alias->save({ address=>$$self{username}, goto=>$$self{username}, active=>1 });
+			$rc .= $Alias->save({ address=>$$self{username}, goto=>$$self{username}, active=>1, dbh=>$dbh });
 		}
 	}
 	return $rc;

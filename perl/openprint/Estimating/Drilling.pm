@@ -24,25 +24,25 @@ require openprint::service;
 
 my @variables = (
 		'Markup1', 'Markup2', 'Markup3',
-        'txtPrice1', 'txtPrice2', 'txtPrice3',
-        'MPrice1', 'MPrice2', 'MPrice3',
-        'txtQuantity1', 'txtQuantity2', 'txtQuantity3',
+		'txtPrice1', 'txtPrice2', 'txtPrice3',
+		'MPrice1', 'MPrice2', 'MPrice3',
+		'txtQuantity1', 'txtQuantity2', 'txtQuantity3',
 		'txtHoleQty',
 		'txtHoleSize',
 		'ItemsPerLift','OverrideItemsPerLift',
 		'ddmEquipment1', 'ddmEquipment2', 'ddmEquipment3',
 		'chkOverrideEquipment1', 'chkOverrideEquipment2', 'chkOverrideEquipment3',
 		'chkOverrideFinishedCalliper','txtFinishedCalliper',
-        );
+		);
 
 sub variables {
     return @variables;
 } # end sub variables
 
 my @outputs = (
-        'txtPrice1', 'txtPrice2', 'txtPrice3',
-        'MPrice1', 'MPrice2', 'MPrice3',
-        'txtUnitPrice1', 'txtUnitPrice2', 'txtUnitPrice3',
+		'txtPrice1', 'txtPrice2', 'txtPrice3',
+		'MPrice1', 'MPrice2', 'MPrice3',
+		'txtUnitPrice1', 'txtUnitPrice2', 'txtUnitPrice3',
 		'ddmEquipment1', 'ddmEquipment2', 'ddmEquipment3',
 		'txtFinishedCalliper',
 		'hdnBreakdown1', 'hdnBreakdown2', 'hdnBreakdown3',

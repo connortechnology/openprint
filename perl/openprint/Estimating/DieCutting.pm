@@ -215,7 +215,7 @@ sub calc_price {
 #$run_price += $qty * $folding_price;
 #} # end fi
 
-	if ( ( defined $$specs{'txtHoleClearingHoles-'.$form} ) and ( $$specs{'txtHoleClearingHoles-'.$form} > 0 ) ) {
+	if ( $$specs{'txtHoleClearingHoles-'.$form} and ( $$specs{'txtHoleClearingHoles-'.$form} > 0 ) ) {
 		my $hole_qty = $$specs{'txtHoleClearingHoles-'.$form} * $$Imposition{imposition};
 		my %HoleClearingPrice = openprint::service::get_price_object( 'HoleClearing', $$specs{'txtHoleClearingHoles-'.$form} * $$specs{"txtQuantity$qty_index"}, $Equipment ); 
 		$HoleClearingPrice{Total} = $impressions * $HoleClearingPrice{Price} * $hole_qty;
@@ -441,7 +441,7 @@ sub signature_needs {
 			$openprint::log->error("No ServiceType for DieCutting");
 		}
 	} # end if
-	return $$specs{"Needed-$form"} eq 'Y' ? 1 : 0;
+	return ($$specs{"Needed-$form"} and ( $$specs{"Needed-$form"} eq 'Y' ) ) ? 1 : 0;
 } # end sub signature_needs
 
 sub signature_calc {

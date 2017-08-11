@@ -24,7 +24,7 @@
 		) ?>
 	<tr<?rowclass?>>
 	<td><? echo ( new openprint::Company( $$variable{CustomerIndex} )->name(); ) ?></td>
-	<td><? echo ( new openprint::User( $$variable{UserIndex} )->name(); ) ?></td>
+	<td><? echo ( new openprint::User( $$variable{UserIndex} )->link_to(); ) ?></td>
 	<td width="150"><?When?></td>
 	<td><? echo ( $$variable{Description} ) ?></td>
 	</tr>

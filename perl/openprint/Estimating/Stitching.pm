@@ -213,6 +213,8 @@ sub signature_calc {
 	my $imposition = 2;
 	my $pockets = $$specs{"txtPockets$qty_index"} = 0;
 
+	$pockets += int( $$specs{txtInsertQuantity} );
+
 	my $override_pockets = 0;
 	if ( ( defined $$specs{'OverridePockets'.$qty_index}) and ($$specs{'OverridePockets'.$qty_index} eq 'Y') ) {
 		foreach my $pages ( @possible_pages ) {
@@ -574,11 +576,13 @@ sub calc {
 # Figure out whether we need a cover
 	my $printing_specs = $$calc_hash{ProjectSpecs} = openprint::service::get_specs_ref( $Project, $$services{''}[0] );
 	@$specs{'txtPageQuantity','txtFinalWidth','txtFinalHeight'} = @$printing_specs{'txtTotalPageQuantity','txtFinalWidth','txtFinalHeight'};
+
 	if ( (defined $$specs{chkOverrideInsertQuantity}) and ( $$specs{chkOverrideInsertQuantity} eq 'Y' ) ) {
 		$variables{txtInsertQuantity} = [ sets::exclude( ['output'], $variables{txtInsertQuantity} ) ];
 	} else {
 		$variables{txtInsertQuantity} = [ sets::union( 'output', @{$variables{txtInsertQuantity}} ) ];
 		$$specs{txtInsertQuantity} = $$printing_specs{txtInsertQuantity};
+$log->debug("Insert qty: $$specs{txtInsertQuantity}");
 	} # end if
 
 	if ( $$specs{txtPageQuantity} <= 0 ) {
@@ -730,6 +734,7 @@ sub calc {
 			$$specs{'hdnBreakdown'.$qty_index} .= 'Total: $'. sprintf('%.2f', Math::Round::nearest(0.01,$price{Price})).'<br/><br/>';
 			$$specs{'hdnBreakdown'.$qty_index} .= 'Comparison: $'. sprintf('%.2f', Math::Round::nearest(0.01,$price{ComparisonPrice})).'<br/><br/>';
 		} else {
+			$$specs{alert} = $results{'Breakdown'};
 			foreach my $press_id ( keys %error ) {
 				my $Equipment = new openprint::Equipment( $press_id );
 				$$specs{'hdnBreakdown'.$qty_index} .= 'For ' . $Equipment->name() . ': ' .  $error{$press_id};
@@ -887,6 +892,13 @@ sub get_price {
 		$unitsPerHour = $Equipment->specification( $$ServiceType{name}.'Units Per Hour', $maxPockets ) if ! $unitsPerHour;
 		$unitsPerHour = $Equipment->specification( 'Units Per Hour '.$price{Imposition}.' out', $maxPockets ) if ! $unitsPerHour;
 		$unitsPerHour = $Equipment->specification( 'Units Per Hour', $maxPockets ) if ! $unitsPerHour;
+	if ( ( defined $$specs{txtInsertQuantity} ) and ( $$specs{txtInsertQuantity} > 0 ) ) {
+		my $insert_slowdown = 0;
+		if ( $insert_slowdown = $Equipment->specification('Insert Slowdown') ) {
+			$unitsPerHour -= $insert_slowdown;
+		}
+	}
+		
 		my $runtime = $unitsPerHour ? $qty/$unitsPerHour : 0; # in hours
 
 		if ( $servicePrice ) {
@@ -968,6 +980,12 @@ sub get_price {
 		$unitsPerHour = $Equipment->specification( $$ServiceType{name}.'Units Per Hour', $neededPockets ) if ! $unitsPerHour;
 		$unitsPerHour = $Equipment->specification( 'Units Per Hour ' . $price{Imposition} . ' out', $neededPockets ) if ! $unitsPerHour;
 		$unitsPerHour = $Equipment->specification( 'Units Per Hour', $neededPockets ) if ! $unitsPerHour;
+	if ( ( defined $$specs{txtInsertQuantity} ) and ( $$specs{txtInsertQuantity} > 0 ) ) {
+		my $insert_slowdown = 0;
+		if ( $insert_slowdown = $Equipment->specification('Insert Slowdown') ) {
+			$unitsPerHour -= $insert_slowdown;
+		}
+	}
 		$pass{Runspeed} = $unitsPerHour;
 		my $runtime = $unitsPerHour ? $qty/$unitsPerHour : 0; # in horus
 		$pass{RunTime} = $runtime;

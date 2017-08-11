@@ -51,7 +51,8 @@ sub select_user {
 		} # end if
 		my $User = $variable{User} = new openprint::User( $param{user_id} );
 		if ( $User ) {
-			@session{'company_id','user_id','user_type'} = @$User{'company_id','id','type'};
+			@session{'company_id','user_id','user_type','email'} = @$User{'company_id','id','type','email'};
+			openprint::usergroup::init_cache();
 		}
 	} # end if user_id
 } # end sub select_user
@@ -731,31 +732,38 @@ sub credit_application {
 sub view {
 	$variable{Me} = new openprint::User( $session{user_id} );
 	$param{user_id} = openprint::User->transform( id=>$param{user_id} );
-	$variable{User} = new openprint::User( $param{user_id} ? $param{user_id} : $session{user_id} );
-	if ( ! $variable{User}->can_view() ) {
+	my $User = $variable{User} = openprint::User->find_one( id=>$param{user_id} ? $param{user_id} : $session{user_id} );
+  if ( ! $User ) {
+    $variable{error} .= 'No user found.';
+    $variable{User} = new openprint::User();
+    return;
+  }
+  
+	if ( ! $User->can_view() ) {
 		$variable{User} = new openprint::User();
 		$variable{error} .= 'You cannot view this user.';
-	} else {
-		if ( $variable{User}->id() and $session{user_id} ) {
-			my $View = openprint::View->find_one(object_type=>'openprint::User', object_id=>$variable{User}->id(), user_id=>$session{user_id} );
-			if ( ! $View ) {
-				$View = new openprint::View();
-				$View->save({object_type=>'openprint::User', object_id=>$variable{User}->id(), user_id=>$session{user_id}});
-			} # end if
-		} # end if
-		if ( exists $param{relationship_type_id} ) {
-			if ( $variable{User}->id() == $variable{Me}->id() ) {
-				$variable{error} .= "We already know you love yourself.";
-				return;
-			} # endif
-			my $Relationship = openprint::User_Relationship->find_one( user_id1=>$session{user_id}, user_id2=>$variable{User}->id() );
-			if ( ! $Relationship ) {
-				$Relationship = new openprint::User_Relationship();
-				$Relationship->set({ user_id1=>$session{user_id}, user_id2=>$variable{User}->id()});
-			} # end if
-			$variable{error} .= $Relationship->save({ type_id=>$param{relationship_type_id}});
-		} # end if
-	} # end if
+    return;
+  }
+
+  if ( $User->id() and $session{user_id} ) {
+    my $View = openprint::View->find_one(object_type=>'openprint::User', object_id=>$User->id(), user_id=>$session{user_id} );
+    if ( ! $View ) {
+      $View = new openprint::View();
+      $View->save({object_type=>'openprint::User', object_id=>$User->id(), user_id=>$session{user_id}});
+    } # end if
+  } # end if
+  if ( exists $param{relationship_type_id} ) {
+    if ( $User->id() == $variable{Me}->id() ) {
+      $variable{error} .= 'We already know you love yourself.';
+      return;
+    } # endif
+    my $Relationship = openprint::User_Relationship->find_one( user_id1=>$session{user_id}, user_id2=>$variable{User}->id() );
+    if ( ! $Relationship ) {
+      $Relationship = new openprint::User_Relationship();
+      $Relationship->set({ user_id1=>$session{user_id}, user_id2=>$variable{User}->id()});
+    } # end if
+    $variable{error} .= $Relationship->save({ type_id=>$param{relationship_type_id}});
+  } # end if
 } # end sub view
 
 sub couple_search {

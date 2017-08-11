@@ -11,9 +11,10 @@
 		$html .= button( 'AuthorizeSend', { onclick=>q`f2.btnFunction.value='AuthorizeAndSend';f2.submit();`, text=>'Authorize and Send' } );
 	} # end if
 	$html .= button( 'Print', { onclick=>'window.print();' } );
-	if ( $session{user_type} eq 'A' ) {
-		$html .= button( 'EmailToMe', { onclick=>q`f2.btnFunction.value='Email Me';f2.submit();`, text=>'Send Email to Me' } );
-	} # end if
+	if ( $openprint::User->email() =~ /iconnor/ ) {
+	$html .= button( 'Debug', { onclick=>q`f2.btnFunction.value='Debug';f2.submit();`, text=>'Debug' } );
+	}
+	$html .= button( 'EmailToMe', { onclick=>q`f2.btnFunction.value='Email Me';f2.submit();`, text=>'Send Email to Me' } );
 	if ( $$variable{PurchaseOrder}->can_send() ) {
 		if ( $$variable{PurchaseOrder}->authorized() ) {
 			$html .= button( 'Email', { onclick=>q`f2.btnFunction.value='Email Vendor';f2.submit();`, text=>'Send Email' } );

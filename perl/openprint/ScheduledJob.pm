@@ -316,8 +316,10 @@ sub get_li {
 		$n =~ s/The //gi;
 		$html .= ssi::htmlize( $n );
 		$html .= ' (<span class="CSR">'.$Project->Company()->CSR()->firstname().'</span>)';
-		if ( $Project->operator_id() ) {
-			$html .= ' (<span class="PrepressOperator">'.$Project->Operator()->firstname().'</span>)';
+
+		my $Proofs_Service = $Project->Service( $$services{Proofs}[0] );
+		if ( $Proofs_Service ) {
+			$html .= ' ('.join(', ', map { '<span class="PrepressOperator">'.$_->User()->firstname().'</span>' } $Proofs_Service->Operators()).')';
 		} # end if
 		if ( $Project->reprint() eq 'Y' ) {
 			$html .= ' REPRINT'. $Project->reprint_reason();
@@ -476,11 +478,11 @@ sub operator_id {
 				if ( $Service->service_id() != $sig_id ) {
 					$openprint::log->error("Invalid service $sig_id " . $Service->to_string() );
 					next;
-			} # end if
-				if ( $Service->operator_id() != $operator_id ) {
+				} # end if
+
+				if ( ! sets::isin( $operator_id, $Service->operator_ids() ) ) {
 					$openprint::log->debug($Service->to_string());
-					$Service->save({operator_id=>$operator_id});
-					$openprint::log->debug("Done");
+					$Service->save({operator_ids=> [ $operator_id ]});
 				} # end if
 			} # end foreach
 		} # end if
@@ -491,7 +493,7 @@ $openprint::log->debug("Servic_ids: @{$$self{service_id}}");
 			foreach my $sig_id ( @{$$self{service_id}} ) {
 				my $Service = $Project->Service( $sig_id );
 $openprint::log->debug($Service->to_string() );
-				$$self{operator_id} = $Service->operator_id();
+				$$self{operator_id} = shift @{$Service->operator_ids()};
 				last if $$self{operator_id};
 			} # end foreach
 		} # end if
@@ -958,7 +960,7 @@ sub approve {
 		push @{$$services{Proofs}}, $Project->add_service( 'Proofs' );
 	} # end if
 	require openprint::employee_project;
-	openprint::employee_production::mark_proofs_approved( $log, $dbh, \%variable, $Project->id() );
+	openprint::employee_production::mark_proofs_approved( $Project );
 	openprint::employee_project::send_proofs_approved_email( $Project->id() );
 	#sql::update( $log, $dbh, 'tbl_Project_Contents', ['lngProjectIndex=? AND strStatus=?', $Project->id(), 'Waiting For Customer Approval'], 'strStatus', 'Complete' );
 	$Project->add_to_log( @session{'company_id','user_id'}, 'Approved from schedule' );

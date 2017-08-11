@@ -103,18 +103,18 @@ sub link_to {
 	return sprintf('<a href="/employee/accounting/expense.html?expense_id=%d">%s</a>', $_[0]{id}, 'Expense ' . $_[0]{id} );
 }
 sub Company {
-	return new openprint::Company( $_[0]{'owner_id'} );
+	return new openprint::Company( $_[0]{owner_id} );
 } # end sub Company
 
 sub Currency {
-	return new openprint::Currency( $_[0]{'currency_id'} );
+	return new openprint::Currency( $_[0]{currency_id} );
 } # end sub Currency
 
 sub category_id {
 	if ( @_ > 1 and defined $_[1] ) {
-		$_[0]{'category_id'} = $_[1];
+		$_[0]{category_id} = $_[1];
 	} # end if
-	return $_[0]{'category_id'};
+	return $_[0]{category_id};
 } # end sub category_id
 
 sub category {
@@ -124,14 +124,14 @@ sub category {
 			$Category = new openprint::Expense_Category();
 			$Category->save({'name'=>$_[1]})
 		} # end if	
-		$_[0]{'category_id'} = $Category->id();
+		$_[0]{category_id} = $Category->id();
 		return $Category->name();
 	} # end if
-	return new openprint::Expense_Category( $_[0]{'category_id'} )->name();
+	return new openprint::Expense_Category( $_[0]{category_id} )->name();
 } # end sub category
 
 sub Category {
-	return new openprint::Expense_Category( $_[0]{'category_id'} );
+	return new openprint::Expense_Category( $_[0]{category_id} );
 } # end sub Category
 
 sub account {
@@ -141,18 +141,18 @@ sub account {
 			$Account = new openprint::Expense_Account();
 			$Account->save({'name'=>$_[1]})
 		} # end if	
-		$_[0]{'account_id'} = $Account->id();
+		$_[0]{account_id} = $Account->id();
 		return $Account->name();
 	} # end if
-	return new openprint::Expense_Account( $_[0]{'account_id'} )->name();
+	return new openprint::Expense_Account( $_[0]{account_id} )->name();
 } # end sub account
 
 sub Account {
-	return new openprint::Expense_Account( $_[0]{'account_id'} );
+	return new openprint::Expense_Account( $_[0]{account_id} );
 } # end sub Account
 
 sub Recipient {
-	return new openprint::Company( $_[0]{'recipient_id'} );
+	return new openprint::Company( $_[0]{recipient_id} );
 }
 
 sub delete {
@@ -165,32 +165,32 @@ sub delete {
 sub Taxes {
     my ( $self ) = @_;
 
-    if ( $$self{'id'} ) {
-		if ( ! $$self{'Taxes'} ) {
-			@{$$self{'Taxes'}} = openprint::Expense_Tax->find('expense_id'=>$$self{'id'});
+    if ( $$self{id} ) {
+		if ( ! $$self{Taxes} ) {
+			@{$$self{Taxes}} = openprint::Expense_Tax->find('expense_id'=>$$self{id});
 		} # end if
 	} else { 
-		@{$$self{'Taxes'}} = ();
+		@{$$self{Taxes}} = ();
     } # end if
-    if ( $self->Company()->country() and $self->Company()->state() and $$self{'invoiced_on'} and ! @{$$self{'Taxes'}} ) {
+    if ( $self->Company()->country() and $self->Company()->state() and $$self{invoiced_on} and ! @{$$self{Taxes}} ) {
         foreach my $Tax ( openprint::Tax->find(
-                    'period_start null_or_<='   =>  $$self{'invoiced_on'},
-                    'period_end null_or_>='     =>  $$self{'invoiced_on'},
+                    'period_start null_or_<='   =>  $$self{invoiced_on},
+                    'period_end null_or_>='     =>  $$self{invoiced_on},
                     'country'   =>  $self->Company()->country(),
                     'state'     =>  $self->Company()->state()),
                 ) {
             my $T = new openprint::Expense_Tax();
             $T->set({
-				'expense_id'	=>	$$self{'id'},
-                'tax_id'    =>  $$Tax{'id'},
-                'rate'      =>  $$Tax{'rate'},
+				'expense_id'	=>	$$self{id},
+                'tax_id'    =>  $$Tax{id},
+                'rate'      =>  $$Tax{rate},
             });
 			# SHould not save.  Saving will be done in the save function This is okay, because in the html, we id our field by the tax_id
-			#$T->save({ 'expense_id'=>  $$self{'id'}}) if $$self{'id'};
-            push @{$$self{'Taxes'}}, $T;
+			#$T->save({ 'expense_id'=>  $$self{id}}) if $$self{id};
+            push @{$$self{Taxes}}, $T;
         } # end foreach Tax
     } # end if
-    return @{$$self{'Taxes'}};
+    return @{$$self{Taxes}};
 } # end sub Taxes
 
 sub save {
@@ -204,8 +204,8 @@ sub save {
 		my @New_Taxes;
 
 		foreach my $Tax ( openprint::Tax->find(
-					'period_start null_or_<='   =>  $$self{'invoiced_on'},
-					'period_end null_or_>='     =>  $$self{'invoiced_on'},
+					'period_start null_or_<='   =>  $$self{invoiced_on},
+					'period_end null_or_>='     =>  $$self{invoiced_on},
 					'country'   =>  $self->Company()->country(),
 					'state'     =>  $self->Company()->state()),
 				) {
@@ -223,7 +223,7 @@ sub save {
 		foreach my $Tax ( @Old_Taxes ) {
 			$Tax->delete() if $Tax->id();
 		} # end foreach Tax
-		@{$$self{'Taxes'}} = @New_Taxes;
+		@{$$self{Taxes}} = @New_Taxes;
 	} # end if
 	foreach my $Tax ( $self->Taxes() ) {
 		$Tax->amount(undef);
@@ -237,19 +237,21 @@ sub save {
 	} # end if
 	return $error;
 } # end sub save
+
 sub total {
 	if ( @_ == 2 ) {
-		$_[0]{'total'} = $_[1];
+		$_[0]{total} = $_[1];
 	} # end if
-	if ( ! $_[0]{'total'} ) {
-		$_[0]{'total'} = $_[0]->amount();
+	if ( ! $_[0]{total} ) {
+		$_[0]{total} = $_[0]->amount();
         foreach my $Tax ( $_[0]->Taxes() ) {
-            $_[0]{'total'} += $Tax->amount();
+            $_[0]{total} += $Tax->amount();
         } # end foreach Tax
-		$_[0]{'total'} = Math::Round::nearest( 0.01, $_[0]{'total'} );
+		$_[0]{total} = Math::Round::nearest( 0.01, $_[0]{total} );
 	} # end if
-	return $_[0]{'total'};
+	return $_[0]{total};
 } # end sub total
+
 sub Tax {
 	foreach my $T ( $_[0]->Taxes() ) {
 		return $T if $$T{tax_id} == $_[1]->id();
@@ -258,21 +260,22 @@ sub Tax {
     if ( ! $result ) {
         $result = new openprint::Expense_Tax();
 		$result->set({
-			'expense_id'=>$_[0]{'id'},
+			'expense_id'=>$_[0]{id},
 			'tax_id'=>$_[1]->id(),
 			'rate'=>$_[1]->rate(),
 			});
     } # end if
     return $result;
 } # end sub Tax
+
 sub business_use_amount {
 	if ( @_ > 1 ) {
-		$_[0]{'business_use_amount'} = $_[1];
+		$_[0]{business_use_amount} = $_[1];
 	} # end if
-	if ( ! defined $_[0]{'business_use_amount'} ) {
-		$_[0]{'business_use_amount'} = Math::Round::nearest( 0.01, $_[0]{'amount'} * ( $_[0]{'business_use'} / 100 ) );
+	if ( ! defined $_[0]{business_use_amount} ) {
+		$_[0]{business_use_amount} = Math::Round::nearest( 0.01, $_[0]{amount} * ( $_[0]{business_use} / 100 ) );
 	} # end if
-	return $_[0]{'business_use_amount'};
+	return $_[0]{business_use_amount};
 } # end sub business_use_amount
 1;
 __END__

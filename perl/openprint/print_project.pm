@@ -507,6 +507,7 @@ sub create_edit_process {
 	my $project_index = $session{project_id} = $Project->id();
 	$Project->lock();
 	my @changes = $Project->changes( \%param );
+	$Project->quantity_indexes(undef);
 
 	my $services = $Project->services();
 	my @service_ids = sort map { $$services{$_} ? @{$$services{$_}} : () } keys %$services;
@@ -566,8 +567,8 @@ if ( 0 ) {
 		} # end if quantity change
 	} # end foreach qty_index
 
-	$Project->reference( $param{txtProjectReference} );
-	$Project->comments( $param{txtComments} );
+	$Project->reference( $param{reference} );
+	$Project->comments( $param{comments} );
 	$Project->mode( $param{rdbMode} );
 	$Project->design( $param{ddmDesign} );
 	$Project->programs( $param{chkPrograms} );

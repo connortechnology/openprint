@@ -32,9 +32,9 @@ function set_item(index) {
 
 function filter_items( index, type_id, e ) {
 	if ( e.name == 'product-'+index ) {
-	new Ajax.Updater('item_id-'+index, '_items_dropdown.html', { parameters: { product_ilike: e.value, vendor_id: get_ddm_value($('supplier_id')), type_id: type_id } } );
+		new Ajax.Updater('item_id-'+index, '_items_dropdown.html', { parameters: { product_ilike: e.value, vendor_id: get_ddm_value($('supplier_id')), type_id: type_id } } );
 	} else {
-	new Ajax.Updater('item_id-'+index, '_items_dropdown.html', { parameters: { name_ilike: e.value, vendor_id: get_ddm_value($('supplier_id')), type_id: type_id } } );
+		new Ajax.Updater('item_id-'+index, '_items_dropdown.html', { parameters: { name_ilike: e.value, vendor_id: get_ddm_value($('supplier_id')), type_id: type_id } } );
 	} // end if
 }
 
@@ -70,35 +70,42 @@ function calc_price( element ) {
 	} // end if
 	update_totals( element.form );
 } // end function calc_price
+
 function update_totals( form ) {
-	var subtotal = 0;
-	var re = /total-(.+)/
+	var total_div = $('total');
+	if ( total_div ) {
+		var subtotal = 0;
+		var re = /total-(.+)/
 
-	for ( var index = 0; index < form.elements.length; index += 1 ) {
-		var e = form.elements[index];
-		var matches = re.exec( e.name );
-		if ( matches ) {
-			subtotal += parseFloat(1*e.value);
-		} // end if
-	} // end for
-	$('subtotal').innerHTML = do_decimals( subtotal, 2 );
-	var total = subtotal;
-	for ( var i = 0; i < tax_ids.length; i+= 1 ) {
-		var tax = 0;
-		
-		if ( form.elements['tax_charge-'+tax_ids[i]].checked ) {
-			tax = subtotal * $('tax_rate-'+tax_ids[i]).innerHTML/100;
-		} else {
-			tax = 0;
-		} // end if
-		$('tax_amount-'+tax_ids[i]).innerHTML = do_decimals( tax, 2 );
-		
-		total += parseFloat( tax );
-	} // end for
-	total -= parseFloat( $('payments_total').innerHTML );
+		for ( var index = 0; index < form.elements.length; index += 1 ) {
+			var e = form.elements[index];
+			var matches = re.exec( e.name );
+			if ( matches ) {
+				subtotal += parseFloat(1*e.value);
+			} // end if
+		} // end for
+		$('subtotal').innerHTML = do_decimals( subtotal, 2 );
+		var total = subtotal;
+		for ( var i = 0; i < tax_ids.length; i+= 1 ) {
+			var tax = 0;
+			
+			if ( form.elements['tax_charge-'+tax_ids[i]].checked ) {
+				tax = subtotal * $('tax_rate-'+tax_ids[i]).innerHTML/100;
+			} else {
+				tax = 0;
+			} // end if
+			$('tax_amount-'+tax_ids[i]).innerHTML = do_decimals( tax, 2 );
+			
+			total += parseFloat( tax );
+		} // end for
+		var payments_total =  $('payments_total');
+		if ( payments_total )
+			total -= parseFloat( payments_total.innerHTML );
 
-	$('total').innerHTML = do_decimals( total, 2 );
+		total_div.innerHTML = do_decimals( total, 2 );
+	} // end if total_div
 } // end function update_totals
+
 function getSelectionId(input, li) {
 	var re = /(\w+)-(\w+)/;
 	var matches = re.exec( input.id );
@@ -124,3 +131,41 @@ function add_Payment(po_id) {
 		description: $('payment_description').value,
 		}, evalScripts: true } );
 } // end function addPayment)po_id)
+
+function add_tax( tax_id ) {
+	new Ajax.Updater( 'Taxes', '_taxes_edit.html', { parameters: { 
+		po_id: po_id, 
+		action: 'add',
+		tax_id: tax_id
+		}, evalScripts: true } );
+}
+function delete_tax( tax_id ) {
+	new Ajax.Updater( 'Taxes', '_taxes_edit.html', { parameters: { 
+		po_id: po_id, 
+		action: 'delete',
+		tax_id: tax_id
+		}, evalScripts: true } );
+}
+function update_taxes( form ) {
+	if ( po_id ) {
+	  new Ajax.Updater( 'Taxes', '_taxes_edit.html?action=reset&po_id='+po_id, { parameters: form.serialize() } );
+	}
+} // end function update_taxes
+
+function update_logs( ) {
+	new Ajax.Updater( 'Logs', '_logs.html?po_id='+po_id );
+}
+
+function add_item() {
+	if ( $('type_id-new').value ) {
+		new Ajax.Request('_po_content_line.html?action=add' +
+				'&amp;type_id=' + encodeURIComponent( $('type_id-new').options[$('type_id-new').selectedIndex].value ) +
+				'&amp;po_id=' + po_id,
+				{
+					evalScripts: true,
+					onSuccess: function(response){$('items').insert( { bottom: response.responseText } );update_totals($('f1'));}
+					} );
+	} else {
+		alert('Please select a type for the new line.');
+	}
+}

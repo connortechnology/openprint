@@ -36,6 +36,15 @@ $debug = 0;
 $table = 'Skid_Contents';
 $serial = 'skid_contents_id_seq';
 
+sub units {
+	$_[0]{units} = $_[1] if @_ > 1;
+
+	if ( ! $_[0]{units} ) {
+		$_[0]{units} = $_[0]->Paper()->units();
+	}
+	return $_[0]{units};
+}
+
 sub purpose {
 	return $_[0]->Purpose()->name();
 } # end sub purpose
@@ -187,7 +196,7 @@ sub checked_out {
 } # end sub checked_out
 
 sub to_string {
-	return sprintf('%s%s of %s', Number::Format::format_number( $_[0]{quantity} ), $_[0]->units(), $_[0]->Paper()->to_string() );
+	return sprintf('%s%s of %s', ( $_[0]{quantity} ? Number::Format::format_number( $_[0]{quantity} ) : 'unknown'), $_[0]->units(), $_[0]->Paper()->to_string() );
 }
 
 1;

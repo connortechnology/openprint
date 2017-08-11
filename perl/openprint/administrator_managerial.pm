@@ -718,7 +718,9 @@ sub email {
 	my $mail_dbh = email::db_connect();
 	if ( $mail_dbh ) {
 		$openprint::Email_Account::dbh = $mail_dbh;
+		$openprint::Email_Alias::dbh = $mail_dbh;
 		my $Email = $variable{Email} = openprint::Email_Account->find_one( username=>$param{username} );
+		$Email = $variable{Email} = new openprint::Email_Account() if ! $Email;
 		if ( $param{action} ) {
 			if ( $param{action} eq 'Delete' ) {
 				$variable{error} .= $Email->delete();
@@ -1084,6 +1086,7 @@ sub users {
 sub _users {
 	ssi::save_params( '/administrator/managerial/users.html', ( 
 				'salesrep_id', 'marketing_category_id', 'company_id','usergroup_id','deleted','email','type','administrator',
+				'notification_type_id',
 				( map { 'created_on_start_' . $_ } ( 'year','month','day' ) ),
 				( map { 'created_on_end_' . $_ } ( 'year','month','day' ) ),
 				) );

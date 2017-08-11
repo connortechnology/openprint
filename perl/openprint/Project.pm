@@ -695,7 +695,7 @@ sub quantity3 {
 
 my @dont_copy = (
 		'ServiceIndex','ProjectIndex','TemplateType',
-		'txtEmployeeComments','rdbComplete','rdbApproved','ddmApprovalDateMonth','ddmApprovalDateDay','ddmApprovalDateYear',
+		'txtEmployeeComments','rdbComplete','rdbApproved','rdbClientApproved', 'ddmApprovalDateMonth','ddmApprovalDateDay','ddmApprovalDateYear',
 		'ddmCompletionDate.*','txtRunHours','txtDowntimeHours',
 		'ddmPressCompletionDate.*', 'UsePress.*', 'rdbPressComplete.*',
 		'UsedPaper.*',
@@ -877,7 +877,7 @@ sub summary {
 				if ( $$printing_specs{"PrintingType-$group_id"} ) { 
 					$summary .= ', '. '<span class="Sheetfed">Printed '.$$printing_specs{"PrintingType-$group_id"}.'</span>,';
 				} #endif Web
-				$summary .= '</br>';
+				$summary .= '<br/>';
 			} # end foreach Group
 		} # end if
 
@@ -1329,6 +1329,7 @@ sub takeover_on {
 	} # end if
 	return $$self{takeover_on};
 } # end sub takeover_on
+
 sub takeover_on_seconds {
 	return Date::Parse::str2time( $_[0]->takeover_on() );
 } # end sub takeover_on_seconds
@@ -1340,6 +1341,7 @@ sub prepress_start_on {
 	} # end if
 	return $$self{prepress_start_on};
 } # end sub prepress_start_on
+
 sub prepress_start_on_seconds {
 	return Date::Parse::str2time( $_[0]->prepress_start_on() );
 } # end sub prepress_start_on_seconds
@@ -1373,10 +1375,18 @@ sub completed_on_seconds {
 sub printed_on {
 	my ( $self ) = @_;
 	if ( ! exists $$self{printed_on} ) {
-		@$self{printed_on} = sql::execute( undef, undef, q`SELECT MAX(dtmtimestamp) FROM Project_Log WHERE project_id=? AND description IN ('Marked Printed')`, $$self{id} );
+		@$self{printed_on} = sql::execute( undef, undef, q`SELECT MAX(dtmtimestamp) FROM Project_Log WHERE project_id=? AND description LIKE 'Marked Printed%'`, $$self{id} );
 	} # end if
 	return $$self{printed_on};
 } # end sub printed_on
+
+sub shipped_on {
+	my ( $self ) = @_;
+	if ( ! exists $$self{shipped_on} ) {
+		@$self{shipped_on} = sql::execute( undef, undef, q`SELECT MAX(dtmtimestamp) FROM Project_Log WHERE project_id=? AND description IN ('Marked Shipped','Marked Picked Up')`, $$self{id} );
+	} # end if
+	return $$self{shipped_on};
+}
 
 sub printed_on_seconds {
 	return Date::Parse::str2time( $_[0]->printed_on() );
@@ -1445,6 +1455,9 @@ sub last_scheduled_seconds {
 sub operator_id {
 	my ( $self ) = @_;
 
+	my ( $caller, undef, $line ) = caller;
+	$openprint::log->debug("deprecated call to Project::operator_id from $caller:$line");
+
 	if ( ! $$self{operator_id} ) {
 		my $services = $self->services();
 		@$self{operator_id} = sql::execute( $log, $dbh, q{SELECT operator_id FROM tbl_Project_Contents WHERE lngProjectIndex=? AND lngServiceIndex=?}, $$self{id}, ( $$services{Proofs} ? $$services{Proofs}[0] : $$services{FilmStripping}[0] ) );
@@ -1454,6 +1467,9 @@ sub operator_id {
 
 sub Operator {
 	my ( $self ) = @_;
+
+	my ( $caller, undef, $line ) = caller;
+	$openprint::log->debug("deprecated call to Project::operator_id from $caller:$line");
 
 	if ( ! $$self{Operator} ) {
 		$$self{Operator} = new openprint::User( $self->operator_id() );
@@ -1867,6 +1883,32 @@ sub can_view {
 	} # end if
 	return 0;
 }
+
+sub can_edit {
+	if ( ! $_[0]{id} ) {
+		$openprint::log->debug("can_view 1 cuz no id") if $debug;
+		return 1;
+	}
+
+  if ( $_[0]{user_id} == $openprint::session{user_id} ) {
+		$openprint::log->debug("can_view 1 cuz i am the creator") if $debug;
+		return 1;
+	}
+	if ( $openprint::session{company_id} == $_[0]{company_id} ) {
+		$openprint::log->debug("can_view 1 cuz i am the company") if $debug;
+		return 1;
+	}
+	if ( $openprint::session{user_type} eq 'A' ) {
+		$openprint::log->debug("can_edit 1 cuz admin") if $debug;
+		return 1 
+	}
+	if ( sets::isin( $_[0]{user_id}, [ $openprint::User{id}, $openprint::User->assistant_ids(), $openprint::User->csr_ids() ] ) ) {
+		$log->debug("$openprint::User{firstname} Either created it or is an assistant") if $debug;
+		return 1;
+	} # end if
+  
+  return 0;
+} # end sub can_view
 
 
 1;

@@ -388,22 +388,18 @@ sub load {
 		$$self{layout_width} += $dutch_width;
 		$$self{layout_height} = $dutch_height if $dutch_height > $$self{layout_height};
 	} # end if
+
+	if ( ! $Project ) {
+		my ( $caller, undef, $line ) = caller;
+		$openprint::log->error("No Project passed to Imposition::load from $caller:$line");
+		$Project = new openprint::Project( $$specs{ProjectIndex} );
+	}
+	$$self{Project} = $Project;
+
 	if ( $$specs{txtSignatureType} ) {
 		if ( ! $$specs{spine} ) {
-			if ( ! $Project ) {
-				if ( $$specs{ProjectIndex} ) {
-					$Project = new openprint::Project( $$specs{ProjectIndex} );
-				} else {
-					$openprint::log->error("No ProjcetIndex in specs");
-foreach my $k ( sort { $a cmp $b } keys %$specs ) {
-$openprint::log->debug("($k) => $$specs{$k}");
-}
-				}
-				my ( $caller, undef, $line ) = caller;
-				$openprint::log->error("No Project passed to Imposition::load from $caller:$line");
-			} 
-			if ( $Project ) {
-				my $services = $Project->services();
+			my $services = $Project->services();
+			if ( $$services{''} and @{$$services{''}} ) {
 				my $printing_specs = openprint::service::get_specs_ref( $Project, $$services{''}[0] );
 				$$self{spine} = $$printing_specs{spine};
 			}
@@ -449,12 +445,12 @@ $openprint::log->debug("($k) => $$specs{$k}");
 			$$self{spreads} = 1;
 		#} # end if
 		$$self{pages} = $$self{spreads} * $$self{spread_size};
-#$openprint::log->debug("spread_rows $$self{spread_rows} x $$self{spread_columns} = $$self{spread_size} spreads: $$self{spreads} pages: $$self{pages} ");
+		$openprint::log->debug("spread_rows $$self{spread_rows} x $$self{spread_columns} = $$self{spread_size} spreads: $$self{spreads} pages: $$self{pages} ");
 	} # end if
-		$$self{page_width} = $$specs{txtFinalWidth};
-		$$self{page_height} = $$specs{txtFinalHeight};
-	$$self{sheet_width} = $$self{Paper}->width();
-	$$self{sheet_height} = $$self{cut_off} ? $$self{cut_off} : $$self{Paper}->height();
+	$$self{page_width} = $$specs{txtFinalWidth};
+	$$self{page_height} = $$specs{txtFinalHeight};
+	$$self{sheet_width} = $$self{Paper}{width};
+	$$self{sheet_height} = $$self{cut_off} ? $$self{cut_off} : $$self{Paper}{height};
 	if ( ! exists $$specs{"RotateSheet$qty_index"} ) {
 		if ( $$self{layout_width} > $$self{Paper}->width() or $$self{layout_height} > $$self{sheet_height} ) {
 			$$self{rotate_sheet} = 1;
@@ -864,8 +860,23 @@ sub spine_direction {
 sub to_svg {
 	my ( $self ) = @_;
 
-	my $svg = '<svg>';
-	$svg .= '<rect width="'.$$self{sheet_width}.'" height="'.$$self{sheet_height}.'" />';
+	# So let's assume that we might want to print this on an 8.5x11 sheet of paper. The source dimensions might be 28x40"
+
+	my $target_width = 3; # inches
+	my $target_height = 2; # inches;
+
+	my $margin = 1; #inch
+
+	# So we need to calculate the scale factor... in pixels.
+	#my $width_scale = ( 40/$target_width * 96 ); # 96 dots per inch?
+	#my $height_scale = ( 28/$target_height * 96 );
+	my $width_scale = ( ($target_width/40) * 96 ); # 96 dots per inch?
+	my $height_scale = ( ($target_height/28) * 96 );
+
+	my $svg = '<svg class="Imposition">';
+	
+	$svg .= '<rect class="background" width="'.int(($self->sheet_width()+(2*$margin))*$width_scale).'" height="'.int(($self->sheet_height()+(2*$margin))*$height_scale).'" />';
+	$svg .= '<rect class="sheet" x="'.int($margin*$width_scale).'" y="'.int($margin*$height_scale).'" width="'.int($self->sheet_width()*$width_scale).'" height="'.int($self->sheet_height()*$height_scale).'" style="fill:rgb(255,255,255);stroke-width:1;stroke:rgb(0,0,0);"/>';
 	$svg .= '</svg>';
 	return $svg;
 }

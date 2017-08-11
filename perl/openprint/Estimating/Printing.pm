@@ -6453,7 +6453,7 @@ $log->debug("COnsidering $$Press{strid}") if DEBUG_PRESSES;
 		} elsif ( ( $printing_type eq 'Web' ) and $openprint::usergroup::groups_cache{'Web Estimating'} and ! openprint::usergroup::is_user_in( ['Web Estimating'], $openprint::session{user_id} ) ) {
 			$results{$press_id} = "You are not authorized for estimating on Web presses.";
 			next;
-		} elsif ( $press_id eq 'KBA' and ! sets::isin( $openprint::session{user_type}, [ 'E', 'A' ] ) ) {
+		} elsif ( $press_id == 108 and ! sets::isin( $openprint::session{user_type}, [ 'E', 'A' ] ) ) {
 			$results{$press_id} = "You are not authorized for estimating on this press.";
 			next;
 		} # end if
@@ -7228,9 +7228,19 @@ $log->debug("Printing::save");
 		} # end foreach
 	} # end if hemmed
 
+	if ( $$services{''} and @{$$services{''}} ) {
+		my $project_specs = openprint::service::get_specs_ref( $Project, $$services{''}[0] );
+
 	my $sig_specs = openprint::service::get_specs_ref( $Project, $s_id );
 	if ( $$sig_specs{Group} ) {
 $log->debug("Group $$sig_specs{Group}");
+
+		foreach my $key ( @openprint::Estimating::MultiPage::signature_variables ) {
+$log->debug("Saving to multipage $key$$sig_specs{Group} => $$param{$key}");
+			if ( exists $$param{$key} ) {
+				openprint::service::insert_service_spec( $log, $openprint::dbh, $$Project{id}, $$services{''}[0], $key.$$sig_specs{Group}, $$param{$key} );
+			}
+		} # end foreach key
 
 		# So, if we just edited NOT the first sig in the group, and it's a bit different, so create a new group?
 		my @sigs = sort { $a <=> $b } $Project->signatures({ Group=>$$sig_specs{Group} });
@@ -7243,16 +7253,20 @@ $log->debug("different");
 				$_ = q{SELECT MAX(strValue::integer) FROM tbl_Service_Specifications WHERE lngProjectIndex=? AND strName='Group'};
 				my ( $new_group ) = sql::execute( $log, $dbh, $_, $Project->id() );
 				$new_group += 1;
-				openprint::service::insert_service_spec( $log, $openprint::dbh, $p_id, $s_id, 'Group', $new_group );
+$log->debug("New group is $new_group");
 				my $pages = $$sig_specs{txtSpreadSize};
 				foreach my $qty_index ( $Project->quantity_indexes() ) {
 					$pages = $$sig_specs{"PageQuantity$qty_index"} if $$sig_specs{"PageQuantity$qty_index"} > $pages;
 				} # end foreach
 				my $new_pages = $$first_sig_specs{GroupPageQuantity}-$pages;
 				
+$log->debug("Old pages $$first_sig_specs{GroupPageQuantity} - this pages: $pages ");
 				openprint::service::insert_service_spec( $log, $openprint::dbh, $p_id, $s_id, 'GroupPageQuantity', $pages );
-				openprint::service::insert_service_spec( $log, $openprint::dbh, $p_id, $s_id, 'OverrideGroupPageQuantity', 'Y' );
 
+				foreach my $key ( @openprint::Estimating::MultiPage::signature_variables ) {
+					openprint::service::insert_service_spec( $log, $openprint::dbh, $p_id, $$services{''}[0], $key.$new_group, $$project_specs{$key.$$sig_specs{Group}} );
+				}	
+				openprint::service::insert_service_spec( $log, $openprint::dbh, $p_id, $$services{''}[0], 'GroupPageQuantity'.$$sig_specs{Group}, $$first_sig_specs{GroupPageQuantity}-$pages );
 				openprint::service::insert_service_spec( $log, $openprint::dbh, $p_id, $$services{''}[0], 'GroupPageQuantity'.$new_group, $pages );
 				openprint::service::insert_service_spec( $log, $openprint::dbh, $p_id, $$services{''}[0], 'OverrideGroupPageQuantity'.$new_group, 'Y' );
 			
@@ -7260,24 +7274,16 @@ $log->debug("different");
 					next if $sig_id == $s_id;
 					openprint::service::insert_service_spec( $log, $openprint::dbh, $p_id, $sig_id, 'GroupPageQuantity', $new_pages );
 				} # end foreach sig_id
-				$$sig_specs{Group} = $new_group;
+				openprint::service::insert_service_spec( $log, $openprint::dbh, $p_id, $s_id, 'Group', $new_group );
 			} # end if
 		} # end if not the first sig in the group
 
-		if ( $$services{''} and @{$$services{''}} ) {
-			my $project_specs = openprint::service::get_specs_ref( $Project, $$services{''}[0] );
-			foreach my $key ( @openprint::Estimating::MultiPage::signature_variables ) {
-$log->debug("Saving to multipage $key$$sig_specs{Group} => $$param{$key}");
-				if ( exists $$param{$key} ) {
-					openprint::service::insert_service_spec( $log, $openprint::dbh, $$Project{id}, $$services{''}[0], $key.$$sig_specs{Group}, $$param{$key} );
-				}
-			} # end foreach key
 		} else {
-			$log->error("No project service in project $$Project{id}");
-		} # end if
+			$log->debug("No group");
+		} # end if Group
 	} else {
-$log->debug("No group");
-	} # end if Group
+		$log->error("No project service in project $$Project{id}");
+	} # end if
 } # end sub save
 
 sub get_colour_description {

@@ -44,6 +44,10 @@ sub name {
 	return $_[0]{name};
 }
 
+sub url_to {
+	return sprintf('/employee/inventory/check.html?check_id=%d', $_[0]{id} );
+}
+
 sub link_to {
 	return sprintf(
 		'<a href="/employee/inventory/check.html?check_id=%d">%s</a>'
@@ -104,9 +108,11 @@ sub item_count {
 	}	
 	return $_[0]{item_count};
 }
-sub save {
-	
-}
 
+sub save {
+	my ( $self, $data ) = @_;
+	$self->item_count( undef ) if $$self{id};
+	return $self->SUPER::save( $data );
+}
 1;
 __END__

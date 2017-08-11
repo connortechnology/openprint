@@ -8,12 +8,6 @@
 			order		=>	'id',
 			) ];
 	} elsif ( $session{$uri.'?skid_id'} ) {
-		my $skid_id = $session{$uri.'?skid_id'};
-		if ( openprint::Skid->transform( id=>$skid_id ) ne $skid_id ) {
-			$variable{error} .= 'Invalid skid/roll id<br/>';
-			$variable{Skids} = [];
-			return;
-		}
 		$$variable{Skids} = [ openprint::Skid->find( 
 			( $session{$uri.'?skid_id'} =~ /%/ ? 
 			( 'id ilike'	=>	$session{$uri.'?skid_id'} ) :
@@ -29,6 +23,21 @@
 			order	=>	'id',
 			( $session{$uri.'?deleted'} ? ( deleted => [ split(',', $session{$uri.'?deleted'} ) ] ) : () ),
 			) ];
+			if ( ! @{$$variable{Skids}} ) {
+				my @Tags = openprint::RFIDTag->find(
+						( $session{$uri.'?rfid_id'} =~ /%/ ? 
+							( 'id ilike'	=>	$session{$uri.'?rfid_id'} ) :
+							( 'id ilike'	=>	'%'.$session{$uri.'?rfid_id'} ) ),
+						
+						);
+				if ( @Tags ) {
+					$$variable{Skids} = [ openprint::Skid->find(
+						rfidtag_id => [ map { $$_{id} } @Tags ],
+						order	=>	'id',
+						( $session{$uri.'?deleted'} ? ( deleted => [ split(',', $session{$uri.'?deleted'} ) ] ) : () ),
+						) ];
+				}
+			}
 	} elsif ( $session{$uri.'?manufacturers_id'} ) {
 		
 		$$variable{Skids} = [ openprint::Skid->find( 

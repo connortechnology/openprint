@@ -20,7 +20,7 @@ $serial= 'order_statuses_id_seq';
 
 sub sort {
 	shift if $_[0] eq 'openprint::Order_Status';
-	return sort { $$a{'name'} cmp $$b{'name'} } @_;
+	return sort { $$a{name} cmp $$b{name} } @_;
 }# end sub sort
 1;
 __END__

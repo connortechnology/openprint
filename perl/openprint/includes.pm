@@ -123,7 +123,7 @@ sub _logs_contents {
 	ssi::save_params( $variable{uri}, 
 			( map { 'log_created_on_start_'.$_ } ( 'year','month','day','hour','minute' ) ),
 			( map { 'log_created_on_end_'.$_ } ( 'year','month','day','hour','minute' ) ),
-			( 'log_limit' ),
+			( 'log_action_id', 'log_limit' ),
 			);
 	
 } # end sub _logs_contents

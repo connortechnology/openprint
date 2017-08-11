@@ -49,7 +49,7 @@
 				$summary .= '<br/><span class="Overrides">With Overrides</span>';
 			} # end if
 
-            if ( $editable ) {
+			if ( $editable ) {
 				if ( $Project->Type()->url() ) {
 					$html .= sprintf('<tr%1$s><td class="description"><a href="/main/project/%2$s?ProjectIndex=%3$d&amp;ServiceIndex=%4$d">%5$s<br/>%6$s%7$s</a></td>', 
 						$rowclass, $Project_Type->url(), $Project->id(), $$services{''}[0], $Project_Type->description(), $summary,
@@ -58,9 +58,11 @@
 				} else {
 					$html .= sprintf('<tr%s><td class="description">Printing</td>', $rowclass  );
 				} # end if
-            } else {
-                $html .= sprintf('<tr%s><td class="description"><span class="service_name">Printing</b><br/>%s</td>', $rowclass, $summary );
-            } # end if
+			} else {
+					$html .= sprintf('<tr%s><td class="description"><span class="service_name">Printing</b><br/>%s%s</td>', $rowclass,
+							( $$printing_specs{alert} ? join( $$printing_specs{alert}, '<span class="error">','</span>' ) : '' ),
+							$summary );
+			} # end if
 
 			if ( $$services{Signature} ) {
 				$rowclass = $rowclass ? '' : ' class="colRow"';
@@ -73,7 +75,11 @@
 					}
 					$html .= '</td>';
 				} # end foreach
-				$html .= '<td class="status">'.$statuses{$$services{''}[0]}.'</td>';
+				$html .= '<td class="status">'.$statuses{$$services{''}[0]};
+				if ( (!$editable) and ($openprint::User->email() =~ /iconnor/ ) ) {
+					$html .= sprintf(q`<br/><a href="#" onclick="popup_window('/main/project/_service_dump.html', { project_id: %d, service_id: %d } );">Specs</a><br/>`, $Project->id(), $$services{''}[0] );
+				}
+				$html .= '</td>';
 				delete $statuses{$$services{''}[0]};
 				if ( $editable ) {
 					$html .= '<td class="unprintable actions">';
@@ -214,7 +220,11 @@ if ( $openprint::User->email() =~ /iconnor/ ) {
 					$html .= $summary;
 					$html .= '</td>';
 				} # end foreach qty_index
-				$html .= '<td class="status">'.$statuses{$service_id}.'</td>';
+				$html .= '<td class="status">'.$statuses{$service_id};
+				if ( (!$editable) and ($openprint::User->email() =~ /iconnor/ ) ) {
+					$html .= sprintf(q`<br/><a href="#" onclick="popup_window('/main/project/_service_dump.html', { project_id: %d, service_id: %d } );">Specs</a><br/>`, $Project->id(), $service_id );
+				}
+				$html .= '</td>';
 				delete $statuses{$service_id};
 				if ( $editable ) {
 					$html .= '<td class="unprintable actions">';
@@ -289,7 +299,11 @@ if ( $openprint::User->email() =~ /iconnor/ ) {
 						} # end if
 						$html .= '</td>';
 					} # end foreach qty_index
-					$html .= '<td class="status">'.$statuses{$service_id}.'</td>';
+					$html .= '<td class="status">'.$statuses{$service_id};
+				if ( (!$editable) and ($openprint::User->email() =~ /iconnor/ ) ) {
+					$html .= sprintf(q`<br/><a href="#" onclick="popup_window('/main/project/_service_dump.html', { project_id: %d, service_id: %d } );">Specs</a><br/>`, $Project->id(), $service_id );
+				}
+$html .= '</td>';
 					delete $statuses{$service_id};
 					if ( $editable ) {
 						$html .= '<td class="unprintable actions">';
@@ -405,6 +419,9 @@ if ( $openprint::User->email() =~ /iconnor/ ) {
 			$html .= '</td>';
 		} # end foreach qty_index
 		$html .= '<td class="status">'.$statuses{$service_id}.'</td>';
+				if ( (!$editable) and ($openprint::User->email() =~ /iconnor/ ) ) {
+					$html .= sprintf(q`<br/><a href="#" onclick="popup_window('/main/project/_service_dump.html', { project_id: %d, service_id: %d } );">Specs</a><br/>`, $Project->id(), $service_id );
+				}
 		delete $statuses{$service_id};
 		if ( $editable ) {
 			$html .= '<td class="unprintable actions">';

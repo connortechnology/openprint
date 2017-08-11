@@ -311,7 +311,7 @@ sub check_credit {
 	my ( $amount ) = @_;
 	my $Credit = new openprint::Company_Credit( { 'company_id'=>$openprint::session{company_id}, 'supplier_id'=>$openprint::config{owner_id} } );
 
-	if ( $Credit->hold() eq 'Y' ) {
+	if ( $Credit->hold() and ( $Credit->hold() eq 'Y' ) ) {
 		return misc::error( $log, $dbh, \%variable, 'Credit on hold', 'Your credit account is on hold, you will not be able to place orders.' );
 	} # end if
 
@@ -324,7 +324,7 @@ sub check_credit {
 			} # end if
 		} else {
 			if ( my @orders = $Credit->denied_orders() ) {
-				my $error = 'You have orders that are more than ' . $Credit->denydays() . ' days overdue.	Please arrange payment before purchasing further.<br/><br/>The following orders are currently overdue:</br><br/>';
+				my $error = 'You have orders that are more than ' . $Credit->denydays() . ' days overdue.	Please arrange payment before purchasing further.<br/><br/>The following orders are currently overdue:<br/><br/>';
 				$error .=	list_orders( $log, $dbh, @orders );
 				return misc::error( $log, $dbh, \%variable, 'Overdue Orders', $error );
 			} # end if

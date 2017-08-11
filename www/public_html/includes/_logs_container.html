@@ -18,6 +18,15 @@
 							with_clear=>1,
 							} ),
 					); ) ?>
+				<? echo ( ssi::select( 
+							openprint::Log_Action->dropdown(), 
+							$session{$$variable{uri}.'?log_action_id'},
+							{ 
+								name			=>	'log_action_id', 
+								prepend		=>	[ '', 'All Actions' ],
+								onchange	=>	q`new Ajax.Updater( 'Logs', '/includes/_logs_contents.html', { parameters: $('logs_form').serialize() } );`,
+								}
+							); ) ?>
 				<? echo ( ssi::select( [ 10, 10, 20, 20, 50, 50, '', 'All' ], $session{$$variable{uri}.'?log_limit'}, { name=>'log_limit', onchange=>q`new Ajax.Updater( 'Logs', '/includes/_logs_contents.html', { parameters: $('logs_form').serialize() } );` } ); ) ?>
 				<? echo ( button( 'LoadLog', { onclick=>q`LoadContent( 'Logs', '/includes/_logs_contents.html', $('logs_form') );`, text=>'Load' } ); ) ?>
 			</li>
