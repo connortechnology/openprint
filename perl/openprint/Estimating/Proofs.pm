@@ -347,7 +347,7 @@ sub insert_proofs {
 
 	my $sig_specs = openprint::service::get_specs_ref( $Project, $signature_service_index );
 	my $Imposition = new openprint::Imposition();
-	$Imposition->load( $sig_specs, $qty_index );
+	$Imposition->load( $sig_specs, $qty_index, $Project );
 	my $specs = openprint::service::get_specs_ref( $Project, $service_index );
 
 	my $ac = sql::start_transaction( $dbh );
