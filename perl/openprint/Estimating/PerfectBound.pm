@@ -172,7 +172,7 @@ sub signature_calc {
 				my $Fold = $$FI{Fold};
 				$openprint::log->debug("Fold pq($$FI{page_quantity}) pages($$FI{pages}) ($$Fold{name}) Pockets: $pockets " . $Fold->to_string()) if DEBUG;
 				if ( $$FI{imposition} < $imposition ) {
-					$results{Breakdown} .= "Setting stitching imposition to $$FI{imposition} out because Folding imposition is $$FI{imposition}out<br/>";
+					$results{Breakdown} .= "Setting perfectbound imposition to $$FI{imposition} out because Folding imposition is $$FI{imposition}out<br/>";
 					$imposition = $$FI{imposition};
 				}
 #if ( ! $$I{Folder} ) {

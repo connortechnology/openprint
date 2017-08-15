@@ -1,30 +1,66 @@
-<? eval (
-	@$variable{'Operator','PickupDate'} = sql::execute( $log, $dbh, q{SELECT (SELECT FirstName || ' ' || LastName FROM Users WHERE id=operator_id), starttime FROM tbl_Project_Contents WHERE lngProjectIndex=? AND lngServiceIndex=?}, @$variable{'ProjectIndex','ServiceIndex'} );
-	) ?>
+<? echo (
+	my $Service = $$variable{Project}->Service( $$variable{ServiceIndex} );
+
+	my @Roles = openprint::Operator_Role->find( servicetype_id=>$Service->servicetype_id(), order=>'lower(name)' );
+	if ( ! @Roles ) {
+		@Roles = openprint::Operator_Role->find( servicetype_id=>undef, order=>'lower(name)' );
+	}
+	my %Operators = map { $$_{role_id}, $_ } openprint::Project_Service_Operator->find( service_id=>$$Service{service_id} );
+		
+	my $html;
+	foreach my $Role ( @Roles ) {
+		$html .= sprintf( q`
 <p>
-	<label>Operator</label>
-		<input type="text" name="txtEmployeeName" readonly="readonly" value="<?Operator?>"/>
-		<input id="TakeOver" name="TakeOver" type="checkbox" onClick="if ( this.checked ) { this.form.txtEmployeeName.value='<?Employee?>'} else { this.form.txtEmployeeName.value=this.form.txtEmployeeName.defaultValue;}" /><label class="radio" for="TakeOver">Take Over</label>
+  <label>%2$s</label>
+	<span id="txtEmployeeName%1$d">%4$s</span>
+	<input id="TakeOver%1$d" name="TakeOver%1$d" type="checkbox" onclick="if ( this.checked ) { $('txtEmployeeName%1$d').innerHTML='%3$s'} else { $('txtEmployeeName%1$d').innerHTML='%4$s';}" />
+	<label class="radio" for="TakeOver%1$d">Take Over</label>
 </p>
-<p>
-	<label>Pickup Time</label>
-<? if ( ! $$variable{'PickupDate'} ) ?>
-	<? eval ( @$variable{'PickupDate'} = sql::execute( $log, $dbh, "SELECT to_char(NOW(),'YYYY-MM-DD HH24:MI')" ); ) ?>
-	<input type="text" size="18" name="PickupDate" id="PickupDate" value="<?PickupDate?>"/>
-		<img src="/javascripts/jscalendar/img.gif" id="PickupDateButton" style="cursor: pointer;" title="Date selector" />
-			<script type="text/javascript">
-				Calendar.setup({
-inputField	:	"PickupDate",
+`, $$Role{id}, $$Role{name}, $openprint::User->name(), ( $Operators{$$Role{id}} ? $Operators{$$Role{id}}->User()->name() : 'None Yet' ),
+ );
+
+if ( 0 ) {
+		$html .= '<p><label>Pickup Time</label>';
+		if ( ! $$variable{"PickupDate$$Role{id}"} ) {
+			@$variable{"PickupDate$$Role{name}"} = sql::execute( $log, $dbh, "SELECT to_char(NOW(),'YYYY-MM-DD HH24:MI')" );
+
+  		$html .= sprintf(q`
+<input type="text" name="PickupDate%1$d" id="PickupDate%1$d" value="%2$s"/>
+<img src="/javascripts/jscalendar/img.gif" id="PickupDateButton%1$d" style="cursor: pointer;" title="Date selector" />
+<script type="text/javascript">
+Calendar.setup({
+inputField	:	"PickupDate%1$d",
 ifFormat	:	"%Y-%m-%d %H:%M",
-button		:	"PickupDateButton",
+button		:	"PickupDateButton%1$d",
 align		:	"Tl",
 showsTime	:	true,
 singleClick	:	false
 				});
-				</script>
-<? else ( ! $$variable{'PickupDate'} ) ?>
-	<?PickupDate?>
-<? endif ( ! $$variable{'PickupDate'} ) ?>
+</script>
+`, $$Role{id}, $$variable{"PickupDate$$Role{id}"} );
+		} else {
+			$html .= $$variable{"PickupDate$$Role{id}"};
+		}
+		$html .= '</p>';
+}
+
+	} # end foreach Role
+	if ( ! $$variable{PickupDate} ) {
+		@$variable{PickupDate} = sql::execute( $log, $dbh, "SELECT to_char(NOW(),'YYYY-MM-DD HH24:MI')" );
+	}
+	return $html;
+) ?>
+<p><label>Pickup Time</label>
+<input type="text" name="PickupDate" id="PickupDate" value="<?PickupDate?>"/>
+<img src="/javascripts/jscalendar/img.gif" id="PickupDateButton" style="cursor: pointer;" title="Date selector" />
+<script type="text/javascript">
+Calendar.setup({
+inputField  : "PickupDate",
+ifFormat  : "%Y-%m-%d %H:%M",
+button    : "PickupDateButton",
+align   : "Tl",
+showsTime : true,
+singleClick : false
+        });
+</script>
 </p>
-
-
