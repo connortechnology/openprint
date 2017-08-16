@@ -96,11 +96,11 @@ sub destroy {
 		$error .= $Log->destroy();
 		return $error if $error;
 	} # end foreach Log
-	foreach my $N ( $_->Notifications() ) {
+	foreach my $N ( $_[0]->Notifications() ) {
 		$error .= $N->destroy();
 		return $error if $error;
 	} # end foreach Log
-	foreach my $I ( $_->Interfaces() ) {
+	foreach my $I ( $_[0]->Interfaces() ) {
 		$error .= $I->destroy();
 		return $error if $error;
 	} # end foreach Log

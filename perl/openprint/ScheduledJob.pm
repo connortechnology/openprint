@@ -317,9 +317,11 @@ sub get_li {
 		$html .= ssi::htmlize( $n );
 		$html .= ' (<span class="CSR">'.$Project->Company()->CSR()->firstname().'</span>)';
 
-		my $Proofs_Service = $Project->Service( $$services{Proofs}[0] );
+		my $Proofs_Service = $Project->Service( $$services{Proofs}[0] ) if $$services{Proofs} and @{$$services{Proofs}};
 		if ( $Proofs_Service ) {
 			$html .= ' ('.join(', ', map { '<span class="PrepressOperator">'.$_->User()->firstname().'</span>' } $Proofs_Service->Operators()).')';
+		} else {
+			$openprint::log->error("NO proofs found in $$Project{id}");
 		} # end if
 		if ( $Project->reprint() eq 'Y' ) {
 			$html .= ' REPRINT'. $Project->reprint_reason();

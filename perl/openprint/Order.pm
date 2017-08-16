@@ -862,6 +862,7 @@ sub due_date {
 sub url_to {
 	return '/main/order/history_details.html?order_id='.$_[0]{id};
 } # end sub url
+
 sub link_to {
 	if ( $_[0]{id} ) {
 		my $text = $_[1] ? $_[1] : ( $_[0]{id} ? $_[0]{id} : 'id ' . $_[0]{id} );

@@ -6181,12 +6181,6 @@ $log->debug("Area $area = $$Imposition{object_area} * Impressions($colour_impres
 	} # end if
 
 
-#$price{'Press Washes'} += $varnish_price{'Press Washes'};
-	if ( $price{'Press Washes'} ) {
-		$price{'Press Wash Price'} = openprint::service::get_price( 'WashUp', undef, $Press );
-		$price{'Press Wash Total'} = $price{'Press Washes'} * $price{'Press Wash Price'};
-		$setup_cost += $price{'Press Wash Total'};
-	} # end if
 
 	my $run_prices;
 	if ( $is_wt ) {
@@ -6218,11 +6212,6 @@ $log->debug("Area $area = $$Imposition{object_area} * Impressions($colour_impres
 		$setup_cost += $price{'Runstyle Charge'};
 	} # end if
 
-	$price{'Comparison Cost'} += $setup_cost;
-	$price{'Setup Total'} += $setup_cost;
-#$log->debug("Setup Cost $setup_cost = $press_setup + $price{'WorkTurn Dry Charge'} + $price{'Plate Total'} + $price{'Press Wash Total'} + $price{'Version Charge'} + $price{'Imposition Total'}");
-
-	$price{'Press Setup'} = $press_setup;
 
 	my $run_cost = misc::sum( map { $$_{Total} } @{$run_prices} );
 	$price{'Run Prices'} = $run_prices;
@@ -6252,6 +6241,18 @@ $log->warn("AQ elapsed: $aq_elapsed");
 $log->warn("Something wrong in AQ");
 		} # end if
 	} # end if Aqueous
+#$price{'Press Washes'} += $varnish_price{'Press Washes'};
+	if ( $price{'Press Washes'} and $Services{WashUp} ) {
+		my $WashPrice = $Services{WashUp}->get_Price( undef, $Press );
+		$price{'Press Wash Price'} = $$WashPrice{Price};
+		$price{'Press Wash Total'} = $price{'Press Washes'} * $$WashPrice{Price};
+		$setup_cost += $price{'Press Wash Total'};
+	} # end if
+	$price{'Comparison Cost'} += $setup_cost;
+	$price{'Setup Total'} += $setup_cost;
+#$log->debug("Setup Cost $setup_cost = $press_setup + $price{'WorkTurn Dry Charge'} + $price{'Plate Total'} + $price{'Press Wash Total'} + $price{'Version Charge'} + $price{'Imposition Total'}");
+
+	$price{'Press Setup'} = $press_setup;
 	$price{'Impression MPrice'} = misc::sum( map { $$_{MPrice} } @{$run_prices} );
 
 	$price{'Minimum Run Charge'} = openprint::service::get_price( 'PressRunChargeMinimum',undef,$Press );
