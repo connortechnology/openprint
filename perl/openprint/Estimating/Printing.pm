@@ -4957,7 +4957,7 @@ $imp->display('[warn]');
 		# When doing the cover, need to calc additional sigs as well.
 		# Add calculations for other Groups
 						$log->debug("Calculating Additional Signatures for other group $other_group_cache_key group $sig_specs{Group}") if DEBUG;
-$log->error(" %other_group_cache ");
+$log->debug(" %other_group_cache ");
 foreach my $k ( keys %other_group_cache ) {
 $log->debug("$k => ");
 }
@@ -5052,7 +5052,7 @@ if ( $Setup ) {
 									my $sig_price = get_project_price( $Project, $sigs[0], @$Setup{'project', 'specs'}, $qty, $qty_index,
 											$$Setup{possible_presses}, $printing_specs, $versions, \%PlateCounts, \%PaperCounts, \%washed_colours, $$Setup{previous_forms_cache}, \@sigs, @$Setup{'impositions','other_impositions'}, {}, 0 );
 									$other_group_cache{$other_group_cache_key} = $sig_price;
-$log->error(" Setting " . %other_group_cache);
+$log->debug(" Setting " . %other_group_cache);
 foreach my $k ( keys %other_group_cache ) {
 $log->debug("$k => ");
 }

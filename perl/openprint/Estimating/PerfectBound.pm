@@ -663,8 +663,8 @@ sub get_price {
 		$price{Insert} = ($price{Insert}*$qty)/1000;
 	} # end if
 
-	my $gateFolds = $$specs{'txtSignatureQtySingleGateFolded'.$qty_index} + $$specs{'txtSignatureQtyDoubleGateFolded'.$qty_index};
-	if ( $$specs{rdbGateFoldFit} eq 'Exact' and $gateFolds > 0 ) {
+	my $gateFolds = $$specs{'txtSignatureQtySingleGateFolded'.$qty_index} + $$specs{'txtSignatureQtyDoubleGateFolded'.$qty_index} if $$specs{'txtSignatureQtySingleGateFolded'.$qty_index} and $$specs{'txtSignatureQtyDoubleGateFolded'.$qty_index};
+	if ( ( $gateFolds > 0 ) and ( $$specs{rdbGateFoldFit} eq 'Exact' ) ) {
 		$price{Service} += openprint::service::get_price( $$specs{ServiceType}, $gateFolds, $Equipment );
 		$price{MakeReady} += $MakeReady{Price} + ( $pocketMakeReady * ( $gateFolds + 1 ) );
 	} # end if
