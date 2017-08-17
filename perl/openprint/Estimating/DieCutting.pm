@@ -188,7 +188,7 @@ sub calc_price {
 	$Total{Impressions} = $impressions;
 
 # this is the price for actual die cutting, priced by impressions.
-	my %ServicePrice = openprint::service::get_price_object( 'DieCutting'.$$specs{'rdbDieCutting-'.$form}, $impressions, $Equipment );
+	my %ServicePrice = openprint::service::get_price_object( 'DieCutting'.$$specs{'rdbDieCutting-'.$form}, $impressions, $Equipment ) if $$specs{'rdbDieCutting-'.$form};
 	if ( ! %ServicePrice ) {
 		%ServicePrice = openprint::service::get_price_object( 'DieCutting', $impressions, $Equipment );
 	} # end if
@@ -370,7 +370,7 @@ sub calc {
 						"ImpOut-$form-$qty_index-$imp_index",
 						"ImpColumns-$form-$qty_index-$imp_index",
 						"ImpRows-$form-$qty_index-$imp_index"} =
-						$I->get('quantity','imposition','columns','rows');
+						@$I{'quantity','imposition','columns','rows'};
 					$imp_index += 1;
 					$$specs{alert} .= $$Price{alert};
 					$status = 'uncalculated' if $$Price{Status} eq 'uncalculated';
