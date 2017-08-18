@@ -6887,6 +6887,7 @@ sub compare_signatures_runstyle {
 	return 1;
 }
 
+# Returns 1 if the same, 0 if ! the same
 sub compare_signatures_no_results {
 	my ( $Project, $sig1, $sig2, $exclude ) = @_;
 	foreach my $key (
@@ -7248,6 +7249,7 @@ $log->debug("Printing::save");
 	if ( $$sig_specs{Group} ) {
 $log->debug("Group $$sig_specs{Group}");
 
+		# Save things like colours, stock, etc.
 		foreach my $key ( @openprint::Estimating::MultiPage::signature_variables ) {
 $log->debug("Saving to multipage $key$$sig_specs{Group} => $$param{$key}");
 			if ( exists $$param{$key} ) {
@@ -7260,8 +7262,7 @@ $log->debug("Saving to multipage $key$$sig_specs{Group} => $$param{$key}");
 		if ( $s_id != $sigs[0] ) {
 $log->debug("Not first");
 			my $first_sig_specs = openprint::service::get_specs_ref( $Project, $sigs[0] );
-			if ( compare_signatures_no_results( $Project, $first_sig_specs, $sig_specs ) ) {
-$log->debug("different");
+			if ( ! compare_signatures_no_results( $Project, $first_sig_specs, $sig_specs ) ) {
 # Split into a new group
 				$_ = q{SELECT MAX(strValue::integer) FROM tbl_Service_Specifications WHERE lngProjectIndex=? AND strName='Group'};
 				my ( $new_group ) = sql::execute( $log, $dbh, $_, $Project->id() );
