@@ -7033,8 +7033,14 @@ sub runspeed {
 #$log->debug("Foudn Additional runspeed for $$Equipment{strid}: $runspeed");
 	#} # end if
 	if ( ! $runspeed ) {
-		$runspeed = int( $Equipment->specification('Run Speed', $$Imposition{Paper}->gsm() ) );
-#$log->debug("Foudn Standard runspeed for $$Equipment{strid}: $runspeed");
+		my $RunSpeed = $Equipment->Specification('Run Speed');
+		if ( $RunSpeed and lc $$RunSpeed{units} eq 'calliper' ) {
+			$runspeed = $Equipment->specification('Run Speed', $$Imposition{Paper}{calliper});
+$log->debug("Foudn runspeed for $$Equipment{strid}: $runspeed on calliper:" . $$Imposition{Paper}{calliper} );
+		} else {
+			$runspeed = int( $Equipment->specification('Run Speed', $$Imposition{Paper}->gsm() ) );
+$log->debug("Foudn runspeed for $$Equipment{strid}: $runspeed on gsm:" . $$Imposition{Paper}->gsm() );
+		}
 	} # end if
 	return $runspeed;
 } # end sub runspeed
