@@ -124,6 +124,9 @@ sub dest_path {
 }
 
 sub run {
+  if ( ! $_[0]->Host()->online() ) {
+    return 'Host is not online.';
+  }
   my $results = '';
   require IPC::Run3;
   my $type = $_[0]->type();
