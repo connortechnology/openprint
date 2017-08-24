@@ -317,9 +317,13 @@ sub get_li {
 		$html .= ssi::htmlize( $n );
 		$html .= ' (<span class="CSR">'.$Project->Company()->CSR()->firstname().'</span>)';
 
-		my $Proofs_Service = $Project->Service( $$services{Proofs}[0] );
+		my $Proofs_Service = $Project->Service( $$services{Proofs}[0] ) if $$services{Proofs} and @{$$services{Proofs}};
 		if ( $Proofs_Service ) {
-			$html .= ' ('.join(', ', map { '<span class="PrepressOperator">'.$_->User()->firstname().'</span>' } $Proofs_Service->Operators()).')';
+			my %operators = map { $$_{user_id}, $_ } $Proofs_Service->Operators();
+
+			$html .= ' ('.join(', ', map { '<span class="PrepressOperator">'.$_->User()->firstname().'</span>' } values %operators ).')';
+		} else {
+			$openprint::log->error("NO proofs found in $$Project{id}");
 		} # end if
 		if ( $Project->reprint() eq 'Y' ) {
 			$html .= ' REPRINT'. $Project->reprint_reason();
@@ -537,7 +541,7 @@ sub runtime {
 		$$self{runtime} = $new;
 	} # end if
 
-	if ( ! $$self{runtime} ) {
+	if ( ( ! $$self{runtime} ) or ( $$self{runtime} eq '00:00:00' ) ) {
 		my $seconds = 0;
 		if ( $$self{project_id} ) {
 			my $Project = $self->Project();
@@ -785,28 +789,35 @@ sub speed {
 		$$self{speed} = $_[0];
 	} # end if
 	if ( ! $$self{speed} ) {
-		if ( (!($$self{speed} = $self->Equipment()->specification('Default Scheduling Runspeed'))) and $$self{project_id} ) {
+		my $Equipment = $self->Equipment();
+		if ( (!($$self{speed} = $Equipment->specification('Default Scheduling Runspeed'))) and $$self{project_id} ) {
 			my $Project = $self->Project();
-			if ( $Project->ordered_quantity_index() and $$self{service_id} and @{$$self{service_id}} ) {
+			my $qty_index = $Project->ordered_quantity_index();
+
+			if ( $qty_index and $$self{service_id} and @{$$self{service_id}} ) {
 				my $Service = $Project->Service( $$self{service_id}[0] );
-				my $ServiceType = $Service->ServiceType();
 				my $specs = $Service->specs();
-				return if ! $specs;
+				if ( ! $specs ) {
+					$openprint::log->error( "$$Project{id} $$Service{service_id} has no specs?!");
+					return;
+				}
+				my $ServiceType = $Service->ServiceType();
 
 				if ( $ServiceType->name() eq 'Folding' ) {
 					my $signatures = $self->pertains_id();
-if ( ! $signatures ) {
-$log->warn("No pertains $signatures");
-} elsif ( ! @{$signatures} ) {
-$log->warn("Empty pertains @$signatures");
-}
-					$$self{speed} = openprint::Estimating::Folding::runspeed( $Project, $Service, $self->Equipment(), $Project->ordered_quantity_index(), $$signatures[0] );
+					if ( ! $signatures ) {
+						$log->warn("No pertains $signatures");
+					} elsif ( ! @{$signatures} ) {
+						$log->warn("Empty pertains @$signatures");
+					}
+					$$self{speed} = openprint::Estimating::Folding::runspeed( $Project, $Service, $Equipment, $qty_index, $$signatures[0] );
 				} elsif ( $ServiceType->name() eq 'Cutting' ) {
 					my $signatures = $self->pertains_id();
-					$$self{speed} = openprint::Estimating::Cutting::runspeed( $Project, $Service, $self->Equipment(), $Project->ordered_quantity_index(), $signatures );
+					$$self{speed} = openprint::Estimating::Cutting::runspeed( $Project, $Service, $Equipment, $qty_index, $signatures );
 				} elsif ( $ServiceType->name() eq 'SaddleStitching' ) {
 				} else {
-					$$self{speed} = openprint::Estimating::Printing::runspeed( $Project, $specs, $Project->ordered_quantity_index(), $self->Equipment() );
+$openprint::log->debug("Getting printing speed");
+					$$self{speed} = openprint::Estimating::Printing::runspeed( $Project, $specs, $qty_index, $Equipment );
 				} # end if
 			} # end if
 		} # end if

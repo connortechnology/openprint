@@ -18,7 +18,6 @@ require openprint::service;
 require openprint::Currency;
 
 require openprint::Estimating::Skids;
-require openprint::Estimating::Printing;
 require openprint::Estimating::Shipping;
 require openprint::Estimating::Stitching;
 require openprint::Estimating::Padding;
@@ -629,6 +628,7 @@ sub get_finished_weight {
 	my ( $project_index ) = @_; 
 	my $project_weight;
 
+require openprint::Estimating::Printing;
 	my $Project = new openprint::Project( $project_index );
 	# We do a weird thing with qty_index here, becasue all quantities should have the same weight, but may be calculated diferent ways, so we run through them until we get a valid weight.
 

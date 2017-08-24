@@ -493,7 +493,7 @@ sub calc {
 		if ( $results{Status} eq 'calculated' ) {
 			$$specs{"ddmEquipment$qty_index"} = $results{Equipment}{id};
 			$$specs{'Imposition'.$qty_index} = $results{Imposition};
-			$$specs{'hdnBreakdown'.$qty_index} .= 'Estimated Run Time: @'.$price{Runspeed}.'/Hr = '. Math::Round::nearest( 0.1, $price{RunTime} ) . ',<br/>';
+			$$specs{'hdnBreakdown'.$qty_index} .= 'Estimated Run Time: @'.$price{Runspeed}.'/Hr = '. Math::Round::nearest( 0.1, $price{RunTime} ) . ',<br/>' if $price{Runspeed};
 			$$specs{'hdnBreakdown'.$qty_index} .= "Number of Passes: $price{Passes}<br/>";
 			$$specs{'hdnBreakdown'.$qty_index} .= "Imposition: $price{Imposition}out<br/>";
 			$$specs{'hdnBreakdown'.$qty_index} .= 'Run Discount' . $price{'RunCost Discount'}.'%<br/>' if $price{'RunCost Discount'};
@@ -575,11 +575,13 @@ sub get_price {
 		%MakeReady = openprint::service::get_price_object( $$specs{ServiceType}.'MakeReady', $$specs{"txtPockets$qty_index"}, $Equipment );
 	} # end if
 	my $pocketMakeReady = openprint::service::get_price( $$specs{ServiceType}.'PocketMakeReady', $$specs{"txtPockets$qty_index"}, $Equipment );
-	$price{MakeReady} = $MakeReady{Price} + ($pocketMakeReady * ( $$specs{"txtPockets$qty_index"} + 1 ));
+	$price{MakeReady} = $MakeReady{Price};
+  $price{MakeReady} += ($pocketMakeReady * ( $$specs{"txtPockets$qty_index"} + 1 )) if $pocketMakeReady;
 
 	my $maxPockets = $Equipment->specification( 'Number of Pockets' );
 	my $neededPockets = $$specs{"txtPockets$qty_index"};
-	$price{RunTime} += $neededPockets * $Equipment->specification( 'Pocket Make Ready' );
+  my $pocket_make_ready_time = $Equipment->specification( 'Pocket Make Ready' );
+	$price{RunTime} += $neededPockets * $pocket_make_ready_time if $pocket_make_ready_time;
 	$openprint::log->debug("Needed Pockets: $neededPockets") if DEBUG;
 # Calculate Full Passes
 	if ( $maxPockets and ( $neededPockets > $maxPockets ) ) {
@@ -655,28 +657,30 @@ sub get_price {
 		$price{MPrice} += ( $GluePrice{Total} / $qty ) * 1000;
 
 		$price{Glue} = $Material;
+    $price{Price} += $GluePrice{Total};
 	} # end if Glues
 
-	if ( $$specs{txtInsertQuantity} > 0 ) {
+	if ( $$specs{txtInsertQuantity} and ( $$specs{txtInsertQuantity} > 0 ) ) {
 		$price{Insert} = openprint::service::get_price( $$specs{ServiceType}.'Insert', $$specs{txtInsertQuantity}, $Equipment) * $$specs{txtInsertQuantity};
 # Convert to cost per thousand
 		$price{Insert} = ($price{Insert}*$qty)/1000;
+    $price{Price} += $price{Insert};
 	} # end if
 
-	my $gateFolds = $$specs{'txtSignatureQtySingleGateFolded'.$qty_index} + $$specs{'txtSignatureQtyDoubleGateFolded'.$qty_index};
-	if ( $$specs{rdbGateFoldFit} eq 'Exact' and $gateFolds > 0 ) {
+	my $gateFolds = $$specs{'txtSignatureQtySingleGateFolded'.$qty_index} + $$specs{'txtSignatureQtyDoubleGateFolded'.$qty_index} if $$specs{'txtSignatureQtySingleGateFolded'.$qty_index} and $$specs{'txtSignatureQtyDoubleGateFolded'.$qty_index};
+	if ( $gateFolds and ( $gateFolds > 0 ) and ( $$specs{rdbGateFoldFit} eq 'Exact' ) ) {
 		$price{Service} += openprint::service::get_price( $$specs{ServiceType}, $gateFolds, $Equipment );
 		$price{MakeReady} += $MakeReady{Price} + ( $pocketMakeReady * ( $gateFolds + 1 ) );
 	} # end if
 
 	$price{'Calliper Markup'} = $Equipment->specification( 'Calliper Price Adjustment', $$specs{txtCalliper} );
-	$price{Service} *= ( 1 + $price{'Calliper Markup'}/100);
+	$price{Service} *= ( 1 + $price{'Calliper Markup'}/100) if $price{'Calliper Markup'};
 
 	$price{'RunCost Discount'} = $Equipment->specification( 'RunCost Discount', $$specs{"txtQuantity$qty_index"} );
-	$price{Service} *= ( 1 - $price{'RunCost Discount'}/100);
+	$price{Service} *= ( 1 - $price{'RunCost Discount'}/100) if $price{'RunCost Discount'};
 
 	$price{'Imposition Discount'} = $Equipment->specification( 'Imposition Discount', $price{Imposition} );
-	$price{Service} *= ( 1 - $price{'Imposition Discount'}/100);
+	$price{Service} *= ( 1 - $price{'Imposition Discount'}/100) if $price{'Imposition Discount'};
 
 	if ( my $Spec = $Equipment->Specification('Make Ready Waste', $neededPockets ) ) {
 		if ( $$Spec{units} eq 'Sheets' ) {
@@ -695,7 +699,7 @@ sub get_price {
 		} # end if
 	} # end if
 
-	$price{Price} = $price{MakeReady} + $price{Service} + $price{Insert} + $price{GluePrice}{Total};
+	$price{Price} += $price{MakeReady} + $price{Service};
 #$openprint::log->debug($price{Imposition} . ' on ' .$Equipment->name() . ' max imp: ' . $Equipment->specification('Maximum Imposition') . 'Discount: ' . $Equipment->specification( 'Imposition Discount', $price{Imposition} ) . ' ' . $price{Price} ) if DEBUG;
 	return \%price;
 } # end sub get_price

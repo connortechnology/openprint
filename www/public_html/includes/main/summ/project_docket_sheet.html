@@ -150,7 +150,7 @@ $log->debug("No a press proof: $$variable{ProofType} ");
 			my $Paper = openprint::Paper::load_from_signature( $Project, $sig_specs, $qty_index );
 			my $Imposition = new openprint::Imposition();
 			$$Imposition{paper} = $Paper;
-			$Imposition->load( $sig_specs, $qty_index );
+			$Imposition->load( $sig_specs, $qty_index, $Project );
 
 			my $signatures = 1;
 			for ( my $i=0; $i < @sigs; $i += 1 ) {

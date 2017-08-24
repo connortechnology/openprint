@@ -188,7 +188,7 @@ sub calc_price {
 	$Total{Impressions} = $impressions;
 
 # this is the price for actual die cutting, priced by impressions.
-	my %ServicePrice = openprint::service::get_price_object( 'DieCutting'.$$specs{'rdbDieCutting-'.$form}, $impressions, $Equipment );
+	my %ServicePrice = openprint::service::get_price_object( 'DieCutting'.$$specs{'rdbDieCutting-'.$form}, $impressions, $Equipment ) if $$specs{'rdbDieCutting-'.$form};
 	if ( ! %ServicePrice ) {
 		%ServicePrice = openprint::service::get_price_object( 'DieCutting', $impressions, $Equipment );
 	} # end if
@@ -324,7 +324,7 @@ sub calc {
 
 			$$specs{'hdnBreakdown'.$qty_index} .= "Form $form: ".( $$sig_specs{txtServiceDescription} ? $$sig_specs{txtServiceDescription} : '' ) .'<br/>';
 			my $Imposition = new openprint::Imposition();
-			$Imposition->load( $sig_specs, $qty_index );
+			$Imposition->load( $sig_specs, $qty_index, $Project );
 			$$specs{'hdnBreakdown'.$qty_index} .= 'Printed: ' . $Imposition->to_string() . '<br/>';
 
 			my %results = signature_calc( $Project, $signature_service_index, $sig_specs, $specs, $qty_index, $Imposition );
@@ -370,7 +370,7 @@ sub calc {
 						"ImpOut-$form-$qty_index-$imp_index",
 						"ImpColumns-$form-$qty_index-$imp_index",
 						"ImpRows-$form-$qty_index-$imp_index"} =
-						$I->get('quantity','imposition','columns','rows');
+						@$I{'quantity','imposition','columns','rows'};
 					$imp_index += 1;
 					$$specs{alert} .= $$Price{alert};
 					$status = 'uncalculated' if $$Price{Status} eq 'uncalculated';

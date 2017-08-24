@@ -25,6 +25,7 @@
 			if ( $$variable{Order}->status() eq 'Re-Opened' ) {
 				$html .= button( 'Continue', { href=>'information.html?order_id='.$$variable{order_id} } );
 				$html .= button( 'Cancel',{ onclick=>q`f1.action='history_details.html';f1.btnFunction.value='Cancel';f1.submit();` } ) if $$variable{Order}->status() ne 'Cancelled';
+				$html .= button( 'Close', { href=>'/main/order/confirmation.html?btnFunction=Close&order_id='.$$variable{Order}->id(), text=>'Close' } );
 			} elsif ( $$variable{Order}->status() eq 'Incomplete' or ! $$variable{Order}->status() ) {
 				$html .= button( 'Continue', { href=>'information.html?order_id='.$$variable{order_id} } );
 				$html .= button( 'Cancel', { onclick=>q`f1.action='history_details.html';f1.btnFunction.value='Cancel';f1.submit();` } ) if $$variable{Order}->status() ne 'Cancelled';

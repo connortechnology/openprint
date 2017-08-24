@@ -1643,7 +1643,7 @@ $log->debug("Adjusting forms from $$Job{forms} to $param{forms}");
 				} # end if
 			} # end if
 		} # end if
-		if ( $param{runtime} ne $Job->runtime() ) {
+		if ( $param{runtime} ne $$Job{runtime} ) {
 			$param{runtime} =~ s/[^\d:]//g;
 			my ( $h, $m, $s );
 			if ( $param{runtime} =~ /(\d+):(\d+):(\d+)/ ) {
@@ -1674,7 +1674,7 @@ $log->debug("Adjusting forms from $$Job{forms} to $param{forms}");
 		$sql{locked} = $param{locked} if exists $param{locked} and $param{locked} != $$Job{locked};
 		$sql{comment} = $param{comment} if (exists $param{comment}) and ( $param{comment} ne $Job->comment() );
 		$sql{impressions} = $param{impressions} if ( exists $param{impressions} ) and ( $Job->impressions() != $param{impressions} );
-		$sql{speed} = $param{speed} if ( exists $param{speed} ) and ( $Job->speed() != $param{speed} );
+		$sql{speed} = $param{speed} if ( exists $param{speed} ) and ( $$Job{speed} != $param{speed} );
 		$sql{stock_verified} = $param{stock_verified} if exists $param{stock_verified} and $param{stock_verified} != $$Job{stock_verified};
 		$sql{stock} = $param{stock} if exists $param{stock} and $param{stock} ne $$Job{stock};
 		$sql{tentative} = $param{tentative} if ( exists $param{tentative} ) and ( $param{tentative} != $$Job{tentative} );
