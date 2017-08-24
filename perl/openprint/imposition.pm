@@ -1317,7 +1317,7 @@ sub cut {
 
 	if ( $$I{runstyle} eq 'Work & Turn' ) {
 		$i1->runstyle( 'SheetWork' );
-		$$i1{columns} = $$i1{columns} / 2;
+		$i1->columns( $$i1{columns} / 2 );
 		if ( $$I{dutch_columns} ) {
 			$i1->dutch_columns( $$i1{dutch_columns} / 2 );
 		} # end if
@@ -1341,7 +1341,7 @@ sub cut {
 		$i2->dutch_rows( 0 );
 		$i2->dutch_columns( 0 );
 		push @Results, $i1, $i2;
-	} elsif ( $I->layout_width() >= $I->layout_height() and $$I{columns} > 1 ) {
+	} elsif ( ( $I->layout_width() >= $I->layout_height() ) and ( $$I{columns} > 1 ) ) {
 		$i1->columns( int($$I{columns} / 2) );
 		if ( ! ( $$I{columns} % 2 ) ) {
 			$i1->quantity( $i1->quantity() * 2 );
@@ -1351,7 +1351,7 @@ sub cut {
 			$i2->columns( $$I{columns} - $$i1{columns} );
 			push @Results, $i1, $i2;
 		} # end if
-	} elsif ( $I->layout_width() < $I->layout_height() and $$I{rows} > 1 ) {
+	} elsif ( ( $I->layout_width() < $I->layout_height() ) and ( $$I{rows} > 1 ) ) {
 		$i1->rows( int($$I{rows} / 2) );
 		if ( ! ( $$I{rows} % 2 ) ) {
 			$i1->quantity( $i1->quantity() * 2 );
@@ -1361,12 +1361,12 @@ sub cut {
 			$i2->rows( $$I{rows} - $$i1{rows} );
 			push @Results, $i1, $i2;
 		} # end if
-	} elsif ( $$I{columns} >= $$I{rows} ) {
+	} elsif ( ( $$I{columns} >= $$I{rows} ) and ( $$I{columns} > 1 ) ) {
 		my $i2 = $I->copy();
 		$i1->columns( int($$I{columns} / 2) );
 		$i2->columns( $$I{columns} - $$i1{columns} );
 		push @Results, $i1, $i2;
-	} else {
+	} elsif ( $$I{rows} > 1 ) {
 		my $i2 = $I->copy();
 		$i1->rows( int($$I{rows} / 2) );
 		$i2->rows( $$I{rows} - $$i1{rows} );
