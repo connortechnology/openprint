@@ -77,7 +77,7 @@ sub specs {
 } # end sub specs
 
 sub ServiceType {
-	return new openprint::ServiceType( $_[0]{'servicetype_id'} );
+	return new openprint::ServiceType( $_[0]{servicetype_id} );
 } # end sub ServiceType
 
 sub service_type {
@@ -122,7 +122,7 @@ sub Equipment {
 					);
 			} # end if
 		} elsif ( ( $ServiceType->name() eq '' ) or $ServiceType->name() eq 'Signature' ) {
-			$$self{Equipment} = openprint::Equipment->find_one( strid=>$$specs{'UsePress'} );
+			$$self{Equipment} = openprint::Equipment->find_one( strid=>$$specs{UsePress} );
 		} # end if
 	} # end if $$self{Equipment}
 	return new openprint::Equipment() if ! $$self{Equipment};
@@ -145,7 +145,7 @@ sub runtime {
     } elsif ( $$specs{ServiceType} eq 'Folding' ) {
        return openprint::Estimating::Folding::runtime( $Project, $self, $Equipment, $qty_index, $impressions, $speed, $pertains_to );
     } elsif ( $$specs{ServiceType} eq 'Drilling' ) {
-        return openprint::Estimating::Drilling::runtime( $Project->id(), $$self{'service_id'}, $specs, $qty_index );
+        return openprint::Estimating::Drilling::runtime( $Project->id(), $$self{service_id}, $specs, $qty_index );
     } elsif ( sets::isin( $$specs{ServiceType}, 'SaddleStitching','LoopStitching' ) ) {
         return openprint::Estimating::Stitching::runtime( $Project, $self, $Equipment, $qty_index, $speed );
     } # end if
@@ -181,10 +181,10 @@ $openprint::log->warn("Deleting " . $self->service_type() . ' ' . $self->to_stri
 	sql::execute( undef, $openprint::dbh, q{DELETE FROM tbl_Service_Specifications WHERE lngProjectIndex=? AND lngServiceIndex=?}, @$self{'project_id','service_id'} );
 	sql::execute( undef, $openprint::dbh, q{DELETE FROM tbl_Project_Contents WHERE lngProjectIndex=? AND lngServiceIndex=?}, @$self{'project_id', 'service_id'} );
 $openprint::log->warn("Deleting Service from " . $Project->to_string() );
-	delete $$Project{'Services'};
-	delete $$Project{'signatures'};
-	delete $$Project{'Signature'};
-	delete $$Project{'service_types'};
+	delete $$Project{Services};
+	delete $$Project{signatures};
+	delete $$Project{Signature};
+	delete $$Project{service_types};
 
 	$Project->unlock();
 
@@ -200,13 +200,18 @@ sub ordered_price {
 sub overrides {
 	my ( $self, $qty_index ) = @_;
 	my $module = 'openprint::Estimating::'.$_[0]->ServiceType()->type();
-	$module = 'openprint::Estimating::Printing' if $module eq 'openprint::Estimating::Signature';
-	$module = 'openprint::Estimating::Printing' if $module eq 'openprint::Estimating::AdditionalSignature';
-	$module = 'openprint::Estimating::Printing' if $module eq 'openprint::Estimating::';
+  
+  if ( $module eq 'openprint::Estimating::Signature' ) {
+    $module = 'openprint::Estimating::Printing';
+  } elsif ( $module eq 'openprint::Estimating::AdditionalSignature' ) {
+    $module = 'openprint::Estimating::Printing';
+  } elsif ( $module eq 'openprint::Estimating::' ) {
+    $module = 'openprint::Estimating::Printing';
+  }
 	eval ( 'require '.$module.';' );
 	if ( my $function = $module->can( 'has_overrides' ) ) {
 		my $specs = $_[0]->specs();
-		my @o = $function->( $self->Project(), $$self{'service_id'}, $specs, $qty_index );
+		my @o = $function->( $self->Project(), $$self{service_id}, $specs, $qty_index );
 		return @o;
 	} else {
 		$openprint::log->warn("No has_overrides for " . $_[0]->ServiceType()->type() );
