@@ -138,12 +138,13 @@ while(1) {
 			$log->debug( $HI->ip() . ' was ' . ( $HI->online() ? 'online' : 'offline' ) . " " . $HI->to_string() );
 			my @ping = $p->ping($HI->ip());
 			
-			my $ping = $ping[0];
 #$openprint::log->debug("Ping1: @ping");
 			if ( ! @ping ) {
 				$log->warn("Problem with ping for " . $Host->hostname() . ' ip: ' . $HI->ip() );
 				next;
-			} elsif ( $ping and ( $ping[1] > 1 ) ) {
+			} 
+			my $ping = $ping[0];
+      if ( $ping and ( $ping[1] > 1 ) ) {
 				(new openprint::Log())->save({Object=>$Host, action=>'Long response time', ip_address=>$HI->ip(), host_id=>$$Host{id}, note=>sprintf('Response time %s seconds.<a href="/employee/it/host.html?host_id=%d">%s</a>', $ping[1], @$Host{'id','hostname'}) });
 			} # end if
 
