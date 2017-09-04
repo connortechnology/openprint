@@ -25,6 +25,9 @@
 			if ( $$variable{Order}->status() eq 'Re-Opened' ) {
 				$html .= button( 'Continue', { href=>'information.html?order_id='.$$variable{order_id} } );
 				$html .= button( 'Cancel',{ onclick=>q`f1.action='history_details.html';f1.btnFunction.value='Cancel';f1.submit();` } ) if $$variable{Order}->status() ne 'Cancelled';
+        if ( sets::isin( $session{user_type}, ['E','A'] ) {
+          $html .= button( 'Close', { onclick=>q`f1.btnFunction.value='Close';f1.submit();`, class=>'Close' } );
+        }
 			} elsif ( $$variable{Order}->status() eq 'Incomplete' or ! $$variable{Order}->status() ) {
 				$html .= button( 'Continue', { href=>'information.html?order_id='.$$variable{order_id} } );
 				$html .= button( 'Cancel', { onclick=>q`f1.action='history_details.html';f1.btnFunction.value='Cancel';f1.submit();` } ) if $$variable{Order}->status() ne 'Cancelled';
