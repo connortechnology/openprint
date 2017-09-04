@@ -22,6 +22,7 @@ use constant DEBUG => 0;
 
 require openprint::Equipment;
 require openprint::service;
+require openprint::Project;
 
 my %specifications = (
 	'Maximum Calliper'	=> {},
@@ -226,32 +227,14 @@ sub signature_calc {
 	foreach my $I ( @$Impositions ) {
 		$I->display('In Stitching:') if DEBUG and 0;
 		my $sig_specs = $$I{specs};
-	#next if $$sig_specs{txtSignatureType} eq 'Cover Pages';
-		if ( ! $sig_specs ) {
-			my ( $caller, undef, $line ) = caller;
-			$openprint::log->error("No specs from imposition $caller line $line @$Impositions");
-
-			$I->display('This');
-			foreach my $i ( @$Impositions ) {
-				$i->display('all');
-			}
-			next;
-		}
 		my $form = $$sig_specs{SignatureIndex};
 		push @printed_impositions, $$I{imposition};
 		if ( ! $$I{Folds} ) {
+			$openprint::log->error("Sitchign: No folds in imposition, generating");
 			if ( DEBUG ) {
-				$openprint::log->debug("Sitchign: No folds in imposition, generating") if DEBUG;
 				$I->display("No Folds");
 			}
-			if ( $folding_specs ) {
-				$$I{Folds} = [ openprint::Estimating::Folding::get_Folds( $folding_specs, $I, $qty_index ) ];
-				if ( DEBUG ) {
-					foreach my $F ( @{$$I{Folds}} ) {
-						$F->display( 'pq:'.$$F{page_quantity} );
-					} # end foreach F
-				} # end if
-			} # end if
+      $$I{Folds} = [ openprint::Estimating::Folding::get_Folds( $folding_specs, $I, $qty_index, $Project ) ] if $folding_specs;
 		} # end if
 
 		if ( ! ( $$I{Folds} and @{$$I{Folds}} ) ) {
