@@ -1,0 +1,11 @@
+[Unit]
+Description=Openprint TIF Merge
+
+[Service]
+#Type=forking
+ExecStart=/var/www/testing/perl/openprint/cron/TIFMerge.pl --config=/etc/openprint/TIFMerge.conf
+Restart=always
+RestartSec=0
+
+[Install]
+WantedBy=multi-user.target

@@ -68,6 +68,7 @@ sub save_contact {
 	$dbh->do( 'LOCK TABLE Users IN SHARE ROW EXCLUSIVE MODE' ) or $log->error( DBI->errstr );
 	my $User = openprint::User->find_one( company_id=>$$p{supplier_id}, email => openprint::User->transform('email', $$p{vendor_email} ) );
 	if ( ! $User ) {
+$log->debug("didn't find user, so create a new one");
 		$User = new openprint::User();
 		my ( $first, $last ) = $$p{vendor_contact} =~ /(\S+)\s*(\S*)/;
 		$User->save( {
@@ -83,6 +84,8 @@ sub save_contact {
 				ftp_active				=>	0,
 				web_active				=>	0,
 				} );
+} else {
+$log->debug("Found user: " . $User->to_string() );
 	} # end if
 	sql::end_transaction( $dbh, $ac );
 	return $$User{id};
@@ -272,6 +275,8 @@ sub view {
 	} elsif ( $param{btnFunction} eq 'Email Me' ) {
 		$variable{error} = $PO->send_to_me();
 		$variable{ExternalRedirect} = '/employee/purchase_order/view.html?po_id='.$PO->id();
+	} elsif ( $param{btnFunction} eq 'Debug' ) {
+		$variable{information} .= $PO->debug();
 	} elsif ( $param{btnFunction} eq 'Received' ) {
 	} elsif ( $param{btnFunction} eq 'Copy' ) {
 		my @notifications = $PO->notifications();
@@ -423,7 +428,11 @@ $log->debug("Creating PO $$PO{id} from label $variable{error}");
 			} # end if
 		} # end if
 		
-		$param{contact_id} = save_contact( \%param ) if $param{supplier_id} and ( ! $param{contact_id} ) and $param{contact_name};
+ if ( $param{supplier_id} and ( ! $param{contact_id} ) and $param{vendor_contact} ) {
+		$param{contact_id} = save_contact( \%param );
+} else {
+$log->debug("Not saving contact ");
+}
 		my %types = save_contents( $PO, \%param );
 
 		if ( $param{delivered_on_switch} eq 'DATE' ) {

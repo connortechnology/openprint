@@ -188,7 +188,7 @@ sub calc_price {
 	$Total{Impressions} = $impressions;
 
 # this is the price for actual die cutting, priced by impressions.
-	my %ServicePrice = openprint::service::get_price_object( 'DieCutting'.$$specs{'rdbDieCutting-'.$form}, $impressions, $Equipment );
+	my %ServicePrice = openprint::service::get_price_object( 'DieCutting'.$$specs{'rdbDieCutting-'.$form}, $impressions, $Equipment ) if $$specs{'rdbDieCutting-'.$form};
 	if ( ! %ServicePrice ) {
 		%ServicePrice = openprint::service::get_price_object( 'DieCutting', $impressions, $Equipment );
 	} # end if
@@ -324,7 +324,7 @@ sub calc {
 
 			$$specs{'hdnBreakdown'.$qty_index} .= "Form $form: ".( $$sig_specs{txtServiceDescription} ? $$sig_specs{txtServiceDescription} : '' ) .'<br/>';
 			my $Imposition = new openprint::Imposition();
-			$Imposition->load( $sig_specs, $qty_index );
+			$Imposition->load( $sig_specs, $qty_index, $Project );
 			$$specs{'hdnBreakdown'.$qty_index} .= 'Printed: ' . $Imposition->to_string() . '<br/>';
 
 			my %results = signature_calc( $Project, $signature_service_index, $sig_specs, $specs, $qty_index, $Imposition );
@@ -370,7 +370,7 @@ sub calc {
 						"ImpOut-$form-$qty_index-$imp_index",
 						"ImpColumns-$form-$qty_index-$imp_index",
 						"ImpRows-$form-$qty_index-$imp_index"} =
-						$I->get('quantity','imposition','columns','rows');
+						@$I{'quantity','imposition','columns','rows'};
 					$imp_index += 1;
 					$$specs{alert} .= $$Price{alert};
 					$status = 'uncalculated' if $$Price{Status} eq 'uncalculated';
@@ -512,9 +512,12 @@ sub signature_calc {
 					if ( 1 == @equipment ) {
 						$results{breakdown} .= "Doesn't fit. $_<br/>";
 					} # end if
-					if ( $$imposition{imposition} > 1 and ! $$specs{"OverrideImposition-$form-$qty_index"} ) {
-						splice ( @Impositions, $impo_index, 1, openprint::imposition::cut( $imposition ) );
-						push @Sets_of_Impositions,  \@Impositions;
+					if ( ( $$imposition{imposition} > 1 ) and ! $$specs{"OverrideImposition-$form-$qty_index"} ) {
+            my @cuts = openprint::imposition::cut( $imposition );
+            if ( @cuts ) {
+              splice ( @Impositions, $impo_index, 1, @cuts );
+              push @Sets_of_Impositions,  \@Impositions;
+            }
 					} # end if
 					$complete = 0;
 					last;
@@ -642,11 +645,12 @@ sub has_overrides {
         foreach my $s_s_id ( $Project->signatures() ) {
             my $sig_specs = openprint::service::get_specs_ref( $Project, $s_s_id );
             my $form = $$sig_specs{SignatureIndex};
-            push @v, map { $$specs{$_} ? $_ : () } (
+$openprint::log->debug("DieCutting " . $$specs{"OverrideImposition-$form-$qty_index"} );
+            push @v, map { ( $$specs{$_} and ( $$specs{$_} ne 'N' ) ) ? $_ : () } (
                     "chkOverrideEquipment-$form-$qty_index",
-                    "chkOverrideImposition-$form-$qty_index",
+                    "OverrideImposition-$form-$qty_index",
                     "OverrideMakeReadyPrice-$form-$qty_index",
-                    "OverridePrice-$form-$qty_index",
+                    "OverridePrice$qty_index",
                     "OverrideDiePrice-$form-$qty_index",
                     "OverrideServicePrice-$form-$qty_index",
                     );

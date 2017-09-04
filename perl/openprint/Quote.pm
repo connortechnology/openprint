@@ -483,6 +483,9 @@ sub can_view {
 		if ( sets::isin( $$Company{salesrep_id}, [ $$User{id}, $User->assistant_ids(), $User->csr_ids() ] ) ) {
 			return 1;
 		} # end if
+		if ( openprint::usergroup::is_user_in( ['Accounting','SalesAdmin','Estimating'], $$User{id} ) ) {
+			return 1;
+		}
 	} # end if
 	return 0;
 } # end sub can_view

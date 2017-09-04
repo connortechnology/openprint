@@ -293,7 +293,7 @@ sub calc {
 
 			$$specs{'hdnBreakdown'.$qty_index} .= "Form $form: $$sig_specs{txtServiceDescription}<br/>";
 			my $Imposition = new openprint::Imposition();
-			$Imposition->load( $sig_specs, $qty_index );
+			$Imposition->load( $sig_specs, $qty_index, $Project );
 			$$specs{'hdnBreakdown'.$qty_index} .= 'Printed: ' . $Imposition->to_string() . '<br/>';
 
 			my %results = signature_calc( $Project, $signature_service_index, $sig_specs, $specs, $qty_index, $Imposition );

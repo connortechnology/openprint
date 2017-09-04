@@ -1389,6 +1389,7 @@ sub load_from_signature {
 			$Paper->mweight( $$specs{txtCustomMWeight} ) if $$specs{txtCustomMWeight};
 		#} # end if
 		$Paper->supplied( $$specs{rdbSuppliedStock} eq 'Y' ? 1 : 0 );
+		$$Paper{Supplied} = $Paper;
 	} else {
 
 		if ( $qty_index and $$specs{'paper_id'.$qty_index} ) {
@@ -1398,6 +1399,8 @@ sub load_from_signature {
 			} else {
 				$$Paper{Supplied} = $Paper->clone();
 			} # end if
+		} else {
+			$openprint::log->debug("load_from_signature called without qty_index:$qty_index paper_id:". $$specs{'paper_id'.$qty_index});
 		}
 		if ( ! ( $$specs{ddmStockBrand} and $$specs{ddmStockFinish} and $$specs{ddmStockColour} and $$specs{ddmStockWeight} ) ) {
 			return new openprint::Paper();

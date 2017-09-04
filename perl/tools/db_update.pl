@@ -4750,10 +4750,7 @@ if ( ! sets::isin( 'par', \@tables ) ) {
     $dbh->do( misc::load_file( $log, '../openprint/sql/PAR.sql' ) );
     die $dbh->errstr() if $dbh->errstr();
 } # end if
-if ( ! sets::isin( 'car', \@tables ) ) {
-    $dbh->do( misc::load_file( $log, '../openprint/sql/CAR.sql' ) );
-    die $dbh->errstr() if $dbh->errstr();
-} # end if
+
 if ( ! sets::isin( 'event_categories', \@tables ) ) {
     $dbh->do( misc::load_file( $log, '../openprint/sql/Event_Categories.sql' ) );
     die $dbh->errstr() if $dbh->errstr();
@@ -5594,13 +5591,26 @@ if ( ! sets::isin('object_specifications', \@tables ) ) {
 	$dbh->do( misc::load_file( $log, q{../openprint/sql/Object_Specifications.sql}) );
 	die if $dbh->errstr();
 } # end if
-	if ( sets::isin('product_specifications', \@tables ) ) {
-		if ( ! sql::execute( undef, undef, "SELECT id FROM object_types where name='openprint::Product'" ) ) {
-			$dbh->do("INSERT INTO object_types (name,human) values ('openprint::Product', 'Product');") or die $dbh->errstr();
-		}
-		$dbh->do(q`insert into object_specifications ( object_type_id, object_id, name, value ) SELECT (SELECT id from object_types where name='openprint::Product'), product_id, name, value from product_specifications;`) or die $dbh->errstr();
-		$dbh->do('DROP TABLE product_specifications');
+
+if ( sets::isin('product_specifications', \@tables ) ) {
+	if ( ! sql::execute( undef, undef, "SELECT id FROM object_types where name='openprint::Product'" ) ) {
+		$dbh->do("INSERT INTO object_types (name,human) values ('openprint::Product', 'Product');") or die $dbh->errstr();
 	}
+	$dbh->do(q`insert into object_specifications ( object_type_id, object_id, name, value ) SELECT (SELECT id from object_types where name='openprint::Product'), product_id, name, value from product_specifications;`) or die $dbh->errstr();
+	$dbh->do('DROP TABLE product_specifications');
+}
+
+if ( ! sets::isin('operator_roles', \@tables ) ) {
+	$log->debug("Adding Operator Roles");
+	$dbh->do( misc::load_file( $log, q{../openprint/sql/Operator_Roles.sql}) );
+	die if $dbh->errstr();
+} # end if
+if ( ! sets::isin('project_service_operators', \@tables ) ) {
+	$log->debug("Adding Project Service Operators");
+	$dbh->do( misc::load_file( $log, q{../openprint/sql/Project_Service_Operators.sql}) );
+	die if $dbh->errstr();
+} # end if
+
 print "done.\n";
 $dbh->disconnect();
 1;

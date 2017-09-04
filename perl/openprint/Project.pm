@@ -695,7 +695,7 @@ sub quantity3 {
 
 my @dont_copy = (
 		'ServiceIndex','ProjectIndex','TemplateType',
-		'txtEmployeeComments','rdbComplete','rdbApproved','ddmApprovalDateMonth','ddmApprovalDateDay','ddmApprovalDateYear',
+		'txtEmployeeComments','rdbComplete','rdbApproved','rdbClientApproved', 'ddmApprovalDateMonth','ddmApprovalDateDay','ddmApprovalDateYear',
 		'ddmCompletionDate.*','txtRunHours','txtDowntimeHours',
 		'ddmPressCompletionDate.*', 'UsePress.*', 'rdbPressComplete.*',
 		'UsedPaper.*',
@@ -1455,6 +1455,9 @@ sub last_scheduled_seconds {
 sub operator_id {
 	my ( $self ) = @_;
 
+	my ( $caller, undef, $line ) = caller;
+	$openprint::log->debug("deprecated call to Project::operator_id from $caller:$line");
+
 	if ( ! $$self{operator_id} ) {
 		my $services = $self->services();
 		@$self{operator_id} = sql::execute( $log, $dbh, q{SELECT operator_id FROM tbl_Project_Contents WHERE lngProjectIndex=? AND lngServiceIndex=?}, $$self{id}, ( $$services{Proofs} ? $$services{Proofs}[0] : $$services{FilmStripping}[0] ) );
@@ -1464,6 +1467,9 @@ sub operator_id {
 
 sub Operator {
 	my ( $self ) = @_;
+
+	my ( $caller, undef, $line ) = caller;
+	$openprint::log->debug("deprecated call to Project::operator_id from $caller:$line");
 
 	if ( ! $$self{Operator} ) {
 		$$self{Operator} = new openprint::User( $self->operator_id() );
