@@ -311,23 +311,18 @@ sub _order_history_results {
 		my $printed_on_end_seconds = Date::Parse::str2time( $printed_on_end ) if $printed_on_end;
 
 		if ( $printed_on_start or $printed_on_end ) {
-$log->debug("Filtering from $printed_on_start to $printed_on_end");
 			my $keep = 0;
 			foreach my $Project ( $Order->Projects() ) {
 				my $printed_on = $Project->printed_on();
 				my $printed_on_seconds = Date::Parse::str2time( $printed_on );
-$log->debug("Printed on $printed_on");
 				next if ! $printed_on;
 				if (
 						( (!$printed_on_start_seconds) or ( $printed_on_seconds > $printed_on_start_seconds ) )
 						and
 						( (!$printed_on_end_seconds) or ( $printed_on_seconds < $printed_on_end_seconds ) )
 					 ) {
-$log->debug("Keeping");
 					$keep = 1;
 					last;
-} else {
-$log->debug("NOt keeping: $printed_on_start > $printed_on and $printed_on_end ");
 				}
 			}
 			next if ! $keep;
