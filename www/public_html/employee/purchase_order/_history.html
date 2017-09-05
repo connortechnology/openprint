@@ -63,13 +63,13 @@
 			}
 		} # end if POs
 		
+		my %types = map { $_, $_ } split(',',$session{$uri.'?types'} );
 
 		foreach my $PO ( @POs ) {
 
 			if ( ( ! $PO->authorized() ) and ( $PO->created_by() == $session{user_id} ) and ( $PO->can_authorize() ) ) {
 				$PO->save({authorized=>1,authorized_on=>'NOW()',authorized_by=>$session{user_id}});
 			} # end if
-
 
 			if ( $session{$uri.'?authorized'} eq 'Y' and $PO->authorized() ne '1' ) {
 				$log->debug("Next want authd but isn't");
@@ -121,12 +121,11 @@
 				next if $next;
 			} # end if
 			if ( $session{$uri.'?types'} ) {
-				$log->debug("looking for " . $session{$uri.'?types'} );
 				my @types = sets::union( map{ $_->type_id() } $PO->Contents() );
 				if ( ! @types ) {
-					next if ! sets::isin( ' ', [ split(',',$session{$uri.'?types'} ) ] );
+					next if ! $types{' '};
 				} else {
-					next if ! sets::intersection( @types, split(',', $session{$uri.'?types'} ) );
+					next if ! sets::intersection( @types, keys %types );
 				} # end if
 			} # end if
 			if ( $session{$uri.'?department_id'} ) {

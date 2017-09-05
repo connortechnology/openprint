@@ -617,7 +617,7 @@ sub calc {
             } # end if
           } # end foreach keys
           my $Imposition = new openprint::Imposition();
-          $Imposition->load( $sig_specs, 1 );
+          $Imposition->load( $sig_specs, 1, $Project );
 
           if ( ( ! sets::isin( 1, $proof_indexes{$signature_index} ) ) and $openprint::config{'Add Default Layout Proof'} eq 'Y' ) {
             push @{$proof_indexes{$signature_index}}, 1;

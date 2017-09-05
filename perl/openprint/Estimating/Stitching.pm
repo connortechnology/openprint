@@ -892,6 +892,13 @@ sub get_price {
 		$unitsPerHour = $Equipment->specification( $$ServiceType{name}.'Units Per Hour', $maxPockets ) if ! $unitsPerHour;
 		$unitsPerHour = $Equipment->specification( 'Units Per Hour '.$price{Imposition}.' out', $maxPockets ) if ! $unitsPerHour;
 		$unitsPerHour = $Equipment->specification( 'Units Per Hour', $maxPockets ) if ! $unitsPerHour;
+	if ( ( defined $$specs{txtInsertQuantity} ) and ( $$specs{txtInsertQuantity} > 0 ) ) {
+		my $insert_slowdown = 0;
+		if ( $insert_slowdown = $Equipment->specification('Insert Slowdown') ) {
+			$unitsPerHour -= $insert_slowdown;
+		}
+	}
+		
 		my $runtime = $unitsPerHour ? $qty/$unitsPerHour : 0; # in hours
 
 		if ( $servicePrice ) {
@@ -973,6 +980,12 @@ sub get_price {
 		$unitsPerHour = $Equipment->specification( $$ServiceType{name}.'Units Per Hour', $neededPockets ) if ! $unitsPerHour;
 		$unitsPerHour = $Equipment->specification( 'Units Per Hour ' . $price{Imposition} . ' out', $neededPockets ) if ! $unitsPerHour;
 		$unitsPerHour = $Equipment->specification( 'Units Per Hour', $neededPockets ) if ! $unitsPerHour;
+	if ( ( defined $$specs{txtInsertQuantity} ) and ( $$specs{txtInsertQuantity} > 0 ) ) {
+		my $insert_slowdown = 0;
+		if ( $insert_slowdown = $Equipment->specification('Insert Slowdown') ) {
+			$unitsPerHour -= $insert_slowdown;
+		}
+	}
 		$pass{Runspeed} = $unitsPerHour;
 		my $runtime = $unitsPerHour ? $qty/$unitsPerHour : 0; # in horus
 		$pass{RunTime} = $runtime;

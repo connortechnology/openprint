@@ -18,7 +18,6 @@ require openprint::service;
 require openprint::Currency;
 
 require openprint::Estimating::Skids;
-require openprint::Estimating::Printing;
 require openprint::Estimating::Shipping;
 require openprint::Estimating::Stitching;
 require openprint::Estimating::Padding;
@@ -99,7 +98,9 @@ sub view_services {
 				} else {
 					openprint::service::save_service( $r, $log, $dbh, $Project->id(), $service_index );
 				} # end if service_type_id
-				$Service->save({ status=>($param{Status} ? $param{Status} : 'calculated')}) if $Service->status() and $Service->status() ne 'Completed';
+				my $new_status = $param{Status} ? $param{Status} : 'calculated';
+
+				$Service->save({ status=>$new_status }) if ( $Service->status() ne $new_status ) and ( $Service->status() ne 'Completed' );
 
 				if ( $ServiceType->id() ) {
 					$Project->add_to_log( @session{'company_id','user_id'}, $ServiceType->name().' service saved.' );
@@ -629,6 +630,7 @@ sub get_finished_weight {
 	my ( $project_index ) = @_; 
 	my $project_weight;
 
+require openprint::Estimating::Printing;
 	my $Project = new openprint::Project( $project_index );
 	# We do a weird thing with qty_index here, becasue all quantities should have the same weight, but may be calculated diferent ways, so we run through them until we get a valid weight.
 

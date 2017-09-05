@@ -261,6 +261,8 @@ sub _order_history_results {
 	ssi::save_params($uri,
 		( map { 'created_on_start_'.$_ } ( 'year','month','day' ) ),
 		( map { 'created_on_end_'.$_ } ( 'year','month','day' ) ),
+		( map { 'printed_on_start_'.$_ } ( 'year','month','day' ) ),
+		( map { 'printed_on_end_'.$_ } ( 'year','month','day' ) ),
 		'status', 'company_id', 'CSR', 'reprint', 'currency_id', 'total_start', 'total_end'
 	);
 	if ( %param ) {
@@ -299,10 +301,39 @@ sub _order_history_results {
 			next if ( $param{reprint} eq 'Y' ) and ! $reprint;
 			next if ( $param{reprint} eq 'N' ) and $reprint;
 		} # end if reprint
+
+		my @printed_on_start = map{ @session{$uri.'?printed_on_start_'.$_} } ( 'year','month','day' );
+		my $printed_on_start = join('-', @printed_on_start ) if Date::Calc::check_date( @printed_on_start );
+		my $printed_on_start_seconds = Date::Parse::str2time( $printed_on_start ) if $printed_on_start;
+
+		my @printed_on_end = map{ @session{$uri.'?printed_on_end_'.$_} } ( 'year','month','day' );
+		my $printed_on_end = join('-', @printed_on_end ) if Date::Calc::check_date( @printed_on_end );
+		my $printed_on_end_seconds = Date::Parse::str2time( $printed_on_end ) if $printed_on_end;
+
+		if ( $printed_on_start or $printed_on_end ) {
+			my $keep = 0;
+			foreach my $Project ( $Order->Projects() ) {
+				my $printed_on = $Project->printed_on();
+				my $printed_on_seconds = Date::Parse::str2time( $printed_on );
+				next if ! $printed_on;
+				if (
+						( (!$printed_on_start_seconds) or ( $printed_on_seconds > $printed_on_start_seconds ) )
+						and
+						( (!$printed_on_end_seconds) or ( $printed_on_seconds < $printed_on_end_seconds ) )
+					 ) {
+					$keep = 1;
+					last;
+				}
+			}
+			next if ! $keep;
+		}
+		
 		if ( $param{press_id} ) {
 			my $Press = new openprint::Equipment( $param{press_id} );
 			my $on_press = 0;
 			foreach my $Project ( $Order->Projects() ) {
+							
+				
 				foreach my $sig_id ( $Project->signatures() ) {
 					my $sig_specs = openprint::service::get_specs_ref( $Project, $sig_id );
 					if ( ! $$sig_specs{UsePress} ) {
@@ -485,7 +516,7 @@ $log->debug("done saving params");
 	} else {
 $log->debug("Loading projects");
 		foreach my $Project ( openprint::Project->find(
-					( @company_ids ? ( 'company_id' => \@company_ids ) : () ),
+					( @company_ids ? ( company_id => \@company_ids ) : () ),
 					ssi::date_filter( '/employee/reports/stock_usage.html?ordered_on_end', 'created_on <=' ),
 					ssi::date_filter( '/employee/reports/stock_usage.html?ordered_on_start', 'created_on >=' ),
 					) ) {
@@ -497,7 +528,8 @@ $log->debug("Loading projects");
 
 	my %totals;
 	my %Stocks;
-$openprint::log->debug("orders: " . @Orders );
+	$openprint::log->debug("orders: " . @Orders );
+	my %types = map { $_, $_ } split( ',', $session{'/employee/reports/stock_usage.html?type'} );
 
 	foreach my $Order ( @Orders, ( $session{'/employee/reports/stock_usage.html?projects_orders'} eq 'Projects' ? new openprint::Order() : () ) ) {
 
@@ -507,7 +539,8 @@ $openprint::log->debug("orders: " . @Orders );
 			my $qty_index = $Project->ordered_quantity_index();
 			if ( ! $qty_index ) {
 				if ( $session{'/employee/reports/stock_usage.html?projects_orders'} eq 'Projects' ) {
-					$qty_index = $Project->quantity_indexes();
+					my @qtys = $Project->quantity_indexes();
+					$qty_index = $qtys[0];
 				} else {
 					$log->error("No Ordered QTY Index in $$Order{id} $$Project{id}!");
 				} # end
@@ -527,7 +560,7 @@ $openprint::log->debug("orders: " . @Orders );
 					} # end if
 				} # end if
 
-				if ( $session{'/employee/reports/stock_usage.html?type'} and ! sets::isin( $$sig_specs{'StockType'.$qty_index}, split( ',', $session{'/employee/reports/stock_usage.html?type'} ) ) ) {
+				if ( %types and ! $types{ $$sig_specs{'StockType'.$qty_index} } ) {
 #$log->debug("Wrong type ". $$sig_specs{'StockType'.$qty_index} );
 					next;
 				}
@@ -699,9 +732,11 @@ sub _production_performance {
 	$variable{columns} = \%columns;
 
 	my %parameters; 
-	if ( ( $session{user_type} ne 'A' ) and ! openprint::usergroup::is_user_in( ['Sales Admin','Reporting'], $session{user_id} ) ) {
-		$parameters{salesrep_id} = $session{user_id};
-		$parameters{or} = "id=(SELECT company_id FROM Users WHERE users.id=$session{user_id})";
+	if ( ( $session{user_type} ne 'A' ) and ! openprint::usergroup::is_user_in( ['Sales Admin','Reporting','Accounting'], $session{user_id} ) ) {
+		$parameters{or} = {
+			id =>$$openprint::User{company_id},
+			salesrep_id	=>	$session{user_id},
+			};
 	} elsif ( $param{csr_id} ) {
 		$parameters{salesrep_id} = $param{csr_id};
 	} # end if

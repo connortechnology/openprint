@@ -23,17 +23,17 @@ function check_input( form, signature_index ) {
 <a href="/employee/project/view.html?ProjectIndex=<?ProjectIndex?>">Return to Project <?ProjectIndex?></a><br/>
 <br/>
 <div class="error"><?ErrorMessage?></div>
-<div style="float: left; width: 49%;"/>
+<div class="leftColumn">
 	<form method="post" name="f1" action="/employee/project/view.html?ProjectIndex=<?ProjectIndex?>&ServiceIndex=<?ServiceIndex?>">
 		<fieldset><legend>Production Feedback</legend>
 			<?include('/includes/employee/feedback/employee.html')?>
 			<?include('/includes/employee/feedback/comments.html')?>
 			<p>
 				<label>Proofs Ready</label>
-				<input type="radio" id="rdbCompleteY" name="rdbComplete" value="Yes" <? echo ( $$variable{rdbComplete} eq 'Yes' ? 'checked="checked"' : '' ) ?> onclick="$('ClientApproved').show();$('QAApproved').show();" />
-				<label class="radio" for="rdbCompleteY">Yes</label>
-				<input type="radio" id="rdbCompleteN" name="rdbComplete" value="No" <? echo ( $$variable{rdbComplete} ne 'Yes' ? 'checked="checked"' : '' ) ?> onclick="$('ClientApproved').hide();$('QAApproved').hide();" />
-				<label class="radio" for="rdbCompleteN">No</label>
+					<? echo ( radio( 'rdbComplete', ['Yes','Yes','No','No'], $$variable{rdbComplete}, {
+							default=>'No',
+							onclick=>q`if(this.value=='Yes'){$('ClientApproved').show();$('QAApproved').show();}else{$('ClientApproved').hide();$('QAApproved').hide();};`,
+							} ); ) ?>
 			</p>
 			<p>
 				<label>Ready Date</label>
@@ -58,20 +58,14 @@ function check_input( form, signature_index ) {
 			</p>
 			<p id="ClientApproved" <? echo ( $$variable{rdbComplete} eq 'Yes' ? '' : 'style="display:none;"' ) ?>>
 				<label>Client Approved?</label>
-					<input type="radio" id="rdbClientApprovedY" name="rdbClientApproved" value="Y" <? echo ( ssi::checked( $$variable{rdbClientApproved} eq 'Y' ); ) ?> />
-					<label class="radio" for="rdbClientApprovedY">Yes</label>
-					<input type="radio" id="rdbClientApprovedN" name="rdbClientApproved" value="N" <? echo ( ssi::checked( $$variable{rdbClientApproved} ne 'Y' ); ) ?> />
-					<label class="radio" for="rdbClientApprovedN">No</label>
+					<?echo(radio( 'rdbClientApproved', ['Y','Yes','N','No'], $$variable{rdbClientApproved}, { default=>'N' } ); ) ?>
 				<? if ( $$variable{rdbClientApproved} eq 'Y' ) ?>
 					at <? echo ( $$variable{ClientApprovalDate} ) ?>
 				<? endif ( $$variable{rdbClientApproved} eq 'Y' ) ?>
 			</p>
 			<p id="QAApproved" <? echo ( $$variable{rdbComplete} eq 'Yes' ? '' : 'style="display:none;"' ) ?>>
 				<label>QA Approved?</label>
-					<input type="radio" id="rdbApprovedY" name="rdbApproved" value="Y" onclick="$('DueDate').show();" <? echo ( ssi::checked( $$variable{rdbApproved} eq 'Y' ); ) ?> />
-					<label class="radio" for="rdbApprovedY">Yes</label>
-					<input type="radio" id="rdbApprovedN" name="rdbApproved" value="N" onclick="$('DueDate').hide();" <? echo ( ssi::checked( $$variable{rdbApproved} ne 'Y' ); ) ?> />
-					<label class="radio" for="rdbApprovedN">No</label>
+					<?echo(radio( 'rdbApproved', ['Y','Yes','N','No'], $$variable{rdbApproved}, { default=>'N', onclick=>q`if(this.value=='Y'){$('DueDate').show();}else{$('DueDate').hide();};` } ); ) ?>
 				<? if ( $$variable{rdbApproved} eq 'Y' ) ?>
 					at <? echo ( $$variable{ApprovalDate} ) ?>
 				<? endif ( $$variable{rdbApproved} eq 'Y' ) ?>
@@ -80,7 +74,7 @@ function check_input( form, signature_index ) {
 <? if ( $session{user_type} eq 'A' or openprint::usergroup::is_user_in( ['Scheduling'], $session{user_id} ) ) ?>
 				<label>Due Date</label>
 				<span class="DateSelector">
-<? echo ( ssi::date_select( 'duedate', [ @$variable{'duedate_year','duedate_month','duedate_day'} ] ) ) ?>
+<? echo ( date_select( 'duedate', [ @$variable{'duedate_year','duedate_month','duedate_day'} ] ) ) ?>
 				</span>
 <? endif ( $session{user_type} eq 'A' or openprint::usergroup::is_user_in( ['Scheduling'], $session{user_id} ) ) ?>
 			</p>
@@ -98,12 +92,10 @@ function check_input( form, signature_index ) {
 			) ?>
 			</p>
 		</fieldset>
-		<input type="hidden" name="OrderId" value="<?OrderID?>"/>
-		<input type="hidden" name="Docket" value="<?Docket?>"/>
 		<input type="hidden" name="btnFunction" value="Save"/>
 	</form>
 </div><!-- Column -->
-<div id="Signatures" style="float: right; width: 49%;"/>
+<div id="Signatures" class="leftColumn"/>
 <?include('/employee/proj/prep/_proofs_signatures.html')?>
 </div><!-- Column -->
 <br class="spacer"/>

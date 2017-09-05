@@ -10,7 +10,8 @@ The following had one or more signatures that ran on <? echo ( join(': ', new op
 		<th class="invoice_id">Invoice #</th>
 		<th class="Company">Company</th>
 		<th class="Project">Project References</th>
-		<th class="DateTime">Date</th>
+		<th class="DateTime">Ordered On</th>
+		<th class="DateTime">Printed On</th>
 		<th class="status">Status</th>
 		<th class="Price">Total</th>
 	</tr>
@@ -33,12 +34,16 @@ The following had one or more signatures that ran on <? echo ( join(': ', new op
 					<td class="Company"><a href="/employee/order/view.html?order_id=%2$d">%5$s</a></td>
 					<td class="Project"><a href="/employee/order/view.html?order_id=%2$d">%6$s</a></td>
 					<td class="DateTime"><a href="/employee/order/view.html?order_id=%2$d">%7$s</a></td>
-					<td class="status"><a href="/employee/order/view.html?order_id=%2$d">%8$s</a></td>
-					<td class="Price"><a href="/employee/order/view.html?order_id=%2$d">%9$s</a></td>
+					<td class="DateTime"><a href="/employee/order/view.html?order_id=%2$d">%8$s</a></td>
+					<td class="status"><a href="/employee/order/view.html?order_id=%2$d">%9$s</a></td>
+					<td class="Price"><a href="/employee/order/view.html?order_id=%2$d">%10$s</a></td>
 				</tr>
 				`, $rowclass, $Order->id(), $Order->docket(), join('<br/>', map { $_->Invoice()->num() } $Order->Invoices() ),
-				htmlize($Order->company_name() ), join('<br/>', map { $_->reference() } $Order->Projects() ), 
-				format_datetime( $Order->created_on() ), $Order->status(), openprint::Currency::format( $price ),
+				htmlize($Order->company_name()),
+				join( '<br/>', map { $_->reference() } $Order->Projects() ), 
+				format_datetime( $Order->created_on() ),
+				join( '<br/>', map { format_datetime( $_->printed_on() ) } $Order->Projects() ),
+				$Order->status(), openprint::Currency::format( $price ),
 			);
 			$rowclass = $rowclass ? '' : ' class="colRow"';
 			$total += $price;
@@ -49,14 +54,14 @@ The following had one or more signatures that ran on <? echo ( join(': ', new op
 			<td></td>
 			<td align="right">Average Value</td>
 			<td>%s</td>
-			<td colspan="2" align="right">Total</td>
+			<td colspan="3" align="right">Total</td>
 			<td class="Price">%s</td>
 		</tr>`, scalar @{$$variable{Orders}}, openprint::Currency::format( $total/scalar @{$$variable{Orders}} ), openprint::Currency::format( $total ) );
 		return $html;
 	) ?>
 </table>
 <span class="Currency">All prices shown are in <? echo ( 
-$session{'/employee/reports/order_history.html?currency_id'} ? new openprint::Currency( $session{'/employee/reports/order_history.html?currency_id'} )->name() : openprint::Currency::get_current()->name() ) ?>.</span>
+$session{$r->uri().'?currency_id'} ? new openprint::Currency( $session{$r->uri().'?currency_id'} )->name() : openprint::Currency::get_current()->name() ) ?>.</span>
 <? else ( @{$$variable{Orders}} ) ?>
 There were no orders matching your criteria.  Please try again.
 <? endif ( @{$$variable{Orders}} ) ?>

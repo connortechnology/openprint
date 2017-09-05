@@ -1028,28 +1028,54 @@ sub companies {
 	if ( $param{btnFunction} ) {
 		if ( $param{btnFunction} eq 'Download' ) {
 			my $uri = $r->uri();
-    my %filters = (
-    order =>  'lower(name)',
-    ( $session{$uri.'?salesrep_id'} ? ( salesrep_id => $session{$uri.'?salesrep_id'} ) : () ),
-    ( $session{$uri.'?company_name'} ? ( 'name ilike' => '%'.$session{$uri.'?company_name'}.'%' ) : () ),
-    ( $session{$uri.'?deleted'} ne '' ? ( deleted => $session{$uri.'?deleted'} ) : () ),
-    date_filter( $uri.'?created_on_end', 'created_on <=' ),
-    date_filter( $uri.'?created_on_start', 'created_on >=' ),
-		);
-		if ( $session{$uri.'?salesrep_id_exclude'} ) {
-			my @csr_ids = map { $_->id() } openprint::User->find( company_id=>$config{owner_id}, 'usergroup any'=>'Sales' );
-			@csr_ids = sets::exclude( [ split(',', $session{$uri.'?salesrep_id'} ) ], \@csr_ids ) if $session{$uri.'?salesrep_id'};
-			$filters{'salesrep_id not in'} = \@csr_ids;
-		} # end if
 
-		my @Companies = openprint::Company->find( %filters );
-			
+			my %filters = (
+					order =>  'lower(name)',
+					( $session{$uri.'?salesrep_id'} ? ( salesrep_id => $session{$uri.'?salesrep_id'} ) : () ),
+					( $session{$uri.'?company_name'} ? ( 'name ilike' => '%'.$session{$uri.'?company_name'}.'%' ) : () ),
+					( $session{$uri.'?deleted'} ne '' ? ( deleted => $session{$uri.'?deleted'} ) : () ),
+					( $session{$uri.'?country'} ne '' ? ( country => $session{$uri.'?country'} ) : () ),
+					( $session{$uri.'?marketing_category_id'} ? ( 'marketing_category_id any'=> $session{$uri.'?marketing_category_id'} ) : () ),
+
+					ssi::date_filter( $uri.'?created_on_end', 'created_on <=' ),
+					ssi::date_filter( $uri.'?created_on_start', 'created_on >=' ),
+					);
+  if ( $session{$uri.'?country_id'} ) {
+    my $Country = new openprint::Location( $session{$uri.'?country_id'} );
+    $filters{country} = $Country->short();
+  }
+
+			if ( $session{$uri.'?salesrep_id_exclude'} ) {
+				my @csr_ids = map { $_->id() } openprint::User->find( company_id=>$config{owner_id}, 'usergroup any'=>'Sales' );
+				@csr_ids = sets::exclude( [ split(',', $session{$uri.'?salesrep_id'} ) ], \@csr_ids ) if $session{$uri.'?salesrep_id'};
+				$filters{'salesrep_id not in'} = \@csr_ids;
+			} # end if
+
+			my @Companies = openprint::Company->find( %filters );
+			my @header = ( 'Company Name','Contact Name', 'Phone #', 'Email','City','State','Registration Date','Account Rep','# of Projects','Last Project', '# of Orders','Last Order');
+			my @data;
+			foreach my $Company ( @Companies ) {
+				my $User = openprint::User->find_one( company_id=>$$Company{id}, order=>'id' );
+				my $CSR = $Company->CSR();
+				my @Projects = openprint::Project->find( company_id=>$$Company{id}, order=>'id DESC' );
+				my @Orders = openprint::Order->find( company_id=>$$Company{id}, order=>'id DESC' );
+
+				push @data, $Company->name(), ($User ? $User->name() : ''), $Company->phone(), ($User ? $User->email() : '' ), $Company->city(), $Company->state(),
+						 ssi::format_date( $Company->created_on() ),
+						 $CSR->name(), scalar @Projects,
+						 (@Projects ? ssi::format_date( $Projects[0]->created_on() ) : ''),
+						 scalar @Orders,
+						 (@Orders ? ssi::format_date( $Orders[0]->created_on() ) : '' ),
+			} # end foreach Company
+			misc::export_csv( $r, $log, \%variable, 'customers.csv', \@header, \@data );
+
+
 		}
 	}
 } # end sub companies
 sub _companies {
 	ssi::save_params( '/administrator/managerial/companies.html', ( 
-				'salesrep_id', 'marketing_category_id', 'company_name',
+				'salesrep_id', 'marketing_category_id', 'company_name', 'country',
 				( map { 'created_on_start_' . $_ } ( 'year','month','day' ) ),
 				) );
 	$session{$r->uri().'?salesrep_id_exclude'} = $param{salesrep_id_exclude};
@@ -1086,6 +1112,7 @@ sub users {
 sub _users {
 	ssi::save_params( '/administrator/managerial/users.html', ( 
 				'salesrep_id', 'marketing_category_id', 'company_id','usergroup_id','deleted','email','type','administrator',
+				'notification_type_id',
 				( map { 'created_on_start_' . $_ } ( 'year','month','day' ) ),
 				( map { 'created_on_end_' . $_ } ( 'year','month','day' ) ),
 				) );

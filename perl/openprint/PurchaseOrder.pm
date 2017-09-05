@@ -177,6 +177,44 @@ sub Contents {
 	return ();
 } # end sub Contents
 
+sub debug {
+	return $_[0]->debug_Approvers();
+
+}
+sub debug_Approvers {
+	my $self = shift;
+	my @notification_types = map { 'PO ' . (new openprint::PurchaseOrder_ContentType( $_ )->name()) . ' Approvals' } sets::union( map { $_->type_id() } $self->Contents() );
+
+  my $results;
+
+  my @user_ids = sets::union( $self->notifications(), map { $_->user_id() } openprint::User_Notification->find(
+        type  =>\@notification_types,
+        value =>'Yes',
+        user_company_id=>$openprint::User->company_id()
+        ) );
+  return if ! @user_ids;
+
+  foreach my $U ( openprint::User->find( id=>\@user_ids, company_id=>$openprint::User->company_id() ) ) {
+    if ( $U->id() == $openprint::User->id() ) {
+      $openprint::log->debug( $U->email() . ' Not mailing me.' );
+      next;
+    } # end if
+    $_ = Email::Valid->address($U->email());
+    if ( ( ! $_ ) or ( $_ ne $U->email() ) ) {
+      $openprint::log->debug( $U->email() . ' is not a valid address.' );
+      next;
+    } # end if
+    if ( ! $self->can_view( $U ) ) {
+      $openprint::log->debug( $U->name() . ' cannot view this PO.' );
+      next;
+    } # end if
+    if ( ! $self->can_authorize( $U ) ) {
+      $openprint::log->debug( $U->name() . ' cannot authorize this PO.' );
+      next;
+    } # end if
+	}
+}
+
 sub send_approval_required_notification {
 	my ( $self ) = @_;
 
@@ -457,6 +495,7 @@ sub is_PEFC {
 		return 1 if $C->description() =~ /PEFC/i;
 	} # end foreach C
 } # end sub is_PEFC
+
 sub copy {
 	my $self = shift;
 	my $New = new openprint::PurchaseOrder();
@@ -766,6 +805,10 @@ sub dockets {
 		@{$$self{dockets}} = sets::union( map { $_->docket() ? $_->docket() : () } $self->Contents() );
 	}
 	return @{$$self{dockets}};
+}
+
+sub Created_By {
+	return new openprint::User( $_[0]{created_by} );
 }
 
 1;

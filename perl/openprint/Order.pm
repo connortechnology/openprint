@@ -25,14 +25,14 @@ $debug = 0;
 $table = 'orders';
 $serial = 'orders_id_seq';
 %fields = (
-	id						=> 'id',
+	id								=> 'id',
 	session_id				=> 'strsessionid',
 	company_id				=> 'company_id',
-	user_id					=> 'user_id',
-	docket					=> 'docket',
-	status					=> undef,
-	status_id				=>	'status_id',
-	total					=> 'total',
+	user_id						=> 'user_id',
+	docket						=> 'docket',
+	status						=> undef,
+	status_id					=>	'status_id',
+	total							=> 'total',
 	downpayment				=> 'downpayment',
 	cod_percent				=>	'cod_percent',
 	downpayment_percent		=>	'downpayment_percent',
@@ -40,23 +40,23 @@ $serial = 'orders_id_seq';
 	updated_on				=>	'updated_on',
 	company_name			=> 'company_name',
 	salutation				=> 'salutation',
-	firstname				=> 'firstname',
-	lastname				=> 'lastname',
-	address1				=> 'address1',
-	address2				=> 'address2',
-	city					=> 'city',
-	state					=> 'state',
-	country					=> 'country',
+	firstname					=> 'firstname',
+	lastname					=> 'lastname',
+	address1					=> 'address1',
+	address2					=> 'address2',
+	city							=> 'city',
+	state							=> 'state',
+	country						=> 'country',
 	postalcode				=> 'postalcode',
-	phone					=> 'phone',
-	extension				=> 'extension',
-	fax						=> 'fax',
-	email					=> 'email',
+	phone							=> 'phone',
+	extension					=> 'extension',
+	fax								=> 'fax',
+	email							=> 'email',
 	alsonotify				=> 'alsonotify',	
-	paid					=> 'paid',
-	owing					=>	'owing',
+	paid							=> 'paid',
+	owing							=>	'owing',
 	currency_id				=> 'currency_id',
-	po						=> 'po',
+	po								=> 'po',
 	administrator_name		=> 'administrator_name',
 	administrator_comments	=> 'administrator_comments',
 	salesrep_id				=>	'salesrep_id',
@@ -312,8 +312,8 @@ sub Contents {
 require openprint::OrderedProject;
 require openprint::OrderedProduct;
 		$_[0]{Contents} = [ 
-			openprint::OrderedProject->find('order_id'=>$_[0]{id},'order'=>$openprint::OrderedProject::fields{project_id}), 
-			openprint::OrderedProduct->find('order_id'=>$_[0]{id},'order'=>$openprint::OrderedProduct::fields{project_id}),
+			openprint::OrderedProject->find( order_id=>$_[0]{id}, order=>$openprint::OrderedProject::fields{project_id}), 
+			openprint::OrderedProduct->find( order_id=>$_[0]{id}, order=>$openprint::OrderedProduct::fields{project_id}),
 			];
 	} # end if
 	return @{$_[0]{Contents}};
@@ -321,7 +321,7 @@ require openprint::OrderedProduct;
 
 sub Ordered_Projects {
 require openprint::OrderedProject;
-	return openprint::OrderedProject->find('order_id'=>$_[0]{id},'order'=>$openprint::OrderedProject::fields{project_id});
+	return openprint::OrderedProject->find( order_id=>$_[0]{id}, order=>$openprint::OrderedProject::fields{project_id});
 } # end sub Ordered_Projects
 
 sub Projects {
@@ -862,6 +862,7 @@ sub due_date {
 sub url_to {
 	return '/main/order/history_details.html?order_id='.$_[0]{id};
 } # end sub url
+
 sub link_to {
 	if ( $_[0]{id} ) {
 		my $text = $_[1] ? $_[1] : ( $_[0]{id} ? $_[0]{id} : 'id ' . $_[0]{id} );

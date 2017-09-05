@@ -102,9 +102,9 @@ $$variable{Object} = $$variable{Host};
 						$html .= button( 'Reset', { onclick=>'f1.reset();' } );
 						if ( $$variable{Host}->id() ) {
 							if ( $$variable{Host}->deleted() ) {
-							$html .= button( 'Destroy', { onclick=>"if(confirm('Are you sure?')){f1.elements['action'].value='Destroy';f1.submit();}" } );
+								$html .= button( 'Destroy', { onclick=>"if(confirm('Are you sure?')){f1.elements['action'].value='Destroy';f1.submit();}" } );
 							} else {
-							$html .= button( 'Delete', { onclick=>"if(confirm('Are you sure?')){f1.elements['action'].value='Delete';f1.submit();}" } );
+								$html .= button( 'Delete', { onclick=>"if(confirm('Are you sure?')){f1.elements['action'].value='Delete';f1.submit();}" } );
 							}
 						} # end if
 						$html .= button( 'Resolve', { onclick=>"f1.elements['action'].value='Resolve';f1.action='/employee/it/host.html';f1.submit();" } );
@@ -112,7 +112,6 @@ $$variable{Object} = $$variable{Host};
 						$html .= button( 'Wake', { onclick=>"f1.elements['action'].value='Wake';f1.action='/employee/it/host.html';f1.submit();" } );
 						$html .= button( 'Reboot', { onclick=>"f1.elements['action'].value='reboot';f1.action='/employee/it/host.html';f1.submit();" } );
 						$html .= button( 'GEOLookup', { onclick=>"f1.elements['action'].value='GEOLookup';f1.action='/employee/it/host.html';f1.submit();" } );
-						#$html .= ssi::writeButton( $log, $dbh, 'clear', 'clear.gif', 'clearForm(f1);', '', 'Clear' );
 						return $html;
 					) ?>
 				</p>
@@ -144,7 +143,9 @@ $$variable{Object} = $$variable{Host};
 	if ( 
 		( scalar @Interfaces != 1 ) 
 		or ( defined $Interfaces[0]{id} ) ) {
-		push @Interfaces, new openprint::Host_Interface();
+		my $New = new openprint::Host_Interface();
+		$New->set({dhcp=>1});
+		push @Interfaces, $New;
 	};
 
 
@@ -181,7 +182,7 @@ $$variable{Object} = $$variable{Host};
 		if ( $$Interface{id} ) {
 			$html .= button( 'DI'.$Interface->id(), { onclick=>qq`delete_interface('$$Interface{id}');`, text=>'X', title=>'Delete Interface' } ),
 		} # end if
-		$html .= '</td></tr><tr><td colspan="2">';
+		$html .= '</td></tr><tr><td colspan="3">';
 		if ( $$Interface{mac} ) {
 			$html .= 'Connections:<br/>';
 			if ( $$variable{Host}->is_wap() ) {
@@ -195,7 +196,7 @@ $$variable{Object} = $$variable{Host};
 				}
 			}
 		} # end if mac
-		$html .= '</td></tr>';
+		$html .= '</td><td></td></tr>';
 	} # end foreach Interface
 	return $html;
 ) ?>

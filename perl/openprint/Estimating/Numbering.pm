@@ -34,10 +34,10 @@ my %variables = (
 
 sub variables {
 	my ( $pid, $sid, $specs ) = @_;
-    my @v;
-    foreach my $k ( keys %variables ) {
-        push @v, $k if sets::isin( 'save', $variables{$k} );
-    } # end foreach;
+  my @v;
+  foreach my $k ( keys %variables ) {
+    push @v, $k if sets::isin( 'save', $variables{$k} );
+  } # end foreach;
 	my $Project = new openprint::Project( $pid );
 	foreach my $ss_id ( $Project->signatures() ) {
 		foreach my $qty_index ( $Project->quantity_indexes() ) {
@@ -45,20 +45,20 @@ sub variables {
 					"txtImposition-$ss_id-$qty_index", "chkOverrideImposition-$ss_id-$qty_index",
 		} # end foreach
 	} # end foreach my ss_id
-    return @v;
+  return @v;
 } # end sub variables
 
 sub no_outputs {
 	my ( $pid, $sid, $specs ) = @_;
-    my @v;
-    foreach my $k ( keys %variables ) {
-        push @v, $k if ! sets::isin( 'output', $variables{$k} );
-    } # end foreach;
-    return @v;
+  my @v;
+  foreach my $k ( keys %variables ) {
+    push @v, $k if ! sets::isin( 'output', $variables{$k} );
+  } # end foreach;
+  return @v;
 } # end sub no_outputs
 
 sub calc {
-    my ($log, $dbh, $variable, $pid, $sid, $specs) = @_;
+  my ($log, $dbh, $variable, $pid, $sid, $specs) = @_;
 
 	my $Project = new openprint::Project( $pid );
 
@@ -86,7 +86,7 @@ sub calc {
 			my $form = $$sig_specs{SignatureIndex};
 			next if ! $$sig_specs{"txtImposition$qty_index"};
 
-			my $Imposition = new openprint::Imposition()->load( $sig_specs, $qty_index );
+			my $Imposition = new openprint::Imposition()->load( $sig_specs, $qty_index, $Project );
 			my $Results = signature_calc( $Project, $specs, $sig_specs, $qty_index, $Imposition );
 			if ( ! $Results ) {
 				$$specs{alert} .= 'No result from signature_calc.';
@@ -135,7 +135,7 @@ $openprint::log->debug("Equipment is : " . $$Results{Equipment}->to_string() );
 		} else {
 			$$specs{'txtPrice'.$qty_index} = sprintf( $openprint::config{ProjectMoneyFormat}, $$specs{"txtPrice$qty_index"} );
 		} # end if
-    } # end foreach qty_index
+  } # end foreach qty_index
 	return $$specs{Status};
 
 } # end sub calc
@@ -149,13 +149,13 @@ sub signature_calc {
 	$$specs{'txtQuantity'.$qty_index} = $Project->quantity($qty_index) if ! $$specs{'txtQuantity'.$qty_index};
 
 	my $form = $$sig_specs{SignatureIndex};
-    if ( $$specs{"chkOverrideImposition-$form-$qty_index"} eq 'Y' ) {
-        if ( $$specs{"txtImposition-$form-$qty_index"} > $Imposition->imposition() or $$specs{"txtImposition-$form-$qty_index"} <= 0 ) {
-            $Results{alert} = 'The specified imposition is not possible.';
-            $Results{Status} = 'uncalculated';
-            return \%Results;
-        } # end if
+  if ( $$specs{"chkOverrideImposition-$form-$qty_index"} eq 'Y' ) {
+    if ( $$specs{"txtImposition-$form-$qty_index"} > $Imposition->imposition() or $$specs{"txtImposition-$form-$qty_index"} <= 0 ) {
+      $Results{alert} = 'The specified imposition is not possible.';
+      $Results{Status} = 'uncalculated';
+      return \%Results;
     } # end if
+  } # end if
 
 	my @Sets_Of_Impositions = ( [ $Imposition ] );
 
@@ -204,8 +204,8 @@ ImpositionSet: for ( my $set_index = 0; $set_index < @Sets_Of_Impositions; $set_
 			my %SetPrice;
 			my $complete = 1;
 
-            for ( my $imp_index = 0; $imp_index < @$Impositions; $imp_index += 1 ) {
-                my $I = $$Impositions[$imp_index];
+      for ( my $imp_index = 0; $imp_index < @$Impositions; $imp_index += 1 ) {
+        my $I = $$Impositions[$imp_index];
 				if ( ! ( $I and $I->imposition() ) ) {
 					$openprint::log->error("No imposition in Numbering.");
 					$I->display();
@@ -241,8 +241,11 @@ ImpositionSet: for ( my $set_index = 0; $set_index < @Sets_Of_Impositions; $set_
 # If we are the last set
 							if ( $set_index+1 == @Sets_Of_Impositions ) {
 								my @new_imps = @$Impositions;
-								splice @new_imps, $imp_index, 1, openprint::imposition::cut( $new_imps[$imp_index] );
-								push @Sets_Of_Impositions, \@new_imps;
+                my @cuts = openprint::imposition::cut( $new_imps[$imp_index] );
+                if ( @cuts ) {
+                  splice @new_imps, $imp_index, 1, @cuts;
+                  push @Sets_Of_Impositions, \@new_imps;
+                }
 							} # end if
 						} else {
 							$Breakdown .= 'Cant cut down W&T because no cutting.  Please add cutting.<br/>';
@@ -356,7 +359,6 @@ ImpositionSet: for ( my $set_index = 0; $set_index < @Sets_Of_Impositions; $set_
 	} else {
 		$Results{Equipment} = $Results{Equipment};
 	} # end if
-
 
 	return \%Results;
 } # end sub signature_calc
