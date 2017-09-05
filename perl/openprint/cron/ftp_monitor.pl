@@ -52,6 +52,12 @@ if ($opts->{help}) {
 	exit 0;
 }
 
+my %codes = (
+	200	=> 'Command okay',
+	213	=>	'File status',
+	221	=>	'Service closing control connection',
+	257	=>	'Path created',
+);
 my %defaults = (
     config  =>  '/etc/openprint/ftp_monitor.conf',
 );
@@ -284,22 +290,25 @@ $log->debug("data: $client $remote_user $user_name $curr_time $xfer_type $path $
 						complete	=> 1,
 					};
 				} # end if send email
-			} elsif ($line =~ /^(\S+)\s+(\S+)\s+(\S+)\s+\[([^\]]+)\]\s+"([^"]*)"\s+(\d+)\s+([\-\d]+)\s+([\.\d\-]+)$/o) {
-#LogFormat IQFormat "%h %l %u %t \"%f\" %s %b %T"
+			} elsif ($line =~ /^(\S+)\s+(\S+)\s+(\S+)\s+\[([^\]]+)\]\s+"([^"]*)"\s+"([^"]*)"\s+(\S+)\s+(\d+)\s+([\-\d]+)\s+([\.\d\-]+)$/o) {
+#LogFormat IQFormat "%h %l %u %t \"%d\" \"%f\" %m %s %b %T"
 
 				my $client = $1;
 				my $remote_user = $2;
 				my $user_name = $3;
 				my $curr_time = $4;
-				my $path = $5;
-
-				my $response_code = $6;
-				my $nbytes = $7;
-				my $xfer_nsecs = $8;
+				my $dir = $5;
+				my $path = $6;
+				my $command = $7;
+				my $response_code = $8;
+				my $nbytes = $9;
+				my $xfer_nsecs = $10;
 				$log->debug("Got IQFormat extended line: $line");
-				$log->debug("data: $client $remote_user $user_name $curr_time $path $response_code $nbytes");
+				$log->debug("data: $client $remote_user $user_name $curr_time $dir $path $command $response_code($codes{$response_code}) $nbytes");
 				if ( $response_code == 331 ) {
 #Username OK, need password
+					next;
+				} elsif ( $command eq 'LIST' or $command eq 'MLSD' ) {
 					next;
 				} elsif ( $response_code == 230 ) {
 # Successful login
@@ -310,6 +319,8 @@ $log->debug("data: $client $remote_user $user_name $curr_time $xfer_type $path $
 					}
 					(new openprint::Log())->save({Object=>$User, action=>'Login', note=>'Successful FTP Login' } );
 					next;
+				} elsif ( $response_code == 257 ) {
+					
 				} elsif ( $nbytes eq '-' ) {
 					$log->debug("Not an upload, ignoring");
 					next;

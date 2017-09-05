@@ -155,6 +155,7 @@ while(1) {
 			}
 			$log->debug( $HI->ip() . ' is now ' . ( $HI->online() ? 'online' : 'offline' ) . ' value of ping was ' . $ping );
 		} # end foreach HI
+
 		if ( ! $has_monitored_interfaces ) {
 			$log->error("Host $$Host{hostname} is monitored but none of it's interfaces are.");
 			next;
