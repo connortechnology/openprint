@@ -261,6 +261,8 @@ sub _order_history_results {
 	ssi::save_params($uri,
 		( map { 'created_on_start_'.$_ } ( 'year','month','day' ) ),
 		( map { 'created_on_end_'.$_ } ( 'year','month','day' ) ),
+		( map { 'printed_on_start_'.$_ } ( 'year','month','day' ) ),
+		( map { 'printed_on_end_'.$_ } ( 'year','month','day' ) ),
 		'status', 'company_id', 'CSR', 'reprint', 'currency_id', 'total_start', 'total_end'
 	);
 	if ( %param ) {
@@ -299,10 +301,44 @@ sub _order_history_results {
 			next if ( $param{reprint} eq 'Y' ) and ! $reprint;
 			next if ( $param{reprint} eq 'N' ) and $reprint;
 		} # end if reprint
+
+		my @printed_on_start = map{ @session{$uri.'?printed_on_start_'.$_} } ( 'year','month','day' );
+		my $printed_on_start = join('-', @printed_on_start ) if Date::Calc::check_date( @printed_on_start );
+		my $printed_on_start_seconds = Date::Parse::str2time( $printed_on_start ) if $printed_on_start;
+
+		my @printed_on_end = map{ @session{$uri.'?printed_on_end_'.$_} } ( 'year','month','day' );
+		my $printed_on_end = join('-', @printed_on_end ) if Date::Calc::check_date( @printed_on_end );
+		my $printed_on_end_seconds = Date::Parse::str2time( $printed_on_end ) if $printed_on_end;
+
+		if ( $printed_on_start or $printed_on_end ) {
+$log->debug("Filtering from $printed_on_start to $printed_on_end");
+			my $keep = 0;
+			foreach my $Project ( $Order->Projects() ) {
+				my $printed_on = $Project->printed_on();
+				my $printed_on_seconds = Date::Parse::str2time( $printed_on );
+$log->debug("Printed on $printed_on");
+				next if ! $printed_on;
+				if (
+						( (!$printed_on_start_seconds) or ( $printed_on_seconds > $printed_on_start_seconds ) )
+						and
+						( (!$printed_on_end_seconds) or ( $printed_on_seconds < $printed_on_end_seconds ) )
+					 ) {
+$log->debug("Keeping");
+					$keep = 1;
+					last;
+} else {
+$log->debug("NOt keeping: $printed_on_start > $printed_on and $printed_on_end ");
+				}
+			}
+			next if ! $keep;
+		}
+		
 		if ( $param{press_id} ) {
 			my $Press = new openprint::Equipment( $param{press_id} );
 			my $on_press = 0;
 			foreach my $Project ( $Order->Projects() ) {
+							
+				
 				foreach my $sig_id ( $Project->signatures() ) {
 					my $sig_specs = openprint::service::get_specs_ref( $Project, $sig_id );
 					if ( ! $$sig_specs{UsePress} ) {
