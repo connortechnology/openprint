@@ -120,16 +120,16 @@ sub item {
 	my $Item = new openprint::PurchaseOrder_Item( $_[0]{item_id} );
 	if ( @_ > 1 ) {
 		if ( $Item->name() ne $_[1] ) {
-			my $NewItem = openprint::PurchaseOrder_Item->find_one( 'name lc'=>lc $_[1], 'company_id'=>$_[0]->PurchaseOrder()->company_id(), 'vendor_id'=>$_[0]->PurchaseOrder()->supplier_id(), 'type_id'=>$_[0]{type_id} );
+			my $NewItem = openprint::PurchaseOrder_Item->find_one( 'name lc'=>lc $_[1], company_id=>$_[0]->PurchaseOrder()->company_id(), vendor_id=>$_[0]->PurchaseOrder()->supplier_id(), type_id=>$_[0]{type_id} );
 			if ( ! $NewItem ) {
 				$NewItem = new openprint::PurchaseOrder_Item();
 				$NewItem->save( { 
-					'name'=>$_[1], 
-					'company_id'=>$_[0]->PurchaseOrder()->company_id(), 
-					'vendor_id'=>$_[0]->PurchaseOrder()->supplier_id(), 
-					'type_id'=>$_[0]{type_id},
-					'price'	=>	$_[0]{price},
-					'product'	=>	$_[0]{product},
+					name				=>	$_[1], 
+					company_id	=>	$_[0]->PurchaseOrder()->company_id(), 
+					vendor_id		=>	$_[0]->PurchaseOrder()->supplier_id(), 
+					type_id			=>	$_[0]{type_id},
+					price				=>	$_[0]{price},
+					product			=>	$_[0]{product},
 				 } );
 			} # end if
 			$_[0]{item_id} = $$NewItem{id};

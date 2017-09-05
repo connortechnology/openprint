@@ -124,6 +124,7 @@
 		<p class="buttons">
 				<? echo ( join( "\n",
 				button( 'ShowResults', { onclick=>'f1.submit();', text=>'Show Results' } ),
+				button( 'Download', { onclick=>q`f1.btnFunction.value='Download';f1.submit();`, text=>'Download' } ),
 				button( 'Add', { href=>'/employee/purchase_order/edit.html', 'text'=>'Add New' } ),
 				button( 'Reset', { href=>'/employee/purchase_order/history.html?btnFunction=reset' } ),
 				); ) ?>

@@ -485,7 +485,7 @@ $log->debug("done saving params");
 	} else {
 $log->debug("Loading projects");
 		foreach my $Project ( openprint::Project->find(
-					( @company_ids ? ( 'company_id' => \@company_ids ) : () ),
+					( @company_ids ? ( company_id => \@company_ids ) : () ),
 					ssi::date_filter( '/employee/reports/stock_usage.html?ordered_on_end', 'created_on <=' ),
 					ssi::date_filter( '/employee/reports/stock_usage.html?ordered_on_start', 'created_on >=' ),
 					) ) {
@@ -497,7 +497,8 @@ $log->debug("Loading projects");
 
 	my %totals;
 	my %Stocks;
-$openprint::log->debug("orders: " . @Orders );
+	$openprint::log->debug("orders: " . @Orders );
+	my %types = map { $_, $_ } split( ',', $session{'/employee/reports/stock_usage.html?type'} );
 
 	foreach my $Order ( @Orders, ( $session{'/employee/reports/stock_usage.html?projects_orders'} eq 'Projects' ? new openprint::Order() : () ) ) {
 
@@ -507,7 +508,8 @@ $openprint::log->debug("orders: " . @Orders );
 			my $qty_index = $Project->ordered_quantity_index();
 			if ( ! $qty_index ) {
 				if ( $session{'/employee/reports/stock_usage.html?projects_orders'} eq 'Projects' ) {
-					$qty_index = $Project->quantity_indexes();
+					my @qtys = $Project->quantity_indexes();
+					$qty_index = $qtys[0];
 				} else {
 					$log->error("No Ordered QTY Index in $$Order{id} $$Project{id}!");
 				} # end
@@ -527,7 +529,7 @@ $openprint::log->debug("orders: " . @Orders );
 					} # end if
 				} # end if
 
-				if ( $session{'/employee/reports/stock_usage.html?type'} and ! sets::isin( $$sig_specs{'StockType'.$qty_index}, split( ',', $session{'/employee/reports/stock_usage.html?type'} ) ) ) {
+				if ( %types and ! $types{ $$sig_specs{'StockType'.$qty_index} } ) {
 #$log->debug("Wrong type ". $$sig_specs{'StockType'.$qty_index} );
 					next;
 				}
