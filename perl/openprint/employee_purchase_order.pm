@@ -549,6 +549,7 @@ $log->debug("Not saving contact ");
 } # end sub edit
 
 sub history {
+	if ( $param{btnFunction} ) {
 	if ( $param{btnFunction} eq 'Delete' ) {
 		foreach my $po_id ( ref $param{po_id} eq 'ARRAY' ? @{$param{po_id}} : $param{po_id} ) {
 			my $PO = new openprint::PurchaseOrder( $po_id );
@@ -630,7 +631,118 @@ $log->error("$key deleted");
 				delete $session{$key};
 			}
 		} # end foreach
+	} elsif ( $param{btnFunction} eq 'Download' ) {
+		my $uri = '/employee/purchase_order/history.html';
+    my %search = (
+      company_id  =>  $openprint::User->company_id(),
+      ssi::date_filter( $uri.'?starting_end', 'created_on <=' ),
+      ssi::date_filter( $uri.'?starting_start', 'created_on >=' ),
+      order   =>  'id desc',
+    );
+    $search{deleted} = $session{$uri.'?deleted'} if exists $session{$uri.'?deleted'};
+    $search{supplier_id} = $session{$uri.'?supplier_id'} if $session{$uri.'?supplier_id'};
+    if ( $session{user_type} eq 'A' or openprint::usergroup::is_user_in( ['Accounting','Shipping','Inventory'], $session{user_id} ) ) {
+      if ( $session{$uri.'?created_by'} ) {
+        $search{created_by} = $session{$uri.'?created_by'};
+      } # end if
+    } else {
+      #$search{created_by} = [ sets::union( $session{user_id}, new openprint::User($session{user_id})->assistant_ids(), new openprint::User($session{user_id})->csr_ids() ) ];
+    } # end if
+    if ( $session{$uri.'?has_manifest'} ne '' ) {
+      $search{'manifest_id is null'} = $session{$uri.'?has_manifest'} eq '1' ? 0 : 1;
+    }
+    $search{cancelled} = $session{$uri.'?cancelled'} if $session{$uri.'?cancelled'} ne '';
+    $search{'item_id any'} = $session{$uri.'?item_id'} if $session{$uri.'?item_id'};
+
+		my @header = ( 'Id', 'Supplier', 'Sub Total', 'Total', 'Item','Quantity','Unit Price', 'Units', 'Item Total' );
+		my @data;
+
+    my $ac = sql::start_transaction( $dbh );
+    my @POs = openprint::PurchaseOrder->find( %search );
+    my %POs = map { $$_{id}, $_ } @POs;
+
+    if ( @POs ) {
+      my @po_ids = map { $$_{id} } @POs;
+      foreach my $PC ( openprint::PurchaseOrder_Content->find( po_id=>\@po_ids ) ) {
+        my $PO = $POs{$$PC{po_id}};
+        $$PO{Contents} = [] if ! $$PO{Contents};
+        push @{$$PO{Contents}}, $PC;
+      }
+      foreach my $PO ( @POs ) {
+        $$PO{Contents} = [] if ! $$PO{Contents};
+      }
+    } # end if POs
+
+		my %types = map { $_, $_ } split(',',$session{$uri.'?types'} );
+
+    foreach my $PO ( @POs ) {
+      if ( $session{$uri.'?authorized'} eq 'Y' and $PO->authorized() ne '1' ) {
+        $log->debug("Next want authd but isn't");
+        next;
+      }
+      if ( $session{$uri.'?authorized'} eq 'N' and $PO->authorized() ne '0' ) {
+        $log->debug("Next want not authd but is");
+        next;
+      }
+      if ( $session{$uri.'?authorized'} eq 'U' and $PO->authorized() ne '' ) {
+        $log->debug("Next want unauthd but is");
+        next;
+      }
+
+      next if $session{$uri.'?vendor_category_id'} and $PO->Supplier()->category_id() != $session{$uri.'?vendor_category_id'};
+      if ( ! $PO->can_view() ) {
+        $log->debug("! can_view");
+        next;
+      }
+
+      if ( $session{$uri.'?docket'} ) {
+        my $next = 1;
+        my $docket = $session{$uri.'?docket'};
+
+        foreach my $C ($PO->Contents()) {
+          if ( $C->docket() =~ /$docket/i ) {
+            $next = 0;
+            last;
+          } # end if
+        } # end foreach
+        if ( $next ) {
+          $log->debug("Next cuz $next contains $docket");
+          next ;
+        }
+      } # end if
+
+      if ( $param{contains} ) {
+        my $next = 1;
+        foreach my $C ($PO->Contents()) {
+          if ( $C->description() =~ /$param{contains}/i ) {
+            $next = 0;
+            last;
+          } elsif ( $C->item() =~ /$param{contains}/i ) {
+            $next = 0;
+            last;
+          } # end if
+        } # end foreach
+        next if $next;
+      } # end if
+
+      if ( $session{$uri.'?department_id'} ) {
+        next if ! sets::isin( $session{$uri.'?department_id'}, [ map { $_->department_id() } $PO->Contents() ] );
+      } # end if
+
+		#my @header = ( 'Id', 'Supplier', 'Sub Total', 'Total', 'Item','Quantity','Unit Price', 'Item Total' );
+			foreach my $C ( $PO->Contents() ) {
+				next if %types and ! $types{$$C{type_id}};
+				push @data, @$PO{'id','vendor_name','subtotal','total'};
+				push @data, $C->item(), $C->qty(), $C->price(), $C->units(), $C->total();
+			}
+    } # end foreach PO
+		sql::end_transaction( $dbh, $ac );
+
+		misc::export_csv( $r, $log, \%variable, 'purchase_order_history_report.csv', \@header,\@data );	
+
+
 	} # end if
+	} # end if btnFunction
 	_history();
 	ssi::setup_date_select( $r->uri(), 'starting_start', -7 );
 	ssi::setup_date_select( $r->uri(), 'starting_end', '' );
