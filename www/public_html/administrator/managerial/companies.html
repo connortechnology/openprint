@@ -4,7 +4,7 @@
 </div>
 <script type="text/javascript">
 function load_page() {
-  LoadContent( 'Results', '_companies.html', $j('f1') );
+  LoadContent( 'Results', '_companies.html', $('f1') );
 } 
 </script>
 <form id="f1" name="f1" method="post" action="companies.html">
@@ -12,13 +12,13 @@ function load_page() {
 		<ul>
 		<li>
 			<label>ID</label>
-			<? echo ( input( type=>'cardinal', name=>'company_id', onkeydown=>"if(event.keyCode==13){f1.submit();}" ); ) ?>
-			<? echo ( button( 'Go1',{ onclick=>"f1.action='company_profiles.html';f1.submit();", text=> 'Go' } ); ) ?>	
+			<? echo ( input( type=>'cardinal', name=>'company_id', onkeydown=>'if(event.keyCode==13){f1.submit();}' ); ) ?>
+			<? echo ( button( 'Go1',{ onclick=>q`f1.action='company_profiles.html';f1.submit();`, text=> 'Go' } ); ) ?>	
 		</li>
 		<li>
 			<label>Name</label>
 			<? echo ( input( type=>'text', name=>'company_name', onkeydown=>'if(event.keyCode==13){f1.submit();}', oninput=>'load_page();' ); ) ?>
-			<? echo ( button( 'Go2',{ onclick=>"f1.action='company_profiles.html';f1.submit();", text=> 'Go' } ); ) ?>	
+			<? echo ( button( 'Go2',{ onclick=>q`f1.action='company_profiles.html';f1.submit();`, text=> 'Go' } ); ) ?>	
 		</li>
 <? echo (
   my $users = openprint::User->dropdown( type=>['E','A'], 'usergroup any'=>'Sales' );
@@ -46,7 +46,7 @@ function load_page() {
 		<li><label>Marketing Category</label><? echo ( ssi::select( openprint::MarketingCategory->dropdown(), $session{$r->uri().'?marketing_category_id'}, { onclick=>'load_page();', name=>'marketing_category_id' } ); ) ?></li>
 		<? endif ( openprint::MarketingCategory->find_one() ) ?>
 		<li><label>Country</label><? echo ( ssi::select( [ map { $_->id(), $_->name() } openprint::Location->find(type=>'country', order=>'lower(name)') ], $session{$r->uri().'?country'}, { name=>'country_id', prepend=>['','All'] } ); ) ?></li>
-		<li><label>Deleted?</label><? echo ( radio( 'deleted', [ '1','Yes', '0', 'No', '', 'Both' ], $session{$r->uri().'?deleted'}, {onclick=>"load_page();"} ); ) ?></li>
+		<li><label>Deleted?</label><? echo ( radio( 'deleted', [ '1','Yes', '0', 'No', '', 'Both' ], $session{$r->uri().'?deleted'}, {onclick=>'load_page();'} ); ) ?></li>
 		</ul>
 		<p class="buttons">
 			<? echo ( join("\n",

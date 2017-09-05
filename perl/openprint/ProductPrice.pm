@@ -37,14 +37,14 @@ $serial = 'product_prices_id_seq';
 	price			=>	[ 's/[^\d\.]//g' ],
 );
 %defaults = (
-	min			=>	undef,
-	max			=>	undef,
-	supplier_id	=>	undef,
-	cost		=>	0,
-	markup		=>	0,
-	price		=>	0,
+	min			      =>	undef,
+	max		      	=>	undef,
+	supplier_id 	=>	undef,
+	cost		      =>	0,
+	markup	    	=>	0,
+	price	      	=>	0,
 	discountable	=>	1,
-	owner_id	=>	q`$session{company_id}`,
+	owner_id    	=>	q`$session{company_id}`,
 );
 
 
@@ -52,35 +52,36 @@ sub Product {
     my $self = shift;
 	if ( @_ ) {
 		my $Product = shift;
-		$$self{'product_id'} = $Product->id();
+		$$self{product_id} = $Product->id();
 	} # end if
-    return new openprint::Product( $$self{'product_id'} );
+    return new openprint::Product( $$self{product_id} );
 } # end sub Product
 
 sub Pricelist {
     my $self = shift;
 	if ( @_ ) {
 		my $Pricelist = shift;
-		$$self{'pricelist_id'} = $Pricelist->id();
+		$$self{pricelist_id} = $Pricelist->id();
 	} # end if
-    return new openprint::Pricelist( $$self{'pricelist_id'} );
+    return new openprint::Pricelist( $$self{pricelist_id} );
 } # end sub Pricelist
 
 sub save {
 	my ( $self, $param ) = @_;
 
-	$$self{'owner_id'} = $openprint::config{'owner_id'} if ! $$self{'owner_id'};
+	$$self{owner_id} = $openprint::config{owner_id} if ! $$self{owner_id};
 
 	if ( ( my $error = $self->SUPER::save( $param ) ) ) {
 		return $error;
 	} # end if
 } # end sub save
+
 sub price {
 	if ( @_ > 1 ) {
-		$_[0]{'price'} = $_[1];
+		$_[0]{price} = $_[1];
 	} # end if
 	if ( ! defined $_[0]{price} ) {
-		$_[0]{'price'} = Math::Round::nearest( 0.01, $_[0]{cost} * ( 1+($_[0]{markup}/100) ) );
+		$_[0]{price} = Math::Round::nearest( 0.01, $_[0]{cost} * ( 1+($_[0]{markup}/100) ) );
 	} # end if
 	return $_[0]{price};
 } # end sub price

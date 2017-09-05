@@ -39,7 +39,7 @@ Please select a company or user to obtain login information.<br/>
 						<? echo ( 
 		$variable{companies_ddm} = openprint::Company->dropdown();
 		if ( @{$variable{companies_ddm}} > 1000 ) {
-			# TOo many.  find the selected one and drop all but previous and following 10..
+			# Too many.  find the selected one and drop all but previous and following 10..
 
 			for ( my $i = 0; $i < @{$variable{companies_ddm}}; $i += 2 ) {
 				if ( $variable{companies_ddm}[$i] == $session{$r->uri().'?company_id'} ) {
@@ -371,21 +371,12 @@ Please select a company or user to obtain login information.<br/>
 			<p id="ButtonsBottom" class="buttons">
 			<label>
 			<? echo (
-<<<<<<< HEAD
 				if ( $$variable{User}->company_id() ) {
 					return button( 'CompanyInfo2', { href=>'company_profiles.html?ddmCustomer='.$$variable{User}->company_id(), text=>'Company' } );
 				} elsif ( $param{'ddmCustomer'} ) {
 					return button( 'CompanyInfo2', { href=>'company_profiles.html?ddmCustomer='.$param{'ddmCustomer'}, text=>'Company' } );
 				}
 				return;
-=======
-					if ( $$variable{User}->company_id() ) {
-						return button( 'CompanyInfo2', { href=>'company_profiles.html?ddmCustomer='.$$variable{User}->company_id(), text=>'Company Information' } );
-					} elsif ( $param{ddmCustomer} ) {
-						return button( 'CompanyInfo2', { href=>'company_profiles.html?ddmCustomer='.$param{ddmCustomer}, text=>'Company Information' } );
-					}
-					return;
->>>>>>> master
 			) ?>
 			</label>
 			<? if ( $$variable{EDIT_USER_NUM} ) ?>

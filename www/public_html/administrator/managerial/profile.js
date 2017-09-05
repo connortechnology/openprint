@@ -6,13 +6,15 @@ function check_field( element ) {
 		var id = matches[1];
 		if ( 
 			element_changed( form.elements['required-'+id] ) ||
+			element_changed( form.elements['viewable-'+id] ) ||
+			element_changed( form.elements['on_registration-'+id] ) ||
 			element_changed( form.elements['name-'+id] ) ||
 			element_changed( form.elements['type-'+id] ) ||
 			element_changed( form.elements['values-'+id] ) 
 		   ) {
-			$('field_'+id).addClassName('changed');
+			$j('#field_'+id).addClass('changed');
 		} else {
-			$('field_'+id).removeClassName('changed');
+			$j('#field_'+id).removeClass('changed');
 		} // end if
 	} else {
 		alert('Not matched' + element.name);
@@ -24,9 +26,10 @@ function newField( ) {
 			data: { 
 				action: 'Add'
 			} } ).done( function( html ) {
-				$('#fields').insert({top: html });
+				$j('#fields').insert({top: html });
 			});
 } // end function newField
+
 function copyField( id ) {
 	var form = jQuery('#f1')[0];
 	jQuery.ajax( '_field_tr.html', { 
@@ -36,7 +39,7 @@ function copyField( id ) {
 				required: get_value(form.elements['required-'+id])
 			} } ).done(
 			function( transport ) {
-				$('#field_'+ id).insert({after: transport.responseText} );
+				$j('#field_'+ id).insert({after: transport.responseText} );
 			}
 	);
 }
@@ -52,13 +55,13 @@ function delField( id ) {
 				if ( html ) {
 					alert( html );
 				} else {
-					var tr = $('#field_'+id); tr.parentNode.removeChild(tr);
+					var tr = $j('#field_'+id);
+          tr.parentNode.removeChild(tr);
 				} // end if
 			}
-		} 
 	);
 }
 
 function upField( field_id ) {
-	jQuery('#fields'.load('_user_fields_tbody.html', { action: 'up', field_id: field_id } );
+	jQuery('#fields').load('_user_fields_tbody.html', { action: 'up', field_id: field_id } );
 } // end function upField

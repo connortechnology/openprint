@@ -5,7 +5,7 @@ function load_records( form, options ) {
 	if ( options && options.order )
 		p.order = options.order;
 	
-	jQuery('Results').load('/employee/it/_radius.html', p );
+	jQuery('#Results').load('/employee/it/_radius.html', p );
 } // end function load
 function new_record( ) {
 	jQuery.ajax( '_radius_mac_line.html', { 
@@ -30,7 +30,7 @@ Please select a host to view/edit.<br/>
 	<fieldset class="filters"><legend>Search Criteria</legend>
 		<ul>
 			<li><label>Username/MAC</label>
-				<input type="text" id="username" name="username" value="<? echo ( $session{'/employee/it/radius.html?username'} ) ?>" onkeyup="this.value=this.value.replace(/\s/,'');" onkeydown="if(event.keyCode == 13){load_records('f1');}" />
+				<input type="text" id="username" name="username" value="<?echo($session{'/employee/it/radius.html?username'})?>" onkeyup="this.value=this.value.replace(/\s/,'');" onkeydown="if(event.keyCode==13){load_records('f1');}" />
 			</li>
 			<? if ( $config{'RADIUS_Support'} ) ?>
 				<li><label>Attribute</label>

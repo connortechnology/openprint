@@ -6,10 +6,10 @@
 var load_page_ajax = null;
 function load_page() {
 	if ( load_page_ajax ) load_page_ajax.abort();
-	 load_page_ajax = jQuery('#Folds').load( '_folds.html',
+	 load_page_ajax = $jQuery('#Folds').load( '_folds.html',
 		{	
-			equipment_id: $('#equipment_id').val(),
-			type: $('#type').val() 
+			equipment_id: $jQuery('#equipment_id').val(),
+			type: $jQuery('#type').val() 
 		},
 		function() {
 			load_page_ajax = null;
@@ -19,6 +19,7 @@ function load_page() {
 } 
 </script>
 <form id="f1" name="f1" method="post" action="folds.html">
+  <input type="hidden" name="btnFunction"/>
 	<fieldset class="filters"><legend>Report Criteria</legend>
 		<ul>
 		<li>
@@ -41,9 +42,9 @@ function load_page() {
 		<p class="buttons">
 			<? echo ( join("\n",
 				button( 'ShowResults', { onclick=>'load_page();', text=>'Show Results' } ),
-			button( 'AddFold', { onclick=>"new Ajax.Request('/administrator/equipment/_fold.html?action=add', { onSuccess: function(response){new Insertion.Top(\$('Folds'), response.responseText);SortableTable.load();} } );", text=>'Add' } ),
-			button( 'ExportFolds', { onclick=>"f1.btnFunction.value='Export Folds';f1.submit();", text=>'Export Folds' } ),
-); ) ?>
+        button( 'AddFold', { onclick=>"new Ajax.Request('/administrator/equipment/_fold.html?action=add', { onSuccess: function(response){new Insertion.Top(\$('Folds'), response.responseText);SortableTable.load();} } );", text=>'Add' } ),
+        button( 'ExportFolds', { onclick=>"f1.btnFunction.value='Export Folds';f1.submit();", text=>'Export Folds' } ),
+      ); ) ?>
 		</p>
 	</fieldset>
 	<div id="Folds"><?include(_folds.html)?></div>

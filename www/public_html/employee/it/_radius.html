@@ -29,7 +29,7 @@
 		<? echo (
 			my $html;
 			my $rowclass;
-			foreach my $Record ( @{$$variable{'Records'}} ) {
+			foreach my $Record ( @{$$variable{Records}} ) {
 				$html .= sprintf('<tr%1$s>
 						<td class="checkbox"><input type="checkbox" id="record_id" name="record_id" value="%2$d"/></td>
 						<td class="username"><a href="/employee/it/radius_record.html?record_id=%2$d">%3$s</a></td>
@@ -45,5 +45,7 @@
 	</tbody>
 </table>
 <p class="buttons">
-<? echo ( button( 'delete', { onclick => "f1.elements['action'].value='Delete';jQuery( 'Results').load('/employee/it/_radius.html', f1.serialize() );", text=>'Delete Checked' } ); ) ?>
+<? echo (
+    button( 'delete', { onclick => "f1.elements['action'].value='Delete';jQuery( '#Results').load('/employee/it/_radius.html', f1.serialize() );", text=>'Delete Checked' } );
+) ?>
 </p>
