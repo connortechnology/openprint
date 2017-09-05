@@ -27,12 +27,16 @@ function load_page() {
 <hr/>
 <ul>
 		<li><label>Company Name</label>
-			<input type="text" oninput="filter_companies( f1.ddmCustomer, {name:this.value} );" 
-			   onkeydown="if(event.keyCode == 13){f1.ddmUser.selectedIndex=-1;f1.btnFunction.value='';this.form.submit();}" 
-				   class="filter" />
+			<input type="text" oninput="filter_companies( $('company_id'), {name:this.value} );" class="filter" />
 			<select name="company_id" id="company_id" onchange="load_page();">
 				<option value="">All</option>
-				<? echo ( make_drop_down( openprint::Company->dropdown(), $session{$r->uri().'?company_id'} );) ?>
+				<? echo ( 
+my $companies = openprint::Company->dropdown();
+if ( @{$companies} < 10000 ) {
+return make_drop_down( $companies, $session{$r->uri().'?company_id'} );
+}
+return '<option value="">Use the filter to populate this dropdown</option>';
+) ?>
 			</select>
 		</li>
 		<li>

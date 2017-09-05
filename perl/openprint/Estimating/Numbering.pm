@@ -241,8 +241,11 @@ ImpositionSet: for ( my $set_index = 0; $set_index < @Sets_Of_Impositions; $set_
 # If we are the last set
 							if ( $set_index+1 == @Sets_Of_Impositions ) {
 								my @new_imps = @$Impositions;
-								splice @new_imps, $imp_index, 1, openprint::imposition::cut( $new_imps[$imp_index] );
-								push @Sets_Of_Impositions, \@new_imps;
+                my @cuts = openprint::imposition::cut( $new_imps[$imp_index] );
+                if ( @cuts ) {
+                  splice @new_imps, $imp_index, 1, @cuts;
+                  push @Sets_Of_Impositions, \@new_imps;
+                }
 							} # end if
 						} else {
 							$Breakdown .= 'Cant cut down W&T because no cutting.  Please add cutting.<br/>';

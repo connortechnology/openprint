@@ -512,9 +512,12 @@ sub signature_calc {
 					if ( 1 == @equipment ) {
 						$results{breakdown} .= "Doesn't fit. $_<br/>";
 					} # end if
-					if ( $$imposition{imposition} > 1 and ! $$specs{"OverrideImposition-$form-$qty_index"} ) {
-						splice ( @Impositions, $impo_index, 1, openprint::imposition::cut( $imposition ) );
-						push @Sets_of_Impositions,  \@Impositions;
+					if ( ( $$imposition{imposition} > 1 ) and ! $$specs{"OverrideImposition-$form-$qty_index"} ) {
+            my @cuts = openprint::imposition::cut( $imposition );
+            if ( @cuts ) {
+              splice ( @Impositions, $impo_index, 1, @cuts );
+              push @Sets_of_Impositions,  \@Impositions;
+            }
 					} # end if
 					$complete = 0;
 					last;
@@ -642,11 +645,11 @@ sub has_overrides {
         foreach my $s_s_id ( $Project->signatures() ) {
             my $sig_specs = openprint::service::get_specs_ref( $Project, $s_s_id );
             my $form = $$sig_specs{SignatureIndex};
-            push @v, map { $$specs{$_} ? $_ : () } (
+            push @v, map { ( $$specs{$_} and ( $$specs{$_} ne 'N' ) ) ? $_ : () } (
                     "chkOverrideEquipment-$form-$qty_index",
-                    "chkOverrideImposition-$form-$qty_index",
+                    "OverrideImposition-$form-$qty_index",
                     "OverrideMakeReadyPrice-$form-$qty_index",
-                    "OverridePrice-$form-$qty_index",
+                    "OverridePrice$qty_index",
                     "OverrideDiePrice-$form-$qty_index",
                     "OverrideServicePrice-$form-$qty_index",
                     );
