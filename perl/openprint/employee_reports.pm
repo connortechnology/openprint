@@ -188,7 +188,7 @@ sub order_history {
 	ssi::setup_date_select( $r->uri(), 'created_on_end', '' );
 
 	if ( $param{action} eq 'download' ) {
-		my @Header = ( 'OrderID', 'Docket', 'Invoice', 'Company', 'Project Reference', 'Date Ordered', 'Status', 'Total', 'Quoted Stock Value', 'Stock Amount' );
+		my @Header = ( 'OrderID', 'Docket', 'Invoice', 'Company', 'Project Reference', 'Date Ordered', 'Date Printed', 'Status', 'Total', 'Quoted Stock Value', 'Stock Amount' );
 		my @Data = ();
 		foreach my $Order ( @{$variable{Orders}} ) {
 			foreach my $Project ( $Order->Projects() ) {
@@ -249,7 +249,7 @@ $log->warn("Paper was supplied");
 					$stock_total += $totals{$string};
 				} # end foreach string
 
-				push @Data, $Order->id(), $Order->docket(), join(',', map { $_->Invoice()->num() } $Order->Invoices() ), $Order->Company()->name(), $Project->reference(), $Order->created_on(), $Order->status(), $Order->total(), $stock_price, $stock_total;
+				push @Data, $Order->id(), $Order->docket(), join(',', map { $_->Invoice()->num() } $Order->Invoices() ), $Order->Company()->name(), $Project->reference(), $Order->created_on(), ssi::format_csv_date($Project->printed_on()), $Order->status(), $Order->total(), $stock_price, $stock_total;
 			} # end foreach Project
 		} # end foreach Order
 
