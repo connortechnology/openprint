@@ -512,7 +512,6 @@ sub create_edit_process {
 	my $services = $Project->services();
 	my @service_ids = sort map { $$services{$_} ? @{$$services{$_}} : () } keys %$services;
 
-
 	foreach my $qty_index ( 1 .. 3 ) {
 		my @other_quantities = sets::exclude( [ $qty_index ], [ $Project->quantity_indexes() ] );
 $log->debug("other quantities @other_quantities");
