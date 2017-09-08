@@ -1,14 +1,14 @@
-<?include( '/includes/error_reporting.html')?>
+<?include(/includes/error_reporting.html)?>
 <div class="Photo">
 	<div class="View">
-<? if ( $variable{'Photo'} and $variable{'Photo'}->asset_id() ) ?>
+<? if ( $variable{Photo} and $variable{Photo}->asset_id() ) ?>
 		<form id="f1" name="f1" action="view_photo.html" method="post">
 			<input type="hidden" name="action" />
-			<input type="hidden" name="asset_id" value="<? echo ( $$variable{'Photo'}->asset_id() ) ?>" />
-			<input type="hidden" name="album_id" value="<? echo ( $$variable{'Photo'}->album_id() ) ?>" />
+			<input type="hidden" name="asset_id" value="<? echo ( $$variable{Photo}->asset_id() ) ?>" />
+			<input type="hidden" name="album_id" value="<? echo ( $$variable{Photo}->album_id() ) ?>" />
 			<? echo ( 
 				my $html = '';
-				my $Photo = $$variable{'Photo'};
+				my $Photo = $$variable{Photo};
 				my $Album = $Photo->Album();
 
 				if ( $Photo->can_edit() ) {
@@ -20,14 +20,14 @@
 					if ( $Photo->asset_id() != $Album->thumbnail_id() ) {
 						$html .= button( 'SAT', { onclick => q`f1.elements['action'].value='set as thumbnail';f1.submit();`, 'text'=>'Set as album thumbnail' } );
 					} # end if isn't thumbnail
-					if ( $Photo->Album()->user_id() == $session{'user_id'} and $Photo->asset_id() != new openprint::User($session{'user_id'})->asset_id() ) {
+					if ( $Photo->Album()->user_id() == $session{user_id} and $Photo->asset_id() != new openprint::User($session{user_id})->asset_id() ) {
 						$html .= button( 'SAPP', { onclick => q`f1.elements['action'].value='set as profile pic';f1.submit();`,
 						'text'=>'Set as profile picture' } );
 		
 					} # end if
-					my $DoDont = openprint::Photo_Album->find_one('name'=>'Do/Dont', 'user_id is null' => 1);
+					my $DoDont = openprint::Photo_Album->find_one( name=>'Do/Dont', 'user_id is null' => 1);
 					if ( $DoDont ) {
-						my $DoDontPhoto = openprint::Photo_in_Album->find_one( 'asset_id'=>$$variable{'Photo'}->asset_id(), 'album_id'=>$DoDont->id() );
+						my $DoDontPhoto = openprint::Photo_in_Album->find_one( asset_id=>$$variable{Photo}->asset_id(), album_id=>$DoDont->id() );
 						if ( $DoDontPhoto ) {
 							$html .= button( 'DoDont', { onclick => q`f1.elements['action'].value='UnDo/Dont';f1.submit();`,
 								'text'=>"Remove from Do/Don't" } );
@@ -71,7 +71,7 @@ if ( 0 ) {
 }
 
 						$html .= '<fieldset><legend>Available Opinions</legend><div id="OpinionAvailability">';
-						$$variable{'Object'} = $Asset;
+						$$variable{Object} = $Asset;
 						$html .= include( '/includes/_opinion_availability.html' );
 						$html .= '</div></fieldset>';
 
@@ -114,16 +114,16 @@ if ( 0 ) {
 				return $html;
 			) ?>
 		</form>
-		<div class="Name"><? echo ( $$variable{'Photo'}->Asset()->name() ) ?></div>
-		<div class="Caption"><? echo ( $$variable{'Photo'}->Asset()->description() ) ?></div>
-		<div class="published_on">Published on <? echo ( format_datetime( $$variable{'Photo'}->Asset()->created_on() ); ) ?></div>
-	<? if ( $session{'user_id'} ) ?>
-		<div id="Opinions"><? echo ( $$variable{'Photo'}->Asset()->opinions('Opinions') ) ?></div>
+		<div class="Name"><? echo ( $$variable{Photo}->Asset()->name() ) ?></div>
+		<div class="Caption"><? echo ( $$variable{Photo}->Asset()->description() ) ?></div>
+		<div class="published_on">Published on <? echo ( format_datetime( $$variable{Photo}->Asset()->created_on() ); ) ?></div>
+	<? if ( $session{user_id} ) ?>
+		<div id="Opinions"><? echo ( $$variable{Photo}->Asset()->opinions('Opinions') ) ?></div>
 		<div id="Comments"><fieldset><legend>Comments</legend><?include('_photo_comments.html')?></fieldset></div>
-	<? endif ( $session{'user_id'} ) ?>
-<? else ( $variable{'Photo'} and $variable{'Photo'}->asset_id() ) ?>
+	<? endif ( $session{user_id} ) ?>
+<? else ( $variable{Photo} and $variable{Photo}->asset_id() ) ?>
 No photo specified
-<? endif ( $variable{'Photo'} and $variable{'Photo'}->asset_id() ) ?>
+<? endif ( $variable{Photo} and $variable{Photo}->asset_id() ) ?>
 	<? if ( $param{album_id} ) ?>
 	<div class="Album">
 		<?include('/photo_albums/_album_photos.html') ?>

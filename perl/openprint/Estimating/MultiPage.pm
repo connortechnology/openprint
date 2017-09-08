@@ -562,7 +562,9 @@ sub status {
 	} # end foreach
 	my @Groups = sql::execute( undef, undef, 'SELECT DISTINCT strvalue FROM tbl_Service_Specifications WHERE lngProjectIndex=? AND strName=?', $project_index, 'Group' );
 	foreach my $Group ( @Groups ) {
+$openprint::log->debug("$Group needed: $needed_pages{$Group} >? $specified_pages{$Group}");
 		if ( $needed_pages{$Group} > $specified_pages{$Group} ) {
+$openprint::log->debug("Returning from ultiPage::status $Group");
 			return $Group;
 		} # end if
 	} # end foreach
@@ -664,10 +666,12 @@ sub check {
 		} # end foreach
 	}
 	if ( $error ) {
+$openprint::log->warn("Have error $error for $qty_index. Existing error is ".$$specs{"alert$qty_index"});
 		if ( $error ne $$specs{"alert$qty_index"} ) {
 			openprint::service::insert_service_spec( $openprint::log, $openprint::dbh, $Project->id(), $Service->service_id(), 'alert'.$qty_index, $error ) if $error;
 		} # end if
 	} else {
+$openprint::log->warn("Have no error $error for $qty_index. Existing error is ".$$specs{"alert$qty_index"});
 # Clears it, but leaves alert messages from elsewhere
 		if ( $$specs{"alert$qty_index"} =~ /^Group/ or $$specs{"alert$qty_index"} =~ /^Stock/ ) {
 			openprint::service::insert_service_spec( $openprint::log, $openprint::dbh, $Project->id(), $Service->service_id(), 'alert'.$qty_index, $error );

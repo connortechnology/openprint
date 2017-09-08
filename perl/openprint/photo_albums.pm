@@ -205,6 +205,7 @@ sub view_photo {
 	if ( ! $Photo ) {
 		$variable{Photo} = new openprint::Photo_in_Album();
 		$log->warn("No photo for album $param{album_id} phto: $param{asset_id}");
+    $variable{Album} = new openprint::Photo_Album();
 		return;
 	} # end if
 
