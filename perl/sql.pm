@@ -255,8 +255,5 @@ if ( ! defined $ac ) {
 	$d->{AutoCommit} = $ac;
 } # end sub end_transaction
 
-
 1;
-
 __END__
-
