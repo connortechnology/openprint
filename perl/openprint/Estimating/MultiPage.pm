@@ -615,10 +615,10 @@ $openprint::log->debug("Starting Multipage::save");
 			# Special case, should never change the type of cover or interior pages.
 			next if ( $v eq 'txtSignatureType' ) and ( $group_id == 1 or $group_id == 2 );
 			if ( $$specs{$v.$group_id} ne $$sig_specs{$v} ) {
-$openprint::log->debug("Saving $v") if DEBUG;
+$openprint::log->debug("Saving $v for group $group_id") if DEBUG;
 				openprint::service::insert_service_spec( $openprint::log, $openprint::dbh, $Project->id(), $ssid, $v, $$specs{$v.$group_id} );
 			} else {
-$openprint::log->debug("Not Saving $v") if DEBUG;
+$openprint::log->debug("Not Saving $v for group $group_id") if DEBUG;
 			} # end if
 		} # end foreach v
 	}  # end foreach signature
