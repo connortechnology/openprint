@@ -778,7 +778,8 @@ sub servicetype_id {
 	} # end if
 	if ( ! exists $$self{service_types}{$s_id} ) {
 	my ( $caller, undef, $line ) = caller;
-		$openprint::log->error("Request for servicetype_id for $s_id, reloading from $caller:$line");
+		#$openprint::log->error("Request for servicetype_id for $s_id, reloading from $caller:$line");
+		Carp::cluck("No servicetype_id for $s_id Project::Service");
 		%{$$self{service_types}} = sql::execute( undef, undef, q{SELECT lngserviceindex, servicetype_id FROM tbl_Project_Contents WHERE lngProjectIndex=?}, $$self{id} );
 		if ( ! $$self{service_types}{$s_id} ) {
 			$openprint::log->error("Request for servicetype_id for $s_id, not found ");
@@ -1376,6 +1377,8 @@ sub printed_on {
 	my ( $self ) = @_;
 	if ( ! exists $$self{printed_on} ) {
 		@$self{printed_on} = sql::execute( undef, undef, q`SELECT MAX(dtmtimestamp) FROM Project_Log WHERE project_id=? AND description LIKE 'Marked Printed%'`, $$self{id} );
+	} else {
+$openprint::log->debug("Printed on: $$self{printed_on}");
 	} # end if
 	return $$self{printed_on};
 } # end sub printed_on
@@ -1520,6 +1523,7 @@ sub Service {
 		Carp::cluck("No service_id passwrod to Project::Service");
 	} # end if
 	return new openprint::Project_Service( {project_id=>$$self{id}, service_id=>$service_id} );
+	#return new openprint::Project_Service( { service_id=>$service_id} );
 } # end sub Service
 
 sub used_press_names {
