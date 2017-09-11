@@ -458,10 +458,10 @@ button( 'merge'.$C->id(), { href=>'/administrator/managerial/company_profiles.ht
 	</fieldset>
 </div>
 <?include(/account/_trade_references.html)?>
+</form>
 <? if ( $$variable{CustomerIndex} ) ?>
 <br class="spacer"/>
 <? echo ( include_logs( $$variable{Company} ); ) ?>
 <? endif ( $$variable{CustomerIndex} ) ?>
-</form>
 </div>
 <script type="text/javascript">load_customers();</script>
