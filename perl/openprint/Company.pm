@@ -84,6 +84,7 @@ $serial = 'companies_id_seq';
 %transforms = (
 	address1		=>	[ 's/^\s+//', 's/\s+$//' ],
 	address2		=>	[ 's/^\s+//', 's/\s+$//' ],
+	notes				=>	[ 's/^\s+//', 's/\s+$//' ],
 	established		=>	[ 's/[^\d\-]//g' ],
 	name			=>	[ 's/[\.\,]//g', 's/^\s+//', 's/\s+$//','s/\///g' ],
 	business_name	=>	[ 's/^\s+//', 's/\s+$//' ],
