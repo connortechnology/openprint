@@ -654,8 +654,8 @@ $log->error("$key deleted");
     $search{cancelled} = $session{$uri.'?cancelled'} if $session{$uri.'?cancelled'} ne '';
     $search{'item_id any'} = $session{$uri.'?item_id'} if $session{$uri.'?item_id'};
 
-		my @header = ( 'Id', 'Supplier', 'Sub Total', 'Total', 'Created', 'Created By', 'Item','Quantity','Unit Price', 'Units', 'Item Total', 'DOcket', 'Printed Start','Printed End' );
-		my @data;
+	my @header = ( 'Id', 'Supplier', 'Sub Total', 'Total', 'Created', 'Created By', 'Item','Quantity','Unit Price', 'Units', 'Item Total', 'Docket', 'Printed Start','Printed End' );
+	my @data;
 
     my $ac = sql::start_transaction( $dbh );
     my @POs = openprint::PurchaseOrder->find( %search );
@@ -674,6 +674,8 @@ $log->error("$key deleted");
     } # end if POs
 
 		my %types = map { $_, $_ } split(',',$session{$uri.'?types'} );
+my $total_quantity = 0;
+my $total_value = 0;
 
     foreach my $PO ( @POs ) {
       if ( $session{$uri.'?authorized'} eq 'Y' and $PO->authorized() ne '1' ) {
@@ -734,6 +736,10 @@ $log->error("$key deleted");
 				next if %types and ! $types{$$C{type_id}};
 				push @data, @$PO{'id','vendor_name','subtotal','total'}, ssi::format_csv_date($$PO{created_on}), $PO->Created_By()->name();
 				push @data, $C->item(), $C->qty(), $C->price(), $C->units(), $C->total(), $C->docket();
+
+				$total_quantity += $C->qty();
+				$total_value += $C->total();
+
 				my ( $printed_start, $printed_end );
 				( my $docket ) = $C->docket() =~ /^\s*(\d+)\s*$/;
 				if ( $docket ) {
@@ -750,6 +756,8 @@ $log->error("$key deleted");
 				push @data, ssi::format_csv_date($printed_start), ssi::format_csv_date($printed_end);
 			}
     } # end foreach PO
+	my @header = ( 'Id', 'Supplier', 'Sub Total', 'Total', 'Created', 'Created By', 'Item','Quantity','Unit Price', 'Units', 'Item Total', 'Docket', 'Printed Start','Printed End' );
+push @data, '','Totals', '', '', '', '', '', $total_quantity, '', '', $total_value, '', '', '';
 		sql::end_transaction( $dbh, $ac );
 
 		misc::export_csv( $r, $log, \%variable, 'purchase_order_history_report.csv', \@header,\@data );	

@@ -20,7 +20,12 @@ $serial = 'object_types_id_seq';
 );
 
 sub Object {
+	if ( $_[0]{name} ) {
 	return $_[0]{name}->new( $_[1] );
+	}
+	my ( $caller, undef, $line ) = caller;
+	$openprint::log->error( "Unknown object from $caller:$line" );
+	return new openprint::Object();
 } # end sub Object
 
 sub human {

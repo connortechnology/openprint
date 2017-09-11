@@ -3263,8 +3263,8 @@ $log->debug("Gruop $$sig_specs{Group} unspecd " . $$sig_specs{'txtUnspecifiedPag
 			$log->debug("calculate_impositions with no needed_pages!!!! " . $$sig_specs{'txtUnspecifiedPageQuantity'.$qty_index} );
 			return ();
 		}
-		if ( $needed_pages <= 2 ) {
-			$log->warn("Bailing early cuz can't do a 2pg signature");
+		if ( $needed_pages < 2 ) {
+			$log->warn("Bailing early cuz can't do less than a 2pg signature");
 			return ();
 		}
 	} # end if
@@ -3389,7 +3389,7 @@ $log->debug("Gruop $$sig_specs{Group} unspecd " . $$sig_specs{'txtUnspecifiedPag
 
 	if ( $$sig_specs{txtSpreadSize} == 2 ) {
 		foreach my $imp ( @impositions ) {
-			if ( $needed_pages % $$imp{pages} == 2 ) {
+			if ( $$imp{pages} > 4 and ( $needed_pages % $$imp{pages} == 2 ) ) {
 				if ( DEBUG_FILTERING ) {
 					$imp->display("DROPPING BECUASE it leaves a 2pg");
 				}
@@ -4505,7 +4505,7 @@ $log->error("No proofs>!");
 #$log->debug( breakdown( $price, $sig_specs ) ) if ! $recursion_depth;
 
 					if ( $$price{upq} ) {
-						if ( ( $$price{upq} == 2 ) and %best_price ) {
+						if ( 0 and ( $$price{upq} == 2 ) and %best_price ) {
 							$$price{complete} = 0;
 							$$price{'Comparison Cost'} += 10000000;
 							$$price{Breakdown} .= 'Unable to calculate additional 2pg signatures.<br/>';
@@ -5492,7 +5492,9 @@ sub calc_price {
 		} # end if
 
 		delete $$Imposition{Folder};
-		if ( ( $$folding_results{Status} eq 'uncalculated' ) or ( ( ! $$folding_results{Equipment} ) and ( $$project{FoldingSpecs}{"chkOverrideEquipment-$$specs{SignatureIndex}-$qty_index"} ne 'Y' ) ) ) {
+		if ( $$folding_results{Status} eq 'uncalculated' ) {
+# a 2 pg doesn't need folding, it's not an error
+# or ( ( ! $$folding_results{Equipment} ) and ( $$project{FoldingSpecs}{"chkOverrideEquipment-$$specs{SignatureIndex}-$qty_index"} ne 'Y' ) ) ) {
 # do not want an invalid fold style to win out unless there are no other valid signatures.
 			$price{'Folding Breakdown'} .= sprintf('Unable to fold<br/>'.$$folding_results{Breakdown});
 			$price{'Comparison Cost'} += 10000000; 

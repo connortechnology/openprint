@@ -373,6 +373,8 @@ $openprint::log->debug("********************************************************
 	$openprint::log->debug( "Signatures: @signatures");
 	return 'uncalculated' if ! @signatures;
 
+	$Project->lock();
+
 	# If we have a specified printing type, then .... if any of the sigs aren't of the same printing type is this even neccessary? 
 	for ( my $i = 0; $i < @signatures; $i += 1 ) {
 		my $sig_specs = openprint::service::get_specs_ref( $Project, $signatures[$i] );
@@ -511,13 +513,12 @@ $openprint::log->debug("Removing impo cuz wrong group") if DEBUG;
 #}
 				
 				#openprint::Estimating::Printing::calc_from_imposition( $Project, $a_ss_id, \%specs, $sig_specs );
-				my $ac = sql::start_transaction( $openprint::dbh );
+					
 				sql::update( undef, undef, 'tbl_Project_Contents', ['lngProjectIndex=? AND lngServiceIndex=?', $$Project{id}, $a_ss_id], 'strStatus', $status );
 
 				foreach my $key ( sort { $a cmp $b } ( openprint::Estimating::Printing::variables( $$Project{id}, $a_ss_id, $new_sig_specs, \%specs ) ) ) {
 					openprint::service::insert_service_spec( $openprint::log, undef, $$Project{id}, $a_ss_id, $key, $specs{$key} );
 				} # end foreach
-				sql::end_transaction( $openprint::dbh, $ac );
 
 			} # end while Additional Imposition
 
@@ -530,10 +531,12 @@ $openprint::log->debug("Removing impo cuz wrong group") if DEBUG;
 			} # end while sigs
 		} else {
 			$openprint::log->warn("uncomplete status: $$sig_specs{Status} alert: $$sig_specs{alert}");
+			$Project->unlock();
 			return 'uncalculated';
 		} # end if
 	} # end foreach group
 
+	$Project->unlock();
 	return 'calculated';
 } # end sub calculate_signatures
 
@@ -562,7 +565,9 @@ sub status {
 	} # end foreach
 	my @Groups = sql::execute( undef, undef, 'SELECT DISTINCT strvalue FROM tbl_Service_Specifications WHERE lngProjectIndex=? AND strName=?', $project_index, 'Group' );
 	foreach my $Group ( @Groups ) {
+$openprint::log->debug("$Group needed: $needed_pages{$Group} >? $specified_pages{$Group}");
 		if ( $needed_pages{$Group} > $specified_pages{$Group} ) {
+$openprint::log->debug("Returning from ultiPage::status $Group");
 			return $Group;
 		} # end if
 	} # end foreach
@@ -615,10 +620,10 @@ $openprint::log->debug("Starting Multipage::save");
 			# Special case, should never change the type of cover or interior pages.
 			next if ( $v eq 'txtSignatureType' ) and ( $group_id == 1 or $group_id == 2 );
 			if ( $$specs{$v.$group_id} ne $$sig_specs{$v} ) {
-$openprint::log->debug("Saving $v") if DEBUG;
+$openprint::log->debug("Saving $v for group $group_id") if DEBUG;
 				openprint::service::insert_service_spec( $openprint::log, $openprint::dbh, $Project->id(), $ssid, $v, $$specs{$v.$group_id} );
 			} else {
-$openprint::log->debug("Not Saving $v") if DEBUG;
+$openprint::log->debug("Not Saving $v for group $group_id") if DEBUG;
 			} # end if
 		} # end foreach v
 	}  # end foreach signature
@@ -664,10 +669,12 @@ sub check {
 		} # end foreach
 	}
 	if ( $error ) {
+$openprint::log->warn("Have error $error for $qty_index. Existing error is ".$$specs{"alert$qty_index"});
 		if ( $error ne $$specs{"alert$qty_index"} ) {
 			openprint::service::insert_service_spec( $openprint::log, $openprint::dbh, $Project->id(), $Service->service_id(), 'alert'.$qty_index, $error ) if $error;
 		} # end if
 	} else {
+$openprint::log->warn("Have no error $error for $qty_index. Existing error is ".$$specs{"alert$qty_index"});
 # Clears it, but leaves alert messages from elsewhere
 		if ( $$specs{"alert$qty_index"} =~ /^Group/ or $$specs{"alert$qty_index"} =~ /^Stock/ ) {
 			openprint::service::insert_service_spec( $openprint::log, $openprint::dbh, $Project->id(), $Service->service_id(), 'alert'.$qty_index, $error );
