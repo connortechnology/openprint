@@ -33,7 +33,7 @@ require misc;
 
 my $threading = 0;
 #use threads;
-use constant DEBUG => 1;
+use constant DEBUG => 0;
 use constant DEBUG_PLATES => 0;
 use constant DEBUG_VERSIONS => 0;
 use constant DEBUG_PRESSES => 0;
@@ -43,7 +43,7 @@ use constant DEBUG_AFTER_FILTERING => 0;
 use constant DEBUG_PRICE_DECISIONS => 0;
 use constant DEBUG_INKS => 0;
 use constant DEBUG_STOCK => 0;
-use constant COMPARISON_LOG => 1;
+use constant COMPARISON_LOG => 0;
 use constant USE_PRICE_CACHE => 1;
 use constant DEBUG_IMPOSITIONS => 0;
 
@@ -3263,8 +3263,8 @@ $log->debug("Gruop $$sig_specs{Group} unspecd " . $$sig_specs{'txtUnspecifiedPag
 			$log->debug("calculate_impositions with no needed_pages!!!! " . $$sig_specs{'txtUnspecifiedPageQuantity'.$qty_index} );
 			return ();
 		}
-		if ( $needed_pages <= 2 ) {
-			$log->warn("Bailing early cuz can't do a 2pg signature");
+		if ( $needed_pages < 2 ) {
+			$log->warn("Bailing early cuz can't do less than a 2pg signature");
 			return ();
 		}
 	} # end if
@@ -3389,7 +3389,7 @@ $log->debug("Gruop $$sig_specs{Group} unspecd " . $$sig_specs{'txtUnspecifiedPag
 
 	if ( $$sig_specs{txtSpreadSize} == 2 ) {
 		foreach my $imp ( @impositions ) {
-			if ( $needed_pages % $$imp{pages} == 2 ) {
+			if ( $$imp{pages} > 4 and ( $needed_pages % $$imp{pages} == 2 ) ) {
 				if ( DEBUG_FILTERING ) {
 					$imp->display("DROPPING BECUASE it leaves a 2pg");
 				}
@@ -4283,7 +4283,6 @@ sub get_project_price {
 		$$price{sig_count} = 1;
 		$$price{Imposition} = $imp;
 		$$price{upq} = $txtUnspecifiedPageQuantity ? $txtUnspecifiedPageQuantity - $$imp{pages} : 0;
-$openprint::log->debug("UPQ: $$price{upq}");
 		if ( $Project->Type()->type() eq 'ScratchPads' ) {
 			$$price{upq} = 0;
 		}
@@ -4506,7 +4505,7 @@ $log->error("No proofs>!");
 #$log->debug( breakdown( $price, $sig_specs ) ) if ! $recursion_depth;
 
 					if ( $$price{upq} ) {
-						if ( ( $$price{upq} == 2 ) and %best_price ) {
+						if ( 0 and ( $$price{upq} == 2 ) and %best_price ) {
 							$$price{complete} = 0;
 							$$price{'Comparison Cost'} += 10000000;
 							$$price{Breakdown} .= 'Unable to calculate additional 2pg signatures.<br/>';
@@ -5493,7 +5492,9 @@ sub calc_price {
 		} # end if
 
 		delete $$Imposition{Folder};
-		if ( ( $$folding_results{Status} eq 'uncalculated' ) or ( ( ! $$folding_results{Equipment} ) and ( $$project{FoldingSpecs}{"chkOverrideEquipment-$$specs{SignatureIndex}-$qty_index"} ne 'Y' ) ) ) {
+		if ( $$folding_results{Status} eq 'uncalculated' ) {
+# a 2 pg doesn't need folding, it's not an error
+# or ( ( ! $$folding_results{Equipment} ) and ( $$project{FoldingSpecs}{"chkOverrideEquipment-$$specs{SignatureIndex}-$qty_index"} ne 'Y' ) ) ) {
 # do not want an invalid fold style to win out unless there are no other valid signatures.
 			$price{'Folding Breakdown'} .= sprintf('Unable to fold<br/>'.$$folding_results{Breakdown});
 			$price{'Comparison Cost'} += 10000000; 
@@ -5738,15 +5739,15 @@ sub calc_price {
 	
 	my @colours_no_coatings = filter_coatings_from_colours(\@colours);
 
+if ( 1 ) {
+	$plate_count += scalar @colours_no_coatings;
+} else {
 	foreach my $Colour ( @colours_no_coatings ) {
 		my $real_colour = $$Colour{name};
-		my $key = $real_colour.'-'.$$Press{strid}.'-'.$qty_index;
-		#if ( $real_colour =~ /Varnish/ and $real_colour =~ /Overall/ and $$washed_colours{$key} ) {
-#$log->debug("No plate for varnish $real_colour ");
-		#} else {
-			$plate_count += 1;
-		#} # end if
+		my $key = join('-',$real_colour,$$Press{strid},$qty_index);
+		$plate_count += 1;
 	} # end foreach Colour
+}
 
 	
 	$plate_setup{'Setup Plate Count'} = $plate_count;
@@ -6185,8 +6186,6 @@ $log->debug("Area $area = $$Imposition{object_area} * Impressions($colour_impres
 	if ( $_ = $Press->specification('Charge for setup overs') and $$_{value} eq 'N' ) {
 		$impressions -= $setup_overs;
 	} # end if
-
-
 
 	my $run_prices;
 	if ( $is_wt ) {

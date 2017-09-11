@@ -188,7 +188,7 @@ sub order_history {
 	ssi::setup_date_select( $r->uri(), 'created_on_end', '' );
 
 	if ( $param{action} eq 'download' ) {
-		my @Header = ( 'OrderID', 'Docket', 'Invoice', 'Company', 'Project Reference', 'Date Ordered', 'Status', 'Total', 'Quoted Stock Value', 'Stock Amount' );
+		my @Header = ( 'OrderID', 'Docket', 'Invoice', 'Company', 'Project Reference', 'Date Ordered', 'Date Printed', 'Status', 'Total', 'Quoted Stock Value', 'Stock Amount' );
 		my @Data = ();
 		foreach my $Order ( @{$variable{Orders}} ) {
 			foreach my $Project ( $Order->Projects() ) {
@@ -249,7 +249,7 @@ $log->warn("Paper was supplied");
 					$stock_total += $totals{$string};
 				} # end foreach string
 
-				push @Data, $Order->id(), $Order->docket(), join(',', map { $_->Invoice()->num() } $Order->Invoices() ), $Order->Company()->name(), $Project->reference(), $Order->created_on(), $Order->status(), $Order->total(), $stock_price, $stock_total;
+				push @Data, $Order->id(), $Order->docket(), join(',', map { $_->Invoice()->num() } $Order->Invoices() ), $Order->Company()->name(), $Project->reference(), $Order->created_on(), ssi::format_csv_date($Project->printed_on()), $Order->status(), $Order->total(), $stock_price, $stock_total;
 			} # end foreach Project
 		} # end foreach Order
 
@@ -261,6 +261,8 @@ sub _order_history_results {
 	ssi::save_params($uri,
 		( map { 'created_on_start_'.$_ } ( 'year','month','day' ) ),
 		( map { 'created_on_end_'.$_ } ( 'year','month','day' ) ),
+		( map { 'printed_on_start_'.$_ } ( 'year','month','day' ) ),
+		( map { 'printed_on_end_'.$_ } ( 'year','month','day' ) ),
 		'status', 'company_id', 'CSR', 'reprint', 'currency_id', 'total_start', 'total_end'
 	);
 	if ( %param ) {
@@ -299,10 +301,39 @@ sub _order_history_results {
 			next if ( $param{reprint} eq 'Y' ) and ! $reprint;
 			next if ( $param{reprint} eq 'N' ) and $reprint;
 		} # end if reprint
+
+		my @printed_on_start = map{ @session{$uri.'?printed_on_start_'.$_} } ( 'year','month','day' );
+		my $printed_on_start = join('-', @printed_on_start ) if Date::Calc::check_date( @printed_on_start );
+		my $printed_on_start_seconds = Date::Parse::str2time( $printed_on_start ) if $printed_on_start;
+
+		my @printed_on_end = map{ @session{$uri.'?printed_on_end_'.$_} } ( 'year','month','day' );
+		my $printed_on_end = join('-', @printed_on_end ) if Date::Calc::check_date( @printed_on_end );
+		my $printed_on_end_seconds = Date::Parse::str2time( $printed_on_end ) if $printed_on_end;
+
+		if ( $printed_on_start or $printed_on_end ) {
+			my $keep = 0;
+			foreach my $Project ( $Order->Projects() ) {
+				my $printed_on = $Project->printed_on();
+				my $printed_on_seconds = Date::Parse::str2time( $printed_on );
+				next if ! $printed_on;
+				if (
+						( (!$printed_on_start_seconds) or ( $printed_on_seconds > $printed_on_start_seconds ) )
+						and
+						( (!$printed_on_end_seconds) or ( $printed_on_seconds < $printed_on_end_seconds ) )
+					 ) {
+					$keep = 1;
+					last;
+				}
+			}
+			next if ! $keep;
+		}
+		
 		if ( $param{press_id} ) {
 			my $Press = new openprint::Equipment( $param{press_id} );
 			my $on_press = 0;
 			foreach my $Project ( $Order->Projects() ) {
+							
+				
 				foreach my $sig_id ( $Project->signatures() ) {
 					my $sig_specs = openprint::service::get_specs_ref( $Project, $sig_id );
 					if ( ! $$sig_specs{UsePress} ) {
@@ -418,6 +449,10 @@ sub stock_usage {
 		my %Stocks = %{$variable{Stocks}};
 		my %Projects = %{$variable{Projects}};
 		my @Orders = @{$variable{Orders}};
+		my $total_projects = 0;
+		my $total_orders = 0;
+		my $total_sheets = 0;
+		my $total_weight = 0;
 		foreach my $paper_string ( sort keys %totals ) {
 			my $Stock = $Stocks{$paper_string};
             my $quantity = $totals{$paper_string}{quantity};
@@ -443,7 +478,30 @@ sub stock_usage {
                 $Stock->type() eq 'Sheet' ? Number::Format::format_number($quantity).' sheets' : '',
                 Number::Format::format_number($Stock->type() eq 'Roll' ? $quantity : $quantity * $Stock->sheet_weight() ),
             );
+			$total_projects += @unique_project_ids;
+			$total_orders += @unique_order_ids;
+			$total_sheets += $Stock->type() eq 'Sheet' ? $quantity : 0;
+			$total_weight += $Stock->type() eq 'Roll' ? $quantity : $quantity * $Stock->sheet_weight();
 		}
+		push @Data, ( '', #manufacturer
+				'', #brand
+				'', #finish
+				'', #colour
+				'', #weight
+				'', #quality
+				'', #material
+				'', #group
+				'', #width
+				'', #height
+				'', #type
+				'', #calliper
+				'', #gsm,
+				'', #fsc
+				$total_projects,
+				$total_orders,
+				$total_sheets . ' sheets',
+				$total_weight . ' lbs',
+				);
 		misc::export_csv( $r, $log, \%variable, 'stock_usage.csv', \@Header,\@Data );	
 	} # end if
 } # end sub stock_usage
@@ -485,7 +543,7 @@ $log->debug("done saving params");
 	} else {
 $log->debug("Loading projects");
 		foreach my $Project ( openprint::Project->find(
-					( @company_ids ? ( 'company_id' => \@company_ids ) : () ),
+					( @company_ids ? ( company_id => \@company_ids ) : () ),
 					ssi::date_filter( '/employee/reports/stock_usage.html?ordered_on_end', 'created_on <=' ),
 					ssi::date_filter( '/employee/reports/stock_usage.html?ordered_on_start', 'created_on >=' ),
 					) ) {
@@ -497,7 +555,8 @@ $log->debug("Loading projects");
 
 	my %totals;
 	my %Stocks;
-$openprint::log->debug("orders: " . @Orders );
+	$openprint::log->debug("orders: " . @Orders );
+	my %types = map { $_, $_ } split( ',', $session{'/employee/reports/stock_usage.html?type'} );
 
 	foreach my $Order ( @Orders, ( $session{'/employee/reports/stock_usage.html?projects_orders'} eq 'Projects' ? new openprint::Order() : () ) ) {
 
@@ -507,7 +566,8 @@ $openprint::log->debug("orders: " . @Orders );
 			my $qty_index = $Project->ordered_quantity_index();
 			if ( ! $qty_index ) {
 				if ( $session{'/employee/reports/stock_usage.html?projects_orders'} eq 'Projects' ) {
-					$qty_index = $Project->quantity_indexes();
+					my @qtys = $Project->quantity_indexes();
+					$qty_index = $qtys[0];
 				} else {
 					$log->error("No Ordered QTY Index in $$Order{id} $$Project{id}!");
 				} # end
@@ -527,7 +587,7 @@ $openprint::log->debug("orders: " . @Orders );
 					} # end if
 				} # end if
 
-				if ( $session{'/employee/reports/stock_usage.html?type'} and ! sets::isin( $$sig_specs{'StockType'.$qty_index}, split( ',', $session{'/employee/reports/stock_usage.html?type'} ) ) ) {
+				if ( %types and ! $types{ $$sig_specs{'StockType'.$qty_index} } ) {
 #$log->debug("Wrong type ". $$sig_specs{'StockType'.$qty_index} );
 					next;
 				}

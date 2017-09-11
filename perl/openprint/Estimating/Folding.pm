@@ -823,6 +823,16 @@ SET:		foreach my $Set_Of_Impositions ( @All_Impositions ) {
 			} # end if
 		} elsif ( $capable eq 'For Pocket Folders' ) {
 			next if $Project->Type()->name() ne 'PresentationFolders';
+		} elsif ( $capable eq 'When Binding' ) {
+			if ( ! ( $$calc_hash{HasStitching} or $$calc_hash{HasPerfectBound} ) ) {
+				$Breakdown .= 'Not binding:<br/>';
+				next;
+			} # end if
+			if ( $Equipment->specification('Fold Covers Only') and ( (!$$sig_specs{Group}) or ( $$sig_specs{Group} != 1 ) )) {
+				$Breakdown .= 'Stitcher can only fold 4pg cover:<br/>';
+				next;
+			} # end if
+
 		} elsif ( $capable eq 'When Stitching' ) {
 			$Breakdown .= 'When Stitching:';
 # Means it's a Stitcher, or a Duplo, so can only do covers
@@ -1557,7 +1567,11 @@ $openprint::log->debug("Runspeed: $$Fold{type}($$Fold{name}) : $$Equipment{name}
 					$fold_specs{"Price-$form-$qty_index"} = $totalPrice;
 					#$Breakdown .= '<tr><td>Signatures:'.(@$Signature_Impositions+1).'</td></tr>';
 					my $stitching_specs;
-					if ( $capable eq 'When Stitching' and (!($$calc_hash{StitchingSpecs}{"chkOverrideEquipment$qty_index"})) ) {
+					if ( 
+							( $capable eq 'When Stitching' or $capable eq 'When Binding' or $capable eq 'When Perfect Bound' )
+							and
+							(!($$calc_hash{StitchingSpecs}{"chkOverrideEquipment$qty_index"})) 
+						 ) {
 						# Make a copy of the specs so we don't clobber the real specs.  Set the override to this stitcher and see how it calcs.
 						$stitching_specs = $$calc_hash{FoldingStitchingSpecs};
 						$$stitching_specs{"ddmEquipment$qty_index"} = $$Equipment{id};
@@ -1726,6 +1740,9 @@ sub calc {
 	} elsif ( $$services{LoopStitching} ) {
 		%{$$calc_hash{StitchingSpecs}} = %{openprint::service::get_specs_ref( $Project, $$services{LoopStitching}[0] )};
 		$$calc_hash{HasStitching} = $$services{LoopStitching}[0];
+	} elsif ( $$services{PerfectBound} ) {
+		%{$$calc_hash{PerfectBoundSpecs}} = %{openprint::service::get_specs_ref( $Project, $$services{PerfectBound}[0] )};
+		$$calc_hash{HasPerfectBound} = $$services{PerfectBound}[0];
 	} 
 	if ( $$calc_hash{HasStitching} ) {
 		#This is a copy used as a temp space for overriding the stitcher

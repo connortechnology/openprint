@@ -645,7 +645,6 @@ sub has_overrides {
         foreach my $s_s_id ( $Project->signatures() ) {
             my $sig_specs = openprint::service::get_specs_ref( $Project, $s_s_id );
             my $form = $$sig_specs{SignatureIndex};
-$openprint::log->debug("DieCutting " . $$specs{"OverrideImposition-$form-$qty_index"} );
             push @v, map { ( $$specs{$_} and ( $$specs{$_} ne 'N' ) ) ? $_ : () } (
                     "chkOverrideEquipment-$form-$qty_index",
                     "OverrideImposition-$form-$qty_index",

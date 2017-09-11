@@ -124,7 +124,9 @@
 				} # end if
 				$html .= button( 'AddProject', { href=>'/main/project/history.html', text=>'Add Project From History' } ) if $config{OrderMode} ne 'Simple';
 				if ( $$variable{Order}->status() eq 'Re-Opened' ) {
+        if ( sets::isin( $session{user_type}, ['E','A'] ) {
 				$html .= button( 'Close', { href=>'/main/order/confirmation.html?btnFunction=Close&order_id='.$$variable{Order}->id(), text=>'Close' } );
+				}
 				}
 				$html .= button( 'SaveAndContinue', { onclick=>'f1.submit();', text=>'Save And Continue' } ); 
         if ( $$variable{Order}->status() eq 'Re-Opened' and ( sets::isin( $session{user_type}, ['E','A'] ) ) {

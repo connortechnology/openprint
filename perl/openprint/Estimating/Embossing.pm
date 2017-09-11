@@ -476,8 +476,11 @@ sub signature_calc {
 						$results{breakdown} .= "Doesn't fit. $_<br/>";
 					} # end if
 					if ( $$imposition{imposition} > 1 and ! $$specs{"OverrideImposition-$form-$qty_index"} ) {
-						splice ( @Impositions, $impo_index, 1, openprint::imposition::cut( $imposition ) );
-						push @Sets_of_Impositions,  \@Impositions;
+            my @cut = openprint::imposition::cut( $imposition );
+            if ( @cut ) {
+              splice ( @Impositions, $impo_index, 1, openprint::imposition::cut( $imposition ) );
+              push @Sets_of_Impositions,  \@Impositions;
+            }
 					} # end if
 					$complete = 0;
 					last;

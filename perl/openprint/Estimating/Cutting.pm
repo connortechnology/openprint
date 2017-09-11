@@ -487,9 +487,8 @@ sub signature_calc_folding_cutting {
 sub signature_calc {
 	my ( $Project, $sig_specs, $specs, $qty_index, $Paper, $Imposition, $folding_specs, $calc_hash ) = @_;
 
-
 	my %results = (
-			Status	=> 'calculated',
+			Status		=>	'calculated',
 			Breakdown	=>	'<b>Post press:</b><br/>',
 			);
 	if ( ! $Paper->cuttable() ) {
@@ -571,8 +570,11 @@ sub signature_calc {
 	my $Folder = undef;
 	if ( $$services{Folding} and @{$$services{Folding}} ) {
 		$folding_specs = openprint::service::get_specs_ref( $Project, $$services{Folding}[0] ) if ! $folding_specs;
-		$Folder = new openprint::Equipment( $$folding_specs{"ddmEquipment-$form-$qty_index"} ) if $$folding_specs{"ddmEquipment-$form-$qty_index"};
-		$Folder = undef if $Folder and ! $Folder->id();
+		if ( $$folding_specs{"ddmEquipment-$form-$qty_index"} ) {
+			$Folder = openprint::Equipment->find_one( id=>$$folding_specs{"ddmEquipment-$form-$qty_index"} );
+		} else {
+			$openprint::log->debug("No folder in folding_specs") if DEBUG; 
+		}
 		if ( $$Imposition{Folds} ) {
 			@folding_impositions = @{$$Imposition{Folds}};
 		} else {
@@ -614,12 +616,11 @@ $openprint::log->debug("Folding impositions: " . @folding_impositions ) if DEBUG
 					and ( $folding_impositions[0]{imposition} == 1 )
 					and ( ! $stitching_imposition )
 
-# Why about the quanitty? Basically if it's 1out, we pre-trim.  Otherwise let the folder do it.  So if er have 2@1out, then we might as well pre-trim
+# Why about the quanitty? Basically if it's 1out, we pre-trim.  Otherwise let the folder do it.  So if we have 2@1out, then we might as well pre-trim
 					#and ( $folding_impositions[0]->quantity() == 1 )
 					and ( (!$Folder) or ( $Folder->id() != $Press->id() ) ) ) {
 				$trim_before_folding = 1;
 			} else {
-
 				if ( @folding_impositions > 1 or $folding_impositions[0]{quantity} > 1 ) {
 					# So according to Brendan, anyone doing the cutting would first make the 4 outer edge trims.  
 					$openprint::log->debug("Folds: " .@folding_impositions ) if DEBUG;
@@ -696,13 +697,13 @@ $openprint::log->debug("Folding impositions: " . @folding_impositions ) if DEBUG
 			} # end 
 
 			if ( ! $$folding_specs{"ddmEquipment-$form-$qty_index"} ) {
-				$results{Breakdown} .= 'Unknown folding equipment<br/>';
+				$results{Breakdown} .= "Unknown folding equipment for form $form qty $qty_index<br/>";
 				next;
-			} elsif( $$folding_specs{"ddmEquipment-$form-$qty_index"} ne $Equipment->id() ) {
-				$results{Breakdown} .= 'Not folding on ' . $Equipment->strid(). ' Folder is ' . ( $Folder ? $$Folder{strid} : '' ). '<br/>';
+			} elsif( $$folding_specs{"ddmEquipment-$form-$qty_index"} ne $$Equipment{id} ) {
+				$results{Breakdown} .= 'Not folding on ' . $$Equipment{strid}. ' Folder is ' . ( $Folder ? $$Folder{strid} : '' ). '<br/>';
 				next;
 			} # end if
-		} elsif ( ( $cutting_capable eq 'When Printing' ) and ( $$sig_specs{'ddmPress'.$qty_index} ne $Equipment->strid() ) ) {
+		} elsif ( ( $cutting_capable eq 'When Printing' ) and ( $$sig_specs{'ddmPress'.$qty_index} ne $$Equipment{strid} ) ) {
 			$results{Breakdown} .= 'Not printing on ' . $Equipment->strid() . '<br/>';
 			next;
 		} elsif ( $cutting_capable eq 'When Stitching' ) {
@@ -719,8 +720,6 @@ $openprint::log->debug("Folding impositions: " . @folding_impositions ) if DEBUG
 				next;
 			} # end if
 		} # end if
-
-			
 
 		my $sheets = ceil( $$sig_specs{'txtQuantity'.$qty_index} / $$I{imposition} );
 		$sheets *= $$sig_specs{PageQuantity} if $$sig_specs{PageQuantity};
