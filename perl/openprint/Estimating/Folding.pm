@@ -1567,7 +1567,11 @@ $openprint::log->debug("Runspeed: $$Fold{type}($$Fold{name}) : $$Equipment{name}
 					$fold_specs{"Price-$form-$qty_index"} = $totalPrice;
 					#$Breakdown .= '<tr><td>Signatures:'.(@$Signature_Impositions+1).'</td></tr>';
 					my $stitching_specs;
-					if ( $capable eq 'When Stitching' and (!($$calc_hash{StitchingSpecs}{"chkOverrideEquipment$qty_index"})) ) {
+					if ( 
+							( $capable eq 'When Stitching' or $capable eq 'When Binding' or $capable eq 'When Perfect Bound' )
+							and
+							(!($$calc_hash{StitchingSpecs}{"chkOverrideEquipment$qty_index"})) 
+						 ) {
 						# Make a copy of the specs so we don't clobber the real specs.  Set the override to this stitcher and see how it calcs.
 						$stitching_specs = $$calc_hash{FoldingStitchingSpecs};
 						$$stitching_specs{"ddmEquipment$qty_index"} = $$Equipment{id};
