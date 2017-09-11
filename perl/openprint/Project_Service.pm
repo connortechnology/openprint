@@ -10,7 +10,7 @@ require openprint::Project_Service_Operator;
 
 use vars qw( $debug %fields %find_fields %transforms %defaults $table %serial @identified_by );
 
-$debug = 1;
+$debug = 0;
 %fields = (
 	service_id		=>	'lngserviceindex',
 	project_id		=>	'lngprojectindex',

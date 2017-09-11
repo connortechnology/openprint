@@ -1135,7 +1135,7 @@ $openprint::log->debug("Considering sig size: $signature_size") if DEBUG_CONVERT
 				$newimp->spread_columns( $col );
 				$newimp->spread_rows( $row );
 				$newimp->display( 'To: ' ) if DEBUG_CONVERT;
-if ( $spread_size == 2 ) {
+if ( $spread_size == 2 and $signature_size > 1 ) {
 				if ( $spine eq 'width' ) {
 					if ( $$imp{image_orientation} == openprint::Imposition::Vertical ) {
 						if ( $row < 2 ) {

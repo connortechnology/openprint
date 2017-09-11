@@ -449,6 +449,10 @@ sub stock_usage {
 		my %Stocks = %{$variable{Stocks}};
 		my %Projects = %{$variable{Projects}};
 		my @Orders = @{$variable{Orders}};
+		my $total_projects = 0;
+		my $total_orders = 0;
+		my $total_sheets = 0;
+		my $total_weight = 0;
 		foreach my $paper_string ( sort keys %totals ) {
 			my $Stock = $Stocks{$paper_string};
             my $quantity = $totals{$paper_string}{quantity};
@@ -474,7 +478,30 @@ sub stock_usage {
                 $Stock->type() eq 'Sheet' ? Number::Format::format_number($quantity).' sheets' : '',
                 Number::Format::format_number($Stock->type() eq 'Roll' ? $quantity : $quantity * $Stock->sheet_weight() ),
             );
+			$total_projects += @unique_project_ids;
+			$total_orders += @unique_order_ids;
+			$total_sheets += $Stock->type() eq 'Sheet' ? $quantity : 0;
+			$total_weight += $Stock->type() eq 'Roll' ? $quantity : $quantity * $Stock->sheet_weight();
 		}
+		push @Data, ( '', #manufacturer
+				'', #brand
+				'', #finish
+				'', #colour
+				'', #weight
+				'', #quality
+				'', #material
+				'', #group
+				'', #width
+				'', #height
+				'', #type
+				'', #calliper
+				'', #gsm,
+				'', #fsc
+				$total_projects,
+				$total_orders,
+				$total_sheets . ' sheets',
+				$total_weight . ' lbs',
+				);
 		misc::export_csv( $r, $log, \%variable, 'stock_usage.csv', \@Header,\@Data );	
 	} # end if
 } # end sub stock_usage
