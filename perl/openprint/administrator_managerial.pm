@@ -90,7 +90,7 @@ sub configuration {
 		} # end while
 
 		# Add record to audit log - action "Update Configuration".
-		new openprint::Log()->save({'action'=>'Update Configuration'});
+		new openprint::Log()->save({action=>'Update Configuration'});
 	} elsif ( $param{action} eq 'delete' ) {
 		sql::execute( undef, undef, 'DELETE FROM Configuration WHERE name=?', $param{name} );
 	} # end if
@@ -527,8 +527,8 @@ sub company_profiles {
 			my $ac = sql::start_transaction( $dbh );
 			foreach my $type ( 'User','Order','Quote','Project', 'Claim', 'Log','Timetrack' ) {
 				require "openprint/$type.pm";
-				foreach ( "openprint::$type"->find( company_id=>$param{merge_company_id}) ) {
-					$_->save({'company_id'=>$Company->id()});
+				foreach ( "openprint::$type"->find( company_id=>$param{merge_company_id} ) ) {
+					$_->save({company_id=>$Company->id()});
 				} # end foreach
 			} # end foreach type
 			foreach my $Timetrack ( openprint::Timetrack->find('owner_id'=>$param{merge_company_id}) ) {
