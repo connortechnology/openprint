@@ -204,7 +204,6 @@ sub auto_calculate {
 	my ( $Project, $exclude ) = @_;
 
 	my $alert;
-	my $specs;
 	my @statuses;
 
 	my @signature_indices = $Project->signatures();
@@ -220,6 +219,7 @@ sub auto_calculate {
 		} # end if
 	} # end if
 	my $services = $Project->services();
+	my $project_specs = openprint::service::get_specs_ref( $Project, $$services{''}[0] ) if $$services{''} and @{$$services{''}};
 
 # Folding - first find out if we need it, and make sure we have it or don't as neccessary
 	require openprint::Estimating::Folding;
@@ -267,9 +267,28 @@ sub auto_calculate {
 			
 	require openprint::Estimating::Stitching;
 	if ( openprint::Estimating::Stitching::neccessary( $Project ) ) {
-		if ( ! ( $$services{SaddleStitching} or $$services{LoopStitching} ) ) {
-			push @{$$services{SaddleStitching}}, $Project->add_service( 'SaddleStitching' );
-		} # end if
+		if ( $$project_specs{rdbTemplateType} eq 'LoopStitching' ) {
+			if ( ! $$services{LoopStitching} ) {
+				push @{$$services{LoopStitching}}, $Project->add_service( 'LoopStitching' );
+			}
+			if ( $$services{SaddleStitching} ) {
+				foreach ( @{$$services{SaddleStitching}} ) {
+					openprint::print_project::delete_service( $Project, $_ );
+				}
+			}
+		} elsif ( $$project_specs{rdbTemplateType} eq 'SaddleStitching' ) {
+			if ( ! $$services{SaddleStitching} ) {
+				push @{$$services{SaddleStitching}}, $Project->add_service( 'SaddleStitching' );
+			}
+
+			if ( $$services{LoopStitching} ) {
+				foreach ( @{$$services{LoopStitching}} ) {
+					openprint::print_project::delete_service( $Project, $_ );
+				}
+			}
+		} else {
+			$openprint::log->error("Stitching is needed, but template is something else ($$project_specs{rdbTemplateType})");
+		}
 	} # end if
 
 	foreach my $service_type ( 'ThreeKnifeTrim', 'Tipping', 'Blowing' ) {
@@ -351,7 +370,7 @@ sub auto_calculate {
 		foreach my $service_index ( @{$$services{$type}} ) {
 			my $ServiceType = $Project->ServiceType( $service_index );
 			my $service_type = $ServiceType->type();
-			$specs = internal_calc( $openprint::log, $openprint::dbh, \%openprint::variable, $$Project{id}, $service_index, $service_type );
+			my $specs = internal_calc( $openprint::log, $openprint::dbh, \%openprint::variable, $$Project{id}, $service_index, $service_type );
 			$alert .= $$specs{alert};
 		} # end foreach service_index
 	} # end while service_type
@@ -375,7 +394,7 @@ sub auto_calculate {
 			next if $ServiceType->category() eq 'Shipping';
 			my $service_type = $ServiceType->type();
 			next if sets::isin( $service_type, ['','Signature'] );
-			$specs = internal_calc( $openprint::log, $openprint::dbh, \%openprint::variable, $$Project{id}, $service_index, $service_type );
+			my $specs = internal_calc( $openprint::log, $openprint::dbh, \%openprint::variable, $$Project{id}, $service_index, $service_type );
 			$alert .= $$specs{alert};
 		} # end foreach service_index
 	} # end while service_type
@@ -387,7 +406,7 @@ sub auto_calculate {
 				next;
 			} # end if
 			foreach my $service_index ( @{$$services{$ServiceType->name()}} ) {
-				$specs = internal_calc( $openprint::log, $openprint::dbh, \%openprint::variable, $$Project{id}, $service_index, $ServiceType->type() );
+				my $specs = internal_calc( $openprint::log, $openprint::dbh, \%openprint::variable, $$Project{id}, $service_index, $ServiceType->type() );
 				$alert .= $$specs{alert};
 			} # end foreach service_index
 		} # end if
