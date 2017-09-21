@@ -407,7 +407,7 @@ sub confirmation {
 		}
 		$Order->update_status();
 		$variable{information} .= $Order->link_to() . ' has been closed';
-		$variable{ExternalRedirect} = $Order->link_to();
+		$variable{ExternalRedirect} = $Order->url_to();
 	} # end if btnFunction eq 'Close or Complete
 
 	$variable{order_id} = $order_id;
