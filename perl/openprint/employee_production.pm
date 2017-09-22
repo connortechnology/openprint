@@ -1559,7 +1559,7 @@ sub _li_change {
 				my $old_date = $Project->due_date();
 				$Project->due_date( $param{duedate} );
 				$Project->save();
-				$Project->add_to_log( @openprint::session{'company_id','user_id'}, "Duedate changed to $param{duedate}" );
+				$Project->add_to_log( @openprint::session{'company_id','user_id'}, "Duedate changed to $param{duedate} from $old_date" );
 				openprint::employee_project::send_duedate_change_notification( $$Project{id}, $Project->order_id() );
 			} # end if date has changed
 		} # end if project_id
