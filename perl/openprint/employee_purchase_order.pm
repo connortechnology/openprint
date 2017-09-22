@@ -966,14 +966,17 @@ sub _payments_edit {
 		my $ac = sql::start_transaction( $openprint::dbh );
 		my $Payment = new openprint::Payment();
 		$variable{error} .= $Payment->save({ 
-				amount			=>	$param{amount},
+				amount				=>	$param{amount},
 				currency_id		=>	$$PO{currency_id},
 				received_on		=>	$param{received_on},
-				memo			=>	$param{description},
+				memo					=>	$param{description},
 				recipient_id	=>	$PO->supplier_id(),
-				payor_id		=>	$PO->company_id(),
+				payor_id			=>	$PO->company_id(),
 				});
-		return if $variable{error};
+		if ( $variable{error} ) {
+			sql::end_transaction( $openprint::dbh, $ac );
+			return;
+		}
 		my $PO_Payment = new openprint::Object_Payment();
 		$variable{error} .= $PO_Payment->save({payment_id=>$Payment->id(), object_id=>$PO->id(), object_type=>'openprint::PurchaseOrder', amount=>$param{amount} });
 		$PO->Payments( undef );
@@ -982,6 +985,12 @@ sub _payments_edit {
 		$variable{error} .= $PO->save();
 		$openprint::dbh->rollback() if $variable{error};
 		sql::end_transaction( $openprint::dbh, $ac );
+			my $L = new openprint::PurchaseOrder_Log();
+			$L->save({
+					user_id	=>	$session{user_id},
+					po_id		=>	$PO->id(),
+					reason	=>	'add payment ' . $PO_Payment->amount(),
+					});
 	} elsif ( $param{action} eq 'Delete' ) {
 $openprint::log->debug("delet");
 		if ( ! sets::isin( $param{payment_id}, [ map { $_->payment_id() } $PO->Payments() ] ) ) {
@@ -1000,6 +1009,12 @@ $openprint::log->debug("deleting");
 			$openprint::dbh->rollback();
 		} # end if
 		sql::end_transaction( $openprint::dbh, $ac );
+			my $L = new openprint::PurchaseOrder_Log();
+			$L->save({
+					user_id	=>	$session{user_id},
+					po_id		=>	$PO->id(),
+					reason	=>	'delete payment ' . $PO_Payment->amount(),
+					});
 	} # end if action
 } # end sub payments_edit
 

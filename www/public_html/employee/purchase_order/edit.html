@@ -204,7 +204,7 @@ var tax_ids = [ <? echo ( join(',', map { $_->tax_id() } $$variable{PurchaseOrde
 		</div>
 		<div class="rightColumn" style="text-align: right;">
 			Currency:
-			<select name="currency_id">
+			<select name="currency_id" id="currency_id">
 				<option value=""> select one </option>
 				<? echo ( make_drop_down( openprint::Currency->dropdown(order=>'lower(name)'), $$variable{PurchaseOrder}->currency_id() ? $$variable{PurchaseOrder}->currency_id() : $session{Currency_id} ); ) ?>
 			</select>

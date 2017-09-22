@@ -126,7 +126,8 @@ function add_Payment(po_id) {
 		po_id: po_id, 
 		action: 'Add',
 		amount: $('payment_amount').value,
-		currency_id: $('payment_currency_id').value,
+		currency_id: $('currency_id').value,
+		//currency_id: $('payment_currency_id').value,
 		received_on: get_date_value( 'payment_received_on' ),
 		description: $('payment_description').value,
 		}, evalScripts: true } );
