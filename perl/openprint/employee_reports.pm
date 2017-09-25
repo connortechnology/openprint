@@ -844,7 +844,7 @@ sub _production_performance {
 							$$sig_specs{'PlateID'.$qty_index} = $Press->specification('Plate Size').'"-'.$Press->specification('Plate Type').'Plate';
 						} # end if
 			
-						my $Plate = openprint::Material->find_one('name'=>$$sig_specs{'PlateID'.$qty_index}) if $$sig_specs{'PlateID'.$qty_index};
+						my $Plate = openprint::Material->find_one( name=>$$sig_specs{'PlateID'.$qty_index}) if $$sig_specs{'PlateID'.$qty_index};
 						my %plate_cost = $Plate->get_price( $$sig_specs{'txtPlateQuantity'.$qty_index} ) if $Plate;
 						
 						$plate_qty += $$sig_specs{'txtPlateQuantity'.$qty_index};
@@ -859,8 +859,6 @@ sub _production_performance {
 					push @Data, $invoiced_on;
 				}
 				if ( $columns{stock} ) {
-
-
 					my $stock_sheets = 0;
 					my $stock_weight = 0;
 					my $stock_cost = 0;	
@@ -906,7 +904,7 @@ sub _production_performance {
 							} # end if
 						}
 
-						push @Data, $stock_sheets_quoted, $stock_weight_quoted, $Service->ordered_price($qty_index);
+						push @Data, join(',',map { $$_{Stock}->to_string() } @stocks_and_quantities ), $stock_sheets_quoted, $stock_weight_quoted, $Service->ordered_price($qty_index);
 					} else {
 						push @Data, 0,0,0;
 					}
@@ -919,7 +917,7 @@ sub _production_performance {
 	$variable{Header} = [ 'Order ID', 'Docket', 'Project ID', 'Company', 'Created On',
 				( $columns{plates} ? ( 'Plates', 'Plate Cost', 'Plate Total' ) : () ),
 				( $columns{production} ? ( 'Operator Assigned', 'Printed On', 'Completed On', 'Invoiced On' ) : () ),
-				( $columns{stock} ? ( 'Used Stock Sheets', 'Used Stock Weight', 'Stock Cost', 'Quoted Stock Sheets', 'Quoted Stock Weight', 'Stock Quoted Price' ) : () ),
+				( $columns{stock} ? ( 'Stock', 'Used Stock Sheets', 'Used Stock Weight', 'Stock Cost', 'Quoted Stock Sheets', 'Quoted Stock Weight', 'Stock Quoted Price' ) : () ),
 				'Status', 'Project Value' ];
 
 	$variable{Data} = \@Data;
