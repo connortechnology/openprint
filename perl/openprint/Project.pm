@@ -32,49 +32,55 @@ $table = 'projects';
 $serial = 'lngProjectIndex_seq';
 
 %fields = (
-	id			=>	'id',
-	docket		=>	'lngdocketnumber',
-	company_id	=>	'company_id',
-	user_id		=>	'user_id',
-	reference		=>	'strprojectreference',
-	comments		=>	'strcomments',
-	design		=>	'strdesign',
-	created_on	=>	'dtmcreationdate',
-	updated_on	=>	'dtmlastmodified',
-	calculated_on	=>	'calculated_on',
-	quantity1=>	'intquantity1',
-	quantity2=>	'intquantity2',
-	quantity3=>	'intquantity3',
-	status=>	'strstatus',
-	mode=>	'strmode',
-	programs=>	'strprograms',
-	other_programs=>	'strotherprograms',
-	currency_id=>	'currency_id',
-	type_id=>	'type_id',
-	price1=>	'price1',
-	price2=>	'price2',
-	price3=>	'price3',
-	order_id=>	'order_id',
-	due_date=>	'due_date',
+	id							=>	'id',
+	docket					=>	'lngdocketnumber',
+	company_id			=>	'company_id',
+	user_id					=>	'user_id',
+	reference				=>	'strprojectreference',
+	comments				=>	'strcomments',
+	design					=>	'strdesign',
+	created_on			=>	'dtmcreationdate',
+	updated_on			=>	'dtmlastmodified',
+	calculated_on		=>	'calculated_on',
+	quantity1				=>	'intquantity1',
+	quantity2				=>	'intquantity2',
+	quantity3				=>	'intquantity3',
+	status					=>	'strstatus',
+	mode						=>	'strmode',
+	programs				=>	'strprograms',
+	other_programs	=>	'strotherprograms',
+	currency_id			=>	'currency_id',
+	type_id					=>	'type_id',
+	price1					=>	'price1',
+	price2					=>	'price2',
+	price3					=>	'price3',
+	order_id				=>	'order_id',
+	due_date				=>	'due_date',
 	externalrefnumber=>	'externalrefnumber',
 	reprint_reason=>	'reprint_reason',
 	reprint=>	'reprint',
 	predefined=>	'predefined',
-	rush=>	'rush',
-	style_id=>	'style_id',
-	summary=>	'summary',
-	markup=>	'markup',
-	priority			=>	'priority',
+	rush							=>	'rush',
+	style_id					=>	'style_id',
+	summary						=>	'summary',
+	markup						=>	'markup',
+	discount					=>	'discount',
+	credit_card_fee   =>  'credit_card_fee',
+	csr_commission    =>  'csr_commission',
+	priority					=>	'priority',
 	production_comments	=>	'production_comments',
 );
 %transforms = (
-	id			=>	[ 's/\D//g', '<2147483647' ],
-	markup		=>	[ 's/[^\-\d\.]//g' ],
-	quantity1	=>	[ 's/\D//g' ],
-	quantity2	=>	[ 's/\D//g' ],
-	quantity3	=>	[ 's/\D//g' ],
-	reference	=>	[ 's/\r\n/<br\/>/mg', 's/\n\r/<br\/>/mg', 's/\n/<br\/>/mg', 's/^\s+//', 's/\s+$//', 's/\s\s+/ /g', 's/[^[:ascii:]]//g' ],
-	comments	=>	[ 's/^\s+//', 's/\s+$//', 's/\s\s+/ /g', 's/[^[:ascii:]]//g' ],
+	id								=>	[ 's/\D//g', '<2147483647' ],
+	markup						=>	[ 's/[^\-\d\.]//g' ],
+	quantity1					=>	[ 's/\D//g' ],
+	quantity2					=>	[ 's/\D//g' ],
+	quantity3					=>	[ 's/\D//g' ],
+	reference					=>	[ 's/\r\n/<br\/>/mg', 's/\n\r/<br\/>/mg', 's/\n/<br\/>/mg', 's/^\s+//', 's/\s+$//', 's/\s\s+/ /g', 's/[^[:ascii:]]//g' ],
+	comments					=>	[ 's/^\s+//', 's/\s+$//', 's/\s\s+/ /g', 's/[^[:ascii:]]//g' ],
+	discount					=>	[ 's/[^\-\d\.]//g' ],
+	csr_commission		=>	[ 's/[^\-\d\.]//g' ],
+	credit_card_fee		=>	[ 's/[^\-\d\.]//g' ],
 );
 %defaults = (
 	created_on	=>	q`'NOW()'`,
@@ -92,6 +98,9 @@ $serial = 'lngProjectIndex_seq';
 	markup		=>	undef,
 	priority	=>	undef,
 	reprint		=>	0,
+	discount				=>	undef,
+	csr_commission	=>	undef,
+	credit_card_fee	=>	undef,
 );
 
 %find_fields = (
@@ -1547,20 +1556,28 @@ sub add_Service {
 sub recalculate {
 	my $self = shift;
 	$self->currency_id( $openprint::session{Currency_id} );
+	my $Company = $self->Company();
+	my $CSR = $Company->CSR();
+
+	$$self{discount} = $$Company{discount};
+	$$self{credit_card_fee} = $$Company{credit_card_fee};
+	$$self{csr_commission} = defined $$Company{csr_commission} ? $$Company{csr_commission} : $$CSR{commission};
+$openprint::log->error("commissioni rate set to $$self{csr_commission}");
+
 	my $services = $self->services();
 	if ( $$services{''} ) {
 		my $Type = $self->Type();
-$openprint::log->debug("Project::recalculate $$Type{type}");
+		$openprint::log->debug("Project::recalculate $$Type{type}");
 		my $specs = openprint::service::internal_calc( $openprint::log, $openprint::dbh, \%openprint::variable, $$self{id}, $$services{''}[0], $$Type{type} );
 		my $status = $$specs{Status};
-$openprint::log->debug("Project::recalculate $$Type{type} $status");
+		$openprint::log->debug("Project::recalculate $$Type{type} $status");
 		# Why is this ne calculated... if the project service can't calc... then neither can the signatures
 		if ( $status eq 'calculated' ) {
 			# Recalc signatures
 			my $module = 'openprint::Estimating::'.$$Type{type};
 			if ( my $function = $module->can( 'calculate_signatures' ) ) {
 				$status = $function->( $self );
-$openprint::log->debug("Calculate_Sigs: status: $status");
+				$openprint::log->debug("Calculate_Sigs: status: $status");
 				openprint::service::status( $$self{id}, $$services{''}[0], $status );
 			} # end if
 			openprint::service::auto_calculate( $self, $$services{''}[0] ) if $status eq 'calculated';
@@ -1569,7 +1586,7 @@ $openprint::log->debug("Calculate_Sigs: status: $status");
 	$self->add_to_log( @openprint::session{'company_id','user_id'}, 'Recalculated. Prices: '.join(',', $self->prices() ) );
 	$self->update_status();
 	$self->summary(undef);
-	return $self->save( {calculated_on=>'NOW()'});
+	return $self->save({calculated_on=>'NOW()'});
 } # end sub recalculate
 
 sub Project {
