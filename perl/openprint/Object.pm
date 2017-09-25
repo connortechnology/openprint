@@ -18,7 +18,7 @@ require openprint::Keyword;
 require openprint::Object_Keyword;
 require openprint::Object_Specification;
 require openprint::Log;
-use vars qw( $log $dbh $AUTOLOAD %cache %name_cache %fields %defaults %transforms $no_cache %session %config );
+use vars qw( $log $dbh $AUTOLOAD %cache %name_cache %fields %transforms $no_cache %session %config );
 
 *log = \$openprint::log;
 *dbh = \$openprint::dbh;
@@ -301,7 +301,7 @@ $log->debug("No serial") if $debug;
 			if ( ! ( $_ = $local_dbh->prepare($command) and $_->execute( @sql{@keys,@$fields{@identified_by}} ) ) ) {
 				my $error = $local_dbh->errstr;
 				$command =~ s/\?/\%s/g;
-				$log->error('SQL failed: ('.sprintf($command, , map { defined $_ ? $_ : 'undef' } ( @sql{@keys, @$fields{@identified_by}}) ).'):' . $local_dbh->errstr);
+				$log->error('SQL failed: ('.sprintf($command, map { defined $_ ? $_ : 'undef' } ( @sql{@keys, @$fields{@identified_by}}) ).'):' . $local_dbh->errstr);
 				$local_dbh->rollback();
 				sql::end_transaction( $local_dbh, $ac );
 				return $error;
