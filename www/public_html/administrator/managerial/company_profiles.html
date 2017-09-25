@@ -124,7 +124,7 @@ button( 'merge'.$C->id(), { href=>'/administrator/managerial/company_profiles.ht
 		<? if ( $$variable{Company}->deleted() ) ?>
 		<div class="error">This company has been deleted.</div>
 		<? endif ( $$variable{Company}->deleted() ) ?>
-		<b><? echo ( $$variable{Company}->notes() ?></b>
+		<b><? echo ( $$variable{Company}->notes() )?></b>
 	<div class="leftColumn">
 		<ul>
 			<? if ( $$variable{Company}->id() ) ?>
@@ -158,6 +158,14 @@ button( 'merge'.$C->id(), { href=>'/administrator/managerial/company_profiles.ht
 			<li class="discount"> 
 				<label>Pricing Discount</label>
 				<? echo ( input( type=>'float', name=>'discount', value=>$$variable{Company}->discount() ); ) ?> %
+			</li>
+			<li class="credit_card_fee"> 
+				<label>Credit Card Fee</label>
+				<? echo ( input( type=>'float', name=>'credit_card_fee', value=>$$variable{Company}->credit_card_fee() ); ) ?> %
+			</li>
+			<li class="csr_commission"> 
+				<label>CSR Commission</label>
+				<? echo ( input( type=>'float', name=>'csr_commission', value=>$$variable{Company}->csr_commission() ); ) ?> %
 			</li>
 			<li> 
 				<label>Sales Person</label>
