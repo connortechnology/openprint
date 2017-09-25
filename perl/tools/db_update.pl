@@ -231,10 +231,15 @@ if ( ! sets::isin( 'companies', \@tables ) ) {
 		$dbh->do('ALTER TABLE companies ADD '.$openprint::Company::fields{established}.q` date`);
 		die $dbh->errstr() if $dbh->errstr();
 	} # end if
-	if ( ! exists $$data{$openprint::Company::fields{discount}} ) {
-		$dbh->do('ALTER TABLE companies ADD '.$openprint::Company::fields{discount}.q` numeric(16,4) DEFAULT '0.0000' NOT NULL`);
-		die $dbh->errstr() if $dbh->errstr();
-	} # end if
+	foreach my $field ( 'credit_card_fee', 'csr_commission' ) {
+		if ( ! $openprint::Company::fields{$field} ) {
+			die "Want to add $field to Company but it's not in fields";
+		} # end if
+		if ( ! exists $$data{$openprint::Company::fields{$field}} ) {
+			$dbh->do('ALTER TABLE companies ADD '.$openprint::Company::fields{$field}.q` FLOAT`);
+			die $dbh->errstr() if $dbh->errstr();
+		} # end if
+	} # end foreach
 	if ( ! exists $$data{$openprint::Company::fields{last_project_id}} ) {
 		if ( ! sets::isin( 'projects', \@tables ) ) {
 			$dbh->do( misc::load_file( $log, q{../openprint/sql/Projects.sql}) ) or die;
@@ -1064,6 +1069,15 @@ if ( ! sets::isin( 'projects', \@tables ) ) {
 	if ( ! exists $$data{reprint_reason} ) {
 		$dbh->do(q`ALTER TABLE projects ADD reprint_reason TEXT`) or $log->error($dbh->errstr());
 	} # end if
+	foreach my $field ( 'credit_card_fee', 'csr_commision', 'discount' ) {
+		if ( ! $openprint::Project::fields{$field} ) {
+			die "Want to add $field to Project but it's not in fields";
+		} # end if
+		if ( ! exists $$data{$openprint::Project::fields{$field}} ) {
+			$dbh->do('ALTER TABLE projects ADD '.$openprint::Project::fields{$field}.q` FLOAT`);
+			die $dbh->errstr() if $dbh->errstr();
+		} # end if
+	} # end foreach
 } # end if
 if ( ! sets::isin( 'servicetype_categories', \@tables ) ) {
 	$dbh->do( misc::load_file( $log, q{../openprint/sql/ServiceType_Categories.sql}) );
