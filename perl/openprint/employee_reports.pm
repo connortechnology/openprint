@@ -675,6 +675,7 @@ $log->debug("Loading projects");
 
 					$totals{$stock_id}{Orders} = [] if ! $totals{$stock_id}{Orders};
 					$totals{$stock_id}{Projects} = [] if ! $totals{$stock_id}{Projects};
+$log->debug("$$Project{id} $stock_id $qty price:$$SQ{price}");
 
 					push @{$totals{$stock_id}{Projects}}, $Project;
 					push @{$totals{$stock_id}{Orders}}, $Order;
