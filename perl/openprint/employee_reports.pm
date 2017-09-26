@@ -443,7 +443,7 @@ sub stock_usage {
 	_stock_usage();
 
 	if ( $param{action} eq 'download' ) {
-		my @Header = ( 'Manufacturer','Brand','Finish','Colour','Weight','Quality','Material','Group','Width','Height','Type','Calliper','GSM','FSC','Projects','Orders','Sheets','Weight','Price' );
+		my @Header = ( 'Manufacturer','Brand','Finish','Colour','Weight','Quality','Material','Group','Width','Height','Type','Calliper','GSM','FSC','Projects','Orders','Sheets','Weight','Price in ' . $openprint::Currency->name() );
 		my @Data = ();
 		my %totals = %{$variable{totals}};
 		my %Stocks = %{$variable{Stocks}};
@@ -505,6 +505,7 @@ sub stock_usage {
 				$total_orders,
 				$total_sheets . ' sheets',
 				$total_weight . ' lbs',
+				$total_price,
 				);
 		misc::export_csv( $r, $log, \%variable, 'stock_usage.csv', \@Header,\@Data );	
 	} # end if
