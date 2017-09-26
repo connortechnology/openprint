@@ -17,9 +17,9 @@
 		<th class="Price">Price</th>
 	</tr>';
 		my $rowclass;
-		my $total_sheets;
-		my $total_lbs;
-		my $total_price;
+		my $total_sheets = 0;
+		my $total_lbs = 0;
+		my $total_price = 0;
 
 		foreach my $paper_string ( sort keys %totals ) {
 			my $Stock = $Stocks{$paper_string};
@@ -54,7 +54,6 @@
 			$total_price += $totals{$paper_string}{price};
 		} # end foreach paper_string
 		my @project_ids = sets::union( map { $$_{id} } map { @{$_} } values %Projects );
-$log->debug("Project_Ids @project_ids");
 		$html .= '<tr class="totals"><td>Totals</td><td class="QTY Projects">'.@project_ids.'</td><td class="QTY Orders">'.@Orders.'</td><td class="QTY Sheets">'. Number::Format::format_number($total_sheets) .'sheets</td><td class="QTY Weight">'.Number::Format::format_number($total_lbs).'lbs</td><td class="Price">'.openprint::Currency::format( $total_price ) . '</td></tr>';
 	return $html;
 ) ?>
