@@ -177,7 +177,6 @@ sub calc {
 			$price = $unitPrice + $makeReady{Price};
 
 			if ( $$specs{rdbCardboardBacking} eq 'Y' ) {
-
 				if ( $Cardboard ) {
 					my %CardboardPrice = $Cardboard->get_price( $package_qty, undef );
 					if ( $CardboardPrice{units} eq 'per square inch' ) {
@@ -187,11 +186,13 @@ sub calc {
 					} elsif ( $CardboardPrice{units} eq 'per pad' ) {
 						$CardboardPrice{Total} = $CardboardPrice{Price};
 					} # end if
+
 $openprint::log->debug("Cardboard size: $$printing_specs{txtFinalWidth} * $$printing_specs{txtFinalHeight}");
-					$$specs{'hdnBreakdown'.$qty_index} .= sprintf('Cardboard Price: $%.2f %s * %s x %s = $%.2f per package = %.2f total<br/>',@CardboardPrice{'Price','units'}, @$printing_specs{'txtFinalWidth','txtFinalHeight'}, $CardboardPrice{Total}, $CardboardPrice{Total}*$package_qty );
+					$$specs{'hdnBreakdown'.$qty_index} .= sprintf('Cardboard Price: $%.2f %s * %s x %s = $%.2f per package = $%.2f<br/>',@CardboardPrice{'Price','units'}, @$printing_specs{'txtFinalWidth','txtFinalHeight'}, $CardboardPrice{Total}, $CardboardPrice{Total}*$package_qty );
 					$price += $CardboardPrice{Total} * $package_qty;
 				} # end if
-			} # end if
+			} # end if rdbCardboardBacking 
+
 			if ( @Materials ) {
 				if ( scalar @Materials == 1 ) {
 					$$specs{type_id} = $Materials[0]->id();
