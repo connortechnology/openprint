@@ -717,10 +717,19 @@ $log->debug("Adding special colour for $colour");
 	} # end if	
 	if ( $project{NeedAqueous} ) {
 		if ( ! $$services{Aqueous} ) {
-			push @{$$services{Aqueous}}, $Project->add_service( 'Aqueous' );
+			push @{$$services{Aqueous}}, $Project->add_service('Aqueous');
 		} # end if	
 		$project{HasAqueous} = $$services{Aqueous}[0];
-		%{$project{AqueousSpecs}} = %{openprint::service::get_specs_ref( $Project, $$services{Aqueous}[0] )};
+		my $aq_specs = openprint::service::get_specs_ref( $Project, $$services{Aqueous}[0] );
+		%{$project{AqueousSpecs}} = %{$aq_specs};
+		foreach my $sig_id ( $Project->signatures() ) {
+			next if $sig_id >= $service_index;
+			my $s_specs = openprint::service::get_specs_ref( $Project, $sig_id );
+			my $form = $$s_specs{SignatureIndex};
+			foreach my $qty_index ( $Project->quantity_indexes() ) {
+				$project{"AqueousMakeReadies$qty_index"}{$$aq_specs{"ddmEquipment-$form-$qty_index"}} = $$aq_specs{"txtLayoutWidth-$form-$qty_index"} * $$aq_specs{"txtLayoutHeight-$form-$qty_index"};
+			}
+		}
 	} elsif ( $$services{Aqueous} and @{$$services{Aqueous}} ) {
 		$project{HasAqueous} = $$services{Aqueous}[0];
 		%{$project{AqueousSpecs}} = %{openprint::service::get_specs_ref( $Project, $$services{Aqueous}[0] )};
@@ -2890,7 +2899,7 @@ $log->debug("after sorting presses: " . ( sprintf('%.4f', tv_interval( [$master_
 						login		=> $openprint::r->dir_config('db_user'),
 						password	=> $openprint::r->dir_config('db_password'),
 						);
-					my $return = get_project_price( $Project, $service_index, $project, \%sig_specs, $qty, $qty_index, \@possible_presses, $printing_specs, \@versions, \%PlateCounts, \%PaperCounts, @$project{'washed_colours','mixed_colours'}, \%previous_forms_cache, \@signatures, \%impositions, \@other_impositions, undef, 0 );
+					my $return = get_project_price( $Project, $service_index, $project, \%sig_specs, $qty, $qty_index, \@possible_presses, $printing_specs, \@versions, \%PlateCounts, \%PaperCounts, @$project{'washed_colours','mixed_colours',"AqueousMakeReadies$qty_index"}, \%previous_forms_cache, \@signatures, \%impositions, \@other_impositions, undef, 0 );
 					#$openprint::dbh->disconnect();
 					return $return;
 					} );
@@ -2904,7 +2913,7 @@ if ( 0 ) {
 						);
 }
 		} else {
-			$prices{$qty_index} = get_project_price( $Project, $service_index, $project, \%sig_specs, $qty, $qty_index, \@possible_presses, $printing_specs, \@versions, \%PlateCounts, \%PaperCounts, @$project{'washed_colours','mixed_colours'}, \%previous_forms_cache, \@signatures, \%impositions, \@other_impositions, undef, 0 );
+			$prices{$qty_index} = get_project_price( $Project, $service_index, $project, \%sig_specs, $qty, $qty_index, \@possible_presses, $printing_specs, \@versions, \%PlateCounts, \%PaperCounts, @$project{'washed_colours','mixed_colours',"AqueousMakeReadies$qty_index"}, \%previous_forms_cache, \@signatures, \%impositions, \@other_impositions, undef, 0 );
 		} # end if
 
 	} # end foreach quantity
@@ -4170,7 +4179,7 @@ sub get_project_price {
 			return {};
 		} # edn if
 	} # edn if
-	my ( $Project, $service_index, $project, $source_sig_specs, $qty, $qty_index, $possible_presses, $printing_specs, $versions, $PlateCounts, $PaperCounts, $washed_colours, $mixed_colours, $previous_forms_cache, $signatures, $impositions, $other_impositions, $best_price, $recursion_depth ) = @_;
+	my ( $Project, $service_index, $project, $source_sig_specs, $qty, $qty_index, $possible_presses, $printing_specs, $versions, $PlateCounts, $PaperCounts, $washed_colours, $mixed_colours, $aq_makereadies, $previous_forms_cache, $signatures, $impositions, $other_impositions, $best_price, $recursion_depth ) = @_;
 	my %best_price = $best_price ? %{$best_price} : ();
 	$log->debug("Best price: $recursion_depth starting get_project_price: ($best_price{'Comparison Cost'}) ($best_price{'Comparison Cost'}) UPQ " . $$source_sig_specs{'txtUnspecifiedPageQuantity'.$qty_index} ) if DEBUG_FILTERING;
 
@@ -4179,6 +4188,7 @@ sub get_project_price {
 
 	my $previous_press = $$source_sig_specs{PreviousPress};
 	my %sig_specs = %{$source_sig_specs};
+	my %aq_makereadies = %{$aq_makereadies} if $aq_makereadies;
 
 	#my @Is = openprint::imposition::sort( calculate_impositions( $Project, $sig_specs, $qty_index, $qty, $PaperCounts, $versions, $project, $impositions ) );
 	my @Is = calculate_impositions( $Project, $source_sig_specs, $qty_index, $qty, $PaperCounts, $versions, $project, $impositions );
@@ -4237,7 +4247,7 @@ sub get_project_price {
 
 		my $do_final_pricing = 1;
 
-		my $price = calc_price( $Project, $service_index, $imp, $project, $services, \%sig_specs, $qty, $qty_index, \%PlateCounts, \%washed_colours, \%mixed_colours, \@total_impositions );
+		my $price = calc_price( $Project, $service_index, $imp, $project, $services, \%sig_specs, $qty, $qty_index, \%PlateCounts, \%washed_colours, \%mixed_colours, \%aq_makereadies, \@total_impositions );
 		if ( ! $$price{complete} ) {
 			if ( DEBUG ) {
 				$imp->display( 'Couldnt calculate initial price: ' . $$price{alert} );
@@ -4301,7 +4311,7 @@ sub get_project_price {
 				$$new_specs{"UnspecifiedVersions$qty_index"} = $versions;
 				$$newimp{specs} = $new_specs;
 
-				my $sig_price = calc_price( $Project, $$new_specs{ServiceIndex}, $newimp, $project, $services, $new_specs, $qty, $qty_index, \%PlateCounts, \%washed_colours, \%mixed_colours, \@total_impositions );
+				my $sig_price = calc_price( $Project, $$new_specs{ServiceIndex}, $newimp, $project, $services, $new_specs, $qty, $qty_index, \%PlateCounts, \%washed_colours, \%mixed_colours, \%aq_makereadies, \@total_impositions );
 				$$sig_price{sig_count} = 1;
 #my $sig_price = get_project_price( $Project, $$new_specs{ServiceIndex}, $project, $service_specs, $new_specs, $qty, $qty_index, $possible_presses, $printing_specs, $versions, \%PlateCounts, \%PaperCounts, \%washed_colours, \%previous_forms_cache, \@signatures, $impositions, $other_impositions, undef, $recursion_depth + 1 );
 
@@ -4357,7 +4367,7 @@ sub get_project_price {
 						} # end if
 					} # end foreach 
 					$price_cache{$price_cache_key} = 
-						get_project_price( $Project, $$new_specs{ServiceIndex}, $project, $new_specs, $qty, $qty_index, \@new_possible_presses, $printing_specs, $versions, \%PlateCounts, \%PaperCounts, \%washed_colours, \%mixed_colours, \%previous_forms_cache, \@signatures, $impositions, $other_impositions, undef, $recursion_depth + 1 );
+						get_project_price( $Project, $$new_specs{ServiceIndex}, $project, $new_specs, $qty, $qty_index, \@new_possible_presses, $printing_specs, $versions, \%PlateCounts, \%PaperCounts, \%washed_colours, \%mixed_colours, \%aq_makereadies, \%previous_forms_cache, \@signatures, $impositions, $other_impositions, undef, $recursion_depth + 1 );
 				} # end if ! $price_cache
 				my $sig_price = $price_cache{$price_cache_key};
 
@@ -4413,7 +4423,7 @@ sub get_project_price {
 foreach my $k ( keys %washed_colours ) {
 $log->debug("$k => $washed_colours");
 }
-							my $sig_price = calc_price( $Project, $$new_specs{ServiceIndex}, $imp, $project, $services, $new_specs, $qty, $qty_index, \%PlateCounts, \%washed_colours, \%mixed_colours, \@total_impositions );
+							my $sig_price = calc_price( $Project, $$new_specs{ServiceIndex}, $imp, $project, $services, $new_specs, $qty, $qty_index, \%PlateCounts, \%washed_colours, \%mixed_colours, \%aq_makereadies, \@total_impositions );
 							$imp->display( $recursion_depth . ' UPQ: ' . $$price{upq} . ' first level calc_price' ) if DEBUG;
 							$$sig_price{Imposition} = $imp;
 							$$sig_price{sig_count} = 1;
@@ -4568,7 +4578,7 @@ $log->debug("Doing full calc when UPQ: >= Pages:" . $$imp{pages} . ' PageQuantit
 									} # end if
 								} # end foreach 
 								$price_cache{$price_cache_key} = 
-									get_project_price( $Project, $$new_specs{ServiceIndex}, $project, $new_specs, $qty, $qty_index, \@new_possible_presses, $printing_specs, $versions, \%PlateCounts, \%PaperCounts, \%washed_colours, \%mixed_colours, \%previous_forms_cache, \@signatures, $impositions, $other_impositions, undef, $recursion_depth + 1 );
+									get_project_price( $Project, $$new_specs{ServiceIndex}, $project, $new_specs, $qty, $qty_index, \@new_possible_presses, $printing_specs, $versions, \%PlateCounts, \%PaperCounts, \%washed_colours, \%mixed_colours, \%aq_makereadies, \%previous_forms_cache, \@signatures, $impositions, $other_impositions, undef, $recursion_depth + 1 );
 							} # end if
 							%{$sig_price} = %{$price_cache{$price_cache_key}};
 #$log->debug("Prices: $sig_price $price_cache{$price_cache_key}");
@@ -5056,7 +5066,7 @@ if ( $Setup ) {
 								my @Papers = @{$$Setup{Stocks}};
 								if ( @Papers ) {
 									my $sig_price = get_project_price( $Project, $sigs[0], @$Setup{'project', 'specs'}, $qty, $qty_index,
-											$$Setup{possible_presses}, $printing_specs, $versions, \%PlateCounts, \%PaperCounts, \%washed_colours, \%mixed_colours, $$Setup{previous_forms_cache}, \@sigs, @$Setup{'impositions','other_impositions'}, {}, 0 );
+											$$Setup{possible_presses}, $printing_specs, $versions, \%PlateCounts, \%PaperCounts, \%washed_colours, \%mixed_colours, \%aq_makereadies, $$Setup{previous_forms_cache}, \@sigs, @$Setup{'impositions','other_impositions'}, {}, 0 );
 									$other_group_cache{$other_group_cache_key} = $sig_price;
 $log->debug(" Setting " . %other_group_cache);
 foreach my $k ( keys %other_group_cache ) {
@@ -5258,7 +5268,7 @@ sub plate_cost {
 # Does not need to take folding or Cutting into account, as those were chosen separately
 sub calc_price {
 	#my $aq_time = [gettimeofday()];
-	my ( $Project, $service_index, $Imposition, $project, $services, $specs, $qty, $qty_index, $PlateCounts, $washed_colours, $mixed_colours, $other_impositions ) = @_;
+	my ( $Project, $service_index, $Imposition, $project, $services, $specs, $qty, $qty_index, $PlateCounts, $washed_colours, $mixed_colours, $aq_makereadies, $other_impositions ) = @_;
 
 	my $Paper = $$Imposition{Paper};
 	my $Press = $$Imposition{Press};
@@ -6230,15 +6240,18 @@ $log->debug("Area $area = $$Imposition{object_area} * Impressions($colour_impres
 	# Used to be hasAQ.. but that doesn't make any sense.	Must be NeedAQ.
 	if ( $$project{NeedAqueous} ) {
 		my $aq_time = gettimeofday();
-		my %aq_results = openprint::Estimating::Aqueous::signature_calc( $Project, $$project{AqueousSpecs}, $specs, $qty_index, $Imposition );
+		my %aq_results = openprint::Estimating::Aqueous::signature_calc( $Project, $$project{AqueousSpecs}, $specs, $qty_index, $Imposition, $aq_makereadies );
+
 		#my $aq_time = [gettimeofday()];
-my $aq_elapsed = sprintf('%.4f seconds', (gettimeofday() - $aq_time)*1000);
-$log->warn("AQ elapsed: $aq_elapsed");
-	#$price{'Aqueous Breakdown'} .= $$project{AqueousSpecs}{'hdnBreakdown'.$qty_index};
+		my $aq_elapsed = sprintf('%.4f seconds', (gettimeofday() - $aq_time)*1000);
+		$log->warn("AQ elapsed: $aq_elapsed");
+#$price{'Aqueous Breakdown'} .= $$project{AqueousSpecs}{'hdnBreakdown'.$qty_index};
 		if ( $aq_results{Status} eq 'uncalculated' ) {
 			$price{'Aqueous Breakdown'} .= "AQ error: $aq_results{alert} $$project{AqueousSpecs}{alert} " . $$project{AqueousSpecs}{'hdnBreakdown'.$qty_index} . '<br/>';
 			$price{'Comparison Cost'} += 1000000; 
 		} elsif ( $aq_results{Equipment} ) {
+			$$aq_makereadies{$aq_results{Equipment}{id}} = $aq_results{Imposition}->layout_area();
+
 			$price{'Aqueous Breakdown'} = sprintf('Aqueous Price: %dout MR $%.2f + BC: $%.2f + Service $%.2f + Material $%.2f = $%.2f on %s<br/>', $aq_results{Imposition}{imposition}, @aq_results{'MakeReady','BlanketCut','Service','Material','Total'}, $aq_results{Equipment}->name() );
 			$price{'Comparison Cost'} += $aq_results{Total};
 			$price{'Press Washes'} += $aq_results{washups};

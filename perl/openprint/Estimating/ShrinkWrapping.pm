@@ -185,6 +185,10 @@ sub calc {
 						$CardboardPrice{Total} = $CardboardPrice{Price} * ($$printing_specs{txtFinalWidth} * $$printing_specs{txtFinalHeight}/144);
 					} elsif ( $CardboardPrice{units} eq 'per pad' ) {
 						$CardboardPrice{Total} = $CardboardPrice{Price};
+					} elsif ( $CardboardPrice{units} eq 'each' ) {
+						$CardboardPrice{Total} = $CardboardPrice{Price};
+					} else {
+$openprint::log->error("Unknown units set on cardboard price!");
 					} # end if
 
 $openprint::log->debug("Cardboard size: $$printing_specs{txtFinalWidth} * $$printing_specs{txtFinalHeight}");
@@ -206,40 +210,42 @@ $openprint::log->debug("Cardboard size: $$printing_specs{txtFinalWidth} * $$prin
 
 					my $material_qty = $package_qty;
 					$material_qty *= $$specs{bands_per_package} if $$specs{bands_per_package};
-	# if $$specs{bands_per_package};
-					if ( $MaterialPrice{units} eq 'per m' ) {
-						$MaterialPrice{Total} = $MaterialPrice{Price} * $material_qty / 1000;
-					$$specs{'hdnBreakdown'.$qty_index} .= sprintf('Material Price: $%1$.2f%2$s * %4$d packages * %5$d per package = $%3$.2f<br/>',@MaterialPrice{'Price','units','Total'}, $package_qty, $$specs{bands_per_package} );
-					} elsif ( $MaterialPrice{units} eq 'each' ) {
-						$MaterialPrice{Total} = $MaterialPrice{Price} * $material_qty;
-					$$specs{'hdnBreakdown'.$qty_index} .= sprintf('Material Price: $%1$.2f%2$s * %4$d packages * %5$d per package = $%3$.2f<br/>',@MaterialPrice{'Price','units','Total'}, $package_qty, $$specs{bands_per_package} );
-					} elsif ( $MaterialPrice{units} eq 'per inch' ) {
-						$MaterialPrice{Total} = $MaterialPrice{Price} * $$printing_specs{txtFinalWidth} * $$printing_specs{txtFinalHeight} * $material_qty;
-					$$specs{'hdnBreakdown'.$qty_index} .= sprintf('Material Price: $%1$.2f%2$s * %4$d packages * %5$d per package = $%3$.2f<br/>',@MaterialPrice{'Price','units','Total'}, $package_qty, $$specs{bands_per_package} );
-					} elsif ( $MaterialPrice{units} eq 'per foot' ) {
-						my $Roll_Length = $Material->Specification('Length');
-						if ( $Roll_Length ) {
-							$MaterialPrice{Total} = Math::Round::nearest( 0.01, $MaterialPrice{Price} * $total_inches / 12 );
-							$$specs{'hdnBreakdown'.$qty_index} .= sprintf('Material Price: $%1$.4f%2$s * %4$d feet = $%3$.2f<br/>',@MaterialPrice{'Price','units','Total'}, $total_inches/12, $$specs{bands_per_package} );
-						} else {
-							$MaterialPrice{Total} = $MaterialPrice{Price} * $$printing_specs{txtFinalWidth} * $$printing_specs{txtFinalHeight} * $material_qty / 144;
+					if ( %MaterialPrice ) {
+# if $$specs{bands_per_package};
+						if ( $MaterialPrice{units} eq 'per m' ) {
+							$MaterialPrice{Total} = $MaterialPrice{Price} * $material_qty / 1000;
 							$$specs{'hdnBreakdown'.$qty_index} .= sprintf('Material Price: $%1$.2f%2$s * %4$d packages * %5$d per package = $%3$.2f<br/>',@MaterialPrice{'Price','units','Total'}, $package_qty, $$specs{bands_per_package} );
-						} # ebnd if
-					} elsif ( $MaterialPrice{units} eq 'per roll' ) {
-						my $Roll_Length = $Material->Specification('Length');
-						if ( ! $Roll_Length ) {
-							$$specs{'hdnBreakdown'.$qty_index} .= 'Unable to find roll Length.  Assuming  42000Inches.<br/>';
-							$Roll_Length = { value => 42000, units=>'inches' };
-						} # end if
+						} elsif ( $MaterialPrice{units} eq 'each' ) {
+							$MaterialPrice{Total} = $MaterialPrice{Price} * $material_qty;
+							$$specs{'hdnBreakdown'.$qty_index} .= sprintf('Material Price: $%1$.2f%2$s * %4$d packages * %5$d per package = $%3$.2f<br/>',@MaterialPrice{'Price','units','Total'}, $package_qty, $$specs{bands_per_package} );
+						} elsif ( $MaterialPrice{units} eq 'per inch' ) {
+							$MaterialPrice{Total} = $MaterialPrice{Price} * $$printing_specs{txtFinalWidth} * $$printing_specs{txtFinalHeight} * $material_qty;
+							$$specs{'hdnBreakdown'.$qty_index} .= sprintf('Material Price: $%1$.2f%2$s * %4$d packages * %5$d per package = $%3$.2f<br/>',@MaterialPrice{'Price','units','Total'}, $package_qty, $$specs{bands_per_package} );
+						} elsif ( $MaterialPrice{units} eq 'per foot' ) {
+							my $Roll_Length = $Material->Specification('Length');
+							if ( $Roll_Length ) {
+								$MaterialPrice{Total} = Math::Round::nearest( 0.01, $MaterialPrice{Price} * $total_inches / 12 );
+								$$specs{'hdnBreakdown'.$qty_index} .= sprintf('Material Price: $%1$.4f%2$s * %4$d feet = $%3$.2f<br/>',@MaterialPrice{'Price','units','Total'}, $total_inches/12, $$specs{bands_per_package} );
+							} else {
+								$MaterialPrice{Total} = $MaterialPrice{Price} * $$printing_specs{txtFinalWidth} * $$printing_specs{txtFinalHeight} * $material_qty / 144;
+								$$specs{'hdnBreakdown'.$qty_index} .= sprintf('Material Price: $%1$.2f%2$s * %4$d packages * %5$d per package = $%3$.2f<br/>',@MaterialPrice{'Price','units','Total'}, $package_qty, $$specs{bands_per_package} );
+							} # ebnd if
+						} elsif ( $MaterialPrice{units} eq 'per roll' ) {
+							my $Roll_Length = $Material->Specification('Length');
+							if ( ! $Roll_Length ) {
+								$$specs{'hdnBreakdown'.$qty_index} .= 'Unable to find roll Length.  Assuming  42000Inches.<br/>';
+								$Roll_Length = { value => 42000, units=>'inches' };
+							} # end if
 
-						$$specs{'hdnBreakdown'.$qty_index} .= 'Length per roll : ' . $$Roll_Length{value}.$$Roll_Length{units} . '<br/>';
-						
-						my $rolls = ceil( $total_inches / $$Roll_Length{value} );
-						$MaterialPrice{Total} = $MaterialPrice{Price} * $rolls;
-						$$specs{'hdnBreakdown'.$qty_index} .= sprintf('Material Price: $%1$.2f%2$s * %4$d rolls = $%3$.2f<br/>',@MaterialPrice{'Price','units','Total'}, $rolls );
-					} # end if
-					$price += $MaterialPrice{Total};
-					$unitPrice += $MaterialPrice{Total};
+							$$specs{'hdnBreakdown'.$qty_index} .= 'Length per roll : ' . $$Roll_Length{value}.$$Roll_Length{units} . '<br/>';
+
+							my $rolls = ceil( $total_inches / $$Roll_Length{value} );
+							$MaterialPrice{Total} = $MaterialPrice{Price} * $rolls;
+							$$specs{'hdnBreakdown'.$qty_index} .= sprintf('Material Price: $%1$.2f%2$s * %4$d rolls = $%3$.2f<br/>',@MaterialPrice{'Price','units','Total'}, $rolls );
+						} # end if
+						$price += $MaterialPrice{Total};
+						$unitPrice += $MaterialPrice{Total};
+					} # end if %MaterialPrice
 				} # end if
 			} # end if Materials
 			$price = $minCharge{Price} if $price < $minCharge{Price};
