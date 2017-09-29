@@ -275,14 +275,14 @@ sub calc {
 } # end sub calc
 
 sub signature_calc {
-    my ( $Project, $specs, $sig_specs, $qty_index, $imposition, $MakeReadies ) = @_;
+	my ( $Project, $specs, $sig_specs, $qty_index, $imposition, $MakeReadies ) = @_;
 
-if ( DEBUG ) {
-foreach my $equipment_id ( keys %{$MakeReadies} ) {
-$openprint::log->debug("Makereadies $equipment_id $$MakeReadies{$equipment_id}");
-}
-$imposition->display();
-}
+	if ( DEBUG ) {
+		foreach my $equipment_id ( keys %{$MakeReadies} ) {
+			$openprint::log->debug("Makereadies $equipment_id $$MakeReadies{$equipment_id}");
+		}
+		$imposition->display();
+	}
 
 	my $form = $$sig_specs{SignatureIndex};
 	my %bestPrice;
@@ -423,13 +423,14 @@ $openprint::log->debug("AQ Equipment $$Equipment{strid}") if DEBUG;
 
 				my %setupPrice;
 				my $colour_total = 0;
-#$openprint::log->debug("Makereadies: $$Equipment{id} $area");
-				if ( $MakeReadies{$Equipment->id()} and (
-							(($area * 1.10 ) > $MakeReadies{$Equipment->id()} ) and
-							(($area * .90 ) < $MakeReadies{$Equipment->id()} )
+$openprint::log->debug("Makereadies: $$Equipment{id} $$Equipment{strid} area: $area $type ? $MakeReadies{$$Equipment{id}}");
+				if ( $MakeReadies{$$Equipment{id}} and (
+							(($area * 1.10 ) > $MakeReadies{$$Equipment{id}} ) and
+							(($area * .90 ) < $MakeReadies{$$Equipment{id}} )
 							) ) {
-#$openprint::log->debug("In Makereadies: $$Equipment{id} $area");
+$openprint::log->debug("In Makereadies: $$Equipment{id} $area");
 				} else {
+$openprint::log->debug("Not In Makereadies: $$Equipment{id} $area");
 					my $MRService = openprint::Service->find_one( name=>$$type{name}.' MakeReady');
 					$MRService = $AllAqueousMakeReady if ! $MRService;
 					if ( ! $MRService ) {
