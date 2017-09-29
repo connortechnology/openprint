@@ -720,7 +720,17 @@ $log->debug("Adding special colour for $colour");
 			push @{$$services{Aqueous}}, $Project->add_service( 'Aqueous' );
 		} # end if	
 		$project{HasAqueous} = $$services{Aqueous}[0];
-		%{$project{AqueousSpecs}} = %{openprint::service::get_specs_ref( $Project, $$services{Aqueous}[0] )};
+		my $aq_specs = openprint::service::get_specs_ref( $Project, $$services{Aqueous}[0] );
+		%{$project{AqueousSpecs}} = %{$aq_specs};
+		foreach my $sig_id ( $Project->signatures() ) {
+			next if $sig_id >= $service_index;
+			my $s_specs = openprint::service::get_specs_ref( $Project, $sig_id );
+			my $form = $$s_specs{SignatureIndex};
+			foreach my $qty_index ( $Project->quantity_indexes() ) {
+				$project{"AqueousMakeReadies$qty_index"}{$$aq_specs{"ddmEquipment-$form-$qty_index"}} = $$aq_specs{"txtLayoutWidth-$form-$qty_index"} * $$aq_specs{"txtLayoutHeight-$form-$qty_index"};
+			}
+		}
+
 	} elsif ( $$services{Aqueous} and @{$$services{Aqueous}} ) {
 		$project{HasAqueous} = $$services{Aqueous}[0];
 		%{$project{AqueousSpecs}} = %{openprint::service::get_specs_ref( $Project, $$services{Aqueous}[0] )};
@@ -6230,7 +6240,7 @@ $log->debug("Area $area = $$Imposition{object_area} * Impressions($colour_impres
 	# Used to be hasAQ.. but that doesn't make any sense.	Must be NeedAQ.
 	if ( $$project{NeedAqueous} ) {
 		my $aq_time = gettimeofday();
-		my %aq_results = openprint::Estimating::Aqueous::signature_calc( $Project, $$project{AqueousSpecs}, $specs, $qty_index, $Imposition );
+		my %aq_results = openprint::Estimating::Aqueous::signature_calc( $Project, $$project{AqueousSpecs}, $specs, $qty_index, $Imposition, $$project{"AqueousMakeReadies$qty_index"} );
 		#my $aq_time = [gettimeofday()];
 my $aq_elapsed = sprintf('%.4f seconds', (gettimeofday() - $aq_time)*1000);
 $log->warn("AQ elapsed: $aq_elapsed");
