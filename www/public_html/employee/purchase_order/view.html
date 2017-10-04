@@ -13,8 +13,8 @@
 	$html .= button( 'Print', { onclick=>'window.print();' } );
 	if ( $openprint::User->email() =~ /iconnor/ ) {
 	$html .= button( 'Debug', { onclick=>q`f2.btnFunction.value='Debug';f2.submit();`, text=>'Debug' } );
-	}
 	$html .= button( 'EmailToMe', { onclick=>q`f2.btnFunction.value='Email Me';f2.submit();`, text=>'Send Email to Me' } );
+	}
 	if ( $$variable{PurchaseOrder}->can_send() ) {
 		if ( $$variable{PurchaseOrder}->authorized() ) {
 			$html .= button( 'Email', { onclick=>q`f2.btnFunction.value='Email Vendor';f2.submit();`, text=>'Send Email' } );

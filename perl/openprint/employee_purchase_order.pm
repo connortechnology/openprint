@@ -654,8 +654,8 @@ $log->error("$key deleted");
     $search{cancelled} = $session{$uri.'?cancelled'} if $session{$uri.'?cancelled'} ne '';
     $search{'item_id any'} = $session{$uri.'?item_id'} if $session{$uri.'?item_id'};
 
-		my @header = ( 'Id', 'Supplier', 'Sub Total', 'Total', 'Item','Quantity','Unit Price', 'Units', 'Item Total' );
-		my @data;
+	my @header = ( 'Id', 'Supplier', 'Sub Total', 'Total', 'Created', 'Created By', 'Item','Quantity','Unit Price', 'Units', 'Item Total', 'Docket', 'Printed Start','Printed End' );
+	my @data;
 
     my $ac = sql::start_transaction( $dbh );
     my @POs = openprint::PurchaseOrder->find( %search );
@@ -674,6 +674,8 @@ $log->error("$key deleted");
     } # end if POs
 
 		my %types = map { $_, $_ } split(',',$session{$uri.'?types'} );
+my $total_quantity = 0;
+my $total_value = 0;
 
     foreach my $PO ( @POs ) {
       if ( $session{$uri.'?authorized'} eq 'Y' and $PO->authorized() ne '1' ) {
@@ -732,10 +734,30 @@ $log->error("$key deleted");
 		#my @header = ( 'Id', 'Supplier', 'Sub Total', 'Total', 'Item','Quantity','Unit Price', 'Item Total' );
 			foreach my $C ( $PO->Contents() ) {
 				next if %types and ! $types{$$C{type_id}};
-				push @data, @$PO{'id','vendor_name','subtotal','total'};
-				push @data, $C->item(), $C->qty(), $C->price(), $C->units(), $C->total();
+				push @data, @$PO{'id','vendor_name','subtotal','total'}, ssi::format_csv_date($$PO{created_on}), $PO->Created_By()->name();
+				push @data, $C->item(), $C->qty(), $C->price(), $C->units(), $C->total(), $C->docket();
+
+				$total_quantity += $C->qty();
+				$total_value += $C->total();
+
+				my ( $printed_start, $printed_end );
+				( my $docket ) = $C->docket() =~ /^\s*(\d+)\s*$/;
+				if ( $docket ) {
+					my $Order = openprint::Order->find_one( docket=>$docket );
+					if ( $Order ) {
+						foreach my $Project ( $Order->Projects() ) {
+							($_) = sql::execute( undef, undef, q`SELECT MIN(dtmtimestamp) FROM Project_Log WHERE project_id=? AND description LIKE 'Marked Printed from %'`, $$Project{id} );
+							$printed_start = $_ if (!$printed_start) or $printed_start gt $_;
+							($_) = sql::execute( undef, undef, q`SELECT MAX(dtmtimestamp) FROM Project_Log WHERE project_id=? AND description LIKE 'Marked Printed from %'`, $$Project{id} );
+							$printed_end = $_ if (!$printed_end) or $printed_end lt $_;
+						}
+					} # end if
+				}
+				push @data, ssi::format_csv_date($printed_start), ssi::format_csv_date($printed_end);
 			}
     } # end foreach PO
+	my @header = ( 'Id', 'Supplier', 'Sub Total', 'Total', 'Created', 'Created By', 'Item','Quantity','Unit Price', 'Units', 'Item Total', 'Docket', 'Printed Start','Printed End' );
+push @data, '','Totals', '', '', '', '', '', $total_quantity, '', '', $total_value, '', '', '';
 		sql::end_transaction( $dbh, $ac );
 
 		misc::export_csv( $r, $log, \%variable, 'purchase_order_history_report.csv', \@header,\@data );	
@@ -944,14 +966,17 @@ sub _payments_edit {
 		my $ac = sql::start_transaction( $openprint::dbh );
 		my $Payment = new openprint::Payment();
 		$variable{error} .= $Payment->save({ 
-				amount			=>	$param{amount},
+				amount				=>	$param{amount},
 				currency_id		=>	$$PO{currency_id},
 				received_on		=>	$param{received_on},
-				memo			=>	$param{description},
+				memo					=>	$param{description},
 				recipient_id	=>	$PO->supplier_id(),
-				payor_id		=>	$PO->company_id(),
+				payor_id			=>	$PO->company_id(),
 				});
-		return if $variable{error};
+		if ( $variable{error} ) {
+			sql::end_transaction( $openprint::dbh, $ac );
+			return;
+		}
 		my $PO_Payment = new openprint::Object_Payment();
 		$variable{error} .= $PO_Payment->save({payment_id=>$Payment->id(), object_id=>$PO->id(), object_type=>'openprint::PurchaseOrder', amount=>$param{amount} });
 		$PO->Payments( undef );
@@ -960,6 +985,12 @@ sub _payments_edit {
 		$variable{error} .= $PO->save();
 		$openprint::dbh->rollback() if $variable{error};
 		sql::end_transaction( $openprint::dbh, $ac );
+			my $L = new openprint::PurchaseOrder_Log();
+			$L->save({
+					user_id	=>	$session{user_id},
+					po_id		=>	$PO->id(),
+					reason	=>	'add payment ' . $PO_Payment->amount(),
+					});
 	} elsif ( $param{action} eq 'Delete' ) {
 $openprint::log->debug("delet");
 		if ( ! sets::isin( $param{payment_id}, [ map { $_->payment_id() } $PO->Payments() ] ) ) {
@@ -978,6 +1009,12 @@ $openprint::log->debug("deleting");
 			$openprint::dbh->rollback();
 		} # end if
 		sql::end_transaction( $openprint::dbh, $ac );
+			my $L = new openprint::PurchaseOrder_Log();
+			$L->save({
+					user_id	=>	$session{user_id},
+					po_id		=>	$PO->id(),
+					reason	=>	'delete payment ' . $PO_Payment->amount(),
+					});
 	} # end if action
 } # end sub payments_edit
 

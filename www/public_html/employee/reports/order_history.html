@@ -42,10 +42,17 @@
 			</select>
 		</li>
 		 <li>
-			 <label>Date</label>
-			<? echo ( join(' to ',
+			 <label>Ordered On</label>
+			 <? echo ( join(' to ',
 						date_select_session('/employee/reports/order_history.html', 'created_on_start', { with_today=>1,with_clear=>1 } ),
 						date_select_session('/employee/reports/order_history.html', 'created_on_end', { with_today=>1,with_clear=>1 } ), 
+						); ) ?>
+		</li>
+		 <li>
+			 <label>Printed On</label>
+			 <? echo ( join(' to ',
+						date_select_session('/employee/reports/order_history.html', 'printed_on_start', { with_today=>1,with_clear=>1 } ),
+						date_select_session('/employee/reports/order_history.html', 'printed_on_end', { with_today=>1,with_clear=>1 } ), 
 						); ) ?>
 		</li>
 		<li>

@@ -179,23 +179,18 @@ sub get_current {
 } # end sub get_currency
 
 sub format {
-	my ( $Currency, $price, $precision );
+	my ( $Currency, $price, $precision, $symbol );
 	if ( ref $_[0] eq 'openprint::Currency' ) {
-		( $Currency, $price, $precision ) = @_;
+		( $Currency, $price, $precision, $symbol ) = @_;
 	} else {
-		( $price, $precision ) = @_;
+		( $price, $precision, $symbol ) = @_;
 		$Currency = get_current();
 	} # end if
 	
 
 	$price = 0 if ! $price;
 	$precision = 2 if ! defined $precision;
-	my $symbol = $Currency->symbol();
-
-	if ( ! $symbol ) {
-		$openprint::log->error( "Currecy does not have symbol: " . $Currency->to_string() );
-		$symbol = '$';
-	}
+	$symbol = $Currency->symbol() if ! defined $symbol;
 
 	require Number::Format;
     my $Formatter = new Number::Format(

@@ -495,6 +495,7 @@ sub is_PEFC {
 		return 1 if $C->description() =~ /PEFC/i;
 	} # end foreach C
 } # end sub is_PEFC
+
 sub copy {
 	my $self = shift;
 	my $New = new openprint::PurchaseOrder();
@@ -804,6 +805,10 @@ sub dockets {
 		@{$$self{dockets}} = sets::union( map { $_->docket() ? $_->docket() : () } $self->Contents() );
 	}
 	return @{$$self{dockets}};
+}
+
+sub Created_By {
+	return new openprint::User( $_[0]{created_by} );
 }
 
 1;
