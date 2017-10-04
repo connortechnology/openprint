@@ -2073,7 +2073,8 @@ if ( 0 ) {
 sub set_size {
 	my ( $Project, $specs, $printing_specs ) = @_;
 
-	if ( $Project->Type()->name() eq 'Banners' ) {
+	my $Type = $Project->Type();
+	if ( $$Type{name} eq 'Banners' ) {
 		my $width = $$specs{txtFinalWidth};
 		my $height = $$specs{txtFinalHeight};
 
@@ -2107,13 +2108,13 @@ sub set_size {
 			$variables{txtHeight} = [ sets::exclude( ['output'], $variables{txtHeight} ) ];
 		} # end if
 
-	} elsif ( $Project->Type()->name() eq 'ScratchPads' ) {
+	} elsif ( $$Type{name} eq 'ScratchPads' ) {
 # Technically, something like a coil bound could be 2pg spread, just need two of them.  
-            if ( ! $$specs{OverrideSpreadSize} ) {
-                $$specs{txtSpreadSize} = 1;
-                $variables{txtSpreadSize} = [ sets::union( 'output', @{$variables{txtSpreadSize}} ) ];
-            } # end if
-		if ( $$specs{ddmProjectSize} ne 'Custom' ) {
+		if ( ! $$specs{OverrideSpreadSize} ) {
+			$$specs{txtSpreadSize} = 1;
+			$variables{txtSpreadSize} = [ sets::union( 'output', @{$variables{txtSpreadSize}} ) ];
+		} # end if
+		if ( $$specs{ddmProjectSize} ne 'Custom' and $$Type{type} eq 'ScratchPads' ) {
 			$$specs{txtWidth} = $$printing_specs{txtWidth} if $$printing_specs{txtWidth};
 			$$specs{txtHeight} = $$printing_specs{txtHeight} if $$printing_specs{txtHeight};
 			$$specs{txtFinalWidth} = $$printing_specs{txtFinalWidth} if $$printing_specs{txtFinalWidth} ;
@@ -2125,7 +2126,7 @@ sub set_size {
 			$variables{txtFinalHeight} = [ sets::exclude( ['output'], $variables{txtFinalHeight} ) ];
 		}
 
-	} elsif ( $Project->Type()->name() eq 'PresentationFolders' ) {
+	} elsif ( $$Type{name} eq 'PresentationFolders' ) {
 		if ( $$specs{ddmProjectSize} ne 'Custom' ) {
 #$log->debug("Auto calc dimensions");
 # auto calc flat dimensions
@@ -2269,7 +2270,7 @@ $log->debug("Using spine ehgiht");
 			$$specs{txtFinalHeight} = $$printing_specs{txtFinalHeight};
 		} else { # not folder, not cover
 			if ( !$$specs{OverrideSpreadSize} ) {
-				if ( $Project->Type()->name() eq 'ScratchPads' ) {
+				if ( $$Type{name} eq 'ScratchPads' ) {
 					$$specs{txtSpreadSize} = 1;
 				} else {
 					if ( sets::isin( $$printing_specs{rdbTemplateType}, ['SaddleStitching', 'LoopStitching'] ) ) {
@@ -2325,7 +2326,7 @@ $log->debug("Using spine height");
 #$variables{txtHeight} = [ sets::exclude( ['output'], $variables{txtHeight} ) ];
 	} # end if
 
-	if ( sets::isin( $Project->Type()->name(), [ 'Envelopes', 'NCR' ] ) ) {
+	if ( sets::isin( $$Type{name}, [ 'Envelopes', 'NCR' ] ) ) {
 		if ( $$specs{rdbSpecificStock} ne 'Y' ) {
 			if ( $$specs{ddmStockSheetSize} ) {
 				@$specs{'txtWidth','txtHeight'} = $$specs{ddmStockSheetSize} =~ /^([\d\.]+)"?\s*x?\s*([\d\.]+)?"?\s*$/;
