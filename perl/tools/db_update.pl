@@ -4873,6 +4873,10 @@ foreach my $config_action ( keys %config_actions ) {
 		$Action->save({name=>$config_action,id=>$config_actions{$config_action}}, 1);
 	} # end if
 } # end foreach config_action
+$dbh->do(q`UPDATE Logs SET action_id=(SELECT id FROM log_actions WHERE name='Edit Company') WHERE action_id=(SELECT id FROM Log_Actions WHERE name='Update Company Profile')`);
+$dbh->do(q`DELETE FROM Log_Actions WHERE name='Update Company Profile'`);
+$dbh->do(q`UPDATE Logs SET action_id=(SELECT id FROM log_actions WHERE name='Edit Company') WHERE action_id=(SELECT id FROM Log_Actions WHERE name='Update Company')`);
+$dbh->do(q`DELETE FROM Log_Actions WHERE name='Update Company'`);
 die $dbh->errstr() if $dbh->errstr();
 
 
