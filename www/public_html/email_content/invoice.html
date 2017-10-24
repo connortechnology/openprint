@@ -33,8 +33,8 @@
 		my @Timetracks = openprint::Timetrack->find('invoice_id'=>$$variable{Invoice}->id(), 'order'=>'starting');
 		return '' if ! @Timetracks;
 		my $html = '<fieldset><legend>Services</legend>';
-		$$variable{'Currency'} = openprint::Currency::get_current() if ! $$variable{'Currency'};
-		$$variable{'service_total'} = 0;
+		$$variable{Currency} = openprint::Currency::get_current() if ! $$variable{Currency};
+		$$variable{service_total} = 0;
 		my $rowclass = '';
 
 		my $count = 0;
@@ -59,7 +59,7 @@
 					$html .= sprintf('</tr><tr %2$s>', $Timetrack->id(), $rowclass );
 					$html .= '<td class="Date">'.($Timetrack->user_id() ? $Timetrack->Employee()->name() : '&nbsp;' ). '</td><td class="Service" colspan="4">'.$Timetrack->description().'</td><td>&nbsp;</td>';
 					$html .= '</tr>';
-					$$variable{'service_total'} += $$Price{'Total'};
+					$$variable{service_total} += $$Price{Total};
 					$rowclass = $rowclass ? '' : 'class="colRow"';
 					my @desc = split('<p>', $Timetrack->description() );
 					#$count += scalar @desc;
@@ -77,25 +77,29 @@
 						</tr>';
 					while ( my $Timetrack = shift @Timetracks ) {
 						$html .= sprintf( q`<tr %2$s>`, $Timetrack->id(), $rowclass );
-						$html .= sprintf('<td class="Date">%s</td>', Date::Format::time2str( $config{'DateFormat'}, Date::Parse::str2time( $Timetrack->starting() ) ) );
+						$html .= sprintf('<td class="Date">%s</td>', Date::Format::time2str( $config{DateFormat}, Date::Parse::str2time( $Timetrack->starting() ) ) );
 						$html .= sprintf('<td class="Service">%s</td>', html_escape( $Timetrack->Service()->name() ) );
 						$html .= '<td class="PO">'.html_escape( $Timetrack->po() ).'</td>';
 						$html .= sprintf('<td class="Interval">%s</td>', misc::seconds_to_pretty_interval( $Timetrack->elapsed() ) ); 
 						my $Price = $Timetrack->Price();
-						$html .= sprintf('<td class="Rate">%s%s</td>', openprint::Currency::format( $$Price{'Price'} ), $$Price{'units'} );
-						$html .= sprintf('<td class="Price">%s</td>', openprint::Currency::format( $$Price{'Total'} ) );
+						$html .= sprintf('<td class="Rate">%s%s</td>', openprint::Currency::format( $$Price{Price} ), $$Price{units} );
+						$html .= sprintf('<td class="Price">%s</td>', openprint::Currency::format( $$Price{Total} ) );
 						$html .= sprintf(q`</tr><tr %2$s>`, $Timetrack->id(), $rowclass );
 						$html .= '<td>&nbsp;</td><td class="Service" colspan="4">'.$Timetrack->description().'</td><td class="Price">&nbsp;</td>';
 						$html .= '</tr>';
-						$$variable{'service_total'} += $$Price{'Total'};
+						$$variable{service_total} += $$Price{Total};
 						$rowclass = $rowclass ? '' : 'class="colRow"';
 					} # end foreach Timetrack
 				} # end if more Timetracks
+          if ( ! $$variable{Invoice}{subtotal_override} ) {
 				$html .= '
 			<tr class="totals">
 				<td colspan="5">Totals</td>
-				<td class="Price">'.openprint::Currency::format( $$variable{'service_total'} ).'</td>
+				<td class="Price">'.openprint::Currency::format( $$variable{service_total} ).'</td>
 			</tr>
+';
+}
+$html .= '
 		</table>
 	</fieldset>';
 				return $html;
