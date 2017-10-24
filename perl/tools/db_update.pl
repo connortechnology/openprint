@@ -1069,7 +1069,7 @@ if ( ! sets::isin( 'projects', \@tables ) ) {
 	if ( ! exists $$data{reprint_reason} ) {
 		$dbh->do(q`ALTER TABLE projects ADD reprint_reason TEXT`) or $log->error($dbh->errstr());
 	} # end if
-	foreach my $field ( 'credit_card_fee', 'csr_commision', 'discount' ) {
+	foreach my $field ( 'credit_card_fee', 'csr_commission', 'discount' ) {
 		if ( ! $openprint::Project::fields{$field} ) {
 			die "Want to add $field to Project but it's not in fields";
 		} # end if

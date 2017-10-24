@@ -621,7 +621,7 @@ window.open(summaryPage,'pop','newWin,left=140,width=640,top=50,height=400,resiz
 }
 
 function checkLoginData( usernameInput, passwordInput ) {
-	var div = $( 'missingLoginMessage' );
+	var div = $j ? $j('#missingLoginMessage') : $('missingLoginMessage');
 	if( usernameInput && ! usernameInput.value ) {
 		// Display login name error.
 		if ( div ) div.show();
@@ -631,7 +631,7 @@ function checkLoginData( usernameInput, passwordInput ) {
 		div.hide();
 	}
 
-	div = $( 'missingPasswordMessage' );
+	div = $j ? $j('missingPasswordMessage') : $('missingPasswordMessage')
 	if( passwordInput && ! passwordInput.value ) {
 		// Display login password error.
 		if ( div ) div.show();
@@ -1564,6 +1564,7 @@ function isIOS() {
 	return is_IOS;
 } // end function isIOS
 
+if ( typeof Prototype !== "undefined" ) {
 /**
  * Ajax.Request.abort
  * extend the prototype.js Ajax.Request object so that it supports an abort method
@@ -1576,6 +1577,7 @@ Ajax.Request.prototype.abort = function() {
 	// update the request counter
 	Ajax.activeRequestCount--;
 };
+}
 
 function get_date_value( prefix ) {
 	var date = new Array();
