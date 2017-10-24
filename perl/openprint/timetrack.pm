@@ -133,20 +133,20 @@ sub edit {
 	if ( $param{func} eq 'Save' ) {
 		$param{owner_id} = $session{company_id} if ! $param{owner_id};
 
-        my $start_datetime = DateTime->new( time_zone => $openprint::TZ,
-				( map { $_ => int($param{'starting_'.$_ }) } ( 'year', 'month', 'day', 'hour','minute' ) ),
-                );
+    my $start_datetime = DateTime->new( time_zone => $openprint::TZ,
+        ( map { $_ => int($param{'starting_'.$_ }) } ( 'year', 'month', 'day', 'hour','minute' ) ),
+        );
 
-        my $end_datetime = DateTime->new( time_zone => $openprint::TZ,
-				( map { $_ => int($param{'ending_'.$_ }) } ( 'year', 'month', 'day', 'hour','minute' ) ),
-                );
+    my $end_datetime = DateTime->new( time_zone => $openprint::TZ,
+        ( map { $_ => int($param{'ending_'.$_ }) } ( 'year', 'month', 'day', 'hour','minute' ) ),
+        );
 
-        if ( $start_datetime > $end_datetime ) {
-            $variable{error} .= 'Invalid end time. The end of the shift must occur after the start of the shift.  No changes made.<br/>';
-            return;
-        } # end if
+    if ( $start_datetime > $end_datetime ) {
+      $variable{error} .= 'Invalid end time. The end of the shift must occur after the start of the shift.  No changes made.<br/>';
+      return;
+    } # end if
 
-        my $parser = 'DateTime::Format::Pg';
+    my $parser = 'DateTime::Format::Pg';
 
 		$param{starting} = $parser->format_datetime( $start_datetime );
 		$param{ending} = $parser->format_datetime( $end_datetime );
