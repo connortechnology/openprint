@@ -806,24 +806,23 @@ sub _production_performance {
 			my @signatures = $Project->signatures();
 			my $qty_index = $Project->ordered_quantity_index();
 
-				if ( @press_names ) {
-					my $found = 0;
+			if ( @press_names ) {
+				my $found = 0;
 
-					foreach my $sig_id ( @signatures ) {
-						my $Service = $Project->Service( $sig_id );
-						my $sig_specs = $Service->specs();
-						if ( ! $$sig_specs{UsePress} ) {
-							$$sig_specs{UsePress} = $$sig_specs{'ddmPress'.$qty_index};
-						} # end if
-						if ( $press_names{$$sig_specs{UsePress}} ) {
-							$found = 1;
-							last;
-						}
+				foreach my $sig_id ( @signatures ) {
+					my $Service = $Project->Service( $sig_id );
+					my $sig_specs = $Service->specs();
+					if ( ! $$sig_specs{UsePress} ) {
+						$$sig_specs{UsePress} = $$sig_specs{'ddmPress'.$qty_index};
+					} # end if
+					if ( $press_names{$$sig_specs{UsePress}} ) {
+						$found = 1;
+						last;
 					}
-					next if ! $found;
-				} # end if press_names
-
-				push @Data, ( $Order->id(), $Order->docket(), $Project->id(), $Order->company_name(), $Order->created_on() );
+				}
+				next if ! $found;
+			} # end if press_names
+			my @fragment = ( $Order->id(), $Order->docket(), $Project->id(), $Order->company_name(), $Order->created_on() );
 
 				if ( $columns{plates} ) {
 					my $plate_qty = 0;
@@ -846,12 +845,12 @@ sub _production_performance {
 						$plate_cost += $plate_cost{Cost} * $$sig_specs{'txtPlateQuantity'.$qty_index};
 						$plate_price += $plate_cost{Price} * $$sig_specs{'txtPlateQuantity'.$qty_index};
 					} # end foreach sig
-					push @Data, $plate_qty, $plate_cost, $plate_price;
+					push @fragment, $plate_qty, $plate_cost, $plate_price;
 				} # end if include plate info
 				if ( $columns{production} ) {
-					push @Data, $Project->takeover_on(), $Project->printed_on(), $Project->completed_on();
+					push @fragment, $Project->takeover_on(), $Project->printed_on(), $Project->completed_on();
 					my $invoiced_on = $Order->invoiced_on();
-					push @Data, $invoiced_on;
+					push @fragment, $invoiced_on;
 				}
 				if ( $columns{stock} ) {
 					my $stock_sheets = 0;
@@ -897,13 +896,13 @@ sub _production_performance {
 							} else {
 								$stock_weight_quoted += $qty;
 							} # end if
+						push @Data, @fragment, $Stock->to_string(), ( $Stock->type() eq 'Sheet' ? ($stock_sheets_quoted,'') : ('', $stock_weight_quoted) ), $Service->ordered_price($qty_index);
 						}
 
-						push @Data, join(',',map { $$_{Stock}->to_string() } @stocks_and_quantities ), $stock_sheets_quoted, $stock_weight_quoted, $Service->ordered_price($qty_index);
 					} else {
 						push @Data, 0,0,0;
 					}
-				}
+				} # end if stock
 
 				push @Data, ( $Project->status(), $Project->ordered_price(),);
 		} # end foreach Project

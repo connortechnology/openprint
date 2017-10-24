@@ -901,6 +901,7 @@ sub mark_proofs_approved {
 
 	my $approval_date = sprintf('%.4d-%.2d-%.2d %.2d:%.2d:%.2d', Date::Calc::Today_and_Now() );
 	openprint::service::insert_service_spec( $log, $dbh, $$Project{id}, $$Service{service_id}, 'ApprovalDate', $approval_date );
+	openprint::service::insert_service_spec( $log, $dbh, $$Project{id}, $$Service{service_id}, 'rdbApproved', 'Yes' );
 } # end sub mark_proofs_approved
 
 sub add_to_barcode_log {

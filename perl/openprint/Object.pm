@@ -188,8 +188,8 @@ sub load {
 				Carp::cluck( 'Failure to load ' . $type . " $$self{id}: Reason: " . $d->errstr );
 			} elsif ( $debug ) {
 				$log->debug( 'Failure to load ' . $type . " $$self{id}: Reason: " );
-				delete $$self{id};
 			} # end if
+			delete $$self{id};
 			if ( @identified_by ) {
 				delete @$self{@identified_by};
 			} # end if

@@ -449,35 +449,48 @@ sub update_status {
 	return if $$self{status} eq 'Deleted';
 
 	my %services = $self->get_services();
-	my @statuses = sql::execute( $openprint::log, $openprint::dbh, q{SELECT DISTINCT strStatus FROM tbl_Project_Contents WHERE lngProjectIndex=?}, $$self{id} );
+	my %service_statuses = sql::execute( $openprint::log, $openprint::dbh, q{SELECT lngServiceIndex, strStatus FROM tbl_Project_Contents WHERE lngProjectIndex=?}, $$self{id} );
+	my %statuses = map { $_ => $_ } values %service_statuses;
 	my $new_status = $$self{status};
 
 	my $Order = new openprint::Order( $$self{order_id} );
 	if ( $$self{order_id} and $Order->status() ne 'Incomplete' ) {
 
 # This fixes the damage caused by re-opening an order
-		if ( sets::isin( 'calculated', \@statuses ) ) {
-			sql::update( $openprint::log, $openprint::dbh, 'tbl_Project_Contents', ['lngProjectIndex=? AND strStatus=?', $$self{id}, 'calculated'], 'strStatus', 'Ordered' );
-			@statuses = sql::execute( $openprint::log, $openprint::dbh, q{SELECT DISTINCT strStatus FROM tbl_Project_Contents WHERE lngProjectIndex=?}, $$self{id} );
-		} # end if
+		foreach my $service_id ( keys %service_statuses ) {
+			my $Service = $self->Service( $service_id );	
+$openprint::log->debug("Service : " . $Service->service_type() . ' ' . $Service->status() );
+			if ( $service_statuses{$service_id} eq 'calculated' ) {
+				if ( $Service->status(undef) ne 'calculated' ) {
+					$Service->save();
+					$service_statuses{$service_id} = $Service->status();
+				}
+			} elsif ( $service_statuses{$service_id} eq 'Ordered' ) {
+				if ( $Service->status(undef) ne 'Ordered' ) {
+					$Service->save();
+					$service_statuses{$service_id} = $Service->status();
+				}
+			}
+		}
+		%statuses = map { $_ => $_ } values %service_statuses;
 
 # We now know that it has been ordered.
 
-		if ( sets::isin( 'Waiting For Customer Approval', \@statuses ) ) {
+		if ( $statuses{'Waiting For Customer Approval'} ) {
 			if ( $$self{status} ne 'Waiting For Customer Approval' ) {
 				$self->add_to_log( @openprint::session{'company_id','user_id'}, "Marked Waiting For Customer Approval from $$self{status}" );
 				$$self{status} = 'Waiting For Customer Approval';
 				$self->save();
 			} # end if
 			return $$self{status};
-		} elsif ( sets::isin( 'Waiting For QA Approval', \@statuses ) ) {
+		} elsif ( $statuses{'Waiting For QA Approval'} ) {
 			if ( $$self{status} ne 'Waiting For QA Approval' ) {
 				$self->add_to_log( @openprint::session{'company_id','user_id'}, "Marked Waiting For QA Approval from $$self{status}" );
 				$$self{status} = 'Waiting For QA Approval';
 				$self->save();
 			} # end if
 			return $$self{status};
-		} elsif ( sets::isin( 'Proofs Out', \@statuses ) and ( $$self{status} ne 'Proofs Out' ) ) {
+		} elsif ( $statuses{'Proofs Out'} and ( $$self{status} ne 'Proofs Out' ) ) {
 			$self->add_to_log( @openprint::session{'company_id','user_id'}, "Marked Proofs Out from $$self{status}" );
 			$$self{status} = 'Proofs Out';
 			$self->save();
@@ -485,8 +498,8 @@ sub update_status {
 		} # end if
 
 # At this point, we know that the project is ordered
-		if ( sets::isin( 'Ordered', \@statuses ) ) {
-			if ( sets::isin( 'Approved', \@statuses ) ) {
+		if ( $statuses{Ordered} ) {
+			if ( $statuses{Approved} ) {
 				if ( $self->is_printed() ) {
 					$new_status = 'Printed';
 				} else {
@@ -568,9 +581,10 @@ sub update_status {
 		} # end if
 	} else {
 # Project is UnOrdered
-		if ( sets::isin( 'Ordered', \@statuses ) ) {
+		if ( $statuses{Ordered} ) {
 			sql::update( $openprint::log, $openprint::dbh, 'tbl_Project_Contents', ['lngProjectIndex=? AND strStatus=?', $$self{id},'Ordered'], 'strStatus', 'calculated' );
-			@statuses = sql::execute( $openprint::log, $openprint::dbh, q{SELECT DISTINCT strStatus FROM tbl_Project_Contents WHERE lngProjectIndex=?}, $$self{id} );
+			%service_statuses = sql::execute( $openprint::log, $openprint::dbh, q{SELECT lngServiceIndex, strStatus FROM tbl_Project_Contents WHERE lngProjectIndex=?}, $$self{id} );
+			%statuses = map { $_ => $_ } values %service_statuses;
 		} # end if
 		if ( $self->Type()->type() eq 'MultiPage' ) {
 			foreach my $qty_index ( $self->quantity_indexes() ) {
@@ -584,9 +598,9 @@ sub update_status {
 				} # end if
 			} # end foreach
 		} # end if
-		if ( sets::isin( 'uncalculated', \@statuses ) ) {
+		if ( $statuses{uncalculated} ) {
 			$new_status = 'uncalculated';
-		} elsif ( sets::isin( 'calculated', \@statuses ) ) { # This works because we have already checked for uncalculated
+		} elsif ( $statuses{calculated} ) { # This works because we have already checked for uncalculated
 			$new_status = 'Unordered';
 		} # end if
 	} # end if
