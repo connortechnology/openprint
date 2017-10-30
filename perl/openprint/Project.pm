@@ -1914,6 +1914,9 @@ sub can_view {
 		$log->debug("$openprint::User{firstname} Either created it or is an assistant") if $debug;
 		return 1;
 	} # end if
+	if ( openprint::usergroup::is_user_in( ['Accounting', 'Estimating'], $openprint::session{user_id} ) ) {
+		return 1;
+	}
 	return 0;
 }
 
