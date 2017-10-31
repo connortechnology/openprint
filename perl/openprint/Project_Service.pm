@@ -10,7 +10,7 @@ require openprint::Project_Service_Operator;
 
 use vars qw( $debug %fields %find_fields %transforms %defaults $table %serial @identified_by );
 
-$debug = 1;
+$debug = 0;
 %fields = (
 	service_id		=>	'lngserviceindex',
 	project_id		=>	'lngprojectindex',
@@ -261,7 +261,7 @@ sub status {
 	}
 	my $servicetype = $_[0]->service_type();
 
-	if ( ! defined $_[0]{status} ) {
+	if ( $servicetype and ( ! defined $_[0]{status} ) ) {
 		my $module = 'openprint/Estimating/'.$servicetype.'.pm';
 		eval{
 			require $module;
@@ -276,6 +276,8 @@ $openprint::log->debug("New status openprint::Estiamting::$servicetype $_[0]{sta
 $openprint::log->debug("No function for openprint::Estiamting::$servicetype can status");
 			$_[0]{status} = 'Ordered';
 		}
+	} else {
+		$_[0]{status} = 'Ordered';
 	}
 	return $_[0]{status};
 } # end sub status
