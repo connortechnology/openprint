@@ -268,8 +268,8 @@ $log->debug("No serial") if $debug;
 		} else {
 			foreach my $id ( @identified_by ) {
 				if ( ! $serial{$id} ) {
-		my ( $caller, undef, $line ) = caller;
-					$log->error("$id nor in serial for $type from $caller:$line") if $debug;
+					my ( $caller, undef, $line ) = caller;
+					$log->debug("$id nor in serial for $type from $caller:$line") if $debug;
 					next;
 				}
 				if ( ! $$self{$id} ) {
