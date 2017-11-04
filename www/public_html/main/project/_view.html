@@ -28,7 +28,7 @@
 	my $ProjectCurrency = $Project->Currency();
 	my $services = $Project->services();
 	my %statuses = sql::execute( $log, $dbh, q{SELECT lngServiceIndex, strStatus FROM tbl_Project_Contents WHERE lngProjectIndex=?}, $Project->id() );
-    my $printing_specs = openprint::service::get_specs_ref( $Project, $$services{''}[0] ) if $$services{''}[0];
+  my $printing_specs = openprint::service::get_specs_ref( $Project, $$services{''}[0] ) if $$services{''}[0];
 	if ( ! $$services{''}[0] ) {
 		Carp::cluck("No project service for project $$Project{id}");
 	} # end if
@@ -56,7 +56,7 @@
 						( $$printing_specs{alert} ? join( $$printing_specs{alert}, '<span class="error">','</span>' ) : '' ),
 						);
 				} else {
-					$html .= sprintf('<tr%s><td class="description">Printing</td>', $rowclass  );
+					$html .= sprintf('<tr%s><td class="description">Printing</td>', $rowclass );
 				} # end if
 			} else {
 					$html .= sprintf('<tr%s><td class="description"><span class="service_name">Printing</b><br/>%s%s</td>', $rowclass,
@@ -486,19 +486,19 @@ $html .= '</td>';
 				<td class="unprintable actions">&nbsp;</td>
 				<? endif ( ( ! $$variable{Project}->docket() ) or ( $$variable{Project}->Order()->status() eq 'Re-Opened' ) ) ?>
 			</tr>
-<tr class="Prices MPrices">
-                <td>Additional M Prices</td>
-                <? echo ( my $html = '';
-                    foreach my $qty_index ( $$variable{Project}->quantity_indexes() ) {
-                        $html .= '<td class="price">'.openprint::Currency::format( $$variable{Project}->Currency()->convert_from( $$variable{Project}->m_price($qty_index)), 4).'</td>';
-                    } # end foreach qty_index
-                    return $html;
-                ) ?>
-                <td class="status">&nbsp;</td>
-                <? if ( ( ! $$variable{Project}->docket() ) or ( $$variable{Project}->Order()->status() eq 'Re-Opened' ) ) ?>
-                <td class="unprintable actions">&nbsp;</td>
-                <? endif ( ( ! $$variable{Project}->docket() ) or ( $$variable{Project}->Order()->status() eq 'Re-Opened' ) ) ?>
-            </tr>
+			<tr class="Prices MPrices">
+				<td>Additional M Prices</td>
+				<? echo ( my $html = '';
+					foreach my $qty_index ( $$variable{Project}->quantity_indexes() ) {
+						$html .= '<td class="price">'.openprint::Currency::format($$variable{Project}->Currency()->convert_from( $$variable{Project}->m_price($qty_index)), 4).'</td>';
+					} # end foreach qty_index
+					return $html;
+				) ?>
+				<td class="status">&nbsp;</td>
+				<? if ( ( ! $$variable{Project}->docket() ) or ( $$variable{Project}->Order()->status() eq 'Re-Opened' ) ) ?>
+				<td class="unprintable actions">&nbsp;</td>
+				<? endif ( ( ! $$variable{Project}->docket() ) or ( $$variable{Project}->Order()->status() eq 'Re-Opened' ) ) ?>
+			</tr>
 
 			<tr class="TotalPrices"> 
 				<td>Total Before Taxes</td>
@@ -516,16 +516,17 @@ $html .= '</td>';
 			</tr>
 <? endif ( $session{user_type} eq 'A' or ! $$variable{Project}->Ordered_Product() ) ?>
 <? if ( $$variable{Project}->Ordered_Product() ) ?>
-        <tr class="totals">
-            <td>Ordered Price</td>
-            <td class="price"><? echo ( openprint::Currency::format( $$variable{Project}->Currency()->convert_from($$variable{Project}->Ordered_Product()->price() ) ); ) ?></td>
-            <td class="status">&nbsp;</td>
-			<? if ( ( ! $$variable{Project}->docket() ) or ( $$variable{Project}->Order()->status() eq 'Re-Opened' ) ) ?>
-            <td class="unprintable actions">&nbsp;</td>
-			<? endif ( ( ! $$variable{Project}->docket() ) or ( $$variable{Project}->Order()->status() eq 'Re-Opened' ) ) ?>
-        </tr>
+			<tr class="totals">
+				<td>Ordered Price</td>
+				<td class="price"><? echo ( openprint::Currency::format( $$variable{Project}->Currency()->convert_from($$variable{Project}->Ordered_Product()->price() ) ); ) ?></td>
+				<td class="status">&nbsp;</td>
+				<? if ( ( ! $$variable{Project}->docket() ) or ( $$variable{Project}->Order()->status() eq 'Re-Opened' ) ) ?>
+				<td class="unprintable actions">&nbsp;</td>
+				<? endif ( ( ! $$variable{Project}->docket() ) or ( $$variable{Project}->Order()->status() eq 'Re-Opened' ) ) ?>
+			</tr>
 <? endif ( $$variable{Project}->Ordered_Product() ) ?>
 	</table>
+
 <br/>
 <? if ( $$variable{Project}->currency_id() != $session{Currency_id} ) ?>
 <span class="Currency">Project originally quoted in <? echo ( $$variable{Project}->Currency()->name() ) ?>.</span>

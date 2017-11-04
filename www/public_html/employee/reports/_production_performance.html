@@ -46,7 +46,7 @@
 
 		while ( @{$$variable{Data}} ) {
 		
-			my ( $order_id, $docket, $project_id, $company, $ordered_on ) = splice @{$$variable{Data}}, 0, 5;
+			my ( $order_id, $docket, $project_id, $company, $ordered_on, $status, $job_value ) = splice @{$$variable{Data}}, 0, 7;
 
 			$html .= sprintf(q`
 				<tr%1$s>
@@ -94,7 +94,7 @@
 			}
 			
 			if ( $$variable{columns}{stock} ) {
-				my ( $sheets, $weight, $stock_cost, $quoted_sheets, $quoted_weight, $stock_charge ) = splice @{$$variable{Data}}, 0, 6;
+				my ( $sheets, $weight, $stock_cost, $stock_name, $quoted_sheets, $quoted_weight, $stock_charge ) = splice @{$$variable{Data}}, 0, 7;
 				$html .= sprintf(q`
 						<td class="Sheets">%4$s</td>
 						<td class="Weight">%5$s</td>
@@ -118,7 +118,6 @@
 				$stock_used_total += $stock_cost;
 				$stock_quoted_total += $stock_charge;
 			}
-			my ( $status, $job_value ) = splice @{$$variable{Data}}, 0, 2;
 			$job_total += $job_value;
 			$html .= sprintf(q`
 					<td class="status"><a href="%3$s?order_id=%2$d">%4$s</a></td>

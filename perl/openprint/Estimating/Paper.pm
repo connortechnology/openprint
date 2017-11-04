@@ -25,7 +25,7 @@ require openprint::service;
 require openprint::Currency;
 require openprint::Paper;
 
-use constant DEBUG => 0;
+use constant DEBUG => 1;
 use constant MAX_STOCK_INDEX => 10;
 
 my @variables = (

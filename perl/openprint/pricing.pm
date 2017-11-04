@@ -214,25 +214,31 @@ $log->debug("Price service_id:$$p{service_id} interpolate:$$p{interpolate};");
 # Now if we are a customer, then we have more to do, including special pricing, adding discounts, etc. 
 	if ( $cust_id != 0 ) {
 		my $Company = new openprint::Company( $cust_id );
+		my $CSR = $Company->CSR();
 
 		my $pricingpercent = $$Company{discount};
-		if ( $pricingpercent ) {
+		if ( $pricingpercent or $$Company{csr_commission} or $$Company{credit_card_fee} or $$CSR{commission} ) {
 			$pricingpercent = 1 - ($pricingpercent/100);
-			for ( my $index = 0; $index < @pricing; $index += 1 ) {
-				if ( $pricing[$index]->{Discountable} ne 'N' ) {
+			my $csr_commission = 1+($$Company{csr_commission} == undef ? $$CSR{commission} : $$Company{csr_commission} ) /100;
+			my $credit_card_fee = 1+$$Company{credit_card_fee}/100;
 
-# the if here is to preserve empty pricing.	if pricei s empty, we display call, instead of 0.00.
-					if ( $pricing[$index]->{Price} ne '' ) {
+			for ( my $index = 0; $index < @pricing; $index += 1 ) {
+
+# the if here is to preserve empty pricing.	if price is empty, we display call, instead of 0.00.
+				if ( $pricing[$index]->{Price} ne '' ) {
+					if ( $pricing[$index]->{Discountable} ne 'N' ) {
 						$pricing[$index]->{Price} *= $pricingpercent;
 					} # end if
-				} # end if
-			} # end for
+					$pricing[$index]->{Price} *= $csr_commission;
+					$pricing[$index]->{Price} *= $credit_card_fee;
+				} # end if has a nunmeric price
+			} # end for each price
 		} # end if
 	} # end if
 	if ( $openprint::config{ApplyMarkup} ) {
 #$openprint::log->debug("Apply Markup: $openprint::config{ApplyMarkup}");	
 		my $pricingpercent = $openprint::config{ApplyMarkup};
-		$pricingpercent =~ s/[^\d\.\-]//g;
+		#$pricingpercent =~ s/[^\d\.\-]//g;
 		$pricingpercent /= 100;
 		$pricingpercent += 1;
 		for ( my $index = 0; $index < @pricing; $index += 1 ) {
@@ -304,21 +310,25 @@ sub get_Price {
 
 	if ( $Price and $$Price{price} ) {
 		if ( $openprint::session{company_id} != 0 ) {
+			my $CSR = $openprint::Company->CSR();
 			my $pricingpercent = $$openprint::Company{discount};
-			if ( $pricingpercent ) {
-				$pricingpercent = 1 - ($pricingpercent/100);
-				if ( $Price->{discountable} ne 'N' ) {
+			if ( $pricingpercent or $$openprint::Company{credit_card_fee} or $$openprint::Company{csr_commission} or $$CSR{commission} ) {
 
-# the if here is to preserve empty pricing. if pricei s empty, we display call, instead of 0.00.
+				$pricingpercent = 1 - ($pricingpercent/100);
+				my $credit_card_fee = 1 + $$openprint::Company{credit_card_fee}/100;
+				my $csr_commission = 1+($$openprint::Company{csr_commission} == undef ? $$CSR{commission} : $$openprint::Company{csr_commission} ) /100;
+				if ( $Price->{discountable} ne 'N' ) {
 					$Price->{price} *= $pricingpercent;
 				} # end if
+				$$Price{price} *= $csr_commission;
+				$$Price{price} *= $credit_card_fee;
 			} # end if
 		} # end if
 
 		if ( $openprint::config{ApplyMarkup} ) {
 #$openprint::log->debug("Apply Markup: $openprint::config{ApplyMarkup}"); 
 			my $pricingpercent = $openprint::config{ApplyMarkup};
-			$pricingpercent =~ s/[^\d\.\-]//g;
+			#$pricingpercent =~ s/[^\d\.\-]//g;
 			$pricingpercent /= 100;
 			$pricingpercent += 1;
 # the if here is to preserve empty pricing. if pricei s empty, we display call, instead of 0.00.

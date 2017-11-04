@@ -416,7 +416,8 @@ sub get_service_specifications {
 			$$variable{ServiceTypeID} = $PT->name();
 			$$variable{ServiceTypeName} = 'Printing';
 		} else {
-			$$variable{ServiceType} = openprint::print::get_ServiceType( $project_index, $service_index );	
+			my $Service = $Project->Service( $service_index );
+			$$variable{ServiceType} = $Service->ServiceType();
 			@$variable{'ServiceTypeID','ServiceTypeName'} = ( $$variable{ServiceType}->name(), $$variable{ServiceType}->description() ) if $$variable{ServiceType};
 		} # end if
 
