@@ -39,8 +39,8 @@ use constant DEBUG_VERSIONS => 0;
 use constant DEBUG_PRESSES => 0;
 use constant DEBUG_FILTERING => 0;
 use constant DEBUG_INITIAL_FILTERING => 0;
-use constant DEBUG_AFTER_FILTERING => 1;
-use constant DEBUG_PRICE_DECISIONS => 1;
+use constant DEBUG_AFTER_FILTERING => 0;
+use constant DEBUG_PRICE_DECISIONS => 0;
 use constant DEBUG_INKS => 0;
 use constant DEBUG_STOCK => 0;
 use constant COMPARISON_LOG => 0;
@@ -727,7 +727,15 @@ $log->debug("Adding special colour for $colour");
 			my $s_specs = openprint::service::get_specs_ref( $Project, $sig_id );
 			my $form = $$s_specs{SignatureIndex};
 			foreach my $qty_index ( $Project->quantity_indexes() ) {
-				$project{"AqueousMakeReadies$qty_index"}{$$aq_specs{"ddmEquipment-$form-$qty_index"}} = $$aq_specs{"txtLayoutWidth-$form-$qty_index"} * $$aq_specs{"txtLayoutHeight-$form-$qty_index"};
+				if ( !$project{"AqueousMakeReadies$qty_index"}{$$aq_specs{"ddmEquipment-$form-$qty_index"}} ) {
+					$project{"AqueousMakeReadies$qty_index"}{$$aq_specs{"ddmEquipment-$form-$qty_index"}} = [];
+				}
+				push @{$project{"AqueousMakeReadies$qty_index"}{$$aq_specs{"ddmEquipment-$form-$qty_index"}}}, $$aq_specs{"txtLayoutWidth-$form-$qty_index"} * $$aq_specs{"txtLayoutHeight-$form-$qty_index"};
+			}
+			foreach my $qty_index ( $Project->quantity_indexes() ) {
+				foreach my $key ( keys %{$project{"AqueousMakeReadies$qty_index"}} ) {
+					$log->debug("$qty_index $key " . join(',',@{$project{"AqueousMakeReadies$qty_index"}{$key}}) );
+				}
 			}
 		}
 	} elsif ( $$services{Aqueous} and @{$$services{Aqueous}} ) {
@@ -3261,7 +3269,7 @@ sub calculate_impositions {
 	if ( $Project->Type()->name() eq 'ScratchPads' ) {
 		$needed_pages = 0;
 	} elsif ( $$sig_specs{txtSignatureType} ) {
-$log->debug("Gruop $$sig_specs{Group} unspecd " . $$sig_specs{'txtUnspecifiedPageQuantity'.$qty_index} . " wanted: " . $$project{ProjectSpecs}{"PageQuantity-$$sig_specs{Group}"} );
+$log->debug("Group $$sig_specs{Group} unspecd " . $$sig_specs{'txtUnspecifiedPageQuantity'.$qty_index} . " wanted: " . $$project{ProjectSpecs}{"PageQuantity-$$sig_specs{Group}"} );
 		if ( $$sig_specs{'chkOverridePageQuantity'.$qty_index} ) {
 			$needed_pages = int( $$sig_specs{'PageQuantity'.$qty_index} );
 		} elsif ( $$project{ProjectSpecs}{"PageQuantity-$$sig_specs{Group}"} and ( $$project{ProjectSpecs}{"PageQuantity-$$sig_specs{Group}"} <= $$sig_specs{'txtUnspecifiedPageQuantity'.$qty_index} ) ) {
@@ -6251,7 +6259,8 @@ $log->debug("Area $area = $$Imposition{object_area} * Impressions($colour_impres
 			$price{'Aqueous Breakdown'} .= "AQ error: $aq_results{alert} $$project{AqueousSpecs}{alert} " . $$project{AqueousSpecs}{'hdnBreakdown'.$qty_index} . '<br/>';
 			$price{'Comparison Cost'} += 1000000; 
 		} elsif ( $aq_results{Equipment} ) {
-			$$aq_makereadies{$aq_results{Equipment}{id}} = $aq_results{Imposition}->layout_area();
+			$$aq_makereadies{$aq_results{Equipment}{id}} = [] if ! $$aq_makereadies{$aq_results{Equipment}{id}};
+			push @{$$aq_makereadies{$aq_results{Equipment}{id}}}, $aq_results{Imposition}->layout_area();
 
 			$price{'Aqueous Breakdown'} = sprintf('Aqueous Price: %dout MR $%.2f + BC: $%.2f + Service $%.2f + Material $%.2f = $%.2f on %s<br/>', $aq_results{Imposition}{imposition}, @aq_results{'MakeReady','BlanketCut','Service','Material','Total'}, $aq_results{Equipment}->name() );
 			$price{'Comparison Cost'} += $aq_results{Total};
