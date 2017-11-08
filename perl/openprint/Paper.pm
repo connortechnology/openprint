@@ -1561,8 +1561,6 @@ $log->debug($P->id_string());
 			$Paper->sheets_per_package( $$specs{sheets_per_package} * $Paper->factor() );
 		} # end if
 	} # end if qty_index
-$openprint::log->debug('Supplied'.$Supplied->to_string() );
-$openprint::log->debug('PressSheet'.$Paper->to_string() );
 	return $Paper;
 
 } # end sub load_from_signature

@@ -347,9 +347,9 @@ $log->debug("SELECTED equipment @selected_equipment ");
 			# When its time to add shifts, we add in sets, until we find an already-implemented shift.
 			my @Equipment_Shifts = $E->Equipment_Shifts();
 			my %Equipment_Shifts = map { $_->id(), $_ } @Equipment_Shifts;
-#foreach my $ES ( @Equipment_Shifts ) {
-#$log->debug( "Available ES: " . $ES->to_string() );
-#}
+foreach my $ES ( @Equipment_Shifts ) {
+$log->debug( "Available ES: " . $ES->to_string() );
+}
 
 			# Showing over 100 days makes the browser crawl forever. So limit it.
 			$end = 100 if $end > 100;
@@ -391,24 +391,25 @@ $log->debug("SELECTED equipment @selected_equipment ");
 				my $Next_Shift = $Shifts[$shift_index];
 
 				# By putting emanantise here....
-				# emanantise will figure out what the next shift should loook like, and add it if neccessary.
+				# emanantise will figure out what the next shift should look like, and add it if neccessary.
 				my $next_shift_start_time = $Shift->endtime_seconds() + $ES->distance();
 #$log->debug("DIstance: " . $ES->distance() . " from " . $Shift->endtime() . " to " . $Next_Shift->starttime() );
-$log->debug("gap? " . $Next_Shift->starttime_seconds() . ' - ' . $Shift->endtime_seconds() . ' = ' . ( $Next_Shift->starttime_seconds() - $Shift->endtime_seconds() ) );
-if ( $Next_Shift->starttime_seconds() - $Shift->endtime_seconds() ) {
-	# If there is a gap, check for jobs that may have slipped between
-  my @Lost_Jobs = openprint::ScheduledJob->find( 'starttime >'=>$Shift->endtime(), 'starttime <'=>$Next_Shift->starttime(), equipment_id=>$$E{id} );
-	if ( @Lost_Jobs ) {
-		# Bumping to next shift.
-		my $starttime = $Next_Shift->starttime_seconds();
-		foreach my $Job ( @Lost_Jobs ) {
-				$_ = $Job->save({starttime_seconds=>$starttime});
-				die $_ if $_;	
-				$starttime += 1;
-		}
-		#openprint::employee_production::reorder_jobs( @Lost_Jobs, $Next_Shift->Jobs() );
-	}
-}
+				$log->debug("gap? " . $Next_Shift->starttime_seconds() . ' - ' . $Shift->endtime_seconds() . ' = ' . ( $Next_Shift->starttime_seconds() - $Shift->endtime_seconds() ) );
+				if ( $Next_Shift->starttime_seconds() - $Shift->endtime_seconds() > 0 ) {
+# If there is a gap, check for jobs that may have slipped between
+					my @Lost_Jobs = openprint::ScheduledJob->find( 'starttime >'=>$Shift->endtime(), 'starttime <'=>$Next_Shift->starttime(), equipment_id=>$$E{id} );
+					if ( @Lost_Jobs ) {
+						$log->debug("Bumping lost jobs");
+# Bumping to next shift.
+						my $starttime = $Next_Shift->starttime_seconds();
+						foreach my $Job ( @Lost_Jobs ) {
+							$_ = $Job->save({starttime_seconds=>$starttime});
+							die $_ if $_;	
+							$starttime += 1;
+						}
+#openprint::employee_production::reorder_jobs( @Lost_Jobs, $Next_Shift->Jobs() );
+					}
+				}
 
 	# If there is only 1 shift, then we don't need to do this.
 if ( 0 ) {
@@ -427,10 +428,13 @@ $log->error("Went past, going back an hour $next_shift_start_time $_, adding an 
 					last if $next_shift_start_time > $Shifts[$shift_index]->starttime_seconds();
 				}
 }
+$log->debug("Calling emanananteise with next start time: $next_shift_start_time ");
 				my $New_Next_Shift = $Next_ES->emanantise( $next_shift_start_time );
 				if ( $New_Next_Shift ) {
+					# emanantise returned a shift
 
 					if ( $New_Next_Shift->id() != $Next_Shift->id() ) {
+						# It's different than the one we already have?
 $log->debug("Adding new shift; previous: " . $Shifts[$shift_index-1]->to_string() );
 $log->debug("Adding new shift; current: " . $Shifts[$shift_index]->to_string() );
 $log->debug("Adding new shift; next: " . $New_Next_Shift->to_string() );

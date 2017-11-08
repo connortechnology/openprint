@@ -262,6 +262,8 @@ sub status {
 	my $servicetype = $_[0]->service_type();
 
 	if ( $servicetype and ( ! defined $_[0]{status} ) ) {
+		my $specs = $_[0]->specs();
+
 		my $module = 'openprint/Estimating/'.$servicetype.'.pm';
 		eval{
 			require $module;
@@ -270,14 +272,18 @@ sub status {
 
 		if ( my $function = ('openprint::Estimating::'.$servicetype)->can('status') ) {
 
-			$_[0]{status} = $function->($_[0]->Project(), $_[0]{service_id}, $_[0]->specs() );
+			$_[0]{status} = $function->($_[0]->Project(), $_[0]{service_id}, $specs );
 $openprint::log->debug("New status openprint::Estiamting::$servicetype $_[0]{status} ");
 		} else {
-$openprint::log->debug("No function for openprint::Estiamting::$servicetype can status");
-			$_[0]{status} = 'Ordered';
+			$openprint::log->debug("No function for openprint::Estiamting::$servicetype can status");
+			if ( $$specs{Status} eq 'uncalculated' ) {
+				$_[0]{status} = 'uncalculated';
+			} elsif ( $_[0]->Project()->order_id() ) {
+				$_[0]{status} = 'Ordered';
+			} else {
+				$_[0]{status} = 'calculated';
+			}
 		}
-	} else {
-		$_[0]{status} = 'Ordered';
 	}
 	return $_[0]{status};
 } # end sub status
