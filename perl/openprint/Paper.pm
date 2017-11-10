@@ -32,7 +32,7 @@ use Time::HiRes qw{ time gettimeofday tv_interval };
 
 use vars qw( $debug $table $serial %fields %find_fields %defaults %transforms %grades );
 
-use constant DEBUG_PRICING => 0;
+use constant DEBUG_PRICING => 1;
 
 $debug = 0;
 $table = 'papers';
@@ -1092,11 +1092,7 @@ sub get_price {
 			} # end if
 			return;
 		} # end if ! price
-		if ( (!$$self{custom}) and $openprint::config{ApplyMarkup} ) {
-			my $new_price = $$price{price} * ( 1 + ( $openprint::config{ApplyMarkup} / 100 ) );
-			$openprint::log->debug("Apply Markup: $$price{price} * ( 1 + $openprint::config{ApplyMarkup} / 100 ) = $new_price " ) if DEBUG_PRICING;
-			$$price{price} = $new_price;
-		} # end if
+
 
 		my $Pricelist = new openprint::Pricelist( $list_id );
 		$$price{currency_id} = $Pricelist->currency_id();
@@ -1104,6 +1100,13 @@ sub get_price {
 	} else {
 		Carp::cluck("No custom price, and no paper::id for service: $params{service}" . $self->to_string()) if $debug;
 	} # end if
+
+	if ( $price and $openprint::config{ApplyMarkup} ) {
+#if ( (!$$self{custom}) and $openprint::config{ApplyMarkup} ) {
+	my $new_price = $$price{price} * ( 1 + ( $openprint::config{ApplyMarkup} / 100 ) );
+	$openprint::log->debug("Apply Markup: $$price{price} * ( 1 + $openprint::config{ApplyMarkup} / 100 ) = $new_price " ) if DEBUG_PRICING;
+	$$price{price} = $new_price;
+} # end if
 
 	if ( $openprint::Company->discount() != 0 ) {
 		$_ = $$price{price};
