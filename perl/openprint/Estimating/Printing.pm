@@ -5478,12 +5478,39 @@ sub calc_price {
 	my $std_speed = $Press->Specification('Standard Run Speed ' . $$Imposition{runstyle} );
 	$std_speed = $Press->Specification('Standard Run Speed') if ! $std_speed;
 	$std_speed = $Press->Specification('Run Speed') if ! $std_speed;
-	if ( lc $$std_speed{units} eq 'calliper' ) {
-		$$specs{"Runspeed$qty_index"} = $$specs{Runspeed} = $price{Runspeed} = $Press->specification( $$std_speed{name}, $$Paper{calliper} );
-#$log->debug("Runspeed by calliper($$Paper{calliper}): $run_speed on $$Press{strid}");
-	} else {
-		$$specs{"Runspeed$qty_index"} = $$specs{Runspeed} = $price{Runspeed} = $Press->specification( $$std_speed{name}, $$Paper{gsm} );
-	} # end if
+  if ( $std_speed ) {
+    my $run_speed;
+    if ( $$std_speed{units} =~ /^Per (.+) Per Hour$/ ) {
+      my $unit = $1;
+      if ( $unit =~ /([\d\.]+)x([\d\.]+)/ ) {
+        my $area = $1*$2;
+        if ( ! $$Imposition{object_width} * $$Imposition{object_height} ) {
+          $log->debug("Runspeed for $$Imposition{object_width} * $$Imposition{object_height} on $$Press{id}");
+        } else {
+          $run_speed = int( $$std_speed{value} * $area/($$Imposition{object_width} * $$Imposition{object_height}) );
+#$log->debug("Runspeed = $$std_speed{value} $$std_speed{units} * $area / ( $$Imposition{object_width} * $$Imposition{object_height}) = $run_speed");
+        } # end if
+#$log->debug("Have runspeed $$std_speed{value}, area: $area, $run_speed");
+      } else {
+        $log->warn("Unknown Per setting $unit");
+      } # end if
+    } elsif ( lc $$std_speed{units} eq 'calliper' ) {
+      $run_speed = $Press->specification( 'Run Speed', $$Paper{calliper} );
+
+      if ( ! $run_speed ) {
+        $log->debug("No run sped on $$Press{strid} for $$std_speed{units} " . ($$std_speed{units} eq 'Calliper' ? $$Paper{calliper} : $Paper->gsm() ) ) if DEBUG;
+        $run_speed = $$std_speed{value} if ! $run_speed;
+      } # end if
+      $log->debug("Std Runspeed by calliper($$Paper{calliper}): $run_speed on $$Press{strid}");
+
+      $$specs{"Runspeed$qty_index"} = $$specs{Runspeed} = $price{Runspeed} = $run_speed;
+    } else {
+      $$specs{"Runspeed$qty_index"} = $$specs{Runspeed} = $price{Runspeed} = $Press->specification( $$std_speed{name}, $$Paper{gsm} );
+    } # end if
+  } else {
+    # No std_speed?!
+  }
+
 	$$Imposition{runspeed} = $$specs{Runspeed};
 #$run_speed = $$std_speed{value} if ! $run_speed;
 #$log->debug("Initial Runspeed: $run_speed, standard: $$std_speed{value}$$std_speed{units}");
@@ -5582,7 +5609,7 @@ sub calc_price {
 			$price{'SpinePaste Cost'} = $$results{Price};
 			$price{'Comparison Cost'} += $$results{Price};
 	#$log->debug( 'Stitching Calc: ' . sprintf('%.4f', tv_interval( [$starttime])*1000) );
-			if ( $$results{Equipment}->id() == $Press->id() ) {
+			if ( $$results{Equipment}{id} == $$Press{id} ) {
 				$price{Runspeed} = $$specs{Runspeed} = $$results{RunSpeed} if $$results{RunSpeed} and ( $$results{RunSpeed} < $price{Runspeed} );
 			} # end if
 		} # end if
@@ -6659,9 +6686,13 @@ sub get_run_prices {
 			} # end if
 		} else {
 	# Only load this if not already specified by some inline bindery service
-			$run_speed = $Press->specification( $$std_speed{name}, (lc $$std_speed{units} eq 'calliper' ? $$Paper{calliper} : $$Paper{gsm} ) ) if ! $run_speed;
+      if ( ! $run_speed ) {
+			$run_speed = $Press->specification( $$std_speed{name}, (lc $$std_speed{units} eq 'calliper' ? $$Paper{calliper} : $$Paper{gsm} ) );
+      } else {
+        $log->debug("Not looking up run speed because already specified");
+      }
 			if ( ! $run_speed ) {
-				$log->debug("No run sped on $$Press{strid} for $$std_speed{units} " . ($$std_speed{units} eq 'Calliper' ? $$Paper{calliper} : $Paper->gsm() ) ) if DEBUG or 0;
+				$log->debug("No run sped on $$Press{strid} for $$std_speed{units} " . ($$std_speed{units} eq 'Calliper' ? $$Paper{calliper} : $Paper->gsm() ) ) if DEBUG or 1;
 				$run_speed = $$std_speed{value};
 			} # end if
 		} # end if
