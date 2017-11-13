@@ -1101,7 +1101,7 @@ sub get_price {
 		Carp::cluck("No custom price, and no paper::id for service: $params{service}" . $self->to_string()) if $debug;
 	} # end if
 
-	if ( $price and $openprint::config{ApplyMarkup} ) {
+	if ( 0 and $price and $openprint::config{ApplyMarkup} ) {
 #if ( (!$$self{custom}) and $openprint::config{ApplyMarkup} ) {
 	my $new_price = $$price{price} * ( 1 + ( $openprint::config{ApplyMarkup} / 100 ) );
 	$openprint::log->debug("Apply Markup: $$price{price} * ( 1 + $openprint::config{ApplyMarkup} / 100 ) = $new_price " ) if DEBUG_PRICING;
