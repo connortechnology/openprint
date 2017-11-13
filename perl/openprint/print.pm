@@ -24,12 +24,6 @@ require openprint::Estimating::Padding;
 require openprint::Estimating::Proofs;
 require openprint::Estimating::MultiPage;
 
-sub get_ServiceType {
-	my ( $project_index, $service_index ) = @_;
-	return if ! $service_index;
-	return  new openprint::ServiceType(sql::execute( undef, undef, q{SELECT servicetype_id FROM tbl_Project_Contents WHERE lngProjectIndex=? AND lngServiceIndex=?}, $project_index, $service_index ) );
-} # end sub get_ServiceType
-
 # Adds completed/edited services, and then displays the status of the project
 sub view_services {
 	my $project_index = $param{project_id} ? $param{project_id} : $param{ProjectIndex};

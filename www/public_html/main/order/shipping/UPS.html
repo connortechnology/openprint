@@ -1,12 +1,4 @@
 <? eval (
-	$$variable{'OrderID'} = $openprint::param{'OrderID'};
-	$$variable{'ProjectIndex'} = $openprint::param{'ProjectIndex'};
-	$$variable{'ServiceIndex'} = $openprint::param{'ServiceIndex'};
-	$$variable{'ServiceType'} = openprint::print::get_ServiceType( @$variable{'ProjectIndex','ServiceIndex'} );
-	@$variable{'ServiceTypeID','ServiceTypeName'} = ( $$variable{'ServiceType'}->name(), $$variable{'ServiceType'}->description() );
-	my $Currency = new openprint::Project( $$variable{'ProjectIndex'} )->Currency();	
-	@$variable{'CurrencyName','CurrencySymbol'} = ( $Currency->name(), $Currency->symbol() );
-
 	require openprint::Estimating::UPS;
 	openprint::Estimating::UPS::display( $log, $dbh, $variable, @$variable{'ProjectIndex','ServiceIndex'} );
 ) ?>
@@ -21,8 +13,8 @@ function validate_data(formName) {
 <div class="Service">
 	<form name="f1" method="post" action="/main/order/submit.html">
 		<fieldset><legend>UPS Shipping Services</legend>
-		<? echo ( include('/main/project/shipping/_shipping_packages.html'); ) ?>
-		<? echo ( include('/main/project/shipping/_shipping_address.html'); ) ?>
+		<?include('/main/project/shipping/_shipping_packages.html')?>
+		<?include('/main/project/shipping/_shipping_address.html')?>
 		<p>
 			<label>Service Type</label>
 			<span id="ServiceTypeDiv">
@@ -39,16 +31,16 @@ function validate_data(formName) {
 		</p>
 		<p>
 			<label><b>Price</b></label>
-			<? eval ( $$variable{'QTYIndex'} = 1 ) ?>
-			<? while ( $$variable{'QTYIndex'} <= 3 ) ?>
-			<? if ( $$variable{'txtQuantity'.$$variable{'QTYIndex'}} ) ?>
+			<? eval ( $$variable{QTYIndex} = 1 ) ?>
+			<? while ( $$variable{QTYIndex} <= 3 ) ?>
+			<? if ( $$variable{'txtQuantity'.$$variable{QTYIndex}} ) ?>
 			<input name="txtPrice<?QTYIndex?>" size="9" readonly="readonly" onfocus="this.blur();" />
-<? if ( sets::isin( $openprint::session{'user_type'}, ['A','E'] ) ) ?>
-<? echo ( ssi::writeButton( $log, $dbh, 'Breakdown'.$$variable{'QTYIndex'}, 'price_breakdown.gif', "show_breakdown('$$variable{'QTYIndex'}');", '', 'Breakdown' ); ) ?>
-<? endif ( sets::isin( $openprint::session{'user_type'}, ['A','E'] ) ) ?>
-			<? endif ( $$variable{'txtQuantity'.$$variable{'QTYIndex'}} ) ?>
-			<? eval ( $$variable{'QTYIndex'} += 1 ) ?>
-			<? endwhile ( $$variable{'QTYIndex'} <= 3 ) ?>
+<? if ( sets::isin( $openprint::session{user_type}, ['A','E'] ) ) ?>
+<? echo ( ssi::writeButton( $log, $dbh, 'Breakdown'.$$variable{QTYIndex}, 'price_breakdown.gif', "show_breakdown('$$variable{QTYIndex}');", '', 'Breakdown' ); ) ?>
+<? endif ( sets::isin( $openprint::session{user_type}, ['A','E'] ) ) ?>
+			<? endif ( $$variable{'txtQuantity'.$$variable{QTYIndex}} ) ?>
+			<? eval ( $$variable{QTYIndex} += 1 ) ?>
+			<? endwhile ( $$variable{QTYIndex} <= 3 ) ?>
 		</p>
 		</fieldset>
 		<hr/>
@@ -63,7 +55,6 @@ function validate_data(formName) {
 		<div id="hdnBreakdown1" style="display:none;"></div>
 		<div id="hdnBreakdown2" style="display:none;"></div>
 		<div id="hdnBreakdown3" style="display:none;"></div>
-
 	</form>
 	UPS, the UPS brandmark, and the Colour Brown are trademarks of United Parcel Service of America, Inc. All Rights Reserved
 </div><!-- Service -->

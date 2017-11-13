@@ -788,11 +788,12 @@ sub _production_performance {
 				( $session{$uri.'?status_id'} ? ( status_id => [ split(',', $session{$uri.'?status_id'} ) ] ) : () ),
 				order => ($param{order} ? $param{order} : 'id'),
 				) ) {
+		next if ! $$Order{docket};
 		if ( $session{$uri.'?reprint'} ) {
 			my $reprint = 0;
 			foreach my $Project ( $Order->Projects() ) {
 				if ( $Project->reprint() eq 'Y' ) {
-					$reprint=1;
+					$reprint = 1;
 					last;
 				} # end if
 			} # end foreach Project
@@ -800,120 +801,119 @@ sub _production_performance {
 			next if ( $session{$uri.'?reprint'} eq 'N' ) and $reprint;
 		} # end if reprint
 
-
 		foreach my $Project ( $Order->Projects() ) {
 			my $services = $Project->services();
 			my @signatures = $Project->signatures();
 			my $qty_index = $Project->ordered_quantity_index();
 
-				if ( @press_names ) {
-					my $found = 0;
+			if ( @press_names ) {
+				my $found = 0;
 
-					foreach my $sig_id ( @signatures ) {
-						my $Service = $Project->Service( $sig_id );
-						my $sig_specs = $Service->specs();
-						if ( ! $$sig_specs{UsePress} ) {
-							$$sig_specs{UsePress} = $$sig_specs{'ddmPress'.$qty_index};
-						} # end if
-						if ( $press_names{$$sig_specs{UsePress}} ) {
-							$found = 1;
-							last;
-						}
+				foreach my $sig_id ( @signatures ) {
+					my $Service = $Project->Service( $sig_id );
+					my $sig_specs = $Service->specs();
+					if ( ! $$sig_specs{UsePress} ) {
+						$$sig_specs{UsePress} = $$sig_specs{'ddmPress'.$qty_index};
+					} # end if
+					if ( $press_names{$$sig_specs{UsePress}} ) {
+						$found = 1;
+						last;
 					}
-					next if ! $found;
-				} # end if press_names
-
-				push @Data, ( $Order->id(), $Order->docket(), $Project->id(), $Order->company_name(), $Order->created_on() );
-
-				if ( $columns{plates} ) {
-					my $plate_qty = 0;
-					my $plate_cost = 0;
-					my $plate_price = 0;
-					foreach my $sig_id ( @signatures ) {
-						my $Service = $Project->Service( $sig_id );
-						my $sig_specs = $Service->specs();
-
-						if ( ! $$sig_specs{'PlateID'.$qty_index} ) {
-							my $Press = $Presses_by_strid{$$sig_specs{UsePress}};
-							next if ! $Press;
-							$$sig_specs{'PlateID'.$qty_index} = $Press->specification('Plate Size').'"-'.$Press->specification('Plate Type').'Plate';
-						} # end if
-			
-						my $Plate = openprint::Material->find_one( name=>$$sig_specs{'PlateID'.$qty_index}) if $$sig_specs{'PlateID'.$qty_index};
-						my %plate_cost = $Plate->get_price( $$sig_specs{'txtPlateQuantity'.$qty_index} ) if $Plate;
-						
-						$plate_qty += $$sig_specs{'txtPlateQuantity'.$qty_index};
-						$plate_cost += $plate_cost{Cost} * $$sig_specs{'txtPlateQuantity'.$qty_index};
-						$plate_price += $plate_cost{Price} * $$sig_specs{'txtPlateQuantity'.$qty_index};
-					} # end foreach sig
-					push @Data, $plate_qty, $plate_cost, $plate_price;
-				} # end if include plate info
-				if ( $columns{production} ) {
-					push @Data, $Project->takeover_on(), $Project->printed_on(), $Project->completed_on();
-					my $invoiced_on = $Order->invoiced_on();
-					push @Data, $invoiced_on;
 				}
-				if ( $columns{stock} ) {
-					my $stock_sheets = 0;
-					my $stock_weight = 0;
-					my $stock_cost = 0;	
-					my %skids;
-					foreach my $PI ( openprint::PaperInventory->find( docket=>$Order->docket(), 'skid_id is null'=>0 ) ) {
-						$skids{$$PI{skid_id}} = 1;
-						if ( $PI->Paper()->units() eq 'Roll' ) {
-							$stock_weight += -1*$$PI{delta};
-						} else {
-							$stock_sheets += -1*$$PI{delta};
-						}
-						my $Cost = $PI->Value();
-						$stock_cost += $$Cost{value};
-					}
-					foreach my $MT ( openprint::Manifest_Content_Type->find( docket=>$Order->docket() ) ) {
-						foreach my $MC ( openprint::ManifestContent->find( type_id=>$$MT{id} ) ) {
-							next if $skids{$$MC{skid_id}};
-							if ( $MT->Paper()->type() eq 'Roll' ) {
-								$stock_weight += $MC->quantity();
-							} else {
-								$stock_sheets += $MC->quantity();
-							}
-							$stock_cost += $MC->value();
-						}
-					}	
-					push @Data, $stock_sheets, $stock_weight, $stock_cost;
-					if ( $$services{Paper} and @{$$services{Paper}} ) {
-						my $Service = $Project->Service( $$services{Paper}[0] );
+				next if ! $found;
+			} # end if press_names
 
-						my $stock_sheets_quoted = 0;
-						my $stock_weight_quoted = 0;
-						my $stock_specs = $Service->specs();
-						my @stocks_and_quantities = openprint::Estimating::Paper::get_stocks_and_quantities( $Project, $$services{Paper}[0], $stock_specs, $qty_index );
-						my $stock_index = 1;
-						foreach my $SQ ( @stocks_and_quantities ) {
-							my ( $Stock, $qty ) = @$SQ{'Stock','quantity'};
-							next if ! $qty;
+			my @fragment = ( $Order->id(), $Order->docket(), $Project->id(), $Order->company_name(), $Order->created_on(), $Project->status(), $Project->ordered_price() );
 
-							if ( $Stock->type() eq 'Sheet' ) {
-								$stock_sheets_quoted += $qty;
-							} else {
-								$stock_weight_quoted += $qty;
-							} # end if
-						}
+			if ( $columns{plates} ) {
+				my $plate_qty = 0;
+				my $plate_cost = 0;
+				my $plate_price = 0;
+				foreach my $sig_id ( @signatures ) {
+					my $Service = $Project->Service( $sig_id );
+					my $sig_specs = $Service->specs();
 
-						push @Data, join(',',map { $$_{Stock}->to_string() } @stocks_and_quantities ), $stock_sheets_quoted, $stock_weight_quoted, $Service->ordered_price($qty_index);
+					if ( ! $$sig_specs{'PlateID'.$qty_index} ) {
+						my $Press = $Presses_by_strid{$$sig_specs{UsePress}};
+						next if ! $Press;
+						$$sig_specs{'PlateID'.$qty_index} = $Press->specification('Plate Size').'"-'.$Press->specification('Plate Type').'Plate';
+					} # end if
+
+					my $Plate = openprint::Material->find_one( name=>$$sig_specs{'PlateID'.$qty_index}) if $$sig_specs{'PlateID'.$qty_index};
+					my %plate_cost = $Plate->get_price( $$sig_specs{'txtPlateQuantity'.$qty_index} ) if $Plate;
+
+					$plate_qty += $$sig_specs{'txtPlateQuantity'.$qty_index};
+					$plate_cost += $plate_cost{Cost} * $$sig_specs{'txtPlateQuantity'.$qty_index};
+					$plate_price += $plate_cost{Price} * $$sig_specs{'txtPlateQuantity'.$qty_index};
+				} # end foreach sig
+				push @fragment, $plate_qty, $plate_cost, $plate_price;
+			} # end if include plate info
+
+			if ( $columns{production} ) {
+				push @fragment, ''.$Project->takeover_on(), ''.$Project->printed_on(), ''.$Project->completed_on();
+				my $invoiced_on = ''.$Order->invoiced_on();
+				push @fragment, $invoiced_on;
+			}
+
+			if ( $columns{stock} ) {
+				my $stock_sheets = 0;
+				my $stock_weight = 0;
+				my $stock_cost = 0;	
+				my %skids;
+				foreach my $PI ( openprint::PaperInventory->find( docket=>$Order->docket(), 'skid_id is null'=>0 ) ) {
+					$skids{$$PI{skid_id}} = 1;
+$openprint::log->debug("PI Stock for $$Order{docket} is $$PI{delta} " . $PI->Paper()->to_string() );
+					if ( $PI->Paper()->units() eq 'Roll' ) {
+						$stock_weight += -1*$$PI{delta};
 					} else {
-						push @Data, 0,0,0;
+						$stock_sheets += -1*$$PI{delta};
+					}
+					my $Cost = $PI->Value();
+					$stock_cost += $$Cost{value};
+				}
+				foreach my $MT ( openprint::Manifest_Content_Type->find( docket=>$Order->docket() ) ) {
+					foreach my $MC ( openprint::ManifestContent->find( type_id=>$$MT{id} ) ) {
+						next if $skids{$$MC{skid_id}};
+						if ( $MT->Paper()->type() eq 'Roll' ) {
+							$stock_weight += $MC->quantity();
+						} else {
+							$stock_sheets += $MC->quantity();
+						}
+						$stock_cost += $MC->value();
 					}
 				}
+				push @fragment, $stock_sheets, $stock_weight, $stock_cost;
 
-				push @Data, ( $Project->status(), $Project->ordered_price(),);
+				if ( $$services{Paper} and @{$$services{Paper}} ) {
+					my $Service = $Project->Service( $$services{Paper}[0] );
+
+					my $stock_sheets_quoted = 0;
+					my $stock_weight_quoted = 0;
+					my $stock_specs = $Service->specs();
+					my @stocks_and_quantities = openprint::Estimating::Paper::get_stocks_and_quantities( $Project, $$services{Paper}[0], $stock_specs, $qty_index );
+					my $stock_index = 1;
+					foreach my $SQ ( @stocks_and_quantities ) {
+						my ( $Stock, $qty ) = @$SQ{'Stock','quantity'};
+						next if ! $qty;
+
+						push @Data, @fragment, $Stock->to_string(), ( $Stock->type() eq 'Sheet' ? ($qty,'') : ('', $qty) ), $$SQ{price};
+					}
+
+				} else {
+					push @Data, @fragment, 0,0,0,0;
+				}
+			} else {
+				push @Data, @fragment;
+			} # end if stock
+
 		} # end foreach Project
 	} # end foreach Order
 
-	$variable{Header} = [ 'Order ID', 'Docket', 'Project ID', 'Company', 'Created On',
+	$variable{Header} = [ 'Order ID', 'Docket', 'Project ID', 'Company', 'Created On', 'Status', 'Project Value',
 				( $columns{plates} ? ( 'Plates', 'Plate Cost', 'Plate Total' ) : () ),
 				( $columns{production} ? ( 'Operator Assigned', 'Printed On', 'Completed On', 'Invoiced On' ) : () ),
-				( $columns{stock} ? ( 'Stock', 'Used Stock Sheets', 'Used Stock Weight', 'Stock Cost', 'Quoted Stock Sheets', 'Quoted Stock Weight', 'Stock Quoted Price' ) : () ),
-				'Status', 'Project Value' ];
+				( $columns{stock} ? ( 'Used Stock Sheets', 'Used Stock Weight', 'Stock Cost', 'Stock', 'Quoted Stock Sheets', 'Quoted Stock Weight', 'Stock Quoted Price' ) : () ),
+ ];
 
 	$variable{Data} = \@Data;
 

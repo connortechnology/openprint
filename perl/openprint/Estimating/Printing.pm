@@ -727,7 +727,15 @@ $log->debug("Adding special colour for $colour");
 			my $s_specs = openprint::service::get_specs_ref( $Project, $sig_id );
 			my $form = $$s_specs{SignatureIndex};
 			foreach my $qty_index ( $Project->quantity_indexes() ) {
-				$project{"AqueousMakeReadies$qty_index"}{$$aq_specs{"ddmEquipment-$form-$qty_index"}} = $$aq_specs{"txtLayoutWidth-$form-$qty_index"} * $$aq_specs{"txtLayoutHeight-$form-$qty_index"};
+				if ( !$project{"AqueousMakeReadies$qty_index"}{$$aq_specs{"ddmEquipment-$form-$qty_index"}} ) {
+					$project{"AqueousMakeReadies$qty_index"}{$$aq_specs{"ddmEquipment-$form-$qty_index"}} = [];
+				}
+				push @{$project{"AqueousMakeReadies$qty_index"}{$$aq_specs{"ddmEquipment-$form-$qty_index"}}}, $$aq_specs{"txtLayoutWidth-$form-$qty_index"} * $$aq_specs{"txtLayoutHeight-$form-$qty_index"};
+			}
+			foreach my $qty_index ( $Project->quantity_indexes() ) {
+				foreach my $key ( keys %{$project{"AqueousMakeReadies$qty_index"}} ) {
+					$log->debug("$qty_index $key " . join(',',@{$project{"AqueousMakeReadies$qty_index"}{$key}}) );
+				}
 			}
 		}
 	} elsif ( $$services{Aqueous} and @{$$services{Aqueous}} ) {
@@ -2073,7 +2081,8 @@ if ( 0 ) {
 sub set_size {
 	my ( $Project, $specs, $printing_specs ) = @_;
 
-	if ( $Project->Type()->name() eq 'Banners' ) {
+	my $Type = $Project->Type();
+	if ( $$Type{name} eq 'Banners' ) {
 		my $width = $$specs{txtFinalWidth};
 		my $height = $$specs{txtFinalHeight};
 
@@ -2107,13 +2116,13 @@ sub set_size {
 			$variables{txtHeight} = [ sets::exclude( ['output'], $variables{txtHeight} ) ];
 		} # end if
 
-	} elsif ( $Project->Type()->name() eq 'ScratchPads' ) {
+	} elsif ( $$Type{name} eq 'ScratchPads' ) {
 # Technically, something like a coil bound could be 2pg spread, just need two of them.  
-            if ( ! $$specs{OverrideSpreadSize} ) {
-                $$specs{txtSpreadSize} = 1;
-                $variables{txtSpreadSize} = [ sets::union( 'output', @{$variables{txtSpreadSize}} ) ];
-            } # end if
-		if ( $$specs{ddmProjectSize} ne 'Custom' ) {
+		if ( ! $$specs{OverrideSpreadSize} ) {
+			$$specs{txtSpreadSize} = 1;
+			$variables{txtSpreadSize} = [ sets::union( 'output', @{$variables{txtSpreadSize}} ) ];
+		} # end if
+		if ( $$specs{ddmProjectSize} ne 'Custom' and $$Type{type} eq 'ScratchPads' ) {
 			$$specs{txtWidth} = $$printing_specs{txtWidth} if $$printing_specs{txtWidth};
 			$$specs{txtHeight} = $$printing_specs{txtHeight} if $$printing_specs{txtHeight};
 			$$specs{txtFinalWidth} = $$printing_specs{txtFinalWidth} if $$printing_specs{txtFinalWidth} ;
@@ -2125,7 +2134,7 @@ sub set_size {
 			$variables{txtFinalHeight} = [ sets::exclude( ['output'], $variables{txtFinalHeight} ) ];
 		}
 
-	} elsif ( $Project->Type()->name() eq 'PresentationFolders' ) {
+	} elsif ( $$Type{name} eq 'PresentationFolders' ) {
 		if ( $$specs{ddmProjectSize} ne 'Custom' ) {
 #$log->debug("Auto calc dimensions");
 # auto calc flat dimensions
@@ -2269,7 +2278,7 @@ $log->debug("Using spine ehgiht");
 			$$specs{txtFinalHeight} = $$printing_specs{txtFinalHeight};
 		} else { # not folder, not cover
 			if ( !$$specs{OverrideSpreadSize} ) {
-				if ( $Project->Type()->name() eq 'ScratchPads' ) {
+				if ( $$Type{name} eq 'ScratchPads' ) {
 					$$specs{txtSpreadSize} = 1;
 				} else {
 					if ( sets::isin( $$printing_specs{rdbTemplateType}, ['SaddleStitching', 'LoopStitching'] ) ) {
@@ -2325,7 +2334,7 @@ $log->debug("Using spine height");
 #$variables{txtHeight} = [ sets::exclude( ['output'], $variables{txtHeight} ) ];
 	} # end if
 
-	if ( sets::isin( $Project->Type()->name(), [ 'Envelopes', 'NCR' ] ) ) {
+	if ( sets::isin( $$Type{name}, [ 'Envelopes', 'NCR' ] ) ) {
 		if ( $$specs{rdbSpecificStock} ne 'Y' ) {
 			if ( $$specs{ddmStockSheetSize} ) {
 				@$specs{'txtWidth','txtHeight'} = $$specs{ddmStockSheetSize} =~ /^([\d\.]+)"?\s*x?\s*([\d\.]+)?"?\s*$/;
@@ -3260,7 +3269,7 @@ sub calculate_impositions {
 	if ( $Project->Type()->name() eq 'ScratchPads' ) {
 		$needed_pages = 0;
 	} elsif ( $$sig_specs{txtSignatureType} ) {
-$log->debug("Gruop $$sig_specs{Group} unspecd " . $$sig_specs{'txtUnspecifiedPageQuantity'.$qty_index} . " wanted: " . $$project{ProjectSpecs}{"PageQuantity-$$sig_specs{Group}"} );
+$log->debug("Group $$sig_specs{Group} unspecd " . $$sig_specs{'txtUnspecifiedPageQuantity'.$qty_index} . " wanted: " . $$project{ProjectSpecs}{"PageQuantity-$$sig_specs{Group}"} );
 		if ( $$sig_specs{'chkOverridePageQuantity'.$qty_index} ) {
 			$needed_pages = int( $$sig_specs{'PageQuantity'.$qty_index} );
 		} elsif ( $$project{ProjectSpecs}{"PageQuantity-$$sig_specs{Group}"} and ( $$project{ProjectSpecs}{"PageQuantity-$$sig_specs{Group}"} <= $$sig_specs{'txtUnspecifiedPageQuantity'.$qty_index} ) ) {
@@ -6250,7 +6259,8 @@ $log->debug("Area $area = $$Imposition{object_area} * Impressions($colour_impres
 			$price{'Aqueous Breakdown'} .= "AQ error: $aq_results{alert} $$project{AqueousSpecs}{alert} " . $$project{AqueousSpecs}{'hdnBreakdown'.$qty_index} . '<br/>';
 			$price{'Comparison Cost'} += 1000000; 
 		} elsif ( $aq_results{Equipment} ) {
-			$$aq_makereadies{$aq_results{Equipment}{id}} = $aq_results{Imposition}->layout_area();
+			$$aq_makereadies{$aq_results{Equipment}{id}} = [] if ! $$aq_makereadies{$aq_results{Equipment}{id}};
+			push @{$$aq_makereadies{$aq_results{Equipment}{id}}}, $aq_results{Imposition}->layout_area();
 
 			$price{'Aqueous Breakdown'} = sprintf('Aqueous Price: %dout MR $%.2f + BC: $%.2f + Service $%.2f + Material $%.2f = $%.2f on %s<br/>', $aq_results{Imposition}{imposition}, @aq_results{'MakeReady','BlanketCut','Service','Material','Total'}, $aq_results{Equipment}->name() );
 			$price{'Comparison Cost'} += $aq_results{Total};

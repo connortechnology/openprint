@@ -18,7 +18,7 @@ require openprint::Keyword;
 require openprint::Object_Keyword;
 require openprint::Object_Specification;
 require openprint::Log;
-use vars qw( $log $dbh $AUTOLOAD %cache %name_cache %fields %defaults %transforms $no_cache %session %config );
+use vars qw( $log $dbh $AUTOLOAD %cache %name_cache %fields %transforms $no_cache %session %config );
 
 *log = \$openprint::log;
 *dbh = \$openprint::dbh;
@@ -188,8 +188,8 @@ sub load {
 				Carp::cluck( 'Failure to load ' . $type . " $$self{id}: Reason: " . $d->errstr );
 			} elsif ( $debug ) {
 				$log->debug( 'Failure to load ' . $type . " $$self{id}: Reason: " );
-				delete $$self{id};
 			} # end if
+			delete $$self{id};
 			if ( @identified_by ) {
 				delete @$self{@identified_by};
 			} # end if
@@ -268,8 +268,8 @@ $log->debug("No serial") if $debug;
 		} else {
 			foreach my $id ( @identified_by ) {
 				if ( ! $serial{$id} ) {
-		my ( $caller, undef, $line ) = caller;
-					$log->error("$id nor in serial for $type from $caller:$line") if $debug;
+					#my ( $caller, undef, $line ) = caller;
+					#$log->debug("$id nor in serial for $type from $caller:$line") if $debug;
 					next;
 				}
 				if ( ! $$self{$id} ) {
@@ -301,7 +301,7 @@ $log->debug("No serial") if $debug;
 			if ( ! ( $_ = $local_dbh->prepare($command) and $_->execute( @sql{@keys,@$fields{@identified_by}} ) ) ) {
 				my $error = $local_dbh->errstr;
 				$command =~ s/\?/\%s/g;
-				$log->error('SQL failed: ('.sprintf($command, , map { defined $_ ? $_ : 'undef' } ( @sql{@keys, @$fields{@identified_by}}) ).'):' . $local_dbh->errstr);
+				$log->error('SQL failed: ('.sprintf($command, map { defined $_ ? $_ : 'undef' } ( @sql{@keys, @$fields{@identified_by}}) ).'):' . $local_dbh->errstr);
 				$local_dbh->rollback();
 				sql::end_transaction( $local_dbh, $ac );
 				return $error;
@@ -961,7 +961,7 @@ $openprint::log->error("Wasting time looking for objects in find $k $search{$k}"
 		Carp::cluck("Extra parameters in $object_type ::find $k => $search{$k}");
 	} # end foreach
 
-	$log->debug("Loading Debug:$debug $object_type ($sql) (".join(',', map { ref $_ eq 'ARRAY' ? join(',', @{$_}) : $_ } @values).')' ) if $debug;
+	#$log->debug("Loading Debug:$debug $object_type ($sql) (".join(',', map { ref $_ eq 'ARRAY' ? join(',', @{$_}) : $_ } @values).')' ) if $debug;
 	
 #$log->debug( 'find prepare: ' . sprintf('%.4f', tv_interval($starttime)*1000) ." useconds") if $debug;
 	my $data = $local_dbh->selectall_arrayref( $sql, { Slice => {} }, @values );

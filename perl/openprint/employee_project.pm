@@ -270,11 +270,9 @@ $log->debug("Sig complete: $complete");
 				} elsif ( $param{rdbClientApproved} eq 'Y' ) {
 					if ( $status ne 'Waiting For QA Approval' ) {
 						$param{ClientApprovalDate} = Date::Format::time2str( $config{DateTimeFormat}, time );
-						if ( $status ne 'Waiting For QA Approval' ) {
-							$Project->add_to_log( @session{'company_id','user_id'}, "Marked Proofs Waiting for QA Approval from $status" );
-							$Service->save({status=>'Waiting For QA Approval'});
-							send_proofs_client_approved_email( $project_index, $order_id );
-						} # end if
+						$Project->add_to_log( @session{'company_id','user_id'}, "Marked Proofs Waiting for QA Approval from $status" );
+						$Service->save({status=>'Waiting For QA Approval'});
+						send_proofs_client_approved_email( $project_index, $order_id );
 					} # end if
 					$param{rdbApproved} = 'N';
 				} else { # Just complete

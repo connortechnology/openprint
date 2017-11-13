@@ -2556,7 +2556,7 @@ sub get_Folds {
 	} # end if
 	return () if !$$Source_Imposition{imposition};
 
-if ( 1 and DEBUG ) {
+if ( DEBUG ) {
 foreach my $k ( sort { $a cmp $b } keys %$folding_specs ) {
 	$openprint::log->debug("$k=>$$folding_specs{$k}");
 }

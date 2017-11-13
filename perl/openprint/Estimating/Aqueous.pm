@@ -62,17 +62,19 @@ sub variables {
 	my @v = @variables;
 	foreach my $s_s_id ( $Project->signatures() ) {
 		my $specs = openprint::service::get_specs_ref( $Project, $s_s_id );
+		my $form = $$specs{SignatureIndex};
 		foreach my $qty_index ( $Project->quantity_indexes() ) {
-			push @v, 
-				 "ddmEquipment-$$specs{SignatureIndex}-$qty_index", "chkOverrideEquipment-$$specs{SignatureIndex}-$qty_index",
-				 "txtImposition-$$specs{SignatureIndex}-$qty_index", "chkOverrideImposition-$$specs{SignatureIndex}-$qty_index",
-				 "txtLayoutWidth-$$specs{SignatureIndex}-$qty_index", "txtLayoutHeight-$$specs{SignatureIndex}-$qty_index",
-				 "MakeReadyPrice-$$specs{SignatureIndex}-$qty_index", "OverrideMakeReadyPrice-$$specs{SignatureIndex}-$qty_index", 
-				 "BlanketPrice-$$specs{SignatureIndex}-$qty_index", "OverrideBlanketPrice-$$specs{SignatureIndex}-$qty_index", 
-				 "ServicePrice-$$specs{SignatureIndex}-$qty_index", "OverrideServicePrice-$$specs{SignatureIndex}-$qty_index", 
-				 "MaterialPrice-$$specs{SignatureIndex}-$qty_index", "OverrideMaterialPrice-$$specs{SignatureIndex}-$qty_index", 
-				 "SignaturePrice-$$specs{SignatureIndex}-$qty_index", "OverrideSignaturePrice-$$specs{SignatureIndex}-$qty_index", 
-
+	
+			push @v, (
+				 "ddmEquipment-$form-$qty_index", "chkOverrideEquipment-$form-$qty_index",
+				 "txtImposition-$form-$qty_index", "chkOverrideImposition-$form-$qty_index",
+				 "txtLayoutWidth-$form-$qty_index", "txtLayoutHeight-$form-$qty_index",
+				 "MakeReadyPrice-$form-$qty_index", "OverrideMakeReadyPrice-$form-$qty_index", 
+				 "BlanketPrice-$form-$qty_index", "OverrideBlanketPrice-$form-$qty_index", 
+				 "ServicePrice-$form-$qty_index", "OverrideServicePrice-$form-$qty_index", 
+				 "MaterialPrice-$form-$qty_index", "OverrideMaterialPrice-$form-$qty_index", 
+				 "SignaturePrice-$form-$qty_index", "OverrideSignaturePrice-$form-$qty_index", 
+				 );
 		} # end foreach
 	} # end foreach
     return @v;
@@ -207,7 +209,10 @@ sub calc {
 				next;
 			}
 			my %results = signature_calc( $Project, $specs, $sig_specs, $qty_index, $Imposition, \%MakeReadies );
-			$MakeReadies{$results{Equipment}->id()} = $Imposition->layout_area() if $results{Equipment};
+			if ( $results{Equipment} ) {
+				$MakeReadies{$results{Equipment}{id}} = [] if ! $MakeReadies{$results{Equipment}{id}};
+				push @{$MakeReadies{$results{Equipment}{id}}}, $Imposition->layout_area();
+			}
 			@outputs = sets::union( @outputs, 
 					"ddmEquipment-$form-$qty_index",
 					"txtImposition-$form-$qty_index",
@@ -279,7 +284,7 @@ sub signature_calc {
 
 	if ( DEBUG ) {
 		foreach my $equipment_id ( keys %{$MakeReadies} ) {
-			$openprint::log->debug("Makereadies $equipment_id $$MakeReadies{$equipment_id}");
+			$openprint::log->debug("Makereadies $equipment_id ".join(',',@{$$MakeReadies{$equipment_id}}));
 		}
 		$Imposition->display();
 	}
@@ -377,14 +382,13 @@ $openprint::log->debug("AQ Equipment $$Equipment{strid}") if DEBUG;
 			} # end if
 		} 
 		if ( my $min_weight = $Equipment->specification('Aqueous Minimum Weight') ) {
-$openprint::log->debug("Min weight: $min_weight");
+#$openprint::log->debug("Min weight: $min_weight");
 			my $Paper = $Imposition->Paper();
 			if ( $min_weight > $Paper->gsm() ) {
 				$$specs{'hdnBreakdown'.$qty_index} .= "Paper is too light. Paper gsm($$Paper{gsm}) < Minimum weight $min_weight gsm<br/>";
 				next;
-			} else {
-$openprint::log->debug("Min weight: $min_weight > $$Paper{gsm}");
-
+			} elsif(DEBUG) {
+				$openprint::log->debug("Min weight: $min_weight > $$Paper{gsm}");
 			}
 		} # end if
 		my %minimum = $AqueousMinimumCharge->get_price( undef, $Equipment ) if $AqueousMinimumCharge;
@@ -434,14 +438,11 @@ $openprint::log->debug("Min weight: $min_weight > $$Paper{gsm}");
 
 				my %setupPrice;
 				my $colour_total = 0;
-$openprint::log->debug("Makereadies: $$Equipment{id} $$Equipment{strid} area: $area $type ? $MakeReadies{$$Equipment{id}}");
-				if ( $MakeReadies{$$Equipment{id}} and (
-							(($area * 1.10 ) > $MakeReadies{$$Equipment{id}} ) and
-							(($area * .90 ) < $MakeReadies{$$Equipment{id}} )
-							) ) {
-$openprint::log->debug("In Makereadies: $$Equipment{id} $area");
+$openprint::log->debug("Makereadies: $$Equipment{id} $$Equipment{strid} area: $area $$type{name} ? " . ( $MakeReadies{$$Equipment{id}} ? join(',', @{$MakeReadies{$$Equipment{id}}}) : 'none' ) ) if DEBUG;
+				if ( $MakeReadies{$$Equipment{id}} and ( map { ( (($area * 1.10) > $_) and (($area * .90) < $_) ) ? $_ : () } @{$MakeReadies{$$Equipment{id}}} ) ) {
+$openprint::log->debug("In Makereadies: $$Equipment{id} $area") if DEBUG;
 				} else {
-$openprint::log->debug("Not In Makereadies: $$Equipment{id} $area");
+$openprint::log->debug("Not In Makereadies: $$Equipment{id} $area") if DEBUG;
 					my $MRService = openprint::Service->find_one( name=>$$type{name}.' MakeReady');
 					$MRService = $AllAqueousMakeReady if ! $MRService;
 					if ( ! $MRService ) {
@@ -450,9 +451,10 @@ $openprint::log->debug("Not In Makereadies: $$Equipment{id} $area");
 						%setupPrice = $MRService->get_price( $run_qty, $Equipment );
 					} # end if
 					$Price{MakeReady} += $setupPrice{Price};
-					$MakeReadies{$Equipment->id()} = $area;
+					$MakeReadies{$$Equipment{id}} = [] if ! $MakeReadies{$$Equipment{id}};
+					push @{$MakeReadies{$$Equipment{id}}}, $area;
 					$Price{washups} = scalar @different_types;
-$colour_total += $setupPrice{Price};
+					$colour_total += $setupPrice{Price};
 				} # end if
 				
 				my %BlanketCutPrice;

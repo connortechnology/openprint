@@ -567,8 +567,10 @@ sub company_profiles {
 				$param{established} = $param{start_year} . '-' . $param{start_month} . '-01';
 			} # end if
 			my @changes = $Company->changes( \%param );
-			$variable{error} .= $Company->save( \%param );
-			(new openprint::Log())->save({object_id=>$$Company{id},object_type=>ref$Company, action=>'Edit Company', note=>join('<br/>', @changes) }) if @changes;
+			if ( @changes ) {
+				$variable{error} .= $Company->save( \%param );
+				(new openprint::Log())->save({object_id=>$$Company{id},object_type=>ref$Company, action=>'Edit Company', note=>join('<br/>', @changes) });
+			}
 			$index = $Company->id();
 
 			if ( $index > 0 ) {
@@ -620,7 +622,7 @@ sub company_profiles {
 								map { $_ => $param{$_.'-'.$Supplier->id()} } ( 'terms', 'denydays', 'warndays', 'limit', 'hold', 'downpayment', 'cod', 'late_payment_amount','late_payment_units','early_payment_amount','early_payment_units', 'early_payment_days' ) } );
 						$note .= '<br/>new credit: ' . $Credit->to_string();
 						$variable{error} .= (new openprint::Log())->save( {
-								action		=> 	'Credit Information Changed', 
+								action			=> 	'Credit Information Changed', 
 								object_id   =>  $index,
 								object_type	=>	'openprint::Company',
 								note        =>  $note,

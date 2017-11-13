@@ -101,6 +101,7 @@ $openprint::log->debug("Auth response for $method $url $tokens{realm}, $username
 		foreach my $k ( keys %{$headers} ) {
 			$openprint::log->debug("No auth Header $k => $$headers{$k}");
 		}
+			$response = $browser->$method( $url, $args ? $args : () );
 	}
 	return $response;
 } # end sub authenticate

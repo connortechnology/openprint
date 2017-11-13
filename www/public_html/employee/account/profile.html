@@ -236,14 +236,16 @@
         </fieldset>
     </div>
 	<div class="AdminOptions">
-		<fieldset>
+		<fieldset><legend>Sales Options</legend>
 			<ul>
 			<? if ( ($session{user_type} eq 'A' ) or ( openprint::usergroup::is_user_in( ['UserManagement'], $session{user_id} ) ) ) ?>
 			<? if ( sets::isin( $$variable{User}->type(), ['E','A'] ) ) ?>
-			<li> 
-				<label>Commission Rate</label>
-				<? echo ( input( type=>'float', id=>'commission', name=>'commission', value=>$$variable{User}->commission() ); ) ?>%
-			</li>
+				<li class="commission" title="Commission applied to all projects. Will be overriden by company-specific commission rate."><label>Commission</label>
+					<?echo(input(type=>'float', name=>'commission', value=>$$variable{User}->commission());)?> %
+				</li>
+				<li class="wage"><label>Wage</label>
+					<?echo(input(type=>'float', name=>'wage', value=>$$variable{User}->wage());)?>
+				</li>
 			<? endif ( sets::isin( $$variable{User}->type(), ['E','A'] ) ) ?>
 			<? endif ( ($session{user_type} eq 'A' ) or ( openprint::usergroup::is_user_in( ['UserManagement'], $session{user_id} ) ) ) ?>
 			<li class="marketing_categories"> 

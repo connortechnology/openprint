@@ -1092,11 +1092,7 @@ sub get_price {
 			} # end if
 			return;
 		} # end if ! price
-		if ( (!$$self{custom}) and $openprint::config{ApplyMarkup} ) {
-			my $new_price = $$price{price} * ( 1 + ( $openprint::config{ApplyMarkup} / 100 ) );
-			$openprint::log->debug("Apply Markup: $$price{price} * ( 1 + $openprint::config{ApplyMarkup} / 100 ) = $new_price " ) if DEBUG_PRICING;
-			$$price{price} = $new_price;
-		} # end if
+
 
 		my $Pricelist = new openprint::Pricelist( $list_id );
 		$$price{currency_id} = $Pricelist->currency_id();
@@ -1104,6 +1100,13 @@ sub get_price {
 	} else {
 		Carp::cluck("No custom price, and no paper::id for service: $params{service}" . $self->to_string()) if $debug;
 	} # end if
+
+	if ( 0 and $price and $openprint::config{ApplyMarkup} ) {
+#if ( (!$$self{custom}) and $openprint::config{ApplyMarkup} ) {
+	my $new_price = $$price{price} * ( 1 + ( $openprint::config{ApplyMarkup} / 100 ) );
+	$openprint::log->debug("Apply Markup: $$price{price} * ( 1 + $openprint::config{ApplyMarkup} / 100 ) = $new_price " ) if DEBUG_PRICING;
+	$$price{price} = $new_price;
+} # end if
 
 	if ( $openprint::Company->discount() != 0 ) {
 		$_ = $$price{price};
@@ -1351,13 +1354,13 @@ sub load_from_signature {
 		$Paper->start_width( $$specs{txtSpecificStockWidth} );
 		$Paper->start_height( $$specs{txtSpecificStockHeight} );
 		$Paper->type( $$specs{StockType} );
-		if ( $qty_index ) {
-			$Paper->width( $$specs{'StockWidth'.$qty_index} );
-			$Paper->height( $$specs{'StockHeight'.$qty_index} ) if $Paper->type() ne 'Roll';
-		} else {
+		#if ( $qty_index ) {
+			#$Paper->width( $$specs{'StockWidth'.$qty_index} );
+			#$Paper->height( $$specs{'StockHeight'.$qty_index} ) if $Paper->type() ne 'Roll';
+		#} else {
 			$Paper->width( $$specs{txtSpecificStockWidth} );
 			$Paper->height( $$specs{txtSpecificStockHeight} ) if $Paper->type() ne 'Roll';
-		} # end if
+		#} # end if
 		$Paper->gsm( $$specs{txtStockGSM} ) if $$specs{txtStockGSM};
 
 		$Paper->minimum_order( $$specs{minimum_order} );
@@ -1510,7 +1513,7 @@ $log->debug($P->id_string());
 		$$Paper{Price} = $$specs{'StockPrice'.$qty_index};
 	} # end if
 
-	my $P = $Paper;
+	my $Supplied = $Paper;
 	$Paper = $Paper->clone();
 #$openprint::log->debug($Paper->to_string() );
 	if ( $qty_index ) {
@@ -1523,11 +1526,11 @@ $log->debug($P->id_string());
 		   ) {
 #Carp::cluck("Custom size $$specs{'StockWidth'.$qty_index}x$$specs{'StockHeight'.$qty_index}");
 #$openprint::log->debug("Custom size $$Paper{width}x$$Paper{height} => $$specs{'StockWidth'.$qty_index}x$$specs{'StockHeight'.$qty_index}");
-			$$Paper{Supplied} = $P;
-			if ( ! $P->start_width() ) {
+			$$Paper{Supplied} = $Supplied;
+			if ( ! $Supplied->start_width() ) {
 #$openprint::log->debug("Setting start with");
-				$P->width( $$specs{'StockWidth'.$qty_index} );
-				$P->start_width( $P->width() );
+				$Supplied->width( $$specs{'StockWidth'.$qty_index} );
+				$Supplied->start_width( $Supplied->width() );
 			} 
 
 			if ( ! $Paper->start_width() ) {
@@ -1554,12 +1557,13 @@ $log->debug($P->id_string());
 				} # end if
 			
 				if ( $Paper->width() and $Paper->height() and $Paper->start_width() and $Paper->start_height() ) {
-				$Paper->mweight($Paper->mweight()/( ($Paper->start_width()/$Paper->width())*($Paper->start_height()/$Paper->height())));
+					$Paper->mweight($Paper->mweight()/( ($Paper->start_width()/$Paper->width())*($Paper->start_height()/$Paper->height())));
 				} # end if
-			} # end if
+			} # end if ! Roll
+			$Paper->minimum_order( $$specs{minimum_order} * $Paper->factor() );
+			$Paper->sheets_per_package( $$specs{sheets_per_package} * $Paper->factor() );
 		} # end if
 	} # end if qty_index
-#$openprint::log->debug($Paper->to_string() );
 	return $Paper;
 
 } # end sub load_from_signature
