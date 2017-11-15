@@ -1576,7 +1576,6 @@ sub recalculate {
 	$$self{discount} = $$Company{discount};
 	$$self{credit_card_fee} = $$Company{credit_card_fee};
 	$$self{csr_commission} = defined $$Company{csr_commission} ? $$Company{csr_commission} : $$CSR{commission};
-$openprint::log->error("commissioni rate set to $$self{csr_commission}");
 
 	my $services = $self->services();
 	if ( $$services{''} ) {
