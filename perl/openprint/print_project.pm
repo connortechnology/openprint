@@ -574,8 +574,8 @@ if ( 0 ) {
 	$Project->programs( $param{chkPrograms} );
 	$Project->other_programs( $param{txtOtherPrograms} );
 	$Project->currency_id( $session{Currency_id} ) if ! $Project->currency_id();
-	$Project->reprint( $openprint::param{reprint} );
-	$Project->reprint_reason( $openprint::param{reprint_reason} );
+	$Project->reprint( $param{reprint} );
+	$Project->reprint_reason( $param{reprint_reason} );
 
 	# This will likely never happen, because the act of cilcking on the different project type changes it.
 	my $ProjectType = openprint::ProjectType->find_one( name => $param{rdbProjectType} ) if $param{rdbProjectType};

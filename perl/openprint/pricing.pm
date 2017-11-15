@@ -209,7 +209,19 @@ $log->debug("Price service_id:$$p{service_id} interpolate:$$p{interpolate};");
 }
 }
 
-# We should do this later...
+	if ( $openprint::config{ApplyMarkup} ) {
+#$openprint::log->debug("Apply Markup: $openprint::config{ApplyMarkup}");	
+		my $pricingpercent = $openprint::config{ApplyMarkup};
+		#$pricingpercent =~ s/[^\d\.\-]//g;
+		$pricingpercent /= 100;
+		$pricingpercent += 1;
+		for ( my $index = 0; $index < @pricing; $index += 1 ) {
+# the if here is to preserve empty pricing.	if pricei s empty, we display call, instead of 0.00.
+			if ( $pricing[$index]->{Price} ne '' ) {
+				$pricing[$index]->{Price} *= $pricingpercent;
+			} # end if
+		} # end for
+	} # end if
 
 # Now if we are a customer, then we have more to do, including special pricing, adding discounts, etc. 
 	if ( $cust_id != 0 ) {
@@ -234,19 +246,6 @@ $log->debug("Price service_id:$$p{service_id} interpolate:$$p{interpolate};");
 				} # end if has a nunmeric price
 			} # end for each price
 		} # end if
-	} # end if
-	if ( $openprint::config{ApplyMarkup} ) {
-#$openprint::log->debug("Apply Markup: $openprint::config{ApplyMarkup}");	
-		my $pricingpercent = $openprint::config{ApplyMarkup};
-		#$pricingpercent =~ s/[^\d\.\-]//g;
-		$pricingpercent /= 100;
-		$pricingpercent += 1;
-		for ( my $index = 0; $index < @pricing; $index += 1 ) {
-# the if here is to preserve empty pricing.	if pricei s empty, we display call, instead of 0.00.
-			if ( $pricing[$index]->{Price} ne '' ) {
-				$pricing[$index]->{Price} *= $pricingpercent;
-			} # end if
-		} # end for
 	} # end if
 
 	my @prices;
@@ -309,6 +308,17 @@ sub get_Price {
 	} # end if
 
 	if ( $Price and $$Price{price} ) {
+
+		if ( $openprint::config{ApplyMarkup} ) {
+#$openprint::log->debug("Apply Markup: $openprint::config{ApplyMarkup}"); 
+			my $pricingpercent = $openprint::config{ApplyMarkup};
+			#$pricingpercent =~ s/[^\d\.\-]//g;
+			$pricingpercent /= 100;
+			$pricingpercent += 1;
+# the if here is to preserve empty pricing. if pricei s empty, we display call, instead of 0.00.
+			$Price->{price} *= $pricingpercent;
+		} # end if
+
 		if ( $openprint::session{company_id} != 0 ) {
 			my $CSR = $openprint::Company->CSR();
 			my $pricingpercent = $$openprint::Company{discount};
@@ -325,15 +335,6 @@ sub get_Price {
 			} # end if
 		} # end if
 
-		if ( $openprint::config{ApplyMarkup} ) {
-#$openprint::log->debug("Apply Markup: $openprint::config{ApplyMarkup}"); 
-			my $pricingpercent = $openprint::config{ApplyMarkup};
-			#$pricingpercent =~ s/[^\d\.\-]//g;
-			$pricingpercent /= 100;
-			$pricingpercent += 1;
-# the if here is to preserve empty pricing. if pricei s empty, we display call, instead of 0.00.
-			$Price->{price} *= $pricingpercent;
-		} # end if
 		if ( $$Price{interpolate} ) {
 			if ( $$Price{max} and $$Price{Next} ) {
 				my $xa = $$Price{min};

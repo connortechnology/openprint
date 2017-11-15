@@ -162,10 +162,6 @@ sub calc {
 			} # end if
 			my $PressSheet = openprint::Paper::load_from_signature( $Project, $sig_specs, $qty_index );
 #$openprint::log->debug("Sheet for sig $ss_id $form $qty_index" . $PressSheet->to_string() ) if DEBUG;
-			#if ( ! ( $PressSheet->id() ) or $$PressSheet{custom} ) {
-				#$openprint::log->error("No id or custom....");
-				#next;
-			#} # end if
 			# This paper is in the printing format, not the supplied
 			# Convert to supplied Stock
 			my $SuppliedStock = $PressSheet->Supplied();
@@ -480,7 +476,6 @@ sub get_stocks {
 		foreach my $q_index ( $Project->quantity_indexes() ) {
 			next if ! $$sig_specs{'txtImposition'.$q_index};
 			my $Paper = openprint::Paper::load_from_signature( $Project, $sig_specs, $q_index )->Supplied();
-#next if ! ( $Paper->id() or $$Paper{custom} );
 			if ( ! $Papers{$Paper->id_string()} ) {
 				$Papers{$Paper->id_string()} = { Project => $Project, Stock=>$Paper, index=>$stock_id, key=>$Paper->id_string() };
 				$stock_id += 1;

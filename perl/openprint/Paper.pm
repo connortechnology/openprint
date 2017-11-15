@@ -1092,11 +1092,7 @@ sub get_price {
 			} # end if
 			return;
 		} # end if ! price
-		if ( (!$$self{custom}) and $openprint::config{ApplyMarkup} ) {
-			my $new_price = $$price{price} * ( 1 + ( $openprint::config{ApplyMarkup} / 100 ) );
-			$openprint::log->debug("Apply Markup: $$price{price} * ( 1 + $openprint::config{ApplyMarkup} / 100 ) = $new_price " ) if DEBUG_PRICING;
-			$$price{price} = $new_price;
-		} # end if
+
 
 		my $Pricelist = new openprint::Pricelist( $list_id );
 		$$price{currency_id} = $Pricelist->currency_id();
@@ -1104,6 +1100,13 @@ sub get_price {
 	} else {
 		Carp::cluck("No custom price, and no paper::id for service: $params{service}" . $self->to_string()) if $debug;
 	} # end if
+
+	if ( 0 and $price and $openprint::config{ApplyMarkup} ) {
+#if ( (!$$self{custom}) and $openprint::config{ApplyMarkup} ) {
+	my $new_price = $$price{price} * ( 1 + ( $openprint::config{ApplyMarkup} / 100 ) );
+	$openprint::log->debug("Apply Markup: $$price{price} * ( 1 + $openprint::config{ApplyMarkup} / 100 ) = $new_price " ) if DEBUG_PRICING;
+	$$price{price} = $new_price;
+} # end if
 
 	if ( $openprint::Company->discount() != 0 ) {
 		$_ = $$price{price};
@@ -1561,8 +1564,6 @@ $log->debug($P->id_string());
 			$Paper->sheets_per_package( $$specs{sheets_per_package} * $Paper->factor() );
 		} # end if
 	} # end if qty_index
-$openprint::log->debug('Supplied'.$Supplied->to_string() );
-$openprint::log->debug('PressSheet'.$Paper->to_string() );
 	return $Paper;
 
 } # end sub load_from_signature

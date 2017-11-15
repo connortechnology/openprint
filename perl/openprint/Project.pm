@@ -1576,7 +1576,6 @@ sub recalculate {
 	$$self{discount} = $$Company{discount};
 	$$self{credit_card_fee} = $$Company{credit_card_fee};
 	$$self{csr_commission} = defined $$Company{csr_commission} ? $$Company{csr_commission} : $$CSR{commission};
-$openprint::log->error("commissioni rate set to $$self{csr_commission}");
 
 	my $services = $self->services();
 	if ( $$services{''} ) {
@@ -1914,6 +1913,9 @@ sub can_view {
 		$log->debug("$openprint::User{firstname} Either created it or is an assistant") if $debug;
 		return 1;
 	} # end if
+	if ( openprint::usergroup::is_user_in( ['Accounting', 'Estimating'], $openprint::session{user_id} ) ) {
+		return 1;
+	}
 	return 0;
 }
 
