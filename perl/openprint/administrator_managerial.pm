@@ -1041,6 +1041,8 @@ sub companies {
 
 					ssi::date_filter( $uri.'?created_on_end', 'created_on <=' ),
 					ssi::date_filter( $uri.'?created_on_start', 'created_on >=' ),
+					ssi::date_filter( $uri.'?updated_on_end', 'updated_on <=' ),
+					ssi::date_filter( $uri.'?updated_on_start', 'updated_on >=' ),
 					);
   if ( $session{$uri.'?country_id'} ) {
     my $Country = new openprint::Location( $session{$uri.'?country_id'} );
@@ -1079,6 +1081,7 @@ sub _companies {
 	ssi::save_params( '/administrator/managerial/companies.html', ( 
 				'salesrep_id', 'marketing_category_id', 'company_name', 'country',
 				( map { 'created_on_start_' . $_ } ( 'year','month','day' ) ),
+				( map { 'updated_on_start_' . $_ } ( 'year','month','day' ) ),
 				) );
 	$session{$r->uri().'?salesrep_id_exclude'} = $param{salesrep_id_exclude};
 } # end sub _companies

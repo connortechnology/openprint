@@ -524,5 +524,20 @@ sub Country {
 	return $_[0]{Country};
 } # end sub Country
 
+sub can_become {
+	my $C = shift;
+	my $User = shift;
+	if ( 
+			( $$User{type} eq 'A' )
+			or
+			( $$User{id} == $$C{salesrep_id} )
+			or
+			sets::isin( $$User{id}, $C->CSR()->assistant_ids() )
+		 ) {
+		return 1;
+	}
+	return 0;
+}
+
 1;
 __END__

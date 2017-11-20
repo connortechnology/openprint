@@ -10,6 +10,8 @@
 		( $session{$uri.'?marketing_category_id'} ? ( 'marketing_category_id any'=> $session{$uri.'?marketing_category_id'} ) : () ),
 		date_filter( $uri.'?created_on_end', 'created_on <=' ),
 		date_filter( $uri.'?created_on_start', 'created_on >=' ),
+		date_filter( $uri.'?updated_on_end', 'updated_on <=' ),
+		date_filter( $uri.'?updated_on_start', 'updated_on >=' ),
 		);
   if ( $session{$uri.'?country_id'} ) {
     my $Country = new openprint::Location( $session{$uri.'?country_id'} );
