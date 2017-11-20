@@ -79,6 +79,7 @@ return $html;
 			my @Companies = openprint::Company->find( id=>[ map { $_->company_id() } @Entries ] );
 			foreach my $Log ( sort { $a->Company()->name() cmp $b->Company()->name() }@Entries ) {
 				next if $companies{$$Log{company_id}};
+				next if ! $Log->Company()->can_become();
 				$companies{$$Log{company_id}} = $Log->company_id();
 				$html .= sprintf('<a href="/account/select_company.html?ddmCompany=%d&amp;btnFunction=SelectCompany">%s</a><br/>',
 					$Log->company_id(), $Log->Company()->name(),
