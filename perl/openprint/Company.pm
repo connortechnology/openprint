@@ -527,6 +527,7 @@ sub Country {
 sub can_become {
 	my $C = shift;
 	my $User = shift;
+	$User = $openprint::User if ! $User;
 	if ( 
 			( $$User{type} eq 'A' )
 			or
