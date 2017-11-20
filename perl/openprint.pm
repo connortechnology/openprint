@@ -87,7 +87,7 @@ sub session_init {
 				my $C = new openprint::Company( $param{ddmCompany} );
 				if ( ! $C->id() ) {
 					$variable{error} .= 'Unknown company selected.  Please try again.<br/>';
-				} elsif ( ! $C->can_become( $openprint::User ) ) { {
+				} elsif ( ! $C->can_become( $openprint::User ) ) {
 						$variable{error} .= 'You are not authorized to use ' . $C->name().'<br/>';
 				} else {
 					switch_company( $C );
