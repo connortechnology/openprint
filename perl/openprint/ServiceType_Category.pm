@@ -9,14 +9,14 @@ $table = 'ServiceType_Categories';
 $serial = 'ServiceType_Categories_id_seq';
 
 %fields = (
-	id				=>	'id',
+	id				=> 'id',
 	name			=> 'name',
-	sorting			=> 'sorting',
+	sorting		=> 'sorting',
 );
 %transforms = (
 );
 %defaults = (
-	'sorting'	=>	undef,
+	sorting		=>	undef,
 );
 
 
@@ -34,7 +34,7 @@ sub ServiceTypes {
 		$params{category_id} = $$self{id};
 		return openprint::ServiceType->find( %params );
 	} elsif ( ! $$self{ServiceTypes} ) {
-		@{$$self{ServiceTypes}} = openprint::ServiceType->find( 'category_id'=>$$self{id} );
+		@{$$self{ServiceTypes}} = openprint::ServiceType->find( category_id=>$$self{id} );
 	} # end if
 	return @{$$self{ServiceTypes}};
 } # end sub ServiceTypes

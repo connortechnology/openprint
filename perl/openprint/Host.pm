@@ -1,6 +1,9 @@
 use strict;
+use warnings;
+
 require openprint::Object;
 require openprint::Host_Interface;
+require openprint::Project_Log;
 
 package openprint::Host_Notification;
 our @ISA = qw( openprint::Object );
@@ -92,7 +95,7 @@ $serial = 'hosts_id_seq';
 sub destroy {
 	my $error;
 	require openprint::Log;
-	foreach my $Log ( openprint::Log->find('host_id'=>$_[0]{id}) ) {
+	foreach my $Log ( openprint::Log->find( host_id=>$_[0]{id} ) ) {
 		$error .= $Log->destroy();
 		return $error if $error;
 	} # end foreach Log
@@ -104,6 +107,10 @@ sub destroy {
 		$error .= $I->destroy();
 		return $error if $error;
 	} # end foreach Log
+	foreach my $Log ( openprint::Project_Log->find( host_id=>$_[0]{id} ) ) {
+		$error .= $Log->save({host_id=>undef});
+		last if $error;
+	}
 
 	$error .= $_[0]->SUPER::destroy();
 	return $error;
@@ -146,6 +153,7 @@ sub Notifications {
 	} # end if
 	return @{$_[0]{Notifications}};
 } # end sub Notifications
+
 sub Interfaces {
 	if ( @_ > 1 ) {
 		$_[0]{Interfaces} = $_[1];
