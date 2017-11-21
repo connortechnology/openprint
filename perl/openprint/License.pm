@@ -10,32 +10,32 @@ $debug = 0;
 $table = 'licenses';
 $serial='licenses_id_seq';
 %fields = (
-		id			=>	'id',
-		serialkey	=>	'serialkey',
-		max_uses		=> 'max_uses',
+		id						=>	'id',
+		serialkey			=>	'serialkey',
+		max_uses			=>	'max_uses',
 		purchased_on	=>	'purchased_on',
 		expires_on		=>	'expires_on',
 		software_id		=>	'software_id',
-		software		=>	undef,
-		comment         =>	'comment',
+		software			=>	undef,
+		comment       =>	'comment',
 		created_on		=>	'created_on',
 		updated_on		=>	'updated_on',
 		);
 %find_fields = (
-	host_id	=>	'id IN (SELECT license_id FROM license_hosts where host_id=?)',
+		host_id	=>	'id IN (SELECT license_id FROM license_hosts where host_id=?)',
 );
 %transforms = (
 		serialkey	=> [ 's/^\s+//', 's/\s+$//', 's/\s\s+/ /g' ],
 		comment		=> [ 's/^\s+//', 's/\s+$//', 's/\s\s+/ /g' ],
 		);
 %defaults = (
-	created_on	=>	q`'NOW'`,
-	updated_on	=>	q`'NOW'`,
-	serialkey	=>	undef,
-	max_uses	=>	1,
-	purchased_on	=>	undef,
-	expires_on		=>	undef,
-	software_id		=>	undef,
+		created_on		=>	q`'NOW'`,
+		updated_on		=>	q`'NOW'`,
+		serialkey			=>	undef,
+		max_uses			=>	1,
+		purchased_on	=>	undef,
+		expires_on		=>	undef,
+		software_id		=>	undef,
 );
 sub software {
 	if ( @_ > 1 ) {
