@@ -8,7 +8,7 @@ use vars qw( $debug $table $serial %fields %find_fields %transforms %defaults );
 
 $debug = 1;
 $table = 'project_log';
-$serial= 'id';
+$serial= 'project_log_id_seq';
 %fields = (
 	id						=>	'id',
 	project_id		=>	'project_id',
