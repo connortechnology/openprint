@@ -1180,6 +1180,11 @@ if ( ! sets::isin( 'project_log', \@tables ) ) {
 		$dbh->do('ALTER TABLE project_log add host_id INTEGER');
 		$dbh->do('ALTER TABLE project_log ADD FOREIGN KEY (host_id) REFERENCES Hosts (id)');
 	}
+	if ( ! exists $$data{id} ) {
+		$log->debug("Adding id to project_log");
+		$dbh->do('ALTER TABLE project_log add id SERIAL');
+		$dbh->do('ALTER TABLE project_log ADD PRIMARY KEY (id)');
+  }
 }
 if ( ! sets::isin( 'barcode_log', \@tables ) ) {
 	$dbh->do( misc::load_file( $log, '../openprint/sql/Barcode_Log.sql' ) ) or die;
