@@ -777,12 +777,19 @@ sub _production_performance {
 	my %Presses_by_id = map { $$_{id}, $_ } @Presses;
 	my %Presses_by_strid = map { $$_{strid}, $_ } @Presses;
 	
-	my @press_names = split(',', $session{$uri.'?press_id'} );
+	my @press_names = split( ',', $session{$uri.'?press_id'} );
 	my %press_names = map { $Presses_by_id{$_}{strid}, $_ } @press_names;
 	my @Data;
 
+	my @ServiceType_Categories = openprint::ServiceType_Category->find( order=>'sorting,lower(name)' );
+	my %ServiceTypes_By_Category;
+	foreach my $Service ( openprint::ServiceType->find() ) {
+		$ServiceTypes_By_Category{$$Service{category_id}} = [] if ! $ServiceTypes_By_Category{$$Service{category_id}};
+		push @{$ServiceTypes_By_Category{$$Service{category_id}}}, $Service;
+	}
+
 	foreach my $Order ( openprint::Order->find(
-				(@Companies ? ( company_id => ( ($session{$uri.'?company_id'} and exists $companies{$session{$uri.'?company_id'}} ) ? $session{$uri.'?company_id'} : [ keys %companies ] ) ) : () ),
+				( @Companies ? ( company_id => ( ($session{$uri.'?company_id'} and exists $companies{$session{$uri.'?company_id'}} ) ? $session{$uri.'?company_id'} : [ keys %companies ] ) ) : () ),
 				ssi::date_filter( $uri.'?ordered_on_start', 'created_on >=' ),
 				ssi::date_filter( $uri.'?ordered_on_end', 'created_on <=' ),
 				( $session{$uri.'?status_id'} ? ( status_id => [ split(',', $session{$uri.'?status_id'} ) ] ) : () ),
@@ -824,6 +831,18 @@ sub _production_performance {
 			} # end if press_names
 
 			my @fragment = ( $Order->id(), $Order->docket(), $Project->id(), $Order->company_name(), $Order->created_on(), $Project->status(), $Project->ordered_price() );
+			my %category_totals;
+			foreach my $Category ( @ServiceType_Categories ) {
+				$category_totals{$$Category{id}} = 0;
+				foreach my $ServiceType ( @{$ServiceTypes_By_Category{$$Category{id}}} ) {
+					next if ! $$services{$$ServiceType{name}};
+					foreach my $service_id ( @{ $$services{$$ServiceType{name}} } ) {
+						my $Service = $Project->Service( $service_id );
+						$category_totals{$$Category{id}} += $Service->ordered_price();	
+					} # end foreach service_id
+				} # end foreach ServiceType
+				push @fragment, $category_totals{$$Category{id}};
+			} # end foreach category
 
 			if ( $columns{plates} ) {
 				my $plate_qty = 0;
@@ -839,7 +858,7 @@ sub _production_performance {
 						$$sig_specs{'PlateID'.$qty_index} = $Press->specification('Plate Size').'"-'.$Press->specification('Plate Type').'Plate';
 					} # end if
 
-					my $Plate = openprint::Material->find_one( name=>$$sig_specs{'PlateID'.$qty_index}) if $$sig_specs{'PlateID'.$qty_index};
+					my $Plate = openprint::Material->find_one( name=>$$sig_specs{'PlateID'.$qty_index} ) if $$sig_specs{'PlateID'.$qty_index};
 					my %plate_cost = $Plate->get_price( $$sig_specs{'txtPlateQuantity'.$qty_index} ) if $Plate;
 
 					$plate_qty += $$sig_specs{'txtPlateQuantity'.$qty_index};
@@ -910,10 +929,11 @@ $openprint::log->debug("PI Stock for $$Order{docket} is $$PI{delta} " . $PI->Pap
 	} # end foreach Order
 
 	$variable{Header} = [ 'Order ID', 'Docket', 'Project ID', 'Company', 'Created On', 'Status', 'Project Value',
-				( $columns{plates} ? ( 'Plates', 'Plate Cost', 'Plate Total' ) : () ),
-				( $columns{production} ? ( 'Operator Assigned', 'Printed On', 'Completed On', 'Invoiced On' ) : () ),
-				( $columns{stock} ? ( 'Used Stock Sheets', 'Used Stock Weight', 'Stock Cost', 'Stock', 'Quoted Stock Sheets', 'Quoted Stock Weight', 'Stock Quoted Price' ) : () ),
- ];
+		( map { $$_{name} } @ServiceType_Categories ),
+		( $columns{plates} ? ( 'Plates', 'Plate Cost', 'Plate Total' ) : () ),
+		( $columns{production} ? ( 'Operator Assigned', 'Printed On', 'Completed On', 'Invoiced On' ) : () ),
+		( $columns{stock} ? ( 'Used Stock Sheets', 'Used Stock Weight', 'Stock Cost', 'Stock', 'Quoted Stock Sheets', 'Quoted Stock Weight', 'Stock Quoted Price' ) : () ),
+	];
 
 	$variable{Data} = \@Data;
 
