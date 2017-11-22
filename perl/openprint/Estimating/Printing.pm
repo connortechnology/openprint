@@ -7106,7 +7106,10 @@ sub get_weight {
 	my $sig_weight = $$specs{txtWidth} * $$specs{txtHeight} * $Paper->wpsi();
 
 	my $weight = $sig_weight;
-	if ( $$specs{'PageQuantity'.$qty_index} ) {
+	if ( $$specs{PageQuantity} ) {
+# For Scratch Pads
+		$weight *= $$specs{PageQuantity};
+	} elsif ( $$specs{'PageQuantity'.$qty_index} ) {
 		if ( ! $$specs{txtSpreadSize} ) {
 			$$specs{txtSpreadSize} = 4;
 			$log->error("Unset Spreadsize");
@@ -7117,10 +7120,6 @@ sub get_weight {
 		$weight *= $$specs{'PageQuantity'.$qty_index}/$$specs{txtSpreadSize};
 	} # end if
 # This is business cards, etc.
-	if ( $$specs{PageQuantity} ) {
-# For Scratch Pads
-		$weight *= $$specs{PageQuantity};
-	} # end if
 #$log->debug("Get_weight: Spreadsize($$specs{txtSpreadSize} ($$specs{'PageQuantity'.$qty_index} > 0 ? $$specs{'PageQuantity'.$qty_index} : 1 ) * ( $$specs{txtWidth} * $$specs{txtHeight} ) * ".$Paper->gsm().'gsm '.$Paper->wpsi() . '==='.$Paper->wpsi(undef)." wpsi = $sig_weight * $$specs{'PageQuantity'.$qty_index} = " . $weight);
 	return $weight;
 } # end sub get_weight
