@@ -57,7 +57,7 @@ sub has_overrides {
 
     my @v;
     if ( $qty_index ) {
-            push @v, map { $$specs{$_.$qty_index} ? $_ : () } (
+            push @v, map { ( $$specs{$_.$qty_index} and $$specs{$_.$qty_index} ne 'N' ) ? $_ : () } (
 					'OverridePrice','OverridePackageType','OverrideItemsPerPackage',
                     );
     } # end if
