@@ -127,7 +127,8 @@ sub get_Price {
 } # end sub get_Price
 
 sub get_price {
-    my ( $self, $quantity, $Equipment, $Pricelist, $period ) = @_;
+  my ( $self, $quantity, $Equipment, $Pricelist, $period ) = @_;
+  return if ! $$self{id};
 
 	if ( ! $period ) {
 		$period = 'NOW()';
@@ -137,11 +138,11 @@ sub get_price {
 	} # end if
 
 	$Pricelist = $openprint::Pricelist if ! $Pricelist;
-    my %price = openprint::pricing::get_best_price_object( $openprint::session{company_id}, $$self{id}, $$Pricelist{id}, 'openprint::service_priceset', $quantity, $$Equipment{id}, $period );
+  my %price = openprint::pricing::get_best_price_object( $openprint::session{company_id}, $$self{id}, $$Pricelist{id}, 'openprint::service_priceset', $quantity, $$Equipment{id}, $period );
 
 	if ( ! %price ) {
 		$log->debug("No price returned for $$self{name} $$Equipment{strid} $quantity $period") if $debug;
-		return ;
+		return;
 	} # end if
 
 	$price{currency_id} = $Pricelist->currency_id();

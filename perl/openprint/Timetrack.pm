@@ -117,18 +117,26 @@ sub elapsed {
 
 sub rate {
 	my ( $self ) = @_;
-	my $Service = $self->Service();
-	my %Price = $Service->get_price( undef, undef, $self->Company()->Pricelist() );
-	if ( $$self{rate} ) {
-		$Price{Cost} = $Price{Price} = $$self{rate};
+
+  if ( $$self{rate} ) {
+    return $$self{rate};
+  }
+
+  if ( $$self{service_id} ) {
+    my $Service = $self->Service();
+    my %Price = $Service->get_price( undef, undef, $self->Company()->Pricelist() );
+    return $Price{Price};
 	} # end if
-	return $Price{Price};
+  return;
 }
 sub units {
 	my ( $self ) = @_;
-	my $Service = $self->Service();
-	my %Price = $Service->get_price( undef, undef, $self->Company()->Pricelist() );
-	return $Price{units};
+  if ( $$self{service_id} ) {
+    my $Service = $self->Service();
+    my %Price = $Service->get_price( undef, undef, $self->Company()->Pricelist() );
+    return $Price{units};
+  } 
+  return
 } # end sub units
 
 sub Price {
