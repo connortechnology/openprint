@@ -6,7 +6,7 @@ require openprint::Host_Interface;
 
 use vars qw( $debug $table $serial %fields %find_fields %transforms %defaults );
 
-$debug = 1;
+$debug = 0;
 $table = 'project_log';
 $serial= 'project_log_id_seq';
 %fields = (
