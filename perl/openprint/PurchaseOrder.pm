@@ -171,7 +171,7 @@ sub Contents {
 		$_[0]{Contents} = $_[1];
 	}
 	if ( $_[0]{id} and ! $_[0]{Contents} ) {
-		$_[0]{Contents} = [openprint::PurchaseOrder_Content->find('po_id'=>$_[0]{id},'order'=>'id')];
+		$_[0]{Contents} = [openprint::PurchaseOrder_Content->find( po_id=>$_[0]{id}, order=>'id')];
 	} # end if
 	return @{$_[0]{Contents}} if $_[0]{Contents};
 	return ();
