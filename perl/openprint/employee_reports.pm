@@ -787,14 +787,14 @@ sub _production_performance {
 		$ServiceTypes_By_Category{$$Service{category_id}} = [] if ! $ServiceTypes_By_Category{$$Service{category_id}};
 		push @{$ServiceTypes_By_Category{$$Service{category_id}}}, $Service;
 	}
-
-	foreach my $Order ( openprint::Order->find(
-				( @Companies ? ( company_id => ( ($session{$uri.'?company_id'} and exists $companies{$session{$uri.'?company_id'}} ) ? $session{$uri.'?company_id'} : [ keys %companies ] ) ) : () ),
+	my @Orders = openprint::Order->find(
+				( ( @Companies or $session{$uri.'?company_id'} ) ? ( company_id => ( ($session{$uri.'?company_id'} and (( !%companies) or exists $companies{$session{$uri.'?company_id'}} ) ) ? $session{$uri.'?company_id'} : [ keys %companies ] ) ) : () ),
 				ssi::date_filter( $uri.'?ordered_on_start', 'created_on >=' ),
 				ssi::date_filter( $uri.'?ordered_on_end', 'created_on <=' ),
 				( $session{$uri.'?status_id'} ? ( status_id => [ split(',', $session{$uri.'?status_id'} ) ] ) : () ),
 				order => ($param{order} ? $param{order} : 'id'),
-				) ) {
+				);
+	foreach my $Order ( @Orders ) {
 		next if ! $$Order{docket};
 		if ( $session{$uri.'?reprint'} ) {
 			my $reprint = 0;
@@ -897,6 +897,7 @@ $openprint::log->debug("PI Stock for $$Order{docket} is $$PI{delta} " . $PI->Pap
 							$stock_weight += $MC->quantity();
 						} else {
 							$stock_sheets += $MC->quantity();
+							$stock_weight += $MC->quantity() * $MT->Paper()->sheet_weight();
 						}
 						$stock_cost += $MC->value();
 					}
@@ -915,7 +916,7 @@ $openprint::log->debug("PI Stock for $$Order{docket} is $$PI{delta} " . $PI->Pap
 						my ( $Stock, $qty ) = @$SQ{'Stock','quantity'};
 						next if ! $qty;
 
-						push @Data, @fragment, $Stock->to_string(), ( $Stock->type() eq 'Sheet' ? ($qty,'') : ('', $qty) ), $$SQ{price};
+						push @Data, @fragment, $Stock->to_string(), ( $Stock->type() eq 'Sheet' ? ($qty,$qty*$Stock->sheet_weight()) : ('', $qty) ), $$SQ{price};
 					}
 
 				} else {
