@@ -28,6 +28,7 @@ $serial = 'timetracks_id_seq';
 	invoice_id    		=>	'invoice_id',
 	service_id    		=>	'service_id',
 	owner_id      		=>	'owner_id',
+	date_associated 	=>	'date_associated',
 	time_associated 	=>	'time_associated',
 	user_id	  	    	=>	'user_id',
 	rate		        	=>	'rate',

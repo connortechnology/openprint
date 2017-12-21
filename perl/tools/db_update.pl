@@ -4540,6 +4540,10 @@ if ( ! sets::isin( 'timetracks', \@tables ) ) {
 	if ( ! exists $$data{duration_override} ) {
 		$dbh->do('ALTER TABLE timetracks ADD duration_override BOOLEAN NOT NULL DEFAULT FALSE');
 	} # end if
+	if ( ! exists $$data{date_associated} ) {
+    $log->debug("Adding date_associated to timetracks");
+		$dbh->do('ALTER TABLE timetracks ADD date_associated BOOLEAN NOT NULL DEFAULT TRUE');
+	} # end if
 } # end if
 
 if ( sets::isin('users', \@tables ) ) {
