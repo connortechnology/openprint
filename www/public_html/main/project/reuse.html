@@ -68,6 +68,34 @@
 		</fieldset>
 		</div>
 		<? if ( sets::isin( $session{user_type}, [ 'E', 'A'] ) ) ?>
+<div class="ReprintOptions">
+<fieldset>
+  <legend>Reprint Options</legend>
+  <ul>
+    <li>
+      <label>Is this a reprint?</label>
+      <? echo ( radio( 'reprint', [ 'Y', 'Yes', 'N', 'No' ], $$variable{reprint}, { default=>'N', onclick=>q`setReason(this.value,$('reprintReasonSection'));` } ); ) ?>
+    </li>
+    <li id="reprintReasonSection" style="display: none;">
+      <label>Reason</label>
+      <select name="reprint_reason">
+        <option value=""> select </option>
+      <? echo ( make_drop_down( [
+          'Customer','Customer',
+          'Docket','Docket',
+          'Prepress','Prepress',
+          'Printing','Printing',
+          'Bindery','Bindery',
+          'Shipping','Shipping',
+          'Supplier - Service','Supplier - Service',
+          'Supplier - Material', 'Supplier - Material',
+          'Other', 'Other',
+          ], $$variable{reprint_reason} );) ?>
+      </select>
+    </li>
+  </ul>
+</fieldset>
+</div>
 	<fieldset>
 		If you would like to assign this project to a different customer, please select them now. You will be logged in as the selected customer and any orders or quotes you make from now on will be recorded in their history.
 		<ul>
@@ -136,5 +164,17 @@ var tinymce_options = {
 
   };
 tinyMCE.init(tinymce_options);
+function setReason(reprintVal,divElem) {
+   if(reprintVal == 'Y') {
+      // Project is a reprint.
+      // Display reason drop down option.
+      divElem.style.display = "block";
+   } else {
+      // Project is not a reprint.
+      // Make sure reason drop down is hidden.
+      divElem.style.display = "none";
+   }
+}
+
 </script>
 

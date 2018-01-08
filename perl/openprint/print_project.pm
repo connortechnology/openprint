@@ -678,7 +678,7 @@ sub reuse_project {
 	my $NewProject = $Project->copy();
 	$variable{error} .= $NewProject->save({
 		( map { exists $param{'quantity'.$_} ? ( 'quantity'.$_	=>	$param{'quantity'.$_} ) : ()  } ( 1 .. 3 ) ),
-		( map { exists $param{$_} ? ( $_ => $param{$_} ) : () } ( 'reference', 'comments' ) ),
+		( map { exists $param{$_} ? ( $_ => $param{$_} ) : () } ( 'reference', 'comments','reprint','reprint_reason' ) ),
 		due_date => undef,
 		user_id	=>	$session{user_id},
 		status	=> ( sets::isin( $Project->status(), [ 'Unordered', 'Pending Deposit', 'In Prepress', 'Proofs Out', 'Approved', 'Printed', 'Complete','Shipped','Picked Up' ] ) ? 'Unordered' : 'uncalculated' ),
