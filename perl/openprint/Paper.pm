@@ -1102,16 +1102,28 @@ sub get_price {
 	} # end if
 
 	if ( 0 and $price and $openprint::config{ApplyMarkup} ) {
-#if ( (!$$self{custom}) and $openprint::config{ApplyMarkup} ) {
-	my $new_price = $$price{price} * ( 1 + ( $openprint::config{ApplyMarkup} / 100 ) );
-	$openprint::log->debug("Apply Markup: $$price{price} * ( 1 + $openprint::config{ApplyMarkup} / 100 ) = $new_price " ) if DEBUG_PRICING;
-	$$price{price} = $new_price;
-} # end if
+	#if ( (!$$self{custom}) and $openprint::config{ApplyMarkup} ) {
+		my $new_price = $$price{price} * ( 1 + ( $openprint::config{ApplyMarkup} / 100 ) );
+		$openprint::log->debug("Apply Markup: $$price{price} * ( 1 + $openprint::config{ApplyMarkup} / 100 ) = $new_price " ) if DEBUG_PRICING;
+		$$price{price} = $new_price;
+	} # end if
 
-	if ( $openprint::Company->discount() != 0 ) {
+	my $CSR = $openprint::Company->CSR();
+
+	if ( $$openprint::Company{discount} or $$openprint::Company{csr_commission} or $$openprint::Company{credit_card_fee} or $$CSR{commission} ) {
+		my $discount = 1 - ($$openprint::Company{discount} / 100);
+		my $csr_commission = 1 + ($$openprint::Company{csr_commission} == undef ? $$CSR{commission} : $$openprint::Company{csr_commission} ) /100;
+		my $credit_card_fee = 1 + ($$openprint::Company{credit_card_fee}/100);
+
 		$_ = $$price{price};
-		$$price{price} *= 1 - ( $openprint::Company->discount()/100 );
-		$openprint::log->debug("Apply Markup: $_ * ( 1 - $$openprint::Company{discount} / 100 ) = $$price{price} " ) if DEBUG_PRICING;
+		$$price{price} *= $discount;
+		$openprint::log->debug("Apply discount: $_ * ( 1 + $discount / 100 ) = $$price{price} " ) if DEBUG_PRICING;
+		$_ = $$price{price};
+		$$price{price} *= $csr_commission;
+		$openprint::log->debug("Apply commission: $_ * ( 1 + $csr_commission / 100 ) = $$price{price} " ) if DEBUG_PRICING;
+		$_ = $$price{price};
+		$$price{price} *= $credit_card_fee;
+		$openprint::log->debug("Apply credit_card fee: $_ * ( 1 + $credit_card_fee / 100 ) = $$price{price} " ) if DEBUG_PRICING;
 	} # end if
 
 	if ( $params{service} eq 'Material' ) {
