@@ -99,6 +99,7 @@ $serial = 'lngProjectIndex_seq';
 	markup		=>	undef,
 	priority	=>	undef,
 	reprint		=>	0,
+	reprint_description	=>	q`''`,
 	discount				=>	undef,
 	csr_commission	=>	undef,
 	credit_card_fee	=>	undef,
