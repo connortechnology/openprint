@@ -28,15 +28,15 @@ The following had one or more signatures that ran on <? echo ( join(': ', new op
 			}
 			$html .= sprintf(q`
 				<tr%1$s>
-					<td class="order_id"><a href="/employee/order/view.html?order_id=%2$d">%2$d</a></td>
-					<td class="Docket"><a href="/employee/order/view.html?order_id=%2$d">%3$d</a></td>
-					<td class="invoice_id"><a href="/employee/order/view.html?order_id=%2$d">%4$s</a></td>
-					<td class="Company"><a href="/employee/order/view.html?order_id=%2$d">%5$s</a></td>
-					<td class="Project"><a href="/employee/order/view.html?order_id=%2$d">%6$s</a></td>
-					<td class="DateTime"><a href="/employee/order/view.html?order_id=%2$d">%7$s</a></td>
-					<td class="DateTime"><a href="/employee/order/view.html?order_id=%2$d">%8$s</a></td>
-					<td class="status"><a href="/employee/order/view.html?order_id=%2$d">%9$s</a></td>
-					<td class="Price"><a href="/employee/order/view.html?order_id=%2$d">%10$s</a></td>
+					<td class="order_id"><a href="/employee/project/view.html?order_id=%2$d">%2$d</a></td>
+					<td class="Docket"><a href="/employee/project/view.html?order_id=%2$d">%3$d</a></td>
+					<td class="invoice_id"><a href="/employee/project/view.html?order_id=%2$d">%4$s</a></td>
+					<td class="Company"><a href="/employee/project/view.html?order_id=%2$d">%5$s</a></td>
+					<td class="Project"><a href="/employee/project/view.html?order_id=%2$d">%6$s</a></td>
+					<td class="DateTime"><a href="/employee/project/view.html?order_id=%2$d">%7$s</a></td>
+					<td class="DateTime"><a href="/employee/project/view.html?order_id=%2$d">%8$s</a></td>
+					<td class="status"><a href="/employee/project/view.html?order_id=%2$d">%9$s</a></td>
+					<td class="Price"><a href="/employee/project/view.html?order_id=%2$d">%10$s</a></td>
 				</tr>
 				`, $rowclass, $Order->id(), $Order->docket(), join('<br/>', map { $_->Invoice()->num() } $Order->Invoices() ),
 				htmlize($Order->company_name()),
