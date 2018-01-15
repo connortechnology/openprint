@@ -36,7 +36,10 @@
 
 	my $editable = ( ( ! $Project->docket() ) or ( $Project->Order()->status() eq 'Re-Opened' ) ) and ! $$variable{Quote};
 
-	foreach my $ServiceCategory ( openprint::ServiceType_Category->find( order=>'sorting,name') ) {
+	@{$$variable{Categories}} = openprint::ServiceType_Category->find( order=>'sorting,name');
+	$$variable{category_totals} = {};
+
+	foreach my $ServiceCategory ( @{$$variable{Categories}} ) {
 		if ( $ServiceCategory->name() eq 'Printing' ) {
 			my $function_name = 'openprint::Estimating::'.$Project_Type->type();
 			my $summary = '';
@@ -45,9 +48,7 @@
 			} # end if
 
 			my $Service = $Project->Service( $$services{''}[0] );
-			if ( $Service->overrides() ) {
-				$summary .= '<br/><span class="Overrides">With Overrides</span>';
-			} # end if
+			$summary .= '<br/><span class="Overrides">With Overrides</span>' if $Service->overrides();
 
 			if ( $editable ) {
 				if ( $Project->Type()->url() ) {
@@ -59,7 +60,7 @@
 					$html .= sprintf('<tr%s><td class="description">Printing</td>', $rowclass );
 				} # end if
 			} else {
-					$html .= sprintf('<tr%s><td class="description"><span class="service_name">Printing</b><br/>%s%s</td>', $rowclass,
+					$html .= sprintf('<tr%s><td class="description"><span class="service_name">Printing</span><br/>%s%s</td>', $rowclass,
 							( $$printing_specs{alert} ? join( $$printing_specs{alert}, '<span class="error">','</span>' ) : '' ),
 							$summary );
 			} # end if
@@ -154,6 +155,7 @@ if ( $openprint::User->email() =~ /iconnor/ ) {
 									);
 							$html .= '</td>';
 							$totals[$qty_index] += $price;
+							$$variable{category_totals}{$$ServiceCategory{id}}[$qty_index] += $price;
 						} # end foreach qty_index
 					} else {
 						$html .= sprintf('<tr%s><td class="description"><b>%d %s</b><br/>%s%s%s</td>', $rowclass, $sig_qty, 'Signature' . ($sig_qty > 1 ? 's' : ''),
@@ -170,6 +172,7 @@ if ( $openprint::User->email() =~ /iconnor/ ) {
 									);
 							$html .= '</td>';
 							$totals[$qty_index] += $price;
+							$$variable{category_totals}{$$ServiceCategory{id}}[$qty_index] += $price;
 						} # end foreach qty_index
 					} # end if editable
 
@@ -212,9 +215,11 @@ if ( $openprint::User->email() =~ /iconnor/ ) {
 					if ( $Service->overrides( $qty_index ) ) {
 						$html .= '<span class="Overrides">With Overrides</span> ';
 					} # end if
+					my $price = $ProjectCurrency->convert_from( $$specs{'txtPrice'.$qty_index} );
 					if ( $session{user_type} eq 'A' or ! $Project->Ordered_Product() ) {
-						$html .= '<span class="price">'.openprint::Currency::format( $ProjectCurrency->convert_from( $$specs{'txtPrice'.$qty_index} ) ).'</span><br/>';
+						$html .= '<span class="price">'.openprint::Currency::format($price).'</span><br/>';
 					} # end if
+					$$variable{category_totals}{$$ServiceCategory{id}}[$qty_index] += $price;
 					my $summary = openprint::service::summary( $Project->id(), $service_id, $qty_index );
 					$summary =~ s/\n/<br\/>/g;
 					$html .= $summary;
@@ -285,9 +290,11 @@ if ( $openprint::User->email() =~ /iconnor/ ) {
 						if ( $Service->overrides( $qty_index ) ) {
 							$html .= '<span class="Overrides">With Overrides</span> ';
 						} # end if
+						my $price = $ProjectCurrency->convert_from( $$specs{'txtPrice'.$qty_index} );
 						if ( $session{user_type} eq 'A' or ! $Project->Ordered_Product() ) {
-							$html .= '<span class="price">'.openprint::Currency::format( $ProjectCurrency->convert_from( $$specs{'txtPrice'.$qty_index} ) ).'</span><br/>';
+							$html .= '<span class="price">'.openprint::Currency::format($price).'</span><br/>';
 						} # end if
+						$$variable{category_totals}{$$ServiceCategory{id}}[$qty_index] += $price;
 						$html .= '</a>' if $do_link;
 						my $summary = openprint::service::summary( $Project->id(), $service_id, $qty_index );
 						if ( ref $summary eq 'ARRAY' ) {
@@ -526,6 +533,7 @@ $html .= '</td>';
 			</tr>
 <? endif ( $$variable{Project}->Ordered_Product() ) ?>
 	</table>
+
 
 <br/>
 <? if ( $$variable{Project}->currency_id() != $session{Currency_id} ) ?>
