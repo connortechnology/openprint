@@ -108,7 +108,7 @@
 	</table>
 	<? endif ( sets::isin( $session{user_type},'A','E') and ( ( ! $$variable{Project}->docket() ) or ( $$variable{Project}->Order()->status() eq 'Re-Opened' ) ) ) ?>
 <br class="spacer"/>
-<?if ( $session{user_type} eq 'A' or $session{user_type} eq 'E' ) ?>
+<?if ( $session{user_type} eq 'A' ) ?>
 <br/>
 <fieldset><legend>Summaries</legend>
 <table class="List Services">
@@ -133,7 +133,7 @@ $rowclass = $rowclass ? '' : ' class="colRow"';
 ) ?>
 </table>
 </fieldset>
-<?endif ( $session{user_type} eq 'A' or $session{user_type} eq 'E' ) ?>
+<?endif ( $session{user_type} eq 'A' ) ?>
 <? if ( $$variable{Project}->docket() ) ?>
 <p>This project has already been sent to production and cannot 
 be modified or ordered at this time. You can reuse your project under a different 
