@@ -6697,11 +6697,11 @@ sub get_run_prices {
 	# Only load this if not already specified by some inline bindery service
       if ( ! $run_speed ) {
 			$run_speed = $Press->specification( $$std_speed{name}, (lc $$std_speed{units} eq 'calliper' ? $$Paper{calliper} : $$Paper{gsm} ) );
-      } else {
+      } elsif ( DEBUG ) {
         $log->debug("Not looking up run speed because already specified");
       }
 			if ( ! $run_speed ) {
-				$log->debug("No run sped on $$Press{strid} for $$std_speed{units} " . ($$std_speed{units} eq 'Calliper' ? $$Paper{calliper} : $Paper->gsm() ) ) if DEBUG or 1;
+				$log->debug("No run sped on $$Press{strid} for $$std_speed{units} " . ($$std_speed{units} eq 'Calliper' ? $$Paper{calliper} : $Paper->gsm() ) ) if DEBUG;
 				$run_speed = $$std_speed{value};
 			} # end if
 		} # end if
