@@ -14,9 +14,9 @@ width: 120px;
 </style>
 <div class="PageTitle">
 <h1>REPORTS</h1>
-<h2>Order History</h2>
+<h2>Services</h2>
 </div>
-<form id="f1" name="f1" action="/employee/reports/order_history.html">
+<form id="f1" name="f1" action="/employee/reports/services.html">
 	<input type="hidden" name="action" />
 	<fieldset class="filters"><legend>Report Criteria</legend>
 		<ul>
@@ -47,8 +47,8 @@ width: 120px;
 		 <li>
 			 <label>Ordered On</label>
 			 <? echo ( join(' to ',
-						date_select_session('/employee/reports/order_history.html', 'created_on_start', { with_today=>1,with_clear=>1 } ),
-						date_select_session('/employee/reports/order_history.html', 'created_on_end', { with_today=>1,with_clear=>1 } ), 
+						date_select_session($r->uri(), 'created_on_start', { with_today=>1,with_clear=>1 } ),
+						date_select_session($r->uri(), 'created_on_end', { with_today=>1,with_clear=>1 } ), 
 						); ) ?>
 		</li>
 		<li>
@@ -70,7 +70,7 @@ width: 120px;
 </form>
 <div id="Results">
 <? echo ( if ( %param ) {
-return include('_order_history_results.html');
+return include('_services.html');
 } else {
 return 'Select Report Criteria and click Show Results';
 }
