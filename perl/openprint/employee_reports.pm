@@ -194,70 +194,32 @@ sub order_history {
 	}
 
 	if ( $param{action} eq 'download' ) {
-		my @Header = ( 'OrderID', 'Docket', 'Invoice', 'Company', 'Project Reference', 'Date Ordered', 'Date Printed', 'Status', 'Total', 'Quoted Stock Value', 'Stock Amount' );
+		my @servicetype_ids = split(',',$session{$r->uri().'?servicetype_id'} );
+		my %ServiceTypesById = map { $$_{id} => $_ } @{$variable{ServiceTypes}};
+
+		my @Header = ( 'OrderID', 'Docket', 'Invoice', 'Company', 'Date Ordered', 'Date Printed', 'Status', 'Total', map { $ServiceTypesById{$_}->description() } @servicetype_ids );
 		my @Data = ();
+		my %service_totals;
+		my $order_total = 0;
 		foreach my $Order ( @{$variable{Orders}} ) {
 			foreach my $Project ( $Order->Projects() ) {
 
 				my %totals;
-				my %Papers;
-				my $qty_index = $Project->ordered_quantity_index();
-				my $stock_price = 0;
+				my @Services = openprint::Project_Service->find(project_id=>$$Project{id}, servicetype_id=>\@servicetype_ids);
+				foreach my $Service ( @Services ) {
+					$totals{$$Service{servicetype_id}} += $Service->ordered_price();
+				}
 
-				my $services = $Project->services();
-				foreach my $ss_id ( $Project->Type()->name() eq 'MultiPage' ? $Project->signatures() : $$services{''}[0] ) {
-					my $sig_specs = openprint::service::get_specs_ref( $Project, $ss_id );
-					if ( ! $$sig_specs{'txtPrice'.$qty_index} ) {
-						$log->warn("No price found.");
-						next;
-					} # end nif
-					my $Paper = openprint::Paper::load_from_signature( $Project, $sig_specs, $qty_index );
-					if ( ! $Paper ) {
-$log->warn("No Paper found");
-						next;
-					} elsif ( $Paper->supplied() ) {
-$log->warn("Paper was supplied");
-						next;
-					} # end if	
-					my $string = $Paper->to_string();
-					$Papers{$string} = $Paper;
-
-					my $impressions = $$sig_specs{'hdnImpressionQuantity'.$qty_index};
-					if ( sets::isin( $$sig_specs{'ddmRunStyle'.$qty_index}, ['Work & Turn','Work & Tumble'] ) ) {
-						$impressions /= 2
-					} elsif ( $$sig_specs{'ddmRunStyle'.$qty_index} eq 'Sheet Work' ) {
-						my @side_one_colours = openprint::Estimating::Printing::get_colours( $sig_specs, 'SideOne' );
-						my @side_two_colours = openprint::Estimating::Printing::get_colours( $sig_specs, 'SideTwo' );
-						if ( @side_one_colours and @side_two_colours ) {
-							$impressions /= 2
-						} # end if
-					} # end if
-
-					if ( $Paper->type() eq 'Roll' ) {
-						$totals{$string} += POSIX::ceil($impressions * $Paper->area() * $Paper->wpsi());
-					} elsif ( $Paper->type() eq 'Sheet' ) {
-						my $sheets = $impressions;
-						if ( $Paper->start_area() and $Paper->area() and ( $Paper->start_area() != $Paper->area() ) ) {
-							$sheets /= $Paper->factor();
-							$sheets = POSIX::ceil( $sheets );
-							$Paper = $Paper->Supplied();
-						} # end if
-						$totals{$string} += Math::Round::nearest( 1, $sheets * $Paper->start_area() * $Paper->wpsi() );
-					} else {
-						$log->error("Unknown type $$Paper{type}");
-					} # end if
-				} # end foreach signature
-
-				my $stock_total;
-				foreach my $string ( keys %totals ) {
-					my $price = $Papers{$string}->get_price( 'weight'=>$totals{$string}, 'service'=>'Material' );
-					$stock_price += $$price{'100lb Total'};
-					$stock_total += $totals{$string};
-				} # end foreach string
-
-				push @Data, $Order->id(), $Order->docket(), join(',', map { $_->Invoice()->num() } $Order->Invoices() ), $Order->Company()->name(), $Project->reference(), $Order->created_on(), ssi::format_csv_date($Project->printed_on()), $Order->status(), $Order->total(), $stock_price, $stock_total;
+				push @Data, $Order->id(), $Order->docket(), join(',', map { $_->Invoice()->num() } $Order->Invoices() ), $Order->Company()->name(), $Order->created_on(), ssi::format_csv_date($Project->printed_on()), $Order->status(), $Order->total();
+				foreach my $servicetype_id ( @servicetype_ids ) {
+					my $price = $totals{$servicetype_id};
+					push @Data, $price;
+					$service_totals{$servicetype_id} += $price;
+				}
 			} # end foreach Project
+			$order_total += $Order->total();
 		} # end foreach Order
+push @Data, '','','','','','','Totals',$order_total, map { $service_totals{$_} } @servicetype_ids;
 
 		misc::export_csv( $r, $log, \%variable, 'order_history_report.csv', \@Header,\@Data );	
 	} # end if
