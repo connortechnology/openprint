@@ -138,11 +138,11 @@
 		my $columns = 4;
 		$columns += scalar @{$$variable{ServiceType_Categories}};
 		$columns += 2 if $$variable{columns}{plates};	
-		$columns += 3 if $$variable{columns}{production};	
+		$columns += 4 if $$variable{columns}{production};	
 		$html .= sprintf(q`<tr class="totals">
-			<td>Count</td>
+			<td>Total</td>
 			<td>%d</td>
-			<td colspan="%d">Total</td>
+			<td colspan="%d"></td>
 		`, $lines, $columns );
 
 		if ( $$variable{columns}{stock} ) {

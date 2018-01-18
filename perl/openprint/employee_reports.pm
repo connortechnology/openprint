@@ -186,6 +186,172 @@ sub order_history {
 	$session{$r->uri().'?status'} = join(',', map { $_->id() } openprint::Order_Status->find() ) if ! $session{$r->uri().'?status'};
 	ssi::setup_date_select( $r->uri(), 'created_on_start', -31 );
 	ssi::setup_date_select( $r->uri(), 'created_on_end', '' );
+	if ( ! $session{$r->uri().'?servicetype_category_id'} ) {
+		$session{$r->uri().'?servicetype_category_id'} = join(',',map { $$_{id} } @{$variable{Categories}});
+	}
+	if ( ! $session{$r->uri().'?servicetype_id'} ) {
+		$session{$r->uri().'?servicetype_id'} = join(',',map { $$_{id} } @{$variable{ServiceTypes}});
+	}
+
+	if ( $param{action} eq 'download' ) {
+		my @servicetype_ids = split(',',$session{$r->uri().'?servicetype_id'} );
+		my %ServiceTypesById = map { $$_{id} => $_ } @{$variable{ServiceTypes}};
+
+		my @Header = ( 'OrderID', 'Docket', 'Invoice', 'Company', 'Date Ordered', 'Date Printed', 'Status', 'Total', map { $ServiceTypesById{$_}->description() } @servicetype_ids );
+		my @Data = ();
+		my %service_totals;
+		my $order_total = 0;
+		foreach my $Order ( @{$variable{Orders}} ) {
+			foreach my $Project ( $Order->Projects() ) {
+
+				my %totals;
+				my @Services = openprint::Project_Service->find(project_id=>$$Project{id}, servicetype_id=>\@servicetype_ids);
+				foreach my $Service ( @Services ) {
+					$totals{$$Service{servicetype_id}} += $Service->ordered_price();
+				}
+
+				push @Data, $Order->id(), $Order->docket(), join(',', map { $_->Invoice()->num() } $Order->Invoices() ), $Order->Company()->name(), $Order->created_on(), ssi::format_csv_date($Project->printed_on()), $Order->status(), $Order->total();
+				foreach my $servicetype_id ( @servicetype_ids ) {
+					my $price = $totals{$servicetype_id};
+					push @Data, $price;
+					$service_totals{$servicetype_id} += $price;
+				}
+			} # end foreach Project
+			$order_total += $Order->total();
+		} # end foreach Order
+push @Data, '','','','','','','Totals',$order_total, map { $service_totals{$_} } @servicetype_ids;
+
+		misc::export_csv( $r, $log, \%variable, 'order_history_report.csv', \@Header,\@Data );	
+	} # end if
+} # end sub order_history
+
+sub _order_history_results {
+	my $uri = '/employee/reports/order_history.html';
+	ssi::save_params( $uri,
+		( map { 'created_on_start_'.$_ } ( 'year','month','day' ) ),
+		( map { 'created_on_end_'.$_ } ( 'year','month','day' ) ),
+		( map { 'printed_on_start_'.$_ } ( 'year','month','day' ) ),
+		( map { 'printed_on_end_'.$_ } ( 'year','month','day' ) ),
+		'status', 'company_id', 'CSR', 'reprint', 'currency_id', 'total_start', 'total_end',
+		'servicetype_id', 'servicetype_category_id',
+	);
+
+	my @ServiceTypes = @{$variable{ServiceTypes}} = openprint::ServiceType->find(order=>'lower(description)');
+	@{$variable{Categories}} = openprint::ServiceType_Category->find( order=>'lower(name)' );
+	%{$variable{ServiceTypesByCategory}} = {};
+	foreach my $Category ( @{$variable{Categories}} ) {
+		$variable{ServiceTypesByCategory}{$$Category{id}} = [ map { $$_{category_id} == $$Category{id}?$_:() } @ServiceTypes ];
+	}
+
+	if ( %param ) {
+		delete $session{$uri.'?servicetype_id'} if ! $param{servicetype_id};
+		delete $session{$uri.'?servicetype_category_id'} if ! $param{servicetype_category_id};
+		my %parameters;
+		if ( ( $session{user_type} ne 'A' ) and ! openprint::usergroup::is_user_in( ['Sales Admin','Reporting','Accounting'], $session{user_id} ) ) {
+			$parameters{or} = {
+					company_id	=> $openprint::User->company_id(),
+					salesrep_id => $session{user_id},
+			};
+		} elsif ( $param{CSR} ) {
+			$parameters{salesrep_id} = $session{$uri.'?CSR'};
+		} # end if
+		$parameters{'last_ordered_on is null'}=0;
+		my @Companies = openprint::Company->find( %parameters ) if %parameters;
+		my %companies = map { $_->id(), $_->name() } @Companies;
+		my @servicetype_ids = split(',',$session{$uri.'?servicetype_id'} );
+
+		$variable{Orders} = [];
+		foreach my $Order ( openprint::Order->find(
+			company_id => ( ($session{$uri.'?company_id'} and ( ( ! %parameters ) or exists $companies{$session{$uri.'?company_id'}} ) ) ? $session{$uri.'?company_id'} : [ keys %companies ] ),
+			( $session{$uri.'?CSR'} ? ( salesrep_id	=> $session{$uri.'?CSR'} ) : () ),
+			ssi::date_filter( $uri.'?created_on_start', 'created_on >=' ),
+			ssi::date_filter( $uri.'?created_on_end', 'created_on <=' ),
+			( $session{$uri.'?status'} ? ( status_id => [ split(',', $session{$uri.'?status'} ) ] ) : () ),
+			( $session{$uri.'?total_start'} ? ( 'total >=' => $session{$uri.'?total_start'} ) : () ),
+			( $session{$uri.'?total_end'} ? ( 'total <=' => $session{$uri.'?total_end'} ) : () ),
+			( $session{$uri.'?currency_id'} ? ( currency_id=>$session{$uri.'?currency_id'} ) : () ),
+			order => ($param{order} ? $openprint::Order::fields{$param{order}} : 'id'),
+		) ) {
+			if ( $param{reprint} ) {
+				my $reprint = 0;
+				foreach my $Project ( $Order->Projects() ) {
+					if ( $Project->reprint() eq 'Y' ) {
+						$reprint=1;
+						last;
+					} # end if
+				} # end foreach Project
+				next if ( $param{reprint} eq 'Y' ) and ! $reprint;
+				next if ( $param{reprint} eq 'N' ) and $reprint;
+			} # end if reprint
+
+			my @printed_on_start = map{ @session{$uri.'?printed_on_start_'.$_} } ( 'year','month','day' );
+			my $printed_on_start = join('-', @printed_on_start ) if Date::Calc::check_date( @printed_on_start );
+			my $printed_on_start_seconds = Date::Parse::str2time( $printed_on_start ) if $printed_on_start;
+
+			my @printed_on_end = map{ @session{$uri.'?printed_on_end_'.$_} } ( 'year','month','day' );
+			my $printed_on_end = join('-', @printed_on_end ) if Date::Calc::check_date( @printed_on_end );
+			my $printed_on_end_seconds = Date::Parse::str2time( $printed_on_end ) if $printed_on_end;
+
+			if ( $printed_on_start or $printed_on_end ) {
+				my $keep = 0;
+				foreach my $Project ( $Order->Projects() ) {
+					my $printed_on = $Project->printed_on();
+					my $printed_on_seconds = Date::Parse::str2time( $printed_on );
+					next if ! $printed_on;
+					if (
+							( (!$printed_on_start_seconds) or ( $printed_on_seconds > $printed_on_start_seconds ) )
+							and
+							( (!$printed_on_end_seconds) or ( $printed_on_seconds < $printed_on_end_seconds ) )
+						 ) {
+						$keep = 1;
+						last;
+					}
+				}
+				next if ! $keep;
+			} # end if printed_on_start or printed_on_end
+			
+			if ( $param{press_id} ) {
+				my $Press = new openprint::Equipment( $param{press_id} );
+				my $on_press = 0;
+				foreach my $Project ( $Order->Projects() ) {
+					foreach my $sig_id ( $Project->signatures() ) {
+						my $sig_specs = openprint::service::get_specs_ref( $Project, $sig_id );
+						if ( ! $$sig_specs{UsePress} ) {
+							$$sig_specs{UsePress} = $$sig_specs{'ddmPress'.$Project->ordered_quantity_index()};
+						} # end if
+						if ( $$sig_specs{UsePress} eq $Press->strid() ) {
+							$on_press = 1;
+						} # end if
+						last if $on_press;
+					} # end foreach sig
+					last if $on_press;
+				} # end foreach Project
+				next if ! $on_press;
+			} # end if press_id
+
+			if ( @servicetype_ids and ( @servicetype_ids != @ServiceTypes ) ) {
+				next if ! openprint::Project->find(
+						docket=> $$Order{docket},
+						'servicetype_id	&&'=> [ split(',',$session{$uri.'?servicetype_id'}) ],
+						);
+			} else {
+				$openprint::log->debug("Not filtering by service");
+			}
+
+			push @{$variable{Orders}}, $Order;
+		} # end foreach Order
+		$variable{Companies} = \%companies;
+	} # end if param
+} # end sub _order_history
+
+sub services {
+
+	_services();
+	ssi::setup_date_select( $r->uri(), 'created_on_start', -31 );
+	ssi::setup_date_select( $r->uri(), 'created_on_end', '' );
+	if ( ! $session{$r->uri().'?servicetype_category_id'} ) {
+		$session{$r->uri().'?servicetype_category_id'} = join(',',map { $$_{id} } @{$variable{Categories}});
+	}
 
 	if ( $param{action} eq 'download' ) {
 		my @Header = ( 'OrderID', 'Docket', 'Invoice', 'Company', 'Project Reference', 'Date Ordered', 'Date Printed', 'Status', 'Total', 'Quoted Stock Value', 'Stock Amount' );
@@ -199,160 +365,65 @@ sub order_history {
 				my $stock_price = 0;
 
 				my $services = $Project->services();
-				foreach my $ss_id ( $Project->Type()->name() eq 'MultiPage' ? $Project->signatures() : $$services{''}[0] ) {
-					my $sig_specs = openprint::service::get_specs_ref( $Project, $ss_id );
-					if ( ! $$sig_specs{'txtPrice'.$qty_index} ) {
-						$log->warn("No price found.");
-						next;
-					} # end nif
-					my $Paper = openprint::Paper::load_from_signature( $Project, $sig_specs, $qty_index );
-					if ( ! $Paper ) {
-$log->warn("No Paper found");
-						next;
-					} elsif ( $Paper->supplied() ) {
-$log->warn("Paper was supplied");
-						next;
-					} # end if	
-					my $string = $Paper->to_string();
-					$Papers{$string} = $Paper;
-
-					my $impressions = $$sig_specs{'hdnImpressionQuantity'.$qty_index};
-					if ( sets::isin( $$sig_specs{'ddmRunStyle'.$qty_index}, ['Work & Turn','Work & Tumble'] ) ) {
-						$impressions /= 2
-					} elsif ( $$sig_specs{'ddmRunStyle'.$qty_index} eq 'Sheet Work' ) {
-						my @side_one_colours = openprint::Estimating::Printing::get_colours( $sig_specs, 'SideOne' );
-						my @side_two_colours = openprint::Estimating::Printing::get_colours( $sig_specs, 'SideTwo' );
-						if ( @side_one_colours and @side_two_colours ) {
-							$impressions /= 2
-						} # end if
-					} # end if
-
-					if ( $Paper->type() eq 'Roll' ) {
-						$totals{$string} += POSIX::ceil($impressions * $Paper->area() * $Paper->wpsi());
-					} elsif ( $Paper->type() eq 'Sheet' ) {
-						my $sheets = $impressions;
-						if ( $Paper->start_area() and $Paper->area() and ( $Paper->start_area() != $Paper->area() ) ) {
-							$sheets /= $Paper->factor();
-							$sheets = POSIX::ceil( $sheets );
-							$Paper = $Paper->Supplied();
-						} # end if
-						$totals{$string} += Math::Round::nearest( 1, $sheets * $Paper->start_area() * $Paper->wpsi() );
-					} else {
-						$log->error("Unknown type $$Paper{type}");
-					} # end if
-				} # end foreach signature
-
-				my $stock_total;
-				foreach my $string ( keys %totals ) {
-					my $price = $Papers{$string}->get_price( 'weight'=>$totals{$string}, 'service'=>'Material' );
-					$stock_price += $$price{'100lb Total'};
-					$stock_total += $totals{$string};
-				} # end foreach string
-
-				push @Data, $Order->id(), $Order->docket(), join(',', map { $_->Invoice()->num() } $Order->Invoices() ), $Order->Company()->name(), $Project->reference(), $Order->created_on(), ssi::format_csv_date($Project->printed_on()), $Order->status(), $Order->total(), $stock_price, $stock_total;
 			} # end foreach Project
 		} # end foreach Order
 
-		misc::export_csv( $r, $log, \%variable, 'order_history_report.csv', \@Header,\@Data );	
+		misc::export_csv( $r, $log, \%variable, 'services_report.csv', \@Header,\@Data );	
 	} # end if
-}
-sub _order_history_results {
-	my $uri = '/employee/reports/order_history.html';
+} # end sub services
+
+sub _services {
+	my $uri = '/employee/reports/services.html';
 	ssi::save_params($uri,
-		( map { 'created_on_start_'.$_ } ( 'year','month','day' ) ),
-		( map { 'created_on_end_'.$_ } ( 'year','month','day' ) ),
-		( map { 'printed_on_start_'.$_ } ( 'year','month','day' ) ),
-		( map { 'printed_on_end_'.$_ } ( 'year','month','day' ) ),
-		'status', 'company_id', 'CSR', 'reprint', 'currency_id', 'total_start', 'total_end'
-	);
+			( map { 'created_on_start_'.$_ } ( 'year','month','day' ) ),
+			( map { 'created_on_end_'.$_ } ( 'year','month','day' ) ),
+			'company_id', 'CSR', 'servicetype_category_id','servicetype_id',
+			);
+	my @ServiceTypes = @{$variable{ServiceTypes}} = openprint::ServiceType->find(order=>'lower(description)');
+	@{$variable{Categories}} = openprint::ServiceType_Category->find( order=>'lower(name)' );
+	%{$variable{ServiceTypesByCategory}} = {};
+	foreach my $Category ( @{$variable{Categories}} ) {
+		$variable{ServiceTypesByCategory}{$$Category{id}} = [ map { $$_{category_id} == $$Category{id}?$_:() } @ServiceTypes ];
+	}
+
 	if ( %param ) {
-	my %parameters; 
-	if ( ( $session{user_type} ne 'A' ) and ! openprint::usergroup::is_user_in( ['Sales Admin','Reporting','Accounting'], $session{user_id} ) ) {
-		$parameters{or} = {
+		delete $session{$uri.'?servicetype_id'} if ! $param{servicetype_id};
+		delete $session{$uri.'?servicetype_category_id'} if ! $param{servicetype_category_id};
+
+		my %parameters; 
+		if ( ( $session{user_type} ne 'A' ) and ! openprint::usergroup::is_user_in( ['Sales Admin','Reporting','Accounting'], $session{user_id} ) ) {
+			$parameters{or} = {
 				company_id	=> $openprint::User->company_id(),
 				salesrep_id => $session{user_id},
-		};
-	} elsif ( $param{CSR} ) {
-		$parameters{salesrep_id} = $session{$uri.'?CSR'};
-	} # end if
-	$parameters{'last_ordered_on is null'}=0;
-	my @Companies = openprint::Company->find( %parameters ) if %parameters;
-	my %companies = map { $_->id(), $_->name() } @Companies;
-	$variable{Orders} = [];
-	foreach my $Order ( openprint::Order->find(
-		company_id => ( ($session{$uri.'?company_id'} and ( ( ! %parameters ) or exists $companies{$session{$uri.'?company_id'}} ) ) ? $session{$uri.'?company_id'} : [ keys %companies ] ),
-		( $session{$uri.'?CSR'} ? ( salesrep_id	=> $session{$uri.'?CSR'} ) : () ),
-		ssi::date_filter( $uri.'?created_on_start', 'created_on >=' ),
-		ssi::date_filter( $uri.'?created_on_end', 'created_on <=' ),
-		( $session{$uri.'?status'} ? ( status_id => [ split(',', $session{$uri.'?status'} ) ] ) : () ),
-		( $session{$uri.'?total_start'} ? ( 'total >=' => $session{$uri.'?total_start'} ) : () ),
-		( $session{$uri.'?total_end'} ? ( 'total <=' => $session{$uri.'?total_end'} ) : () ),
-		( $session{$uri.'?currency_id'} ? ( currency_id=>$session{$uri.'?currency_id'} ) : () ),
-		order => ($param{order} ? $openprint::Order::fields{$param{order}} : 'id'),
-	) ) {
-		if ( $param{reprint} ) {
-			my $reprint = 0;
-			foreach my $Project ( $Order->Projects() ) {
-				if ( $Project->reprint() eq 'Y' ) {
-					$reprint=1;
-					last;
-				} # end if
-			} # end foreach Project
-			next if ( $param{reprint} eq 'Y' ) and ! $reprint;
-			next if ( $param{reprint} eq 'N' ) and $reprint;
-		} # end if reprint
-
-		my @printed_on_start = map{ @session{$uri.'?printed_on_start_'.$_} } ( 'year','month','day' );
-		my $printed_on_start = join('-', @printed_on_start ) if Date::Calc::check_date( @printed_on_start );
-		my $printed_on_start_seconds = Date::Parse::str2time( $printed_on_start ) if $printed_on_start;
-
-		my @printed_on_end = map{ @session{$uri.'?printed_on_end_'.$_} } ( 'year','month','day' );
-		my $printed_on_end = join('-', @printed_on_end ) if Date::Calc::check_date( @printed_on_end );
-		my $printed_on_end_seconds = Date::Parse::str2time( $printed_on_end ) if $printed_on_end;
-
-		if ( $printed_on_start or $printed_on_end ) {
-			my $keep = 0;
-			foreach my $Project ( $Order->Projects() ) {
-				my $printed_on = $Project->printed_on();
-				my $printed_on_seconds = Date::Parse::str2time( $printed_on );
-				next if ! $printed_on;
-				if (
-						( (!$printed_on_start_seconds) or ( $printed_on_seconds > $printed_on_start_seconds ) )
-						and
-						( (!$printed_on_end_seconds) or ( $printed_on_seconds < $printed_on_end_seconds ) )
-					 ) {
-					$keep = 1;
-					last;
-				}
-			}
-			next if ! $keep;
-		}
-		
-		if ( $param{press_id} ) {
-			my $Press = new openprint::Equipment( $param{press_id} );
-			my $on_press = 0;
-			foreach my $Project ( $Order->Projects() ) {
-							
-				
-				foreach my $sig_id ( $Project->signatures() ) {
-					my $sig_specs = openprint::service::get_specs_ref( $Project, $sig_id );
-					if ( ! $$sig_specs{UsePress} ) {
-						$$sig_specs{UsePress} = $$sig_specs{'ddmPress'.$Project->ordered_quantity_index()};
-					} # end if
-					if ( $$sig_specs{UsePress} eq $Press->strid() ) {
-						$on_press = 1;
-					} # end if
-					last if $on_press;
-				} # end foreach sig
-				last if $on_press;
-			} # end foreach Project
-			next if ! $on_press;
+			};
+		} elsif ( $param{CSR} ) {
+			$parameters{salesrep_id} = $session{$uri.'?CSR'};
 		} # end if
-		push @{$variable{Orders}}, $Order;
-	} # end foreach Order
-	$variable{Companies} = \%companies;
-	}
-}
+		$parameters{'last_ordered_on is null'}=0;
+		my @Companies = openprint::Company->find( %parameters ) if %parameters;
+		my %companies = map { $_->id(), $_->name() } @Companies;
+		my @servicetype_ids = split(',',$session{$uri.'?servicetype_id'});
+
+		$variable{Orders} = [];
+		foreach my $Order ( openprint::Order->find(
+					company_id => ( ($session{$uri.'?company_id'} and ( ( ! %parameters ) or exists $companies{$session{$uri.'?company_id'}} ) ) ? $session{$uri.'?company_id'} : [ keys %companies ] ),
+					( $session{$uri.'?CSR'} ? ( salesrep_id	=> $session{$uri.'?CSR'} ) : () ),
+					ssi::date_filter( $uri.'?created_on_start', 'created_on >=' ),
+					ssi::date_filter( $uri.'?created_on_end', 'created_on <=' ),
+					order => ($param{order} ? $openprint::Order::fields{$param{order}} : 'id'),
+					) ) {
+			if ( @servicetype_ids and ( @servicetype_ids != @ServiceTypes ) ) {
+				next if ! openprint::Project->find(
+						docket=> $$Order{docket},
+						'servicetype_id	&&'	=> [ split(',',$session{$uri.'?servicetype_id'}) ],
+						);
+			}
+
+			push @{$variable{Orders}}, $Order;
+		} # end foreach Order
+		$variable{Companies} = \%companies;
+	} # end if param
+} # end sub _services
 
 sub order_performance {
 	ssi::setup_date_select( '/employee/reports/order_performance.html', 'created_on_start', -31 );
@@ -787,14 +858,14 @@ sub _production_performance {
 		$ServiceTypes_By_Category{$$Service{category_id}} = [] if ! $ServiceTypes_By_Category{$$Service{category_id}};
 		push @{$ServiceTypes_By_Category{$$Service{category_id}}}, $Service;
 	}
-
-	foreach my $Order ( openprint::Order->find(
-				( @Companies ? ( company_id => ( ($session{$uri.'?company_id'} and exists $companies{$session{$uri.'?company_id'}} ) ? $session{$uri.'?company_id'} : [ keys %companies ] ) ) : () ),
+	my @Orders = openprint::Order->find(
+				( ( @Companies or $session{$uri.'?company_id'} ) ? ( company_id => ( ($session{$uri.'?company_id'} and (( !%companies) or exists $companies{$session{$uri.'?company_id'}} ) ) ? $session{$uri.'?company_id'} : [ keys %companies ] ) ) : () ),
 				ssi::date_filter( $uri.'?ordered_on_start', 'created_on >=' ),
 				ssi::date_filter( $uri.'?ordered_on_end', 'created_on <=' ),
 				( $session{$uri.'?status_id'} ? ( status_id => [ split(',', $session{$uri.'?status_id'} ) ] ) : () ),
 				order => ($param{order} ? $param{order} : 'id'),
-				) ) {
+				);
+	foreach my $Order ( @Orders ) {
 		next if ! $$Order{docket};
 		if ( $session{$uri.'?reprint'} ) {
 			my $reprint = 0;
@@ -897,6 +968,7 @@ $openprint::log->debug("PI Stock for $$Order{docket} is $$PI{delta} " . $PI->Pap
 							$stock_weight += $MC->quantity();
 						} else {
 							$stock_sheets += $MC->quantity();
+							$stock_weight += $MC->quantity() * $MT->Paper()->sheet_weight();
 						}
 						$stock_cost += $MC->value();
 					}
@@ -915,7 +987,7 @@ $openprint::log->debug("PI Stock for $$Order{docket} is $$PI{delta} " . $PI->Pap
 						my ( $Stock, $qty ) = @$SQ{'Stock','quantity'};
 						next if ! $qty;
 
-						push @Data, @fragment, $Stock->to_string(), ( $Stock->type() eq 'Sheet' ? ($qty,'') : ('', $qty) ), $$SQ{price};
+						push @Data, @fragment, $Stock->to_string(), ( $Stock->type() eq 'Sheet' ? ($qty,$qty*$Stock->sheet_weight()) : ('', $qty) ), $$SQ{price};
 					}
 
 				} else {

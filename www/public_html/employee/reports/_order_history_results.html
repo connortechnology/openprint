@@ -9,7 +9,6 @@ The following had one or more signatures that ran on <? echo ( join(': ', new op
 		<th class="Docket">Docket</th>
 		<th class="invoice_id">Invoice #</th>
 		<th class="Company">Company</th>
-		<th class="Project">Project References</th>
 		<th class="DateTime">Ordered On</th>
 		<th class="DateTime">Printed On</th>
 		<th class="status">Status</th>
@@ -19,44 +18,62 @@ The following had one or more signatures that ran on <? echo ( join(': ', new op
 		my $html = '';
 		my $rowclass;
 		my $total;
+		my $uri = '/employee/reports/order_history.html';
+		my @servicetype_ids = split(',',$session{$uri.'?servicetype_id'} );
+
 		foreach my $Order ( @{$$variable{Orders}} ) {
 			my $price;
-			if ( $session{'/employee/reports/order_history.html?currency_id'} ) {
+			if ( $session{$uri.'?currency_id'} ) {
 				$price = $Order->total();
 			} else {
 				$price = $Order->Currency()->convert_from( $Order->total() );
 			}
 			$html .= sprintf(q`
 				<tr%1$s>
-					<td class="order_id"><a href="/employee/order/view.html?order_id=%2$d">%2$d</a></td>
-					<td class="Docket"><a href="/employee/order/view.html?order_id=%2$d">%3$d</a></td>
-					<td class="invoice_id"><a href="/employee/order/view.html?order_id=%2$d">%4$s</a></td>
-					<td class="Company"><a href="/employee/order/view.html?order_id=%2$d">%5$s</a></td>
-					<td class="Project"><a href="/employee/order/view.html?order_id=%2$d">%6$s</a></td>
-					<td class="DateTime"><a href="/employee/order/view.html?order_id=%2$d">%7$s</a></td>
-					<td class="DateTime"><a href="/employee/order/view.html?order_id=%2$d">%8$s</a></td>
-					<td class="status"><a href="/employee/order/view.html?order_id=%2$d">%9$s</a></td>
-					<td class="Price"><a href="/employee/order/view.html?order_id=%2$d">%10$s</a></td>
+					<td class="order_id"><a href="/employee/project/view.html?order_id=%2$d">%2$d</a></td>
+					<td class="Docket"><a href="/employee/project/view.html?order_id=%2$d">%3$d</a></td>
+					<td class="invoice_id"><a href="/employee/project/view.html?order_id=%2$d">%4$s</a></td>
+					<td class="Company"><a href="/employee/project/view.html?order_id=%2$d">%5$s</a></td>
+					<td class="DateTime"><a href="/employee/project/view.html?order_id=%2$d">%6$s</a></td>
+					<td class="DateTime"><a href="/employee/project/view.html?order_id=%2$d">%7$s</a></td>
+					<td class="status"><a href="/employee/project/view.html?order_id=%2$d">%8$s</a></td>
+					<td class="Price"><a href="/employee/project/view.html?order_id=%2$d">%9$s</a></td>
 				</tr>
 				`, $rowclass, $Order->id(), $Order->docket(), join('<br/>', map { $_->Invoice()->num() } $Order->Invoices() ),
 				htmlize($Order->company_name()),
-				join( '<br/>', map { $_->reference() } $Order->Projects() ), 
 				format_datetime( $Order->created_on() ),
 				join( '<br/>', map { format_datetime( $_->printed_on() ) } $Order->Projects() ),
 				$Order->status(), openprint::Currency::format( $price ),
 			);
+			foreach my $Project ( $Order->Projects() ) {
+
+				my @Services = openprint::Project_Service->find(project_id=>$$Project{id}, 'servicetype_id'=>\@servicetype_ids);
+
+				$html .= sprintf('
+        <tr%1$s>
+					<td></td>
+					<td colspan="3" class="reference">%2$s</td>
+					<td colspan="4" class="services" valign="top"><table>%3$s</table></td>
+				<tr>', $rowclass, $Project->reference(),
+				( @servicetype_ids != @{$variable{ServiceTypes}} ? join('<br/>',
+						map { '<tr><td>'.$_->name().'</td><td class="Price">'.openprint::Currency::format($_->ordered_price() ).'</td></tr>' } @Services ).
+					'<tr class="totals"><td>Service Total:</td><td class="Price">'.openprint::Currency::format(misc::sum(map{$_->ordered_price()}@Services)).'</td></tr>' : '' ),
+				);
+			} # end foreach Project
 			$rowclass = $rowclass ? '' : ' class="colRow"';
 			$total += $price;
 		} # end foreach Order
 		$html .= sprintf(q`<tr class="totals">
 			<td align="right">Count</td>
 			<td>%d</td>
-			<td></td>
 			<td align="right">Average Value</td>
 			<td>%s</td>
 			<td colspan="3" align="right">Total</td>
 			<td class="Price">%s</td>
-		</tr>`, scalar @{$$variable{Orders}}, openprint::Currency::format( $total/scalar @{$$variable{Orders}} ), openprint::Currency::format( $total ) );
+		</tr>`, scalar @{$$variable{Orders}},
+		openprint::Currency::format( $total/scalar @{$$variable{Orders}} ),
+		openprint::Currency::format( $total ),
+		);
 		return $html;
 	) ?>
 </table>
