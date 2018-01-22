@@ -49,8 +49,9 @@
 			</tr>';
 				while ( ( $count < 35 ) and ( my $Timetrack = shift @Timetracks ) ) {
 					$html .= sprintf( q`<tr %2$s>`, $Timetrack->id(), $rowclass );
-					$html .= sprintf('<td class="Date">%s</td>', ssi::format_date( $Timetrack->starting() ) );
-					$html .= sprintf('<td class="Service">%s</td>', ssi::html_escape( $Timetrack->Service()->name() ) );
+					$html .= sprintf('<td class="Date">%s</td>', format_date( $Timetrack->starting() ) . ( $Timetrack->elapsed() > 60*60*24 ? '<br/>through<br/>' . 
+format_date( $Timetrack->ending() ) : '' ) );
+					$html .= sprintf('<td class="Service">%s</td>', html_escape( $Timetrack->Service()->name() ) );
 					$html .= '<td class="PO">'.html_escape( $Timetrack->po() ).'</td>';
 					$html .= sprintf('<td class="Interval">%s</td>', misc::seconds_to_pretty_interval( $Timetrack->elapsed() ) ); 
 					my $Price = $Timetrack->Price();
@@ -77,7 +78,8 @@
 						</tr>';
 					while ( my $Timetrack = shift @Timetracks ) {
 						$html .= sprintf( q`<tr %2$s>`, $Timetrack->id(), $rowclass );
-						$html .= sprintf('<td class="Date">%s</td>', Date::Format::time2str( $config{DateFormat}, Date::Parse::str2time( $Timetrack->starting() ) ) );
+						$html .= sprintf('<td class="Date">%s</td>', format_date( $Timetrack->starting() ). ( $Timetrack->elapsed() > 60*60*24 ? '<br/>through<br/>' . 
+format_date( $Timetrack->ending() ) : '' ) );
 						$html .= sprintf('<td class="Service">%s</td>', html_escape( $Timetrack->Service()->name() ) );
 						$html .= '<td class="PO">'.html_escape( $Timetrack->po() ).'</td>';
 						$html .= sprintf('<td class="Interval">%s</td>', misc::seconds_to_pretty_interval( $Timetrack->elapsed() ) ); 
@@ -107,12 +109,21 @@ $html .= '
 	<?include(/invoice/_products_view.html)?>
 <div class="Notes">
 	<fieldset><legend>Notes</legend>
-        <table class="List">
-            <tr><td class="Date">Posted On</td><td><? echo ( format_date( $$variable{Invoice}->posted_on() ); ) ?></td></tr>
-            <tr><td><b>Due On</b></td><td><b><? echo ( format_date( $$variable{Invoice}->due_on() ); ) ?></b></td></tr>
-            <tr><td>Notes</td><td><? echo ( $$variable{Invoice}->external_notes() ) ?></td></tr>
-            <tr><td><b>Invoice Terms</b></td>
-			<td><b>Net 15 days. Interest on overdue amounts will acrue at the rate of <? echo ( $$variable{Invoice}->monthly_interest() ) ?>% per month from the due date.</b></td></tr>
+    <table class="List">
+      <tr><td class="Date">Posted On</td><td><? echo ( format_date( $$variable{Invoice}->posted_on() ); ) ?></td></tr>
+      <tr><td><b>Due On</b></td><td><b><? echo ( format_date( $$variable{Invoice}->due_on() ); ) ?></b></td></tr>
+      <tr><td>Notes</td><td><? echo ( $$variable{Invoice}->external_notes() ) ?></td></tr>
+      <tr><td><b>Invoice Terms</b></td>
+			<td class="terms">
+<?echo(
+my $Credit = $$variable{Invoice}->Invoicee()->Credit( $$variable{Invoice}{invoicer_id} );
+my $html = 'Net ' . $$Credit{terms}. ' days';
+if ( $$variable{Invoice}->monthly_interest() > 0 ) {
+ $html .= ' Interest on overdue amounts will acrue at the rate of '.$$variable{Invoice}->monthly_interest() .'% per month from the due date.';
+}
+return $html;
+)?>
+</td></tr>
         </table>
     </fieldset>
 </div>

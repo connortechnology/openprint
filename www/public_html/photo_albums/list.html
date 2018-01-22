@@ -10,7 +10,7 @@
 						<select name="user_id" id="user_id" onchange="new Ajax.Updater('Results','_list.html', { parameters: this.form.serialize() } );">
 							<option value=""> all </option>
 							<? echo ( 
-								make_drop_down( openprint::User->dropdown( order=>'lower(firstname),lower(lastname)'), $session{'/photo_albums/list.html?user_id'} );
+								make_drop_down( openprint::User->dropdown( $session{'/photo_albums/list.html?user_id'} );
 							) ?>
 						</select>
 					</li>

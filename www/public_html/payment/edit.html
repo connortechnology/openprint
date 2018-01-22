@@ -96,6 +96,7 @@
 				if ( $$variable{Payment}->id() ) {
 					if ( $$variable{Payment}->deleted() ) {
 						$html .= button( 'Destroy', { onclick=>q`if(confirm('Are you sure?')){f1.btnFunction.value='Destroy';f1.submit();}` } );
+						$html .= button( 'UnDelete', { onclick=>q`f1.btnFunction.value='UnDelete';f1.submit();` } );
 					} else {
 						$html .= button( 'Delete', { onclick=>q`f1.btnFunction.value='Delete';f1.submit();` } );
 					} # end if

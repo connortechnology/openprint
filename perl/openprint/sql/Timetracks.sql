@@ -11,6 +11,7 @@ CREATE TABLE timetracks (
     service_id integer, FOREIGN KEY (service_id) REFERENCES Services(id),
     owner_id integer NOT NULL, FOREIGN KEY (owner_id) REFERENCES COmpanies(id),
     time_associated boolean,
+    date_associated boolean,
     user_id integer, FOREIGN KEY (user_id) REFERENCES Users(id),
     paycheque_id integer,
     rate numeric(10,2),
