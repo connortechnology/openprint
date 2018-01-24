@@ -1186,8 +1186,10 @@ if ( ! sets::isin( 'project_log', \@tables ) ) {
 	}
 	if ( ! exists $$data{id} ) {
 		$log->debug("Adding id to project_log");
-		$dbh->do('ALTER TABLE project_log add id SERIAL');
-		$dbh->do('ALTER TABLE project_log ADD PRIMARY KEY (id)');
+		$dbh->do('ALTER TABLE project_log add id SERIAL') or die $dbh->errstr();
+		$dbh->do('ALTER TABLE project_log DROP CONSTRAINT project_log_pkey') or die $dbh->errstr();
+		$dbh->do('ALTER TABLE project_log ADD PRIMARY KEY (id)') or die $dbh->errstr();
+		$dbh->do('CREATE INDEX project_log_project_id_timestamp_idx on project_log (project_id,dtmtimestamp)') or die $dbh->errstr();
   }
 }
 if ( ! sets::isin( 'barcode_log', \@tables ) ) {
