@@ -93,7 +93,6 @@ sub view_services {
 					openprint::service::save_service( $r, $log, $dbh, $Project->id(), $service_index );
 				} # end if service_type_id
 				my $new_status = $param{Status} ? $param{Status} : 'calculated';
-
 				$Service->save({ status=>$new_status }) if ( $Service->status() ne $new_status ) and ( $Service->status() ne 'Completed' );
 
 				if ( $ServiceType->id() ) {

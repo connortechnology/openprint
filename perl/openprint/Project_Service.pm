@@ -286,6 +286,8 @@ $openprint::log->debug("New status openprint::Estiamting::$servicetype $_[0]{sta
 				$_[0]{status} = 'calculated';
 			}
 		}
+	} else {
+		$_[0]{status} = '';
 	}
 	return $_[0]{status};
 } # end sub status
