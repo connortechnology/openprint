@@ -732,10 +732,11 @@ $log->debug("Adding special colour for $colour");
 				}
 				push @{$project{"AqueousMakeReadies$qty_index"}{$$aq_specs{"ddmEquipment-$form-$qty_index"}}}, $$aq_specs{"txtLayoutWidth-$form-$qty_index"} * $$aq_specs{"txtLayoutHeight-$form-$qty_index"};
 			}
-			foreach my $qty_index ( $Project->quantity_indexes() ) {
-				foreach my $key ( keys %{$project{"AqueousMakeReadies$qty_index"}} ) {
-					$log->debug("$qty_index $key " . join(',',@{$project{"AqueousMakeReadies$qty_index"}{$key}}) );
-				}
+		} # end foreach sig
+		#$log->debug("AQUEOUS MR");
+		foreach my $qty_index ( $Project->quantity_indexes() ) {
+			foreach my $key ( keys %{$project{"AqueousMakeReadies$qty_index"}} ) {
+				$log->debug("AQUEOUS MR qty_index:$qty_index equipment:$key " . join(',',@{$project{"AqueousMakeReadies$qty_index"}{$key}}) );
 			}
 		}
 	} elsif ( $$services{Aqueous} and @{$$services{Aqueous}} ) {
@@ -4197,7 +4198,6 @@ sub get_project_price {
 
 	my $previous_press = $$source_sig_specs{PreviousPress};
 	my %sig_specs = %{$source_sig_specs};
-	my %aq_makereadies = %{$aq_makereadies} if $aq_makereadies;
 
 	#my @Is = openprint::imposition::sort( calculate_impositions( $Project, $sig_specs, $qty_index, $qty, $PaperCounts, $versions, $project, $impositions ) );
 	my @Is = calculate_impositions( $Project, $source_sig_specs, $qty_index, $qty, $PaperCounts, $versions, $project, $impositions );
@@ -4247,6 +4247,7 @@ sub get_project_price {
 		my %washed_colours = %$washed_colours;
 		my %mixed_colours = %$mixed_colours;
 		my %PaperCounts = %$PaperCounts;
+	my %aq_makereadies = %{$aq_makereadies} if $aq_makereadies;
 
 		my @total_impositions = @$other_impositions;
 
@@ -6292,6 +6293,7 @@ $log->debug("Area $area = $$Imposition{object_area} * Impressions($colour_impres
 			$price{'Aqueous Breakdown'} = sprintf('Aqueous Price: %dout MR $%.2f + BC: $%.2f + Service $%.2f + Material $%.2f = $%.2f on %s<br/>', $aq_results{Imposition}{imposition}, @aq_results{'MakeReady','BlanketCut','Service','Material','Total'}, $aq_results{Equipment}->name() );
 			$price{'Comparison Cost'} += $aq_results{Total};
 			$price{'Press Washes'} += $aq_results{washups};
+#$openprint::log->error("AQ washups: $aq_results{washups}");
 		} else {
 $log->warn("Something wrong in AQ");
 		} # end if
@@ -6870,16 +6872,18 @@ sub filter_colours {
 	my ( $front, $back ) = @_;
 	#my @filtered_colours = @{$front} if $front;
 	my %filtered_colours = map { my %c = %{$_}; ( $$_{name}, \%c ) } @{$front};
+	my @colour_names = map { $$_{name} } @{$front};
 
 	foreach my $Colour ( @{$back} ) {
 		if ( ! $filtered_colours{$$Colour{name}} ) {
 			#push @filtered_colours, $Colour;
+			push @colour_names, $$Colour{name};
 			$filtered_colours{$$Colour{name}} = $Colour;
 		} else {
 			$filtered_colours{$$Colour{name}}{coverage} = ( $filtered_colours{$$Colour{name}}{coverage} + $$Colour{coverage}) / 2;
 		} # end if
 	} # end foreach
-	return values %filtered_colours;
+	return @filtered_colours{@colour_names};
 } # end sub
 
 sub compare_signatures_runstyle {
