@@ -1592,7 +1592,7 @@ sub recalculate {
 			my $module = 'openprint::Estimating::'.$$Type{type};
 			if ( my $function = $module->can( 'calculate_signatures' ) ) {
 				$status = $function->( $self );
-				$openprint::log->debug("Calculate_Sigs: status: $status");
+				$openprint::log->debug("$$Type{type}::Calculate_Sigs: status: $status");
 				openprint::service::status( $$self{id}, $$services{''}[0], $status );
 			} # end if
 			openprint::service::auto_calculate( $self, $$services{''}[0] ) if $status eq 'calculated';
