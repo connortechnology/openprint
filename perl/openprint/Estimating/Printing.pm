@@ -2612,11 +2612,16 @@ sub calc {
 			$variables{"hdnImpositionDutchColumns$qty_index"} = [ sets::union( 'output', @{$variables{"hdnImpositionDutchColumns$qty_index"}} ) ];
 			$variables{"hdnImpositionDutchRows$qty_index"} = [ sets::union( 'output', @{$variables{"hdnImpositionDutchRows$qty_index"}} ) ];
 		} # end if
-		if ( $$specs{"chkOverrideRunStyle$qty_index"} and $$specs{"ddmRunStyle$qty_index"} and $$specs{"chkOverridePress$qty_index"} and $$specs{"ddmPress$qty_index"} ) {
-			my $Press = openprint::Equipment->find_one(strid=>$$specs{"ddmPress$qty_index"});
-			if ( ! sets::isin( $$specs{"ddmRunStyle$qty_index"}, [ split(',', $Press->specification('Runstyles') ) ] ) ) {
-				$$specs{alert} .= "Press $$Press{name} cannot do " . $$specs{"ddmRunStyle$qty_index"}.'<br/>';
+		if ( $$specs{"chkOverrideRunStyle$qty_index"} and $$specs{"ddmRunStyle$qty_index"} ) {
+			if ( ( $$specs{"ddmRunStyle$qty_index"} ne 'Sheet Work' ) and ! ( @side_one_colours and @side_two_colours ) ) {
+				$$specs{alert} .= "Single sided job overriden to double sided imposition.<br/>";
 			}
+			if ( $$specs{"chkOverridePress$qty_index"} and $$specs{"ddmPress$qty_index"} ) {
+				my $Press = openprint::Equipment->find_one(strid=>$$specs{"ddmPress$qty_index"});
+				if ( ! sets::isin( $$specs{"ddmRunStyle$qty_index"}, [ split(',', $Press->specification('Runstyles') ) ] ) ) {
+					$$specs{alert} .= "Press $$Press{name} cannot do " . $$specs{"ddmRunStyle$qty_index"}.'<br/>';
+				}
+			} # end if also overriden press
 		}
 	} # end foreach qty_index
 	if ( $$specs{alert} ) {
