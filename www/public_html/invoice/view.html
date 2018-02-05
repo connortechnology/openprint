@@ -83,16 +83,18 @@ $$variable{Timetracks} = [ openprint::Timetrack->find(invoice_id=>$$variable{Inv
 				my $rowclass = '';
 				foreach my $Timetrack ( @{$$variable{Timetracks}} ) {
 					$html .= sprintf( q`<tr %2$s>`, $Timetrack->id(), $rowclass );
-					$html .= sprintf('<td class="Date">%s</td>', format_date( $Timetrack->starting() ) . ( $Timetrack->elapsed() > 60*60*24 ? '<br/>through<br/>' . 
-format_date( $Timetrack->ending() ) : '' ) );
+          my $formatted_start = format_date( $Timetrack->starting() );
+          my $formatted_end = format_date( $Timetrack->ending() );
+
+					$html .= sprintf('<td class="Date">%s</td>', $Timetrack->Employee()->link_to() );
 					$html .= sprintf('<td class="Service">%s</td>', html_escape( $Timetrack->Service()->name() ) );
-					$html .= '<td class="PO">'.ssi::html_escape( $Timetrack->po() ) . '</td>';
+					$html .= '<td class="PO">'.html_escape( $Timetrack->po() ) . '</td>';
 					$html .= sprintf('<td class="Interval">%s</td>', misc::seconds_to_pretty_interval( $Timetrack->elapsed() ) ); 
 					my $Price = $Timetrack->Price();
 					$html .= sprintf('<td class="Rate">%s%s</td>', openprint::Currency::format( $$Price{Price} ), $$Price{units} );
 					$html .= sprintf('<td class="Price">%s</td>', openprint::Currency::format( $$Price{Total} ) );
 					$html .= sprintf(q`</tr><tr %2$s>`, $Timetrack->id(), $rowclass );
-					$html .= '<td>'.$Timetrack->Employee()->link_to().'</td><td colspan="4">'.$Timetrack->description().'</td><td>&nbsp;</td>';
+					$html .= '<td>'. $formatted_start . ( ( $formatted_start ne $formatted_end ) ? ( '<br/>through<br/>' .  $formatted_end ) : '' ) .  '</td><td colspan="4">'.$Timetrack->description().'</td><td>&nbsp;</td>';
 					$html .= '</tr>';
 					$$variable{service_total} += $$Price{Total};
 					$$variable{elapsed_total} += $Timetrack->elapsed();
