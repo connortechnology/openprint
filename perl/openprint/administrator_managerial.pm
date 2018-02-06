@@ -728,9 +728,31 @@ sub email {
 				$variable{error} .= $Email->delete();
 			} elsif ( $param{action} eq 'Save' ) {
 				$variable{error} .= $Email->save( \%param );
+
+				my @domains = email::domains();
+				my ( $user, $domain ) = $Email->username() =~ /^([^\@]+)\@(.+)$/;
+				if ( sets::isin( $domain, \@domains ) ) {
+					if ( $param{VacationState} ) {
+						email::start_vacation( $Email->username(), @param{'VacationSubject','VacationMessage','VacationSystemEmails'} );
+					} else {
+						email::stop_vacation( $Email->username() );
+					} # end if
+					if ( $param{EmailPassword} and $param{EmailPassword} eq $param{VerifyEmailPassword} ) {
+						email::set_password( @param{'username','EmailPassword'} );
+					} # end if
+					my @aliases = ();
+					foreach my $alias ( split "\r\n", $param{aliases} ) {
+						next if ! $alias;
+						push @aliases, $alias;
+					} # end foreach
+					push @aliases, $Email->username() if ! @aliases;
+					email::aliases( $Email->username(), @aliases );
+				} # end if
 			} # end if
 			$variable{ExternalRedirect} = '/administrator/managerial/emails.html' if ! $variable{error};
 		} # end if action
+		@variable{'VacationState','VacationSubject','VacationMessage','VacationSystemEmails'} = email::get_vacation( $Email->username() );
+		$variable{Aliases} = [email::aliases( $Email->username() )];
 	} else {
 		$variable{error} .= "No connection to mail db.<br/>";
 	} # end if have maildb connection
