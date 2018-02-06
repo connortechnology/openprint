@@ -48,9 +48,11 @@
 				<th class="Price">Price</th>
 			</tr>';
 				while ( ( $count < 35 ) and ( my $Timetrack = shift @Timetracks ) ) {
+          my $formatted_starting = format_date( $Timetrack->starting() );
+          my $formatted_ending = format_date( $Timetrack->ending() );
+
 					$html .= sprintf( q`<tr %2$s>`, $Timetrack->id(), $rowclass );
-					$html .= sprintf('<td class="Date">%s</td>', format_date( $Timetrack->starting() ) . ( $Timetrack->elapsed() > 60*60*24 ? '<br/>through<br/>' . 
-format_date( $Timetrack->ending() ) : '' ) );
+					$html .= sprintf('<td class="Date">%s</td>',($Timetrack->user_id() ? $Timetrack->Employee()->name() : '&nbsp;' ) );
 					$html .= sprintf('<td class="Service">%s</td>', html_escape( $Timetrack->Service()->name() ) );
 					$html .= '<td class="PO">'.html_escape( $Timetrack->po() ).'</td>';
 					$html .= sprintf('<td class="Interval">%s</td>', misc::seconds_to_pretty_interval( $Timetrack->elapsed() ) ); 
@@ -58,7 +60,9 @@ format_date( $Timetrack->ending() ) : '' ) );
 					$html .= sprintf('<td class="Rate">%s%s</td>', openprint::Currency::format( $$Price{Price} ), $$Price{units} );
 					$html .= sprintf('<td class="Price">%s</td>', openprint::Currency::format( $$Price{Total} ) );
 					$html .= sprintf('</tr><tr %2$s>', $Timetrack->id(), $rowclass );
-					$html .= '<td class="Date">'.($Timetrack->user_id() ? $Timetrack->Employee()->name() : '&nbsp;' ). '</td><td class="Service" colspan="4">'.$Timetrack->description().'</td><td>&nbsp;</td>';
+					$html .= '<td class="Date">'.$formatted_starting . (
+              ( $formatted_starting ne $formatted_ending ) ? '<br/>through<br/>' .  $formatted_ending : '' ).
+            '</td><td class="Service" colspan="4">'.$Timetrack->description().'</td><td>&nbsp;</td>';
 					$html .= '</tr>';
 					$$variable{service_total} += $$Price{Total};
 					$rowclass = $rowclass ? '' : 'class="colRow"';
