@@ -5,7 +5,7 @@ package openprint::Imposition;
 require Math::Round;
 require Data::Dumper;
 use vars qw( $AUTOLOAD %Orientations);
-use constant DEBUG => 0;
+use constant DEBUG => 1;
 use constant DEBUG_PERFORMANCE => 1;
 
 use constant Vertical => 0;
@@ -421,9 +421,9 @@ sub load {
 		} else {
 			if ( $$self{image_orientation} == Vertical ) {
 				$$self{page_rows} = $$self{spread_rows};
-				$$self{page_columns} = $$self{spread_columns} * ($$self{spread_size}/2);
+				$$self{page_columns} = $$self{spread_columns} * ($$self{spread_size} > 1 ? ($$self{spread_size}/2) : 1 );
 			} else {
-				$$self{page_rows} = $$self{spread_rows} * ($$self{spread_size}/2);
+				$$self{page_rows} = $$self{spread_rows} * ($$self{spread_size} > 1 ? ($$self{spread_size}/2) : 1 );
 				$$self{page_columns} = $$self{spread_columns};
 			}
 		}
