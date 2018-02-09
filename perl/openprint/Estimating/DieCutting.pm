@@ -130,11 +130,13 @@ sub calc_price {
 		} # end if
 			
 		if ( ! %DiePrice ) {
-			my %BendingPrice = openprint::service::get_price_object( 'DieCutRuleBending',$$specs{txtDieCutBends}*$$Imposition{imposition}, undef );
-			if ( %BendingPrice ) {
-				$BendingPrice{Total} = $BendingPrice{Price} * $$specs{txtDieCutBends} * $$Imposition{imposition};
-				$DiePrice{Price} += $BendingPrice{Total};
-			}
+      if ( $$specs{txtDieCutBends} ) {
+        my %BendingPrice = openprint::service::get_price_object( 'DieCutRuleBending',$$specs{txtDieCutBends}*$$Imposition{imposition}, undef );
+        if ( %BendingPrice ) {
+          $BendingPrice{Total} = $BendingPrice{Price} * $$specs{txtDieCutBends} * $$Imposition{imposition};
+          $DiePrice{Price} += $BendingPrice{Total};
+        }
+      }
 #$die_price += $bending_price;
 #$log->debug(" ** Adding Bending Cost: $bending_price For $$specs{txtDieCutBends} Bends, MakeReady Total: $make_ready ** ");
 			if ( my $Material = openprint::Material->find_one( name=>'DieCuttingDieRule') ) {
