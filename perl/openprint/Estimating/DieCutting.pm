@@ -139,12 +139,14 @@ sub calc_price {
       }
 #$die_price += $bending_price;
 #$log->debug(" ** Adding Bending Cost: $bending_price For $$specs{txtDieCutBends} Bends, MakeReady Total: $make_ready ** ");
-			if ( my $Material = openprint::Material->find_one( name=>'DieCuttingDieRule') ) {
-				my %SteelRulePrice = $Material->get_price( $$specs{'txtSteelRuleLength-'.$form}*$$Imposition{imposition}, undef );
-				if ( %SteelRulePrice ) {
-					$SteelRulePrice{Total} = $SteelRulePrice{Price} * $$specs{'txtSteelRuleLength-'.$form}*$$Imposition{imposition};
-					$DiePrice{Price} += $SteelRulePrice{Total};
-				}
+      if ( $$specs{'txtSteelRuleLength-'.$form} ) {
+        if ( my $Material = openprint::Material->find_one( name=>'DieCuttingDieRule') ) {
+          my %SteelRulePrice = $Material->get_price( $$specs{'txtSteelRuleLength-'.$form}*$$Imposition{imposition}, undef );
+          if ( %SteelRulePrice ) {
+            $SteelRulePrice{Total} = $SteelRulePrice{Price} * $$specs{'txtSteelRuleLength-'.$form}*$$Imposition{imposition};
+            $DiePrice{Price} += $SteelRulePrice{Total};
+          }
+        } # end if
 			} # end if
 #$die_price += $steel_rule_price;
 #$log->debug(" ** Adding Rule Cost: $steel_rule_price For $$specs{txtSteelRuleLength} Inches, MakeReady Total: $make_ready ** ");
