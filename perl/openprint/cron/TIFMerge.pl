@@ -50,6 +50,7 @@ die if ! db_connect();
 
 configuration::from_db();
 configuration::merge( $opts );
+$log = new logger( {file=>$config{log_file}, level=>$config{log_level}} );
 
 if ( $config{pid_file} ) {
 	my $pidh;
@@ -62,7 +63,7 @@ if ( $config{pid_file} ) {
 } # end if
 
 while ( 1 ) {
-	sleep 1;
+	sleep 10;
 
 	my ( @base_filenames, @imprint_filenames );
 	if ( ! open(S, "> $config{base_path}/.lock.lck") ) {
@@ -97,32 +98,35 @@ while ( 1 ) {
 		next if -d $config{base_path}.'/'.$file;
 
 # CHeck AGE
+if ( 0 ) {
 		my $mtime = ( stat $file )[9];
 		if ( time - $mtime < 2*60 ) {
 			next;
 		} # end if
+}
 
 		$log->debug("Have base file $file");
-		my ( $file_base, $form, $side, $colour, $extension ) = $file =~ /^(.*)\.(\d)([AB])\.(\w)\.(TIF)$/i;
-		$log->warn("Base Parsed to $file_base, $form, $side, $colour, $extension from $file") if $debug;
+		my ( $docket, $file_base, $form, $side, $colour, $extension ) = $file =~ /^(\d+)(.*)\.(\d+)([AB])\.(\w)\.(TIF)$/i;
+		$log->warn("Base Parsed to $file_base, $form, Side: $side, $colour, $extension from $file") if $debug;
 
 		foreach my $imprint_file ( @imprint_filenames ) {
 			next if $imprint_file =~ /^\./; 
 			next if -d $config{base_path}.'/'.$imprint_file;
 			next if $imprint_file eq "${file_base}M.$colour.TIF";
 
-			if ( $imprint_file =~ /^$file_base(_FM_\d+)?/ ) {
-				my ( $imprint_file_base, $form, $side, $colour, $extension ) = $imprint_file =~ /^(.*)\.(\d)([AB])\.(\w)\.(TIF)$/i;
+			if ( ( $imprint_file =~ /^$docket([_A-Za-z0-9]*)\.(\d+)$side\.$colour\.$extension$/ ) ) {
+				my ($base, $imprint_form ) = ( $1, $2 );
 
-				my $dest_file = "$config{merged_path}/${imprint_file_base}.$form$side.$colour.M.TIF";
+				my $dest_file = "$config{merged_path}/${docket}${base}.$imprint_form$side.$colour.M.TIF";
 				if ( -e $dest_file ) {
 					$log->debug("Skipping because $dest_file exists");
 					next;
 				}
 				my $start_time = time;
-				$log->debug("Merging with $imprint_file");
 				my ( $stdout, $stderr );
-				IPC::Run3::run3(qq`/usr/local/bin/tiffmerge "$config{base_path}/$file" "$config{imprint_path}/$imprint_file" "$config{merged_path}/${file_base}.$form$side.$colour.M.TIF"`, undef, $stdout, $stderr );
+my $cmd = qq`/usr/local/bin/tiffmerge "$config{base_path}/$file" "$config{imprint_path}/$imprint_file" "$dest_file"`;
+				$log->debug("Merging with $imprint_file using $cmd");
+				IPC::Run3::run3( $cmd, undef, $stdout, $stderr );
 				#GOODIPC::Run3::run3(qq`TMPDIR=/media/Brick2/tmp composite-im6 -compose Multiply "$config{base_path}/$file" "$config{imprint_path}/$imprint_file" "$config{merged_path}/${file_base}.$form$side.$colour.M.TIF"`, undef, $stdout, $stderr );
 				#IPC::Run3::run3(qq`TMPDIR=/media/Brick2/tmp gm composite -compose Over "$config{base_path}/$file" "$config{imprint_path}/$imprint_file" "$config{merged_path}/${file_base}.$form$side.$colour.M.TIF"`, undef, $stdout, $stderr );
 				if ( $? ) {
@@ -130,16 +134,16 @@ while ( 1 ) {
 					next;
 				}
 
+				rename( $config{imprint_path}.'/'.$imprint_file, $config{imprint_path}.'/'.$imprint_file.'.done' );
+				#unlink $config{imprint_path}.'/'.$imprint_file;
 				my $runtime = misc::seconds_to_pretty_interval( time - $start_time );
 
 				# Success, let's figure out who to email about it.
-				next if ! db_connect();
-
-				my ( $docket, $initials ) = $file_base =~ /^(\d+)(\w\w)/;
-				if ( ! $docket ) {
-					$log->debug("Unable to determine docket");
+				if ( ! db_connect() ) {
+					$log->error("Next because no db!");
 					next;
 				}
+
 				my %Operators;
 				foreach my $Project ( openprint::Project->find( docket=>$docket ) ) {
 					my $services = $Project->services();
@@ -154,6 +158,7 @@ while ( 1 ) {
 					my $Email = new openprint::Email();
 					$log->debug($Email->send(
 						TO	=> values %Operators,
+BCC=>'iconnor@point-one.com',
 						FROM=>'iconnor@point-one.com',
 						SUBJECT=>'Merged TIFF available',
 						BODY	=>	 "
@@ -164,10 +169,8 @@ Runtime: $runtime
 
 					));
 				}
-				#rename( $config{imprint_path}.'/'.$imprint_file, $config{imprint_path}.'/'.$imprint_file.'.done' );
-				unlink $config{imprint_path}.'/'.$imprint_file;
 			} else {
-				$log->debug("Didn't match $file and $imprint_file");
+				$log->debug("Didn't match $file and $imprint_file => $docket$file_base.$side.$colour.$extension");
 			}
 		} # end if
 	} # end foreach file in input hotfolder

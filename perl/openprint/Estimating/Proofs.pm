@@ -860,6 +860,23 @@ sub has_overrides {
     return @v;
 } # end sub has_overrides
 
+sub status {
+	my ( $Project, $service_id, $specs ) = @_;
+	$specs = openprint::service::get_specs_ref( $Project, $service_id ) if ! $specs;
+
+$openprint::log->debug("$$specs{rdbApproved} client: $$specs{rdbClientApproved} complete: $$specs{rdbComplete}");
+	my $status;
+	if ( $$specs{rdbApproved} eq 'Yes' ) {
+		$status = 'Approved';
+	} elsif ( $$specs{rdbClientApproved} eq 'Y' ) {
+		$status = 'Waiting For QA Approval';
+	} elsif ( $$specs{rdbComplete} eq 'Yes' ) {
+		$status = 'Proofs out';
+	} else {
+		$status = 'Ordered'
+	}	
+	return $status;
+} # end sub status
 
 1;
 __END__

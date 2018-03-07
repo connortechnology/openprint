@@ -164,6 +164,8 @@ foreach my $Host ( @Hosts ) {
 									$log->debug( 'assoclist' . Dumper( $network ) );
 
 									my $wap_HI = $HI;
+# Older luci's didn't populate this sometimes? We are hitting the wap using one mac... but the network may have a different maac because it has multiple radios
+if ( $$network{bssid} ) {
 									if ( $$HI{mac} ne $$network{bssid} ) {
 										$log->debug( "HI{mac} $$HI{mac} ne network{bssid} $$network{bssid}");
 										$wap_HI = openprint::Host_Interface->find_one( mac=>$$network{bssid} );
@@ -172,6 +174,9 @@ foreach my $Host ( @Hosts ) {
 											$wap_HI->save({mac=>$$network{bssid}, host_id=>$$Host{id} });
 										} # end if
 									}
+}else{
+$log->debug("No bssid");
+}
 									my @macs;
 
 									if ( ref $$network{assoclist} eq 'ARRAY' ) {

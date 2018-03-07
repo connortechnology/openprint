@@ -126,10 +126,9 @@ sub owing_early {
 	if ( $_[0]{early_payment_units} eq 'amount' ) {
 		return Math::Round::nearest( .01, $owing + $_[0]{early_payment_amount} );
 	} elsif ( $_[0]{early_payment_units} eq 'percent' ) {
-$openprint::log->debug("doing early payment percent: $_[0]{early_payment_amount}");
 		return Math::Round::nearest( .01, $owing * ( 1 - $_[0]{early_payment_amount}/100 ) );
 	} else {
-$openprint::log->debug('Unknown units for early_payment '. $_[0]{early_payment_units} );
+$openprint::log->error('Unknown units for early_payment '. $_[0]{early_payment_units} );
 		return Math::Round::nearest( .01, $owing );
 	} # end if
 } # end sub owing
@@ -302,7 +301,7 @@ sub send {
 		TO			=>	( $To ? $To : [$self->Invoicee()->AccountingContacts()] ),
 		FROM		=>	$config{AccountingEmail},
 		ATTACHMENTS	=>	\@attachments,
-		SUBJECT		=>	sprintf('Your Invoice (%1$d) is now available.', $$self{id} ),
+		SUBJECT		=>	sprintf('%1$s Invoice (%2$d) is now available.', $self->Invoicer()->name(), $$self{id} ),
 	);
 	(new openprint::Log())->save({Object=>$self, action=>'Invoice Sent', note=>$results});
 	return $results;

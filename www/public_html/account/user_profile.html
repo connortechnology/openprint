@@ -102,7 +102,7 @@
 					<input type="radio" id="MailingListN" name="mailinglist" <? echo ( checked( $$variable{User}->mailinglist() ne 'Y' ); ) ?> value="N" />
 					<label class="radio" for="MailingListN">No</label>
    				</li>
-			<? if ( $$variable{'Me'}->administrator() eq 'Y' or $$variable{User}->Company()->can_edit() ) ?>
+			<? if ( $$variable{Me}->administrator() eq 'Y' or $$variable{User}->Company()->can_edit() ) ?>
    				<li class="web_active notrequired">
    					<label>Can login to the web site?</label>
    					<input type="radio" id="web_activeY" name="web_active" <? echo ( checked( $$variable{User}->web_active() eq 'Y' ); ) ?> value="Y" />
@@ -131,17 +131,23 @@
    					<input type="radio" id="email_quotes_to_myself0" name="email_quotes_to_myself" <? echo ( checked( ! $$variable{User}->email_quotes_to_myself() ); ) ?> value="0" />
    					<label class="radio" for="email_quotes_to_myself0">No</label>
    				</li>
-<? eval ( @{$$variable{'QuoteLevels'}} = sql::execute( undef, undef, 'SELECT id,name FROM QuoteLevels Order BY lower(name)' ); ) ?>
-<? if ( @{$$variable{'QuoteLevels'}} > 1 ) ?>
+<? eval ( @{$$variable{QuoteLevels}} = sql::execute( undef, undef, 'SELECT id,name FROM QuoteLevels Order BY lower(name)' ); ) ?>
+<? if ( @{$$variable{QuoteLevels}} > 1 ) ?>
    				<li class="notrequired">
    					<label>Quote Level</label>
 					<select id="quote_level" name="quote_level">
 						<option value="">select</option>
-						<? echo ( make_drop_down( $$variable{'QuoteLevels'}, $$variable{User}->quote_level() ) ) ?>
+						<? echo ( make_drop_down( $$variable{QuoteLevels}, $$variable{User}->quote_level() ) ) ?>
 					</select>
    				</li>
-<? endif ( @{$$variable{'QuoteLevels'}} > 1 ) ?>
-			<? endif ( $$variable{'Me'}->administrator() eq 'Y' or $$variable{User}->Company()->can_edit() ) ?>
+<? endif ( @{$$variable{QuoteLevels}} > 1 ) ?>
+				<li class="commission"><label>Commission</label>
+					<?echo(input(type=>'float', name=>'commission', value=>$$variable{User}->commission());)?> %
+				</li>
+				<li class="wage"><label>Wage</label>
+					<?echo(input(type=>'float', name=>'wage', value=>$$variable{User}->wage());)?>
+				</li>
+			<? endif ( $$variable{Me}->administrator() eq 'Y' or $$variable{User}->Company()->can_edit() ) ?>
 				</ul>
 				</div>
    			</fieldset>
@@ -170,7 +176,7 @@
 							<span id="password_alert"></span>
 						</li>
 						<li><label>Password Last Changed</label>
-						<? echo ( $$variable{User}->password_changed_on() ? Date::Format::time2str($config{'DateTimeFormat'}, Date::Parse::str2time( $$variable{User}->password_changed_on() ) ) : 'never' ) ?>
+						<? echo ( $$variable{User}->password_changed_on() ? Date::Format::time2str($config{DateTimeFormat}, Date::Parse::str2time( $$variable{User}->password_changed_on() ) ) : 'never' ) ?>
 						</li>
 					</ul>
 				</div>

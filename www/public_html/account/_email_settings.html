@@ -33,11 +33,11 @@
 				</li>
 				<li>
 					<label>Vacation Status</label>
-					<? echo ( radio( 'VacationState', [ 1, 'Enabled', '0', 'Disabled' ], $$variable{VacationState}, { default=>0 } ); ) ?> 
+					<? echo ( radio( 'VacationState', [ 1, 'Enabled', '0', 'Disabled' ], $$variable{VacationState}, { default=>'0' } ); ) ?> 
 				</li>
 				<li>
 					<label>Receive System Emails</label>
-					<? echo ( radio( 'VacationSystemEmails', [ 1, 'Yes', '0', 'No' ], $$variable{VacationSystemEmails}, { default=>1 } ); ) ?> 
+					<? echo ( radio( 'VacationSystemEmails', [ 1, 'Yes', '0', 'No' ], $$variable{VacationSystemEmails}, { default=>'1' } ); ) ?> 
 				</li>
 			</ul>
 			</div>

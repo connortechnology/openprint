@@ -901,6 +901,7 @@ sub mark_proofs_approved {
 
 	my $approval_date = sprintf('%.4d-%.2d-%.2d %.2d:%.2d:%.2d', Date::Calc::Today_and_Now() );
 	openprint::service::insert_service_spec( $log, $dbh, $$Project{id}, $$Service{service_id}, 'ApprovalDate', $approval_date );
+	openprint::service::insert_service_spec( $log, $dbh, $$Project{id}, $$Service{service_id}, 'rdbApproved', 'Yes' );
 } # end sub mark_proofs_approved
 
 sub add_to_barcode_log {
@@ -1559,7 +1560,7 @@ sub _li_change {
 				my $old_date = $Project->due_date();
 				$Project->due_date( $param{duedate} );
 				$Project->save();
-				$Project->add_to_log( @openprint::session{'company_id','user_id'}, "Duedate changed to $param{duedate}" );
+				$Project->add_to_log( @openprint::session{'company_id','user_id'}, "Duedate changed to $param{duedate} from $old_date" );
 				openprint::employee_project::send_duedate_change_notification( $$Project{id}, $Project->order_id() );
 			} # end if date has changed
 		} # end if project_id

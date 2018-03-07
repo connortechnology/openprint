@@ -416,7 +416,8 @@ sub get_service_specifications {
 			$$variable{ServiceTypeID} = $PT->name();
 			$$variable{ServiceTypeName} = 'Printing';
 		} else {
-			$$variable{ServiceType} = openprint::print::get_ServiceType( $project_index, $service_index );	
+			my $Service = $Project->Service( $service_index );
+			$$variable{ServiceType} = $Service->ServiceType();
 			@$variable{'ServiceTypeID','ServiceTypeName'} = ( $$variable{ServiceType}->name(), $$variable{ServiceType}->description() ) if $$variable{ServiceType};
 		} # end if
 
@@ -573,8 +574,9 @@ if ( 0 ) {
 	$Project->programs( $param{chkPrograms} );
 	$Project->other_programs( $param{txtOtherPrograms} );
 	$Project->currency_id( $session{Currency_id} ) if ! $Project->currency_id();
-	$Project->reprint( $openprint::param{reprint} );
-	$Project->reprint_reason( $openprint::param{reprint_reason} );
+	$Project->reprint( $param{reprint} );
+	$Project->reprint_reason( $param{reprint_reason} );
+	$Project->reprint_description( $param{reprint_description} );
 
 	# This will likely never happen, because the act of cilcking on the different project type changes it.
 	my $ProjectType = openprint::ProjectType->find_one( name => $param{rdbProjectType} ) if $param{rdbProjectType};
@@ -677,7 +679,7 @@ sub reuse_project {
 	my $NewProject = $Project->copy();
 	$variable{error} .= $NewProject->save({
 		( map { exists $param{'quantity'.$_} ? ( 'quantity'.$_	=>	$param{'quantity'.$_} ) : ()  } ( 1 .. 3 ) ),
-		( map { exists $param{$_} ? ( $_ => $param{$_} ) : () } ( 'reference', 'comments' ) ),
+		( map { exists $param{$_} ? ( $_ => $param{$_} ) : () } ( 'reference', 'comments','reprint','reprint_reason' ) ),
 		due_date => undef,
 		user_id	=>	$session{user_id},
 		status	=> ( sets::isin( $Project->status(), [ 'Unordered', 'Pending Deposit', 'In Prepress', 'Proofs Out', 'Approved', 'Printed', 'Complete','Shipped','Picked Up' ] ) ? 'Unordered' : 'uncalculated' ),

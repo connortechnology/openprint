@@ -6,7 +6,7 @@
 		my $Payment = $Object_Payment->Payment();
 		$html .= sprintf('<tr><td class="buttons">%s</td><td class="description">%s</td><td class="Date">%s</td><td class="amount">%s</td></tr>',
 			button('DelPayment'.$$Payment{id}, { onclick=>qq`new Ajax.Updater( 'Payments', '_payments_edit.html', { parameters: { po_id: $$variable{PurchaseOrder}{id}, payment_id: $$Payment{id}, action: 'Delete' } } );`, text=>'-', title=>'Delete' } ),
-			$Payment->memo(), format_date( $Payment->received_on() ), $Payment->Currency()->name(), openprint::Currency::format( $Payment->amount() ) );
+			$Payment->memo(), format_date( $Payment->received_on() ), $$variable{PurchaseOrder}->Currency()->format( $Payment->amount() ) );
 
 	} # end foreach $Payment
 	$html .= sprintf('<tr><td class="buttons">%s</td><td class="description">%s</td><td class="Date">%s</td><td class="amount">%s</td></tr>',
@@ -20,7 +20,8 @@
 </table>
 <? if ( $param{action} ) ?>
 <script type="text/javascript">
-$('payments_total').innerHTML='<?echo(openprint::Currency::format( $$variable{PurchaseOrder}->payments_total() ) )?>';
-$('total').innerHTML='<?echo(openprint::Currency::format( $$variable{PurchaseOrder}->total() ) )?>';
+$('payments_total').innerHTML='<?echo( $$variable{PurchaseOrder}->Currency()->format( $$variable{PurchaseOrder}->payments_total(), 2, '' ) )?>';
+$('total').innerHTML='<?echo( $$variable{PurchaseOrder}->Currency()->format( $$variable{PurchaseOrder}->total(), 2, '' ) )?>';
+update_logs();
 </script>
 <? endif ( $param{action} ) ?>

@@ -90,7 +90,7 @@ sub configuration {
 		} # end while
 
 		# Add record to audit log - action "Update Configuration".
-		new openprint::Log()->save({'action'=>'Update Configuration'});
+		new openprint::Log()->save({action=>'Update Configuration'});
 	} elsif ( $param{action} eq 'delete' ) {
 		sql::execute( undef, undef, 'DELETE FROM Configuration WHERE name=?', $param{name} );
 	} # end if
@@ -527,8 +527,8 @@ sub company_profiles {
 			my $ac = sql::start_transaction( $dbh );
 			foreach my $type ( 'User','Order','Quote','Project', 'Claim', 'Log','Timetrack' ) {
 				require "openprint/$type.pm";
-				foreach ( "openprint::$type"->find( company_id=>$param{merge_company_id}) ) {
-					$_->save({'company_id'=>$Company->id()});
+				foreach ( "openprint::$type"->find( company_id=>$param{merge_company_id} ) ) {
+					$_->save({company_id=>$Company->id()});
 				} # end foreach
 			} # end foreach type
 			foreach my $Timetrack ( openprint::Timetrack->find('owner_id'=>$param{merge_company_id}) ) {
@@ -567,8 +567,10 @@ sub company_profiles {
 				$param{established} = $param{start_year} . '-' . $param{start_month} . '-01';
 			} # end if
 			my @changes = $Company->changes( \%param );
-			$variable{error} .= $Company->save( \%param );
-			(new openprint::Log())->save({object_id=>$$Company{id},object_type=>ref$Company, action=>'Edit Company', note=>join('<br/>', @changes) }) if @changes;
+			if ( @changes ) {
+				$variable{error} .= $Company->save( \%param );
+				(new openprint::Log())->save({object_id=>$$Company{id},object_type=>ref$Company, action=>'Edit Company', note=>join('<br/>', @changes) });
+			}
 			$index = $Company->id();
 
 			if ( $index > 0 ) {
@@ -620,7 +622,7 @@ sub company_profiles {
 								map { $_ => $param{$_.'-'.$Supplier->id()} } ( 'terms', 'denydays', 'warndays', 'limit', 'hold', 'downpayment', 'cod', 'late_payment_amount','late_payment_units','early_payment_amount','early_payment_units', 'early_payment_days' ) } );
 						$note .= '<br/>new credit: ' . $Credit->to_string();
 						$variable{error} .= (new openprint::Log())->save( {
-								action		=> 	'Credit Information Changed', 
+								action			=> 	'Credit Information Changed', 
 								object_id   =>  $index,
 								object_type	=>	'openprint::Company',
 								note        =>  $note,
@@ -726,9 +728,31 @@ sub email {
 				$variable{error} .= $Email->delete();
 			} elsif ( $param{action} eq 'Save' ) {
 				$variable{error} .= $Email->save( \%param );
+
+				my @domains = email::domains();
+				my ( $user, $domain ) = $Email->username() =~ /^([^\@]+)\@(.+)$/;
+				if ( sets::isin( $domain, \@domains ) ) {
+					if ( $param{VacationState} ) {
+						email::start_vacation( $Email->username(), @param{'VacationSubject','VacationMessage','VacationSystemEmails'} );
+					} else {
+						email::stop_vacation( $Email->username() );
+					} # end if
+					if ( $param{EmailPassword} and $param{EmailPassword} eq $param{VerifyEmailPassword} ) {
+						email::set_password( @param{'username','EmailPassword'} );
+					} # end if
+					my @aliases = ();
+					foreach my $alias ( split "\r\n", $param{aliases} ) {
+						next if ! $alias;
+						push @aliases, $alias;
+					} # end foreach
+					push @aliases, $Email->username() if ! @aliases;
+					email::aliases( $Email->username(), @aliases );
+				} # end if
 			} # end if
 			$variable{ExternalRedirect} = '/administrator/managerial/emails.html' if ! $variable{error};
 		} # end if action
+		@variable{'VacationState','VacationSubject','VacationMessage','VacationSystemEmails'} = email::get_vacation( $Email->username() );
+		$variable{Aliases} = [email::aliases( $Email->username() )];
 	} else {
 		$variable{error} .= "No connection to mail db.<br/>";
 	} # end if have maildb connection
@@ -1039,6 +1063,8 @@ sub companies {
 
 					ssi::date_filter( $uri.'?created_on_end', 'created_on <=' ),
 					ssi::date_filter( $uri.'?created_on_start', 'created_on >=' ),
+					ssi::date_filter( $uri.'?updated_on_end', 'updated_on <=' ),
+					ssi::date_filter( $uri.'?updated_on_start', 'updated_on >=' ),
 					);
   if ( $session{$uri.'?country_id'} ) {
     my $Country = new openprint::Location( $session{$uri.'?country_id'} );
@@ -1077,6 +1103,7 @@ sub _companies {
 	ssi::save_params( '/administrator/managerial/companies.html', ( 
 				'salesrep_id', 'marketing_category_id', 'company_name', 'country',
 				( map { 'created_on_start_' . $_ } ( 'year','month','day' ) ),
+				( map { 'updated_on_start_' . $_ } ( 'year','month','day' ) ),
 				) );
 	$session{$r->uri().'?salesrep_id_exclude'} = $param{salesrep_id_exclude};
 } # end sub _companies

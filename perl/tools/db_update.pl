@@ -231,10 +231,15 @@ if ( ! sets::isin( 'companies', \@tables ) ) {
 		$dbh->do('ALTER TABLE companies ADD '.$openprint::Company::fields{established}.q` date`);
 		die $dbh->errstr() if $dbh->errstr();
 	} # end if
-	if ( ! exists $$data{$openprint::Company::fields{discount}} ) {
-		$dbh->do('ALTER TABLE companies ADD '.$openprint::Company::fields{discount}.q` numeric(16,4) DEFAULT '0.0000' NOT NULL`);
-		die $dbh->errstr() if $dbh->errstr();
-	} # end if
+	foreach my $field ( 'credit_card_fee', 'csr_commission' ) {
+		if ( ! $openprint::Company::fields{$field} ) {
+			die "Want to add $field to Company but it's not in fields";
+		} # end if
+		if ( ! exists $$data{$openprint::Company::fields{$field}} ) {
+			$dbh->do('ALTER TABLE companies ADD '.$openprint::Company::fields{$field}.q` FLOAT`);
+			die $dbh->errstr() if $dbh->errstr();
+		} # end if
+	} # end foreach
 	if ( ! exists $$data{$openprint::Company::fields{last_project_id}} ) {
 		if ( ! sets::isin( 'projects', \@tables ) ) {
 			$dbh->do( misc::load_file( $log, q{../openprint/sql/Projects.sql}) ) or die;
@@ -1064,6 +1069,19 @@ if ( ! sets::isin( 'projects', \@tables ) ) {
 	if ( ! exists $$data{reprint_reason} ) {
 		$dbh->do(q`ALTER TABLE projects ADD reprint_reason TEXT`) or $log->error($dbh->errstr());
 	} # end if
+	if ( ! exists $$data{reprint_description} ) {
+		$log->debug("Add reprint_description to Projects");
+		$dbh->do(q`ALTER TABLE projects ADD reprint_description TEXT`) or $log->error($dbh->errstr());
+	} # end if
+	foreach my $field ( 'credit_card_fee', 'csr_commission', 'discount' ) {
+		if ( ! $openprint::Project::fields{$field} ) {
+			die "Want to add $field to Project but it's not in fields";
+		} # end if
+		if ( ! exists $$data{$openprint::Project::fields{$field}} ) {
+			$dbh->do('ALTER TABLE projects ADD '.$openprint::Project::fields{$field}.q` FLOAT`);
+			die $dbh->errstr() if $dbh->errstr();
+		} # end if
+	} # end foreach
 } # end if
 if ( ! sets::isin( 'servicetype_categories', \@tables ) ) {
 	$dbh->do( misc::load_file( $log, q{../openprint/sql/ServiceType_Categories.sql}) );
@@ -1166,6 +1184,13 @@ if ( ! sets::isin( 'project_log', \@tables ) ) {
 		$dbh->do('ALTER TABLE project_log add host_id INTEGER');
 		$dbh->do('ALTER TABLE project_log ADD FOREIGN KEY (host_id) REFERENCES Hosts (id)');
 	}
+	if ( ! exists $$data{id} ) {
+		$log->debug("Adding id to project_log");
+		$dbh->do('ALTER TABLE project_log add id SERIAL') or die $dbh->errstr();
+		$dbh->do('ALTER TABLE project_log DROP CONSTRAINT project_log_pkey') or die $dbh->errstr();
+		$dbh->do('ALTER TABLE project_log ADD PRIMARY KEY (id)') or die $dbh->errstr();
+		$dbh->do('CREATE INDEX project_log_project_id_timestamp_idx on project_log (project_id,dtmtimestamp)') or die $dbh->errstr();
+  }
 }
 if ( ! sets::isin( 'barcode_log', \@tables ) ) {
 	$dbh->do( misc::load_file( $log, '../openprint/sql/Barcode_Log.sql' ) ) or die;
@@ -4521,6 +4546,10 @@ if ( ! sets::isin( 'timetracks', \@tables ) ) {
 	if ( ! exists $$data{duration_override} ) {
 		$dbh->do('ALTER TABLE timetracks ADD duration_override BOOLEAN NOT NULL DEFAULT FALSE');
 	} # end if
+	if ( ! exists $$data{date_associated} ) {
+    $log->debug("Adding date_associated to timetracks");
+		$dbh->do('ALTER TABLE timetracks ADD date_associated BOOLEAN NOT NULL DEFAULT TRUE');
+	} # end if
 } # end if
 
 if ( sets::isin('users', \@tables ) ) {
@@ -4873,6 +4902,10 @@ foreach my $config_action ( keys %config_actions ) {
 		$Action->save({name=>$config_action,id=>$config_actions{$config_action}}, 1);
 	} # end if
 } # end foreach config_action
+$dbh->do(q`UPDATE Logs SET action_id=(SELECT id FROM log_actions WHERE name='Edit Company') WHERE action_id=(SELECT id FROM Log_Actions WHERE name='Update Company Profile')`);
+$dbh->do(q`DELETE FROM Log_Actions WHERE name='Update Company Profile'`);
+$dbh->do(q`UPDATE Logs SET action_id=(SELECT id FROM log_actions WHERE name='Edit Company') WHERE action_id=(SELECT id FROM Log_Actions WHERE name='Update Company')`);
+$dbh->do(q`DELETE FROM Log_Actions WHERE name='Update Company'`);
 die $dbh->errstr() if $dbh->errstr();
 
 

@@ -32,49 +32,56 @@ $table = 'projects';
 $serial = 'lngProjectIndex_seq';
 
 %fields = (
-	id			=>	'id',
-	docket		=>	'lngdocketnumber',
-	company_id	=>	'company_id',
-	user_id		=>	'user_id',
-	reference		=>	'strprojectreference',
-	comments		=>	'strcomments',
-	design		=>	'strdesign',
-	created_on	=>	'dtmcreationdate',
-	updated_on	=>	'dtmlastmodified',
-	calculated_on	=>	'calculated_on',
-	quantity1=>	'intquantity1',
-	quantity2=>	'intquantity2',
-	quantity3=>	'intquantity3',
-	status=>	'strstatus',
-	mode=>	'strmode',
-	programs=>	'strprograms',
-	other_programs=>	'strotherprograms',
-	currency_id=>	'currency_id',
-	type_id=>	'type_id',
-	price1=>	'price1',
-	price2=>	'price2',
-	price3=>	'price3',
-	order_id=>	'order_id',
-	due_date=>	'due_date',
+	id							=>	'id',
+	docket					=>	'lngdocketnumber',
+	company_id			=>	'company_id',
+	user_id					=>	'user_id',
+	reference				=>	'strprojectreference',
+	comments				=>	'strcomments',
+	design					=>	'strdesign',
+	created_on			=>	'dtmcreationdate',
+	updated_on			=>	'dtmlastmodified',
+	calculated_on		=>	'calculated_on',
+	quantity1				=>	'intquantity1',
+	quantity2				=>	'intquantity2',
+	quantity3				=>	'intquantity3',
+	status					=>	'strstatus',
+	mode						=>	'strmode',
+	programs				=>	'strprograms',
+	other_programs	=>	'strotherprograms',
+	currency_id			=>	'currency_id',
+	type_id					=>	'type_id',
+	price1					=>	'price1',
+	price2					=>	'price2',
+	price3					=>	'price3',
+	order_id				=>	'order_id',
+	due_date				=>	'due_date',
 	externalrefnumber=>	'externalrefnumber',
-	reprint_reason=>	'reprint_reason',
-	reprint=>	'reprint',
-	predefined=>	'predefined',
-	rush=>	'rush',
-	style_id=>	'style_id',
-	summary=>	'summary',
-	markup=>	'markup',
-	priority			=>	'priority',
+	reprint					=>	'reprint',
+	reprint_reason	=>	'reprint_reason',
+	reprint_description	=>	'reprint_description',
+	predefined			=>	'predefined',
+	rush							=>	'rush',
+	style_id					=>	'style_id',
+	summary						=>	'summary',
+	markup						=>	'markup',
+	discount					=>	'discount',
+	credit_card_fee   =>  'credit_card_fee',
+	csr_commission    =>  'csr_commission',
+	priority					=>	'priority',
 	production_comments	=>	'production_comments',
 );
 %transforms = (
-	id			=>	[ 's/\D//g', '<2147483647' ],
-	markup		=>	[ 's/[^\-\d\.]//g' ],
-	quantity1	=>	[ 's/\D//g' ],
-	quantity2	=>	[ 's/\D//g' ],
-	quantity3	=>	[ 's/\D//g' ],
-	reference	=>	[ 's/\r\n/<br\/>/mg', 's/\n\r/<br\/>/mg', 's/\n/<br\/>/mg', 's/^\s+//', 's/\s+$//', 's/\s\s+/ /g', 's/[^[:ascii:]]//g' ],
-	comments	=>	[ 's/^\s+//', 's/\s+$//', 's/\s\s+/ /g', 's/[^[:ascii:]]//g' ],
+	id								=>	[ 's/\D//g', '<2147483647' ],
+	markup						=>	[ 's/[^\-\d\.]//g' ],
+	quantity1					=>	[ 's/\D//g' ],
+	quantity2					=>	[ 's/\D//g' ],
+	quantity3					=>	[ 's/\D//g' ],
+	reference					=>	[ 's/\r\n/<br\/>/mg', 's/\n\r/<br\/>/mg', 's/\n/<br\/>/mg', 's/^\s+//', 's/\s+$//', 's/\s\s+/ /g', 's/[^[:ascii:]]//g' ],
+	comments					=>	[ 's/^\s+//', 's/\s+$//', 's/\s\s+/ /g', 's/[^[:ascii:]]//g' ],
+	discount					=>	[ 's/[^\-\d\.]//g' ],
+	csr_commission		=>	[ 's/[^\-\d\.]//g' ],
+	credit_card_fee		=>	[ 's/[^\-\d\.]//g' ],
 );
 %defaults = (
 	created_on	=>	q`'NOW()'`,
@@ -92,6 +99,10 @@ $serial = 'lngProjectIndex_seq';
 	markup		=>	undef,
 	priority	=>	undef,
 	reprint		=>	0,
+	reprint_description	=>	q`''`,
+	discount				=>	undef,
+	csr_commission	=>	undef,
+	credit_card_fee	=>	undef,
 );
 
 %find_fields = (
@@ -440,35 +451,48 @@ sub update_status {
 	return if $$self{status} eq 'Deleted';
 
 	my %services = $self->get_services();
-	my @statuses = sql::execute( $openprint::log, $openprint::dbh, q{SELECT DISTINCT strStatus FROM tbl_Project_Contents WHERE lngProjectIndex=?}, $$self{id} );
+	my %service_statuses = sql::execute( $openprint::log, $openprint::dbh, q{SELECT lngServiceIndex, strStatus FROM tbl_Project_Contents WHERE lngProjectIndex=?}, $$self{id} );
+	my %statuses = map { $_ => $_ } values %service_statuses;
 	my $new_status = $$self{status};
 
 	my $Order = new openprint::Order( $$self{order_id} );
 	if ( $$self{order_id} and $Order->status() ne 'Incomplete' ) {
 
 # This fixes the damage caused by re-opening an order
-		if ( sets::isin( 'calculated', \@statuses ) ) {
-			sql::update( $openprint::log, $openprint::dbh, 'tbl_Project_Contents', ['lngProjectIndex=? AND strStatus=?', $$self{id}, 'calculated'], 'strStatus', 'Ordered' );
-			@statuses = sql::execute( $openprint::log, $openprint::dbh, q{SELECT DISTINCT strStatus FROM tbl_Project_Contents WHERE lngProjectIndex=?}, $$self{id} );
-		} # end if
+		foreach my $service_id ( keys %service_statuses ) {
+			my $Service = $self->Service( $service_id );	
+$openprint::log->debug("Service : " . $Service->service_type() . ' ' . $Service->status() );
+			if ( $service_statuses{$service_id} eq 'calculated' ) {
+				if ( $Service->status(undef) ne 'calculated' ) {
+					$Service->save();
+					$service_statuses{$service_id} = $Service->status();
+				}
+			} elsif ( $service_statuses{$service_id} eq 'Ordered' ) {
+				if ( $Service->status(undef) ne 'Ordered' ) {
+					$Service->save();
+					$service_statuses{$service_id} = $Service->status();
+				}
+			}
+		}
+		%statuses = map { $_ => $_ } values %service_statuses;
 
 # We now know that it has been ordered.
 
-		if ( sets::isin( 'Waiting For Customer Approval', \@statuses ) ) {
+		if ( $statuses{'Waiting For Customer Approval'} ) {
 			if ( $$self{status} ne 'Waiting For Customer Approval' ) {
 				$self->add_to_log( @openprint::session{'company_id','user_id'}, "Marked Waiting For Customer Approval from $$self{status}" );
 				$$self{status} = 'Waiting For Customer Approval';
 				$self->save();
 			} # end if
 			return $$self{status};
-		} elsif ( sets::isin( 'Waiting For QA Approval', \@statuses ) ) {
+		} elsif ( $statuses{'Waiting For QA Approval'} ) {
 			if ( $$self{status} ne 'Waiting For QA Approval' ) {
 				$self->add_to_log( @openprint::session{'company_id','user_id'}, "Marked Waiting For QA Approval from $$self{status}" );
 				$$self{status} = 'Waiting For QA Approval';
 				$self->save();
 			} # end if
 			return $$self{status};
-		} elsif ( sets::isin( 'Proofs Out', \@statuses ) and ( $$self{status} ne 'Proofs Out' ) ) {
+		} elsif ( $statuses{'Proofs Out'} and ( $$self{status} ne 'Proofs Out' ) ) {
 			$self->add_to_log( @openprint::session{'company_id','user_id'}, "Marked Proofs Out from $$self{status}" );
 			$$self{status} = 'Proofs Out';
 			$self->save();
@@ -476,8 +500,8 @@ sub update_status {
 		} # end if
 
 # At this point, we know that the project is ordered
-		if ( sets::isin( 'Ordered', \@statuses ) ) {
-			if ( sets::isin( 'Approved', \@statuses ) ) {
+		if ( $statuses{Ordered} ) {
+			if ( $statuses{Approved} ) {
 				if ( $self->is_printed() ) {
 					$new_status = 'Printed';
 				} else {
@@ -559,9 +583,10 @@ sub update_status {
 		} # end if
 	} else {
 # Project is UnOrdered
-		if ( sets::isin( 'Ordered', \@statuses ) ) {
+		if ( $statuses{Ordered} ) {
 			sql::update( $openprint::log, $openprint::dbh, 'tbl_Project_Contents', ['lngProjectIndex=? AND strStatus=?', $$self{id},'Ordered'], 'strStatus', 'calculated' );
-			@statuses = sql::execute( $openprint::log, $openprint::dbh, q{SELECT DISTINCT strStatus FROM tbl_Project_Contents WHERE lngProjectIndex=?}, $$self{id} );
+			%service_statuses = sql::execute( $openprint::log, $openprint::dbh, q{SELECT lngServiceIndex, strStatus FROM tbl_Project_Contents WHERE lngProjectIndex=?}, $$self{id} );
+			%statuses = map { $_ => $_ } values %service_statuses;
 		} # end if
 		if ( $self->Type()->type() eq 'MultiPage' ) {
 			foreach my $qty_index ( $self->quantity_indexes() ) {
@@ -575,9 +600,9 @@ sub update_status {
 				} # end if
 			} # end foreach
 		} # end if
-		if ( sets::isin( 'uncalculated', \@statuses ) ) {
+		if ( $statuses{uncalculated} ) {
 			$new_status = 'uncalculated';
-		} elsif ( sets::isin( 'calculated', \@statuses ) ) { # This works because we have already checked for uncalculated
+		} elsif ( $statuses{calculated} ) { # This works because we have already checked for uncalculated
 			$new_status = 'Unordered';
 		} # end if
 	} # end if
@@ -1547,20 +1572,27 @@ sub add_Service {
 sub recalculate {
 	my $self = shift;
 	$self->currency_id( $openprint::session{Currency_id} );
+	my $Company = $self->Company();
+	my $CSR = $Company->CSR();
+
+	$$self{discount} = $$Company{discount};
+	$$self{credit_card_fee} = $$Company{credit_card_fee};
+	$$self{csr_commission} = defined $$Company{csr_commission} ? $$Company{csr_commission} : $$CSR{commission};
+
 	my $services = $self->services();
 	if ( $$services{''} ) {
 		my $Type = $self->Type();
-$openprint::log->debug("Project::recalculate $$Type{type}");
+		$openprint::log->debug("Project::recalculate $$Type{type}");
 		my $specs = openprint::service::internal_calc( $openprint::log, $openprint::dbh, \%openprint::variable, $$self{id}, $$services{''}[0], $$Type{type} );
 		my $status = $$specs{Status};
-$openprint::log->debug("Project::recalculate $$Type{type} $status");
+		$openprint::log->debug("Project::recalculate $$Type{type} $status");
 		# Why is this ne calculated... if the project service can't calc... then neither can the signatures
 		if ( $status eq 'calculated' ) {
 			# Recalc signatures
 			my $module = 'openprint::Estimating::'.$$Type{type};
 			if ( my $function = $module->can( 'calculate_signatures' ) ) {
 				$status = $function->( $self );
-$openprint::log->debug("Calculate_Sigs: status: $status");
+				$openprint::log->debug("$$Type{type}::Calculate_Sigs: status: $status");
 				openprint::service::status( $$self{id}, $$services{''}[0], $status );
 			} # end if
 			openprint::service::auto_calculate( $self, $$services{''}[0] ) if $status eq 'calculated';
@@ -1569,7 +1601,7 @@ $openprint::log->debug("Calculate_Sigs: status: $status");
 	$self->add_to_log( @openprint::session{'company_id','user_id'}, 'Recalculated. Prices: '.join(',', $self->prices() ) );
 	$self->update_status();
 	$self->summary(undef);
-	return $self->save( {calculated_on=>'NOW()'});
+	return $self->save({calculated_on=>'NOW()'});
 } # end sub recalculate
 
 sub Project {
@@ -1590,8 +1622,14 @@ sub calliper {
 		if ( $project_type eq 'MultiPage' ) {
 	
 			foreach my $group_id ( $$printing_specs{groups} ? split(',', $$printing_specs{groups} ) : openprint::Estimating::MultiPage::groups( $$Project{id}, $printing_specs ) ) {
-				$finished_calliper += int( 10000 * ($$printing_specs{'GroupPageQuantity'.$group_id}/2) * $$printing_specs{"txtSpecificStockCalliper$group_id"} );
-				#$log->debug("$finished_calliper += int( 10000 * (" . $$printing_specs{'GroupPageQuantity'.$group_id}.'/2) * '.$$printing_specs{"txtSpecificStockCalliper$group_id"} );
+				foreach my $signature_service_index ( $Project->signatures({Group=>$group_id}) ) {
+					my $sig_specs = openprint::service::get_specs_ref( $Project, $signature_service_index );
+					my $sig_caliper = $$sig_specs{txtSpecificStockCalliper} ? $$sig_specs{txtSpecificStockCalliper} : $$printing_specs{"txtSpecificStockCalliper$group_id"};
+				
+				$finished_calliper += int( 10000 * ($$printing_specs{'GroupPageQuantity'.$group_id}/2) * $sig_caliper );
+				$log->debug("$finished_calliper += int( 10000 * (" . $$printing_specs{'GroupPageQuantity'.$group_id}.'/2) * '.$sig_caliper );
+					last;
+				}
 
 			} # end foreach group
 			if ( ! $finished_calliper ) {
@@ -1883,6 +1921,9 @@ sub can_view {
 		$log->debug("$openprint::User{firstname} Either created it or is an assistant") if $debug;
 		return 1;
 	} # end if
+	if ( openprint::usergroup::is_user_in( ['Accounting', 'Estimating'], $openprint::session{user_id} ) ) {
+		return 1;
+	}
 	return 0;
 }
 

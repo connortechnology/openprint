@@ -83,15 +83,18 @@ $$variable{Timetracks} = [ openprint::Timetrack->find(invoice_id=>$$variable{Inv
 				my $rowclass = '';
 				foreach my $Timetrack ( @{$$variable{Timetracks}} ) {
 					$html .= sprintf( q`<tr %2$s>`, $Timetrack->id(), $rowclass );
-					$html .= sprintf('<td class="Date">%s</td>', Date::Format::time2str( $config{DateFormat}, Date::Parse::str2time( $Timetrack->starting() ) ) );
-					$html .= sprintf('<td class="Service">%s</td>', ssi::html_escape( $Timetrack->Service()->name() ) );
-					$html .= '<td class="PO">'.ssi::html_escape( $Timetrack->po() ) . '</td>';
+          my $formatted_start = format_date( $Timetrack->starting() );
+          my $formatted_end = format_date( $Timetrack->ending() );
+
+					$html .= sprintf('<td class="Date">%s</td>', $Timetrack->Employee()->link_to() );
+					$html .= sprintf('<td class="Service">%s</td>', html_escape( $Timetrack->Service()->name() ) );
+					$html .= '<td class="PO">'.html_escape( $Timetrack->po() ) . '</td>';
 					$html .= sprintf('<td class="Interval">%s</td>', misc::seconds_to_pretty_interval( $Timetrack->elapsed() ) ); 
 					my $Price = $Timetrack->Price();
 					$html .= sprintf('<td class="Rate">%s%s</td>', openprint::Currency::format( $$Price{Price} ), $$Price{units} );
 					$html .= sprintf('<td class="Price">%s</td>', openprint::Currency::format( $$Price{Total} ) );
 					$html .= sprintf(q`</tr><tr %2$s>`, $Timetrack->id(), $rowclass );
-					$html .= '<td>'.$Timetrack->Employee()->link_to().'</td><td colspan="4">'.$Timetrack->description().'</td><td>&nbsp;</td>';
+					$html .= '<td>'. $formatted_start . ( ( $formatted_start ne $formatted_end ) ? ( '<br/>through<br/>' .  $formatted_end ) : '' ) .  '</td><td colspan="4">'.$Timetrack->description().'</td><td>&nbsp;</td>';
 					$html .= '</tr>';
 					$$variable{service_total} += $$Price{Total};
 					$$variable{elapsed_total} += $Timetrack->elapsed();
@@ -99,12 +102,14 @@ $$variable{Timetracks} = [ openprint::Timetrack->find(invoice_id=>$$variable{Inv
 				} # end foreach Timetrack
 				return $html;
 			) ?>
+<?if(!$$variable{Invoice}{subtotal_override})?>
 			<tr class="totals">
 				<td colspan="3">Totals</td>
 				<td class="Interval"><?echo(misc::seconds2hms($$variable{elapsed_total});)?></td>
 				<td class="Rate">&nbsp;</td>
 				<td class="Price"><? echo ( openprint::Currency::format( $$variable{service_total} ); ) ?></td>
 			</tr>
+<?endif(!$$variable{Invoice}{subtotal_override})?>
 		</table>
 	</fieldset>
 <? endif ( @{$$variable{Timetracks}} ) ?>
@@ -117,7 +122,14 @@ $$variable{Timetracks} = [ openprint::Timetrack->find(invoice_id=>$$variable{Inv
             <tr><td>Posted On</td><td><? echo ( format_date( $$variable{Invoice}->posted_on() ); ) ?></td></tr>
             <tr><td><b>Due On</b></td><td><b><? echo ( format_date( $$variable{Invoice}->due_on() ); ) ?></b></td></tr>
             <tr><td>Notes</td><td><? echo ( $$variable{Invoice}->external_notes() ) ?></td></tr>
-            <tr><td><b>Invoice Terms</b></td><td><b>Net 15 days. Interest on overdue amounts will acrue at the rate of <? echo ( $$variable{Invoice}->monthly_interest() ) ?>% per month from the due date.</b></td></tr>
+            <tr><td><b>Invoice Terms</b></td><td class="terms"><?echo(
+my $Credit = $$variable{Invoice}->Invoicee()->Credit( $$variable{Invoice}{invoicer_id} );
+my $html = 'Net ' . $$Credit{terms}. ' days';
+if ( $$variable{Invoice}->monthly_interest() > 0 ) {
+ $html .= ' Interest on overdue amounts will acrue at the rate of '.$$variable{Invoice}->monthly_interest() .'% per month from the due date.';
+}
+return $html;
+)?></td></tr>
         </table>
     </fieldset>
 </div>

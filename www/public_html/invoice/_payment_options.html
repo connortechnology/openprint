@@ -17,7 +17,6 @@
 	} # end foreach 
     return if ! @options;
 
-    my $last = pop @options;
-    return 'Payment can be made by ' . join(', ', @options) . ' or ' . $last;
+    return 'Payment can be made by ' . join(', ', @options) . ' or other pre-arrangement';
 ) ?>
 </div>

@@ -45,7 +45,8 @@ sub select_company {
 
 sub select_user {
 	if ( $param{user_id} ) {
-		if ( $session{user_type} ne 'A' ) {
+		if ( ( $session{user_type} ne 'A' ) and ( $param{user_id} != $session{user_id} ) ) {
+			my $User = $variable{User} = $openprint::User;
 			$variable{error} .= 'You are not an administrator.  You cannot impersonate other users.<br/>';
 			return;
 		} # end if

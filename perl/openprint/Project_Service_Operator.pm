@@ -9,7 +9,7 @@ require openprint::ServiceType;
 
 use vars qw( $debug %fields %find_fields %transforms %defaults $table $serial );
 
-$debug = 1;
+$debug = 0;
 %fields = (
 	id					=>	'id',
 	service_id	=>	'service_id',

@@ -108,6 +108,32 @@
 	</table>
 	<? endif ( sets::isin( $session{user_type},'A','E') and ( ( ! $$variable{Project}->docket() ) or ( $$variable{Project}->Order()->status() eq 'Re-Opened' ) ) ) ?>
 <br class="spacer"/>
+<?if ( $session{user_type} eq 'A' ) ?>
+<br/>
+<fieldset><legend>Summaries</legend>
+<table class="List Services">
+<? echo (
+	my $html;
+my $rowclass;
+	foreach my $Category ( @{$$variable{Categories}} ) {
+		$html .= '<tr'.$rowclass.'><td class="description">'.$Category->name() . ' total</td>';
+		$html .= join("\n", map {
+						'<td class="price">'.openprint::Currency::format( $$variable{category_totals}{$$Category{id}}[$_] ).'</td>'
+						} $$variable{Project}->quantity_indexes()
+						);
+$html .= '<td class="status">&nbsp;</td>';
+				if ( ( ! $$variable{Project}->docket() ) or ( $$variable{Project}->Order()->status() eq 'Re-Opened' ) ) {
+				$html .= '<td class="unprintable actions">&nbsp;</td>';
+}
+
+			$html .= '</tr>';
+$rowclass = $rowclass ? '' : ' class="colRow"';
+	} # end foreach category
+	return $html;
+) ?>
+</table>
+</fieldset>
+<?endif ( $session{user_type} eq 'A' ) ?>
 <? if ( $$variable{Project}->docket() ) ?>
 <p>This project has already been sent to production and cannot 
 be modified or ordered at this time. You can reuse your project under a different 
@@ -117,6 +143,7 @@ name and then make changes. If you have any questions please click on our <a hre
 <? endif ( $$variable{Project}->docket() ) ?>
 
 </form>
+<?include(_commissions_discounts.html)?>
 <div class="Disclaimer"><? echo ( $config{ProjectViewDisclaimer} ) ?></div>
 <? if ( $$variable{Project}->can_edit() ) ?>
 <script type="text/javascript">

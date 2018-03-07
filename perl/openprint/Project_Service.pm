@@ -12,18 +12,18 @@ use vars qw( $debug %fields %find_fields %transforms %defaults $table %serial @i
 
 $debug = 0;
 %fields = (
-	service_id		=>	'lngserviceindex',
-	project_id		=>	'lngprojectindex',
-	operator_id		=>	'operator_id',
+	service_id			=>	'lngserviceindex',
+	project_id			=>	'lngprojectindex',
+	operator_id			=>	'operator_id',
 	operator_ids		=>	undef,
-	status			=>	'strstatus',
+	status					=>	'strstatus',
 	servicetype_id	=>	'servicetype_id',
-	service_type	=>	undef,
-	created_on		=>	'dtmlastmodified',
+	service_type		=>	undef,
+	created_on			=>	'dtmlastmodified',
 );
 %find_fields = (
-	category	=>	'(SELECT ServiceType_Categories.name FROM ServiceType_Categories,Service_Types WHERE ServiceType_Categories.id=Service_Types.category_id AND Service_Types.id=servicetype_id)',
-	servicetype		=>	'(SELECT name FROM service_types WHERE service_types.id=servicetype_id)',
+	category				=>	'(SELECT ServiceType_Categories.name FROM ServiceType_Categories,Service_Types WHERE ServiceType_Categories.id=Service_Types.category_id AND Service_Types.id=servicetype_id)',
+	servicetype			=>	'(SELECT name FROM service_types WHERE service_types.id=servicetype_id)',
 );
 %transforms = (
 	
@@ -154,10 +154,11 @@ sub runtime {
 
 sub delete {
 	my ( $self ) = @_;
-if ( ! $$self{project_id} ) {
-	$openprint::log->error("Attempt to delete a Project Service with no project.");
-	return '';
-} # end if
+
+	if ( ! $$self{project_id} ) {
+		$openprint::log->error("Attempt to delete a Project Service with no project.");
+		return '';
+	} # end if
 
 	# Lock all schedule
 	openprint::ScheduledJob->lock();
@@ -182,6 +183,7 @@ $openprint::log->warn("Deleting " . $self->service_type() . ' ' . $self->to_stri
 	sql::execute( undef, $openprint::dbh, q{DELETE FROM tbl_Project_Contents WHERE lngProjectIndex=? AND lngServiceIndex=?}, @$self{'project_id', 'service_id'} );
 $openprint::log->warn("Deleting Service from " . $Project->to_string() );
 	delete $$Project{Services};
+	delete $$Project{ServicesById};
 	delete $$Project{signatures};
 	delete $$Project{Signature};
 	delete $$Project{service_types};
@@ -254,6 +256,51 @@ sub link_to {
 	my ( $self, $text ) = @_;
 	return sprintf('<a href="/main/project/view.html?ProjectIndex=%1$d&amp;ServiceIndex=%2$d">%3$s</a>', $self->Project()->id(), $self->id(), ( $text ? $text : $self->ServiceType()->name() ) );
 } # end sub link_to
+
+sub status {
+	if ( @_ > 1 ) {
+		$_[0]{status} = $_[1];
+	}
+	my $servicetype = $_[0]->service_type();
+
+	if ( $servicetype and ( ! defined $_[0]{status} ) ) {
+		my $specs = $_[0]->specs();
+
+		my $module = 'openprint/Estimating/'.$servicetype.'.pm';
+		eval{
+			require $module;
+		};
+		$openprint::log->error("ERror requiring $module ::summary: $@)") if $@;
+
+		if ( my $function = ('openprint::Estimating::'.$servicetype)->can('status') ) {
+
+			$_[0]{status} = $function->($_[0]->Project(), $_[0]{service_id}, $specs );
+$openprint::log->debug("New status openprint::Estiamting::$servicetype $_[0]{status} ");
+		} else {
+			$openprint::log->debug("No function for openprint::Estiamting::$servicetype can status");
+			if ( $$specs{Status} eq 'uncalculated' ) {
+				$_[0]{status} = 'uncalculated';
+			} elsif ( $_[0]->Project()->order_id() ) {
+				$_[0]{status} = 'Ordered';
+			} else {
+				$_[0]{status} = 'calculated';
+			}
+		}
+	#} else {
+		#$_[0]{status} = '';
+	}
+	return $_[0]{status};
+} # end sub status
+
+sub name {
+	my $specs = $_[0]->specs();
+	return $$specs{ServiceName} ? $$specs{ServiceName} : $_[0]->ServiceType()->description();
+}
+
+sub description {
+	my $specs = $_[0]->specs();
+	return $$specs{txtServiceDescription} ? ' - '.$$specs{txtServiceDescription} : '';
+}
 
 1;
 __END__

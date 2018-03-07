@@ -1,5 +1,8 @@
 <?include('/includes/error_reporting.html') ?>
 <? if ( @{$$variable{Data}} ) ?>
+<? eval (
+	@{$$variable{ServiceType_Categories}} = openprint::ServiceType_Category->find( order=>'sorting,lower(name)' );
+)?>
 <table class="List">
 	<tr>
 		<th class="order_id">Order</th>
@@ -7,6 +10,7 @@
 		<th class="project_id">Project</th>
 		<th class="Company">Company</th>
 		<th class="Date">Ordered</th>
+<? echo ( join("\n", map { '<th class="'.$$_{name}.'">'.$$_{name}.'</th>' } @{$$variable{ServiceType_Categories}} ); ) ?>
 <?if($$variable{columns}{plates})?>
 		<th class="plate_count">Plates</th>
 		<th class="Price plate_cost">Plate Cost</th>
@@ -46,7 +50,7 @@
 
 		while ( @{$$variable{Data}} ) {
 		
-			my ( $order_id, $docket, $project_id, $company, $ordered_on ) = splice @{$$variable{Data}}, 0, 5;
+			my ( $order_id, $docket, $project_id, $company, $ordered_on, $status, $job_value ) = splice @{$$variable{Data}}, 0, 7;
 
 			$html .= sprintf(q`
 				<tr%1$s>
@@ -59,6 +63,7 @@
 				$rowclass, $order_id, $link_to, $docket, $project_id, htmlize($company),
 				format_datetime( $ordered_on ), 
 				);
+			$html .= join("\n", map { '<td class="'.$$_{name}.'">'.openprint::Currency::format(shift @{$$variable{Data}}).'</td>' } @{$$variable{ServiceType_Categories}} );
 			if ( $$variable{columns}{plates} ) {
 				my ( $plates, $plate_cost, $plate_price ) = splice @{$$variable{Data}}, 0, 3;
 				$html .= sprintf(q`
@@ -94,7 +99,7 @@
 			}
 			
 			if ( $$variable{columns}{stock} ) {
-				my ( $sheets, $weight, $stock_cost, $quoted_sheets, $quoted_weight, $stock_charge ) = splice @{$$variable{Data}}, 0, 6;
+				my ( $sheets, $weight, $stock_cost, $stock_name, $quoted_sheets, $quoted_weight, $stock_charge ) = splice @{$$variable{Data}}, 0, 7;
 				$html .= sprintf(q`
 						<td class="Sheets">%4$s</td>
 						<td class="Weight">%5$s</td>
@@ -118,7 +123,6 @@
 				$stock_used_total += $stock_cost;
 				$stock_quoted_total += $stock_charge;
 			}
-			my ( $status, $job_value ) = splice @{$$variable{Data}}, 0, 2;
 			$job_total += $job_value;
 			$html .= sprintf(q`
 					<td class="status"><a href="%3$s?order_id=%2$d">%4$s</a></td>
@@ -132,12 +136,13 @@
 		} # end foreach Order
 
 		my $columns = 4;
+		$columns += scalar @{$$variable{ServiceType_Categories}};
 		$columns += 2 if $$variable{columns}{plates};	
-		$columns += 3 if $$variable{columns}{production};	
+		$columns += 4 if $$variable{columns}{production};	
 		$html .= sprintf(q`<tr class="totals">
-			<td>Count</td>
+			<td>Total</td>
 			<td>%d</td>
-			<td colspan="%d">Total</td>
+			<td colspan="%d"></td>
 		`, $lines, $columns );
 
 		if ( $$variable{columns}{stock} ) {

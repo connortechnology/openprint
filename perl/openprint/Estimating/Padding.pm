@@ -54,6 +54,22 @@ sub no_outputs {
 	return @no_output;
 } # end sub no_outputs
 
+sub has_overrides {
+  my ( $Project, $service_id, $specs, $qty_index ) = @_;
+  $specs = openprint::service::get_specs_ref( $Project, $service_id ) if ! $specs;
+
+  my @v;
+  if ( $qty_index ) {
+    push @v, map { ( $$specs{$_.$qty_index} and $$specs{$_.$qty_index} ne 'N' ) ? $_ : () } (
+        'OverridePrice',
+        );
+  } # end if
+
+  return @v;
+
+} # end sub has_overrides
+
+
 sub calc {
 	my ( $log, $dbh, $variable, $project_index, $service_index, $specs ) = @_;
 

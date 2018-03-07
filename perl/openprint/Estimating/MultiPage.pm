@@ -422,7 +422,7 @@ $openprint::log->debug("********************************************************
 			# Remove Impos for other groups
 			foreach my $qty_index ( $Project->quantity_indexes() ) {
 				if ( $$sig_specs{'Additional Impositions'.$qty_index} and @{$$sig_specs{'Additional Impositions'.$qty_index}} ) {
-                    my $Imposition = $$sig_specs{'Additional Impositions'.$qty_index}[0];
+					my $Imposition = $$sig_specs{'Additional Impositions'.$qty_index}[0];
 					my $specs = $$Imposition{specs};
 					if ( $$specs{Group} and ( $$specs{Group} != $group ) ) {
 $openprint::log->debug("Removing impo cuz wrong group") if DEBUG;

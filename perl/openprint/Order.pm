@@ -20,7 +20,7 @@ require openprint::Payment;
 require openprint::Tax;
 require openprint::Order_Notification;
 
-$debug = 0;
+$debug = 1;
 
 $table = 'orders';
 $serial = 'orders_id_seq';
@@ -859,6 +859,7 @@ sub due_date {
 	} # end if
 	return $_[0]{due_date};
 } # end sub due_date
+
 sub url_to {
 	return '/main/order/history_details.html?order_id='.$_[0]{id};
 } # end sub url

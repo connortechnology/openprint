@@ -80,12 +80,17 @@ sub session_init {
 
 	return if ! $dbh;
 
+	$User = new openprint::User( $session{user_id} );
+
 	if ( $param{btnFunction} and sets::isin( $session{user_type}, ['E','A'] ) ) {
 		if ( $param{btnFunction} eq 'SelectCompany' ) {
 			if ( $param{ddmCompany} != $session{company_id} ) {
+
 				my $C = new openprint::Company( $param{ddmCompany} );
 				if ( ! $C->id() ) {
-					$variable{error} .= 'Unknown company selected.  Please try again.';
+					$variable{error} .= 'Unknown company selected.  Please try again.<br/>';
+				} elsif ( ! $C->can_become( $openprint::User ) ) {
+					$variable{error} .= 'You are not authorized to use ' . $C->name().'<br/>';
 				} else {
 					switch_company( $C );
 				} # end if
@@ -116,7 +121,6 @@ sub session_init {
 		$session{Currency_id} = $_->id() if $_;
 	} # end if
 
-	$User = new openprint::User( $session{user_id} );
 	$Company = new openprint::Company( $session{company_id} );
 	$Owner = new openprint::Company( $config{owner_id} );
 	$Currency = new openprint::Currency( $session{Currency_id} );

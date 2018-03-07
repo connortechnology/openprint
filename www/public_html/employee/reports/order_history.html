@@ -76,7 +76,6 @@
 				<? echo ( make_drop_down( [ map { $_->id(), $_->strid() . ': ' . $_->name() } openprint::Equipment->find('category any'=>'Printing', order=>'lower(strid)') ], $param{press_id} ); ) ?>
 			</select>
 		</li>
-		<? if ( $session{user_type} eq 'A' or openprint::usergroup::is_user_in( ['Sales Admin','Reporting','Accounting'], $session{user_id} ) ) ?>
 		<li>
 			<label>Reprint</label>
 			<? echo ( radio( 'reprint', [ 'Y', 'Yes', 'N', 'No', '', 'Both' ], $param{reprint} ); ) ?>
@@ -85,6 +84,7 @@
 			<label>POs</label>
 			<? echo ( radio( 'pos', [ 'With', 'With', 'Without', 'Without', '', 'All' ], $param{reprint} ); ) ?>
 		</li>
+<?include(_services_filter.html)?>
 		<li>
 			<label>Sort By</label>
 			<select name="order">
@@ -93,7 +93,6 @@
 				<option value="company">Company</option>
 			</select>
 		</li>
-		<? endif ( $session{user_type} eq 'A' or openprint::usergroup::is_user_in( ['Sales Admin','Reporting','Accounting'], $session{user_id} ) ) ?>
 		</ul>
 		 <p class="buttons">
 			 <? echo ( join("\n",

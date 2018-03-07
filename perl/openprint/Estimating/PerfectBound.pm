@@ -532,6 +532,11 @@ sub calc {
 			$$specs{'Imposition'.$qty_index} = '' if ( ! $$specs{'OverrideImposition'.$qty_index} ) or ( $$specs{'OverrideImposition'.$qty_index} ne 'Y' );
 		} # end if
 
+		if ( ! defined $price{Price} ) {
+			$price{Price} = 0;
+			$price{MPrice} = 0;
+		}
+
 		if ( $$specs{"Markup$qty_index"} ) {
 			$price{MPrice} *= (1+$$specs{"Markup$qty_index"}/100);
 			$price{Price} *= (1+$$specs{"Markup$qty_index"}/100);
@@ -550,7 +555,7 @@ sub calc {
 		$$specs{"txtRunTime$qty_index"} = $price{RunTime};
 	} # end foreach qty_index
 
-	$log->debug(" END Perfect Bound!!!!!!!!!!!!!!!!!!");
+	$log->debug(" END Perfect Bound!!!!!!!!!!!!!!!!!! status: $$specs{Status}");
 	return $$specs{Status};
 } # end sub calc
 

@@ -552,7 +552,7 @@ $openprint::log->debug("Colour bar is now $colour_bar") if DEBUG;
 	} # end if
 
 	$adjusted_paper_height = 0 if $adjusted_paper_height < 0;
-	$openprint::log->debug("Height: $paper_height - CB $$specs{colour_bar_size} - Grip $$specs{'Grip Size'} CropTOp: $$setup1{cropmark_top} - CropBottom: $$setup1{cropmark_bottom} = $adjusted_paper_height") if DEBUG;
+	$openprint::log->debug("Height: $adjusted_paper_height - CB $$specs{colour_bar_size} - Grip $$specs{'Grip Size'} CropTOp: $$setup1{cropmark_top} - CropBottom: $$setup1{cropmark_bottom} = $adjusted_paper_height") if DEBUG;
 
 	my $adjusted_paper_width = $paper_width; 
 	if ( $Paper->cuttable() ) {

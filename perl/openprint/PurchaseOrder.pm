@@ -171,7 +171,7 @@ sub Contents {
 		$_[0]{Contents} = $_[1];
 	}
 	if ( $_[0]{id} and ! $_[0]{Contents} ) {
-		$_[0]{Contents} = [openprint::PurchaseOrder_Content->find('po_id'=>$_[0]{id},'order'=>'id')];
+		$_[0]{Contents} = [openprint::PurchaseOrder_Content->find( po_id=>$_[0]{id}, order=>'id')];
 	} # end if
 	return @{$_[0]{Contents}} if $_[0]{Contents};
 	return ();
@@ -736,18 +736,26 @@ sub can_see_pricing {
 	} # end if
 
 	if ( $_[1] ) {
-		my @contains = sets::contains( [ $$User{id}, $User->assistant_ids(), $User->csr_ids() ], [ map { $_->salesrep_id() } $_[1]->Orders() ] );
-		if ( @contains ) {
-			$log->debug("can see pricing because @contains in orders") if $debug;
-			return 1;
+		if ( $_[1]->Type()->type() eq 'Sheet Stock' or $_[1]->Type()->type() eq 'Roll stock' ) {
+			# Ahmed doesn't want people to see stock pricing
+		} else {
+			my @contains = sets::contains( [ $$User{id}, $User->assistant_ids(), $User->csr_ids() ], [ map { $_->salesrep_id() } $_[1]->Orders() ] );
+			if ( @contains ) {
+				$log->debug("can see pricing because @contains in orders") if $debug;
+				return 1;
+			} # end if
 		} # end if
 	} else {
 		foreach my $C ( $_[0]->Contents() ) {
+		if ( $C->Type()->type() eq 'Sheet Stock' or $C->Type()->type() eq 'Roll stock' ) {
+			# Ahmed doesn't want people to see stock pricing
+		} else {
 
 			my @contains = sets::contains( [ $$User{id}, $User->assistant_ids(), $User->csr_ids() ], [ map { $_->salesrep_id() } $C->Orders() ] );
 			if ( @contains ) {
 				$log->debug("can see pricing because @contains in orders") if $debug;
 				return 1;
+			} # end if
 			} # end if
 		} # end foreach C
 	} # end if
