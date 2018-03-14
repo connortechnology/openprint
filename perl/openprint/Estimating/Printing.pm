@@ -5431,20 +5431,25 @@ sub calc_price {
 	} # end if
 
 	my $run_overs = 0;
-	my $over_rate = 0;
+	my $overs_rate = 0;
 	if ( $$specs{'OverrideRun'.$qty_index} and ( $$specs{'OverrideRun'.$qty_index} eq 'Y' ) ) {
 		$run_overs = $$specs{'OverRun'.$qty_index};
 	} else {
 # Should include bindery overs, but not setups, because the setup overs do the same job as the Run Overs
-		$over_rate = $Press->specification( 'Press Run Overs', $net_sheets );
-		if ( $over_rate ) {
-			$price{'Overs Rate'} = $over_rate;
-			if ( ( $$specs{txtSignatureType} eq 'Cover Pages' ) and ( $_ = $Press->Specification( 'Covers Overs Percentage' ) ) ) {
-				$over_rate *= ( 1 + $$_{value} / 100 );
-			} # end if
-			$run_overs = $net_sheets * $over_rate;
+		my $PressRunOvers = $Press->Specification( 'Press Run Overs', $net_sheets );
+		if ( $PressRunOvers ) {
+			if ( $$PressRunOvers{units} eq 'Press Sheets' ) {
+				$run_overs = $$PressRunOvers{value};
+			} else {
+				#Percentage
+				$price{'Overs Rate'} = $$PressRunOvers{value};
+				if ( ( $$specs{txtSignatureType} eq 'Cover Pages' ) and ( $_ = $Press->Specification( 'Covers Overs Percentage' ) ) ) {
+					$price{'Overs Rate'} *= ( 1 + $$_{value} / 100 );
+				} # end if
+				$run_overs = int($net_sheets * $price{'Overs Rate'});
+			}
 		} else {
-			$over_rate = 0;
+			$overs_rate = 0;
 			$price{'Overs Rate'} = 0;
 		}
 	} # end if
@@ -5934,11 +5939,13 @@ if ( 1 ) {
 		$setup_overs += $fm_overs + $additional_setup_overs;
 	} # en dif
 
+if ( 0 ) {
 	if ( $$specs{'OverrideRun'.$qty_index} and (  $$specs{'OverrideRun'.$qty_index} eq 'Y' ) ) {
 		$run_overs = $$specs{'OverRun'.$qty_index};
 	} else {
-		$run_overs = ceil( $net_sheets * $over_rate );
+		$run_overs = ceil( $net_sheets * $overs_rate );
 	} # end if
+} # end if
 
 	my $total_overs = 0;
 
