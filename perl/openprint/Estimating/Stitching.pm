@@ -492,10 +492,10 @@ EQUIPMENT:foreach my $Equipment ( @equipment ) {
 
 			my $capable = $Equipment->specification('Stitching Capable');
 
-			if ( $capable eq 'When Digital' and $Press->specification('Printing Type') ne 'Digital' ) {
+			if ( ( $capable eq 'When Digital' ) and ( $Press->specification('Printing Type') ne 'Digital' ) ) {
 				$results{Breakdown} .= 'Not printed digital.<br/>';
 				next;
-			} elsif ( $capable eq 'When Not Digital' and $Press->specification('Printing Type') eq 'Digital' ) {
+			} elsif ( ( $capable eq 'When Not Digital' ) and ( $Press->specification('Printing Type') eq 'Digital' ) ) {
 				$results{Breakdown} .= 'Not for digital.<br/>';
 				next;
 			} # end if
@@ -678,7 +678,7 @@ $log->debug("Insert qty: $$specs{txtInsertQuantity}");
 
 		if ( ! @possible_equipment ) {
 # alert the user that no equipment is good.
-			$$specs{alert} = 'Our stitching equipment cannot run this project, for the following reasons:<br/>';
+			$$specs{alert} .= 'Our stitching equipment cannot run this project, for the following reasons:<br/>';
 			foreach my $press_id ( keys %error ) {
 				my $Equipment = new openprint::Equipment( $press_id );
 				$$specs{alert} .= 'For ' . $Equipment->name() . ': ' .  $error{$press_id};
@@ -816,13 +816,13 @@ sub equipment_fits {
 				return ': Too Thick.<br/>';
 			} # end if
 		} else {
-            $openprint::log->warn("No min calliper set for $$specs{ServiceTypeName} on $$Equipment{strid}");
-        } # end if
+			$openprint::log->warn("No min calliper set for $$specs{ServiceTypeName} on $$Equipment{strid}");
+		} # end if
 
 	} else {
 		$openprint::log->error("No calliper in Stitching::get_equipment");
 	} # end if
-	return;
+	return '';
 }
 
 sub get_equipment {
