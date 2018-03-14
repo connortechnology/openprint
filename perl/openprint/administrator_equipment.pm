@@ -300,12 +300,12 @@ sub _fold {
 	} elsif ( $param{action} eq 'copy' ) {
 		my $NewFold = $Fold->copy();
 		delete $param{id};
-		$NewFold->save(\%param);
-		foreach my $Spec ( $Fold->Specifications() ) {
-			$Spec = $Spec->copy();
-			$Spec->fold_id( $NewFold->id() );
-			$Spec->save();
+		$variable{error} .= $NewFold->save(\%param);
+		if ( ! $variable{error} ) {
+		foreach my $Spec ( $NewFold->Specifications() ) {
+			$_ = $Spec->save( {fold_id=>$NewFold->id() });
 		} # end foreach Spec
+		}
 		$variable{Fold} = $NewFold;
 		$param{id} = $NewFold->id();
 		
@@ -326,6 +326,9 @@ sub _fold {
 
 sub _fold_specification {
 	my $FoldSpecification = new openprint::FoldSpecification( $param{id} );
+	my $Fold = $FoldSpecification->Fold();
+	my $Equipment = $Fold->Equipment();
+
 	if ( $param{action} eq 'add' ) {
 		foreach my $k ( 'fold_id' ) {
 			$$FoldSpecification{$k} = $param{$k};
@@ -334,13 +337,16 @@ sub _fold_specification {
 		$variable{Specification} = $FoldSpecification;
 	} elsif ( $param{action} eq 'delete' ) {
 		$FoldSpecification->delete();
+			(new openprint::Log())->save({ object_type=>(ref $Equipment), object_id=>$$Equipment{id}, action=>'Save Fold', note=>'Fold ' . $$Fold{name} . ' specification deleted ' . $FoldSpecification->to_string() });
 		$variable{PageContent} = ' ';
 	} elsif ( $param{action} eq 'update' ) {
 		if ( $param{field} ne 'interpolate' ) {
+			(new openprint::Log())->save({ object_type=>(ref $Equipment), object_id=>$$Equipment{id}, action=>'Save Fold', note=>'Fold ' . $$Fold{name} . ' specification ' . $param{field} . ' changed from ' . $$FoldSpecification{$param{field}} . ' to ' . $param{value} });
 			$$FoldSpecification{$param{field}} = $param{value};
 			$FoldSpecification->save();
 			$variable{PageContent} = $$FoldSpecification{$param{field}};
 		} else {
+			(new openprint::Log())->save({ object_type=>(ref $Equipment), object_id=>$$Equipment{id}, action=>'Save Fold', note=>'Fold ' . $$Fold{name} . ' specification ' . $param{field} . ' changed from ' . $$FoldSpecification{$param{field}} . ' to ' . $param{value} });
 			$$FoldSpecification{interpolate} = ! $$FoldSpecification{interpolate};
 			$$FoldSpecification{interpolate} = 1 * $$FoldSpecification{interpolate};
 			$FoldSpecification->save();
