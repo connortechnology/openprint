@@ -495,6 +495,9 @@ EQUIPMENT:foreach my $Equipment ( @equipment ) {
 			if ( $capable eq 'When Digital' and $Press->specification('Printing Type') ne 'Digital' ) {
 				$results{Breakdown} .= 'Not printed digital.<br/>';
 				next;
+			} elsif ( $capable eq 'When Not Digital' and $Press->specification('Printing Type') eq 'Digital' ) {
+				$results{Breakdown} .= 'Not for digital.<br/>';
+				next;
 			} # end if
 			if ( $$I{Folder} and ( $$I{Folder}->id() != $Equipment->id() ) ) {
 				if ( ( $_ = $$I{Folder}->specification('Folding Capable') ) and ( $_ eq 'When Stitching' ) ) {
@@ -768,7 +771,7 @@ $log->debug("Insert qty: $$specs{txtInsertQuantity}");
 sub display {
 	my ( $log, $dbh, $variable, $project_index, $service_index ) = @_;
 
-	@{$$variable{Equipment}} = openprint::Equipment->find( Specifications => {'Stitching Capable'=>['Y','When Printing','When Digital','When Folding']}, useinestimating=>1,order=>'lower(strName)');
+	@{$$variable{Equipment}} = openprint::Equipment->find( Specifications => {'Stitching Capable'=>['Y','When Printing','When Digital','When Folding','When Not Digital']}, useinestimating=>1,order=>'lower(strName)');
 
 #my $Project = new openprint::Project( $project_index );
 #my $ProjectType = $Project->Type();
@@ -826,7 +829,7 @@ sub get_equipment {
 	my ( $specs, $error ) = @_;
 
 	my @possible_equipment;
-	my @all_equipment = openprint::Equipment->find( Specifications => {'Stitching Capable'=>['Y','When Printing','When Digital','When Folding']}, useinestimating=>1,order=>'strName');
+	my @all_equipment = openprint::Equipment->find( Specifications => {'Stitching Capable'=>['Y','When Printing','When Digital','When Folding','When Not Digital']}, useinestimating=>1,order=>'strName');
 
 	foreach my $Equipment ( @all_equipment ) {
 		$_ = equipment_fits( $Equipment, $specs );
