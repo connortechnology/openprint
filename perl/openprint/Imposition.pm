@@ -881,5 +881,15 @@ sub to_svg {
 	return $svg;
 }
 
+sub landscape_portrait_square {
+	if ( $_[0]{image_width} < $_[0]{image_height} ) {
+		return 'portrait';
+	} elsif ( $_[0]{image_width} > $_[0]{image_height} ) {
+		return 'landscape';
+	} else {
+		return 'square';
+	}
+}
+
 1;
 __END__
