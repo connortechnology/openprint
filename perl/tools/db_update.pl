@@ -1895,6 +1895,14 @@ if ( ! sets::isin( 'folds', \@tables ) ) {
 			$dbh->do('DROP SEQUENCE fold_id_seq');
 		} # end if
 	} # end if
+	if ( ! exists $$data{runspeed_units} ) {
+		$log->debug("Adding runspeed_units to folds");
+		$dbh->do(q`ALTER TABLE folds ADD runspeed_units TEXT NOT NULL default 'gsm'`);
+	} # end if
+	if ( ! exists $$data{orientation} ) {
+		$log->debug("Adding orientation to folds");
+		$dbh->do(q`ALTER TABLE folds ADD orientation TEXT`);
+	} # end if
 	if ( ! exists $$data{comments} ) {
 		$dbh->do('ALTER TABLE folds ADD comments TEXT');
 	} # end if
