@@ -1,8 +1,5 @@
 <? eval (
 	$$variable{foldok} = '';
-	#if ( $$variable{Specification}->interpolate() and ( $$variable{Specification}->min_weight() != $$variable{Specification}->max_weight() ) ) {
-		#$$variable{foldok} = 'error';
-	#} # end if
 ) ?>
 <tr <? if ( $$variable{foldok} ) ?>style="background-color: red;"<? endif ( $$variable{foldok} ) ?> id="FoldSpecification-<? echo ( $$variable{Specification}->id(); ) ?>" >
 	<td><span style="width:100%; float: left;" id="min_weight-<? echo ( $$variable{Specification}->id() ) ?>"><? echo ( $$variable{Specification}->min_weight() eq '' ? '&nbsp;' : $$variable{Specification}->min_weight(); ) ?></span></td>
