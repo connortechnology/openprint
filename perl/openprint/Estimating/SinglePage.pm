@@ -71,7 +71,7 @@ sub calc {
 
 sub calculate_signatures {
 	shift @_ if $_[0] eq 'openprint::Estimating::SinglePage::calculate_signatures';
-	my ( $Project ) = $_[0];
+	my $Project = $_[0];
 
 	my $status = 'calculated';
 $openprint::log->debug("****************************************************************Starting SinglePage::calculate_signatures");
@@ -185,13 +185,13 @@ $openprint::log->debug( "Signature: @signatures");
 
 			} # end foreach qty_index
 
-			my $ac = sql::start_transaction( $openprint::dbh );
+			$Project->lock();
 			sql::update( undef, undef, 'tbl_Project_Contents', ['lngProjectIndex=? AND lngServiceIndex=?', $$Project{id}, $a_ss_id], 'strStatus', $status );
 
 			foreach my $key ( openprint::Estimating::Printing::variables( $$Project{id}, $a_ss_id, $new_sig_specs, \%specs ) ) {
 				openprint::service::insert_service_spec( undef, undef, $$Project{id}, $a_ss_id, $key, $specs{$key} );
 			} # end foreach
-			sql::end_transaction( $openprint::dbh, $ac );
+			$Project->unlock();
 
 		} # end while Additional Imposition
 
