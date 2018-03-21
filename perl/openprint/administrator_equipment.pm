@@ -126,7 +126,7 @@ sub edit {
 	} elsif ( $param{btnFunction} eq 'Export Specifications' ) {
 		export_specs( $Equipment );
 	} elsif ( $param{btnFunction} eq 'Export Folds' ) {
-		my @header = ( 'Equipment ID', 'Fold Type', 'Description', 'Pages', 'Horizontal Pages', 'Vertical Pages', 'Folds', 'Angles', 'Spine Direction', 'Min Imposition', 'Max Imposition', 'Min Page Width', 'Max Page Width', 'Min Page Height', 'Max Page Height', 'Min Calliper', 'Max Calliper', 'Printing Type', 'Make Ready Time', 'Make Ready Overs', 'Make Ready Units', 'Run Overs', 'Run Overs Units', 'Inline Cutting', 'When Stitching', 'When Perfect Binding', 'Spine Pasting');
+		my @header = ( 'Equipment ID', 'Fold Type', 'Description', 'Pages', 'Horizontal Pages', 'Vertical Pages', 'Folds', 'Angles', 'Spine Direction', 'Min Imposition', 'Max Imposition', 'Min Page Width', 'Max Page Width', 'Min Page Height', 'Max Page Height', 'Min Calliper', 'Max Calliper', 'Printing Type', 'Make Ready Time', 'Make Ready Overs', 'Make Ready Units', 'Run Overs', 'Run Overs Units', 'Runspeed Units','Orientation', 'Inline Cutting', 'When Stitching', 'When Perfect Binding', 'Spine Pasting');
 
 		my $max_speeds = 0;
 		my @data;
@@ -147,6 +147,8 @@ sub edit {
 					 $Fold->min_width(), $Fold->max_width(), $Fold->min_height(), $Fold->max_height(), $Fold->min_calliper(), $Fold->max_calliper(), 
 					 $Fold->printing_type(), $Fold->makeready_time(), $Fold->makeready_overs(), $Fold->makeready_overs_units(), 
 					 $Fold->run_overs(), $Fold->run_overs_units(), 
+					 $Fold->runspeed_units(),
+					 $Fold->orientation(),
 					 $Fold->cutting(), $Fold->stitching(), $Fold->perfectbind(), $Fold->spinepaste();
 			my @Speeds = $Fold->Specifications();
 			my $speeds = scalar @Speeds;
@@ -168,26 +170,30 @@ sub edit {
 		my $error = '';
 		if ( ! $param{fileFolds} ) {
 			$variable{error} .= 'No file given to upload.<br>';
+$log->error("No file given");
 			return;
 		} # end if
+$log->error("file given");
 
 		my $ac = sql::start_transaction( $dbh );
 
-        sql::execute( undef, undef, 'DELETE FROM Folds' . ( $Equipment->id()?' WHERE equipment_id=' . $Equipment->id():''));
+		sql::execute( undef, undef, 'DELETE FROM Fold_Specifications WHERE fold_id IN (SELECT id FROM Folds ' . ( $Equipment->id()?' WHERE equipment_id=' . $Equipment->id():'').')');
+		sql::execute( undef, undef, 'DELETE FROM Folds' . ( $Equipment->id()?' WHERE equipment_id=' . $Equipment->id():''));
 
-        my $upload = $r->upload( 'fileFolds' );
-        my $io = $upload->io();
-        $_ = <$io>;
+		my $upload = $r->upload('fileFolds');
+		my $io = $upload->io();
+		$_ = <$io>;
 
-        my $csv = Text::CSV_XS->new();
+		my $csv = Text::CSV_XS->new();
 
-        while (<$io>) {
+		while (<$io>) {
 			my $status = $csv->parse($_);
 			my ( $equipment_strid, $type, $name, $pages, $page_columns, $page_rows, $folds, $angles, $spine_direction, 
 					$min_imposition, $max_imposition, $min_width, $max_width, $min_height, $max_height, 
 					$min_calliper, $max_calliper, 
-					$printing_type, $makeready_time, $makeready_overs, $makeready_overs_units, $run_overs, $run_overs_units, $cutting, $stitching, $perfectbind, $spinepaste, @speeds )
-
+					$printing_type, $makeready_time, $makeready_overs, $makeready_overs_units, $run_overs, $run_overs_units, 
+					$runspeed_units, $orientation,
+					$cutting, $stitching, $perfectbind, $spinepaste, @speeds )
 				= misc::trim( $csv->fields() );
 
 			if ( ! $equipment{$equipment_strid} ) {
@@ -211,6 +217,8 @@ $log->error($error);
 					page_rows             =>  $page_rows,
 					min_imposition        =>  $min_imposition,
 					max_imposition        =>  $max_imposition,
+					runspeed_units				=>	$runspeed_units,
+					orientation						=>	$orientation,	
 					cutting               =>  $cutting,
 					stitching             =>  $stitching,
 					perfectbind           =>  $perfectbind,
@@ -225,6 +233,10 @@ $log->error($error);
 					angles                =>  $angles,
 					printing_type         =>  $printing_type,
 			});
+			if ( $error ) {
+				$dbh->rollback();
+				last;
+			}
 			while ( my ( $min_weight, $max_weight, $weight_units, $runspeed, $interpolate ) = splice @speeds, 0, 5 ) {
 				next if ! $runspeed;
 				my $Speed =  new openprint::FoldSpecification();
@@ -240,7 +252,7 @@ $log->error($error);
 			} # end while speeds
 
 		} # end while IO
-        sql::end_transaction( $dbh, $ac );
+		sql::end_transaction( $dbh, $ac );
 	$variable{error} = $error;
 	} # end if
 
