@@ -1178,14 +1178,15 @@ sub add_signature {
 
 sub copy_signature {
 	my ( $self, $sig_specs, $data, $status ) = @_;
+	$self->lock();
 	my $new_service_index = $self->add_signature( undef, $status );
 	if ( ! $new_service_index ) {
 		$log->error('Error copying signature.');
+		$self->unlock();
 		return;
 	} # end if
 	my $new_specs = openprint::service::get_specs_ref( $self, $new_service_index );
 
-	my $ac = sql::start_transaction( $dbh );
 	foreach my $key ( openprint::Estimating::Printing::variables( $$self{id}, $new_service_index, $new_specs, $sig_specs ) ) {
 		next if $key eq 'SignatureIndex';
 		if ( exists $$data{$key} ) {
@@ -1194,7 +1195,7 @@ sub copy_signature {
 			openprint::service::insert_service_spec( $log, $dbh, $self->id(), $new_service_index, $key, $$sig_specs{$key}, ! exists $$new_specs{$key} );
 		} # end if
 	} # end foreach
-	sql::end_transaction( $dbh, $ac );
+	$self->unlock();
 	return $new_service_index;
 } # end sub copy_signature
 
