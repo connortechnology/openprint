@@ -281,11 +281,11 @@ $log->error("PReventing customer change");
 		} # end if
 	} elsif ( $param{btnFunction} eq 'Delete' ) {
 		$User->delete();
-		$User = $User->Next( 'type'=>$param{ddmUserRole}, 'company_id'=>$param{ddmCustomer} );
+		$User = $User->Next( type=>$param{ddmUserRole}, company_id=>$param{ddmCustomer} );
 		$variable{information} = 'User marked deleted.';
 	} elsif ( $param{btnFunction} eq 'Destroy' ) {
 		$User->destroy();
-		$User = $User->Next( 'type'=>$param{ddmUserRole}, 'company_id'=>$param{ddmCustomer} );
+		$User = $User->Next( type=>$param{ddmUserRole}, company_id=>$param{ddmCustomer} );
 		$variable{information} = 'Record deleted.';
 
 	} elsif ($param{btnFunction} eq 'Save') {
