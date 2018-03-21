@@ -447,12 +447,12 @@ EQUIPMENT:foreach my $Equipment ( @equipment ) {
 					next;
 				} # end if
 				if ( $$Press{id} != $$Equipment{id} ) {
-					$results{Breakdown} .= "Press not the same: " . $I->Press()->id() . ' != ' . $Equipment->id() if DEBUG;
+					$results{Breakdown} .= "Press not the same: " . $I->Press()->id() . ' != ' . $Equipment->id() . '<br/>' if DEBUG;
 					next;
 				} # end if
 
 				if ( $$I{Folder} and ( $$I{Folder}->id() != $Equipment->id() ) ) {
-					$results{Breakdown} .= "Folder not the same: " . $$I{Folder}{id}. ' != ' . $Equipment->id() if DEBUG;
+					$results{Breakdown} .= "Folder not the same: " . $$I{Folder}{id}. ' != ' . $Equipment->id() . '<br/>' if DEBUG;
 					next;
 				} # end if
 
@@ -895,12 +895,13 @@ sub get_price {
 		$unitsPerHour = $Equipment->specification( $$ServiceType{name}.'Units Per Hour', $maxPockets ) if ! $unitsPerHour;
 		$unitsPerHour = $Equipment->specification( 'Units Per Hour '.$price{Imposition}.' out', $maxPockets ) if ! $unitsPerHour;
 		$unitsPerHour = $Equipment->specification( 'Units Per Hour', $maxPockets ) if ! $unitsPerHour;
-	if ( ( defined $$specs{txtInsertQuantity} ) and ( $$specs{txtInsertQuantity} > 0 ) ) {
-		my $insert_slowdown = 0;
-		if ( $insert_slowdown = $Equipment->specification('Insert Slowdown') ) {
-			$unitsPerHour -= $insert_slowdown;
+
+		if ( ( defined $$specs{txtInsertQuantity} ) and ( $$specs{txtInsertQuantity} > 0 ) ) {
+			my $insert_slowdown = 0;
+			if ( $insert_slowdown = $Equipment->specification('Insert Slowdown') ) {
+				$unitsPerHour -= $insert_slowdown;
+			}
 		}
-	}
 		
 		my $runtime = $unitsPerHour ? $qty/$unitsPerHour : 0; # in hours
 
@@ -914,6 +915,8 @@ sub get_price {
 			} else {
 				$openprint::log->error("880: Unknown Unit Type: ($$servicePrice{units}) for service $$Service{name} on $$Equipment{strid} $$Equipment{name} maxpockets: $maxPockets");
 			} # end if
+		} else {
+			$openprint::log->warning("No service price for $$Service{name}");
 		}
 
 		my $loopbreak_pockets = $neededPockets;
@@ -983,12 +986,13 @@ sub get_price {
 		$unitsPerHour = $Equipment->specification( $$ServiceType{name}.'Units Per Hour', $neededPockets ) if ! $unitsPerHour;
 		$unitsPerHour = $Equipment->specification( 'Units Per Hour ' . $price{Imposition} . ' out', $neededPockets ) if ! $unitsPerHour;
 		$unitsPerHour = $Equipment->specification( 'Units Per Hour', $neededPockets ) if ! $unitsPerHour;
-	if ( ( defined $$specs{txtInsertQuantity} ) and ( $$specs{txtInsertQuantity} > 0 ) ) {
-		my $insert_slowdown = 0;
-		if ( $insert_slowdown = $Equipment->specification('Insert Slowdown') ) {
-			$unitsPerHour -= $insert_slowdown;
+
+		if ( ( defined $$specs{txtInsertQuantity} ) and ( $$specs{txtInsertQuantity} > 0 ) ) {
+			my $insert_slowdown = 0;
+			if ( $insert_slowdown = $Equipment->specification('Insert Slowdown') ) {
+				$unitsPerHour -= $insert_slowdown;
+			}
 		}
-	}
 		$pass{Runspeed} = $unitsPerHour;
 		my $runtime = $unitsPerHour ? $qty/$unitsPerHour : 0; # in horus
 		$pass{RunTime} = $runtime;
@@ -1012,6 +1016,8 @@ sub get_price {
 				$openprint::log->debug("Unknown Units: $$servicePrice{units} for $$ServiceType{name} range($neededPockets) equipment(".$Equipment->strid().")");
 			} # end if
 			$price{Service} += $$servicePrice{Total}
+		} else {
+			$openprint::log->warn("No service price for $$Service{name}");
 		}
 
 		$price{RunTime} += $runtime;
@@ -1094,12 +1100,12 @@ sub get_price {
 	if ( $plusCover ) {
 		my $StitchingCoverService = openprint::Service->find_one(name=>$$ServiceType{name}.'Cover');
 		if ( $StitchingCoverService ) {
-		my $StitchingCoverPrice = $StitchingCoverService->get_Price( $qty, $Equipment );
+			my $StitchingCoverPrice = $StitchingCoverService->get_Price( $qty, $Equipment );
 			if ( $StitchingCoverPrice ) {
-					$price{CoverService} = $StitchingCoverService;
-					$price{CoverPrice} = $StitchingCoverPrice;
-					$$StitchingCoverPrice{Total} = $$StitchingCoverPrice{Price} * $qty;
-					$price{Service} += $$StitchingCoverPrice{Total};
+				$price{CoverService} = $StitchingCoverService;
+				$price{CoverPrice} = $StitchingCoverPrice;
+				$$StitchingCoverPrice{Total} = $$StitchingCoverPrice{Price} * $qty;
+				$price{Service} += $$StitchingCoverPrice{Total};
 			}
 		}
 	}
