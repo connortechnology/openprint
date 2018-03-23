@@ -3105,7 +3105,7 @@ sub save_price( $$$$$ ) {
 
 	if ( my $stock_qt = $$price{'Stock Quantity'} ) {
 		$$specs{'OverSetup'.$qty_index} = $$stock_qt{'Initial Setup Overs'};
-		$$specs{'OverRun'.$qty_index} = $$stock_qt{'Run Overs'};
+		$$specs{'OverRun'.$qty_index} = $$stock_qt{'Run Overs'}{total};
 		$$specs{'OverTotal'.$qty_index} = $$stock_qt{'Total Overs'};
 	} # end if
 	$$specs{'ImpositionCharge'.$qty_index} = $$price{'Imposition Total'};
