@@ -5,7 +5,7 @@ package openprint::Imposition;
 require Math::Round;
 require Data::Dumper;
 use vars qw( $AUTOLOAD %Orientations);
-use constant DEBUG => 1;
+use constant DEBUG => 0;
 use constant DEBUG_PERFORMANCE => 1;
 
 use constant Vertical => 0;
