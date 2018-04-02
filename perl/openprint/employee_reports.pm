@@ -902,6 +902,17 @@ sub _production_performance {
 			} # end if press_names
 
 			my @fragment = ( $Order->id(), $Order->docket(), $Project->id(), $Order->company_name(), $Order->created_on(), $Project->status(), $Project->ordered_price() );
+			my $impressions = 0;
+			foreach my $sig_id ( @signatures ) {
+				my $Service = $Project->Service( $sig_id );
+				my $sig_specs = $Service->specs();
+				if ( ! $$sig_specs{'hdnImpressionQuantity'.$qty_index} ) {
+					next;
+				} # end if
+				$impressions += $$sig_specs{'hdnImpressionQuantity'.$qty_index};
+			}
+			push @fragment, $impressions;
+	
 			my %category_totals;
 			foreach my $Category ( @ServiceType_Categories ) {
 				$category_totals{$$Category{id}} = 0;
@@ -1001,6 +1012,7 @@ $openprint::log->debug("PI Stock for $$Order{docket} is $$PI{delta} " . $PI->Pap
 	} # end foreach Order
 
 	$variable{Header} = [ 'Order ID', 'Docket', 'Project ID', 'Company', 'Created On', 'Status', 'Project Value',
+		'Impressions',
 		( map { $$_{name} } @ServiceType_Categories ),
 		( $columns{plates} ? ( 'Plates', 'Plate Cost', 'Plate Total' ) : () ),
 		( $columns{production} ? ( 'Operator Assigned', 'Printed On', 'Completed On', 'Invoiced On' ) : () ),

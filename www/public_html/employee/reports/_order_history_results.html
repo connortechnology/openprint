@@ -3,6 +3,8 @@
 <? if ( $param{press_id} ) ?>
 The following had one or more signatures that ran on <? echo ( join(': ', new openprint::Equipment( $param{press_id} )->get('strid','name') ); ) ?><br/><br/>
 <? endif ( $param{press_id} ) ?>
+	<? echo (
+		my $html = '
 <table class="List sortable">
 	<tr>
 		<th class="order_id">Order #</th>
@@ -13,13 +15,14 @@ The following had one or more signatures that ran on <? echo ( join(': ', new op
 		<th class="DateTime">Printed On</th>
 		<th class="status">Status</th>
 		<th class="Price">Total</th>
-	</tr>
-	<? echo (
-		my $html = '';
+		';
+		my %ServiceTypesById = map { $$_{id} => $_ } @{$variable{ServiceTypes}};
+		my @servicetype_ids = split(',',$session{$uri.'?servicetype_id'} );
+		$html .= join("\n",  map { '<th>'.$ServiceTypesById{$_}->description().'</th>' } @servicetype_ids )
+		$html .= '</tr>';
 		my $rowclass;
 		my $total;
 		my $uri = '/employee/reports/order_history.html';
-		my @servicetype_ids = split(',',$session{$uri.'?servicetype_id'} );
 
 		foreach my $Order ( @{$$variable{Orders}} ) {
 			my $price;
@@ -47,7 +50,7 @@ The following had one or more signatures that ran on <? echo ( join(': ', new op
 			);
 			foreach my $Project ( $Order->Projects() ) {
 
-				my @Services = openprint::Project_Service->find(project_id=>$$Project{id}, 'servicetype_id'=>\@servicetype_ids);
+				my @Services = openprint::Project_Service->find(project_id=>$$Project{id}, servicetype_id=>\@servicetype_ids);
 
 				$html .= sprintf('
         <tr%1$s>
