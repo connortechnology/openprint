@@ -1,7 +1,7 @@
 <?include('/includes/error_reporting.html')?>
 <? if ( @{$$variable{Orders}} ) ?>
 <? if ( $param{press_id} ) ?>
-The following had one or more signatures that ran on <? echo ( join(': ', new openprint::Equipment( $param{press_id} )->get('strid','name') ); ) ?><br/><br/>
+The following had one or more signatures that ran on <? echo ( join(': ', new openprint::Equipment($param{press_id})->get('strid','name') ); ) ?><br/><br/>
 <? endif ( $param{press_id} ) ?>
 <table class="List sortable">
 	<tr>
@@ -47,7 +47,10 @@ The following had one or more signatures that ran on <? echo ( join(': ', new op
 			);
 			foreach my $Project ( $Order->Projects() ) {
 
-				my @Services = openprint::Project_Service->find(project_id=>$$Project{id}, 'servicetype_id'=>\@servicetype_ids);
+				my @Services = openprint::Project_Service->find(
+						project_id=>$$Project{id},
+						servicetype_id=>\@servicetype_ids
+						) if @servicetype_ids;
 
 				$html .= sprintf('
         <tr%1$s>
