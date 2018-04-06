@@ -261,7 +261,8 @@ sub _order_history_results {
 		my @servicetype_ids = split(',',$session{$uri.'?servicetype_id'} );
 
 		$variable{Orders} = [];
-		foreach my $Order ( openprint::Order->find(
+
+		my @Orders = openprint::Order->find(
 			company_id => ( ($session{$uri.'?company_id'} and ( ( ! %parameters ) or exists $companies{$session{$uri.'?company_id'}} ) ) ? $session{$uri.'?company_id'} : [ keys %companies ] ),
 			( $session{$uri.'?CSR'} ? ( salesrep_id	=> $session{$uri.'?CSR'} ) : () ),
 			ssi::date_filter( $uri.'?created_on_start', 'created_on >=' ),
@@ -271,7 +272,24 @@ sub _order_history_results {
 			( $session{$uri.'?total_end'} ? ( 'total <=' => $session{$uri.'?total_end'} ) : () ),
 			( $session{$uri.'?currency_id'} ? ( currency_id=>$session{$uri.'?currency_id'} ) : () ),
 			order => ($param{order} ? $openprint::Order::fields{$param{order}} : 'id'),
-		) ) {
+		);
+		my @order_ids = map { $$_{id} } @Orders;
+
+		my %Projects_By_OrderId;
+		foreach my $Project ( openprint::Project->find(order_id=>\@order_ids) ) {
+			$Projects_By_OrderId{$$Project{order_id}} = [] if ! $Projects_By_OrderId{$$Project{order_id}};
+			push @{$Projects_By_OrderId{$$Project{order_id}}}, $Project;
+		}
+
+		my %Invoices_By_OrderId;
+		foreach my $Invoice ( openprint::Order_Invoice->find(order_id=>\@order_ids) ) {
+			$Invoices_By_OrderId{$$Invoice{order_id}} = [] if ! $Invoices_By_OrderId{$$Invoice{order_id}};
+			push @{$Invoices_By_OrderId{$$Invoice{order_id}}}, $Invoice;
+		}
+
+		foreach my $Order ( @Orders ) {
+			$$Order{Projects} = $Projects_By_OrderId{$$Order{id}};
+			$$Order{Invoices} = $Invoices_By_OrderId{$$Order{id}};
 			if ( $param{reprint} ) {
 				my $reprint = 0;
 				foreach my $Project ( $Order->Projects() ) {
@@ -289,8 +307,8 @@ sub _order_history_results {
 			my $printed_on_start_seconds = Date::Parse::str2time( $printed_on_start ) if $printed_on_start;
 
 			my @printed_on_end = map{ @session{$uri.'?printed_on_end_'.$_} } ( 'year','month','day' );
-			my $printed_on_end = join('-', @printed_on_end ) if Date::Calc::check_date( @printed_on_end );
-			my $printed_on_end_seconds = Date::Parse::str2time( $printed_on_end ) if $printed_on_end;
+			my $printed_on_end = join('-', @printed_on_end) if Date::Calc::check_date(@printed_on_end);
+			my $printed_on_end_seconds = Date::Parse::str2time($printed_on_end) if $printed_on_end;
 
 			if ( $printed_on_start or $printed_on_end ) {
 				my $keep = 0;
@@ -319,7 +337,7 @@ sub _order_history_results {
 						if ( ! $$sig_specs{UsePress} ) {
 							$$sig_specs{UsePress} = $$sig_specs{'ddmPress'.$Project->ordered_quantity_index()};
 						} # end if
-						if ( $$sig_specs{UsePress} eq $Press->strid() ) {
+						if ( $$sig_specs{UsePress} eq $$Press{strid} ) {
 							$on_press = 1;
 						} # end if
 						last if $on_press;
@@ -330,12 +348,11 @@ sub _order_history_results {
 			} # end if press_id
 
 			if ( @servicetype_ids and ( @servicetype_ids != @ServiceTypes ) ) {
-				next if ! openprint::Project->find(
-						docket=> $$Order{docket},
-						'servicetype_id	&&'=> [ split(',',$session{$uri.'?servicetype_id'}) ],
+				
+				next if (!$Order->Projects()) or !openprint::Project_Service->find(
+						project_id			=> [ map { $$_{id} } $Order->Projects() ],
+						servicetype_id	=> \@servicetype_ids,
 						);
-			} else {
-				$openprint::log->debug("Not filtering by service");
 			}
 
 			push @{$variable{Orders}}, $Order;
