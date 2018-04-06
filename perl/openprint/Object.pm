@@ -88,6 +88,7 @@ sub new {
 
 	$cache{$config{db_name}}{$parent} = {} if ! $cache{$config{db_name}}{$parent};
 	my $sub_cache = $cache{$config{db_name}}{$parent};
+#$log->debug("New parent:$parent id:$id data:$data ref:$ref");
 
 	if ( ! $ref ) {
 		if ( $id and (!$dont_cache) and $$sub_cache{$id} ) {
@@ -116,10 +117,15 @@ $log->debug("Loading object $parent $id from cache and populating with data new 
 		my $self = {};
 		bless $self, $parent;
 
-		if ( ( $$self{id} = $id ) or $data ) {
-$log->debug("loading $parent $id") if $debug or DEBUG_ALL;
-			$self->load( $data );
-		} # end if
+if ( 1 ) {
+	if ( ( $$self{id} = $id ) or $data ) {
+		if ( $debug or DEBUG_ALL ) {
+			my ( $caller, undef, $line ) = caller;
+			$log->debug("loading $parent $id from $caller:$line");
+		}
+		$self->load( $data );
+	} # end if
+}
 		if ( ! ( $no_cache or $dont_cache ) ) {
 			if ( $id ) {
 				# Using $id instead of $$self{od} means that we cache non existent entries
@@ -667,7 +673,7 @@ my $add_placeholder = ( ! ( $field =~ /\?/ ) ) ?  1 : 0;
 $log->warn("find_operators: op not found field($field) type($type) op($operator) value($value)");
 	} # end if
 	return;
-} # end sub
+} # end sub find_operators
 
 sub User {
 	require openprint::User;
@@ -931,9 +937,7 @@ $openprint::log->error("Wasting time looking for objects in find $k $search{$k}"
 		} # end foreach
 	} # end if
 
-
-
-#optimsise this
+#optimise this
 	if ( $$fields{deleted} and ! sets::isin( 'deleted', \@used_fields ) ) {
 		push @where, 'deleted=?';
 		push @values, 0;
@@ -987,16 +991,13 @@ $openprint::log->error("Wasting time looking for objects in find $k $search{$k}"
 #debug();
 			return @results;
 		} # end if
-		#return map { $object_type->new_scalar_id( $_->{$$fields{id}}, $_ ) } @$data;
-		return map { $object_type->new( $_->{$$fields{id}}, $_ ) } @$data;
+		return map { new($object_type, $_->{$$fields{id}}, $_) } @$data;
 	} else {
 		my @identified_by = eval '@'.$object_type.'::identified_by';
 		if ( ! @identified_by ) {
 			$log->debug("Multi key object $object_type but no identified by") if $debug;
 		} # end if
-		return map { $object_type->new( \@identified_by, $_, !$do_cache ) } @$data;
-#$log->debug("Objs: "  . scalar @objs );
-		#return @objs;
+		return map { new($object_type, \@identified_by, $_, !$do_cache) } @$data;
 	} # end if
 } # end sub find
 
