@@ -834,7 +834,7 @@ sub _plates {
 			( map { 'ordered_on_end_'.$_ } ( 'year','month','day' ) ),
 			( map { 'printed_on_start_'.$_ } ( 'year','month','day' ) ),
 			( map { 'printed_on_end_'.$_ } ( 'year','month','day' ) ),
-			'press_id', 'csr_id', 'reprint',
+			'press_id', 'csr_id', 'reprint','format',
 			);
 
 	my %parameters; 
@@ -865,6 +865,7 @@ sub _plates {
 	my %press_names = map { $Presses_by_id{$_}{strid}, $_ } @press_names;
 
 	my %PlateCounts; # Indexed by Press->plateid->Cost
+	my %PlateTypes;
 
 	my @Orders = openprint::Order->find(
 				( ( @Companies or $session{$uri.'?company_id'} ) ? ( company_id => ( ($session{$uri.'?company_id'} and (( !%companies) or exists $companies{$session{$uri.'?company_id'}} ) ) ? $session{$uri.'?company_id'} : [ keys %companies ] ) ) : () ),
@@ -882,6 +883,15 @@ sub _plates {
 			push @{$Projects_By_OrderId{$$Project{order_id}}}, $Project;
 		}
 	}
+
+	my @printed_on_start = map{ @session{$uri.'?printed_on_start_'.$_} } ( 'year','month','day' );
+	my $printed_on_start = join('-', @printed_on_start ) if Date::Calc::check_date( @printed_on_start );
+	my $printed_on_start_seconds = Date::Parse::str2time( $printed_on_start ) if $printed_on_start;
+
+	my @printed_on_end = map{ @session{$uri.'?printed_on_end_'.$_} } ( 'year','month','day' );
+	my $printed_on_end = join('-', @printed_on_end) if Date::Calc::check_date(@printed_on_end);
+	my $printed_on_end_seconds = Date::Parse::str2time($printed_on_end) if $printed_on_end;
+
 	foreach my $Order ( @Orders ) {
 		next if ! $$Order{docket};
 		if ( $session{$uri.'?reprint'} ) {
@@ -897,6 +907,21 @@ sub _plates {
 		} # end if reprint
 
 		foreach my $Project ( $Order->Projects() ) {
+
+			if ( $printed_on_start or $printed_on_end ) {
+				my $printed_on = $Project->printed_on();
+
+				next if ! $printed_on;
+				my $printed_on_seconds = Date::Parse::str2time( $printed_on );
+				if ( ! ( 
+							( (!$printed_on_start_seconds) or ( $printed_on_seconds > $printed_on_start_seconds ) )
+							and
+							( (!$printed_on_end_seconds) or ( $printed_on_seconds < $printed_on_end_seconds ) )
+							) ) {
+					next;
+				}
+			} # end if printed_on_start or printed_on_end
+
 			my $services = $Project->services();
 			my @signatures = $Project->signatures();
 			my $qty_index = $Project->ordered_quantity_index();
@@ -922,6 +947,7 @@ sub _plates {
 					$$sig_specs{'PlateID'.$qty_index} = $Press->specification('Plate Size').'"-'.$Press->specification('Plate Type').'Plate';
 				} # end if
 				my $plate_id = $$sig_specs{'PlateID'.$qty_index};
+				$PlateTypes{$plate_id} = !undef;
 
 				my $Plate = openprint::Material->find_one( name=>$$sig_specs{'PlateID'.$qty_index} ) if $$sig_specs{'PlateID'.$qty_index};
 				my %plate_cost = $Plate->get_price( $$sig_specs{'txtPlateQuantity'.$qty_index} ) if $Plate;
@@ -942,17 +968,18 @@ sub _plates {
 		} # end foreach Project
 	} # end foreach Order
 
-	$variable{Header} = [ 'Press','Plate Type', 'Quoted Price', 'Count' ];
+	$variable{Header} = [ 'Press','Plate Type', 'Count', 'Quoted Cost', 'Total' ];
 
 	foreach my $press ( keys %PlateCounts ) {
 		foreach my $plate ( keys %{$PlateCounts{$press}} ) {
 			foreach my $price ( keys %{$PlateCounts{$press}{$plate}} ) {
-				push @{$variable{Data}}, $press, $plate, $price, $PlateCounts{$press}{$plate}{$price};
+				push @{$variable{Data}}, $press, $plate, $PlateCounts{$press}{$plate}{$price}, $price, $price*$PlateCounts{$press}{$plate}{$price};
 			}
 		}
 	}
+	$variable{PlateCounts} = \%PlateCounts;
 
-} # end sub _production_performance
+} # end sub _plates
 
 sub production_performance {
 	if ( ! %param ) {
