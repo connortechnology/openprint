@@ -822,32 +822,39 @@ $openprint::log->debug("Have question ? for $k $$search{$k} $db_field") if DEBUG
 	return ( \@where, \@values, \@used_fields );
 }
 
-sub find {
+sub find_sql {
 	no strict 'refs';
 	my $object_type = shift;
 
 	my $debug = ${$object_type.'::debug'};
 	$debug = DEBUG_ALL if ! $debug;
-	my $starttime = [gettimeofday] if $debug;
 
 	my $params;
 	if ( @_ == 1 ) {
 		$params = $_[0];
-	if ( ref $params ne 'HASH' ) {
-		$log->error("params $params was not a has");
-	} # e3nd if
+		if ( ref $params ne 'HASH' ) {
+			$log->error("params $params was not a has");
+		} # end if
 	} else {
 		$params = { @_ };
 	} # end if
 
-	my $do_cache = $$params{columns} ? 0 : 1;
-	my $sql = join( ' ', 'SELECT',
-		( exists $$params{distinct} ? 'DISTINCT' : () ),
-		( exists $$params{columns} ? $$params{columns} : '*' ),
-		'FROM',
-		( exists $$params{table} ? $$params{table} : ${$object_type.'::table'} ),
+	my %sql = (
+		( distinct => ( exists $$params{distinct} ? 1:0 ) ),
+		( columns => ( exists $$params{columns} ? $$params{columns} : '*' ) ),
+		( table => ( exists $$params{table} ? $$params{table} : ${$object_type.'::table'} )),
+		'group by'=> $$params{'group by'},
+		limit => $$params{limit},
+		offset => $$params{offset},
 	);
-	delete @$params{'distinct','columns','table'};
+	if ( exists $$params{order} ) {
+		$sql{order} = $$params{order};
+	} else {
+		my $order = eval '$'.$object_type.'::default_sort';
+#$log->debug("default sort: $object_type :: default_sort = $order") if DEBUG_ALL;
+		$sql{order} = $order if $order;
+	} # end if
+	delete @$params{'distinct','columns','table','group by','limit','offset','order'};
 	
 	my @where;
 	my @values;
@@ -855,6 +862,87 @@ sub find {
 		push @where, '(' . (shift @{$$params{custom}}) . ')';
 		push @values, @{$$params{custom}};
 		delete $$params{custom};
+	} # end if
+
+	my @param_keys = keys %$params;
+
+	# no operators, just which fields are being searched on. Mostly just useful for detetion of the deleted field.
+	my %used_fields;
+
+	# We use this search hash so that we can mash it up and leave the params hash alone
+	my %search;
+	@search{@param_keys} = @$params{@param_keys};
+
+	my ( $where, $values, $used_fields ) = get_fields_values( $object_type, \%search, \@param_keys );
+	delete @search{@{$used_fields}};
+	@used_fields{ @{$used_fields} } = @{$used_fields};
+	push @where, @{$where};
+	push @values, @{$values};
+
+	my $fields = \%{$object_type.'::fields'};
+# Check for Object references
+	if ( 0 and  %search ) {
+$openprint::log->debug("Usgin search");
+		foreach my $k ( keys %search ) {
+			if ( sets::isin( ref $search{$k}, [ '', 'SCALAR','ARRAY','HASH' ] ) ) {
+$openprint::log->error("Wasting time looking for objects in find $k $search{$k}");
+				next;
+			}
+			my $f = (lc $k).'_id';
+			if ( exists $$fields{$f} ) {
+				Carp::cluck("Use of deprecated Object ref in find");
+				if ( $search{$k}->id() ) {
+					push @where, $$fields{$f}.' = ?';
+					push @values, $search{$k}->id();
+				} else {
+					push @where, "$$fields{$f} IS NULL";
+				} # end if
+				delete $search{$k};
+			} # end if
+		} # end foreach
+	} # end if
+
+#optimise this
+	if ( $$fields{deleted} and ! $used_fields{deleted} ) {
+		push @where, 'deleted=?';
+		push @values, 0;
+	} # end if
+	$sql{where} = \@where;
+	$sql{values} = \@values;
+	$sql{used_fields} = \%used_fields;
+
+	foreach my $k ( keys %search ) {
+		$log->error("Extra parameters in $object_type ::find $k => $search{$k}");
+		Carp::cluck("Extra parameters in $object_type ::find $k => $search{$k}");
+	} # end foreach
+
+	$sql{sql} = join( ' ',
+			( 'SELECT', ( $sql{distinct} ? ('DISTINCT') : () ) ),
+			( $sql{columns}, 'FROM', $sql{table} ),
+			( @{$sql{where}} ? ('WHERE', join(' AND ', @{$sql{where}})) : () ),
+			( $sql{order} ? ( 'ORDER BY', $sql{order} ) : () ),
+			( $sql{'group by'} ? ( 'GROUP BY', $sql{'group by'} ) : () ),
+			( $sql{limit} ? ( 'LIMIT', $sql{limit}) : () ),
+			( $sql{offset} ? ( 'OFFSET', $sql{offset} ) : () ),
+	);	
+	#$log->debug("Loading Debug:$debug $object_type ($sql) (".join(',', map { ref $_ eq 'ARRAY' ? join(',', @{$_}) : $_ } @values).')' ) if $debug;
+	return \%sql;
+} # end sub find_sql
+
+sub find {
+
+	no strict 'refs';
+	my $object_type = shift;
+
+	my $starttime = [gettimeofday] if $debug;
+	my $params;
+	if ( @_ == 1 ) {
+		$params = $_[0];
+		if ( ref $params ne 'HASH' ) {
+			$log->error("params $params was not a has");
+		} # end if
+	} else {
+		$params = { @_ };
 	} # end if
 
 	my $local_dbh = ${$object_type.'::dbh'};
@@ -866,10 +954,11 @@ sub find {
 		$local_dbh = $openprint::dbh if ! $local_dbh;
 	} # end if
 
-	my @param_keys = sets::exclude( [ 'order','limit','offset'], [ keys %$params ] );
+	my $sql = find_sql( $object_type, $params);
 
+	my $do_cache = $$sql{columns} ne '*' ? 0 : 1;
 	my $cache_field = ${$object_type.'::cache_field'} if $do_cache;
-	if ( $cache_field and $$params{$cache_field} and ( 1 == @param_keys ) ) {
+	if ( $cache_field and $$params{$cache_field} and ( 1 == scalar keys %{$$sql{used_fields}} ) ) {
 
 $log->debug("have cache field $cache_field for $$params{$cache_field}") if DEBUG_ALL;
 		if ( exists $name_cache{$object_type} and exists $name_cache{$object_type}{$$params{$cache_field}} ) {
@@ -900,83 +989,19 @@ $log->error("returning nothing for $object_type $cache_field $$params{$cache_fie
 		$do_cache = 0;
 		$log->debug("Not doing caching for $object_type using $cache_field with params $$params{$cache_field} ") if DEBUG_ALL or DEBUG_CACHE;
 	} # end if
-
-	# no operators, just which fields are being searched on. Mostly just useful for detetion of the deleted field.
-	my @used_fields;
-
-	# We use this search hash so that we can mash it up and leave the params hash alone
-	my %search;
-	@search{@param_keys} = @$params{@param_keys};
-
-	my ( $where, $values, $used_fields ) = get_fields_values( $object_type, \%search, \@param_keys );
-	delete @search{@{$used_fields}};
-	push @used_fields, @{$used_fields};
-	push @where, @{$where};
-	push @values, @{$values};
-
-	my $fields = \%{$object_type.'::fields'};
-# Check for Object references
-	if ( 0 and  %search ) {
-$openprint::log->debug("Usgin search");
-		foreach my $k ( keys %search ) {
-			if ( sets::isin( ref $search{$k}, [ '', 'SCALAR','ARRAY','HASH' ] ) ) {
-$openprint::log->error("Wasting time looking for objects in find $k $search{$k}");
-				next;
-			}
-			my $f = (lc $k).'_id';
-			if ( exists $$fields{$f} ) {
-				Carp::cluck("Use of deprecated Object ref in find");
-				if ( $search{$k}->id() ) {
-					push @where, $$fields{$f}.' = ?';
-					push @values, $search{$k}->id();
-				} else {
-					push @where, "$$fields{$f} IS NULL";
-				} # end if
-				delete $search{$k};
-			} # end if
-		} # end foreach
-	} # end if
-
-#optimise this
-	if ( $$fields{deleted} and ! sets::isin( 'deleted', \@used_fields ) ) {
-		push @where, 'deleted=?';
-		push @values, 0;
-	} # end if
-	$sql .= ' WHERE ' . join(' AND ', @where ) if @where;
-
-	if ( exists $$params{order} ) {
-		$sql .= " ORDER BY $$params{order}";
-	} else {
-		my $order = eval '$'.$object_type.'::default_sort';
-#$log->debug("default sort: $object_type :: default_sort = $order") if DEBUG_ALL;
-		$sql .= " ORDER BY $order" if $order;
-	} # end if
-	if ( $$params{'group by'} ) {
-		$sql .= " GROUP BY $$params{group}";
-	} # end if
-	if ( exists $$params{limit} ) {
-		$sql .= " LIMIT $$params{limit}" if $$params{limit};
-	} # end if
-	if ( exists $$params{offset} ) {
-		$sql .= " OFFSET $$params{offset}" if $$params{offset};
-	} # end if
-	foreach my $k ( keys %search ) {
-		$log->error("Extra parameters in $object_type ::find $k => $search{$k}");
-		Carp::cluck("Extra parameters in $object_type ::find $k => $search{$k}");
-	} # end foreach
-
-	#$log->debug("Loading Debug:$debug $object_type ($sql) (".join(',', map { ref $_ eq 'ARRAY' ? join(',', @{$_}) : $_ } @values).')' ) if $debug;
 	
 #$log->debug( 'find prepare: ' . sprintf('%.4f', tv_interval($starttime)*1000) ." useconds") if $debug;
-	my $data = $local_dbh->selectall_arrayref( $sql, { Slice => {} }, @values );
+	my $data = $local_dbh->selectall_arrayref($$sql{sql}, { Slice => {} }, @{$$sql{values}});
 	if ( ! $data ) {
-		$log->error('Error ' . $local_dbh->errstr() . " loading $object_type ($sql) (". join(',', map { ref $_ eq 'ARRAY' ? 'ARRAY('.join(',',@$_).')' : $_ } @values ) . ") " );
+		$log->error('Error ' . $local_dbh->errstr() . " loading $object_type ($$sql{sql}) (". join(',', map { ref $_ eq 'ARRAY' ? 'ARRAY('.join(',',@$_).')' : $_ } @{$$sql{values}} ) . ')' );
 		return ();
 	#} elsif ( ( ! @$data ) and $debug ) {
 		#$log->debug("No $type ($sql) (@values) " );
 	} elsif ( $debug ) {
-		$log->debug("Loading Debug:$debug $object_type ($sql) (".join(',', map { ref $_ eq 'ARRAY' ? join(',', @{$_}) : $_ } @values).') # of results:' . @$data . ' in ' . sprintf('%.4f', tv_interval($starttime)*1000) .' useconds' );
+		$log->debug("Loading Debug:$debug $object_type ($$sql{sql}) (".join(',', map { ref $_ eq 'ARRAY' ? join(',', @{$_}) : $_ } @{$$sql{values}}).') # of results:' . @$data . ' in ' . sprintf('%.4f', tv_interval($starttime)*1000) .' useconds' );
 	} # end if
+
+	my $fields = \%{$object_type.'::fields'};
 	if ( $$fields{id} ) {
 		if ( $cache_field ) {
 			my @results = map { $object_type->new( $_->{$$fields{id}}, $_ ) } @$data;
