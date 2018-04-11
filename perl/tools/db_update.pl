@@ -1597,6 +1597,10 @@ if ( sets::isin( 'services', \@tables ) ) {
 		$dbh->do('ALTER TABLE Services ADD servicetype_id  INTEGER');
 		$dbh->do('ALTER TABLE Services ADD FOREIGN KEY (servicetype_id) REFERENCES service_types (id)');
 	} # end if
+	if ( ! exists $$data{deleted} ) {
+		$log->debug("Adding deleted to Services");
+		$dbh->do('ALTER TABLE Services ADD deleted BOOLEAN NOT NULL default false') or die $dbh->errstr();
+	}
 } else {
 	$dbh->do( misc::load_file( $log, q{../openprint/sql/Services.sql}) );
 } # end if
