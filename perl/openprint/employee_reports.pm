@@ -861,11 +861,11 @@ sub _plates {
 	my %Presses_by_id = map { $$_{id}, $_ } @Presses;
 	my %Presses_by_strid = map { $$_{strid}, $_ } @Presses;
 	
-	my @press_names = split( ',', $session{$uri.'?press_id'} );
-	my %press_names = map { $Presses_by_id{$_}{strid}, $_ } @press_names;
+	my @press_ids = split( ',', $session{$uri.'?press_id'} );
+	my %press_names = map { $Presses_by_id{$_} ? ( $Presses_by_id{$_}{strid} => $_ ) : () } @press_ids;
+	my @press_names = sort { $a cmp $b } keys %press_names;
 
-	my %PlateCounts; # Indexed by Press->plateid->Cost
-	my %PlateTypes;
+	my %PlateCounts; # Indexed by plateid->Cost->Press
 
 	my @Orders = openprint::Order->find(
 				( ( @Companies or $session{$uri.'?company_id'} ) ? ( company_id => ( ($session{$uri.'?company_id'} and (( !%companies) or exists $companies{$session{$uri.'?company_id'}} ) ) ? $session{$uri.'?company_id'} : [ keys %companies ] ) ) : () ),
@@ -933,6 +933,8 @@ sub _plates {
 				my $Service = $Project->Service( $sig_id );
 				my $sig_specs = $Service->specs();
 
+				next if ! $$sig_specs{"txtImposition$qty_index"};
+
 				#if ( ! $$sig_specs{UsePress} ) {
 					$$sig_specs{UsePress} = $$sig_specs{'ddmPress'.$qty_index};
 				#} # end if
@@ -944,10 +946,11 @@ sub _plates {
 				if ( ! $$sig_specs{'PlateID'.$qty_index} ) {
 					my $Press = $Presses_by_strid{$$sig_specs{UsePress}};
 					next if ! $Press;
-					$$sig_specs{'PlateID'.$qty_index} = $Press->specification('Plate Size').'"-'.$Press->specification('Plate Type').'Plate';
+					my $plate_size = $Press->specification('Plate Size');
+					next if ! $plate_size;
+					$$sig_specs{'PlateID'.$qty_index} = $plate_size.'"-'.$Press->specification('Plate Type').'Plate';
 				} # end if
 				my $plate_id = $$sig_specs{'PlateID'.$qty_index};
-				$PlateTypes{$plate_id} = !undef;
 
 				my $Plate = openprint::Material->find_one( name=>$$sig_specs{'PlateID'.$qty_index} ) if $$sig_specs{'PlateID'.$qty_index};
 				my %plate_cost = $Plate->get_price( $$sig_specs{'txtPlateQuantity'.$qty_index} ) if $Plate;
@@ -959,24 +962,46 @@ sub _plates {
 					$plate_price = $plate_cost{Cost};
  #* $$sig_specs{'txtPlateQuantity'.$qty_index};
 				#}
-				$PlateCounts{$$sig_specs{UsePress}} = {} if ! exists $PlateCounts{$$sig_specs{UsePress}};
-				$PlateCounts{$$sig_specs{UsePress}}{$plate_id} = {} if ! exists $PlateCounts{$$sig_specs{UsePress}}{$$sig_specs{'PlateID'.$qty_index}};
-				$PlateCounts{$$sig_specs{UsePress}}{$plate_id}{$plate_price} = 0 if ! exists $PlateCounts{$$sig_specs{UsePress}}{$$sig_specs{'PlateID'.$qty_index}}{$plate_price};
-				$PlateCounts{$$sig_specs{UsePress}}{$plate_id}{$plate_price} += $$sig_specs{'txtPlateQuantity'.$qty_index};
+
+				$PlateCounts{$plate_id} = {} if ! exists $PlateCounts{$plate_id};
+				$PlateCounts{$plate_id}{$plate_price} = {} if ! exists $PlateCounts{$plate_id}{$plate_price};
+				$PlateCounts{$plate_id}{$plate_price}{$$sig_specs{UsePress}} = 0 if ! exists $PlateCounts{$plate_id}{$plate_price}{$$sig_specs{UsePress}};
+
+				$PlateCounts{$plate_id}{$plate_price}{$$sig_specs{UsePress}} += $$sig_specs{'txtPlateQuantity'.$qty_index};
 			} # end foreach sig
 
 		} # end foreach Project
 	} # end foreach Order
 
-	$variable{Header} = [ 'Press','Plate Type', 'Count', 'Quoted Cost', 'Total' ];
+	if ( $session{$uri.'?format'} eq 'Separate' ) {
+		$variable{Header} = [ 'Plate Type', 'Quoted Cost' ];
+		foreach my $press ( @press_names ) {
+			push @{$variable{Header}}, $press.' Count', $press.' Total';
+		}
 
-	foreach my $press ( keys %PlateCounts ) {
-		foreach my $plate ( keys %{$PlateCounts{$press}} ) {
-			foreach my $price ( keys %{$PlateCounts{$press}{$plate}} ) {
-				push @{$variable{Data}}, $press, $plate, $PlateCounts{$press}{$plate}{$price}, $price, $price*$PlateCounts{$press}{$plate}{$price};
+		foreach my $plate ( keys %PlateCounts ) {
+			foreach my $price ( keys %{$PlateCounts{$plate}} ) {
+			  push @{$variable{Data}}, $plate, $price;
+				foreach my $press ( @press_names ) {
+					if ( $PlateCounts{$plate}{$price}{$press} ) {
+						push @{$variable{Data}}, $PlateCounts{$plate}{$price}{$press}, $price*$PlateCounts{$plate}{$price}{$press};
+					} else {
+						push @{$variable{Data}}, '', '';
+					}
+				}
 			}
 		}
-	}
+	} else {
+		$variable{Header} = [ 'Plate Type', 'Quoted Cost', 'Press', 'Count', 'Total' ];
+
+		foreach my $plate ( keys %PlateCounts ) {
+			foreach my $price ( keys %{$PlateCounts{$plate}} ) {
+				foreach my $press ( keys %{$PlateCounts{$plate}{$price}} ) {
+					push @{$variable{Data}}, $plate, $price, $press, $PlateCounts{$plate}{$price}{$press}, $price*$PlateCounts{$plate}{$price}{$press};
+				}
+			}
+		}
+	} # end if format
 	$variable{PlateCounts} = \%PlateCounts;
 
 } # end sub _plates
