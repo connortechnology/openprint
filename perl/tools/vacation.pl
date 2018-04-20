@@ -133,7 +133,11 @@ sub send_vacation_email {
 	my $sth = do_query( qq{SELECT subject,body FROM vacation WHERE email=?}, $email );
 	if ($sth->rows == 1) {
 		my @row = $sth->fetchrow_array;
-		if ( $row[0] or $row[1] ) {
+		if (
+				($row[0] and ($row[0] =~ /\S/m) )
+				or
+				( $row[1] and ($row[1] =~ /\S/m) )
+		   ) {
 			do_debug ("[SEND RESPONSE] for $orig_messageid:\n", "FROM: $email (orig_to: $orig_to)\n", "TO: $orig_from\n", "SUBJECT: $orig_subject\n", "VACATION SUBJECT: $row[0]\n", "VACATION BODY: $row[1]\n");
 			do_mail ($email, $orig_from, $row[0], $row[1]);
 			do_log ($orig_messageid, $orig_to, $orig_from, $orig_subject); 
