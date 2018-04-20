@@ -67,7 +67,12 @@
 			</ul>
 		</fieldset>
 		</div>
-		<? if ( sets::isin( $session{user_type}, [ 'E', 'A'] ) ) ?>
+<? echo (
+  if ( sets::isin( $session{user_type}, [ 'E', 'A' ] ) ) {
+    return include('_reprint_options.html');
+  }
+  return;
+)?>
 	<fieldset>
 		If you would like to assign this project to a different customer, please select them now. You will be logged in as the selected customer and any orders or quotes you make from now on will be recorded in their history.
 		<ul>
@@ -136,5 +141,17 @@ var tinymce_options = {
 
   };
 tinyMCE.init(tinymce_options);
+function setReason(reprintVal,divElem) {
+   if(reprintVal == 'Y') {
+      // Project is a reprint.
+      // Display reason drop down option.
+      divElem.style.display = "block";
+   } else {
+      // Project is not a reprint.
+      // Make sure reason drop down is hidden.
+      divElem.style.display = "none";
+   }
+}
+
 </script>
 

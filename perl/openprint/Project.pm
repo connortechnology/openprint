@@ -57,9 +57,10 @@ $serial = 'lngProjectIndex_seq';
 	order_id				=>	'order_id',
 	due_date				=>	'due_date',
 	externalrefnumber=>	'externalrefnumber',
-	reprint_reason=>	'reprint_reason',
-	reprint=>	'reprint',
-	predefined=>	'predefined',
+	reprint					=>	'reprint',
+	reprint_reason	=>	'reprint_reason',
+	reprint_description	=>	'reprint_description',
+	predefined			=>	'predefined',
 	rush							=>	'rush',
 	style_id					=>	'style_id',
 	summary						=>	'summary',
@@ -98,6 +99,7 @@ $serial = 'lngProjectIndex_seq';
 	markup		=>	undef,
 	priority	=>	undef,
 	reprint		=>	0,
+	reprint_description	=>	q`''`,
 	discount				=>	undef,
 	csr_commission	=>	undef,
 	credit_card_fee	=>	undef,
@@ -1176,14 +1178,15 @@ sub add_signature {
 
 sub copy_signature {
 	my ( $self, $sig_specs, $data, $status ) = @_;
+	$self->lock();
 	my $new_service_index = $self->add_signature( undef, $status );
 	if ( ! $new_service_index ) {
 		$log->error('Error copying signature.');
+		$self->unlock();
 		return;
 	} # end if
 	my $new_specs = openprint::service::get_specs_ref( $self, $new_service_index );
 
-	my $ac = sql::start_transaction( $dbh );
 	foreach my $key ( openprint::Estimating::Printing::variables( $$self{id}, $new_service_index, $new_specs, $sig_specs ) ) {
 		next if $key eq 'SignatureIndex';
 		if ( exists $$data{$key} ) {
@@ -1192,7 +1195,7 @@ sub copy_signature {
 			openprint::service::insert_service_spec( $log, $dbh, $self->id(), $new_service_index, $key, $$sig_specs{$key}, ! exists $$new_specs{$key} );
 		} # end if
 	} # end foreach
-	sql::end_transaction( $dbh, $ac );
+	$self->unlock();
 	return $new_service_index;
 } # end sub copy_signature
 
@@ -1590,7 +1593,7 @@ sub recalculate {
 			my $module = 'openprint::Estimating::'.$$Type{type};
 			if ( my $function = $module->can( 'calculate_signatures' ) ) {
 				$status = $function->( $self );
-				$openprint::log->debug("Calculate_Sigs: status: $status");
+				$openprint::log->debug("$$Type{type}::Calculate_Sigs: status: $status");
 				openprint::service::status( $$self{id}, $$services{''}[0], $status );
 			} # end if
 			openprint::service::auto_calculate( $self, $$services{''}[0] ) if $status eq 'calculated';
@@ -1620,8 +1623,14 @@ sub calliper {
 		if ( $project_type eq 'MultiPage' ) {
 	
 			foreach my $group_id ( $$printing_specs{groups} ? split(',', $$printing_specs{groups} ) : openprint::Estimating::MultiPage::groups( $$Project{id}, $printing_specs ) ) {
-				$finished_calliper += int( 10000 * ($$printing_specs{'GroupPageQuantity'.$group_id}/2) * $$printing_specs{"txtSpecificStockCalliper$group_id"} );
-				#$log->debug("$finished_calliper += int( 10000 * (" . $$printing_specs{'GroupPageQuantity'.$group_id}.'/2) * '.$$printing_specs{"txtSpecificStockCalliper$group_id"} );
+				foreach my $signature_service_index ( $Project->signatures({Group=>$group_id}) ) {
+					my $sig_specs = openprint::service::get_specs_ref( $Project, $signature_service_index );
+					my $sig_caliper = $$sig_specs{txtSpecificStockCalliper} ? $$sig_specs{txtSpecificStockCalliper} : $$printing_specs{"txtSpecificStockCalliper$group_id"};
+				
+				$finished_calliper += int( 10000 * ($$printing_specs{'GroupPageQuantity'.$group_id}/2) * $sig_caliper );
+				$log->debug("$finished_calliper += int( 10000 * (" . $$printing_specs{'GroupPageQuantity'.$group_id}.'/2) * '.$sig_caliper );
+					last;
+				}
 
 			} # end foreach group
 			if ( ! $finished_calliper ) {

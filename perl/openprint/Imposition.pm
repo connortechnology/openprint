@@ -421,9 +421,9 @@ sub load {
 		} else {
 			if ( $$self{image_orientation} == Vertical ) {
 				$$self{page_rows} = $$self{spread_rows};
-				$$self{page_columns} = $$self{spread_columns} * ($$self{spread_size}/2);
+				$$self{page_columns} = $$self{spread_columns} * ($$self{spread_size} > 1 ? ($$self{spread_size}/2) : 1 );
 			} else {
-				$$self{page_rows} = $$self{spread_rows} * ($$self{spread_size}/2);
+				$$self{page_rows} = $$self{spread_rows} * ($$self{spread_size} > 1 ? ($$self{spread_size}/2) : 1 );
 				$$self{page_columns} = $$self{spread_columns};
 			}
 		}
@@ -879,6 +879,16 @@ sub to_svg {
 	$svg .= '<rect class="sheet" x="'.int($margin*$width_scale).'" y="'.int($margin*$height_scale).'" width="'.int($self->sheet_width()*$width_scale).'" height="'.int($self->sheet_height()*$height_scale).'" style="fill:rgb(255,255,255);stroke-width:1;stroke:rgb(0,0,0);"/>';
 	$svg .= '</svg>';
 	return $svg;
+}
+
+sub landscape_portrait_square {
+	if ( $_[0]{image_width} < $_[0]{image_height} ) {
+		return 'portrait';
+	} elsif ( $_[0]{image_width} > $_[0]{image_height} ) {
+		return 'landscape';
+	} else {
+		return 'square';
+	}
 }
 
 1;

@@ -1069,6 +1069,10 @@ if ( ! sets::isin( 'projects', \@tables ) ) {
 	if ( ! exists $$data{reprint_reason} ) {
 		$dbh->do(q`ALTER TABLE projects ADD reprint_reason TEXT`) or $log->error($dbh->errstr());
 	} # end if
+	if ( ! exists $$data{reprint_description} ) {
+		$log->debug("Add reprint_description to Projects");
+		$dbh->do(q`ALTER TABLE projects ADD reprint_description TEXT`) or $log->error($dbh->errstr());
+	} # end if
 	foreach my $field ( 'credit_card_fee', 'csr_commission', 'discount' ) {
 		if ( ! $openprint::Project::fields{$field} ) {
 			die "Want to add $field to Project but it's not in fields";
@@ -1182,8 +1186,10 @@ if ( ! sets::isin( 'project_log', \@tables ) ) {
 	}
 	if ( ! exists $$data{id} ) {
 		$log->debug("Adding id to project_log");
-		$dbh->do('ALTER TABLE project_log add id SERIAL');
-		$dbh->do('ALTER TABLE project_log ADD PRIMARY KEY (id)');
+		$dbh->do('ALTER TABLE project_log add id SERIAL') or die $dbh->errstr();
+		$dbh->do('ALTER TABLE project_log DROP CONSTRAINT project_log_pkey') or die $dbh->errstr();
+		$dbh->do('ALTER TABLE project_log ADD PRIMARY KEY (id)') or die $dbh->errstr();
+		$dbh->do('CREATE INDEX project_log_project_id_timestamp_idx on project_log (project_id,dtmtimestamp)') or die $dbh->errstr();
   }
 }
 if ( ! sets::isin( 'barcode_log', \@tables ) ) {
@@ -1591,6 +1597,10 @@ if ( sets::isin( 'services', \@tables ) ) {
 		$dbh->do('ALTER TABLE Services ADD servicetype_id  INTEGER');
 		$dbh->do('ALTER TABLE Services ADD FOREIGN KEY (servicetype_id) REFERENCES service_types (id)');
 	} # end if
+	if ( ! exists $$data{deleted} ) {
+		$log->debug("Adding deleted to Services");
+		$dbh->do('ALTER TABLE Services ADD deleted BOOLEAN NOT NULL default false') or die $dbh->errstr();
+	}
 } else {
 	$dbh->do( misc::load_file( $log, q{../openprint/sql/Services.sql}) );
 } # end if
@@ -1888,6 +1898,14 @@ if ( ! sets::isin( 'folds', \@tables ) ) {
 		} else {
 			$dbh->do('DROP SEQUENCE fold_id_seq');
 		} # end if
+	} # end if
+	if ( ! exists $$data{runspeed_units} ) {
+		$log->debug("Adding runspeed_units to folds");
+		$dbh->do(q`ALTER TABLE folds ADD runspeed_units TEXT NOT NULL default 'gsm'`);
+	} # end if
+	if ( ! exists $$data{orientation} ) {
+		$log->debug("Adding orientation to folds");
+		$dbh->do(q`ALTER TABLE folds ADD orientation TEXT`);
 	} # end if
 	if ( ! exists $$data{comments} ) {
 		$dbh->do('ALTER TABLE folds ADD comments TEXT');
@@ -4539,6 +4557,10 @@ if ( ! sets::isin( 'timetracks', \@tables ) ) {
 	} # end if
 	if ( ! exists $$data{duration_override} ) {
 		$dbh->do('ALTER TABLE timetracks ADD duration_override BOOLEAN NOT NULL DEFAULT FALSE');
+	} # end if
+	if ( ! exists $$data{date_associated} ) {
+    $log->debug("Adding date_associated to timetracks");
+		$dbh->do('ALTER TABLE timetracks ADD date_associated BOOLEAN NOT NULL DEFAULT TRUE');
 	} # end if
 } # end if
 

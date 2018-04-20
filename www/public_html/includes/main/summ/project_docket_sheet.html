@@ -27,13 +27,20 @@
 	</tr>
 	<tr>
 		<td width="20%" valign="top"><table cellspacing="0" cellpadding="0" border="0" width="100%"><tr>
-			<td class="headerText"><b>Docket #</b></td>
-			<td class="docketText"><? echo ( $$variable{Order}->docket() ) ?></td>
+		<td class="headerText"><b>Docket #</b></td>
+		<td class="docketText"><? echo ( $$variable{Order}->docket() ) ?></td>
 		</tr></table></td>
-		<td colspan="2" width="60%" valign="top"><table cellspacing="0" cellpadding="1" border="0" width="100%">
+		<td colspan="2" width="60%" valign="top">
+		<table cellspacing="0" cellpadding="1" border="0" width="100%">
 				<tr>
-					<td width="16%" class="headerText"><b>Reference</b></td>
+					<td width="16%" class="headerText" valign="top"><b>Reference</b></td>
+<?if($$variable{Project}{reprint} eq 'Y' )?>
+					<td width="55%" class="docketText"><? echo ( $$variable{Project}->reference() ) ?></td>
+					<td width="4%" class="headerText" valign="top"><b>Reprint</b></td>
+					<td width="25%" class="docketText"><? echo ( join('<br/>', $$variable{Project}{reprint_reason}, $$variable{Project}{reprint_description} ); ) ?></td>
+<?else($$variable{Project}{reprint} eq 'Y' )?>
 					<td width="84%" class="docketText"><? echo ( $$variable{Project}->reference() ) ?></td>
+<?endif($$variable{Project}{reprint} eq 'Y' )?>
 				</tr>
 			</table></td>
 		<td width="20%" valign="top"><table cellspacing="0" cellpadding="0" border="0" width="100%">

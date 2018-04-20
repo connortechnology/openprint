@@ -134,6 +134,8 @@ sub outputs {
 	'8PageFold',
 	'10PageFold',
 	'12PageFold',
+	'12Page3PanelRollFold',
+	'12Page3PanelZFold',
 	'16PageFold',
 	'18PageFold',
 	'20PageFold',
@@ -182,6 +184,8 @@ sub outputs {
 	'8PageFold', '8 Page Fold',
 	'10PageFold', '10 Page Fold',
 	'12PageFold', '12 Page Fold',
+	'12Page3PanelRollFold',	'12 Page 3 Panel Roll Fold',
+	'12Page3PanelZFold',	'12 Page 3 Panel Z Fold',
 	'16PageFold', '16 Page Fold',
 	'18PageFold', '18 Page Fold',
 	'20PageFold', '20 Page Fold',
@@ -1330,8 +1334,7 @@ $openprint::log->debug("Got Fold: " . $Fold->to_string() ) if DEBUG;
 
 			my @Used_Impositions = map { $_->copy() } @{$Set_Of_Impositions};
 
-			my $mr_time = $Equipment->specification('Station Make Ready');
-			my $totalTime = $mr_time ? $mr_time * 60 : 0;
+			my $totalTime = 0;
 
 			my $comparison_cost = 0;
 			my $totalPrice;
@@ -1364,12 +1367,12 @@ $openprint::log->debug("Got Fold: " . $Fold->to_string() ) if DEBUG;
 				if ( $$specs{"OverrideRunspeed-$form-$qty_index-$fold_index"} and ( $$specs{"OverrideRunspeed-$form-$qty_index-$fold_index"} eq 'Y' ) ) {
 					$runspeed = $$specs{"FoldRunspeed-$form-$qty_index-$fold_index"};
 $openprint::log->debug("Override speed to $runspeed for $form $qty_index $fold_index ");
-					$runspeed = int($Fold->runspeed($$Paper{gsm})) if ! $runspeed;
+					$runspeed = int($Fold->runspeed($$Fold{runspeed_units} eq 'calliper' ? $$Paper{calliper} : $$Paper{gsm})) if ! $runspeed;
 foreach my $k ( keys %{$specs} ) {
 $openprint::log->debug(" $k => $$specs{$k}");
 }
 				} else {
-					$runspeed = int($Fold->runspeed($$Paper{gsm})) if ! $runspeed;
+					$runspeed = int($Fold->runspeed($$Fold{runspeed_units} eq 'calliper' ? $$Paper{calliper} : $$Paper{gsm})) if ! $runspeed;
 				}
 				
 				$$Imposition{Folder} = $Equipment;
@@ -1439,11 +1442,13 @@ $openprint::log->debug("Resulting fold: " . $Fold->to_string() ) if DEBUG;
 						$setupPrice{Total} = $setupPrice{Price} * $imposition;
 						$Breakdown .= sprintf( '($%1$.2f%2$s * %4$d out =$%3$.2f)', @setupPrice{'Price','units','Total'}, $imposition );
 					} elsif ( $setupPrice{units} eq 'per hour' ) {
-						if ( ! $$Fold{makeready_time} ) {
-$openprint::log->error("No makeready_time on " . $Fold->to_string() );
+						my $makeready_time = eval($$Fold{makeready_time});
+						if ( (! $makeready_time) or $? ) {
+$openprint::log->error("No makeready_time on " . $Fold->to_string() . ': ' . $? );
 						}
-						$setupPrice{Total} = $setupPrice{Price} * $$Fold{makeready_time} / 60;
-						$Breakdown .= sprintf( '($%1$.2f%2$s * %4$d minutes = $%3$.2f)', @setupPrice{'Price','units','Total'}, $$Fold{makeready_time} );
+						$totalTime += $makeready_time;
+						$setupPrice{Total} = $setupPrice{Price} * $makeready_time / 60;
+						$Breakdown .= sprintf( '($%1$.2f%2$s * %4$d minutes = $%3$.2f)', @setupPrice{'Price','units','Total'}, $makeready_time );
 					} else {
 						#$Breakdown .= "Unknown Makeready units($setupPrice{units})<br/>";
 #$openprint::log->error("No units set on Fold MR " . $setupPrice{Service}->name() . ' on ' . $Equipment->name() );

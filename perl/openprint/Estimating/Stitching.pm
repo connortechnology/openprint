@@ -447,12 +447,12 @@ EQUIPMENT:foreach my $Equipment ( @equipment ) {
 					next;
 				} # end if
 				if ( $$Press{id} != $$Equipment{id} ) {
-					$results{Breakdown} .= "Press not the same: " . $I->Press()->id() . ' != ' . $Equipment->id() if DEBUG;
+					$results{Breakdown} .= "Press not the same: " . $I->Press()->id() . ' != ' . $Equipment->id() . '<br/>' if DEBUG;
 					next;
 				} # end if
 
 				if ( $$I{Folder} and ( $$I{Folder}->id() != $Equipment->id() ) ) {
-					$results{Breakdown} .= "Folder not the same: " . $$I{Folder}{id}. ' != ' . $Equipment->id() if DEBUG;
+					$results{Breakdown} .= "Folder not the same: " . $$I{Folder}{id}. ' != ' . $Equipment->id() . '<br/>' if DEBUG;
 					next;
 				} # end if
 
@@ -492,8 +492,11 @@ EQUIPMENT:foreach my $Equipment ( @equipment ) {
 
 			my $capable = $Equipment->specification('Stitching Capable');
 
-			if ( $capable eq 'When Digital' and $Press->specification('Printing Type') ne 'Digital' ) {
+			if ( ( $capable eq 'When Digital' ) and ( $Press->specification('Printing Type') ne 'Digital' ) ) {
 				$results{Breakdown} .= 'Not printed digital.<br/>';
+				next;
+			} elsif ( ( $capable eq 'When Not Digital' ) and ( $Press->specification('Printing Type') eq 'Digital' ) ) {
+				$results{Breakdown} .= 'Not for digital.<br/>';
 				next;
 			} # end if
 			if ( $$I{Folder} and ( $$I{Folder}->id() != $Equipment->id() ) ) {
@@ -675,7 +678,7 @@ $log->debug("Insert qty: $$specs{txtInsertQuantity}");
 
 		if ( ! @possible_equipment ) {
 # alert the user that no equipment is good.
-			$$specs{alert} = 'Our stitching equipment cannot run this project, for the following reasons:<br/>';
+			$$specs{alert} .= 'Our stitching equipment cannot run this project, for the following reasons:<br/>';
 			foreach my $press_id ( keys %error ) {
 				my $Equipment = new openprint::Equipment( $press_id );
 				$$specs{alert} .= 'For ' . $Equipment->name() . ': ' .  $error{$press_id};
@@ -768,7 +771,7 @@ $log->debug("Insert qty: $$specs{txtInsertQuantity}");
 sub display {
 	my ( $log, $dbh, $variable, $project_index, $service_index ) = @_;
 
-	@{$$variable{Equipment}} = openprint::Equipment->find( Specifications => {'Stitching Capable'=>['Y','When Printing','When Digital','When Folding']}, useinestimating=>1,order=>'lower(strName)');
+	@{$$variable{Equipment}} = openprint::Equipment->find( Specifications => {'Stitching Capable'=>['Y','When Printing','When Digital','When Folding','When Not Digital']}, useinestimating=>1,order=>'lower(strName)');
 
 #my $Project = new openprint::Project( $project_index );
 #my $ProjectType = $Project->Type();
@@ -813,20 +816,20 @@ sub equipment_fits {
 				return ': Too Thick.<br/>';
 			} # end if
 		} else {
-            $openprint::log->warn("No min calliper set for $$specs{ServiceTypeName} on $$Equipment{strid}");
-        } # end if
+			$openprint::log->warn("No min calliper set for $$specs{ServiceTypeName} on $$Equipment{strid}");
+		} # end if
 
 	} else {
 		$openprint::log->error("No calliper in Stitching::get_equipment");
 	} # end if
-	return;
+	return '';
 }
 
 sub get_equipment {
 	my ( $specs, $error ) = @_;
 
 	my @possible_equipment;
-	my @all_equipment = openprint::Equipment->find( Specifications => {'Stitching Capable'=>['Y','When Printing','When Digital','When Folding']}, useinestimating=>1,order=>'strName');
+	my @all_equipment = openprint::Equipment->find( Specifications => {'Stitching Capable'=>['Y','When Printing','When Digital','When Folding','When Not Digital']}, useinestimating=>1,order=>'strName');
 
 	foreach my $Equipment ( @all_equipment ) {
 		$_ = equipment_fits( $Equipment, $specs );
@@ -892,12 +895,13 @@ sub get_price {
 		$unitsPerHour = $Equipment->specification( $$ServiceType{name}.'Units Per Hour', $maxPockets ) if ! $unitsPerHour;
 		$unitsPerHour = $Equipment->specification( 'Units Per Hour '.$price{Imposition}.' out', $maxPockets ) if ! $unitsPerHour;
 		$unitsPerHour = $Equipment->specification( 'Units Per Hour', $maxPockets ) if ! $unitsPerHour;
-	if ( ( defined $$specs{txtInsertQuantity} ) and ( $$specs{txtInsertQuantity} > 0 ) ) {
-		my $insert_slowdown = 0;
-		if ( $insert_slowdown = $Equipment->specification('Insert Slowdown') ) {
-			$unitsPerHour -= $insert_slowdown;
+
+		if ( ( defined $$specs{txtInsertQuantity} ) and ( $$specs{txtInsertQuantity} > 0 ) ) {
+			my $insert_slowdown = 0;
+			if ( $insert_slowdown = $Equipment->specification('Insert Slowdown') ) {
+				$unitsPerHour -= $insert_slowdown;
+			}
 		}
-	}
 		
 		my $runtime = $unitsPerHour ? $qty/$unitsPerHour : 0; # in hours
 
@@ -911,6 +915,8 @@ sub get_price {
 			} else {
 				$openprint::log->error("880: Unknown Unit Type: ($$servicePrice{units}) for service $$Service{name} on $$Equipment{strid} $$Equipment{name} maxpockets: $maxPockets");
 			} # end if
+		} else {
+			$openprint::log->warning("No service price for $$Service{name}");
 		}
 
 		my $loopbreak_pockets = $neededPockets;
@@ -980,12 +986,13 @@ sub get_price {
 		$unitsPerHour = $Equipment->specification( $$ServiceType{name}.'Units Per Hour', $neededPockets ) if ! $unitsPerHour;
 		$unitsPerHour = $Equipment->specification( 'Units Per Hour ' . $price{Imposition} . ' out', $neededPockets ) if ! $unitsPerHour;
 		$unitsPerHour = $Equipment->specification( 'Units Per Hour', $neededPockets ) if ! $unitsPerHour;
-	if ( ( defined $$specs{txtInsertQuantity} ) and ( $$specs{txtInsertQuantity} > 0 ) ) {
-		my $insert_slowdown = 0;
-		if ( $insert_slowdown = $Equipment->specification('Insert Slowdown') ) {
-			$unitsPerHour -= $insert_slowdown;
+
+		if ( ( defined $$specs{txtInsertQuantity} ) and ( $$specs{txtInsertQuantity} > 0 ) ) {
+			my $insert_slowdown = 0;
+			if ( $insert_slowdown = $Equipment->specification('Insert Slowdown') ) {
+				$unitsPerHour -= $insert_slowdown;
+			}
 		}
-	}
 		$pass{Runspeed} = $unitsPerHour;
 		my $runtime = $unitsPerHour ? $qty/$unitsPerHour : 0; # in horus
 		$pass{RunTime} = $runtime;
@@ -1009,6 +1016,8 @@ sub get_price {
 				$openprint::log->debug("Unknown Units: $$servicePrice{units} for $$ServiceType{name} range($neededPockets) equipment(".$Equipment->strid().")");
 			} # end if
 			$price{Service} += $$servicePrice{Total}
+		} else {
+			$openprint::log->warn("No service price for $$Service{name}");
 		}
 
 		$price{RunTime} += $runtime;
@@ -1091,12 +1100,12 @@ sub get_price {
 	if ( $plusCover ) {
 		my $StitchingCoverService = openprint::Service->find_one(name=>$$ServiceType{name}.'Cover');
 		if ( $StitchingCoverService ) {
-		my $StitchingCoverPrice = $StitchingCoverService->get_Price( $qty, $Equipment );
+			my $StitchingCoverPrice = $StitchingCoverService->get_Price( $qty, $Equipment );
 			if ( $StitchingCoverPrice ) {
-					$price{CoverService} = $StitchingCoverService;
-					$price{CoverPrice} = $StitchingCoverPrice;
-					$$StitchingCoverPrice{Total} = $$StitchingCoverPrice{Price} * $qty;
-					$price{Service} += $$StitchingCoverPrice{Total};
+				$price{CoverService} = $StitchingCoverService;
+				$price{CoverPrice} = $StitchingCoverPrice;
+				$$StitchingCoverPrice{Total} = $$StitchingCoverPrice{Price} * $qty;
+				$price{Service} += $$StitchingCoverPrice{Total};
 			}
 		}
 	}

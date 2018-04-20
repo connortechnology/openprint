@@ -152,12 +152,12 @@ sub edit {
 		$param{ending} = $parser->format_datetime( $end_datetime );
 		if ( ! $param{timetrack_id} ) {
 			if ( openprint::Timetrack->find_one(
-						user_id		=> ( $param{user_id} ? $param{user_id} : undef ),
-						owner_id	=>$param{owner_id},
-						company_id	=>$param{company_id},
-						starting	=>$param{starting},
-						ending		=>$param{ending},
-						service_id	=>( $param{service_id} ? $param{service_id} : undef ),
+						user_id	  	=>  ( $param{user_id} ? $param{user_id} : undef ),
+						owner_id  	=>  $param{owner_id},
+						company_id	=>  $param{company_id},
+						starting  	=>  $param{starting},
+						ending		  =>  $param{ending},
+						service_id	=>  ( $param{service_id} ? $param{service_id} : undef ),
 						description	=>	$param{description},
 						) ) {
 				$variable{error} = 'Not creating duplicate.<br/>';

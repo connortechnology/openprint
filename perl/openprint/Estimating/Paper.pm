@@ -145,7 +145,7 @@ sub calc {
 		$$specs{alert} .= 'Stocks not found.<br/>';
 		return $$specs{Status} = 'uncalculated';
 	} # end if
-    my %indexes  = map { $$_{key}, $_ } @Stocks;
+	my %indexes  = map { $$_{key}, $_ } @Stocks;
 	$$specs{Status} = 'calculated';
 
 	foreach my $ss_id ( $Project->signatures() ) {
@@ -203,7 +203,29 @@ $log->debug("converted StockQuantity: $sheets") if DEBUG;
 					delete $$specs{"sheets-form$form-$qty_index"};
 				} # end if
 			} else {
-$log->debug("StockQuantity from sig $form : overriden to ".$$specs{"qty-form$form-$qty_index"} ) if DEBUG;
+				$log->debug("StockQuantity from sig $form : overriden to ".$$specs{"qty-form$form-$qty_index"} ) if DEBUG;
+				if ( $PressSheet->type() eq 'Sheet' ) {
+          my $sheets = $$sig_specs{'StockQuantity'.$qty_index};
+$log->debug("StockQuantity from sig $form : $sheets") if DEBUG;
+          if ( ! ( $PressSheet->area() and $PressSheet->start_area() ) ) {
+            Carp::cluck("No sheet area PressSheet: " . $PressSheet->area() . ' start: ' . $PressSheet->start_area() );
+					} elsif ( $PressSheet->factor() > 1 ) {
+# convert to supplied count
+						$sheets = ceil( $sheets / $PressSheet->factor() );
+					} # end if
+					if ( 
+							( $$specs{"qty-form$form-$qty_index"} < Math::Round::nearest( 0.1, ( $sheets * $PressSheet->start_sheet_weight() ) ) )
+							or
+							( $$specs{"sheets-form$form-$qty_index"} < $sheets ) 
+						 ) {
+						$$specs{alert} .= "The overriden stock quantity for form $form qty $qty_index is not sufficient.<br/>";	
+					}
+        } else {
+					if ( $$specs{"qty-form$form-$qty_index"} < $$sig_specs{'StockQuantity'.$qty_index} ) {
+						$$specs{alert} .= "The overriden stock quantity for form $form qty $qty_index is not sufficient.<br/>";	
+					}
+        } # end if
+
 			} # end if
 
 			if ( $SuppliedStock->type() eq 'Sheet' ) {

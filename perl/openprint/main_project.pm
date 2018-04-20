@@ -311,5 +311,9 @@ sub _view_log {
 }
 sub _service_dump {
 }
+
+sub summary {
+	openprint::print_project::summary( $r, $log, $dbh, \%variable );
+}
 1;
 __END__

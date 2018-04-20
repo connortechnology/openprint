@@ -152,9 +152,9 @@ sub send_notification {
 			my $sig_specs = openprint::service::get_specs_ref( $Project, $sig_id );
 			my $Press;
 			if ( $$sig_specs{UsePress} ) {
-				$Press = openprint::Equipment->find_one('strid'=>$$sig_specs{UsePress});
+				$Press = openprint::Equipment->find_one(strid=>$$sig_specs{UsePress});
 			} else {
-				$Press = openprint::Equipment->find_one('strid'=>$$sig_specs{'ddmPress'.$Project->ordered_quantity_index()});
+				$Press = openprint::Equipment->find_one(strid=>$$sig_specs{'ddmPress'.$Project->ordered_quantity_index()});
 			} # endif
 			if ( $Press ) {
 				foreach my $Skid ( $self->Skids() ) {
@@ -181,8 +181,8 @@ sub send_notification {
 	$Email->html_body( ssi::include( '/email_template.html', \%info ) );
 	$Email->send( 
 			TO			=>	\@recipients, 
-			SUBJECT 	=> 'Stock allocated for docket ' . $Order->docket(),
 			FROM		=>	$openprint::User,
+			SUBJECT =>	'Stock allocated for docket ' . $Order->docket(),
 			);
 
 } # end sub stock_allocation_notification

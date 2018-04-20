@@ -113,7 +113,7 @@ sub calc_price {
 
 	my %DiePrice;
 
-	if ( $$specs{'rdbSuppliedDie-'.$form} eq 'Y' ) {
+	if ( $$specs{'rdbSuppliedDie-'.$form} and ( $$specs{'rdbSuppliedDie-'.$form} eq 'Y' ) ) {
 		# if customer is supplying die, then there is no die cost.
 		#$log->debug(" ** Customer is Supplying Die ** ");
 	} else { 
@@ -147,9 +147,9 @@ sub calc_price {
 #$die_price += $steel_rule_price;
 #$log->debug(" ** Adding Rule Cost: $steel_rule_price For $$specs{txtSteelRuleLength} Inches, MakeReady Total: $make_ready ** ");
 #
-			if ( $$specs{txtDieCutPunches} > 0 ) {
+			if ( $$specs{txtDieCutPunches} and ( $$specs{txtDieCutPunches} > 0 ) ) {
 ##punches are optional
-				if ( my $Material = openprint::Material->find_one('name'=>'DieCutPunch'.$$specs{'rdbDieCutting-'.$form}) ) {
+				if ( my $Material = openprint::Material->find_one( name=>'DieCutPunch'.$$specs{'rdbDieCutting-'.$form}) ) {
 					my %PunchPrice = $Material->get_price( $$specs{'txtDieCutPunches-'.$form}*$$Imposition{imposition}, $Equipment );
 					$PunchPrice{Total} = $PunchPrice{Price} * $$specs{'txtDieCutPunches-'.$form} * $$Imposition{imposition};
 					$DiePrice{Price} += $PunchPrice{Total};

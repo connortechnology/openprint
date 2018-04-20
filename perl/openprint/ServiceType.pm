@@ -107,6 +107,15 @@ sub Defaults {
 	return @{$_[0]{Defaults}};
 } # end sub Defaults
 
+sub allow_delete {
+	if ( @_ > 1 ) {
+		$_[0]{allow_delete} = $_[1];
+	}
+	if ( ! exists $_[0]{allow_delete} ) {
+		$_[0]{allow_delete} = $defaults{allow_delete};
+	}
+	return $_[0]{allow_delete};
+}
 
 1;
 __END__

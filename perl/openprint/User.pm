@@ -203,8 +203,12 @@ sub next {
 	my $self = shift;
 	my %params = @_;
 
-	my $sql = 'SELECT MIN(firstname) FROM users WHERE firstname > ?';
+	my $sql = 'SELECT id, firstname FROM users WHERE firstname >= ? AND deleted != true';
 	my @values = ( $$self{firstname} );
+	if ( $$self{id} ) {
+		$sql .= ' AND id!=?';
+		push @values, $$self{id};
+	}
 	if ( $params{company_id} ) {
 		$sql .= ' AND company_id=?';
 		push @values, $params{company_id};
@@ -214,7 +218,7 @@ sub next {
 		push @values, $params{type};
 	} # end if
 
-	$sql = qq{SELECT id FROM users WHERE firstname = ($sql)};
+	$sql .= ' ORDER BY firstname ASC LIMIT 1';
 	( $_ ) = sql::execute( $log, $dbh, $sql, @values );
 	return $_;
 }
@@ -227,8 +231,12 @@ sub prev {
 	my $self = shift;
 	my %params = @_;
 
-	my $sql = 'SELECT MAX(FirstName) FROM Users WHERE FirstName < ?';
+	my $sql = 'SELECT id, firstname FROM Users WHERE firstname <= ? AND deleted != true';
 	my @values = ( $$self{firstname} );
+	if ( $$self{id} ) {
+		$sql .= ' AND id!=?';
+		push @values, $$self{id};
+	}
 	if ( $params{company_id} ) {
 		$sql .= ' AND company_id=?';
 		push @values, $params{company_id};
@@ -238,7 +246,7 @@ sub prev {
 		push @values, $params{type};
 	} # end if
 
-	$sql = qq{SELECT id FROM Users WHERE FirstName = ($sql)};
+	$sql .= ' ORDER BY firstname DESC LIMIT 1';
 	( $_ ) = sql::execute( $log, $dbh, $sql, @values );
 	return $_;
 }
