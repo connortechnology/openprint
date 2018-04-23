@@ -502,7 +502,8 @@ sub _project_list {
 	ssi::save_params( '/employee/production/projects.html', (
 		( map { 'due_date_start_'.$_ } ( 'year','month','day' ) ),
 		( map { 'due_date_end_'.$_ } ( 'year','month','day' ) ),
-		'ProjectStatus', 'ddmSalesRep', 'ddmEmployee', 'ddmCustomer', 'ddmPress'
+		'ProjectStatus', 'ddmSalesRep', 'ddmEmployee', 'ddmCustomer', 'ddmPress',
+		'servicetype_id',
 		)  );
 }
 
