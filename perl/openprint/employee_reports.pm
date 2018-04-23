@@ -180,6 +180,64 @@ sub _project_performance {
 	%{$variable{Companies}} = %companies;
 } # end sub _project_performance
 
+sub lost_orders {
+	ssi::setup_date_select($r->uri(), 'created_on_start', -31);
+	ssi::setup_date_select($r->uri(), 'created_on_end', '');
+	_lost_orders();
+}
+
+sub _lost_orders {
+	my $uri = '/employee/reports/lost_orders.html';
+	ssi::save_params( $uri,
+			( map { 'created_on_start_'.$_ } ( 'year','month','day' ) ),
+			( map { 'created_on_end_'.$_ } ( 'year','month','day' ) ),
+			'company_id','salesrep_id',
+			);
+	my %parameters;
+	if ( ( $session{user_type} ne 'A' ) and ! openprint::usergroup::is_user_in( ['Sales Admin','Reporting','Accounting'], $session{user_id} ) ) {
+		$parameters{or} = {
+			company_id  => $openprint::User->company_id(),
+			salesrep_id => $session{user_id},
+		};
+	} elsif ( $param{salesrep_id} ) {
+		$parameters{salesrep_id} = $session{$uri.'?salesrep_id'};
+	} # end if
+	$parameters{id} = $session{$uri.'?company_id'} if $session{$uri.'?company_id'};
+	$parameters{'last_ordered_on is null'}=0;
+	my @Companies = openprint::Company->find( %parameters ) if %parameters > 1;
+	my %companies = map { $_->id(), $_->name() } @Companies;
+
+	$variable{Orders} = [];
+
+	my @Orders = openprint::Order->find(
+			( @Companies ? ( company_id => [ keys %companies ] ) : () ),
+			( $session{$uri.'?salesrep_id'} ? ( salesrep_id => $session{$uri.'?salesrep_id'} ) : () ),
+			ssi::date_filter( $uri.'?created_on_start', 'created_on >=' ),
+			ssi::date_filter( $uri.'?created_on_end', 'created_on <=' ),
+			order=>'id ASC',
+			);
+	my %OrdersByDocket = map { $$_{docket} => $_ } @Orders;
+	foreach my $docket ( $Orders[0]->docket() .. $Orders[@Orders-1]->docket() ) {
+		if ( ! $OrdersByDocket{$docket} ) {
+			push @{$variable{Orders}}, $docket;
+
+			# Get previous
+			$_ = $docket - 1;
+			while ( $_ and  ! $OrdersByDocket{$_} ) {
+				$_ -= 1;
+			}
+			push @{$variable{Orders}}, $OrdersByDocket{$_};
+
+			# Get Next
+			$_ = $docket + 1;
+			while ( $_ and  ! $OrdersByDocket{$_} ) {
+				$_ += 1;
+			}
+			push @{$variable{Orders}}, $OrdersByDocket{$_};
+		}
+	}
+}
+
 sub order_history {
 
 	_order_history_results();
@@ -210,7 +268,13 @@ sub order_history {
 					$totals{$$Service{servicetype_id}} += $Service->ordered_price();
 				}
 
-				push @Data, $Order->id(), $Order->docket(), join(',', map { $_->Invoice()->num() } $Order->Invoices() ), $Order->Company()->name(), $Order->created_on(), ssi::format_csv_date($Project->printed_on()), $Order->status(), $Order->total();
+				push @Data, $Order->id(), $Order->docket(),
+						 join(',', map { $_->Invoice()->num() } $Order->Invoices()),
+						 $Order->Company()->name(),
+						 ssi::format_csv_date($Order->created_on()),
+						 ssi::format_csv_date($Project->printed_on()),
+						 $Order->status(),
+						 $Order->total();
 				foreach my $servicetype_id ( @servicetype_ids ) {
 					my $price = $totals{$servicetype_id};
 					push @Data, $price;
@@ -256,7 +320,7 @@ sub _order_history_results {
 			$parameters{salesrep_id} = $session{$uri.'?CSR'};
 		} # end if
 		$parameters{'last_ordered_on is null'}=0;
-		my @Companies = openprint::Company->find( %parameters ) if %parameters;
+		my @Companies = openprint::Company->find( %parameters ) if %parameters > 1;
 		my %companies = map { $_->id(), $_->name() } @Companies;
 		my @servicetype_ids = split(',',$session{$uri.'?servicetype_id'} );
 
@@ -1725,7 +1789,7 @@ sub customer_performance {
 						$Contact->name(), $Contact->phone(), $Contact->email(),
 						Number::Format::format_number( scalar @{ $orders_by_company{$$Company{id}} } ), 
 						openprint::Currency::format( $order_total ),
-						( $LastOrder ? Date::Format::time2str( '%Y-%m-%d', Date::Parse::str2time( $LastOrder->created_on() ) ) : 'never' ),
+						( $LastOrder ? ssi::format_csv_date($LastOrder->created_on()) : 'never' ),
 						$payment_cycle . ' days',
 						);
 			} # end foreach Company
