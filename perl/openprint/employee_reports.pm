@@ -327,7 +327,7 @@ sub _order_history_results {
 		$variable{Orders} = [];
 
 		my @Orders = openprint::Order->find(
-			company_id => ( ($session{$uri.'?company_id'} and ( ( ! %parameters ) or exists $companies{$session{$uri.'?company_id'}} ) ) ? $session{$uri.'?company_id'} : [ keys %companies ] ),
+			company_id => ( ($session{$uri.'?company_id'} and ( ( %parameters == 1 ) or exists $companies{$session{$uri.'?company_id'}} ) ) ? $session{$uri.'?company_id'} : [ keys %companies ] ),
 			( $session{$uri.'?CSR'} ? ( salesrep_id	=> $session{$uri.'?CSR'} ) : () ),
 			ssi::date_filter( $uri.'?created_on_start', 'created_on >=' ),
 			ssi::date_filter( $uri.'?created_on_end', 'created_on <=' ),
