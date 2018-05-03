@@ -727,7 +727,14 @@ sub email {
 			if ( $param{action} eq 'Delete' ) {
 				$variable{error} .= $Email->delete();
 			} elsif ( $param{action} eq 'Save' ) {
-				$variable{error} .= $Email->save( \%param );
+				my ( $account, $domain ) = split('@', $param{username});
+				$variable{error} .= $Email->save({
+						username=>$param{username},
+						( ( $param{EmailPassword} and $param{EmailPassword} eq $param{VerifyEmailPassword} ) ? ( password=>$param{EmailPassword} ) : () ),
+						name=>$param{name},
+						active=>$param{active},
+						maildir=>($param{maildir} ? $param{maildir} : join('/', $domain, $account,'')),
+} );
 
 				my @domains = email::domains();
 				my ( $user, $domain ) = $Email->username() =~ /^([^\@]+)\@(.+)$/;
