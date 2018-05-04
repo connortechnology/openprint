@@ -359,7 +359,7 @@ sub is_wap {
 }
 
 sub link_to {
-	return sprintf('<a href="/employee/it/host.html?host_id=%d">%s</a>', $_[0]->id(), ( @_ > 1 ? $_[1] : $_[0]->hostname() ) );
+	return sprintf('<a href="/employee/it/host.html?host_id=%d">%s</a>', $_[0]->id(), ( ( @_ > 1 and $_[1] ) ? $_[1] : $_[0]->hostname() ) );
 }
 
 sub online {
