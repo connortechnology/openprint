@@ -589,7 +589,6 @@ EQUIPMENT: foreach my $Equipment ( @equipment ) {
 			 if ( $totalPrice < $Results{Price} or ! exists $Results{Price} ) {
 				 $Results{Price} = $totalPrice;
 				 $Results{Equipment} = $Equipment;
-				 $Results{Runspeed} = $Equipment->specification('Scoring Runspeed');
 				 $Results{Impositions} = \@Folds;
 			 } # end if
 		 } else {
@@ -625,7 +624,6 @@ EQUIPMENT: foreach my $Equipment ( @equipment ) {
 				 if ( $totalPrice < $Results{Price} or ! exists $Results{Price} ) {
 					 $Results{Price} = $totalPrice;
 					 $Results{Equipment} = $Equipment;
-					 $Results{Runspeed} = $Equipment->specification('Scoring Runspeed');
 					 $Results{Impositions} = $Set_Of_Impositions;
 				 } # end if
 			 } # end foreach imposition I
@@ -705,16 +703,18 @@ sub get_price {
 	} # end if
 	$servicePrice{Total} = 0;
 
+	my $runspeed = $Equipment->specification('PerfScoreRunSpeed');
+	if ( ! $runspeed ) {
+		if ( $$I{Fold} and $$I{Fold}{equipment_id} == $$Equipment{id} ) {
+			$runspeed = $$I{Fold}->runspeed($I->Paper()->gsm());
+		} # end if
+	} # end if
+	$Results{Runspeed} = $runspeed;
+
 	if ( $servicePrice{units} eq 'per m' ) {
 		$servicePrice{Total} = Math::Round::nearest( 0.01, $servicePrice{Price} * $qty / 1000 );
 		$Results{Breakdown} .= sprintf('Service: $%.2f%s * %d * %d scores=$%.2f<br/>', @servicePrice{'Price','units'}, $qty, $score_qty, $servicePrice{Total} );
 	} elsif ( $servicePrice{units} eq 'per hour' ) {
-		my $runspeed;
-		if ( $$I{Fold} and $$I{Fold}{equipment_id} == $$Equipment{id} ) {
-			$runspeed = $$I{Fold}->runspeed($I->Paper()->gsm());
-		} else {
-			$runspeed = $Equipment->specification('PerfScoreRunSpeed');
-		} # end if
 		if ( $runspeed ) {
 			if ( int($runspeed) ) {
 				my $hours = $qty / $runspeed;

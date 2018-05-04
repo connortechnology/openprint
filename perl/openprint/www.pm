@@ -578,7 +578,7 @@ $log->debug("Service: " . $Service->to_string() );
 							} # end if
 						} # end if -e $ENV{DOCUMENT_ROOT}.$uri
 					}
-				} # end if main:proj:$third
+				} # end if main:project:$third
 			} else {
 				if ( -e $ENV{DOCUMENT_ROOT}.$uri ) {
 					my ( $proc ) = $filename =~ /^(.*)\.(html|json)$/;
@@ -597,7 +597,6 @@ $log->debug("No proc found for $filename");
 				} # end if -e $ENV{DOCUMENT_ROOT}.$uri 
 
 				openprint::print_project::view_pdfs( $r, $log, $dbh, \%variable )				if $filename eq 'proj_view_pdf.html';
-				openprint::print_project::summary( $r, $log, $dbh, \%variable )					if $filename eq 'summary.html';
 				openprint::print_project::summary( $r, $log, $dbh, \%variable )					if $filename eq 'docket_sheet.html';
 			} # end if defined third
 		} elsif ( -e $ENV{DOCUMENT_ROOT}.$uri ) {

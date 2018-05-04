@@ -197,7 +197,7 @@ while(1) {
 		my $since = $now-($$Host{state_changed_on} ? $$Host{state_changed_on} : 0 );
 		$log->debug( $Host->hostname() . ' is now ' . ( $Host->online() ? 'online' : 'offline' ) . " $since seconds ago" );
 		if ( ! $Host->online() ) {
-			if ( ( ! $$Host{notified} ) and ( $since > $$Host{offline_seconds} ) ) {
+			if ( ( ! $$Host{notified} ) and ( (!$$Host{offline_seconds}) or ( $since > $$Host{offline_seconds} ) ) ) {
 				$_ = $Host->save({ notified=>1 });
 				if ( $_ ) {
 					$log->error($_);
@@ -309,7 +309,7 @@ sub sig_handler {
 sub notify {
 	my ( $Host, $online ) = @_;
 	my $results;
-	my @To = map { $_->User() } $Host->Notifications();
+	my @To = map { $_->User() } $Host->Notifications(undef);
 	if ( @To and ( @To < 10 ) ) {
 		my %info = ( Host	=>	$Host,);
 		my $Email = new openprint::Email();

@@ -1,13 +1,22 @@
 <script type="text/javascript">
-    function calc(formName) {
-		LoadContent( 'Results', '/employee/reports/_order_history_results.html', $(formName) );
+  function calc(formName) {
+		LoadContent( 'Results', '/employee/reports/_services.html', $(formName) );
 	} // end function
 </script>
+<style type="text/css">
+#Results table th ,
+#Results table td {
+text-align: right;
+}
+th.Service {
+width: 120px;
+}
+</style>
 <div class="PageTitle">
 <h1>REPORTS</h1>
-<h2>Order History</h2>
+<h2>Services</h2>
 </div>
-<form id="f1" name="f1" action="/employee/reports/order_history.html">
+<form id="f1" name="f1" action="/employee/reports/services.html">
 	<input type="hidden" name="action" />
 	<fieldset class="filters"><legend>Report Criteria</legend>
 		<ul>
@@ -35,32 +44,12 @@
 				<? echo ( make_drop_down( openprint::Company->dropdown( 'last_order_id is null'=>0 ), $session{$r->uri().'?company_id'} ); ) ?>
 			</select>
 		</li>
-		<li>
-			<label>Status</label>
-			<select name="status" multiple="multiple" size="4" >
-			<? echo ( make_drop_down( openprint::Order_Status->dropdown(), [ split(',', $session{$r->uri().'?status'} )] );) ?>
-			</select>
-		</li>
 		 <li>
 			 <label>Ordered On</label>
 			 <? echo ( join(' to ',
-						date_select_session('/employee/reports/order_history.html', 'created_on_start', { with_today=>1,with_clear=>1 } ),
-						date_select_session('/employee/reports/order_history.html', 'created_on_end', { with_today=>1,with_clear=>1 } ), 
+						date_select_session($r->uri(), 'created_on_start', { with_today=>1,with_clear=>1 } ),
+						date_select_session($r->uri(), 'created_on_end', { with_today=>1,with_clear=>1 } ), 
 						); ) ?>
-		</li>
-		 <li>
-			 <label>Printed On</label>
-			 <? echo ( join(' to ',
-						date_select_session('/employee/reports/order_history.html', 'printed_on_start', { with_today=>1,with_clear=>1 } ),
-						date_select_session('/employee/reports/order_history.html', 'printed_on_end', { with_today=>1,with_clear=>1 } ), 
-						); ) ?>
-		</li>
-		<li>
-			<label>Value</label>
-			<? echo ( join(' to ', 
-				input( type=>'float', id=>'total_start', name=>'total_start', value=>$param{total_start} ),
-				input( type=>'float', id=>'total_end', name=>'total_end', value=>$param{total_end} ),
-			); ) ?>
 		</li>
 		<li>
 			<label>Currency</label>
@@ -69,30 +58,7 @@
 			<? echo ( make_drop_down( openprint::Currency->dropdown( order=>'lower(name)'), $session{$r->uri().'?currency_id'} ) ) ?>
 			</select>
 		</li>
-		<li>
-			<label>Press</label>
-			<select id="press_id" name="press_id">
-				<option value="">All</option>
-				<? echo ( make_drop_down( [ map { $_->id(), $_->strid() . ': ' . $_->name() } openprint::Equipment->find('category any'=>'Printing', order=>'lower(strid)') ], $param{press_id} ); ) ?>
-			</select>
-		</li>
-		<li>
-			<label>Reprint</label>
-			<? echo ( radio( 'reprint', [ 'Y', 'Yes', 'N', 'No', '', 'Both' ], $param{reprint} ); ) ?>
-		</li>
-		<li>
-			<label>POs</label>
-			<? echo ( radio( 'pos', [ 'With', 'With', 'Without', 'Without', '', 'All' ], $param{reprint} ); ) ?>
-		</li>
 <?include(_services_filter.html)?>
-		<li>
-			<label>Sort By</label>
-			<select name="order">
-				<option value="created_on">Date Ordered</option>
-				<option value="total">Value</option>
-				<option value="company">Company</option>
-			</select>
-		</li>
 		</ul>
 		 <p class="buttons">
 			 <? echo ( join("\n",
@@ -104,7 +70,7 @@
 </form>
 <div id="Results">
 <? echo ( if ( %param ) {
-return include('_order_history_results.html');
+return include('_services.html');
 } else {
 return 'Select Report Criteria and click Show Results';
 }

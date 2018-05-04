@@ -502,7 +502,8 @@ sub _project_list {
 	ssi::save_params( '/employee/production/projects.html', (
 		( map { 'due_date_start_'.$_ } ( 'year','month','day' ) ),
 		( map { 'due_date_end_'.$_ } ( 'year','month','day' ) ),
-		'ProjectStatus', 'ddmSalesRep', 'ddmEmployee', 'ddmCustomer', 'ddmPress'
+		'ProjectStatus', 'ddmSalesRep', 'ddmEmployee', 'ddmCustomer', 'ddmPress',
+		'servicetype_id',
 		)  );
 }
 
@@ -929,11 +930,14 @@ $log->error("No service_id in service for project $project_id, $service_id: " . 
 	my $ac = sql::start_transaction( $dbh );
 	$Service->save({status=>'Complete'});
 	my $specs = $Service->specs();
+	my @operator_ids = @{ $Service->operator_ids() };
 # Remove from Print Schedule
 	foreach my $Job ( openprint::ScheduledJob->find( project_id=>$project_id, 'service_id @>'=>$service_id ) ) {
+		@operator_ids = sets::union(@operator_ids, $Job->Shift()->operator_id()) if $Job->Shift()->operator_id();
 		$Job->delete();
 	} # end foreach Job
-	$Project->add_to_log( @session{'company_id','user_id'}, "Form $$specs{SignatureIndex} Completed". ( sets::isin( $session{user_id}, $Service->operator_ids() ) ? '': ' for ' . join(',',map { $_->name() } $Service->Operators() ) ) );
+	$log->debug("Completing form by $session{user_id} for @operator_ids");
+	$Project->add_to_log( @session{'company_id','user_id'}, "Form $$specs{SignatureIndex} Completed". ( sets::isin( $session{user_id}, \@operator_ids ) ? '': ' for ' . join(',',map { $_->name() } openprint::User->find(id=>\@operator_ids) ) ) );
 	sql::end_transaction( $dbh, $ac );
 } # end sub complete_signature
 

@@ -346,21 +346,28 @@ sub auto_calculate {
 	} # end if
 
 	foreach my $service_name ( 'Scoring', 'Perforating', 'Counting', 'Imposition', 'Stripping' ) {
-		next if $$services{$service_name};
+		if ( $$services{$service_name} ) {
+			$openprint::log->debug("Already have $service_name");
+			next;
+		}
 		eval {
 
-			require "openprint/Estimating/$service_name";
+			require "openprint/Estimating/$service_name.pm";
 			if ( my $function = "openprint::Estimating::$service_name"->can('neccessary') ) {
 				my $neccessary = $function->( $Project );
 
 				if ( $neccessary and ! $$services{$service_name} ) {
 					$_ = $Project->add_service($service_name);
-					push @{$$services{$service_name}}, $_ if $_ and !$$services{$service_name};
+					push @{$$services{$service_name}}, $_ if $_;
+} else {
+				$openprint::log->debug("Not neccessary $service_name");
+
 				} # end if
 			} else {
 				$openprint::log->error("No neccessary function in openprint::Estimating::$service_name");
 			}
 		}; # end if eval
+	$openprint::log->error("Error in requiring $service_name $@") if $@;
 	} # end foreach service_name;
 
 

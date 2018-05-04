@@ -31,6 +31,8 @@ CREATE TABLE Folds (
 	run_overs_units	TEXT,
 	printing_type	TEXT,
 	comments		TEXT,
+	runspeed_units	TEXT NOT NULL default 'gsm',
+	orientation	TEXT,
 	PRIMARY KEY (id)
 );
 

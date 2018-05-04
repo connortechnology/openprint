@@ -107,9 +107,12 @@
 			to
 <? echo ( date_select_session( '/employee/production/projects.html', 'due_date_end', { onchange=>'load_projects();', with_today=>1, with_clear=>1 } ); ) ?>
 	</li>
+			<li><label>Contains</label>
+				<? echo ( ssi::select( openprint::ServiceType->dropdown(order=>'lower(name)'), $session{$r->uri().'?servicetype_id'}, { name=>'servicetype_id', prepend=>['','All'], onchange=>'load_projects();' } ); ) ?>
+			</li>
 	</ul>
 	<p class="buttons">
-		<? echo ( button( 'ShowResults', { onclick=>'load_projects();', text=>'Show Results' } ); ) ?>
+		<? echo ( button('ShowResults', { onclick=>'load_projects();', text=>'Show Results'} ); ) ?>
 	</p>
 </fieldset>
 </form>

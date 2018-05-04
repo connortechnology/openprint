@@ -1,41 +1,31 @@
-<? while ( @$variable{'SignatureIndex','Reference'} = splice @{$$variable{'SignatureGroups'}},0,2; ) ?>
-<? if ( $$variable{"txtVerticalQty-$$variable{'SignatureIndex'}"} or $$variable{"txtHorizontalQty-$$variable{'SignatureIndex'}"} ) ?>
-	<? if ( $$variable{'Reference'} ) ?>
-	<p>Information for <b><?Reference?></b></p>
-	<? endif ( $$variable{'Reference'} ) ?>
-	<p> 
-		<label>Number of scores per item</label>
-<? eval ( $$variable{'QTYIndex'} = 1 ) ?>
-<? while ( $$variable{'QTYIndex'} <= 3 ) ?>
-<? if ( $$variable{'txtQuantity'.$$variable{'QTYIndex'}} ) ?>
-		<span class="value">
-<? echo ( int($$variable{"txtVerticalQty-$$variable{'SignatureIndex'}"}) ) ?> Vertical
-<? echo ( int($$variable{"txtHorizontalQty-$$variable{'SignatureIndex'}"}) ) ?> Horizontal
-		</span>
-<? endif ( $$variable{'txtQuantity'.$$variable{'QTYIndex'}} ) ?>
-<? eval ( $$variable{'QTYIndex'} += 1 ) ?>
-<? endwhile ( $$variable{'QTYIndex'} <= 3 ) ?>
-	</p>
-	<p>
-		<label>Imposition</label>
-<? eval ( $$variable{'QTYIndex'} = 1 ) ?>
-<? while ( $$variable{'QTYIndex'} <= 3 ) ?>
-<? if ( $$variable{'txtQuantity'.$$variable{'QTYIndex'}} ) ?>
-		<span class="value"><? echo ( sprintf('%dout %s&quot; x %s&quot;', @$variable{"txtImposition-$$variable{'SignatureIndex'}-$$variable{'QTYIndex'}",
-"txtLayoutWidth-$$variable{'SignatureIndex'}-$$variable{'QTYIndex'}","txtLayoutHeight-$$variable{'SignatureIndex'}-$$variable{'QTYIndex'}"} ); ) ?></span>
-<? endif ( $$variable{'txtQuantity'.$$variable{'QTYIndex'}} ) ?>
-<? eval ( $$variable{'QTYIndex'} += 1 ) ?>
-<? endwhile ( $$variable{'QTYIndex'} <= 3 ) ?>
-	</p>
-	<p>
-		<label>Equipment</label>
-<? eval ( $$variable{'QTYIndex'} = 1 ) ?>
-<? while ( $$variable{'QTYIndex'} <= 3 ) ?>
-<? if ( $$variable{'txtQuantity'.$$variable{'QTYIndex'}} ) ?>
-		<span class="value"><? echo ( new openprint::Equipment( $$variable{"ddmEquipment-$$variable{'SignatureIndex'}-$$variable{'QTYIndex'}"} )->name() ) ?></span>
-<? endif ( $$variable{'txtQuantity'.$$variable{'QTYIndex'}} ) ?>
-<? eval ( $$variable{'QTYIndex'} += 1 ) ?>
-<? endwhile ( $$variable{'QTYIndex'} <= 3 ) ?>
-	</p>
-<? endif ( $$variable{"txtVerticalQty-$$variable{'SignatureIndex'}"} or $$variable{"txtHorizontalQty-$$variable{'SignatureIndex'}"} ) ?>
-<? endwhile ( @$variable{'SignatureIndex','Reference'} = splice @{$$variable{'SignatureGroups'}},0,2; ) ?>
+<ul>
+<? echo (
+  my $html;
+
+  foreach my $sig_id ( $$variable{Project}->signatures({sort=>1}) ) {
+    my $sig_specs = openprint::service::get_specs_ref( $$variable{Project}, $sig_id );
+    my $form = $$sig_specs{SignatureIndex};
+
+    $html .= '<li><label>For form ' . $form . '</label></li>';
+$html .='<li><label>Number of scores per item</label>';
+foreach my $qty_index ( $$variable{Project}->quantity_indexes() ) {
+		$html .= '<span class="value">'. int($$variable{"txtVerticalQty-$$variable{'SignatureIndex'}"}).' Vertical '.
+		int($$variable{"txtHorizontalQty-$$variable{'SignatureIndex'}"}).' Horizontal</span>';
+}
+$html .= '</li>';
+$html .= include('/includes/main/summ/signature_equipment.html', $variable );
+
+    $html .= '<li><label>Imposition</label><div class="value"><table><tr><th class="Qty">Qty</th><th class="Imp">Imposition</th></tr>';
+    foreach my $qty_index ( $$variable{Project}->quantity_indexes() ) {
+
+      foreach my $imp_index ( 1 .. 4 ) {
+        next if ! $$variable{"ImpQty-$form-$qty_index-$imp_index"};
+
+        $html .= sprintf('<tr><td class="Qty">%d</td><td class="Imp">%d x %d + %d x %d = %d out</td></tr>',
+          @variable{map { join('-', $_, $form, $qty_index, $imp_index ) } ( 'ImpQty', 'ImpColumns','ImpRows','ImpDutchColumns','ImpDutchRows','ImpOut' )} );
+      } # end foreach imp_index
+    } # end foreach qty_index
+    $html .= '</table></div></li>';
+  } # end foreach form
+  return $html;
+) ?>

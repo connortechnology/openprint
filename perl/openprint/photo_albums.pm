@@ -194,8 +194,9 @@ view_photo();
 } # end sub _view_photo
 
 sub view_photo {
-	$param{asset_id} =~ s/\D//g;
-	$param{album_id} =~ s/\D//g;
+	$param{asset_id} = openprint::Asset->transform( id => $param{asset_id} );
+	$param{album_id} = openprint::Photo_Album->transform( id => $param{album_id} );
+
 	if ( ! ( $param{asset_id} and $param{album_id} ) ) {
 		# Search engines, etc might get here
 		return;

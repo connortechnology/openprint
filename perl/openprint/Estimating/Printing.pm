@@ -732,10 +732,11 @@ $log->debug("Adding special colour for $colour");
 				}
 				push @{$project{"AqueousMakeReadies$qty_index"}{$$aq_specs{"ddmEquipment-$form-$qty_index"}}}, $$aq_specs{"txtLayoutWidth-$form-$qty_index"} * $$aq_specs{"txtLayoutHeight-$form-$qty_index"};
 			}
-			foreach my $qty_index ( $Project->quantity_indexes() ) {
-				foreach my $key ( keys %{$project{"AqueousMakeReadies$qty_index"}} ) {
-					$log->debug("$qty_index $key " . join(',',@{$project{"AqueousMakeReadies$qty_index"}{$key}}) );
-				}
+		} # end foreach sig
+		#$log->debug("AQUEOUS MR");
+		foreach my $qty_index ( $Project->quantity_indexes() ) {
+			foreach my $key ( keys %{$project{"AqueousMakeReadies$qty_index"}} ) {
+				$log->debug("AQUEOUS MR qty_index:$qty_index equipment:$key " . join(',',@{$project{"AqueousMakeReadies$qty_index"}{$key}}) );
 			}
 		}
 	} elsif ( $$services{Aqueous} and @{$$services{Aqueous}} ) {
@@ -2611,11 +2612,16 @@ sub calc {
 			$variables{"hdnImpositionDutchColumns$qty_index"} = [ sets::union( 'output', @{$variables{"hdnImpositionDutchColumns$qty_index"}} ) ];
 			$variables{"hdnImpositionDutchRows$qty_index"} = [ sets::union( 'output', @{$variables{"hdnImpositionDutchRows$qty_index"}} ) ];
 		} # end if
-		if ( $$specs{"chkOverrideRunStyle$qty_index"} and $$specs{"ddmRunStyle$qty_index"} and $$specs{"chkOverridePress$qty_index"} and $$specs{"ddmPress$qty_index"} ) {
-			my $Press = openprint::Equipment->find_one(strid=>$$specs{"ddmPress$qty_index"});
-			if ( ! sets::isin( $$specs{"ddmRunStyle$qty_index"}, [ split(',', $Press->specification('Runstyles') ) ] ) ) {
-				$$specs{alert} .= "Press $$Press{name} cannot do " . $$specs{"ddmRunStyle$qty_index"}.'<br/>';
+		if ( $$specs{"chkOverrideRunStyle$qty_index"} and $$specs{"ddmRunStyle$qty_index"} ) {
+			if ( ( $$specs{"ddmRunStyle$qty_index"} ne 'Sheet Work' ) and ! ( @side_one_colours and @side_two_colours ) ) {
+				$$specs{alert} .= "Single sided job overriden to double sided imposition.<br/>";
 			}
+			if ( $$specs{"chkOverridePress$qty_index"} and $$specs{"ddmPress$qty_index"} ) {
+				my $Press = openprint::Equipment->find_one(strid=>$$specs{"ddmPress$qty_index"});
+				if ( ! sets::isin( $$specs{"ddmRunStyle$qty_index"}, [ split(',', $Press->specification('Runstyles') ) ] ) ) {
+					$$specs{alert} .= "Press $$Press{name} cannot do " . $$specs{"ddmRunStyle$qty_index"}.'<br/>';
+				}
+			} # end if also overriden press
 		}
 	} # end foreach qty_index
 	if ( $$specs{alert} ) {
@@ -3099,7 +3105,7 @@ sub save_price( $$$$$ ) {
 
 	if ( my $stock_qt = $$price{'Stock Quantity'} ) {
 		$$specs{'OverSetup'.$qty_index} = $$stock_qt{'Initial Setup Overs'};
-		$$specs{'OverRun'.$qty_index} = $$stock_qt{'Run Overs'};
+		$$specs{'OverRun'.$qty_index} = $$stock_qt{'Run Overs'}{total};
 		$$specs{'OverTotal'.$qty_index} = $$stock_qt{'Total Overs'};
 	} # end if
 	$$specs{'ImpositionCharge'.$qty_index} = $$price{'Imposition Total'};
@@ -3134,8 +3140,8 @@ sub save_price( $$$$$ ) {
 	$unitprice *= 1+$Project->markup()/100 if $Project->markup();
 	$$specs{'txtUnitPrice'.$qty_index} = sprintf($openprint::config{UnitPriceFormat}, $unitprice );
 	my $mprice = $$price{'Impression MPrice'} / $$Imposition{imposition} if $$Imposition{imposition};
-	my $rate = 1+($$price{'Overs Rate'}/100);
-	my $ink = (($$price{'Ink Price'}/$qty)*1000 );
+	my $rate = ($$price{'Run Overs'}{total}/$qty)*1000;
+	my $ink = ($$price{'Ink Price'}/$qty)*1000;
 
 	$mprice = $rate * ($mprice + $ink);
 	if ( $_ = $$specs{'Markup'.$qty_index} ) {
@@ -3222,7 +3228,11 @@ sub breakdown {
 	} # end if
 
 	if ( $stock_qty ) {
-		$breakdown .= sprintf( 'Overs: Base:%s Initial Setups: %d*%d=%d, Additional Setups: %d*%d=%d Run: %.2f%% = %s FM:%s Additional Plate:%d * %d changes = %s Bindery: %d (FoldMakeReady: %d FoldRun: %d', @$stock_qty{'Net Sheet Count','Initial Setup Rate','Initial Setup Count','Initial Setup Overs','Additional Setup Rate','Additional Setup Count','Additional Setup Overs','Run Overs Rate', 'Run Overs','FM Overs','Additional Plate Overs Rate','Plate Changes','Additional Plate Overs', 'BinderyOvers', 'FoldingMakeReadyOvers','FoldingRunOvers'} );
+		my $RunOvers = $$price{'Run Overs'};
+		$breakdown .= sprintf( 'Overs: Base:%s Initial Setups: %d*%d=%d, Additional Setups: %d*%d=%d Run: %.2f%s = %s FM:%s Additional Plate:%d * %d changes = %s Bindery: %d (FoldMakeReady: %d FoldRun: %d',
+					@$stock_qty{'Net Sheet Count','Initial Setup Rate','Initial Setup Count','Initial Setup Overs','Additional Setup Rate','Additional Setup Count','Additional Setup Overs'},
+					@$RunOvers{'value','units','total'},
+					@$stock_qty{'FM Overs','Additional Plate Overs Rate','Plate Changes','Additional Plate Overs', 'BinderyOvers', 'FoldingMakeReadyOvers','FoldingRunOvers'} );
 #foreach ( 'Net Sheet Count','Initial Setup Rate','Initial Setup Count','Initial Setup Overs','Additional Setup Rate','Additional Setup Count','Additional Setup Overs','Run Overs Rate', 'Run Overs','FM Overs','Additional Plate Overs Rate','Plate Changes','Additional Plate Overs', 'BinderyOvers', 'FoldingMakeReadyOvers','FoldingRunOvers' ) {
 #$log->debug("$_ $$stock_qty{$_}");
 #}
@@ -4197,7 +4207,6 @@ sub get_project_price {
 
 	my $previous_press = $$source_sig_specs{PreviousPress};
 	my %sig_specs = %{$source_sig_specs};
-	my %aq_makereadies = %{$aq_makereadies} if $aq_makereadies;
 
 	#my @Is = openprint::imposition::sort( calculate_impositions( $Project, $sig_specs, $qty_index, $qty, $PaperCounts, $versions, $project, $impositions ) );
 	my @Is = calculate_impositions( $Project, $source_sig_specs, $qty_index, $qty, $PaperCounts, $versions, $project, $impositions );
@@ -4247,6 +4256,7 @@ sub get_project_price {
 		my %washed_colours = %$washed_colours;
 		my %mixed_colours = %$mixed_colours;
 		my %PaperCounts = %$PaperCounts;
+	my %aq_makereadies = %{$aq_makereadies} if $aq_makereadies;
 
 		my @total_impositions = @$other_impositions;
 
@@ -5424,24 +5434,27 @@ sub calc_price {
 		} # end if
 	} # end if
 
-	my $run_overs = 0;
-	my $over_rate = 0;
 	if ( $$specs{'OverrideRun'.$qty_index} and ( $$specs{'OverrideRun'.$qty_index} eq 'Y' ) ) {
-		$run_overs = $$specs{'OverRun'.$qty_index};
+		$price{'Run Overs'} = { value=>$$specs{'OverRun'.$qty_index}, total=>$$specs{'OverRun'.$qty_index} };
 	} else {
 # Should include bindery overs, but not setups, because the setup overs do the same job as the Run Overs
-		$over_rate = $Press->specification( 'Press Run Overs', $net_sheets );
-		if ( $over_rate ) {
-			$price{'Overs Rate'} = $over_rate;
+		my $PressRunOvers = $Press->Specification( 'Press Run Overs', $net_sheets );
+		if ( $PressRunOvers ) {
 			if ( ( $$specs{txtSignatureType} eq 'Cover Pages' ) and ( $_ = $Press->Specification( 'Covers Overs Percentage' ) ) ) {
-				$over_rate *= ( 1 + $$_{value} / 100 );
-			} # end if
-			$run_overs = $net_sheets * $over_rate;
+				$$PressRunOvers{value} *= ( 1 + $$_{value} / 100 );
+			}
+			if ( $$PressRunOvers{units} eq 'Press Sheets' ) {
+				$$PressRunOvers{total} = $$PressRunOvers{value};
+			} else {
+				#Percentage
+				$$PressRunOvers{total} = int($$PressRunOvers{value} * $net_sheets);
+			}
+			$price{'Run Overs'} = { value=>$$PressRunOvers{value}, units=>$$PressRunOvers{units}, total=>$$PressRunOvers{total} };
 		} else {
-			$over_rate = 0;
-			$price{'Overs Rate'} = 0;
+			$price{'Run Overs'} = { value=>0,units=>'',total=>0};
 		}
 	} # end if
+	my $run_overs = $price{'Run Overs'}{total};
 
 	my $fm_overs = 0;
 	if ( $$specs{ScreenType} and ( $$specs{ScreenType} eq 'FM' ) ) {
@@ -5928,12 +5941,6 @@ if ( 1 ) {
 		$setup_overs += $fm_overs + $additional_setup_overs;
 	} # en dif
 
-	if ( $$specs{'OverrideRun'.$qty_index} and (  $$specs{'OverrideRun'.$qty_index} eq 'Y' ) ) {
-		$run_overs = $$specs{'OverRun'.$qty_index};
-	} else {
-		$run_overs = ceil( $net_sheets * $over_rate );
-	} # end if
-
 	my $total_overs = 0;
 
 	if ( $_ = $Press->Specification('Overs') and $$_{value} eq 'All' ) {
@@ -5983,8 +5990,7 @@ if ( 1 ) {
 			'Additional Setup Count'	=> $additional_setup_count,
 			'Additional Setup Rate'		=> $setup_rate,
 			'Additional Setup Overs'	=> $additional_setup_overs,
-			'Run Overs'					=>	$run_overs,
-			'Run Overs Rate'			=>	$price{'Overs Rate'},
+			'Run Overs'					=>	$price{'Run Overs'},
 			'Additional Plate Overs'	=>	$additional_overs,
 			'Additional Plate Overs Rate'	=>	$additional_overs_rate,
 			'Total Overs'				=>	$total_overs,
@@ -6292,6 +6298,7 @@ $log->debug("Area $area = $$Imposition{object_area} * Impressions($colour_impres
 			$price{'Aqueous Breakdown'} = sprintf('Aqueous Price: %dout MR $%.2f + BC: $%.2f + Service $%.2f + Material $%.2f = $%.2f on %s<br/>', $aq_results{Imposition}{imposition}, @aq_results{'MakeReady','BlanketCut','Service','Material','Total'}, $aq_results{Equipment}->name() );
 			$price{'Comparison Cost'} += $aq_results{Total};
 			$price{'Press Washes'} += $aq_results{washups};
+#$openprint::log->error("AQ washups: $aq_results{washups}");
 		} else {
 $log->warn("Something wrong in AQ");
 		} # end if
@@ -6697,11 +6704,11 @@ sub get_run_prices {
 	# Only load this if not already specified by some inline bindery service
       if ( ! $run_speed ) {
 			$run_speed = $Press->specification( $$std_speed{name}, (lc $$std_speed{units} eq 'calliper' ? $$Paper{calliper} : $$Paper{gsm} ) );
-      } else {
+      } elsif ( DEBUG ) {
         $log->debug("Not looking up run speed because already specified");
       }
 			if ( ! $run_speed ) {
-				$log->debug("No run sped on $$Press{strid} for $$std_speed{units} " . ($$std_speed{units} eq 'Calliper' ? $$Paper{calliper} : $Paper->gsm() ) ) if DEBUG or 1;
+				$log->debug("No run sped on $$Press{strid} for $$std_speed{units} " . ($$std_speed{units} eq 'Calliper' ? $$Paper{calliper} : $Paper->gsm() ) ) if DEBUG;
 				$run_speed = $$std_speed{value};
 			} # end if
 		} # end if
@@ -6870,16 +6877,18 @@ sub filter_colours {
 	my ( $front, $back ) = @_;
 	#my @filtered_colours = @{$front} if $front;
 	my %filtered_colours = map { my %c = %{$_}; ( $$_{name}, \%c ) } @{$front};
+	my @colour_names = map { $$_{name} } @{$front};
 
 	foreach my $Colour ( @{$back} ) {
 		if ( ! $filtered_colours{$$Colour{name}} ) {
 			#push @filtered_colours, $Colour;
+			push @colour_names, $$Colour{name};
 			$filtered_colours{$$Colour{name}} = $Colour;
 		} else {
 			$filtered_colours{$$Colour{name}}{coverage} = ( $filtered_colours{$$Colour{name}}{coverage} + $$Colour{coverage}) / 2;
 		} # end if
 	} # end foreach
-	return values %filtered_colours;
+	return @filtered_colours{@colour_names};
 } # end sub
 
 sub compare_signatures_runstyle {
