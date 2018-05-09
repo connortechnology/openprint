@@ -880,8 +880,11 @@ sub plates {
 	if ( ! %param ) {
 		ssi::setup_date_select( $r->uri(), 'ordered_on_start', -31 );
 		ssi::setup_date_select( $r->uri(), 'ordered_on_end', '' );
-		ssi::setup_date_select( $r->uri(), 'printed_on_start', -31 );
-		ssi::setup_date_select( $r->uri(), 'printed_on_end', '' );
+		#ssi::setup_date_select( $r->uri(), 'printed_on_start', -31 );
+		#ssi::setup_date_select( $r->uri(), 'printed_on_end', '' );
+		if ( ! $session{$r->uri().'?press_id'} ) {
+			$session{$r->uri().'?press_id'} = join(',',map{$$_{id}} openprint::Equipment->find('category any'=>'Printing'));
+		}
 	} # end if
 	_plates();
 
@@ -975,13 +978,20 @@ sub _plates {
 			if ( $printed_on_start or $printed_on_end ) {
 				my $printed_on = $Project->printed_on();
 
-				next if ! $printed_on;
+
+				if ( ! $printed_on ) {
+					$log->debug("Project $$Project{id} has not been printed");
+					next;
+				} else {
+					$log->debug("Project $$Project{id} was printed $printed_on");
+				}
 				my $printed_on_seconds = Date::Parse::str2time( $printed_on );
-				if ( ! ( 
-							( (!$printed_on_start_seconds) or ( $printed_on_seconds > $printed_on_start_seconds ) )
-							and
-							( (!$printed_on_end_seconds) or ( $printed_on_seconds < $printed_on_end_seconds ) )
-							) ) {
+				if (
+							( $printed_on_start_seconds and ( $printed_on_seconds < $printed_on_start_seconds ) )
+							or	
+							( $printed_on_end_seconds and ( $printed_on_seconds > $printed_on_end_seconds ) )
+							) {
+					$log->debug("Project $$Project{id} was printed $printed_on_start_seconds < $printed_on < $printed_on_end_seconds ");
 					next;
 				}
 			} # end if printed_on_start or printed_on_end
