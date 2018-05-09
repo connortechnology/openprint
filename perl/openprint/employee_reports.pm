@@ -204,7 +204,7 @@ sub _lost_orders {
 	} # end if
 	$parameters{id} = $session{$uri.'?company_id'} if $session{$uri.'?company_id'};
 	$parameters{'last_ordered_on is null'}=0;
-	my @Companies = openprint::Company->find( %parameters ) if %parameters > 1;
+	my @Companies = openprint::Company->find( %parameters ) if (keys %parameters) > 1;
 	my %companies = map { $_->id(), $_->name() } @Companies;
 
 	$variable{Orders} = [];
@@ -283,7 +283,7 @@ sub order_history {
 			} # end foreach Project
 			$order_total += $Order->total();
 		} # end foreach Order
-push @Data, '','','','','','','Totals',$order_total, map { $service_totals{$_} } @servicetype_ids;
+		push @Data, '','','','','','','Totals',$order_total, map { $service_totals{$_} } @servicetype_ids;
 
 		misc::export_csv( $r, $log, \%variable, 'order_history_report.csv', \@Header,\@Data );	
 	} # end if
@@ -319,15 +319,15 @@ sub _order_history_results {
 		} elsif ( $param{CSR} ) {
 			$parameters{salesrep_id} = $session{$uri.'?CSR'};
 		} # end if
-		$parameters{'last_ordered_on is null'}=0;
-		my @Companies = openprint::Company->find( %parameters ) if %parameters > 1;
+		$parameters{'last_ordered_on is null'} = 0;
+		my @Companies = openprint::Company->find( %parameters ) if (keys %parameters) > 1;
 		my %companies = map { $_->id(), $_->name() } @Companies;
 		my @servicetype_ids = split(',',$session{$uri.'?servicetype_id'} );
 
 		$variable{Orders} = [];
 
 		my @Orders = openprint::Order->find(
-			company_id => ( ($session{$uri.'?company_id'} and ( ( %parameters == 1 ) or exists $companies{$session{$uri.'?company_id'}} ) ) ? $session{$uri.'?company_id'} : [ keys %companies ] ),
+			company_id => ( ($session{$uri.'?company_id'} and ( ( (keys %parameters) == 1 ) or exists $companies{$session{$uri.'?company_id'}} ) ) ? $session{$uri.'?company_id'} : [ keys %companies ] ),
 			( $session{$uri.'?CSR'} ? ( salesrep_id	=> $session{$uri.'?CSR'} ) : () ),
 			ssi::date_filter( $uri.'?created_on_start', 'created_on >=' ),
 			ssi::date_filter( $uri.'?created_on_end', 'created_on <=' ),
@@ -481,13 +481,13 @@ sub _services {
 			$parameters{salesrep_id} = $session{$uri.'?CSR'};
 		} # end if
 		$parameters{'last_ordered_on is null'}=0;
-		my @Companies = openprint::Company->find( %parameters ) if %parameters;
+		my @Companies = openprint::Company->find( %parameters ) if (keys %parameters) > 1;
 		my %companies = map { $_->id(), $_->name() } @Companies;
 		my @servicetype_ids = split(',',$session{$uri.'?servicetype_id'});
 
 		$variable{Orders} = [];
 		foreach my $Order ( openprint::Order->find(
-					company_id => ( ($session{$uri.'?company_id'} and ( ( ! %parameters ) or exists $companies{$session{$uri.'?company_id'}} ) ) ? $session{$uri.'?company_id'} : [ keys %companies ] ),
+					company_id => ( ($session{$uri.'?company_id'} and ( ( (keys %parameters)==1 ) or exists $companies{$session{$uri.'?company_id'}} ) ) ? $session{$uri.'?company_id'} : [ keys %companies ] ),
 					( $session{$uri.'?CSR'} ? ( salesrep_id	=> $session{$uri.'?CSR'} ) : () ),
 					ssi::date_filter( $uri.'?created_on_start', 'created_on >=' ),
 					ssi::date_filter( $uri.'?created_on_end', 'created_on <=' ),
