@@ -5522,7 +5522,7 @@ sub calc_price {
         $log->debug("No run sped on $$Press{strid} for $$std_speed{units} " . ($$std_speed{units} eq 'Calliper' ? $$Paper{calliper} : $Paper->gsm() ) ) if DEBUG;
         $run_speed = $$std_speed{value} if ! $run_speed;
       } # end if
-      $log->debug("Std Runspeed by calliper($$Paper{calliper}): $run_speed on $$Press{strid}");
+      #$log->debug("Std Runspeed by calliper($$Paper{calliper}): $run_speed on $$Press{strid}");
 
       $$specs{"Runspeed$qty_index"} = $$specs{Runspeed} = $price{Runspeed} = $run_speed;
     } else {
