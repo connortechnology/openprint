@@ -63,7 +63,7 @@ if ( ! $dbh ) {
 } # end if
 $log->debug("Connected to db");
 
-my $filename = '/home/iconnor/.local/share/teamviewer12/logfiles/Connections.txt';
+my $filename = '/home/iconnor/.local/share/teamviewer13/logfiles/Connections.txt';
 if ( ! open( FH, '<'.$filename ) ) {
 	die "Can't open $filename: $!";
 }
@@ -143,6 +143,8 @@ foreach my $line (<FH>) {
               description     =>  'Teamview connection to ' . $Host->hostname(),
               });
           $log->error($_) if $_;
+        } else {
+          $log->debug("Not adding");
         }
       } # TImetrack not found
 
@@ -182,7 +184,7 @@ sub confirm {
     print $_[0];
     $input = <STDIN>;
     chomp $input;
-    if ( $input eq 'Y' or $input eq '' ) {
+    if ( $input eq 'Y' or $input eq 'y' or $input eq '' ) {
       return 1;
     }
     return 0;
