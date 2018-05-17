@@ -73,7 +73,7 @@ sub _history {
   ssi::save_params($uri,
       'created_on_start_year', 'created_on_start_month','created_on_start_day',
       'created_on_end_year', 'created_on_end_month','created_on_end_day',
-      'QuotedFor', 'company_id','deleted','salesrep_id', 'status', 'total_start','total_end','limit','press_id',
+      'QuotedFor', 'company_id','deleted','salesrep_id', 'status', 'total_start','total_end','limit','press_id','ordered',
       );
   if ( $param{QuoteID} ) {
     $variable{Quotes} = [ openprint::Quote->find(
@@ -108,11 +108,23 @@ sub _history {
                'total3 <=' => $session{$uri.'?total_end'},
                } ) : () ),
            ] ) : () ),
-        order =>  $openprint::Quote::fields{created_on}.' DESC',
-        limit =>   $session{$uri.'?limit'},
-           ) ) {
+				order =>  $openprint::Quote::fields{created_on}.' DESC',
+				limit =>   $session{$uri.'?limit'},
+					 ) ) {
 
-        if ( $param{press_id} ) {
+			if ( $param{ordered} ne '' ) {
+				my $keep = 0;
+        foreach my $Project ( $Quote->Projects() ) {
+					if ( $Project->docket() ) {
+						$keep = 1;
+						last;
+					}
+				}
+				next if $param{ordered} and !$keep;
+				next if $keep and !$param{ordered};
+			}
+			
+      if ( $param{press_id} ) {
         my $on_press = 0;
         foreach my $Project ( $Quote->Projects() ) {
           foreach my $sig_id ( $Project->signatures() ) {

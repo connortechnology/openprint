@@ -69,6 +69,16 @@
 						my @options = ( 'Incomplete','Complete','Re-Opened' );
 						ssi::select( [ map { $_, $_ } @options ], $session{$r->uri().'?status'}, { name=>'status', onchange=>'load_quotes();', prepend=>['','All'] } );) ?>
 			</li>
+			<li><label>Ordered</label>
+				<?echo(
+						radio(
+							'ordered',
+							[ '1','Yes','0','No','','Both'],
+							$session{$r->uri().'?ordered'},
+							{ onclick=>'load_quotes();', default=>'' },
+							);
+						) ?>
+			</li>
 			<li>
 				<label>Press</label>
 				<select id="press_id" name="press_id" onchange="load_quotes();">
