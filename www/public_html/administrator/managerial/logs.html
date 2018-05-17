@@ -19,9 +19,9 @@
 				</li>
 				<li>
 					<label>Object</label>
-					<select name="objecttype_id" id="objecttype_id">
+					<select name="object_type_id" id="object_type_id">
 					<option value="">All</option>
-					<? echo ( make_drop_down( openprint::ObjectType->dropdown(), $param{objecttype_id} ); ) ?>
+					<? echo ( make_drop_down( openprint::Object_Type->dropdown(), $param{object_type_id} ); ) ?>
 					</select>
 				</li>			
 				<li>
@@ -73,7 +73,7 @@
 					date_filter( $r->uri(). '?date_start', 'date_time >=' ),
 					( $param{company_id} ? ( company_id	=>	$param{company_id} ) : () ),
 					( $param{user_id} ? ( user_id		=>	$param{user_id} ) : () ),
-					( $param{objecttype_id} ? ( objecttype_id		=>	$param{objecttype_id} ) : () ),
+					( $param{object_type_id} ? ( object_type_id		=>	$param{object_type_id} ) : () ),
 					action_id	=>	$param{log_actions},
           order => 'date_time',
 					) ];
