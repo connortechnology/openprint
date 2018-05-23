@@ -614,6 +614,10 @@ $openprint::log->debug("folds from sigimpo") if DEBUG;
 		$i->runstyle('Sheet Work');
 		$$i{start_columns} = $$i{columns};
 		$i->columns( $$i{columns}/2 );
+
+		if ( $$i{dutch_columns} ) {
+			$i->dutch_columns( $$i{dutch_columns} / 2 );
+		}
 		$$i{quantity} = 2;
 		push @Set_Of_Impositions, $i;
 	} elsif ( $$SignatureImposition{runstyle} eq 'Work & Tumble' ) {
@@ -621,6 +625,9 @@ $openprint::log->debug("folds from sigimpo") if DEBUG;
 		$i->runstyle('Sheet Work');
 		$i->start_rows( $$i{rows} );
 		$i->rows( $$i{rows}/2 );
+		if ( $$i{dutch_rows} ) {
+			$i->dutch_rows( $$i{dutch_rows} / 2 );
+		}
 		$$i{quantity} = 2;
 		push @Set_Of_Impositions, $i;
 	} else {
@@ -638,7 +645,7 @@ $openprint::log->debug("folds from sigimpo") if DEBUG;
 					my $i = $I->copy();
 					$i->dutch_columns(0);
 					$i->dutch_rows(0);
-					$i->quantity(1);
+					#$i->quantity(1);
 					push @Impositions, $i;
 				}
 				{
@@ -647,7 +654,7 @@ $openprint::log->debug("folds from sigimpo") if DEBUG;
 					$i->rows( $$i{dutch_rows} );
 					$i->dutch_columns(0);
 					$i->dutch_rows(0);
-					$i->quantity(1);
+					#$i->quantity(1);
 					$i->image_orientation($$I{image_orientation} == openprint::Imposition::Vertical ? openprint::Imposition::Horizontal : openprint::Imposition::Vertical);
 					push @Impositions, $i;
 				}
