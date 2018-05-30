@@ -15,17 +15,18 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA
 
 use strict;
+use warnings;
+
 package openprint::Estimating::Bundling;
 use POSIX qw(ceil);
 use vars qw( %ServicePrices %MaterialPrices );
 %ServicePrices = (
-'BundlingMakeReady'	=> { },
-'BundlingMinimum'	=> { },
-'Bundling'			=> { units => [ 'per m', 'per bundle', 'per package' ] },
-);
+		'BundlingMakeReady'	=> { },
+		'BundlingMinimum'	=> { },
+		'Bundling'			=> { units => [ 'per m', 'per bundle', 'per package' ] },
+		);
 
 require openprint::service;
-
 require sql;
 
 my @variables = (
@@ -320,31 +321,45 @@ $openprint::log->debug("Per package due to versions: $qty / $$sig_specs{Versions
 } # end sub calc
 
 sub summary {
-    my ( $Project, $service_id, $specs, $qty_index ) = @_;
-    $specs = openprint::service::get_specs_ref( $Project, $service_id ) if ! $specs;
-    my $text = '';
-    if ( $qty_index ) {
-        $text .= $$specs{'txtPackageQuantity'.$qty_index};
-        if ( $$specs{ServiceType} =~ /Wrap/i ) {
-            $text .= ' wrap' . ($$specs{'txtPackageQuantity'.$qty_index} > 1 ? 's' : '');
-        } elsif ( $$specs{ServiceType} =~ /Bundling/i ) {
-            $text .= ' bundle' . ($$specs{'txtPackageQuantity'.$qty_index} > 1 ? 's' : '');
-        } elsif ( $$specs{ServiceType} =~ /Banding/i ) {
-            $text .= ' bundle' . ($$specs{'txtPackageQuantity'.$qty_index} > 1 ? 's' : '');
-        } # end if
-    } else {
-        $text .= $$specs{txtItemsPerPackage} . ' items';
-        if ( $$specs{ServiceType} =~ /Wrap/i ) {
-            $text .= ' per wrap';
-        } elsif ( $$specs{ServiceType} =~ /Bundling/i ) {
-            $text .= ' per bundle';
-        } elsif ( $$specs{ServiceType} =~ /Banding/i ) {
-            $text .= ' per band';
+	my ($Project, $service_id, $specs, $qty_index) = @_;
+
+	$specs = openprint::service::get_specs_ref($Project, $service_id) if ! $specs;
+	my $text = '';
+	if ( $qty_index ) {
+		$text .= $$specs{'txtPackageQuantity'.$qty_index};
+		if ( $$specs{ServiceType} =~ /Wrap/i ) {
+			$text .= ' wrap' . ($$specs{'txtPackageQuantity'.$qty_index} > 1 ? 's' : '');
+		} elsif ( $$specs{ServiceType} =~ /Bundling/i ) {
+			$text .= ' bundle' . ($$specs{'txtPackageQuantity'.$qty_index} > 1 ? 's' : '');
+		} elsif ( $$specs{ServiceType} =~ /Banding/i ) {
+			$text .= ' bundle' . ($$specs{'txtPackageQuantity'.$qty_index} > 1 ? 's' : '');
+		} # end if
+	} else {
+		$text .= $$specs{txtItemsPerPackage} . ' items';
+		if ( $$specs{ServiceType} =~ /Wrap/i ) {
+			$text .= ' per wrap';
+		} elsif ( $$specs{ServiceType} =~ /Bundling/i ) {
+			$text .= ' per bundle';
+		} elsif ( $$specs{ServiceType} =~ /Banding/i ) {
+			$text .= ' per band';
 			$text .= sprintf(' %d bands each', $$specs{bands_per_package} ) if $$specs{bands_per_package};
-        } # end if
-        $text .= $$specs{rdbCardboardBacking} eq 'Y' ? ' with cardboard backing.' : '';
-    } # end if
-    return $text;
+		} # end if
+		if ( $$specs{type_id} ) {
+			my $Material = new openprint::Material($$specs{type_id});
+			$text .= ' ' . $Material->name() . ' ';
+			$openprint::log->debug($text);
+		} else {
+			$openprint::log->debug($text);
+		} 
+		if ( $$specs{cross_type_id} ) {
+			my $CrossMaterial = new openprint::Material($$specs{cross_type_id});
+			$text .= ' ' . $CrossMaterial->name() . ' ';
+		} 
+
+		$text .= $$specs{rdbCardboardBacking} eq 'Y' ? ' with cardboard backing.' : '';
+	} # end if
+$openprint::log->debug("Bundling:: summary");
+	return $text;
 } # end sub summary
 
 sub save {
@@ -359,17 +374,17 @@ sub save {
 } # end sub save
 
 sub has_overrides {
-    my ( $Project, $service_id, $specs, $qty_index ) = @_;
-    $specs = openprint::service::get_specs_ref( $Project, $service_id ) if ! $specs;
+	my ( $Project, $service_id, $specs, $qty_index ) = @_;
+	$specs = openprint::service::get_specs_ref( $Project, $service_id ) if ! $specs;
 
-    my @v;
-    if ( $qty_index ) {
-            push @v, map { $$specs{$_.$qty_index} ? $_ : () } (
-					'OverridePrice',
-                    );
-    } # end if
+	my @v;
+	if ( $qty_index ) {
+		push @v, map { $$specs{$_.$qty_index} ? $_ : () } (
+				'OverridePrice',
+				);
+	} # end if
 
-    return @v;
+	return @v;
 
 } # end sub has_overrides
 1;

@@ -167,6 +167,7 @@ $log->debug("Sig complete: $complete");
 					} # end if
 				} # end foreach
 			} # end if
+$log->debug("Project complete: $complete " . $Service->to_string());
 
 			my $services = $Project->services();
 			if ( $$services{''} ) {
