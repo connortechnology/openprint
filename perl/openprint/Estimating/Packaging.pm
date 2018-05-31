@@ -19,7 +19,6 @@ package openprint::Estimating::Packaging;
 use POSIX qw(ceil);
 
 require openprint::service;
-
 require sql;
 
 my @variables = (
@@ -241,14 +240,11 @@ sub summary {
 		} # end if
 		if ( $$specs{type_id} ) {
 			my $Material = new openprint::Material($$specs{type_id});
-			$text .= ' ' . $Material->name() . ' ';
-			$openprint::log->debug($text);
-		} else {
-			$openprint::log->debug($text);
+			$text .= ' ' . $Material->description() . ' ';
 		} 
 		if ( $$specs{cross_type_id} ) {
 			my $CrossMaterial = new openprint::Material($$specs{cross_type_id});
-			$text .= ' ' . $CrossMaterial->name() . ' ';
+			$text .= ' ' . $CrossMaterial->description() . ' ';
 		} 
 		$text .= $$specs{rdbCardboardBacking} eq 'Y' ? ' with cardboard backing.' : '';
 	} # end if

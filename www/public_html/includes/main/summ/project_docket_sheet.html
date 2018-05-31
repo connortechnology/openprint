@@ -563,8 +563,7 @@ $log->debug("Binder: @BinderyServiceNames");
 		} # end if
 		if ( $$services{Bundling} ) {
 			foreach ( @{$$services{Bundling}} ) {
-				my $specs = openprint::service::get_specs_ref( $$variable{Project}, $_ );
-				$html .= ", Bundles in $$specs{txtItemsPerPackage}'s";
+				$html .= 'Bundling in ' . openprint::service::summary($$variable{ProjectIndex}, $_ );
 			} # end foreach s_id
 		} # end if
 		if ( $$services{KraftWrap} ) {

@@ -101,9 +101,9 @@ sub calc {
 		return $$specs{Status} = 'uncalculated';
 	} # end if
 
-	$$specs{bands_per_package} =~ s/[^\d\.]//g;
-	$$specs{cross_bands_per_package} =~ s/[^\d\.]//g;
-	my $makeReady = openprint::service::get_price( $ServiceType->name().'MakeReady', undef, undef );
+	$$specs{bands_per_package} =~ s/[^\d\.]//g if $$specs{bands_per_package};
+	$$specs{cross_bands_per_package} =~ s/[^\d\.]//g if $$specs{cross_bands_per_package};
+	my $makeReady = openprint::service::get_price( $ServiceType->name().'MakeReady', undef, undef ) || 0;
 	my $Service = openprint::Service->find_one( name=>$ServiceType->name() );
 	my $minCharge = openprint::service::get_price( $ServiceType->name().'Minimum', undef, undef );
 	if ( ! $minCharge ) {
@@ -158,9 +158,9 @@ sub calc {
 
 	foreach my $qty_index ( $Project->quantity_indexes() ) {
 
-		$$specs{"Markup$qty_index"} =~ s/[^\d\.\-]//g;
-		$$specs{"txtPrice$qty_index"} =~ s/[^\d\.]//g;
-		$$specs{"txtQuantity$qty_index"} =~ s/[^\d\.]//g;
+		$$specs{"Markup$qty_index"} =~ s/[^\d\.\-]//g if $$specs{"Markup$qty_index"};
+		$$specs{"txtPrice$qty_index"} =~ s/[^\d\.]//g if $$specs{"txtPrice$qty_index"};
+		$$specs{"txtQuantity$qty_index"} =~ s/[^\d\.]//g if $$specs{"txtQuantity$qty_index"};
 		$$specs{"txtQuantity$qty_index"} = $Project->quantity($qty_index) if ! $$specs{"txtQuantity$qty_index"};
 		my $qty = $$specs{txtPressSheetComboItems} ? $$specs{'txtQuantity'.$qty_index} * $$specs{txtPressSheetComboItems} : $$specs{'txtQuantity'.$qty_index};
 		next if ! $qty;
@@ -184,7 +184,7 @@ $openprint::log->debug("Per package due to versions: $qty / $$sig_specs{Versions
 		my $m_qty = $$specs{txtItemsPerPackage} ? ceil( 1000/$$specs{txtItemsPerPackage} ) : 0;
 
 		$$specs{'hdnBreakdown'.$qty_index} .= sprintf('Minimum Charge: $%.2f<br/>', $minCharge );
-		$$specs{'hdnBreakdown'.$qty_index} .= sprintf('Makeready: $%.2f<br/>', $makeReady );
+		$$specs{'hdnBreakdown'.$qty_index} .= sprintf('Makeready: $%.2f<br/>', $makeReady);
 		my $price = 0;
 		my $mprice = 0;
 		my $unitPrice = 0;
@@ -241,12 +241,13 @@ $openprint::log->debug("Per package due to versions: $qty / $$sig_specs{Versions
 				$mprice += $CardboardPrice{MPrice};
 			} # end if
 		} # end if
+
 		if ( @Materials ) {
 			if ( $Material ) {
-				my %MaterialPrice = $Material->get_price( $$specs{bands_per_package} );
 
 				my $material_qty = $package_qty * $$specs{bands_per_package};
 				my $m_material_qty = $m_qty * $$specs{bands_per_package};
+				my %MaterialPrice = $Material->get_price($material_qty);
 # if $$specs{bands_per_package};
 				if ( $MaterialPrice{units} eq 'per m' ) {
 					%MaterialPrice = $Material->get_price( $package_qty );
@@ -308,13 +309,22 @@ $openprint::log->debug("Per package due to versions: $qty / $$sig_specs{Versions
 
 		$$specs{'hdnBreakdown'.$qty_index} .= sprintf('Total: $%.2f<br/>',$price );
 		$$specs{'txtPackageQuantity'.$qty_index} = $package_qty;
-		if ( $$specs{'OverridePrice'.$qty_index} ne 'Y' ) {
-			$$specs{"txtPrice$qty_index"} = sprintf( $openprint::config{ProjectMoneyFormat}, $price*(1+$$specs{"Markup$qty_index"}/100)*(1+$Project->markup()/100) );
+			if ( $$specs{"Markup$qty_index"} ) {
+				$price *= (1+$$specs{"Markup$qty_index"}/100);
+			}
+			if ( $Project->markup() ) {
+			 	$price *= (1+$Project->markup()/100);
+			 	$mprice *= (1+$Project->markup()/100);
+			 	$unitPrice *= (1+$Project->markup()/100);
+		
+			}
+		if ( (!$$specs{'OverridePrice'.$qty_index}) or ($$specs{'OverridePrice'.$qty_index} ne 'Y') ) {
+			$$specs{"txtPrice$qty_index"} = sprintf( $openprint::config{ProjectMoneyFormat}, $price);
 		} else {
 			$$specs{"txtPrice$qty_index"} = sprintf( $openprint::config{ProjectMoneyFormat}, $$specs{"txtPrice$qty_index"} );
 		} # endif
-		$$specs{"txtUnitPrice$qty_index"} = sprintf( $openprint::config{UnitPriceFormat}, ( $unitPrice/$qty ) * (1+$Project->markup()/100) );
-		$$specs{"MPrice$qty_index"} = sprintf( $openprint::config{UnitPriceFormat}, ( $mprice ) * (1+$Project->markup()/100) );
+		$$specs{"txtUnitPrice$qty_index"} = sprintf($openprint::config{UnitPriceFormat}, $unitPrice/$qty);
+		$$specs{"MPrice$qty_index"} = sprintf($openprint::config{UnitPriceFormat}, $mprice);
 	} # end foreach
 
 	return $$specs{Status} = $status;
@@ -346,14 +356,11 @@ sub summary {
 		} # end if
 		if ( $$specs{type_id} ) {
 			my $Material = new openprint::Material($$specs{type_id});
-			$text .= ' ' . $Material->name() . ' ';
-			$openprint::log->debug($text);
-		} else {
-			$openprint::log->debug($text);
+			$text .= ' ' . $Material->description() . ' ';
 		} 
 		if ( $$specs{cross_type_id} ) {
 			my $CrossMaterial = new openprint::Material($$specs{cross_type_id});
-			$text .= ' ' . $CrossMaterial->name() . ' ';
+			$text .= ' ' . $CrossMaterial->description() . ' ';
 		} 
 
 		$text .= $$specs{rdbCardboardBacking} eq 'Y' ? ' with cardboard backing.' : '';
