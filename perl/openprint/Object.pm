@@ -933,6 +933,8 @@ sub find {
 
 	no strict 'refs';
 	my $object_type = shift;
+	my $debug = ${$object_type.'::debug'};
+	$debug = DEBUG_ALL if ! $debug;
 
 	my $starttime = [gettimeofday] if $debug;
 	my $params;

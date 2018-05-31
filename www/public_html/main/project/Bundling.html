@@ -26,7 +26,7 @@
 					$html .= ' and type of bands</label>';
 					$html .= input( name=>'bands_per_package', value=>$$variable{bands_per_package}, type=>'cardinal', oninput=>'calc(this.form.name);' );
 					$html .= ssi::select( 
-					[ map{ $_->id(), $_->description() } @Materials ], $$variable{type_id}, { name=>'type_id', onchange=>'calc(this.form.name);' } ).'</li>';
+					[ map{ $_->id(), $_->description() } @Materials ], $$variable{type_id}, { name=>'type_id', onchange=>'calc(this.form.name);', prepend=>['','select'] } ).'</li>';
 				} # end if
 			} 
 
@@ -38,7 +38,15 @@
 				} else {
 					$html .= ' and Type of cross bands</label>';
 					$html .= input( name=>'cross_bands_per_package', value=>$$variable{cross_bands_per_package}, type=>'cardinal', oninput=>'calc(this.form.name);' );
-					$html .= ssi::select( [ map{ $_->id(), $_->description() } @CrossMaterials ], $$variable{cross_type_id}, { name=>'cross_type_id', onchange=>'calc(this.form.name);' } );
+					$html .= ssi::select(
+							[ map{ $_->id(), $_->description() } @CrossMaterials ],
+							$$variable{cross_type_id},
+							{
+								name=>'cross_type_id',
+								onchange=>'calc(this.form.name);',
+								prepend=>['','select']
+							}
+							);
 				} # end if
 				$html .= '</li>';
 			}

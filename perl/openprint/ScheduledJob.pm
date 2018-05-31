@@ -501,6 +501,9 @@ $openprint::log->debug($Service->to_string() );
 				last if $$self{operator_id};
 			} # end foreach
 		} # end if
+		if ( ! $$self{operator_id} ) {
+			$$self{operator_id} = $self->Shift()->operator_id();
+		}
 	} # end if
 	return $$self{operator_id};
 } # end sub operator_id

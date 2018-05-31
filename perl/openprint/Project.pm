@@ -1546,7 +1546,10 @@ sub Service {
 		$openprint::log->error("No service_id passed to Service for project $$self{id}");
 		Carp::cluck("No service_id passwrod to Project::Service");
 	} # end if
-	return new openprint::Project_Service( {project_id=>$$self{id}, service_id=>$service_id} );
+	if ( ! $$self{Project_Services}{$service_id} ) {
+		$$self{Project_Services}{$service_id} = new openprint::Project_Service( {project_id=>$$self{id}, service_id=>$service_id} );
+	}
+	return $$self{Project_Services}{$service_id};
 	#return new openprint::Project_Service( { service_id=>$service_id} );
 } # end sub Service
 
