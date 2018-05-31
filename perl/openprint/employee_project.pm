@@ -45,7 +45,7 @@ sub view {
 
 	my $project_index = $param{ProjectIndex};
 	$project_index = $param{project_id} if ! $project_index;
-	$project_index = openprint::Project->transform('id', $project_index );
+	$project_index = openprint::Project->transform('id', $project_index);
 		
 	if ( ! $project_index ) {
 		if ( $param{Docket} ) {
