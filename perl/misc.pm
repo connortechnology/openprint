@@ -279,20 +279,24 @@ sub seconds_to_pretty_interval {
 
 	my $days = int ( $remainder / ( 60* 60 * 24 ) );
 	$remainder = $remainder % ( 60 * 60 * 24 );
-	if ( sets::isin( $days, [ 28,29,30,31 ] ) ) {
-		$string .= '1 month';
-		return $string;
-	} else {
-    if ( $remainder and ! ( $remainder % (60*60 ) ) ) {
-      $string .= $days * 24 + ( $remainder / 3600 ).'h'; 
-      $remainder = 0;
-    } elsif ( $days ) {
-      $string .= sprintf('%dd', $days );
+	if ( sets::isin($days, [ 28,29,30,31 ]) ) {
+$openprint::log->debug("Remainder: $remainder");
+    if ( (! $remainder) or ( $remainder == 82800 ) ) {
+      $string .= '1 month';
+      return $string;
     }
-	} # end if
-	return $string if ! $remainder;
+	}
+ #else {
+    #if ( $remainder and ! ( $remainder % (60*60 ) ) ) {
+      #$string .= $days * 24 + ( $remainder / 3600 ).'h'; 
+      #$remainder = 0;
+    #} elsif ( $days ) {
+      #$string .= sprintf('%dd', $days );
+    #}
+	#} # end if
+	#return $string if ! $remainder;
 
-	$string .= seconds2hms( $remainder );
+	$string .= seconds2hms( $days * 60 * 60 * 24 + $remainder );
 	return $string;
 } # end sub seconds_to_pretty_interval
 
