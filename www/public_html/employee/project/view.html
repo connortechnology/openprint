@@ -98,6 +98,11 @@ function send_notifications( form, project_id ) {
 	<? if ( $$variable{Order}->docket() ) ?>
 <br class="spacer"/>
 <fieldset><legend onclick="toggleContent('StockAllocations','_stock_allocations.html?docket=<? echo ( $$variable{Order}->docket() ) ?>', null, null );">Allocated</legend>
+<?echo ( button('StockAllocationPopup', {
+			target=>'_blank',
+			href=>sprintf('/employee/project/stock_allocations.html?project_id=%1$d&amp;docket=%2$s', $$variable{ProjectIndex},$$variable{Order}->docket() ),
+			text=>'Open in Popup'
+			} ); )?>
 <div id="StockAllocations" class="StockAllocated"><?include(/employee/project/_stock_allocations.html)?></div>
 </fieldset>
 <br/>

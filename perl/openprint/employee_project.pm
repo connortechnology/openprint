@@ -942,6 +942,10 @@ sub _production_feedback {
 	$variable{service_id} = $param{service_id};
 } # end sub _production_feedback
 
+sub stock_allocations {
+	_stock_allocations();
+}
+
 sub _stock_allocations {
 	$variable{Order} = openprint::Order->find_one( docket=>$param{docket} );
 	if ( $param{action} eq 'delete' ) {
