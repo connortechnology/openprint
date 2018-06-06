@@ -106,15 +106,16 @@ function send_notifications( form, project_id ) {
 <div id="StockAllocations" class="StockAllocated"><?include(/employee/project/_stock_allocations.html)?></div>
 </fieldset>
 <br/>
-<div id="StockCheckout" class="StockCheckout">
-<?echo ( button('StockCheckoutPopup', {
-			target=>'_blank',
-			href=>sprintf('/employee/project/stock_checkout.html?project_id=%1$d&amp;docket=%2$s', $$variable{ProjectIndex},$$variable{Order}->docket() ),
-			text=>'Open in Popup'
-			} ); )?>
-
-		<?include(/employee/project/_stock_checkout.html)?>
-  </div>
+	<div id="StockCheckout" class="StockCheckout">
+		<fieldset><legend>Stock Used</legend>
+	<?echo ( button('StockCheckoutPopup', {
+				target=>'_blank',
+				href=>sprintf('/employee/project/stock_checkout.html?project_id=%1$d&amp;docket=%2$s', $$variable{ProjectIndex},$$variable{Order}->docket() ),
+				text=>'Open in Popup'
+				} ); )?>
+			<div id="StockCheckout"><?include(/employee/project/_stock_checkout.html)?></div>
+		</fieldset>
+	</div>
 	<div class="leftColumn">
 	<? eval (
 		$$variable{PurchaseOrders} = [ openprint::PurchaseOrder_Content->find( docket=>$$variable{Order}->docket() ) ];
