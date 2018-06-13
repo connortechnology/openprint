@@ -375,8 +375,8 @@ sub save {
 	my $Project = new openprint::Project( $project_index );
 	my $services = $Project->services();
 
-	if ( ($$param{AccurateCount} eq 'Y' ) and ! $$services{Counting} ) {
-		$Project->add_service( 'Counting' );
+	if ( ($$param{AccurateCount} and ($$param{AccurateCount} eq 'Y') ) and ! $$services{Counting} ) {
+		$Project->add_service('Counting');
 	} # end if
 } # end sub save
 
