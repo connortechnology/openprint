@@ -1,3 +1,6 @@
+<?eval(
+$$variable{canseepricing} = ($session{user_type} eq 'A' or openprint::usergroup::is_user_in(['InventoryManager','Accounting'], $session{user_id} ) ) ? 1 : 0;
+)?>
 <form id="checkout_form" name="checkout_form">
 	<input type="hidden" name="docket" value="<? echo ( $$variable{Order}->docket() ) ?>" />
 	<input type="hidden" name="action" value="Add" />
