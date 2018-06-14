@@ -142,8 +142,8 @@ sub calc {
 		}
 	} # end if
 
-	my $Material = new openprint::Material( $$specs{type_id} );
-	my $CrossMaterial = new openprint::Material( $$specs{cross_type_id} );
+	my $Material = openprint::Material->find_one( id=>$$specs{type_id} );
+	my $CrossMaterial = openprint::Material->find_one( id=>$$specs{cross_type_id} );
 	if ( $$specs{cross_bands_per_package} and ! $$specs{bands_per_package} ) {
 		@CrossMaterials = @Materials;
 		$CrossMaterial = $Material;
