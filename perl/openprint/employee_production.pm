@@ -937,7 +937,8 @@ $log->error("No service_id in service for project $project_id, $service_id: " . 
 		$Job->delete();
 	} # end foreach Job
 	$log->debug("Completing form by $session{user_id} for @operator_ids");
-	$Project->add_to_log( @session{'company_id','user_id'}, "Form $$specs{SignatureIndex} Completed". ( sets::isin( $session{user_id}, \@operator_ids ) ? '': ' for ' . join(',',map { $_->name() } openprint::User->find(id=>\@operator_ids) ) ) );
+	$Project->add_to_log( @session{'company_id','user_id'},
+			"Form $$specs{SignatureIndex} Completed". ( ( @operator_ids and sets::isin( $session{user_id}, \@operator_ids ) ) ? '': ' for ' . join(',',map { $_->name() } openprint::User->find(id=>\@operator_ids) ) ) );
 	sql::end_transaction( $dbh, $ac );
 } # end sub complete_signature
 

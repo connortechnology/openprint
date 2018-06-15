@@ -26,7 +26,7 @@ sub project_history {
 		( map { 'created_on_time_end_'.$_ } ( 'hour','minute' ) ),
 		( map { 'status_on_start_'.$_ } ( 'year','month','day','hour','minute' ) ),
 		( map { 'status_on_end_'.$_ } ( 'year','month','day','hour','minute' ) ),
-		'status', 'previous_status', 'company_id', 'Estimator', 'CSR', 'reprint', 'type_id',
+		'status', 'previous_status', 'company_id', 'Estimator', 'CSR', 'reprint', 'type_id','press_id',
 	);
 	ssi::setup_date_select( $page, 'created_on_start', -31 );
 	ssi::setup_date_select( $page, 'created_on_end', '' );
@@ -40,7 +40,7 @@ sub _project_history_results {
 		( map { 'created_on_time_end_'.$_ } ( 'hour','minute' ) ),
 		( map { 'status_on_start_'.$_ } ( 'year','month','day','hour','minute' ) ),
 		( map { 'status_on_end_'.$_ } ( 'year','month','day','hour','minute' ) ),
-		'status', 'previous_status', 'company_id', 'Estimator', 'CSR', 'reprint', 'type_id',
+		'status', 'previous_status', 'company_id', 'Estimator', 'CSR', 'reprint', 'type_id','press_id',
 	);
 	my %parameters; 
 	if ( ( $session{user_type} ne 'A' ) and ! openprint::usergroup::is_user_in( ['Sales Admin','Reporting'], $session{user_id} ) ) {
@@ -52,6 +52,7 @@ sub _project_history_results {
 		$parameters{salesrep_id} = $session{$page.'?CSR'};
 	} # end if
 	#$parameters{order} = 'lower(strcompanyname)';
+	$parameters{'last_project_id is null'}=0;
 	my @Companies = openprint::Company->find( %parameters );
 	my %companies = map { int($_->id()), $_->name() } @Companies;
 	my @company_ids = map { $_->id() } @Companies;
@@ -83,6 +84,7 @@ sub _project_history_results {
 	} # end if
 
 	if ( %companies ) {
+		my $Press = new openprint::Equipment($param{press_id} ) if $param{press_id};
 		@{$variable{Projects}} = ();
 		foreach my $Project ( openprint::Project->find( %filters ) ) {
 			if ( $param{previous_status} and (
@@ -95,7 +97,7 @@ sub _project_history_results {
 					$keep = 1 if openprint::Project_Log->find(
 							ssi::date_filter( '/employee/reports/project_history.html?status_on_start', 'created_on >=' ),
 							ssi::date_filter( '/employee/reports/project_history.html?status_on_end', 'created_on <=' ),
-							'project_id'=>$Project->id(),
+							project_id=>$Project->id(),
 							'description like'=>'Marked Proofs Waiting For QA Approval%'
 							);
 				} # end if
@@ -103,7 +105,7 @@ sub _project_history_results {
 					$keep = 1 if openprint::Project_Log->find(
 							ssi::date_filter( '/employee/reports/project_history.html?status_on_start', 'created_on >=' ),
 							ssi::date_filter( '/employee/reports/project_history.html?status_on_end', 'created_on <=' ),
-							'project_id'=>$Project->id(),
+							project_id=>$Project->id(),
 							'description like'=>'Marked Proofs Waiting For Customer Approval%'
 							);
 				} # end if
@@ -111,12 +113,28 @@ sub _project_history_results {
 					$keep = 1 if openprint::Project_Log->find(
 							ssi::date_filter( '/employee/reports/project_history.html?status_on_start', 'created_on >=' ),
 							ssi::date_filter( '/employee/reports/project_history.html?status_on_end', 'created_on <=' ),
-							'project_id'=>$Project->id(),
+							project_id =>$Project->id(),
 							'description in'	=>	[ map { 'Marked ' . $_ } @statuses ],
 							);
 				} # end if
 				next if ! $keep;
-			} # end if
+			} # end if previous_status
+
+			if ( $param{press_id} ) {
+				my $on_press = 0;
+				foreach my $sig_id ( $Project->signatures() ) {
+					my $sig_specs = openprint::service::get_specs_ref($Project, $sig_id);
+					if ( ! $$sig_specs{UsePress} ) {
+						$$sig_specs{UsePress} = $$sig_specs{'ddmPress'.$Project->ordered_quantity_index()};
+					} # end if
+					if ( $$sig_specs{UsePress} eq $$Press{strid} ) {
+						$on_press = 1;
+					} # end if
+					last if $on_press;
+				} # end foreach sig
+				next if ! $on_press;
+			} # end if press_id
+
 			push @{$variable{Projects}}, $Project;
 		} # end foreach Project
 	} else {
@@ -204,7 +222,7 @@ sub _lost_orders {
 	} # end if
 	$parameters{id} = $session{$uri.'?company_id'} if $session{$uri.'?company_id'};
 	$parameters{'last_ordered_on is null'}=0;
-	my @Companies = openprint::Company->find( %parameters ) if %parameters > 1;
+	my @Companies = openprint::Company->find( %parameters ) if (keys %parameters) > 1;
 	my %companies = map { $_->id(), $_->name() } @Companies;
 
 	$variable{Orders} = [];
@@ -283,7 +301,7 @@ sub order_history {
 			} # end foreach Project
 			$order_total += $Order->total();
 		} # end foreach Order
-push @Data, '','','','','','','Totals',$order_total, map { $service_totals{$_} } @servicetype_ids;
+		push @Data, '','','','','','','Totals',$order_total, map { $service_totals{$_} } @servicetype_ids;
 
 		misc::export_csv( $r, $log, \%variable, 'order_history_report.csv', \@Header,\@Data );	
 	} # end if
@@ -319,15 +337,15 @@ sub _order_history_results {
 		} elsif ( $param{CSR} ) {
 			$parameters{salesrep_id} = $session{$uri.'?CSR'};
 		} # end if
-		$parameters{'last_ordered_on is null'}=0;
-		my @Companies = openprint::Company->find( %parameters ) if %parameters > 1;
+		$parameters{'last_ordered_on is null'} = 0;
+		my @Companies = openprint::Company->find( %parameters ) if (keys %parameters) > 1;
 		my %companies = map { $_->id(), $_->name() } @Companies;
 		my @servicetype_ids = split(',',$session{$uri.'?servicetype_id'} );
 
 		$variable{Orders} = [];
 
 		my @Orders = openprint::Order->find(
-			company_id => ( ($session{$uri.'?company_id'} and ( ( %parameters == 1 ) or exists $companies{$session{$uri.'?company_id'}} ) ) ? $session{$uri.'?company_id'} : [ keys %companies ] ),
+			company_id => ( ($session{$uri.'?company_id'} and ( ( (keys %parameters) == 1 ) or exists $companies{$session{$uri.'?company_id'}} ) ) ? $session{$uri.'?company_id'} : [ keys %companies ] ),
 			( $session{$uri.'?CSR'} ? ( salesrep_id	=> $session{$uri.'?CSR'} ) : () ),
 			ssi::date_filter( $uri.'?created_on_start', 'created_on >=' ),
 			ssi::date_filter( $uri.'?created_on_end', 'created_on <=' ),
@@ -481,13 +499,13 @@ sub _services {
 			$parameters{salesrep_id} = $session{$uri.'?CSR'};
 		} # end if
 		$parameters{'last_ordered_on is null'}=0;
-		my @Companies = openprint::Company->find( %parameters ) if %parameters;
+		my @Companies = openprint::Company->find( %parameters ) if (keys %parameters) > 1;
 		my %companies = map { $_->id(), $_->name() } @Companies;
 		my @servicetype_ids = split(',',$session{$uri.'?servicetype_id'});
 
 		$variable{Orders} = [];
 		foreach my $Order ( openprint::Order->find(
-					company_id => ( ($session{$uri.'?company_id'} and ( ( ! %parameters ) or exists $companies{$session{$uri.'?company_id'}} ) ) ? $session{$uri.'?company_id'} : [ keys %companies ] ),
+					company_id => ( ($session{$uri.'?company_id'} and ( ( (keys %parameters)==1 ) or exists $companies{$session{$uri.'?company_id'}} ) ) ? $session{$uri.'?company_id'} : [ keys %companies ] ),
 					( $session{$uri.'?CSR'} ? ( salesrep_id	=> $session{$uri.'?CSR'} ) : () ),
 					ssi::date_filter( $uri.'?created_on_start', 'created_on >=' ),
 					ssi::date_filter( $uri.'?created_on_end', 'created_on <=' ),
@@ -880,8 +898,11 @@ sub plates {
 	if ( ! %param ) {
 		ssi::setup_date_select( $r->uri(), 'ordered_on_start', -31 );
 		ssi::setup_date_select( $r->uri(), 'ordered_on_end', '' );
-		ssi::setup_date_select( $r->uri(), 'printed_on_start', -31 );
-		ssi::setup_date_select( $r->uri(), 'printed_on_end', '' );
+		#ssi::setup_date_select( $r->uri(), 'printed_on_start', -31 );
+		#ssi::setup_date_select( $r->uri(), 'printed_on_end', '' );
+		if ( ! $session{$r->uri().'?press_id'} ) {
+			$session{$r->uri().'?press_id'} = join(',',map{$$_{id}} openprint::Equipment->find('category any'=>'Printing'));
+		}
 	} # end if
 	_plates();
 
@@ -975,13 +996,20 @@ sub _plates {
 			if ( $printed_on_start or $printed_on_end ) {
 				my $printed_on = $Project->printed_on();
 
-				next if ! $printed_on;
+
+				if ( ! $printed_on ) {
+					$log->debug("Project $$Project{id} has not been printed");
+					next;
+				} else {
+					$log->debug("Project $$Project{id} was printed $printed_on");
+				}
 				my $printed_on_seconds = Date::Parse::str2time( $printed_on );
-				if ( ! ( 
-							( (!$printed_on_start_seconds) or ( $printed_on_seconds > $printed_on_start_seconds ) )
-							and
-							( (!$printed_on_end_seconds) or ( $printed_on_seconds < $printed_on_end_seconds ) )
-							) ) {
+				if (
+							( $printed_on_start_seconds and ( $printed_on_seconds < $printed_on_start_seconds ) )
+							or	
+							( $printed_on_end_seconds and ( $printed_on_seconds > $printed_on_end_seconds ) )
+							) {
+					$log->debug("Project $$Project{id} was printed $printed_on_start_seconds < $printed_on < $printed_on_end_seconds ");
 					next;
 				}
 			} # end if printed_on_start or printed_on_end

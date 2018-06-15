@@ -1,11 +1,11 @@
 <p>
-	<label>Items per <?ServiceTypeName?></label>
-<? eval ( $$variable{'QTYIndex'} = 1 ) ?>
-<? while ( $$variable{'QTYIndex'} <= 3 ) ?>
-    <? if ( $$variable{'Project'}->quantity($$variable{'QTYIndex'}) ) ?>
-	<span class="value"><?txtItemsPerPackage?></span>
-    <? endif ( $$variable{'Project'}->quantity($$variable{'QTYIndex'}) ) ?>
-<? eval ( $$variable{'QTYIndex'} += 1 ) ?>
-<? endwhile ( $$variable{'QTYIndex'} <= 3 ) ?>
+<?echo ( openprint::service::summary( @$variable{'ProjectIndex','ServiceIndex'} ) ) ?>
+	<?echo (
+		join("\n", map { 
+			'<span class="value">'.
+			openprint::service::summary( @$variable{'ProjectIndex','ServiceIndex'}, $_ ).
+			'</span>';
+		} $$variable{Project}->quantity_indexes();
+ ) ?>
 </p>
 <?include(/includes/main/summ/package_quantity.html)?>

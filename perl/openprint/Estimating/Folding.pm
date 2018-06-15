@@ -614,6 +614,10 @@ $openprint::log->debug("folds from sigimpo") if DEBUG;
 		$i->runstyle('Sheet Work');
 		$$i{start_columns} = $$i{columns};
 		$i->columns( $$i{columns}/2 );
+
+		if ( $$i{dutch_columns} ) {
+			$i->dutch_columns( $$i{dutch_columns} / 2 );
+		}
 		$$i{quantity} = 2;
 		push @Set_Of_Impositions, $i;
 	} elsif ( $$SignatureImposition{runstyle} eq 'Work & Tumble' ) {
@@ -621,6 +625,9 @@ $openprint::log->debug("folds from sigimpo") if DEBUG;
 		$i->runstyle('Sheet Work');
 		$i->start_rows( $$i{rows} );
 		$i->rows( $$i{rows}/2 );
+		if ( $$i{dutch_rows} ) {
+			$i->dutch_rows( $$i{dutch_rows} / 2 );
+		}
 		$$i{quantity} = 2;
 		push @Set_Of_Impositions, $i;
 	} else {
@@ -638,7 +645,7 @@ $openprint::log->debug("folds from sigimpo") if DEBUG;
 					my $i = $I->copy();
 					$i->dutch_columns(0);
 					$i->dutch_rows(0);
-					$i->quantity(1);
+					#$i->quantity(1);
 					push @Impositions, $i;
 				}
 				{
@@ -647,7 +654,7 @@ $openprint::log->debug("folds from sigimpo") if DEBUG;
 					$i->rows( $$i{dutch_rows} );
 					$i->dutch_columns(0);
 					$i->dutch_rows(0);
-					$i->quantity(1);
+					#$i->quantity(1);
 					$i->image_orientation($$I{image_orientation} == openprint::Imposition::Vertical ? openprint::Imposition::Horizontal : openprint::Imposition::Vertical);
 					push @Impositions, $i;
 				}
@@ -1100,6 +1107,8 @@ $openprint::log->debug("Has a fold, doing extra checks") if DEBUG;
 								} else {
 # decide whether it's running portrait or landscape basessd on which way the folds go
 									$openprint::log->debug("Has max feed width width folds: $width_folds height folds: $height_folds $$sig_specs{txtWidth} $$sig_specs{txtHeight} width_size: $width_size height_size: $height_size max_feed_width: $max_feed_width") if DEBUG;
+
+									# width_folds and height_folds are already rotated
 									if ( $width_folds and $height_folds ) {
 										if ( $height_size > $max_feed_width and $width_size > $max_feed_width ) {
 											$failure_reason = "max feed on both dimensions $max_feed_width .";
@@ -1258,33 +1267,34 @@ $openprint::log->debug("Got Fold: " . $Fold->to_string() ) if DEBUG;
 											( $width_folds and ! $height_folds )
 											#or ( ((!defined $$Fold{folds}) or ($width_folds == $$Fold{folds})) and ((!defined $$Fold{angles}) or ($height_folds == $$Fold{angles})) and ( $width_folds < $height_folds ) ) 
 										 ) {
-										if ( $$Imposition{image_orientation} == openprint::Imposition::Vertical ) {
+										#$if ( $$Imposition{image_orientation} == openprint::Imposition::Vertical ) {
 # If folds are on width, we grip on height...
 											if ( $$Imposition{layout_height} >= $max_feed_width ) {
 												$fits = "Fold no good due to max feed width ($max_feed_width). $width_folds x $height_folds size: ($$Imposition{layout_height}).";
 												$Fold = undef;
 											} # end if
-										} else {
-											if ( $$Imposition{layout_width} >= $max_feed_width ) {
-												$fits = "Fold no good due to max feed width ($max_feed_width). $width_folds x $height_folds size: ($$Imposition{layout_width}).";
-												$Fold = undef;
-											} # end if
-										} # end if
+										#$} else {
+											#$if ( $$Imposition{layout_width} >= $max_feed_width ) {
+												#$$fits = "Fold no good due to max feed width ($max_feed_width). $width_folds x $height_folds size: ($$Imposition{layout_width}).";
+												#$$Fold = undef;
+											#$} # end if
+										#$} # end if
 									} elsif ( 
 											( $height_folds and ! $width_folds ) 
 #or ( (!defined $$Fold{folds}) or ($height_folds == $$Fold{folds})) and ((!defined $$Fold{angles}) or ($width_folds == $$Fold{angles}) ) 
 											) {
-										if ( $$Imposition{image_orientation} == openprint::Imposition::Vertical ) {
+										#$if ( $$Imposition{image_orientation} == openprint::Imposition::Vertical ) {
+#$$openprint::log->debug("Vertical $$Imposition{layout_width} >= $max_feed_width");
 											if ( $$Imposition{layout_width} >= $max_feed_width ) {
 												$fits = "Fold no good due to max feed width ($max_feed_width). $width_folds x $height_folds size: ($$Imposition{layout_width}).";
 												$Fold = undef;
 											} # end if
-										} else {
-											if ( $$Imposition{layout_height} >= $max_feed_width ) {
-												$fits = "Fold no good due to max feed width ($max_feed_width). $width_folds x $height_folds size: ($$Imposition{layout_height}).";
-												$Fold = undef;
-											} # end if
-										} # end if
+										#$} else {
+											#$if ( $$Imposition{layout_height} >= $max_feed_width ) {
+												#$$fits = "Fold no good due to max feed width ($max_feed_width). $width_folds x $height_folds size: ($$Imposition{layout_height}).";
+												#$$Fold = undef;
+											#$} # end if
+										#$} # end if
 									} else {
 										$openprint::log->warn("No fold match width_folds: $width_folds, height_folds: $height_folds Fold:$$Fold{name} folds: $$Fold{folds} angles:$$Fold{angles}") if DEBUG;
 									} # end if

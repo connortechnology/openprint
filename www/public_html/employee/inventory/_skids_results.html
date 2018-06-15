@@ -304,6 +304,7 @@ $RFIDTag->id(),
  );
 
 				$html .= '<td class="Dockets" rowspan="2">';
+				$html .= 'Ordered for ' . join(',',map { sprintf('<a href="/employee/project/view.html?docket=%1$d">%1$d</a>', $_ ); } $Skid->dockets() ).'<br/>';
 				foreach my $PA ( @Allocations ) {
 					$html .= sprintf( '<a href="/employee/inventory/skid_details.html?skid_id=%d">%d - %d%s</a><br/>',
 					$$Skid{id},
@@ -312,6 +313,7 @@ $RFIDTag->id(),
 					$PA->Paper()->units(),	
 					);
 				} # end while
+				$html .= 'Used for ' . $Skid->used_for_dockets().'<br/>';
 				$html .= '</td><td rowspan="2" class="Condition">'. join('<br/>', map { $_->condition() } $Skid->Contents() ) . '</td>';
 				if ( $$variable{can_see_pricing} ) {
 					$html .= '<td rowspan="2" class="Price">'.$Skid->cost().'</td>';

@@ -45,7 +45,7 @@ sub view {
 
 	my $project_index = $param{ProjectIndex};
 	$project_index = $param{project_id} if ! $project_index;
-	$project_index = openprint::Project->transform('id', $project_index );
+	$project_index = openprint::Project->transform('id', $project_index);
 		
 	if ( ! $project_index ) {
 		if ( $param{Docket} ) {
@@ -167,6 +167,7 @@ $log->debug("Sig complete: $complete");
 					} # end if
 				} # end foreach
 			} # end if
+$log->debug("Project complete: $complete " . $Service->to_string());
 
 			my $services = $Project->services();
 			if ( $$services{''} ) {
@@ -843,12 +844,16 @@ sub summary {
 	openprint::print_project::summary( $r, $log, $dbh, \%variable, $param{ProjectIndex} );
 } # end sub summary
 
+sub stock_checkout {
+	_stock_checkout();
+}
+
 sub _stock_checkout {
 	my $Order;
-	$variable{Project} = new openprint::Project( $param{project_id} ) if $param{project_id};
+	$variable{Project} = new openprint::Project($param{project_id}) if $param{project_id};
 
 	if ( $param{docket} ) {
-		$Order = openprint::Order->find_one( docket=>$param{docket} );
+		$Order = openprint::Order->find_one(docket=>$param{docket});
 		if ( ! $Order ) {
 			$variable{error} .= 'No docket found for ' . $param{docket} . '<br/>';
 			return;
@@ -936,6 +941,10 @@ sub _production_feedback {
 	$variable{Project} = new openprint::Project( $param{project_id} );
 	$variable{service_id} = $param{service_id};
 } # end sub _production_feedback
+
+sub stock_allocations {
+	_stock_allocations();
+}
 
 sub _stock_allocations {
 	$variable{Order} = openprint::Order->find_one( docket=>$param{docket} );
