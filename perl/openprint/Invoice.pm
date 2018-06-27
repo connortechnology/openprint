@@ -448,7 +448,6 @@ sub Pricelist {
 	return $_[0]->Invoicee()->Pricelist();
 } # end sub Pricelist
 
-<<<<<<< HEAD
 sub paid_on {
   if ( ! $_[0]{paid_on} ) {
     foreach my $Invoice_Payment ( reverse sort { $a->Payment()->received_on() cmp $b->Payment()->received_on() } $_[0]->Payments() ) {
@@ -466,7 +465,7 @@ sub Currency {
   }
   return $$self{Currency};
 } # end sub Currency
-=======
+
 sub first_sent_on {
 	if ( ! exists $_[0]{first_sent_on} ) {
 		if ( my $Log = openprint::Log->find_one(
@@ -480,7 +479,6 @@ sub first_sent_on {
 	} # end ! exists first_sent_on
 	return $_[0]{first_sent_on};
 } # end sub first_sent_on
->>>>>>> 52c041d6271a876198fa69a0e1d403602a1f34b6
 
 1;
 __END__
