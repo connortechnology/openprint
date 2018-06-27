@@ -9,12 +9,12 @@ $debug = 0;
 $table = 'currency_conversions';
 $serial	= 'currency_conversions_id_seq';
 %fields = (
-	id				=>	'id',
-	to_id			=>	'to_id',
-	from_id			=>	'from_id',
+	id		    		=>	'id',
+	to_id			    =>	'to_id',
+	from_id			  =>	'from_id',
 	period_start	=>	'period_start',
 	period_end		=>	'period_end',
-	rate			=>	'rate',
+	rate		    	=>	'rate',
 );
 %transforms = (
 	rate	=>	[ 's/[^\-\.\d]//g' ],
@@ -22,7 +22,7 @@ $serial	= 'currency_conversions_id_seq';
 %defaults = (
 	period_start	=>	undef,
 	period_end		=>	undef,
-	rate			=>	undef,
+	rate	    		=>	undef,
 );
 
 sub amount {
@@ -32,6 +32,7 @@ sub amount {
 sub To {
 	return new openprint::Currency( $_[0]{to_id} );
 } # end sub To
+
 sub From {
 	return new openprint::Currency( $_[0]{from_id} );
 } # end sub From
