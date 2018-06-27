@@ -40,6 +40,7 @@ $serial = 'services_id_seq';
 		owner_id		=>	'owner_id',
 		activity_code	=>	'activity_code',
 		servicetype_id	=>	'servicetype_id',
+		deleted					=>	'deleted',
 	 	);	
 %find_fields = (
 		category		=> '(SELECT name FROM Service_Categories WHERE service_categories.id=category_id)',
@@ -59,6 +60,7 @@ $serial = 'services_id_seq';
 		taxexempt1	=>	q`'N'`,
 		taxexempt2	=>	q`'N'`,
 		owner_id	=>	q`$openprint::config{owner_id}`,
+		deleted					=>	0,
 		);
 
 $cache_field = 'name';
@@ -86,13 +88,13 @@ sub save {
 
 } # end sub save
 
-sub delete {
+sub destroy {
 	my $self = shift;
 
 	delete $openprint::Object::cache{'openprint::Service'}{$$self{id}} if $openprint::Object::cache{'openprint::Service'};	
 	my $ac = sql::start_transaction( $dbh );
     sql::execute( undef, undef, q{DELETE FROM Service_Prices WHERE service_id=?}, $$self{id} );
-	$self->SUPER::delete();
+	$self->SUPER::destroy();
 	sql::end_transaction( $dbh, $ac );
 	return $dbh->errstr();
 } # end sub delete

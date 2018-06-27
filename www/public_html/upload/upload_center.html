@@ -110,10 +110,10 @@ function check_input( form ) {
 		<p class="buttons">
 		<? echo ( 
 				my $qry;
-				if( $param{'docket'} ) {
-					$qry = '?docket=' . $param{'docket'};
-				} elsif( $param{'project_id'} ) {
-					$qry = '?project_id=' . $param{'project_id'};
+				if( $param{docket} ) {
+					$qry = '?docket=' . $param{docket};
+				} elsif( $param{project_id} ) {
+					$qry = '?project_id=' . $param{project_id};
 				} # end if
 			button( 'Cancel', { href=>"/upload/upload_center.html$qry", text=>'Cancel Upload' } );
 		) ?>
@@ -126,10 +126,10 @@ function check_input( form ) {
 		<p class="buttons">
 		<? echo ( 
 			my $qry;
-			if( $param{'docket'} ) {
-				$qry = '?docket=' . $param{'docket'};
-			} elsif( $param{'project_id'} ) {
-				$qry = '?project_id=' . $param{'project_id'};
+			if( $param{docket} ) {
+				$qry = '?docket=' . $param{docket};
+			} elsif( $param{project_id} ) {
+				$qry = '?project_id=' . $param{project_id};
 			} # end if
 				
 			return join("\n",

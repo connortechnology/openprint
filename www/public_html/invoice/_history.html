@@ -1,95 +1,3 @@
-<? eval (
-	$$variable{subtotal} = $$variable{total} = $$variable{interest_total} = $$variable{owing_total} = 0;
-	$$variable{Taxes} = [ openprint::Tax->find(
-		date_filter( '/invoice/history.html?created_on_end', 'period_start null_or_<=' ),
-		date_filter( '/invoice/history.html?created_on_start', 'period_end null_or_>=' ),
-		order		=>	'period_start,name',
-	) ];
-	my $company_ids = [ map { $$_{id} } openprint::Company->find_filtered() ] if $session{user_type} ne 'A';
-
-	my @Invoices = @{$$variable{Invoices}} = ();
-	if ( $param{invoice_id} ) {
-		@Invoices = openprint::Invoice->find( id => $param{invoice_id},
-			( sets::isin( $session{user_type}, ['E','A'] ) ?  () : ( invoicee_id=>$session{company_id} ) ),
-			order	=>	'num,id',
-			);
-	} elsif ( $param{invoice_num} ) {
-		@Invoices = openprint::Invoice->find( 'num ilike' => ( $param{invoice_num} =~ /%/ ? $param{invoice_num} : '%'.$param{invoice_num}.'%' ),
-			( sets::isin( $session{user_type}, ['E','A'] ) ?  () : ( invoicee_id=>$session{company_id} ) ),
-			order	=>	'num,id',
-			);
-	} elsif ( $param{po_id} ) {
-		@Invoices = openprint::Invoice->find('po any'=>$param{po_id},
-			( sets::isin( $session{user_type}, ['E','A'] ) ?  () : ( invoicee_id=>$session{company_id} ) ),
-			order	=>	'num,id',
-			);
-	} else {
-		foreach my $Invoice ( openprint::Invoice->find( 
-			date_filter( '/invoice/history.html?created_on_end', 'created_on <=' ),
-			date_filter( '/invoice/history.html?created_on_start', 'created_on >=' ),
-			date_filter( '/invoice/history.html?due_on_end', 'due_on is null or <=' ),
-			date_filter( '/invoice/history.html?due_on_start', 'due_on is null or >=' ),
-
-			( sets::isin( $session{user_type}, ['E','A'] ) ? (
-				( $session{'/invoice/history.html?company_id'} ? ( invoicee_id => $session{'/invoice/history.html?company_id'} ) : ( $company_ids ? ( invoicee_id => $company_ids ) : () ) ),
-				invoicer_id		=> $openprint::User->company_id(),
-			) : (
-				( invoicee_id	=>	$session{company_id} ),
-			) ),
-			( $session{'/invoice/history.html?product_id'} ? ( 'product_id any' => $session{'/invoice/history.html?product_id'} ) : () ),
-			order				=> 'created_on',
-			) ) {
-			if ( $session{'/invoice/history.html?paid'} ne '' ) {
-      $log->debug("Paid? " . $Invoice->is_paid() );
-				if ( $Invoice->is_paid() ) {
-					next if $session{'/invoice/history.html?paid'} == 0;
-				} else {
-					next if $session{'/invoice/history.html?paid'} == 1;
-				} # end if
-			} # end if
-			if ( $session{'/invoice/history.html?bad_debt'} != 2 ) {
-				if ( $Invoice->bad_debt() ) {
-					next if $session{'/invoice/history.html?bad_debt'} == 0;
-				} elsif ( $Invoice->bad_debt() eq '0' ) {
-					next if $session{'/invoice/history.html?bad_debt'} == 1;
-				} # end if
-			} # end if
-
-      if ( Date::Calc::check_date( @session{ map { $$variable{uri}.'?paid_on_start_'.$_ } ( 'year','month','day' ) } ) ) {
-        my $date = join('-',@session{ map { $$variable{uri}.'?paid_on_start_'.$_ } ( 'year','month','day' ) } );
-        if ( $Invoice->paid_on() lt $date ) {
-          next;
-        }
-      }
-      if ( Date::Calc::check_date( @session{ map { $$variable{uri}.'?paid_on_end_'.$_ } ( 'year','month','day' ) } ) ) {
-        my $date = join('-',@session{ map { $$variable{uri}.'?paid_on_end_'.$_ } ( 'year','month','day' ) } );
-        if ( $Invoice->paid_on() gt $date ) {
-          next;
-        }
-      }
-			push @Invoices, $Invoice;
-		} # end foreach Invoice
-	} # end if
-
-	foreach my $Invoice ( @Invoices ) {
-		push @{$$variable{Invoices}}, $Invoice;
-		next if ! $Invoice->can_view();
-		$$variable{subtotal} += $Invoice->subtotal();
-		$$variable{total} += $Invoice->total();
-		$$variable{interest_total} += $Invoice->interest();
-		$$variable{paid_total} += $Invoice->paid();
-		$$variable{paidvalue_total} += $Invoice->paid_value();
-		$$variable{owing_total} += $Invoice->owing();
-		foreach my $Tax ( @{$$variable{Taxes}} ) {
-			my $IT = $Invoice->Tax( $Tax );
-			next if ! $$IT{tax_id};
-			$$variable{tax_totals}{$Tax->id()} += $IT->amount();
-		} # end foreach Tax
-	} # end foreach Invoice
-
-	$$variable{Currency} = openprint::Currency::get_current() if ! $$variable{Currency};
-) ?>
-
 <? if ( @{$$variable{Invoices}} == 0 ) ?>
 	There are no invoices which match your search criteria. 
 <? else ( @{$$variable{Invoices}} == 0 ) ?>
@@ -190,7 +98,7 @@
 			<td class="Owing Price"><? echo ( openprint::Currency::format( $$variable{owing_total} ); ) ?></td>	
 		</tr>
 	</table>
-	<span class="Currency">All prices listed in <? hecho ( new openprint::Currency($session{Currency_id})->name(); ) ?></span>
+	<span class="Currency">All prices listed in <? hecho ( $openprint::Currency->name(); ) ?></span>
 	<br class="spacer"/>
 <p class="buttons">
 <? echo ( button('Delete',{ onclick=>'delete_confirm(document.f1);' }); ) ?>

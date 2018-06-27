@@ -1178,14 +1178,15 @@ sub add_signature {
 
 sub copy_signature {
 	my ( $self, $sig_specs, $data, $status ) = @_;
+	$self->lock();
 	my $new_service_index = $self->add_signature( undef, $status );
 	if ( ! $new_service_index ) {
 		$log->error('Error copying signature.');
+		$self->unlock();
 		return;
 	} # end if
 	my $new_specs = openprint::service::get_specs_ref( $self, $new_service_index );
 
-	my $ac = sql::start_transaction( $dbh );
 	foreach my $key ( openprint::Estimating::Printing::variables( $$self{id}, $new_service_index, $new_specs, $sig_specs ) ) {
 		next if $key eq 'SignatureIndex';
 		if ( exists $$data{$key} ) {
@@ -1194,7 +1195,7 @@ sub copy_signature {
 			openprint::service::insert_service_spec( $log, $dbh, $self->id(), $new_service_index, $key, $$sig_specs{$key}, ! exists $$new_specs{$key} );
 		} # end if
 	} # end foreach
-	sql::end_transaction( $dbh, $ac );
+	$self->unlock();
 	return $new_service_index;
 } # end sub copy_signature
 
@@ -1545,7 +1546,10 @@ sub Service {
 		$openprint::log->error("No service_id passed to Service for project $$self{id}");
 		Carp::cluck("No service_id passwrod to Project::Service");
 	} # end if
-	return new openprint::Project_Service( {project_id=>$$self{id}, service_id=>$service_id} );
+	if ( ! $$self{Project_Services}{$service_id} ) {
+		$$self{Project_Services}{$service_id} = new openprint::Project_Service( {project_id=>$$self{id}, service_id=>$service_id} );
+	}
+	return $$self{Project_Services}{$service_id};
 	#return new openprint::Project_Service( { service_id=>$service_id} );
 } # end sub Service
 
@@ -1622,8 +1626,14 @@ sub calliper {
 		if ( $project_type eq 'MultiPage' ) {
 	
 			foreach my $group_id ( $$printing_specs{groups} ? split(',', $$printing_specs{groups} ) : openprint::Estimating::MultiPage::groups( $$Project{id}, $printing_specs ) ) {
-				$finished_calliper += int( 10000 * ($$printing_specs{'GroupPageQuantity'.$group_id}/2) * $$printing_specs{"txtSpecificStockCalliper$group_id"} );
-				#$log->debug("$finished_calliper += int( 10000 * (" . $$printing_specs{'GroupPageQuantity'.$group_id}.'/2) * '.$$printing_specs{"txtSpecificStockCalliper$group_id"} );
+				foreach my $signature_service_index ( $Project->signatures({Group=>$group_id}) ) {
+					my $sig_specs = openprint::service::get_specs_ref( $Project, $signature_service_index );
+					my $sig_caliper = $$sig_specs{txtSpecificStockCalliper} ? $$sig_specs{txtSpecificStockCalliper} : $$printing_specs{"txtSpecificStockCalliper$group_id"};
+				
+				$finished_calliper += int( 10000 * ($$printing_specs{'GroupPageQuantity'.$group_id}/2) * $sig_caliper );
+				$log->debug("$finished_calliper += int( 10000 * (" . $$printing_specs{'GroupPageQuantity'.$group_id}.'/2) * '.$sig_caliper );
+					last;
+				}
 
 			} # end foreach group
 			if ( ! $finished_calliper ) {

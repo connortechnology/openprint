@@ -166,6 +166,10 @@ $log->debug("T value: " . $T->value() . " subtotal: $$self{subtotal}");
 			$$self{subtotal} += $P->total();
 $log->debug("P value: " . $P->total() . " subtotal: $$self{subtotal}" );
 		}# end foreach P
+		foreach my $O ( $self->Orders() ) {
+			$$self{subtotal} += $O->Order()->subtotal();
+$log->debug("O value: " . $O->Order()->subtotal() . " subtotal: $$self{subtotal}" );
+		}# end foreach P
 	} # end if
 	return Math::Round::nearest( .01, $$self{subtotal} );
 } # end sub subtotal
@@ -309,10 +313,10 @@ sub send {
 } # end sub send
 
 sub Products {
-	return openprint::Invoiced_Product->find('invoice_id'=>$_[0]{id},'order'=>'id');
+	return openprint::Invoiced_Product->find(invoice_id=>$_[0]{id}, order=>'id');
 } # end sub Products
 sub Projects {
-	return openprint::Invoiced_Project->find('invoice_id'=>$_[0]{id},'order'=>'id');
+	return openprint::Invoiced_Project->find(invoice_id=>$_[0]{id}, order=>'id');
 } # end sub Projects
 sub Orders {
 	return openprint::Order_Invoice->find(invoice_id=>$_[0]{id}, order=>'order_id');
@@ -444,6 +448,7 @@ sub Pricelist {
 	return $_[0]->Invoicee()->Pricelist();
 } # end sub Pricelist
 
+<<<<<<< HEAD
 sub paid_on {
   if ( ! $_[0]{paid_on} ) {
     foreach my $Invoice_Payment ( reverse sort { $a->Payment()->received_on() cmp $b->Payment()->received_on() } $_[0]->Payments() ) {
@@ -461,6 +466,21 @@ sub Currency {
   }
   return $$self{Currency};
 } # end sub Currency
+=======
+sub first_sent_on {
+	if ( ! exists $_[0]{first_sent_on} ) {
+		if ( my $Log = openprint::Log->find_one(
+					object_id=>$_[0]{id},
+					object_type=>'openprint::Invoice', 
+					action=>'Invoice Sent',
+					order	=>	'id ASC',
+					) ) {
+			$_[0]{first_sent_on} = $Log->date_time();
+		}
+	} # end ! exists first_sent_on
+	return $_[0]{first_sent_on};
+} # end sub first_sent_on
+>>>>>>> 52c041d6271a876198fa69a0e1d403602a1f34b6
 
 1;
 __END__

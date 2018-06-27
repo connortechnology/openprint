@@ -276,6 +276,17 @@ sub Fold {
 			next;
 		} # end if
 
+		if ( $$Fold{orientation} ) {
+			my %orientations = map { $_, $_ } split(',', $$Fold{orientation});
+			if ( ! $$params{page_width} < $$params{page_height} ) { 
+				next if ! $orientations{portrait};
+			} elsif ( ! $$params{page_width} > $$params{page_height} ) { 
+				next if ! $orientations{landscape};
+			} else {
+				next if ! $orientations{square};
+			}
+		}
+
 		if ( $$params{printing_type} and $$Fold{printing_type} and ! sets::isin( $$params{printing_type}, [ split(',', $$Fold{printing_type}) ] ) ) {
 			$openprint::log->debug("Fold no good due to PrintingType ($$params{printing_type}) != " . $$Fold{printing_type} ) if DEBUG_FOLDING;
 			next;

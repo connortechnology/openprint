@@ -22,6 +22,7 @@ $debug = 0;
 );
 %defaults = (
 	role_id	=>	undef,
+	user_id	=>	undef,
 );
 $table = 'project_service_operators';
 $serial = 'project_service_operators_id_seq';

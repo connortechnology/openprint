@@ -145,13 +145,16 @@ sub type {
 } # end sub type
 
 sub Notifications {
-	if ( ! $_[0]{Notifications} ) {
-		@{$_[0]{Notifications}} = openprint::Host_Notification->find(
-				'host_id'	=>	$_[0]{id},
+	my $self = shift;
+	$$self{Notifications} = shift if @_;
+
+	if ( ! $$self{Notifications} ) {
+		@{$$self{Notifications}} = openprint::Host_Notification->find(
+				host_id	=> $$self{id},
 				);
 				#'order' => 'lower(strfirstName),lower(strlastname)' );
 	} # end if
-	return @{$_[0]{Notifications}};
+	return @{$$self{Notifications}};
 } # end sub Notifications
 
 sub Interfaces {

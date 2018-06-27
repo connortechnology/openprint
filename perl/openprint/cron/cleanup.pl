@@ -106,7 +106,7 @@ foreach my $session ( @$session_ids ) {
 @$session_ids = ();
 $log->debug("Deleted $deleted_session_count sessions");
 
-if ( openprint::Order->find_one() ) {
+if ( 0 and openprint::Order->find_one() ) {
 # Clean out unfinished Orders
 	my @Orders = openprint::Order->find('status'=>'Incomplete','created_on <=' => sprintf('%.4d-%.2d-%.2d', Date::Calc::Add_Delta_Days( Date::Calc::Today(), -180 ) ) );
 	$log->debug('Cleaning out ' . @Orders . ' incomplete orders');

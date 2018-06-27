@@ -216,7 +216,7 @@ sub skids {
 	$session{'/employee/inventory/skids.html?checked_out'} = '' if ! exists $session{'/employee/inventory/skids.html?checked_out'};
 
 	ssi::setup_date_select( '/employee/inventory/skids.html', 'received_on_start', 0 );
-	ssi::setup_date_select( '/employee/inventory/skids.html', 'received_on_end', 0 );
+	ssi::setup_date_select( '/employee/inventory/skids.html', 'received_on_end', -7 );
 	ssi::setup_date_select( '/employee/inventory/skids.html', 'created_on_start', '' );
 	ssi::setup_date_select( '/employee/inventory/skids.html', 'created_on_end', '' );
 	ssi::setup_date_select( '/employee/inventory/skids.html', 'updated_on_start', '' );

@@ -142,11 +142,12 @@
 			$sql{'quantity >='} = 1;
 		}
 
-		$$variable{Skids} = [ openprint::Skid->find( %sql ) ];
+		$$variable{skids_sql} = openprint::Skid->find_sql(%sql);
+
+		$$variable{Skids} = [ openprint::Skid->find(%sql) ];
 
 	} # end if
 
-$log->debug("# of SKids" . @{$$variable{Skids}} );
 	openprint::Location->find( type=>'place', company_id=>$openprint::Owner->id() );
 	if ( @{$$variable{Skids}} > 100 ) {
 		openprint::Manufacturer->find();
@@ -163,7 +164,7 @@ $log->debug("# of SKids" . @{$$variable{Skids}} );
 <form id="SkidResults" name="SkidResults" action="skids.html" method="post">
 	<table class="List">
 		<tr>
-			<th class="checkbox unprintable"><input type="checkbox" onclick="select_all( this.form, 'skids', this.checked );"/></th>
+			<th class="checkbox unprintable"><input type="checkbox" onclick="select_all(this.form, 'skids', this.checked);"/></th>
 			<th class="Skid">Skid ID</th>
 			<th class="RFID">RFIDTag</th>
 			<th class="ManufacturersID">Manufacturers ID</th>
@@ -191,17 +192,22 @@ $log->debug("# of SKids" . @{$$variable{Skids}} );
 			my $total_value;
 			my %Allocations;
 
+			my %SkidsById = map { $$_{id} => $_ } @{$$variable{Skids}};
+
 			# I think this is ok, because there are never that many allocations at any given time
 			# This is because skids_ids is an array type... need to make this better.
 			foreach my $Allocation ( openprint::PaperAllocation->find() ) {
-				foreach my $Skid ( $Allocation->Skids() ) {
-					push @{$Allocations{$$Skid{id}}}, $Allocation;
+				foreach my $skid_id ( $Allocation->skid_ids() ) {
+					push @{$Allocations{$skid_id}}, $Allocation;
 				} # end 
 			} # end foreach
-			my @skid_ids = map { $$_{id} } @{$$variable{Skids}};
+			my @skid_ids = keys %SkidsById;
 			my %SkidContents;
 $log->debug("Loading SkidContent" ) if $debug;
-			foreach my $SC ( openprint::SkidContent->find( skid_id => \@skid_ids ) ) {
+			my $skids_sql = $$variable{skids_sql};
+			$$skids_sql{sql} =~ s/\*/id/g;
+
+			foreach my $SC ( openprint::SkidContent->find( custom=>['skid_id IN ('.$$skids_sql{sql}.')', @{$$skids_sql{values}} ] ) ) {
 				push @{$SkidContents{$$SC{skid_id}}}, $SC;
 			} # end foreach SC
 $log->debug("Done Loading SkidContent" ) if $debug;
@@ -298,6 +304,7 @@ $RFIDTag->id(),
  );
 
 				$html .= '<td class="Dockets" rowspan="2">';
+				$html .= 'Ordered for ' . join(',',map { sprintf('<a href="/employee/project/view.html?docket=%1$d">%1$d</a>', $_ ); } $Skid->dockets() ).'<br/>';
 				foreach my $PA ( @Allocations ) {
 					$html .= sprintf( '<a href="/employee/inventory/skid_details.html?skid_id=%d">%d - %d%s</a><br/>',
 					$$Skid{id},
@@ -306,6 +313,7 @@ $RFIDTag->id(),
 					$PA->Paper()->units(),	
 					);
 				} # end while
+				$html .= 'Used for ' . $Skid->used_for_dockets().'<br/>';
 				$html .= '</td><td rowspan="2" class="Condition">'. join('<br/>', map { $_->condition() } $Skid->Contents() ) . '</td>';
 				if ( $$variable{can_see_pricing} ) {
 					$html .= '<td rowspan="2" class="Price">'.$Skid->cost().'</td>';

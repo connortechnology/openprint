@@ -3105,7 +3105,7 @@ sub save_price( $$$$$ ) {
 
 	if ( my $stock_qt = $$price{'Stock Quantity'} ) {
 		$$specs{'OverSetup'.$qty_index} = $$stock_qt{'Initial Setup Overs'};
-		$$specs{'OverRun'.$qty_index} = $$stock_qt{'Run Overs'};
+		$$specs{'OverRun'.$qty_index} = $$stock_qt{'Run Overs'}{total};
 		$$specs{'OverTotal'.$qty_index} = $$stock_qt{'Total Overs'};
 	} # end if
 	$$specs{'ImpositionCharge'.$qty_index} = $$price{'Imposition Total'};
@@ -3140,8 +3140,8 @@ sub save_price( $$$$$ ) {
 	$unitprice *= 1+$Project->markup()/100 if $Project->markup();
 	$$specs{'txtUnitPrice'.$qty_index} = sprintf($openprint::config{UnitPriceFormat}, $unitprice );
 	my $mprice = $$price{'Impression MPrice'} / $$Imposition{imposition} if $$Imposition{imposition};
-	my $rate = 1+($$price{'Overs Rate'}/100);
-	my $ink = (($$price{'Ink Price'}/$qty)*1000 );
+	my $rate = ($$price{'Run Overs'}{total}/$qty)*1000;
+	my $ink = ($$price{'Ink Price'}/$qty)*1000;
 
 	$mprice = $rate * ($mprice + $ink);
 	if ( $_ = $$specs{'Markup'.$qty_index} ) {
@@ -3228,7 +3228,11 @@ sub breakdown {
 	} # end if
 
 	if ( $stock_qty ) {
-		$breakdown .= sprintf( 'Overs: Base:%s Initial Setups: %d*%d=%d, Additional Setups: %d*%d=%d Run: %.2f%% = %s FM:%s Additional Plate:%d * %d changes = %s Bindery: %d (FoldMakeReady: %d FoldRun: %d', @$stock_qty{'Net Sheet Count','Initial Setup Rate','Initial Setup Count','Initial Setup Overs','Additional Setup Rate','Additional Setup Count','Additional Setup Overs','Run Overs Rate', 'Run Overs','FM Overs','Additional Plate Overs Rate','Plate Changes','Additional Plate Overs', 'BinderyOvers', 'FoldingMakeReadyOvers','FoldingRunOvers'} );
+		my $RunOvers = $$price{'Run Overs'};
+		$breakdown .= sprintf( 'Overs: Base:%s Initial Setups: %d*%d=%d, Additional Setups: %d*%d=%d Run: %.2f%s = %s FM:%s Additional Plate:%d * %d changes = %s Bindery: %d (FoldMakeReady: %d FoldRun: %d',
+					@$stock_qty{'Net Sheet Count','Initial Setup Rate','Initial Setup Count','Initial Setup Overs','Additional Setup Rate','Additional Setup Count','Additional Setup Overs'},
+					@$RunOvers{'value','units','total'},
+					@$stock_qty{'FM Overs','Additional Plate Overs Rate','Plate Changes','Additional Plate Overs', 'BinderyOvers', 'FoldingMakeReadyOvers','FoldingRunOvers'} );
 #foreach ( 'Net Sheet Count','Initial Setup Rate','Initial Setup Count','Initial Setup Overs','Additional Setup Rate','Additional Setup Count','Additional Setup Overs','Run Overs Rate', 'Run Overs','FM Overs','Additional Plate Overs Rate','Plate Changes','Additional Plate Overs', 'BinderyOvers', 'FoldingMakeReadyOvers','FoldingRunOvers' ) {
 #$log->debug("$_ $$stock_qty{$_}");
 #}
@@ -5430,24 +5434,27 @@ sub calc_price {
 		} # end if
 	} # end if
 
-	my $run_overs = 0;
-	my $over_rate = 0;
 	if ( $$specs{'OverrideRun'.$qty_index} and ( $$specs{'OverrideRun'.$qty_index} eq 'Y' ) ) {
-		$run_overs = $$specs{'OverRun'.$qty_index};
+		$price{'Run Overs'} = { value=>$$specs{'OverRun'.$qty_index}, total=>$$specs{'OverRun'.$qty_index} };
 	} else {
 # Should include bindery overs, but not setups, because the setup overs do the same job as the Run Overs
-		$over_rate = $Press->specification( 'Press Run Overs', $net_sheets );
-		if ( $over_rate ) {
-			$price{'Overs Rate'} = $over_rate;
+		my $PressRunOvers = $Press->Specification( 'Press Run Overs', $net_sheets );
+		if ( $PressRunOvers ) {
 			if ( ( $$specs{txtSignatureType} eq 'Cover Pages' ) and ( $_ = $Press->Specification( 'Covers Overs Percentage' ) ) ) {
-				$over_rate *= ( 1 + $$_{value} / 100 );
-			} # end if
-			$run_overs = $net_sheets * $over_rate;
+				$$PressRunOvers{value} *= ( 1 + $$_{value} / 100 );
+			}
+			if ( $$PressRunOvers{units} eq 'Press Sheets' ) {
+				$$PressRunOvers{total} = $$PressRunOvers{value};
+			} else {
+				#Percentage
+				$$PressRunOvers{total} = int($$PressRunOvers{value} * $net_sheets);
+			}
+			$price{'Run Overs'} = { value=>$$PressRunOvers{value}, units=>$$PressRunOvers{units}, total=>$$PressRunOvers{total} };
 		} else {
-			$over_rate = 0;
-			$price{'Overs Rate'} = 0;
+			$price{'Run Overs'} = { value=>0,units=>'',total=>0};
 		}
 	} # end if
+	my $run_overs = $price{'Run Overs'}{total};
 
 	my $fm_overs = 0;
 	if ( $$specs{ScreenType} and ( $$specs{ScreenType} eq 'FM' ) ) {
@@ -5515,7 +5522,7 @@ sub calc_price {
         $log->debug("No run sped on $$Press{strid} for $$std_speed{units} " . ($$std_speed{units} eq 'Calliper' ? $$Paper{calliper} : $Paper->gsm() ) ) if DEBUG;
         $run_speed = $$std_speed{value} if ! $run_speed;
       } # end if
-      $log->debug("Std Runspeed by calliper($$Paper{calliper}): $run_speed on $$Press{strid}");
+      #$log->debug("Std Runspeed by calliper($$Paper{calliper}): $run_speed on $$Press{strid}");
 
       $$specs{"Runspeed$qty_index"} = $$specs{Runspeed} = $price{Runspeed} = $run_speed;
     } else {
@@ -5934,12 +5941,6 @@ if ( 1 ) {
 		$setup_overs += $fm_overs + $additional_setup_overs;
 	} # en dif
 
-	if ( $$specs{'OverrideRun'.$qty_index} and (  $$specs{'OverrideRun'.$qty_index} eq 'Y' ) ) {
-		$run_overs = $$specs{'OverRun'.$qty_index};
-	} else {
-		$run_overs = ceil( $net_sheets * $over_rate );
-	} # end if
-
 	my $total_overs = 0;
 
 	if ( $_ = $Press->Specification('Overs') and $$_{value} eq 'All' ) {
@@ -5989,8 +5990,7 @@ if ( 1 ) {
 			'Additional Setup Count'	=> $additional_setup_count,
 			'Additional Setup Rate'		=> $setup_rate,
 			'Additional Setup Overs'	=> $additional_setup_overs,
-			'Run Overs'					=>	$run_overs,
-			'Run Overs Rate'			=>	$price{'Overs Rate'},
+			'Run Overs'					=>	$price{'Run Overs'},
 			'Additional Plate Overs'	=>	$additional_overs,
 			'Additional Plate Overs Rate'	=>	$additional_overs_rate,
 			'Total Overs'				=>	$total_overs,

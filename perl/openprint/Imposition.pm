@@ -5,7 +5,7 @@ package openprint::Imposition;
 require Math::Round;
 require Data::Dumper;
 use vars qw( $AUTOLOAD %Orientations);
-use constant DEBUG => 1;
+use constant DEBUG => 0;
 use constant DEBUG_PERFORMANCE => 1;
 
 use constant Vertical => 0;
@@ -879,6 +879,16 @@ sub to_svg {
 	$svg .= '<rect class="sheet" x="'.int($margin*$width_scale).'" y="'.int($margin*$height_scale).'" width="'.int($self->sheet_width()*$width_scale).'" height="'.int($self->sheet_height()*$height_scale).'" style="fill:rgb(255,255,255);stroke-width:1;stroke:rgb(0,0,0);"/>';
 	$svg .= '</svg>';
 	return $svg;
+}
+
+sub landscape_portrait_square {
+	if ( $_[0]{image_width} < $_[0]{image_height} ) {
+		return 'portrait';
+	} elsif ( $_[0]{image_width} > $_[0]{image_height} ) {
+		return 'landscape';
+	} else {
+		return 'square';
+	}
 }
 
 1;

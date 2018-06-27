@@ -2,11 +2,12 @@ use strict;
 package openprint::Object_Type;
 our @ISA = qw( openprint::Object );
 
-use vars qw( $debug $table %fields %transforms %defaults $serial );
+use vars qw( $debug $table %fields %transforms %defaults $serial $default_sort );
 
 $debug = 0;
 $table = 'object_types';
 $serial = 'object_types_id_seq';
+$default_sort	=	'lower(name)';
 %fields = (
 	id		=>	'id',
 	name	=>	'name',

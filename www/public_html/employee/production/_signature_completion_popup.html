@@ -29,7 +29,7 @@
 						$log->error("No users found for groups: " . join(',', map { $$_{id} } @Usergroups ) );
 						return;
 					}
-					make_drop_down( openprint::User->dropdown(id=>[ map { $$_{user_id} } @Usersin], order=>'lower(firstname),lower(lastname)'), $operator_id );
+					make_drop_down( openprint::User->dropdown(id=>[ map { $$_{user_id} } @Usersin]), $operator_id );
 				) ?>
 			</select>
 		</p>

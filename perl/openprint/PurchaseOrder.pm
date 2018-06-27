@@ -731,23 +731,31 @@ sub can_see_pricing {
 	my $User = $openprint::User;
 	
 	if ( ( $$User{id} == $_[0]->created_by() ) or ( $$User{type} eq 'A' ) or openprint::usergroup::is_user_in( ['Accounting','SalesAdmin','InventoryManager'], $$User{id} ) ) {
-		$log->debug('can see') if $debug;
+		$log->debug('can see pricing') if $debug;
 		return 1;
 	} # end if
 
 	if ( $_[1] ) {
-		my @contains = sets::contains( [ $$User{id}, $User->assistant_ids(), $User->csr_ids() ], [ map { $_->salesrep_id() } $_[1]->Orders() ] );
-		if ( @contains ) {
-			$log->debug("can see pricing because @contains in orders") if $debug;
-			return 1;
+		if ( $_[1]->Type()->type() eq 'Sheet Stock' or $_[1]->Type()->type() eq 'Roll Stock' ) {
+			# Ahmed doesn't want people to see stock pricing
+		} else {
+			my @contains = sets::contains( [ $$User{id}, $User->assistant_ids(), $User->csr_ids() ], [ map { $_->salesrep_id() } $_[1]->Orders() ] );
+			if ( @contains ) {
+				$log->debug("can see pricing because @contains in orders") if $debug;
+				return 1;
+			} # end if
 		} # end if
 	} else {
 		foreach my $C ( $_[0]->Contents() ) {
+		if ( $C->Type()->type() eq 'Sheet Stock' or $C->Type()->type() eq 'Roll Stock' ) {
+			# Ahmed doesn't want people to see stock pricing
+		} else {
 
 			my @contains = sets::contains( [ $$User{id}, $User->assistant_ids(), $User->csr_ids() ], [ map { $_->salesrep_id() } $C->Orders() ] );
 			if ( @contains ) {
 				$log->debug("can see pricing because @contains in orders") if $debug;
 				return 1;
+			} # end if
 			} # end if
 		} # end foreach C
 	} # end if

@@ -90,7 +90,7 @@ sub convert_from {
   $DST_Currency = get_current() if ! $DST_Currency;;
 
 	if ( ! ( $DST_Currency and $$DST_Currency{id} ) ) {
-		$log->error("Invalid destiation currency in convert_from");
+		$log->error("Invalid destination currency in convert_from");
 		return $value;
 	} elsif ( ! $$self{id} ) {
 		$log->error("Invalid src currency in convert_from");
@@ -211,10 +211,10 @@ sub format {
 	$symbol = $Currency->symbol() if ! defined $symbol;
 
 	require Number::Format;
-    my $Formatter = new Number::Format(
-            -decimal_digits     =>  $precision,
-            -int_curr_symbol    =>  $symbol,
-            );
+	my $Formatter = new Number::Format(
+			-decimal_digits     =>  $precision,
+			-int_curr_symbol    =>  $symbol,
+			);
 	return $Formatter->format_price( $price, $precision );
 } # end sub format
 

@@ -152,14 +152,14 @@ sub save_contents {
 		} # end if
 
 		$variable{error} .= $C->save( {
-				po_id		=>	$PO->id(),
-				qty			=>	$$p{'qty-'.$content_id},
+				po_id			=>	$PO->id(),
+				qty				=>	$$p{'qty-'.$content_id},
 				product		=>	$$p{'product-'.$content_id},
 				item_id		=>	$$Item{id},
 				description	=>	$$p{'description-'.$content_id},
 				docket		=>	$$p{'docket-'.$content_id},
-				price		=>	$$p{'price-'.$content_id},
-				total		=>	$$p{'total-'.$content_id},
+				price			=>	$$p{'price-'.$content_id},
+				total			=>	$$p{'total-'.$content_id},
 				type_id		=>	$$p{'type_id-'.$content_id},
 				( $Dept ? ( department_id	=>	$Dept->id() ) : ( ) ),
 				});
