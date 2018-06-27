@@ -52,9 +52,9 @@ sub history {
 				'order'     =>  'period_start,name',
 				);
 
-		my @Header = ('ID','Due On','Company','SubTotal',
+		my @Header = ('ID','Created','Due On','Company','SubTotal',
 				( map { sprintf('%s (%d%)', $_->name(), $_->rate() ) } @Taxes ),
-				'Total','Interest','Owing');
+				'Total','Interest','Owing','Currency');
 		my @Data;
 
 		my ($subtotal, $interest_total, $total, $owing_total, %tax_totals );
@@ -91,9 +91,12 @@ sub history {
 				$tax_totals{$Tax->id()} += $Invoice->Tax( $Tax )->amount();
 			} # end foreach Tax
 
-			push @Data, $Invoice->id(), $Invoice->due_on(), $Invoice->Invoicee()->name(), $Invoice->subtotal(), 
+			push @Data, $Invoice->id(),
+      ssi::format_csv_date($Invoice->created_on()),
+      ssi::format_csv_date($Invoice->due_on()),
+      $Invoice->Invoicee()->name(), $Invoice->subtotal(), 
 				 ( map { $Invoice->Tax( $_ )->amount() } @Taxes ),
-				 $Invoice->total(), $Invoice->interest(), $Invoice->owing();
+				 $Invoice->total(), $Invoice->interest(), $Invoice->owing(), $Invoice->Currency()->name();
 		} # end foreach Invoice
 		push @Data, 'Totals:', '', '', $subtotal, ( map { $tax_totals{$_->id()} } @Taxes ), $total, $interest_total, $owing_total;
 
@@ -161,6 +164,8 @@ sub _history {
 		( map { 'created_on_end_'.$_ } ( 'year','month','day' ) ),
 		( map { 'due_on_start_'.$_ } ( 'year','month','day' ) ),
 		( map { 'due_on_end_'.$_ } ( 'year','month','day' ) ),
+		( map { 'paid_on_start_'.$_ } ( 'year','month','day' ) ),
+		( map { 'paid_on_end_'.$_ } ( 'year','month','day' ) ),
 		'paid','company_id','bad_debt','product_id') );
 } # end sub _history
 
