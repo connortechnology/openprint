@@ -117,7 +117,7 @@ foreach my $Host ( @Hosts ) {
 			if ( $Host->type() eq 'TP-Link Archer C7' ) {
 				use JSON;
 				$initial_url = $protocol.'://'.$$HI{ip}.'/cgi-bin/luci';
-				$url = $protocol.'://'.$$HI{ip}.'/cgi-bin/luci/;stok=7633201666a3f5dd7f25acea43449f5e/admin/status/overview?status=1&_=0.6478539785164518';
+				$url = $protocol.'://'.$$HI{ip}.'/cgi-bin/luci/admin/status/overview?status=1';
 				$args = {
 					luci_username=> $Host->info('username'),
 					luci_password=> $Host->info('password'),
@@ -130,13 +130,13 @@ foreach my $Host ( @Hosts ) {
 					next;
 				}
 				my $headers = $response->headers();
-#foreach my $k ( keys %{$headers} ) {
-#$openprint::log->debug("Header $k => $$headers{$k}");
-#}
+foreach my $k ( keys %{$headers} ) {
+$openprint::log->debug("Header $k => $$headers{$k}");
+}
 				if ( $$headers{'client-ssl-cipher'} ) {
 					$protocol = 'https';
 					$initial_url = $protocol.'://'.$$HI{ip}.'/cgi-bin/luci';
-					$url = $protocol.'://'.$$HI{ip}.'/cgi-bin/luci/;stok=7633201666a3f5dd7f25acea43449f5e/admin/status/overview?status=1&_=0.6478539785164518';
+					$url = $protocol.'://'.$$HI{ip}.'/cgi-bin/luci/admin/status/overview?status=1&_=0.6478539785164518';
 				}
 #$log->debug("status: ".  $response->is_success  . ' line: ' . $response->status_line() );
 #$log->debug( $response->content() );
@@ -155,6 +155,7 @@ foreach my $Host ( @Hosts ) {
 					}
 				}
 
+$log->debug("content: " . $response->content() );
 				my $json = decode_json( $response->content() );
 				if ( $$json{wifinets} and @{$$json{wifinets}} ) {
 					foreach my $wifinet ( @{$$json{wifinets}} ) {
