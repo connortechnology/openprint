@@ -6,9 +6,12 @@
 		@Hosts = openprint::Host->find(
 			id	=> [ sets::union( map { $$_{host_id} } @HIs ) ],
 			order	=> $session{'/employee/it/hosts.html?order'} ? $session{'/employee/it/hosts.html?order'} : 'lower(hostname)',
-			( $session{'/employee/it/hosts.html?deleted'} ? ( deleted=>$session{'/employee/it/hosts.html?deleted'} ) : () ),
+			( $session{'/employee/it/hosts.html?deleted'} ne '' ? ( deleted=>$session{'/employee/it/hosts.html?deleted'} ) : ( deleted=>[0,1] ) ),
 			limit	=>10,
 		);
+			if ( !@Hosts ) {
+				$variable{warning} .= "Interface found for " . $session{'/employee/it/hosts.html?mac'} . " but host not found.<br/>";
+			}
 		}
 	} else {
 		my $host_ids;
@@ -108,6 +111,7 @@
 		push @{$$variable{'Hosts'}}, $Host;
 	} # end foreach Host
 ) ?>
+<?include(/includes/error_reporting.html)?>
 <table class="List">
 	<thead>
 		<tr>

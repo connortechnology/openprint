@@ -103,6 +103,7 @@ $$variable{Object} = $$variable{Host};
 						if ( $$variable{Host}->id() ) {
 							if ( $$variable{Host}->deleted() ) {
 								$html .= button( 'Destroy', { onclick=>"if(confirm('Are you sure?')){f1.elements['action'].value='Destroy';f1.submit();}" } );
+								$html .= button( 'Undelete', { onclick=>"f1.elements['action'].value='Undelete';f1.submit();" } );
 							} else {
 								$html .= button( 'Delete', { onclick=>"if(confirm('Are you sure?')){f1.elements['action'].value='Delete';f1.submit();}" } );
 							}
