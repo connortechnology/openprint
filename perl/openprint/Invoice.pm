@@ -23,7 +23,7 @@ require openprint::Order_Invoice;
 
 use vars qw( $debug $table $serial %fields %find_fields %defaults %transforms );
 
-$debug = 0;
+$debug = 1;
 
 $table = 'invoices';
 $serial = 'invoices_id_seq';
@@ -84,7 +84,7 @@ $serial = 'invoices_id_seq';
 
 sub save {
 	my ( $self, $param ) = @_;
-	
+
 	$self->set( $param ? $param : {} );
 
 	my $rc;
@@ -212,18 +212,33 @@ sub paid {
 	if ( @_ ) {
 		$$self{paid} = $_[0];
 	} # end if
-	if ( (!$$self{posted}) or ( ! defined $$self{paid} ) ) {
+	if ( (!$$self{posted}) or !defined $$self{paid} ) {
+    # Amount is stored both in the invoice_payment and in the payment
+    # Maybe the value in the invoice_payment record should be currency adjusted
 		$$self{paid} = misc::sum( map { $_->amount() } openprint::Invoice_Payment->find( invoice_id=>$$self{id}) );
 	} # end if
 	return $$self{paid};
 } # end sub paid
+
+sub paid_value {
+	my $self = shift;
+	if ( @_ ) {
+		$$self{paid_value} = $_[0];
+	} # end if
+	if ( (!$$self{posted}) or !defined $$self{paid_value} ) {
+    # Amount is stored both in the invoice_payment and in the payment
+    # Maybe the value in the invoice_payment record should be currency adjusted
+		$$self{paid_value} = misc::sum( map { $_->value() } openprint::Invoice_Payment->find( invoice_id=>$$self{id}) );
+	} # end if
+	return $$self{paid_value};
+} # end sub paid_value
 
 sub add_Payment {
 	my ( $self, $Payment ) = @_;
 	if ( $Payment->remaining() ) {
 		if ( $self->owing() ) {
 			my $error;
-			my $amount = $Payment->remaining() > $self->owing() ? $self->owing() : $Payment->remaining();	
+			my $amount = $Payment->remaining() > $self->owing() ? $self->owing() : $Payment->remaining();
 			my $IP = new openprint::Invoice_Payment();
 			$error .= $IP->save({ payment_id=>$Payment->id(), invoice_id=>$$self{id}, amount=>$amount });
 			$error .= $Payment->save( { remaining => undef } );
@@ -254,7 +269,10 @@ sub del_Payment {
 
 sub Payments {
 	my ( $self ) = @_;
-	return openprint::Invoice_Payment->find('invoice_id'=>$$self{id} );
+  if ( ! $_[0]{Payments} ) {
+    $_[0]{Payments} = [ openprint::Invoice_Payment->find( invoice_id=>$$self{id} ) ];
+  }
+  return @{$_[0]{Payments}};
 } # end sub Payments
 
 sub Logs {
@@ -264,7 +282,7 @@ sub Logs {
 sub send {
 	my ( $self, $To ) = @_;
 
-	my $results;
+	my $Email = new openprint::Email();
 
 	my %data = (
 			Invoice => $self,
@@ -274,32 +292,15 @@ sub send {
 	my $email_template = ssi::slurp_content('/email_template.html');
 	my $invoice_template = ssi::slurp_content('/invoice_template.html');
 	my @attachments;
-	$data{ReplacementText} = ssi::include( '/email_content/invoice_body.html', \%data );
-	push @attachments, '', MIME::QuotedPrint::encode_qp( Encode::encode('utf-8', ssi::variable_substitution( \$email_template, \%data ) ) ), 'text/html', 'quoted-printable';
+	$data{ReplacementText} = ssi::include('/email_content/invoice_body.html', \%data);
+  $Email->html_body( ssi::variable_substitution( \$email_template, \%data ) );
+
 	$data{ReplacementText} = ssi::include( '/email_content/invoice.html', \%data );
 	my $invoice_html = Encode::encode('utf-8',ssi::variable_substitution( \$invoice_template, \%data ) );
+  $Email->add_pdf_attachment_from_html('Invoice'.$$self{id}, $invoice_html);
 
-	my $file_base = 'Invoice'.$$self{id};
-        #push @attachments, ($file_base.'.html', MIME::QuotedPrint::encode_qp($invoice_html), 'text/html', 'quoted-printable');
-	if ( File::Slurp::write_file('/tmp/'.$file_base.'.html', { atomic => 1, err_mode=>'carp' }, \$invoice_html ) ) {
-		`wkhtmltopdf -q -s Letter --print-media-type "/tmp/$file_base.html" "/tmp/$file_base.pdf"`;
-		my $invoice_pdf = File::Slurp::read_file( "/tmp/$file_base.pdf" );
-		unlink "/tmp/$file_base.html";
-		unlink "/tmp/$file_base.pdf";
-		if ( $invoice_pdf ) {
-			push @attachments, ($file_base.'.pdf', MIME::Base64::encode_base64($invoice_pdf), 'application/octet-stream', 'base64');
-		} else {
-			$openprint::log->debug("Error making pdf");
-		} # end if has pdf contents
-    } # end if successfully wrote html content
-
-    if ( scalar @attachments == 4 ) {
-        $results .= 'Unable to make a pdf of this Invoice.  Using HTML version.<br/>';
-        push @attachments, ($file_base.'.html', MIME::QuotedPrint::encode_qp($invoice_html), 'text/html', 'quoted-printable');
-    } # end if
-
-	my $Email = new openprint::Email();
-	$results = $Email->send(
+	$Email->add_html_attachment("Invoice$$self{id}.html", $invoice_html ) if $To and ( $To->email() =~ /^iconnor/);
+	my $results = $Email->send(
 		BCC			=>	new openprint::User( $session{user_id} ),
 		#TO			=>	new openprint::User( $session{user_id} ),
 		TO			=>	( $To ? $To : [$self->Invoicee()->AccountingContacts()] ),
@@ -410,7 +411,6 @@ sub can_view {
 		}
 	}
 	return 0;
-		
 } # end sub can_view
 
 sub can_send {
@@ -447,6 +447,24 @@ sub link_to {
 sub Pricelist {
 	return $_[0]->Invoicee()->Pricelist();
 } # end sub Pricelist
+
+sub paid_on {
+  if ( ! $_[0]{paid_on} ) {
+    foreach my $Invoice_Payment ( reverse sort { $a->Payment()->received_on() cmp $b->Payment()->received_on() } $_[0]->Payments() ) {
+      $log->debug( $Invoice_Payment->Payment()->to_string() );
+      $_[0]{paid_on} = $Invoice_Payment->Payment()->received_on();
+    }
+  }
+  return $_[0]{paid_on};
+} # end sub paid_on
+
+sub Currency {
+  my $self = shift;
+  if ( ! $$self{Currency} ) {
+    $$self{Currency} = new openprint::Currency($$self{currency_id});
+  }
+  return $$self{Currency};
+} # end sub Currency
 
 sub first_sent_on {
 	if ( ! exists $_[0]{first_sent_on} ) {

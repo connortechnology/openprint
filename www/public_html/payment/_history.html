@@ -27,6 +27,7 @@
 			) ) {
 			push @{$$variable{Payments}}, $Payment;
 			$$variable{total} += $Payment->amount();
+			$$variable{value_total} += $Payment->value();
 			$$variable{remaining_total} += $Payment->remaining();
 		} # end foreach Payment
 	} # end if
@@ -50,6 +51,7 @@
 			<th class="TransactionID">Transaction ID</th>
 			<th class="Memo">Memo</th>
 			<th class="Price">Amount</th>
+			<th class="Price">Value</th>
 			<th class="Price">Remaining</th>
 		</tr>
 		<? while ( $$variable{Payment} = shift @{$$variable{Payments}}; ) ?>
@@ -61,6 +63,7 @@
 			<td class="TransactionID"><a href="/payment/edit.html?payment_id=<? echo ( $$variable{Payment}->id(); ) ?>"><? hecho ( $$variable{Payment}->transaction_id(); ) ?></a></td>
 			<td class="Memo"><a href="/payment/edit.html?payment_id=<? echo ( $$variable{Payment}->id(); ) ?>"><? hecho ( $$variable{Payment}->memo(); ) ?></a></td>
 			<td class="Price"><? echo ( openprint::Currency::format( $$variable{Payment}->amount() ); ) ?></td>
+			<td class="Price"><? echo ( openprint::Currency::format( $$variable{Payment}->value() ); ) ?></td>
 			<td class="Price"><? echo ( openprint::Currency::format( $$variable{Payment}->remaining() ); ) ?></td>
 		</tr>
 		<? eval ( $$variable{rowclass} = $$variable{rowclass} ? '' : ' class="colRow"';) ?>
@@ -68,8 +71,8 @@
 		<tr class="totals">
 			<td colspan="6">Totals</td>
 			<td class="Price"><? echo ( openprint::Currency::format( $$variable{total} ); ) ?></td>
+			<td class="Price"><? echo ( openprint::Currency::format( $$variable{value_total} ); ) ?></td>
 			<td class="Price"><? echo ( openprint::Currency::format( $$variable{remaining_total} ); ) ?></td>
 		</tr>
 	</table>
-	<span class="Currency">All prices listed in <? hecho ( new openprint::Currency( $session{Currency_id} )->name(); ) ?></span>
 <? endif ( @{$$variable{Payments}} == 0 ) ?>

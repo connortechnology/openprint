@@ -441,7 +441,7 @@ sub _expenses {
 				'paid_on_start_year','paid_on_start_month','paid_on_start_day',
 				'paid_on_end_year','paid_on_end_month','paid_on_end_day',
 				'category_id', 'recipient_id', 'account_id','attention', 'currency_id',
-				'amount','total',
+				'amount','total','business_use',
 				) );
 } # end sub _expenses
 

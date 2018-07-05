@@ -199,6 +199,8 @@ sub view_photo {
 
 	if ( ! ( $param{asset_id} and $param{album_id} ) ) {
 		# Search engines, etc might get here
+		$variable{Photo} = new openprint::Photo_in_Album();
+    $variable{Album} = new openprint::Photo_Album();
 		return;
 	} # end if
 

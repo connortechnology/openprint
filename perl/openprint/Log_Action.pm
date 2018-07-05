@@ -10,9 +10,9 @@ $table = 'log_actions';
 $serial = 'log_actions_id_seq';
 
 %fields = (
-	'id'	=>	'id',
-	'name'	=>	'name',
-	'description'	=>	'description',
+	id	=>	'id',
+	name	=>	'name',
+	description	=>	'description',
 );
 %transforms = (
 );

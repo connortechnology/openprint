@@ -141,6 +141,11 @@ function select_category( recipient_id ) {
 		</div>
 		<div class="rightColumn">
 			<ul>
+        <? if ( $$variable{Expense}->id() ) ?>
+        <li><label>Entered</label>
+          <?echo ( $$variable{Expense}->created_on() ) ?>
+        </li>
+        <? endif ( $$variable{Expense}->id() ) ?>
 				<li>
 					<label>Invoiced On</label>
 					<? echo ( 	
