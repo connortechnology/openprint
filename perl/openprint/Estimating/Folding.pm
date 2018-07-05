@@ -898,6 +898,7 @@ SET:		foreach my $Set_Of_Impositions ( @All_Impositions ) {
 					next;
 				} # end if
 				next if $$Set_Of_Impositions[0]{quantity} != 1;
+				next if $$Set_Of_Impositions[0]{pages} != $$SignatureImposition{pages};
 			} elsif ( $capable eq 'When Stitching' ) {
 				if ( scalar @$Set_Of_Impositions != 1 ) {
 					$openprint::log->debug("Sets of impos != 1 for $$Equipment{strid}") if DEBUG;
@@ -1429,7 +1430,7 @@ $openprint::log->debug("Resulting fold: " . $Fold->to_string() ) if DEBUG;
 				} # end if
 				my $width = $Imposition->layout_width();
 
-				$Breakdown .= sprintf( '%s: %d*%dout %s layout: %sx%s qty: %d StockWeight %.2fgsm calliper:%.4f<br/>', $$Fold{name}, $impo_qty, @$Imposition{'imposition','image_orientation', 'layout_width', 'layout_height'}, $run_qty, @$Paper{'gsm','calliper'} );
+				$Breakdown .= sprintf( '%s %s: %d*%dout %s layout: %sx%s qty: %d StockWeight %.2fgsm calliper:%.4f<br/>', @$Fold{'type','name'}, $impo_qty, @$Imposition{'imposition','image_orientation', 'layout_width', 'layout_height'}, $run_qty, @$Paper{'gsm','calliper'} );
 
 				my $total_MR = 0;
 				my %setupPrice = openprint::service::get_price_object( $Fold->type().'MakeReady', $imposition, $Equipment );
