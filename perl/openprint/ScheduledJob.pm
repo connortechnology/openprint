@@ -184,7 +184,7 @@ sub comment {
 			$comment .= openprint::Estimating::Stitching::schedule_summary( $Project, $$self{service_id}[0], $service_specs, $Project->ordered_quantity_index() )
 		} else {
 			my $service_specs = openprint::service::get_specs_ref( $Project, $$self{service_id}[0] );
-			$comment = openprint::Estimating::Printing::get_colour_description( $service_specs );
+			$comment = openprint::Estimating::Printing::get_colour_description($Project, $service_specs);
 			my $Equipment = $self->Equipment();
 
 			if ( $Equipment->specification('Folding Capable') eq 'When Printing' ) {
