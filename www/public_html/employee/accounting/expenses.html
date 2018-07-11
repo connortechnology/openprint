@@ -100,6 +100,9 @@
 					<li><label>Total</label>
 						<? echo ( input( type=>'float', name=>'total', value=>$session{'/employee/accounting/expenses.html?total'}, oninput=>'load_expenses(this.form);' ); ) ?>
 					</li>
+					<li><label>Business %</label>
+						<? echo ( input( type=>'float', name=>'business_use', value=>$session{'/employee/accounting/expenses.html?business_use'}, oninput=>'load_expenses(this.form);' ); ) ?>
+					</li>
 				</ul>
 			</div>
 		</div>

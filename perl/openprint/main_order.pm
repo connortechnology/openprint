@@ -272,7 +272,7 @@ sub confirmation {
 
 	my $Order = new openprint::Order( $order_id );
 
-	if ( $param{btnFunction} eq 'Close' or $param{btnFunction} eq 'Complete' ) {
+	if ( $param{btnFunction} eq 'Complete' ) {
 	
 		if ( $Order->id() and ( sets::isin( $Order->status(), ['Incomplete','Re-Opened'] ) ) ) {
 			if ( ( $Order->company_id() == $session{company_id} ) and ( $session{company_id} == $openprint::User->company_id() ) ) {
@@ -379,6 +379,35 @@ sub confirmation {
 		} else {
 			$log->debug("Already complete");
 		} # end if
+	} elsif ( $param{btnFunction} eq 'Close' ) {
+		if ( $Order->status() ne 'Re-Opened' ) {
+			$variable{error} .= "Can only close a re-opened Order.";
+			$variable{ExternalRedirect} = '/main/order/submit.html?order_id='.$Order->id();
+			return;
+		}
+		$Order->subtotal(undef);
+		foreach my $Tax ( $Order->Taxes() ) {
+			$Tax->save({ amount => undef });
+		} # end foreach Tax
+		$Order->total(undef);
+		$Order->status('In Production');
+		$Order->save();
+		$Order->add_log( 'Close Order' );
+		foreach my $OP ( $Order->Ordered_Projects() ) {
+			my $Project = $OP->Project();
+			sql::update( $log, $dbh, 'tbl_Project_Contents', ["lngProjectIndex=? AND strStatus NOT IN ( 'Complete', 'Approved', 'Proofs Out', 'Waiting For Customer Approval','Waiting For QA Approval','')", $Project->id()], 'strStatus', 'Ordered' );
+			$Project->update_status();
+		}
+		foreach my $Product ( $Order->Products() ) {
+			if ( $$Product{project_id} ) {
+				my $Project = $Product->Project();
+				sql::update( $log, $dbh, 'tbl_Project_Contents', ["lngProjectIndex=? AND strStatus NOT IN ( 'Complete', 'Approved', 'Proofs Out', 'Waiting For Client Approval','Waiting For QA Approval','')", $Project->id()], 'strStatus', 'Ordered' );
+				$Project->update_status();
+			}
+		}
+		$Order->update_status();
+		$variable{information} .= $Order->link_to() . ' has been closed';
+		$variable{ExternalRedirect} = $Order->url_to();
 	} # end if btnFunction eq 'Close or Complete
 
 	$variable{order_id} = $order_id;

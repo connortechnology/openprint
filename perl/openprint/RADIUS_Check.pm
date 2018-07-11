@@ -15,6 +15,10 @@ $serial = 'radcheck_id_seq';
 	op			=>	'op',
 	value		=>	'value',
 );
+%transforms = (
+		username	=>	[ 's/^\s+//', 's/\s+$//' ],
+		value	=>	[ 's/^\s+//', 's/\s+$//' ],
+);
 
 %attributes = (
 	'Cleartext-Password'	=>	'Cleartext Password', 

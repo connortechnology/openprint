@@ -138,12 +138,13 @@ while(1) {
 			$log->debug( $HI->ip() . ' was ' . ( $HI->online() ? 'online' : 'offline' ) . " " . $HI->to_string() );
 			my @ping = $p->ping($HI->ip());
 			
-			my $ping = $ping[0];
 #$openprint::log->debug("Ping1: @ping");
 			if ( ! @ping ) {
 				$log->warn("Problem with ping for " . $Host->hostname() . ' ip: ' . $HI->ip() );
 				next;
-			} elsif ( $ping and ( $ping[1] > 1 ) ) {
+			} 
+			my $ping = $ping[0];
+      if ( $ping and ( $ping[1] > 1 ) ) {
 				(new openprint::Log())->save({Object=>$Host, action=>'Long response time', ip_address=>$HI->ip(), host_id=>$$Host{id}, note=>sprintf('Response time %s seconds.<a href="/employee/it/host.html?host_id=%d">%s</a>', $ping[1], @$Host{'id','hostname'}) });
 			} # end if
 
@@ -153,8 +154,9 @@ while(1) {
 			if ( ( $HI->online() and ! $ping ) or ( $ping and !$HI->online() ) ) {
 				$HI->save({online=>$ping});
 			}
-			$log->debug( $HI->ip() . ' is now ' . ( $HI->online() ? 'online' : 'offline' ) . ' value of ping was ' . $ping );
+			$log->debug( $HI->ip() . ' is now ' . ( $HI->online() ? 'online' : 'offline' ) . ' value of ping was ' . ( defined $ping ? $ping : 'undef' ) );
 		} # end foreach HI
+
 		if ( ! $has_monitored_interfaces ) {
 			$log->error("Host $$Host{hostname} is monitored but none of it's interfaces are.");
 			next;
@@ -195,7 +197,7 @@ while(1) {
 		my $since = $now-($$Host{state_changed_on} ? $$Host{state_changed_on} : 0 );
 		$log->debug( $Host->hostname() . ' is now ' . ( $Host->online() ? 'online' : 'offline' ) . " $since seconds ago" );
 		if ( ! $Host->online() ) {
-			if ( ( ! $$Host{notified} ) and ( $since > $$Host{offline_seconds} ) ) {
+			if ( ( ! $$Host{notified} ) and ( (!$$Host{offline_seconds}) or ( $since > $$Host{offline_seconds} ) ) ) {
 				$_ = $Host->save({ notified=>1 });
 				if ( $_ ) {
 					$log->error($_);
@@ -307,7 +309,7 @@ sub sig_handler {
 sub notify {
 	my ( $Host, $online ) = @_;
 	my $results;
-	my @To = map { $_->User() } $Host->Notifications();
+	my @To = map { $_->User() } $Host->Notifications(undef);
 	if ( @To and ( @To < 10 ) ) {
 		my %info = ( Host	=>	$Host,);
 		my $Email = new openprint::Email();
@@ -321,8 +323,8 @@ sub notify {
 				FROM		=>	$config{TechSupportEmail},
 				HTML_BODY	=>	$html_body,
 				);
+		(new openprint::Log())->save({ Object=>$Host, action=>'Emailed', note=>$results });
 	} # end if @To > 10
-	(new openprint::Log())->save({ Object=>$Host, action=>'Emailed', note=>$results });
 	return $results;
 }
 

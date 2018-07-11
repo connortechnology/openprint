@@ -247,7 +247,7 @@ sub credit {
 			if ( %updates ) {
 				my $note = note=>join('<br/>', map { $_ . ' changed from ' . $$Company{$_} . ' to ' . $updates{$_} } sort keys %updates );
 				if ( ! ( $_ = $Company->save(\%updates) ) ) {
-					(new openprint::Log())->save({action=>'Update Company', Object=>$Company, note=>$note });
+					(new openprint::Log())->save({action=>'Edit Company', Object=>$Company, note=>$note });
 				} else {
 					$variable{error} .= $_ . '<br/>';
 				} # en dif
@@ -441,7 +441,7 @@ sub _expenses {
 				'paid_on_start_year','paid_on_start_month','paid_on_start_day',
 				'paid_on_end_year','paid_on_end_month','paid_on_end_day',
 				'category_id', 'recipient_id', 'account_id','attention', 'currency_id',
-				'amount','total',
+				'amount','total','business_use',
 				) );
 } # end sub _expenses
 

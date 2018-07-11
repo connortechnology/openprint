@@ -32,6 +32,8 @@ require openprint::Equipment_Shift;
 require openprint::ScheduledJob;
 require openprint::Project_Service;
 require openprint::SignatureCapture;
+require openprint::Operator_Role;
+require openprint::Project_Service_Operator;
 
 use vars qw( $r $log $dbh %variable %param %session %config );
 *r = \$openprint::r;
@@ -500,7 +502,8 @@ sub _project_list {
 	ssi::save_params( '/employee/production/projects.html', (
 		( map { 'due_date_start_'.$_ } ( 'year','month','day' ) ),
 		( map { 'due_date_end_'.$_ } ( 'year','month','day' ) ),
-		'ProjectStatus', 'ddmSalesRep', 'ddmEmployee', 'ddmCustomer', 'ddmPress'
+		'ProjectStatus', 'ddmSalesRep', 'ddmEmployee', 'ddmCustomer', 'ddmPress',
+		'servicetype_id',
 		)  );
 }
 
@@ -652,13 +655,18 @@ sub send_duedate_change_notification {
 sub load_press_completion {
 	my ( $log, $dbh, $variable, $project_index ) = @_;
 
-	$variable{Project} = new openprint::Project( $project_index );
+	my $Project = $variable{Project} = new openprint::Project( $project_index );
 
 	foreach my $signature_service_index ( $variable{Project}->signatures() ) {
-		my $specs = openprint::service::get_specs_ref( $variable{Project}, $signature_service_index );
+		my $Service = $Project->Service( $signature_service_index );
+		my $specs = $Service->specs();
 		push @{$variable{Signatures}}, @$specs{'SignatureIndex','txtServiceDescription'};
 
-		$variable{"txtEmployeeName-$$specs{SignatureIndex}"} = new openprint::User( sql::execute( undef, undef, 'SELECT operator_id FROM tbl_Project_COntents WHERE lngProjectIndex=? AND lngServiceIndex=?', $project_index, $signature_service_index ) )->name();
+		my @Operators = $Service->Operators();
+		if ( @Operators ) {
+			my $Operator = shift @Operators;
+			$variable{"txtEmployeeName-$$specs{SignatureIndex}"} = $Operator->User()->name();
+		}
 
 		@variable{
 				"txtEmployeeComments-$$specs{SignatureIndex}",
@@ -748,7 +756,7 @@ sub barcode {
 		$param{$param} =~ s/\D//g;
 	} # end foreach param
 
-	($param{Order}) = sql::execute( $log, $dbh, q{SELECT  MAX(OrderIndex) FROM Order_Contents WHERE lngProjectIndex=?}, $param{Project} ) if ( ! $param{Order} ) and $param{Project};
+	($param{Order}) = sql::execute( $log, $dbh, q{SELECT MAX(OrderIndex) FROM Order_Contents WHERE lngProjectIndex=?}, $param{Project} ) if ( ! $param{Order} ) and $param{Project};
 	my %operators = map { $_->id(), $_->name() } openprint::User->find(type=>['E','A']);
 
 	if ( $param{Project} or $param{Action} or $param{Operator} ) {
@@ -780,19 +788,16 @@ sub barcode {
 	my $docket_id = $Project->docket();
 
 	if ( $param{Action} == 1 ) { # Assign Prepress Operator
+		my $Service = $Project->Service( $services{Proofs} ? $services{Proofs} : $services{FilmStripping} );
 
-		my ( $service_index, $old_operator_id ) = sql::execute( $log, $dbh, q{SELECT lngServiceIndex, operator_id FROM tbl_Project_Contents WHERE lngProjectIndex=? AND lngServiceIndex=?}, $Project->id(), $services{Proofs} ? $services{Proofs} : $services{FilmStripping} );
-
-		if ( ! $service_index ) {
+		if ( ! $Service ) {
 			$variable{Error} = "Could not locate Proofs or FilmStripping Service for docket $docket_id";
 			$message = "Could not locate Proofs or FilmStripping Service for docket $docket_id";
 			return;
 		} # end if
 
-		sql::update( $log, $dbh, 'tbl_Project_Contents', ['lngProjectIndex=? AND lngServiceIndex=?', $Project->id(), $service_index],
-				'operator_id', $param{Operator},
-				'starttime',    'NOW()',
-				);
+		my $old_operator_id = shift @{$Service->operator_ids()};
+		$Service->save({ operator_ids => [ $param{Operator} ] } );
 		if ( ! $old_operator_id ) {
 			$message .= "Assigning Prepress Operator for project $param{Project} to $operators{$param{Operator}}";
 		} elsif ( $param{Operator} != $old_operator_id ) {
@@ -802,48 +807,48 @@ sub barcode {
 		} # end if
 		$Project->add_to_log( @session{'company_id','user_id'}, $message );
 	} elsif ( $param{Action} == 2 ) { # Proofs Out
-		my ( $service_index, $old_operator_id, $status ) = sql::execute( $log, $dbh, q{SELECT lngServiceIndex, operator_id, strStatus FROM tbl_Project_Contents WHERE lngProjectIndex=? AND lngServiceIndex=?}, $Project->id(), ( $services{Proofs} ? $services{Proofs} : $services{FilmStripping} ) );
+		my $Service = $Project->Service( $services{Proofs} ? $services{Proofs} : $services{FilmStripping} );
 
-		if ( ! $service_index ) {
+		if ( ! $Service ) {
 			$variable{Error} = "Could not locate Proofs or FilmStripping Service for docket $docket_id";
 			return;
 		} # end if
 
-		openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $service_index, 'rdbComplete', 'Yes' );
-		$Project->add_to_log( $session{company_id}, $param{Operator}, "Marked Proofs Proofs Out from $status via barcode" );
-		openprint::service::status( $Project->id(), $service_index, 'Proofs Out' );
-		$message = sprintf( 'Marked project %d Proofs Out from %s', $Project->id(), $status );
+		openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $$Service{id}, 'rdbComplete', 'Yes' );
+		$Project->add_to_log( $session{company_id}, $param{Operator}, "Marked Proofs Proofs Out from $$Service{status} via barcode" );
+		$message = sprintf( 'Marked project %d Proofs Out from %s', $Project->id(), $$Service{status} );
+		$Service->save({status=>'Proofs Out'});
 
 #send_proofs_complete_email( $project_index, $order_id );
 	} elsif ( $param{Action} == 3 ) { # Proofs Approved
-		my ( $service_index, $old_operator_id, $status ) = sql::execute( $log, $dbh, q{SELECT lngServiceIndex, operator_id, strStatus FROM tbl_Project_Contents WHERE lngProjectIndex=? AND lngServiceIndex=?}, $Project->id(), ( $services{Proofs} ? $services{Proofs} : $services{FilmStripping} ) );
+		my $Service = $Project->Service( $services{Proofs} ? $services{Proofs} : $services{FilmStripping} );
 
-		if ( ! $service_index ) {
+		if ( ! $Service ) {
 			$variable{Error} = "Could not locate Proofs or FilmStripping Service for docket $docket_id";
 			return;
 		} # end if
-		$message = sprintf('Marked project %d Approved from %s<br/>Notified CSR', $Project->id(), $status );
+		$message = sprintf('Marked project %d Approved from %s<br/>Notified CSR', $Project->id(), $$Service{status} );
 		$Project->due_date( $Project->get_due_date() );
 		$Project->save();
-		mark_proofs_approved( $log, $dbh, \%variable, $Project->id(), $service_index, $status );
+		mark_proofs_approved( $Project, $Service );
 		openprint::employee_project::send_proofs_approved_email( $Project->id(), $param{Order} );
 	} elsif ( $param{Action} == 4 ) { # Unassign Operator
-		my ( $service_index, $old_operator_id ) = sql::execute( $log, $dbh, q{SELECT lngServiceIndex, operator_id FROM tbl_Project_Contents WHERE lngProjectIndex=? AND lngServiceIndex=?}, $Project->id(), $services{Proofs} ? $services{Proofs} : $services{FilmStripping} );
+		my $Service = $Project->Service( $services{Proofs} ? $services{Proofs} : $services{FilmStripping} );
 
-		if ( ! $service_index ) {
+		if ( ! $Service ) {
 			$variable{Error} = 'Could not locate Proofs or FilmStripping Service';
 			return;
 		} # end if
 
-		sql::update( $log, $dbh, 'tbl_Project_Contents', ['lngProjectIndex=? AND lngServiceIndex=?', $Project->id(), $service_index],
-				'operator_id',  undef,
-				'starttime',    'NOW()',
-				);
+		my $old_operator_id = shift @{$Service->operator_ids()};
 		if ( ! $old_operator_id ) {
 			$message = sprintf('Un-Assigning Prepress Operator for project %d', $Project->id());
 		} else {
 			$message = sprintf('Un-Assigning Prepress Operator for project %d from %s', $Project->id(), $operators{$old_operator_id});
 		} # end if
+		foreach my $Operator ( openprint::Project_Service_Operator->find( service_id=>$$Service{id} ) ) {
+			$Operator->delete();
+		}
 		$Project->add_to_log( $session{company_id}, $param{Operator}, $message );
 	} elsif ( $param{Action} == 20 ) { # Project Printed
 		$Project->status_change( $session{company_id}, $param{Operator}, 'Complete' );
@@ -880,30 +885,25 @@ sub barcode {
 } # end sub barcode
 
 sub mark_proofs_approved {
-	my ( $log, $dbh, $variable, $project_index, $service_index, $old_status ) = @_;
+	my ( $Project, $Service ) = @_;
 
 
-	my $Project = new openprint::Project( $project_index );
-	if ( ! $service_index ) {
+	if ( ! $Service ) {
 		my $services = $Project->services();
-		$service_index = $$services{Proofs} ? $$services{Proofs}[0] : $$services{FilmStripping}[0];
+		$Service = $Project->Service( $$services{Proofs} ? $$services{Proofs}[0] : $$services{FilmStripping}[0] );
 	} # end if
-	if ( ! $service_index ) {
-		$log->error("Project $project_index has no Proofs service in mark_proofs_approved.");
-	} elsif ( ! $old_status ) {
-		my $Service = $Project->Service( $service_index );
-		$old_status = $Service->status();
+	if ( ! $Service ) {
+		$log->error("Project $$Project{id} has no Proofs service in mark_proofs_approved.");
 	}
 
-	$Project->add_to_log( @session{'company_id','user_id'}, "Marked Proofs Approved from $old_status" );
-	$variable{Project} = $Project;
+	$Project->add_to_log( @session{'company_id','user_id'}, "Marked Proofs Approved from $$Service{status}" );
+	$Service->save({status=>'Approved'});
 # Mark Service as Approved
-	sql::update( $log, $dbh, 'tbl_Project_Contents', ['lngProjectIndex=? AND lngServiceIndex=?', $project_index, $service_index], 'strStatus', 'Approved' );
 
 	my $approval_date = sprintf('%.4d-%.2d-%.2d %.2d:%.2d:%.2d', Date::Calc::Today_and_Now() );
-	openprint::service::insert_service_spec( $log, $dbh, $project_index, $service_index, 'ApprovalDate', $approval_date );
+	openprint::service::insert_service_spec( $log, $dbh, $$Project{id}, $$Service{service_id}, 'ApprovalDate', $approval_date );
+	openprint::service::insert_service_spec( $log, $dbh, $$Project{id}, $$Service{service_id}, 'rdbApproved', 'Yes' );
 } # end sub mark_proofs_approved
-
 
 sub add_to_barcode_log {
 	my ( $log, $dbh, $variable, $project_id, $docket, $operator_id, $desc ) = @_;
@@ -930,11 +930,15 @@ $log->error("No service_id in service for project $project_id, $service_id: " . 
 	my $ac = sql::start_transaction( $dbh );
 	$Service->save({status=>'Complete'});
 	my $specs = $Service->specs();
+	my @operator_ids = @{ $Service->operator_ids() };
 # Remove from Print Schedule
 	foreach my $Job ( openprint::ScheduledJob->find( project_id=>$project_id, 'service_id @>'=>$service_id ) ) {
+		@operator_ids = sets::union(@operator_ids, $Job->Shift()->operator_id()) if $Job->Shift()->operator_id();
 		$Job->delete();
 	} # end foreach Job
-	$Project->add_to_log( @session{'company_id','user_id'}, "Form $$specs{SignatureIndex} Completed". ( $Service->operator_id() != $session{user_id} ? ' for ' . $Service->Operator()->name() : '' ) );
+	$log->debug("Completing form by $session{user_id} for @operator_ids");
+	$Project->add_to_log( @session{'company_id','user_id'},
+			"Form $$specs{SignatureIndex} Completed". ( ( @operator_ids and sets::isin( $session{user_id}, \@operator_ids ) ) ? '': ' for ' . join(',',map { $_->name() } openprint::User->find(id=>\@operator_ids) ) ) );
 	sql::end_transaction( $dbh, $ac );
 } # end sub complete_signature
 
@@ -1561,7 +1565,7 @@ sub _li_change {
 				my $old_date = $Project->due_date();
 				$Project->due_date( $param{duedate} );
 				$Project->save();
-				$Project->add_to_log( @openprint::session{'company_id','user_id'}, "Duedate changed to $param{duedate}" );
+				$Project->add_to_log( @openprint::session{'company_id','user_id'}, "Duedate changed to $param{duedate} from $old_date" );
 				openprint::employee_project::send_duedate_change_notification( $$Project{id}, $Project->order_id() );
 			} # end if date has changed
 		} # end if project_id
@@ -1645,7 +1649,7 @@ $log->debug("Adjusting forms from $$Job{forms} to $param{forms}");
 				} # end if
 			} # end if
 		} # end if
-		if ( $param{runtime} ne $Job->runtime() ) {
+		if ( $param{runtime} ne $$Job{runtime} ) {
 			$param{runtime} =~ s/[^\d:]//g;
 			my ( $h, $m, $s );
 			if ( $param{runtime} =~ /(\d+):(\d+):(\d+)/ ) {
@@ -1676,7 +1680,7 @@ $log->debug("Adjusting forms from $$Job{forms} to $param{forms}");
 		$sql{locked} = $param{locked} if exists $param{locked} and $param{locked} != $$Job{locked};
 		$sql{comment} = $param{comment} if (exists $param{comment}) and ( $param{comment} ne $Job->comment() );
 		$sql{impressions} = $param{impressions} if ( exists $param{impressions} ) and ( $Job->impressions() != $param{impressions} );
-		$sql{speed} = $param{speed} if ( exists $param{speed} ) and ( $Job->speed() != $param{speed} );
+		$sql{speed} = $param{speed} if ( exists $param{speed} ) and ( $$Job{speed} != $param{speed} );
 		$sql{stock_verified} = $param{stock_verified} if exists $param{stock_verified} and $param{stock_verified} != $$Job{stock_verified};
 		$sql{stock} = $param{stock} if exists $param{stock} and $param{stock} ne $$Job{stock};
 		$sql{tentative} = $param{tentative} if ( exists $param{tentative} ) and ( $param{tentative} != $$Job{tentative} );

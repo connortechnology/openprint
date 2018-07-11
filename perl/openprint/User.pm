@@ -19,41 +19,41 @@ $default_sort	=	'lower(firstname),lower(lastname)';
 
 %fields = (
 	id							=>	'id',
-	company_id		=>	'company_id',
-	salutation		=>	'salutation',
-	title				=>	'title',
-	firstname			=>	'firstname',
-	lastname			=>	'lastname',
-	email				=>	'email',
+	company_id			=>	'company_id',
+	salutation			=>	'salutation',
+	title						=>	'title',
+	firstname				=>	'firstname',
+	lastname				=>	'lastname',
+	email						=>	'email',
 	email_valid			=>	'email_valid',
-	phone				=>	'phone',
-	extension			=>	'extension',
-	mobile			=>	'mobile',
-	sms				=>	'sms',
-	fax				=>	'fax',
-	mailinglist		=>	'ysnmailinglist',
-	greeting			=>	'greeting',
-	created_on		=>	'created_on',
-	updated_on		=>	'updated_on',
-	type				=>	'type',
+	phone						=>	'phone',
+	extension				=>	'extension',
+	mobile					=>	'mobile',
+	sms							=>	'sms',
+	fax							=>	'fax',
+	mailinglist			=>	'ysnmailinglist',
+	greeting				=>	'greeting',
+	created_on			=>	'created_on',
+	updated_on			=>	'updated_on',
+	type						=>	'type',
 	change_password	=>	'ysnchangepassword',
 	password_changed_on	=>	'password_changed_on',
-	commission		=>	'dblcommission',
-	wage				=>	'wage',
+	commission			=>	'dblcommission',
+	wage						=>	'wage',
 	administrator		=>	'ysnadministrator',
-	'password',			=>	'password',
-	ftp_active		=>	'ftp_active',
-	ftp_root			=>	'ftp_root',
-	web_active		=>	'web_active',
+	password				=>	'password',
+	ftp_active			=>	'ftp_active',
+	ftp_root				=>	'ftp_root',
+	web_active			=>	'web_active',
 	howdidyouhearaboutus	=>	'howdidyouhearaboutus',
 	howdidyouhearaboutusother	=>	'howdidyouhearaboutusother',
-	quote_level		=>	'quote_level',
+	quote_level				=>	'quote_level',
 	email_quotes_to_myself        =>      'email_quotes_to_myself',
 	purchasing_limit	=>	'purchasing_limit',
 	purchasing_total_limit	=>	'purchasing_total_limit',
-	notes				=>	'notes',
-	asset_id			=>	'asset_id',
-	deleted			=>	'deleted',
+	notes							=>	'notes',
+	asset_id					=>	'asset_id',
+	deleted						=>	'deleted',
 	last_logged_in		=>	undef,
 ); # end %fields
 %find_fields = (
@@ -66,7 +66,7 @@ $default_sort	=	'lower(firstname),lower(lastname)';
 );
 
 %transforms = (
-	id				=>	[ 's/\D//g' ],
+	id				=>	[ 's/\D//g', '<2147483647' ],
 	company_id		=>	[ 's/\D//g' ],
 	commission		=>	[ 's/[^\d\.\-]//g' ],
 	wage				=>	[ 's/[^\d\.]//g' ],
@@ -203,8 +203,12 @@ sub next {
 	my $self = shift;
 	my %params = @_;
 
-	my $sql = 'SELECT MIN(firstname) FROM users WHERE firstname > ?';
+	my $sql = 'SELECT id, firstname FROM users WHERE firstname >= ? AND deleted != true';
 	my @values = ( $$self{firstname} );
+	if ( $$self{id} ) {
+		$sql .= ' AND id!=?';
+		push @values, $$self{id};
+	}
 	if ( $params{company_id} ) {
 		$sql .= ' AND company_id=?';
 		push @values, $params{company_id};
@@ -214,7 +218,7 @@ sub next {
 		push @values, $params{type};
 	} # end if
 
-	$sql = qq{SELECT id FROM users WHERE firstname = ($sql)};
+	$sql .= ' ORDER BY firstname ASC LIMIT 1';
 	( $_ ) = sql::execute( $log, $dbh, $sql, @values );
 	return $_;
 }
@@ -227,8 +231,12 @@ sub prev {
 	my $self = shift;
 	my %params = @_;
 
-	my $sql = 'SELECT MAX(FirstName) FROM Users WHERE FirstName < ?';
+	my $sql = 'SELECT id, firstname FROM Users WHERE firstname <= ? AND deleted != true';
 	my @values = ( $$self{firstname} );
+	if ( $$self{id} ) {
+		$sql .= ' AND id!=?';
+		push @values, $$self{id};
+	}
 	if ( $params{company_id} ) {
 		$sql .= ' AND company_id=?';
 		push @values, $params{company_id};
@@ -238,7 +246,7 @@ sub prev {
 		push @values, $params{type};
 	} # end if
 
-	$sql = qq{SELECT id FROM Users WHERE FirstName = ($sql)};
+	$sql .= ' ORDER BY firstname DESC LIMIT 1';
 	( $_ ) = sql::execute( $log, $dbh, $sql, @values );
 	return $_;
 }

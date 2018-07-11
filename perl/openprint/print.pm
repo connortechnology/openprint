@@ -18,18 +18,11 @@ require openprint::service;
 require openprint::Currency;
 
 require openprint::Estimating::Skids;
-require openprint::Estimating::Printing;
 require openprint::Estimating::Shipping;
 require openprint::Estimating::Stitching;
 require openprint::Estimating::Padding;
 require openprint::Estimating::Proofs;
 require openprint::Estimating::MultiPage;
-
-sub get_ServiceType {
-	my ( $project_index, $service_index ) = @_;
-	return if ! $service_index;
-	return  new openprint::ServiceType(sql::execute( undef, undef, q{SELECT servicetype_id FROM tbl_Project_Contents WHERE lngProjectIndex=? AND lngServiceIndex=?}, $project_index, $service_index ) );
-} # end sub get_ServiceType
 
 # Adds completed/edited services, and then displays the status of the project
 sub view_services {
@@ -99,7 +92,8 @@ sub view_services {
 				} else {
 					openprint::service::save_service( $r, $log, $dbh, $Project->id(), $service_index );
 				} # end if service_type_id
-				$Service->save({ status=>($param{Status} ? $param{Status} : 'calculated')}) if $Service->status() and $Service->status() ne 'Completed';
+				my $new_status = $param{Status} ? $param{Status} : 'calculated';
+				$Service->save({ status=>$new_status }) if ( $Service->status() ne $new_status ) and ( $Service->status() ne 'Completed' );
 
 				if ( $ServiceType->id() ) {
 					$Project->add_to_log( @session{'company_id','user_id'}, $ServiceType->name().' service saved.' );
@@ -137,19 +131,15 @@ sub view_services {
 					openprint::service::internal_calc( $log, $dbh, \%variable, $project_index, $$services{''}[0], $Project->Type()->type() );
 # Might need to test for status of project service
 					$recalc = 1;
-				} elsif (sets::isin( $param{ServiceType}, [ 'Scoring', 'Perforating','SpinePaste','Stitching','Sewing','DieCutting'] ) ) {
+				} elsif (sets::isin( $param{ServiceType}, ['Scoring','Perforating','SpinePaste','Stitching','Sewing','DieCutting'] ) ) {
 					openprint::Estimating::MultiPage::calculate_signatures( $Project );
 					$recalc = 1;
-				} elsif (sets::isin( $param{'ServiceType'}, [ 'Folding' ] ) ) {
+				} elsif (sets::isin( $param{ServiceType}, ['Folding' ] ) ) {
+					openprint::Estimating::MultiPage::calculate_signatures( $Project );
 					if ( $$services{Cutting} and @{$$services{Cutting}} ) {	
 						openprint::service::internal_calc( $log, $dbh, \%variable, $project_index, $$services{Cutting}[0], 'Cutting' );
 					} # end if
-					if ( $$services{Scoring} and @{$$services{Scoring}} ) {	
-						openprint::service::internal_calc( $log, $dbh, \%variable, $project_index, $$services{Scoring}[0], 'Scoring' );
-					} # end if
-					if ( $$services{SaddleStitching} and @{$$services{SaddleStitching}} ) {	
-						openprint::service::internal_calc( $log, $dbh, \%variable, $project_index, $$services{SaddleStitching}[0], 'Stitching' );
-					} # end if
+					$recalc = 1;
 				} elsif ( $param{ServiceType} eq 'Paper' ) {
 					openprint::service::internal_calc( $log, $dbh, \%variable, $project_index, $service_index, 'Paper' );
 				} # end if
@@ -629,6 +619,7 @@ sub get_finished_weight {
 	my ( $project_index ) = @_; 
 	my $project_weight;
 
+require openprint::Estimating::Printing;
 	my $Project = new openprint::Project( $project_index );
 	# We do a weird thing with qty_index here, becasue all quantities should have the same weight, but may be calculated diferent ways, so we run through them until we get a valid weight.
 

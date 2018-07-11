@@ -1,6 +1,9 @@
 use strict;
+use warnings;
+
 require openprint::Object;
 require openprint::Host_Interface;
+require openprint::Project_Log;
 
 package openprint::Host_Notification;
 our @ISA = qw( openprint::Object );
@@ -90,20 +93,24 @@ $serial = 'hosts_id_seq';
 );
 
 sub destroy {
-	my $error;
+	my $error = '';
 	require openprint::Log;
-	foreach my $Log ( openprint::Log->find('host_id'=>$_[0]{id}) ) {
+	foreach my $Log ( openprint::Log->find( host_id=>$_[0]{id} ) ) {
 		$error .= $Log->destroy();
 		return $error if $error;
 	} # end foreach Log
-	foreach my $N ( $_->Notifications() ) {
+	foreach my $N ( $_[0]->Notifications() ) {
 		$error .= $N->destroy();
 		return $error if $error;
 	} # end foreach Log
-	foreach my $I ( $_->Interfaces() ) {
+	foreach my $I ( $_[0]->Interfaces() ) {
 		$error .= $I->destroy();
 		return $error if $error;
 	} # end foreach Log
+	foreach my $Log ( openprint::Project_Log->find( host_id=>$_[0]{id} ) ) {
+		$error .= $Log->save({host_id=>undef});
+		last if $error;
+	}
 
 	$error .= $_[0]->SUPER::destroy();
 	return $error;
@@ -138,14 +145,18 @@ sub type {
 } # end sub type
 
 sub Notifications {
-	if ( ! $_[0]{Notifications} ) {
-		@{$_[0]{Notifications}} = openprint::Host_Notification->find(
-				'host_id'	=>	$_[0]{id},
+	my $self = shift;
+	$$self{Notifications} = shift if @_;
+
+	if ( ! $$self{Notifications} ) {
+		@{$$self{Notifications}} = openprint::Host_Notification->find(
+				host_id	=> $$self{id},
 				);
 				#'order' => 'lower(strfirstName),lower(strlastname)' );
 	} # end if
-	return @{$_[0]{Notifications}};
+	return @{$$self{Notifications}};
 } # end sub Notifications
+
 sub Interfaces {
 	if ( @_ > 1 ) {
 		$_[0]{Interfaces} = $_[1];
@@ -198,6 +209,7 @@ sub reboot {
 	my $success = 0;
 
 	foreach my $HI ( $Host->Interfaces() ) {
+		next if ! $HI->ip();
 		my $url;
 		my $initial_url; # in case we need to hit a different url first.
 		my $method = 'get';
@@ -205,38 +217,50 @@ sub reboot {
 		my $expect;
 		my $do_not_expect;
 		my $port = 80;
+		my $protocol = 'http';
 
 		if ( sets::isin( $_[0]->type(), [ 'AIC500', 'AIC500W', 'AIC777W', 'AIC747W' ] ) ) {
-			$url = 'http://'.$HI->ip().'/admin/reboot.cgi?type=0';
+			$url = $HI->ip().'/admin/reboot.cgi?type=0';
 		} elsif ( $_[0]->type() eq 'AIC250W' ) {
-			$url = 'http://'.$HI->ip().'/Reply.htm?Reset=Yes';
+			$url = $HI->ip().'/Reply.htm?Reset=Yes';
 		} elsif ( $_[0]->type() eq 'M8640' ) {
-			$url = 'http://'.$HI->ip().'/cgi-bin/reboot.cgi';
+			$url = $HI->ip().'/cgi-bin/reboot.cgi';
 		} elsif ( $_[0]->type() eq 'TL-WPA4220' ) {
-			$url = 'http://'.$HI->ip().'/userRpm/SysRebootRpm.htm?Reboot=Reboot';
+			$url = $HI->ip().'/userRpm/SysRebootRpm.htm?Reboot=Reboot';
 		} elsif( $_[0]->type() eq 'D-Link DAP1522' ) {
-			$url = 'http://'.$HI->ip().'/sys_cfg_valid.xgi?&exeshell=submit REBOOT';
+			$url = $HI->ip().'/sys_cfg_valid.xgi?&exeshell=submit REBOOT';
 		} elsif( $_[0]->type() eq 'DGS-1224T' ) {
-			$initial_url = 'http://'.$HI->ip();
+			$initial_url = $HI->ip();
 			$url = '/cgi_device';
 			$args = {
 			post_url => 'cgi_reboot.',
 			};
 			$method = 'post';
 		} elsif( $_[0]->type() eq 'DLink DCS-910' ) {
-			$initial_url = 'http://'.$HI->ip();
-			$url = 'http://'.$HI->ip().'/ReplyF.htm';
+			$initial_url = $HI->ip();
+			$url = $HI->ip().'/ReplyF.htm';
 			$method = 'post';
 			$args = {
 				Reset => 'Reboot the Device',
 			};
 			$expect = 'Device has been rebooted';
 
+		} elsif ( $_[0]->type() eq 'TP-Link Archer C7' ) {
+			$method = 'post';
+			$url = $HI->ip().'/cgi-bin/luci/admin/system/reboot/call';
+			$initial_url = $$HI{ip}.'/cgi-bin/luci';
+        $args = {
+          luci_username=> $Host->info('username'),
+          luci_password=> $Host->info('password'),
+          submit => 'Login',
+token=>'53e677e902828a6a3dbd13b50fda7abe',
+        };
+
 		} elsif( $_[0]->type() eq 'DCS932L' ) {
-			$url = 'http://'.$HI->ip().'/setSystemReboot';
+			$url = $HI->ip().'/setSystemReboot';
 		} elsif( $_[0]->type() eq 'DCS-933L' ) {
-			$initial_url = 'http://'.$HI->ip();
-			$url = 'http://'.$HI->ip().'/setSystemReboot';
+			$initial_url = $HI->ip();
+			$url = $HI->ip().'/setSystemReboot';
 			$method = 'post';
 			$args = {
 				ReplySuccessPage=>'reboot.htm',
@@ -244,7 +268,7 @@ sub reboot {
 				Reset => 'Reboot the Device',
 			};
 		} elsif ( $_[0]->type() eq 'WG602v3' ) {
-			$url = 'http://'.$HI->ip().'/cgi-bin/reboot.cgi';
+			$url = $HI->ip().'/cgi-bin/reboot.cgi';
 			$args = {
 				reboot_ap => 1,
 			};
@@ -254,20 +278,26 @@ sub reboot {
 			return 0;
 		}
 
-		my $response = $browser->get($initial_url ? $initial_url : $url);
-		#$openprint::log->debug( $response->status_line );
+		my $response = $browser->get($protocol.'://'.($initial_url ? $initial_url : $url));
+		$openprint::log->debug("Sending initial url: " . $protocol.'://'.($initial_url ? $initial_url : $url) );
+		$openprint::log->debug( $response->status_line );
 		#$openprint::log->debug( $response->content );
 		my $headers = $response->headers();
 		#foreach my $k ( keys %$headers ) {
 			#$openprint::log->debug("Initial Header $k => $$headers{$k}");
 		#} # end if
-		$response = $HI->authenticate( $browser, $response, $method, $port, $url, $args );
+		if ( $$headers{'client-ssl-cipher'} ) {
+$openprint::log->debug("Swtiching to https");
+			$protocol = 'https';
+			$port = 443;
+		}
+		$response = $HI->authenticate( $browser, $response, $method, $port, $protocol.'://'.$url, $args );
 
 		if ( ! $response->is_success ) {
 			$openprint::log->error( $response->content );
 			if ( $response->status_line() eq '401 Unauthorized' or $response->status_line() eq '401 Not Authorized' ) {
 				$openprint::log->error("Couldn't get content from $url unauthorized trying again:". $response->status_line );
-				$response = $browser->get($url);
+				$response = $browser->get($protocol.'://'.$url);
 				if ( $response->status_line() eq '401 Unauthorized' or $response->status_line() eq '401 Not Authorized' ) {
 					$openprint::log->error("Couldn't get content from $url unauthorized:". $response->status_line );
 					my $headers = $response->headers();
@@ -331,8 +361,14 @@ sub is_wap {
 	return sets::isin( $_[0]->type(), [ 'WG602v3', 'WPN802','TP-Link Archer C7' ] );
 }
 
+sub url {
+	return sprintf('/employee/it/host.html?host_id=%d', $_[0]{id});
+}
+
 sub link_to {
-	return sprintf('<a href="/employee/it/host.html?host_id=%d">%s</a>', $_[0]->id(), ( @_ > 1 ? $_[1] : $_[0]->hostname() ) );
+	return sprintf('<a href="/employee/it/host.html?host_id=%d">%s</a>',
+      $_[0]->id(), ( ( @_ > 1 and $_[1] ) ? $_[1] : ( $_[0]->hostname() ? $_[0]->hostname() : '' ) )
+      );
 }
 
 sub online {

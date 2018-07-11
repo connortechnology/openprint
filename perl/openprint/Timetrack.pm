@@ -28,6 +28,7 @@ $serial = 'timetracks_id_seq';
 	invoice_id    		=>	'invoice_id',
 	service_id    		=>	'service_id',
 	owner_id      		=>	'owner_id',
+	date_associated 	=>	'date_associated',
 	time_associated 	=>	'time_associated',
 	user_id	  	    	=>	'user_id',
 	rate		        	=>	'rate',
@@ -111,24 +112,42 @@ sub elapsed {
 	} else {
 		my ($start) = $$self{starting} =~ /(\d\d\d\d-\d\d-\d\d)/;
 		my ($end) = $$self{ending} =~ /(\d\d\d\d-\d\d-\d\d)/;
-		return Date::Parse::str2time( $end ) - Date::Parse::str2time( $start );
+if ( 0 ) {
+    my $start_dt = $parser->parse_datetime( "$start 00:00:00");
+$openprint::log->debug("starting: " . $parser->format_datetime( $start_dt ) );
+    my $end_dt = $parser->parse_datetime( "$end 00:00:00" )->add( DateTime::Duration->new('days'=>1) ) ;
+$openprint::log->debug("ending: " . $parser->format_datetime( $end_dt ) );
+    my $duration_dt = $end_dt->subtract_datetime( $start_dt );
+$openprint::log->debug("elapsed: " . $duration_dt->in_units('seconds') );
+    return $duration_dt->in_units('seconds');
+}
+
+		return (Date::Parse::str2time( "$end 23:59:59" )+1) - Date::Parse::str2time( "$start 00:00:00");
 	} # end if
 } # end sub elapsed
 
 sub rate {
 	my ( $self ) = @_;
-	my $Service = $self->Service();
-	my %Price = $Service->get_price( undef, undef, $self->Company()->Pricelist() );
-	if ( $$self{rate} ) {
-		$Price{Cost} = $Price{Price} = $$self{rate};
+
+  if ( $$self{rate} ) {
+    return $$self{rate};
+  }
+
+  if ( $$self{service_id} ) {
+    my $Service = $self->Service();
+    my %Price = $Service->get_price( undef, undef, $self->Company()->Pricelist() );
+    return $Price{Price};
 	} # end if
-	return $Price{Price};
+  return;
 }
 sub units {
 	my ( $self ) = @_;
-	my $Service = $self->Service();
-	my %Price = $Service->get_price( undef, undef, $self->Company()->Pricelist() );
-	return $Price{units};
+  if ( $$self{service_id} ) {
+    my $Service = $self->Service();
+    my %Price = $Service->get_price( undef, undef, $self->Company()->Pricelist() );
+    return $Price{units};
+  } 
+  return
 } # end sub units
 
 sub Price {

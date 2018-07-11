@@ -388,22 +388,18 @@ sub load {
 		$$self{layout_width} += $dutch_width;
 		$$self{layout_height} = $dutch_height if $dutch_height > $$self{layout_height};
 	} # end if
+
+	if ( ! $Project ) {
+		my ( $caller, undef, $line ) = caller;
+		$openprint::log->error("No Project passed to Imposition::load from $caller:$line");
+		$Project = new openprint::Project( $$specs{ProjectIndex} );
+	}
+	$$self{Project} = $Project;
+
 	if ( $$specs{txtSignatureType} ) {
 		if ( ! $$specs{spine} ) {
-			if ( ! $Project ) {
-				if ( $$specs{ProjectIndex} ) {
-					$Project = new openprint::Project( $$specs{ProjectIndex} );
-				} else {
-					$openprint::log->error("No ProjcetIndex in specs");
-foreach my $k ( sort { $a cmp $b } keys %$specs ) {
-$openprint::log->debug("($k) => $$specs{$k}");
-}
-				}
-				my ( $caller, undef, $line ) = caller;
-				$openprint::log->error("No Project passed to Imposition::load from $caller:$line");
-			} 
-			if ( $Project ) {
-				my $services = $Project->services();
+			my $services = $Project->services();
+			if ( $$services{''} and @{$$services{''}} ) {
 				my $printing_specs = openprint::service::get_specs_ref( $Project, $$services{''}[0] );
 				$$self{spine} = $$printing_specs{spine};
 			}
@@ -425,9 +421,9 @@ $openprint::log->debug("($k) => $$specs{$k}");
 		} else {
 			if ( $$self{image_orientation} == Vertical ) {
 				$$self{page_rows} = $$self{spread_rows};
-				$$self{page_columns} = $$self{spread_columns} * ($$self{spread_size}/2);
+				$$self{page_columns} = $$self{spread_columns} * ($$self{spread_size} > 1 ? ($$self{spread_size}/2) : 1 );
 			} else {
-				$$self{page_rows} = $$self{spread_rows} * ($$self{spread_size}/2);
+				$$self{page_rows} = $$self{spread_rows} * ($$self{spread_size} > 1 ? ($$self{spread_size}/2) : 1 );
 				$$self{page_columns} = $$self{spread_columns};
 			}
 		}
@@ -883,6 +879,16 @@ sub to_svg {
 	$svg .= '<rect class="sheet" x="'.int($margin*$width_scale).'" y="'.int($margin*$height_scale).'" width="'.int($self->sheet_width()*$width_scale).'" height="'.int($self->sheet_height()*$height_scale).'" style="fill:rgb(255,255,255);stroke-width:1;stroke:rgb(0,0,0);"/>';
 	$svg .= '</svg>';
 	return $svg;
+}
+
+sub landscape_portrait_square {
+	if ( $_[0]{image_width} < $_[0]{image_height} ) {
+		return 'portrait';
+	} elsif ( $_[0]{image_width} > $_[0]{image_height} ) {
+		return 'landscape';
+	} else {
+		return 'square';
+	}
 }
 
 1;

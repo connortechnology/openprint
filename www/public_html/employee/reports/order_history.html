@@ -42,10 +42,17 @@
 			</select>
 		</li>
 		 <li>
-			 <label>Date</label>
-			<? echo ( join(' to ',
+			 <label>Ordered On</label>
+			 <? echo ( join(' to ',
 						date_select_session('/employee/reports/order_history.html', 'created_on_start', { with_today=>1,with_clear=>1 } ),
 						date_select_session('/employee/reports/order_history.html', 'created_on_end', { with_today=>1,with_clear=>1 } ), 
+						); ) ?>
+		</li>
+		 <li>
+			 <label>Printed On</label>
+			 <? echo ( join(' to ',
+						date_select_session('/employee/reports/order_history.html', 'printed_on_start', { with_today=>1,with_clear=>1 } ),
+						date_select_session('/employee/reports/order_history.html', 'printed_on_end', { with_today=>1,with_clear=>1 } ), 
 						); ) ?>
 		</li>
 		<li>
@@ -69,7 +76,6 @@
 				<? echo ( make_drop_down( [ map { $_->id(), $_->strid() . ': ' . $_->name() } openprint::Equipment->find('category any'=>'Printing', order=>'lower(strid)') ], $param{press_id} ); ) ?>
 			</select>
 		</li>
-		<? if ( $session{user_type} eq 'A' or openprint::usergroup::is_user_in( ['Sales Admin','Reporting','Accounting'], $session{user_id} ) ) ?>
 		<li>
 			<label>Reprint</label>
 			<? echo ( radio( 'reprint', [ 'Y', 'Yes', 'N', 'No', '', 'Both' ], $param{reprint} ); ) ?>
@@ -78,6 +84,7 @@
 			<label>POs</label>
 			<? echo ( radio( 'pos', [ 'With', 'With', 'Without', 'Without', '', 'All' ], $param{reprint} ); ) ?>
 		</li>
+<?include(_services_filter.html)?>
 		<li>
 			<label>Sort By</label>
 			<select name="order">
@@ -86,7 +93,6 @@
 				<option value="company">Company</option>
 			</select>
 		</li>
-		<? endif ( $session{user_type} eq 'A' or openprint::usergroup::is_user_in( ['Sales Admin','Reporting','Accounting'], $session{user_id} ) ) ?>
 		</ul>
 		 <p class="buttons">
 			 <? echo ( join("\n",

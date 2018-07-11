@@ -3,6 +3,8 @@ CREATE TABLE Payments (
 	owner_id			INTEGER NOT NULL, FOREIGN KEY (owner_id) REFERENCES Companies (id),
 	payor_id			INTEGER NOT NULL, FOREIGN KEY (payor_id) REFERENCES Companies (id),
 	amount				FLOAT,
+  exchange      FLOAT,
+  value         FLOAT,
 	created_on			TIMESTAMP WITH TIME ZONE,
 	updated_on			TIMESTAMP WITH TIME ZONE,
 	method				TEXT,

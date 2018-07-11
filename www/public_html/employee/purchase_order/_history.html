@@ -63,13 +63,13 @@
 			}
 		} # end if POs
 		
+		my %types = %{$$variable{types}} = map { $_, $_ } split(',',$session{$uri.'?types'} );
 
 		foreach my $PO ( @POs ) {
 
 			if ( ( ! $PO->authorized() ) and ( $PO->created_by() == $session{user_id} ) and ( $PO->can_authorize() ) ) {
 				$PO->save({authorized=>1,authorized_on=>'NOW()',authorized_by=>$session{user_id}});
 			} # end if
-
 
 			if ( $session{$uri.'?authorized'} eq 'Y' and $PO->authorized() ne '1' ) {
 				$log->debug("Next want authd but isn't");
@@ -121,12 +121,11 @@
 				next if $next;
 			} # end if
 			if ( $session{$uri.'?types'} ) {
-				$log->debug("looking for " . $session{$uri.'?types'} );
 				my @types = sets::union( map{ $_->type_id() } $PO->Contents() );
 				if ( ! @types ) {
-					next if ! sets::isin( ' ', [ split(',',$session{$uri.'?types'} ) ] );
+					next if ! $types{' '};
 				} else {
-					next if ! sets::intersection( @types, split(',', $session{$uri.'?types'} ) );
+					next if ! sets::intersection( @types, keys %types );
 				} # end if
 			} # end if
 			if ( $session{$uri.'?department_id'} ) {
@@ -191,15 +190,17 @@
 		<th class="po_id">ID</th>
 		<th class="DateTime">Date</th>
 		<th class="Company">Supplier</th>
-		<th class="User">Created By</th>
-		<th class="AuthorizedBy">Authorized / Declined By</th>
+		<th class="User CreatedBy">Created By</th>
+		<th class="User AuthorizedBy">Authorized / Declined By</th>
 		<th class="Manifest">Manifest</th>
 		<th class="Docket">Docket</th>
+		<th class="Quantity">Quantity</th>
 		<th class="Price">Total</th>
 	</tr>
 	<? echo ( 
 		my $html = '';
 		my $report_total = 0;
+		my $qty_total = 0;
 		my $Currency = openprint::Currency::get_current();
 		my $ac = sql::start_transaction( $dbh );
 		foreach my $PO ( @{$$variable{PurchaseOrders}} ) {
@@ -219,27 +220,33 @@
 				} # end if
 			} # end if
 
+			my $qty = misc::sum( map { $$variable{types}{$_->type_id()} ? $_->qty() : 0 } $PO->Contents() );
+
 			$html .= sprintf( q`
 				<td class="po_id"><a href="/employee/purchase_order/view.html?po_id=%1$d">%1$d</a></td>
 				<td class="DateTime"><a href="/employee/purchase_order/view.html?po_id=%1$d">%2$s</a></td>
 				<td class="Company"><a href="/employee/purchase_order/view.html?po_id=%1$d">%3$s</a></td>
-				<td class="User"><a href="/employee/purchase_order/view.html?po_id=%1$d">%4$s</a></td>
-				<td class="AuthorizedBy"><a href="/employee/purchase_order/view.html?po_id=%1$d">%6$s</a></td>
+				<td class="User CreatedBy"><a href="/employee/purchase_order/view.html?po_id=%1$d">%4$s</a></td>
+				<td class="User AuthorizedBy"><a href="/employee/purchase_order/view.html?po_id=%1$d">%6$s</a></td>
 				<td class="Manifest"><a href="/employee/purchase_order/view.html?po_id=%1$d">%7$s</a></td>
 				<td class="Docket"><a href="/employee/purchase_order/view.html?po_id=%1$d">%8$s</a></td>
+				<td class="Quantity"><a href="/employee/purchase_order/view.html?po_id=%1$d">%9$s</a></td>
 				<td class="Price">%5$s</td>
 			</tr>`, $PO->id(), format_datetime($PO->created_on()), $PO->Supplier()->name(), $PO->Creator()->name(), 
 				$PO->cancelled() ? 'CANCELLED' : ( $PO->can_see_pricing() ? openprint::Currency::format($total) : '' ), 
 				( ( $PO->authorized() and ! $PO->authorized_by() ) ? 'Authorized' : $PO->Authorized_By()->name() ),
 				$PO->Manifest()->name(),
 				join('<br/>', sets::exclude( [''], [ sets::union( map { $_->docket() } $PO->Contents() ) ] ) ),
+				Number::Format::format_number( $qty ),
 				);
+			$qty_total += $qty;
 			$report_total += $total;
 		} # end foreach
 		sql::end_transaction( $dbh, $ac );
-		$html .= '<tr class="totals"><td colspan="'.( $session{user_type} eq 'A' ? 8 : 7 ) . '">Total (' . $Currency->name().') :</td><td class="Price">';
-		$html .= openprint::Currency::format( $report_total );
-		$html .= '</td></tr>';
+		$html .= '<tr class="totals">
+								<td colspan="'.( $session{user_type} eq 'A' ? 8 : 7 ) . '">Total (' . $Currency->name().') :</td>
+								<td class="Quantity">'.Number::Format::format_number($qty_total).'</td>
+								<td class="Price">'. openprint::Currency::format( $report_total ) . '</td></tr>';
 		return $html;
 	) ?>
 		

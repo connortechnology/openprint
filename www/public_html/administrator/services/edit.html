@@ -24,7 +24,7 @@
 			<label>Service</label>
 			<select name="service_id" onchange="if(this.options[this.selectedIndex].value != ''){this.form.btnFunction.value='';this.form.submit();}">
 				<option value="">Select a Service</option>
-				<? echo ( make_drop_down( [ map { $_->id(), $_->name() . ' : '.$_->description() } openprint::Service->find(
+				<? echo ( make_drop_down( [ map { $_->id(), $_->name() . ($_->name() ne $_->description() ? ' : '.$_->description() : '' ) } openprint::Service->find(
 							( $param{ddmSearchCategory} ? ( category_id=>$param{ddmSearchCategory} ) : () ),
 							( $param{equipment_id} ? ( 'equipment_id any'=> $param{equipment_id} ) : () ),
 							order=>'lower(name)') ], $$variable{Service}->id() ); ) ?>
@@ -40,20 +40,24 @@
 				$html .= button( 'Save1', { onclick=>q`f2.btnFunction.value='Save';f2.submit();`, text=>'Save' } );
 				if ( $$variable{Service}->id() ) {
 					$html .= button( 'Copy1', { onclick=>"f1.btnFunction.value='Copy';fmCheck(f1);", text=>'Copy' } );
-					$html .= button( 'Delete1', { onclick=>"f1.btnFunction.value='Delete';fmChange=2;fmCheck(f1);", text=>'Delete' } );
+					if ( $$variable{Service}->deleted() ) {
+						$html .= button( 'Destroy1', { onclick=>"f1.btnFunction.value='Destroy';fmChange=2;fmCheck(f1);", text=>'Destroy' } );
+					} else {
+						$html .= button( 'Delete1', { onclick=>"f1.btnFunction.value='Delete';fmChange=2;fmCheck(f1);", text=>'Delete' } );
+					}
 				} # end if
 				$html .= button( 'Reset1', { onclick=>'f1.reset();', text=>'Reset' } );
 				return $html;
 			) ?>
 		</p>
 <? if ( $openprint::User->email() =~ 'iconnor@' ) ?>
-        <p class="buttons">
-            <input type="file" name="file"/>
-            <? echo ( join("\n",
-            button( 'Import', { onclick=>"f1.btnFunction.value='Import';f1.submit();", text=>'Import' } ),
-            button( 'Export', { onclick=>"f1.btnFunction.value='Export';f1.submit();", text=>'Export' } ),
-            ); ) ?>
-        </p>
+		<p class="buttons">
+				<input type="file" name="file"/>
+				<? echo ( join("\n",
+				button( 'Import', { onclick=>"f1.btnFunction.value='Import';f1.submit();", text=>'Import' } ),
+				button( 'Export', { onclick=>"f1.btnFunction.value='Export';f1.submit();", text=>'Export' } ),
+				); ) ?>
+		</p>
 <? endif ( $openprint::User->email() =~ 'iconnor@' ) ?>
 
 	</fieldset>

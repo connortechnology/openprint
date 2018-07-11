@@ -8,11 +8,12 @@ use vars qw( $debug $table $serial %fields %find_fields %transforms %defaults );
 
 $debug = 0;
 $table = 'project_log';
-$serial= '';
+$serial= 'project_log_id_seq';
 %fields = (
+	id						=>	'id',
 	project_id		=>	'project_id',
 	company_id		=>	'company_id',
-	user_id			=>	'user_id',
+	user_id				=>	'user_id',
 	created_on		=>	'dtmtimestamp',
 	description		=>	'description',
 	host_id				=>	'host_id',
@@ -23,8 +24,8 @@ $serial= '';
 %transforms = (
 );
 %defaults = (
-	created_on	=>	q`'NOW()'`,
-	host_id		=>	q`$self->ip_address( $ENV{REMOTE_ADDR} );return $$self{host_id};`,
+	created_on		=>	q`'NOW()'`,
+	host_id				=>	q`$self->ip_address( $ENV{REMOTE_ADDR} );return $$self{host_id};`,
 );
 
 sub description_html {

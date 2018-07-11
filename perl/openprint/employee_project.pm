@@ -28,6 +28,8 @@ require openprint::ServiceType_Category;
 require openprint::SignatureCapture;
 require openprint::File;
 require openprint::User_Notification;
+require openprint::Operator_Role;
+require openprint::Project_Service_Operator;
 
 
 use vars qw( $r $log $dbh %variable %param %session %config );
@@ -43,7 +45,7 @@ sub view {
 
 	my $project_index = $param{ProjectIndex};
 	$project_index = $param{project_id} if ! $project_index;
-	$project_index = openprint::Project->transform('id', $project_index );
+	$project_index = openprint::Project->transform('id', $project_index);
 		
 	if ( ! $project_index ) {
 		if ( $param{Docket} ) {
@@ -145,34 +147,41 @@ sub view {
 		return;
 	} elsif ( $param{btnFunction} eq 'Save' ) {
 		my $service_index = $param{ServiceIndex};
-		my $status = openprint::service::status( $project_index, $service_index );
+		my $Service = $Project->Service( $service_index );
+		my $status = $Service->status();
+		my $specs = $Service->specs();
 
-		my ( $service_type ) = openprint::service::get_specifications( $log, $dbh, $project_index, $service_index, 'ServiceType' );
+		my $ServiceType = $Service->ServiceType();
+		my $service_type = $ServiceType->name();
+
 		if ( $service_type eq 'Signature' ) {
-			my $complete = is_sig_complete( $project_index, $service_index );
+			my $complete = is_sig_complete( $Project, $service_index );
+$log->debug("Sig complete: $complete");
 			if ( $complete ) {
 # Run through each of the signatures and if everyone is complete, then set the printing service to complete
 				foreach my $signature_service_index ( $Project->signatures() ) {
 					next if $signature_service_index == $service_index;
-					my $status = openprint::service::status( $project_index, $signature_service_index );
-					if ( $status ne 'Complete' ) {
+					if ( 'Complete' ne openprint::service::status( $project_index, $signature_service_index ) ) {
 						$complete = 0;
+						last;
 					} # end if
 				} # end foreach
 			} # end if
+$log->debug("Project complete: $complete " . $Service->to_string());
 
 			my $services = $Project->services();
 			if ( $$services{''} ) {
+				my $ProjectService = $Project->Service( $$services{''}[0] );
 				if ( $complete ) {
-					sql::update( $log, $dbh, 'tbl_Project_Contents', ['lngProjectIndex=? AND lngServiceIndex=?', $project_index, $$services{''}[0]], 'strStatus', 'Complete' );	
+					$ProjectService->save({ status=>'Complete' });
+
 					$Project->add_to_log( @session{'company_id','user_id'}, 'All signatures complete - marking printing complete.' );
 					foreach my $PA ( openprint::PaperAllocation->find(docket=>$Project->docket() ) ) {
-						next if $PA->Paper()->type() ne 'Roll';
 						$PA->delete();
 						$Project->add_to_log( @session{'company_id','user_id'}, 'Freeing allocated paper: ' . $PA->quantity() . $PA->units() );
 					} # end foreach
 				} else {
-					sql::update( $log, $dbh, 'tbl_Project_Contents', ['lngProjectIndex=? AND lngServiceIndex=?', $project_index, $$services{''}[0]], 'strStatus', 'Ordered' );	
+					$ProjectService->save({ status=>'Ordered' });
 				} # end if
 			} # end if
 
@@ -181,38 +190,28 @@ sub view {
 			# Store Usepress
 			foreach my $signature_service_index ( $Project->signatures() ) {
 				my $sig_specs = openprint::service::get_specs_ref( $Project, $signature_service_index );
-				next if ! $param{'UsePress-'.$$sig_specs{SignatureIndex}};
-				next if $param{'UsePress-'.$$sig_specs{SignatureIndex}} eq $$sig_specs{UsePress};
-				openprint::service::insert_service_spec( $log, $dbh, $project_index, $signature_service_index, 'UsePress', $param{"UsePress-$$sig_specs{SignatureIndex}"} );
+				my $form = $$sig_specs{SignatureIndex};
+				next if ( ( ! $param{'UsePress-'.$form} ) or ( $param{'UsePress-'.$form} eq $$sig_specs{UsePress} ) );
+				openprint::service::insert_service_spec( $log, $dbh, $project_index, $signature_service_index, 'UsePress', $param{"UsePress-$form"} );
 				my $runtime = openprint::service::get_runtime( $Project, $signature_service_index );
 
-				my $Equipment = openprint::Equipment->find_one('strid'=>$param{"UsePress-$$sig_specs{SignatureIndex}"} );
+				my $Equipment = openprint::Equipment->find_one( strid=>$param{"UsePress-$$sig_specs{SignatureIndex}"} );
 				next if ! $Equipment;
 
 				foreach my $Job ( openprint::ScheduledJob->find( 'service_id @>'	=> $signature_service_index ) ) {
-					$Job->save({ 'equipment_id'	=> $Equipment->id(), 'runtime'		=> "$runtime minutes", });
+					$Job->save({ equipment_id	=> $Equipment->id(), runtime => "$runtime minutes", });
 				} # end foreach Job
 			} # end foreach signature_service_index
 
 			if ( $service_type eq 'FilmStripping' ) {
 				if ( $param{rdbComplete} eq 'Yes' ) {
 					if ( ! Date::Calc::check_date( @param{'duedate_year','duedate_month','duedate_day'} ) ) {
-						my @ServiceTypes = openprint::ServiceType->find('name'=>$service_type);
-						if ( @ServiceTypes ) {
-							$variable{Redirect} = '/employee/proj/'.$ServiceTypes[0]->url();
-							$variable{ErrorMessage} = 'There was an error saving the DueDate.  Please check that a real date was selected.';
-						} else {
-							$variable{error} = 'There was an error saving the DueDate.  Please check that a real date was selected.';
-						} # end if
+						$variable{Redirect} = '/employee/proj/'.$ServiceType->url();
+						$variable{ErrorMessage} = 'There was an error saving the DueDate.  Please check that a real date was selected.';
 						$param{rdbComplete} = 'No';
 					} elsif ( 0 < Date::Calc::Delta_Days( @param{'ddmDueDateYear','ddmDueDateMonth','ddmDueDateDay'}, Date::Calc::Today() ) ) {
-						my @ServiceTypes = openprint::ServiceType->find('name'=>$service_type);
-						if ( @ServiceTypes ) {
-							$variable{Redirect} = '/employee/proj/'.$ServiceTypes[0]->url();
-							$variable{ErrorMessage} = 'You cannot select a date in the past. Please try again.';
-						} else {
-							$variable{error} = 'You cannot select a duedate in the past. Please try again.';
-						} # end if
+						$variable{Redirect} = '/employee/proj/'.$ServiceType->url();
+						$variable{ErrorMessage} = 'You cannot select a date in the past. Please try again.';
 						$param{rdbComplete} = 'No';
 					} else {
 						if ( $param{duedate_year} ) {
@@ -225,13 +224,13 @@ sub view {
 							} # end if
 						} # end if
 
-						openprint::service::status( $project_index, $service_index, 'Approved' );
+						$Service->save({status=>'Approved'});
 					} # end if
 				} else { # Not Complete
 					if ( $status ne 'Ordered' ) {
 # Make sure we don't get approved without complete, because they can't unapprove
 						$Project->add_to_log( @session{'company_id','user_id'}, "Marked Filmstripping Ordered from $status" );
-						openprint::service::status( $project_index, $service_index, 'Ordered' );
+						$Service->save({status=>'Ordered'});
 					} # end if
 				} # end if Complete or NOT
 			} elsif ( $service_type eq 'Proofs' ) {
@@ -241,18 +240,13 @@ sub view {
 					$param{rdbClientApproved} = 'N';
 					if ( $status ne 'Ordered' ) {
 						$Project->add_to_log( @session{'company_id','user_id'}, "Marked Proofs Ordered from $status" );
-						openprint::service::status( $project_index, $service_index, 'Ordered' );
+						$Service->save({status=>'Ordered'});
 					} # end if
 				} elsif ( $param{rdbApproved} eq 'Y' ) {
 					if ( $param{duedate_year} ) {
 						if ( ! Date::Calc::check_date( @param{'duedate_year','duedate_month','duedate_day'} ) ) {
-							my @ServiceTypes = openprint::ServiceType->find('name'=>$service_type);
-							if ( @ServiceTypes ) {
-								$variable{Redirect} = '/employee/proj/'.$ServiceTypes[0]->url();
-								$variable{ErrorMessage} = 'There was an error saving the DueDate.  Please check that a real date was selected.';
-							} else {
-								$variable{error} = 'There was an error saving the due date.  Please check that a real date was selected.';
-							} # end if
+							$variable{Redirect} = '/employee/proj/'.$ServiceType->url();
+							$variable{ErrorMessage} = 'There was an error saving the DueDate.  Please check that a real date was selected.';
 							$param{rdbApproved} = 'N';
 						} else {
 							# It's a valid duedate
@@ -271,16 +265,15 @@ sub view {
 					} # end if due date is specified
 
 					if ( (!$variable{error}) and ($status ne 'Approved') ) {
-						openprint::employee_production::mark_proofs_approved( $log, $dbh, \%variable, $project_index, $service_index, $status );
+						openprint::employee_production::mark_proofs_approved( $Project, $Service );
 						send_proofs_approved_email( $project_index, $order_id );
 					} # end if
 				} elsif ( $param{rdbClientApproved} eq 'Y' ) {
 					if ( $status ne 'Waiting For QA Approval' ) {
 						$param{ClientApprovalDate} = Date::Format::time2str( $config{DateTimeFormat}, time );
-						if ( $status ne 'Waiting For QA Approval' ) {
-							$Project->add_to_log( @session{'company_id','user_id'}, "Marked Proofs Waiting for QA Approval from $status" );
-							openprint::service::status( $project_index, $service_index, 'Waiting For QA Approval' );
-						} # end if
+						$Project->add_to_log( @session{'company_id','user_id'}, "Marked Proofs Waiting for QA Approval from $status" );
+						$Service->save({status=>'Waiting For QA Approval'});
+						send_proofs_client_approved_email( $project_index, $order_id );
 					} # end if
 					$param{rdbApproved} = 'N';
 				} else { # Just complete
@@ -288,7 +281,7 @@ sub view {
 						$param{CompleteDate} = Date::Format::time2str( $config{DateTimeFormat}, time );
 						if ( $status ne 'Waiting For Customer Approval' ) {
 							$Project->add_to_log( @session{'company_id','user_id'}, "Marked Proofs Waiting for Customer Approval from $status" );
-							openprint::service::status( $project_index, $service_index, 'Waiting For Customer Approval' );
+							$Service->save({status=>'Waiting For Customer Approval'});
 						} # end if
 					} # end if
 					# Only send if completion date has changed
@@ -302,10 +295,8 @@ sub view {
 			} # end if Proofs or FilmStrippign
 		} else { # A Service, But Not Film Stripping or Proofs
 			if ( $param{rdbComplete} eq 'Yes' ) {
-				sql::update( $log, $dbh, 'tbl_Project_Contents', ['lngProjectIndex=? AND lngServiceIndex=?', $project_index, $service_index], 'strStatus', 'Complete' );
-
-				my $ServiceType = openprint::ServiceType->find_one(name=>$service_type);
-				my $category = $ServiceType? $ServiceType->category():'';
+				$Service->save({status=>'Complete'});
+				my $category = $ServiceType ? $ServiceType->category():'';
 				if ( $category eq 'Bindery' ) {
 					$_ = q{ SELECT lngServiceIndex FROM tbl_Service_Specifications WHERE lngProjectIndex=?
 						 AND strName='ServiceType'
@@ -316,28 +307,41 @@ sub view {
 						$_ = q{SELECT lngServiceIndex FROM tbl_Service_Specifications WHERE lngProjectIndex=?  AND strName='ServiceType'
 							 AND strValue IN ( SELECT name FROM Service_Types WHERE category = 'Packaging' )};
 						foreach my $packaging_service_index ( sql::execute( $log, $dbh, $_, $project_index ) ) {
-							sql::update( $log, $dbh, 'tbl_Project_Contents', ['lngProjectIndex=? AND lngServiceIndex=?', $project_index, $packaging_service_index], 'strStatus', 'Complete' );
+							my $Packaging_Service = $Project->Service( $packaging_service_index );
+							$Packaging_Service->save({status=>'Complete'});
 						} # end foreach
 					}  # end if
 				} # end if Bindery
 			} elsif ( $service_type ) { # rdbComplete == No
-				openprint::service::status( $project_index, $service_index, 'Ordered' );
+				$Service->save({status=>'Ordered'});
 			} # end if Complete or NOT
 		} # end if FilmStripping, Proofs or other
 
-		if ( $param{TakeOver} ) {
+		foreach my $Role ( openprint::Operator_Role->find( 'servicetype_id is null or ='=>$$ServiceType{id} ) ) {
+			my $Operator = openprint::Project_Service_Operator->find_one( service_id=>$service_index, role_id=>$$Role{id} );
+			$Operator = new openprint::Project_Service_Operator() if ! $Operator;
+
+			# TakeOver is only for Proofs
+			if ( $param{"TakeOver$$Role{id}"} ) {
 # Take Over
-			$Project->add_to_log( @session{'company_id','user_id'}, 'Taken Over by '. $param{txtEmployeeName} );
-			if ( $param{PickupDate} ) {
-				sql::update( $log, $dbh, 'tbl_Project_Contents', ['lngProjectIndex=? AND lngServiceIndex=?', $project_index, $service_index], ['starttime', $param{PickupDate}, 'operator_id', $session{user_id} ] );
-			} else {
-				sql::update( $log, $dbh, 'tbl_Project_Contents', ['lngProjectIndex=? AND lngServiceIndex=?', $project_index, $service_index], ['starttime', 'NOW()', 'operator_id', $session{user_id} ] );
+				$Project->add_to_log( @session{'company_id','user_id'}, 'Taken Over by '. $openprint::User->name() . ' as ' . $$Role{name} );
+
+				$Operator->save({ service_id=>$service_index, user_id=>$$openprint::User{id}, role_id=>$$Role{id} });
+			} elsif ( ( exists $$specs{SignatureIndex} ) and ( exists $param{"operator_id-$$specs{SignatureIndex}-$$Role{id}"} ) ) {
+				$Operator->save({ service_id=>$service_index, user_id=>$param{"operator_id-$$specs{SignatureIndex}-$$Role{id}"}, role_id=>$$Role{id} });
+				$Project->add_to_log( @session{'company_id','user_id'}, 'Operator changed to '. $Operator->User()->name() . ' by ' . $openprint::User->name() . ' as ' . $$Role{name} );
+			
+			} elsif ( exists $param{"operator_id-$$Role{id}"} ) {
+				$Operator->save({ service_id=>$service_index, user_id=>$param{"operator_id-$$Role{id}"}, role_id=>$$Role{id} });
+				$Project->add_to_log( @session{'company_id','user_id'}, 'Operator changed to '. $Operator->User()->name() . ' by ' . $openprint::User->name() . ' as ' . $$Role{name} );
+			
 			} # end if
-		} # end if
+		} # end foreach Role
+		$Service->save({ starttime=> ($param{"PickupDate"} ? $param{"PickupDate"} : 'NOW()') });
 
 # Save info
 		my $ac = sql::start_transaction( $dbh );
-		my $service_specs = openprint::service::get_specs_ref( $Project, $service_index );
+		my $service_specs = $Service->specs();
 		if ( $$service_specs{ProjectType} ) {
 			my $complete = 1;
 
@@ -349,13 +353,13 @@ sub view {
 					openprint::service::insert_service_spec( $log, $dbh, $project_index, $signature_service_index, $param, $param{"$param-$$sig_specs{SignatureIndex}"} );
 				} # end foreach
 
-				if ( ! is_sig_complete( $project_index, $signature_service_index ) ) {
+				if ( ! is_sig_complete( $Project, $signature_service_index ) ) {
 					$complete = 0;
 				} else {
-					foreach my $Job ( openprint::ScheduledJob->find('project_id'=>$project_index, 'service_id @>'=>$signature_service_index ) ) {
+					foreach my $Job ( openprint::ScheduledJob->find( project_id=>$project_index, 'service_id @>'=>$signature_service_index ) ) {
 						$Job->delete();
 					} # end foreach
-					if ( my $Equipment = openprint::Equipment->find_one('strid'=>$$sig_specs{UsePress}) ) {
+					if ( my $Equipment = openprint::Equipment->find_one( strid=>$$sig_specs{UsePress}) ) {
 						$Equipment->update_schedule();
 					} # end if
 				} # end if
@@ -365,7 +369,7 @@ sub view {
 			if ( $complete ) {
 				$Project->status_change( @session{'company_id','user_id'}, 'Printed' );
 			} else {
-				openprint::service::status( $project_index, $service_index, 'Ordered' );
+				$Service->save({status=>'Ordered'});
 				$Project->add_to_log( @session{'company_id','user_id'}, "Marked Ordered from $status" );
 			} #nd if
 		} elsif ( $service_type eq 'Signature' ) {
@@ -374,14 +378,14 @@ sub view {
 				openprint::service::insert_service_spec( $log, $dbh, $project_index, $service_index, $param, $param{"$param-$$service_specs{SignatureIndex}"} );
 			} # end foreach
 
-			if ( my $Equipment = openprint::Equipment->find_one( 'strid'=>$$service_specs{UsePress} ) ) {
+			if ( my $Equipment = openprint::Equipment->find_one( strid=>$$service_specs{UsePress} ) ) {
 				$Equipment->update_schedule();
 			} # end if
 		} else {
 			my @do_not_save = ( 'btnFunction','ProjectIndex','ServiceIndex','order_id', 'duedate_day','duedate_month','duedate_year','Docket','TakeOver', 'OrderID' );
 			foreach my $param ( keys %param ) {
-				next if ( sets::isin_regx( $param, @do_not_save ) );
 				next if $$service_specs{$param} eq $param{$param};
+				next if ( sets::isin_regx( $param, @do_not_save ) );
 				openprint::service::insert_service_spec( $log, $dbh, $project_index, $service_index, $param, $param{$param} );
 			} # end foreach
 		} # end if
@@ -417,7 +421,7 @@ $log->debug("Saving signature");
 	} elsif ( $param{btnFunction} eq 'AddToPressSchedule' ) {
 		$variable{error} .= openprint::press_schedule::add_project_to_press_schedule( $Project, $param{ServiceIndex} );
 	} elsif ( $param{btnFunction} eq 'RemoveFromPressSchedule' ) {
-		foreach my $Job ( openprint::ScheduledJob->find( 'project_id'=>$Project->id() ) ) {
+		foreach my $Job ( openprint::ScheduledJob->find( project_id=>$Project->id() ) ) {
 			$Job->delete();
 		} # end foreach Job
 	} elsif ( $param{btnFunction} eq 'Add Service' ) {
@@ -436,12 +440,12 @@ $log->debug("Saving signature");
 			$Project->add_to_log( @session{'company_id','user_id'}, sprintf( 'Added Service: %s', $ServiceType->name() ) );
 		} elsif ( $param{txtServiceName} ) {
 			
-			my @ServiceTypes = openprint::ServiceType->find('name'=>'CustomService');
-			if ( @ServiceTypes ) {
+			my $ServiceType = openprint::ServiceType->find_one( name=>'CustomService');
+			if ( $ServiceType ) {
 
 			my $ac = sql::start_transaction( $dbh );
 
-			sql::insert( $log, $dbh, 'tbl_Project_Contents', 'lngProjectIndex', $project_index, 'strStatus', 'Waiting For Customer Approval', 'servicetype_id', $ServiceTypes[0]->id() );
+			sql::insert( $log, $dbh, 'tbl_Project_Contents', 'lngProjectIndex', $project_index, 'strStatus', 'Waiting For Customer Approval', 'servicetype_id', $ServiceType->id() );
 			$_ = q{SELECT MAX(lngServiceIndex) FROM tbl_Project_Contents WHERE lngProjectIndex=?};
 			my ( $service_index ) = sql::execute( $log, $dbh, $_, $project_index );
 			sql::insert( $log, $dbh, 'tbl_Service_Specifications', [
@@ -683,6 +687,52 @@ sub send_proofs_complete_email {
 #} # end if
 } # end sub send_proofs_complete_email
 
+sub send_proofs_client_approved_email {
+  my ( $project_index, $order_id ) = @_;
+# Send email to sales rep
+  my %info;
+  $info{SecureSiteURL} = $config{ExternalSecureSiteURL};
+  $info{siteURL} = $config{ExternalSiteURL};
+
+  my $Project = new openprint::Project( $project_index );
+  $order_id = $Project->order_id() if ! $order_id;
+  @info{'DocketNumber','ProjectReference','ProjectIndex','OrderID'} = ( $Project->docket(), $Project->reference(), $project_index, $order_id );
+
+  my $Order = new openprint::Order( $order_id );
+  @info{'CustomerFirstName','CustomerLastName','CustomerEmail'} = ( $Order->firstname(), $Order->lastname(), $Order->email() );
+
+  @info{'EmployeeFirstName','EmployeeLastName','EmployeeEmail','EmployeeExtension'} = $openprint::User->get(qw(firstname lastname email extension) );
+
+  $info{CompletionDate} = Date::Format::time2str( $config{DateTimeFormat}, time );
+
+  $info{ReplacementText} = ssi::include( '/email_content/proofs_client_approved-sales_rep.html', \%info );
+  my $Email = new openprint::Email();
+  $Email->html_body( ssi::include( '/email_template.html', \%info ) );
+
+  my $CSR = $Order->CSR();
+  my @Users = map { $_->User() } openprint::User_Notification->find( type =>'Proofs Client Approval Notifications', value =>'Yes',
+      'company_id is null or =' => $Project->company_id(),
+      user_company_id=>[$Project->company_id(), $openprint::User->company_id(), ( $CSR->id() ? $CSR->company_id() : () ) ] );
+
+  if ( ! sets::isin( $CSR->id(), [ map { $_->id() } @Users ] ) ) {
+    my $Notification = $CSR->notification('Proofs Client Approval Notifications');
+    push @Users, $CSR if (!$Notification) or ( $Notification ne 'No' );
+  } # end if
+
+  my $results;
+  foreach my $User ( @Users ) {
+    next if $User->id() == $session{user_id};
+    next if $User->deleted();
+
+    $results .= $Email->send(
+        FROM  => $openprint::User,
+        TO    => $User,
+        SUBJECT => "Docket $info{DocketNumber} $$Order{company_name} - Proofs Client Approved",
+        );
+  } # end if
+  $Project->add_to_log( @session{'company_id','user_id'}, "Proofs client approved email sent to $results" );
+} # end sub send_proofs_client_approved_email
+
 sub send_proofs_approved_email {
 	my ( $project_index, $order_id ) = @_;
 # Send email to sales rep
@@ -763,24 +813,24 @@ sub send_duedate_change_notification {
 } # end sub send_duedate_change_notification
 
 sub is_sig_complete {
-	my ( $project_index, $signature_service_index ) = @_;
+	my ( $Project, $signature_service_index ) = @_;
 
-	my $Project = new openprint::Project( $project_index );
-	my $sig_specs = openprint::service::get_specs_ref( $Project, $signature_service_index );
+	my $Service = $Project->Service( $signature_service_index );
+	my $sig_specs = $Service->specs();
 	if ( $param{"rdbPressComplete-$$sig_specs{SignatureIndex}"} ne 'Yes' ) {
-		$Project->add_to_log( @session{'company_id','user_id'}, "Marking form $$sig_specs{SignatureIndex} incomplete." );
-		sql::update( $log, $dbh, 'tbl_Project_Contents', ['lngProjectIndex=? AND lngServiceIndex=?', $project_index, $signature_service_index], 'strStatus','Ordered' );
+		if ( $Service->status() ne 'Ordered' ) {
+			$Project->add_to_log( @session{'company_id','user_id'}, "Marking form $$sig_specs{SignatureIndex} incomplete." );
+			$Service->save({status=>'Ordered'});
+		}
 		return 0;
 	} # end if
-	if ( $param{"operator_id-$$sig_specs{SignatureIndex}"} and ( $session{user_id} != $param{"operator_id-$$sig_specs{SignatureIndex}"} ) ) {
-		$Project->add_to_log( @session{'company_id','user_id'}, "Marking form $$sig_specs{SignatureIndex} complete for " . new openprint::User( $param{"operator_id-$$sig_specs{SignatureIndex}"} )->name() );
-	} else {
+	if ( $Service->status() ne 'Complete' ) {
 		$Project->add_to_log( @session{'company_id','user_id'}, "Marking form $$sig_specs{SignatureIndex} complete." );
-	} # end if
-	sql::update( $log, $dbh, 'tbl_Project_Contents', ['lngProjectIndex=? AND lngServiceIndex=?', $project_index, $signature_service_index], 'strStatus','Complete' );
+		$Service->save({status=>'Complete'});
+	}
 
 # Remove jobs from the Schedule when marked complete.
-	foreach my $Job ( openprint::ScheduledJob->find( project_id => $project_index, 'service_id @>' => $signature_service_index ) ) {
+	foreach my $Job ( openprint::ScheduledJob->find( project_id => $$Project{id}, 'service_id @>' => $signature_service_index ) ) {
 		$Job->delete();
 	} # end foreach
 
@@ -794,12 +844,16 @@ sub summary {
 	openprint::print_project::summary( $r, $log, $dbh, \%variable, $param{ProjectIndex} );
 } # end sub summary
 
+sub stock_checkout {
+	_stock_checkout();
+}
+
 sub _stock_checkout {
 	my $Order;
-	$variable{Project} = new openprint::Project( $param{project_id} ) if $param{project_id};
+	$variable{Project} = new openprint::Project($param{project_id}) if $param{project_id};
 
 	if ( $param{docket} ) {
-		$Order = openprint::Order->find_one( docket=>$param{docket} );
+		$Order = openprint::Order->find_one(docket=>$param{docket});
 		if ( ! $Order ) {
 			$variable{error} .= 'No docket found for ' . $param{docket} . '<br/>';
 			return;
@@ -887,6 +941,10 @@ sub _production_feedback {
 	$variable{Project} = new openprint::Project( $param{project_id} );
 	$variable{service_id} = $param{service_id};
 } # end sub _production_feedback
+
+sub stock_allocations {
+	_stock_allocations();
+}
 
 sub _stock_allocations {
 	$variable{Order} = openprint::Order->find_one( docket=>$param{docket} );

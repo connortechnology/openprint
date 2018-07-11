@@ -98,7 +98,7 @@ if ( @Interfaces ) {
 
 		foreach my $I ( openprint::Host_Interface->find( 'mac !=' => $mac, ip=>$ip ) ) {
 			$I->save({ip=>undef});
-			(new openprint::Log())->save( { Object => $I->Host, note=>'IP Address removed because it is taken by host ' . $Interface->Host()->link_to(), action=>'IP Changed' } );
+			(new openprint::Log())->save( { Object => $I->Host(), note=>'IP Address removed because it is taken by host ' . $Interface->Host()->link_to(), action=>'IP Changed' } );
 		} # end foreach I
 	} # end foreach Interface
 } else {

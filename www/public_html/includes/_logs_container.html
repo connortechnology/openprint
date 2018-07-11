@@ -19,7 +19,7 @@
 							} ),
 					); ) ?>
 				<? echo ( ssi::select( 
-							openprint::Log_Action->dropdown(), 
+							openprint::Log_Action->dropdown( order=>'lower(name)' ), 
 							$session{$$variable{uri}.'?log_action_id'},
 							{ 
 								name			=>	'log_action_id', 

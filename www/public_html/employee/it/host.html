@@ -22,7 +22,7 @@ cleanup : true
 <form id="f1" name="f1" method="post" action="/employee/it/host.html" enctype="multipart/form-data">
 	<input type="hidden" id="host_id" name="host_id" value="<? echo ( $$variable{Host}->id() ) ?>" />
 	<input type="hidden" id="action" name="action" />
-	<fieldset><legend>Host <? echo ( $$variable{Host}->link_to( $$variable{Host}->id() ) ) ?></legend>
+	<fieldset><legend>Host <? echo ( $$variable{Host}->link_to( $$variable{Host}->id() ) .($$variable{Host}->deleted() ? ' <span class="warning">Deleted</span>':'')) ?></legend>
 		<div class="content leftColumn">
 			<ul>
 				<li>
@@ -102,9 +102,10 @@ $$variable{Object} = $$variable{Host};
 						$html .= button( 'Reset', { onclick=>'f1.reset();' } );
 						if ( $$variable{Host}->id() ) {
 							if ( $$variable{Host}->deleted() ) {
-							$html .= button( 'Destroy', { onclick=>"if(confirm('Are you sure?')){f1.elements['action'].value='Destroy';f1.submit();}" } );
+								$html .= button( 'Destroy', { onclick=>"if(confirm('Are you sure?')){f1.elements['action'].value='Destroy';f1.submit();}" } );
+								$html .= button( 'Undelete', { onclick=>"f1.elements['action'].value='Undelete';f1.submit();" } );
 							} else {
-							$html .= button( 'Delete', { onclick=>"if(confirm('Are you sure?')){f1.elements['action'].value='Delete';f1.submit();}" } );
+								$html .= button( 'Delete', { onclick=>"if(confirm('Are you sure?')){f1.elements['action'].value='Delete';f1.submit();}" } );
 							}
 						} # end if
 						$html .= button( 'Resolve', { onclick=>"f1.elements['action'].value='Resolve';f1.action='/employee/it/host.html';f1.submit();" } );
@@ -112,7 +113,6 @@ $$variable{Object} = $$variable{Host};
 						$html .= button( 'Wake', { onclick=>"f1.elements['action'].value='Wake';f1.action='/employee/it/host.html';f1.submit();" } );
 						$html .= button( 'Reboot', { onclick=>"f1.elements['action'].value='reboot';f1.action='/employee/it/host.html';f1.submit();" } );
 						$html .= button( 'GEOLookup', { onclick=>"f1.elements['action'].value='GEOLookup';f1.action='/employee/it/host.html';f1.submit();" } );
-						#$html .= ssi::writeButton( $log, $dbh, 'clear', 'clear.gif', 'clearForm(f1);', '', 'Clear' );
 						return $html;
 					) ?>
 				</p>
@@ -144,7 +144,9 @@ $$variable{Object} = $$variable{Host};
 	if ( 
 		( scalar @Interfaces != 1 ) 
 		or ( defined $Interfaces[0]{id} ) ) {
-		push @Interfaces, new openprint::Host_Interface();
+		my $New = new openprint::Host_Interface();
+		$New->set({dhcp=>1});
+		push @Interfaces, $New;
 	};
 
 
@@ -153,7 +155,8 @@ $$variable{Object} = $$variable{Host};
 <tr id="hi-%1$d">
 	<td class="mac">%2$s</td>
 	<td class="ip">%3$s</td>
-	<td class="options">monitor %4$s<br/>dhcp %5$s<br/>%7$s</td>
+	<td class="options">
+%4$s<label for="monitor-%1$d">monitor</label><br/>%5$s<label for="dhcp-%1$d">dhcp</label><br/>%7$s</td>
 	<td class="comment" rowspan="2"><textarea name="comment-%1$s">%6$s</textarea></td>
 `, 
 	$$Interface{id},
@@ -181,7 +184,7 @@ $$variable{Object} = $$variable{Host};
 		if ( $$Interface{id} ) {
 			$html .= button( 'DI'.$Interface->id(), { onclick=>qq`delete_interface('$$Interface{id}');`, text=>'X', title=>'Delete Interface' } ),
 		} # end if
-		$html .= '</td></tr><tr><td colspan="2">';
+		$html .= '</td></tr><tr><td colspan="3">';
 		if ( $$Interface{mac} ) {
 			$html .= 'Connections:<br/>';
 			if ( $$variable{Host}->is_wap() ) {
@@ -195,7 +198,7 @@ $$variable{Object} = $$variable{Host};
 				}
 			}
 		} # end if mac
-		$html .= '</td></tr>';
+		$html .= '</td><td></td></tr>';
 	} # end foreach Interface
 	return $html;
 ) ?>

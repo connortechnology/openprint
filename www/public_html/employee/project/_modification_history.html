@@ -20,10 +20,10 @@
 
 		my $uri = '/employee/project/modification_log.html';
 
-my @project_ids;
-if ( $session{$uri.'?StartDocket'} ) {
-@project_ids = map { $_->id() } openprint::Project->find( docket=>$session{$uri.'?StartDocket'} );
-}
+		my @project_ids;
+		if ( $session{$uri.'?StartDocket'} ) {
+			@project_ids = map { $_->id() } openprint::Project->find( docket=>$session{$uri.'?StartDocket'} );
+		}
 
 		my @ProjectLog = openprint::Project_Log->find(
 			( $$variable{Project} ? (
@@ -48,16 +48,15 @@ if ( $session{$uri.'?StartDocket'} ) {
 			if ( $$variable{Project} ) {
 				if ( $Log->description =~ /^Scheduled/ ) {
 					if ( ! $scheduled_end ) {
-						$scheduled_end = Date::Parse::str2time( $Log->created_on() );
-					} else {
-						$scheduled_start = Date::Parse::str2time( $Log->created_on() );
+						$scheduled_end = $Log->created_on();
 					} # end if
+					$scheduled_start = $Log->created_on();
 				} # end if
 				if ( ( ! $ordered ) and ( $Log->description =~ /^Add to Order/ ) ) {
-					$ordered = Date::Parse::str2time( $Log->created_on() );
+					$ordered = $Log->created_on();
 				} # end if
 				if ( ( $Log->description =~ /^Taken Over/ ) or ( $Log->description =~ /^Marked Proofs/ ) ) {
-					$prepress_start = Date::Parse::str2time( $Log->created_on() );
+					$prepress_start = $Log->created_on();
 				} # end if
 			} # end if
 			$html .= sprintf( '<tr%1$s>', $rowclass );
@@ -72,10 +71,16 @@ if ( $session{$uri.'?StartDocket'} ) {
 		} # end foreach
 
 		if ( $$variable{Project} ) {
+$log->debug("ordered: $ordered scheduled start $scheduled_start prepress_start: $prepress_start");
+						$scheduled_end = Date::Parse::str2time( $scheduled_end ) if $scheduled_end;
+						$scheduled_start = Date::Parse::str2time( $scheduled_start ) if $scheduled_start;
+						$ordered = Date::Parse::str2time( $ordered ) if $ordered;
+						$prepress_start = Date::Parse::str2time( $prepress_start ) if $prepress_start;
+$log->debug("ordered: $ordered scheduled start $scheduled_start prepress_start: $prepress_start");
 			$html .= '<tr class="totals">';
-			$html .= '<td colspan="2">Time spent before prepress action:</td><td>'. misc::seconds_to_pretty_interval( $prepress_start - $ordered) . '</td></tr>';
-			$html .= '<tr><td colspan="2">Time spent before first scheduled:</td><td>'. misc::seconds_to_pretty_interval( $scheduled_start - $ordered) . '</td></tr>';
-			$html .= '<tr><td colspan="2">Time spent before last scheduled:</td><td>'. misc::seconds_to_pretty_interval( $scheduled_end - $ordered) . '</td></tr>';
+			$html .= '<td colspan="2">Time spent before prepress action:</td><td colspan="2">'. misc::seconds_to_pretty_interval( $prepress_start - $ordered) . '</td></tr>';
+			$html .= '<tr><td colspan="2">Time spent before first scheduled:</td><td colspan="2">'. misc::seconds_to_pretty_interval( $scheduled_start - $ordered) . '</td></tr>';
+			$html .= '<tr><td colspan="2">Time spent before last scheduled:</td><td colspan="2">'. misc::seconds_to_pretty_interval( $scheduled_end - $ordered) . '</td></tr>';
 		} # end if
 		return $html;
 	) ?>

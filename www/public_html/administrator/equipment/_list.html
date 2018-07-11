@@ -18,7 +18,7 @@
     $$variable{Equipment} = [ openprint::Equipment->find( %filters ) ];
 ) ?>	
 <? if ( @{$$variable{Equipment}} ) ?>
-	<table class="List">
+	<table class="List sortable">
 		<tr> 
 			<th class="EquipmentID">ID #</th>
 			<th class="EquipmentName">Name</th>
@@ -37,15 +37,15 @@
 	<td class="EquipmentID">%2$s</td>
 	<td class="EquipmentName">%3$s</td>
 	<td class="Description">%4$s</td>
-	<td class="Services">%6$s</td>
-	<td class="Date">%5$s</td>
+	<td class="Services">%5$s</td>
+	<td class="Date">%6$s</td>
 </tr>
 `, $rowclass, 
 	$Equipment->link_to( $$Equipment{id} ),
 	$Equipment->link_to( $$Equipment{strid} ), 
 	$Equipment->link_to( $$Equipment{name} ), 
-	format_date( $$Equipment{created_on} ),
 	join(',', sort { $a cmp $b } map { $ServiceTypes{$_} ? $ServiceTypes{$_}->name() : () } @{$Equipment->servicetype_id()} ),
+	format_date( $$Equipment{created_on} ),
  );
 
 		$rowclass = $rowclass ? '' : ' class="colRow"';

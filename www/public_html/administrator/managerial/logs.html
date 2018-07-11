@@ -18,6 +18,13 @@
 					</ul>
 				</li>
 				<li>
+					<label>Object</label>
+					<select name="object_type_id" id="object_type_id">
+					<option value="">All</option>
+					<? echo ( make_drop_down( openprint::Object_Type->dropdown(), $param{object_type_id} ); ) ?>
+					</select>
+				</li>			
+				<li>
 					<label>Company</label>
 					<input type="text" onkeyup="filterDDM(this, this.form.company_id);" size="4" />
 					<select name="company_id" onclick="new Ajax.Request( 'user_id', '/includes/_user_ddm.html', { parameters{ company_id: this.getValue() }} );">
@@ -29,7 +36,7 @@
 					<label>User</label>
 					<select name="user_id" id="user_id">
 					<option value="">All</option>
-					<? echo ( make_drop_down( openprint::User->dropdown( company_id=>$param{company_id} ? $param{company_id} : $session{company_id}, order=>'lower(firstname),lower(lastname)'), $param{user_id} ); ) ?>
+					<? echo ( make_drop_down( openprint::User->dropdown( company_id=>$param{company_id} ? $param{company_id} : $session{company_id}), $param{user_id} ); ) ?>
 					</select>
 				</li>			
 				<li>
@@ -66,6 +73,7 @@
 					date_filter( $r->uri(). '?date_start', 'date_time >=' ),
 					( $param{company_id} ? ( company_id	=>	$param{company_id} ) : () ),
 					( $param{user_id} ? ( user_id		=>	$param{user_id} ) : () ),
+					( $param{object_type_id} ? ( object_type_id		=>	$param{object_type_id} ) : () ),
 					action_id	=>	$param{log_actions},
           order => 'date_time',
 					) ];
@@ -92,7 +100,7 @@
 						$Log->User()->link_to( $Log->User()->email() ),
 						$Log->User()->name(),
 						$Log->Company()->name(),
-						( $Object ? $Object->link_to( $Log->Object_Type()->human() ) : '' ),
+						( $Object ? $Object->link_to( $Log->Object_Type()->human() . ' : ' . $Object->name() ) : '' ),
 						join("\n",
 							button( 'X'.$Log->id(), { onclick=>qq`new Ajax.Request('_logs.json', { parameters: { action: 'delete', log_id: $$Log{id} }, onSuccess: function(){ \$('log_$$Log{id}').remove() } } );`, text=>'-' } ),
 						),

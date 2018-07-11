@@ -111,5 +111,22 @@ sub units {
 	return $_[0]{units};
 } # end sub units
 
+sub Cost {
+	return $_[0]->Skid()->Cost();	
+}
+
+sub Value {
+	my $Cost = $_[0]->Cost();
+	my $qty = -1*$_[0]{delta};
+	if ( $_[0]{units} eq 'sheets' ) {
+		my $Paper = $_[0]->Paper();
+		if ( $Paper->type() ne 'Roll' ) {
+		$qty = $qty * $$Paper{width} * $$Paper{height} * $Paper->wpsi();
+		}
+	}
+	$$Cost{value} = $$Cost{cost} * $qty / 100;
+	return $Cost;
+}
+
 1;
 __END__

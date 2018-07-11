@@ -19,6 +19,9 @@ sub history {
 	if ( $param{btnFunction} eq 'Delete' ) {
 		my $Payment = new openprint::Payment( $param{payment_id} );
 		$variable{error} .= $Payment->delete();
+	} elsif ( $param{btnFunction} eq 'UnDelete' ) {
+		my $Payment = new openprint::Payment( $param{payment_id} );
+		$variable{error} .= $Payment->undelete();
 	} elsif ( $param{btnFunction} eq 'Destroy' ) {
 		my $Payment = new openprint::Payment( $param{payment_id} );
 		$variable{error} .= $Payment->destroy();
@@ -68,6 +71,9 @@ sub edit {
 		$variable{error} .= $Payment->send_receipt( $openprint::User );
 	} elsif ( $param{btnFunction} eq 'Delete' ) {
 		$variable{error} .= $Payment->delete();
+		$variable{ExternalRedirect} = '/payment/history.html' if ! $variable{error};
+	} elsif ( $param{btnFunction} eq 'UnDelete' ) {
+		$variable{error} .= $Payment->undelete();
 		$variable{ExternalRedirect} = '/payment/history.html' if ! $variable{error};
 	} # end if
 } # end sub edit

@@ -1,9 +1,6 @@
 <script type="text/javascript">
 	function page_load( div_id, form ) {
-		var div = $(div_id);
-		if ( div )
-			div.innerHTML = 'Please wait. Loading...';
-		new Ajax.Updater( div_id, '/employee/purchase_order/_history.html', { parameters: form.serialize() } );
+		LoadContent( div_id, '/employee/purchase_order/_history.html', form.serialize() );
 	} // end function load
 	function open_decline_window( form ) {
 		var po_ids;
@@ -124,6 +121,7 @@
 		<p class="buttons">
 				<? echo ( join( "\n",
 				button( 'ShowResults', { onclick=>'f1.submit();', text=>'Show Results' } ),
+				button( 'Download', { onclick=>q`f1.btnFunction.value='Download';f1.submit();`, text=>'Download' } ),
 				button( 'Add', { href=>'/employee/purchase_order/edit.html', 'text'=>'Add New' } ),
 				button( 'Reset', { href=>'/employee/purchase_order/history.html?btnFunction=reset' } ),
 				); ) ?>

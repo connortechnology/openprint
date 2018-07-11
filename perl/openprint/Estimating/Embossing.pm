@@ -293,7 +293,7 @@ sub calc {
 
 			$$specs{'hdnBreakdown'.$qty_index} .= "Form $form: $$sig_specs{txtServiceDescription}<br/>";
 			my $Imposition = new openprint::Imposition();
-			$Imposition->load( $sig_specs, $qty_index );
+			$Imposition->load( $sig_specs, $qty_index, $Project );
 			$$specs{'hdnBreakdown'.$qty_index} .= 'Printed: ' . $Imposition->to_string() . '<br/>';
 
 			my %results = signature_calc( $Project, $signature_service_index, $sig_specs, $specs, $qty_index, $Imposition );
@@ -476,8 +476,11 @@ sub signature_calc {
 						$results{breakdown} .= "Doesn't fit. $_<br/>";
 					} # end if
 					if ( $$imposition{imposition} > 1 and ! $$specs{"OverrideImposition-$form-$qty_index"} ) {
-						splice ( @Impositions, $impo_index, 1, openprint::imposition::cut( $imposition ) );
-						push @Sets_of_Impositions,  \@Impositions;
+            my @cut = openprint::imposition::cut( $imposition );
+            if ( @cut ) {
+              splice ( @Impositions, $impo_index, 1, openprint::imposition::cut( $imposition ) );
+              push @Sets_of_Impositions,  \@Impositions;
+            }
 					} # end if
 					$complete = 0;
 					last;

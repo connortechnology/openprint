@@ -57,7 +57,7 @@ sub has_overrides {
 
     my @v;
     if ( $qty_index ) {
-            push @v, map { $$specs{$_.$qty_index} ? $_ : () } (
+            push @v, map { ( $$specs{$_.$qty_index} and $$specs{$_.$qty_index} ne 'N' ) ? $_ : () } (
 					'OverridePrice','OverridePackageType','OverrideItemsPerPackage',
                     );
     } # end if
@@ -178,7 +178,6 @@ $log->debug("Materials: " . map { $_->name() } @Materials ) if DEBUG;
 
 			$$specs{'hdnBreakdown'.$qty_index} .= '<fieldset><legend>'.$Material->name().'</legend>';
 
-			if ( $$specs{'OverrideItemsPerPackage'.$qty_index} ne 'Y'  ) {
 # Make sure it's not too heavy
 				$items_by_weight = int ( $Material->specification('Maximum Weight') / $$specs{txtFinishedWeight} );
 				$$specs{'hdnBreakdown'.$qty_index} .= sprintf('Items by weight: Max %d / project weight %.3f = %d per package<br/>',
@@ -251,13 +250,17 @@ $log->debug("Materials: " . map { $_->name() } @Materials ) if DEBUG;
 					$items_per_package = $$specs{items_per_package};
 				} # end if
 
-			} else {
-				$items_per_package = int $$specs{'txtItemsPerPackage'.$qty_index};
-			} # end if
 			$$specs{'hdnBreakdown'.$qty_index} .= sprintf('Items per: %d<br/>', $items_per_package );
 			if ( ! $items_per_package ) {
 				$$specs{'hdnBreakdown'.$qty_index} .= '</fieldset>';
 				next;
+			} # end if
+			if ( $$specs{'OverrideItemsPerPackage'.$qty_index} eq 'Y' ) {
+				if ( $items_per_package < $$specs{'txtItemsPerPackage'.$qty_index} ) {
+					$$specs{'hdnBreakdown'.$qty_index} .= "Can't fit " . $$specs{'txtItemsPerPackage'.$qty_index} . " in this package.<br/>";
+					next;
+				}
+				$items_per_package = int $$specs{'txtItemsPerPackage'.$qty_index};
 			} # end if
 
 			my $package_qty = ceil($qty/$items_per_package);
