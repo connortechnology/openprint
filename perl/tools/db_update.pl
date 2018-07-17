@@ -556,7 +556,7 @@ if ( ! sets::isin( 'orders', \@tables ) ) {
 	load_sql( 'Orders' );
 }
 
-if ( ! sets::isin( 'payments', \@tables ) ) {
+if ( ! sets::isin('payments', \@tables) ) {
 	$dbh->do( misc::load_file( $log, q{../openprint/sql/Payments.sql}) );
 	die "died error from do " . $dbh->errstr() if $dbh->errstr();
 } else {
@@ -638,6 +638,14 @@ if ( ! sets::isin( 'payments', \@tables ) ) {
 		$dbh->do('ALTER TABLE payments add order_id INTEGER');
 		$dbh->do('ALTER TABLE payments add FOREIGN KEY (order_id) REFERENCES Orders (id)');
 	} # end if
+  if ( !$$data{exchange} ) {
+    $log->debug("Adding exchange to payments");
+    $dbh->do('ALTER TABLE payments ADD exchange FLOAT');
+  }
+  if ( !$$data{value} ) {
+    $log->debug("Adding value to payments");
+    $dbh->do('ALTER TABLE payments ADD value FLOAT');
+  }
 } # end if
 
 	# Check orders structure, don't have to check for existence because we did that twice above

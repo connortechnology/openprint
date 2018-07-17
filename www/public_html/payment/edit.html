@@ -67,6 +67,12 @@
 					<? echo ( make_drop_down( [ map { $_->id(), $_->name() } openprint::Currency->find('order'=>'lower(name)') ], $$variable{Payment}->currency_id() ? $$variable{Payment}->currency_id() : openprint::Currency::get_current()->id() ); ) ?>
 				</select>
 			</li>
+      <li id="exchange"><label>Exchange Rate</label>
+				<? echo ( input( type=>'float', name=>'exchange', id=>'exchange', value=> $$variable{Payment}->exchange() ); ) ?>
+      </li>
+      <li><label>Value</label>
+				<? echo ( input( type=>'float', name=>'value', id=>'value', value=> $$variable{Payment}->value() ); ) ?>
+      </li>
 			<li><label for="method">Method</label>
 				<select id="method" name="method">
 <? echo ( 

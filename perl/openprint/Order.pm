@@ -362,8 +362,11 @@ sub balance {
 } # end sub balance
 
 sub Currency {
-	my $self = shift;
-	return new openprint::Currency( $$self{currency_id} );
+  my $self = shift;
+  if ( ! $$self{Currency} ) {
+    $$self{Currency} = new openprint::Currency( $$self{currency_id} );
+  }
+  return $$self{Currency};
 } # end sub
 
 sub pay {
@@ -510,7 +513,7 @@ sub send_sales_order {
 	my $sales_order = ssi::variable_substitution( \$email_template, \%order );
 
 	$Email->add_pdf_attachment_from_html("Order$$self{id}", $sales_order );
-	$Email->add_html_attachmentl("Order$$self{id}.html", $sales_order ) if $openprint::User->email() =~ /^iconnor/;
+	$Email->add_html_attachment("Order$$self{id}.html", $sales_order ) if $openprint::User->email() =~ /^iconnor/;
 
 	my $sales_person_email;
 	if ( $self->salesrep_id() ) {
