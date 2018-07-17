@@ -20,7 +20,7 @@ require openprint::Payment;
 require openprint::Tax;
 require openprint::Order_Notification;
 
-$debug = 1;
+$debug = 0;
 
 $table = 'orders';
 $serial = 'orders_id_seq';
@@ -362,8 +362,11 @@ sub balance {
 } # end sub balance
 
 sub Currency {
-	my $self = shift;
-	return new openprint::Currency( $$self{currency_id} );
+  my $self = shift;
+  if ( ! $$self{Currency} ) {
+    $$self{Currency} = new openprint::Currency( $$self{currency_id} );
+  }
+  return $$self{Currency};
 } # end sub
 
 sub pay {
@@ -510,7 +513,7 @@ sub send_sales_order {
 	my $sales_order = ssi::variable_substitution( \$email_template, \%order );
 
 	$Email->add_pdf_attachment_from_html("Order$$self{id}", $sales_order );
-	$Email->add_html_attachmentl("Order$$self{id}.html", $sales_order ) if $openprint::User->email() =~ /^iconnor/;
+	$Email->add_html_attachment("Order$$self{id}.html", $sales_order ) if $openprint::User->email() =~ /^iconnor/;
 
 	my $sales_person_email;
 	if ( $self->salesrep_id() ) {
@@ -648,10 +651,19 @@ sub Tax {
 	return $result;
 } # end sub Tax
 
+sub Payments {
+	my $self = shift;
+	$$self{Payments} = shift if @_;
+	if ( $$self{id} and ! $$self{Payments} ) {
+		$$self{Payments} = [ openprint::Payment->find(order_id=>$$self{id},order=>$openprint::Payment::fields{received_on}.' DESC') ];
+	}
+	return @{$$self{Payments}};
+}
+
 sub paid {
 	$_[0]{paid} = $_[1] if ( @_ == 2 );
 	if ( $_[0]{id} and ! defined $_[0]{paid} ) {
-		$_[0]{paid} = misc::sum( map { $_->amount() } openprint::Payment->find(order_id=>$_[0]{id}) );
+		$_[0]{paid} = misc::sum( map { $_->amount() } $_[0]->Payments() );
 	} # end if
 	return $_[0]{paid};
 } # end sub paid
@@ -667,17 +679,20 @@ sub paid_on_seconds {
 	if ( $_[0]->paid() < $_[0]->total() ) {
 		return time;
 	} # end if
-	my $Last_Payment = openprint::Payment->find_one('order_id'=>$_[0]{id},'order'=>$openprint::Payment::fields{received_on}.' DESC');
+	my @Payments = $_[0]->Payments();
+	my $Last_Payment = $Payments[-1];
 	if ( ! $Last_Payment ) {
 		return time;
 	} # end if
 	return Date::Parse::str2time( $Last_Payment->received_on() );
 } # end sub paid_on
+
 sub paid_on {
 	if ( $_[0]->paid() < $_[0]->total() ) {
 		return Date::Format::time2str( '%Y-%m-%d %H:%M:%S', time );
 	} # end if
-	my $Last_Payment = openprint::Payment->find_one('order_id'=>$_[0]{id},'order'=>$openprint::Payment::fields{received_on}.' DESC');
+	my @Payments = $_[0]->Payments();
+	my $Last_Payment = $Payments[-1];
 	if ( ! $Last_Payment ) {
 		return Date::Format::time2str( '%Y-%m-%d %H:%M:%S', time );
 	} # end if

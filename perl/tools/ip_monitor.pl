@@ -154,7 +154,7 @@ while(1) {
 			if ( ( $HI->online() and ! $ping ) or ( $ping and !$HI->online() ) ) {
 				$HI->save({online=>$ping});
 			}
-			$log->debug( $HI->ip() . ' is now ' . ( $HI->online() ? 'online' : 'offline' ) . ' value of ping was ' . $ping );
+			$log->debug( $HI->ip() . ' is now ' . ( $HI->online() ? 'online' : 'offline' ) . ' value of ping was ' . ( defined $ping ? $ping : 'undef' ) );
 		} # end foreach HI
 
 		if ( ! $has_monitored_interfaces ) {

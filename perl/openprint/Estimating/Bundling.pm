@@ -240,7 +240,7 @@ $openprint::log->debug("Per package due to versions: $qty / $$sig_specs{Versions
 				$price += $CardboardPrice{Total};
 				$mprice += $CardboardPrice{MPrice};
 			} # end if
-		} # end if
+		} # end if rdbCardboardBacking
 
 		if ( @Materials ) {
 			if ( $Material ) {
@@ -250,7 +250,7 @@ $openprint::log->debug("Per package due to versions: $qty / $$sig_specs{Versions
 				my %MaterialPrice = $Material->get_price($material_qty);
 # if $$specs{bands_per_package};
 				if ( $MaterialPrice{units} eq 'per m' ) {
-					%MaterialPrice = $Material->get_price( $package_qty );
+					%MaterialPrice = $Material->get_price($package_qty);
 					$MaterialPrice{Total} = $MaterialPrice{Price} * $material_qty / 1000;
 					$MaterialPrice{MPrice} = $MaterialPrice{Price} * $m_material_qty / 1000;
 				} elsif ( $MaterialPrice{units} eq 'each' ) {

@@ -71,7 +71,13 @@ print "Checking $user\n" if DEBUG;
 		} # end foreach
 
 	} # end foreach folder
-	`/bin/kill -HUP \`/bin/cat /run/spamassassin.pid\`` if $update_spamassassin;
+  if ( $update_spamassassin ) {
+    if ( -e '/run/spamassassin.pid' ) {
+      `/bin/kill -HUP \`/bin/cat /run/spamassassin.pid\``;
+    } elsif ( -e '/var/run/spamd.pid' ) {
+      `/bin/kill -HUP \`/bin/cat /var/run/spamd.pid\``;
+    }
+  }
 	foreach my $folder ( '.Trash', '.Deleted Messages' ) {
 		next if $user eq 'matt';
 		if ( ! -e "$spool_path$user/$folder" ) {

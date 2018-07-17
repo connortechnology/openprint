@@ -68,15 +68,21 @@
 			</li>
 			<li>
 				<label>Created</label>
-<? echo ( date_select_session( '/invoice/history.html', 'created_on_start', { onchange=>q`load_invoices($('f1'));`, with_today=>1,with_clear=>1 } ); ) ?>
+<? echo ( date_select_session('/invoice/history.html', 'created_on_start', { onchange=>q`load_invoices($('f1'));`, with_today=>1,with_clear=>1 }); ) ?>
 					to 
-<? echo ( date_select_session( '/invoice/history.html', 'created_on_end', { onchange=>q`load_invoices($('f1'));`, with_today=>1,with_clear=>1 } ); ) ?>
+<? echo ( date_select_session('/invoice/history.html', 'created_on_end', { onchange=>q`load_invoices($('f1'));`, with_today=>1,with_clear=>1 }); ) ?>
 			</li>
 			<li>
 				<label>Due</label>
 <? echo ( date_select_session( '/invoice/history.html', 'due_on_start', { onchange=>q`load_invoices($('f1'));`, with_today=>1,with_clear=>1 } ); ) ?>
 					to 
 <? echo ( date_select_session( '/invoice/history.html', 'due_on_end', { onchange=>q`load_invoices($('f1'));`, with_today=>1,with_clear=>1 } ); ) ?>
+			</li>
+			<li>
+				<label>Paid On</label>
+<? echo ( date_select_session( '/invoice/history.html', 'paid_on_start', { onchange=>q`load_invoices($('f1'));`, with_today=>1,with_clear=>1 } ); ) ?>
+					to 
+<? echo ( date_select_session( '/invoice/history.html', 'paid_on_end', { onchange=>q`load_invoices($('f1'));`, with_today=>1,with_clear=>1 } ); ) ?>
 			</li>
 			</ul>
 		</div>

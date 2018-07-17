@@ -74,6 +74,10 @@ if ( $config{db_name} ) {
 	$log->error("Must specify database name in order to look up hosts.\n");
 	exit(1);
 } # end if
+
+if ( length $mac > 17 ) {
+$mac = substr( $mac, length $mac - 17, 17 );
+}
 my @Interfaces = openprint::Host_Interface->find(mac=>$mac);
 if ( @Interfaces ) {
 	foreach my $Interface ( @Interfaces ) {

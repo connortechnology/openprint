@@ -34,7 +34,7 @@ sub cache_field {
 	return $cache_field;
 }
 sub conversions {
-	my ( $self, $to ) = @_;
+	my ( $self, $to, $period ) = @_;
 	return 1 if $$self{id} == $to;
 	if ( ! exists $$self{Conversions} ) {
 		if ( $$self{id} ) {
@@ -78,8 +78,17 @@ sub set_conversion {
 } # end sub add_conversion
 
 sub convert_from {
-	my ( $self, $value, $DST_Currency ) = @_;
-	$DST_Currency = get_current() if ! $DST_Currency;
+	my ( $self, $value, $options ) = @_;
+  my $DST_Currency;
+  my $period;
+  if ( ref $options eq 'openprint::Currency' ) {
+    $DST_Currency = $DST_Currency;
+  } elsif ( $options ) {
+    $DST_Currency = $$options{DST_Currency} if $$options{DST_Currency};
+    $period = $$options{period} if $$options{period};
+  }
+  $DST_Currency = get_current() if ! $DST_Currency;;
+
 	if ( ! ( $DST_Currency and $$DST_Currency{id} ) ) {
 		$log->error("Invalid destination currency in convert_from");
 		return $value;
@@ -88,8 +97,17 @@ sub convert_from {
 		return $value;
 	}
 
+  my $rate;
 	if ( $DST_Currency->id() != $$self{id} ) {
-		my $rate = $self->conversions( $DST_Currency->id() );
+    if ( $period ) {
+      ( $rate ) = sql::execute(undef, undef, q{SELECT rate FROM Currency_Conversions WHERE from_id=? AND to_id=? AND (period_end IS NULL OR period_end >= ?) AND (period_start IS NULL OR period_start <= ?)}, $$self{id}, $$DST_Currency{id}, $period, $period);
+      if ( !$rate ) {
+        $log->error("No rate found for converting $$self{name} to $$DST_Currency{name}");
+        $rate = $self->conversions($$DST_Currency{id});
+      }
+    } else {
+      $rate = $self->conversions($$DST_Currency{id});
+    }
 		my $new = $value * $rate;
 		$log->debug("Converting $value in $$self{name} to $$DST_Currency{name} using rate $rate $new") if $debug;
 		return $new;

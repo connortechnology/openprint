@@ -16,26 +16,30 @@ $table = 'payments';
 $serial = 'payments_id_seq';
 
 %fields = (
-	id				=>	'id',
-	order_id		=>	'order_id',
-	recipient_id	=>	'owner_id',
-	payor_id		=>	'payor_id',
-	amount			=>	'amount',
-	created_on		=>	'created_on',
-	updated_on		=>	'updated_on',
-	method			=>	'method',
-	currency_id		=>	'currency_id',
-	transaction_id	=>	'transaction_id',
-	memo			=>	'memo',
-	completed		=>	'completed',
-	received_on		=>	'received_on',
-	remaining		=>	'remaining',
-	deleted			=>	'deleted',
-	type_id			=>	'type_id',
+  id				=>	'id',
+  order_id		=>	'order_id',
+  recipient_id	=>	'owner_id',
+  payor_id		=>	'payor_id',
+  amount			=>	'amount',
+  created_on		=>	'created_on',
+  updated_on		=>	'updated_on',
+  method			=>	'method',
+  currency_id		=>	'currency_id',
+  transaction_id	=>	'transaction_id',
+  memo			=>	'memo',
+  completed		=>	'completed',
+  received_on		=>	'received_on',
+  remaining		=>	'remaining',
+  deleted			=>	'deleted',
+  type_id			=>	'type_id',
+  exchange  =>  'exchange',
+  value     =>  'value',
 );
 
 %transforms = (
-	amount	=>	[ 's/[^\-\d\.]//g' ],
+	amount  	=>	[ 's/[^\-\d\.]//g' ],
+	exchange	=>	[ 's/[^\-\d\.]//g' ],
+	value  	=>	[ 's/[^\-\d\.]//g' ],
 );
 %defaults = (
 	order_id	=>	undef,
@@ -46,7 +50,9 @@ $serial = 'payments_id_seq';
 	deleted		=>	0,
 	owner_id	=>	q`$openprint::config{owner_id}`,
 	amount		=>	undef,
+	value		=>	undef,
 	remaining	=>	undef,
+  exchange  =>  1,
 );
 
 sub save {
@@ -141,6 +147,35 @@ sub Invoices {
 	} # end if
 	return @{$_[0]{Invoices}};
 } # end sub Invoices
+
+sub value {
+  if ( ! $_[0]{value} ) {
+    $_[0]{value} = Math::Round::nearest( 0.01, $_[0]{amount} * $_[0]->exchange() );
+  }
+  return $_[0]{value};
+}
+
+sub exchange {
+  if ( !$_[0]{exchange} ) {
+    if ( $_[0]{currency_id} != $$openprint::Currency{id} ) {
+      my $Conversion = openprint::Currency_Conversion->find_one(
+        from_id=>$_[0]{currency_id}, to_id=>$$openprint::Currency{id},
+        'period_start null_or_<=' => $_[0]{received_on},
+        'period_end null_or_>=' => $_[0]{received_on},
+      );
+      if ( $Conversion ) {
+        $_[0]{exchange} = $$Conversion{rate};
+      } else {
+        $openprint::log->error("No rate found for exchange from $_[0]{currency_id} to $$openprint::Currency{id} for $_[0]{received_on}");
+      }
+    } else {
+      $_[0]{exchange} = 1;
+    }
+  }
+  return $_[0]{exchange};
+}
+
+
 
 1;
 __END__

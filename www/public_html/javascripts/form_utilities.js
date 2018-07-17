@@ -1015,27 +1015,28 @@ function update_duration(form, starting_prefix, ending_prefix, suffix ) {
 	var end_year = form.elements[ending_prefix+suffix+'_year'] ? form.elements[ending_prefix+suffix+'_year'].value : 0;
 	var end_month = form.elements[ending_prefix+suffix+'_month'] ? form.elements[ending_prefix+suffix+'_month'].value : 0;
 	var end_day = form.elements[ending_prefix+suffix+'_day'] ? form.elements[ending_prefix+suffix+'_day'].value : 0;
-	var end_hour = form.elements[ending_prefix+suffix+'_hour'] ? form.elements[ending_prefix+suffix+'_hour'].value : 0;
-	var end_minute = form.elements[ending_prefix+suffix+'_minute'] ? form.elements[ending_prefix+suffix+'_minute'].value : 0;
+	var end_hour = ( do_time && form.elements[ending_prefix+suffix+'_hour'] ) ? form.elements[ending_prefix+suffix+'_hour'].value : 23;
+	var end_minute = ( do_time && form.elements[ending_prefix+suffix+'_minute'] ) ? form.elements[ending_prefix+suffix+'_minute'].value : 59;
 
-	var start = new Date( start_year, start_month, start_day, start_hour, start_minute );
-	var end = new Date( end_year, end_month, end_day, end_hour, end_minute );
+	var start = new Date( start_year, start_month, start_day, start_hour, start_minute, 0 );
+	var end = new Date( end_year, end_month, end_day, end_hour, end_minute, 59 );
 
 	var difference = parseInt( ( end - start ) / 1000 );
+console.log(difference);
 	var days = parseInt(difference/(60*60*24));
 
 	if ( do_time ) {
 		if ( unknown_time ) {
-			if(starting_time_elem)starting_time_elem.hide();
-			if(ending_time_elem)ending_time_elem.hide();
+			if ( starting_time_elem ) starting_time_elem.hide();
+			if ( ending_time_elem ) ending_time_elem.hide();
 
 			if ( form.elements[starting_prefix+suffix+'_hour'] ) ddm_select_by_value( form.elements[starting_prefix+suffix+'_hour'], 0 );
 			if ( form.elements[starting_prefix+suffix+'_minute'] ) ddm_select_by_value( form.elements[starting_prefix+suffix+'_minute'], 0 );
 			if ( form.elements[ending_prefix+suffix+'_hour'] ) ddm_select_by_value( form.elements[ending_prefix+suffix+'_hour'], 0 );
 			if ( form.elements[ending_prefix+suffix+'_minute'] ) ddm_select_by_value( form.elements[ending_prefix+suffix+'_minute'], 0 );
 		} else {
-			if(starting_time_elem)starting_time_elem.show();
-			if(ending_time_elem)ending_time_elem.show();
+			if ( starting_time_elem ) starting_time_elem.show();
+			if ( ending_time_elem ) ending_time_elem.show();
 		} // end if
 		if ( $('duration'+suffix+'_time') ) $('duration'+suffix+'_time').show();
 		difference -= days * ( 60*60*24 );

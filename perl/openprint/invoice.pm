@@ -35,11 +35,11 @@ sub history {
 				return;
 			} # end if
 		} elsif ( $param{btnFunction} eq 'Send To Me' ) {
-			my $Invoice = openprint::Invoice->find_one( id=>$param{invoice_id} );
+			my $Invoice = openprint::Invoice->find_one(id=>$param{invoice_id});
 			if ( ! $Invoice ) {
 				$variable{error} .= "Invoice $param{invoice_id} not found";
 			} else {
-				$variable{error} .= $Invoice->send( new openprint::User( $session{user_id} ) );
+				$variable{error} .= $Invoice->send($openprint::User);
 				$variable{information} .= 'Invoice ' . $Invoice->id() . ' sent.<br/>';
 			} # end if
 			$variable{ExternalRedirect} = '/invoice/history.html';
@@ -57,13 +57,13 @@ sub history {
 
 			foreach my $Invoice ( @{$variable{Invoices}} ) {
 				push @Data, $Invoice->id(), 
-ssi::format_csv_datetime($Invoice->created_on()),
-ssi::format_csv_datetime($Invoice->posted_on()),
-ssi::format_csv_date($Invoice->due_on()),
-ssi::format_csv_datetime($Invoice->first_sent_on()),
-$Invoice->Invoicee()->name(), $Invoice->subtotal(), 
-					 ( map { $Invoice->Tax( $_ )->amount() } @Taxes ),
-					 $Invoice->total(), $Invoice->interest(), $Invoice->owing();
+        ssi::format_csv_datetime($Invoice->created_on()),
+        ssi::format_csv_datetime($Invoice->posted_on()),
+        ssi::format_csv_date($Invoice->due_on()),
+        ssi::format_csv_datetime($Invoice->first_sent_on()),
+        $Invoice->Invoicee()->name(), $Invoice->subtotal(), 
+        ( map { $Invoice->Tax( $_ )->amount() } @Taxes ),
+        $Invoice->total(), $Invoice->interest(), $Invoice->owing();
 			} # end foreach Invoice
 			push @Data, 'Totals:', '', '', '', '', '', $subtotal, ( map { $tax_totals{$_->id()} } @Taxes ), $total, $interest_total, $owing_total;
 
@@ -128,75 +128,91 @@ $Invoice->Invoicee()->name(), $Invoice->subtotal(),
 } # end sub history
 
 sub _history {
-	my $url = '/invoice/history.html';
+  my $uri = '/invoice/history.html';
 
-	ssi::save_params($url, ( 
-		( map { 'created_on_start_'.$_ } ( 'year','month','day' ) ),
-		( map { 'created_on_end_'.$_ } ( 'year','month','day' ) ),
-		( map { 'due_on_start_'.$_ } ( 'year','month','day' ) ),
-		( map { 'due_on_end_'.$_ } ( 'year','month','day' ) ),
-		'paid','company_id','bad_debt','product_id') );
+  ssi::save_params($uri, ( 
+      ( map { 'created_on_start_'.$_ } ( 'year','month','day' ) ),
+      ( map { 'created_on_end_'.$_ } ( 'year','month','day' ) ),
+      ( map { 'due_on_start_'.$_ } ( 'year','month','day' ) ),
+      ( map { 'due_on_end_'.$_ } ( 'year','month','day' ) ),
+      ( map { 'paid_on_start_'.$_ } ( 'year','month','day' ) ),
+      ( map { 'paid_on_end_'.$_ } ( 'year','month','day' ) ),
+      'paid','company_id','bad_debt','product_id') );
 
   $variable{subtotal} = $variable{total} = $variable{interest_total} = $variable{owing_total} = 0;
   $variable{Taxes} = [ openprint::Tax->find(
-    ssi::date_filter($url.'?created_on_end', 'period_start null_or_<='),
-    ssi::date_filter($url.'?created_on_start', 'period_end null_or_>='),
-    order   =>  'period_start,name',
-  ) ];
+      ssi::date_filter($uri.'?created_on_end', 'period_start null_or_<='),
+      ssi::date_filter($uri.'?created_on_start', 'period_end null_or_>='),
+      order   =>  'period_start,name',
+    ) ];
   my $company_ids = [ map { $$_{id} } openprint::Company->find_filtered() ] if $session{user_type} ne 'A';
 
   my @Invoices = @{$variable{Invoices}} = ();
   if ( $param{invoice_id} ) {
     @Invoices = openprint::Invoice->find(
-				id => $param{invoice_id},
-				( sets::isin( $session{user_type}, ['E','A'] ) ?  () : ( invoicee_id=>$session{company_id} ) ),
-				order => 'num,id',
-      );
+      id => $param{invoice_id},
+      ( sets::isin( $session{user_type}, ['E','A'] ) ?  () : ( invoicee_id=>$session{company_id} ) ),
+      order => 'num,id',
+    );
   } elsif ( $param{invoice_num} ) {
     @Invoices = openprint::Invoice->find(
-				'num ilike' => ( $param{invoice_num} =~ /%/ ? $param{invoice_num} : '%'.$param{invoice_num}.'%' ),
-				( sets::isin( $session{user_type}, ['E','A'] ) ?  () : ( invoicee_id=>$session{company_id} ) ),
-				order => 'num,id',
-      );
+      'num ilike' => ( $param{invoice_num} =~ /%/ ? $param{invoice_num} : '%'.$param{invoice_num}.'%' ),
+      ( sets::isin( $session{user_type}, ['E','A'] ) ?  () : ( invoicee_id=>$session{company_id} ) ),
+      order => 'num,id',
+    );
   } elsif ( $param{po_id} ) {
     @Invoices = openprint::Invoice->find(
-				'po any'=>$param{po_id},
-				( sets::isin( $session{user_type}, ['E','A'] ) ?  () : ( invoicee_id=>$session{company_id} ) ),
-				order => 'num,id',
-      );
+      'po any'=>$param{po_id},
+      ( sets::isin( $session{user_type}, ['E','A'] ) ?  () : ( invoicee_id=>$session{company_id} ) ),
+      order => 'num,id',
+    );
   } else {
     foreach my $Invoice ( openprint::Invoice->find(
-      ssi::date_filter( '/invoice/history.html?created_on_end', 'created_on <=' ),
-      ssi::date_filter( '/invoice/history.html?created_on_start', 'created_on >=' ),
-      ssi::date_filter( '/invoice/history.html?due_on_end', 'due_on is null or <=' ),
-      ssi::date_filter( '/invoice/history.html?due_on_start', 'due_on is null or >=' ),
-    ( sets::isin($session{user_type}, ['E','A']) ? (
-        ( $session{'/invoice/history.html?company_id'} ? 
-					( invoicee_id => $session{'/invoice/history.html?company_id'} ) : 
-					( $company_ids ? ( invoicee_id => $company_ids ) : () ) 
-				),
-				invoicer_id => $openprint::User->company_id(),
-				) : (
-        ( invoicee_id => $session{company_id} ),
-      ) ),
-      ( $session{'/invoice/history.html?product_id'} ? ( 'product_id any' => $session{'/invoice/history.html?product_id'} ) : () ),
-      order => 'created_on',
+        ssi::date_filter($uri.'?created_on_end', 'created_on <='),
+        ssi::date_filter($uri.'?created_on_start', 'created_on >='),
+        ssi::date_filter($uri.'?due_on_end', 'due_on is null or <='),
+        ssi::date_filter($uri.'?due_on_start', 'due_on is null or >='),
+        ( sets::isin($session{user_type}, ['E','A']) ? (
+            ( $session{$uri.'?company_id'} ? 
+              ( invoicee_id => $session{$uri.'?company_id'} ) : 
+              ( $company_ids ? ( invoicee_id => $company_ids ) : () ) 
+            ),
+            invoicer_id => $openprint::User->company_id(),
+          ) : (
+            ( invoicee_id => $session{company_id} ),
+          ) ),
+        ( $session{$uri.'?product_id'} ? ( 'product_id any' => $session{$uri.'?product_id'} ) : () ),
+        order => 'created_on',
       ) ) {
-      if ( $session{'/invoice/history.html?paid'} ne '' ) {
+      if ( $session{$uri.'?paid'} ne '' ) {
         if ( $Invoice->is_paid() ) {
-          next if $session{'/invoice/history.html?paid'} == 0;
+          next if $session{$uri.'?paid'} == 0;
         } else {
-          next if $session{'/invoice/history.html?paid'} == 1;
+          next if $session{$uri.'?paid'} == 1;
         } # end if
       } # end if
-      if ( $session{'/invoice/history.html?bad_debt'} != 2 ) {
+      if ( $session{$uri.'?bad_debt'} != 2 ) {
         if ( $Invoice->bad_debt() ) {
-          next if $session{'/invoice/history.html?bad_debt'} == 0;
+          next if $session{$uri.'?bad_debt'} == 0;
         } elsif ( $Invoice->bad_debt() eq '0' ) {
-          next if $session{'/invoice/history.html?bad_debt'} == 1;
+          next if $session{$uri.'?bad_debt'} == 1;
         } # end if
       } # end if
-			next if ! $Invoice->can_view();
+
+      if ( Date::Calc::check_date( @session{ map { $uri.'?paid_on_start_'.$_ } ( 'year','month','day' ) } ) ) {
+        my $date = join('-',@session{ map { $uri.'?paid_on_start_'.$_ } ( 'year','month','day' ) } );
+        if ( $Invoice->paid_on() lt $date ) {
+          next;
+        }
+      }
+      if ( Date::Calc::check_date( @session{ map { $uri.'?paid_on_end_'.$_ } ( 'year','month','day' ) } ) ) {
+        my $date = join('-',@session{ map { $uri.'?paid_on_end_'.$_ } ( 'year','month','day' ) } );
+        if ( $Invoice->paid_on() gt $date ) {
+          next;
+        }
+      }
+
+      next if ! $Invoice->can_view();
       push @Invoices, $Invoice;
     } # end foreach Invoice
   } # end if
@@ -205,6 +221,8 @@ sub _history {
     $variable{subtotal} += $Invoice->subtotal();
     $variable{total} += $Invoice->total();
     $variable{interest_total} += $Invoice->interest();
+    $variable{paid_total} += $Invoice->paid();
+    $variable{paidvalue_total} += $Invoice->paid_value();
     $variable{owing_total} += $Invoice->owing();
     foreach my $Tax ( @{$variable{Taxes}} ) {
       my $IT = $Invoice->Tax( $Tax );
