@@ -1837,7 +1837,7 @@ sub _customer_performance {
 			'ordered_on_end_year','ordered_on_end_month','ordered_on_end_day', 
 			'not_ordered_on_start_year','not_ordered_on_start_month','not_ordered_on_start_day',
 			'not_ordered_on_end_year','not_ordered_on_end_month','not_ordered_on_end_day', 
-			'salesrep_id','payment_cycle','country','has_discount' );
+			'salesrep_id','payment_cycle','country','has_discount','has_credit_card_fee','has_csr_commission' );
 } # end sub _customer_performance
 
 sub prepress_productivity {

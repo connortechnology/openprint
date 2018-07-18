@@ -56,8 +56,14 @@
 </div>
 <div class="leftColumn">
 <ul>
-	<li><label>Has discount/markup?</label>
-		<?echo(radio('has_discount', [ 'Y', 'Yes', 'N','No','','Both' ], $session{$$variable{uri}.'?has_discount'} );)?>,
+	<li><label>Has discount / markup?</label>
+		<?echo(radio('has_discount', [ 'Y', 'Yes', 'N','No','','Both' ], $session{$$variable{uri}.'?has_discount'} );)?>
+	</li>
+	<li><label>Has credit card fee?</label>
+		<?echo(radio('has_credit_card_fee', [ 'Y', 'Yes', 'N','No','','Both' ], $session{$$variable{uri}.'?has_credit_card_fee'} );)?>
+	</li>
+	<li><label>Has csr commission?</label>
+		<?echo(radio('has_csr_commission', [ 'Y', 'Yes', 'N','No','','Both' ], $session{$$variable{uri}.'?has_csr_commission'} );)?>
 	</li>
 </ul>
 </div>

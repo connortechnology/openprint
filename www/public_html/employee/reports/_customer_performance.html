@@ -114,12 +114,16 @@
 			} # end if
 
 			if ( $session{$uri.'?has_discount'} ne '' ) {
-				if ( ($session{$uri.'?has_discount'} eq 'Y') and !(1*$Company->discount()) ) {
-					next;
-				}
-				if ( ($session{$uri.'?has_discount'} eq 'N') and (1*$Company->discount()) ) {
-					next;
-				}
+				next if ( ($session{$uri.'?has_discount'} eq 'Y') and !(1*$Company->discount()) );
+				next if ( ($session{$uri.'?has_discount'} eq 'N') and (1*$Company->discount()) ) ;
+			}
+			if ( $session{$uri.'?has_credit_card_fee'} ne '' ) {
+				next if ( ($session{$uri.'?has_credit_card_fee'} eq 'Y') and !(1*$Company->credit_card_fee()) );
+				next if ( ($session{$uri.'?has_credit_card_fee'} eq 'N') and (1*$Company->credit_card_fee()) ) ;
+			}
+			if ( $session{$uri.'?has_csr_commission'} ne '' ) {
+				next if ( ($session{$uri.'?has_csr_commission'} eq 'Y') and !(1*$Company->csr_commission()) );
+				next if ( ($session{$uri.'?has_csr_commission'} eq 'N') and (1*$Company->csr_commission()) ) ;
 			}
 
 			foreach my $Order ( @{ $orders_by_company{$$Company{id}} } ) {
