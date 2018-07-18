@@ -35,7 +35,7 @@
 		( $session{'/employee/accounting/search.html?ddmEmployee'} ? ( salesrep_id => $session{'/employee/accounting/search.html?ddmEmployee'} ) : () ),
 		( $session{'/employee/accounting/search.html?dblTotal2'} ? ( 'value <='	=> $session{'/employee/accounting/search.html?dblTotal2'} ) : () ),
 		( $session{'/employee/accounting/search.html?dblTotal1'} ? ( 'value >='	=> $session{'/employee/accounting/search.html?dblTotal1'} ) : () ),
-		'owing null or >'	=>	0,
+		'owing is null or >'	=>	0,
 		order		=> $openprint::Order::fields{created_on},
 		) ];
 	} # end if
