@@ -1714,10 +1714,10 @@ sub customer_performance {
 	my $uri = $variable{uri};
 
 	_customer_performance();
-	ssi::setup_date_select( $uri, 'ordered_on_start', -31 );
-	ssi::setup_date_select( $uri, 'ordered_on_end', 0 );
-	ssi::setup_date_select( $uri, 'not_ordered_on_start', -31 );
-	ssi::setup_date_select( $uri, 'not_ordered_on_end', 0 );
+	#ssi::setup_date_select( $uri, 'ordered_on_start', -31 );
+	#ssi::setup_date_select( $uri, 'ordered_on_end', 0 );
+	#ssi::setup_date_select( $uri, 'not_ordered_on_start', -31 );
+	#ssi::setup_date_select( $uri, 'not_ordered_on_end', 0 );
 
 	if ( exists $param{Download} ) {
 
