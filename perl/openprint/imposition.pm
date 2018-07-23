@@ -240,7 +240,7 @@ sub calc_setup_object {
 			$openprint::log->debug("Proper grain Paper(".$Paper->grain_direction().") Press($press_grain)") if DEBUG;
 		} # end if
 	} elsif ( DEBUG ) {
-		$openprint::log->debug("No grain discretion. $$Paper{gsm}gsm");
+		$openprint::log->debug("No grain direction. $$Paper{gsm}gsm");
 	} # end if press_grain
 	if ( $run_style eq 'Perfecting' ) {
 		my $press_grain = $Press->specification('Perfecting Grain', $Paper->gsm() );
@@ -268,7 +268,7 @@ sub calc_setup_object {
 				$openprint::log->debug("Proper perfecting grain Paper(".$Paper->grain_direction().") Press($press_grain)") if DEBUG;
 			} # end if
 		} elsif ( DEBUG ) {
-			$openprint::log->debug("No perfecting grain discretion. $$Paper{gsm}");
+			$openprint::log->debug("No perfecting grain direction. $$Paper{gsm}");
 		} # end if press_grain
 	} # end if Perfecting
 
