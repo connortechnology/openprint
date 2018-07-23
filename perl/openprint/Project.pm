@@ -123,7 +123,9 @@ $serial = 'lngProjectIndex_seq';
 
 sub delete {
 	my $self = shift;
-	sql::update( undef, undef, $table, ['id=?', $$self{id}], ['strStatus', 'Deleted'] );
+	if ( !$self->save({ status=>'Deleted' }) ) {
+		$self->add_to_log( @openprint::session{'company_id','user_id'}, 'Deleted' );
+	}
 } # end sub delete
 
 sub deleted {
