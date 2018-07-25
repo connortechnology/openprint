@@ -5,11 +5,19 @@
 			<ul>
 				<li>
 					<label>Password</label>
-					<input type="text" name="EmailPassword" />
+					<input type="text" name="EmailPassword"
+					<? if ( $session{user_type} eq 'A' ) ?>
+					value="<? echo ( $$variable{Email}->password() ) ?>"
+					<? endif ( $session{user_type} eq 'A' ) ?>
+					/>
 				</li>
 				<li>
 					<label>Verify Password</label>
-					<input type="text" name="VerifyEmailPassword" />
+					<input type="text" name="VerifyEmailPassword"
+					<? if ( $session{user_type} eq 'A' ) ?>
+					value="<? echo ( $$variable{Email}->password() ) ?>"
+					<? endif ( $session{user_type} eq 'A' ) ?>
+					/>
 				</li>
 				<li>
 					<label>Forwards<br/>(One per line)</label>
