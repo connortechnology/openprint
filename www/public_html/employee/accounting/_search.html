@@ -35,7 +35,7 @@
 		( $session{'/employee/accounting/search.html?ddmEmployee'} ? ( salesrep_id => $session{'/employee/accounting/search.html?ddmEmployee'} ) : () ),
 		( $session{'/employee/accounting/search.html?dblTotal2'} ? ( 'value <='	=> $session{'/employee/accounting/search.html?dblTotal2'} ) : () ),
 		( $session{'/employee/accounting/search.html?dblTotal1'} ? ( 'value >='	=> $session{'/employee/accounting/search.html?dblTotal1'} ) : () ),
-		'owing >'	=>	0,
+		'owing is null or >'	=>	0,
 		order		=> $openprint::Order::fields{created_on},
 		) ];
 	} # end if
@@ -62,6 +62,7 @@
 		my $rowclass;
 		my $ac = sql::start_transaction( $dbh );
 		foreach my $Order ( @{$$variable{'Orders'}} ) {
+			next if ! $Order->owing();
 			$html .= sprintf(q`
 <tr%1$s> 
 	<td class="order_id"><a href="/employee/accounting/details.html?order_id=%2$d">%2$d</a></td>
