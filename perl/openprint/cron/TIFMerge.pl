@@ -107,17 +107,18 @@ if ( 0 ) {
 
 		$log->debug("Have base file $file");
 		my ( $docket, $file_base, $form, $side, $colour, $extension ) = $file =~ /^(\d+)(.*)\.(\d+)([AB])\.(\w)\.(TIF)$/i;
-		$log->warn("Base Parsed to $file_base, $form, Side: $side, $colour, $extension from $file") if $debug;
+		$log->warn("Base Parsed to $docket $file_base, $form, Side: $side, $colour, $extension from $file") if $debug;
 
 		foreach my $imprint_file ( @imprint_filenames ) {
 			next if $imprint_file =~ /^\./; 
 			next if -d $config{base_path}.'/'.$imprint_file;
 			next if $imprint_file eq "${file_base}M.$colour.TIF";
+			next if $imprint_file =~ /\.done$/;
 
-			if ( ( $imprint_file =~ /^$docket([_A-Za-z0-9]*)\.(\d+)$side\.$colour\.$extension$/ ) ) {
-				my ($base, $imprint_form ) = ( $1, $2 );
+			if ( ( $imprint_file =~ /^$docket([_A-Za-z0-9 ]*)\.(\d+)$side\.$colour(\.[^\.]+)?\.$extension$/ ) ) {
+				my ($base, $imprint_form, $extra ) = ( $1, $2, $3 );
 
-				my $dest_file = "$config{merged_path}/${docket}${base}.$imprint_form$side.$colour.M.TIF";
+				my $dest_file = "$config{merged_path}/${docket}${base}.$imprint_form$side.$colour$extra.M.TIF";
 				if ( -e $dest_file ) {
 					$log->debug("Skipping because $dest_file exists");
 					next;

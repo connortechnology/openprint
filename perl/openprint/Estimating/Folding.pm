@@ -351,6 +351,9 @@ sub has_overrides {
 			my $form = $$sig_specs{SignatureIndex};
 			push @v, "chkOverrideEquipment-$form-$qty_index" if $$specs{"chkOverrideEquipment-$form-$qty_index"};
 			push @v, "chkOverrideFold-$form-$qty_index" if $$specs{"chkOverrideFold-$form-$qty_index"};
+			foreach my $fold_index ( 1 .. 4 ) {
+				push @v, "OverrideRunspeed-$form-$qty_index-$fold_index" if $$specs{"OverrideRunspeed-$form-$qty_index-$fold_index"} and $$specs{"OverrideRunspeed-$form-$qty_index-$fold_index"} eq 'Y';
+			}
 		} # end foreach
 	} # end if
 
@@ -433,8 +436,8 @@ sub signature_calc {
 			MakeReadyTime			=>	0,
 	);
 	
-	if ( ! $$SignatureImposition{imposition} ) {
-		Carp::cluck( 'Invalid Imposition');
+	if ( !$$SignatureImposition{imposition} ) {
+		Carp::cluck('Invalid Imposition');
 		$results{Breakdown}	 = 'Invalid Signature passed to Folding';
 		return \%results;
 	} # end if
@@ -446,10 +449,10 @@ sub signature_calc {
 		return \%results;
 	} # end if
 
-	if ( ! ( $$sig_specs{txtFinalWidth} and $$sig_specs{txtFinalHeight} ) ) {
-$openprint::log->error("No finished width and height, cannot continue $$Project{id} $qty_index");
+	if ( !( $$sig_specs{txtFinalWidth} and $$sig_specs{txtFinalHeight} ) ) {
+		$openprint::log->error("No finished width and height, cannot continue $$Project{id} $qty_index");
 		# Does not need folding
-		$results{Breakdown}		= 'No finished width and height, cannot continue';
+		$results{Breakdown} = 'No finished width and height, cannot continue';
 		return \%results;
 	} # end if
 
@@ -475,7 +478,7 @@ $openprint::log->error("No finished width and height, cannot continue $$Project{
 	} # end if
 
 	my $perforating = 0;
-	$perforating = openprint::Estimating::Perforating::signature_has_perforation( $$calc_hash{PerforatingSpecs}, $sig_specs ) if $$calc_hash{PerforatingSpecs};
+	$perforating = openprint::Estimating::Perforating::signature_has_perforation($$calc_hash{PerforatingSpecs}, $sig_specs) if $$calc_hash{PerforatingSpecs};
 
 	my @my_equipment;
 
@@ -898,6 +901,7 @@ SET:		foreach my $Set_Of_Impositions ( @All_Impositions ) {
 					next;
 				} # end if
 				next if $$Set_Of_Impositions[0]{quantity} != 1;
+				next if $$Set_Of_Impositions[0]{pages} != $$SignatureImposition{pages};
 			} elsif ( $capable eq 'When Stitching' ) {
 				if ( scalar @$Set_Of_Impositions != 1 ) {
 					$openprint::log->debug("Sets of impos != 1 for $$Equipment{strid}") if DEBUG;
@@ -1429,7 +1433,7 @@ $openprint::log->debug("Resulting fold: " . $Fold->to_string() ) if DEBUG;
 				} # end if
 				my $width = $Imposition->layout_width();
 
-				$Breakdown .= sprintf( '%s: %d*%dout %s layout: %sx%s qty: %d StockWeight %.2fgsm calliper:%.4f<br/>', $$Fold{name}, $impo_qty, @$Imposition{'imposition','image_orientation', 'layout_width', 'layout_height'}, $run_qty, @$Paper{'gsm','calliper'} );
+				$Breakdown .= sprintf( '%s %s: %d*%dout %s layout: %sx%s qty: %d StockWeight %.2fgsm calliper:%.4f<br/>', @$Fold{'type','name'}, $impo_qty, @$Imposition{'imposition','image_orientation', 'layout_width', 'layout_height'}, $run_qty, @$Paper{'gsm','calliper'} );
 
 				my $total_MR = 0;
 				my %setupPrice = openprint::service::get_price_object( $Fold->type().'MakeReady', $imposition, $Equipment );

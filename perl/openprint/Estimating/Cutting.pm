@@ -89,6 +89,9 @@ sub has_overrides {
       push @v, map { $$specs{"$_-$form-$qty_index"} ? "$_-$form-$qty_index" : () } ( 'chkOverrideEquipment', 'chkOverrideStockCutEquipment', 'chkOverrideCalculatedCuts' );
     } # end foreach
   } # end foreach
+	foreach my $qty_index ( $Project->quantity_indexes() ) {
+		push @v, map { $$specs{"$_$qty_index"} ? "$_$qty_index" : () } ( 'OverridePrice' );
+	}
 
   return @v;
 

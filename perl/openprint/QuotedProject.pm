@@ -15,11 +15,11 @@ $debug = 0;
 $table = 'tbl_quote_details';
 $serial = 'tbl_quote_details_id_seq';
 %fields = (
-		id				=>	'id',
+		id						=>	'id',
 		quantity1			=>	'intquantity1',
 		quantity2			=>	'intquantity2',
 		quantity3			=>	'intquantity3',
-		markup1			=>	'dblmarkup1',
+		markup1				=>	'dblmarkup1',
 		markup2			=>	'dblmarkup2',
 		markup3			=>	'dblmarkup3',
 		price1			=>	'dblprice1',
@@ -36,33 +36,32 @@ $serial = 'tbl_quote_details_id_seq';
 );
 
 %transforms = (
-	
 );
 
 %defaults = (
-	'id'	=> undef,
-	'markup1'	=> undef,
-	'markup2'	=> undef,
-	'markup3'	=> undef,
-	'price1'	=> undef,
-	'price2'	=> undef,
-	'price3'	=> undef,
+	id			=> undef,
+	markup1	=> undef,
+	markup2	=> undef,
+	markup3	=> undef,
+	price1	=> undef,
+	price2	=> undef,
+	price3	=> undef,
 );
 
 sub template_id {
 	if ( @_ > 1 ) {
-		$_[0]{'template_id'} = $_[1];
+		$_[0]{template_id} = $_[1];
 	} # end if
-	if ( $_[0]{'template_id'} ) {
-		return $_[0]{'template_id'};
+	if ( $_[0]{template_id} ) {
+		return $_[0]{template_id};
 	} else {
 		return $_[0]->Project()->style_id();
 	} # end if
 } # end sub template_id
 
 sub Template {
-	if ( $_[0]{'template_id'} ) {
-		return new openprint::QuoteLevel( $_[0]{'template_id'} );
+	if ( $_[0]{template_id} ) {
+		return new openprint::QuoteLevel( $_[0]{template_id} );
 	} else {
 		return $_[0]->Project()->Template();
 	} # end if
@@ -84,14 +83,14 @@ sub markup {
 } # end sub total
 
 sub cost {
-    my ( $self, $qty_index, $new_value ) = @_;
-    if ( @_ == 3 ) {
-        $$self{'cost'.$qty_index} = $new_value;
-    } # end if
-    if ( ! (1*$$self{'cost'.$qty_index}) ) {
-        $$self{'cost'.$qty_index} = Math::Round::nearest( 0.01, $self->Project()->Currency()->convert_to( $self->Quote()->Currency(), $self->Project()->price($qty_index) ) );
-    } # end if
-    return $$self{'cost'.$qty_index};
+	my ( $self, $qty_index, $new_value ) = @_;
+	if ( @_ == 3 ) {
+		$$self{'cost'.$qty_index} = $new_value;
+	} # end if
+	if ( ! (1*$$self{'cost'.$qty_index}) ) {
+		$$self{'cost'.$qty_index} = Math::Round::nearest( 0.01, $self->Project()->Currency()->convert_to( $self->Quote()->Currency(), $self->Project()->price($qty_index) ) );
+	} # end if
+	return $$self{'cost'.$qty_index};
 } # end sub cost
 
 sub price {
@@ -107,20 +106,24 @@ sub price {
 
 sub quantity {
 	my ( $self, $qty_index, $new_value ) = @_;
-	if ( defined $new_value ) {
+	if ( @_ == 3 ) {
 		$$self{'quantity'.$qty_index} = $new_value;
 	} # end if
+	if ( ! $$self{'quantity'.$qty_index} ) {
+		$$self{'quantity'.$qty_index} = $self->Project()->quantity($qty_index);
+	}
 	return $$self{'quantity'.$qty_index};
 } # end sub total
+
 sub quantity_indexes {
 	my ( $self ) = @_;
-	if ( ! exists $$self{'quantity_indexes'} ) {
-		@{$$self{'quantity_indexes'}} = ();
+	if ( ! exists $$self{quantity_indexes} ) {
+		@{$$self{quantity_indexes}} = ();
 		foreach my $qty_index ( 1 .. 3 ) {
-			push @{$$self{'quantity_indexes'}}, $qty_index if $$self{"quantity$qty_index"};
+			push @{$$self{quantity_indexes}}, $qty_index if $self->quantity($qty_index);
 		} # end foreach qty_index
 	} # end if
-	return @{$$self{'quantity_indexes'}};
+	return @{$$self{quantity_indexes}};
 } # end sub quantity_indexes
 
 1;

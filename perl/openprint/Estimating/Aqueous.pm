@@ -295,7 +295,7 @@ sub signature_calc {
 
 	my @front_aq;
 	my %front_aq;
-	$$sig_specs{SideOneColours} = [openprint::Estimating::Printing::get_colours( $sig_specs, 'SideOne' )] if ! $$sig_specs{SideOneColours};
+	$$sig_specs{SideOneColours} = [openprint::Estimating::Printing::get_colours($sig_specs, 'SideOne')] if ! $$sig_specs{SideOneColours};
 	foreach ( @{$$sig_specs{SideOneColours}} ) {
 #$openprint::log->debug("blah  $$_{name}");
 		if ( $$_{name} =~ /Aqueous/ ) {
@@ -307,7 +307,7 @@ sub signature_calc {
 
 	my @back_aq;
 	my %back_aq;
-	$$sig_specs{SideTwoColours} = [openprint::Estimating::Printing::get_colours( $sig_specs, 'SideTwo' )] if ! $$sig_specs{SideTwoColours};
+	$$sig_specs{SideTwoColours} = [openprint::Estimating::Printing::get_colours($sig_specs, 'SideTwo')] if ! $$sig_specs{SideTwoColours};
 	foreach ( @{$$sig_specs{SideTwoColours}} ) {
 		if ( $$_{name} =~ /Aqueous/ ) {
 			push @back_aq, $_;
@@ -328,7 +328,13 @@ sub signature_calc {
 	# Should include overs
 	my $impressions = $$sig_specs{"hdnImpressionQuantity$qty_index"} ? $$sig_specs{"hdnImpressionQuantity$qty_index"} : $$specs{"txtQuantity$qty_index"};
 $openprint::log->debug("Impressions: " . $$sig_specs{"hdnImpressionQuantity$qty_index"} . " qty: " . $$specs{"txtQuantity$qty_index"} ) if DEBUG;
-	if ( $$Imposition{runstyle} eq 'Sheet Work' and @{$$sig_specs{SideTwoColours}} and @{$$sig_specs{SideOneColours}} ) {
+if ( 
+		@{$$sig_specs{SideTwoColours}} 
+		and 
+		@{$$sig_specs{SideOneColours}} 
+		and 
+		( $$Imposition{runstyle} eq 'Sheet Work' ) 
+	 ) {
 		$impressions /= 2;
 	}
 
