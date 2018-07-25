@@ -265,7 +265,7 @@ $log->debug("No a press proof: $$variable{ProofType} ");
 			} # end if
 			$html .= '</td><td class="docketText"> ';
 
-			$html .= openprint::Estimating::Printing::get_colour_description( $sig_specs ) . '<br/>';
+			$html .= openprint::Estimating::Printing::get_colour_description($Project, $sig_specs).'<br/>';
 			foreach my $edge ( 'Top','Bottom','Left','Right' ) {
 				if ( $$sig_specs{'Bleed'.$edge} ne $edge ) {
 					$html .= 'No ' . $edge . ' bleed<br/>';

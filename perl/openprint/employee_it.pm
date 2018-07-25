@@ -110,6 +110,13 @@ sub host {
 			return;
 		} # end if
 		%param = ();
+	} elsif ( $param{action} eq 'Undelete' ) {
+		$variable{error} .= $Host->undelete();
+		if ( ! $variable{error} ) {
+			$variable{ExternalRedirect} = '/employee/it/hosts.html';
+			return;
+		} # end if
+		%param = ();
 	} elsif ( $param{action} eq 'Destroy' ) {
 		$variable{error} .= $Host->destroy();
 		if ( ! $variable{error} ) {
@@ -140,7 +147,8 @@ sub host {
 			} else {
 				$variable{error} .= "Error running wakeonlan -i $$I{ip} $$I{mac}<br/>";
 			}
-		} # end foraech
+			$variable{ExternalRedirect} = $Host->url();
+		} # end foreach
 	} elsif ( $param{action} eq 'GEOLookup' ) {
 		foreach my $I ( $Host->interfaces() ) {
 			if ( ! $I->ip() ) {
