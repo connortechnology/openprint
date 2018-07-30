@@ -6771,39 +6771,50 @@ $log->error("Unknown units on Outside Wheel Slow Down ($$Slow_Down{units})");
 		$speed_mod = Math::Round::nearest( .001, $$std_speed{value} / $run_speed );
 		#$log->debug("1Press ".$$Press{strid}." Calliper: $$Paper{calliper} gsm: $$Paper{gsm} ($running_price) ($run_price{units}) STD: ($$std_speed{value}) RUN ($run_speed), mod: $speed_mod,	std/run: " . ( $speed_mod ? $run_speed/$speed_mod : $std_speed/$run_speed ) ) if DEBUG;
 	}
+	my $SheetLengthMarkup = $Press->Specification('SheetLengthMarkup',$$Paper{height});
+
 	foreach my $run_price ( @run_prices ) {
 		$$run_price{run_speed} = $run_speed;
 
-	if ( sets::isin( $$run_price{units}, ['per m','per 1000 impressions', 'per 1000'] ) ) {
-		if ( $speed_mod ) {
-			$$run_price{Price} *= $speed_mod;
-		} # end if
-#$log->warn(" ** FINAL	RUNNING PRICE $running_price **") if DEBUG or 1;
-		$$run_price{Total} = ($$run_price{Price} * $impressions)/1000;
-		$$run_price{MPrice} = $$run_price{Price};
-	} elsif ( $$run_price{units} eq 'per impression' ) {
-		if ( $speed_mod ) {
-			$$run_price{Price} *= $speed_mod;
-		} # end if
-#$log->warn(" ** FINAL	RUNNING PRICE $running_price **") if DEBUG or 1;
-		$$run_price{Total} = ($$run_price{Price} * $impressions);
-		$$run_price{MPrice} = $$run_price{Price} * 1000;
-
-	} elsif ( $$run_price{units} eq 'per hour' ) {
-		if ( $run_speed ) {
-			if ( int($run_speed) ) {
-	# In Minutes, not hours
-				$$run_price{RunHours} = $impressions / $run_speed;
-				$$run_price{RunTime} = int ( 60 * $impressions / $run_speed );
-			} else {
-				$log->error(" Bogus value for runspeed: $run_speed in get_run_price on $$Press{strid}");
+		if ( sets::isin( $$run_price{units}, ['per m','per 1000 impressions', 'per 1000'] ) ) {
+			if ( $speed_mod ) {
+				$$run_price{Price} *= $speed_mod;
 			} # end if
+#$log->warn(" ** FINAL	RUNNING PRICE $running_price **") if DEBUG or 1;
+			$$run_price{Total} = ($$run_price{Price} * $impressions)/1000;
+			$$run_price{MPrice} = $$run_price{Price};
+		} elsif ( $$run_price{units} eq 'per impression' ) {
+			if ( $speed_mod ) {
+				$$run_price{Price} *= $speed_mod;
+			} # end if
+#$log->warn(" ** FINAL	RUNNING PRICE $running_price **") if DEBUG or 1;
+			$$run_price{Total} = ($$run_price{Price} * $impressions);
+			$$run_price{MPrice} = $$run_price{Price} * 1000;
+
+		} elsif ( $$run_price{units} eq 'per hour' ) {
+			if ( $run_speed ) {
+				if ( int($run_speed) ) {
+# In Minutes, not hours
+					$$run_price{RunHours} = $impressions / $run_speed;
+					$$run_price{RunTime} = int ( 60 * $impressions / $run_speed );
+				} else {
+					$log->error(" Bogus value for runspeed: $run_speed in get_run_price on $$Press{strid}");
+				} # end if
+			} # end if
+			$$run_price{Total} = $$run_price{Price} * $$run_price{RunHours};
+			$$run_price{MPrice} = ( $$run_price{Total} / $impressions ) * 1000;
+		} else {
+			$log->warn("Unknown Units for $$Imposition{runstyle} ($side_one_colours/$side_two_colours) $impression_service: ($impressions imps) ($$run_price{units}) on " . $$Press{strid} );
 		} # end if
-		$$run_price{Total} = $$run_price{Price} * $$run_price{RunHours};
-		$$run_price{MPrice} = ( $$run_price{Total} / $impressions ) * 1000;
-	} else {
-		$log->warn("Unknown Units for $$Imposition{runstyle} ($side_one_colours/$side_two_colours) $impression_service: ($impressions imps) ($$run_price{units}) on " . $$Press{strid} );
-	} # end if
+		if ( $SheetLengthMarkup ) {
+			if ( $$SheetLengthMarkup{units} eq 'Percent' ) {
+				$$run_price{Price} *= 1 + ($$SheetLengthMarkup{value}/100);
+				$$run_price{MPrice} *= 1 + ($$SheetLengthMarkup{value}/100);
+				$$run_price{Total} *= 1 + ($$SheetLengthMarkup{value}/100);
+			} else {
+				$log->debug("Unknown units for SheetLengthMarkup for $$Paper{height}");
+			}
+		}
 	} # end foreach run_price
 #$log->debug("Impresion price: $run_price{Cost} $run_price{units} = $run_price{Price}");
 	return \@run_prices;
