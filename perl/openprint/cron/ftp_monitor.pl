@@ -505,11 +505,9 @@ sub send_email {
 	my $company_name;
 	if ( $Company ) {
 		$company_name = $Company->name();
-		#$company_name =~ s/ /_/g;
 	} # end if
 
 	my $project_files_path = $config{file_path};
-	#$project_files_path =~ s/ /_/g;
 
 	foreach my $upload ( @uploads ) {
 		my $file = $upload->{file};
@@ -520,9 +518,14 @@ $log->debug("Processing upload $file");
 		$$upload{file_str} = $file_str;
 		$$upload{company_name} = $company_name;
 
-		my $regexp = $project_files_path.'/'.$company_name.'/(.+)';
+		my $regexp = "^$project_files_path/$company_name/(.+)$";
 $log->debug("regexp: $regexp");
-		@$upload{proper_file_path} = $file =~ /^$regexp$/;
+		@$upload{proper_file_path} = $file =~ /$regexp/;
+		if ( ! $$upload{proper_file_path} ) {
+			$log->debug("Trying a more generic regexp");
+			$regexp = "^(.*)/$company_name/(.+)$";
+			@$upload{proper_file_path} = $file =~ /$regexp/;
+		}
 		$$upload{proper_file_path} = $$upload{file_str} if ! $$upload{proper_file_path};
 
 		#if ( ! $company_name ) {
