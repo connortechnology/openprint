@@ -299,10 +299,10 @@ $log->debug("data: $client $remote_user $user_name $curr_time $xfer_type $path $
 				my $curr_time = $4;
 				my $dir = $5;
 				my $path = $6;
-				my $command = $7;
-				my $response_code = $8;
-				my $nbytes = $9;
-				my $xfer_nsecs = $10;
+				my $command = defined $7 ? $7 : '';
+				my $response_code = defined $8 ? $8 : '';
+				my $nbytes = defined $9 ? $9 : '';
+				my $xfer_nsecs = defined $10 ? $10 : '';
 				$log->debug("Got IQFormat extended line: $line");
 				$log->debug("data: $client $remote_user $user_name $curr_time $dir $path $command $response_code($codes{$response_code}) $nbytes");
 				if ( $response_code == 331 ) {
@@ -320,7 +320,8 @@ $log->debug("data: $client $remote_user $user_name $curr_time $xfer_type $path $
 					(new openprint::Log())->save({Object=>$User, action=>'Login', note=>'Successful FTP Login' } );
 					next;
 				} elsif ( $response_code == 257 ) {
-					
+					$log->debug("Path Created, ignoring");	
+					next;
 				} elsif ( $nbytes eq '-' ) {
 					$log->debug("Not an upload, ignoring");
 					next;
@@ -644,7 +645,7 @@ $log->debug("regexp: $regexp");
 					FROM    => ( $config{AdministratorEmail} ? $config{AdministratorEmail} : $from ),
 					'Reply-To'	=>	$from,
 					TO      => \@to,
-#BCC		=>	'iconnor@connortechnology.com',
+BCC		=>	'iconnor@connortechnology.com',
 					SUBJECT => $subject,
 					ATTACHMENTS => [ '', MIME::QuotedPrint::encode_qp(Encode::encode('utf-8',$body)), 'text/html', 'quoted-printable' ]
 				);
