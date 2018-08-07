@@ -54,8 +54,11 @@ if ($opts->{help}) {
 
 my %codes = (
 	200	=> 'Command okay',
+	212	=>	'Directory status',
 	213	=>	'File status',
+	215	=>	'NAME system type',
 	221	=>	'Service closing control connection',
+	230	=>	'User logged in',
 	257	=>	'Path created',
 );
 my %defaults = (
