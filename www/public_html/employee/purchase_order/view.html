@@ -58,9 +58,11 @@
 			</div>
 			<div class="PageTitle">
 				<h1>PURCHASE ORDER</h1><br/>
+				<span class="po">
 				P.O. # [ <? echo ( $$variable{PurchaseOrder}->link_to() ) ?> ]
-<? echo ( $$variable{PurchaseOrder}->is_FSC() ? 'FSC' : '' ) ?>
-<? echo ( $$variable{PurchaseOrder}->is_PEFC() ? 'PEFC' : '' ) ?>
+				<? echo ( $$variable{PurchaseOrder}->is_FSC() ? 'FSC' : '' ) ?>
+				<? echo ( $$variable{PurchaseOrder}->is_PEFC() ? 'PEFC' : '' ) ?>
+				</span>
 				<br/>
 				Date <? echo ( format_date( $$variable{PurchaseOrder}->created_on() ); ) ?><br/>
 <? if ( $$variable{PurchaseOrder}->manifest_id() ) ?>
