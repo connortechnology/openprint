@@ -58,9 +58,16 @@ $serial = 'payments_id_seq';
 sub save {
 	$_[0]->set( $_[1] ) if $_[1];
 	$_[0]->remaining(undef);
-    my $error = $_[0]->SUPER::save( );
-	if ( (! $error) and $_[0]{order_id} ) {
-		#$_[0]->Order()->paid(undef);
+  my $error = $_[0]->SUPER::save( );
+	if ( (!$error) and $_[0]{order_id} ) {
+# Should check to see who is calling us and don't call Order->save if it's from Order->pay
+# I put this back so that order paid status's update. 2018-08-07
+		my $Order = $_[0]->Order();
+
+		# Don't need to clear Payments and paid because those are done in Order->save
+		#$Order->Payments(undef);
+		#$Order->paid(undef);
+		$error .= $Order->save();
 	} # end if
 	return $error;
 } # end sub save

@@ -1528,15 +1528,15 @@ if ( DEBUG_IMPOSITIONS and $$specs{"chkOverrideRunStyle$qty_index"} ) {
 			if ( DEBUG_IMPOSITIONS and $$Overrides{"chkOverrideSheetSize$qty_index"} and $$specs{"ddmStockSheetSize$qty_index"} ) {
 
 				my ( $width, $height ) = split('x', $$specs{"ddmStockSheetSize$qty_index"} );
-	$log->debug("$width x $height");
-				if ( $width and ( $width != $Paper->width() ) ) {
-	$log->debug("Skipping cuz not $width");
+				if ( $width and ( $width != $$Paper{width} ) ) {
+	$log->debug("Skipping cuz not desired width: $$Paper{width}x$$Paper{height} != $width");
 					next;
 				} 
-				if ( $height and ( $height != $Paper->height() ) ) {
-	$log->debug("Skipping cuz not $height");
+				if ( $height and ( $height != $$Paper{height} ) ) {
+	$log->debug("Skipping cuz not desired height $$Paper{width}x$$Paper{height} != $height");
 					next;
 				} 
+				$log->debug("Have acceptable sheet $width x $height");
 			} 
 
 			if ( $$specs{Group} ) {
@@ -1560,7 +1560,7 @@ if ( DEBUG_IMPOSITIONS and $$specs{"chkOverrideRunStyle$qty_index"} ) {
 			my @imps;
 			if ( ! $feeds{$$Paper{type}} ) {
 				if ( DEBUG_IMPOSITIONS ) {
-					$log->debug("Not in feeds: " . $Paper->to_string() . ' on ' . $Press->strid() );
+					$log->debug("Not in feeds: " . $Paper->to_string() . ' on ' . $$Press{strid} );
 				} # end if
 				next;
 			} # end if
@@ -1663,12 +1663,12 @@ if ( DEBUG_INITIAL_FILTERING and $$AP{width} == 35 ) {
 				} else {
 					my @temp_imps = openprint::imposition::get_imposition( $project, $do_work_turn, $do_perfecting, $$specs{Versions}, $P, $Press );
 					push @i, @temp_imps;
-if ( DEBUG_IMPOSITIONS ) {
-$log->error("Got " . @temp_imps . " for " . $P->to_string() );
-foreach my$i( @temp_imps ) {
-$i->display( 'Returned from get_imposition' );
-}
-}
+					if ( DEBUG_IMPOSITIONS ) {
+						$log->error("Got " . @temp_imps . " for " . $P->to_string() );
+						foreach my$i( @temp_imps ) {
+							$i->display( 'Returned from get_imposition' );
+						}
+					}
 				} # end if
 				if ( $$P{start_width} ) {
 					push @imps, @i;
@@ -1765,17 +1765,17 @@ $log->debug("Cutting to " . $P->to_string() ) if DEBUG_IMPOSITIONS;
 								( $P->width() >= $$specs{txtWidth} and $P->height() >= $$specs{txtHeight} ) 
 								or ( $P->height() >= $$specs{txtWidth} and $P->width() >= $$specs{txtHeight} ) 
 							) ) {
-$log->debug("Next paper because it's too small for the item" . $P->width() . 'x' . $P->height() . ' => ' . $$specs{txtWidth} . 'x' . $$specs{txtHeight} ) if DEBUG;
+						$log->debug("Next paper because it's too small for the item" . $P->width() . 'x' . $P->height() . ' => ' . $$specs{txtWidth} . 'x' . $$specs{txtHeight} ) if DEBUG;
 						last;
 					} # end if
 
 					my @i = openprint::imposition::get_imposition( $project, $do_work_turn, $do_perfecting, $$specs{Versions}, $P, $Press );
-if ( DEBUG_IMPOSITIONS ) {
-$log->error("Got " . @i . " impositions on $$Press{strid} " . $P->to_string() );
-foreach my $i ( @i ) {
-$i->display("initial for $$Press{strid}");
-}
-}
+					if ( DEBUG_IMPOSITIONS ) {
+						$log->error("Got " . @i . " impositions on $$Press{strid} " . $P->to_string() );
+						foreach my $i ( @i ) {
+							$i->display("initial for $$Press{strid}");
+						}
+					}
 					last if ! @i;
 					push @imps, @i;
 					foreach my $i ( @i ) {
@@ -1803,25 +1803,25 @@ $i->display("initial for $$Press{strid}");
 						} # end if
 						my $add = 1;
 						my $Aarea = $$i{Paper}->area();
-	if ( DEBUG_INITIAL_FILTERING ) {
-	$i->display("STARTING A");
-	}
+						if ( DEBUG_INITIAL_FILTERING ) {
+							$i->display("STARTING A");
+						}
 						if ( $$Overrides{"chkOverrideSheetSize$qty_index"} or $$Overrides{"OverrideCutOff$qty_index"} ) {
 						} else {
 							for ( my $imp_index = 0; $imp_index < @{$imps{$key}}; $imp_index += 1 ) {
 								my $B = $imps{$key}[$imp_index];
 								my $Barea = $$B{Paper}->area();
 								if ( $Aarea < $Barea ) {
-	if ( DEBUG_INITIAL_FILTERING ) {
-	$B->display("DROPPING B");
-	$i->display("KEEPPING A");
-	}
+									if ( DEBUG_INITIAL_FILTERING ) {
+										$B->display("DROPPING B");
+										$i->display("KEEPPING A");
+									}
 									splice @{$imps{$key}}, $imp_index, 1;
 									$imp_index -= 1;
 								} elsif ( $Aarea > $Barea ) {
-	if ( DEBUG_INITIAL_FILTERING ) {
-	$i->display("NOT ADDING");
-	}
+									if ( DEBUG_INITIAL_FILTERING ) {
+										$i->display("NOT ADDING");
+									}
 									$add = 0;
 									last;
 								} # end if
@@ -6771,39 +6771,60 @@ $log->error("Unknown units on Outside Wheel Slow Down ($$Slow_Down{units})");
 		$speed_mod = Math::Round::nearest( .001, $$std_speed{value} / $run_speed );
 		#$log->debug("1Press ".$$Press{strid}." Calliper: $$Paper{calliper} gsm: $$Paper{gsm} ($running_price) ($run_price{units}) STD: ($$std_speed{value}) RUN ($run_speed), mod: $speed_mod,	std/run: " . ( $speed_mod ? $run_speed/$speed_mod : $std_speed/$run_speed ) ) if DEBUG;
 	}
+	my $SheetLengthMarkup = $Press->Specification('SheetLengthMarkup',$$Paper{height});
+	my $SheetWidthMarkup = $Press->Specification('SheetWidthMarkup',$$Paper{width});
+
 	foreach my $run_price ( @run_prices ) {
 		$$run_price{run_speed} = $run_speed;
 
-	if ( sets::isin( $$run_price{units}, ['per m','per 1000 impressions', 'per 1000'] ) ) {
-		if ( $speed_mod ) {
-			$$run_price{Price} *= $speed_mod;
-		} # end if
-#$log->warn(" ** FINAL	RUNNING PRICE $running_price **") if DEBUG or 1;
-		$$run_price{Total} = ($$run_price{Price} * $impressions)/1000;
-		$$run_price{MPrice} = $$run_price{Price};
-	} elsif ( $$run_price{units} eq 'per impression' ) {
-		if ( $speed_mod ) {
-			$$run_price{Price} *= $speed_mod;
-		} # end if
-#$log->warn(" ** FINAL	RUNNING PRICE $running_price **") if DEBUG or 1;
-		$$run_price{Total} = ($$run_price{Price} * $impressions);
-		$$run_price{MPrice} = $$run_price{Price} * 1000;
-
-	} elsif ( $$run_price{units} eq 'per hour' ) {
-		if ( $run_speed ) {
-			if ( int($run_speed) ) {
-	# In Minutes, not hours
-				$$run_price{RunHours} = $impressions / $run_speed;
-				$$run_price{RunTime} = int ( 60 * $impressions / $run_speed );
-			} else {
-				$log->error(" Bogus value for runspeed: $run_speed in get_run_price on $$Press{strid}");
+		if ( sets::isin( $$run_price{units}, ['per m','per 1000 impressions', 'per 1000'] ) ) {
+			if ( $speed_mod ) {
+				$$run_price{Price} *= $speed_mod;
 			} # end if
+#$log->warn(" ** FINAL	RUNNING PRICE $running_price **") if DEBUG or 1;
+			$$run_price{Total} = ($$run_price{Price} * $impressions)/1000;
+			$$run_price{MPrice} = $$run_price{Price};
+		} elsif ( $$run_price{units} eq 'per impression' ) {
+			if ( $speed_mod ) {
+				$$run_price{Price} *= $speed_mod;
+			} # end if
+#$log->warn(" ** FINAL	RUNNING PRICE $running_price **") if DEBUG or 1;
+			$$run_price{Total} = ($$run_price{Price} * $impressions);
+			$$run_price{MPrice} = $$run_price{Price} * 1000;
+
+		} elsif ( $$run_price{units} eq 'per hour' ) {
+			if ( $run_speed ) {
+				if ( int($run_speed) ) {
+# In Minutes, not hours
+					$$run_price{RunHours} = $impressions / $run_speed;
+					$$run_price{RunTime} = int ( 60 * $impressions / $run_speed );
+				} else {
+					$log->error(" Bogus value for runspeed: $run_speed in get_run_price on $$Press{strid}");
+				} # end if
+			} # end if
+			$$run_price{Total} = $$run_price{Price} * $$run_price{RunHours};
+			$$run_price{MPrice} = ( $$run_price{Total} / $impressions ) * 1000;
+		} else {
+			$log->warn("Unknown Units for $$Imposition{runstyle} ($side_one_colours/$side_two_colours) $impression_service: ($impressions imps) ($$run_price{units}) on " . $$Press{strid} );
 		} # end if
-		$$run_price{Total} = $$run_price{Price} * $$run_price{RunHours};
-		$$run_price{MPrice} = ( $$run_price{Total} / $impressions ) * 1000;
-	} else {
-		$log->warn("Unknown Units for $$Imposition{runstyle} ($side_one_colours/$side_two_colours) $impression_service: ($impressions imps) ($$run_price{units}) on " . $$Press{strid} );
-	} # end if
+		if ( $SheetLengthMarkup ) {
+			if ( $$SheetLengthMarkup{units} eq 'Percent' ) {
+				$$run_price{Price} *= 1 + ($$SheetLengthMarkup{value}/100);
+				$$run_price{MPrice} *= 1 + ($$SheetLengthMarkup{value}/100);
+				$$run_price{Total} *= 1 + ($$SheetLengthMarkup{value}/100);
+			} else {
+				$log->debug("Unknown units for SheetLengthMarkup for $$Paper{height}");
+			}
+		}
+		if ( $SheetWidthMarkup ) {
+			if ( $$SheetWidthMarkup{units} eq 'Percent' ) {
+				$$run_price{Price} *= 1 + ($$SheetWidthMarkup{value}/100);
+				$$run_price{MPrice} *= 1 + ($$SheetWidthMarkup{value}/100);
+				$$run_price{Total} *= 1 + ($$SheetWidthMarkup{value}/100);
+			} else {
+				$log->debug("Unknown units for SheetWidthMarkup for $$Paper{width}");
+			}
+		}
 	} # end foreach run_price
 #$log->debug("Impresion price: $run_price{Cost} $run_price{units} = $run_price{Price}");
 	return \@run_prices;

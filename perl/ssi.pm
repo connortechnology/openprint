@@ -826,10 +826,15 @@ sub checkboxes {
 
 	while ( my ( $value, $label ) = splice @{$values}, 0, 2 ) {
 		$html .= $container[0] if @container;
-		$html .= sprintf(q`<input type="checkbox" name="%1$s" value="%2$s" id="%3$s%2$s" %4$s%5$s />`,
+		$html .= sprintf('<input type="checkbox" name="%1$s" value="%2$s" id="%3$s%2$s" %4$s%5$s/>',
 				$name, $value, $id, checked( sets::isin( $value, $selected ) ), $onclick ? ' onclick="'.$onclick.'"' : '' );
 		if ( $label ) {
-			$html .= sprintf(q`<label class="radio" for="%1$s%2$s">%3$s</label>`, $id, $value, $label );
+			$html .= sprintf(
+'
+<label class="radio" for="%1$s%2$s">
+%3$s
+</label>
+', $id, $value, $label );
 		} # end if
 		$html .= $container[1] if @container;
 	} # end foreach value

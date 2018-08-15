@@ -215,7 +215,14 @@ sub calc_setup_object {
 	if ( my $Stock_Setting = $Press->Stock_Setting( $Paper ) ) {
 		$press_grain = $Stock_Setting->grain();
 	} else {
-		$press_grain = $Press->specification('Grain', $Paper->gsm());
+		$press_grain = $Press->Specification('Grain');
+		if ( $$press_grain{units} eq 'gsm' ) {
+			$press_grain = $Press->Specification('Grain', $Paper->gsm());
+		} elsif ( $$press_grain{units} eq 'calliper' ) {
+			$press_grain = $Press->Specification('Grain', $Paper->calliper());
+		} else {
+			$press_grain = $$press_grain{value};
+		}
 	} # end if
 #$openprint::log->debug("Grains: $grain_direction, Press: $press_grain, Paper: ". $Paper->grain_direction() . ', paper->long: ' . $Paper->long() );
 	if ( $press_grain and $press_grain ne 'Both' ) {

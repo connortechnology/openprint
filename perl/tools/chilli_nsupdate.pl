@@ -23,8 +23,8 @@ GetOptions($opts, 'help',
     'db_name=s', 'db_host=s', 'db_user=s', 'db_pass=s','log_level=s','config=s',
  );
 if ($$opts{help}) {
-    usage();
-    exit 0;
+	usage();
+	exit 0;
 }
 my %defaults = (
     config  =>  "/etc/openprint/$program.conf",
@@ -109,7 +109,7 @@ if ( @Interfaces ) {
 				$log->debug("IP unchanged ($ENV{'FRAMED_IP_ADDRESS'} for $$Interface{mac}");
 			} # end if
 		} else {
-			$log->debug("IP not changed because dhcp not set for mac $ENV{'CALLING_STATION_ID'} $ENV{'FRAMED_IP_ADDRESS'}");
+			$log->debug("IP not changed because dhcp not set for mac $ENV{'CALLING_STATION_ID'} $ENV{'FRAMED_IP_ADDRESS'}" . $Interface->to_string() );
 		} # end if Host->dhcp
 	} # end foreach Inteface
 } else {

@@ -791,7 +791,7 @@ SET:		foreach my $Set_Of_Impositions ( @All_Impositions ) {
 			push @New_All_Impositions, $Set_Of_Impositions;
 		} # end foreach Set
 		if ( ! @New_All_Impositions ) {
-			$openprint::log->error("Didn't find any matching folds for the override");
+			#$openprint::log->error("Didn't find any matching folds for the override");
 			$$specs{alert} .= "Didn't find any matching folds for the override<br/>";
 			$results{Status} = 'uncalculated';
 			return;
