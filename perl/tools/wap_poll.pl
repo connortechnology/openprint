@@ -155,41 +155,54 @@ $openprint::log->debug("Header $k => $$headers{$k}");
 					}
 				}
 
-$log->debug("content: " . $response->content() );
+        $log->debug("content: " . $response->content() );
+
 				my $json = decode_json( $response->content() );
 				if ( $$json{wifinets} and @{$$json{wifinets}} ) {
 					foreach my $wifinet ( @{$$json{wifinets}} ) {
 						if ( $$wifinet{networks} and @{$$wifinet{networks}} ) {
 							foreach my $network ( @{$$wifinet{networks}} ) {
-								if ( $$network{assoclist} ) {
-									$log->debug( 'assoclist' . Dumper( $network ) );
+                my $assoclist;
+                my @macs;
 
-									my $wap_HI = $HI;
-# Older luci's didn't populate this sometimes? We are hitting the wap using one mac... but the network may have a different maac because it has multiple radios
-if ( $$network{bssid} ) {
-									if ( $$HI{mac} ne $$network{bssid} ) {
-										$log->debug( "HI{mac} $$HI{mac} ne network{bssid} $$network{bssid}");
-										$wap_HI = openprint::Host_Interface->find_one( mac=>$$network{bssid} );
-										if ( ! $wap_HI ) {
-											$wap_HI = new openprint::Host_Interface();
-											$wap_HI->save({mac=>$$network{bssid}, host_id=>$$Host{id} });
-										} # end if
-									}
-}else{
-$log->debug("No bssid");
-}
-									my @macs;
+                if ( ! $$network{assoclist} ) {
+									$log->error( 'No assoclist' . Dumper( $network ) );
+                  $url = $protocol.'://'.$$HI{ip}.$$headers{location}.'/admin/network/wireless_assoclist';
+$log->debug("Getting assoclist from $url");
+                  my $wireless_assoclist_response = $browser->get($url);
+                  $log->debug( 'assoclist' . $wireless_assoclist_response->content());
+                  $assoclist = decode_json( $wireless_assoclist_response->content() );
+                  $log->debug( 'assoclist' . Dumper( $assoclist ) );
+                  next if ! $assoclist;
+                  @macs = map { $$_{bssid} } @{$assoclist};
+                } else {
+                  $assoclist = $$network{assoclist};
+                  if ( ref $assoclist eq 'ARRAY' ) {
+                    @macs = @{$assoclist};
+                  } elsif ( ref $assoclist eq 'HASH' ) {
+                    @macs = keys %{$assoclist};
+                  }
+                }
 
-									if ( ref $$network{assoclist} eq 'ARRAY' ) {
-										@macs = @{$$network{assoclist}};
-									} elsif ( ref $$network{assoclist} eq 'HASH' ) {
-										@macs = keys %{$$network{assoclist}};
-									}
-									update_connections( $wap_HI, @macs );
+                $log->debug( 'assoclist' . Dumper( $network ) );
 
-								} else {
-									$log->debug( 'No assoclist' . Dumper( $network ) );
-								} # end fi assocllist
+                my $wap_HI = $HI;
+                # Older luci's didn't populate this sometimes? We are hitting the wap using one mac... but the network may have a different maac because it has multiple radios
+                if ( $$network{bssid} ) {
+                  if ( $$HI{mac} ne lc $$network{bssid} ) {
+                    $log->debug( "HI{mac} $$HI{mac} ne network{bssid} $$network{bssid}");
+                    $wap_HI = openprint::Host_Interface->find_one( mac=>$$network{bssid} );
+                    if ( ! $wap_HI ) {
+                      $wap_HI = new openprint::Host_Interface();
+                      $wap_HI->save({mac=>$$network{bssid}, host_id=>$$Host{id} });
+                    } # end if
+                  }
+                } else {
+                  $log->debug("No bssid");
+                }
+
+                update_connections( $wap_HI, @macs );
+
 
 							} # end ofreach network
 						} else {
