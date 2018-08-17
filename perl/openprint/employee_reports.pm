@@ -1711,32 +1711,28 @@ sub _job_size {
 } # end sub _job_size
 
 sub customer_performance {
-	ssi::save_params('/employee/reports/customer_performance.html', 
-			'ordered_on_start_year','ordered_on_start_month','ordered_on_start_day',
-			'ordered_on_end_year','ordered_on_end_month','ordered_on_end_day', 
-			'not_ordered_on_start_year','not_ordered_on_start_month','not_ordered_on_start_day',
-			'not_ordered_on_end_year','not_ordered_on_end_month','not_ordered_on_end_day', 
-			'salesrep_id','payment_cycle', 'country' );
-	ssi::setup_date_select( '/employee/reports/customer_performance.html', 'ordered_on_start', -31 );
-	ssi::setup_date_select( '/employee/reports/customer_performance.html', 'ordered_on_end', 0 );
-	ssi::setup_date_select( '/employee/reports/customer_performance.html', 'not_ordered_on_start', -31 );
-	ssi::setup_date_select( '/employee/reports/customer_performance.html', 'not_ordered_on_end', 0 );
-	
+	my $uri = $variable{uri};
+
+	_customer_performance();
+	#ssi::setup_date_select( $uri, 'ordered_on_start', -31 );
+	#ssi::setup_date_select( $uri, 'ordered_on_end', 0 );
+	#ssi::setup_date_select( $uri, 'not_ordered_on_start', -31 );
+	#ssi::setup_date_select( $uri, 'not_ordered_on_end', 0 );
 
 	if ( exists $param{Download} ) {
 
 		my $do_not_ordered_since = 1 if Date::Calc::check_date( @session{
-							'/employee/reports/customer_performance.html?not_ordered_on_start_year',
-							'/employee/reports/customer_performance.html?not_ordered_on_start_month',
-							'/employee/reports/customer_performance.html?not_ordered_on_start_day'
+							$uri.'?not_ordered_on_start_year',
+							$uri.'?not_ordered_on_start_month',
+							$uri.'?not_ordered_on_start_day'
 							} ) or Date::Calc::check_date( @session{
-								'/employee/reports/customer_performance.html?not_ordered_on_end_year',
-								'/employee/reports/customer_performance.html?not_ordered_on_end_month',
-								'/employee/reports/customer_performance.html?not_ordered_on_end_day'
+								$uri.'?not_ordered_on_end_year',
+								$uri.'?not_ordered_on_end_month',
+								$uri.'?not_ordered_on_end_day'
 								} );
 		my @status_ids = map { $$_{id} } openprint::Order_Status->find(name=>['Complete','Picked Up', 'Shipped','Waiting For QA Approval', 'Waiting For Customer Approval','Order Submitted','In Production','Waiting For Pickup','Re-Opened','Pending Deposit','Paid','Complete' ]);
 
-		my @header = ( 'CSR', 'Company Name', 'Country', 'Contact Name','Contact Phone','Contact Email', '# of Orders', 'Order Value', 'Date of Last Order', 'Payment Cycle' );
+		my @header = ( 'CSR', 'Company Name', 'Country', 'Contact Name','Contact Phone','Contact Email', '# of Orders', 'Order Value', 'Date of Last Order', 'Payment Cycle', 'Discount/Markup' ,'Credit Card Fee','CSR Commission');
 		my @data;
 		my @csr_ids;
 		if ( ( $session{user_type} ne 'A' ) and ! openprint::usergroup::is_user_in( ['Sales Admin','Reporting'], $session{user_id} ) ) {
@@ -1751,8 +1747,8 @@ sub customer_performance {
 
 		{
 			my @Orders = openprint::Order->find( 
-					ssi::date_filter( '/employee/reports/customer_performance.html?ordered_on_start', 'created_on >=' ),
-					ssi::date_filter( '/employee/reports/customer_performance.html?ordered_on_end', 'created_on <=' ),
+					ssi::date_filter( $uri.'?ordered_on_start', 'created_on >=' ),
+					ssi::date_filter( $uri.'?ordered_on_end', 'created_on <=' ),
 					status_id => \@status_ids,
 					);
 			foreach my $Order ( @Orders ) {
@@ -1762,8 +1758,8 @@ sub customer_performance {
 		}
 		my %not_ordered_since;
 		my @Orders_Since = openprint::Order->find(
-				ssi::date_filter( '/employee/reports/customer_performance.html?not_ordered_on_start', 'created_on >=' ),
-				ssi::date_filter( '/employee/reports/customer_performance.html?not_ordered_on_end', 'created_on <=' ),
+				ssi::date_filter( $uri.'?not_ordered_on_start', 'created_on >=' ),
+				ssi::date_filter( $uri.'?not_ordered_on_end', 'created_on <=' ),
 				status_id => \@status_ids,
 				);
 		foreach my $Order ( @Orders_Since ) {
@@ -1774,24 +1770,29 @@ sub customer_performance {
 			my $CSR = new openprint::User( $csr_id );
 
 			foreach my $Company ( openprint::Company->find( salesrep_id=>$csr_id, order=>'lower(name)',
-						( $session{'/employee/reports/customer_performance.html?country'} ? ( country=>$session{'/employee/reports/customer_performance.html?country'} ) : () ),
+						( $session{$uri.'?country'} ? ( country=>$session{'/employee/reports/customer_performance.html?country'} ) : () ),
 						) ) {
 				my $order_total;
 				my $payment_cycle;
 
 				next if ! $orders_by_company{$$Company{id}} and ( Date::Calc::check_date( @session{
-                            '/employee/reports/customer_performance.html?ordered_on_start_year',
-                            '/employee/reports/customer_performance.html?ordered_on_start_month',
-                            '/employee/reports/customer_performance.html?ordered_on_start_day'
+                            $uri.'?ordered_on_start_year',
+                            $uri.'?ordered_on_start_month',
+                            $uri.'?ordered_on_start_day'
                             } ) or Date::Calc::check_date( @session{
-                            '/employee/reports/customer_performance.html?ordered_on_end_year',
-                            '/employee/reports/customer_performance.html?ordered_on_end_month',
-                            '/employee/reports/customer_performance.html?ordered_on_end_day'
+                            $uri.'?ordered_on_end_year',
+                            $uri.'?ordered_on_end_month',
+                            $uri.'?ordered_on_end_day'
                             } ) );
 
 				if ( $do_not_ordered_since ) {
 					next if $not_ordered_since{$$Company{id}};
 				} # end if
+
+				if ( $session{$uri.'?has_discount'} ne '' ) {
+					next if $session{$uri.'?has_discount'} eq 'Y' and ! $Company->discount();
+					next if $session{$uri.'?has_discount'} eq 'N' and $Company->discount();
+				}
 
 				foreach my $Order ( @{ $orders_by_company{$$Company{id}} } ) {
 					$order_total += $Order->Currency()->convert_from( $Order->total() );
@@ -1819,19 +1820,24 @@ sub customer_performance {
 						openprint::Currency::format( $order_total ),
 						( $LastOrder ? ssi::format_csv_date($LastOrder->created_on()) : 'never' ),
 						$payment_cycle . ' days',
+						$Company->discount(),
+						$Company->credit_card_fee(),
+						$Company->csr_commission(),
 						);
 			} # end foreach Company
 		} # end foreach CSR
 		misc::export_csv( $r, $log, \%variable, 'customer_performance.csv', \@header, \@data );
 	} # end if
 } # end sub customer_performance
+
 sub _customer_performance {
-	ssi::save_params('/employee/reports/customer_performance.html',  
+	my $uri = '/employee/reports/customer_performance.html';
+	ssi::save_params($uri,  
 			'ordered_on_start_year','ordered_on_start_month','ordered_on_start_day',
 			'ordered_on_end_year','ordered_on_end_month','ordered_on_end_day', 
 			'not_ordered_on_start_year','not_ordered_on_start_month','not_ordered_on_start_day',
 			'not_ordered_on_end_year','not_ordered_on_end_month','not_ordered_on_end_day', 
-			'salesrep_id','payment_cycle','country' );
+			'salesrep_id','payment_cycle','country','has_discount','has_credit_card_fee','has_csr_commission' );
 } # end sub _customer_performance
 
 sub prepress_productivity {
@@ -1844,6 +1850,7 @@ sub project_log {
 	ssi::setup_date_select( '/employee/reports/project_log.html', 'created_on_start', -7 );
 	ssi::setup_date_select( '/employee/reports/project_log.html', 'created_on_end', '' );
 } # end sub project_log
+
 sub _project_log {
 	ssi::save_params('/employee/reports/project_log.html',
 			( map { 'created_on_start_'.$_ } ( 'year','month','day' ) ),

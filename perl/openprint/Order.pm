@@ -20,7 +20,7 @@ require openprint::Payment;
 require openprint::Tax;
 require openprint::Order_Notification;
 
-$debug = 1;
+$debug = 0;
 
 $table = 'orders';
 $serial = 'orders_id_seq';
@@ -88,7 +88,8 @@ invoice_num => 'id IN (SELECT order_id FROM order_invoices WHERE invoice_id=(SEL
 sub save {
 	my ( $self, $params ) = @_;
 
-	$self->set( $params ? $params : {} );
+	$self->set($params ? $params : {});
+	$self->Payments(undef);
 	$self->paid(undef);
 	$$self{owing} = $$self{total} - $$self{paid};
 	$$self{company_id} = $session{company_id} if ! $$self{company_id};
@@ -376,18 +377,19 @@ sub pay {
 		return "Order $$self{id} is already paid!<br/>";
 	} # end if
 
+	# Payment->save() will load and save the Order object as well
 	my $error = (new openprint::Payment())->save({
-			order_id		=>	$$self{id},
-			payor_id		=>	$$self{company_id},
+			order_id			=>	$$self{id},
+			payor_id			=>	$$self{company_id},
 			recipient_id	=>	$self->supplier_id(),
-			amount		=>	$self->owing(),
-			method		=>	'Manual',
-			currency_id	=>	$$self{currency_id},
-			memo			=>	'Order marked paid',
-			received_on	=>	'NOW()',
+			amount				=>	$self->owing(),
+			method				=>	'Manual',
+			currency_id		=>	$$self{currency_id},
+			memo					=>	'Order marked paid',
+			received_on		=>	'NOW()',
 			});
-	if ( ! $error ) {
-		$self->add_log("Paid.");
+	if ( !$error ) {
+		$self->add_log('Paid.');
 		$self->update_status();
 		$error .= $self->save();
 	} # end if
@@ -634,7 +636,7 @@ sub Taxes {
 				$T->save({
 						order_id	=>	$$self{id},
 						tax_id		=>	$$Tax{id},
-						rate		=>	$$Tax{rate},
+						rate			=>	$$Tax{rate},
 						});
 				push @{$$self{Taxes}}, $T;
 			} # end foreach Tax
@@ -651,10 +653,19 @@ sub Tax {
 	return $result;
 } # end sub Tax
 
+sub Payments {
+	my $self = shift;
+	$$self{Payments} = shift if @_;
+	if ( $$self{id} and ! $$self{Payments} ) {
+		$$self{Payments} = [ openprint::Payment->find(order_id=>$$self{id},order=>$openprint::Payment::fields{received_on}.' DESC') ];
+	}
+	return @{$$self{Payments}};
+}
+
 sub paid {
 	$_[0]{paid} = $_[1] if ( @_ == 2 );
 	if ( $_[0]{id} and ! defined $_[0]{paid} ) {
-		$_[0]{paid} = misc::sum( map { $_->amount() } openprint::Payment->find(order_id=>$_[0]{id}) );
+		$_[0]{paid} = misc::sum( map { $_->amount() } $_[0]->Payments() );
 	} # end if
 	return $_[0]{paid};
 } # end sub paid
@@ -670,17 +681,20 @@ sub paid_on_seconds {
 	if ( $_[0]->paid() < $_[0]->total() ) {
 		return time;
 	} # end if
-	my $Last_Payment = openprint::Payment->find_one('order_id'=>$_[0]{id},'order'=>$openprint::Payment::fields{received_on}.' DESC');
+	my @Payments = $_[0]->Payments();
+	my $Last_Payment = $Payments[-1];
 	if ( ! $Last_Payment ) {
 		return time;
 	} # end if
 	return Date::Parse::str2time( $Last_Payment->received_on() );
 } # end sub paid_on
+
 sub paid_on {
 	if ( $_[0]->paid() < $_[0]->total() ) {
 		return Date::Format::time2str( '%Y-%m-%d %H:%M:%S', time );
 	} # end if
-	my $Last_Payment = openprint::Payment->find_one('order_id'=>$_[0]{id},'order'=>$openprint::Payment::fields{received_on}.' DESC');
+	my @Payments = $_[0]->Payments();
+	my $Last_Payment = $Payments[-1];
 	if ( ! $Last_Payment ) {
 		return Date::Format::time2str( '%Y-%m-%d %H:%M:%S', time );
 	} # end if
@@ -694,6 +708,7 @@ sub downpayment_owing {
 	} # end if
 	return $_[0]{downpayment_owing};
 } # end sub downpayment_owing
+
 sub downpayment_percent {
 	if ( ! defined $_[0]{downpayment_percent} ) {
 		my $Credit = $_[0]->Company()->Credit();
@@ -701,6 +716,7 @@ sub downpayment_percent {
 	} # end if
 	return $_[0]{downpayment_percent};
 } # end sub downpayment_percent
+
 sub cod_percent {
 	my $Credit = $_[0]->Company()->Credit();
 	return $Credit->cod();
@@ -709,6 +725,7 @@ sub cod_percent {
 sub cod { 
 	return Math::Round::nearest( .01,$_[0]{total} * ($_[0]->cod_percent/100));
 } # end sub cod
+
 # Returns the remmaining amount to pay on delivery
 sub cod_owing {
 	if ( ! exists $_[0]{cod_owing} ) {
@@ -721,6 +738,7 @@ sub cod_owing {
 	} # end if
 	return $_[0]{cod_owing};
 } # end sub cod_owing
+
 sub cod_owing_percent {
 	my $cod_total = $_[0]->cod();
 	return 0 if ! $cod_total;
@@ -734,6 +752,7 @@ sub cod_owing_percent {
 	return 100-$owing;
 	return 0;
 } # end sub cod_owing_percent
+
 sub supplier_id {
 	if ( @_ > 1 ) {
 		$_[0]{supplier_id} = $_[1];
@@ -743,6 +762,7 @@ sub supplier_id {
 	} # end if
 	return $_[0]{supplier_id};
 } # end sub supplier_id
+
 sub Supplier {
 	return new openprint::Company( $_[0]->supplier_id() );
 } # end sub Supplier

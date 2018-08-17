@@ -71,7 +71,7 @@ sub runtime_seconds {
 		$_[0]{runtime} = misc::seconds2hms($_[1]);
 	} # end if
 
-	my $seconds = misc::hms2time( $_[0]->runtime() );
+	my $seconds = $_[0]->runtime() ? misc::hms2time($_[0]->runtime()) : 0;
 
 	if ( ! $seconds ) {
 		$log->error("Got nothing for $_[0]{runtime} from misc::hms2time");
@@ -123,7 +123,10 @@ sub endtime {
 		$_[0]{endtime} = $_[1];
 	}
 	if ( ! $_[0]{endtime} ) {
-		$_[0]{endtime} = Date::Format::time2str( '%Y-%m-%d %H:%M:%S%z', $_[0]->starttime_seconds() + $_[0]->runtime_seconds() );
+		if ( $_[0]{starttime} ) {
+			# Can only have an endtime if we have a starttime
+			$_[0]{endtime} = Date::Format::time2str( '%Y-%m-%d %H:%M:%S%z', $_[0]->starttime_seconds() + $_[0]->runtime_seconds() );
+		}
 	} # end if
 	return $_[0]{endtime};
 } # end sub endtime
@@ -184,7 +187,7 @@ sub comment {
 			$comment .= openprint::Estimating::Stitching::schedule_summary( $Project, $$self{service_id}[0], $service_specs, $Project->ordered_quantity_index() )
 		} else {
 			my $service_specs = openprint::service::get_specs_ref( $Project, $$self{service_id}[0] );
-			$comment = openprint::Estimating::Printing::get_colour_description( $service_specs );
+			$comment = openprint::Estimating::Printing::get_colour_description($Project, $service_specs);
 			my $Equipment = $self->Equipment();
 
 			if ( $Equipment->specification('Folding Capable') eq 'When Printing' ) {

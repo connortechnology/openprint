@@ -528,8 +528,8 @@ sub save {
 	$$specs{'Versions'.$qty_index} = $$self{versions};
 	$$specs{'hdnImpositionRows'.$qty_index} = $$self{rows};
 	$$specs{'hdnImpositionColumns'.$qty_index} = $$self{columns};
-	$$specs{'hdnImpositionDutchRows'.$qty_index} = $$self{dutch_rows};
-	$$specs{'hdnImpositionDutchColumns'.$qty_index} = $$self{dutch_columns};
+	$$specs{'hdnImpositionDutchRows'.$qty_index} = $$self{dutch_rows} ? $$self{dutch_rows} : '';
+	$$specs{'hdnImpositionDutchColumns'.$qty_index} = $$self{dutch_columns} ? $$self{dutch_columns} : '';
 	$$specs{'hdnImageOrientation'.$qty_index} = $$self{image_orientation} == Vertical ? 'Vertical' : 'Horizontal';
 	$$specs{'page_columns'.$qty_index} = $self->page_columns();
 	$$specs{'page_rows'.$qty_index} = $self->page_rows();

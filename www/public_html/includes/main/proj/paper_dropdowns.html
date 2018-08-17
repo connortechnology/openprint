@@ -36,7 +36,7 @@
 			<input type="text" name="txtSpecificStockWeight<?Signature?>" value="<? echo ( $$variable{'txtSpecificStockWeight'.$$variable{Signature}} ) ?>" />
 			</li>
 			<li class="calliper"><label>Calliper</label>
-				<? echo ( input( type=>'float', name=>'txtSpecificStockCalliper'.$$variable{Signature}, value=>$$variable{'txtSpecificStockCalliper'.$$variable{Signature}}, onchange=>'calc(this.form.name);' ); ) ?>
+				<? echo ( input( type=>'float', name=>'txtSpecificStockCalliper'.$$variable{Signature}, value=>$$variable{'txtSpecificStockCalliper'.$$variable{Signature}}, oninput=>'calc(this.form.name);' ); ) ?>
 				inches
 			</li>
 			<li class="Type"><label>Format</label>
@@ -47,9 +47,9 @@
 			</li>
 			<li class="Size" id="SpecificStockSize<?Signature?>">
 				<label>Size</label>
-				<? echo ( input( type=>'float', name=>'txtSpecificStockWidth'.$$variable{Signature}, value=>$$variable{'txtSpecificStockWidth'.$$variable{Signature}}, onkeyup=>"Stock_onchange(this,'$$variable{Signature}');gsm_to_mweight(this.form,'$$variable{Signature}');paper_price_calc(this,'$$variable{Signature}');" ); ) ?>
+				<? echo ( input( type=>'float', name=>'txtSpecificStockWidth'.$$variable{Signature}, value=>$$variable{'txtSpecificStockWidth'.$$variable{Signature}}, oninput=>"Stock_onchange(this,'$$variable{Signature}');gsm_to_mweight(this.form,'$$variable{Signature}');paper_price_calc(this,'$$variable{Signature}');" ); ) ?>
 				<span id="SpecificStockHeight<?Signature?>" <? echo ( 'style="display: none;"' if $$variable{'StockType'.$$variable{Signature}} eq 'Roll' ) ?>> x 
-				<? echo ( input( type=>'float', name=>'txtSpecificStockHeight'.$$variable{Signature}, value=>$$variable{'txtSpecificStockHeight'.$$variable{Signature}}, onkeyup=>"Stock_onchange(this,'$$variable{Signature}');gsm_to_mweight(this.form,'$$variable{Signature}');paper_price_calc(this,'$$variable{Signature}');" ); ) ?>
+				<? echo ( input( type=>'float', name=>'txtSpecificStockHeight'.$$variable{Signature}, value=>$$variable{'txtSpecificStockHeight'.$$variable{Signature}}, oninput=>"Stock_onchange(this,'$$variable{Signature}');gsm_to_mweight(this.form,'$$variable{Signature}');paper_price_calc(this,'$$variable{Signature}');" ); ) ?>
 </span>
 			</li>
 			<li class="MWeight" id="MWeight<?Signature?>" <? echo ( 'style="display: none;"' if $$variable{'StockType'.$$variable{Signature}} eq 'Roll' ) ?>>

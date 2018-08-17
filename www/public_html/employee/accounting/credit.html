@@ -60,14 +60,14 @@ function swap_credit(src_id,dst_id) {
 		</li>
 		</ul>
 		<p class="buttons">
-			<? echo ( join('',
-input( name=>'import', id=>'import', type=>'file' ),
-button('Import',{ onclick=>q`var form = $('f1');form.btnFunction.value='Import';form.submit();` } ),
-button('Export',{ onclick=>q`var form = $('f1');form.btnFunction.value='Export';form.submit();` } ),
-); ) ?>
+			<? echo ( join("\n",
+					input( name=>'import', id=>'import', type=>'file' ),
+					button('Import',{ onclick=>q`var form = $('f1');form.btnFunction.value='Import';form.submit();` } ),
+					button('Export',{ onclick=>q`var form = $('f1');form.btnFunction.value='Export';form.submit();` } ),
+					); ) ?>
 		</p>
 	</fieldset>
-<? if ( $$variable{'CompanyIndex'} ) ?>
+<? if ( $$variable{CompanyIndex} ) ?>
 	<fieldset>
 	<?include(/account/_sales_edit.html)?>
 	<?include(/includes/_credit_edit.html)?>
@@ -82,14 +82,14 @@ button('Export',{ onclick=>q`var form = $('f1');form.btnFunction.value='Export';
 <? eval (
 	my %Order_Statuses = map { $_->name(), $$_{id} } openprint::Order_Status->find();
 	$$variable{UnpaidOrders} = [ openprint::Order->find(
-		company_id	=> $param{'ddmCustomer'},
+		company_id	=> $param{ddmCustomer},
 		'status_id not in'	=>	[ @Order_Statuses{'Cancelled','Deleted','Incomplete'} ],
 		'owing null_or_>'	=>	0,
-		order		=> $openprint::Order::fields{'created_on'},
+		order		=> $openprint::Order::fields{created_on},
 		) ];
 
 ) ?>
-<? if ( @{$$variable{'UnpaidOrders'}} ) ?>
+<? if ( @{$$variable{UnpaidOrders}} ) ?>
 	<table class="List">
 		<tr> 
 			<th class="order_id">Order ID</th>
@@ -108,9 +108,10 @@ button('Export',{ onclick=>q`var form = $('f1');form.btnFunction.value='Export';
 			my $total_total = 0;
 			my $html;
 
-			my $ac = sql::start_transaction( $dbh );
+			my $ac = sql::start_transaction($dbh);
 			foreach my $Order ( @{$$variable{UnpaidOrders}} ) {
-				$html .= sprintf( '
+				next if ! $Order->owing();
+				$html .= sprintf('
 				<tr%1$s> 
 					<td class="order_id"><a href="/employee/accounting/details.html?order_id=%2$d">%2$d</a></td>
 					<td class="Docket"><a href="/employee/accounting/details.html?order_id=%2$d">%3$d</a></td>
@@ -139,15 +140,15 @@ button('Export',{ onclick=>q`var form = $('f1');form.btnFunction.value='Export';
 				<td class="Price">%s</td>
 				<td class="Price">%s</td>
 				<td>%s</td>
-			</tr>', scalar @{$$variable{'UnpaidOrders'}}, openprint::Currency::format( $total_total ), openprint::Currency::format( $balance_total ),
+			</tr>', scalar @{$$variable{UnpaidOrders}}, openprint::Currency::format( $total_total ), openprint::Currency::format( $balance_total ),
 			button( 'Pay', { onclick=>"f1.btnFunction.value='Pay';f1.submit();" } ),
 			);
 			return $html;
 		) ?>
 	</table>
-<? else ( @{$$variable{'UnpaidOrders'}} ) ?>
+<? else ( @{$$variable{UnpaidOrders}} ) ?>
 There are no unpaid orders.
-<? endif ( @{$$variable{'UnpaidOrders'}} ) ?>
+<? endif ( @{$$variable{UnpaidOrders}} ) ?>
 </fieldset>
 <fieldset><legend>Credit Change History</legend>
 	<table class="List">
@@ -163,6 +164,6 @@ There are no unpaid orders.
 ) ?>
 	</table>
 </fieldset>
-<? endif ( $$variable{'CompanyIndex'} ) ?>
+<? endif ( $$variable{CompanyIndex} ) ?>
 	<input type="hidden" name="btnFunction"/>
 </form>

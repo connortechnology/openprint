@@ -174,17 +174,19 @@ sub info {
 	require openprint::Host_Info;
 	if ( ! $_[0]{Info} ) {
 		%{$_[0]{Info}} = map { $_->name(), $_ } openprint::Host_Info->find(host_id=>$_[0]{id});
-		foreach my $k ( keys %{$_[0]{Info}} ) {
-			$openprint::log->debug(" $k => " . $_[0]{Info}{$k}->value() );
-		} # end foreach
+		if ( $debug ) {
+			foreach my $k ( keys %{$_[0]{Info}} ) {
+				$openprint::log->debug(" $k => " . $_[0]{Info}{$k}->value() );
+			} # end foreach
+		}
 	} # end if
 	if ( $_[0]{Info}{$_[1]} ) {
 		return $_[0]{Info}{$_[1]}->value();
 	} # end if
-$openprint::log->debug("No value for $_[1] " . $_[0]->to_string() );
-		foreach my $k ( keys %{$_[0]{Info}} ) {
-			$openprint::log->debug(" $k => " . $_[0]{Info}{$k}->value() );
-		} # end foreach
+	$openprint::log->debug("No value for $_[1] " . $_[0]->to_string() );
+	foreach my $k ( keys %{$_[0]{Info}} ) {
+		$openprint::log->debug(" $k => " . $_[0]{Info}{$k}->value() );
+	} # end foreach
 	return '';
 } # end sub info
 
@@ -246,15 +248,48 @@ sub reboot {
 			$expect = 'Device has been rebooted';
 
 		} elsif ( $_[0]->type() eq 'TP-Link Archer C7' ) {
-			$method = 'post';
-			$url = $HI->ip().'/cgi-bin/luci/admin/system/reboot/call';
-			$initial_url = $$HI{ip}.'/cgi-bin/luci';
-        $args = {
-          luci_username=> $Host->info('username'),
-          luci_password=> $Host->info('password'),
-          submit => 'Login',
-token=>'53e677e902828a6a3dbd13b50fda7abe',
-        };
+			require JSON;
+
+			my $username = $Host->info('username');
+			my $password = $Host->info('password');
+
+			# Need to get an auth token
+			my $uri = $protocol.'://'.$$HI{ip}.'/cgi-bin/luci/rpc/auth';
+			my $json = qq`{"id":"1","method":"login","params":["$username","$password"]}`;
+			my $req = HTTP::Request->new('POST', $uri);
+			$req->header('Content-Type' => 'application/json');
+			$req->content($json);
+			my $response = $browser->request($req);
+
+			if ( !$response->is_success ) {
+				$openprint::log->error("Failed to get auth token:\n".$response->content);
+				next;
+			}
+
+			my $json_response = JSON::decode_json($response->content);
+			if ( ! ( $json_response and $$json_response{result} ) ) {
+				$openprint::log->error("Failed to get auth token:\n".$response->content);
+				next;
+			}
+
+			$uri = $protocol.'://'.$$HI{ip}.'/cgi-bin/luci/rpc/sys?auth='.$$json_response{result};
+			$json = qq`{"id":"1","method":"call","params":["reboot"]}`;
+			$req = HTTP::Request->new('POST', $uri);
+			$req->header('Content-Type' => 'application/json');
+			$req->content($json);
+			$response = $browser->request($req);
+			if ( !$response->is_success ) {
+				$openprint::log->error("Failed to reboot:\n".$response->content.":\n".$response->status_line());
+				next;
+			}
+
+			$json_response = JSON::decode_json($response->content);
+			if ( !$json_response or $$json_response{error} ) {
+				$openprint::log->error("Failed to reboot:\n".$response->content);
+				next;
+			}
+			$success = 1;
+			last;
 
 		} elsif( $_[0]->type() eq 'DCS932L' ) {
 			$url = $HI->ip().'/setSystemReboot';
@@ -280,21 +315,17 @@ token=>'53e677e902828a6a3dbd13b50fda7abe',
 
 		my $response = $browser->get($protocol.'://'.($initial_url ? $initial_url : $url));
 		$openprint::log->debug("Sending initial url: " . $protocol.'://'.($initial_url ? $initial_url : $url) );
-		$openprint::log->debug( $response->status_line );
-		#$openprint::log->debug( $response->content );
 		my $headers = $response->headers();
-		#foreach my $k ( keys %$headers ) {
-			#$openprint::log->debug("Initial Header $k => $$headers{$k}");
-		#} # end if
 		if ( $$headers{'client-ssl-cipher'} ) {
 $openprint::log->debug("Swtiching to https");
 			$protocol = 'https';
 			$port = 443;
 		}
-		$response = $HI->authenticate( $browser, $response, $method, $port, $protocol.'://'.$url, $args );
+		$response = $HI->authenticate(
+				$browser, $response, $method, $port, $protocol.'://'.$url, $args);
 
-		if ( ! $response->is_success ) {
-			$openprint::log->error( $response->content );
+		if ( !$response->is_success ) {
+			$openprint::log->error( "No success: content:".$response->content."\nstatus:".$response->status_line() );
 			if ( $response->status_line() eq '401 Unauthorized' or $response->status_line() eq '401 Not Authorized' ) {
 				$openprint::log->error("Couldn't get content from $url unauthorized trying again:". $response->status_line );
 				$response = $browser->get($protocol.'://'.$url);
@@ -311,7 +342,7 @@ $openprint::log->debug("Swtiching to https");
 					$success = 1;
 				} # end if
 			} else {
-				$openprint::log->warn("Couldn't get content from $url rebooting" . $response->status_line );
+				$openprint::log->warn("Couldn't get content from $protocol://$url rebooting" . $response->status_line );
 				my $headers = $response->headers();
 				foreach my $k ( keys %$headers ) {
 					$openprint::log->error("Header $k => $$headers{$k}");
@@ -359,6 +390,10 @@ $openprint::log->debug("Swtiching to https");
 
 sub is_wap {
 	return sets::isin( $_[0]->type(), [ 'WG602v3', 'WPN802','TP-Link Archer C7' ] );
+}
+
+sub url {
+	return sprintf('/employee/it/host.html?host_id=%d', $_[0]{id});
 }
 
 sub link_to {

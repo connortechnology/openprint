@@ -63,6 +63,7 @@ die 'Error opening db' if ! $dbh;
 configuration::from_db( );
 configuration::from_file( $$opts{config} );
 configuration::merge( $opts );
+$log = logger->new( { file=>$config{log_file}, level=>$config{log_level}} );
 
 $session{company_id} = $config{owner_id};
 $ENV{DOCUMENT_ROOT} = $config{DOCUMENT_ROOT};
@@ -72,18 +73,21 @@ openprint::session_init();
 # The first query to execute grabs the ids of all of the email campaigns
 # that are currently set to run
 openprint::EmailCampaign->lock();
-my @campaign_ids = openprint::EmailCampaign->find( $$opts{campaign_id} ? ( id=>$$opts{campaign_id} ) : (active => 'Y', 'nextrun <' => 'NOW()', 'custom'=>['(timeofday IS NULL) OR (timeofday <= CURRENT_TIME)'] ) );
+my @campaign_ids = openprint::EmailCampaign->find(
+		$$opts{campaign_id} ?
+		( id=>$$opts{campaign_id} ) :
+		(active => 'Y', 'nextrun <' => 'NOW()', custom=>['(timeofday IS NULL) OR (timeofday <= CURRENT_TIME)'] ) );
 
 $log->info("There are ".@campaign_ids." active campaigns\n");
 
 # For each campaign, we need to get the associated query and interval of
 # between the last login time and now (which will be our threshold of concern)
 foreach my $Campaign (@campaign_ids) {
-	
 	$Campaign->send();
 	#print "Done campaign " . $Campaign->name() . "\n";
 } # foreach campaign_id
 openprint::EmailCampaign->unlock();
+
 
 $dbh->disconnect();
 

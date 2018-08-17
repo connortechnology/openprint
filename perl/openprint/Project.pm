@@ -26,7 +26,7 @@ require openprint::Estimating::MultiPage;
 require openprint::service;
 require openprint::Project_Log;
 
-$debug = 0;
+$debug = 1;
 
 $table = 'projects';
 $serial = 'lngProjectIndex_seq';
@@ -123,7 +123,9 @@ $serial = 'lngProjectIndex_seq';
 
 sub delete {
 	my $self = shift;
-	sql::update( undef, undef, $table, ['id=?', $$self{id}], ['strStatus', 'Deleted'] );
+	if ( !$self->save({ status=>'Deleted' }) ) {
+		$self->add_to_log( @openprint::session{'company_id','user_id'}, 'Deleted' );
+	}
 } # end sub delete
 
 sub deleted {

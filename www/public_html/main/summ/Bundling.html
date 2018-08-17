@@ -1,11 +1,11 @@
 <p>
-<?echo ( openprint::service::summary( @$variable{'ProjectIndex','ServiceIndex'} ) ) ?>
+	<?echo ( openprint::service::summary( @$variable{'ProjectIndex','ServiceIndex'} ) ) ?>
 	<?echo (
 		join("\n", map { 
-			'<span class="value">'.
-			openprint::service::summary( @$variable{'ProjectIndex','ServiceIndex'}, $_ ).
-			'</span>';
-		} $$variable{Project}->quantity_indexes();
+				'<span class="value">'.
+				openprint::service::summary( @$variable{'ProjectIndex','ServiceIndex'}, $_ ).
+				'</span>';
+			} $$variable{Project}->quantity_indexes()
+		);
  ) ?>
 </p>
-<?include(/includes/main/summ/package_quantity.html)?>

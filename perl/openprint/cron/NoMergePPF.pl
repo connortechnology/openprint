@@ -21,7 +21,7 @@ use vars qw( $log $dbh %config );
 *config = \%openprint::config;
 
 $log = logger->new();
-$log->{level} = "warn";
+$log->{level} = 'warn';
 
 my $source_path = $ARGV[0];
 my $dest_path = $ARGV[1];
@@ -31,7 +31,6 @@ my $db_user = $ARGV[4];
 my $db_pass = $ARGV[5];
 $db_user = $db_name if ! $db_user;
 $db_pass = $db_name if ! $db_pass;
-
 
 my $inotify = new Linux::Inotify2;
 if ( 0 and $inotify and $inotify->watch( $source_path, IN_CREATE ) ) {
@@ -72,7 +71,7 @@ if ( 0 and $inotify and $inotify->watch( $source_path, IN_CREATE ) ) {
 				next;
 			} # end if
 
-			my ( $docket, $ppo, $name, $sig, $side ) = $file_base =~ /(\d\d\d\d\d)(\w*)_?(.*?)S?g?(\d+)S?d?.(\w)/i;
+			my ( $docket, $ppo, $name, $sig, $side ) = $file_base =~ /(\d+)(\w*)_?(.*?)S?g?(\d+)S?d?.(\w)/i;
 			my $data = '';
 #print "File: $file Docket $docket, Operattor: $ppo, Name: $name, Sig: $sig, $side\n";
 			$sig = 0 if ! $sig;
@@ -91,19 +90,22 @@ if ( 0 and $inotify and $inotify->watch( $source_path, IN_CREATE ) ) {
 
 			if ( $docket ) {
 				$dbh = sql::open_sql( $log,
-						'host'      => $db_host,
-						'database'  => $db_name,
-						'driver'    => 'Pg',
-						'login'     => $db_user,
-						'password'  => $db_pass,
+						host      => $db_host,
+						database  => $db_name,
+						driver    => 'Pg',
+						login     => $db_user,
+						password  => $db_pass,
 						) if ! ( $dbh and $dbh->ping() );
 				die 'Error opening db' if ! $dbh;
 
 				configuration::init_cache( $log, $dbh );
-				foreach my $PPF (openprint::CIP3_PPF->find('docket'=>$docket,'signature'=>$sig,'side'=>$side)) {
+				foreach my $PPF (openprint::CIP3_PPF->find(
+							docket=>$docket,
+							signature=>$sig,
+							side=>$side)) {
 					$PPF->delete();
 				} # end foreach
-				foreach my $Project ( openprint::Project->find('docket'=>$docket) ) {
+				foreach my $Project ( openprint::Project->find(docket=>$docket) ) {
 					my $services = $Project->services();
 
 					my $found = 0;

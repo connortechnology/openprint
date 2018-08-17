@@ -218,11 +218,11 @@ sub debug_Approvers {
 sub send_approval_required_notification {
 	my ( $self ) = @_;
 
-	my $email_template = misc::load_file( $log, $config{SkinPath} . '/email_template.html' );
+	my $email_template = ssi::slurp_content('/email_template.html');
 	my %info;
 	$info{From} = $openprint::User;
 	$info{PurchaseOrder} = $self;
-	$info{ReplacementText} = ssi::include( '/email_content/purchase_order_notification.html', \%info );
+	$info{ReplacementText} = ssi::include('/email_content/purchase_order_notification.html', \%info);
 
 	my @notification_types = map { 'PO ' . (new openprint::PurchaseOrder_ContentType( $_ )->name()) . ' Approvals' } sets::union( map { $_->type_id() } $self->Contents() );
 	$_ = MIME::QuotedPrint::encode_qp( Encode::encode('utf-8', ssi::variable_substitution( \$email_template, \%info ) ) );
