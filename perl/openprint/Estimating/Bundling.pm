@@ -85,8 +85,9 @@ sub calc {
 		return $$specs{Status} = 'uncalculated';
 	} # end if
 
-	$$specs{txtItemsPerPackage} = int($$specs{txtItemsPerPackage});
-	if ( ! $$specs{txtItemsPerPackage} ) {	# a zero value is still calculated, just with a zero price.d
+	$$specs{txtItemsPerPackage} = defined $$specs{txtItemsPerPackage} ? int($$specs{txtItemsPerPackage}) : 0;
+	if ( !$$specs{txtItemsPerPackage} ) {
+# a zero value is still calculated, just with a zero price.
 		if ( $ServiceType->name() eq 'Bundling' ) {
 			$$specs{alert} .= 'Please enter the # of items in each bundle';
 		} elsif ( $ServiceType->name() eq 'ShrinkWrap' ) {
@@ -344,7 +345,7 @@ sub summary {
 		} elsif ( $$specs{ServiceType} =~ /Banding/i ) {
 			$text .= ' bundle' . ($$specs{'txtPackageQuantity'.$qty_index} > 1 ? 's' : '');
 		} # end if
-	} else {
+	} elsif ($$specs{txtItemsPerPackage}) {
 		$text .= $$specs{txtItemsPerPackage} . ' items';
 		if ( $$specs{ServiceType} =~ /Wrap/i ) {
 			$text .= ' per wrap';
