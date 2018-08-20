@@ -1,6 +1,10 @@
 <li>
-	<label> Finished Dimensions</label>
-	<input name="txtFinalWidth" size="9" value="<?txtFinalWidth?>" onkeyup="calc(this.form.name);" />
-	<input name="txtFinalHeight" size="9" value="<?txtFinalHeight?>" onkeyup="calc(this.form.name);" />
+	<label>Finished Dimensions</label>
+<?echo(
+	join("\n",
+		input(type=>'float',name=>'txtFinalWidth', value=>$$variable{txtFinalWidth}, onkeyup=>'calc(this.form.name);'),
+		input(type=>'float',name=>'txtFinalHeight', value=>$$variable{txtFinalHeight}, onkeyup=>'calc(this.form.name);'),
+	);
+)?>
 	(W x H) in decimals
 </li>
