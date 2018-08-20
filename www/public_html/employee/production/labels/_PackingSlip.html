@@ -1,11 +1,10 @@
 <? eval (
-	$$variable{Label} = new openprint::Label( $param{id} ) if ! $$variable{Label};
 	my $changed = 0;
 	if ( ! $$variable{Label}->get_data('date') ) {
-		$$variable{Label}->set_data('date'=>Date::Format::time2str($config{DateFormat}, time ) );
+		$$variable{Label}->set_data(date=>Date::Format::time2str($config{DateFormat}, time));
 		$changed = 1;
 	} # end if
-	if ( ! $$variable{Label}->get_data('from') ) {
+	if ( !$$variable{Label}->get_data('from') ) {
 		if ( $$variable{Project} ) {
 			my $services = $$variable{Project}->services();
 
@@ -106,7 +105,7 @@
 				} # end foreach Project
 			} # end if
 		} # end if
-		$$variable{Label}->set_data('description'=>$html);
+		$$variable{Label}->set_data(description=>$html);
 		$changed = 1;
 	} # end if
 	if ( ! $$variable{Label}->get_data('quantity') ) {
