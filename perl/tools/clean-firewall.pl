@@ -67,7 +67,9 @@ configuration::from_file($$opts{config});
 configuration::merge($opts);
 
 $log->warn("Getting hosts");
-foreach my $Host ( openprint::Host->find( blacklist=>1, 'updated_on <=' => sprintf('%.4d-%.2d-%.2d', Date::Calc::Add_Delta_Days( Date::Calc::Today(), -30 ) ) ) ) {
+foreach my $Host ( openprint::Host->find( blacklist=>1, 
+    #'updated_on <=' => sprintf('%.4d-%.2d-%.2d', Date::Calc::Add_Delta_Days( Date::Calc::Today(), -30 ) ) 
+   ) ) {
 	foreach my $HI ( $Host->Interfaces() ) {
 	$log->warn("Allowing $$HI{ip}");
 	$Host->save({blacklist=>0, count=>10});

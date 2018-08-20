@@ -646,6 +646,14 @@ if ( ! sets::isin('payments', \@tables) ) {
     $log->debug("Adding value to payments");
     $dbh->do('ALTER TABLE payments ADD value FLOAT');
   }
+  if ( !$$data{value_locked} ) {
+    $log->debug("Adding value_locked to payments");
+    $dbh->do('ALTER TABLE payments ADD value_locked BOOLEAN NOT NULL DEFAULT FALSE');
+  }
+  if ( !$$data{amount_locked} ) {
+    $log->debug("Adding amount_locked to payments");
+    $dbh->do('ALTER TABLE payments ADD amount_locked BOOLEAN NOT NULL DEFAULT FALSE');
+  }
 } # end if
 
 	# Check orders structure, don't have to check for existence because we did that twice above

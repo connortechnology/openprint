@@ -21,6 +21,7 @@ $serial = 'payments_id_seq';
   recipient_id	=>	'owner_id',
   payor_id		=>	'payor_id',
   amount			=>	'amount',
+  amount_locked =>  'amount_locked',
   created_on		=>	'created_on',
   updated_on		=>	'updated_on',
   method			=>	'method',
@@ -34,6 +35,7 @@ $serial = 'payments_id_seq';
   type_id			=>	'type_id',
   exchange  =>  'exchange',
   value     =>  'value',
+  value_locked  =>  'value_locked',
 );
 
 %transforms = (
@@ -53,6 +55,8 @@ $serial = 'payments_id_seq';
 	value		=>	undef,
 	remaining	=>	undef,
   exchange  =>  1,
+  value_locked  =>  0,
+  amount_locked =>  0,
 );
 
 sub save {
