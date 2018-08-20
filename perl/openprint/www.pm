@@ -3,7 +3,7 @@ package openprint::www;
 use utf8;
 use open ( ":encoding(UTF-8)", ":std" );
 
-use constant Debug => 1;
+use constant Debug => 0;
 
 #use Benchmark;
 #use diagnostics;
@@ -42,7 +42,6 @@ use vars qw( $r %variable %session %param %config $log $dbh $starttime );
 
 sub warn {
 	$log->error("Warning: $_[0]");
-
 }
 
 $SIG{__WARN__} = \&warn;
