@@ -461,8 +461,9 @@ sub save_project_information {
 					);
 			foreach my $service_id ( @{$$services{$ShippingType->name()}} ) {
 				foreach my $spec ( @shipping_fields ) {
-					$log->debug("Sacing: $$ShippingType{name} $spec-$project_index-$service_id => " . $param{"$spec-$project_index-$service_id"} );
-					openprint::service::insert_service_spec( $log, $dbh, $project_index, $service_id, $spec, $param{"$spec-$project_index-$service_id"} ) if exists $param{"$spec-$project_index-$service_id"};
+					my $key = join('-', $spec, $project_index, $service_id);
+					$log->debug("Sacing: $$ShippingType{name} $key => " . ($param{$key}?$param{$key}:'') );
+					openprint::service::insert_service_spec($log, $dbh, $project_index, $service_id, $spec, $param{$key}) if exists $param{$key};
 				} # end foreach field
 			} # end foreach service_id
 		} # end foreach ShippingType
