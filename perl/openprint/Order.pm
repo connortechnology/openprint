@@ -659,7 +659,7 @@ sub Payments {
 	if ( $$self{id} and ! $$self{Payments} ) {
 		$$self{Payments} = [ openprint::Payment->find(order_id=>$$self{id},order=>$openprint::Payment::fields{received_on}.' DESC') ];
 	}
-	return @{$$self{Payments}};
+	return $$self{Payments} ? @{$$self{Payments}} : ();
 }
 
 sub paid {
