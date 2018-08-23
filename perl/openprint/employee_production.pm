@@ -1563,14 +1563,7 @@ sub _li_change {
 				$log->error("Project $$Project{id} not found in set_duedate");
 				return;
 			} # end if
-
-			if ( $Project->due_date() ne $param{duedate} ) {
-				my $old_date = $Project->due_date();
-				$Project->due_date( $param{duedate} );
-				$Project->save();
-				$Project->add_to_log( @openprint::session{'company_id','user_id'}, "Duedate changed to $param{duedate} from $old_date" );
-				openprint::employee_project::send_duedate_change_notification( $$Project{id}, $Project->order_id() );
-			} # end if date has changed
+			$Project->change_due_date($param{duedate});
 		} # end if project_id
 		return;
 	} elsif ( $param{action} eq 'start' ) {
@@ -2298,6 +2291,17 @@ sub gracol {
 ] );
 	
 } # end sub racol
+
+sub overview {
+	if ( %param ) {
+		ssi::save_params( $r->uri(), (
+					( map { 'due_date_start_'. $_ } ( 'year','month','day' ) ),
+					( map { 'due_date_end_'. $_ } ( 'year','month','day' ) ),
+					) );
+	} # end if
+	ssi::setup_date_select( $r->uri(), 'due_date_start', -31 );
+	ssi::setup_date_select( $r->uri(), 'due_date_end', '' );
+} # end sub overview
 
 1;
 __END__

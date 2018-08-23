@@ -20,6 +20,7 @@
 		$$variable{Label}->notify_csr();
 	} # end if
 ) ?>
+<?echo($$variable{Label}{reference}?>
 <div class="buttons">
 	<? echo ( join("\n",
 		button( 'PDF', { href=>'/employee/production/labels/label.html?action=pdf&amp;id='.$$variable{Label}->id() } ),
@@ -34,7 +35,7 @@
 		if ( ! $$variable{Label}->type_id() ) {
 			return 'Unknown label type.';
 		} else {
-			return include( '/employee/production/labels/_'.$$variable{Label}->Type()->name().'.html' );
+			return include('/employee/production/labels/_'.$$variable{Label}->Type()->name().'.html');
 		} # end if
 	) ?>
 </div>

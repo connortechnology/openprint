@@ -22,8 +22,8 @@ $openprint::Object::no_cache = 1;
 $dbh = sql::open_sql( $log, ('database'=>$ARGV[0], 'driver'=>'Pg','login'=>$ARGV[1], 'password'=>$ARGV[2], 'host'=>$ARGV[3]) );
 	
 foreach my $Project ( openprint::Project->find( order=>'id desc',
-			status=>['In Prepress','Proofs Out', 'Waiting For Customer Approval','Waiting For QA Approval','Approved','Printed'],
-			'updated_on <='=>'2016-12-31 23:59:59' ) ) {
+			status=>['In Prepress','Proofs Out', 'Waiting For Customer Approval','Waiting For QA Approval','Approved','Printed','Pending Deposit'],
+			'created_on <='=>'2017-12-31 23:59:59' ) ) {
 #sprintf('%.4d-%.2d-%.2d 00:00:00', Date::Calc::Add_Delta_Days( Date::Calc::Today(), -30 ) ), 'order'=>'index desc' ) ) {
 	
 	print $Project->id() . ' status:'.$Project->status().' company:' . $Project->Company()->name() . ' ' . $Project->updated_on() . ' ' . $Project->shippingtype() . " " . $Project->due_date() . "\n";
@@ -31,6 +31,7 @@ foreach my $Project ( openprint::Project->find( order=>'id desc',
 			print "Scheduled, skipping \n";
 			next;
 	} # end if
+	
 	#if ( $Project->due_date() ) {
 		#next;
 	#} # end if
