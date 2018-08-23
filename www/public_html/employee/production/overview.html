@@ -76,40 +76,50 @@
 <? endif ( openprint::usergroup::is_user_in( ['Scheduling'], $session{user_id} ) ) ?>
 </script>
 <?include('/includes/error_reporting.html')?>
-<form id="f1" name="f1" method="post" action="/employee/production/overview.html">
-	<input type="hidden" name="btnFunction"/>
-	<input type="hidden" name="ProjectIndex" />
-	<input type="hidden" name="ServiceIndex" />
-	<input type="hidden" name="schedule_id" />
-	<fieldset class="filters">
-		<ul>
-			<li>
-				<label>Date Range</label>
-					<? echo ( join(' to ',
-						date_select_session($r->uri(), 'due_date_start', { with_today=>1, onchange=>q`check_time_starting($('f1'),'due_date_start','due_date_end');` } ),
-						date_select_session($r->uri(), 'due_date_end', { with_today=>1, onchange=>q`check_time_starting($('f1'),'due_date_start','due_date_end');` } ),
-					); ) ?>
-			</li>
-		</ul>
-		<p class="buttons">
-			<? echo ( button( 'ShowResults', { onclick=>'f1.submit();', text=>'Refresh' } ); ) ?>
-		</p>
-	</fieldset>
-<br/>
-	<div class="docketmessage">
-		See Docket for detail
-	</div>
+<div class="ProductionOverview">
+	<form id="f1" name="f1" method="post" action="/employee/production/overview.html">
+		<input type="hidden" name="btnFunction"/>
+		<input type="hidden" name="ProjectIndex" />
+		<fieldset class="filters">
+			<ul>
+				<li>
+					<label>Date Range</label>
+						<? echo ( join(' to ',
+							date_select_session($r->uri(), 'due_date_start', { with_today=>1, onchange=>q`check_time_starting($('f1'),'due_date_start','due_date_end');` } ),
+							date_select_session($r->uri(), 'due_date_end', { with_today=>1, onchange=>q`check_time_starting($('f1'),'due_date_start','due_date_end');` } ),
+						); ) ?>
+				</li>
+				<li><label>Equipment</label>
+				<?echo(
+						$$variable{Presses} = [ openprint::Equipment->find('category any'=>'Printing') ];
+						ssi::select(
+							[ map { $$_{id}, $$_{strid} . ' ' . $$_{name} } @{$$variable{Presses}} ],
+							[split(',',$session{$r->uri().'?equipment_id'})],
+							{name=>'equipment_id',multiple=>'multiple'}
+							);
+						) ?>
+				</li>
+				<li><label>Is Printed</label>
+					<?echo(radio('is_printed', [ '1', 'Yes', '0', 'No', '', 'Both' ], $session{$r->uri().'?is_printed'} );)?>
+				</li>
+			</ul>
+			<p class="buttons">
+				<? echo ( button( 'ShowResults', { onclick=>'f1.submit();', text=>'Refresh' } ); ) ?>
+			</p>
+		</fieldset>
+		<br/>
+		<div class="docketmessage">See Docket for detail</div>
 		<br/>
 		<br/>
-	</div>
 	<table>
 		<thead>
       <tr>
         <th>Docket</th>
         <th>Customer</th>
+				<th>Operator</th>
         <th>Proofs Out</th>
-        <th>Printed</th>
         <th>To Print</th>
+        <th>Printed</th>
         <th>Cut</th>
         <th>Trim &amp; Box</th>
         <th>Fold</th>
@@ -117,13 +127,17 @@
         <th>SWrap</th>
         <th>Total Qty</th>
         <th>Due Date</th>
+				<th>Ship Flat</th>
         <th>Comment</th>
       </tr>
 		</thead>
 		<tbody>
 <?echo (
+ 
+my %Presses = map { $$_{id}, $_ } @{$$variable{Presses}};
 
 my @Projects = openprint::Project->find(
+	'order_id is null'=>0,
 	date_filter( $r->uri().'?due_date_end', 'due_date <=' ),
 	date_filter( $r->uri().'?due_date_start', 'due_date >=' ),
 	order=>'due_date NULLS LAST',
@@ -137,9 +151,17 @@ my @Projects = openprint::Project->find(
 	'Printed',
 	],
 	);
+my %Companies = map { $$_{id}, $_ } openprint::Company->find( id=>[ map { $$_{company_id} } @Projects ] );
 
 my $html;
 foreach my $Project ( @Projects ) {
+	next if $session{$r->uri().'?is_printed'} eq '1' and ! $Project->is_printed();
+	next if $session{$r->uri().'?is_printed'} eq '0' and $Project->is_printed();
+
+	my @Schedule = openprint::ScheduledJob->find( project_id=>$$Project{id}, 'starttime is null'=>0, order=>'starttime' );
+	my @press_ids = sets::union( map { $Presses{$$_{equipment_id}} ? $$_{equipment_id} : () } @Schedule );
+	next if ! sets::intersection( split(',',$session{$r->uri().'?equipment_id'}), @press_ids );
+
 	#my $OP = $Project->Ordered_Project();
 	my ( $year, $month, $day ) = split('-', $Project->due_date() );
 	
@@ -148,16 +170,19 @@ foreach my $Project ( @Projects ) {
 		$due_date .= ' ' . $year;
 	}
 
-
-	my @Schedule = openprint::ScheduledJob->find( project_id=>$$Project{id}, 'starttime is null'=>0, order=>'starttime' );
 	my $services = $Project->services();
+	my $Service = $Project->Service( $$services{Proofs}[0] ) if $$services{Proofs};
+  my %Operators = map { $$_{user_id}, $_ } openprint::Project_Service_Operator->find( service_id=>$$Service{service_id} ) if $Service;
+	my $operators = join(' ', map { $_->User()->link_to( $_->User()->name(), title=>$_->Role()->name ) } values %Operators );
+
 	$html .= sprintf('
 <tr>
 	<td class="Docket">%s</td>
 	<td class="Company">%s</td>
+	<td class="Operator">%s</td>
   <td class="ProofsOut">%s</td>
-	<td class="Printed">%s</td> 
 	<td class="ToPrint">%s</td>
+	<td class="Printed">%s</td> 
 	<td class="Cut">%s</td>
 	<td class="Trim">%s</td>
 	<td class="Fold">%s</td>
@@ -165,20 +190,27 @@ foreach my $Project ( @Projects ) {
 	<td class="ShrinkWrap">%s</td>
 	<td class="Total">%s</td>
 	<td class="DueDate" id="JumpToDate%d">%s<input type="hidden" name="ScheduleDate-%d" id="ScheduleDate-%d" value="%s"/></td>
-	<td class="Comment">%s</td>
+	<td class="ShipFlat">%s</td>
+	<td class="Comment" id="production_comments%d" %s>%s</td>
 </tr>', $Project->production_link_to( $Project->docket() ),
 	$Project->production_link_to( $Project->Company()->name() ),
+	$operators,
 	( sets::isin( $Project->status(), [ 'Proofs Out', 'Waiting For Customer Approval','Waiting For QA Approval','Approved','Printed' ] ) ? '&#10004;' : '' ),
+	( @press_ids ? join(', ', map { $Presses{$_} ? $Presses{$_}->strid() : () } @press_ids ) : '' ),
 	( $Project->is_printed() ? '&#10004;' : '' ),
-	( @Schedule ? '&#10004;' : '' ),
 	( $$services{Cutting} ? '&#10004;' : '' ),	
 	( $$services{PlainCartons} ? '&#10004;' : '' ),	
-	( $$services{Folding} ? '&#10004;' : '' ),	
+	( $$services{Folding} and openprint::Estimating::Folding::is_offline( $Project, $Project->ordered_quantity_index() ) ? '&#10004;' : '' ),	
 	( ( $$services{SaddleStitching} or $$services{LoopStitching} ) ? '&#10004;' : '' ),	
 	( $$services{ShrinkWrap} ? '&#10004;' : '' ),	
 	Number::Format::format_number($Project->ordered_quantity()),
 	$$Project{id}, $due_date,
 	$$Project{id}, $$Project{id}, $$Project{due_date},
+	( $$services{NoBindery} ? '&#10004;' : '' ),
+	$$Project{id},
+	( openprint::usergroup::is_user_in( ['Scheduling'], $session{user_id} ) ? 
+		q`onclick="popup_window('_production_comments_popup.html', 'project_id=`.$Project->id().q`', { width: 500, height: 400 } );"` :
+'' ),
 	$$Project{production_comments},
 	);
 }
@@ -187,6 +219,7 @@ return $html;
 		</tbody>
 	</table>	
 </form>
+</div>
 <? if ( openprint::usergroup::is_user_in( ['Scheduling'], $session{user_id} ) ) ?>
 <script type="text/javascript">
 	setup_dates();

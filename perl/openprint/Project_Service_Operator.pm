@@ -6,6 +6,7 @@ require openprint;
 require openprint::Project;
 require openprint::User;
 require openprint::ServiceType;
+require openprint::Operator_Role;
 
 use vars qw( $debug %fields %find_fields %transforms %defaults $table $serial );
 
@@ -38,6 +39,10 @@ sub Service {
 sub User {
 	return new openprint::User( $_[0]{user_id} );
 } # end sub 
+
+sub Role {
+	return new openprint::Operator_Role( $_[0]{role_id} );
+}
 
 1;
 __END__

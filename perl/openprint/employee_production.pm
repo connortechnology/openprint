@@ -2297,11 +2297,24 @@ sub overview {
 		ssi::save_params( $r->uri(), (
 					( map { 'due_date_start_'. $_ } ( 'year','month','day' ) ),
 					( map { 'due_date_end_'. $_ } ( 'year','month','day' ) ),
+					'equipment_id', 'is_printed',
 					) );
 	} # end if
 	ssi::setup_date_select( $r->uri(), 'due_date_start', -31 );
 	ssi::setup_date_select( $r->uri(), 'due_date_end', '' );
+	$session{$r->uri().'?equipment_id'} = join(',', map { $$_{id} } openprint::Equipment->find('category any'=>'Printing') ) if ! $session{$r->uri().'?equipment_id'};
 } # end sub overview
+
+sub _production_comments_popup {
+  my $Project = $variable{Project} = new openprint::Project( $param{project_id} );
+} # end sub _production_comments_popup
+
+sub _production_comments {
+  my $Project = $variable{Project} = new openprint::Project( $param{project_id} );
+  if ( $param{action} eq 'Save' ) {
+		$Project->save({ production_comments=>$param{production_comments} });
+  } # end if
+} # end sub _production_comments
 
 1;
 __END__
