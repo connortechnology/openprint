@@ -160,7 +160,8 @@ foreach my $Project ( @Projects ) {
 
 	my @Schedule = openprint::ScheduledJob->find( project_id=>$$Project{id}, 'starttime is null'=>0, order=>'starttime' );
 	my @press_ids = sets::union( map { $Presses{$$_{equipment_id}} ? $$_{equipment_id} : () } @Schedule );
-	next if ! sets::intersection( split(',',$session{$r->uri().'?equipment_id'}), @press_ids );
+	my @selected_presses = split(',',$session{$r->uri().'?equipment_id'});
+	next if ( @selected_presses != @{$$variable{Presses}} ) and !sets::intersection( @selected_presses, @press_ids );
 
 	#my $OP = $Project->Ordered_Project();
 	my ( $year, $month, $day ) = split('-', $Project->due_date() );
