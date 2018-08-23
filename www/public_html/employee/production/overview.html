@@ -138,8 +138,8 @@ my %Presses = map { $$_{id}, $_ } @{$$variable{Presses}};
 
 my @Projects = openprint::Project->find(
 	'order_id is null'=>0,
-	date_filter( $r->uri().'?due_date_end', 'due_date <=' ),
-	date_filter( $r->uri().'?due_date_start', 'due_date >=' ),
+	date_filter( $r->uri().'?due_date_end', 'due_date is null or <=' ),
+	date_filter( $r->uri().'?due_date_start', 'due_date is null or >=' ),
 	order=>'due_date NULLS LAST',
 	status=>[
 	'Pending Deposit',
