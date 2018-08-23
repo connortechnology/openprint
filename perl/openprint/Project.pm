@@ -1805,7 +1805,7 @@ sub link_to {
 } # end sub link_to
 
 sub production_link_to {
-	return sprintf('<a href="/employee/proj/view.html?project_id=%1$d">%2$s</a>', $_[0]{id}, ( $_[1] ? $_[1] : $_[0]{id} ) );
+	return sprintf('<a href="/employee/project/view.html?project_id=%1$d">%2$s</a>', $_[0]{id}, ( $_[1] ? $_[1] : $_[0]{id} ) );
 } # end sub production_link_to
 
 sub check_for_order {
@@ -1959,6 +1959,17 @@ sub can_edit {
   return 0;
 } # end sub can_view
 
+sub change_due_date {
+	my $Project = shift;
+	my $new_due_date = shift;
+
+	my $old_due_date = $$Project{due_date};
+	if ( $old_due_date ne $new_due_date ) {
+		$Project->save( { due_date => $new_due_date } );
+		$Project->add_to_log( @openprint::session{'company_id','user_id'}, "Duedate changed to $new_due_date from $old_due_date" );
+		openprint::employee_project::send_duedate_change_notification( $$Project{id}, $Project->order_id() );
+	} # end if date has changed
+}
 
 1;
 __END__

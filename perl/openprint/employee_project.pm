@@ -1108,5 +1108,23 @@ sub _additional_charge_notifications {
 	} # end if action 
 } # end sub _additional_charge_notifications 
 
+sub _change {
+	if ( $param{action} ) {
+		if ( $param{action} eq 'setduedate' ) {
+
+			my $Project = openprint::Project->find_one( id=>$param{project_id} );
+			if ( ! $Project ) {
+					$log->error("Project $param{project_id} not found in set_duedate");
+					return;
+			} # end if
+			$Project->change_due_date($param{duedate});
+		} else {
+			$log->error("Unrecognized action $param{action} in project _change");
+		} # end if action
+	} else {
+		$log->error("No action in project _change");
+	} # end if action
+} # end sub _change
+
 1;
 __END__
