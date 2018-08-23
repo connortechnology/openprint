@@ -893,6 +893,10 @@ if ( sets::isin( 'project_types', \@tables ) ) {
 	if ( exists $$data{strtemplateurl} ) {
 		$dbh->do('ALTER TABLE Project_Types drop strtemplateurl');
 	}
+	if ( ! exists $$data{deleted} ) {
+		$log->debug("Add deleted to Project_Types");
+		$dbh->do('ALTER TABLE Project_Types add deleted boolean not null default false') or die $dbh->errstr();
+	}
 } else {
 	$dbh->do( misc::load_file( $log, q{../openprint/sql/Project_Types.sql}) );
 } # end if

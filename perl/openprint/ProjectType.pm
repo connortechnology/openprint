@@ -23,6 +23,7 @@ $serial = 'project_types_id_seq';
 	'type'			=>	'type',
 	'please_call'	=>	'please_call',
 	category		=>	undef,
+	deleted		=> 'deleted',
 );
 %transforms = (
 	id			=>	[ 's/\D//g', '<2147483647' ],
@@ -33,6 +34,7 @@ $serial = 'project_types_id_seq';
 	'category_id'	=>	undef,
 	'sorting'		=>	undef,
 	'please_call'	=>	0,
+	deleted	=>	0,
 );
 
 sub save {
