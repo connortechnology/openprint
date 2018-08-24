@@ -102,6 +102,9 @@
 				<li><label>Is Printed</label>
 					<?echo(radio('is_printed', [ '1', 'Yes', '0', 'No', '', 'Both' ], $session{$r->uri().'?is_printed'} );)?>
 				</li>
+				<li><label>Is Proofs Out</label>
+					<?echo(radio('is_proofs_out', [ '1', 'Yes', '0', 'No', '', 'Both' ], $session{$r->uri().'?is_proofs_out'} );)?>
+				</li>
 			</ul>
 			<p class="buttons">
 				<? echo ( button( 'ShowResults', { onclick=>'f1.submit();', text=>'Refresh' } ); ) ?>
@@ -142,13 +145,17 @@ my @Projects = openprint::Project->find(
 	date_filter( $r->uri().'?due_date_start', 'due_date is null or >=' ),
 	order=>'due_date NULLS LAST',
 	status=>[
-	'Pending Deposit',
+( ($session{$r->uri().'?is_proofs_out'} eq '0' or $session{$r->uri().'?is_proofs_out'} eq '' ) ?
+	('Pending Deposit',
 	'In Prepress',
-	'Proofs Out',
+) : () ),
+( ($session{$r->uri().'?is_proofs_out'} eq '1' or $session{$r->uri().'?is_proofs_out'} eq '' ) ?
+	('Proofs Out',
 	'Waiting For Customer Approval',
 	'Waiting For QA Approval',
 	'Approved',
 	'Printed',
+) : () ),
 	],
 	);
 my %Companies = map { $$_{id}, $_ } openprint::Company->find( id=>[ map { $$_{company_id} } @Projects ] );
