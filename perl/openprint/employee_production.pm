@@ -2297,7 +2297,7 @@ sub overview {
 		ssi::save_params( $r->uri(), (
 					( map { 'due_date_start_'. $_ } ( 'year','month','day' ) ),
 					( map { 'due_date_end_'. $_ } ( 'year','month','day' ) ),
-					'equipment_id', 'is_printed',
+					'equipment_id', 'is_printed','is_proofs_out',
 					) );
 	} # end if
 	ssi::setup_date_select( $r->uri(), 'due_date_start', -31 );
