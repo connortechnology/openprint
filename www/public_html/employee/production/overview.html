@@ -241,7 +241,7 @@ foreach my $Project ( @Projects ) {
 	Number::Format::format_number($Project->ordered_quantity()),
 	$$Project{id}, $due_date,
 	$$Project{id}, $$Project{id}, $$Project{due_date},
-	( $$services{NoBindery} ? 'Yes' : '' ),
+	( $$services{PlainCartons} ? '' : 'Yes' ),
 	$$Project{id},
 	( openprint::usergroup::is_user_in( ['Scheduling'], $session{user_id} ) ? 
 		q`onclick="popup_window('_production_comments_popup.html', 'project_id=`.$Project->id().q`', { width: 500, height: 400 } );"` :
