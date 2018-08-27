@@ -105,6 +105,9 @@
 				<li><label>Is Proofs Out</label>
 					<?echo(radio('is_proofs_out', [ '1', 'Yes', '0', 'No', '', 'Both' ], $session{$r->uri().'?is_proofs_out'} );)?>
 				</li>
+				<li><label>Ship Flat</label>
+					<?echo(radio('is_ship_flat', [ '1', 'Yes', '0', 'No', '', 'Both' ], $session{$r->uri().'?is_ship_flat'} );)?>
+				</li>
 			</ul>
 			<p class="buttons">
 				<? echo ( button( 'ShowResults', { onclick=>'f1.submit();', text=>'Refresh' } ); ) ?>
@@ -205,10 +208,15 @@ foreach my $Project ( @Projects ) {
 	}
 
 	my $services = $Project->services();
+
+	my $is_ship_flat = $$services{PlainCartons} ? 0 : 1;
+
+	next if $session{$r->uri().'?is_ship_flat'} eq '1' and ! $is_ship_flat;
+	next if $session{$r->uri().'?is_ship_flat'} eq '0' and $is_ship_flat;
+	
 	my $Service = $Project->Service( $$services{Proofs}[0] ) if $$services{Proofs};
   my %Operators = map { $$_{user_id}, $_ } openprint::Project_Service_Operator->find( service_id=>$$Service{service_id} ) if $Service;
 	my $operators = join(' ', map { $_->User()->link_to( $_->User()->name(), title=>$_->Role()->name ) } values %Operators );
-
 
 	$html .= sprintf('
 <tr>
