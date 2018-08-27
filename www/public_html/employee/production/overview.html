@@ -124,10 +124,10 @@
         <th>To Print</th>
         <th>Printed</th>
         <th>Cut</th>
-        <th>Trim &amp; Box</th>
         <th>Fold</th>
         <th>Stitch</th>
         <th>SWrap</th>
+        <th>Trim &amp; Box</th>
         <th>Total Qty</th>
         <th>Due Date</th>
 				<th>Ship Flat</th>
@@ -136,7 +136,33 @@
 		</thead>
 		<tbody>
 <?echo (
- 
+use warnings; 
+
+sub get_status {
+	my ( $Project, $service_names ) = @_;
+	my $services = $Project->services();
+	foreach my $service_name ( ref $service_names eq 'ARRAY' ? @{$service_names} : ( $service_names ) ) {
+		if ( $$services{$service_name} ) {
+			my $specs = openprint::service::get_specs_ref( $Project, $$services{$service_name}[0] );
+			if ( $$specs{rdbComplete} eq 'Y' ) {
+				return '&#10004;';
+			}
+			if ( $service_name eq 'Folding' ) {
+				if  (
+				openprint::Estimating::Folding::is_offline( $Project, $Project->ordered_quantity_index() )
+				) {
+				return 'Yes';
+				}
+			} else {
+				return 'Yes';
+			}
+		} else {
+$log->debug($service_name . ' not in services');
+		}
+	} # end foreach
+	return '';
+}
+
 my %Presses = map { $$_{id}, $_ } @{$$variable{Presses}};
 
 my @Projects = openprint::Project->find(
@@ -183,6 +209,7 @@ foreach my $Project ( @Projects ) {
   my %Operators = map { $$_{user_id}, $_ } openprint::Project_Service_Operator->find( service_id=>$$Service{service_id} ) if $Service;
 	my $operators = join(' ', map { $_->User()->link_to( $_->User()->name(), title=>$_->Role()->name ) } values %Operators );
 
+
 	$html .= sprintf('
 <tr>
 	<td class="Docket">%s</td>
@@ -192,10 +219,10 @@ foreach my $Project ( @Projects ) {
 	<td class="ToPrint">%s</td>
 	<td class="Printed">%s</td> 
 	<td class="Cut">%s</td>
-	<td class="Trim">%s</td>
 	<td class="Fold">%s</td>
 	<td class="Stitch">%s</td>
 	<td class="ShrinkWrap">%s</td>
+	<td class="Trim">%s</td>
 	<td class="Total">%s</td>
 	<td class="DueDate" id="JumpToDate%d">%s<input type="hidden" name="ScheduleDate-%d" id="ScheduleDate-%d" value="%s"/></td>
 	<td class="ShipFlat">%s</td>
@@ -206,15 +233,15 @@ foreach my $Project ( @Projects ) {
 	( sets::isin( $Project->status(), [ 'Proofs Out', 'Waiting For Customer Approval','Waiting For QA Approval','Approved','Printed' ] ) ? '&#10004;' : '' ),
 	( @press_ids ? join(', ', map { $Presses{$_} ? $Presses{$_}->strid() : () } @press_ids ) : '' ),
 	( $Project->is_printed() ? '&#10004;' : '' ),
-	( $$services{Cutting} ? '&#10004;' : '' ),	
-	( $$services{PlainCartons} ? '&#10004;' : '' ),	
-	( $$services{Folding} and openprint::Estimating::Folding::is_offline( $Project, $Project->ordered_quantity_index() ) ? '&#10004;' : '' ),	
-	( ( $$services{SaddleStitching} or $$services{LoopStitching} ) ? '&#10004;' : '' ),	
-	( $$services{ShrinkWrap} ? '&#10004;' : '' ),	
+	get_status( $Project, 'Cutting' ),	
+	get_status( $Project, 'Folding' ),	
+	get_status( $Project, [ 'SaddleStitching', 'LoopStitching' ] ),	
+	get_status( $Project, 'ShrinkWrap' ),	
+	get_status( $Project, 'PlainCartons' ),	
 	Number::Format::format_number($Project->ordered_quantity()),
 	$$Project{id}, $due_date,
 	$$Project{id}, $$Project{id}, $$Project{due_date},
-	( $$services{NoBindery} ? '&#10004;' : '' ),
+	( $$services{NoBindery} ? 'Yes' : '' ),
 	$$Project{id},
 	( openprint::usergroup::is_user_in( ['Scheduling'], $session{user_id} ) ? 
 		q`onclick="popup_window('_production_comments_popup.html', 'project_id=`.$Project->id().q`', { width: 500, height: 400 } );"` :
