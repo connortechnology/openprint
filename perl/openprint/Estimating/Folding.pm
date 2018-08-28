@@ -1988,8 +1988,11 @@ sub signature_summary {
 						"FoldType-$form-$qty_index-$fold_index"} );
 			} # end foreach
 			my $html = join('<br/>', ( ' on ' . $Equipment->name() ), sort { $a cmp $b } @folds);
-			my $Press = openprint::Equipment->find_one( strid=>$$sig_specs{"ddmPress$qty_index"} );
-			if ( $Press and ( $$Press{id} != $$Equipment{id} ) and ($Press->specification('Folding Capable') eq 'When Printing' ) ) {
+			my $Press = openprint::Equipment->find_one( strid => $$sig_specs{"ddmPress$qty_index"} );
+			if ( $Press and ( $$Press{id} != $$Equipment{id} ) 
+and ( $Equipment->specification('Type') eq 'Folder' )
+#and ($Press->specification('Folding Capable') eq 'When Printing')
+ ) {
 				$html .= '<br/><span class="warning">Folding Offline</span>';
 			}
 			return $html;
@@ -2025,13 +2028,16 @@ sub is_offline {
 		if ( $$fold_specs{"ddmEquipment-$form-$qty_index"} ) {
 			my $Equipment = new openprint::Equipment( $$fold_specs{"ddmEquipment-$form-$qty_index"} );
 			my $Press = openprint::Equipment->find_one( strid=>$$sig_specs{"ddmPress$qty_index"} );
-			if ( $Press and ( $$Press{id} != $$Equipment{id} ) and ($Press->specification('Folding Capable') eq 'When Printing' ) ) {
+			if ( $Press and ( $$Press{id} != $$Equipment{id} ) 
+and ( $Equipment->specification('Type') eq 'Folder' )
+#and ($Press->specification('Folding Capable') eq 'When Printing' )
+ ) {
 				return 1;
 			}
 		} # end if
 	} # end foreach sig
 	return 0;
-}
+} # end sub is_offline
 
 sub summary {
 	my ( $Project, $service_id, $specs, $qty_index ) = @_;
