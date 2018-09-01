@@ -102,6 +102,12 @@
 				<li><label>Is Printed</label>
 					<?echo(radio('is_printed', [ '1', 'Yes', '0', 'No', '', 'Both' ], $session{$r->uri().'?is_printed'} );)?>
 				</li>
+				<li><label>Is Proofs Out</label>
+					<?echo(radio('is_proofs_out', [ '1', 'Yes', '0', 'No', '', 'Both' ], $session{$r->uri().'?is_proofs_out'} );)?>
+				</li>
+				<li><label>Ship Flat</label>
+					<?echo(radio('is_ship_flat', [ '1', 'Yes', '0', 'No', '', 'Both' ], $session{$r->uri().'?is_ship_flat'} );)?>
+				</li>
 			</ul>
 			<p class="buttons">
 				<? echo ( button( 'ShowResults', { onclick=>'f1.submit();', text=>'Refresh' } ); ) ?>
@@ -121,10 +127,10 @@
         <th>To Print</th>
         <th>Printed</th>
         <th>Cut</th>
-        <th>Trim &amp; Box</th>
         <th>Fold</th>
         <th>Stitch</th>
         <th>SWrap</th>
+        <th>Trim &amp; Box</th>
         <th>Total Qty</th>
         <th>Due Date</th>
 				<th>Ship Flat</th>
@@ -133,22 +139,50 @@
 		</thead>
 		<tbody>
 <?echo (
- 
+use warnings; 
+
+sub get_status {
+	my ( $Project, $service_names ) = @_;
+	my $services = $Project->services();
+	foreach my $service_name ( ref $service_names eq 'ARRAY' ? @{$service_names} : ( $service_names ) ) {
+		if ( $$services{$service_name} ) {
+			my $specs = openprint::service::get_specs_ref( $Project, $$services{$service_name}[0] );
+			if ( $$specs{rdbComplete} and ( $$specs{rdbComplete} eq 'Y' ) ) {
+				return '&#10004;';
+			}
+			if ( $service_name eq 'Folding' ) {
+				if  (
+				openprint::Estimating::Folding::is_offline( $Project, $Project->ordered_quantity_index() )
+				) {
+				return 'Yes';
+				}
+			} else {
+				return 'Yes';
+			}
+		}
+	} # end foreach
+	return '';
+}
+
 my %Presses = map { $$_{id}, $_ } @{$$variable{Presses}};
 
 my @Projects = openprint::Project->find(
 	'order_id is null'=>0,
-	date_filter( $r->uri().'?due_date_end', 'due_date <=' ),
-	date_filter( $r->uri().'?due_date_start', 'due_date >=' ),
+	date_filter( $r->uri().'?due_date_end', 'due_date is null or <=' ),
+	date_filter( $r->uri().'?due_date_start', 'due_date is null or >=' ),
 	order=>'due_date NULLS LAST',
 	status=>[
-	'Pending Deposit',
+( ($session{$r->uri().'?is_proofs_out'} eq '0' or $session{$r->uri().'?is_proofs_out'} eq '' ) ?
+	('Pending Deposit',
 	'In Prepress',
-	'Proofs Out',
+) : () ),
+( ($session{$r->uri().'?is_proofs_out'} eq '1' or $session{$r->uri().'?is_proofs_out'} eq '' ) ?
+	('Proofs Out',
 	'Waiting For Customer Approval',
 	'Waiting For QA Approval',
 	'Approved',
 	'Printed',
+) : () ),
 	],
 	);
 my %Companies = map { $$_{id}, $_ } openprint::Company->find( id=>[ map { $$_{company_id} } @Projects ] );
@@ -164,7 +198,7 @@ foreach my $Project ( @Projects ) {
 	next if ( @selected_presses != @{$$variable{Presses}} ) and !sets::intersection( @selected_presses, @press_ids );
 
 	#my $OP = $Project->Ordered_Project();
-	my ( $year, $month, $day ) = split('-', $Project->due_date() );
+	my ( $year, $month, $day ) = $Project->due_date() ? split('-', $Project->due_date() ) : ();
 	
 	my $due_date = $month ? '&nbsp;'.substr( Date::Calc::Month_to_Text( $month ),0, 3) . ' '.$day : '';
 	if ( $month and ( Date::Calc::Delta_Days( $year, $month, $day, Date::Calc::Today() ) > 60 ) ) {
@@ -172,6 +206,12 @@ foreach my $Project ( @Projects ) {
 	}
 
 	my $services = $Project->services();
+
+	my $is_ship_flat = $$services{PlainCartons} ? 0 : 1;
+
+	next if $session{$r->uri().'?is_ship_flat'} eq '1' and ! $is_ship_flat;
+	next if $session{$r->uri().'?is_ship_flat'} eq '0' and $is_ship_flat;
+	
 	my $Service = $Project->Service( $$services{Proofs}[0] ) if $$services{Proofs};
   my %Operators = map { $$_{user_id}, $_ } openprint::Project_Service_Operator->find( service_id=>$$Service{service_id} ) if $Service;
 	my $operators = join(' ', map { $_->User()->link_to( $_->User()->name(), title=>$_->Role()->name ) } values %Operators );
@@ -185,10 +225,10 @@ foreach my $Project ( @Projects ) {
 	<td class="ToPrint">%s</td>
 	<td class="Printed">%s</td> 
 	<td class="Cut">%s</td>
-	<td class="Trim">%s</td>
 	<td class="Fold">%s</td>
 	<td class="Stitch">%s</td>
 	<td class="ShrinkWrap">%s</td>
+	<td class="Trim">%s</td>
 	<td class="Total">%s</td>
 	<td class="DueDate" id="JumpToDate%d">%s<input type="hidden" name="ScheduleDate-%d" id="ScheduleDate-%d" value="%s"/></td>
 	<td class="ShipFlat">%s</td>
@@ -199,20 +239,20 @@ foreach my $Project ( @Projects ) {
 	( sets::isin( $Project->status(), [ 'Proofs Out', 'Waiting For Customer Approval','Waiting For QA Approval','Approved','Printed' ] ) ? '&#10004;' : '' ),
 	( @press_ids ? join(', ', map { $Presses{$_} ? $Presses{$_}->strid() : () } @press_ids ) : '' ),
 	( $Project->is_printed() ? '&#10004;' : '' ),
-	( $$services{Cutting} ? '&#10004;' : '' ),	
-	( $$services{PlainCartons} ? '&#10004;' : '' ),	
-	( $$services{Folding} and openprint::Estimating::Folding::is_offline( $Project, $Project->ordered_quantity_index() ) ? '&#10004;' : '' ),	
-	( ( $$services{SaddleStitching} or $$services{LoopStitching} ) ? '&#10004;' : '' ),	
-	( $$services{ShrinkWrap} ? '&#10004;' : '' ),	
+	get_status( $Project, 'Cutting' ),	
+	get_status( $Project, 'Folding' ),	
+	get_status( $Project, [ 'SaddleStitching', 'LoopStitching' ] ),	
+	get_status( $Project, 'ShrinkWrap' ),	
+	get_status( $Project, 'PlainCartons' ),	
 	Number::Format::format_number($Project->ordered_quantity()),
 	$$Project{id}, $due_date,
-	$$Project{id}, $$Project{id}, $$Project{due_date},
-	( $$services{NoBindery} ? '&#10004;' : '' ),
+	$$Project{id}, $$Project{id}, ($$Project{due_date}?$$Project{due_date}:''),
+	( $$services{PlainCartons} ? '' : 'Yes' ),
 	$$Project{id},
 	( openprint::usergroup::is_user_in( ['Scheduling'], $session{user_id} ) ? 
 		q`onclick="popup_window('_production_comments_popup.html', 'project_id=`.$Project->id().q`', { width: 500, height: 400 } );"` :
 '' ),
-	$$Project{production_comments},
+	( $$Project{production_comments} ? $$Project{production_comments} : '' ),
 	);
 }
 return $html;
