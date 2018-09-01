@@ -1,7 +1,7 @@
 <? echo (
 	my $Service = $$variable{Project}->Service( $$variable{ServiceIndex} );
 
-	my @Roles = openprint::Operator_Role->find( servicetype_id=>$Service->servicetype_id(), order=>'lower(name)' );
+	my @Roles = openprint::Operator_Role->find( servicetype_id=>$Service->servicetype_id(), order=>'sorting, lower(name)' );
 	if ( ! @Roles ) {
 		@Roles = openprint::Operator_Role->find( servicetype_id=>undef, order=>'lower(name)' );
 	}

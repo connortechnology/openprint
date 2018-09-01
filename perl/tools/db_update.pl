@@ -5679,6 +5679,12 @@ if ( ! sets::isin('operator_roles', \@tables ) ) {
 	$log->debug("Adding Operator Roles");
 	$dbh->do( misc::load_file( $log, q{../openprint/sql/Operator_Roles.sql}) );
 	die if $dbh->errstr();
+} else {
+	my $data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='operator_roles'", 'column_name');
+	if ( ! exists $$data{sorting} ) {
+$log->debug("Adding sorting to Operator_ROles");
+		$dbh->do('ALTER TABLE operator_roles add sorting integer');
+	} # end if
 } # end if
 if ( ! sets::isin('project_service_operators', \@tables ) ) {
 	$log->debug("Adding Project Service Operators");
