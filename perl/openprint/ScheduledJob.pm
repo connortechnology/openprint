@@ -325,7 +325,7 @@ sub get_li {
 			my %operators = map { $$_{user_id}, $_ } $Proofs_Service->Operators();
 
 			$html .= ' ('.join(', ', map { '<span class="PrepressOperator">'.$_->User()->firstname().'</span>' } values %operators ).')';
-		} else {
+		} elsif ( $$Project{docket} ) {
 			$openprint::log->error("NO proofs found in $$Project{id}");
 		} # end if
 		if ( $Project->reprint() eq 'Y' ) {
