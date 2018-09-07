@@ -1663,7 +1663,7 @@ $log->debug("Adjusting forms from $$Job{forms} to $param{forms}");
 			$sql{runtime} = $param{runtime};
 		} # end if
 		if ( exists $param{'starttime_year'} ) {
-			if ( Date::Calc::check_date( map { $_ => $param{'starttime_'.$_} } ( 'year', 'month', 'day' ) ) ) {
+			if ( Date::Calc::check_date( map { $param{'starttime_'.$_} } ( 'year', 'month', 'day' ) ) ) {
 				my $old_starttime_dt = DateTime::Format::Pg->parse_datetime( $Job->starttime() );
 				my $new_starttime_dt = DateTime->new( time_zone=>$openprint::TZ, map { $_ => $param{'starttime_'.$_} } ( 'year', 'month', 'day', 'hour', 'minute' ) );
 				if ( $old_starttime_dt != $new_starttime_dt ) {
