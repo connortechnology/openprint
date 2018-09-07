@@ -63,7 +63,7 @@ Carp::cluck("Loadi?! ");
 }
 sub starttime_seconds {
 	if ( @_ == 2 ) {
-		$_[0]{starttime} = $parser->format_datetime( DateTime->from_epoch( 'epoch'=>$_[1], time_zone=>$openprint::TZ ) );
+		$_[0]{starttime} = $parser->format_datetime( DateTime->from_epoch( epoch=>$_[1], time_zone=>$openprint::TZ ) );
 	} # end if
 	return $parser->parse_datetime( $_[0]{starttime} )->epoch();
 } # endsub
@@ -112,22 +112,33 @@ sub name {
 } # end sub name
 
 sub schedule {
-	return openprint::press_schedule->find( 'starttime >='=>$_[0]{starttime}, 'starttime <='=>$_[0]{endtime}, equipment_id=>$_[0]{equipment_id} );
+	return openprint::press_schedule->find(
+			'starttime >='=>$_[0]{starttime},
+			'starttime <='=>$_[0]{endtime},
+			equipment_id	=>$_[0]{equipment_id}
+			);
 } # end sub schedule
 
 sub Schedule {
-	return openprint::ScheduledJob->find( 
-		( $_[0]{starttime} ? 
-			( 
-			'starttime >='		=>	$_[0]{starttime}, 
-			'starttime <'		=>	$_[0]{endtime}, 
-			) : (
-			'starttime is null'	=>	$_[0]{starttime} ? 0 : 1,
-			) ),
-			equipment_id		=>	$_[0]{equipment_id},
-			order				=>	'starttime,projectindex,service_id',
-			);
+	if ( ! $_[0]{Schedule} ) {
+		$_[0]{Schedule} = [ openprint::ScheduledJob->find( 
+				( $_[0]{starttime} ? 
+					( 
+					 'starttime >='		=>	$_[0]{starttime}, 
+					 'starttime <'		=>	$_[0]{endtime}, 
+					) : (
+						'starttime is null'	=>	$_[0]{starttime} ? 0 : 1,
+						) ),
+				equipment_id		=>	$_[0]{equipment_id},
+				order				=>	'starttime,projectindex,service_id',
+				)];
+	}
+	return @{$_[0]{Schedule}};
 } # end sub Schedule
+
+sub Schedule_Without_Job {
+	return map { $$_{id} != $_[1] ? $_ : () } $_[0]->Schedule();
+}
 
 sub operator_id {
 	my $self = shift;
