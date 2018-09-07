@@ -120,7 +120,7 @@ sub schedule {
 } # end sub schedule
 
 sub Schedule {
-	if ( ! $_[0]{Schedule} ) {
+	#if ( ! $_[0]{Schedule} ) {
 		$_[0]{Schedule} = [ openprint::ScheduledJob->find( 
 				( $_[0]{starttime} ? 
 					( 
@@ -132,7 +132,7 @@ sub Schedule {
 				equipment_id		=>	$_[0]{equipment_id},
 				order				=>	'starttime,projectindex,service_id',
 				)];
-	}
+	#}
 	return @{$_[0]{Schedule}};
 } # end sub Schedule
 
