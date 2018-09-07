@@ -676,7 +676,7 @@ sub status {
 } # end sub status
 
 sub bump {
-	my ( $self, $equipment_id ) = @_;
+	my ( $self, $equipment_id, $NewShift ) = @_;
 	push @{$variable{changed}}, $self->Shift()->ul_id();
 	my $Project = $self->Project();
 	$Project->save({ due_date=>$Project->get_due_date()}) if $Project->id() and ! $Project->due_date();
@@ -685,94 +685,117 @@ sub bump {
 	$dbh->do( 'LOCK TABLE Schedule IN ACCESS EXCLUSIVE MODE' ) or $log->error( DBI->errstr );
 	$dbh->do( 'LOCK TABLE Shifts IN ACCESS EXCLUSIVE MODE' ) or $log->error( DBI->errstr );
 
+	my $Equipment = $self->Equipment();
+
+	# If we have a change of equipment
 	if ( $equipment_id and ( $equipment_id != $$self{equipment_id} ) ) {
-		my $old_equipment_id = $$self{equipment_id};
-		$self->save({equipment_id=>$equipment_id});
+		$self->equipment_id($equipment_id);
 		# Shuffle the old list
-		if ( $old_equipment_id and new openprint::Equipment( $old_equipment_id )->smartscheduling() ) {
-			openprint::employee_production::reorder_jobs(openprint::ScheduledJob->find( equipment_id=>$old_equipment_id,'starttime is null'=>0,order=>'starttime' ));
+		if ( $Equipment->smartscheduling() ) {
+			openprint::employee_production::reorder_jobs(
+					openprint::ScheduledJob->find(
+						equipment_id				=>$$Equipment{id},
+						'starttime is null'	=>0,
+						order								=>'starttime',
+						));
 		} # end if
+		$Equipment = $self->Equipment();
 	} # end if
 
 	my $error;
-	if ( $self->Equipment()->smartscheduling() ) {
-		if ( ! $$self{starttime} ) {
-			my $LastJob = openprint::ScheduledJob->find_one(
-				order	=>	'starttime DESC NULLS LAST',
-				tentative	=>	0,
-				equipment_id	=>	$$self{equipment_id},
-				'id !='			=>	$$self{id},
-			);
-			my $starttime_seconds;
-			if ( $LastJob ) {
-				$starttime_seconds = $LastJob->endtime_seconds() + 1;
-			} # end if
-			if ( $starttime_seconds < time ) {
-				$starttime_seconds = time;
-			} # end if
-							
-			$error .= $self->save({starttime_seconds=>$starttime_seconds});
-			push @{$variable{changed}}, $self->Shift()->ul_id();
-		} else {
-			my @final_order = openprint::ScheduledJob->find( equipment_id=>$self->equipment_id(),'starttime <'=>$self->starttime(),order=>'starttime' );
-			foreach my $Job ( $self->Shift()->Schedule() ) {
-				push @final_order, $Job if $$Job{id} != $$self{id};
-			} # end foreach job in shift
-			my $Next = $self->Shift()->Next();
-			push @final_order, $Next->Schedule();
-			push @final_order, $self;
-			push @final_order, openprint::ScheduledJob->find( equipment_id=>$self->equipment_id(),'starttime >='=>$Next->endtime(),order=>'starttime' );
+	if ( $Equipment->smartscheduling() ) {
+# When SmartScheduling, all jobs can move. so determine the appropriate shift, sort the jobs
+		if ( ! $NewShift ) {
+			if ( $$self{starttime} ) {
+				$NewShift = $self->Shift()->Next();
+			} else {
+# Have no starttime, so stick on the end of the last shift
+				my $LastJob = openprint::ScheduledJob->find_one(
+						order					=>	'starttime DESC NULLS LAST',
+						tentative			=>	0,
+						equipment_id	=>	$$self{equipment_id},
+						'id !='				=>	$$self{id},
+						);
+				$NewShift = $LastJob->Shift();
+			}
+		}
 
-			openprint::employee_production::reorder_jobs( @final_order );
-		} # end if
+		my @final_order = openprint::ScheduledJob->find(
+				equipment_id	=>	$self->equipment_id(),
+				'starttime <'	=>	$NewShift->starttime(),
+				'id !='	=>	$$self{id},
+				order=>'starttime',
+				);
+		foreach my $Job ( $NewShift->Schedule() ) {
+			push @final_order, $Job if $$Job{id} != $$self{id};
+		} # end foreach job in shift
+		push @final_order, $self;
+		push @final_order, openprint::ScheduledJob->find(
+				equipment_id	=>	$self->equipment_id(),
+				'starttime >='=>	$NewShift->endtime(),
+				'id !=' 			=>	$$self{id},
+				order					=>	'starttime',
+				);
+
+		# Reorder will do the saving
+		openprint::employee_production::reorder_jobs( @final_order );
 	} else {
 		$openprint::log->debug("Not smart scheduling");
-		if ( ! $$self{starttime} ) {
-			$openprint::log->debug("Coming from pending");
-			my $LastJob = openprint::ScheduledJob->find_one(
-				order	=>	'starttime DESC',
-				tentative	=>	0,
-				equipment_id	=>	$$self{equipment_id},
-				'id !='			=>	$$self{id},
-				'starttime is null' => 0
-			);
-			my $starttime_seconds = 0;
-			if ( $LastJob ) {
-				$starttime_seconds = $LastJob->endtime_seconds() + 1;
-				$log->debug("Setting starttime after last job : " .$LastJob->to_string() );
+		# In non-smart scheduling, we don't touch any of the other jobs, just the one that moves.
+		# If the job is scheduled, then bump to either the specified shift, or the last populated shift.
+		if ( ! $NewShift ) {
+			if ( $$self{starttime} ) {
+				$NewShift = $self->Shift()->Next();
 			} else {
-				$log->debug("No Last Job");
-			}
-			# This time might not fall on a shift.
-			if ( $starttime_seconds < ( $_ = time ) ) {
-				$openprint::log->debug("Resulting time is less than now $starttime_seconds, bumping to now $_");
-				$starttime_seconds = $_;
-			}
+				# Get the last job, and derive the shift from it.
+				my $LastJob = openprint::ScheduledJob->find_one(
+						order	=>	'starttime DESC',
+						tentative	=>	0,
+						equipment_id	=>	$$self{equipment_id},
+						'id !='			=>	$$self{id},
+						'starttime is null' => 0
+						);
+				if ( $LastJob ) {
+					$NewShift = $LastJob->Shift();
+				} else {
+					# Find a shift > now
+					$NewShift = openprint::Shift->find_one(
+							equipment_id  =>  $$self{equipment_id},
+							'starttime >='	=>	$parser->format_datetime(DateTime->now()),
+							);
+					if ( ! $NewShift ) {
+						$log->error("Need to emanantise");
+					}
+				}
+			} # end if was scheduled
+		} # end if ! NewShift
 
-			# Can't just set startime here.  Should always be a valid shift time.
-			# So get a shift first
-			$self->starttime_seconds( $starttime_seconds );
-			if ( ! $self->Shift() ) {
-				$openprint::log->debug("No shift");
-				# Fell into a spot where there are not Shifts.
-				# So we should 
-			} # end if
-
-			$error .= $self->save({ starttime_seconds=>$starttime_seconds });
+		my $starttime_seconds = 0;
+		my @Jobs = $NewShift->Schedule_Without_Job( $$self{id} );
+		if ( @Jobs ) {
+			my $LastJob = $Jobs[@Jobs-1];
+			$starttime_seconds = $LastJob->endtime_seconds() + 1;
+			$log->debug("Setting starttime after last job : " .$LastJob->to_string() );
 		} else {
-			my $NextShift = $self->Shift()->Next();
-			while ( $NextShift->starttime_seconds() < time ) {
-				$NextShift= $NextShift->Next();
-			}
-			my @NextSchedule = $NextShift->Schedule();
-			if ( @NextSchedule ) {
-				my $LastJob = pop @NextSchedule;
-				$self->starttime_seconds($LastJob->endtime_seconds()+1);
-				$self->save();
-			} else {
-				$self->save({starttime=>$NextShift->starttime()});
-			} # end if
+			$log->debug("No Last Job");
+			$starttime_seconds = $NewShift->starttime_seconds();
+		}
+# This time might not fall on a shift.
+		if ( $starttime_seconds < ( $_ = time ) ) {
+			$openprint::log->debug("Resulting time is less than now $starttime_seconds, bumping to now $_");
+			$starttime_seconds = $_;
+		}
+
+# Can't just set startime here.  Should always be a valid shift time.
+# So get a shift first
+		$self->starttime_seconds( $starttime_seconds );
+		if ( ! $self->Shift() ) {
+			$openprint::log->error("No shift");
+# Fell into a spot where there are not Shifts.
+# So we should 
 		} # end if
+
+		$error .= $self->save();
 		my $Shift = $self->Shift();
 		push @{$variable{changed}}, $Shift->ul_id() if $Shift;
 	} # end if smartscheduling
@@ -943,8 +966,11 @@ sub ServiceType {
 
 sub equipment_id {
 	if ( @_ > 1 ) {
-		$_[0]{equipment_id} = $_[1];
-		delete $_[0]{Shift};
+		if ( $_[0]{equipment_id} != $_[1] ) {
+			$_[0]{equipment_id} = $_[1];
+			delete $_[0]{Shift};
+			delete $_[0]{Equipment};
+		}
 	} # end if
 	if ( ( ! $_[0]{equipment_id} ) and $_[0]{project_id} ) {
 		# Attempt to guess

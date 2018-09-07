@@ -44,6 +44,8 @@ use vars qw( $r $log $dbh %variable %param %session %config );
 *param = \%openprint::param;
 *config = \%openprint::config;
 
+my $parser = 'DateTime::Format::Pg';
+
 sub jobs_by_csr {
 	_jobs_by_csr();
 } # end sub jobs_by_csr
@@ -1664,7 +1666,7 @@ $log->debug("Adjusting forms from $$Job{forms} to $param{forms}");
 		} # end if
 		if ( exists $param{'starttime_year'} ) {
 			if ( Date::Calc::check_date( map { $param{'starttime_'.$_} } ( 'year', 'month', 'day' ) ) ) {
-				my $old_starttime_dt = DateTime::Format::Pg->parse_datetime( $Job->starttime() );
+				my $old_starttime_dt = $parser->parse_datetime( $Job->starttime() );
 				my $new_starttime_dt = DateTime->new( time_zone=>$openprint::TZ, map { $_ => $param{'starttime_'.$_} } ( 'year', 'month', 'day', 'hour', 'minute' ) );
 				if ( $old_starttime_dt != $new_starttime_dt ) {
 					$sql{starttime} = DateTime::Format::Pg->format_datetime( $new_starttime_dt );
@@ -1691,38 +1693,62 @@ $log->debug("Adjusting forms from $$Job{forms} to $param{forms}");
 					openprint::ScheduledJob->find( 'starttime is null'=>0, equipment_id=>$$Job{equipment_id},order=>'starttime' ) );
 		} # end if smartscheduling
 	} elsif ( $param{btnFunction} eq 'BumpJob' ) {
+		my $NewShift;
+		if ( Date::Calc::check_date( map { $param{'starttime_'.$_} } ( 'year', 'month', 'day' ) ) ) {
+# We assume that there is a shift, otherwise how can we be scheduling?
+			my $starttime_dt = DateTime->new(
+					( map { $_ => $param{'starttime_'.$_} } ( 'year','month','day' ) ),
+					hour=>0, minute=>0, second=>0, time_zone=>$openprint::TZ );
+			my $endtime_dt = DateTime->new(
+					( map { $_ => $param{'starttime_'.$_} } ( 'year','month','day' ) ),
+					hour=>23, minute=>59, second=>59, time_zone=>$openprint::TZ );
+			$NewShift = openprint::Shift->find_one(
+					'starttime >='	=>	$parser->format_datetime($starttime_dt),
+					'starttime <='	=>	$parser->format_datetime($endtime_dt),
+					( $param{shift_id} ? ( shift_id				=>	$param{shift_id}) : () ),
+					equipment_id		=>	$$Equipment{id},
+					);
+		} else {
+			$log->debug("No valid startdate specified");
+		}
 		if ( $param{servicetype_id} ) {
 			# The intent is to copy the job
-			foreach my $servicetype_id ( ref $param{servicetype_id} eq 'ARRAY' ? @{$param{servicetype_id}} : split(',',$param{servicetype_id}) ) {
-				if ( ! $Job->project_id() ) {
+			foreach my $servicetype_id (
+					ref $param{servicetype_id} eq 'ARRAY' ? @{$param{servicetype_id}} : split(',',$param{servicetype_id})
+					) {
+				if ( !$Job->project_id() ) {
 					my $J = $Job->copy();
-					$J->save({
-						equipment_id =>	$param{equipment_id},
-					});
+					$J->save({ equipment_id => $param{equipment_id} });
 				} else {
-					my @Services = openprint::Project_Service->find( project_id=>$Job->project_id(), servicetype_id=>$servicetype_id);
-					if ( ! @Services ) {
+					my @Services = openprint::Project_Service->find(
+							project_id			=>	$Job->project_id(),
+							servicetype_id	=>	$servicetype_id
+							);
+					if ( !@Services ) {
 						# Add one.
 						$log->debug("Adding $servicetype_id servicetype to $$Job{project_id}");
 						push @Services, $Job->Project()->add_Service( new openprint::ServiceType( $servicetype_id ) );
 					} # end if
 					foreach my $Service ( @Services ) {
-						my $J = openprint::ScheduledJob->find_one(project_id=>$Job->project_id(), 'service_id @>'=>$Service->service_id());
+						my $J = openprint::ScheduledJob->find_one(
+								project_id			=>	$Job->project_id(),
+								'service_id @>'	=>	$Service->service_id()
+								);
 						if ( ! $J ) {
 							$J = new openprint::ScheduledJob();
 							$variable{error} .= $J->save({
-								project_id		=>	$Service->project_id(),
-								service_id		=>	[$Service->service_id()],
-								equipment_id	=>	$param{equipment_id},
+								project_id			=>	$Service->project_id(),
+								service_id			=>	[$Service->service_id()],
+								equipment_id		=>	$param{equipment_id},
 								servicetype_id	=>	$Service->servicetype_id(),
 							});
 						} # end if
-						$variable{error} .= $J->bump( $param{equipment_id} );
+						$variable{error} .= $J->bump( $param{equipment_id}, $NewShift );
 					} # end foreach Service
 				} # end if project_id
 			} # end foreach servicetype_id
 		} else {
-			$variable{error} .= $Job->bump( $param{equipment_id} );
+			$variable{error} .= $Job->bump( $param{equipment_id}, $NewShift );
 		} # end if
 	} elsif ( $param{action} eq 'Down' ) {
 		my $Job = new openprint::ScheduledJob( $param{schedule_id} );
@@ -1930,7 +1956,6 @@ sub _shift_change {
 			return;
 		} # end if
 
-		my $parser = 'DateTime::Format::Pg';
 
 		# Prevent starttime changing from excluding jobs
 		foreach my $J ( $Shift->Schedule() ) {
