@@ -1888,7 +1888,7 @@ $imp->display(" Less than $max_imposition") if DEBUG_INITIAL_FILTERING;
 							foreach my $I ( @{$imps{$str}} ) {
 								if ( $$I{Paper}->area() <= $A->area() ) {
 									$add = 0;
-	$imp->display("Foudn non-dutch") if DEBUG_INITIAL_FILTERING;
+	$imp->display("Found non-dutch") if DEBUG_INITIAL_FILTERING;
 								} # end if
 							} # end foreach
 						} # end if
@@ -7132,31 +7132,40 @@ sub runspeed {
 
 	my $Imposition = new openprint::Imposition();
 	$Imposition->load( $sig_specs, $qty_index, $Project );
+	my $Paper = $Imposition->Paper();
+	my $form = $$sig_specs{SignatureIndex};
 
 	if ( $Equipment->specification('Folding Capable') eq 'When Printing' ) {
 		my $services = $Project->services();
 		if ( $$services{Folding} ) {
 			my $fold_specs = openprint::service::get_specs_ref( $Project, $$services{Folding}[0] );
+
 			if ( $$fold_specs{'ddmEquipment-'.$$sig_specs{SignatureIndex}.'-'.$qty_index} == $Equipment->id() ) {
-				my $foldtype = sprintf('%sx%s-%dPage-%sSignatureFold', @$Imposition{'spread_columns','spread_rows','pages'}, $openprint::Imposition::Orientations{$$Imposition{'image_orientation'}} );
-				$runspeed = int( $Equipment->specification($foldtype.'RunSpeed', $$Imposition{Paper}->gsm() ) );
-#$log->debug("Foudn runspeed for fold $foldtype: $runspeed");
-			} # end if
-		} # end if
-	} # end if
-	#if ( ! $runspeed ) {
-		#$runspeed = int( $Equipment->specification( 'Press Additional Run Speed', $$sig_specs{txtSpecificStockCalliper} ) );
-#$log->debug("Foudn Additional runspeed for $$Equipment{strid}: $runspeed");
-	#} # end if
-	if ( ! $runspeed ) {
+				$runspeed = int($$fold_specs{"FoldRunspeed-$form-$qty_index-1"});
+				if ( ! $runspeed ) {
+					my @Folds = openprint::Estimating::Folding::get_Folds($fold_specs, $Imposition, $qty_index);
+					if ( @Folds ) {
+						my $Fold = $Folds[0];
+						$runspeed = int($Fold->runspeed($$Fold{runspeed_units} eq 'calliper' ? $$Paper{calliper} : $$Paper{gsm}));
+					}
+				}
+			} # end if Folding inline
+		} # end if has Folding
+	} # end if Press supports Folding
+
+	if ( !$runspeed ) {
 		my $RunSpeed = $Equipment->Specification('Run Speed '.$$Imposition{runstyle});
 		$RunSpeed = $Equipment->Specification('Run Speed') if ! $RunSpeed;
-		if ( $RunSpeed and lc $$RunSpeed{units} eq 'calliper' ) {
-			$runspeed = $Equipment->specification($$RunSpeed{name}, $$Imposition{Paper}{calliper});
-$log->debug("Foudn runspeed for $$Equipment{strid}: $runspeed on calliper:" . $$Imposition{Paper}{calliper} );
+		if ( $RunSpeed ) {
+			if ( lc $$RunSpeed{units} eq 'calliper' ) {
+				$runspeed = $Equipment->specification($$RunSpeed{name}, $$Paper{calliper});
+				$log->debug("Found runspeed for $$Equipment{strid}: $runspeed on calliper:" . $$Paper{calliper} );
+			} else {
+				$runspeed = int($Equipment->specification($$RunSpeed{name}, $Paper->gsm()) );
+				$log->debug("Found runspeed for $$Equipment{strid}: $runspeed on gsm:" . $Paper->gsm());
+			}
 		} else {
-			$runspeed = int( $Equipment->specification($$RunSpeed{name}, $$Imposition{Paper}->gsm() ) );
-$log->debug("Foudn runspeed for $$Equipment{strid}: $runspeed on gsm:" . $$Imposition{Paper}->gsm() );
+			$runspeed = int($Equipment->specification('Standard Run Speed', $Paper->gsm()));
 		}
 	} # end if
 	return $runspeed;
