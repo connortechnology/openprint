@@ -152,9 +152,9 @@ sub get_status {
 			}
 			if ( $service_name eq 'Folding' ) {
 				if  (
-				openprint::Estimating::Folding::is_offline( $Project, $Project->ordered_quantity_index() )
+					openprint::Estimating::Folding::is_offline( $Project, $Project->ordered_quantity_index() )
 				) {
-				return 'Yes';
+					return 'Yes';
 				}
 			} else {
 				return 'Yes';
@@ -192,7 +192,7 @@ foreach my $Project ( @Projects ) {
 	next if $session{$r->uri().'?is_printed'} eq '1' and ! $Project->is_printed();
 	next if $session{$r->uri().'?is_printed'} eq '0' and $Project->is_printed();
 
-	my @Schedule = openprint::ScheduledJob->find( project_id=>$$Project{id}, 'starttime is null'=>0, order=>'starttime' );
+	my @Schedule = openprint::ScheduledJob->find( project_id=>$$Project{id}, order=>'starttime' );
 	my @press_ids = sets::union( map { $Presses{$$_{equipment_id}} ? $$_{equipment_id} : () } @Schedule );
 	my @selected_presses = split(',',$session{$r->uri().'?equipment_id'});
 	next if ( @selected_presses != @{$$variable{Presses}} ) and !sets::intersection( @selected_presses, @press_ids );
