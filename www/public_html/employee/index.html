@@ -34,15 +34,20 @@ You may use a barcode scanner.  Simply scan the code and click Go.<br/>
 		<ul>
 		<li>
 			<label>Docket #</label>
-			<? echo ( join('', 
-						input(type=>'cardinal',name=>'StartDocket', onchange=>'change_handler(this);', onkeypress=>'return input_handler(this,event);', onkeydown=>'if(event.keyCode==13){submit_handler(f1);}', min=>1),
-						button( 'Go1', { onclick=>'submit_handler( f1 );', text=>'Go' } ),
-						button( 'Go1Prepress', { onclick=>q`window.location='/employee/proj/prep/proofs.html?docket='+f1.StartDocket.value;`, text=>'Go Proofs' } ),
+			<? echo ( join("\n", 
+						input(type=>'cardinal',name=>'StartDocket',
+							onchange=>'change_handler(this);',
+							onkeypress=>'return input_handler(this,event);',
+							onkeydown=>'if(event.keyCode==13){submit_handler(f1);}',
+							min=>1
+							),
+						button('Go1', { onclick=>'submit_handler( f1 );', text=>'Go' } ),
+						button('Go1Prepress', { onclick=>q`if(f1.StockDocket.value){window.location='/employee/proj/prep/proofs.html?docket='+f1.StartDocket.value;};`, text=>'Go Proofs' } ),
 						); ) ?>
 		</li>
 		<li>
 			<label>Order #</label>
-			<? echo ( join('',
+			<? echo ( join("\n",
 				input(type=>'cardinal',name=>'OrderID', onchange=>'change_handler(this);', onkeypress=>'return input_handler( this, event );', onkeydown=>'if(event.keyCode == 13){submit_handler(f1);}' ),
 				button( 'Go2', { onclick=>'submit_handler( f1 );', text=>'Go' } ),
 				); ) ?>
