@@ -20,6 +20,7 @@ function check_input( form, signature_index ) {
 	$$variable{Project} = new openprint::Project( $$variable{ProjectIndex} );
 	@$variable{Docket} = $$variable{Project}->docket();
 ) ?>
+<?if($$variable{Project}->id())?>
 <a href="/employee/project/view.html?ProjectIndex=<?ProjectIndex?>">Return to Project <?ProjectIndex?></a><br/>
 <br/>
 <div class="error"><?ErrorMessage?></div>
@@ -100,3 +101,6 @@ function check_input( form, signature_index ) {
 </div><!-- Column -->
 <br class="spacer"/>
 <?include(/employee/project/_production_log_container.html)?>
+<?else($$variable{Project}->id())?>
+<div class="error">Project not found</div>
+<?endif($$variable{Project}->id())?>
