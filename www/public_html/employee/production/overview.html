@@ -165,6 +165,7 @@ sub get_status {
 }
 
 my %Presses = map { $$_{id}, $_ } @{$$variable{Presses}};
+my %Presses_by_strid = map { $$_{strid}, $_ } @{$$variable{Presses}};
 
 my @Projects = openprint::Project->find(
 	'order_id is null'=>0,
@@ -194,6 +195,16 @@ foreach my $Project ( @Projects ) {
 
 	my @Schedule = openprint::ScheduledJob->find( project_id=>$$Project{id}, order=>'starttime' );
 	my @press_ids = sets::union( map { $Presses{$$_{equipment_id}} ? $$_{equipment_id} : () } @Schedule );
+
+	my $qty_index = $Project->ordered_quantity_index();
+
+	my @quoted_presses = ();
+	foreach my $sig_id ( $Project->signatures() ) {
+		my $sig_specs = openprint::service::get_specs_ref( $Project, $sig_id );
+		push @quoted_presses, ( $$sig_specs{UsedPress} ? $$sig_specs{UsedPress} : $$sig_specs{"ddmPress$qty_index"} );
+	}
+	my @quoted_press_ids = map { $Presses_by_strid{$_} ? $Presses_by_strid{$_}->id() : () } sets::union( @quoted_presses );
+
 	my @selected_presses = split(',',$session{$r->uri().'?equipment_id'});
 	next if ( @selected_presses != @{$$variable{Presses}} ) and !sets::intersection( @selected_presses, @press_ids );
 
@@ -237,7 +248,11 @@ foreach my $Project ( @Projects ) {
 	$Project->production_link_to( $Project->Company()->name() ),
 	$operators,
 	( sets::isin( $Project->status(), [ 'Proofs Out', 'Waiting For Customer Approval','Waiting For QA Approval','Approved','Printed' ] ) ? '&#10004;' : '' ),
-	( @press_ids ? join(', ', map { $Presses{$_} ? $Presses{$_}->strid() : () } @press_ids ) : '' ),
+	( @press_ids ?
+		join(', ', map { $Presses{$_} ? $Presses{$_}->strid() : () } @press_ids )
+		:
+		'('.join(', ', map { $Presses{$_} ? $Presses{$_}->strid() : () }@quoted_press_ids ).')'
+	),
 	( $Project->is_printed() ? '&#10004;' : '' ),
 	get_status( $Project, 'Cutting' ),	
 	get_status( $Project, 'Folding' ),	
