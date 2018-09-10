@@ -48,6 +48,7 @@
 			<th class="Email">Email</th>
 			<th class="Company">Company</th>
 			<th class="UserType">Type</th>
+			<th class="Access">Access</th>
 			<th class="Date">Created</th>
 		</tr>
 <? echo (
@@ -61,14 +62,20 @@
 	<td class="Email">%4$s</td>
 	<td class="Company">%6$s</td>
 	<td class="UserType">%7$s</td>
+	<td class="Access">%8$s</td>
 	<td class="Date">%5$s</td>
 </tr>
 `, $rowclass, 
 	$User->admin_link_to( $$User{id} ),
 	$User->admin_link_to( $User->name() ), 
 	$User->admin_link_to( $User->email() ), 
-format_date( $$User{created_on} ), $User->Company()->name(),
+	format_date( $$User{created_on} ),
+	$User->Company()->name(),
 	$User->type(),
+	join(', ', 
+		( $User->ftp_active() ? 'FTP' : () ),
+		( $User->web_active() ? 'Web' : () ),
+		),
  );
 
 		$rowclass = $rowclass ? '' : ' class="colRow"';
