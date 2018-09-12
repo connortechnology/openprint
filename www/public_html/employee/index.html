@@ -42,7 +42,7 @@ You may use a barcode scanner.  Simply scan the code and click Go.<br/>
 							min=>1
 							),
 						button('Go1', { onclick=>'submit_handler( f1 );', text=>'Go' } ),
-						button('Go1Prepress', { onclick=>q`if(f1.StockDocket.value){window.location='/employee/proj/prep/proofs.html?docket='+f1.StartDocket.value;};`, text=>'Go Proofs' } ),
+						button('Go1Prepress', { onclick=>q`if(f1.StartDocket.value){window.location='/employee/proj/prep/proofs.html?docket='+f1.StartDocket.value;};`, text=>'Go Proofs' } ),
 						); ) ?>
 		</li>
 		<li>
