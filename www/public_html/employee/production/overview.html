@@ -120,21 +120,22 @@
 	<table>
 		<thead>
       <tr>
-        <th>Docket</th>
-        <th>Customer</th>
-				<th>Operator</th>
-        <th>Proofs Out</th>
-        <th>To Print</th>
-        <th>Printed</th>
-        <th>Cut</th>
-        <th>Fold</th>
-        <th>Stitch</th>
-        <th>SWrap</th>
-        <th>Trim &amp; Box</th>
-        <th>Total Qty</th>
-        <th>Due Date</th>
-				<th>Ship Flat</th>
-        <th>Comment</th>
+        <th class="Docket">Docket</th>
+        <th class="Company">Customer</th>
+				<th class="Operator">Operator</th>
+        <th class="ProofsOut">Proofs Out</th>
+        <th class="ToPrint">Press Schedule</th>
+        <th class="Printed">Printed</th>
+				<th class="Skids">Skids</th>
+        <th class="Cut">Cut</th>
+        <th class="Fold">Fold</th>
+        <th class="Stitch">Stitch</th>
+        <th class="ShrinkWrap">SWrap</th>
+        <th class="Trim">Trim &amp; Box</th>
+        <th class="Total">Total Qty</th>
+        <th class="DueDate">Due Date</th>
+				<th class="ShipFlat">Ship Flat</th>
+        <th class="Comment">Comment</th>
       </tr>
 		</thead>
 		<tbody>
@@ -143,16 +144,26 @@ use warnings;
 
 sub get_status {
 	my ( $Project, $service_names ) = @_;
+	my $qty_index = $Project->ordered_quantity_index();
 	my $services = $Project->services();
 	foreach my $service_name ( ref $service_names eq 'ARRAY' ? @{$service_names} : ( $service_names ) ) {
 		if ( $$services{$service_name} ) {
-			my $specs = openprint::service::get_specs_ref( $Project, $$services{$service_name}[0] );
+			my $Service = $Project->Service( $$services{$service_name}[0] );
+			my $specs = $Service->specs();
 			if ( $$specs{rdbComplete} and ( $$specs{rdbComplete} eq 'Y' ) ) {
 				return '&#10004;';
 			}
+			my $module = 'openprint::Estimating::'.$Service->ServiceType()->type();
+			eval ( 'require '.$module.';' );
+			$log->error($@) if $@;
+			if ( my $function = $module->can('overview_summary') ) {
+				return $function->($Project, $$Service{service_id}, $specs, $qty_index);
+			} else {
+				$log->debug("No overview function for $module");
+			}
 			if ( $service_name eq 'Folding' ) {
 				if  (
-					openprint::Estimating::Folding::is_offline( $Project, $Project->ordered_quantity_index() )
+					openprint::Estimating::Folding::is_offline($Project, $qty_index)
 				) {
 					return 'Yes';
 				}
@@ -164,6 +175,19 @@ sub get_status {
 	return '';
 }
 
+sub overview_date {
+	my $date = shift;
+	return '' if ! $date;
+
+	my ( $year, $month, $day ) = $date =~ /^(\d{4})\-(\d{2})\-(\d{2})/;
+
+  my $result = $month ? '&nbsp;'.substr( Date::Calc::Month_to_Text( $month ),0, 3) . ' '.$day : '';
+  if ( $month and ( Date::Calc::Delta_Days( $year, $month, $day, Date::Calc::Today() ) > 60 ) ) {
+    $result .= ' ' . $year;
+  }
+	return $result;
+}
+
 my %Presses = map { $$_{id}, $_ } @{$$variable{Presses}};
 my %Presses_by_strid = map { $$_{strid}, $_ } @{$$variable{Presses}};
 
@@ -173,11 +197,18 @@ my @Projects = openprint::Project->find(
 	date_filter( $r->uri().'?due_date_start', 'due_date is null or >=' ),
 	order=>'due_date NULLS LAST',
 	status=>[
-( ($session{$r->uri().'?is_proofs_out'} eq '0' or $session{$r->uri().'?is_proofs_out'} eq '' ) ?
+( (
+	 (!exists $session{$r->uri().'?is_proofs_out'}) or 
+	 $session{$r->uri().'?is_proofs_out'} eq '0' or 
+		$session{$r->uri().'?is_proofs_out'} eq ''
+	) ?
 	('Pending Deposit',
 	'In Prepress',
 ) : () ),
-( ($session{$r->uri().'?is_proofs_out'} eq '1' or $session{$r->uri().'?is_proofs_out'} eq '' ) ?
+( (
+	 (!exists $session{$r->uri().'?is_proofs_out'}) or
+	 $session{$r->uri().'?is_proofs_out'} eq '1' or 
+	 $session{$r->uri().'?is_proofs_out'} eq '' ) ?
 	('Proofs Out',
 	'Waiting For Customer Approval',
 	'Waiting For QA Approval',
@@ -190,8 +221,10 @@ my %Companies = map { $$_{id}, $_ } openprint::Company->find( id=>[ map { $$_{co
 
 my $html;
 foreach my $Project ( @Projects ) {
-	next if $session{$r->uri().'?is_printed'} eq '1' and ! $Project->is_printed();
-	next if $session{$r->uri().'?is_printed'} eq '0' and $Project->is_printed();
+	if ( $session{$r->uri().'?is_printed'} ) {
+		next if $session{$r->uri().'?is_printed'} eq '1' and ! $Project->is_printed();
+		next if $session{$r->uri().'?is_printed'} eq '0' and $Project->is_printed();
+	}
 
 	my @Schedule = openprint::ScheduledJob->find( project_id=>$$Project{id}, order=>'starttime' );
 	my @press_ids = sets::union( map { $Presses{$$_{equipment_id}} ? $$_{equipment_id} : () } @Schedule );
@@ -209,23 +242,23 @@ foreach my $Project ( @Projects ) {
 	next if ( @selected_presses != @{$$variable{Presses}} ) and !sets::intersection( @selected_presses, @press_ids );
 
 	#my $OP = $Project->Ordered_Project();
-	my ( $year, $month, $day ) = $Project->due_date() ? split('-', $Project->due_date() ) : ();
-	
-	my $due_date = $month ? '&nbsp;'.substr( Date::Calc::Month_to_Text( $month ),0, 3) . ' '.$day : '';
-	if ( $month and ( Date::Calc::Delta_Days( $year, $month, $day, Date::Calc::Today() ) > 60 ) ) {
-		$due_date .= ' ' . $year;
-	}
 
 	my $services = $Project->services();
 
 	my $is_ship_flat = $$services{PlainCartons} ? 0 : 1;
 
-	next if $session{$r->uri().'?is_ship_flat'} eq '1' and ! $is_ship_flat;
-	next if $session{$r->uri().'?is_ship_flat'} eq '0' and $is_ship_flat;
+	if ( exists $session{$r->uri().'?is_ship_flat'} ) {
+		next if $session{$r->uri().'?is_ship_flat'} eq '1' and ! $is_ship_flat;
+		next if $session{$r->uri().'?is_ship_flat'} eq '0' and $is_ship_flat;
+	}
 	
 	my $Service = $Project->Service( $$services{Proofs}[0] ) if $$services{Proofs};
   my %Operators = map { $$_{user_id}, $_ } openprint::Project_Service_Operator->find( service_id=>$$Service{service_id} ) if $Service;
 	my $operators = join(' ', map { $_->User()->link_to( $_->User()->name(), title=>$_->Role()->name ) } values %Operators );
+
+	my $package_service_id = $$services{BulkSkids} ? 
+		$$services{BulkSkids}[0] :
+		( $$Service{PlainCartons} ? $$Service{PlainCartons}[0] : undef );
 
 	$html .= sprintf('
 <tr>
@@ -235,6 +268,7 @@ foreach my $Project ( @Projects ) {
   <td class="ProofsOut">%s</td>
 	<td class="ToPrint">%s</td>
 	<td class="Printed">%s</td> 
+	<td class="Skids">%s</td>
 	<td class="Cut">%s</td>
 	<td class="Fold">%s</td>
 	<td class="Stitch">%s</td>
@@ -253,14 +287,15 @@ foreach my $Project ( @Projects ) {
 		:
 		'('.join(', ', map { $Presses{$_} ? $Presses{$_}->strid() : () }@quoted_press_ids ).')'
 	),
-	( $Project->is_printed() ? '&#10004;' : '' ),
+	( $Project->is_printed() ? overview_date($Project->printed_on()) : '' ),
+	( $package_service_id ? openprint::Estimating::Skids::overview_summary($Project,$package_service_id, undef, $qty_index) : '' ),
 	get_status( $Project, 'Cutting' ),	
 	get_status( $Project, 'Folding' ),	
 	get_status( $Project, [ 'SaddleStitching', 'LoopStitching' ] ),	
 	get_status( $Project, 'ShrinkWrap' ),	
 	get_status( $Project, 'PlainCartons' ),	
 	Number::Format::format_number($Project->ordered_quantity()),
-	$$Project{id}, $due_date,
+	$$Project{id}, overview_date($Project->due_date()),
 	$$Project{id}, $$Project{id}, ($$Project{due_date}?$$Project{due_date}:''),
 	( $$services{PlainCartons} ? '' : 'Yes' ),
 	$$Project{id},

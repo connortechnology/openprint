@@ -1234,6 +1234,37 @@ sub schedule_summary {
 	);
 }
 
+sub overview_summary {
+  my ( $Project, $service_id, $specs, $qty_index ) = @_;
+
+	my $summary = '';
+	my $services = $Project->services();
+	if ( $$services{''} and @{$$services{''}} ) {
+		my $printing_specs = openprint::service::get_specs_ref($Project, $$services{''}[0]);
+		if ( $$printing_specs{txtTotalPageQuantity} ) {
+			if ( $$printing_specs{rdbCover} eq 'Different' ) {
+				my $cover_pages = 0;
+				foreach my $ss_id ( $Project->signatures({Group=>1}) ) {
+					my $sig_specs = openprint::service::get_specs_ref($Project, $ss_id);
+					$cover_pages += $$sig_specs{GroupPageQuantity};
+					last;
+				} # end foreach
+				$summary .= sprintf('%dpg+C ', $$printing_specs{txtTotalPageQuantity} - $cover_pages);
+			} else {
+				$summary .= sprintf('%dpg ', $$printing_specs{txtTotalPageQuantity});
+			} # end if
+		}
+	} else {
+		$openprint::log->error("No project service in $$Project{id}");
+	}
+
+	return  join(' ',
+			$summary,
+			( $$specs{rdbGateFoldFit} ? 'Gate Fold Fit = ' . $$specs{rdbGateFoldFit} : () ),
+			( $$specs{CoverFit} ? 'Cover Fit = ' . $$specs{CoverFit} : () ),
+			);
+}
+
 sub runtime {
 	my ( $Project, $Service, $Equipment, $qty_index, $speed ) = @_;
 
