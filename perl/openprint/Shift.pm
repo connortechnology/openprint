@@ -79,10 +79,14 @@ sub endtime_dt {
 }
 sub endtime_seconds {
 	if ( @_ == 2 ) {
-		$_[0]{endtime} = Date::Format::time2str( '%Y-%m-%d %H:%M:%S', $_[1] );
+		$_[0]{endtime} = Date::Format::time2str( '%Y-%m-%d %H:%M:%S%z', $_[1] );
 	} # end if
-	return Date::Parse::str2time( $_[0]{endtime} );
-} # endsub
+	if ( ! $_[0]{endtime_seconds} ) {
+		$_[0]{endtime_seconds} = Date::Parse::str2time( $_[0]{endtime} );
+$log->debug("Parsing endtime_seconds to $_[0]{endtime_seconds} from $_[0]{endtime}");
+	}
+	return $_[0]{endtime_seconds};
+} # end sub endtime_seconds
 
 sub Operator {
 	return new openprint::User( $_[0]{operator_id} );
@@ -442,6 +446,37 @@ $log->debug("while Last_dt: $last_dt < $end_dt");
 	} # end if
 	return @Shifts;
 } # end sbu get_Shifts
+
+sub docket {
+	if ( ! $_[0]{docket} ) {
+		$_[0]{docket} = $_[0]->Project()->docket();
+	}
+	return $_[0]{docket};
+}
+
+sub add_job {
+	my ( $self, $Job ) = @_;
+
+	my @Schedule = $self->Schedule();
+	$Job->starttime_seconds( @Schedule ? $Schedule[@Schedule-1]->endtime_seconds()+1 : $self->starttime_seconds() );
+	$Job->save();
+
+	if ( $self->Equipment->smartscheduling() ) {
+		my @before = openprint::ScheduledJob->find(
+				equipment_id=>$$self{equipment_id},	
+				'starttime <'	=>	$Job->starttime(),
+				'id !='				=>	$$Job{id},
+				order					=>	'starttime'
+				);
+		my @after = openprint::ScheduledJob->find(
+				equipment_id=>$$self{equipment_id},	
+				'starttime <'	=>	$Job->starttime(),
+				'id !='				=>	$$Job{id},
+				order	=>	'starttime'
+				);
+		openprint::employee_production::reorder_jobs( @before, $Job, @after );
+	}
+}
 
 1;
 __END__
