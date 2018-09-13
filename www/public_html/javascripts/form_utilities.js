@@ -1022,7 +1022,6 @@ function update_duration(form, starting_prefix, ending_prefix, suffix ) {
 	var end = new Date( end_year, end_month, end_day, end_hour, end_minute, 59 );
 
 	var difference = parseInt( ( end - start ) / 1000 );
-console.log(difference);
 	var days = parseInt(difference/(60*60*24));
 
 	if ( do_time ) {
