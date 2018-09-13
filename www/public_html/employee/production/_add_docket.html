@@ -16,18 +16,26 @@
 			<?echo( input(type=>"cardinal", name=>"forms", value=>"1" ); )?>
 		</li>
 		<li><label>Press</label>
-			<select name="press_id">
-		<? echo ( make_drop_down( 
+			<select name="press_id" onchange="new Ajax.Updater('shift_id', '_equipment_shifts.html?equipment_id='+this.value+'&'+$('shift_id').value);">
+		<? echo (
+			$$variable{Equipment} = new openprint::Equipment( ( split(',',$session{'/employee/production/print_overview.html?Equipment'}) == 1 ? $session{'/employee/production/print_overview.html?Equipment'} : undef ) );
+				make_drop_down( 
 					openprint::Equipment->dropdown('category any'=>'Printing',
 						useinscheduling=>1, order=>'lower(strname)'),
-					( split(',',$session{'/employee/production/print_overview.html?Equipment'}) == 1 ? $session{'/employee/production/print_overview.html?Equipment'} : undef ),
+					$$variable{Equipment}{id},
 					); ) ?>
 			</select>
+		</li>
+		<li><label>Date</label>
+      <?echo( return date_select('starttime', [Date::Calc::Today()]);) ?>
+    </li>
+    <li><label>Shift</label>
+			<select id="shift_id" name="shift_id"><?include(_equipment_shifts.html)?></select>
 		</li>
 		<li><label>Impressions</label>
 			<? echo ( input( type=>'cardinal', name=>'impressions' ); ) ?>
 		</li>
-		<li><label>Runtime</label>
+		<li class="runtime"><label>Runtime</label>
  <? echo (
 		 my ( $h, $m, $s ) = ( 1, 0, 0 );
 ## goes to 99 because it can be more than a day.
@@ -43,7 +51,7 @@
 		<p class="buttons">
 			<? echo ( join("\n",
 						button( 'Submit', { onclick=>'AddDocketForm.submit();' } ),
-		button( 'Cancel', { onclick=> 'popupWin.close();', } ),
+						button( 'Cancel', { onclick=> 'popupWin.close();', } ),
 		); ) ?>
 		</p>
 	</fieldset>
