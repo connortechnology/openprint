@@ -341,7 +341,7 @@ sub get_Shifts {
 
 	@Equipment_Shifts = $Equipment->Equipment_Shifts() if ! @Equipment_Shifts;
 	if ( ! @Equipment_Shifts ) {
-		$openprint::log->error("THere are no shifts for " . $Equipment->to_string() );
+		$openprint::log->error("THere are no shifts defined for " . $Equipment->to_string() );
 		return ();
 	}
 	my @Shifts;
@@ -415,16 +415,27 @@ $log->debug("while Last_dt: $last_dt < $end_dt");
 			'starttime >'	=> $parser->format_datetime( $start_dt ),
 			order			=>	'starttime',
 			) ) {
+$openprint::log->debug("Have shift after: " . $NextShift->to_string());
 		# No previous shifts, but have one after, so go backwards
 		my $next_time = $NextShift->starttime_seconds();
 		while ( $NextShift->starttime_seconds() > $start_dt->epoch() ) {
-			$NextShift = $NextShift->Equipment_Shift()->Previous()->emanantise( $NextShift->starttime() - $NextShift->Equipment_Shift()->Previous()->duration_seconds() );
+			my $PreviousEquipmentShift = $NextShift->Equipment_Shift()->Previous();
+$openprint::log->debug("Have previous Equipment Shift" . $PreviousEquipmentShift->to_string());
+
+			my $previous_seconds = $NextShift->starttime_seconds() - $PreviousEquipmentShift->duration_seconds();
+
+			$NextShift = $PreviousEquipmentShift->emanantise( $previous_seconds );
+			if ( ! $NextShift ) {
+$openprint::log->error("Unable to emanantise for $previous_seconds " . Date::Format::time2str($config{DateTimeFormat}, $previous_seconds));
+				last;
+			}
 			unshift @Shifts, $NextShift if $NextShift->starttime_seconds() < $end_dt->epoch();
 		} # end while
 	} else {
 	# Just add them all in the specified range
 		my $ES = $Equipment_Shifts[0];
 		while ( $start_dt < $end_dt ) {
+$openprint::log-debug("Eman for " . $start_dt->epoch());
 			my $Shift = $ES->emanantise( $start_dt->epoch() );
 			if ( ! $Shift ) {
 				$log->error("failed to emanantise");

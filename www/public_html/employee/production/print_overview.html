@@ -368,6 +368,7 @@ $log->debug( "Available ES: " . $ES->to_string() );
 				$log->debug("No shifts found, implementing some");
 				@Shifts = openprint::Shift::get_Shifts( $E, $st, $et, @Equipment_Shifts );
 			} # end if
+
 			if ( ! @Shifts ) {
 				$html .= 'No Shifts defined.</div>';
 				next;
@@ -428,12 +429,16 @@ $log->error("Went past, going back an hour $next_shift_start_time $_, adding an 
 					last if $next_shift_start_time > $Shifts[$shift_index]->starttime_seconds();
 				}
 }
-$log->debug("Calling emanananteise with next start time: $next_shift_start_time ");
+$log->debug("Calling emanananteise with next start time: $next_shift_start_time " . Date::Format::time2str($config{DateTimeFormat}, $next_shift_start_time));
 				my $New_Next_Shift = $Next_ES->emanantise( $next_shift_start_time );
 				if ( $New_Next_Shift ) {
 					# emanantise returned a shift
 
 					if ( $New_Next_Shift->id() != $Next_Shift->id() ) {
+if ( $New_Next_Shift->starttime_seconds() <= $next_shift_start_time ) {
+$log->error("Brekaing because new shift is < $next_shift_start_time");
+last;
+}
 						# It's different than the one we already have?
 $log->debug("Adding new shift; previous: " . $Shifts[$shift_index-1]->to_string() );
 $log->debug("Adding new shift; current: " . $Shifts[$shift_index]->to_string() );
@@ -445,6 +450,9 @@ $log->debug("Adding new shift; next: " . $New_Next_Shift->to_string() );
 						# Reset counter, and go again
 						$shift_index -= 1;
 						next;
+					} else {
+$log->error("Returned the same shift id;");
+last;
 					} 
 					last if $New_Next_Shift->starttime_dt() > $et;
 				} else {
@@ -458,12 +466,18 @@ $log->debug("Adding new shift; next: " . $New_Next_Shift->to_string() );
 			my $LastShift = $Shifts[@Shifts-1];
 			while ( $LastShift->endtime_seconds() < $et->epoch() ) {
 				my $ES = $LastShift->Equipment_Shift()->Next();
+				my $distance = $LastShift->Equipment_Shift()->distance();
+				$distance = 1 if ! $distance;
 
-				my $last_time = $LastShift->endtime_seconds() + $LastShift->Equipment_Shift()->distance();
+				my $last_time = $LastShift->endtime_seconds() + $distance;
 				my $NewShift = $ES->emanantise( $last_time );
-				if ( ! $NewShift ) {
+				if ( !$NewShift ) {
 					$log->error("Error getting shift for $last_time ");
 					last;
+}elsif ( $NewShift->id() == $LastShift->id() ) {
+					$log->error("Error shift for $last_time same shift");
+					last;
+
 				}
 				
 				push @Shifts, $NewShift;
