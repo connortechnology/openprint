@@ -2053,7 +2053,7 @@ sub operator_schedule {
 		$Shift->endtime_seconds( [@param{'end_day','end_hour','end_minute'}] );
 		$variable{error} .= $Shift->save( {
 			name				=>	$param{name},
-			operator_id		=>	$param{operator_id},
+			operator_id	=>	$param{operator_id},
 			});
 	} elsif ( $param{func} eq 'delete' ) {
 		my $Shift = new openprint::Equipment_Shift( $param{shift_id} );
@@ -2103,7 +2103,7 @@ sub _operators {
 
 sub _operator_shift_li {
 	my $Shift = $variable{Shift} = new openprint::Equipment_Shift( $param{shift_id} );
-	$Shift->save(\%param);
+	$variable{error} .= $Shift->save(\%param);
 } # end sub operator_shift_li
 
 sub _operator_shift_popup {
