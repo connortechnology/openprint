@@ -221,7 +221,7 @@ my %Companies = map { $$_{id}, $_ } openprint::Company->find( id=>[ map { $$_{co
 
 my $html;
 foreach my $Project ( @Projects ) {
-	if ( $session{$r->uri().'?is_printed'} ) {
+	if ( defined $session{$r->uri().'?is_printed'} ) {
 		next if $session{$r->uri().'?is_printed'} eq '1' and ! $Project->is_printed();
 		next if $session{$r->uri().'?is_printed'} eq '0' and $Project->is_printed();
 	}
@@ -247,7 +247,7 @@ foreach my $Project ( @Projects ) {
 
 	my $is_ship_flat = $$services{PlainCartons} ? 0 : 1;
 
-	if ( exists $session{$r->uri().'?is_ship_flat'} ) {
+	if ( defined $session{$r->uri().'?is_ship_flat'} ) {
 		next if $session{$r->uri().'?is_ship_flat'} eq '1' and ! $is_ship_flat;
 		next if $session{$r->uri().'?is_ship_flat'} eq '0' and $is_ship_flat;
 	}
