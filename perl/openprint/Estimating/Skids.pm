@@ -424,6 +424,7 @@ sub overview_summary {
 				$summary .= $$specs{"txtItemsPerPackage$qty_index"} . ' per '.$package.'<br/>';
 			}
 			$summary .= $$specs{"txtPackageQuantity$qty_index"} . ' ' . $package . ( $$specs{"txtPackageQuantity$qty_index"} == 1 ? '' : 's' );
+if ( 0 ) {
 			my $g = $$specs{'totalWeight'.$qty_index} * 453.5923696;
 			if ( $g > 1000 ) {
 				$summary .= sprintf( ', Total Weight: %slbs (%skg)', 
@@ -436,6 +437,7 @@ sub overview_summary {
 						Number::Format::format_number( Math::Round::nearest( 1, $g ) ),
 				);
 			} # end if
+}
 		} else {
 			if ( $$Material{name} ) {
 				$summary .= $$specs{"txtPackageQuantity$qty_index"} . ' ' . $$Material{name} . 
@@ -445,6 +447,7 @@ sub overview_summary {
 	} else {
 		if ( $$specs{ServiceType} eq 'Gaylords' ) {
 			$summary .= $$specs{"txtPackageQuantity$qty_index"} . ( $$specs{"txtPackageQuantity$qty_index"} == 1 ? ' gaylord' : ' gaylords' );
+if ( 0 ) {
 			my $g = $$specs{'totalWeight'.$qty_index} * 453.5923696;
 			if ( $g > 1000 ) {
 				$summary .= sprintf( ', Total Weight: %slbs (%skg)', 
@@ -457,8 +460,10 @@ sub overview_summary {
 						Number::Format::format_number( Math::Round::nearest( 1, $g ) ),
 				);
 			} # end if
+}
 		} else {
 			$summary .= $$specs{"txtPackageQuantity$qty_index"} . ' ' . $Material->name() . ( $$specs{"txtPackageQuantity$qty_index"} == 1 ? '' : 's' );
+if ( 0 ) {
 			my $g = $$specs{'totalWeight'.$qty_index} * 453.5923696;
 			if ( $g > 1000 ) {
 				$summary .= sprintf( ', Total Weight: %slbs (%skg)', 
@@ -470,6 +475,7 @@ sub overview_summary {
 						Number::Format::format_number( Math::Round::nearest( 1, $$specs{'totalWeight'.$qty_index}) ), 
 						Number::Format::format_number( Math::Round::nearest( 1, $g ) ),
 				);
+			} # end if
 			} # end if
 		} # end if
 	} # end if

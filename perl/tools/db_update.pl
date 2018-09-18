@@ -30,7 +30,7 @@ use vars qw( $log $dbh %config );
 
 $openprint::Object::no_cache = 1;
 
-$log = new logger( 'debug' );
+$log = new logger('debug');
 
 $ARGV[1] = $ARGV[0] if ! $ARGV[1];
 $ARGV[2] = $ARGV[1] if ! $ARGV[2];
@@ -295,8 +295,8 @@ if ( ! sets::isin( 'users', \@tables ) ) {
 } else {
 	my $data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='users'", 'column_name');
 	if ( $data ) {
-		print "Updating Users...\n";
 		if ( ! exists $$data{deleted} ) {
+			$log->debug("Adding deleted to Users");
 			my $ac = sql::start_transaction( $dbh );
 			$dbh->do(q`alter table Users add deleted boolean`);
 			$dbh->do(q`alter table Users alter deleted set default false`);
@@ -305,9 +305,11 @@ if ( ! sets::isin( 'users', \@tables ) ) {
 			sql::end_transaction( $dbh, $ac );
 		} 
 		if ( ! exists $$data{wage} ) {
+			$log->debug("Adding wage to Users");
 			$dbh->do(q`alter table Users add wage float`);
 		} # end if
 		if ( exists $$data{strfirstname} ) {
+			$log->debug("renameing various columns getting rid of str");
 			my $ac = sql::start_transaction( $dbh );
 			$dbh->do(q`alter table Users rename column strfirstname to firstname`);
 			$dbh->do(q`alter table Users rename column strlastname to lastname`);
@@ -373,6 +375,7 @@ if ( ! sets::isin( 'users', \@tables ) ) {
 		} # end if
 	} # end if
 	if ( sets::isin( 'users_index_seq', \@sequences ) ) {
+		$log->debug("Adding users_id_seq");
 		if ( ! sets::isin( 'users_id_seq', \@sequences ) ) {
 			$dbh->do('CREATE SEQUENCE users_id_seq');
 		} # end if
@@ -3223,11 +3226,35 @@ if ( sets::isin( 'equipment_shifts', \@tables ) ) {
 		$dbh->do('ALTER TABLE Equipment_shifts add id serial');
 		$dbh->do('ALTER TABLE Equipment_shifts add PRIMARY KEY (id)');
 	} # end if
+	if ( ! exists $$data{operator_ids} ) {
+		$dbh->do("ALTER TABLE Equipment_Shifts ADD operator_ids INTEGER[]") or die $dbh->errstr();
+		if ( exists $$data{operator_id} ) {
+			$log->debug("Updating operator_ids and removing operator_id");
+			$dbh->do("UPDATE Equipment_Shifts SET operator_ids = ARRAY[operator_id]") or die $dbh->errstr();
+		}
+	}
+	if ( exists $$data{operator_id} ) {
+		$log->debug("DROPPING operator_id from Equipment_Shifts");
+		$dbh->do("ALTER TABLE Equipment_Shifts DROP operator_id");
+	}
 } # end if
 
 if ( ! sets::isin('shifts',\@tables ) ) {
 	$dbh->do( misc::load_file( $log, q{../openprint/sql/Shifts.sql}) );
+} else {
+	my $data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='shifts'", 'column_name');
 	die if $dbh->errstr();
+	if ( ! exists $$data{operator_ids} ) {
+		$dbh->do("ALTER TABLE Shifts ADD operator_ids INTEGER[]") or die $dbh->errstr();
+		if ( exists $$data{operator_id} ) {
+			$log->debug("Updating operator_ids and removing operator_id");
+			$dbh->do("UPDATE Shifts SET operator_ids = ARRAY[operator_id]") or die $dbh->errstr();
+		}
+	}
+	if ( exists $$data{operator_id} ) {
+		$log->debug("DROPPING operator_id FROM Shifts");
+		$dbh->do("ALTER TABLE Shifts DROP operator_id");
+	}
 } # end if
 
 if ( ! sets::isin('user_notification_types',\@tables ) ) {
@@ -4230,6 +4257,7 @@ if ( sets::isin( 'invoice_logs', \@tables ) ) {
 		});
 		die if $dbh->errstr();
     }
+		$dbh->do('DROP TABLE Invoice_Logs') or die $dbh->errstr();
 	sql::end_transaction( $dbh, $ac );
 
 } # end if
@@ -4548,13 +4576,13 @@ if ( ! sets::isin('signaturecapture', \@tables ) ) {
 	$dbh->do( misc::load_file( $log, q{../openprint/sql/SignatureCapture.sql}) );
 } # end if
 if ( sets::isin( 'emailcampaigns', \@tables ) ) {
-$log->debug("has email_campaigns");
 	$data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='emailcampaigns'", 'column_name');
 	if ( ! $$data{nextrun} ) {
-		$dbh->do( 'ALTER TABLE emailcampaigns add nextrun timestamp with time zone' );
+		$log->debug("Adding nextrun to emailcampaigns");
+		$dbh->do('ALTER TABLE emailcampaigns add nextrun timestamp with time zone') or die $dbh->errstr();;
 	} # end if
 	if ( ! exists $$data{email_to} ) {
-$log->debug("Add email_to");
+		$log->debug("Add email_to");
 		$dbh->do('ALTER TABLE emailcampaigns add email_to text');
 	} # end if
 	if ( ! exists $$data{email_html} ) {
@@ -4883,7 +4911,7 @@ my %config_actions = (
 	'Add Currency'			=>	76,
 	'Update Configuration' => 77,
 	'Login Failed'	=> 78,
-	'Select Company'	=>	79,
+	'Switch Company'	=>	79,
 	'Login'		=>	2,
 	'Logout'	=>	3,
 	'Service Copy'	=>	27,
@@ -5533,6 +5561,7 @@ my $data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, c
 }
 $dbh->do( 'update service_prices set units=lower(units)');
 $dbh->do( 'update paper_prices set strunits=lower(strunits)');
+$log->debug("Updating locations for all companies");
 foreach my $Company ( openprint::Company->find() ) {
 	my $Country;
 	if ( $Company->country() ) {

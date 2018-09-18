@@ -38,8 +38,8 @@
 			<li><label>Duration</label>
 				<input type="text" name="duration" id="duration" value="<? echo ( $$variable{Shift}->duration() ) ?>" />
 			</li>
-			<li><label>Operator</label>
-				<select name="operator_id" id="operator_id">
+			<li><label>Operators</label>
+				<select name="operator_ids" id="operator_ids" multiple="multiple">
 					<option value=""> select </option>
 				<? echo (
 						my $Equipment = $$variable{Shift}->Equipment();
@@ -53,10 +53,10 @@
 						my @user_ids = map { $Operators{$$_{user_id}} ? () : $$_{user_id} } @Usersin;
 
 						my $html .= '<optgroup label="Usual Operators">';
-						$html .= make_drop_down( [ @{openprint::User->dropdown( company_id=>$openprint::User->company_id(), id=>[keys %Operators] )} ], $$variable{Shift}->operator_id() ) if %Operators;
+						$html .= make_drop_down( [ @{openprint::User->dropdown( company_id=>$openprint::User->company_id(), id=>[keys %Operators] )} ], $$variable{Shift}->operator_ids() ) if %Operators;
 						$html .= '</optgroup>';
 						$html .= '<optgroup label="Others">';
-						$html .= make_drop_down( [ @{openprint::User->dropdown( company_id=>$openprint::User->company_id(), id=>\@user_ids )} ], $$variable{Shift}->operator_id() ) if @user_ids;
+						$html .= make_drop_down( [ @{openprint::User->dropdown( company_id=>$openprint::User->company_id(), id=>\@user_ids )} ], $$variable{Shift}->operator_ids() ) if @user_ids;
 						$html .= '</optgroup>';
 
 						return $html;
@@ -72,3 +72,4 @@
 		</p>
 	</fieldset>
 </form>
+<script type="text/javascript">$j('#operator_ids').chosen();</script>

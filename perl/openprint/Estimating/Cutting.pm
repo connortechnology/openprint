@@ -1490,30 +1490,58 @@ sub runtime {
   foreach my $sig_id ( @{$signatures} ) {
     my $sig_specs = openprint::service::get_specs_ref( $Project, $sig_id );
     my $form = $$sig_specs{SignatureIndex};
-		my $E = $Equipment ? $Equipment : openprint::Equipment->find_one(id=>$$specs{"ddmEquipment-$form-$qty_index"});
-		if ( ! $E ) {
-			$log->error("No Equipment for id " . $$specs{"ddmEquipment-$form-$qty_index"} . " for form $form");
-			next;
+		if ( $$specs{"ddmEquipment-$form-$qty_index"} ) {
+			my $E = $Equipment ? $Equipment : openprint::Equipment->find_one(id=>$$specs{"ddmEquipment-$form-$qty_index"});
+			if ( $E and ( $E->specification('Type') ne 'Stitcher' ) ) {
+				my $makeready = $E->specification( 'Make Ready Time' );
+				my $runspeed = $E->specification( 'Cutting Time' );
+				$openprint::log->debug("Cutting runtime: $makeready $runspeed");
+				$impressions = $$sig_specs{"hdnImpressionQuantity$qty_index"};
+				if ( ! $impressions ) {
+					$log->error("No impressions for form $form");
+					next;
+				}
+				my $liftDepth = $E->specification('Maximum Lift Depth', $$sig_specs{txtSpecificStockCalliper} );
+				$openprint::log->debug( "Caclulationg runspeed for sig $sig_id $form) (".$$specs{"txtCalculatedCuts-$form-$qty_index"} . " using lift depth $liftDepth on $$E{strid}");
+				my $lifts = POSIX::ceil($liftDepth/$$sig_specs{txtSpecificStockCalliper});
+				if ( ! $lifts ) {
+					$log->error("No lifts for $liftDepth / $$sig_specs{txtSpecificStockCalliper} in form $form");
+					#next;
+					$lifts = $impressions;
+				}
+
+				$runtime += ( $$specs{"txtCalculatedCuts-$form-$qty_index"} + $$specs{"txtAdditionalCuts$form"} ) * ( $makeready + $runspeed) * $lifts;
+			} else {
+				$log->error("None or Equipment is a stitcher, so the cutting happens when stitching");
+			}
+		} # end if has regular cuts
+	
+		if ( $$specs{"FoldingCuts-$form-$qty_index"} and $$specs{"FoldingEquipment-$form-$qty_index"} ) {
+			# Pre-folding cutting
+			my $E = $Equipment ? $Equipment : openprint::Equipment->find_one(id=>$$specs{"FoldingEquipment-$form-$qty_index"});
+			if ( $E ) {
+				my $makeready = $E->specification( 'Make Ready Time' );
+				my $runspeed = $E->specification( 'Cutting Time' );
+				$openprint::log->debug("Cutting runtime: $makeready $runspeed");
+				$impressions = $$sig_specs{"hdnImpressionQuantity$qty_index"};
+				if ( ! $impressions ) {
+					$log->error("No impressions for form $form");
+					next;
+				}
+				my $liftDepth = $E->specification('Maximum Lift Depth', $$sig_specs{txtSpecificStockCalliper});
+				$openprint::log->debug( "Caclulation runspeed for sig $sig_id $form) (".$$specs{"txtCalculatedCuts-$form-$qty_index"} . " using lift depth $liftDepth on $$E{strid}");
+				my $lifts = POSIX::ceil($liftDepth/$$sig_specs{txtSpecificStockCalliper});
+				if ( ! $lifts ) {
+					$log->error("No lifts for $liftDepth / $$sig_specs{txtSpecificStockCalliper} in form $form");
+					#next;
+					$lifts = $impressions;
+				}
+
+				$runtime += ( $$specs{"txtCalculatedCuts-$form-$qty_index"} + $$specs{"txtAdditionalCuts$form"} ) * ( $makeready + $runspeed) * $lifts;
+			}
+			
 		}
 
-		my $makeready = $E->specification( 'Make Ready Time' );
-		my $runspeed = $E->specification( 'Cutting Time' );
-		$openprint::log->debug("Cutting runtime: $makeready $runspeed");
-		$impressions = $$sig_specs{"hdnImpressionQuantity$qty_index"};
-		if ( ! $impressions ) {
-			$log->error("No impressions for form $form");
-			next;
-		}
-    my $liftDepth = $E->specification('Maximum Lift Depth', $$sig_specs{txtSpecificStockCalliper} );
-    $openprint::log->debug( "Caclulationg runspeed for sig $sig_id $form) (".$$specs{"txtCalculatedCuts-$form-$qty_index"} . " using lift depth $liftDepth on $$E{strid}");
-		my $lifts = $liftDepth/$$sig_specs{txtSpecificStockCalliper};
-		if ( ! $lifts ) {
-			$log->error("No lifts for $liftDepth / $$sig_specs{txtSpecificStockCalliper} in form $form");
-			#next;
-			$lifts = $impressions;
-		}
-
-    $runtime += ( $$specs{"txtCalculatedCuts-$form-$qty_index"} + $$specs{"txtAdditionalCuts$form"} ) * ( $makeready + $runspeed) * $lifts;
   } # end foreach
   $openprint::log->debug("Cutting runtime: $runtime $impressions");
   return $runtime;

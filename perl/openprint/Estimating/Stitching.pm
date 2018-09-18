@@ -154,7 +154,7 @@ sub get_imposition {
 } # end sub get_imposition
 
 # Calculates the cost of stitching a signature... which is not realistic, but will hopefully help when deciding between 1up or 2up stitching
-# includes teh cost of folding...
+# includes the cost of folding...
 sub signature_calc {
 	my ( $Project, $service_index, $specs, $qty_index, $Impositions, $calc_hash ) = @_;
 
@@ -167,12 +167,12 @@ sub signature_calc {
 	my $printing_specs = openprint::service::get_specs_ref( $Project, $$services{''}[0] );
 	my $folding_specs = $$calc_hash{FoldingSpecs};
 	my $ServiceType = $Project->ServiceType( $service_index );
-	if ( ! $ServiceType->id() ) {
+	if ( ! $$ServiceType{id} ) {
 		$results{alert} .= 'Unable to determine stitching type!<br/>';
 		$results{Status} = 'uncalculated';
 		return \%results;
 	} else {
-		$$specs{ServiceTypeName} = $ServiceType->name();
+		$$specs{ServiceTypeName} = $$ServiceType{name};
 	} # end if
 
 	my $plusCover = $$printing_specs{rdbCover} eq 'Different' ? 1 : 0;
@@ -204,7 +204,7 @@ sub signature_calc {
 		@$specs{'Width','Height'} = @$printing_specs{'txtFinalWidth','txtFinalHeight'};
 	} else {
 		@$specs{'Width','Height'} = @$printing_specs{'txtFinalWidth','txtFinalHeight'};
-		$$specs{alert} .= 'Unable to determine spine direction. Calculations may be invalid.';
+		$$specs{alert} .= 'Unable to determine spine direction. Calculations may be invalid.<br/>';
 	} # end if
 	$$specs{txtCalliper} = $Project->calliper() if ! $$specs{txtCalliper};
 
@@ -216,7 +216,11 @@ sub signature_calc {
 	$pockets += int( $$specs{txtInsertQuantity} );
 
 	my $override_pockets = 0;
-	if ( ( defined $$specs{'OverridePockets'.$qty_index}) and ($$specs{'OverridePockets'.$qty_index} eq 'Y') ) {
+	if (
+			(defined $$specs{'OverridePockets'.$qty_index})
+			and
+			($$specs{'OverridePockets'.$qty_index} eq 'Y')
+		 ) {
 		foreach my $pages ( @possible_pages ) {
 			$pockets += $$specs{join('','txtSignatureQty',$pages,'Page-',$qty_index)};
 		}
@@ -277,7 +281,7 @@ sub signature_calc {
 
 			my %signatures;
 
-				my $pages_done;
+			my $pages_done;
 
 			foreach my $FI ( @{$$I{Folds}} ) {
 				$FI->display( 'Fold form '.$form ) if DEBUG;
@@ -295,7 +299,7 @@ $openprint::log->debug("Fold pq($$FI{page_quantity}) pages($$FI{pages}) ($$Fold{
 					#} else {
 					#$openprint::log->debug('Folder is ' . $$I{Folder}->strid() );
 				}
-				$openprint::log->debug("Adding " . $Fold->pages() . 'x'.$FI->quantity() );
+				$openprint::log->debug("Stitching Adding " . $Fold->pages() . 'pg x qty:'.$FI->quantity() );
 
 
 				if ( ! $override_pockets ) {

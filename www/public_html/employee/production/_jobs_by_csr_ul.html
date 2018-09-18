@@ -26,8 +26,8 @@
 		$html .= '</span>';
 		$html .= ' (<span class="CSR">'.$Project->Order()->Company()->CSR()->firstname().'</span>)';
 
-		if ( $Project->operator_id() ) {
-			$html .= ' (<span class="PrepressOperator">'.$Project->Operator()->firstname().'</span>)';
+		if ( @{$Project->operator_ids()} ) {
+			$html .= ' (<span class="PrepressOperator">'.join(', ', map { $_->firstname() } $Project->Operators() ).'</span>)';
 		} # end if
 		$html .= sprintf(q`<a class="docket" href="/employee/project/view.html?ProjectIndex=%1$d">%2$d</a>`, @$Project{'id','docket'} );
 		if ( $Project->reprint() eq 'Y' ) {

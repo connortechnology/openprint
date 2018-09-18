@@ -122,15 +122,14 @@
       <tr>
         <th class="Docket">Docket</th>
         <th class="Company">Customer</th>
-				<th class="Operator">Operator</th>
-        <th class="ProofsOut">Proofs Out</th>
+				<th class="Operator">OP</th>
         <th class="ToPrint">Press Schedule</th>
         <th class="Printed">Printed</th>
 				<th class="Skids">Skids</th>
         <th class="Cut">Cut</th>
         <th class="Fold">Fold</th>
         <th class="Stitch">Stitch</th>
-        <th class="ShrinkWrap">SWrap</th>
+        <th class="Other">Other</th>
         <th class="Trim">Trim &amp; Box</th>
         <th class="Total">Total Qty</th>
         <th class="DueDate">Due Date</th>
@@ -168,7 +167,11 @@ sub get_status {
 					return 'Yes';
 				}
 			} else {
-				return 'Yes';
+				if ( my $function = $module->can('runtime') ) {
+					return misc::seconds2hm($function->($Project, $Service, undef, $qty_index));
+				} else {
+					return 'Yes';
+				}
 			}
 		}
 	} # end foreach
@@ -254,7 +257,7 @@ foreach my $Project ( @Projects ) {
 	
 	my $Service = $Project->Service( $$services{Proofs}[0] ) if $$services{Proofs};
   my %Operators = map { $$_{user_id}, $_ } openprint::Project_Service_Operator->find( service_id=>$$Service{service_id} ) if $Service;
-	my $operators = join(' ', map { $_->User()->link_to( $_->User()->name(), title=>$_->Role()->name ) } values %Operators );
+	my $operators = join(' ', map { $_->User()->link_to( substr($_->User()->firstname(),0,1).substr($_->User()->lastname(),0,1), { title=>$_->Role()->name() } ) } values %Operators );
 
 	my $package_service_id = $$services{BulkSkids} ? 
 		$$services{BulkSkids}[0] :
@@ -264,15 +267,14 @@ foreach my $Project ( @Projects ) {
 <tr>
 	<td class="Docket">%s</td>
 	<td class="Company">%s</td>
-	<td class="Operator">%s</td>
-  <td class="ProofsOut">%s</td>
+	<td class="Operator">%s %s</td>
 	<td class="ToPrint">%s</td>
 	<td class="Printed">%s</td> 
 	<td class="Skids">%s</td>
 	<td class="Cut">%s</td>
 	<td class="Fold">%s</td>
 	<td class="Stitch">%s</td>
-	<td class="ShrinkWrap">%s</td>
+	<td class="Other">%s</td>
 	<td class="Trim">%s</td>
 	<td class="Total">%s</td>
 	<td class="DueDate" id="JumpToDate%d">%s<input type="hidden" name="ScheduleDate-%d" id="ScheduleDate-%d" value="%s"/></td>
@@ -292,7 +294,12 @@ foreach my $Project ( @Projects ) {
 	get_status( $Project, 'Cutting' ),	
 	get_status( $Project, 'Folding' ),	
 	get_status( $Project, [ 'SaddleStitching', 'LoopStitching' ] ),	
-	get_status( $Project, 'ShrinkWrap' ),	
+
+( join(', ', map {
+$$services{$_} ? 
+$_. ': '. get_status( $Project, $_ ) : (),	
+} ( 'ShrinkWrap','Bundling', 'ClipSealing','Drilling','KraftWrap','Padding','Perforating','PlasticCoil','Scoring','SoftFolding') ) ),
+
 	get_status( $Project, 'PlainCartons' ),	
 	Number::Format::format_number($Project->ordered_quantity()),
 	$$Project{id}, overview_date($Project->due_date()),
