@@ -86,11 +86,11 @@ sub has_overrides {
     my $sig_specs = openprint::service::get_specs_ref( $Project, $s_s_id );
     my $form = $$sig_specs{SignatureIndex};
     foreach my $qty_index ( $Project->quantity_indexes() ) {
-      push @v, map { $$specs{"$_-$form-$qty_index"} ? "$_-$form-$qty_index" : () } ( 'chkOverrideEquipment', 'chkOverrideStockCutEquipment', 'chkOverrideCalculatedCuts' );
+      push @v, map { ($$specs{"$_-$form-$qty_index"} and ($$specs{"$_-$form-$qty_index"} eq 'Y') )? "$_-$form-$qty_index" : () } ( 'chkOverrideEquipment', 'chkOverrideStockCutEquipment', 'chkOverrideCalculatedCuts' );
     } # end foreach
   } # end foreach
 	foreach my $qty_index ( $Project->quantity_indexes() ) {
-		push @v, map { $$specs{"$_$qty_index"} ? "$_$qty_index" : () } ( 'OverridePrice' );
+		push @v, map { ($$specs{"$_$qty_index"} and ( $$specs{"$_$qty_index"} eq 'Y') ) ? "$_$qty_index" : () } ( 'OverridePrice' );
 	}
 
   return @v;
@@ -527,7 +527,7 @@ sub signature_calc {
 
 # Grab the Calliper
 
-  my $calliper = $Paper->calliper();
+  my $calliper = $$Paper{calliper};
   if ( ! $calliper ) {
     $openprint::log->debug("**** NO Calliper ****") if DEBUG;
     $results{alert} .= "Calliper is unknown for signature $form.<br/>";
@@ -582,7 +582,7 @@ sub signature_calc {
 
 $openprint::log->debug("Folding impos " . @folding_impositions  . ' eq ' . @my_equipment );
 
-  if ( $stitching_specs and $stitching_imposition) {
+  if ( $stitching_specs and $stitching_imposition ) {
     if ( $$Imposition{image_orientation} == openprint::Imposition::Horizontal ) {
       $stitching_imposition = $$Imposition{columns} if $stitching_imposition > $$Imposition{columns};
     } else {
@@ -676,9 +676,9 @@ $openprint::log->debug("Folding impos " . @folding_impositions  . ' eq ' . @my_e
   my $bestM = 0;
   my $bestEquipment;
   foreach my $Equipment ( @my_equipment ) {
-    next if ! $Equipment->id();
-    $results{Breakdown} .= 'Equipment ' . $Equipment->name() .':';
-    if ( $$services{NoOfflineBindery} and ( $$sig_specs{'ddmPress'.$qty_index} ne $Equipment->strid() ) ) {
+    next if ! $$Equipment{id};
+    $results{Breakdown} .= 'Equipment ' . $$Equipment{name} .':';
+    if ( $$services{NoOfflineBindery} and ( $$sig_specs{'ddmPress'.$qty_index} ne $$Equipment{strid} ) ) {
       $results{Breakdown} .= "No Offline bindery and not printing on $$Equipment{name}.<br/>";
       next;
     } # end if
@@ -708,9 +708,9 @@ $openprint::log->debug("Folding impos " . @folding_impositions  . ' eq ' . @my_e
       if ( ! $$stitching_specs{'ddmEquipment'.$qty_index} ) {
         $results{Breakdown} .= 'Stitching not calculated yet.<br/>';
         next;
-      } # e dn if
-      if ( $$stitching_specs{'ddmEquipment'.$qty_index} != $Equipment->id() ) {
-        $results{Breakdown} .= 'Not stitching on ' . $Equipment->strid() . '<br/>';
+      } # end if
+      if ( $$stitching_specs{'ddmEquipment'.$qty_index} != $$Equipment{id} ) {
+        $results{Breakdown} .= 'Not stitching on ' . $$Equipment{strid} . '<br/>';
         next;
       } # end if
       if ( keys %pretrim_sides ) {
