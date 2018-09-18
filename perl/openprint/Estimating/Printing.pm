@@ -5467,7 +5467,7 @@ sub calc_price {
 				$$PressRunOvers{total} = $$PressRunOvers{value};
 			} else {
 				#Percentage
-				$$PressRunOvers{total} = int($$PressRunOvers{value} * $net_sheets);
+				$$PressRunOvers{total} = int($$PressRunOvers{value}/100 * $net_sheets);
 			}
 			$price{'Run Overs'} = { value=>$$PressRunOvers{value}, units=>$$PressRunOvers{units}, total=>$$PressRunOvers{total} };
 		} else {
@@ -7461,7 +7461,8 @@ $log->debug("Adding PMS for $type chkColourCoating$index$side");
 	if ( $front_pms ) {
 		unshift @front_coatings, $front_pms.'PMS';
 	} # end if
-	unshift @front_coatings, map { $$specs{'chk'.$_.$side} ? $_ . ( $$specs{$_.$side.'Coverage'} != $CMYK_Ink_Coverage ? ' ' . $$specs{$_.$side.'Coverage'}.'%' : '')    : () } ( 'Cyan','Magenta','Yellow','Black' );
+
+	unshift @front_coatings, map { $$specs{'chk'.$_.$side} ? $_ . ( $$specs{$_.'Spot'.$side.'Coverage'} != $CMYK_Ink_Coverage ? ' ' . $$specs{$_.'Spot'.$side.'Coverage'}.'%' : '')    : () } ( 'Cyan','Magenta','Yellow','Black' );
 	if ( $$specs{'chkProcessColour'.$side} ) {
 		unshift @front_coatings, join(' ', '4C', 
 				map { 
@@ -7500,7 +7501,7 @@ $log->debug("Adding PMS for $type chkColourCoating$index$side");
 		if ( $back_pms ) {
 			unshift @back_coatings, $back_pms.'PMS';
 		} # end if
-		unshift @back_coatings, map { $$specs{'chk'.$_.$side} ? $_ : () } ( 'Cyan','Magenta','Yellow','Black' );
+		unshift @back_coatings, map { $$specs{'chk'.$_.$side} ? $_ . ( $$specs{$_.'Spot'.$side.'Coverage'} != $CMYK_Ink_Coverage ? ' ' . $$specs{$_.'Spot'.$side.'Coverage'}.'%' : '')    : () } ( 'Cyan','Magenta','Yellow','Black' );
 		if ( $$specs{'chkProcessColour'.$side} ) {
 			unshift @back_coatings, join(' ', '4C',
 				map {
