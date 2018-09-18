@@ -304,7 +304,7 @@ sub get_ul {
 						Date::Calc::Day_of_Week_Abbreviation( Date::Calc::Day_of_Week($year, $month, $day)), $day, Date::Calc::Month_to_Text( $month ), $Shift->name(), 
 						Date::Format::time2str('%H:%M', $Shift->starttime_seconds() ),
 						Date::Format::time2str('%H:%M', $Shift->endtime_seconds() ),
-						( @Operators ? join(', ', map { $_->name() } @Operators->name() ) : 'assign'),
+						( @Operators ? join(', ', map { $_->name() } @Operators ) : 'assign'),
 						);
 			} # end if
 		} else {
