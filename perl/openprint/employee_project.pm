@@ -207,11 +207,11 @@ $log->debug("Project complete: $complete " . $Service->to_string());
 				if ( $param{rdbComplete} eq 'Yes' ) {
 					if ( ! Date::Calc::check_date( @param{'duedate_year','duedate_month','duedate_day'} ) ) {
 						$variable{Redirect} = '/employee/proj/'.$ServiceType->url();
-						$variable{ErrorMessage} = 'There was an error saving the DueDate.  Please check that a real date was selected.';
+						$variable{error} = 'There was an error saving the DueDate.  Please check that a real date was selected.';
 						$param{rdbComplete} = 'No';
 					} elsif ( 0 < Date::Calc::Delta_Days( @param{'ddmDueDateYear','ddmDueDateMonth','ddmDueDateDay'}, Date::Calc::Today() ) ) {
 						$variable{Redirect} = '/employee/proj/'.$ServiceType->url();
-						$variable{ErrorMessage} = 'You cannot select a date in the past. Please try again.';
+						$variable{error} .= 'You cannot select a date in the past. Please try again.';
 						$param{rdbComplete} = 'No';
 					} else {
 						if ( $param{duedate_year} ) {
@@ -245,8 +245,7 @@ $log->debug("Project complete: $complete " . $Service->to_string());
 				} elsif ( $param{rdbApproved} eq 'Y' ) {
 					if ( $param{duedate_year} ) {
 						if ( ! Date::Calc::check_date( @param{'duedate_year','duedate_month','duedate_day'} ) ) {
-							$variable{Redirect} = '/employee/proj/'.$ServiceType->url();
-							$variable{ErrorMessage} = 'There was an error saving the DueDate.  Please check that a real date was selected.';
+							$variable{error} = 'There was an error saving the DueDate.  Please check that a real date was selected.';
 							$param{rdbApproved} = 'N';
 						} else {
 							# It's a valid duedate
@@ -408,6 +407,7 @@ $log->debug("Saving signature");
 			$Order->update_status( );
 		} # end if
 		sql::end_transaction( $dbh, $ac );
+		$variable{Redirect} = '/employee/proj/'.$ServiceType->url();
 	} elsif ( $param{btnFunction} eq 'Shipped' ) {
 		$Project->status_change( undef, undef, 'Shipped' );
 	} elsif ( $param{btnFunction} eq 'Picked Up' ) {
