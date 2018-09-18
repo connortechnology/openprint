@@ -191,8 +191,16 @@ sub load_equipment {
     push @capabilities, 'Large Format';
   } # end if
   $log->debug("load_equipment");
-  @equipment = openprint::Equipment->find( Specifications => {'Cutting Capable'=>\@capabilities}, useinestimating=>1, order=>'lower(strName)');
-  @PreFoldingEquipment = openprint::Equipment->find( Specifications => {'Cutting Capable'=>['Y','When Printing']}, useinestimating=>1, order=>'lower(strName)');
+  @equipment = openprint::Equipment->find(
+			Specifications 	=> {'Cutting Capable'=>\@capabilities},
+			useinestimating	=> 1,
+			order						=> 'lower(strName)'
+			);
+  @PreFoldingEquipment = openprint::Equipment->find(
+			Specifications => {'Cutting Capable'=>['Y','When Printing']},
+			useinestimating=>1,
+			order=>'lower(strName)'
+			);
 } # end sub load_equipment
 
 sub signature_calc_stock_cutting {
@@ -205,7 +213,11 @@ sub signature_calc_stock_cutting {
       );
 
   my @my_equipment;
-  if ( (defined $$specs{"chkOverrideStockCutEquipment-$qty_index"}) and ( $$specs{"chkOverrideStockCutEquipment-$qty_index"} eq 'Y' ) ) {
+  if (
+			(defined $$specs{"chkOverrideStockCutEquipment-$qty_index"})
+			and
+			($$specs{"chkOverrideStockCutEquipment-$qty_index"} eq 'Y')
+		 ) {
     $openprint::log->debug("Overriding Equipment! " . $$specs{"ddmStockCutEquipment-$qty_index"}) if DEBUG;
     @my_equipment = ( new openprint::Equipment( $$specs{"ddmStockCutEquipment-$qty_index"} ) );
   } else {
@@ -505,8 +517,12 @@ sub signature_calc {
   my $form = $$sig_specs{SignatureIndex};
 
   my @my_equipment;
-  if ( (defined $$specs{"chkOverrideEquipment-$form-$qty_index"} ) and ( $$specs{"chkOverrideEquipment-$form-$qty_index"} eq 'Y' ) ) {
-    @my_equipment = ( new openprint::Equipment( $$specs{"ddmEquipment-$form-$qty_index"} ) );
+  if (
+			(defined $$specs{"chkOverrideEquipment-$form-$qty_index"})
+			and
+			($$specs{"chkOverrideEquipment-$form-$qty_index"} eq 'Y')
+		 ) {
+    @my_equipment = ( new openprint::Equipment($$specs{"ddmEquipment-$form-$qty_index"}) );
   } else {
     load_equipment( $Project ) if ! @equipment;
     @my_equipment = @equipment;
@@ -551,6 +567,7 @@ sub signature_calc {
     $stitching_specs = openprint::service::get_specs_ref( $Project, $$services{CornerStitching}[0] );
     $stitching_imposition = $$stitching_specs{'Imposition'.$qty_index};
   } # end if
+
   my %pretrim_sides;
   my $Stitcher;
   if ( $stitching_specs and $$stitching_specs{"ddmEquipment$qty_index"} ) {
@@ -582,13 +599,20 @@ sub signature_calc {
 
 $openprint::log->debug("Folding impos " . @folding_impositions  . ' eq ' . @my_equipment );
 
-  if ( $stitching_specs and $stitching_imposition) {
-    if ( $$Imposition{image_orientation} == openprint::Imposition::Horizontal ) {
-      $stitching_imposition = $$Imposition{columns} if $stitching_imposition > $$Imposition{columns};
-    } else {
-      $stitching_imposition = $$Imposition{rows} if $stitching_imposition > $$Imposition{rows};
+  if ( $stitching_specs and $stitching_imposition ) {
+		if ( $$Imposition{image_orientation} == openprint::Imposition::Horizontal ) {
+			if ( $stitching_imposition > $$Imposition{columns} ) {
+				$openprint::log->debug("Adjusting stitching imposition to cols $$Imposition{columns} from $stitching_imposition");
+				$stitching_imposition = $$Imposition{columns};
+			}
+		} else {
+			if ( $stitching_imposition > $$Imposition{rows} ) {
+				$openprint::log->debug("Adjusting stitching imposition to rows $$Imposition{columns} from $stitching_imposition");
+				$stitching_imposition = $$Imposition{rows}
+			}
     } # end if
   } # end if
+$openprint::log->debug("Stitching imposition: $stitching_imposition");
 
   my $Press = $Imposition->Press();
   my $output_format = $Press->specification('OutputFormat');
@@ -607,7 +631,11 @@ $openprint::log->debug("Folding impos " . @folding_impositions  . ' eq ' . @my_e
     $openprint::log->debug("Folding impositions: " . @folding_impositions ) if DEBUG;
 
     my $folding_cuts = 0;
-    if ( ( defined $$specs{"OverrideFoldingCuts-$form-$qty_index"} ) and ( $$specs{"OverrideFoldingCuts-$form-$qty_index"} eq 'Y' ) ) {
+    if (
+				(defined $$specs{"OverrideFoldingCuts-$form-$qty_index"})
+				and
+				($$specs{"OverrideFoldingCuts-$form-$qty_index"} eq 'Y')
+			 ) {
       $folding_cuts = $$specs{"FoldingCuts-$form-$qty_index"};
     } else {
       if ( ( @folding_impositions == 1 ) 
@@ -616,17 +644,26 @@ $openprint::log->debug("Folding impos " . @folding_impositions  . ' eq ' . @my_e
 
 # Why about the quanitty? Basically if it's 1out, we pre-trim.  Otherwise let the folder do it.  So if we have 2@1out, then we might as well pre-trim
 #and ( $folding_impositions[0]->quantity() == 1 )
-          and ( (!$Folder) or ( $Folder->id() != $Press->id() ) ) ) {
+          and ( (!$Folder) or ($$Folder{id} != $$Press{id}) )
+				 ) {
         $trim_before_folding = 1;
       } else {
-        if ( @folding_impositions > 1 or $folding_impositions[0]{quantity} > 1 ) {
+        if ( (@folding_impositions > 1) or ($folding_impositions[0]{quantity} > 1) ) {
 # So according to Brendan, anyone doing the cutting would first make the 4 outer edge trims.  
           $openprint::log->debug("Folds: " .@folding_impositions ) if DEBUG;
           $folding_cuts += 4; # outside cuts
-            $folding_cuts += @folding_impositions - 1;
+					$folding_cuts += @folding_impositions - 1;
           foreach my $folding_imposition ( @folding_impositions ) {
             $folding_cuts += $$folding_imposition{quantity}-1 if $$folding_imposition{quantity};
           } # end foreach
+				} elsif (
+						($folding_impositions[0]{imposition} > $stitching_imposition)
+						and
+						($Folder->specification('Type') eq 'Stitcher')
+						) {
+					$folding_impositions[0]->display("Cutting impo before folding because the folder is a stitcher:");
+					$folding_cuts += $folding_impositions[0]{columns}-1;
+					$folding_cuts += $folding_impositions[0]{rows}-1;
         } # end if
       } # end if
     } # end if
@@ -1446,25 +1483,42 @@ sub runtime {
 
   my $specs = $Service->specs();
   my $runtime = 0;
-  if ( ! $Equipment ) {
-    return 0 if ! $$specs{'ddmEquipment'.$qty_index};
-    $Equipment = openprint::Equipment->find_one('strid'=>$$specs{'ddmEquipment'.$qty_index});
-    return 0 if ! $Equipment;
-  } # end if
 
-  my $makeready = $Equipment->specification( 'Make Ready Time' );
-  my $runspeed = $Equipment->specification( 'Cutting Time' );
-  $openprint::log->debug("Cutting runtime: $makeready $runspeed");
+	$signatures = [$Project->signatures()] if ! $signatures;
+	#$speed = runspeed($Project,$Service,$Equipment,$qty_index,$signatures) if ! $speed;
+
   foreach my $sig_id ( @{$signatures} ) {
     my $sig_specs = openprint::service::get_specs_ref( $Project, $sig_id );
     my $form = $$sig_specs{SignatureIndex};
-    my $liftDepth = $Equipment->specification( 'Maximum Lift Depth', $$sig_specs{txtSpecificStockCalliper} );
-    $openprint::log->debug( "Caclulationg runspeed for sig $sig_id $form) (".$$specs{"txtCalculatedCuts-$form-$qty_index"} );
-    $runtime += ( $$specs{"txtCalculatedCuts-$form-$qty_index"} + $$specs{"txtAdditionalCuts$form"} ) * ( $makeready + $runspeed) * ( $impressions/($liftDepth/$$sig_specs{txtSpecificStockCalliper} ) );
+		my $E = $Equipment ? $Equipment : openprint::Equipment->find_one(id=>$$specs{"ddmEquipment-$form-$qty_index"});
+		if ( ! $E ) {
+			$log->error("No Equipment for id " . $$specs{"ddmEquipment-$form-$qty_index"} . " for form $form");
+			next;
+		}
+
+		my $makeready = $E->specification( 'Make Ready Time' );
+		my $runspeed = $E->specification( 'Cutting Time' );
+		$openprint::log->debug("Cutting runtime: $makeready $runspeed");
+		$impressions = $$sig_specs{"hdnImpressionQuantity$qty_index"};
+		if ( ! $impressions ) {
+			$log->error("No impressions for form $form");
+			next;
+		}
+    my $liftDepth = $E->specification('Maximum Lift Depth', $$sig_specs{txtSpecificStockCalliper} );
+    $openprint::log->debug( "Caclulationg runspeed for sig $sig_id $form) (".$$specs{"txtCalculatedCuts-$form-$qty_index"} . " using lift depth $liftDepth on $$E{strid}");
+		my $lifts = $liftDepth/$$sig_specs{txtSpecificStockCalliper};
+		if ( ! $lifts ) {
+			$log->error("No lifts for $liftDepth / $$sig_specs{txtSpecificStockCalliper} in form $form");
+			#next;
+			$lifts = $impressions;
+		}
+
+    $runtime += ( $$specs{"txtCalculatedCuts-$form-$qty_index"} + $$specs{"txtAdditionalCuts$form"} ) * ( $makeready + $runspeed) * $lifts;
   } # end foreach
   $openprint::log->debug("Cutting runtime: $runtime $impressions");
   return $runtime;
 } # end sub runtime
+
 sub save {
 } # end sub save
 
