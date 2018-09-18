@@ -459,7 +459,6 @@ sub link {
 sub link_to {
 	my $self = shift;
 	my $content = ( @_ ? shift @_ : $self->name() );
-$openprint::log->debug("Content: $content name:$$self{name}");
 	my %options = ref $_[0] eq 'HASH' ? %{$_[0]} : @_;
 
 	return sprintf('<a href="/account/view.html?user_id=%1$d"%3$s>%2$s</a>', 
