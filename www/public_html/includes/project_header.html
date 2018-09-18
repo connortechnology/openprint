@@ -87,7 +87,7 @@
   }
   my %Operators = map { $$_{role_id}, $_ } openprint::Project_Service_Operator->find( service_id=>$$ProofsService{service_id} );
 
-	return join(', ', map { $Operators{$$_{id}->User()->name() } } @Roles );
+	return join(', ', map { $Operators{$_->User()->name() } } @Roles );
 ) ?>
 					<li>
 						<label>Prepress Operator<?echo($$variable{Project}->Operators()!=1's':'')?></label>
