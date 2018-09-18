@@ -397,6 +397,15 @@ sub format_bytes {
 	} # end if
 } # end sub format_bytes
 
+sub seconds2hm {
+  my ( $seconds ) = @_;
+  my $hours = int( $seconds / (60*60) );
+  $seconds = $seconds % ( 60*60 );
+  my $minutes = int ( $seconds / 60 );
+
+  return sprintf('%d:%.2d', $hours, $minutes );
+} # end sub seconds2hm
+
 sub seconds2hms {
 	my ( $seconds ) = @_;
 	my $hours = int( $seconds / (60*60) );

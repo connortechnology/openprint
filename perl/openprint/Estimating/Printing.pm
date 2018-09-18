@@ -7466,7 +7466,7 @@ $log->debug("Adding PMS for $type chkColourCoating$index$side");
 		unshift @front_coatings, join(' ', '4C', 
 				map { 
 				( $$specs{$_.$side.'Coverage'} != $CMYK_Ink_Coverage ) ?
-				'<span class="warning">'. $process_colours_short{$_}.':'.$$specs{$_.$side.'Coverage'}.'%</span>'
+				'<span class="warning">'. $process_colours_short{$_}.$$specs{$_.$side.'Coverage'}.'%</span>'
 				: ()
 				} ('Cyan','Magenta','Yellow','Black')
 				);

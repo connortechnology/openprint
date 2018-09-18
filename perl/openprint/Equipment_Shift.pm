@@ -32,31 +32,31 @@ $serial = 'equipment_shifts_id_seq';
 	endtime_seconds		=>	undef,
 	name				=>	'name',
 	equipment_id		=>	'equipment_id',
-    operator_id  		=>  'operator_id',
-);
-%find_fields = (
-	'endtime'		=>	'(starttime+duration)',
+	operator_ids  		=>  'operator_ids',
 );
 
 %find_fields = (
-	'endtime'	=>	'starttime_seconds + duration_seconds - 1',
+	endtime	=>	'starttime_seconds + duration_seconds - 1',
 );
 
 %transforms = (
-	'id'			=>	[ 's/\D//g' ],
-	'operator_id'   =>  [ 's/\D//g' ],
+	id			=>	[ 's/\D//g' ],
 );
 
 %defaults = (
-	'operator_id'	=>	undef,
-	'starttime'		=>	q`'00:00:00'`,
-	'starttime_seconds'	=>	0,
-	'duration_seconds'	=>	1,
-	'name'			=>	q`'Shift'`,
+	operator_ids		=> [],
+	starttime_seconds	=>	0,
+	duration_seconds	=>	1,
+	name							=>	q`'Shift'`,
 );
 
 sub to_string {
-	return sprintf("EquipmentShift: %s %s %s", $_[0]->Equipment()->name(), $_[0]->name(), misc::seconds_to_JDF_interval( $_[0]{duration} ) );
+	return sprintf(
+			"EquipmentShift: %s %s %s",
+			$_[0]->Equipment()->name(),
+			$_[0]->name(),
+			misc::seconds_to_JDF_interval( $_[0]{duration_seconds} ),
+			);
 }
 
 my $dtfd = DateTime::Format::Duration->new(
@@ -79,7 +79,7 @@ sub starttime_seconds {
 
 sub endtime {
 	if ( ! $_[0]{endtime} ) {
-		$_[0]{endtime} = Date::Format::time2str( '%H:%M:%S', $_[0]->endtime_seconds());
+		$_[0]{endtime} = Date::Format::time2str('%H:%M:%S', $_[0]->endtime_seconds());
 	} # end if
 	return $_[0]{endtime};
 } # end sub endtime_seconds
@@ -189,7 +189,8 @@ sub test_emanantise {
 	my $Shift = new openprint::Shift();
 		$Shift->set({
 				equipment_id	=>	$$self{equipment_id},
-				operator_id		=>	( $$self{operator_id} ? $$self{operator_id} : undef ),
+				#operator_id		=>	( $$self{operator_id} ? $$self{operator_id} : undef ),
+				operator_ids		=>	$$self{operator_ids},
 				shift_id		=>	$$self{id},
 				starttime		=>	$parser->format_datetime( $st ),
 				endtime			=>	$parser->format_datetime( $et ),
@@ -278,10 +279,10 @@ sub emanantise {
 		$Shift = new openprint::Shift();
 		$Shift->save({
 				equipment_id	=>	$$self{equipment_id},
-				operator_id		=>	( $$self{operator_id} ? $$self{operator_id} : undef ),
-				shift_id		=>	$$self{id},
-				starttime		=>	$parser->format_datetime( $st ),
-				endtime			=>	$parser->format_datetime( $et ),
+				operator_ids	=>	$$self{operator_ids},
+				shift_id			=>	$$self{id},
+				starttime			=>	$parser->format_datetime( $st ),
+				endtime				=>	$parser->format_datetime( $et ),
 				});
 	} # end if
 	return $Shift;
@@ -292,8 +293,20 @@ sub Equipment {
 } # end sub Equipment
 
 sub Operator {
+ my ( $caller, undef, $line ) = caller;
+$log->error("Deprecated call to Operator from $caller:$line");
 	return new openprint::User( $_[0]{operator_id} );
 } # end sub Operator
+
+sub Operators {
+	if ( ! $_[0]{Operators} ) {
+		$_[0]{Operators} = [];
+		if ( $_[0]{id} and $_[0]{operator_ids} and @{$_[0]{operator_ids}} ) {
+			$_[0]{Operators} = [openprint::User->find(id=>$_[0]{operator_ids})];
+		}
+	}
+	return @{$_[0]{Operators}};
+}
 
 sub First {
 	my ( $self ) = @_;
@@ -385,6 +398,7 @@ sub delete {
 sub starttime_string {
 	return 'Day ' . int( $_[0]{starttime_seconds} / DAY ) . ' ' .  misc::seconds2hms( $_[0]->starttime_seconds() % DAY );
 } # end sub starttime_string
+
 sub endtime_string {
 	return 'Day ' . int( $_[0]->endtime_seconds() / DAY ) . ' ' .  misc::seconds2hms( $_[0]->endtime_seconds() % DAY );
 } # end sub starttime_string
@@ -392,24 +406,27 @@ sub endtime_string {
 sub start_day {
 	return int($_[0]{starttime_seconds} / DAY);
 }
+
 sub end_day {
-	return int( $_[0]->endtime_seconds() / DAY );
+	return int($_[0]->endtime_seconds() / DAY);
 } # end sub end_day
 
 sub start_hour {
 	my $time = $_[0]{starttime_seconds} % DAY;
 	return int($time/HOUR);
 } # end sub start_hour
+
 sub end_hour {
 	my $time = $_[0]->endtime_seconds() % DAY;
 	return int($time/HOUR);
 } # end sub end_hour
 
 sub start_minute {
-	return int( ( $_[0]{starttime_seconds} % HOUR ) /60);
+	return int(( $_[0]{starttime_seconds} % HOUR )/60);
 } # end sub start_minute
+
 sub end_minute {
-	return int( ( $_[0]->endtime_seconds() % HOUR )/60);
+	return int(( $_[0]->endtime_seconds() % HOUR )/60);
 } # end sub end_hour
 
 sub Duration {
@@ -424,6 +441,7 @@ sub duration {
 	} # end if
 	return misc::seconds2hms( $_[0]{duration_seconds} );
 } # end sub duration
+
 sub duration_seconds {
 	if ( @_ > 1 ) {
 		$_[0]{duration_seconds} = $_[1];

@@ -831,7 +831,7 @@ sub barcode {
 		if ( ! $old_operator_id ) {
 			$message .= "Assigning Prepress Operator for project $param{Project} to $operators{$param{Operator}}";
 		} elsif ( $param{Operator} != $old_operator_id ) {
-			$message .= "Assigning Prepress Operator for project $param{Project} from $operators{$old_operator_id} to $operators{$param{operator}}";
+			$message .= "Assigning Prepress Operator for project $param{Project} from $operators{$old_operator_id} to $operators{$param{Operator}}";
 		} else {
 			$message .= "Setting Prepress Operator for project $param{Project} to $operators{$param{Operator}}";
 		} # end if
@@ -917,7 +917,6 @@ sub barcode {
 sub mark_proofs_approved {
 	my ( $Project, $Service ) = @_;
 
-
 	if ( ! $Service ) {
 		my $services = $Project->services();
 		$Service = $Project->Service( $$services{Proofs} ? $$services{Proofs}[0] : $$services{FilmStripping}[0] );
@@ -949,7 +948,7 @@ sub add_to_barcode_log {
 } # end sub add_to_barcode_log
 
 sub complete_signature {
-	my ( $log, $dbh, $variable, $project_id, $service_id ) = @_;
+	my ( $project_id, $service_id ) = @_;
 
 	my $Project = new openprint::Project( $project_id );
 	my $Service = $Project->Service( $service_id );
@@ -963,7 +962,7 @@ $log->error("No service_id in service for project $project_id, $service_id: " . 
 	my @operator_ids = @{ $Service->operator_ids() };
 # Remove from Print Schedule
 	foreach my $Job ( openprint::ScheduledJob->find( project_id=>$project_id, 'service_id @>'=>$service_id ) ) {
-		@operator_ids = sets::union(@operator_ids, $Job->Shift()->operator_id()) if $Job->Shift()->operator_id();
+		@operator_ids = sets::union(@operator_ids, @{$Job->Shift()->operator_ids()}) if @{$Job->Shift()->operator_ids()};
 		$Job->delete();
 	} # end foreach Job
 	
@@ -973,6 +972,8 @@ $log->error("No service_id in service for project $project_id, $service_id: " . 
 	$Project->add_to_log( @session{'company_id','user_id'},
 			"Form $$specs{SignatureIndex} Completed". ( ( @operator_ids and sets::isin( $session{user_id}, \@operator_ids ) ) ? '': ' for ' . join(',',map { $_->name() } @Users ) ) );
 	sql::end_transaction($dbh, $ac);
+
+	# When completing a signature we are not going to auto-schedule Folding, Cutting, Stitching, etc.
 } # end sub complete_signature
 
 sub docket_sheet {
@@ -1254,7 +1255,7 @@ $log->debug("Order after coalesce: @order : " . join(',', map { new openprint::S
 		if ( ! $Equipment->smartscheduling() ) {
 			$log->debug("Old");
 
-			my ( $start_time, $end_time, $operator_id ) = ( $Shift->starttime(), $Shift->endtime(), $Shift->operator_id() );
+			my ( $start_time, $end_time, $operator_ids ) = ( $Shift->starttime(), $Shift->endtime(), $Shift->operator_ids() );
 
 			$log->debug("drop_project: @order");
 			while ( @order ) {
@@ -1275,10 +1276,10 @@ $log->debug("Order after coalesce: @order : " . join(',', map { new openprint::S
 				} # end if
 
 				my %sql;
-				$sql{operator_id} = $operator_id if $operator_id != $Job->operator_id();
-				if ( $$Job{starttime} ne $start_time or $$Job{equipment_id} != $Shift->equipment_id() ) {
+				$sql{operator_ids} = $operator_ids if sets::intersection(@{$operator_ids}, @{$Job->operator_ids()}) != @{$operator_ids};
+				if ( ( $$Job{starttime} ne $start_time ) or ( $$Job{equipment_id} != $$Shift{equipment_id} ) ) {
 					$sql{starttime} = $start_time;
-					$sql{equipment_id} = $Shift->equipment_id();
+					$sql{equipment_id} = $$Shift{equipment_id};
 				} # end if
 
 				if ( keys %sql ) {
@@ -1498,7 +1499,7 @@ $log->debug(" splicing $order[$i]{starttime} $i " . $order[$i]->Project()->docke
 
 		$log->debug("Job: " . $row->to_string() );
 # Time to move on to next shift
-		while ( ( ! $Shift->operator_id() ) or ( $start_time > $Shift->endtime_seconds() ) ) {
+		while ( ( ! @{$Shift->operator_ids()} ) or ( $start_time > $Shift->endtime_seconds() ) ) {
 $log->debug("Moving on to next shift:i becase no operator or $start_time " . Date::Format::time2str($config{DateTimeFormat}, $start_time). " > end: $$Shift{endtime_seconds} " . $Shift->to_string() );
 			if ( ! @Shifts ) {
 #$log->debug("Loading next Equipment_shift: " . $Shift->Equipment_Shift()->endtime() );
@@ -1514,7 +1515,7 @@ $log->debug(" NO NEXT ES: "  );
 				} # end if ! NextES
 				$Shift = $NextES->emanantise( $start_time );
 					
-				if ( ( ! $Shift ) or ! $Shift->operator_id() ) {
+				if ( ( ! $Shift ) or ! @{$Shift->operator_id()} ) {
 					$variable{error} .= 'Unable to add more shifts. This is probably because not enough shifts have operators assigned. Need shifts for ' . Date::Format::time2str($config{DateTimeFormat}, $start_time) . ' onwards.';
 					$dbh->rollback();
 					sql::end_transaction( $dbh, $ac );
@@ -1540,7 +1541,7 @@ $openprint::log->debug("Shift " . $Shift->ul_id() . " has not changed");
 
 		push @jobs_in_shift, $$row{id};
 
-		$row->operator_id( $Shift->operator_id() );
+		$row->operator_ids( $Shift->operator_ids() );
 		last if $row->save({
 				starttime		=> $start_time ? Date::Format::time2str('%Y-%m-%d %H:%M:%S%z', $start_time ) : undef,
 				equipment_id	=> $$Shift{equipment_id},
@@ -1934,7 +1935,7 @@ $log->debug("second job can't move");
 		# Actually this is complete Signature
 		foreach my $sig_id ( @{$$Job{service_id}} ) {
 			my $sig_specs = openprint::service::get_specs_ref( $Job->Project(), $sig_id );
-			complete_signature( $log, $dbh, \%variable, $Job->project_id(), $sig_id );
+			complete_signature( $Job->project_id(), $sig_id );
 		} # end foreach
 		$Job->Project()->update_status();
 		push @{$variable{changed}}, $Job->Shift()->ul_id();
@@ -2026,13 +2027,13 @@ sub _shift_change {
 		} # end foreach
 
 		$variable{error} .= $Shift->save({
-				starttime		=>	$parser->format_datetime( $new_start_datetime ),
-				endtime			=>	$parser->format_datetime( $new_end_datetime ),
-				operator_id	=>	$param{operator_id},
-				shift_id		=>	$param{equipmentshift_id},
+				starttime			=>	$parser->format_datetime( $new_start_datetime ),
+				endtime				=>	$parser->format_datetime( $new_end_datetime ),
+				operator_ids	=>	( ref $param{operator_ids} eq 'ARRAY' ? $param{operator_ids} : [ split(',',$param{operator_ids}) ] ),
+				shift_id			=>	$param{equipmentshift_id},
 				});
 
-	} # end if
+	} # end if delete or save
 
 	if ( $Shift->Equipment()->smartscheduling() ) {
 		reorder_jobs(
@@ -2044,27 +2045,27 @@ sub _shift_change {
 
 sub operator_schedule {
 	if ( $param{func} eq 'Reset' ) {
-		foreach my $param ( 'category_id', 'equipment_id' ) {
+		foreach my $param ( 'category_id', 'equipment_id', 'operator_ids' ) {
 			delete $session{$r->uri().'?'.$param};
 		} # end if
 	} elsif ( $param{func} eq 'save' ) {
 		my $Shift = new openprint::Equipment_Shift( $param{shift_id} );
 		$Shift->starttime_seconds( [@param{'start_day','start_hour','start_minute'}] );
 		$Shift->endtime_seconds( [@param{'end_day','end_hour','end_minute'}] );
-		$variable{error} .= $Shift->save( {
-			name				=>	$param{name},
-			operator_id	=>	$param{operator_id},
+		$variable{error} .= $Shift->save({
+			name			   	=>	$param{name},
+			operator_ids	=>	( ( ref $param{operator_ids} eq 'ARRAY' ) ? $param{operator_ids} : [ split(',',$param{operator_ids}) ] ),
 			});
 	} elsif ( $param{func} eq 'delete' ) {
 		my $Shift = new openprint::Equipment_Shift( $param{shift_id} );
-		$variable{error} .= $Shift->delete();
+		$variable{error} .= $Shift->delete() if $Shift->id();
 	} elsif ( $param{func} eq 'Add Shift' ) {
-		my @Equipment = map { new openprint::Equipment( $_ ) } ( ref $param{equipment_id} eq 'ARRAY' ? @{$param{equipment_id}} : $param{equipment_id} );
+		my @Equipment = map { new openprint::Equipment($_) } ( ref $param{equipment_id} eq 'ARRAY' ? @{$param{equipment_id}} : $param{equipment_id} );
 		foreach my $Equipment ( @Equipment ) {
 			next if ! $Equipment->id();
-			my $LastShift = openprint::Equipment_Shift->find_one(equipment_id=>$Equipment->id(), order=>'starttime_seconds DESC');
+			my $LastShift = openprint::Equipment_Shift->find_one(equipment_id=>$$Equipment{id}, order=>'starttime_seconds DESC');
 			my $NewShift = new openprint::Equipment_Shift();
-			$NewShift->equipment_id( $Equipment->id() );
+			$NewShift->equipment_id( $$Equipment{id} );
 			if ( $LastShift ) {
 				$NewShift->starttime_seconds( $LastShift->endtime_seconds() );
 				$NewShift->duration_seconds( $LastShift->duration_seconds() );
@@ -2072,10 +2073,11 @@ sub operator_schedule {
 				$NewShift->duration( $Equipment->specification('Default Shift Duration') ) if ! $NewShift->duration();
 				$NewShift->duration( '07:00:00' ) if ! $NewShift->duration();
 			} # end if
+			$NewShift->operator_ids( $NewShift->Equipment()->operator_ids() );
 			$variable{error} .= $NewShift->save();
 		} # end foreach Equipment
 	} else {
-		ssi::save_params( $r->uri(), ( 'category_id', 'equipment_id' ) );
+		ssi::save_params( $r->uri(), ( 'category_id', 'equipment_id', 'operator_ids' ) );
 	} # end if
 
 } # end sub operator_schedule
@@ -2086,7 +2088,7 @@ sub _job_popup {
 
 sub _signature_completion_popup {
 	if ( ! $param{schedule_id} ) {
-		$variable{error} .= "Job id not specified<br/>";
+		$variable{error} .= 'Job id not specified<br/>';
 		$variable{Job} = new openprint::ScheduledJob();
 		return;
 	}
@@ -2117,16 +2119,26 @@ sub _check_for_skid {
 sub prepress_schedule {
 	if ( %param ) {
 		if ( $param{btnFunction} eq 'Reset' ) {
-			foreach my $param ( 'Presses','statuses','takenover_on_start_year','takenover_on_start_month','takenover_on_start_day','takenover_on_end_year','takenover_on_end_month','takenover_on_end_day' ) {
+			foreach my $param ( 'Presses','scale','statuses',
+					( map { 'takenover_on_start_'.$_ } ( 'year','month','day' ) ),
+					( map { 'takenover_on_end_'.$_ } ( 'year','month','day' ) ),
+					) {
 				delete $session{'/employee/production/prepress_schedule.html?'.$param};
 			} # end if
 		} else {
-			ssi::save_params( '/employee/production/prepress_schedule.html', ( 'Presses','scale','statuses','takenover_on_start_year','takenover_on_start_month','takenover_on_start_day','takenover_on_end_year','takenover_on_end_month','takenover_on_end_day' ) );
+			ssi::save_params( '/employee/production/prepress_schedule.html', (
+						'Presses','scale','statuses',
+						( map { 'takenover_on_start_'.$_ } ( 'year','month','day' ) ),
+						( map { 'takenover_on_end_'.$_ } ( 'year','month','day' ) ),
+						) );
 		} # end if
 	} elsif ( ( time - $session{'/employee/production/prepress_schedule.html?lastupdated'} ) > 24*60*60 ) {
-		foreach my $param ( 'Presses', 'statuses','scale','takenover_on_start_year','takenover_on_start_month','takenover_on_start_day','takenover_on_end_year','takenover_on_end_month','takenover_on_end_day' ) {
+		foreach my $param ( 'Presses','scale','statuses',
+				( map { 'takenover_on_start_'.$_ } ( 'year','month','day' ) ),
+				( map { 'takenover_on_end_'.$_ } ( 'year','month','day' ) ),
+				) {
 			delete $session{'/employee/production/prepress_schedule.html?'.$param};
-		} # end if
+		}
 	} # end if
 	$session{'/employee/production/prepress_schedule.html?lastupdated'} = time;
 } # end sub prepress_schedule

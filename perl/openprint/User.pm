@@ -457,8 +457,17 @@ sub link {
 } # end sub link
 
 sub link_to {
-    return sprintf('<a href="/account/view.html?user_id=%1$d">%2$s</a>', $_[0]{id}, @_ > 1 ? $_[1] : $_[0]->name() );
+	my $self = shift;
+	my $content = @_ ? shift @_ : $$self{name};
+	my %options = ref $_[0] eq 'HASH' ? %{$_[0]} : @_;
+
+	return sprintf('<a href="/account/view.html?user_id=%1$d"%3$s>%2$s</a>', 
+			$$self{id},
+			$content,
+			( %options ? join(' ', '', map { $_.'="'.$options{$_}.'"' } keys %options ) : '' ),
+			);
 } # end sub link_to
+
 sub admin_link_to {
     return sprintf('<a href="/administrator/managerial/user_profiles.html?user_id=%1$d">%2$s</a>', $_[0]{id}, @_ > 1 ? $_[1] : $_[0]->name() );
 } # end sub admin_link_to

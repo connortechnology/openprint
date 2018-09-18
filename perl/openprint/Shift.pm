@@ -26,7 +26,7 @@ $serial = 'shifts_id_seq';
 	id					=>	'id',
 	starttime			=>	'starttime',
 	endtime				=>	'endtime',
-	operator_id			=>	'operator_id',
+	operator_ids			=>	'operator_ids',
 	shift_id			=>	'shift_id',
 	equipment_id		=>	'equipment_id',
 	starttime_seconds	=>	undef,
@@ -41,11 +41,10 @@ $serial = 'shifts_id_seq';
 
 %transforms = (
 	id			=>	[ 's/\D//g' ],
-	operator_id	=>	[ 's/\D//g' ],
 );
 
 %defaults = (
-	operator_id		=>	undef,
+	operator_ids		=>	[],
 	created_on		=>	q`'NOW()'`,
 	updated_on		=>	q`'NOW()'`,
 );
@@ -89,8 +88,20 @@ $log->debug("Parsing endtime_seconds to $_[0]{endtime_seconds} from $_[0]{endtim
 } # end sub endtime_seconds
 
 sub Operator {
+	my ( $caller, undef, $line ) = caller;
+	$log->error("Deprecated call to Operator from $caller:$line");
 	return new openprint::User( $_[0]{operator_id} );
 } # end sub Operator
+
+sub Operators {
+  if ( ! $_[0]{Operators} ) {
+    $_[0]{Operators} = [];
+    if ( $_[0]{id} and $_[0]{operator_ids} and @{$_[0]{operator_ids}} ) {
+      $_[0]{Operators} = [openprint::User->find(id=>$_[0]{operator_ids})];
+    }
+  }
+  return @{$_[0]{Operators}};
+}
 
 sub Equipment_Shift {
 	return new openprint::Equipment_Shift( $_[0]{shift_id} );
@@ -146,21 +157,31 @@ sub Schedule_Without_Job {
 
 sub operator_id {
 	my $self = shift;
+	my ( $caller, undef, $line ) = caller;
+  $log->error("Deprecated call to Operator from $caller:$line");
+	return 0;
+} # end sub operator_id
+
+sub operator_ids {
+	my $self = shift;
 
 	if ( @_ ) {
 		if ( $$self{id} ) {
+			my @new_operator_ids = ( @_ == 1 and ref $_[0] eq 'ARRAY') ? @{$_[0]} : @_;
+
+$openprint::log->debug("Setting operator from ".join(',',@{$$self{operator_ids}})." to @new_operator_ids");
 			foreach my $Job ( $self->Schedule() ) {
-				$Job->save({ operator_id=>$_[0] });
+				$Job->save({ operator_ids=>@new_operator_ids });
 			} # end foreach
-$openprint::log->debug("Setting operator from $$self{operator_id} to $_[0]");
-			if ( $$self{operator_id} != $_[0] ) {
-$openprint::log->debug("Setting operator to $_[0]");
-				$$self{operator_id} = $_[0];
+
+			if ( sets::intersection(@new_operator_ids, @{$$self{operator_ids}}) != @new_operator_ids ) {
+$openprint::log->debug("Setting operator to @new_operator_ids");
+				$$self{operator_ids} = \@new_operator_ids;
 				$self->save();
 			} # end if
 		} # end if
 	} # end if
-	return $$self{operator_id};
+	return $$self{operator_ids};
 } # end sub operator_id
 
 sub Equipment {
@@ -173,7 +194,8 @@ sub to_string {
 		$$self{to_string} = sprintf('%s %s %s to %s op:(%s)', $self->Equipment()->name(), $self->name(), 
 			$self->starttime() ? $parser->format_datetime( $self->starttime_dt ) : '',
 			$self->endtime() ? $parser->format_datetime( $self->endtime_dt ) : '',
-			$self->Operator()->name() );
+			join(', ', map { $_->name() } $self->Operators() )
+			);
 	} # end if
 	return $$self{to_string};
 } # end sub to_string
@@ -257,24 +279,33 @@ sub get_ul {
 			$month += 1;
 		} # endif
 		if ( Date::Calc::check_date( $year, $month, $day ) ) {
-			my $Operator = $Shift->Operator();
+			my @Operators = $Shift->Operators();
 
 			if ( openprint::usergroup::is_user_in( ['PressManager','Scheduling'], $session{user_id} ) ) {
-				$html .= sprintf( q`<div class="When" onclick="popup_window('_shift_popup.html','shift_id=%d', {width:475});"><span class="Interval">%s %d %.3s %s %s to %s</span><span class="TotalImpressions">(%d)</span><span class="%s">%s</span></div>`, 
+				$html .= sprintf(
+						q`
+<div class="When" onclick="popup_window('_shift_popup.html','shift_id=%d', {width:475});">
+  <span class="Interval">%s %d %.3s %s %s to %s</span>
+  <span class="TotalImpressions">(%d)</span>
+  <span class="%s">%s</span>
+</div>`, 
 						$Shift->id(), 
 						Date::Calc::Day_of_Week_Abbreviation( Date::Calc::Day_of_Week($year, $month, $day) ), 
 						$day, 
 						Date::Calc::Month_to_Text( $month ), $Shift->name(), 
 						Date::Format::time2str('%H:%M', $Shift->starttime_seconds() ),
 						Date::Format::time2str('%H:%M', $Shift->endtime_seconds() ),
-						$total_impressions, ($Operator->id() ? 'Operator' : 'assign' ), 
-						($Operator->id() ? $Operator->name() : 'assign') );
+						$total_impressions, (@Operators ? 'operator' : 'assign' ), 
+						( @Operators ? join(', ', map { $_->name() } @Operators ) : 'assign'),
+						);
 			} else {
-				$html .= sprintf( '<div class="When"><span class="Shift_time">%s %d %.3s %s %s to %s</span><span class="operator">%s</span></div>', 
+				$html .= sprintf(
+						'<div class="When"><span class="Shift_time">%s %d %.3s %s %s to %s</span><span class="operator">%s</span></div>', 
 						Date::Calc::Day_of_Week_Abbreviation( Date::Calc::Day_of_Week($year, $month, $day)), $day, Date::Calc::Month_to_Text( $month ), $Shift->name(), 
 						Date::Format::time2str('%H:%M', $Shift->starttime_seconds() ),
 						Date::Format::time2str('%H:%M', $Shift->endtime_seconds() ),
-						( $Operator->id() ? $Operator->name() : 'assign' ) );
+						( @Operators ? join(', ', map { $_->name() } @Operators->name() ) : 'assign'),
+						);
 			} # end if
 		} else {
 			$openprint::log->debug("Not a valid date in Shift->get_ul() ($year,$month,$day) from $$Shift{starttime}");

@@ -346,6 +346,10 @@ sub get_li {
 
 	} # end if
 
+	my $i_am_the_operator = sets::isin( $session{user_id}, $self->Shift()->operator_ids() )
+		||
+		sets::isin( $session{user_id}, [ map { $_->id() } $Equipment->Operators() ] ) 
+		;
 	if ( openprint::usergroup::is_user_in( ['Scheduling'], $session{user_id} ) ) {
 		$html .= sprintf( q`<div class="Comment" onclick="job_popup('%1$d');">%2$s</div>`, $$self{id}, $self->comment() );
 		$html .= sprintf( q`<div class="Stock" onclick="popup_window( '/employee/production/_stock_popup.html', 'schedule_id=%1$d', {width:475} );">%2$s</div>`, $$self{id}, $self->stock() );
@@ -428,14 +432,11 @@ sub get_li {
 			if ( sets::isin( $self->ServiceType()->name(), [ '','Signature' ] ) ) {
 				$html .= ssi::button( 'Paper'.$$self{id}, { onclick=> "popup_window('/employee/production/_stock_details.html','project_id=$$self{project_id}' );", text=> 'P', title=>'Paper' } );
 			} # end if
-			if ( ( $session{user_id} == $self->Shift()->operator_id() ) or ( 
-						#( ! $self->Shift()->operator_id() ) and 
-sets::isin( $session{user_id}, [ map { $_->id() } $Equipment->Operators() ] ) 
-						) ) {
-			$html .= ssi::button( 'Complete'.$$self{id}, { onclick=>"popup_window('/employee/production/_signature_completion_popup.html', 'schedule_id=$$self{id}', { height: '100px', center: 'false' } );", text=>'Complete',title=>'Complete Job' } );
+			if ( $i_am_the_operator ) {
+				$html .= ssi::button( 'Complete'.$$self{id}, { onclick=>"popup_window('/employee/production/_signature_completion_popup.html', 'schedule_id=$$self{id}', { height: '100px', center: 'false' } );", text=>'Complete', title=>'Complete Job' } );
 			}
 		} # end if
-		if ( $$self{operator_id} == $session{user_id} ) {
+		if ( $i_am_the_operator ) {
 			$html .= ssi::button( 'Start'.$$self{id}, { onclick=>"new Ajax.Request('_li_change.json', { parameters: { id: $$self{id}, action: 'start' } } );", text=> 'Start' } );
 		} # end if
 		$html .= '</span>';
@@ -448,7 +449,7 @@ sets::isin( $session{user_id}, [ map { $_->id() } $Equipment->Operators() ] )
 			$html .= '</span>';
 		} # end if smart
 	} # end if
-	if ( $openprint::session{'/employee/production/print_overview.html?show_feedback'} and ( $ul_id !~ /Pending|Approved/ ) ) {
+	if ( $$self{project_id} and $openprint::session{'/employee/production/print_overview.html?show_feedback'} and ( $ul_id !~ /Pending|Approved/ ) ) {
 		my @Data = openprint::ProductionFeedback->find(project_id=>$$self{project_id},order=>'starting_on');
 		if ( @Data ) {
 			$html .= '<br class="spacer"/><div class="Feedback"><fieldset><legend>Production Feedback</legend>
@@ -471,45 +472,58 @@ sets::isin( $session{user_id}, [ map { $_->id() } $Equipment->Operators() ] )
 } # end sub get_li
 
 # operator_Id is not stored in the job, this is a convenience function.
-sub operator_id {
-	my ( $self, $operator_id ) = @_;
+sub operator_ids {
+	my $self = shift;
 
 	my $Project = $self->Project();
 
-	if ( ( defined $operator_id ) and ( 1*$operator_id != 1*$$self{operator_id} ) ) {
-		$$self{operator_id} = $operator_id;
-		if ( $$self{project_id} ) {
-			foreach my $sig_id ( @{$$self{service_id}} ) {
-				next if ! $sig_id;
-				my $Service = $Project->Service( $sig_id );
-				if ( $Service->service_id() != $sig_id ) {
-					$openprint::log->error("Invalid service $sig_id " . $Service->to_string() );
-					next;
-				} # end if
+	if ( @_ ) {
+		my @new_operator_ids = ref $_[0] eq 'ARRAY' ? @{$_[0]} : @_;
+		if ( 
+				(!$$self{operator_ids})
+				or
+				( sets::intersection( @new_operator_ids , @{$$self{operator_ids}} ) != @new_operator_ids )
+			 ) {
+			$$self{operator_ids} = \@new_operator_ids;
 
-				if ( ! sets::isin( $operator_id, $Service->operator_ids() ) ) {
-					$openprint::log->debug($Service->to_string());
-					$Service->save({operator_ids=> [ $operator_id ]});
-				} # end if
-			} # end foreach
-		} # end if
-	} # end if
-	if ( ! $$self{operator_id} ) {
+			if ( $$self{project_id} ) {
+				foreach my $sig_id ( @{$$self{service_id}} ) {
+					next if ! $sig_id;
+					my $Service = $Project->Service( $sig_id );
+					if ( $Service->service_id() != $sig_id ) {
+						$openprint::log->error("Invalid service $sig_id " . $Service->to_string() );
+						next;
+					} # end if
+
+					if ( sets::intersection( @new_operator_ids, $Service->operator_ids() ) != @new_operator_ids ) {
+						$openprint::log->debug($Service->to_string());
+						$Service->save({operator_ids=>$$self{operator_ids}});
+					} # end if
+				} # end foreach service_id
+			} # end if project_id
+		} # end if operator_ids changed
+	} # end if @_
+
+	if ( ! $$self{operator_ids} ) {
 		if ( $$self{project_id} ) {
 $openprint::log->debug("Servic_ids: @{$$self{service_id}}");
 			foreach my $sig_id ( @{$$self{service_id}} ) {
 				my $Service = $Project->Service( $sig_id );
 $openprint::log->debug($Service->to_string() );
-				$$self{operator_id} = shift @{$Service->operator_ids()};
-				last if $$self{operator_id};
+				$$self{operator_ids} = $Service->operator_ids();
 			} # end foreach
 		} # end if
-		if ( ! $$self{operator_id} ) {
-			$$self{operator_id} = $self->Shift()->operator_id();
+		if ( ! $$self{operator_ids} ) {
+			$$self{operator_ids} = $self->Shift()->operator_ids();
 		}
 	} # end if
-	return $$self{operator_id};
-} # end sub operator_id
+	return $$self{operator_ids};
+} # end sub operator_ids
+
+sub operator_id {
+	my ( $caller, undef, $line ) = caller;
+	$log->error("Deprecated call to operator_id from $caller:$line");
+}
 
 sub impressions {
 	my $self = shift;

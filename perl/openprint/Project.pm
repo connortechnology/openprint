@@ -1485,7 +1485,7 @@ sub operator_id {
 	my ( $self ) = @_;
 
 	my ( $caller, undef, $line ) = caller;
-	$openprint::log->debug("deprecated call to Project::operator_id from $caller:$line");
+	$openprint::log->error("deprecated call to Project::operator_id from $caller:$line");
 
 	if ( ! $$self{operator_id} ) {
 		my $services = $self->services();
@@ -1498,7 +1498,7 @@ sub Operator {
 	my ( $self ) = @_;
 
 	my ( $caller, undef, $line ) = caller;
-	$openprint::log->debug("deprecated call to Project::operator_id from $caller:$line");
+	$openprint::log->error("deprecated call to Project::operator_id from $caller:$line");
 
 	if ( ! $$self{Operator} ) {
 		$$self{Operator} = new openprint::User( $self->operator_id() );
