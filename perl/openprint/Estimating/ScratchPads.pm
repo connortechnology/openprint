@@ -169,14 +169,14 @@ sub calc {
 		next if $override_pages{$group_id};
 
 		if ( exists $$specs{'OverrideGroupPageQuantity'.$group_id} and $$specs{'OverrideGroupPageQuantity'.$group_id} eq 'Y' ) {
-            if ( ! $$specs{'GroupPageQuantity'.$group_id} ) {
+			if ( ! $$specs{'GroupPageQuantity'.$group_id} ) {
 # We still set override so that it doesn't auto-fill    
-                $$specs{alert} .= 'You have override the # of pages in group ' . $$specs{"txtSignatureType$group_id"} . ' but not entered the # of pages.<br/>';
-                $$specs{Status} = 'uncalculated';
-                $$specs{'GroupPageQuantity'.$group_id.'_container'} = { addClassName=>'error' };
-            } else {
-                $$specs{'GroupPageQuantity'.$group_id.'_container'} = { removeClassName=>'error' };
-            }
+				$$specs{alert} .= 'You have override the # of pages in group ' . $$specs{"txtSignatureType$group_id"} . ' but not entered the # of pages.<br/>';
+				$$specs{Status} = 'uncalculated';
+				$$specs{'GroupPageQuantity'.$group_id.'_container'} = { addClassName=>'error' };
+			} else {
+				$$specs{'GroupPageQuantity'.$group_id.'_container'} = { removeClassName=>'error' };
+			}
 			$override_pages{$group_id} = $$specs{'GroupPageQuantity'.$group_id};
 			$log->debug("Setting override pages for group $group_id to " . $$specs{'GroupPageQuantity'.$group_id} );
 		} else {
@@ -208,7 +208,7 @@ sub calc {
 		foreach ( @signature_variables ) {
 			next if ! $sig_specs{$_};
 			if ( $sig_specs{$_} ne $$specs{ $_.$group_id} ) {
-				$$specs{ $_.$group_id} = $sig_specs{$_};
+				$$specs{$_.$group_id} = $sig_specs{$_};
 				$variables{$_.$group_id} = [] if ! $variables{$_.$group_id};
 				push @{$variables{$_.$group_id}}, 'output';
 			}
@@ -324,8 +324,8 @@ if ( 0 ) {
 										txtSignatureType			=> 'Backing Pages',
 										txtServiceDescription	=> 'Backing',
 										) : (
-											txtSignatureType	=> 'Interior Pages',
-											txtServiceDescription	=> 'Padding Pages',
+											txtSignatureType	=> 'Pad Pages',
+											txtServiceDescription	=> 'Pad Pages',
 											) ),
 						Group			=> $group_id,
 						PrintingType	=> $$param{PrintingType},
@@ -371,26 +371,26 @@ $log->debug("Adding backing pages");
 		} # end foreach
 	} # end if Backing
 
-	if ( ! $Project->signatures({ type=>'Interior Pages'}) ) {
+	if ( ! $Project->signatures({ type=>'Pad Pages'}) ) {
 # Must have at least 1 interioer signature
 		my $print_service_index = $Project->add_signature( undef, 'uncalculated', {
-				txtSignatureType	=>	'Interior Pages',
-				txtServiceDescription	=> 'Padding Pages',
+				txtSignatureType	=>	'Pad Pages',
+				txtServiceDescription	=> 'Pad Pages',
 				Group	=> 2,
 				PrintingType	=> $$param{PrintingType},
 				txtSpreadSize	=> 1,
 				} );
 	} # end if
 	if ( ( ! $$param{GroupPageQuantity2} ) and ( $$param{OverrideGroupPageQuantity2} ne 'Y' ) ) {
-		$$param{GroupPageQuantity2} = $needed_pages{'Interior Pages'};
+		$$param{GroupPageQuantity2} = $needed_pages{'Pad Pages'};
 	} # end if
 
 	# THis could only set sizes.. weird.
 	foreach my $ss_id ( $Project->signatures() ) {
-		my $sig_specs = openprint::service::get_specs_ref( $Project->id(), $ss_id );
+		my $sig_specs = openprint::service::get_specs_ref( $$Project{id}, $ss_id );
 		my $group_id = $$sig_specs{Group};
 		foreach my $k ( @signature_variables ) {
-			openprint::service::insert_service_spec( $openprint::log, $openprint::dbh, $Project->id(), $ss_id, $k, $$specs{$k.$group_id} );
+			openprint::service::insert_service_spec( $openprint::log, $openprint::dbh, $$Project{id}, $ss_id, $k, $$specs{$k.$group_id} );
 		}
 	} # end foreach
 

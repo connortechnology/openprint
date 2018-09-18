@@ -29,7 +29,7 @@ function check_input( form, signature_index ) {
         <? echo ( join("\n",
               input( type=>'cardinal', name=>'Docket', id=>'Docket', onchange=>'change_handler(this);', onkeypress=>'return input_handler(this,event);', onkeydown=>q`if(event.keyCode==13){window.location='view.html?Docket='+this.value;};`, onkeyup=>q`$('project_id').value='';`, value=>$param{Docket}),
               button( 'Go1', { onclick=>q`window.location='view.html?Docket='+$('Docket').value;`, text=>'Go' } ),
-						button('GoProofs', { onclick=>q`if($('Docket').value){window.location='/employee/proj/prep/proofs.html?docket='+$('Docket').value;};`, text=>'Go Proofs' } ),
+							button( 'GoProofs', { onclick=>q`if($('Docket').value){window.location='/employee/proj/prep/proofs.html?docket='+$('Docket').value;};`, text=>'Go Proofs' } ),
         ); ) ?>
         </li>
       </ul>

@@ -813,7 +813,7 @@ $openprint::log->debug("Stitching imposition: $stitching_imposition");
 # Regular book signatures will be trimmed by the stitcher, so we only need 1 cut per imposition
 # Most stitchers do 3knife trim, but some do not. Most need a Head Trim, some need Head & Foot
 # interior vertical cuts = $sig_specs{hdnImpositionColumns}-1
-      if ( $$sig_specs{txtSignatureType} ) {
+      if ( $$sig_specs{txtSignatureType} and ( $$sig_specs{txtSignatureType} ne 'Pad Pages') ) {
 
 # but if we are cutting into smaller signatures, then we need more cutting
 $openprint::log->debug("Sitching $stitching_imposition out printing $$sig_specs{'txtImposition'.$qty_index}out") if DEBUG;
