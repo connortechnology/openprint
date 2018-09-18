@@ -76,8 +76,6 @@
 						</li>
 						<? endif ( $$variable{Project}->requested_date() ) ?>
 					<? endif ( $$variable{Project}->due_date() ) ?>
-					<li>
-						<label>Prepress Operator<?echo($$variable{Project}->Operators()!=1's':'')?></label>
 <? echo (
 	my $services = $$variable{Project}->services();
 	my $ProofsService = $$variable{Project}->Service( $$services{Proofs} ? $$services{Proofs}[0] : $$services{FilmStripping}[0] );
@@ -89,9 +87,12 @@
   }
   my %Operators = map { $$_{role_id}, $_ } openprint::Project_Service_Operator->find( service_id=>$$ProofsService{service_id} );
 
-	return join(', ', map { new openprint::User($_)->link_to() } sets::union( map { $Operators{$$_{id}}{user_id} } @Roles ) );
+	my @operator_ids = sets::union( map { $Operators{$$_{id}}{user_id} } @Roles );
+	return 
+	'<li><label>Prepress Operator'.(@operator_ids!=1?'s':'').'</label>'.
+	join(', ', map { new openprint::User($_)->link_to() } @operator_ids ).
+	'</li>';
 ) ?>
-					</li>
 					<? endif ( $$variable{Project}->docket() ) ?>
 					<? if ( $$variable{Project}->predefined() and $session{'user_type'} eq 'A' ) ?>
 					<li>
