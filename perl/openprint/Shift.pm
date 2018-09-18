@@ -23,16 +23,16 @@ $table = 'shifts';
 $serial = 'shifts_id_seq';
 
 %fields = (
-	id					=>	'id',
-	starttime			=>	'starttime',
-	endtime				=>	'endtime',
+	id								=>	'id',
+	starttime					=>	'starttime',
+	endtime						=>	'endtime',
 	operator_ids			=>	'operator_ids',
-	shift_id			=>	'shift_id',
-	equipment_id		=>	'equipment_id',
+	shift_id					=>	'shift_id',
+	equipment_id			=>	'equipment_id',
 	starttime_seconds	=>	undef,
 	endtime_seconds		=>	undef,
-	created_on			=>	'created_on',
-	updated_on			=>	'updated_on',
+	created_on				=>	'created_on',
+	updated_on				=>	'updated_on',
 );
 %find_fields = (
 	name		=>	'(SELECT name FROM equipment_shifts WHERE shift_id=equipment_shifts.id)',
@@ -89,7 +89,7 @@ $log->debug("Parsing endtime_seconds to $_[0]{endtime_seconds} from $_[0]{endtim
 
 sub Operator {
 	my ( $caller, undef, $line ) = caller;
-	$log->error("Deprecated call to Operator from $caller:$line");
+	$log->error("Deprecated call to Shift::Operator from $caller:$line");
 	return new openprint::User( $_[0]{operator_id} );
 } # end sub Operator
 
@@ -158,7 +158,7 @@ sub Schedule_Without_Job {
 sub operator_id {
 	my $self = shift;
 	my ( $caller, undef, $line ) = caller;
-  $log->error("Deprecated call to Operator from $caller:$line");
+  $log->error("Deprecated call to Shift::operator_id from $caller:$line");
 	return 0;
 } # end sub operator_id
 
@@ -167,7 +167,7 @@ sub operator_ids {
 
 	if ( @_ ) {
 		if ( $$self{id} ) {
-			my @new_operator_ids = ( @_ == 1 and ref $_[0] eq 'ARRAY') ? @{$_[0]} : @_;
+			my @new_operator_ids = ( (@_ == 1) and (ref $_[0] eq 'ARRAY')) ? @{$_[0]} : @_;
 
 $openprint::log->debug("Setting operator from ".join(',',@{$$self{operator_ids}})." to @new_operator_ids");
 			foreach my $Job ( $self->Schedule() ) {
@@ -228,7 +228,9 @@ sub get_lis {
 sub ul_id {
 	my ( $self ) = @_;
 	if ( $self->starttime() ) {
-		return sprintf('ul%d-%s-%s', $$self{equipment_id}, Date::Format::time2str('%Y-%m-%d', $self->starttime_seconds() ), $self->name() );
+		return sprintf('ul%d-%s-%s', $$self{equipment_id},
+				Date::Format::time2str('%Y-%m-%d', $self->starttime_seconds() ),
+				$self->name() );
 	} else {
 		return sprintf('ul%d-%s', $$self{equipment_id}, $self->name() );
 	} # end if
@@ -242,7 +244,10 @@ sub get_from_ul_id {
 
 	my $Shift;
 	if ( $date ) {
-		$Shift = openprint::Shift->find_one( equipment_id=>$equipment_id, name=>($shift_name ? $shift_name : undef ), startdate=>$date );
+		$Shift = openprint::Shift->find_one(
+				equipment_id=>$equipment_id,
+				name=>($shift_name ? $shift_name : undef ),
+				startdate=>$date );
 		return if ! $Shift;
 	} else {
 		$Shift = new openprint::Shift();
@@ -289,7 +294,7 @@ sub get_ul {
   <span class="TotalImpressions">(%d)</span>
   <span class="%s">%s</span>
 </div>`, 
-						$Shift->id(), 
+						$$Shift{id}, 
 						Date::Calc::Day_of_Week_Abbreviation( Date::Calc::Day_of_Week($year, $month, $day) ), 
 						$day, 
 						Date::Calc::Month_to_Text( $month ), $Shift->name(), 
