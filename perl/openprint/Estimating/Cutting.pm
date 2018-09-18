@@ -90,7 +90,7 @@ sub has_overrides {
     } # end foreach
   } # end foreach
 	foreach my $qty_index ( $Project->quantity_indexes() ) {
-		push @v, map { $$specs{"$_$qty_index"} ? "$_$qty_index" : () } ( 'OverridePrice' );
+		push @v, map { $$specs{"$_$qty_index"} and ($$specs{"$_$qty_index"} eq 'Y') ? "$_$qty_index" : () } ( 'OverridePrice' );
 	}
 
   return @v;
@@ -1512,7 +1512,7 @@ sub runtime {
 
 				$runtime += ( $$specs{"txtCalculatedCuts-$form-$qty_index"} + $$specs{"txtAdditionalCuts$form"} ) * ( $makeready + $runspeed) * $lifts;
 			} else {
-				$log->error("None or Equipment is a stitcher, so the cutting happens when stitching");
+				$log->debug("None or Equipment is a stitcher, so the cutting happens when stitching");
 			}
 		} # end if has regular cuts
 	
