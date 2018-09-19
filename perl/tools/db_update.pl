@@ -5704,6 +5704,12 @@ if ( sets::isin('product_specifications', \@tables ) ) {
 	$dbh->do('DROP TABLE product_specifications');
 }
 
+if ( ! sets::isin('backups', \@tables ) ) {
+  $log->debug("Adding Backups");
+  $dbh->do( misc::load_file( $log, q{../openprint/sql/Backups.sql}) );
+  die if $dbh->errstr();
+}
+
 if ( ! sets::isin('operator_roles', \@tables ) ) {
 	$log->debug("Adding Operator Roles");
 	$dbh->do( misc::load_file( $log, q{../openprint/sql/Operator_Roles.sql}) );
@@ -5715,6 +5721,7 @@ $log->debug("Adding sorting to Operator_ROles");
 		$dbh->do('ALTER TABLE operator_roles add sorting integer');
 	} # end if
 } # end if
+
 if ( ! sets::isin('project_service_operators', \@tables ) ) {
 	$log->debug("Adding Project Service Operators");
 	$dbh->do( misc::load_file( $log, q{../openprint/sql/Project_Service_Operators.sql}) );
