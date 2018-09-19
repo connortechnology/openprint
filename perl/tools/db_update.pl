@@ -30,7 +30,7 @@ use vars qw( $log $dbh %config );
 
 $openprint::Object::no_cache = 1;
 
-$log = new logger( 'debug' );
+$log = new logger('debug');
 
 $ARGV[1] = $ARGV[0] if ! $ARGV[1];
 $ARGV[2] = $ARGV[1] if ! $ARGV[2];
@@ -231,10 +231,15 @@ if ( ! sets::isin( 'companies', \@tables ) ) {
 		$dbh->do('ALTER TABLE companies ADD '.$openprint::Company::fields{established}.q` date`);
 		die $dbh->errstr() if $dbh->errstr();
 	} # end if
-	if ( ! exists $$data{$openprint::Company::fields{discount}} ) {
-		$dbh->do('ALTER TABLE companies ADD '.$openprint::Company::fields{discount}.q` numeric(16,4) DEFAULT '0.0000' NOT NULL`);
-		die $dbh->errstr() if $dbh->errstr();
-	} # end if
+	foreach my $field ( 'credit_card_fee', 'csr_commission' ) {
+		if ( ! $openprint::Company::fields{$field} ) {
+			die "Want to add $field to Company but it's not in fields";
+		} # end if
+		if ( ! exists $$data{$openprint::Company::fields{$field}} ) {
+			$dbh->do('ALTER TABLE companies ADD '.$openprint::Company::fields{$field}.q` FLOAT`);
+			die $dbh->errstr() if $dbh->errstr();
+		} # end if
+	} # end foreach
 	if ( ! exists $$data{$openprint::Company::fields{last_project_id}} ) {
 		if ( ! sets::isin( 'projects', \@tables ) ) {
 			$dbh->do( misc::load_file( $log, q{../openprint/sql/Projects.sql}) ) or die;
@@ -290,8 +295,8 @@ if ( ! sets::isin( 'users', \@tables ) ) {
 } else {
 	my $data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='users'", 'column_name');
 	if ( $data ) {
-		print "Updating Users...\n";
 		if ( ! exists $$data{deleted} ) {
+			$log->debug("Adding deleted to Users");
 			my $ac = sql::start_transaction( $dbh );
 			$dbh->do(q`alter table Users add deleted boolean`);
 			$dbh->do(q`alter table Users alter deleted set default false`);
@@ -300,9 +305,11 @@ if ( ! sets::isin( 'users', \@tables ) ) {
 			sql::end_transaction( $dbh, $ac );
 		} 
 		if ( ! exists $$data{wage} ) {
+			$log->debug("Adding wage to Users");
 			$dbh->do(q`alter table Users add wage float`);
 		} # end if
 		if ( exists $$data{strfirstname} ) {
+			$log->debug("renameing various columns getting rid of str");
 			my $ac = sql::start_transaction( $dbh );
 			$dbh->do(q`alter table Users rename column strfirstname to firstname`);
 			$dbh->do(q`alter table Users rename column strlastname to lastname`);
@@ -368,6 +375,7 @@ if ( ! sets::isin( 'users', \@tables ) ) {
 		} # end if
 	} # end if
 	if ( sets::isin( 'users_index_seq', \@sequences ) ) {
+		$log->debug("Adding users_id_seq");
 		if ( ! sets::isin( 'users_id_seq', \@sequences ) ) {
 			$dbh->do('CREATE SEQUENCE users_id_seq');
 		} # end if
@@ -551,7 +559,7 @@ if ( ! sets::isin( 'orders', \@tables ) ) {
 	load_sql( 'Orders' );
 }
 
-if ( ! sets::isin( 'payments', \@tables ) ) {
+if ( ! sets::isin('payments', \@tables) ) {
 	$dbh->do( misc::load_file( $log, q{../openprint/sql/Payments.sql}) );
 	die "died error from do " . $dbh->errstr() if $dbh->errstr();
 } else {
@@ -633,6 +641,22 @@ if ( ! sets::isin( 'payments', \@tables ) ) {
 		$dbh->do('ALTER TABLE payments add order_id INTEGER');
 		$dbh->do('ALTER TABLE payments add FOREIGN KEY (order_id) REFERENCES Orders (id)');
 	} # end if
+  if ( !$$data{exchange} ) {
+    $log->debug("Adding exchange to payments");
+    $dbh->do('ALTER TABLE payments ADD exchange FLOAT');
+  }
+  if ( !$$data{value} ) {
+    $log->debug("Adding value to payments");
+    $dbh->do('ALTER TABLE payments ADD value FLOAT');
+  }
+  if ( !$$data{value_locked} ) {
+    $log->debug("Adding value_locked to payments");
+    $dbh->do('ALTER TABLE payments ADD value_locked BOOLEAN NOT NULL DEFAULT FALSE');
+  }
+  if ( !$$data{amount_locked} ) {
+    $log->debug("Adding amount_locked to payments");
+    $dbh->do('ALTER TABLE payments ADD amount_locked BOOLEAN NOT NULL DEFAULT FALSE');
+  }
 } # end if
 
 	# Check orders structure, don't have to check for existence because we did that twice above
@@ -872,6 +896,10 @@ if ( sets::isin( 'project_types', \@tables ) ) {
 	if ( exists $$data{strtemplateurl} ) {
 		$dbh->do('ALTER TABLE Project_Types drop strtemplateurl');
 	}
+	if ( ! exists $$data{deleted} ) {
+		$log->debug("Add deleted to Project_Types");
+		$dbh->do('ALTER TABLE Project_Types add deleted boolean not null default false') or die $dbh->errstr();
+	}
 } else {
 	$dbh->do( misc::load_file( $log, q{../openprint/sql/Project_Types.sql}) );
 } # end if
@@ -1064,6 +1092,19 @@ if ( ! sets::isin( 'projects', \@tables ) ) {
 	if ( ! exists $$data{reprint_reason} ) {
 		$dbh->do(q`ALTER TABLE projects ADD reprint_reason TEXT`) or $log->error($dbh->errstr());
 	} # end if
+	if ( ! exists $$data{reprint_description} ) {
+		$log->debug("Add reprint_description to Projects");
+		$dbh->do(q`ALTER TABLE projects ADD reprint_description TEXT`) or $log->error($dbh->errstr());
+	} # end if
+	foreach my $field ( 'credit_card_fee', 'csr_commission', 'discount' ) {
+		if ( ! $openprint::Project::fields{$field} ) {
+			die "Want to add $field to Project but it's not in fields";
+		} # end if
+		if ( ! exists $$data{$openprint::Project::fields{$field}} ) {
+			$dbh->do('ALTER TABLE projects ADD '.$openprint::Project::fields{$field}.q` FLOAT`);
+			die $dbh->errstr() if $dbh->errstr();
+		} # end if
+	} # end foreach
 } # end if
 if ( ! sets::isin( 'servicetype_categories', \@tables ) ) {
 	$dbh->do( misc::load_file( $log, q{../openprint/sql/ServiceType_Categories.sql}) );
@@ -1166,6 +1207,13 @@ if ( ! sets::isin( 'project_log', \@tables ) ) {
 		$dbh->do('ALTER TABLE project_log add host_id INTEGER');
 		$dbh->do('ALTER TABLE project_log ADD FOREIGN KEY (host_id) REFERENCES Hosts (id)');
 	}
+	if ( ! exists $$data{id} ) {
+		$log->debug("Adding id to project_log");
+		$dbh->do('ALTER TABLE project_log add id SERIAL') or die $dbh->errstr();
+		$dbh->do('ALTER TABLE project_log DROP CONSTRAINT project_log_pkey') or die $dbh->errstr();
+		$dbh->do('ALTER TABLE project_log ADD PRIMARY KEY (id)') or die $dbh->errstr();
+		$dbh->do('CREATE INDEX project_log_project_id_timestamp_idx on project_log (project_id,dtmtimestamp)') or die $dbh->errstr();
+  }
 }
 if ( ! sets::isin( 'barcode_log', \@tables ) ) {
 	$dbh->do( misc::load_file( $log, '../openprint/sql/Barcode_Log.sql' ) ) or die;
@@ -1572,6 +1620,10 @@ if ( sets::isin( 'services', \@tables ) ) {
 		$dbh->do('ALTER TABLE Services ADD servicetype_id  INTEGER');
 		$dbh->do('ALTER TABLE Services ADD FOREIGN KEY (servicetype_id) REFERENCES service_types (id)');
 	} # end if
+	if ( ! exists $$data{deleted} ) {
+		$log->debug("Adding deleted to Services");
+		$dbh->do('ALTER TABLE Services ADD deleted BOOLEAN NOT NULL default false') or die $dbh->errstr();
+	}
 } else {
 	$dbh->do( misc::load_file( $log, q{../openprint/sql/Services.sql}) );
 } # end if
@@ -1789,6 +1841,11 @@ if ( ! sets::isin( 'service_prices',\@tables )  ) {
 			$dbh->do("UPDATE Service_Prices set mode='Interpolated' WHERE interpolate iS true") or die $dbh->errstr();
 		} # end if
 	} # end if
+	#if ( ! exists $$data{quantity_units} ) {
+		#$log->debug("Adding quantity_units to service_prices");
+		#$dbh->do('ALTER TABLE Service_Prices ADD quantity_units TEXT');
+		#die $dbh->errstr() if $dbh->errstr();
+	#}
 	if ( ! exists $$data{id} ) {
 		$log->debug("Adding id SERIAL to Service_prices");
 		$dbh->do('ALTER TABLE Service_Prices ADD id SERIAL');
@@ -1869,6 +1926,14 @@ if ( ! sets::isin( 'folds', \@tables ) ) {
 		} else {
 			$dbh->do('DROP SEQUENCE fold_id_seq');
 		} # end if
+	} # end if
+	if ( ! exists $$data{runspeed_units} ) {
+		$log->debug("Adding runspeed_units to folds");
+		$dbh->do(q`ALTER TABLE folds ADD runspeed_units TEXT NOT NULL default 'gsm'`);
+	} # end if
+	if ( ! exists $$data{orientation} ) {
+		$log->debug("Adding orientation to folds");
+		$dbh->do(q`ALTER TABLE folds ADD orientation TEXT`);
 	} # end if
 	if ( ! exists $$data{comments} ) {
 		$dbh->do('ALTER TABLE folds ADD comments TEXT');
@@ -3161,11 +3226,35 @@ if ( sets::isin( 'equipment_shifts', \@tables ) ) {
 		$dbh->do('ALTER TABLE Equipment_shifts add id serial');
 		$dbh->do('ALTER TABLE Equipment_shifts add PRIMARY KEY (id)');
 	} # end if
+	if ( ! exists $$data{operator_ids} ) {
+		$dbh->do("ALTER TABLE Equipment_Shifts ADD operator_ids INTEGER[]") or die $dbh->errstr();
+		if ( exists $$data{operator_id} ) {
+			$log->debug("Updating operator_ids and removing operator_id");
+			$dbh->do("UPDATE Equipment_Shifts SET operator_ids = ARRAY[operator_id]") or die $dbh->errstr();
+		}
+	}
+	if ( exists $$data{operator_id} ) {
+		$log->debug("DROPPING operator_id from Equipment_Shifts");
+		$dbh->do("ALTER TABLE Equipment_Shifts DROP operator_id");
+	}
 } # end if
 
 if ( ! sets::isin('shifts',\@tables ) ) {
 	$dbh->do( misc::load_file( $log, q{../openprint/sql/Shifts.sql}) );
+} else {
+	my $data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='shifts'", 'column_name');
 	die if $dbh->errstr();
+	if ( ! exists $$data{operator_ids} ) {
+		$dbh->do("ALTER TABLE Shifts ADD operator_ids INTEGER[]") or die $dbh->errstr();
+		if ( exists $$data{operator_id} ) {
+			$log->debug("Updating operator_ids and removing operator_id");
+			$dbh->do("UPDATE Shifts SET operator_ids = ARRAY[operator_id]") or die $dbh->errstr();
+		}
+	}
+	if ( exists $$data{operator_id} ) {
+		$log->debug("DROPPING operator_id FROM Shifts");
+		$dbh->do("ALTER TABLE Shifts DROP operator_id");
+	}
 } # end if
 
 if ( ! sets::isin('user_notification_types',\@tables ) ) {
@@ -4168,6 +4257,7 @@ if ( sets::isin( 'invoice_logs', \@tables ) ) {
 		});
 		die if $dbh->errstr();
     }
+		$dbh->do('DROP TABLE Invoice_Logs') or die $dbh->errstr();
 	sql::end_transaction( $dbh, $ac );
 
 } # end if
@@ -4486,13 +4576,13 @@ if ( ! sets::isin('signaturecapture', \@tables ) ) {
 	$dbh->do( misc::load_file( $log, q{../openprint/sql/SignatureCapture.sql}) );
 } # end if
 if ( sets::isin( 'emailcampaigns', \@tables ) ) {
-$log->debug("has email_campaigns");
 	$data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='emailcampaigns'", 'column_name');
 	if ( ! $$data{nextrun} ) {
-		$dbh->do( 'ALTER TABLE emailcampaigns add nextrun timestamp with time zone' );
+		$log->debug("Adding nextrun to emailcampaigns");
+		$dbh->do('ALTER TABLE emailcampaigns add nextrun timestamp with time zone') or die $dbh->errstr();;
 	} # end if
 	if ( ! exists $$data{email_to} ) {
-$log->debug("Add email_to");
+		$log->debug("Add email_to");
 		$dbh->do('ALTER TABLE emailcampaigns add email_to text');
 	} # end if
 	if ( ! exists $$data{email_html} ) {
@@ -4520,6 +4610,10 @@ if ( ! sets::isin( 'timetracks', \@tables ) ) {
 	} # end if
 	if ( ! exists $$data{duration_override} ) {
 		$dbh->do('ALTER TABLE timetracks ADD duration_override BOOLEAN NOT NULL DEFAULT FALSE');
+	} # end if
+	if ( ! exists $$data{date_associated} ) {
+    $log->debug("Adding date_associated to timetracks");
+		$dbh->do('ALTER TABLE timetracks ADD date_associated BOOLEAN NOT NULL DEFAULT TRUE');
 	} # end if
 } # end if
 
@@ -4817,7 +4911,7 @@ my %config_actions = (
 	'Add Currency'			=>	76,
 	'Update Configuration' => 77,
 	'Login Failed'	=> 78,
-	'Select Company'	=>	79,
+	'Switch Company'	=>	79,
 	'Login'		=>	2,
 	'Logout'	=>	3,
 	'Service Copy'	=>	27,
@@ -4873,6 +4967,10 @@ foreach my $config_action ( keys %config_actions ) {
 		$Action->save({name=>$config_action,id=>$config_actions{$config_action}}, 1);
 	} # end if
 } # end foreach config_action
+$dbh->do(q`UPDATE Logs SET action_id=(SELECT id FROM log_actions WHERE name='Edit Company') WHERE action_id=(SELECT id FROM Log_Actions WHERE name='Update Company Profile')`);
+$dbh->do(q`DELETE FROM Log_Actions WHERE name='Update Company Profile'`);
+$dbh->do(q`UPDATE Logs SET action_id=(SELECT id FROM log_actions WHERE name='Edit Company') WHERE action_id=(SELECT id FROM Log_Actions WHERE name='Update Company')`);
+$dbh->do(q`DELETE FROM Log_Actions WHERE name='Update Company'`);
 die $dbh->errstr() if $dbh->errstr();
 
 
@@ -5455,9 +5553,15 @@ my $data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, c
 			$log->debug("adding interpolate to tbl_material_prices");
 		$dbh->do('ALTER TABLE tbl_material_prices ADD interpolate         BOOLEAN NOT NULL default false');
 	}
+	#if ( ! exists $$data{quantity_units} ) {
+		#$log->debug("Adding quantity_units to tbl_material_prices");
+		#$dbh->do('ALTER TABLE tbl_material_prices ADD quantity_units TEXT');
+		#die $dbh->errstr() if $dbh->errstr();
+	#}
 }
 $dbh->do( 'update service_prices set units=lower(units)');
 $dbh->do( 'update paper_prices set strunits=lower(strunits)');
+$log->debug("Updating locations for all companies");
 foreach my $Company ( openprint::Company->find() ) {
 	my $Country;
 	if ( $Company->country() ) {
@@ -5610,6 +5714,12 @@ if ( ! sets::isin('operator_roles', \@tables ) ) {
 	$log->debug("Adding Operator Roles");
 	$dbh->do( misc::load_file( $log, q{../openprint/sql/Operator_Roles.sql}) );
 	die if $dbh->errstr();
+} else {
+	my $data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='operator_roles'", 'column_name');
+	if ( ! exists $$data{sorting} ) {
+$log->debug("Adding sorting to Operator_ROles");
+		$dbh->do('ALTER TABLE operator_roles add sorting integer');
+	} # end if
 } # end if
 
 if ( ! sets::isin('project_service_operators', \@tables ) ) {

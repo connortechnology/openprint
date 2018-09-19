@@ -1,17 +1,17 @@
 <html>
 	<body>
-Thank you for using <? echo ( $$variable{'Invoice'}->Invoicer()->business_name() ) ?>.  Your current invoice (#<? echo ( $$variable{'Invoice'}->id() ) ?>) is attached.  <br/>
+Thank you for using <? echo ( $$variable{Invoice}->Invoicer()->business_name() ) ?>.  Your current invoice (#<? echo ( $$variable{Invoice}->id() ) ?>) is attached.  <br/>
  <br/>
-This invoice has been sent to the following contacts at <? echo ( $$variable{'Invoice'}->Invoicee()->business_name() ) ?>:<br/>
+This invoice has been sent to the following contacts at <? echo ( $$variable{Invoice}->Invoicee()->business_name() ) ?>:<br/>
 <? echo (
 	my $html = '';
-	foreach my $C ( $$variable{'Invoice'}->Invoicee()->AccountingContacts() ) {
+	foreach my $C ( $$variable{Invoice}->Invoicee()->AccountingContacts() ) {
 		$html .= sprintf('"%s" &lt;%s&gt;<br/>', $C->name(), $C->email() );
 	} # end foreach
 	return $html;
 ) ?>
  <br/>
-If you have any questions or comments regarding your invoice, or our online billing system, please send us an e-mail at <a href="mailto://<? echo ( $config{'AccountingEmail'} ) ?>"><? echo ( $config{'AccountingEmail'} ) ?></a>.<br/>
+If you have any questions or comments regarding your invoice, or our online billing system, please send us an e-mail at <a href="mailto://<? echo ( $config{AccountingEmail} ) ?>"><? echo ( $config{AccountingEmail} ) ?></a>.<br/>
 As always, your concerns will be addressed in a prompt and confidential manner.<br/>
  <br/>
 Thank you,<br/>

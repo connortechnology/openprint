@@ -3,7 +3,7 @@
 <script type="text/javascript">
 	tinyMCE.init({
 		mode : "textareas",
-		theme : "simple"
+		theme : "advanced"
 	});
 
 	function company_id_onchange( ddm ) {
@@ -42,6 +42,14 @@
 				</select>
 			</li>
 			<li>
+				<label>Date Associated</label>
+				<? echo ( 
+					radio( 'date_associated', [ '1','Yes', '0', 'No' ], $$variable{Timetrack}->date_associated(), { 
+						default	=>	'1',
+						onclick=>q`if(this.value=='1' && this.checked) { $('start').show();$('end').show(); } else { $('start').hide();$('end').hide(); }update_duration(this.form,'starting','ending');`,
+				} ); ) ?>
+			</li>
+			<li>
 				<label>Time Associated</label>
 				<? echo ( 
 					radio( 'time_associated', [ '1','Yes', '0', 'No' ], $$variable{Timetrack}->time_associated(), { 
@@ -49,20 +57,22 @@
 						onclick=>q`if(this.value=='1' && this.checked) { $('starting_time').show();$('ending_time').show(); } else { $('starting_time').hide();$('ending_time').hide(); }update_duration(this.form,'starting','ending');`,
 				} ); ) ?>
 			</li>
-			<li><label>Start</label>
+			<li id="start"><label>Start</label>
 			<? echo ( datetime_select( 'starting', $$variable{Timetrack}->starting(), 
 						{
 						onchange	=>	q`check_time_starting($('f1'),'starting','ending'); update_duration($('f1'),'starting','ending');`,
 						showtime	=>	sets::isin( $$variable{Timetrack}->time_associated(), [ '', 1 ] ),
 						with_today	=>	1,
+            with_time   =>  $$variable{Timetrack}{time_associated},
 						} ); ) ?>
 			</li>
-			<li><label>End</label>
+			<li id="end"><label>End</label>
 			<? echo ( datetime_select( 'ending', $$variable{Timetrack}->ending(), 
 						{
 						onchange	=>	q`update_duration(this.form,'starting','ending');`,
 						showtime	=>	sets::isin( $$variable{Timetrack}->time_associated(), [ '', 1 ] ),
 						with_today	=>	1,
+            with_time   =>  $$variable{Timetrack}{time_associated},
 						} ); ) ?>
 			</li>
 			<li><label>Duration</label>
@@ -122,6 +132,7 @@
 			</ul>
 		</div>
 		</div>
+<br class="spacer"/>
 		<p class="buttons" id="buttons">
 			<? echo (
 				my $html = '';

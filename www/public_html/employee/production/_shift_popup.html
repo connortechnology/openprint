@@ -24,7 +24,7 @@
 			</li>
 			<li>
 				<label>Operator</label>
-				<select id="operator_id" name="operator_id" size="1"><option value="">select one</option>
+				<select id="operator_ids" name="operator_ids" multiple="multiple">
 				<? echo ( 
 					my $Equipment = $$variable{Shift}->Equipment();
 
@@ -34,7 +34,7 @@
 						return;
 					}
 
-					my @Usergroups = openprint::UserGroup->find( name=> \@categories );
+					my @Usergroups = openprint::UserGroup->find( name=>\@categories );
 					if ( ! @Usergroups ) {
 						$log->error("No usergroups found for categories @categories");
 						return;
@@ -50,11 +50,13 @@
 
 					my @user_ids = map { $Operators{$$_{user_id}} ? () : $$_{user_id} } @Usersin;
 
-					my $html .= '<optgroup label="Usual Operators">';
-					$html .= make_drop_down( [ @{openprint::User->dropdown( company_id=>$session{company_id}, id=>[keys %Operators] )} ], $$variable{Shift}->operator_id() );
+					my $html;
+
+					$html .= '<optgroup label="Usual Operators">';
+					$html .= make_drop_down( [ @{openprint::User->dropdown( company_id=>$openprint::User->company_id(), id=>[keys %Operators] )} ], $$variable{Shift}->operator_ids() ) if %Operators;
 					$html .= '</optgroup>';
 					$html .= '<optgroup label="Others">';
-					$html .= make_drop_down( [ @{openprint::User->dropdown( company_id=>$session{company_id}, id=>\@user_ids )} ], $$variable{Shift}->operator_id() );
+					$html .= make_drop_down( [ @{openprint::User->dropdown( company_id=>$openprint::User->company_id(), id=>\@user_ids )} ], $$variable{Shift}->operator_ids() ) if @user_ids;
 					$html .= '</optgroup>';
 					return $html;
 				   ) ?>
@@ -73,7 +75,6 @@
 	</p>
 </form>
 <?else($$variable{Shift}->id())?>
-		<? echo ( 
-				button( 'CancelShift', { onclick=>"popupWin.destroy();", text=>'Cancel' } )
-		) ?>
+		<? echo ( button( 'CancelShift', { onclick=>"popupWin.destroy();", text=>'Cancel' } )) ?>
 <?endif($$variable{Shift}->id())?>
+<script type="text/javascript">$j('#operator_ids').chosen();</script>

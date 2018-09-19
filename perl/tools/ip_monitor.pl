@@ -154,8 +154,9 @@ while(1) {
 			if ( ( $HI->online() and ! $ping ) or ( $ping and !$HI->online() ) ) {
 				$HI->save({online=>$ping});
 			}
-			$log->debug( $HI->ip() . ' is now ' . ( $HI->online() ? 'online' : 'offline' ) . ' value of ping was ' . $ping );
+			$log->debug( $HI->ip() . ' is now ' . ( $HI->online() ? 'online' : 'offline' ) . ' value of ping was ' . ( defined $ping ? $ping : 'undef' ) );
 		} # end foreach HI
+
 		if ( ! $has_monitored_interfaces ) {
 			$log->error("Host $$Host{hostname} is monitored but none of it's interfaces are.");
 			next;
@@ -308,7 +309,7 @@ sub sig_handler {
 sub notify {
 	my ( $Host, $online ) = @_;
 	my $results;
-	my @To = map { $_->User() } $Host->Notifications();
+	my @To = map { $_->User() } $Host->Notifications(undef);
 	if ( @To and ( @To < 10 ) ) {
 		my %info = ( Host	=>	$Host,);
 		my $Email = new openprint::Email();

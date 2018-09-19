@@ -63,7 +63,7 @@ if ( ! $mac ) {
 if ( $config{db_name} ) {
 	$openprint::dbh = sql::open_sql( $log,
 			host      => $config{db_host},
-			port		=>	$config{db_port},
+			port      => $config{db_port},
 			database  => $config{db_name},
 			driver    => 'Pg',
 			login     => $config{db_user},
@@ -74,18 +74,19 @@ if ( $config{db_name} ) {
 	$log->error("Must specify database name in order to look up hosts.\n");
 	exit(1);
 } # end if
+
+if ( length $mac > 17 ) {
+$mac = substr( $mac, length $mac - 17, 17 );
+}
 my @Interfaces = openprint::Host_Interface->find(mac=>$mac);
 if ( @Interfaces ) {
 	foreach my $Interface ( @Interfaces ) {
 		if ( $Interface->dhcp() ) {
 			if ( $Interface->ip() ne $ip ) {
+				my $Host = $Interface->Host();
+				(new openprint::Log())->save( { Object=>$Host, note=>"IP Address changed from $$Interface{$ip} to $ip" . $Interface->Host()->link_to(), action=>'IP Changed' } );
 				$_ = $Interface->save({ip=>$ip});
 				$log->error($_) if $_;
-				(new openprint::Log())->save( { object_id => $Interface->host_id(), object_type=>'openprint::Host', note=>'IP Address removed because it is taken by host ' . $Interface->Host()->link_to(), action=>'IP Changed' } );
-
-				my $Host = $Interface->Host();
-
-				my $hostname = $Host->hostname();
 			} else {
 				$log->debug("IP unchanged for $mac => $ip => $hostname");
 			} # end if
@@ -95,7 +96,7 @@ if ( @Interfaces ) {
 
 		foreach my $I ( openprint::Host_Interface->find( 'mac !=' => $mac, ip=>$ip ) ) {
 			$I->save({ip=>undef});
-			(new openprint::Log())->save( { Object => $I->Host, note=>'IP Address removed because it is taken by host ' . $Interface->Host()->link_to(), action=>'IP Changed' } );
+			(new openprint::Log())->save( { Object => $I->Host(), note=>'IP Address removed because it is taken by host ' . $Interface->Host()->link_to(), action=>'IP Changed' } );
 		} # end foreach I
 	} # end foreach Interface
 } else {

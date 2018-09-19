@@ -10,6 +10,7 @@ require sql;
 require logger;
 require openprint;
 require openprint::Host;
+require openprint::Log;
 require Date::Parse;
 require DateTime;
 require DateTime::Format::Pg;
@@ -78,15 +79,18 @@ configuration::merge($opts);
 my @re = (
 		'^(\w{3} [ :0-9]{11}) [\._a-zA-Z0-9\-]+ sshd\[[0-9]+\]: pam_\w+\(sshd:auth\): authentication failure; logname= uid=0 euid=0 tty=ssh ruser= rhost=(?<IP>[\._a-zA-Z0-9\-]+)\s*',
 		'^(\w{3} [ :0-9]{11}) [\._a-zA-Z0-9\-]+ sshd\[[0-9]+\]: Bad protocol version identification \'[^\']+\' from (?<IP>[\._a-zA-Z0-9\-]+)( port [[:digit:]]+)?$',
+		'^(\w{3} [ :0-9]{11}) [\._a-zA-Z0-9\-]+ sshd\[[0-9]+\]: Did not receive identification string from (?<IP>[\._a-zA-Z0-9\-]+)( port [[:digit:]]+)?$',
 		'^(\w{3} [ :0-9]{11}) [\._a-zA-Z0-9\-]+ sshd\[[0-9]+\]: pam_\w+\(sshd:auth\): authentication failure; logname= uid=0 euid=0 tty=ssh ruser= rhost=(?<IP>[\._a-zA-Z0-9\-]+)(\s+user\=\w+)?$',
-		'^(\w{3} [ :0-9]{11}) [\._a-zA-Z0-9\-]+ sshd\[[0-9]+\]: fatal: Unable to negotiate with (?<IP>[\._a-zA-Z0-9\-]+) port [0-9]+',
+		'^(\w{3} [ :0-9]{11}) [\._a-zA-Z0-9\-]+ sshd\[[0-9]+\]: (fatal: )?Unable to negotiate with (?<IP>[\._a-zA-Z0-9\-]+) port [0-9]+',
 		'^(\w{3} [ :0-9]{11}) [\._a-zA-Z0-9\-]+ sshd\[[0-9]+\]: Failed password for [\._a-zA-Z0-9\-]+ from (?<IP>[\._a-zA-Z0-9\-]+) port [0-9]+ ssh2$',
 		'^(\w{3} [ :0-9]{11}) [\._a-zA-Z0-9\-]+ sshd\[[0-9]+\]: Failed password for (invalid|illegal) user [\._a-zA-Z0-9\-]+ from (?<IP>[\._a-zA-Z0-9\-]+) port [0-9]+ ssh2$',
 		'^(\w{3} [ :0-9]{11}) [\._a-zA-Z0-9\-]+ sshd\[[0-9]+\]: error: PAM: Authentication failure for (illegal user root|[\._a-zA-Z0-9\-]+) from (?<IP>[\._a-zA-Z0-9\-]+)$',
 		'^(\w{3} [ :0-9]{11}) [\._a-zA-Z0-9\-]+ sshd\[[0-9]+\]: (error: )?PAM: [[:digit:]]+ more authentication failures?; logname= uid=0 euid=0 tty=ssh ruser= rhost=(?<IP>[\._a-zA-Z0-9\-]+)(\s+user=\w+)?$',
 		'^(\w{3} [ :0-9]{11}) [\._a-zA-Z0-9\-]+ sshd\[[0-9]+\]: Disconnecting: Too many authentication failures for (invalid user )?[^[:space:]]* from (?<IP>[.[:digit:]]+) port [[:digit:]]+ ssh2 \[preauth\]$',
+		'^(\w{3} [ :0-9]{11}) [\._a-zA-Z0-9\-]+ sshd\[[0-9]+\]: (Connection closed by|Disconnected from) (invalid user [[:alnum:]]+ )?(?<IP>[.[:digit:]]+)( port [[:digit:]]+ \[preauth\])?$',
+		'^(\w{3} [ :0-9]{11}) [\._a-zA-Z0-9\-]+ sshd\[[0-9]+\]: Disconnecting invalid user [[:alnum:]]+ (?<IP>[.[:digit:]]+) port [[:digit:]]+: Change of username or service not allowed:',
 		'^(\w{3} [ :0-9]{11}) [\._a-zA-Z0-9\-]+ sshd\[[0-9]+\]: error: maximum authentication attempts exceeded for (invalid user )?[[:alnum:]]+ from (?<IP>[.[:digit:]]+) port [[:digit:]]+ ssh2 \[preauth\]$',
-		'^(\w{3} [ :0-9]{11}) [\._a-zA-Z0-9\-]+ sshd\[[0-9]+\]: Invalid user \w+ from (?<IP>[0-9.]+)$',
+		'^(\w{3} [ :0-9]{11}) [\._a-zA-Z0-9\-]+ sshd\[[0-9]+\]: Invalid user [[:alnum:]-]+ from (?<IP>[0-9.]+)',
 		'^(\w{3} [ :0-9]{11}) [\._a-zA-Z0-9\-]+ sshd\[[0-9]+\]: Connection closed by (?<IP>[0-9.]+):? \[preauth\]$',
 		'^(\w{3} [ :0-9]{11}) [\._a-zA-Z0-9\-]+ sshd\[[0-9]+\]: Received disconnect from (?<IP>[0-9.]+) (port [[:digit:]]+:)?[[:digit:]]+:[ \.,/:[:alnum:]]+\[preauth\]$',
 		'^(\w{3} [ :0-9]{11}) [\._a-zA-Z0-9\-]+ sshd\[[0-9]+\]: Protocol major versions differ for (?<IP>[0-9.]+) ',
@@ -99,12 +103,14 @@ my @re = (
 		q`^(\w{3} [ :0-9]{11}) [\._a-zA-Z0-9\-]+ dovecot: imap\-login: Disconnected \(((auth failed, [0-9]+|no) attempts in|client didn't finish SASL auth, waited) [0-9]+ secs\): user=<[a-zA-Z@\.0-9]*>, (method=PLAIN, )?rip=(?<IP>[\.0-9]+), lip=[\.0-9]+, (TLS handshaking: SSL_accept\(\) failed: Unknown error, )?session=<[^>]+>$`,
 		'^(\w{3} [ :0-9]{11}) [\._a-zA-Z0-9\-]+ dovecot: pop3\-login: Aborted (l|L)ogin \(auth failed, [0-9]+ attempts in [0-9]+ secs\): user=<[a-zA-Z@\.0-9]*>, method=PLAIN, rip=(?<IP>[\.0-9]+), lip=[\.0-9]+, session=<[^>]+>$',
 		q`^(\w{3} [ :0-9]{11}) [\._a-zA-Z0-9\-]+ named\[[0-9]+\]: client (?<IP>[0-9.]+)#[0-9]+: (view [A-Za-z0-9]+: )?query \(cache\) '[./[:alnum:]]+' denied$`,
-		q`^(\w{3} [ :0-9]{11}) [\._a-zA-Z0-9\-]+ pam-abl\[[0-9]+\]: Blocking access from (?<IP>[0-9.]+) to service sshd, user root$`,
-		q`^(\w{3} [ :0-9]{11}) [\._a-zA-Z0-9\-]+ postfix\/(submission\/)?smtpd\[[0-9]+\]: warning: [\.\-A-Za-z0-9]+\[(?<IP>[0-9.]+)\]: SASL (CRAM\-MD5|Login|LOGIN|PLAIN) authentication failed:`,
+		q`^(\w{3} [ :0-9]{11}) [\._a-zA-Z0-9\-]+ pam\-abl\[[0-9]+\]: Blocking access from (?<IP>[0-9.]+) to service sshd, user root$`,
+		q`^(\w{3} [ :0-9]{11}) [\._a-zA-Z0-9\-]+ postfix\/(submission\/)?smtpd\[[0-9]+\]: warning: [\.\-A-Za-z0-9]+\[(?<IP>[0-9.]+)\]: SASL (CRAM\-MD5|Login|LOGIN|PLAIN) authentication fail`,
+		q`^(\w{3} [ :0-9]{11}) [\._a-zA-Z0-9\-]+ postfix\/smtpd\[[0-9]+\]: warning: Connection rate limimt exceeded: [[:digit:]]+ from unknown \[(?<IP>[0-9.]+)\] for service smtp$`,
 		q`^(\w{3} [ :0-9]{11}) [\._a-zA-Z0-9\-]+ pdns\[[0-9]+\]: Received a malformed qdomain from (?<IP>[0-9.]+), '[^']+': sending servfail$`,
 		q`^(\w{3} [ :0-9]{11}) [\._a-zA-Z0-9\-]+ ovpn\-server\[[0-9]+\]: (?<IP>[0-9.]+):[0-9]+ WARNING Bad encapsulated packet length from peer \([[:digit:]]+\), which must be > 0 and <= 1547 \-\- please ensure that \-\-tun\-mtu or \-\-link\-mtu is equal on both peers \-\- this condition could also indicate a possible active attack on the TCP link \-\- \[Attempting restart\.\.\.\]$`,
 		q`^(\w{3} [ :0-9]{11}) [\._a-zA-Z0-9\-]+ kernel: \[[0-9]+\.[0-9]+\] Shorewall:logflags:DROP:IN=[a-z]+[0-9] OUT= MAC= SRC=(?<IP>[0-9.]+) DST=[0-9\.]+ LEN=40 TOS=0x00 PREC=0x00 TTL=[0-9]+ ID=[0-9]+ DF PROTO=TCP SPT=443 DPT=21 WINDOW=8192 RES=0x00 URGP=0$`,
 		q`^(\w{3} [ :0-9]{11}) [\._a-zA-Z0-9\-]+ kernel: \[[0-9]+\.[0-9]+\] Shorewall:logflags:DROP:IN=[a-z]+[0-9] OUT= MAC= SRC=(?<IP>[0-9.]+)`,
+		q`^(\w{3} [ :0-9]{11}) [\._a-zA-Z0-9\-]+ apache2: \[:error\] \[pid [0-9]+\] \[client (?<IP>[0-9.]+):[0-9]+\] script '[/\.\-[:alnum:]]+\.php' not found or unable to stat`,
 );
 
 
@@ -330,11 +336,13 @@ $log->debug("coutn for $ip is $host_counts{$ip}{count}");
 					#$log->debug( "$ip $host_counts{$ip}{ip} $host_counts{$ip}{count}" ) if $config{debug};
 	
 					if ( $host_counts{$ip}{blacklist} ) {
+            (new openprint::Log())->save( { Object=>$host_counts{$ip}, action=>'Blacklist' } );
 						$log->debug("Dropping $ip");
 						`shorewall drop $ip`;
 					}
 				} elsif ( $host_counts{$ip}{count} > 20 ) {
 					$log->debug("Dropping $ip beacuse $host_counts{$ip}{count} > 20");
+            (new openprint::Log())->save( { Object=>$host_counts{$ip}, action=>'Blacklist' } );
 					`shorewall drop $ip`;
 				} # end if wasn't blacklisted, but now is
 			#} # end foreach ip

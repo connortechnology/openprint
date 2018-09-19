@@ -37,13 +37,19 @@ function load_page() {
   return;
 ) ?>
 		<li> 
-			<label>Created Date</label>
+			<label>Created</label>
 			<? echo ( date_select_session( $r->uri(), 'created_on_start', { with_today=>1, with_clear=>1, onchange=>'load_page();' } ); ) ?>
 			to
 			<? echo ( date_select_session( $r->uri(), 'created_on_end', { with_today=>1, with_clear=>1, onchange=>'load_page();' } ); ) ?>
 		</li>
+		<li> 
+			<label>Updated</label>
+			<? echo ( date_select_session( $r->uri(), 'updated_on_start', { with_today=>1, with_clear=>1, onchange=>'load_page();' } ); ) ?>
+			to
+			<? echo ( date_select_session( $r->uri(), 'updated_on_end', { with_today=>1, with_clear=>1, onchange=>'load_page();' } ); ) ?>
+		</li>
 		<? if ( openprint::MarketingCategory->find_one() ) ?>
-		<li><label>Marketing Category</label><? echo ( ssi::select( openprint::MarketingCategory->dropdown(), $session{$r->uri().'?marketing_category_id'}, { onclick=>'load_page();', name=>'marketing_category_id' } ); ) ?></li>
+		<li><label>Marketing Category</label><? echo ( ssi::select( openprint::MarketingCategory->dropdown(), $session{$r->uri().'?marketing_category_id'}, { onclick=>'load_page();', name=>'marketing_category_id', prepend=>['','All'] } ); ) ?></li>
 		<? endif ( openprint::MarketingCategory->find_one() ) ?>
 		<li><label>Country</label><? echo ( ssi::select( [ map { $_->id(), $_->name() } openprint::Location->find(type=>'country', order=>'lower(name)') ], $session{$r->uri().'?country'}, { name=>'country_id', prepend=>['','All'] } ); ) ?></li>
 		<li><label>Deleted?</label><? echo ( radio( 'deleted', [ '1','Yes', '0', 'No', '', 'Both' ], $session{$r->uri().'?deleted'}, {onclick=>'load_page();'} ); ) ?></li>

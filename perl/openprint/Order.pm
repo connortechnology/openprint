@@ -25,14 +25,14 @@ $debug = 0;
 $table = 'orders';
 $serial = 'orders_id_seq';
 %fields = (
-	id						=> 'id',
+	id								=> 'id',
 	session_id				=> 'strsessionid',
 	company_id				=> 'company_id',
-	user_id					=> 'user_id',
-	docket					=> 'docket',
-	status					=> undef,
-	status_id				=>	'status_id',
-	total					=> 'total',
+	user_id						=> 'user_id',
+	docket						=> 'docket',
+	status						=> undef,
+	status_id					=>	'status_id',
+	total							=> 'total',
 	downpayment				=> 'downpayment',
 	cod_percent				=>	'cod_percent',
 	downpayment_percent		=>	'downpayment_percent',
@@ -40,23 +40,23 @@ $serial = 'orders_id_seq';
 	updated_on				=>	'updated_on',
 	company_name			=> 'company_name',
 	salutation				=> 'salutation',
-	firstname				=> 'firstname',
-	lastname				=> 'lastname',
-	address1				=> 'address1',
-	address2				=> 'address2',
-	city					=> 'city',
-	state					=> 'state',
-	country					=> 'country',
+	firstname					=> 'firstname',
+	lastname					=> 'lastname',
+	address1					=> 'address1',
+	address2					=> 'address2',
+	city							=> 'city',
+	state							=> 'state',
+	country						=> 'country',
 	postalcode				=> 'postalcode',
-	phone					=> 'phone',
-	extension				=> 'extension',
-	fax						=> 'fax',
-	email					=> 'email',
+	phone							=> 'phone',
+	extension					=> 'extension',
+	fax								=> 'fax',
+	email							=> 'email',
 	alsonotify				=> 'alsonotify',	
-	paid					=> 'paid',
-	owing					=>	'owing',
+	paid							=> 'paid',
+	owing							=>	'owing',
 	currency_id				=> 'currency_id',
-	po						=> 'po',
+	po								=> 'po',
 	administrator_name		=> 'administrator_name',
 	administrator_comments	=> 'administrator_comments',
 	salesrep_id				=>	'salesrep_id',
@@ -88,7 +88,8 @@ invoice_num => 'id IN (SELECT order_id FROM order_invoices WHERE invoice_id=(SEL
 sub save {
 	my ( $self, $params ) = @_;
 
-	$self->set( $params ? $params : {} );
+	$self->set($params ? $params : {});
+	$self->Payments(undef);
 	$self->paid(undef);
 	$$self{owing} = $$self{total} - $$self{paid};
 	$$self{company_id} = $session{company_id} if ! $$self{company_id};
@@ -252,6 +253,7 @@ $openprint::log->debug("Setting status to $_[1]");
 # Adding Waiting For Pickup, Shipped, Picked Up
 sub update_status {
 	my $self = shift;
+	my $do_not_notify = shift;
 	if ( $self->status() eq 'Re-Opened' ) {
 		return $$self{status};
 	}
@@ -279,7 +281,7 @@ sub update_status {
 		$self->status('Complete');
 	} # end if
 	if ( 'Complete' eq $self->status() ) {
-		$self->send_completion_notice( );
+		#$self->send_completion_notice( ) unless $do_not_notify
 
 		if ( $config{SendInvoiceOnProjectCompletion} ne 'N' ) {
 			#send_invoice( $r, $log, $dbh, $order_id );
@@ -312,8 +314,8 @@ sub Contents {
 require openprint::OrderedProject;
 require openprint::OrderedProduct;
 		$_[0]{Contents} = [ 
-			openprint::OrderedProject->find('order_id'=>$_[0]{id},'order'=>$openprint::OrderedProject::fields{project_id}), 
-			openprint::OrderedProduct->find('order_id'=>$_[0]{id},'order'=>$openprint::OrderedProduct::fields{project_id}),
+			openprint::OrderedProject->find( order_id=>$_[0]{id}, order=>$openprint::OrderedProject::fields{project_id}), 
+			openprint::OrderedProduct->find( order_id=>$_[0]{id}, order=>$openprint::OrderedProduct::fields{project_id}),
 			];
 	} # end if
 	return @{$_[0]{Contents}};
@@ -321,15 +323,15 @@ require openprint::OrderedProduct;
 
 sub Ordered_Projects {
 require openprint::OrderedProject;
-	return openprint::OrderedProject->find('order_id'=>$_[0]{id},'order'=>$openprint::OrderedProject::fields{project_id});
+	return openprint::OrderedProject->find( order_id=>$_[0]{id}, order=>$openprint::OrderedProject::fields{project_id});
 } # end sub Ordered_Projects
 
 sub Projects {
 	my $self = shift;
-require openprint::OrderedProject;
+	require openprint::OrderedProject;
 	return @{$$self{Projects}} if $$self{Projects};
 	return () if ! $$self{id};
-	$$self{Projects} = [ map { $_->Project() } openprint::OrderedProject->find( 'order_id'=>$$self{id} ) ];
+	$$self{Projects} = [ map { $_->Project() } openprint::OrderedProject->find(order_id=>$$self{id}) ];
 	return @{$$self{Projects}};
 } # end sub Projects
 
@@ -362,8 +364,11 @@ sub balance {
 } # end sub balance
 
 sub Currency {
-	my $self = shift;
-	return new openprint::Currency( $$self{currency_id} );
+  my $self = shift;
+  if ( ! $$self{Currency} ) {
+    $$self{Currency} = new openprint::Currency( $$self{currency_id} );
+  }
+  return $$self{Currency};
 } # end sub
 
 sub pay {
@@ -373,18 +378,19 @@ sub pay {
 		return "Order $$self{id} is already paid!<br/>";
 	} # end if
 
+	# Payment->save() will load and save the Order object as well
 	my $error = (new openprint::Payment())->save({
-			order_id		=>	$$self{id},
-			payor_id		=>	$$self{company_id},
+			order_id			=>	$$self{id},
+			payor_id			=>	$$self{company_id},
 			recipient_id	=>	$self->supplier_id(),
-			amount		=>	$self->owing(),
-			method		=>	'Manual',
-			currency_id	=>	$$self{currency_id},
-			memo			=>	'Order marked paid',
-			received_on	=>	'NOW()',
+			amount				=>	$self->owing(),
+			method				=>	'Manual',
+			currency_id		=>	$$self{currency_id},
+			memo					=>	'Order marked paid',
+			received_on		=>	'NOW()',
 			});
-	if ( ! $error ) {
-		$self->add_log("Paid.");
+	if ( !$error ) {
+		$self->add_log('Paid.');
 		$self->update_status();
 		$error .= $self->save();
 	} # end if
@@ -510,7 +516,7 @@ sub send_sales_order {
 	my $sales_order = ssi::variable_substitution( \$email_template, \%order );
 
 	$Email->add_pdf_attachment_from_html("Order$$self{id}", $sales_order );
-	$Email->add_html_attachmentl("Order$$self{id}.html", $sales_order ) if $openprint::User->email() =~ /^iconnor/;
+	$Email->add_html_attachment("Order$$self{id}.html", $sales_order ) if $openprint::User->email() =~ /^iconnor/;
 
 	my $sales_person_email;
 	if ( $self->salesrep_id() ) {
@@ -631,7 +637,7 @@ sub Taxes {
 				$T->save({
 						order_id	=>	$$self{id},
 						tax_id		=>	$$Tax{id},
-						rate		=>	$$Tax{rate},
+						rate			=>	$$Tax{rate},
 						});
 				push @{$$self{Taxes}}, $T;
 			} # end foreach Tax
@@ -648,10 +654,19 @@ sub Tax {
 	return $result;
 } # end sub Tax
 
+sub Payments {
+	my $self = shift;
+	$$self{Payments} = shift if @_;
+	if ( $$self{id} and ! $$self{Payments} ) {
+		$$self{Payments} = [ openprint::Payment->find(order_id=>$$self{id},order=>$openprint::Payment::fields{received_on}.' DESC') ];
+	}
+	return $$self{Payments} ? @{$$self{Payments}} : ();
+}
+
 sub paid {
 	$_[0]{paid} = $_[1] if ( @_ == 2 );
 	if ( $_[0]{id} and ! defined $_[0]{paid} ) {
-		$_[0]{paid} = misc::sum( map { $_->amount() } openprint::Payment->find(order_id=>$_[0]{id}) );
+		$_[0]{paid} = misc::sum( map { $_->amount() } $_[0]->Payments() );
 	} # end if
 	return $_[0]{paid};
 } # end sub paid
@@ -667,17 +682,20 @@ sub paid_on_seconds {
 	if ( $_[0]->paid() < $_[0]->total() ) {
 		return time;
 	} # end if
-	my $Last_Payment = openprint::Payment->find_one('order_id'=>$_[0]{id},'order'=>$openprint::Payment::fields{received_on}.' DESC');
+	my @Payments = $_[0]->Payments();
+	my $Last_Payment = $Payments[-1];
 	if ( ! $Last_Payment ) {
 		return time;
 	} # end if
 	return Date::Parse::str2time( $Last_Payment->received_on() );
 } # end sub paid_on
+
 sub paid_on {
 	if ( $_[0]->paid() < $_[0]->total() ) {
 		return Date::Format::time2str( '%Y-%m-%d %H:%M:%S', time );
 	} # end if
-	my $Last_Payment = openprint::Payment->find_one('order_id'=>$_[0]{id},'order'=>$openprint::Payment::fields{received_on}.' DESC');
+	my @Payments = $_[0]->Payments();
+	my $Last_Payment = $Payments[-1];
 	if ( ! $Last_Payment ) {
 		return Date::Format::time2str( '%Y-%m-%d %H:%M:%S', time );
 	} # end if
@@ -691,6 +709,7 @@ sub downpayment_owing {
 	} # end if
 	return $_[0]{downpayment_owing};
 } # end sub downpayment_owing
+
 sub downpayment_percent {
 	if ( ! defined $_[0]{downpayment_percent} ) {
 		my $Credit = $_[0]->Company()->Credit();
@@ -698,6 +717,7 @@ sub downpayment_percent {
 	} # end if
 	return $_[0]{downpayment_percent};
 } # end sub downpayment_percent
+
 sub cod_percent {
 	my $Credit = $_[0]->Company()->Credit();
 	return $Credit->cod();
@@ -706,6 +726,7 @@ sub cod_percent {
 sub cod { 
 	return Math::Round::nearest( .01,$_[0]{total} * ($_[0]->cod_percent/100));
 } # end sub cod
+
 # Returns the remmaining amount to pay on delivery
 sub cod_owing {
 	if ( ! exists $_[0]{cod_owing} ) {
@@ -718,6 +739,7 @@ sub cod_owing {
 	} # end if
 	return $_[0]{cod_owing};
 } # end sub cod_owing
+
 sub cod_owing_percent {
 	my $cod_total = $_[0]->cod();
 	return 0 if ! $cod_total;
@@ -731,6 +753,7 @@ sub cod_owing_percent {
 	return 100-$owing;
 	return 0;
 } # end sub cod_owing_percent
+
 sub supplier_id {
 	if ( @_ > 1 ) {
 		$_[0]{supplier_id} = $_[1];
@@ -740,6 +763,7 @@ sub supplier_id {
 	} # end if
 	return $_[0]{supplier_id};
 } # end sub supplier_id
+
 sub Supplier {
 	return new openprint::Company( $_[0]->supplier_id() );
 } # end sub Supplier
@@ -859,6 +883,7 @@ sub due_date {
 	} # end if
 	return $_[0]{due_date};
 } # end sub due_date
+
 sub url_to {
 	return '/main/order/history_details.html?order_id='.$_[0]{id};
 } # end sub url

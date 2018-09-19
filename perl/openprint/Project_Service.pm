@@ -10,20 +10,20 @@ require openprint::Project_Service_Operator;
 
 use vars qw( $debug %fields %find_fields %transforms %defaults $table %serial @identified_by );
 
-$debug = 1;
+$debug = 0;
 %fields = (
-	service_id		=>	'lngserviceindex',
-	project_id		=>	'lngprojectindex',
-	operator_id		=>	'operator_id',
+	service_id			=>	'lngserviceindex',
+	project_id			=>	'lngprojectindex',
+	operator_id			=>	'operator_id',
 	operator_ids		=>	undef,
-	status			=>	'strstatus',
+	status					=>	'strstatus',
 	servicetype_id	=>	'servicetype_id',
-	service_type	=>	undef,
-	created_on		=>	'dtmlastmodified',
+	service_type		=>	undef,
+	created_on			=>	'dtmlastmodified',
 );
 %find_fields = (
-	category	=>	'(SELECT ServiceType_Categories.name FROM ServiceType_Categories,Service_Types WHERE ServiceType_Categories.id=Service_Types.category_id AND Service_Types.id=servicetype_id)',
-	servicetype		=>	'(SELECT name FROM service_types WHERE service_types.id=servicetype_id)',
+	category				=>	'(SELECT ServiceType_Categories.name FROM ServiceType_Categories,Service_Types WHERE ServiceType_Categories.id=Service_Types.category_id AND Service_Types.id=servicetype_id)',
+	servicetype			=>	'(SELECT name FROM service_types WHERE service_types.id=servicetype_id)',
 );
 %transforms = (
 	
@@ -91,42 +91,63 @@ sub service_type {
 } # end sub service_type
 
 sub Equipment {
-	my ( $self, $qty_index ) = @_;
+	my ( $self, $qty_index, @pertains ) = @_;
 
-	if ( ! $$self{Equipment} ) {
-		if ( ! $qty_index ) { 
-			# Want ordered quantity
-			$qty_index = $self->Project()->ordered_quantity_index();
-		} # end if
-		
-		my $specs = $self->specs();
-		my $ServiceType = $self->ServiceType();
+	my @Equipment;
+	my $Project = $self->Project();
 
-		if ( $ServiceType->name() eq 'Cutting' ) {
-			$$self{Equipment} = openprint::Equipment->find_one(
-					'use_in_scheduling'=>1,
-					'Specifications'=>{'Cutting Capable'=>'Y'},
-					);
-		} elsif ( $ServiceType->name() eq 'Folding' ) {
-			$$self{Equipment} = openprint::Equipment->find_one(
-					'use_in_scheduling'=>1,
-					'Specifications'=>{'Folding Capable'=>'Y'},
-					);
+	if ( ! $qty_index ) { 
+# Want ordered quantity
+		$qty_index = $Project->ordered_quantity_index();
+	} # end if
+
+	my $specs = $self->specs();
+	my $ServiceType = $self->ServiceType();
+
+	if ( $ServiceType->name() eq 'Cutting' ) {
+		my @equipment_ids;
+		foreach my $s_id ( @pertains ) {
+			my $sig_specs = openprint::service::get_specs_ref( $Project, $s_id );
+			my $form = $$sig_specs{SignatureIndex};
+
+			if ( $$specs{"ddmEquipment-$form-$qty_index"} ) {
+				push @equipment_ids, $$specs{"ddmEquipment-$form-$qty_index"};
+			}
+			if ( $$specs{"FoldingEquipment-$form-$qty_index"} ) {
+				push @equipment_ids, $$specs{"FoldingEquipment-$form-$qty_index"};
+			}
+			# Don't do stock cut equipment
+		} # end foreach s_id
+
+		@Equipment = openprint::Equipment->find(
+				id	=>	[ sets::union( @equipment_ids ) ],
+				use_in_scheduling	=>1,
+				) if @equipment_ids;
+
+	} elsif ( $ServiceType->name() eq 'Folding' ) {
+		@Equipment = openprint::Equipment->find(
+				use_in_scheduling	=>	1,
+				Specifications		=>	{'Folding Capable'=>'Y'},
+				);
 		} elsif ( $ServiceType->name() eq 'Stitching' ) {
 			if ( $$specs{'ddmEquipment'.$qty_index} ) {
-				$$self{Equipment} =  new openprint::Equipment( $$specs{'ddmEquipment'.$qty_index} );
-			} else {
-			$$self{Equipment} = openprint::Equipment->find_one(
-					'use_in_scheduling'=>1,
-					'Specifications'=>{'Stitching Capable'=>'Y'},
-					);
+				@Equipment = openprint::Equipment->find(
+						use_in_scheduling =>	1,
+						id	=>	$$specs{'ddmEquipment'.$qty_index},
+						);
+			}
+			if ( !@Equipment ) {
+				@Equipment = openprint::Equipment->find(
+						use_in_scheduling =>	1,
+						Specifications		=>	{'Stitching Capable'=>'Y'},
+						);
 			} # end if
 		} elsif ( ( $ServiceType->name() eq '' ) or $ServiceType->name() eq 'Signature' ) {
-			$$self{Equipment} = openprint::Equipment->find_one( strid=>$$specs{UsePress} );
+			@Equipment = openprint::Equipment->find( strid=>$$specs{UsePress} );
 		} # end if
-	} # end if $$self{Equipment}
-	return new openprint::Equipment() if ! $$self{Equipment};
-	return $$self{Equipment};
+
+	#} # end if $$self{Equipment}
+	return @Equipment;
 } # end sub Equipment
 
 sub runtime {
@@ -154,10 +175,11 @@ sub runtime {
 
 sub delete {
 	my ( $self ) = @_;
-if ( ! $$self{project_id} ) {
-	$openprint::log->error("Attempt to delete a Project Service with no project.");
-	return '';
-} # end if
+
+	if ( ! $$self{project_id} ) {
+		$openprint::log->error("Attempt to delete a Project Service with no project.");
+		return '';
+	} # end if
 
 	# Lock all schedule
 	openprint::ScheduledJob->lock();
@@ -182,6 +204,7 @@ $openprint::log->warn("Deleting " . $self->service_type() . ' ' . $self->to_stri
 	sql::execute( undef, $openprint::dbh, q{DELETE FROM tbl_Project_Contents WHERE lngProjectIndex=? AND lngServiceIndex=?}, @$self{'project_id', 'service_id'} );
 $openprint::log->warn("Deleting Service from " . $Project->to_string() );
 	delete $$Project{Services};
+	delete $$Project{ServicesById};
 	delete $$Project{signatures};
 	delete $$Project{Signature};
 	delete $$Project{service_types};
@@ -254,6 +277,51 @@ sub link_to {
 	my ( $self, $text ) = @_;
 	return sprintf('<a href="/main/project/view.html?ProjectIndex=%1$d&amp;ServiceIndex=%2$d">%3$s</a>', $self->Project()->id(), $self->id(), ( $text ? $text : $self->ServiceType()->name() ) );
 } # end sub link_to
+
+sub status {
+	if ( @_ > 1 ) {
+		$_[0]{status} = $_[1];
+	}
+	my $servicetype = $_[0]->service_type();
+
+	if ( $servicetype and ( ! defined $_[0]{status} ) ) {
+		my $specs = $_[0]->specs();
+
+		my $module = 'openprint/Estimating/'.$servicetype.'.pm';
+		eval{
+			require $module;
+		};
+		$openprint::log->error("ERror requiring $module ::summary: $@)") if $@;
+
+		if ( my $function = ('openprint::Estimating::'.$servicetype)->can('status') ) {
+
+			$_[0]{status} = $function->($_[0]->Project(), $_[0]{service_id}, $specs );
+$openprint::log->debug("New status openprint::Estiamting::$servicetype $_[0]{status} ");
+		} else {
+			$openprint::log->debug("No function for openprint::Estiamting::$servicetype can status");
+			if ( $$specs{Status} eq 'uncalculated' ) {
+				$_[0]{status} = 'uncalculated';
+			} elsif ( $_[0]->Project()->order_id() ) {
+				$_[0]{status} = 'Ordered';
+			} else {
+				$_[0]{status} = 'calculated';
+			}
+		}
+	#} else {
+		#$_[0]{status} = '';
+	}
+	return $_[0]{status};
+} # end sub status
+
+sub name {
+	my $specs = $_[0]->specs();
+	return $$specs{ServiceName} ? $$specs{ServiceName} : $_[0]->ServiceType()->description();
+}
+
+sub description {
+	my $specs = $_[0]->specs();
+	return $$specs{txtServiceDescription} ? ' - '.$$specs{txtServiceDescription} : '';
+}
 
 1;
 __END__

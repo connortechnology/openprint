@@ -292,9 +292,12 @@ function filter_onChange( element, id, selected ) {
 <? if ( $$variable{Equipment}->specification('Folding Capable') ) ?>
 	<fieldset><legend>Fold Specifications</legend>
 		Select the # of pages of the folds that you would like to edit.  To add a new fold click Add.
+<form id="f3" name="f3" method="post" enctype="multipart/form-data" action="edit.html">
+	<input type="hidden" id="ddmEquipment" name="ddmEquipment" value="<? echo ( $$variable{Equipment}->id() ) ?>" />
+	<input type="hidden" name="btnFunction"/>
 		<p>
 			<label>Type</label>
-			<select style="width: auto;" id="type" name="type" onchange="new Ajax.Updater( 'Folds', '_fold.html', {method:'get', evalScripts:true, onLoading:function(){ $('Folds').innerHTML='Loading...';}, parameters:{equipment_id: <? echo ( $$variable{Equipment}->id() ) ?>, type: $('type').getValue() } } );">
+			<select style="width: auto;" id="type" name="type" onchange="new Ajax.Updater( 'Folds', '_fold.html', { evalScripts:true, onLoading:function(){ $('Folds').innerHTML='Loading...';}, parameters:{equipment_id: <? echo ( $$variable{Equipment}->id() ) ?>, type: $('type').getValue() } } );">
 				<option value="">select</option>
 				<option value="all">All</option>
 <? echo ( 
@@ -308,14 +311,14 @@ function filter_onChange( element, id, selected ) {
 <? echo ( join("\n",
 			button( 'AddFold', { onclick=>"new Ajax.Request('/administrator/equipment/_fold.html?action=add&equipment_id=". $$variable{Equipment}->id() ."', { onSuccess: function(response){new Insertion.Top(\$('Folds'), response.responseText);SortableTable.load();} } );", text=>'Add' } ),
 			'<input type="file" name="fileFolds"/>',
-			button( 'ExportFolds', { onclick=>"f2.btnFunction.value='Export Folds';f2.submit();", text=>'Export Folds' } ),
-			button( 'ImportFolds', { onclick=>"f2.btnFunction.value='Import Folds';f2.submit();", text=>'Import Folds' } ),
+			button( 'ExportFolds', { onclick=>"f3.btnFunction.value='Export Folds';f3.submit();", text=>'Export Folds' } ),
+			button( 'ImportFolds', { onclick=>"f3.btnFunction.value='Import Folds';f3.submit();", text=>'Import Folds' } ),
 	);) ?>
 		</p>
+</form>
 		<div id="Folds"> </div>
 	</fieldset>
 <? endif ( $$variable{Equipment}->specification('Folding Capable') ) ?>
-</form>
 <form id="stock_settings_form" name="stock_settings_form" action="">
 	<input type="hidden" id="equipment_id" name="equipment_id" value="<? echo ( $$variable{Equipment}->id() ) ?>" />
 	<fieldset><legend>Specific Stock Settings</legend>

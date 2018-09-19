@@ -21,7 +21,7 @@ sub load {
 	my $self = shift;
 
 	my @values = @$self{'product_index','list_index'};
-	my $sql = 'SELECT service_id, equipment_id, period_start, period_end, Min, Max, Units, Cost, Markup, Price, Discountable,mode FROM Service_Prices WHERE Service_id=? AND pricelist_id=?';
+	my $sql = 'SELECT service_id, equipment_id, period_start, period_end, Min, Max, Units, Cost, Markup, Price, Discountable,mode FROM Service_Prices WHERE service_id=? AND pricelist_id=?';
 	if ( $self->{equipment_index} ) {
 		$sql .= ' AND (equipment_id=? OR equipment_id IS NULL)';
 		push @values, $self->{equipment_index};

@@ -117,7 +117,7 @@ foreach my $Host ( @Hosts ) {
 			if ( $Host->type() eq 'TP-Link Archer C7' ) {
 				use JSON;
 				$initial_url = $protocol.'://'.$$HI{ip}.'/cgi-bin/luci';
-				$url = $protocol.'://'.$$HI{ip}.'/cgi-bin/luci/;stok=7633201666a3f5dd7f25acea43449f5e/admin/status/overview?status=1&_=0.6478539785164518';
+				$url = $protocol.'://'.$$HI{ip}.'/cgi-bin/luci/admin/status/overview?status=1';
 				$args = {
 					luci_username=> $Host->info('username'),
 					luci_password=> $Host->info('password'),
@@ -130,13 +130,13 @@ foreach my $Host ( @Hosts ) {
 					next;
 				}
 				my $headers = $response->headers();
-#foreach my $k ( keys %{$headers} ) {
-#$openprint::log->debug("Header $k => $$headers{$k}");
-#}
+foreach my $k ( keys %{$headers} ) {
+$openprint::log->debug("Header $k => $$headers{$k}");
+}
 				if ( $$headers{'client-ssl-cipher'} ) {
 					$protocol = 'https';
 					$initial_url = $protocol.'://'.$$HI{ip}.'/cgi-bin/luci';
-					$url = $protocol.'://'.$$HI{ip}.'/cgi-bin/luci/;stok=7633201666a3f5dd7f25acea43449f5e/admin/status/overview?status=1&_=0.6478539785164518';
+					$url = $protocol.'://'.$$HI{ip}.'/cgi-bin/luci/admin/status/overview?status=1&_=0.6478539785164518';
 				}
 #$log->debug("status: ".  $response->is_success  . ' line: ' . $response->status_line() );
 #$log->debug( $response->content() );
@@ -150,40 +150,59 @@ foreach my $Host ( @Hosts ) {
 					$url = $protocol.'://'.$$HI{ip}.$$headers{location}.'/admin/status/overview?status=1';
 					$response = $browser->get( $url );
 					if ( ! $response->is_success ) {
-						$log->error("Failed talkingt o $$Host{hostname} at $$HI{ip} " . $response->status_line() . ' ' . $response->content() );
+						$log->error("Failed talking to $$Host{hostname} at $$HI{ip} " . $response->status_line() . ' ' . $response->content() );
 						next;
 					}
 				}
+
+        $log->debug("content: " . $response->content() );
 
 				my $json = decode_json( $response->content() );
 				if ( $$json{wifinets} and @{$$json{wifinets}} ) {
 					foreach my $wifinet ( @{$$json{wifinets}} ) {
 						if ( $$wifinet{networks} and @{$$wifinet{networks}} ) {
 							foreach my $network ( @{$$wifinet{networks}} ) {
-								if ( $$network{assoclist} ) {
-									$log->debug( 'assoclist' . Dumper( $network ) );
+                my $assoclist;
+                my @macs;
 
-									my $wap_HI = $HI;
-									if ( $$HI{mac} ne $$network{bssid} ) {
-										$log->debug( "HI{mac} $$HI{mac} ne network{bssid} $$network{bssid}");
-										$wap_HI = openprint::Host_Interface->find_one( mac=>$$network{bssid} );
-										if ( ! $wap_HI ) {
-											$wap_HI = new openprint::Host_Interface();
-											$wap_HI->save({mac=>$$network{bssid}, host_id=>$$Host{id} });
-										} # end if
-									}
-									my @macs;
+                if ( ! $$network{assoclist} ) {
+									$log->error( 'No assoclist' . Dumper( $network ) );
+                  $url = $protocol.'://'.$$HI{ip}.$$headers{location}.'/admin/network/wireless_assoclist';
+$log->debug("Getting assoclist from $url");
+                  my $wireless_assoclist_response = $browser->get($url);
+                  $log->debug( 'assoclist' . $wireless_assoclist_response->content());
+                  $assoclist = decode_json( $wireless_assoclist_response->content() );
+                  $log->debug( 'assoclist' . Dumper( $assoclist ) );
+                  next if ! $assoclist;
+                  @macs = map { $$_{bssid} } @{$assoclist};
+                } else {
+                  $assoclist = $$network{assoclist};
+                  if ( ref $assoclist eq 'ARRAY' ) {
+                    @macs = @{$assoclist};
+                  } elsif ( ref $assoclist eq 'HASH' ) {
+                    @macs = keys %{$assoclist};
+                  }
+                }
 
-									if ( ref $$network{assoclist} eq 'ARRAY' ) {
-										@macs = @{$$network{assoclist}};
-									} elsif ( ref $$network{assoclist} eq 'HASH' ) {
-										@macs = keys %{$$network{assoclist}};
-									}
-									update_connections( $wap_HI, @macs );
+                $log->debug( 'assoclist' . Dumper( $network ) );
 
-								} else {
-									$log->debug( 'No assoclist' . Dumper( $network ) );
-								} # end fi assocllist
+                my $wap_HI = $HI;
+                # Older luci's didn't populate this sometimes? We are hitting the wap using one mac... but the network may have a different maac because it has multiple radios
+                if ( $$network{bssid} ) {
+                  if ( $$HI{mac} ne lc $$network{bssid} ) {
+                    $log->debug( "HI{mac} $$HI{mac} ne network{bssid} $$network{bssid}");
+                    $wap_HI = openprint::Host_Interface->find_one( mac=>$$network{bssid} );
+                    if ( ! $wap_HI ) {
+                      $wap_HI = new openprint::Host_Interface();
+                      $wap_HI->save({mac=>$$network{bssid}, host_id=>$$Host{id} });
+                    } # end if
+                  }
+                } else {
+                  $log->debug("No bssid");
+                }
+
+                update_connections( $wap_HI, @macs );
+
 
 							} # end ofreach network
 						} else {
@@ -266,7 +285,7 @@ exit 0;
 sub update_connections {
 	my ( $wap_HI, @macs ) = @_;
 	openprint::Host_Interface->lock();
-	my %OldConnections = map { ( $$_{mac} ? uc $$_{mac} : $$_{mac} ), $_ } openprint::Host_Interface->find( connected_to=>$$wap_HI{mac} );
+	my %OldConnections = map { $$_{mac} ? ( uc $$_{mac}, $_ ) : ( ) } openprint::Host_Interface->find( connected_to=>$$wap_HI{mac} );
 
 	foreach my $mac ( map { uc $_ } @macs ) {
 		if ( $OldConnections{$mac} ) {

@@ -34,7 +34,7 @@ sub _stocks {
 			'colour_id','weight_id','fsc_code','material_id', 'Types', 'recommendations',
 			'grain_direction', 'digital', 'width','height', 'scoring', 'setup_prices', 
 			'material_prices', 'customer_supplied', 'has_message', 'has_minimum_order',
-			'calliper', 'has_problems' );
+			'calliper', 'has_problems', 'user_type' );
 		$session{'/administrator/stock/list.html?OrLarger'} = $param{OrLarger};
 	} # end if
 } # end sub _stocks
@@ -144,6 +144,7 @@ sub list {
 		foreach my $Paper ( @Papers ) {
 			my $ac = sql::start_transaction( $dbh );
 			if ( $param{mode} eq 'modify' ) {
+				my $note = 'Modify Prices: ';
 				foreach my $Price ( $Paper->Prices() ) {
 					if ( $param{amount} ne '' ) {
 						if ( $param{amount} =~ /^\+(.*)/ ) {
@@ -166,8 +167,11 @@ $openprint::log->debug("Setting: $param{amount} " );
 					} # end if
 					$Price->price( Math::Round::nearest( 0.01, $Price->cost() * ( 1+($Price->markup()/100) ) ) );
 					$variable{error} .= $Price->save();
+					$note .= '<br/>'.$Price->to_string();
 				} # end foreach Price
+				(new openprint::Log())->save({ Object=>$Paper, action=>'Edit', note=>$note } );
 			} elsif ( $param{mode} eq 'new' ) {
+				my $note = 'New Prices: ';
 				foreach my $Price ( $Paper->Prices() ) {
 					$Price->delete();
 				} # end foreach Price
@@ -191,11 +195,13 @@ $openprint::log->debug("Setting: $param{amount} " );
 								discountable	=>	$param{"discount-$pricelist_id-$id"},
 								service			=>	$param{"service-$pricelist_id-$id"},
 								} );
+						$note .= '<br/>'.$Price->to_string();
 						
 						# Force reload
 						delete $$Paper{Prices};
 					} # end if
 				} # end foreach param key
+				(new openprint::Log())->save({ Object=>$Paper, action=>'Edit', note=>$note } );
 			} elsif ( $param{mode} eq 'recommended' ) {
 				$Paper->recommendations( ref $param{PRF} eq 'ARRAY' ? @{$param{PRF}} : ( $param{PRF} ) );
 				$variable{error} .= $Paper->save();

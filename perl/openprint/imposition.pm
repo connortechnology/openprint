@@ -215,7 +215,14 @@ sub calc_setup_object {
 	if ( my $Stock_Setting = $Press->Stock_Setting( $Paper ) ) {
 		$press_grain = $Stock_Setting->grain();
 	} else {
-		$press_grain = $Press->specification('Grain', $Paper->gsm());
+		$press_grain = $Press->Specification('Grain');
+		if ( $$press_grain{units} eq 'gsm' ) {
+			$press_grain = $Press->Specification('Grain', $Paper->gsm());
+		} elsif ( $$press_grain{units} eq 'calliper' ) {
+			$press_grain = $Press->Specification('Grain', $Paper->calliper());
+		} else {
+			$press_grain = $$press_grain{value};
+		}
 	} # end if
 #$openprint::log->debug("Grains: $grain_direction, Press: $press_grain, Paper: ". $Paper->grain_direction() . ', paper->long: ' . $Paper->long() );
 	if ( $press_grain and $press_grain ne 'Both' ) {
@@ -240,7 +247,7 @@ sub calc_setup_object {
 			$openprint::log->debug("Proper grain Paper(".$Paper->grain_direction().") Press($press_grain)") if DEBUG;
 		} # end if
 	} elsif ( DEBUG ) {
-		$openprint::log->debug("No grain discretion. $$Paper{gsm}gsm");
+		$openprint::log->debug("No grain direction. $$Paper{gsm}gsm");
 	} # end if press_grain
 	if ( $run_style eq 'Perfecting' ) {
 		my $press_grain = $Press->specification('Perfecting Grain', $Paper->gsm() );
@@ -268,7 +275,7 @@ sub calc_setup_object {
 				$openprint::log->debug("Proper perfecting grain Paper(".$Paper->grain_direction().") Press($press_grain)") if DEBUG;
 			} # end if
 		} elsif ( DEBUG ) {
-			$openprint::log->debug("No perfecting grain discretion. $$Paper{gsm}");
+			$openprint::log->debug("No perfecting grain direction. $$Paper{gsm}");
 		} # end if press_grain
 	} # end if Perfecting
 
@@ -552,7 +559,7 @@ $openprint::log->debug("Colour bar is now $colour_bar") if DEBUG;
 	} # end if
 
 	$adjusted_paper_height = 0 if $adjusted_paper_height < 0;
-	$openprint::log->debug("Height: $paper_height - CB $$specs{colour_bar_size} - Grip $$specs{'Grip Size'} CropTOp: $$setup1{cropmark_top} - CropBottom: $$setup1{cropmark_bottom} = $adjusted_paper_height") if DEBUG;
+	$openprint::log->debug("Height: $adjusted_paper_height - CB $$specs{colour_bar_size} - Grip $$specs{'Grip Size'} CropTOp: $$setup1{cropmark_top} - CropBottom: $$setup1{cropmark_bottom} = $adjusted_paper_height") if DEBUG;
 
 	my $adjusted_paper_width = $paper_width; 
 	if ( $Paper->cuttable() ) {
@@ -1135,7 +1142,7 @@ $openprint::log->debug("Considering sig size: $signature_size") if DEBUG_CONVERT
 				$newimp->spread_columns( $col );
 				$newimp->spread_rows( $row );
 				$newimp->display( 'To: ' ) if DEBUG_CONVERT;
-if ( $spread_size == 2 ) {
+if ( $spread_size == 2 and $signature_size > 1 ) {
 				if ( $spine eq 'width' ) {
 					if ( $$imp{image_orientation} == openprint::Imposition::Vertical ) {
 						if ( $row < 2 ) {

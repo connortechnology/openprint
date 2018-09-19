@@ -590,7 +590,7 @@ sub PurchaseOrders {
 sub dockets {
 	my $self = shift;
 	if ( ! $$self{dockets} ) {
-		$$self{dockets} = [ sets::union( ( map { $_->Type()->docket() ? $_->Type()->docket() : () } $self->ManifestContents() ) ) ]; 
+		$$self{dockets} = [ sets::union( ( map { $_->Type()->docket() ? $_->Type()->docket() : $_->Type()->PurchaseOrder()->dockets() } $self->ManifestContents() ) ) ]; 
 	}
 	return @{$$self{dockets}};
 }

@@ -600,7 +600,7 @@ sub date_select {
 	} # end if
 	if ( ref $options eq 'HASH' ) {
 	} elsif ( $options ) {
-		$options = {'onchange'=>$options};
+		$options = {onchange=>$options};
 	} # end if
 #$openprint::log->debug(" date_select: $value : ($year,$month,$day), order: $$options{order}");
 	$$options{order} = 'y,m,d' if ! $$options{order};
@@ -618,18 +618,18 @@ sub date_select {
 
 	my $html = '<span class="'.$class.'">';
 	$html .= sprintf('<span id="%1$s_date">', $prefix );
-	foreach my $o ( split(',', $$options{order} ) ) {
-		if ( ( $o eq 'y' ) and ( (!@fields) or sets::isin( 'year', \@fields ) ) ) {
+	foreach my $o ( split(',', $$options{order}) ) {
+		if ( ( $o eq 'y' ) and ( (!@fields) or sets::isin('year', \@fields) ) ) {
 			$html .= sprintf(q`<select id="%1$s_year" name="%1$s_year" onchange="setDaysDropDown(this.value,this.form.elements['%1$s_month'].value,this.form.elements['%1$s_day'],this.form.elements['%1$s_day'].value);%2$s"><option value=""> </option>`, $prefix, $$options{onchange} );
 			$html .= return_years( $start_year, $end_year, $year );
 			$html .= '</select>';
 #$log->debug($html);
-		} elsif ( ( $o eq 'm' ) and ( (!@fields) or sets::isin( 'month', \@fields ) ) ) {
+		} elsif ( ( $o eq 'm' ) and ( (!@fields) or sets::isin('month', \@fields) ) ) {
 			$html .= sprintf(q`<select id="%1$s_month" name="%1$s_month" onfocus="this.previousValue=this.value" onchange="setDaysDropDown(this.form.elements['%1$s_year'].value,this.value,this.form.elements['%1$s_day'],this.form.elements['%1$s_day'].value, this.previousValue);%2$s;this.previousValue=this.value;"><option value=""> </option>`, $prefix, $$options{onchange} );
 			$html .= getmonths( $month );
 			$html .= '</select>';
 #$log->debug($html);
-		} elsif ( ( $o eq 'd' ) and ( (!@fields) or sets::isin( 'day', \@fields ) ) ) {
+		} elsif ( ( $o eq 'd' ) and ( (!@fields) or sets::isin('day', \@fields) ) ) {
 			$html .= sprintf('<select id="%1$s_day" name="%1$s_day" onchange="%2$s"><option value=""> </option>', $prefix, $$options{onchange} );
 			$html .= getdays( $day, int($year), int($month) );
 			$html .= '</select>';
@@ -637,10 +637,16 @@ sub date_select {
 		} # endif
 	} # end foreach o
 	if ( $$options{with_clear} ) {
-		$html .= button( $prefix.'_clear', { 'onclick'=>q`date_clear( $('`.$prefix.q`_year'), $('`.$prefix.q`_month'), $('`.$prefix.q`_day') );`.$$options{onchange}, text=>'C', title=>'Clear', class=>'Clear'} );
+		$html .= button( $prefix.'_clear', {
+				onclick=>q`date_clear( $('`.$prefix.q`_year'), $('`.$prefix.q`_month'), $('`.$prefix.q`_day') );`.$$options{onchange},
+				text=>'C', title=>'Clear', class=>'Clear',
+				} );
 	} # end if
 	if ( $$options{with_today} ) {
-		$html .= button( $prefix.'_today', { 'onclick'=>q`set_today( $('`.$prefix.q`_year'), $('`.$prefix.q`_month'), $('`.$prefix.q`_day') );`.$$options{onchange}, text=>'T', title=>'Today', class=>'Today'} );
+		$html .= button( $prefix.'_today', {
+				onclick=>q`set_today( $('`.$prefix.q`_year'), $('`.$prefix.q`_month'), $('`.$prefix.q`_day') );`.$$options{onchange},
+				text=>'T', title=>'Today', class=>'Today',
+				} );
 	} # end if
 	$html .= '<span id="'.$prefix.'_alert"></span>';
 	$html .= '</span></span>';
@@ -796,7 +802,7 @@ sub radio {
 
 	my $onclick = $$options{onclick} if $options;
 	my $html;
-	if ( $$options{default} and ! defined $selected ) {
+	if ( exists($$options{default}) and ! defined($selected) ) {
 $log->debug("Selecting default $$options{default} for radio $name");
 		$selected = $$options{default};
 	} # end if
@@ -822,13 +828,19 @@ sub checkboxes {
 	my $html;
 	my @container = @{$$options{container}} if $$options{container};
 	$values = ['on', '' ] if ! $values;
+	my $id = $$options{id} ? $$options{id} : $name;
 
 	while ( my ( $value, $label ) = splice @{$values}, 0, 2 ) {
 		$html .= $container[0] if @container;
-		$html .= sprintf(q`<input type="checkbox" name="%1$s" value="%2$s" id="%1$s%2$s" %3$s%4$s />`,
-				$name, $value, checked( sets::isin( $value, $selected ) ), $onclick ? ' onclick="'.$onclick.'"' : '' );
+		$html .= sprintf('<input type="checkbox" name="%1$s" value="%2$s" id="%3$s%2$s" %4$s%5$s/>',
+				$name, $value, $id, checked( sets::isin( $value, $selected ) ), $onclick ? ' onclick="'.$onclick.'"' : '' );
 		if ( $label ) {
-			$html .= sprintf(q`<label class="radio" for="%1$s%2$s">%3$s</label>`, $name, $value, $label );
+			$html .= sprintf(
+'
+<label class="radio" for="%1$s%2$s">
+%3$s
+</label>
+', $id, $value, $label );
 		} # end if
 		$html .= $container[1] if @container;
 	} # end foreach value

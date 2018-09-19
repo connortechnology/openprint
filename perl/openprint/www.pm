@@ -3,7 +3,7 @@ package openprint::www;
 use utf8;
 use open ( ":encoding(UTF-8)", ":std" );
 
-use constant Debug => 1;
+use constant Debug => 0;
 
 #use Benchmark;
 #use diagnostics;
@@ -42,7 +42,6 @@ use vars qw( $r %variable %session %param %config $log $dbh $starttime );
 
 sub warn {
 	$log->error("Warning: $_[0]");
-
 }
 
 $SIG{__WARN__} = \&warn;
@@ -336,6 +335,26 @@ sub parse_page {
 			require openprint::print;
 			require openprint::print_project;
 			require openprint::employee_production;
+			if ( $param{docket} ) {
+				my @Projects = openprint::Project->find(docket=>$param{docket});
+				if ( ! @Projects ) {
+					$variable{error} ='No projects found for docket ' . $param{docket}.'<br/>';
+return;
+				} elsif ( @Projects > 1 ) {
+					$variable{error} ='Multiple projects found for docket ' . $param{docket}.'<br/>';
+return;
+				}
+				$param{ProjectIndex} = $Projects[0]->id();
+				my $services = $Projects[0]->services();
+				if ( $$services{Proofs} ) {
+					$param{ServiceIndex} = $$services{Proofs}[0];
+				} else {
+					$variable{error} .= 'No Proofs service found in project ' . $Projects[0]->id() . '<br/>';
+					return;
+
+				}
+			}
+
 			openprint::print_project::get_service_specifications( $r, $log, $dbh, \%variable, @param{'ProjectIndex','ServiceIndex'} ) if $param{ServiceIndex} and $filename ne 'multipage_signatures.html';
 			@variable{'ProjectIndex','ServiceIndex','OrderID'} = @param{'ProjectIndex','ServiceIndex','OrderID'};
 			
@@ -578,7 +597,7 @@ $log->debug("Service: " . $Service->to_string() );
 							} # end if
 						} # end if -e $ENV{DOCUMENT_ROOT}.$uri
 					}
-				} # end if main:proj:$third
+				} # end if main:project:$third
 			} else {
 				if ( -e $ENV{DOCUMENT_ROOT}.$uri ) {
 					my ( $proc ) = $filename =~ /^(.*)\.(html|json)$/;
@@ -597,7 +616,6 @@ $log->debug("No proc found for $filename");
 				} # end if -e $ENV{DOCUMENT_ROOT}.$uri 
 
 				openprint::print_project::view_pdfs( $r, $log, $dbh, \%variable )				if $filename eq 'proj_view_pdf.html';
-				openprint::print_project::summary( $r, $log, $dbh, \%variable )					if $filename eq 'summary.html';
 				openprint::print_project::summary( $r, $log, $dbh, \%variable )					if $filename eq 'docket_sheet.html';
 			} # end if defined third
 		} elsif ( -e $ENV{DOCUMENT_ROOT}.$uri ) {

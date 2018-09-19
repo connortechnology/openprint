@@ -33,10 +33,10 @@ $serial = 'projecttemplate_id_seq';
 	finished_height	=>	[ 's/[^\.\d]//g' ],
 	flat_width		=>	[ 's/[^\.\d]//g' ],
 	flat_height		=>	[ 's/[^\.\d]//g' ],
-    type => [ 's/^\s+//', 's/\s+$//', 's/\s\s+/ /g' ],
-    description => [ 's/^\s+//', 's/\s+$//', 's/\s\s+/ /g' ],
-    message => [ 's/^\s+//', 's/\s+$//', 's/\s\s+/ /g' ],
-    name => [ 's/^\s+//', 's/\s+$//', 's/\s\s+/ /g' ],
+	type => [ 's/^\s+//', 's/\s+$//', 's/\s\s+/ /g' ],
+	description => [ 's/^\s+//', 's/\s+$//', 's/\s\s+/ /g' ],
+	message => [ 's/^\s+//', 's/\s+$//', 's/\s\s+/ /g' ],
+	name => [ 's/^\s+//', 's/\s+$//', 's/\s\s+/ /g' ],
 );
 
 %defaults = (

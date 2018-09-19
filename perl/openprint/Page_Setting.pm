@@ -37,13 +37,15 @@ sub cache_field {
 sub can_view {
 
 	if ( $openprint::session{user_id} ) {
-		if ( $_[0]{user_ids} and $openprint::session{user_id} and sets::isin( $openprint::session{user_id}, $_[0]{user_ids} ) ) {
+		if ( $_[0]{user_ids} and sets::isin( $openprint::session{user_id}, $_[0]{user_ids} ) ) {
 			$openprint::log->debug("User is in user_ids") if DEBUG;
 			return 1;
 		} # end if
 		if ( $openprint::session{user_type} eq 'A' ) {
 			$openprint::log->debug("User is an admin") if DEBUG;
 			return 1;
+		} elsif ( DEBUG ) {
+			$openprint::log->debug("User is not an admini $openprint::session{user_type}") if DEBUG;
 		}
 	} # end if
 		
@@ -68,7 +70,7 @@ $openprint::log->debug( "Usergroups are " . join(',', @{$_[0]{usergroup_ids}}) )
 	if ( $_[0]{user_level} ) {
 		if ( $_[0]{user_level} eq 'A' ) {
 			if ( $openprint::session{user_type} ne 'A' ) {
-				#$openprint::log->debug("REturning 0 cuz not an admin");
+				$openprint::log->debug("REturning 0 cuz not an admin") if DEBUG;
 				return 0;
 			}
 		} elsif ( $_[0]{user_level} eq 'E' ) {

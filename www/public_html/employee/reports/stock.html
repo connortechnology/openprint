@@ -117,7 +117,7 @@ LoadContent( 'Results', '/employee/reports/_stock.html', document.forms.f1.seria
 					foreach my $Stock ( @{$$variable{'Paper'}} ) {
 						$data{$Stock->width()} = $Stock->width();
 					} # end foreach
-					return ssi::make_drop_down( [map { $_, $_ } sort keys %data ], $session{'/employee/reports/stock.html?width'} );
+					make_drop_down( [map { $_, $_ } sort keys %data ], $session{'/employee/reports/stock.html?width'} );
 				) ?>
 			</select> x
 			<select name="height" size="1" onchange="" >
@@ -127,7 +127,7 @@ LoadContent( 'Results', '/employee/reports/_stock.html', document.forms.f1.seria
 					foreach my $Stock ( @{$$variable{'Paper'}} ) {
 						$data{$Stock->height()} = $Stock->height();
 					} # end foreach
-					return ssi::make_drop_down( [map { $_, $_ } sort keys %data ], $session{'/employee/reports/stock.html?height'} );
+					make_drop_down( [map { $_, $_ } sort keys %data ], $session{'/employee/reports/stock.html?height'} );
 				) ?>
 			</select>
 			<input type="checkbox" id="OrLarger" name="OrLarger" value="Y" onclick="" /><label class="radio" for="OrLarger">or larger</label>
@@ -164,4 +164,4 @@ LoadContent( 'Results', '/employee/reports/_stock.html', document.forms.f1.seria
 		</p>
 	</fieldset>
 </form>
-<div id="Results"><?include('_stock.html')?></div>
+<div id="Results">Select search criteria and click Show Results</div>

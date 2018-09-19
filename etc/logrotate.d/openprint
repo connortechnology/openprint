@@ -1,4 +1,5 @@
 /var/log/openprint-syslog.log
+/var/log/dnsmasq_nsupdate.log
 /var/log/openprint-syslog-apache.log
 /var/log/wap_poll.log
 {

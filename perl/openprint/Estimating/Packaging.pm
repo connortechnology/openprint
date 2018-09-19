@@ -19,7 +19,6 @@ package openprint::Estimating::Packaging;
 use POSIX qw(ceil);
 
 require openprint::service;
-
 require sql;
 
 my @variables = (
@@ -217,31 +216,39 @@ $openprint::log->debug("Per package due to versions: $qty / $$sig_specs{Versions
 } # end sub calc
 
 sub summary {
-    my ( $Project, $service_id, $specs, $qty_index ) = @_;
-    $specs = openprint::service::get_specs_ref( $Project, $service_id ) if ! $specs;
-    my $text = '';
-    if ( $qty_index ) {
-        $text .= $$specs{'txtPackageQuantity'.$qty_index};
-        if ( $$specs{ServiceType} =~ /Wrap/i ) {
-            $text .= ' wrap' . ($$specs{'txtPackageQuantity'.$qty_index} > 1 ? 's' : '');
-        } elsif ( $$specs{ServiceType} =~ /Bundling/i ) {
-            $text .= ' bundle' . ($$specs{'txtPackageQuantity'.$qty_index} > 1 ? 's' : '');
-        } elsif ( $$specs{ServiceType} =~ /Banding/i ) {
-            $text .= ' bundle' . ($$specs{'txtPackageQuantity'.$qty_index} > 1 ? 's' : '');
-        } # end if
-    } else {
-        $text .= $$specs{txtItemsPerPackage} . ' items';
-        if ( $$specs{ServiceType} =~ /Wrap/i ) {
-            $text .= ' per wrap';
-        } elsif ( $$specs{ServiceType} =~ /Bundling/i ) {
-            $text .= ' per bundle';
-        } elsif ( $$specs{ServiceType} =~ /Banding/i ) {
-            $text .= ' per band';
+	my ($Project, $service_id, $specs, $qty_index) = @_;
+	$specs = openprint::service::get_specs_ref($Project, $service_id) if ! $specs;
+	my $text = '';
+	if ( $qty_index ) {
+		$text .= $$specs{'txtPackageQuantity'.$qty_index};
+		if ( $$specs{ServiceType} =~ /Wrap/i ) {
+			$text .= ' wrap' . ($$specs{'txtPackageQuantity'.$qty_index} > 1 ? 's' : '');
+		} elsif ( $$specs{ServiceType} =~ /Bundling/i ) {
+			$text .= ' bundle' . ($$specs{'txtPackageQuantity'.$qty_index} > 1 ? 's' : '');
+		} elsif ( $$specs{ServiceType} =~ /Banding/i ) {
+			$text .= ' bundle' . ($$specs{'txtPackageQuantity'.$qty_index} > 1 ? 's' : '');
+		} # end if
+	} else {
+		$text .= $$specs{txtItemsPerPackage} . ' items';
+		if ( $$specs{ServiceType} =~ /Wrap/i ) {
+			$text .= ' per wrap';
+		} elsif ( $$specs{ServiceType} =~ /Bundling/i ) {
+			$text .= ' per bundle';
+		} elsif ( $$specs{ServiceType} =~ /Banding/i ) {
+			$text .= ' per band';
 			$text .= sprintf(' %d bands each', $$specs{bands_per_package} ) if $$specs{bands_per_package};
-        } # end if
-        $text .= $$specs{rdbCardboardBacking} eq 'Y' ? ' with cardboard backing.' : '';
-    } # end if
-    return $text;
+		} # end if
+		if ( $$specs{type_id} ) {
+			my $Material = new openprint::Material($$specs{type_id});
+			$text .= ' ' . $Material->description() . ' ';
+		} 
+		if ( $$specs{cross_type_id} ) {
+			my $CrossMaterial = new openprint::Material($$specs{cross_type_id});
+			$text .= ' ' . $CrossMaterial->description() . ' ';
+		} 
+		$text .= $$specs{rdbCardboardBacking} eq 'Y' ? ' with cardboard backing.' : '';
+	} # end if
+	return $text;
 } # end sub summary
 
 sub save {

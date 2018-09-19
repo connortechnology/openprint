@@ -22,7 +22,7 @@ cleanup : true
 <form id="f1" name="f1" method="post" action="/employee/it/host.html" enctype="multipart/form-data">
 	<input type="hidden" id="host_id" name="host_id" value="<? echo ( $$variable{Host}->id() ) ?>" />
 	<input type="hidden" id="action" name="action" />
-	<fieldset><legend>Host <? echo ( $$variable{Host}->link_to( $$variable{Host}->id() ) ) ?></legend>
+	<fieldset><legend>Host <? echo ( $$variable{Host}->link_to( $$variable{Host}->id() ) .($$variable{Host}->deleted() ? ' <span class="warning">Deleted</span>':'')) ?></legend>
 		<div class="content leftColumn">
 			<ul>
 				<li>
@@ -104,6 +104,7 @@ make_drop_down( openprint::Company->dropdown(id=>[ @owner_ids, $openprint::Compa
 						if ( $$variable{Host}->id() ) {
 							if ( $$variable{Host}->deleted() ) {
 								$html .= button( 'Destroy', { onclick=>"if(confirm('Are you sure?')){f1.elements['action'].value='Destroy';f1.submit();}" } );
+								$html .= button( 'Undelete', { onclick=>"f1.elements['action'].value='Undelete';f1.submit();" } );
 							} else {
 								$html .= button( 'Delete', { onclick=>"if(confirm('Are you sure?')){f1.elements['action'].value='Delete';f1.submit();}" } );
 							}
@@ -155,14 +156,15 @@ make_drop_down( openprint::Company->dropdown(id=>[ @owner_ids, $openprint::Compa
 <tr id="hi-%1$d">
 	<td class="mac">%2$s</td>
 	<td class="ip">%3$s</td>
-	<td class="options">monitor %4$s<br/>dhcp %5$s<br/>%7$s</td>
+	<td class="options">
+%4$s<br/>%5$s<br/>%7$s</td>
 	<td class="comment" rowspan="2"><textarea name="comment-%1$s">%6$s</textarea></td>
 `, 
 	$$Interface{id},
 	input( type=>'mac', name=>'mac-'.$$Interface{id}, value=>$$Interface{mac} ),
 	input( type=>'ip', name=>'ip-'.$$Interface{id}, value=>$Interface->ip() ),
-	checkboxes( 'monitor-'.$$Interface{id}, [ 1, '' ], $Interface->monitor() ),
-	checkboxes( 'dhcp-'.$$Interface{id}, [ 1, '' ], $Interface->dhcp() ),
+	checkboxes( 'monitor-'.$$Interface{id}, [ 1, 'monitor' ], $Interface->monitor() ),
+	checkboxes( 'dhcp-'.$$Interface{id}, [ 1, 'dhcp' ], $Interface->dhcp() ),
 	$Interface->comment(),
 	( defined($$Interface{online}) ? ( $$Interface{online} ? 'online' : 'offline' ) : '' ),
 );

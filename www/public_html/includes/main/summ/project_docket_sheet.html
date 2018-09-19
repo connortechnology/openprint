@@ -27,13 +27,20 @@
 	</tr>
 	<tr>
 		<td width="20%" valign="top"><table cellspacing="0" cellpadding="0" border="0" width="100%"><tr>
-			<td class="headerText"><b>Docket #</b></td>
-			<td class="docketText"><? echo ( $$variable{Order}->docket() ) ?></td>
+		<td class="headerText"><b>Docket #</b></td>
+		<td class="docketText"><? echo ( $$variable{Order}->docket() ) ?></td>
 		</tr></table></td>
-		<td colspan="2" width="60%" valign="top"><table cellspacing="0" cellpadding="1" border="0" width="100%">
+		<td colspan="2" width="60%" valign="top">
+		<table cellspacing="0" cellpadding="1" border="0" width="100%">
 				<tr>
-					<td width="16%" class="headerText"><b>Reference</b></td>
+					<td width="16%" class="headerText" valign="top"><b>Reference</b></td>
+<?if($$variable{Project}{reprint} eq 'Y' )?>
+					<td width="55%" class="docketText"><? echo ( $$variable{Project}->reference() ) ?></td>
+					<td width="4%" class="headerText" valign="top"><b>Reprint</b></td>
+					<td width="25%" class="docketText"><? echo ( join('<br/>', $$variable{Project}{reprint_reason}, $$variable{Project}{reprint_description} ); ) ?></td>
+<?else($$variable{Project}{reprint} eq 'Y' )?>
 					<td width="84%" class="docketText"><? echo ( $$variable{Project}->reference() ) ?></td>
+<?endif($$variable{Project}{reprint} eq 'Y' )?>
 				</tr>
 			</table></td>
 		<td width="20%" valign="top"><table cellspacing="0" cellpadding="0" border="0" width="100%">
@@ -258,7 +265,7 @@ $log->debug("No a press proof: $$variable{ProofType} ");
 			} # end if
 			$html .= '</td><td class="docketText"> ';
 
-			$html .= openprint::Estimating::Printing::get_colour_description( $sig_specs ) . '<br/>';
+			$html .= openprint::Estimating::Printing::get_colour_description($Project, $sig_specs).'<br/>';
 			foreach my $edge ( 'Top','Bottom','Left','Right' ) {
 				if ( $$sig_specs{'Bleed'.$edge} ne $edge ) {
 					$html .= 'No ' . $edge . ' bleed<br/>';
@@ -443,12 +450,13 @@ $log->debug("No a press proof: $$variable{ProofType} ");
 	return $html;
 ) ?>
 		<tr>
-            <td colspan="3" class="headerText"><b>Special Prepress Instructions</b>
+            <td colspan="3" class="headerText"><b>Special Prepress Instructions</b><br/>
 			<b><? echo ( 'FM SCREENING' if $$variable{ScreenType} eq 'FM' ) ?></b>
 			<? echo (
 				my $services = $$variable{Project}->services();
 				if ( $$services{PerfectBound} ) {
-					return '1/4&quot; spine gutter';
+					return '1/4&quot; spine gutter<br/>'.
+						'CHECK 1/4&quot; LAP SCORE CLEARANCE ON IFC &amp; IBC';
 				} elsif ( $$services{''} ) {
 					my $p_specs = openprint::service::get_specs_ref( $$variable{Project}, $$services{''}[0] );
 					if ( $$p_specs{rdbTemplateType} eq 'PerfectBound' ) {
@@ -555,8 +563,7 @@ $log->debug("Binder: @BinderyServiceNames");
 		} # end if
 		if ( $$services{Bundling} ) {
 			foreach ( @{$$services{Bundling}} ) {
-				my $specs = openprint::service::get_specs_ref( $$variable{Project}, $_ );
-				$html .= ", Bundles in $$specs{txtItemsPerPackage}'s";
+				$html .= 'Bundling in ' . openprint::service::summary($$variable{ProjectIndex}, $_ );
 			} # end foreach s_id
 		} # end if
 		if ( $$services{KraftWrap} ) {

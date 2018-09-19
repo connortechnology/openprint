@@ -132,7 +132,7 @@ button( 'merge'.$C->id(), { href=>'/administrator/managerial/company_profiles.ht
 		<? if ( $$variable{Company}->deleted() ) ?>
 		<div class="error">This company has been deleted.</div>
 		<? endif ( $$variable{Company}->deleted() ) ?>
-		<b><?notes?></b>
+		<b><? echo ( $$variable{Company}->notes() )?></b>
 	<div class="leftColumn">
 		<ul>
 			<? if ( $$variable{Company}->id() ) ?>
@@ -167,6 +167,14 @@ button( 'merge'.$C->id(), { href=>'/administrator/managerial/company_profiles.ht
 				<label>Pricing Discount</label>
 				<? echo ( input( type=>'float', name=>'discount', value=>$$variable{Company}->discount() ); ) ?> %
 			</li>
+			<li class="credit_card_fee"> 
+				<label>Credit Card Fee</label>
+				<? echo ( input( type=>'float', name=>'credit_card_fee', value=>$$variable{Company}->credit_card_fee() ); ) ?> %
+			</li>
+			<li class="csr_commission"> 
+				<label>CSR Commission</label>
+				<? echo ( input( type=>'float', name=>'csr_commission', value=>$$variable{Company}->csr_commission() ); ) ?> %
+			</li>
 			<li> 
 				<label>Sales Person</label>
 				<select name="salesrep_id">
@@ -200,7 +208,7 @@ button( 'merge'.$C->id(), { href=>'/administrator/managerial/company_profiles.ht
 		<? endif ( $$variable{Company}->id() ) ?>
 		<li>
 			<label>Notes</label>
-			<textarea id="notes" name="notes" rows="<? echo ( count_lines( $$variable{notes} ); ) ?>" onkeyup="textarea_resize(this);"><?notes?></textarea>
+			<textarea id="notes" name="notes" rows="<? echo ( count_lines( $$variable{notes} ); ) ?>" onkeyup="textarea_resize(this);"><? echo ( $$variable{Company}->notes() )?></textarea>
 		</li>
 		<? if ( $$variable{Company}->id() ) ?>
 			<? eval (
@@ -428,6 +436,13 @@ button( 'merge'.$C->id(), { href=>'/administrator/managerial/company_profiles.ht
 		</ul>
 	</fieldset>
 </div>
+<div class="Locations">
+<fieldset><legend>Locations</legend>
+	<?echo(
+return join('<br/>', map { $_->to_string() } openprint::Location->find( company_id=>$$variable{Company}->id() ) );
+	)?>
+</fieldset>
+</div>
 <div class="CreditInformation">
 <?include(/includes/_credit_edit.html)?>
 </div>
@@ -466,10 +481,10 @@ button( 'merge'.$C->id(), { href=>'/administrator/managerial/company_profiles.ht
 	</fieldset>
 </div>
 <?include(/account/_trade_references.html)?>
+</form>
 <? if ( $$variable{CustomerIndex} ) ?>
 <br class="spacer"/>
 <? echo ( include_logs( $$variable{Company} ); ) ?>
 <? endif ( $$variable{CustomerIndex} ) ?>
-</form>
 </div>
 <script type="text/javascript">load_customers();</script>

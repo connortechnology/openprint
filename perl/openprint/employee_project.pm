@@ -45,7 +45,7 @@ sub view {
 
 	my $project_index = $param{ProjectIndex};
 	$project_index = $param{project_id} if ! $project_index;
-	$project_index = openprint::Project->transform('id', $project_index );
+	$project_index = openprint::Project->transform('id', $project_index);
 		
 	if ( ! $project_index ) {
 		if ( $param{Docket} ) {
@@ -167,6 +167,7 @@ $log->debug("Sig complete: $complete");
 					} # end if
 				} # end foreach
 			} # end if
+$log->debug("Project complete: $complete " . $Service->to_string());
 
 			my $services = $Project->services();
 			if ( $$services{''} ) {
@@ -206,11 +207,11 @@ $log->debug("Sig complete: $complete");
 				if ( $param{rdbComplete} eq 'Yes' ) {
 					if ( ! Date::Calc::check_date( @param{'duedate_year','duedate_month','duedate_day'} ) ) {
 						$variable{Redirect} = '/employee/proj/'.$ServiceType->url();
-						$variable{ErrorMessage} = 'There was an error saving the DueDate.  Please check that a real date was selected.';
+						$variable{error} = 'There was an error saving the DueDate.  Please check that a real date was selected.';
 						$param{rdbComplete} = 'No';
 					} elsif ( 0 < Date::Calc::Delta_Days( @param{'ddmDueDateYear','ddmDueDateMonth','ddmDueDateDay'}, Date::Calc::Today() ) ) {
 						$variable{Redirect} = '/employee/proj/'.$ServiceType->url();
-						$variable{ErrorMessage} = 'You cannot select a date in the past. Please try again.';
+						$variable{error} .= 'You cannot select a date in the past. Please try again.';
 						$param{rdbComplete} = 'No';
 					} else {
 						if ( $param{duedate_year} ) {
@@ -244,8 +245,7 @@ $log->debug("Sig complete: $complete");
 				} elsif ( $param{rdbApproved} eq 'Y' ) {
 					if ( $param{duedate_year} ) {
 						if ( ! Date::Calc::check_date( @param{'duedate_year','duedate_month','duedate_day'} ) ) {
-							$variable{Redirect} = '/employee/proj/'.$ServiceType->url();
-							$variable{ErrorMessage} = 'There was an error saving the DueDate.  Please check that a real date was selected.';
+							$variable{error} = 'There was an error saving the DueDate.  Please check that a real date was selected.';
 							$param{rdbApproved} = 'N';
 						} else {
 							# It's a valid duedate
@@ -270,11 +270,9 @@ $log->debug("Sig complete: $complete");
 				} elsif ( $param{rdbClientApproved} eq 'Y' ) {
 					if ( $status ne 'Waiting For QA Approval' ) {
 						$param{ClientApprovalDate} = Date::Format::time2str( $config{DateTimeFormat}, time );
-						if ( $status ne 'Waiting For QA Approval' ) {
-							$Project->add_to_log( @session{'company_id','user_id'}, "Marked Proofs Waiting for QA Approval from $status" );
-							$Service->save({status=>'Waiting For QA Approval'});
-							send_proofs_client_approved_email( $project_index, $order_id );
-						} # end if
+						$Project->add_to_log( @session{'company_id','user_id'}, "Marked Proofs Waiting for QA Approval from $status" );
+						$Service->save({status=>'Waiting For QA Approval'});
+						send_proofs_client_approved_email( $project_index, $order_id );
 					} # end if
 					$param{rdbApproved} = 'N';
 				} else { # Just complete
@@ -409,6 +407,7 @@ $log->debug("Saving signature");
 			$Order->update_status( );
 		} # end if
 		sql::end_transaction( $dbh, $ac );
+		$variable{Redirect} = '/employee/proj/'.$ServiceType->url();
 	} elsif ( $param{btnFunction} eq 'Shipped' ) {
 		$Project->status_change( undef, undef, 'Shipped' );
 	} elsif ( $param{btnFunction} eq 'Picked Up' ) {
@@ -845,12 +844,16 @@ sub summary {
 	openprint::print_project::summary( $r, $log, $dbh, \%variable, $param{ProjectIndex} );
 } # end sub summary
 
+sub stock_checkout {
+	_stock_checkout();
+}
+
 sub _stock_checkout {
 	my $Order;
-	$variable{Project} = new openprint::Project( $param{project_id} ) if $param{project_id};
+	$variable{Project} = new openprint::Project($param{project_id}) if $param{project_id};
 
 	if ( $param{docket} ) {
-		$Order = openprint::Order->find_one( docket=>$param{docket} );
+		$Order = openprint::Order->find_one(docket=>$param{docket});
 		if ( ! $Order ) {
 			$variable{error} .= 'No docket found for ' . $param{docket} . '<br/>';
 			return;
@@ -938,6 +941,10 @@ sub _production_feedback {
 	$variable{Project} = new openprint::Project( $param{project_id} );
 	$variable{service_id} = $param{service_id};
 } # end sub _production_feedback
+
+sub stock_allocations {
+	_stock_allocations();
+}
 
 sub _stock_allocations {
 	$variable{Order} = openprint::Order->find_one( docket=>$param{docket} );
@@ -1100,6 +1107,24 @@ sub _additional_charge_notifications {
 		$variable{information} = 'Additional Charges Email sent.' . $_;
 	} # end if action 
 } # end sub _additional_charge_notifications 
+
+sub _change {
+	if ( $param{action} ) {
+		if ( $param{action} eq 'setduedate' ) {
+
+			my $Project = openprint::Project->find_one( id=>$param{project_id} );
+			if ( ! $Project ) {
+					$log->error("Project $param{project_id} not found in set_duedate");
+					return;
+			} # end if
+			$Project->change_due_date($param{duedate});
+		} else {
+			$log->error("Unrecognized action $param{action} in project _change");
+		} # end if action
+	} else {
+		$log->error("No action in project _change");
+	} # end if action
+} # end sub _change
 
 1;
 __END__

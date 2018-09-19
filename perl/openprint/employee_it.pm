@@ -56,7 +56,11 @@ sub _hosts {
 	if ( $param{action} eq 'Delete' ) {
 		foreach my $host_id ( ref $param{host_id} eq 'ARRAY' ? @{$param{host_id}} : $param{host_id} ) {
 			my $Host = new openprint::Host( $host_id );
-			$variable{error} .= $Host->delete();
+      if ( $Host->deleted() ) {
+        $variable{error} .= $Host->destroy();
+      } else {
+        $variable{error} .= $Host->delete();
+      }
 		} # end foreach host_id
 		%param = ();
 	} # end if
@@ -85,6 +89,7 @@ sub _hosts {
 
 sub host {
 	my $Host = $variable{Host} = new openprint::Host( $param{host_id} );
+<<<<<<< HEAD
   if ( $param{action} ) {
     if ( $param{action} eq 'Resolve' ) {
       foreach my $I ( $Host->Interfaces() ) {
@@ -97,6 +102,13 @@ sub host {
       } # end foreach
     } elsif ( $param{action} eq 'Delete' ) {
       $variable{error} .= $Host->delete();
+      if ( ! $variable{error} ) {
+        $variable{ExternalRedirect} = '/employee/it/hosts.html';
+        return;
+      } # end if
+      %param = ();
+    } elsif ( $param{action} eq 'Undelete' ) {
+      $variable{error} .= $Host->undelete();
       if ( ! $variable{error} ) {
         $variable{ExternalRedirect} = '/employee/it/hosts.html';
         return;
@@ -208,6 +220,7 @@ sub host {
       } # end if
     } # end if
 	} # end if param{action}
+
 	if ( ( ! $Host->id() ) and ( $param{ip} or $param{mac} or $param{hostname} ) ) {
 		my $I = new openprint::Host_Interface();
 		$I->set({ ip=>$param{ip}, mac=>$param{mac} });
@@ -287,7 +300,9 @@ sub _radius_mac_line {
 			$log->warn("Re didn't match $param{username}");
 		} # end if
 		if ( $param{attribute} eq 'Cleartext-Password' ) {
+			if ( ! $param{value} ) {
 			$param{value} = $param{username};
+			}
 		} elsif ( $param{attribute} eq 'Framed-IP-Address' ) {
 			if ( ! $param{value} ) {
 				my $Host = openprint::Host->find_one('mac any'=>$param{username});

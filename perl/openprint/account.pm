@@ -45,7 +45,8 @@ sub select_company {
 
 sub select_user {
 	if ( $param{user_id} ) {
-		if ( $session{user_type} ne 'A' ) {
+		if ( ( $session{user_type} ne 'A' ) and ( $param{user_id} != $session{user_id} ) ) {
+			my $User = $variable{User} = $openprint::User;
 			$variable{error} .= 'You are not an administrator.  You cannot impersonate other users.<br/>';
 			return;
 		} # end if
@@ -730,9 +731,12 @@ sub credit_application {
 } # sub credit_application
 
 sub view {
-	$variable{Me} = new openprint::User( $session{user_id} );
+	$variable{Me} = $openprint::User;
 	$param{user_id} = openprint::User->transform( id=>$param{user_id} );
 	my $User = $variable{User} = openprint::User->find_one( id=>$param{user_id} ? $param{user_id} : $session{user_id} );
+	if ( ( !$User ) and ( $session{user_type} eq 'A' ) ) {
+		$User = $variable{User} = openprint::User->find_one( deleted=>1, id=>$param{user_id} ? $param{user_id} : $session{user_id} );
+	}
   if ( ! $User ) {
     $variable{error} .= 'No user found.';
     $variable{User} = new openprint::User();

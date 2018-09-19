@@ -1,13 +1,13 @@
 <fieldset><legend>Modification History</legend>
 	<table class="List" style="table-layout: auto;">
 	<tr>
-	<th class="Company">Customer</th>
+	<th class="Company">Company</th>
 	<th class="User">User</th>
 	<th class="DateTime">When</th>
 	<th class="description">Description</th>
 	</tr>
 	<? eval ( 
-		$_ = q{SELECT company_id, user_id, to_char(dtmTimestamp,'HH12:MIpm MM/DD/YYYY'), Description FROM Project_Log WHERE project_id=? ORDER BY dtmTimestamp DESC};
+		$_ = q{SELECT company_id, user_id, dtmTimestamp, Description FROM Project_Log WHERE project_id=? ORDER BY dtmTimestamp DESC};
 		@{$$variable{ProjectLog}} = sql::execute( $log, $dbh, $_, $param{project_id} );
 	) ?>
 	<? while ( @$variable{'CustomerIndex','UserIndex','When','Description'} = splice @{$$variable{ProjectLog}},0,4; ) ?>
@@ -23,10 +23,10 @@
 			} # end if
 		) ?>
 	<tr<?rowclass?>>
-	<td><? echo ( new openprint::Company( $$variable{CustomerIndex} )->name(); ) ?></td>
-	<td><? echo ( new openprint::User( $$variable{UserIndex} )->link_to(); ) ?></td>
-	<td width="150"><?When?></td>
-	<td><? echo ( $$variable{Description} ) ?></td>
+	<td class="Company"><? echo ( new openprint::Company( $$variable{CustomerIndex} )->name(); ) ?></td>
+	<td class="User"><? echo ( new openprint::User( $$variable{UserIndex} )->link_to(); ) ?></td>
+	<td class="DateTime"><? echo ( format_datetime($$variable{When}) ) ?></td>
+	<td class="description"><? echo ( $$variable{Description} ) ?></td>
 	</tr>
 	<? eval ( $$variable{rowclass} = $$variable{rowclass} ? '' : ' class="colRow"'; ) ?>
 	<? endwhile ( @$variable{'CustomerIndex','UserIndex','When','Description'} = splice @{$$variable{ProjectLog}},0,4; ) ?>

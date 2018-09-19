@@ -5,7 +5,7 @@ require openprint::Host;
 package openprint::Host_Interface;
 our @ISA = qw( openprint::Object );
 use vars qw( $debug $table $serial %find_fields %fields %transforms %defaults );
-$debug = 1;
+$debug = 0;
 $serial = 'host_interfaces_id_seq';
 $table = 'host_interfaces';
 
@@ -101,6 +101,7 @@ $openprint::log->debug("Auth response for $method $url $tokens{realm}, $username
 		foreach my $k ( keys %{$headers} ) {
 			$openprint::log->debug("No auth Header $k => $$headers{$k}");
 		}
+		$response = $browser->$method( $url, $args ? $args : () );
 	}
 	return $response;
 } # end sub authenticate
