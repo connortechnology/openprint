@@ -10,7 +10,7 @@
 				<option value="">select</option>
 				<? echo ( 
 					my $operator_ids = $$variable{Job}->operator_ids();
-					$operator_ids = [ $session{user_id} ] if ! @{$operator_ids};
+					$operator_ids = [ $session{user_id} ] if ! ( $operator_ids and @{$operator_ids} );
 
 					$log->debug("Popup for " . $$variable{Job}->to_string() );
 
