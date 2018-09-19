@@ -947,13 +947,12 @@ sub add_to_barcode_log {
 			);
 } # end sub add_to_barcode_log
 
-sub complete_signature {
-	my ( $project_id, $service_id ) = @_;
+sub complete_service {
+	my ( $Project, $service_id ) = @_;
 
-	my $Project = new openprint::Project( $project_id );
 	my $Service = $Project->Service( $service_id );
 	if ( ! $Service->service_id() ) {
-$log->error("No service_id in service for project $project_id, $service_id: " . $Service->to_string() );
+$log->error("No service_id in service for project $$Project{id}, $service_id: " . $Service->to_string() );
 		return;
 	} # end if
 	my $ac = sql::start_transaction( $dbh );
@@ -961,20 +960,64 @@ $log->error("No service_id in service for project $project_id, $service_id: " . 
 	my $specs = $Service->specs();
 	my @operator_ids = @{ $Service->operator_ids() };
 # Remove from Print Schedule
-	foreach my $Job ( openprint::ScheduledJob->find( project_id=>$project_id, 'service_id @>'=>$service_id ) ) {
-		@operator_ids = sets::union(@operator_ids, @{$Job->Shift()->operator_ids()}) if @{$Job->Shift()->operator_ids()};
+	my @forms;
+	foreach my $Job ( openprint::ScheduledJob->find( project_id=>$$Project{id}, 'service_id @>'=>$service_id ) ) {
+		my $Shift = $Job->Shift();
+		@operator_ids = sets::union(@operator_ids, @{$Shift->operator_ids()}) if $Shift->operator_ids();
+		push @forms, map { my $sig_specs = openprint::service::get_specs_ref( $Project, $_ ); $$sig_specs{SignatureIndex}; } @{$Job->pertains_id()};
 		$Job->delete();
 	} # end foreach Job
+	@forms = sort sets::union( @forms );
 	
 	my @Users = openprint::User->find(id=>\@operator_ids) if @operator_ids;
 
-	$log->debug("Completing form by $session{user_id} for @operator_ids");
+
+	$log->debug("Completing ".$Service->service_type(). " for form".(@forms==1?'':'s')." @forms by $session{user_id} for @operator_ids");
 	$Project->add_to_log( @session{'company_id','user_id'},
 			"Form $$specs{SignatureIndex} Completed". ( ( @operator_ids and sets::isin( $session{user_id}, \@operator_ids ) ) ? '': ' for ' . join(',',map { $_->name() } @Users ) ) );
 	sql::end_transaction($dbh, $ac);
 
-	# When completing a signature we are not going to auto-schedule Folding, Cutting, Stitching, etc.
-} # end sub complete_signature
+	if ( $Service->service_type() eq 'Printing' ) {
+		# When complete a form, schedule Folding, and Stitching
+		my $services = $Project->services();
+		foreach my $service_name ( 'Cutting','Folding','Stitching' ) {
+			if ( $$services{$service_name} and @{$$services{$service_name}} ) {
+				foreach my $s_id ( @{$$services{$service_name}} ) {
+					my $Service = $Project->Service( $s_id );
+					my $specs = $Service->specs();
+					if ( $Service->status() ne 'Complete' ) {
+						# If a job is not scheduled
+						my $Job = openprint::ScheduledJob->find_one('service_id @>'=>$s_id, 'pertains_id @>'=>$service_id);
+						if ( ! $Job ) {
+							$log->debug("Job for $service_name is not on schedule, will try to add it");
+							my @Equipment = $Service->Equipment();
+							if ( !@Equipment ) {
+								$log->warn("Unable to get any Equipment for $service_name");
+							}
+							foreach my $Equipment ( @Equipment ) {
+								$log->debug("Adding job for $service_name on $$Equipment{strid}");
+								$Job = new openprint::ScheduledJob();
+								$Job->set({
+										service_id			=>	[$s_id],
+										pertains_id			=>	[$service_id],
+										servicetype_id	=>	$Service->servicetype_id(),
+										equipment_Id		=>	$$Equipment{id},
+										});
+								$log->debug("Add bindery job to schedule: " . $Job->to_string() );
+								$Job->put_job_on_schedule();
+							} # end foreach equipment
+						} else {
+							$log->debug("Found Job for $service_name " . $Job->to_string() );
+							$Job->put_job_on_schedule();
+						} # end if
+
+					} # end if is not Complete
+				} # end foreach service_id
+			} # end if
+		} # end foreach Service
+	} # end sub Printing
+	
+} # end sub complete_service
 
 sub docket_sheet {
 	openprint::print_project::summary( @_ );
@@ -1449,6 +1492,10 @@ $log->debug("NES: " . $NextES->name() );
 		} # end if ! NextES
 		push @Shifts, $NextES->emanantise( $start_time );
 	} # end if ! @Shifts
+	if ( ! @Shifts ) {
+		$log->error("NO more shifts in reorder_jobs");
+		return;
+	}
 
 	my $Shift = shift @Shifts;
 $log->debug("Starting Shift: " . $Shift->to_string());
@@ -1479,10 +1526,10 @@ $log->debug(" splicing $order[$i]{starttime} $i " . $order[$i]->Project()->docke
 	my @jobs_in_shift;
 	while ( @order ) {
 		my $row = shift @order;
-		push @{$variable{changed}}, $row->Shift()->ul_id();
+		push @{$variable{changed}}, $row->Shift()->ul_id() if $row->Shift();
 
 		my $run_time = $$row{tentative} ? 1 : $row->runtime_seconds();
-		$log->debug("run time for " . $row->docket() . ' is ' . $run_time . ' ' . misc::seconds2hms($run_time));
+		$log->debug("run time for $$row{id} docket " . $row->docket() . ' is ' . $run_time . ' ' . misc::seconds2hms($run_time));
 		if ( ! $run_time ) {
 			$log->error("JOb $$row{id} " . $row->docket() . ' is 0, making it 1' );
 			$run_time = 1;
@@ -1515,7 +1562,7 @@ $log->debug(" NO NEXT ES: "  );
 				} # end if ! NextES
 				$Shift = $NextES->emanantise( $start_time );
 					
-				if ( ( ! $Shift ) or ! @{$Shift->operator_id()} ) {
+				if ( ( ! $Shift ) or ! @{$Shift->operator_ids()} ) {
 					$variable{error} .= 'Unable to add more shifts. This is probably because not enough shifts have operators assigned. Need shifts for ' . Date::Format::time2str($config{DateTimeFormat}, $start_time) . ' onwards.';
 					$dbh->rollback();
 					sql::end_transaction( $dbh, $ac );
@@ -1933,9 +1980,10 @@ $log->debug("second job can't move");
 		push @{$variable{changed}}, $Job->Shift()->ul_id();
 	} elsif ( $param{btnFunction} eq 'CompleteJob' ) {
 		# Actually this is complete Signature
+		my $Project = $Job->Project();
 		foreach my $sig_id ( @{$$Job{service_id}} ) {
-			my $sig_specs = openprint::service::get_specs_ref( $Job->Project(), $sig_id );
-			complete_signature( $Job->project_id(), $sig_id );
+			my $sig_specs = openprint::service::get_specs_ref( $Project, $sig_id );
+			complete_service( $Project, $sig_id );
 		} # end foreach
 		$Job->Project()->update_status();
 		push @{$variable{changed}}, $Job->Shift()->ul_id();
@@ -1966,6 +2014,9 @@ sub _shift_popup {
 
 sub _shift_change {
 	my $Shift = new openprint::Shift( $param{shift_id} );
+	if ( ! $Shift->id() ) {
+		return;	
+	}
 
 	# Always update the shift
 	push @{$variable{changed}}, $Shift->ul_id();
