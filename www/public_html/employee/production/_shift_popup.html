@@ -45,7 +45,22 @@
 						return;
 					}
 
-					my @Operators = $Equipment->Operators();
+					
+					my @Operators = $$variable{Shift}->Operators();
+					if ( ! @Operators ) {
+						$log->warn("No operators for " . $$variable{Shift}->to_string());
+						my $Equipment_Shift = $$variable{Shift}->Equipment_Shift();
+						if ( ! $Equipment_Shift ) {
+							$log->error("No equipment shift");
+						} else {
+							@Operators = $Equipment_Shift->Operators();
+							if ( ! @Operators ) {
+								$log->warn("No equipment operators for " . $$variable{Shift}->to_string());
+								@Operators = $$$variable{Shift}->Equipment_Shift()->Operators() if ! @Operators;
+							}
+						}
+
+					}
 					my %Operators = map { $$_{id}, $_ } @Operators;
 
 					my @user_ids = map { $Operators{$$_{user_id}} ? () : $$_{user_id} } @Usersin;
