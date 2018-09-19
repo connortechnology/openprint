@@ -373,12 +373,14 @@ sub TZ {
 	return $_[0]{TZ};
 } # end sub TZ
 
+# Returns shifts in the interval between start_dt and end_dt.
+
 sub get_Shifts {
 	my ( $Equipment, $start_dt, $end_dt, @Equipment_Shifts ) = @_;
 
 	@Equipment_Shifts = $Equipment->Equipment_Shifts() if ! @Equipment_Shifts;
 	if ( ! @Equipment_Shifts ) {
-		$openprint::log->error("THere are no shifts defined for " . $Equipment->to_string() );
+		$openprint::log->error("There are no shifts defined for " . $Equipment->to_string() );
 		return ();
 	}
 	my @Shifts;
@@ -386,15 +388,16 @@ sub get_Shifts {
 
 	# Case #1 Shift before
 	if ( my $LastShift = openprint::Shift->find_one(
-			equipment_id	=>	$Equipment->id(),
-			'starttime <'	=>	$parser->format_datetime( $start_dt ),
+			equipment_id	=>	$$Equipment{id},
+# 2018-09-19 change from < to <= on the premise that the shift may start on the exact second
+			'starttime <='	=>	$parser->format_datetime( $start_dt ),
 			order			=>	'starttime DESC',
 			) ) {
 		$openprint::log->debug("Found a previous shift " . $LastShift->to_string() );
 		# This is going to be thie most common
 		my $last_dt = $LastShift->endtime_dt() + DateTime::Duration->new( seconds => 1 );
 
-		if ( $LastShift->starttime_dt() < $start_dt and $last_dt > $start_dt ) {
+		if ( $LastShift->starttime_dt() <= $start_dt and $last_dt > $start_dt ) {
 			# This can happen because we may call this with successive start_dt to adjust the start to the start of a shift
 			$openprint::log->debug("Have a Shift for the given start time $last_dt < $start_dt ");
 			return ( $LastShift );
@@ -525,6 +528,19 @@ sub add_job {
 		openprint::employee_production::reorder_jobs( @before, $Job, @after );
 	}
 }
+
+sub check_and_fix {
+	my ( $Shift ) = @_;
+
+	if ( $Shift->endtime_seconds() == $Shift->starttime_seconds() ) {
+		$openprint::log->warn("Resetting shift duration because it is zero");
+		$openprint::log->debug("Shift before " . $Shift->to_string());
+		$Shift->endtime_seconds( $Shift->starttime_seconds() + $Shift->Equipment_Shift()->duration_seconds() );
+		$openprint::log->debug("Shift aftere " . $Shift->to_string());
+		$openprint::log->debug("Added " . $Shift->Equipment_Shift()->duration_seconds() . ' seconds');
+		$Shift->save() if $Shift->endtime_seconds() != $Shift->starttime_seconds();
+	}
+} # end sub check_and_fix
 
 
 1;
