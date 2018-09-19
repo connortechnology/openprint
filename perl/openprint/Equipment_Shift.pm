@@ -52,10 +52,12 @@ $serial = 'equipment_shifts_id_seq';
 
 sub to_string {
 	return sprintf(
-			"EquipmentShift: %s %s %s",
+			"EquipmentShift: %s %s %s from %s to %s",
 			$_[0]->Equipment()->name(),
 			$_[0]->name(),
-			misc::seconds_to_JDF_interval( $_[0]{duration_seconds} ),
+			$_[0]->duration() ? $_[0]->duration() : $_[0]{duration_seconds},,
+			$_[0]->starttime() ? $_[0]->starttime() : $_[0]{starttime_seconds},,
+			$_[0]->endtime() ? $_[0]->endtime() : $_[0]{endtime_seconds},,
 			);
 }
 
@@ -64,6 +66,10 @@ my $dtfd = DateTime::Format::Duration->new(
 		'%H hours, %M minutes, %S seconds'
 		);
 
+sub starttime {
+		#return Date::Format::time2str('%H:%M:%S', $_[0]->starttime_seconds());
+		return $_[0]{starttime} = misc::seconds2hms($_[0]->starttime_seconds());
+}
 sub starttime_seconds {
 	if ( @_ > 1 ) {
 		if ( ref $_[1] eq 'ARRAY' ) {
@@ -79,7 +85,8 @@ sub starttime_seconds {
 
 sub endtime {
 	if ( ! $_[0]{endtime} ) {
-		$_[0]{endtime} = Date::Format::time2str('%H:%M:%S', $_[0]->endtime_seconds());
+		$_[0]{endtime} = misc::seconds2hms($_[0]->endtime_seconds());
+		#$_[0]{endtime} = Date::Format::time2str('%H:%M:%S', $_[0]->endtime_seconds());
 	} # end if
 	return $_[0]{endtime};
 } # end sub endtime_seconds
@@ -185,6 +192,10 @@ sub test_emanantise {
 		$log->error("Dt > ET $et does not fit on this shift");
 		return;
 	}
+	if ( $et <= $st ) {
+		$log->error("ET $et <= ST $st so not creating Shift");
+		return;
+	}
 
 	my $Shift = new openprint::Shift();
 		$Shift->set({
@@ -243,13 +254,16 @@ sub emanantise {
 		#$st -= DateTime::Duration->new( days=>1 );
 	} # end if
 	#$log->debug("final st: " . $parser->format_datetime( $st ) . ' requested: ' . $parser->format_datetime( $requested_dt ) );
+	# WTH is this for? now + duration - now()
 	my $now = DateTime->now( time_zone => 'UTC' );
 	my $es_duration = DateTime::Duration->new( seconds => $self->duration_seconds() );
+$log->debug("Now + duration?" . $es_duration->in_units('seconds') );
 	$_ = $now->clone->add_duration( $es_duration );
 	$es_duration = $_->subtract_datetime_absolute( $now );
+$log->debug("Now + duration?" . $es_duration->in_units('seconds') );
 
 	my $et = $st->clone()->add_duration( $es_duration );
-	#$log->debug("et: " . $parser->format_datetime( $et ) . " is_dst() ? " . $et->is_dst() . " st_dst? " . $st->is_dst() );
+	$log->debug("et: $et (".$es_duration->in_units('seconds').") (".$self->duration_seconds().") is_dst() ? " . $et->is_dst() . " st_dst? " . $st->is_dst() );
 	if ( (!$st->is_dst()) and $et->is_dst() ) {
 		$et -= DateTime::Duration->new( hours=>1 );
 #$log->debug("subtracting an hour for DST new et:" . $parser->format_datetime( $et ));
@@ -271,9 +285,11 @@ sub emanantise {
 				equipment_id	=>	$$self{equipment_id},
 				shift_id		=>	$$self{id},
 				'starttime >='	=>	$parser->format_datetime( $st ),
-				'starttime <='	=>	$parser->format_datetime( $et ),
+# 2018-09-18 changed this from <= to <
+				'starttime <'	=>	$parser->format_datetime( $et ),
 				) ) {
 
+		$log->debug("Emanantise found " . $Shift->to_string());
 		# Looks for a shift of the right type that starts within the expected shift time. so start time can be moved up
 	} else {
 		$Shift = new openprint::Shift();
@@ -457,7 +473,10 @@ sub distance {
 	if ( $$Next{starttime_seconds} > $$self{starttime_seconds} ) {
 		return $$Next{starttime_seconds} - $self->endtime_seconds();
 	} elsif ( $$self{starttime_seconds} == $$Next{starttime_seconds} ) {
-		return DAY - $$self{duration_seconds};
+		my $distance = DAY - $$self{duration_seconds};
+		$distance = 0 if $distance < 0;
+		return $distance;
+		#return (DAY - $$self{duration_seconds})+1;
 	} else {
 		# Wrap around
 		my $endtime = $self->endtime_seconds() % DAY;
