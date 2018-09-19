@@ -400,14 +400,7 @@ $log->debug("Shifts are: " . $S->to_string());
 $log->debug("Shift: " . $Shift->to_string());
 $log->debug("Nextt: " . $Next_Shift->to_string());
 
-				if ( $Shift->endtime_seconds() == $Shift->starttime_seconds() ) {
-$log->warn("Resetting shift duration because it is zero");
-$log->debug("Shift before " . $Shift->to_string());
-					$Shift->endtime_seconds( $Shift->starttime_seconds() + $Shift->Equipment_Shift()->duration_seconds() );
-$log->debug("Shift aftere " . $Shift->to_string());
-$log->debug("Added " . $Shift->Equipment_Shift()->duration_seconds() . ' seconds');
-					$Shift->save() if $Shift->endtime_seconds() != $Shift->starttime_seconds();	
-				}
+				$Shift->check_and_fix();
 
 				# By putting emanantise here....
 				# emanantise will figure out what the next shift should look like, and add it if neccessary.
@@ -457,14 +450,15 @@ $log->error("Went past, going back an hour $next_shift_start_time $_, adding an 
 
 					if ( $New_Next_Shift->id() != $Next_Shift->id() ) {
 
-if ( $New_Next_Shift->starttime_seconds() < $next_shift_start_time ) {
-$log->error("Brekaing because new shift is < $next_shift_start_time");
-last;
-}
-						# It's different than the one we already have?
-$log->debug("Adding new shift; previous: " . $Shifts[$shift_index-1]->to_string() );
-$log->debug("Adding new shift; current: " . $Shifts[$shift_index]->to_string() );
-$log->debug("Adding new shift; next: " . $New_Next_Shift->to_string() );
+						if ( $New_Next_Shift->starttime_seconds() < $next_shift_start_time ) {
+							# Actually this is valid... if we ask for 12:01,but shift begins at 12:00
+							$log->error("Brekaing because new shift is < $next_shift_start_time");
+							last;
+						}
+# It's different than the one we already have?
+						$log->debug("Adding new shift; previous: " . $Shifts[$shift_index-1]->to_string() );
+						$log->debug("Adding new shift; current: " . $Shifts[$shift_index]->to_string() );
+						$log->debug("Adding new shift; next: " . $New_Next_Shift->to_string() );
 						splice @Shifts, $shift_index, 0, $New_Next_Shift;
 #foreach my $S ( @Shifts ) {
 #$log->debug("Shifts are: " . $S->to_string());
@@ -473,6 +467,7 @@ $log->debug("Adding new shift; next: " . $New_Next_Shift->to_string() );
 						$shift_index -= 1;
 						next;
 					} 
+					$New_Next_Shift->check_and_fix();
 					last if $New_Next_Shift->starttime_dt() > $et;
 				} else {
 					$log->error( " Failed to match the shift for " . $ES->Next()->to_string() );
@@ -504,7 +499,7 @@ $log->debug("LastShift $$LastShift{endtime} < $et");
 				$LastShift = $NewShift;
 			} # end while
 			foreach my $Shift ( @Shifts ) {	
-				push @{$$variable{drops}}, $Shift->ul_id() if @{$Shift->operator_ids()} or ! $E->smartscheduling();
+				push @{$$variable{drops}}, $Shift->ul_id() if ($Shift->operator_ids() and @{$Shift->operator_ids()}) or ! $E->smartscheduling();
 				$html .= $Shift->get_ul( );
 			} # end foreach Shift
 
