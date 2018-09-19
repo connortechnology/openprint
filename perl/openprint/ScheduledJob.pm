@@ -74,7 +74,7 @@ sub runtime_seconds {
 	my $seconds = $_[0]->runtime() ? misc::hms2time($_[0]->runtime()) : 0;
 
 	if ( ! $seconds ) {
-		$log->error("Got nothing for $_[0]{runtime} from misc::hms2time");
+		$log->error("Got nothing for $_[0]{runtime} from misc::hms2time :" . $_[0]->to_string());
 	} elsif ( $debug ) {
 		$log->debug("Got $seconds seconds for $_[0]{runtime} from misc::hms2time");
 	}
@@ -99,8 +99,8 @@ sub starttime_seconds {
 			$starttime_dt = DateTime->from_epoch( epoch=>$_[1], time_zone=>$openprint::TZ );
 			$log->error( 'ScheduledJob: startime_seconds < NOW() ' . $parser->format_datetime( $starttime_dt ) );
 		} # end if
-$openprint::log->debug("Setting starttime_seconds to $_[1]");
 		$starttime_dt = DateTime->from_epoch( epoch=>$_[1], time_zone=>$openprint::TZ );
+$openprint::log->debug("Setting starttime_seconds to $_[1] => $starttime_dt");
 		$_[0]->starttime( $parser->format_datetime( $starttime_dt ) );
 $openprint::log->debug("Got $starttime_dt = $_[0]{starttime}");
 		
@@ -615,7 +615,9 @@ $openprint::log->debug("Getting shift for " . $self->to_string() );
 					#limit			=>	1,
 					});
 			if ( !@Shifts ) {
-				$openprint::log->debug("No shift for " . $self->to_string() );
+				$openprint::log->error("ScheduledJob: No shift for " . $self->to_string() );
+if ( 0 ) {
+# I'm starting to think that we shouldn't instantiate here. Or can emanantise do it all for us?
 
 				my $limit = 12; # Only go forward 12 hours at most. 
 				if ( ! @Shifts ) {
@@ -633,8 +635,10 @@ $openprint::log->debug("Getting shift for " . $self->to_string() );
 					}
 				} # end if still ! @Shifts
 				
+}
 			} # end if if ! @Shifts
 
+		return if ! @Shifts;
 			if ( @Shifts > 1 ) {
 				$log->error("Should delete duplicate shifts! " . @Shifts );
 				foreach ( @Shifts ) {
@@ -957,7 +961,7 @@ $openprint::log->debug("Asave $_");
 
 sub to_string {
 	my $self = $_[0];
-	return sprintf('%d %s on %s starting %s', $self->Project()->docket(), join(',', ( $self->service_id() ? @{$self->service_id()} : () ) ), $self->Equipment()->name(), $self->starttime() );
+	return sprintf('%d %s on %s starting %s', $self->docket(), join(',', ( $self->service_id() ? @{$self->service_id()} : () ) ), $self->Equipment()->name(), $self->starttime() );
 } # end sub to_string
 
 sub pertains_id {
@@ -1050,8 +1054,8 @@ sub put_job_on_schedule {
 		# If no shifts, then will have to fall back to Pending
 		my $NextShift = openprint::Shift->find(
 				equipment_id	=>	$$Job{equipment_id},
-				'starttime <='	=>	$$Job->starttime(),
-				'endtime >'	=>	$$Job->starttime(),
+				'starttime <='	=>	$Job->starttime(),
+				'endtime >'	=>	$Job->starttime(),
 				);
 		if ( $NextShift ) {
 			$Job->starttime( $$NextShift{starttime} );
@@ -1063,6 +1067,13 @@ sub put_job_on_schedule {
 	# Since we stuck it on the end, we don't need to reorder
 	#$Job->reorder_shift();
 } # end sub put_job_on_schedule
+
+sub docket {
+	if ( ! $_[0]{docket} ) {
+		$_[0]{docket} = $_[0]->Project()->docket() if $_[0]{project_id};
+	}
+	return $_[0]{docket};
+}
 
 1;
 __END__
