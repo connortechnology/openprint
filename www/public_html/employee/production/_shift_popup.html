@@ -56,7 +56,7 @@
 							@Operators = $Equipment_Shift->Operators();
 							if ( ! @Operators ) {
 								$log->warn("No equipment operators for " . $$variable{Shift}->to_string());
-								@Operators = $$$variable{Shift}->Equipment_Shift()->Operators() if ! @Operators;
+								@Operators = $$variable{Shift}->Equipment_Shift()->Operators() if ! @Operators;
 							}
 						}
 
