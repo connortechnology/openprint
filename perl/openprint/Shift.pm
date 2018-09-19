@@ -44,7 +44,7 @@ $serial = 'shifts_id_seq';
 );
 
 %defaults = (
-	operator_ids		=>	[],
+	operator_ids		=>	'[]',
 	created_on		=>	q`'NOW()'`,
 	updated_on		=>	q`'NOW()'`,
 );
@@ -79,6 +79,7 @@ sub endtime_dt {
 sub endtime_seconds {
 	if ( @_ == 2 ) {
 		$_[0]{endtime} = Date::Format::time2str( '%Y-%m-%d %H:%M:%S%z', $_[1] );
+		$_[0]{endtime_seconds} = $_[1];
 	} # end if
 	if ( ! $_[0]{endtime_seconds} ) {
 		$_[0]{endtime_seconds} = Date::Parse::str2time( $_[0]{endtime} );
@@ -524,6 +525,7 @@ sub add_job {
 		openprint::employee_production::reorder_jobs( @before, $Job, @after );
 	}
 }
+
 
 1;
 __END__
