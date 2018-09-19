@@ -26,9 +26,9 @@ $debug = 0;
 $table = 'backups';
 $serial = 'backups_id_seq';
 %fields = (
-	id			  =>	'id',
-	name    	=>	'name',
-  path      =>  'path',
+	id  			  =>	'id',
+	name      	=>	'name',
+  path        =>  'path',
   username    =>  'username',
 	enabled   	=>	'enabled',
 	description	=>	'description',
@@ -111,7 +111,7 @@ sub dest_path {
   if ( ! $_[0]{dest_path} ) {
   my $path = $_[0]{path};
   $path =~ s/\//_/g;
-    $_[0]{dest_path} = join('/', 
+    $_[0]{dest_path} = join('/',
         DEST_PATH,
         ( $_[0]->owner_id() ? $_[0]->Owner()->name() : () ),
         $_[0]{name},
@@ -164,7 +164,7 @@ sub run {
       Object  =>  $_[0],
       action  =>  'Failed Backup',
       note    =>  $results,
-    }); 
+    });
       next;
     } # end if
     $openprint::log->error("Ran backup. Reason: ($?) stdout($stdout) stderr($stderr)");
@@ -175,14 +175,14 @@ sub run {
         Object  =>  $_[0],
         action  =>  'Successful Backup',
         note    =>  $results,
-    }); 
+    });
     return $results;
   } # end foreach ip or hostname
   (new openprint::Log())->save({
       Object  =>  $_[0],
       action  =>  'Failed Backup',
       note    =>  $results,
-    }); 
+    });
 } # end sub run
 
 1;
