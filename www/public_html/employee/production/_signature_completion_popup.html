@@ -6,11 +6,11 @@
 	<fieldset><legend>Signature Completion</legend>
 		<p>
 			<label>Operator</label>
-			<select name="operator_id" id="operator_id">
+			<select name="operator_ids" id="operator_ids" multiple="multiple">
 				<option value="">select</option>
 				<? echo ( 
-					my $operator_id = $$variable{Job}->operator_id();
-					$operator_id = $session{user_id} if ! $operator_id;
+					my $operator_ids = $$variable{Job}->operator_ids();
+					$operator_ids = [ $session{user_id} ] if ! @{$operator_ids};
 
 					$log->debug("Popup for " . $$variable{Job}->to_string() );
 
@@ -27,9 +27,10 @@
 					my @Usersin = openprint::User_in_UserGroup->find( usergroup_id=>[ map { $$_{id} } @Usergroups ] );
 					if ( ! @Usersin ) {
 						$log->error("No users found for groups: " . join(',', map { $$_{id} } @Usergroups ) );
-						return;
 					}
-					make_drop_down( openprint::User->dropdown(id=>[ map { $$_{user_id} } @Usersin]), $operator_id );
+					my @user_ids = sets::union( @{$operator_ids}, map { $$_{user_id} } @Usersin);
+
+					make_drop_down( openprint::User->dropdown(id=>\@user_ids), $operator_ids );
 				) ?>
 			</select>
 		</p>
@@ -45,3 +46,4 @@
 <? else ( $$variable{Job}->id() ) ?>
 <? echo ( button( 'Close', { onclick=>'popupWin.destroy();' } ); ) ?>
 <? endif ( $$variable{Job}->id() ) ?>
+<script type="text/javascript">$j('#operator_ids').chosen();</script>
