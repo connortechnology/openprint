@@ -12,7 +12,7 @@
     } // end function setup_drops
 </script>
 <?include(/includes/error_reporting.html)?>
-<form id="f1" name="f1" method="post" action="operator_schedule.html">
+<form id="f1" name="f1" method="get" action="operator_schedule.html">
 	<input type="hidden" name="func"/>
 	<fieldset class="filters"><legend>Display Criteria</legend>
 		<div class="leftColumn">
@@ -28,7 +28,7 @@
 				</li>
 				<li>
 					<label>Equipment</label>
-					<select name="equipment_id" id="equipment_id" multiple="multiple">
+					<select name="equipment_id" id="equipment_id" multiple="multiple" onchange="this.form.submit();">
 		<? echo ( 
 			@{$$variable{Equipment}} = ();
 			my @presses = openprint::Equipment->find(
