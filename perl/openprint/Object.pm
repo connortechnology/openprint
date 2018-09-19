@@ -1102,7 +1102,7 @@ $openprint::log->debug("Autoload $type $name $_[0] $_[1] $self $newvalue") if ! 
 sub to_string {
 	my $type = ref($_[0]);
 	my $fields = eval '\%'.$type.'::fields';
-    return $type . ': '. join(' ' , map { $_[0]{$_} ? "$_ => $_[0]{$_}" : () } keys %$fields );
+    return $type . ': '. join(' ' , map { $_[0]{$_} ? $_ . ' => ' . (ref $_[0]{$_} eq 'ARRAY' ? join(',',@{$_[0]{$_}}) : $_[0]{$_} ) : () } keys %$fields );
 }
 
 sub dropdown {
