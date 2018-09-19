@@ -36,6 +36,9 @@ sub destroy {
 	return if ! $$self{id};
 	my $error = '';
 	my $ac = sql::start_transaction( $openprint::dbh );
+  foreach my $Category ( $self->Categories() ) {
+    $error .= $Category->save({parent_ids=>sets::exclude([$Category->id()], $Category->parent_ids())});
+  }
 	foreach my $Product ( openprint::Product->find(category_id=>$$self{id}, deleted=>[0,1]) ) {
 		$error .= $Product->save({category_id=>undef});
 	} # end foreach
