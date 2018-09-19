@@ -304,9 +304,14 @@
 
 		my $parser = 'DateTime::Format::Pg';
 
-		my $start_dt = new DateTime( time_zone=>$openprint::TZ, map { $_ => $session{'/employee/production/print_overview.html?schedule_start_'.$_} } ( 'year', 'month', 'day' ) );
-		my $end_dt = new DateTime( time_zone=>$openprint::TZ, map { $_ => $session{'/employee/production/print_overview.html?schedule_end_'.$_} } ( 'year', 'month', 'day' ) );
-		$log->debug("Start: $start_dt, end $end_dt");
+		my $start_dt = new DateTime(
+				time_zone=>$openprint::TZ,
+				map { $_ => $session{$r->uri().'?schedule_start_'.$_} } ( 'year', 'month', 'day' ),
+				);
+		my $end_dt = new DateTime(
+				time_zone=>$openprint::TZ,
+				map { $_ => $session{$r->uri().'?schedule_end_'.$_} } ( 'year', 'month', 'day' ),
+				);
 
 		my $ac = sql::start_transaction( $dbh );
 
@@ -316,12 +321,11 @@
 			'starttime <='	=> $parser->format_datetime( $end_dt ),
 			'starttime >='	=> $parser->format_datetime( $start_dt ),
 		);
-#$log->debug("# of jobs: " . @Jobs );
 
 		my @Projects = openprint::Project->find( id=>[ sets::union( map { $$_{project_id} ? $$_{project_id} : () } @Jobs ) ] ) if @Jobs;
 		my @Companies = openprint::Company->find( id=>[ sets::union( map { $$_{company_id} ? $$_{company_id} : () } @Projects ) ] ) if @Projects;
 
-		# WHy does this need to be ACCESS exclusive?  SOmething that changes it should be.... perhaps the idea is that i any canges are in progress, we want to wait for them to finish, but if changes are happening, then any lock we try to get will hol... so this just prevent concurrent views
+		# Why does this need to be ACCESS exclusive?  SOmething that changes it should be.... perhaps the idea is that i any canges are in progress, we want to wait for them to finish, but if changes are happening, then any lock we try to get will hol... so this just prevent concurrent views
 		# However, the problem is that this can implement shifts.. perhaps we should wait until we need to implement shifts...
 		# Ok, but we actually only create shifts, not adjust jobs... so only need to lock the shifts	
 		$dbh->do( 'LOCK TABLE Shifts IN ACCESS EXCLUSIVE MODE' ) or $log->error( DBI->errstr );
@@ -357,11 +361,12 @@ $log->debug( "Available ES: " . $ES->to_string() );
 			my $st = $start_dt;
 			my $et = $st + DateTime::Duration->new( days=>$end );
 
+			# Get all the shifts in the time span
 			my @Shifts = openprint::Shift->find( 
-				equipment_id 		=>	$E->id(),
+				equipment_id 		=>	$$E{id},
 				'starttime <'		=>	$parser->format_datetime( $et ),
-				'starttime >='		=>	$parser->format_datetime( $st ),
-				order				=>	'starttime',
+				'starttime >='	=>	$parser->format_datetime( $st ),
+				order						=>	'starttime',
 				);
 
 			if ( ! @Shifts ) {
@@ -374,34 +379,50 @@ $log->debug( "Available ES: " . $ES->to_string() );
 				next;
 			} # end if
 
-			# First, need to find the first Equipment Shift to show.  Easy, will be given by the first shift in our list of shifts
+			# First, need to find the first Equipment Shift to show.  
+			# Easy, will be given by the first shift in our list of shifts
 			# What about multi-day schedules?
 			my $ES = $Shifts[0]->Equipment_Shift();
-			#$log->debug("First ES: " . $ES->to_string() );
+			$log->debug("First ES: " . $ES->to_string() );
 
-			# Step two: Make sure all the shifts are there. We do this by running through them, comparing the shift_id to the expected ES
+			# Step two: Make sure all the shifts are there.
+			# We do this by running through them, comparing the shift_id to the expected ES
 			# We start at 1 because we already looked for 0 and found it.  Micro-optimisation
-#foreach my $S ( @Shifts ) {
-#$log->debug("Shifts are: " . $S->to_string());
-#}
+foreach my $S ( @Shifts ) {
+$log->debug("Shifts are: " . $S->to_string());
+}
 			my $Next_ES = $ES->Next();
-			#$log->debug("Next ES: " . $Next_ES->to_string() );
+			$log->debug("Next ES: " . $Next_ES->to_string() );
 
 			for ( my $shift_index = 1; $shift_index < @Shifts; $shift_index += 1 ) {
 				my $Shift = $Shifts[$shift_index-1];
 				my $Next_Shift = $Shifts[$shift_index];
+$log->debug("Shift: " . $Shift->to_string());
+$log->debug("Nextt: " . $Next_Shift->to_string());
+
+				if ( $Shift->endtime_seconds() == $Shift->starttime_seconds() ) {
+$log->warn("Resetting shift duration because it is zero");
+$log->debug("Shift before " . $Shift->to_string());
+					$Shift->endtime_seconds( $Shift->starttime_seconds() + $Shift->Equipment_Shift()->duration_seconds() );
+$log->debug("Shift aftere " . $Shift->to_string());
+$log->debug("Added " . $Shift->Equipment_Shift()->duration_seconds() . ' seconds');
+					$Shift->save() if $Shift->endtime_seconds() != $Shift->starttime_seconds();	
+				}
 
 				# By putting emanantise here....
 				# emanantise will figure out what the next shift should look like, and add it if neccessary.
 				my $next_shift_start_time = $Shift->endtime_seconds() + $ES->distance();
-#$log->debug("DIstance: " . $ES->distance() . " from " . $Shift->endtime() . " to " . $Next_Shift->starttime() );
+				$log->debug("DIstance: " . $ES->distance() . " from " . $Shift->endtime() . " to " . $Next_Shift->starttime() );
 				$log->debug("gap? " . $Next_Shift->starttime_seconds() . ' - ' . $Shift->endtime_seconds() . ' = ' . ( $Next_Shift->starttime_seconds() - $Shift->endtime_seconds() ) );
 				if ( $Next_Shift->starttime_seconds() - $Shift->endtime_seconds() > 0 ) {
 # If there is a gap, check for jobs that may have slipped between
-					my @Lost_Jobs = openprint::ScheduledJob->find( 'starttime >'=>$Shift->endtime(), 'starttime <'=>$Next_Shift->starttime(), equipment_id=>$$E{id} );
+					my @Lost_Jobs = openprint::ScheduledJob->find(
+							'starttime <'=>$Next_Shift->starttime(),
+							'starttime >'=>$Shift->endtime(),
+							equipment_id=>$$E{id} );
 					if ( @Lost_Jobs ) {
 						$log->debug("Bumping lost jobs");
-# Bumping to next shift.
+						# Bumping to next shift.
 						my $starttime = $Next_Shift->starttime_seconds();
 						foreach my $Job ( @Lost_Jobs ) {
 							$_ = $Job->save({starttime_seconds=>$starttime});
@@ -429,13 +450,14 @@ $log->error("Went past, going back an hour $next_shift_start_time $_, adding an 
 					last if $next_shift_start_time > $Shifts[$shift_index]->starttime_seconds();
 				}
 }
-$log->debug("Calling emanananteise with next start time: $next_shift_start_time " . Date::Format::time2str($config{DateTimeFormat}, $next_shift_start_time));
+				$log->debug("Calling emanananteise with next start time: $next_shift_start_time " . Date::Format::time2str($config{DateTimeFormat}, $next_shift_start_time));
 				my $New_Next_Shift = $Next_ES->emanantise( $next_shift_start_time );
 				if ( $New_Next_Shift ) {
 					# emanantise returned a shift
 
 					if ( $New_Next_Shift->id() != $Next_Shift->id() ) {
-if ( $New_Next_Shift->starttime_seconds() <= $next_shift_start_time ) {
+
+if ( $New_Next_Shift->starttime_seconds() < $next_shift_start_time ) {
 $log->error("Brekaing because new shift is < $next_shift_start_time");
 last;
 }
@@ -450,9 +472,6 @@ $log->debug("Adding new shift; next: " . $New_Next_Shift->to_string() );
 						# Reset counter, and go again
 						$shift_index -= 1;
 						next;
-					} else {
-$log->error("Returned the same shift id;");
-last;
 					} 
 					last if $New_Next_Shift->starttime_dt() > $et;
 				} else {
@@ -465,6 +484,7 @@ last;
 			# List of Shifts may end before our specified date range is up, so start at the last shift and fill in.
 			my $LastShift = $Shifts[@Shifts-1];
 			while ( $LastShift->endtime_seconds() < $et->epoch() ) {
+$log->debug("LastShift $$LastShift{endtime} < $et");
 				my $ES = $LastShift->Equipment_Shift()->Next();
 				my $distance = $LastShift->Equipment_Shift()->distance();
 				$distance = 1 if ! $distance;
