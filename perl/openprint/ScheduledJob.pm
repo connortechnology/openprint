@@ -172,7 +172,7 @@ sub comment {
 					$Imposition->load( $sig_specs, $Project->ordered_quantity_index(), $Project );
 					my @Folds = openprint::Estimating::Folding::get_Folds( $specs, $Imposition, $Project->ordered_quantity_index() );
 					foreach my $FI ( @Folds ) {
-						$comment .= 'Form ' .$$sig_specs{SignatureIndex} . ': ' . $FI->quantity() . ' ' . $FI->imposition() . 'out ' . $$FI{Fold}->type() . '<br/>';
+						$comment .= 'Form ' .$$sig_specs{SignatureIndex} . ': ' . $FI->quantity() . ' ' . $$FI{imposition} . 'out ' . $$FI{Fold}->type() . '<br/>';
 					} # end foreach For
 				} # end foreach sig_id
 				$comment = 'unknown fold' if ! $comment;
@@ -385,7 +385,7 @@ sub get_li {
 		} # end if
 		$html .= ssi::button( 'Bump'.$$self{id}, { onclick=>"popup_window('/employee/production/_bump_job.html','schedule_id=$$self{id}');", text=> 'B', title=>'Bump to next shift' } );
 		if ( $$self{project_id} ) {
-			$html .= ssi::button( 'Complete'.$$self{id}, { onclick=>"popup_window('/employee/production/_signature_completion_popup.html', 'schedule_id=$$self{id}', { height: '100px', center: 'false' } );", text=>'C',title=>'Complete Job' } );
+			$html .= ssi::button( 'Complete'.$$self{id}, { onclick=>"popup_window('/employee/production/_signature_completion_popup.html', 'schedule_id=$$self{id}', { width: '400px', height: '300px', center: 'false' } );", text=>'C',title=>'Complete Job' } );
 			$html .= ssi::button( 'House'.$$self{id}, { onclick=>"new Ajax.Updater('item_$$self{id}','_li.html', {parameters: {schedule_id:$$self{id}, action: 'House Stock' } } );", text=>'H', title=>'House Stock' } );
 			$html .= ssi::button( 'PO'.$$self{id}, { target=>'_blank', href=>"/employee/purchase_order/edit.html?project_id=$$self{project_id}", text=>'PO', title=>'Create PO' } );
 		} # end if
@@ -513,7 +513,7 @@ $openprint::log->debug($Service->to_string() );
 				$$self{operator_ids} = $Service->operator_ids();
 			} # end foreach
 		} # end if
-		if ( ! $$self{operator_ids} ) {
+		if ( ! ( $$self{operator_ids} and @{$$self{operator_ids}} ) ) {
 			$$self{operator_ids} = $self->Shift()->operator_ids();
 		}
 	} # end if
@@ -522,7 +522,7 @@ $openprint::log->debug($Service->to_string() );
 
 sub operator_id {
 	my ( $caller, undef, $line ) = caller;
-	$log->error("Deprecated call to operator_id from $caller:$line");
+	$log->error("Deprecated call to ScheduledJob::operator_id from $caller:$line");
 }
 
 sub impressions {
@@ -614,7 +614,7 @@ $openprint::log->debug("Getting shift for " . $self->to_string() );
 					'starttime <='	=>	$$self{starttime},
 					#limit			=>	1,
 					});
-			if ( ! @Shifts ) {
+			if ( !@Shifts ) {
 				$openprint::log->debug("No shift for " . $self->to_string() );
 
 				my $limit = 12; # Only go forward 12 hours at most. 
@@ -1024,5 +1024,45 @@ sub approve {
 	$Project->update_status();
 	return;
 } # end sub approve
+
+sub put_job_on_schedule {
+	my ( $Job ) = @_;
+
+	if ( ! $Job->starttime_seconds() ) {
+		# Stick the start time at the end or now.
+		my $LastJob = openprint::ScheduledJob->find_one(
+				'starttime is null' =>  0,
+				equipment_id  =>  $$Job{equipment_id},
+				order         =>  'starttime desc',
+				tentative     =>  0,
+				);
+		if ( $LastJob ) {
+			$Job->starttime_seconds( $LastJob?$LastJob->endtime_seconds()+1: time );
+		}
+		
+	}
+	if ( $Job->starttime_seconds() < time ) {
+		$Job->starttime_seconds( time );
+	}
+	if ( ! $Job->Shift() ) {
+		# There is no shift for this time period.
+		# So get the next shift after and put it on there.
+		# If no shifts, then will have to fall back to Pending
+		my $NextShift = openprint::Shift->find(
+				equipment_id	=>	$$Job{equipment_id},
+				'starttime <='	=>	$$Job->starttime(),
+				'endtime >'	=>	$$Job->starttime(),
+				);
+		if ( $NextShift ) {
+			$Job->starttime( $$NextShift{starttime} );
+		} else {
+			$Job->starttime('');
+		}
+	}
+	$Job->save();
+	# Since we stuck it on the end, we don't need to reorder
+	#$Job->reorder_shift();
+} # end sub put_job_on_schedule
+
 1;
 __END__
