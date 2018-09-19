@@ -10,7 +10,10 @@
 				<option value="">select</option>
 				<? echo ( 
 					my $operator_ids = $$variable{Job}->operator_ids();
-					$operator_ids = [ $session{user_id} ] if ! ( $operator_ids and @{$operator_ids} );
+					if ( ! ( $operator_ids and @{$operator_ids} ) ) {
+						$log->debug("No operator_ids for " . $$variable{Job}->to_string());
+						$operator_ids = [ $session{user_id} ] ;
+					}
 
 					$log->debug("Popup for " . $$variable{Job}->to_string() );
 
@@ -18,6 +21,8 @@
 					if ( ! @categories ) {
 						$log->error("No categories for " . $$variable{Job}->Equipment()->name()  . $$variable{Job}->to_string() );
 						return;
+					} else {
+					$log->debug("Categories: @categories");
 					}
 					my @Usergroups = openprint::UserGroup->find( name=> \@categories );
 					if ( ! @Usergroups ) {
@@ -28,7 +33,9 @@
 					if ( ! @Usersin ) {
 						$log->error("No users found for groups: " . join(',', map { $$_{id} } @Usergroups ) );
 					}
-					my @user_ids = sets::union( @{$operator_ids}, map { $$_{user_id} } @Usersin);
+					my @user_ids = sets::union( (map { $_ ? $_ : () } @{$operator_ids}), map { $$_{user_id} ? $$_{user_id} : () } @Usersin);
+$log->debug("operator_ids: @{$operator_ids}:".join(',',@{$operator_ids}).':'.@{$operator_ids});
+$log->debug("operator_ids: @user_ids");
 
 					make_drop_down( openprint::User->dropdown(id=>\@user_ids), $operator_ids );
 				) ?>
