@@ -89,7 +89,6 @@ sub _hosts {
 
 sub host {
 	my $Host = $variable{Host} = new openprint::Host( $param{host_id} );
-<<<<<<< HEAD
   if ( $param{action} ) {
     if ( $param{action} eq 'Resolve' ) {
       foreach my $I ( $Host->Interfaces() ) {
