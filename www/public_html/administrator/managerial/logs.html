@@ -17,7 +17,13 @@
 						 ) ?>
 					</ul>
 				</li>
-<<<<<<< HEAD
+				<li>
+					<label>Object</label>
+					<select name="object_type_id" id="object_type_id">
+					<option value="">All</option>
+					<? echo ( make_drop_down( openprint::Object_Type->dropdown(), $param{object_type_id} ); ) ?>
+					</select>
+				</li>			
         <li>
           <label>Company</label>
           <input type="text" onkeyup="filterDDM(this, this.form.company_id);" size="4" />
@@ -30,33 +36,9 @@
           <label>User</label>
           <select name="user_id" id="user_id">
           <option value="">All</option>
-          <? echo ( make_drop_down( openprint::User->dropdown( company_id=>$param{company_id} ? $param{company_id} : $session{company_id}, order=>'lower(firstname),lower(lastname)'), $param{user_id} ); ) ?>
-          </select>
-        </li>			
-=======
-				<li>
-					<label>Object</label>
-					<select name="object_type_id" id="object_type_id">
-					<option value="">All</option>
-					<? echo ( make_drop_down( openprint::Object_Type->dropdown(), $param{object_type_id} ); ) ?>
-					</select>
-				</li>			
-				<li>
-					<label>Company</label>
-					<input type="text" onkeyup="filterDDM(this, this.form.company_id);" size="4" />
-					<select name="company_id" onclick="new Ajax.Request( 'user_id', '/includes/_user_ddm.html', { parameters{ company_id: this.getValue() }} );">
-					<option value="">All</option>
-					<? echo ( make_drop_down( openprint::Company->dropdown(), exists $param{company_id} ? $param{company_id} : $session{company_id} ); ) ?>
-					</select>
-				</li>			
-				<li>
-					<label>User</label>
-					<select name="user_id" id="user_id">
-					<option value="">All</option>
 					<? echo ( make_drop_down( openprint::User->dropdown( company_id=>$param{company_id} ? $param{company_id} : $session{company_id}), $param{user_id} ); ) ?>
 					</select>
 				</li>			
->>>>>>> master
 				<li>
 					<label>Date</label>
 					<? echo ( date_select_session( $r->uri(), 'date_start', { with_today=>1, with_clear=>1 } ); ) ?>
