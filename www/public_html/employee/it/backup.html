@@ -77,6 +77,7 @@ cleanup : true
 				<li><label>Last Ran</label><? echo ( format_datetime( $$variable{Backup}->lastran_on() ); ) ?></li>
 			</ul>
 		</div>
+<br class="spacer"/>
 				<p class="buttons">
 					<? echo ( 
 						my $html;
@@ -93,6 +94,10 @@ cleanup : true
 						return $html;
 					) ?>
 				</p>
+<p>Don't forget to copy over the ssh key with something like the following command.  <br/>
+VoxIP: sudo ssh-copy-id -i /root/.ssh/id_rsa.pub root@IP-address<br/>
+VueIP: sudo ssh-copy-id -i /root/.ssh/id_rsa.pub ipc@IP-address<br/>
+</p>
 	</fieldset>
 </form>
 <? if ( $$variable{Backup}->id() ) ?>
