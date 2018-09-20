@@ -1299,6 +1299,7 @@ $log->debug("Order after coalesce: @order : " . join(',', map { new openprint::S
 			$log->debug("Old");
 
 			my ( $start_time, $end_time, $operator_ids ) = ( $Shift->starttime(), $Shift->endtime(), $Shift->operator_ids() );
+			$operator_ids = [] if ! $operator_ids;
 
 			$log->debug("drop_project: @order");
 			while ( @order ) {
