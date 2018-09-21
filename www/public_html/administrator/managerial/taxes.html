@@ -38,9 +38,9 @@
 				<? echo (date_select( 'period_start-New',[], { with_today=>1 } ); ) ?> to 
 				<? echo (date_select( 'period_end-New',[], { with_today=>1 } ); ) ?>
 			</td>
-			<td class="country"><select name="country-New" onchange="new Ajax.Updater('state-New', '/includes/_states_provinces.html', { parameters: { country: this.getValue() } } );">
-				<option value="">select</option><?echo(return_countries($param{'country-New'} ? $param{'country-New'} : $openprint::Company->country() );)?></select></td>
-			<td class="state"><select name="state-New" id="state-New"><option value="">select</option>
+			<td class="country"><select name="country-New" onchange="jQuery('#state-New').load( '/includes/_states_provinces.html', { country: this.getValue() } );">
+				<?echo(return_countries($param{'country-New'} ? $param{'country-New'} : $openprint::Company->country() );)?></select></td>
+			<td class="state"><select name="state-New" id="state-New">
 				<? echo (
 						if ( $param{'country-New'} ) {
 							if ( $param{'country-New'} eq 'CA' ) {

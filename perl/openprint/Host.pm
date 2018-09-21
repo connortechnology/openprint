@@ -92,6 +92,10 @@ $serial = 'hosts_id_seq';
 	owner_id			=>	undef,
 );
 
+sub name {
+  return $_[0]->hostname();
+}
+
 sub destroy {
 	my $error = '';
 	require openprint::Log;

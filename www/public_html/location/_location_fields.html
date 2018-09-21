@@ -8,7 +8,8 @@
 	$html .= sprintf(q`<input type="text" id="location" name="location" value="%1$s"/>
 		<div id="location_autocomplete" class="autocomplete" style="display:none;"></div>
 		<script type="text/javascript">
-		new Ajax.Autocompleter('location','location_autocomplete', '/location/_locations.html?type=place', { minChars: 2,afterUpdateElement : getSelectedLocation } );
+		//Ajax.Autocompleter('location','location_autocomplete', '/location/_locations.html?type=place', { minChars: 2,afterUpdateElement : getSelectedLocation } );
+$('location').autocomplete( {minChars: 2, onSelect: getSelectedLocation, serviceUrl: '/location/_locations.html?type=place' } );
 		</script>
 `, $$variable{Location}->name() );
 	$html .= '</li>';
