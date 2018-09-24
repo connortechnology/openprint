@@ -90,7 +90,7 @@ sub has_overrides {
     } # end foreach
   } # end foreach
 	foreach my $qty_index ( $Project->quantity_indexes() ) {
-		push @v, map { $$specs{"$_$qty_index"} and ($$specs{"$_$qty_index"} eq 'Y') ? "$_$qty_index" : () } ( 'OverridePrice' );
+		push @v, map { ( $$specs{"$_$qty_index"} and ($$specs{"$_$qty_index"} eq 'Y')) ? "$_$qty_index" : () } ( 'OverridePrice' );
 	}
 
   return @v;
