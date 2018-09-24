@@ -738,7 +738,7 @@ $openprint::log->debug("Using Single wheel space $$specs{'Perfecting Single Gutt
 		$openprint::log->debug("*** NOT Using Max Image Length2: $adjusted_paper_height After: $Maximum_Image_Length***") if DEBUG;
 	} # end if
 
-	my $colour_bar = 0;
+	$colour_bar = 0;
 	if ( $$specs{'Colour Bar Orientation'} ne 'Length' ) {
 
 # if colour bar is at bottom, 
