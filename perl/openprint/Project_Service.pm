@@ -121,24 +121,24 @@ sub Equipment {
 
 		@Equipment = openprint::Equipment->find(
 				id	=>	[ sets::union( @equipment_ids ) ],
-				use_in_scheduling	=>1,
+				useinscheduling	=>1,
 				) if @equipment_ids;
 
 	} elsif ( $ServiceType->name() eq 'Folding' ) {
 		@Equipment = openprint::Equipment->find(
-				use_in_scheduling	=>	1,
+				useinscheduling	=>	1,
 				Specifications		=>	{'Folding Capable'=>'Y'},
 				);
 		} elsif ( $ServiceType->name() eq 'Stitching' ) {
 			if ( $$specs{'ddmEquipment'.$qty_index} ) {
 				@Equipment = openprint::Equipment->find(
-						use_in_scheduling =>	1,
+						useinscheduling =>	1,
 						id	=>	$$specs{'ddmEquipment'.$qty_index},
 						);
 			}
 			if ( !@Equipment ) {
 				@Equipment = openprint::Equipment->find(
-						use_in_scheduling =>	1,
+						useinscheduling =>	1,
 						Specifications		=>	{'Stitching Capable'=>'Y'},
 						);
 			} # end if
