@@ -511,7 +511,7 @@ sub Stock_Settings {
 } # end sub Stock_Settings
 
 sub servicetype_id {
-	my ( $self ) = @_;
+	my $self = shift;
 	return [] if ! $$self{servicetype_id};
 	return $$self{servicetype_id};
 } # end sub servicetype_id
