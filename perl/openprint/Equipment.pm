@@ -73,6 +73,7 @@ use constant DEBUG_FOLDING => 0;
 	sorting			=>	undef,
 	category_id		=>	undef,
 	useinestimating	=>	undef,
+	useinscheduling	=>	undef,
 );
 
 sub fits {
