@@ -1,0 +1,45 @@
+<? eval (
+  my $uri = '/employee/it/logs.html';
+		@{$$variable{Results}} = openprint::SysLog->find(
+			date_filter($uri.'?date_time_end', 'date_time <=' ),
+			date_filter($uri.'?date_time_start', 'date_time >=' ),
+			);
+) ?>
+<? if ( @{$$variable{Results}} ) ?>
+<table class="List sortable">
+	<tr>
+		<th class="DateTime">When</th>
+		<th class="IP">IP Address</th>
+		<th class="Note">Note</th>
+		<th class="Email">Email</th>
+		<th class="User">Name</th>
+		<th class="Company">Company</th>
+	</tr>
+	<? echo (
+		my $html = '';
+
+		foreach my $Log ( @{$$variable{Results}} ) {
+			my $User = $Log->User();
+			$html .= sprintf('<tr>
+					<td class="DateTime">%s</td>
+					<td class="IP"><a href="/employee/it/host.html?host_id=%d">%s</a></td>
+					<td class="Note">%s</td>
+					<td class="Email">%s</td>
+					<td class="User">%s</td>
+					<td class="Company">%s</td>
+				</tr>',
+        format_datetime( $Log->date_time() ),
+				$Log->Host()->id(),
+				$Log->hostname() ? $Log->hostname() : $Log->ip_address(),
+				$Log->note(),
+				$User->email(),
+				$User->name(),
+				$Log->Company()->name(),
+				);
+		} # end foreach
+		return $html;
+	) ?>
+</table>
+<? else ( @{$$variable{Results}} ) ?>
+No results matched your search criteria
+<? endif ( @{$$variable{Results}} ) ?>

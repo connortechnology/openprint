@@ -2,7 +2,14 @@
 	<input type="hidden" name="schedule_id" value="<? echo ( $param{schedule_id} ) ?>" />
 	<fieldset><legend>Job Scheduling Information</legend>
 		<ul>
-			<li><label>Service</label><?echo( $$variable{Job}->ServiceType()->name() )?></li>
+			<li><label>Service</label><?echo(
+				if ( ! $$variable{Job}->servicetype_id() ) {
+				$$variable{Equipment} = $$variable{Job}->Equipment();
+				return '<select name="servicetype_id">'.include('_job_service_dropdown.html').'</select>';
+				} else {
+				 return $$variable{Job}->ServiceType()->name();
+				}
+			)?></li>
 			<li>
 				<label onclick="tinymce_on('comment');">Comment</label>
 				<div id="comment" onclick="tinymce_on('comment');"><? echo ( $$variable{Job}->comment() ) ?></div>
@@ -17,7 +24,7 @@
 				<span id="stock_click_to_edit" onclick="tinymce_on('stock');$('stock_click_to_edit').remove();">Click to edit</span>
 				<? endif ( ! $$variable{Job}->stock() ) ?>
 			</li>
-	<? if ( 1 or $$variable{Job}->Equipment()->smartscheduling() or ! $$variable{Job}->project_id() ) ?>
+	<? if ( $$variable{Job}->Equipment()->smartscheduling() or ! $$variable{Job}->project_id() ) ?>
 			<li>
 				<label>Locked</label>
 				<? echo ( radio(
@@ -27,6 +34,7 @@
 							onclick=>q`$('StartTime').toggle();`, default=>'0'
 							} ); ) ?>
 			</li>
+	<? endif ( $$variable{Job}->Equipment()->smartscheduling() or ! $$variable{Job}->project_id() ) ?>
 			<li id="StartTime">
 				<label>Start Time</label>
 				<? echo ( 
@@ -36,7 +44,6 @@
 						);
 				) ?>
 			</li>
-	<? endif ( 1 or $$variable{Job}->Equipment()->smartscheduling() or ! $$variable{Job}->project_id() ) ?>
 			<li>
 				<label>Tentative</label>
 				<? echo ( radio( 'tentative', [ '1', 'Yes', '0', 'No' ], $$variable{Job}{tentative}, { default=>'0' } ); ) ?>
@@ -81,7 +88,7 @@
 		<p class="buttons">
 			<? echo ( join("\n",
 				button( 'SaveStartTime', { onclick=>q`tinyMCE.triggerSave();new Ajax.Request('_li_change.json',{parameters:$('JobForm').serialize(), onSuccess:function(){popupWin.close();}});`, text=>'Save' } ),
-				button( 'CancelStartTime', { onclick=>'popupWin.close();', text=> 'Cancel' } ) 
+				button( 'CancelStartTime', { onclick=>'tinyMCE.triggerSave();popupWin.close();', text=>'Cancel' } ) 
 			); ) ?>
 		</p>
 	<input type="hidden" name="action" value="SaveJob" />
