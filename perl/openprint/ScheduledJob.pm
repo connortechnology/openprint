@@ -1070,7 +1070,7 @@ sub put_job_on_schedule {
 		if ( $NextShift ) {
 			$Job->starttime( $$NextShift{starttime} );
 		} else {
-			$Job->starttime('');
+			$Job->starttime(undef);
 		}
 	}
 	$Job->save();
