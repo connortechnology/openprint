@@ -2501,41 +2501,36 @@ $I->display("Min spread size: $min_spread_size dir($$I{spine_direction}) " . $op
 			if ( $override and ( $$I{quantity} >= 2 ) ) {
 				if ( $$I{quantity} % 2 ) {
 # Cut in roughly half, or just break one off? maybe both
-					{
-						my $i3 = $I->copy();
-						my $amount = int( $$I{quantity} / 2 );
-						$i3->quantity( $amount );
-						$$i3{page_quantity} = $amount;
+					my $i3 = $I->copy();
+					my $amount = int( $$I{quantity} / 2 );
+					$i3->quantity( $amount );
+					$$i3{page_quantity} = $amount;
 
-						my $i4 = $i1->copy();
-						$i4->quantity( $$i4{quantity} - ( $amount * 2 ) );
-						$$i4{page_quantity} = $$i4{page_quantity} - ( 2 * $amount );
-						push @results, [ $i3, $i4 ];
+					my $i4 = $i1->copy();
+					$i4->quantity( $$i4{quantity} - ( $amount * 2 ) );
+					$$i4{page_quantity} = $$i4{page_quantity} - ( 2 * $amount );
+					push @results, [ $i3, $i4 ];
 
-						if ( DEBUG ) {
-							$openprint::log->error(sprintf('Cutting pages down uneven pages pq(%s) %d to pq(%s) %d by cutting spread columns %d to %d',
-										$$i3{page_quantity}, $i3->pages(), $$i4{page_quantity}, $i4->pages(), $$i3{spread_columns}, $$i4{spread_columns} ) );
-							$i3->display();
-							$i4->display();
-						}
+					if ( DEBUG ) {
+						$openprint::log->error(sprintf('Cutting pages down uneven pages pq(%s) %d to pq(%s) %d by cutting spread columns %d to %d',
+									$$i3{page_quantity}, $i3->pages(), $$i4{page_quantity}, $i4->pages(), $$i3{spread_columns}, $$i4{spread_columns} ) );
+						$i3->display();
+						$i4->display();
 					}
+					$i3 = $I->copy();
+					$amount = $i3->quantity() - $amount;
+					$i3->quantity( $amount );
+					$$i3{page_quantity} = $amount;
 
-					{
-						my $i3 = $I->copy();
-						my $amount = $i3->quantity() - $amount;
-						$i3->quantity( $amount );
-						$$i3{page_quantity} = $amount;
-
-						my $i4 = $i1->copy();
-						$i4->quantity( $$i4{quantity} - ( $amount* 2 ) );
-						$$i4{page_quantity} = $$i4{page_quantity} - ( 2 * $amount );
-						push @results, [ $i3, $i4 ];
-						if ( DEBUG ) {
-							$openprint::log->error(sprintf('Cutting pages down uneven pages %d to %d by cutting spread columns %d to %d',
-										$i3->pages(), $i4->pages(), $$i3{spread_columns}, $$i4{spread_columns} ) );
-							$i3->display();
-							$i4->display();
-						}
+					$i4 = $i1->copy();
+					$i4->quantity( $$i4{quantity} - ( $amount* 2 ) );
+					$$i4{page_quantity} = $$i4{page_quantity} - ( 2 * $amount );
+					push @results, [ $i3, $i4 ];
+					if ( DEBUG ) {
+						$openprint::log->error(sprintf('Cutting pages down uneven pages %d to %d by cutting spread columns %d to %d',
+									$i3->pages(), $i4->pages(), $$i3{spread_columns}, $$i4{spread_columns} ) );
+						$i3->display();
+						$i4->display();
 					}
 
 				} else {
