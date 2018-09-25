@@ -6,19 +6,46 @@ function load_page() {
 <form id="searchLog" name="searchLog" action="syslog.html" method="post">
 	<fieldset class="filters"><legend>Search</legend>
 		<ul>
-			<li>
-				<label>Date</label>
+			<li><label>Received Time</label>
+			<? echo ( join("\n to \n",
+              datetime_select_session( $r->uri(), 'receivedat_start', { with_today=>1, with_clear=>1 } ),
+              datetime_select_session( $r->uri(), 'receivedat_end', { with_today=>1, with_clear=>1 } ),
+              ); ) ?>
+			</li>
+			<li><label>Device Time</label>
 				<? echo ( join("\n to \n",
-              datetime_select_session( $r->uri(), 'date_time_start', { with_today=>1, with_clear=>1 } ),
-              datetime_select_session( $r->uri(), 'date_time_end', { with_today=>1, with_clear=>1 } ),
+              datetime_select_session( $r->uri(), 'devicereportedtime_start', { with_today=>1, with_clear=>1 } ),
+              datetime_select_session( $r->uri(), 'devicereportedtime_end', { with_today=>1, with_clear=>1 } ),
               ); ) ?>
 			</li>
       <li><label>Host</label>
       </li>
       <li><label>Service</label>
       </li>
-      <li><label>Level</label>
+      <li><label>Severity</label>
+	  <?echo(
+			  ssi::select(
+				  [ map { $_ => $openprint::Syslog::severities{$_} } sort keys %openprint::Syslog::severities ],
+				  $session{$r->uri().'?priority'},
+				  {
+					name=>'priority',
+					prepend=>['','All'],
+# onchange=>'load_page();',
+				  },
+				  );
+) ?>
       </li>
+      <li><label>Facility</label>
+	  <?echo(
+			  ssi::select(
+				  [ map { $_ => $openprint::Syslog::facilities{$_} } sort keys %openprint::Syslog::facilities ],
+				  $session{$r->uri().'?facility'},
+				  { name=>'facility',
+prepend=>['','All'],
+# onchange=>'load_page();',
+				  },
+				  ); 
+)?>
 		</ul>
 		<p class="buttons">
 		<? echo ( button( 'Search', { onclick=>'load_page();' } ); ) ?>

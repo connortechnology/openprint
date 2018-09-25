@@ -21,6 +21,7 @@ require openprint::Session;
 require openprint::License;
 require openprint::Software;
 require openprint::Location;
+require openprint::Syslog;
 
 sub logs {
 	_logs();
@@ -49,6 +50,9 @@ sub hosts {
 	} # end if
 	if ( ! exists $session{'/employee/it/hosts.html?notassigned'} ) {
 		$session{'/employee/it/hosts.html?notassigned'} = 1;
+	} # end if
+	if ( ! exists $session{'/employee/it/hosts.html?deleted'} ) {
+		$session{'/employee/it/hosts.html?deleted'} = 0;
 	} # end if
 } # end sub hosts
 
@@ -655,6 +659,25 @@ sub backup {
     $$Backup{owner_id} = $$openprint::Owner{id};
   }
 
+}
+sub syslog {
+  _hosts();
+  my $uri = $r->uri();
+  ssi::setup_date_select( $uri, 'receivedat_start', -1 );
+  ssi::setup_date_select( $uri, 'receivedat_end', '' );
+  ssi::setup_date_select( $uri, 'devicereportedtime_start', '' );
+  ssi::setup_date_select( $uri, 'devicereportedtime_end', '' );
+}
+sub _syslog {
+	my $uri = '/employee/it/syslog.html';
+
+	ssi::save_params( $uri,
+		 ( map { 'receivedat_start_'.$_ } ( 'year','month','day','hour','minute' ) ),
+		 ( map { 'receivedat_end_'.$_ } ( 'year','month','day','hour','minute' ) ),
+		 ( map { 'devicereportedtime_start_'.$_ } ( 'year','month','day','hour','minute' ) ),
+		 ( map { 'devicereportedtime_end_'.$_ } ( 'year','month','day','hour','minute' ) ),
+		'priority','facility',
+		 );
 }
 
 1;

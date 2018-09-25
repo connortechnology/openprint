@@ -1,40 +1,52 @@
-<? eval (
-  my $uri = '/employee/it/logs.html';
-		@{$$variable{Results}} = openprint::SysLog->find(
-			date_filter($uri.'?date_time_end', 'date_time <=' ),
-			date_filter($uri.'?date_time_start', 'date_time >=' ),
-			);
+<? echo (
+	@{$$variable{Results}} = ();
+	$openprint::Syslog::dbh = sql::open_sql( $log,
+	  database  => $config{syslog_db_name},
+	  driver    => $config{syslog_db_driver},
+	  host      => $config{syslog_db_hostname},
+	  login     => $config{syslog_db_username},
+	  password  => $config{syslog_db_password},
+	);
+	return 'Unable to connect to Syslog database<br/>' if ! $openprint::Syslog::dbh;
+
+
+  my $uri = '/employee/it/syslog.html';
+  @{$$variable{Results}} = openprint::Syslog->find(
+		date_filter($uri.'?receivedat_end', 'receivedat <=' ),
+		date_filter($uri.'?receivedat_start', 'receivedat >=' ),
+		date_filter($uri.'?devicereportedtime_end', 'devicereportedtime <=' ),
+		date_filter($uri.'?devicereportedtime_start', 'devicereportedtime >=' ),
+		(
+		 map { $session{$uri.'?'.$_} ? ( $_ => $session{$uri.'?'.$_} ) : () } ( 'facility','priority' ),
+		) 
+	  );
 ) ?>
 <? if ( @{$$variable{Results}} ) ?>
 <table class="List sortable">
 	<tr>
 		<th class="DateTime">When</th>
-		<th class="IP">IP Address</th>
-		<th class="Note">Note</th>
-		<th class="Email">Email</th>
-		<th class="User">Name</th>
-		<th class="Company">Company</th>
+		<th class="Facility">Facility</th>
+		<th class="Host">Host</th>
+		<th class="Service">Service</th>
+		<th class="Message">Message</th>
 	</tr>
 	<? echo (
 		my $html = '';
 
 		foreach my $Log ( @{$$variable{Results}} ) {
-			my $User = $Log->User();
 			$html .= sprintf('<tr>
-					<td class="DateTime">%s</td>
-					<td class="IP"><a href="/employee/it/host.html?host_id=%d">%s</a></td>
-					<td class="Note">%s</td>
-					<td class="Email">%s</td>
-					<td class="User">%s</td>
-					<td class="Company">%s</td>
+					<td class="DateTime">%s %s</td>
+					<td class="Facility">%s</td>
+					<td class="Host">%s</td>
+					<td class="Service">%s</td>
+					<td class="Message">%s</td>
 				</tr>',
-        format_datetime( $Log->date_time() ),
-				$Log->Host()->id(),
-				$Log->hostname() ? $Log->hostname() : $Log->ip_address(),
-				$Log->note(),
-				$User->email(),
-				$User->name(),
-				$Log->Company()->name(),
+        format_datetime( $$Log{receivedat} ),
+        format_datetime( $$Log{devicereportedtime} ),
+				$$Log{facility},
+				$$Log{fromhost},
+				$$Log{syslogtag},
+				$$Log{message},
 				);
 		} # end foreach
 		return $html;

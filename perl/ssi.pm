@@ -488,15 +488,20 @@ sub button {
 		} # end if
 		my $PageSetting = openprint::Page_Setting::get( $href );
 		return if $PageSetting and ! $PageSetting->can_view();
-	} else {
-		$$options{href} = '#';
+	#} else {
+		#$$options{href} = '#';
 	} # end if
 	$$options{text} = $name if ! exists $$options{text};
 
-	my $html = qq`<a id="Button$name" href="$$options{href}" class="button $$options{class}" `;
+	#my $html = qq`<a id="Button$name" href="$$options{href}" class="button $$options{class}" `;
+	my $html = qq`<button id="Button$name" class="$$options{class}" `;
 	$html .= qq`title="$$options{title}" ` if $$options{title};
-	$html .= 'target="$$options{target}" ' if $$options{target};
-	if ( $$options{onclick} ) {
+	$html .= qq`target="$$options{target}" ` if $$options{target};
+	$$options{type} = 'button' if ! $$options{type};
+	$html .= qq`type="$$options{type}" ` if $$options{type};
+	if ( $$options{href} ) {
+		$html .= qq`onclick="window.location='$$options{href}'" `;
+	} elsif ( $$options{onclick} ) {
 		$html .= 'onclick="';
 		$html .= $$options{onclick}."return false;\" ";
 	} # end if
@@ -523,7 +528,8 @@ sub button {
 	} else {
 		$html .= '<span class="l"></span><span class="c" id="'.$name.'c"' . ( $$options{title} ? ' title="'.$$options{title}.'"' : '' ) .'>' . $$options{text} .'</span><span class="r"></span>';
 	}
-	$html .= "</a>";
+	#$html .= "</a>";
+	$html .= '</button>';
 	return $html;
 } # end sub button
 
@@ -810,11 +816,13 @@ $log->debug("Selecting default $$options{default} for radio $name");
 	while ( my ( $value, $label ) = splice @{$values}, 0, 2 ) {
 		$html .= $$options{container}[0] if $$options{container};
 		$html .= sprintf(q`
+				<label class="radio%7$s" for="%1$s%6$s%2$s">
 				<input type="radio" name="%1$s" value="%2$s" id="%1$s%6$s%2$s" %4$s%5$s />
-				<label class="radio" for="%1$s%6$s%2$s">%3$s</label>
+				%3$s</label>
 				`, $name, $value, $label, checked( $value eq $selected ), 
 				( $onclick ? ' onclick="'.$onclick.'"' : '' ),
 				$$options{id},
+				( $$options{inline} ? '-inline' : '' ),
 				);
 		$html .= $$options{container}[1] if $$options{container};
 	} # end foreach value
@@ -827,21 +835,34 @@ sub checkboxes {
 	my $onclick = $$options{onclick} if $options;
 	my $html;
 	my @container = @{$$options{container}} if $$options{container};
-	$values = ['on', '' ] if ! $values;
+
+	if ( ! $values ) {
+		$values = ['on', '' ];
+	} elsif ( ref $values ne 'ARRAY' ) {
+		$values = [ $values ];
+	}
 	my $id = $$options{id} ? $$options{id} : $name;
 
 	while ( my ( $value, $label ) = splice @{$values}, 0, 2 ) {
 		$html .= $container[0] if @container;
-		$html .= sprintf('<input type="checkbox" name="%1$s" value="%2$s" id="%3$s%2$s" %4$s%5$s/>',
-				$name, $value, $id, checked( sets::isin( $value, $selected ) ), $onclick ? ' onclick="'.$onclick.'"' : '' );
 		if ( $label ) {
 			$html .= sprintf(
 '
-<label class="radio" for="%1$s%2$s">
-%3$s
+<label class="radio%7$s" for="%1$s%2$s">
+<input type="checkbox" name="%1$s" value="%2$s" id="%3$s%2$s" %4$s%5$s/>
+%6$s
 </label>
-', $id, $value, $label );
-		} # end if
+', $name, $value, $id, checked( sets::isin( $value, $selected ) ),
+( $onclick ? ' onclick="'.$onclick.'"' : ''),
+$label,
+( $$options{inline} ? '-inline' : '' ),
+ );
+		} else {
+			$html .= sprintf('<input type="checkbox" name="%1$s" value="%2$s" id="%3$s%2$s" %4$s%5$s/>',
+					$name, $value, $id,
+					checked( sets::isin( $value, $selected ) ),
+					( $onclick ? ' onclick="'.$onclick.'"' : ''), );
+		} # end if has label content
 		$html .= $container[1] if @container;
 	} # end foreach value
 	return $html;
@@ -1147,6 +1168,40 @@ sub do_css_links {
         pop @parts;
     } # end while
     return join("\n", reverse @html );
+}
+
+sub bootstrap_navmenu {
+	my $menu = shift;
+	my $current_uri = shift;
+
+	my $html;
+
+	foreach my $category ( sort keys %{$menu} ) {
+		if ( ref $$menu{$category} ) {
+			my %urls = %{$$menu{$category}};
+			my $submenu_html;
+			my $on = 0;
+			foreach my $url ( sort { $urls{$a} cmp $urls{$b} } keys %urls ) {
+				if ( $urls{$url} ) {
+					my $Page_Setting = openprint::Page_Setting::get( $url );
+					if ( $Page_Setting->can_view() ) {
+						$submenu_html .= sprintf('<li><a href="%s">%s</a></li>', $url, $urls{$url} )."\n";
+					} # end if
+				}
+				$on = 1 if $current_uri eq $url;
+			} # end foreach url
+			if ( $submenu_html ) {
+				$html .= join( $submenu_html,
+						sprintf(q`
+							<li id="%1$sMenu" class="%2$s">
+							<a href="#%1$sSubMenu" data-toggle="collapse" aria-expanded="false" class="dropdown-toggle">%1$s</a>
+							<ul id="%1$sSubMenu" class="collapse list-unstyled">`, $category, ( $on ? 'active' : '' ) ),'</ul></li>' );
+			}
+		} else {
+			$html .= sprintf( q`<li id="%1$sMenu" class="%2$s"><a href="%2$s">%1$s</a></li>`, $category, $$menu{$category} );
+		}
+	} # end foreach category
+	return $html;
 }
 
 1;
