@@ -1182,20 +1182,25 @@ sub bootstrap_navmenu {
 			my $submenu_html;
 			my $on = 0;
 			foreach my $url ( sort { $urls{$a} cmp $urls{$b} } keys %urls ) {
-				if ( $urls{$url} ) {
+				my $text = $urls{$url};
+				if ( $text ) {
 					my $Page_Setting = openprint::Page_Setting::get( $url );
 					if ( $Page_Setting->can_view() ) {
-						$submenu_html .= sprintf('<li><a href="%s">%s</a></li>', $url, $urls{$url} )."\n";
+						$submenu_html .= sprintf('<li><a href="%s">%s</a></li>', $url, $text )."\n";
 					} # end if
 				}
 				$on = 1 if $current_uri eq $url;
 			} # end foreach url
+
 			if ( $submenu_html ) {
 				$html .= join( $submenu_html,
 						sprintf(q`
 							<li id="%1$sMenu" class="%2$s">
-							<a href="#%1$sSubMenu" data-toggle="collapse" aria-expanded="false" class="dropdown-toggle">%1$s</a>
-							<ul id="%1$sSubMenu" class="collapse list-unstyled">`, $category, ( $on ? 'active' : '' ) ),'</ul></li>' );
+							<a href="#%1$sSubMenu" data-toggle="collapse" aria-expanded="%3$s" class="dropdown-toggle">%1$s</a>
+							<ul id="%1$sSubMenu" class="%4$s list-unstyled">`,
+							$category,
+							( $on ? ('active','true','in' ) : ( '', 'false', 'collapse' ) ),
+							),'</ul></li>' );
 			}
 		} else {
 			$html .= sprintf( q`<li id="%1$sMenu" class="%2$s"><a href="%2$s">%1$s</a></li>`, $category, $$menu{$category} );
