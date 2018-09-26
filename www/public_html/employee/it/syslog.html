@@ -1,3 +1,13 @@
+<?eval(
+$openprint::Syslog::dbh = sql::open_sql( $log,
+	  database  => $config{syslog_db_name},
+	  driver    => $config{syslog_db_driver},
+	  host      => $config{syslog_db_hostname},
+	  login     => $config{syslog_db_username},
+	  password  => $config{syslog_db_password},
+	);
+	return 'Unable to connect to Syslog database<br/>' if ! $openprint::Syslog::dbh;
+)?>
 <script type="text/javascript">
 function load_page() {
 	new Ajax.Updater( 'Results', '_syslog.html', { parameters: $('searchLog').serialize() } );
@@ -19,8 +29,22 @@ function load_page() {
               ); ) ?>
 			</li>
       <li><label>Host</label>
+	  <?echo(ssi::select(
+				  [map { $_, $_ } sql::execute(undef,$openprint::Syslog::dbh,'SELECT name FROM hosts ORDER BY lower(name)')],
+				  $session{$r->uri().'?fromhost'},
+					{name=>'fromhost',
+					prepend=>['','All'],
+} 
+); ) ?>
       </li>
       <li><label>Service</label>
+	  <?echo(ssi::select(
+				  [map { $_, $_ } sql::execute(undef,$openprint::Syslog::dbh,'SELECT name FROM syslogtags ORDER BY lower(name)')],
+				  $session{$r->uri().'?syslogtag'},
+					{name=>'syslogtag',
+					prepend=>['','All'],
+} 
+); ) ?>
       </li>
       <li><label>Severity</label>
 	  <?echo(
