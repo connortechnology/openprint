@@ -480,5 +480,22 @@ sub first_sent_on {
 	return $_[0]{first_sent_on};
 } # end sub first_sent_on
 
+sub paid_days {
+  if ( ! $_[0]{paid_on} ) {
+    $openprint::log->debug("No paid_on");
+    return;
+  }
+  my $sent = $_[0]->first_sent_on();
+  if ( ! $sent ) {
+    $openprint::log->debug("No sent");
+    return;
+  }
+
+  my $paid_time = Date::Parse::str2time( $_[0]{paid_on} );
+  my $sent_time = Date::Parse::str2time( $sent );
+  my $days = int( ($paid_time-$sent_time) / 86400 );
+  return $days;
+}
+
 1;
 __END__
