@@ -30,21 +30,21 @@
         my $Currency = $Invoice->Currency();
 
 				if ( ! $Invoice->can_view() ) {
-				$html .= sprintf(q`<tr%1$s title="%4$s">
-						<td class="invoice_id"><a href="/invoice/view.html?invoice_id=%2$d">%2$d</a></td>
-						<td class="invoice_num"><a href="/invoice/view.html?invoice_id=%2$d">%3$s</a></td>
-						<td class="Date"><a href="/invoice/view.html?invoice_id=%2$d">%5$s</a></td>
-						<td class="Date"><a href="/invoice/view.html?invoice_id=%2$d">%6$s</a></td>
-						<td class="Date"><a href="/invoice/view.html?invoice_id=%2$d">%7$s</a></td>
-						<td class="Company"><a href="/invoice/view.html?invoice_id=%2$d">%8$s</a></td>
-						<td colspan="%9$d">You may not see any further details</td>
-						</tr>`,
-						$rowclass, $Invoice->id(), $Invoice->num(), $Invoice->internal_notes().$Invoice->external_notes(),
-						format_date( $Invoice->created_on() ),
-						format_date( $Invoice->due_on() ),
-						htmlize( $Invoice->Invoicee()->name() ),
-					4 + scalar @{$$variable{Taxes}},
-						);
+          $html .= sprintf(q`<tr%1$s title="%4$s">
+              <td class="invoice_id"><a href="/invoice/view.html?invoice_id=%2$d">%2$d</a></td>
+              <td class="invoice_num"><a href="/invoice/view.html?invoice_id=%2$d">%3$s</a></td>
+              <td class="Date"><a href="/invoice/view.html?invoice_id=%2$d">%5$s</a></td>
+              <td class="Date"><a href="/invoice/view.html?invoice_id=%2$d">%6$s</a></td>
+              <td class="Date"><a href="/invoice/view.html?invoice_id=%2$d">%7$s</a></td>
+              <td class="Company"><a href="/invoice/view.html?invoice_id=%2$d">%8$s</a></td>
+              <td colspan="%9$d">You may not see any further details</td>
+              </tr>`,
+              $rowclass, $Invoice->id(), $Invoice->num(), $Invoice->internal_notes().$Invoice->external_notes(),
+              format_date( $Invoice->created_on() ),
+              format_date( $Invoice->due_on() ),
+              htmlize( $Invoice->Invoicee()->name() ),
+            4 + scalar @{$$variable{Taxes}},
+              );
 				}  else {
 				$html .= sprintf(q`<tr%1$s title="%4$s"> 
 						<td class="invoice_id"><a href="/invoice/view.html?invoice_id=%2$d">%2$d</a></td>
@@ -63,7 +63,7 @@
 						</tr>`, $rowclass, $Invoice->id(), $Invoice->num(), $Invoice->internal_notes().$Invoice->external_notes(), 
 						format_date( $Invoice->created_on() ),
 						format_date( $Invoice->due_on() ),
-						format_date( $Invoice->paid_on() ),
+            $Invoice->paid_on() ? (format_date( $Invoice->paid_on() ) . ' ' . $Invoice->paid_days() . ' days' ) : '',
 						htmlize( $Invoice->Invoicee()->name() ),
             ( 
             ( $$Invoice{currency_id} != $session{Currency_id} ) ?
