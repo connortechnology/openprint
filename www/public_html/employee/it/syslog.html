@@ -70,7 +70,12 @@ prepend=>['','All'],
 				  },
 				  ); 
 )?>
+		</li>
+		<li><label>Message</label>
+			<input type="text" name="message" value="<?echo($session{$r->uri().'?message'})?>"/>
+		</li>
 		</ul>
+
 		<p class="buttons">
 		<? echo ( button( 'Search', { onclick=>'load_page();' } ); ) ?>
 		</p>
@@ -78,5 +83,5 @@ prepend=>['','All'],
 </form>
 <fieldset>
 	<legend>Logs</legend>
-	<div id="Results"> </div>
+	<div id="Results"><?include(_syslog.html)?></div>
 </fieldset>
