@@ -71,11 +71,11 @@ sub verify_login {
 		if ( @Users = openprint::User->find(email=>$email,deleted=>1) ) {
 			foreach my $U ( @Users ) {
 				$$variable{information} = "\"$email\" Has been deleted.  Please contact us to have your account re-instated.";
-				(new openprint::Log())->save({Object=>$U, 'action'=>'Login Failed', 'note'=>'Account Deleted', 'user_id'=>$U->id(), 'company_id'=>$U->company_id() } );
+				(new openprint::Log())->save({Object=>$U, action=>'Login Failed', note=>'Account Deleted', user_id=>$U->id(), company_id=>$U->company_id() } );
 			} # end foreach U
 		} else {
 			$$variable{information} = "\"$email\" is not a valid account.	Please try again.";
-			(new openprint::Log())->save({'action'=>'Login Failed', 'note'=>'Invalid login: ' . $email } );
+			(new openprint::Log())->save({action=>'Login Failed', note=>'Invalid login: ' . $email } );
 		} # end if
 		$$variable{error} = 'Authentication Failed.';
 		return;
@@ -90,7 +90,8 @@ sub verify_login {
 					$User = $U;
 					last;
 				} # end if
-			}
+			};
+			$log->error( "Eval error of Authen::Passphrase::BlowfishCrypt Reason: " . $@ ) if $@;
 		} else {
 			if ( $password eq $U->password() ) {
 				$User = $U;

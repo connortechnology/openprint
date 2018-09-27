@@ -1003,23 +1003,45 @@ sub _status {
 			} # end if
 		} # end foreach service_id
 	} elsif ( $param{action} eq 'addtoschedule' ) {
+		my $NewShift;
+    if ( $param{shift_id} and Date::Calc::check_date( map { $param{'starttime_'.$_} } ( 'year', 'month', 'day' ) ) ) {
+# We assume that there is a shift, otherwise how can we be scheduling?
+      my $starttime_dt = DateTime->new(
+          ( map { $_ => $param{'starttime_'.$_} } ( 'year','month','day' ) ),
+          hour=>0, minute=>0, second=>0, time_zone=>$openprint::TZ );
+      my $endtime_dt = DateTime->new(
+          ( map { $_ => $param{'starttime_'.$_} } ( 'year','month','day' ) ),
+          hour=>23, minute=>59, second=>59, time_zone=>$openprint::TZ );
+      $NewShift = openprint::Shift->find_one(
+          'starttime >='  =>  $openprint::parser->format_datetime($starttime_dt),
+          'starttime <='  =>  $openprint::parser->format_datetime($endtime_dt),
+          ( $param{shift_id} ? ( shift_id       =>  $param{shift_id}) : () ),
+          equipment_id    =>  $param{equipment_id},
+          );
+    } else {
+      $log->debug("No valid startdate specified");
+    }
+
 		my $Job = new openprint::ScheduledJob();
 		$_ = $Job->save({
-				'project_id'	=>  $param{project_id},
-				'equipment_id'  =>  $param{equipment_id},
-				'starttime'	 =>  undef,
-				'service_id'	=>  [ split(',',$param{service_id}) ],
-				'servicetype_id'	=>  $Service->ServiceType->id(),
+				project_id			=>  $param{project_id},
+				equipment_id 	  =>  $param{equipment_id},
+				starttime	 			=>  ( $NewShift ? $NewShift->starttime() : undef ),
+				service_id			=>  [ split(',',$param{service_id}) ],
+				servicetype_id	=>  $Service->ServiceType->id(),
 				});
 		if ( $_ ) {
 			$variable{error} .= 'Error adding to press schedule: ' . $_;
 		} else {
 			if ( sets::isin( $variable{name}, 'Printing','Signature' ) ) {
 				my $sig_specs = $Service->specs();
-				$Job->Project()->add_to_log( @session{'company_id','user_id'}, "Added Form $$sig_specs{SignatureIndex} to pending schedule for " . $Job->Equipment()->strid() );
+				$Job->Project()->add_to_log( @session{'company_id','user_id'}, "Added Form $$sig_specs{SignatureIndex} to schedule for " . $Job->Equipment()->strid() );
 			} else {
-				$Job->Project()->add_to_log( @session{'company_id','user_id'}, "Added " . $Service->ServiceType->name() . " to pending schedule." );
+				$Job->Project()->add_to_log( @session{'company_id','user_id'}, "Added " . $Service->ServiceType->name() . " to schedule." );
 			} # end if
+			if ( $NewShift ) {
+				$Job->bump( undef, $NewShift );
+			}
 		} # end if
 
 	} # end if
