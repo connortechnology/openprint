@@ -42,8 +42,8 @@
 			$html .= input( type=>'text', name=>$name, value=>$$C{value} );
         } # end if
 		$html .= '<span class="buttons">';
-		$html .= button( 'Delete'.$$C{name}, { onclick =>qq`new Ajax.Request('_configuration.json', { parameters: { name: '$$C{name}', action: 'delete' }, evalScripts: true } );`, 'text'=>'Delete' } );
-		$html .= button( 'Edit'.$$C{name}, { onclick =>qq`popup_window('_configuration_popup.html','name=$$C{name}');`, 'text'=>'Edit' } );
+		$html .= button( 'Delete'.$$C{name}, { onclick =>qq`new Ajax.Request('_configuration.json', { parameters: { name: '$$C{name}', action: 'delete' }, evalScripts: true } );`, text=>'Delete' } );
+		$html .= button( 'Edit'.$$C{name}, { onclick =>qq`popup_window('_configuration_popup.html','name=$$C{name}');`, text=>'Edit' } );
 		$html .= '</span>';
         $html .= "</li>\n";
 		$cat = $$C{category};

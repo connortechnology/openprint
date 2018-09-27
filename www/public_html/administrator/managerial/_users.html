@@ -1,10 +1,10 @@
 <? eval (
 	my $uri = '/administrator/managerial/users.html';
 	if ( $session{$uri.'?email'} ) {
-    my %filters = (
-		'email ilike' => '%'.$session{$uri.'?email'}.'%' ,
-	);
-    $$variable{Users} = [ openprint::User->find( %filters ) ];
+		my %filters = (
+			'email ilike' => '%'.$session{$uri.'?email'}.'%' ,
+		);
+		$$variable{Users} = [ openprint::User->find( %filters ) ];
 	} else {
     my %filters = (
 		( map { $session{join('?', $uri, $_)} ? ( $_ => $session{join('?', $uri, $_) } ) : () } ( 'company_id','type' ) ),
@@ -24,14 +24,14 @@
 			@csr_ids = sets::exclude( [ split(',', $session{$uri.'?salesrep_id'} ) ], \@csr_ids ) if $session{$uri.'?salesrep_id'};
 			$filters{'salesrep_id not in'} = \@csr_ids;
 		} elsif ( $session{$uri.'?salesrep_id'} ) {
-			$filters{'salesrep_id'} = $session{$uri.'?salesrep_id'};
+			$filters{salesrep_id} = $session{$uri.'?salesrep_id'};
 		} # end if
 		if ( $session{$uri.'?usergroup_id'} ) {
 			$filters{'usergroup_id any'} = $session{$uri.'?usergroup_id'};
 		} # end if
 		
 		my @Users = openprint::User->find( %filters );
-		my @Companies = openprint::Company->find(id=>[ map { $$_{company_id} } @Users ]) @Users;
+		my @Companies = openprint::Company->find(id=>[ map { $$_{company_id} } @Users ]) if @Users;
 
 		if ( $session{$uri.'?notification_type_id'} ) {
 			my %Notifications = map { $$_{user_id}, $_ } openprint::User_Notification->find( type_id=>$session{$uri.'?notification_type_id'} );
@@ -44,7 +44,7 @@
 <? if ( @{$$variable{Users}} ) ?>
 	<table class="List">
 		<tr> 
-			<th class="UserID">Account #</th>
+			<th class="UserID">User #</th>
 			<th class="User">Name</th>
 			<th class="Email">Email</th>
 			<th class="Company">Company</th>
