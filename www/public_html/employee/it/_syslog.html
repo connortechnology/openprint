@@ -20,6 +20,7 @@ if ( ! $openprint::Syslog::dbh ) {
 		date_filter($uri.'?devicereportedtime_start', 'devicereportedtime >=' ),
 		( map { $session{$uri.'?'.$_} ? ( $_ => $session{$uri.'?'.$_} ) : () } ( 'facility','priority','fromhost') ),
 		( map { $session{$uri.'?'.$_} ? ( "$_ ilike" => $session{$uri.'?'.$_}.'%' ) : () } ( 'syslogtag' ) ),
+		( $session{$uri.'?message'} ? ( 'message ilike' => '%'.$session{$uri.'?message'}.'%' ) : () ),
 	  );
 	return;
 ) ?>

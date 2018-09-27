@@ -676,7 +676,7 @@ sub _syslog {
 		 ( map { 'receivedat_end_'.$_ } ( 'year','month','day','hour','minute' ) ),
 		 ( map { 'devicereportedtime_start_'.$_ } ( 'year','month','day','hour','minute' ) ),
 		 ( map { 'devicereportedtime_end_'.$_ } ( 'year','month','day','hour','minute' ) ),
-		'priority','facility','fromhost','syslogtag',
+		'priority','facility','fromhost','syslogtag','message',
 		 );
 }
 
