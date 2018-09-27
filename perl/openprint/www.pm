@@ -128,27 +128,34 @@ utf8::decode($param{$key});
 	openprint::session_init();
 	openprint::usergroup::init_cache();
 	if ( $dbh ) {
-		my $PageSetting = openprint::Page_Setting::get( $page );
-		$PageSetting = new openprint::Page_Setting() if ! $PageSetting;
-		$variable{PageSetting} = $PageSetting;
 
-		# if not logged in, determine if they are allowed to see this page or not.
-		if ( ! $PageSetting->can_view() ) {
-			$log->debug("No good, need login");
-			if ( $page =~ /^.*\/_/ ) {
-				$r->content_type(q{text/javascript; charset=utf-8});
-				$r->print( q`window.location='/error/error_login.html';` );
-				return Apache2::Const::OK;
-			} else {
-				if ( $page =~ /employee/ ) {
-				$page = '/employee/account/login.html';
+		if ( !$session{user_id} and !openprint::User->find_one(type=>'A') ) {
+			$page = '/administrator/managerial/user_profiles.html';
+			$session{user_type} = 'A';
+		} else {
+
+			my $PageSetting = openprint::Page_Setting::get( $page );
+			$PageSetting = new openprint::Page_Setting() if ! $PageSetting;
+			$variable{PageSetting} = $PageSetting;
+
+# if not logged in, determine if they are allowed to see this page or not.
+			if ( ! $PageSetting->can_view() ) {
+				$log->debug("No good, need login");
+				if ( $page =~ /^.*\/_/ ) {
+					$r->content_type(q{text/javascript; charset=utf-8});
+					$r->print( q`window.location='/error/error_login.html';` );
+					return Apache2::Const::OK;
 				} else {
-				$page = '/error/error_login.html';
+					if ( $page =~ /employee/ ) {
+						$page = '/employee/account/login.html';
+					} else {
+						$page = '/error/error_login.html';
+					} # end if
 				} # end if
+				$variable{Destination} = misc::get_destination( $r, $r->uri() );
+#$r->headers_out->set(Location=>'/error/error_login.html');
+#$r->status(Apache2::Const::REDIRECT);
 			} # end if
-			$variable{Destination} = misc::get_destination( $r, $r->uri() );
-				#$r->headers_out->set(Location=>'/error/error_login.html');
-				#$r->status(Apache2::Const::REDIRECT);
 		} # end if
 
 		foreach my $o ( split(',',$config{Cached_Objects} ) ) {
