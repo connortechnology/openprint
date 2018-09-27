@@ -27,7 +27,7 @@ insert into Configuration values ('NewFirstUserAccountActivation', 'N', 'yes/no'
 insert into Configuration values ('NewNonFirstUserAccountActivation', 'N', 'yes/no', 'Whether to automatically activate any subsequent users in a company when they register.','Miscellaneous Settings' );
 insert into Configuration values ('NewCustomerAccountActivation', 'N', 'yes/no', 'Whether to automatically activate new companies when they register.','Miscellaneous Settings' );
 insert into Configuration values ('Mail Server', 'localhost', 'text', '','Miscellaneous Settings' );
-insert into Configuration values ('startYear', '2012', 'text', 'The year the website went up.  Used to limit the # of years displayed in date fields','Miscellaneous Settings' );
+insert into Configuration values ('startYear', '2018', 'text', 'The year the website went up.  Used to limit the # of years displayed in date fields','Miscellaneous Settings' );
 insert into Configuration values ('password_checks_min_length', '6', 'text', 'Minimum length a password must be.', 'Password Settings');
 insert into Configuration values ('password_checks_max_length', '0', 'text', 'Maximum length a password must be.', 'Password Settings');
 insert into Configuration values ('password_checks_uppercase', 'yes', 'yes/no', 'Password must have uppercase characters.', 'Password Settings');
@@ -53,9 +53,9 @@ INSERT INTO configuration VALUES ('AcceptCreditApplications', 'N', 'yes/no', 'Wh
 INSERT INTO configuration VALUES ('UserProfileRequiredFields', 'firstname', 'list', 'Command separated list of fields that are required to be filled in on the User Profile page.', 'Miscellaneous Settings');
 INSERT INTO configuration VALUES ('RegistrationRequiredFields', 'firstname,password,verifypassword,email,agree_terms,date_of_birth', 'text', 'Fields which are required on the registration page.', 'Miscellaneous Settings');
 INSERT INTO configuration VALUES ('VideoUploadDisclaimer', '', 'textarea', '', 'Disclaimers');
-INSERT INTO configuration VALUES ('HelpdeskEmail', '"Helpdesk" <helpdesk@pleasurablethings.ca>', 'text', 'Email address to send helpdesk requests to.', 'Email Notifications');
-INSERT INTO configuration VALUES ('TechSupportEmail', '"Support" <support@pleasurablethings.ca>', 'text', 'Email address to send technical support requests to.', 'Email Notifications');
-INSERT INTO configuration VALUES ('UserRegistrationEmail', '"New Accounts" <newaccounts@pleasurablethings.ca>', 'text', 'Email address to send new user registrations to.', 'Email Notifications');
+INSERT INTO configuration VALUES ('HelpdeskEmail', '"Helpdesk" <helpdesk@connortechnology.com>', 'text', 'Email address to send helpdesk requests to.', 'Email Notifications');
+INSERT INTO configuration VALUES ('TechSupportEmail', '"Support" <support@connortechnology.com>', 'text', 'Email address to send technical support requests to.', 'Email Notifications');
+INSERT INTO configuration VALUES ('UserRegistrationEmail', '"New Accounts" <newaccounts@connortechnology.com>', 'text', 'Email address to send new user registrations to.', 'Email Notifications');
 INSERT INTO configuration VALUES ('DateFormat', '%b %e, %Y', 'text', 'Format string used to show dates, without time', 'Miscellaneous Settings');
 INSERT INTO configuration VALUES ('DateTimeFormat', '%Y-%m-%d %H:%M', 'text', 'Format string used when displaying timstamps with both a date and a time part. Edit', 'Miscellaneous Settings');
 INSERT INTO configuration VALUES ('RegistrationDisclaimer', '', 'textarea', 'Text to show at bottom of registration', 'Disclaimers');
@@ -68,12 +68,12 @@ INSERT INTO configuration VALUES ('owner_id', '1', 'Supplier', 'Site Owner', 'Mi
 INSERT INTO configuration VALUES ('WhyRegister', '', 'textarea', 'Text to display on login page (and maybe elsewhere) explaining why a person should register on the site.', 'Disclaimers');
 INSERT INTO configuration VALUES ('meta-description', NULL, 'text', 'Default content to use for description meta tag.', 'Miscellaneous Settings');
 INSERT INTO configuration VALUES ('meta-keywords', NULL, 'text', 'Default content for the keywords meta tag.', 'Miscellaneous Settings');
-INSERT INTO configuration VALUES ('Small_Asset_Height', NULL, 'text', '', 'Asset Settings');
-INSERT INTO configuration VALUES ('Medium_Asset_Height', NULL, 'text', '', 'Asset Settings');
-INSERT INTO configuration VALUES ('Large_Asset_Height', NULL, 'text', '', 'Asset Settings');
-INSERT INTO configuration VALUES ('Large_Asset_Width', '800', 'text', '', 'Asset Settings');
-INSERT INTO configuration VALUES ('Medium_Asset_Width', '300', 'text', '', 'Asset Settings');
-INSERT INTO configuration VALUES ('Small_Asset_Width', '50', 'text', '', 'Asset Settings');
+INSERT INTO configuration VALUES ('Small_Asset_Height', NULL, 'text', 'Small Asset Height', 'Asset Settings');
+INSERT INTO configuration VALUES ('Medium_Asset_Height', NULL, 'text', 'Medium Asset Height', 'Asset Settings');
+INSERT INTO configuration VALUES ('Large_Asset_Height', NULL, 'text', 'Large Asset Height', 'Asset Settings');
+INSERT INTO configuration VALUES ('Large_Asset_Width', '800', 'text', 'Large Asset Width', 'Asset Settings');
+INSERT INTO configuration VALUES ('Medium_Asset_Width', '300', 'text', 'Medium Asset Width', 'Asset Settings');
+INSERT INTO configuration VALUES ('Small_Asset_Width', '50', 'text', 'Small Asset Width', 'Asset Settings');
 INSERT INTO configuration VALUES ('PhotoUploadDisclaimer', '', 'textarea', 'Content to show on photo upload pages.', 'Disclaimers');
 
 INSERT INTO configuration VALUES ('bitcoin_server', 'localhost', 'text', 'Bitcoin Server Hostname', 'Bitcoin Settings');
