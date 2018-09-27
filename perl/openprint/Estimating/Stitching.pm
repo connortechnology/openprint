@@ -475,7 +475,7 @@ EQUIPMENT:foreach my $Equipment ( @equipment ) {
 
 # Need to look at all sigs...
 				foreach my $I ( @$Impositions ) {
-					if ( $I->Press()->id() != $Equipment->id() ) {
+					if ( $I->Press()->id() != $$Equipment{id} ) {
 						$results{Breakdown} .= "All sigs must be printed on this stitcher.<br/>";
 						next EQUIPMENT;
 					} # end if
@@ -518,11 +518,11 @@ EQUIPMENT:foreach my $Equipment ( @equipment ) {
 			} # end if
 			if ( $$I{Folder} and ( $$I{Folder}->id() != $Equipment->id() ) ) {
 				if ( ( $_ = $$I{Folder}->specification('Folding Capable') ) and ( $_ eq 'When Stitching' ) ) {
-					$results{Breakdown} .= $Equipment->strid() . ' is not the folding equipment, is '.$$I{Folder}->name() . '<br/>';
+					$results{Breakdown} .= $$Equipment{strid} . ' is not the folding equipment, is '.$$I{Folder}->name() . '<br/>';
 					next;
 				}
 				if ( $capable eq 'When Folding' ) {
-					$results{Breakdown} .= 'Not being folded on ' .$Equipment->name(). ' is on '. $$I{Folder}->name() . '<br/>';
+					$results{Breakdown} .= 'Not being folded on ' .$$Equipment{name}. ' is on '. $$I{Folder}->name() . '<br/>';
 					next;
 				} # end if
 			} # end if
@@ -897,6 +897,8 @@ sub get_price {
 	my $PocketMakeReady = $Equipment->Specification('Pocket Make Ready', undef);
 
 	my $unitsPerHour;
+	my $caliper_slowdown = $Equipment->Specification('Caliper Slowdown', $$specs{txtCalliper} );
+	my $insert_slowdown = $Equipment->specification('Insert Slowdown') if $$specs{txtInsertQuantity};
 
 # Calculate Full Passes
 	if ( $maxPockets and ( $neededPockets > $maxPockets ) ) {
@@ -923,10 +925,10 @@ sub get_price {
 		$unitsPerHour = $Equipment->specification('Units Per Hour '.$price{Imposition}.' out', $maxPockets) if ! $unitsPerHour;
 		$unitsPerHour = $Equipment->specification('Units Per Hour', $maxPockets) if ! $unitsPerHour;
 
-		if ( ( defined $$specs{txtInsertQuantity} ) and ( $$specs{txtInsertQuantity} > 0 ) ) {
-			my $insert_slowdown = 0;
-			if ( $insert_slowdown = $Equipment->specification('Insert Slowdown') ) {
-				$unitsPerHour -= $insert_slowdown;
+		$unitsPerHour -= $insert_slowdown if $insert_slowdown;
+		if ( $caliper_slowdown ) {
+			if ( $$caliper_slowdown{units} eq 'Percent' ) {
+				$unitsPerHour *= (1-($$caliper_slowdown{value}/100));
 			}
 		}
 
@@ -1014,10 +1016,10 @@ sub get_price {
 		$unitsPerHour = $Equipment->specification( 'Units Per Hour ' . $price{Imposition} . ' out', $neededPockets ) if ! $unitsPerHour;
 		$unitsPerHour = $Equipment->specification( 'Units Per Hour', $neededPockets ) if ! $unitsPerHour;
 
-		if ( ( defined $$specs{txtInsertQuantity} ) and ( $$specs{txtInsertQuantity} > 0 ) ) {
-			my $insert_slowdown = 0;
-			if ( $insert_slowdown = $Equipment->specification('Insert Slowdown') ) {
-				$unitsPerHour -= $insert_slowdown;
+		$unitsPerHour -= $insert_slowdown if $insert_slowdown;
+		if ( $caliper_slowdown ) {
+			if ( $$caliper_slowdown{units} eq 'Percent' ) {
+				$unitsPerHour *= (1-($$caliper_slowdown{value}/100));
 			}
 		}
 		$pass{Runspeed} = $unitsPerHour;

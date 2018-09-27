@@ -255,7 +255,7 @@
 			<? echo ( button( 'ShowResults', { onclick=>'f1.submit();', text=>'Show Results' } ); ) ?>
 			<? echo ( button( 'Reset', { onclick=>"f1.btnFunction.value='Reset';f1.submit();", text=>'Reset' } ); ) ?>
 <? if ( openprint::usergroup::is_user_in( ['Scheduling'], $session{user_id} ) ) ?>
-			<? echo ( button( 'AddDocket', { onclick=>"popup_window('_add_docket.html', '', { width: 600, height: 400 } );", text=>'Add Docket' } ); ) ?>
+			<? echo ( button( 'AddDocket', { onclick=>"popup_window('_add_docket.html', '', { width: 600, height: 500 } );", text=>'Add Docket' } ); ) ?>
 			<? echo ( button( 'AddMaintenance', { onclick=>"popup_window('_add_maintenance.html', '', { width: 600, height: 400 } );", text=>'Add Maintenance' } ); ) ?>
 			<? echo (
 				if ( @{$$variable{Equipment}} == 1 ) {

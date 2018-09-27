@@ -475,7 +475,7 @@ $openprint::log->error("Unable to emanantise for $previous_seconds " . Date::For
 	# Just add them all in the specified range
 		my $ES = $Equipment_Shifts[0];
 		while ( $start_dt < $end_dt ) {
-$openprint::log-debug("Eman for " . $start_dt->epoch());
+$openprint::log->debug("Eman for " . $start_dt->epoch());
 			my $Shift = $ES->emanantise( $start_dt->epoch() );
 			if ( ! $Shift ) {
 				$log->error("failed to emanantise");

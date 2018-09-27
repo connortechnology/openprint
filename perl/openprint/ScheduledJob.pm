@@ -22,7 +22,7 @@ require openprint::ProductionFeedback;
 
 my $parser = 'DateTime::Format::Pg';
 
-$debug = 0;
+$debug = 1;
 $table = 'schedule';
 $serial = 'schedule_id_seq';
 
@@ -156,6 +156,10 @@ sub comment {
 
 		if ( $ServiceType->name() eq 'Folding' ) {
 			my $qty_index = $Project->ordered_quantity_index();
+			if ( ! $qty_index ) {
+				$log->error("No qty for project $$Project{id} docket: $$Project{docket}");
+				$qty_index = 1;
+			}
 
 			foreach my $service_index ( @{$$self{service_id}} ) {
 				my $Service = $Project->Service( $service_index );
@@ -169,7 +173,7 @@ sub comment {
 					my $sig_specs = $SignatureService->specs();
 
 					my $Imposition = new openprint::Imposition();
-					$Imposition->load( $sig_specs, $Project->ordered_quantity_index(), $Project );
+					$Imposition->load( $sig_specs, $qty_index, $Project );
 					my @Folds = openprint::Estimating::Folding::get_Folds( $specs, $Imposition, $Project->ordered_quantity_index() );
 					foreach my $FI ( @Folds ) {
 						$comment .= 'Form ' .$$sig_specs{SignatureIndex} . ': ' . $FI->quantity() . ' ' . $$FI{imposition} . 'out ' . $$FI{Fold}->type() . '<br/>';
@@ -352,7 +356,9 @@ sub get_li {
 		;
 	if ( openprint::usergroup::is_user_in( ['Scheduling'], $session{user_id} ) ) {
 		$html .= sprintf( q`<div class="Comment" onclick="job_popup('%1$d');">%2$s</div>`, $$self{id}, $self->comment() );
+		if ( sets::isin( $self->ServiceType()->name(), [ '','Signature' ] ) ) {
 		$html .= sprintf( q`<div class="Stock" onclick="popup_window( '/employee/production/_stock_popup.html', 'schedule_id=%1$d', {width:475} );">%2$s</div>`, $$self{id}, $self->stock() );
+		}
 		if ( $$self{project_id} ) {
 			$html .= sprintf(q`<input type="hidden" name="ScheduleDate-%1$d" id="ScheduleDate-%1$d" value="%2$s"/>`, $$self{id}, $Project->due_date() );
 			$html .= sprintf( q`<span class="Forms" onclick="job_popup('%1$d');">%2$d %3$s</span>`, $$self{id}, $self->forms(), 'form'.($self->forms() > 1 ? 's' : '') );
@@ -371,8 +377,10 @@ sub get_li {
 
 		$html .= sprintf( q`<span class="RunTime" onclick="job_popup('%1$d');">Total Hr: %2$.2d:%3$.2d</span>`, $$self{id}, split(':',$self->runtime()) );
 
+		if ( sets::isin( $self->ServiceType()->name(), [ '','Signature' ] ) ) {
 		if ( $Equipment->specification('DoStockVerification') eq 'Y' ) {
 			$html .= sprintf( q`<span class="StockVerified" onclick="job_popup('%1$d');">Stock: %2$s</span>`, $$self{id}, $self->stock_verified() ? 'Yes' : 'No' );
+		} # end if
 		} # end if
 
 		$html .= '<span class="Buttons">';
@@ -386,8 +394,10 @@ sub get_li {
 		$html .= ssi::button( 'Bump'.$$self{id}, { onclick=>"popup_window('/employee/production/_bump_job.html','schedule_id=$$self{id}');", text=> 'B', title=>'Bump to next shift' } );
 		if ( $$self{project_id} ) {
 			$html .= ssi::button( 'Complete'.$$self{id}, { onclick=>"popup_window('/employee/production/_signature_completion_popup.html', 'schedule_id=$$self{id}', { width: '400px', height: '300px', center: 'false' } );", text=>'C',title=>'Complete Job' } );
-			$html .= ssi::button( 'House'.$$self{id}, { onclick=>"new Ajax.Updater('item_$$self{id}','_li.html', {parameters: {schedule_id:$$self{id}, action: 'House Stock' } } );", text=>'H', title=>'House Stock' } );
-			$html .= ssi::button( 'PO'.$$self{id}, { target=>'_blank', href=>"/employee/purchase_order/edit.html?project_id=$$self{project_id}", text=>'PO', title=>'Create PO' } );
+			if ( sets::isin( $self->ServiceType()->name(), [ '','Signature' ] ) ) {
+				$html .= ssi::button( 'House'.$$self{id}, { onclick=>"new Ajax.Updater('item_$$self{id}','_li.html', {parameters: {schedule_id:$$self{id}, action: 'House Stock' } } );", text=>'H', title=>'House Stock' } );
+				$html .= ssi::button( 'PO'.$$self{id}, { target=>'_blank', href=>"/employee/purchase_order/edit.html?project_id=$$self{project_id}", text=>'PO', title=>'Create PO' } );
+			} # end if
 		} # end if
 		$html .= ssi::button( 'Remove'.$$self{id}, { onclick=>"remove_job($$self{id});", text=> 'D', title=>'Delete from schedule' } );
 		if ( $$self{project_id} ) {
@@ -1060,7 +1070,7 @@ sub put_job_on_schedule {
 		if ( $NextShift ) {
 			$Job->starttime( $$NextShift{starttime} );
 		} else {
-			$Job->starttime('');
+			$Job->starttime(undef);
 		}
 	}
 	$Job->save();
@@ -1070,7 +1080,11 @@ sub put_job_on_schedule {
 
 sub docket {
 	if ( ! $_[0]{docket} ) {
-		$_[0]{docket} = $_[0]->Project()->docket() if $_[0]{project_id};
+		if ( $_[0]{project_id} ) {
+			$_[0]{docket} = $_[0]->Project()->docket();
+		} else {
+			$openprint::log->debug("No project id for job $_[0]{id} so no docket");
+		}
 	}
 	return $_[0]{docket};
 }

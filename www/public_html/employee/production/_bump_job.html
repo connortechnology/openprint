@@ -4,7 +4,7 @@
 	$$variable{Form} = $$sig_specs{SignatureIndex};
 	$$variable{Equipment} = $$variable{Job}->Equipment();
 	if ( $$variable{Job}{starttime} ) {
-	$$variable{NextShift} = $$variable{Job}->Shift()->Next();
+		$$variable{NextShift} = $$variable{Job}->Shift()->Next();
 	} else {
 		$$variable{LastJob} = openprint::ScheduledJob->find_one(
 			order               =>  'starttime DESC',
@@ -15,11 +15,17 @@
 			);
 		if ( $$variable{LastJob} ) {
 			$$variable{NextShift} = $$variable{LastJob}->Shift();
-		}
-		while ( $$variable{NextShift}->starttime_seconds() < time ) {
-			$$variable{NextShift} = $$variable{NextShift}->Next();
+		} else {
+			$$variable{NextShift} = openprint::Shift->find_one(
+					equipment_id => $$variable{Job}{equipment_id},
+					'starttime >' => 'NOW()',
+					order=>'starttime',
+			);
 		}
 	}
+	while ( $$variable{NextShift} and ( $$variable{NextShift}->starttime_seconds() < time ) ) {
+		$$variable{NextShift} = $$variable{NextShift}->Next();
+	} # end while
 ) ?>
 <form id="bump_form" name="bump_form" action="_li_change.json" method="post">
 	<input type="hidden" name="schedule_id" value="<? echo ( $param{schedule_id} ) ?>" />
@@ -27,7 +33,7 @@
 	<fieldset>
 	<h3>Bump Docket <? echo ( $$variable{Job}->Project()->docket() ) ?> Form <?Form?></h3>
 	<ul>
-		<li><label>Press</label>
+		<li><label>Equipment</label>
 			<select name="equipment_id" onchange="new Ajax.Updater( 'other_servicetypes', '_bump_job_popup_servicetypes.html', { parameters: { equipment_id: this.getValue(), schedule_id: this.form.schedule_id.value} } );">
 				<option value="">Unknown</option>
 				<? echo ( 
