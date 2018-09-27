@@ -426,6 +426,20 @@ sub fix_date {
 	return ( $year, $month, $day );
 } # end sub fix_date
 
+sub fix_datetime {
+	my ( $year, $month, $day, $hour,$minute,$second ) = @_;
+	$month = int $month;
+	$month = 12 if ( $month > 12 );
+	$month = 1 if $month < 0;
+	if ( $year and $month and $day > Date::Calc::Days_in_Month( $year, $month ) ) {
+		$day = Date::Calc::Days_in_Month( $year, $month );
+	} # end if
+  $hour = 23 if $hour > 23;
+  $minute = 59 if $minute > 59;
+  $second = 59 if $second > 59;
+	return ( $year, $month, $day, $hour, $minute, $second );
+} # end sub fix_datetime
+
 sub get_dates {
 	my ( $log, $dbh, $year, $month, $day ) = @_;
 
@@ -579,6 +593,32 @@ sub writeTip {
 		return $word;
 	} # endif
 } # end  sub writeTip
+
+sub setup_datetime_select {
+	my ( $page, $prefix, $delta_seconds ) = @_;
+
+  my @fields = ( 'year','month','day','hour','minute','second');
+	if ( ( 
+        ! ( 
+          exists $session{$page.'?'.$prefix.'_year'}
+          and
+          exists $session{$page.'?'.$prefix.'_month'}
+          and 
+          exists $session{$page.'?'.$prefix.'_day'} ) )
+      or ( time - $session{$page.'?lastupdated'} > 3600 ) ) {
+		if ( $delta_seconds ne '' ) {
+      my $dt = DateTime->now( time_zone=>$openprint::TZ );
+      $dt = $dt->add(seconds=>$delta_seconds);
+
+      @session{map {$page.'?'.$prefix.'_'.$_} @fields} = map { $dt->$_() } @fields;
+    } else {
+      @session{map {$page.'?'.$prefix.'_'.$_} @fields} = map { '' } @fields;
+		} # end if
+	} else {
+      @session{map {$page.'?'.$prefix.'_'.$_} @fields} = fix_datetime(
+      @session{map {$page.'?'.$prefix.'_'.$_} @fields} );
+	} # end if
+} # end sub setup_datetime_select
 
 sub setup_date_select {
 	my ( $page, $prefix, $delta ) = @_;

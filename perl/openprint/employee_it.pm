@@ -663,10 +663,10 @@ sub backup {
 sub syslog {
   _hosts();
   my $uri = $r->uri();
-  ssi::setup_date_select( $uri, 'receivedat_start', -1 );
-  ssi::setup_date_select( $uri, 'receivedat_end', '' );
-  ssi::setup_date_select( $uri, 'devicereportedtime_start', '' );
-  ssi::setup_date_select( $uri, 'devicereportedtime_end', '' );
+  ssi::setup_datetime_select( $uri, 'receivedat_start', -3600 );
+  ssi::setup_datetime_select( $uri, 'receivedat_end', '' );
+  ssi::setup_datetime_select( $uri, 'devicereportedtime_start', '' );
+  ssi::setup_datetime_select( $uri, 'devicereportedtime_end', '' );
 }
 sub _syslog {
 	my $uri = '/employee/it/syslog.html';
