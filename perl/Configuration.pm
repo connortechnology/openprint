@@ -22,6 +22,6 @@ $table = 'configuration';
 );
 %defaults = ();
 
-@types = ( 'Supplier', 'pricelist', 'currency', 'yes/no', 'textarea', 'text','number', 'list' );
+@types = ( 'Supplier', 'pricelist', 'currency', 'yes/no', 'textarea', 'text','number', 'list','boolean' );
 1;
 __END__
