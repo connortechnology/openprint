@@ -26,7 +26,7 @@ require openprint::Estimating::MultiPage;
 require openprint::service;
 require openprint::Project_Log;
 
-$debug = 1;
+$debug = 0;
 
 $table = 'projects';
 $serial = 'lngProjectIndex_seq';
@@ -115,7 +115,7 @@ $serial = 'lngProjectIndex_seq';
 	value			=>	[ 'price1', 'price2', 'price3' ],
 	used_press_name	=>	q`(SELECT strValue FROM tbl_Service_Specifications WHERE lngProjectIndex=projects.id AND strName='UsePress')`,
 	estimated_press_name	=>	q`(SELECT strValue FROM tbl_Service_Specifications WHERE lngProjectIndex=projects.id AND strName IN ('ddmPress1','ddmPress2','ddmPress3'))`,
-	operator_id		=>	q`(SELECT operator_id FROM tbl_Project_Contents WHERE lngProjectIndex=id)`,
+	operator_id		=>	q`(SELECT user_id FROM Project_Service_Operators WHERE service_id IN (SELECT lngServiceIndex FROM tbl_Project_Contents WHERE lngprojectindex=projects.id))`,
 	quote_id		=>	q`(SELECT quote_id FROM tbl_quote_details WHERE project_id=Projects.id)`,
 	servicetype_id	=>	'(SELECT servicetype_id FROM tbl_project_contents WHERE lngprojectIndex=id)',
 	type	=>	'(SELECT name FROM project_types WHERE project_types.id=type_id)',
@@ -1485,20 +1485,20 @@ sub operator_id {
 	my ( $self ) = @_;
 
 	my ( $caller, undef, $line ) = caller;
-	$openprint::log->debug("deprecated call to Project::operator_id from $caller:$line");
+	$openprint::log->error("deprecated call to Project::operator_id from $caller:$line");
 
 	if ( ! $$self{operator_id} ) {
 		my $services = $self->services();
 		@$self{operator_id} = sql::execute( $log, $dbh, q{SELECT operator_id FROM tbl_Project_Contents WHERE lngProjectIndex=? AND lngServiceIndex=?}, $$self{id}, ( $$services{Proofs} ? $$services{Proofs}[0] : $$services{FilmStripping}[0] ) );
 	} # end if
 	return $$self{operator_id};
-} # end sub Operator
+} # end sub operator_id
 
 sub Operator {
 	my ( $self ) = @_;
 
 	my ( $caller, undef, $line ) = caller;
-	$openprint::log->debug("deprecated call to Project::operator_id from $caller:$line");
+	$openprint::log->error("deprecated call to Project::operator_id from $caller:$line");
 
 	if ( ! $$self{Operator} ) {
 		$$self{Operator} = new openprint::User( $self->operator_id() );
@@ -1704,7 +1704,7 @@ sub calliper {
 				$pages = 4;
 			} elsif ( sets::isin( $$sig_specs{rdbTemplateType}, ['5PanelFold', '5PanelZFold'] ) ) {
 				$pages = 5;
-			} elsif ( sets::isin( $$sig_specs{rdbTemplateType}, ['6PanelFold', '6PanelZFold','12pg3PanelRollFold', '12pg3PanelZFold'] ) ) {
+			} elsif ( sets::isin( $$sig_specs{rdbTemplateType}, ['6PanelFold', '6PanelZFold','12Page3PanelRollFold', '12Page3PanelZFold'] ) ) {
 				$pages = 6;
 			} elsif ( $$sig_specs{rdbTemplateType} eq 'SingleGateFold' ) {
 				$pages = 3;
@@ -1805,7 +1805,7 @@ sub link_to {
 } # end sub link_to
 
 sub production_link_to {
-	return sprintf('<a href="/employee/proj/view.html?project_id=%1$d">%2$s</a>', $_[0]{id}, ( $_[1] ? $_[1] : $_[0]{id} ) );
+	return sprintf('<a href="/employee/project/view.html?project_id=%1$d">%2$s</a>', $_[0]{id}, ( $_[1] ? $_[1] : $_[0]{id} ) );
 } # end sub production_link_to
 
 sub check_for_order {
@@ -1959,6 +1959,17 @@ sub can_edit {
   return 0;
 } # end sub can_view
 
+sub change_due_date {
+	my $Project = shift;
+	my $new_due_date = shift;
+
+	my $old_due_date = $$Project{due_date};
+	if ( $old_due_date ne $new_due_date ) {
+		$Project->save( { due_date => $new_due_date } );
+		$Project->add_to_log( @openprint::session{'company_id','user_id'}, "Duedate changed to $new_due_date from $old_due_date" );
+		openprint::employee_project::send_duedate_change_notification( $$Project{id}, $Project->order_id() );
+	} # end if date has changed
+}
 
 1;
 __END__

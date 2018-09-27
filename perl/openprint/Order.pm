@@ -253,6 +253,7 @@ $openprint::log->debug("Setting status to $_[1]");
 # Adding Waiting For Pickup, Shipped, Picked Up
 sub update_status {
 	my $self = shift;
+	my $do_not_notify = shift;
 	if ( $self->status() eq 'Re-Opened' ) {
 		return $$self{status};
 	}
@@ -280,7 +281,7 @@ sub update_status {
 		$self->status('Complete');
 	} # end if
 	if ( 'Complete' eq $self->status() ) {
-		$self->send_completion_notice( );
+		#$self->send_completion_notice( ) unless $do_not_notify
 
 		if ( $config{SendInvoiceOnProjectCompletion} ne 'N' ) {
 			#send_invoice( $r, $log, $dbh, $order_id );
@@ -659,7 +660,7 @@ sub Payments {
 	if ( $$self{id} and ! $$self{Payments} ) {
 		$$self{Payments} = [ openprint::Payment->find(order_id=>$$self{id},order=>$openprint::Payment::fields{received_on}.' DESC') ];
 	}
-	return @{$$self{Payments}};
+	return $$self{Payments} ? @{$$self{Payments}} : ();
 }
 
 sub paid {

@@ -154,7 +154,7 @@ sub get_imposition {
 } # end sub get_imposition
 
 # Calculates the cost of stitching a signature... which is not realistic, but will hopefully help when deciding between 1up or 2up stitching
-# includes teh cost of folding...
+# includes the cost of folding...
 sub signature_calc {
 	my ( $Project, $service_index, $specs, $qty_index, $Impositions, $calc_hash ) = @_;
 
@@ -167,12 +167,12 @@ sub signature_calc {
 	my $printing_specs = openprint::service::get_specs_ref( $Project, $$services{''}[0] );
 	my $folding_specs = $$calc_hash{FoldingSpecs};
 	my $ServiceType = $Project->ServiceType( $service_index );
-	if ( ! $ServiceType->id() ) {
+	if ( ! $$ServiceType{id} ) {
 		$results{alert} .= 'Unable to determine stitching type!<br/>';
 		$results{Status} = 'uncalculated';
 		return \%results;
 	} else {
-		$$specs{ServiceTypeName} = $ServiceType->name();
+		$$specs{ServiceTypeName} = $$ServiceType{name};
 	} # end if
 
 	my $plusCover = $$printing_specs{rdbCover} eq 'Different' ? 1 : 0;
@@ -204,7 +204,7 @@ sub signature_calc {
 		@$specs{'Width','Height'} = @$printing_specs{'txtFinalWidth','txtFinalHeight'};
 	} else {
 		@$specs{'Width','Height'} = @$printing_specs{'txtFinalWidth','txtFinalHeight'};
-		$$specs{alert} .= 'Unable to determine spine direction. Calculations may be invalid.';
+		$$specs{alert} .= 'Unable to determine spine direction. Calculations may be invalid.<br/>';
 	} # end if
 	$$specs{txtCalliper} = $Project->calliper() if ! $$specs{txtCalliper};
 
@@ -216,7 +216,11 @@ sub signature_calc {
 	$pockets += int( $$specs{txtInsertQuantity} );
 
 	my $override_pockets = 0;
-	if ( ( defined $$specs{'OverridePockets'.$qty_index}) and ($$specs{'OverridePockets'.$qty_index} eq 'Y') ) {
+	if (
+			(defined $$specs{'OverridePockets'.$qty_index})
+			and
+			($$specs{'OverridePockets'.$qty_index} eq 'Y')
+		 ) {
 		foreach my $pages ( @possible_pages ) {
 			$pockets += $$specs{join('','txtSignatureQty',$pages,'Page-',$qty_index)};
 		}
@@ -277,7 +281,7 @@ sub signature_calc {
 
 			my %signatures;
 
-				my $pages_done;
+			my $pages_done;
 
 			foreach my $FI ( @{$$I{Folds}} ) {
 				$FI->display( 'Fold form '.$form ) if DEBUG;
@@ -295,7 +299,7 @@ $openprint::log->debug("Fold pq($$FI{page_quantity}) pages($$FI{pages}) ($$Fold{
 					#} else {
 					#$openprint::log->debug('Folder is ' . $$I{Folder}->strid() );
 				}
-				$openprint::log->debug("Adding " . $Fold->pages() . 'x'.$FI->quantity() );
+				$openprint::log->debug("Stitching Adding " . $Fold->pages() . 'pg x qty:'.$FI->quantity() );
 
 
 				if ( ! $override_pockets ) {
@@ -471,7 +475,7 @@ EQUIPMENT:foreach my $Equipment ( @equipment ) {
 
 # Need to look at all sigs...
 				foreach my $I ( @$Impositions ) {
-					if ( $I->Press()->id() != $Equipment->id() ) {
+					if ( $I->Press()->id() != $$Equipment{id} ) {
 						$results{Breakdown} .= "All sigs must be printed on this stitcher.<br/>";
 						next EQUIPMENT;
 					} # end if
@@ -514,11 +518,11 @@ EQUIPMENT:foreach my $Equipment ( @equipment ) {
 			} # end if
 			if ( $$I{Folder} and ( $$I{Folder}->id() != $Equipment->id() ) ) {
 				if ( ( $_ = $$I{Folder}->specification('Folding Capable') ) and ( $_ eq 'When Stitching' ) ) {
-					$results{Breakdown} .= $Equipment->strid() . ' is not the folding equipment, is '.$$I{Folder}->name() . '<br/>';
+					$results{Breakdown} .= $$Equipment{strid} . ' is not the folding equipment, is '.$$I{Folder}->name() . '<br/>';
 					next;
 				}
 				if ( $capable eq 'When Folding' ) {
-					$results{Breakdown} .= 'Not being folded on ' .$Equipment->name(). ' is on '. $$I{Folder}->name() . '<br/>';
+					$results{Breakdown} .= 'Not being folded on ' .$$Equipment{name}. ' is on '. $$I{Folder}->name() . '<br/>';
 					next;
 				} # end if
 			} # end if
@@ -893,6 +897,8 @@ sub get_price {
 	my $PocketMakeReady = $Equipment->Specification('Pocket Make Ready', undef);
 
 	my $unitsPerHour;
+	my $caliper_slowdown = $Equipment->Specification('Caliper Slowdown', $$specs{txtCalliper} );
+	my $insert_slowdown = $Equipment->specification('Insert Slowdown') if $$specs{txtInsertQuantity};
 
 # Calculate Full Passes
 	if ( $maxPockets and ( $neededPockets > $maxPockets ) ) {
@@ -919,10 +925,10 @@ sub get_price {
 		$unitsPerHour = $Equipment->specification('Units Per Hour '.$price{Imposition}.' out', $maxPockets) if ! $unitsPerHour;
 		$unitsPerHour = $Equipment->specification('Units Per Hour', $maxPockets) if ! $unitsPerHour;
 
-		if ( ( defined $$specs{txtInsertQuantity} ) and ( $$specs{txtInsertQuantity} > 0 ) ) {
-			my $insert_slowdown = 0;
-			if ( $insert_slowdown = $Equipment->specification('Insert Slowdown') ) {
-				$unitsPerHour -= $insert_slowdown;
+		$unitsPerHour -= $insert_slowdown if $insert_slowdown;
+		if ( $caliper_slowdown ) {
+			if ( $$caliper_slowdown{units} eq 'Percent' ) {
+				$unitsPerHour *= (1-($$caliper_slowdown{value}/100));
 			}
 		}
 
@@ -1010,10 +1016,10 @@ sub get_price {
 		$unitsPerHour = $Equipment->specification( 'Units Per Hour ' . $price{Imposition} . ' out', $neededPockets ) if ! $unitsPerHour;
 		$unitsPerHour = $Equipment->specification( 'Units Per Hour', $neededPockets ) if ! $unitsPerHour;
 
-		if ( ( defined $$specs{txtInsertQuantity} ) and ( $$specs{txtInsertQuantity} > 0 ) ) {
-			my $insert_slowdown = 0;
-			if ( $insert_slowdown = $Equipment->specification('Insert Slowdown') ) {
-				$unitsPerHour -= $insert_slowdown;
+		$unitsPerHour -= $insert_slowdown if $insert_slowdown;
+		if ( $caliper_slowdown ) {
+			if ( $$caliper_slowdown{units} eq 'Percent' ) {
+				$unitsPerHour *= (1-($$caliper_slowdown{value}/100));
 			}
 		}
 		$pass{Runspeed} = $unitsPerHour;
@@ -1232,6 +1238,37 @@ sub schedule_summary {
 			( $$specs{rdbGateFoldFit} ? 'Gate Fold Fit = ' . $$specs{rdbGateFoldFit} : () ),
 			( $$specs{CoverFit} ? 'Cover Fit = ' . $$specs{CoverFit} : () ),
 	);
+}
+
+sub overview_summary {
+  my ( $Project, $service_id, $specs, $qty_index ) = @_;
+
+	my $summary = '';
+	my $services = $Project->services();
+	if ( $$services{''} and @{$$services{''}} ) {
+		my $printing_specs = openprint::service::get_specs_ref($Project, $$services{''}[0]);
+		if ( $$printing_specs{txtTotalPageQuantity} ) {
+			if ( $$printing_specs{rdbCover} eq 'Different' ) {
+				my $cover_pages = 0;
+				foreach my $ss_id ( $Project->signatures({Group=>1}) ) {
+					my $sig_specs = openprint::service::get_specs_ref($Project, $ss_id);
+					$cover_pages += $$sig_specs{GroupPageQuantity};
+					last;
+				} # end foreach
+				$summary .= sprintf('%dpg+C ', $$printing_specs{txtTotalPageQuantity} - $cover_pages);
+			} else {
+				$summary .= sprintf('%dpg ', $$printing_specs{txtTotalPageQuantity});
+			} # end if
+		}
+	} else {
+		$openprint::log->error("No project service in $$Project{id}");
+	}
+
+	return  join(' ',
+			$summary,
+			( $$specs{rdbGateFoldFit} ? 'Gate Fold Fit = ' . $$specs{rdbGateFoldFit} : () ),
+			( $$specs{CoverFit} ? 'Cover Fit = ' . $$specs{CoverFit} : () ),
+			);
 }
 
 sub runtime {

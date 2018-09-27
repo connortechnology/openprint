@@ -207,11 +207,11 @@ $log->debug("Project complete: $complete " . $Service->to_string());
 				if ( $param{rdbComplete} eq 'Yes' ) {
 					if ( ! Date::Calc::check_date( @param{'duedate_year','duedate_month','duedate_day'} ) ) {
 						$variable{Redirect} = '/employee/proj/'.$ServiceType->url();
-						$variable{ErrorMessage} = 'There was an error saving the DueDate.  Please check that a real date was selected.';
+						$variable{error} = 'There was an error saving the DueDate.  Please check that a real date was selected.';
 						$param{rdbComplete} = 'No';
 					} elsif ( 0 < Date::Calc::Delta_Days( @param{'ddmDueDateYear','ddmDueDateMonth','ddmDueDateDay'}, Date::Calc::Today() ) ) {
 						$variable{Redirect} = '/employee/proj/'.$ServiceType->url();
-						$variable{ErrorMessage} = 'You cannot select a date in the past. Please try again.';
+						$variable{error} .= 'You cannot select a date in the past. Please try again.';
 						$param{rdbComplete} = 'No';
 					} else {
 						if ( $param{duedate_year} ) {
@@ -245,8 +245,7 @@ $log->debug("Project complete: $complete " . $Service->to_string());
 				} elsif ( $param{rdbApproved} eq 'Y' ) {
 					if ( $param{duedate_year} ) {
 						if ( ! Date::Calc::check_date( @param{'duedate_year','duedate_month','duedate_day'} ) ) {
-							$variable{Redirect} = '/employee/proj/'.$ServiceType->url();
-							$variable{ErrorMessage} = 'There was an error saving the DueDate.  Please check that a real date was selected.';
+							$variable{error} = 'There was an error saving the DueDate.  Please check that a real date was selected.';
 							$param{rdbApproved} = 'N';
 						} else {
 							# It's a valid duedate
@@ -408,6 +407,7 @@ $log->debug("Saving signature");
 			$Order->update_status( );
 		} # end if
 		sql::end_transaction( $dbh, $ac );
+		$variable{Redirect} = '/employee/proj/'.$ServiceType->url();
 	} elsif ( $param{btnFunction} eq 'Shipped' ) {
 		$Project->status_change( undef, undef, 'Shipped' );
 	} elsif ( $param{btnFunction} eq 'Picked Up' ) {
@@ -1003,23 +1003,45 @@ sub _status {
 			} # end if
 		} # end foreach service_id
 	} elsif ( $param{action} eq 'addtoschedule' ) {
+		my $NewShift;
+    if ( $param{shift_id} and Date::Calc::check_date( map { $param{'starttime_'.$_} } ( 'year', 'month', 'day' ) ) ) {
+# We assume that there is a shift, otherwise how can we be scheduling?
+      my $starttime_dt = DateTime->new(
+          ( map { $_ => $param{'starttime_'.$_} } ( 'year','month','day' ) ),
+          hour=>0, minute=>0, second=>0, time_zone=>$openprint::TZ );
+      my $endtime_dt = DateTime->new(
+          ( map { $_ => $param{'starttime_'.$_} } ( 'year','month','day' ) ),
+          hour=>23, minute=>59, second=>59, time_zone=>$openprint::TZ );
+      $NewShift = openprint::Shift->find_one(
+          'starttime >='  =>  $openprint::parser->format_datetime($starttime_dt),
+          'starttime <='  =>  $openprint::parser->format_datetime($endtime_dt),
+          ( $param{shift_id} ? ( shift_id       =>  $param{shift_id}) : () ),
+          equipment_id    =>  $param{equipment_id},
+          );
+    } else {
+      $log->debug("No valid startdate specified");
+    }
+
 		my $Job = new openprint::ScheduledJob();
 		$_ = $Job->save({
-				'project_id'	=>  $param{project_id},
-				'equipment_id'  =>  $param{equipment_id},
-				'starttime'	 =>  undef,
-				'service_id'	=>  [ split(',',$param{service_id}) ],
-				'servicetype_id'	=>  $Service->ServiceType->id(),
+				project_id			=>  $param{project_id},
+				equipment_id 	  =>  $param{equipment_id},
+				starttime	 			=>  ( $NewShift ? $NewShift->starttime() : undef ),
+				service_id			=>  [ split(',',$param{service_id}) ],
+				servicetype_id	=>  $Service->ServiceType->id(),
 				});
 		if ( $_ ) {
 			$variable{error} .= 'Error adding to press schedule: ' . $_;
 		} else {
 			if ( sets::isin( $variable{name}, 'Printing','Signature' ) ) {
 				my $sig_specs = $Service->specs();
-				$Job->Project()->add_to_log( @session{'company_id','user_id'}, "Added Form $$sig_specs{SignatureIndex} to pending schedule for " . $Job->Equipment()->strid() );
+				$Job->Project()->add_to_log( @session{'company_id','user_id'}, "Added Form $$sig_specs{SignatureIndex} to schedule for " . $Job->Equipment()->strid() );
 			} else {
-				$Job->Project()->add_to_log( @session{'company_id','user_id'}, "Added " . $Service->ServiceType->name() . " to pending schedule." );
+				$Job->Project()->add_to_log( @session{'company_id','user_id'}, "Added " . $Service->ServiceType->name() . " to schedule." );
 			} # end if
+			if ( $NewShift ) {
+				$Job->bump( undef, $NewShift );
+			}
 		} # end if
 
 	} # end if
@@ -1107,6 +1129,24 @@ sub _additional_charge_notifications {
 		$variable{information} = 'Additional Charges Email sent.' . $_;
 	} # end if action 
 } # end sub _additional_charge_notifications 
+
+sub _change {
+	if ( $param{action} ) {
+		if ( $param{action} eq 'setduedate' ) {
+
+			my $Project = openprint::Project->find_one( id=>$param{project_id} );
+			if ( ! $Project ) {
+					$log->error("Project $param{project_id} not found in set_duedate");
+					return;
+			} # end if
+			$Project->change_due_date($param{duedate});
+		} else {
+			$log->error("Unrecognized action $param{action} in project _change");
+		} # end if action
+	} else {
+		$log->error("No action in project _change");
+	} # end if action
+} # end sub _change
 
 1;
 __END__

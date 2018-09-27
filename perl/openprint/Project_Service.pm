@@ -10,7 +10,7 @@ require openprint::Project_Service_Operator;
 
 use vars qw( $debug %fields %find_fields %transforms %defaults $table %serial @identified_by );
 
-$debug = 1;
+$debug = 0;
 %fields = (
 	service_id			=>	'lngserviceindex',
 	project_id			=>	'lngprojectindex',
@@ -91,42 +91,63 @@ sub service_type {
 } # end sub service_type
 
 sub Equipment {
-	my ( $self, $qty_index ) = @_;
+	my ( $self, $qty_index, @pertains ) = @_;
 
-	if ( ! $$self{Equipment} ) {
-		if ( ! $qty_index ) { 
-			# Want ordered quantity
-			$qty_index = $self->Project()->ordered_quantity_index();
-		} # end if
-		
-		my $specs = $self->specs();
-		my $ServiceType = $self->ServiceType();
+	my @Equipment;
+	my $Project = $self->Project();
 
-		if ( $ServiceType->name() eq 'Cutting' ) {
-			$$self{Equipment} = openprint::Equipment->find_one(
-					'use_in_scheduling'=>1,
-					'Specifications'=>{'Cutting Capable'=>'Y'},
-					);
-		} elsif ( $ServiceType->name() eq 'Folding' ) {
-			$$self{Equipment} = openprint::Equipment->find_one(
-					'use_in_scheduling'=>1,
-					'Specifications'=>{'Folding Capable'=>'Y'},
-					);
+	if ( ! $qty_index ) { 
+# Want ordered quantity
+		$qty_index = $Project->ordered_quantity_index();
+	} # end if
+
+	my $specs = $self->specs();
+	my $ServiceType = $self->ServiceType();
+
+	if ( $ServiceType->name() eq 'Cutting' ) {
+		my @equipment_ids;
+		foreach my $s_id ( @pertains ) {
+			my $sig_specs = openprint::service::get_specs_ref( $Project, $s_id );
+			my $form = $$sig_specs{SignatureIndex};
+
+			if ( $$specs{"ddmEquipment-$form-$qty_index"} ) {
+				push @equipment_ids, $$specs{"ddmEquipment-$form-$qty_index"};
+			}
+			if ( $$specs{"FoldingEquipment-$form-$qty_index"} ) {
+				push @equipment_ids, $$specs{"FoldingEquipment-$form-$qty_index"};
+			}
+			# Don't do stock cut equipment
+		} # end foreach s_id
+
+		@Equipment = openprint::Equipment->find(
+				id	=>	[ sets::union( @equipment_ids ) ],
+				useinscheduling	=>1,
+				) if @equipment_ids;
+
+	} elsif ( $ServiceType->name() eq 'Folding' ) {
+		@Equipment = openprint::Equipment->find(
+				useinscheduling	=>	1,
+				Specifications		=>	{'Folding Capable'=>'Y'},
+				);
 		} elsif ( $ServiceType->name() eq 'Stitching' ) {
 			if ( $$specs{'ddmEquipment'.$qty_index} ) {
-				$$self{Equipment} =  new openprint::Equipment( $$specs{'ddmEquipment'.$qty_index} );
-			} else {
-			$$self{Equipment} = openprint::Equipment->find_one(
-					'use_in_scheduling'=>1,
-					'Specifications'=>{'Stitching Capable'=>'Y'},
-					);
+				@Equipment = openprint::Equipment->find(
+						useinscheduling =>	1,
+						id	=>	$$specs{'ddmEquipment'.$qty_index},
+						);
+			}
+			if ( !@Equipment ) {
+				@Equipment = openprint::Equipment->find(
+						useinscheduling =>	1,
+						Specifications		=>	{'Stitching Capable'=>'Y'},
+						);
 			} # end if
 		} elsif ( ( $ServiceType->name() eq '' ) or $ServiceType->name() eq 'Signature' ) {
-			$$self{Equipment} = openprint::Equipment->find_one( strid=>$$specs{UsePress} );
+			@Equipment = openprint::Equipment->find( strid=>$$specs{UsePress} );
 		} # end if
-	} # end if $$self{Equipment}
-	return new openprint::Equipment() if ! $$self{Equipment};
-	return $$self{Equipment};
+
+	#} # end if $$self{Equipment}
+	return @Equipment;
 } # end sub Equipment
 
 sub runtime {

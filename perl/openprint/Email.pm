@@ -249,8 +249,8 @@ sub add_pdf_attachment_from_html {
 	if ( File::Slurp::write_file('/tmp/'.$name.'.html', { atomic => 1, err_mode=>'carp' }, \$html ) ) {
     `wkhtmltopdf -q "/tmp/$name.html" "/tmp/$name.pdf"`;
     my $pdf = File::Slurp::read_file( "/tmp/$name.pdf", err_mode => 'carp' );
-    #unlink "/tmp/$name.html";
-    #unlink "/tmp/$name.pdf";
+    unlink "/tmp/$name.html";
+    unlink "/tmp/$name.pdf";
     if ( $pdf ) {
       push @attachments, ($name.'.pdf', MIME::Base64::encode_base64($pdf), 'application/octet-stream', 'base64');
     } else {

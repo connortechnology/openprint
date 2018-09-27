@@ -41,7 +41,7 @@ my $Lexicon;
 sub slurp_content {
 	my ( $file ) = @_;
 
-$log->debug("Slurping file $file");
+#$log->debug("Slurping file $file");
 
 	if ( ! ( $file =~ /^\// ) ) {
 		# Use a path relative to the current page
@@ -265,12 +265,25 @@ sub make_drop_down {
 		} # end for
 	} # end if
 	for ( my $n = 0; $n < @{$search_data}; $n += 2 ) {
-		$temp .= sprintf('<option value="%s"%s>%s</option>',
-			( $$options{encode} ? HTML::Entities::encode_entities(Encode::encode('utf-8',$$search_data[$n])) : $$search_data[$n] ),
-			( $selected{ $$search_data[$n] } ? ' selected="selected"' : '' ),
-			( $$options{encode} ? HTML::Entities::encode_entities( Encode::encode('utf-8',$$options{length} ? substr($$search_data[$n + 1],0, $$options{length}) : $$search_data[$n + 1] ) ) : ( $$options{length} ? substr($$search_data[$n + 1],0, $$options{length}) : $$search_data[$n + 1] ) ),
-		);
+		
+		$temp .= join('','<option value="',
+				( $$options{encode} ? HTML::Entities::encode_entities(Encode::encode('utf-8',$$search_data[$n])) : $$search_data[$n] ),
+				'"',
+				( $selected{ $$search_data[$n] } ? ' selected="selected"' : '' ),
+				'>',
+				( $$options{encode} ? HTML::Entities::encode_entities( Encode::encode('utf-8',$$options{length} ? substr($$search_data[$n + 1],0, $$options{length}) : $$search_data[$n + 1] ) ) : ( $$options{length} ? substr($$search_data[$n + 1],0, $$options{length}) : $$search_data[$n + 1] ) ),
+				'</option>',
+				);
 	} # end for
+	if ( $$options{append} ) {
+		for ( my $n = 0; $n < @{$$options{append}}; $n += 2 ) {
+			$temp .= sprintf('<option value="%s"%s>%s</option>',
+					( $$options{encode} ? HTML::Entities::encode_entities(Encode::encode('utf-8',$$options{append}[$n])) : $$options{append}[$n] ),
+					( $selected{ $$options{append}[$n] } ? ' selected="selected"' : '' ),
+					( $$options{encode} ? HTML::Entities::encode_entities( Encode::encode('utf-8',$$options{length} ? substr($$options{append}[$n + 1],0, $$options{length}) : $$options{append}[$n + 1] ) ) : $$options{length} ? substr($$options{append}[$n + 1],0, $$options{length}) : $$options{append}[$n + 1] ),
+					);
+		} # end for
+	} # end if
 	return $temp;
 } # sub make_drop_down
 
@@ -600,7 +613,7 @@ sub date_select {
 	} # end if
 	if ( ref $options eq 'HASH' ) {
 	} elsif ( $options ) {
-		$options = {'onchange'=>$options};
+		$options = {onchange=>$options};
 	} # end if
 #$openprint::log->debug(" date_select: $value : ($year,$month,$day), order: $$options{order}");
 	$$options{order} = 'y,m,d' if ! $$options{order};
@@ -618,18 +631,18 @@ sub date_select {
 
 	my $html = '<span class="'.$class.'">';
 	$html .= sprintf('<span id="%1$s_date">', $prefix );
-	foreach my $o ( split(',', $$options{order} ) ) {
-		if ( ( $o eq 'y' ) and ( (!@fields) or sets::isin( 'year', \@fields ) ) ) {
+	foreach my $o ( split(',', $$options{order}) ) {
+		if ( ( $o eq 'y' ) and ( (!@fields) or sets::isin('year', \@fields) ) ) {
 			$html .= sprintf(q`<select id="%1$s_year" name="%1$s_year" onchange="setDaysDropDown(this.value,this.form.elements['%1$s_month'].value,this.form.elements['%1$s_day'],this.form.elements['%1$s_day'].value);%2$s"><option value=""> </option>`, $prefix, $$options{onchange} );
 			$html .= return_years( $start_year, $end_year, $year );
 			$html .= '</select>';
 #$log->debug($html);
-		} elsif ( ( $o eq 'm' ) and ( (!@fields) or sets::isin( 'month', \@fields ) ) ) {
+		} elsif ( ( $o eq 'm' ) and ( (!@fields) or sets::isin('month', \@fields) ) ) {
 			$html .= sprintf(q`<select id="%1$s_month" name="%1$s_month" onfocus="this.previousValue=this.value" onchange="setDaysDropDown(this.form.elements['%1$s_year'].value,this.value,this.form.elements['%1$s_day'],this.form.elements['%1$s_day'].value, this.previousValue);%2$s;this.previousValue=this.value;"><option value=""> </option>`, $prefix, $$options{onchange} );
 			$html .= getmonths( $month );
 			$html .= '</select>';
 #$log->debug($html);
-		} elsif ( ( $o eq 'd' ) and ( (!@fields) or sets::isin( 'day', \@fields ) ) ) {
+		} elsif ( ( $o eq 'd' ) and ( (!@fields) or sets::isin('day', \@fields) ) ) {
 			$html .= sprintf('<select id="%1$s_day" name="%1$s_day" onchange="%2$s"><option value=""> </option>', $prefix, $$options{onchange} );
 			$html .= getdays( $day, int($year), int($month) );
 			$html .= '</select>';
@@ -637,10 +650,16 @@ sub date_select {
 		} # endif
 	} # end foreach o
 	if ( $$options{with_clear} ) {
-		$html .= button( $prefix.'_clear', { 'onclick'=>q`date_clear( $('`.$prefix.q`_year'), $('`.$prefix.q`_month'), $('`.$prefix.q`_day') );`.$$options{onchange}, text=>'C', title=>'Clear', class=>'Clear'} );
+		$html .= button( $prefix.'_clear', {
+				onclick=>q`date_clear( $('`.$prefix.q`_year'), $('`.$prefix.q`_month'), $('`.$prefix.q`_day') );`.$$options{onchange},
+				text=>'C', title=>'Clear', class=>'Clear',
+				} );
 	} # end if
 	if ( $$options{with_today} ) {
-		$html .= button( $prefix.'_today', { 'onclick'=>q`set_today( $('`.$prefix.q`_year'), $('`.$prefix.q`_month'), $('`.$prefix.q`_day') );`.$$options{onchange}, text=>'T', title=>'Today', class=>'Today'} );
+		$html .= button( $prefix.'_today', {
+				onclick=>q`set_today( $('`.$prefix.q`_year'), $('`.$prefix.q`_month'), $('`.$prefix.q`_day') );`.$$options{onchange},
+				text=>'T', title=>'Today', class=>'Today',
+				} );
 	} # end if
 	$html .= '<span id="'.$prefix.'_alert"></span>';
 	$html .= '</span></span>';

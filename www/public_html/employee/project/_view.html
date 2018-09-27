@@ -573,7 +573,7 @@ $log->debug("price for stock$stock_index qty $qty_index: " . $Stock->to_string()
         my $need_add = 0;
         my $pending = 0;
         foreach my $sig_id ( $$variable{Project}->signatures() ) {
-          my $Job = openprint::ScheduledJob->find_one('project_id'=>$$variable{ProjectIndex}, 'service_id any'=>$sig_id );
+          my $Job = openprint::ScheduledJob->find_one(project_id=>$$variable{ProjectIndex}, 'service_id any'=>$sig_id );
           if ( ! $Job ) {
             $need_add = 1;
           } elsif ( ! $Job->starttime() ) {
@@ -582,9 +582,9 @@ $log->debug("price for stock$stock_index qty $qty_index: " . $Stock->to_string()
         } # end foreach sig_id
 
         if ( $need_add ) {
-          $html .= button( 'AddToPressSchedule'.$$variable{Project}{id}, { onclick=>qq`form_submit('$$variable{formname}','AddToPressSchedule');`, text=>'Add To Press Schedule' } );
+          $html .= button( 'AddToPressSchedule'.$$variable{Project}{id}, { onclick=>qq`form_submit('$$variable{formname}','AddToPressSchedule');`, text=>'Add To Schedule' } );
         } else {
-          $html .= button( 'RemoveFromPressSchedule'.$$variable{Project}{id}, { onclick=>qq`form_submit('$$variable{formname}','RemoveFromPressSchedule');`, text=>'Remove from Press Schedule' } );
+          $html .= button( 'RemoveFromPressSchedule'.$$variable{Project}{id}, { onclick=>qq`form_submit('$$variable{formname}','RemoveFromPressSchedule');`, text=>'Remove from Schedule' } );
         } # end if
         if ( $pending ) {
           $html .= button( 'ScheduleJob'.$$variable{Project}{id}, { onclick=>qq`form_submit('$$variable{formname}','BumpSchedule');`, text=>'Schedule' } );
@@ -595,6 +595,7 @@ $log->debug("price for stock$stock_index qty $qty_index: " . $Stock->to_string()
       }
 
       my @bindery_services = openprint::print_project::get_services_in_category( $log, $dbh, $$variable{ProjectIndex}, 'Bindery' );
+if ( 0 ) {
 
       if ( $$variable{ProjectStatus} eq 'Printed' and @bindery_services and ! ( sql::execute( undef, undef, q{SELECT serviceindex FROM Bindery_Schedule WHERE projectindex=?}, $$variable{ProjectIndex} ) ) ) {
         $html .= button( 'AddToBinderySchedule'.$$variable{Project}{id}, { onclick=>qq`form_submit('$$variable{formname}','AddToBinderySchedule');`, text=>'Add To Bindery Schedule' } );
@@ -602,6 +603,7 @@ $log->debug("price for stock$stock_index qty $qty_index: " . $Stock->to_string()
       #if ( openprint::usergroup::is_user_in( ['Scheduling','Accounting'], $session{user_id} ) ) {
       #$html .= button( 'Complete'.$$variable{Project}{id}, { onclick=>qq`form_submit('$$variable{formname}','Complete');`, text=>'Complete' } );
       #} # end if
+}
       if ( @bindery_services ) {
         $html .= button( 'CompleteBindery'.$$variable{Project}{id}, { onclick=>qq`form_submit('$$variable{formname}','BinderyComplete');`, text=>'Complete Bindery' } );
       } # end if
@@ -609,7 +611,7 @@ $log->debug("price for stock$stock_index qty $qty_index: " . $Stock->to_string()
 
         $html .= button( 'Shipped'.$$variable{Project}{id}, { onclick=>qq`form_submit('$$variable{formname}','Shipped');`, text=>'Shipped' } );
       } # end if
-      if ( $$variable{Project}->shippingtype() eq 'CustomerPickUp' and $$variable{Project}->status() ne 'Picked Up' ) {
+      if ( ( (!$$variable{Project}->shippingtype()) or $$variable{Project}->shippingtype() eq 'CustomerPickUp' ) and $$variable{Project}->status() ne 'Picked Up' ) {
         $html .= button( 'PickedUp'.$$variable{Project}{id}, { onclick=>qq`form_submit('$$variable{formname}','Picked Up');`, text=>'Picked Up' } );
       } # end if
       if ( $session{user_type} eq 'A' or $openprint::User->id() == $$variable{Order}->salesrep_id() or openprint::usergroup::is_user_in( ['Sales Admin','Scheduling','PrepressManager'], $session{user_id} ) ) {

@@ -1102,7 +1102,7 @@ $openprint::log->debug("Autoload $type $name $_[0] $_[1] $self $newvalue") if ! 
 sub to_string {
 	my $type = ref($_[0]);
 	my $fields = eval '\%'.$type.'::fields';
-    return $type . ': '. join(' ' , map { $_[0]{$_} ? "$_ => $_[0]{$_}" : () } keys %$fields );
+    return $type . ': '. join(' ' , map { $_[0]{$_} ? $_ . ' => ' . (ref $_[0]{$_} eq 'ARRAY' ? join(',',@{$_[0]{$_}}) : $_[0]{$_} ) : () } keys %$fields );
 }
 
 sub dropdown {
@@ -1376,7 +1376,7 @@ sub Assets {
 	$param{order}	= 'asset_id' if ! $param{order};
 	$param{object_type} = ref $_[0];
 	my @Assets = openprint::Object_Asset->find(%param);	
-$openprint::log->debug("# of Assets: " . scalar @Assets );
+$openprint::log->debug("# of Assets: " . scalar @Assets ) if $debug;
 	return @Assets;
 } # end sub Assets
 

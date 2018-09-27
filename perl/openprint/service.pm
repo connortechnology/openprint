@@ -66,7 +66,7 @@ $openprint::log->debug("Module is: $module");
 	# make this fast by doing it in one transaction, locking does the tranasaction for us
 	$Project->lock();
 	my @changes;
-	foreach my $key (@variables) {
+	foreach my $key ( sort { $a cmp $b } @variables) {
 #$log->debug("Key: $key ($openprint::param{$key}) ( $$specs{$key})");
 		if ( ref $openprint::param{$key} eq 'ARRAY' ) {
 #$log->error("Key: $key ($openprint::param{$key}) ( $$specs{$key})");

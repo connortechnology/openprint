@@ -30,7 +30,7 @@ use vars qw( $log $dbh %config );
 
 $openprint::Object::no_cache = 1;
 
-$log = new logger( 'debug' );
+$log = new logger('debug');
 
 $ARGV[1] = $ARGV[0] if ! $ARGV[1];
 $ARGV[2] = $ARGV[1] if ! $ARGV[2];
@@ -295,8 +295,8 @@ if ( ! sets::isin( 'users', \@tables ) ) {
 } else {
 	my $data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='users'", 'column_name');
 	if ( $data ) {
-		print "Updating Users...\n";
 		if ( ! exists $$data{deleted} ) {
+			$log->debug("Adding deleted to Users");
 			my $ac = sql::start_transaction( $dbh );
 			$dbh->do(q`alter table Users add deleted boolean`);
 			$dbh->do(q`alter table Users alter deleted set default false`);
@@ -305,9 +305,11 @@ if ( ! sets::isin( 'users', \@tables ) ) {
 			sql::end_transaction( $dbh, $ac );
 		} 
 		if ( ! exists $$data{wage} ) {
+			$log->debug("Adding wage to Users");
 			$dbh->do(q`alter table Users add wage float`);
 		} # end if
 		if ( exists $$data{strfirstname} ) {
+			$log->debug("renameing various columns getting rid of str");
 			my $ac = sql::start_transaction( $dbh );
 			$dbh->do(q`alter table Users rename column strfirstname to firstname`);
 			$dbh->do(q`alter table Users rename column strlastname to lastname`);
@@ -373,6 +375,7 @@ if ( ! sets::isin( 'users', \@tables ) ) {
 		} # end if
 	} # end if
 	if ( sets::isin( 'users_index_seq', \@sequences ) ) {
+		$log->debug("Adding users_id_seq");
 		if ( ! sets::isin( 'users_id_seq', \@sequences ) ) {
 			$dbh->do('CREATE SEQUENCE users_id_seq');
 		} # end if
@@ -893,6 +896,23 @@ if ( sets::isin( 'project_types', \@tables ) ) {
 	if ( exists $$data{strtemplateurl} ) {
 		$dbh->do('ALTER TABLE Project_Types drop strtemplateurl');
 	}
+	if ( ! exists $$data{deleted} ) {
+		$log->debug("Add deleted to Project_Types");
+		$dbh->do('ALTER TABLE Project_Types add deleted boolean not null default false') or die $dbh->errstr();
+	}
+	if ( ! exists $$data{please_call} ) {
+		$dbh->do('ALTER TABLE Project_Types add please_call boolean not null default false');
+	} # endif
+	if ( ! exists $$data{type} ) {
+		$dbh->do('ALTER TABLE project_types add type text');
+		$dbh->do(q`UPDATE project_types SET type='SinglePage'`);
+		$dbh->do(q`UPDATE project_types SET type='MultiPage' WHERE name='MultiPage'`);
+		$dbh->do(q`UPDATE project_types SET type='MultiPage' WHERE name='MultiPagePublication'`);
+		$dbh->do(q`UPDATE project_types SET type='MultiPage' WHERE name='Magazines'`);
+		$dbh->do(q`UPDATE project_types SET type='MultiPage' WHERE name='Newsletters'`);
+		$dbh->do(q`UPDATE project_types SET type='MultiPage' WHERE name='Calendars'`);
+		die $dbh->errstr() if $dbh->errstr();
+	} # end if
 } else {
 	$dbh->do( misc::load_file( $log, q{../openprint/sql/Project_Types.sql}) );
 } # end if
@@ -3219,11 +3239,35 @@ if ( sets::isin( 'equipment_shifts', \@tables ) ) {
 		$dbh->do('ALTER TABLE Equipment_shifts add id serial');
 		$dbh->do('ALTER TABLE Equipment_shifts add PRIMARY KEY (id)');
 	} # end if
+	if ( ! exists $$data{operator_ids} ) {
+		$dbh->do("ALTER TABLE Equipment_Shifts ADD operator_ids INTEGER[]") or die $dbh->errstr();
+		if ( exists $$data{operator_id} ) {
+			$log->debug("Updating operator_ids and removing operator_id");
+			$dbh->do("UPDATE Equipment_Shifts SET operator_ids = ARRAY[operator_id]") or die $dbh->errstr();
+		}
+	}
+	if ( exists $$data{operator_id} ) {
+		$log->debug("DROPPING operator_id from Equipment_Shifts");
+		$dbh->do("ALTER TABLE Equipment_Shifts DROP operator_id") or die $dbh->errstr();
+	}
 } # end if
 
 if ( ! sets::isin('shifts',\@tables ) ) {
 	$dbh->do( misc::load_file( $log, q{../openprint/sql/Shifts.sql}) );
+} else {
+	my $data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='shifts'", 'column_name');
 	die if $dbh->errstr();
+	if ( ! exists $$data{operator_ids} ) {
+		$dbh->do("ALTER TABLE Shifts ADD operator_ids INTEGER[]") or die $dbh->errstr();
+		if ( exists $$data{operator_id} ) {
+			$log->debug("Updating operator_ids and removing operator_id");
+			$dbh->do("UPDATE Shifts SET operator_ids = ARRAY[operator_id]") or die $dbh->errstr();
+		}
+	}
+	if ( exists $$data{operator_id} ) {
+		$log->debug("DROPPING operator_id FROM Shifts");
+		$dbh->do("ALTER TABLE Shifts DROP operator_id") or die $dbh->errstr();
+	}
 } # end if
 
 if ( ! sets::isin('user_notification_types',\@tables ) ) {
@@ -4226,6 +4270,7 @@ if ( sets::isin( 'invoice_logs', \@tables ) ) {
 		});
 		die if $dbh->errstr();
     }
+		$dbh->do('DROP TABLE Invoice_Logs') or die $dbh->errstr();
 	sql::end_transaction( $dbh, $ac );
 
 } # end if
@@ -4516,19 +4561,6 @@ if ( sets::isin( 'tbl_service_defaults', \@tables ) ) {
 		$dbh->do('ALTER TABLE tbl_service_defaults add FOREIGN KEY (projecttype_id) REFERENCES project_types (id) ');
 	} # end if
 } # end if
-if ( sets::isin( 'project_types', \@tables ) ) {
-	$data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='project_types'", 'column_name');
-	if ( ! exists $$data{type} ) {
-		$dbh->do('ALTER TABLE project_types add type text');
-		$dbh->do(q`UPDATE project_types SET type='SinglePage'`);
-		$dbh->do(q`UPDATE project_types SET type='MultiPage' WHERE name='MultiPage'`);
-		$dbh->do(q`UPDATE project_types SET type='MultiPage' WHERE name='MultiPagePublication'`);
-		$dbh->do(q`UPDATE project_types SET type='MultiPage' WHERE name='Magazines'`);
-		$dbh->do(q`UPDATE project_types SET type='MultiPage' WHERE name='Newsletters'`);
-		$dbh->do(q`UPDATE project_types SET type='MultiPage' WHERE name='Calendars'`);
-		die $dbh->errstr() if $dbh->errstr();
-	} # end if
-} # end if
 if ( sets::isin( 'service_types', \@tables ) ) {
 	$data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='service_types'", 'column_name');
 	if ( ! exists $$data{projecttype_id} ) {
@@ -4544,13 +4576,13 @@ if ( ! sets::isin('signaturecapture', \@tables ) ) {
 	$dbh->do( misc::load_file( $log, q{../openprint/sql/SignatureCapture.sql}) );
 } # end if
 if ( sets::isin( 'emailcampaigns', \@tables ) ) {
-$log->debug("has email_campaigns");
 	$data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='emailcampaigns'", 'column_name');
 	if ( ! $$data{nextrun} ) {
-		$dbh->do( 'ALTER TABLE emailcampaigns add nextrun timestamp with time zone' );
+		$log->debug("Adding nextrun to emailcampaigns");
+		$dbh->do('ALTER TABLE emailcampaigns add nextrun timestamp with time zone') or die $dbh->errstr();;
 	} # end if
 	if ( ! exists $$data{email_to} ) {
-$log->debug("Add email_to");
+		$log->debug("Add email_to");
 		$dbh->do('ALTER TABLE emailcampaigns add email_to text');
 	} # end if
 	if ( ! exists $$data{email_html} ) {
@@ -4801,13 +4833,6 @@ if ( sets::isin( 'tbl_equipment', \@tables ) ) {
 	} # end if
 } # end if
 
-if ( sets::isin( 'equipment_shifts', \@tables ) ) {
-my $data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='equipment_shifts'", 'column_name');
-if ( ! exists $$data{operator_id} ) {
-	$dbh->do('ALTER TABLE equipment_shifts ADD operator_id INTEGER');
-	$dbh->do('ALTER TABLE equipment_shifts ADD FOREIGN KEY (operator_id) REFERENCES Users (id)');
-} # end if
-} # end if
 if ( ! sets::isin( 'par', \@tables ) ) {
     $dbh->do( misc::load_file( $log, '../openprint/sql/PAR.sql' ) );
     die $dbh->errstr() if $dbh->errstr();
@@ -4879,7 +4904,7 @@ my %config_actions = (
 	'Add Currency'			=>	76,
 	'Update Configuration' => 77,
 	'Login Failed'	=> 78,
-	'Select Company'	=>	79,
+	'Switch Company'	=>	79,
 	'Login'		=>	2,
 	'Logout'	=>	3,
 	'Service Copy'	=>	27,
@@ -4985,15 +5010,6 @@ if ( ! sets::isin( 'privacy_groups', \@tables ) ) {
     $dbh->do( misc::load_file( $log, '../openprint/sql/Privacy_Groups.sql' ) );
     die $dbh->errstr() if $dbh->errstr();
 } # end if
-if ( ! sets::isin( 'project_types', \@tables ) ) {
-    $dbh->do( misc::load_file( $log, '../openprint/sql/Project_Types.sql' ) );
-    die $dbh->errstr() if $dbh->errstr();
-} else {
-	my $data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='project_types'", 'column_name');
-	if ( ! exists $$data{please_call} ) {
-		$dbh->do('ALTER TABLE Project_Types add please_call boolean not null default false');
-	} # endif
-}
 if ( ! sets::isin( 'emailcampaigns', \@tables ) ) {
     $dbh->do( misc::load_file( $log, '../openprint/sql/EmailCampaigns.sql' ) );
     die $dbh->errstr() if $dbh->errstr();
@@ -5529,6 +5545,7 @@ my $data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, c
 }
 $dbh->do( 'update service_prices set units=lower(units)');
 $dbh->do( 'update paper_prices set strunits=lower(strunits)');
+$log->debug("Updating locations for all companies");
 foreach my $Company ( openprint::Company->find() ) {
 	my $Country;
 	if ( $Company->country() ) {
@@ -5671,11 +5688,24 @@ if ( sets::isin('product_specifications', \@tables ) ) {
 	$dbh->do('DROP TABLE product_specifications');
 }
 
+if ( ! sets::isin('backups', \@tables ) ) {
+  $log->debug("Adding Backups");
+  $dbh->do( misc::load_file( $log, q{../openprint/sql/Backups.sql}) );
+  die if $dbh->errstr();
+}
+
 if ( ! sets::isin('operator_roles', \@tables ) ) {
 	$log->debug("Adding Operator Roles");
 	$dbh->do( misc::load_file( $log, q{../openprint/sql/Operator_Roles.sql}) );
 	die if $dbh->errstr();
+} else {
+	my $data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='operator_roles'", 'column_name');
+	if ( ! exists $$data{sorting} ) {
+$log->debug("Adding sorting to Operator_ROles");
+		$dbh->do('ALTER TABLE operator_roles add sorting integer');
+	} # end if
 } # end if
+
 if ( ! sets::isin('project_service_operators', \@tables ) ) {
 	$log->debug("Adding Project Service Operators");
 	$dbh->do( misc::load_file( $log, q{../openprint/sql/Project_Service_Operators.sql}) );

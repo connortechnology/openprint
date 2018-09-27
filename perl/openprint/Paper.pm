@@ -1414,8 +1414,8 @@ sub load_from_signature {
 			} else {
 				$$Paper{Supplied} = $Paper->clone();
 			} # end if
-		} else {
-			$openprint::log->debug("load_from_signature called without qty_index:$qty_index paper_id:". $$specs{'paper_id'.$qty_index});
+		#} else {
+			#Carp::cluck("load_from_signature called without qty_index:$qty_index and paper_id:". $$specs{'paper_id'.$qty_index});
 		}
 		if ( ! ( $$specs{ddmStockBrand} and $$specs{ddmStockFinish} and $$specs{ddmStockColour} and $$specs{ddmStockWeight} ) ) {
 			return new openprint::Paper();
@@ -1846,10 +1846,10 @@ sub check {
     return "may have invalid basis weight current:$$Paper{basis_mweight} != calculated:$$Copy{basis_mweight}";
   }
   if ( $Paper->brand() =~ /cover/i or $Paper->weight() =~ /cover/i and ( $Paper->basis_width() != 20 or $Paper->basis_height() != 26 ) ) {
-	  "may have has wrong basis size.";
+	  return "may have has wrong basis size.";
     }
   if ( ( $Paper->finish() =~ /1 side/i ) and ( $Paper->doublesided() ) ) {
-    "appears to be C1S, but is marked double sided.";
+    return "appears to be C1S, but is marked double sided.";
   }
 
 	return;

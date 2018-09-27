@@ -3,7 +3,7 @@
 	<form id="f1" name="f1" action="company_profile_fields.html" method="post">
 		<input type="hidden" name="action" id="action" />
 		<p class="buttons">
-		<? echo ( ssi::button('Save',{onclick=>q`$('action').value='Save';$('f1').submit();`});) ?>
+		<? echo ( button('Save',{onclick=>q`$j('#action').value='Save';$j('#f1').submit();`});) ?>
  		Use dragndrop for sorting.
 		</p>
 		<table class="List">
@@ -20,10 +20,10 @@
 					<th class="match">Match</th>
 					<th class="viewable">Viewable</th>
 					<th class="onregistration">On Registration</th>
- 					<th class="buttons"><? echo (ssi::button('New',{onclick=>'newField();'});) ?></th>
+ 					<th class="buttons"><? echo (button('New',{onclick=>'newField();'});) ?></th>
 				</tr>
 			</thead>
-			<tbody id="fields"><? echo ( include('_company_fields_tbody.html'); ) ?></tbody>
+			<tbody id="fields"><?include('_company_fields_tbody.html')?></tbody>
 		</table>
 	</form>
 </div>

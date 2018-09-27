@@ -11,6 +11,7 @@ $debug = 1;
 	id							=>	'id',
 	servicetype_id	=>	'servicetype_id',
 	name						=>	'name',
+	sorting			=> 'sorting',
 );
 %find_fields = (
 );
@@ -18,6 +19,7 @@ $debug = 1;
 );
 %defaults = (
 	servicetype_id	=>	undef,
+	sorting	=>	undef,
 );
 
 1;

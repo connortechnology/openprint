@@ -1,0 +1,31 @@
+<script type="text/javascript">
+function load_page() {
+	new Ajax.Updater( 'Results', '_syslog.html', { parameters: $('searchLog').serialize() } );
+}
+</script>
+<form id="searchLog" name="searchLog" action="syslog.html" method="post">
+	<fieldset class="filters"><legend>Search</legend>
+		<ul>
+			<li>
+				<label>Date</label>
+				<? echo ( join("\n to \n",
+              datetime_select_session( $r->uri(), 'date_time_start', { with_today=>1, with_clear=>1 } ),
+              datetime_select_session( $r->uri(), 'date_time_end', { with_today=>1, with_clear=>1 } ),
+              ); ) ?>
+			</li>
+      <li><label>Host</label>
+      </li>
+      <li><label>Service</label>
+      </li>
+      <li><label>Level</label>
+      </li>
+		</ul>
+		<p class="buttons">
+		<? echo ( button( 'Search', { onclick=>'load_page();' } ); ) ?>
+		</p>
+	</fieldset>
+</form>
+<fieldset>
+	<legend>Logs</legend>
+	<div id="Results"> </div>
+</fieldset>

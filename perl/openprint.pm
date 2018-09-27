@@ -1,7 +1,7 @@
 use strict;
 use warnings;
 package openprint;
-use vars qw( $r %variable %session %param %config $log $dbh $User $Company $TZ $Owner $Pricelist $Currency );
+use vars qw( $r %variable %session %param %config $log $dbh $User $Company $TZ $Owner $Pricelist $Currency $parser );
 
 
 sub session_init {
@@ -10,6 +10,8 @@ sub session_init {
 	require openprint::Pricelist;
 	require openprint::Currency;
 	require DateTime::TimeZone;
+
+	$parser = 'DateTime::Format::Pg';
  
 	if ( ! $openprint::config{Timezone} ) {
 		$log->error("You must configure a time zone.  Defaulting to America/Toronto");
