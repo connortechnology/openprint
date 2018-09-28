@@ -5,17 +5,27 @@
 	function check_inputs( form ) {
 		return true;
 	} //  end function check_inputs
-    var tinymce_options = {
-        mode : "textareas",
-        plugins: "paste",
-        theme : "advanced",
+
+  function toggle_monitored(e) {
+    if ( e.value == 1 ) {
+      $('offline_seconds').show();
+      $('notify_frequency').show();
+    } else {
+      $('offline_seconds').hide();
+      $('notify_frequency').hide();
+    }
+  }
+  var tinymce_options = {
+      mode : "textareas",
+      plugins: "paste",
+      theme : "advanced",
 theme_advanced_buttons1 : "bold,italic,underline,strikethrough,|,fontsizeselect,|,bullist,numlist,|,indent,outdent",
 theme_advanced_buttons2 : '',
 theme_advanced_buttons2 : '',
 cleanup : true
-    };
+  };
 
-    tinyMCE.init( tinymce_options );
+  tinyMCE.init( tinymce_options );
 </script>
 <div class="Host"><div class="Edit">
 <?include(/includes/error_reporting.html)?>
@@ -49,7 +59,7 @@ cleanup : true
 				</li>
 				<li>
 					<label>Monitor</label>
-					<? echo ( radio( 'monitored', [ '1','Yes','0','No' ], $$variable{Host}->monitored(), { onclick=>q`if(this.value==1){$('offline_seconds').show();}else{$('offline_seconds').hide()};`} ); ) ?>
+					<? echo ( radio( 'monitored', [ '1','Yes','0','No' ], $$variable{Host}->monitored(), { onclick=>q`toggle_monitored(this);`} ); ) ?>
 				</li>
 				<li id="offline_seconds"<? echo ( $$variable{Host}->monitored() ? '' : ' style="display: none;"' ) ?>><label>Seconds offline before notification</label>
 					<? echo ( input( type=>'cardinal', name=>'offline_seconds', value=>$$variable{Host}->offline_seconds() ); ) ?>
@@ -64,14 +74,14 @@ cleanup : true
 					<textarea id="description" name="description" rows="<? echo (count_lines($$variable{Host}->description()) ) ?>" onkeyup="textarea_resize(this);"><? echo ( $$variable{Host}->description() ) ?></textarea>
 				</li>
 				<li><label>Owner</label>
-				<input type="text" onkeyup="filter_companies('owner_id', {name:this.value,selected_id:get_ddm_value($('owner_id'))});" class="filter" />
-                <select id="owner_id" name="owner_id" onchange="stop_filter_companies();">
-                    <option value="">None</option>
+          <input type="text" onkeyup="filter_companies('owner_id', {name:this.value,selected_id:get_ddm_value($('owner_id'))});" class="filter" />
+          <select id="owner_id" name="owner_id" onchange="stop_filter_companies();">
+            <option value="">None</option>
 <? echo ( 
 my @owner_ids = sql::execute( undef, undef, 'SELECT DISTINCT owner_id FROM Hosts');
 make_drop_down( openprint::Company->dropdown(id=>[ @owner_ids, $openprint::Company->id() ]), $$variable{Host}->owner_id() );
 ) ?>
-                </select>
+          </select>
 				</li>
 				<li><label>Created On</label><? echo ( format_datetime( $$variable{Host}->created_on() ); ) ?></li>
 				<li><label>Updated On</label><? echo ( format_datetime( $$variable{Host}->updated_on() ); ) ?></li>
@@ -80,10 +90,10 @@ make_drop_down( openprint::Company->dropdown(id=>[ @owner_ids, $openprint::Compa
 <? if ( $$variable{Host}->id() ) ?>
 		<div class="content rightColumn">
 			<fieldset><legend>Photos</legend>
-				<? echo (
-            $$variable{Object} = $$variable{Host};
-            include('/employee/assets/_asset_upload.html');
-            ) ?>
+			<? echo (
+				$$variable{Object} = $$variable{Host};
+				include('/employee/assets/_asset_upload.html');
+      ) ?>
 			</fieldset>
 			<fieldset><legend>Notifications</legend>
 				<div id="notifications"><?include('_notifications.html')?></div>
@@ -96,6 +106,7 @@ make_drop_down( openprint::Company->dropdown(id=>[ @owner_ids, $openprint::Compa
 			</fieldset>
 		</div>
 <? endif ( $$variable{Host}->id() ) ?>
+		<br class="spacer"/>
 				<p class="buttons">
 					<? echo ( 
 						my $html;
@@ -206,14 +217,13 @@ make_drop_down( openprint::Company->dropdown(id=>[ @owner_ids, $openprint::Compa
 	</table>
 </fieldset>
 <? if ( $$variable{Host}->id() ) ?>
-            <fieldset><legend>Where</legend>
+<fieldset><legend>Where</legend>
 <? echo ( 
     $$variable{Location} = $$variable{Host}->Location();
-    return include( '/location/_location_fields.html' );
+    return include('/location/_location_fields.html');
 ) ?>
-            </fieldset>
+</fieldset>
 <? endif ( $$variable{Host}->id() ) ?>
-            </fieldset>
 </form>
 <? if ( $$variable{Host}->id() ) ?>
 <? echo ( include_logs( $$variable{Host} ); ) ?>
