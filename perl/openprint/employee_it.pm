@@ -23,6 +23,9 @@ require openprint::Software;
 require openprint::Location;
 require openprint::Syslog;
 
+sub index {
+}
+
 sub logs {
 	_logs();
 	ssi::setup_date_select( '/employee/it/logs.html', 'date_time_start', 0 );
