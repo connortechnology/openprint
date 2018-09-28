@@ -9,13 +9,15 @@
 		<div id="location_autocomplete" class="autocomplete" style="display:none;"></div>
 		<script type="text/javascript">
 		//Ajax.Autocompleter('location','location_autocomplete', '/location/_locations.html?type=place', { minChars: 2,afterUpdateElement : getSelectedLocation } );
-$('location').autocomplete( {minChars: 2, onSelect: getSelectedLocation, serviceUrl: '/location/_locations.html?type=place' } );
+var loc = $('location');
+if ( loc )
+  loc.autocomplete( {minChars: 2, onSelect: getSelectedLocation, serviceUrl: '/location/_locations.html?type=place' } );
 		</script>
 `, $$variable{Location}->name() );
 	$html .= '</li>';
 	if ( $session{user_type} eq 'A' ) {
 		$html .= '<li><label>Type</label><select name="location_type_id" id="location_type_id"><option value=""></option>'.
-		ssi::make_drop_down( openprint::Location_Type->dropdown(), $$variable{Location}->type_id() ).'</select></li>';
+		make_drop_down( openprint::Location_Type->dropdown(), $$variable{Location}->type_id() ).'</select></li>';
 	} # end if
 	$html .= sprintf('
 	<li><label>Address</label><input type="text" name="address" id="address" value="%s" /></li>
