@@ -134,7 +134,7 @@ sub variable_substitution {
 				$log->error( "Eval error of ($1), Reason: " . $@ ) if $@;
 			} elsif ( $command =~ /^echo\s*\(\s*(.*)\s*\)/ms ) {
 				$_ = eval $1;
-				$result .= $_;
+				$result .= $_ if $_;
 				$log->error( "Eval error ($@) of ($1), Reason: " . $@ ) if $@;
 			} elsif ( $command =~ /^translate\s*\(\s*([\S]+)\s*\)/ms ) {
 				$result .= translate($1);
