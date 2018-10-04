@@ -81,13 +81,27 @@ sub configuration {
 				#$variable{error} .= $C->delete();
 				#$C->description( $$C{name} ) if ! $C->description();
 				#$variable{error} .= $C->save({value=>$new_value, name=>$$C{name},  });
-			#} els
-			if ( $$C{value} ne $new_value ) {
-				$C->save({ value=>$new_value });
+        #} els
+        if ( $$C{value} ne $new_value ) {
+          if ( $$C{name} eq 'encrypt_passwords' ) {
+            if ( (!$$C{value}) and $new_value ) {
+              # Special case need to update everyone's passwords
+              foreach my $User ( openprint::User->find() ) {
+                my $ppr = Authen::Passphrase::BlowfishCrypt->new( cost => 8, salt_random => 1, passphrase => $$User{password} );
+                $variable{error} .= $User->save({ password => $ppr->as_rfc2307() });
+              } # end foreach User
+              $variable{error} .= $C->save({ value=>$new_value });
+            } else {
+              $variable{error} .= "Turning off encryption is a manual process.<br/>";
+              next;
+            }
+          } else {
+            $C->save({ value=>$new_value });
+          }
 			} else {
 				$log->debug("Value unchanged for $$C{name}: currnet: $$C{value} new: $param{$$C{name}}");
 			} # end if
-		} # end while
+		} # end foreach
 
 		# Add record to audit log - action "Update Configuration".
 		new openprint::Log()->save({action=>'Update Configuration'});
