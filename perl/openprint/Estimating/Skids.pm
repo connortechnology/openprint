@@ -420,7 +420,7 @@ sub overview_summary {
 	if ( $$services{BulkSkids} ) {
 		# The purpose of this is to put all the breakdown in the skids line and leave the other packaging summaries empty
 		if ( $$services{BulkSkids}[0] == $service_id ) {
-			if ( !$$specs{items_per_package} ) {
+			if ( $$specs{items_per_package} ) {
 				$summary .= $$specs{"txtItemsPerPackage$qty_index"} . ' per '.$package.'<br/>';
 			}
 			$summary .= $$specs{"txtPackageQuantity$qty_index"} . ' ' . $package . ( $$specs{"txtPackageQuantity$qty_index"} == 1 ? '' : 's' );
