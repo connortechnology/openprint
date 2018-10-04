@@ -31,7 +31,7 @@
 		} # end if
 		
 		my @Users = openprint::User->find( %filters );
-		my @Companies = openprint::Company->find(id=>[ map { $$_{company_id} } @Users ]) @Users;
+		my @Companies = openprint::Company->find(id=>[ map { $$_{company_id} } @Users ]) if @Users;
 
 		if ( $session{$uri.'?notification_type_id'} ) {
 			my %Notifications = map { $$_{user_id}, $_ } openprint::User_Notification->find( type_id=>$session{$uri.'?notification_type_id'} );
