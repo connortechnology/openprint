@@ -242,6 +242,9 @@ sub reboot {
 			post_url => 'cgi_reboot.',
 			};
 			$method = 'post';
+    } elsif( $_[0]->type() eq 'Grandview' ) {
+      $initial_url = $HI->ip();
+      $url = '/goform/maintenance?cmd=set&restart=yes';
 		} elsif( $_[0]->type() eq 'DLink DCS-910' ) {
 			$initial_url = $HI->ip();
 			$url = $HI->ip().'/ReplyF.htm';
