@@ -151,7 +151,7 @@ sub variable_substitution {
 			} elsif ( $command =~ /^slurp\s*\(\s*'?([^'\)]*)'?\s*\)/ms ) {
 				$result .= slurp_content( $1 );
 			} else {
-				$result .= $$variable{$command};
+				$result .= $$variable{$command} if $$variable{$command};
 			} # end if
 		} else {
 			return $result.$after;
