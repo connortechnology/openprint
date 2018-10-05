@@ -1,5 +1,9 @@
 <script type="text/javascript">
 	function check_inputs( form ) {
+    if(!form.elements['name'].value){
+      alert("Please give this backup a name.");
+      return false;
+    }
 		return true;
 	} //  end function check_inputs
     var tinymce_options = {
@@ -72,9 +76,11 @@ cleanup : true
   ) ?>
           </select>
 				</li>
+        <?if($$variable{Backup}->id())?>
 				<li><label>Created On</label><? echo ( format_datetime( $$variable{Backup}->created_on() ); ) ?></li>
 				<li><label>Updated On</label><? echo ( format_datetime( $$variable{Backup}->updated_on() ); ) ?></li>
 				<li><label>Last Ran</label><? echo ( format_datetime( $$variable{Backup}->lastran_on() ); ) ?></li>
+        <?endif($$variable{Backup}->id())?>
 			</ul>
 		</div>
 <br class="spacer"/>
