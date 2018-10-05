@@ -430,7 +430,13 @@ sub online {
 sub Owner {
   return new openprint::Company( $_[0]{owner_id} );
 }
-
+sub can_reboot {
+  if ( sets::isin( $_[0]->type(), [ 'AIC500', 'AIC500W', 'AIC777W', 'AIC747W','AIC250W','M8640','TL-WPA4220','D-Link DAP1522','DGS-1224T','DLink DCS-910','TP-Link Archer C7',
+        'DCS932L','DCS-933L','WG602v3' ] ) ) {
+    return !undef;
+  }
+  return undef;
+}
 
 1;
 __END__
