@@ -119,7 +119,7 @@ while(1) {
 	my @Hosts = openprint::Host->find( monitored=>1 );
 	foreach my $Host ( @Hosts ) {
 
-		$log->debug( $Host->hostname() . ' was ' . ( $Host->online() ? 'online' : 'offline' ) );
+		$log->debug( ($Host->hostname()?$Host->hostname():'host with no hostname') . ' was ' . ( $Host->online() ? 'online' : 'offline' ) );
 
 		my $online = undef;
 		my $now = time;
@@ -195,7 +195,7 @@ while(1) {
 		} # end if online status change
 
 		my $since = $now-($$Host{state_changed_on} ? $$Host{state_changed_on} : 0 );
-		$log->debug( $Host->hostname() . ' is now ' . ( $Host->online() ? 'online' : 'offline' ) . " $since seconds ago" );
+		$log->debug( ($Host->hostname() ? $Host->hostname() : 'unknown hostname'). ' is now ' . ( $Host->online() ? 'online' : 'offline' ) . " $since seconds ago" );
 		if ( ! $Host->online() ) {
 			if ( ( ! $$Host{notified} ) and ( (!$$Host{offline_seconds}) or ( $since > $$Host{offline_seconds} ) ) ) {
 				$_ = $Host->save({ notified=>1 });
