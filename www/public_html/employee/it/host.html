@@ -228,7 +228,7 @@ make_drop_down( openprint::Company->dropdown(id=>[ @owner_ids, $openprint::Compa
 	</table>
 </fieldset>
 <? if ( $$variable{Host}->id() ) ?>
-<fieldset><legend>Where</legend>
+<fieldset class="Where"><legend>Where</legend>
 <? echo ( 
     $$variable{Location} = $$variable{Host}->Location();
     return include('/location/_location_fields.html');
