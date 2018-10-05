@@ -152,7 +152,7 @@ sub host {
         }
       } # end foraech
     } elsif ( $param{action} eq 'GEOLookup' ) {
-      foreach my $I ( $Host->interfaces() ) {
+      foreach my $I ( $Host->Interfaces() ) {
         if ( ! $I->ip() ) {
           $variable{error} .= "Interface $$I{mac} does not have an ip.<br/>";
         } else {
