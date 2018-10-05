@@ -880,7 +880,7 @@ $log->debug("Selecting default $$options{default} for radio $name");
 				`, $name, $value, $label, checked( $value eq $selected ), 
 				( $onclick ? ' onclick="'.$onclick.'"' : '' ),
 				$$options{id},
-				( $$options{inline} ? '-inline' : '' ),
+				( ($$options{inline} or ! exists $$options{inline} ) ? '-inline' : '' ),
 				);
 		$html .= $$options{container}[1] if $$options{container};
 	} # end foreach value
