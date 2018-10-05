@@ -556,7 +556,7 @@ sub button {
 		$html .= '<span class="l"></span><span class="c" id="'.$name.'c"' . ( $$options{title} ? ' title="'.$$options{title}.'"' : '' ) .'>' . $$options{text} .'</span><span class="r"></span>';
 	}
 	#$html .= "</a>";
-	$html .= '</button>';
+	$html .= '</button>'."\n";
 	return $html;
 } # end sub button
 
@@ -695,17 +695,20 @@ sub date_select {
 #$log->debug($html);
 		} # endif
 	} # end foreach o
+  $html .= "\n";
 	if ( $$options{with_clear} ) {
 		$html .= button( $prefix.'_clear', {
 				onclick=>q`date_clear( $('`.$prefix.q`_year'), $('`.$prefix.q`_month'), $('`.$prefix.q`_day') );`.$$options{onchange},
 				text=>'C', title=>'Clear', class=>'Clear',
 				} );
+      $html .= "\n";
 	} # end if
 	if ( $$options{with_today} ) {
 		$html .= button( $prefix.'_today', {
 				onclick=>q`set_today( $('`.$prefix.q`_year'), $('`.$prefix.q`_month'), $('`.$prefix.q`_day') );`.$$options{onchange},
 				text=>'T', title=>'Today', class=>'Today',
 				} );
+      $html .= "\n";
 	} # end if
 	$html .= '<span id="'.$prefix.'_alert"></span>';
 	$html .= '</span></span>';
@@ -1229,7 +1232,16 @@ sub bootstrap_navmenu {
 
 	my $html;
 
-	foreach my $category ( sort keys %{$menu} ) {
+  my @categories;
+  if ( ref $menu eq 'ARRAY' ) {
+    @categories = map { $_%2 ? () : $$menu[$_] } 1 .. scalar @{$menu};
+    my %m = @{$menu};
+    $menu = \%m;
+  } else {
+    @categories = sort keys %{$menu};
+  }
+
+	foreach my $category ( @categories ) {
 		if ( ref $$menu{$category} ) {
 			my %urls = %{$$menu{$category}};
 			my $submenu_html;
