@@ -46,14 +46,15 @@ cleanup : true
 						<? echo ( make_drop_down( openprint::Host_Type->dropdown(order=>'lower(name)'), $$variable{Host}->type_id() ); ) ?>
 					</select>
 				</li>
-				<li>
+				<li class="blacklist">
 					<label>Blacklist</label>
 					<? echo ( radio( 'blacklist', [ '1','Yes','0','No' ], $$variable{Host}->blacklist() ); ) ?>
 				</li>
-				<li>
-					<label>Access violation count</label><input type="text" name="count" id="count" value="<? echo ( $$variable{Host}->count() ) ?>" />
+				<li class="access_violations">
+					<label>Access violation count</label>
+          <?echo(input(type=>'cardinal', name=>'count', id=>'count' value=>$$variable{Host}->count() ); )?>
 				</li>
-				<li>
+				<li class="whitelist">
 					<label>Whitelist</label>
 					<? echo ( radio( 'whitelist', [ '1','Yes','0','No' ], $$variable{Host}->whitelist() ); ) ?>
 				</li>
@@ -101,7 +102,7 @@ make_drop_down( openprint::Company->dropdown(id=>[ @owner_ids, $openprint::Compa
 			<fieldset><legend>Information</legend>
 				<div id="information"><?include('_information.html')?></div>
 			</fieldset>
-			<fieldset><legend>Licenses</legend>
+			<fieldset class="licenses"><legend>Licenses</legend>
 				<div id="licenses"><?include('_host_licenses.html')?></div>
 			</fieldset>
 		</div>
@@ -123,7 +124,9 @@ make_drop_down( openprint::Company->dropdown(id=>[ @owner_ids, $openprint::Compa
 						$html .= button( 'Resolve', { onclick=>"f1.elements['action'].value='Resolve';f1.action='/employee/it/host.html';f1.submit();" } );
 						$html .= button( 'Ping', { onclick=>"f1.elements['action'].value='ping';f1.action='/employee/it/host.html';f1.submit();" } );
 						$html .= button( 'Wake', { onclick=>"f1.elements['action'].value='Wake';f1.action='/employee/it/host.html';f1.submit();" } );
-						$html .= button( 'Reboot', { onclick=>"f1.elements['action'].value='reboot';f1.action='/employee/it/host.html';f1.submit();" } );
+            if ( $$variable{Host}->can_reboot() ) {
+            $html .= button( 'Reboot', { onclick=>"f1.elements['action'].value='reboot';f1.action='/employee/it/host.html';f1.submit();" } );
+            }
 						$html .= button( 'GEOLookup', { onclick=>"f1.elements['action'].value='GEOLookup';f1.action='/employee/it/host.html';f1.submit();" } );
 						return $html;
 					) ?>
@@ -174,8 +177,8 @@ make_drop_down( openprint::Company->dropdown(id=>[ @owner_ids, $openprint::Compa
 	$$Interface{id},
 	input( type=>'mac', name=>'mac-'.$$Interface{id}, value=>$$Interface{mac} ),
 	input( type=>'ip', name=>'ip-'.$$Interface{id}, value=>$Interface->ip() ),
-	checkboxes( 'monitor-'.$$Interface{id}, [ 1, 'monitor' ], $Interface->monitor() ),
-	checkboxes( 'dhcp-'.$$Interface{id}, [ 1, 'dhcp' ], $Interface->dhcp() ),
+	checkboxes( 'monitor-'.$$Interface{id}, [ 1, 'monitor' ], $Interface->monitor(), { contain=>['<span class="option_monitor">','</span>']} ),
+	checkboxes( 'dhcp-'.$$Interface{id}, [ 1, 'dhcp' ], $Interface->dhcp(), { container=>['<span class="option_dhcp">', '</span>' ] } ),
 	$Interface->comment(),
 	( defined($$Interface{online}) ? ( $$Interface{online} ? 'online' : 'offline' ) : '' ),
 );
