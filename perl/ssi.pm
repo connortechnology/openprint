@@ -873,9 +873,10 @@ $log->debug("Selecting default $$options{default} for radio $name");
 	while ( my ( $value, $label ) = splice @{$values}, 0, 2 ) {
 		$html .= $$options{container}[0] if $$options{container};
 		$html .= sprintf(q`
-				<label class="radio%7$s" for="%1$s%6$s%2$s">
-				<input type="radio" name="%1$s" value="%2$s" id="%1$s%6$s%2$s" %4$s%5$s />
-				%3$s</label>
+      <div class="form-check%7$s">
+				<label class="form-check-label radio%7$s" for="%1$s%6$s%2$s">
+				<input class="form-check-input" type="radio" name="%1$s" value="%2$s" id="%1$s%6$s%2$s" %4$s%5$s />
+				%3$s</label></div>
 				`, $name, $value, $label, checked( $value eq $selected ), 
 				( $onclick ? ' onclick="'.$onclick.'"' : '' ),
 				$$options{id},
