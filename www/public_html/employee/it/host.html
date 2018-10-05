@@ -3,6 +3,13 @@
 		jQuery.ajax( '_host_actions.json', { data: { interface_id: id, action: 'delete interface' } } );
 	}
 	function check_inputs( form ) {
+    if ( ! form.elements['hostname'].value ) {
+      if ( confirm('You should really enter something for the hostname field.  It does not have to be the actual hostname of the device, but can be something to help you identify it. Click Ok to save anyway.') ) {
+        return true;
+      } else {
+        return false;
+      }
+    }
 		return true;
 	} //  end function check_inputs
 
@@ -14,6 +21,8 @@
       $('offline_seconds').hide();
       $('notify_frequency').hide();
     }
+    console.log(e.value);
+    var checkboxes = $j('.option_monitor input').prop("checked", e.value == '1' ? true : false );
   }
   var tinymce_options = {
       mode : "textareas",
@@ -45,6 +54,7 @@ cleanup : true
 						<option value="">select</option>
 						<? echo ( make_drop_down( openprint::Host_Type->dropdown(order=>'lower(name)'), $$variable{Host}->type_id() ); ) ?>
 					</select>
+          <?echo(button('NewType',{onclick=>q`toggle_input( $j('#type_id'), $j('#type') );`, text=>'New'});)?>
 				</li>
 				<li class="blacklist">
 					<label>Blacklist</label>
@@ -52,7 +62,7 @@ cleanup : true
 				</li>
 				<li class="access_violations">
 					<label>Access violation count</label>
-          <?echo(input(type=>'cardinal', name=>'count', id=>'count' value=>$$variable{Host}->count() ); )?>
+          <?echo(input(type=>'cardinal', name=>'count', id=>'count', value=>$$variable{Host}->count() ); )?>
 				</li>
 				<li class="whitelist">
 					<label>Whitelist</label>
@@ -90,12 +100,10 @@ make_drop_down( openprint::Company->dropdown(id=>[ @owner_ids, $openprint::Compa
 		</div>
 <? if ( $$variable{Host}->id() ) ?>
 		<div class="content rightColumn">
-			<fieldset><legend>Photos</legend>
 			<? echo (
 				$$variable{Object} = $$variable{Host};
 				include('/employee/assets/_asset_upload.html');
       ) ?>
-			</fieldset>
 			<fieldset><legend>Notifications</legend>
 				<div id="notifications"><?include('_notifications.html')?></div>
 			</fieldset>
@@ -177,7 +185,7 @@ make_drop_down( openprint::Company->dropdown(id=>[ @owner_ids, $openprint::Compa
 	$$Interface{id},
 	input( type=>'mac', name=>'mac-'.$$Interface{id}, value=>$$Interface{mac} ),
 	input( type=>'ip', name=>'ip-'.$$Interface{id}, value=>$Interface->ip() ),
-	checkboxes( 'monitor-'.$$Interface{id}, [ 1, 'monitor' ], $Interface->monitor(), { contain=>['<span class="option_monitor">','</span>']} ),
+	checkboxes( 'monitor-'.$$Interface{id}, [ 1, 'monitor' ], $Interface->monitor(), { container=>['<span class="option_monitor">','</span>']} ),
 	checkboxes( 'dhcp-'.$$Interface{id}, [ 1, 'dhcp' ], $Interface->dhcp(), { container=>['<span class="option_dhcp">', '</span>' ] } ),
 	$Interface->comment(),
 	( defined($$Interface{online}) ? ( $$Interface{online} ? 'online' : 'offline' ) : '' ),
