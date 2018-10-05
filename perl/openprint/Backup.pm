@@ -97,7 +97,10 @@ sub type {
 } # end sub type
 
 sub link_to {
-	return sprintf('<a href="/employee/it/backup.html?backup_id=%d">%s</a>', $_[0]->id(), ( @_ > 1 ? $_[1] : $_[0]->name() ) );
+	return sprintf('<a href="/employee/it/backup.html?backup_id=%d">%s</a>', 
+    ($_[0]->id() ? $_[0]->id() : 0),
+    ( (@_ > 1 and $_[1]) ? $_[1] : $_[0]->name() ),
+  );
 }
 
 sub Owner {
