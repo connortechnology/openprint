@@ -107,12 +107,6 @@ return;
 				); ) ?>
 		</p>
 	</fieldset>
-	<div id="Results">
-<? if ( map { $session{'/employee/it/hosts.html?'.$_} ? $_ : () } ( 'ip','hostname','mac','monitored' ) ) ?>
-<?include('/employee/it/_hosts.html')?>
-<? else ( map { $session{'/employee/it/hosts.html?'.$_} ? $_ : () } ( 'ip','hostname','mac','monitored' ) ) ?>
- Choose criteria and click Show Results
-<? endif ( map { $session{'/employee/it/hosts.html?'.$_} ? $_ : () } ( 'ip','hostname','mac','monitored' ) ) ?>
-</div>
+	<div id="Results"><?include(/employee/it/_hosts.html)?></div>
 </form>
 <script type="text/javascript">document.f1.ip.focus();</script>

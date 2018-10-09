@@ -130,7 +130,7 @@
 			my $html;
 			my $rowclass;
 			foreach my $Host ( @{$$variable{Hosts}} ) {
-$rowclass = ' class="deleted"' if $Host->deleted();
+       $rowclass = ' class="deleted"' if $Host->deleted();
 				my @Assets = $Host->Assets();
 				$html .= sprintf('
 					<tr%8$s>
@@ -147,11 +147,11 @@ $rowclass = ' class="deleted"' if $Host->deleted();
 					join('<br/>', map { $_->ip() } $Host->Interfaces() ), 
 					join('<br/>', map { $_->mac() } $Host->Interfaces() ), 
 					join(', ', (
-						( ( map { $_->dhcp() ? 'dhcp' : () } $Host->Interfaces() ) ? 'dhcp' : () ),
-						( $Host->blacklist() ? 'blacklisted: count='.$Host->count() : () ),
-						( $Host->whitelist() ? 'whitelisted' : () ),
-						( $Host->monitored() ? 'monitored' : () ),
-						( ( defined $Host->online() and ! $Host->online() ) ? 'offline' : () ),
+          ( ( map { $_->dhcp() ? 'dhcp' : () } $Host->Interfaces() ) ? '<span class="dhcp">dhcp</span>' : () ),
+            ( $Host->blacklist() ? '<span class="blacklisted">blacklisted: count='.$Host->count().'</span>' : () ),
+            ( $Host->whitelist() ? '<span class="whitelisted">whitelisted</span>' : () ),
+            ( $Host->monitored() ? '<span class="monitored">monitored</span>' : () ),
+            ( ( defined $Host->online() and ! $Host->online() ) ? '<span class="offline">offline</span>' : () ),
 					) ),
 					$Host->description(),
 					$rowclass,

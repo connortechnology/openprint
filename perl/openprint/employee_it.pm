@@ -41,21 +41,16 @@ sub _logs {
 
 sub hosts {
 	_hosts();
-	ssi::setup_date_select( '/employee/it/hosts.html', 'created_on_start', '' );
-	ssi::setup_date_select( '/employee/it/hosts.html', 'created_on_end', '' );
-	ssi::setup_date_select( '/employee/it/hosts.html', 'updated_on_start', '' );
-	ssi::setup_date_select( '/employee/it/hosts.html', 'updated_on_end', '' );
-	if ( ! exists $session{'/employee/it/hosts.html?has_hostname'} ) {
-		$session{'/employee/it/hosts.html?has_hostname'} = 1;
+  my $uri = $r->uri();
+	ssi::setup_date_select( $uri, 'created_on_start', '' );
+	ssi::setup_date_select( $uri, 'created_on_end', '' );
+	ssi::setup_date_select( $uri, 'updated_on_start', '' );
+	ssi::setup_date_select( $uri, 'updated_on_end', '' );
+	if ( ! exists $session{$uri.'?has_hostname'} ) {
+		$session{$uri.'?has_hostname'} = '';
 	} # end if
-	if ( ! exists $session{'/employee/it/hosts.html?assigned'} ) {
-		$session{'/employee/it/hosts.html?assigned'} = 1;
-	} # end if
-	if ( ! exists $session{'/employee/it/hosts.html?notassigned'} ) {
-		$session{'/employee/it/hosts.html?notassigned'} = 1;
-	} # end if
-	if ( ! exists $session{'/employee/it/hosts.html?deleted'} ) {
-		$session{'/employee/it/hosts.html?deleted'} = 0;
+	if ( ! exists $session{$uri.'?deleted'} ) {
+		$session{$uri.'?deleted'} = 0;
 	} # end if
 } # end sub hosts
 
