@@ -11,9 +11,9 @@
           button( 'd'.$U->user_id(), { onclick=>"del_notification($$U{user_id});", , text=>'X' } ),
 					);
 			} # end foreach User in Notifications
-    if ( ! $$variable{Host}->id() ) {
-    $html .= '<li class="information">Click save to apply changes</li>';
-    }
+      if ( ! $$variable{Host}->id() ) {
+        $html .= '<li class="information">Click save to apply changes</li>';
+      }
 		} else {
 			$html .= '<li>No notifications will be sent. Select and add a recipient to receive notifications about this device.</li>';
 		} # end if
