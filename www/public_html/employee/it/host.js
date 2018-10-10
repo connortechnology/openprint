@@ -13,6 +13,7 @@ function add_notification() {
   }
 }
 function del_notification(user_id) { 
+    var notification_ids = $j('#notification_ids');
   $j('#notifications').load( '_notifications.html', { action: 'delete', notification_ids: notification_ids.val(), user_id: user_id } );
 }
 	function delete_interface( id ) {
