@@ -1,41 +1,4 @@
-<script type="text/javascript">
-	function delete_interface( id ) {
-		jQuery.ajax( '_host_actions.json', { data: { interface_id: id, action: 'delete interface' } } );
-	}
-	function check_inputs( form ) {
-    if ( ! form.elements['hostname'].value ) {
-      if ( confirm('You should really enter something for the hostname field.  It does not have to be the actual hostname of the device, but can be something to help you identify it. Click Ok to save anyway.') ) {
-        return true;
-      } else {
-        return false;
-      }
-    }
-		return true;
-	} //  end function check_inputs
-
-  function toggle_monitored(e) {
-    if ( e.value == 1 ) {
-      $('offline_seconds').show();
-      $('notify_frequency').show();
-    } else {
-      $('offline_seconds').hide();
-      $('notify_frequency').hide();
-    }
-    console.log(e.value);
-    var checkboxes = $j('.option_monitor input').prop("checked", e.value == '1' ? true : false );
-  }
-  var tinymce_options = {
-      mode : "textareas",
-      plugins: "paste",
-      theme : "advanced",
-theme_advanced_buttons1 : "bold,italic,underline,strikethrough,|,fontsizeselect,|,bullist,numlist,|,indent,outdent",
-theme_advanced_buttons2 : '',
-theme_advanced_buttons2 : '',
-cleanup : true
-  };
-
-  tinyMCE.init( tinymce_options );
-</script>
+<script type="text/javascript" src="<?hash_link(/employee/it/host.js)?>"></script>
 <div class="Host"><div class="Edit">
 <?include(/includes/error_reporting.html)?>
 <form id="f1" name="f1" method="post" action="/employee/it/host.html" enctype="multipart/form-data">
@@ -98,23 +61,25 @@ make_drop_down( openprint::Company->dropdown(id=>[ @owner_ids, $openprint::Compa
 				<li><label>Updated On</label><? echo ( format_datetime( $$variable{Host}->updated_on() ); ) ?></li>
 			</ul>
 		</div>
-<? if ( $$variable{Host}->id() ) ?>
 		<div class="content rightColumn">
+<? if ( $$variable{Host}->id() ) ?>
 			<? echo (
 				$$variable{Object} = $$variable{Host};
 				include('/employee/assets/_asset_upload.html');
       ) ?>
+<? endif ( $$variable{Host}->id() ) ?>
 			<fieldset><legend>Notifications</legend>
 				<div id="notifications"><?include('_notifications.html')?></div>
 			</fieldset>
+<? if ( $$variable{Host}->id() ) ?>
 			<fieldset><legend>Information</legend>
 				<div id="information"><?include('_information.html')?></div>
 			</fieldset>
 			<fieldset class="licenses"><legend>Licenses</legend>
 				<div id="licenses"><?include('_host_licenses.html')?></div>
 			</fieldset>
-		</div>
 <? endif ( $$variable{Host}->id() ) ?>
+		</div>
 		<br class="spacer"/>
 				<p class="buttons">
 					<? echo ( 

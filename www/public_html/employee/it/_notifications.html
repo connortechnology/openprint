@@ -2,17 +2,22 @@
 <ul class="notifications">
 	<? echo (
 		my $html;
+
 		my @Notifications = $$variable{Host}->Notifications();
 		if ( @Notifications ) {
 			foreach my $U ( @Notifications ) {
 				$html .= sprintf( q`<li id="notification_%d"><span class="name">%s</span><span class="buttons">%s</span></li>`, 
 					$U->user_id(), $U->User()->link_to(), 
-					button( 'd'.$U->user_id(), { onclick=>qq`\$j('#notifications').load('_notifications.html', { action: 'delete', host_id: '$$variable{Host}{id}', user_id: $$U{user_id}} );`, text=>'X' } ),
+          button( 'd'.$U->user_id(), { onclick=>"del_notification($$U{user_id});", , text=>'X' } ),
 					);
 			} # end foreach User in Notifications
+    if ( ! $$variable{Host}->id() ) {
+    $html .= '<li class="information">Click save to apply changes</li>';
+    }
 		} else {
 			$html .= '<li>No notifications will be sent. Select and add a recipient to receive notifications about this device.</li>';
 		} # end if
+    $html .= input(type=>'hidden', name=>'notification_ids', id=>'notification_ids', value=>join(',',map { $$_{user_id}} @Notifications) );
 		return $html;
 	) ?>
 	<li>
@@ -28,6 +33,7 @@
 		) ?>
 		</select>
 		<? echo ( button( 'AddNotification', { 
-					onclick=>qq`var user_id=\$j('#new_notification_id').val();if( user_id ) { \$j('#notifications').load( '_notifications.html', { action: 'add', host_id: '$$variable{Host}{id}', user_id: user_id } );}else{alert('Select a user');};`, text=>'Add' } ); ) ?>
+					onclick=>'add_notification();',
+          text=>'Add' } ); ) ?>
 	</li>
 </ul>

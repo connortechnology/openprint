@@ -184,6 +184,21 @@ sub host {
           $variable{error} .= $I->delete() if $$I{id};
         } # end if
       } # end foreach Interface
+
+      my %notifications = map { $$_{user_id}, $_ } $Host->Notifications();
+
+      foreach my $user_id ( sets::union(split(',',$param{notification_ids})) ) {
+        if ( $notifications{$user_id} ) {
+          delete $notifications{$user_id};
+          next;
+        }
+        my $Notification = new openprint::Host_Notification();
+        $variable{error} .= $Notification->save({host_id=>$$Host{id}, user_id=>$user_id});
+      }
+      foreach my $Notification ( values %notifications ) {
+        $variable{error} .= $Notification->delete();
+      }
+      $Host->Notifications(undef);
       
       if ( ! $variable{error} ) {
         (new openprint::Log())->save({Object=>$Host, action=>'Edit', note=>join('<br/>', @changes) });
@@ -417,21 +432,50 @@ sub _notifications {
 	my $Host = $variable{Host} = new openprint::Host( $param{host_id} );
 
 	if ( $param{action} eq 'add' ) {
-		my $Notification = new openprint::Host_Notification();
-		$variable{error} .= $Notification->save({
-			'user_id'	=>	$param{user_id},
-			'host_id'	=>	$$Host{id},
-		});
+
+    if ( $$Host{id} ) {
+      my $Notification = new openprint::Host_Notification();
+      $variable{error} .= $Notification->save({
+          user_id	=>	$param{user_id},
+          host_id	=>	$$Host{id},
+        });
+    } else {
+      my @Notifications;
+      foreach my $user_id ( split(',',$param{notification_ids} ) ) {
+        my $Notification = new openprint::Host_Notification();
+        $Notification->set({
+            user_id	=>	$user_id,
+          });
+
+        push @Notifications, $Notification;
+      } # end foreach user_id
+      $Host->Notifications( \@Notifications );
+    }
+      
 	} elsif ( $param{action} eq 'delete' ) {
-		my $Notification = openprint::Host_Notification->find_one(
-			'user_id'	=>	$param{user_id},
-			'host_id'	=>	$$Host{id},
-			);
-		if ( ! $Notification ) {
-			$variable{error} .= 'Notification not found.';
-		} else {
-			$variable{error} .= $Notification->delete();
-			delete $$Host{Notifications};
+    if ( $$Host{id} ) {
+      my $Notification = openprint::Host_Notification->find_one(
+        user_id	=>	$param{user_id},
+        host_id	=>	$$Host{id},
+        );
+      if ( ! $Notification ) {
+        $variable{error} .= 'Notification not found.';
+      } else {
+        $variable{error} .= $Notification->delete();
+        delete $$Host{Notifications};
+      } # end if
+    } else {
+      my @Notifications;
+      foreach my $user_id ( split(',',$param{notification_ids} ) ) {
+        next if $user_id == $param{user_id};
+        my $Notification = new openprint::Host_Notification();
+        $Notification->set({
+            user_id	=>	$user_id,
+          });
+
+        push @Notifications, $Notification;
+      } # end foreach user_id
+      $Host->Notifications( \@Notifications );
 		} # end if
 	} # end if
 } # end sub _notifications

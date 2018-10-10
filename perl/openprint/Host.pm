@@ -155,10 +155,10 @@ sub Notifications {
 	if ( ! $$self{Notifications} ) {
 		@{$$self{Notifications}} = openprint::Host_Notification->find(
 				host_id	=> $$self{id},
-				);
+				) if $$self{id};
 				#'order' => 'lower(strfirstName),lower(strlastname)' );
 	} # end if
-	return @{$$self{Notifications}};
+	return $$self{Notifications} ? @{$$self{Notifications}} : ();
 } # end sub Notifications
 
 sub Interfaces {
@@ -169,10 +169,10 @@ sub Interfaces {
 		@{$_[0]{Interfaces}} = openprint::Host_Interface->find(
 				host_id	=>	$_[0]{id},
 				order	=>	'mac',
-				);
+				) if $_[0]{id};
 	} # end if
-	return @{$_[0]{Interfaces}};
-} # end sub Notifications
+	return $_[0]{Interfaces} ? @{$_[0]{Interfaces}} : ();
+} # end sub Interfaces
 
 sub info {
 	require openprint::Host_Info;
