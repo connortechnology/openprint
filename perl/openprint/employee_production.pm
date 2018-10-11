@@ -203,7 +203,7 @@ sub print_overview {
 						txtServiceDescription => 'Additional Signature',
 						SignatureIndex => $signature_count,
 						ImpressionQuantity => $param{impressions},
-						UsePress  =>$Equipment->strid(),
+						UsePress  => $Equipment->strid(),
 						});
 				push @services, $service_id;
 				$Project->add_to_log( @session{'company_id','user_id'}, sprintf( 'Added Service: %s', 'Signature' ) );
@@ -252,7 +252,7 @@ sub print_overview {
 					$NewShift->add_job( $Job );
 				}
 			} else {
-				$variable{error} .= "Invalid startdate specified";
+				$variable{error} .= 'Invalid startdate specified';
 			}
 		} # end if
 		$variable{error} .= $Job->save();

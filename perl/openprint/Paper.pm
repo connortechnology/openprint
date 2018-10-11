@@ -183,7 +183,8 @@ sub load {
 	if ( ! $data ) {
 		$data = $openprint::dbh->selectrow_hashref( q{SELECT * FROM Papers WHERE id=?}, {}, $$self{id} );
 	} # end if
-	@$self{keys %fields} = @$data{@fields{keys %fields}};
+	my @keys = map { (defined $fields{$_}) ? $_ : () } keys %fields;
+	@$self{@keys} = @$data{@fields{@keys}};
 	if ( exists $$data{allocated} ) {
 		$$self{allocated} = $$data{allocated}
 	}

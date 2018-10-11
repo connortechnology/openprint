@@ -30,6 +30,11 @@
 				<?echo( date_select('starttime', [Date::Calc::Today()]);) ?>
 			</li>
 			<li><label>Shift</label>
+<?eval(
+	# We want to default to the next shift for today
+		$$variable{NextShift} = openprint::Shift->find_one( 'starttime >' => 'NOW()', equipment_id=>$$variable{Equipment}{id}, order=>'starttime asc');
+$log->debug("Next SWhift: " . $$variable{NextShift}->to_string() );
+)?>
 				<select id="shift_id" name="shift_id"><?include(_equipment_shifts.html)?></select>
 			</li>
 			<li><label>Service</label><select id="servicetype_id" name="servicetype_id"><?include(_job_service_dropdown.html)?></select></li>

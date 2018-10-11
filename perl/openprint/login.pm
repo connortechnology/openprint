@@ -126,8 +126,8 @@ sub verify_login {
 		(new openprint::Log())->save({Object=>$User, action=>'Login Failed', note=>'User Account Not Activated', user_id=>$User->id(), company_id=>$User->company_id() } );
 		return;
 	} elsif ( $User->web_active() ne 'Y' ) {
-		$$variable{error} = "User Account activation status is unknown.";
-		$$variable{information} = "Please report this error.";
+		$$variable{error} = 'User Account activation status is unknown.';
+		$$variable{information} = 'Please report this error.';
 		return;
 	} # end if
 
@@ -137,8 +137,8 @@ sub verify_login {
 		(new openprint::Log())->save({Object=>$User, action=>'Login Failed', note=>'User not an employee', user_id=>$User->id(), company_id=>$User->company_id() } );
 		return;
 	} elsif ( $site eq 'A' and $User->type() ne 'A' ) {
-		$$variable{error} = "Not authorised.";
-		$$variable{information} = "You are not an administrator.	You do not have access to the administrator site.";
+		$$variable{error} = 'Not authorised.';
+		$$variable{information} = 'You are not an administrator.	You do not have access to the administrator site.';
 		(new openprint::Log())->save({Object=>$User, action=>'Login Failed', note=>'User not an administrator', user_id=>$User->id(), company_id=>$User->company_id() } );
 		return;
 	} # end if
@@ -193,6 +193,7 @@ sub verify_login {
      
 		$$variable{ExternalRedirect} = $1;
 	} elsif ( (!$variable{error}) and ( $r->uri() =~ /\/account\/login.html/ ) ) {
+		# I think the redirect is to handle reloads
 		$$variable{ExternalRedirect} = $r->uri();
 	} # end if
 
