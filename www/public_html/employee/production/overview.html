@@ -81,6 +81,7 @@
 		<input type="hidden" name="btnFunction"/>
 		<input type="hidden" name="ProjectIndex" />
 		<fieldset class="filters">
+<div class="leftColumn">
 			<ul>
 				<li>
 					<label>Date Range</label>
@@ -109,6 +110,20 @@
 					<?echo(radio('is_ship_flat', [ '1', 'Yes', '0', 'No', '', 'Both' ], $session{$r->uri().'?is_ship_flat'} );)?>
 				</li>
 			</ul>
+</div>
+	<div class="leftColumn legend">
+      <ul><li><label>Legend</label>
+        <ul>
+          <li class="inprepress">In Prepress</li>
+          <li class="rush">Rush</li>
+          <li class="shipped">Shipped</li>
+          <li class="approval">Waiting for client approval</li>
+        </ul>
+      </li>
+      </ul>
+    </div>
+<br class="spacer"/>
+
 			<p class="buttons">
 				<? echo ( button( 'ShowResults', { onclick=>'f1.submit();', text=>'Refresh' } ); ) ?>
 			</p>
@@ -134,6 +149,7 @@
         <th class="Total">Total Qty</th>
         <th class="DueDate">Due Date</th>
 				<th class="ShipFlat">Ship Flat</th>
+				<th class="Shipping">Shipping</td>
         <th class="Comment">Comment</th>
       </tr>
 		</thead>
@@ -221,6 +237,7 @@ my @Projects = openprint::Project->find(
 	],
 	);
 my %Companies = map { $$_{id}, $_ } openprint::Company->find( id=>[ map { $$_{company_id} } @Projects ] );
+my @labeltype_ids = map { $$_{id} } openprint::LabelType->find(name=>['PackingSlip','PackingSlip2']);
 
 my $html;
 foreach my $Project ( @Projects ) {
@@ -263,8 +280,22 @@ foreach my $Project ( @Projects ) {
 		$$services{BulkSkids}[0] :
 		( $$Service{PlainCartons} ? $$Service{PlainCartons}[0] : undef );
 
+my @Labels = openprint::Label->find( docket=>$Project->docket(), type_id=>\@labeltype_ids );
+my $class;
+if ( $Project->status() eq 'In Prepress' ) {
+	$class .= 'inprepress';
+} elsif ( $Project->status() eq 'Waiting For Customer Approval' ) {
+	$class .= 'approval';
+}
+if ( $Project->rush() ) {
+  $class .= 'rush';
+}
+if ( @Labels ) {
+  $class .= 'shipped';
+}
+
 	$html .= sprintf('
-<tr>
+<tr class="%s">
 	<td class="Docket">%s</td>
 	<td class="Company">%s</td>
 	<td class="Operator">%s %s</td>
@@ -279,8 +310,11 @@ foreach my $Project ( @Projects ) {
 	<td class="Total">%s</td>
 	<td class="DueDate" id="JumpToDate%d">%s<input type="hidden" name="ScheduleDate-%d" id="ScheduleDate-%d" value="%s"/></td>
 	<td class="ShipFlat">%s</td>
+<td class="Shipping">%s</td>
 	<td class="Comment" id="production_comments%d" %s>%s</td>
-</tr>', $Project->production_link_to( $Project->docket() ),
+</tr>', 
+$class,
+$Project->production_link_to( $Project->docket() ),
 	$Project->production_link_to( $Project->Company()->name() ),
 	$operators,
 	( sets::isin( $Project->status(), [ 'Proofs Out', 'Waiting For Customer Approval','Waiting For QA Approval','Approved','Printed' ] ) ? '&#10004;' : '' ),
@@ -305,6 +339,7 @@ $_. ': '. get_status( $Project, $_ ) : (),
 	$$Project{id}, overview_date($Project->due_date()),
 	$$Project{id}, $$Project{id}, ($$Project{due_date}?$$Project{due_date}:''),
 	( $$services{PlainCartons} ? '' : 'Yes' ),
+( openprint::Label->find( docket=>$Project->docket(), type_id=>\@labeltype_ids ) ? '&#10004;' : '' )	,
 	$$Project{id},
 	( openprint::usergroup::is_user_in( ['Scheduling'], $session{user_id} ) ? 
 		q`onclick="popup_window('_production_comments_popup.html', 'project_id=`.$Project->id().q`', { width: 500, height: 400 } );"` :
