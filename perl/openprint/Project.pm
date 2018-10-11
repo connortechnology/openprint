@@ -1664,19 +1664,19 @@ sub calliper {
 				} # end if
 			} # en dif ! calliper
 		} elsif ( $project_type eq 'ScratchPads' ) {
-            my @signatures = $Project->signatures();
+			my @signatures = $Project->signatures();
 # Single page item, if there are multiple signatures, it is due to multiple versions
-            my $signature_service_index = $signatures[0];
-            my $sig_specs = openprint::service::get_specs_ref( $Project, $signature_service_index );
-            my $calliper;
-            if ( $$sig_specs{txtSpecificStockCalliper} ) {
-                $calliper = int($$sig_specs{txtSpecificStockCalliper}*10000);
-            } else {
-                $openprint::log->warn("Loading calliper from stock.  Consider populating sig_specs with calliper for speed.");
-                my $Paper = openprint::Paper::load_from_signature( $Project, $sig_specs );
-                $$sig_specs{txtSpecificStockCalliper} = $Paper->calliper();
-                $calliper = int( $Paper->calliper() * 10000);
-            } # end if
+			my $signature_service_index = $signatures[0];
+			my $sig_specs = openprint::service::get_specs_ref( $Project, $signature_service_index );
+			my $calliper;
+			if ( $$sig_specs{txtSpecificStockCalliper} ) {
+				$calliper = int($$sig_specs{txtSpecificStockCalliper}*10000);
+			} else {
+				$openprint::log->warn("Loading calliper from stock.  Consider populating sig_specs with calliper for speed.");
+				my $Paper = openprint::Paper::load_from_signature( $Project, $sig_specs );
+				$$sig_specs{txtSpecificStockCalliper} = $Paper->calliper();
+				$calliper = int( $Paper->calliper() * 10000);
+			} # end if
 			$finished_calliper += $$printing_specs{PageQuantity} * $calliper;
 		} else {
 			my @signatures = $Project->signatures();
@@ -1693,36 +1693,40 @@ sub calliper {
 				$calliper = int( $Paper->calliper() * 10000);
 			} # end if
 			my $pages = 1;
-			if ( sets::isin( $$sig_specs{rdbTemplateType}, [ '2PanelFold', '4PageFold', 'Landscape Fold', 'Portrait Fold' ] ) ) {
-				$pages = 2;
-			} elsif ( sets::isin( $$sig_specs{rdbTemplateType}, [  'NoFold', 'Portrait', 'Landscape','Square','Forms', '' ] ) ) {
-			} elsif ( sets::isin( $$sig_specs{rdbTemplateType}, [ 'PadsPortrait', 'PadsLandscape','PadsSquare','Pads' ] ) ) {
-				$pages *= $$sig_specs{PageQuantity} if $$sig_specs{PageQuantity};
-			} elsif ( sets::isin( $$sig_specs{rdbTemplateType},['3PanelFold','3PanelZFold'] ) ) {
-				$pages = 3;
-			} elsif ( sets::isin( $$sig_specs{rdbTemplateType}, ['4PanelFold', '4PanelZFold', '4PanelRollFold'] ) ) {
-				$pages = 4;
-			} elsif ( sets::isin( $$sig_specs{rdbTemplateType}, ['5PanelFold', '5PanelZFold'] ) ) {
-				$pages = 5;
-			} elsif ( sets::isin( $$sig_specs{rdbTemplateType}, ['6PanelFold', '6PanelZFold','12Page3PanelRollFold', '12Page3PanelZFold'] ) ) {
-				$pages = 6;
-			} elsif ( $$sig_specs{rdbTemplateType} eq 'SingleGateFold' ) {
-				$pages = 3;
-			} elsif ( sets::isin( $$sig_specs{rdbTemplateType}, [ 'DoubleGateFold', '2Panel2Pocket' ] ) ) {
-				$pages = 4;
-			} elsif ( $$sig_specs{rdbTemplateType} eq 'DifficultFold' ) {
-				$pages = 6;
-			} elsif ( $$sig_specs{rdbTemplateType} eq '8PageFold' ) {
-				$pages = 4;
-			} elsif ( $$sig_specs{rdbTemplateType} eq '2Panel1Pocket' ) {
+			if ( $sig_specs{rdbTemplateType} ) {
+				if ( sets::isin( $$sig_specs{rdbTemplateType}, [ '2PanelFold', '4PageFold', 'Landscape Fold', 'Portrait Fold' ] ) ) {
+					$pages = 2;
+				} elsif ( sets::isin( $$sig_specs{rdbTemplateType}, [  'NoFold', 'Portrait', 'Landscape','Square','Forms', '' ] ) ) {
+				} elsif ( sets::isin( $$sig_specs{rdbTemplateType}, [ 'PadsPortrait', 'PadsLandscape','PadsSquare','Pads' ] ) ) {
+					$pages *= $$sig_specs{PageQuantity} if $$sig_specs{PageQuantity};
+				} elsif ( sets::isin( $$sig_specs{rdbTemplateType},['3PanelFold','3PanelZFold'] ) ) {
+					$pages = 3;
+				} elsif ( sets::isin( $$sig_specs{rdbTemplateType}, ['4PanelFold', '4PanelZFold', '4PanelRollFold'] ) ) {
+					$pages = 4;
+				} elsif ( sets::isin( $$sig_specs{rdbTemplateType}, ['5PanelFold', '5PanelZFold'] ) ) {
+					$pages = 5;
+				} elsif ( sets::isin( $$sig_specs{rdbTemplateType}, ['6PanelFold', '6PanelZFold','12Page3PanelRollFold', '12Page3PanelZFold'] ) ) {
+					$pages = 6;
+				} elsif ( $$sig_specs{rdbTemplateType} eq 'SingleGateFold' ) {
+					$pages = 3;
+				} elsif ( sets::isin( $$sig_specs{rdbTemplateType}, [ 'DoubleGateFold', '2Panel2Pocket' ] ) ) {
+					$pages = 4;
+				} elsif ( $$sig_specs{rdbTemplateType} eq 'DifficultFold' ) {
+					$pages = 6;
+				} elsif ( $$sig_specs{rdbTemplateType} eq '8PageFold' ) {
+					$pages = 4;
+				} elsif ( $$sig_specs{rdbTemplateType} eq '2Panel1Pocket' ) {
 # FIXME: GUTTERS
-				$pages = 3;
-			} elsif ( $$sig_specs{rdbTemplateType} eq '3Panel1Pocket' ) {
+					$pages = 3;
+				} elsif ( $$sig_specs{rdbTemplateType} eq '3Panel1Pocket' ) {
 # FIXME: GUTTERS
-				$pages = 4;
-			} else {
-				$log->error("Unknown template type n calliper $$sig_specs{rdbTemplateType}");
-			} #// end if
+					$pages = 4;
+				} else {
+					$log->error("Unknown template type n calliper $$sig_specs{rdbTemplateType}");
+				} #// end if
+			} elsif ( $$sig_specs{txtWidth} != $$sig_specs{txtFinalWidth} or $$sig_specs{txtHeight} != $$sig_specs{txtFinalHeight} ) {
+				$log->error("No template given, but flat and final dimensions differ");
+			}
 			$finished_calliper += $pages * $calliper;
 		} # end if
 		$openprint::log->debug("******************************* FINISHED CALLIPER is $finished_calliper/1000 *********************************");
