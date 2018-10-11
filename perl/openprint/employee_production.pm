@@ -1001,7 +1001,7 @@ $log->error("No service_id in service for project $$Project{id}, $service_id: " 
 										service_id			=>	[$s_id],
 										pertains_id			=>	[$service_id],
 										servicetype_id	=>	$Service->servicetype_id(),
-										equipment_Id		=>	$$Equipment{id},
+										equipment_id		=>	$$Equipment{id},
 										});
 								$log->debug("Add bindery job to schedule: " . $Job->to_string() );
 								$Job->put_job_on_schedule();
