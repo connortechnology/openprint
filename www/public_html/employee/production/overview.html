@@ -116,7 +116,7 @@
         <ul>
           <li class="inprepress">In Prepress</li>
           <li class="rush">Rush</li>
-          <li class="shipped">Shipped</li>
+          <li class="inshipping">In Shipping</li>
           <li class="approval">Waiting for client approval</li>
         </ul>
       </li>
@@ -291,7 +291,7 @@ if ( $Project->rush() ) {
   $class .= 'rush';
 }
 if ( @Labels ) {
-  $class .= 'shipped';
+  $class .= 'inshipping';
 }
 
 	$html .= sprintf('
