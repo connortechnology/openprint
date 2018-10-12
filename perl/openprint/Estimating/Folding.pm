@@ -2215,7 +2215,7 @@ sub overview_summary {
 			splice @signatures, $sig_index+1,$sig_count-1 if $sig_count > 1;
 		}
 		my $summary = overview_signature_summary( $Project, $service_id, undef, $qty_index, $s_s_id, undef );
-		next if $summary eq 'not folded';
+		next if (!$summary) or ($summary eq 'not folded');
 
 		if ( $sig_count > 1 ) {
 			$html .= $sig_count . ' Forms ';
