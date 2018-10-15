@@ -1,6 +1,7 @@
 package openprint::administrator_services;
 
 use strict;
+use warnings;
 
 require sql;
 require openprint::Pricelist;
@@ -124,6 +125,7 @@ sub edit {
 						period_end		=>	( Date::Calc::check_date( map { $param{"period_end-$$Price{id}_$_"} } ( 'year','month','day' ) ) ? sprintf('%.4d-%.2d-%.2d 23:59:59', map { $param{"period_end-$$Price{id}_$_"} } ( 'year','month','day' ) ) : undef ),
 						min				=>	$param{"min-$$Price{id}"},
 						max				=>	$param{"max-$$Price{id}"},
+						range_units			=>	$param{"range_units-$$Price{id}"},
 						units			=>	$param{"units-$$Price{id}"},
 						cost			=>	$param{"cost-$$Price{id}"},
 						markup			=>	$param{"markup-$$Price{id}"},
@@ -155,9 +157,9 @@ sub edit {
 		my $NewService = $Service->copy();
 		$$NewService{name} = 'Copy of '.$$Service{name};
         
-        $variable{error} = $NewService->save();
+		$variable{error} = $NewService->save();
 		(new openprint::Log())->save({object_id=>$$NewService{id},object_type=>ref$NewService, action=>'Copy Service', note=>'From ' . $Service->name()} ) if ! $variable{error};
-        if ( ! $variable{error} ) {
+		if ( ! $variable{error} ) {
 			foreach my $price ( $Service->prices() ) {
 				$$price{service_id} = $$NewService{id};
 				delete $$price{id};
