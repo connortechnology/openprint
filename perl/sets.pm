@@ -13,7 +13,11 @@ sub isin {
 			#%h = %{ { map { $_ => 1 } @{$_[1]} } };
 			
 			foreach (@{$_[1]}) {
-				return 1 if $_ eq $_[0];
+				return 1 if (
+					((!defined $_[0]) and !defined($_))
+					or 
+					( defined($_) and defined($_[0]) and ($_ eq $_[0]) ) 
+					);
 			} # end foeach
 			return 1 if $h{$_[0]};
 		} else {

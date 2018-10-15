@@ -9,7 +9,9 @@
 		<div id="location_autocomplete" class="autocomplete" style="display:none;"></div>
 		<script type="text/javascript">
 		//Ajax.Autocompleter('location','location_autocomplete', '/location/_locations.html?type=place', { minChars: 2,afterUpdateElement : getSelectedLocation } );
-$('location').autocomplete( {minChars: 2, onSelect: getSelectedLocation, serviceUrl: '/location/_locations.html?type=place' } );
+var loc = $('location');
+if ( loc )
+loc.autocomplete( {minChars: 2, onSelect: getSelectedLocation, serviceUrl: '/location/_locations.html?type=place' } );
 		</script>
 `, $$variable{Location}->name() );
 	$html .= '</li>';
