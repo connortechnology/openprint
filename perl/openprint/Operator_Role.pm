@@ -6,12 +6,12 @@ use vars qw( $debug %fields %find_fields %transforms %defaults $table $serial );
 
 $table = 'operator_roles';
 $serial = 'operator_roles_id_seq';
-$debug = 1;
+$debug = 0;
 %fields = (
 	id							=>	'id',
 	servicetype_id	=>	'servicetype_id',
 	name						=>	'name',
-	sorting			=> 'sorting',
+	sorting					=>	'sorting',
 );
 %find_fields = (
 );
