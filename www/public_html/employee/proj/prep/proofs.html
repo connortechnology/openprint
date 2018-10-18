@@ -104,6 +104,15 @@ function check_input( form, signature_index ) {
 					$html .= button( 'Email', { href=>qq`mailto:`.$$variable{Project}->Order()->email().q`?subject=Docket%20$$variable{Docket}&body=$$variable{body}`, text=>'Email' } );
 					$html .= button( 'UploadPDFs', { onclick=>"open_window('/employee/production/upload_pdfs.html?ProjectIndex=$$variable{ProjectIndex}','upload','resizable=yes,scrollbars=yes,width=800,height=600,screenX=10,screenY=10,top=0,left=0');", href=>'', text=>'Upload PDFs' } );
     $html .= button( 'DocketButton'.$$variable{Project}{id}, { onclick=>"open_window('/main/project/docket_sheet.html?ProjectIndex=$$variable{ProjectIndex}');", text=>'Docket' } );
+					my $DocketLabelType = openprint::LabelType->find_one(name=>'Docket Label');
+					if ( $DocketLabelType ) {
+						my $DocketLabel = openprint::Label->find_one(docket=>$$variable{Project}->docket(), type_id=>$$DocketLabelType{id});
+						if ( $DocketLabel ) {
+							$html .= button( 'DocketButton'.$$variable{Project}{id}, { onclick=>"open_window('/employee/production/labels/label.html?docket=$$variable{Project}{docket}&project_id=$$variable{ProjectIndex}&id=$$DocketLabel{id}');", text=>'Docket Label' } );
+						} else {
+							$html .= button( 'DocketButton'.$$variable{Project}{id}, { onclick=>"open_window('/employee/production/labels/label.html?docket=$$variable{Project}{docket}&project_id=$$variable{ProjectIndex}&type_id=$$DocketLabelType{id}');", text=>'Docket Label' } );
+						}
+					}
 					return $html;
 			) ?>
 			</p>
