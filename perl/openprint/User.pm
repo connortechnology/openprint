@@ -329,11 +329,18 @@ sub csr_ids {
 	return @{$$self{csr_ids}};
 } # end sub
 
+sub in_Group {
+	my $self = shift;
+	my @Results;
+	return sets::intersection( @_, map { $$_{name} } $self->Groups() );
+}
+
 sub Groups {
-	require openprint::UserGroup;
-	if ( $_[0]{id} ) {
-		return openprint::UserGroup->find('user_id any'=>$_[0]{id} );
+	if ( $_[0]{id} and ! $_[0]{Groups} ) {
+		require openprint::UserGroup;
+		$_[0]{Groups} = [ openprint::UserGroup->find('user_id any'=>$_[0]{id} ) ];
 	} # end if
+	return @{$_[0]{Groups}} if $_[0]{Groups};
 	return ();
 } # end sub Groups
 
