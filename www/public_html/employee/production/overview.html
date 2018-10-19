@@ -103,26 +103,37 @@
 				<li><label>Is Printed</label>
 					<?echo(radio('is_printed', [ '1', 'Yes', '0', 'No', '', 'Both' ], $session{$r->uri().'?is_printed'} );)?>
 				</li>
+				<li><label>Is Scheduled</label>
+					<?echo(radio('is_scheduled', [ '1', 'Yes', '0', 'No', '', 'Both' ], $session{$r->uri().'?is_scheduled'} );)?>
+				</li>
 				<li><label>Is Proofs Out</label>
 					<?echo(radio('is_proofs_out', [ '1', 'Yes', '0', 'No', '', 'Both' ], $session{$r->uri().'?is_proofs_out'} );)?>
 				</li>
+<!--
+				<li><label>Is Client Approved</label>
+					<?echo(radio('is_client_approved', [ '1', 'Yes', '0', 'No', '', 'Both' ], $session{$r->uri().'?is_client_approved'} );)?>
+				</li>
+				<li><label>Is QA Approved</label>
+					<?echo(radio('is_qa_approved', [ '1', 'Yes', '0', 'No', '', 'Both' ], $session{$r->uri().'?is_qa_approved'} );)?>
+				</li>
+-->
 				<li><label>Ship Flat</label>
 					<?echo(radio('is_ship_flat', [ '1', 'Yes', '0', 'No', '', 'Both' ], $session{$r->uri().'?is_ship_flat'} );)?>
 				</li>
 			</ul>
-</div>
-	<div class="leftColumn legend">
-      <ul><li><label>Legend</label>
-        <ul>
-          <li class="inprepress">In Prepress</li>
-          <li class="rush">Rush</li>
-          <li class="inshipping">In Shipping</li>
-          <li class="approval">Waiting for client approval</li>
-        </ul>
-      </li>
-      </ul>
-    </div>
-<br class="spacer"/>
+		</div>
+		<div class="leftColumn legend">
+		  <ul><li><label>Legend</label>
+			<ul>
+			  <li class="inprepress">In Prepress</li>
+			  <li class="rush">Rush</li>
+			  <li class="inshipping">In Shipping</li>
+			  <li class="approval">Waiting for client approval</li>
+			</ul>
+		  </li>
+		  </ul>
+		</div>
+		<br class="spacer"/>
 
 			<p class="buttons">
 				<? echo ( button( 'ShowResults', { onclick=>'f1.submit();', text=>'Refresh' } ); ) ?>
@@ -245,8 +256,14 @@ foreach my $Project ( @Projects ) {
 		next if $session{$r->uri().'?is_printed'} eq '1' and ! $Project->is_printed();
 		next if $session{$r->uri().'?is_printed'} eq '0' and $Project->is_printed();
 	}
-
 	my @Schedule = openprint::ScheduledJob->find( project_id=>$$Project{id}, order=>'starttime' );
+
+	if ( defined $session{$r->uri().'?is_scheduled'} ) {
+		my @Jobs = map { $$_{starttime} ? $_ : () } @Schedule;
+		next if ($session{$r->uri().'?is_scheduled'} eq '1') and ! @Jobs;
+		next if ($session{$r->uri().'?is_scheduled'} eq '0') and @Jobs;
+	}
+
 	my @press_ids = sets::union( map { $Presses{$$_{equipment_id}} ? $$_{equipment_id} : () } @Schedule );
 
 	my $qty_index = $Project->ordered_quantity_index();
@@ -273,26 +290,26 @@ foreach my $Project ( @Projects ) {
 	}
 	
 	my $Service = $Project->Service( $$services{Proofs}[0] ) if $$services{Proofs};
-  my %Operators = map { $$_{user_id}, $_ } openprint::Project_Service_Operator->find( service_id=>$$Service{service_id} ) if $Service;
+	my %Operators = map { $$_{user_id}, $_ } openprint::Project_Service_Operator->find( service_id=>$$Service{service_id} ) if $Service;
 	my $operators = join(' ', map { $_->User()->link_to( substr($_->User()->firstname(),0,1).substr($_->User()->lastname(),0,1), { title=>$_->Role()->name() } ) } values %Operators );
 
 	my $package_service_id = $$services{BulkSkids} ? 
 		$$services{BulkSkids}[0] :
 		( $$Service{PlainCartons} ? $$Service{PlainCartons}[0] : undef );
 
-my @Labels = openprint::Label->find( docket=>$Project->docket(), type_id=>\@labeltype_ids );
-my $class;
-if ( $Project->status() eq 'In Prepress' ) {
-	$class .= 'inprepress';
-} elsif ( $Project->status() eq 'Waiting For Customer Approval' ) {
-	$class .= 'approval';
-}
-if ( $Project->rush() ) {
-  $class .= 'rush';
-}
-if ( @Labels ) {
-  $class .= 'inshipping';
-}
+	my @Labels = openprint::Label->find( docket=>$Project->docket(), type_id=>\@labeltype_ids );
+	my $class;
+	if ( $Project->status() eq 'In Prepress' ) {
+		$class .= ' inprepress';
+	} elsif ( $Project->status() eq 'Waiting For Customer Approval' ) {
+		$class .= ' approval';
+	}
+	if ( $Project->rush() ) {
+	  $class .= ' rush';
+	}
+	if ( @Labels ) {
+	  $class .= ' inshipping';
+	}
 
 	$html .= sprintf('
 <tr class="%s">
@@ -318,10 +335,13 @@ $Project->production_link_to( $Project->docket() ),
 	$Project->production_link_to( $Project->Company()->name() ),
 	$operators,
 	( sets::isin( $Project->status(), [ 'Proofs Out', 'Waiting For Customer Approval','Waiting For QA Approval','Approved','Printed' ] ) ? '&#10004;' : '' ),
-	( @press_ids ?
+	(
+( $Project->status() eq 'Waiting For QA Approval' ) ? '' : (
+ @press_ids ?
 		join(', ', map { $Presses{$_} ? $Presses{$_}->strid() : () } @press_ids )
 		:
 		'('.join(', ', map { $Presses{$_} ? $Presses{$_}->strid() : () }@quoted_press_ids ).')'
+	),
 	),
 	( $Project->is_printed() ? overview_date($Project->printed_on()) : '' ),
 	( $package_service_id ? openprint::Estimating::Skids::overview_summary($Project,$package_service_id, undef, $qty_index) : '' ),

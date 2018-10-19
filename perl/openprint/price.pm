@@ -36,6 +36,7 @@ sub set {
 	setEquipment( $self, shift );
 	setMin( $self, shift );
 	setMax( $self, shift );
+	setRangeUnits( $self, shift );
 	setUnits( $self, shift );
 	setCost( $self, shift );
 	setMarkup( $self, shift );
@@ -60,6 +61,10 @@ sub setMax {
 	$_[0]{max} = $_[1];
 }
 
+sub setRangeUnits {
+	my $self = shift;
+	$self->{range_units} = shift;
+}
 sub setUnits {
 	my $self = shift;
 	$self->{units} = shift;
@@ -87,6 +92,7 @@ sub copy {
 	setEquipment( $self, $src->{equipment_index} );
 	setMin( $self, $src->{min} );
 	setMax( $self, $src->{max} );
+	setRangeUnits( $self, $src->{range_units} );
 	setUnits( $self, $src->{units} );
 	setCost( $self, $src->{Cost} );
 	setMarkup( $self, $src->{Markup} );

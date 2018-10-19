@@ -24,7 +24,7 @@ sub load {
 	my $self = shift;
 
 	my @values = ( @$self{'product_index','list_index'} );
-    my $sql = 'SELECT lngEquipmentIndex, lngMin, lngMax, strUnits, dblCost, dblMarkup, dblPrice, ysnDiscountable FROM tbl_Material_Prices WHERE lngMaterialIndex=? AND lngListIndex=?';
+    my $sql = 'SELECT lngEquipmentIndex, lngMin, lngMax, range_units, strUnits, dblCost, dblMarkup, dblPrice, ysnDiscountable FROM tbl_Material_Prices WHERE lngMaterialIndex=? AND lngListIndex=?';
 	if ( $self->{equipment_index} ) {
 		$sql .= ' AND (lngEquipmentIndex=? OR lngEquipmentIndex IS NULL)';
 		push @values, $self->{equipment_index};
@@ -37,7 +37,7 @@ sub load {
 
     while ( @records ) {
 		my $price = openprint::material_price->new( $self->{log}, $self->{dbh}, $self );
-		$price->set( splice @records, 0, 8 );
+		$price->set( splice @records, 0, 9 );
 		push @{$self->{prices}}, $price;
     } # end while
 } # end sub load
