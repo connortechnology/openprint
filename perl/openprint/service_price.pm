@@ -18,6 +18,7 @@ sub save {
 		'period_end',				( $self->{period_end} eq '' ? undef : $self->{period_end} ),
 		'min',				( $self->{min} eq '' ? undef : $self->{min} ),
 		'max',				( $self->{max} eq '' ? undef : $self->{max} ),
+		'range_units',			( $self->{range_units} eq '' ? undef : $self->{range_units} ),
 		'units',			( $self->{units} eq '' ? undef : $self->{units} ),
 		'cost',				( $self->{Cost} eq '' ? undef : $self->{Cost} ),
 		'markup',			( $self->{Markup} eq '' ? undef : $self->{Markup} ),
@@ -27,7 +28,7 @@ sub save {
 } # end sub save
 
 sub set {
-	@{$_[0]}{'self','service_id','equipment_index','period_start','period_end','min','max','units','Cost','Markup','Price','discountable','mode'} = @_;
+	@{$_[0]}{'self','service_id','equipment_index','period_start','period_end','min','max','range_units','units','Cost','Markup','Price','discountable','mode'} = @_;
 } # end sub set
 
 1;

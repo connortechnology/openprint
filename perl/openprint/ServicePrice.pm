@@ -19,6 +19,7 @@ $serial = 'service_prices_id_seq';
 	equipment_id		=>	'equipment_id',
 	min							=>	'min',
 	max							=>	'max',
+	range_units			=>	'range_units',
 	units						=>	'units',
 	cost						=>	'cost',
 	markup					=>	'markup',
@@ -86,6 +87,7 @@ sub markup {
 	} # end if
 	return $_[0]{markup};
 } # end sub markup
+
 sub cost {
 	if ( @_ > 1 ) {
 		$_[0]{cost} = $_[1];

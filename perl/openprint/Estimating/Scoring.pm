@@ -918,14 +918,13 @@ sub summary {
 		my $html;
 		foreach my $s_s_id ( $Project->signatures( { sort=>1 } ) ) {
 			my $sig_specs = openprint::service::get_specs_ref( $Project, $s_s_id );
+			next if ! $$specs{"ddmEquipment-$$sig_specs{SignatureIndex}-$qty_index"}; 
 			my $Paper = openprint::Paper::load_from_signature( $Project, $sig_specs, $qty_index );
 			if ( signature_needs( $Project, $specs, $sig_specs, $Paper ) ) {
 				$html .= 'Form ' . $$sig_specs{SignatureIndex} . ' ' . $$sig_specs{txtServiceDescription} . ' scored ' .signature_summary( $Project, $service_id, undef, $qty_index, $s_s_id, undef ) . "\n";
 			} # end if
 		} # end foreach
 		return $html;
-
-	} else {
 	} # end if
 } # end sub summary
 

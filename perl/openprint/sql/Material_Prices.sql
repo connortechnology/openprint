@@ -8,6 +8,7 @@ CREATE TABLE tbl_Material_Prices (
 	dtmEnd				TIMESTAMP with time zone,
 	lngMin				NUMERIC(10,4),
 	lngMax				NUMERIC(10,4),
+	range_units		TEXT,
 	strUnits            TEXT,
 	dblCost				NUMERIC( 10, 5 ),
 	dblMarkup			NUMERIC( 10, 2 ),

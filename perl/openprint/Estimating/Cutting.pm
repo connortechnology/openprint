@@ -671,8 +671,12 @@ $openprint::log->debug("Stitching imposition: $stitching_imposition");
     if ( $folding_cuts ) {
       load_equipment( $Project ) if ! @PreFoldingEquipment;
       my @PreFoldEquipment = @PreFoldingEquipment;
-      if ( ( defined $$specs{"OverrideFoldingEquipment-$form-$qty_index"} ) and ( $$specs{"OverrideFoldingEquipment-$form-$qty_index"} eq 'Y' ) ) {
-        if ( ! sets::isin( $$specs{"OverrideFoldingEquipment-$form-$qty_index"}, [ map { $_->id() } @PreFoldingEquipment ] ) ) {
+      if (
+					defined($$specs{"OverrideFoldingEquipment-$form-$qty_index"})
+					and
+					( $$specs{"OverrideFoldingEquipment-$form-$qty_index"} eq 'Y' )
+				 ) {
+        if ( ! sets::isin( $$specs{"OverrideFoldingEquipment-$form-$qty_index"}, [ map { $$_{id} } @PreFoldingEquipment ] ) ) {
           $results{alert} .= 'Overriden Equipment is not suitable for cutting before folding.<br/>';
         } # end if
         @PreFoldEquipment = ( new openprint::Equipment( $$specs{"FoldingEquipment-$form-$qty_index"} ) );
@@ -692,10 +696,15 @@ $openprint::log->debug("Stitching imposition: $stitching_imposition");
         my $price;
         if ( $ServicePrice{units} eq 'per inch' ) {
           $price = ( $piles * $folding_cuts * $ServicePrice{Price} * $I->image_height() );
-          $results{Breakdown} .= sprintf('%d pre-folding cuts on %d sheets in %d piles * %.2f inches: %.2f%s=%.2f<br/>', $folding_cuts, $sheets, $piles, $I->image_height(), @ServicePrice{'Price','units'}, $price );
+          $results{Breakdown} .= sprintf(
+							'%d pre-folding cuts on %d sheets in %d piles * %.2f inches: %.2f%s=%.2f<br/>',
+							$folding_cuts, $sheets, $piles, $I->image_height(), @ServicePrice{'Price','units'}, $price,
+							);
         } else {
           $price = ( $piles * $folding_cuts * $ServicePrice{Price} );
-          $results{Breakdown} .= sprintf('%d pre-folding cuts on %d sheets in %d piles: %.2f%s=%.2f<br/>', $folding_cuts, $sheets, $piles, @ServicePrice{'Price','units'}, $price );
+          $results{Breakdown} .= sprintf(
+							'%d pre-folding cuts on %d sheets in %d piles: %.2f%s=%.2f<br/>',
+							$folding_cuts, $sheets, $piles, @ServicePrice{'Price','units'}, $price );
         } # end if
         if ( ( ! defined $results{FoldingPrice} ) or ( $price < $results{FoldingPrice} ) ) {
           $results{FoldingPrice} = $price;
@@ -1018,13 +1027,16 @@ $I->display();
       } else {
         if ( $ServicePrice{units} eq 'per inch' ) {
           $price = ( $piles * $horizontal_cuts *$ServicePrice{Price} * $$I{image_width} );
-          $results{Breakdown} .= sprintf("%d Horizontal cuts on %d sheets in %d piles * %.2f inches: %.2f%s=%.2f<br/>", $horizontal_cuts, $sheets, $piles, $$I{image_width}, @ServicePrice{'Price','units'}, $price );
+          $results{Breakdown} .= sprintf('%d Horizontal cuts on %d sheets in %d piles * %.2f inches: %.2f%s=%.2f<br/>',
+							$horizontal_cuts, $sheets, $piles, $$I{image_width}, @ServicePrice{'Price','units'}, $price );
         } elsif ( $ServicePrice{units} eq 'per m' ) {
           $price = ( $piles * $horizontal_cuts * $ServicePrice{Price} * ($sheets/1000) );
-          $results{Breakdown} .= sprintf("%d Horizontal cuts on %d sheets in %d piles: %.2f%s=%.2f<br/>", $horizontal_cuts, $sheets, $piles, @ServicePrice{'Price','units'}, $price );
+          $results{Breakdown} .= sprintf('%d Horizontal cuts on %d sheets in %d piles: %.2f%s=%.2f<br/>',
+							$horizontal_cuts, $sheets, $piles, @ServicePrice{'Price','units'}, $price );
         } else {
           $price = ( $piles * $horizontal_cuts * $ServicePrice{Price} );
-          $results{Breakdown} .= sprintf("%d Horizontal cuts on %d sheets in %d piles: %.2f%s=%.2f<br/>", $horizontal_cuts, $sheets, $piles, @ServicePrice{'Price','units'}, $price );
+          $results{Breakdown} .= sprintf('%d Horizontal cuts on %d sheets in %d piles: %.2f%s=%.2f<br/>',
+							$horizontal_cuts, $sheets, $piles, @ServicePrice{'Price','units'}, $price );
         }
         $totalPrice += $price;
         if ( (!$config{'Dumb_Cutting'}) or ( $config{'Dumb_Cutting'} ne 'Y' ) ) {
@@ -1118,7 +1130,8 @@ $I->display();
           if ( $pilehandlingprice{units} eq 'per pile' ) {
             $pilehandlingprice{Total} = $pilehandlingprice{Price} * $piles;
             $totalPrice += $pilehandlingprice{Total};
-            $results{Breakdown} .= sprintf('Pile handling: $%1$.2f%2$s * %4$d piles = $%3$.2f<br/>', @pilehandlingprice{'Price','units','Total'}, $piles );
+            $results{Breakdown} .= sprintf('Pile handling: $%1$.2f%2$s * %4$d piles = $%3$.2f<br/>',
+								@pilehandlingprice{'Price','units','Total'}, $piles );
           } else {
             $openprint::log->error("invalid units $pilehandlingprice{units} on $$PileHandling{name}");
             $results{alert} .= "invalid units $pilehandlingprice{units} on $$PileHandling{name}<br/>";
@@ -1478,6 +1491,7 @@ sub runspeed {
   return $runspeed;
 }
 
+# Returns runtime in seconds.
 sub runtime {
   my ( $Project, $Service, $Equipment, $qty_index, $impressions, $speed, $signatures ) = @_;
 
@@ -1501,49 +1515,63 @@ sub runtime {
 					$log->error("No impressions for form $form");
 					next;
 				}
-				my $liftDepth = $E->specification('Maximum Lift Depth', $$sig_specs{txtSpecificStockCalliper} );
-				$openprint::log->debug( "Caclulationg runspeed for sig $sig_id $form) (".$$specs{"txtCalculatedCuts-$form-$qty_index"} . " using lift depth $liftDepth on $$E{strid}");
-				my $lifts = POSIX::ceil($liftDepth/$$sig_specs{txtSpecificStockCalliper});
-				if ( ! $lifts ) {
-					$log->error("No lifts for $liftDepth / $$sig_specs{txtSpecificStockCalliper} in form $form");
+				my $liftDepth = $E->specification('Maximum Lift Depth', $$sig_specs{txtSpecificStockCalliper});
+				$openprint::log->debug(join('',
+							"Calculating runspeed for sig $sig_id form:$form cuts(",
+							$$specs{"txtCalculatedCuts-$form-$qty_index"},
+							" using lift depth $liftDepth on $$E{strid}",
+							));
+				my $items_per_lift = POSIX::ceil($liftDepth/$$sig_specs{txtSpecificStockCalliper});
+				if ( ! $items_per_lift ) {
+					$log->error("No items_per_lift for $liftDepth / $$sig_specs{txtSpecificStockCalliper} in form $form");
 					#next;
-					$lifts = $impressions;
+					$items_per_lift = $impressions;
 				}
+				my $piles = $impressions / $items_per_lift;
 
-				$runtime += ( $$specs{"txtCalculatedCuts-$form-$qty_index"} + $$specs{"txtAdditionalCuts$form"} ) * ( $makeready + $runspeed) * $lifts;
+				$runtime += ( $$specs{"txtCalculatedCuts-$form-$qty_index"} + $$specs{"txtAdditionalCuts$form"} ) * ( $makeready + $runspeed) * $piles;
+				$openprint::log->debug("Resulting runtime: $runtime");
 			} else {
-				$log->debug("None or Equipment is a stitcher, so the cutting happens when stitching");
+				$log->debug('None or Equipment is a stitcher, so the cutting happens when stitching');
 			}
 		} # end if has regular cuts
 	
 		if ( $$specs{"FoldingCuts-$form-$qty_index"} and $$specs{"FoldingEquipment-$form-$qty_index"} ) {
+$openprint::log->debug("Doing Folding Cuts");
 			# Pre-folding cutting
 			my $E = $Equipment ? $Equipment : openprint::Equipment->find_one(id=>$$specs{"FoldingEquipment-$form-$qty_index"});
 			if ( $E ) {
-				my $makeready = $E->specification( 'Make Ready Time' );
-				my $runspeed = $E->specification( 'Cutting Time' );
-				$openprint::log->debug("Cutting runtime: $makeready $runspeed");
 				$impressions = $$sig_specs{"hdnImpressionQuantity$qty_index"};
-				if ( ! $impressions ) {
+				if ( !$impressions ) {
 					$log->error("No impressions for form $form");
 					next;
 				}
+				my $makeready = $E->specification('Make Ready Time');
+				my $runspeed = $E->specification('Cutting Time');
+				$openprint::log->debug("Cutting runtime: MR:$makeready RS:$runspeed");
 				my $liftDepth = $E->specification('Maximum Lift Depth', $$sig_specs{txtSpecificStockCalliper});
-				$openprint::log->debug( "Caclulation runspeed for sig $sig_id $form) (".$$specs{"txtCalculatedCuts-$form-$qty_index"} . " using lift depth $liftDepth on $$E{strid}");
-				my $lifts = POSIX::ceil($liftDepth/$$sig_specs{txtSpecificStockCalliper});
-				if ( ! $lifts ) {
+				my $items_per_lift = POSIX::ceil($liftDepth/$$sig_specs{txtSpecificStockCalliper});
+				if ( ! $items_per_lift ) {
 					$log->error("No lifts for $liftDepth / $$sig_specs{txtSpecificStockCalliper} in form $form");
 					#next;
-					$lifts = $impressions;
+					$items_per_lift = $impressions;
 				}
+				my $piles = POSIX::ceil( $impressions / $items_per_lift );
 
-				$runtime += ( $$specs{"txtCalculatedCuts-$form-$qty_index"} + $$specs{"txtAdditionalCuts$form"} ) * ( $makeready + $runspeed) * $lifts;
-			}
-			
-		}
+				$openprint::log->debug(join('',
+							"Calculation Folding Cuts runspeed for sig $sig_id form:$form Cuts(",
+							$$specs{"FoldingCuts-$form-$qty_index"},
+							" using lift depth $liftDepth/$$sig_specs{txtSpecificStockCalliper}=$items_per_lift on $$E{strid} = $piles piles",
+							));
+				my $this_runtime = ( $makeready + ($$specs{"FoldingCuts-$form-$qty_index"} * $runspeed) ) * $piles;
+$openprint::log->debug("Runtime for sig $this_runtime=".misc::seconds2hms($this_runtime));
 
-  } # end foreach
-  $openprint::log->debug("Cutting runtime: $runtime $impressions");
+				$runtime += $this_runtime;
+			} # end if Equipment
+		} # end if FoldingCuts
+
+  } # end foreach Signature
+  $openprint::log->debug("Cutting runtime: RS:$runtime=".misc::seconds2hms($runtime)." Impressions:$impressions");
   return $runtime;
 } # end sub runtime
 

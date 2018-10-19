@@ -552,6 +552,12 @@ if ( ! sets::isin( 'order_statuses_id_seq', \@sequences ) ) {
 if ( ! sets::isin( 'paymenttypes', \@tables ) ) {
 	$dbh->do( misc::load_file( $log, q{../openprint/sql/PaymentTypes.sql}) ) or die $dbh->errstr();
 } else {
+	my $data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='paymenttypes'", 'column_name');
+  if ( ! exists $$data{payee_id} ) {
+    $log->debug("Adding payee_id to paymenttypes");
+      $dbh->do('ALTER TABLE paymenttypes ADD payee_id INTEGER') or die $dbh->errstr();
+      $dbh->do('ALTER TABLE paymenttypes ADD FOREIGN KEY (payee_id) REFERENCES Companies (id)') or die $dbh->errstr();
+  }
 } # end if
 
 
@@ -1854,11 +1860,11 @@ if ( ! sets::isin( 'service_prices',\@tables )  ) {
 			$dbh->do("UPDATE Service_Prices set mode='Interpolated' WHERE interpolate iS true") or die $dbh->errstr();
 		} # end if
 	} # end if
-	#if ( ! exists $$data{quantity_units} ) {
-		#$log->debug("Adding quantity_units to service_prices");
-		#$dbh->do('ALTER TABLE Service_Prices ADD quantity_units TEXT');
-		#die $dbh->errstr() if $dbh->errstr();
-	#}
+	if ( ! exists $$data{range_units} ) {
+		$log->debug("Adding range units to service_price");
+		$dbh->do('ALTER TABLE Service_Prices ADD range_units TEXT') or die $dbh->errstr();
+		$dbh->do('UPDATE Service_Prices SET range_units = units') or die $dbh->errstr();
+	}
 	if ( ! exists $$data{id} ) {
 		$log->debug("Adding id SERIAL to Service_prices");
 		$dbh->do('ALTER TABLE Service_Prices ADD id SERIAL');
@@ -5537,11 +5543,11 @@ my $data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, c
 			$log->debug("adding interpolate to tbl_material_prices");
 		$dbh->do('ALTER TABLE tbl_material_prices ADD interpolate         BOOLEAN NOT NULL default false');
 	}
-	#if ( ! exists $$data{quantity_units} ) {
-		#$log->debug("Adding quantity_units to tbl_material_prices");
-		#$dbh->do('ALTER TABLE tbl_material_prices ADD quantity_units TEXT');
-		#die $dbh->errstr() if $dbh->errstr();
-	#}
+	if ( ! exists $$data{range_units} ) {
+		$log->debug("Adding range units to tbl_Material_prices");
+		$dbh->do('ALTER TABLE tbl_Material_Prices ADD range_units TEXT') or die $dbh->errstr();
+		$dbh->do('UPDATE tbl_Material_Prices SET range_units = strunits') or die $dbh->errstr();
+	}
 }
 $dbh->do( 'update service_prices set units=lower(units)');
 $dbh->do( 'update paper_prices set strunits=lower(strunits)');
