@@ -552,6 +552,12 @@ if ( ! sets::isin( 'order_statuses_id_seq', \@sequences ) ) {
 if ( ! sets::isin( 'paymenttypes', \@tables ) ) {
 	$dbh->do( misc::load_file( $log, q{../openprint/sql/PaymentTypes.sql}) ) or die $dbh->errstr();
 } else {
+	my $data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='paymenttypes'", 'column_name');
+  if ( ! exists $$data{payee_id} ) {
+    $log->debug("Adding payee_id to paymenttypes");
+      $dbh->do('ALTER TABLE paymenttypes ADD payee_id INTEGER') or die $dbh->errstr();
+      $dbh->do('ALTER TABLE paymenttypes ADD FOREIGN KEY (payee_id) REFERENCES Companies (id)') or die $dbh->errstr();
+  }
 } # end if
 
 
