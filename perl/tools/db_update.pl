@@ -5698,6 +5698,27 @@ if ( ! sets::isin('backups', \@tables ) ) {
   $log->debug("Adding Backups");
   $dbh->do( misc::load_file( $log, q{../openprint/sql/Backups.sql}) );
   die if $dbh->errstr();
+} else {
+	my $data = $dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='backups'", 'column_name');
+  if ( ! exists $$data{type} ) {
+    $dbh->do('ALTER TABLE Backups ADD type TEXT') or die $dbh->errstr();
+    $dbh->do('UPDATE Backups SET type=(SELECT lc(name) FROM Backup_Types WHERE backup_types.id=backups.type_id)') or die $dbh->errstr();
+  }
+  if ( exists $$data{type_id} ) {
+    $dbh->do('ALTER TABLE Backups DROP type_id') or die $dbh->errstr();
+  }
+  if ( ! exists $$data{deleted} ) {
+    $log->debug("Adding deleted to Backups");
+    $dbh->do('ALTER TABLE Backups ADD deleted BOOLEAN NOT NULL DEFAULT FALSE') or die $dbh->errstr();
+  }
+  if ( ! exists $$data{owner_id} ) {
+    $log->debug("Adding Owner_id to bakcups");
+		$dbh->do('ALTER TABLE Backups add owner_id INTEGER') or die $dbh->errstr();
+		$dbh->do('ALTER TABLE Backups add FOREIGN KEY (owner_id) REFERENCES Companies (id)') or die $dbh->errstr();
+  }
+}
+if ( sets::isin('backup_types', \@tables ) ) {
+  $dbh->do('DROP TABLE Backup_Types') or die $dbh->errstr();
 }
 
 if ( ! sets::isin('operator_roles', \@tables ) ) {

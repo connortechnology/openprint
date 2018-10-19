@@ -10,7 +10,7 @@
     ( $session{'/employee/it/backups.html?monitored'} ne '' ? ( monitored=>$session{'/employee/it/backups.html?monitored'} ) : () ),
     ( $session{'/employee/it/backups.html?online'} ne '' ? ( online=>$session{'/employee/it/backups.html?online'} ) : () ),
     ( $session{'/employee/it/backups.html?has_name'} ne '' ? ( 'name is null' => ! $session{'/employee/it/backups.html?has_name'} ) : () ),
-    ( $session{'/employee/it/backups.html?type_id'} ne '' ? ( type_id => $session{'/employee/it/backups.html?type_id'} ) : () ),
+    ( $session{'/employee/it/backups.html?type'} ne '' ? ( type => $session{'/employee/it/backups.html?type'} ) : () ),
     ( $session{'/employee/it/backups.html?owner_id'} ne '' ? ( owner_id => $session{'/employee/it/backups.html?owner_id'} ) : () ),
     ( $session{'/employee/it/backups.html?deleted'} ? ( deleted=>$session{'/employee/it/backups.html?deleted'} ) : () ),
     date_filter( '/employee/it/backups.html?created_on_end', 'created_on <=' ),

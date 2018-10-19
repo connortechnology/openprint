@@ -654,7 +654,7 @@ sub _backups {
       'updated_on_start_year', 'updated_on_start_month', 'updated_on_start_day',
       'updated_on_end_year', 'updated_on_end_month', 'updated_on_end_day',
       'enabled',
-      'name','type_id',
+      'name','type',
       'order', 'deleted', 'owner_id',
       );
 
@@ -680,11 +680,6 @@ sub backup {
       $variable{information} .= $Backup->run(); 
       $variable{ExternalRedirect} = '/employee/it/backup.html?backup_id='.$Backup->id();
     } elsif ( $param{action} eq 'Save' ) {
-      if ( $param{type_id} ) {
-        delete $param{type};
-      } else {
-        delete $param{type_id};
-      } # end if
       my @changes = $Backup->changes(\%param);
       $variable{error} .= $Backup->save(\%param) if @changes;
 

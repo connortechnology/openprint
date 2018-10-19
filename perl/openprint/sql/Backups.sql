@@ -1,8 +1,3 @@
-CREATE TABLE Backup_Types (
-  id SERIAL,
-  name  TEXT,
-  PRIMARY KEY (id)
-);
 CREATE TABLE Backups (
   id SERIAL,
   name        TEXT,
