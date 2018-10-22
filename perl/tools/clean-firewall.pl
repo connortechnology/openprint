@@ -24,8 +24,8 @@ my $program = basename($0);
 my $opts = {};
 Getopt::Long::GetOptions($opts, 'help', 'config=s',
 	'log_file=s', 'log_level=s',
-'db_name=s', 'db_host=s', 'db_user=s', 'db_pass=s','db_port=s',
-'debug=s',
+	'db_name=s', 'db_host=s', 'db_user=s', 'db_pass=s','db_port=s',
+	'debug=s',
 );
 
 if ($opts->{help}) {
