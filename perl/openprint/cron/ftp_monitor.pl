@@ -58,8 +58,15 @@ my %codes = (
 	213	=>	'File status',
 	215	=>	'NAME system type',
 	221	=>	'Service closing control connection',
+	226 =>  'Closing data connection',
+	227 => 	'Entering Passive Mode',
 	230	=>	'User logged in',
+	250 =>	'Requested file action okay, completed',
 	257	=>	'Path created',
+	331 =>	'User name ok, need password',
+	350	=>	'Requested file action pending further information.',
+	530	=>	'User not logged in',
+	550	=>	'Requested action not taken. File unavailable, not found, not accessible',
 );
 my %defaults = (
     config  =>  '/etc/openprint/ftp_monitor.conf',
@@ -296,22 +303,26 @@ $log->debug("data: $client $remote_user $user_name $curr_time $xfer_type $path $
 			} elsif ($line =~ /^(\S+)\s+(\S+)\s+(\S+)\s+\[([^\]]+)\]\s+"([^"]*)"\s+"([^"]*)"\s+(\S+)\s+(\d+)\s+([\-\d]+)\s+([\.\d\-]+)$/o) {
 #LogFormat IQFormat "%h %l %u %t \"%d\" \"%f\" %m %s %b %T"
 
-				my $client = $1;
-				my $remote_user = $2;
-				my $user_name = $3;
-				my $curr_time = $4;
-				my $dir = $5;
-				my $path = $6;
+				my $client = defined $1 ? $1 : '';
+				my $remote_user = defined $2 ? $2 : '';
+				my $user_name = defined $3 ? $3 : '';
+				my $curr_time = defined $4 ? $4 : '';
+				my $dir = defined $5 ? $5 : '';
+				my $path = defined $6 ? $6 : '';
 				my $command = defined $7 ? $7 : '';
 				my $response_code = defined $8 ? $8 : '';
 				my $nbytes = defined $9 ? $9 : '';
 				my $xfer_nsecs = defined $10 ? $10 : '';
 				$log->debug("Got IQFormat extended line: $line");
-				$log->debug("data: $client $remote_user $user_name $curr_time $dir $path $command $response_code($codes{$response_code}) $nbytes");
+				if ( ! defined $codes{$response_code} ) {
+					$log->error("Need to define the response code for $response_code");
+				}
+				$log->debug("data: client:$client remote_user:$remote_user username:$user_name time:$curr_time dir:$dir path:$path command:$command code:$response_code($codes{$response_code}) bytes:$nbytes");
 				if ( $response_code == 331 ) {
 #Username OK, need password
 					next;
-				} elsif ( $command eq 'LIST' or $command eq 'MLSD' ) {
+				} elsif ( $command eq 'LIST' or $command eq 'MLSD' or $command eq 'CDUP' ) {
+$log->debug("Command was not an upload");
 					next;
 				} elsif ( $response_code == 230 ) {
 # Successful login
@@ -321,6 +332,15 @@ $log->debug("data: $client $remote_user $user_name $curr_time $xfer_type $path $
 						next;
 					}
 					(new openprint::Log())->save({Object=>$User, action=>'Login', note=>'Successful FTP Login' } );
+					next;
+				} elsif ( $response_code == 350 ) {
+					$log->debug("Requested file action pending further information. ");
+					next;
+				} elsif ( $response_code == 257 ) {
+					$log->debug("PWD");
+					next;
+				} elsif ( $response_code == 550 ) {
+					$log->debug("Action not taken");
 					next;
 				} elsif ( $response_code == 257 ) {
 					$log->debug("Path Created, ignoring");
@@ -333,6 +353,9 @@ $log->debug("data: $client $remote_user $user_name $curr_time $xfer_type $path $
 					next;
 				} elsif ( $path eq '-' ) {
 					$log->debug("Not an upload, response_code: $response_code path was $path");
+					next;
+				} elsif ( -d $path ) {
+					$log->debug("Was creating a dir at $path, no notification");
 					next;
 				}
 
@@ -379,7 +402,7 @@ $log->debug("data: $client $remote_user $user_name $curr_time $xfer_type $path $
 					}
 				} # end if send email
 
-				if ($send_email) {
+				if ( $send_email ) {
 					my $already_uploading = 0;
 					foreach my $U ( @{$uploads{$user_name}} ) {
 						if ( $$U{file} eq $path ) {
@@ -389,7 +412,8 @@ $log->debug("data: $client $remote_user $user_name $curr_time $xfer_type $path $
 							last;
 						}
 					}
-					if ( ! $already_uploading ) {
+					if ( !$already_uploading ) {
+$log->debug("Queing upload $path");
 						push @{$uploads{$user_name}}, {
 							timestamp => $curr_time,
 							duration => $xfer_nsecs,
@@ -522,12 +546,12 @@ $log->debug("Processing upload $file");
 		$$upload{file_str} = $file_str;
 		$$upload{company_name} = $company_name;
 
-		my $regexp = "^$project_files_path/$company_name/(.+)\$";
+		my $regexp = "^\Q$project_files_path\E\\/\Q$company_name\E\\/(.+)\$";
 $log->debug("regexp: $regexp");
 		@$upload{proper_file_path} = $file =~ /$regexp/;
 		if ( ! $$upload{proper_file_path} ) {
-			$log->debug("Trying a more generic regexp");
-			$regexp = "^.*/$company_name/(.+)\$";
+			$log->debug("Trying a more generic regexp against $file");
+			$regexp = "^.*\\/\Q$company_name\E\\/(.+)\$";
 			@$upload{proper_file_path} = $file =~ /$regexp/;
 		}
 		$$upload{proper_file_path} = $$upload{file_str} if ! $$upload{proper_file_path};
