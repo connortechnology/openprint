@@ -332,33 +332,34 @@ sub parse_page {
 
 	} elsif ( $first eq 'employee' ) {
 		if ( $second eq 'proj' ) {
+			if ( $param{docket} ) {
+				$param{docket} = openprint::Project->transform(docket=>$param{docket});
+				my @Projects = openprint::Project->find(docket=>$param{docket});
+				if ( !@Projects ) {
+					$variable{error} ='No projects found for docket ' . $param{docket}.'<br/>';
+					return;
+				} elsif ( @Projects > 1 ) {
+					$variable{error} ='Multiple projects found for docket ' . $param{docket}.'<br/>';
+					my $rowclass = '';
+					foreach my $Project ( @Projects ) {
+						$variable{error} .= qq`<div$rowclass><a href="$variable{uri}?project_id=$$Project{id}">$$Project{id}</a> $$Project{reference}</div>`; 
+						$rowclass= $rowclass ? '' : ' class="colRow"';
+					}
+					return;
+				}
+				$param{ProjectIndex} = $Projects[0]->id();
+			} elsif ( $param{project_id} ) {
+				$param{ProjectIndex} = $param{project_id};
+			}
+
 			require openprint::print;
 			require openprint::print_project;
 			require openprint::employee_production;
-			if ( $param{docket} ) {
-				my @Projects = openprint::Project->find(docket=>$param{docket});
-				if ( ! @Projects ) {
-					$variable{error} ='No projects found for docket ' . $param{docket}.'<br/>';
-return;
-				} elsif ( @Projects > 1 ) {
-					$variable{error} ='Multiple projects found for docket ' . $param{docket}.'<br/>';
-return;
-				}
-				$param{ProjectIndex} = $Projects[0]->id();
-				my $services = $Projects[0]->services();
-				if ( $$services{Proofs} ) {
-					$param{ServiceIndex} = $$services{Proofs}[0];
-				} else {
-					$variable{error} .= 'No Proofs service found in project ' . $Projects[0]->id() . '<br/>';
-					return;
-
-				}
-			}
 
 			openprint::print_project::get_service_specifications( $r, $log, $dbh, \%variable, @param{'ProjectIndex','ServiceIndex'} ) if $param{ServiceIndex} and $filename ne 'multipage_signatures.html';
 			@variable{'ProjectIndex','ServiceIndex','OrderID'} = @param{'ProjectIndex','ServiceIndex','OrderID'};
 			
-			$variable{Project} = new openprint::Project( $variable{ProjectIndex} );
+			my $Project = $variable{Project} = new openprint::Project($variable{ProjectIndex});
 			@variable{'ddmDueDate','OrderedQuantityIndex'} = ( $variable{Project}->due_date(), $variable{Project}->ordered_quantity_index() );
 			$variable{QTYIndex} = $variable{OrderedQuantityIndex};
 			$variable{DocketNumber} = $variable{Project}->docket();
@@ -366,11 +367,22 @@ return;
 			$variable{Employee} = $openprint::User->name();
 			
 			if ( $filename eq 'proofs.html' or $filename eq 'FilmStripping.html' ) {
-				foreach my $signature_service_index ( $variable{Project}->signatures() ) {
-					my $sig_specs = openprint::service::get_specs_ref( $variable{Project}, $signature_service_index );
+				if ( ! $param{ServiceIndex} ) {
+					my $services = $Project->services();
+					if ( $$services{Proofs} ) {
+						$variable{ServiceIndex} =	$param{ServiceIndex} = $$services{Proofs}[0];
+					} else {
+						$variable{error} .= 'No Proofs service found in project ' . $Project->id() . '<br/>';
+						return;
+					}
+				}
+				foreach my $signature_service_index ( $Project->signatures() ) {
+					my $sig_specs = openprint::service::get_specs_ref( $Project, $signature_service_index );
 					push @{$variable{Signatures}}, @$sig_specs{'SignatureIndex','txtServiceDescription'};
 					if ( ! $$sig_specs{UsePress} ) {
-						openprint::service::insert_service_spec( $log, $dbh, $variable{ProjectIndex}, $signature_service_index, 'UsePress', $$sig_specs{'ddmPress'.$variable{Project}->ordered_quantity_index()} );
+						openprint::service::insert_service_spec(
+								$log, $dbh, $$Project{id}, $signature_service_index,
+								'UsePress', $$sig_specs{'ddmPress'.$Project->ordered_quantity_index()} );
 					} # end if
 					$variable{"UsePress-$signature_service_index"} = $$sig_specs{UsePress};
 				} # end foreach signature_service_index
