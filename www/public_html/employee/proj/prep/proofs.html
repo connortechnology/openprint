@@ -1,23 +1,22 @@
 <script type="text/javascript">
 function check_input( form, signature_index ) {
-    if ( form.elements['txtProofQuantity-'+signature_index].value ) {
-        if ( ! form.elements['txtProofWidth-'+signature_index].value ) {
-            alert('Please enter the width of the additional proofs');
-            return false;
-        } else if ( ! form.elements['txtProofHeight-'+signature_index].value ) {
-            alert('Please enter the height of the additional proofs');
-            return false;
-        } else if ( ! get_ddm_value(form.elements['ddmProofType-'+signature_index] ) ) {
-            alert('Please enter the type of the additional proofs');
-            return false;
-        } // end if
-    } // end if
-    return true;
+	if ( form.elements['txtProofQuantity-'+signature_index].value ) {
+		if ( ! form.elements['txtProofWidth-'+signature_index].value ) {
+			alert('Please enter the width of the additional proofs');
+			return false;
+		} else if ( ! form.elements['txtProofHeight-'+signature_index].value ) {
+			alert('Please enter the height of the additional proofs');
+			return false;
+		} else if ( ! get_ddm_value(form.elements['ddmProofType-'+signature_index] ) ) {
+			alert('Please enter the type of the additional proofs');
+			return false;
+		} // end if
+	} // end if
+	return true;
 } // end function check_input
 </script>
 
 <? eval ( 
-	$$variable{Project} = new openprint::Project( $$variable{ProjectIndex} );
 	@$variable{Docket} = $$variable{Project}->docket();
 ) ?>
 <form id="f2" name="f2" action="/employee/project/view.html" method="post">
@@ -25,8 +24,8 @@ function check_input( form, signature_index ) {
 		<ul>
 			<li class="docket"><label>Docket #</label>
 			<? echo ( join("\n",
-						input( type=>'cardinal', name=>'Docket', id=>'Docket', onchange=>'change_handler(this);', onkeypress=>'return input_handler(this,event);', onkeydown=>q`if(event.keyCode==13){window.location='view.html?Docket='+this.value;};`, onkeyup=>q`$('project_id').value='';`, value=>$param{Docket}),
-						button( 'Go1', { onclick=>q`window.location='view.html?Docket='+$('Docket').value;`, text=>'Go' } ),
+						input( type=>'cardinal', name=>'docket', id=>'Docket', onchange=>'change_handler(this);', onkeypress=>'return input_handler(this,event);', onkeydown=>q`if(event.keyCode==13){window.location='/employee/project/view.html?docket='+this.value;};`, onkeyup=>q`$('project_id').value='';`, value=>$param{Docket}),
+						button( 'Go1', { onclick=>q`window.location='/employee/project/view.html?docket='+$('Docket').value;`, text=>'Go' } ),
 						button( 'GoProofs', { onclick=>q`if($('Docket').value){window.location='/employee/proj/prep/proofs.html?docket='+$('Docket').value;};`, text=>'Go Proofs' } ),
 			); ) ?>
 			</li>
@@ -128,3 +127,4 @@ function check_input( form, signature_index ) {
 <?else($$variable{Project}->id())?>
 <div class="error">Project not found</div>
 <?endif($$variable{Project}->id())?>
+<?include('/includes/error_reporting.html')?>
