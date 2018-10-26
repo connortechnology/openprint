@@ -183,7 +183,8 @@ sub load {
 	if ( ! $data ) {
 		$data = $openprint::dbh->selectrow_hashref( q{SELECT * FROM Papers WHERE id=?}, {}, $$self{id} );
 	} # end if
-	@$self{keys %fields} = @$data{@fields{keys %fields}};
+	my @keys = map { (defined $fields{$_}) ? $_ : () } keys %fields;
+	@$self{@keys} = @$data{@fields{@keys}};
 	if ( exists $$data{allocated} ) {
 		$$self{allocated} = $$data{allocated}
 	}
@@ -924,7 +925,7 @@ sub in_stock {
 	return 0 if ! $_[0]{id};
 
 	if ( @_ > 1 ) {
-$openprint::log->debug("Setting paper in_stock to $_[1]");
+$openprint::log->debug("Setting paper in_stock to " . ( $_[1] ? $_[1] : 'undef' ));
 		if ( ref $_[1] eq 'openprint::InventoryCondition' ) {
 			my $in_stock = 0;
 			foreach my $C ( openprint::SkidContent->find(deleted=>0,paper_id=>$_[0]{id}, condition_id=>$_[1]->id() ) ) {
@@ -938,10 +939,11 @@ $openprint::log->debug("Setting paper in_stock to $_[1]");
 	} # end if
 
 	if ( ! defined $_[0]{in_stock} ) {
+		$_[0]{in_stock} = 0;
 		foreach my $SkidContent ( $_[0]->SkidContents() ) {
 			$_[0]{in_stock} += $SkidContent->quantity();
 		} # end foreach SkidContent
-$openprint::log->debug("Loading paper in_stock to $_[0]{in_stock}");
+		$openprint::log->debug("Loading paper in_stock to $_[0]{in_stock}");
 	} # end if
 	return $_[0]{in_stock};
 } # end sub in_stock
@@ -1414,8 +1416,8 @@ sub load_from_signature {
 			} else {
 				$$Paper{Supplied} = $Paper->clone();
 			} # end if
-		} else {
-			$openprint::log->debug("load_from_signature called without qty_index:$qty_index paper_id:". $$specs{'paper_id'.$qty_index});
+		#} else {
+			#Carp::cluck("load_from_signature called without qty_index:$qty_index and paper_id:". $$specs{'paper_id'.$qty_index});
 		}
 		if ( ! ( $$specs{ddmStockBrand} and $$specs{ddmStockFinish} and $$specs{ddmStockColour} and $$specs{ddmStockWeight} ) ) {
 			return new openprint::Paper();
@@ -1846,10 +1848,10 @@ sub check {
     return "may have invalid basis weight current:$$Paper{basis_mweight} != calculated:$$Copy{basis_mweight}";
   }
   if ( $Paper->brand() =~ /cover/i or $Paper->weight() =~ /cover/i and ( $Paper->basis_width() != 20 or $Paper->basis_height() != 26 ) ) {
-	  "may have has wrong basis size.";
+	  return "may have has wrong basis size.";
     }
   if ( ( $Paper->finish() =~ /1 side/i ) and ( $Paper->doublesided() ) ) {
-    "appears to be C1S, but is marked double sided.";
+    return "appears to be C1S, but is marked double sided.";
   }
 
 	return;

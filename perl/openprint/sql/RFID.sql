@@ -1,14 +1,11 @@
 
-DROP TABLE IF EXISTS RFIDTagHistory;
-DROP TABLE IF EXISTS RFIDTags;
-DROP TABLE IF EXISTS RFIDTagTypes;
-
 CREATE TABLE RFIDTagTypes (
 	id	 SERIAL NOT NULL,
 	name	TEXT,
 	PRIMARY KEY (id)
 );
-table create unique index rfidtagtypes_name_idx on rfidtagtypes (name);
+
+CREATE UNIQUE INDEX rfidtagtypes_name_idx on rfidtagtypes (name);
 
 CREATE TABLE RFIDTagActions (
 	id	 SERIAL NOT NULL,
@@ -26,7 +23,6 @@ CREATE TABLE RFIDTags (
 	PRIMARY KEY (id)
 );
 
-DROP TABLE IF EXISTS RFIDTagHistory;
 CREATE TABLE RFIDTagHistory (
 	id	SERIAL NOT NULL,
 	rfidtag_id	TEXT NOT NULL, FOREIGN KEY (rfidtag_id) REFERENCES RFIDTags (id),
@@ -36,5 +32,5 @@ CREATE TABLE RFIDTagHistory (
 	PRIMARY KEY (id)
 );
 
-create index rfidtaghistory_updated_on_scanner_idx on rfidtaghistory (updated_on,scanner_id);
+create index rfidtaghistory_updated_on_scanner_idx on rfidtaghistory(updated_on,scanner_id);
 create index rfidtaghistory_rfidtag_idx on rfidtaghistory (rfidtag_id);

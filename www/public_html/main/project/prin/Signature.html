@@ -144,7 +144,7 @@
 		} elsif ( $$variable{ProjectType}->name() eq 'ScratchPads' ) {
 			return join("\n",
 				include('/includes/main/proj/templates/generic.html'),
-				'<p id="NotepadPages"><label># of pages per pad</label>',
+				'<p id="NotepadPages"><label>Pages per pad</label>',
 				input(type=>'cardinal', name=>'PageQuantity', value=>$$variable{PageQuantity}, oninput=>'calc(this.form.name);' ),
 				'</p>',
 				include('/includes/main/proj/dimensions.html'),

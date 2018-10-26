@@ -18,7 +18,7 @@ sub new {
 	$self->{equipment_index} = $equipment_index;
 	$self->{qty} = $qty;
 	my $Pricelist = new openprint::Pricelist( $self->{list_index} );
-	$$self{'currency_id'} = $Pricelist->currency_id();
+	$$self{currency_id} = $Pricelist->currency_id();
 
 	@{$self->{prices}} = ();
 	return $self;
@@ -27,7 +27,7 @@ sub new {
 sub save {
 	my $self = shift;
 
-	$self->{log}->debug( "Saving priceset" );
+	$self->{log}->error( "Saving priceset" );
 
 	$_ = "DELETE FROM " . $self->{table}. " WHERE lngIndex='" . $self->{product_index} . 
 		"' AND lngListIndex = '" . $self->{list_index} .  "'";
@@ -42,11 +42,11 @@ sub save {
 
 sub load {
 	my $self = shift;
-
+$$self{log}->error("DEPRECATED pricelist::load");
 	my $Pricelist = new openprint::Pricelist( $self->{list_index} );
 
 	my @values = @$self{'product_index','list_index'};
-	my $sql = 'SELECT lngEquipmentIndex, lngMin, lngMax, strUnits, dblCost, dblMarkup, dblPrice, interpolate FROM '. $self->{table};
+	my $sql = 'SELECT lngEquipmentIndex, lngMin, lngMax, range_units, strUnits, dblCost, dblMarkup, dblPrice, interpolate FROM '. $self->{table};
 	$sql .= 'WHERE lngIndex=? AND lngListIndex=?';
 	if ( $self->{equipment_index} ) {
 		$sql .= ' AND lngEquipmentIndex=?';
@@ -63,8 +63,8 @@ sub load {
     my @records = sql::execute( $self->{log}, undef, $sql, @values );
     while ( @records ) {
 		my $price = openprint::price->new( $self->{log}, $self->{dbh}, $self );
-		$price->set( splice @records, 0, 7 );
-		$$price{'currency_id'} = $Pricelist->currency_id();
+		$price->set( splice @records, 0, 9 );
+		$$price{currency_id} = $Pricelist->currency_id();
 		push @{$self->{prices}}, $price;
     } # end while
 }
@@ -77,6 +77,4 @@ sub addPrice {
 } # end sub addPrice
 
 1;
-
 __END__
-~       

@@ -1,6 +1,6 @@
 <script type="text/javascript">
 	function delete_interface( id ) {
-		new Ajax.Request( '_host_actions.json', { parameters: { interface_id: id, action: 'delete interface' } } );
+		jQuery.ajax( '_host_actions.json', { data: { interface_id: id, action: 'delete interface' } } );
 	}
 	function check_inputs( form ) {
 		return true;
@@ -29,9 +29,9 @@ cleanup : true
 					<label>Hostname</label>
 					<input type="text" id="hostname" name="hostname" value="<? echo ( $$variable{Host}->hostname() ) ?>" oninput="to_hostname(this);" />
 				</li>
-				<li><label onclick="toggle_input( $('type_id'), $('type') );">Type</label>
-					<input type="text" id="type" name="type" style="display:none;" onkeyup="ddm_select_by_text( $('type_id'), this.value, 0 );" />
-					<select name="type_id" id="type_id" onchange="$('type').value='';">
+				<li><label onclick="toggle_input( $j('#type_id'), $j('#type') );">Type</label>
+					<input type="text" id="type" name="type" style="display:none;" oninput="ddm_select_by_text( $j('#type_id'), this.value, 0 );" />
+					<select name="type_id" id="type_id" onchange="$j('#type').value='';">
 						<option value="">select</option>
 						<? echo ( make_drop_down( openprint::Host_Type->dropdown(order=>'lower(name)'), $$variable{Host}->type_id() ); ) ?>
 					</select>
@@ -81,8 +81,9 @@ make_drop_down( openprint::Company->dropdown(id=>[ @owner_ids, $openprint::Compa
 		<div class="content rightColumn">
 			<fieldset><legend>Photos</legend>
 				<? echo (
-$$variable{Object} = $$variable{Host};
- include('/employee/assets/_asset_upload.html'); ) ?>
+            $$variable{Object} = $$variable{Host};
+            include('/employee/assets/_asset_upload.html');
+            ) ?>
 			</fieldset>
 			<fieldset><legend>Notifications</legend>
 				<div id="notifications"><?include('_notifications.html')?></div>
@@ -212,6 +213,7 @@ $$variable{Object} = $$variable{Host};
 ) ?>
             </fieldset>
 <? endif ( $$variable{Host}->id() ) ?>
+            </fieldset>
 </form>
 <? if ( $$variable{Host}->id() ) ?>
 <? echo ( include_logs( $$variable{Host} ); ) ?>

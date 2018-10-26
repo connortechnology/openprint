@@ -368,6 +368,7 @@ $openprint::log->debug("********************************************************
 	my @signatures = sort $Project->signatures({type=>'Interior Pages'});
 	push @signatures, sort $Project->signatures({type=>'Cover Pages'});
 	push @signatures, sort $Project->signatures({type=>'Gate Folded Pages'});
+	push @signatures, sort $Project->signatures({type=>'Pad Pages'});
 	push @signatures, sort $Project->signatures({type=>'Backing Pages'});
 	@signatures = $Project->signatures() if ! @signatures;
 	$openprint::log->debug( "Signatures: @signatures");

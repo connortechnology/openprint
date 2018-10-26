@@ -338,14 +338,21 @@ sub _order_history_results {
 			$parameters{salesrep_id} = $session{$uri.'?CSR'};
 		} # end if
 		$parameters{'last_ordered_on is null'} = 0;
-		my @Companies = openprint::Company->find( %parameters ) if (keys %parameters) > 1;
+		my @Companies = openprint::Company->find( %parameters ) if keys %parameters;
 		my %companies = map { $_->id(), $_->name() } @Companies;
 		my @servicetype_ids = split(',',$session{$uri.'?servicetype_id'} );
 
 		$variable{Orders} = [];
 
+	# Companies should always have 1 because we include our own, so if empty, then we must be an admin.
+
 		my @Orders = openprint::Order->find(
-			company_id => ( ($session{$uri.'?company_id'} and ( ( (keys %parameters) == 1 ) or exists $companies{$session{$uri.'?company_id'}} ) ) ? $session{$uri.'?company_id'} : [ keys %companies ] ),
+				( @Companies ? (
+												company_id => (
+													($session{$uri.'?company_id'} and $companies{$session{$uri.'?company_id'}})
+													?
+													$session{$uri.'?company_id'} : [ keys %companies ] ) 
+			) : () ),
 			( $session{$uri.'?CSR'} ? ( salesrep_id	=> $session{$uri.'?CSR'} ) : () ),
 			ssi::date_filter( $uri.'?created_on_start', 'created_on >=' ),
 			ssi::date_filter( $uri.'?created_on_end', 'created_on <=' ),
@@ -355,6 +362,10 @@ sub _order_history_results {
 			( $session{$uri.'?currency_id'} ? ( currency_id=>$session{$uri.'?currency_id'} ) : () ),
 			order => ($param{order} ? $openprint::Order::fields{$param{order}} : 'id'),
 		);
+		if ( ! @Orders ) {
+			$variable{Orders} = \@Orders;
+			return;
+		}
 		my @order_ids = map { $$_{id} } @Orders;
 
 		my %Projects_By_OrderId;

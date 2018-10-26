@@ -210,6 +210,57 @@ sub outputs {
 	'3Panel2PocketGusset', '3 Panel 2 Pocket w/Gussets',
 	'MapFold','Map Fold',
 );
+my %short_fold_names = (
+	'2PanelFold', '2panel',
+	'3PanelFold', '3panel',
+	'3PanelZFold', '3panelZ',
+	'4PanelFold', '4Panel',
+	'4PanelZFold', '4PanelZ',
+	'5PanelFold', '5Panel',
+	'5PanelZFold', '5PanelZ',
+	'6PanelFold', '6Panel',
+	'6PanelZFold', '6PanelZ',
+	'7PanelFold', '7Panel',
+	'7PanelZFold', '7PanelZ',
+	'8PanelFold', '8Panel',
+	'8PanelZFold', '8PanelZ',
+	'SingleGateFold', 'Single Gate Fold',
+	'DoubleGateFold', 'Double Gate Fold',
+	'4PageFold', '4pg',
+	'6PageFold', '6pg',
+	'8PageFold', '8pg',
+	'10PageFold', '10pg',
+	'12PageFold', '12pg',
+	'12Page3PanelRollFold',	'12pg3PanelRoll',
+	'12Page3PanelZFold',	'12pg3PanelZ',
+	'16PageFold', '16pg',
+	'18PageFold', '18pg',
+	'20PageFold', '20pg',
+	'22PageFold', '22pg',
+	'24PageFold', '24pg',
+	'28PageFold', '28pg',
+	'30PageFold', '30pg',
+	'32PageFold', '32pg',
+	'36PageFold', '36pg',
+	'40PageFold', '40pg',
+	'42PageFold', '42pg',
+	'44PageFold', '44pg',
+	'48PageFold', '48pg',
+	'56PageFold', '56pg',
+	'60PageFold', '60pg',
+	'64PageFold', '64pg',
+	'72PageFold', '72pg',
+	'2Panel1Pocket', 'Single Pocket',
+	'2Panel2Pocket', '2 Pocket',
+	'2Panel2PocketGusset', '2 Pocket w/Gussets',
+	'3Panel2Pocket', '3 Panel 2 Pocket',
+	'3Panel2PocketGusset', '3 Panel 2 Pocket w/Gussets',
+	'MapFold','Map Fold',
+);
+my %short_signature_types = (
+	'Interior Pages' => 'Int',
+	'Cover Pages' => 'Cov',
+);
 
 sub fold_types {
 } # end sub fold_types
@@ -1723,12 +1774,14 @@ sub load_equipment {
 	my $services = $Project->services();
 
 	my $Service = $Project->Service( $$services{Folding}[0] ) if $$services{Folding};
-	#push @folding_capable, 'For Pocket Folders' if $Project->Type()->name() eq 'PresentationFolders';
-	#push @folding_capable, 'When PerfectBound' if $$services{PerfectBound};
-	#push @folding_capable, 'When Stitching' if ( $$services{SaddleStitching} or $$services{LoopStitching} );
-	#push @folding_capable, 'When Printing';
-	@equipment = openprint::Equipment->find( 'useinestimating is null or ='=>1, 'servicetype_id any'=>$Service->servicetype_id(),
-#Specifications=>{'Folding Capable'=>\@folding_capable}
+my @folding_capable;
+	push @folding_capable, 'For Pocket Folders' if $Project->Type()->name() eq 'PresentationFolders';
+	push @folding_capable, 'When PerfectBound' if $$services{PerfectBound};
+	push @folding_capable, 'When Stitching' if ( $$services{SaddleStitching} or $$services{LoopStitching} );
+	push @folding_capable, 'When Printing';
+	@equipment = openprint::Equipment->find( 'useinestimating is null or ='=>1,
+# 'servicetype_id any'=>$Service->servicetype_id(),
+Specifications=>{'Folding Capable'=>\@folding_capable}
  ) if $Service;
 } # end sub load_equipment
 
@@ -2001,6 +2054,45 @@ and ( $Equipment->specification('Type') eq 'Folder' )
 	return '';
 } # end sub signature_summary
 
+sub overview_signature_summary {
+	my ( $Project, $service_index, $specs, $qty_index, $s_id, $sig_specs ) = @_;
+	$specs = openprint::service::get_specs_ref( $Project, $service_index ) if ! $specs;
+	$sig_specs = openprint::service::get_specs_ref( $Project, $s_id ) if ! $sig_specs;
+	if ( ! $$sig_specs{"txtImposition$qty_index"} ) {
+		return '';
+	} # end if
+	my $form = $$sig_specs{SignatureIndex};
+	my @folds;
+	if (
+			( defined $$specs{"chkOverrideEquipment-$form-$qty_index"} )
+			and
+			( $$specs{"chkOverrideEquipment-$form-$qty_index"} eq 'Y' )
+			and
+			! $$specs{"ddmEquipment-$form-$qty_index"}
+		 ) {
+		return 'not folded';
+	} elsif ( $$specs{"ddmEquipment-$form-$qty_index"} ) {
+		my $Equipment = new openprint::Equipment( $$specs{"ddmEquipment-$form-$qty_index"} );
+		foreach my $fold_index ( 1 .. 4 ) {
+			next if ! $$specs{"FoldQty-$form-$qty_index-$fold_index"};
+			push @folds, sprintf('%1$d %3$s %2$dout', @$specs{
+					"FoldQty-$form-$qty_index-$fold_index",
+					"FoldImposition-$form-$qty_index-$fold_index"},
+					$short_fold_names{$$specs{"FoldType-$form-$qty_index-$fold_index"}},
+					);
+		} # end foreach
+		my $html = join('<br/>', sort { $a cmp $b } @folds);
+		#my $Press = openprint::Equipment->find_one( strid => $$sig_specs{"ddmPress$qty_index"} );
+		#if ( $Press and ( $$Press{id} != $$Equipment{id} ) 
+				#and ( $Equipment->specification('Type') eq 'Folder' )
+##and ($Press->specification('Folding Capable') eq 'When Printing')
+			 #) {
+		#}
+		return $html;
+	} # end if
+	return '';
+} # end sub overview_signature_summary
+
 sub is_offline {
 	my ( $Project, $qty_index ) = @_;
 
@@ -2089,6 +2181,56 @@ sub summary {
 	return '';
 } # end sub summary
 
+sub overview_summary {
+	my ( $Project, $service_id, $specs, $qty_index ) = @_;
+	$specs = openprint::service::get_specs_ref( $Project, $service_id ) if ! $specs;
+	my $html;
+	my $cur_sig_specs;
+	my @signatures = $Project->signatures( { sort=>1 } );
+
+	for ( my $sig_index = 0; $sig_index < @signatures; $sig_index += 1 ) {
+		my $s_s_id = $signatures[$sig_index];
+		my $sig_specs = openprint::service::get_specs_ref( $Project, $s_s_id );
+		if ( ! $$sig_specs{"txtImposition$qty_index"} ) {
+			next;
+		} # end if
+		my $form = $$sig_specs{SignatureIndex};
+
+		my $Imposition1 = new openprint::Imposition();
+		$Imposition1->load( $sig_specs, $qty_index, $Project );
+
+		my $sig_count = 1;
+
+		if ( $sig_index < @signatures - 1 ) {
+			for ( my $sig_index2 = $sig_index + 1; $sig_index2 < @signatures; $sig_index2 += 1 ) {
+				my $sig_specs2 = openprint::service::get_specs_ref( $Project, $signatures[$sig_index2] );
+				my $Imposition2 = new openprint::Imposition();
+				$Imposition2->load( $sig_specs, $qty_index, $Project );
+				if ( openprint::Estimating::Printing::compare_signatures( $Project, $sig_specs, $sig_specs2, $qty_index )
+						and compare_folds( $specs, $Imposition1, $Imposition2, $qty_index )
+					 ) {
+					$sig_count += 1;
+				} else {
+					last;
+				} # end if
+			} # end for
+			splice @signatures, $sig_index+1,$sig_count-1 if $sig_count > 1;
+		}
+		my $summary = overview_signature_summary( $Project, $service_id, undef, $qty_index, $s_s_id, undef );
+		next if (!$summary) or ($summary eq 'not folded');
+
+		if ( $sig_count > 1 ) {
+			$html .= $sig_count . ' Forms ';
+ #. $short_signature_types{$$sig_specs{txtServiceDescription}};
+		} else {
+			$html .= 'Form ' . $form . ' ';
+# . $short_signature_types{$$sig_specs{txtServiceDescription}};
+		} # end if
+		$html .= ' ' . $summary.'<br/>';
+	} # end foreach
+	return $html;
+} # end sub schedule_summary
+
 sub runspeed {
 	my ( $Project, $Service, $Equipment, $qty_index, $sig_id ) = @_;
 	my $specs = $Service->specs();
@@ -2125,10 +2267,11 @@ sub runtime {
 
 	my $specs = $Service->specs();
 	my $runTime;
+	$pertains_to = [ $Project->signatures() ] if ! $pertains_to;
 
 	foreach my $sig_id ( ref $pertains_to eq 'ARRAY' ? @{$pertains_to} : $pertains_to ) {
 		my $sig_specs = openprint::service::get_specs_ref( $Project, $sig_id );
-	my $form = $$sig_specs{SignatureIndex};
+		my $form = $$sig_specs{SignatureIndex};
 		$Equipment = new openprint::Equipment( $$specs{"ddmEquipment-$form-$qty_index"} ) if ! $Equipment;
 # Make ready
 		$runTime += $Equipment->specification( 'Station Make Ready' ) * 60;
@@ -2510,28 +2653,28 @@ $I->display("Min spread size: $min_spread_size dir($$I{spine_direction}) " . $op
 					$i4->quantity( $$i4{quantity} - ( $amount * 2 ) );
 					$$i4{page_quantity} = $$i4{page_quantity} - ( 2 * $amount );
 					push @results, [ $i3, $i4 ];
+
 					if ( DEBUG ) {
 						$openprint::log->error(sprintf('Cutting pages down uneven pages pq(%s) %d to pq(%s) %d by cutting spread columns %d to %d',
 									$$i3{page_quantity}, $i3->pages(), $$i4{page_quantity}, $i4->pages(), $$i3{spread_columns}, $$i4{spread_columns} ) );
 						$i3->display();
 						$i4->display();
 					}
-
-					my $i3 = $I->copy();
+					$i3 = $I->copy();
 					$amount = $i3->quantity() - $amount;
-          $i3->quantity( $amount );
-          $$i3{page_quantity} = $amount;
+					$i3->quantity( $amount );
+					$$i3{page_quantity} = $amount;
 
-          my $i4 = $i1->copy();
-          $i4->quantity( $$i4{quantity} - ( $amount* 2 ) );
-          $$i4{page_quantity} = $$i4{page_quantity} - ( 2 * $amount );
-          push @results, [ $i3, $i4 ];
-          if ( DEBUG ) {
-            $openprint::log->error(sprintf('Cutting pages down uneven pages %d to %d by cutting spread columns %d to %d',
-                  $i3->pages(), $i4->pages(), $$i3{spread_columns}, $$i4{spread_columns} ) );
-            $i3->display();
-            $i4->display();
-          }
+					$i4 = $i1->copy();
+					$i4->quantity( $$i4{quantity} - ( $amount* 2 ) );
+					$$i4{page_quantity} = $$i4{page_quantity} - ( 2 * $amount );
+					push @results, [ $i3, $i4 ];
+					if ( DEBUG ) {
+						$openprint::log->error(sprintf('Cutting pages down uneven pages %d to %d by cutting spread columns %d to %d',
+									$i3->pages(), $i4->pages(), $$i3{spread_columns}, $$i4{spread_columns} ) );
+						$i3->display();
+						$i4->display();
+					}
 
 				} else {
 

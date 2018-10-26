@@ -1888,7 +1888,7 @@ $imp->display(" Less than $max_imposition") if DEBUG_INITIAL_FILTERING;
 							foreach my $I ( @{$imps{$str}} ) {
 								if ( $$I{Paper}->area() <= $A->area() ) {
 									$add = 0;
-	$imp->display("Foudn non-dutch") if DEBUG_INITIAL_FILTERING;
+	$imp->display("Found non-dutch") if DEBUG_INITIAL_FILTERING;
 								} # end if
 							} # end foreach
 						} # end if
@@ -6634,10 +6634,11 @@ sub get_run_prices {
 
 	my @run_prices;
 	my $max_colours = $Press->specification('Number of Colours');
-	if ( ! $max_colours ) {
-		$log->error(" ***** FATAL ERROR: Could Not Get 'Number of Colours' for Press: $$Press{strid} ***********");
-		return \@run_prices;
-	} # end if
+	#if ( ! $max_colours ) {
+		#$log->error(" ***** FATAL ERROR: Could Not Get 'Number of Colours' for Press: $$Press{strid} ***********");
+		#return \@run_prices;
+	#} # end if
+
 	my $impression_service = 'ColourImpression';
 
 	if ( $$Imposition{runstyle} eq 'Web' or $$Imposition{runstyle} eq 'Perfecting' ) {
@@ -6646,8 +6647,11 @@ sub get_run_prices {
 		my $Impression_Service = $Services{$impression_service};
 		my $RunPrice;
 		if ( ! ( $Impression_Service and $RunPrice = $Impression_Service->get_Price( $impressions, $Press ) ) ) {
-			$impression_service = join('',$$Imposition{runstyle},'Impression',$side_two_colours,'/',$side_one_colours);
-			$Impression_Service = $Services{$impression_service};
+			if ( $side_one_colours != $side_two_colours ) {
+				# Try back then front
+				$impression_service = join('',$$Imposition{runstyle},'Impression',$side_two_colours,'/',$side_one_colours);
+				$Impression_Service = $Services{$impression_service};
+			}
 			if ( ! ( $Impression_Service and $RunPrice = $Impression_Service->get_Price( $impressions, $Press ) ) ) {
 				$Impression_Service = $Services{$$Imposition{runstyle}.'Impression'};
 				$RunPrice = $Impression_Service->get_Price( $impressions, $Press ) if $Impression_Service;
@@ -6678,7 +6682,7 @@ sub get_run_prices {
 				my $RunPrice = $Impression_Service->get_Price( $impressions, $Press );
 				$$RunPrice{Passes} = 1;
 				$$RunPrice{impressions} = $impressions;
-		$$RunPrice{side} = 'Front';
+				$$RunPrice{side} = 'Front';
 				push @run_prices, $RunPrice;
 			} # end if mod_colours
 		} # end if side one colours
@@ -6691,9 +6695,9 @@ sub get_run_prices {
 				my $Impression_Service = $Services{$run_colours.$impression_service};
 				my $RunPrice = $Impression_Service->get_Price( $impressions, $Press );
 				$$RunPrice{impressions} = $impressions;
-		$$RunPrice{side} = 'Back';
+				$$RunPrice{side} = 'Back';
 				foreach ( 1 .. $full_runs ) {
-				push @run_prices, $RunPrice;
+					push @run_prices, $RunPrice;
 				}
 			} # end if
 #
@@ -6702,7 +6706,7 @@ sub get_run_prices {
 				my $Impression_Service = $Services{$mod_colours.$impression_service};
 				my $RunPrice = $Impression_Service->get_Price( $impressions, $Press );
 				$$RunPrice{impressions} = $impressions;
-		$$RunPrice{side} = 'Back';
+				$$RunPrice{side} = 'Back';
 				push @run_prices, $RunPrice;
 			} # end if
 		} # end if side_two_colours
@@ -6793,6 +6797,10 @@ $log->error("Unknown units on Outside Wheel Slow Down ($$Slow_Down{units})");
 			$$run_price{MPrice} = $$run_price{Price} * 1000;
 
 		} elsif ( $$run_price{units} eq 'per hour' ) {
+			if ( $$run_price{range_units} and ( $$run_price{range_units} eq 'total impressions' ) and $side_one_colours and $side_two_colours ) {
+				my $r_price = $$run_price{Service}->get_Price( $impressions*2, $Press );
+				$$run_price{Price} = $$r_price{Price};
+			}
 			if ( $run_speed ) {
 				if ( int($run_speed) ) {
 # In Minutes, not hours
@@ -7132,31 +7140,40 @@ sub runspeed {
 
 	my $Imposition = new openprint::Imposition();
 	$Imposition->load( $sig_specs, $qty_index, $Project );
+	my $Paper = $Imposition->Paper();
+	my $form = $$sig_specs{SignatureIndex};
 
 	if ( $Equipment->specification('Folding Capable') eq 'When Printing' ) {
 		my $services = $Project->services();
 		if ( $$services{Folding} ) {
 			my $fold_specs = openprint::service::get_specs_ref( $Project, $$services{Folding}[0] );
+
 			if ( $$fold_specs{'ddmEquipment-'.$$sig_specs{SignatureIndex}.'-'.$qty_index} == $Equipment->id() ) {
-				my $foldtype = sprintf('%sx%s-%dPage-%sSignatureFold', @$Imposition{'spread_columns','spread_rows','pages'}, $openprint::Imposition::Orientations{$$Imposition{'image_orientation'}} );
-				$runspeed = int( $Equipment->specification($foldtype.'RunSpeed', $$Imposition{Paper}->gsm() ) );
-#$log->debug("Foudn runspeed for fold $foldtype: $runspeed");
-			} # end if
-		} # end if
-	} # end if
-	#if ( ! $runspeed ) {
-		#$runspeed = int( $Equipment->specification( 'Press Additional Run Speed', $$sig_specs{txtSpecificStockCalliper} ) );
-#$log->debug("Foudn Additional runspeed for $$Equipment{strid}: $runspeed");
-	#} # end if
-	if ( ! $runspeed ) {
+				$runspeed = int($$fold_specs{"FoldRunspeed-$form-$qty_index-1"});
+				if ( ! $runspeed ) {
+					my @Folds = openprint::Estimating::Folding::get_Folds($fold_specs, $Imposition, $qty_index);
+					if ( @Folds ) {
+						my $Fold = $Folds[0];
+						$runspeed = int($Fold->runspeed($$Fold{runspeed_units} eq 'calliper' ? $$Paper{calliper} : $$Paper{gsm}));
+					}
+				}
+			} # end if Folding inline
+		} # end if has Folding
+	} # end if Press supports Folding
+
+	if ( !$runspeed ) {
 		my $RunSpeed = $Equipment->Specification('Run Speed '.$$Imposition{runstyle});
 		$RunSpeed = $Equipment->Specification('Run Speed') if ! $RunSpeed;
-		if ( $RunSpeed and lc $$RunSpeed{units} eq 'calliper' ) {
-			$runspeed = $Equipment->specification($$RunSpeed{name}, $$Imposition{Paper}{calliper});
-$log->debug("Foudn runspeed for $$Equipment{strid}: $runspeed on calliper:" . $$Imposition{Paper}{calliper} );
+		if ( $RunSpeed ) {
+			if ( lc $$RunSpeed{units} eq 'calliper' ) {
+				$runspeed = $Equipment->specification($$RunSpeed{name}, $$Paper{calliper});
+				$log->debug("Found runspeed for $$Equipment{strid}: $runspeed on calliper:" . $$Paper{calliper} );
+			} else {
+				$runspeed = int($Equipment->specification($$RunSpeed{name}, $Paper->gsm()) );
+				$log->debug("Found runspeed for $$Equipment{strid}: $runspeed on gsm:" . $Paper->gsm());
+			}
 		} else {
-			$runspeed = int( $Equipment->specification($$RunSpeed{name}, $$Imposition{Paper}->gsm() ) );
-$log->debug("Foudn runspeed for $$Equipment{strid}: $runspeed on gsm:" . $$Imposition{Paper}->gsm() );
+			$runspeed = int($Equipment->specification('Standard Run Speed', $Paper->gsm()));
 		}
 	} # end if
 	return $runspeed;
@@ -7452,12 +7469,13 @@ $log->debug("Adding PMS for $type chkColourCoating$index$side");
 	if ( $front_pms ) {
 		unshift @front_coatings, $front_pms.'PMS';
 	} # end if
-	unshift @front_coatings, map { $$specs{'chk'.$_.$side} ? $_ . ( $$specs{$_.$side.'Coverage'} != $CMYK_Ink_Coverage ? ' ' . $$specs{$_.$side.'Coverage'}.'%' : '')    : () } ( 'Cyan','Magenta','Yellow','Black' );
+
+	unshift @front_coatings, map { $$specs{'chk'.$_.$side} ? $_ . ( $$specs{$_.'Spot'.$side.'Coverage'} != $CMYK_Ink_Coverage ? ' ' . $$specs{$_.'Spot'.$side.'Coverage'}.'%' : '')    : () } ( 'Cyan','Magenta','Yellow','Black' );
 	if ( $$specs{'chkProcessColour'.$side} ) {
 		unshift @front_coatings, join(' ', '4C', 
 				map { 
 				( $$specs{$_.$side.'Coverage'} != $CMYK_Ink_Coverage ) ?
-				'<span class="warning">'. $process_colours_short{$_}.':'.$$specs{$_.$side.'Coverage'}.'%</span>'
+				'<span class="warning">'. $process_colours_short{$_}.$$specs{$_.$side.'Coverage'}.'%</span>'
 				: ()
 				} ('Cyan','Magenta','Yellow','Black')
 				);
@@ -7491,7 +7509,7 @@ $log->debug("Adding PMS for $type chkColourCoating$index$side");
 		if ( $back_pms ) {
 			unshift @back_coatings, $back_pms.'PMS';
 		} # end if
-		unshift @back_coatings, map { $$specs{'chk'.$_.$side} ? $_ : () } ( 'Cyan','Magenta','Yellow','Black' );
+		unshift @back_coatings, map { $$specs{'chk'.$_.$side} ? $_ . ( $$specs{$_.'Spot'.$side.'Coverage'} != $CMYK_Ink_Coverage ? ' ' . $$specs{$_.'Spot'.$side.'Coverage'}.'%' : '')    : () } ( 'Cyan','Magenta','Yellow','Black' );
 		if ( $$specs{'chkProcessColour'.$side} ) {
 			unshift @back_coatings, join(' ', '4C',
 				map {
