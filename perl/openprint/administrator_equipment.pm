@@ -287,9 +287,15 @@ sub _specification {
 				$param{value} = ssi::unhtmlize( $param{value} );
 			} elsif ( $param{field} eq 'units' ) {
 			} # end if
-			(new openprint::Log())->save({ object_type=>(ref $Equipment), object_id=>$$Equipment{id}, action=>'Save Equipment Specification', 
-				note=>$$Specification{name} . ' ' . $param{field} . ' from ' . join(' => ' , $$Specification{$param{field}}, $param{value} ) });
+
+			my @changes = $Specification->changes({ $param{field} => $param{value} });
+			if ( @changes ) {
+				(new openprint::Log())->save({ Object=>$Equipment, action=>'Save Equipment Specification', 
+				note=>$$Specification{name} . ' ' .join('<br/>', @changes )
+				});
+#. $param{field} . ' from ' . join(' => ' , $$Specification{$param{field}}, $param{value} ) });
 			$variable{error} .= $Specification->save({$param{field}=>$param{value}});
+			}
 			$variable{PageContent} = $$Specification{$param{field}} ne '' ? $$Specification{$param{field}} : '&nbsp;';
 		} else {
 			$$Specification{interpolate} = ! $$Specification{interpolate};
