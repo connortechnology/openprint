@@ -9,7 +9,7 @@ CREATE TABLE Backups (
   created_on  TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
   updated_on  TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
   deleted     BOOLEAN NOT NULL DEFAULT false,
-  type_id     INTEGER, FOREIGN KEY (type_id) REFERENCES Backup_Types (id),
+  type_id     INTEGER,
   host_id     INTEGER, FOREIGN KEY (host_id) REFERENCES Hosts (id),
   lastran_on  TIMESTAMP WITH TIME ZONE,
   owner_id    INTEGER, FOREIGN KEY (owner_id) REFERENCES Companies (id),

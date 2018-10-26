@@ -55,6 +55,8 @@ $serial = 'hosts_id_seq';
 	type_id		=>	'type_id',
 	type			=>	undef,
 	offline_seconds	=>	'offline_seconds',
+	max_ping_time	=>	'max_ping_time',
+  min_ping_frequency  =>  'min_ping_frequency',
 	state_changed_on	=>	'state_changed_on',
 	notified			=>	'notified',
 	notify_frequency	=>	'notify_frequency',
@@ -69,6 +71,8 @@ $serial = 'hosts_id_seq';
 %transforms = (
 	id			=>	[ 's/\D//g' ],
 	notify_frequency	=>	[ 's/\D//g' ],
+	min_ping_frequency	=>	[ 's/\D//g' ],
+	max_ping_time	=>	[ 's/\D//g' ],
 	hostname	=>	[ 's/\s//g' ],
 	description	=>	[ 's/^\s+//', 's/\s+$//', 's/\s\s+/ /g' ],
 );
@@ -90,6 +94,8 @@ $serial = 'hosts_id_seq';
 	location_id		=>	undef,
 	notify_frequency	=>	undef,
 	owner_id			=>	undef,
+  max_ping_time =>  1000,
+  min_ping_frequency  =>  60,
 );
 
 sub name {

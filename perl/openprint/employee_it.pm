@@ -56,7 +56,13 @@ sub hosts {
 
 sub _hosts {
 	if ( $param{action} eq 'Delete' ) {
-		foreach my $host_id ( ref $param{host_id} eq 'ARRAY' ? @{$param{host_id}} : $param{host_id} ) {
+    my @host_ids;
+    if ( exists $param{host_id} ) {
+      @host_ids = ref $param{host_id} eq 'ARRAY' ? @{$param{host_id}} : $param{host_id};
+    } elsif ( exists $param{'host_id[]'} ) {
+      @host_ids = ref $param{'host_id[]'} eq 'ARRAY' ? @{$param{'host_id[]'}} : $param{'host_id[]'};
+    }
+		foreach my $host_id ( @host_ids ) {
 			my $Host = new openprint::Host( $host_id );
       if ( $Host->deleted() ) {
         $variable{error} .= $Host->destroy();

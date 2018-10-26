@@ -5,7 +5,7 @@ function load_host( form, options ) {
 	div.innerHTML = 'Loading... Please wait.';
 	var p = form.serialize(true);
 	if ( options && options.order )
-		p.order = options.order;
+		p = p+'&order='+options.order;
 	
 	div.load('/employee/it/_hosts.html', p );
 } // end function load

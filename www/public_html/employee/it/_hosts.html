@@ -1,53 +1,55 @@
 <? eval (
 	my @Hosts;
-	if ( $session{'/employee/it/hosts.html?mac'} and ( $session{'/employee/it/hosts.html?mac'} !~ /%/ ) ) {
-		my @HIs = openprint::Host_Interface->find( mac => $session{'/employee/it/hosts.html?mac'} );
+  my $uri = '/employee/it/hosts.html';
+
+	if ( $session{$uri.'?mac'} and ( $session{$uri.'?mac'} !~ /%/ ) ) {
+		my @HIs = openprint::Host_Interface->find( mac => $session{$uri.'?mac'} );
 		if ( @HIs ) {
 		@Hosts = openprint::Host->find(
 			id	=> [ sets::union( map { $$_{host_id} } @HIs ) ],
-			order	=> $session{'/employee/it/hosts.html?order'} ? $session{'/employee/it/hosts.html?order'} : 'lower(hostname)',
-			( $session{'/employee/it/hosts.html?deleted'} ne '' ? ( deleted=>$session{'/employee/it/hosts.html?deleted'} ) : ( deleted=>[0,1] ) ),
+      order	=> ($session{$uri.'?order'} and $openprint::Host::fields{$session{$uri.'?order'}} ) ? $session{$uri.'?order'} : 'lower(hostname)',
+			( $session{$uri.'?deleted'} ne '' ? ( deleted=>$session{$uri.'?deleted'} ) : ( deleted=>[0,1] ) ),
 			limit	=>10,
 		);
 			if ( !@Hosts ) {
-				$variable{warning} .= "Interface found for " . $session{'/employee/it/hosts.html?mac'} . " but host not found.<br/>";
+				$variable{warning} .= "Interface found for " . $session{$uri.'?mac'} . " but host not found.<br/>";
 			}
 		}
 	} else {
 		my $host_ids;
-		if ( $session{'/employee/it/hosts.html?ip'} ) {
-			if ( $session{'/employee/it/hosts.html?ip'} =~ /\// ) {
-				$host_ids = [ map { $_->host_id() } openprint::Host_Interface->find( 'ip <<=' => $session{'/employee/it/hosts.html?ip'} ) ];
+		if ( $session{$uri.'?ip'} ) {
+			if ( $session{$uri.'?ip'} =~ /\// ) {
+				$host_ids = [ map { $_->host_id() } openprint::Host_Interface->find( 'ip <<=' => $session{$uri.'?ip'} ) ];
 			} else {
-				$host_ids = [ map { $_->host_id() } openprint::Host_Interface->find( ip => $session{'/employee/it/hosts.html?ip'} ) ];
+				$host_ids = [ map { $_->host_id() } openprint::Host_Interface->find( ip => $session{$uri.'?ip'} ) ];
 			}
 		}
 
 		if ( (! $host_ids ) or ( @{$host_ids} ) ) {
-			$session{'/employee/it/hosts.html?order'} = 'lower(hostname)' if ! $session{'/employee/it/hosts.html?order'};
+			$session{$uri.'?order'} = 'lower(hostname)' if ! $session{$uri.'?order'};
 			@Hosts = openprint::Host->find(
-				order	=> $session{'/employee/it/hosts.html?order'} ? $session{'/employee/it/hosts.html?order'} : 'lower(hostname)',
+      order	=> ($session{$uri.'?order'} and $openprint::Host::fields{$session{$uri.'?order'}} ) ? $session{$uri.'?order'} : 'lower(hostname)',
 				( $host_ids ? ( id => $host_ids ) : () ),
-				( $session{'/employee/it/hosts.html?hostname'} ? ( 'hostname ilike' => ( $session{'/employee/it/hosts.html?hostname'} =~ /%/ ? $session{'/employee/it/hosts.html?hostname'} : $session{'/employee/it/hosts.html?hostname'}.'%' ) ) : () ),
-				( $session{'/employee/it/hosts.html?blacklisted'} ne '' ? ( blacklist=>$session{'/employee/it/hosts.html?blacklisted'} ) : () ),
-				( $session{'/employee/it/hosts.html?whitelisted'} ne '' ? ( whitelist=>$session{'/employee/it/hosts.html?whitelisted'} ) : () ),
-				( $session{'/employee/it/hosts.html?monitored'} ne '' ? ( monitored=>$session{'/employee/it/hosts.html?monitored'} ) : () ),
-				( $session{'/employee/it/hosts.html?online'} ne '' ? ( online=>$session{'/employee/it/hosts.html?online'} ) : () ),
-				( $session{'/employee/it/hosts.html?has_hostname'} ne '' ? ( 'hostname is null' => ! $session{'/employee/it/hosts.html?has_hostname'} ) : () ),
-				( $session{'/employee/it/hosts.html?type_id'} ne '' ? ( type_id => $session{'/employee/it/hosts.html?type_id'} ) : () ),
-				( $session{'/employee/it/hosts.html?owner_id'} ne '' ? ( owner_id => $session{'/employee/it/hosts.html?owner_id'} ) : () ),
-				( $session{'/employee/it/hosts.html?deleted'} ne '' ? ( deleted=>$session{'/employee/it/hosts.html?deleted'} ) : ( deleted=>[0,1] ) ),
-				date_filter( '/employee/it/hosts.html?created_on_end', 'created_on <=' ),
-				date_filter( '/employee/it/hosts.html?created_on_start', 'created_on >=' ),
-				date_filter( '/employee/it/hosts.html?updated_on_end', 'updated_on <=' ),
-				date_filter( '/employee/it/hosts.html?updated_on_start', 'updated_on >=' ),
+				( $session{$uri.'?hostname'} ? ( 'hostname ilike' => ( $session{$uri.'?hostname'} =~ /%/ ? $session{$uri.'?hostname'} : $session{$uri.'?hostname'}.'%' ) ) : () ),
+				( $session{$uri.'?blacklisted'} ne '' ? ( blacklist=>$session{$uri.'?blacklisted'} ) : () ),
+				( $session{$uri.'?whitelisted'} ne '' ? ( whitelist=>$session{$uri.'?whitelisted'} ) : () ),
+				( $session{$uri.'?monitored'} ne '' ? ( monitored=>$session{$uri.'?monitored'} ) : () ),
+				( $session{$uri.'?online'} ne '' ? ( online=>$session{$uri.'?online'} ) : () ),
+				( $session{$uri.'?has_hostname'} ne '' ? ( 'hostname is null' => ! $session{$uri.'?has_hostname'} ) : () ),
+				( $session{$uri.'?type_id'} ne '' ? ( type_id => $session{$uri.'?type_id'} ) : () ),
+				( $session{$uri.'?owner_id'} ne '' ? ( owner_id => $session{$uri.'?owner_id'} ) : () ),
+				( $session{$uri.'?deleted'} ne '' ? ( deleted=>$session{$uri.'?deleted'} ) : ( deleted=>[0,1] ) ),
+				date_filter($uri.'?created_on_end', 'created_on <=' ),
+				date_filter($uri.'?created_on_start', 'created_on >=' ),
+				date_filter($uri.'?updated_on_end', 'updated_on <=' ),
+				date_filter($uri.'?updated_on_start', 'updated_on >=' ),
 				);
 		} # end if
 	} # end if
 
 	my $mac_search;
-	if ( $session{'/employee/it/hosts.html?mac'} and $session{'/employee/it/hosts.html?mac'} =~ /%/ ) {
-		$mac_search = lc $session{'/employee/it/hosts.html?mac'};
+	if ( $session{$uri.'?mac'} and $session{$uri.'?mac'} =~ /%/ ) {
+		$mac_search = lc $session{$uri.'?mac'};
 		$mac_search =~ s/%/\.\*/g;
 		$mac_search =~ s/://g;
 	} # end $mac_search
@@ -71,8 +73,8 @@
 			next if $next;
 		} # end if
 
-		if ( $session{'/employee/it/hosts.html?radius_auth'} ne '' ) {
-			if ( $session{'/employee/it/hosts.html?radius_auth'} eq '1' ) {
+		if ( $session{$uri.'?radius_auth'} ne '' ) {
+			if ( $session{$uri.'?radius_auth'} eq '1' ) {
 				my $show = 0;
 				next if ! @Interfaces;
 				foreach my $I ( @Interfaces ) {
@@ -88,7 +90,7 @@
 					} # end if
 				} # end foreach mac
 				next if ! $show;
-			} elsif ( $session{'/employee/it/hosts.html?radius_auth'} eq '0' ) {
+			} elsif ( $session{$uri.'?radius_auth'} eq '0' ) {
 				my $show = 1;
 				if ( @Interfaces ) {
 					foreach my $I ( @Interfaces ) {
@@ -105,7 +107,7 @@
 				} # end if
 				next if ! $show;
 			} else {
-				$log->error("Unknown value of " . $session{'/employee/it/hosts.html?radius_auth'} );
+				$log->error("Unknown value of " . $session{$uri.'?radius_auth'} );
 			} # end if
 		} # end if
 		push @{$$variable{'Hosts'}}, $Host;
@@ -174,12 +176,12 @@ my ( $online, $text ) = @_;
 					);
 				$rowclass = $rowclass ? '' : ' class="colRow"';
 			} # end foreach Host
-			$html .= '<tr class="totals"><td colspan="8"># of hosts: ' . @{$$variable{Hosts}} . '</td></tr>';
+			$html .= '<tr class="totals"><td colspan="9"># of hosts: ' . @{$$variable{Hosts}} . '</td></tr>';
 			return $html;
 		) ?>
 		<tr>
 	</tbody>
 </table>
 <p class="buttons">
-<? echo ( button( 'delete', { onclick=>q`jQuery( 'Results').load('/employee/it/_hosts.html?action=Delete', { host_id: get_value( $('f1').host_id ) } );`, text=>'Delete Checked' } ); ) ?>
+<? echo ( button( 'delete', { onclick=>q`jQuery('#Results').load('/employee/it/_hosts.html?action=Delete', { host_id: get_value( $('f1').host_id ) } );`, text=>'Delete Checked' } ); ) ?>
 </p>

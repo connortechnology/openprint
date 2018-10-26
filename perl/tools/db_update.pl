@@ -1048,6 +1048,14 @@ if ( ! sets::isin( 'hosts', \@tables ) ) {
 		$dbh->do('ALTER TABLE hosts add owner_id INTEGER');
 		$dbh->do('ALTER TABLE hosts add FOREIGN KEY (owner_id) REFERENCES Companies (id)');
 	} # end if
+  if ( !exists $$hosts_table{min_ping_frequency} ) {
+    $log->debug("Adding min_ping_frequency to hosts");
+    $dbh->do('ALTER TABLE hosts ADD min_ping_frequency INTEGER') or die $dbh->errstr();
+  }
+  if ( !exists $$hosts_table{max_ping_time} ) {
+    $log->debug("Adding max_ping_time to hosts");
+    $dbh->do('ALTER TABLE hosts ADD max_ping_time INTEGER') or die $dbh->errstr();
+  }
 }
 if ( sets::isin( 'tbl_projects', \@tables ) ) {
 	my $data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='tbl_projects'", 'column_name');
