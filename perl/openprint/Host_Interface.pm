@@ -1,6 +1,8 @@
 use strict;
 require openprint::Object;
 require openprint::Host;
+use Data::Dumper;
+
 
 package openprint::Host_Interface;
 our @ISA = qw( openprint::Object );
@@ -15,8 +17,8 @@ $table = 'host_interfaces';
 	ip				=>	'ip',
 	comment			=>	'comment',
 	dhcp			=>	'dhcp',
-    host_id         =>  'host_id',
-    connected_to  =>  'connected_to',
+  host_id         =>  'host_id',
+  connected_to  =>  'connected_to',
 	monitor			=>	'monitor',
 	online			=>	'online',
 );
@@ -105,6 +107,38 @@ $openprint::log->debug("Auth response for $method $url $tokens{realm}, $username
 	}
 	return $response;
 } # end sub authenticate
+
+sub vendor {
+  if ( !$_[0]{vendor} ) {
+    if ( $_[0]{mac} ) {
+      require openprint::OUI_Vendor;
+      my $oui = $_[0]{mac};
+      $oui =~ s/\D//g;
+      $oui =~ s/^(\d{6}).*$/${1}000000/;
+
+      if ( my $Vendor = openprint::OUI_Vendor->find_one(oui=>$oui) ) {
+        $_[0]{vendor} = $$Vendor{vendor_name};
+      } else {
+        eval {
+          require Net::MAC::Vendor;
+          my $vendor = Net::MAC::Vendor::lookup($_[0]{mac});
+          #$_ = Data::Dumper::Dumper($vendor);
+          if ( $vendor and @{$vendor} ) {
+
+            $_[0]{vendor} = shift @{$vendor};
+
+            my $Vendor = new openprint::OUI_Vendor();
+            $Vendor->save({ oui=>$oui, vendor_name=>$_[0]{vendor} });
+          }
+        };
+      }
+      $openprint::log->error("Error in eval: $@") if $@;
+      return $_[0]{vendor};
+    }
+    return '';
+  }
+  return $_[0]{vendor};
+}
 
 1;
 __END__
