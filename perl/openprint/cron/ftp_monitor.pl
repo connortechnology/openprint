@@ -340,7 +340,7 @@ $log->debug("Command was not an upload");
 					$log->debug("PWD");
 					next;
 				} elsif ( $response_code == 550 ) {
-					$log->debug("Action not taken");
+					$log->debug("Action not taken ");
 					next;
 				} elsif ( $response_code == 257 ) {
 					$log->debug("Path Created, ignoring");
@@ -546,7 +546,7 @@ $log->debug("Processing upload $file");
 		$$upload{file_str} = $file_str;
 		$$upload{company_name} = $company_name;
 
-		my $regexp = "^\Q$project_files_path\E\\/\Q$company_name\E\\/(.+)\$";
+		my $regexp = '^'.quotemeta($project_files_path).'\/'.quotemeta($company_name).'\/(.+)\$';
 $log->debug("regexp: $regexp");
 		@$upload{proper_file_path} = $file =~ /$regexp/;
 		if ( ! $$upload{proper_file_path} ) {
