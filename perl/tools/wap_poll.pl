@@ -166,12 +166,17 @@ $openprint::log->debug("Header $k => $$headers{$k}");
                 my @macs;
 
                 if ( ! $$network{assoclist} ) {
-									$log->error( 'No assoclist' . Dumper( $network ) );
+					$log->error( 'No assoclist' . Dumper( $network ) );
                   $url = $protocol.'://'.$$HI{ip}.$$headers{location}.'/admin/network/wireless_assoclist';
 $log->debug("Getting assoclist from $url");
                   my $wireless_assoclist_response = $browser->get($url);
-                  $log->debug( 'assoclist' . $wireless_assoclist_response->content());
-                  $assoclist = decode_json( $wireless_assoclist_response->content() );
+				  if ( !$wireless_assoclist_response->is_success ) {
+					$log->error("Unable to get assoclist from $$HI{ip} " . $wireless_assoclist_response->status_line());
+					next;
+				  }
+				  my $wireless_assoclist_content = $wireless_assoclist_response->content();
+                  $log->debug( 'assoclist' . $wireless_assoclist_content );
+                  $assoclist = decode_json( $wireless_assoclist_content );
                   $log->debug( 'assoclist' . Dumper( $assoclist ) );
                   next if ! $assoclist;
                   @macs = map { $$_{bssid} } @{$assoclist};
