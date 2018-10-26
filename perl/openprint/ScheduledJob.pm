@@ -22,7 +22,7 @@ require openprint::ProductionFeedback;
 
 my $parser = 'DateTime::Format::Pg';
 
-$debug = 1;
+$debug = 0;
 $table = 'schedule';
 $serial = 'schedule_id_seq';
 

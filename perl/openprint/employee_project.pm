@@ -51,14 +51,14 @@ sub view {
 		if ( $param{Docket} ) {
 			$param{Docket} =~ s/\D//g;
 			if ( $param{Docket} ) {
-				if ( my @Projects = openprint::Project->find('docket'=>$param{Docket}) ) {
+				if ( my @Projects = openprint::Project->find(docket=>$param{Docket}) ) {
 					$project_index = $Projects[0]->id();
 				} # end if
 			} # end if
 		} elsif ( $param{docket} ) {
 			$param{docket} =~ s/\D//g;
 			if ( $param{docket} ) {
-				if ( my @Projects = openprint::Project->find('docket'=>$param{docket}) ) {
+				if ( my @Projects = openprint::Project->find(docket=>$param{docket}) ) {
 					$project_index = $Projects[0]->id();
 				} # end if
 			} # end if
@@ -532,7 +532,7 @@ sub send_additional_charges_notifications {
 	return 'No one to notify.' if ! @Notifications;
 
 	my $CSR = new openprint::User( $Order->salesrep_id() );
-	my $Operator = new openprint::User( $session{user_id} );
+	my $Operator = $openprint::User;
 
 	@info{'CSRFirstName','CSRLastName','CSREmail'} = ( $CSR->firstname(), $CSR->lastname(), $CSR->email() );
 	@info{'CustomerFirstName','CustomerLastName','CustomerEmail'} = ( $Order->firstname(), $Order->lastname(), $Order->email() );

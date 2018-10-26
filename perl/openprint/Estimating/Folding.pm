@@ -1774,12 +1774,14 @@ sub load_equipment {
 	my $services = $Project->services();
 
 	my $Service = $Project->Service( $$services{Folding}[0] ) if $$services{Folding};
-	#push @folding_capable, 'For Pocket Folders' if $Project->Type()->name() eq 'PresentationFolders';
-	#push @folding_capable, 'When PerfectBound' if $$services{PerfectBound};
-	#push @folding_capable, 'When Stitching' if ( $$services{SaddleStitching} or $$services{LoopStitching} );
-	#push @folding_capable, 'When Printing';
-	@equipment = openprint::Equipment->find( 'useinestimating is null or ='=>1, 'servicetype_id any'=>$Service->servicetype_id(),
-#Specifications=>{'Folding Capable'=>\@folding_capable}
+my @folding_capable;
+	push @folding_capable, 'For Pocket Folders' if $Project->Type()->name() eq 'PresentationFolders';
+	push @folding_capable, 'When PerfectBound' if $$services{PerfectBound};
+	push @folding_capable, 'When Stitching' if ( $$services{SaddleStitching} or $$services{LoopStitching} );
+	push @folding_capable, 'When Printing';
+	@equipment = openprint::Equipment->find( 'useinestimating is null or ='=>1,
+# 'servicetype_id any'=>$Service->servicetype_id(),
+Specifications=>{'Folding Capable'=>\@folding_capable}
  ) if $Service;
 } # end sub load_equipment
 

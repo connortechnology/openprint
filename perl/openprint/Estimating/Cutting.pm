@@ -909,7 +909,7 @@ $openprint::log->debug("have stitching imposition $stitching_imposition");
         } else {
           $vertical_cuts += $$I{columns}-1;
           $horizontal_cuts += $$I{rows}-1;
-$openprint::log->debug("vcuts: $vertical_cuts hcuts: $horizontal_cuts ");
+#$openprint::log->debug("vcuts: $vertical_cuts hcuts: $horizontal_cuts ");
         } # end if
         foreach my $side ( keys %pretrim_sides ) {
 # What I am thinking here, is that if it was 2 out, the in between head trim would already have been done, so there is just 1 to do
