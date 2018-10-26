@@ -54,6 +54,9 @@
 						misc::format_bytes($$Upload{size}), 
 						( $$Upload{complete} ? 'Complete' : '<span class="error">Incomplete</span>' ),
 						); 
+if ( ! -e $Upload->path() ) {
+$log->error("File does not exist at " . $Upload->path() );
+}
 				} # end foreach Upload
 				return $html;
 			) ?>
