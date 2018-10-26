@@ -52,10 +52,10 @@ if (my $err = configuration::from_file($$opts{config})) {
 configuration::merge($opts);
 
 foreach my $param ( 'db_name','db_user','db_pass' ) {
-	die "$program: missing required --$param parameter" if ! $config{$param};
+	die "$program: missing required --$param parameter" if ! $openprint::config{$param};
 } # end foreach required-param
 
-$log = logger->new( {'file'=>$config{'log_file'}, 'level'=>$config{'log_level'}} );
+$log = logger->new( {file=>$config{log_file}, level=>$config{log_level}} );
 $log->info("Opening SQL connection $config{db_user} $config{db_name} on $config{db_host}");
 my %db_connect_info = (
 	port		=> $config{db_port},
@@ -65,7 +65,7 @@ my %db_connect_info = (
 	login	 	=> $config{db_user},
 	password	=> $config{db_pass},
 );
-$dbh = sql::open_sql( $log, %db_connect_info );
+$openprint::dbh = sql::open_sql( $log, %db_connect_info );
 die "Couldn't connect to db: $$dbh{errstr}" if ! $dbh;
 configuration::init();
 configuration::from_file($$opts{config});
@@ -121,10 +121,10 @@ while (my $buf = <STDIN>) {
 
 		# If a blacklist is specified, update it on start
 		if ( $opts->{blacklist} ) {
-			if ( ! open( FH, '>'.$opts->{blacklist} ) ) {
+			if ( ! open(FH, '>'.$opts->{blacklist}) ) {
 				die 'Unable to open blacklist: ' . $opts->{blacklist} . "\n";
 			} else {
-				foreach my $Host ( openprint::Host->find( blacklist => 1) ) {
+				foreach my $Host ( openprint::Host->find(blacklist=>1) ) {
 					foreach my $Interface ( $Host->Interfaces() ) {
 						my $mac = $Interface->mac();
 						if ( $mac ) {
@@ -156,18 +156,25 @@ while (my $buf = <STDIN>) {
 		$log->debug("Done updating shorewall.") if $config{debug};
 	} # end if do update
 
-print ( $buf );
+  #print ( $buf );
 	#my ($port, $ipaddr) = IO::Socket::sockaddr_in($sock->peername);
 	#my $hn = gethostbyaddr($ipaddr, Socket::AF_INET);
 	$log->debug($buf) if $config{debug};
 	# Without the multiline flag, will do one line at a time, nice.
-	my ( $source, $remote_logname, $user, $when, $request, $server_response, $bytes, $referrer, $agent ) = $buf =~ /^(\S+) (\S+) (\S+) \[([^\]]+)\] "([^"]+)" (\d+) (\d+) "([^"]+)" "([^"]+)"$/;
-	if ( ! $source ) {
-		$log->error("No match: " . $buf );
+  #my ( $source, $remote_logname, $user, $when, $request, $server_response, $bytes, $referrer, $agent ) = $buf =~ /^(\S+) (\S+) (\S+) \[([^\]]+)\] "([^"]+)" (\d+) (\d+) "([^"]+)" "([^"]+)"$/;
+  my $source;
+  my $server_response;
+	my ( $when, $remote_logname, $pid, $remote ) = $buf =~ /^\[([^\]]+)\] \[([^\]]+)\] \[([^\]]+)\] \[([^\]]+)\] script '[^']+' not found or unable to stat/;
+	if ( ! $remote ) {
+		$log->error("No match: " . $buf);
 		next;
-	#} else {
-		#$log->error("match: " . $buf );
-	} 
+	} else {
+		$log->error("match: " . $buf );
+	}
+    if ( $remote =~ /client ([\.\d]+):\d+/ ) {
+      $source = $1;
+    }
+  
 #[error] No match: 192.168.101.10 - - [07/Feb/2013:11:22:59 -0500] "GET /css/alphacube.css HTTP/1.0" 304 282 "http://www.intelligentquote.ca/" "Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:19.0) Gecko/20100101 Firefox/19.0"
 #[debug] 127.0.0.1 - - [07/Feb/2013:11:03:00 -0500] "OPTIONS * HTTP/1.0" 200 126 "-" "Apache/2.2.22 (Ubuntu) (internal dummy connection)"
 #$log->debug("Thing1: $1, thing3: $line ");
