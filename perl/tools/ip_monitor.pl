@@ -81,7 +81,8 @@ $config{ping_wait} = 2 if ! $config{ping_wait};
 # udp has less network traffic overhead
 my $p = Net::Ping->new($config{ping_type},$config{ping_wait});
 my $hup;
-my %times;
+
+my %last_ping_time;
 $SIG{HUP} = \&sig_handler;
 
 # TUrn off Object caching
@@ -115,7 +116,6 @@ while(1) {
 		$hup = 0;
 	} # end if ! dbh
 
-	$log->debug( 'Getting hosts' );
 	my @Hosts = openprint::Host->find( monitored=>1 );
 	foreach my $Host ( @Hosts ) {
 
@@ -124,6 +124,12 @@ while(1) {
 		my $online = undef;
 		my $now = time;
 		my $has_monitored_interfaces = 0;
+
+    # If we have a minimum frequency set and not enough time has passed, the skip it.
+    if ( $$Host{min_ping_frequency} and $last_ping_time{$$Host{id}} and ( ($now - $last_ping_time{$$Host{id}}) < $$Host{min_ping_frequency} ) ) {
+      next;
+    }
+    $last_ping_time{$$Host{id}} = $now;
 
 		# First find out current status, then lock & load to find out previous status because we don't want to hold this lock for however long it takes to ping.
 		my @HIs = $Host->Interfaces( undef );
@@ -135,17 +141,22 @@ while(1) {
 			}
 			$has_monitored_interfaces = 1;
 
-			$log->debug( $HI->ip() . ' was ' . ( $HI->online() ? 'online' : 'offline' ) . " " . $HI->to_string() );
+			$log->debug( $HI->ip() . ' was ' . ( $HI->online() ? 'online' : 'offline' ) . ' ' . $HI->to_string() );
 			my @ping = $p->ping($HI->ip());
 			
-#$openprint::log->debug("Ping1: @ping");
 			if ( ! @ping ) {
 				$log->warn("Problem with ping for " . $Host->hostname() . ' ip: ' . $HI->ip() );
 				next;
 			} 
 			my $ping = $ping[0];
-      if ( $ping and ( $ping[1] > 1 ) ) {
-				(new openprint::Log())->save({Object=>$Host, action=>'Long response time', ip_address=>$HI->ip(), host_id=>$$Host{id}, note=>sprintf('Response time %s seconds.<a href="/employee/it/host.html?host_id=%d">%s</a>', $ping[1], @$Host{'id','hostname'}) });
+      if ( $ping and ( $ping[1] > ($$Host{max_ping_time} ? $$Host{max_ping_time} : 1 ) ) ) {
+				(new openprint::Log())->save({
+            Object=>$Host,
+            action=>'Long response time',
+            ip_address=>$HI->ip(),
+            host_id=>$$Host{id},
+            note=>sprintf('Response time %s seconds.<a href="/employee/it/host.html?host_id=%d">%s</a>', $ping[1], @$Host{'id','hostname'}),
+          });
 			} # end if
 
 			# The idea is if any ip is pingable... then the host is up
@@ -180,7 +191,12 @@ while(1) {
 				next;
 			} # end if	
 
-			(new openprint::Log())->save({Object=>$Host, action_id=>( $online ? 100 : 101 ), host_id=>$$Host{id}, note=>sprintf('<a href="/employee/it/host.html?host_id=%d">%s</a>', @$Host{'id','hostname'}) });
+			(new openprint::Log())->save({
+          Object=>$Host,
+          action_id=>( $online ? 100 : 101 ),
+          host_id=>$$Host{id},
+          note=>sprintf('<a href="/employee/it/host.html?host_id=%d">%s</a>', @$Host{'id','hostname'}),
+        });
 			if ( $online and $notified ) {
 # We are now online and an offline notification went out. So send an online notification
 				$log->debug("Sending online notification");
@@ -331,7 +347,7 @@ sub notify {
 sub usage {
 	print <<EOH;
 
-usage: iq_monitor [--help] 
+usage: ip_monitor [--help] 
 
 The purpose of this script is to monitor hosts for uptime
 
