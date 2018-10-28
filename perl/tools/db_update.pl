@@ -4127,10 +4127,6 @@ if ( ! sets::isin( 'stockqualities_id_seq', \@sequences ) ) {
 	$dbh->do(q`ALTER TABLE stockqualities ALTER id SET default nextval('stockqualities_id_seq')`);
 	$dbh->do(q`SELECT setval('stockqualities_id_seq', (SELECT max(id) FROM stockqualities))`);
 } # end if
-if ( ! sets::isin( 'event_categories', \@tables ) ) {
-    $dbh->do( misc::load_file( $log, '../openprint/sql/Event_Categories.sql' ) );
-    die $dbh->errstr() if $dbh->errstr();
-} 
 
 if ( ! sets::isin( 'events', \@tables ) ) {
     $dbh->do( misc::load_file( $log, '../openprint/sql/Events.sql' ) );
@@ -4853,9 +4849,11 @@ if ( ! sets::isin( 'par', \@tables ) ) {
 } # end if
 
 if ( ! sets::isin( 'event_categories', \@tables ) ) {
-    $dbh->do( misc::load_file( $log, '../openprint/sql/Event_Categories.sql' ) );
-    die $dbh->errstr() if $dbh->errstr();
+  $dbh->do( misc::load_file( $log, '../openprint/sql/Event_Categories.sql' ) );
+  die $dbh->errstr() if $dbh->errstr();
+  push @tables, 'event_categories';
 } # end if
+
 if ( ! sets::isin( 'photos_in_albums', \@tables ) ) {
     $dbh->do( misc::load_file( $log, '../openprint/sql/Photos_in_Albums.sql' ) );
     die $dbh->errstr() if $dbh->errstr();
@@ -5710,7 +5708,9 @@ if ( ! sets::isin('backups', \@tables ) ) {
 	my $data = $dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='backups'", 'column_name');
   if ( ! exists $$data{type} ) {
     $dbh->do('ALTER TABLE Backups ADD type TEXT') or die $dbh->errstr();
-    $dbh->do('UPDATE Backups SET type=(SELECT lc(name) FROM Backup_Types WHERE backup_types.id=backups.type_id)') or die $dbh->errstr();
+    if ( exists $$data{type_id} ) {
+      $dbh->do('UPDATE Backups SET type=(SELECT lc(name) FROM Backup_Types WHERE backup_types.id=backups.type_id)') or die $dbh->errstr();
+    }
   }
   if ( exists $$data{type_id} ) {
     $dbh->do('ALTER TABLE Backups DROP type_id') or die $dbh->errstr();
