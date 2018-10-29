@@ -85,10 +85,6 @@ my $hup;
 my %last_ping_time;
 $SIG{HUP} = \&sig_handler;
 
-# TUrn off Object caching
-# If we do this, we incur a lot more db load which might be trivial, but.... our use of locking should mean that we don't need to do this anymore
-$openprint::Object::no_cache = 0;
-
 while(1) {
 	if ( ! ( $dbh and $dbh->ping ) ) {
 		$log->debug("Connecting to db");	

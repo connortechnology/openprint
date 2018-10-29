@@ -54,7 +54,7 @@ if ( my $err = configuration::from_file($$opts{config}) ) {
 configuration::merge($opts);
 
 foreach my $param ( 'db_name','db_user','db_pass' ) {
-	die "$program: missing required --$param parameter" if ! $config{$param};
+	die "$program: missing required --$param parameter" if ! $openprint::config{$param};
 } # end foreach required-param
 
 
@@ -69,7 +69,7 @@ my %db_connect_info = (
 	password	=> $config{db_pass},
 );
 
-$dbh = sql::open_sql( $log, %db_connect_info );
+$openprint::dbh = sql::open_sql( $log, %db_connect_info );
 die "Couldn't connect to db: $$dbh{errstr}" if ! $dbh;
 configuration::init();
 configuration::from_file($$opts{config});
@@ -153,9 +153,7 @@ while(1) {
 		configuration::merge($opts);
 	} elsif ( $hup ) {
 		$log->hup();
-$log->debug("# of entries in host_counts: " . keys %host_counts);
-$log->debug("# of entries in Object_cache: " . keys %{$openprint::Object::cache{$config{db_name}}} );
-$log->debug("# of entries in Object_name_cache: " . keys %{$openprint::Object::name_cache{$config{db_name}}} );
+    $log->debug("# of entries in host_counts: " . keys %host_counts);
 		configuration::init( );
 		configuration::from_file($$opts{config});
 		configuration::merge($opts);
