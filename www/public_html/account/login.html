@@ -48,7 +48,7 @@ if ( $session{user_type} eq 'A' or $session{user_type} eq 'E' ) {
 				action_id=>\@action_ids,
 				'date_time >=' => DateTime::Format::Pg->format_datetime( $weekago ),
 				order=>'date_time',
-				);
+				) if @action_ids;
 		if ( @Logs ) {
 			my $html = 'The following recent actions may have an effect on pricing.<br/>
 <table class="List sortable"><tr>
