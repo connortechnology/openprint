@@ -1,12 +1,13 @@
 <? echo (
 	my $Service = $$variable{Project}->Service( $$variable{ServiceIndex} );
+	my $category = $Service->ServiceType()->Category()->name();
 
 	my @Roles = openprint::Operator_Role->find( servicetype_id=>$Service->servicetype_id(), order=>'sorting, lower(name)' );
 	if ( ! @Roles ) {
 		@Roles = openprint::Operator_Role->find( servicetype_id=>undef, order=>'lower(name)' );
 	}
 	my %Operators = map { $$_{role_id}, $_ } openprint::Project_Service_Operator->find( service_id=>$$Service{service_id} );
-	if ( $openprint::User->in_Group('Prepress') ) {
+	if ( $openprint::User->in_Group( $category ) ) {
 		
 		foreach my $Role ( @Roles ) {
 			next if $Operators{$$Role{id}};
@@ -26,12 +27,13 @@ $log->debug("Adding op for " . $openprint::User->to_string() . " for role $$Role
 <p>
   <label>%2$s</label>
 	<span id="txtEmployeeName%1$d">%4$s</span>
-	<input id="TakeOver%1$d" name="TakeOver%1$d" type="checkbox" %5$s onclick="if ( this.checked ) { $('txtEmployeeName%1$d').innerHTML='%3$s'} else { $('txtEmployeeName%1$d').innerHTML='%4$s';}" />
+	<input id="TakeOver%1$d" name="TakeOver%1$d" type="checkbox" value="%6$d" %5$s onclick="if ( this.checked ) { $('txtEmployeeName%1$d').innerHTML='%3$s'} else { $('txtEmployeeName%1$d').innerHTML='%4$s';}" />
 	<label class="radio" for="TakeOver%1$d">Take Over</label>
 </p>
 `, $$Role{id}, $$Role{name}, $openprint::User->name(),
 ( $Operators{$$Role{id}} ? $Operators{$$Role{id}}->User()->name() : 'None Yet' ),
-checked($Operators{$$Role{id}}->user_id() == $session{user_id}),
+checked($Operators{$$Role{id}} and ($Operators{$$Role{id}}->user_id() == $session{user_id}) ),
+$session{user_id}
  );
 
 if ( 0 ) {
