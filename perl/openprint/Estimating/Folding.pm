@@ -1779,6 +1779,7 @@ my @folding_capable;
 	push @folding_capable, 'When PerfectBound' if $$services{PerfectBound};
 	push @folding_capable, 'When Stitching' if ( $$services{SaddleStitching} or $$services{LoopStitching} );
 	push @folding_capable, 'When Printing';
+	push @folding_capable, 'Y';
 	@equipment = openprint::Equipment->find( 'useinestimating is null or ='=>1,
 # 'servicetype_id any'=>$Service->servicetype_id(),
 Specifications=>{'Folding Capable'=>\@folding_capable}
