@@ -31,7 +31,7 @@ $log->debug("Adding op for " . $openprint::User->to_string() . " for role $$Role
 </p>
 `, $$Role{id}, $$Role{name}, $openprint::User->name(),
 ( $Operators{$$Role{id}} ? $Operators{$$Role{id}}->User()->name() : 'None Yet' ),
-checked($Operators{$$Role{id}}->user_id() == $session{user_id}),
+checked($Operators{$$Role{id}} and ($Operators{$$Role{id}}->user_id() == $session{user_id}) ),
  );
 
 if ( 0 ) {
