@@ -1226,8 +1226,10 @@ sub get_due_date {
 	my $runtime = 0;
 	foreach ( $self->signatures() ) {
 		$runtime += openprint::service::get_runtime( $self, $_ );
+$openprint::log->debug("Adding runtime $runtime");
 	} # end foreach
-	$duedatedays += int( $runtime / ( 24*60 ) );
+$openprint::log->debug("Adding runtime days: " . int( $runtime / ( 24*60 ) ) );
+	$duedatedays += int( $runtime / ( 24*60*60 ) );
 	
 	return sprintf('%.4d-%.2d-%.2d', misc::add_delta_business_days( Date::Calc::Today(), $duedatedays ) );
 } # end sub get_due_date
