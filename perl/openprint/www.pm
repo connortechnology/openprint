@@ -390,6 +390,7 @@ sub parse_page {
 				if ( ! $variable{ddmDueDate} ) {
 					$variable{ddmDueDate} = $variable{Project}->get_due_date();
 				} # end if
+				$variable{duedate} = $variable{ddmDueDate};
 				@variable{'duedate_year','duedate_month','duedate_day'} = split('-', $variable{ddmDueDate});
 
 			} elsif ( $third eq 'prin' ) {	
