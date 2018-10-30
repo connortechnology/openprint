@@ -29,7 +29,7 @@ cleanup : true
 				<li>
 					<label>Host</label>
           <?echo ( ssi::select( 
-            openprint::Host->dropdown( order=>'hostname' ),
+                                              openprint::Host->dropdown( 'owner_id is null'=>0,order=>'hostname' ),
             $$variable{Backup}->host_id(),
             {
               name    =>  'host_id',
