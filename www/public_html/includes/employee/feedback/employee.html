@@ -43,17 +43,11 @@ if ( 0 ) {
 
   		$html .= sprintf(q`
 <input type="text" name="PickupDate%1$d" id="PickupDate%1$d" value="%2$s"/>
-<img src="/javascripts/jscalendar/img.gif" id="PickupDateButton%1$d" style="cursor: pointer;" title="Date selector" />
-<script type="text/javascript">
-Calendar.setup({
-inputField	:	"PickupDate%1$d",
-ifFormat	:	"%Y-%m-%d %H:%M",
-button		:	"PickupDateButton%1$d",
-align		:	"Tl",
-showsTime	:	true,
-singleClick	:	false
-				});
-</script>
+					<script type="text/javascript">
+					$j("[name$='PickupDate%1$d']").datetimepicker({
+							dateFormat: "yy-mm-dd", timeFormat: 'hh:mm', constrainInput: true,
+							showOn: "both", buttonImage: "/images/calendar.gif", buttonImageOnly: true, buttonText: "Select date"
+							}); </script>
 `, $$Role{id}, $$variable{"PickupDate$$Role{id}"} );
 		} else {
 			$html .= $$variable{"PickupDate$$Role{id}"};
@@ -68,16 +62,11 @@ singleClick	:	false
 	return $html;
 ) ?>
 <p><label>Pickup Time</label>
-<input type="text" name="PickupDate" id="PickupDate" value="<?PickupDate?>"/>
-<img src="/javascripts/jscalendar/img.gif" id="PickupDateButton" style="cursor: pointer;" title="Date selector" />
-<script type="text/javascript">
-Calendar.setup({
-inputField  : "PickupDate",
-ifFormat  : "%Y-%m-%d %H:%M",
-button    : "PickupDateButton",
-align   : "Tl",
-showsTime : true,
-singleClick : false
-        });
-</script>
+	<input type="text" name="PickupDate" id="PickupDate" value="<?PickupDate?>"/>
+	<script type="text/javascript">
+	$j("[name$='PickupDate']").datetimepicker({
+			dateFormat: "yy-mm-dd", timeFormat: 'hh:mm', constrainInput: true,
+			showOn: "both", buttonImage: "/images/calendar.gif", buttonImageOnly: true, buttonText: "Select date"
+			});
+  </script>
 </p>
