@@ -81,7 +81,7 @@ sub get_all_children {
 	
 	foreach my $child ( $_[0]->children() ) {
 		# Prevent infinite loop
-		next if sets::isin( $child->id(), [ map { $_->id() } @results ] );
+		next if $$child{id} and sets::isin( $$child{id}, [ map { $_->id() } @results ] );
 		push @results, $child, $child->get_all_children();
 	} # end foreach child
 	return @results;
@@ -160,7 +160,7 @@ sub ancestor {
 	my $self = shift;
 	return if ! @_;
 	my ( $value ) = $self->get( $_[0] );
-	if ( sets::isin( $value, $_[1] ) ) {
+	if ( $value and sets::isin( $value, $_[1] ) ) {
 		#$openprint::log->debug( "Returning Location: $_[0] ($$self{name}) ($value) != $_[1]");
 		return $self;
 	#} else {
