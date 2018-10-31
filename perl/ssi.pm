@@ -789,7 +789,10 @@ sub write_override {
 	my ( $for, $value, $locked_js, $unlocked_js ) = @_;
 	if ( 1 ) {
 		return sprintf(q`<input type="hidden" id="%1$s" name="%1$s" value="%2$s"/><img class="Override" src="/images/%3$s.gif" onclick="var e=$('%1$s');if(e.value){e.value='';this.src='/images/unlocked.gif';%5$s} else {e.value='Y';this.src='/images/locked.gif';%4$s}" alt=""/>`, 
-				$for, (sets::isin( $value, ['Y', '1' ] ) ? 'Y' : '' ), (sets::isin( $value, ['Y', '1' ] ) ? 'locked' : 'unlocked'), $locked_js, $unlocked_js );
+				$for,
+				((defined($value) and sets::isin($value, ['Y', '1' ]) ) ? 'Y' : '' ),
+				((defined($value) and sets::isin($value, ['Y', '1' ])) ? 'locked' : 'unlocked'),
+				$locked_js, $unlocked_js );
 	} else {
 		return sprintf('<input type="checkbox" id="%1$s" name="%1$s" value="%2$s" onclick="if(!this.checked){%5$s}else{%4$s};" %3$s /> <label class="radio" for="%1$s">Override</label>', $for, $value, ssi::checked( $value eq 'Y' ), $locked_js, $unlocked_js );
 	} # end if
@@ -846,7 +849,10 @@ sub checkboxes {
 	while ( my ( $value, $label ) = splice @{$values}, 0, 2 ) {
 		$html .= $container[0] if @container;
 		$html .= sprintf('<input type="checkbox" name="%1$s" value="%2$s" id="%3$s%2$s" %4$s%5$s/>',
-				$name, $value, $id, checked( sets::isin( $value, $selected ) ), $onclick ? ' onclick="'.$onclick.'"' : '' );
+				$name, $value, $id,
+				checked( defined($value) and sets::isin( $value, $selected ) ),
+				( $onclick ? ' onclick="'.$onclick.'"' : '' )
+				);
 		if ( $label ) {
 			$html .= sprintf(
 '
@@ -993,6 +999,9 @@ sub input {
 	$html .= ' required' if $options{required};
 	$html .= ' readonly="readonly"' if $options{readonly};
 	$html .= '/>';
+	if ( $options{with_clear} ) {
+		$html .= qq`<span class="input-clear" onclick="jQuery('[name\$=$options{name}]').val('').focus();">x</span>`;
+	}
 	return $html;
 } # end sub input
 
