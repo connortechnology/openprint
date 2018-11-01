@@ -5768,6 +5768,11 @@ if ( ! sets::isin('sensor_readings', \@tables) ) {
 	$dbh->do( misc::load_file( $log, q{../../sql/sensor_readings.sql}) );
 	die if $dbh->errstr();
 } # end if
+if ( ! sets::isin('oui_vendors', \@tables ) ) {
+	$log->debug("Adding oui_vendors");
+	$dbh->do( misc::load_file( $log, q{../../sql/OUI_Vendors.sql}) );
+	die if $dbh->errstr();
+}
 
 print "done.\n";
 $dbh->disconnect();
