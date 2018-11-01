@@ -25,7 +25,7 @@ $table = 'host_interfaces';
 %transforms = (
 	mac         	=>    [ 's/[^\da-fA-F:\-]//g' ],
 	connected_to	=>    [ 's/[^\da-fA-F:\-]//g' ],
-	ip          	=>    [ 's/[^\d\.\:a-fA-F]//g' ],
+	ip          	=>    [ 's/[^\d\.\:a-fA-F\/]//g' ],
 );
 
 %find_fields = (
@@ -138,6 +138,10 @@ sub vendor {
     return '';
   }
   return $_[0]{vendor};
+}
+
+sub is_subnet {
+  return ( index($_[0]{ip}, '/') == -1 ) ? 0 : 1;
 }
 
 1;
