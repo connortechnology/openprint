@@ -993,6 +993,9 @@ sub input {
 	} # end if
 	$html .= ' value="'.html_escape($options{value}).'"' if $options{value} ne '';
 
+	if ( $options{with_clear} ) {
+		$options{class} = $options{class} ? $options{class} . ' input-clear' : 'input-clear';
+	}
 	foreach (@input_options) {
 		$html .= qq` $_="$options{$_}"` if exists $options{$_};
 	} # end foreach
