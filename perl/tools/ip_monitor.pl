@@ -159,7 +159,8 @@ while(1) {
           if ( ! openprint::Host_Interface->find_one(ip=>$ip->ip()) ) {
             # We are pinging a subnet, so now we duplicate the to create a new entry for this ip
             my $new_Host = $HI->Host()->copy();
-            $new_Host->save({hostname=>$Host->hostname().' '.$ip->ip()});
+            
+            $new_Host->save({hostname=>$Host->hostname().' '.$ip->ip(), type_id=>undef});
             my $new_HI = $HI->copy();
             $new_HI->save({host_id=>$$new_Host{id}, ip=>$ip->ip()});
             foreach my $N ( $Host->Notifications() ) {
