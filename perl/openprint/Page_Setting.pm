@@ -3,7 +3,7 @@ package openprint::Page_Setting;
 our @ISA = qw(openprint::Object);
 
 use vars qw( $debug $serial $table %fields %transforms %defaults $cache_field $cached %cache );
-use constant DEBUG => 1;
+use constant DEBUG => 0;
 
 $debug = 0;
 $cached = 0;
@@ -106,7 +106,7 @@ sub get {
 	my $cache = $cache{$openprint::config{db_name}};
 
 	if ( ! $$cache{$page} ) {
-    $openprint::log->debug("No cached Page Setting found for $page");
+    $openprint::log->debug("No cached Page Setting found for $page") if DEBUG;
 # Need to create one.
 		my @chunks = split('/', $page);
 		while ( @chunks ) {

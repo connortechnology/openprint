@@ -1,19 +1,19 @@
 #!/usr/bin/perl
-use lib './EnviroTrack';
+use lib '/var/www/testing/perl';
 use strict;
 use warnings;
 
-require EnviroTrack;
-require EnviroTrack::sql;
-require EnviroTrack::logger;
-require EnviroTrack::configuration;
+require openprint;
+require sql;
+require logger;
+require configuration;
 
-use vars qw( $log $dbh %config);
-*log = \$EnviroTrack::log;
-*dbh = \$EnviroTrack::dbh;
-*config = \%EnviroTrack::config;
+use vars qw( $log $dbh %config );
+*log = \$openprint::log;
+*dbh = \$openprint::dbh;
+*config = \%openprint::config;
 
-$log = EnviroTrack::logger->new();
+$log = logger->new();
 $log->{level} = 'debug';
 
 use Getopt::Long;
@@ -26,7 +26,7 @@ GetOptions($opts, 'help',
 		'db_name=s', 'db_host=s', 'db_user=s', 'db_pass=s', 'debug=s', 'config=s',
 		);
 
-if ($opts->{help}) {
+if ( $opts->{help} ) {
     usage();
     exit 0;
 }
@@ -43,9 +43,9 @@ if ( $opts->{debug}) {
     $$log{level} = $opts->{debug};
 }
 
-EnviroTrack::configuration::init( );
-EnviroTrack::configuration::from_file( $$opts{config} );
-EnviroTrack::configuration::merge( $opts );
+configuration::init( );
+configuration::from_file( $$opts{config} );
+configuration::merge( $opts );
 
 unless ($config{db_name}) {
     print STDERR "$program: missing required --db_name parameter\n";
@@ -61,9 +61,9 @@ $dbh = sql::open_sql( $log,
         );
 
 die 'Error opening db' if ! $dbh;
-EnviroTrack::configuration::init( );
-EnviroTrack::configuration::from_file( $$opts{config} );
-EnviroTrack::configuration::merge( $opts );
+configuration::init( );
+configuration::from_file( $$opts{config} );
+configuration::merge( $opts );
 
 require EnviroTrack::Sensor;
 require EnviroTrack::Sensor::LM;
@@ -80,13 +80,13 @@ while(1) {
 				);
 
 		if ( ! $dbh ) {
-			$log->error( 'Error opening db' );
+			$log->error('Error opening db');
 			sleep(1);
 		}
 		
-		EnviroTrack::configuration::init( );
-		EnviroTrack::configuration::from_file( $$opts{config} );
-		EnviroTrack::configuration::merge( $opts );
+		configuration::init( );
+		configuration::from_file( $$opts{config} );
+		configuration::merge( $opts );
 	}
  
 	foreach my $Sensor ( new EnviroTrack::Sensor::LM(), EnviroTrack::Sensor->find() ) {

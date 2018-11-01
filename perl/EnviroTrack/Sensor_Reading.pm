@@ -2,10 +2,9 @@ use strict;
 package EnviroTrack::Sensor_Reading;
 our @ISA = qw( EnviroTrack::Object );
 
-require EnviroTrack::sql;
-require EnviroTrack::Object;
+require sql;
+require openprint::Object;
 
-use EnviroTrack ();
 use vars qw( $debug %fields %find_fields %transforms %defaults $table $serial $AUTOLOAD $default_sort );
 $table = 'sensor_readings';
 $serial = 'sensor_readings_id_seq';
