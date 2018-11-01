@@ -315,7 +315,7 @@ sub parse_page {
 		$status = Apache2::Const::OK;
 
 		# This needs special treatment.
-		if ( $filename eq 'login_confirmation.html') {
+		if ( $filename eq 'login_confirmation.html' ) {
 			openprint::login::verify_login( $r, $log, $dbh, $session{_session_id}, \%variable, 'A' );
 			return $status if $variable{Redirect};	
 		} # end if
@@ -450,7 +450,7 @@ $log->debug("Running openprint::$module->$proc") if Debug;
 				}
 			} # end if
 		} # end if
-	} elsif ( sets::isin( $first, [ 'content', 'account' ] ) ) { # main
+	} elsif ( $first and sets::isin( $first, [ 'content', 'account' ] ) ) { # main
 		my ( $proc ) = $filename =~ /(.*)\.\w*$/;
 		if ( $proc ) {
 			my $module = join('_',@path);
