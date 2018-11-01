@@ -243,25 +243,15 @@ $log->debug("Project complete: $complete " . $Service->to_string());
 						$Service->save({status=>'Ordered'});
 					} # end if
 				} elsif ( $param{rdbApproved} eq 'Y' ) {
-					if ( $param{duedate_year} ) {
-						if ( ! Date::Calc::check_date( @param{'duedate_year','duedate_month','duedate_day'} ) ) {
-							$variable{error} = 'There was an error saving the DueDate.  Please check that a real date was selected.';
-							$param{rdbApproved} = 'N';
+					if ( $param{duedate} and ( $param{duedate} ne $Project->due_date() ) ) {
+						$Project->due_date( $param{duedate} );
+						if ( ! $Project->save() ) {
+							$Project->add_to_log( @session{'company_id','user_id'}, "Duedate changed to $param{duedate}" );
+							send_duedate_change_notification( $project_index, $order_id );
 						} else {
-							# It's a valid duedate
-							my $duedate = sprintf('%.4d-%.2d-%.2d', @param{'duedate_year','duedate_month','duedate_day'} );
-
-							if ( $duedate ne $Project->due_date() ) {
-								$Project->due_date( $duedate );
-								if ( ! $Project->save() ) {
-									$Project->add_to_log( @session{'company_id','user_id'}, "Duedate changed to $duedate" );
-									send_duedate_change_notification( $project_index, $order_id );
-								} else {
-									$variable{error} .= 'Error saving duedate.';
-								} # end if
-							} # end if
-						} # end if valid due date
-					} # end if due date is specified
+							$variable{error} .= 'Error saving duedate.';
+						} # end if
+					} # end if
 
 					if ( (!$variable{error}) and ($status ne 'Approved') ) {
 						openprint::employee_production::mark_proofs_approved( $Project, $Service );

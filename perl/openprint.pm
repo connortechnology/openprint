@@ -3,6 +3,7 @@ use warnings;
 package openprint;
 use vars qw( $r %variable %session %param %config $log $dbh $User $Company $TZ $Owner $Pricelist $Currency $parser );
 
+use constant Debug => 1;
 
 sub session_init {
 	require Apache2::Cookie;
@@ -26,6 +27,7 @@ sub session_init {
 		if ( $$cookies{_session_id} ) {
 			$cookie = $$cookies{_session_id};
 			$cookie = $cookie->value if $cookie;
+$log->debug("Have session $$cookies{_session_id} $cookie") if Debug;
 		} else {
 			if ( $r->param('_session_id') ) {
 				$log->error("Since when is session_id in the params");
@@ -54,6 +56,7 @@ sub session_init {
 			} # end if
 
 			if ( (!$cookie) or ( $cookie ne $session{_session_id} ) ) {
+$log->debug("Generating new cookie $session{_session_id}") if Debug;
 				my $Cookie = Apache2::Cookie->new($r,
 						-name	=> '_session_id',
 						-value => $session{_session_id},

@@ -172,6 +172,7 @@ sub get_status {
 	my ( $Project, $service_names ) = @_;
 	my $qty_index = $Project->ordered_quantity_index();
 	my $services = $Project->services();
+			my $html;
 	foreach my $service_name ( ref $service_names eq 'ARRAY' ? @{$service_names} : ( $service_names ) ) {
 		if ( $$services{$service_name} ) {
 			my $Service = $Project->Service( $$services{$service_name}[0] );
@@ -183,7 +184,7 @@ sub get_status {
 			eval ( 'require '.$module.';' );
 			$log->error($@) if $@;
 			if ( my $function = $module->can('overview_summary') ) {
-				return $function->($Project, $$Service{service_id}, $specs, $qty_index);
+				$html .= $function->($Project, $$Service{service_id}, $specs, $qty_index);
 			} else {
 				$log->debug("No overview function for $module");
 			}
@@ -191,18 +192,21 @@ sub get_status {
 				if  (
 					openprint::Estimating::Folding::is_offline($Project, $qty_index)
 				) {
-					return 'Yes';
+					if ( my $function = $module->can('runtime') ) {
+						$html .= '<br/>'.misc::seconds2hm($function->($Project, $Service, undef, $qty_index));
+						return $html;
+					}
 				}
 			} else {
 				if ( my $function = $module->can('runtime') ) {
-					return misc::seconds2hm($function->($Project, $Service, undef, $qty_index));
-				} else {
-					return 'Yes';
+					$html .= misc::seconds2hm($function->($Project, $Service, undef, $qty_index));
+				} elsif ( ! $html ) {
+					 return 'Yes';
 				}
 			}
 		}
 	} # end foreach
-	return '';
+	return $html;
 }
 
 sub overview_date {

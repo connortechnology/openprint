@@ -53,19 +53,12 @@ function check_input( form, signature_index ) {
 				<label>Ready Date</label>
 				<? if ( $$variable{rdbComplete} ne 'Yes' ) ?>
 				<? eval ( $$variable{CompletionDate} = Date::Format::time2str( '%Y-%m-%d %H:%M', time ); ) ?>
-					<input type="text" size="18" name="CompletionDate" id="CompletionDate" value="<?CompletionDate?>"/>
-					<img src="/images/calendar.gif" id="CompletionDateButton" style="cursor: pointer;" title="Date selector" />
+					<input type="text" name="CompletionDate" id="CompletionDate" value="<?CompletionDate?>"/>
 					<script type="text/javascript">
-					Calendar.setup({
-					inputField     :    "CompletionDate",      // id of the input field
-					ifFormat       :    "%Y-%m-%d %H:%M",       // format of the input field
-					button         :    "CompletionDateButton",  // trigger for the calendar (button ID)
-					align           :   "Tl",
-					showsTime      :    true,            // will display a time selector
-					singleClick    :   false,           // double-click mode
-					timeFormat		: 24
-					});
-					</script>
+					$j("[name$='CompletionDate']").datetimepicker({
+							dateFormat: "yy-mm-dd", timeFormat: 'hh:mm', constrainInput: true,
+							showOn: "both", buttonImage: "/images/calendar.gif", buttonImageOnly: true, buttonText: "Select date"
+							}); </script>
 				<? else ( $$variable{rdbComplete} ne 'Yes' ) ?>
 					<?CompletionDate?>
 				<? endif ( $$variable{rdbComplete} ne 'Yes' ) ?>
@@ -87,9 +80,10 @@ function check_input( form, signature_index ) {
 			<p id="DueDate" <? echo ( $$variable{rdbApproved} eq 'Y' ? '' : 'style="display:none;"' ) ?> >
 <? if ( $session{user_type} eq 'A' or openprint::usergroup::is_user_in( ['Scheduling'], $session{user_id} ) ) ?>
 				<label>Due Date</label>
-				<span class="DateSelector">
-<? echo ( date_select( 'duedate', [ @$variable{'duedate_year','duedate_month','duedate_day'} ] ) ) ?>
-				</span>
+<? echo ( 
+input( name=>'duedate', type=>'text', value=>$$variable{duedate} );
+) ?>
+<script type="text/javascript">$j("[name$='duedate']").datepicker({ dateFormat: "yy-mm-dd", constrainInput: true}); </script>
 <? endif ( $session{user_type} eq 'A' or openprint::usergroup::is_user_in( ['Scheduling'], $session{user_id} ) ) ?>
 			</p>
 			<p class="buttons">
@@ -97,19 +91,21 @@ function check_input( form, signature_index ) {
 					my $html;
 					$html .= button( 'Save', { onclick=>'f1.submit();' } );
 					$html .= button( 'Reset', { onclick=>'f1.reset();' } );
-					my $body = include( '/email_content/sign-off.html' );
-					$body =~ s/([^A-Za-z0-9])/sprintf("%%%02X", ord($1))/seg;
-					$$variable{body} = $body;
-					$html .= button( 'Email', { href=>qq`mailto:`.$$variable{Project}->Order()->email().q`?subject=Docket%20$$variable{Docket}&body=$$variable{body}`, text=>'Email' } );
-					$html .= button( 'UploadPDFs', { onclick=>"open_window('/employee/production/upload_pdfs.html?ProjectIndex=$$variable{ProjectIndex}','upload','resizable=yes,scrollbars=yes,width=800,height=600,screenX=10,screenY=10,top=0,left=0');", href=>'', text=>'Upload PDFs' } );
-    $html .= button( 'DocketButton'.$$variable{Project}{id}, { onclick=>"open_window('/main/project/docket_sheet.html?ProjectIndex=$$variable{ProjectIndex}');", text=>'Docket' } );
+					#my $body = include( '/email_content/sign-off.html' );
+					#$body =~ s/([^A-Za-z0-9])/sprintf("%%%02X", ord($1))/seg;
+					#$$variable{body} = $body;
+					#$html .= button( 'Email', { href=>qq`mailto:`.$$variable{Project}->Order()->email().qq`?subject=Docket%20$$variable{Docket}&body=$$variable{body}`, text=>'Email' } );
+					#$html .= button( 'UploadPDFs', { onclick=>"open_window('/employee/production/upload_pdfs.html?ProjectIndex=$$variable{ProjectIndex}','upload','resizable=yes,scrollbars=yes,width=800,height=600,screenX=10,screenY=10,top=0,left=0');", href=>'', text=>'Upload PDFs' } );
+					$html .= button( 'DocketButton'.$$variable{Project}{id}, { onclick=>"open_window('/main/project/docket_sheet.html?ProjectIndex=$$variable{ProjectIndex}');", text=>'Docket' } );
+					
 					my $DocketLabelType = openprint::LabelType->find_one(name=>'Docket Label');
 					if ( $DocketLabelType ) {
 						my $DocketLabel = openprint::Label->find_one(docket=>$$variable{Project}->docket(), type_id=>$$DocketLabelType{id});
 						if ( $DocketLabel ) {
 							$html .= button( 'DocketButton'.$$variable{Project}{id}, { onclick=>"open_window('/employee/production/labels/label.html?docket=$$variable{Project}{docket}&project_id=$$variable{ProjectIndex}&id=$$DocketLabel{id}');", text=>'Docket Label' } );
 						} else {
-							$html .= button( 'DocketButton'.$$variable{Project}{id}, { onclick=>"open_window('/employee/production/labels/label.html?docket=$$variable{Project}{docket}&project_id=$$variable{ProjectIndex}&type_id=$$DocketLabelType{id}');", text=>'Docket Label' } );
+							$html .= button( 'DocketButton'.$$variable{Project}{id}, { onclick=>"open_window('/employee/production/labels/label.html?docket=$$variable{Project}{docket}&project_id=$$variable{ProjectIndex}&type_id=$$DocketLabelType{id}');", text=>'Docket Label',
+ } );
 						}
 					}
 					return $html;
