@@ -556,7 +556,7 @@ sub internal_calc {
 
 # Returns vale in seconds
 sub get_runtime {
-    my ( $Project, $service_index, $Equipment, $impressions, $speed, $pertains_to ) = @_;
+	my ( $Project, $service_index, $Equipment, $impressions, $speed, $pertains_to ) = @_;
 	my $Service = $Project->Service( $service_index );
 	return $Service->runtime( $Equipment, $impressions, $speed, $pertains_to );
 } # end sub get_runtime

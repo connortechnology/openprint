@@ -103,8 +103,25 @@ sub host {
         if ( ! $I->ip() ) {
           $variable{error} .= 'For ' . $I->mac() . ': No ip.  Cant resolve without an ip.';
         } else {
-          $variable{error} .= $Host->save({ hostname	=> $Host->resolve() });
-          $variable{error} .= $I->save({ mac		=> $I->get_mac(), });
+          my $hostname = $Host->resolve();
+          if ( $hostname ) {
+            $Host->set({ hostname	=> $hostname });
+            $variable{information} .= "Discovered hostname $hostname.";
+          } else {
+            $variable{error} .= 'Failed to resolve hostname<br/>';
+          }
+          if ( ! $$I{mac} ) {
+            my $mac = $I->get_mac();
+            if ( $mac ) {
+              $I->set({ mac	=> $mac });
+              $variable{information} .= "Discovered mac $mac.";
+            } else {
+              $variable{error} .= 'Failed to determine mac address<br/>';
+            }
+          }
+          if ( $variable{information} ) {
+            $variable{information} .= "<br/>Click Save to commit new values";
+          }
         } # end if
       } # end foreach
     } elsif ( $param{action} eq 'Delete' ) {

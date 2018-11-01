@@ -836,7 +836,7 @@ $I->display( $I->page_columns() . ' x ' . $I->page_rows() );
           $horizontal_cuts += int( ($I->page_rows()-1)*$$I{rows} * 2 ) + 2;
 
         } elsif ( $stitching_imposition ) {
-$openprint::log->debug("have stitching imposition $stitching_imposition");
+#$openprint::log->debug("have stitching imposition $stitching_imposition");
           if ( ! @folding_impositions ) {
 # Are stitching but don't have folded impositions... 
             $vertical_cuts += int ($$I{columns} / $stitching_imposition)-1;

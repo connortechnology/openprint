@@ -12,36 +12,40 @@ $serial = 'host_interfaces_id_seq';
 $table = 'host_interfaces';
 
 %fields = (
-	id				=>	'id',
-	mac				=>	'mac',
-	ip				=>	'ip',
-	comment			=>	'comment',
-	dhcp			=>	'dhcp',
+	id			      	=>	'id',
+	mac			      	=>	'mac',
+	ip			      	=>	'ip',
+	comment		    	=>	'comment',
+	dhcp		      	=>	'dhcp',
   host_id         =>  'host_id',
-  connected_to  =>  'connected_to',
-	monitor			=>	'monitor',
-	online			=>	'online',
+  connected_to    =>  'connected_to',
+	monitor	    		=>	'monitor',
+	online		    	=>	'online',
 );
+
 %transforms = (
-	mac         	=>    [ 's/[^\da-fA-F:\-]//g' ],
-	connected_to	=>    [ 's/[^\da-fA-F:\-]//g' ],
-	ip          	=>    [ 's/[^\d\.\:a-fA-F]//g' ],
+	mac           	=> [ 's/[^\da-fA-F:\-]//g' ],
+	connected_to  	=> [ 's/[^\da-fA-F:\-]//g' ],
+	ip            	=> [ 's/[^\d\.\:a-fA-F\/]//g' ],
 );
 
 %find_fields = (
 	whitelist	=>	'(SELECT whitelist FROM Hosts WHERE Hosts.id=host_id)',
 );
 %defaults	= (
-	dhcp		=>	0,
-	ip			=>	undef,
-	mac			=>	undef,
+	dhcp	  	=>	0,
+	ip		  	=>	undef,
+	mac		  	=>	undef,
   connected_to  =>  undef,
 	monitor		=>	0,
 	online		=>	undef,
 );
 
 sub Host {
-	return new openprint::Host( $_[0]{host_id} );
+  if ( ! $_[0]{Host} ) {
+    $_[0]{Host} = new openprint::Host( $_[0]{host_id} );
+  }
+  return $_[0]{Host};
 } # end sub Host;
 
 sub resolve {
@@ -138,6 +142,10 @@ sub vendor {
     return '';
   }
   return $_[0]{vendor};
+}
+
+sub is_subnet {
+  return ( index($_[0]{ip}, '/') == -1 ) ? 0 : 1;
 }
 
 1;

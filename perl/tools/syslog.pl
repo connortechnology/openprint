@@ -38,8 +38,8 @@ if ($opts->{help}) {
 } # end if
 
 my %defaults = (
-	config	=>	'/etc/openprint/syslog.conf',
-	port	=>	10514,
+	config  	=>	'/etc/openprint/syslog.conf',
+	port    	=>	10514,
 	protocol	=>	'udp',
 );
 foreach my $default ( keys %defaults ) {
@@ -265,14 +265,22 @@ while(1) {
 				if ( ! $host_counts{$ip} ) {
 					$log->debug("$ip not in host_counts, adding it");
 					my $Host;
-					my $HI = openprint::Host_Interface->find_one(ip=>$ip);
+          # May return a subnet
+					my $HI = openprint::Host_Interface->find_one('ip >>'=>$ip);
 					if ( ! $HI ) {
 						$HI = new openprint::Host_Interface();
 						$Host = new openprint::Host();
 						$Host->save({hostname=>$hostname});
 						$HI->save({host_id=>$$Host{id}, ip=>$ip});
 					} else {
-						$Host = $HI->Host();
+            if ( $HI->is_subnet() ) {
+              $Host = $HI->Host()->copy();
+              $Host->save({hostname=>$hostname, description=>$Host->description().' was ' . $Host->hostname()});
+              my $HI = $HI->copy();
+              $HI->save({host_id=>$$Host{id}, ip=>$ip});
+            } else {
+              $Host = $HI->Host();
+            }
 					} # end if      
 					$host_counts{$ip} = $Host;
 				} # end if

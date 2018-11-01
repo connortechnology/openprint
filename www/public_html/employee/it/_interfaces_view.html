@@ -3,7 +3,7 @@
 		<tr>
 			<th class="mac">Mac</th>
 			<th class="ip">IP Address</th>
-			<th class="dhcp">DHCP?</th>
+			<th class="options_status">Options / Status</th>
 			<th class="comment">Comment</th>
 <? if ( $config{RADIUS_Support} eq 'Y' ) ?>
 	<th class="radius">RADIUS</th>
@@ -25,21 +25,21 @@
 	my $radius_fragment = slurp_content( '/employee/it/_radius_mac_line_view.html' );
 	my @macs = map { $_->mac() ? () : '' } $$variable{Host}->Interfaces();
 
-	my $NewHI = new openprint::Host_Interface();
-	$NewHI->mac( $param{mac} ) if ! $$variable{Host}->id();
-
-	foreach my $Interface ( $$variable{Host}->Interfaces(), ( @macs ? () : $NewHI ) ) {
+	foreach my $Interface ( $$variable{Host}->Interfaces() ) {
 		$html .= sprintf(q`
 <tr id="hi-%1$d">
 	<td class="mac">%2$s</td>
 	<td class="ip">%3$s</td>
-	<td class="dhcp">%4$s</td>
+	<td class="options_status">%4$s</td>
 	<td class="comment" rowspan="2">%5$s</td>
 `, 
 	$$Interface{id},
 	$$Interface{mac},
 	$Interface->ip(),
-	$Interface->dhcp() ? 'yes' : 'no',
+join(', ',
+	( ( $config{DHCP_Server_Support} and $Interface->dhcp() ) ? '<span class="option_dhcp">dhcp</span>' : () ),
+  ( $Interface->monitored() ? '<span class="monitored">monitored</span>' : () ),
+  ),
 	$Interface->comment(),
 );
 	
