@@ -13,7 +13,7 @@ $table = 'oui_vendors';
 	vendor_name		=>	'vendor_name',
 );
 %transforms = (
-	oui		=>	[ 's/\D//g' ],
+	oui		=>	[ 's/[^A-Fa-f0-9]//g' ],
 	vendor_name	=>	[ 's/^\s+//', 's/\s+$//', 's/\s\s+/ /g' ],
 );
 
