@@ -29,7 +29,6 @@
 			) ),
 			( $session{$uri.'?servicetype_id'} ? ( 'servicetype_id	any'=> $session{$uri.'?servicetype_id'} ) : () ),
 			order				=> 'id DESC',
-limit=>100,
 		);
 		$sql{status} = [ split(',', $session{$uri.'?ddmStatus'} ) ] if $session{$uri.'?ddmStatus'};
 		$sql{type_id} = $session{$uri.'?type_id'} if $session{$uri.'?type_id'};
