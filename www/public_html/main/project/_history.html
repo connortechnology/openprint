@@ -1,4 +1,5 @@
 <? eval (
+	my $uri = $$variable{uri} = '/main/project/history.html';
 	if ( $param{ProjectID} ) {
 		if ( $param{ProjectID} =~ /\%/ ) {
 			$$variable{Projects} = [ openprint::Project->find(
@@ -10,33 +11,34 @@
 			$param{ProjectID} = openprint::Project->transform( 'id', $param{ProjectID} );
 			$$variable{Projects} = [ openprint::Project->find( 
 				company_id		=> $session{company_id},
-				id				=> $param{ProjectID},
-				order			=> 'id DESC',
+				id						=> $param{ProjectID},
+				order					=> 'id DESC',
 			) ] if $param{ProjectID};
 		}
 	} else {
 		my %sql = (
-			date_filter( '/main/project/history.html?created_on_end', 'created_on <=' ),
-			date_filter( '/main/project/history.html?created_on_start', 'created_on >=' ),
-			date_filter( '/main/project/history.html?updated_on_end', 'updated_on <=' ),
-			date_filter( '/main/project/history.html?updated_on_start', 'updated_on >=' ),
+			date_filter( $uri.'?created_on_end', 'created_on <=' ),
+			date_filter( $uri.'?created_on_start', 'created_on >=' ),
+			date_filter( $uri.'?updated_on_end', 'updated_on <=' ),
+			date_filter( $uri.'?updated_on_start', 'updated_on >=' ),
 
 			( sets::isin( $session{user_type}, [ 'A', 'E' ] ) ? ( 
-				$session{'/main/project/history.html?company_id'} ? ( company_id => $session{'/main/project/history.html?company_id'} ) : ()
+				$session{$uri.'?company_id'} ? ( company_id => $session{$uri.'?company_id'} ) : ()
 			) : ( 
 				company_id		=>  $session{company_id}
 			) ),
-			( $session{'/main/project/history.html?servicetype_id'} ? ( 'servicetype_id	any'=>	$session{'/main/project/history.html?servicetype_id'} ) : () ),
+			( $session{$uri.'?servicetype_id'} ? ( 'servicetype_id	any'=> $session{$uri.'?servicetype_id'} ) : () ),
 			order				=> 'id DESC',
+limit=>100,
 		);
-		$sql{status} = [ split( ',', $session{'/main/project/history.html?ddmStatus'} ) ] if $session{'/main/project/history.html?ddmStatus'};
-		$sql{type_id} = $session{'/main/project/history.html?type_id'} if $session{'/main/project/history.html?type_id'};
-		$sql{predefined} = $session{'/main/project/history.html?predefined'} if $session{'/main/project/history.html?predefined'};
+		$sql{status} = [ split(',', $session{$uri.'?ddmStatus'} ) ] if $session{$uri.'?ddmStatus'};
+		$sql{type_id} = $session{$uri.'?type_id'} if $session{$uri.'?type_id'};
+		$sql{predefined} = $session{$uri.'?predefined'} if $session{$uri.'?predefined'};
 		$sql{'reference ilike'} = '%'.$param{reference}.'%' if $param{reference};
-		$sql{user_id} = $session{'/main/project/history.html?user_id'} if $session{'/main/project/history.html?user_id'};
-		$sql{salesrep_id} = $session{'/main/project/history.html?csr_id'} if $session{'/main/project/history.html?csr_id'};
+		$sql{user_id} = $session{$uri.'?user_id'} if $session{$uri.'?user_id'};
+		$sql{salesrep_id} = $session{$uri.'?salesrep_id'} if $session{$uri.'?salesrep_id'};
 
-		$$variable{Projects} = [ openprint::Project->find( %sql ) ];
+		$$variable{Projects} = [ openprint::Project->find(%sql) ];
 	} # end if
 
 	$$variable{Currency} = openprint::Currency::get_current() if ! $$variable{Currency};
@@ -90,6 +92,7 @@
 <tr%1$s> 
 	<td>&nbsp;</td>
 	<td colspan="7"><a href="/main/project/view.html?ProjectIndex=%2$d">%10$s</a></td>
+	<td class="User">%11$s</td>
 </tr>`,
 					$rowclass, $Project->id(), $Project->Company()->name(), $Project->reference(), 
 					( $Project->quantity(1) ? openprint::Currency::format( $Project->Currency()->convert_from( $Project->price(1) ) ) : '' ),
@@ -97,6 +100,7 @@
 					( $Project->quantity(3) ? openprint::Currency::format( $Project->Currency()->convert_from( $Project->price(3) ) ) : '' ),
 					$Project->status(), format_date( $Project->created_on() ),
 					$Project->summary(),
+					$Project->User()->name(),
 				);
 				$rowclass = $rowclass ? ' class="colRow"' : '';
 			} # end foreach Project
@@ -153,7 +157,9 @@ if ( $Project->can_view() ) {
 </tr>
 <tr%1$s> 
 	<td colspan="%9$d">&nbsp;</td>
-	<td colspan="7"><a href="/main/project/view.html?ProjectIndex=%2$d">%10$s</a></td>
+	<td colspan="5"><a href="/main/project/view.html?ProjectIndex=%2$d">%10$s</a></td>
+  <td class="User">%11$s</td>
+  <td class="checkbox"></td>
 </tr>`,
 					$rowclass, $Project->id(), $Project->reference(), 
 					( $Project->quantity(1) ? openprint::Currency::format( $Project->Currency()->convert_from( $Project->price(1) ) ) : '' ),
@@ -162,9 +168,7 @@ if ( $Project->can_view() ) {
 					$Project->status(), format_date($Project->created_on() ),
 					( ( ( ! $session{'/main/project/history.html?company_id'} ) and sets::isin( $session{user_type}, ['E','A'] ) ) ? '2' : '1' ),
 					$Project->summary(), 
-					( 
-						( $Project->predefined() and $_ = join('<br/>', map { $_->Category()->name() . ' ' . $_->name() } openprint::Product->find(project_id=>$Project->id()) ) ) ? '<br/>Predefined for ' . $_ : '<br/>Not assigned to a product.' 
-					),
+					$Project->User()->name(),
 				);
 } else {
                 push @html, sprintf(q`
@@ -183,15 +187,15 @@ if ( $Project->can_view() ) {
 </tr>
 <tr%1$s>
     <td colspan="%6$d">&nbsp;</td>
-    <td colspan="7">%7$s</td>
+    <td colspan="5">%7$s</td>
+    <td class="User">%8$s</td>
+    <td class="checkbox"></td>
 </tr>`,
                     $rowclass, $Project->id(), $Project->reference(),
                     $Project->status(), format_date($Project->created_on() ),
                     ( ( ( ! $session{'/main/project/history.html?company_id'} ) and sets::isin( $session{user_type}, ['E','A'] ) ) ? '2' : '1' ),
                     $Project->summary(),
-                    (
-                        ( $Project->predefined() and $_ = join('<br/>', map { $_->Category()->name() . ' ' . $_->name() } openprint::Product->find(project_id=>$Project->id()) ) ) ? '<br/>Predefined for ' . $_ : '<br/>Not assigned to a product.'
-                    ),
+										$Project->User()->name(),
                 );
 
 }
@@ -200,7 +204,7 @@ if ( $Project->can_view() ) {
 			return join( "\n", @html );
 		) ?>
 	</table>
-	<span class="Currency">All prices listed in <? echo ( new openprint::Currency( $session{Currency_id} )->name(); ) ?></span>
+	<span class="Currency">All prices listed in <? echo ( $openprint::Currency->name(); ) ?></span>
 	<br class="spacer"/>
 <p class="buttons">
 <? echo ( 
