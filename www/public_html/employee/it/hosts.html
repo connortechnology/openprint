@@ -21,19 +21,19 @@ Please select a host to view/edit.<br/>
 						value=>$session{$r->uri().'?ip'}, onkeydown=>q`if(event&&event.keyCode==13){load_host($('f1'));}`, with_clear=>1 ); ) ?>
 			</li>
 			<li class="hostname"><label for="hostname">Hostname</label>
-			<?echo( input( type=>"text", id=>"hostname", name=>"hostname",
-						value=>$session{$r->uri().'?hostname'}, oninput=>"to_hostname(this);",
-						onkeypress=>"if(event && event.keyCode == 13){load_host( $('f1') );}",
-						with_clear=>1,
+			<?echo( input( type=>'text', id=>'hostname', name=>'hostname',
+						value				=> $session{$r->uri().'?hostname'}, oninput=>'to_hostname(this);',
+						onkeypress	=> q`if(event && event.keyCode == 13){load_host( $('f1') );}`,
+						with_clear	=> 1,
 ); ) ?>
 			</li>
 			<li class="mac"><label for="mac">MAC</label>
-				<?echo( input( pattern=>"[0-9a-fA-F:\-%]*", type=>'text', id=>'mac', name=>"mac",
-							value=>$session{$r->uri().'?mac'},
-							onkeyup=>"this.value=this.value.replace(/[^0-9a-fA-F:\-%]/g,'');",
-							onkeydown=>"if(event && event.keyCode == 13){load_host( $('f1') );}",
-							oninput=>"this.onkeyup.call(this);", 
-							with_clear=>1 ); ) ?>
+				<?echo( input( pattern=>'[0-9a-fA-F:\\-%]*', type=>'text', id=>'mac', name=>'mac',
+							value			=> $session{$r->uri().'?mac'},
+							onkeyup		=> q`this.value=this.value.replace(/[^0-9a-fA-F:\\-%]/g,'');`,
+							onkeydown	=> q`if(event && event.keyCode == 13){load_host( $('f1') );}`,
+							oninput		=> 'this.onkeyup.call(this);', 
+							with_clear=> 1 ); ) ?>
 			</li>
 			<li class="type"><label>Type</label>
 				<? echo ( ssi::select( openprint::Host_Type->dropdown(order=>'lower(name)'), $session{'/employee/it/hosts.html?type_id'}, { name=>'type_id', prepend=>['','All'] } ); ) ?>
