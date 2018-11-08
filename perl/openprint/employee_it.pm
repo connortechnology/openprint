@@ -740,5 +740,53 @@ sub _syslog {
 		 );
 }
 
+sub is_ipv4 {
+  $_[0] =~ /^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}\.$/;
+}
+sub is_ipv6 {
+  $_[0] =~ /:/;
+}
+sub is_mac {
+  $_[0] =~ /^[:0-9A-F]{17}$/;
+}
+
+sub _interface {
+  if ( $param{action} ) {
+    if ($param{action} eq 'dhcp' ) {
+      if ( ! $param{mac} ) {
+      }
+      my @HIs = openprint::Host_Interface->find(mac=>$param{mac});
+      foreach my $Interface (@HIs) {
+        my $Host = $Interface->Host();
+        if ( 
+          (
+            (!$$Interface{ip})
+              or
+            (is_ipv4($Interface->ip()) and is_ipv4($param{ip}))
+              or
+            (is_ipv6($Interface->ip()) and is_ipv6($param{ip}))
+          )
+            and ( $Interface->ip() ne $param{ip} )
+        ) {
+          (new openprint::Log())->save( { Object=>$Host, note=>"IP Address changed from $$Interface{ip} to $param{ip}" . $Interface->Host()->link_to(), action=>'IP Changed' } );
+          $Interface->save({ip=>$param{ip}});
+        }
+        if ( $param{hostname} and is_mac($Host->name()) ) {
+          (new openprint::Log())->save( { Object => $Host, note=>"Name changed from $$Host{name} to $param{hostname}", action=>'Changed' } );
+          $Host->save({name=>$param{hostname}});
+        } else {
+          $log->debug("Not updating hostname from $$Host{name} to $param{hostname}");
+        }
+        $log->debug("Not updating HI from $$Interface{ip} to $param{ip}");
+      } # end foreach HI
+
+      foreach my $I ( openprint::Host_Interface->find( 'mac !=' => $param{mac}, ip=>$param{ip} ) ) {
+        $I->save({ip=>undef});
+        (new openprint::Log())->save( { Object => $I->Host(), note=>'IP Address removed because it is taken by host ' . $I->Host()->link_to(), action=>'IP Changed' } );
+      } # end foreach I
+    } #endif action
+  } # end if action
+}
+
 1;
 __END__
