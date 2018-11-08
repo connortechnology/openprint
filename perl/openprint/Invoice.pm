@@ -57,7 +57,7 @@ $serial = 'invoices_id_seq';
 
 %find_fields = (
 	po		=>	'(SELECT po FROM invoiced_products WHERE invoiced_products.invoice_id = invoices.id)',
-	sent_on	=>	'(SELECT created_on FROM invoice_logs WHERE invoice_id=invoices.id LIMIT 1)',
+	sent_on	=>	q`(SELECT date_time FROM logs WHERE object_id=invoices.id AND object_type_id=(SELECT id FROM Object_Types WHERE name='openprint::Invoice') LIMIT 1)`,
 	product_id	=>	'(SELECT product_id FROM invoiced_products WHERE invoice_id=invoices.id)',
 );
 
