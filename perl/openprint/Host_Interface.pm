@@ -117,8 +117,8 @@ sub vendor {
     if ( $_[0]{mac} ) {
       require openprint::OUI_Vendor;
       my $oui = $_[0]{mac};
-      $oui =~ s/\D//g;
-      $oui =~ s/^(\d{6}).*$/${1}000000/;
+      $oui =~ s/[^A-Fa-f0-9]//g;
+      $oui =~ s/^([A-Fa-f0-9]{6}).*$/${1}000000/;
 
       if ( my $Vendor = openprint::OUI_Vendor->find_one(oui=>$oui) ) {
         $_[0]{vendor} = $$Vendor{vendor_name};
