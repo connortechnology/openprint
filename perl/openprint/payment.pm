@@ -96,6 +96,11 @@ sub _unpaid {
 		my $Invoice = new openprint::Invoice( $param{invoice_id} );
 		$Invoice->del_Payment( $Payment );
 	} # end if
+  foreach my $k ( 'recipient_id', 'payor_id' ) {
+    if ( $param{$k} ) {
+      $$Payment{$k} = $param{$k};
+    }
+  }
 	$variable{Payment} = $Payment;
 } # end sub _paid
 
