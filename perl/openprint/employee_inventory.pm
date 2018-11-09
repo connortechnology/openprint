@@ -313,13 +313,15 @@ sub inventory_report {
 				$log->debug("Skid $$Skid{id} skipped because no quantity") if DEBUG;
 				next;
 			}
-			if ( $param{has_value} eq '1' and ! $C->cost() ) {
-				$log->debug("Skid $$Skid{id} skipped because no cost") if DEBUG;
-				next ;
-			}
-			if ( $param{has_value} eq '0' and $C->cost() ) {
-				$log->debug("Skid $$Skid{id} skipped because has cost") if DEBUG;
-				next ;
+			if ( defined($param{has_value}) ) {
+				if ( $param{has_value} eq '1' and ! $C->cost() ) {
+					$log->debug("Skid $$Skid{id} skipped because no cost") if DEBUG;
+					next ;
+				}
+				if ( $param{has_value} eq '0' and $C->cost() ) {
+					$log->debug("Skid $$Skid{id} skipped because has cost") if DEBUG;
+					next ;
+				}
 			}
 
 			my $Paper = $C->Paper();
@@ -2543,7 +2545,7 @@ sub manifest_import {
 					$variable{error} .= $Content->save({manifest_id=>$$Manifest{id}, type_id=>$$Type{id}, quantity=>$available_quantity });
 					
 				} elsif ( 
-					( my $manufacturers_id, my $location, my $received_on, my $available_quantity, my $available_lbs, my $hold_quantity, my $hold_lbs ) = 
+					my ( $manufacturers_id, $location, $received_on, $available_quantity, $available_lbs, $hold_quantity, $hold_lbs ) = 
 						$line =~ /^(\S+)\s+(\S+)\s+([\d\.]+)\s+(\S)RO\S+\s+(\S+)\s+(\S)RO\S+\s+([\d\.]+)$/ ) {
 					$log->debug("Line $line_count: width: $width, weight: $basis_weight, id: $manufacturers_id, qty: $available_quantity, lbs: $available_lbs");
 					$roll_count += 1;
@@ -3191,7 +3193,7 @@ $log->debug("Giving up on ssigning stock from system. as it has too many content
 					} # end while
 
 					$Skid = $RFIDTag->Skid();
-					my @Contents = $Skid->Contents();
+					@Contents = $Skid->Contents();
 					if ( @Contents == 1 ) {
 $log->debug("Assigning stock from previous roll.");
 						$ICE->save({ paper_id=>$Contents[0]->paper_id() });

@@ -1,7 +1,7 @@
 use strict;
 package openprint::Service;
 our @ISA = qw( openprint::Object );
-use vars qw($debug $table $serial %fields %find_fields %transforms %defaults %session $log $dbh $cache_field $cached %ServicePrices );
+use vars qw($debug $table $serial %fields %find_fields %transforms %defaults %session $log $dbh $cache_field $cached %ServicePrices %Configuration );
 
 require sql;
 require openprint::Object;
@@ -62,6 +62,41 @@ $serial = 'services_id_seq';
 		owner_id	=>	q`$openprint::config{owner_id}`,
 		deleted					=>	0,
 		);
+
+%Configuration = (
+		'1ColourImpression'	=> {
+			range_units => [ 'impressions', 'total impressions' ],
+			units	=>	[ 'per 1000', 'per 1000 impressions', 'per m', 'per hour' ],
+		},
+		'2ColourImpression'	=> {
+			range_units => [ 'impressions', 'total impressions' ],
+			units	=>	[ 'per 1000', 'per 1000 impressions', 'per m', 'per hour' ],
+		},
+		'3ColourImpression'	=> {
+			range_units => [ 'impressions', 'total impressions' ],
+			units	=>	[ 'per 1000', 'per 1000 impressions', 'per m', 'per hour' ],
+		},
+		'4ColourImpression'	=> {
+			range_units => [ 'impressions', 'total impressions' ],
+			units	=>	[ 'per 1000', 'per 1000 impressions', 'per m', 'per hour' ],
+		},
+		'5ColourImpression'	=> {
+			range_units => [ 'impressions', 'total impressions' ],
+			units	=>	[ 'per 1000', 'per 1000 impressions', 'per m', 'per hour' ],
+		},
+		'6ColourImpression'	=> {
+			range_units => [ 'impressions', 'total impressions' ],
+			units	=>	[ 'per 1000', 'per 1000 impressions', 'per m', 'per hour' ],
+		},
+		'7ColourImpression'	=> {
+			range_units => [ 'impressions', 'total impressions' ],
+			units	=>	[ 'per 1000', 'per 1000 impressions', 'per m', 'per hour' ],
+		},
+		'8ColourImpression'	=> {
+			range_units => [ 'impressions', 'total impressions' ],
+			units	=>	[ 'per 1000', 'per 1000 impressions', 'per m', 'per hour' ],
+		},
+);
 
 $cache_field = 'name';
 sub cache_field {

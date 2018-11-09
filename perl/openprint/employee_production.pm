@@ -1022,6 +1022,7 @@ $log->error("No service_id in service for project $$Project{id}, $service_id: " 
 sub docket_sheet {
 	openprint::print_project::summary( @_ );
 } # end sub docket_sheet
+
 sub summary {
 	openprint::print_project::summary( @_ );
 } # end sub summary
@@ -2437,7 +2438,7 @@ sub overview {
 		ssi::save_params( $r->uri(), (
 					( map { 'due_date_start_'. $_ } ( 'year','month','day' ) ),
 					( map { 'due_date_end_'. $_ } ( 'year','month','day' ) ),
-					'equipment_id', 'is_printed','is_proofs_out', 'is_ship_flat',
+					'equipment_id', 'is_printed','is_proofs_out', 'is_ship_flat','is_scheduled','is_client_approved','is_qa_approved',
 					) );
 	} # end if
 	ssi::setup_date_select( $r->uri(), 'due_date_start', -31 );

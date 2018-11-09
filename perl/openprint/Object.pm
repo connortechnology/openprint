@@ -119,10 +119,10 @@ $log->debug("Loading object $parent $id from cache and populating with data new 
 
 if ( 1 ) {
 	if ( ( $$self{id} = $id ) or $data ) {
-		if ( $debug or DEBUG_ALL ) {
-			my ( $caller, undef, $line ) = caller;
-			$log->debug("loading $parent $id from $caller:$line");
-		}
+		#if ( $debug or DEBUG_ALL ) {
+			#my ( $caller, undef, $line ) = caller;
+			#$log->debug("loading $parent $id from $caller:$line");
+		#}
 		$self->load( $data );
 	} # end if
 }
@@ -574,7 +574,7 @@ sub destroy {
 	return $local_dbh->errstr if $local_dbh->errstr;
 	delete $openprint::Object::cache{$config{db_name}}{$type}{join('-',@$self{@identified_by})};
 	eval 'if ( %'.$type.'::find_cache ) { %'.$type.'::find_cache = (); }';
-	return;
+	return '';
 } # end sub destroy
 
 sub Creator {
@@ -645,6 +645,8 @@ my $add_placeholder = ( ! ( $field =~ /\?/ ) ) ?  1 : 0;
 		return 'lower('.$field.$type.') = ?', $value;
 	} elsif ( $operator eq 'uc' ) {
 		return 'upper('.$field.$type.') = ?', $value;
+	} elsif ( $operator eq 'trunc' ) {
+		return 'trunc('.$field.$type.') = ?', $value;
 	} elsif ( $operator eq 'any' ) {
 		if ( ref $value eq 'ARRAY' ) {
 			return '(' . join(',', map { '?' } @{$value} ).") = ANY($field)", @{$value}; 
@@ -1012,6 +1014,7 @@ $log->error("returning nothing for $object_type $cache_field $$params{$cache_fie
 #$log->warn("Doing find_cache for $object_type $cache_ref $name_cache{$object_type}");
 
 			foreach my $O ( @results ) {
+				next if !$$O{$cache_field};
 				$cache_ref->{$$O{$cache_field}} = $O;
 #$log->warn("Doing find_cache for $object_type $$O{$cache_field}");
 			} 
@@ -1075,9 +1078,11 @@ $openprint::log->debug("Autoload $type $name $_[0] $_[1] $self $newvalue") if ! 
 						#return $$defaults{$name};
 					#}
 				#} # end if
-*{$name} = sub {
-      @_ > 1 ? $_[0]->{$name} = $_[1] : $_[0]->{$name};
-    };
+        # This creates a function entry in the object so that we don't call AUTOLOAD
+        # Instead of creating a new anonymous sub... shouldn't we point it at an existing sub?
+        *{$name} = sub {
+          @_ > 1 ? $_[0]->{$name} = $_[1] : $_[0]->{$name};
+        };
 				return $_[0]{$name};
 			} else {
 				my $field = (lc $name) . '_id';

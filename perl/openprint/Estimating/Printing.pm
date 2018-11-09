@@ -715,6 +715,7 @@ $log->debug("Adding special colour for $colour");
 		$project{NeedScoring} = 0;
 		$project{NeedFolding} = 0;
 	} # end if
+openprint::Estimating::Cutting::init( $Project, \%project );
 	$project{NeedUVCoating} = openprint::Estimating::UVCoating::signature_needs( $Project, $specs );
 	$project{NeedAqueous} = openprint::Estimating::Aqueous::signature_needs( $Project, $specs );
 	@$specs{'NeedFolding','NeedScoring'} = @project{'NeedFolding','NeedScoring'};
@@ -6634,10 +6635,11 @@ sub get_run_prices {
 
 	my @run_prices;
 	my $max_colours = $Press->specification('Number of Colours');
-	if ( ! $max_colours ) {
-		$log->error(" ***** FATAL ERROR: Could Not Get 'Number of Colours' for Press: $$Press{strid} ***********");
-		return \@run_prices;
-	} # end if
+	#if ( ! $max_colours ) {
+		#$log->error(" ***** FATAL ERROR: Could Not Get 'Number of Colours' for Press: $$Press{strid} ***********");
+		#return \@run_prices;
+	#} # end if
+
 	my $impression_service = 'ColourImpression';
 
 	if ( $$Imposition{runstyle} eq 'Web' or $$Imposition{runstyle} eq 'Perfecting' ) {
@@ -6646,8 +6648,11 @@ sub get_run_prices {
 		my $Impression_Service = $Services{$impression_service};
 		my $RunPrice;
 		if ( ! ( $Impression_Service and $RunPrice = $Impression_Service->get_Price( $impressions, $Press ) ) ) {
-			$impression_service = join('',$$Imposition{runstyle},'Impression',$side_two_colours,'/',$side_one_colours);
-			$Impression_Service = $Services{$impression_service};
+			if ( $side_one_colours != $side_two_colours ) {
+				# Try back then front
+				$impression_service = join('',$$Imposition{runstyle},'Impression',$side_two_colours,'/',$side_one_colours);
+				$Impression_Service = $Services{$impression_service};
+			}
 			if ( ! ( $Impression_Service and $RunPrice = $Impression_Service->get_Price( $impressions, $Press ) ) ) {
 				$Impression_Service = $Services{$$Imposition{runstyle}.'Impression'};
 				$RunPrice = $Impression_Service->get_Price( $impressions, $Press ) if $Impression_Service;
@@ -6678,7 +6683,7 @@ sub get_run_prices {
 				my $RunPrice = $Impression_Service->get_Price( $impressions, $Press );
 				$$RunPrice{Passes} = 1;
 				$$RunPrice{impressions} = $impressions;
-		$$RunPrice{side} = 'Front';
+				$$RunPrice{side} = 'Front';
 				push @run_prices, $RunPrice;
 			} # end if mod_colours
 		} # end if side one colours
@@ -6691,9 +6696,9 @@ sub get_run_prices {
 				my $Impression_Service = $Services{$run_colours.$impression_service};
 				my $RunPrice = $Impression_Service->get_Price( $impressions, $Press );
 				$$RunPrice{impressions} = $impressions;
-		$$RunPrice{side} = 'Back';
+				$$RunPrice{side} = 'Back';
 				foreach ( 1 .. $full_runs ) {
-				push @run_prices, $RunPrice;
+					push @run_prices, $RunPrice;
 				}
 			} # end if
 #
@@ -6702,7 +6707,7 @@ sub get_run_prices {
 				my $Impression_Service = $Services{$mod_colours.$impression_service};
 				my $RunPrice = $Impression_Service->get_Price( $impressions, $Press );
 				$$RunPrice{impressions} = $impressions;
-		$$RunPrice{side} = 'Back';
+				$$RunPrice{side} = 'Back';
 				push @run_prices, $RunPrice;
 			} # end if
 		} # end if side_two_colours
@@ -6793,6 +6798,10 @@ $log->error("Unknown units on Outside Wheel Slow Down ($$Slow_Down{units})");
 			$$run_price{MPrice} = $$run_price{Price} * 1000;
 
 		} elsif ( $$run_price{units} eq 'per hour' ) {
+			if ( $$run_price{range_units} and ( $$run_price{range_units} eq 'total impressions' ) and $side_one_colours and $side_two_colours ) {
+				my $r_price = $$run_price{Service}->get_Price( $impressions*2, $Press );
+				$$run_price{Price} = $$r_price{Price};
+			}
 			if ( $run_speed ) {
 				if ( int($run_speed) ) {
 # In Minutes, not hours

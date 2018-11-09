@@ -51,14 +51,14 @@ sub view {
 		if ( $param{Docket} ) {
 			$param{Docket} =~ s/\D//g;
 			if ( $param{Docket} ) {
-				if ( my @Projects = openprint::Project->find('docket'=>$param{Docket}) ) {
+				if ( my @Projects = openprint::Project->find(docket=>$param{Docket}) ) {
 					$project_index = $Projects[0]->id();
 				} # end if
 			} # end if
 		} elsif ( $param{docket} ) {
 			$param{docket} =~ s/\D//g;
 			if ( $param{docket} ) {
-				if ( my @Projects = openprint::Project->find('docket'=>$param{docket}) ) {
+				if ( my @Projects = openprint::Project->find(docket=>$param{docket}) ) {
 					$project_index = $Projects[0]->id();
 				} # end if
 			} # end if
@@ -243,25 +243,15 @@ $log->debug("Project complete: $complete " . $Service->to_string());
 						$Service->save({status=>'Ordered'});
 					} # end if
 				} elsif ( $param{rdbApproved} eq 'Y' ) {
-					if ( $param{duedate_year} ) {
-						if ( ! Date::Calc::check_date( @param{'duedate_year','duedate_month','duedate_day'} ) ) {
-							$variable{error} = 'There was an error saving the DueDate.  Please check that a real date was selected.';
-							$param{rdbApproved} = 'N';
+					if ( $param{duedate} and ( $param{duedate} ne $Project->due_date() ) ) {
+						$Project->due_date( $param{duedate} );
+						if ( ! $Project->save() ) {
+							$Project->add_to_log( @session{'company_id','user_id'}, "Duedate changed to $param{duedate}" );
+							send_duedate_change_notification( $project_index, $order_id );
 						} else {
-							# It's a valid duedate
-							my $duedate = sprintf('%.4d-%.2d-%.2d', @param{'duedate_year','duedate_month','duedate_day'} );
-
-							if ( $duedate ne $Project->due_date() ) {
-								$Project->due_date( $duedate );
-								if ( ! $Project->save() ) {
-									$Project->add_to_log( @session{'company_id','user_id'}, "Duedate changed to $duedate" );
-									send_duedate_change_notification( $project_index, $order_id );
-								} else {
-									$variable{error} .= 'Error saving duedate.';
-								} # end if
-							} # end if
-						} # end if valid due date
-					} # end if due date is specified
+							$variable{error} .= 'Error saving duedate.';
+						} # end if
+					} # end if
 
 					if ( (!$variable{error}) and ($status ne 'Approved') ) {
 						openprint::employee_production::mark_proofs_approved( $Project, $Service );
@@ -532,7 +522,7 @@ sub send_additional_charges_notifications {
 	return 'No one to notify.' if ! @Notifications;
 
 	my $CSR = new openprint::User( $Order->salesrep_id() );
-	my $Operator = new openprint::User( $session{user_id} );
+	my $Operator = $openprint::User;
 
 	@info{'CSRFirstName','CSRLastName','CSREmail'} = ( $CSR->firstname(), $CSR->lastname(), $CSR->email() );
 	@info{'CustomerFirstName','CustomerLastName','CustomerEmail'} = ( $Order->firstname(), $Order->lastname(), $Order->email() );

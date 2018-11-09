@@ -3,6 +3,12 @@ package sets;
 
 sub isin {
 
+	if ( ! defined $_[0] ) {
+		my ( $caller, undef, $line ) = caller;
+		$openprint::log->error("undefined needle in isin from $caller:$line");
+		return;
+	}
+
 	my %h;
     # Takes in a variable, and an array, and checks the array element by
     # element to see if the variable exists inside the array.
