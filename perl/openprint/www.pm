@@ -299,7 +299,7 @@ sub parse_page {
 	my $fourth = shift @thing if @thing;
 
 	if ( $filename eq 'getfile.html' ) {
-		my $sourceDir = $config{ProjectFilesPath} . openprint::upload_handler::get_destdir();
+		my $sourceDir = $config{ProjectFilesPath} . handlers::upload::get_destdir();
 		$variable{Download} = misc::load_file( $log, $sourceDir.$param{path}.'/'.$variable{Download});
 		$r->headers_out->{'Content-Disposition'} = "attachment; filename=\"$param{filename}\"";
 		$r->content_type( "application/octet-stream; name=\"$param{filename}\"" );
@@ -443,7 +443,7 @@ $log->debug("Running openprint::$module->$proc") if Debug;
 				}
 			} # end if
 		} # end if
-	} elsif ( sets::isin( $first, [ 'content', 'account' ] ) ) { # main
+	} elsif ( $first and  sets::isin( $first, [ 'content', 'account' ] ) ) { # main
 		my ( $proc ) = $filename =~ /(.*)\.\w*$/;
 		if ( $proc ) {
 			my $module = join('_',@path);
