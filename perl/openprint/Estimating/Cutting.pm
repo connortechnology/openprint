@@ -43,6 +43,11 @@ my @variables = (
     'txtRunTime1', 'txtRunTime2', 'txtRunTime3',
     'txtFinishedCalliper',
     );
+my $CuttingService;
+my $CuttingMakeReady;
+my $PileHandling;
+my $BladeCleaning;
+
 
 sub variables {
   my @v = @variables;
@@ -203,6 +208,13 @@ sub load_equipment {
 			);
 } # end sub load_equipment
 
+sub init {
+  my ( $Project, $calc_hash ) = @_;
+
+  $CuttingService = openprint::Service->find_one(name=>'Cutting');
+  $CuttingMakeReady = openprint::Service->find_one(name=>'CuttingMakeReady');
+}
+
 sub signature_calc_stock_cutting {
   my ( $Project, $specs, $qty_index, $Stocks ) = @_;
 
@@ -233,10 +245,10 @@ sub signature_calc_stock_cutting {
 
   my $services = $Project->services();
 
-  my $Cutting = openprint::Service->find_one(name=>'Cutting');
-  my $PileHandling = openprint::Service->find_one(name=>'CuttingPileHandling');
-  my $CuttingMakeReady = openprint::Service->find_one(name=>'CuttingMakeReady');
-  my $BladeCleaning = openprint::Service->find_one(name=>'Blade Cleaning');
+  $CuttingService = openprint::Service->find_one(name=>'Cutting') if ! $CuttingService;
+  $PileHandling = openprint::Service->find_one(name=>'CuttingPileHandling') if ! $PileHandling;
+  $CuttingMakeReady = openprint::Service->find_one(name=>'CuttingMakeReady') if ! $CuttingMakeReady;
+  $BladeCleaning = openprint::Service->find_one(name=>'Blade Cleaning') if ! $BladeCleaning;
 
   my $total = 0;
   my $total_mprice = 0;
@@ -350,8 +362,8 @@ sub signature_calc_stock_cutting {
         $openprint::log->debug("No PileHandling");
       } # end PileHandling
       my $service_price = 0;
-      if ( $Cutting ) {
-        my %ServicePrice = $Cutting->get_price( $sheets, $Equipment );
+      if ( $CuttingService ) {
+        my %ServicePrice = $CuttingService->get_price( $sheets, $Equipment );
         foreach my $cuts ( $width_cuts, $height_cuts ) {
           next if ! $cuts;
           $openprint::log->warn("Negative CUTS!") if $cuts < 1;
@@ -617,10 +629,10 @@ $openprint::log->debug("Stitching imposition: $stitching_imposition");
   my $Press = $Imposition->Press();
   my $output_format = $Press->specification('OutputFormat');
 
-  my $Cutting = openprint::Service->find_one(name=>'Cutting');
-  my $PileHandling = openprint::Service->find_one(name=>'CuttingPileHandling');
-  my $CuttingMakeReady = openprint::Service->find_one(name=>'CuttingMakeReady');
-  my $BladeCleaning = openprint::Service->find_one(name=>'Blade Cleaning');
+  $CuttingService = openprint::Service->find_one(name=>'Cutting') if ! $CuttingService;
+  $PileHandling = openprint::Service->find_one(name=>'CuttingPileHandling') if ! $PileHandling;
+  $CuttingMakeReady = openprint::Service->find_one(name=>'CuttingMakeReady') if ! $CuttingMakeReady;
+  $BladeCleaning = openprint::Service->find_one(name=>'Blade Cleaning') if ! $BladeCleaning;
 
   my $I = $Imposition->copy();
   my $trim_before_folding = 0;
@@ -687,11 +699,11 @@ $openprint::log->debug("Stitching imposition: $stitching_imposition");
         $sheets *= $$sig_specs{PageQuantity} if $$sig_specs{PageQuantity};
         my $piles = $liftDepth ? ceil( $sheets*$calliper/$liftDepth ) : $sheets;
         $results{Breakdown} .= '# of pre-folding cuts: ' . $folding_cuts . ' => ' .($folding_cuts * $sheets) . '<br/>';
-        my %ServicePrice = $Cutting->get_price( undef, $Equipment );
+        my %ServicePrice = $CuttingService->get_price( undef, $Equipment );
         if ( $ServicePrice{units} eq 'per cut' ) {
-          %ServicePrice = $Cutting->get_price( $sheets * $folding_cuts, $Equipment );
+          %ServicePrice = $CuttingService->get_price( $sheets * $folding_cuts, $Equipment );
         } else {
-          %ServicePrice = $Cutting->get_price( $sheets, $Equipment );
+          %ServicePrice = $CuttingService->get_price( $sheets, $Equipment );
         } # end if
         my $price;
         if ( $ServicePrice{units} eq 'per inch' ) {
@@ -984,12 +996,12 @@ $I->display();
     my $mprice = 0;
     my $price;
 
-    my %ServicePrice = $Cutting->get_price( undef, $Equipment );
+    my %ServicePrice = $CuttingService->get_price( undef, $Equipment );
     if ( %ServicePrice ) {
       if ( $ServicePrice{units} eq 'per cut' ) {
-        %ServicePrice = $Cutting->get_price( $sheets * $cuts, $Equipment );
+        %ServicePrice = $CuttingService->get_price( $sheets * $cuts, $Equipment );
       } else {
-        %ServicePrice = $Cutting->get_price( $sheets, $Equipment );
+        %ServicePrice = $CuttingService->get_price( $sheets, $Equipment );
       } # end if
     } # end if
 
