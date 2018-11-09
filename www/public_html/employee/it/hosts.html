@@ -5,7 +5,7 @@ function load_host( form, options ) {
 	div.innerHTML = 'Loading... Please wait.';
 	var p = form.serialize(true);
 	if ( options && options.order )
-		p.order = options.order;
+		p = p+'&order='+options.order;
 	
 	div.load('/employee/it/_hosts.html', p );
 } // end function load
@@ -18,14 +18,17 @@ Please select a host to view/edit.<br/>
 		<ul>
 			<li class="ip"><label for="ip">Host IP</label>
 			<? echo ( input( type=>'ip', id=>'ip', name=>'ip',
-						value=>$session{$r->uri().'?ip'}, onkeydown=>q`if(event&&event.keyCode==13){load_host($('f1'));}`, with_clear=>1 ); ) ?>
+						value=>$session{$r->uri().'?ip'},
+            onkeydown=>q`if(event&&event.keyCode==13){load_host($('f1'));}`,
+            with_clear=>1,
+            ); ) ?>
 			</li>
 			<li class="hostname"><label for="hostname">Hostname</label>
-			<?echo( input( type=>'text', id=>'hostname', name=>'hostname',
-						value				=> $session{$r->uri().'?hostname'}, oninput=>'to_hostname(this);',
+			<? echo ( input( type=>'text', id=>'hostname', name=>'hostname',
+						value=>$session{$r->uri().'?hostname'}, oninput=>'to_hostname(this);',
 						onkeypress	=> q`if(event && event.keyCode == 13){load_host( $('f1') );}`,
 						with_clear	=> 1,
-); ) ?>
+      ); ) ?>
 			</li>
 			<li class="mac"><label for="mac">MAC</label>
 				<?echo( input( pattern=>'[0-9a-fA-F:\\-%]*', type=>'text', id=>'mac', name=>'mac',
@@ -36,78 +39,71 @@ Please select a host to view/edit.<br/>
 							with_clear=> 1 ); ) ?>
 			</li>
 			<? echo ( 
-my $hosttype_dropdown = openprint::Host_Type->dropdown(order=>'lower(name)');
-if ( @{$hosttype_dropdown} > 2 ) {
-		'<li><label>Type</label>'.
-    ssi::select($hosttype_dropdown,
-        $session{'/employee/it/hosts.html?type_id'}, { name=>'type_id', prepend=>['','All'] } ).
-'</li>';
-}
-return;
- ) ?>
-<? echo ( 
-my @owner_ids = sql::execute( undef, undef, 'SELECT DISTINCT owner_id FROM Hosts');
-if ( @owner_ids > 1 ) {
-		return q`<li class="owner"><label>Owner</label>
-                <input type="text" onkeyup="filter_companies('owner_id', {name:this.value,selected_id:get_ddm_value($('owner_id'))});" class="filter" />
-                <select id="owner_id" name="owner_id" onchange="stop_filter_companies();">
-                    <option value="">All</option>`.
-make_drop_down( openprint::Company->dropdown(id=>[ @owner_ids, $openprint::Company->id() ]), $session{'/employee/it/hosts.html?owner_id'} ).
+        my $hosttype_dropdown = openprint::Host_Type->dropdown(order=>'lower(name)');
+        if ( @{$hosttype_dropdown} > 2 ) {
+          return join("\n",
+            '<li class="type"><label>Type</label>',
+            ssi::select($hosttype_dropdown, $session{$r->uri().'?type_id'}, { name=>'type_id', prepend=>['','All'] } ),
+            '</li>',
+          );
+        }
+        return;
+      ) ?>
+      <? echo ( 
+        my @owner_ids = sql::execute( undef, undef, 'SELECT DISTINCT owner_id FROM Hosts');
+        if ( @owner_ids > 1 ) {
+          return q`
+          <li class="owner"><label>Owner</label>
+            <input type="text" onkeyup="filter_companies('owner_id', {name:this.value,selected_id:get_ddm_value($('owner_id'))});" class="filter" />
+            <select id="owner_id" name="owner_id" onchange="stop_filter_companies();">
+              <option value="">All</option>`.
+make_drop_down( openprint::Company->dropdown(id=>[ @owner_ids, $openprint::Company->id() ]), $session{$r->uri().'?owner_id'} ).
 q`
-                </select>
-                </li>
-`;
-}
-return;
-) ?>
+            </select>
+          </li>
+        `;
+      }
+      return;
+    ) ?>
 		<li>
 			<label>Date Added</label>
-<? echo ( date_select_session( '/employee/it/hosts.html', 'created_on_start', { with_today => 1, with_clear=>1 } ); ) ?>
+<? echo ( date_select_session( $r->uri(), 'created_on_start', { with_today => 1, with_clear=>1 } ); ) ?>
 			to 
-<? echo ( date_select_session( '/employee/it/hosts.html', 'created_on_end', { with_today => 1, with_clear=>1 } ); ) ?>
+<? echo ( date_select_session( $r->uri(), 'created_on_end', { with_today => 1, with_clear=>1 } ); ) ?>
 		</li>
 		<li>
 			<label>Last Updated</label>
-<? echo ( date_select_session( '/employee/it/hosts.html', 'updated_on_start', { with_today => 1, with_clear=>1 } ); ) ?>
+<? echo ( date_select_session( $r->uri(), 'updated_on_start', { with_today => 1, with_clear=>1 } ); ) ?>
 			to 
-<? echo ( date_select_session( '/employee/it/hosts.html', 'updated_on_end', { with_today => 1, with_clear=>1 } ); ) ?>
+<? echo ( date_select_session( $r->uri(), 'updated_on_end', { with_today => 1, with_clear=>1 } ); ) ?>
 		</li>
 		<li class="blacklisted">
 			<label>Blacklisted</label>
-			<? echo ( radio( 'blacklisted', [ '1','Yes','0','No','','Both' ], $session{'/employee/it/hosts.html?blacklisted'} ); ) ?>
+      <? echo ( radio( 'blacklisted', [ '1','Yes','0','No','','Both' ], $session{$r->uri().'?blacklisted'} ); ) ?>
 		</li>
 		<li class="whitelisted">
 			<label>Whitelisted</label>
-			<? echo ( radio( 'whitelisted', [ '1','Yes','0','No','','Both' ], $session{'/employee/it/hosts.html?whitelisted'} ); ) ?>
+      <? echo ( radio( 'whitelisted', [ '1','Yes','0','No','','Both' ], $session{$r->uri().'?whitelisted'} ); ) ?>
 		</li>
 		<li>
 			<label>Monitored</label>
-			<? echo ( radio( 'monitored', [ '1','Yes','0','No','','Both' ], $session{'/employee/it/hosts.html?monitored'} ); ) ?>
+      <? echo ( radio( 'monitored', [ '1','Yes','0','No','','Both' ], $session{$r->uri().'?monitored'} ); ) ?>
 		</li>
 		<li>
 			<label>Online</label>
-			<? echo ( radio( 'online', [ '1','Yes','0','No','','Both' ], $session{'/employee/it/hosts.html?online'} ); ) ?>
+      <? echo ( radio( 'online', [ '1','Yes','0','No','','Both' ], $session{$r->uri().'?online'} ); ) ?>
 		</li>
 		<li>
 			<label>Has hostname</label>
-			<? echo ( radio( 'has_hostname', [ '1','Yes','0','No','','Both' ], $session{'/employee/it/hosts.html?has_hostname'} ); ) ?>
+      <? echo ( radio( 'has_hostname', [ '1','Yes','0','No','','Both' ], $session{$r->uri().'?has_hostname'} ); ) ?>
 		</li>
-<!--
-		<li>
-            <label>Assigned/Unassigned?</label>
-            <input type="checkbox" id="assigned" name="assigned" value="1" <? echo ( ssi::checked( $session{'/employee/it/hosts.html?assigned'} ); ) ?> />
-            <label class="radio" for="assigned">Assigned</label>
-            <input type="checkbox" id="notassigned" name="notassigned" value="1" <? echo ( ssi::checked( $session{'/employee/it/hosts.html?notassigned'} ); ) ?> />
-            <label class="radio" for="notassigned">Unassigned</label>
-		</li>
--->
 <? if ( $config{'RADIUS Support'} ) ?>
 	<li><label>Has RADIUS Auth</label>
-		<? echo ( radio( 'radius_auth', [ 1, 'Yes', 0, 'No', '', 'Both' ], $session{'/employee/it/hosts.html?radius_auth'} ); ) ?>
+    <? echo ( radio( 'radius_auth', [ 1, 'Yes', 0, 'No', '', 'Both' ], $session{$r->uri().'?radius_auth'} ); ) ?>
 	</li>
 <? endif ( $config{'RADIUS Support'} ) ?>
 	<li><label>Deleted</label>
-		<? echo ( radio( 'deleted', [ 1, 'Yes', 0, 'No', '', 'Both' ], $session{'/employee/it/hosts.html?deleted'} ); ) ?>
+    <? echo ( radio( 'deleted', [ 1, 'Yes', 0, 'No', '', 'Both' ], $session{$r->uri().'?deleted'} ); ) ?>
 	</li>
 		</ul>
 		<p class="buttons">

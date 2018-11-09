@@ -106,7 +106,7 @@ sub get {
 	my $cache = $cache{$openprint::config{db_name}};
 
 	if ( ! $$cache{$page} ) {
-    $openprint::log->debug("No cached Page Setting found for $page");
+    $openprint::log->debug("No cached Page Setting found for $page") if DEBUG;
 # Need to create one.
 		my @chunks = split('/', $page);
 		while ( @chunks ) {

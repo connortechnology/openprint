@@ -38,8 +38,8 @@ if ($opts->{help}) {
 } # end if
 
 my %defaults = (
-	config	=>	'/etc/openprint/syslog.conf',
-	port	=>	10514,
+	config  	=>	'/etc/openprint/syslog.conf',
+	port    	=>	10514,
 	protocol	=>	'udp',
 );
 foreach my $default ( keys %defaults ) {
@@ -54,7 +54,7 @@ if ( my $err = configuration::from_file($$opts{config}) ) {
 configuration::merge($opts);
 
 foreach my $param ( 'db_name','db_user','db_pass' ) {
-	die "$program: missing required --$param parameter" if ! $config{$param};
+	die "$program: missing required --$param parameter" if ! $openprint::config{$param};
 } # end foreach required-param
 
 
@@ -69,7 +69,7 @@ my %db_connect_info = (
 	password	=> $config{db_pass},
 );
 
-$dbh = sql::open_sql( $log, %db_connect_info );
+$openprint::dbh = sql::open_sql( $log, %db_connect_info );
 die "Couldn't connect to db: $$dbh{errstr}" if ! $dbh;
 configuration::init();
 configuration::from_file($$opts{config});
@@ -88,9 +88,9 @@ my @re = (
 		'^(\w{3} [ :0-9]{11}) [\._a-zA-Z0-9\-]+ sshd\[[0-9]+\]: (error: )?PAM: [[:digit:]]+ more authentication failures?; logname= uid=0 euid=0 tty=ssh ruser= rhost=(?<IP>[\._a-zA-Z0-9\-]+)(\s+user=\w+)?$',
 		'^(\w{3} [ :0-9]{11}) [\._a-zA-Z0-9\-]+ sshd\[[0-9]+\]: Disconnecting: Too many authentication failures for (invalid user )?[^[:space:]]* from (?<IP>[.[:digit:]]+) port [[:digit:]]+ ssh2 \[preauth\]$',
 		'^(\w{3} [ :0-9]{11}) [\._a-zA-Z0-9\-]+ sshd\[[0-9]+\]: (Connection closed by|Disconnected from) (invalid user [.@[:alnum:]]+ )?(?<IP>[.[:digit:]]+)( port [[:digit:]]+ \[preauth\])?$',
-		'^(\w{3} [ :0-9]{11}) [\._a-zA-Z0-9\-]+ sshd\[[0-9]+\]: Disconnecting invalid user [[:alnum:]]+ (?<IP>[.[:digit:]]+) port [[:digit:]]+: Change of username or service not allowed:',
+		'^(\w{3} [ :0-9]{11}) [\._a-zA-Z0-9\-]+ sshd\[[0-9]+\]: Disconnecting invalid user [[:alnum:]]* (?<IP>[.[:digit:]]+) port [[:digit:]]+: Change of username or service not allowed:',
 		'^(\w{3} [ :0-9]{11}) [\._a-zA-Z0-9\-]+ sshd\[[0-9]+\]: error: maximum authentication attempts exceeded for (invalid user )?[[:alnum:]]+ from (?<IP>[.[:digit:]]+) port [[:digit:]]+ ssh2 \[preauth\]$',
-		'^(\w{3} [ :0-9]{11}) [\._a-zA-Z0-9\-]+ sshd\[[0-9]+\]: Invalid user [.\?|@[:alnum:]-]+ from (?<IP>[0-9.]+)',
+		'^(\w{3} [ :0-9]{11}) [\._a-zA-Z0-9\-]+ sshd\[[0-9]+\]: Invalid user [.\?|@[:alnum:]-]* from (?<IP>[0-9.]+)',
 		'^(\w{3} [ :0-9]{11}) [\._a-zA-Z0-9\-]+ sshd\[[0-9]+\]: Connection closed by (?<IP>[0-9.]+):? \[preauth\]$',
 		'^(\w{3} [ :0-9]{11}) [\._a-zA-Z0-9\-]+ sshd\[[0-9]+\]: Received disconnect from (?<IP>[0-9.]+) (port [[:digit:]]+:)?[[:digit:]]+:[ \.,/:[:alnum:]]+\[preauth\]$',
 		'^(\w{3} [ :0-9]{11}) [\._a-zA-Z0-9\-]+ sshd\[[0-9]+\]: Protocol major versions differ for (?<IP>[0-9.]+) ',
@@ -98,8 +98,8 @@ my @re = (
 		'^(\w{3} [ :0-9]{11}) [\._a-zA-Z0-9\-]+ proftpd\[[0-9]+\]: [\.\-A-Za-z0-9]+ \([\.\-A-Za-z0-9]+\[(?<IP>[.:a-zA-Z0-9]+)\]\) \- Maximum login attempts \([0-9]+\) exceeded, connection refused$',
 		'^(\w{3} [ :0-9]{11}) [\._a-zA-Z0-9\-]+ proftpd\[[0-9]+\]: [\.\-A-Za-z0-9]+ \([\.\-A-Za-z0-9]+\[(?<IP>[.:a-zA-Z0-9]+)\]\) \- USER [\.\-A-Za-z0-9]+: no such user found from [0-9.]+\[[0-9.]+\] to [.:a-zA-Z0-9]+$',
 		'^(\w{3} [ :0-9]{11}) [\._a-zA-Z0-9\-]+ sshd\[[0-9]+\]: Failed keyboard-interactive/pam for invalid user [\.\-A-Za-z0-9]+ from (?<IP>[.:a-zA-Z0-9]+) port [0-9]+ ssh2$',
+		'^(\w{3} [ :0-9]{11}) [\._a-zA-Z0-9\-]+ dovecot: (imap|pop3)\-login: Disconnected \(auth failed, [0-9]+ attempts in [0-9]+ secs\): user=<[a-zA-Z@\.0-9]*>, method=[[:alnum:]-]+, rip=(?<IP>[\.0-9]+), lip=[\.0-9]+, session=<[^>]+>$',
 		'^(\w{3} [ :0-9]{11}) [\._a-zA-Z0-9\-]+ dovecot: (imap|pop3)\-login: Disconnected \(auth failed, 1 attempts\): user=<[a-zA-Z@\.0-9]*>, method=PLAIN, rip=(?<IP>[\.0-9]+), lip=[\.0-9]+?$',
-		'^(\w{3} [ :0-9]{11}) [\._a-zA-Z0-9\-]+ dovecot: (imap|pop3)\-login: Disconnected \(auth failed, [0-9]+ attempts in [0-9]+ secs\): user=<[a-zA-Z@\.0-9]*>, method=PLAIN, rip=(?<IP>[\.0-9]+), lip=[\.0-9]+, session=<[^>]+>$',
 		q`^(\w{3} [ :0-9]{11}) [\._a-zA-Z0-9\-]+ dovecot: imap\-login: Disconnected \(((auth failed, [0-9]+|no) attempts in|client didn't finish SASL auth, waited) [0-9]+ secs\): user=<[a-zA-Z@\.0-9]*>, (method=PLAIN, )?rip=(?<IP>[\.0-9]+), lip=[\.0-9]+, (TLS handshaking: SSL_accept\(\) failed: Unknown error, )?session=<[^>]+>$`,
 		'^(\w{3} [ :0-9]{11}) [\._a-zA-Z0-9\-]+ dovecot: pop3\-login: Aborted (l|L)ogin \(auth failed, [0-9]+ attempts in [0-9]+ secs\): user=<[a-zA-Z@\.0-9]*>, method=PLAIN, rip=(?<IP>[\.0-9]+), lip=[\.0-9]+, session=<[^>]+>$',
 		q`^(\w{3} [ :0-9]{11}) [\._a-zA-Z0-9\-]+ named\[[0-9]+\]: client (?<IP>[0-9.]+)#[0-9]+: (view [A-Za-z0-9]+: )?query \(cache\) '[./[:alnum:]]+' denied$`,
@@ -153,9 +153,7 @@ while(1) {
 		configuration::merge($opts);
 	} elsif ( $hup ) {
 		$log->hup();
-$log->debug("# of entries in host_counts: " . keys %host_counts);
-$log->debug("# of entries in Object_cache: " . keys %{$openprint::Object::cache{$config{db_name}}} );
-$log->debug("# of entries in Object_name_cache: " . keys %{$openprint::Object::name_cache{$config{db_name}}} );
+    $log->debug("# of entries in host_counts: " . keys %host_counts);
 		configuration::init( );
 		configuration::from_file($$opts{config});
 		configuration::merge($opts);
@@ -267,14 +265,22 @@ $log->debug("# of entries in Object_name_cache: " . keys %{$openprint::Object::n
 				if ( ! $host_counts{$ip} ) {
 					$log->debug("$ip not in host_counts, adding it");
 					my $Host;
-					my $HI = openprint::Host_Interface->find_one(ip=>$ip);
+          # May return a subnet
+					my $HI = openprint::Host_Interface->find_one('ip >>'=>$ip);
 					if ( ! $HI ) {
 						$HI = new openprint::Host_Interface();
 						$Host = new openprint::Host();
 						$Host->save({hostname=>$hostname});
 						$HI->save({host_id=>$$Host{id}, ip=>$ip});
 					} else {
-						$Host = $HI->Host();
+            if ( $HI->is_subnet() ) {
+              $Host = $HI->Host()->copy();
+              $Host->save({hostname=>$hostname, description=>$Host->description().' was ' . $Host->hostname()});
+              my $HI = $HI->copy();
+              $HI->save({host_id=>$$Host{id}, ip=>$ip});
+            } else {
+              $Host = $HI->Host();
+            }
 					} # end if      
 					$host_counts{$ip} = $Host;
 				} # end if

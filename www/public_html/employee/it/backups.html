@@ -3,14 +3,14 @@ function load_backup( form, options ) {
   LoadContent( 'Results', '/employee/it/_backups.html' );
 } // end function load
 </script>
-<? echo ( include('/includes/error_reporting.html'); ) ?>
+<?include('/includes/error_reporting.html') ?>
 Please select a backup to view/edit.<br/>
 <form id="f1" name="f1" method="post" action="backups.html">
 	<input type="hidden" name="action"/>
 	<fieldset class="filters"><legend>Search Criteria</legend>
 		<ul>
       <li><label>Type</label>
-        <? echo ( ssi::select( openprint::Backup_Type->dropdown(order=>'lower(name)'), $session{'/employee/it/backups.html?type_id'}, { name=>'type_id', prepend=>['','All'] } ); ) ?>
+        <? echo ( ssi::select( [ map { $_, $openprint::Backups::types{$_} } sort { $a cmp $b } keys %openprint::Backups::types], $session{$r->uri().'?type'}, { name=>'type', prepend=>['','All'] } ); ) ?>
       </li>
       <li><label>Owner</label>
         <input type="text" onkeyup="filter_companies('owner_id', {name:this.value,selected_id:get_ddm_value($('owner_id'))});" class="filter" />
@@ -24,18 +24,18 @@ make_drop_down( openprint::Company->dropdown(id=>[ @owner_ids, $openprint::Compa
       </li>
       <li>
         <label>Date Added</label>
-  <? echo ( date_select_session( '/employee/it/backups.html', 'created_on_start', { with_today => 1, with_clear=>1 } ); ) ?>
+        <? echo ( date_select_session( $r->uri(), 'created_on_start', { with_today => 1, with_clear=>1 } ); ) ?>
         to 
-  <? echo ( date_select_session( '/employee/it/backups.html', 'created_on_end', { with_today => 1, with_clear=>1 } ); ) ?>
+        <? echo ( date_select_session( $r->uri(), 'created_on_end', { with_today => 1, with_clear=>1 } ); ) ?>
       </li>
       <li>
         <label>Last Updated</label>
-  <? echo ( date_select_session( '/employee/it/backups.html', 'updated_on_start', { with_today => 1, with_clear=>1 } ); ) ?>
+        <? echo ( date_select_session( $r->uri(), 'updated_on_start', { with_today => 1, with_clear=>1 } ); ) ?>
         to 
-  <? echo ( date_select_session( '/employee/it/backups.html', 'updated_on_end', { with_today => 1, with_clear=>1 } ); ) ?>
+        <? echo ( date_select_session( $r->uri(), 'updated_on_end', { with_today => 1, with_clear=>1 } ); ) ?>
       </li>
     <li><label>Deleted</label>
-      <? echo ( radio( 'deleted', [ 1, 'Yes', 0, 'No', '', 'Both' ], $session{'/employee/it/backups.html?deleted'} ); ) ?>
+      <? echo ( radio( 'deleted', [ 1, 'Yes', 0, 'No', '', 'Both' ], $session{$r->uri().'?deleted'} ); ) ?>
     </li>
 		</ul>
 		<p class="buttons">

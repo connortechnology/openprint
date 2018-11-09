@@ -108,6 +108,8 @@ CREATE TABLE public.systemevents (
     systemid integer
 );
 
+create index systemevents_receivedat_idx on systemevents(receivedat);
+
 
 ALTER TABLE public.systemevents OWNER TO rsyslog;
 

@@ -82,3 +82,5 @@ INSERT INTO configuration VALUES ('bitcoin_user', '', 'text', 'Bitcoin Server Us
 INSERT INTO configuration VALUES ('bitcoin_password', '', 'text', 'Bitcoin Server Password', 'Bitcoin Settings');
 INSERT INTO configuration VALUES ('bitcoin_account', '', 'text', 'Bitcoin Account', 'Bitcoin Settings');
 insert into Configuration values ('encrypt_passwords', '', 'text', 'Whether to use encrypted passwords.', 'System Settings');
+insert into Configuration values ('DHCP_Server_Support', '1', 'boolean', 'Include features supporting DHCP Server Integration.', 'Features / Integrations');
+

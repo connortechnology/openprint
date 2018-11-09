@@ -55,6 +55,8 @@ $serial = 'hosts_id_seq';
 	type_id		=>	'type_id',
 	type			=>	undef,
 	offline_seconds	=>	'offline_seconds',
+	max_ping_time	=>	'max_ping_time',
+  min_ping_frequency  =>  'min_ping_frequency',
 	state_changed_on	=>	'state_changed_on',
 	notified			=>	'notified',
 	notify_frequency	=>	'notify_frequency',
@@ -69,27 +71,31 @@ $serial = 'hosts_id_seq';
 %transforms = (
 	id			=>	[ 's/\D//g' ],
 	notify_frequency	=>	[ 's/\D//g' ],
+	min_ping_frequency	=>	[ 's/\D//g' ],
+	max_ping_time	=>	[ 's/\D//g' ],
 	hostname	=>	[ 's/\s//g' ],
 	description	=>	[ 's/^\s+//', 's/\s+$//', 's/\s\s+/ /g' ],
 );
 %defaults = (
-	'blacklist'	=>	0,
-	'whitelist'	=>	0,
-	'monitored'	=>	0,
-	'hostname'	=>	undef,
-	'created_on'	=>	q`'NOW()'`,
-	'updated_on'	=>	q`'NOW()'`,
+	blacklist 	=>	0,
+	whitelist 	=>	0,
+	monitored 	=>	0,
+	hostname  	=>	undef,
+	created_on  =>	q`'NOW()'`,
+	updated_on	=>	q`'NOW()'`,
 	resolved_on		=>	undef,
-	'count'		=>	0,
-	'deleted'	=>	0,
-	'online'	=>	undef,
-	'type_id'	=>	undef,
-	'state_changed_on'	=>	undef,
-	'offline_seconds'	=>	undef,
-	'notified'=>	0,
+	count		=>	0,
+	deleted	=>	0,
+	online	=>	undef,
+	type_id	=>	undef,
+	state_changed_on	=>	undef,
+	offline_seconds	=>	undef,
+	notified      =>	0,
 	location_id		=>	undef,
 	notify_frequency	=>	undef,
 	owner_id			=>	undef,
+  max_ping_time =>  1000,
+  min_ping_frequency  =>  60,
 );
 
 sub name {
@@ -396,7 +402,7 @@ $openprint::log->debug("Swtiching to https");
 } # end sub reboot
 
 sub is_wap {
-	return sets::isin( $_[0]->type(), [ 'WG602v3', 'WPN802','TP-Link Archer C7' ] );
+	return ( $_[0]{type_id} and $_[0]->type() and sets::isin( $_[0]->type(), [ 'WG602v3', 'WPN802','TP-Link Archer C7' ] ) );
 }
 
 sub url {
@@ -431,7 +437,7 @@ sub Owner {
   return new openprint::Company( $_[0]{owner_id} );
 }
 sub can_reboot {
-  if ( sets::isin( $_[0]->type(), [ 'AIC500', 'AIC500W', 'AIC777W', 'AIC747W','AIC250W','M8640','TL-WPA4220','D-Link DAP1522','DGS-1224T','DLink DCS-910','TP-Link Archer C7',
+  if ( $_[0]{type_id} and $_[0]->type() and sets::isin( $_[0]->type(), [ 'AIC500', 'AIC500W', 'AIC777W', 'AIC747W','AIC250W','M8640','TL-WPA4220','D-Link DAP1522','DGS-1224T','DLink DCS-910','TP-Link Archer C7',
         'DCS932L','DCS-933L','WG602v3' ] ) ) {
     return !undef;
   }

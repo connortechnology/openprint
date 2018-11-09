@@ -2,20 +2,6 @@ use strict;
 use warnings;
 require openprint::Object;
 
-package openprint::Backup_Type;
-our @ISA = qw( openprint::Object );
-use vars qw( $debug $table $serial %fields %transforms %defaults %types );
-$debug = 0;
-$table = 'backup_types';
-$serial = 'backup_types_id_seq';
-%fields = (
-	id			=>	'id',
-	name		=>	'name',
-);
-%transforms = (
-	id		=>	[ 's/\D//g' ],
-	name	=>	[ 's/^\s+//', 's/\s+$//', 's/\s\s+/ /g' ],
-);
 
 package openprint::Backup;
 our @ISA = qw( openprint::Object );
@@ -36,8 +22,7 @@ $serial = 'backups_id_seq';
 	updated_on	=>	'updated_on',
 	deleted		  =>	'deleted',
 	host_id		  =>	'host_id',
-	type_id		  =>	'type_id',
-	type			  =>	undef,
+	type			  =>	'type',
 	lastran_on	=>	'lastran_on',
 	owner_id		=>	'owner_id',
   keep        =>  'keep',
@@ -64,6 +49,13 @@ $serial = 'backups_id_seq';
   keep          =>  undef,
 );
 
+%types = (
+  daily => 'Daily',
+  hourly =>  'Hourly',
+  weekly =>  'Weekly',
+  monthly => 'Monthly',
+);
+
 sub destroy {
 	my $error;
 	#require openprint::Log;
@@ -75,26 +67,6 @@ sub destroy {
 	$error .= $_[0]->SUPER::destroy();
 	return $error;
 } # end sub destroy
-
-sub Type {
-	return new openprint::Backup_Type( $_[0]{type_id} );
-} # end sub Type
-
-sub type {
-	if ( @_ > 1 ) {
-		my $Type = openprint::Backup_Type->find_one('name lc'=> lc openprint::Backup_Type->transform( name=>$_[1]) );
-		if ( ! $Type ) {
-			$Type = new openprint::Backup_Type();
-			$Type->save({name=>$_[1]});
-		} # end if
-		$_[0]{type_id} = $Type->id();
-		$_[0]{type} = $Type->name();
-	} # end if @_ > 1
-	if ( ! defined $_[0]{type} ) {
-		$_[0]{type} = new openprint::Backup_Type( $_[0]{type_id} )->name();
-	} # end if
-	return $_[0]{type};
-} # end sub type
 
 sub link_to {
 	return sprintf('<a href="/employee/it/backup.html?backup_id=%d">%s</a>', 
@@ -137,13 +109,13 @@ sub run {
 
   my $keep = $_[0]{keep};
   if ( ! $keep ) {
-    if ( $type eq 'Daily' ) {
+    if ( $type eq 'daily' ) {
       $keep = 7;
-    } elsif ( $type eq 'Hourly' ) {
+    } elsif ( $type eq 'hourly' ) {
       $keep = 12;
-    } elsif ( $type eq 'Weekly' ) {
+    } elsif ( $type eq 'weekly' ) {
       $keep = 4;
-    } elsif ( $type eq 'Monthly' ) {
+    } elsif ( $type eq 'monthly' ) {
       $keep = 12;
     } else {
       $keep = 5;

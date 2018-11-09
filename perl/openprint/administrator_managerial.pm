@@ -667,11 +667,6 @@ sub company_profiles {
 		$Company->undelete();
 	} # end if btnFunction
 
-	if ( ! $index ) {
-		$index = $session{company_id};
-		$Company = new openprint::Company($index);
-	} # end if
-
 	my @customers_categories;
 	if ( $index ) {
 		my $shipping_address = $Company->get_shipping_address();
