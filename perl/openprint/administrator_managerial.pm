@@ -129,40 +129,71 @@ sub _configuration_popup {
 } # end sub
 
 sub taxes {
+	if ( $param{action} ) {
+		if ( $param{action} eq 'Delete' ) {
+			my $ac = sql::start_transaction( $dbh );
+			foreach my $id ( ref $param{tax_ids} eq 'ARRAY' ? @{$param{tax_ids}} : $param{tax_ids} ) {
+				my $Tax = new openprint::Tax( $id );
+				(new openprint::Log())->save({
+						Object=>$Tax,
+						action=>'Delete Tax',
+						note	=>sprintf('Country: %s | State: %s', $Tax->country(), $Tax->state() )
+						});
+				$variable{error} .= $Tax->delete();
+			} # end foreach
+			sql::end_transaction( $dbh, $ac );
+		} elsif ( $param{action} eq 'Save' ) {
+			my $ac = sql::start_transaction( $dbh );
+			foreach my $Tax ( openprint::Tax->find() ) {
+				$variable{error} .= $Tax->save({
+						name			=>	$param{'name-'.$Tax->id()},
+						rate			=>	$param{'rate-'.$Tax->id()},
+						period_start	=> ( Date::Calc::check_date( map { @param{'period_start-'.$$Tax{id}.'_'.$_} } ( 'year','month','day' ) ) 
+								?
+								sprintf('%.4d-%.2d-%.2d', map { @param{'period_start-'.$$Tax{id}.'_'.$_} } ( 'year','month','day' ))
+								: undef ),
+						period_end	=> ( Date::Calc::check_date( map { @param{'period_end-'.$$Tax{id}.'_'.$_} } ( 'year','month','day' ) )
+								? sprintf('%.4d-%.2d-%.2d', map { @param{'period_end-'.$$Tax{id}.'_'.$_} } 'year','month','day' ) : undef ),
+						});
+				(new openprint::Log())->save({
+						Object=>$Tax,
+						action=>'Save Tax',
+						note	=>sprintf('Country: %s | State: %s', $Tax->country(), $Tax->state() )
+						});
+			} # end foreach Tax
+			if ( $param{'rate-New'} ) {
+				my $Tax = new openprint::Tax();
+				$variable{error} .= $Tax->save({
+						name					=>	$param{'name-New'},
+						rate					=>	$param{'rate-New'},
+						country				=>	$param{'country-New'},
+						state					=>	$param{'state-New'},
+						period_start	=> ( Date::Calc::check_date( @param{'period_start-New_year','period_start-New_month','period_start-New_day'} ) ? sprintf('%.4d-%.2d-%.2d', @param{'period_start-New_year','period_start-New_month','period_start-New_day'} ) : undef ),
+						period_end		=> ( Date::Calc::check_date( @param{'period_end-New_year','period_end-New_month','period_end-New_day'} ) ? sprintf('%.4d-%.2d-%.2d', @param{'period_end-New_year','period_end-New_month','period_end-New_day'} ) : undef ),
+						});
+				(new openprint::Log())->save({
+						Object=>$Tax,
+						action=>'Save Tax',
+						note	=>sprintf('Country: %s | State: %s', $Tax->country(), $Tax->state() )
+						});
+			} # end if New Tax
 
-	if ( $param{btnFunction} eq 'Delete' ) {
-		my $ac = sql::start_transaction( $dbh );
-		foreach my $id ( ref $param{tax_ids} eq 'ARRAY' ? @{$param{tax_ids}} : $param{tax_ids} ) {
-			my $Tax = new openprint::Tax( $id );
-			openprint::logs::insertLogRecord('74', sprintf('Country: %s | State: %s', $Tax->country(), $Tax->state() ) );
-			$variable{error} .= $Tax->delete();
-		} # end foreach
-		sql::end_transaction( $dbh, $ac );
-	} elsif ( $param{btnFunction} eq 'Save' ) {
-		my $ac = sql::start_transaction( $dbh );
-		foreach my $Tax ( openprint::Tax->find() ) {
-			$variable{error} .= $Tax->save({
-				'name'			=>	$param{'name-'.$Tax->id()},
-				'rate'			=>	$param{'rate-'.$Tax->id()},
-				'period_start'	=> ( Date::Calc::check_date( @param{'period_start-'.$$Tax{id}.'_year','period_start-'.$$Tax{id}.'_month','period_start-'.$$Tax{id}.'_day'} ) ? sprintf('%.4d-%.2d-%.2d', @param{'period_start-'.$$Tax{id}.'_year','period_start-'.$$Tax{id}.'_month','period_start-'.$$Tax{id}.'_day'} ) : undef ),
-				'period_end'	=> ( Date::Calc::check_date( @param{'period_end-'.$$Tax{id}.'_year','period_end-'.$$Tax{id}.'_month','period_end-'.$$Tax{id}.'_day'} ) ? sprintf('%.4d-%.2d-%.2d', @param{'period_end-'.$$Tax{id}.'_year','period_end-'.$$Tax{id}.'_month','period_end-'.$$Tax{id}.'_day'} ) : undef ),
-				});
-		} # end foreach Tax
-		if ( $param{'rate-New'} ) {
-			my $Tax = new openprint::Tax();
-			$variable{error} .= $Tax->save({
-				'name'			=>	$param{'name-New'},
-				'rate'			=>	$param{'rate-New'},
-				'country'		=>	$param{'country-New'},
-				'state'			=>	$param{'state-New'},
-				'period_start'	=> ( Date::Calc::check_date( @param{'period_start-New_year','period_start-New_month','period_start-New_day'} ) ? sprintf('%.4d-%.2d-%.2d', @param{'period_start-New_year','period_start-New_month','period_start-New_day'} ) : undef ),
-				'period_end'	=> ( Date::Calc::check_date( @param{'period_end-New_year','period_end-New_month','period_end-New_day'} ) ? sprintf('%.4d-%.2d-%.2d', @param{'period_end-New_year','period_end-New_month','period_end-New_day'} ) : undef ),
-				});
-		} # end if New Tax
-
-		sql::end_transaction( $dbh, $ac );
-		$variable{ExternalRedirect} = '/administrator/managerial/taxes.html';
-	} # end if
+			sql::end_transaction( $dbh, $ac );
+			$variable{ExternalRedirect} = '/administrator/managerial/taxes.html';
+		} elsif ( $param{action} eq 'Download' ) {
+			my @header = ( 'Name', 'Period Start', 'Period End', 'Canada', 'Province', 'Rate' );
+			my @data;
+			foreach my $Tax ( openprint::Tax->find() ) {
+				push @data, $Tax->name(),
+						 ssi::format_csv_date( $Tax->period_start() ),
+						 ssi::format_csv_date( $Tax->period_end() ),
+						 $Tax->country(),
+						 $Tax->state(),
+						 $Tax->rate();
+			}
+			misc::export_csv( $r, $log, \%variable, 'taxes.csv', \@header, \@data );
+		} # end if
+	} # end if action
 } # end sub taxes
 
 sub currency {
