@@ -157,17 +157,31 @@ while(1) {
         my $ping = $ping[0];
         if ( $ping and $HI->is_subnet() ) {
           if ( ! openprint::Host_Interface->find_one(ip=>$ip->ip()) ) {
-            # We are pinging a subnet, so now we duplicate the to create a new entry for this ip
-            my $new_Host = $HI->Host()->copy();
-            
-            $new_Host->save({hostname=>$Host->hostname().' '.$ip->ip(), type_id=>undef});
+
             my $new_HI = $HI->copy();
-            $new_HI->save({host_id=>$$new_Host{id}, ip=>$ip->ip()});
-            foreach my $N ( $Host->Notifications() ) {
-              $N->copy()->save({host_id=>$$new_Host{id}});
+            $$new_HI{ip} = $ip->ip();
+
+            my $mac = $new_HI->get_mac();
+            if ( $mac and my $existing_HI = openprint::Host_Interface->find_one(mac=>$mac) ) {
+              (new openprint::Log())->save( {
+                  object  => $existing_HI->Host(),
+                  note  => "IP Address changed from $$existing_HI{ip} to $$new_HI{ip} by ip_monitor subnet scanning.",
+                  action  => 'IP Changed'
+                } );
+              $existing_HI->save({ip=>$ip->ip()});
+
+            } else {
+              # We are pinging a subnet, so now we duplicate the to create a new entry for this ip
+              my $new_Host = $HI->Host()->copy();
+
+              $new_Host->save({hostname=>$Host->hostname().' '.$ip->ip(), type_id=>undef});
+              $new_HI->save({host_id=>$$new_Host{id}});
+              foreach my $N ( $Host->Notifications() ) {
+                $N->copy()->save({host_id=>$$new_Host{id}});
+              }
+              # Send notification?
+              notify_new_host_detected($new_Host);
             }
-            # Send notification?
-            notify_new_host_detected($new_Host);
             next;
           }
         }
@@ -253,7 +267,7 @@ while(1) {
 
     $Host->unlock();
 
-    if ( $Host->online() ) {
+    if ( $Host->online() and $$Host{type_id} ) {
       if ( $Host->type() =~ /DCS\-910/ ) {
         require LWP;
         my $browser = LWP::UserAgent->new();
