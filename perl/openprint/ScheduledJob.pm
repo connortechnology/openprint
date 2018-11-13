@@ -191,7 +191,7 @@ sub comment {
 			$comment .= openprint::Estimating::Stitching::schedule_summary( $Project, $$self{service_id}[0], $service_specs, $Project->ordered_quantity_index() )
 		} else {
 			my $service_specs = openprint::service::get_specs_ref( $Project, $$self{service_id}[0] );
-			$comment = openprint::Estimating::Printing::get_colour_description($Project, $service_specs);
+			$comment = openprint::Estimating::Printing::get_colour_description_no_coverage($Project, $service_specs);
 			my $Equipment = $self->Equipment();
 
 			if ( $Equipment->specification('Folding Capable') eq 'When Printing' ) {
@@ -322,7 +322,7 @@ sub get_li {
 		my $n = $Project->Company()->name();
 		$n =~ s/The //gi;
 		$html .= ssi::htmlize( $n );
-		$html .= ' (<span class="CSR">'.$Project->Company()->CSR()->firstname().'</span>)';
+		$html .= ' (<span class="CSR">'.$Project->Company()->CSR()->firstname().'</span>)' if $$Project{company_id} != $openprint::config{owner_id};
 
 		my $Proofs_Service = $Project->Service( $$services{Proofs}[0] ) if $$services{Proofs} and @{$$services{Proofs}};
 		if ( $Proofs_Service ) {
@@ -360,8 +360,11 @@ sub get_li {
 		$html .= sprintf( q`<div class="Stock" onclick="popup_window( '/employee/production/_stock_popup.html', 'schedule_id=%1$d', {width:475} );">%2$s</div>`, $$self{id}, $self->stock() );
 		}
 		if ( $$self{project_id} ) {
-			$html .= sprintf(q`<input type="hidden" name="ScheduleDate-%1$d" id="ScheduleDate-%1$d" value="%2$s"/>`, $$self{id}, $Project->due_date() );
-			$html .= sprintf( q`<span class="Forms" onclick="job_popup('%1$d');">%2$d %3$s</span>`, $$self{id}, $self->forms(), 'form'.($self->forms() > 1 ? 's' : '') );
+			$html .= sprintf(q`
+					<input type="hidden" name="ScheduleDate-%1$d" id="ScheduleDate-%1$d" value="%2$s"/>
+					<span class="Forms" onclick="job_popup('%1$d');">%3$d %4$s</span>
+					`, $$self{id}, $Project->due_date(), $self->forms(), 'form'.($self->forms() > 1 ? 's' : '')
+					);
 			if ( $Equipment->smartscheduling() ) {
 				$html .= sprintf( q`<span class="Impressions" onclick="job_popup('%1$d');">%2$d imps @ %3$d/Hr</span>`, $$self{id}, $self->impressions(), $self->speed() );
 			} else {
