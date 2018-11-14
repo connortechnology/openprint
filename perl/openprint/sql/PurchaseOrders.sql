@@ -46,6 +46,7 @@ CREATE TABLE PurchaseOrders (
 	shipto_email		text,
 	manifest_id			INTEGER,
 	cancelled			BOOLEAN NOT NULL default false,
+	do_not_pay			BOOLEAN NOT NULL default false,
 	PRIMARY KEY (id)
 );
 
