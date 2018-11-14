@@ -31,29 +31,30 @@
 		</p>
 	<input type="hidden" name="btnFunction"/>
 	<fieldset>
-		<p><label>ID</label><? echo ( $$variable{Campaign}->id() ) ?></p>
-		<p><label>Name</label><input type="text" name="name" value="<? echo ( $$variable{Campaign}->name() ) ?>" /></p>
-		<p><label>Query</label><textarea name="query" rows="<? echo ( ssi::count_lines($$variable{Campaign}->query()); ) ?>" onkeyup="textarea_resize(this);" ><? echo ($$variable{Campaign}->query()) ?></textarea></p>
-		<p><label>Email From</label><input type="text" name="email_from" value="<? hecho ( $$variable{Campaign}->email_from() ) ?>"  /></p>
-		<p><label>Override To</label><input type="text" name="email_to" value="<? hecho ( $$variable{Campaign}->email_to() ) ?>"  /></p>
-		<p><label>Email Subject</label><input type="text" name="email_subject" value="<? echo ( $$variable{Campaign}->email_subject() ) ?>"  /></p>
-		<p><label>Template</label><select name="template_id"><option value="">select</option><? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::EmailTemplate->find('order'=>'lower(name)') ], $$variable{Campaign}->template_id() ); ) ?></select></p>
-		<p><label>Email TEXT Body</label><textarea wrap="physical" name="email_text" rows="<? echo ( count_lines( $$variable{Campaign}->email_text() ) ) ?>" onkeyup="textarea_resize( this );" ><? echo ( ssi::html_escape( $$variable{Campaign}->email_text() ); ) ?></textarea></p>
-		<p><label>Email HTML Body</label><textarea wrap="physical" class="mce" name="email_html" rows="<? echo ( count_lines( $$variable{Campaign}->email_html() ) ) ?>" onkeyup="textarea_resize( this );" ><? echo ( ssi::html_escape( $$variable{Campaign}->email_html() ); ) ?></textarea></p>
-		<p><label>Attachments</label><textarea name="attachments" rows="<? echo ( scalar split("\n", $$variable{Campaign}->attachments() ) ) ?>" onkeyup="textarea_resize( this );" ><? echo ( $$variable{Campaign}->attachments() ) ?></textarea></p>
-		<p><label>Times to send</label><input type="text" name="timestosend" value="<? echo ( $$variable{Campaign}->timestosend() ) ?>"  /></p>
-		<p><label>Time of day to send</label><input type="text" name="timeofday" value="<? echo ( $$variable{Campaign}->timeofday() ) ?>"  /></p>
-		<p><label>Interval between emails</label><input type="text" name="interval" value="<? echo ( $$variable{Campaign}->interval() ) ?>"  /></p>
-		<p><label>Active</label>
-		<input type="radio" id="activeY" name="active" value="Y" <? echo ( $$variable{Campaign}->active() eq 'Y' ? 'checked="checked"' : '' ) ?> />
-		<label for="activeY" class="radio">Yes</label>
-		<input type="radio" id="activeN" name="active" value="N" <? echo ( $$variable{Campaign}->active() ne 'Y' ? 'checked="checked"' : '' ) ?> />
-		<label for="activeN" class="radio">No</label>
-		</p>
-		<p><label>Last Run</label><? echo ( $$variable{Campaign}->lastrun() ) ?></p>
-		<p><label>Next Run</label><span class="DateTimeSelector"><? echo ( 
+		<ul>
+		<li><label>ID</label><? echo ( $$variable{Campaign}->id() ) ?></li>
+		<li><label>Name</label><input type="text" name="name" value="<? echo ( $$variable{Campaign}->name() ) ?>" /></li>
+		<li><label>Query</label>
+		<textarea name="query" rows="<? echo ( ssi::count_lines($$variable{Campaign}->query()); ) ?>" onkeyup="textarea_resize(this);" ><? echo ($$variable{Campaign}->query()) ?></textarea>
+		</li>
+		<li><label>Email From</label><input type="text" name="email_from" value="<? hecho ( $$variable{Campaign}->email_from() ) ?>"  /></li>
+		<li><label>Override To</label><input type="text" name="email_to" value="<? hecho ( $$variable{Campaign}->email_to() ) ?>"  /></li>
+		<li><label>Email Subject</label><input type="text" name="email_subject" value="<? echo ( $$variable{Campaign}->email_subject() ) ?>"  /></li>
+		<li><label>Template</label><select name="template_id"><option value="">select</option><? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::EmailTemplate->find('order'=>'lower(name)') ], $$variable{Campaign}->template_id() ); ) ?></select></li>
+		<li><label>Email TEXT Body</label><textarea wrap="physical" name="email_text" rows="<? echo ( count_lines( $$variable{Campaign}->email_text() ) ) ?>" onkeyup="textarea_resize( this );" ><? echo ( ssi::html_escape( $$variable{Campaign}->email_text() ); ) ?></textarea></li>
+		<li><label>Email HTML Body</label><textarea wrap="physical" class="mce" name="email_html" rows="<? echo ( count_lines( $$variable{Campaign}->email_html() ) ) ?>" onkeyup="textarea_resize( this );" ><? echo ( ssi::html_escape( $$variable{Campaign}->email_html() ); ) ?></textarea></li>
+		<li><label>Attachments</label><textarea name="attachments" rows="<? echo ( scalar split("\n", $$variable{Campaign}->attachments() ) ) ?>" onkeyup="textarea_resize( this );" ><? echo ( $$variable{Campaign}->attachments() ) ?></textarea></li>
+		<li><label>Times to send</label><input type="text" name="timestosend" value="<? echo ( $$variable{Campaign}->timestosend() ) ?>"  /></li>
+		<li><label>Time of day to send</label><input type="text" name="timeofday" value="<? echo ( $$variable{Campaign}->timeofday() ) ?>"  /></li>
+		<li><label>Interval between emails</label><input type="text" name="interval" value="<? echo ( $$variable{Campaign}->interval() ) ?>"  /></li>
+		<li><label>Active</label>
+<?echo(checkboxes('active', ['Y','yes', 'N', 'No'], $$variable{Campaign}->active(), { default=>'N' } ); )?>
+		</li>
+		<li><label>Last Run</label><? echo ( $$variable{Campaign}->lastrun() ) ?></li>
+		<li><label>Next Run</label><? echo ( 
 datetime_select( 'nextrun', $$variable{Campaign}->nextrun() ? $$variable{Campaign}->nextrun() : '', {with_today=>1} );
-) ?></span></p>
+) ?></li>
+</ul>
 		<p class="buttons">
 			<? echo ( join("\n",
 				button( 'DeleteBottom', { onclick=>"f1.btnFunction.value='Delete';fmChange=2;fmCheck(f1);", text=>'Delete' } ),

@@ -95,7 +95,7 @@ $openprint::log->debug("Having authenticate $$headers{'www-authenticate'}");
 					($username ? $username : ''), 
 					($password ? $password : ''),
 					);
-			$response = $browser->$method( $url, $args ? $args : () );
+			$response = $browser->$method( $url, $args ? %{$args} : () );
 $openprint::log->debug("Auth response for $method $url $tokens{realm}, $username, $password " . $response->is_success );
 		} else {
 			$openprint::log->error("No realm");
