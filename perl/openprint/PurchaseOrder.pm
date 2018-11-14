@@ -84,6 +84,7 @@ $serial = 'purchaseorders_id_seq';
 	shipto_email				=>	'shipto_email',
 	manifest_id					=>	'manifest_id',
 	cancelled						=>		'cancelled',
+	do_not_pay					=>	'do_not_pay',
 	#notifications				=>	undef,
 );
 
@@ -108,6 +109,7 @@ $serial = 'purchaseorders_id_seq';
 	cancelled		=>	0,
 	supplier_id	=>	undef,
 	contact_id	=>	undef,
+	do_not_pay	=>	'1',
 );
 
 sub save {
