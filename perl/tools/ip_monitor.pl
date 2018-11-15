@@ -162,7 +162,7 @@ while(1) {
             $$new_HI{ip} = $ip->ip();
 
             my $mac = $new_HI->get_mac();
-            if ( $mac and my $existing_HI = openprint::Host_Interface->find_one(mac=>$mac) ) {
+            if ( $mac and (my $existing_HI = openprint::Host_Interface->find_one(mac=>$mac) )) {
               (new openprint::Log())->save( {
                   object  => $existing_HI->Host(),
                   note  => "IP Address changed from $$existing_HI{ip} to $$new_HI{ip} by ip_monitor subnet scanning.",
