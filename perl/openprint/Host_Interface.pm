@@ -71,6 +71,7 @@ sub get_mac {
 $openprint::log->debug("Looking at $iface. " . $iface->address . ', subnet: ' . $subnet );
 		if ( $iface->address =~ /^$subnet\.\d+$/ ) {
 			$use_iface = $iface;
+$openprint::log->debug("Using $iface. " . $iface->address . ', subnet: ' . $subnet );
 		} # end if
 	}
 
@@ -82,6 +83,7 @@ $openprint::log->debug("Looking at $iface. " . $iface->address . ', subnet: ' . 
 	} else {
 		$openprint::log->debug("Unable to determine interface");
 	} # end if
+  return undef;
 } # end sub get_mac
 
 sub authenticate {
