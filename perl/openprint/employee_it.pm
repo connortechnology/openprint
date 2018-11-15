@@ -771,11 +771,11 @@ sub _interface {
           (new openprint::Log())->save( { Object=>$Host, note=>"IP Address changed from $$Interface{ip} to $param{ip}" . $Interface->Host()->link_to(), action=>'IP Changed' } );
           $Interface->save({ip=>$param{ip}});
         }
-        if ( $param{hostname} and is_mac($Host->name()) ) {
-          (new openprint::Log())->save( { Object => $Host, note=>"Name changed from $$Host{name} to $param{hostname}", action=>'Changed' } );
-          $Host->save({name=>$param{hostname}});
+        if ( $param{hostname} and is_mac($Host->hostname()) ) {
+          (new openprint::Log())->save( { Object => $Host, note=>"Name changed from $$Host{hostname} to $param{hostname}", action=>'Changed' } );
+          $Host->save({hostname=>$param{hostname}});
         } else {
-          $log->debug("Not updating hostname from $$Host{name} to $param{hostname}");
+          $log->debug("Not updating hostname from $$Host{hostname} to $param{hostname}");
         }
         $log->debug("Not updating HI from $$Interface{ip} to $param{ip}");
       } # end foreach HI
