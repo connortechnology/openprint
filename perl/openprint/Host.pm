@@ -402,7 +402,7 @@ $openprint::log->debug("Swtiching to https");
 } # end sub reboot
 
 sub is_wap {
-	return ( $_[0]{type_id} and $_[0]->type() and sets::isin( $_[0]->type(), [ 'WG602v3', 'WPN802','TP-Link Archer C7' ] ) );
+	return ( $_[0]{type_id} && $_[0]->type() && sets::isin( $_[0]->type(), [ 'WG602v3', 'WPN802','TP-Link Archer C7' ] ) );
 }
 
 sub url {
