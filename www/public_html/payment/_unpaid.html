@@ -17,9 +17,9 @@
 			my $html = '';
 			my @Invoices;
 			foreach my $I ( openprint::Invoice->find(
-				invoicer_id =>$session{company_id},
-				invoicee_id =>$$variable{Payment}->payor_id(),
-				order =>'id',
+				invoicer_id => ( $param{recipient_id} ? $param{recipient_id} : $session{company_id} ),
+				invoicee_id => $$variable{Payment}->payor_id(),
+				order       => 'id',
 			) ) {
 				push @Invoices, $I if $I->owing() > 0;
 			} # end foreach $I
@@ -43,17 +43,26 @@
 </tr>`, 
 	$I->link_to(),
 	format_date( $I->early_payment_date() ),
-	openprint::Currency::format( $I->owing_early() ),
+	$openprint::Currency->format( $I->owing_early() ),
 	format_date( $I->due_on() ),
-	openprint::Currency::format( $total ),
-	openprint::Currency::format( $owing ),
+	$openprint::Currency->format( $total ),
+	$openprint::Currency->format( $owing ),
   $Currency->short(),
 	button( 'add'.$I->id(), { onclick=>'pay_invoice('.$I->id().');', text=>'+', title=>'Add to Payment' } ),
 );
 			} # end foreach $I
-			$html .= sprintf('</tbody><tfoot><tr class="totals"><td colspan="4">Totals</td><td class="Price">%s</td><td class="Price">%s</td><td>&nbsp;</td><td>&nbsp;</td></tr></tfoot>',
-				openprint::Currency::format($total_total),
-				openprint::Currency::format($owing_total),
+			$html .= sprintf('
+</tbody>
+<tfoot>
+  <tr class="totals">
+    <td colspan="4">Totals</td>
+    <td class="Price">%s</td>
+    <td class="Price">%s</td>
+    <td>&nbsp;</td><td>&nbsp;</td>
+  </tr>
+</tfoot>',
+				$openprint::Currency->format($total_total),
+				$openprint::Currency->format($owing_total),
 				);
 			return $html;
 		) ?>

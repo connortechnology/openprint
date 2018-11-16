@@ -26,56 +26,66 @@ Please select a host to view/edit.<br/>
 			<li class="hostname"><label for="hostname">Hostname</label>
 			<? echo ( input( type=>'text', id=>'hostname', name=>'hostname',
 						value=>$session{$r->uri().'?hostname'}, oninput=>'to_hostname(this);',
-						onkeypress=>"if(event && event.keyCode == 13){load_host( $('f1') );}",
-						with_clear=>1,
+						onkeypress	=> q`if(event && event.keyCode == 13){load_host( $('f1') );}`,
+						with_clear	=> 1,
       ); ) ?>
 			</li>
 			<li class="mac"><label for="mac">MAC</label>
-				<?echo( input( pattern=>'[0-9a-fA-F:\-%]*', type=>'text', id=>'mac', name=>'mac',
-							value=>$session{$r->uri().'?mac'},
-							onkeyup=>"this.value=this.value.replace(/[^0-9a-fA-F:\-%]/g,'');",
-							onkeydown=>"if(event && event.keyCode == 13){load_host( $('f1') );}",
-							oninput=>"this.onkeyup.call(this);", 
-							with_clear=>1 ); ) ?>
+				<?echo( input( pattern=>'[0-9a-fA-F:\\-%]*', type=>'text', id=>'mac', name=>'mac',
+							value			=> $session{$r->uri().'?mac'},
+							onkeyup		=> q`this.value=this.value.replace(/[^0-9a-fA-F:\\-%]/g,'');`,
+							onkeydown	=> q`if(event && event.keyCode == 13){load_host( $('f1') );}`,
+							oninput		=> 'this.onkeyup.call(this);', 
+							with_clear=> 1 ); ) ?>
 			</li>
 			<? echo ( 
-        my $hosttype_dropdown = openprint::Host_Type->dropdown(order=>'lower(name)');
+        my $html = '';
+        my $Network_Type = openprint::Host_Type->find_one(name=>'Network');
+        if ( $Network_Type ) {
+          my $networks_dropdown = openprint::Host->dropdown(type_id=>$$Network_Type{id}, order=>'lower(hostname)');
+          if ( @{$networks_dropdown} ) {
+            $html .= join("\n",
+              '<li class="network"><label>Network</label>',
+              ssi::select($networks_dropdown, $session{$r->uri().'?network_id'}, { name=>'network_id', prepend=>['','All'] } ),
+              '</li>',
+            );
+          }
+        }
+        my $hosttype_dropdown = openprint::Host_Type->dropdown(order=>'lower(name)', ( $Network_Type ? ('id !='=>$$Network_Type{id}) : () ));
         if ( @{$hosttype_dropdown} > 2 ) {
-          return join("\n",
+          $html .= join("\n",
             '<li class="type"><label>Type</label>',
             ssi::select($hosttype_dropdown, $session{$r->uri().'?type_id'}, { name=>'type_id', prepend=>['','All'] } ),
             '</li>',
           );
         }
-        return;
-      ) ?>
-      <? echo ( 
+        
         my @owner_ids = sql::execute( undef, undef, 'SELECT DISTINCT owner_id FROM Hosts');
         if ( @owner_ids > 1 ) {
-          return q`
+          $html .= q`
           <li class="owner"><label>Owner</label>
             <input type="text" onkeyup="filter_companies('owner_id', {name:this.value,selected_id:get_ddm_value($('owner_id'))});" class="filter" />
             <select id="owner_id" name="owner_id" onchange="stop_filter_companies();">
               <option value="">All</option>`.
-make_drop_down( openprint::Company->dropdown(id=>[ @owner_ids, $openprint::Company->id() ]), $session{'/employee/it/hosts.html?owner_id'} ).
+make_drop_down( openprint::Company->dropdown(id=>[ @owner_ids, $openprint::Company->id() ]), $session{$r->uri().'?owner_id'} ).
 q`
             </select>
           </li>
-        `;
-      }
-      return;
+          `;
+        }
+        return $html;
     ) ?>
 		<li>
 			<label>Date Added</label>
-<? echo ( date_select_session( '/employee/it/hosts.html', 'created_on_start', { with_today => 1, with_clear=>1 } ); ) ?>
+<? echo ( date_select_session( $r->uri(), 'created_on_start', { with_today => 1, with_clear=>1 } ); ) ?>
 			to 
-<? echo ( date_select_session( '/employee/it/hosts.html', 'created_on_end', { with_today => 1, with_clear=>1 } ); ) ?>
+<? echo ( date_select_session( $r->uri(), 'created_on_end', { with_today => 1, with_clear=>1 } ); ) ?>
 		</li>
 		<li>
 			<label>Last Updated</label>
-<? echo ( date_select_session( '/employee/it/hosts.html', 'updated_on_start', { with_today => 1, with_clear=>1 } ); ) ?>
+<? echo ( date_select_session( $r->uri(), 'updated_on_start', { with_today => 1, with_clear=>1 } ); ) ?>
 			to 
-<? echo ( date_select_session( '/employee/it/hosts.html', 'updated_on_end', { with_today => 1, with_clear=>1 } ); ) ?>
+<? echo ( date_select_session( $r->uri(), 'updated_on_end', { with_today => 1, with_clear=>1 } ); ) ?>
 		</li>
 		<li class="blacklisted">
 			<label>Blacklisted</label>

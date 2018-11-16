@@ -137,7 +137,7 @@ sub _history {
       ( map { 'due_on_end_'.$_ } ( 'year','month','day' ) ),
       ( map { 'paid_on_start_'.$_ } ( 'year','month','day' ) ),
       ( map { 'paid_on_end_'.$_ } ( 'year','month','day' ) ),
-      'paid','company_id','bad_debt','product_id') );
+      'paid','company_id','bad_debt','product_id', 'invoicer_id' ) );
 
   $variable{subtotal} = $variable{total} = $variable{interest_total} = $variable{owing_total} = 0;
   $variable{Taxes} = [ openprint::Tax->find(
@@ -177,7 +177,8 @@ sub _history {
               ( invoicee_id => $session{$uri.'?company_id'} ) : 
               ( $company_ids ? ( invoicee_id => $company_ids ) : () ) 
             ),
-            invoicer_id => $openprint::User->company_id(),
+
+            ( $session{$uri.'?invoicer_id'} ? ( invoicer_id => $session{$uri.'?invoicer_id'} ) : () ),
           ) : (
             ( invoicee_id => $session{company_id} ),
           ) ),

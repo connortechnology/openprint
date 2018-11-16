@@ -135,6 +135,7 @@ sub data_to_csv {
 	push @data, $csv->string() . "\n";
 
 	for ( my $index = 0; $index < @{$data}; $index += 1 ) {
+		next if ! defined($$data[$index]);
 		$$data[$index] =~ s/[\n\r]//g; # these really mess up the CSV
 	} # end for
 	
