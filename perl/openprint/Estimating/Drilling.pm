@@ -287,6 +287,7 @@ sub runtime {
 	my $Equipment = new openprint::Equipment( $$specs{'ddmEquipment'.$qty_index} );
 	my $makeready = $Equipment->specification( 'Make Ready Time', undef );
 	my $runspeed = $Equipment->specification( 'Run Speed', undef );
+$runspeed = 1 if ! $runspeed;
 	my $runs = $$specs{'txtHoleQty'};
 
 # Should be the # of drills in the machine
