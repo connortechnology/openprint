@@ -910,7 +910,7 @@ sub _interface {
       } # end foreach I
     } #endif action
   } # end if action
-  $variable{Content} = "{result:'ok'}";
+  $variable{PageContent} = "{result:'ok'}";
 }
 
 1;
