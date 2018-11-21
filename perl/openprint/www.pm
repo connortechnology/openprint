@@ -365,6 +365,9 @@ sub parse_page {
 			$variable{DocketNumber} = $variable{Project}->docket();
 
 			$variable{Employee} = $openprint::User->name();
+			if ( $variable{ServiceIndex} ) {
+				$variable{Service} = $variable{Project}->Service($variable{ServiceIndex});
+			}
 			
 			if ( $filename eq 'proofs.html' or $filename eq 'FilmStripping.html' ) {
 				if ( ! $param{ServiceIndex} ) {
@@ -476,7 +479,7 @@ $log->debug("Running openprint::$module->$proc") if Debug;
 				# Things like UPS SHipping might not actually have a service
 				openprint::print::get_quantities( \%variable, $project_index );
 				if ( $project_index and $service_index ) {
-					my $Service = $variable{Project}->Service( $service_index );
+					my $Service = $variable{Service} = $variable{Project}->Service( $service_index );
 $log->debug("Service: " . $Service->to_string() );
 					if ( ! $Service->service_id() ) {
 						$variable{error} .= "Unable to load data for service. Perhaps it was removed.<br/>";
@@ -485,10 +488,9 @@ $log->debug("Service: " . $Service->to_string() );
 						$variable{ServiceType} = $Service->ServiceType();
 						@variable{'ServiceTypeID','ServiceTypeName','ServiceTypeType'} = $variable{ServiceType}->get('name','description','type') if $variable{ServiceType};
 
-	$log->debug("ServiceType: $variable{ServiceTypeType}");
+						$log->debug("ServiceType: $variable{ServiceTypeType}");
 						my $specs = $Service->specs();
 						@variable{keys %$specs} = values %$specs;
-						$variable{ServiceType} = $Service->ServiceType();
 					} # end if
 				} # end if
 				$variable{ProjectType} = $variable{Project}->Type();
