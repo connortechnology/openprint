@@ -65,6 +65,7 @@ $serial = 'orders_id_seq';
 	#'invoiced_on'				=>	'invoiced_on',
 	terms_accepted			=>	'terms_accepted',
 	supplier_id				=>	'supplier_id',
+	do_not_pay_commission	=>	'do_not_pay_commission',
 	);
 
 %transforms = (
@@ -83,6 +84,7 @@ invoice_num => 'id IN (SELECT order_id FROM order_invoices WHERE invoice_id=(SEL
 %defaults = (
 	updated_on	=>	q`'NOW()'`,
 	salesrep_id	=>	undef,
+	do_not_pay_commission	=>	0,
 );
 
 sub save {
@@ -293,10 +295,10 @@ sub update_status {
 sub add_log {
 	my ( $self, $comment ) = @_;
 	sql::insert( undef, undef, 'Order_Log',[
-			'order_id',		$$self{id},
-			'company_id',	$openprint::session{company_id} ? $openprint::session{company_id} : undef,
-			'user_id',		$openprint::session{user_id},
-			'description',	$comment,
+			order_id =>	  	$$self{id},
+			company_id =>  	$openprint::session{company_id} ? $openprint::session{company_id} : undef,
+			user_id =>		  $openprint::session{user_id},
+			description =>	$comment,
 			] );
 } # end sub add_log
 
