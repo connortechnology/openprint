@@ -408,16 +408,17 @@ $log->debug("User ids not match " . $Users[0]->id()  . ' != ' . $User->id() );
 		} # end if
 
 		my @categories = sql::execute( $log, $dbh, 'SELECT id FROM Marketing_Categories' );
-
 		sql::execute( $log, $dbh, 'DELETE FROM Users_in_Marketing_Categories WHERE user_id=?', $User->id() );
 
 		# add them back in
-		my $sth = $dbh->prepare( q{INSERT INTO Users_in_Marketing_Categories (category_id,user_id) VALUES ( ?, ? )} );
-		foreach my $cat ( ref $param{selectUserCategories} eq 'ARRAY' ? @{$param{selectUserCategories}} : $param{selectUserCategories} ) {
-			if ( sets::isin( $cat, \@categories ) ) {
-				$sth->execute( $cat, $User->id() ) or $log->error( DBI->errstr );
-			} # end if
-		} # end foreach
+		if ( $param{selectUserCategories} ) {
+			my $sth = $dbh->prepare( q{INSERT INTO Users_in_Marketing_Categories (category_id,user_id) VALUES ( ?, ? )} );
+			foreach my $cat ( ref $param{selectUserCategories} eq 'ARRAY' ? @{$param{selectUserCategories}} : $param{selectUserCategories} ) {
+				if ( sets::isin( $cat, \@categories ) ) {
+					$sth->execute( $cat, $User->id() ) or $log->error( DBI->errstr );
+				} # end if
+			} # end foreach
+		} # end if
 
 		sql::execute( $log, $dbh, q{DELETE FROM users_in_userGroups WHERE user_id=?}, $User->id() );
 		if ( $param{UserGroups} ) {
@@ -429,9 +430,9 @@ $log->debug("User ids not match " . $Users[0]->id()  . ' != ' . $User->id() );
 		foreach my $service_default_id ( sql::execute( undef, undef, 'SELECT id FROM User_Service_Defaults WHERE user_id=?', $User->id() ) ) {
 			if ( $param{'name-'.$service_default_id} ) {
 				sql::update( undef, undef, 'User_Service_Defaults', ['id=?'=>$service_default_id], {
-						'servicetype_id'=>$param{'servicetype_id-'.$service_default_id} ? $param{'servicetype_id-'.$service_default_id} : undef,
-						'name'=>$param{'name-'.$service_default_id},
-						'value'=>$param{'value-'.$service_default_id}
+						servicetype_id=>$param{'servicetype_id-'.$service_default_id} ? $param{'servicetype_id-'.$service_default_id} : undef,
+						name=>$param{'name-'.$service_default_id},
+						value=>$param{'value-'.$service_default_id}
 						});
 			} else {
 				sql::execute( undef, undef, 'DELETE FROM User_Service_Defaults WHERE id=?', $service_default_id );
@@ -452,10 +453,9 @@ $log->debug("User ids not match " . $Users[0]->id()  . ' != ' . $User->id() );
 
 	# if we don't have a selected user, pick the first one returned filtered by company and user type if specified
 	my @Users = openprint::User->find(
-		( $cust_id ? ( 'company_id'=>$cust_id ) : () ),
-		( $user_role ? ( 'type'=>$user_role ) : () ),
-		( $param{deleted} ne '' ? ( 'deleted'=>$param{deleted} ) : () ),
-		'order'=>'lower(firstname),lower(lastname)'
+		( $cust_id ? ( company_id=>$cust_id ) : () ),
+		( $user_role ? ( type=>$user_role ) : () ),
+		( $param{deleted} ne '' ? ( deleted=>$param{deleted} ) : () ),
 		);
 
 	if ( $User->deleted() ) {
@@ -505,8 +505,7 @@ $log->debug("User ids not match " . $Users[0]->id()  . ' != ' . $User->id() );
 		} # end if
 	} # end if
 
-	# fill in User Name Drop Down Menu
-	$variable{FILL_USER_NAME} = ssi::make_drop_down( [ map { $_->id(), $_->name() } @Users ], $User->id() );
+	$variable{Users} = \@Users;
 
 	# Get Marketing Category Inforamation - get all categories, and highlight the ones this user is in.
 	my @available_categories = sql::execute( $log, $dbh, 'SELECT id, name FROM Marketing_Categories' );
