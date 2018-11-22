@@ -1,0 +1,6 @@
+polkit.addRule(function(action, subject) {
+    if (action.id == "com.envirotrack.policykit.pkexec.run-shutdown" &&
+        subject.user != "www-data") {
+        return polkit.Result.NO;
+    }
+});
