@@ -4,6 +4,22 @@
 <form id="f1" name="f1" method="post" action="/employee/it/network.html" enctype="multipart/form-data">
 	<input type="hidden" id="host_id" name="host_id" value="<? echo ( $$variable{Host}->id() ) ?>" />
 	<input type="hidden" id="action" name="action" />
+				<p class="buttons">
+					<? echo ( 
+						my $html;
+						$html .= button( 'Save', { onclick=>"if( check_inputs( f1 ) ){f1.elements['action'].value='Save';f1.submit();}" } );
+						$html .= button( 'Reset', { onclick=>'f1.reset();' } );
+						if ( $$variable{Host}->id() ) {
+							if ( $$variable{Host}->deleted() ) {
+								$html .= button( 'Destroy', { onclick=>"if(confirm('Are you sure?')){f1.elements['action'].value='Destroy';f1.submit();}" } );
+								$html .= button( 'Undelete', { onclick=>"f1.elements['action'].value='Undelete';f1.submit();" } );
+							} else {
+								$html .= button( 'Delete', { onclick=>"if(confirm('Are you sure?')){f1.elements['action'].value='Delete';f1.submit();}" } );
+							}
+						} # end if
+						return $html;
+					) ?>
+				</p>
 	<fieldset><legend>Network <? echo ( $$variable{Host}->link_to( $$variable{Host}->id() ) .($$variable{Host}->deleted() ? ' <span class="warning">Deleted</span>':'')) ?></legend>
 		<div class="content leftColumn">
 			<ul>
@@ -44,61 +60,30 @@ make_drop_down( openprint::Company->dropdown(id=>[ @owner_ids, $openprint::Compa
 			</fieldset>
 		</div>
 		<br class="spacer"/>
-				<p class="buttons">
-					<? echo ( 
-						my $html;
-						$html .= button( 'Save', { onclick=>"if( check_inputs( f1 ) ){f1.elements['action'].value='Save';f1.submit();}" } );
-						$html .= button( 'Reset', { onclick=>'f1.reset();' } );
-						if ( $$variable{Host}->id() ) {
-							if ( $$variable{Host}->deleted() ) {
-								$html .= button( 'Destroy', { onclick=>"if(confirm('Are you sure?')){f1.elements['action'].value='Destroy';f1.submit();}" } );
-								$html .= button( 'Undelete', { onclick=>"f1.elements['action'].value='Undelete';f1.submit();" } );
-							} else {
-								$html .= button( 'Delete', { onclick=>"if(confirm('Are you sure?')){f1.elements['action'].value='Delete';f1.submit();}" } );
-							}
-						} # end if
-						return $html;
-					) ?>
-				</p>
 	</fieldset>
 <fieldset><legend>Interfaces</legend>
-	<table class="List">
+	<table id="Interfaces" class="List">
 		<tr>
 			<th class="ip">Subnet</th>
 			<th class="options">Options</th>
 			<th class="comment">Comment</th>
-			<th class="buttons">&nbsp;</th>
+			<th class="buttons">
+<? echo ( button( 'AddInterface', { onclick=>qq`add_subnet();`, text=>'+', title=>'Add Subnet' } );) ?>
+      </th>
 		</tr>
 <? echo (
 	my $html;
 	my @Interfaces = $$variable{Host}->Interfaces();
-	if ( 
-		( scalar @Interfaces != 1 ) 
-		or ( defined $Interfaces[0]{id} ) ) {
+	if ( !@Interfaces ) {
 		my $New = new openprint::Host_Interface();
 		$New->set({dhcp=>1});
 		push @Interfaces, $New;
 	};
 
-	foreach my $Interface ( @Interfaces ) {
-		$html .= sprintf(q`
-<tr id="hi-%1$d">
-	<td class="ip">%2$s</td>
-	<td class="options">%3$s</td>
-	<td class="comment"><textarea name="comment-%1$s">%4$s</textarea></td>
-`, 
-	$$Interface{id},
-	input( type=>'ip', name=>'ip-'.$$Interface{id}, value=>$Interface->ip() ),
-join('<br/>',
-	checkboxes( 'monitor-'.$$Interface{id}, [ 1, 'monitor' ], $Interface->monitor(), { container=>['<span class="option_monitor">','</span>']} ) ),
-	$Interface->comment(),
-);
-	
-		$html .= '<td class="buttons">';
-		if ( $$Interface{id} ) {
-			$html .= button( 'DI'.$Interface->id(), { onclick=>qq`delete_interface('$$Interface{id}');`, text=>'X', title=>'Delete Interface' } ),
-		} # end if
-		$html .= '</td></tr>';
+  my $subnet_line = slurp_content('/employee/it/_subnet.html');
+	foreach ( @Interfaces ) {
+    $$variable{Interface} = $_;
+		$html .= variable_substitution(\$subnet_line, $variable);
 	} # end foreach Interface
 	return $html;
 ) ?>
