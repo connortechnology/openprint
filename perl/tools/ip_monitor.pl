@@ -182,8 +182,8 @@ while(1) {
               # Send notification?
               notify_new_host_detected($new_Host);
             }
-            next;
           }
+          next;
         }
 
         if ( $ping and ( $ping[1] > ($$Host{max_ping_time} ? $$Host{max_ping_time} : 1 ) ) ) {

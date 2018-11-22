@@ -1245,7 +1245,7 @@ sub bootstrap_navmenu {
 
   my @categories;
   if ( ref $menu eq 'ARRAY' ) {
-    @categories = map { $_%2 ? () : $$menu[$_] } 1 .. scalar @{$menu};
+    @categories = map { $_ % 2 ? () : $$menu[$_] } 0 .. scalar @{$menu};
     my %m = @{$menu};
     $menu = \%m;
   } else {
