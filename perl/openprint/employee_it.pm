@@ -55,6 +55,7 @@ sub hosts {
 } # end sub hosts
 
 sub _hosts {
+  $variable{uri} = '/employee/it/hosts.html';
 	if ( $param{action} eq 'Delete' ) {
     my @host_ids;
     if ( exists $param{host_id} ) {
@@ -136,7 +137,7 @@ sub _networks {
 			'has_hostname', 'monitored',
 			'order', 'deleted', 'owner_id',
 			);
-} # end sub _networs
+} # end sub _networks
 
 sub host {
 	my $Host = $variable{Host} = new openprint::Host( $param{host_id} );
@@ -414,6 +415,7 @@ sub network {
 	} # end if
 	ssi::setup_date_select( '/employee/it/network.html', 'log_created_on_start', 0 );
 	ssi::setup_date_select( '/employee/it/network.html', 'log_created_on_end', '' );
+  $variable{uri} = '/employee/it/network.html';
 } # end sub network
 
 sub camera {
@@ -845,7 +847,7 @@ sub backup {
 
 }
 sub syslog {
-  _hosts();
+  _syslog();
   my $uri = $r->uri();
   ssi::setup_datetime_select( $uri, 'receivedat_start', -3600 );
   ssi::setup_datetime_select( $uri, 'receivedat_end', '' );
@@ -874,9 +876,21 @@ sub is_mac {
   $_[0] =~ /^[:0-9A-F]{17}$/;
 }
 
+sub _subnet {
+  if ( $param{action} ) {
+    if ( $param{action} eq 'add subnet' ) {
+      my $I = $variable{Interface} = new openprint::Host_Interface();
+      $$I{host_id} = $param{host_id};
+    }
+  }
+}
+
 sub _interface {
   if ( $param{action} ) {
-    if ($param{action} eq 'dhcp' ) {
+    if ( $param{action} eq 'add interface' ) {
+      my $I = $variable{Interface} = new openprint::Host_Interface();
+      $$I{host_id} = $param{host_id};
+    } elsif ($param{action} eq 'dhcp' ) {
       if ( ! $param{mac} ) {
       }
       my @HIs = openprint::Host_Interface->find(mac=>$param{mac});

@@ -635,6 +635,8 @@ my $add_placeholder = ( ! ( $field =~ /\?/ ) ) ?  1 : 0;
 		return '('.$field.$type.' IS NULL OR '.$field.$type.' < ?)', $value;
 	} elsif ( $operator eq 'null_or_=' or $operator eq 'is null or =' ) {
 		return '('.$field.$type.' IS NULL OR '.$field.$type.' = ?)', $value;
+	} elsif ( $operator eq 'is null or !=' ) {
+		return '('.$field.$type.' IS NULL OR '.$field.$type.' != ?)', $value;
 	} elsif ( $operator eq 'null or in' or $operator eq 'is null or in' ) {
 		return '('.$field.$type.' IS NULL OR '.$field.$type.' IN ('.join(',', map { '?' } @{$value} ) . '))', @{$value};
 	} elsif ( $operator eq 'null or not in' ) {
