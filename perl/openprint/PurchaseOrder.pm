@@ -109,7 +109,7 @@ $serial = 'purchaseorders_id_seq';
 	cancelled		=>	0,
 	supplier_id	=>	undef,
 	contact_id	=>	undef,
-	do_not_pay	=>	'1',
+	do_not_pay	=>	'0',
 );
 
 sub save {
