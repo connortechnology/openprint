@@ -72,6 +72,8 @@ configuration::from_file($$opts{config});
 configuration::merge($opts);
 
 my @re = (
+	q`/^\[([^\]]+)\] \[([^\]]+)\] \[([^\]]+)\] \[(?<IP>[^\]]+)\] script '[^']+' not found or unable to stat/`,
+  q`(?<IP>[0-9\.]+) \- \- \[([^\]]+)\] "[^"]+" 404 293$`
 );
 
 
@@ -157,82 +159,73 @@ while (my $buf = <STDIN>) {
 	} # end if do update
 
   #print ( $buf );
-	#my ($port, $ipaddr) = IO::Socket::sockaddr_in($sock->peername);
-	#my $hn = gethostbyaddr($ipaddr, Socket::AF_INET);
 	$log->debug($buf) if $config{debug};
-	# Without the multiline flag, will do one line at a time, nice.
-  #my ( $source, $remote_logname, $user, $when, $request, $server_response, $bytes, $referrer, $agent ) = $buf =~ /^(\S+) (\S+) (\S+) \[([^\]]+)\] "([^"]+)" (\d+) (\d+) "([^"]+)" "([^"]+)"$/;
-  my $source;
-  my $server_response;
-	my ( $when, $remote_logname, $pid, $remote ) = $buf =~ /^\[([^\]]+)\] \[([^\]]+)\] \[([^\]]+)\] \[([^\]]+)\] script '[^']+' not found or unable to stat/;
-	if ( ! $remote ) {
-		$log->error("No match: " . $buf);
-		next;
-	} else {
-		$log->error("match: " . $buf );
-	}
+  foreach my $re ( @re ) {
+    my $source;
+    my $server_response;
+    if ( !( $buf =~ /$re/ ) ) {
+      $log->error("No match: " . $buf);
+      next;
+    }
+    $log->error("match: " . $buf );
+    my $remote = $+{IP};
     if ( $remote =~ /client ([\.\d]+):\d+/ ) {
       $source = $1;
     }
   
-#[error] No match: 192.168.101.10 - - [07/Feb/2013:11:22:59 -0500] "GET /css/alphacube.css HTTP/1.0" 304 282 "http://www.intelligentquote.ca/" "Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:19.0) Gecko/20100101 Firefox/19.0"
-#[debug] 127.0.0.1 - - [07/Feb/2013:11:03:00 -0500] "OPTIONS * HTTP/1.0" 200 126 "-" "Apache/2.2.22 (Ubuntu) (internal dummy connection)"
-#$log->debug("Thing1: $1, thing3: $line ");
+    my ( $ip, $hostname );
+    if ( $source =~ /^\d+\.\d+\.\d+\.\d+$/ ) {
+      # Is an IP
+      $log->debug( "$source is an ip" ) if $config{debug};
+      $ip = $source;
+    } else {
+      # is a hostname
+      $hostname = $source;
+      $ip = gethostbyname($source);
+      if ( defined $ip ) {
+        $ip = Socket::inet_ntoa($ip);
+        $log->debug( "Got $ip for $source" ) if $config{debug};
+      } # end if
+    } # end if
 
-	my ( $ip, $hostname );
-	if ( $source =~ /^\d+\.\d+\.\d+\.\d+$/ ) {
-# Is an IP
-		$log->debug( "$source is an ip" ) if $config{debug};
-		$ip = $source;
-	} else {
-# is a hostname
-		$hostname = $source;
-		$ip = gethostbyname($source);
-		if ( defined $ip ) {
-			$ip = Socket::inet_ntoa($ip);
-			$log->debug( "Got $ip for $source" ) if $config{debug};
-		} # end if
-	} # end if
+    if ( $ip and $whitelist{$ip} ) {
+      $log->debug( "$ip is whitelisted" ) if $config{debug};
+      next;
+    } # end if
+    if ( ! $ip ) {
+      $log->debug( "No ip for $source" ) if $config{debug};
+      next;
+    } # end if
+    if ( $ip eq '127.0.0.1' ) {
+      $log->debug( "Not localhost for $source" ) if $config{debug};
+      next;
+    } # end if
 
-	if ( $ip and $whitelist{$ip} ) {
-		$log->debug( "$ip is whitelisted" ) if $config{debug};
-		next;
-	} # end if
-	if ( ! $ip ) {
-		$log->debug( "No ip for $source" ) if $config{debug};
-		next;
-	} # end if
-	if ( $ip eq '127.0.0.1' ) {
-		$log->debug( "Not localhost for $source" ) if $config{debug};
-		next;
-	} # end if
-	if ( $server_response == 404 ) {
-		$log->debug("GOt 404");
+    if ( ! $host_counts{$ip} ) {
+      my $Interface = openprint::Host_Interface->find_one(ip=>$ip);
+      if ( $Interface ) {
+        my $Host = $Interface->Host();
+        $host_counts{$$Interface{ip}} = $Host;
+      } else {
+        my $Host = $host_counts{$ip} = new openprint::Host();
+        $Interface = new openprint::Host_Interface();
+        $$Host{Interfaces} = [ $Interface ];
+        $Host->hostname( $hostname );
+        $Host->save();
+        $Interface->save({ ip=>$ip, host_id=>$$Host{id} } );
+      } # end if
+    } # end if
+    $host_counts{$ip}{count} += 1;
 
-		if ( ! $host_counts{$ip} ) {
-			my $Interface = openprint::Host_Interface->find_one(ip=>$ip);
-			if ( $Interface ) {
-				my $Host = $Interface->Host();
-				$host_counts{$$Interface{ip}} = $Host;
-			} else {
-				my $Host = $host_counts{$ip} = new openprint::Host();
-				$Interface = new openprint::Host_Interface();
-				$$Host{Interfaces} = [ $Interface ];
-				$Host->hostname( $hostname );
-				$Host->save();
-				$Interface->save({ ip=>$ip, host_id=>$$Host{id} } );
-			} # end if
-		} # end if
-		$host_counts{$ip}{count} += 1;
-
-		if ( $host_counts{$ip}{count} > 20 and ! $host_counts{$ip}{blacklist} ) {
-			$host_counts{$ip}{blacklist} = 1;
-			$log->debug( "$ip $host_counts{$ip}{ip} $host_counts{$ip}{count}" ) if $opts->{debug};
-			#`shorewall drop $ip` if $host_counts{$ip}{blacklist};
-		} # end if
-		$_ = $host_counts{$ip}->save();
-		$log->error( $_ ) if $_;
-	} # end if 404
+    if ( $host_counts{$ip}{count} > 20 and ! $host_counts{$ip}{blacklist} ) {
+      $host_counts{$ip}{blacklist} = 1;
+      $log->debug( "$ip $host_counts{$ip}{ip} $host_counts{$ip}{count}" ) if $opts->{debug};
+      #`shorewall drop $ip` if $host_counts{$ip}{blacklist};
+    } # end if
+    $_ = $host_counts{$ip}->save();
+    $log->error( $_ ) if $_;
+    last;
+  } # end froeach re
 
 } # end while buf = <STDIN>
 
