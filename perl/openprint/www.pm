@@ -485,12 +485,12 @@ $log->debug("Service: " . $Service->to_string() );
 						$variable{error} .= "Unable to load data for service. Perhaps it was removed.<br/>";
 						$variable{ExternalRedirect} = '/main/project/view.html?project_id='.$project_index;
 					} else {
-						$variable{ServiceType} = $Service->ServiceType();
-						@variable{'ServiceTypeID','ServiceTypeName','ServiceTypeType'} = $variable{ServiceType}->get('name','description','type') if $variable{ServiceType};
 
-						$log->debug("ServiceType: $variable{ServiceTypeType}");
 						my $specs = $Service->specs();
 						@variable{keys %$specs} = values %$specs;
+						$variable{ServiceType} = $Service->ServiceType();
+						@variable{'ServiceTypeID','ServiceTypeName','ServiceTypeType'} = $variable{ServiceType}->get('name','description','type') if $variable{ServiceType};
+						$log->debug("ServiceType: $variable{ServiceTypeType}");
 					} # end if
 				} # end if
 				$variable{ProjectType} = $variable{Project}->Type();
