@@ -11,7 +11,7 @@ use vars qw( $debug $log $dbh %config %session $table $serial %fields %find_fiel
 *config = \%openprint::config;
 *session = \%openprint::session;
 
-$debug = 0;
+$debug = 1;
 
 require sql;
 require ssi;
