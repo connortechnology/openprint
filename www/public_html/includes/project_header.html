@@ -3,9 +3,9 @@
 ) ?>
 <div class="Header">
 <? if ( $session{user_type} eq 'A' or $openprint::User->in_Group('Accounting') ) ?>
-<? if ( $$variable{Order}->do_not_pay_commission() ) ?>
+<? if ( $$variable{Project}->Order()->do_not_pay_commission() ) ?>
 					<h1 class="error">Do Not Pay Commission</h1>
-<? endif ( $$variable{Order}->do_not_pay_commission() ) ?>
+<? endif ( $$variable{Project}->Order()->do_not_pay_commission() ) ?>
 <? endif ( $session{user_type} eq 'A' or $openprint::User->in_Group('Accounting') ) ?>
 	<div class="ProjectInformation">
 		<fieldset><legend>Project Information</legend>
