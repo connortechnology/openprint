@@ -1,13 +1,12 @@
 use strict;
 package EnviroTrack::Sensor_Input;
-our @ISA = qw( EnviroTrack::Object );
+our @ISA = qw( openprint::Object );
 
-require EnviroTrack::sql;
-require EnviroTrack::Object;
+require sql;
+require openprint::Object;
 require EnviroTrack::Sensor;
 require EnviroTrack::Sensor_Reading;
 
-use EnviroTrack ();
 use vars qw( $debug %fields %find_fields %transforms %defaults $table $serial $AUTOLOAD $default_sort );
 $table = 'sensor_inputs';
 $serial = 'sensor_inputs_id_seq';
@@ -18,9 +17,11 @@ $debug = 0;
 	id			=>	'id',
 	name		=>	'name',
 	label		=>	'label',
-	created		=>	'created',
-	modified	=>	'modified',
+  #created		=>	'created',
+  #modified	=>	'modified',
 	sensor_id	=>	'sensor_id',
+  min       =>  'min',
+  max       =>  'max',
 ); # end %fields
 
 %find_fields = (
@@ -32,14 +33,16 @@ $debug = 0;
 	label		=>	[ 's/^\s+//', 's/\s+$//' ],
 	min			=>	[ 's/[\d\.\-]//g' ],
 	max			=>	[ 's/[\d\.\-]//g' ],
-	created		=>	[ 's/.*//g' ],
-	modified	=>	[ 's/.*//g' ],
+  #created		=>	[ 's/.*//g' ],
+  #modified	=>	[ 's/.*//g' ],
 );
 
 %defaults = (
-	created				=>	q`'NOW()'`,
-	modified			=>	q`'NOW()'`,
+  #created				=>	q`'NOW()'`,
+  #modified			=>	q`'NOW()'`,
 	#deleted					=>	0,
+  min    =>  undef,
+  max    =>  undef,
 );
 
 sub take_reading {

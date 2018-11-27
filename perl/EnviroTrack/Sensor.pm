@@ -1,17 +1,16 @@
 use strict;
 package EnviroTrack::Sensor;
-our @ISA = qw( EnviroTrack::Object );
+our @ISA = qw( openprint::Object );
 
-require EnviroTrack::sql;
-require EnviroTrack::Object;
-#require EnviroTrack::Sensor_in_SensorGroup;
+require sql;
+require openprint;
+require openprint::Object;
 
-use EnviroTrack ();
 use vars qw( $debug %fields %find_fields %transforms %defaults $table $serial $AUTOLOAD $default_sort );
 $table = 'sensors';
 $serial = 'sensors_id_seq';
 
-$debug = 0;
+$debug = 1;
 
 %fields = (
 	id			=>	'id',
@@ -20,9 +19,10 @@ $debug = 0;
 	url			=>	'url',
 	username	=>	'username',
 	password	=>	'password',
-	created		=>	'created',
-	modified	=>	'modified',
+	created_on	=>	'created',
+	updated_on	=>	'modified',
 	type_id		=>	'type_id',
+	deleted		=>	'deleted',
 ); # end %fields
 
 %find_fields = (
@@ -32,21 +32,33 @@ $debug = 0;
 	id			=>	[ 's/\D//g' ],
 	name		=>	[ 's/^\s+//', 's/\s+$//' ],
 	password	=>	[ 's/^\s+//', 's/\s+$//' ],
-	created		=>	[ 's/.*//g' ],
-	modified	=>	[ 's/.*//g' ],
+	created_on	=>	[ 's/.*//g' ],
+	updated_on	=>	[ 's/.*//g' ],
 );
 
 %defaults = (
-	created				=>	q`'NOW()'`,
-	modified			=>	q`'NOW()'`,
-	#deleted					=>	0,
+	created_on	=>	q`'NOW()'`,
+	updated_on	=>	q`'NOW()'`,
+	deleted		=>	0,
+	type_id		=>	undef,
 );
 
 sub link_to {
-    return sprintf('<a href="/account/view.html?user_id=%1$d">%2$s</a>', $_[0]{id}, @_ > 1 ? $_[1] : $_[0]->name() );
+    return sprintf('<a href="/sensors/view.html?sensors_id=%1$d">%2$s</a>', $_[0]{id}, @_ > 1 ? $_[1] : $_[0]->name() );
 } # end sub link_to
 
 sub type {
+	if ( @_ > 1 ) {
+		$_[0]{type} = EnviroTrack::Sensor_Type->transform(name=>$_[1]);
+		if ( $_[0]{type} ) {
+			$_[0]{Type} = EnviroTrack::Sensor_Type->find(name=>$_[0]{type});
+			if ( ! $_[0]{Type} ) {
+				$_[0]{Type} = new EnviroTrack::Sensor_Type();
+				$_[0]{Type}->save({name=>$_[0]{type}});
+			}
+		}
+		
+	}
 	if ( ! $_[0]{Type} ) {
 		$_[0]->Type();
 		$_[0]{type} = $_[0]{Type}->name();
@@ -83,6 +95,12 @@ sub Inputs {
 		$_[0]{Inputs} = [ EnviroTrack::Sensor_Input->find( sensor_id=>$_[0]{id} ) ];
 	}
 	return @{$_[0]{Inputs}};
+}
+
+sub can_edit {
+	if ( $openprint::session{user_type} eq 'E' or $openprint::session{user_type} eq 'A' ) {
+		return 1;
+	}
 }
 
 1;
