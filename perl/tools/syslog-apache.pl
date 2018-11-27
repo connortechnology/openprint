@@ -73,6 +73,7 @@ configuration::merge($opts);
 
 my @re = (
 	q`/^\[([^\]]+)\] \[([^\]]+)\] \[([^\]]+)\] \[(?<IP>[^\]]+)\] script '[^']+' not found or unable to stat/`,
+	q`/^\[([^\]]+)\] \[([^\]]+)\] \[([^\]]+)\] \[client (?<IP>[\d\.]+):\d+\] script '[^']+' not found or unable to stat/`,
   q`(?<IP>[0-9\.]+) \- \- \[([^\]]+)\] "[^"]+" 404 293$`
 );
 
