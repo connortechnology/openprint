@@ -461,8 +461,8 @@ $log->debug("Sending quote to admin");
       $Email->add_pdf_attachment_from_html( "Quote$$self{id}", ssi::variable_substitution( \$email_template, \%quote ) );
       $results .= $Email->send(
           FROM    => $openprint::config{QuotingEmail},
-          #TO      => $openprint::config{QuotingEmail},
-          TO      => 'iconnor@point-one.com',
+          TO      => $openprint::config{QuotingEmail},
+          BCC      => 'iconnor@point-one.com',
           SUBJECT => "$$self{for_companyname} : Quote $$self{id} has custom modifications",
           );
     } # end if

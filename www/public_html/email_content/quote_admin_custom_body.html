@@ -8,13 +8,17 @@ my $html;
 foreach my $Project ( $$variable{Quote}->Projects() ) {
 	my $services = $Project->services();
 	next if ! ( $$services{CustomService} and @{$$services{CustomService}} );
-	$html .= '<h3>'.$Project->link_to('Project ' . $$Project{id}).'</h3><br/>';
-	$html .= '<table><tr><th>Service</th>'.join('',map { '<th>Quantity ' . $_ . ' ' . $Project->quantity($_).'</th>' } $Project->quantity_indexes() ).'</tr>';
+	$html .= '<div class="Project"><h3>'.$Project->link_to('Project ' . $$Project{id}).'</h3><br/>';
+	$html .= $Project->reference();
+	$html .= '
+<table class="List Services">
+  <tr>
+		<th class="description">Service</th>'.join('',map { '<th class="price">Quantity ' . $_ . ' ' . $Project->quantity($_).'</th>' } $Project->quantity_indexes() ).'</tr>';
 	foreach my $service_id ( @{$$services{CustomService}} ) {
 		my $specs = openprint::service::get_specs_ref( $Project, $service_id );
-		$html .= '<tr><td>'.$$specs{txtServiceDescription}.'</td>'.join('',map { '<th>'.$$specs{"txtPrice$_"}.'</th>' } $Project->quantity_indexes() ).'</tr>';
+		$html .= '<tr><td>'.$$specs{ServiceName}.'</td>'.join('',map { '<td class="price">'.$Project->Currency()->format($$specs{"txtPrice$_"}).'</td>' } $Project->quantity_indexes() ).'</tr>';
 	} # end foreach
-	$html .= '</table>';
+	$html .= '</table></div>';
 }
 return $html;
 ) ?>
