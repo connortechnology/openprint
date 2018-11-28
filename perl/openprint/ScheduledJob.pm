@@ -409,16 +409,16 @@ sub get_li {
 			} elsif ( ( $$self{pertains_id} and @{$$self{pertains_id}} > 2 ) or ( $$self{service_id} and @{$$self{service_id}} == 2 ) ) {
 				$html .= ssi::button( 'Split'.$$self{id}, { onclick=>"popup_window('_split_popup.html', 'schedule_id=$$self{id}' );", text=> 'S', title=>'Split Job' } );
 			} # end if
-			if ( sets::isin( $self->ServiceType()->name(), [ '','Signature' ] ) ) {
+			if ( $$self{servicetype_id} and sets::isin( $self->ServiceType()->name(), [ '','Signature' ] ) ) {
 				$html .= ssi::button( 'Stock'.$$self{id}, { onclick=> "popup_window('/employee/production/_stock_details.html','project_id='+$$self{project_id} );", text=> 'P', title=>'Paper' } );
 			#} else {
 				#$log->debug("ServiceType: $$self{project_id} $$self{servicetype_id}" . $self->ServiceType()->name() );
 			} # end if
 		} # end if
 		if ( ( $self->starttime_seconds() > time ) or ( $$self{project_id} and ( $self->status() ne 'In Production' ) ) ) {
-			$html .= ssi::button( 'Start'.$$self{id}, { onclick=> "start_job($$self{id});", text=> 'Start' } );
+			$html .= ssi::button( 'Start'.$$self{id}, { onclick=> "start_job($$self{id});", text=>'Start' } );
 		} elsif ( ( $self->starttime_seconds() < time ) and ( (!$$self{project_id}) or $self->status() eq 'In Production' ) ) {
-			$html .= ssi::button( 'Stop'.$$self{id}, { onclick=> "stop_job($$self{id});", text=> 'Stop' } );
+			$html .= ssi::button( 'Stop'.$$self{id}, { onclick=> "stop_job($$self{id});", text=>'Stop' } );
 		} # end if
 		$html .= '</span>';
 		if ( $$self{project_id} ) {
@@ -431,7 +431,7 @@ sub get_li {
 		}
 	} else {
 		$html .= sprintf( '<div class="Comment">%1$s</div>', $self->comment() );
-		$html .= sprintf( q`<div class="Stock">%1$s</div>`, $self->stock() );
+		$html .= sprintf( '<div class="Stock">%1$s</div>', $self->stock() );
 		if ( $$self{project_id} ) {
 			$html .= sprintf( '<span class="Forms">%d %s</span>', $self->forms(), $self->forms() > 1 ? ' forms' : ' form' );
 			$html .= sprintf( '<span class="Impressions">%d imps</span>', $self->impressions() );
