@@ -55,7 +55,7 @@ return '';
 		<li><label>Time of day to send</label><input type="text" name="timeofday" value="<? echo ( $$variable{Campaign}->timeofday() ) ?>"  /></li>
 		<li><label>Interval between emails</label><input type="text" name="interval" value="<? echo ( $$variable{Campaign}->interval() ) ?>"  /></li>
 		<li><label>Active</label>
-<?echo(checkboxes('active', ['Y','yes', 'N', 'No'], $$variable{Campaign}->active(), { default=>'N' } ); )?>
+<?echo(radio('active', ['Y','yes', 'N', 'No'], $$variable{Campaign}->active(), { default=>'N' } ); )?>
 		</li>
 		<li><label>Last Run</label><? echo ( $$variable{Campaign}->lastrun() ) ?></li>
 		<li><label>Next Run</label><? echo ( 
