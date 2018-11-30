@@ -26,7 +26,7 @@ require openprint::Estimating::MultiPage;
 require openprint::service;
 require openprint::Project_Log;
 
-$debug = 0;
+$debug = 1;
 
 $table = 'projects';
 $serial = 'lngProjectIndex_seq';
@@ -1976,6 +1976,17 @@ sub change_due_date {
 		openprint::employee_project::send_duedate_change_notification( $$Project{id}, $Project->order_id() );
 	} # end if date has changed
 }
+
+sub Services {
+	my $self = shift;
+	$$self{Services} = shift if @_;
+	if ( $$self{id} and !$$self{Services} ) {
+		$$self{Services} = [ openprint::Project_Service->find(project_id=>$$self{id}) ];
+	}
+	return @{$$self{Services}} if $$self{Services};
+	return ();
+}
+
 
 1;
 __END__

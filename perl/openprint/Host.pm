@@ -123,7 +123,12 @@ sub destroy {
 sub ping {
 	require Net::Ping;
 	my $p = Net::Ping->new();
-	my $rc = $p->ping($_[0]{ip});
+my $rc;
+	foreach my $HI ( $_[0]->Interfaces() ) {
+		next if ! $$HI{ip};
+	 $rc = $p->ping($$HI{ip});
+		return $rc if $rc;
+	}
 	$p->close();
 	return $rc;
 } # end sub ping

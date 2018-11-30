@@ -84,6 +84,7 @@ sub view_services {
 					$variable{ExternalRedirect} = '/main/project/view.html?project_id='.$project_index;
 					return;
 				} # end if
+
 				my $recalc = 0;	
 				my $ServiceType = $Service->ServiceType();
 

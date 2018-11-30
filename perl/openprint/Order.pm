@@ -20,7 +20,7 @@ require openprint::Payment;
 require openprint::Tax;
 require openprint::Order_Notification;
 
-$debug = 0;
+$debug = 1;
 
 $table = 'orders';
 $serial = 'orders_id_seq';
@@ -330,11 +330,14 @@ require openprint::OrderedProject;
 
 sub Projects {
 	my $self = shift;
-	require openprint::OrderedProject;
+	$$self{Projects} = shift if @_;
+	if ( $$self{id} and ! $$self{Projects} ) {
+		require openprint::OrderedProject;
+		$$self{Projects} = [ map { $_->Project() } openprint::OrderedProject->find(order_id=>$$self{id}) ];
+	}
+
 	return @{$$self{Projects}} if $$self{Projects};
-	return () if ! $$self{id};
-	$$self{Projects} = [ map { $_->Project() } openprint::OrderedProject->find(order_id=>$$self{id}) ];
-	return @{$$self{Projects}};
+	return ();
 } # end sub Projects
 
 sub Products {
@@ -898,6 +901,14 @@ sub link_to {
 	return '';
 } # end sub link_to
 
+sub production_link_to {
+	if ( $_[0]{id} ) {
+		my $text = $_[1] ? $_[1] : ( $_[0]{id} ? $_[0]{id} : 'id ' . $_[0]{id} );
+		return sprintf('<a href="/employee/project/view.html?order_id=%d">%s</a>', $_[0]{id}, $text );
+	}
+	return '';
+} # end sub link_to
+
 sub company_name {
 	if ( @_ > 1 ) {
 		$_[0]{company_name} = $_[1];
@@ -943,7 +954,6 @@ sub address_html {
     ( map { $self->$_() ? $countries::countries{$$self{$_}} : () } ( 'country' ) ),
   );
 }
-
 
 1;
 __END__

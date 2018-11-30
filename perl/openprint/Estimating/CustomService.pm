@@ -24,6 +24,7 @@ require openprint::service;
 my @variables = (
 		'txtPrice1', 'txtPrice2', 'txtPrice3',
 		'Price', 'Units',
+'ServiceName',
 );
 
 sub variables {
