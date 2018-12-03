@@ -20,7 +20,7 @@ require openprint::Payment;
 require openprint::Tax;
 require openprint::Order_Notification;
 
-$debug = 0;
+$debug = 1;
 
 $table = 'orders';
 $serial = 'orders_id_seq';
@@ -65,6 +65,7 @@ $serial = 'orders_id_seq';
 	#'invoiced_on'				=>	'invoiced_on',
 	terms_accepted			=>	'terms_accepted',
 	supplier_id				=>	'supplier_id',
+	do_not_pay_commission	=>	'do_not_pay_commission',
 	);
 
 %transforms = (
@@ -83,6 +84,7 @@ invoice_num => 'id IN (SELECT order_id FROM order_invoices WHERE invoice_id=(SEL
 %defaults = (
 	updated_on	=>	q`'NOW()'`,
 	salesrep_id	=>	undef,
+	do_not_pay_commission	=>	0,
 );
 
 sub save {
@@ -293,10 +295,10 @@ sub update_status {
 sub add_log {
 	my ( $self, $comment ) = @_;
 	sql::insert( undef, undef, 'Order_Log',[
-			'order_id',		$$self{id},
-			'company_id',	$openprint::session{company_id} ? $openprint::session{company_id} : undef,
-			'user_id',		$openprint::session{user_id},
-			'description',	$comment,
+			order_id =>	  	$$self{id},
+			company_id =>  	$openprint::session{company_id} ? $openprint::session{company_id} : undef,
+			user_id =>		  $openprint::session{user_id},
+			description =>	$comment,
 			] );
 } # end sub add_log
 
@@ -328,11 +330,14 @@ require openprint::OrderedProject;
 
 sub Projects {
 	my $self = shift;
-	require openprint::OrderedProject;
+	$$self{Projects} = shift if @_;
+	if ( $$self{id} and ! $$self{Projects} ) {
+		require openprint::OrderedProject;
+		$$self{Projects} = [ map { $_->Project() } openprint::OrderedProject->find(order_id=>$$self{id}) ];
+	}
+
 	return @{$$self{Projects}} if $$self{Projects};
-	return () if ! $$self{id};
-	$$self{Projects} = [ map { $_->Project() } openprint::OrderedProject->find(order_id=>$$self{id}) ];
-	return @{$$self{Projects}};
+	return ();
 } # end sub Projects
 
 sub Products {
@@ -896,6 +901,14 @@ sub link_to {
 	return '';
 } # end sub link_to
 
+sub production_link_to {
+	if ( $_[0]{id} ) {
+		my $text = $_[1] ? $_[1] : ( $_[0]{id} ? $_[0]{id} : 'id ' . $_[0]{id} );
+		return sprintf('<a href="/employee/project/view.html?order_id=%d">%s</a>', $_[0]{id}, $text );
+	}
+	return '';
+} # end sub link_to
+
 sub company_name {
 	if ( @_ > 1 ) {
 		$_[0]{company_name} = $_[1];
@@ -941,7 +954,6 @@ sub address_html {
     ( map { $self->$_() ? $countries::countries{$$self{$_}} : () } ( 'country' ) ),
   );
 }
-
 
 1;
 __END__

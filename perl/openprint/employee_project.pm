@@ -85,9 +85,23 @@ sub view {
 		( $order_id ) = sql::execute( $log, $dbh, q{SELECT id FROM Orders WHERE id IN ( SELECT DISTINCT OrderIndex FROM Order_Contents WHERE lngProjectIndex=? ) AND docket=?}, $project_index, $param{Docket} );
 	} # end if
 	$variable{OrderID} = $order_id;
-	$variable{Order} = new openprint::Order( $order_id );
+	my $Order = $variable{Order} = new openprint::Order( $order_id );
 
-	if ( $param{action} eq 'Change Status' ) {
+	if ( $param{action} eq 'DoNotPayCommission' ) {
+		if ( $session{user_type} eq 'A' ) {
+			$Order->save({do_not_pay_commission=>1});
+			(new openprint::Log())->save({Object=>$Order, action=>'Save', note=>'Mark Order as Do Not Pay Commission'});
+		} else {
+			$variable{error} .= 'You do not have permission.';
+		}
+	} elsif ( $param{action} eq 'PayCommission' ) {
+		if ( $session{user_type} eq 'A' ) {
+			$Order->save({do_not_pay_commission=>0});
+			(new openprint::Log())->save({Object=>$Order, action=>'Save', note=>'Mark Order as Ok To Pay Commission'});
+		} else {
+			$variable{error} .= 'You do not have permission.';
+		}
+	} elsif ( $param{action} eq 'Change Status' ) {
 		foreach my $service_id ( split(',', $param{service_id} ) ) {
 			my $Service = $Project->Service( $service_id );
 			if ( ! $Service->service_id() ) {

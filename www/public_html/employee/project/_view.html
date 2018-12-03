@@ -612,7 +612,7 @@ if ( 0 ) {
       #$html .= button( 'Complete'.$$variable{Project}{id}, { onclick=>qq`form_submit('$$variable{formname}','Complete');`, text=>'Complete' } );
       #} # end if
 }
-      if ( @bindery_services ) {
+      if ( @bindery_services and ( $openprint::User->in_Group('Scheduling') or $openprint::User->in_Group('Bindery Manager') ) ) {
         $html .= button( 'CompleteBindery'.$$variable{Project}{id}, { onclick=>qq`form_submit('$$variable{formname}','BinderyComplete');`, text=>'Complete Bindery' } );
       } # end if
       if ( sets::isin( $$variable{Project}->shippingtype(), [ 'Delivery', 'Shipping' ] ) and $$variable{Project}->status() ne 'Shipped' ) {
@@ -625,6 +625,20 @@ if ( 0 ) {
       if ( $session{user_type} eq 'A' or $openprint::User->id() == $$variable{Order}->salesrep_id() or openprint::usergroup::is_user_in( ['Sales Admin','Scheduling','PrepressManager'], $session{user_id} ) ) {
         $html .= button( 'Delete'.$$variable{Project}{id}, { onclick=>qq`form_submit( '$$variable{formname}', 'DeleteServices');`, text=>'Delete Checked Services' } );
       } # end if
+
+			if ( $session{user_type} eq 'A' ) {
+				if ( $$variable{Order}->do_not_pay_commission() ) {
+					$html .= button('PayCommission'.$$variable{Project}{id}, { href=>'/employee/project/view.html?action=PayCommission&docket='.$$variable{Project}{docket},
+							text=>'Ok To Pay Commission'
+ } );
+				} else {
+					$html .= button('DoNotPayCommission'.$$variable{Project}{id}, {
+							href=>'/employee/project/view.html?action=DoNotPayCommission&docket='.$$variable{Project}{docket},
+							text=>'Do Not Pay Commission'
+							} );
+				
+				}
+			}
 
       return $html;
     ) ?>

@@ -1977,5 +1977,16 @@ sub change_due_date {
 	} # end if date has changed
 }
 
+sub Services {
+	my $self = shift;
+	$$self{Services} = shift if @_;
+	if ( $$self{id} and !$$self{Services} ) {
+		$$self{Services} = [ openprint::Project_Service->find(project_id=>$$self{id}) ];
+	}
+	return @{$$self{Services}} if $$self{Services};
+	return ();
+}
+
+
 1;
 __END__
