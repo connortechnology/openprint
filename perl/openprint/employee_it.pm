@@ -126,6 +126,16 @@ sub host {
       } else {
         $variable{error} .= 'Host failed to reboot. Check logs';
       }
+    } elsif ( $param{action} eq 'get_config' ) {
+			my $content = $Host->get_config();
+      if ( $content ) {
+        $variable{Download} = $content;
+				my $filename = $Host->name().Date::Format::time2str( '%Y-%m-%d %H:%M:%S', time).'.cfg';
+				$r->headers_out->{'Content-Disposition'} = "attachment; filename=\"$filename\"";
+				$r->content_type("text/csv; name=\"$filename\"");
+      } else {
+        $variable{error} .= 'Failed to get content. ';
+      }
     } elsif ( $param{action} eq 'Wake' ) {
       foreach my $I ( $Host->Interfaces() ) {
         next if ! $I->mac();
