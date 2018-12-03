@@ -24,7 +24,7 @@ loc.autocomplete( {minChars: 2, onSelect: getSelectedLocation, serviceUrl: '/loc
 	<li><label>Postal/Zip Code</label><input type="text" name="postalcode" id="postalcode" value="%s" /></li>
 	<li class="latitude"><label>Latitude</label><input type="number" name="latitude" id="latitude" value="%s" /></li>
 	<li class="longitude"><label>Longitude</label><input type="number" name="longitude" id="longitude" value="%s" /></li>
-', $$variable{Location}->get('address','postalcode','latitude','longitude') ) if ! sets::isin( $$variable{Location}->type(), ['city','state','country'] );
+', $$variable{Location}->get('address','postalcode','latitude','longitude') ) if ! ( $$variable{Location}->type() and sets::isin( $$variable{Location}->type(), ['city','state','country'] ) );
 
 	$html .= '</ul><ul class="ancestors">';
 	if ( $$variable{Location}->type() ne 'country' ) {

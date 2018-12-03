@@ -300,7 +300,7 @@ sub reboot {
 			$success = 1;
 			last;
 
-		} elsif( $_[0]->type() eq 'DCS932L' ) {
+		} elsif( $_[0]->type() eq 'DCS-932L' ) {
 			$url = $HI->ip().'/setSystemReboot';
 		} elsif( $_[0]->type() eq 'DCS-933L' ) {
 			$initial_url = $HI->ip();
@@ -433,6 +433,42 @@ sub Owner {
   return new openprint::Company( $_[0]{owner_id} );
 }
 
+sub get_config {
+	my $Host = shift;
+	require LWP;
+	my $browser = LWP::UserAgent->new();
+	if ( $Host->type() eq 'DCS-932L' ) {
+		my $protocol = 'http';
+		my $path = '/Config.CFG';
+		my $method = 'get';
+		my $port = 80;
+		my $args;
+		foreach my $HI ( $Host->Interfaces() ) {
+
+			my $url = $protocol.'://'.$HI->ip().$path;
+			my $response = $browser->get($url);
+			$openprint::log->debug("Sending initial url: $url");
+			my $headers = $response->headers();
+			if ( $$headers{'client-ssl-cipher'} ) {
+				$openprint::log->debug("Swtiching to https");
+				$protocol = 'https';
+				$port = 443;
+			}
+			$response = $HI->authenticate( $browser, $response, $method, $port, $url, $args);
+			#$openprint::log->debug($response->content());
+			if ( !$response->is_success ) {
+			} else {
+				return $response->content();
+				last;
+			}
+
+		} # end foreach HI
+	} # end if type
+} # end sub get_config
+
+sub can_get_config {
+	return ( $_[0]{type_id} and sets::isin( $_[0]->type(), [ 'DCS-932L' ] ) );
+}
 
 1;
 __END__
