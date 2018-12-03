@@ -33,7 +33,9 @@ cleanup : true
 				<li>
 					<label>Host</label>
           <?echo ( ssi::select( 
-                                              openprint::Host->dropdown( 'owner_id is null'=>0,order=>'hostname' ),
+            openprint::Host->dropdown( 
+#'owner_id is null'=>0,
+order=>'hostname' ),
             $$variable{Backup}->host_id(),
             {
               name    =>  'host_id',
@@ -49,11 +51,7 @@ cleanup : true
 					<input type="text" id="path" name="path" value="<? echo ( $$variable{Backup}->path() ) ?>" />
 				</li>
 				<li><label onclick="toggle_input( $('#type_id'), $('#type') );">Type</label>
-					<input type="text" id="type" name="type" style="display:none;" onkeyup="ddm_select_by_text( $('#type_id'), this.value, 0 );" />
-					<select name="type_id" id="type_id" onchange="$('#type').value='';">
-						<option value="">select</option>
-						<? echo ( make_drop_down( openprint::Backup_Type->dropdown(order=>'lower(name)'), $$variable{Backup}->type_id() ); ) ?>
-					</select>
+        <? echo ( ssi::select( [ map { $_, $openprint::Backup::types{$_} } sort { $a cmp $b } keys %openprint::Backup::types], $$variable{Backup}->type(), { name=>'type' } ); ) ?>
 				</li>
 				<li>
 					<label>How many to keep</label>
