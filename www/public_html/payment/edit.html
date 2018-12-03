@@ -35,8 +35,15 @@
 			evalScripts: true,
 		} );
 	} // end function load_paid
-
-
+  function load_unpaid( ) {
+    new Ajax.Updater( 'Unpaid', '_unpaid.html', {
+        parameters: {
+          payment_id: <? echo ( $$variable{Payment}->id() ) ?>,
+          recipient_id: $('recipient_id').value,
+     },
+          evalScripts: true,
+    } );
+  } // end function load_unpaid()
 </script>
 <? endif ( $$variable{Payment}->id() ) ?>
 <?include('/includes/error_reporting.html')?>
@@ -47,7 +54,7 @@
 		<div class="leftColumn">
 			<ul>
 			<li><label for="recipient_id">Recipient</label>
-				<select id="recipient_id" name="recipient_id">
+				<select id="recipient_id" name="recipient_id" onchange="load_unpaid();">
 					<option value=""> select </option>
 					<? echo ( make_drop_down(
              openprint::Company->dropdown(supplier=>'Y'),

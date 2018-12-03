@@ -299,7 +299,7 @@ sub parse_page {
 	my $fourth = shift @thing if @thing;
 
 	if ( $filename eq 'getfile.html' ) {
-		my $sourceDir = $config{ProjectFilesPath} . openprint::upload_handler::get_destdir();
+		my $sourceDir = $config{ProjectFilesPath} . handlers::upload::get_destdir();
 		$variable{Download} = misc::load_file( $log, $sourceDir.$param{path}.'/'.$variable{Download});
 		$r->headers_out->{'Content-Disposition'} = "attachment; filename=\"$param{filename}\"";
 		$r->content_type( "application/octet-stream; name=\"$param{filename}\"" );
@@ -365,6 +365,9 @@ sub parse_page {
 			$variable{DocketNumber} = $variable{Project}->docket();
 
 			$variable{Employee} = $openprint::User->name();
+			if ( $variable{ServiceIndex} ) {
+				$variable{Service} = $variable{Project}->Service($variable{ServiceIndex});
+			}
 			
 			if ( $filename eq 'proofs.html' or $filename eq 'FilmStripping.html' ) {
 				if ( ! $param{ServiceIndex} ) {
@@ -390,6 +393,7 @@ sub parse_page {
 				if ( ! $variable{ddmDueDate} ) {
 					$variable{ddmDueDate} = $variable{Project}->get_due_date();
 				} # end if
+				$variable{duedate} = $variable{ddmDueDate};
 				@variable{'duedate_year','duedate_month','duedate_day'} = split('-', $variable{ddmDueDate});
 
 			} elsif ( $third eq 'prin' ) {	
@@ -442,7 +446,7 @@ $log->debug("Running openprint::$module->$proc") if Debug;
 				}
 			} # end if
 		} # end if
-	} elsif ( sets::isin( $first, [ 'content', 'account' ] ) ) { # main
+	} elsif ( $first and  sets::isin( $first, [ 'content', 'account' ] ) ) { # main
 		my ( $proc ) = $filename =~ /(.*)\.\w*$/;
 		if ( $proc ) {
 			my $module = join('_',@path);
@@ -475,19 +479,18 @@ $log->debug("Running openprint::$module->$proc") if Debug;
 				# Things like UPS SHipping might not actually have a service
 				openprint::print::get_quantities( \%variable, $project_index );
 				if ( $project_index and $service_index ) {
-					my $Service = $variable{Project}->Service( $service_index );
+					my $Service = $variable{Service} = $variable{Project}->Service( $service_index );
 $log->debug("Service: " . $Service->to_string() );
 					if ( ! $Service->service_id() ) {
 						$variable{error} .= "Unable to load data for service. Perhaps it was removed.<br/>";
 						$variable{ExternalRedirect} = '/main/project/view.html?project_id='.$project_index;
 					} else {
-						$variable{ServiceType} = $Service->ServiceType();
-						@variable{'ServiceTypeID','ServiceTypeName','ServiceTypeType'} = $variable{ServiceType}->get('name','description','type') if $variable{ServiceType};
 
-	$log->debug("ServiceType: $variable{ServiceTypeType}");
 						my $specs = $Service->specs();
 						@variable{keys %$specs} = values %$specs;
 						$variable{ServiceType} = $Service->ServiceType();
+						@variable{'ServiceTypeID','ServiceTypeName','ServiceTypeType'} = $variable{ServiceType}->get('name','description','type') if $variable{ServiceType};
+						$log->debug("ServiceType: $variable{ServiceTypeType}");
 					} # end if
 				} # end if
 				$variable{ProjectType} = $variable{Project}->Type();

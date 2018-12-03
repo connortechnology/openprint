@@ -65,7 +65,7 @@ Please select a company or user to obtain login information.<br/>
 					<label>User Name</label>
 					<select name="ddmUser" onchange="f1.btnFunction.value='';f1.submit();">
 						<option value="">Select a User</option>
-						<?FILL_USER_NAME?>
+						<?echo( make_drop_down( [ map { $_->id(), $_->name() } @{$$variable{Users}} ], $$variable{User}->id() ); ) ?>
 					</select>
 				</li>
 			</ul>
@@ -312,8 +312,8 @@ Please select a company or user to obtain login information.<br/>
 			<? echo (
 				my $html;
 				my @UserGroups = map { $_->id() } $$variable{User}->Groups();
-				foreach my $Group ( openprint::UserGroup->find( 'order'=>'lower(name)' ) ) {
-					$html .= sprintf('<li><input type="checkbox" id="UserGroups%1$d" name="UserGroups" value="%1$d" %3$s /><label for="UserGroups%1$d">%2$s</label></li>', $Group->id(), $Group->name(), checked( sets::isin( $Group->id(), \@UserGroups ) ) );
+				foreach my $Group ( openprint::UserGroup->find( order=>'lower(name)' ) ) {
+					$html .= sprintf('<li><input type="checkbox" id="UserGroups%1$d" name="UserGroups" value="%1$d" %3$s /><label class="radio" for="UserGroups%1$d">%2$s</label></li>', $Group->id(), $Group->name(), checked( sets::isin( $Group->id(), \@UserGroups ) ) );
 				} # end foreach
 				return $html;
 			) ?>
@@ -322,7 +322,7 @@ Please select a company or user to obtain login information.<br/>
 		<? if ( $$variable{DoEmail} ) ?>
 		<?include(/account/_email_settings.html)?>
 		<? endif ( $$variable{DoEmail} ) ?>
-		<? echo ( include('/account/_user_profile_edit.html'); ) ?>
+		<?include('/account/_user_profile_edit.html')?>
 		<div class="LoginCredentials">
 			<fieldset><legend>Login Information</legend> 
 				<ul>

@@ -135,6 +135,7 @@ sub data_to_csv {
 	push @data, $csv->string() . "\n";
 
 	for ( my $index = 0; $index < @{$data}; $index += 1 ) {
+		next if ! defined($$data[$index]);
 		$$data[$index] =~ s/[\n\r]//g; # these really mess up the CSV
 	} # end for
 	
@@ -547,6 +548,15 @@ $openprint::log->debug("Have @filenames from $_[0]");
 	return @results;
 }
 
+sub make_hash_from_array {
+	my $key = shift;
+	my %results;
+	foreach my $object ( @_ ) {
+		$results{$$object{$key}} = [] if ! $results{$$object{$key}};
+		push @{$results{$$object{$key}}}, $object;
+	}
+	return \%results;
+}
 
 1;
 __END__

@@ -119,10 +119,10 @@ $log->debug("Loading object $parent $id from cache and populating with data new 
 
 if ( 1 ) {
 	if ( ( $$self{id} = $id ) or $data ) {
-		if ( $debug or DEBUG_ALL ) {
-			my ( $caller, undef, $line ) = caller;
-			$log->debug("loading $parent $id from $caller:$line");
-		}
+		#if ( $debug or DEBUG_ALL ) {
+			#my ( $caller, undef, $line ) = caller;
+			#$log->debug("loading $parent $id from $caller:$line");
+		#}
 		$self->load( $data );
 	} # end if
 }
@@ -1026,6 +1026,7 @@ $log->error("returning nothing for $object_type $cache_field $$params{$cache_fie
 #$log->warn("Doing find_cache for $object_type $cache_ref $name_cache{$object_type}");
 
 			foreach my $O ( @results ) {
+				next if !$$O{$cache_field};
 				$cache_ref->{$$O{$cache_field}} = $O;
 #$log->warn("Doing find_cache for $object_type $$O{$cache_field}");
 			} 

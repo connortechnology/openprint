@@ -85,9 +85,23 @@ sub view {
 		( $order_id ) = sql::execute( $log, $dbh, q{SELECT id FROM Orders WHERE id IN ( SELECT DISTINCT OrderIndex FROM Order_Contents WHERE lngProjectIndex=? ) AND docket=?}, $project_index, $param{Docket} );
 	} # end if
 	$variable{OrderID} = $order_id;
-	$variable{Order} = new openprint::Order( $order_id );
+	my $Order = $variable{Order} = new openprint::Order( $order_id );
 
-	if ( $param{action} eq 'Change Status' ) {
+	if ( $param{action} eq 'DoNotPayCommission' ) {
+		if ( $session{user_type} eq 'A' ) {
+			$Order->save({do_not_pay_commission=>1});
+			(new openprint::Log())->save({Object=>$Order, action=>'Save', note=>'Mark Order as Do Not Pay Commission'});
+		} else {
+			$variable{error} .= 'You do not have permission.';
+		}
+	} elsif ( $param{action} eq 'PayCommission' ) {
+		if ( $session{user_type} eq 'A' ) {
+			$Order->save({do_not_pay_commission=>0});
+			(new openprint::Log())->save({Object=>$Order, action=>'Save', note=>'Mark Order as Ok To Pay Commission'});
+		} else {
+			$variable{error} .= 'You do not have permission.';
+		}
+	} elsif ( $param{action} eq 'Change Status' ) {
 		foreach my $service_id ( split(',', $param{service_id} ) ) {
 			my $Service = $Project->Service( $service_id );
 			if ( ! $Service->service_id() ) {
@@ -243,25 +257,15 @@ $log->debug("Project complete: $complete " . $Service->to_string());
 						$Service->save({status=>'Ordered'});
 					} # end if
 				} elsif ( $param{rdbApproved} eq 'Y' ) {
-					if ( $param{duedate_year} ) {
-						if ( ! Date::Calc::check_date( @param{'duedate_year','duedate_month','duedate_day'} ) ) {
-							$variable{error} = 'There was an error saving the DueDate.  Please check that a real date was selected.';
-							$param{rdbApproved} = 'N';
+					if ( $param{duedate} and ( $param{duedate} ne $Project->due_date() ) ) {
+						$Project->due_date( $param{duedate} );
+						if ( ! $Project->save() ) {
+							$Project->add_to_log( @session{'company_id','user_id'}, "Duedate changed to $param{duedate}" );
+							send_duedate_change_notification( $project_index, $order_id );
 						} else {
-							# It's a valid duedate
-							my $duedate = sprintf('%.4d-%.2d-%.2d', @param{'duedate_year','duedate_month','duedate_day'} );
-
-							if ( $duedate ne $Project->due_date() ) {
-								$Project->due_date( $duedate );
-								if ( ! $Project->save() ) {
-									$Project->add_to_log( @session{'company_id','user_id'}, "Duedate changed to $duedate" );
-									send_duedate_change_notification( $project_index, $order_id );
-								} else {
-									$variable{error} .= 'Error saving duedate.';
-								} # end if
-							} # end if
-						} # end if valid due date
-					} # end if due date is specified
+							$variable{error} .= 'Error saving duedate.';
+						} # end if
+					} # end if
 
 					if ( (!$variable{error}) and ($status ne 'Approved') ) {
 						openprint::employee_production::mark_proofs_approved( $Project, $Service );

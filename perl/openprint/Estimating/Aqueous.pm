@@ -166,17 +166,22 @@ sub calc {
 
 	my $Project = new openprint::Project( $project_index );
 
-	@all_equipment = openprint::Equipment->find( Specifications => {'Aqueous Capable'=>['Y','When Printing']}, useinestimating=>1, order=>'lower(strName)') if ! @all_equipment;
+	@all_equipment = openprint::Equipment->find(
+			Specifications => {'Aqueous Capable'=>['Y','When Printing']},
+			useinestimating=>1,
+			order=>'lower(strName)'
+			) if ! @all_equipment;
 
 	foreach my $qty_index ( $Project->quantity_indexes() ) {
 		$$specs{"Markup$qty_index"} =~ s/[^\d\.\-]//g if $$specs{"Markup$qty_index"};
 		$$specs{"txtPrice$qty_index"} =~ s/[^\d\.]//g if $$specs{"txtPrice$qty_index"};
 		$$specs{"txtQuantity$qty_index"} =~ s/\D//g if $$specs{"txtQuantity$qty_index"};
 		$$specs{"txtQuantity$qty_index"} = $Project->quantity($qty_index) if ! $$specs{"txtQuantity$qty_index"};
-		if ( ! ( $$specs{"txtQuantity$qty_index"} > 0 ) ) {
+		if ( $$specs{"txtQuantity$qty_index"} <= 0 ) {
 			next;
 		} # end if
-		$$specs{'hdnBreakdown'.$qty_index} = sprintf('QTY: %d<br/>',$$specs{"txtQuantity$qty_index"} );
+		$$specs{'hdnBreakdown'.$qty_index} = '';
+#sprintf('QTY: %d<br/>',$$specs{"txtQuantity$qty_index"} );
 
 		my $qty = $$specs{"txtQuantity$qty_index"};
 		if ( $$specs{txtPressSheetComboItems} ) {
@@ -346,7 +351,10 @@ if (
 		#$impressions *= $$sig_specs{Versions};
 	#} # end if
 
-	@all_equipment = openprint::Equipment->find( Specifications => {'Aqueous Capable'=>['Y','When Printing']}, useinestimating=>1,order=>'lower(strName)') if ! @all_equipment;
+	@all_equipment = openprint::Equipment->find(
+			Specifications => {'Aqueous Capable'=>['Y','When Printing']},
+			useinestimating=>1,
+			order=>'lower(strName)') if ! @all_equipment;
 	my @equipment;	
 	if ( (defined $$specs{"chkOverrideEquipment-$form-$qty_index"} ) and ( $$specs{"chkOverrideEquipment-$form-$qty_index"} eq 'Y' ) ) {
 		@equipment = ( new openprint::Equipment( $$specs{"ddmEquipment-$form-$qty_index"} ) );
@@ -364,20 +372,21 @@ if (
 	my @impositions = ();
 	@impositions = ( $Imposition->copy() );
 	$openprint::log->debug('AQ DOne Cutting :' . @impositions) if DEBUG;
+	my $Paper = $Imposition->Paper();
 
-	my $AllAqueousMakeReady = openprint::Service->find_one( name=>'AqueousMakeReady');
-	my $AqueousMinimumCharge = openprint::Service->find_one( name=>'AqueousMinimumCharge');
+	my $AllAqueousMakeReady = openprint::Service->find_one(name=>'AqueousMakeReady');
+	my $AqueousMinimumCharge = openprint::Service->find_one(name=>'AqueousMinimumCharge');
 
-	my $BlanketCutService = openprint::Service->find_one( name => 'AqueousBlanketCut');
-	$BlanketCutService = openprint::Service->find_one( name => 'BlanketCut') if ! $BlanketCutService;
-	my $BlanketCutServiceWT = openprint::Service->find_one( name => 'AqueousBlanketCutW&T');
+	my $BlanketCutService = openprint::Service->find_one(name=>'AqueousBlanketCut');
+	$BlanketCutService = openprint::Service->find_one(name=>'BlanketCut') if ! $BlanketCutService;
+	my $BlanketCutServiceWT = openprint::Service->find_one(name=>'AqueousBlanketCutW&T');
 	$BlanketCutServiceWT = $BlanketCutService  if ! $BlanketCutServiceWT;
 	my %Materials;
-	$Materials{Aqueous} = openprint::Material->find_one( name=> 'Aqueous' );
+	$Materials{Aqueous} = openprint::Material->find_one(name=>'Aqueous');
 	
 	foreach my $Equipment ( @equipment ) {
-$openprint::log->debug("AQ Equipment $$Equipment{strid}") if DEBUG;
-		$$specs{'hdnBreakdown'.$qty_index} .= 'Equipment: '.$Equipment->strid().' ' . $Equipment->specification('Aqueous Capable') . ' ' . $$sig_specs{'ddmPress'.$qty_index} . ',<br/>';
+		$openprint::log->debug("AQ Equipment $$Equipment{strid}") if DEBUG;
+		$$specs{'hdnBreakdown'.$qty_index} .= 'Equipment: '.$$Equipment{strid}.' '.$Equipment->specification('Aqueous Capable').' '.$$sig_specs{'ddmPress'.$qty_index} . ',<br/>';
 		if ( $Equipment->specification('Aqueous Capable') eq 'When Printing' ) {
 			if ( $$sig_specs{'ddmPress'.$qty_index} ne $$Equipment{strid} ) {
 				$$specs{'hdnBreakdown'.$qty_index} .= 'Not printing on this press.<br/>';
@@ -389,7 +398,6 @@ $openprint::log->debug("AQ Equipment $$Equipment{strid}") if DEBUG;
 		} 
 		if ( my $min_weight = $Equipment->specification('Aqueous Minimum Weight') ) {
 #$openprint::log->debug("Min weight: $min_weight");
-			my $Paper = $Imposition->Paper();
 			if ( $min_weight > $Paper->gsm() ) {
 				$$specs{'hdnBreakdown'.$qty_index} .= "Paper is too light. Paper gsm($$Paper{gsm}) < Minimum weight $min_weight gsm<br/>";
 				next;
@@ -445,6 +453,7 @@ $openprint::log->debug("AQ Equipment $$Equipment{strid}") if DEBUG;
 				my %setupPrice;
 				my $colour_total = 0;
 $openprint::log->debug("Makereadies: $$Equipment{id} $$Equipment{strid} area: $area $$type{name} ? " . ( $MakeReadies{$$Equipment{id}} ? join(',', @{$MakeReadies{$$Equipment{id}}}) : 'none' ) ) if DEBUG;
+
 				if ( $MakeReadies{$$Equipment{id}} and ( map { ( (($area * 1.10) > $_) and (($area * .90) < $_) ) ? $_ : () } @{$MakeReadies{$$Equipment{id}}} ) ) {
 $openprint::log->debug("In Makereadies: $$Equipment{id} $area") if DEBUG;
 				} else {
@@ -532,7 +541,7 @@ $openprint::log->debug("Not In Makereadies: $$Equipment{id} $area") if DEBUG;
 						$MaterialPrice{Total} = $MaterialPrice{Price} * $area/1000;
 					} elsif ( $MaterialPrice{units} eq 'per m' ) {
 						$MaterialPrice{Total} = $MaterialPrice{Price} * $run_qty / 1000;
-					} else {
+					} elsif ( $MaterialPrice{Price} ) {
 						$$specs{'hdnBreakdown'.$qty_index} .= "Unknown units for Material $$Material{name} ($MaterialPrice{units})<br/>";
 					} # end if
 					$Price{Material} += $MaterialPrice{Total};
@@ -542,8 +551,27 @@ $openprint::log->debug("Not In Makereadies: $$Equipment{id} $area") if DEBUG;
 				$$specs{'hdnBreakdown'.$qty_index} .= sprintf('MR: $%.2f + BC: $%.2f + Service: ($%.2f%s*%d)=$%.2f + Material: $%.2f%s = $%.2f ) = $%.2f<br/>',
 					$setupPrice{Price}, $BlanketCutPrice{Price}, @ServicePrice{'Price','units','Quantity','Total'}, @MaterialPrice{'Price','units','Total'}, $colour_total );
 			} # end foreach type
+
+			if (
+					( defined $$specs{"OverrideMakeReadyPrice-$form-$qty_index"} )
+					and
+					( $$specs{"OverrideMakeReadyPrice-$form-$qty_index"} eq 'Y' )
+				 ) {
+				$Price{MakeReady} = $$specs{"MakeReadyPrice-$form-$qty_index"};
+			} # end if
+			if ( (defined $$specs{"OverrideBlanketPrice-$form-$qty_index"} ) and ( $$specs{"OverrideBlanketPrice-$form-$qty_index"} eq 'Y' ) ) {
+				$Price{BlanketCut} = $$specs{"BlanketPrice-$form-$qty_index"};
+			} # end if
+			if ( (defined $$specs{"OverrideServicePrice-$form-$qty_index"} ) and ( $$specs{"OverrideServicePrice-$form-$qty_index"} eq 'Y' ) ) {
+				$Price{Service} = $$specs{"ServicePrice-$form-$qty_index"};
+			} # end if
+			if ( (defined $$specs{"OverrideMaterialPrice-$form-$qty_index"}) and ( $$specs{"OverrideMaterialPrice-$form-$qty_index"} eq 'Y' ) ) {
+				$Price{Material} = $$specs{"MaterialPrice-$form-$qty_index"};
+			} # end if
+
 			$Price{Total} = $Price{MakeReady} + $Price{Service} + $Price{Material} + $Price{BlanketCut};
 			if ( %minimum and ( $Price{Total} < $minimum{Price} ) ) {
+				$$specs{'hdnBreakdown'.$qty_index} .= sprintf('Minimum Charge: $%.2f', $minimum{Price});
 				$Price{Total} = $minimum{Price};
 			} # end if
 
@@ -564,26 +592,18 @@ $openprint::log->debug("Not In Makereadies: $$Equipment{id} $area") if DEBUG;
 		$bestPrice{Status} = 'calculated';
 	} # end if
 
-	if ( ( defined $$specs{"OverrideMakeReadyPrice-$form-$qty_index"} ) and ( $$specs{"OverrideMakeReadyPrice-$form-$qty_index"} eq 'Y' ) ) {
-		$bestPrice{MakeReady} = $$specs{"MakeReadyPrice-$form-$qty_index"};
-	} # end if
-	if ( (defined $$specs{"OverrideBlanketPrice-$form-$qty_index"} ) and ( $$specs{"OverrideBlanketPrice-$form-$qty_index"} eq 'Y' ) ) {
-		$bestPrice{BlanketCut} = $$specs{"BlanketPrice-$form-$qty_index"};
-	} # end if
-	if ( (defined $$specs{"OverrideServicePrice-$form-$qty_index"} ) and ( $$specs{"OverrideServicePrice-$form-$qty_index"} eq 'Y' ) ) {
-		$bestPrice{Service} = $$specs{"ServicePrice-$form-$qty_index"};
-	} # end if
-	if ( (defined $$specs{"OverrideMaterialPrice-$form-$qty_index"}) and ( $$specs{"OverrideMaterialPrice-$form-$qty_index"} eq 'Y' ) ) {
-		$bestPrice{Material} = $$specs{"MaterialPrice-$form-$qty_index"};
-	} # end if
-	$bestPrice{Total} = misc::sum( @bestPrice{'MakeReady','BlanketCut','Service','Material'} );
+	#$bestPrice{Total} = misc::sum( @bestPrice{'MakeReady','BlanketCut','Service','Material'} );
 	return %bestPrice;
 } # end sub signature_calc
 
 sub display {
 	my ( $log, $dbh, $variable, $project_index, $service_index ) = @_;
 #$openprint::log->debug('Aqueous');
-	@{$$variable{Equipment}} = openprint::Equipment->find( 'Specifications' => {'Aqueous Capable'=>['Y','When Printing']}, 'useinestimating'=>1,'order'=>'lower(strName)');
+	@{$$variable{Equipment}} = openprint::Equipment->find(
+			Specifications => {'Aqueous Capable'=>['Y','When Printing']},
+			useinestimating=>1,
+			order=>'lower(strName)'
+			);
 } # end sub display
 
 # Copies the AQ settings back into the printing service, because that is where we have chosen to store them.
@@ -597,11 +617,11 @@ sub summary {
 } # end sub summary
 
 sub has_overrides {
-    my ( $Project, $service_id, $specs, $qty_index ) = @_;
-    $specs = openprint::service::get_specs_ref( $Project, $service_id ) if ! $specs;
+	my ( $Project, $service_id, $specs, $qty_index ) = @_;
+	$specs = openprint::service::get_specs_ref( $Project, $service_id ) if ! $specs;
 
-    my @v;
-    if ( $qty_index ) {
+	my @v;
+	if ( $qty_index ) {
 		foreach my $s_s_id ( $Project->signatures() ) {
 			my $sig_specs = openprint::service::get_specs_ref( $Project, $s_s_id );
 			my $form = $$sig_specs{SignatureIndex};
@@ -615,12 +635,10 @@ sub has_overrides {
 					"OverrideSignaturePrice-$form-$qty_index",
 					);
 		} # end foreach sig
-    } # end if
+	} # end if
 
-    return @v;
-
+	return @v;
 } # end sub has_overrides
-
 
 1;
 __END__

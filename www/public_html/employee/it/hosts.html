@@ -16,18 +16,29 @@ Please select a host to view/edit.<br/>
 	<input type="hidden" name="action"/>
 	<fieldset class="filters"><legend>Search Criteria</legend>
 		<ul>
-		<li>
-			<label for="ip">Host IP</label>
-			<? echo ( input( type=>'ip', id=>'ip', name=>'ip', value=>$session{'/employee/it/hosts.html?ip'}, oninput=>"this.form.hostname.value='';this.form.mac.value='';", onkeydown=>q`if(event&&event.keyCode==13){load_host($('f1'));}`, ondblclick=>q`this.value='';` ); ) ?>
-			Hostname:
-			<input type="text" id="hostname" name="hostname" value="<? echo ( $session{'/employee/it/hosts.html?hostname'} ) ?>" oninput="to_hostname(this);" onkeydown="this.form.ip.value='';this.form.mac.value='';if(event && event.keyCode == 13){load_host( $('f1') );}" ondblclick="this.value='';"/>
-			MAC:
-			<input pattern="[0-9a-fA-F:\-%]*" type="text" id="mac" name="mac" value="<? echo ( $session{'/employee/it/hosts.html?mac'} ) ?>" onkeyup="this.value=this.value.replace(/[^0-9a-fA-F:\-%]/g,'');" onkeydown="this.form.ip.value='';this.form.hostname.value='';if(event && event.keyCode == 13){load_host( $('f1') );}" oninput="this.onkeyup.call(this);" ondblclick="this.value='';"/>
-		</li>
-		<li><label>Type</label>
-			<? echo ( ssi::select( openprint::Host_Type->dropdown(order=>'lower(name)'), $session{'/employee/it/hosts.html?type_id'}, { name=>'type_id', prepend=>['','All'] } ); ) ?>
-		</li>
-		<li><label>Owner</label>
+			<li class="ip"><label for="ip">Host IP</label>
+			<? echo ( input( type=>'ip', id=>'ip', name=>'ip',
+						value=>$session{$r->uri().'?ip'}, onkeydown=>q`if(event&&event.keyCode==13){load_host($('f1'));}`, with_clear=>1 ); ) ?>
+			</li>
+			<li class="hostname"><label for="hostname">Hostname</label>
+			<?echo( input( type=>'text', id=>'hostname', name=>'hostname',
+						value				=> $session{$r->uri().'?hostname'}, oninput=>'to_hostname(this);',
+						onkeypress	=> q`if(event && event.keyCode == 13){load_host( $('f1') );}`,
+						with_clear	=> 1,
+); ) ?>
+			</li>
+			<li class="mac"><label for="mac">MAC</label>
+				<?echo( input( pattern=>'[0-9a-fA-F:\\-%]*', type=>'text', id=>'mac', name=>'mac',
+							value			=> $session{$r->uri().'?mac'},
+							onkeyup		=> q`this.value=this.value.replace(/[^0-9a-fA-F:\\-%]/g,'');`,
+							onkeydown	=> q`if(event && event.keyCode == 13){load_host( $('f1') );}`,
+							oninput		=> 'this.onkeyup.call(this);', 
+							with_clear=> 1 ); ) ?>
+			</li>
+			<li class="type"><label>Type</label>
+				<? echo ( ssi::select( openprint::Host_Type->dropdown(order=>'lower(name)'), $session{'/employee/it/hosts.html?type_id'}, { name=>'type_id', prepend=>['','All'] } ); ) ?>
+			</li>
+			<li class="owner"><label>Owner</label>
                 <input type="text" onkeyup="filter_companies('owner_id', {name:this.value,selected_id:get_ddm_value($('owner_id'))});" class="filter" />
                 <select id="owner_id" name="owner_id" onchange="stop_filter_companies();">
                     <option value="">All</option>

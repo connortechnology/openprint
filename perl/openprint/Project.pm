@@ -1226,8 +1226,10 @@ sub get_due_date {
 	my $runtime = 0;
 	foreach ( $self->signatures() ) {
 		$runtime += openprint::service::get_runtime( $self, $_ );
+$openprint::log->debug("Adding runtime $runtime");
 	} # end foreach
-	$duedatedays += int( $runtime / ( 24*60 ) );
+$openprint::log->debug("Adding runtime days: " . int( $runtime / ( 24*60 ) ) );
+	$duedatedays += int( $runtime / ( 24*60*60 ) );
 	
 	return sprintf('%.4d-%.2d-%.2d', misc::add_delta_business_days( Date::Calc::Today(), $duedatedays ) );
 } # end sub get_due_date
@@ -1974,6 +1976,17 @@ sub change_due_date {
 		openprint::employee_project::send_duedate_change_notification( $$Project{id}, $Project->order_id() );
 	} # end if date has changed
 }
+
+sub Services {
+	my $self = shift;
+	$$self{Services} = shift if @_;
+	if ( $$self{id} and !$$self{Services} ) {
+		$$self{Services} = [ openprint::Project_Service->find(project_id=>$$self{id}) ];
+	}
+	return @{$$self{Services}} if $$self{Services};
+	return ();
+}
+
 
 1;
 __END__

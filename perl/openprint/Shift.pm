@@ -216,6 +216,7 @@ sub get_lis {
 	foreach my $Job ( @Jobs ) {
 		if ( $filters ) {
 			if ( $$filters{Status} ) {
+				next if ! $$Job{project_id};
 				next if ! sets::isin( $Job->Project()->status(), $$filters{Status} );
 			} # end if
 		} # end if
@@ -270,7 +271,7 @@ sub get_ul {
 	foreach my $Job ( @Jobs ) {
 		if ( $filters ) {
 			if ( $$filters{Status} ) {
-				next if ! sets::isin( $Job->Project()->status(), $$filters{Status} );
+				next if ! ( $$Job{project_id} and sets::isin( $Job->Project()->status(), $$filters{Status} ) );
 			} # end if
 		} # end if
 		$total_impressions += $Job->impressions();

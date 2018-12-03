@@ -206,6 +206,33 @@ sub view {
 			delete $param{btnFunction};
 			$variable{ExternalRedirect} = '/employee/purchase_order/history.html';
 		} # end if
+  } elsif ( $param{btnFunction} eq 'DoNotPay' ) {
+    $variable{error} .= $PO->save({ do_not_pay=>1 });
+    if ( ! $variable{error} ) {
+      my $L = new openprint::PurchaseOrder_Log();
+      $L->save({
+          user_id =>  $session{user_id},
+          po_id   =>  $PO->id(),
+          reason  =>  'Marked do not pay: '. $param{reason},
+          });
+      delete $param{po_id};
+      delete $param{btnFunction};
+      $variable{ExternalRedirect} = '/employee/purchase_order/view.html?po_id='.$PO->id();
+    } # end if
+  } elsif ( $param{btnFunction} eq 'UnDoNotPay' ) {
+    $variable{error} .= $PO->save({do_not_pay=>0});
+    if ( ! $variable{error} ) {
+      my $L = new openprint::PurchaseOrder_Log();
+      $L->save({
+          user_id =>  $session{user_id},
+          po_id   =>  $PO->id(),
+          reason  =>  'Un-DoNotPay: '. $param{reason},
+          });
+      delete $param{po_id};
+      delete $param{btnFunction};
+      $variable{ExternalRedirect} = '/employee/purchase_order/view.html?po_id='.$PO->id();
+    } # end if
+
 	} elsif ( $param{btnFunction} eq 'Cancel' ) {
 		$variable{error} .= $PO->save({ cancelled=>1 });
 		if ( ! $variable{error} ) {

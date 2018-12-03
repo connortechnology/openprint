@@ -44,6 +44,11 @@
             <? echo ( openprint::Currency::format( $$variable{Order}->owing() ); ) ?>
         </li>
 		<? endif ( $config{ShowAccountingOnOrder} ne 'N' or ( $session{user_type} eq 'A' or $session{user_type} eq 'E' ) ) ?>
+<? if ( $session{user_type} eq 'A' or $openprint::User->in_Group('Accounting') ) ?>
+<? if ( $$variable{Order}->do_not_pay_commission() ) ?>
+					<li  class="error">Do Not Pay Commission</li>
+<? endif ( $$variable{Order}->do_not_pay_commission() ) ?>
+<? endif ( $session{user_type} eq 'A' or $openprint::User->in_Group('Accounting') ) ?>
 	</ul>
 	</div>
 	<span class="Currency">All prices listed in <? echo ( $$variable{Currency}->name() ) ?>.

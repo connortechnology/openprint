@@ -12,8 +12,10 @@
 		$log->error( 'No Project Service in project ' . $$variable{Project}->id() . ' index: ' . $$variable{index} );
 		return;
 	} 
+
+	# If there is a scheduled equipment for this service type
 	if ( openprint::Equipment->find(useinscheduling=>1,'servicetype_id @>'=> $Service->servicetype_id()) ) {
-		if ( my $Job = openprint::ScheduledJob->find_one('service_id @>'=> \@service_ids ) ) {
+		if ( my $Job = openprint::ScheduledJob->find_one('service_id @>'=> \@service_ids) ) {
 			if ( ! $Job->starttime() ) {
 				$html = 'Scheduled in pending';
 			} else {

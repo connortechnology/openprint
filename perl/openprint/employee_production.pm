@@ -1022,6 +1022,7 @@ $log->error("No service_id in service for project $$Project{id}, $service_id: " 
 sub docket_sheet {
 	openprint::print_project::summary( @_ );
 } # end sub docket_sheet
+
 sub summary {
 	openprint::print_project::summary( @_ );
 } # end sub summary
