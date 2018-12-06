@@ -57,9 +57,22 @@ sub isin_regx {
 
 } # end sub inin_regx
 
+sub ordered_union {
+	my %hash;
+	my @results;
+	foreach ( @_ ) {
+		if ( ! $hash{$_} ) {
+			push @results, $_;
+			$hash{$_} = !undef;
+		}
+	}
+	return @results;
+}
+
 sub union {
 	return keys %{{ map { $_ => 1 } @_ }};
 } # end sub union
+
 sub object_union {
 	return values %{{ map { $_->id() => $_ } @_ }};
 } # end sub union
