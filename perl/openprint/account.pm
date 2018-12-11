@@ -456,12 +456,12 @@ sub user_profile {
 
 	if ( $User->can_edit() ) {
 		if ( $param{btnFunction} eq '<<' ) {
-			$User = $User->Prev( 'company_id'=>$session{company_id} );
+			$User = $User->Prev(company_id=>$session{company_id});
 		} elsif ( $param{btnFunction} eq '>>' ) {
-			$User = $User->Next( company_id=>$session{company_id} );
+			$User = $User->Next(company_id=>$session{company_id});
 		} elsif ( $param{btnFunction} eq 'Delete' ) {
 			$User->delete();
-			$User = $User->Next( 'company_id'=>$session{company_id} );
+			$User = $User->Next(company_id=>$session{company_id});
 		} elsif ( $param{btnFunction} eq 'Save' ) {
 			my $error = '';
 			if ( $param{password} ne $User->password() ) {
@@ -469,7 +469,7 @@ sub user_profile {
 					$variable{warning} .= 'Verify password left blank, password not changed.<br/>';
 					delete $param{password};
 				} else {
-					$error .= "Password fields do not match.<br/>" if $param{password} ne $param{verifypassword};
+					$error .= 'Password fields do not match.<br/>' if $param{password} ne $param{verifypassword};
 				} # end if
 			} # end if
 

@@ -99,8 +99,11 @@ $openprint::log->debug("Having authenticate $$headers{'www-authenticate'}");
 			my $username = $Host->info('username');
 			my $password = $Host->info('password');
 			$openprint::log->debug("tokens: $tokens realm: $tokens{realm} username: $username password: $password ");
-			$browser->credentials( $HI->ip().':'.$port, $tokens{realm}, $username, $password );
-			$response = $browser->$method( $url, $args ? $args : () );
+			$browser->credentials( $HI->ip().':'.$port, $tokens{realm},
+					($username ? $username : ''), 
+					($password ? $password : ''),
+					);
+			$response = $browser->$method( $url, $args ? %{$args} : () );
 $openprint::log->debug("Auth response for $method $url $tokens{realm}, $username, $password " . $response->is_success );
 		} else {
 			$openprint::log->error("No realm");

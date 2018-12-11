@@ -4,7 +4,7 @@ use Carp;
 
 use openprint::Imposition;
 
-use constant DEBUG => 0;
+use constant DEBUG => 1;
 use constant DEBUG_DUTCH => 0;
 use constant DEBUG_CONVERT => 0;
 
@@ -1200,12 +1200,27 @@ sub decrease_imposition {
 			$imp2->rows( $$imposition{dutch_rows} );
 			push @results, $imp2;
 		} elsif ( $$imposition{runstyle} eq 'Work & Turn' ) {
-			#if ( $$imposition{columns} >= 2 ) {
-					my $imp1 = $imposition->copy();
-					$imp1->runstyle( 'Sheet Work' );
-					$imp1->columns( $$imp1{columns} / 2 );
-					push @results, $imp1;
-			#
+			{
+				my $imp1 = $imposition->copy();
+				$imp1->runstyle( 'Sheet Work' );
+				$imp1->columns( $$imp1{columns} / 2 );
+				push @results, $imp1;
+			}
+
+			if ( $$imposition{columns} > 2 ) {
+# Consider removing a column from each half.
+				my $imp1 = $imposition->copy();
+				$imp1->columns( $$imp1{columns} - 2 );
+				push @results, $imp1;
+			}
+
+			if ( $$imposition{rows} > 1 ) {
+# Consider knocking a row off
+				my $imp1 = $imposition->copy();
+				$imp1->rows( $$imp1{rows}-1 );
+				push @results, $imp1;
+			}
+
 			#f ( $$imposition{rows} >= 2 ) {
 			#foreach my $row ( 2 .. $$imposition{rows} ) {
 			#	my $imp1 = $imposition->copy();

@@ -671,6 +671,10 @@ if ( ! sets::isin('payments', \@tables) ) {
 		$dbh->do('ALTER TABLE orders ADD supplier_id INTEGER');
 		$dbh->do('ALTER TABLE orders ADD FOREIGN KEY (supplier_id) REFERENCES Companies (Id)');
 	} # end if
+	if ( ! exists $$data{do_not_pay_commission} ) {
+		$log->debug("Adding do_not_pay_commission to Orders");
+		$dbh->do('ALTER Table orders add do_not_pay_commission boolean not null default false') or $dbh->errstr();
+	}
 	if ( ! exists $$data{total} ) {
 		if ( exists $$data{curtotalsale} ) {
 			$dbh->do('ALTER TABLE orders rename curtotalsale to total');

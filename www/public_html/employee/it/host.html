@@ -109,6 +109,9 @@ make_drop_down( openprint::Company->dropdown(id=>[ @owner_ids, $openprint::Compa
             $html .= button( 'Reboot', { onclick=>"f1.elements['action'].value='reboot';f1.action='/employee/it/host.html';f1.submit();" } );
             }
 						$html .= button( 'GEOLookup', { onclick=>"f1.elements['action'].value='GEOLookup';f1.action='/employee/it/host.html';f1.submit();" } );
+						if ( $$variable{Host}->can_get_config() ) {
+							$html .= button( 'GetConfig', { onclick=>"f1.elements['action'].value='get_config';f1.submit();", text=>'Get Config' } );
+						}
 						return $html;
 					) ?>
 				</p>
