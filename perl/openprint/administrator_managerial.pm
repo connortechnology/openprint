@@ -599,7 +599,7 @@ sub company_profiles {
 # add them back in
 				my $sth = $dbh->prepare( q{INSERT INTO Companies_in_Marketing_Categories (Category_Id,Company_Id) VALUES ( ?, ? )} );
 				foreach my $cat ( $param{selectCustomerCategories} ) {
-					if ( sets::isin( $cat, \@customercategories ) ) {
+					if ( $cat and sets::isin( $cat, \@customercategories ) ) {
 						$sth->execute( $cat, $index ) or $log->error( DBI->errstr );
 					} # end if
 				} # end foreach
