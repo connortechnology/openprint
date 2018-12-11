@@ -57,7 +57,7 @@ $serial = 'invoices_id_seq';
 
 %find_fields = (
 	po		=>	'(SELECT po FROM invoiced_products WHERE invoiced_products.invoice_id = invoices.id)',
-	sent_on	=>	q`(SELECT date_time FROM logs WHERE object_id=invoices.id AND object_type_id=(SELECT id FROM Object_Types WHERE name='openprint::Invoice') LIMIT 1)`,
+	sent_on	=>	q`(SELECT date_time FROM logs WHERE object_id=invoices.id AND object_type_id=(SELECT id FROM Object_Types WHERE name='openprint::Invoice') AND action_id=(SELECT id FROM Log_Actions WHERE name='Invoice Sent') LIMIT 1)`,
 	product_id	=>	'(SELECT product_id FROM invoiced_products WHERE invoice_id=invoices.id)',
 );
 
@@ -509,6 +509,18 @@ sub paid_days {
   my $sent_time = Date::Parse::str2time( $sent );
   my $days = int( ($paid_time-$sent_time) / 86400 );
   return $days;
+}
+
+sub sent_on {
+
+  if ( ! $_[0]{sent_on} ) {
+    ( $_[0]{sent_on} ) = sql::execute( undef, undef, q`
+      SELECT MIN(date_time) FROM logs WHERE object_id=?
+      AND object_type_id=(SELECT id FROM Object_Types WHERE name='openprint::Invoice') 
+      AND action_id=(SELECT id FROM log_actions WHERE name='Invoice Sent') 
+      LIMIT 1`, $_[0]{id});
+  }
+  return $_[0]{sent_on};
 }
 
 1;
