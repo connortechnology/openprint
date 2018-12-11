@@ -430,7 +430,7 @@ sub subtotal {
 		$$self{subtotal} = shift;
 	} # end if
 
-	if ( sets::isin($$self{status}, ['Re-Opened','Incomplete'] ) or ! $$self{subtotal} ) {
+	if ( (!$$self{status}) or (!$$self{subtotal}) or sets::isin($$self{status}, ['Re-Opened','Incomplete']) ) {
 		$$self{subtotal} = 0;
 		$$self{subtotal} += misc::sum( map { $_->price() } $self->Ordered_Projects() );
 		foreach my $Product ( $self->Products() ) {
