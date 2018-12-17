@@ -4,6 +4,7 @@
       <li>
         <label>Currency</label>
         <select name="select_currency_id" onchange="this.form.submit();">
+          <option value="">select one</option>
           <? echo ( make_drop_down( openprint::Currency->dropdown( order=>'lower(name)' ), $session{Currency_id} );) ?>
         </select>
       </li>
