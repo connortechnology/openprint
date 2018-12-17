@@ -916,8 +916,14 @@ sub _interface {
           )
             and ( $Interface->ip() ne $param{ip} )
         ) {
-          (new openprint::Log())->save( { Object=>$Host, note=>"IP Address changed from $$Interface{ip} to $param{ip}" . $Interface->Host()->link_to(), action=>'IP Changed' } );
+          (new openprint::Log())->save( {
+              Object  =>  $Host,
+              note    =>  "IP Address changed from $$Interface{ip} to $param{ip}",
+              action  =>  'IP Changed',
+            } );
           $Interface->save({ip=>$param{ip}});
+        } else {
+          $log->debug("Not updating HI from $$Interface{ip} to $param{ip}");
         }
         if ( $param{hostname} and is_mac($Host->hostname()) ) {
           (new openprint::Log())->save( { Object => $Host, note=>"Name changed from $$Host{hostname} to $param{hostname}", action=>'Changed' } );
@@ -925,12 +931,15 @@ sub _interface {
         } else {
           $log->debug("Not updating hostname from $$Host{hostname} to $param{hostname}");
         }
-        $log->debug("Not updating HI from $$Interface{ip} to $param{ip}");
       } # end foreach HI
 
-      foreach my $I ( openprint::Host_Interface->find( 'mac !=' => $param{mac}, ip=>$param{ip} ) ) {
+      foreach my $I ( openprint::Host_Interface->find( 'mac !='=>$param{mac}, ip=>$param{ip} ) ) {
         $I->save({ip=>undef});
-        (new openprint::Log())->save( { Object => $I->Host(), note=>'IP Address removed because it is taken by host ' . $I->Host()->link_to(), action=>'IP Changed' } );
+        (new openprint::Log())->save({
+            Object => $I->Host(),
+            note   =>'IP Address removed because it is taken by host ' . $I->Host()->link_to(),
+            action =>'IP Changed',
+          });
       } # end foreach I
     } #endif action
   } # end if action
