@@ -2000,8 +2000,8 @@ $openprint::log->warn("Applying markup: $markup from project $$Project{markup}")
 			$mprice *= $markup;
 		}
 
-		if ( (!$$specs{'OverridePrice'.$qty_index}) or ( $$specs{'OverridePrice'.$qty_index} ne 'Y' ) ) {
-			$$specs{"txtPrice$qty_index"} = sprintf( $openprint::config{ProjectMoneyFormat}, $price );
+		if ( (!$$specs{'OverridePrice'.$qty_index}) or ($$specs{'OverridePrice'.$qty_index} ne 'Y') ) {
+			$$specs{"txtPrice$qty_index"} = sprintf( $openprint::config{ProjectMoneyFormat}, $price);
 		} else {
 			$$specs{"txtPrice$qty_index"} = sprintf( $openprint::config{ProjectMoneyFormat}, $$specs{"txtPrice$qty_index"} );
 		} # end if
