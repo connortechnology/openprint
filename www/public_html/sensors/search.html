@@ -59,7 +59,7 @@
 			<p class="buttons">
 				<? echo ( join("\n",
 					button( 'ShowResults', { onclick=> 'load_sensors(f1);', text=>'Show Results' } ),
-					( openprint::Sensor::can_edit() ? button( 'New', { href=> '/sensors/edit.html', text=>'New Sensor' } ) : '' ),
+					( EnviroTrack::Sensor::can_edit() ? button( 'New', { href=> '/sensors/edit.html', text=>'New Sensor' } ) : '' ),
 					); ) ?>
 			</p>
 		</fieldset>

@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE policyconfig PUBLIC
+ "-//freedesktop//DTD PolicyKit Policy Configuration 1.0//EN"
+ "http://www.freedesktop.org/standards/PolicyKit/1/policyconfig.dtd">
+<policyconfig>
+
+  <vendor>IP Convergence</vendor>
+  <vendor_url>http://www.ipcnv.com/</vendor_url>
+
+  <action id="com.envirotrack.policykit.pkexec.run-shutdown">
+    <description>Allow the EnviroTrack webuser to use shutdown</description>
+    <message>The EnviroTrack webuser is trusted to use shutdown</message>
+    <defaults>
+      <allow_any>yes</allow_any>
+      <allow_inactive>yes</allow_inactive>
+      <allow_active>yes</allow_active>
+    </defaults>
+    <annotate key="org.freedesktop.policykit.exec.path">/sbin</annotate>
+    <annotate key="org.freedesktop.policykit.exec.argv1">/sbin/shutdown</annotate>
+  </action>
+
+</policyconfig>

@@ -1,6 +1,6 @@
 <? eval (
 	my @Hosts;
-  my $uri = '/employee/it/hosts.html';
+  my $uri = $$variable{uri};
 
 	if ( $session{$uri.'?mac'} and ( $session{$uri.'?mac'} !~ /%/ ) ) {
 		my @HIs = openprint::Host_Interface->find( mac => $session{$uri.'?mac'} );
@@ -12,22 +12,40 @@
 			limit	=>10,
 		);
 			if ( !@Hosts ) {
-				$variable{warning} .= "Interface found for " . $session{$uri.'?mac'} . " but host not found.<br/>";
+				$variable{warning} .= 'Interface found for ' . $session{$uri.'?mac'} . ' but host not found.<br/>';
 			}
 		}
 	} else {
 		my $host_ids;
-		if ( $session{$uri.'?ip'} ) {
+
+		if ( $session{$uri.'?network_id'} ) {
+      # Network is less specific than ip, so let's load it first.
+      $host_ids = [] if ! $host_ids;
+      foreach my $Network ( openprint::Host_Interface->find(host_id=>$session{$uri.'?network_id'}) ) {
+        push @{$host_ids}, map { $_->host_id() } openprint::Host_Interface->find( 'ip <<=' => $$Network{ip} );
+      } # end foreach Network
+    }
+
+		if ( $session{$uri.'?ip'} and ( (!$host_ids) or @{$host_ids} ) ) {
 			if ( $session{$uri.'?ip'} =~ /\// ) {
-				$host_ids = [ map { $_->host_id() } openprint::Host_Interface->find( 'ip <<=' => $session{$uri.'?ip'} ) ];
+				$host_ids = [ map { $_->host_id() } openprint::Host_Interface->find(
+            'ip <<=' => $session{$uri.'?ip'},
+            ( $host_ids ? ( host_id => $host_ids ) : () ),
+          ) ];
 			} else {
-				$host_ids = [ map { $_->host_id() } openprint::Host_Interface->find( ip => $session{$uri.'?ip'} ) ];
+				$host_ids = [ map { $_->host_id() } openprint::Host_Interface->find(
+            ip => $session{$uri.'?ip'},
+            ( $host_ids ? ( host_id => $host_ids ) : () ),
+            ) ];
 			}
 		}
 
 		if ( (! $host_ids ) or ( @{$host_ids} ) ) {
 			$session{$uri.'?order'} = 'lower(hostname)' if ! $session{$uri.'?order'};
+      my $Network_Type = openprint::Host_Type->find_one(name=>'Network');
+
 			@Hosts = openprint::Host->find(
+      ($Network_Type ? ('type_id is null or !='=>$$Network_Type{id}) : () ),
       order	=> ($session{$uri.'?order'} and $openprint::Host::fields{$session{$uri.'?order'}} ) ? $session{$uri.'?order'} : 'lower(hostname)',
 				( $host_ids ? ( id => $host_ids ) : () ),
 				( $session{$uri.'?hostname'} ? ( 'hostname ilike' => ( $session{$uri.'?hostname'} =~ /%/ ? $session{$uri.'?hostname'} : $session{$uri.'?hostname'}.'%' ) ) : () ),
@@ -47,6 +65,18 @@
 				);
 		} # end if
 	} # end if
+
+  # Bulk load HostInterfaces
+  if ( @Hosts ) {
+    my %Host_Interfaces;
+    foreach my $HI ( openprint::Host_Interface->find( host_id=>[map { $$_{id} } @Hosts], order =>  'mac' ) ) {
+      $Host_Interfaces{$$HI{host_id}} = [] if ! $Host_Interfaces{$$HI{host_id}};
+      push @{$Host_Interfaces{$$HI{host_id}}}, $HI;
+    }
+    foreach my $Host ( @Hosts ) {
+      $Host->Interfaces( $Host_Interfaces{$$Host{id}} );
+    }
+  }
 
 	my $mac_search;
 	if ( $session{$uri.'?mac'} and $session{$uri.'?mac'} =~ /%/ ) {

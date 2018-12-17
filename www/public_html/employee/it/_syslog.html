@@ -32,7 +32,6 @@ if ( ! $openprint::Syslog::dbh ) {
 		<th class="Host">Host</th>
 		<th class="Service">Service</th>
 		<th class="Priority">Severity</th>
-		<th class="Message">Message</th>
 	</tr>
 	<? echo (
 		my $html = '';
@@ -49,13 +48,15 @@ my %severities = (
 );
 
 		foreach my $Log ( @{$$variable{Results}} ) {
-			$html .= sprintf('<tr class="%s">
-					<td class="DateTime">%s %s</td>
-					<td class="Facility">%s</td>
-					<td class="Host">%s</td>
-					<td class="Service">%s</td>
-					<td class="Priority">%s</td>
-					<td class="Message">%s</td>
+			$html .= sprintf('<tr class="%1$s" style="border-bottom: none;">
+					<td class="DateTime">%2$s</td>
+					<td class="Facility">%4$s</td>
+					<td class="Host">%5$s</td>
+					<td class="Service">%6$s</td>
+					<td class="Priority">%7$s</td>
+        </tr><tr class="%1$s">
+          <td class="DateTime">%3$s</td>
+					<td colspan="4" class="Message">%8$s</td>
 				</tr>',
 $severities{$$Log{priority}},
         format_datetime( $$Log{receivedat} ),

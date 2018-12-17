@@ -5,7 +5,7 @@ sub isin {
 
 	if ( ! defined $_[0] ) {
 		my ( $caller, undef, $line ) = caller;
-		$openprint::log->error("undefined needle in isin from $caller:$line");
+Carp::cluck("undefined needle in isin from $caller:$line");
 		return;
 	}
 

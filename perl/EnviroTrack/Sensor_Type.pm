@@ -1,10 +1,10 @@
 use strict;
 package EnviroTrack::Sensor_Type;
-our @ISA = qw( EnviroTrack::Object );
+our @ISA = qw( openprint::Object );
 
-require EnviroTrack::Object;
+require openprint::Object;
+require openprint;
 
-use EnviroTrack ();
 use vars qw( $debug %fields %find_fields %transforms %defaults $table $serial $AUTOLOAD $default_sort );
 $table = 'sensor_types';
 $serial = 'sensor_types_id_seq';

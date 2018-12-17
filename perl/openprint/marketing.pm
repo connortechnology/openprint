@@ -35,12 +35,12 @@ use vars qw( $r $log $dbh %variable %param %session %config );
 
 sub email_campaigns {
 	my $Campaign = new openprint::EmailCampaign( $param{campaign_id} );
-    if ( $param{btnFunction} eq 'Delete' ) {
-        $variable{error} .= $Campaign->delete();
-    } elsif ( $param{btnFunction} eq 'Run' ) {
-        $variable{information} = $Campaign->send();
-    } elsif ( $param{btnFunction} eq 'Trial' ) {
-        $variable{information} = $Campaign->trial( new openprint::User( $openprint::session{user_id} )->email() );
+	if ( $param{btnFunction} eq 'Delete' ) {
+		$variable{error} .= $Campaign->delete();
+	} elsif ( $param{btnFunction} eq 'Run' ) {
+		$variable{information} = $Campaign->send();
+	} elsif ( $param{btnFunction} eq 'Trial' ) {
+		$variable{information} = $Campaign->trial( $openprint::User->email() );
 	} # end if
 
 	$variable{campaign_id} = $Campaign->id();
@@ -51,11 +51,11 @@ sub email_campaigns {
 
 sub _email_campaigns {
 
-	    ssi::save_params( '/marketing/email_campaigns.html', (
-                ( map { 'called_on_start_' . $_ } ( 'year','month','day' ) ),
-                ( map { 'called_on_end_' . $_ } ( 'year','month','day' ) ),
+	ssi::save_params( '/marketing/email_campaigns.html', (
+				( map { 'called_on_start_' . $_ } ( 'year','month','day' ) ),
+				( map { 'called_on_end_' . $_ } ( 'year','month','day' ) ),
 				'user_id', 'deleted', 'active',
-		) );
+				) );
 } # end sub _email_campaigns
 
 sub categories {
@@ -89,11 +89,12 @@ sub categories {
 sub email_campaign {
 	my $Campaign = new openprint::EmailCampaign( $param{campaign_id}) ;
 	if ( $param{btnFunction} eq 'Save' ) {
-		$param{nextrun} = sprintf('%.4d-%.2d-%.2d %.2d:%.2d:%.2d', @param{'nextrun_year','nextrun_month','nextrun_day','nextrun_hour','nextrun_minute'}, 0 ) if $param{nextrun_year};
+		$param{nextrun} = sprintf('%.4d-%.2d-%.2d %.2d:%.2d:%.2d',
+				@param{'nextrun_year','nextrun_month','nextrun_day','nextrun_hour','nextrun_minute'}, 0 ) if $param{nextrun_year};
 		$variable{error} .= $Campaign->save( \%param );
 		$variable{ExternalRedirect} = '/marketing/email_campaigns.html' if ! $variable{error};
-    } elsif ( $param{btnFunction} eq 'Delete' ) {
-        $variable{error} .= $Campaign->delete();
+	} elsif ( $param{btnFunction} eq 'Delete' ) {
+		$variable{error} .= $Campaign->delete();
 		$variable{ExternalRedirect} = '/marketing/email_campaigns.html' if ! $variable{error};
 	} elsif ( $param{btnFunction} eq 'Run' ) {
 		$variable{Results} = $Campaign->send();

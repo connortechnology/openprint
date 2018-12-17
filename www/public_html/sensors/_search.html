@@ -1,5 +1,5 @@
 <? eval (
-  $$variable{uri} = '/sensors/search.html';
+	my $uri = $$variable{uri} = '/sensors/search.html';
 
 	@{$$variable{Sensors}} = ();
 	foreach my $Sensor ( openprint::Sensor->find( 

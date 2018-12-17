@@ -7,7 +7,7 @@ use Data::Dumper;
 package openprint::Host_Interface;
 our @ISA = qw( openprint::Object );
 use vars qw( $debug $table $serial %find_fields %fields %transforms %defaults );
-$debug = 0;
+$debug = 1;
 $serial = 'host_interfaces_id_seq';
 $table = 'host_interfaces';
 
@@ -71,6 +71,7 @@ sub get_mac {
 $openprint::log->debug("Looking at $iface. " . $iface->address . ', subnet: ' . $subnet );
 		if ( $iface->address =~ /^$subnet\.\d+$/ ) {
 			$use_iface = $iface;
+$openprint::log->debug("Using $iface. " . $iface->address . ', subnet: ' . $subnet );
 		} # end if
 	}
 
@@ -82,6 +83,7 @@ $openprint::log->debug("Looking at $iface. " . $iface->address . ', subnet: ' . 
 	} else {
 		$openprint::log->debug("Unable to determine interface");
 	} # end if
+  return undef;
 } # end sub get_mac
 
 sub authenticate {
@@ -97,8 +99,11 @@ $openprint::log->debug("Having authenticate $$headers{'www-authenticate'}");
 			my $username = $Host->info('username');
 			my $password = $Host->info('password');
 			$openprint::log->debug("tokens: $tokens realm: $tokens{realm} username: $username password: $password ");
-			$browser->credentials( $HI->ip().':'.$port, $tokens{realm}, $username, $password );
-			$response = $browser->$method( $url, $args ? $args : () );
+			$browser->credentials( $HI->ip().':'.$port, $tokens{realm},
+					($username ? $username : ''), 
+					($password ? $password : ''),
+					);
+			$response = $browser->$method( $url, $args ? %{$args} : () );
 $openprint::log->debug("Auth response for $method $url $tokens{realm}, $username, $password " . $response->is_success );
 		} else {
 			$openprint::log->error("No realm");
@@ -117,8 +122,8 @@ sub vendor {
     if ( $_[0]{mac} ) {
       require openprint::OUI_Vendor;
       my $oui = $_[0]{mac};
-      $oui =~ s/\D//g;
-      $oui =~ s/^(\d{6}).*$/${1}000000/;
+      $oui =~ s/[^A-Fa-f0-9]//g;
+      $oui =~ s/^([A-Fa-f0-9]{6}).*$/${1}000000/;
 
       if ( my $Vendor = openprint::OUI_Vendor->find_one(oui=>$oui) ) {
         $_[0]{vendor} = $$Vendor{vendor_name};

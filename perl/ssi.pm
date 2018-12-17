@@ -142,7 +142,7 @@ sub variable_substitution {
 				$result .= hash_link($1);
 			} elsif ( $command =~ /^hecho\s*\(\s*(.*)\s*\)/ms ) {
 				$_ = eval $1;
-				$result .= html_escape($_);
+				$result .= html_escape($_) if $_;
 				$log->error( "Eval error of ($1), Reason: " . $@ ) if $@;
 			} elsif ( $command =~ /^checked\s*\(\s*(.*)\s*\)/ms ) {
 				$result .= checked( eval $1 );
@@ -1245,7 +1245,7 @@ sub bootstrap_navmenu {
 
   my @categories;
   if ( ref $menu eq 'ARRAY' ) {
-    @categories = map { $_%2 ? () : $$menu[$_] } 1 .. scalar @{$menu};
+    @categories = map { $_ % 2 ? () : $$menu[$_] } 0 .. scalar @{$menu};
     my %m = @{$menu};
     $menu = \%m;
   } else {

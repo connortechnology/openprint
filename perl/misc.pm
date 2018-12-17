@@ -548,6 +548,15 @@ $openprint::log->debug("Have @filenames from $_[0]");
 	return @results;
 }
 
+sub make_hash_from_array {
+	my $key = shift;
+	my %results;
+	foreach my $object ( @_ ) {
+		$results{$$object{$key}} = [] if ! $results{$$object{$key}};
+		push @{$results{$$object{$key}}}, $object;
+	}
+	return \%results;
+}
 
 1;
 __END__

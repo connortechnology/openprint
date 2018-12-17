@@ -55,6 +55,7 @@ sub hosts {
 } # end sub hosts
 
 sub _hosts {
+  $variable{uri} = '/employee/it/hosts.html';
 	if ( $param{action} eq 'Delete' ) {
     my @host_ids;
     if ( exists $param{host_id} ) {
@@ -78,22 +79,65 @@ sub _hosts {
 			'updated_on_start_year', 'updated_on_start_month', 'updated_on_start_day', 
 			'updated_on_end_year', 'updated_on_end_month', 'updated_on_end_day', 
 			'has_hostname', 'monitored','whitelisted','blacklisted','online',
-			'ip','hostname','mac','type_id',
+			'ip','hostname','mac','type_id','network_id',
 			'radius_auth', 'order', 'deleted', 'owner_id',
 			);
 	if ( $config{'RADIUS_Support'} eq 'Y' ) {
 		$openprint::RADIUS_Reply::dbh = $openprint::RADIUS_Check::dbh = sql::open_sql( $log,
-				'database'  => $config{RADIUS_DB_Name},
-				'driver'    => $config{RADIUS_DB_Driver},
-				'host'      => $config{RADIUS_DB_Server},
-				'login'     => $config{RADIUS_DB_Username},
-				'password'  => $config{RADIUS_DB_Password},
+				database  => $config{RADIUS_DB_Name},
+				driver    => $config{RADIUS_DB_Driver},
+				host      => $config{RADIUS_DB_Server},
+				login     => $config{RADIUS_DB_Username},
+				password  => $config{RADIUS_DB_Password},
 				);
 		if ( ! $openprint::RADIUS_Check::dbh ) {
 			$variable{error} .= 'Unable to connect to RADIUS DB server.';
 		} # end if
 	} # end if
 } # end sub _hosts
+
+sub networks {
+	_networks();
+  my $uri = $r->uri();
+	ssi::setup_date_select( $uri, 'created_on_start', '' );
+	ssi::setup_date_select( $uri, 'created_on_end', '' );
+	ssi::setup_date_select( $uri, 'updated_on_start', '' );
+	ssi::setup_date_select( $uri, 'updated_on_end', '' );
+	if ( ! exists $session{$uri.'?has_hostname'} ) {
+		$session{$uri.'?has_hostname'} = '';
+	} # end if
+	if ( ! exists $session{$uri.'?deleted'} ) {
+		$session{$uri.'?deleted'} = 0;
+	} # end if
+} # end sub networks
+
+sub _networks {
+	if ( $param{action} eq 'Delete' ) {
+    my @host_ids;
+    if ( exists $param{host_id} ) {
+      @host_ids = ref $param{host_id} eq 'ARRAY' ? @{$param{host_id}} : $param{host_id};
+    } elsif ( exists $param{'host_id[]'} ) {
+      @host_ids = ref $param{'host_id[]'} eq 'ARRAY' ? @{$param{'host_id[]'}} : $param{'host_id[]'};
+    }
+		foreach my $host_id ( @host_ids ) {
+			my $Host = new openprint::Host( $host_id );
+      if ( $Host->deleted() ) {
+        $variable{error} .= $Host->destroy();
+      } else {
+        $variable{error} .= $Host->delete();
+      }
+		} # end foreach host_id
+		%param = ();
+	} # end if
+	ssi::save_params( '/employee/it/networks.html', 
+			'created_on_start_year', 'created_on_start_month', 'created_on_start_day', 
+			'created_on_end_year', 'created_on_end_month', 'created_on_end_day', 
+			'updated_on_start_year', 'updated_on_start_month', 'updated_on_start_day', 
+			'updated_on_end_year', 'updated_on_end_month', 'updated_on_end_day', 
+			'has_hostname', 'monitored',
+			'order', 'deleted', 'owner_id',
+			);
+} # end sub _networks
 
 sub host {
 	my $Host = $variable{Host} = new openprint::Host( $param{host_id} );
@@ -150,6 +194,16 @@ sub host {
         $variable{information} .= 'Host successfully rebooted';
       } else {
         $variable{error} .= 'Host failed to reboot. Check logs';
+      }
+    } elsif ( $param{action} eq 'get_config' ) {
+			my $content = $Host->get_config();
+      if ( $content ) {
+        $variable{Download} = $content;
+				my $filename = $Host->name().Date::Format::time2str( '%Y-%m-%d %H:%M:%S', time).'.cfg';
+				$r->headers_out->{'Content-Disposition'} = "attachment; filename=\"$filename\"";
+				$r->content_type("text/csv; name=\"$filename\"");
+      } else {
+        $variable{error} .= 'Failed to get content. ';
       }
     } elsif ( $param{action} eq 'Wake' ) {
       foreach my $I ( $Host->Interfaces() ) {
@@ -291,6 +345,88 @@ sub host {
   } # end if
 
 } # end sub view_host
+
+sub network {
+	my $Host = $variable{Host} = new openprint::Host( $param{host_id} );
+  if ( $param{action} ) {
+    if ( $param{action} eq 'Delete' ) {
+      $variable{error} .= $Host->delete();
+      if ( ! $variable{error} ) {
+        $variable{ExternalRedirect} = '/employee/it/networks.html';
+        return;
+      } # end if
+      %param = ();
+    } elsif ( $param{action} eq 'Undelete' ) {
+      $variable{error} .= $Host->undelete();
+      if ( ! $variable{error} ) {
+        $variable{ExternalRedirect} = '/employee/it/networks.html';
+        return;
+      } # end if
+      %param = ();
+    } elsif ( $param{action} eq 'Destroy' ) {
+      $variable{error} .= $Host->destroy();
+      if ( ! $variable{error} ) {
+        $variable{ExternalRedirect} = '/employee/it/networks.html';
+        return;
+      } # end if
+      %param = ();
+    } elsif ( $param{action} eq 'Save' ) {
+      my @changes = $Host->changes(\%param);
+
+      $variable{error} .= $Host->save(\%param) if @changes;
+      foreach my $I ( $Host->Interfaces(), new openprint::Host_Interface() ) {
+        if ( $param{"ip-$$I{id}"} or $param{"comment-$$I{id}"} ) {
+          my %c = map { $_, $param{"$_-$$I{id}"} } ( 'ip', 'monitor', 'comment' );
+          my @c = $I->changes( \%c );
+          if ( @c ) {
+            $c{host_id} = $$Host{id};
+            $variable{error} .= $I->save(\%c);
+            push @changes, 'Interface changed: ' . join(',', @c ) . '<br/>' if ! $variable{error};
+          }
+        } else {
+          $variable{error} .= $I->delete() if $$I{id};
+        } # end if
+      } # end foreach Interface
+
+      my %notifications = map { $$_{user_id}, $_ } $Host->Notifications();
+
+      foreach my $user_id ( sets::union(split(',',$param{notification_ids})) ) {
+        if ( $notifications{$user_id} ) {
+          delete $notifications{$user_id};
+          next;
+        }
+        my $Notification = new openprint::Host_Notification();
+        $variable{error} .= $Notification->save({host_id=>$$Host{id}, user_id=>$user_id});
+      }
+      foreach my $Notification ( values %notifications ) {
+        $variable{error} .= $Notification->delete();
+      }
+      $Host->Notifications(undef);
+      
+      if ( ! $variable{error} ) {
+        (new openprint::Log())->save({Object=>$Host, action=>'Edit', note=>join('<br/>', @changes) });
+        $variable{ExternalRedirect} = '/employee/it/networks.html';
+        return;
+      } # end if
+      %param = ();
+    } # end if
+	} # end if param{action}
+
+	if ( ( ! $Host->id() ) and ( $param{ip} or $param{hostname} ) ) {
+		my $I = new openprint::Host_Interface();
+		$I->set({ ip=>$param{ip} });
+		$Host->Interfaces( [ $I ] );
+		$Host->hostname( $param{hostname} );
+		if ( $I->ip() ) {
+			if ( ! $Host->hostname() ) {
+				$Host->hostname( $Host->resolve() );
+			} # end if
+		} # end if
+	} # end if
+	ssi::setup_date_select( '/employee/it/network.html', 'log_created_on_start', 0 );
+	ssi::setup_date_select( '/employee/it/network.html', 'log_created_on_end', '' );
+  $variable{uri} = '/employee/it/network.html';
+} # end sub network
 
 sub camera {
 } # end sub camera
@@ -721,7 +857,7 @@ sub backup {
 
 }
 sub syslog {
-  _hosts();
+  _syslog();
   my $uri = $r->uri();
   ssi::setup_datetime_select( $uri, 'receivedat_start', -3600 );
   ssi::setup_datetime_select( $uri, 'receivedat_end', '' );
@@ -750,9 +886,21 @@ sub is_mac {
   $_[0] =~ /^[:0-9A-F]{17}$/;
 }
 
+sub _subnet {
+  if ( $param{action} ) {
+    if ( $param{action} eq 'add subnet' ) {
+      my $I = $variable{Interface} = new openprint::Host_Interface();
+      $$I{host_id} = $param{host_id};
+    }
+  }
+}
+
 sub _interface {
   if ( $param{action} ) {
-    if ($param{action} eq 'dhcp' ) {
+    if ( $param{action} eq 'add interface' ) {
+      my $I = $variable{Interface} = new openprint::Host_Interface();
+      $$I{host_id} = $param{host_id};
+    } elsif ($param{action} eq 'dhcp' ) {
       if ( ! $param{mac} ) {
       }
       my @HIs = openprint::Host_Interface->find(mac=>$param{mac});
@@ -771,11 +919,11 @@ sub _interface {
           (new openprint::Log())->save( { Object=>$Host, note=>"IP Address changed from $$Interface{ip} to $param{ip}" . $Interface->Host()->link_to(), action=>'IP Changed' } );
           $Interface->save({ip=>$param{ip}});
         }
-        if ( $param{hostname} and is_mac($Host->name()) ) {
-          (new openprint::Log())->save( { Object => $Host, note=>"Name changed from $$Host{name} to $param{hostname}", action=>'Changed' } );
-          $Host->save({name=>$param{hostname}});
+        if ( $param{hostname} and is_mac($Host->hostname()) ) {
+          (new openprint::Log())->save( { Object => $Host, note=>"Name changed from $$Host{hostname} to $param{hostname}", action=>'Changed' } );
+          $Host->save({hostname=>$param{hostname}});
         } else {
-          $log->debug("Not updating hostname from $$Host{name} to $param{hostname}");
+          $log->debug("Not updating hostname from $$Host{hostname} to $param{hostname}");
         }
         $log->debug("Not updating HI from $$Interface{ip} to $param{ip}");
       } # end foreach HI
@@ -786,6 +934,7 @@ sub _interface {
       } # end foreach I
     } #endif action
   } # end if action
+  $variable{Content} = "{result:'ok'}";
 }
 
 1;

@@ -36,7 +36,7 @@ package openprint::Host;
 our @ISA = qw( openprint::Object );
 
 use vars qw( $debug $table $serial %fields %find_fields %transforms %defaults %types );
-$debug = 0;
+$debug = 1;
 $table = 'hosts';
 $serial = 'hosts_id_seq';
 %fields = (
@@ -129,7 +129,12 @@ sub destroy {
 sub ping {
 	require Net::Ping;
 	my $p = Net::Ping->new();
-	my $rc = $p->ping($_[0]{ip});
+my $rc;
+	foreach my $HI ( $_[0]->Interfaces() ) {
+		next if ! $$HI{ip};
+	 $rc = $p->ping($$HI{ip});
+		return $rc if $rc;
+	}
 	$p->close();
 	return $rc;
 } # end sub ping
@@ -304,7 +309,7 @@ sub reboot {
 			$success = 1;
 			last;
 
-		} elsif( $_[0]->type() eq 'DCS932L' ) {
+		} elsif( $_[0]->type() eq 'DCS-932L' ) {
 			$url = $HI->ip().'/setSystemReboot';
 		} elsif( $_[0]->type() eq 'DCS-933L' ) {
 			$initial_url = $HI->ip();
@@ -402,7 +407,7 @@ $openprint::log->debug("Swtiching to https");
 } # end sub reboot
 
 sub is_wap {
-	return ( $_[0]{type_id} and $_[0]->type() and sets::isin( $_[0]->type(), [ 'WG602v3', 'WPN802','TP-Link Archer C7' ] ) );
+	return ( $_[0]{type_id} && $_[0]->type() && sets::isin( $_[0]->type(), [ 'WG602v3', 'WPN802','TP-Link Archer C7' ] ) );
 }
 
 sub url {
@@ -436,12 +441,50 @@ sub online {
 sub Owner {
   return new openprint::Company( $_[0]{owner_id} );
 }
+
 sub can_reboot {
   if ( $_[0]{type_id} and $_[0]->type() and sets::isin( $_[0]->type(), [ 'AIC500', 'AIC500W', 'AIC777W', 'AIC747W','AIC250W','M8640','TL-WPA4220','D-Link DAP1522','DGS-1224T','DLink DCS-910','TP-Link Archer C7',
         'DCS932L','DCS-933L','WG602v3' ] ) ) {
     return !undef;
   }
   return undef;
+}
+
+sub get_config {
+	my $Host = shift;
+	require LWP;
+	my $browser = LWP::UserAgent->new();
+	if ( $Host->type() eq 'DCS-932L' ) {
+		my $protocol = 'http';
+		my $path = '/Config.CFG';
+		my $method = 'get';
+		my $port = 80;
+		my $args;
+		foreach my $HI ( $Host->Interfaces() ) {
+
+			my $url = $protocol.'://'.$HI->ip().$path;
+			my $response = $browser->get($url);
+			$openprint::log->debug("Sending initial url: $url");
+			my $headers = $response->headers();
+			if ( $$headers{'client-ssl-cipher'} ) {
+				$openprint::log->debug("Swtiching to https");
+				$protocol = 'https';
+				$port = 443;
+			}
+			$response = $HI->authenticate( $browser, $response, $method, $port, $url, $args);
+			#$openprint::log->debug($response->content());
+			if ( !$response->is_success ) {
+			} else {
+				return $response->content();
+				last;
+			}
+
+		} # end foreach HI
+	} # end if type
+} # end sub get_config
+
+sub can_get_config {
+	return ( $_[0]{type_id} and sets::isin( $_[0]->type(), [ 'DCS-932L' ] ) );
 }
 
 1;

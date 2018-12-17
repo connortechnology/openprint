@@ -1,5 +1,25 @@
-<? echo (
-	if ( $param{action} eq 'delete interface' ) {
+<?echo(
+  if ( $param{action} eq 'add subnet' ) {
+    my $I = $$variable{Interface} = new openprint::Host_Interface();
+    $$I{host_id} = $param{host_id};
+    $variable{error} .= $I->save();
+    my $html =  include('/employee/it/_subnet.html');
+    return qq`
+\$j('#Interfaces tr:last').after('
+$html
+');
+`;
+  } elsif ( $param{action} eq 'add interface' ) {
+    my $I = $$variable{Interface} = new openprint::Host_Interface();
+    $$I{host_id} = $param{host_id};
+    $variable{error} .= $I->save();
+    my $html =  include('/employee/it/_interface.html');
+    return qq`
+\$j('#Interfaces tr:last').after('
+$html
+');
+`;
+  } elsif ( $param{action} eq 'delete interface' ) {
 		if ( ! $param{interface_id} ) {
 			return qq`alert('No id for interface');`;
 		}

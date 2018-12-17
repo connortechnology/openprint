@@ -90,7 +90,7 @@ sub dest_path {
         DEST_PATH,
         ( $_[0]->owner_id() ? $_[0]->Owner()->name() : () ),
         $_[0]{name},
-        $path,
+        ( defined $path ? $path : '' ),
         $_[0]->type(),
         '',
         );

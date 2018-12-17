@@ -10,7 +10,7 @@ Please select a backup to view/edit.<br/>
 	<fieldset class="filters"><legend>Search Criteria</legend>
 		<ul>
       <li><label>Type</label>
-        <? echo ( ssi::select( [ map { $_, $openprint::Backups::types{$_} } sort { $a cmp $b } keys %openprint::Backups::types], $session{$r->uri().'?type'}, { name=>'type', prepend=>['','All'] } ); ) ?>
+        <? echo ( ssi::select( [ map { $_, $openprint::Backup::types{$_} } sort { $a cmp $b } keys %openprint::Backups::type], $session{$r->uri().'?type'}, { name=>'type', prepend=>['','All'] } ); ) ?>
       </li>
       <li><label>Owner</label>
         <input type="text" onkeyup="filter_companies('owner_id', {name:this.value,selected_id:get_ddm_value($('owner_id'))});" class="filter" />

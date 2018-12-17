@@ -35,6 +35,11 @@
 		} elsif ( $$variable{PurchaseOrder}->cancelled() eq '0' ) {
 			$html .= button( 'Cancel', { onclick=>q`f2.btnFunction.value='Cancel';f2.submit();` } );
 		} # end if
+		if ( $$variable{PurchaseOrder}->do_not_pay() ) {
+			$html .= button( 'UnDoNotPay', { onclick=>q`f2.btnFunction.value='UnDoNotPay';f2.submit();`, text=>'Remove Do Not Pay' } );
+		} else {
+			$html .= button( 'DoNotPay', { onclick=>q`f2.btnFunction.value='DoNotPay';f2.submit();`, text=>'Do Not Pay' } );
+		} # end if
 	} # end if can edit
 	$html .= button( 'Copy', { onclick=>q`f2.action='view.html';f2.btnFunction.value='Copy';f2.submit();` } );
 	return $html;
@@ -293,6 +298,9 @@ Manifest: <a href="/employee/inventory/manifest_view.html?manifest_id=<? echo ( 
 <? if ( ! $$variable{PurchaseOrder}->authorized() ) ?>
 <div id="not_approved"><img src="/images/not_approved.png"/></div>
 <? endif ( ! $$variable{PurchaseOrder}->authorized() ) ?>
+<? if ( $$variable{PurchaseOrder}->do_not_pay() ) ?>
+<div id="do_not_pay"><img src="/images/do_not_pay.png"/></div>
+<? endif ( $$variable{PurchaseOrder}->do_not_pay() ) ?>
 <? else ( $$variable{PurchaseOrder}->can_view() ) ?>
 You do not have the rights to view this PO.
 <? endif ( $$variable{PurchaseOrder}->can_view() ) ?>
