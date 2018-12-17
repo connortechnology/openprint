@@ -9,20 +9,20 @@
 		<tr> 
 			<th class="invoice_id">ID</th>
 			<th class="invoice_num">Num</th>
-			<th class="Date CreatedOn">Created</th>
-			<th class="Date DueOn">Due</th>
-			<th class="Date SentOn">Sent On</th>
-			<th class="Date PaidOn">Paid On</th>
+			<th class="Date created_on">Created</th>
+			<th class="Date due_on">Due</th>
+			<th class="Date sent_on">Sent On</th>
+			<th class="Date paid_on">Paid On</th>
 			<th class="Company">Company</th>
-			<th class="Price">SubTotal</th>
+			<th class="Price subtotal">SubTotal</th>
 			<? echo ( 
 				return join("\n", map { exists $$variable{tax_totals}{$_->id()} ? sprintf('<th class="Price">%s (%d%)</th>', $_->name(), $_->rate() ) : () } @{$$variable{Taxes}} );
 			) ?>
-			<th class="Price">Total</th>
+			<th class="Price total">Total</th>
 			<th class="Interest Price">Interest</th>
-			<th class="Paid Price">Paid</th>
-			<th class="Paid Price">Paid Value</th>
-			<th class="Owing Price">Owing</th>
+			<th class="Price Paid">Paid</th>
+			<th class="Price Value">Paid Value</th>
+			<th class="Price Owing">Owing</th>
 		</tr>
 		<? echo (
 			my $html;
@@ -34,10 +34,10 @@
           $html .= sprintf(q`<tr%1$s title="%4$s">
               <td class="invoice_id"><a href="/invoice/view.html?invoice_id=%2$d">%2$d</a></td>
               <td class="invoice_num"><a href="/invoice/view.html?invoice_id=%2$d">%3$s</a></td>
-              <td class="Date CreatedOn"><a href="/invoice/view.html?invoice_id=%2$d">%5$s</a></td>
-              <td class="Date DueOn"><a href="/invoice/view.html?invoice_id=%2$d">%6$s</a></td>
-              <td class="Date SentOn"><a href="/invoice/view.html?invoice_id=%2$d">%7$s</a></td>
-              <td class="Date PaidOn"><a href="/invoice/view.html?invoice_id=%2$d">%8$s</a></td>
+              <td class="Date created_on"><a href="/invoice/view.html?invoice_id=%2$d">%5$s</a></td>
+              <td class="Date due_on"><a href="/invoice/view.html?invoice_id=%2$d">%6$s</a></td>
+              <td class="Date sent_on"><a href="/invoice/view.html?invoice_id=%2$d">%7$s</a></td>
+              <td class="Date paid_on"><a href="/invoice/view.html?invoice_id=%2$d">%8$s</a></td>
               <td class="Company"><a href="/invoice/view.html?invoice_id=%2$d">%9$s</a></td>
               <td colspan="%9$d">You may not see any further details</td>
               </tr>`,
@@ -53,18 +53,18 @@
 				$html .= sprintf(q`<tr%1$s title="%4$s"> 
 						<td class="invoice_id"><a href="/invoice/view.html?invoice_id=%2$d">%2$d</a></td>
 						<td class="invoice_num"><a href="/invoice/view.html?invoice_id=%2$d">%3$s</a></td>
-						<td class="Date CreatedOn"><a href="/invoice/view.html?invoice_id=%2$d">%5$s</a></td>
-						<td class="Date DueOn"><a href="/invoice/view.html?invoice_id=%2$d">%6$s</a></td>
-						<td class="Date SentOn"><a href="/invoice/view.html?invoice_id=%2$d">%7$s</a></td>
-						<td class="Date PaidOn"><a href="/invoice/view.html?invoice_id=%2$d">%8$s</a></td>
+						<td class="Date created_on"><a href="/invoice/view.html?invoice_id=%2$d">%5$s</a></td>
+						<td class="Date due_on"><a href="/invoice/view.html?invoice_id=%2$d">%6$s</a></td>
+						<td class="Date sent_on"><a href="/invoice/view.html?invoice_id=%2$d">%7$s</a></td>
+						<td class="Date paid_on"><a href="/invoice/view.html?invoice_id=%2$d">%8$s</a></td>
 						<td class="Company"><a href="/invoice/view.html?invoice_id=%2$d">%9$s</a></td>
-						<td class="Price">%10$s</td>
+						<td class="Price subtotal">%10$s</td>
 						%11$s
-						<td class="Price">%12$s</td>
-						<td class="Interest Price">%13$s</td>
-						<td class="Paid Price">%14$s</td>
-						<td class="Paid Price">%15$s</td>
-						<td class="Owing Price">%16$s</td>
+						<td class="Price total">%12$s</td>
+						<td class="Price Interest">%13$s</td>
+						<td class="Price Paid">%14$s</td>
+						<td class="Price Value">%15$s</td>
+						<td class="Price Owing">%16$s</td>
 						</tr>`, $rowclass, $Invoice->id(), $Invoice->num(), $Invoice->internal_notes().$Invoice->external_notes(), 
 						format_date( $Invoice->created_on() ),
 						format_date( $Invoice->due_on() ),
@@ -92,7 +92,13 @@
 			return $html;
 		) ?>
 			<tr class="totals">
-			<td colspan="7">Totals</td>
+        <td class="invoice_id"></td>
+        <td class="invoice_num"></td>
+        <td class="Date created_on"></td>
+        <td class="Date due_on"></td>
+        <td class="Date sent_on"></td>
+        <td class="Date paid_on"></td>
+			<td>Totals</td>
 			<td class="Price"><? echo ( openprint::Currency::format( $$variable{subtotal} ); ) ?></td>	
 			<? echo (
 				return join('', map { exists $$variable{tax_totals}{$_->id()} ? sprintf('<td class="Price">%s</td>', openprint::Currency::format( $$variable{tax_totals}{$_->id()} ) ) : () } @{$$variable{Taxes}} );
@@ -100,7 +106,7 @@
 			<td class="Price"><? echo ( openprint::Currency::format( $$variable{total} ); ) ?></td>	
 			<td class="Interest Price"><? echo ( openprint::Currency::format( $$variable{interest_total} ); ) ?></td>	
 			<td class="Paid Price"><? echo ( openprint::Currency::format( $$variable{paid_total} ); ) ?></td>	
-			<td class="Paid Price"><? echo ( openprint::Currency::format( $$variable{paidvalue_total} ); ) ?></td>	
+			<td class="Price Value"><? echo ( openprint::Currency::format( $$variable{paidvalue_total} ); ) ?></td>	
 			<td class="Owing Price"><? echo ( openprint::Currency::format( $$variable{owing_total} ); ) ?></td>	
 		</tr>
 	</table>
