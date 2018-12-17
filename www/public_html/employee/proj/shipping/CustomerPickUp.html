@@ -12,15 +12,12 @@ function calc( formName ) {
 	} // end if
 	timeout = null;
 	gettingNewPrice = true;
-
 	remove_div('AlertDiv');
 	var form = getFormObj( formName );
-
 	var h = $H(form.serialize(true));
 	h.set('ServiceType', 'CustomerPickUp');
 	h.set('callback','cbFillUPSResults');
 	new Ajax.Request( '/main/project/_calc.json', { method: 'post', parameters: h, evalScripts: true } );
-
 } // end calc()
 function cbFillUPSResults( results ) {
 	cbFillResults( results );
@@ -34,14 +31,27 @@ function validate_data(formName) {
 	var text = '';
 	return true;
 } // end function
-
 function submit_handler() {
     var form = $('f1');
     form.signature.value = escape(top.getSignature());
     form.submit();
 }
-
 </script>
+<form id="f2" name="f2" action="/employee/project/view.html" method="post">
+  <fieldset class="filters">
+    <ul>
+      <li class="docket"><label>Docket #</label>
+      <? echo ( join("\n",
+            input( type=>'cardinal', name=>'docket', id=>'Docket', onchange=>'change_handler(this);', onkeypress=>'return input_handler(this,event);', onkeydown=>q`if(event.keyCode==13){window.location='/employee/project/view.html?docket='+this.value;};`, onkeyup=>q`$('project_id').value='';`, value=>$param{Docket}),
+            button( 'Go1', { onclick=>q`window.location='/employee/project/view.html?docket='+$('Docket').value;`, text=>'Go' } ),
+            button( 'GoProofs', { onclick=>q`if($('Docket').value){window.location='/employee/proj/prep/proofs.html?docket='+$('Docket').value;};`, text=>'Go Proofs' } ),
+            $$variable{Project}->id() ?
+              button('Return', { href=>'/employee/project/view.html?ProjectIndex='.$$variable{ProjectIndex}, text=>'Return to Docket '.$$variable{Project}->docket() } ) : (),
+      ); ) ?>
+      </li>
+    </ul>
+  </fieldset>
+</form>
 <div class="Service Shipping CustomerPickup">
 	<form id="f1" name="f1" method="post" action="/employee/project/view.html" onsubmit="form_submit();">
 		<fieldset><legend>Customer Pickup</legend>
