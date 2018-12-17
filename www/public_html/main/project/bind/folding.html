@@ -124,13 +124,20 @@ if ( 0 ) {
 				foreach my $qty_index ( $Project->quantity_indexes() ) {
 					$html .= '<span class="'.$$variable{Columns}.'Columns">';
 					if ( $$sig_specs{"txtImposition$qty_index"} ) {
-						$html .= sprintf('<select name="ddmEquipment-%1$d-%2$d" onchange="calc(this.form.name);">', $$sig_specs{SignatureIndex}, $qty_index );
-						$html .= '<option value="">No Folding</option>';
-						$html .= make_drop_down( $$variable{EquipmentArray}, $$variable{"ddmEquipment-$$sig_specs{SignatureIndex}-$qty_index"} );
-						$html .= '</select>';
+          $html .= ssi::select( 
+            $$variable{EquipmentArray},
+            $$variable{"ddmEquipment-$$sig_specs{SignatureIndex}-$qty_index"},
+            {
+              name=>"ddmEquipment-$$sig_specs{SignatureIndex}-$qty_index",
+              prepend=>['','No Folding'],
+              onchange=>'calc(this.form.name);',
+            } );
 
 						if ( sets::isin( $session{user_type}, ['A','E'] ) ) {
-							$html .= sprintf('<input type="checkbox" id="chkOverrideEquipment-%1$d-%2$d" name="chkOverrideEquipment-%1$d-%2$d" %3$s value="Y" onclick="if ( ! this.checked ) calc(this.form.name);" /><label class="radio" for="chkOverrideEquipment-%1$d-%2$d">Override</label>', $$sig_specs{SignatureIndex}, $qty_index, $$variable{'chkOverrideEquipment-'.$$sig_specs{SignatureIndex}.'-'.$qty_index} eq 'Y' ? 'checked="checked"' : '' );
+							$html .= sprintf('
+<label class="radio-inline" for="chkOverrideEquipment-%1$d-%2$d">
+<input type="checkbox" id="chkOverrideEquipment-%1$d-%2$d" name="chkOverrideEquipment-%1$d-%2$d" %3$s value="Y" onclick="if ( ! this.checked ) calc(this.form.name);" />
+Override</label>', $$sig_specs{SignatureIndex}, $qty_index, $$variable{'chkOverrideEquipment-'.$$sig_specs{SignatureIndex}.'-'.$qty_index} eq 'Y' ? 'checked="checked"' : '' );
 						} elsif ( $$variable{'chkOverrideEquipment-'.$$sig_specs{SignatureIndex}.'-'.$qty_index} eq 'Y' ) {
 							$html .= sprintf('<input type="hidden" name="chkOverrideEquipment-%1$d-%2$d" value="Y" />Overriden', $$sig_specs{SignatureIndex}, $qty_index );
 						} # end if
@@ -144,8 +151,14 @@ if ( 0 ) {
 					$html .= '<div class="'.$$variable{Columns}.'Columns">';
 					if ( $$sig_specs{"txtImposition$qty_index"} ) {
 						if ( sets::isin( $session{user_type}, ['A','E'] ) ) {
-							$html .= sprintf('<input type="checkbox" id="chkOverrideFold-%1$d-%2$d" name="chkOverrideFold-%1$d-%2$d" %3$s value="Y" onclick="if ( ! this.checked ) { calc(this.form.name);}else{show_extra_fold(%1$d,%2$d);};" /><label class="radio" for="chkOverrideFold-%1$d-%2$d">Override Folds</label>', $$sig_specs{SignatureIndex}, $qty_index, $$variable{"chkOverrideFold-$$sig_specs{SignatureIndex}-$qty_index"} eq 'Y' ? 'checked="checked"' : '' );
-							$html .= sprintf('<input type="checkbox" id="chkOverrideLimits-%1$d-%2$d" name="chkOverrideLimits-%1$d-%2$d" %3$s value="Y" onclick="calc(this.form.name);" /><label class="radio" for="chkOverrideLimits-%1$d-%2$d">Ignore Equipment Limits</label><br/>', $$sig_specs{SignatureIndex}, $qty_index, $$variable{"chkOverrideLimits-$$sig_specs{SignatureIndex}-$qty_index"} eq 'Y' ? 'checked="checked"' : '' );
+							$html .= sprintf('
+              <label class="radio-inline" for="chkOverrideFold-%1$d-%2$d">
+              <input type="checkbox" id="chkOverrideFold-%1$d-%2$d" name="chkOverrideFold-%1$d-%2$d" %3$s value="Y" onclick="if ( ! this.checked ) { calc(this.form.name);}else{show_extra_fold(%1$d,%2$d);};" />
+                Override Folds</label>', $$sig_specs{SignatureIndex}, $qty_index, $$variable{"chkOverrideFold-$$sig_specs{SignatureIndex}-$qty_index"} eq 'Y' ? 'checked="checked"' : '' );
+							$html .= sprintf('
+              <label class="radio-inline" for="chkOverrideLimits-%1$d-%2$d">
+              <input type="checkbox" id="chkOverrideLimits-%1$d-%2$d" name="chkOverrideLimits-%1$d-%2$d" %3$s value="Y" onclick="calc(this.form.name);" />
+                Ignore Equipment Limits</label><br/>', $$sig_specs{SignatureIndex}, $qty_index, $$variable{"chkOverrideLimits-$$sig_specs{SignatureIndex}-$qty_index"} eq 'Y' ? 'checked="checked"' : '' );
 						} else {
 							if ( $$variable{"chkOverrideFold-$$sig_specs{SignatureIndex}-$qty_index"} eq 'Y' ) {
 								$html .= sprintf('<input type="hidden" name="chkOverrideFold-%1$d-%2$d" value="Y" /> Folds Overriden', $$sig_specs{SignatureIndex}, $qty_index );
@@ -177,9 +190,9 @@ if ( 0 ) {
 			) ?>
 			<hr/>
 			<ul>
-<?include('/includes/main/proj/_quantities.html') ?>
-<?include('/includes/main/proj/_service_price.html') ?>
-<?include('/includes/main/proj/_breakdown.html') ?>
+        <?include('/includes/main/proj/_quantities.html') ?>
+        <?include('/includes/main/proj/_service_price.html') ?>
+        <?include('/includes/main/proj/_breakdown.html') ?>
 			</ul>
 		</fieldset>
 		<br class="spacer"/>
