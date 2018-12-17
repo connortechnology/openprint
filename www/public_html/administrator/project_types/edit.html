@@ -46,61 +46,57 @@
 ); ) ?>
 		</p>
 	</fieldset>
-	<fieldset class="leftColumn"><legend><? echo ( $$variable{ProjectType}->id() ? $$variable{ProjectType}->description() : 'New Project Type' ) ?></legend>
+	<fieldset class="leftColumn">
+    <legend><? echo ( $$variable{ProjectType}->id() ? $$variable{ProjectType}->description() : 'New Project Type' ) ?></legend>
 		<ul>
-		<li> 
-			<label>Name</label>
-			<input type="text" id="name" name="name" value="<? echo ( $$variable{ProjectType}->name(); ) ?>" /> 
-		</li>
-		<li> 
-			<label>Description</label>
-			<input type="text" id="description" name="description" value="<? echo ( $$variable{ProjectType}->description(); ) ?>" /> 
-		</li>
-		<li>
-			<label onclick="$('category_id').toggle();$('category').toggle();">Category</label>
-			<select id="category_id" name="category_id" onchange="$('category').value='';">
-				<option value=""> none </option>
-				<? echo (
-					make_drop_down( $$variable{Categories}, $$variable{ProjectType}->category_id() );
-			) ?>
-			</select>
-			<input type="text" name="category" id="category" style="display:none;" oninput="ddm_select_by_value($('category_id'), '' );"/>
-		</li>
-<? if ( $openprint::User->email() =~ /iconnor/ ) ?>
-		<li> 
-			<label>Type</label>
-			<? echo ( ssi::select( 
-				[
-					'ChannelLetters', 'Channel Letter',
-					 'SinglePage', 'Single Page',
-					'MultiPage', 'Multiple Pages / Book',
-					'ScratchPads',	'Scratch/Note Pads',
-				], $$variable{ProjectType}->type(),
-				{ name => 'type',
-					prepend=>['','please set'] } ); ) ?>
-		</li>
-		<li> 
-			<label>URL</label>
-			<input type="url" id="url" name="url" value="<? echo ( $$variable{ProjectType}->url(); ) ?>" />
-		</li>
-<? endif ( $openprint::User->email() =~ /iconnor/ ) ?>
-		<li> 
-			<label>Sort</label>
-			<input type="number" id="sorting" name="sorting" value="<? echo ( $$variable{ProjectType}->sorting(); ) ?>" />
-		</li>
-		<li> 
-			<label>Show please call</label>
-			<input type="radio" id="please_call1" name="please_call" value="1" <? echo ( checked( $$variable{ProjectType}->please_call() ); ) ?>" />
-			<label for="please_call1" class="radio">Yes</label>
-			<input type="radio" id="please_call0" name="please_call" value="0" <? echo ( checked( ! $$variable{ProjectType}->please_call() ); ) ?>" />
-			<label for="please_call0" class="radio">No</label>
-		</li>
+      <li> 
+        <label>Name</label>
+        <input type="text" id="name" name="name" value="<? echo ( $$variable{ProjectType}->name(); ) ?>" /> 
+      </li>
+      <li> 
+        <label>Description</label>
+        <input type="text" id="description" name="description" value="<? echo ( $$variable{ProjectType}->description(); ) ?>" /> 
+      </li>
+      <li>
+        <label onclick="$('category_id').toggle();$('category').toggle();">Category</label>
+        <select id="category_id" name="category_id" onchange="$('category').value='';">
+          <option value=""> none </option>
+          <? echo (
+            make_drop_down( $$variable{Categories}, $$variable{ProjectType}->category_id() );
+        ) ?>
+        </select>
+        <input type="text" name="category" id="category" style="display:none;" oninput="ddm_select_by_value($('category_id'), '' );"/>
+      </li>
+  <? if ( $openprint::User->email() =~ /iconnor/ ) ?>
+      <li> 
+        <label>Type</label>
+        <? echo ( ssi::select( 
+          [
+            'ChannelLetters', 'Channel Letter',
+             'SinglePage', 'Single Page',
+            'MultiPage', 'Multiple Pages / Book',
+            'ScratchPads',	'Scratch/Note Pads',
+          ], $$variable{ProjectType}->type(),
+          { name => 'type',
+            prepend=>['','please set'] } ); ) ?>
+      </li>
+      <li> 
+        <label>URL</label>
+        <input type="url" id="url" name="url" value="<? echo ( $$variable{ProjectType}->url(); ) ?>" />
+      </li>
+  <? endif ( $openprint::User->email() =~ /iconnor/ ) ?>
+      <li> 
+        <label>Sort</label>
+        <input type="number" id="sorting" name="sorting" value="<? echo ( $$variable{ProjectType}->sorting(); ) ?>" />
+      </li>
+      <li> 
+        <label>Show please call</label>
+        <?echo(radio( 'please_call', [ '1', 'Yes', '0', 'No' ], $$variable{ProjectType}->please_call() ); ) ?>
+      </li>
 		</ul>
-		</fieldset><!-- Column -->
-		
-
-<?eval( $$variable{Object} = $$variable{ProjectType} ) ?>
-<?include(/employee/assets/_asset_upload.html)?>
+	</fieldset><!-- Column -->
+  <?eval( $$variable{Object} = $$variable{ProjectType} ) ?>
+  <?include(/employee/assets/_asset_upload.html)?>
 	<br class="spacer"/>
 	<fieldset class="RequiredServices"> 
 		<legend>Required Services</legend>
