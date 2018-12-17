@@ -66,26 +66,26 @@ function filter_onChange( element, id, selected ) {
 <form id="f1" name="f1" method="post" enctype="multipart/form-data" action="edit.html">
 	<fieldset class="filters"><legend>Search Information</legend>
 		<ul>
-		<li>
-			<label>Category</label>
-			<select name="search_category_id" onchange="if(this.options[this.selectedIndex].value != ''){f1.btnFunction.value='';fmCheck(f1);};">
-				<option value="">All</option>
-<? echo ( make_drop_down( openprint::Equipment_Category->dropdown(order=>'lower(name)'), $param{search_category_id} );) ?>
-			</select>
-		</li>
-		<li>
-			<label>Equipment ID</label>
-			<select name="ddmEquipment" onchange="if(this.options[this.selectedIndex].value != ''){f1.btnFunction.value='';fmCheck(f1);}" >
-				<option value="">Select Equipment</option>
-<? echo (
-	my @Equipment = openprint::Equipment->find( 
-		( $param{ddmEquipment} ? ( or=>{deleted=>0, id=>$param{ddmEquipment} } ) : () ),
-		order => 'lower(strID)',
-		);
-    make_drop_down( [ map { $_->id(), join(': ', $_->strid(), $_->name() ) } @Equipment ], $$variable{Equipment}->id() );
-) ?>
-			</select>
-		</li>
+      <li>
+        <label>Category</label>
+        <select name="search_category_id" onchange="if(this.options[this.selectedIndex].value != ''){f1.btnFunction.value='';fmCheck(f1);};">
+          <option value="">All</option>
+  <? echo ( make_drop_down( openprint::Equipment_Category->dropdown(order=>'lower(name)'), $param{search_category_id} );) ?>
+        </select>
+      </li>
+      <li>
+        <label>Equipment ID</label>
+        <select name="ddmEquipment" onchange="if(this.options[this.selectedIndex].value != ''){f1.btnFunction.value='';fmCheck(f1);}" >
+          <option value="">Select Equipment</option>
+  <? echo (
+    my @Equipment = openprint::Equipment->find( 
+      ( $param{ddmEquipment} ? ( or=>{deleted=>0, id=>$param{ddmEquipment} } ) : () ),
+      order => 'lower(strID)',
+      );
+      make_drop_down( [ map { $_->id(), join(': ', $_->strid(), $_->name() ) } @Equipment ], $$variable{Equipment}->id() );
+  ) ?>
+        </select>
+      </li>
 		</ul>
 		<p class="buttons">
 		<? echo ( join( "\n",
@@ -212,10 +212,7 @@ function filter_onChange( element, id, selected ) {
 			</p>
 			<p>
 				<label>CIP3 Integration</label>
-				<input type="radio" id="cip3_monitor1" name="cip3_monitor" value="1"  <? echo ( ssi::checked( $$variable{Equipment}->cip3_monitor() ); ) ?> onclick="$('CIP3').show();" />
-				<label class="radio" for="cip3_monitor1">Yes</label>
-				<input type="radio" id="cip3_monitor0" name="cip3_monitor" value="0"  <? echo ( ssi::checked(! $$variable{Equipment}->cip3_monitor() ); ) ?> onclick="$('CIP3').hide();" />
-				<label class="radio" for="cip3_monitor0">No</label>
+        <?echo(radio('cip3_monitor', ['1','Yes','0','No'], $$variable{Equipment}->cip3_monitor(), { onclick=>q`if(this.value==1){$('CIP3').show();}else{$('CIP3').hide();}` } );)?>
 			</p>
 			<div id="CIP3" <? echo ( $$variable{Equipment}->cip3_monitor() ? '' : 'style="display: none;"' ) ?>>	
 				<p>
@@ -228,17 +225,11 @@ function filter_onChange( element, id, selected ) {
 				</p>
 				<p>
 					<label>Hold PPFs?</label>
-					<input type="radio" id="cip3_hold1" name="cip3_hold" value="1" <? echo ( ssi::checked( $$variable{Equipment}->cip3_hold() ); ) ?> />
-					<label class="radio" for="cip3_hold1">Yes</label>
-					<input type="radio" id="cip3_hold0" name="cip3_hold" value="0"  <? echo ( ssi::checked(! $$variable{Equipment}->cip3_hold() ); ) ?> />
-					<label class="radio" for="cip3_hold0">No</label>
+          <?echo(radio('cip3_hold', [ '1','Yes','0','No'],  $$variable{Equipment}->cip3_hold() ); ) ?>
 				</p>
 				<p>
 					<label>Merge PPFs?</label>
-					<input type="radio" id="cip3_merge1" name="cip3_merge" value="1" <? echo ( ssi::checked( $$variable{Equipment}->cip3_merge() ); ) ?> />
-					<label class="radio" for="cip3_merge1">Yes</label>
-					<input type="radio" id="cip3_merge0" name="cip3_merge" value="0"  <? echo ( ssi::checked(! $$variable{Equipment}->cip3_merge() ); ) ?> />
-					<label class="radio" for="cip3_merge0">No</label>
+          <?echo(radio('cip3_merge', [ '1','Yes','0','No'],  $$variable{Equipment}->cip3_merge() ); ) ?>
 				</p>
 			</div>
 		</div>
