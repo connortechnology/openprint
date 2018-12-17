@@ -51,13 +51,13 @@ sub slurp_content {
 	} # end if
 	my $content = '';
 	if ( -e $config{SkinPath}.$file ) {
-		$content = File::Slurp::read_file($config{SkinPath}.$file,err_mode => 'carp' );
+		$content = File::Slurp::read_file($config{SkinPath}.$file, err_mode => 'carp' );
 	} elsif ( -e $config{SkinPath}.'/html/'.$file ) {
-		$content = File::Slurp::read_file($config{SkinPath}.'/html/'.$file,err_mode => 'carp' );
+		$content = File::Slurp::read_file($config{SkinPath}.'/html/'.$file, err_mode => 'carp' );
 	} elsif ( $ENV{DOCUMENT_ROOT} and ( -e ($ENV{DOCUMENT_ROOT}.$file) ) ) {
-		$content = File::Slurp::read_file($ENV{DOCUMENT_ROOT}.$file,err_mode => 'carp' );
+		$content = File::Slurp::read_file($ENV{DOCUMENT_ROOT}.$file, err_mode => 'carp' );
 	} elsif ( $config{DOCUMENT_ROOT} and ( -e $config{DOCUMENT_ROOT}.$file ) ) {
-		$content = File::Slurp::read_file($config{DOCUMENT_ROOT}.$file,err_mode => 'carp' );
+		$content = File::Slurp::read_file($config{DOCUMENT_ROOT}.$file, err_mode => 'carp' );
 	} else {
 		$content = File::Slurp::read_file($file,err_mode => 'carp' );
 	} # end if
@@ -1262,7 +1262,7 @@ sub bootstrap_navmenu {
 				if ( $text ) {
 					my $Page_Setting = openprint::Page_Setting::get( $url );
 					if ( $Page_Setting->can_view() ) {
-						$submenu_html .= sprintf('<li><a href="%s">%s</a></li>', $url, $text )."\n";
+						$submenu_html .= sprintf('<li class="menu-item"><a href="%s">%s</a></li>', $url, $text )."\n";
 					} # end if
 				}
 				$on = 1 if $current_uri eq $url;
@@ -1271,15 +1271,15 @@ sub bootstrap_navmenu {
 			if ( $submenu_html ) {
 				$html .= join( $submenu_html,
 						sprintf(q`
-							<li id="%1$sMenu" class="%2$s">
+							<li id="%1$sMenu" class="menu-item dropdown %2$s">
 							<a href="#%1$sSubMenu" data-toggle="collapse" aria-expanded="%3$s" class="dropdown-toggle">%1$s</a>
-							<ul id="%1$sSubMenu" class="%4$s list-unstyled">`,
+							<ul id="%1$sSubMenu" class="dropdown-menu %4$s list-unstyled">`,
 							$category,
 							( $on ? ('active','true','in' ) : ( '', 'false', 'collapse' ) ),
 							),'</ul></li>' );
 			}
 		} else {
-			$html .= sprintf( q`<li id="%1$sMenu" class="%2$s"><a href="%2$s">%1$s</a></li>`, $category, $$menu{$category} );
+			$html .= sprintf( q`<li id="%1$sMenu" class="menu-item %2$s"><a href="%2$s">%1$s</a></li>`, $category, $$menu{$category} );
 		}
 	} # end foreach category
 	return $html;
