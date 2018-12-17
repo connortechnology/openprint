@@ -89,6 +89,8 @@ sub verify_login {
 				if ( $ppr->match($password) ) {
 					$User = $U;
 					last;
+        } else {
+          $openprint::log->debug("User $$U{email}'s password did not match: $$U{password} != $password");
 				} # end if
 			};
 			$log->error( "Eval error of Authen::Passphrase::BlowfishCrypt Reason: " . $@ ) if $@;
@@ -99,8 +101,9 @@ sub verify_login {
 			} # end if
 		} # end if
 	} # end foreach
+
 	if ( ! $User ) {
-		$$variable{information} = 'The password you entered was not correct.	Please try again.';
+		$$variable{information} = 'The credentials you entered were not correct.	Please try again.<br/>';
 		foreach my $U ( @Users ) {
 			(new openprint::Log())->save({Object=>$U, action=>'Login Failed', note=>'Invalid Password', user_id=>$U->id(), company_id=>$U->company_id() } );
 		} # end foreach U
@@ -391,9 +394,10 @@ sub password_strength {
 
 sub forgotten_password {
 	if ( $config{encrypt_passwords} ) {
-		$variable{error} = 'We cannot retrieve passwords.';
+		$variable{error} = 'We cannot retrieve passwords at this time. Please contact your CSR.';
 		return;
 	} # end if
+
 	if ( ! $param{email} ) {
 		$variable{error} = 'Please enter the email address of the account to retrieve.';
 		return;
