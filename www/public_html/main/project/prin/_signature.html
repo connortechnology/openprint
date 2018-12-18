@@ -38,7 +38,7 @@
 		</ul>
 	</div>
 	<div class="rightColumn">
-		<div id="PresentationFolderQuestions<?Signature?>" <? echo ( ! sets::isin( $$variable{'rdbTemplateType'.$$variable{Signature}}, ['2Panel1Pocket','2Panel2Pocket','TriFoldDoublePocket'] ) ? 'style="display:none;"' : '' ) ?> >
+		<div id="PresentationFolderQuestions<?Signature?>" <? echo ( ! ( $$variable{'rdbTemplateType'.$$variable{Signature}} and sets::isin( $$variable{'rdbTemplateType'.$$variable{Signature}}, ['2Panel1Pocket','2Panel2Pocket','TriFoldDoublePocket'] ) ) ? 'style="display:none;"' : '' ) ?> >
 	<? echo (
 		if ( $$variable{Signature} == 1 ) {
 			return include('/includes/main/proj/presentation_folder_printing.html' );
