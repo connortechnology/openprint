@@ -58,8 +58,8 @@
 							$html .= '<td></td>'x((scalar @Categories - $category_index) - 1);
 							$html .= '</tr>';
 						} # end foreach Service
-if ( 0 ) {
-						$html .= '<tr'.$rowclass.'><td class="Service">'.$$ServiceType{description}.'</td></td>';
+if ( 1 ) {
+						$html .= '<tr class="totals"><td colspan="2" class="Service">Total</td></td>';
 						$html .= '<td></td>' x $category_index;
 
 						$html .= '<td>'.openprint::Currency::format($servicetype_price).'</td>';
