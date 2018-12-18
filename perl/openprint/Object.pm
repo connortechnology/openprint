@@ -391,6 +391,10 @@ sub changes {
 	my ( $self, $params ) = @_;
 
 	my $type = ref $self;
+	if ( ! $type ) {
+		my ( $caller, undef, $line ) = caller;
+		$log->error("No type in Object::changes. self:$self from  $caller:$line");
+	}
 	my $fields = eval ('\%'.$type.'::fields');
 	if ( ! $fields ) {
 $log->warn('Object::changes called on an object with no fields');
@@ -431,6 +435,10 @@ sub set {
 	my @set_fields = ();
 
 	my $type = ref $self;
+	if ( ! $type ) {
+		my ( $caller, undef, $line ) = caller;
+		$log->error("No type in Object::set. self:$self from  $caller:$line");
+	}
 	my %fields = eval ('%'.$type.'::fields');
 	if ( ! %fields ) {
 		$log->warn('Object::set called on an object with no fields');
@@ -445,7 +453,7 @@ sub set {
 $log->debug("field: $field, param: ".$$params{$field}) if $debug;
 		if ( exists $$params{$field} ) {
 $openprint::log->debug("field: $field, $$self{$field} =? param: ".$$params{$field}) if $debug;
-			if ( ( ! defined $$self{$field} ) or ($$self{$field} ne $params->{$field}) ) {
+			if ( ( ! defined $$self{$field} ) or (!defined($$params{$field})) or ($$self{$field} ne $params->{$field}) ) {
 # Only make changes to fields that have changed
 				if ( defined $fields{$field} ) {
 					$$self{$field} = $$params{$field} if defined $fields{$field};
@@ -510,6 +518,10 @@ sub clone {
 sub delete {
 	my ( $self ) = @_;
 	my $type = ref $self;
+	if ( ! $type ) {
+		my ( $caller, undef, $line ) = caller;
+		$log->error("No type in Object::delete. self:$self from  $caller:$line");
+	}
 
 	my $table = eval '$'.$type.'::table';
 	my $debug = eval '$'.$type.'::debug';
@@ -1051,7 +1063,11 @@ $log->debug("returning to $caller:$line from find_one") if DEBUG_ALL;
 sub AUTOLOAD {
 	no strict;
 	my ( $self, $newvalue ) = @_;
-	my $type = ref($_[0]);
+	my $type = ref($self);
+	if ( ! $type ) {
+		my ( $caller, undef, $line ) = caller;
+		$log->error("No type in Object::AUTOLOAD. self:$self from  $caller:$line");
+	}
 	my $name = $AUTOLOAD;
 	$name =~ s/.*://;
 	my $fields = eval '\%'.$type.'::fields';

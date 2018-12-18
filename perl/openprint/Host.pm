@@ -385,7 +385,7 @@ $openprint::log->debug("Swtiching to https");
 
 	if ( $success ) {
 
-		(new openprint::Log())->save({ action=>'Host rebooted', Object=>$Host, host_id=>$Host->id(), note=>sprintf('<a href="/employee/it/host.html?host_id=%d">%s</a> has been rebooted.', @$Host{'id','hostname'})});
+		(new openprint::Log())->save({ action=>'Host rebooted', Object=>$Host, host_id=>$Host->id(), note=>sprintf('<a href="/employee/it/host.html?host_id=%d">%s</a> has been rebooted by %s.', @$Host{'id','hostname'}, $0)});
 		if ( 0 ) {
 			my @To = map { $_->User() } $Host->Notifications();
 			if ( @To and ( @To < 10 ) ) {

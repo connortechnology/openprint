@@ -176,7 +176,11 @@ $openprint::log->debug("Header $k => $$headers{$k}");
           $url = $protocol.'://'.$$HI{ip}.$$headers{location}.'/admin/network/wireless_assoclist';
 $log->debug("Getting assoclist from $url");
           my $wireless_assoclist_response = $browser->get($url);
-          $log->debug( 'assoclist' . $wireless_assoclist_response->content());
+					if ( !$wireless_assoclist_response->is_success ) {
+						$log->error("Unable to get assoclist from $$HI{ip} " . $wireless_assoclist_response->status_line());
+						next;
+					}
+					$log->debug( 'assoclist' . $wireless_assoclist_response->content());
           $assoclist = decode_json( $wireless_assoclist_response->content() );
           $log->debug( 'assoclist' . Dumper( $assoclist ) );
           if ( $assoclist ) {
