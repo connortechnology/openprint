@@ -453,7 +453,7 @@ sub set {
 $log->debug("field: $field, param: ".$$params{$field}) if $debug;
 		if ( exists $$params{$field} ) {
 $openprint::log->debug("field: $field, $$self{$field} =? param: ".$$params{$field}) if $debug;
-			if ( ( ! defined $$self{$field} ) or ($$self{$field} ne $params->{$field}) ) {
+			if ( ( ! defined $$self{$field} ) or (!defined($$params{$field})) or ($$self{$field} ne $params->{$field}) ) {
 # Only make changes to fields that have changed
 				if ( defined $fields{$field} ) {
 					$$self{$field} = $$params{$field} if defined $fields{$field};
