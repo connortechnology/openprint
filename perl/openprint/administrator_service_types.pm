@@ -173,7 +173,7 @@ sub edit {
           note=> "Service Type ID: $$ServiceType{id} Name: $$ServiceType{name}"
         });
     } # end if
-  } # end if
+	} # end if btnfunction
 
 	$variable{ServiceType} = $ServiceType;
 } # end sub edit

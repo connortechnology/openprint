@@ -28,7 +28,7 @@ $serial = 'backups_id_seq';
   keep        =>  'keep',
 );
 %find_fields = (
-	type	=>	'type_id = (SELECT id FROM Backup_types WHERE backup_types.name = ?)',
+	#type	=>	'type_id = (SELECT id FROM Backup_types WHERE backup_types.name = ?)',
 );
 %transforms = (
 	id			=>	[ 's/\D//g' ],
@@ -90,8 +90,8 @@ sub dest_path {
         DEST_PATH,
         ( $_[0]->owner_id() ? $_[0]->Owner()->name() : () ),
         $_[0]{name},
-        $path,
-        $_[0]->type(),
+        ( defined $path ? $path : '' ),
+        $_[0]->type() ? $_[0]->type() : '',
         '',
         );
   }

@@ -617,7 +617,7 @@ if ( 0 ) {
       } # end if
 
 			# If we are a shipping user
-			if ( $openprint::User->in_Group('Shipping') ) {
+			if ( $openprint::User->in_Group('Shipping','Accounting') ) {
 				if ( sets::isin( $$variable{Project}->shippingtype(), [ 'Delivery', 'Shipping' ] ) and $$variable{Project}->status() ne 'Shipped' ) {
 
 					$html .= button( 'Shipped'.$$variable{Project}{id}, { onclick=>qq`form_submit('$$variable{formname}','Shipped');`, text=>'Shipped' } );

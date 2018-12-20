@@ -2233,7 +2233,7 @@ sub set_size {
 			} # end if
 			#$log->debug("SpreadSize: $$specs{txtSpreadSize}");
 			if ( ! $$specs{chkOverrideDimensions} ) {
-				if ( sets::isin($$specs{rdbTemplateType}, ['2Panel1Pocket','2Panel2Pocket','TriFoldDoublePocket'] ) ) {
+				if ( $$specs{rdbTemplateType} and sets::isin($$specs{rdbTemplateType}, ['2Panel1Pocket','2Panel2Pocket','TriFoldDoublePocket'] ) ) {
 					$$specs{txtWidth} = $$printing_specs{txtFinalWidth} * $$specs{rdbPanels};
 					my $pockets = 0;
 					if ( $$specs{rdbPanels} == 2 ) {

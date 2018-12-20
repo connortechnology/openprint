@@ -15,7 +15,7 @@ Any actions you perform will be recorded in the selected <? echo ( translate('co
 		my $html;
 		if ( @csr_ids ) {
 			$html .= '
-<div class="form-group"><label>Sales Rep</label>';
+<li class="form-group"><label>Sales Rep</label>';
 		if ( @csr_ids > 4 ) {
 			$html .= ssi::select( 
 				openprint::User->dropdown(id=>\@csr_ids), 
@@ -34,13 +34,13 @@ Any actions you perform will be recorded in the selected <? echo ( translate('co
 				}
 			 );
 		} # end if
-		$html .= '</div>
+		$html .= '</li>
 ';
 		} # end if
 return $html;
 	) ?>
 <? endif ( $session{user_type} eq 'A' or $openprint::User->csr_ids() ) ?>
-		<div class="form-group">
+		<li class="form-group">
 			<label><? echo ( translate('company') ) ?></label>
 			<input class="filter" name="CompanyFilter" type="text" oninput="filter_companies('ddmCompany', {name:this.value, selected_id:get_ddm_value($('ddmCompany'))});" />
 			<select id="ddmCompany" name="ddmCompany" onchange="stop_filter_companies();if(this.options[this.selectedIndex].value != '') f1.submit();">
@@ -60,8 +60,8 @@ return $html;
 				) ?>
 			</select>
 			<? echo ( button( 'Switch', { onclick=>'f1.submit();' } ); ) ?>
-		</div>
-		<div class="form-group"<label>Last 10</label>
+		</li>
+		<li class="form-group"<label>Last 10</label>
 	<? echo ( 
 		my $html = '';
 
@@ -96,7 +96,7 @@ return $html;
 		} # end if
 		return $html;
 		) ?>
-		</div>
+		</li>
 	</fieldset>
 	<input type="hidden" name="btnFunction" value="SelectCompany"/>
 </form>

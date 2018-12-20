@@ -27,7 +27,7 @@
 		<label class="radio" for="rdbPocketSize4<?Signature?>">4&quot;</label>
 		</span>
 		<span class="checkOption">
-		<input type="radio" id="rdbPocketSizeOther<?Signature?>" name="rdbPocketSize<?Signature?>" value="Other" onclick="calc(this.form.name);" <? echo ( ssi::checked( $$variable{'rdbPocketSize'.$$variable{'Signature'}} eq 'Other' or ! sets::isin( $$variable{'rdbPocketSize'.$$variable{'Signature'}}, [3,4] ) ); ) ?> />
+		<input type="radio" id="rdbPocketSizeOther<?Signature?>" name="rdbPocketSize<?Signature?>" value="Other" onclick="calc(this.form.name);" <? echo ( checked( $$variable{'rdbPocketSize'.$$variable{Signature}} eq 'Other' or ! ($$variable{'rdbPocketSize'.$$variable{Signature}} and sets::isin( $$variable{'rdbPocketSize'.$$variable{Signature}}, [3,4] ) ) ); ) ?> />
 		<label class="radio" for="rdbPocketSizeOther<?Signature?>">Other</label>
 			<input type="text" name="PocketSize<?Signature?>" value="<? echo ( $$variable{'PocketSize'.$$variable{'Signature'}} ) ?>" onkeyup="this.value=this.value.replace(/[^\d\.]/, '' );$('rdbPocketSizeOther<?Signature?>').checked=true;calc(this.form.name);" size="2"/>
 		</span>
