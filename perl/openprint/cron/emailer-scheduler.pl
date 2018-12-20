@@ -1,5 +1,5 @@
 #!/usr/bin/perl -w
-use lib "/etc/apache2/lib/perl";
+use lib '/etc/apache2/lib/perl';
 use strict;
 use utf8;
 
@@ -39,7 +39,7 @@ if ($opts->{help}) {
 
 $$opts{config} = '/etc/openprint/emailer-scheduler.conf' if ! $$opts{config};
 
-$log = new logger( {level=>'warn'});
+$log = new logger( {level=>'debug'});
 configuration::init();
 configuration::from_file( $$opts{config} );
 configuration::merge( $opts );
@@ -49,7 +49,7 @@ foreach my $param ( 'db_name','db_user','db_pass' ) {
 	die "$program: missing required --$param parameter" if ! $config{$param};
 } # end foreach required-param
 
-$log->info("Opening SQL connection");
+#$log->info("Opening SQL connection to $config{db_name}");
 $dbh = sql::open_sql( $log, 
 	port			=> $config{db_port},
 	host			=> $config{db_host},
@@ -76,7 +76,7 @@ openprint::EmailCampaign->lock();
 my @campaign_ids = openprint::EmailCampaign->find(
 		$$opts{campaign_id} ?
 		( id=>$$opts{campaign_id} ) :
-		(active => 'Y', 'nextrun <' => 'NOW()', custom=>['(timeofday IS NULL) OR (timeofday <= CURRENT_TIME)'] ) );
+		(active => 'Y', 'nextrun is null or <' => 'NOW()', custom=>['(timeofday IS NULL) OR (timeofday <= CURRENT_TIME)'] ) );
 
 $log->info("There are ".@campaign_ids." active campaigns\n");
 
