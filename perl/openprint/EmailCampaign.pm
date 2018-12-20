@@ -18,36 +18,36 @@ $table = 'emailcampaigns';
 $serial = 'emailcampaigns_id_seq';
 
 %fields = (
-	'id'	=>	'id',
-	'name'	=>	'name',
-	'query'	=>	'query',
-	'interval'	=>	'interval',
-	'active'	=>	'active',
-	'timestosend'	=>	'timestosend',
-	'timeofday'		=>	'timeofday',
-	'email_subject'	=>	'email_subject',
-	'email_from'	=>	'email_from',
-	'email_to'		=>	'email_to',
-	'email_text'	=>	'email_text',
-	'email_html'	=>	'email_html',
-	'attachments'	=>	'attachments',
-	'lastrun'		=>	'lastrun',
-	'nextrun'		=>	'nextrun',
-	'created_on'	=>	'created_on',
-	'updated_on'	=>	'updated_on',
-	'template_id'	=>	'template_id',
-	deleted			=>	'deleted',
+	id	          =>	'id',
+	name      	  =>	'name',
+	query     	  =>	'query',
+	interval  	  =>	'interval',
+	active    	  =>	'active',
+	timestosend	  =>	'timestosend',
+	timeofday		  =>	'timeofday',
+	email_subject	=>	'email_subject',
+	email_from  	=>	'email_from',
+	email_to	  	=>	'email_to',
+	email_text    =>	'email_text',
+	email_html  	=>	'email_html',
+	attachments 	=>	'attachments',
+	lastrun		    =>	'lastrun',
+	nextrun		    =>	'nextrun',
+	created_on  	=>	'created_on',
+	updated_on  	=>	'updated_on',
+	template_id 	=>	'template_id',
+	deleted			  =>	'deleted',
 );
 
 %defaults = (
-	'lastrun'	=>	undef,
-	'nextrun'	=>	undef,
-	'interval'	=> q`'00:00:00'`,
-	'timeofday'	=> undef,
-	'created_on'	=> q`'NOW()'`,
-	'updated_on'	=> q`'NOW()'`,
-	'timestosend'	=>	undef,
-	'template_id'	=>	undef,
+	lastrun   	=>	undef,
+	nextrun	    =>	undef,
+	interval	  => q`'00:00:00'`,
+	timeofday	  => undef,
+	created_on	=> q`'NOW()'`,
+	updated_on	=> q`'NOW()'`,
+	timestosend	=>	undef,
+	template_id	=>	undef,
 	deleted			=>	0,
 );
 
@@ -59,8 +59,8 @@ sub destroy {
 	sql::execute( undef, undef, q{DELETE FROM EmailCampaigns WHERE id=?}, $self->{id} );
 	sql::end_transaction( $openprint::dbh, $ac );
 	
-	new openprint::Log()->save({'action'=>'Delete Email Campaign', 'note'=>"Campaign ID: " . $self->{id} . " Campaign Name: "  . $self->{name}, Object=>$self});
-} # end sub delete
+	new openprint::Log()->save({action=>'Delete Email Campaign', note=>"Campaign ID: " . $self->{id} . " Campaign Name: "  . $self->{name}, Object=>$self});
+} # end sub destroy
 
 sub send_admin_email {
 	my ($log, $dbh, $replacements) = @_;
@@ -194,7 +194,7 @@ sub send {
 		my ( $interval_expired, $num_email_sent );
 		my $User = $replacements{User} = new openprint::User( $user_id );
 
-		if ( $User->mailinglist() eq 'N' ) {
+		if ( (!$User->mailinglist()) or ( $User->mailinglist() eq 'N' ) ) {
 			$results .= sprintf('<span class="error">NOT Sending Email to: %s at %s : they have chosen to not receive email.</span><br/>', $replacements{User}->link_to(),$replacements{User}->email()  );
 			next;
 		} # end if
