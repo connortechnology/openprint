@@ -77,8 +77,10 @@ my @Interfaces = openprint::Host_Interface->find(mac=>$mac);
 if ( @Interfaces ) {
 	foreach my $Interface ( @Interfaces ) {
 		if ( $Interface->dhcp() ) {
-			if ( $Interface->ip() ne $ip ) {
-				my $old_ip = $Interface->ip();
+			my $old_ip = $Interface->ip();
+			$old_ip = '' if ! defined $old_ip;
+			if ( (!$old_ip) or ($old_ip ne $ip) ) {
+				
 				$_ = $Interface->save({ip=>$ip});
 				$log->error($_) if $_;
 				(new openprint::Log())->save( {
@@ -103,14 +105,18 @@ if ( @Interfaces ) {
 
 		foreach my $I ( openprint::Host_Interface->find( 'mac !=' => $mac, ip=>$ip ) ) {
 			$I->save({ip=>undef});
-			(new openprint::Log())->save( { Object => $I->Host(), note=>'IP Address removed because it is taken by host ' . $Interface->Host()->link_to(), action=>'IP Changed' } );
+			(new openprint::Log())->save( {
+					Object	=> $I->Host(),
+					note	=>'IP Address removed because it is taken by host ' . $Interface->Host()->link_to(),
+					action	=>'IP Changed',
+					} );
 		} # end foreach I
 	} # end foreach Interface
 } else {
 	my $Host = new openprint::Host();
 	$Host->save({ hostname=>$hostname} );
 	my $Interface = new openprint::Host_Interface();
-	$Interface->save({ ip=>$ip, mac => $mac, host_id=>$$Host{id}, dhcp=>1 });
+	$Interface->save({ ip=>$ip, mac=>$mac, host_id=>$$Host{id}, dhcp=>1 });
 
 	$log->debug("Host not found for mac $mac $hostname. Added a new entry");
 } # end if Hosts
@@ -121,7 +127,7 @@ exit(0);
 sub usage {
 	print <<EOH;
 
-usage: chilli_nsupdate.pl [--help] 
+usage: dhcpd_nsupdate.pl [--help] 
 
 The purpose of this script is to do a dns update when someone connects to the chilli hotspot
 

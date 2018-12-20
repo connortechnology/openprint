@@ -5,6 +5,32 @@
 	<input type="hidden" id="host_id" name="host_id" value="<? echo ( $$variable{Host}->id() ) ?>" />
 	<input type="hidden" id="action" name="action" />
 	<fieldset><legend>Host <? echo ( $$variable{Host}->link_to( $$variable{Host}->id() ) .($$variable{Host}->deleted() ? ' <span class="warning">Deleted</span>':'')) ?></legend>
+				<p class="buttons">
+					<? echo ( 
+						my $html;
+						$html .= button( 'Save', { onclick=>"if( check_inputs( f1 ) ){f1.elements['action'].value='Save';f1.submit();}" } );
+						$html .= button( 'Reset', { onclick=>'f1.reset();' } );
+						if ( $$variable{Host}->id() ) {
+							if ( $$variable{Host}->deleted() ) {
+								$html .= button( 'Destroy', { onclick=>"if(confirm('Are you sure?')){f1.elements['action'].value='Destroy';f1.submit();}" } );
+								$html .= button( 'Undelete', { onclick=>"f1.elements['action'].value='Undelete';f1.submit();" } );
+							} else {
+								$html .= button( 'Delete', { onclick=>"if(confirm('Are you sure?')){f1.elements['action'].value='Delete';f1.submit();}" } );
+							}
+						} # end if
+						$html .= button( 'Resolve', { onclick=>"f1.elements['action'].value='Resolve';f1.action='/employee/it/host.html';f1.submit();" } );
+						$html .= button( 'Ping', { onclick=>"f1.elements['action'].value='ping';f1.action='/employee/it/host.html';f1.submit();" } );
+						$html .= button( 'Wake', { onclick=>"f1.elements['action'].value='Wake';f1.action='/employee/it/host.html';f1.submit();" } );
+            if ( $$variable{Host}->can_reboot() ) {
+            $html .= button( 'Reboot', { onclick=>"f1.elements['action'].value='reboot';f1.action='/employee/it/host.html';f1.submit();" } );
+            }
+						$html .= button( 'GEOLookup', { onclick=>"f1.elements['action'].value='GEOLookup';f1.action='/employee/it/host.html';f1.submit();" } );
+						if ( $$variable{Host}->can_get_config() ) {
+							$html .= button( 'GetConfig', { onclick=>"f1.elements['action'].value='get_config';f1.submit();", text=>'Get Config' } );
+						}
+						return $html;
+					) ?>
+				</p>
 		<div class="content leftColumn">
 			<ul>
 				<li>
@@ -89,32 +115,6 @@ make_drop_down( openprint::Company->dropdown(id=>[ @owner_ids, $openprint::Compa
 <? endif ( $$variable{Host}->id() ) ?>
 		</div>
 		<br class="spacer"/>
-				<p class="buttons">
-					<? echo ( 
-						my $html;
-						$html .= button( 'Save', { onclick=>"if( check_inputs( f1 ) ){f1.elements['action'].value='Save';f1.submit();}" } );
-						$html .= button( 'Reset', { onclick=>'f1.reset();' } );
-						if ( $$variable{Host}->id() ) {
-							if ( $$variable{Host}->deleted() ) {
-								$html .= button( 'Destroy', { onclick=>"if(confirm('Are you sure?')){f1.elements['action'].value='Destroy';f1.submit();}" } );
-								$html .= button( 'Undelete', { onclick=>"f1.elements['action'].value='Undelete';f1.submit();" } );
-							} else {
-								$html .= button( 'Delete', { onclick=>"if(confirm('Are you sure?')){f1.elements['action'].value='Delete';f1.submit();}" } );
-							}
-						} # end if
-						$html .= button( 'Resolve', { onclick=>"f1.elements['action'].value='Resolve';f1.action='/employee/it/host.html';f1.submit();" } );
-						$html .= button( 'Ping', { onclick=>"f1.elements['action'].value='ping';f1.action='/employee/it/host.html';f1.submit();" } );
-						$html .= button( 'Wake', { onclick=>"f1.elements['action'].value='Wake';f1.action='/employee/it/host.html';f1.submit();" } );
-            if ( $$variable{Host}->can_reboot() ) {
-            $html .= button( 'Reboot', { onclick=>"f1.elements['action'].value='reboot';f1.action='/employee/it/host.html';f1.submit();" } );
-            }
-						$html .= button( 'GEOLookup', { onclick=>"f1.elements['action'].value='GEOLookup';f1.action='/employee/it/host.html';f1.submit();" } );
-						if ( $$variable{Host}->can_get_config() ) {
-							$html .= button( 'GetConfig', { onclick=>"f1.elements['action'].value='get_config';f1.submit();", text=>'Get Config' } );
-						}
-						return $html;
-					) ?>
-				</p>
 	</fieldset>
 <fieldset><legend>Interfaces</legend>
 	<table id="Interfaces" class="List">
