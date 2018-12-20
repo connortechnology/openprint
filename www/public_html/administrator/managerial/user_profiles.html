@@ -258,7 +258,7 @@ Please select a company or user to obtain login information.<br/>
 		</fieldset>
 		<fieldset class="Assistants"><legend>Assistants</legend>
 				<ul>
-					<? if ( @{$$variable{csr_ids}} = openprint::User->find('id !='=>$$variable{User}->id(), company_id=>$config{owner_id}, type=>['E','A'], 'usergroup any'=>'Sales' ) ) ?>
+					<? if ( @{$$variable{csr_ids}} = openprint::User->find('id !='=>$$variable{User}->id(), ($config{owner_id} ? (company_id=>$config{owner_id}) : () ), type=>['E','A'], 'usergroup any'=>'Sales' ) ) ?>
 					<li class="csr_ids">
 						<label>Assistant to</label>
 						<select name="csr_ids" size="4" multiple="multiple">
@@ -271,21 +271,21 @@ Please select a company or user to obtain login information.<br/>
 							<? echo ( make_drop_down( [ map { $_->id(), $_->name() } @{$$variable{csr_ids}} ], [$$variable{User}->assistant_ids()] ); ) ?>
 						</select>
 					</li>
-					<? endif ( @{$$variable{csr_ids}} = openprint::User->find('id !='=>$$variable{User}->id(), company_id=>$config{owner_id}, type=>['E','A'], 'usergroup any'=>'Sales' ) ) ?>
+					<? endif ( @{$$variable{csr_ids}} = openprint::User->find('id !='=>$$variable{User}->id(), ($config{owner_id} ? (company_id=>$config{owner_id}) : () ), type=>['E','A'], 'usergroup any'=>'Sales' ) ) ?>
 					<? endif ( sets::isin( $$variable{User}->type(), ['E','A'] ) ) ?>
 				</ul>
 			</fieldset>
 
 			<div class="rightColumn">
 				<ul>
-					<? if ( @{$$variable{user_categories}} = openprint::MarketingCategory->find('order'=>'lower(name)') ) ?>
+					<? if ( @{$$variable{user_categories}} = openprint::MarketingCategory->find(order=>'lower(name)') ) ?>
 					<li class="user_categories">
 						<label>User Category</label>
 						<select name="selectUserCategories" multiple="multiple">
 						<? echo ( make_drop_down( [ map { $_->id(), $_->name() } @{$$variable{user_categories}} ], [ openprint::MarketingCategory->find('user_id any'=>$$variable{User}->id()) ] ); ) ?>
 						</select>
 					</li>
-					<? endif ( @{$$variable{user_categories}} = openprint::MarketingCategory->find('order'=>'lower(name)') ) ?>
+					<? endif ( @{$$variable{user_categories}} = openprint::MarketingCategory->find(order=>'lower(name)') ) ?>
 <li class="email_quotes notrequired">
                     <label>Email my quotes to myself?</label>
 					
