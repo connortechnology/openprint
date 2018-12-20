@@ -32,15 +32,19 @@ cleanup : true
 				</li>
 				<li>
 					<label>Host</label>
-          <?echo ( ssi::select( 
-            openprint::Host->dropdown( 
+          <?echo ( join("\n",
+                ssi::select( 
+                  openprint::Host->dropdown( 
 #'owner_id is null'=>0,
-order=>'hostname' ),
+                    order=>'hostname' ),
             $$variable{Backup}->host_id(),
             {
               name    =>  'host_id',
               prepend =>  [ '', 'select' ],
-            } ); ) ?>
+            } ),
+button('GoHost', { href=>$$variable{Backup}->Host()->url_to(), text=>'Go' } ),
+);
+              ) ?>
 				</li>
 				<li>
 					<label>User</label>
@@ -99,8 +103,16 @@ order=>'hostname' ),
 					) ?>
 				</p>
 <p>Don't forget to copy over the ssh key with something like the following command.  <br/>
-VoxIP: sudo ssh-copy-id -i /var/www/.ssh/id_rsa.pub root@IP-address<br/>
-VueIP: sudo ssh-copy-id -i /var/www/.ssh/id_rsa.pub ipc@IP-address<br/>
+<?echo(
+my $html = '';
+foreach my $HI ( $$variable{Backup}->Host()->Interfaces() ) {
+$html .= "
+VoxIP: sudo ssh-copy-id -i /var/www/.ssh/id_rsa.pub root\@$$HI{ip}<br/>
+VueIP: sudo ssh-copy-id -i /var/www/.ssh/id_rsa.pub ipc\@$$HI{ip}<br/>
+";
+}
+return $html;
+) ?>
 </p>
 	</fieldset>
 </form>
