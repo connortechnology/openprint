@@ -410,7 +410,7 @@ sub is_wap {
 	return ( $_[0]{type_id} && $_[0]->type() && sets::isin( $_[0]->type(), [ 'WG602v3', 'WPN802','TP-Link Archer C7' ] ) );
 }
 
-sub url {
+sub url_to {
 	return sprintf('/employee/it/host.html?host_id=%d', $_[0]{id});
 }
 
