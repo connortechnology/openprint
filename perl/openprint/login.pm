@@ -121,7 +121,7 @@ sub verify_login {
 
 	# Have a valid user now.
 	if ( $User->web_active() eq 'N' ) {
-		$$variable{error} = "User not activated.";
+		$$variable{error} = 'User not activated.';
 		$$variable{information} = "Applications for existing corporate accounts must be approved by and administrator. You will be notified when you application had been approved.";
 		(new openprint::Log())->save({Object=>$User, action=>'Login Failed', note=>'User Account Not Activated', user_id=>$User->id(), company_id=>$User->company_id() } );
 		return;
@@ -192,6 +192,8 @@ sub verify_login {
 	} elsif ( $session{Destination} =~ /^Click <a href="(.*)">here<\/a> to continue the survey\./ ) {
      
 		$$variable{ExternalRedirect} = $1;
+  } elsif ( $User->homepage() ) {
+    $$variable{ExternalRedirect} = $User->homepage()->value();
 	} elsif ( (!$variable{error}) and ( $r->uri() =~ /\/account\/login.html/ ) ) {
 		# I think the redirect is to handle reloads
 		$$variable{ExternalRedirect} = $r->uri();
