@@ -10,7 +10,7 @@
     ( $session{'/employee/it/backups.html?monitored'} ne '' ? ( monitored=>$session{'/employee/it/backups.html?monitored'} ) : () ),
     ( $session{'/employee/it/backups.html?online'} ne '' ? ( online=>$session{'/employee/it/backups.html?online'} ) : () ),
     ( $session{'/employee/it/backups.html?has_name'} ne '' ? ( 'name is null' => ! $session{'/employee/it/backups.html?has_name'} ) : () ),
-    ( $session{'/employee/it/backups.html?type_id'} ne '' ? ( type_id => $session{'/employee/it/backups.html?type_id'} ) : () ),
+    ( $session{'/employee/it/backups.html?type'} ne '' ? ( type => $session{'/employee/it/backups.html?type'} ) : () ),
     ( $session{'/employee/it/backups.html?owner_id'} ne '' ? ( owner_id => $session{'/employee/it/backups.html?owner_id'} ) : () ),
     ( $session{'/employee/it/backups.html?deleted'} ? ( deleted=>$session{'/employee/it/backups.html?deleted'} ) : () ),
     date_filter( '/employee/it/backups.html?created_on_end', 'created_on <=' ),
@@ -26,6 +26,7 @@
 		<tr>
 			<th class="checkbox">&nbsp;</th>
 			<th class="name">Name</th>
+			<th class="hostname">Host</th>
 			<th class="type">Type</th>
 			<th class="options">Options</th>
 			<th class="DateTime">Last Ran</th>
@@ -36,32 +37,34 @@
 			my $html;
 			my $rowclass;
 			foreach my $Backup ( @{$$variable{Backups}} ) {
-				my @Assets = $Backup->Assets();
+        my $Host = $Backup->Host();
+
 				$html .= sprintf('
-					<tr%8$s>
-						<td rowspan="2" class="checkbox"><input type="checkbox" id="backup_id" name="backup_id" value="%1$d"/></td>
+					<tr%7$s>
+						<td class="checkbox"><input type="checkbox" id="backup_id" name="backup_id" value="%1$d"/></td>
 						<td class="name"><a href="/employee/it/backup.html?backup_id=%1$d">%2$s</a></td>
-						<td class="type"><a href="/employee/it/backup.html?backup_id=%1$d">%3$s</a></td>
-						<td class="options"><a href="/employee/it/backup.html?backup_id=%1$d">%4$s</a></td>
-						<td rowspan="2" class="DateTime"><a href="/employee/it/backup.html?backup_id=%1$d">%5$s</a></td>
-          </tr><tr%8$s>
-						<td class="path"><a href="/employee/it/backup.html?backup_id=%1$d">%6$s</a></td>
-						<td class="path" colspan="2"><a href="/employee/it/backup.html?backup_id=%1$d">%7$s</a></td>
-					</tr>
-					', $Backup->id(), $Backup->name(), $Backup->type(), '',
-format_datetime( $Backup->lastran_on() ),
-          $Backup->path(),
-          $Backup->dest_path(),
+						<td class="hostname"><a href="/employee/it/backup.html?backup_id=%1$d">%3$s</a></td>
+						<td class="type"><a href="/employee/it/backup.html?backup_id=%1$d">%4$s</a></td>
+						<td class="options"><a href="/employee/it/backup.html?backup_id=%1$d">%5$s</a></td>
+						<td class="DateTime"><a href="/employee/it/backup.html?backup_id=%1$d">%6$s</a></td>
+          </tr>
+					', $Backup->id(), $Backup->name(), 
+          $Host->hostname() . ' ' . ($Host->online() ? '<span class="online">online</span>' : '<span class="offline">offline</span>'),
+          $openprint::Backup::types{$Backup->type()},
+          '',
+          format_datetime( $Backup->lastran_on() ),
 					$rowclass,
 					);
 				$rowclass = $rowclass ? '' : ' class="colRow"';
 			} # end foreach Backup
-			$html .= '<tr class="totals"><td colspan="5"># of backups: ' . @{$$variable{Backups}} . '</td></tr>';
+			$html .= '<tr class="totals"><td colspan="6"># of backups: ' . @{$$variable{Backups}} . '</td></tr>';
 			return $html;
 		) ?>
 		<tr>
 	</tbody>
 </table>
 <p class="buttons">
-<? echo ( button( 'delete', { onclick=>q`jQuery( 'Results').load('/employee/it/_backups.html?action=Delete', { backup_id: get_value( $('f1').backup_id ) } );`, text=>'Delete Checked' } ); ) ?>
+<? echo ( button( 'delete', {
+  onclick=>q`jQuery('#Results').load('/employee/it/_backups.html?action=Delete', { backup_id: get_value( $('f1').backup_id ) } );`, text=>'Delete Checked' } );
+) ?>
 </p>

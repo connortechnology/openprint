@@ -55,6 +55,8 @@ $serial = 'hosts_id_seq';
 	type_id		=>	'type_id',
 	type			=>	undef,
 	offline_seconds	=>	'offline_seconds',
+	max_ping_time	=>	'max_ping_time',
+  min_ping_frequency  =>  'min_ping_frequency',
 	state_changed_on	=>	'state_changed_on',
 	notified			=>	'notified',
 	notify_frequency	=>	'notify_frequency',
@@ -69,27 +71,31 @@ $serial = 'hosts_id_seq';
 %transforms = (
 	id			=>	[ 's/\D//g' ],
 	notify_frequency	=>	[ 's/\D//g' ],
+	min_ping_frequency	=>	[ 's/\D//g' ],
+	max_ping_time	=>	[ 's/\D//g' ],
 	hostname	=>	[ 's/\s//g' ],
 	description	=>	[ 's/^\s+//', 's/\s+$//', 's/\s\s+/ /g' ],
 );
 %defaults = (
-	'blacklist'	=>	0,
-	'whitelist'	=>	0,
-	'monitored'	=>	0,
-	'hostname'	=>	undef,
-	'created_on'	=>	q`'NOW()'`,
-	'updated_on'	=>	q`'NOW()'`,
+	blacklist 	=>	0,
+	whitelist 	=>	0,
+	monitored 	=>	0,
+	hostname  	=>	undef,
+	created_on  =>	q`'NOW()'`,
+	updated_on	=>	q`'NOW()'`,
 	resolved_on		=>	undef,
-	'count'		=>	0,
-	'deleted'	=>	0,
-	'online'	=>	undef,
-	'type_id'	=>	undef,
-	'state_changed_on'	=>	undef,
-	'offline_seconds'	=>	undef,
-	'notified'=>	0,
+	count		=>	0,
+	deleted	=>	0,
+	online	=>	undef,
+	type_id	=>	undef,
+	state_changed_on	=>	undef,
+	offline_seconds	=>	undef,
+	notified      =>	0,
 	location_id		=>	undef,
 	notify_frequency	=>	undef,
 	owner_id			=>	undef,
+  max_ping_time =>  1000,
+  min_ping_frequency  =>  60,
 );
 
 sub name {
@@ -160,10 +166,10 @@ sub Notifications {
 	if ( ! $$self{Notifications} ) {
 		@{$$self{Notifications}} = openprint::Host_Notification->find(
 				host_id	=> $$self{id},
-				);
+				) if $$self{id};
 				#'order' => 'lower(strfirstName),lower(strlastname)' );
 	} # end if
-	return @{$$self{Notifications}};
+	return $$self{Notifications} ? @{$$self{Notifications}} : ();
 } # end sub Notifications
 
 sub Interfaces {
@@ -174,10 +180,10 @@ sub Interfaces {
 		@{$_[0]{Interfaces}} = openprint::Host_Interface->find(
 				host_id	=>	$_[0]{id},
 				order	=>	'mac',
-				);
+				) if $_[0]{id};
 	} # end if
-	return @{$_[0]{Interfaces}};
-} # end sub Notifications
+	return $_[0]{Interfaces} ? @{$_[0]{Interfaces}} : ();
+} # end sub Interfaces
 
 sub info {
 	require openprint::Host_Info;
@@ -247,6 +253,9 @@ sub reboot {
 			post_url => 'cgi_reboot.',
 			};
 			$method = 'post';
+    } elsif( $_[0]->type() eq 'Grandview' ) {
+      $initial_url = $HI->ip();
+      $url = '/goform/maintenance?cmd=set&restart=yes';
 		} elsif( $_[0]->type() eq 'DLink DCS-910' ) {
 			$initial_url = $HI->ip();
 			$url = $HI->ip().'/ReplyF.htm';
@@ -302,6 +311,12 @@ sub reboot {
 
 		} elsif( $_[0]->type() eq 'DCS-932L' ) {
 			$url = $HI->ip().'/setSystemReboot';
+    } elsif ( $_[0]->type() eq 'DCS-942L' ) {
+      $url = $HI->ip().'/eng/admin/export.cgi';
+      $method = 'post';
+      $args = {
+        reboot => 'true'
+      };
 		} elsif( $_[0]->type() eq 'DCS-933L' ) {
 			$initial_url = $HI->ip();
 			$url = $HI->ip().'/setSystemReboot';
@@ -398,10 +413,10 @@ $openprint::log->debug("Switching to https");
 } # end sub reboot
 
 sub is_wap {
-	return sets::isin( $_[0]->type(), [ 'WG602v3', 'WPN802','TP-Link Archer C7' ] );
+	return ( $_[0]{type_id} && $_[0]->type() && sets::isin( $_[0]->type(), [ 'WG602v3', 'WPN802','TP-Link Archer C7' ] ) );
 }
 
-sub url {
+sub url_to {
 	return sprintf('/employee/it/host.html?host_id=%d', $_[0]{id});
 }
 
@@ -432,6 +447,14 @@ sub online {
 sub Owner {
   return new openprint::Company( $_[0]{owner_id} );
 }
+
+sub can_reboot {
+  if ( $_[0]{type_id} and $_[0]->type() and sets::isin( $_[0]->type(), [ 'AIC500', 'AIC500W', 'AIC777W', 'AIC747W','AIC250W','M8640','TL-WPA4220','D-Link DAP1522','DGS-1224T','DLink DCS-910','TP-Link Archer C7',
+        'DCS932L','DCS-933L','DCS-942L', 'WG602v3' ] ) ) {
+    return !undef;
+  }
+  return undef;
+} # end sub can_reboot
 
 sub get_config {
 	my $Host = shift;

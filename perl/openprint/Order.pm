@@ -454,10 +454,10 @@ sub subtotal {
 
 sub total {
 	my $self = shift;
-	if ( @_ ) {
-		$$self{total} = shift;
-	} # emd of
-	if ( (!$$self{total}) or sets::isin( $$self{status}, ['Re-Opened','Incomplete'] ) ) {
+	$$self{total} = shift if @_;
+	if ( (!$$self{total}) or 
+			($$self{status} and sets::isin($$self{status}, ['Re-Opened','Incomplete']) )
+		 ) {
 		$$self{total} = $self->subtotal();
 		foreach my $Tax ( $self->Taxes() ) {
 			$$self{total} += $Tax->amount();
