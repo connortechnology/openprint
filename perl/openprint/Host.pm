@@ -326,7 +326,7 @@ sub reboot {
 		$openprint::log->debug("Sending initial url: " . $protocol.'://'.($initial_url ? $initial_url : $url) );
 		my $headers = $response->headers();
 		if ( $$headers{'client-ssl-cipher'} ) {
-$openprint::log->debug("Swtiching to https");
+$openprint::log->debug("Switching to https");
 			$protocol = 'https';
 			$port = 443;
 		}
