@@ -4132,6 +4132,12 @@ if ( ! sets::isin( 'stockqualities_id_seq', \@sequences ) ) {
 	$dbh->do(q`SELECT setval('stockqualities_id_seq', (SELECT max(id) FROM stockqualities))`);
 } # end if
 
+if ( ! sets::isin( 'event_categories', \@tables ) ) {
+  $dbh->do( misc::load_file( $log, '../../sql/Event_Categories.sql' ) );
+  die $dbh->errstr() if $dbh->errstr();
+  push @tables, 'event_categories';
+} # end if
+
 if ( ! sets::isin( 'events', \@tables ) ) {
     $dbh->do( misc::load_file( $log, '../../sql/Events.sql' ) );
     die $dbh->errstr() if $dbh->errstr();
@@ -4852,11 +4858,6 @@ if ( ! sets::isin( 'par', \@tables ) ) {
     die $dbh->errstr() if $dbh->errstr();
 } # end if
 
-if ( ! sets::isin( 'event_categories', \@tables ) ) {
-  $dbh->do( misc::load_file( $log, '../../sql/Event_Categories.sql' ) );
-  die $dbh->errstr() if $dbh->errstr();
-  push @tables, 'event_categories';
-} # end if
 
 if ( ! sets::isin( 'photos_in_albums', \@tables ) ) {
     $dbh->do( misc::load_file( $log, '../../sql/Photos_in_Albums.sql' ) );

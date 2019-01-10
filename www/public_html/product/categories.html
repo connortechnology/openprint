@@ -19,6 +19,11 @@
 </fieldset>
 </form>
 <p class="buttons">
-<?echo(button('New', { href=>'category_edit.html' } );)?>
+<?echo(
+  if ( openprint::Product_Category->can_edit() ) {
+    return button('New', { href=>'category_edit.html' } );
+  }
+  return;
+)?>
 </p>
 <div id="Results"><?include(_categories.html)?></div>

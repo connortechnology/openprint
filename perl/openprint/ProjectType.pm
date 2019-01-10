@@ -14,27 +14,27 @@ $table = 'project_types';
 $serial = 'project_types_id_seq';
 
 %fields = (
-	'id'			=>	'id',
-	'name'			=>	'name',	
-	'description'	=>	'description',
-	'category_id'	=>	'category_id',
-	'url'			=>	'url',
-	'sorting'		=>	'sorting',
-	'type'			=>	'type',
-	'please_call'	=>	'please_call',
+	id		    	=>	'id',
+	name		  	=>	'name',
+	description	=>	'description',
+	category_id	=>	'category_id',
+	url		    	=>	'url',
+	sorting	  	=>	'sorting',
+	type			  =>	'type',
+	please_call	=>	'please_call',
 	category		=>	undef,
-	deleted		=> 'deleted',
+	deleted	  	=> 'deleted',
 );
 %transforms = (
 	id			=>	[ 's/\D//g', '<2147483647' ],
-	'name'	=>	[ 's/\s//g' ],
+	name  	=>	[ 's/\s//g' ],
 );
 %defaults = (
-	'id'			=>	undef,
-	'category_id'	=>	undef,
-	'sorting'		=>	undef,
-	'please_call'	=>	0,
-	deleted	=>	0,
+	id			    =>	undef,
+	category_id	=>	undef,
+	sorting	  	=>	undef,
+	please_call	=>	0,
+	deleted   	=>	0,
 );
 
 sub save {
@@ -58,20 +58,23 @@ sub save {
 			sql::insert( undef, undef, 'ProjectType_BlockedServices', ['projecttype_id', $$self{id}, 'servicetype_id', $servicetype_id ] );
 		} # end foreach
 	} # end if
-	return;	
+	return '';
 } # end sub save
 
 sub next {
 	my $self = shift;
+
+  my $next_id;
 	if ( $$self{name} ) {
-		($_) = sql::execute( undef, undef, q{SELECT id FROM Project_Types WHERE name = (SELECT MIN(name) FROM Project_Types WHERE name>?)}, $$self{name} );
-		if ( ! $_ ) {
-			( $_ ) = sql::execute( undef, undef, q{SELECT id FROM Project_Types WHERE name = (SELECT MAX(name) FROM Project_Types WHERE name<?)}, $$self{name} );
+		($next_id) = sql::execute( undef, undef, q{SELECT id FROM Project_Types WHERE name = (SELECT MIN(name) FROM Project_Types WHERE name>?)}, $$self{name} );
+		if ( ! $next_id ) {
+			( $next_id ) = sql::execute( undef, undef, q{SELECT id FROM Project_Types WHERE name = (SELECT MAX(name) FROM Project_Types WHERE name<?)}, $$self{name} );
 		} # end if
 	} # end if
-	( $_ ) = sql::execute( undef, undef, q{SELECT MIN(id) FROM Project_Types} ) if ! $_;
-	return new openprint::ProjectType( $_ );
+	( $next_id ) = sql::execute( undef, undef, q{SELECT MIN(id) FROM Project_Types} ) if ! $next_id;
+	return new openprint::ProjectType( $next_id );
 } # end sub next
+
 sub prev {
 	my $self = shift;
 	if ( $$self{name} ) {
@@ -148,7 +151,7 @@ sub destroy {
 	sql::update( undef, undef, 'Projects', ['type_id=?',$$self{id}], 'type_id', undef );
 	sql::execute( undef, undef, q{DELETE FROM Project_Types WHERE Id=?}, $$self{id} );
 	sql::end_transaction( $openprint::dbh, $ac );
-	
+
 	(new openprint::Log())->save({ action=>'Delete Project Type', note=>"Project Type ID: $$self{id} Project Type: $$self{name}"});
 	return;
 } # end sub destroy

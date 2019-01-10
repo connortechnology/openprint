@@ -61,14 +61,7 @@
 					<ul>
    				<li class="salutation notrequired"> 
    					<label>Salutation</label>
-					<input type="radio" id="SalutationMr." name="salutation" value="Mr." <? echo ( checked( $$variable{User}->salutation() eq 'Mr.' ); ) ?> />
-					<label class="radio" for="SalutationMr.">Mr.</label>
-					<input type="radio" id="SalutationMrs." name="salutation" value="Mrs." <? echo ( checked( $$variable{User}->salutation() eq 'Mrs.' ); ) ?> />
-					<label class="radio" for="SalutationMrs.">Mrs.</label>
-					<input type="radio" id="SalutationMs." name="salutation" value="Ms." <? echo ( checked( $$variable{User}->salutation() eq 'Ms.' ); ) ?> />
-					<label class="radio" for="SalutationMs.">Ms.</label>
-					<input type="radio" id="SalutationMiss" name="salutation" value="Miss" <? echo ( checked( $$variable{User}->salutation() eq 'Miss' ); ) ?> />
-					<label class="radio" for="SalutationMiss">Miss</label>
+            <?echo(radio('salutation', [ map { $_, $_ } ( 'Mr.','Mrs.','Ms.','Miss' ) ], $$variable{User}->salutation() ); ) ?>
    				</li>
    				<li class="required firstname">
    					<label for="firstname">First Name</label>
@@ -97,39 +90,24 @@
    				</li>
    				<li class="mailinglist notrequired">
    					<label>Add to our Mailing List</label>
-					<input type="radio" id="MailingListY" name="mailinglist" <? echo ( checked( $$variable{User}->mailinglist() eq 'Y' ); ) ?> value="Y" />
-					<label class="radio" for="MailingListY">Yes</label>
-					<input type="radio" id="MailingListN" name="mailinglist" <? echo ( checked( $$variable{User}->mailinglist() ne 'Y' ); ) ?> value="N" />
-					<label class="radio" for="MailingListN">No</label>
+            <?echo(radio('mailinglist', [ 'Y', 'Yes', 'N', 'No' ], $$variable{User}->mailinglist() );)?>
    				</li>
 			<? if ( $$variable{Me}->administrator() eq 'Y' or $$variable{User}->Company()->can_edit() ) ?>
    				<li class="web_active notrequired">
    					<label>Can login to the web site?</label>
-   					<input type="radio" id="web_activeY" name="web_active" <? echo ( checked( $$variable{User}->web_active() eq 'Y' ); ) ?> value="Y" />
-   					<label class="radio" for="web_activeY">Yes</label>
-   					<input type="radio" id="web_activeN" name="web_active" <? echo ( checked( $$variable{User}->web_active() ne 'Y' ); ) ?> value="N" />
-   					<label class="radio" for="web_activeN">No</label>
+            <?echo(radio('web_active', [ 'Y', 'Yes', 'N', 'No' ], $$variable{User}->web_active() );)?>
    				</li>
 				<li class="ftp_active notrequired">
 					<label>Can login to the FTP site?</label>
-					<input type="radio" id="ftp_active1" name="ftp_active" <? echo ( checked( $$variable{User}->ftp_active() ); ) ?> value="1" />
-					<label class="radio" for="ftp_active1">Yes</label>
-					<input type="radio" id="ftp_active0" name="ftp_active" <? echo ( checked( ! $$variable{User}->ftp_active() ); ) ?> value="0" />
-					<label class="radio" for="ftp_active0">No</label>
+            <?echo(radio('ftp_active', [ '1', 'Yes', '0', 'No' ], $$variable{User}->ftp_active() );)?>
 				</li>
    				<li class="administrator notrequired">
    					<label>Company administrator?</label>
-   					<input type="radio" id="AdministratorY" name="administrator" <? echo ( checked( $$variable{User}->administrator() eq 'Y' ); ) ?> value="Y" />
-   					<label class="radio" for="AdministratorY">Yes</label>
-   					<input type="radio" id="AdministratorN" name="administrator" <? echo ( checked( $$variable{User}->administrator() ne 'Y' ); ) ?> value="N" /> 
-   					<label class="radio" for="AdministratorN">No</label>
+            <?echo(radio('administrator', [ 'Y', 'Yes', 'N', 'No' ], $$variable{User}->administrator() );)?>
    				</li>
    				<li class="email_quotes notrequired">
    					<label>Email my quotes to myself?</label>
-   					<input type="radio" id="email_quotes_to_myself1" name="email_quotes_to_myself" <? echo ( checked( $$variable{User}->email_quotes_to_myself() ); ) ?> value="1" />
-   					<label class="radio" for="email_quotes_to_myself1">Yes</label>
-   					<input type="radio" id="email_quotes_to_myself0" name="email_quotes_to_myself" <? echo ( checked( ! $$variable{User}->email_quotes_to_myself() ); ) ?> value="0" />
-   					<label class="radio" for="email_quotes_to_myself0">No</label>
+            <?echo(radio('email_quotes_to_mysql', [ '1', 'Yes', '0', 'No' ], $$variable{User}->administrator() );)?>
    				</li>
 <? eval ( @{$$variable{QuoteLevels}} = sql::execute( undef, undef, 'SELECT id,name FROM QuoteLevels Order BY lower(name)' ); ) ?>
 <? if ( @{$$variable{QuoteLevels}} > 1 ) ?>

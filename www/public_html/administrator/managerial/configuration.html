@@ -6,7 +6,19 @@
 					button( 'ResetTop', { onclick=>'f1.reset();',text => 'Reset' } ),
 					button( 'New', { onclick=>q`popup_window('_configuration_popup.html');` } )
 		); ) ?>
-</p>
+  </p>
+<fieldset class="filters"><legend>Filter</legend>
+  <ul>
+    <li><label>Category</label>
+      <?echo(ssi::select([sql::execute(undef,undef,'SELECT DISTINCT category,category FROM Configuration ORDER BY category')],
+          $param{category_filter}, 
+          { name=>'category_filter', prepend=>['','All'], onchange=>'this.form.submit();' }
+          );
+          )?>
+    </li>
+  </ul>
+</fieldset>
+
 <div id="Configuration">
 <? echo (
 	my $html;
@@ -14,7 +26,9 @@
 	my $Pricelists = openprint::Pricelist->dropdown(order=>'lower(name)');
 
 	my $cat;
-	foreach my $C ( Configuration->find(order=>'lower(category),lower(name)') ) {
+	foreach my $C ( Configuration->find(
+    ( $param{category_filter} ? (category=>$param{category_filter}) : () ),
+    order=>'lower(category),lower(name)') ) {
 
 		if ( ! defined $cat ) {
 			$html .= "<fieldset><legend>$$C{category}</legend><ul>";

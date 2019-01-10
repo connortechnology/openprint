@@ -89,6 +89,8 @@ sub verify_login {
 				if ( $ppr->match($password) ) {
 					$User = $U;
 					last;
+        } else {
+          $openprint::log->debug("User $$U{email}'s password did not match: $$U{password} != $password");
 				} # end if
 			};
 			$log->error( "Eval error of Authen::Passphrase::BlowfishCrypt Reason: " . $@ ) if $@;
@@ -99,8 +101,9 @@ sub verify_login {
 			} # end if
 		} # end if
 	} # end foreach
+
 	if ( ! $User ) {
-		$$variable{information} = 'The password you entered was not correct.	Please try again.';
+		$$variable{information} = 'The credentials you entered were not correct.	Please try again.<br/>';
 		foreach my $U ( @Users ) {
 			(new openprint::Log())->save({Object=>$U, action=>'Login Failed', note=>'Invalid Password', user_id=>$U->id(), company_id=>$U->company_id() } );
 		} # end foreach U
@@ -270,7 +273,7 @@ sub change_password {
 	} # end if
 
 
-	my $User = new openprint::User( $session{user_id} );
+	my $User = $openprint::User;
 
 	if ( my $reason = check_password( $openprint::param{txtNewPassword} ) ) {
 		$variable{error} = "The new password you entered was not good enough: $reason.<br/>";
@@ -278,39 +281,39 @@ sub change_password {
 		return;
 	} # end if
 
-	if ( $config{encrypt_passwords} ) {
-require Authen::Passphrase::BlowfishCrypt;
-		my $ppr = Authen::Passphrase::BlowfishCrypt->new(
-                cost => 8, salt_random => 1,
-                passphrase => $param{txtOldPassword} );
-		$param{txtOldPassword} = $ppr->as_rfc2307();
-		my $ppr = Authen::Passphrase::BlowfishCrypt->new(
-				cost => 8, salt_random => 1,
-				passphrase => $param{txtNewPassword} );
-		$param{txtNewPassword} = $ppr->as_rfc2307();
-	} # end if
-	
-	if ( $openprint::param{txtNewPassword} eq $User->password() ) {
+	if ( $param{txtNewPassword} eq $User->password() ) {
 		$variable{error} = 'The new password you entered was the same as your current password. Please try again.<br/>';
 		$variable{Redirect} = '/account/change_password.html';
 		return;
 	} # end if
 
-	if ( $User->password() eq $openprint::param{txtOldPassword} ) {
-		$variable{error} .= $User->save({
-				password => $param{txtNewPassword},
-				change_password => 'N',
-				password_changed_on => 'NOW()',
-				});
-		if ( $session{Destination} =~ /^Click <a href="(.*)\.html\??(.*)">here<\/a>/ ) {
-			$variable{ExternalRedirect} = $1.'.html?'.$2;
-			delete $session{Destination};
-		} # end if Destination
-	} else {
-		$variable{error} = 'You entered the wrong old password.<br/>';
-		$variable{Redirect} = '/account/change_password.html';
-		return;
-	} # end if
+  if ( $config{encrypt_passwords} ) {
+    require Authen::Passphrase::BlowfishCrypt;
+    my $ppr = Authen::Passphrase::BlowfishCrypt->from_rfc2307($User->password());
+    if ( ! $ppr->match($param{txtOldPassword}) ) {
+      $variable{error} = 'You entered the wrong old password.<br/>';
+      $variable{Redirect} = '/account/change_password.html';
+      return;
+    } # end if
+    $ppr = Authen::Passphrase::BlowfishCrypt->new(
+      cost => 8, salt_random => 1,
+      passphrase => $param{txtNewPassword} );
+    $param{txtNewPassword} = $ppr->as_rfc2307();
+  } elsif ( $User->password() ne $openprint::param{txtOldPassword} ) {
+    $variable{error} = 'You entered the wrong old password.<br/>';
+    $variable{Redirect} = '/account/change_password.html';
+    return;
+  } # end if
+
+  $variable{error} .= $User->save({
+      password => $param{txtNewPassword},
+      change_password => 'N',
+      password_changed_on => 'NOW()',
+    });
+  if ( $session{Destination} =~ /^Click <a href="(.*)\.html\??(.*)">here<\/a>/ ) {
+    $variable{ExternalRedirect} = $1.'.html?'.$2;
+    delete $session{Destination};
+  } # end if Destination
 } # sub change_password
 
 # handles logout if timeout
@@ -393,9 +396,10 @@ sub password_strength {
 
 sub forgotten_password {
 	if ( $config{encrypt_passwords} ) {
-		$variable{error} = 'We cannot retrieve passwords.';
+		$variable{error} = 'We cannot retrieve passwords at this time. Please contact your CSR.';
 		return;
 	} # end if
+
 	if ( ! $param{email} ) {
 		$variable{error} = 'Please enter the email address of the account to retrieve.';
 		return;

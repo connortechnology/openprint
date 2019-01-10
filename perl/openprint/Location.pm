@@ -823,13 +823,15 @@ $openprint::log->debug("Location::fitlers selected $country_id, $state_id, $city
 	my @States = openprint::Location->find(type=>[ 'state', 'province'],
 			( sets::isin( $country_id, [ map { $_->id() } @Countries ] ) ? ( parent_id=>$country_id ) : () ),
 			);
-	$html .= ssi::select( [ '', 'All', map { $_->id(), $_->name() } @States ], $state_id, { name=>'state_id', id=>'state_id', onchange=>qq`Location_onchange( this, 'state'$option_string );"` } );
+	$html .= ssi::select( [ '', 'All', map { $_->id(), $_->name() } @States ], $state_id, {
+      name=>'state_id', id=>'state_id', onchange=>qq`Location_onchange( this, 'state'$option_string );"` } );
 
 	$html .= '</li><li><label>City</label>';
-	my @Cities = openprint::Location->find('order'=>'lower(name)','type'=>'city',
-			( sets::isin( $state_id, [ map { $_->id() } @States ] ) ? ( 'parent_id'=>$state_id ) : () ),
+	my @Cities = openprint::Location->find( order=>'lower(name)', type=>'city',
+			( ( $state_id and sets::isin( $state_id, [ map { $_->id() } @States ] )) ? ( parent_id=>$state_id ) : () ),
     );
-    $html .= ssi::select( [ '', 'All', map { $_->id(), $_->name() } @Cities ], $city_id, { name=>'city_id', id=>'city_id', onchange=>qq`Location_onchange( this, 'city'$option_string );` } );
+    $html .= ssi::select( [ '', 'All', map { $_->id(), $_->name() } @Cities ], $city_id, {
+        name=>'city_id', id=>'city_id', onchange=>qq`Location_onchange( this, 'city'$option_string );` } );
 	$html .= '</li>';
     #$html .= '<li><label>Place</label>';
     #my @es = openprint::Location->find('order'=>'lower(name)','type'=>'place',

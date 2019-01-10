@@ -36,7 +36,7 @@ package openprint::Host;
 our @ISA = qw( openprint::Object );
 
 use vars qw( $debug $table $serial %fields %find_fields %transforms %defaults %types );
-$debug = 1;
+$debug = 0;
 $table = 'hosts';
 $serial = 'hosts_id_seq';
 %fields = (
@@ -311,6 +311,12 @@ sub reboot {
 
 		} elsif( $_[0]->type() eq 'DCS-932L' ) {
 			$url = $HI->ip().'/setSystemReboot';
+    } elsif ( $_[0]->type() eq 'DCS-942L' ) {
+      $url = $HI->ip().'/eng/admin/export.cgi';
+      $method = 'post';
+      $args = {
+        reboot => 'true'
+      };
 		} elsif( $_[0]->type() eq 'DCS-933L' ) {
 			$initial_url = $HI->ip();
 			$url = $HI->ip().'/setSystemReboot';
@@ -444,11 +450,11 @@ sub Owner {
 
 sub can_reboot {
   if ( $_[0]{type_id} and $_[0]->type() and sets::isin( $_[0]->type(), [ 'AIC500', 'AIC500W', 'AIC777W', 'AIC747W','AIC250W','M8640','TL-WPA4220','D-Link DAP1522','DGS-1224T','DLink DCS-910','TP-Link Archer C7',
-        'DCS932L','DCS-933L','WG602v3' ] ) ) {
+        'DCS932L','DCS-933L','DCS-942L', 'WG602v3' ] ) ) {
     return !undef;
   }
   return undef;
-}
+} # end sub can_reboot
 
 sub get_config {
 	my $Host = shift;
