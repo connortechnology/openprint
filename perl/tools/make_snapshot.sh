@@ -82,9 +82,9 @@ if (( "$BACKUPS" <= "0" )) ; then
 	BACKUPS=3
 fi;
 
-if [ "$TYPE" != "" ]; then
-    TYPE=".$TYPE"
-fi;
+#if [ "$TYPE" != "" ]; then
+    #TYPE="$TYPE."
+#fi;
 
 # ------------- the script itself --------------------------------------
 # step 3: make a hard-link-only (except for dirs) copy of the latest snapshot,

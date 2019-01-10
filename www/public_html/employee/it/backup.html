@@ -6,15 +6,15 @@
     }
 		return true;
 	} //  end function check_inputs
-    var tinymce_options = {
-        mode : "textareas",
-        plugins: "paste",
-        theme : "advanced",
+  var tinymce_options = {
+      mode : "textareas",
+      plugins: "paste",
+      theme : "advanced",
 theme_advanced_buttons1 : "bold,italic,underline,strikethrough,|,fontsizeselect,|,bullist,numlist,|,indent,outdent",
 theme_advanced_buttons2 : '',
 theme_advanced_buttons2 : '',
 cleanup : true
-    };
+  };
 
     tinyMCE.init( tinymce_options );
 </script>
@@ -85,6 +85,13 @@ button('GoHost', { href=>$$variable{Backup}->Host()->url_to(), text=>'Go' } ),
         <?endif($$variable{Backup}->id())?>
 			</ul>
 		</div>
+<div class="content leftColumn">
+<fieldset><legend>Files</legend>
+<div id="Files">
+<?include(_backup_files.html)?>
+</div>
+</fieldset>
+</div>
 <br class="spacer"/>
 				<p class="buttons">
 					<? echo ( 
