@@ -942,9 +942,9 @@ sub _interface {
             action =>'IP Changed',
           });
       } # end foreach I
+  $variable{PageContent} = "{result:'ok'}";
     } #endif action
   } # end if action
-  $variable{PageContent} = "{result:'ok'}";
 }
 
 1;
