@@ -947,5 +947,15 @@ sub _interface {
   } # end if action
 }
 
+sub _backup_files {
+  my $Backup = $variable{Backup} = new openprint::Backup($param{backup_id});
+  if ( $param{file} ) {
+    $r->headers_out->{'Content-Disposition'} = "attachment; filename=\"$param{file}\"";
+    $r->content_type("application/octet-stream; name=\"$param{file}\"");
+    $r->sendfile(join('/', $Backup->dest_path(), $param{path}, $param{file}));
+    return;
+  }
+}
+
 1;
 __END__

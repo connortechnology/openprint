@@ -34,6 +34,7 @@ $serial = 'backups_id_seq';
 	id			=>	[ 's/\D//g' ],
 	keep		=>	[ 's/\D//g' ],
 	name  	=>	[ 's/\s//g' ],
+  path    =>   [ 's/\/+$//' ], # remove trailing /
 	username  	=>	[ 's/\W//g' ],
 	description	=>	[ 's/^\s+//', 's/\s+$//', 's/\s\s+/ /g' ],
 );
@@ -84,15 +85,14 @@ sub Host {
 
 sub dest_path {
   if ( ! $_[0]{dest_path} ) {
-  my $path = $_[0]{path};
-  $path =~ s/\//_/g;
+    my $path = $_[0]{path};
+    $path =~ s/\//_/g;
     $_[0]{dest_path} = join('/',
         DEST_PATH,
         ( $_[0]->owner_id() ? $_[0]->Owner()->name() : () ),
         $_[0]{name},
         ( defined $path ? $path : '' ),
-        $_[0]->type() ? $_[0]->type() : '',
-        '',
+        ( $_[0]->type() ? $_[0]->type() : () ),
         );
   }
   return $_[0]{dest_path};
@@ -159,6 +159,19 @@ sub run {
       note    =>  $results,
     });
 } # end sub run
+
+sub size {
+my $self = shift;
+  my $path = $self->dest_path();
+  my @output = `/usr/bin/du -s "$path"`;
+  if ( ! @output ) {
+    $openprint::log->error("Failed getting size of $$self{dest_path}: @output");
+    return undef;
+  }
+    $openprint::log->debug("Size of $$self{dest_path}: @output");
+  my ( $size ) = $output[0] =~ /^(\d+)/;
+  return $size;
+}
 
 1;
 __END__
