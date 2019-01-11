@@ -2,20 +2,22 @@
 	<fieldset><legend>Please login</legend>
 		<div class="content">
 			<div class="instruction">Please enter your e-mail address and password.</div>
-				<p class="form-group">
+        <ul>
+				<li class="form-group">
 					<label for="email" class="col-form-label">E-mail</label>
 					<input type="email" id="email" name="email" value="<? echo ( $param{email} ) ?>" onkeydown="if(event.keyCode == 13){checkLoginData( this, LoginForm.password );}" /><br/>
 					<span id="missingLoginMessage" style="display: none;"><img src="/images/smallCurvedArrow.gif" alt=""/> Please enter your email address.</span>
-				</p>
-				<p class="form-group">
+				</li>
+				<li class="form-group">
 					<label for="password" class="col-form-label">Password</label>
 					<input type="password" id="password" name="password" onkeydown="if(event.keyCode == 13){checkLoginData(LoginForm.email, this);}" /><br/>
 					<span id="missingPasswordMessage" style="display: none;"><img src="/images/smallCurvedArrow.gif" alt=""/> Please enter your password.</span>
-				</p>
-				<p class="form-group">
+				</li>
+				<li class="form-group">
 					<label class="col-form-label">Remember me</label>
 					<? echo ( radio( 'rdbRememberMe', ['Y','Yes','N','No'], ( $param{rdbRememberMe} || $config{rdbRememberMe} || 'N' ), { inline=>0 } ); ) ?>
-				</p>
+				</li>
+        </ul>
 		</div>
 		<p class="buttons">
 			<? echo ( join("\n",
