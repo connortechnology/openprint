@@ -4,9 +4,11 @@ use lib '/var/www/testing/perl';
 use strict;
 use warnings;
 
+require openprint;
 require configuration;
 require sql;
 require misc;
+require openprint::User;
 require openprint::Host;
 require openprint::Host_Interface;
 require logger;
@@ -86,6 +88,24 @@ my $hup;
 my %last_ping_time;
 $SIG{HUP} = \&sig_handler;
 
+$openprint::dbh = sql::open_sql( $log,
+		port		=> $config{db_port},
+		host		=> $config{db_host},
+		database	=> $config{db_name},
+		driver		=> 'Pg',
+		login		=> $config{db_user},
+		password	=> $config{db_pass},
+		);
+if ( ! $dbh ) {
+	$log->error( 'Error opening db. Sleeping for 5.' );
+	die;
+} # end if ! dbh
+if ( $config{user_id} ) {
+	$openprint::session{user_id} = $config{user_id};
+	$openprint::User = new openprint::User($openprint::session{user_id});
+	$openprint::sesssion{company_id} = $openprint::User->company_id();
+	$openprint::Company = $openprint::User->Company();
+}
 while(1) {
 	if ( ! ( $dbh and $dbh->ping ) ) {
 		$log->debug("Connecting to db");	

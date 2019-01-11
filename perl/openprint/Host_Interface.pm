@@ -12,15 +12,15 @@ $serial = 'host_interfaces_id_seq';
 $table = 'host_interfaces';
 
 %fields = (
-	id			      	=>	'id',
-	mac			      	=>	'mac',
-	ip			      	=>	'ip',
-	comment		    	=>	'comment',
-	dhcp		      	=>	'dhcp',
-  host_id         =>  'host_id',
-  connected_to    =>  'connected_to',
-	monitor	    		=>	'monitor',
-	online		    	=>	'online',
+	id						=>	'id',
+	mac						=>	'mac',
+	ip						=>	'ip',
+	comment				=>	'comment',
+	dhcp					=>	'dhcp',
+  host_id       =>  'host_id',
+  connected_to  =>  'connected_to',
+	monitor				=>	'monitor',
+	online				=>	'online',
 );
 
 %transforms = (
@@ -98,13 +98,20 @@ $openprint::log->debug("Having authenticate $$headers{'www-authenticate'}");
 			my $Host = $HI->Host();
 			my $username = $Host->info('username');
 			my $password = $Host->info('password');
-			$openprint::log->debug("tokens: $tokens realm: $tokens{realm} username: $username password: $password ");
-			$browser->credentials( $HI->ip().':'.$port, $tokens{realm},
+			$openprint::log->debug("tokens: $tokens realm: $tokens{realm} username: $username password: $password args: " . ($args ? join(',',map { "$_=>$$args{$_}" } keys %{$args}) :'none'));
+			$browser->credentials(
+					$HI->ip().':'.$port,
+					$tokens{realm},
 					($username ? $username : ''), 
 					($password ? $password : ''),
 					);
-			$response = $browser->$method( $url, $args ? %{$args} : () );
-$openprint::log->debug("Auth response for $method $url $tokens{realm}, $username, $password " . $response->is_success );
+			$response = $browser->get($url);
+				$openprint::log->debug("Auth response for $method $url $tokens{realm}, $username, $password " . $response->is_success );
+
+			if ( $response->is_success and ( ($method ne 'get') or $args ) ) {
+$openprint::log->debug("Sending actual url $method ");
+				$response = $browser->$method($url, $args );
+			}
 		} else {
 			$openprint::log->error("No realm");
 		} # end if

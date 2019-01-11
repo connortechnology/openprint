@@ -84,7 +84,7 @@ if ( @Interfaces ) {
 		if ( $Interface->dhcp() ) {
 			if ( $Interface->ip() ne $ip ) {
 				my $Host = $Interface->Host();
-				(new openprint::Log())->save( { Object=>$Host, note=>"IP Address changed from $$Interface{$ip} to $ip" . $Interface->Host()->link_to(), action=>'IP Changed' } );
+				(new openprint::Log())->save( { Object=>$Host, note=>"IP Address changed from $$Interface{ip} to $ip" . $Interface->Host()->link_to(), action=>'IP Changed' } );
 				$_ = $Interface->save({ip=>$ip});
 				$log->error($_) if $_;
 			} else {

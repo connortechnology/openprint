@@ -155,7 +155,7 @@ $openprint::log->debug("Header $k => $$headers{$k}");
 					}
 				}
 
-        #$log->debug("content: " . $response->content() );
+        $log->debug("content: " . $response->content() );
 
 				my $json = decode_json( $response->content() );
         $log->debug("content: " . Dumper($json));
