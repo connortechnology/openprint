@@ -7,6 +7,11 @@ require sql;
 require openprint::Object;
 require openprint::pricing;
 
+use openprint ();
+*session = \%openprint::session;
+*log = \$openprint::log;
+*dbh = \$openprint::dbh;
+
 foreach my $Service ( 'UVCoating' ) {
 	eval "
 		my \@keys = keys %openprint::Estimating::${Service}::ServicePrices;
@@ -17,10 +22,6 @@ foreach my $service ( keys %ServicePrices) {
 $log->debug("Have a price definition for $service");
 }
 
-use openprint ();
-*session = \%openprint::session;
-*log = \$openprint::log;
-*dbh = \$openprint::dbh;
 
 $debug = 0;
 $cached = 0;
