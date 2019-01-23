@@ -1,4 +1,5 @@
 <? eval (
+	my $uri = '/main/order/history.html';
 	$$variable{Currency} = openprint::Currency::get_current();
 	@$variable{'CurrencyName','CurrencySymbol','CurrencyShort'} = $$variable{Currency}->get('name','symbol','short');
 	if ( $param{order_id} ) {
@@ -36,11 +37,9 @@
 		} # end if	
 	} else {
 		@{$$variable{Orders}} = openprint::Order->find(
-			date_filter( '/main/order/history.html?created_on_end', 'created_on <=' ),
-			date_filter( '/main/order/history.html?created_on_start', 'created_on >=' ),
-			( $session{'/main/order/history.html?status_id'} ? ( status_id		=>	$session{'/main/order/history.html?status_id'} ) : () ),
-			( $session{'/main/order/history.html?company_id'} ? ( company_id	=>	$session{'/main/order/history.html?company_id'} ) : () ),
-			( $session{'/main/order/history.html?ddmOrderedBy'} ? ( user_id		=>	$session{'/main/order/history.html?ddmOrderedBy'} ) : () ),
+			date_filter($uri.'?created_on_end', 'created_on <=' ),
+			date_filter($uri.'?created_on_start', 'created_on >=' ),
+			( map { $session{$uri.'?'.$_} ? ( $_ => $session{$uri.'?'.$_} ) : () } ( 'status_id','company_id','ddmOrderedBy','salesrep_id' ) ),
 			order				=>	'id DESC',
 		);
 	} # end if
