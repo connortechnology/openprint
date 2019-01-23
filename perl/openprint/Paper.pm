@@ -1848,8 +1848,8 @@ sub check {
     return "may have invalid basis weight current:$$Paper{basis_mweight} != calculated:$$Copy{basis_mweight}";
   }
   if ( $Paper->brand() =~ /cover/i or $Paper->weight() =~ /cover/i and ( $Paper->basis_width() != 20 or $Paper->basis_height() != 26 ) ) {
-	  return "may have has wrong basis size.";
-    }
+		return "may have wrong basis size. Should probably be 20x26";
+	}
   if ( ( $Paper->finish() =~ /1 side/i ) and ( $Paper->doublesided() ) ) {
     return "appears to be C1S, but is marked double sided.";
   }
