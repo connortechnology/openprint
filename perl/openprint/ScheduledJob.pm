@@ -356,8 +356,8 @@ sub get_li {
 		;
 	if ( openprint::usergroup::is_user_in( ['Scheduling'], $session{user_id} ) ) {
 		$html .= sprintf( q`<div class="Comment" onclick="job_popup('%1$d');">%2$s</div>`, $$self{id}, $self->comment() );
-		if ( sets::isin( $self->ServiceType()->name(), [ '','Signature' ] ) ) {
-		$html .= sprintf( q`<div class="Stock" onclick="popup_window( '/employee/production/_stock_popup.html', 'schedule_id=%1$d', {width:475} );">%2$s</div>`, $$self{id}, $self->stock() );
+		if ( $$self{servicetype_id} and sets::isin( $self->ServiceType()->name(), [ '','Signature' ] ) ) {
+		  $html .= sprintf( q`<div class="Stock" onclick="popup_window( '/employee/production/_stock_popup.html', 'schedule_id=%1$d', {width:475} );">%2$s</div>`, $$self{id}, $self->stock() );
 		}
 		if ( $$self{project_id} ) {
 			$html .= sprintf(q`
@@ -442,7 +442,7 @@ sub get_li {
 		$html .= sprintf( q{<span class="RunTime">%2$.2d:%3$.2d</span>}, $$self{id}, split(':',$self->runtime()) );
 		$html .= '<span class="Buttons">';
 		if ( $$self{project_id} ) {
-			if ( sets::isin( $self->ServiceType()->name(), [ '','Signature' ] ) ) {
+			if ( $$self{servicetype_id} and sets::isin( $self->ServiceType()->name(), [ '','Signature' ] ) ) {
 				$html .= ssi::button( 'Paper'.$$self{id}, { onclick=> "popup_window('/employee/production/_stock_details.html','project_id=$$self{project_id}' );", text=> 'P', title=>'Paper' } );
 			} # end if
 			if ( $i_am_the_operator ) {
