@@ -462,7 +462,7 @@ $log->debug("Sending quote to admin");
       $results .= $Email->send(
           FROM    => $openprint::config{QuotingEmail},
           TO      => $openprint::config{QuotingEmail},
-          BCC      => 'iconnor@point-one.com',
+          #BCC      => 'iconnor@point-one.com',
           SUBJECT => "$$self{for_companyname} : Quote $$self{id} has custom modifications",
           );
     } # end if
