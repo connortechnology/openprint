@@ -2295,7 +2295,7 @@ $log->debug("Using spine ehgiht");
 				if ( $$Type{name} eq 'ScratchPads' ) {
 					$$specs{txtSpreadSize} = 1;
 				} else {
-					if ( sets::isin( $$printing_specs{rdbTemplateType}, ['SaddleStitching', 'LoopStitching'] ) ) {
+					if ( $$printing_specs{rdbTemplateType} eq 'SaddleStitching' or $$printing_specs{rdbTemplateType} eq 'LoopStitching' ) {
 						$$specs{txtSpreadSize} = ( $$specs{GroupPageQuantity} > 6 ? 4 : $$specs{GroupPageQuantity} );
 					} elsif ( $openprint::config{$$printing_specs{rdbTemplateType}.'SpreadSize'} ) {
 						$$specs{txtSpreadSize} = $openprint::config{$$printing_specs{rdbTemplateType}.'SpreadSize'};
@@ -2307,7 +2307,7 @@ $log->debug("Using spine ehgiht");
 						} else {
 							$$specs{txtSpreadSize} = 2;
 						} # end if
-					} elsif ( sets::isin( $$printing_specs{rdbTemplateType}, ['CornerStitching','SpinePaste'] ) ) {
+					} elsif ( $$printing_specs{rdbTemplateType} eq 'CornerStitching' or $$printing_specs{rdbTemplateType} eq 'SpinePaste' ) {
 						$$specs{txtSpreadSize} = 2;
 					} elsif ( $$specs{GroupPageQuantity} % 4 ) {
 						$$specs{txtSpreadSize} = 2;

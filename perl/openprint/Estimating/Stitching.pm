@@ -131,7 +131,7 @@ sub neccessary {
 
 	my $printing_service_index = $$services{''}[0] if $$services{''};
 	my $specs = openprint::service::get_specs_ref( $Project, $printing_service_index );
-	if ( sets::isin( $$specs{rdbTemplateType},[ 'SaddleStitching','LoopStitching'] ) ) {
+	if ( $$specs{rdbTemplateType} eq 'SaddleStitching' or $$specs{rdbTemplateType} eq 'LoopStitching' ) {
 		return 1;
 	} # end if
 
