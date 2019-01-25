@@ -72,7 +72,7 @@ function swap_credit(src_id,dst_id) {
 	<?include(/account/_sales_edit.html)?>
 	<?include(/includes/_credit_edit.html)?>
 	<p class="buttons">
-		<? echo ( join('',
+		<? echo ( join("\n",
 			button( 'Save', { onclick=>"if(!f1.ddmCustomer.value){alert('Please select a customer');}else{f1.btnFunction.value='Save';f1.submit();};" } ),
 			button( 'Reset', { onclick=>"f1.reset();" } ),
 			); ) ?>
@@ -87,6 +87,13 @@ function swap_credit(src_id,dst_id) {
 		'owing null_or_>'	=>	0,
 		order		=> $openprint::Order::fields{created_on},
 		) ];
+
+	my %Invoices_By_OrderId = misc::make_hash_from_array( 'order_id',
+		openprint::Order_Invoice->find(order_id=>[ map { $$_{id} } @{$$variable{UnpaidOrders}} ] ) );
+
+	foreach my $Order ( @{$$variable{UnpaidOrders}} ) {
+		$$Order{Invoices} = $Invoices_By_OrderId{$$Order{id}} ? $Invoices_By_OrderId{$$Order{id}} : [];
+	}
 
 ) ?>
 <? if ( @{$$variable{UnpaidOrders}} ) ?>
@@ -126,7 +133,8 @@ function swap_credit(src_id,dst_id) {
 				', $rowclass, $Order->id(), $Order->docket(), 
 					format_date( $Order->created_on() ),
 					join('<br/>', map { $_->Invoice()->link_to() } $Order->Invoices() ), $Order->po(), 
-					openprint::Currency::format($Order->total()), openprint::Currency::format( $Order->owing() ),
+					openprint::Currency::format($Order->total()),
+					openprint::Currency::format( $Order->owing() ),
 					$Order->status(),
 					);
 					$rowclass = $rowclass ? '' : ' class="colRow"';
@@ -139,13 +147,18 @@ function swap_credit(src_id,dst_id) {
 				<td colspan="4">Totals</td>
 				<td class="Price">%s</td>
 				<td class="Price">%s</td>
-				<td>%s</td>
+				<td></td>
 			</tr>', scalar @{$$variable{UnpaidOrders}}, openprint::Currency::format( $total_total ), openprint::Currency::format( $balance_total ),
-			button( 'Pay', { onclick=>"f1.btnFunction.value='Pay';f1.submit();" } ),
 			);
 			return $html;
 		) ?>
 	</table>
+<p class="buttons">
+<?echo(join("\n",
+			button( 'Pay', { onclick=>"f1.btnFunction.value='Pay';f1.submit();" } ),
+			button( 'Cancel', { onclick=>"f1.btnFunction.value='Cancel';f1.submit();" } ),
+);)?>
+</p>
 <? else ( @{$$variable{UnpaidOrders}} ) ?>
 There are no unpaid orders.
 <? endif ( @{$$variable{UnpaidOrders}} ) ?>
