@@ -448,7 +448,7 @@ sub history_details {
 		} # end if
 
 	} elsif ( $param{btnFunction} eq 'Cancel' ) {
-		openprint::order::cancel_order( $order_id );
+		$variable{error} .= $Order->cancel();
 	} elsif ( $param{btnFunction} eq 'Pay' ) {
 		$Order->pay();
 	} elsif ( $param{btnFunction} eq 'Save Payment' ) {

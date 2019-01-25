@@ -1979,11 +1979,11 @@ sub change_due_date {
 
 sub Services {
 	my $self = shift;
-	$$self{Services} = shift if @_;
+	$$self{Project_Services} = shift if @_;
 	if ( $$self{id} and !$$self{Services} ) {
-		$$self{Services} = [ openprint::Project_Service->find(project_id=>$$self{id}) ];
+		%{$$self{Project_Services}} = map { $$_{service_id} => $_ } openprint::Project_Service->find(project_id=>$$self{id});
 	}
-	return @{$$self{Services}} if $$self{Services};
+	return values %{$$self{Project_Services}} if $$self{Project_Services};
 	return ();
 }
 

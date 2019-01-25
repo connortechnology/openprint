@@ -66,10 +66,10 @@ sub view {
 		} # end if
 		$Order->update_status();
 	} elsif ( $openprint::param{'btnFunction'} eq 'Cancel' ) {
-		openprint::order::cancel_order( $order_id );
-    } # end if
-	$variable{'Order'} = $Order;
-    openprint::order::display_order( $order_id );
+		$variable{error} .= $Order->cancel();
+	} # end if
+	$variable{Order} = $Order;
+	openprint::order::display_order( $order_id );
 } # end sub view
 
 1;

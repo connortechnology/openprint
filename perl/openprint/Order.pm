@@ -324,7 +324,7 @@ require openprint::OrderedProduct;
 } # end sub Contents
 
 sub Ordered_Projects {
-require openprint::OrderedProject;
+	require openprint::OrderedProject;
 	return openprint::OrderedProject->find( order_id=>$_[0]{id}, order=>$openprint::OrderedProject::fields{project_id});
 } # end sub Ordered_Projects
 
@@ -333,7 +333,7 @@ sub Projects {
 	$$self{Projects} = shift if @_;
 	if ( $$self{id} and ! $$self{Projects} ) {
 		require openprint::OrderedProject;
-		$$self{Projects} = [ map { $_->Project() } openprint::OrderedProject->find(order_id=>$$self{id}) ];
+		$$self{Projects} = [ map { $_->Project() } $self->Ordered_Projects() ];
 	}
 
 	return @{$$self{Projects}} if $$self{Projects};
@@ -402,6 +402,35 @@ sub pay {
 	return $error;
 } # end sub pay
 
+sub cancel {
+	my $Order = shift;
+	my $error = '';
+  $error .= $Order->save({ status=>'Cancelled' });
+	require openprint::press_schedule;
+  foreach my $Project ( $Order->Projects() ) {
+    $Project->status('Unordered');
+    $Project->order_id( undef );
+    $Project->docket( undef );
+    $Project->save();
+		foreach my $PS ( $Project->Services() ) {
+			$PS->save({status=>'calculated'});
+		}
+
+    openprint::press_schedule::remove( $Project->id() );
+
+    # Free up any stock allocated to this project
+    foreach my $PA ( openprint::PaperAllocation->find( docket=>$Order->docket() ) ) {
+      my @skid_ids = $PA->skid_ids() ? @{$PA->skid_ids()} : ();
+      $Order->add_log( qq`De-allocated $$PA{quantity}$$PA{units} of <a href="/employee/inventory/paper_details.html?paper_id=$$PA{paper_id}">` . $PA->Paper()->to_string() . '</a>'.
+          ( @skid_ids ? ' on skid: ' .  join(',', map { $_->url_to() } openprint::Skid->find(id=>\@skid_ids) ) : '' ) );
+      $PA->delete();
+    } # end foreach PA
+  } # end foreach
+  $Order->add_log( 'Cancelled' );
+  $Order->send_cancellation_notice();
+	return $error;
+} # end sub cancel
+
 sub send_cancellation_notice {
 
 	my @Recipients;
@@ -420,8 +449,8 @@ sub send_cancellation_notice {
 	my %order;
 	$order{Order} = $_[0];
 	$order{ReplacementText} = ssi::include('/email_content/order_cancellation_notice.html', \%order );
-	new openprint::Email()->send(
-			FROM	=> new openprint::User( $session{user_id} ),
+	(new openprint::Email())->send(
+			FROM	=> $openprint::User,
 			TO	=> \@Recipients,
 			SUBJECT => "Docket $_[0]{docket} has been cancelled.",
 			ATTACHMENTS => [ '', MIME::QuotedPrint::encode_qp( ssi::include( '/email_template.html', \%order ) ), 'text/html', 'quoted-printable'],
