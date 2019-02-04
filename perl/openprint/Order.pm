@@ -575,9 +575,37 @@ sub send_sales_order {
 		$self->add_log( 'Sales Order:'.$email_results.'<br/>' );
 		$results .= 'Sales order sent to ' . $email_results . '<br/>';
 	}
+	$results .= $self->send_admin_emails();
+	return $results;
+}
+sub send_admin_emails {
+	my $self = shift;
+	my @admin_emails = @_;
+
+	my %order = (
+    OrderID => $$self{id},
+    Order => $self,
+  );
+  my $Email = new openprint::Email();
+  my $results;
+
+	my $sales_person_email;
+	if ( $self->salesrep_id() ) {
+		my $CSR = new openprint::User( $self->salesrep_id() );
+		$sales_person_email = sprintf('"%s %s" <%s>', $CSR->get('firstname','lastname','email'));
+	}
+	if ( ! $sales_person_email ) {
+		$sales_person_email = $config{OrderingEmail};
+	} # end if
+
+  # When an order is made,the Order currency will be the current session Currency.  
+  # All resends should stay in the currency that the order was created in.
+  my $Currency = $self->Currency();
+  @order{'Currency','CurrencyName','CurrencySymbol'} = ( $Currency, $Currency->name(), $Currency->symbol() );
+
+  my $email_template = ssi::slurp_content( '/email_template.html' );
 
 	$Email = new openprint::Email();
-
 	$order{ReplacementText} = ssi::include( '/email_content/order_admin_body.html', \%order );
 	$Email->html_body( ssi::variable_substitution( \$email_template, \%order ) );
 
@@ -606,25 +634,28 @@ sub send_sales_order {
 		} # end if
 	} # for each Project
 
-	my @admin_emails = split( ',', $config{OrderingEmail} );
-	@admin_emails = map { misc::trim(lc $_) } @admin_emails;
+	if ( ! @admin_emails ) {
+		@admin_emails = split( ',', $config{OrderingEmail} );
+		@admin_emails = map { misc::trim(lc $_) } @admin_emails;
 
-	my @accounting_emails = split( ',', $config{AccountingEmail} );
-	@accounting_emails = map { misc::trim(lc $_) } @accounting_emails;
+		my @accounting_emails = split( ',', $config{AccountingEmail} );
+		@accounting_emails = map { misc::trim(lc $_) } @accounting_emails;
 
-	@admin_emails = sets::union( @admin_emails, @accounting_emails, $sales_person_email, 
-		map {
-			sets::isin( $_->User()->type(), ['E','A'] ) ? 
-			sprintf('"%s %s" <%s>', $_->User()->get('firstname','lastname','email')) 
-			: ()
-			} $self->Projects()
-		);
+		@admin_emails = sets::union( @admin_emails, @accounting_emails, $sales_person_email, 
+				map {
+				sets::isin( $_->User()->type(), ['E','A'] ) ? 
+				sprintf('"%s %s" <%s>', $_->User()->get('firstname','lastname','email')) 
+				: ()
+				} $self->Projects()
+				);
+	}
 
 	if ( @admin_emails ) {
 		my $email_results .= $Email->send(
 				FROM	=> $config{OrderingEmail},
 				'Reply-to'	=> $$self{email},
-				TO		=> join(',',@admin_emails),
+				TO		=> \@admin_emails,
+				#TO	 =>	'iconnor@point-one.com',
 				#TO	 =>	'iconnor@connortechnology.com',
 				#BCC	 =>	'iconnor@connortechnology.com',
 				SUBJECT => "Order $$self{id}",
@@ -632,6 +663,7 @@ sub send_sales_order {
 		$self->add_log( 'Admin Sales Order:'.$email_results );
 		$results .= 'Admin Sales Order sent to '. $email_results.'<br/>';
 	} # end if
+$log->debug("Results: $results");
 	return $results;
 } # end sub send_sales_order
 
