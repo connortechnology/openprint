@@ -43,7 +43,7 @@ function load_customers( ) {
 			<label>Sales Rep</label>
 			<select name="search_salesrep_id" onchange="load_customers();">
 				<option value=""> All </option>
-				<? echo ( make_drop_down( [ map { $_->id(),$_->name() } @{$$variable{SalesReps}} ], $param{search_salesrep_id} ); ) ?>
+				<? echo ( make_drop_down( [ map { $_->id(),$_->name() } @{$$variable{SalesReps}} ], $session{'/administrator/managerial/company_profiles.html?search_salesrep_id'} ); ) ?>
 			</select>
 		</li>
 <? endif ( @{$$variable{SalesReps}} = openprint::User->find( id=>[sql::execute( undef, undef, 'SELECT DISTINCT salesrep_id FROM companies')], deleted=>[0,1]) ) ?>
@@ -57,9 +57,9 @@ function load_customers( ) {
 				<? echo ( 
 if ( 0 ) {
 					my %params = (
-							( $param{search_salesrep_id} ? ( 'salesrep_id'=>$param{search_salesrep_id} ) : () ),
-							( $param{deleted} ne '' ? ( 'deleted'=>$param{deleted} ) : () ),
-							'order'=>'lower(name)',
+							( $session{'/administrator/managerial/company_profiles.html?search_salesrep_id'} ? ( salesrep_id=>$session{'/administrator/managerial/company_profiles.html?search_salesrep_id'} ) : () ),
+							( $session{'/administrator/managerial/company_profiles.html?deleted'} ne '' ? ( 'deleted'=>$session{'/administrator/managerial/company_profiles.html?deleted'} ) : () ),
+							order=>'lower(name)',
 					);
 					if ( $param{search_type} eq 'Suppliers' ) {
 						$params{supplier} ='Y';
@@ -180,7 +180,7 @@ button( 'merge'.$C->id(), { href=>'/administrator/managerial/company_profiles.ht
 				<label>Sales Person</label>
 				<select name="salesrep_id">
 					<option value="">select</option>
-					<? echo ( make_drop_down( openprint::User->dropdown( type=>['E','A'], order=>'lower(firstname),lower(lastname)', web_active=>'Y'), $$variable{Company}->salesrep_id() ); ) ?>
+					<? echo ( make_drop_down( openprint::User->dropdown(type=>['E','A'], web_active=>'Y'), $$variable{Company}->salesrep_id() ); ) ?>
 				</select>
 			</li>
 		</ul>
