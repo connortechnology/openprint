@@ -334,8 +334,8 @@ sub _order_history_results {
 					company_id	=> $openprint::User->company_id(),
 					salesrep_id => $session{user_id},
 			};
-		} elsif ( $param{CSR} ) {
-			$parameters{salesrep_id} = $session{$uri.'?CSR'};
+		#} elsif ( $param{CSR} ) {
+			#$parameters{salesrep_id} = $session{$uri.'?CSR'};
 		} # end if
 		$parameters{'last_ordered_on is null'} = 0;
 		my @Companies = openprint::Company->find( %parameters ) if keys %parameters;
