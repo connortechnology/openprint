@@ -528,6 +528,7 @@ $log->debug("User ids not match " . $Users[0]->id()  . ' != ' . $User->id() );
 
 sub company_profiles {
 
+	ssi::save_params( '/administrator/managerial/company_profiles.html', ( 'search_salesrep_id','deleted' ) );
 # form field to db field mappings
 	my %shipping_fields = (
 			'txtShippingCompanyName'	=>	'CompanyName',
