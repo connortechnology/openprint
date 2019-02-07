@@ -107,9 +107,9 @@ sub history {
 			(new openprint::Email())->send(
 						FROM    => $config{AccountingEmail},
 						TO      =>  \@Recipients,
-						#TO      => new openprint::User( $session{user_id} ),
-						BCC     => new openprint::User( $session{user_id} ),
-						SUBJECT => 'Account Statement from ' . ( new openprint::User( $session{user_id} )->Company()->name() ),
+						#TO      => $openprint::User,
+						BCC     => $openprint::User,
+						SUBJECT => 'Account Statement from ' . ( $openprint::User->Company()->name() ),
 						ATTACHMENTS	=>	\@attachments,
 						);
 			$variable{information} .= 'Account statement sent to ' . join('<br/>', map { sprintf('&quot;%s %s&quot; &lt;%s&gt;',$_->get('firstname','lastname','email')) } @Recipients );
@@ -120,8 +120,8 @@ sub history {
 	ssi::setup_date_select('/invoice/history.html', 'due_on_start', -60);
 	ssi::setup_date_select('/invoice/history.html', 'due_on_end', '');
 
-	$session{'/invoice/history.html?paid'} = '0' if ! sets::isin( $session{'/invoice/history.html?paid'}, [ 0,1,''] );
-	$session{'/invoice/history.html?bad_debt'} = '0' if ! sets::isin( $session{'/invoice/history.html?bad_debt'}, [ 0,1,''] );
+	$session{'/invoice/history.html?paid'} = '0' if ! ( exists($session{'/invoice/history.html?paid'}) and sets::isin( $session{'/invoice/history.html?paid'}, [ 0,1,''] ) );
+	$session{'/invoice/history.html?bad_debt'} = '0' if ! (exists($session{'/invoice/history.html?bad_debt'}) and sets::isin( $session{'/invoice/history.html?bad_debt'}, [ 0,1,''] ) );
 	$session{'/invoice/history.html?employee_id'} = $session{user_id} if ! exists $session{'/invoice/history.html?employee_id'};
 
 	_history();
