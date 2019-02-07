@@ -529,6 +529,11 @@ if ( ! sets::isin( 'invoice_interests', \@tables ) ) {
 if ( ! sets::isin( 'invoices_id_seq', \@sequences ) ) {
 	$dbh->do('CREATE SEQUENCE invoices_id_seq');
 } # en dif
+
+if ( !sets::isin('invoices_payments', \@tables) ) {
+	load_sql('Invoices_Payments');
+}
+
 if ( ! sets::isin( 'order_statuses', \@tables ) ) {
     $dbh->do( misc::load_file( $log, '../../sql/Order_Statuses.sql' ) );
     die $dbh->errstr() if $dbh->errstr();
