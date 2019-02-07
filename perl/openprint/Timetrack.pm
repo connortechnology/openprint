@@ -167,7 +167,7 @@ sub Price {
 		$elapsed = Math::Round::nearest(1,$elapsed/(60*60*24*30));
 		#$openprint::log->debug('Month pricing ' . $elapsed );
 		$Price{Total} = $Price{Price} * $elapsed;
-	} elsif ( lc $Price{units} eq '/hr.' ) {
+	} elsif ( $Price{units} =~ /^\/hr\.?/i ) {
 		$Price{Total} = $Price{Price} * $elapsed / 3600;
 	} else {
 		$openprint::log->warn('Unknown units in Timetrack Service ('.$Service->name().') ('.$Price{units}.') assuming Hrs');
