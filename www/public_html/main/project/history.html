@@ -76,15 +76,15 @@
 			<ul>
 			<li>
 				<label>Creation Date</label>
-<? echo ( date_select_session( '/main/project/history.html', 'created_on_start', { onchange=>'load_projects();', with_today=>1 } ); ) ?>
+<? echo ( date_select_session( $r->uri(), 'created_on_start', { onchange=>'load_projects();', with_today=>1 } ); ) ?>
 					to 
-<? echo ( date_select_session( '/main/project/history.html', 'created_on_end', { onchange=>'load_projects();', with_today=>1 } ); ) ?>
+<? echo ( date_select_session( $r->uri(), 'created_on_end', { onchange=>'load_projects();', with_today=>1 } ); ) ?>
 			</li>
 			<li>
 				<label>Last Updated</label>
-<? echo ( date_select_session( '/main/project/history.html', 'updated_on_start', { onchange=>'load_projects();', with_today=>1 } ); ) ?>
+<? echo ( date_select_session( $r->uri(), 'updated_on_start', { onchange=>'load_projects();', with_today=>1 } ); ) ?>
 					to 
-<? echo ( date_select_session( '/main/project/history.html', 'updated_on_end', { onchange=>'load_projects();', with_today=>1 } ); ) ?>
+<? echo ( date_select_session( $r->uri(), 'updated_on_end', { onchange=>'load_projects();', with_today=>1 } ); ) ?>
 			</li>
 <? if ( sets::isin( $session{user_type},[ 'E', 'A' ] ) ) ?>
 			<li><label>Company</label>
@@ -114,9 +114,9 @@
 <? endif ( sets::isin( $session{user_type},[ 'E', 'A' ] ) ) ?>
 <? eval ( 
 	$$variable{Users} = [ openprint::User->find(
-		# Defaults to currently logged in company
-		( $session{'/main/project/history.html?company_id'} ? ( company_id=>$session{'/main/project/history.html?company_id'} ) : () ),
-		order=>'lower(firstname),lower(lastname)' ) ] ) ?>
+		# Defaults to currently logged in company, if company is all, then list users in OUR company
+		company_id => ( $session{$r->uri().'?company_id'} ? $session{$r->uri().'?company_id'} : $session{company_id} ),
+ ) ] ) ?>
 <? if ( @{$$variable{Users}} > 1 ) ?>
 			<li><label>Created By</label>
 				<select name="user_id" onchange="load_projects();">

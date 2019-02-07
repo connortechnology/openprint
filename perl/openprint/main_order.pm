@@ -424,7 +424,7 @@ sub history {
 
 sub _history {
 	ssi::save_params( '/main/order/history.html', 
-			'ddmOrderedBy','company_id','status_id',
+			'ddmOrderedBy','company_id','status_id','salesrep_id',
 			'created_on_start_year', 'created_on_start_month','created_on_start_day', 
 			'created_on_end_year', 'created_on_end_month','created_on_end_day', 
 			);
@@ -448,7 +448,7 @@ sub history_details {
 		} # end if
 
 	} elsif ( $param{btnFunction} eq 'Cancel' ) {
-		openprint::order::cancel_order( $order_id );
+		$variable{error} .= $Order->cancel();
 	} elsif ( $param{btnFunction} eq 'Pay' ) {
 		$Order->pay();
 	} elsif ( $param{btnFunction} eq 'Save Payment' ) {

@@ -122,7 +122,8 @@ sub find_real_address {
          } # end if
       } # end if
 	  $sth->finish();
-   } # end if
+  } # end if
+  return ();
 } # end sub
 
 sub send_vacation_email {
@@ -145,7 +146,7 @@ sub send_vacation_email {
 			do_mail ($orig_from, $orig_from, 'Vacation set with empty body and subject! Please either turn off your vacation auto-responder or enter a message to be sent to people while you are away.', '' );
 		} # end if
 	} else {
-		do_debug("# of rows returned for vacation for $email: " . $sth->rows);
+		do_debug("# of rows returned for vacation for $email: " . $sth->rows, '', '', '', '', '');
 	} # end if
 	$sth->finish();
 
@@ -188,18 +189,18 @@ my @search_array;
 for (@strip_to_array) {
    if ($_ =~ /([\w\-.%]+\@[\w.-]+)/) { 
 	push (@search_array, $1); 
-  	do_debug ("[STRIP RECIPIENTS]: ", $messageid, $1, "-", "-", "-");
+  	do_debug("[STRIP RECIPIENTS]: ", $messageid, $1, "-", "-", "-");
    }
 }
 
 # Search for email address which has vacation
 for (@search_array) {
-	my ($rv, $email) = find_real_address ($_);
+	my ($rv, $email) = find_real_address($_);
 	if ($rv == 1) {
-		do_debug ("[FOUND VACATION]: ", $messageid, $from, $to, $email, $subject);
+		do_debug("[FOUND VACATION]: ", $messageid, $from, $to, $email, $subject);
 		send_vacation_email( $email, $subject, $from, $to, $messageid);
 	} else {
-		do_debug ("[DID NOT FIND VACATION]: ", $messageid, $from, $to, $email, $subject);
+		do_debug("[DID NOT FIND VACATION]: ", $messageid, $from, $to, $_, $subject);
 	} # end if
 }
 $dbh->disconnect();

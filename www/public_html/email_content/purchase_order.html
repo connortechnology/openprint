@@ -7,7 +7,7 @@
 		<?include(/css/email.css)?>
 		<?include(/css/purchase_order.css)?>
 		</style>
-		<base href="<? echo ( $config{'ExternalSiteURL'} ) ?>"/>
+		<base href="<? echo ( $config{ExternalSiteURL} ) ?>"/>
 	</head>
 	<body>
 		<div class="PO">
@@ -69,7 +69,7 @@
 			</div>
 <? if ( $$variable{PurchaseOrder}->notifications() ) ?>
         <div id="Notifications">
-            <p><label>NOTIFY:</label>
+            <p><label>NOTIFY</label>
             <? echo (
                 my $html = '';
                 foreach my $U ( openprint::User->find( id=>[$$variable{PurchaseOrder}->notifications()], order=>'lower(firstname),lower(lastname)' ) ) {
@@ -80,7 +80,7 @@
             </p>
         </div>
 <? endif ( $$variable{PurchaseOrder}->notifications() ) ?>
-        <div id="DocketSummary"><p><label>DOCKET:</label>
+        <div id="DocketSummary"><p><label>DOCKET</label>
 <? echo ( my $html;
     foreach my $C ( $$variable{PurchaseOrder}->Contents() ) {
         $html .= $C->docket().'<br/>' if $C->docket();
@@ -241,6 +241,12 @@ return $html;
 				</table>
 			</fieldset>
 			</div>
+<? if ( ! $$variable{PurchaseOrder}->authorized() ) ?>
+<div id="not_approved"><img src="/images/not_approved.png"/></div>
+<? endif ( ! $$variable{PurchaseOrder}->authorized() ) ?>
+<? if ( $$variable{PurchaseOrder}->do_not_pay() ) ?>
+<div id="do_not_pay"><img src="/images/do_not_pay.png"/></div>
+<? endif ( $$variable{PurchaseOrder}->do_not_pay() ) ?>
 		</div><!--PO-->
 	</body>
 </html>

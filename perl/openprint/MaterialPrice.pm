@@ -22,6 +22,7 @@ $serial = 'materialprices_id_seq';
 	equipment_id		=>	'lngequipmentindex',
 	min							=>	'lngmin',
 	max							=>	'lngmax',
+	range_units			=>	'range_units',
 	units						=>	'strunits',
 	cost						=>	'dblcost',
 	markup					=>	'dblmarkup',

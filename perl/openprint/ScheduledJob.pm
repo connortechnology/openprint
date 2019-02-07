@@ -22,7 +22,7 @@ require openprint::ProductionFeedback;
 
 my $parser = 'DateTime::Format::Pg';
 
-$debug = 1;
+$debug = 0;
 $table = 'schedule';
 $serial = 'schedule_id_seq';
 
@@ -191,7 +191,7 @@ sub comment {
 			$comment .= openprint::Estimating::Stitching::schedule_summary( $Project, $$self{service_id}[0], $service_specs, $Project->ordered_quantity_index() )
 		} else {
 			my $service_specs = openprint::service::get_specs_ref( $Project, $$self{service_id}[0] );
-			$comment = openprint::Estimating::Printing::get_colour_description($Project, $service_specs);
+			$comment = openprint::Estimating::Printing::get_colour_description_no_coverage($Project, $service_specs);
 			my $Equipment = $self->Equipment();
 
 			if ( $Equipment->specification('Folding Capable') eq 'When Printing' ) {
@@ -322,7 +322,7 @@ sub get_li {
 		my $n = $Project->Company()->name();
 		$n =~ s/The //gi;
 		$html .= ssi::htmlize( $n );
-		$html .= ' (<span class="CSR">'.$Project->Company()->CSR()->firstname().'</span>)';
+		$html .= ' (<span class="CSR">'.$Project->Company()->CSR()->firstname().'</span>)' if $$Project{company_id} != $openprint::config{owner_id};
 
 		my $Proofs_Service = $Project->Service( $$services{Proofs}[0] ) if $$services{Proofs} and @{$$services{Proofs}};
 		if ( $Proofs_Service ) {
@@ -356,12 +356,15 @@ sub get_li {
 		;
 	if ( openprint::usergroup::is_user_in( ['Scheduling'], $session{user_id} ) ) {
 		$html .= sprintf( q`<div class="Comment" onclick="job_popup('%1$d');">%2$s</div>`, $$self{id}, $self->comment() );
-		if ( sets::isin( $self->ServiceType()->name(), [ '','Signature' ] ) ) {
-		$html .= sprintf( q`<div class="Stock" onclick="popup_window( '/employee/production/_stock_popup.html', 'schedule_id=%1$d', {width:475} );">%2$s</div>`, $$self{id}, $self->stock() );
+		if ( $$self{servicetype_id} and sets::isin( $self->ServiceType()->name(), [ '','Signature' ] ) ) {
+		  $html .= sprintf( q`<div class="Stock" onclick="popup_window( '/employee/production/_stock_popup.html', 'schedule_id=%1$d', {width:475} );">%2$s</div>`, $$self{id}, $self->stock() );
 		}
 		if ( $$self{project_id} ) {
-			$html .= sprintf(q`<input type="hidden" name="ScheduleDate-%1$d" id="ScheduleDate-%1$d" value="%2$s"/>`, $$self{id}, $Project->due_date() );
-			$html .= sprintf( q`<span class="Forms" onclick="job_popup('%1$d');">%2$d %3$s</span>`, $$self{id}, $self->forms(), 'form'.($self->forms() > 1 ? 's' : '') );
+			$html .= sprintf(q`
+					<input type="hidden" name="ScheduleDate-%1$d" id="ScheduleDate-%1$d" value="%2$s"/>
+					<span class="Forms" onclick="job_popup('%1$d');">%3$d %4$s</span>
+					`, $$self{id}, $Project->due_date(), $self->forms(), 'form'.($self->forms() > 1 ? 's' : '')
+					);
 			if ( $Equipment->smartscheduling() ) {
 				$html .= sprintf( q`<span class="Impressions" onclick="job_popup('%1$d');">%2$d imps @ %3$d/Hr</span>`, $$self{id}, $self->impressions(), $self->speed() );
 			} else {
@@ -406,16 +409,16 @@ sub get_li {
 			} elsif ( ( $$self{pertains_id} and @{$$self{pertains_id}} > 2 ) or ( $$self{service_id} and @{$$self{service_id}} == 2 ) ) {
 				$html .= ssi::button( 'Split'.$$self{id}, { onclick=>"popup_window('_split_popup.html', 'schedule_id=$$self{id}' );", text=> 'S', title=>'Split Job' } );
 			} # end if
-			if ( sets::isin( $self->ServiceType()->name(), [ '','Signature' ] ) ) {
+			if ( $$self{servicetype_id} and sets::isin( $self->ServiceType()->name(), [ '','Signature' ] ) ) {
 				$html .= ssi::button( 'Stock'.$$self{id}, { onclick=> "popup_window('/employee/production/_stock_details.html','project_id='+$$self{project_id} );", text=> 'P', title=>'Paper' } );
 			#} else {
 				#$log->debug("ServiceType: $$self{project_id} $$self{servicetype_id}" . $self->ServiceType()->name() );
 			} # end if
 		} # end if
 		if ( ( $self->starttime_seconds() > time ) or ( $$self{project_id} and ( $self->status() ne 'In Production' ) ) ) {
-			$html .= ssi::button( 'Start'.$$self{id}, { onclick=> "start_job($$self{id});", text=> 'Start' } );
+			$html .= ssi::button( 'Start'.$$self{id}, { onclick=> "start_job($$self{id});", text=>'Start' } );
 		} elsif ( ( $self->starttime_seconds() < time ) and ( (!$$self{project_id}) or $self->status() eq 'In Production' ) ) {
-			$html .= ssi::button( 'Stop'.$$self{id}, { onclick=> "stop_job($$self{id});", text=> 'Stop' } );
+			$html .= ssi::button( 'Stop'.$$self{id}, { onclick=> "stop_job($$self{id});", text=>'Stop' } );
 		} # end if
 		$html .= '</span>';
 		if ( $$self{project_id} ) {
@@ -428,7 +431,7 @@ sub get_li {
 		}
 	} else {
 		$html .= sprintf( '<div class="Comment">%1$s</div>', $self->comment() );
-		$html .= sprintf( q`<div class="Stock">%1$s</div>`, $self->stock() );
+		$html .= sprintf( '<div class="Stock">%1$s</div>', $self->stock() );
 		if ( $$self{project_id} ) {
 			$html .= sprintf( '<span class="Forms">%d %s</span>', $self->forms(), $self->forms() > 1 ? ' forms' : ' form' );
 			$html .= sprintf( '<span class="Impressions">%d imps</span>', $self->impressions() );
@@ -439,7 +442,7 @@ sub get_li {
 		$html .= sprintf( q{<span class="RunTime">%2$.2d:%3$.2d</span>}, $$self{id}, split(':',$self->runtime()) );
 		$html .= '<span class="Buttons">';
 		if ( $$self{project_id} ) {
-			if ( sets::isin( $self->ServiceType()->name(), [ '','Signature' ] ) ) {
+			if ( $$self{servicetype_id} and sets::isin( $self->ServiceType()->name(), [ '','Signature' ] ) ) {
 				$html .= ssi::button( 'Paper'.$$self{id}, { onclick=> "popup_window('/employee/production/_stock_details.html','project_id=$$self{project_id}' );", text=> 'P', title=>'Paper' } );
 			} # end if
 			if ( $i_am_the_operator ) {

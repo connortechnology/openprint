@@ -34,6 +34,7 @@ my @variables = (
 		'RequirePressProofs',
 		'alert',
 		);
+my %ProofServices;
 
 sub variables {
 	my ( $p_id, $s_id, $specs ) = @_;
@@ -257,7 +258,7 @@ sub signature_calc {
 		push @{$$indexes{$form}}, 3;
 	} # end if
 
-my %ProofServices = map { $_->name(), $_ } openprint::Service->find( category=>'Proofs' );
+	%ProofServices = map { $_->name(), $_ } openprint::Service->find( category=>'Proofs' ) if ! %ProofServices;
 
 $log->debug("Proof indexes " . join(',', @{$$indexes{$form}}  ) ) if DEBUG;
 	foreach my $proof_index ( @{$$indexes{$form}} ) {

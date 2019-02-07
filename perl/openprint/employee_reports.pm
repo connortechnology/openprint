@@ -368,17 +368,11 @@ sub _order_history_results {
 		}
 		my @order_ids = map { $$_{id} } @Orders;
 
-		my %Projects_By_OrderId;
-		foreach my $Project ( openprint::Project->find(order_id=>\@order_ids) ) {
-			$Projects_By_OrderId{$$Project{order_id}} = [] if ! $Projects_By_OrderId{$$Project{order_id}};
-			push @{$Projects_By_OrderId{$$Project{order_id}}}, $Project;
-		}
+		my %Projects_By_OrderId = misc::make_hash_from_array( 'order_id', 
+				openprint::Project->find(order_id=>\@order_ids) );
 
-		my %Invoices_By_OrderId;
-		foreach my $Invoice ( openprint::Order_Invoice->find(order_id=>\@order_ids) ) {
-			$Invoices_By_OrderId{$$Invoice{order_id}} = [] if ! $Invoices_By_OrderId{$$Invoice{order_id}};
-			push @{$Invoices_By_OrderId{$$Invoice{order_id}}}, $Invoice;
-		}
+		my %Invoices_By_OrderId = misc::make_hash_from_array( 'order_id',
+				openprint::Order_Invoice->find(order_id=>\@order_ids) );
 
 		foreach my $Order ( @Orders ) {
 			$$Order{Projects} = $Projects_By_OrderId{$$Order{id}};
@@ -464,17 +458,76 @@ sub services {
 	}
 
 	if ( $param{action} eq 'download' ) {
-		my @Header = ( 'OrderID', 'Docket', 'Invoice', 'Company', 'Project Reference', 'Date Ordered', 'Date Printed', 'Status', 'Total', 'Quoted Stock Value', 'Stock Amount' );
+		my @Header = ( 'OrderID', 'Docket', 'Company', 'Ordered On', 'Order Total' );
 		my @Data = ();
+
+		my %servicetypes = map{ $_=>$_ } split(',', $session{$r->uri().'?servicetype_id'});
+    my %category_ids = map{ $_=>$_ } split(',', $session{$r->uri().'?servicetype_category_id'});
+
+    # If a service is clicked, but not it's category then add the category
+    foreach my $ServiceType ( @{$variable{ServiceTypes}} ) {
+      if ( $servicetypes{$$ServiceType{id}} and ! $category_ids{$$ServiceType{category_id}} ) {
+        $category_ids{$$ServiceType{category_id}} = $$ServiceType{category_id};
+      }
+    }
+    my @Categories = map { $category_ids{$$_{id}} ? $_ : () } @{$variable{Categories}};
+		push @Header, map { $$_{name} . ' Service ', $$_{name} . ' Price' } @Categories;
+
 		foreach my $Order ( @{$variable{Orders}} ) {
 			foreach my $Project ( $Order->Projects() ) {
 
-				my %totals;
-				my %Papers;
-				my $qty_index = $Project->ordered_quantity_index();
-				my $stock_price = 0;
 
-				my $services = $Project->services();
+				my %category_data;
+				my $rows = 1;
+
+				my @Services = $Project->Services();
+				my $Services_By_ServiceType = misc::make_hash_from_array('servicetype_id', @Services );
+
+				for( my $category_index = 0; $category_index < @Categories; $category_index += 1 ) {
+					my $Category = $Categories[$category_index];
+					my ( @service_names, @service_prices );
+					$category_data{$$Category{id}} = [];
+
+					foreach my $ServiceType ( @{$variable{ServiceTypesByCategory}{$$Category{id}}} ) {
+						next if ! $servicetypes{$$ServiceType{id}};
+						if ( ! $$Services_By_ServiceType{$$ServiceType{id}} ) {
+							#push @Data, '', '';
+							next;
+						}
+
+					
+						if ( @{$$Services_By_ServiceType{$$ServiceType{id}}} > $rows ) {
+							$rows = @{$$Services_By_ServiceType{$$ServiceType{id}}};
+						}
+
+						foreach my $Service ( @{$$Services_By_ServiceType{$$ServiceType{id}}} ) {
+
+							my $specs = $Service->specs();
+
+							my $price = $openprint::Currency->format(
+									$Order->Currency()->convert_from(
+										$Service->ordered_price() ));
+							push @{$category_data{$$Category{id}}}, $$ServiceType{description}.' '.$$specs{ServiceName}, $price;
+						} # end foreach Service
+					} # end foreach ServiceType
+
+				} # end foreach category
+				foreach ( 1 .. $rows ) {
+					push @Data, ( $$Order{id}, $$Order{docket},
+							$Order->Company()->name(), 
+							$Order->created_on(),
+							$Order->Currency()->format_price($Project->ordered_price()),
+							);
+					foreach my $Category ( @Categories ) {
+
+						if ( @{$category_data{$$Category{id}}} ) {
+							push @Data, shift @{$category_data{$$Category{id}}}, shift @{$category_data{$$Category{id}}};
+						} else {
+							push @Data, ( '', '' );
+						}
+					} # end foreach category
+				} # end foreach row
+
 			} # end foreach Project
 		} # end foreach Order
 
@@ -503,32 +556,57 @@ sub _services {
 		my %parameters; 
 		if ( ( $session{user_type} ne 'A' ) and ! openprint::usergroup::is_user_in( ['Sales Admin','Reporting','Accounting'], $session{user_id} ) ) {
 			$parameters{or} = {
-				company_id	=> $openprint::User->company_id(),
+				id					=> $openprint::User->company_id(),
 				salesrep_id => $session{user_id},
 			};
 		} elsif ( $param{CSR} ) {
 			$parameters{salesrep_id} = $session{$uri.'?CSR'};
 		} # end if
-		$parameters{'last_ordered_on is null'}=0;
+		$parameters{id} = $session{$uri.'?company_id'} if $session{$uri.'?company_id'};
+		$parameters{'last_ordered_on is null'} = 0;
 		my @Companies = openprint::Company->find( %parameters ) if (keys %parameters) > 1;
 		my %companies = map { $_->id(), $_->name() } @Companies;
 		my @servicetype_ids = split(',',$session{$uri.'?servicetype_id'});
 
 		$variable{Orders} = [];
-		foreach my $Order ( openprint::Order->find(
-					company_id => ( ($session{$uri.'?company_id'} and ( ( (keys %parameters)==1 ) or exists $companies{$session{$uri.'?company_id'}} ) ) ? $session{$uri.'?company_id'} : [ keys %companies ] ),
+		return if (keys %parameters > 1 ) and !@Companies;
+
+		my @Orders = openprint::Order->find(
+					( @Companies ? ( company_id => [ keys %companies ] ) : () ),
 					( $session{$uri.'?CSR'} ? ( salesrep_id	=> $session{$uri.'?CSR'} ) : () ),
 					ssi::date_filter( $uri.'?created_on_start', 'created_on >=' ),
 					ssi::date_filter( $uri.'?created_on_end', 'created_on <=' ),
 					order => ($param{order} ? $openprint::Order::fields{$param{order}} : 'id'),
-					) ) {
-			if ( @servicetype_ids and ( @servicetype_ids != @ServiceTypes ) ) {
-				next if ! openprint::Project->find(
-						docket=> $$Order{docket},
-						'servicetype_id	&&'	=> [ split(',',$session{$uri.'?servicetype_id'}) ],
-						);
-			}
+					);
+		return if ! @Orders;
 
+		my @dockets = map { $$_{docket} } @Orders;
+		my @Projects = openprint::Project->find(
+				docket => \@dockets,
+				( 
+				 ( @servicetype_ids and ( @servicetype_ids != @ServiceTypes ) ) ?
+				 ( 'servicetype_id	&&'	=> [ split(',',$session{$uri.'?servicetype_id'}) ] ) 
+				 : () ),
+				);
+		my @project_ids = map { $$_{id} } @Projects;
+
+		my @Services = openprint::Project_Service->find( project_id=>\@project_ids );
+		my %Services;
+		foreach my $Service ( @Services ) {
+			$Services{$$Service{project_id}} = [] if ! $Services{$$Service{project_id}};
+			push @{$Services{$$Service{project_id}}}, $Service;
+		}
+
+		my %Projects;
+		foreach my $Project ( @Projects ) {
+			$Projects{$$Project{docket}} = [] if ! $Projects{$$Project{docket}};
+			push @{$Projects{$$Project{docket}}}, $Project;
+			$Project->Services($Services{$$Project{id}});
+		}
+
+		foreach my $Order ( @Orders ) {
+			next if ! $Projects{$$Order{docket}};
+			$Order->Projects( $Projects{$$Order{docket}} );
 			push @{$variable{Orders}}, $Order;
 		} # end foreach Order
 		$variable{Companies} = \%companies;

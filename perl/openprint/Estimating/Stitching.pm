@@ -131,7 +131,7 @@ sub neccessary {
 
 	my $printing_service_index = $$services{''}[0] if $$services{''};
 	my $specs = openprint::service::get_specs_ref( $Project, $printing_service_index );
-	if ( sets::isin( $$specs{rdbTemplateType},[ 'SaddleStitching','LoopStitching'] ) ) {
+	if ( $$specs{rdbTemplateType} eq 'SaddleStitching' or $$specs{rdbTemplateType} eq 'LoopStitching' ) {
 		return 1;
 	} # end if
 
@@ -299,7 +299,7 @@ $openprint::log->debug("Fold pq($$FI{page_quantity}) pages($$FI{pages}) ($$Fold{
 					#} else {
 					#$openprint::log->debug('Folder is ' . $$I{Folder}->strid() );
 				}
-				$openprint::log->debug("Stitching Adding " . $Fold->pages() . 'pg x qty:'.$FI->quantity() );
+				$openprint::log->debug("Stitching Adding " . $Fold->pages() . 'pg x qty:'.$FI->quantity() ) if DEBUG;
 
 
 				if ( ! $override_pockets ) {
@@ -338,19 +338,19 @@ $openprint::log->debug("Fold pq($$FI{page_quantity}) pages($$FI{pages}) ($$Fold{
 #$imposition = 1;
 #$I->display("Setting imposition to 1 due to foldingositions") if DEBUG;
 #$results{Breakdown} .= "Setting imposition to 1 due to foldingositions<br/>";
-			if ($$I{imposition} % 2 ) {
+			if ( $$I{imposition} % 2 ) {
 				$I->display("Setting imposition to 1 due to odd impositions") if DEBUG;
 				$results{Breakdown} .= "Setting imposition to 1 due to odd impositions<br/>";
 				$imposition = 1;
-			} elsif ($$I{image_orientation} == openprint::Imposition::Vertical and $$I{rows} % 2 ) {
+			} elsif ( $$I{image_orientation} == openprint::Imposition::Vertical and $$I{rows} % 2 ) {
 				$I->display("Setting imposition to 1 due to Vertial and odd rows") if DEBUG;
 				$results{Breakdown} .= "Setting imposition to 1 due to vertical and odd rows<br/>";
 				$imposition = 1;
-			} elsif ( ($$I{image_orientation} == openprint::Imposition::Horizontal ) and ( $$I{columns} % 2 ) ) {
+			} elsif ( ( $$I{image_orientation} == openprint::Imposition::Horizontal ) and ( $$I{columns} % 2 ) ) {
 				$I->display("Setting imposition to 1 due to Horizal and odd cols") if DEBUG or 1;
 				$results{Breakdown} .= "Setting imposition to 1 due to Horizontal and odd cols on form $form".$I->to_string()."<br/>";
 				$imposition = 1;
-			} elsif (sets::isin( $$I{runstyle}, ['Work & Turn','Work & Tumble'] ) and ($$I{imposition}%4) ) {
+			} elsif ( sets::isin( $$I{runstyle}, ['Work & Turn','Work & Tumble'] ) and ($$I{imposition}%4) ) {
 				$I->display("Setting imposition to 1 due to W&T impo not % 4 ") if DEBUG;
 				$imposition = 1;
 			} # end if
@@ -409,7 +409,6 @@ $openprint::log->debug("Fold pq($$FI{page_quantity}) pages($$FI{pages}) ($$Fold{
 	@printed_impositions = sets::union( @printed_impositions );
 	my %error;
 	my @equipment = ();
-
 
 	if ( ( defined $$specs{"chkOverrideEquipment$qty_index"} ) and ( $$specs{"chkOverrideEquipment$qty_index"} eq 'Y' ) ) {
 		if ( ! $$specs{"ddmEquipment$qty_index"} ) {
@@ -481,24 +480,25 @@ EQUIPMENT:foreach my $Equipment ( @equipment ) {
 					} # end if
 				} # end foreach I
 			} # end if Press
+
 			my $max_imp = $Equipment->specification("Maximum $$ServiceType{name} Imposition");
 			if ( ( defined $max_imp ) and ( $max_imp < $imposition ) ) {
-				$results{Breakdown} .= sprintf('Imposition too big.  This press only does ' . $max_imp . 'out.<br/>');
-				if ( $Equipment->specification('Type') eq 'Press' ) {
+				$results{Breakdown} .= 'Imposition too big.  This press only does ' . $max_imp . 'out.<br/>';
+				if ( $type eq 'Press' ) {
 					next;
 				} else {
 					next;
 				} # end if
 			} # end if
 
-			my $max_spine_length = $Equipment->specification('Maximum Spine Length', $imposition );
+			my $max_spine_length = $Equipment->specification('Maximum Spine Length', $imposition);
 			if ( $max_spine_length and ( $$specs{Height} > $max_spine_length ) ) {
-				$results{Breakdown} .= sprintf('Spine Too big. Spine: %s, Maximum for %dout: %s<br/>', $$specs{Height}, $imposition, $max_spine_length );
+				$results{Breakdown} .= sprintf('Spine Too big. Spine: %s, Maximum for %dout: %s<br/>', $$specs{Height}, $imposition, $max_spine_length);
 				next;
 			} # end if
-			my $min_spine_length = $Equipment->specification('Minimum Spine Length', $imposition );
+			my $min_spine_length = $Equipment->specification('Minimum Spine Length', $imposition);
 			if ( $min_spine_length and ( $$specs{Height} < $min_spine_length ) ) {
-				$results{Breakdown} .= sprintf('Spine Too small. Spine: %s, Minimum for %dout: %s<br/>', $$specs{Height}, $imposition, $min_spine_length );
+				$results{Breakdown} .= sprintf('Spine Too small. Spine: %s, Minimum for %dout: %s<br/>', $$specs{Height}, $imposition, $min_spine_length);
 				next;
 			} # end if
 			my $max_face_trim = $Equipment->specification('Maximum Spread Width');
@@ -516,7 +516,7 @@ EQUIPMENT:foreach my $Equipment ( @equipment ) {
 				$results{Breakdown} .= 'Not for digital.<br/>';
 				next;
 			} # end if
-			if ( $$I{Folder} and ( $$I{Folder}->id() != $Equipment->id() ) ) {
+			if ( $$I{Folder} and ( $$I{Folder}->id() != $$Equipment{id} ) ) {
 				if ( ( $_ = $$I{Folder}->specification('Folding Capable') ) and ( $_ eq 'When Stitching' ) ) {
 					$results{Breakdown} .= $$Equipment{strid} . ' is not the folding equipment, is '.$$I{Folder}->name() . '<br/>';
 					next;

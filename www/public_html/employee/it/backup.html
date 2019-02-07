@@ -1,5 +1,9 @@
 <script type="text/javascript">
 	function check_inputs( form ) {
+    if(!form.elements['name'].value){
+      alert("Please give this backup a name.");
+      return false;
+    }
 		return true;
 	} //  end function check_inputs
     var tinymce_options = {
@@ -28,13 +32,19 @@ cleanup : true
 				</li>
 				<li>
 					<label>Host</label>
-          <?echo ( ssi::select( 
-            openprint::Host->dropdown( order=>'hostname' ),
+          <?echo ( join("\n",
+                ssi::select( 
+                  openprint::Host->dropdown( 
+#'owner_id is null'=>0,
+                    order=>'hostname' ),
             $$variable{Backup}->host_id(),
             {
               name    =>  'host_id',
               prepend =>  [ '', 'select' ],
-            } ); ) ?>
+            } ),
+button('GoHost', { href=>$$variable{Backup}->Host()->url_to(), text=>'Go' } ),
+);
+              ) ?>
 				</li>
 				<li>
 					<label>User</label>
@@ -45,11 +55,7 @@ cleanup : true
 					<input type="text" id="path" name="path" value="<? echo ( $$variable{Backup}->path() ) ?>" />
 				</li>
 				<li><label onclick="toggle_input( $('#type_id'), $('#type') );">Type</label>
-					<input type="text" id="type" name="type" style="display:none;" onkeyup="ddm_select_by_text( $('#type_id'), this.value, 0 );" />
-					<select name="type_id" id="type_id" onchange="$('#type').value='';">
-						<option value="">select</option>
-						<? echo ( make_drop_down( openprint::Backup_Type->dropdown(order=>'lower(name)'), $$variable{Backup}->type_id() ); ) ?>
-					</select>
+        <? echo ( ssi::select( [ map { $_, $openprint::Backup::types{$_} } sort { $a cmp $b } keys %openprint::Backup::types], $$variable{Backup}->type(), { name=>'type' } ); ) ?>
 				</li>
 				<li>
 					<label>How many to keep</label>
@@ -72,9 +78,11 @@ cleanup : true
   ) ?>
           </select>
 				</li>
+        <?if($$variable{Backup}->id())?>
 				<li><label>Created On</label><? echo ( format_datetime( $$variable{Backup}->created_on() ); ) ?></li>
 				<li><label>Updated On</label><? echo ( format_datetime( $$variable{Backup}->updated_on() ); ) ?></li>
 				<li><label>Last Ran</label><? echo ( format_datetime( $$variable{Backup}->lastran_on() ); ) ?></li>
+        <?endif($$variable{Backup}->id())?>
 			</ul>
 		</div>
 <br class="spacer"/>
@@ -95,8 +103,16 @@ cleanup : true
 					) ?>
 				</p>
 <p>Don't forget to copy over the ssh key with something like the following command.  <br/>
-VoxIP: sudo ssh-copy-id -i /root/.ssh/id_rsa.pub root@IP-address<br/>
-VueIP: sudo ssh-copy-id -i /root/.ssh/id_rsa.pub ipc@IP-address<br/>
+<?echo(
+my $html = '';
+foreach my $HI ( $$variable{Backup}->Host()->Interfaces() ) {
+$html .= "
+VoxIP: sudo ssh-copy-id -i /var/www/.ssh/id_rsa.pub root\@$$HI{ip}<br/>
+VueIP: sudo ssh-copy-id -i /var/www/.ssh/id_rsa.pub ipc\@$$HI{ip}<br/>
+";
+}
+return $html;
+) ?>
 </p>
 	</fieldset>
 </form>

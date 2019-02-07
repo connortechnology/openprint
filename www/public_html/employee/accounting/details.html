@@ -6,25 +6,32 @@
 			form.submit();
 		} // end if
 	} // end function confirm_delete()
+
+	function confirm_cancel( form ) {
+		if ( confirm("Are you sure you want to cancel this order?") ) {
+			form.btnFunction.value = 'Cancel';
+			form.submit();
+		} // end if
+	} // end function confirm_delete()
 </script>
 <?echo(ssi::link('/css/order.css');)?>
 <?include('/includes/error_reporting.html')?>
 <form id="f2" name="f2" method="get" action="/employee/accounting/details.html">
-    <fieldset class="filters">
-        <div class="content">
-            <ul>
-			<li>
-				<label>Docket #</label>
-				<? echo (
-					input( type=>'cardinal', id=>'docket', name=>'docket', value=>$param{docket}, onkeypress=>q`$('order_id').value='';return input_handler(this, event);`, onkeydown=>q`if(event.keyCode == 13){$('f2').submit();}`);
-				) ?>
-			</li>
-			<li>
-				<label>Order ID</label>
-				<? echo ( 
-					input( type=>'cardinal', id=>'order_id', name=>'order_id', value=>$param{order_id}, onkeypress=>q`$('docket').value='';$('docket').value='';return input_handler(this, event);`, onkeydown=>q`if(event.keyCode == 13){$('f2').submit();}` );
-				) ?>
-			</li>
+  <fieldset class="filters">
+    <div class="content">
+      <ul>
+				<li>
+					<label>Docket #</label>
+					<? echo (
+						input( type=>'cardinal', id=>'docket', name=>'docket', value=>$param{docket}, onkeypress=>q`$('order_id').value='';return input_handler(this, event);`, onkeydown=>q`if(event.keyCode == 13){$('f2').submit();}`);
+					) ?>
+				</li>
+				<li>
+					<label>Order ID</label>
+					<? echo ( 
+						input( type=>'cardinal', id=>'order_id', name=>'order_id', value=>$param{order_id}, onkeypress=>q`$('docket').value='';$('docket').value='';return input_handler(this, event);`, onkeydown=>q`if(event.keyCode == 13){$('f2').submit();}` );
+					) ?>
+				</li>
 			</ul>
 		</div>
 	</fieldset>
@@ -35,8 +42,8 @@
 	<? echo ( my $html;
 		$html .= button( 'Log', { onclick=>"popup_window('/main/order/_view_log.html', { order_id:$$variable{Order}{id} }, { width: 800 } );", text=> 'View Log' } );
 		#writeButton('Send','sendEmailInvoice.gif', "f1.btnFunction.value='Send';f1.submit();",'','Send Email Invoice' );
-		$html .= button( 'Pay', { onclick=>"f1.btnFunction.value='Pay';f1.submit();" } ) if $$variable{'Order'}->owing() > 0;
-		#$html .= writeButton( $log, $dbh, 'Back','back.gif', '','search.html','Back' );
+		$html .= button('Pay', { onclick=>"f1.btnFunction.value='Pay';f1.submit();" } ) if $$variable{'Order'}->owing() > 0;
+		$html .= button('Cancel', { onclick=>q`confirm_cancel($('f1'));`} ) if $$variable{'Order'}->status() ne 'Cancelled';
 		my @Suppliers = openprint::Company->find( supplier =>'Y', offers_credit =>1, order=>'lower(name)' );
 		if ( @Suppliers > 1 ) {
 			$html .= button( 'ChangeSupplier', { onclick=>q`f1.btnFunction.value='ChangeSupplier';f1.submit();`, text=>'Change Supplier to' } );

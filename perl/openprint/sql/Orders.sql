@@ -61,5 +61,6 @@ CREATE TABLE Orders (
 	docket			INTEGER,
 	strsessionid			TEXT,
 	invoice_id				INTEGER, FOREIGN KEY (invoice_id) REFERENCES invoices(id),
+	do_not_pay_commission	BOOLEAN NOT NULL default false,
 	PRIMARY KEY (id)
 );

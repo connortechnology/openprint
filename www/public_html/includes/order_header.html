@@ -4,9 +4,9 @@
 		<div class="content"><ul>
 			<li><label>Supplier</label><? echo ( $$variable{Order}->Supplier()->name() ) ?></li>
 			<li class="po"><label>P.O.</label><? echo ( $$variable{Order}->po() ) ?></li>
-			<li><label>Order ID</label><? echo ( $$variable{Order}->id() ) ?></li>
+			<li><label>Order ID</label><? echo ( $$variable{Order}->link_to() ) ?></li>
 		<? if ( $$variable{Order}->docket() ) ?>
-			<li><label>Docket</label><? echo ( $$variable{Order}->docket(); ) ?></li>
+			<li><label>Docket</label><? echo ( $$variable{Order}->link_to($$variable{Order}->docket()); ) ?></li>
 			<li><label>Invoices</label><div id="Invoices"><?include('/employee/accounting/_order_invoices.html')?></div></li>
 		<? endif ( $$variable{Order}->docket() ) ?>
 			<li><label>Created</label><? echo ( format_date( $$variable{Order}->created_on() ) ) ?></li>

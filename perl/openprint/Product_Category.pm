@@ -57,10 +57,13 @@ Carp::cluck("Deprecated call openprint::Product_Category::products");
 
 sub Products {
 	my $self = shift;
-	my %params = @_;
-	$params{category_id} = $$self{id};
+  if ( $$self{id} ) {
+    my %params = @_;
+    $params{category_id} = $$self{id};
 
-	return openprint::Product->find( %params );
+    return openprint::Product->find( %params );
+  }
+  return ();
 } # end sub products
 
 sub Photos {

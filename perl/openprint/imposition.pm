@@ -4,7 +4,7 @@ use Carp;
 
 use openprint::Imposition;
 
-use constant DEBUG => 0;
+use constant DEBUG => 1;
 use constant DEBUG_DUTCH => 0;
 use constant DEBUG_CONVERT => 0;
 
@@ -392,25 +392,27 @@ $openprint::log->debug("Not Pretrimming on $$Press{strid}") if DEBUG;
 	my $bindery_bleed = 0;
 	my $bindery_head = 0;
 
-	if ( sets::isin( $$specs{Binding}, ['SaddleStitching','LoopStitching'] ) ) {
-		$bindery_gutters = $Press->specification('StitchingGutter');
-		$bindery_bleed = $Press->specification('StitchingBleed');
-		if ( $bindery_bleed ) {
-			$setup1->bleed_size( $bindery_bleed );
-			$setup2->bleed_size( $bindery_bleed );
+	if ( $$specs{Binding} ) {
+		if ( sets::isin( $$specs{Binding}, ['SaddleStitching','LoopStitching'] ) ) {
+			$bindery_gutters = $Press->specification('StitchingGutter');
+			$bindery_bleed = $Press->specification('StitchingBleed');
+			if ( $bindery_bleed ) {
+				$setup1->bleed_size( $bindery_bleed );
+				$setup2->bleed_size( $bindery_bleed );
+			} # end if
+			$setup1->folio_lip( $bindery_gutters );
+			$setup2->folio_lip( $bindery_gutters );
+		} elsif ( sets::isin( $$specs{Binding}, ['PerfectBound','SpinePaste'] ) ) {
+			$bindery_gutters = $Press->specification('PerfectBindGutter');
+			$bindery_bleed = $Press->specification('PerfectBindBleed');
+			if ( $bindery_bleed ) {
+				$setup1->bleed_size( $bindery_bleed );
+				$setup2->bleed_size( $bindery_bleed );
+			} # end if
+			$setup1->folio_lip( $bindery_gutters );
+			$setup2->folio_lip( $bindery_gutters );
+			$bindery_head = $$specs{PerfectBindCoverGutter};
 		} # end if
-		$setup1->folio_lip( $bindery_gutters );
-		$setup2->folio_lip( $bindery_gutters );
-	} elsif ( sets::isin( $$specs{Binding}, ['PerfectBound','SpinePaste'] ) ) {
-		$bindery_gutters = $Press->specification('PerfectBindGutter');
-		$bindery_bleed = $Press->specification('PerfectBindBleed');
-		if ( $bindery_bleed ) {
-			$setup1->bleed_size( $bindery_bleed );
-			$setup2->bleed_size( $bindery_bleed );
-		} # end if
-		$setup1->folio_lip( $bindery_gutters );
-		$setup2->folio_lip( $bindery_gutters );
-		$bindery_head = $$specs{PerfectBindCoverGutter};
 	} # end if
 #$openprint::log->debug("Using perfectbind cover gutter: $bindery_head Bindery bleed: $bindery_bleed");
 	my %bleed_locations = map { $_, $_ } split(',', $$specs{BleedLocations} );
@@ -623,7 +625,7 @@ $openprint::log->debug("Using Single wheel space $$specs{'Perfecting Single Gutt
 	} # end if
 	$openprint::log->debug("P Width gutters: $adjusted_paper_width") if DEBUG;
 
-	if ( sets::isin( $run_style, ['Perfecting','Sheet Work','Web'] ) ) {
+	if ( $run_style eq 'Perfecting' or $run_style eq 'Sheet Work' or $run_style eq 'Web' ) {
 		calc_setup( $setup1, @$setup1{'image_width','image_height'}, $adjusted_paper_width, $adjusted_paper_height ? $adjusted_paper_height : $$setup1{image_height} );
 		$openprint::log->debug(" CHECK 1 Upright $run_style Using Paper $paper_width x $paper_height -> $adjusted_paper_width x $adjusted_paper_height Gutter: $gutters, Image: $$setup1{image_width} x $$setup1{image_height} Imposition: " . $$setup1{imposition}. ":".$$setup1{columns} . 'x' . $$setup1{rows}. " $run_style " . $setup1->layout_width(undef) . 'x' . $setup1->layout_height() ) if DEBUG;
 
@@ -850,7 +852,7 @@ $openprint::log->debug("Using Single wheel space $$specs{'Perfecting Single Gutt
 
 	my $Paper2 = $setup2->Paper();
 
-	if ( sets::isin( $run_style, ['Perfecting','Sheet Work','Web'] ) ) {
+	if ( $run_style eq 'Perfecting' or $run_style eq 'Sheet Work' or $run_style eq 'Web' ) {
 		calc_setup( $setup2, @$setup2{'image_height','image_width'}, $adjusted_paper_width, $adjusted_paper_height ? $adjusted_paper_height : $$setup2{image_width} );
 
 		if ( ( $run_style eq 'Perfecting' ) and ( $$setup2{rows} == 1 ) and ( $$specs{'Colour Bar Orientation'} ne 'Length' ) ) {
@@ -953,7 +955,7 @@ sub add_imposition {
 		my $wt = $run_style =~ /^Work/;
 
 		if ( ! $Paper->cuttable() ) {
-			if ( ! sets::isin( $run_style, ['Web','Sheet Work','Perfecting'] ) ) {
+			if ( ! ( $run_style eq 'Perfecting' or $run_style eq 'Sheet Work' or $run_style eq 'Web' ) ) {
 				$openprint::log->debug("$run_style not possible when stock not cuttable") if DEBUG;
 				next;
 			} # end if
@@ -1095,7 +1097,7 @@ $openprint::log->debug("Convert Impositions: Desired: $desired_signature_size, S
 
 	foreach my $imp ( @$impositions ) {
 		my $impo = $$imp{imposition};
-		$impo /= 2 if sets::isin( $$imp{runstyle}, ['Work & Turn','Work & Tumble' ] );
+		$impo /= 2 if $$imp{runstyle} eq 'Work & Turn' or $$imp{runstyle} eq 'Work & Tumble';
 		$$imp{start_imposition} = $impo;
 		#$impo = int( $impo / ($spread_size/2) );
 		# impo has become max spreads
@@ -1198,12 +1200,27 @@ sub decrease_imposition {
 			$imp2->rows( $$imposition{dutch_rows} );
 			push @results, $imp2;
 		} elsif ( $$imposition{runstyle} eq 'Work & Turn' ) {
-			#if ( $$imposition{columns} >= 2 ) {
-					my $imp1 = $imposition->copy();
-					$imp1->runstyle( 'Sheet Work' );
-					$imp1->columns( $$imp1{columns} / 2 );
-					push @results, $imp1;
-			#
+			{
+				my $imp1 = $imposition->copy();
+				$imp1->runstyle( 'Sheet Work' );
+				$imp1->columns( $$imp1{columns} / 2 );
+				push @results, $imp1;
+			}
+
+			if ( $$imposition{columns} > 2 ) {
+# Consider removing a column from each half.
+				my $imp1 = $imposition->copy();
+				$imp1->columns( $$imp1{columns} - 2 );
+				push @results, $imp1;
+			}
+
+			if ( $$imposition{rows} > 1 ) {
+# Consider knocking a row off
+				my $imp1 = $imposition->copy();
+				$imp1->rows( $$imp1{rows}-1 );
+				push @results, $imp1;
+			}
+
 			#f ( $$imposition{rows} >= 2 ) {
 			#foreach my $row ( 2 .. $$imposition{rows} ) {
 			#	my $imp1 = $imposition->copy();

@@ -715,6 +715,7 @@ $log->debug("Adding special colour for $colour");
 		$project{NeedScoring} = 0;
 		$project{NeedFolding} = 0;
 	} # end if
+openprint::Estimating::Cutting::init( $Project, \%project );
 	$project{NeedUVCoating} = openprint::Estimating::UVCoating::signature_needs( $Project, $specs );
 	$project{NeedAqueous} = openprint::Estimating::Aqueous::signature_needs( $Project, $specs );
 	@$specs{'NeedFolding','NeedScoring'} = @project{'NeedFolding','NeedScoring'};
@@ -2294,7 +2295,7 @@ $log->debug("Using spine ehgiht");
 				if ( $$Type{name} eq 'ScratchPads' ) {
 					$$specs{txtSpreadSize} = 1;
 				} else {
-					if ( sets::isin( $$printing_specs{rdbTemplateType}, ['SaddleStitching', 'LoopStitching'] ) ) {
+					if ( $$printing_specs{rdbTemplateType} eq 'SaddleStitching' or $$printing_specs{rdbTemplateType} eq 'LoopStitching' ) {
 						$$specs{txtSpreadSize} = ( $$specs{GroupPageQuantity} > 6 ? 4 : $$specs{GroupPageQuantity} );
 					} elsif ( $openprint::config{$$printing_specs{rdbTemplateType}.'SpreadSize'} ) {
 						$$specs{txtSpreadSize} = $openprint::config{$$printing_specs{rdbTemplateType}.'SpreadSize'};
@@ -2306,7 +2307,7 @@ $log->debug("Using spine ehgiht");
 						} else {
 							$$specs{txtSpreadSize} = 2;
 						} # end if
-					} elsif ( sets::isin( $$printing_specs{rdbTemplateType}, ['CornerStitching','SpinePaste'] ) ) {
+					} elsif ( $$printing_specs{rdbTemplateType} eq 'CornerStitching' or $$printing_specs{rdbTemplateType} eq 'SpinePaste' ) {
 						$$specs{txtSpreadSize} = 2;
 					} elsif ( $$specs{GroupPageQuantity} % 4 ) {
 						$$specs{txtSpreadSize} = 2;
@@ -6634,10 +6635,11 @@ sub get_run_prices {
 
 	my @run_prices;
 	my $max_colours = $Press->specification('Number of Colours');
-	if ( ! $max_colours ) {
-		$log->error(" ***** FATAL ERROR: Could Not Get 'Number of Colours' for Press: $$Press{strid} ***********");
-		return \@run_prices;
-	} # end if
+	#if ( ! $max_colours ) {
+		#$log->error(" ***** FATAL ERROR: Could Not Get 'Number of Colours' for Press: $$Press{strid} ***********");
+		#return \@run_prices;
+	#} # end if
+
 	my $impression_service = 'ColourImpression';
 
 	if ( $$Imposition{runstyle} eq 'Web' or $$Imposition{runstyle} eq 'Perfecting' ) {
@@ -6646,8 +6648,11 @@ sub get_run_prices {
 		my $Impression_Service = $Services{$impression_service};
 		my $RunPrice;
 		if ( ! ( $Impression_Service and $RunPrice = $Impression_Service->get_Price( $impressions, $Press ) ) ) {
-			$impression_service = join('',$$Imposition{runstyle},'Impression',$side_two_colours,'/',$side_one_colours);
-			$Impression_Service = $Services{$impression_service};
+			if ( $side_one_colours != $side_two_colours ) {
+				# Try back then front
+				$impression_service = join('',$$Imposition{runstyle},'Impression',$side_two_colours,'/',$side_one_colours);
+				$Impression_Service = $Services{$impression_service};
+			}
 			if ( ! ( $Impression_Service and $RunPrice = $Impression_Service->get_Price( $impressions, $Press ) ) ) {
 				$Impression_Service = $Services{$$Imposition{runstyle}.'Impression'};
 				$RunPrice = $Impression_Service->get_Price( $impressions, $Press ) if $Impression_Service;
@@ -6678,7 +6683,7 @@ sub get_run_prices {
 				my $RunPrice = $Impression_Service->get_Price( $impressions, $Press );
 				$$RunPrice{Passes} = 1;
 				$$RunPrice{impressions} = $impressions;
-		$$RunPrice{side} = 'Front';
+				$$RunPrice{side} = 'Front';
 				push @run_prices, $RunPrice;
 			} # end if mod_colours
 		} # end if side one colours
@@ -6691,9 +6696,9 @@ sub get_run_prices {
 				my $Impression_Service = $Services{$run_colours.$impression_service};
 				my $RunPrice = $Impression_Service->get_Price( $impressions, $Press );
 				$$RunPrice{impressions} = $impressions;
-		$$RunPrice{side} = 'Back';
+				$$RunPrice{side} = 'Back';
 				foreach ( 1 .. $full_runs ) {
-				push @run_prices, $RunPrice;
+					push @run_prices, $RunPrice;
 				}
 			} # end if
 #
@@ -6702,7 +6707,7 @@ sub get_run_prices {
 				my $Impression_Service = $Services{$mod_colours.$impression_service};
 				my $RunPrice = $Impression_Service->get_Price( $impressions, $Press );
 				$$RunPrice{impressions} = $impressions;
-		$$RunPrice{side} = 'Back';
+				$$RunPrice{side} = 'Back';
 				push @run_prices, $RunPrice;
 			} # end if
 		} # end if side_two_colours
@@ -6793,6 +6798,10 @@ $log->error("Unknown units on Outside Wheel Slow Down ($$Slow_Down{units})");
 			$$run_price{MPrice} = $$run_price{Price} * 1000;
 
 		} elsif ( $$run_price{units} eq 'per hour' ) {
+			if ( $$run_price{range_units} and ( $$run_price{range_units} eq 'total impressions' ) and $side_one_colours and $side_two_colours ) {
+				my $r_price = $$run_price{Service}->get_Price( $impressions*2, $Press );
+				$$run_price{Price} = $$r_price{Price};
+			}
 			if ( $run_speed ) {
 				if ( int($run_speed) ) {
 # In Minutes, not hours
@@ -7423,6 +7432,83 @@ $log->debug("Old pages $$first_sig_specs{GroupPageQuantity} - this pages: $pages
 		$log->error("No project service in project $$Project{id}");
 	} # end if
 } # end sub save
+
+sub get_colour_description_no_coverage {
+	my ( $Project, $specs ) = @_;
+
+	my @front_coatings = ();
+	my $front_pms = 0;
+
+	my @back_coatings = ();
+	my $coatings = '';
+	my $back_pms = 0;
+
+	my $side = 'SideOne';
+	my $ProjectTypeName = $Project->Type()->name();
+
+	foreach my $k ( keys %$specs ) {
+		if ( my ( $index ) = $k =~ /^chkColourCoating(\d+)$side/ ) {
+			next if ! $$specs{"chkColourCoating$index$side"};
+
+			my $type = $$specs{"ColourCoatingType$index$side"};
+			next if ! $type;
+			next if $$specs{"chkColourCoatingColour$index$side"} and ( $$specs{"chkColourCoatingColour$index$side"} eq 'None' );
+			if ( $type =~ /Aqueous/ or $type =~ /Varnish/ or $type =~ /UV/ ) {
+				
+				push @front_coatings , $$specs{"ColourCoatingType$index$side"};
+			} elsif ( $type =~ /PMS/i ) {
+				$front_pms += 1;
+$log->debug("Adding PMS for $type chkColourCoating$index$side");
+			} else {
+				push @front_coatings, $$specs{"ColourCoatingType$index$side"}; 	#line added to show other types june-18-2008
+			} # end if
+		} # end if
+	} # end foreach
+
+	if ( $front_pms ) {
+		unshift @front_coatings, $front_pms.'PMS';
+	} # end if
+
+	unshift @front_coatings, map { $$specs{'chk'.$_.$side} ? $_ : () } ( 'Cyan','Magenta','Yellow','Black' );
+	if ( $$specs{'chkProcessColour'.$side} ) {
+		unshift @front_coatings, '4C'; 
+	}
+
+	if ( (defined $$specs{sides_the_same}) and ( $$specs{sides_the_same} eq 'Y' ) ) {
+		@back_coatings = @front_coatings;
+		$back_pms = $front_pms;
+		$coatings .= ' back the same as front';
+	} else {
+		$side = 'SideTwo';
+
+		foreach my $k ( keys %$specs ) {
+			if ( my ( $index ) = $k =~ /^chkColourCoating(\d+)$side/ ) {
+				next if ! $$specs{"chkColourCoating$index$side"};
+				my $type = $$specs{"ColourCoatingType$index$side"};
+				next if ! $type;
+				next if $$specs{"chkColourCoatingColour$index$side"} and ( $$specs{"chkColourCoatingColour$index$side"} eq 'None' );
+
+				if ( $type =~ /Aqueous/ or $type =~ /Varnish/ or $type =~ /UV/ ) {
+#Changes made on june-19-2008
+#						$back_coatings .= '+'.$$specs{"ColourCoatingColour$index$side"};
+					push @back_coatings, $$specs{"ColourCoatingType$index$side"};
+				} elsif ( $type =~ /PMS/i ) {
+					$back_pms += 1;
+				} else {
+					push @back_coatings, $$specs{"ColourCoatingType$index$side"};
+				} # end if
+			} # end if
+		} # end foreach
+		if ( $back_pms ) {
+			unshift @back_coatings, $back_pms.'PMS';
+		} # end if
+		unshift @back_coatings, map { $$specs{'chk'.$_.$side} ? $_ : () } ( 'Cyan','Magenta','Yellow','Black' );
+		if ( $$specs{'chkProcessColour'.$side} ) {
+			unshift @back_coatings, '4C';
+		} # end if Process
+	} # end if
+	return join('+', @front_coatings).'/'.join('+',@back_coatings).' ' . $coatings;
+} # end sub get_colour_description_no_coverage
 
 sub get_colour_description {
 	my ( $Project, $specs ) = @_;

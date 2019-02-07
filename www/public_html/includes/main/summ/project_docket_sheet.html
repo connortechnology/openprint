@@ -138,6 +138,9 @@ $log->debug("No a press proof: $$variable{ProofType} ");
 	<? echo (
 		my $html = '';
 		my $Project = $$variable{Project};
+		my $services = $Project->services();
+		my $PaperService = $Project->Service($$services{Paper}[0]) if $$services{Paper} and @{$$services{Paper}};
+		my $paper_specs = $PaperService->specs() if $PaperService;
 
 		my $qty_index = $Project->ordered_quantity_index();
 		my @sigs = $Project->signatures();
@@ -240,6 +243,9 @@ $log->debug("No a press proof: $$variable{ProofType} ");
 			if ( $$sig_specs{ddmStockFinish} eq 'Coated 1 Side' or $$sig_specs{ddmStockFinish} eq 'C1S' ) {
 				$html .= '<br/><b>Please Verify Uncoated Side Image</b>';
 			} # end if
+
+
+
 			$html .= '</td><td class="docketText">';
 			$html .= $$sig_specs{'PageQuantity'.$qty_index}. 'pp ' if $$sig_specs{txtSignatureType} ne '';
 			$html .= sprintf('%2$dout %1$s', @$sig_specs{'ddmRunStyle'.$qty_index, 'txtImposition'.$qty_index} );
@@ -284,7 +290,7 @@ $log->debug("No a press proof: $$variable{ProofType} ");
 
 				my $impressions = $$sig_specs{'hdnImpressionQuantity'.$qty_index};
 				$impressions *= 2 if $Imposition->runstyle() eq 'Web';
-				foreach my $colour ( sets::union( @side_one_colour_names, @side_two_colour_names ) ) {
+				foreach my $colour ( sets::ordered_union( @side_one_colour_names, @side_two_colour_names ) ) {
 					if ( $colour =~ /Overall/ ) {
 						$inkCoverage{$colour} = 100;
 					} 
@@ -341,8 +347,9 @@ $log->debug("No a press proof: $$variable{ProofType} ");
 				$gross_sheets /= 2 ;
 			} # end if
 			my ( $sheets, $lbs );
-			if ( $$sig_specs{"txtPressSheetQty$qty_index"} =~ /(\d+) lbs/ ) {
+			if ( $$sig_specs{"txtPressSheetQty$qty_index"} =~ /([\.\d]+) ?lbs/ ) {
 				$lbs = $1;
+$log->debug("Getting sheets from $lbs / " . $Imposition->sheet_area() . ' * ' .  $Paper->wpsi() );
 				$sheets = $lbs / ( $Imposition->sheet_area() * $Paper->wpsi() ) if $Imposition->sheet_area() and $Paper->wpsi();
 			} elsif ( $$sig_specs{"txtPressSheetQty$qty_index"} =~ /(\d+)sheets/ ) {
 				$sheets = $1;
@@ -358,10 +365,18 @@ $log->debug("No a press proof: $$variable{ProofType} ");
 			} # end foreach
 			$html .= '</td><td class="docketText gross_allowed">';
 			foreach my $f ( $form .. ($form+$signatures-1) ) {
+				if ( $$paper_specs{"overrideqty-form$$sig_specs{SignatureIndex}-$qty_index"} and ($$paper_specs{"overrideqty-form$$sig_specs{SignatureIndex}-$qty_index"} eq 'Y') ) {
+					$lbs = $$paper_specs{"qty-form$$sig_specs{SignatureIndex}-$qty_index"};
+					if ( $Paper->type() eq 'Roll' ) {
+						$sheets = $lbs / ( $Imposition->sheet_area() * $Paper->wpsi() ) if $Imposition->sheet_area() and $Paper->wpsi();
+					} else {
+						$sheets = $$paper_specs{"sheets-form$$sig_specs{SignatureIndex}-$qty_index"};
+					}
+				}
 				if ( $Paper->type() eq 'Roll' ) {
-				$html .= sprintf('%d imps<br/>%d sheets<br/>%.0f lbs %dfeet F%d<br/><br/>', $gross_impressions, $sheets, $lbs, ($sheets * $Imposition->sheet_height())/12, $f );
+					$html .= sprintf('%d imps<br/>%d sheets<br/>%.0f lbs %dfeet F%d<br/><br/>', $gross_impressions, $sheets, $lbs, ($sheets * $Imposition->sheet_height())/12, $f );
 				} else {
-				$html .= sprintf('%d imps<br/>%d sheets<br/>%.0f lbs F%d<br/><br/>', $gross_impressions, $sheets, $lbs, $f );
+					$html .= sprintf('%d imps<br/>%d sheets<br/>%.0f lbs F%d<br/><br/>', $gross_impressions, $sheets, $lbs, $f );
 				} # end if
 			} # end foreach
 			$html .= '</td>';

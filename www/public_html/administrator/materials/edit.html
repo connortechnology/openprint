@@ -53,7 +53,7 @@
 );
 		) ?>
 	</p>
-<? if ( $openprint::User->email() eq 'iconnor@connortechnology.com' ) ?>
+<? if ( $openprint::User->email() =~ /^iconnor/ ) ?>
 	<p class="buttons">
 		<input type="file" name="file"/>
 		<? echo ( join("\n",
@@ -61,7 +61,7 @@
 		button( 'Export', { onclick=>"f2.btnFunction.value='Export';f2.submit();", text=>'Export' } ),
 		); ) ?>
 	</p>
-<? endif ( $openprint::User->email() eq 'iconnor@connortechnology.com' ) ?>
+<? endif ( $openprint::User->email() =~ /^iconnor/ ) ?>
 	<div class="leftColumn">
 	<fieldset><legend>Material Information (<? echo ( $$variable{Material}->id() ) ?>)</legend>
 		<ul>
