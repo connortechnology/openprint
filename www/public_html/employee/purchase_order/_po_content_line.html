@@ -48,7 +48,7 @@
 		);
 	} elsif ( $C->Type()->type() eq 'Sheet Stock' ) {
 		my ( $mweight, $type, $name ) = $C->item() =~ /^([\d\.]+)M *([\w\/]*) *(.*)$/;
-		if ( ! sets::isin( $type, [ '', 'FSC', 'PEFC/SFI' ] ) ) {
+		if ( $type and ! sets::isin( $type, [ '', 'FSC', 'PEFC/SFI' ] ) ) {
 			$name = $type . ' ' . $name;
 			$type = '';
 		} # end if
