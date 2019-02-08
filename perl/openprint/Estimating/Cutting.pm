@@ -609,7 +609,7 @@ sub signature_calc {
     } # end foreach fold_index
   } # end if
 
-$openprint::log->debug("Folding impos " . @folding_impositions  . ' eq ' . @my_equipment );
+#$openprint::log->debug("Folding impos " . @folding_impositions  . ' eq ' . @my_equipment );
 
   if ( $stitching_specs and $stitching_imposition ) {
 	  if ( $$Imposition{image_orientation} == openprint::Imposition::Horizontal ) {
@@ -624,7 +624,7 @@ $openprint::log->debug("Folding impos " . @folding_impositions  . ' eq ' . @my_e
 		  }
     } # end if
   } # end if
-$openprint::log->debug("Stitching imposition: $stitching_imposition");
+#$openprint::log->debug("Stitching imposition: $stitching_imposition");
 
   my $Press = $Imposition->Press();
   my $output_format = $Press->specification('OutputFormat');
