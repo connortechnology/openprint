@@ -484,7 +484,7 @@ sub Currency {
 } # end sub Currency
 
 sub can_delete {
-	my $User = $_[1] ? $_[1] : new openprint::User( $openprint::session{user_id} );
+	my $User = $_[1] ? $_[1] : $openprint::User;
 	if ( $$User{type} eq 'A' ) {
 		return 1;
 	} elsif ( $$User{id} == $_[0]{user_id} ) {
@@ -499,7 +499,7 @@ sub can_delete {
 } # end sub can_delete
 
 sub can_view {
-	my $User = $_[1] ? $_[1] : new openprint::User( $openprint::session{user_id} );
+	my $User = $_[1] ? $_[1] : $openprint::User;
 	if ( $$User{type} eq 'A' ) {
 		return 1;
 	} elsif ( $$User{id} == $_[0]{user_id} ) {
@@ -508,7 +508,7 @@ sub can_view {
 		return 1;
 	} else {
 		my $Company = $_[0]->Company();
-		if ( sets::isin( $$Company{salesrep_id}, [ $$User{id}, $User->assistant_ids(), $User->csr_ids() ] ) ) {
+		if ( $$Company{salesrep_id} and sets::isin( $$Company{salesrep_id}, [ $$User{id}, $User->assistant_ids(), $User->csr_ids() ] ) ) {
 			return 1;
 		} # end if
 		if ( openprint::usergroup::is_user_in( ['Accounting','SalesAdmin','Estimating'], $$User{id} ) ) {
