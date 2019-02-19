@@ -91,13 +91,15 @@ foreach my $week ( @{$variable{Results}} ) {
 
 	$html .= sprintf('
 		<tr%1$s>
-			<td class="Week">Week %3$d of %2$d %4$s</td>
-			<td class="Logins">%5$s</td>
-			<td class="Projects">%6$s</td>
-			<td class="Quotes">%7$s</td>
-			<td class="Orders">%8$s</td>
+			<td class="Week">Week %3$d of %2$s %4$s to %5$s</td>
+			<td class="Logins">%6$s</td>
+			<td class="Projects">%7$s</td>
+			<td class="Quotes">%8$s</td>
+			<td class="Orders">%9$s</td>
 		</tr>', $rowclass,
-			$$week{week}->week(), $$week{week}->strftime('%d %b'),
+			$$week{week}->week(),
+			$$week{week}->strftime('%b %d'),
+			$$week{next_week}->strftime('%b %d'),
 			scalar @{$$week{logins}},
 			scalar @{$$week{projects}},
 			scalar @{$$week{quotes}},
