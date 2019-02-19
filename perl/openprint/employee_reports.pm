@@ -2032,6 +2032,7 @@ $log->debug("Start $start_dt => $end_dt");
 quotes => \@Quotes,
 orders => \@Orders,
 				week=>$current_dt->clone(),
+				next_week=>$next_week,
 		};
 		$current_dt = $next_week;
 	} # end while
