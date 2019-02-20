@@ -299,7 +299,7 @@ $log->error("PReventing customer change");
 		$User->save({});
 		$user_id = $User->id();
     } elsif ( $param{btnFunction} eq 'merge' ) {
-		if ( $$User{id} == $openprint::param{merge_user_id} ) {
+		if ( $$User{id} == $param{merge_user_id} ) {
 			$variable{error} .= 'Choose a different user to merge into.';
 		} else {
 			my $ac = sql::start_transaction( $dbh );
@@ -562,11 +562,11 @@ sub company_profiles {
 			( $index ) = sql::execute( $log, $dbh, 'SELECT id from Company WHERE strAccountNum=?',$param{txtSearchAccountNum});
 		} # end if
 	} elsif ( $param{btnFunction} eq 'merge' ) {
-		if ( ! $openprint::param{company_id} ) {
+		if ( ! $param{company_id} ) {
 			$variable{error} .= 'There must be a selected company to merge to.';
-		} elsif ( ! $openprint::param{merge_company_id} ) {
+		} elsif ( ! $param{merge_company_id} ) {
 			$variable{error} .= 'There must be a selected company to merge from.';
-		} elsif ( $openprint::param{company_id} == $openprint::param{merge_company_id} ) {
+		} elsif ( $param{company_id} == $param{merge_company_id} ) {
 			$variable{error} .= 'Choose a different company to merge into.';
 		} else {
 			my $ac = sql::start_transaction( $dbh );
@@ -579,18 +579,18 @@ sub company_profiles {
 			foreach my $Timetrack ( openprint::Timetrack->find('owner_id'=>$param{merge_company_id}) ) {
 				$Timetrack->save({'owner_id'=>$Company->id()});
 			} # end foreach Timetrack
-			foreach ( openprint::Invoice->find('invoicer_id'=>$param{merge_company_id}) ) {
-				$_->save({'invoicer_id'=>$Company->id()});
+			foreach ( openprint::Invoice->find(invoicer_id=>$param{merge_company_id}) ) {
+				$_->save({invoicer_id=>$Company->id()});
 			} # end foreach
-			foreach ( openprint::Invoice->find('invoicee_id'=>$param{merge_company_id}) ) {
-				$_->save({'invoicee_id'=>$Company->id()});
+			foreach ( openprint::Invoice->find(invoicee_id=>$param{merge_company_id}) ) {
+				$_->save({invoicee_id=>$Company->id()});
 			} # end foreach
-			foreach my $Payment ( openprint::Payment->find('payor_id'=>$param{merge_company_id}) ) {
-				$Payment->save({'payor_id'=>$Company->id()});
+			foreach my $Payment ( openprint::Payment->find(payor_id=>$param{merge_company_id}) ) {
+				$Payment->save({payor_id=>$Company->id()});
  #if $Payment->payor_id() == $Company->id();
 			} # end foreach  Payment
-			foreach my $Payment ( openprint::Payment->find('recipient_id'=>$param{merge_company_id}) ) {
-				$Payment->save({'recipient_id'=>$Company->id()});
+			foreach my $Payment ( openprint::Payment->find(recipient_id=>$param{merge_company_id}) ) {
+				$Payment->save({recipient_id=>$Company->id()});
 # if $Payment->recipient_id() == $Company->id();
 			} # end foreach  Payment
 			foreach my $Stock ( openprint::Paper->find(supplier_id=>$param{merge_company_id}) ) {
@@ -627,13 +627,16 @@ sub company_profiles {
 				my @customercategories = sql::execute( $log, $dbh, 'SELECT id FROM Marketing_Categories' );
 
 				sql::execute( $log, $dbh, q{DELETE FROM Companies_in_Marketing_Categories WHERE company_Id =?}, $index );
+				if ( $param{selectCustomerCategories} ) {
 # add them back in
-				my $sth = $dbh->prepare( q{INSERT INTO Companies_in_Marketing_Categories (Category_Id,Company_Id) VALUES ( ?, ? )} );
-				foreach my $cat ( $param{selectCustomerCategories} ) {
-					if ( sets::isin( $cat, \@customercategories ) ) {
-						$sth->execute( $cat, $index ) or $log->error( DBI->errstr );
-					} # end if
-				} # end foreach
+					my $sth = $dbh->prepare( q{INSERT INTO Companies_in_Marketing_Categories (Category_Id,Company_Id) VALUES ( ?, ? )} );
+					foreach my $cat ( $param{selectCustomerCategories} ) {
+						if ( sets::isin( $cat, \@customercategories ) ) {
+							$sth->execute( $cat, $index ) or $log->error( DBI->errstr );
+						} # end if
+					} # end foreach
+					$sth->finish();
+				}
 
 				my %params;
 				foreach my $field ( keys %shipping_fields ) {
