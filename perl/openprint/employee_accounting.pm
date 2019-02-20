@@ -265,7 +265,7 @@ sub credit {
 				$updates{$p} = $param{$p} if exists $param{$p} and $$Company{$p} ne $param{$p};
 			}
 			if ( %updates ) {
-				my $note = note=>join('<br/>', map { $_ . ' changed from ' . $$Company{$_} . ' to ' . $updates{$_} } sort keys %updates );
+				my $note = join('<br/>', map { $_ . ' changed from ' . $$Company{$_} . ' to ' . $updates{$_} } sort keys %updates );
 				if ( ! ( $_ = $Company->save(\%updates) ) ) {
 					(new openprint::Log())->save({action=>'Edit Company', Object=>$Company, note=>$note });
 				} else {
