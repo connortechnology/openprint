@@ -76,6 +76,13 @@ function check_input( form, signature_index ) {
 					at <? echo ( $$variable{ApprovalDate} ) ?>
 				<? endif ( $$variable{rdbApproved} eq 'Y' ) ?>
 			</p>
+<? eval (
+		if ( ! $variable{ddmDueDate} ) {
+			$variable{ddmDueDate} = $variable{Project}->get_due_date();
+		} # end if
+		$variable{duedate} = $variable{ddmDueDate};
+		@variable{'duedate_year','duedate_month','duedate_day'} = split('-', $variable{ddmDueDate});
+)?>
 			<p id="DueDate" <? echo ( $$variable{rdbApproved} eq 'Y' ? '' : 'style="display:none;"' ) ?> >
 <? if ( $session{user_type} eq 'A' or openprint::usergroup::is_user_in( ['Scheduling'], $session{user_id} ) ) ?>
 				<label>Due Date</label>
