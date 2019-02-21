@@ -2269,11 +2269,10 @@ sub runtime {
 	my $specs = $Service->specs();
 	my $runTime;
 	$pertains_to = [ $Project->signatures() ] if ! $pertains_to;
-
 	foreach my $sig_id ( ref $pertains_to eq 'ARRAY' ? @{$pertains_to} : $pertains_to ) {
 		my $sig_specs = openprint::service::get_specs_ref( $Project, $sig_id );
 		my $form = $$sig_specs{SignatureIndex};
-		$Equipment = new openprint::Equipment( $$specs{"ddmEquipment-$form-$qty_index"} ) if ! $Equipment;
+		$Equipment = new openprint::Equipment( $$specs{"ddmEquipment-$form-$qty_index"} );
 # Make ready
 		$runTime += $Equipment->specification( 'Station Make Ready' ) * 60;
 

@@ -1518,7 +1518,7 @@ sub runtime {
     my $form = $$sig_specs{SignatureIndex};
 		if ( $$specs{"ddmEquipment-$form-$qty_index"} ) {
 			my $E = $Equipment ? $Equipment : openprint::Equipment->find_one(id=>$$specs{"ddmEquipment-$form-$qty_index"});
-			if ( $E and ( $E->specification('Type') ne 'Stitcher' ) ) {
+			if ( $E and ( $E->specification('Type') ne 'Stitcher' ) and ( $E->specification('Type') ne 'Folder' ) ) {
 				my $makeready = $E->specification( 'Make Ready Time' );
 				my $runspeed = $E->specification( 'Cutting Time' );
 				$openprint::log->debug("Cutting runtime: $makeready $runspeed");
