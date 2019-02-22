@@ -60,11 +60,14 @@
 		<? echo (
 			my $html = '';
 			my $rowclass;
+  my $uri = '/employee/production/projects.html';
 
 			foreach my $Project ( @{$$variable{Projects}} ) {
 				#next if $session{'/employee/production/projects.html?ddmPress'} and ! sets::isin( $session{'/employee/production/projects.html?ddmPress'}, [ $Project->used_press_names() ] );
 				#my @operators = sql::execute( $log, $dbh, q{SELECT DISTINCT operator_id FROM tbl_Project_Contents WHERE lngProjectIndex=? AND operator_id IS NOT NULL}, $Project->id() );
 				#next if $param{ddmEmployee} and sets::isin( $param{ddmEmployee}, \@operators );
+				next if $session{$uri.'?cod'} eq 'Y' and !$Project->Order()->cod_owing();
+				next if $session{$uri.'?cod'} eq 'N' and $Project->Order()->cod_owing();
 				$html .= "<tr$rowclass>\n";
 				$html .= sprintf(q`
 						<td class="project_id"><a href="/employee/project/view.html?project_id=%1$d">%1$d</a>&nbsp;</td>

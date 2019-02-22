@@ -533,7 +533,7 @@ sub _project_list {
 		( map { 'due_date_start_'.$_ } ( 'year','month','day' ) ),
 		( map { 'due_date_end_'.$_ } ( 'year','month','day' ) ),
 		'ProjectStatus', 'ddmSalesRep', 'ddmEmployee', 'ddmCustomer', 'ddmPress',
-		'servicetype_id',
+		'servicetype_id','cod',
 		)  );
 }
 
