@@ -151,6 +151,8 @@ sub run {
         action  =>  'Successful Backup',
         note    =>  $results,
     });
+
+    # Stop after the first successful backup, as we are iterating through ips
     return $results;
   } # end foreach ip or hostname
   (new openprint::Log())->save({
@@ -158,17 +160,18 @@ sub run {
       action  =>  'Failed Backup',
       note    =>  $results,
     });
+  return $results;
 } # end sub run
 
 sub size {
-my $self = shift;
+  my $self = shift;
   my $path = $self->dest_path();
   my @output = `/usr/bin/du -s "$path"`;
   if ( ! @output ) {
     $openprint::log->error("Failed getting size of $$self{dest_path}: @output");
     return undef;
   }
-    $openprint::log->debug("Size of $$self{dest_path}: @output");
+  $openprint::log->debug("Size of $$self{dest_path}: @output");
   my ( $size ) = $output[0] =~ /^(\d+)/;
   return $size;
 }
