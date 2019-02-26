@@ -88,18 +88,20 @@ function swap_credit(src_id,dst_id) {
 		order		=> $openprint::Order::fields{created_on},
 		) ];
 
-  my @Order_Invoices = openprint::Order_Invoice->find(order_id=>[ map { $$_{id} } @{$$variable{UnpaidOrders}} ] );
-	my %Invoices_By_OrderId = misc::make_hash_from_array( 'order_id', @Order_Invoices );
-	my @invoice_ids = map { $$_{invoice_id} } @Order_Invoices;
+	if ( @{$$variable{UnpaidOrders}} ) {
+		my @Order_Invoices = openprint::Order_Invoice->find(order_id=>[ map { $$_{id} } @{$$variable{UnpaidOrders}} ] );
+		my %Invoices_By_OrderId = misc::make_hash_from_array( 'order_id', @Order_Invoices );
+		my @invoice_ids = map { $$_{invoice_id} } @Order_Invoices;
 
-	my %Invoices_by_id = map { $$_{id}, $_ } openprint::Invoice->find(id=>\@invoice_ids);
-	foreach my $OI ( @Order_Invoices ) {
-	  $$OI{Invoice} = $Invoices_by_id{$$OI{invoice_Id}};
-	}
+		my %Invoices_by_id = map { $$_{id}, $_ } openprint::Invoice->find(id=>\@invoice_ids);
+		foreach my $OI ( @Order_Invoices ) {
+			$$OI{Invoice} = $Invoices_by_id{$$OI{invoice_Id}};
+		}
 
-	my %invoice_ids = ();
-	foreach my $Order ( @{$$variable{UnpaidOrders}} ) {
-		$$Order{Invoices} = $Invoices_By_OrderId{$$Order{id}} ? $Invoices_By_OrderId{$$Order{id}} : [];
+		my %invoice_ids = ();
+		foreach my $Order ( @{$$variable{UnpaidOrders}} ) {
+			$$Order{Invoices} = $Invoices_By_OrderId{$$Order{id}} ? $Invoices_By_OrderId{$$Order{id}} : [];
+		}
 	}
 ) ?>
 <? if ( @{$$variable{UnpaidOrders}} ) ?>
