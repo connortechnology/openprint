@@ -396,6 +396,9 @@ sub confirmation {
 		foreach my $OP ( $Order->Ordered_Projects() ) {
 			my $Project = $OP->Project();
 			sql::update( $log, $dbh, 'tbl_Project_Contents', ["lngProjectIndex=? AND strStatus NOT IN ( 'Complete', 'Approved', 'Proofs Out', 'Waiting For Customer Approval','Waiting For QA Approval','')", $Project->id()], 'strStatus', 'Ordered' );
+			if ( $Project->docket() != $Order->docket() ) {
+				$Project->save({docket=>$Order->docket()});
+			}
 			$Project->update_status();
 		}
 		foreach my $Product ( $Order->Products() ) {
