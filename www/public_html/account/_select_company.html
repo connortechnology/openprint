@@ -47,7 +47,10 @@ return $html;
 				<? echo ( 
 					$$variable{company_dropdown} = openprint::Company->dropdown(
 						or	=> { 
-							id => [ sets::union( $openprint::User->company_id(), $session{company_id} ) ],
+            id => [ sets::union( 
+            ( $openprint::User->company_id() ? $openprint::User->company_id() : () ),
+            ( $session{company_id} ? $session{company_id} : () ),
+            ) ],
 							salesrep_id=>$session{'/account/select_company.html?csr_ids'} ? $session{'/account/select_company.html?csr_ids'} : [ undef, $session{user_id}, $openprint::User->csr_ids() ],
 							}
 						);

@@ -309,18 +309,18 @@ sub send {
 	$data{ReplacementText} = ssi::include('/email_content/invoice_body.html', \%data) if ! $data{ReplacementText};
   $Email->html_body( ssi::variable_substitution( \$email_template, \%data ) );
 
-	$data{ReplacementText} = ssi::include( '/email_content/invoice.html', \%data );
-	my $invoice_html = Encode::encode('utf-8',ssi::variable_substitution( \$invoice_template, \%data ) );
-  $Email->add_pdf_attachment_from_html('Invoice'.$$self{id}, $invoice_html);
+	$data{ReplacementText} = ssi::include('/email_content/invoice.html', \%data);
+	my $invoice_html = Encode::encode('utf-8',ssi::variable_substitution(\$invoice_template, \%data));
+  $Email->add_pdf_attachment_from_html('Invoice'.$self->num(), $invoice_html);
 
-	$Email->add_html_attachment("Invoice$$self{id}.html", $invoice_html ) if $To and ( $To->email() =~ /^iconnor/);
+	$Email->add_html_attachment("Invoice".$self->num().'.html', $invoice_html) if $To and ($To->email() =~ /^iconnor/);
 	my $results = $Email->send(
-		BCC			=>	new openprint::User( $session{user_id} ),
+		BCC			=>	$openprint::User,
 		#TO			=>	new openprint::User( $session{user_id} ),
 		TO			=>	( $To ? $To : [$self->Invoicee()->AccountingContacts()] ),
 		FROM		=>	$config{AccountingEmail},
 		ATTACHMENTS	=>	\@attachments,
-		SUBJECT		=>	sprintf('%1$s Invoice (%2$d) is now available.', $self->Invoicer()->name(), $$self{id} ),
+		SUBJECT		=>	sprintf('%1$s Invoice (%2$s) is now available.', $self->Invoicer()->name(), $self->num()),
 	);
 	(new openprint::Log())->save({Object=>$self, action=>'Invoice Sent', note=>$results});
 	return $results;

@@ -13,7 +13,7 @@
 	<tbody>
 <? echo ( 
 my $html;
-foreach my $Object_Asset ( $$variable{'Product'}->Assets() ) {
+foreach my $Object_Asset ( $$variable{Product}->Assets() ) {
 	my $Asset = $Object_Asset->Asset();
 	$html .= sprintf('
 		<tr>
