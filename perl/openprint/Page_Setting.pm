@@ -99,14 +99,14 @@ sub get {
 	my ( $page ) = @_;
 
 	if ( ! $cache{$openprint::config{db_name}} ) {
-		$openprint::log->debug("loading Page settings for $openprint::config{db_name}") if $debug;
+		$openprint::log->debug("loading Page settings for $openprint::config{db_name}") if DEBUG;
 		$cache{$openprint::config{db_name}} = { map { $_->url(), $_ } openprint::Page_Setting->find() };
 	} # end if
 
 	my $cache = $cache{$openprint::config{db_name}};
 
 	if ( ! $$cache{$page} ) {
-    $openprint::log->debug("No cached Page Setting found for $page");
+    $openprint::log->debug("No cached Page Setting found for $page") if DEBUG;
 # Need to create one.
 		my @chunks = split('/', $page);
 		while ( @chunks ) {

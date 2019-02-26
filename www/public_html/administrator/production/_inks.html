@@ -41,7 +41,7 @@
 					} # end foreach Price
 				} # end foreach Pricelist
 			} # end if
-			$html .= sprintf(q`</td><td class="service"><a href="/administrator/services/edit.html?ddmService=%2$d">%3$s</a><br/>`, $Ink->id(), $Ink->service_id(), $Ink->Service()->name() );
+			$html .= sprintf(q`</td><td class="service"><a href="/administrator/services/edit.html?service_id=%2$d">%3$s</a><br/>`, $Ink->id(), $Ink->service_id(), $Ink->Service()->name() );
 			if ( $Ink->service_id() ) {
 				foreach my $Pricelist ( @{$$variable{Pricelists}} ) {
 					$html .= 'Prices for pricelist: ' . $Pricelist->name(). '<br/>';

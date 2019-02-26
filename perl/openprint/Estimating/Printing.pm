@@ -2233,7 +2233,7 @@ sub set_size {
 			} # end if
 			#$log->debug("SpreadSize: $$specs{txtSpreadSize}");
 			if ( ! $$specs{chkOverrideDimensions} ) {
-				if ( sets::isin($$specs{rdbTemplateType}, ['2Panel1Pocket','2Panel2Pocket','TriFoldDoublePocket'] ) ) {
+				if ( $$specs{rdbTemplateType} and sets::isin($$specs{rdbTemplateType}, ['2Panel1Pocket','2Panel2Pocket','TriFoldDoublePocket'] ) ) {
 					$$specs{txtWidth} = $$printing_specs{txtFinalWidth} * $$specs{rdbPanels};
 					my $pockets = 0;
 					if ( $$specs{rdbPanels} == 2 ) {
@@ -2267,7 +2267,7 @@ $log->debug("Using spine ehgiht");
 				} # end if
 				$$specs{txtFinalHeight} = $$printing_specs{txtFinalHeight} if ! $$specs{txtFinalHeight};
 
-				if ( $$printing_specs{rdbTemplateType} eq 'PerfectBound' ) {
+				if ( $$specs{rdbTemplateType} and ( $$printing_specs{rdbTemplateType} eq 'PerfectBound' ) ) {
 # Perfect bound requires more width on the cover to cover the calliiper	
 					my $finished_calliper = 0;
 					my @Groups = sql::execute( undef, undef, 'SELECT DISTINCT strvalue FROM tbl_Service_Specifications WHERE lngProjectIndex=? AND strName=?', $Project->id(), 'Group' );

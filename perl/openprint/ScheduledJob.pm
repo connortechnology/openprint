@@ -380,10 +380,10 @@ sub get_li {
 
 		$html .= sprintf( q`<span class="RunTime" onclick="job_popup('%1$d');">Total Hr: %2$.2d:%3$.2d</span>`, $$self{id}, split(':',$self->runtime()) );
 
-		if ( sets::isin( $self->ServiceType()->name(), [ '','Signature' ] ) ) {
-		if ( $Equipment->specification('DoStockVerification') eq 'Y' ) {
-			$html .= sprintf( q`<span class="StockVerified" onclick="job_popup('%1$d');">Stock: %2$s</span>`, $$self{id}, $self->stock_verified() ? 'Yes' : 'No' );
-		} # end if
+		if ( $$self{servicetype_id} and sets::isin( $self->ServiceType()->name(), [ '','Signature' ] ) ) {
+			if ( $Equipment->specification('DoStockVerification') eq 'Y' ) {
+				$html .= sprintf( q`<span class="StockVerified" onclick="job_popup('%1$d');">Stock: %2$s</span>`, $$self{id}, $self->stock_verified() ? 'Yes' : 'No' );
+			} # end if
 		} # end if
 
 		$html .= '<span class="Buttons">';

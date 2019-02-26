@@ -51,8 +51,8 @@ $openprint::log->debug($_[0]->Server()->to_string() );
 sub source_snapshot_url {
 	return $_[0]{type} eq 'Remote' ? 'http://'.$_[0]{host}.($_[0]{jpg_path}?
 		$_[0]{jpg_path}:$_[0]{path}) :
-			sprintf('http://%2$s/cgi-bin/zms?mode=single&amp;monitor=%1$d&amp;maxfps=%3$d&amp;user=all&pass=p1GraPHic',
-					$_[0]{id}, $_[0]->Server()->Hostname(), $_[0]{max_fps} );
+			sprintf('http://%2$s/cgi-bin/zms?mode=single&amp;monitor=%1$d&amp;user=all&pass=p1GraPHic',
+					$_[0]{id}, $_[0]->Server()->Hostname() );
 } # end sub source_snapshot_url
 
 sub can_view {

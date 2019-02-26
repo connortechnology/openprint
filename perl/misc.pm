@@ -555,7 +555,7 @@ sub make_hash_from_array {
 		$results{$$object{$key}} = [] if ! $results{$$object{$key}};
 		push @{$results{$$object{$key}}}, $object;
 	}
-	return \%results;
+	return wantarray ? %results : \%results;
 }
 
 1;

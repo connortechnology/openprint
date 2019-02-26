@@ -609,7 +609,7 @@ sub signature_calc {
     } # end foreach fold_index
   } # end if
 
-$openprint::log->debug("Folding impos " . @folding_impositions  . ' eq ' . @my_equipment );
+#$openprint::log->debug("Folding impos " . @folding_impositions  . ' eq ' . @my_equipment );
 
   if ( $stitching_specs and $stitching_imposition ) {
 	  if ( $$Imposition{image_orientation} == openprint::Imposition::Horizontal ) {
@@ -624,7 +624,7 @@ $openprint::log->debug("Folding impos " . @folding_impositions  . ' eq ' . @my_e
 		  }
     } # end if
   } # end if
-$openprint::log->debug("Stitching imposition: $stitching_imposition");
+#$openprint::log->debug("Stitching imposition: $stitching_imposition");
 
   my $Press = $Imposition->Press();
   my $output_format = $Press->specification('OutputFormat');
@@ -1518,7 +1518,7 @@ sub runtime {
     my $form = $$sig_specs{SignatureIndex};
 		if ( $$specs{"ddmEquipment-$form-$qty_index"} ) {
 			my $E = $Equipment ? $Equipment : openprint::Equipment->find_one(id=>$$specs{"ddmEquipment-$form-$qty_index"});
-			if ( $E and ( $E->specification('Type') ne 'Stitcher' ) ) {
+			if ( $E and ( $E->specification('Type') ne 'Stitcher' ) and ( $E->specification('Type') ne 'Folder' ) ) {
 				my $makeready = $E->specification( 'Make Ready Time' );
 				my $runspeed = $E->specification( 'Cutting Time' );
 				$openprint::log->debug("Cutting runtime: $makeready $runspeed");

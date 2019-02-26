@@ -116,6 +116,13 @@
           $$variable{index} = $ss_id;
           $$variable{status} = $statuses{$ss_id};
           $html .= variable_substitution( \$status_html, $variable );
+
+					my $Service = $Project->Service($ss_id);
+					my $runtime = $Service->runtime();
+					if ( $runtime ) {
+						$html .= misc::seconds2hm($runtime);
+						$category_totals{$$ServiceCategory{name}}{runtime} += $runtime;
+					};
           $html .= "</td></tr>\n";
           $rowclass = $rowclass ? '' : ' class="colRow"';
         } # end while sigs
@@ -173,8 +180,11 @@
 					$html .= '</td><td class="status" id="status'.$service_id.'">';
 					@$variable{'status','index'} = ( $statuses{$service_id}, $service_id );
           $html .= variable_substitution( \$status_html, $variable );
-					$html .= misc::seconds2hm($Service->runtime());
-					$category_totals{$$ServiceCategory{name}}{runtime} += $Service->runtime();
+					my $runtime = $Service->runtime();
+					if ( $runtime ) {
+						$html .= misc::seconds2hm($runtime);
+						$category_totals{$$ServiceCategory{name}}{runtime} += $runtime;
+					};
 					$html .= "</td></tr>\n";
 					$rowclass = $rowclass ? '' : ' class="colRow"';
 				} # end foreach service_id

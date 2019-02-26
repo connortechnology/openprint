@@ -1277,7 +1277,6 @@ sub runtime {
 	my $ServiceType = $Service->ServiceType();
 	my $specs = $Service->specs();
 	if ( ! $Equipment ) {
-		$openprint::log->warn("No equipment passed to runtime");
 		if ( ! $$specs{'ddmEquipment'.$qty_index} ) {
 			$openprint::log->error("No equipment in estimate");
 			return 0;

@@ -343,7 +343,7 @@ sub parse_page {
 					my $rowclass = '';
 					foreach my $Project ( @Projects ) {
 						$variable{error} .= qq`<div$rowclass><a href="$variable{uri}?project_id=$$Project{id}">$$Project{id}</a> $$Project{reference}</div>`; 
-						$rowclass= $rowclass ? '' : ' class="colRow"';
+						$rowclass = $rowclass ? '' : ' class="colRow"';
 					}
 					return;
 				}
@@ -356,7 +356,6 @@ sub parse_page {
 			require openprint::print_project;
 			require openprint::employee_production;
 
-			openprint::print_project::get_service_specifications( $r, $log, $dbh, \%variable, @param{'ProjectIndex','ServiceIndex'} ) if $param{ServiceIndex} and $filename ne 'multipage_signatures.html';
 			@variable{'ProjectIndex','ServiceIndex','OrderID'} = @param{'ProjectIndex','ServiceIndex','OrderID'};
 			
 			my $Project = $variable{Project} = new openprint::Project($variable{ProjectIndex});
@@ -379,24 +378,9 @@ sub parse_page {
 						return;
 					}
 				}
-				foreach my $signature_service_index ( $Project->signatures() ) {
-					my $sig_specs = openprint::service::get_specs_ref( $Project, $signature_service_index );
-					push @{$variable{Signatures}}, @$sig_specs{'SignatureIndex','txtServiceDescription'};
-					if ( ! $$sig_specs{UsePress} ) {
-						openprint::service::insert_service_spec(
-								$log, $dbh, $$Project{id}, $signature_service_index,
-								'UsePress', $$sig_specs{'ddmPress'.$Project->ordered_quantity_index()} );
-					} # end if
-					$variable{"UsePress-$signature_service_index"} = $$sig_specs{UsePress};
-				} # end foreach signature_service_index
-
-				if ( ! $variable{ddmDueDate} ) {
-					$variable{ddmDueDate} = $variable{Project}->get_due_date();
-				} # end if
-				$variable{duedate} = $variable{ddmDueDate};
-				@variable{'duedate_year','duedate_month','duedate_day'} = split('-', $variable{ddmDueDate});
-
-			} elsif ( $third eq 'prin' ) {	
+			}
+			openprint::print_project::get_service_specifications( $r, $log, $dbh, \%variable, @param{'ProjectIndex','ServiceIndex'} ) if $param{ServiceIndex} and $filename ne 'multipage_signatures.html';
+			if ( $third eq 'prin' ) {	
 				openprint::employee_production::load_press_completion( $log, $dbh, \%variable, $variable{ProjectIndex} );
 				if ( $filename eq '_production_feedback.html' ) {
 					openprint::employee_project::_production_feedback( );
