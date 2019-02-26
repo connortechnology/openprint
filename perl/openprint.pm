@@ -149,7 +149,7 @@ $log->debug("Generating new cookie $session{_session_id}") if Debug;
 		} # end if
 	} # end if
 	$Pricelist = new openprint::Pricelist( $session{Pricelist_id} ) if $session{Pricelist_id};
-
+  $log->debug("Done session init");
 } # end sub session_init
 
 sub switch_company {
