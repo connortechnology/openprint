@@ -1,46 +1,5 @@
 <?include(/includes/error_reporting.html)?>
-<script type="text/javascript">
-function set_credit(src_id,dst_id) {
-	var form = $('f1');
-	var fields = [ 'denydays', 'warndays','limit','hold','downpayment','cod'];
-	for ( var i= 0; i < fields.length; i += 1 ) {
-		var field = fields[i];
-		if ( ! form.elements[field+'-'+dst_id] ) {
-			alert('No element for dest ' + field);
-		} else if ( ! form.elements[field+'-'+src_id] ) {
-			alert('No element for src ' + field);
-		} // end if
-		//$(field+'-'+dst_id).value = $(field+'-'+src_id).value;
-		if ( form.elements[field+'-'+dst_id].length ) {
-			set_rdb_value( form.elements[field+'-'+dst_id], get_rdb_value( form.elements[field+'-'+src_id] ) );
-		} else {
-			form.elements[field+'-'+dst_id].value = form.elements[field+'-'+src_id].value;
-		}
-	} // end for
-} // end function set_credit
-function swap_credit(src_id,dst_id) {
-	var form = $('f1');
-	var fields = [ 'denydays', 'warndays','limit','hold','downpayment','cod'];
-	for ( var i= 0; i < fields.length; i += 1 ) {
-		var field = fields[i];
-		if ( ! form.elements[field+'-'+dst_id] ) {
-			alert('No element for dest ' + field);
-		} else if ( ! form.elements[field+'-'+src_id] ) {
-			alert('No element for src ' + field);
-		} // end if
-		//$(field+'-'+dst_id).value = $(field+'-'+src_id).value;
-		if ( form.elements[field+'-'+dst_id].length ) {
-			var value = get_rdb_value(form.elements[field+'-'+dst_id]);
-			set_rdb_value( form.elements[field+'-'+dst_id], get_rdb_value( form.elements[field+'-'+src_id] ) );
-			set_rdb_value(form.elements[field+'-'+src_id],value);
-		} else {
-			var value = form.elements[field+'-'+dst_id].value;
-			form.elements[field+'-'+dst_id].value = form.elements[field+'-'+src_id].value;
-			form.elements[field+'-'+src_id].value = value;
-		}
-	} // end for
-} // end function set_credit
-</script>
+<script type="text/javascript" src="<?hash_link('/employee/accounting/credit.js')?>"></script>
 <form id="f1" name="f1" method="post" action="credit.html" enctype="multipart/form-data">
 	<fieldset class="filters"><legend>Select Company</legend>
 		<ul>
@@ -163,8 +122,8 @@ function swap_credit(src_id,dst_id) {
 	</table>
 <p class="buttons">
 <?echo(join("\n",
-			button( 'Pay', { onclick=>"f1.btnFunction.value='Pay';f1.submit();" } ),
-			button( 'Cancel', { onclick=>"f1.btnFunction.value='Cancel';f1.submit();" } ),
+			button( 'Pay', { onclick=>'click_pay();'} ),
+			button( 'Cancel', {onclick=>'click_cancel();'} ),
 );)?>
 </p>
 <? else ( @{$$variable{UnpaidOrders}} ) ?>
