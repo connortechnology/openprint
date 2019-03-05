@@ -436,6 +436,14 @@ $log->debug("Creating PO $$PO{id} from label $variable{error}");
 	} elsif ( $param{btnFunction} eq 'Save' ) {
 		if ( ! $param{po_id} ) {
 			$variable{error} .= $PO->save( { created_by	=> $session{user_id}, company_id => $openprint::User->company_id() } );
+		} elsif ( ($PO->Creator()->type() eq 'E') and ($openprint::User->type() eq 'A') ) {
+			$variable{error} .= $PO->save( { created_by => $session{user_id} });
+			my $L = new openprint::PurchaseOrder_Log();
+			$L->save({
+					user_id	=>	$session{user_id},
+					po_id		=>	$PO->id(),
+					reason	=>	'Taking ownership',
+					});
 		} # end if
 
 		$param{supplier_id} = save_supplier( \%param ) if ( ! $param{supplier_id} ) and $param{vendor_name};
