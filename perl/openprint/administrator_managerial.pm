@@ -1192,13 +1192,14 @@ sub users {
 
 }
 sub _users {
-	ssi::save_params('/administrator/managerial/users.html', (
+	my $uri = '/administrator/managerial/users.html';
+	ssi::save_params($uri,(
 				'salesrep_id', 'marketing_category_id', 'company_id','usergroup_id','deleted','email','type','administrator',
 				'notification_type_id',
 				( map { 'created_on_start_' . $_ } ( 'year','month','day' ) ),
 				( map { 'created_on_end_' . $_ } ( 'year','month','day' ) ),
 				) );
-	$session{$r->uri().'?salesrep_id_exclude'} = $param{salesrep_id_exclude};
+	$session{$uri.'?salesrep_id_exclude'} = $param{salesrep_id_exclude};
 }
 
 1;
