@@ -268,7 +268,7 @@ $openprint::log->warn("FIXM E");
 	} # end if
 
 	if ( $$specs{rdbCover} eq 'Different') {
-		if ( sets::isin($$specs{rdbTemplateType1}, ['2Panel1Pocket','2Panel2Pocket','TriFoldDoublePocket'] ) ) {
+		if ( $$specs{rdbTemplateType1} and sets::isin($$specs{rdbTemplateType1}, ['2Panel1Pocket','2Panel2Pocket','TriFoldDoublePocket'] ) ) {
 			if ( $$specs{rdbPocketSize1} and ( $$specs{rdbPocketSize1} ne 'Other' ) ) {
 				$$specs{PocketSize1} = $$specs{rdbPocketSize1};	
 			} else {
@@ -627,7 +627,7 @@ $openprint::log->debug("Saving $v for group $group_id") if DEBUG;
 $openprint::log->debug("Not Saving $v for group $group_id") if DEBUG;
 			} # end if
 		} # end foreach v
-	}  # end foreach signature
+	} # end foreach signature
 } # end sub save
 
 sub check {

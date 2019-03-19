@@ -7099,8 +7099,8 @@ sub runtime {
 	my @side_one_colours = get_colours( $specs, 'SideOne' );
 	my @side_two_colours = get_colours( $specs, 'SideTwo' );
 	my @colours;
-	if ( sets::isin( $$specs{'ddmRunStyle'.$qty_index}, ['Work & Turn', 'Work & Tumble'] ) ) {
-		@colours = filter_colours( \@side_one_colours, \@side_two_colours );
+	if ( $$specs{'ddmRunStyle'.$qty_index} and ( $$specs{'ddmRunStyle'.$qty_index} eq 'Work & Turn' or $$specs{'ddmRunStyle'.$qty_index} eq 'Work & Tumble'] ) ) {
+		@colours = filter_colours(\@side_one_colours, \@side_two_colours);
 	} else {
 		@colours = ( @side_one_colours, @side_two_colours );
 	} # end if
