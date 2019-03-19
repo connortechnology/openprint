@@ -4,7 +4,7 @@ use Carp;
 
 use openprint::Imposition;
 
-use constant DEBUG => 1;
+use constant DEBUG => 0;
 use constant DEBUG_DUTCH => 0;
 use constant DEBUG_CONVERT => 0;
 
@@ -903,7 +903,11 @@ $openprint::log->debug("Using Single wheel space $$specs{'Perfecting Single Gutt
 		} # end if imposition
 	} elsif ( $run_style eq 'Work & Tumble' ) {
 		calc_setup( $setup2, @$setup2{'image_height','image_width'}, $adjusted_paper_width, $adjusted_paper_height/2 );
-		$openprint::log->debug( sprintf('CHECK 2 Work&Tumble Using Paper %sx%s -> %sx%s Image: %s x %s Imposition: %dout:%dx%d ',$paper_width, $paper_height, $adjusted_paper_width, $adjusted_paper_height/2, $setup2->image_height(), $setup2->image_width(), $setup2->imposition(), $setup2->columns(), $setup2->rows()) ) if DEBUG;
+		$openprint::log->debug( sprintf(
+					'CHECK 2 Work&Tumble Using Paper %sx%s -> %sx%s Image: %s x %s Imposition: %dout:%dx%d',
+					$paper_width, $paper_height, $adjusted_paper_width, $adjusted_paper_height/2,
+					@$setup2{'image_height','image_width','imposition','columns','rows'}
+					) ) if DEBUG;
 		if ( $$setup2{imposition} ) {
 
 			if ( $$specs{dutch} ) {
@@ -911,7 +915,11 @@ $openprint::log->debug("Using Single wheel space $$specs{'Perfecting Single Gutt
 					$imp->rows( $$imp{rows} * 2 );
 					$imp->dutch_rows( $$imp{dutch_rows} * 2 );
 					$imp->Paper()->height( $imp->used_height() ) if ! $imp->Paper()->height();
-					$openprint::log->debug( sprintf('CHECK 2 Work&Tumble Dutch Using Paper %sx%s->%sx%s Image: %s x %s Imposition: %dout:%dx%d+%dx%d',$paper_width, $paper_height, $adjusted_paper_width, $adjusted_paper_height/2, $imp->image_height(), $imp->image_width(), $imp->imposition(), $imp->columns(), $imp->rows(), $imp->dutch_columns(), $imp->dutch_rows() ) ) if DEBUG;
+					$openprint::log->debug( sprintf(
+								'CHECK 2 Work&Tumble Dutch Using Paper %sx%s->%sx%s Image: %s x %s Imposition: %dout:%dx%d+%dx%d',
+								$paper_width, $paper_height, $adjusted_paper_width, $adjusted_paper_height/2,
+								@$imp{'image_height','image_width','imposition','columns', 'rows', 'dutch_columns','dutch_rows'}
+								) ) if DEBUG;
 					push @results, $imp;
 				} # end foreach imposition
 			} # end if grain_direction
