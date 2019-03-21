@@ -1156,5 +1156,8 @@ sub _change {
 	} # end if action
 } # end sub _change
 
+sub _related_projects {
+}
+
 1;
 __END__
