@@ -328,11 +328,13 @@ sub signature_calc {
 		return %bestPrice;
 	} # end if
 
-	my @different_types = sets::union( keys %front_aq, keys %back_aq );
+	my %different_types = ( %front_aq, %back_aq );
+	my @different_types = keys %different_types;
+#sets::union( keys %front_aq, keys %back_aq );
 
 	# Should include overs
 	my $impressions = $$sig_specs{"hdnImpressionQuantity$qty_index"} ? $$sig_specs{"hdnImpressionQuantity$qty_index"} : $$specs{"txtQuantity$qty_index"};
-$openprint::log->debug("Impressions: " . $$sig_specs{"hdnImpressionQuantity$qty_index"} . " qty: " . $$specs{"txtQuantity$qty_index"} ) if DEBUG;
+$openprint::log->debug('Impressions: ' . $$sig_specs{"hdnImpressionQuantity$qty_index"} . ' qty: ' . $$specs{"txtQuantity$qty_index"} ) if DEBUG;
 if ( 
 		@{$$sig_specs{SideTwoColours}} 
 		and 
@@ -548,7 +550,8 @@ $openprint::log->debug("Not In Makereadies: $$Equipment{id} $area") if DEBUG;
 					$colour_total += $MaterialPrice{Total};
 				} # end if
 
-				$$specs{'hdnBreakdown'.$qty_index} .= sprintf('MR: $%.2f + BC: $%.2f + Service: ($%.2f%s*%d)=$%.2f + Material: $%.2f%s = $%.2f ) = $%.2f<br/>',
+				$$specs{'hdnBreakdown'.$qty_index} .= sprintf(
+						'MR: $%.2f + BC: $%.2f + Service: ($%.2f%s*%d)=$%.2f + Material: $%.2f%s = $%.2f ) = $%.2f<br/>',
 					$setupPrice{Price}, $BlanketCutPrice{Price}, @ServicePrice{'Price','units','Quantity','Total'}, @MaterialPrice{'Price','units','Total'}, $colour_total );
 			} # end foreach type
 
