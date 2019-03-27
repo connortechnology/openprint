@@ -715,7 +715,7 @@ $log->debug("Adding special colour for $colour");
 		$project{NeedScoring} = 0;
 		$project{NeedFolding} = 0;
 	} # end if
-openprint::Estimating::Cutting::init( $Project, \%project );
+	openprint::Estimating::Cutting::init( $Project, \%project );
 	$project{NeedUVCoating} = openprint::Estimating::UVCoating::signature_needs( $Project, $specs );
 	$project{NeedAqueous} = openprint::Estimating::Aqueous::signature_needs( $Project, $specs );
 	@$specs{'NeedFolding','NeedScoring'} = @project{'NeedFolding','NeedScoring'};
@@ -1282,6 +1282,7 @@ $log->debug("not Skipping cuz ddmPress$qty_index eq $$Press{strid}");
 				$log->warn("QTY $qty_index Press $$Press{strid} Printing Type ($printing_type) IS the overriden type " . $$specs{'PrintingType'.$qty_index} ) if DEBUG_IMPOSITIONS;
 			} # end if
 		} else {
+# FIXME
 			if ( $$specs{PrintingTypes} and ! sets::isin( $printing_type, $$specs{PrintingTypes} ) ) {
 				if ( $$specs{'chkOverridePress'.$qty_index} and ( $$specs{'ddmPress'.$qty_index} eq $$Press{strid} ) ) {
 					$$specs{alert} .= 'Press ' . $$Press{strid} . " Printing Type ($printing_type) is not in PrintingTypes	". join(',', @{$$specs{PrintingTypes}} ) . '<br/>';
@@ -1342,7 +1343,12 @@ $log->debug("not Skipping cuz ddmPress$qty_index eq $$Press{strid}");
 		} elsif ( ! sets::isin('Perfecting', [ split(',',$$project{Runstyles} ) ] ) ) {
 			$log->debug("** $$Press{strid} Can't Perfect - Perfecting not in runstyles ***") if DEBUG_IMPOSITIONS;
 			$do_perfecting = 0;
-		} elsif ( @side_one_colours > int($number_of_colours/2) or @side_two_colours > int($number_of_colours/2) ) {
+		} elsif ( 
+				( (!$number_of_colours%2) and ( @side_one_colours > int($number_of_colours/2) or @side_two_colours > int($number_of_colours/2) ) )
+				or
+				( ($number_of_colours%2) and ( @side_one_colours > int($number_of_colours/2)+1 or @side_two_colours > int($number_of_colours/2)+1 ) )
+				or ( @side_one_colours == int($number_of_colours/2)+1 and @side_two_colours == int($number_of_colours/2)+1 )
+				) {
 			$log->debug("** Too many colours to	Perfect	***") if DEBUG_IMPOSITIONS;
 			$do_perfecting = 0;
 		} elsif ( @side_one_varnishes or @side_two_varnishes  ) {
@@ -1854,17 +1860,32 @@ if ( $do_initial_filtering ) {
 			}
 		}
 
+		my $have_perfecting = 0;
+		my $prefer_perfecting = $Press->specification('Prefer Perfecting');
+
 		my $max_imposition = 0;
 		foreach my $imp ( @impositions ) {
 			$max_imposition = $$imp{imposition} if $$imp{imposition} > $max_imposition;
+			if ( (!$have_perfecting) and $$imp{runstyle} eq 'Perfecting' ) {
+				$have_perfecting = 1;
+			}
 		} # end foraech
 		$max_imposition = int( $max_imposition / 4 );
 
 		foreach my $imp ( @impositions ) {
 			if ( $$imp{imposition} < $max_imposition ) {
-$imp->display(" Less than $max_imposition") if DEBUG_INITIAL_FILTERING;
+$imp->display("Less than $max_imposition") if DEBUG_INITIAL_FILTERING;
 				next;
 			} # end if
+			if ( $have_perfecting 
+					and ( $$imp{runstyle} eq 'Work & Turn' or $$imp{runstyle} eq 'Work & Tumble' )
+					and ( $prefer_perfecting eq 'Y' ) 
+					and ( ! ($$specs{"chkOverrideRunStyle$qty_index"} and ($$specs{"chkOverrideRunStyle$qty_index"} eq 'Y') ) )
+				 ) {
+				$imp->display('Have Perfecting so dont do W&T') if DEBUG_INITIAL_FILTERING;
+				next;
+			} # end if
+			
 			my $A = $$imp{Paper};
 
 			my $a_stock_minimum = $$specs{"txtQuantity$qty_index"} / $$imp{imposition};
@@ -2631,7 +2652,9 @@ sub calc {
 			}
 			if ( $$specs{"chkOverridePress$qty_index"} and $$specs{"ddmPress$qty_index"} ) {
 				my $Press = openprint::Equipment->find_one(strid=>$$specs{"ddmPress$qty_index"});
-				if ( ! sets::isin( $$specs{"ddmRunStyle$qty_index"}, [ split(',', $Press->specification('Runstyles') ) ] ) ) {
+				if ( !$Press ) {
+					$$specs{alert} .= "Press " . $$specs{"ddmPress$qty_index"} ." no longer exists<br/>";
+				} elsif ( ! sets::isin( $$specs{"ddmRunStyle$qty_index"}, [ split(',', $Press->specification('Runstyles') ) ] ) ) {
 					$$specs{alert} .= "Press $$Press{name} cannot do " . $$specs{"ddmRunStyle$qty_index"}.'<br/>';
 				}
 			} # end if also overriden press
@@ -2822,7 +2845,10 @@ $log->debug("after sorting presses: " . ( sprintf('%.4f', tv_interval( [$master_
 			$variables{'ddmPress'.$qty_index} = [ sets::union( 'output', @{$variables{'ddmPress'.$qty_index}} ) ];
 			if ( $$printing_specs{"ddmPress-$$specs{Group}"} ) {
 				my $OverridePress = $Presses{$$printing_specs{"ddmPress-$$specs{Group}"}};
-				if ( $presses{$OverridePress->id()} ) {
+				if ( !$OverridePress ) {
+					$$specs{alert} .= 'The press ' . $$printing_specs{"ddmPress-$$specs{Group}"} . ' no longer exists'; 
+					return $$specs{Status} = 'uncalculated';
+				} elsif ( $presses{$OverridePress->id()} ) {
 					$$specs{alert} .= 'The press that you have chosen '.$OverridePress->name() . ' is not appropriate for the following reason: ' .$presses{$OverridePress->id()};
 					return $$specs{Status} = 'uncalculated';
 				} # end if
@@ -3006,7 +3032,7 @@ $log->error("No stock breakdown $stock_breakdown for $qty_index");
 		$price = $best_price if ! $price;
 
 		my $last_sig_price = $$price{prices}[ @{$$price{prices}} -1 ];
-		$log->warn("Final Prices:"	. @{$$price{prices}}	);
+		#$log->warn("Final Prices:"	. @{$$price{prices}}	);
 
 		$$specs{'hdnBreakdown'.$qty_index} .= join('', 
 				( $stitching_breakdown ? $stitching_breakdown : '' ),
@@ -4451,9 +4477,10 @@ sub get_project_price {
 								( ((!$$new_specs{'chkOverridePress'.$qty_index}) or ($$new_specs{'chkOverridePress'.$qty_index} ne 'Y')) or ($$new_specs{'ddmPress'.$qty_index} eq $Press->strid()) ) and
 								( ((!$$new_specs{'chkOverrideRunStyle'.$qty_index}) or ($$new_specs{'chkOverrideRunStyle'.$qty_index} ne 'Y')) or ($$new_specs{'ddmRunStyle'.$qty_index} eq $$imp{runstyle}) )
 							) {
-
+if ( 0 ) {
 foreach my $k ( keys %washed_colours ) {
 $log->debug("$k => $washed_colours");
+}
 }
 							my $sig_price = calc_price( $Project, $$new_specs{ServiceIndex}, $imp, $project, $services, $new_specs, $qty, $qty_index, \%PlateCounts, \%washed_colours, \%mixed_colours, \%aq_makereadies, \@total_impositions );
 							$imp->display( $recursion_depth . ' UPQ: ' . $$price{upq} . ' first level calc_price' ) if DEBUG;
@@ -6313,7 +6340,6 @@ $log->debug("Area $area = $$Imposition{object_area} * Impressions($colour_impres
 		my $aq_time = gettimeofday();
 		my %aq_results = openprint::Estimating::Aqueous::signature_calc( $Project, $$project{AqueousSpecs}, $specs, $qty_index, $Imposition, $aq_makereadies );
 
-		#my $aq_time = [gettimeofday()];
 		my $aq_elapsed = sprintf('%.4f seconds', (gettimeofday() - $aq_time)*1000);
 		$log->warn("AQ elapsed: $aq_elapsed");
 #$price{'Aqueous Breakdown'} .= $$project{AqueousSpecs}{'hdnBreakdown'.$qty_index};
@@ -6560,35 +6586,35 @@ $log->debug("COnsidering $$Press{strid}") if DEBUG_PRESSES;
 		}
 
 		if ( ( @$side_one_colours > $number_of_colours or @$side_two_colours > $number_of_colours ) and ( $_ = $Press->specification('Multipass', $Paper->gsm()) and ( $_ ne 'Y' ) ) ) {
-			$results{$press_id} = "Too many colours and no multipass.";
+			$results{$press_id} = 'Too many colours and no multipass.';
 			next;
 		} elsif ( $_ = $Press->specification('Web Press') and ( $_ eq 'Y' ) ) {
 			if ( @$side_one_colours > $number_of_colours ) {
-				$results{$press_id} = "Too many colours for web.";
+				$results{$press_id} = 'Too many colours for web.';
 				next;
 			} elsif ( @$side_two_colours > $number_of_colours ) {
-				$results{$press_id} = "Too many colours for web.";
+				$results{$press_id} = 'Too many colours for web.';
 				next;
 			} # end if
 		} elsif ( $side_one_colours and @$side_two_colours and ($printing_type ne 'Digital') and $Press->specification('Runstyles') eq 'Sheet Work' and $Press->specification('Multipass', $Paper->gsm()) ne 'Y' ) {
 			# Something like an inkjet that can only do 1 sided
-			$results{$press_id} = "Can only do 1 sided jobs.";
+			$results{$press_id} = 'Can only do 1 sided jobs.';
 			next;
 		} # end if
 
 		if ( $varnish ) {
 			if ( $Press->specification('Varnish Capable') ne 'Y' ) {
-				$results{$press_id} = "Failed varnish check.";
+				$results{$press_id} = 'Failed varnish check.';
 				next;
 			} # end if
 		} # end if
 		if ( $aqueous and ! sets::isin( $Press->specification('Aqueous Capable'), [ 'Y', 'When Printing' ] ) ) {
-			$results{$press_id} = "Failed Aqueous check.";
+			$results{$press_id} = 'Failed Aqueous check.';
 			next;
 		} # end if
 		if ( my $stocknames = $Press->specification('StockBrands') ) {
 			my ( @allowed, @disallowed );
-			foreach ( split(',',$stocknames) ) {
+			foreach ( split(',', $stocknames) ) {
 				if ( $_ =~ /^\!(.+)$/ ) {
 					push @disallowed, $1;
 				} else {
@@ -6607,7 +6633,7 @@ $log->debug("COnsidering $$Press{strid}") if DEBUG_PRESSES;
 		} # end if
 		if ( my $stockmaterials = $Press->specification('StockMaterials') ) {
 			my ( @allowed, @disallowed );
-			foreach ( split(',',$stockmaterials) ) {
+			foreach ( split(',', $stockmaterials) ) {
 				if ( $_ =~ /^\!(.+)$/ ) {
 					push @disallowed, $1;
 				} else {
@@ -6782,7 +6808,7 @@ $log->error("Unknown units on Outside Wheel Slow Down ($$Slow_Down{units})");
 	foreach my $run_price ( @run_prices ) {
 		$$run_price{run_speed} = $run_speed;
 
-		if ( sets::isin( $$run_price{units}, ['per m','per 1000 impressions', 'per 1000'] ) ) {
+		if ( $$run_price{units} and sets::isin( $$run_price{units}, ['per m','per 1000 impressions', 'per 1000'] ) ) {
 			if ( $speed_mod ) {
 				$$run_price{Price} *= $speed_mod;
 			} # end if
