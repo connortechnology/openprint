@@ -945,7 +945,7 @@ sub get_price {
 				$openprint::log->error("880: Unknown Unit Type: ($$servicePrice{units}) for service $$Service{name} on $$Equipment{strid} $$Equipment{name} maxpockets: $maxPockets");
 			} # end if
 		} else {
-			$openprint::log->warning("No service price for $$Service{name}");
+			$openprint::log->warn("No service price for $$Service{name}");
 		}
 
 		my $loopbreak_pockets = $neededPockets;
