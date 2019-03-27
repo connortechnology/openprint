@@ -1,10 +1,11 @@
+<?eval( $$variable{can_edit} = ( ($session{user_type} eq 'A') or ( $session{user_id} == $$variable{Company}->salesrep_id() ) or $openprint::User->Groups('Accounting') ) ? 1 : 0; ) ?>
 <div class="SalesInformation">
 	<fieldset><legend>Sales Information</legend>
 		<ul>
 			<li><label>Price List</label><? echo ( $$variable{Company}->Pricelist()->name() ) ?></li>
       <li class="discount" title="For a markup, use a negative value"><label>Pricing Discount</label>
 <? echo (
-	if ( $session{user_type} eq 'A' or ( $session{user_id} == $$variable{Company}->salesrep_id() ) ) {
+	if ( $$variable{can_edit} ) {
 		return input( type=>'float', name=>'discount', value=>$$variable{Company}->discount() );
 	} else {
 		return $$variable{Company}->discount();
@@ -12,7 +13,7 @@
 ) ?>%</li>
 			<li class="csr_commission" title="Set the CSR commission percentage.  This will override the commission set in the CSR's user account. 0 means a 0% commission, empty means use whatever is set in the CSR's account."><label>CSR Commission</label>
 <? echo (
-	if ( $session{user_type} eq 'A' or ( $session{user_id} == $$variable{Company}->salesrep_id() ) ) {
+	if ( $$variable{can_edit} ) {
 		return input( type=>'float', name=>'csr_commission', value=>$$variable{Company}->csr_commission() );
 	} else {
 		return $$variable{Company}->csr_commission();
@@ -20,7 +21,7 @@
 ) ?>%</li>
             <li class="credit_card_fee"><label>Credit Card Fee</label>
 <? echo (
-	if ( $session{user_type} eq 'A' or ( $session{user_id} == $$variable{Company}->salesrep_id() ) ) {
+	if ( $$variable{can_edit} ) {
 		return input( type=>'float', name=>'credit_card_fee', value=>$$variable{Company}->credit_card_fee() );
 	} else {
 		return $$variable{Company}->credit_card_fee();

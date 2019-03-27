@@ -261,16 +261,16 @@ sub credit {
 				} # end if
 			} # end foreach Supplier
 			my %updates;
-			foreach my $p ( 'discount', 'salesrep_id', 'notes' ) {
-				$updates{$p} = $param{$p} if exists $param{$p} and $$Company{$p} ne $param{$p};
+			foreach my $p ( 'csr_commission','credit_card_fee', 'discount', 'salesrep_id', 'notes' ) {
+				$updates{$p} = $param{$p} if exists($param{$p}) and ($$Company{$p} ne $param{$p});
 			}
 			if ( %updates ) {
 				my $note = join('<br/>', map { $_ . ' changed from ' . $$Company{$_} . ' to ' . $updates{$_} } sort keys %updates );
 				if ( ! ( $_ = $Company->save(\%updates) ) ) {
-					(new openprint::Log())->save({action=>'Edit Company', Object=>$Company, note=>$note });
+					(new openprint::Log())->save({ action=>'Edit Company', Object=>$Company, note=>$note });
 				} else {
 					$variable{error} .= $_ . '<br/>';
-				} # en dif
+				} # end if
 			} 
 			sql::end_transaction( $dbh, $ac );
 		} # end if
