@@ -302,7 +302,7 @@ foreach my $Project ( @Projects ) {
 		( $$Service{PlainCartons} ? $$Service{PlainCartons}[0] : undef );
 
 	my @Labels = openprint::Label->find( docket=>$Project->docket(), type_id=>\@labeltype_ids );
-	my $class;
+	my $class = '';
 	if ( $Project->status() eq 'In Prepress' ) {
 		$class .= ' inprepress';
 	} elsif ( $Project->status() eq 'Waiting For Customer Approval' ) {
