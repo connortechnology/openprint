@@ -21,6 +21,7 @@ package openprint::Estimating::Printing;
 use strict;
 #use warnings;
 use Data::Dumper;
+use Storable 'dclone';
 use POSIX qw(ceil);
 use openprint ();
 use vars qw( %config $log $dbh %ServicePrices );
@@ -4295,7 +4296,7 @@ sub get_project_price {
 		my %washed_colours = %$washed_colours;
 		my %mixed_colours = %$mixed_colours;
 		my %PaperCounts = %$PaperCounts;
-	my %aq_makereadies = %{$aq_makereadies} if $aq_makereadies;
+		my %aq_makereadies = %{ dclone $aq_makereadies} if $aq_makereadies;
 
 		my @total_impositions = @$other_impositions;
 
@@ -4995,14 +4996,14 @@ $imp->display('[warn]');
 					} else {
 						my $Price = $$results{Price};
 						$$price{'Stitching Breakdown'} .= sprintf('Stitching (%s) (%s) %dout on %s Price: $%.2f<br/>', @$results{'Status','alert','Imposition'},$$results{Equipment}{strid}, $$Price{Price} );
-						$$price{'Stitching Breakdown'} .= "breakdown($$results{Breakdown})";
+						$$price{'Stitching Breakdown'} .= "breakdown($$results{Breakdown})<br/>";
 						$$price{'Stitching Cost'} = $$Price{Price};
 						$$price{'Comparison Cost'} += $$Price{Price};
 						$$price{'Comparison Log'} .= 'Stitching: $' .	$$Price{Price} . '<br/>' if COMPARISON_LOG;
 				#$stitching_cache{scalar @all_impositions} = $results;
 						$log->debug("After Stitching $$price{'Comparison Cost'} $$price{'Stitching Cost'} $$results{Breakdown}") if DEBUG;
 					} # end if
-					$log->debug( 'Stitching Calc: ' . sprintf('%.4f', tv_interval($starttime)*1000) . ' msecs' ) if DEBUG;
+					$log->debug('Stitching Calc: ' . Math::Round::nearest(0.0001, tv_interval($starttime)*1000).' msecs') if DEBUG;
 
 				} elsif ( $$services{PerfectBound} and $sig_specs{txtSignatureType} ne 'Cover Pages') {
 					my $starttime = [gettimeofday()] if DEBUG;
@@ -6338,13 +6339,15 @@ $log->debug("Area $area = $$Imposition{object_area} * Impressions($colour_impres
 	# Used to be hasAQ.. but that doesn't make any sense.	Must be NeedAQ.
 	if ( $$project{NeedAqueous} ) {
 		my $aq_time = gettimeofday();
-		my %aq_results = openprint::Estimating::Aqueous::signature_calc( $Project, $$project{AqueousSpecs}, $specs, $qty_index, $Imposition, $aq_makereadies );
+		my %aq_results = openprint::Estimating::Aqueous::signature_calc(
+				$Project, $$project{AqueousSpecs}, $specs, $qty_index, $Imposition, $aq_makereadies );
 
 		my $aq_elapsed = sprintf('%.4f seconds', (gettimeofday() - $aq_time)*1000);
 		$log->warn("AQ elapsed: $aq_elapsed");
 #$price{'Aqueous Breakdown'} .= $$project{AqueousSpecs}{'hdnBreakdown'.$qty_index};
 		if ( $aq_results{Status} eq 'uncalculated' ) {
-			$price{'Aqueous Breakdown'} .= "AQ error: $aq_results{alert} $$project{AqueousSpecs}{alert} " . $$project{AqueousSpecs}{'hdnBreakdown'.$qty_index} . '<br/>';
+			$price{'Aqueous Breakdown'} .= "AQ error: $aq_results{alert} $$project{AqueousSpecs}{alert} ".
+				$$project{AqueousSpecs}{'hdnBreakdown'.$qty_index} . '<br/>';
 			$price{'Comparison Cost'} += 1000000; 
 		} elsif ( $aq_results{Equipment} ) {
 			$$aq_makereadies{$aq_results{Equipment}{id}} = [] if ! $$aq_makereadies{$aq_results{Equipment}{id}};
@@ -6354,7 +6357,7 @@ $log->debug("Area $area = $$Imposition{object_area} * Impressions($colour_impres
 					'Aqueous Price: %dout MR $%.2f + BC: $%.2f + Service $%.2f + Material $%.2f = $%.2f on %s<br/>',
 					$aq_results{Imposition}{imposition},
 					@aq_results{'MakeReady','BlanketCut','Service','Material','Total'},
-					$aq_results{Equipment}->name() );
+					$aq_results{Equipment}{name} );
 			$price{'Comparison Cost'} += $aq_results{Total};
 			$price{'Press Washes'} += $aq_results{washups};
 #$openprint::log->error("AQ washups: $aq_results{washups}");

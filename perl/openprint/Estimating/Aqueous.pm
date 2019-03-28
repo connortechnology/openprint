@@ -42,6 +42,8 @@ require openprint::Imposition;
 
 use vars qw( @outputs );
 use constant DEBUG => 0;
+use Storable 'dclone';
+
 
 # Offline Aqueous
 # Let's assume that each piece of equipment can do 1 coat at a time
@@ -289,7 +291,7 @@ sub signature_calc {
 
 	if ( DEBUG ) {
 		foreach my $equipment_id ( keys %{$MakeReadies} ) {
-			$openprint::log->debug("Makereadies $equipment_id ".join(',',@{$$MakeReadies{$equipment_id}}));
+			$openprint::log->debug("Makereadies before aq calc equipment: $equipment_id ".join(',',@{$$MakeReadies{$equipment_id}}));
 		}
 		$Imposition->display();
 	}
@@ -302,7 +304,6 @@ sub signature_calc {
 	my %front_aq;
 	$$sig_specs{SideOneColours} = [openprint::Estimating::Printing::get_colours($sig_specs, 'SideOne')] if ! $$sig_specs{SideOneColours};
 	foreach ( @{$$sig_specs{SideOneColours}} ) {
-#$openprint::log->debug("blah  $$_{name}");
 		if ( $$_{name} =~ /Aqueous/ ) {
 			push @front_aq, $_;
 			$front_aq{$$_{name}} = $_;
@@ -334,8 +335,8 @@ sub signature_calc {
 
 	# Should include overs
 	my $impressions = $$sig_specs{"hdnImpressionQuantity$qty_index"} ? $$sig_specs{"hdnImpressionQuantity$qty_index"} : $$specs{"txtQuantity$qty_index"};
-$openprint::log->debug('Impressions: ' . $$sig_specs{"hdnImpressionQuantity$qty_index"} . ' qty: ' . $$specs{"txtQuantity$qty_index"} ) if DEBUG;
-if ( 
+	$openprint::log->debug('Impressions: ' . $$sig_specs{"hdnImpressionQuantity$qty_index"} . ' qty: ' . $$specs{"txtQuantity$qty_index"} ) if DEBUG;
+	if ( 
 		@{$$sig_specs{SideTwoColours}} 
 		and 
 		@{$$sig_specs{SideOneColours}} 
@@ -373,9 +374,9 @@ if (
 
 	my @impositions = ();
 	@impositions = ( $Imposition->copy() );
-	$openprint::log->debug('AQ DOne Cutting :' . @impositions) if DEBUG;
 	my $Paper = $Imposition->Paper();
 
+	my %Services;
 	my $AllAqueousMakeReady = openprint::Service->find_one(name=>'AqueousMakeReady');
 	my $AqueousMinimumCharge = openprint::Service->find_one(name=>'AqueousMinimumCharge');
 
@@ -383,13 +384,16 @@ if (
 	$BlanketCutService = openprint::Service->find_one(name=>'BlanketCut') if ! $BlanketCutService;
 	my $BlanketCutServiceWT = openprint::Service->find_one(name=>'AqueousBlanketCutW&T');
 	$BlanketCutServiceWT = $BlanketCutService  if ! $BlanketCutServiceWT;
+
 	my %Materials;
 	$Materials{Aqueous} = openprint::Material->find_one(name=>'Aqueous');
 	
 	foreach my $Equipment ( @equipment ) {
 		$openprint::log->debug("AQ Equipment $$Equipment{strid}") if DEBUG;
-		$$specs{'hdnBreakdown'.$qty_index} .= 'Equipment: '.$$Equipment{strid}.' '.$Equipment->specification('Aqueous Capable').' '.$$sig_specs{'ddmPress'.$qty_index} . ',<br/>';
-		if ( $Equipment->specification('Aqueous Capable') eq 'When Printing' ) {
+		my $Aqueous_Capable = $Equipment->specification('Aqueous Capable');
+		$$specs{'hdnBreakdown'.$qty_index} .= join(' ',
+				'Equipment:', $$Equipment{strid}, $Aqueous_Capable, $$sig_specs{'ddmPress'.$qty_index}, '<br/>');
+		if ( $Aqueous_Capable eq 'When Printing' ) {
 			if ( $$sig_specs{'ddmPress'.$qty_index} ne $$Equipment{strid} ) {
 				$$specs{'hdnBreakdown'.$qty_index} .= 'Not printing on this press.<br/>';
 				next;
@@ -397,20 +401,18 @@ if (
 				$$specs{'hdnBreakdown'.$qty_index} .= 'Cant perfect with double sided AQ.<br/>';
 				next;
 			} # end if
-		} 
+		}
 		if ( my $min_weight = $Equipment->specification('Aqueous Minimum Weight') ) {
-#$openprint::log->debug("Min weight: $min_weight");
 			if ( $min_weight > $Paper->gsm() ) {
 				$$specs{'hdnBreakdown'.$qty_index} .= "Paper is too light. Paper gsm($$Paper{gsm}) < Minimum weight $min_weight gsm<br/>";
 				next;
-			} elsif(DEBUG) {
+			} elsif (DEBUG) {
 				$openprint::log->debug("Min weight: $min_weight > $$Paper{gsm}");
 			}
 		} # end if
-		my %minimum = $AqueousMinimumCharge->get_price( undef, $Equipment ) if $AqueousMinimumCharge;
+		my %minimum = $AqueousMinimumCharge->get_price(undef, $Equipment) if $AqueousMinimumCharge;
 
 		foreach my $imp ( @impositions ) {
-			my %MakeReadies = $MakeReadies ? %$MakeReadies : ();
 			#$$specs{'hdnBreakdown'.$qty_index} .= sprintf('Imposition: %dx%d+%dx%d=%dout %s:', @$imp{'columns','rows','dutch_columns','dutch_rows','imposition','runstyle'} );
 			#next if ! $$imp{imposition};
 
@@ -423,6 +425,9 @@ if (
 				next;
 			} # end if
 
+# Make Readies is a hash of array refs, need to copy the arrays as well.
+			my $MakeReadies_clone = dclone( $MakeReadies ) if $MakeReadies;
+#map { $_ => [ @{$$MakeReadies{$_}} ] } keys %{$MakeReadies} if $MakeReadies;
 			my %Price = (
 				BlanketCut	=>	0,
 			);
@@ -439,7 +444,6 @@ if (
 					if ( ! ( $front_aq{$type} and $back_aq{$type} ) ) {
 						$type =~ s/Overall/W&T/;
 						push @types, { name => $type, coverage=> $front_aq{$type} ? $front_aq{$type}{coverage}/2 : $back_aq{$type}{coverage}/2 };
-
 					} else {
 						push @types, { name => $type, coverage=>($front_aq{$type}{coverage} + $back_aq{$type}{coverage} )/2 };
 					} # end if
@@ -454,23 +458,28 @@ if (
 
 				my %setupPrice;
 				my $colour_total = 0;
-$openprint::log->debug("Makereadies: $$Equipment{id} $$Equipment{strid} area: $area $$type{name} ? " . ( $MakeReadies{$$Equipment{id}} ? join(',', @{$MakeReadies{$$Equipment{id}}}) : 'none' ) ) if DEBUG;
+				$openprint::log->debug("Makereadies: $$Equipment{id} $$Equipment{strid} area: $area $$type{name} ? " .
+						( $$MakeReadies_clone{$$Equipment{id}} ? join(',', @{$$MakeReadies_clone{$$Equipment{id}}}) : 'none' ) ) if DEBUG;
 
-				if ( $MakeReadies{$$Equipment{id}} and ( map { ( (($area * 1.10) > $_) and (($area * .90) < $_) ) ? $_ : () } @{$MakeReadies{$$Equipment{id}}} ) ) {
-$openprint::log->debug("In Makereadies: $$Equipment{id} $area") if DEBUG;
+				if ( $$MakeReadies_clone{$$Equipment{id}} and
+						( map { ( (($area * 1.10) > $_) and (($area * .90) < $_) ) ? $_ : () } @{$$MakeReadies_clone{$$Equipment{id}}} )
+					 ) {
+					$openprint::log->debug("In Makereadies: $$Equipment{id} $area") if DEBUG;
 				} else {
-$openprint::log->debug("Not In Makereadies: $$Equipment{id} $area") if DEBUG;
-					my $MRService = openprint::Service->find_one( name=>$$type{name}.' MakeReady');
+					$openprint::log->debug("Not In Makereadies: $$Equipment{id} $area") if DEBUG;
+					$Services{$$type{name}.' MakeReady'} = openprint::Service->find_one(name=>$$type{name}.' MakeReady') if ! exists $Services{$$type{name}.' MakeReady'};
+					my $MRService = $Services{$$type{name}.' MakeReady'};
 					$MRService = $AllAqueousMakeReady if ! $MRService;
 					if ( ! $MRService ) {
-						$$specs{'hdnBreakdown'.$qty_index} = 'No Make Ready Service for ' . $$type{name} . '<br/>';
+						$$specs{'hdnBreakdown'.$qty_index} .= 'No Make Ready Service for ' . $$type{name} . '<br/>';
 					} else {
 						%setupPrice = $MRService->get_price( $run_qty, $Equipment );
 					} # end if
 					$Price{MakeReady} += $setupPrice{Price};
-					$MakeReadies{$$Equipment{id}} = [] if ! $MakeReadies{$$Equipment{id}};
-					push @{$MakeReadies{$$Equipment{id}}}, $area;
+					$$MakeReadies_clone{$$Equipment{id}} = [] if ! $$MakeReadies_clone{$$Equipment{id}};
+					push @{$$MakeReadies_clone{$$Equipment{id}}}, $area;
 					$Price{washups} = scalar @different_types;
+					$$specs{'hdnBreakdown'.$qty_index} .= 'Washups: ' . $Price{washups} . '<br/>';
 					$colour_total += $setupPrice{Price};
 				} # end if
 				
@@ -485,7 +494,8 @@ $openprint::log->debug("Not In Makereadies: $$Equipment{id} $area") if DEBUG;
 					$colour_total += $BlanketCutPrice{Price};
 				} # end if
 
-				my $Service = openprint::Service->find_one( name=>$$type{name} );
+				$Services{$$type{name}} = openprint::Service->find_one( name=>$$type{name} ) if ! $Services{$$type{name}};
+				my $Service = $Services{$$type{name}};
 				if ( ! $Service ) {
 					$$specs{'hdnBreakdown'.$qty_index} = 'No Service for ' . $$type{name} . '<br/>';
 					next;
