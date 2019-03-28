@@ -397,7 +397,7 @@ sub get_li {
 		$html .= ssi::button( 'Bump'.$$self{id}, { onclick=>"popup_window('/employee/production/_bump_job.html','schedule_id=$$self{id}');", text=> 'B', title=>'Bump to next shift' } );
 		if ( $$self{project_id} ) {
 			$html .= ssi::button( 'Complete'.$$self{id}, { onclick=>"popup_window('/employee/production/_signature_completion_popup.html', 'schedule_id=$$self{id}', { width: '400px', height: '300px', center: 'false' } );", text=>'C',title=>'Complete Job' } );
-			if ( sets::isin( $self->ServiceType()->name(), [ '','Signature' ] ) ) {
+			if ( (!$self->ServiceType()->name()) or $self->ServiceType()->name() eq 'Signature' ) {
 				$html .= ssi::button( 'House'.$$self{id}, { onclick=>"new Ajax.Updater('item_$$self{id}','_li.html', {parameters: {schedule_id:$$self{id}, action: 'House Stock' } } );", text=>'H', title=>'House Stock' } );
 				$html .= ssi::button( 'PO'.$$self{id}, { target=>'_blank', href=>"/employee/purchase_order/edit.html?project_id=$$self{project_id}", text=>'PO', title=>'Create PO' } );
 			} # end if
