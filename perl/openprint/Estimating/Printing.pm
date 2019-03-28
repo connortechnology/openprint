@@ -736,21 +736,37 @@ $log->debug("Adding special colour for $colour");
 		$project{HasAqueous} = $$services{Aqueous}[0];
 		my $aq_specs = openprint::service::get_specs_ref( $Project, $$services{Aqueous}[0] );
 		%{$project{AqueousSpecs}} = %{$aq_specs};
-		foreach my $sig_id ( $Project->signatures( { sort=>1 } ) ) {
-			last if $sig_id == $service_index;
-			my $s_specs = openprint::service::get_specs_ref( $Project, $sig_id );
-			my $form = $$s_specs{SignatureIndex};
-			foreach my $qty_index ( $Project->quantity_indexes() ) {
-				if ( !$project{"AqueousMakeReadies$qty_index"}{$$aq_specs{"ddmEquipment-$form-$qty_index"}} ) {
-					$project{"AqueousMakeReadies$qty_index"}{$$aq_specs{"ddmEquipment-$form-$qty_index"}} = [];
-				}
-				push @{$project{"AqueousMakeReadies$qty_index"}{$$aq_specs{"ddmEquipment-$form-$qty_index"}}}, $$aq_specs{"txtLayoutWidth-$form-$qty_index"} * $$aq_specs{"txtLayoutHeight-$form-$qty_index"};
-			}
-		} # end foreach sig
-		#$log->debug("AQUEOUS MR");
+
+		my @sorted_sigs = $Project->signatures( { sort=>1 } );
+
 		foreach my $qty_index ( $Project->quantity_indexes() ) {
-			foreach my $key ( keys %{$project{"AqueousMakeReadies$qty_index"}} ) {
-				$log->debug("AQUEOUS MR qty_index:$qty_index equipment:$key " . join(',',@{$project{"AqueousMakeReadies$qty_index"}{$key}}) );
+			my $aq_mrs = $project{"AqueousMakeReadies$qty_index"} = {};
+
+			foreach my $sig_id ( @sorted_sigs ) {
+				last if $sig_id == $service_index;
+				my $s_specs = openprint::service::get_specs_ref( $Project, $sig_id );
+				my @aq_colours = sets::union(
+						openprint::Estimating::Aqueous::get_colours( $s_specs, 'SideOne' ),
+						openprint::Estimating::Aqueous::get_colours( $s_specs, 'SideTwo' ),
+						);
+
+				my $form = $$s_specs{SignatureIndex};
+				my $equipment_id = $$aq_specs{"ddmEquipment-$form-$qty_index"};
+
+				$$aq_mrs{$equipment_id} = {} if ! $$aq_mrs{$equipment_id};
+				foreach my $colour ( @aq_colours ) {
+					if ( $colour =~ /Aqueous/ ) {
+						$$aq_mrs{$equipment_id}{$colour} = [] if ! $$aq_mrs{$equipment_id}{$colour};
+						push @{$$aq_mrs{$equipment_id}{$colour}}, $$aq_specs{"txtLayoutWidth-$form-$qty_index"} * $$aq_specs{"txtLayoutHeight-$form-$qty_index"};
+					} # end if
+				} # end foreach colour
+			} # end foreach sig
+
+			$log->debug("AQUEOUS MR $qty_index " . join(',', keys %{$aq_mrs} ));
+			foreach my $equipment_id ( keys %{$aq_mrs} ) {
+				foreach my $type ( keys %{$$aq_mrs{$equipment_id}} ) {
+					$log->debug("AQUEOUS MR qty_index:$qty_index equipment:$equipment_id type: $type" . join(',',@{$$aq_mrs{$equipment_id}{$type}}) );
+				}
 			}
 		}
 	} elsif ( $$services{Aqueous} and @{$$services{Aqueous}} ) {
@@ -6350,8 +6366,11 @@ $log->debug("Area $area = $$Imposition{object_area} * Impressions($colour_impres
 				$$project{AqueousSpecs}{'hdnBreakdown'.$qty_index} . '<br/>';
 			$price{'Comparison Cost'} += 1000000; 
 		} elsif ( $aq_results{Equipment} ) {
-			$$aq_makereadies{$aq_results{Equipment}{id}} = [] if ! $$aq_makereadies{$aq_results{Equipment}{id}};
-			push @{$$aq_makereadies{$aq_results{Equipment}{id}}}, $aq_results{Imposition}->layout_area();
+			foreach my $type ( $aq_results{types} ? @{$aq_results{types}} : () ) {
+				$$aq_makereadies{$aq_results{Equipment}{id}} = {} if ! $$aq_makereadies{$aq_results{Equipment}{id}};
+				$$aq_makereadies{$aq_results{Equipment}{id}}{$type} = [] if ! $$aq_makereadies{$aq_results{Equipment}{id}}{$type};
+				push @{$$aq_makereadies{$aq_results{Equipment}{id}}{$type}}, $aq_results{Imposition}->layout_area();
+			}
 
 			$price{'Aqueous Breakdown'} = sprintf(
 					'Aqueous Price: %dout MR $%.2f + BC: $%.2f + Service $%.2f + Material $%.2f = $%.2f on %s<br/>',

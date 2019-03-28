@@ -217,8 +217,11 @@ sub calc {
 			}
 			my %results = signature_calc( $Project, $specs, $sig_specs, $qty_index, $Imposition, \%MakeReadies );
 			if ( $results{Equipment} ) {
-				$MakeReadies{$results{Equipment}{id}} = [] if ! $MakeReadies{$results{Equipment}{id}};
-				push @{$MakeReadies{$results{Equipment}{id}}}, $Imposition->layout_area();
+				$MakeReadies{$results{Equipment}{id}} = {} if ! $MakeReadies{$results{Equipment}{id}};
+				foreach my $type ( $results{types} ? @{$results{types}} : () ) {
+					$MakeReadies{$results{Equipment}{id}}{$type} = [] if ! $MakeReadies{$results{Equipment}{id}}{$type};
+					push @{$MakeReadies{$results{Equipment}{id}}{$type}}, $Imposition->layout_area();
+				}
 			}
 			@outputs = sets::union( @outputs, 
 					"ddmEquipment-$form-$qty_index",
@@ -291,7 +294,9 @@ sub signature_calc {
 
 	if ( DEBUG ) {
 		foreach my $equipment_id ( keys %{$MakeReadies} ) {
-			$openprint::log->debug("Makereadies before aq calc equipment: $equipment_id ".join(',',@{$$MakeReadies{$equipment_id}}));
+			foreach my $type ( keys %{$$MakeReadies{$equipment_id}} ) {
+				$openprint::log->debug("Makereadies before aq calc equipment: $equipment_id $type: ".join(',',@{$$MakeReadies{$equipment_id}{$type}}));
+			}
 		}
 		$Imposition->display();
 	}
@@ -426,7 +431,7 @@ sub signature_calc {
 			} # end if
 
 # Make Readies is a hash of array refs, need to copy the arrays as well.
-			my $MakeReadies_clone = dclone( $MakeReadies ) if $MakeReadies;
+			my $MakeReadies_clone = $MakeReadies ? dclone( $MakeReadies ) : {};
 #map { $_ => [ @{$$MakeReadies{$_}} ] } keys %{$MakeReadies} if $MakeReadies;
 			my %Price = (
 				BlanketCut	=>	0,
@@ -453,33 +458,43 @@ sub signature_calc {
 			} else {
 				@types = (@front_aq, @back_aq);
 			} # end if
+
+			my $mrs = $$MakeReadies_clone{$$Equipment{id}};
+
+			$Price{types} = [ map { $$_{name} } @types ];
 			my $area = $imp->layout_area();
 			foreach my $type ( @types ) {
 
+				my $type_name = $$type{name};
+
 				my %setupPrice;
 				my $colour_total = 0;
-				$openprint::log->debug("Makereadies: $$Equipment{id} $$Equipment{strid} area: $area $$type{name} ? " .
-						( $$MakeReadies_clone{$$Equipment{id}} ? join(',', @{$$MakeReadies_clone{$$Equipment{id}}}) : 'none' ) ) if DEBUG;
+				$openprint::log->debug("Makereadies: $$Equipment{id} $$Equipment{strid} this area: ".($area * .90) . " < $area < " . ($area * 1.10) . "$type_name ? " .
+						( ($mrs and $$mrs{$type_name} ) ? join(',', @{$$mrs{$type_name}}) : 'none' ) ) if DEBUG;
 
-				if ( $$MakeReadies_clone{$$Equipment{id}} and
-						( map { ( (($area * 1.10) > $_) and (($area * .90) < $_) ) ? $_ : () } @{$$MakeReadies_clone{$$Equipment{id}}} )
+				if (
+						$mrs and $$mrs{$type_name} and
+						( map { ( (($area * 1.10) > $_) and (($area * .90) < $_) ) ? $_ : () } @{$$mrs{$type_name}} )
 					 ) {
 					$openprint::log->debug("In Makereadies: $$Equipment{id} $area") if DEBUG;
 				} else {
 					$openprint::log->debug("Not In Makereadies: $$Equipment{id} $area") if DEBUG;
 					$Services{$$type{name}.' MakeReady'} = openprint::Service->find_one(name=>$$type{name}.' MakeReady') if ! exists $Services{$$type{name}.' MakeReady'};
-					my $MRService = $Services{$$type{name}.' MakeReady'};
+					my $MRService = $Services{$type_name.' MakeReady'};
 					$MRService = $AllAqueousMakeReady if ! $MRService;
 					if ( ! $MRService ) {
-						$$specs{'hdnBreakdown'.$qty_index} .= 'No Make Ready Service for ' . $$type{name} . '<br/>';
+						$$specs{'hdnBreakdown'.$qty_index} .= 'No Make Ready Service for ' . $type_name . '<br/>';
 					} else {
 						%setupPrice = $MRService->get_price( $run_qty, $Equipment );
 					} # end if
 					$Price{MakeReady} += $setupPrice{Price};
-					$$MakeReadies_clone{$$Equipment{id}} = [] if ! $$MakeReadies_clone{$$Equipment{id}};
-					push @{$$MakeReadies_clone{$$Equipment{id}}}, $area;
-					$Price{washups} = scalar @different_types;
-					$$specs{'hdnBreakdown'.$qty_index} .= 'Washups: ' . $Price{washups} . '<br/>';
+					if ( ! $$MakeReadies_clone{$$Equipment{id}}{$type_name} ) {
+$openprint::log->debug("Adding a washup for $$Equipment{id} $type_name");
+						$Price{washups} += 1;
+					}
+					$$MakeReadies_clone{$$Equipment{id}} = {} if ! $$MakeReadies_clone{$$Equipment{id}};
+					$$MakeReadies_clone{$$Equipment{id}}{$type_name} = [] if ! $$MakeReadies_clone{$$Equipment{id}}{$type_name};
+					push @{$$MakeReadies_clone{$$Equipment{id}}{$type_name}}, $area;
 					$colour_total += $setupPrice{Price};
 				} # end if
 				
@@ -564,6 +579,7 @@ sub signature_calc {
 						'MR: $%.2f + BC: $%.2f + Service: ($%.2f%s*%d)=$%.2f + Material: $%.2f%s = $%.2f ) = $%.2f<br/>',
 					$setupPrice{Price}, $BlanketCutPrice{Price}, @ServicePrice{'Price','units','Quantity','Total'}, @MaterialPrice{'Price','units','Total'}, $colour_total );
 			} # end foreach type
+			$$specs{'hdnBreakdown'.$qty_index} .= 'Washups: ' . $Price{washups} . '<br/>';
 
 			if (
 					( defined $$specs{"OverrideMakeReadyPrice-$form-$qty_index"} )
@@ -597,6 +613,7 @@ sub signature_calc {
 				$bestPrice{Equipment} = $Equipment;
 				$bestPrice{Imposition} = $imp;
 				$bestPrice{washups} = $Price{washups};
+				$bestPrice{types} = $Price{types};
 			} # end if
 		} # end foreach Imposition
 	} # end foreach equipment
