@@ -172,7 +172,7 @@ sub get_status {
 	my ( $Project, $service_names ) = @_;
 	my $qty_index = $Project->ordered_quantity_index();
 	my $services = $Project->services();
-			my $html;
+			my $html = '';
 	foreach my $service_name ( ref $service_names eq 'ARRAY' ? @{$service_names} : ( $service_names ) ) {
 		if ( $$services{$service_name} ) {
 			my $Service = $Project->Service( $$services{$service_name}[0] );

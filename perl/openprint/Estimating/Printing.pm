@@ -5477,7 +5477,7 @@ sub calc_price {
 	$setup_rate = $Press->specification( 'MakeReady Overs Rate ' . $Paper->material(), scalar @colours ) if ! $setup_rate;
 	$setup_rate = $Press->specification( 'MakeReady Overs Rate', scalar @colours ) if ! $setup_rate;
 
-	my $is_Roll2Sheet = ( $Paper->type() eq 'Roll' and sets::isin('Sheet', split(',', $Press->specification('Feed') ) ) ) ? 1 : 0;
+	my $is_Roll2Sheet = $$Imposition{is_roll2sheet} = ( $$Paper{type} eq 'Roll' and sets::isin('Sheet', split(',', $Press->specification('Feed') ) ) ) ? 1 : 0;
 	if ( $is_Roll2Sheet ) {
 		if ( my $roll2sheet_overs_rate = $Press->specification( 'Roll2Sheet Additional Setup Overs' ) ) {
 			$setup_rate *= ( 1 + ( $roll2sheet_overs_rate / 100 ) );
@@ -5589,11 +5589,18 @@ sub calc_price {
         $run_speed = $$std_speed{value} if ! $run_speed;
       } # end if
       #$log->debug("Std Runspeed by calliper($$Paper{calliper}): $run_speed on $$Press{strid}");
-
-      $$specs{"Runspeed$qty_index"} = $$specs{Runspeed} = $price{Runspeed} = $run_speed;
     } else {
-      $$specs{"Runspeed$qty_index"} = $$specs{Runspeed} = $price{Runspeed} = $Press->specification( $$std_speed{name}, $$Paper{gsm} );
+			$run_speed = $Press->specification( $$std_speed{name}, $$Paper{gsm} );
     } # end if
+
+		if ( $is_Roll2Sheet and my $roll2sheet_slowdown = $Press->Specification('Roll2Sheet Slowdown') ) {
+			if ( $$roll2sheet_slowdown{units} eq 'Percent' ) {
+				$run_speed *= ( 1-($$roll2sheet_slowdown{value}/100));
+			} else {
+				$log->error("Unknown units on roll2sheet slowdown");
+			}
+		}
+		$$specs{"Runspeed$qty_index"} = $$specs{Runspeed} = $price{Runspeed} = $run_speed;
   } else {
     # No std_speed?!
   }
@@ -5954,7 +5961,7 @@ if ( 1 ) {
 			$price{'Plate Total'} += $$press_setup_back{'Plate Total'};
 			@price{'Plate Setup Price','Plate Setup Count','Plate Setup Units'} = @$press_setup_back{'Plate Price','Plate Count','Plate Units'};
 		} # end if
-	} elsif ( sets::isin( $$Imposition{runstyle}, ['Web','Perfecting'] ) ) {
+	} elsif ( $$Imposition{runstyle} eq 'Web' or $$Imposition{runstyle} eq 'Perfecting' ) {
 		my $press_setup_cost = press_setup_cost( $plate_changes, $plate_setup{'Plate Runs'}, $$project{combined_colours}, $$Paper{calliper}, $qty_index, $Imposition );
 		$press_setup += $$press_setup_cost{Total};
 		$price{'Setup Breakdown'} .= sprintf('%d units * $%.2f%s = $%.2f<br/>', @$press_setup_cost{'Unit Count','Price','units','Total'} );
@@ -6788,7 +6795,7 @@ sub get_run_prices {
 		} else {
 	# Only load this if not already specified by some inline bindery service
       if ( ! $run_speed ) {
-			$run_speed = $Press->specification( $$std_speed{name}, (lc $$std_speed{units} eq 'calliper' ? $$Paper{calliper} : $$Paper{gsm} ) );
+				$run_speed = $Press->specification( $$std_speed{name}, (lc $$std_speed{units} eq 'calliper' ? $$Paper{calliper} : $$Paper{gsm} ) );
       } elsif ( DEBUG ) {
         $log->debug("Not looking up run speed because already specified");
       }
@@ -6801,6 +6808,14 @@ sub get_run_prices {
 		$run_speed = $Press->specification('Run Speed') if ! $run_speed;
 		$log->debug("No standard speed on $$Press{strid}") if DEBUG;
 	} # end if
+
+	if ( $$Imposition{is_roll2sheet} and my $roll2sheet_slowdown = $Press->Specification('Roll2Sheet Slowdown') ) {
+		if ( $$roll2sheet_slowdown{units} eq 'Percent' ) {
+			$run_speed *= ( 1-($$roll2sheet_slowdown{value}/100));
+		} else {
+			$log->error("Unknown units on roll2sheet slowdown");
+		}
+	}
 
 	if ( $$Imposition{runstyle} eq 'Perfecting' and ! $$Paper{perfecting} ) {
 		my $Outside_Wheel_Size = $Press->specification( 'Outside Slow Down Wheel Size' );

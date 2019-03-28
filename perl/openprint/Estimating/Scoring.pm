@@ -731,28 +731,31 @@ sub get_price {
 #$openprint::log->debug("Horizontal: $horizontal_rule");
 	if ( $horizontal_rule and $Rule ) {
 		%horizontal_price = $Rule->get_price( $horizontal_rule, $Equipment );
-		if ( sets::isin( $horizontal_price{units},['per rule','each','per score'] ) ) {
+		if ( $horizontal_price{units} eq 'per rule' or $horizontal_price{units} eq 'each' or $horizontal_price{units} eq 'per score' ) {
 			$horizontal_price{Total} = $horizontal_price{Price} * $horizontal_rule;
-			$Results{Breakdown} .= sprintf('Rule: $%1$.2f%2$s * %4$d rule=$%3$.2f<br/>', @horizontal_price{'Price','units','Total'}, $horizontal_rule );
+			$Results{Breakdown} .= sprintf('Rule: $%1$.2f%2$s * %4$d rule=$%3$.2f<br/>',
+					@horizontal_price{'Price','units','Total'}, $horizontal_rule );
 		} elsif ( $horizontal_price{units} eq 'per inch' ) {
 			$horizontal_price{Total} = $horizontal_price{Price} * $horizontal_length;
-			$Results{Breakdown} .= sprintf('Rule: $%1$.2f%2$s * %4$.2finches=$%3$.2f<br/>', @horizontal_price{'Price','units','Total'}, $horizontal_length );
+			$Results{Breakdown} .= sprintf('Rule: $%1$.2f%2$s * %4$.2finches=$%3$.2f<br/>',
+					@horizontal_price{'Price','units','Total'}, $horizontal_length );
 		} elsif ( $horizontal_price{units} eq 'per foot' ) {
 			$horizontal_price{Total} = $horizontal_price{Price} * $horizontal_length/12;
-			$Results{Breakdown} .= sprintf('Rule: $%1$.2f%2$s * %4$.2finches=$%3$.2f<br/>', @horizontal_price{'Price','units','Total'}, $horizontal_length/12 );
+			$Results{Breakdown} .= sprintf('Rule: $%1$.2f%2$s * %4$.2finches=$%3$.2f<br/>',
+					@horizontal_price{'Price','units','Total'}, $horizontal_length/12 );
 		} else {
+			$openprint::log->error("Unknown units set on horizontal material price ($horizontal_price{units}) on $$Equipment{strid}");
+
 			$Results{Breakdown} .= "Unknown units set on horizontal material price ($horizontal_price{units})<br/>";
 		} # end if
 	} else {
 		$horizontal_price{Total} = 0;
 	} # end if
 
-
-#$openprint::log->debug("Vertical: $vertical_rule");
 	if ( $vertical_rule ) {
 		if ( $Wheel ) {
 			%vertical_price = $Wheel->get_price( $vertical_rule, $Equipment );
-			if ( sets::isin( $vertical_price{units},['per rule','each'] ) ) {
+			if ( $vertical_price{units} eq 'per rule' or $vertical_price{units} eq 'each' ) {
 				$vertical_price{Total} = $vertical_price{Price} * $vertical_rule;
 				$Results{Breakdown} .= sprintf('Wheel: $%1$.2f%2$s * %4$d wheels=$%3$.2f<br/>', @vertical_price{'Price','units','Total'}, $vertical_rule );
 			} elsif ( $vertical_price{units} eq 'per inch' ) {
@@ -762,6 +765,7 @@ sub get_price {
 				$vertical_price{Total} = $vertical_price{Price} * $vertical_length/12;
 				$Results{Breakdown} .= sprintf('Wheel: $%1$.2f%2$s * %4$.2finches=$%3$.2f<br/>', @vertical_price{'Price','units','Total'}, $vertical_length/12 );
 			} else {
+				$openprint::log->error("Unknown units set on vertical material price ($vertical_price{units}) on $$Equipment{name}");
 				$Results{Breakdown} .= "Unknown units set on vertical material price ($vertical_price{units})<br/>";
 			} # end if
 		} else {
@@ -820,7 +824,7 @@ sub get_scores {
 		} elsif ( $$sig_specs{rdbTemplateType} =~ /3PanelZ?Fold/ ) {
 			$$specs{"txtVerticalQty-$form"} = $width_folds;
 			$$specs{"txtHorizontalQty-$form"} = $height_folds;
-		} elsif ( sets::isin( $$sig_specs{rdbTemplateType}, 'AccordianFold') ) {
+		} elsif ( $$sig_specs{rdbTemplateType} eq 'AccordianFold' ) {
 			$$specs{"txtVerticalQty-$form"} = $width_folds;
 			$$specs{"txtHorizontalQty-$form"} = $height_folds;
 		} elsif ( sets::isin( $$sig_specs{rdbTemplateType}, '4PanelFold','4PanelZFold', 'AccordianFold4Panel') ) {
