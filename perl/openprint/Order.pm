@@ -495,6 +495,30 @@ sub total {
 	return $$self{total};
 } # end sub total
 
+sub credit_card_fee {
+	my $self = shift;
+	if ( ! exists $$self{credit_card_fee} ) {
+		$$self{credit_card_fee} = 0;
+		foreach my $OP ( $self->Ordered_Projects() ) {
+			my $Project = $OP->Project();
+			$$self{credit_card_fee} += $Project->credit_card_fee( $Project->ordered_quantity_index() );
+		}
+	}
+	return $$self{credit_card_fee};
+}
+
+sub csr_commission {
+	my $self = shift;
+	if ( ! exists $$self{csr_commission} ) {
+		$$self{csr_commission} = 0;
+		foreach my $OP ( $self->Ordered_Projects() ) {
+			my $Project = $OP->Project();
+			$$self{csr_commission} += $Project->csr_commission( $Project->ordered_quantity_index() );
+		}
+	}
+	return $$self{csr_commission};
+}
+
 sub send_completion_notice {
 	my ( $self ) = @_;
 

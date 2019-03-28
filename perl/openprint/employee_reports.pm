@@ -273,10 +273,15 @@ sub order_history {
 		my @servicetype_ids = split(',',$session{$r->uri().'?servicetype_id'} );
 		my %ServiceTypesById = map { $$_{id} => $_ } @{$variable{ServiceTypes}};
 
-		my @Header = ( 'OrderID', 'Docket', 'Invoice', 'Company', 'Date Ordered', 'Date Printed', 'Status', 'Total', map { $ServiceTypesById{$_}->description() } @servicetype_ids );
+		my @Header = ( 'OrderID', 'Docket', 'Invoice', 'Company', 'Date Ordered', 'Date Printed', 'Status', 'Total',
+				'Commission',
+				'Credit Card Fee',
+				map { $ServiceTypesById{$_}->description() } @servicetype_ids );
 		my @Data = ();
 		my %service_totals;
 		my $order_total = 0;
+		my $csr_commission_total = 0;
+		my $credit_card_fee_total = 0;
 		foreach my $Order ( @{$variable{Orders}} ) {
 			foreach my $Project ( $Order->Projects() ) {
 
@@ -286,13 +291,17 @@ sub order_history {
 					$totals{$$Service{servicetype_id}} += $Service->ordered_price();
 				}
 
-				push @Data, $Order->id(), $Order->docket(),
-						 join(',', map { $_->Invoice()->num() } $Order->Invoices()),
-						 $Order->Company()->name(),
-						 ssi::format_csv_date($Order->created_on()),
-						 ssi::format_csv_date($Project->printed_on()),
-						 $Order->status(),
-						 $Order->total();
+				push @Data, (
+						$Order->id(), $Order->docket(),
+						join(',', map { $_->Invoice()->num() } $Order->Invoices()),
+						$Order->Company()->name(),
+						ssi::format_csv_date($Order->created_on()),
+						ssi::format_csv_date($Project->printed_on()),
+						$Order->status(),
+						$openprint::Currency->format($Order->total()),
+						$openprint::Currency->format($Order->csr_commission()),
+						$openprint::Currency->format($Order->credit_card_fee()),
+				);
 				foreach my $servicetype_id ( @servicetype_ids ) {
 					my $price = $totals{$servicetype_id};
 					push @Data, $price;
@@ -300,10 +309,16 @@ sub order_history {
 				}
 			} # end foreach Project
 			$order_total += $Order->total();
+			$csr_commission_total += $Order->csr_commission();
+			$credit_card_fee_total += $Order->credit_card_fee();
 		} # end foreach Order
-		push @Data, '','','','','','','Totals',$order_total, map { $service_totals{$_} } @servicetype_ids;
+		push @Data, '','','','','','','Totals',
+				 $openprint::Currency->format($order_total),
+				 $openprint::Currency->format($csr_commission_total),
+				 $openprint::Currency->format($credit_card_fee_total),
+				 map { $service_totals{$_} } @servicetype_ids;
 
-		misc::export_csv( $r, $log, \%variable, 'order_history_report.csv', \@Header,\@Data );	
+		misc::export_csv($r, $log, \%variable, 'order_history_report.csv', \@Header,\@Data);	
 	} # end if
 } # end sub order_history
 
@@ -373,6 +388,8 @@ sub _order_history_results {
 
 		my %Invoices_By_OrderId = misc::make_hash_from_array( 'order_id',
 				openprint::Order_Invoice->find(order_id=>\@order_ids) );
+
+		openprint::Invoice->find(id=>[ map { $$_{invoice_id} } ( map { @{$Invoices_By_OrderId{$_}} } keys %Invoices_By_OrderId ) ] );
 
 		foreach my $Order ( @Orders ) {
 			$$Order{Projects} = $Projects_By_OrderId{$$Order{id}};
