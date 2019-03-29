@@ -5595,7 +5595,10 @@ sub calc_price {
 
 		if ( $is_Roll2Sheet and my $roll2sheet_slowdown = $Press->Specification('Roll2Sheet Slowdown') ) {
 			if ( $$roll2sheet_slowdown{units} eq 'Percent' ) {
+$log->debug("Slowing down runspeed due to roll2sheet $run_speed *= ( 1-($$roll2sheet_slowdown{value}/100));");
 				$run_speed *= ( 1-($$roll2sheet_slowdown{value}/100));
+$log->debug("Slowing down runspeed due to roll2sheet $run_speed *= ( 1-($$roll2sheet_slowdown{value}/100));");
+
 			} else {
 				$log->error("Unknown units on roll2sheet slowdown");
 			}
@@ -6805,17 +6808,21 @@ sub get_run_prices {
 			} # end if
 		} # end if
 	} else {
-		$run_speed = $Press->specification('Run Speed') if ! $run_speed;
+		if ( ! $run_speed ) {
+			$run_speed = $Press->specification('Run Speed');
+			if ( $$Imposition{is_roll2sheet} and my $roll2sheet_slowdown = $Press->Specification('Roll2Sheet Slowdown') ) {
+				if ( $$roll2sheet_slowdown{units} eq 'Percent' ) {
+					$log->debug("Slowing down runspeed due to roll2sheet $run_speed *= ( 1-($$roll2sheet_slowdown{value}/100));");
+					$run_speed *= ( 1-($$roll2sheet_slowdown{value}/100));
+					$log->debug("Slowing down runspeed due to roll2sheet $run_speed *= ( 1-($$roll2sheet_slowdown{value}/100));");
+				} else {
+					$log->error("Unknown units on roll2sheet slowdown");
+				}
+			}
+		}
 		$log->debug("No standard speed on $$Press{strid}") if DEBUG;
 	} # end if
 
-	if ( $$Imposition{is_roll2sheet} and my $roll2sheet_slowdown = $Press->Specification('Roll2Sheet Slowdown') ) {
-		if ( $$roll2sheet_slowdown{units} eq 'Percent' ) {
-			$run_speed *= ( 1-($$roll2sheet_slowdown{value}/100));
-		} else {
-			$log->error("Unknown units on roll2sheet slowdown");
-		}
-	}
 
 	if ( $$Imposition{runstyle} eq 'Perfecting' and ! $$Paper{perfecting} ) {
 		my $Outside_Wheel_Size = $Press->specification( 'Outside Slow Down Wheel Size' );
