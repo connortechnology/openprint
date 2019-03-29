@@ -6809,7 +6809,8 @@ sub get_run_prices {
 		} # end if
 	} else {
 		if ( ! $run_speed ) {
-			$run_speed = $Press->specification('Run Speed');
+			$run_speed = $Press->specification('Run Speed '.$$Imposition{runstyle});
+			$run_speed = $Press->specification('Run Speed') if ! $run_speed;
 			if ( $$Imposition{is_roll2sheet} and my $roll2sheet_slowdown = $Press->Specification('Roll2Sheet Slowdown') ) {
 				if ( $$roll2sheet_slowdown{units} eq 'Percent' ) {
 					$log->debug("Slowing down runspeed due to roll2sheet $run_speed *= ( 1-($$roll2sheet_slowdown{value}/100));");
