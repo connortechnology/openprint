@@ -122,8 +122,8 @@ sub edit {
 					next if ! exists $param{"price-$$Price{id}"};
 					my $new_values = {
 #equipment_id	=>	$param{"equipment_id-$$Price{id}"},
-						period_start	=>	( Date::Calc::check_date( map { $param{"period_start-$$Price{id}_$_"} } ( 'year','month','day' ) ) ? sprintf('%.4d-%.2d-%.2d 00:00:00', map { $param{"period_start-$$Price{id}_$_"} } ( 'year','month','day' ) ) : undef ),
-						period_end		=>	( Date::Calc::check_date( map { $param{"period_end-$$Price{id}_$_"} } ( 'year','month','day' ) ) ? sprintf('%.4d-%.2d-%.2d 23:59:59', map { $param{"period_end-$$Price{id}_$_"} } ( 'year','month','day' ) ) : undef ),
+						period_start	=>	( Date::Calc::check_date( map { $param{"period_start-$$Price{id}_$_"} ? $param{"period_start-$$Price{id}_$_"} : 0 } ( 'year','month','day' ) ) ? sprintf('%.4d-%.2d-%.2d 00:00:00', map { $param{"period_start-$$Price{id}_$_"} } ( 'year','month','day' ) ) : undef ),
+						period_end		=>	( Date::Calc::check_date( map { $param{"period_end-$$Price{id}_$_"} ? $param{"period_end-$$Price{id}_$_"} : 0 } ( 'year','month','day' ) ) ? sprintf('%.4d-%.2d-%.2d 23:59:59', map { $param{"period_end-$$Price{id}_$_"} } ( 'year','month','day' ) ) : undef ),
 						min				=>	$param{"min-$$Price{id}"},
 						max				=>	$param{"max-$$Price{id}"},
 						range_units			=>	$param{"range_units-$$Price{id}"},

@@ -119,7 +119,7 @@ sub save {
 	if ( ( my $error = $self->SUPER::save( ) ) ) {
 		return $error;
 	} # end if
-	return;
+	return '';
 
 } # end sub save
 
