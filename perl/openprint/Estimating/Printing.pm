@@ -5551,9 +5551,9 @@ sub calc_price {
 	$impressions *= 2 if $$project{print_sides} == 2 and $is_wt;
 # or ( $$Imposition{runstyle} eq 'Sheet Work' ) );
 
-	my $max_impression_quantity = $Press->specification('Maximum Impression Quantity', $$Paper{calliper} );
+	my $max_impression_quantity = $Press->specification('Maximum Impression Quantity', $$Paper{calliper});
 	if ( $max_impression_quantity and ($max_impression_quantity < $impressions ) ) {
-		$log->debug("Next cuz of maximum impression quantity $max_impression_quantity : $impressions" ) if DEBUG;
+		$log->debug("Next cuz of maximum impression quantity $max_impression_quantity : $impressions") if DEBUG;
 		return \%price;
 	#} else {
 		#$log->debug("NOT Next cuz of maximum impression quantity $max_impression_quantity : $impressions" ) if DEBUG;
@@ -5979,7 +5979,14 @@ if ( 1 ) {
 	} # end if
 	my $setup_cost = $press_setup + $price{'WorkTurn Dry Charge'} + $price{'Plate Total'} + $price{'Version Charge'};
 
-	# Recalculate Overs, etc using Plate Count now
+	if ( my $RunstyleMakeReadyService = openprint::Service->find_one(name=>'RunstyleMakeReady'.$$Imposition{runstyle}) ) {
+		my $RunstyleMakeReady = $price{RunstyleMakeReady} = $RunstyleMakeReadyService->get_Price(undef, $Press);
+		$$RunstyleMakeReady{Total} = $$RunstyleMakeReady{Price};
+		$setup_cost += $price{RunstyleMakeReady}{Total};
+		$price{'Setup Breakdown'} .= sprintf('RunStyleMakeReady $%.2f%s = $%.2f<br/>', @$RunstyleMakeReady{'Price','units','Total'} );
+	}
+
+# Recalculate Overs, etc using Plate Count now
 	if ( $$project{print_sides} == 1 ) {
 		$setup_rate = $Press->specification( 'MakeReady Overs Rate One Side', $plate_setup{'Plate Count'} );
 		$setup_rate = $Press->specification( 'MakeReady Overs Rate '.$Paper->material(), $plate_setup{'Plate Count'} ) if ! $setup_rate;
@@ -6396,7 +6403,7 @@ $log->warn("Something wrong in AQ");
 	} # end if Aqueous
 #$price{'Press Washes'} += $varnish_price{'Press Washes'};
 	if ( $price{'Press Washes'} and $Services{WashUp} ) {
-		my $WashPrice = $Services{WashUp}->get_Price( undef, $Press );
+		my $WashPrice = $Services{WashUp}->get_Price(undef, $Press);
 		$price{'Press Wash Price'} = $$WashPrice{Price};
 		$price{'Press Wash Total'} = $price{'Press Washes'} * $$WashPrice{Price};
 		$setup_cost += $price{'Press Wash Total'};
@@ -6408,7 +6415,7 @@ $log->warn("Something wrong in AQ");
 	$price{'Press Setup'} = $press_setup;
 	$price{'Impression MPrice'} = misc::sum( map { $$_{MPrice} } @{$run_prices} );
 
-	$price{'Minimum Run Charge'} = openprint::service::get_price( 'PressRunChargeMinimum',undef,$Press );
+	$price{'Minimum Run Charge'} = openprint::service::get_price('PressRunChargeMinimum', undef, $Press);
 
 	if ( $run_cost < $price{'Minimum Run Charge'} ) {
 		$run_cost = $price{'Minimum Run Charge'};
@@ -6923,7 +6930,7 @@ sub press_setup_cost {
 
 	$Price{'Setup Count'} = $setup_count + ( $plate_change_qty ? $plate_change_qty : 0 );
 	if ( ! ( %Price = openprint::service::get_price_object( 'PressUnitMakeReady'.$$Imposition{runstyle}, undef, $Press ) ) ) {
-		%Price = openprint::service::get_price_object( 'PressUnitMakeReady', undef, $Press );
+		%Price = openprint::service::get_price_object('PressUnitMakeReady', undef, $Press);
 	} # end if
 	if ( $Price{units} eq 'stock calliper - per plate' ) {
 		%Price = openprint::service::get_price_object( 'PressUnitMakeReady', $calliper, $Press );
