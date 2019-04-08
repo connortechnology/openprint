@@ -960,7 +960,7 @@ $I->display( $I->page_columns() . ' x ' . $I->page_rows() );
 
 # Dutch cuts don't happen on books
       if ( ( ! $$sig_specs{txtSignatureType} ) and ! @folding_impositions ) {
-$I->display();
+#$I->display();
 # Now consider Dutch cuts
         if ( $$I{dutch_columns} and $$I{dutch_rows} ) {
           $dutch_vertical_cuts += 1 + $$I{dutch_columns};
