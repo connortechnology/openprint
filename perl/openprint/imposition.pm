@@ -317,11 +317,11 @@ $openprint::log->debug("Not Pretrimming on $$Press{strid}") if DEBUG;
 	$$setup1{Press} = $Press;
 	$$setup1{printing_type} = $Press->specification('Printing Type');
 	if ( $run_style eq 'Perfecting' ) {
-		$setup1->colour_bar_size( $$specs{Perfecting_colour_bar_size} );
-		$setup2->colour_bar_size( $$specs{Perfecting_colour_bar_size} );
+		$$setup1{colour_bar_size} = $$specs{Perfecting_colour_bar_size};
+		$$setup2{colour_bar_size} = $$specs{Perfecting_colour_bar_size};
 	} else {
-		$setup1->colour_bar_size( $$specs{colour_bar_size} );
-		$setup2->colour_bar_size( $$specs{colour_bar_size} );
+		$$setup1{colour_bar_size} = $$specs{colour_bar_size};
+		$$setup2{colour_bar_size} = $$specs{colour_bar_size};
 	} # end if
 	$setup1->colour_bar_orientation( $$specs{'Colour Bar Orientation'} );
 	$$setup1{spine} = $$specs{ProjectSpecs}{spine};
