@@ -39,8 +39,17 @@ function check_input( form, signature_index ) {
 <?if($$variable{Project}->Order()->cod_owing())?>
 <div class="error">This job is COD</div>
 <?endif($$variable{Project}->Order()->cod_owing())?>
-<div class="leftColumn">
+<div class="header">
+	<fieldset><legend>Docket Information</legend>
+		<ul>
+			<li class="docket"><label>Docket</label><?echo($$variable{Project}->docket())?></li>
+			<li class="company"><label>Company</label><?echo($$variable{Project}->Company()->name())?></li>
+		</ul>
+	</fieldset>
+</div>
+<div id="ProductionFeedback">
 	<form method="post" name="f1" action="/employee/project/view.html?ProjectIndex=<?ProjectIndex?>&ServiceIndex=<?ServiceIndex?>">
+
 		<fieldset><legend>Production Feedback</legend>
 			<?include('/includes/employee/feedback/employee.html')?>
 			<?include('/includes/employee/feedback/comments.html')?>
