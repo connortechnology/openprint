@@ -264,10 +264,10 @@ sub _specification {
 	my $Equipment = $Specification->Equipment();
 
 	if ( $param{action} eq 'add' ) {
-		$variable{error} .= $Specification->save({'name'=>'new','equipment_id'=>$param{equipment_id}});
+		$variable{error} .= $Specification->save({ name=>'new', equipment_id=>$param{equipment_id}});
 	} elsif ( $param{action} eq 'delete' ) {
 		if ( ! $Specification->delete() ) {
-			(new openprint::Log())->save({ object_type=>(ref $Equipment), object_id=>$$Equipment{id}, action=>'Delete Equipment Specification', 
+			(new openprint::Log())->save({ Object=>$Equipment, action=>'Delete Equipment Specification', 
 				note=>join(' => ' , @$Specification{'name','value'} ) });
 			$variable{PageContent} = ' ';
 		}
