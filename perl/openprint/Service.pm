@@ -240,6 +240,10 @@ sub category {
     return $$self{category};
 } # end sub category
 
+sub link_to {
+	my $self = shift;
+	return '<a href="/administrator/services/edit.html?service_id='.$$self{id}.'">'.$$self{name}.'</a>';
+}
 
 1;
 __END__
