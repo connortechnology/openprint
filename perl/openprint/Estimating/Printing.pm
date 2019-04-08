@@ -1327,8 +1327,12 @@ $log->debug("not Skipping cuz ddmPress$qty_index eq $$Press{strid}");
 		# The second pass requires washes for all other units as a second pass, so that tends to be not likely.
 		my @side_one_varnishes = map { ( $$_{name} =~ /Varnish/ ) ? $$_{name} : () } ( @{$$project{side_one_coatings}}, @{$$project{side_one_colours}} );
 		my @side_two_varnishes = map { ( $$_{name} =~ /Varnish/ ) ? $$_{name} : () } ( @{$$project{side_two_coatings}}, @{$$project{side_two_colours}} );
-
 		my $varnish_capable = $Press->specification('Varnish Capable');
+
+		my @side_one_aq = map { ( $$_{name} =~ /Aqueous/ ) ? $$_{name} : () } ( @{$$project{side_one_coatings}}, @{$$project{side_one_colours}} );
+		my @side_two_aq = map { ( $$_{name} =~ /Aqueous/ ) ? $$_{name} : () } ( @{$$project{side_two_coatings}}, @{$$project{side_two_colours}} );
+		my $aq_capable = $Press->specification('Aqueous Capable');
+
 		if ( 0 ) {
 			if ( $varnish_capable eq 'Y' ) {
 				push @side_one_colours, @side_one_varnishes;
@@ -1381,6 +1385,20 @@ $log->debug("not Skipping cuz ddmPress$qty_index eq $$Press{strid}");
 				$log->debug("** Too many colours to	Perfect	***") if DEBUG_IMPOSITIONS;
 				$do_perfecting = 0;
 			} 
+		} elsif ( @side_one_aq or @side_two_aq  ) {
+      if ( ( $aq_capable eq '1 Side' ) and (
+        ( ! ( @side_one_aq and @side_two_aq ) ) and
+        ( ( @side_one_colours - @side_one_aq ) <= int($number_of_colours/2) ) and
+        ( ( @side_two_colours - @side_two_aq ) <= int($number_of_colours/2) ) )
+      ) {
+        $log->debug("** Can do 1 sided varnish perfecting but @side_one_aq/@side_two_aq ***");
+      } else {
+        #$log->debug(( @side_one_colours - @side_one_varnishes ) . ' <= ' . int($number_of_colours/2)) if DEBUG;
+        #$log->debug(( @side_two_colours - @side_two_varnishes ) . ' <= ' . int($number_of_colours/2)) if DEBUG;
+        $log->debug("** Too many colours to Perfect ***") if DEBUG_IMPOSITIONS;
+        $do_perfecting = 0;
+      }
+
 		} elsif ( ( $_ = $Press->specification('Maximum Calliper Perfecting') ) and ( $$specs{txtSpecificStockCalliper} > $_ ) ) {
 			$do_perfecting = 0;
 			$log->debug("** Too thick to:	Perfect	***") if DEBUG_IMPOSITIONS;
@@ -3267,9 +3285,11 @@ sub breakdown {
 	$breakdown .= sprintf('Roll2Sheet Charge: $%1$.2f%2$s=%3$.2f<br/>', @$price{'Roll2SheetRunCost','Roll2SheetUnits','Roll2SheetRunCharge'} ) if $$price{Roll2SheetRunCharge};
 	foreach my $run_price ( @{$$price{'Run Prices'}} ) {
 		if ( $_ = $Press->Specification('Charge for setup overs') and $$_{value} eq 'N' ) {
-			$breakdown .= sprintf('%s %s %d/(%d Per Hour) * $%.2f%s = $%.2f<br/>', @$run_price{'side','ServiceName'}, ( $$run_price{impressions}-$$stock_qty{'Setup Overs'} ),@$run_price{'run_speed','Price','units','Total'} );
+			$breakdown .= sprintf('%s %s %d/(%d Per Hour) * $%.2f%s = $%.2f<br/>',
+@$run_price{'side','ServiceName'}, ( $$run_price{impressions}-$$stock_qty{'Setup Overs'} ),@$run_price{'run_speed','Price','units','Total'} );
 		} else {
-			$breakdown .= sprintf('%s %s %d/(%d Per Hour) * $%.2f%s = $%.2f<br/>', @$run_price{'side','ServiceName','impressions','run_speed','Price','units','Total'} );
+			$breakdown .= sprintf('%s %s %d/(%d Per Hour) * $%.2f%s = $%.2f<br/>',
+@$run_price{'side','ServiceName','impressions','run_speed','Price','units','Total'} );
 		} # end if
 	} # end foreach run price /pass
 
@@ -5561,36 +5581,39 @@ sub calc_price {
 	$$specs{'hdnImpressionQuantity'.$qty_index} = $impressions;
 #$log->debug("Impressions $impressions overs: $overs setup: $setup_overs run: $run_overs");
 
-	my $std_speed = $Press->Specification('Standard Run Speed ' . $$Imposition{runstyle} );
-	$std_speed = $Press->Specification('Standard Run Speed') if ! $std_speed;
-	$std_speed = $Press->Specification('Run Speed '.$$Imposition{runstyle}) if ! $std_speed;
-	$std_speed = $Press->Specification('Run Speed') if ! $std_speed;
-  if ( $std_speed ) {
+	my $RunSpeed = $price{RunSpeed} = $Press->Specification('Run Speed '.$$Imposition{runstyle});
+	$RunSpeed = $price{RunSpeed} = $Press->Specification('Run Speed') if ! $price{RunSpeed};
+
+	my $std_speed = $price{StandardRunSpeed} = $Press->Specification('Standard Run Speed ' . $$Imposition{runstyle} );
+	$price{StandardRunSpeed} = $std_speed = $Press->Specification('Standard Run Speed') if ! $std_speed;
+	$std_speed = $price{RunSpeed} if ! $std_speed;
+
+  if ( $RunSpeed ) {
     my $run_speed;
-    if ( $$std_speed{units} =~ /^Per (.+) Per Hour$/ ) {
+    if ( $$RunSpeed{units} =~ /^Per (.+) Per Hour$/ ) {
       my $unit = $1;
       if ( $unit =~ /([\d\.]+)x([\d\.]+)/ ) {
         my $area = $1*$2;
         if ( ! $$Imposition{object_width} * $$Imposition{object_height} ) {
           $log->debug("Runspeed for $$Imposition{object_width} * $$Imposition{object_height} on $$Press{id}");
         } else {
-          $run_speed = int( $$std_speed{value} * $area/($$Imposition{object_width} * $$Imposition{object_height}) );
+          $run_speed = int( $$RunSpeed{value} * $area/($$Imposition{object_width} * $$Imposition{object_height}) );
 #$log->debug("Runspeed = $$std_speed{value} $$std_speed{units} * $area / ( $$Imposition{object_width} * $$Imposition{object_height}) = $run_speed");
         } # end if
 #$log->debug("Have runspeed $$std_speed{value}, area: $area, $run_speed");
       } else {
         $log->warn("Unknown Per setting $unit");
       } # end if
-    } elsif ( lc $$std_speed{units} eq 'calliper' ) {
-      $run_speed = $Press->specification($$std_speed{name}, $$Paper{calliper});
+    } elsif ( lc $$RunSpeed{units} eq 'calliper' ) {
+      $run_speed = $Press->specification($$RunSpeed{name}, $$Paper{calliper});
 
       if ( ! $run_speed ) {
-        $log->debug("No run speed on $$Press{strid} for $$std_speed{units} " . ($$std_speed{units} eq 'Calliper' ? $$Paper{calliper} : $Paper->gsm() ) ) if DEBUG;
-        $run_speed = $$std_speed{value} if ! $run_speed;
+        $log->debug("No run speed on $$Press{strid} for $$RunSpeed{units} " . ($$RunSpeed{units} eq 'Calliper' ? $$Paper{calliper} : $Paper->gsm() ) ) if DEBUG;
+        $run_speed = $$RunSpeed{value};
       } # end if
       #$log->debug("Std Runspeed by calliper($$Paper{calliper}): $run_speed on $$Press{strid}");
     } else {
-			$run_speed = $Press->specification( $$std_speed{name}, $$Paper{gsm} );
+			$run_speed = $Press->specification($$RunSpeed{name}, $$Paper{gsm});
     } # end if
 
 		if ( $is_Roll2Sheet and my $roll2sheet_slowdown = $Press->Specification('Roll2Sheet Slowdown') ) {
@@ -5606,11 +5629,11 @@ $log->debug("Slowing down runspeed due to roll2sheet $run_speed *= ( 1-($$roll2s
 		$$specs{"Runspeed$qty_index"} = $$specs{Runspeed} = $price{Runspeed} = $run_speed;
   } else {
     # No std_speed?!
+		$log->error("No runspeed on $$Press{id}");
   }
 
 	$$Imposition{runspeed} = $$specs{Runspeed};
-#$run_speed = $$std_speed{value} if ! $run_speed;
-#$log->debug("Initial Runspeed: $run_speed, standard: $$std_speed{value}$$std_speed{units}");
+$log->debug("Initial Runspeed: standard: $$RunSpeed{value}$$RunSpeed{units} actual: $$specs{Runspeed}") if DEBUG;
 
 	my $folding_results;
 
@@ -5643,16 +5666,16 @@ $log->debug("Slowing down runspeed due to roll2sheet $run_speed *= ( 1-($$roll2s
 			if ( $$folding_results{Equipment} ) {
 
 				# Scoring needs this.
-				$$project{FoldingSpecs}{"ddmEquipment-$$specs{SignatureIndex}-$qty_index"} = $$folding_results{Equipment}->id();
+				$$project{FoldingSpecs}{"ddmEquipment-$$specs{SignatureIndex}-$qty_index"} = $$folding_results{Equipment}{id};
 				
-				if ( $$folding_results{Equipment}->id() == $Press->id() ) {
+				if ( $$folding_results{Equipment}{id} == $$Press{id} ) {
 					my $FI = $$folding_results{FoldedImpositions}[0];
 					if ( ! $FI ) {
 						$log->error("WTF FI is empty! maybe caching issue? Fold equipment is FI: " . $FI);
 						
 					} elsif ( ! $$FI{Equipment} ) {
 						$log->error("WTF Equipment in Fold is empty! maybe caching issue? Fold equipment is " . $$FI{Equipment} . ' FI: ' . $FI->to_string() );
-					} elsif ( $$FI{Equipment}->id() != $Press->id() ) {
+					} elsif ( $$FI{Equipment}{id} != $$Press{id} ) {
 						$log->error("WTF Equipment in Fold is not the press, but the folding results equipment is. maybe caching issue? Fold equipment is " . $$FI{Equipment}->strid() . ' FI: ' . $FI->to_string() );
 					} else {
 					$FI->display( "Runspeed: $$FI{runspeed}") if DEBUG;
@@ -5762,7 +5785,7 @@ $log->debug("Slowing down runspeed due to roll2sheet $run_speed *= ( 1-($$roll2s
 			$price{'Scoring Breakdown'} .= sprintf('Scoring Price: %s on %s $%.2f<br/>', join(',', map { $_->to_string() } @{$scoring_results{Impositions}} ), ($scoring_results{Equipment} ? $scoring_results{Equipment}->name() : ''), $scoring_results{Price} );
 			#$log->error("Scoring is calculated $price{'Scoring Breakdown'}");
 			$price{'Comparison Cost'} += $scoring_results{Price};
-			if ( $scoring_results{Equipment} and ( $scoring_results{Equipment}->id() == $Press->id() ) and $scoring_results{Runspeed} ) {
+			if ( $scoring_results{Equipment} and ( $scoring_results{Equipment}{id} == $$Press{id} ) and $scoring_results{Runspeed} ) {
 				if ( $scoring_results{Runspeed} =~ /(.*)\%/ ) {
 					$price{Runspeed} *= (1+$1/100);
 					$$specs{Runspeed} = $price{Runspeed};
@@ -5777,6 +5800,7 @@ $log->debug("Slowing down runspeed due to roll2sheet $run_speed *= ( 1-($$roll2s
 	#} else {
 			#$log->error("Scoring is not being done");
 	} # end if
+
 	if ( $$project{HasPerforating} ) {
 		my %perforating_results = openprint::Estimating::Perforating::signature_calc( $Project, @$project{'HasPerforating','PerforatingSpecs'}, $service_index, $specs, $qty_index, $Imposition );
 		if ( $perforating_results{Status} eq 'uncalculated' ) {
@@ -5785,7 +5809,7 @@ $log->debug("Slowing down runspeed due to roll2sheet $run_speed *= ( 1-($$roll2s
 		} else {
 			$price{'Perforating Breakdown'} .= sprintf('Perforating Price: %.2f speed: %s on %s<br/>', @perforating_results{'Price','Runspeed'}, ( $perforating_results{Equipment} ? $perforating_results{Equipment}->name() : 'no press' ) );
 			$price{'Comparison Cost'} += $perforating_results{Price};
-			if ( $perforating_results{Equipment} and ($perforating_results{Equipment}->id() == $Press->id()) ) {
+			if ( $perforating_results{Equipment} and ($perforating_results{Equipment}{id} == $$Press{id}) and $perforating_results{Runspeed} ) {
 				if ( $perforating_results{Runspeed} =~ /(.*)\%/ ) {
 					$price{Runspeed} *= (1+$1/100);
 					$$specs{Runspeed} = $price{Runspeed};
@@ -5983,7 +6007,7 @@ if ( 1 ) {
 		my $RunstyleMakeReady = $price{RunstyleMakeReady} = $RunstyleMakeReadyService->get_Price(undef, $Press);
 		$$RunstyleMakeReady{Total} = $$RunstyleMakeReady{Price};
 		$setup_cost += $price{RunstyleMakeReady}{Total};
-		$price{'Setup Breakdown'} .= sprintf('RunStyleMakeReady $%.2f%s = $%.2f<br/>', @$RunstyleMakeReady{'Price','units','Total'} );
+		$price{'Setup Breakdown'} .= $RunstyleMakeReadyService->description().sprintf(' $%.2f%s = $%.2f<br/>', @$RunstyleMakeReady{'Price','units','Total'} );
 	}
 
 # Recalculate Overs, etc using Plate Count now
@@ -6271,7 +6295,7 @@ $log->debug("Area $area = $$Imposition{object_area} * Impressions($colour_impres
 	#$log->debug("Area: $area Impressions: $impressions " . $Imposition->object_area() );
 
 				if ( $material_price{units} eq 'per cartridge' ) {
-					my $Coverage = $InkMaterial->New_Specification('Coverage', { range=>$grade, equipment_id=>$$Press{id}} );
+					my $Coverage = $Ink->Coverage($Press, $grade);
 					my $qty = Math::Round::nearest( 0.0001, $area/$$Coverage{value} ) if $Coverage and $$Coverage{value};
 					%material_price = $InkMaterial->get_price( $qty, $Press );
 					$ink_price{Material} = \%material_price;
@@ -6279,7 +6303,7 @@ $log->debug("Area $area = $$Imposition{object_area} * Impressions($colour_impres
 					$ink_price{Total} += $material_price{Total};
 					$price{'Ink breakdown'} .= sprintf(' mileage: %d sq in per cartridge, %.2fsq in means %.4f * $%s%s=$%.2f = $%.2f', $$Coverage{value}, $area, $qty, @material_price{'Price','units','Total'}, $ink_price{Total});
 				} elsif ( $material_price{units} eq 'per kg' ) {
-					my $Coverage = $InkMaterial->New_Specification('Coverage', { range=>$grade, equipment_id=>$$Press{id}} );
+					my $Coverage = $Ink->Coverage($Press, $grade);
 					if ( ( ! $Coverage ) or ! $$Coverage{value} ) {
 						$log->debug("No Coverage for grade $grade Press: $$Press{strid}");
 					}
@@ -6332,9 +6356,9 @@ $log->debug("Area $area = $$Imposition{object_area} * Impressions($colour_impres
 	my $run_prices;
 	if ( $is_wt ) {
 		#my @c = filter_coatings_from_colours( \@colours );
-		$run_prices = get_run_prices( $impressions, scalar(@{$$project{filtered_colours}}), 0, $Imposition, $Press, $price{Runspeed} ); 
+		$run_prices = get_run_prices( $impressions, scalar(@{$$project{filtered_colours}}), 0, $Imposition, $Press, \%price ); 
 	} else {
-		$run_prices = get_run_prices( $impressions, scalar @{$$project{side_one_colours}}, scalar @{$$project{side_two_colours}}, $Imposition, $Press, $price{Runspeed} );
+		$run_prices = get_run_prices( $impressions, scalar @{$$project{side_one_colours}}, scalar @{$$project{side_two_colours}}, $Imposition, $Press, \%price );
 	} # end if
 	#$price{Runspeed} = $$specs{Runspeed} = $$run_price{run_speed};
 
@@ -6647,7 +6671,7 @@ $log->debug("COnsidering $$Press{strid}") if DEBUG_PRESSES;
 				next;
 			} # end if
 		} # end if
-		if ( $aqueous and ! sets::isin( $Press->specification('Aqueous Capable'), [ 'Y', 'When Printing' ] ) ) {
+		if ( $aqueous and ! sets::isin( $Press->specification('Aqueous Capable'), [ 'Y', 'When Printing', '1 Side' ] ) ) {
 			$results{$press_id} = 'Failed Aqueous check.';
 			next;
 		} # end if
@@ -6696,14 +6720,11 @@ $log->debug("COnsidering $$Press{strid}") if DEBUG_PRESSES;
 } # end sub select_press
 
 sub get_run_prices {
-	my ( $impressions, $side_one_colours, $side_two_colours, $Imposition, $Press, $run_speed ) = @_;
+	my ( $impressions, $side_one_colours, $side_two_colours, $Imposition, $Press, $price ) = @_;
+
 
 	my @run_prices;
 	my $max_colours = $Press->specification('Number of Colours');
-	#if ( ! $max_colours ) {
-		#$log->error(" ***** FATAL ERROR: Could Not Get 'Number of Colours' for Press: $$Press{strid} ***********");
-		#return \@run_prices;
-	#} # end if
 
 	my $impression_service = 'ColourImpression';
 
@@ -6712,7 +6733,7 @@ sub get_run_prices {
 		$impression_service = join('',$$Imposition{runstyle},'Impression',$side_one_colours,'/',$side_two_colours);
 		my $Impression_Service = $Services{$impression_service};
 		my $RunPrice;
-		if ( ! ( $Impression_Service and $RunPrice = $Impression_Service->get_Price( $impressions, $Press ) ) ) {
+		if ( ! ( $Impression_Service and $RunPrice = $Impression_Service->get_Price($impressions, $Press) ) ) {
 			if ( $side_one_colours != $side_two_colours ) {
 				# Try back then front
 				$impression_service = join('',$$Imposition{runstyle},'Impression',$side_two_colours,'/',$side_one_colours);
@@ -6745,11 +6766,15 @@ sub get_run_prices {
 			my $mod_colours = $side_one_colours % $max_colours;
 			if ( $mod_colours ) {
 				my $Impression_Service = $Services{$mod_colours.$impression_service};
-				my $RunPrice = $Impression_Service->get_Price( $impressions, $Press );
-				$$RunPrice{Passes} = 1;
-				$$RunPrice{impressions} = $impressions;
-				$$RunPrice{side} = 'Front';
-				push @run_prices, $RunPrice;
+				if ( ! $Impression_Service ) {
+					$log->error("No service for $mod_colours.$impression_service");
+				} else {
+					my $RunPrice = $Impression_Service->get_Price( $impressions, $Press );
+					$$RunPrice{Passes} = 1;
+					$$RunPrice{impressions} = $impressions;
+					$$RunPrice{side} = 'Front';
+					push @run_prices, $RunPrice;
+				}
 			} # end if mod_colours
 		} # end if side one colours
 
@@ -6782,8 +6807,8 @@ sub get_run_prices {
 
 	# There should be either a Standard Run Speed
 
-	my $std_speed = $Press->Specification('Standard Run Speed '.$$Imposition{runstyle});
-	$std_speed = $Press->Specification('Standard Run Speed') if ! $std_speed;
+	my $run_speed = $$price{Runspeed};
+	my $std_speed = $$price{StandardRunSpeed};
 	my $Paper = $$Imposition{Paper};
 	
 	my $speed_mod;
@@ -6815,28 +6840,15 @@ sub get_run_prices {
 			} # end if
 		} # end if
 	} else {
-		if ( ! $run_speed ) {
-			$run_speed = $Press->specification('Run Speed '.$$Imposition{runstyle});
-			$run_speed = $Press->specification('Run Speed') if ! $run_speed;
-			if ( $$Imposition{is_roll2sheet} and my $roll2sheet_slowdown = $Press->Specification('Roll2Sheet Slowdown') ) {
-				if ( $$roll2sheet_slowdown{units} eq 'Percent' ) {
-					$log->debug("Slowing down runspeed due to roll2sheet $run_speed *= ( 1-($$roll2sheet_slowdown{value}/100));");
-					$run_speed *= ( 1-($$roll2sheet_slowdown{value}/100));
-					$log->debug("Slowing down runspeed due to roll2sheet $run_speed *= ( 1-($$roll2sheet_slowdown{value}/100));");
-				} else {
-					$log->error("Unknown units on roll2sheet slowdown");
-				}
-			}
-		}
-		$log->debug("No standard speed on $$Press{strid}") if DEBUG;
+		$log->debug("No standard speed on $$Press{strid} have runspeed $run_speed") if DEBUG;
 	} # end if
 
 
 	if ( $$Imposition{runstyle} eq 'Perfecting' and ! $$Paper{perfecting} ) {
-		my $Outside_Wheel_Size = $Press->specification( 'Outside Slow Down Wheel Size' );
-$log->debug("Checking for slowdown wheel size: $Outside_Wheel_Size ") if DEBUG;
+		my $Outside_Wheel_Size = $Press->specification('Outside Slow Down Wheel Size');
+$log->debug("Checking for slowdown wheel size: $Outside_Wheel_Size") if DEBUG;
 		if ( $Outside_Wheel_Size ) {
-			my $Slow_Down = $Press->Specification( 'Outside Wheel Slow Down' );
+			my $Slow_Down = $Press->Specification('Outside Wheel Slow Down');
 $log->debug("Have slowdown wheel size: $Outside_Wheel_Size layout_wdith: " . $Imposition->layout_width() . ' paper width: ' . $Imposition->sheet_width() ) if DEBUG;
 			if ( $Imposition->layout_width() + $Outside_Wheel_Size > $Imposition->sheet_width() ) {
 				if ( $$Slow_Down{units} eq 'Percent' ) {
@@ -6851,7 +6863,7 @@ $log->error("Unknown units on Outside Wheel Slow Down ($$Slow_Down{units})");
 	} # end if
 
 	if ( $std_speed and ( $run_speed != $$std_speed{value} ) ) {
-		$speed_mod = Math::Round::nearest( .001, $$std_speed{value} / $run_speed );
+		$speed_mod = Math::Round::nearest(.001, $$std_speed{value} / $run_speed);
 		#$log->debug("1Press ".$$Press{strid}." Calliper: $$Paper{calliper} gsm: $$Paper{gsm} ($running_price) ($run_price{units}) STD: ($$std_speed{value}) RUN ($run_speed), mod: $speed_mod,	std/run: " . ( $speed_mod ? $run_speed/$speed_mod : $std_speed/$run_speed ) ) if DEBUG;
 	}
 	my $SheetLengthMarkup = $Press->Specification('SheetLengthMarkup',$$Paper{height});
