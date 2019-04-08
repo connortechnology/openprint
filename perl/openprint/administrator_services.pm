@@ -29,6 +29,7 @@ sub edit {
 		} elsif ( $param{btnFunction} eq '>>' ) {
 			$Service = $Service->Next( {category_id=>$param{ddmSearchCategory}} );
 		} elsif ( $param{btnFunction} eq 'Delete' ) {
+			(new openprint::Log())->save({Object=>$Service, action=>'Delete'});
 			$variable{error} .= $Service->delete() if ! $variable{error};
 			$Service = $Service->Next( {category_id=>$param{ddmSearchCategory}} ) if ! $variable{error};
 		} elsif ( $param{btnFunction} eq 'Destroy' ) {
@@ -36,6 +37,7 @@ sub edit {
 				$variable{error} .= sprintf('Service is used in <a href="/timetrack/edit.html?timetrack_id=%1$d">Timetrack %1$d</a><br/>', $T->id() );
 			} # end foreach T
 			$variable{error} .= $Service->destroy() if ! $variable{error};
+			(new openprint::Log())->save({action=>'Delete', note=>'Service ' . $$Service{name}});
 			$Service = $Service->Next( {category_id=>$param{ddmSearchCategory}} ) if ! $variable{error};
 		} elsif ( $param{btnFunction} eq 'Export' ) {
 			my @header = ( 'Service Name', 'Description','Category', 'Activity Code', 'Fed Tax Exempt', 'State Tax Exempt' );
@@ -146,12 +148,6 @@ sub edit {
 			sql::end_transaction( $dbh, $ac );
 			if ( ! $variable{error} ) {
 				$variable{ExternalRedirect} = '/administrator/services/edit.html?service_id='.$Service->id();
-				if ( $param{ddmServiceCategory} ) {
-					$variable{ExternalRedirect} .= '&ddmServiceCategory='.$param{ddmServiceCategory};
-				}
-				if ( $param{equipment_id} ) {
-					$variable{ExternalRedirect} .= '&equipment_id='.$param{equipment_id};
-				} # end if
 			} # end if
 		} elsif ( $param{btnFunction} eq 'Copy' ) {
 
@@ -170,6 +166,8 @@ sub edit {
 			$Service = $NewService;
 		} # end if btnFunction value
 	} # end if btnFunction
+
+	ssi::save_params($r->uri(), 'service_id', 'equipment_id', 'ddmSearchCategory');
 
 	$variable{Service} = $Service;
 } # end sub edit
