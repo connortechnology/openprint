@@ -3262,7 +3262,7 @@ sub breakdown {
 
 	my $breakdown = '';
 	$breakdown .= openprint::Estimating::Imposition::signature_summary( $Imposition, $$price{'Imposition Price'} ) if $$price{'Imposition Price'} and $ImpositionServiceType;
-	$breakdown .= sprintf('%s Colour Bar %s %s, Bleed: %s Orientation: %s<br/>', ( $Press ? $$Press{strid} : '' ), $Imposition->colour_bar_size(), $Imposition->colour_bar_orientation(), @$Imposition{'bleed_size'},
+	$breakdown .= sprintf('%s Colour Bar %s %s, Bleed: %s Orientation: %s<br/>', ( $Press ? $$Press{strid} : '' ), $$Imposition{colour_bar_size}, $Imposition->colour_bar_orientation(), @$Imposition{'bleed_size'},
 		$Imposition->image_orientation_text() );
 	$breakdown .= '<b>Setups</b><br/>';
 	if ( $$price{GripperSetup} ) {
@@ -4650,7 +4650,7 @@ $log->debug("Doing full calc when UPQ: >= Pages:" . $$imp{pages} . ' PageQuantit
 
 								$$new_specs{PrintingTypes} = [ $Press->specification('Printing Type') ];
 								if ( (!$$new_specs{'chkOverridePress'.$qty_index}) or ( $$new_specs{'chkOverridePress'.$qty_index} ne 'Y' ) ) {
-									$$new_specs{PreviousPress} = $Press->strid();
+									$$new_specs{PreviousPress} = $$Press{strid};
 									#$log->debug("Setting press to $$Press{strid} was ($$new_specs{PreviousPress}) recursion depth($recursion_depth) $new_specs");
 								}
 								$$new_specs{PreviousStockType} = $$Paper{type};
@@ -5068,13 +5068,15 @@ $imp->display('[warn]');
 					#my $other_group_cache_key = $$Press{id}; #join(',', $$Press{id}, $$imp{imposition}, $$imp{columns} );
 					my $other_group_cache_key = join(',', $$Press{id}, @$imp{'imposition','columns'} );
 					if ( ! $other_group_cache{$other_group_cache_key} ) {
-		# When doing the cover, need to calc additional sigs as well.
-		# Add calculations for other Groups
+# When doing the cover, need to calc additional sigs as well.
+# Add calculations for other Groups
 						$log->debug("Calculating Additional Signatures for other group $other_group_cache_key group $sig_specs{Group}") if DEBUG;
-$log->debug(" %other_group_cache ");
-foreach my $k ( keys %other_group_cache ) {
-$log->debug("$k => ");
-}
+						if ( DEBUG ) {
+							$log->debug(" %other_group_cache ");
+							foreach my $k ( keys %other_group_cache ) {
+								$log->debug("$k => ");
+							}
+						}
 						my @sigs = sort $Project->signatures({Group=>2, sort=>1});
 						if ( @sigs ) {
 							my $Group = 2;
@@ -5087,21 +5089,21 @@ $log->debug("$k => ");
 
 								%{$$Setup{specs}} = %{$Service->specs()};
 								my $subsig_specs = $$Setup{specs};
-if ( $$subsig_specs{txtSignatureType} eq 'Cover Pages' ) {
-$log->error("subsig type: $$subsig_specs{txtSignatureType}");
-} else {
-								set_size( $Project, $$Setup{specs}, $printing_specs );
-								$$Setup{side_one_colours} = [ get_colours( $$Setup{specs}, 'SideOne' ) ];
-								$$Setup{side_two_colours} = [ get_colours( $$Setup{specs}, 'SideTwo' ) ];
-								$$subsig_specs{'txtUnspecifiedPageQuantity'.$qty_index} = get_unspecified_pages( $Project, $sigs[0], $subsig_specs, $qty_index );
-								$$Setup{Stocks} = [ get_Stocks( $Project, $$Setup{specs} ) ];
-								if ( @{$$Setup{Stocks}} ) {
+								if ( $$subsig_specs{txtSignatureType} eq 'Cover Pages' ) {
+									$log->error("subsig type: $$subsig_specs{txtSignatureType}");
+								} else {
+									set_size( $Project, $$Setup{specs}, $printing_specs );
+									$$Setup{side_one_colours} = [ get_colours( $$Setup{specs}, 'SideOne' ) ];
+									$$Setup{side_two_colours} = [ get_colours( $$Setup{specs}, 'SideTwo' ) ];
+									$$subsig_specs{'txtUnspecifiedPageQuantity'.$qty_index} = get_unspecified_pages( $Project, $sigs[0], $subsig_specs, $qty_index );
+									$$Setup{Stocks} = [ get_Stocks( $Project, $$Setup{specs} ) ];
+									if ( @{$$Setup{Stocks}} ) {
 
-									my %Overrides = get_overrides( $Project, $subsig_specs );
-									$$Setup{Overrides} = \%Overrides;
+										my %Overrides = get_overrides( $Project, $subsig_specs );
+										$$Setup{Overrides} = \%Overrides;
 
-									my $new_project = $$Setup{project} = setup_project( $Project, $sigs[0], $Project->services(), @$Setup{'specs','side_one_colours', 'side_two_colours'}, $$Setup{Stocks}[0] );
-									$log->error("PreviousPress from $$subsig_specs{PreviousPress} ");
+										my $new_project = $$Setup{project} = setup_project( $Project, $sigs[0], $Project->services(), @$Setup{'specs','side_one_colours', 'side_two_colours'}, $$Setup{Stocks}[0] );
+										$log->error("PreviousPress from $$subsig_specs{PreviousPress} ");
 # This isn't perfect, as we may actually need a stock setup charge for the other group
 									$$new_project{stocksetupcharged} = $$project{stocksetupcharged};
 
@@ -5618,9 +5620,9 @@ sub calc_price {
 
 		if ( $is_Roll2Sheet and my $roll2sheet_slowdown = $Press->Specification('Roll2Sheet Slowdown') ) {
 			if ( $$roll2sheet_slowdown{units} eq 'Percent' ) {
-$log->debug("Slowing down runspeed due to roll2sheet $run_speed *= ( 1-($$roll2sheet_slowdown{value}/100));");
+$log->debug("Slowing down runspeed due to roll2sheet $run_speed *= ( 1-($$roll2sheet_slowdown{value}/100));") if DEBUG;
 				$run_speed *= ( 1-($$roll2sheet_slowdown{value}/100));
-$log->debug("Slowing down runspeed due to roll2sheet $run_speed *= ( 1-($$roll2sheet_slowdown{value}/100));");
+$log->debug("Slowing down runspeed due to roll2sheet $run_speed *= ( 1-($$roll2sheet_slowdown{value}/100));") if DEBUG;
 
 			} else {
 				$log->error("Unknown units on roll2sheet slowdown");
@@ -5797,6 +5799,7 @@ $log->debug("Initial Runspeed: standard: $$RunSpeed{value}$$RunSpeed{units} actu
 		} else {
 			$log->error("Scoring is not uncalculated but no Imposition $scoring_results{Breakdown}");
 		} # end if
+			$log->error("Done Scoring is not being done");
 	#} else {
 			#$log->error("Scoring is not being done");
 	} # end if
@@ -5859,6 +5862,7 @@ $log->debug("Initial Runspeed: standard: $$RunSpeed{value}$$RunSpeed{units} actu
 	#} else {
 		#$log->debug("Has no cutting") if DEBUG;
 	} # end if
+			$log->error("Done Cutting is not being done");
 
 	# Now we know the bindery overs
 	my $bindery_overs = sets::max( $$folding_results{MakeReadyOvers} + $$folding_results{RunOvers}, $scoring_results{Overs}, $uv_results{Overs}, $diecutting_results{Overs}, $price{'Cutting Overs'} );
@@ -5945,6 +5949,7 @@ if ( 1 ) {
 	my $press_setup = 0;
 
 	if ( $GripperMakeReadyService ) {
+			$log->error("Do gripper make read");
 		my $charge = 1;
 		foreach my $other_I ( @{$other_impositions} ) {
 			last if $other_I == $Imposition;
