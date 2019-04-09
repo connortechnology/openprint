@@ -619,8 +619,8 @@ $openprint::log->debug("Using Single wheel space $$specs{'Perfecting Single Gutt
 	} # end if
 
 	if ( $Paper->cuttable() ) {
-		$adjusted_paper_width -= $setup1->cropmark_left();
-		$adjusted_paper_width -= $setup1->cropmark_right();
+		$adjusted_paper_width -= $$setup1{cropmark_left};
+		$adjusted_paper_width -= $$setup1{cropmark_right};
 		$adjusted_paper_width = 0 if $adjusted_paper_width < 0;
 	} # end if
 	$openprint::log->debug("P Width gutters: $adjusted_paper_width") if DEBUG;
@@ -776,12 +776,12 @@ $openprint::log->debug("Using Single wheel space $$specs{'Perfecting Single Gutt
 		$cropmarkspace = $$specs{CropMarkSpace};
 		$cropmarkspace -= $bleed_size if $bleed_locations{Left};
 		$cropmarkspace = 0 if $cropmarkspace < 0;
-		$setup2->cropmark_top( $cropmarkspace );
+		$$setup2{cropmark_top} = $cropmarkspace;
 
 		$cropmarkspace = $$specs{CropMarkSpace};
 		$cropmarkspace -= $bleed_size if $bleed_locations{Right};
 		$cropmarkspace = 0 if $cropmarkspace < 0;
-		$setup2->cropmark_bottom( $cropmarkspace );
+		$$setup2{cropmark_bottom} = $cropmarkspace;
 
 		$adjusted_paper_height -= $setup2->cropmark_top();
 		$adjusted_paper_height -= $setup2->cropmark_bottom();
@@ -791,12 +791,12 @@ $openprint::log->debug("Using Single wheel space $$specs{'Perfecting Single Gutt
 		
 		$cropmarkspace -= $bleed_size if $bleed_locations{Top};
 		$cropmarkspace = 0 if $cropmarkspace < 0;
-		$setup2->cropmark_left( $cropmarkspace );
+		$$setup2{cropmark_left} = $cropmarkspace;
 		$gutters -= $cropmarkspace;
 		$cropmarkspace = $$specs{CropMarkSpace};
 		$cropmarkspace -= $bleed_size if $bleed_locations{Bottom};
 		$cropmarkspace = 0 if $cropmarkspace < 0;
-		$setup2->cropmark_right( $cropmarkspace );
+		$$setup2{cropmark_right} = $cropmarkspace;
 #$openprint::log->debug( "Crop marks: $$setup2{cropmark_left} $$setup2{cropmark_right}");
 		$gutters -= $cropmarkspace;
 		$gutters = 0 if $gutters < 0;
