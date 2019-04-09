@@ -153,6 +153,14 @@ sub get_imposition {
 	return $imposition;
 } # end sub get_imposition
 
+sub init {
+  my ( $Project, $calc_hash ) = @_;
+
+  #$gService = openprint::Service->find_one(name=>'Cutting');
+  #$CuttingMakeReady = openprint::Service->find_one(name=>'CuttingMakeReady');
+}
+
+
 # Calculates the cost of stitching a signature... which is not realistic, but will hopefully help when deciding between 1up or 2up stitching
 # includes the cost of folding...
 sub signature_calc {
@@ -516,13 +524,13 @@ EQUIPMENT:foreach my $Equipment ( @equipment ) {
 				$results{Breakdown} .= 'Not for digital.<br/>';
 				next;
 			} # end if
-			if ( $$I{Folder} and ( $$I{Folder}->id() != $$Equipment{id} ) ) {
+			if ( $$I{Folder} and ( $$I{Folder}{id} != $$Equipment{id} ) ) {
 				if ( ( $_ = $$I{Folder}->specification('Folding Capable') ) and ( $_ eq 'When Stitching' ) ) {
-					$results{Breakdown} .= $$Equipment{strid} . ' is not the folding equipment, is '.$$I{Folder}->name() . '<br/>';
+					$results{Breakdown} .= $$Equipment{strid} . ' is not the folding equipment, is '.$$I{Folder}{name} . '<br/>';
 					next;
 				}
 				if ( $capable eq 'When Folding' ) {
-					$results{Breakdown} .= 'Not being folded on ' .$$Equipment{name}. ' is on '. $$I{Folder}->name() . '<br/>';
+					$results{Breakdown} .= 'Not being folded on ' .$$Equipment{name}. ' is on '. $$I{Folder}{name} . '<br/>';
 					next;
 				} # end if
 			} # end if
