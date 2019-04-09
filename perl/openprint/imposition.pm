@@ -783,8 +783,8 @@ $openprint::log->debug("Using Single wheel space $$specs{'Perfecting Single Gutt
 		$cropmarkspace = 0 if $cropmarkspace < 0;
 		$$setup2{cropmark_bottom} = $cropmarkspace;
 
-		$adjusted_paper_height -= $setup2->cropmark_top();
-		$adjusted_paper_height -= $setup2->cropmark_bottom();
+		$adjusted_paper_height -= $$setup2{cropmark_top};
+		$adjusted_paper_height -= $$setup2{cropmark_bottom};
 		$adjusted_paper_height = 0 if $adjusted_paper_height < 0;
 
 		$cropmarkspace = $$specs{CropMarkSpace};
@@ -845,8 +845,8 @@ $openprint::log->debug("Using Single wheel space $$specs{'Perfecting Single Gutt
 	} # end if
 
 	if ( $Paper->cuttable() ) {
-		$adjusted_paper_width -= $setup2->cropmark_left();
-		$adjusted_paper_width -= $setup2->cropmark_right();
+		$adjusted_paper_width -= $$setup2{cropmark_left};
+		$adjusted_paper_width -= $$setup2{cropmark_right};
 		$adjusted_paper_width = 0 if $adjusted_paper_width < 0;
 	} # end if
 
