@@ -31,13 +31,16 @@ IONICE="/usr/bin/ionice -c3";
 CP="$NICE $IONICE $CP";
 RSYNC="$NICE $IONICE $RSYNC";
 RM="$NICE $IONICE $RM";
-
 BACKUPS=3;
+DEBUG=0;
 
-USAGE="Usage: `/usr/bin/basename $0` [-hv] [-n int] [-c arg] [-t type] [-T] args"
+USAGE="Usage: `/usr/bin/basename $0` [-hv] [-n int] [-c arg] [-t type] [-T] [-4] args"
 
-while getopts hvn:c:t:T OPT; do
+while getopts dh4vn:c:t:T OPT; do
 	case "$OPT" in
+    d)
+      DEBUG=1;
+      ;;
 		h)
 			echo $USAGE
 			exit 0
@@ -58,6 +61,9 @@ while getopts hvn:c:t:T OPT; do
 		T)
 			TIME="/usr/bin/time "
 			;;
+    4)
+      RSYNC="$RSYNC -4"
+      ;;
 		\?)
 			# getopts issues an error message
 			echo $USAGE >&2
@@ -93,7 +99,7 @@ if [ -d "$DEST$TYPE.new" ] ; then
 	TODAY=$($DATE -I)
 	CREATEDON=$($STAT -c %y "$DEST$TYPE.new" | $AWK '{ printf $1 "\n"}')
 	if (( "${TODAY//-/}" > "${CREATEDON//-/}" )) ; then 
-		#echo "$RM -r $DEST$TYPE.new && $RM $DEST$TYPE.new.log";
+    if [ DEBUG ]; then echo "$RM -r $DEST$TYPE.new && $RM $DEST$TYPE.new.log"; fi;
 		$RM -r "$DEST$TYPE.new"
 		$RM "$DEST$TYPE.new.log"
 	else 
@@ -103,17 +109,16 @@ if [ -d "$DEST$TYPE.new" ] ; then
 fi;
 
 if [ -d "$DEST$TYPE.0" ] ; then 
-	#echo "$CP -al $DEST$TYPE.0 $DEST$TYPE.new"
+	if [ DEBUG ]; then echo "$CP -al $DEST$TYPE.0 $DEST$TYPE.new"; fi;
 	$CP -al "$DEST$TYPE.0" "$DEST$TYPE.new"
 else
-	#echo "Making $DEST$TYPE.new"
+	if [ DEBUG ]; then echo "Making $DEST$TYPE.new"; fi;
 	$MKDIR -p "$DEST$TYPE.new"
 fi;
 # step 4: rsync from the system into the latest snapshot (notice that
 # rsync behaves like cp --remove-destination by default, so the destination
 # is unlinked first.  If it were not so, this would copy over the other
 # snapshot(s) too!
-#echo "$RSYNC \"$1\" \"$DEST\""
 if [ -e "$DEST$TYPE.0.du" ] ; then
 	OLDDU=$(<"$DEST$TYPE.0.du")
 else
@@ -122,10 +127,10 @@ else
 fi
 echo "Size of last backup: $OLDDU"
 if [[ $SOURCE =~ : ]]; then
-	#echo "$TIME$RSYNC -aHx --delete-delay --delete-excluded --log-file=$DEST$TYPE.new.log $@ -e ssh -T -c aes128-ctr -o Compression=no -x $SOURCE $DEST$TYPE.new"
+	if [ DEBUG ]; then echo "$TIME$RSYNC -aHx --delete-delay --delete-excluded --log-file=$DEST$TYPE.new.log $@ -e ssh -T -x $SOURCE $DEST$TYPE.new"; fi;
 	$TIME$RSYNC -aHx --delete-delay --delete-excluded --log-file="$DEST$TYPE.new.log" $@ -e "ssh -T -c aes128-ctr -o Compression=no -x" "$SOURCE" "$DEST$TYPE.new"
 else
-	#echo "$TIME$RSYNC -aHx --delete-delay --delete-excluded --log-file=$DEST$TYPE.new.log $@ $SOURCE $DEST$TYPE.new"
+if [ DEBUG ]; then echo "$TIME$RSYNC -aHx --delete-delay --delete-excluded --log-file=$DEST$TYPE.new.log $@ $SOURCE $DEST$TYPE.new"; fi;
 	$TIME$RSYNC -aHx --delete-delay --delete-excluded --log-file="$DEST$TYPE.new.log" $@ "$SOURCE" "$DEST$TYPE.new"
 fi
 if [ $? != 0 -a $? != 24 ]; then
