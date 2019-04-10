@@ -292,11 +292,11 @@ sub send {
 
   my $skin_path = '';
   if ( -e ($openprint::config{SkinPath}.'/'.$self->Invoicer()->name() ) ) {
-  $skin_path = '/'.$self->Invoicer()->name();
-  $openprint::log->debug("Have skinpath at $skin_path");
-} else {
-  $openprint::log->debug("Have no skinpath at " . $openprint::config{SkinPath}.'/'.$self->Invoicer()->name() );
-}
+    $skin_path = '/'.$self->Invoicer()->name();
+    $openprint::log->debug("Have skinpath at $skin_path");
+  } else {
+    $openprint::log->debug("Have no skinpath at " . $openprint::config{SkinPath}.'/'.$self->Invoicer()->name() );
+  }
 
 	my $email_template = ssi::slurp_content($skin_path.'/email_template.html');
 	$email_template = ssi::slurp_content('/email_template.html') if ! $email_template;
