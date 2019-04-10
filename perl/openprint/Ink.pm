@@ -55,5 +55,18 @@ sub Mix_Service {
 	} # end if
 	return $_[0]{Mix_Service};	
 } # end sub Mix_Service
+
+# Provides cached coverage lookup
+sub Coverage {
+	my ( $self, $Press, $grade ) = @_;
+	$$self{Coverages} = {} if ! $$self{Coverages};
+	$$self{Coverages}{$$Press{id}} = {} if ! $$self{Coverages};
+	if ( ! $$self{Coverages}{$$Press{id}}{$grade} ) {
+		$$self{Coverages}{$$Press{id}}{$grade} = $self->Material()->New_Specification('Coverage', { range=>$grade, equipment_id=>$$Press{id}} );
+	}
+	return $$self{Coverages}{$$Press{id}}{$grade};
+}
+
+
 1;
 __END__

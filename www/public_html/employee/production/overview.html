@@ -172,7 +172,7 @@ sub get_status {
 	my ( $Project, $service_names ) = @_;
 	my $qty_index = $Project->ordered_quantity_index();
 	my $services = $Project->services();
-			my $html;
+			my $html = '';
 	foreach my $service_name ( ref $service_names eq 'ARRAY' ? @{$service_names} : ( $service_names ) ) {
 		if ( $$services{$service_name} ) {
 			my $Service = $Project->Service( $$services{$service_name}[0] );
@@ -302,7 +302,7 @@ foreach my $Project ( @Projects ) {
 		( $$Service{PlainCartons} ? $$Service{PlainCartons}[0] : undef );
 
 	my @Labels = openprint::Label->find( docket=>$Project->docket(), type_id=>\@labeltype_ids );
-	my $class;
+	my $class = '';
 	if ( $Project->status() eq 'In Prepress' ) {
 		$class .= ' inprepress';
 	} elsif ( $Project->status() eq 'Waiting For Customer Approval' ) {

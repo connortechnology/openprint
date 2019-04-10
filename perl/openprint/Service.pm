@@ -6,6 +6,10 @@ use vars qw($debug $table $serial %fields %find_fields %transforms %defaults %se
 require sql;
 require openprint::Object;
 require openprint::pricing;
+use openprint ();
+*session = \%openprint::session;
+*log = \$openprint::log;
+*dbh = \$openprint::dbh;
 
 foreach my $Service ( 'UVCoating' ) {
 	eval "
@@ -17,10 +21,6 @@ foreach my $service ( keys %ServicePrices) {
 $log->debug("Have a price definition for $service");
 }
 
-use openprint ();
-*session = \%openprint::session;
-*log = \$openprint::log;
-*dbh = \$openprint::dbh;
 
 $debug = 0;
 $cached = 0;
@@ -119,7 +119,7 @@ sub save {
 	if ( ( my $error = $self->SUPER::save( ) ) ) {
 		return $error;
 	} # end if
-	return;
+	return '';
 
 } # end sub save
 
@@ -240,6 +240,10 @@ sub category {
     return $$self{category};
 } # end sub category
 
+sub link_to {
+	my $self = shift;
+	return '<a href="/administrator/services/edit.html?service_id='.$$self{id}.'">'.$$self{name}.'</a>';
+}
 
 1;
 __END__

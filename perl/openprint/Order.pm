@@ -20,7 +20,7 @@ require openprint::Payment;
 require openprint::Tax;
 require openprint::Order_Notification;
 
-$debug = 1;
+$debug = 0;
 
 $table = 'orders';
 $serial = 'orders_id_seq';
@@ -324,7 +324,7 @@ require openprint::OrderedProduct;
 } # end sub Contents
 
 sub Ordered_Projects {
-require openprint::OrderedProject;
+	require openprint::OrderedProject;
 	return openprint::OrderedProject->find( order_id=>$_[0]{id}, order=>$openprint::OrderedProject::fields{project_id});
 } # end sub Ordered_Projects
 
@@ -333,7 +333,7 @@ sub Projects {
 	$$self{Projects} = shift if @_;
 	if ( $$self{id} and ! $$self{Projects} ) {
 		require openprint::OrderedProject;
-		$$self{Projects} = [ map { $_->Project() } openprint::OrderedProject->find(order_id=>$$self{id}) ];
+		$$self{Projects} = [ map { $_->Project() } $self->Ordered_Projects() ];
 	}
 
 	return @{$$self{Projects}} if $$self{Projects};
@@ -402,6 +402,35 @@ sub pay {
 	return $error;
 } # end sub pay
 
+sub cancel {
+	my $Order = shift;
+	my $error = '';
+  $error .= $Order->save({ status=>'Cancelled' });
+	require openprint::press_schedule;
+  foreach my $Project ( $Order->Projects() ) {
+    $Project->status('Unordered');
+    $Project->order_id( undef );
+    $Project->docket( undef );
+    $Project->save();
+		foreach my $PS ( $Project->Services() ) {
+			$PS->save({status=>'calculated'});
+		}
+
+    openprint::press_schedule::remove( $Project->id() );
+
+    # Free up any stock allocated to this project
+    foreach my $PA ( openprint::PaperAllocation->find( docket=>$Order->docket() ) ) {
+      my @skid_ids = $PA->skid_ids() ? @{$PA->skid_ids()} : ();
+      $Order->add_log( qq`De-allocated $$PA{quantity}$$PA{units} of <a href="/employee/inventory/paper_details.html?paper_id=$$PA{paper_id}">` . $PA->Paper()->to_string() . '</a>'.
+          ( @skid_ids ? ' on skid: ' .  join(',', map { $_->url_to() } openprint::Skid->find(id=>\@skid_ids) ) : '' ) );
+      $PA->delete();
+    } # end foreach PA
+  } # end foreach
+  $Order->add_log( 'Cancelled' );
+  $Order->send_cancellation_notice();
+	return $error;
+} # end sub cancel
+
 sub send_cancellation_notice {
 
 	my @Recipients;
@@ -420,8 +449,8 @@ sub send_cancellation_notice {
 	my %order;
 	$order{Order} = $_[0];
 	$order{ReplacementText} = ssi::include('/email_content/order_cancellation_notice.html', \%order );
-	new openprint::Email()->send(
-			FROM	=> new openprint::User( $session{user_id} ),
+	(new openprint::Email())->send(
+			FROM	=> $openprint::User,
 			TO	=> \@Recipients,
 			SUBJECT => "Docket $_[0]{docket} has been cancelled.",
 			ATTACHMENTS => [ '', MIME::QuotedPrint::encode_qp( ssi::include( '/email_template.html', \%order ) ), 'text/html', 'quoted-printable'],
@@ -465,6 +494,30 @@ sub total {
 	} # end if
 	return $$self{total};
 } # end sub total
+
+sub credit_card_fee {
+	my $self = shift;
+	if ( ! exists $$self{credit_card_fee} ) {
+		$$self{credit_card_fee} = 0;
+		foreach my $OP ( $self->Ordered_Projects() ) {
+			my $Project = $OP->Project();
+			$$self{credit_card_fee} += $Project->credit_card_fee( $Project->ordered_quantity_index() );
+		}
+	}
+	return $$self{credit_card_fee};
+}
+
+sub csr_commission {
+	my $self = shift;
+	if ( ! exists $$self{csr_commission} ) {
+		$$self{csr_commission} = 0;
+		foreach my $OP ( $self->Ordered_Projects() ) {
+			my $Project = $OP->Project();
+			$$self{csr_commission} += $Project->csr_commission( $Project->ordered_quantity_index() );
+		}
+	}
+	return $$self{csr_commission};
+}
 
 sub send_completion_notice {
 	my ( $self ) = @_;
@@ -546,9 +599,37 @@ sub send_sales_order {
 		$self->add_log( 'Sales Order:'.$email_results.'<br/>' );
 		$results .= 'Sales order sent to ' . $email_results . '<br/>';
 	}
+	$results .= $self->send_admin_emails();
+	return $results;
+}
+sub send_admin_emails {
+	my $self = shift;
+	my @admin_emails = @_;
+
+	my %order = (
+    OrderID => $$self{id},
+    Order => $self,
+  );
+  my $Email = new openprint::Email();
+  my $results;
+
+	my $sales_person_email;
+	if ( $self->salesrep_id() ) {
+		my $CSR = new openprint::User( $self->salesrep_id() );
+		$sales_person_email = sprintf('"%s %s" <%s>', $CSR->get('firstname','lastname','email'));
+	}
+	if ( ! $sales_person_email ) {
+		$sales_person_email = $config{OrderingEmail};
+	} # end if
+
+  # When an order is made,the Order currency will be the current session Currency.  
+  # All resends should stay in the currency that the order was created in.
+  my $Currency = $self->Currency();
+  @order{'Currency','CurrencyName','CurrencySymbol'} = ( $Currency, $Currency->name(), $Currency->symbol() );
+
+  my $email_template = ssi::slurp_content( '/email_template.html' );
 
 	$Email = new openprint::Email();
-
 	$order{ReplacementText} = ssi::include( '/email_content/order_admin_body.html', \%order );
 	$Email->html_body( ssi::variable_substitution( \$email_template, \%order ) );
 
@@ -577,25 +658,28 @@ sub send_sales_order {
 		} # end if
 	} # for each Project
 
-	my @admin_emails = split( ',', $config{OrderingEmail} );
-	@admin_emails = map { misc::trim(lc $_) } @admin_emails;
+	if ( ! @admin_emails ) {
+		@admin_emails = split( ',', $config{OrderingEmail} );
+		@admin_emails = map { misc::trim(lc $_) } @admin_emails;
 
-	my @accounting_emails = split( ',', $config{AccountingEmail} );
-	@accounting_emails = map { misc::trim(lc $_) } @accounting_emails;
+		my @accounting_emails = split( ',', $config{AccountingEmail} );
+		@accounting_emails = map { misc::trim(lc $_) } @accounting_emails;
 
-	@admin_emails = sets::union( @admin_emails, @accounting_emails, $sales_person_email, 
-		map {
-			sets::isin( $_->User()->type(), ['E','A'] ) ? 
-			sprintf('"%s %s" <%s>', $_->User()->get('firstname','lastname','email')) 
-			: ()
-			} $self->Projects()
-		);
+		@admin_emails = sets::union( @admin_emails, @accounting_emails, $sales_person_email, 
+				map {
+				sets::isin( $_->User()->type(), ['E','A'] ) ? 
+				sprintf('"%s %s" <%s>', $_->User()->get('firstname','lastname','email')) 
+				: ()
+				} $self->Projects()
+				);
+	}
 
 	if ( @admin_emails ) {
 		my $email_results .= $Email->send(
 				FROM	=> $config{OrderingEmail},
 				'Reply-to'	=> $$self{email},
-				TO		=> join(',',@admin_emails),
+				TO		=> \@admin_emails,
+				#TO	 =>	'iconnor@point-one.com',
 				#TO	 =>	'iconnor@connortechnology.com',
 				#BCC	 =>	'iconnor@connortechnology.com',
 				SUBJECT => "Order $$self{id}",
@@ -603,6 +687,7 @@ sub send_sales_order {
 		$self->add_log( 'Admin Sales Order:'.$email_results );
 		$results .= 'Admin Sales Order sent to '. $email_results.'<br/>';
 	} # end if
+$log->debug("Results: $results");
 	return $results;
 } # end sub send_sales_order
 

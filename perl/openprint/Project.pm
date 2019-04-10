@@ -1979,14 +1979,42 @@ sub change_due_date {
 
 sub Services {
 	my $self = shift;
-	$$self{Services} = shift if @_;
+	$$self{Project_Services} = shift if @_;
 	if ( $$self{id} and !$$self{Services} ) {
-		$$self{Services} = [ openprint::Project_Service->find(project_id=>$$self{id}) ];
+		%{$$self{Project_Services}} = map { $$_{service_id} => $_ } openprint::Project_Service->find(project_id=>$$self{id});
 	}
-	return @{$$self{Services}} if $$self{Services};
+	return values %{$$self{Project_Services}} if $$self{Project_Services};
 	return ();
 }
 
+sub credit_card_fee {
+  my $self = shift;
+  if ( @_ ) {
+    my $qty_index = shift;
+    if ( ! exists $$self{'credit_card_fee'.$qty_index} ) {
+      my $price = $self->price($qty_index);
+      $$self{'credit_card_fee'.$qty_index} = $price - ( $price/( 1+($$self{credit_card_fee}/100) ) )
+    }
+    return $$self{'credit_card_fee'.$qty_index};
+  }
+  $$self{credit_card_fee} = shift if @_;
+  return $$self{credit_card_fee};
+} # end sub credit_card_fee
+
+sub csr_commission {
+# Commissions are paid on the project cost NOT including credit card processing fees
+	my $self = shift;
+	if ( @_ ) {
+		my $qty_index = shift;
+		if ( ! exists $$self{'csr_commission'.$qty_index} ) {
+			my $price = $self->price($qty_index) - $self->credit_card_fee($qty_index);
+			$$self{'csr_commission'.$qty_index} = $price - ( $price/( 1+($$self{csr_commission}/100) ) )
+		}
+		return $$self{'csr_commission'.$qty_index};
+	}
+	$$self{csr_commission} = shift if @_;
+	return $$self{csr_commission};
+} # end sub csr_commission
 
 1;
 __END__

@@ -116,6 +116,13 @@
           $$variable{index} = $ss_id;
           $$variable{status} = $statuses{$ss_id};
           $html .= variable_substitution( \$status_html, $variable );
+
+					my $Service = $Project->Service($ss_id);
+					my $runtime = $Service->runtime();
+					if ( $runtime ) {
+						$html .= misc::seconds2hm($runtime);
+						$category_totals{$$ServiceCategory{name}}{runtime} += $runtime;
+					};
           $html .= "</td></tr>\n";
           $rowclass = $rowclass ? '' : ' class="colRow"';
         } # end while sigs
@@ -173,8 +180,11 @@
 					$html .= '</td><td class="status" id="status'.$service_id.'">';
 					@$variable{'status','index'} = ( $statuses{$service_id}, $service_id );
           $html .= variable_substitution( \$status_html, $variable );
-					$html .= misc::seconds2hm($Service->runtime());
-					$category_totals{$$ServiceCategory{name}}{runtime} += $Service->runtime();
+					my $runtime = $Service->runtime();
+					if ( $runtime ) {
+						$html .= misc::seconds2hm($runtime);
+						$category_totals{$$ServiceCategory{name}}{runtime} += $runtime;
+					};
 					$html .= "</td></tr>\n";
 					$rowclass = $rowclass ? '' : ' class="colRow"';
 				} # end foreach service_id
@@ -565,6 +575,7 @@ $log->debug("price for stock$stock_index qty $qty_index: " . $Stock->to_string()
     button( 'UploadPDFs'.$$variable{Project}{id}, { onclick=>"open_window('/employee/production/upload_pdfs.html?ProjectIndex=$$variable{ProjectIndex}','upload','resizable=yes,scrollbars=yes,width=800,height=600,screenX=10,screenY=10,top=0,left=0');", text=>'Upload PDFs' } ),
     #button( 'ExportJDF', { onclick=>qq`form_submit('$$variable{formname}','Export JDF');`, text=>'JDF' } ),
     #button( 'ExportMXML', { onclick=>qq`form_submit('$$variable{formname}','Export MXML');`, text=>'MXML' } ),
+    button( 'RelatedDockets'.$$variable{Project}{id}, { onclick=>"popup_window('/employee/project/_related_projects.html','project_id=$$variable{ProjectIndex}', { width: 800, height: 600 } );", text=>'Related Dockets' } ),
     ); ) ?>
   </span>
   
