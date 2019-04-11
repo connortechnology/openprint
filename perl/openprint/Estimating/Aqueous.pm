@@ -411,7 +411,7 @@ sub signature_calc {
 			if ( $$sig_specs{'ddmPress'.$qty_index} ne $$Equipment{strid} ) {
 				$$specs{'hdnBreakdown'.$qty_index} .= 'Not printing on this press.<br/>';
 				next;
-			} elsif ( @front_aq and @back_aq ) {
+			} elsif ( @front_aq and @back_aq and ( $$Imposition{runstyle} eq 'Perfecting' ) ) {
 				$$specs{'hdnBreakdown'.$qty_index} .= 'Cant perfect with double sided AQ.<br/>';
 				next;
 			} # end if
