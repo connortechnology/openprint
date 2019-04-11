@@ -88,6 +88,17 @@
 						return $html;
 					) ?>
 					</li>
+					<li class="ImpressionPrice"><label>Additional Pass (<?CurrencySymbol?>)</label>
+          <? echo ( my $html;
+            foreach my $qty_index ( $$variable{Project}->quantity_indexes() ) {
+              $html .= '<span class="'.$$variable{Columns}.'Columns">';
+              $html .= input( type=>'float', name=>"ImpressionPrice-$$variable{SignatureIndex}-$qty_index", value=>$$variable{"ImpressionPrice-$$variable{SignatureIndex}-$qty_index"}, oninput=>'calc(this.form.name);' );
+              $html .= write_override( "OverrideImpressionPrice-$$variable{SignatureIndex}-$qty_index", $$variable{"OverrideImpressionPrice-$$variable{SignatureIndex}-$qty_index"}, '', q`calc('f1')` );
+              $html .= '</span>';
+            } # end foreach qty_index
+            return $html;
+          ) ?>
+          </li>
 					<li class="SignaturePrice"><label>Signature Total (<?CurrencySymbol?>)</label>
 					<? echo ( my $html;
 						foreach my $qty_index ( $$variable{Project}->quantity_indexes() ) {
