@@ -169,7 +169,7 @@ sub calc {
 	my $Project = new openprint::Project( $project_index );
 
 	@all_equipment = openprint::Equipment->find(
-			Specifications => {'Aqueous Capable'=>['Y','When Printing']},
+			Specifications => {'Aqueous Capable'=>['Y','When Printing','1 Side']},
 			useinestimating=>1,
 			order=>'lower(strName)'
 			) if ! @all_equipment;
@@ -360,7 +360,7 @@ sub signature_calc {
 	#} # end if
 
 	@all_equipment = openprint::Equipment->find(
-			Specifications => {'Aqueous Capable'=>['Y','When Printing']},
+			Specifications => {'Aqueous Capable'=>['Y','When Printing','1 Side']},
 			useinestimating=>1,
 			order=>'lower(strName)') if ! @all_equipment;
 	my @equipment;	
@@ -398,6 +398,7 @@ sub signature_calc {
 		my $Aqueous_Capable = $Equipment->specification('Aqueous Capable');
 		$$specs{'hdnBreakdown'.$qty_index} .= join(' ',
 				'Equipment:', $$Equipment{strid}, $Aqueous_Capable, $$sig_specs{'ddmPress'.$qty_index}, '<br/>');
+
 		if ( $Aqueous_Capable eq 'When Printing' ) {
 			if ( $$sig_specs{'ddmPress'.$qty_index} ne $$Equipment{strid} ) {
 				$$specs{'hdnBreakdown'.$qty_index} .= 'Not printing on this press.<br/>';
@@ -406,7 +407,16 @@ sub signature_calc {
 				$$specs{'hdnBreakdown'.$qty_index} .= 'Cant perfect with double sided AQ.<br/>';
 				next;
 			} # end if
+		} elsif ( $Aqueous_Capable eq '1 Side' ) {
+			if ( $$sig_specs{'ddmPress'.$qty_index} ne $$Equipment{strid} ) {
+				$$specs{'hdnBreakdown'.$qty_index} .= 'Not printing on this press.<br/>';
+				next;
+			} elsif ( @front_aq and @back_aq ) {
+				$$specs{'hdnBreakdown'.$qty_index} .= 'Cant perfect with double sided AQ.<br/>';
+				next;
+			} # end if
 		}
+
 		if ( my $min_weight = $Equipment->specification('Aqueous Minimum Weight') ) {
 			if ( $min_weight > $Paper->gsm() ) {
 				$$specs{'hdnBreakdown'.$qty_index} .= "Paper is too light. Paper gsm($$Paper{gsm}) < Minimum weight $min_weight gsm<br/>";
