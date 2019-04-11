@@ -5500,11 +5500,9 @@ sub calc_price {
 	$setup_rate = $Press->specification( 'MakeReady Overs Rate', scalar @colours ) if ! $setup_rate;
 
 	my $is_Roll2Sheet = $$Imposition{is_roll2sheet} = ( $$Paper{type} eq 'Roll' and sets::isin('Sheet', split(',', $Press->specification('Feed') ) ) ) ? 1 : 0;
-	if ( $is_Roll2Sheet ) {
-		if ( my $roll2sheet_overs_rate = $Press->specification( 'Roll2Sheet Additional Setup Overs' ) ) {
-			$setup_rate *= ( 1 + ( $roll2sheet_overs_rate / 100 ) );
-		} # end if
-	} # end if
+	my $roll2sheet_setup_overs_rate = $Press->specification('Roll2Sheet Additional Setup Overs') if $is_Roll2Sheet;
+ 
+	$setup_rate *= ( 1 + ( $roll2sheet_setup_overs_rate / 100 ) ) if $roll2sheet_setup_overs_rate;
 
 	my $setup_overs;
 	if ( $$specs{'OverrideSetup'.$qty_index} and ( $$specs{'OverrideSetup'.$qty_index} eq 'Y' ) ) {
@@ -5515,11 +5513,9 @@ sub calc_price {
 		$setup_overs = $Press->specification( 'MakeReady Overs ' . $$Imposition{runstyle}, scalar @colours );
 		$setup_overs = $Press->specification( 'MakeReady Overs', scalar @colours ) if ! $setup_overs;
 	} # end if
-	if ( $is_Roll2Sheet ) {
-		if ( my $roll2sheet_overs_rate = $Press->specification( 'Roll2Sheet Additional Run Overs' ) ) {
-			$setup_overs *= ( 1 + ( $roll2sheet_overs_rate / 100 ) );
-		} # end if
-	} # end if
+
+	my $roll2sheet_run_overs_rate = $Press->specification('Roll2Sheet Additional Run Overs') if $is_Roll2Sheet;
+	$setup_overs *= ( 1 + ( $roll2sheet_run_overs_rate / 100 ) ) if $roll2sheet_run_overs_rate;
 
 	if ( $$specs{'OverrideRun'.$qty_index} and ( $$specs{'OverrideRun'.$qty_index} eq 'Y' ) ) {
 		$price{'Run Overs'} = { value=>$$specs{'OverRun'.$qty_index}, total=>$$specs{'OverRun'.$qty_index} };
@@ -6027,11 +6023,7 @@ if ( 1 ) {
 	$setup_rate = 0 if ! defined $setup_rate;
 
 	my $initial_setup_rate = $setup_rate;
-	if ( $is_Roll2Sheet ) {
-		if ( my $roll2sheet_overs_rate = $Press->specification('Roll2Sheet Additional Setup Overs') ) {
-			$initial_setup_rate *= ( 1 + ( $roll2sheet_overs_rate / 100 ) );
-		} # end if
-	} # end if
+	$initial_setup_rate *= ( 1 + ( $roll2sheet_setup_overs_rate / 100 ) ) if $roll2sheet_setup_overs_rate;
 
 	# Shouldn't need ceil.	Rate is an integer
 	my $initial_setup_overs = ceil( $plate_setup{'Setup Plate Count'} * $initial_setup_rate );
@@ -6043,6 +6035,7 @@ if ( 1 ) {
 	if ( $additional_setup_count ) {
 		$additional_setup_rate = $Press->specification('MakeReady Overs Additional Setup Rate');
 		$additional_setup_rate = $setup_rate if ! $additional_setup_rate;
+		$additional_setup_rate  *= ( 1 + ( $roll2sheet_setup_overs_rate / 100 ) ) if $roll2sheet_setup_overs_rate;
 		$additional_setup_overs = ceil( $additional_setup_rate * $additional_setup_count );
 	}
 
