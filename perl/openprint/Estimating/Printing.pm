@@ -1386,18 +1386,16 @@ $log->debug("not Skipping cuz ddmPress$qty_index eq $$Press{strid}");
 				$do_perfecting = 0;
 			} 
 		} elsif ( @side_one_aq or @side_two_aq  ) {
-      if ( ( $aq_capable eq '1 Side' ) and (
-        ( ! ( @side_one_aq and @side_two_aq ) ) and
-        ( ( @side_one_colours - @side_one_aq ) <= int($number_of_colours/2) ) and
-        ( ( @side_two_colours - @side_two_aq ) <= int($number_of_colours/2) ) )
-      ) {
-        $log->debug("** Can do 1 sided varnish perfecting but @side_one_aq/@side_two_aq ***");
-      } else {
-        #$log->debug(( @side_one_colours - @side_one_varnishes ) . ' <= ' . int($number_of_colours/2)) if DEBUG;
-        #$log->debug(( @side_two_colours - @side_two_varnishes ) . ' <= ' . int($number_of_colours/2)) if DEBUG;
-        $log->debug("** Too many colours to Perfect ***") if DEBUG_IMPOSITIONS;
-        $do_perfecting = 0;
-      }
+			if ( @side_one_aq and @side_two_aq and ! $Press->specification('Aqueous Double Sided When Perfecting') ) {
+				$log->debug("** Too many aq colours to Perfect ***") if DEBUG_IMPOSITIONS;
+				$do_perfecting = 0;
+			} elsif (
+					( ( @side_one_colours - @side_one_aq ) > int($number_of_colours/2) ) or
+					( ( @side_two_colours - @side_two_aq ) > int($number_of_colours/2) ) )
+			{
+				$log->debug("** Too many aq colours to Perfect ***") if DEBUG_IMPOSITIONS;
+				$do_perfecting = 0;
+			}
 
 		} elsif ( ( $_ = $Press->specification('Maximum Calliper Perfecting') ) and ( $$specs{txtSpecificStockCalliper} > $_ ) ) {
 			$do_perfecting = 0;
