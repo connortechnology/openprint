@@ -261,7 +261,7 @@ sub calc {
 			} else {
 
 				if ( $results{Equipment} ) {
-					$$specs{"ddmEquipment-$form-$qty_index"} = $results{Equipment}->id();
+					$$specs{"ddmEquipment-$form-$qty_index"} = $results{Equipment}{id};
 					$GrandTotal += $$specs{"SignaturePrice-$form-$qty_index"};
 					$$specs{"txtImposition-$form-$qty_index"} = $results{Imposition}{imposition};
 					$$specs{"txtLayoutWidth-$form-$qty_index"} = $results{Imposition}->layout_width();
@@ -351,26 +351,18 @@ sub signature_calc {
 		$impressions /= 2;
 	}
 
-	# Why would it be multiplied by the # of items per sheet? That doesn't make any sense at all.
-	#if ( $$specs{txtPressSheetComboItems} ) {
-		#$impressions *= $$specs{txtPressSheetComboItems};
-	#} # end if
-	#if ( $$sig_specs{Versions} ) {
-		#$impressions *= $$sig_specs{Versions};
-	#} # end if
-
 	@all_equipment = openprint::Equipment->find(
 			Specifications => {'Aqueous Capable'=>['Y','When Printing','1 Side']},
 			useinestimating=>1,
 			order=>'lower(strName)') if ! @all_equipment;
 	my @equipment;	
-	if ( (defined $$specs{"chkOverrideEquipment-$form-$qty_index"} ) and ( $$specs{"chkOverrideEquipment-$form-$qty_index"} eq 'Y' ) ) {
+	if ( (defined $$specs{"chkOverrideEquipment-$form-$qty_index"}) and ( $$specs{"chkOverrideEquipment-$form-$qty_index"} eq 'Y' ) ) {
 		@equipment = ( new openprint::Equipment( $$specs{"ddmEquipment-$form-$qty_index"} ) );
 	} else {
 		@equipment = @all_equipment;
 	} # endif
 
-	if ( (defined $$specs{"chkOverrideImposition-$form-$qty_index"} ) and ( $$specs{"chkOverrideImposition-$form-$qty_index"} eq 'Y' ) ) {
+	if ( (defined $$specs{"chkOverrideImposition-$form-$qty_index"}) and ( $$specs{"chkOverrideImposition-$form-$qty_index"} eq 'Y' ) ) {
 		if ( $$specs{"txtImposition-$form-$qty_index"} > $$Imposition{imposition} or $$specs{"txtImposition-$form-$qty_index"} <= 0 ) {
 			$$specs{alert} .= 'The specified imposition is not possible.<br/>';
 			return %bestPrice;
@@ -399,19 +391,11 @@ sub signature_calc {
 		$$specs{'hdnBreakdown'.$qty_index} .= join(' ',
 				'Equipment:', $$Equipment{strid}, $Aqueous_Capable, $$sig_specs{'ddmPress'.$qty_index}, '<br/>');
 
-		if ( $Aqueous_Capable eq 'When Printing' ) {
+		if ( $Aqueous_Capable eq 'When Printing' or $Aqueous_Capable eq '1 Side' ) {
 			if ( $$sig_specs{'ddmPress'.$qty_index} ne $$Equipment{strid} ) {
 				$$specs{'hdnBreakdown'.$qty_index} .= 'Not printing on this press.<br/>';
 				next;
 			} elsif ( @front_aq and @back_aq and ( $$Imposition{runstyle} eq 'Perfecting' ) and ! $Equipment->specification('Aqueous Double Sided When Perfecting') ) {
-				$$specs{'hdnBreakdown'.$qty_index} .= 'Cant perfect with double sided AQ.<br/>';
-				next;
-			} # end if
-		} elsif ( $Aqueous_Capable eq '1 Side' ) {
-			if ( $$sig_specs{'ddmPress'.$qty_index} ne $$Equipment{strid} ) {
-				$$specs{'hdnBreakdown'.$qty_index} .= 'Not printing on this press.<br/>';
-				next;
-			} elsif ( @front_aq and @back_aq ) {
 				$$specs{'hdnBreakdown'.$qty_index} .= 'Cant perfect with double sided AQ.<br/>';
 				next;
 			} # end if
@@ -640,7 +624,7 @@ sub display {
 	my ( $log, $dbh, $variable, $project_index, $service_index ) = @_;
 #$openprint::log->debug('Aqueous');
 	@{$$variable{Equipment}} = openprint::Equipment->find(
-			Specifications => {'Aqueous Capable'=>['Y','When Printing']},
+			Specifications => {'Aqueous Capable'=>['Y','When Printing','1 Side']},
 			useinestimating=>1,
 			order=>'lower(strName)'
 			);
