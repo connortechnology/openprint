@@ -79,7 +79,7 @@
         write_override('amount_locked', $$variable{Payment}->amount_locked()),
         ); ) ?>
 				<select name="currency_id" id="currency_id">
-					<? echo ( make_drop_down( [ map { $_->id(), $_->name() } openprint::Currency->find('order'=>'lower(name)') ], $$variable{Payment}->currency_id() ? $$variable{Payment}->currency_id() : openprint::Currency::get_current()->id() ); ) ?>
+					<? echo ( make_drop_down( openprint::Currency->dropdown(), $$variable{Payment}->currency_id() ? $$variable{Payment}->currency_id() : openprint::Currency::get_current()->id() ); ) ?>
 				</select>
 			</li>
       <li id="exchange"><label>Exchange Rate</label>
@@ -96,7 +96,7 @@
 			<li><label for="method">Method</label>
 				<select id="method" name="method">
 <? echo ( 
-	my @options = ( '', 'Cash','Cheque','Email Transfer','Manual','Paypal','Swift', 'Work In Trade' );
+	my @options = ( '', 'Bitcoin', 'Cash','Cheque','Email Transfer','Manual','Paypal','Swift', 'Work In Trade' );
 	make_drop_down( [ map { $_, $_ } @options ], $$variable{Payment}->method() );
 ) ?>
 				</select>
@@ -108,10 +108,13 @@
 		</div>
 		<div class="rightColumn">
 			<ul>
-			<li>
-				<label for="memo">Memo</label>
-				<textarea id="memo" name="memo" rows="<? echo ( count_lines( $$variable{Payment}->memo() ); ) ?>" onkeyup="textarea_resize(this);"><? echo ( $$variable{Payment}->memo() ) ?></textarea>
-			</li>
+        <li><label>Deposited to</label><?echo(
+       ssi::select( openprint::Expense_Account->dropdown(), $$variable{Payment}->account_id(), { name=>'account_id', prepend=>['','Unknown'] } ); ) ?>
+        </li>
+        <li>
+          <label for="memo">Memo</label>
+          <textarea id="memo" name="memo" rows="<? echo ( count_lines( $$variable{Payment}->memo() ); ) ?>" onkeyup="textarea_resize(this);"><? echo ( $$variable{Payment}->memo() ) ?></textarea>
+        </li>
 			</ul>
 		</div>
 		<br class="spacer"/>

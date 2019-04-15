@@ -17,7 +17,7 @@
 			my $html = '';
 			my @Invoices;
 			foreach my $I ( openprint::Invoice->find(
-				invoicer_id => ( $param{recipient_id} ? $param{recipient_id} : $session{company_id} ),
+        invoicer_id => $$variable{Payment}->recipient_id(),
 				invoicee_id => $$variable{Payment}->payor_id(),
 				order       => 'id',
 			) ) {

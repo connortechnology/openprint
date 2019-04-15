@@ -14,6 +14,7 @@ use vars qw( $r %variable %session %param %config $log $dbh );
 require openprint::Payment;
 require openprint::Invoice;
 require openprint::Invoice_Payment;
+require openprint::Expense_Account;
 
 sub history {
 	if ( $param{btnFunction} eq 'Delete' ) {
@@ -54,16 +55,22 @@ sub edit {
 	my $Payment = $variable{Payment} = new openprint::Payment( $param{payment_id} );
 	if ( $param{btnFunction} eq 'Save' ) {
 		$param{recipient_id} = $session{company_id} if ! $param{recipient_id};
-		if ( Date::Calc::check_date( @param{'received_on_year','received_on_month','received_on_day'} ) ) {
-			$param{received_on} = sprintf('%.4d-%.2d-%.2d', @param{'received_on_year','received_on_month','received_on_day'} );
-			$variable{error} .= $Payment->save(\%param);
-			if ( $param{payment_id} ) {
-				$variable{ExternalRedirect} = '/payment/history.html';
-			} else {
-				$variable{ExternalRedirect} = '/payment/edit.html?payment_id='.$Payment->id();
-			} # end if
-		} else {
+		if ( ! Date::Calc::check_date( @param{'received_on_year','received_on_month','received_on_day'} ) ) {
 			$variable{error} .= 'Invalid received on date.<br/>';
+      return;
+    }
+    $param{received_on} = sprintf('%.4d-%.2d-%.2d', @param{'received_on_year','received_on_month','received_on_day'} );
+    my @changes = $Payment->changes(\%param);
+    if ( @changes ) {
+			$variable{error} .= $Payment->save(\%param);
+      if ( !$variable{error} ) {
+        (new openprint::Log())->save({Object=>$Payment, action=>'Edit', note=>join('<br/>', @changes)});
+        if ( $param{payment_id} ) {
+          $variable{ExternalRedirect} = '/payment/history.html';
+        } else {
+          $variable{ExternalRedirect} = '/payment/edit.html?payment_id='.$Payment->id();
+        } # end if
+			} # end if
 		} # end if
 	} elsif ( $param{btnFunction} eq 'Send Receipt' ) {
 		$variable{error} .= $Payment->send_receipt();
