@@ -3279,7 +3279,10 @@ sub breakdown {
 	} # end if
 	$breakdown .= openprint::Estimating::Imposition::signature_summary( $Imposition, $$price{'Imposition Price'} ) if $$price{'Imposition Price'} and ! $ImpositionServiceType;
 
-	$breakdown .= sprintf('Runstyle Charge:$%.2f<br/>', $$price{'Runstyle Charge'} ) if defined $$price{'Runstyle Charge'};
+	if ( defined $$price{'Runstyle Charge'} ) {
+		my $RunStyleCharge = $$price{'Runstyle Charge'};
+		$breakdown .= sprintf('%s Charge: $%.2f<br/>', @$RunStyleCharge{'ServiceName','Price'} );
+	}
 	$breakdown .= sprintf($$Imposition{runstyle}.' Dry Cost:$%.2f<br/>', @$price{'WorkTurn Dry Charge'} ) if $$price{'WorkTurn Dry Charge'};
 	$breakdown .= sprintf('Press Wash Charge: $%.2f * %d washes = $%.2f<br/>', @$price{'Press Wash Price','Press Washes','Press Wash Total'}) if $$price{'Press Washes'};
 	$breakdown .= sprintf('Plate Make Ready: $%.2f%s * %dplates * %d runs = $%.2f<br/>', @$price{'Plate Setup Price','Plate Setup Units','Plate Setup Count', 'Plate Runs', 'Plate Total'} );
@@ -5507,7 +5510,6 @@ sub calc_price {
 	$setup_rate *= ( 1 + ( $roll2sheet_setup_overs_rate / 100 ) ) if $roll2sheet_setup_overs_rate;
 
 	my $roll2sheet_run_overs_rate = $Press->specification('Roll2Sheet Additional Run Overs') if $is_Roll2Sheet;
-$log->error("Roll2SheetRunOversReate $is_Roll2Sheet $roll2sheet_run_overs_rate");
 
 	my $setup_overs;
 	if ( $$specs{'OverrideSetup'.$qty_index} and ( $$specs{'OverrideSetup'.$qty_index} eq 'Y' ) ) {
@@ -5567,9 +5569,9 @@ $log->error("Roll2SheetRunOversReate $is_Roll2Sheet $roll2sheet_run_overs_rate")
 	$overs = $additional_overs;
 
 	if ( ( $_ = $Press->Specification('Overs') ) and ( $$_{value} eq 'All' ) ) {
-		$overs += ceil( $setup_overs + $run_overs );
+		$overs += ceil($setup_overs + $run_overs);
 	} else {
-		$overs += ceil( ($setup_overs > $run_overs) ? $setup_overs : $run_overs );
+		$overs += ceil(($setup_overs > $run_overs) ? $setup_overs : $run_overs);
 	} # end if
 	$overs = $min_overs if $overs < $min_overs;
 
@@ -5866,7 +5868,7 @@ $log->debug("Initial Runspeed: standard: $$RunSpeed{value}$$RunSpeed{units} actu
 	#} else {
 		#$log->debug("Has no cutting") if DEBUG;
 	} # end if
-			$log->error("Done Cutting is not being done");
+			#$log->error("Done Cutting is not being done");
 
 	# Now we know the bindery overs
 	my $bindery_overs = sets::max( $$folding_results{MakeReadyOvers} + $$folding_results{RunOvers}, $scoring_results{Overs}, $uv_results{Overs}, $diecutting_results{Overs}, $price{'Cutting Overs'} );
@@ -6011,12 +6013,6 @@ if ( 1 ) {
 	} # end if
 	my $setup_cost = $press_setup + $price{'WorkTurn Dry Charge'} + $price{'Plate Total'} + $price{'Version Charge'};
 
-	if ( my $RunstyleMakeReadyService = openprint::Service->find_one(name=>'RunstyleMakeReady'.$$Imposition{runstyle}) ) {
-		my $RunstyleMakeReady = $price{RunstyleMakeReady} = $RunstyleMakeReadyService->get_Price(undef, $Press);
-		$$RunstyleMakeReady{Total} = $$RunstyleMakeReady{Price};
-		$setup_cost += $price{RunstyleMakeReady}{Total};
-		$price{'Setup Breakdown'} .= $RunstyleMakeReadyService->description().sprintf(' $%.2f%s = $%.2f<br/>', @$RunstyleMakeReady{'Price','units','Total'} );
-	}
 
 # Recalculate Overs, etc using Plate Count now
 	if ( $$project{print_sides} == 1 ) {
@@ -6383,9 +6379,9 @@ $log->debug("Area $area = $$Imposition{object_area} * Impressions($colour_impres
 
 	my $RunStyleService = $Services{$$Imposition{runstyle}.'Setup'};
 
-	if ( $RunStyleService and my %RunStylePrice = $RunStyleService->get_price( undef, $Press ) ) {
-		$price{'Runstyle Charge'} += $RunStylePrice{Price};
-		$setup_cost += $price{'Runstyle Charge'};
+	if ( $RunStyleService and my %RunStylePrice = $RunStyleService->get_price(undef, $Press) ) {
+		$price{'Runstyle Charge'} = \%RunStylePrice;
+		$setup_cost += $RunStylePrice{Price};
 	} # end if
 
 
