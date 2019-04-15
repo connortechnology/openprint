@@ -668,6 +668,11 @@ if ( ! sets::isin('payments', \@tables) ) {
     $log->debug("Adding amount_locked to payments");
     $dbh->do('ALTER TABLE payments ADD amount_locked BOOLEAN NOT NULL DEFAULT FALSE');
   }
+  if ( ! $$data{account_id} ) {
+    $log->debug("Adding account_id to Payment");
+    $dbh->do('ALTER TABLE Payments ADD account_id    INTEGER') or die $dbh->errstr();
+    $dbh->do('ALTER TABLE Payments ADD FOREIGN KEY (account_id) REFERENCES Expense_Accounts (id)') or die $dbh->errstr();
+  }
 } # end if
 
 	# Check orders structure, don't have to check for existence because we did that twice above
@@ -5728,6 +5733,10 @@ if ( ! sets::isin('backups', \@tables ) ) {
   if ( ! exists $$data{deleted} ) {
     $log->debug("Adding deleted to Backups");
     $dbh->do('ALTER TABLE Backups ADD deleted BOOLEAN NOT NULL DEFAULT FALSE') or die $dbh->errstr();
+  }
+  if ( ! exists $$data{enabled} ) {
+    $log->debug("Adding enabled to Backups");
+    $dbh->do('ALTER TABLE Backups ADD enabled BOOLEAN NOT NULL DEFAULT TRUE') or die $dbh->errstr();
   }
   if ( ! exists $$data{owner_id} ) {
     $log->debug("Adding Owner_id to bakcups");

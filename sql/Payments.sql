@@ -17,5 +17,6 @@ CREATE TABLE Payments (
 	deleted				BOOLEAN not NULL default false,
 	type_id				INTEGER, FOREIGN KEY (type_id) REFERENCES PaymentTypes (id),
 	order_id			INTEGER, FOREIGN KEY (order_id) REFERENCES Orders(id),
+  account_id    INTEGER, FOREIGN KEY (account_id) REFERENCES Expense_Accounts (id),
 	PRIMARY KEY( id )
 );
