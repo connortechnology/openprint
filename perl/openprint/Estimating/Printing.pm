@@ -5580,7 +5580,10 @@ sub calc_price {
 # or ( $$Imposition{runstyle} eq 'Sheet Work' ) );
 
 	my $max_impression_quantity = $Press->specification('Maximum Impression Quantity', $$Paper{calliper});
-	if ( $max_impression_quantity and ($max_impression_quantity < $impressions ) ) {
+	if ( $max_impression_quantity and (
+				($max_impression_quantity < $impressions)
+				or ( $$Imposition{runstyle} eq 'Sheet Work' and $$project{print_sides} == 2 and $max_impression_quantity < $impressions*2 )
+					) ) {
 		$log->debug("Next cuz of maximum impression quantity $max_impression_quantity : $impressions") if DEBUG;
 		return \%price;
 	#} else {
