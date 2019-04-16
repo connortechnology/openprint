@@ -30,7 +30,7 @@ sub edit {
 			$Service = $Service->Next( {category_id=>$param{ddmSearchCategory}} );
 		} elsif ( $param{btnFunction} eq 'Delete' ) {
 			(new openprint::Log())->save({Object=>$Service, action=>'Delete'});
-			$variable{error} .= $Service->delete() if ! $variable{error};
+			$variable{error} .= $Service->delete();
 			$Service = $Service->Next( {category_id=>$param{ddmSearchCategory}} ) if ! $variable{error};
 		} elsif ( $param{btnFunction} eq 'Destroy' ) {
 			foreach my $T ( openprint::Timetrack->find(service_id=>$Service->id() ) ) {
