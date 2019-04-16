@@ -1405,6 +1405,9 @@ sub printed_on {
 	my ( $self ) = @_;
 	if ( ! exists $$self{printed_on} ) {
 		@$self{printed_on} = sql::execute( undef, undef, q`SELECT MAX(dtmtimestamp) FROM Project_Log WHERE project_id=? AND description LIKE 'Marked Printed%'`, $$self{id} );
+		if ( ! $$self{printed_on} ) {
+			@$self{printed_on} = sql::execute( undef, undef, q`SELECT MAX(dtmtimestamp) FROM Project_Log WHERE project_id=? AND description LIKE 'Form % Completed for%'`, $$self{id} );
+		}
 	} else {
 $openprint::log->debug("Printed on: $$self{printed_on}");
 	} # end if
