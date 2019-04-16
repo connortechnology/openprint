@@ -127,10 +127,10 @@ sub destroy {
 	my $self = shift;
 
 	delete $openprint::Object::cache{'openprint::Service'}{$$self{id}} if $openprint::Object::cache{'openprint::Service'};	
-	my $ac = sql::start_transaction( $dbh );
-    sql::execute( undef, undef, q{DELETE FROM Service_Prices WHERE service_id=?}, $$self{id} );
+	my $ac = sql::start_transaction($dbh);
+	sql::execute(undef, undef, q{DELETE FROM Service_Prices WHERE service_id=?}, $$self{id});
 	$self->SUPER::destroy();
-	sql::end_transaction( $dbh, $ac );
+	sql::end_transaction($dbh, $ac);
 	return $dbh->errstr();
 } # end sub delete
 
