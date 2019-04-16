@@ -9,8 +9,10 @@ The following had one or more signatures that ran on <? echo ( join(': ', new op
 		<th class="Docket">Docket</th>
 		<th class="invoice_id">Invoice #</th>
 		<th class="Company">Company</th>
-		<th class="DateTime">Ordered On</th>
-		<th class="DateTime">Printed On</th>
+		<th class="DateTime">Ordered</th>
+		<th class="DateTime">Printed</th>
+		<th class="DateTime">Shipped</th>
+		<th class="DateTime">Invoiced</th>
 		<th class="status">Status</th>
 		<th class="Price">Total</th>
 		<th class="Price">Commission</th>
@@ -47,15 +49,19 @@ The following had one or more signatures that ran on <? echo ( join(': ', new op
 					<td class="Company"><a href="/employee/project/view.html?order_id=%2$d">%5$s</a></td>
 					<td class="DateTime"><a href="/employee/project/view.html?order_id=%2$d">%6$s</a></td>
 					<td class="DateTime"><a href="/employee/project/view.html?order_id=%2$d">%7$s</a></td>
-					<td class="status"><a href="/employee/project/view.html?order_id=%2$d">%8$s</a></td>
-					<td class="Price"><a href="/employee/project/view.html?order_id=%2$d">%9$s</a></td>
-					<td class="Price"><a href="/employee/project/view.html?order_id=%2$d">%10$s</a></td>
+					<td class="DateTime"><a href="/employee/project/view.html?order_id=%2$d">%8$s</a></td>
+					<td class="DateTime"><a href="/employee/project/view.html?order_id=%2$d">%9$s</a></td>
+					<td class="status"><a href="/employee/project/view.html?order_id=%2$d">%10$s</a></td>
 					<td class="Price"><a href="/employee/project/view.html?order_id=%2$d">%11$s</a></td>
+					<td class="Price"><a href="/employee/project/view.html?order_id=%2$d">%12$s</a></td>
+					<td class="Price"><a href="/employee/project/view.html?order_id=%2$d">%13$s</a></td>
 				</tr>
 				`, $rowclass, $Order->id(), $Order->docket(), join('<br/>', map { $_->Invoice()->num() } $Order->Invoices() ),
 				htmlize($Order->company_name()),
 				format_datetime( $Order->created_on() ),
 				join( '<br/>', map { format_datetime( $_->printed_on() ) } $Order->Projects() ),
+				join( '<br/>', map { format_datetime( $_->shipped_on() ) } $Order->Projects() ),
+				format_datetime( $Order->invoiced_on() ),
 				$Order->status(),
 				openprint::Currency::format( $price ),
 				openprint::Currency::format( $csr_commission ),

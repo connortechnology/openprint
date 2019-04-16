@@ -273,7 +273,7 @@ sub order_history {
 		my @servicetype_ids = split(',',$session{$r->uri().'?servicetype_id'} );
 		my %ServiceTypesById = map { $$_{id} => $_ } @{$variable{ServiceTypes}};
 
-		my @Header = ( 'OrderID', 'Docket', 'Invoice', 'Company', 'Date Ordered', 'Date Printed', 'Status', 'Total',
+		my @Header = ( 'OrderID', 'Docket', 'Invoice', 'Company', 'Date Ordered', 'Date Printed', 'Date Shipped', 'Date Invoiced', 'Status', 'Total',
 				'Commission',
 				'Credit Card Fee',
 				map { $ServiceTypesById{$_}->description() } @servicetype_ids );
@@ -297,6 +297,8 @@ sub order_history {
 						$Order->Company()->name(),
 						ssi::format_csv_date($Order->created_on()),
 						ssi::format_csv_date($Project->printed_on()),
+						ssi::format_csv_date($Project->shipped_on()),
+						ssi::format_csv_date($Order->invoiced_on()),
 						$Order->status(),
 						$openprint::Currency->format($Order->total()),
 						$openprint::Currency->format($Order->csr_commission()),
@@ -1310,7 +1312,8 @@ sub _production_performance {
 				next if ! $found;
 			} # end if press_names
 
-			my @fragment = ( $Order->id(), $Order->docket(), $Project->id(), $Order->company_name(), $Order->created_on(), $Project->status(), $Project->ordered_price() );
+			my @fragment = ( $Order->id(), $Order->docket(), $Project->id(), $Order->company_name(), $Order->created_on(), 
+					$Project->status(), $Project->ordered_price() );
 			my $impressions = 0;
 			foreach my $sig_id ( @signatures ) {
 				my $Service = $Project->Service( $sig_id );
@@ -1360,8 +1363,13 @@ sub _production_performance {
 			} # end if include plate info
 
 			if ( $columns{production} ) {
-				push @fragment, ''.$Project->takeover_on(), ''.$Project->printed_on(), ''.$Project->completed_on();
-				my $invoiced_on = ''.$Order->invoiced_on();
+				push @fragment,
+						 ssi::format_csv_datetime($Project->takeover_on()),
+						 ssi::format_csv_datetime($Project->printed_on()),
+						 ssi::format_csv_datetime($Project->completed_on());
+				my $shipped_on = ssi::format_csv_datetime($Project->shipped_on());
+				push @fragment, $shipped_on;
+				my $invoiced_on = ssi::format_csv_datetime($Order->invoiced_on());
 				push @fragment, $invoiced_on;
 			}
 
@@ -1420,11 +1428,12 @@ $openprint::log->debug("PI Stock for $$Order{docket} is $$PI{delta} " . $PI->Pap
 		} # end foreach Project
 	} # end foreach Order
 
-	$variable{Header} = [ 'Order ID', 'Docket', 'Project ID', 'Company', 'Created On', 'Status', 'Project Value',
+	$variable{Header} = [ 'Order ID', 'Docket', 'Project ID', 'Company',
+		'Created On', 'Status', 'Project Value',
 		'Impressions',
 		( map { $$_{name} } @ServiceType_Categories ),
 		( $columns{plates} ? ( 'Plates', 'Plate Cost', 'Plate Total' ) : () ),
-		( $columns{production} ? ( 'Operator Assigned', 'Printed On', 'Completed On', 'Invoiced On' ) : () ),
+		( $columns{production} ? ( 'Operator Assigned', 'Printed On', 'Completed On', 'Shipped On', 'Invoiced On' ) : () ),
 		( $columns{stock} ? ( 'Used Stock Sheets', 'Used Stock Weight', 'Stock Cost', 'Stock', 'Quoted Stock Sheets', 'Quoted Stock Weight', 'Stock Quoted Price' ) : () ),
 	];
 
