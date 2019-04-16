@@ -1415,6 +1415,12 @@ sub shipped_on {
 	my ( $self ) = @_;
 	if ( ! exists $$self{shipped_on} ) {
 		@$self{shipped_on} = sql::execute( undef, undef, q`SELECT MAX(dtmtimestamp) FROM Project_Log WHERE project_id=? AND description IN ('Marked Shipped','Marked Picked Up')`, $$self{id} );
+		if ( $$self{docket} and ! $$self{shipped_on} ) {
+			my $ShippingLabel = openprint::Label->find_one( docket=>$$self{docket}, type=>'PackingSlip' );
+			if ( $ShippingLabel ) {
+				$$self{shipped_on} = $$ShippingLabel{created_on};
+			}
+		}
 	} # end if
 	return $$self{shipped_on};
 }
