@@ -1401,7 +1401,7 @@ $openprint::log->debug("PI Stock for $$Order{docket} is $$PI{delta} " . $PI->Pap
 						$stock_cost += $MC->value();
 					}
 				}
-				push @fragment, $stock_sheets, $stock_weight, $stock_cost;
+				push @fragment, $stock_sheets, int($stock_weight), $stock_cost;
 
 				if ( $$services{Paper} and @{$$services{Paper}} ) {
 					my $Service = $Project->Service( $$services{Paper}[0] );
@@ -1415,7 +1415,7 @@ $openprint::log->debug("PI Stock for $$Order{docket} is $$PI{delta} " . $PI->Pap
 						my ( $Stock, $qty ) = @$SQ{'Stock','quantity'};
 						next if ! $qty;
 
-						push @Data, @fragment, $Stock->to_string(), ( $Stock->type() eq 'Sheet' ? ($qty,$qty*$Stock->sheet_weight()) : ('', $qty) ), $$SQ{price};
+						push @Data, @fragment, $Stock->to_string(), ( $Stock->type() eq 'Sheet' ? ($qty,int($qty*$Stock->sheet_weight())) : ('', $qty) ), $$SQ{price};
 					}
 
 				} else {
