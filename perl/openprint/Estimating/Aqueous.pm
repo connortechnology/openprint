@@ -684,8 +684,8 @@ sub signature_calc {
 
 sub breakdown {
 	my $Price = shift;
-	my $breakdown = $$Price{Imposition}{imposition} . 'out on ' . $$Price{Equipment}->name().'<br/>';
-	for ( my $i = 0; $i < @{$$Price{types}}; $i ++ ) {
+	my $breakdown = $$Price{Imposition}{imposition} . 'out on ' . ($$Price{Equipment} ? $$Price{Equipment}->name() : 'unknown' ).'<br/>';
+	for ( my $i = 0; $i < ( $$Price{types} ? scalar @{$$Price{types}} : 0); $i ++ ) {
 		my $type = $$Price{types}[$i];
 		my $SetupPrice = $$Price{setupPrices}[$i];
 		my $BlanketCutPrice = $$Price{BlanketCutPrices}[$i];
