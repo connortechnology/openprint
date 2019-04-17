@@ -1,6 +1,8 @@
 use strict;
 require openprint::Object;
 require openprint::Host;
+use Data::Dumper;
+
 
 package openprint::Host_Interface;
 our @ISA = qw( openprint::Object );
@@ -10,36 +12,40 @@ $serial = 'host_interfaces_id_seq';
 $table = 'host_interfaces';
 
 %fields = (
-	id				=>	'id',
-	mac				=>	'mac',
-	ip				=>	'ip',
-	comment			=>	'comment',
-	dhcp			=>	'dhcp',
-    host_id         =>  'host_id',
-    connected_to  =>  'connected_to',
-	monitor			=>	'monitor',
-	online			=>	'online',
+	id						=>	'id',
+	mac						=>	'mac',
+	ip						=>	'ip',
+	comment				=>	'comment',
+	dhcp					=>	'dhcp',
+  host_id       =>  'host_id',
+  connected_to  =>  'connected_to',
+	monitor				=>	'monitor',
+	online				=>	'online',
 );
+
 %transforms = (
-	mac         	=>    [ 's/[^\da-fA-F:\-]//g' ],
-	connected_to	=>    [ 's/[^\da-fA-F:\-]//g' ],
-	ip          	=>    [ 's/[^\d\.\:a-fA-F]//g' ],
+	mac           	=> [ 's/[^\da-fA-F:\-]//g' ],
+	connected_to  	=> [ 's/[^\da-fA-F:\-]//g' ],
+	ip            	=> [ 's/[^\d\.\:a-fA-F\/]//g' ],
 );
 
 %find_fields = (
 	whitelist	=>	'(SELECT whitelist FROM Hosts WHERE Hosts.id=host_id)',
 );
 %defaults	= (
-	dhcp		=>	0,
-	ip			=>	undef,
-	mac			=>	undef,
+	dhcp	  	=>	0,
+	ip		  	=>	undef,
+	mac		  	=>	undef,
   connected_to  =>  undef,
 	monitor		=>	0,
 	online		=>	undef,
 );
 
 sub Host {
-	return new openprint::Host( $_[0]{host_id} );
+  if ( ! $_[0]{Host} ) {
+    $_[0]{Host} = new openprint::Host( $_[0]{host_id} );
+  }
+  return $_[0]{Host};
 } # end sub Host;
 
 sub resolve {
@@ -65,6 +71,7 @@ sub get_mac {
 $openprint::log->debug("Looking at $iface. " . $iface->address . ', subnet: ' . $subnet );
 		if ( $iface->address =~ /^$subnet\.\d+$/ ) {
 			$use_iface = $iface;
+$openprint::log->debug("Using $iface. " . $iface->address . ', subnet: ' . $subnet );
 		} # end if
 	}
 
@@ -76,6 +83,7 @@ $openprint::log->debug("Looking at $iface. " . $iface->address . ', subnet: ' . 
 	} else {
 		$openprint::log->debug("Unable to determine interface");
 	} # end if
+  return undef;
 } # end sub get_mac
 
 sub authenticate {
@@ -90,10 +98,20 @@ $openprint::log->debug("Having authenticate $$headers{'www-authenticate'}");
 			my $Host = $HI->Host();
 			my $username = $Host->info('username');
 			my $password = $Host->info('password');
-			$openprint::log->debug("tokens: $tokens realm: $tokens{realm} username: $username password: $password ");
-			$browser->credentials( $HI->ip().':'.$port, $tokens{realm}, $username, $password );
-			$response = $browser->$method( $url, $args ? $args : () );
-$openprint::log->debug("Auth response for $method $url $tokens{realm}, $username, $password " . $response->is_success );
+			$openprint::log->debug("tokens: $tokens realm: $tokens{realm} username: $username password: $password args: " . ($args ? join(',',map { "$_=>$$args{$_}" } keys %{$args}) :'none'));
+			$browser->credentials(
+					$HI->ip().':'.$port,
+					$tokens{realm},
+					($username ? $username : ''), 
+					($password ? $password : ''),
+					);
+			$response = $browser->get($url);
+				$openprint::log->debug("Auth response for $method $url $tokens{realm}, $username, $password " . $response->is_success );
+
+			if ( $response->is_success and ( ($method ne 'get') or $args ) ) {
+$openprint::log->debug("Sending actual url $method ");
+				$response = $browser->$method($url, $args );
+			}
 		} else {
 			$openprint::log->error("No realm");
 		} # end if
@@ -101,10 +119,46 @@ $openprint::log->debug("Auth response for $method $url $tokens{realm}, $username
 		foreach my $k ( keys %{$headers} ) {
 			$openprint::log->debug("No auth Header $k => $$headers{$k}");
 		}
-			$response = $browser->$method( $url, $args ? $args : () );
+		$response = $browser->$method( $url, $args ? $args : () );
 	}
 	return $response;
 } # end sub authenticate
+
+sub vendor {
+  if ( !$_[0]{vendor} ) {
+    if ( $_[0]{mac} ) {
+      require openprint::OUI_Vendor;
+      my $oui = $_[0]{mac};
+      $oui =~ s/[^A-Fa-f0-9]//g;
+      $oui =~ s/^([A-Fa-f0-9]{6}).*$/${1}000000/;
+
+      if ( my $Vendor = openprint::OUI_Vendor->find_one(oui=>$oui) ) {
+        $_[0]{vendor} = $$Vendor{vendor_name};
+      } else {
+        eval {
+          require Net::MAC::Vendor;
+          my $vendor = Net::MAC::Vendor::lookup($_[0]{mac});
+          #$_ = Data::Dumper::Dumper($vendor);
+          if ( $vendor and @{$vendor} ) {
+
+            $_[0]{vendor} = shift @{$vendor};
+
+            my $Vendor = new openprint::OUI_Vendor();
+            $Vendor->save({ oui=>$oui, vendor_name=>$_[0]{vendor} });
+          }
+        };
+      }
+      $openprint::log->error("Error in eval: $@") if $@;
+      return $_[0]{vendor};
+    }
+    return '';
+  }
+  return $_[0]{vendor};
+}
+
+sub is_subnet {
+  return ( index($_[0]{ip}, '/') == -1 ) ? 0 : 1;
+}
 
 1;
 __END__

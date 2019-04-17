@@ -168,6 +168,9 @@ sub value {
 				openprint::Currency::convert( $Cost );
 				$openprint::log->debug("cost for $$self{skid_id} $$Cost{units} $$Cost{cost}") if $debug;
 				if ( (!$$Cost{units}) or ($$Cost{units} eq '/100lbs' or $$Cost{units} eq '/cwt') ) {
+					if ( ! defined $$Cost{cost} ) {
+						$openprint::log->error("Undefined cost in POC for skid $$self{skid_id}");
+					}
 					$$self{value} = $$self{quantity} * $$Cost{cost} / 100;
 				} else {
 					$$self{value} = $$self{quantity} * $$Cost{cost};

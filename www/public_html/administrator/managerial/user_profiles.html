@@ -39,7 +39,7 @@ Please select a company or user to obtain login information.<br/>
 						<? echo ( 
 		$variable{companies_ddm} = openprint::Company->dropdown();
 		if ( @{$variable{companies_ddm}} > 1000 ) {
-			# TOo many.  find the selected one and drop all but previous and following 10..
+			# Too many.  find the selected one and drop all but previous and following 10..
 
 			for ( my $i = 0; $i < @{$variable{companies_ddm}}; $i += 2 ) {
 				if ( $variable{companies_ddm}[$i] == $session{$r->uri().'?company_id'} ) {
@@ -65,7 +65,7 @@ Please select a company or user to obtain login information.<br/>
 					<label>User Name</label>
 					<select name="ddmUser" onchange="f1.btnFunction.value='';f1.submit();">
 						<option value="">Select a User</option>
-						<?FILL_USER_NAME?>
+						<?echo( make_drop_down( [ map { $_->id(), $_->name() } @{$$variable{Users}} ], $$variable{User}->id() ); ) ?>
 					</select>
 				</li>
 			</ul>
@@ -90,7 +90,7 @@ Please select a company or user to obtain login information.<br/>
 					$html .= button( 'Prev1', { onclick=>"f1.btnFunction.value='&lt;&lt;';fmCheck(f1);", text=>'&lt;&lt;' } );
 					$html .= button( 'Next1', { onclick=>"f1.btnFunction.value='&gt;&gt;';fmCheck(f1);", text=>'&gt;&gt;' } );
 					$html .= button( 'Copy1', { onclick=>"f1.btnFunction.value='copy';f1.submit();", text=>'Copy' } );
-					$html .= button( 'New1', { onclick=>"\$('Log').hide();keepCompany(f1);", text=>'New' } );
+					$html .= button( 'New1', { onclick=>"var l=\$('Log');if(l){l.hide();};keepCompany(f1);", text=>'New' } );
 					if ( $$variable{User}->deleted() ) {
 						$html .= button( 'UnDelete1', { onclick=>"f1.btnFunction.value='Undelete';f1.submit();", text=>'Undelete' } );
 						$html .= button( 'Destroy1', { onclick=>"f1.btnFunction.value='Destroy';f1.submit();", text=>'Destroy' } );
@@ -312,8 +312,8 @@ Please select a company or user to obtain login information.<br/>
 			<? echo (
 				my $html;
 				my @UserGroups = map { $_->id() } $$variable{User}->Groups();
-				foreach my $Group ( openprint::UserGroup->find( 'order'=>'lower(name)' ) ) {
-					$html .= sprintf('<li><input type="checkbox" id="UserGroups%1$d" name="UserGroups" value="%1$d" %3$s /><label for="UserGroups%1$d">%2$s</label></li>', $Group->id(), $Group->name(), checked( sets::isin( $Group->id(), \@UserGroups ) ) );
+				foreach my $Group ( openprint::UserGroup->find( order=>'lower(name)' ) ) {
+					$html .= sprintf('<li><input type="checkbox" id="UserGroups%1$d" name="UserGroups" value="%1$d" %3$s /><label class="radio" for="UserGroups%1$d">%2$s</label></li>', $Group->id(), $Group->name(), checked( sets::isin( $Group->id(), \@UserGroups ) ) );
 				} # end foreach
 				return $html;
 			) ?>
@@ -322,7 +322,7 @@ Please select a company or user to obtain login information.<br/>
 		<? if ( $$variable{DoEmail} ) ?>
 		<?include(/account/_email_settings.html)?>
 		<? endif ( $$variable{DoEmail} ) ?>
-		<? echo ( include('/account/_user_profile_edit.html'); ) ?>
+		<?include('/account/_user_profile_edit.html')?>
 		<div class="LoginCredentials">
 			<fieldset><legend>Login Information</legend> 
 				<ul>
@@ -371,12 +371,12 @@ Please select a company or user to obtain login information.<br/>
 			<p id="ButtonsBottom" class="buttons">
 			<label>
 			<? echo (
-					if ( $$variable{User}->company_id() ) {
-						return button( 'CompanyInfo2', { href=>'company_profiles.html?ddmCustomer='.$$variable{User}->company_id(), text=>'Company Information' } );
-					} elsif ( $param{ddmCustomer} ) {
-						return button( 'CompanyInfo2', { href=>'company_profiles.html?ddmCustomer='.$param{ddmCustomer}, text=>'Company Information' } );
-					}
-					return;
+				if ( $$variable{User}->company_id() ) {
+					return button( 'CompanyInfo2', { href=>'company_profiles.html?ddmCustomer='.$$variable{User}->company_id(), text=>'Company' } );
+				} elsif ( $param{'ddmCustomer'} ) {
+					return button( 'CompanyInfo2', { href=>'company_profiles.html?ddmCustomer='.$param{'ddmCustomer'}, text=>'Company' } );
+				}
+				return;
 			) ?>
 			</label>
 			<? if ( $$variable{EDIT_USER_NUM} ) ?>
@@ -399,31 +399,7 @@ Please select a company or user to obtain login information.<br/>
 		</fieldset>
 		<input type="hidden" name="btnFunction"/>
 	</form>
-<div id="Log">
 <? if ( $$variable{User}->id() ) ?>
-	<form id="f2" name="f2" method="post" action="user_profiles.html">
-		<input type="hidden" name="user_id" value="<?echo ($variable{User}->id())?>"/>
-		<fieldset><legend>Logs</legend>
-			<ul>
-				<li><label>Date</label>
-					<? echo ( join( ' to ',
-							datetime_select_session( $r->uri(),'log_created_on_start', {
-								onchange    =>q`new Ajax.Updater( 'Logs', '_user_logs.html', { parameters: $('f2').serialize() } );`,
-								with_today=>1,
-								with_clear=>1,
-								} ),
-							datetime_select_session( $r->uri(),'log_created_on_end', {
-								onchange    =>q`new Ajax.Updater( 'Logs', '_user_logs.html', { parameters: $('f2').serialize() } );`,
-								with_today=>1,
-								with_clear=>1,
-								} ),
-						); ) ?>
-					<? echo ( button( 'LoadLog', { onclick=>q`new Ajax.Updater( 'Logs', '_user_logs.html', { parameters: $('f2').serialize() } );`, text=>'Load' } ); ) ?>
-				</li>
-			</ul>
-			<div id="Logs"><?include('_user_logs.html')?></div>
-		</fieldset>
-	</form>
+<? echo ( include_logs( $$variable{User} ); ) ?>
 <? endif ( $$variable{User}->id() ) ?>
-</div>
 </div>

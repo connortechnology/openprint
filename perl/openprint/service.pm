@@ -66,7 +66,7 @@ $openprint::log->debug("Module is: $module");
 	# make this fast by doing it in one transaction, locking does the tranasaction for us
 	$Project->lock();
 	my @changes;
-	foreach my $key (@variables) {
+	foreach my $key ( sort { $a cmp $b } @variables) {
 #$log->debug("Key: $key ($openprint::param{$key}) ( $$specs{$key})");
 		if ( ref $openprint::param{$key} eq 'ARRAY' ) {
 #$log->error("Key: $key ($openprint::param{$key}) ( $$specs{$key})");
@@ -556,7 +556,7 @@ sub internal_calc {
 
 # Returns vale in seconds
 sub get_runtime {
-    my ( $Project, $service_index, $Equipment, $impressions, $speed, $pertains_to ) = @_;
+	my ( $Project, $service_index, $Equipment, $impressions, $speed, $pertains_to ) = @_;
 	my $Service = $Project->Service( $service_index );
 	return $Service->runtime( $Equipment, $impressions, $speed, $pertains_to );
 } # end sub get_runtime

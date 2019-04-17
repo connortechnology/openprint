@@ -57,7 +57,7 @@ $serial = 'invoices_id_seq';
 
 %find_fields = (
 	po		=>	'(SELECT po FROM invoiced_products WHERE invoiced_products.invoice_id = invoices.id)',
-	sent_on	=>	'(SELECT created_on FROM invoice_logs WHERE invoice_id=invoices.id LIMIT 1)',
+	sent_on	=>	q`(SELECT date_time FROM logs WHERE object_id=invoices.id AND object_type_id=(SELECT id FROM Object_Types WHERE name='openprint::Invoice') LIMIT 1)`,
 	product_id	=>	'(SELECT product_id FROM invoiced_products WHERE invoice_id=invoices.id)',
 );
 
@@ -289,10 +289,24 @@ sub send {
 			uri => 'invoice',
 			Currency	=>	$self->Currency(),
 	);
-	my $email_template = ssi::slurp_content('/email_template.html');
-	my $invoice_template = ssi::slurp_content('/invoice_template.html');
+
+  my $skin_path = '';
+  if ( -e ($openprint::config{SkinPath}.'/'.$self->Invoicer()->name() ) ) {
+  $skin_path = '/'.$self->Invoicer()->name();
+  $openprint::log->debug("Have skinpath at $skin_path");
+} else {
+  $openprint::log->debug("Have no skinpath at " . $openprint::config{SkinPath}.'/'.$self->Invoicer()->name() );
+}
+
+	my $email_template = ssi::slurp_content($skin_path.'/email_template.html');
+	$email_template = ssi::slurp_content('/email_template.html') if ! $email_template;
+
+  my $invoice_template = ssi::slurp_content($skin_path.'/invoice_template.html');
+  $invoice_template = ssi::slurp_content('/invoice_template.html') if ! $invoice_template;
+
 	my @attachments;
-	$data{ReplacementText} = ssi::include('/email_content/invoice_body.html', \%data);
+	$data{ReplacementText} = ssi::include($skin_path.'/email_content/invoice_body.html', \%data);
+	$data{ReplacementText} = ssi::include('/email_content/invoice_body.html', \%data) if ! $data{ReplacementText};
   $Email->html_body( ssi::variable_substitution( \$email_template, \%data ) );
 
 	$data{ReplacementText} = ssi::include( '/email_content/invoice.html', \%data );
@@ -479,6 +493,23 @@ sub first_sent_on {
 	} # end ! exists first_sent_on
 	return $_[0]{first_sent_on};
 } # end sub first_sent_on
+
+sub paid_days {
+  if ( ! $_[0]{paid_on} ) {
+    $openprint::log->debug("No paid_on");
+    return;
+  }
+  my $sent = $_[0]->first_sent_on();
+  if ( ! $sent ) {
+    $openprint::log->debug("No sent");
+    return;
+  }
+
+  my $paid_time = Date::Parse::str2time( $_[0]{paid_on} );
+  my $sent_time = Date::Parse::str2time( $sent );
+  my $days = int( ($paid_time-$sent_time) / 86400 );
+  return $days;
+}
 
 1;
 __END__

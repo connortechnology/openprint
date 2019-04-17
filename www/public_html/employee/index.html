@@ -34,58 +34,64 @@ You may use a barcode scanner.  Simply scan the code and click Go.<br/>
 		<ul>
 		<li>
 			<label>Docket #</label>
-			<? echo ( join('', 
-						input(type=>'cardinal',name=>'StartDocket', onchange=>'change_handler(this);', onkeypress=>'return input_handler(this,event);', onkeydown=>'if(event.keyCode==13){submit_handler(f1);}', min=>1),
-						button( 'Go1', { onclick=>'submit_handler( f1 );', text=>'Go' } ),
+			<? echo ( join("\n", 
+						input(type=>'cardinal',name=>'StartDocket',
+							onchange=>'change_handler(this);',
+							onkeypress=>'return input_handler(this,event);',
+							onkeydown=>'if(event.keyCode==13){submit_handler(f1);}',
+							min=>1
+							),
+						button('Go1', { onclick=>'submit_handler( f1 );', text=>'Go' } ),
+						button('Go1Prepress', { onclick=>q`if(f1.StartDocket.value){window.location='/employee/proj/prep/proofs.html?docket='+f1.StartDocket.value;};`, text=>'Go Proofs' } ),
 						); ) ?>
 		</li>
 		<li>
 			<label>Order #</label>
-			<? echo ( join('',
+			<? echo ( join("\n",
 				input(type=>'cardinal',name=>'OrderID', onchange=>'change_handler(this);', onkeypress=>'return input_handler( this, event );', onkeydown=>'if(event.keyCode == 13){submit_handler(f1);}' ),
 				button( 'Go2', { onclick=>'submit_handler( f1 );', text=>'Go' } ),
 				); ) ?>
 		</li>
 		<li>
 			<label>Project #</label>
-			<? echo ( join('',
+			<? echo ( join("\n",
 			input( type=>'cardinal', name=>'project_id', onchange=>'change_handler(this);', onkeypress=>'return input_handler( this, event );', onkeydown=>'if(event.keyCode == 13){submit_handler(f1);}' ),
 			button( 'Go3', { onclick=>'submit_handler( f1 );', text=>'Go' } ),
 			); ) ?>
 		</li>
 		<li>
 			<label>Skid #</label>
-			<? echo ( join('',
+			<? echo ( join("\n",
 						input(type=>'cardinal', name=>'skid_id', onchange=>'change_handler(this);', onkeypress=>'return input_handler( this, event );', onkeydown=>'if(event.keyCode == 13){submit_handler(f1);}'),
 						button( 'Go4', { onclick=>'submit_handler( f1 );', text=>'Go' } ),
 						); ) ?>
 		</li>
 		<li><label>Paper #</label>
-			<? echo ( join('',
+			<? echo ( join("\n",
 						input( type=>'cardinal', name=>'paper_id', onchange=>'change_handler(this);', onkeypress=>'return input_handler( this, event );', onkeydown=>'if(event.keyCode == 13){submit_handler(f1);}' ),
 						button( 'Go5', { onclick=>'submit_handler( f1 );', text=>'Go' } ),
 						); ) ?>
 		</li>
 		<li><label>RFID #</label>
-			<? echo ( join('',
+			<? echo ( join("\n",
 			input( type=>'text', pattern=>'[0-9]*', name=>'rfidtag_id', onchange=>'change_handler(this);', onkeypress=>'return input_handler( this, event );', onkeyup=>'hexize(this);', onkeydown=>'if(event.keyCode == 13){submit_handler(f1);}' ),
 			button( 'Go6', { onclick=>'submit_handler( f1 );', text=>'Go' } ),
 			); ) ?>
 		</li>
 		<li><label>PO #</label>
-			<? echo ( join('',
+			<? echo ( join("\n",
 						input( type=>'cardinal', name=>'po_id', onchange=>'change_handler(this);', onkeypress=>'return input_handler( this, event );', onkeydown=>'if(event.keyCode == 13){submit_handler(f1);}' ),
 						button( 'GoPO', { onclick=>'submit_handler( f1 );', text=>'Go' } ),
 						); ) ?>
 		</li>
 		<li><label>Manifest #</label>
-			<? echo ( join('',
+			<? echo ( join("\n",
 			input( type=>'text', name=>'manifest_name', onchange=>'change_handler(this);', onkeypress=>'return input_handler( this, event );', onkeydown=>'if(event.keyCode == 13){submit_handler(f1);}' ),
 			button( 'GoManifest', { onclick=>'submit_handler( f1 );', text=>'Go' } ),
 			); ) ?>
 		</li>
 		<li><label>Invoice</label>
-			<? echo ( join('',
+			<? echo ( join("\n",
 			input( type=>'text', name=>'invoice_num', onkeydown=>'if(event.keyCode == 13){submit_handler(f1);}' ),
 			button( 'GoInvoice', { onclick=>'submit_handler( f1 );', text=>'Go' } ),
 			); ) ?>
@@ -191,10 +197,10 @@ format_date( $$Order{updated_on} ) );
             { 'custom' => ['(user_id1=? OR user_id2=?)', @session{'user_id','user_id'} ] }
             ) ) if $session{user_id};
         my $html;
-		require openprint::Article;
+				require openprint::Article;
         my @Articles = openprint::Article->find( published=>1,
-            'published_on <=' => sprintf('%.4d-%.2d-%.2d 00:00:00', Date::Calc::Add_Delta_Days( Date::Calc::Today(), 30 ) ),
-			limit	=> 5,
+            'published_on >=' => sprintf('%.4d-%.2d-%.2d 00:00:00', Date::Calc::Add_Delta_Days( Date::Calc::Today(), -30 ) ),
+						limit	=> 5,
             order =>  'published_on DESC',
         );
 

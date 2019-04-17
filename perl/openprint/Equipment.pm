@@ -73,6 +73,7 @@ use constant DEBUG_FOLDING => 0;
 	sorting			=>	undef,
 	category_id		=>	undef,
 	useinestimating	=>	undef,
+	useinscheduling	=>	undef,
 );
 
 sub fits {
@@ -325,7 +326,7 @@ sub Specification {
 	my ( $self, $name, $range, $s_debug ) = @_;
 
 	my $key = join('',$$self{id},$name,$range);
-	if ( $Specification_cache{$key} ) {
+	if ( exists $Specification_cache{$key} ) {
 		return $Specification_cache{$key};
 	} # end if
 
@@ -341,8 +342,8 @@ sub Specification {
 		} # end if
 	} # end if
 
-	if ( ! $$self{Specifications}{$name} ) {
-		$openprint::log->warn("No specfications for ($name) " . $self->name() ) if $s_debug;
+	if ( ! exists $$self{Specifications}{$name} ) {
+		$openprint::log->warn("No specifications for ($name) " . $self->name() ) if $s_debug;
 		return;
 	} # end if
 	my $Spec = misc::find_entry( $range, $$self{Specifications}{$name}, $s_debug );
@@ -511,7 +512,7 @@ sub Stock_Settings {
 } # end sub Stock_Settings
 
 sub servicetype_id {
-	my ( $self ) = @_;
+	my $self = shift;
 	return [] if ! $$self{servicetype_id};
 	return $$self{servicetype_id};
 } # end sub servicetype_id

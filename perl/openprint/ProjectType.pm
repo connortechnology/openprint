@@ -23,6 +23,7 @@ $serial = 'project_types_id_seq';
 	'type'			=>	'type',
 	'please_call'	=>	'please_call',
 	category		=>	undef,
+	deleted		=> 'deleted',
 );
 %transforms = (
 	id			=>	[ 's/\D//g', '<2147483647' ],
@@ -33,6 +34,7 @@ $serial = 'project_types_id_seq';
 	'category_id'	=>	undef,
 	'sorting'		=>	undef,
 	'please_call'	=>	0,
+	deleted	=>	0,
 );
 
 sub save {
@@ -135,7 +137,7 @@ sub blocked_ServiceTypes {
 	return ();
 } # end sub blocked_ServiceTypes
 
-sub delete {
+sub destroy {
 	my $self = shift;
 
 	my $ac = sql::start_transaction( $openprint::dbh );
@@ -149,7 +151,7 @@ sub delete {
 	
 	(new openprint::Log())->save({ action=>'Delete Project Type', note=>"Project Type ID: $$self{id} Project Type: $$self{name}"});
 	return;
-} # end sub delete
+} # end sub destroy
 
 sub Templates {
 	my ( $self, %params ) = @_;

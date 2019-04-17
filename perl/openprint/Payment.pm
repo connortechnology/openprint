@@ -21,6 +21,7 @@ $serial = 'payments_id_seq';
   recipient_id	=>	'owner_id',
   payor_id		=>	'payor_id',
   amount			=>	'amount',
+  amount_locked =>  'amount_locked',
   created_on		=>	'created_on',
   updated_on		=>	'updated_on',
   method			=>	'method',
@@ -34,6 +35,7 @@ $serial = 'payments_id_seq';
   type_id			=>	'type_id',
   exchange  =>  'exchange',
   value     =>  'value',
+  value_locked  =>  'value_locked',
 );
 
 %transforms = (
@@ -53,14 +55,23 @@ $serial = 'payments_id_seq';
 	value		=>	undef,
 	remaining	=>	undef,
   exchange  =>  1,
+  value_locked  =>  0,
+  amount_locked =>  0,
 );
 
 sub save {
 	$_[0]->set( $_[1] ) if $_[1];
 	$_[0]->remaining(undef);
-    my $error = $_[0]->SUPER::save( );
-	if ( (! $error) and $_[0]{order_id} ) {
-		#$_[0]->Order()->paid(undef);
+  my $error = $_[0]->SUPER::save( );
+	if ( (!$error) and $_[0]{order_id} ) {
+# Should check to see who is calling us and don't call Order->save if it's from Order->pay
+# I put this back so that order paid status's update. 2018-08-07
+		my $Order = $_[0]->Order();
+
+		# Don't need to clear Payments and paid because those are done in Order->save
+		#$Order->Payments(undef);
+		#$Order->paid(undef);
+		$error .= $Order->save();
 	} # end if
 	return $error;
 } # end sub save
@@ -103,7 +114,7 @@ sub Invoice_Payments {
 		$_[0]{Invoice_Payments} = $_[1];
 	}
 	if ( ( ! $_[0]{Invoice_Payments} ) and ( $_[0]{id} ) ) {
-		$_[0]{Invoice_Payments} = [ openprint::Invoice_Payment->find( payment_id=>$_[0]{id} ) ];
+		$_[0]{Invoice_Payments} = [ openprint::Invoice_Payment->find( payment_id=>$_[0]{id}, order=>'invoice_id' ) ];
 	} 
 
 	return @{$_[0]{Invoice_Payments}} if $_[0]{Invoice_Payments};

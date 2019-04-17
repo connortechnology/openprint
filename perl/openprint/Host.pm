@@ -55,6 +55,8 @@ $serial = 'hosts_id_seq';
 	type_id		=>	'type_id',
 	type			=>	undef,
 	offline_seconds	=>	'offline_seconds',
+	max_ping_time	=>	'max_ping_time',
+  min_ping_frequency  =>  'min_ping_frequency',
 	state_changed_on	=>	'state_changed_on',
 	notified			=>	'notified',
 	notify_frequency	=>	'notify_frequency',
@@ -69,28 +71,36 @@ $serial = 'hosts_id_seq';
 %transforms = (
 	id			=>	[ 's/\D//g' ],
 	notify_frequency	=>	[ 's/\D//g' ],
+	min_ping_frequency	=>	[ 's/\D//g' ],
+	max_ping_time	=>	[ 's/\D//g' ],
 	hostname	=>	[ 's/\s//g' ],
 	description	=>	[ 's/^\s+//', 's/\s+$//', 's/\s\s+/ /g' ],
 );
 %defaults = (
-	'blacklist'	=>	0,
-	'whitelist'	=>	0,
-	'monitored'	=>	0,
-	'hostname'	=>	undef,
-	'created_on'	=>	q`'NOW()'`,
-	'updated_on'	=>	q`'NOW()'`,
+	blacklist 	=>	0,
+	whitelist 	=>	0,
+	monitored 	=>	0,
+	hostname  	=>	undef,
+	created_on  =>	q`'NOW()'`,
+	updated_on	=>	q`'NOW()'`,
 	resolved_on		=>	undef,
-	'count'		=>	0,
-	'deleted'	=>	0,
-	'online'	=>	undef,
-	'type_id'	=>	undef,
-	'state_changed_on'	=>	undef,
-	'offline_seconds'	=>	undef,
-	'notified'=>	0,
+	count		=>	0,
+	deleted	=>	0,
+	online	=>	undef,
+	type_id	=>	undef,
+	state_changed_on	=>	undef,
+	offline_seconds	=>	undef,
+	notified      =>	0,
 	location_id		=>	undef,
 	notify_frequency	=>	undef,
 	owner_id			=>	undef,
+  max_ping_time =>  1000,
+  min_ping_frequency  =>  60,
 );
+
+sub name {
+  return $_[0]->hostname();
+}
 
 sub destroy {
 	my $error = '';
@@ -119,7 +129,12 @@ sub destroy {
 sub ping {
 	require Net::Ping;
 	my $p = Net::Ping->new();
-	my $rc = $p->ping($_[0]{ip});
+my $rc;
+	foreach my $HI ( $_[0]->Interfaces() ) {
+		next if ! $$HI{ip};
+	 $rc = $p->ping($$HI{ip});
+		return $rc if $rc;
+	}
 	$p->close();
 	return $rc;
 } # end sub ping
@@ -151,10 +166,10 @@ sub Notifications {
 	if ( ! $$self{Notifications} ) {
 		@{$$self{Notifications}} = openprint::Host_Notification->find(
 				host_id	=> $$self{id},
-				);
+				) if $$self{id};
 				#'order' => 'lower(strfirstName),lower(strlastname)' );
 	} # end if
-	return @{$$self{Notifications}};
+	return $$self{Notifications} ? @{$$self{Notifications}} : ();
 } # end sub Notifications
 
 sub Interfaces {
@@ -165,26 +180,28 @@ sub Interfaces {
 		@{$_[0]{Interfaces}} = openprint::Host_Interface->find(
 				host_id	=>	$_[0]{id},
 				order	=>	'mac',
-				);
+				) if $_[0]{id};
 	} # end if
-	return @{$_[0]{Interfaces}};
-} # end sub Notifications
+	return $_[0]{Interfaces} ? @{$_[0]{Interfaces}} : ();
+} # end sub Interfaces
 
 sub info {
 	require openprint::Host_Info;
 	if ( ! $_[0]{Info} ) {
 		%{$_[0]{Info}} = map { $_->name(), $_ } openprint::Host_Info->find(host_id=>$_[0]{id});
-		foreach my $k ( keys %{$_[0]{Info}} ) {
-			$openprint::log->debug(" $k => " . $_[0]{Info}{$k}->value() );
-		} # end foreach
+		if ( $debug ) {
+			foreach my $k ( keys %{$_[0]{Info}} ) {
+				$openprint::log->debug(" $k => " . $_[0]{Info}{$k}->value() );
+			} # end foreach
+		}
 	} # end if
 	if ( $_[0]{Info}{$_[1]} ) {
 		return $_[0]{Info}{$_[1]}->value();
 	} # end if
-$openprint::log->debug("No value for $_[1] " . $_[0]->to_string() );
-		foreach my $k ( keys %{$_[0]{Info}} ) {
-			$openprint::log->debug(" $k => " . $_[0]{Info}{$k}->value() );
-		} # end foreach
+	$openprint::log->debug("No value for $_[1] " . $_[0]->to_string() );
+	foreach my $k ( keys %{$_[0]{Info}} ) {
+		$openprint::log->debug(" $k => " . $_[0]{Info}{$k}->value() );
+	} # end foreach
 	return '';
 } # end sub info
 
@@ -236,6 +253,9 @@ sub reboot {
 			post_url => 'cgi_reboot.',
 			};
 			$method = 'post';
+    } elsif( $_[0]->type() eq 'Grandview' ) {
+      $initial_url = $HI->ip();
+      $url = '/goform/maintenance?cmd=set&restart=yes';
 		} elsif( $_[0]->type() eq 'DLink DCS-910' ) {
 			$initial_url = $HI->ip();
 			$url = $HI->ip().'/ReplyF.htm';
@@ -246,18 +266,57 @@ sub reboot {
 			$expect = 'Device has been rebooted';
 
 		} elsif ( $_[0]->type() eq 'TP-Link Archer C7' ) {
-			$method = 'post';
-			$url = $HI->ip().'/cgi-bin/luci/admin/system/reboot/call';
-			$initial_url = $$HI{ip}.'/cgi-bin/luci';
-        $args = {
-          luci_username=> $Host->info('username'),
-          luci_password=> $Host->info('password'),
-          submit => 'Login',
-token=>'53e677e902828a6a3dbd13b50fda7abe',
-        };
+			require JSON;
 
-		} elsif( $_[0]->type() eq 'DCS932L' ) {
+			my $username = $Host->info('username');
+			my $password = $Host->info('password');
+
+			# Need to get an auth token
+			my $uri = $protocol.'://'.$$HI{ip}.'/cgi-bin/luci/rpc/auth';
+			my $json = qq`{"id":"1","method":"login","params":["$username","$password"]}`;
+			my $req = HTTP::Request->new('POST', $uri);
+			$req->header('Content-Type' => 'application/json');
+			$req->content($json);
+			my $response = $browser->request($req);
+
+			if ( !$response->is_success ) {
+				$openprint::log->error("Failed to get auth token:\n".$response->content);
+				next;
+			}
+
+			my $json_response = JSON::decode_json($response->content);
+			if ( ! ( $json_response and $$json_response{result} ) ) {
+				$openprint::log->error("Failed to get auth token:\n".$response->content);
+				next;
+			}
+
+			$uri = $protocol.'://'.$$HI{ip}.'/cgi-bin/luci/rpc/sys?auth='.$$json_response{result};
+			$json = qq`{"id":"1","method":"call","params":["reboot"]}`;
+			$req = HTTP::Request->new('POST', $uri);
+			$req->header('Content-Type' => 'application/json');
+			$req->content($json);
+			$response = $browser->request($req);
+			if ( !$response->is_success ) {
+				$openprint::log->error("Failed to reboot:\n".$response->content.":\n".$response->status_line());
+				next;
+			}
+
+			$json_response = JSON::decode_json($response->content);
+			if ( !$json_response or $$json_response{error} ) {
+				$openprint::log->error("Failed to reboot:\n".$response->content);
+				next;
+			}
+			$success = 1;
+			last;
+
+		} elsif( $_[0]->type() eq 'DCS-932L' ) {
 			$url = $HI->ip().'/setSystemReboot';
+    } elsif ( $_[0]->type() eq 'DCS-942L' ) {
+      $url = $HI->ip().'/eng/admin/export.cgi';
+      $method = 'post';
+      $args = {
+        reboot => 'true'
+      };
 		} elsif( $_[0]->type() eq 'DCS-933L' ) {
 			$initial_url = $HI->ip();
 			$url = $HI->ip().'/setSystemReboot';
@@ -280,21 +339,17 @@ token=>'53e677e902828a6a3dbd13b50fda7abe',
 
 		my $response = $browser->get($protocol.'://'.($initial_url ? $initial_url : $url));
 		$openprint::log->debug("Sending initial url: " . $protocol.'://'.($initial_url ? $initial_url : $url) );
-		$openprint::log->debug( $response->status_line );
-		#$openprint::log->debug( $response->content );
 		my $headers = $response->headers();
-		#foreach my $k ( keys %$headers ) {
-			#$openprint::log->debug("Initial Header $k => $$headers{$k}");
-		#} # end if
 		if ( $$headers{'client-ssl-cipher'} ) {
-$openprint::log->debug("Swtiching to https");
+$openprint::log->debug("Switching to https");
 			$protocol = 'https';
 			$port = 443;
 		}
-		$response = $HI->authenticate( $browser, $response, $method, $port, $protocol.'://'.$url, $args );
+		$response = $HI->authenticate(
+				$browser, $response, $method, $port, $protocol.'://'.$url, $args);
 
-		if ( ! $response->is_success ) {
-			$openprint::log->error( $response->content );
+		if ( !$response->is_success ) {
+			$openprint::log->error( "No success: content:".$response->content."\nstatus:".$response->status_line() );
 			if ( $response->status_line() eq '401 Unauthorized' or $response->status_line() eq '401 Not Authorized' ) {
 				$openprint::log->error("Couldn't get content from $url unauthorized trying again:". $response->status_line );
 				$response = $browser->get($protocol.'://'.$url);
@@ -311,7 +366,7 @@ $openprint::log->debug("Swtiching to https");
 					$success = 1;
 				} # end if
 			} else {
-				$openprint::log->warn("Couldn't get content from $url rebooting" . $response->status_line );
+				$openprint::log->warn("Couldn't get content from $protocol://$url rebooting" . $response->status_line );
 				my $headers = $response->headers();
 				foreach my $k ( keys %$headers ) {
 					$openprint::log->error("Header $k => $$headers{$k}");
@@ -336,7 +391,7 @@ $openprint::log->debug("Swtiching to https");
 
 	if ( $success ) {
 
-		(new openprint::Log())->save({ action=>'Host rebooted', Object=>$Host, host_id=>$Host->id(), note=>sprintf('<a href="/employee/it/host.html?host_id=%d">%s</a> has been rebooted.', @$Host{'id','hostname'})});
+		(new openprint::Log())->save({ action=>'Host rebooted', Object=>$Host, host_id=>$Host->id(), note=>sprintf('<a href="/employee/it/host.html?host_id=%d">%s</a> has been rebooted by %s.', @$Host{'id','hostname'}, $0)});
 		if ( 0 ) {
 			my @To = map { $_->User() } $Host->Notifications();
 			if ( @To and ( @To < 10 ) ) {
@@ -358,16 +413,17 @@ $openprint::log->debug("Swtiching to https");
 } # end sub reboot
 
 sub is_wap {
-	return sets::isin( $_[0]->type(), [ 'WG602v3', 'WPN802','TP-Link Archer C7' ] );
+	return ( $_[0]{type_id} && $_[0]->type() && sets::isin( $_[0]->type(), [ 'WG602v3', 'WPN802','TP-Link Archer C7' ] ) );
 }
 
-sub url {
+sub url_to {
 	return sprintf('/employee/it/host.html?host_id=%d', $_[0]{id});
 }
 
 sub link_to {
 	return sprintf('<a href="/employee/it/host.html?host_id=%d">%s</a>',
-      $_[0]->id(), ( ( @_ > 1 and $_[1] ) ? $_[1] : ( $_[0]->hostname() ? $_[0]->hostname() : '' ) )
+      ( $_[0]{id} ? $_[0]{id} : 0 ),
+      ( ( @_ > 1 and $_[1] ) ? $_[1] : ( $_[0]->hostname() ? $_[0]->hostname() : '' ) )
       );
 }
 
@@ -392,6 +448,50 @@ sub Owner {
   return new openprint::Company( $_[0]{owner_id} );
 }
 
+sub can_reboot {
+  if ( $_[0]{type_id} and $_[0]->type() and sets::isin( $_[0]->type(), [ 'AIC500', 'AIC500W', 'AIC777W', 'AIC747W','AIC250W','M8640','TL-WPA4220','D-Link DAP1522','DGS-1224T','DLink DCS-910','TP-Link Archer C7',
+        'DCS932L','DCS-933L','DCS-942L', 'WG602v3' ] ) ) {
+    return !undef;
+  }
+  return undef;
+} # end sub can_reboot
+
+sub get_config {
+	my $Host = shift;
+	require LWP;
+	my $browser = LWP::UserAgent->new();
+	if ( $Host->type() eq 'DCS-932L' ) {
+		my $protocol = 'http';
+		my $path = '/Config.CFG';
+		my $method = 'get';
+		my $port = 80;
+		my $args;
+		foreach my $HI ( $Host->Interfaces() ) {
+
+			my $url = $protocol.'://'.$HI->ip().$path;
+			my $response = $browser->get($url);
+			$openprint::log->debug("Sending initial url: $url");
+			my $headers = $response->headers();
+			if ( $$headers{'client-ssl-cipher'} ) {
+				$openprint::log->debug("Swtiching to https");
+				$protocol = 'https';
+				$port = 443;
+			}
+			$response = $HI->authenticate( $browser, $response, $method, $port, $url, $args);
+			#$openprint::log->debug($response->content());
+			if ( !$response->is_success ) {
+			} else {
+				return $response->content();
+				last;
+			}
+
+		} # end foreach HI
+	} # end if type
+} # end sub get_config
+
+sub can_get_config {
+	return ( $_[0]{type_id} and sets::isin( $_[0]->type(), [ 'DCS-932L' ] ) );
+}
 
 1;
 __END__

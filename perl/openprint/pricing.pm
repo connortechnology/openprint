@@ -181,7 +181,7 @@ sub get_best_prices {
 
 	if ( ! $list_id ) {
 		my ( $caller, undef, $line ) = caller;
-		$log->error("Not specifying pricelist to get_best_prices is deprecated from $caller:$line");
+		#$log->error("Not specifying pricelist to get_best_prices is deprecated from $caller:$line");
 
 		Carp::cluck("Not specifying pricelist to get_best_prices is deprecated from $caller:$line");
 # figure out which price list we select from, because the caller didn't specify.

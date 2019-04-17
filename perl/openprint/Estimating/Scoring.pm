@@ -321,7 +321,7 @@ sub calc {
 } # end sub calc
 
 sub signature_calc {
-	my ( $Project, $specs, $sig_specs, $qty_index, $SignatureImposition, $calc_hash ) = @_;
+	my ( $Project, $specs, $sig_specs, $qty_index, $SignatureImposition, $calc_hash, $Used_Impositions ) = @_;
 	my %Results = (
 			Status		=>	'calculated',
 			Breakdown	=>	'',
@@ -361,18 +361,18 @@ sub signature_calc {
 	if ( DEBUG ) {
 		$SignatureImposition->display('Original sig');
 		foreach my $Fold ( @Folds ) {
-			$Fold->display( 'Fold' );
+			$Fold->display('Fold');
 		} 
 	} # end nif
 
 	my @equipment;	
 	if ( $$specs{"chkOverrideEquipment-$form-$qty_index"} and ($$specs{"chkOverrideEquipment-$form-$qty_index"} eq 'Y') ) {
 		@equipment = openprint::Equipment->find( id=>$$specs{"ddmEquipment-$form-$qty_index"} );
-		$openprint::log->debug("Overriding Equipment to: " . $$specs{"ddmEquipment-$form-$qty_index"} );
+		$openprint::log->debug('Overriding Equipment to: ' . $$specs{"ddmEquipment-$form-$qty_index"} );
 	} else {
 
 		if ( ! @all_equipment ) {
-			$openprint::log->warn("This should have been already done");
+			$openprint::log->warn('This should have been already done');
 			init( $Project, $calc_hash );
 		}
 		@equipment = @all_equipment;
@@ -483,6 +483,7 @@ sub signature_calc {
 			} # end if
 		} # end if dutch
 		@All_Impositions = openprint::Estimating::Folding::reduce_impositions( \@Sets_of_Impositions );
+		@All_Impositions = openprint::Estimating::Folding::remove_duplicates( @All_Impositions );
 		if ( DEBUG ) {
 			$openprint::log->debug("Sets of Maximum Impositions: " . @All_Impositions);
 			foreach my $Set ( @All_Impositions ) {
@@ -549,13 +550,13 @@ EQUIPMENT: foreach my $Equipment ( @equipment ) {
 				 next ;
 			 } 
 		 } elsif ( $type eq 'Press' ) {
-			 if ( sets::isin( $$sig_specs{'ddmRunStyle'.$qty_index}, ['Work & Turn','Work & Tumble'] ) ) {
+			 if ( $$sig_specs{'ddmRunStyle'.$qty_index} eq  'Work & Turn' or $$sig_specs{'ddmRunStyle'.$qty_index} eq 'Work & Tumble' ) {
 				 $Results{Breakdown} .= 'Cant do an inline score when W&T.<br/>';
 				 next;
 			 } # end if
 		 } # end if type
 
-		 if ( $$calc_hash{NoOfflineBindery} and ( $$sig_specs{'ddmPress'.$qty_index} ne $Equipment->strid() ) ) {
+		 if ( $$calc_hash{NoOfflineBindery} and ( $$sig_specs{'ddmPress'.$qty_index} ne $$Equipment{strid} ) ) {
 			 $Results{Breakdown} .= "No Offline bindery and not printing on $$Equipment{name}.<br/>";
 			 next;
 		 } # end if
@@ -584,7 +585,7 @@ EQUIPMENT: foreach my $Equipment ( @equipment ) {
 				 $Results{Breakdown} .= $$Price{Breakdown};
 			 } # end foreach my $Fold
 #$Results{Imposition} = $Fold;
-			 $Results{Breakdown} .= sprintf('Total: $%.2f<br/>', $totalPrice );
+			 $Results{Breakdown} .= sprintf('Total: $%.2f<br/>', $totalPrice);
 
 			 if ( $totalPrice < $Results{Price} or ! exists $Results{Price} ) {
 				 $Results{Price} = $totalPrice;
@@ -679,7 +680,7 @@ sub get_price {
 		%setupPrice = $ScoringMakeReadyService->get_price( $score_qty, $Equipment ) if $ScoringMakeReadyService;
 	} # end if
 
-	$Results{Breakdown} .= sprintf( 'MakeReady: for %d scores = $%.2f<br/>', $score_qty, $setupPrice{Price} ) if %setupPrice;
+	$Results{Breakdown} .= sprintf('MakeReady: for %d scores = $%.2f<br/>', $score_qty, $setupPrice{Price}) if %setupPrice;
 	$Results{Breakdown} .= "Imposition: $$I{columns}x$$I{rows}=$$I{imposition}: ";
 
 	my $Overs = $Equipment->Specification( 'Scoring Overs', $qty );
@@ -713,13 +714,15 @@ sub get_price {
 
 	if ( $servicePrice{units} eq 'per m' ) {
 		$servicePrice{Total} = Math::Round::nearest( 0.01, $servicePrice{Price} * $qty / 1000 );
-		$Results{Breakdown} .= sprintf('Service: $%.2f%s * %d * %d scores=$%.2f<br/>', @servicePrice{'Price','units'}, $qty, $score_qty, $servicePrice{Total} );
+		$Results{Breakdown} .= sprintf('Service: $%.2f%s * %d * %d scores=$%.2f<br/>',
+				@servicePrice{'Price','units'}, $qty, $score_qty, $servicePrice{Total} );
 	} elsif ( $servicePrice{units} eq 'per hour' ) {
 		if ( $runspeed ) {
 			if ( int($runspeed) ) {
 				my $hours = $qty / $runspeed;
 				$servicePrice{Total} = Math::Round::nearest( 0.01, $servicePrice{Price} * $hours );
-				$Results{Breakdown} .= sprintf('Service: $%.2f%s * %d @ %d%s = $%.2f<br/>', @servicePrice{'Price','units'}, $qty, $runspeed, 'Per Hour', $servicePrice{Total} );
+				$Results{Breakdown} .= sprintf('Service: $%.2f%s * %d @ %d%s = $%.2f<br/>',
+						@servicePrice{'Price','units'}, $qty, $runspeed, 'Per Hour', $servicePrice{Total} );
 			} else {
 				$openprint::log->error("Bogus runspeed ($runspeed) on $$Equipment{strid}");
 			} # end if
@@ -731,38 +734,46 @@ sub get_price {
 #$openprint::log->debug("Horizontal: $horizontal_rule");
 	if ( $horizontal_rule and $Rule ) {
 		%horizontal_price = $Rule->get_price( $horizontal_rule, $Equipment );
-		if ( sets::isin( $horizontal_price{units},['per rule','each','per score'] ) ) {
-			$horizontal_price{Total} = $horizontal_price{Price} * $horizontal_rule;
-			$Results{Breakdown} .= sprintf('Rule: $%1$.2f%2$s * %4$d rule=$%3$.2f<br/>', @horizontal_price{'Price','units','Total'}, $horizontal_rule );
-		} elsif ( $horizontal_price{units} eq 'per inch' ) {
-			$horizontal_price{Total} = $horizontal_price{Price} * $horizontal_length;
-			$Results{Breakdown} .= sprintf('Rule: $%1$.2f%2$s * %4$.2finches=$%3$.2f<br/>', @horizontal_price{'Price','units','Total'}, $horizontal_length );
-		} elsif ( $horizontal_price{units} eq 'per foot' ) {
-			$horizontal_price{Total} = $horizontal_price{Price} * $horizontal_length/12;
-			$Results{Breakdown} .= sprintf('Rule: $%1$.2f%2$s * %4$.2finches=$%3$.2f<br/>', @horizontal_price{'Price','units','Total'}, $horizontal_length/12 );
-		} else {
-			$Results{Breakdown} .= "Unknown units set on horizontal material price ($horizontal_price{units})<br/>";
+		if ( %horizontal_price ) {
+			if ( $horizontal_price{units} eq 'per rule' or $horizontal_price{units} eq 'each' or $horizontal_price{units} eq 'per score' ) {
+				$horizontal_price{Total} = $horizontal_price{Price} * $horizontal_rule;
+				$Results{Breakdown} .= sprintf('Rule: $%1$.2f%2$s * %4$d rule=$%3$.2f<br/>',
+						@horizontal_price{'Price','units','Total'}, $horizontal_rule );
+			} elsif ( $horizontal_price{units} eq 'per inch' ) {
+				$horizontal_price{Total} = $horizontal_price{Price} * $horizontal_length;
+				$Results{Breakdown} .= sprintf('Rule: $%1$.2f%2$s * %4$.2finches=$%3$.2f<br/>',
+						@horizontal_price{'Price','units','Total'}, $horizontal_length );
+			} elsif ( $horizontal_price{units} eq 'per foot' ) {
+				$horizontal_price{Total} = $horizontal_price{Price} * $horizontal_length/12;
+				$Results{Breakdown} .= sprintf('Rule: $%1$.2f%2$s * %4$.2finches=$%3$.2f<br/>',
+						@horizontal_price{'Price','units','Total'}, $horizontal_length/12 );
+			} else {
+				$openprint::log->error("Unknown units set on horizontal material price ($horizontal_price{units}) on $$Equipment{strid}");
+
+				$Results{Breakdown} .= "Unknown units set on horizontal material price ($horizontal_price{units})<br/>";
+			} # end if
 		} # end if
 	} else {
 		$horizontal_price{Total} = 0;
 	} # end if
 
-
-#$openprint::log->debug("Vertical: $vertical_rule");
 	if ( $vertical_rule ) {
 		if ( $Wheel ) {
 			%vertical_price = $Wheel->get_price( $vertical_rule, $Equipment );
-			if ( sets::isin( $vertical_price{units},['per rule','each'] ) ) {
-				$vertical_price{Total} = $vertical_price{Price} * $vertical_rule;
-				$Results{Breakdown} .= sprintf('Wheel: $%1$.2f%2$s * %4$d wheels=$%3$.2f<br/>', @vertical_price{'Price','units','Total'}, $vertical_rule );
-			} elsif ( $vertical_price{units} eq 'per inch' ) {
-				$vertical_price{Total} = $vertical_price{Price} * $vertical_length;
-				$Results{Breakdown} .= sprintf('Wheel: $%1$.2f%2$s * %4$.2finches=$%3$.2f<br/>', @vertical_price{'Price','units','Total'}, $vertical_length );
-			} elsif ( $vertical_price{units} eq 'per foot' ) {
-				$vertical_price{Total} = $vertical_price{Price} * $vertical_length/12;
-				$Results{Breakdown} .= sprintf('Wheel: $%1$.2f%2$s * %4$.2finches=$%3$.2f<br/>', @vertical_price{'Price','units','Total'}, $vertical_length/12 );
-			} else {
-				$Results{Breakdown} .= "Unknown units set on vertical material price ($vertical_price{units})<br/>";
+			if ( %vertical_price ) {
+				if ( $vertical_price{units} eq 'per rule' or $vertical_price{units} eq 'each' ) {
+					$vertical_price{Total} = $vertical_price{Price} * $vertical_rule;
+					$Results{Breakdown} .= sprintf('Wheel: $%1$.2f%2$s * %4$d wheels=$%3$.2f<br/>', @vertical_price{'Price','units','Total'}, $vertical_rule );
+				} elsif ( $vertical_price{units} eq 'per inch' ) {
+					$vertical_price{Total} = $vertical_price{Price} * $vertical_length;
+					$Results{Breakdown} .= sprintf('Wheel: $%1$.2f%2$s * %4$.2finches=$%3$.2f<br/>', @vertical_price{'Price','units','Total'}, $vertical_length );
+				} elsif ( $vertical_price{units} eq 'per foot' ) {
+					$vertical_price{Total} = $vertical_price{Price} * $vertical_length/12;
+					$Results{Breakdown} .= sprintf('Wheel: $%1$.2f%2$s * %4$.2finches=$%3$.2f<br/>', @vertical_price{'Price','units','Total'}, $vertical_length/12 );
+				} else {
+					$openprint::log->error("Unknown units set on vertical material price ($vertical_price{units}) on $$Equipment{name}");
+					$Results{Breakdown} .= "Unknown units set on vertical material price ($vertical_price{units})<br/>";
+				} # end if
 			} # end if
 		} else {
 			$Results{Breakdown} .= "No material found for ScoringWheel<br/>";
@@ -820,7 +831,7 @@ sub get_scores {
 		} elsif ( $$sig_specs{rdbTemplateType} =~ /3PanelZ?Fold/ ) {
 			$$specs{"txtVerticalQty-$form"} = $width_folds;
 			$$specs{"txtHorizontalQty-$form"} = $height_folds;
-		} elsif ( sets::isin( $$sig_specs{rdbTemplateType}, 'AccordianFold') ) {
+		} elsif ( $$sig_specs{rdbTemplateType} eq 'AccordianFold' ) {
 			$$specs{"txtVerticalQty-$form"} = $width_folds;
 			$$specs{"txtHorizontalQty-$form"} = $height_folds;
 		} elsif ( sets::isin( $$sig_specs{rdbTemplateType}, '4PanelFold','4PanelZFold', 'AccordianFold4Panel') ) {
@@ -918,14 +929,13 @@ sub summary {
 		my $html;
 		foreach my $s_s_id ( $Project->signatures( { sort=>1 } ) ) {
 			my $sig_specs = openprint::service::get_specs_ref( $Project, $s_s_id );
+			next if ! $$specs{"ddmEquipment-$$sig_specs{SignatureIndex}-$qty_index"}; 
 			my $Paper = openprint::Paper::load_from_signature( $Project, $sig_specs, $qty_index );
 			if ( signature_needs( $Project, $specs, $sig_specs, $Paper ) ) {
 				$html .= 'Form ' . $$sig_specs{SignatureIndex} . ' ' . $$sig_specs{txtServiceDescription} . ' scored ' .signature_summary( $Project, $service_id, undef, $qty_index, $s_s_id, undef ) . "\n";
 			} # end if
 		} # end foreach
 		return $html;
-
-	} else {
 	} # end if
 } # end sub summary
 

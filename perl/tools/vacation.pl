@@ -61,9 +61,9 @@ sub do_debug {
 sub do_cache {
    my ($to, $from) = @_;
 
-   my $sth = do_query ( qq{SELECT * FROM vacation_cache WHERE to_email=? AND from_email=?}, $to, $from );
-   if ($sth->rows == 0) {
-      $sth = do_query( qq{INSERT INTO vacation_cache VALUES (?,?)}, $to, $from );
+   my $sth = do_query('SELECT * FROM vacation_cache WHERE to_email=? AND from_email=?', $to, $from);
+   if ( $sth->rows == 0 ) {
+      $sth = do_query('INSERT INTO vacation_cache VALUES (?,?)', $to, $from);
 	  return 0;
    } # end if
    return $sth->rows;
@@ -73,15 +73,15 @@ sub do_log {
    my ($messageid, $to, $from, $subject) = @_;
    my $date;
    if ( $syslog ) {
-       open (SYSLOG, "|/usr/bin/logger -p mail.info -t Vacation") or die ("Unable to open logger"); 
+       open(SYSLOG, '|/usr/bin/logger -p mail.info -t Vacation') or die ("Unable to open logger"); 
        printf SYSLOG "Orig-To: %s From: %s MessageID: %s Subject: %s", $to, $from, $messageid, $subject;
-       close (SYSLOG); 
+       close(SYSLOG); 
    }
    if ( $logfile ) {
-   open (LOG, ">> $logfile") or die ("Unable to open log file");
-   chop ($date = `date "+%Y/%m/%d %H:%M:%S"`);
+	   open(LOG, ">> $logfile") or die 'Unable to open log file';
+	   chop($date = `date "+%Y/%m/%d %H:%M:%S"`);
        print LOG "$date: To: $to From: $from Subject: $subject MessageID: $messageid \n";
-   close (LOG);
+	   close(LOG);
    }
 }
 
@@ -122,7 +122,8 @@ sub find_real_address {
          } # end if
       } # end if
 	  $sth->finish();
-   } # end if
+  } # end if
+  return ();
 } # end sub
 
 sub send_vacation_email {
@@ -134,7 +135,7 @@ sub send_vacation_email {
 	if ($sth->rows == 1) {
 		my @row = $sth->fetchrow_array;
 		if (
-				($row[0] and ($row[0] =~ /\S/m) )
+				( $row[0] and ($row[0] =~ /\S/m) )
 				or
 				( $row[1] and ($row[1] =~ /\S/m) )
 		   ) {
@@ -144,6 +145,8 @@ sub send_vacation_email {
 		} else {
 			do_mail ($orig_from, $orig_from, 'Vacation set with empty body and subject! Please either turn off your vacation auto-responder or enter a message to be sent to people while you are away.', '' );
 		} # end if
+	} else {
+		do_debug("# of rows returned for vacation for $email: " . $sth->rows, '', '', '', '', '');
 	} # end if
 	$sth->finish();
 
@@ -186,18 +189,18 @@ my @search_array;
 for (@strip_to_array) {
    if ($_ =~ /([\w\-.%]+\@[\w.-]+)/) { 
 	push (@search_array, $1); 
-  	do_debug ("[STRIP RECIPIENTS]: ", $messageid, $1, "-", "-", "-");
+  	do_debug("[STRIP RECIPIENTS]: ", $messageid, $1, "-", "-", "-");
    }
 }
 
 # Search for email address which has vacation
 for (@search_array) {
-	my ($rv, $email) = find_real_address ($_);
+	my ($rv, $email) = find_real_address($_);
 	if ($rv == 1) {
-		do_debug ("[FOUND VACATION]: ", $messageid, $from, $to, $email, $subject);
+		do_debug("[FOUND VACATION]: ", $messageid, $from, $to, $email, $subject);
 		send_vacation_email( $email, $subject, $from, $to, $messageid);
 	} else {
-		do_debug ("[DID NOT FIND VACATION]: ", $messageid, $from, $to, $email, $subject);
+		do_debug("[DID NOT FIND VACATION]: ", $messageid, $from, $to, $_, $subject);
 	} # end if
 }
 $dbh->disconnect();

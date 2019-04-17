@@ -5,7 +5,12 @@
 		my @drops = sets::union( @{$$variable{changed}} );
 		$log->debug("Drops: @drops");
 		foreach my $id (sort @drops) {
-			$html .= sprintf(q`if ( $('%1$s') ) new Ajax.Updater( '%1$s', '_ul.html', { parameters: { ul_id: '%1$s' }, evalScripts:true } );`, $id );
+			$html .= sprintf(q`
+if ( $('%1$s') ) {
+	new Ajax.Updater( '%1$s', '_ul.html', { parameters: { ul_id: '%1$s' }, evalScripts:true } );
+} else {
+	console.log('no div for %1$s');
+}`, $id );
 			$html .= "\n";
 		} # end foreach id
 	} # end if

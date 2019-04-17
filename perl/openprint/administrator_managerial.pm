@@ -81,13 +81,27 @@ sub configuration {
 				#$variable{error} .= $C->delete();
 				#$C->description( $$C{name} ) if ! $C->description();
 				#$variable{error} .= $C->save({value=>$new_value, name=>$$C{name},  });
-			#} els
-			if ( $$C{value} ne $new_value ) {
-				$C->save({ value=>$new_value });
+        #} els
+        if ( $$C{value} ne $new_value ) {
+          if ( $$C{name} eq 'encrypt_passwords' ) {
+            if ( (!$$C{value}) and $new_value ) {
+              # Special case need to update everyone's passwords
+              foreach my $User ( openprint::User->find() ) {
+                my $ppr = Authen::Passphrase::BlowfishCrypt->new( cost => 8, salt_random => 1, passphrase => $$User{password} );
+                $variable{error} .= $User->save({ password => $ppr->as_rfc2307() });
+              } # end foreach User
+              $variable{error} .= $C->save({ value=>$new_value });
+            } else {
+              $variable{error} .= "Turning off encryption is a manual process.<br/>";
+              next;
+            }
+          } else {
+            $C->save({ value=>$new_value });
+          }
 			} else {
 				$log->debug("Value unchanged for $$C{name}: currnet: $$C{value} new: $param{$$C{name}}");
 			} # end if
-		} # end while
+		} # end foreach
 
 		# Add record to audit log - action "Update Configuration".
 		new openprint::Log()->save({action=>'Update Configuration'});
@@ -115,40 +129,71 @@ sub _configuration_popup {
 } # end sub
 
 sub taxes {
+	if ( $param{action} ) {
+		if ( $param{action} eq 'Delete' ) {
+			my $ac = sql::start_transaction( $dbh );
+			foreach my $id ( ref $param{tax_ids} eq 'ARRAY' ? @{$param{tax_ids}} : $param{tax_ids} ) {
+				my $Tax = new openprint::Tax( $id );
+				(new openprint::Log())->save({
+						Object=>$Tax,
+						action=>'Delete Tax',
+						note	=>sprintf('Country: %s | State: %s', $Tax->country(), $Tax->state() )
+						});
+				$variable{error} .= $Tax->delete();
+			} # end foreach
+			sql::end_transaction( $dbh, $ac );
+		} elsif ( $param{action} eq 'Save' ) {
+			my $ac = sql::start_transaction( $dbh );
+			foreach my $Tax ( openprint::Tax->find() ) {
+				$variable{error} .= $Tax->save({
+						name			=>	$param{'name-'.$Tax->id()},
+						rate			=>	$param{'rate-'.$Tax->id()},
+						period_start	=> ( Date::Calc::check_date( map { @param{'period_start-'.$$Tax{id}.'_'.$_} } ( 'year','month','day' ) ) 
+								?
+								sprintf('%.4d-%.2d-%.2d', map { @param{'period_start-'.$$Tax{id}.'_'.$_} } ( 'year','month','day' ))
+								: undef ),
+						period_end	=> ( Date::Calc::check_date( map { @param{'period_end-'.$$Tax{id}.'_'.$_} } ( 'year','month','day' ) )
+								? sprintf('%.4d-%.2d-%.2d', map { @param{'period_end-'.$$Tax{id}.'_'.$_} } 'year','month','day' ) : undef ),
+						});
+				(new openprint::Log())->save({
+						Object=>$Tax,
+						action=>'Save Tax',
+						note	=>sprintf('Country: %s | State: %s', $Tax->country(), $Tax->state() )
+						});
+			} # end foreach Tax
+			if ( $param{'rate-New'} ) {
+				my $Tax = new openprint::Tax();
+				$variable{error} .= $Tax->save({
+						name					=>	$param{'name-New'},
+						rate					=>	$param{'rate-New'},
+						country				=>	$param{'country-New'},
+						state					=>	$param{'state-New'},
+						period_start	=> ( Date::Calc::check_date( @param{'period_start-New_year','period_start-New_month','period_start-New_day'} ) ? sprintf('%.4d-%.2d-%.2d', @param{'period_start-New_year','period_start-New_month','period_start-New_day'} ) : undef ),
+						period_end		=> ( Date::Calc::check_date( @param{'period_end-New_year','period_end-New_month','period_end-New_day'} ) ? sprintf('%.4d-%.2d-%.2d', @param{'period_end-New_year','period_end-New_month','period_end-New_day'} ) : undef ),
+						});
+				(new openprint::Log())->save({
+						Object=>$Tax,
+						action=>'Save Tax',
+						note	=>sprintf('Country: %s | State: %s', $Tax->country(), $Tax->state() )
+						});
+			} # end if New Tax
 
-	if ( $param{btnFunction} eq 'Delete' ) {
-		my $ac = sql::start_transaction( $dbh );
-		foreach my $id ( ref $param{tax_ids} eq 'ARRAY' ? @{$param{tax_ids}} : $param{tax_ids} ) {
-			my $Tax = new openprint::Tax( $id );
-			openprint::logs::insertLogRecord('74', sprintf('Country: %s | State: %s', $Tax->country(), $Tax->state() ) );
-			$variable{error} .= $Tax->delete();
-		} # end foreach
-		sql::end_transaction( $dbh, $ac );
-	} elsif ( $param{btnFunction} eq 'Save' ) {
-		my $ac = sql::start_transaction( $dbh );
-		foreach my $Tax ( openprint::Tax->find() ) {
-			$variable{error} .= $Tax->save({
-				'name'			=>	$param{'name-'.$Tax->id()},
-				'rate'			=>	$param{'rate-'.$Tax->id()},
-				'period_start'	=> ( Date::Calc::check_date( @param{'period_start-'.$$Tax{id}.'_year','period_start-'.$$Tax{id}.'_month','period_start-'.$$Tax{id}.'_day'} ) ? sprintf('%.4d-%.2d-%.2d', @param{'period_start-'.$$Tax{id}.'_year','period_start-'.$$Tax{id}.'_month','period_start-'.$$Tax{id}.'_day'} ) : undef ),
-				'period_end'	=> ( Date::Calc::check_date( @param{'period_end-'.$$Tax{id}.'_year','period_end-'.$$Tax{id}.'_month','period_end-'.$$Tax{id}.'_day'} ) ? sprintf('%.4d-%.2d-%.2d', @param{'period_end-'.$$Tax{id}.'_year','period_end-'.$$Tax{id}.'_month','period_end-'.$$Tax{id}.'_day'} ) : undef ),
-				});
-		} # end foreach Tax
-		if ( $param{'rate-New'} ) {
-			my $Tax = new openprint::Tax();
-			$variable{error} .= $Tax->save({
-				'name'			=>	$param{'name-New'},
-				'rate'			=>	$param{'rate-New'},
-				'country'		=>	$param{'country-New'},
-				'state'			=>	$param{'state-New'},
-				'period_start'	=> ( Date::Calc::check_date( @param{'period_start-New_year','period_start-New_month','period_start-New_day'} ) ? sprintf('%.4d-%.2d-%.2d', @param{'period_start-New_year','period_start-New_month','period_start-New_day'} ) : undef ),
-				'period_end'	=> ( Date::Calc::check_date( @param{'period_end-New_year','period_end-New_month','period_end-New_day'} ) ? sprintf('%.4d-%.2d-%.2d', @param{'period_end-New_year','period_end-New_month','period_end-New_day'} ) : undef ),
-				});
-		} # end if New Tax
-
-		sql::end_transaction( $dbh, $ac );
-		$variable{ExternalRedirect} = '/administrator/managerial/taxes.html';
-	} # end if
+			sql::end_transaction( $dbh, $ac );
+			$variable{ExternalRedirect} = '/administrator/managerial/taxes.html';
+		} elsif ( $param{action} eq 'Download' ) {
+			my @header = ( 'Name', 'Period Start', 'Period End', 'Canada', 'Province', 'Rate' );
+			my @data;
+			foreach my $Tax ( openprint::Tax->find() ) {
+				push @data, $Tax->name(),
+						 ssi::format_csv_date( $Tax->period_start() ),
+						 ssi::format_csv_date( $Tax->period_end() ),
+						 $Tax->country(),
+						 $Tax->state(),
+						 $Tax->rate();
+			}
+			misc::export_csv( $r, $log, \%variable, 'taxes.csv', \@header, \@data );
+		} # end if
+	} # end if action
 } # end sub taxes
 
 sub currency {
@@ -254,7 +299,7 @@ $log->error("PReventing customer change");
 		$User->save({});
 		$user_id = $User->id();
     } elsif ( $param{btnFunction} eq 'merge' ) {
-		if ( $$User{id} == $openprint::param{merge_user_id} ) {
+		if ( $$User{id} == $param{merge_user_id} ) {
 			$variable{error} .= 'Choose a different user to merge into.';
 		} else {
 			my $ac = sql::start_transaction( $dbh );
@@ -363,16 +408,17 @@ $log->debug("User ids not match " . $Users[0]->id()  . ' != ' . $User->id() );
 		} # end if
 
 		my @categories = sql::execute( $log, $dbh, 'SELECT id FROM Marketing_Categories' );
-
 		sql::execute( $log, $dbh, 'DELETE FROM Users_in_Marketing_Categories WHERE user_id=?', $User->id() );
 
 		# add them back in
-		my $sth = $dbh->prepare( q{INSERT INTO Users_in_Marketing_Categories (category_id,user_id) VALUES ( ?, ? )} );
-		foreach my $cat ( ref $param{selectUserCategories} eq 'ARRAY' ? @{$param{selectUserCategories}} : $param{selectUserCategories} ) {
-			if ( sets::isin( $cat, \@categories ) ) {
-				$sth->execute( $cat, $User->id() ) or $log->error( DBI->errstr );
-			} # end if
-		} # end foreach
+		if ( $param{selectUserCategories} ) {
+			my $sth = $dbh->prepare( q{INSERT INTO Users_in_Marketing_Categories (category_id,user_id) VALUES ( ?, ? )} );
+			foreach my $cat ( ref $param{selectUserCategories} eq 'ARRAY' ? @{$param{selectUserCategories}} : $param{selectUserCategories} ) {
+				if ( sets::isin( $cat, \@categories ) ) {
+					$sth->execute( $cat, $User->id() ) or $log->error( DBI->errstr );
+				} # end if
+			} # end foreach
+		} # end if
 
 		sql::execute( $log, $dbh, q{DELETE FROM users_in_userGroups WHERE user_id=?}, $User->id() );
 		if ( $param{UserGroups} ) {
@@ -384,9 +430,9 @@ $log->debug("User ids not match " . $Users[0]->id()  . ' != ' . $User->id() );
 		foreach my $service_default_id ( sql::execute( undef, undef, 'SELECT id FROM User_Service_Defaults WHERE user_id=?', $User->id() ) ) {
 			if ( $param{'name-'.$service_default_id} ) {
 				sql::update( undef, undef, 'User_Service_Defaults', ['id=?'=>$service_default_id], {
-						'servicetype_id'=>$param{'servicetype_id-'.$service_default_id} ? $param{'servicetype_id-'.$service_default_id} : undef,
-						'name'=>$param{'name-'.$service_default_id},
-						'value'=>$param{'value-'.$service_default_id}
+						servicetype_id=>$param{'servicetype_id-'.$service_default_id} ? $param{'servicetype_id-'.$service_default_id} : undef,
+						name=>$param{'name-'.$service_default_id},
+						value=>$param{'value-'.$service_default_id}
 						});
 			} else {
 				sql::execute( undef, undef, 'DELETE FROM User_Service_Defaults WHERE id=?', $service_default_id );
@@ -407,10 +453,9 @@ $log->debug("User ids not match " . $Users[0]->id()  . ' != ' . $User->id() );
 
 	# if we don't have a selected user, pick the first one returned filtered by company and user type if specified
 	my @Users = openprint::User->find(
-		( $cust_id ? ( 'company_id'=>$cust_id ) : () ),
-		( $user_role ? ( 'type'=>$user_role ) : () ),
-		( $param{deleted} ne '' ? ( 'deleted'=>$param{deleted} ) : () ),
-		'order'=>'lower(firstname),lower(lastname)'
+		( $cust_id ? ( company_id=>$cust_id ) : () ),
+		( $user_role ? ( type=>$user_role ) : () ),
+		( $param{deleted} ne '' ? ( deleted=>$param{deleted} ) : () ),
 		);
 
 	if ( $User->deleted() ) {
@@ -460,8 +505,7 @@ $log->debug("User ids not match " . $Users[0]->id()  . ' != ' . $User->id() );
 		} # end if
 	} # end if
 
-	# fill in User Name Drop Down Menu
-	$variable{FILL_USER_NAME} = ssi::make_drop_down( [ map { $_->id(), $_->name() } @Users ], $User->id() );
+	$variable{Users} = \@Users;
 
 	# Get Marketing Category Inforamation - get all categories, and highlight the ones this user is in.
 	my @available_categories = sql::execute( $log, $dbh, 'SELECT id, name FROM Marketing_Categories' );
@@ -484,6 +528,7 @@ $log->debug("User ids not match " . $Users[0]->id()  . ' != ' . $User->id() );
 
 sub company_profiles {
 
+	ssi::save_params( '/administrator/managerial/company_profiles.html', ( 'search_salesrep_id','deleted' ) );
 # form field to db field mappings
 	my %shipping_fields = (
 			'txtShippingCompanyName'	=>	'CompanyName',
@@ -517,11 +562,11 @@ sub company_profiles {
 			( $index ) = sql::execute( $log, $dbh, 'SELECT id from Company WHERE strAccountNum=?',$param{txtSearchAccountNum});
 		} # end if
 	} elsif ( $param{btnFunction} eq 'merge' ) {
-		if ( ! $openprint::param{company_id} ) {
+		if ( ! $param{company_id} ) {
 			$variable{error} .= 'There must be a selected company to merge to.';
-		} elsif ( ! $openprint::param{merge_company_id} ) {
+		} elsif ( ! $param{merge_company_id} ) {
 			$variable{error} .= 'There must be a selected company to merge from.';
-		} elsif ( $openprint::param{company_id} == $openprint::param{merge_company_id} ) {
+		} elsif ( $param{company_id} == $param{merge_company_id} ) {
 			$variable{error} .= 'Choose a different company to merge into.';
 		} else {
 			my $ac = sql::start_transaction( $dbh );
@@ -534,18 +579,18 @@ sub company_profiles {
 			foreach my $Timetrack ( openprint::Timetrack->find('owner_id'=>$param{merge_company_id}) ) {
 				$Timetrack->save({'owner_id'=>$Company->id()});
 			} # end foreach Timetrack
-			foreach ( openprint::Invoice->find('invoicer_id'=>$param{merge_company_id}) ) {
-				$_->save({'invoicer_id'=>$Company->id()});
+			foreach ( openprint::Invoice->find(invoicer_id=>$param{merge_company_id}) ) {
+				$_->save({invoicer_id=>$Company->id()});
 			} # end foreach
-			foreach ( openprint::Invoice->find('invoicee_id'=>$param{merge_company_id}) ) {
-				$_->save({'invoicee_id'=>$Company->id()});
+			foreach ( openprint::Invoice->find(invoicee_id=>$param{merge_company_id}) ) {
+				$_->save({invoicee_id=>$Company->id()});
 			} # end foreach
-			foreach my $Payment ( openprint::Payment->find('payor_id'=>$param{merge_company_id}) ) {
-				$Payment->save({'payor_id'=>$Company->id()});
+			foreach my $Payment ( openprint::Payment->find(payor_id=>$param{merge_company_id}) ) {
+				$Payment->save({payor_id=>$Company->id()});
  #if $Payment->payor_id() == $Company->id();
 			} # end foreach  Payment
-			foreach my $Payment ( openprint::Payment->find('recipient_id'=>$param{merge_company_id}) ) {
-				$Payment->save({'recipient_id'=>$Company->id()});
+			foreach my $Payment ( openprint::Payment->find(recipient_id=>$param{merge_company_id}) ) {
+				$Payment->save({recipient_id=>$Company->id()});
 # if $Payment->recipient_id() == $Company->id();
 			} # end foreach  Payment
 			foreach my $Stock ( openprint::Paper->find(supplier_id=>$param{merge_company_id}) ) {
@@ -582,13 +627,16 @@ sub company_profiles {
 				my @customercategories = sql::execute( $log, $dbh, 'SELECT id FROM Marketing_Categories' );
 
 				sql::execute( $log, $dbh, q{DELETE FROM Companies_in_Marketing_Categories WHERE company_Id =?}, $index );
+				if ( $param{selectCustomerCategories} ) {
 # add them back in
-				my $sth = $dbh->prepare( q{INSERT INTO Companies_in_Marketing_Categories (Category_Id,Company_Id) VALUES ( ?, ? )} );
-				foreach my $cat ( $param{selectCustomerCategories} ) {
-					if ( sets::isin( $cat, \@customercategories ) ) {
-						$sth->execute( $cat, $index ) or $log->error( DBI->errstr );
-					} # end if
-				} # end foreach
+					my $sth = $dbh->prepare( q{INSERT INTO Companies_in_Marketing_Categories (Category_Id,Company_Id) VALUES ( ?, ? )} );
+					foreach my $cat ( $param{selectCustomerCategories} ) {
+						if ( sets::isin( $cat, \@customercategories ) ) {
+							$sth->execute( $cat, $index ) or $log->error( DBI->errstr );
+						} # end if
+					} # end foreach
+					$sth->finish();
+				}
 
 				my %params;
 				foreach my $field ( keys %shipping_fields ) {
@@ -1144,13 +1192,14 @@ sub users {
 
 }
 sub _users {
-	ssi::save_params('/administrator/managerial/users.html', (
+	my $uri = '/administrator/managerial/users.html';
+	ssi::save_params($uri,(
 				'salesrep_id', 'marketing_category_id', 'company_id','usergroup_id','deleted','email','type','administrator',
 				'notification_type_id',
 				( map { 'created_on_start_' . $_ } ( 'year','month','day' ) ),
 				( map { 'created_on_end_' . $_ } ( 'year','month','day' ) ),
 				) );
-	$session{$r->uri().'?salesrep_id_exclude'} = $param{salesrep_id_exclude};
+	$session{$uri.'?salesrep_id_exclude'} = $param{salesrep_id_exclude};
 }
 
 1;

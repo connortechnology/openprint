@@ -6,6 +6,7 @@ require openprint;
 require openprint::Project;
 require openprint::User;
 require openprint::ServiceType;
+require openprint::Operator_Role;
 
 use vars qw( $debug %fields %find_fields %transforms %defaults $table $serial );
 
@@ -14,7 +15,9 @@ $debug = 0;
 	id					=>	'id',
 	service_id	=>	'service_id',
 	user_id			=>	'user_id',
+	User				=>	undef,
 	role_id			=>	'role_id',
+	Role				=>	undef,
 );
 %find_fields = (
 );
@@ -36,8 +39,26 @@ sub Service {
 }
 
 sub User {
-	return new openprint::User( $_[0]{user_id} );
-} # end sub 
+	if ( @_ > 1 ) {
+		$_[0]{User} = $_[1];
+		$_[0]{user_id} = $_[0]{User} ? $_[0]{User}{id} : undef;
+	}
+	if ( !$_[0]{User} ) {
+		$_[0]{User} = new openprint::User($_[0]{user_id});
+	}
+	return $_[0]{User};
+} # end sub User
+
+sub Role {
+	if ( @_ > 1 ) {
+		$_[0]{Role} = $_[1];
+		$_[0]{role_id} = $_[0]{Role} ? $_[0]{Role}{id} : undef;
+	}
+	if ( ! $_[0]{Role} ) {
+		$_[0]{Role} = new openprint::Operator_Role($_[0]{role_id});
+	}
+	return $_[0]{Role};
+} # end sub Role
 
 1;
 __END__

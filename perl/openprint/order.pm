@@ -461,8 +461,9 @@ sub save_project_information {
 					);
 			foreach my $service_id ( @{$$services{$ShippingType->name()}} ) {
 				foreach my $spec ( @shipping_fields ) {
-					$log->debug("Sacing: $$ShippingType{name} $spec-$project_index-$service_id => " . $param{"$spec-$project_index-$service_id"} );
-					openprint::service::insert_service_spec( $log, $dbh, $project_index, $service_id, $spec, $param{"$spec-$project_index-$service_id"} ) if exists $param{"$spec-$project_index-$service_id"};
+					my $key = join('-', $spec, $project_index, $service_id);
+					$log->debug("Sacing: $$ShippingType{name} $key => " . ($param{$key}?$param{$key}:'') );
+					openprint::service::insert_service_spec($log, $dbh, $project_index, $service_id, $spec, $param{$key}) if exists $param{$key};
 				} # end foreach field
 			} # end foreach service_id
 		} # end foreach ShippingType
@@ -674,29 +675,10 @@ sub make_order_from_order {
 
 sub cancel_order {
 	my ( $order_id ) = @_;
-
+	my ( $caller, undef, $line ) = caller;
+	$log->error("Use of deprecated cancel_order from $caller:$line");
 	my $Order = new openprint::Order( $order_id );
-	$variable{error} .= $Order->save({ status=>'Cancelled' });
-	$_ = 'SELECT lngProjectIndex FROM Order_Contents WHERE OrderIndex=?';
-	foreach my $project_index ( sql::execute( $log, $dbh, $_, $order_id ) ) {
-		my $Project = new openprint::Project( $project_index );
-		$Project->status('Unordered');
-		$Project->order_id( undef );
-		$Project->docket( undef );
-		$Project->save();
-		sql::update( $log, $dbh, 'tbl_Project_Contents', ['lngProjectIndex=? AND strStatus!=?', $project_index, 'Complete'], 'strStatus', 'calculated' );
-		openprint::press_schedule::remove( $Project->id() );
-
-		# Free up any stock allocated to this project
-		foreach my $PA ( openprint::PaperAllocation->find( docket=>$Order->docket() ) ) {
-			my @skid_ids = $PA->skid_ids() ? @{$PA->skid_ids()} : ();
-			$Order->add_log( qq`De-allocated $$PA{quantity}$$PA{units} of <a href="/employee/inventory/paper_details.html?paper_id=$$PA{paper_id}">` . $PA->Paper()->to_string() . '</a>'.
-					( @skid_ids ? ' on skid: ' .  join(',', map { $_->url_to() } openprint::Skid->find(id=>\@skid_ids) ) : '' ) );
-			$PA->delete();
-		} # end foreach PA
-	} # end foreach
-	$Order->add_log( 'Cancelled' );
-	$Order->send_cancellation_notice();
+	return $Order->cancel();
 } # end sub cancel_order
 
 

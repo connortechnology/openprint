@@ -46,6 +46,8 @@
 
 		my @Categories = openprint::ServiceType_Category->find( order=>'sorting,name');
     foreach my $ServiceCategory ( @Categories ) {
+			$category_totals{$$ServiceCategory{name}} = { price=>0, runtime=>0 } if ! $category_totals{$$ServiceCategory{name}};
+
       if ( $ServiceCategory->name() eq 'Printing' ) {
         push @shown_services, $$services{''}[0];
         $html .= "<tr$rowclass>\n";
@@ -95,9 +97,9 @@
             } # end if
           } # end for
           $html .= "<tr$rowclass>";
-          $html .= sprintf('<td class="checkbox"><input type="checkbox" name="chkDelete-%1$d" /></td>', $ss_id ) if $$variable{checkboxes};
+          $html .= sprintf('<td class="checkbox"><input type="checkbox" name="chkDelete-%1$d"/></td>', $ss_id) if $$variable{checkboxes};
           $html .= sprintf('<td class="Service"><a href="/employee/proj/%s?ProjectIndex=%d&amp;ServiceIndex=%d"><b>%d %s</b><br/>%s<br/>%s</a></td>',
-              'prin/Signature.html', $Project->id(), $ss_id, $sig_qty, 'Signature' . ($sig_qty > 1 ? 's' : ''),
+              'prin/Signature.html', $Project->id(), $ss_id, $sig_qty, 'Signature'.($sig_qty > 1 ? 's' : ''),
               openprint::Estimating::Printing::summary( $Project, $ss_id, \%sig_specs ),
               openprint::Estimating::Printing::summary( $Project, $ss_id, \%sig_specs, $qty_index ),
               );
@@ -106,7 +108,7 @@
           if ( $$variable{canseepricing} ) {
 						my $price = $ProjectCurrency->convert_from( $sig_specs{'txtPrice'.$qty_index} );
             $totals[$qty_index] += $price;
-						$category_totals{$$ServiceCategory{name}} += $price;
+						$category_totals{$$ServiceCategory{name}}{price} += $price;
             $html .= openprint::Currency::format( $price );
           } # end if
 
@@ -114,6 +116,13 @@
           $$variable{index} = $ss_id;
           $$variable{status} = $statuses{$ss_id};
           $html .= variable_substitution( \$status_html, $variable );
+
+					my $Service = $Project->Service($ss_id);
+					my $runtime = $Service->runtime();
+					if ( $runtime ) {
+						$html .= misc::seconds2hm($runtime);
+						$category_totals{$$ServiceCategory{name}}{runtime} += $runtime;
+					};
           $html .= "</td></tr>\n";
           $rowclass = $rowclass ? '' : ' class="colRow"';
         } # end while sigs
@@ -125,19 +134,21 @@
           foreach my $service_id ( @{$$services{$ServiceType->name()}} ) {
             push @shown_services, $service_id;
             $rowclass = ' class="colRowRed"' if $statuses{$service_id} eq 'Waiting For Customer Approval';
-            my $specs = openprint::service::get_specs_ref( $Project, $service_id );
+						my $Service = $Project->Service($service_id);
+
+            my $specs = $Service->specs();
 
             $html .= "<tr$rowclass>\n";
-            $html .= sprintf(q`<td class="checkbox"><input type="checkbox" name="chkDelete-%1$d" /></td>`, $service_id ) if $$variable{checkboxes};
+            $html .= sprintf(q`<td class="checkbox"><input type="checkbox" name="chkDelete-%1$d"/></td>`, $service_id) if $$variable{checkboxes};
 
             my @summaries;
-            my $summary = openprint::service::summary( $Project->id(),$service_id );
+            my $summary = openprint::service::summary($Project->id(), $service_id);
             if ( ref $summary eq 'ARRAY' ) {
               @summaries = @{$summary};
               $summary = shift @summaries;
             } # end if
 
-            my $qty_summary = openprint::service::summary( $Project->id(), $service_id, $qty_index );
+            my $qty_summary = openprint::service::summary($Project->id(), $service_id, $qty_index);
             if ( ref $qty_summary eq 'ARRAY' ) {
               $$qty_summary[0] =~ s/\n/<br\/>/g;
             } else {
@@ -163,12 +174,17 @@
             } # end if
 						my $price = $ProjectCurrency->convert_from( $$specs{'txtPrice'.$qty_index});
             $html .= openprint::Currency::format( $price );
-						$category_totals{$$ServiceCategory{name}} += $price;
+						$category_totals{$$ServiceCategory{name}}{price} += $price;
           } # end if
           
 					$html .= '</td><td class="status" id="status'.$service_id.'">';
 					@$variable{'status','index'} = ( $statuses{$service_id}, $service_id );
           $html .= variable_substitution( \$status_html, $variable );
+					my $runtime = $Service->runtime();
+					if ( $runtime ) {
+						$html .= misc::seconds2hm($runtime);
+						$category_totals{$$ServiceCategory{name}}{runtime} += $runtime;
+					};
 					$html .= "</td></tr>\n";
 					$rowclass = $rowclass ? '' : ' class="colRow"';
 				} # end foreach service_id
@@ -330,7 +346,9 @@ $log->debug("price for stock$stock_index qty $qty_index: " . $Stock->to_string()
 			next if ! $category_totals{$$Category{name}};
 			$html .= '<tr class="totals">';
 			$html .= '<td class="checkbox"></td>' if $$variable{checkboxes};
-			$html .= '<td>'.$$Category{name}.' total:</td><td class="Price">'.openprint::Currency::format(  $category_totals{ $$Category{name} } ) . '</td><td class="status"></td></tr>';
+			$html .= '<td>'.$$Category{name}.' total:</td><td class="Price">'.openprint::Currency::format( $category_totals{ $$Category{name}}{price} ) . '</td><td class="status">';
+			$html .= misc::seconds2hm($category_totals{ $$Category{name}}{runtime});
+			$html .= '</td></tr>';
 		} # end foreach category
 	} # end if can_see_pricing
 
@@ -557,6 +575,7 @@ $log->debug("price for stock$stock_index qty $qty_index: " . $Stock->to_string()
     button( 'UploadPDFs'.$$variable{Project}{id}, { onclick=>"open_window('/employee/production/upload_pdfs.html?ProjectIndex=$$variable{ProjectIndex}','upload','resizable=yes,scrollbars=yes,width=800,height=600,screenX=10,screenY=10,top=0,left=0');", text=>'Upload PDFs' } ),
     #button( 'ExportJDF', { onclick=>qq`form_submit('$$variable{formname}','Export JDF');`, text=>'JDF' } ),
     #button( 'ExportMXML', { onclick=>qq`form_submit('$$variable{formname}','Export MXML');`, text=>'MXML' } ),
+    button( 'RelatedDockets'.$$variable{Project}{id}, { onclick=>"popup_window('/employee/project/_related_projects.html','project_id=$$variable{ProjectIndex}', { width: 800, height: 600 } );", text=>'Related Dockets' } ),
     ); ) ?>
   </span>
   
@@ -573,7 +592,7 @@ $log->debug("price for stock$stock_index qty $qty_index: " . $Stock->to_string()
         my $need_add = 0;
         my $pending = 0;
         foreach my $sig_id ( $$variable{Project}->signatures() ) {
-          my $Job = openprint::ScheduledJob->find_one('project_id'=>$$variable{ProjectIndex}, 'service_id any'=>$sig_id );
+          my $Job = openprint::ScheduledJob->find_one(project_id=>$$variable{ProjectIndex}, 'service_id any'=>$sig_id );
           if ( ! $Job ) {
             $need_add = 1;
           } elsif ( ! $Job->starttime() ) {
@@ -582,9 +601,9 @@ $log->debug("price for stock$stock_index qty $qty_index: " . $Stock->to_string()
         } # end foreach sig_id
 
         if ( $need_add ) {
-          $html .= button( 'AddToPressSchedule'.$$variable{Project}{id}, { onclick=>qq`form_submit('$$variable{formname}','AddToPressSchedule');`, text=>'Add To Press Schedule' } );
+          $html .= button( 'AddToPressSchedule'.$$variable{Project}{id}, { onclick=>qq`form_submit('$$variable{formname}','AddToPressSchedule');`, text=>'Add To Schedule' } );
         } else {
-          $html .= button( 'RemoveFromPressSchedule'.$$variable{Project}{id}, { onclick=>qq`form_submit('$$variable{formname}','RemoveFromPressSchedule');`, text=>'Remove from Press Schedule' } );
+          $html .= button( 'RemoveFromPressSchedule'.$$variable{Project}{id}, { onclick=>qq`form_submit('$$variable{formname}','RemoveFromPressSchedule');`, text=>'Remove from Schedule' } );
         } # end if
         if ( $pending ) {
           $html .= button( 'ScheduleJob'.$$variable{Project}{id}, { onclick=>qq`form_submit('$$variable{formname}','BumpSchedule');`, text=>'Schedule' } );
@@ -595,6 +614,7 @@ $log->debug("price for stock$stock_index qty $qty_index: " . $Stock->to_string()
       }
 
       my @bindery_services = openprint::print_project::get_services_in_category( $log, $dbh, $$variable{ProjectIndex}, 'Bindery' );
+if ( 0 ) {
 
       if ( $$variable{ProjectStatus} eq 'Printed' and @bindery_services and ! ( sql::execute( undef, undef, q{SELECT serviceindex FROM Bindery_Schedule WHERE projectindex=?}, $$variable{ProjectIndex} ) ) ) {
         $html .= button( 'AddToBinderySchedule'.$$variable{Project}{id}, { onclick=>qq`form_submit('$$variable{formname}','AddToBinderySchedule');`, text=>'Add To Bindery Schedule' } );
@@ -602,19 +622,40 @@ $log->debug("price for stock$stock_index qty $qty_index: " . $Stock->to_string()
       #if ( openprint::usergroup::is_user_in( ['Scheduling','Accounting'], $session{user_id} ) ) {
       #$html .= button( 'Complete'.$$variable{Project}{id}, { onclick=>qq`form_submit('$$variable{formname}','Complete');`, text=>'Complete' } );
       #} # end if
-      if ( @bindery_services ) {
+}
+      if ( @bindery_services and ( $openprint::User->in_Group('Scheduling') or $openprint::User->in_Group('Bindery Manager') ) ) {
         $html .= button( 'CompleteBindery'.$$variable{Project}{id}, { onclick=>qq`form_submit('$$variable{formname}','BinderyComplete');`, text=>'Complete Bindery' } );
       } # end if
-      if ( sets::isin( $$variable{Project}->shippingtype(), [ 'Delivery', 'Shipping' ] ) and $$variable{Project}->status() ne 'Shipped' ) {
 
-        $html .= button( 'Shipped'.$$variable{Project}{id}, { onclick=>qq`form_submit('$$variable{formname}','Shipped');`, text=>'Shipped' } );
-      } # end if
-      if ( $$variable{Project}->shippingtype() eq 'CustomerPickUp' and $$variable{Project}->status() ne 'Picked Up' ) {
-        $html .= button( 'PickedUp'.$$variable{Project}{id}, { onclick=>qq`form_submit('$$variable{formname}','Picked Up');`, text=>'Picked Up' } );
-      } # end if
+			# If we are a shipping user
+			if ( $openprint::User->in_Group('Shipping','Accounting') ) {
+				if ( sets::isin( $$variable{Project}->shippingtype(), [ 'Delivery', 'Shipping' ] ) and $$variable{Project}->status() ne 'Shipped' ) {
+
+					$html .= button( 'Shipped'.$$variable{Project}{id}, { onclick=>qq`form_submit('$$variable{formname}','Shipped');`, text=>'Shipped' } );
+				} # end if
+
+				if ( ( (!$$variable{Project}->shippingtype()) or $$variable{Project}->shippingtype() eq 'CustomerPickUp' ) and $$variable{Project}->status() ne 'Picked Up' ) {
+					$html .= button( 'PickedUp'.$$variable{Project}{id}, { onclick=>qq`form_submit('$$variable{formname}','Picked Up');`, text=>'Picked Up' } );
+				} # end if
+			} # end if is Shipping User
+
       if ( $session{user_type} eq 'A' or $openprint::User->id() == $$variable{Order}->salesrep_id() or openprint::usergroup::is_user_in( ['Sales Admin','Scheduling','PrepressManager'], $session{user_id} ) ) {
         $html .= button( 'Delete'.$$variable{Project}{id}, { onclick=>qq`form_submit( '$$variable{formname}', 'DeleteServices');`, text=>'Delete Checked Services' } );
       } # end if
+
+			if ( $session{user_type} eq 'A' ) {
+				if ( $$variable{Order}->do_not_pay_commission() ) {
+					$html .= button('PayCommission'.$$variable{Project}{id}, { href=>'/employee/project/view.html?action=PayCommission&docket='.$$variable{Project}{docket},
+							text=>'Ok To Pay Commission'
+ } );
+				} else {
+					$html .= button('DoNotPayCommission'.$$variable{Project}{id}, {
+							href=>'/employee/project/view.html?action=DoNotPayCommission&docket='.$$variable{Project}{docket},
+							text=>'Do Not Pay Commission'
+							} );
+				
+				}
+			}
 
       return $html;
     ) ?>

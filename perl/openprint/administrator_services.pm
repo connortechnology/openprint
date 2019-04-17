@@ -1,6 +1,7 @@
 package openprint::administrator_services;
 
 use strict;
+use warnings;
 
 require sql;
 require openprint::Pricelist;
@@ -22,108 +23,112 @@ sub edit {
 
 	my $Service = new openprint::Service( $param{service_id} );
 
-	if ( $param{btnFunction} eq '<<' ) {
-		$Service = $Service->Previous( {category_id=>$param{ddmSearchCategory}} );
-	} elsif ( $param{btnFunction} eq '>>' ) {
-		$Service = $Service->Next( {category_id=>$param{ddmSearchCategory}} );
-	} elsif ( $param{btnFunction} eq 'Delete' ) {
-		$variable{error} .= $Service->delete() if ! $variable{error};
-		$Service = $Service->Next( {category_id=>$param{ddmSearchCategory}} ) if ! $variable{error};
-	} elsif ( $param{btnFunction} eq 'Destroy' ) {
-		foreach my $T ( openprint::Timetrack->find(service_id=>$Service->id() ) ) {
-			$variable{error} .= sprintf('Service is used in <a href="/timetrack/edit.html?timetrack_id=%1$d">Timetrack %1$d</a><br/>', $T->id() );
-		} # end foreach T
-		$variable{error} .= $Service->destroy() if ! $variable{error};
-		$Service = $Service->Next( {category_id=>$param{ddmSearchCategory}} ) if ! $variable{error};
-	} elsif ( $param{btnFunction} eq 'Export' ) {
-		my @header = ( 'Service Name', 'Description','Category', 'Activity Code', 'Fed Tax Exempt', 'State Tax Exempt' );
+	if ( $param{btnFunction} ) {
+		if ( $param{btnFunction} eq '<<' ) {
+			$Service = $Service->Previous( {category_id=>$param{ddmSearchCategory}} );
+		} elsif ( $param{btnFunction} eq '>>' ) {
+			$Service = $Service->Next( {category_id=>$param{ddmSearchCategory}} );
+		} elsif ( $param{btnFunction} eq 'Delete' ) {
+			(new openprint::Log())->save({Object=>$Service, action=>'Delete'});
+			$variable{error} .= $Service->delete();
+			$Service = $Service->Next( {category_id=>$param{ddmSearchCategory}} ) if ! $variable{error};
+		} elsif ( $param{btnFunction} eq 'Destroy' ) {
+			foreach my $T ( openprint::Timetrack->find(service_id=>$Service->id() ) ) {
+				$variable{error} .= sprintf('Service is used in <a href="/timetrack/edit.html?timetrack_id=%1$d">Timetrack %1$d</a><br/>', $T->id() );
+			} # end foreach T
+			$variable{error} .= $Service->destroy() if ! $variable{error};
+			(new openprint::Log())->save({action=>'Delete', note=>'Service ' . $$Service{name}});
+			$Service = $Service->Next( {category_id=>$param{ddmSearchCategory}} ) if ! $variable{error};
+		} elsif ( $param{btnFunction} eq 'Export' ) {
+			my @header = ( 'Service Name', 'Description','Category', 'Activity Code', 'Fed Tax Exempt', 'State Tax Exempt' );
 
-		my @data;
-		foreach ( openprint::Service->find( order=>'name' ) ) {
-			push @data, $_->get( 'name', 'description', 'category', 'activity_code', 'taxexempt1','taxexempt2' );
-		} # end foreach
+			my @data;
+			foreach ( openprint::Service->find( order=>'name' ) ) {
+				push @data, $_->get( 'name', 'description', 'category', 'activity_code', 'taxexempt1','taxexempt2' );
+			} # end foreach
 
-		misc::export_csv( $openprint::r, $log, \%variable, 'services.csv', \@header, \@data );
-	} elsif ( $param{btnFunction} eq 'Import' ) {
+			misc::export_csv( $openprint::r, $log, \%variable, 'services.csv', \@header, \@data );
+		} elsif ( $param{btnFunction} eq 'Import' ) {
 
-		my $error = '';
-		if ( $param{file} ) {
-			my $ac = sql::start_transaction( $dbh );
-			my %Services = map { $$_{name}, $_ } openprint::Service->find();
+			my $error = '';
+			if ( $param{file} ) {
+				my $ac = sql::start_transaction( $dbh );
+				my %Services = map { $$_{name}, $_ } openprint::Service->find();
 
-			my $upload = $r->upload( 'file' );
-			my $io = $upload->io();
-			$_ = <$io>;
+				my $upload = $r->upload( 'file' );
+				my $io = $upload->io();
+				$_ = <$io>;
 
-			my $csv = Text::CSV_XS->new();
+				my $csv = Text::CSV_XS->new();
 
-			while (<$io>) {
-				my $status = $csv->parse($_);
-				my ( $name, $description, $category, $activity_code, $tax1, $tax2 ) = misc::trim( $csv->fields() );
-				next if $name eq '';
-				if ( $Services{$name} ) {
-					$error .= "Not importing $name because it already exists at " . $Services{$name}->link_to().'<br/>';
-					next;
-				}
-				my $Service = new openprint::Service();
-				$_ = $Service->save({
-						name			=>	$name,
-						description		=>	$description,
-						category		=>	$category,
-						activity_code	=>	$activity_code,
-						taxexempt1		=>	$tax1,
-						taxexempt2		=>	$tax2,
-						});
-				if ( $_ ) {
-					$error .= $_;
-					$dbh->rollback();
-					last;
-				} else {
-					$variable{information} .= "$name successfully imported.<br/>";
-					$Services{$name} = $Service;
-				}
-			} # end while
-			sql::end_transaction( $dbh, $ac );
-		} else {
-			$error .= 'No file given to upload.<br>';
-		} # end if
-		$variable{error} = $error; 
-	} elsif ( $param{btnFunction} eq 'Save' ) {
-		if ( $param{new_category} ) {
-			if ( my @Categories = openprint::ServiceCategory->find(name=>$param{new_category} ) ) {
-				$param{category_id} = $Categories[0]->id();
+				while (<$io>) {
+					my $status = $csv->parse($_);
+					my ( $name, $description, $category, $activity_code, $tax1, $tax2 ) = misc::trim( $csv->fields() );
+					next if $name eq '';
+					if ( $Services{$name} ) {
+						$error .= "Not importing $name because it already exists at " . $Services{$name}->link_to().'<br/>';
+						next;
+					}
+					my $Service = new openprint::Service();
+					$_ = $Service->save({
+							name			=>	$name,
+							description		=>	$description,
+							category		=>	$category,
+							activity_code	=>	$activity_code,
+							taxexempt1		=>	$tax1,
+							taxexempt2		=>	$tax2,
+							});
+					if ( $_ ) {
+						$error .= $_;
+						$dbh->rollback();
+						last;
+					} else {
+						$variable{information} .= "$name successfully imported.<br/>";
+						$Services{$name} = $Service;
+					}
+				} # end while
+				sql::end_transaction( $dbh, $ac );
 			} else {
-				my $Category = new openprint::ServiceCategory();
-				$Category->name( $param{new_category} );
-				if ( $_ = $Category->save() ) {
-					$variable{error} .= $_;
-					return;
+				$error .= 'No file given to upload.<br>';
+			} # end if
+			$variable{error} = $error; 
+		} elsif ( $param{btnFunction} eq 'Save' ) {
+			if ( $param{new_category} ) {
+				if ( my @Categories = openprint::ServiceCategory->find(name=>$param{new_category} ) ) {
+					$param{category_id} = $Categories[0]->id();
 				} else {
-					$param{category_id} = $Category->id();
+					my $Category = new openprint::ServiceCategory();
+					$Category->name( $param{new_category} );
+					if ( $_ = $Category->save() ) {
+						$variable{error} .= $_;
+						return;
+					} else {
+						$param{category_id} = $Category->id();
+					} # end if
 				} # end if
 			} # end if
-		} # end if
 
 
-		my $ac = sql::start_transaction( $dbh );
-		my @changes = $Service->changes( \%param );
-		$variable{error} .= $Service->save( \%param ) if @changes;
-		if ( ! $variable{error} ) {
+			my $ac = sql::start_transaction( $dbh );
+			my @changes = $Service->changes( \%param );
+			$variable{error} .= $Service->save( \%param ) if @changes;
+			if ( ! $variable{error} ) {
 
-			# Please note that we don't do any deleting here.  We mayonlyhave the prices for 1 piee of equipment on screen, so just update the ones that are on screen.
+# Please note that we don't do any deleting here.  We mayonlyhave the prices for 1 piee of equipment on screen, so just update the ones that are on screen.
 
-			@changes = ( join(', ', @changes) ) if @changes;
-			foreach my $Price ( openprint::ServicePrice->find( 
-						service_id=>$$Service{id}, 
-						($param{equipment_id} ? ( equipment_id=>$param{equipment_id} ) : () ),
-						order=>'pricelist_id, min NULLS FIRST,max NULLS FIRST' ) ) {
-				next if ! exists $param{"price-$$Price{id}"};
-				my $new_values = {
-						#equipment_id	=>	$param{"equipment_id-$$Price{id}"},
-						period_start	=>	( Date::Calc::check_date( map { $param{"period_start-$$Price{id}_$_"} } ( 'year','month','day' ) ) ? sprintf('%.4d-%.2d-%.2d 00:00:00', map { $param{"period_start-$$Price{id}_$_"} } ( 'year','month','day' ) ) : undef ),
-						period_end		=>	( Date::Calc::check_date( map { $param{"period_end-$$Price{id}_$_"} } ( 'year','month','day' ) ) ? sprintf('%.4d-%.2d-%.2d 23:59:59', map { $param{"period_end-$$Price{id}_$_"} } ( 'year','month','day' ) ) : undef ),
+				@changes = ( join(', ', @changes) ) if @changes;
+				foreach my $Price ( openprint::ServicePrice->find( 
+							service_id=>$$Service{id}, 
+							($param{equipment_id} ? ( equipment_id=>$param{equipment_id} ) : () ),
+							order=>'pricelist_id, min NULLS FIRST,max NULLS FIRST' ) ) {
+					next if ! exists $param{"price-$$Price{id}"};
+					my $new_values = {
+#equipment_id	=>	$param{"equipment_id-$$Price{id}"},
+						period_start	=>	( Date::Calc::check_date( map { $param{"period_start-$$Price{id}_$_"} ? $param{"period_start-$$Price{id}_$_"} : 0 } ( 'year','month','day' ) ) ? sprintf('%.4d-%.2d-%.2d 00:00:00', map { $param{"period_start-$$Price{id}_$_"} } ( 'year','month','day' ) ) : undef ),
+						period_end		=>	( Date::Calc::check_date( map { $param{"period_end-$$Price{id}_$_"} ? $param{"period_end-$$Price{id}_$_"} : 0 } ( 'year','month','day' ) ) ? sprintf('%.4d-%.2d-%.2d 23:59:59', map { $param{"period_end-$$Price{id}_$_"} } ( 'year','month','day' ) ) : undef ),
 						min				=>	$param{"min-$$Price{id}"},
 						max				=>	$param{"max-$$Price{id}"},
+						range_units			=>	$param{"range_units-$$Price{id}"},
 						units			=>	$param{"units-$$Price{id}"},
 						cost			=>	$param{"cost-$$Price{id}"},
 						markup			=>	$param{"markup-$$Price{id}"},
@@ -131,41 +136,38 @@ sub edit {
 						discountable	=>	$param{"discountable-$$Price{id}"},
 						mode			=>	$param{"mode-$$Price{id}"},
 						supplier_id		=>	$param{"supplier_id-$$Price{id}"},
-						};
-				my @price_changes = $Price->changes( $new_values );
-				if ( @price_changes ) {
-					$variable{error} .= $Price->save( $new_values );
-					push @changes, ( 'Change price for ' .$Price->id_string() . ': ' .  join(', ', map { $_ } @price_changes ) );
-				} # end if
-			} # end foreach 
-			(new openprint::Log())->save({object_id=>$$Service{id},object_type=>ref$Service, action=>'Edit Service', note=>join('<br/>', @changes) }) if @changes;
-		} # end if not error
-		sql::end_transaction( $dbh, $ac );
-		if ( ! $variable{error} ) {
-			$variable{ExternalRedirect} = '/administrator/services/edit.html?service_id='.$Service->id();
-			if ( $param{ddmServiceCategory} ) {
-				$variable{ExternalRedirect} .= '&ddmServiceCategory='.$param{ddmServiceCategory};
-			}
-			if ( $param{equipment_id} ) {
-				$variable{ExternalRedirect} .= '&equipment_id='.$param{equipment_id};
+					};
+					my @price_changes = $Price->changes( $new_values );
+					if ( @price_changes ) {
+						$variable{error} .= $Price->save( $new_values );
+						push @changes, ( 'Change price for ' .$Price->id_string() . ': ' .  join(', ', map { $_ } @price_changes ) );
+					} # end if
+				} # end foreach 
+				(new openprint::Log())->save({object_id=>$$Service{id},object_type=>ref$Service, action=>'Edit Service', note=>join('<br/>', @changes) }) if @changes;
+			} # end if not error
+			sql::end_transaction( $dbh, $ac );
+			if ( ! $variable{error} ) {
+				$variable{ExternalRedirect} = '/administrator/services/edit.html?service_id='.$Service->id();
 			} # end if
-		} # end if
-    } elsif ( $param{btnFunction} eq 'Copy' ) {
-        
-		my $NewService = $Service->copy();
-		$$NewService{name} = 'Copy of '.$$Service{name};
-        
-        $variable{error} = $NewService->save();
-		(new openprint::Log())->save({object_id=>$$NewService{id},object_type=>ref$NewService, action=>'Copy Service', note=>'From ' . $Service->name()} ) if ! $variable{error};
-        if ( ! $variable{error} ) {
-			foreach my $price ( $Service->prices() ) {
-				$$price{service_id} = $$NewService{id};
-				delete $$price{id};
-				$variable{error} .= $price->save();
-			} # end foreach
-		} # end if
-		$Service = $NewService;
-	} # end if
+		} elsif ( $param{btnFunction} eq 'Copy' ) {
+
+			my $NewService = $Service->copy();
+			$$NewService{name} = 'Copy of '.$$Service{name};
+
+			$variable{error} = $NewService->save();
+			(new openprint::Log())->save({object_id=>$$NewService{id},object_type=>ref$NewService, action=>'Copy Service', note=>'From ' . $Service->name()} ) if ! $variable{error};
+			if ( ! $variable{error} ) {
+				foreach my $price ( $Service->prices() ) {
+					$$price{service_id} = $$NewService{id};
+					delete $$price{id};
+					$variable{error} .= $price->save();
+				} # end foreach
+			} # end if
+			$Service = $NewService;
+		} # end if btnFunction value
+	} # end if btnFunction
+
+	ssi::save_params($r->uri(), 'service_id', 'equipment_id', 'ddmSearchCategory');
 
 	$variable{Service} = $Service;
 } # end sub edit

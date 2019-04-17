@@ -396,6 +396,9 @@ sub confirmation {
 		foreach my $OP ( $Order->Ordered_Projects() ) {
 			my $Project = $OP->Project();
 			sql::update( $log, $dbh, 'tbl_Project_Contents', ["lngProjectIndex=? AND strStatus NOT IN ( 'Complete', 'Approved', 'Proofs Out', 'Waiting For Customer Approval','Waiting For QA Approval','')", $Project->id()], 'strStatus', 'Ordered' );
+			if ( $Project->docket() != $Order->docket() ) {
+				$Project->save({docket=>$Order->docket()});
+			}
 			$Project->update_status();
 		}
 		foreach my $Product ( $Order->Products() ) {
@@ -424,7 +427,7 @@ sub history {
 
 sub _history {
 	ssi::save_params( '/main/order/history.html', 
-			'ddmOrderedBy','company_id','status_id',
+			'ddmOrderedBy','company_id','status_id','salesrep_id',
 			'created_on_start_year', 'created_on_start_month','created_on_start_day', 
 			'created_on_end_year', 'created_on_end_month','created_on_end_day', 
 			);
@@ -448,7 +451,7 @@ sub history_details {
 		} # end if
 
 	} elsif ( $param{btnFunction} eq 'Cancel' ) {
-		openprint::order::cancel_order( $order_id );
+		$variable{error} .= $Order->cancel();
 	} elsif ( $param{btnFunction} eq 'Pay' ) {
 		$Order->pay();
 	} elsif ( $param{btnFunction} eq 'Save Payment' ) {

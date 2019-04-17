@@ -18,7 +18,7 @@ sub setup {
 	if ( $param{'function'} eq 'Save' ) {
 		foreach my $Type ( openprint::Performance_Point_Type->find() ) {
 			foreach my $Equipment ( openprint::Equipment->find(
-						'use_in_scheduling'=>1,
+						useinscheduling=>1,
 						( $Type->category() ? ( 'category'=>$Type->category() ) : () ),
 						) ) {
 				my $Point = openprint::Performance_Point->find_one('equipment_id'=>$$Equipment{'id'},'type_id'=> $$Type{'id'} );

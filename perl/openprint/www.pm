@@ -3,7 +3,7 @@ package openprint::www;
 use utf8;
 use open ( ":encoding(UTF-8)", ":std" );
 
-use constant Debug => 1;
+use constant Debug => 0;
 
 #use Benchmark;
 #use diagnostics;
@@ -42,7 +42,6 @@ use vars qw( $r %variable %session %param %config $log $dbh $starttime );
 
 sub warn {
 	$log->error("Warning: $_[0]");
-
 }
 
 $SIG{__WARN__} = \&warn;
@@ -300,7 +299,7 @@ sub parse_page {
 	my $fourth = shift @thing if @thing;
 
 	if ( $filename eq 'getfile.html' ) {
-		my $sourceDir = $config{ProjectFilesPath} . openprint::upload_handler::get_destdir();
+		my $sourceDir = $config{ProjectFilesPath} . handlers::upload::get_destdir();
 		$variable{Download} = misc::load_file( $log, $sourceDir.$param{path}.'/'.$variable{Download});
 		$r->headers_out->{'Content-Disposition'} = "attachment; filename=\"$param{filename}\"";
 		$r->content_type( "application/octet-stream; name=\"$param{filename}\"" );
@@ -333,35 +332,55 @@ sub parse_page {
 
 	} elsif ( $first eq 'employee' ) {
 		if ( $second eq 'proj' ) {
+			if ( $param{docket} ) {
+				$param{docket} = openprint::Project->transform(docket=>$param{docket});
+				my @Projects = openprint::Project->find(docket=>$param{docket});
+				if ( !@Projects ) {
+					$variable{error} ='No projects found for docket ' . $param{docket}.'<br/>';
+					return;
+				} elsif ( @Projects > 1 ) {
+					$variable{error} ='Multiple projects found for docket ' . $param{docket}.'<br/>';
+					my $rowclass = '';
+					foreach my $Project ( @Projects ) {
+						$variable{error} .= qq`<div$rowclass><a href="$variable{uri}?project_id=$$Project{id}">$$Project{id}</a> $$Project{reference}</div>`; 
+						$rowclass = $rowclass ? '' : ' class="colRow"';
+					}
+					return;
+				}
+				$param{ProjectIndex} = $Projects[0]->id();
+			} elsif ( $param{project_id} ) {
+				$param{ProjectIndex} = $param{project_id};
+			}
+
 			require openprint::print;
 			require openprint::print_project;
 			require openprint::employee_production;
-			openprint::print_project::get_service_specifications( $r, $log, $dbh, \%variable, @param{'ProjectIndex','ServiceIndex'} ) if $param{ServiceIndex} and $filename ne 'multipage_signatures.html';
+
 			@variable{'ProjectIndex','ServiceIndex','OrderID'} = @param{'ProjectIndex','ServiceIndex','OrderID'};
 			
-			$variable{Project} = new openprint::Project( $variable{ProjectIndex} );
+			my $Project = $variable{Project} = new openprint::Project($variable{ProjectIndex});
 			@variable{'ddmDueDate','OrderedQuantityIndex'} = ( $variable{Project}->due_date(), $variable{Project}->ordered_quantity_index() );
 			$variable{QTYIndex} = $variable{OrderedQuantityIndex};
 			$variable{DocketNumber} = $variable{Project}->docket();
 
 			$variable{Employee} = $openprint::User->name();
+			if ( $variable{ServiceIndex} ) {
+				$variable{Service} = $variable{Project}->Service($variable{ServiceIndex});
+			}
 			
 			if ( $filename eq 'proofs.html' or $filename eq 'FilmStripping.html' ) {
-				foreach my $signature_service_index ( $variable{Project}->signatures() ) {
-					my $sig_specs = openprint::service::get_specs_ref( $variable{Project}, $signature_service_index );
-					push @{$variable{Signatures}}, @$sig_specs{'SignatureIndex','txtServiceDescription'};
-					if ( ! $$sig_specs{UsePress} ) {
-						openprint::service::insert_service_spec( $log, $dbh, $variable{ProjectIndex}, $signature_service_index, 'UsePress', $$sig_specs{'ddmPress'.$variable{Project}->ordered_quantity_index()} );
-					} # end if
-					$variable{"UsePress-$signature_service_index"} = $$sig_specs{UsePress};
-				} # end foreach signature_service_index
-
-				if ( ! $variable{ddmDueDate} ) {
-					$variable{ddmDueDate} = $variable{Project}->get_due_date();
-				} # end if
-				@variable{'duedate_year','duedate_month','duedate_day'} = split('-', $variable{ddmDueDate});
-
-			} elsif ( $third eq 'prin' ) {	
+				if ( ! $param{ServiceIndex} ) {
+					my $services = $Project->services();
+					if ( $$services{Proofs} ) {
+						$variable{ServiceIndex} =	$param{ServiceIndex} = $$services{Proofs}[0];
+					} else {
+						$variable{error} .= 'No Proofs service found in project ' . $Project->id() . '<br/>';
+						return;
+					}
+				}
+			}
+			openprint::print_project::get_service_specifications( $r, $log, $dbh, \%variable, @param{'ProjectIndex','ServiceIndex'} ) if $param{ServiceIndex} and $filename ne 'multipage_signatures.html';
+			if ( $third eq 'prin' ) {	
 				openprint::employee_production::load_press_completion( $log, $dbh, \%variable, $variable{ProjectIndex} );
 				if ( $filename eq '_production_feedback.html' ) {
 					openprint::employee_project::_production_feedback( );
@@ -411,7 +430,7 @@ $log->debug("Running openprint::$module->$proc") if Debug;
 				}
 			} # end if
 		} # end if
-	} elsif ( sets::isin( $first, [ 'content', 'account' ] ) ) { # main
+	} elsif ( $first and  sets::isin( $first, [ 'content', 'account' ] ) ) { # main
 		my ( $proc ) = $filename =~ /(.*)\.\w*$/;
 		if ( $proc ) {
 			my $module = join('_',@path);
@@ -444,19 +463,18 @@ $log->debug("Running openprint::$module->$proc") if Debug;
 				# Things like UPS SHipping might not actually have a service
 				openprint::print::get_quantities( \%variable, $project_index );
 				if ( $project_index and $service_index ) {
-					my $Service = $variable{Project}->Service( $service_index );
+					my $Service = $variable{Service} = $variable{Project}->Service( $service_index );
 $log->debug("Service: " . $Service->to_string() );
 					if ( ! $Service->service_id() ) {
 						$variable{error} .= "Unable to load data for service. Perhaps it was removed.<br/>";
 						$variable{ExternalRedirect} = '/main/project/view.html?project_id='.$project_index;
 					} else {
-						$variable{ServiceType} = $Service->ServiceType();
-						@variable{'ServiceTypeID','ServiceTypeName','ServiceTypeType'} = $variable{ServiceType}->get('name','description','type') if $variable{ServiceType};
 
-	$log->debug("ServiceType: $variable{ServiceTypeType}");
 						my $specs = $Service->specs();
 						@variable{keys %$specs} = values %$specs;
 						$variable{ServiceType} = $Service->ServiceType();
+						@variable{'ServiceTypeID','ServiceTypeName','ServiceTypeType'} = $variable{ServiceType}->get('name','description','type') if $variable{ServiceType};
+						$log->debug("ServiceType: $variable{ServiceTypeType}");
 					} # end if
 				} # end if
 				$variable{ProjectType} = $variable{Project}->Type();

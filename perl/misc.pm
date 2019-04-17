@@ -135,6 +135,7 @@ sub data_to_csv {
 	push @data, $csv->string() . "\n";
 
 	for ( my $index = 0; $index < @{$data}; $index += 1 ) {
+		next if ! defined($$data[$index]);
 		$$data[$index] =~ s/[\n\r]//g; # these really mess up the CSV
 	} # end for
 	
@@ -397,6 +398,15 @@ sub format_bytes {
 	} # end if
 } # end sub format_bytes
 
+sub seconds2hm {
+  my ( $seconds ) = @_;
+  my $hours = int( $seconds / (60*60) );
+  $seconds = $seconds % ( 60*60 );
+  my $minutes = int ( $seconds / 60 );
+
+  return sprintf('%d:%.2d', $hours, $minutes );
+} # end sub seconds2hm
+
 sub seconds2hms {
 	my ( $seconds ) = @_;
 	my $hours = int( $seconds / (60*60) );
@@ -445,7 +455,7 @@ sub find_entry {
 $openprint::log->debug("Found spec for $range:" . $x->min() . ' ' . $x->max() . ' : ' . $x->value() ) if $debug;
 		return if ( $$x{max} and ( $$x{max} < $range ) and ! $$x{interpolate} );
 	} else {
-$openprint::log->debug("Couldn't find monimum for $name : $range on " . ( $$array[0]->Equipment() ? $$array[0]->Equipment()->name() : '' ) ) if $debug;
+$openprint::log->debug("Couldn't find minimum for $name : $range on " . ( $$array[0]->Equipment() ? $$array[0]->Equipment()->name() : '' ) ) if $debug;
 		return;	
 	}
 	for ( ; $i < @{$array}; $i += 1 ) {
@@ -538,6 +548,15 @@ $openprint::log->debug("Have @filenames from $_[0]");
 	return @results;
 }
 
+sub make_hash_from_array {
+	my $key = shift;
+	my %results;
+	foreach my $object ( @_ ) {
+		$results{$$object{$key}} = [] if ! $results{$$object{$key}};
+		push @{$results{$$object{$key}}}, $object;
+	}
+	return wantarray ? %results : \%results;
+}
 
 1;
 __END__

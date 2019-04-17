@@ -23,7 +23,7 @@
 	
 		push @operators, openprint::Project_Service_Operator->find( role_id=>$$Role{id}, service_id=>$$Service{service_id} );
 	} # end foreach Project
-	@{$$variable{Operators}} = map { $_->User() } @operators;
+	@{$$variable{Operators}} = @operators ? (map { $_->User() } @operators) : ( $openprint::User ) ;
 	} # end if
 ) ?>
 <?include(/includes/error_reporting.html)?>

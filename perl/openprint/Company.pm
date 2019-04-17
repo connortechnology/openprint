@@ -11,7 +11,7 @@ require sql;
 require openprint::Object;
 require openprint::User;
 
-$debug = 1;
+$debug = 0;
 $default_sort = 'lower(name)';
 $table = 'companies';
 $serial = 'companies_id_seq';
@@ -77,6 +77,7 @@ $serial = 'companies_id_seq';
 	last_quoted_on	=>	'(SELECT MAX(dtmquotedate) FROM Quotes WHERE companyindex=companies.id)',
 	last_called_on	=>	'(SELECT MAX(date_time) FROM sales_logs WHERE company_id=companies.id)',
 	last_invoiced_on	=>	'(SELECT MAX(created_on) FROM invoices WHERE invoicee_id=companies.id)',
+  last_expense_on   =>  '(SELECT MAX(created_on) FROM expenses WHERE recipient_Id=companies.id)',
 	credit_app_on	=>	'(SELECT MAX(dtmcreationdate) FROM creditapplications WHERE company_id=companies.id)',
 	marketing_category_id	=>	'(SELECT category_id FROM companies_in_marketing_categories WHERE company_id=companies.id)',
 	profile_field	=>	'(SELECT value FROM Company_Profiles WHERE company_id=companies.id AND field_id=?)',
@@ -396,11 +397,12 @@ sub find_filtered {
 } # end sub find_filtered
 
 sub can_view {
-    return 1 if $openprint::session{user_type} eq 'A';
-    return 1 if $_[0]->salesrep_id() == $openprint::session{user_id};
-    return 1 if $_[0]{id} == $$openprint::User{company_id};
-	return 1 if sets::isin( $_[0]->salesrep_id(), $openprint::User->csr_ids() );
-        return 1 if openprint::usergroup::is_user_in( ['Estimating','Prepress','Accounting','Shipping','Inventory'], $openprint::session{user_id} );
+	my $self = shift;
+	return 1 if $openprint::session{user_type} eq 'A';
+	return 1 if $$self{salesrep_id} == $openprint::session{user_id};
+	return 1 if $$self{id} == $$openprint::User{company_id};
+	return 1 if $$self{salesrep_id} and sets::isin( $$self{salesrep_id}, $openprint::User->csr_ids() );
+	return 1 if openprint::usergroup::is_user_in( ['Estimating','Prepress','Accounting','Shipping','Inventory'], $openprint::session{user_id} );
 	return 0;
 } # end sub can_view
 

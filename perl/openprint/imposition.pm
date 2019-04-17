@@ -215,23 +215,30 @@ sub calc_setup_object {
 	if ( my $Stock_Setting = $Press->Stock_Setting( $Paper ) ) {
 		$press_grain = $Stock_Setting->grain();
 	} else {
-		$press_grain = $Press->specification('Grain', $Paper->gsm());
+		$press_grain = $Press->Specification('Grain');
+		if ( $$press_grain{units} eq 'gsm' ) {
+			$press_grain = $Press->specification('Grain', $Paper->gsm());
+		} elsif ( $$press_grain{units} eq 'calliper' ) {
+			$press_grain = $Press->specification('Grain', $$Paper{calliper});
+		} else {
+			$press_grain = $$press_grain{value};
+		}
 	} # end if
 #$openprint::log->debug("Grains: $grain_direction, Press: $press_grain, Paper: ". $Paper->grain_direction() . ', paper->long: ' . $Paper->long() );
 	if ( $press_grain and $press_grain ne 'Both' ) {
 		if ( $press_grain eq 'Long' ) {
 			if ( $Paper->grain_direction() ne $Paper->long() ) {
-				$openprint::log->debug("Improper grain Paper(".$Paper->grain_direction().") Long (".$Paper->long().")") if DEBUG;
+				$openprint::log->debug('Improper grain Paper('.$Paper->grain_direction().') Long ('.$Paper->long().')') if DEBUG;
 				return;
 			} elsif ( DEBUG ) {
-				$openprint::log->debug("PROPER grain Paper(".$Paper->grain_direction().") Long (".$Paper->long().")");
+				$openprint::log->debug('PROPER grain Paper('.$Paper->grain_direction().') Long ('.$Paper->long().')');
 			} # en dif
 		} elsif ( $press_grain eq 'Short' ) {
 			if ( $Paper->grain_direction() ne $Paper->short() ) {
-				$openprint::log->debug("Improper grain Paper(".$Paper->grain_direction().") Short (".$Paper->short().")") if DEBUG;
+				$openprint::log->debug('Improper grain Paper('.$Paper->grain_direction().') Short ('.$Paper->short().')') if DEBUG;
 				return;
 			} elsif ( DEBUG ) {
-				$openprint::log->debug("Proper grain Paper(".$Paper->grain_direction().") Short (".$Paper->short().")") if DEBUG;
+				$openprint::log->debug('Proper grain Paper('.$Paper->grain_direction().') Short ('.$Paper->short().')');
 			} # en dif
 		} elsif ($press_grain ne $Paper->grain_direction() ) {
 			$openprint::log->debug("Improper grain Paper(".$Paper->grain_direction().") Press($press_grain)") if DEBUG;
@@ -240,7 +247,7 @@ sub calc_setup_object {
 			$openprint::log->debug("Proper grain Paper(".$Paper->grain_direction().") Press($press_grain)") if DEBUG;
 		} # end if
 	} elsif ( DEBUG ) {
-		$openprint::log->debug("No grain discretion. $$Paper{gsm}gsm");
+		$openprint::log->debug("No grain direction. $$Paper{gsm}gsm");
 	} # end if press_grain
 	if ( $run_style eq 'Perfecting' ) {
 		my $press_grain = $Press->specification('Perfecting Grain', $Paper->gsm() );
@@ -268,7 +275,7 @@ sub calc_setup_object {
 				$openprint::log->debug("Proper perfecting grain Paper(".$Paper->grain_direction().") Press($press_grain)") if DEBUG;
 			} # end if
 		} elsif ( DEBUG ) {
-			$openprint::log->debug("No perfecting grain discretion. $$Paper{gsm}");
+			$openprint::log->debug("No perfecting grain direction. $$Paper{gsm}");
 		} # end if press_grain
 	} # end if Perfecting
 
@@ -312,11 +319,11 @@ $openprint::log->debug("Not Pretrimming on $$Press{strid}") if DEBUG;
 	$$setup1{Press} = $Press;
 	$$setup1{printing_type} = $Press->specification('Printing Type');
 	if ( $run_style eq 'Perfecting' ) {
-		$setup1->colour_bar_size( $$specs{Perfecting_colour_bar_size} );
-		$setup2->colour_bar_size( $$specs{Perfecting_colour_bar_size} );
+		$$setup1{colour_bar_size} = $$specs{Perfecting_colour_bar_size};
+		$$setup2{colour_bar_size} = $$specs{Perfecting_colour_bar_size};
 	} else {
-		$setup1->colour_bar_size( $$specs{colour_bar_size} );
-		$setup2->colour_bar_size( $$specs{colour_bar_size} );
+		$$setup1{colour_bar_size} = $$specs{colour_bar_size};
+		$$setup2{colour_bar_size} = $$specs{colour_bar_size};
 	} # end if
 	$setup1->colour_bar_orientation( $$specs{'Colour Bar Orientation'} );
 	$$setup1{spine} = $$specs{ProjectSpecs}{spine};
@@ -389,25 +396,27 @@ $openprint::log->debug("Not Pretrimming on $$Press{strid}") if DEBUG;
 	my $bindery_bleed = 0;
 	my $bindery_head = 0;
 
-	if ( sets::isin( $$specs{Binding}, ['SaddleStitching','LoopStitching'] ) ) {
-		$bindery_gutters = $Press->specification('StitchingGutter');
-		$bindery_bleed = $Press->specification('StitchingBleed');
-		if ( $bindery_bleed ) {
-			$setup1->bleed_size( $bindery_bleed );
-			$setup2->bleed_size( $bindery_bleed );
+	if ( $$specs{Binding} ) {
+		if ( sets::isin( $$specs{Binding}, ['SaddleStitching','LoopStitching'] ) ) {
+			$bindery_gutters = $Press->specification('StitchingGutter');
+			$bindery_bleed = $Press->specification('StitchingBleed');
+			if ( $bindery_bleed ) {
+				$setup1->bleed_size( $bindery_bleed );
+				$setup2->bleed_size( $bindery_bleed );
+			} # end if
+			$setup1->folio_lip( $bindery_gutters );
+			$setup2->folio_lip( $bindery_gutters );
+		} elsif ( sets::isin( $$specs{Binding}, ['PerfectBound','SpinePaste'] ) ) {
+			$bindery_gutters = $Press->specification('PerfectBindGutter');
+			$bindery_bleed = $Press->specification('PerfectBindBleed');
+			if ( $bindery_bleed ) {
+				$setup1->bleed_size( $bindery_bleed );
+				$setup2->bleed_size( $bindery_bleed );
+			} # end if
+			$setup1->folio_lip( $bindery_gutters );
+			$setup2->folio_lip( $bindery_gutters );
+			$bindery_head = $$specs{PerfectBindCoverGutter};
 		} # end if
-		$setup1->folio_lip( $bindery_gutters );
-		$setup2->folio_lip( $bindery_gutters );
-	} elsif ( sets::isin( $$specs{Binding}, ['PerfectBound','SpinePaste'] ) ) {
-		$bindery_gutters = $Press->specification('PerfectBindGutter');
-		$bindery_bleed = $Press->specification('PerfectBindBleed');
-		if ( $bindery_bleed ) {
-			$setup1->bleed_size( $bindery_bleed );
-			$setup2->bleed_size( $bindery_bleed );
-		} # end if
-		$setup1->folio_lip( $bindery_gutters );
-		$setup2->folio_lip( $bindery_gutters );
-		$bindery_head = $$specs{PerfectBindCoverGutter};
 	} # end if
 #$openprint::log->debug("Using perfectbind cover gutter: $bindery_head Bindery bleed: $bindery_bleed");
 	my %bleed_locations = map { $_, $_ } split(',', $$specs{BleedLocations} );
@@ -614,13 +623,13 @@ $openprint::log->debug("Using Single wheel space $$specs{'Perfecting Single Gutt
 	} # end if
 
 	if ( $Paper->cuttable() ) {
-		$adjusted_paper_width -= $setup1->cropmark_left();
-		$adjusted_paper_width -= $setup1->cropmark_right();
+		$adjusted_paper_width -= $$setup1{cropmark_left};
+		$adjusted_paper_width -= $$setup1{cropmark_right};
 		$adjusted_paper_width = 0 if $adjusted_paper_width < 0;
 	} # end if
 	$openprint::log->debug("P Width gutters: $adjusted_paper_width") if DEBUG;
 
-	if ( sets::isin( $run_style, ['Perfecting','Sheet Work','Web'] ) ) {
+	if ( $run_style eq 'Perfecting' or $run_style eq 'Sheet Work' or $run_style eq 'Web' ) {
 		calc_setup( $setup1, @$setup1{'image_width','image_height'}, $adjusted_paper_width, $adjusted_paper_height ? $adjusted_paper_height : $$setup1{image_height} );
 		$openprint::log->debug(" CHECK 1 Upright $run_style Using Paper $paper_width x $paper_height -> $adjusted_paper_width x $adjusted_paper_height Gutter: $gutters, Image: $$setup1{image_width} x $$setup1{image_height} Imposition: " . $$setup1{imposition}. ":".$$setup1{columns} . 'x' . $$setup1{rows}. " $run_style " . $setup1->layout_width(undef) . 'x' . $setup1->layout_height() ) if DEBUG;
 
@@ -735,7 +744,7 @@ $openprint::log->debug("Using Single wheel space $$specs{'Perfecting Single Gutt
 		$openprint::log->debug("*** NOT Using Max Image Length2: $adjusted_paper_height After: $Maximum_Image_Length***") if DEBUG;
 	} # end if
 
-	my $colour_bar = 0;
+	$colour_bar = 0;
 	if ( $$specs{'Colour Bar Orientation'} ne 'Length' ) {
 
 # if colour bar is at bottom, 
@@ -771,27 +780,27 @@ $openprint::log->debug("Using Single wheel space $$specs{'Perfecting Single Gutt
 		$cropmarkspace = $$specs{CropMarkSpace};
 		$cropmarkspace -= $bleed_size if $bleed_locations{Left};
 		$cropmarkspace = 0 if $cropmarkspace < 0;
-		$setup2->cropmark_top( $cropmarkspace );
+		$$setup2{cropmark_top} = $cropmarkspace;
 
 		$cropmarkspace = $$specs{CropMarkSpace};
 		$cropmarkspace -= $bleed_size if $bleed_locations{Right};
 		$cropmarkspace = 0 if $cropmarkspace < 0;
-		$setup2->cropmark_bottom( $cropmarkspace );
+		$$setup2{cropmark_bottom} = $cropmarkspace;
 
-		$adjusted_paper_height -= $setup2->cropmark_top();
-		$adjusted_paper_height -= $setup2->cropmark_bottom();
+		$adjusted_paper_height -= $$setup2{cropmark_top};
+		$adjusted_paper_height -= $$setup2{cropmark_bottom};
 		$adjusted_paper_height = 0 if $adjusted_paper_height < 0;
 
 		$cropmarkspace = $$specs{CropMarkSpace};
 		
 		$cropmarkspace -= $bleed_size if $bleed_locations{Top};
 		$cropmarkspace = 0 if $cropmarkspace < 0;
-		$setup2->cropmark_left( $cropmarkspace );
+		$$setup2{cropmark_left} = $cropmarkspace;
 		$gutters -= $cropmarkspace;
 		$cropmarkspace = $$specs{CropMarkSpace};
 		$cropmarkspace -= $bleed_size if $bleed_locations{Bottom};
 		$cropmarkspace = 0 if $cropmarkspace < 0;
-		$setup2->cropmark_right( $cropmarkspace );
+		$$setup2{cropmark_right} = $cropmarkspace;
 #$openprint::log->debug( "Crop marks: $$setup2{cropmark_left} $$setup2{cropmark_right}");
 		$gutters -= $cropmarkspace;
 		$gutters = 0 if $gutters < 0;
@@ -840,14 +849,14 @@ $openprint::log->debug("Using Single wheel space $$specs{'Perfecting Single Gutt
 	} # end if
 
 	if ( $Paper->cuttable() ) {
-		$adjusted_paper_width -= $setup2->cropmark_left();
-		$adjusted_paper_width -= $setup2->cropmark_right();
+		$adjusted_paper_width -= $$setup2{cropmark_left};
+		$adjusted_paper_width -= $$setup2{cropmark_right};
 		$adjusted_paper_width = 0 if $adjusted_paper_width < 0;
 	} # end if
 
 	my $Paper2 = $setup2->Paper();
 
-	if ( sets::isin( $run_style, ['Perfecting','Sheet Work','Web'] ) ) {
+	if ( $run_style eq 'Perfecting' or $run_style eq 'Sheet Work' or $run_style eq 'Web' ) {
 		calc_setup( $setup2, @$setup2{'image_height','image_width'}, $adjusted_paper_width, $adjusted_paper_height ? $adjusted_paper_height : $$setup2{image_width} );
 
 		if ( ( $run_style eq 'Perfecting' ) and ( $$setup2{rows} == 1 ) and ( $$specs{'Colour Bar Orientation'} ne 'Length' ) ) {
@@ -898,7 +907,11 @@ $openprint::log->debug("Using Single wheel space $$specs{'Perfecting Single Gutt
 		} # end if imposition
 	} elsif ( $run_style eq 'Work & Tumble' ) {
 		calc_setup( $setup2, @$setup2{'image_height','image_width'}, $adjusted_paper_width, $adjusted_paper_height/2 );
-		$openprint::log->debug( sprintf('CHECK 2 Work&Tumble Using Paper %sx%s -> %sx%s Image: %s x %s Imposition: %dout:%dx%d ',$paper_width, $paper_height, $adjusted_paper_width, $adjusted_paper_height/2, $setup2->image_height(), $setup2->image_width(), $setup2->imposition(), $setup2->columns(), $setup2->rows()) ) if DEBUG;
+		$openprint::log->debug( sprintf(
+					'CHECK 2 Work&Tumble Using Paper %sx%s -> %sx%s Image: %s x %s Imposition: %dout:%dx%d',
+					$paper_width, $paper_height, $adjusted_paper_width, $adjusted_paper_height/2,
+					@$setup2{'image_height','image_width','imposition','columns','rows'}
+					) ) if DEBUG;
 		if ( $$setup2{imposition} ) {
 
 			if ( $$specs{dutch} ) {
@@ -906,7 +919,11 @@ $openprint::log->debug("Using Single wheel space $$specs{'Perfecting Single Gutt
 					$imp->rows( $$imp{rows} * 2 );
 					$imp->dutch_rows( $$imp{dutch_rows} * 2 );
 					$imp->Paper()->height( $imp->used_height() ) if ! $imp->Paper()->height();
-					$openprint::log->debug( sprintf('CHECK 2 Work&Tumble Dutch Using Paper %sx%s->%sx%s Image: %s x %s Imposition: %dout:%dx%d+%dx%d',$paper_width, $paper_height, $adjusted_paper_width, $adjusted_paper_height/2, $imp->image_height(), $imp->image_width(), $imp->imposition(), $imp->columns(), $imp->rows(), $imp->dutch_columns(), $imp->dutch_rows() ) ) if DEBUG;
+					$openprint::log->debug( sprintf(
+								'CHECK 2 Work&Tumble Dutch Using Paper %sx%s->%sx%s Image: %s x %s Imposition: %dout:%dx%d+%dx%d',
+								$paper_width, $paper_height, $adjusted_paper_width, $adjusted_paper_height/2,
+								@$imp{'image_height','image_width','imposition','columns', 'rows', 'dutch_columns','dutch_rows'}
+								) ) if DEBUG;
 					push @results, $imp;
 				} # end foreach imposition
 			} # end if grain_direction
@@ -950,7 +967,7 @@ sub add_imposition {
 		my $wt = $run_style =~ /^Work/;
 
 		if ( ! $Paper->cuttable() ) {
-			if ( ! sets::isin( $run_style, ['Web','Sheet Work','Perfecting'] ) ) {
+			if ( ! ( $run_style eq 'Perfecting' or $run_style eq 'Sheet Work' or $run_style eq 'Web' ) ) {
 				$openprint::log->debug("$run_style not possible when stock not cuttable") if DEBUG;
 				next;
 			} # end if
@@ -1092,7 +1109,7 @@ $openprint::log->debug("Convert Impositions: Desired: $desired_signature_size, S
 
 	foreach my $imp ( @$impositions ) {
 		my $impo = $$imp{imposition};
-		$impo /= 2 if sets::isin( $$imp{runstyle}, ['Work & Turn','Work & Tumble' ] );
+		$impo /= 2 if $$imp{runstyle} eq 'Work & Turn' or $$imp{runstyle} eq 'Work & Tumble';
 		$$imp{start_imposition} = $impo;
 		#$impo = int( $impo / ($spread_size/2) );
 		# impo has become max spreads
@@ -1195,12 +1212,27 @@ sub decrease_imposition {
 			$imp2->rows( $$imposition{dutch_rows} );
 			push @results, $imp2;
 		} elsif ( $$imposition{runstyle} eq 'Work & Turn' ) {
-			#if ( $$imposition{columns} >= 2 ) {
-					my $imp1 = $imposition->copy();
-					$imp1->runstyle( 'Sheet Work' );
-					$imp1->columns( $$imp1{columns} / 2 );
-					push @results, $imp1;
-			#
+			{
+				my $imp1 = $imposition->copy();
+				$imp1->runstyle( 'Sheet Work' );
+				$imp1->columns( $$imp1{columns} / 2 );
+				push @results, $imp1;
+			}
+
+			if ( $$imposition{columns} > 2 ) {
+# Consider removing a column from each half.
+				my $imp1 = $imposition->copy();
+				$imp1->columns( $$imp1{columns} - 2 );
+				push @results, $imp1;
+			}
+
+			if ( $$imposition{rows} > 1 ) {
+# Consider knocking a row off
+				my $imp1 = $imposition->copy();
+				$imp1->rows( $$imp1{rows}-1 );
+				push @results, $imp1;
+			}
+
 			#f ( $$imposition{rows} >= 2 ) {
 			#foreach my $row ( 2 .. $$imposition{rows} ) {
 			#	my $imp1 = $imposition->copy();

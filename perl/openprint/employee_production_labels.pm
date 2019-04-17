@@ -1,4 +1,6 @@
 use strict;
+use warnings;
+
 package openprint::employee_production_labels;
 use Date::Calc qw(Add_Delta_Days Date_to_Days check_date );
 
@@ -34,7 +36,7 @@ sub _label {
 
 			if ( $param{location_id} ) {
 
-				my $OldLocation = openprint::Location->find_one( id=>$old_location_id ) if $old_location_id;
+				my $OldLocation = openprint::Location->find_one(id=>$old_location_id) if $old_location_id;
 				my $NewLocation = openprint::Location->find_one(id=>$param{location_id});
 				if ( $NewLocation ) {
 					if ( $OldLocation ) {
@@ -66,8 +68,19 @@ sub _label {
 } # end sub _label
 
 sub label {
-	my $Label = $variable{Label} = new openprint::Label( $param{id} );
-	if ( $param{function} eq 'Send' ) {
+	if ( $param{type_id} and !$param{id} ) {
+		my $Label = $variable{Label} = new openprint::Label();
+		$variable{error} .= $Label->save({
+				type_id		=>	$param{type_id},
+				reference	=>	$param{reference},
+				docket		=>	$param{docket},
+				});
+		$variable{ExternalRedirect} = $Label->url() if !$variable{error};
+		return;
+	}
+		
+	my $Label = $variable{Label} = new openprint::Label($param{id});
+	if ( $param{function} and $param{function} eq 'Send' ) {
 		my $email_template = ssi::slurp_content( '/email_template.html' );
 		my @attachments;
 		my %info;
@@ -104,7 +117,7 @@ sub label {
 				note=> 'Emailed from ' . $param{from} . ' to the following recipients:<br/>' . $variable{information} });
 
 		$variable{ExternalRedirect} = '/employee/production/labels/label.html?id='.$Label->id();
-	} elsif ( $param{action} eq 'pdf' ) {
+	} elsif ( $param{action} and $param{action} eq 'pdf' ) {
 		my %info;
 		$info{Label} = $Label;
 
@@ -131,7 +144,7 @@ sub label {
 } # end sub label
 
 sub _send_email {
-	$variable{Label} = new openprint::Label( $param{id} );
+	$variable{Label} = new openprint::Label($param{id});
 } # end _send_email
 
 1;
