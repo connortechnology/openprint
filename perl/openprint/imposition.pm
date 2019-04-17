@@ -307,6 +307,8 @@ $openprint::log->debug("Not Pretrimming on $$Press{strid}") if DEBUG;
 	$setup1->spread_rows( 1 );
 	$setup1->spread_columns( 1 );
 
+	#$setup1->page_rows( POSIX::ceil( $$specs{txtHeight}/$$specs{txtFinalHeight} ) );
+	#$setup1->page_columns( POSIX::ceil( $$specs{txtWidth}/$$specs{txtFinalWidth}) );
 	$setup1->page_rows( Math::Round::nearest( 1, $$specs{txtHeight}/$$specs{txtFinalHeight} ) );
 	$setup1->page_columns( Math::Round::nearest( 1, $$specs{txtWidth}/$$specs{txtFinalWidth}) );
 
@@ -338,6 +340,8 @@ $openprint::log->debug("Not Pretrimming on $$Press{strid}") if DEBUG;
 	$$setup2{spread_size} = $$specs{txtSpreadSize};
 	$$setup2{spread_rows} = 1;
 	$$setup2{spread_columns} = 1;
+	#$$setup2{page_columns} = POSIX::ceil( $$specs{txtHeight}/$$specs{txtFinalHeight} );
+	#$$setup2{page_rows} = POSIX::ceil( $$specs{txtWidth}/$$specs{txtFinalWidth});
 	$$setup2{page_columns} = Math::Round::nearest( 1, $$specs{txtHeight}/$$specs{txtFinalHeight} );
 	$$setup2{page_rows} = Math::Round::nearest( 1, $$specs{txtWidth}/$$specs{txtFinalWidth});
 	$$setup2{page_width} = $$specs{txtFinalWidth};
