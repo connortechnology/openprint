@@ -1536,7 +1536,7 @@ sub runtime {
 							));
 				my $items_per_lift = POSIX::ceil($liftDepth/$$sig_specs{txtSpecificStockCalliper});
 				if ( ! $items_per_lift ) {
-					$log->error("No items_per_lift for $liftDepth / $$sig_specs{txtSpecificStockCalliper} in form $form of $$Project{id} on $$E{strid}");
+					#$log->error("No items_per_lift for $liftDepth / $$sig_specs{txtSpecificStockCalliper} in form $form of $$Project{id} on $$E{strid}");
 					#next;
 					$items_per_lift = $impressions;
 				}

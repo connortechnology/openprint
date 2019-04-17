@@ -15,7 +15,6 @@
 :
 '&nbsp;';
  ) ?></span></td>
-<?eval($log->error($$variable{Specification}->name() . ' ' .$$variable{Specification}->value()))?>
 	<td class="units"><span id="SUnits<? echo ( $$variable{Specification}->id(); ) ?>"><? echo ( $$variable{Specification}->units() ? $$variable{Specification}->units() : '&nbsp;'; ) ?></span></td>
 	<td class="interpolate"><span id="i<? echo ( $$variable{Specification}->id(); ) ?>" onclick="new Ajax.Updater('i<? echo ( $$variable{Specification}->id(); ) ?>', '/administrator/equipment/_specification.html?id=<? echo ( $$variable{Specification}->id() ) ?>&action=update&field=interpolate', {} );"><? echo ( $$variable{Specification}->interpolate() ? 'Yes' : 'No' ) ?></span></td>
 	<td class="buttons">

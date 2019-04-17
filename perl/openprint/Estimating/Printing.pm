@@ -5957,7 +5957,6 @@ if ( 1 ) {
 	my $press_setup = 0;
 
 	if ( $GripperMakeReadyService ) {
-			$log->error("Do gripper make read");
 		my $charge = 1;
 		foreach my $other_I ( @{$other_impositions} ) {
 			last if $other_I == $Imposition;
@@ -5968,11 +5967,10 @@ if ( 1 ) {
 			} # end if
 		} # end foreach other_I
 		if ( $charge ) {	
-			$price{GripperSetup} = $GripperMakeReadyService->get_Price( $$Paper{calliper}, $Press );
+			$price{GripperSetup} = $GripperMakeReadyService->get_Price($$Paper{calliper}, $Press);
 			$press_setup += $price{GripperSetup}{Price};
 		} # end if
 	}
-
 
 	if ( $$Imposition{runstyle} eq 'Sheet Work' ) {
 		if ( @{$$project{side_one_colours}} and @{$$project{side_two_colours}} ) {
