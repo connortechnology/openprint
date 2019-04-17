@@ -430,10 +430,10 @@ sub load {
 	} else {
 		# It's a brochure or something, so can't be cut.
 
-		$$self{page_rows} = POSIX::ceil($$specs{txtWidth} / $$specs{txtFinalWidth}) if $$specs{txtFinalWidth};
-		#$$self{page_rows} = Math::Round::nearest(1,$$specs{txtWidth} / $$specs{txtFinalWidth}) if $$specs{txtFinalWidth};
-		$$self{page_columns} = POSIX::ceil($$specs{txtHeight} / $$specs{txtFinalHeight}) if $$specs{txtFinalHeight};
-		#$$self{page_columns} = Math::Round::nearest(1,$$specs{txtHeight} / $$specs{txtFinalHeight}) if $$specs{txtFinalHeight};
+		#$$self{page_rows} = POSIX::ceil($$specs{txtWidth} / $$specs{txtFinalWidth}) if $$specs{txtFinalWidth};
+		$$self{page_rows} = Math::Round::nearest(1,$$specs{txtWidth} / $$specs{txtFinalWidth}) if $$specs{txtFinalWidth};
+		#$$self{page_columns} = POSIX::ceil($$specs{txtHeight} / $$specs{txtFinalHeight}) if $$specs{txtFinalHeight};
+		$$self{page_columns} = Math::Round::nearest(1,$$specs{txtHeight} / $$specs{txtFinalHeight}) if $$specs{txtFinalHeight};
 $openprint::log->debug("Got page layout $$self{page_columns} x $$self{page_rows}");
 
 		#if ( 1 ) {
@@ -887,8 +887,8 @@ sub to_svg {
 
 	$svg .= qq`<rect class="sheet" x="$sheet_x" y="$sheet_y" width="$sheet_width" height="$sheet_height" style="fill:rgb(255,255,255);stroke-width:1;stroke:rgb(0,0,0);"/>`;
 
-	my $image_width = int( ($sheet_width-4 - ($$self{columns}) ) / $$self{columns});
-	my $image_height = int( ($sheet_height-4 -($$self{rows}) ) / $$self{rows});
+	my $image_width = int( ($sheet_width-4 - $$self{columns} ) / $$self{columns});
+	my $image_height = int( ($sheet_height-4 - $$self{rows} ) / $$self{rows});
 
 	foreach my $column ( 1 .. $$self{columns} ) {
 		foreach my $row ( 1 .. $$self{rows} ) {
@@ -899,26 +899,35 @@ sub to_svg {
 			if ( $self->page_columns() > 1 ) {
 $openprint::log->debug("Adding page_columns");
 				my $page_width = int( $image_width / $self->page_columns() );
+				my $page_height = int( $image_height / $self->page_rows() );
+					my $colour = ( $$self{spine} eq 'height' and $$self{image_orientation} == Vertical ) ? 'red' : 'black';
+
+				#if ( $$self{spine} eq 'height' and $$self{image_orientation} == Vertical ) {
 				foreach my $page_column ( 2 .. $self->page_columns() ) {
 					my $page_x1 = $image_x + ($page_column-1)*$page_width;
-					my $page_x2 = $image_x + ( $page_column*$page_width );
-					my $page_y1 = $image_y;
-					my $page_y2 = $image_y;
+					my $page_x2 = $image_x + ($page_column-1)*$page_width;
 
-					$svg .= qq`<line x1="$page_x1" y1="$page_y1" x2="$page_x2" y2="$page_y2" stroke="black" stroke-dasharray="5,5"/>`;
+					my $page_y1 = $image_y;
+# + $page_height;
+					my $page_y2 = $image_y + ($page_height * $self->page_rows());
+
+# This is the linees between pages, One of these will be the spine.
+					$svg .= qq`<line x1="$page_x1" y1="$page_y1" x2="$page_x2" y2="$page_y2" stroke="$colour" stroke-dasharray="5,5"/>`;
 				}
-			} elsif ( $self->page_rows() > 1 ) {
+			} 
+
+	  	if ( $self->page_rows() > 1 ) {
+				my $colour = ( $$self{spine} eq 'height' and $$self{image_orientation} == Horizontal ) ? 'red' : 'black';
 				my $page_width = int( $image_width / $self->page_columns() );
 				my $page_height = int( $image_height / $self->page_rows() );
 				foreach my $page_row ( 2 .. $self->page_rows() ) {
 					my $page_x1 = $image_x;
-					my $page_x2 = $image_x + $page_width;
+					my $page_x2 = $image_x + ($page_width * $self->page_columns);
 
 					my $page_y1 = $image_y + ($page_row-1)*$page_height;
 					my $page_y2 = $image_y + ($page_row-1)*$page_height;
-					$svg .= qq`<line x1="$page_x1" y1="$page_y1" x2="$page_x2" y2="$page_y2" stroke="black" stroke-dasharray="5,5"/>`;
+					$svg .= qq`<line x1="$page_x1" y1="$page_y1" x2="$page_x2" y2="$page_y2" stroke="$colour" stroke-dasharray="5,5"/>`;
 				}
-
 			}
 			
 		} # end foreach row
