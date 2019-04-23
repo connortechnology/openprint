@@ -68,5 +68,11 @@ There is no current project.
 <? endif ( $$variable{ProjectIndex} eq '' ) ?>
 <br/>
 <p class="buttons">
-<? echo ( button( 'ReturnToProjectView', { href=>'view.html?ProjectIndex='.$$variable{ProjectIndex}, text=>'Return to Project View' } ); ) ?>
+<? echo ( 
+if ( $ENV{HTTP_REFERER} =~ /employee/ ) {
+button( 'ReturnToProjectView', { href=>'/employee/project/view.html?ProjectIndex='.$$variable{ProjectIndex}, text=>'Return to Project View' } );
+} else {
+button( 'ReturnToProjectView', { href=>'view.html?ProjectIndex='.$$variable{ProjectIndex}, text=>'Return to Project View' } );
+}
+) ?>
 </p>

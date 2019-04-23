@@ -571,7 +571,7 @@ $log->debug("price for stock$stock_index qty $qty_index: " . $Stock->to_string()
   <span style="float: left;">
     <? echo ( join("\n",
     button( 'DocketButton'.$$variable{Project}{id}, { onclick=>"open_window('/main/project/docket_sheet.html?ProjectIndex=$$variable{ProjectIndex}');", text=>'Docket' } ),
-    button( 'Summary'.$$variable{Project}{id}, { href=> "summary.html?ProjectIndex=$$variable{ProjectIndex}", text=>'Summary' } ),
+    button( 'Summary'.$$variable{Project}{id}, { href=> "/main/project/summary.html?ProjectIndex=$$variable{ProjectIndex}", text=>'Summary' } ),
     button( 'UploadPDFs'.$$variable{Project}{id}, { onclick=>"open_window('/employee/production/upload_pdfs.html?ProjectIndex=$$variable{ProjectIndex}','upload','resizable=yes,scrollbars=yes,width=800,height=600,screenX=10,screenY=10,top=0,left=0');", text=>'Upload PDFs' } ),
     #button( 'ExportJDF', { onclick=>qq`form_submit('$$variable{formname}','Export JDF');`, text=>'JDF' } ),
     #button( 'ExportMXML', { onclick=>qq`form_submit('$$variable{formname}','Export MXML');`, text=>'MXML' } ),
