@@ -1318,6 +1318,7 @@ sub _production_performance {
 			foreach my $sig_id ( @signatures ) {
 				my $Service = $Project->Service( $sig_id );
 				my $sig_specs = $Service->specs();
+				next if ! $$sig_specs{'txtPrice'.$qty_index};
 				if ( ! $$sig_specs{'hdnImpressionQuantity'.$qty_index} ) {
 					next;
 				} # end if
@@ -1345,6 +1346,7 @@ sub _production_performance {
 				foreach my $sig_id ( @signatures ) {
 					my $Service = $Project->Service( $sig_id );
 					my $sig_specs = $Service->specs();
+					next if ! $$sig_specs{'txtPrice'.$qty_index};
 
 					if ( ! $$sig_specs{'PlateID'.$qty_index} ) {
 						my $Press = $Presses_by_strid{$$sig_specs{UsePress}};
