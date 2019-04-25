@@ -1362,9 +1362,9 @@ $log->debug("not Skipping cuz ddmPress$qty_index eq $$Press{strid}");
 			$do_perfecting = 0;
 			$log->debug("** One sided:	Perfect	***") if DEBUG_IMPOSITIONS;
 		} elsif ( 
-				( (!$number_of_colours%2) and ( @side_one_colours > int($number_of_colours/2) or @side_two_colours > int($number_of_colours/2) ) )
+				( (!($number_of_colours%2)) and ( (@side_one_colours > int($number_of_colours/2)) or (@side_two_colours > int($number_of_colours/2)) ) )
 				or
-				( ($number_of_colours%2) and ( @side_one_colours > int($number_of_colours/2)+1 or @side_two_colours > int($number_of_colours/2)+1 ) )
+				( ($number_of_colours%2) and ( (@side_one_colours > int($number_of_colours/2)+1) or (@side_two_colours > int($number_of_colours/2)+1) ) )
 				or ( @side_one_colours == int($number_of_colours/2)+1 and @side_two_colours == int($number_of_colours/2)+1 )
 				) {
 			$log->debug("** Too many colours to	Perfect	***") if DEBUG_IMPOSITIONS;
