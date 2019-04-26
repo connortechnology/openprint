@@ -11,6 +11,7 @@
 		<? endif ( $$variable{Order}->docket() ) ?>
 			<li><label>Created</label><? echo ( format_date( $$variable{Order}->created_on() ) ) ?></li>
 			<li><label>Status</label><? echo ( $$variable{Order}->status() ) ?></li>
+			<li><label>Sales Rep</label><? echo ( $$variable{Order}->CSR()->link_to() ) ?></li>
 		</ul></div>
 	</fieldset>
 	</div>
