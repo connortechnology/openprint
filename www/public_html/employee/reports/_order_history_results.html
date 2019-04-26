@@ -78,7 +78,7 @@ The following had one or more signatures that ran on <? echo ( join(': ', new op
         <tr%1$s>
 					<td></td>
 					<td colspan="3" class="reference">%2$s</td>
-					<td colspan="6" class="services" valign="top"><table>%3$s</table></td>
+					<td colspan="8" class="services" valign="top"><table>%3$s</table></td>
 				<tr>', $rowclass, $Project->reference(),
 				( @servicetype_ids != @{$variable{ServiceTypes}} ? join('<br/>',
 						map { '<tr><td>'.$_->name().'</td><td class="Price">'.openprint::Currency::format($_->ordered_price() ).'</td></tr>' } @Services ).
@@ -95,7 +95,7 @@ The following had one or more signatures that ran on <? echo ( join(': ', new op
 			<td>%d</td>
 			<td align="right">Average Value</td>
 			<td>%s</td>
-			<td colspan="3" align="right">Total</td>
+			<td colspan="5" align="right">Total</td>
 			<td class="Price">%s</td>
 			<td class="Price">%s</td>
 			<td class="Price">%s</td>
