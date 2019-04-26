@@ -350,6 +350,7 @@ sub _order_history_results {
 			$parameters{or} = {
 					company_id	=> $openprint::User->company_id(),
 					salesrep_id => $session{user_id},
+					user_id=> $session{user_id},
 			};
 		#} elsif ( $param{CSR} ) {
 			#$parameters{salesrep_id} = $session{$uri.'?CSR'};
