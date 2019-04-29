@@ -289,7 +289,7 @@ my %variables = (
 	SpreadRows3 => ['save','output'],SpreadCols3 => ['save','output'],
 	ddmStockSheetSize => ['save'],ddmStockSheetSize1 => ['save','output'], ddmStockSheetSize2 => ['save','output'], ddmStockSheetSize3 => ['save','output'],
 	ddmStockSize	=>	['save'],
-	ddmRunStyle=>['save'],ddmRunStyle1 => ['save','output'], ddmRunStyle2 => ['save','output'], ddmRunStyle3 => ['save','output'],
+	ddmRunStyle=>['save'], ddmRunStyle1 => ['save','output'], ddmRunStyle2 => ['save','output'], ddmRunStyle3 => ['save','output'],
 	ddmPress1 => ['save','output'], ddmPress2 => ['save','output'], ddmPress3 => ['save','output'], 
 	PrintingType1 => ['save','output'], PrintingType2 => ['save','output'], PrintingType3 => ['save','output'], 
 	PrintingTypes => [],

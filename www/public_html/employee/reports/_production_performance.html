@@ -33,6 +33,7 @@
 <?endif($$variable{columns}{stock})?>
 		<th class="status">Status</th>
 		<th class="Impressions">Impressions</th>
+		<th class="RunStyles">RunStyles</th>
 		<th class="Price">Job Value</th>
 	</tr>
 	<? echo (
@@ -52,7 +53,7 @@
 
 		while ( @{$$variable{Data}} ) {
 		
-			my ( $order_id, $docket, $project_id, $company, $ordered_on, $status, $job_value, $impressions ) = splice @{$$variable{Data}}, 0, 8;
+			my ( $order_id, $docket, $project_id, $company, $ordered_on, $status, $job_value, $impressions, $runstyles ) = splice @{$$variable{Data}}, 0, 9;
 
 			$html .= sprintf(q`
 				<tr%1$s>
@@ -131,11 +132,13 @@
 			$html .= sprintf(q`
 					<td class="status"><a href="%3$s?order_id=%2$d">%4$s</a></td>
 					<td class="Impressions">%5$s</td>
-					<td class="Price"><a href="%3$s?order_id=%2$d">%6$s</a></td>
+					<td class="RunStyles">%6$s</td>
+					<td class="Price"><a href="%3$s?order_id=%2$d">%7$s</a></td>
 				</tr>
 				`, $rowclass, $order_id, $link_to,
 				$status,
 				Number::Format::format_number($impressions),
+				$runstyles,
 				openprint::Currency::format($job_value),
 			);
 			$rowclass = $rowclass ? '' : ' class="colRow"';

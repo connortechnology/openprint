@@ -4,7 +4,7 @@ use Carp qw( cluck );
 package openprint::Imposition;
 require Math::Round;
 require Data::Dumper;
-use vars qw( $AUTOLOAD %Orientations);
+use vars qw( $AUTOLOAD %Orientations @RunStyles);
 use constant DEBUG => 0;
 use constant DEBUG_PERFORMANCE => 1;
 
@@ -14,6 +14,8 @@ use constant Horizontal => 1;
 	0	=>	'Vertical',
 	1	=>	'Horizontal',
 );
+
+@RunStyles = ( 'Sheet Work', 'Work & Turn', 'Work & Tumble', 'Perfecting', 'Web' );
 
 my @fields = (
 	'start_imposition','start_columns','start_rows',

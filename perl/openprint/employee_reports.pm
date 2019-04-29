@@ -1229,7 +1229,7 @@ sub _production_performance {
 			( map { 'ordered_on_end_'.$_ } ( 'year','month','day' ) ),
 			( map { 'completed_on_start_'.$_ } ( 'year','month','day' ) ),
 			( map { 'completed_on_end_'.$_ } ( 'year','month','day' ) ),
-			'press_id', 'csr_id', 'reprint','columns','status_id',
+			'press_id', 'csr_id', 'reprint','columns','status_id','runstyles',
 			);
 
 	my %columns = map { $_, $_ } split(',', $session{$uri.'?columns'} ) if $session{$uri.'?columns'};
@@ -1263,6 +1263,8 @@ sub _production_performance {
 	my @press_names = split( ',', $session{$uri.'?press_id'} );
 	my %press_names = map { $Presses_by_id{$_}{strid}, $_ } @press_names;
 	my @Data;
+
+	my %wanted_runstyles = map { $_ => $_ } split(',', $session{$uri.'?runstyles'});
 
 	my @ServiceType_Categories = openprint::ServiceType_Category->find( order=>'sorting,lower(name)' );
 	my %ServiceTypes_By_Category;
@@ -1313,8 +1315,22 @@ sub _production_performance {
 				next if ! $found;
 			} # end if press_names
 
+			if ( %wanted_runstyles ) {
+				my $found = 0;
+				foreach my $sig_id ( @signatures ) {
+					my $Service = $Project->Service( $sig_id );
+					my $sig_specs = $Service->specs();
+					if ( $wanted_runstyles{$$sig_specs{'ddmRunStyle'.$qty_index}} ) {	
+						$found = 1;
+						last;
+					}
+				} # end foreach sig
+				next if ! $found;
+			}
+
 			my @fragment = ( $Order->id(), $Order->docket(), $Project->id(), $Order->company_name(), $Order->created_on(), 
 					$Project->status(), $Project->ordered_price() );
+			my %runstyles;
 			my $impressions = 0;
 			foreach my $sig_id ( @signatures ) {
 				my $Service = $Project->Service( $sig_id );
@@ -1324,8 +1340,9 @@ sub _production_performance {
 					next;
 				} # end if
 				$impressions += $$sig_specs{'hdnImpressionQuantity'.$qty_index};
+				$runstyles{$$sig_specs{'ddmRunStyle'.$qty_index}} = 1;
 			}
-			push @fragment, $impressions;
+			push @fragment, $impressions, join(',',keys %runstyles);
 	
 			my %category_totals;
 			foreach my $Category ( @ServiceType_Categories ) {
@@ -1433,7 +1450,7 @@ $openprint::log->debug("PI Stock for $$Order{docket} is $$PI{delta} " . $PI->Pap
 
 	$variable{Header} = [ 'Order ID', 'Docket', 'Project ID', 'Company',
 		'Created On', 'Status', 'Project Value',
-		'Impressions',
+		'Impressions', 'Runstyles',
 		( map { $$_{name} } @ServiceType_Categories ),
 		( $columns{plates} ? ( 'Plates', 'Plate Cost', 'Plate Total' ) : () ),
 		( $columns{production} ? ( 'Operator Assigned', 'Printed On', 'Completed On', 'Shipped On', 'Invoiced On' ) : () ),
