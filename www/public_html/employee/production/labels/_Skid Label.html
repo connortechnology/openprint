@@ -1,8 +1,8 @@
 <? eval (
-	$$variable{'Company'} = $$variable{'Project'}->Company();
-	my $services = $$variable{'Project'}->services();
-	my $Service = $$variable{'Project'}->Service( $$services{'Proofs'} ? $$services{'Proofs'}[0] : $$services{'FilmStripping'}[0] );
-	$$variable{'Operator'} = $Service->Operator() if $Service;
+	$$variable{Company} = $$variable{Project}->Company();
+	my $services = $$variable{Project}->services();
+	my $Service = $$variable{Project}->Service( $$services{Proofs} ? $$services{Proofs}[0] : $$services{FilmStripping}[0] );
+	$$variable{Operator} = $Service->Operator() if $Service;
 ) ?>
 <style type="text/css">
 	ul {
@@ -45,7 +45,7 @@
 </style>
 <div style="float: left; text-align: center; margin-top:100px;">
 Project #<br/>
-<img src="/barcode.png?code=P<? echo ( $$variable{'Project'}->id() ) ?>+"/>
+<img src="/barcode.png?code=P<? echo ( $$variable{Project}->id() ) ?>+"/>
 </div>
 <div style="float: right; text-align: center; margin-top:100px;">
 Submit<br/>
@@ -55,26 +55,26 @@ Submit<br/>
 <ul>
 	<li class="Customer">
 		<label>Customer</label>
-		<? echo ( $$variable{'Company'}->name() ) ?>
+		<? echo ( $$variable{Company}->name() ) ?>
 	</li>
 	<li class="Docket">
 		<label>Docket</label>
-			<? echo ( $$variable{'Project'}->docket() ) ?>
-			<? echo ( sprintf('%.1s%.1s', $$variable{'Operator'}->get('firstname','lastname') ); ) ?>
+			<? echo ( $$variable{Project}->docket() ) ?>
+			<? echo ( sprintf('%.1s%.1s', $$variable{Operator}->get('firstname','lastname') ); ) ?>
 	</li>
 	<li class="Description">
 		<label>Description</label>
-		<? echo ( substr $$variable{'Project'}->reference(), 0, 50; ) ?>
+		<? echo ( substr $$variable{Project}->reference(), 0, 50; ) ?>
 	</li>
 	<li class="Press">
 		<label>Press</label>
 		<? echo (
 			my @presses;
-			foreach my $signature_service_index ( $$variable{'Project'}->signatures() ) {
-				my $Service = $$variable{'Project'}->Service( $signature_service_index );
+			foreach my $signature_service_index ( $$variable{Project}->signatures() ) {
+				my $Service = $$variable{Project}->Service( $signature_service_index );
 				my $sig_specs = $Service->specs();
-				$$sig_specs{'UsePress'} = $$sig_specs{'ddmPress'.$$variable{'Project'}->ordered_quantity_index()} if ! $$sig_specs{'UsePress'};
-				push @presses, $$sig_specs{'UsePress'} if ! sets::isin( $$sig_specs{'UsePress'}, @presses );
+				$$sig_specs{UsePress} = $$sig_specs{'ddmPress'.$$variable{Project}->ordered_quantity_index()} if ! $$sig_specs{UsePress};
+				push @presses, $$sig_specs{UsePress} if ! sets::isin( $$sig_specs{UsePress}, @presses );
 			} # end foreach
 			return join(',', sql::execute( $log, $dbh, q{SELECT strName FROM tbl_Equipment WHERE strID IN ('}.join("','", @presses ).q{')} ) );
 		) ?>
@@ -83,12 +83,12 @@ Submit<br/>
 <br class="spacer"/>
 <? echo (
 	my $html;
-	my $services = $$variable{'Project'}->services();
-	if ( $$services{'BulkSkids'} ) {
-		foreach my $service_index ( @{$$services{'BulkSkids'}} ) {
-			my $Service = $$variable{'Project'}->Service( $service_index );
+	my $services = $$variable{Project}->services();
+	if ( $$services{BulkSkids} ) {
+		foreach my $service_index ( @{$$services{BulkSkids}} ) {
+			my $Service = $$variable{Project}->Service( $service_index );
 			my $specs = $Service->specs();
-			foreach my $skid ( 1 .. $$specs{'txtPackageQuantity'} ) {
+			foreach my $skid ( 1 .. $$specs{txtPackageQuantity} ) {
 				$html .= qq{<fieldset><legend>Skid $skid</legend>};
 				$html .= q{</fieldset>};
 			} # end foreach

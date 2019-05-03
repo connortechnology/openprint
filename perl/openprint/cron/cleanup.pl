@@ -75,13 +75,12 @@ $openprint::dbh = sql::open_sql( $log,
 	password	=> $config{db_pass},
 );
 die 'Error opening db' if ! $dbh;
-$openprint::Object::no_cache = 1;
 
 configuration::init( \%config );
 
 # Clear out old sessions
 my $session_ids = $dbh->selectcol_arrayref( q{SELECT id FROM sessions} );
-$log->warn("Cleaning out sessions: " . @$session_ids . " sessions in system");
+$log->debug("Cleaning out sessions: " . @$session_ids . " sessions in system");
 my $deleted_session_count = 0;
 foreach my $session ( @$session_ids ) {
     $session =~ s/\s//g;
@@ -105,19 +104,19 @@ foreach my $session ( @$session_ids ) {
 	} # end if
 } # end foreach
 @$session_ids = ();
-$log->warn("Deleted $deleted_session_count sessions");
+$log->debug("Deleted $deleted_session_count sessions");
 
-if ( openprint::Order->find_one() ) {
+if ( 0 and openprint::Order->find_one() ) {
 # Clean out unfinished Orders
 	my @Orders = openprint::Order->find('status'=>'Incomplete','created_on <=' => sprintf('%.4d-%.2d-%.2d', Date::Calc::Add_Delta_Days( Date::Calc::Today(), -180 ) ) );
-	$log->warn('Cleaning out ' . @Orders . ' incomplete orders');
+	$log->debug('Cleaning out ' . @Orders . ' incomplete orders');
 	foreach my $Order ( @Orders ) {
 		$Order->delete();
 	} # end foreach
 } # end if
 if ( openprint::Quote->find_one() ) {
 	my @Quotes = openprint::Quote->find('status'=>'Incomplete','created_on <=' => sprintf('%.4d-%.2d-%.2d', Date::Calc::Add_Delta_Days( Date::Calc::Today(), -365 ) ) );
-	$log->warn('Cleaning out ' . @Quotes . ' incomplete quotes ');
+	$log->debug('Cleaning out ' . @Quotes . ' incomplete quotes ');
 	foreach my $Quote ( @Quotes ) {
 		$Quote->delete();
 	} # end foreach
@@ -132,7 +131,7 @@ if ( ( exists $config{RFID} ) and $config{RFID} ) {
 			'updated_on <'=>sprintf('%.4d-%.2d-%.2d 23:59:59', Date::Calc::Add_Delta_Days( Date::Calc::Today(), -31 ) ),
 			'updated_on >'=>sprintf('%.4d-%.2d-%.2d 23:59:59', Date::Calc::Add_Delta_Days( Date::Calc::Today(), -62 ) ),
 			);
-	$log->warn( "Scanner History Entries: " . @Hs );
+	$log->debug( "Scanner History Entries: " . @Hs );
 	foreach my $H ( @Hs ) {
 		$H->delete();
 	} # end foreach H
@@ -140,7 +139,7 @@ if ( ( exists $config{RFID} ) and $config{RFID} ) {
 			'updated_on <'=>sprintf('%.4d-%.2d-%.2d 23:59:59', Date::Calc::Add_Delta_Days( Date::Calc::Today(), -31 ) ),
 			'updated_on >'=>sprintf('%.4d-%.2d-%.2d 23:59:59', Date::Calc::Add_Delta_Days( Date::Calc::Today(), -62 ) ),
 			);
-	$log->warn( "Tag History Entries: " . @Hs );
+	$log->debug( "Tag History Entries: " . @Hs );
 	foreach my $H ( @Hs ) {
 		$H->delete();
 	} # end foreach H
@@ -149,7 +148,7 @@ if ( ( exists $config{RFID} ) and $config{RFID} ) {
 			'skid_id exists'=>	0,
 			'type'			=>	'Skid',
 			);
-	$log->warn( "Tag History Entries (unassigned and old): " . @old_unassigned_tags );
+	$log->debug( "Tag History Entries (unassigned and old): " . @old_unassigned_tags );
 	foreach my $H ( @old_unassigned_tags ) {
 		next if $H->skid_id();
 		$H->delete();
@@ -157,26 +156,33 @@ if ( ( exists $config{RFID} ) and $config{RFID} ) {
 } # end if
 }
 
-if ( 1 ) {
-# Resolve any unresolved IP's
-my @Hosts = openprint::Host->find(
-		'hostname is null'=>1, 
-		'resolved_on null_or_<='	=>	sprintf('%.4d-%.2d-%.2d', Date::Calc::Add_Delta_Days( Date::Calc::Today(), -30 ) ),
-);
-$log->debug("# of hosts needing resolving: " . @Hosts );
-foreach my $Host ( @Hosts ) {
-		my $host = $Host->resolve();
-		if ( $host ) {
-			$Host->hostname( $host );
-		}
-		$Host->save({
-				resolved_on	=> 'NOW()',
-				});
-} # end foreach Host
-}
 
 # Paper maintenance
-foreach my $Paper ( openprint::Paper->find() ) {
+foreach my $Paper ( openprint::Paper->find( 'project_type_id exists' => 1 ) ) {
+	if ( (! $$Paper{basis_mweight} ) and $Paper->basis_mweight() ) {
+				$log->debug("Updating basis_weight");
+		$Paper->save();
+	}
+	
+	my $check = $Paper->check();
+	if ( $check ) {
+		if ( $check =~ /basis/ ) {
+			if ( $Paper->weight() =~ /(\d+)lb/ ) {
+				$log->debug("Updating based on basis_mweight");
+				$$Paper{gsm} = undef;
+				$$Paper{wpsi} = undef;
+				$$Paper{mweight} = undef;
+				$Paper->gsm();
+				$Paper->mweight();
+				$Paper->basis_mweight( 2*$1 );
+				$Paper->save();
+			}
+	$check = $Paper->check();
+		}
+		$log->error($Paper->to_string() . ' ' . $check . " id:$$Paper{id}");
+		#sleep 1;
+	}
+
 	my $old_wpsi = $Paper->wpsi();
 	$old_wpsi = '' if ! defined $old_wpsi;
 	next if ! $Paper->wpsi(undef);
@@ -193,7 +199,7 @@ foreach my $Log ( openprint::Log->find('date_time <='=>sprintf('%.4d-%.2d-%.2d',
 	$Log->delete();
 	$log_count += 1;
 } # end foreach Log
-$log->warn("Deleted $log_count log entries");
+$log->debug("Deleted $log_count log entries");
 }
 
 #if ( $config{AssetPath} ) {
@@ -237,7 +243,23 @@ foreach my $Skid ( openprint::Skid->find(
         $deleted_skids += 1;
     } # end if
 } # end foreach Skid
-$log->warn("Deleted $deleted_skids skids");
+$log->debug("Deleted $deleted_skids skids");
+
+if ( 1 ) {
+	# Resolve any unresolved IP's
+	my @Hosts = openprint::Host->find(
+			'hostname is null'=>1, 
+			'resolved_on null_or_<='	=>	sprintf('%.4d-%.2d-%.2d', Date::Calc::Add_Delta_Days( Date::Calc::Today(), -30 ) ),
+	);
+	$log->debug("# of hosts needing resolving: " . @Hosts );
+	foreach my $Host ( @Hosts ) {
+			my $host = $Host->resolve();
+			if ( $host ) {
+				$Host->hostname( $host );
+			}
+			$Host->save({ resolved_on	=> 'NOW()' });
+	} # end foreach Host
+}
 
 $dbh->disconnect();
 

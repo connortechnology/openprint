@@ -1,5 +1,11 @@
 package openprint::Estimating::Blowing;
 use strict;
+use vars qw( %ServicePrices %MaterialPrices );
+%ServicePrices = (
+	'BlowingMakeReady'	=> { },
+	'Blowing'			=> { units => [ 'per m', 'each' ], },
+	'BlowingMinimumCharge'	=> { },
+);
 
 require openprint::service;
 

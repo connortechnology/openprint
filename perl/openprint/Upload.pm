@@ -59,7 +59,7 @@ sub path {
 
 sub duration {
 	my $parser = 'DateTime::Format::Pg';
-	my $finished_dt = $parser->parse_datetime( $_[0]{finished} );
+	my $finished_dt = $_[0]{finished} ? $parser->parse_datetime( $_[0]{finished} ) : DateTime->now();
 	my $start_dt = $parser->parse_datetime( $_[0]{start} );
 	my $duration = $finished_dt->subtract_datetime_absolute( $start_dt );
 	return $duration;

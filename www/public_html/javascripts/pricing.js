@@ -122,3 +122,32 @@ function add_new_price ( service_id, pricelist_id, equipment_id ) {
 			);
 	} // end if
 } // end function add_new_price ( service_id, pricelist_id, equipment_id )
+function check_price( element ) {
+    var form = element.form;
+    var matches;
+    if ( matches = element.name.match( /^\w+\-(\d+)$/ ) ) {
+        var id = matches[1];
+		var container = $('Price-'+id);
+
+		if ( ! container ) {
+			console.error("No element found for Price-"+id);
+			return;
+		}
+        if (
+            element_changed( form.elements['min-'+id] ) ||
+            element_changed( form.elements['max-'+id] ) ||
+            element_changed( form.elements['units-'+id] ) ||
+            element_changed( form.elements['cost-'+id] ) ||
+            element_changed( form.elements['markup-'+id] ) ||
+            element_changed( form.elements['price-'+id] ) ||
+            element_changed( form.elements['discount-'+id] )
+           ) {
+			container.addClassName('changed');
+        } else {
+            container.removeClassName('changed');
+        } // end if
+    } else {
+        alert('Not matched' + element.name);
+    } // end if
+} // end function check_field 
+

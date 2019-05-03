@@ -15,13 +15,10 @@ require openprint::Skid;
 require openprint::User;
 require openprint::Project;
 require openprint::Order;
-require openprint::PaperPrice;
-require openprint::logs;
-require openprint::Manufacturer;
 require openprint::Email;
 require openprint::InventoryCondition;
 
-$debug = 1;
+$debug = 0;
 
 $table = 'paper_allocations';
 $serial = 'paper_allocation_id_seq';
@@ -61,7 +58,7 @@ sub delete {
 	if ( $_[0]{id} ) {
 		my $ac = sql::start_transaction( );
 		if ( $_[0]->docket() ) {
-			$_[0]->Order()->add_to_log(@session{'company_id','user_id'}, 'Allocation deleted.' . ( @_ > 1 ? ' Reason: ' . $_[1] : '' ) );
+			$_[0]->Order()->add_log( 'Allocation deleted.' . ( @_ > 1 ? ' Reason: ' . $_[1] : '' ) );
 		} # end if
 		$_ = $_[0]->SUPER::delete();
 		if ( $_ ) {
@@ -148,16 +145,16 @@ sub send_notification {
 
 	my @recipients = map { $_->notification('Stock Allocations') eq 'Yes' ? $_ : () } openprint::User->find( company_id=>$openprint::config{owner_id}, 'usergroup any'=>'InventoryManager' );
 
-    my $offsite = 0;
+  my $offsite = 0;
 	my $nolocation = 0;
 	foreach my $Project ( $Order->Projects() ) {
 		foreach my $sig_id ( $Project->signatures() ) {
 			my $sig_specs = openprint::service::get_specs_ref( $Project, $sig_id );
 			my $Press;
 			if ( $$sig_specs{UsePress} ) {
-				$Press = openprint::Equipment->find_one('strid'=>$$sig_specs{UsePress});
+				$Press = openprint::Equipment->find_one(strid=>$$sig_specs{UsePress});
 			} else {
-				$Press = openprint::Equipment->find_one('strid'=>$$sig_specs{'ddmPress'.$Project->ordered_quantity_index()});
+				$Press = openprint::Equipment->find_one(strid=>$$sig_specs{'ddmPress'.$Project->ordered_quantity_index()});
 			} # endif
 			if ( $Press ) {
 				foreach my $Skid ( $self->Skids() ) {
@@ -184,8 +181,8 @@ sub send_notification {
 	$Email->html_body( ssi::include( '/email_template.html', \%info ) );
 	$Email->send( 
 			TO			=>	\@recipients, 
-			SUBJECT 	=> 'Stock allocated for docket ' . $Order->docket(),
 			FROM		=>	$openprint::User,
+			SUBJECT =>	'Stock allocated for docket ' . $Order->docket(),
 			);
 
 } # end sub stock_allocation_notification

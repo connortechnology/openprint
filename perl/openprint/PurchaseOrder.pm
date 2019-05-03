@@ -11,7 +11,7 @@ use vars qw( $debug $log $dbh %config %session $table $serial %fields %find_fiel
 *config = \%openprint::config;
 *session = \%openprint::session;
 
-$debug = 0;
+$debug = 1;
 
 require sql;
 require ssi;
@@ -37,58 +37,61 @@ $table = 'purchaseorders';
 $serial = 'purchaseorders_id_seq';
 
 %fields = (
-	id				=>	'id',
-	num					=>	'num',
-	company_id		=>	'company_id',
-	contact_id			=>	'contact_id',
-	'currency_id'		=>	'currency_id',
-	'created_on'		=>	'created_on',
-	'updated_on'		=>	'updated_on',
-	'created_by'		=>	'created_by',
-	'authorized'		=>	'authorized',
-	'authorized_by'		=>	'authorized_by',
-	'authorized_on'		=>	'authorized_on',
-	'delivered_on'		=>	'delivered_on',
+	id									=>	'id',
+	num									=>	'num',
+	company_id					=>	'company_id',
+	contact_id					=>	'contact_id',
+	currency_id					=>	'currency_id',
+	created_on					=>	'created_on',
+	updated_on					=>	'updated_on',
+	created_by					=>	'created_by',
+	authorized					=>	'authorized',
+	authorized_by				=>	'authorized_by',
+	authorized_on				=>	'authorized_on',
+	delivered_on				=>	'delivered_on',
 	delivered_on_switch	=>	'delivered_on_switch',
-	'total'				=>	'total',
-	'subtotal'			=>	'subtotal',
-	'deleted'			=>	'deleted',
-	'supplier_id'		=>	'supplier_id',
-	'shipping_method'	=>	'shipping_method',
-	'shipping_terms'	=>	'shipping_terms',
-	'vendor_contact'	=>	'vendor_contact',
-	contact_id			=>	'contact_id',
-	'vendor_name'		=>	'vendor_name',
-	'vendor_address1'	=>	'vendor_address1',
-	'vendor_address2'	=>	'vendor_address2',
-	'vendor_city'		=>	'vendor_city',
-	'vendor_country'	=>	'vendor_country',
-	'vendor_state'		=>	'vendor_state',
-	'vendor_postalcode'	=>	'vendor_postalcode',
-	'vendor_phone'		=>	'vendor_phone',
-	'vendor_fax'		=>	'vendor_fax',
-	'vendor_sms'		=>	'vendor_sms',
-	'vendor_email'		=>	'vendor_email',
-	'shipto_contact'	=>	'shipto_contact',
-	'shipto_name'		=>	'shipto_name',
-	'shipto_address1'	=>	'shipto_address1',
-	'shipto_address2'	=>	'shipto_address2',
-	'shipto_city'		=>	'shipto_city',
-	'shipto_country'	=>	'shipto_country',
-	'shipto_state'		=>	'shipto_state',
-	'shipto_postalcode'	=>	'shipto_postalcode',
-	'shipto_phone'		=>	'shipto_phone',
-	'shipto_mobile'		=>	'shipto_mobile',
-	'shipto_fax'		=>	'shipto_fax',
-	'shipto_sms'		=>	'shipto_sms',
-	'shipto_email'		=>	'shipto_email',
-	'manifest_id'		=>	'manifest_id',
-	'cancelled'			=>	'cancelled',
+	total								=>	'total',
+	subtotal						=>	'subtotal',
+	deleted							=>	'deleted',
+	supplier_id					=>	'supplier_id',
+	shipping_method			=>	'shipping_method',
+	shipping_terms			=>	'shipping_terms',
+	vendor_contact			=>	'vendor_contact',
+	contact_id					=>	'contact_id',
+	vendor_name					=>	'vendor_name',
+	vendor_address1			=>	'vendor_address1',
+	vendor_address2			=>	'vendor_address2',
+	vendor_city					=>	'vendor_city',
+	vendor_country			=>	'vendor_country',
+	vendor_state				=>	'vendor_state',
+	vendor_postalcode		=>	'vendor_postalcode',
+	vendor_phone				=>	'vendor_phone',
+	vendor_fax					=>	'vendor_fax',
+	vendor_sms					=>	'vendor_sms',
+	vendor_email				=>	'vendor_email',
+	shipto_contact			=>	'shipto_contact',
+	shipto_name					=>	'shipto_name',
+	shipto_address1			=>	'shipto_address1',
+	shipto_address2			=>	'shipto_address2',
+	shipto_city					=>	'shipto_city',
+	shipto_country			=>	'shipto_country',
+	shipto_state				=>	'shipto_state',
+	shipto_postalcode		=>	'shipto_postalcode',
+	shipto_phone				=>	'shipto_phone',
+	shipto_mobile				=>	'shipto_mobile',
+	shipto_fax					=>	'shipto_fax',
+	shipto_sms					=>	'shipto_sms',
+	shipto_email				=>	'shipto_email',
+	manifest_id					=>	'manifest_id',
+	cancelled						=>		'cancelled',
+	do_not_pay					=>	'do_not_pay',
+	#notifications				=>	undef,
 );
 
 %find_fields = (
 	docket	=>	'(SELECT docket FROM PurchaseOrder_Contents WHERE PurchaseOrder_Contents.po_id=PurchaseOrders.id)',
 	item_id	=>	'(SELECT item_id FROM PurchaseOrder_Contents WHERE PurchaseOrder_Contents.po_id=PurchaseOrders.id)',
+	notification_user_id	=>	'(SELECT user_id FROM PurchaseOrder_Notifications WHERE po_id=purchaseorders.id)',
 );
 
 %transforms = (
@@ -96,16 +99,17 @@ $serial = 'purchaseorders_id_seq';
 );
 
 %defaults = (
-	created_on	=> q`'NOW()'`,
-	updated_on	=> q`'NOW()'`,
-	deleted		=>	0,
-	currency_id	=> q`$session{Currency_id}`,
-	total			=>	0,
+	created_on	=>	q`'NOW()'`,
+	updated_on	=>	q`'NOW()'`,
+	deleted			=>	0,
+	currency_id	=>	q`$session{Currency_id}`,
+	total				=>	0,
 	subtotal		=>	0,
 	manifest_id	=>	undef,
 	cancelled		=>	0,
-	supplier_id		=>	undef,
-	contact_id		=>	undef,
+	supplier_id	=>	undef,
+	contact_id	=>	undef,
+	do_not_pay	=>	'0',
 );
 
 sub save {
@@ -113,30 +117,34 @@ sub save {
 
 	$self->set( $param ? $param : {} );
 
-	my $ac = sql::start_transaction( $openprint::dbh );
-$openprint::log->debug("PurchaseOrder::Save AC: $ac");
-	$dbh->do( "LOCK TABLE $openprint::PurchaseOrder_Tax::table IN EXCLUSIVE MODE" ) or $log->error( DBI->errstr );
+	#openprint::PurchaseOrder_Tax->lock();
 	# force recalculation
 	$self->subtotal(undef);
-	foreach my $Tax ( $self->Taxes(1) ) {
+	foreach my $Tax ( $self->Taxes() ) {
+$openprint::log->debug("setting tax amount");
 		$Tax->PurchaseOrder( $self );
 		$Tax->amount(undef);
 	} # end foreach Tax
 	$self->total(undef);
 	if ( ! $$self{currency_id} ) {
+		# Default to current currency
 		my $Currency = openprint::Currency::get_current();
 		$$self{currency_id} = $Currency->id() if $Currency;
 	} # end if
 	my $error = $self->SUPER::save({}, $force_insert );
 
 	# Taxes
-	foreach my $T ( $self->Taxes() ) {
-		$error .= $T->save({purchaseorder_id=>$$self{id}, PurchaseOrder=>$self});
+	foreach my $Tax ( $self->Taxes() ) {
+$openprint::log->debug("Saving taxes".$Tax->to_string());
+		$error .= $Tax->save({purchaseorder_id=>$$self{id}, PurchaseOrder=>$self});
 	} # end foreach
+if ( 0 ) {
+	# No longer doing this
 	foreach my $T ( $self->old_Taxes() ) {
 		$T->delete();
 	} # end foreach T
-	sql::end_transaction( $openprint::dbh, $ac );
+}
+	#openprint::PurchaseOrder_Tax->unlock();
 
 	return $error;
 } # end sub save
@@ -144,6 +152,7 @@ $openprint::log->debug("PurchaseOrder::Save AC: $ac");
 sub Currency {
 	my ( $self ) = @_;
 	if ( ! $$self{currency_id} ) {
+$openprint::log->debug("Defaulting PO currency to current");
 		$$self{currency_id} = openprint::Currency::get_current()->id();
 	} # end if
 	return new openprint::Currency( $_[0]{currency_id} );
@@ -164,20 +173,58 @@ sub Contents {
 		$_[0]{Contents} = $_[1];
 	}
 	if ( $_[0]{id} and ! $_[0]{Contents} ) {
-		$_[0]{Contents} = [openprint::PurchaseOrder_Content->find('po_id'=>$_[0]{id},'order'=>'id')];
+		$_[0]{Contents} = [openprint::PurchaseOrder_Content->find( po_id=>$_[0]{id}, order=>'id')];
 	} # end if
 	return @{$_[0]{Contents}} if $_[0]{Contents};
 	return ();
 } # end sub Contents
 
+sub debug {
+	return $_[0]->debug_Approvers();
+
+}
+sub debug_Approvers {
+	my $self = shift;
+	my @notification_types = map { 'PO ' . (new openprint::PurchaseOrder_ContentType( $_ )->name()) . ' Approvals' } sets::union( map { $_->type_id() } $self->Contents() );
+
+  my $results;
+
+  my @user_ids = sets::union( $self->notifications(), map { $_->user_id() } openprint::User_Notification->find(
+        type  =>\@notification_types,
+        value =>'Yes',
+        user_company_id=>$openprint::User->company_id()
+        ) );
+  return if ! @user_ids;
+
+  foreach my $U ( openprint::User->find( id=>\@user_ids, company_id=>$openprint::User->company_id() ) ) {
+    if ( $U->id() == $openprint::User->id() ) {
+      $openprint::log->debug( $U->email() . ' Not mailing me.' );
+      next;
+    } # end if
+    $_ = Email::Valid->address($U->email());
+    if ( ( ! $_ ) or ( $_ ne $U->email() ) ) {
+      $openprint::log->debug( $U->email() . ' is not a valid address.' );
+      next;
+    } # end if
+    if ( ! $self->can_view( $U ) ) {
+      $openprint::log->debug( $U->name() . ' cannot view this PO.' );
+      next;
+    } # end if
+    if ( ! $self->can_authorize( $U ) ) {
+      $openprint::log->debug( $U->name() . ' cannot authorize this PO.' );
+      next;
+    } # end if
+	}
+}
+
 sub send_approval_required_notification {
 	my ( $self ) = @_;
 
-	my $email_template = misc::load_file( $log, $config{SkinPath} . '/email_template.html' );
+	my $email_template = ssi::slurp_content('/email_template.html');
 	my %info;
 	$info{From} = $openprint::User;
 	$info{PurchaseOrder} = $self;
-	$info{ReplacementText} = ssi::include( '/email_content/purchase_order_notification.html', \%info );
+	$info{ReplacementText} = ssi::include('/email_content/purchase_order_notification.html', \%info);
 
 	my @notification_types = map { 'PO ' . (new openprint::PurchaseOrder_ContentType( $_ )->name()) . ' Approvals' } sets::union( map { $_->type_id() } $self->Contents() );
 	$_ = MIME::QuotedPrint::encode_qp( Encode::encode('utf-8', ssi::variable_substitution( \$email_template, \%info ) ) );
@@ -391,7 +438,7 @@ sub decline {
 sub notifications {
 	my ( $self, $new ) = @_;
 	if ( $new ) {
-		@{$$self{notifications}} = @{$new};
+		$$self{notifications} = ref $new eq 'ARRAY' ? $new : [ $new ];
 		if ( $$self{id} ) {
 			my $ac = sql::start_transaction( $openprint::dbh );
 			$dbh->do( 'LOCK TABLE PurchaseOrder_Notifications IN ACCESS EXCLUSIVE MODE' ) or $openprint::log->error( DBI->errstr );
@@ -419,7 +466,7 @@ sub update_notifications {
 
 	my @companies = ( $PO->company_id(), $PO->supplier_id() );
 	my @notifications = $PO->notifications(); # returns user_ids
-		my @new_notifications = @notifications;
+	my @new_notifications = @notifications;
 	if ( $PO->is_FSC() or $PO->is_PEFC() ) {
 		@new_notifications = sets::union( @new_notifications, map { $PO->can_view( $_->User() ) ? $_->user_id() : () } openprint::User_Notification->find( type=>'FSC/PEFC Notifications', value=>'Yes', user_company_id=>\@companies, 'company_id is null or ='=>$PO->supplier_id() ) );
 	} # end if
@@ -450,6 +497,7 @@ sub is_PEFC {
 		return 1 if $C->description() =~ /PEFC/i;
 	} # end foreach C
 } # end sub is_PEFC
+
 sub copy {
 	my $self = shift;
 	my $New = new openprint::PurchaseOrder();
@@ -468,8 +516,12 @@ sub Manifest {
 # We don't make any db changes here.  That only happens on PO saving
 sub Taxes {
 	my ( $self ) = @_;
+	if ( @_ > 1 ) {
+		$$self{Taxes} = $_[1];
+	}
 	@{$$self{Taxes}} = openprint::PurchaseOrder_Tax->find(purchaseorder_id=>$$self{id}) if $$self{id} and ! $$self{Taxes};
 
+if ( 0 ) {
 	my $Supplier = $self->Supplier();
 	my $country = $Supplier->country() ? $Supplier->country() : $$self{vendor_country};
 	my $state = $Supplier->state() ? $Supplier->state() : $$self{vendor_state};
@@ -488,13 +540,21 @@ sub Taxes {
 				tax_id			=>	$$Tax{id},
 				rate			=>	$$Tax{rate},
 			});
-			#if ( $$self{id} ) {
-				#$T->save({'purchaseorder_id'	=>	$$self{id}});
-			#} # end if
 			push @{$$self{Taxes}}, $T;
 		} # end foreach Tax
 	} # end if
-	if ( @_ > 1 and $$self{id} ) {
+}
+	return $$self{Taxes} ? @{$$self{Taxes}} : ();
+} # end sub Taxes
+
+sub default_Taxes {
+	my ( $self ) = @_;
+	@{$$self{Taxes}} = openprint::PurchaseOrder_Tax->find(purchaseorder_id=>$$self{id}) if $$self{id} and ! $$self{Taxes};
+	my $Supplier = $self->Supplier();
+	my $country = $Supplier->country() ? $Supplier->country() : $$self{vendor_country};
+	my $state = $Supplier->state() ? $Supplier->state() : $$self{vendor_state};
+	my $created_on = $$self{created_on} ? $$self{created_on} : 'NOW()';
+	if ( $$self{id} ) {
 		my @new_taxes = openprint::Tax->find(
 				'period_start null_or_<='	=>	$created_on,
 				'period_end null_or_>='	 	=>	$created_on,
@@ -506,22 +566,22 @@ sub Taxes {
 		# Clear out any no longer valid taxes
 		for ( my $i = 0; $i < @{$$self{Taxes}}; $i += 1 ) {
 			my $Tax = $$self{Taxes}[$i];
-			if ( ! $new_tax_ids{$Tax->tax_id()} ) {
-				#$Tax->delete();
+			if ( ! $new_tax_ids{$$Tax{tax_id}} ) {
+				$Tax->delete() if $Tax->id();
 				splice @{$$self{Taxes}}, $i, 1; $i -= 1;
 			} # end if
 		} # end foreach old Tax
-		#@{$$self{Taxes}} = openprint::PurchaseOrder_Tax->find('purchaseorder_id'=>$$self{id});
 		if ( @new_taxes != @{$$self{Taxes}} ) {
-			my @tax_ids = map { $_->tax_id() } @{$$self{Taxes}};
+			my %tax_ids = map { $_->tax_id(), $_ } @{$$self{Taxes}};
 			foreach my $Tax ( @new_taxes ) {
-				if ( ! sets::isin( $Tax->id(), \@tax_ids ) ) {
+				if ( ! $tax_ids{$$Tax{id}} ) {
 					my $T = new openprint::PurchaseOrder_Tax();
 					$T->set({
 							PurchaseOrder	=>	$self,
 							tax_id			=>	$$Tax{id},
 							rate			=>	$$Tax{rate},
 							});
+					$T->save() if $$self{id};
 					push @{$$self{Taxes}}, $T;
 				} # end if
 			} # end foreach Tax	
@@ -533,7 +593,7 @@ sub Taxes {
 sub old_Taxes {
 	my ( $self ) = @_;
 	my @old_Taxes;
-	my @new_Taxes = $self->Taxes(1);
+	my @new_Taxes = $self->default_Taxes();
 	my %new_tax_ids = map { $_->tax_id(), $_->tax_id() } @new_Taxes;
 	
 	foreach my $old_Tax ( openprint::PurchaseOrder_Tax->find(purchaseorder_id=>$$self{id}) ) {
@@ -545,7 +605,7 @@ sub old_Taxes {
 } # end sub old_Taxes
 
 sub Tax {
-    my $result = openprint::PurchaseOrder_Tax->find_one('purchaseorder_id'=>$_[0]{id}, 'tax_id'=>$_[1]->id() ) if $_[0]{id};
+    my $result = openprint::PurchaseOrder_Tax->find_one( purchaseorder_id=>$_[0]{id}, tax_id=>$_[1]->id() ) if $_[0]{id};
     if ( ! $result ) {
         return new openprint::PurchaseOrder_Tax();
     } # end if
@@ -605,8 +665,8 @@ sub can_view {
 		} # end if
 	} # end foreach C
 
-	if ( $_[0]->notifications() ) {
-		if ( sets::isin( $$User{id}, $_[0]->notifications() ) ) {
+	if ( my @notifications = $_[0]->notifications() ) {
+		if ( sets::isin( $$User{id}, \@notifications ) ) {
 			$log->debug($$User{firstname} . ' can see because in notifications.' ) if $debug;
 			return 1;
 		} # end if
@@ -670,31 +730,39 @@ sub can_see_pricing {
 		return 1;
 	} # end if
 
-	my $User = new openprint::User( $openprint::session{user_id} );
+	my $User = $openprint::User;
 	
 	if ( ( $$User{id} == $_[0]->created_by() ) or ( $$User{type} eq 'A' ) or openprint::usergroup::is_user_in( ['Accounting','SalesAdmin','InventoryManager'], $$User{id} ) ) {
-$log->debug('can see') if $debug;
+		$log->debug('can see pricing') if $debug;
 		return 1;
 	} # end if
 
 	if ( $_[1] ) {
-		my @contains = sets::contains( [ $$User{id}, $User->assistant_ids(), $User->csr_ids() ], [ map { $_->salesrep_id() } $_[1]->Orders() ] );
-		if ( @contains ) {
-			$log->debug("can see pricing because @contains in orders") if $debug;
-			return 1;
+		if ( $_[1]->Type()->type() eq 'Sheet Stock' or $_[1]->Type()->type() eq 'Roll Stock' ) {
+			# Ahmed doesn't want people to see stock pricing
+		} else {
+			my @contains = sets::contains( [ $$User{id}, $User->assistant_ids(), $User->csr_ids() ], [ map { $_->salesrep_id() } $_[1]->Orders() ] );
+			if ( @contains ) {
+				$log->debug("can see pricing because @contains in orders") if $debug;
+				return 1;
+			} # end if
 		} # end if
 	} else {
 		foreach my $C ( $_[0]->Contents() ) {
+		if ( $C->Type()->type() eq 'Sheet Stock' or $C->Type()->type() eq 'Roll Stock' ) {
+			# Ahmed doesn't want people to see stock pricing
+		} else {
 
 			my @contains = sets::contains( [ $$User{id}, $User->assistant_ids(), $User->csr_ids() ], [ map { $_->salesrep_id() } $C->Orders() ] );
 			if ( @contains ) {
 				$log->debug("can see pricing because @contains in orders") if $debug;
 				return 1;
 			} # end if
+			} # end if
 		} # end foreach C
 	} # end if
-	if ( $_[0]->notifications() ) {
-		if ( sets::isin( $$User{id}, $_[0]->notifications() ) ) {
+	if ( my @notifications = $_[0]->notifications() ) {
+		if ( sets::isin( $$User{id}, \@notifications ) ) {
 			$log->debug($$User{firstname} . ' can see because in notifications.' ) if $debug;
 			return 1;
 		} # end if
@@ -740,6 +808,18 @@ sub summary {
 	} 
 	return $_[0]{summary};
 } # end sub summary
+
+sub dockets {
+	my $self = shift;
+	if ( ! $$self{dockets} ) {
+		@{$$self{dockets}} = sets::union( map { $_->docket() ? $_->docket() : () } $self->Contents() );
+	}
+	return @{$$self{dockets}};
+}
+
+sub Created_By {
+	return new openprint::User( $_[0]{created_by} );
+}
 
 1;
 __END__

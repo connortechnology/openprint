@@ -54,11 +54,11 @@ $opts->{db_user} = $opts->{db_name} if ! $opts->{db_user};
 $opts->{db_pass} = $opts->{db_name} if ! $opts->{db_pass};
 
 $dbh = sql::open_sql( $log,
-		'host'      => $opts->{db_host},
-		'database'  => $opts->{db_name},
-		'driver'    => 'Pg',
-		'login'     => $opts->{db_user},
-		'password'  => $opts->{db_pass},
+		host      => $opts->{db_host},
+		database  => $opts->{db_name},
+		driver    => 'Pg',
+		login     => $opts->{db_user},
+		password  => $opts->{db_pass},
 		);
 die 'Error opening db' if ! $dbh;
 
@@ -78,18 +78,18 @@ foreach my $Equipment ( @Equipment ) {
 	#$log->debug("Processing " . $Equipment->name() );
 	my @filenames;
 	if ( ! open(S, "> $$Equipment{cip3_in}/.lock.lck") ) {
-		$log->error("Unable to open semaphoreat $$Equipment{cip3_in}/.lock.lck\n");
+		$log->error("Unable to open semaphoreat $$Equipment{cip3_in}/.lock.lck");
 		next;
 	} # end if
 	if ( ! flock(S, LOCK_EX) ) {
-		$log->error("Unable to lock semaphore\n");
+		$log->error('Unable to lock semaphore');
 		next;
 	} # end if
 	if ( opendir DIRHANDLE, $Equipment->cip3_in() ) {
 		@filenames = readdir DIRHANDLE;
 		closedir DIRHANDLE;
 	} else {
-		print "Cannot open input hotfolder for $$Equipment{name} at $$Equipment{cip3_in}\n";
+		print "Cannot open input hotfolder for $$Equipment{name} at $$Equipment{cip3_in}";
 		next;
 	} # end if
 
@@ -103,6 +103,7 @@ foreach my $Equipment ( @Equipment ) {
 			# Will ignore ., .., any hidden file
 		$log->warn("File... $file" ) if $debug;
 			next if $file =~ /^\./; 
+			next if -d $Equipment->cip3_in().'/'.$file;
 			my ( $file_base, $side, $extension ) = $file =~ /^(.*)([AB])\.(ppf)$/i;
 $log->warn("Parsed to $file_base, $side, $extension from $file") if $debug;
 			if ( $side ne 'B' ) {
@@ -113,7 +114,7 @@ $log->warn("Not a B") if $debug;
 			my $out_base = $file_base;
 			$out_base =~ s/\./_/g;
 
-			my ( $docket, $ppo, $name, $sig ) = $file_base =~ /^(\d\d\d\d\d)(\w\w)?_?(.+?)Sg(\d+)/i;
+			my ( $docket, $ppo, $name, $sig ) = $file_base =~ /^(\d+)(\w\w)?_?(.+?)Sg(\d+)/i;
 	print "File: $file Docket $docket, Operattor: $ppo, Name: $name, Sig: $sig, $side\n" if $debug;
 			$sig = 0 if ! $sig;
 			my $data;
@@ -145,7 +146,7 @@ if ( $mangle ) {
 				if ( $line =~ /^\/CIP3AdmJobName\s+\((.*)\)\s+def/ ) {
 					my $job_name = $1;
 					if ( length $job_name > 16 ) {
-						if ( my ( $pre, $j_name, $sig ) = ( $job_name =~ /(\d\d\d\d\d\w\w)(.+)SIG(\d\d\d)/ ) ) {
+						if ( my ( $pre, $j_name, $sig ) = ( $job_name =~ /(\d+\w\w)(.+)SIG(\d\d\d)/ ) ) {
 							$line = '/CIP3AdmJobName ('.$pre.(substr($j_name,0,4)).'Sg'.$sig."SdB) def\r\n";
 						} else {
 							$line = '/CIP3AdmJobName ('.(substr($job_name,0,16)).") def\r\n";
@@ -198,7 +199,7 @@ if ( $mangle ) {
 				} elsif ( $line =~ /^\/CIP3AdmJobName\s+\((.+)\)\s+def/ ) {
 					my $job_name = $1;
 					if ( length $job_name > 16 ) {
-						if ( my ( $pre, $name, $sig ) = ( $job_name =~ /(\d\d\d\d\d\w\w)(.+)SIG(\d\d\d)/ ) ) {
+						if ( my ( $pre, $name, $sig ) = ( $job_name =~ /(\d+\w\w)(.+)SIG(\d\d\d)/ ) ) {
 							$line = '/CIP3AdmJobName ('.$pre.(substr($name,0,4)).'Sg'.$sig."SdA) def\r\n";
 						} else {
 							$line = '/CIP3AdmJobName ('.(substr($job_name,0,16)).") def\r\n";
@@ -215,7 +216,7 @@ if ( $mangle ) {
 			close $A;
 
 			if ( ! $complete ) {
-				$log->error("File was not complete! $file_base");
+				$log->error("File was not complete! ".$Equipment->cip3_in()."/$file");
 				next;
 			} # end if
 			if ( ! $data ) {
@@ -244,6 +245,7 @@ $dbh->disconnect();
 	foreach my $file ( @filenames ) {
 		# Will ignore ., .., any hidden file
 		next if $file =~ /^\./; 
+		next if -d $Equipment->cip3_in().'/'.$file;
 
         # CHeck AGE
 		my $mtime = ( stat $file )[9];
@@ -257,7 +259,7 @@ $log->warn("SINGLE SIDE Parsed to $file_base, $side, $extension from $file") if 
 		$out_base =~ s/\./_/g;
 		my $data;
 
-		my ( $docket, $ppo, $name, $sig ) = $file_base =~ /^(\d\d\d\d\d)(\w\w)?_?(.+?)S?g?(\d+)/i;
+		my ( $docket, $ppo, $name, $sig ) = $file_base =~ /^(\d+)(\w\w)?_?(.+?)S?g?(\d+)/i;
 
 		if ( ! open ( IN, '< ' . $$Equipment{'cip3_in'}.'/'.$file ) ) {
 			print "Error opening for read:" . $$Equipment{'cip3_in'}.'/'.$file."\n" ;
@@ -286,7 +288,7 @@ if ( $mangle ) {
 				my $job_name = $1;
 #$log->warn("Truncating JobName $job_name");
 				if ( length $job_name > 16 ) {
-					if ( my ( $pre, $j_name, $sig ) = ( $job_name =~ /(\d\d\d\d\d\w\w)(.+)SIG(\d\d\d)/ ) ) {
+					if ( my ( $pre, $j_name, $sig ) = ( $job_name =~ /(\d+\w\w)(.+)SIG(\d\d\d)/ ) ) {
 						$line = '/CIP3AdmJobName ('.$pre.(substr($j_name,0,4)).'Sg'.$sig.'Sd'.$side.") def\r\n";
 					} else {
 						$line = '/CIP3AdmJobName ('.(substr($job_name,0,16)).") def\r\n";
@@ -298,7 +300,7 @@ if ( $mangle ) {
 		} # end while
 		close IN;
 		if ( ! $complete ) {
-			$log->error("File was not complete! $file_base");
+			$log->error("File was not complete! ".$Equipment->cip3_in()."/$file");
 			next;
 		} # end if
 $dbh = sql::open_sql( $log,
@@ -324,16 +326,16 @@ sub store_PPF {
 	my $compressed_data;
 	if ( $use_compression ) {
 		$compressed_data = Compress::Zlib::compress($data);
-		$log->warn("Compressed PPF from " . (length $data) . " to " . (length $compressed_data) ) if $debug;
+		$log->warn('Compressed PPF from ' . (length $data) . ' to ' . (length $compressed_data) ) if $debug;
 	} # end if
 	my $PPF = new openprint::CIP3_PPF();
 	$PPF->set({
-			'docket'    	=>  $docket,
-			'signature' 	=>  $sig,
-			'side'      	=>  $side,
-			'version'		=>	$version,
-			'data'      	=>  encode_base64($compressed_data ? $compressed_data : $data),
-			'compressed'	=>	($compressed_data ? 1 : 0),
+			docket    	=>  $docket,
+			signature 	=>  $sig,
+			side      	=>  $side,
+			version		=>	$version,
+			data      	=>  encode_base64($compressed_data ? $compressed_data : $data),
+			compressed	=>	($compressed_data ? 1 : 0),
 			});
 
 	if ( $docket ) {
@@ -341,7 +343,7 @@ sub store_PPF {
 		$log->error($_) if $_;
 		$PPF->generate_previews(undef,1);
 
-		foreach my $Project ( openprint::Project->find('docket'=>$docket,'limit'=>10) ) {
+		foreach my $Project ( openprint::Project->find(docket=>$docket,limit=>10) ) {
 			my $services = $Project->services();
 
 			my $found = 0;
@@ -361,9 +363,9 @@ sub store_PPF {
 				print "Adding new signature for $docket $sig $side\n";
 				$Project->add_signature( $sig, 'Ordered', { 
 						'txtPrice'.$Project->ordered_quantity_index()	=> 0,
-						'txtSignatureType'		=>	'Interior Pages',
-						'txtServiceDescription'	=>	'Interior Pages',
-						'ddmRunStyleUsed'		=>	$PPF->runstyle(),
+						txtSignatureType		=>	'Interior Pages',
+						txtServiceDescription	=>	'Interior Pages',
+						ddmRunStyleUsed		=>	$PPF->runstyle(),
 						( map { 'ddmPress'.$_ => $$Equipment{strid} } ( $Project->quantity_indexes(), 'Used' ) ),
 						} );
 				$Project->add_to_log( undef, undef, "CIP3 Adding new form $sig $side." );

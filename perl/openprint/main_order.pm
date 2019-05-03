@@ -48,7 +48,7 @@ sub information {
 			$variable{ExternalRedirect} = '/main/order/information.html?order_id='.$order_id;
 		} elsif ( $param{product_id} ) {
 			$param{product_id} =~ s/\D//g;
-			my $OrderedProduct = openprint::OrderedProduct->find_one('id'=>$param{product_id}, 'order_id'=>$order_id);
+			my $OrderedProduct = openprint::OrderedProduct->find_one( id=>$param{product_id}, order_id=>$order_id );
 			if ( ! $OrderedProduct ) {
 				$variable{error} .= "Product $param{product_id} is not in order $order_id<br/>";
 			} elsif ( $OrderedProduct->order_id() != $order_id or $OrderedProduct->id() != $param{product_id} ) {
@@ -82,7 +82,7 @@ sub information {
 		if ( $param{quote_id} ) {
 			( $order_id, $error ) = openprint::order::make_order_from_quote( $param{quote_id} );
 		} else {
-			if ( openprint::Order->find('project_id'=>$param{ProjectIndex},status=>['Pending Deposit', 'In Production', 'Complete', 'Shipped', 'Waiting For Pickup', 'Picked Up']) ) {
+			if ( openprint::Order->find( project_id=>$param{ProjectIndex},status=>['Pending Deposit', 'In Production', 'Complete', 'Shipped', 'Waiting For Pickup', 'Picked Up']) ) {
 				return misc::error($log, $dbh, \%variable, q{Can't order project.}, "Project $param{ProjectIndex} has already been ordered." );
 			} # end if
 
@@ -105,7 +105,11 @@ sub information {
 			$variable{error} .= openprint::order::save_project_information( $OP );
 		} # end foreach
 	} elsif ( $param{Product} and $param{Quantity} ) {
+$log->debug("Adding product $param{Product}");
 		( $order_id, $error ) = openprint::order::add_product( $order_id, @param{'Product','Quantity'} );
+	} elsif ( $param{product_id} and $param{quantity} ) {
+$log->debug("Adding product $param{product_id}");
+		( $order_id, $error ) = openprint::order::add_product( $order_id, @param{'product_id','quantity'} );
 	} # end if
 
 	if ( $error ) {
@@ -268,7 +272,7 @@ sub confirmation {
 
 	my $Order = new openprint::Order( $order_id );
 
-	if ( $param{btnFunction} eq 'Close' or $param{btnFunction} eq 'Complete' ) {
+	if ( $param{btnFunction} eq 'Complete' ) {
 	
 		if ( $Order->id() and ( sets::isin( $Order->status(), ['Incomplete','Re-Opened'] ) ) ) {
 			if ( ( $Order->company_id() == $session{company_id} ) and ( $session{company_id} == $openprint::User->company_id() ) ) {
@@ -285,12 +289,12 @@ sub confirmation {
 
 			# Commit Project Information
 			foreach my $OP ( $Order->Ordered_Projects() ) {
+				my $Project = $OP->Project();
 				$variable{error} .= $OP->save({
-					reference	=> $OP->Project()->reference(),
-					price		=> undef,
+					reference	=> $Project->reference(),
+					price	  	=> undef,
 					quantity	=> undef,
 				});
-				my $Project = $OP->Project();
 				$variable{error} .= $Project->check_for_order( $OP );
 			} # end foreach Project
 			$variable{error} = check_for_errors( $Order ) if ! $variable{error};
@@ -302,7 +306,7 @@ sub confirmation {
 
 			my $sub_total = $Order->subtotal(undef);
 			foreach my $Tax ( $Order->Taxes() ) {
-				$Tax->save({'amount'=>undef});
+				$Tax->save({ amount => undef });
 			} # end foreach Tax
 			my $total = $Order->total(undef);
 
@@ -375,6 +379,38 @@ sub confirmation {
 		} else {
 			$log->debug("Already complete");
 		} # end if
+	} elsif ( $param{btnFunction} eq 'Close' ) {
+		if ( $Order->status() ne 'Re-Opened' ) {
+			$variable{error} .= "Can only close a re-opened Order.";
+			$variable{ExternalRedirect} = '/main/order/submit.html?order_id='.$Order->id();
+			return;
+		}
+		$Order->subtotal(undef);
+		foreach my $Tax ( $Order->Taxes() ) {
+			$Tax->save({ amount => undef });
+		} # end foreach Tax
+		$Order->total(undef);
+		$Order->status('In Production');
+		$Order->save();
+		$Order->add_log( 'Close Order' );
+		foreach my $OP ( $Order->Ordered_Projects() ) {
+			my $Project = $OP->Project();
+			sql::update( $log, $dbh, 'tbl_Project_Contents', ["lngProjectIndex=? AND strStatus NOT IN ( 'Complete', 'Approved', 'Proofs Out', 'Waiting For Customer Approval','Waiting For QA Approval','')", $Project->id()], 'strStatus', 'Ordered' );
+			if ( $Project->docket() != $Order->docket() ) {
+				$Project->save({docket=>$Order->docket()});
+			}
+			$Project->update_status();
+		}
+		foreach my $Product ( $Order->Products() ) {
+			if ( $$Product{project_id} ) {
+				my $Project = $Product->Project();
+				sql::update( $log, $dbh, 'tbl_Project_Contents', ["lngProjectIndex=? AND strStatus NOT IN ( 'Complete', 'Approved', 'Proofs Out', 'Waiting For Client Approval','Waiting For QA Approval','')", $Project->id()], 'strStatus', 'Ordered' );
+				$Project->update_status();
+			}
+		}
+		$Order->update_status();
+		$variable{information} .= $Order->link_to() . ' has been closed';
+		$variable{ExternalRedirect} = $Order->url_to();
 	} # end if btnFunction eq 'Close or Complete
 
 	$variable{order_id} = $order_id;
@@ -391,7 +427,7 @@ sub history {
 
 sub _history {
 	ssi::save_params( '/main/order/history.html', 
-			'ddmOrderedBy','company_id','status_id',
+			'ddmOrderedBy','company_id','status_id','salesrep_id',
 			'created_on_start_year', 'created_on_start_month','created_on_start_day', 
 			'created_on_end_year', 'created_on_end_month','created_on_end_day', 
 			);
@@ -415,7 +451,7 @@ sub history_details {
 		} # end if
 
 	} elsif ( $param{btnFunction} eq 'Cancel' ) {
-		openprint::order::cancel_order( $order_id );
+		$variable{error} .= $Order->cancel();
 	} elsif ( $param{btnFunction} eq 'Pay' ) {
 		$Order->pay();
 	} elsif ( $param{btnFunction} eq 'Save Payment' ) {

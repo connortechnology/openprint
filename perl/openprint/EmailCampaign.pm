@@ -135,9 +135,9 @@ sub send_email {
 		);
 		
 	sql::insert( undef, undef, 'EmailCampaign_Log', 
-			'campaign_id',	$self->{id},
-			'Log',			$results,
-			'time',				'NOW()',
+			campaign_id =>	$self->{id},
+			Log=>			$results,
+			time=>				'NOW()',
 			);
 } # end sub send_email
 
@@ -195,14 +195,14 @@ sub send {
 		my $User = $replacements{User} = new openprint::User( $user_id );
 
 		if ( $User->mailinglist() eq 'N' ) {
-			$results .= sprintf('<span class="error">NOT Sending Email to: %s %s at %s : they have chosen to not receive email.</span><br/>', $replacements{User}->get('firstname','lastname','email') );
+			$results .= sprintf('<span class="error">NOT Sending Email to: %s at %s : they have chosen to not receive email.</span><br/>', $replacements{User}->link_to(),$replacements{User}->email()  );
 			next;
 		} # end if
 
 		my $addr = Email::Valid->address( $replacements{User}->email() );
 
 		if ( ( ! $addr ) or ( $addr ne $replacements{User}->email() ) ) {
-			$results .= sprintf('<span class="error">NOT Sending Email to: %s %s at %s : the email address appears to be invalid.</span><br/>', $replacements{User}->get('firstname','lastname','email') );
+			$results .= sprintf('<span class="error">NOT Sending Email to: %s at %s : the email address appears to be invalid.</span><br/>', $replacements{User}->link_to(),$replacements{User}->email() );
 			next;
 		} # end if
 
@@ -212,7 +212,7 @@ sub send {
 			$results .= sprintf('<span class="error">NOT Sending Email to: %s %s at %s : No body.</span><br/>%s<br/>', $replacements{User}->get('firstname','lastname','email'),$@ );
 			next;
 		} # end if
-		$results .= sprintf('Sending Email to: %s %s at %s<br/>',$replacements{User}->get('firstname','lastname','email') );
+		$results .= sprintf('Sending Email to: %s at %s<br/>',$replacements{User}->get('link_to','email') );
 		$self->send_email( \%replacements );
 	} # for all mail user ids
 	$$self{email_text} = $email_text;

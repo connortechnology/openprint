@@ -1,4 +1,6 @@
 use strict;
+use warnings;
+
 package openprint::administrator_service_types;
 
 use openprint ();
@@ -53,40 +55,60 @@ sub edit {
 					return;
 				} else {
 					$param{category_id} = $Category->id();
-					 } # end if
 				} # end if
 			} # end if
-
-		$variable{error} = $ServiceType->save( \%param );
-		my $ac = sql::start_transaction( $dbh );
-		foreach my $SD ( $ServiceType->Defaults() ) {
-			if ( ! $param{'name-'.$$SD{id}} ) {
-				$variable{error} .= $SD->delete();
-			} else {
-				$variable{error} .= $SD->save({
-					projecttype_id	=>	$param{'projecttype_id-'.$$SD{id}},
-					name			=>	$param{'name-'.$$SD{id}},
-					value			=>	$param{'value-'.$$SD{id}},
-					}) if (
-						( $SD->projecttype_id() != $param{'projecttype_id-'.$$SD{id}} ) or
-						( $SD->name() ne $param{'name-'.$$SD{id}} ) or
-						( $SD->value() ne $param{'value-'.$$SD{id}} )
-						);
-			} # end if
-		} # end foreach
-		if ( $param{'name-'} ne '' ) {
-			my $SD = new openprint::ServiceType_Default( );
-			$variable{error} .= $SD->save({
-					servicetype_id	=>	$$ServiceType{id},
-					projecttype_id	=>	$param{'projecttype_id-'},
-					name				=>	$param{'name-'},
-					value				=>	$param{'value-'},
-					});
 		} # end if
-		sql::end_transaction( $dbh, $ac );
-		if ( ! $variable{error} ) {
-			$variable{ExternalRedirect} = '/administrator/service_types/index.html';
+
+		my $ac = sql::start_transaction( $dbh );
+
+		my @changes = $ServiceType->changes(\%param);
+		if ( @changes ) {
+			$_ .= $ServiceType->save(\%param);
+			if ( $_ ) {
+				$variable{error} .= "Error saving Service Type $$ServiceType{name} : $_<br/>";
+			} # end if
 		}
+
+		if ( ! $variable{error} ) {
+
+			foreach my $SD ( $ServiceType->Defaults() ) {
+				if ( ! $param{'name-'.$$SD{id}} ) {
+					$variable{error} .= $SD->delete();
+					push @changes, "Default $$SD{name} deleted";
+				} else {
+					my $changes = {
+						projecttype_id	=>	$param{'projecttype_id-'.$$SD{id}},
+						name						=>	$param{'name-'.$$SD{id}},
+						value						=>	$param{'value-'.$$SD{id}},
+						};
+					my @sd_changes = $SD->changes($changes);
+					if ( @sd_changes ) {
+						$variable{error} .= $SD->save($changes) if @sd_changes;
+						push @changes, @sd_changes;
+					} # end if changes
+				} # end if
+			} # end foreach SD
+
+			if ( $param{'name-'} ne '' ) {
+				my $SD = new openprint::ServiceType_Default( );
+				my $changes = {
+						servicetype_id	=>	$$ServiceType{id},
+						projecttype_id	=>	$param{'projecttype_id-'},
+						name				=>	$param{'name-'},
+						value				=>	$param{'value-'},
+						};
+				$variable{error} .= $SD->save($changes);
+				push @changes, "New Default $$SD{name} " . join('<br/>', map { join('=>', $_, $$changes{$_}) } keys %{$changes}) if ! $variable{error};
+			} # end if
+
+		} # end if changes
+		if ( ! $variable{error} ) {
+			(new openprint::Log())->save({ Object=>$ServiceType, action=>'Edit Service Type', note => join('<br/>', @changes ) });
+			$variable{ExternalRedirect} = '/administrator/service_types/index.html';
+		} else {
+			$dbh->rollback();
+		}
+		sql::end_transaction($dbh, $ac);
 	} elsif ( $param{btnFunction} eq 'Copy' ) {
 		my $New = $ServiceType->copy();
 		
@@ -123,7 +145,7 @@ sub edit {
 				}
 
 				my $STD = new openprint::ServiceType_Default();
-				if ( $_ .= $STD->save({
+				if ( $_ = $STD->save({
 							projecttype_id	=>	$PT ? $PT->id() : undef,
 							servicetype_id	=>	$ServiceType->id(),
 							name			=>	$name,
@@ -165,7 +187,8 @@ sub index {
 			#ssi::setup_date_select( '/administrator/service_types/index.html', 'starting_on_start', 0 );
 			#ssi::setup_date_select( '/administrator/service_types/index.html', 'starting_on_end', '' );
 	 #} # end if
-	if ( $param{btnFunction} eq 'Export' ) {
+	if ( !$param{btnFunction} ) {
+	} elsif ( $param{btnFunction} eq 'Export' ) {
 		 my @header = ( 'Name', 'Description', 'Category', 'Type', 'URL', 'Visible in Project Create', 'Visible in Project View', 'Visible in Project Summary', 'Allow Removal', 'Sort Value' );
 		 my @data = map { $_->get( qw(
 					name 
@@ -301,7 +324,8 @@ $log->debug("No changes");
 			$log->warn( "No file given to upload." );
 		} # end if
 	} # end if param{btnFunction}
-} # end sub search
+} # end sub index
+
 sub _index {
 	 if ( ! $param{'btnFunction'} ) {
 			ssi::save_params( '/administrator/service_types/index.html', (

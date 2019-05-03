@@ -1,6 +1,5 @@
 function submit_handler (form) {
-	var status = true;  
-	status = validate_data(form);
+	var status = validate_data(form);
 	if (status) {
 		status = checkSelections(form);
 	} // end if

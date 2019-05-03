@@ -63,7 +63,7 @@ sub send {
 			BOUNDARY =>	$$self{boundary},
 			( $params{CC} ? ( CC		=>	$params{CC} ) : () ),
 			( @bcc ? ( BCC		=>	join(',', @bcc ) ) : () ),
-            SMTP    => $params{SMTP} ? $params{SMTP} : $openprint::config{'Mail Server'},
+            smtp    => $params{SMTP} ? $params{SMTP} : $openprint::config{'Mail Server'},
 			( $params{'Return-receipt-to'} ? ( 'Return-receipt-to' => $params{'Return-receipt-to'} ) : () ),
 			( $params{'Disposition-Notification-To'} ? ( 'Disposition-Notification-To' => $params{'Disposition-Notification-To'} ) : () ),
             FROM    => ( ref $$self{from} eq 'openprint::User' ? sprintf('"%s" <%s>', $$self{from}->get('name','email') ) : $$self{from} ),
@@ -247,21 +247,21 @@ sub add_pdf_attachment_from_html {
 	my @attachments;
 	$html = Encode::encode('utf-8',$html);
 	if ( File::Slurp::write_file('/tmp/'.$name.'.html', { atomic => 1, err_mode=>'carp' }, \$html ) ) {
-        `wkhtmltopdf -q "/tmp/$name.html" "/tmp/$name.pdf"`;
-        my $pdf = File::Slurp::read_file( "/tmp/$name.pdf", err_mode => 'carp' );
-        unlink "/tmp/$name.html";
-        unlink "/tmp/$name.pdf";
-        if ( $pdf ) {
-            push @attachments, ($name.'.pdf', MIME::Base64::encode_base64($pdf), 'application/octet-stream', 'base64');
-        } else {
-            $openprint::log->debug("Error making pdf");
-        } # end if has pdf contents
-    } # end if successfully wrote html content
-	my $results;
-    if ( ! @attachments ) {
-        $results .= 'Unable to make a pdf.  Using HTML version.<br/>';
-        push @attachments, ($name.'.html', MIME::QuotedPrint::encode_qp($html), 'text/html', 'quoted-printable');
-    } # end if
+    `wkhtmltopdf -q "/tmp/$name.html" "/tmp/$name.pdf"`;
+    my $pdf = File::Slurp::read_file( "/tmp/$name.pdf", err_mode => 'carp' );
+    unlink "/tmp/$name.html";
+    unlink "/tmp/$name.pdf";
+    if ( $pdf ) {
+      push @attachments, ($name.'.pdf', MIME::Base64::encode_base64($pdf), 'application/octet-stream', 'base64');
+    } else {
+      $openprint::log->debug("Error making pdf");
+    } # end if has pdf contents
+  } # end if successfully wrote html content
+  my $results;
+  if ( ! @attachments ) {
+    $results .= 'Unable to make a pdf.  Using HTML version.<br/>';
+    push @attachments, ($name.'.html', MIME::QuotedPrint::encode_qp($html), 'text/html', 'quoted-printable');
+  } # end if
 	$$self{ATTACHMENTS} = [] if ! $$self{ATTACHMENTS};
 	push @{$$self{ATTACHMENTS}}, @attachments;
 	return $results;

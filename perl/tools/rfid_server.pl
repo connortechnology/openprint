@@ -65,13 +65,13 @@ sub Checkout_Skid {
 sub process_request {
 	my $self = shift;
 
-	$dbh = sql::open_sql( $log, ('database'=>'point-one', 'driver'=>'Pg','login'=>'point-one', 'password'=>'point-one','host'=>'database') );
+	$dbh = sql::open_sql( $log, (database=>'point-one', driver=>'Pg',login=>'point-one', password=>'point-one',host=>'database') );
 
 	# Have to reload scanner here
 
 	my $date = Date::Format::time2str('%Y-%m-%d %H:%M', time );
 
-	my @checkout_tags = openprint::RFIDTag->find('type'=>'Checkout');
+	my @checkout_tags = openprint::RFIDTag->find(type=>'Checkout');
 
 	$self->get_client_info();
 	%Scanners = map { $_->ipaddr(), $_ } openprint::RFIDScanner->find();
@@ -81,11 +81,11 @@ sub process_request {
 	if ( ! $Scanner ) {
 		# Have a new one, add it
 		$Scanner = new openprint::RFIDScanner();
-		$Scanner->save( {'ipaddr'=>$ip_addr} );
+		$Scanner->save( {ipaddr=>$ip_addr} );
 		$Scanners{$ip_addr} = $Scanner;
 	} # end if
 	$self->log(1, sprintf('%s : %s : %s',$date, $ip_addr, 'connect ' . $Scanner->name() ));
-	if ( my $error = $Scanner->save({'lastseen_on'=>'NOW()'}) ) {
+	if ( my $error = $Scanner->save({lastseen_on=>'NOW()'}) ) {
 		$self->log(1, sprintf('%s : %s : error saving scanner: %s', $date, $ip_addr, $error ));
 	} # end if
 
@@ -110,7 +110,7 @@ sub process_request {
 		my $tag = '';
 		while ( read(STDIN, $data, 40) ) {
 			while ( ! ( $dbh and $dbh->ping() ) ) {
-				$dbh = sql::open_sql( $log, ('database'=>'point-one', 'driver'=>'Pg','login'=>'point-one', 'password'=>'point-one','host'=>'database') );
+				$dbh = sql::open_sql( $log, (database=>'point-one', driver=>'Pg',login=>'point-one', password=>'point-one',host=>'database') );
 				if ( ! $dbh ) {
 					$self->log("No connection to db.  Sleeping.");
 					sleep 10;
@@ -140,7 +140,7 @@ sub process_request {
 			$date = Date::Format::time2str('%Y-%m-%d %H:%M', $time );
 			# if not seen in 10 minutes, then update scanner last seen time
 			if ( ($time - Date::Parse::str2time($Scanner->lastseen_on())) > 600 ) {
-				if ( my $error = $Scanner->save({'lastseen_on'=>'NOW()'}) ) {
+				if ( my $error = $Scanner->save({lastseen_on=>'NOW()'}) ) {
 					$self->log(1, sprintf('%s : %s : error saving scanner: %s', $date, $ip_addr, $error ));
 				} # end if
 			} # end if
@@ -189,7 +189,7 @@ sub process_request {
 			} elsif ( $Scanner->type() eq 'Mobile' ) {
 				if ( sets::isin( $Tag->type(), ['Location','Checkout'] ) ) {
 					if ( $Tag->valid() ) {
-						@last_seen = map {$_->location_id()} openprint::RFIDScannerHistory->find('scanner_id'=>$Scanner->id(),'order'=>'updated_on DESC','limit'=>$location_cache_size) if ! @last_seen;
+						@last_seen = map {$_->location_id()} openprint::RFIDScannerHistory->find(scanner_id=>$Scanner->id(),order=>'updated_on DESC',limit=>$location_cache_size) if ! @last_seen;
 						if ( ( ! @last_seen ) or ! sets::isin( $Tag->location_id(), \@last_seen ) ) {
 							$Scanner->location_id( $Tag->location_id(), $Tag->id() );
 							shift @last_seen if @last_seen > $location_cache_size;
@@ -207,6 +207,8 @@ sub process_request {
 						$self->log(1, sprintf('%s : %s : error saving tag %s', $date, $ip_addr, $_ ));
 					} # end if
 					foreach my $IC ( openprint::Inventory_Check->find(
+								# 0 is the value for All
+								scanner_id => [ 0, $$Scanner{id} ],
 								'started_on <=' => 'NOW()',
 								'ended_on >=' => 'NOW()' 
 								) ) {
@@ -233,6 +235,8 @@ sub process_request {
 					} # end if
 				} # End if
 				foreach my $IC ( openprint::Inventory_Check->find(
+								# 0 is the value for All
+					scanner_id => [ 0, $$Scanner{id} ],
 					'started_on <=' => 'NOW()',
 					'ended_on >=' => 'NOW()' 
 					) ) {
@@ -265,7 +269,7 @@ sub process_request {
 			} elsif ( $Scanner->type() eq 'Truck Location' ) {
 				if ( sets::isin( $Tag->type(), ['Location','Checkout'] ) ) {
 					if ( $Tag->valid() ) {
-						@last_seen = map {$_->location_id()} openprint::RFIDScannerHistory->find('scanner_id'=>$Scanner->id(),'order'=>'updated_on DESC','limit'=>8) if ! @last_seen;
+						@last_seen = map {$_->location_id()} openprint::RFIDScannerHistory->find(scanner_id=>$Scanner->id(),order=>'updated_on DESC',limit=>8) if ! @last_seen;
 						if ( ! sets::isin( $Tag->location_id(), \@last_seen ) ) {
 #$self->log(1, sprintf('%s : %s : truck moving to %s : %s', $date, $ip_addr, $Tag->id(), $Tag->Location()->name() ));
 							$Scanner->location_id( $Tag->location_id(), $Tag->id() );
@@ -295,7 +299,7 @@ sub process_request {
 					$self->log(1, sprintf('%s : %s : error saving skid: %s', $date, $ip_addr, $error )) if $error;
 					$self->log(1, sprintf('%s : %s : updating location of tag %s to %s', $date, $ip_addr, $Tag->id(), $Scanner->Location()->name() ));
 					$Tag->location_id( $Scanner->location_id(), $Scanner->id() );
-					my $error = $Tag->save({'id'=>$tag_id});
+					my $error = $Tag->save({id=>$tag_id});
 					$self->log(1, sprintf('%s : %s : error %s', $date, $ip_addr, $error )) if $error;
 					$self->log(1, sprintf('%s : %s : done updating location of tag %s to %s', $date, $ip_addr, $Tag->id(), $Scanner->Location()->name() ));
 				} elsif ( $Tag->type() eq 'Location' ) {

@@ -16,17 +16,17 @@
 			$sql{salesrep_id} = $param{salesrep_id};
 		} # end if
 	}
-   if ( $openprint::session{user_id} and ( $openprint::session{user_type} ne 'A' ) and ! openprint::usergroup::is_user_in( ['Estimating','Prepress','Accounting','Shipping','Inventory'], $openprint::session{user_id} ) ) {
-        if ( (!$sql{salesrep_id}) or ( ! sets::isin( $sql{salesrep_id}, [ $openprint::session{user_id}, $openprint::User->csr_ids() ] ) ) ) {
-            $sql{or} = { 
-				salesrep_id => [ $openprint::session{user_id}, $openprint::User->csr_ids() ],
-				id=> [$session{company_id}, ( $openprint::User->company_id() != $session{company_id} ? $openprint::User->company_id() : () ) ],
+  if ( $session{user_id} and ( $session{user_type} ne 'A' ) and ! openprint::usergroup::is_user_in( ['Estimating','Prepress','Accounting','Shipping','Inventory'], $session{user_id} ) ) {
+    if ( (!$sql{salesrep_id}) or ( ! sets::isin( $sql{salesrep_id}, [ $session{user_id}, $openprint::User->csr_ids() ] ) ) ) {
+      $sql{or} = { 
+				salesrep_id => [ $session{user_id}, $openprint::User->csr_ids() ],
+				id => [$session{company_id}, ( $openprint::User->company_id() != $session{company_id} ? $openprint::User->company_id() : () ) ],
 			};
-
-        }           
-    } else {
-$log->debug("Not adding filter");
-    } # end if
+    }           
+  } else {
+		$log->debug( "Not adding filter user_id: ($session{user_id}) $session{user_type} ne 'A' " );
+#. openprint::usergroup::is_user_in( ['Estimating','Prepress','Accounting','Shipping','Inventory'], $session{user_id} ) . join(',', openprint::usergroup::is_user_in( ['Estimating','Prepress','Accounting','Shipping','Inventory'], $session{user_id} ) ) );
+  } # end if
 
 	if ( ! $param{order} ) {
 		$sql{order} = 'lower(name)';

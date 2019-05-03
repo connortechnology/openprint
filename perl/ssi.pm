@@ -26,6 +26,7 @@ require Date::Parse;
 require Date::Format;
 require DateTime::Format::Pg;
 require DateTime::TimeZone;
+require POSIX;
 my $parser = 'DateTime::Format::Pg';
 
 #Used for resource hashed links
@@ -133,7 +134,7 @@ sub variable_substitution {
 				$log->error( "Eval error of ($1), Reason: " . $@ ) if $@;
 			} elsif ( $command =~ /^echo\s*\(\s*(.*)\s*\)/ms ) {
 				$_ = eval $1;
-				$result .= $_;
+				$result .= $_ if $_;
 				$log->error( "Eval error ($@) of ($1), Reason: " . $@ ) if $@;
 			} elsif ( $command =~ /^translate\s*\(\s*([\S]+)\s*\)/ms ) {
 				$result .= translate($1);
@@ -141,7 +142,7 @@ sub variable_substitution {
 				$result .= hash_link($1);
 			} elsif ( $command =~ /^hecho\s*\(\s*(.*)\s*\)/ms ) {
 				$_ = eval $1;
-				$result .= html_escape($_);
+				$result .= html_escape($_) if $_;
 				$log->error( "Eval error of ($1), Reason: " . $@ ) if $@;
 			} elsif ( $command =~ /^checked\s*\(\s*(.*)\s*\)/ms ) {
 				$result .= checked( eval $1 );
@@ -150,7 +151,7 @@ sub variable_substitution {
 			} elsif ( $command =~ /^slurp\s*\(\s*'?([^'\)]*)'?\s*\)/ms ) {
 				$result .= slurp_content( $1 );
 			} else {
-				$result .= $$variable{$command};
+				$result .= $$variable{$command} if $$variable{$command};
 			} # end if
 		} else {
 			return $result.$after;
@@ -251,23 +252,38 @@ sub make_drop_down {
 		$check_array = [ $checkval ];
 	} # end if
 
+	my %selected = map { $_ => $_ } @$check_array;
+
 	my $temp = '';
 	if ( $$options{prepend} ) {
-		for ( my $n = 0; $n < @{$$options{prepend}}; $n += 2) {
+		for ( my $n = 0; $n < @{$$options{prepend}}; $n += 2 ) {
 			$temp .= sprintf('<option value="%s"%s>%s</option>',
 					( $$options{encode} ? HTML::Entities::encode_entities(Encode::encode('utf-8',$$options{prepend}[$n])) : $$options{prepend}[$n] ),
-					( sets::isin( $$options{prepend}[$n], $check_array ) ? ' selected="selected"' : '' ),
+					( $selected{ $$options{prepend}[$n] } ? ' selected="selected"' : '' ),
 					( $$options{encode} ? HTML::Entities::encode_entities( Encode::encode('utf-8',$$options{length} ? substr($$options{prepend}[$n + 1],0, $$options{length}) : $$options{prepend}[$n + 1] ) ) : $$options{length} ? substr($$options{prepend}[$n + 1],0, $$options{length}) : $$options{prepend}[$n + 1] ),
 					);
 		} # end for
 	} # end if
-	for ( my $n = 0; $n < @{$search_data}; $n += 2) {
-		$temp .= sprintf('<option value="%s"%s>%s</option>',
-			( $$options{encode} ? HTML::Entities::encode_entities(Encode::encode('utf-8',$$search_data[$n])) : $$search_data[$n] ),
-			( sets::isin( $$search_data[$n], $check_array ) ? ' selected="selected"' : '' ),
-			( $$options{encode} ? HTML::Entities::encode_entities( Encode::encode('utf-8',$$options{length} ? substr($$search_data[$n + 1],0, $$options{length}) : $$search_data[$n + 1] ) ) : ( $$options{length} ? substr($$search_data[$n + 1],0, $$options{length}) : $$search_data[$n + 1] ) ),
-		);
+	for ( my $n = 0; $n < @{$search_data}; $n += 2 ) {
+		
+		$temp .= join('','<option value="',
+				( $$options{encode} ? HTML::Entities::encode_entities(Encode::encode('utf-8',$$search_data[$n])) : $$search_data[$n] ),
+				'"',
+				( $selected{ $$search_data[$n] } ? ' selected="selected"' : '' ),
+				'>',
+				( $$options{encode} ? HTML::Entities::encode_entities( Encode::encode('utf-8',$$options{length} ? substr($$search_data[$n + 1],0, $$options{length}) : $$search_data[$n + 1] ) ) : ( $$options{length} ? substr($$search_data[$n + 1],0, $$options{length}) : $$search_data[$n + 1] ) ),
+				'</option>',
+				);
 	} # end for
+	if ( $$options{append} ) {
+		for ( my $n = 0; $n < @{$$options{append}}; $n += 2 ) {
+			$temp .= sprintf('<option value="%s"%s>%s</option>',
+					( $$options{encode} ? HTML::Entities::encode_entities(Encode::encode('utf-8',$$options{append}[$n])) : $$options{append}[$n] ),
+					( $selected{ $$options{append}[$n] } ? ' selected="selected"' : '' ),
+					( $$options{encode} ? HTML::Entities::encode_entities( Encode::encode('utf-8',$$options{length} ? substr($$options{append}[$n + 1],0, $$options{length}) : $$options{append}[$n + 1] ) ) : $$options{length} ? substr($$options{append}[$n + 1],0, $$options{length}) : $$options{append}[$n + 1] ),
+					);
+		} # end for
+	} # end if
 	return $temp;
 } # sub make_drop_down
 
@@ -597,7 +613,7 @@ sub date_select {
 	} # end if
 	if ( ref $options eq 'HASH' ) {
 	} elsif ( $options ) {
-		$options = {'onchange'=>$options};
+		$options = {onchange=>$options};
 	} # end if
 #$openprint::log->debug(" date_select: $value : ($year,$month,$day), order: $$options{order}");
 	$$options{order} = 'y,m,d' if ! $$options{order};
@@ -615,18 +631,18 @@ sub date_select {
 
 	my $html = '<span class="'.$class.'">';
 	$html .= sprintf('<span id="%1$s_date">', $prefix );
-	foreach my $o ( split(',', $$options{order} ) ) {
-		if ( ( $o eq 'y' ) and ( (!@fields) or sets::isin( 'year', \@fields ) ) ) {
+	foreach my $o ( split(',', $$options{order}) ) {
+		if ( ( $o eq 'y' ) and ( (!@fields) or sets::isin('year', \@fields) ) ) {
 			$html .= sprintf(q`<select id="%1$s_year" name="%1$s_year" onchange="setDaysDropDown(this.value,this.form.elements['%1$s_month'].value,this.form.elements['%1$s_day'],this.form.elements['%1$s_day'].value);%2$s"><option value=""> </option>`, $prefix, $$options{onchange} );
 			$html .= return_years( $start_year, $end_year, $year );
 			$html .= '</select>';
 #$log->debug($html);
-		} elsif ( ( $o eq 'm' ) and ( (!@fields) or sets::isin( 'month', \@fields ) ) ) {
+		} elsif ( ( $o eq 'm' ) and ( (!@fields) or sets::isin('month', \@fields) ) ) {
 			$html .= sprintf(q`<select id="%1$s_month" name="%1$s_month" onfocus="this.previousValue=this.value" onchange="setDaysDropDown(this.form.elements['%1$s_year'].value,this.value,this.form.elements['%1$s_day'],this.form.elements['%1$s_day'].value, this.previousValue);%2$s;this.previousValue=this.value;"><option value=""> </option>`, $prefix, $$options{onchange} );
 			$html .= getmonths( $month );
 			$html .= '</select>';
 #$log->debug($html);
-		} elsif ( ( $o eq 'd' ) and ( (!@fields) or sets::isin( 'day', \@fields ) ) ) {
+		} elsif ( ( $o eq 'd' ) and ( (!@fields) or sets::isin('day', \@fields) ) ) {
 			$html .= sprintf('<select id="%1$s_day" name="%1$s_day" onchange="%2$s"><option value=""> </option>', $prefix, $$options{onchange} );
 			$html .= getdays( $day, int($year), int($month) );
 			$html .= '</select>';
@@ -634,10 +650,16 @@ sub date_select {
 		} # endif
 	} # end foreach o
 	if ( $$options{with_clear} ) {
-		$html .= button( $prefix.'_clear', { 'onclick'=>q`date_clear( $('`.$prefix.q`_year'), $('`.$prefix.q`_month'), $('`.$prefix.q`_day') );`.$$options{onchange}, text=>'C', title=>'Clear', class=>'Clear'} );
+		$html .= button( $prefix.'_clear', {
+				onclick=>q`date_clear( $('`.$prefix.q`_year'), $('`.$prefix.q`_month'), $('`.$prefix.q`_day') );`.$$options{onchange},
+				text=>'C', title=>'Clear', class=>'Clear',
+				} );
 	} # end if
 	if ( $$options{with_today} ) {
-		$html .= button( $prefix.'_today', { 'onclick'=>q`set_today( $('`.$prefix.q`_year'), $('`.$prefix.q`_month'), $('`.$prefix.q`_day') );`.$$options{onchange}, text=>'T', title=>'Today', class=>'Today'} );
+		$html .= button( $prefix.'_today', {
+				onclick=>q`set_today( $('`.$prefix.q`_year'), $('`.$prefix.q`_month'), $('`.$prefix.q`_day') );`.$$options{onchange},
+				text=>'T', title=>'Today', class=>'Today',
+				} );
 	} # end if
 	$html .= '<span id="'.$prefix.'_alert"></span>';
 	$html .= '</span></span>';
@@ -767,7 +789,10 @@ sub write_override {
 	my ( $for, $value, $locked_js, $unlocked_js ) = @_;
 	if ( 1 ) {
 		return sprintf(q`<input type="hidden" id="%1$s" name="%1$s" value="%2$s"/><img class="Override" src="/images/%3$s.gif" onclick="var e=$('%1$s');if(e.value){e.value='';this.src='/images/unlocked.gif';%5$s} else {e.value='Y';this.src='/images/locked.gif';%4$s}" alt=""/>`, 
-				$for, (sets::isin( $value, ['Y', '1' ] ) ? 'Y' : '' ), (sets::isin( $value, ['Y', '1' ] ) ? 'locked' : 'unlocked'), $locked_js, $unlocked_js );
+				$for,
+				((defined($value) and sets::isin($value, ['Y', '1' ]) ) ? 'Y' : '' ),
+				((defined($value) and sets::isin($value, ['Y', '1' ])) ? 'locked' : 'unlocked'),
+				$locked_js, $unlocked_js );
 	} else {
 		return sprintf('<input type="checkbox" id="%1$s" name="%1$s" value="%2$s" onclick="if(!this.checked){%5$s}else{%4$s};" %3$s /> <label class="radio" for="%1$s">Override</label>', $for, $value, ssi::checked( $value eq 'Y' ), $locked_js, $unlocked_js );
 	} # end if
@@ -776,7 +801,13 @@ sub write_override {
 sub count_lines {
 	if ( $_[0] ) {
 		my @lines = split( "\n", $_[0] );
-		return scalar @lines;
+		my $lines = scalar @lines;
+		if ( $_[1] and $_[1]{width} ) {
+				foreach ( @lines ) {
+					$lines += ( POSIX::ceil( length($_ ) / $_[1]{width} ) ) - 1;
+				}
+		}	
+		return $lines;
 	} else {
 		return 2;
 	} # end if
@@ -787,7 +818,7 @@ sub radio {
 
 	my $onclick = $$options{onclick} if $options;
 	my $html;
-	if ( $$options{default} and ! defined $selected ) {
+	if ( exists($$options{default}) and ! defined($selected) ) {
 $log->debug("Selecting default $$options{default} for radio $name");
 		$selected = $$options{default};
 	} # end if
@@ -805,6 +836,7 @@ $log->debug("Selecting default $$options{default} for radio $name");
 	} # end foreach value
 	return $html;
 } # end sub radio
+
 sub checkboxes {
 	my ( $name, $values, $selected, $options ) = @_;
 
@@ -812,13 +844,22 @@ sub checkboxes {
 	my $html;
 	my @container = @{$$options{container}} if $$options{container};
 	$values = ['on', '' ] if ! $values;
+	my $id = $$options{id} ? $$options{id} : $name;
 
 	while ( my ( $value, $label ) = splice @{$values}, 0, 2 ) {
 		$html .= $container[0] if @container;
-		$html .= sprintf(q`<input type="checkbox" name="%1$s" value="%2$s" id="%1$s%2$s" %3$s%4$s />`,
-				$name, $value, checked( sets::isin( $value, $selected ) ), $onclick ? ' onclick="'.$onclick.'"' : '' );
+		$html .= sprintf('<input type="checkbox" name="%1$s" value="%2$s" id="%3$s%2$s" %4$s%5$s/>',
+				$name, $value, $id,
+				checked( defined($value) and sets::isin( $value, $selected ) ),
+				( $onclick ? ' onclick="'.$onclick.'"' : '' )
+				);
 		if ( $label ) {
-			$html .= sprintf(q`<label class="radio" for="%1$s%2$s">%3$s</label>`, $name, $value, $label );
+			$html .= sprintf(
+'
+<label class="radio" for="%1$s%2$s">
+%3$s
+</label>
+', $id, $value, $label );
 		} # end if
 		$html .= $container[1] if @container;
 	} # end foreach value
@@ -952,12 +993,18 @@ sub input {
 	} # end if
 	$html .= ' value="'.html_escape($options{value}).'"' if $options{value} ne '';
 
+	if ( $options{with_clear} ) {
+		$options{class} = $options{class} ? $options{class} . ' input-clear' : 'input-clear';
+	}
 	foreach (@input_options) {
 		$html .= qq` $_="$options{$_}"` if exists $options{$_};
 	} # end foreach
 	$html .= ' required' if $options{required};
 	$html .= ' readonly="readonly"' if $options{readonly};
 	$html .= '/>';
+	if ( $options{with_clear} ) {
+		$html .= qq`<span class="input-clear" onclick="jQuery('[name\$=$options{name}]').val('').focus();">x</span>`;
+	}
 	return $html;
 } # end sub input
 
@@ -989,7 +1036,7 @@ sub reset_session($) {
 		} #end if
 	} # end foreach
 	%param = ();
-	$variable{ExternalRedirect} = $_[0];
+	#$variable{ExternalRedirect} = $_[0];
 } # end sub reset_session
 
 
@@ -1080,6 +1127,12 @@ sub format_date {
 sub format_datetime {
 	return $_[0] ? Date::Format::time2str( $config{DateTimeFormat}, Date::Parse::str2time( $_[0] ) ) : '';
 } # end sub format_datetime
+sub format_csv_datetime {
+	return $_[0] ? Date::Format::time2str( '%Y-%m-%d %H:%M:%S', Date::Parse::str2time( $_[0] ) ) : '';
+} # end sub format_datetime
+sub format_csv_date {
+	return $_[0] ? Date::Format::time2str( '%Y-%m-%d', Date::Parse::str2time( $_[0] ) ) : '';
+} # end sub format_datetime
 
 sub link {
 	return '<link rel="stylesheet" type="text/css" href="'.hash_link($_[0]).'"/>';
@@ -1090,6 +1143,7 @@ sub include_logs {
 	$variable{Object} = $Object;
 	setup_date_select( $variable{uri}, 'log_created_on_start', -31 );
 	setup_date_select( $variable{uri}, 'log_created_on_end', '' );
+	$session{$variable{uri}.'?log_limit'} = 50 if ! exists $session{$variable{uri}.'?log_limit'};
 	return include('/includes/_logs_container.html');
 }
 sub include_logs_view {
@@ -1097,7 +1151,27 @@ sub include_logs_view {
 	$variable{Object} = $Object;
 	setup_date_select( $variable{uri}, 'log_created_on_start', -31 );
 	setup_date_select( $variable{uri}, 'log_created_on_end', '' );
+	$session{$variable{uri}.'?log_limit'} = 50 if ! exists $session{$variable{uri}.'?log_limit'};
 	return include('/includes/_logs_contents_view.html');
+}
+
+sub do_css_links {
+    my @html;
+    my $css = shift;
+    $css =~ s/^\///;
+    $css =~ s/\..+$//;
+    my @parts = split '/', $css;
+    
+    while ( @parts ) {
+        $css = join('_', @parts ) . '.css';
+        if ( -e $config{SkinPath}.'/css/'.$css ) {
+            push @html, '<link type="text/css" rel="stylesheet" href="'.hash_link('/css/'.$css).'"/>';
+        } elsif ( Debug ) {
+          $log->debug("Does not exist at " . $config{SkinPath}.'/css/'.$css);
+        } # end if
+        pop @parts;
+    } # end while
+    return join("\n", reverse @html );
 }
 
 1;

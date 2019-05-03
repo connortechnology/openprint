@@ -2,7 +2,7 @@
 use utf8;
 use lib '/etc/apache2/lib/perl';
 use strict;
-#use warnings;
+use warnings;
 
 require configuration;
 require sql;
@@ -13,6 +13,8 @@ require openprint::User;
 require Email::Valid;
 require openprint::Email;
 require openprint::User_Notification;
+require openprint::Host;
+require openprint::Host_Interface;
 require logger;
 require openprint::Upload;
 require openprint;
@@ -50,6 +52,22 @@ if ($opts->{help}) {
 	exit 0;
 }
 
+my %codes = (
+	200	=> 'Command okay',
+	212	=>	'Directory status',
+	213	=>	'File status',
+	215	=>	'NAME system type',
+	221	=>	'Service closing control connection',
+	226 =>  'Closing data connection',
+	227 => 	'Entering Passive Mode',
+	230	=>	'User logged in',
+	250 =>	'Requested file action okay, completed',
+	257	=>	'Path created',
+	331 =>	'User name ok, need password',
+	350	=>	'Requested file action pending further information.',
+	530	=>	'User not logged in',
+	550	=>	'Requested action not taken. File unavailable, not found, not accessible',
+);
 my %defaults = (
     config  =>  '/etc/openprint/ftp_monitor.conf',
 );
@@ -82,7 +100,7 @@ $config{sleep} = 1.0 if ! $config{sleep};
 if ( $config{pid_file} ) {
 	my $pidh;
 	if (open($pidh, '> '.$config{pid_file} ) ) {
-		print $pidh $$."\n"; 
+		print $pidh $$."\n";
 		close($pidh);
 	} else {
 		die "Unable to open pid file";
@@ -91,7 +109,7 @@ if ( $config{pid_file} ) {
 
 $log = logger->new( { file=>$config{log_file}, level=>$config{log_level}} );
 $log->info("Opening SQL connection $config{db_host} $config{db_name}");
-$openprint::dbh = sql::open_sql( $log, 
+$openprint::dbh = sql::open_sql( $log,
 	port		=> $config{db_port},
 	host		=> $config{db_host},
 	database	=> $config{db_name},
@@ -166,7 +184,7 @@ $log->debug("Opened fifo at $config{fifo}");
 				foreach my $banned_re ( @banned_files ) {
 					if ( $path =~ /$banned_re/ ) {
 						# Detected bad file
-						$bad = 1;	
+						$bad = 1;
 						last;
 					} # end if
 				} # end foreach banned_re
@@ -238,7 +256,7 @@ $log->debug("data: $client $remote_user $user_name $curr_time $xfer_type $path $
 				foreach my $banned_re ( @banned_files ) {
 					if ( $path =~ /$banned_re/ ) {
 						# Detected bad file
-						$bad = 1;	
+						$bad = 1;
 						last;
 					} # end if
 				} # end foreach banned_re
@@ -282,22 +300,29 @@ $log->debug("data: $client $remote_user $user_name $curr_time $xfer_type $path $
 						complete	=> 1,
 					};
 				} # end if send email
-			} elsif ($line =~ /^(\S+)\s+(\S+)\s+(\S+)\s+\[([^\]]+)\]\s+"([^"]*)"\s+(\d+)\s+([\-\d]+)\s+([\.\d\-]+)$/o) {
-#LogFormat IQFormat "%h %l %u %t \"%f\" %s %b %T"
+			} elsif ($line =~ /^(\S+)\s+(\S+)\s+(\S+)\s+\[([^\]]+)\]\s+"([^"]*)"\s+"([^"]*)"\s+(\S+)\s+(\d+)\s+([\-\d]+)\s+([\.\d\-]+)$/o) {
+#LogFormat IQFormat "%h %l %u %t \"%d\" \"%f\" %m %s %b %T"
 
-				my $client = $1;
-				my $remote_user = $2;
-				my $user_name = $3;
-				my $curr_time = $4;
-				my $path = $5;
-
-				my $response_code = $6;
-				my $nbytes = $7;
-				my $xfer_nsecs = $8;
+				my $client = defined $1 ? $1 : '';
+				my $remote_user = defined $2 ? $2 : '';
+				my $user_name = defined $3 ? $3 : '';
+				my $curr_time = defined $4 ? $4 : '';
+				my $dir = defined $5 ? $5 : '';
+				my $path = defined $6 ? $6 : '';
+				my $command = defined $7 ? $7 : '';
+				my $response_code = defined $8 ? $8 : '';
+				my $nbytes = defined $9 ? $9 : '';
+				my $xfer_nsecs = defined $10 ? $10 : '';
 				$log->debug("Got IQFormat extended line: $line");
-				$log->debug("data: $client $remote_user $user_name $curr_time $path $response_code $nbytes");
+				if ( ! defined $codes{$response_code} ) {
+					$log->error("Need to define the response code for $response_code");
+				}
+				$log->debug("data: client:$client remote_user:$remote_user username:$user_name time:$curr_time dir:$dir path:$path command:$command code:$response_code($codes{$response_code}) bytes:$nbytes");
 				if ( $response_code == 331 ) {
 #Username OK, need password
+					next;
+				} elsif ( $command eq 'LIST' or $command eq 'MLSD' or $command eq 'CDUP' ) {
+$log->debug("Command was not an upload");
 					next;
 				} elsif ( $response_code == 230 ) {
 # Successful login
@@ -308,6 +333,18 @@ $log->debug("data: $client $remote_user $user_name $curr_time $xfer_type $path $
 					}
 					(new openprint::Log())->save({Object=>$User, action=>'Login', note=>'Successful FTP Login' } );
 					next;
+				} elsif ( $response_code == 350 ) {
+					$log->debug("Requested file action pending further information. ");
+					next;
+				} elsif ( $response_code == 257 ) {
+					$log->debug("PWD");
+					next;
+				} elsif ( $response_code == 550 ) {
+					$log->debug("Action not taken ");
+					next;
+				} elsif ( $response_code == 257 ) {
+					$log->debug("Path Created, ignoring");
+					next;
 				} elsif ( $nbytes eq '-' ) {
 					$log->debug("Not an upload, ignoring");
 					next;
@@ -316,6 +353,9 @@ $log->debug("data: $client $remote_user $user_name $curr_time $xfer_type $path $
 					next;
 				} elsif ( $path eq '-' ) {
 					$log->debug("Not an upload, response_code: $response_code path was $path");
+					next;
+				} elsif ( -d $path ) {
+					$log->debug("Was creating a dir at $path, no notification");
 					next;
 				}
 
@@ -332,7 +372,7 @@ $log->debug("data: $client $remote_user $user_name $curr_time $xfer_type $path $
 				foreach my $banned_re ( @banned_files ) {
 					if ( $path =~ /$banned_re/ ) {
 						# Detected bad file
-						$bad = 1;	
+						$bad = 1;
 						last;
 					} # end if
 				} # end foreach banned_re
@@ -362,7 +402,7 @@ $log->debug("data: $client $remote_user $user_name $curr_time $xfer_type $path $
 					}
 				} # end if send email
 
-				if ($send_email) {
+				if ( $send_email ) {
 					my $already_uploading = 0;
 					foreach my $U ( @{$uploads{$user_name}} ) {
 						if ( $$U{file} eq $path ) {
@@ -370,9 +410,10 @@ $log->debug("data: $client $remote_user $user_name $curr_time $xfer_type $path $
 							$$U{duration} += $xfer_nsecs;
 							$already_uploading = 1;
 							last;
-						} 
-					}	
-					if ( ! $already_uploading ) {
+						}
+					}
+					if ( !$already_uploading ) {
+$log->debug("Queing upload $path");
 						push @{$uploads{$user_name}}, {
 							timestamp => $curr_time,
 							duration => $xfer_nsecs,
@@ -402,7 +443,7 @@ $log->debug("data: $client $remote_user $user_name $curr_time $xfer_type $path $
 
 		if ( ! $dbh->ping() ) {
 			$log->warn("REOpening SQL connection");
-			$openprint::dbh = sql::open_sql( $log, 
+			$openprint::dbh = sql::open_sql( $log,
 					host		=> $config{db_host},
 					database	=> $config{db_name},
 					driver		=> 'Pg',
@@ -441,7 +482,7 @@ sub check_scoreboard {
 		if ( ( ! sets::isin( $username, \@users ) ) or ( $config{max_files} and ( @{$uploads{$username}} > $config{max_files} ) ) ) {
 
 $log->debug("Max_files: $config{max_files}");
-			
+
 			if ( $config{wait_before_emailing} ) {
 				# Assume the last file is the most recent
 				my $Upload = $uploads{$username}[@{$uploads{$username}}-1];
@@ -476,7 +517,7 @@ sub send_email {
 	} # end if
 	my $upload = $uploads[0];
 	# Try to get User first.  It's going to be the fastest lookup
-	
+
 	my $Company;
 	my $User;
 	my @Users = openprint::User->find(email=>lc $upload->{user},ftp_active=>1);
@@ -492,11 +533,9 @@ sub send_email {
 	my $company_name;
 	if ( $Company ) {
 		$company_name = $Company->name();
-		#$company_name =~ s/ /_/g;
 	} # end if
 
 	my $project_files_path = $config{file_path};
-	#$project_files_path =~ s/ /_/g;
 
 	foreach my $upload ( @uploads ) {
 		my $file = $upload->{file};
@@ -507,9 +546,14 @@ $log->debug("Processing upload $file");
 		$$upload{file_str} = $file_str;
 		$$upload{company_name} = $company_name;
 
-		my $regexp = $project_files_path.'/'.$company_name.'/(.+)';
+		my $regexp = '^'.quotemeta($project_files_path).'\/'.quotemeta($company_name).'\/(.+)\$';
 $log->debug("regexp: $regexp");
-		@$upload{proper_file_path} = $file =~ /^$regexp$/;
+		@$upload{proper_file_path} = $file =~ /$regexp/;
+		if ( ! $$upload{proper_file_path} ) {
+			$log->debug("Trying a more generic regexp against $file");
+			$regexp = "^.*\\/\Q$company_name\E\\/(.+)\$";
+			@$upload{proper_file_path} = $file =~ /$regexp/;
+		}
 		$$upload{proper_file_path} = $$upload{file_str} if ! $$upload{proper_file_path};
 
 		#if ( ! $company_name ) {
@@ -539,7 +583,7 @@ $log->debug("regexp: $regexp");
 
 	my $dbh_count = 1;
 	while ( ! ( $openprint::dbh and $openprint::dbh->ping() ) ) {
-		$openprint::dbh = sql::open_sql( $log, 
+		$openprint::dbh = sql::open_sql( $log,
 			host		=> $config{db_host},
 			database	=> $config{db_name},
 			driver		=> 'Pg',
@@ -558,7 +602,7 @@ $log->debug("regexp: $regexp");
 		my $error = $Upload->save({
 			(company_id	=>	$Company ? $Company->id() : undef),
 			(user_id		=>	$User ? $User->id() : undef ),
-			company		=>	$$upload{company_name},
+			company			=>	$$upload{company_name},
 			size			=>	$upload->{size},
 			total			=>	$upload->{size},
 			finished		=>	$upload->{timestamp},
@@ -607,7 +651,7 @@ $log->debug("regexp: $regexp");
 			} # end if
 			push @to, map { $_->User() } openprint::User_Notification->find( type=>'Client File Uploads',value=>'Yes', 'company_id is null or ='=>$Company->id(), company_id=>[ $config{owner_id}, $Company->id() ] );
 		} # end if
-		
+
 		if ( ! @to ) {
 			@to = ( $config{OrderingEmail} );
 		} # end if
@@ -631,13 +675,13 @@ $log->debug("regexp: $regexp");
 					FROM    => ( $config{AdministratorEmail} ? $config{AdministratorEmail} : $from ),
 					'Reply-To'	=>	$from,
 					TO      => \@to,
-#BCC		=>	'iconnor@connortechnology.com',
+BCC		=>	'iconnor@connortechnology.com',
 					SUBJECT => $subject,
 					ATTACHMENTS => [ '', MIME::QuotedPrint::encode_qp(Encode::encode('utf-8',$body)), 'text/html', 'quoted-printable' ]
 				);
 		} # end if
 		#$openprint::dbh->disconnect();
-	
+
 	} elsif ( 1 ) {
 	my $bytes_str = $upload->{size} == 1 ? 'byte' : 'bytes';
 	my $status = $upload->{status} eq 'i' ? 'Incomplete' : 'Completed';
@@ -665,7 +709,7 @@ EOT
 			smtp => $config{smtp_server},
 			From => $config{from},
 			To => $config{recipient},
-			BCC	=>	'iconnor@connortechnology.com',
+			#BCC	=>	'iconnor@connortechnology.com',
 			Subject => $subject,
 		};
 
@@ -855,7 +899,7 @@ sub take_evasive_action {
 
 	my $dbh_count = 1;
 	while ( ! ( $openprint::dbh and $openprint::dbh->ping() ) ) {
-		$openprint::dbh = sql::open_sql( $log, 
+		$openprint::dbh = sql::open_sql( $log,
 			host		=> $config{db_host},
 			database	=> $config{db_name},
 			driver	=> 'Pg',
@@ -867,35 +911,42 @@ sub take_evasive_action {
 		sleep(1);
 	} # enw hwhile no db connection
 
-	my $User = openprint::User->find_one('email lc'=>lc $username, ftp_active=>'Y' );
+	my $User = openprint::User->find_one('email lc'=>lc $username, ftp_active=>1 );
+	if ( ! $User ) {
+		$log->warn("unable to load ftpable user account for $username");
+		return;
+	} # end if
+	$User = openprint::User->find_one('email lc'=>lc $username );
 	if ( ! $User ) {
 		$log->warn("unable to load insecure user account for $username");
 		return;
 	} # end if
 
 	my $Company = $User->Company();
-	my @To = ( $config{TechSupportEmail} );
+	my @To = ( $config{TechSupportEmail}, $username );
 
 	if ( $Company->salesrep_id() ) {
 		push @To, $Company->CSR();
 	} # end if
-		
+
 	my %variable;
 	$variable{Company} = $Company;
 	$variable{User} = $User;
+$log->debug("Email sent to @To from $config{TechSupportEmail}");
 
 	$variable{ReplacementText} = ssi::include( '/email_content/ftp_account_compromised.html', \%variable );
 	if ( $variable{ReplacementText} ) {
-		my $email_template = misc::load_file( $log, $config{skin_path} . '/email_template.html' );
-		my $body = ssi::variable_substitution( undef, $log, $dbh, \$email_template, \%variable );
+		my $email_template = ssi::slurp_content( '/email_template.html' );
+		my $body = ssi::variable_substitution( \$email_template, \%variable );
 		my $Mail = new openprint::Email();
-		$Mail->send(
+		$Mail->html_body( $body );
+		$_ = $Mail->send(
 				FROM    =>	$config{TechSupportEmail},
 				TO      =>	\@To,
 				SUBJECT =>	'FTP Account compromised',
-				ATTACHMENTS => [ '', encode_qp(Encode::encode('utf-8',$body)), 'text/html', 'quoted-printable' ]
 			);
-		$_ = $User->save({ ftp_active=>'N', change_password=>'Y' });
+		$log->debug("Email sent to $_");
+		$_ = $User->save({ ftp_active=>0, change_password=>'Y' });
 		$log->error($_) if $_;
 	} else {
 		$log->error("No email content for 'ftp_account_compromised.html'");
@@ -903,6 +954,7 @@ sub take_evasive_action {
 	if ( $client ) {
 		$log->debug("Blacklisting client $client");
 		my $ip;
+		# FIXME someday this will have to be updated to detect ipv6
 		if ( $client =~ /[^\d\.]/ ) {
 			$_ = gethostbyname($client);
 			if ( defined $_ ) {
@@ -913,25 +965,30 @@ sub take_evasive_action {
 			$ip = $client;
 		} # end if
 		if ( $ip ) {
-			my @Interfaces = openprint::Host_Interfaces->find(ip=>$ip);
+			my @Interfaces = openprint::Host_Interface->find(ip=>$ip);
 			if ( @Interfaces ) {
 				foreach my $Interface ( @Interfaces ) {
-					my $Host = $Interface->Host();	
-					if ( ! ( $Host->blacklist() or $Host->whitelist() ) ) {
-						$_ = $Host->save({blacklist=>1});
-						$log->error($_) if $_;
-					} # end if
+					my $Host = $Interface->Host();
 					(new openprint::Log())->save({
-							action	=> 'Intrusion', 
+							Object		=>	$Host,
+							action	=> 'Intrusion',
 							note		=> "FTP violation. User account $username",
 							host_id		=> $$Host{id},
 							user_id		=> $$User{id},
 							company_id	=> $$User{company_id},
 							} );
+					if ( ! ( $Host->blacklist() or $Host->whitelist() ) ) {
+						$_ = $Host->save({blacklist=>1});
+						if ( $_ ) {
+							$log->error($_);
+						} else {
+							last;
+						} # end if
+					} # end if
 				} # end foreach  Interface
 			} else {
 				my $Host = new openprint::Host();
-				$Host->save({} );
+				$Host->save({});
 				my $Interface = new openprint::Host_Interface();
 				$Interface->save({ ip=>$ip, host_id=>$$Host{id} });
 			} # end if

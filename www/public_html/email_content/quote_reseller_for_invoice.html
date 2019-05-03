@@ -20,10 +20,13 @@
 			foreach my $QP ( $$variable{Quote}->Quoted_Projects() ) {
 				my $Project = $QP->Project();
 				my $services = $Project->services();
-				$html .= sprintf(q`<tr%1$s><td class="project_id">%2$d</td><td class="description">%3$s%4$s</td><td colspan="3"><table>`,
-					$rowclass, $Project->id(),
-					( $Project->reference() ? $Project->reference() . '<br/>' : '' ),
-					( $config{ShowProjectSummaryOnQuote} ne 'N' ? $Project->summary() : '' ),
+
+				$html .= sprintf(q`
+<tr%1$s>
+	<td class="project_id">%2$d</td>
+	<td class="description">%3$s</td>
+	<td colspan="3"><table>`,
+					$rowclass, $Project->id(), $Project->Type()->description(),
 					);
 				foreach my $qty_index ( $Project->quantity_indexes() ) {
 					my $weight;
@@ -49,7 +52,16 @@
 							openprint::Currency::format( $QP->price($qty_index) ),
 							);
 				} # end foreach qty_index
-				$html .= "</table>\n</td>\n</tr>\n";
+				$html .= '
+    </table>
+  </td>
+</tr>
+<tr>
+  <td></td><td colspan="4">
+<div class="reference">'.
+( $Project->reference() ? $Project->reference() . '<br/>' : '' ).'</div><div class="summary">'.
+( $config{ShowProjectSummaryOnQuote} ne 'N' ? $Project->summary() : '' ).'</div></td></tr>
+';
 			} # end foreach QP
 			$rowclass = $rowclass ? '' : ' class="colRow"';
 			return $html;

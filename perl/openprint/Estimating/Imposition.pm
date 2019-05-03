@@ -194,7 +194,7 @@ $openprint::log->debug("Imposition calc: @_");
             } # end if
 			push @Previous_Signatures, $sig_id;
 			my $Imposition = new openprint::Imposition();
-			$Imposition->load( $sig_specs, $qty_index );
+			$Imposition->load( $sig_specs, $qty_index, $Project );
 			my $price = signature_calc( $Project, $Imposition, scalar @Previous_Signatures, $qty_index );
 			$total += $$price{Total};
 

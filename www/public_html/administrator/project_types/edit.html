@@ -1,3 +1,4 @@
+<script type="text/javascript" src="<?hash_link(/javascripts/paper.js)?>"></script>
 <form id="f1" name="f1" method="post" action="edit.html" enctype="multipart/form-data">
 	<input type="hidden" name="btnFunction"/>
 	<fieldset class="filters"><legend>Search Information</legend>
@@ -56,13 +57,14 @@
 			<input type="text" id="description" name="description" value="<? echo ( $$variable{ProjectType}->description(); ) ?>" /> 
 		</li>
 		<li>
-			<label>Category</label>
-			<select id="category_id" name="category_id">
+			<label onclick="$('category_id').toggle();$('category').toggle();">Category</label>
+			<select id="category_id" name="category_id" onchange="$('category').value='';">
 				<option value=""> none </option>
 				<? echo (
 					make_drop_down( $$variable{Categories}, $$variable{ProjectType}->category_id() );
 			) ?>
 			</select>
+			<input type="text" name="category" id="category" style="display:none;" oninput="ddm_select_by_value($('category_id'), '' );"/>
 		</li>
 <? if ( $openprint::User->email() =~ /iconnor/ ) ?>
 		<li> 
@@ -106,7 +108,7 @@
 		<ul> 
 <? echo (
 		return checkboxes('required_services', 
-			[ map { $_->id(), $_->description() } openprint::ServiceType->find('order'=>'lower(name)') ],
+			[ map { $_->id(), $_->description() } openprint::ServiceType->find( order=>'lower(name)') ],
 			[ $$variable{ProjectType}->required_services() ],
 			{ container=>['<li>','</li>'] }
 			);
@@ -119,7 +121,7 @@
 		<ul> 
 <? echo (
 		return checkboxes('blocked_services', 
-			[ map { $_->id(), $_->description() } openprint::ServiceType->find('order'=>'lower(name)') ],
+			[ map { $_->id(), $_->description() } openprint::ServiceType->find( order=>'lower(name)') ],
 			[ $$variable{ProjectType}->blocked_services() ],
 			{ container=>['<li>','</li>'] }
 			);
@@ -129,8 +131,55 @@
 <? if ( $$variable{ProjectType}->id() ) ?>
 	<div class="PaperRecommendations">
 	<fieldset><legend>Paper Recommendations</legend>
+		<div class="leftColumn">
+			<ul>
+		<li>
+            <label>Brand</label>
+            <select id="brand_id" name="brand_id" onchange="filter_onChange(this,'');">
+                <option value="">select</option>
+                <? echo ( make_drop_down( openprint::StockBrand->dropdown( order=>'lower(name)'), $session{$r->uri().'?brand_id'} );) ?>
+            </select>
+        </li>
+<? echo (
+    my $html;
+    my @options = ( 'Finish', 'Colour', 'Weight', 'Quality', 'Material' );
+    my %options = map { $_, lc $_ } @options;
+
+    openprint::StockFinish->find();
+    openprint::StockColour->find();
+    openprint::StockWeight->find();
+    openprint::StockQuality->find();
+
+    my %find = map { $session{$r->uri().'?'.$_} ? ( $_=>$session{$r->uri().'?'.$_} ) : ()} ( 'brand_id', 'manufacturer_id', 'group_id' );
+    my %results;
+    my @Stocks = openprint::Paper->find(\%find);
+
+    foreach my $Stock ( @Stocks ) {
+        foreach my $option ( @options ) {
+            $results{$option}{$$Stock{$options{$option}.'_id'}} = $Stock->$option();
+        } # end foreach Stock
+    }# end foreach option
+
+    foreach my $option ( @options ) {
+        my @sorted = ('openprint::Stock'.$option)->sort( map { $results{$option}{$_} } keys %{$results{$option}} );
+        my $lc_option = $options{$option};
+
+        $html .= sprintf(q`
+        <li>
+            <label>%3$s</label>
+            <select id="%1$s_id" name="%1$s_id" size="1" onchange="filter_onChange(this,'');"><option value=""> select one </option>%2$s</select>
+        </li>`, $lc_option, make_drop_down( [map { $_->id(), $_->name() } @sorted ], $session{$r->uri().'?'.$lc_option.'_id'} ), $option );
+        $find{$lc_option.'_id'} = $session{$r->uri().'?'.$lc_option.'_id'} if $session{$r->uri().'?'.$lc_option.'_id'};
+    }# end foreach option
+    return $html;
+) ?>
+
+		</div>
+		<div class="rightColumn">
 		<ul><li><? echo ( radio( 'Recommended', [ '1', 'Yes', '0', 'No', '', 'All' ], $param{Recommended}, { onclick=>qq`new Ajax.Updater( 'PaperRecommendations', '_paper_recommendations.html', { parameters: { projecttype_id: $param{ddmProjectType}, recommended: this.value } } );` } ); ) ?></li>
 		</ul>
+		</div>
+		<br class="spacer"/>
 		<div id="PaperRecommendations">
 			<?include('_paper_recommendations.html')?>
 		</div>	

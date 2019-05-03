@@ -45,12 +45,16 @@ sub select_company {
 
 sub select_user {
 	if ( $param{user_id} ) {
-		if ( $session{user_type} ne 'A' ) {
+		if ( ( $session{user_type} ne 'A' ) and ( $param{user_id} != $session{user_id} ) ) {
+			my $User = $variable{User} = $openprint::User;
 			$variable{error} .= 'You are not an administrator.  You cannot impersonate other users.<br/>';
 			return;
 		} # end if
 		my $User = $variable{User} = new openprint::User( $param{user_id} );
-		@session{'company_id','user_id','user_type'} = $User->get('company_id','id','type');
+		if ( $User ) {
+			@session{'company_id','user_id','user_type','email'} = @$User{'company_id','id','type','email'};
+			openprint::usergroup::init_cache();
+		}
 	} # end if user_id
 } # end sub select_user
 
@@ -113,12 +117,27 @@ sub registration {
 			$log->error("No MD5SUM, there must have been a problem creating the png!");
 		} else {
 			require Authen::Captcha;
-			my $Captcha = new Authen::Captcha('data_folder' => '/tmp', 'output_folder' => $config{SkinPath}.'/images/captcha');
+			my $Captcha = new Authen::Captcha( data_folder => '/tmp/'.$config{db_name}, output_folder => $config{SkinPath}.'/images/captcha');
 			# Remove spaces, because some people want to put spaces between the characters, etc.
 			$param{Captcha} =~ s/\s//g;
-			if ( 1 != $Captcha->check_code( @param{'Captcha','MD5SUM'} ) ) {
+			my $rc = $Captcha->check_code( @param{'Captcha','MD5SUM'} );
+			if ( $rc == 1 ) {
+				# Passed
+			} elsif ( $rc == 0 ) {
+				# File error, log and carry on
+				$log->error("Captcha file error");
+			} elsif ( $rc == -1 ) {
+				$log->debug("Failed: code expired");
+				$error .= 'Captcha validation code has expired.  Please try again.';
+			} elsif ( $rc == -2 ) {
+				$log->debug("Failed: invalid code (not in db)");
 				$error .= 'Captcha validation code incorrect.  Please try again.';
-			} # end if
+			} elsif ( $rc == -3 ) {
+				$log->debug("Failed: invalid code (does not match token)");
+				$error .= 'Captcha validation code incorrect.  Please try again.';
+			} else {
+				$log->error("unknown return code $rc from Authen::Captcha");
+			}
 		} # end if
 	} # end if
 
@@ -437,12 +456,12 @@ sub user_profile {
 
 	if ( $User->can_edit() ) {
 		if ( $param{btnFunction} eq '<<' ) {
-			$User = $User->Prev( 'company_id'=>$session{company_id} );
+			$User = $User->Prev(company_id=>$session{company_id});
 		} elsif ( $param{btnFunction} eq '>>' ) {
-			$User = $User->Next( company_id=>$session{company_id} );
+			$User = $User->Next(company_id=>$session{company_id});
 		} elsif ( $param{btnFunction} eq 'Delete' ) {
 			$User->delete();
-			$User = $User->Next( 'company_id'=>$session{company_id} );
+			$User = $User->Next(company_id=>$session{company_id});
 		} elsif ( $param{btnFunction} eq 'Save' ) {
 			my $error = '';
 			if ( $param{password} ne $User->password() ) {
@@ -450,7 +469,7 @@ sub user_profile {
 					$variable{warning} .= 'Verify password left blank, password not changed.<br/>';
 					delete $param{password};
 				} else {
-					$error .= "Password fields do not match.<br/>" if $param{password} ne $param{verifypassword};
+					$error .= 'Password fields do not match.<br/>' if $param{password} ne $param{verifypassword};
 				} # end if
 			} # end if
 
@@ -712,32 +731,43 @@ sub credit_application {
 } # sub credit_application
 
 sub view {
-	$variable{Me} = new openprint::User( $session{user_id} );
-	$variable{User} = new openprint::User( $param{user_id} ? $param{user_id} : $session{user_id} );
-	if ( ! $variable{User}->can_view() ) {
+	$variable{Me} = $openprint::User;
+	$param{user_id} = openprint::User->transform( id=>$param{user_id} );
+	my $User = $variable{User} = openprint::User->find_one( id=>$param{user_id} ? $param{user_id} : $session{user_id} );
+	if ( ( !$User ) and ( $session{user_type} eq 'A' ) ) {
+		$User = $variable{User} = openprint::User->find_one( deleted=>1, id=>$param{user_id} ? $param{user_id} : $session{user_id} );
+	}
+  if ( ! $User ) {
+    $variable{error} .= 'No user found.';
+    $variable{User} = new openprint::User();
+    return;
+  }
+  
+	if ( ! $User->can_view() ) {
 		$variable{User} = new openprint::User();
 		$variable{error} .= 'You cannot view this user.';
-	} else {
-		if ( $variable{User}->id() and $session{user_id} ) {
-			my $View = openprint::View->find_one(object_type=>'openprint::User', object_id=>$variable{User}->id(), user_id=>$session{user_id} );
-			if ( ! $View ) {
-				$View = new openprint::View();
-				$View->save({object_type=>'openprint::User', object_id=>$variable{User}->id(), user_id=>$session{user_id}});
-			} # end if
-		} # end if
-		if ( exists $param{relationship_type_id} ) {
-			if ( $variable{User}->id() == $variable{Me}->id() ) {
-				$variable{error} .= "We already know you love yourself.  Frequently.";
-				return;
-			} # endif
-			my $Relationship = openprint::User_Relationship->find_one('user_id1'=>$session{user_id}, 'user_id2'=>$variable{User}->id() );
-			if ( ! $Relationship ) {
-				$Relationship = new openprint::User_Relationship();
-				$Relationship->set({'user_id1'=>$session{user_id}, 'user_id2'=>$variable{User}->id()});
-			} # end if
-			$variable{error} .= $Relationship->save({'type_id'=>$param{relationship_type_id}});
-		} # end if
-	} # end if
+    return;
+  }
+
+  if ( $User->id() and $session{user_id} ) {
+    my $View = openprint::View->find_one(object_type=>'openprint::User', object_id=>$User->id(), user_id=>$session{user_id} );
+    if ( ! $View ) {
+      $View = new openprint::View();
+      $View->save({object_type=>'openprint::User', object_id=>$User->id(), user_id=>$session{user_id}});
+    } # end if
+  } # end if
+  if ( exists $param{relationship_type_id} ) {
+    if ( $User->id() == $variable{Me}->id() ) {
+      $variable{error} .= 'We already know you love yourself.';
+      return;
+    } # endif
+    my $Relationship = openprint::User_Relationship->find_one( user_id1=>$session{user_id}, user_id2=>$variable{User}->id() );
+    if ( ! $Relationship ) {
+      $Relationship = new openprint::User_Relationship();
+      $Relationship->set({ user_id1=>$session{user_id}, user_id2=>$variable{User}->id()});
+    } # end if
+    $variable{error} .= $Relationship->save({ type_id=>$param{relationship_type_id}});
+  } # end if
 } # end sub view
 
 sub couple_search {

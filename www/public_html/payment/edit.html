@@ -1,3 +1,4 @@
+<script src="edit.js"></script>
 <? if ( $$variable{Payment}->id() ) ?>
 <script type="text/javascript">
 	function pay_invoice( invoice_id ) {
@@ -34,6 +35,15 @@
 			evalScripts: true,
 		} );
 	} // end function load_paid
+  function load_unpaid( ) {
+    new Ajax.Updater( 'Unpaid', '_unpaid.html', {
+        parameters: {
+          payment_id: <? echo ( $$variable{Payment}->id() ) ?>,
+          recipient_id: $('recipient_id').value,
+     },
+          evalScripts: true,
+    } );
+  } // end function load_unpaid()
 </script>
 <? endif ( $$variable{Payment}->id() ) ?>
 <?include('/includes/error_reporting.html')?>
@@ -44,10 +54,12 @@
 		<div class="leftColumn">
 			<ul>
 			<li><label for="recipient_id">Recipient</label>
-				<select id="recipient_id" name="recipient_id">
+				<select id="recipient_id" name="recipient_id" onchange="load_unpaid();">
 					<option value=""> select </option>
-					<? echo ( make_drop_down( openprint::Company->dropdown( supplier=>'Y'),
-						$$variable{Payment}->recipient_id() ? $$variable{Payment}->recipient_id() : $session{company_id} ); ) ?>
+					<? echo ( make_drop_down(
+             openprint::Company->dropdown(supplier=>'Y'),
+             $$variable{Payment}->recipient_id() ? $$variable{Payment}->recipient_id() : $session{company_id}
+             ); ) ?>
 				</select>
 			</li>
 			<li><label for="payor_id">Payor</label>
@@ -62,15 +74,29 @@
 			<? echo ( date_select( 'received_on', $$variable{Payment}->received_on() ? $$variable{Payment}->received_on() : [Date::Calc::Today()], { with_today=>1} ); ) ?>
 			</li>
 			<li><label for="amount">Amount</label>
-				<? echo ( input( type=>'float', name=>'amount', id=>'amount', value=> $$variable{Payment}->amount() ); ) ?>
+				<? echo ( join("\n",
+        input( type=>'float', name=>'amount', id=>'amount', value=> $$variable{Payment}->amount() ),
+        write_override('amount_locked', $$variable{Payment}->amount_locked()),
+        ); ) ?>
 				<select name="currency_id" id="currency_id">
 					<? echo ( make_drop_down( [ map { $_->id(), $_->name() } openprint::Currency->find('order'=>'lower(name)') ], $$variable{Payment}->currency_id() ? $$variable{Payment}->currency_id() : openprint::Currency::get_current()->id() ); ) ?>
 				</select>
 			</li>
+      <li id="exchange"><label>Exchange Rate</label>
+        <? echo ( input( type=>'float', name=>'exchange', id=>'exchange', value=>$$variable{Payment}->exchange(), onkeyup=>'calc_from_exchange(this.form);' ); ) ?>
+      </li>
+      <li><label>Value</label>
+				<? echo ( join("\n",
+          input(type=>'float', name=>'value', id=>'value',
+          value=>$$variable{Payment}->value(),
+          onkeyup=>'calc_exchange_from_value(this.form);'),
+        write_override('value_locked', $$variable{Payment}->value_locked()),
+        ); ) ?>
+      </li>
 			<li><label for="method">Method</label>
 				<select id="method" name="method">
 <? echo ( 
-	my @options = ( '', 'Cash','Cheque','Email Transfer','Manual','Paypal','Work In Trade' );
+	my @options = ( '', 'Cash','Cheque','Email Transfer','Manual','Paypal','Swift', 'Work In Trade' );
 	make_drop_down( [ map { $_, $_ } @options ], $$variable{Payment}->method() );
 ) ?>
 				</select>
@@ -96,6 +122,7 @@
 				if ( $$variable{Payment}->id() ) {
 					if ( $$variable{Payment}->deleted() ) {
 						$html .= button( 'Destroy', { onclick=>q`if(confirm('Are you sure?')){f1.btnFunction.value='Destroy';f1.submit();}` } );
+						$html .= button( 'UnDelete', { onclick=>q`f1.btnFunction.value='UnDelete';f1.submit();` } );
 					} else {
 						$html .= button( 'Delete', { onclick=>q`f1.btnFunction.value='Delete';f1.submit();` } );
 					} # end if

@@ -40,11 +40,11 @@
 			<ul>
 				<li> 
 					<label>Please provide a reference</label>
-					<textarea name="reference" rows="<? echo ( count_lines( $$variable{Project}->reference() ) ) ?>" onkeyup="textarea_resize(this);"><? echo ( unhtmlize( $$variable{Project}->reference() ); ) ?></textarea>
+					<textarea id="reference" name="reference" rows="<? echo ( count_lines( $$variable{Project}->reference() ) ) ?>" onkeyup="textarea_resize(this);"><? echo ( unhtmlize( $$variable{Project}->reference() ); ) ?></textarea>
 				</li>
 				<li>
 					<label>Additional comments or instructions</label>
-					<textarea name="comments" rows="<? echo ( count_lines( $$variable{Project}->comments() ); ) ?>" onkeyup="textarea_resize(this);"><? echo ( htmlize( $$variable{Project}->comments() ); ) ?></textarea>
+					<textarea id="comments" name="comments" rows="<? echo ( count_lines( $$variable{Project}->comments() ); ) ?>" onkeyup="textarea_resize(this);"><? echo ( htmlize( $$variable{Project}->comments() ); ) ?></textarea>
 				</li>
 			</ul>
 		</fieldset>
@@ -67,7 +67,12 @@
 			</ul>
 		</fieldset>
 		</div>
-		<? if ( sets::isin( $session{user_type}, [ 'E', 'A'] ) ) ?>
+<? echo (
+  if ( sets::isin( $session{user_type}, [ 'E', 'A' ] ) ) {
+    return include('_reprint_options.html');
+  }
+  return;
+)?>
 	<fieldset>
 		If you would like to assign this project to a different customer, please select them now. You will be logged in as the selected customer and any orders or quotes you make from now on will be recorded in their history.
 		<ul>
@@ -123,3 +128,30 @@
 	</form>
 </div>
 </div>
+<script type="text/javascript">
+var tinymce_options = {
+    mode : "textareas",
+ plugins: "paste",
+  theme_advanced_toolbar_location : "top",
+  theme_advanced_buttons1 : "bold,italic,underline,strikethrough,separator,justifyleft,justifycenter,justifyright,justifyfull",
+  theme_advanced_buttons2 : "bullist,numlist,outdent,indent,sub,sup,charmap",
+  theme_advanced_buttons3 : "",
+  auto_resize : true,
+    theme : "advanced"
+
+  };
+tinyMCE.init(tinymce_options);
+function setReason(reprintVal,divElem) {
+   if(reprintVal == 'Y') {
+      // Project is a reprint.
+      // Display reason drop down option.
+      divElem.style.display = "block";
+   } else {
+      // Project is not a reprint.
+      // Make sure reason drop down is hidden.
+      divElem.style.display = "none";
+   }
+}
+
+</script>
+

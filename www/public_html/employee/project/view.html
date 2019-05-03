@@ -1,16 +1,17 @@
-<div class="leftColumn">
+<div class="DocketNavigation">
 	<form id="f2" name="f2" action="/employee/project/view.html" method="post">
 		<fieldset class="filters">
 			<ul>
 				<li class="docket"><label>Docket #</label>
-				<? echo ( join('',
-							input( type=>'cardinal', name=>'Docket', id=>'Docket', onchange=>'change_handler(this);', onkeypress=>'return input_handler(this,event);', onkeydown=>q`if(event.keyCode==13){window.location='view.html?Docket='+this.value;};`, onkeyup=>q`$('project_id').value='';`, value=>$param{Docket}),
+				<? echo ( join("\n",
+							input( type=>'cardinal', name=>'Docket', id=>'Docket', onchange=>'change_handler(this);', onkeypress=>'return input_handler(this,event);', onkeydown=>q`if(event.keyCode==13){window.location='view.html?Docket='+this.value;};`, onkeyup=>q`$('project_id').value='';`, value=>$param{Docket}, with_clear=>1 ),
 							button( 'Go1', { onclick=>q`window.location='view.html?Docket='+$('Docket').value;`, text=>'Go' } ),
+							button('Go1Prepress', { onclick=>q`if(f2.Docket.value){window.location='/employee/proj/prep/proofs.html?docket='+f2.Docket.value;};`, text=>'Go Proofs' } ),
 				); ) ?>
 				</li>
 				<li class="project_id"><label>Project #</label>
-				<? echo ( join('',
-							input( type=>'cardinal', name=>'project_id', id=>'project_id', onchange=>'change_handler(this);', onkeypress=>'return input_handler(this,event);', onkeydown=>'if(event.keyCode==13){f2.submit();}', onkeyup=>q`$('Docket').value='';`, value=>$param{project_id} ),
+				<? echo ( join("\n",
+							input( type=>'cardinal', name=>'project_id', id=>'project_id', onchange=>'change_handler(this);', onkeypress=>'return input_handler(this,event);', onkeydown=>'if(event.keyCode==13){f2.submit();}', onkeyup=>q`$('Docket').value='';`, value=>$param{project_id}, with_clear=>1 ),
 							button( 'Go2', { onclick=>'f2.submit();', text=>'Go' } ),
 				); ) ?>
 				</li>
@@ -98,15 +99,29 @@ function send_notifications( form, project_id ) {
 	<? if ( $$variable{Order}->docket() ) ?>
 <br class="spacer"/>
 <fieldset><legend onclick="toggleContent('StockAllocations','_stock_allocations.html?docket=<? echo ( $$variable{Order}->docket() ) ?>', null, null );">Allocated</legend>
+<?echo ( button('StockAllocationPopup', {
+			target=>'_blank',
+			href=>sprintf('/employee/project/stock_allocations.html?project_id=%1$d&amp;docket=%2$s', $$variable{ProjectIndex},$$variable{Order}->docket() ),
+			text=>'Open in Popup'
+			} ); )?>
 <div id="StockAllocations" class="StockAllocated"><?include(/employee/project/_stock_allocations.html)?></div>
 </fieldset>
 <br/>
-<div id="StockCheckout" class="StockCheckout"><?include(/employee/project/_stock_checkout.html)?></div>
+	<div id="StockCheckout" class="StockCheckout">
+		<fieldset><legend>Stock Used</legend>
+	<?echo ( button('StockCheckoutPopup', {
+				target=>'_blank',
+				href=>sprintf('/employee/project/stock_checkout.html?project_id=%1$d&amp;docket=%2$s', $$variable{ProjectIndex},$$variable{Order}->docket() ),
+				text=>'Open in Popup'
+				} ); )?>
+			<div id="StockCheckout"><?include(/employee/project/_stock_checkout.html)?></div>
+		</fieldset>
+	</div>
 	<div class="leftColumn">
 	<? eval (
 		$$variable{PurchaseOrders} = [ openprint::PurchaseOrder_Content->find( docket=>$$variable{Order}->docket() ) ];
 	) ?>
-	<? if ( @{$$variable{'PurchaseOrders'}} ) ?>
+	<? if ( @{$$variable{PurchaseOrders}} ) ?>
 	<fieldset><legend>Purchase Orders:</legend>
 		<table class="List">
 			<tr><th class="po_id">PO</th><th class="description">Description</th><th class="quantity">Quantity</th></tr>
@@ -127,7 +142,7 @@ function send_notifications( form, project_id ) {
 	) ?>
 		</table>
 	</fieldset>
-	<? endif ( @{$$variable{'PurchaseOrders'}} ) ?>
+	<? endif ( @{$$variable{PurchaseOrders}} ) ?>
 	<?include(/employee/project/_files.html)?>
 	</div>
 	<div class="rightColumn">

@@ -6,6 +6,7 @@ CREATE TABLE Service_Prices (
 	supplier_id		INTEGER, FOREIGN KEY (supplier_id) REFERENCES Companies (id),
 	min			float,
 	max			float,
+	range_units	TEXT,
 	units			TEXT,
 	cost			float,
 	markup			float,

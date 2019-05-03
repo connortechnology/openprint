@@ -80,7 +80,13 @@
 						<label>Recipient</label>
 						<select name="recipient_id" id="recipient_id" onchange="load_expenses(this.form);">
 							<option value="">all</option>
-							<? echo ( make_drop_down( openprint::Company->dropdown('order'=>'lower(name)'), $session{'/employee/accounting/expenses.html?recipient_id'} ); ) ?>
+              <? echo (
+               make_drop_down(
+                 openprint::Company->dropdown(
+                   order=>'lower(name)',
+                   'last_expense_on >=' => DateTime::Format::Pg->format_datetime(
+                     DateTime->now()->subtract(years=>1)
+                   )), $session{'/employee/accounting/expenses.html?recipient_id'} ); ) ?>
 						</select>
 					</li>
 					<li>
@@ -99,6 +105,9 @@
 					</li>
 					<li><label>Total</label>
 						<? echo ( input( type=>'float', name=>'total', value=>$session{'/employee/accounting/expenses.html?total'}, oninput=>'load_expenses(this.form);' ); ) ?>
+					</li>
+					<li><label>Business %</label>
+						<? echo ( input( type=>'float', name=>'business_use', value=>$session{'/employee/accounting/expenses.html?business_use'}, oninput=>'load_expenses(this.form);' ); ) ?>
 					</li>
 				</ul>
 			</div>

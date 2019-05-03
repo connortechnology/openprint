@@ -40,7 +40,7 @@ my @dbs = @ARGV;
 if ( ! @dbs ) {
 	my $command = join(' ',
 			'/usr/bin/psql',
-			( $$opts{host} and $$opts{host} ne 'local' ? ( '-h' ,  $$opts{host} ) : () ),
+			( ( $$opts{host} and ( $$opts{host} ne 'local' ) ) ? ( '-h' , $$opts{host} ) : () ),
 			( $$opts{port} ? ( '-p', $$opts{port} ) : () ),
 			'-t', '-c', '"SELECT datname from pg_database"', '-d', 'template1',
 			);
@@ -67,10 +67,10 @@ foreach my $db ( @dbs ) {
 	} # end if
 	
 	if ( ! sets::isin( 'database_info', $tables ) ) {
-		print "No database_info table in $db @$tables\n";
-		print 'Tables: ' . join(',', @$tables);
+		print "No database_info table in db $db tables:( @$tables )\n";
 		next;
 	} # end if
+
 	my $row = $dbh->selectrow_hashref( 'SELECT * FROM database_info ORDER BY updated_on DESC LIMIT 1' );
 	if ( ! $row ) {
 		#print "Error loading row from database_info of $db " . $dbh->errstr()."\n";
@@ -86,11 +86,12 @@ foreach my $db ( @dbs ) {
 			} # end if
 		} # end if
 		my $command = join(' ',
-				'pg_dump -b -Fc ',
-				( $$opts{host} and $$opts{host} ne 'local' ? ( '-h', $$opts{host} ) : () ),
+				'pg_dump -b -Fc',
+				( ( $$opts{host} and $$opts{host} ne 'local' ) ? ( '-h', $$opts{host} ) : () ),
 				( $$opts{port} ? ( '-p', $$opts{port} ): () ),
 				$db, '|', 'bzip2', '>', "$path/$db/$year-$mon-$mday.sql.new.bz2",
 				);
+		#print "running $command\n";
 		system($command);
 		die "Can't dump $db" if $?;
 		if ( ! rename( "$path/$db/$year-$mon-$mday.sql.new.bz2", "$path/$db/$year-$mon-$mday.sql.bz2" ) ) {

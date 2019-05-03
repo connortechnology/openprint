@@ -1,6 +1,10 @@
 <div class="PaymentOptions">
 <? echo (
-    my %Types = map { $_->name(), $_ } openprint::PaymentType->find();
+     my %Types = map { $_->name(), $_ } openprint::PaymentType->find(
+     'payee_id is null or ='=>$$variable{Invoice}->invoicer_id(),
+     order=>'lower(name)',
+     );
+
     my @options;
     my $html;
 	foreach my $k ( keys %Types ) {
@@ -17,7 +21,6 @@
 	} # end foreach 
     return if ! @options;
 
-    my $last = pop @options;
-    return 'Payment can be made by ' . join(', ', @options) . ' or ' . $last;
+    return 'Payment can be made by ' . join(', ', @options) . ' or other pre-arrangement';
 ) ?>
 </div>

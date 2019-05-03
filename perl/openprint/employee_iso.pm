@@ -1,5 +1,4 @@
 package openprint::employee_iso;
-use MIME::QuotedPrint;
 use openprint;
 use vars qw( %variable %session %param %config $log $dbh $r );
 *variable = \%openprint::variable;
@@ -17,45 +16,67 @@ require openprint::PAR;
 require openprint::MAR;
 
 use strict;
+use warnings;
 
 sub mars {
-	if ( $param{btnFunction} eq 'Delete' ) {
-		foreach my $mar_id ( ref $param{mars} eq 'ARRAY' ? @{$param{mars}} : $param{mars} ) {
-			my $MAR = new openprint::MAR( $mar_id );
-			$variable{error} .= $MAR->delete();
-		} # end foreach mar_id
-	} elsif ( $param{btnFunction} eq 'Download in CSV Format' ) {
-		my @header = ('Issued To','Issued On','Issued By','Reply By', 'Equipment','Problem','Cause','Action','Effectiveness', 'Part2 Recipient', 'Part2 Signed On', 'Part3 Recipient', 'Part3 Signed On', 'Part4 QS Mgt Rep/Designate', 'Part4 Signed On' );
-		my @data;
-		my %params = (
-			ssi::date_filter( 'issued_on_start', 'issued_on >=', \%param ),
-			ssi::date_filter( 'issued_on_end', 'issued_on <=', \%param ),
-		);
-		foreach my $MAR ( openprint::MAR->find(%params) ) {
-			push @data, (
-					new openprint::User($MAR->issued_to_id() )->name(),
-					$MAR->issued_on(),
-					new openprint::User($MAR->issued_by_id() )->name(),
-					$MAR->reply_by(),
-					join( ',', map { new openprint::Equipment($_)->name() } split(';', $MAR->presses()) ),
-					$MAR->problem(),
-					$MAR->cause(),
-					$MAR->action(),
-					$MAR->effectiveness(),
-					new openprint::User($MAR->part2_user_id())->name(),
-					$MAR->part2_signed_on(),
-					new openprint::User($MAR->part3_user_id())->name(),
-					$MAR->part3_signed_on(),
-					new openprint::User($MAR->part4_user_id())->name(),
-					$MAR->part4_signed_on(),
+	if ( $param{btnFunction} ) {
+		if ( $param{btnFunction} eq 'Delete' ) {
+			foreach my $MAR ( openprint::MAR->find(
+						( ref $param{mars} eq 'ARRAY' ? ( id=>$param{mars} ) : ( id=>$param{mars} ) )
+						) ) {
+				$variable{error} .= $MAR->delete();
+			} # end foreach MAR
+		} elsif ( $param{btnFunction} eq 'Download in CSV Format' ) {
+			my @header = (
+					'Issued To','Issued On','Issued By','Reply By',
+					'Equipment','Problem','Cause','Action','Effectiveness',
+					'Part2 Recipient', 'Part2 Signed On',
+					'Part3 Recipient', 'Part3 Signed On',
+					'Part4 QS Mgt Rep/Designate', 'Part4 Signed On',
 					);
-		} # end foreach MAR
-		
-		misc::export_csv( $r, $log, \%variable, 'MARS.csv', \@header, \@data );
-	} # end if
+			my @data;
+			my %params = (
+				ssi::date_filter( 'issued_on_start', 'issued_on >=', \%param ),
+				ssi::date_filter( 'issued_on_end', 'issued_on <=', \%param ),
+			);
+			my @MARs = openprint::MAR->find(%params);
+			if ( @MARs ) {
+				openprint::Company->find(id=>[ map { $$_{company_id} ? $$_{company_id} : () } @MARs ]);
+				openprint::User->find(id=>[ map { 
+						( $$_{issued_to_id} ? $$_{issued_to_id} : () ),
+						( $$_{issued_by_id} ? $$_{issued_by_id} : () ),
+						( $$_{part2_user_id} ? $$_{part2_user_id} : () ),
+						( $$_{part3_user_id} ? $$_{part3_user_id} : () ),
+						( $$_{part4_user_id} ? $$_{part4_user_id} : () ),
+						} @MARs ]);
+			}
+			foreach my $MAR ( @MARs ) {
+				push @data, (
+						new openprint::User($MAR->issued_to_id() )->name(),
+						$MAR->issued_on(),
+						new openprint::User($MAR->issued_by_id() )->name(),
+						$MAR->reply_by(),
+						( $MAR->presses() ? join( ',', map { new openprint::Equipment($_)->name() } split(';', $MAR->presses()) ) : '' ),
+						$MAR->problem(),
+						$MAR->cause(),
+						$MAR->action(),
+						$MAR->effectiveness(),
+						new openprint::User($MAR->part2_user_id())->name(),
+						$MAR->part2_signed_on(),
+						new openprint::User($MAR->part3_user_id())->name(),
+						$MAR->part3_signed_on(),
+						new openprint::User($MAR->part4_user_id())->name(),
+						$MAR->part4_signed_on(),
+						);
+			} # end foreach MAR
+			
+			misc::export_csv( $r, $log, \%variable, 'MARS.csv', \@header, \@data );
+		} # end if
+	} # end if btnFunction
 	_mars();
 	ssi::setup_date_select( '/employee/iso/mars.html', 'issued_on_start', -30 );
 	ssi::setup_date_select( '/employee/iso/mars.html', 'issued_on_end', '' );
+	$session{'/employee/iso/mars.html?status'} = '' if ! exists $session{'/employee/iso/mars.html?status'};
 } # end sub mars
 
 sub _mars {
@@ -141,55 +162,79 @@ sub _mar_edit_part4 {
 
 ### CARS SECTIONS BEGINS HERE
 sub cars {
-	if ( $param{btnFunction} eq 'Delete' ) {
-		foreach my $car_id ( ref $param{cars} eq 'ARRAY' ? @{$param{cars}} : $param{cars} ) {
-			my $CAR = new openprint::CAR( $car_id );
-			$variable{error} .= $CAR->delete();
-		} # end foreach car_id
-	} elsif ( $param{btnFunction} eq 'Download in CSV Format' ) {
-		my @header = ('Issued To','Issued On','Issued By','Reply By', 'Docket','Customer','Identified By','Printed On','Presses','Area','Reason','Problem','Cause','Action','Effectiveness', 'Part2 Recipient', 'Part2 Signed On', 'Part3 Recipient', 'Part3 Signed On', 'Part4 QS Mgt Rep/Designate', 'Part4 Signed On','Reprint Requested','Reprint Approved','Reprint Charge','Reprint Quantity', 'Reprint Value', 'Reprint On','Reprint Approved By', 'Approved On','Artwork' );
-		my @data;
-		my %params = (
-			ssi::date_filter( 'issued_on_start', 'issued_on >=', \%param ),
-			ssi::date_filter( 'issued_on_end', 'issued_on <=', \%param ),
-		);
-		foreach my $CAR ( openprint::CAR->find(%params) ) {
-			push @data, (
-					new openprint::User($CAR->issued_to_id() )->name(),
-					$CAR->issued_on(),
-					new openprint::User($CAR->issued_by_id() )->name(),
-					$CAR->reply_by(),
-					$CAR->docket(),
-					$CAR->Company()->name(),
-					$CAR->identified_by(),
-					$CAR->printed_on(),
-					join( ',', map { new openprint::Equipment($_)->name() } split(';', $CAR->presses()) ),
-					$CAR->Area()->name(),
-					$CAR->Reason()->name(),
-					$CAR->problem(),
-					$CAR->cause(),
-					$CAR->action(),
-					$CAR->effectiveness(),
-					new openprint::User($CAR->part2_user_id())->name(),
-					$CAR->part2_signed_on(),
-					new openprint::User($CAR->part3_user_id())->name(),
-					$CAR->part3_signed_on(),
-					new openprint::User($CAR->part4_user_id())->name(),
-					$CAR->part4_signed_on(),
-					$CAR->reprint(),
-					$CAR->reprint_approval(),
-					$CAR->reprint_charge(),
-					$CAR->reprint_quantity(),
-					$CAR->reprint_value(),
-					$CAR->reprint_on(),
-					new openprint::User( $CAR->approved_by_id() )->name(),
-					$CAR->approved_on(),
-					$CAR->artwork(),
-					);
-		} # end foreach CAR
-		
-		misc::export_csv( $r, $log, \%variable, 'CARS.csv', \@header, \@data );
-	} # end if
+	if ( $param{btnFunction} ) {
+		if ( $param{btnFunction} eq 'Delete' ) {
+			foreach my $CAR ( openprint::CAR->find(
+						( ref $param{cars} eq 'ARRAY' ? ( id=>$param{cars} ) : ( id=>$param{cars} ) )
+						) ) {
+				$variable{error} .= $CAR->delete();
+			} # end foreach CAR
+		} elsif ( $param{btnFunction} eq 'Download in CSV Format' ) {
+			my @header = (
+					'Issued To','Issued On','Issued By','Reply By',
+					'Docket','Customer','Identified By','Printed On','Presses',
+					'Area','Reason','Problem','Cause','Action','Effectiveness',
+					'Part2 Recipient', 'Part2 Signed On',
+					'Part3 Recipient', 'Part3 Signed On',
+					'Part4 QS Mgt Rep/Designate', 'Part4 Signed On',
+					'Reprint Requested','Reprint Approved','Reprint Charge','Reprint Quantity',
+					'Reprint Value', 'Reprint On','Reprint Approved By', 'Approved On','Artwork' );
+			my @data;
+			my %params = (
+				ssi::date_filter( 'issued_on_start', 'issued_on >=', \%param ),
+				ssi::date_filter( 'issued_on_end', 'issued_on <=', \%param ),
+			);
+			my @CARs = openprint::CAR->find(%params);
+			if ( @CARs ) {
+				openprint::Company->find(id=>[ map { $$_{company_id} } @CARs ]);
+				openprint::User->find(id=>[ map { 
+						( $$_{issued_to_id} ? $$_{issued_to_id} : () ),
+						( $$_{issued_by_id} ? $$_{issued_by_id} : () ),
+						( $$_{part2_user_id} ? $$_{part2_user_id} : () ),
+						( $$_{part3_user_id} ? $$_{part3_user_id} : () ),
+						( $$_{part4_user_id} ? $$_{part4_user_id} : () ),
+						( $$_{approved_by_id} ? $$_{approved_by_id} : () ),
+						} @CARs ]);
+			}
+			
+			foreach my $CAR ( @CARs ) {
+				push @data, (
+						new openprint::User($CAR->issued_to_id() )->name(),
+						$CAR->issued_on(),
+						new openprint::User($CAR->issued_by_id() )->name(),
+						$CAR->reply_by(),
+						$CAR->docket(),
+						$CAR->Company()->name(),
+						$CAR->identified_by(),
+						$CAR->printed_on(),
+						( $CAR->presses() ? join( ',', map { new openprint::Equipment($_)->name() } split(';', $CAR->presses()) ) : '' ),
+						$CAR->Area()->name(),
+						$CAR->Reason()->name(),
+						$CAR->problem(),
+						$CAR->cause(),
+						$CAR->action(),
+						$CAR->effectiveness(),
+						new openprint::User($CAR->part2_user_id())->name(),
+						$CAR->part2_signed_on(),
+						new openprint::User($CAR->part3_user_id())->name(),
+						$CAR->part3_signed_on(),
+						new openprint::User($CAR->part4_user_id())->name(),
+						$CAR->part4_signed_on(),
+						$CAR->reprint(),
+						$CAR->reprint_approval(),
+						$CAR->reprint_charge(),
+						$CAR->reprint_quantity(),
+						$CAR->reprint_value(),
+						$CAR->reprint_on(),
+						new openprint::User( $CAR->approved_by_id() )->name(),
+						$CAR->approved_on(),
+						$CAR->artwork(),
+						);
+			} # end foreach CAR
+			
+			misc::export_csv( $r, $log, \%variable, 'CARS.csv', \@header, \@data );
+		} # end if
+	} # end if btnFunction
 	_car_results();
 	ssi::setup_date_select( '/employee/iso/cars.html', 'issued_on_start', -30 );
 	ssi::setup_date_select( '/employee/iso/cars.html', 'issued_on_end', '' );
@@ -266,6 +311,7 @@ sub _car_view_part1 {
 		
 	} # end if btnFunction is Save
 } # end sub _car_view_part1
+
 sub _car_view_part2 {
 	$variable{CAR} = new openprint::CAR( $param{car_id} );
 	if ( $param{btnFunction} eq 'Save' ) {
@@ -276,6 +322,7 @@ sub _car_view_part2 {
 		} # end if
 	} # end if
 } # end sub _car_view_part2
+
 sub _car_view_part3 {
 	$variable{CAR} = new openprint::CAR( $param{car_id} );
 	if ( $param{btnFunction} eq 'Save' ) {
@@ -312,45 +359,60 @@ sub _car_edit_part4 {
 }
 
 sub pars {
-	if ( $param{btnFunction} eq 'Delete' ) {
-		foreach my $par_id ( ref $param{pars} eq 'ARRAY' ? @{$param{pars}} : $param{pars} ) {
-			my $PAR = new openprint::PAR( $par_id );
-			$variable{error} .= $PAR->delete();
-		} # end foreach par_id
-	} elsif ( $param{btnFunction} eq 'Download in CSV Format' ) {
-		my @header = ('Issued To','Issued On','Issued By','Reply By', 'Area','Reason','Problem','Cause','Action','Effectiveness', 
-'Part1 Recipient', 'Part1 Signed On', 'Part2 Recipient', 'Part2 Signed On', 'Part3 Recipient', 'Part3 Signed On', 'Part4 QS Mgt Rep/Designate', 'Part4 Signed On' );
-		my @data;
-		my %params = (
-				'issued_on >='   =>  sprintf('%.4d-%.2d-%.2d', @param{'StartYear','StartMonth','StartDay'} ),
-				'issued_on <=' =>  sprintf('%.4d-%.2d-%.2d', @param{ 'EndYear', 'EndMonth', 'EndDay'} ),
-		);
-		foreach my $PAR ( openprint::PAR->find(%params) ) {
-			push @data, (
-					new openprint::User($PAR->issued_to_id() )->name(),
-					$PAR->issued_on(),
-					new openprint::User($PAR->issued_by_id() )->name(),
-					$PAR->reply_by(),
-					$PAR->Area()->name(),
-					$PAR->Reason()->name(),
-					$PAR->problem(),
-					$PAR->cause(),
-					$PAR->action(),
-					$PAR->effectiveness(),
-					new openprint::User($PAR->part1_user_id())->name(),
-					$PAR->part1_signed_on(),
-					new openprint::User($PAR->part2_user_id())->name(),
-					$PAR->part2_signed_on(),
-					new openprint::User($PAR->part3_user_id())->name(),
-					$PAR->part3_signed_on(),
-					new openprint::User($PAR->part4_user_id())->name(),
-					$PAR->part4_signed_on(),
+	if ( $param{btnFunction} ) {
+		if ( $param{btnFunction} eq 'Delete' ) {
+			foreach my $PAR ( openprint::PAR->find(
+						( ref $param{pars} eq 'ARRAY' ? ( id=>$param{pars} ) : ( id=>$param{pars} ) )
+						) ) {
+				$variable{error} .= $PAR->delete();
+			} # end foreach PAR
+		} elsif ( $param{btnFunction} eq 'Download in CSV Format' ) {
+			my @header = ('Issued To','Issued On','Issued By','Reply By', 'Area','Reason','Problem','Cause','Action','Effectiveness', 
+					'Part1 Recipient', 'Part1 Signed On', 'Part2 Recipient', 'Part2 Signed On', 'Part3 Recipient', 'Part3 Signed On', 'Part4 QS Mgt Rep/Designate', 'Part4 Signed On' );
+			my @data;
+			my %params = (
+					ssi::date_filter( 'issued_on_start', 'issued_on >=', \%param ),
+					ssi::date_filter( 'issued_on_end', 'issued_on <=', \%param ),
 					);
+			my @PARs = openprint::PAR->find(%params);
+			if ( @PARs ) {
+				openprint::Company->find(id=>[ map { $$_{company_id} } @PARs ]);
+				openprint::User->find(id=>[ map { 
+						( $$_{issued_to_id} ? $$_{issued_to_id} : () ),
+						( $$_{issued_by_id} ? $$_{issued_by_id} : () ),
+						( $$_{part1_user_id} ? $$_{part1_user_id} : () ),
+						( $$_{part2_user_id} ? $$_{part2_user_id} : () ),
+						( $$_{part3_user_id} ? $$_{part3_user_id} : () ),
+						( $$_{part4_user_id} ? $$_{part4_user_id} : () ),
+						} @PARs ]);
+			}
+			foreach my $PAR ( @PARs ) {
+				push @data, (
+						new openprint::User($PAR->issued_to_id() )->name(),
+						$PAR->issued_on(),
+						new openprint::User($PAR->issued_by_id() )->name(),
+						$PAR->reply_by(),
+						$PAR->Area()->name(),
+						$PAR->Reason()->name(),
+						$PAR->problem(),
+						$PAR->cause(),
+						$PAR->action(),
+						$PAR->effectiveness(),
+						new openprint::User($PAR->part1_user_id())->name(),
+						$PAR->part1_signed_on(),
+						new openprint::User($PAR->part2_user_id())->name(),
+						$PAR->part2_signed_on(),
+						new openprint::User($PAR->part3_user_id())->name(),
+						$PAR->part3_signed_on(),
+						new openprint::User($PAR->part4_user_id())->name(),
+						$PAR->part4_signed_on(),
+						);
 
-		} # end foreach CAR
-		
-		misc::export_csv( $r, $log, \%variable, 'PARS.csv', \@header, \@data );
-	} # end if
+			} # end foreach CAR
+
+			misc::export_csv( $r, $log, \%variable, 'PARS.csv', \@header, \@data );
+		} # end if
+	} # end if btnFunction
 	ssi::setup_date_select( '/employee/iso/pars.html', 'issued_on_start', -365 );
 	ssi::setup_date_select( '/employee/iso/pars.html', 'issued_on_end', '' );
 	_par_results();

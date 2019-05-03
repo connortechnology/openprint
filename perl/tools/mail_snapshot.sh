@@ -19,9 +19,9 @@ CP=/bin/cp;
 TOUCH=/bin/touch;
 BACKUPS=3;
 
-USAGE="Usage: `/usr/bin/basename $0` [-hv] [-c arg] [ -n int] args"
+USAGE="Usage: `/usr/bin/basename $0` [-hTv] [-c arg] [ -n int] args"
 
-while getopts hvc:n: OPT; do
+while getopts hTvc:n: OPT; do
 	case "$OPT" in
 		h)
 			echo $USAGE
@@ -37,6 +37,9 @@ while getopts hvc:n: OPT; do
 		n)
 			BACKUPS=$OPTARG;
 			;;
+        T)
+            TIME="/usr/bin/time "
+            ;;
 		\?)
 			# getopts issues an error message
 			echo $USAGE >&2
@@ -75,6 +78,6 @@ while (( "$BACKUPS" > "0" )) ; do
 done
 
 #echo "$CP -al $2.0 $2.1"
-$CP -al "$1" "$2.0"
+$TIME$CP -al "$1" "$2.0"
 # step 5: update the mtime of hourly.0 to reflect the snapshot time
 $TOUCH "$2.0"

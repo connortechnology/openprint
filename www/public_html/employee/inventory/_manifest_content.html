@@ -34,7 +34,7 @@ if ( tr ) tr.remove();
 			$$C{FixStockOnSkid} = 1;
 		} # end if
 
-		$variable{location_dropdown} = openprint::Location->dropdown(order=>'parent_id NULLS FIRST, lower(name)', type=>'place') if ! exists $variable{location_dropdown};
+		$variable{location_dropdown} = openprint::Location->dropdown(company_id=>$openprint::Owner->id(), order=>'parent_id NULLS FIRST, lower(name)', type=>'place') if ! exists $variable{location_dropdown};
 
 		my $id = $$variable{type_id}.'-'.$$C{id};
 		$html .= '<tr id="tr-'.$$C{id}.'" title="'.$$C{id}.'">';

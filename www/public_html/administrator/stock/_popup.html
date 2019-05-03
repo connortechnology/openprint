@@ -54,9 +54,9 @@
 		</ul>
 	</fieldset>
 	<fieldset><legend><input type="radio" id="modeother" name="mode" value="other" /> Other</legend>
-		<ul><li><label>Score required</label>
-		<?echo( radio('score_required', ['1','Yes','0','No','','Unchanged'] ); ) ?>
-			</li>
+		<ul>
+			<li><label>Score required</label> <?echo( radio('score_required', ['1','Yes','0','No','','Unchanged'], { onclick=>q`$('modeother').checked=true;` } ); ) ?> </li>
+			<li><label>New GSM</label> <?echo(input(type=>'float', name=>'gsm', oninput=>q`$('modeother').checked=true;` ); ) ?> </li>
 		</ul>
 	</fieldset>
 	<p class="buttons">

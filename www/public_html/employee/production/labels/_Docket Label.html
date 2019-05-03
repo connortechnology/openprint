@@ -15,9 +15,15 @@
 	foreach my $Project ( @{$$variable{Projects}} ) {
 		
 		my $services = $Project->services();
-		push @operators, sql::execute( undef, undef, q{SELECT operator_id FROM tbl_Project_Contents WHERE lngProjectIndex=? AND lngserviceindex=?}, $Project->id(), $$services{Proofs} ? $$services{Proofs}[0] : $$services{FilmStripping}[0] );
+		my $Service = $Project->Service( $$services{Proofs} ? $$services{Proofs}[0] : $$services{FilmStripping}[0]  );
+		
+		my $Role = openprint::Operator_Role->find_one( servicetype_id=>$$Service{servicetype_id}, name=>'Imposition Operator' );
+		$Role = openprint::Operator_Role->find_one( servicetype_id=>$$Service{servicetype_id} ) if ! $Role;
+		$Role = openprint::Operator_Role->find_one( servicetype_id=>undef ) if ! $Role;
+	
+		push @operators, openprint::Project_Service_Operator->find( role_id=>$$Role{id}, service_id=>$$Service{service_id} );
 	} # end foreach Project
-	@{$$variable{Operators}} = map { new openprint::User($_) } sets::union( @operators );
+	@{$$variable{Operators}} = @operators ? (map { $_->User() } @operators) : ( $openprint::User ) ;
 	} # end if
 ) ?>
 <?include(/includes/error_reporting.html)?>

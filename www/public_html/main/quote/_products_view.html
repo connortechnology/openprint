@@ -18,15 +18,16 @@
 			my $subtotal = 0;
 			foreach my $Product ( $$variable{'Quote'}->Products() ) {
 				$html .= sprintf('<tr%1$s>
-									<td class="thumbnail">%8$s</td>
+									<td class="thumbnail">%9$s</td>
 									<td class="description">%3$s</td>
 									<td class="quantity">%4$s</td>
-									<td class="price">%5$s</td>
-									<td class="markup">%6$s</td>
-									<td class="newprice">%7$s</td>
-									</tr>', $rowclass, $Product->id(), $Product->name() . ' ' . $Product->description() . ( $Product->description() ? '<br/>'.$Product->comments() : $Product->comments() ), 
+									<td class="price">%5$s%6$s</td>
+									<td class="markup">%7$s</td>
+									<td class="newprice">%8$s</td>
+									</tr>', $rowclass, $Product->id(), $Product->name() . ($Product->description() ne $Product->name() ? ' ' . $Product->description() : '' ) . ( $Product->description() ? '<br/>'.$Product->comments() : $Product->comments() ), 
 									Number::Format::format_number($Product->quantity()), 
 									openprint::Currency::format( $Product->cost() ), 
+                  $Product->units(),
 									1*$Product->markup().'%', 
 									openprint::Currency::format( $Product->price() ),
 						$Product->Product()->thumbnail_html(),

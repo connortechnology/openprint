@@ -2,6 +2,11 @@
 	$$variable{Project} = new openprint::Project( $$variable{'ProjectIndex'} ) if ! $$variable{Project};
 ) ?>
 <div class="Header">
+<? if ( $session{user_type} eq 'A' or $openprint::User->in_Group('Accounting') ) ?>
+<? if ( $$variable{Project}->Order()->do_not_pay_commission() ) ?>
+					<h1 class="error">Do Not Pay Commission</h1>
+<? endif ( $$variable{Project}->Order()->do_not_pay_commission() ) ?>
+<? endif ( $session{user_type} eq 'A' or $openprint::User->in_Group('Accounting') ) ?>
 	<div class="ProjectInformation">
 		<fieldset><legend>Project Information</legend>
 			<div class="content">
@@ -76,12 +81,23 @@
 						</li>
 						<? endif ( $$variable{Project}->requested_date() ) ?>
 					<? endif ( $$variable{Project}->due_date() ) ?>
-					<? if ( $$variable{Project}->Operator()->id() ) ?>
-					<li>
-						<label>Prepress Operator</label>
-						<? echo ( $$variable{Project}->Operator()->name() ) ?>
-					</li>
-					<? endif ( $$variable{Project}->Operator()->id() ) ?>
+<? echo (
+	my $services = $$variable{Project}->services();
+	my $ProofsService = $$variable{Project}->Service( $$services{Proofs} ? $$services{Proofs}[0] : $$services{FilmStripping}[0] );
+
+
+  my @Roles = openprint::Operator_Role->find( servicetype_id=>$ProofsService->servicetype_id(), order=>'sorting, lower(name)' );
+  if ( ! @Roles ) {
+    @Roles = openprint::Operator_Role->find( servicetype_id=>undef, order=>'lower(name)' );
+  }
+  my %Operators = map { $$_{role_id}, $_ } openprint::Project_Service_Operator->find( service_id=>$$ProofsService{service_id} );
+
+	my @operator_ids = sets::union( map { $Operators{$$_{id}}{user_id} } @Roles );
+	return 
+	'<li><label>Prepress Operator'.(@operator_ids!=1?'s':'').'</label>'.
+	join(', ', map { new openprint::User($_)->link_to() } @operator_ids ).
+	'</li>';
+) ?>
 					<? endif ( $$variable{Project}->docket() ) ?>
 					<? if ( $$variable{Project}->predefined() and $session{'user_type'} eq 'A' ) ?>
 					<li>
@@ -96,7 +112,10 @@
 					</li>
 					<? endif ( $$variable{Project}->predefined() and $session{'user_type'} eq 'A' ) ?>
 					<? if ( $$variable{Project}->reprint() and $$variable{Project}->reprint() ne 'N' ) ?>
-					<li><label>Reprint Reason</label><? echo ( $$variable{Project}->reprint_reason() ) ?></li>
+					<li class="reprint"><label>Reprint Reason</label>
+					<? echo ( $$variable{Project}->reprint_reason() ) ?>
+					<br/><? echo ( $$variable{Project}->reprint_description() ) ?>
+					</li>
 					<? endif ( $$variable{Project}->reprint() and $$variable{Project}->reprint() ne 'N' ) ?>
 				</ul>
 			</div>
@@ -139,7 +158,7 @@
 	<div class="Description">
 		<fieldset><legend>Description</legend>
 			<div class="content">
-				<ul><li>
+				<ul><li id="summary">
 			<? echo ( $$variable{Project}->summary() ) ?>
 				</li></ul>
 			</div>
@@ -148,7 +167,7 @@
 	<div class="Reference">
 		<fieldset><legend>Reference</legend>
 			<div class="content">
-				<ul><li>
+				<ul><li id="reference">
 			<? echo ( $$variable{Project}->reference(); ) ?>
 				</li></ul>
 			</div>
@@ -159,7 +178,7 @@
 		<fieldset><legend>Comments</legend>
 			<div class="content">
 				<ul><li>
-			<? hecho ( $$variable{Project}->comments(); ) ?>
+			<? echo ( $$variable{Project}->comments(); ) ?>
 				</li></ul>
 			</div>
 		</fieldset>

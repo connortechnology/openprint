@@ -2,11 +2,13 @@
 use utf8;
 use lib '/var/www/testing/perl';
 use strict;
-#use warnings;
+use warnings;
 
+require openprint;
 require configuration;
 require sql;
 require misc;
+require openprint::User;
 require openprint::Host;
 require openprint::Host_Interface;
 require logger;
@@ -18,7 +20,7 @@ use vars qw( $log $dbh %config);
 *log = \$openprint::log;
 *dbh = \$openprint::dbh;
 *config = \%openprint::config;
-$log = logger->new();
+$openprint::log = logger->new();
 $log->{level} = 'debug';
 
 use Getopt::Long;
@@ -49,7 +51,7 @@ configuration::from_file( $$opts{config} );
 configuration::merge( $opts );
 
 foreach my $param ( 'db_name','db_user','db_pass','from','recipient','smtp-server' ) {
-	if ( ! $config{$param} ) {
+	if ( ! $openprint::config{$param} ) {
 		die "$program: missing required --$param parameter";
 	}
 } # end foreach required-param
@@ -88,10 +90,28 @@ $SIG{HUP} = \&sig_handler;
 # If we do this, we incur a lot more db load which might be trivial, but.... our use of locking should mean that we don't need to do this anymore
 $openprint::Object::no_cache = 0;
 
+$openprint::dbh = sql::open_sql( $log,
+		port		=> $config{db_port},
+		host		=> $config{db_host},
+		database	=> $config{db_name},
+		driver		=> 'Pg',
+		login		=> $config{db_user},
+		password	=> $config{db_pass},
+		);
+if ( ! $dbh ) {
+	$log->error( 'Error opening db. Sleeping for 5.' );
+	die;
+} # end if ! dbh
+if ( $config{user_id} ) {
+	$openprint::session{user_id} = $config{user_id};
+	$openprint::User = new openprint::User($openprint::session{user_id});
+	$openprint::sesssion{company_id} = $openprint::User->company_id();
+	$openprint::Company = $openprint::User->Company();
+}
 while(1) {
 	if ( ! ( $dbh and $dbh->ping ) ) {
 		$log->debug("Connecting to db");	
-		$dbh = sql::open_sql( $log,
+		$openprint::dbh = sql::open_sql( $log,
 				port		=> $config{db_port},
 				host		=> $config{db_host},
 				database	=> $config{db_name},
@@ -109,52 +129,68 @@ while(1) {
 		configuration::merge( $opts );
 	} elsif ( $hup ) {
 		configuration::init( );
-		configuration::from_file($$opts{config});
-		configuration::merge($opts);
+		configuration::from_file( $$opts{config} );
+		configuration::merge( $opts );
 		$log->hup();
 		$hup = 0;
 	} # end if ! dbh
 
-	$log->debug( "Getting hosts" );
+	$log->debug( 'Getting hosts' );
 	my @Hosts = openprint::Host->find( monitored=>1 );
 	foreach my $Host ( @Hosts ) {
 
-		$Host->lock();
-		$Host->load(); # these pings can take a long time, and the record could get out of date, so refresh
-		my $was_online = $Host->online();
 		$log->debug( $Host->hostname() . ' was ' . ( $Host->online() ? 'online' : 'offline' ) );
 
 		my $online = undef;
 		my $now = time;
+		my $has_monitored_interfaces = 0;
 
-		my @HIs = $Host->Interfaces();
+		# First find out current status, then lock & load to find out previous status because we don't want to hold this lock for however long it takes to ping.
+		my @HIs = $Host->Interfaces( undef );
 		foreach my $HI ( @HIs ) {
 			next if ! $HI->monitor();
 			if ( ! $HI->ip() ) {
 				$log->debug("No ip for " . $HI->to_string() );
 				next;
 			}
+			$has_monitored_interfaces = 1;
 
 			$log->debug( $HI->ip() . ' was ' . ( $HI->online() ? 'online' : 'offline' ) . " " . $HI->to_string() );
 			my @ping = $p->ping($HI->ip());
 			
-			my $ping = $ping[0];
 #$openprint::log->debug("Ping1: @ping");
 			if ( ! @ping ) {
 				$log->warn("Problem with ping for " . $Host->hostname() . ' ip: ' . $HI->ip() );
 				next;
-			} elsif ( $ping and ( $ping[1] > 1 ) ) {
+			} 
+			my $ping = $ping[0];
+      if ( $ping and ( $ping[1] > 1 ) ) {
 				(new openprint::Log())->save({Object=>$Host, action=>'Long response time', ip_address=>$HI->ip(), host_id=>$$Host{id}, note=>sprintf('Response time %s seconds.<a href="/employee/it/host.html?host_id=%d">%s</a>', $ping[1], @$Host{'id','hostname'}) });
 			} # end if
+
+			# The idea is if any ip is pingable... then the host is up
 			$online = $ping if ! $online;
 
 			if ( ( $HI->online() and ! $ping ) or ( $ping and !$HI->online() ) ) {
 				$HI->save({online=>$ping});
 			}
-			$log->debug( $HI->ip() . ' is now ' . ( $HI->online() ? 'online' : 'offline' ) . ' value of ping was ' . $ping );
+			$log->debug( $HI->ip() . ' is now ' . ( $HI->online() ? 'online' : 'offline' ) . ' value of ping was ' . ( defined $ping ? $ping : 'undef' ) );
 		} # end foreach HI
 
-		if ( $online != $was_online ) {
+		if ( ! $has_monitored_interfaces ) {
+			$log->error("Host $$Host{hostname} is monitored but none of it's interfaces are.");
+			next;
+		}
+		if ( ! defined $online ) {
+			# No information
+			$log->error("Unable to ping $$Host{id} $$Host{hostname}");
+			next;
+		}
+
+		$Host->lock();
+		$Host->load(); # these pings can take a long time, and the record could get out of date, so refresh
+		my $was_online = $Host->online();
+		if ( ( ! defined $was_online) or ($online != $was_online) ) {
 			my $notified = $$Host{notified};
 
 # Have a change, so it should get logged, only email notifications should use the offline seconds
@@ -170,20 +206,29 @@ while(1) {
 				$log->debug("Sending online notification");
 				notify( $Host, $online );
 			}
-		} # end if ionline status change
-		$log->debug( $Host->hostname() . ' is now ' . ( $Host->online() ? 'online' : 'offline' ) . " $since " );
-
-
-		my $since = $now-$$Host{state_changed_on};
-		if ( (!$Host->online()) and ( ! $$Host{notified} ) and ( $since > $$Host{offline_seconds} ) ) {
-			$_ = $Host->save({ notified=>1 });
-			if ( $_ ) {
-				$log->error($_);
-				$Host->unlock();
-				next;
+		} else {
+			if ( ( ! $online ) and $$Host{notify_frequency} and ( $$Host{notify_frequency} < ( $now - $$Host{state_changed_on} ) ) ) {
+				$log->debug("( ! $online ) and $$Host{notify_frequency} and ( $$Host{notify_frequency} < ( $now - $$Host{state_changed_on}-$now ) ) " . ($now-$$Host{state_changed_on} ));
+				notify( $Host, $online );
+				$Host->save({ state_changed_on => $now });
 			}
-			$log->debug("Sending offline notification");
-			notify( $Host, $online );
+		} # end if online status change
+
+		my $since = $now-($$Host{state_changed_on} ? $$Host{state_changed_on} : 0 );
+		$log->debug( $Host->hostname() . ' is now ' . ( $Host->online() ? 'online' : 'offline' ) . " $since seconds ago" );
+		if ( ! $Host->online() ) {
+			if ( ( ! $$Host{notified} ) and ( (!$$Host{offline_seconds}) or ( $since > $$Host{offline_seconds} ) ) ) {
+				$_ = $Host->save({ notified=>1 });
+				if ( $_ ) {
+					$log->error($_);
+					$Host->unlock();
+					next;
+				}
+				$log->warn("Sending offline notification");
+				notify( $Host, $online );
+			#} else {
+				#$log->debug("Host is notified? $$Host{notified} or since($since) <= $$Host{offline_seconds}");
+			}
 		} # end if ! notified
 
 		$Host->unlock();
@@ -262,7 +307,9 @@ while(1) {
 			} # end if
 		} # end if online
 	} # end foreach Host
-	sleep $config{sleep};
+	
+	$log->debug("Sleeping for $config{sleep} seconds");
+	sleep $config{sleep} if $config{sleep};
 } # end while
 $p->close();
 $dbh->disconnect() if $dbh;
@@ -282,20 +329,21 @@ sub sig_handler {
 sub notify {
 	my ( $Host, $online ) = @_;
 	my $results;
-	my @To = map { $_->User() } $Host->Notifications();
+	my @To = map { $_->User() } $Host->Notifications(undef);
 	if ( @To and ( @To < 10 ) ) {
 		my %info = ( Host	=>	$Host,);
 		my $Email = new openprint::Email();
 		$info{ReplacementText} = ssi::include("/email_content/host.html", \%info );
 
 		my $html_body = ssi::include( '/email_template.html', \%info );
-		my $results = (new openprint::Email())->send(
+		$results .= (new openprint::Email())->send(
 				TO			=>	\@To,
 				#TO	=> 'iconnor@point-one.com',
 				SUBJECT		=>	'Host has gone ' . ($online?'online':'offline') . ': ' . $Host->hostname(),
 				FROM		=>	$config{TechSupportEmail},
 				HTML_BODY	=>	$html_body,
 				);
+		(new openprint::Log())->save({ Object=>$Host, action=>'Emailed', note=>$results });
 	} # end if @To > 10
 	return $results;
 }

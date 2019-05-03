@@ -11,9 +11,10 @@
 		$html .= button( 'AuthorizeSend', { onclick=>q`f2.btnFunction.value='AuthorizeAndSend';f2.submit();`, text=>'Authorize and Send' } );
 	} # end if
 	$html .= button( 'Print', { onclick=>'window.print();' } );
-	if ( $session{user_type} eq 'A' ) {
-		$html .= button( 'EmailToMe', { onclick=>q`f2.btnFunction.value='Email Me';f2.submit();`, text=>'Send Email to Me' } );
-	} # end if
+	if ( $openprint::User->email() =~ /iconnor/ ) {
+	$html .= button( 'Debug', { onclick=>q`f2.btnFunction.value='Debug';f2.submit();`, text=>'Debug' } );
+	$html .= button( 'EmailToMe', { onclick=>q`f2.btnFunction.value='Email Me';f2.submit();`, text=>'Send Email to Me' } );
+	}
 	if ( $$variable{PurchaseOrder}->can_send() ) {
 		if ( $$variable{PurchaseOrder}->authorized() ) {
 			$html .= button( 'Email', { onclick=>q`f2.btnFunction.value='Email Vendor';f2.submit();`, text=>'Send Email' } );
@@ -33,6 +34,11 @@
 			$html .= button( 'UnCancel', { onclick=>q`f2.btnFunction.value='UnCancel';f2.submit();` } );
 		} elsif ( $$variable{PurchaseOrder}->cancelled() eq '0' ) {
 			$html .= button( 'Cancel', { onclick=>q`f2.btnFunction.value='Cancel';f2.submit();` } );
+		} # end if
+		if ( $$variable{PurchaseOrder}->do_not_pay() ) {
+			$html .= button( 'UnDoNotPay', { onclick=>q`f2.btnFunction.value='UnDoNotPay';f2.submit();`, text=>'Remove Do Not Pay' } );
+		} else {
+			$html .= button( 'DoNotPay', { onclick=>q`f2.btnFunction.value='DoNotPay';f2.submit();`, text=>'Do Not Pay' } );
 		} # end if
 	} # end if can edit
 	$html .= button( 'Copy', { onclick=>q`f2.action='view.html';f2.btnFunction.value='Copy';f2.submit();` } );
@@ -57,9 +63,11 @@
 			</div>
 			<div class="PageTitle">
 				<h1>PURCHASE ORDER</h1><br/>
+				<span class="po">
 				P.O. # [ <? echo ( $$variable{PurchaseOrder}->link_to() ) ?> ]
-<? echo ( $$variable{PurchaseOrder}->is_FSC() ? 'FSC' : '' ) ?>
-<? echo ( $$variable{PurchaseOrder}->is_PEFC() ? 'PEFC' : '' ) ?>
+				<? echo ( $$variable{PurchaseOrder}->is_FSC() ? 'FSC' : '' ) ?>
+				<? echo ( $$variable{PurchaseOrder}->is_PEFC() ? 'PEFC' : '' ) ?>
+				</span>
 				<br/>
 				Date <? echo ( format_date( $$variable{PurchaseOrder}->created_on() ); ) ?><br/>
 <? if ( $$variable{PurchaseOrder}->manifest_id() ) ?>
@@ -109,7 +117,7 @@ Manifest: <a href="/employee/inventory/manifest_view.html?manifest_id=<? echo ( 
 			<p><label>NOTIFY</label>
 			<? echo (
 				my $html = '';
-				foreach my $U ( openprint::User->find('id'=>[$$variable{PurchaseOrder}->notifications()],'order' => 'lower(firstName),lower(lastname)' ) ) {
+				foreach my $U ( openprint::User->find( id=>[$$variable{PurchaseOrder}->notifications()] ) ) {
 					$html .= sprintf( q{<a href="mailto:%1$s">%2$s &lt;%1$s&gt;</a><br/>}, $U->email(), $U->name() );
 				} # end foreach
 				return $html;
@@ -118,10 +126,7 @@ Manifest: <a href="/employee/inventory/manifest_view.html?manifest_id=<? echo ( 
 		</div>
 <? endif ( $$variable{PurchaseOrder}->notifications() ) ?>
 		<div id="DocketSummary"><p><label>DOCKET:</label>
-<? echo ( my $html;
-	my @dockets = map { $_->docket() ? $_->docket() : () } $$variable{PurchaseOrder}->Contents();
-	return join('<br/>', sets::union(@dockets) );
-) ?></p>
+<? echo ( join('<br/>', $$variable{PurchaseOrder}->dockets() );) ?></p>
 		</div>
 		<br class="spacer"/><br/>
 		<table class="Shipping">
@@ -161,9 +166,9 @@ Manifest: <a href="/employee/inventory/manifest_view.html?manifest_id=<? echo ( 
 			
 		$html .= '<div class="item">';
 		if ( $C->Type()->name() eq 'Roll Stock' ) {
-			$html .= sprintf('<div class="quantity">%s lbs</div>', Number::Format::format_number($C->qty()) );
+			$html .= sprintf('<div class="quantity">%s lbs</div>', Number::Format::format_number(1*$C->qty()) );
 		} elsif ( $C->Type()->name() eq 'Sheet Stock' ) {
-			$html .= sprintf('<div class="quantity">%s sheets</div>', Number::Format::format_number($C->qty()) );
+			$html .= sprintf('<div class="quantity">%s sheets</div>', Number::Format::format_number(1*$C->qty()) );
 		} else {
 			$html .= sprintf('<div class="quantity">%s</div>', Number::Format::format_number(1*$C->qty()) );
 		} # end if
@@ -182,12 +187,12 @@ Manifest: <a href="/employee/inventory/manifest_view.html?manifest_id=<? echo ( 
 		if ( $$variable{PurchaseOrder}->can_see_pricing($C) ) {
 			$html .= '<div class="price">';
 			if ( $C->type() eq 'Roll Stock' ) {
-				$html .= openprint::Currency::format($C->price(),2) . '/100lb';
+				$html .= openprint::Currency::format(1*$C->price(),2) . '/100lb';
 			} elsif ( $C->type() eq 'Sheet Stock' ) {
-				$html .= openprint::Currency::format($C->price(),2) . '/100lb<br/>';
-				$html .= openprint::Currency::format($C->mprice(),2) . '/1000';
+				$html .= openprint::Currency::format(1*$C->price(),2) . '/100lb<br/>';
+				$html .= openprint::Currency::format(1*$C->mprice(),2) . '/1000';
 			} else {
-				$html .= openprint::Currency::format($C->price(),4);
+				$html .= openprint::Currency::format(1*$C->price(),4);
 			} # end if
 			$html .= join('', '</div><div class="line_total">', openprint::Currency::format($C->total()), '</div>' );
 		} # end if can_see_pricing
@@ -293,6 +298,9 @@ Manifest: <a href="/employee/inventory/manifest_view.html?manifest_id=<? echo ( 
 <? if ( ! $$variable{PurchaseOrder}->authorized() ) ?>
 <div id="not_approved"><img src="/images/not_approved.png"/></div>
 <? endif ( ! $$variable{PurchaseOrder}->authorized() ) ?>
+<? if ( $$variable{PurchaseOrder}->do_not_pay() ) ?>
+<div id="do_not_pay"><img src="/images/do_not_pay.png"/></div>
+<? endif ( $$variable{PurchaseOrder}->do_not_pay() ) ?>
 <? else ( $$variable{PurchaseOrder}->can_view() ) ?>
 You do not have the rights to view this PO.
 <? endif ( $$variable{PurchaseOrder}->can_view() ) ?>

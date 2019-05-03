@@ -18,55 +18,55 @@ $debug = 0;
 $default_sort	=	'lower(firstname),lower(lastname)';
 
 %fields = (
-	'id'				=>	'id',
-	'company_id'		=>	'company_id',
-	'salutation'		=>	'salutation',
-	'title'				=>	'title',
-	'firstname'			=>	'firstname',
-	'lastname'			=>	'lastname',
-	'email'				=>	'email',
+	id							=>	'id',
+	company_id			=>	'company_id',
+	salutation			=>	'salutation',
+	title						=>	'title',
+	firstname				=>	'firstname',
+	lastname				=>	'lastname',
+	email						=>	'email',
 	email_valid			=>	'email_valid',
-	'phone'				=>	'phone',
-	'extension'			=>	'extension',
-	'mobile'			=>	'mobile',
-	'sms'				=>	'sms',
-	'fax'				=>	'fax',
-	'mailinglist'		=>	'ysnmailinglist',
-	'greeting'			=>	'greeting',
-	'created_on'		=>	'created_on',
-	'updated_on'		=>	'updated_on',
-	'type'				=>	'type',
-	'change_password'	=>	'ysnchangepassword',
-	'password_changed_on'	=>	'password_changed_on',
-	'commission'		=>	'dblcommission',
-	'wage'				=>	'wage',
-	'administrator'		=>	'ysnadministrator',
-	'password',			=>	'password',
-	'ftp_active'		=>	'ftp_active',
-	ftp_root			=>	'ftp_root',
-	'web_active'		=>	'web_active',
-	'howdidyouhearaboutus'	=>	'howdidyouhearaboutus',
-	'howdidyouhearaboutusother'	=>	'howdidyouhearaboutusother',
-	'quote_level'		=>	'quote_level',
-	'email_quotes_to_myself'        =>      'email_quotes_to_myself',
-	'purchasing_limit'	=>	'purchasing_limit',
-	'purchasing_total_limit'	=>	'purchasing_total_limit',
-	'notes'				=>	'notes',
-	'asset_id'			=>	'asset_id',
-	'deleted'			=>	'deleted',
-	last_Logged_in		=>	undef,
+	phone						=>	'phone',
+	extension				=>	'extension',
+	mobile					=>	'mobile',
+	sms							=>	'sms',
+	fax							=>	'fax',
+	mailinglist			=>	'ysnmailinglist',
+	greeting				=>	'greeting',
+	created_on			=>	'created_on',
+	updated_on			=>	'updated_on',
+	type						=>	'type',
+	change_password	=>	'ysnchangepassword',
+	password_changed_on	=>	'password_changed_on',
+	commission			=>	'dblcommission',
+	wage						=>	'wage',
+	administrator		=>	'ysnadministrator',
+	password				=>	'password',
+	ftp_active			=>	'ftp_active',
+	ftp_root				=>	'ftp_root',
+	web_active			=>	'web_active',
+	howdidyouhearaboutus	=>	'howdidyouhearaboutus',
+	howdidyouhearaboutusother	=>	'howdidyouhearaboutusother',
+	quote_level				=>	'quote_level',
+	email_quotes_to_myself        =>      'email_quotes_to_myself',
+	purchasing_limit	=>	'purchasing_limit',
+	purchasing_total_limit	=>	'purchasing_total_limit',
+	notes							=>	'notes',
+	asset_id					=>	'asset_id',
+	deleted						=>	'deleted',
+	last_logged_in		=>	undef,
 ); # end %fields
 %find_fields = (
-	'name'	=>	q`firstname || ' ' || lastname`,
-	'usergroup_id'	=>	'(SELECT usergroup_id FROM users_in_usergroups WHERE user_id=users.id)',
-	'usergroup'		=>	'(SELECT name from usergroups WHERE id IN (SELECT usergroup_id FROM users_in_usergroups WHERE user_id=users.id))',
-	'last_online'	=>	'(SELECT MAX(date_time) FROM logs WHERE user_id=users.id)',
-	'profile_field'	=>	'(SELECT value FROM User_Profiles WHERE user_id=users.id AND field_id=?)',
+	name	=>	q`firstname || ' ' || lastname`,
+	usergroup_id	=>	'(SELECT usergroup_id FROM users_in_usergroups WHERE user_id=users.id)',
+	usergroup		=>	'(SELECT name from usergroups WHERE id IN (SELECT usergroup_id FROM users_in_usergroups WHERE user_id=users.id))',
+	last_online	=>	'(SELECT MAX(date_time) FROM logs WHERE user_id=users.id)',
+	profile_field	=>	'(SELECT value FROM User_Profiles WHERE user_id=users.id AND field_id=?)',
 	company_deleted	=>	'(SELECT deleted FROM Companies WHERE Companies.id=company_id)',
 );
 
 %transforms = (
-	id				=>	[ 's/\D//g' ],
+	id				=>	[ 's/\D//g', '<2147483647' ],
 	company_id		=>	[ 's/\D//g' ],
 	commission		=>	[ 's/[^\d\.\-]//g' ],
 	wage				=>	[ 's/[^\d\.]//g' ],
@@ -165,14 +165,14 @@ sub destroy {
 	my $ac = sql::start_transaction( $dbh );
 	sql::execute( undef, undef, 'DELETE FROM Users_in_Marketing_Categories WHERE User_Id=?', $$self{id} );
 
-	foreach my $Quote ( openprint::Quote->find('user_id'=>$$self{id}) ) {
+	foreach my $Quote ( openprint::Quote->find(user_id=>$$self{id}) ) {
 		$Quote->delete();
 	} # end foreach
-	foreach my $Order ( openprint::Order->find('user_id'=>$$self{id}) ) {
+	foreach my $Order ( openprint::Order->find(user_id=>$$self{id}) ) {
 		$Order->delete();
 	} # end foreach
 	sql::update( undef, undef, 'order_log', ['user_id=?',$$self{id}], 'user_id', undef );
-	foreach my $Project ( openprint::Project->find('user_id'=>$$self{id}) ) {
+	foreach my $Project ( openprint::Project->find(user_id=>$$self{id}) ) {
 		$Project->delete();
 	} # end foreach
 	sql::execute( $log, $dbh, 'DELETE FROM users_in_usergroups WHERE user_id=?', $$self{id} );
@@ -203,8 +203,12 @@ sub next {
 	my $self = shift;
 	my %params = @_;
 
-	my $sql = 'SELECT MIN(firstname) FROM users WHERE firstname > ?';
+	my $sql = 'SELECT id, firstname FROM users WHERE firstname >= ? AND deleted != true';
 	my @values = ( $$self{firstname} );
+	if ( $$self{id} ) {
+		$sql .= ' AND id!=?';
+		push @values, $$self{id};
+	}
 	if ( $params{company_id} ) {
 		$sql .= ' AND company_id=?';
 		push @values, $params{company_id};
@@ -214,7 +218,7 @@ sub next {
 		push @values, $params{type};
 	} # end if
 
-	$sql = qq{SELECT id FROM users WHERE firstname = ($sql)};
+	$sql .= ' ORDER BY firstname ASC LIMIT 1';
 	( $_ ) = sql::execute( $log, $dbh, $sql, @values );
 	return $_;
 }
@@ -227,8 +231,12 @@ sub prev {
 	my $self = shift;
 	my %params = @_;
 
-	my $sql = 'SELECT MAX(FirstName) FROM Users WHERE FirstName < ?';
+	my $sql = 'SELECT id, firstname FROM Users WHERE firstname <= ? AND deleted != true';
 	my @values = ( $$self{firstname} );
+	if ( $$self{id} ) {
+		$sql .= ' AND id!=?';
+		push @values, $$self{id};
+	}
 	if ( $params{company_id} ) {
 		$sql .= ' AND company_id=?';
 		push @values, $params{company_id};
@@ -238,7 +246,7 @@ sub prev {
 		push @values, $params{type};
 	} # end if
 
-	$sql = qq{SELECT id FROM Users WHERE FirstName = ($sql)};
+	$sql .= ' ORDER BY firstname DESC LIMIT 1';
 	( $_ ) = sql::execute( $log, $dbh, $sql, @values );
 	return $_;
 }
@@ -321,11 +329,18 @@ sub csr_ids {
 	return @{$$self{csr_ids}};
 } # end sub
 
+sub in_Group {
+	my $self = shift;
+	my @Results;
+	return sets::intersection( @_, map { $$_{name} } $self->Groups() );
+}
+
 sub Groups {
-	require openprint::UserGroup;
-	if ( $_[0]{id} ) {
-		return openprint::UserGroup->find('user_id any'=>$_[0]{id} );
+	if ( $_[0]{id} and ! $_[0]{Groups} ) {
+		require openprint::UserGroup;
+		$_[0]{Groups} = [ openprint::UserGroup->find('user_id any'=>$_[0]{id} ) ];
 	} # end if
+	return @{$_[0]{Groups}} if $_[0]{Groups};
 	return ();
 } # end sub Groups
 
@@ -345,6 +360,16 @@ sub Notifications {
 	
 	return @{$$self{Notifications}};
 } # end sub Notifications
+
+sub notification {
+	my ( $self, $type ) = @_;
+	foreach my $Notification ( $self->Notifications() ) {
+		if ( $Notification->type() eq $type ) {
+			return $Notification->value();
+		}
+	}
+	return;
+}
 
 sub purchasing_total {
 	require openprint::PurchaseOrder;
@@ -385,14 +410,14 @@ sub Asset {
 		} else {
 			if ( $_[0]->Profile()->Gender() ) {
 				#$openprint::log->debug("Loading by gender");
-				$_[0]{Asset} = openprint::Asset->find_one('name'=>'Default Profile ' . $_[0]->Profile()->Gender() );
+				$_[0]{Asset} = openprint::Asset->find_one(name=>'Default Profile ' . $_[0]->Profile()->Gender() );
 			} # end if
 			if ( ! $_[0]{Asset} ) {
 				#$openprint::log->debug("Loading by default");
-				$_[0]{Asset} = openprint::Asset->find_one('name'=>'Default Profile' );
+				$_[0]{Asset} = openprint::Asset->find_one(name=>'Default Profile' );
 			} # end if
 			if ( $_[0]{id} ) {
-				my @Albums = openprint::Photo_Album->find('user_id'=>$_[0]{id});
+				my @Albums = openprint::Photo_Album->find(user_id=>$_[0]{id});
 				foreach my $Album ( @Albums ) {
 					my @Photos = $Album->Photos();
 					if ( @Photos ) {
@@ -439,8 +464,17 @@ sub link {
 } # end sub link
 
 sub link_to {
-    return sprintf('<a href="/account/view.html?user_id=%1$d">%2$s</a>', $_[0]{id}, @_ > 1 ? $_[1] : $_[0]->name() );
+	my $self = shift;
+	my $content = ( @_ ? shift @_ : $self->name() );
+	my %options = ref $_[0] eq 'HASH' ? %{$_[0]} : @_;
+
+	return sprintf('<a href="/account/view.html?user_id=%1$d"%3$s>%2$s</a>', 
+			$$self{id},
+			$content,
+			( %options ? join(' ', '', map { $_.'="'.$options{$_}.'"' } keys %options ) : '' ),
+			);
 } # end sub link_to
+
 sub admin_link_to {
     return sprintf('<a href="/administrator/managerial/user_profiles.html?user_id=%1$d">%2$s</a>', $_[0]{id}, @_ > 1 ? $_[1] : $_[0]->name() );
 } # end sub admin_link_to
@@ -495,15 +529,15 @@ sub html {
 } # end sub html
 
 sub last_logged_in {
-	if ( (! $_[0]{last_logged_on} ) and $_[0]{id} ) {
+	if ( (! $_[0]{last_logged_in} ) and $_[0]{id} ) {
 		# Almost any entry means we were logged in.  
-		my $Log = openprint::Log->find_one(user_id=>$_[0]{id},'order'=>'date_time DESC');
+		my $Log = openprint::Log->find_one(user_id=>$_[0]{id}, action=>'Login', order=>'date_time DESC');
 		if ( $Log ) {
 #$openprint::log->debug("last_Logged_in: " . $Log->to_string() );
-			$_[0]{last_logged_on} = $$Log{date_time};
+			$_[0]{last_logged_in} = $$Log{date_time};
 		} # end if
 	}
-	return $_[0]{last_logged_on};
+	return $_[0]{last_logged_in};
 } # end sub last_logged_in
 
 sub AUTOLOAD {
@@ -526,7 +560,8 @@ $openprint::log->debug("Autoload User $name $_[0]") if $debug;
 			} # end if
 			return $$Profile{fields}{$name};
 		} else {
-			$openprint::log->warn("Unknown field in User::AUTOLOAD $name");
+			my ( $caller, undef, $line ) = caller;
+			$openprint::log->error("Unknown field in User::AUTOLOAD $name from $caller:$line");
 		} # end if
 	} # end if
 } # end sub AUTOLOAD
@@ -561,17 +596,17 @@ sub Location {
 		my $Profile = $_[0]->Profile();
 		my $Location;
 		if ( $Profile->postalcode() ) {
-			$Location = openprint::Location->find_one( 'postalcode'=>openprint::Location->transform('postalcode', $Profile->postalcode() ) );
+			$Location = openprint::Location->find_one( postalcode=>openprint::Location->transform('postalcode', $Profile->postalcode() ) );
 		} # end if
 		if ( ! $Location and $Profile->city() ) {
 			my $City = new openprint::Location( $Profile->city() );
-			$Location = openprint::Location->find_one( 'type'=>'city', 'name'=>$City->name() );
+			$Location = openprint::Location->find_one( type=>'city', name=>$City->name() );
+			if ( ! $Location ) {
+				$Location = openprint::Location::google( join('+', $Profile->postalcode(), $Profile->city() ) );
+			} # end if
 		} # end if
 		if ( ! $Location ) {
-			$Location = openprint::Location::google( join('+', $Profile->postalcode(), $Profile->city() ) );
-		} # end if
-		if ( ! $Location ) {
-			$log->error("Still no location");
+			$log->debug("no location for User $_[0]{email}");
 			return new openprint::Location();
 		} # endif
 		$_[0]{Location} = $Location;

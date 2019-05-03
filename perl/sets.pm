@@ -3,6 +3,12 @@ package sets;
 
 sub isin {
 
+	if ( ! defined $_[0] ) {
+		my ( $caller, undef, $line ) = caller;
+Carp::cluck("undefined needle in isin from $caller:$line");
+		return;
+	}
+
 	my %h;
     # Takes in a variable, and an array, and checks the array element by
     # element to see if the variable exists inside the array.
@@ -13,7 +19,11 @@ sub isin {
 			#%h = %{ { map { $_ => 1 } @{$_[1]} } };
 			
 			foreach (@{$_[1]}) {
-				return 1 if $_ eq $_[0];
+				return 1 if (
+					((!defined $_[0]) and !defined($_))
+					or 
+					( defined($_) and defined($_[0]) and ($_ eq $_[0]) ) 
+					);
 			} # end foeach
 			return 1 if $h{$_[0]};
 		} else {
@@ -47,9 +57,22 @@ sub isin_regx {
 
 } # end sub inin_regx
 
+sub ordered_union {
+	my %hash;
+	my @results;
+	foreach ( @_ ) {
+		if ( ! $hash{$_} ) {
+			push @results, $_;
+			$hash{$_} = !undef;
+		}
+	}
+	return @results;
+}
+
 sub union {
 	return keys %{{ map { $_ => 1 } @_ }};
 } # end sub union
+
 sub object_union {
 	return values %{{ map { $_->id() => $_ } @_ }};
 } # end sub union

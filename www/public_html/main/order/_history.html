@@ -1,4 +1,5 @@
 <? eval (
+	my $uri = '/main/order/history.html';
 	$$variable{Currency} = openprint::Currency::get_current();
 	@$variable{'CurrencyName','CurrencySymbol','CurrencyShort'} = $$variable{Currency}->get('name','symbol','short');
 	if ( $param{order_id} ) {
@@ -36,11 +37,9 @@
 		} # end if	
 	} else {
 		@{$$variable{Orders}} = openprint::Order->find(
-			date_filter( '/main/order/history.html?created_on_end', 'created_on <=' ),
-			date_filter( '/main/order/history.html?created_on_start', 'created_on >=' ),
-			( $session{'/main/order/history.html?status_id'} ? ( status_id		=>	$session{'/main/order/history.html?status_id'} ) : () ),
-			( $session{'/main/order/history.html?company_id'} ? ( company_id	=>	$session{'/main/order/history.html?company_id'} ) : () ),
-			( $session{'/main/order/history.html?ddmOrderedBy'} ? ( user_id		=>	$session{'/main/order/history.html?ddmOrderedBy'} ) : () ),
+			date_filter($uri.'?created_on_end', 'created_on <=' ),
+			date_filter($uri.'?created_on_start', 'created_on >=' ),
+			( map { $session{$uri.'?'.$_} ? ( $_ => $session{$uri.'?'.$_} ) : () } ( 'status_id','company_id','ddmOrderedBy','salesrep_id' ) ),
 			order				=>	'id DESC',
 		);
 	} # end if
@@ -53,7 +52,7 @@
 			) ?>
 	<div class="unprintable">
 		<br/>
-		Please click on an <b>Order ID #</b> to view an order's details. <br/>
+		Please click on an <b>Order ID #</b> to view an order's details. <br/>Lines in red are waiting for customer approval.<br/>
 	</div>
 	<br/>
 	<table class="List">
@@ -63,7 +62,8 @@
 				<th class="docket">Docket</th>
 				<th class="invoices">Invoices</th>
 				<th class="User">Ordered By</th>
-				<th class="Date">Date</th>
+				<th class="Date">Created</th>
+				<th class="Date">Requested For</th>
 				<th class="Status">Status</th>
 				<th class="Price">Total</th>
 				<th class="Price">Balance</th>
@@ -93,16 +93,19 @@
 	<td class="order_id"><a href="history_details.html?order_id=%2$d">%2$d</a></td>
 	<td class="docket"><a href="history_details.html?order_id=%2$d">%3$s</a></td>
 	<td class="invoices"><a href="history_details.html?order_id=%2$d">%4$s</a></td>
-	<td align="left"><a href="history_details.html?order_id=%2$d">%5$s</a></td>
+	<td class="User"><a href="history_details.html?order_id=%2$d">%5$s</a></td>
 	<td class="Date"><a href="history_details.html?order_id=%2$d">%6$s</a></td>
-	<td class="Status"><a href="history_details.html?order_id=%2$d">%7$s</a></td>
-	<td class="Price"><a href="history_details.html?order_id=%2$d">%8$s</a></td>
+	<td class="Date"><a href="history_details.html?order_id=%2$d">%7$s</a></td>
+	<td class="Status"><a href="history_details.html?order_id=%2$d">%8$s</a></td>
 	<td class="Price"><a href="history_details.html?order_id=%2$d">%9$s</a></td>
+	<td class="Price"><a href="history_details.html?order_id=%2$d">%10$s</a></td>
 </tr>
 <tr%1$s>
 	<td colspan="3">&nbsp;</td>
-	<td colspan="5">%10$s</td>
-</tr>`, $rowclass, $Order->id(), $Order->docket(), join('<br/>', map { $_->Invoice()->num() } $Order->Invoices() ), $Order->name(), format_date( $Order->created_on() ),
+	<td colspan="6">%11$s</td>
+</tr>`, $rowclass, $Order->id(), $Order->docket(), join('<br/>', map { $_->Invoice()->num() } $Order->Invoices() ), $Order->name(), 
+format_date( $Order->created_on() ),
+join('<br/>', map { $$_{requested_for} ? format_date( $$_{requested_for} ) : () } $Order->Ordered_Projects() ),
 $Order->status(), 
 openprint::Currency::format( $$variable{total} ),
 openprint::Currency::format( $$variable{balance} ),
@@ -113,7 +116,7 @@ join('<br/>', map { $_->reference() ? $_->reference() : $_->summary() } $Order->
 		return $html;
 	) ?>
 		<tr class="totals">
-			<td colspan="6" align="right"><b>Report Totals</b></td>
+			<td colspan="7" align="right"><b>Report Totals</b></td>
 			<td class="Price"><? echo ( openprint::Currency::format( $$variable{ReportTotal} ); ) ?></td>
 			<td class="Price"><? echo ( openprint::Currency::format( $$variable{ReportBalance} ); ) ?></td>
 		</tr>

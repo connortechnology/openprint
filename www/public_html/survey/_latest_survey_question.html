@@ -1,7 +1,7 @@
 <? echo (
 	require openprint::Survey_Question;
 	my $Question = openprint::Survey_Question->find_one(
-		( $session{user_id} ? ( 'user_id not in'=>$session{user_id} ) : () ),
+		( $session{user_id} ? ( 'user_id does not contain'=>$session{user_id} ) : () ),
 		);
 	return 'No more questions.' if ! $Question;
 	

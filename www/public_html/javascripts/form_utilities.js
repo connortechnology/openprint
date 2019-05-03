@@ -1,4 +1,4 @@
-function isin ( array, value ) {
+function isin( array, value ) {
 	if ( array ) {
 		for ( var i = 0; i < array.length; i += 1 ) {
 			if ( array[i] == value ) 
@@ -32,6 +32,7 @@ function get_value( obj ) {
 				value[value.length] = obj[x].value;
 			} // end if
 		}
+		if ( value.length == 0 ) return;
 		if ( value.length == 1 ) return value[0];
 		return value;
 	} else {
@@ -280,10 +281,19 @@ function ddm_select_by_value( ddm, value, defaultValue ) {
 	} // end if
 	return false;
 } // end function ddm_select_by_value( ddm, value );
+
 function ddm_select_by_text( ddm, value, defaultValue ) {
 	if ( ddm ) {
-		for ( var index = 0, len = ddm.options.length; index < len; index += 1 ) {
-			if ( ddm.options[index].text == value ) {
+    var options;
+    if ( ddm.options )
+      options = ddm.options;
+    else if ( ddm[0].options ) {
+      options = ddm[0].options;
+      ddm = ddm[0];
+    }
+
+		for ( var index = 0, len = options.length; index < len; index += 1 ) {
+			if ( options[index].text == value ) {
 				ddm_select_by_index( ddm, index );
 				return;
 			} // end if
@@ -293,6 +303,7 @@ function ddm_select_by_text( ddm, value, defaultValue ) {
 		alert( "null ddm passed to ddm_select_by_text" );
 	} // end if
 } // end function ddm_select_by_text( ddm, value );
+
 function ddm_select_by_text_case_insensitive( ddm, value, defaultValue ) {
 	var lowervalue = value.toLowerCase();
 	if ( ddm ) {
@@ -519,6 +530,10 @@ function clearForm(form) {
 	} // end for
 } // end function clearForm(form)
 
+function update_changed( element ) {
+	if ( element_changed(element) ) {
+	}
+}
 function element_changed( element ) {
 	if ( ! element ) {
 //alert('Null element passed to element_changed');
@@ -616,7 +631,7 @@ window.open(summaryPage,'pop','newWin,left=140,width=640,top=50,height=400,resiz
 }
 
 function checkLoginData( usernameInput, passwordInput ) {
-	var div = $( 'missingLoginMessage' );
+	var div = $j ? $j('#missingLoginMessage') : $('missingLoginMessage');
 	if( usernameInput && ! usernameInput.value ) {
 		// Display login name error.
 		if ( div ) div.show();
@@ -626,7 +641,7 @@ function checkLoginData( usernameInput, passwordInput ) {
 		div.hide();
 	}
 
-	div = $( 'missingPasswordMessage' );
+	div = $j ? $j('missingPasswordMessage') : $('missingPasswordMessage')
 	if( passwordInput && ! passwordInput.value ) {
 		// Display login password error.
 		if ( div ) div.show();
@@ -1010,27 +1025,27 @@ function update_duration(form, starting_prefix, ending_prefix, suffix ) {
 	var end_year = form.elements[ending_prefix+suffix+'_year'] ? form.elements[ending_prefix+suffix+'_year'].value : 0;
 	var end_month = form.elements[ending_prefix+suffix+'_month'] ? form.elements[ending_prefix+suffix+'_month'].value : 0;
 	var end_day = form.elements[ending_prefix+suffix+'_day'] ? form.elements[ending_prefix+suffix+'_day'].value : 0;
-	var end_hour = form.elements[ending_prefix+suffix+'_hour'] ? form.elements[ending_prefix+suffix+'_hour'].value : 0;
-	var end_minute = form.elements[ending_prefix+suffix+'_minute'] ? form.elements[ending_prefix+suffix+'_minute'].value : 0;
+	var end_hour = ( do_time && form.elements[ending_prefix+suffix+'_hour'] ) ? form.elements[ending_prefix+suffix+'_hour'].value : 23;
+	var end_minute = ( do_time && form.elements[ending_prefix+suffix+'_minute'] ) ? form.elements[ending_prefix+suffix+'_minute'].value : 59;
 
-	var start = new Date( start_year, start_month, start_day, start_hour, start_minute );
-	var end = new Date( end_year, end_month, end_day, end_hour, end_minute );
+	var start = new Date( start_year, start_month, start_day, start_hour, start_minute, 0 );
+	var end = new Date( end_year, end_month, end_day, end_hour, end_minute, 59 );
 
 	var difference = parseInt( ( end - start ) / 1000 );
 	var days = parseInt(difference/(60*60*24));
 
 	if ( do_time ) {
 		if ( unknown_time ) {
-			if(starting_time_elem)starting_time_elem.hide();
-			if(ending_time_elem)ending_time_elem.hide();
+			if ( starting_time_elem ) starting_time_elem.hide();
+			if ( ending_time_elem ) ending_time_elem.hide();
 
 			if ( form.elements[starting_prefix+suffix+'_hour'] ) ddm_select_by_value( form.elements[starting_prefix+suffix+'_hour'], 0 );
 			if ( form.elements[starting_prefix+suffix+'_minute'] ) ddm_select_by_value( form.elements[starting_prefix+suffix+'_minute'], 0 );
 			if ( form.elements[ending_prefix+suffix+'_hour'] ) ddm_select_by_value( form.elements[ending_prefix+suffix+'_hour'], 0 );
 			if ( form.elements[ending_prefix+suffix+'_minute'] ) ddm_select_by_value( form.elements[ending_prefix+suffix+'_minute'], 0 );
 		} else {
-			if(starting_time_elem)starting_time_elem.show();
-			if(ending_time_elem)ending_time_elem.show();
+			if ( starting_time_elem ) starting_time_elem.show();
+			if ( ending_time_elem ) ending_time_elem.show();
 		} // end if
 		if ( $('duration'+suffix+'_time') ) $('duration'+suffix+'_time').show();
 		difference -= days * ( 60*60*24 );
@@ -1358,14 +1373,28 @@ onDestroy: function(eventName, win) {
 function toggle_input( ddm, txt ) {
 	ddm.toggle();
 	txt.toggle();
-	if ( ddm.visible() ) {
-		ddm.focus();
-		txt.value = '';
-	} 
-	if ( txt.visible() ) {
-		txt.focus();
-		ddm.selectedIndex = -1;
-	}
+  if ( ddm.visible ) {
+    if ( ddm.visible() ) {
+      ddm.focus();
+      txt.value = '';
+    } 
+    if ( txt.visible() ) {
+      txt.focus();
+      ddm.selectedIndex = -1;
+    }
+  } else {
+console.log("Using jquery visible");
+    if ( ddm.is(':visible') ) {
+console.log("ddm is visible");
+      ddm.focus();
+      txt.value = '';
+    } 
+    if ( txt.is(':visible') ) {
+console.log("txt is visible");
+      txt.focus();
+      ddm.prop('selectedIndex', 0 );
+    }
+  }
 }
 function getValues( form, element_names, more_values ) {
 	form = $(form);
@@ -1473,7 +1502,7 @@ function integerize(e) {
 }
 function to_hostname(e) {
 	if ( e.value.match(/\s/) ) {
-		e.value = parseFloat(e.value.replace(/\s/g,''));
+		e.value = e.value.replace(/\s/g,'');
 	} 
 }
 function floatize(e) {
@@ -1559,6 +1588,7 @@ function isIOS() {
 	return is_IOS;
 } // end function isIOS
 
+if ( typeof Prototype !== "undefined" ) {
 /**
  * Ajax.Request.abort
  * extend the prototype.js Ajax.Request object so that it supports an abort method
@@ -1571,6 +1601,7 @@ Ajax.Request.prototype.abort = function() {
 	// update the request counter
 	Ajax.activeRequestCount--;
 };
+}
 
 function get_date_value( prefix ) {
 	var date = new Array();

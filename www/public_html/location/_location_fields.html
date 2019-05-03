@@ -8,7 +8,10 @@
 	$html .= sprintf(q`<input type="text" id="location" name="location" value="%1$s"/>
 		<div id="location_autocomplete" class="autocomplete" style="display:none;"></div>
 		<script type="text/javascript">
-		new Ajax.Autocompleter('location','location_autocomplete', '/location/_locations.html?type=place', { minChars: 2,afterUpdateElement : getSelectedLocation } );
+		//Ajax.Autocompleter('location','location_autocomplete', '/location/_locations.html?type=place', { minChars: 2,afterUpdateElement : getSelectedLocation } );
+var loc = $('location');
+if ( loc )
+loc.autocomplete( {minChars: 2, onSelect: getSelectedLocation, serviceUrl: '/location/_locations.html?type=place' } );
 		</script>
 `, $$variable{Location}->name() );
 	$html .= '</li>';
@@ -21,7 +24,7 @@
 	<li><label>Postal/Zip Code</label><input type="text" name="postalcode" id="postalcode" value="%s" /></li>
 	<li class="latitude"><label>Latitude</label><input type="number" name="latitude" id="latitude" value="%s" /></li>
 	<li class="longitude"><label>Longitude</label><input type="number" name="longitude" id="longitude" value="%s" /></li>
-', $$variable{Location}->get('address','postalcode','latitude','longitude') ) if ! sets::isin( $$variable{Location}->type(), ['city','state','country'] );
+', $$variable{Location}->get('address','postalcode','latitude','longitude') ) if ! ( $$variable{Location}->type() and sets::isin( $$variable{Location}->type(), ['city','state','country'] ) );
 
 	$html .= '</ul><ul class="ancestors">';
 	if ( $$variable{Location}->type() ne 'country' ) {

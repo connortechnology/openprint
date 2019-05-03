@@ -1,4 +1,5 @@
 use strict;
+use warnings;
 package openprint::SkidContent;
 our @ISA = qw(openprint::Object);
 
@@ -34,6 +35,15 @@ $debug = 0;
 );
 $table = 'Skid_Contents';
 $serial = 'skid_contents_id_seq';
+
+sub units {
+	$_[0]{units} = $_[1] if @_ > 1;
+
+	if ( ! $_[0]{units} ) {
+		$_[0]{units} = $_[0]->Paper()->units();
+	}
+	return $_[0]{units};
+}
 
 sub purpose {
 	return $_[0]->Purpose()->name();
@@ -110,20 +120,27 @@ sub Cost {
 		foreach my $MC ( $_[0]->Manifest_Contents() ) {
 			my $Type = $MC->Type();
 			if ( $Type->cost() ) {
+				my $Currency = $Type->Currency();
 				$$self{Cost} = {
-					cost	=>	$Type->cost(),
-					units	=>	$Type->cost_units(),
+					cost				=>	$$Type{cost},
+					price				=>	$$Type{cost},
+					units				=>	$Type->cost_units(),
+					( $Currency ? (
+					currency_id	=>	$$Currency{id},
+					Currency		=>	$Currency,
+					) : () )
 				};
 			} else {
 				my $POC = $Type->PurchaseOrder_Content();
+				if ( ( ! $POC ) and $$Type{docket} ) {
+					# Look again without a docket
+					$POC = $Type->PurchaseOrder_Content({ ignore_docket=>1 });
+				}
+				if ( ! $POC ) {
+					$POC = $Type->PurchaseOrder_Content({ ignore_docket=>1, ignore_fsc=>1 });	
+				}
 				next if ! $POC;
-				my $POCurrency = $POC->PurchaseOrder()->Currency();
-				if ( $POCurrency ) {
-					$$self{Cost}{cost} = $POCurrency->convert_from( $POC->price() );
-				} else {
-					$$self{Cost}{cost} = $POC->price();
-				} # end if
-				$$self{Cost}{units} = $POC->price_units();
+				$$self{Cost} = $POC->Cost();
 			} # end if
 			last if $$self{Cost};
 		} # end foreach MC
@@ -134,7 +151,10 @@ sub Cost {
 # SKids can have multiple manifests, but only one PO
 sub cost {
 	my $Cost = $_[0]->Cost();
-	return $$Cost{cost} if $Cost;
+	if ( $Cost ) {
+		openprint::Currency::convert( $Cost );
+		return $$Cost{cost};
+	}
 	return;
 } # end sub cost
 
@@ -142,18 +162,25 @@ sub cost {
 sub value {
 	my $self = $_[0];
 	if ( ! exists $$self{value} ) {
-		
-		my $Cost = $_[0]->Cost();
-		if ( $Cost ) {
-$openprint::log->debug("cost for $$self{skid_id} $$Cost{units} $$Cost{cost}");
-			if ( (!$$Cost{units}) or ($$Cost{units} eq '/100lbs' or $$Cost{units} eq '/cwt') ) {
-				$$self{value} = $$self{quantity} * $$Cost{cost} / 100;
+		if ( $$self{quantity} ) {
+			my $Cost = $_[0]->Cost();
+			if ( $Cost ) {
+				openprint::Currency::convert( $Cost );
+				$openprint::log->debug("cost for $$self{skid_id} $$Cost{units} $$Cost{cost}") if $debug;
+				if ( (!$$Cost{units}) or ($$Cost{units} eq '/100lbs' or $$Cost{units} eq '/cwt') ) {
+					if ( ! defined $$Cost{cost} ) {
+						$openprint::log->error("Undefined cost in POC for skid $$self{skid_id}");
+					}
+					$$self{value} = $$self{quantity} * $$Cost{cost} / 100;
+				} else {
+					$$self{value} = $$self{quantity} * $$Cost{cost};
+				} # end if
 			} else {
-				$$self{value} = $$self{quantity} * $$Cost{cost};
-			} # end if
+				$openprint::log->debug("No cost for $$self{skid_id}") if $debug;
+			} # end Cost
 		} else {
-$openprint::log->debug("No cost for $$self{skid_id}");
-		} # end Cost
+			$$self{value} = 0;
+		}
 	} # end if ! exists value
 	return $$self{value} if $$self{value};
 	return;
@@ -175,7 +202,7 @@ sub checked_out {
 } # end sub checked_out
 
 sub to_string {
-	return sprintf('%s%s of %s', Number::Format::format_number( $_[0]{quantity} ), $_[0]->units(), $_[0]->Paper()->to_string() );
+	return sprintf('%s%s of %s', ( $_[0]{quantity} ? Number::Format::format_number( $_[0]{quantity} ) : 'unknown'), $_[0]->units(), $_[0]->Paper()->to_string() );
 }
 
 1;

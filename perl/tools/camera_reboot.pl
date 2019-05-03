@@ -25,7 +25,7 @@ my $program = basename($0);
 
 my $opts = {};
 GetOptions($opts, 'help', 
-    'db_name=s', 'db_host=s', 'db_user=s', 'db_pass=s','blacklist=s', 'debug=s', 'host_id=s',
+    'db_port=s', 'db_name=s', 'db_host=s', 'db_user=s', 'db_pass=s','blacklist=s', 'debug=s', 'host_id=s',
  );
 
 if ($opts->{help}) {
@@ -63,6 +63,7 @@ $log = logger->new( {'file'=>$config{'log_file'}, 'level'=>$config{'log_level'}}
 
 $log->debug("Connecting to db");	
 $dbh = sql::open_sql( $log,
+    port => $config{db_port},
 		'host'		=> $config{'db_host'},
 		'database'	=> $config{'db_name'},
 		'driver'	=> 'Pg',
@@ -86,6 +87,7 @@ foreach my $Host ( @Hosts ) {
 			$log->debug( "Monitored host without ip: " . $Host->to_string() );
 			next;
 		} # end if
+			$log->debug( "Pinging ip: " . $HI->ip() );
 		my @ping = $p->ping($HI->ip());
 		my $ping = $ping[0];
 	#$openprint::log->debug("Ping1: @ping");
@@ -98,8 +100,10 @@ foreach my $Host ( @Hosts ) {
 			$Host->reboot();
 		} elsif ( $Host->online() ) {
 			$log->debug("No ping for $$Host{hostname}");
+      $Host->reboot();
 		} else {
 			$log->debug("$$Host{hostname} is offline: ping $ping");
+      $Host->reboot();
 		} # end if online
 	} # end foreach HI
 } # end foreach $Host

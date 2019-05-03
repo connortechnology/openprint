@@ -1,24 +1,6 @@
-<? eval (
-	if ( ! $param{'ddmDueDateYear'.$$variable{'Project'}->id()} ) {
-		@$variable{
-		'ddmDueDateYear'.$$variable{'Project'}->id(), 
-		'ddmDueDateMonth'.$$variable{'Project'}->id(), 
-		'ddmDueDateDay'.$$variable{'Project'}->id(),
-		} = Date::Calc::Add_Delta_Days( Date::Calc::Today(), 14 );
-	} # end if
-) ?>
-	
 <li class="RequiredBy">
 	<label>Required By</label>
-	<span class="DateSelector">
-	<select name="ddmDueDateMonth<? echo ( $$variable{'Project'}->id(); ) ?>" size="1" onchange="setDaysDropDown(this.form.ddmDueDateYear<? echo ( $$variable{'Project'}->id(); ) ?>.value,this.form.ddmDueDateMonth<? echo ( $$variable{'Project'}->id(); ) ?>.value, this.form.ddmDueDateDay<? echo ( $$variable{'Project'}->id(); ) ?>, this.form.ddmDueDateDay<? echo ( $$variable{'Project'}->id(); ) ?>.value);">
-    <? echo ( ssi::getmonths( $$variable{'ddmDueDateMonth'.$$variable{'Project'}->id()} ); ) ?>
-	</select>
-	<select name="ddmDueDateDay<? echo ( $$variable{'Project'}->id(); ) ?>" size="1" onchange="setDaysDropDown(this.form.ddmDueDateYear<? echo ( $$variable{'Project'}->id(); ) ?>.value,this.form.ddmDueDateMonth<? echo ( $$variable{'Project'}->id(); ) ?>.value, this.form.ddmDueDateDay<? echo ( $$variable{'Project'}->id(); ) ?>, this.form.ddmDueDateDay<? echo ( $$variable{'Project'}->id(); ) ?>.value);">
-    <? echo ( ssi::getdays( $$variable{'ddmDueDateDay'.$$variable{'Project'}->id()} ); ) ?>
-	</select>
-	<select name="ddmDueDateYear<? echo ( $$variable{'Project'}->id(); ) ?>" size="1" onchange="setDaysDropDown(this.form.ddmDueDateYear<? echo ( $$variable{'Project'}->id(); ) ?>.value,this.form.ddmDueDateMonth<? echo ( $$variable{'Project'}->id(); ) ?>.value, this.form.ddmDueDateDay<? echo ( $$variable{'Project'}->id(); ) ?>, this.form.ddmDueDateDay<? echo ( $$variable{'Project'}->id(); ) ?>.value);">
-		<? echo ( ssi::getyears((localtime(time))[5]+1900, (localtime(time))[5]-100, $$variable{'ddmDueDateYear'.$$variable{'Project'}->id()} ); ) ?>
-	</select>
-	</span>
+	<?echo(date_select( 'requested_for'.$$variable{Project}->id(), 
+				$$variable{Project}->requested_for() ? $$variable{Project}->requested_for() : [ Date::Calc::Add_Delta_Days( Date::Calc::Today(), 14 ) ],
+				); ) ?>
 </li>

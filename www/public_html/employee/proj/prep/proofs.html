@@ -1,87 +1,107 @@
 <script type="text/javascript">
 function check_input( form, signature_index ) {
-    if ( form.elements['txtProofQuantity-'+signature_index].value ) {
-        if ( ! form.elements['txtProofWidth-'+signature_index].value ) {
-            alert('Please enter the width of the additional proofs');
-            return false;
-        } else if ( ! form.elements['txtProofHeight-'+signature_index].value ) {
-            alert('Please enter the height of the additional proofs');
-            return false;
-        } else if ( ! get_ddm_value(form.elements['ddmProofType-'+signature_index] ) ) {
-            alert('Please enter the type of the additional proofs');
-            return false;
-        } // end if
-    } // end if
-    return true;
+	if ( form.elements['txtProofQuantity-'+signature_index].value ) {
+		if ( ! form.elements['txtProofWidth-'+signature_index].value ) {
+			alert('Please enter the width of the additional proofs');
+			return false;
+		} else if ( ! form.elements['txtProofHeight-'+signature_index].value ) {
+			alert('Please enter the height of the additional proofs');
+			return false;
+		} else if ( ! get_ddm_value(form.elements['ddmProofType-'+signature_index] ) ) {
+			alert('Please enter the type of the additional proofs');
+			return false;
+		} // end if
+	} // end if
+	return true;
 } // end function check_input
 </script>
 
 <? eval ( 
-	$$variable{Project} = new openprint::Project( $$variable{ProjectIndex} );
 	@$variable{Docket} = $$variable{Project}->docket();
 ) ?>
-<a href="/employee/project/view.html?ProjectIndex=<?ProjectIndex?>">Return to Project <?ProjectIndex?></a><br/>
-<br/>
+<form id="f2" name="f2" action="/employee/project/view.html" method="post">
+	<fieldset class="filters">
+		<ul>
+			<li class="docket"><label>Docket #</label>
+			<? echo ( join("\n",
+						input( type=>'cardinal', name=>'docket', id=>'Docket', onchange=>'change_handler(this);', onkeypress=>'return input_handler(this,event);', onkeydown=>q`if(event.keyCode==13){window.location='/employee/project/view.html?docket='+this.value;};`, onkeyup=>q`$('project_id').value='';`, value=>$param{Docket}),
+						button( 'Go1', { onclick=>q`window.location='/employee/project/view.html?docket='+$('Docket').value;`, text=>'Go' } ),
+						button( 'GoProofs', { onclick=>q`if($('Docket').value){window.location='/employee/proj/prep/proofs.html?docket='+$('Docket').value;};`, text=>'Go Proofs' } ),
+						$$variable{Project}->id() ? 
+							button('Return', { href=>'/employee/project/view.html?ProjectIndex='.$$variable{ProjectIndex}, text=>'Return to Docket '.$$variable{Project}->docket() } ) : (),
+			); ) ?>
+			</li>
+		</ul>
+	</fieldset>
+</form>
+<?if($$variable{Project}->id())?>
 <div class="error"><?ErrorMessage?></div>
-<div style="float: left; width: 49%;"/>
+<?if($$variable{Project}->Order()->cod_owing())?>
+<div class="error">This job is COD</div>
+<?endif($$variable{Project}->Order()->cod_owing())?>
+<div class="header">
+	<fieldset><legend>Docket Information</legend>
+		<ul>
+			<li class="docket"><label>Docket</label><?echo($$variable{Project}->docket())?></li>
+			<li class="company"><label>Company</label><?echo($$variable{Project}->Company()->name())?></li>
+		</ul>
+	</fieldset>
+</div>
+<div id="ProductionFeedback">
 	<form method="post" name="f1" action="/employee/project/view.html?ProjectIndex=<?ProjectIndex?>&ServiceIndex=<?ServiceIndex?>">
+
 		<fieldset><legend>Production Feedback</legend>
 			<?include('/includes/employee/feedback/employee.html')?>
 			<?include('/includes/employee/feedback/comments.html')?>
 			<p>
 				<label>Proofs Ready</label>
-				<input type="radio" id="rdbCompleteY" name="rdbComplete" value="Yes" <? echo ( $$variable{rdbComplete} eq 'Yes' ? 'checked="checked"' : '' ) ?> onclick="$('ClientApproved').show();$('QAApproved').show();" />
-				<label class="radio" for="rdbCompleteY">Yes</label>
-				<input type="radio" id="rdbCompleteN" name="rdbComplete" value="No" <? echo ( $$variable{rdbComplete} ne 'Yes' ? 'checked="checked"' : '' ) ?> onclick="$('ClientApproved').hide();$('QAApproved').hide();" />
-				<label class="radio" for="rdbCompleteN">No</label>
+					<? echo ( radio( 'rdbComplete', ['Yes','Yes','No','No'], $$variable{rdbComplete}, {
+							default=>'No',
+							onclick=>q`if(this.value=='Yes'){$('ClientApproved').show();$('QAApproved').show();}else{$('ClientApproved').hide();$('QAApproved').hide();};`,
+							} ); ) ?>
 			</p>
 			<p>
 				<label>Ready Date</label>
 				<? if ( $$variable{rdbComplete} ne 'Yes' ) ?>
 				<? eval ( $$variable{CompletionDate} = Date::Format::time2str( '%Y-%m-%d %H:%M', time ); ) ?>
-					<input type="text" size="18" name="CompletionDate" id="CompletionDate" value="<?CompletionDate?>"/>
-					<img src="/images/calendar.gif" id="CompletionDateButton" style="cursor: pointer;" title="Date selector" />
+					<input type="text" name="CompletionDate" id="CompletionDate" value="<?CompletionDate?>"/>
 					<script type="text/javascript">
-					Calendar.setup({
-					inputField     :    "CompletionDate",      // id of the input field
-					ifFormat       :    "%Y-%m-%d %H:%M",       // format of the input field
-					button         :    "CompletionDateButton",  // trigger for the calendar (button ID)
-					align           :   "Tl",
-					showsTime      :    true,            // will display a time selector
-					singleClick    :   false,           // double-click mode
-					timeFormat		: 24
-					});
-					</script>
+					$j("[name$='CompletionDate']").datetimepicker({
+							dateFormat: "yy-mm-dd", timeFormat: 'hh:mm', constrainInput: true,
+							showOn: "both", buttonImage: "/images/calendar.gif", buttonImageOnly: true, buttonText: "Select date"
+							}); </script>
 				<? else ( $$variable{rdbComplete} ne 'Yes' ) ?>
 					<?CompletionDate?>
 				<? endif ( $$variable{rdbComplete} ne 'Yes' ) ?>
 			</p>
 			<p id="ClientApproved" <? echo ( $$variable{rdbComplete} eq 'Yes' ? '' : 'style="display:none;"' ) ?>>
 				<label>Client Approved?</label>
-					<input type="radio" id="rdbClientApprovedY" name="rdbClientApproved" value="Y" <? echo ( ssi::checked( $$variable{rdbClientApproved} eq 'Y' ); ) ?> />
-					<label class="radio" for="rdbClientApprovedY">Yes</label>
-					<input type="radio" id="rdbClientApprovedN" name="rdbClientApproved" value="N" <? echo ( ssi::checked( $$variable{rdbClientApproved} ne 'Y' ); ) ?> />
-					<label class="radio" for="rdbClientApprovedN">No</label>
+					<?echo(radio( 'rdbClientApproved', ['Y','Yes','N','No'], $$variable{rdbClientApproved}, { default=>'N' } ); ) ?>
 				<? if ( $$variable{rdbClientApproved} eq 'Y' ) ?>
 					at <? echo ( $$variable{ClientApprovalDate} ) ?>
 				<? endif ( $$variable{rdbClientApproved} eq 'Y' ) ?>
 			</p>
 			<p id="QAApproved" <? echo ( $$variable{rdbComplete} eq 'Yes' ? '' : 'style="display:none;"' ) ?>>
 				<label>QA Approved?</label>
-					<input type="radio" id="rdbApprovedY" name="rdbApproved" value="Y" onclick="$('DueDate').show();" <? echo ( ssi::checked( $$variable{rdbApproved} eq 'Y' ); ) ?> />
-					<label class="radio" for="rdbApprovedY">Yes</label>
-					<input type="radio" id="rdbApprovedN" name="rdbApproved" value="N" onclick="$('DueDate').hide();" <? echo ( ssi::checked( $$variable{rdbApproved} ne 'Y' ); ) ?> />
-					<label class="radio" for="rdbApprovedN">No</label>
+					<?echo(radio( 'rdbApproved', ['Y','Yes','N','No'], $$variable{rdbApproved}, { default=>'N', onclick=>q`if(this.value=='Y'){$('DueDate').show();}else{$('DueDate').hide();};` } ); ) ?>
 				<? if ( $$variable{rdbApproved} eq 'Y' ) ?>
 					at <? echo ( $$variable{ApprovalDate} ) ?>
 				<? endif ( $$variable{rdbApproved} eq 'Y' ) ?>
 			</p>
+<? eval (
+		if ( ! $variable{ddmDueDate} ) {
+			$variable{ddmDueDate} = $variable{Project}->get_due_date();
+		} # end if
+		$variable{duedate} = $variable{ddmDueDate};
+		@variable{'duedate_year','duedate_month','duedate_day'} = split('-', $variable{ddmDueDate});
+)?>
 			<p id="DueDate" <? echo ( $$variable{rdbApproved} eq 'Y' ? '' : 'style="display:none;"' ) ?> >
 <? if ( $session{user_type} eq 'A' or openprint::usergroup::is_user_in( ['Scheduling'], $session{user_id} ) ) ?>
 				<label>Due Date</label>
-				<span class="DateSelector">
-<? echo ( ssi::date_select( 'duedate', [ @$variable{'duedate_year','duedate_month','duedate_day'} ] ) ) ?>
-				</span>
+<? echo ( 
+input( name=>'duedate', type=>'text', value=>$$variable{duedate} );
+) ?>
+<script type="text/javascript">$j("[name$='duedate']").datepicker({ dateFormat: "yy-mm-dd", constrainInput: true}); </script>
 <? endif ( $session{user_type} eq 'A' or openprint::usergroup::is_user_in( ['Scheduling'], $session{user_id} ) ) ?>
 			</p>
 			<p class="buttons">
@@ -89,21 +109,36 @@ function check_input( form, signature_index ) {
 					my $html;
 					$html .= button( 'Save', { onclick=>'f1.submit();' } );
 					$html .= button( 'Reset', { onclick=>'f1.reset();' } );
-					my $body = include( '/email_content/sign-off.html' );
-					$body =~ s/([^A-Za-z0-9])/sprintf("%%%02X", ord($1))/seg;
-					$$variable{body} = $body;
-					$html .= button( 'Email', { href=>qq`mailto:`.$$variable{Project}->Order()->email().q`?subject=Docket%20$$variable{Docket}&body=$$variable{body}`, text=>'Email' } );
-					$html .= button( 'UploadPDFs', { onclick=>"open_window('/employee/production/upload_pdfs.html?ProjectIndex=$$variable{ProjectIndex}','upload','resizable=yes,scrollbars=yes,width=800,height=600,screenX=10,screenY=10,top=0,left=0');", href=>'', text=>'Upload PDFs' } );
+					#my $body = include( '/email_content/sign-off.html' );
+					#$body =~ s/([^A-Za-z0-9])/sprintf("%%%02X", ord($1))/seg;
+					#$$variable{body} = $body;
+					#$html .= button( 'Email', { href=>qq`mailto:`.$$variable{Project}->Order()->email().qq`?subject=Docket%20$$variable{Docket}&body=$$variable{body}`, text=>'Email' } );
+					#$html .= button( 'UploadPDFs', { onclick=>"open_window('/employee/production/upload_pdfs.html?ProjectIndex=$$variable{ProjectIndex}','upload','resizable=yes,scrollbars=yes,width=800,height=600,screenX=10,screenY=10,top=0,left=0');", href=>'', text=>'Upload PDFs' } );
+					$html .= button( 'DocketButton'.$$variable{Project}{id}, { onclick=>"open_window('/main/project/docket_sheet.html?ProjectIndex=$$variable{ProjectIndex}');", text=>'Docket' } );
+					
+					my $DocketLabelType = openprint::LabelType->find_one(name=>'Docket Label');
+					if ( $DocketLabelType ) {
+						my $DocketLabel = openprint::Label->find_one(docket=>$$variable{Project}->docket(), type_id=>$$DocketLabelType{id});
+						if ( $DocketLabel ) {
+							$html .= button( 'DocketButton'.$$variable{Project}{id}, { onclick=>"open_window('/employee/production/labels/label.html?docket=$$variable{Project}{docket}&project_id=$$variable{ProjectIndex}&id=$$DocketLabel{id}');", text=>'Docket Label' } );
+						} else {
+							$html .= button( 'DocketButton'.$$variable{Project}{id}, { onclick=>"open_window('/employee/production/labels/label.html?docket=$$variable{Project}{docket}&project_id=$$variable{ProjectIndex}&type_id=$$DocketLabelType{id}');", text=>'Docket Label',
+ } );
+						}
+					}
 					return $html;
 			) ?>
 			</p>
 		</fieldset>
-		<input type="hidden" name="OrderId" value="<?OrderID?>"/>
-		<input type="hidden" name="Docket" value="<?Docket?>"/>
 		<input type="hidden" name="btnFunction" value="Save"/>
 	</form>
 </div><!-- Column -->
-<div id="Signatures" style="float: right; width: 49%;"/>
+<div id="Signatures" class="leftColumn"/>
 <?include('/employee/proj/prep/_proofs_signatures.html')?>
 </div><!-- Column -->
 <br class="spacer"/>
+<?include('/employee/project/_production_log_container.html')?>
+<?else($$variable{Project}->id())?>
+<div class="error">Project not found</div>
+<?endif($$variable{Project}->id())?>
+<?include('/includes/error_reporting.html')?>

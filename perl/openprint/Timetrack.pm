@@ -18,52 +18,78 @@ $serial = 'timetracks_id_seq';
 	id				=> 'id',
 	starting		=>	'starting',
 	ending			=>	'ending',
+	starting_dt		=>	undef,
+	ending_dt		=>	undef,
 	duration		=>	'duration',
 	duration_override	=>	'duration_override',
-	company_id		=>	'company_id',
-	project_id		=>	'project_id',
-	description		=>	'description',
-	invoice_id		=>	'invoice_id',
-	service_id		=>	'service_id',
-	owner_id		=>	'owner_id',
-	time_associated	=>	'time_associated',
-	user_id			=>	'user_id',
-	rate			=>	'rate',
-	created_on		=> 'created_on',
-	updated_on		=> 'updated_on',
-	deleted			=> 'deleted',
-	currency_id		=>	'currency_id',
+	company_id    		=>	'company_id',
+	project_id    		=>	'project_id',
+	description   		=>	'description',
+	invoice_id    		=>	'invoice_id',
+	service_id    		=>	'service_id',
+	owner_id      		=>	'owner_id',
+	date_associated 	=>	'date_associated',
+	time_associated 	=>	'time_associated',
+	user_id	  	    	=>	'user_id',
+	rate		        	=>	'rate',
+	created_on    		=> 'created_on',
+	updated_on    		=> 'updated_on',
+	deleted	      		=> 'deleted',
+	currency_id   		=>	'currency_id',
 	travel_associated	=>	'travel_associated',
-	distance			=>	'distance',
-	billable			=>	'billable',
-	po					=>	'po',
-	keywords			=>	undef,
+	distance	    		=>	'distance',
+	billable	    		=>	'billable',
+	po			      		=>	'po',
+	keywords	    		=>	undef,
 );
 %find_fields = (
 	paycheque_id		=>	'(SELECT paycheque_id FROM Paycheques_Timetracks WHERE timetrack_id=timetracks.id)',
 );
 
 %transforms = (
-	rate		=>	[ 's/[^\d\.]//g' ],
+	rate	  	=>	[ 's/[^\d\.]//g' ],
 	distance	=>	[ 's/[^\d\.]//g' ],
-    po			=>	[ 's/^\s+//', 's/\s+$//' ],
+  po	  		=>	[ 's/^\s+//', 's/\s+$//' ],
 );
 %defaults = (
-	created_on			=>	q`'NOW()'`,
-	updated_on			=>	q`'NOW()'`,
-	deleted				=>	0,
-	rate				=>	undef,
-	currency_id			=>	undef,
-	owner_id			=>	undef,
-	invoice_id			=>	undef,
-	service_id			=>	undef,
-	project_id			=>	undef,
-	user_id				=>	undef,
+	created_on	  		=>	q`'NOW()'`,
+	updated_on  			=>	q`'NOW()'`,
+	deleted	  	   		=>	0,
+	rate			       	=>	undef,
+	currency_id		  	=>	undef,
+	owner_id		     	=>	q`$openprint::Owner->id()`,
+	invoice_id			  =>	undef,
+	service_id		  	=>	undef,
+	project_id		  	=>	undef,
+	user_id			    	=>	undef,
 	travel_associated	=>	0,
-	distance			=>	undef,
-	billable			=>	q`1`,
+	distance			    =>	undef,
+	billable		    	=>	q`1`,
 	duration_override	=>	0,
 );
+
+my $parser = 'DateTime::Format::Pg';
+
+sub starting_dt {
+	if ( @_ > 1 ) {
+		$_[0]{starting_dt} = $_[1];
+		$_[0]{starting} = $parser->format_datetime( $_[0]{starting_dt} ) if $_[0]{starting_dt};
+	}
+	if ( ! $_[0]{starting_dt} ) {
+		$_[0]{starting_dt} = $parser->parse_datetime( $_[0]{starting} );
+	}
+	return $_[0]{starting_dt};
+}
+sub ending_dt {
+	if ( @_ > 1 ) {
+		$_[0]{ending_dt} = $_[1];
+		$_[0]{ending} = $parser->format_datetime( $_[0]{ending_dt} ) if $_[0]{ending_dt};
+	}
+	if ( ! $_[0]{ending_dt} ) {
+		$_[0]{ending_dt} = $parser->parse_datetime( $_[0]{ending} );
+	}
+	return $_[0]{ending_dt};
+}
 
 sub duration {
 	if ( @_ > 1 ) {
@@ -86,24 +112,42 @@ sub elapsed {
 	} else {
 		my ($start) = $$self{starting} =~ /(\d\d\d\d-\d\d-\d\d)/;
 		my ($end) = $$self{ending} =~ /(\d\d\d\d-\d\d-\d\d)/;
-		return Date::Parse::str2time( $end ) - Date::Parse::str2time( $start );
+if ( 0 ) {
+    my $start_dt = $parser->parse_datetime( "$start 00:00:00");
+$openprint::log->debug("starting: " . $parser->format_datetime( $start_dt ) );
+    my $end_dt = $parser->parse_datetime( "$end 00:00:00" )->add( DateTime::Duration->new('days'=>1) ) ;
+$openprint::log->debug("ending: " . $parser->format_datetime( $end_dt ) );
+    my $duration_dt = $end_dt->subtract_datetime( $start_dt );
+$openprint::log->debug("elapsed: " . $duration_dt->in_units('seconds') );
+    return $duration_dt->in_units('seconds');
+}
+
+		return (Date::Parse::str2time( "$end 23:59:59" )+1) - Date::Parse::str2time( "$start 00:00:00");
 	} # end if
 } # end sub elapsed
 
 sub rate {
 	my ( $self ) = @_;
-	my $Service = $self->Service();
-	my %Price = $Service->get_price( undef, undef, $self->Company()->Pricelist() );
-	if ( $$self{rate} ) {
-		$Price{Cost} = $Price{Price} = $$self{rate};
+
+  if ( $$self{rate} ) {
+    return $$self{rate};
+  }
+
+  if ( $$self{service_id} ) {
+    my $Service = $self->Service();
+    my %Price = $Service->get_price( undef, undef, $self->Company()->Pricelist() );
+    return $Price{Price};
 	} # end if
-	return $Price{Price};
+  return;
 }
 sub units {
 	my ( $self ) = @_;
-	my $Service = $self->Service();
-	my %Price = $Service->get_price( undef, undef, $self->Company()->Pricelist() );
-	return $Price{units};
+  if ( $$self{service_id} ) {
+    my $Service = $self->Service();
+    my %Price = $Service->get_price( undef, undef, $self->Company()->Pricelist() );
+    return $Price{units};
+  } 
+  return
 } # end sub units
 
 sub Price {

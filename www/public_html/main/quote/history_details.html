@@ -12,9 +12,16 @@ function delete_confirm(form) {
 }
 </script>
 <?include('/includes/error_reporting.html')?>
+
 <? if ( $$variable{Quote}->company_id() != $session{company_id} ) ?>
-	<div class="warning unprintable">Warning: You are logged in as <? echo ( $openprint::Company->name() ) ?> but this order belongs to <a href="history_details.html?quote_id=<?echo($$variable{Quote}->id())?>&amp;btnFunction=SelectCompany&amp;ddmCompany=<?echo($$variable{Quote}->company_id())?>"><? echo ( $$variable{Quote}->Company()->name() ) ?></a>!</div>
+	<div class="warning unprintable">
+		Warning: You are logged in as <? echo ( $openprint::Company->name() ) ?> but this order belongs to 
+		<a href="history_details.html?quote_id=<?echo($$variable{Quote}->id())?>&amp;btnFunction=SelectCompany&amp;ddmCompany=<?echo($$variable{Quote}->company_id())?>">
+			<? echo ( $$variable{Quote}->Company()->name() ) ?>
+		</a>!
+	</div>
 <? endif ( $$variable{Quote}->company_id() != $session{company_id} ) ?>
+
 <? if ( $$variable{Quote}->deleted() ) ?>
 	<div class="warning">This quote has been deleted.</div>
 <? endif ( $$variable{Quote}->deleted() ) ?>
@@ -49,6 +56,7 @@ function delete_confirm(form) {
 				} # end if
 				if ( $$variable{Quote}->status() eq 'Complete' ) {
 					$html .= button( 'Resend', { onclick=>"f1.action='/main/quote/history_details.html';f1.btnFunction.value='Resend';f1.submit();", text=>'Resend' } );
+					$html .= button( 'SendToMe', { onclick=>"f1.action='/main/quote/history_details.html';f1.btnFunction.value='SendToMe';f1.submit();", text=>'Send To Me' } );
 					$html .= button( 'Order', { onclick=>"f1.action='/main/order/information.html';f1.btnFunction.value='Process Order';f1.submit();", text=>'Order' } );
 					$html .= button( 'Edit', { onclick=>"f1.action='/main/quote/information.html';f1.btnFunction.value='Continue';f1.submit();", text=>'Edit' } );
 				} else {

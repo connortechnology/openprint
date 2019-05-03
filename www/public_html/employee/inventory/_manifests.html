@@ -131,8 +131,8 @@
 
 			my %ManifestCTs;
 			foreach my $MCT ( @ManifestContentTypes ) {
-				$ManifestCTs{$$MCT{manifest_id}} = [] if !$ManifestCTs{$$MCT{manifest_id}};
-				@{$ManifestCTs{$$MCT{manifest_id}}}, $MCT;
+				$ManifestCTs{$$MCT{manifest_id}} = [] if ! $ManifestCTs{$$MCT{manifest_id}};
+				push @{$ManifestCTs{$$MCT{manifest_id}}}, $MCT;
 			}
 
 		

@@ -49,7 +49,6 @@
 			<p class="buttons">
 				<? echo ( join("\n",
 					button( 'ShowResults', { onclick=> 'load_products(f1);', text=>'Show Results' } ),
-					#ssi::writeButton( $log, $dbh, 'Reset', 'reset.gif', 'f1.reset();', '', 'Reset' ),
 					button( 'New', { href=> '/administrator/service_types/edit.html', text=>'New Service Type' } ),
 					); ) ?>
 			</p>

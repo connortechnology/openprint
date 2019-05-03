@@ -17,7 +17,6 @@ require openprint::Currency;
 require ssi;
 require DateTime::Format::Pg;
 require DateTime::TimeZone;
-require HTML::Strip;
 
 sub history {
 	if ( $param{func} eq 'Destroy' ) {
@@ -81,6 +80,51 @@ sub history {
 sub _history {
 	if ( ! $param{func} ) {
 		ssi::save_params( '/timetrack/history.html', ( 'starting_start_year','starting_start_month','starting_start_day','starting_end_year','starting_end_month','starting_end_day','invoiced','paid','user_id','company_id', 'service_id', 'billable','travel_associated','contains', 'keywords' ) );
+	} else {
+		if ( $param{func} eq 'merge' ) {
+			my $start = undef;
+			my $end = undef;
+			my $desc = '';
+			my $NewTimetrack;
+      my @Src_Timetracks = openprint::Timetrack->find(id=>ref $param{timetrack_id} eq 'ARRAY' ? $param{timetrack_id} : [ split(',', $param{timetrack_id}) ] );
+			foreach my $Timetrack ( @Src_Timetracks ) {
+				next if ! $Timetrack->can_edit();
+				if ( ! $NewTimetrack ) {
+					$NewTimetrack = $Timetrack->copy();
+				} else {
+					if ( $NewTimetrack->company_id() != $Timetrack->company_id() ) {
+						$variable{error} .= "Timetracks must be from same company.";
+						return;
+					}
+					if ( $NewTimetrack->user_id() != $Timetrack->user_id() ) {
+						$variable{error} .= "Timetracks must be from same user.";
+						return;
+					}
+				}
+				if ( (!$start) or $Timetrack->starting_dt() < $start ) {
+					$start = $Timetrack->starting_dt();
+				}
+				if ( (!$end) or $Timetrack->ending_dt() > $end ) {
+					$end = $Timetrack->ending_dt();
+				}
+				$desc .= $Timetrack->starting_dt() . ' to ' . $Timetrack->ending_dt() . ': ' . $Timetrack->description() . '<br/>';
+			} # end foreach Source Timetrack
+			if ( $NewTimetrack ) {
+        
+				$variable{error} .= $NewTimetrack->save({ starting_dt=>$start, ending_dt=>$end, description=>$desc });
+        if ( ! $variable{error} ) {
+          foreach my $T ( @Src_Timetracks ) {
+            next if ! $T->can_edit();
+            $T->delete();
+          }
+        }
+			}
+		} elsif ( $param{func} eq 'delete' ) {
+			foreach my $Timetrack ( openprint::Timetrack->find(id=>ref $param{timetrack_id} eq 'ARRAY' ? $param{timetrack_id} : [ split(',', $param{timetrack_id}) ] ) ) {
+				next if ! $Timetrack->can_edit();
+				$variable{error} .= $Timetrack->delete();
+			}
+		}
 	} # end if
 } # end sub _history
 
@@ -89,31 +133,31 @@ sub edit {
 	if ( $param{func} eq 'Save' ) {
 		$param{owner_id} = $session{company_id} if ! $param{owner_id};
 
-        my $start_datetime = DateTime->new( time_zone => $openprint::TZ,
-				( map { $_ => int($param{'starting_'.$_ }) } ( 'year', 'month', 'day', 'hour','minute' ) ),
-                );
+    my $start_datetime = DateTime->new( time_zone => $openprint::TZ,
+        ( map { $_ => int($param{'starting_'.$_ }) } ( 'year', 'month', 'day', 'hour','minute' ) ),
+        );
 
-        my $end_datetime = DateTime->new( time_zone => $openprint::TZ,
-				( map { $_ => int($param{'ending_'.$_ }) } ( 'year', 'month', 'day', 'hour','minute' ) ),
-                );
+    my $end_datetime = DateTime->new( time_zone => $openprint::TZ,
+        ( map { $_ => int($param{'ending_'.$_ }) } ( 'year', 'month', 'day', 'hour','minute' ) ),
+        );
 
-        if ( $start_datetime > $end_datetime ) {
-            $variable{error} .= 'Invalid end time. The end of the shift must occur after the start of the shift.  No changes made.<br/>';
-            return;
-        } # end if
+    if ( $start_datetime > $end_datetime ) {
+      $variable{error} .= 'Invalid end time. The end of the shift must occur after the start of the shift.  No changes made.<br/>';
+      return;
+    } # end if
 
-        my $parser = 'DateTime::Format::Pg';
+    my $parser = 'DateTime::Format::Pg';
 
 		$param{starting} = $parser->format_datetime( $start_datetime );
 		$param{ending} = $parser->format_datetime( $end_datetime );
 		if ( ! $param{timetrack_id} ) {
 			if ( openprint::Timetrack->find_one(
-						user_id		=> ( $param{user_id} ? $param{user_id} : undef ),
-						owner_id	=>$param{owner_id},
-						company_id	=>$param{company_id},
-						starting	=>$param{starting},
-						ending		=>$param{ending},
-						service_id	=>( $param{service_id} ? $param{service_id} : undef ),
+						user_id	  	=>  ( $param{user_id} ? $param{user_id} : undef ),
+						owner_id  	=>  $param{owner_id},
+						company_id	=>  $param{company_id},
+						starting  	=>  $param{starting},
+						ending		  =>  $param{ending},
+						service_id	=>  ( $param{service_id} ? $param{service_id} : undef ),
 						description	=>	$param{description},
 						) ) {
 				$variable{error} = 'Not creating duplicate.<br/>';

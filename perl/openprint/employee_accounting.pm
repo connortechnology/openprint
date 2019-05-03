@@ -8,6 +8,7 @@ require Encode;
 require openprint::Company_Credit;
 require openprint::order;
 require openprint::Order;
+require openprint::Order_Invoice;
 require openprint::Ledger;
 require openprint::Expenditure;
 require openprint::Expense;
@@ -30,24 +31,24 @@ sub _jump {
 
 sub search {
 	if ( $param{btnFunction} eq 'Go' ) {
-        if ( $param{StartDocket} or $param{order_id} or $param{invoice_id} ) {
-            my @Orders = openprint::Order->find(
-				( $param{StartDocket} ? ( docket=>$param{StartDocket} ) : () ),
-				( $param{order_id} ? ( id=>$param{order_id} ) : () ),
-				( $param{invoice_id} ? ( invoice_id=>$param{invoice_id} ) : () ),
-				);
-            if ( @Orders == 1 ) {
-                $variable{ExternalRedirect} = '/employee/accounting/details.html?order_id='.$Orders[0]->id();
-                return;
-            } # end if
-        } elsif ( $param{project_id} ) {
+		if ( $param{StartDocket} or $param{order_id} or $param{invoice_id} ) {
+			my @Orders = openprint::Order->find(
+					( $param{StartDocket} ? ( docket=>$param{StartDocket} ) : () ),
+					( $param{order_id} ? ( id=>$param{order_id} ) : () ),
+					( $param{invoice_id} ? ( invoice_id=>$param{invoice_id} ) : () ),
+					);
+			if ( @Orders == 1 ) {
+				$variable{ExternalRedirect} = '/employee/accounting/details.html?order_id='.$Orders[0]->id();
+				return;
+			} # end if
+		} elsif ( $param{project_id} ) {
 			my $Project = new openprint::Project( $param{project_id} );
 			if ( $Project->id() and $Project->order_id() ) {
-                $variable{ExternalRedirect} = '/employee/accounting/details.html?order_id='.$Project->order_id();
-                return;
-            } # end if
-        } # end if
-    } # end if
+				$variable{ExternalRedirect} = '/employee/accounting/details.html?order_id='.$Project->order_id();
+				return;
+			} # end if
+		} # end if
+	} # end if
 
 	_search();
 	ssi::setup_date_select( '/employee/accounting/search.html', 'ordered_on_start', -365 );
@@ -70,7 +71,7 @@ sub details {
 
 	my $order_id;
 	my $Order;
-	
+
 	if ( $param{order_id} ) {
 		$order_id = openprint::Order->transform( id => $param{order_id} );
 		$Order = new openprint::Order( $order_id );
@@ -105,8 +106,8 @@ sub details {
 			$variable{error} .= $Order->save({supplier_id=>$param{supplier_id}});
 		} # end if
 		$variable{ExternalRedirect} = '/employee/accounting/details.html?order_id='.$Order->id() if ! $variable{error};
-    } elsif ( $param{btnFunction} eq 'Save' ) {
-		
+	} elsif ( $param{btnFunction} eq 'Save' ) {
+
 		my $error;
 		$error .= 'Please enter a valid monetary amount.<br/>' if ( ! $param{amount} ) or $param{amount} =~ /[^-\$\d\.]/;
 		$error .= 'Please enter a valid received on date.<br/>' if ! Date::Calc::check_date( @param{'received_on_year','received_on_month','received_on_day'} );
@@ -115,17 +116,17 @@ sub details {
 
 		my $Payment = new openprint::Payment();
 		$error = $Payment->save({
-			'order_id'			=>	$order_id,
-			'recipient_id'		=>	$Order->supplier_id(),
-			'payor_id'			=>	$Order->company_id(),
-			'amount'			=>	$param{amount},
-			'received_on'		=>  join('-', @param{'received_on_year','received_on_month','received_on_day'} ),
-			'method'			=>	$param{method},
-			'currency_id'		=>	$Order->currency_id(),
-			'memo'				=>	$param{memo},
-			'transaction_id'	=>	$param{transaction_id},
-		});
-		
+				order_id			=>	$order_id,
+				recipient_id	=>	$Order->supplier_id(),
+				payor_id			=>	$Order->company_id(),
+				amount				=>	$param{amount},
+				received_on		=>  join('-', @param{'received_on_year','received_on_month','received_on_day'} ),
+				method				=>	$param{method},
+				currency_id		=>	$Order->currency_id(),
+				memo					=>	$param{memo},
+				transaction_id	=>	$param{transaction_id},
+				});
+
 		if ( $error ) {
 			return misc::error( $log, $dbh, \%variable, 'Error Saving Payment', $error );
 		} else {
@@ -152,9 +153,9 @@ sub details {
 			$Order->save();
 		} # end if
 		$variable{ExternalRedirect} = '/employee/accounting/details.html?order_id='.$Order->id();
-		#openprint::order::send_invoice( $r, $log, $dbh, $order_id );
-    } elsif ( $param{btnFunction} eq 'Cancel' ) {
-       openprint::order::cancel_order( $log, $dbh, $order_id );
+#openprint::order::send_invoice( $r, $log, $dbh, $order_id );
+	} elsif ( $param{btnFunction} eq 'Cancel' ) {
+		$variable{error} .= $Order->cancel();
 	} # end if
 
 	openprint::order::get_invoice_to( \%variable, $Order );
@@ -171,7 +172,7 @@ sub credit {
 	my $company_id = $param{ddmCustomer};
 
 	if ( $param{btnFunction} eq 'Go' ) {
-		 if ( $param{txtSearchAccountNum} ne '' ) {
+		if ( $param{txtSearchAccountNum} ne '' ) {
 			my @Companies = openprint::Company->find( accountnumber=>$param{txtSearchAccountNum}, deleted=>[0,1] );
 			if ( @Companies == 1 ) {
 				$company_id = $Companies[0]{id};
@@ -179,11 +180,30 @@ sub credit {
 				$variable{error} = join('<br/>',
 						'There are multiple companies with that account number.  Select by clicking:',
 						map { '<a href="credit.html?ddmCustomer='.$_->id().'">'.$_->accountnumber() . ' : ' . $_->name().'</a>' } @Companies,
-							);
+						);
 			} else {
 				$variable{error} = 'No company found with account # ' . $param{txtSearchAccountNum}.'<br/>';	
 			} # end if
 		} # end if
+
+ } elsif ( $param{btnFunction} eq 'Cancel' ) {
+    if ( ! $param{PAID} ) {
+      $variable{error} = 'Please select an order to cancel.<br/>';
+    } else {
+      my @errors;
+      foreach my $order_id ( ref $param{PAID} eq 'ARRAY' ? @{$param{PAID}} : $param{PAID} ) {
+        my $Order = new openprint::Order( $order_id );
+        if ( $Order->company_id() != $company_id ) {
+          push @errors, 'Order ' . $Order->id() . ' does not belong to ' . new openprint::Company($company_id)->name().'.';
+          next;
+        } # end if
+				$_ = $Order->cancel();
+        push @errors, $_ if $_;
+      } # end foreach
+      if ( @errors ) {
+        $variable{error} = join('<br/>', @errors );
+      } # end if
+    } # end if
 
 	} elsif ( $param{btnFunction} eq 'Pay' ) {
 		if ( ! $param{PAID} ) {
@@ -212,45 +232,45 @@ sub credit {
 			foreach my $Supplier ( openprint::Company->find( offers_credit=>1) ) {
 				my $Credit = new openprint::Company_Credit( { company_id=>$company_id, supplier_id=>$Supplier->id() } );
 
-                if (
-                        ( $Credit->denydays() != openprint::Company_Credit->transform('denydays', $param{'denydays-'.$$Supplier{id}} ) ) or
-                        ( $Credit->warndays() != openprint::Company_Credit->transform('warndays', $param{'warndays-'.$$Supplier{id}} ) ) or
-                        ( $Credit->limit() != openprint::Company_Credit->transform('limit', $param{'limit-'.$$Supplier{id}} ) ) or
-                        ( $Credit->hold() ne openprint::Company_Credit->transform('hold', $param{'hold-'.$$Supplier{id}} ) ) or
-                        ( $Credit->downpayment() != openprint::Company_Credit->transform('downpayment', $param{'downpayment-'.$$Supplier{id}} ) ) or
-                        ( $Credit->cod() != openprint::Company_Credit->transform('cod', $param{'cod-'.$$Supplier{id}} ) ) or
-                        ( $Credit->late_payment_amount() != openprint::Company_Credit->transform('late_payment_amount', $param{'late_payment_amount-'.$$Supplier{id}} ) ) or
-                        ( $Credit->late_payment_units() ne openprint::Company_Credit->transform('late_payment_units', $param{'late_payment_units-'.$$Supplier{id}} ) ) or
-                        ( $Credit->early_payment_amount() != openprint::Company_Credit->transform('early_payment_amount', $param{'early_payment_amount-'.$$Supplier{id}} ) ) or
-                        ( $Credit->early_payment_units() ne openprint::Company_Credit->transform('early_payment_units', $param{'early_payment_units-'.$$Supplier{id}} ) ) or
-                        ( $Credit->early_payment_days() != openprint::Company_Credit->transform('early_payment_days', $param{'early_payment_days-'.$$Supplier{id}} ) )
-                        ) {
-                    my $note = 'Old credit: ' . $Credit->to_string() if $Credit->supplier_id();
+				if (
+						( $Credit->denydays() != openprint::Company_Credit->transform('denydays', $param{'denydays-'.$$Supplier{id}} ) ) or
+						( $Credit->warndays() != openprint::Company_Credit->transform('warndays', $param{'warndays-'.$$Supplier{id}} ) ) or
+						( $Credit->limit() != openprint::Company_Credit->transform('limit', $param{'limit-'.$$Supplier{id}} ) ) or
+						( $Credit->hold() ne openprint::Company_Credit->transform('hold', $param{'hold-'.$$Supplier{id}} ) ) or
+						( $Credit->downpayment() != openprint::Company_Credit->transform('downpayment', $param{'downpayment-'.$$Supplier{id}} ) ) or
+						( $Credit->cod() != openprint::Company_Credit->transform('cod', $param{'cod-'.$$Supplier{id}} ) ) or
+						( $Credit->late_payment_amount() != openprint::Company_Credit->transform('late_payment_amount', $param{'late_payment_amount-'.$$Supplier{id}} ) ) or
+						( $Credit->late_payment_units() ne openprint::Company_Credit->transform('late_payment_units', $param{'late_payment_units-'.$$Supplier{id}} ) ) or
+						( $Credit->early_payment_amount() != openprint::Company_Credit->transform('early_payment_amount', $param{'early_payment_amount-'.$$Supplier{id}} ) ) or
+						( $Credit->early_payment_units() ne openprint::Company_Credit->transform('early_payment_units', $param{'early_payment_units-'.$$Supplier{id}} ) ) or
+						( $Credit->early_payment_days() != openprint::Company_Credit->transform('early_payment_days', $param{'early_payment_days-'.$$Supplier{id}} ) )
+					 ) {
+					my $note = 'Old credit: ' . $Credit->to_string() if $Credit->supplier_id();
 					$variable{error} .= $Credit->save( { 'company_id'=>$company_id, 'supplier_id'=>$Supplier->id(), 
 							map { $_ => $param{$_.'-'.$Supplier->id()} } ( 'denydays','warndays','limit','hold','downpayment','cod',
-'late_payment_amount','late_payment_units','early_payment_amount','early_payment_units','early_payment_days' ) } );
-                    $note .= '<br/>new credit: ' . $Credit->to_string();
-                    $variable{error} .= (new openprint::Log())->save( {
+									'late_payment_amount','late_payment_units','early_payment_amount','early_payment_units','early_payment_days' ) } );
+					$note .= '<br/>new credit: ' . $Credit->to_string();
+					$variable{error} .= (new openprint::Log())->save( {
 							action		=>	'Credit Information Changed',
 							object_id	=>	$company_id,
 							object_type	=>	'openprint::Company',
 							note		=>	$note,
-});
-                } else {
-                    $variable{information} .= 'Credit unchanged for ' . $Supplier->name() . '<br/>';
-                } # end if
+							});
+				} else {
+					$variable{information} .= 'Credit unchanged for ' . $Supplier->name() . '<br/>';
+				} # end if
 			} # end foreach Supplier
 			my %updates;
-			foreach my $p ( 'discount', 'salesrep_id', 'notes' ) {
-				$updates{$p} = $param{$p} if exists $param{$p} and $$Company{$p} ne $param{$p};
+			foreach my $p ( 'csr_commission','credit_card_fee', 'discount', 'salesrep_id', 'notes' ) {
+				$updates{$p} = $param{$p} if exists($param{$p}) and ($$Company{$p} ne $param{$p});
 			}
 			if ( %updates ) {
-				my $note = note=>join('<br/>', map { $_ . ' changed from ' . $$Company{$_} . ' to ' . $updates{$_} } sort keys %updates );
+				my $note = join('<br/>', map { $_ . ' changed from ' . $$Company{$_} . ' to ' . $updates{$_} } sort keys %updates );
 				if ( ! ( $_ = $Company->save(\%updates) ) ) {
-					(new openprint::Log())->save({action=>'Update Company', Object=>$Company, note=>$note });
+					(new openprint::Log())->save({ action=>'Edit Company', Object=>$Company, note=>$note });
 				} else {
 					$variable{error} .= $_ . '<br/>';
-				} # en dif
+				} # end if
 			} 
 			sql::end_transaction( $dbh, $ac );
 		} # end if
@@ -261,10 +281,10 @@ sub credit {
 		openprint::Company->find();
 		foreach my $Credit ( openprint::Company_Credit->find() ) {
 			push @data, ( $Credit->Supplier()->name(), $Credit->Company()->name(), $Credit->Company()->business_name(),
-				 $Credit->warndays(), $Credit->denydays(), $Credit->limit(), 
-				 $Credit->hold(), $Credit->downpayment(), $Credit->cod(),
-				 $Credit->debt(), $Credit->remaining(), '',
-				 );
+					$Credit->warndays(), $Credit->denydays(), $Credit->limit(), 
+					$Credit->hold(), $Credit->downpayment(), $Credit->cod(),
+					$Credit->debt(), $Credit->remaining(), '',
+					);
 		} # ebd foreach Credut
 		misc::export_csv( $r, $log, \%variable, 'Credit.csv', \@header, \@data );
 	} elsif ( $param{btnFunction} eq 'Import' ) {
@@ -283,7 +303,7 @@ sub credit {
 			my $ac = sql::start_transaction( $dbh );
 			while ( <$io> ) {
 				$csv->parse($_);
-				#my ( $creditor_name, $company_name, $legal_name, $warndays, $denydays, $limit, $hold, $downpayment, $cod, $note ) = misc::trim( $csv->fields() );
+#my ( $creditor_name, $company_name, $legal_name, $warndays, $denydays, $limit, $hold, $downpayment, $cod, $note ) = misc::trim( $csv->fields() );
 				my ( $creditor_name, $company_name, $legal_name, $warndays, $denydays, $limit, $hold, $downpayment, $cod, $note ) = $csv->fields();
 				next if ! $creditor_name;
 				next if ! $company_name;
@@ -315,7 +335,7 @@ sub credit {
 					} elsif ( substr( $company_name, -5,5) eq ' Ltd.' and $Companies{substr($company_name,0,-5)} ) {
 						$Companies{$company_name} = $Companies{substr($company_name,0,-5)};
 					} else {
-$log->debug("$company_name " . substr( $company_name, -1,1) . ','. substr($company_name,0,-1) );
+						$log->debug("$company_name " . substr( $company_name, -1,1) . ','. substr($company_name,0,-1) );
 						$variable{error} .= "Unknown company $company_name<br/>";
 						next;
 					} # end if
@@ -329,36 +349,36 @@ $log->debug("$company_name " . substr( $company_name, -1,1) . ','. substr($compa
 				$hold = 0 if $hold != 1;
 				my $Credit = $Companies{$company_name}->Credit($Companies{$creditor_name}->id());
 				if ( 
-					( $warndays eq '' or $Credit->warndays() == $warndays ) and
-					( $denydays eq '' or $Credit->denydays() == $denydays ) and
-					( $limit eq '' or $Credit->limit() == $limit ) and
-					( $hold eq '' or $Credit->hold() == $hold ) and
-					( $downpayment eq '' or $Credit->downpayment() == $downpayment ) and
-					( $cod eq '' or $Credit->cod() == $cod ) 
-	) {
+						( $warndays eq '' or $Credit->warndays() == $warndays ) and
+						( $denydays eq '' or $Credit->denydays() == $denydays ) and
+						( $limit eq '' or $Credit->limit() == $limit ) and
+						( $hold eq '' or $Credit->hold() == $hold ) and
+						( $downpayment eq '' or $Credit->downpayment() == $downpayment ) and
+						( $cod eq '' or $Credit->cod() == $cod ) 
+					 ) {
 					$variable{information} .= "No change made for $creditor_name for $company_name $legal_name<br/>";
 					next;
 				} # end if
 
-$variable{information} .= "$company_name for $creditor_name changed:".join(', ',
-					(( $warndays eq '' or $Credit->warndays() == $warndays ) ? () : ('warn days: '.$Credit->warndays().' to '.$warndays )),
-					(( $denydays eq '' or $Credit->denydays() == $denydays ) ? () : ('deny days: '.$Credit->denydays().' to '.$denydays )),
-					(( $limit eq '' or $Credit->limit() == $limit )? () : ('limit: ' . $Credit->limit().' to ' . $limit )),
-					(( $hold eq '' or $Credit->hold() == $hold ) ? () : ( 'hold: ' . $Credit->hold().' to ' . $hold )),
-					(( $downpayment eq '' or $Credit->downpayment() == $downpayment ) ? () : ( 'downpayment: ' . $Credit->downpayment() . $downpayment )),
-					(( $cod eq '' or $Credit->cod() == $cod ) ? () : ('cod: ' . $Credit->cod() . ' to ' . $cod ) ),
-).'<br/>';
+				$variable{information} .= "$company_name for $creditor_name changed:".join(', ',
+						(( $warndays eq '' or $Credit->warndays() == $warndays ) ? () : ('warn days: '.$Credit->warndays().' to '.$warndays )),
+						(( $denydays eq '' or $Credit->denydays() == $denydays ) ? () : ('deny days: '.$Credit->denydays().' to '.$denydays )),
+						(( $limit eq '' or $Credit->limit() == $limit )? () : ('limit: ' . $Credit->limit().' to ' . $limit )),
+						(( $hold eq '' or $Credit->hold() == $hold ) ? () : ( 'hold: ' . $Credit->hold().' to ' . $hold )),
+						(( $downpayment eq '' or $Credit->downpayment() == $downpayment ) ? () : ( 'downpayment: ' . $Credit->downpayment() . $downpayment )),
+						(( $cod eq '' or $Credit->cod() == $cod ) ? () : ('cod: ' . $Credit->cod() . ' to ' . $cod ) ),
+						).'<br/>';
 
 				$variable{error} .= $Credit->save({
-					( $$Credit{company_id} ? () : ( 'company_id'=>$Companies{$company_name}->id() ) ),
-					( $$Credit{supplier_id} ? () : ( 'supplier_id'=>$Companies{$creditor_name}->id() ) ),
-					( $warndays ne '' ? ('warndays'=>$warndays) : () ),
-					( $denydays ne '' ? ('denydays'=>$denydays) : () ),
-					( $limit ne '' ? ('limit'=>$limit) : () ),
-					( $hold ne '' ? ('hold'=>$hold) : () ),
-					( $downpayment ne '' ? ('downpayment'=>$downpayment) : () ),
-					( $cod ne '' ? ('cod'=>$cod) : () ),
-					});
+						( $$Credit{company_id} ? () : ( 'company_id'=>$Companies{$company_name}->id() ) ),
+						( $$Credit{supplier_id} ? () : ( 'supplier_id'=>$Companies{$creditor_name}->id() ) ),
+						( $warndays ne '' ? ('warndays'=>$warndays) : () ),
+						( $denydays ne '' ? ('denydays'=>$denydays) : () ),
+						( $limit ne '' ? ('limit'=>$limit) : () ),
+						( $hold ne '' ? ('hold'=>$hold) : () ),
+						( $downpayment ne '' ? ('downpayment'=>$downpayment) : () ),
+						( $cod ne '' ? ('cod'=>$cod) : () ),
+						});
 				$variable{error} .= (new openprint::Log())->save({action=>'Credit Information Imported',object_id=>$Companies{$company_name}->id(),object_type=>'openprint::Company',note=>$note. " for $company_name for $creditor_name"}) if $note;
 			} # end while
 			(new openprint::Log())->save({'action'=>'Credit Information Imported',note=>$variable{error}.$variable{information}});
@@ -366,8 +386,8 @@ $variable{information} .= "$company_name for $creditor_name changed:".join(', ',
 		} # end if	
 	} # end if btnFunction
 
-$variable{CompanyIndex} = $company_id;
-$variable{Company} = new openprint::Company($company_id);
+	$variable{CompanyIndex} = $company_id;
+	$variable{Company} = new openprint::Company($company_id);
 } # end sub credit
 
 sub ledger {
@@ -397,8 +417,8 @@ sub expenditures {
 	} else {
 		ssi::save_params( '/employee/accounting/expenditures.html', ( 'occurred_on_start_year','occurred_on_start_month','occurred_on_start_day','occurred_on_end_year','occurred_on_end_month','occurred_on_end_day') );
 	} # end if
-ssi::setup_date_select( '/employee/accounting/expenditures.html', 'occurred_on_start', -31 );
-ssi::setup_date_select( '/employee/accounting/expenditures.html', 'occurred_on_end', '' );
+	ssi::setup_date_select( '/employee/accounting/expenditures.html', 'occurred_on_start', -31 );
+	ssi::setup_date_select( '/employee/accounting/expenditures.html', 'occurred_on_end', '' );
 
 } # end sub expenditures
 
@@ -441,7 +461,7 @@ sub _expenses {
 				'paid_on_start_year','paid_on_start_month','paid_on_start_day',
 				'paid_on_end_year','paid_on_end_month','paid_on_end_day',
 				'category_id', 'recipient_id', 'account_id','attention', 'currency_id',
-				'amount','total',
+				'amount','total','business_use',
 				) );
 } # end sub _expenses
 
@@ -458,13 +478,13 @@ sub expense {
 		} # end if
 	} elsif ( $param{btnFunction} eq 'Save' ) {
 		if ( $param{amount} =~ /[\=\+\-\*\/]/ ) {
-$log->debug("Calcing amount: $param{amount}");
+			$log->debug("Calcing amount: $param{amount}");
 			if ( $param{amount} =~ /\=/ ) {	
 				eval('$param{amount} ' . "$param{amount};" );
 			} else {
 				eval('$param{amount} = ' . "$param{amount};" );
 			} # end if
-$log->debug("Calcing amount: $param{amount}");
+			$log->debug("Calcing amount: $param{amount}");
 		} # end if
 		$param{owner_id} = $session{company_id} if ! $param{owner_id};
 		$param{due_on} = sprintf('%.4d-%.2d-%.2d', @param{'due_on_year','due_on_month','due_on_day'} ) if Date::Calc::check_date( @param{'due_on_year','due_on_month','due_on_day'} );
@@ -494,16 +514,16 @@ $log->debug("Calcing amount: $param{amount}");
 			return;	
 		} # end if
 
-		# At this point,  the array returned should be the correct, appropriate list of taxes.  What we are updating is merely whether we are charging to for those taxes
+# At this point,  the array returned should be the correct, appropriate list of taxes.  What we are updating is merely whether we are charging to for those taxes
 		foreach my $Tax ( $Expense->Taxes() ) {
-            # Order is important here. Also the 1* turns an undef value into a specific boolean 0, because we used a checkbox
+# Order is important here. Also the 1* turns an undef value into a specific boolean 0, because we used a checkbox
 			if ( $Tax->charge() != 1*$param{'tax_charge-'.$Tax->tax_id()} ) {
 				$Tax->charge(1*$param{'tax_charge-'.$Tax->tax_id()});
 				$Tax->amount(undef);
 				$Tax->save();
 			} # end if
 			ssi::save_params( '/employee/accounting/expense.html', $param{'tax_charge-'.$Tax->tax_id()} ) if $param{'tax_charge-'.$Tax->tax_id()};
-        } # end foreach
+		} # end foreach
 		ssi::save_params( '/employee/accounting/expense.html', 'category_id', 
 				'due_on', 'invoiced_on', 'paid_on', 'recipient_id', 'business_use', 'account_id'
 				);
@@ -511,7 +531,7 @@ $log->debug("Calcing amount: $param{amount}");
 		$variable{information} .= 'Expense saved successfully.<br/>';
 		$variable{ExternalRedirect} = '/employee/accounting/expenses.html';
 
-		# Now update the session for expenses so that we always show the entry we just saved.
+# Now update the session for expenses so that we always show the entry we just saved.
 		foreach my $key ( 'company_id', 'recipient_id', 'account_id', 'category_id' ) {
 			if ( $session{'/employee/accounting/expenses.html?'.$key} and ( $session{'/employee/accounting/expenses.html?'.$key} != $$Expense{$key} ) ) {
 				delete $session{'/employee/accounting/expenses.html?'.$key};
@@ -524,19 +544,19 @@ $log->debug("Calcing amount: $param{amount}");
 	$Expense->owner_id( $session{company_id} ) if ! $Expense->owner_id();
 	$Expense->invoiced_on( join('-', Date::Calc::Today() ) ) if ! $Expense->invoiced_on();
 
-    if ( ( ! $Expense->id() ) and ( time - $session{'/employee/accounting/expense.html?lastupdated'} < ( 12*60*60 ) ) ) {
-        $variable{Expense}->recipient_id( $session{'/employee/accounting/expense.html?recipient_id'} ) if ! $variable{Expense}->recipient_id();
-        $variable{Expense}->due_on( $session{'/employee/accounting/expense.html?due_on'} ) if ! $variable{Expense}->due_on();
-        $variable{Expense}->invoiced_on( $session{'/employee/accounting/expense.html?invoiced_on'} ) if ! $variable{Expense}->invoiced_on();
-        $variable{Expense}->paid_on( $session{'/employee/accounting/expense.html?paid_on'} ) if ! $variable{Expense}->paid_on();
-        $variable{Expense}->category_id( $session{'/employee/accounting/expense.html?category_id'} ) if ! $variable{Expense}->category_id();
-        $variable{Expense}->business_use( $session{'/employee/accounting/expense.html?business_use'} ) if ! $variable{Expense}->business_use();
-        $variable{Expense}->account_id( $session{'/employee/accounting/expense.html?account_id'} ) if ! $variable{Expense}->account_id();
-        foreach my $Tax ( $Expense->Taxes() ) {
+	if ( ( ! $Expense->id() ) and ( time - $session{'/employee/accounting/expense.html?lastupdated'} < ( 12*60*60 ) ) ) {
+		$variable{Expense}->recipient_id( $session{'/employee/accounting/expense.html?recipient_id'} ) if ! $variable{Expense}->recipient_id();
+		$variable{Expense}->due_on( $session{'/employee/accounting/expense.html?due_on'} ) if ! $variable{Expense}->due_on();
+		$variable{Expense}->invoiced_on( $session{'/employee/accounting/expense.html?invoiced_on'} ) if ! $variable{Expense}->invoiced_on();
+		$variable{Expense}->paid_on( $session{'/employee/accounting/expense.html?paid_on'} ) if ! $variable{Expense}->paid_on();
+		$variable{Expense}->category_id( $session{'/employee/accounting/expense.html?category_id'} ) if ! $variable{Expense}->category_id();
+		$variable{Expense}->business_use( $session{'/employee/accounting/expense.html?business_use'} ) if ! $variable{Expense}->business_use();
+		$variable{Expense}->account_id( $session{'/employee/accounting/expense.html?account_id'} ) if ! $variable{Expense}->account_id();
+		foreach my $Tax ( $Expense->Taxes() ) {
 			$Tax->charge( $session{'/employee/accounting/expense.html?tax_charge-'.$Tax->tax_id()} ) if $session{'/employee/accounting/expense.html?tax_charge-'.$Tax->tax_id()};
-        } # end foreach
-    } # end if
-	
+		} # end foreach
+	} # end if
+
 } # end sub expense
 
 sub _expense_taxes {
@@ -583,7 +603,7 @@ sub credit_applications {
 			'ddmStatus',
 			'created_on_start_year', 'created_on_start_month','created_on_start_day',
 			'created_on_end_year', 'created_on_end_month','created_on_end_day',
-		);
+			);
 
 } # end sub credit_applications
 
@@ -611,15 +631,15 @@ sub credit_application {
 				'granted_downpayment'	=>	$param{downpayment},
 				'granted_cod'			=>	$param{cod},
 				});
-		
+
 		$variable{error} .= $Credit->save( {
-			'company_id'	=>	$Application->company_id(),
-			'denydays'		=>	$param{denydays},
-			'warndays'		=>	$param{warndays},
-			'limit'			=>	$param{limit},
-			'downpayment'	=>	$param{downpayment},
-			'cod'			=>	$param{cod},
-			} );
+				'company_id'	=>	$Application->company_id(),
+				'denydays'		=>	$param{denydays},
+				'warndays'		=>	$param{warndays},
+				'limit'			=>	$param{limit},
+				'downpayment'	=>	$param{downpayment},
+				'cod'			=>	$param{cod},
+				} );
 		if ( ! $variable{error} ) {
 
 			$variable{ReplacementText} = ssi::slurp_content( '/email_content/credit_change_notification.html' );
@@ -630,7 +650,7 @@ sub credit_application {
 					TO		=> $Application->User()->email(),
 					SUBJECT => 'Credit Status Changed.',
 					ATTACHMENTS	=> [ '', MIME::QuotedPrint::encode_qp(Encode::encode('utf-8',$template)), 'text/html', 'quoted-printable' ],
-				);
+					);
 		} # end if
 		$variable{ExternalRedirect} = '/employee/accounting/credit_applications.html' if ! $variable{error};
 	} elsif ( $param{btnFunction} eq 'SendToMe' ) {
@@ -678,7 +698,7 @@ sub _order_invoices {
 				$variable{error} .= $OI->save({ order_id=>$$Order{id}, invoice_id=>$$Invoice{id} });
 				$Order->add_log('Invoiced # ' . $Invoice->link_to());
 			} # end if
-        } # end if
+		} # end if
 	} # end if action
 } # end sub _order_invoices
 

@@ -144,7 +144,7 @@ sub calc {
 				next;
 			} # end if
 			my $Imposition = new openprint::Imposition();
-			$Imposition->load( $sig_specs, $qty_index );
+			$Imposition->load( $sig_specs, $qty_index, $Project );
 			my $Equipment = $Imposition->Press();
 			$$specs{'hdnBreakdown'.$qty_index} .= $Imposition->to_string().'</br>';
 
@@ -194,7 +194,7 @@ sub calc {
 				next;
 			} # end if
 			my $Imposition = new openprint::Imposition();
-			$Imposition->load( $sig_specs, $qty_index );
+			$Imposition->load( $sig_specs, $qty_index, $Project );
 			my $Equipment = $Imposition->Equipment();
 			my %Results = signature_calc( $Project, $specs, $sig_specs, $qty_index, \%proof_indexes, \%proof_totals, $Equipment, $Imposition );
 			$totalPrice += $Results{Total};
@@ -329,7 +329,7 @@ sub insert_proofs {
 
 	my $sig_specs = openprint::service::get_specs_ref( $Project, $signature_service_index );
 	my $Imposition = new openprint::Imposition();
-	$Imposition->load( $sig_specs, $qty_index );
+	$Imposition->load( $sig_specs, $qty_index, $Project );
 	my $specs = openprint::service::get_specs_ref( $Project, $service_index );
 
 	my $ac = sql::start_transaction( $dbh );

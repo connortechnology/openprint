@@ -194,10 +194,13 @@ view_photo();
 } # end sub _view_photo
 
 sub view_photo {
-	$param{asset_id} =~ s/\D//g;
-	$param{album_id} =~ s/\D//g;
+	$param{asset_id} = openprint::Asset->transform( id => $param{asset_id} );
+	$param{album_id} = openprint::Photo_Album->transform( id => $param{album_id} );
+
 	if ( ! ( $param{asset_id} and $param{album_id} ) ) {
 		# Search engines, etc might get here
+		$variable{Photo} = new openprint::Photo_in_Album();
+    $variable{Album} = new openprint::Photo_Album();
 		return;
 	} # end if
 
@@ -205,6 +208,7 @@ sub view_photo {
 	if ( ! $Photo ) {
 		$variable{Photo} = new openprint::Photo_in_Album();
 		$log->warn("No photo for album $param{album_id} phto: $param{asset_id}");
+    $variable{Album} = new openprint::Photo_Album();
 		return;
 	} # end if
 

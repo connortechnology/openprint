@@ -1,4 +1,4 @@
-#!/usr/bin/perl
+#!/usr/bin/perl -w
 use lib "/etc/apache2/lib/perl";
 use strict;
 use utf8;
@@ -49,29 +49,35 @@ foreach my $param ( 'db_name','db_user','db_pass' ) {
 	die "$program: missing required --$param parameter" if ! $config{$param};
 } # end foreach required-param
 
-
 $log->info("Opening SQL connection");
 $dbh = sql::open_sql( $log, 
-	port		=> $config{db_port},
-	host		=> $config{db_host},
+	port			=> $config{db_port},
+	host			=> $config{db_host},
 	database	=> $config{db_name},
 	driver		=> 'Pg',
-	login		=> $config{db_user},
+	login			=> $config{db_user},
 	password	=> $config{db_pass},
 );
 die 'Error opening db' if ! $dbh;
 configuration::from_db( );
 configuration::from_file( $$opts{config} );
 configuration::merge( $opts );
+$config{log_level} = 'debug' if ! $config{log_level};
+$log = logger->new( {file=>$config{log_file}, level=>$config{log_level}} );
 
 $session{company_id} = $config{owner_id};
+$session{user_type} = $config{user_type} ? $config{user_type} : '';
 $ENV{DOCUMENT_ROOT} = $config{DOCUMENT_ROOT};
 
 openprint::session_init();
 
 # The first query to execute grabs the ids of all of the email campaigns
 # that are currently set to run
-my @campaign_ids = openprint::EmailCampaign->find( $$opts{campaign_id} ? ( id=>$$opts{campaign_id} ) : (active => 'Y', 'nextrun <' => 'NOW()', 'custom'=>['(timeofday IS NULL) OR (timeofday <= CURRENT_TIME)'] ) );
+openprint::EmailCampaign->lock();
+my @campaign_ids = openprint::EmailCampaign->find(
+		$$opts{campaign_id} ?
+		( id=>$$opts{campaign_id} ) :
+		(active => 'Y', 'nextrun <' => 'NOW()', custom=>['(timeofday IS NULL) OR (timeofday <= CURRENT_TIME)'] ) );
 
 $log->info("There are ".@campaign_ids." active campaigns\n");
 
@@ -81,8 +87,16 @@ foreach my $Campaign (@campaign_ids) {
 	$Campaign->send();
 	#print "Done campaign " . $Campaign->name() . "\n";
 } # foreach campaign_id
+openprint::EmailCampaign->unlock();
+
 
 $dbh->disconnect();
+
+sub usage {
+print "email_scheduler.pl 'help', 'log_file=s', 'log_level=s',
+    'db_port=s', 'db_name=s', 'db_host=s', 'db_user=s', 'db_pass=s',
+	'config=s', 'campaign_id=s',\n";
+}
 
 1;
 __END__

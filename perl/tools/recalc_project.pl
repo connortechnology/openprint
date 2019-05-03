@@ -34,7 +34,7 @@ if ($opts->{help}) {
 
 my $program = basename($0);
 # Get our configuration information
-$_ = configuration::from_file('/etc/openprint/openprint.conf');
+$_ = configuration::from_file("/etc/openprint/$program.conf");
 $log->error($_) if $_;
 configuration::merge($opts);
 
@@ -59,21 +59,24 @@ if ( $config{pid_file} ) {
 
 $log->debug("Connecting to db");	
 $dbh = sql::open_sql( $log,
-		host		=> $config{db_host},
+		host			=> $config{db_host},
 		database	=> $config{db_name},
 		driver		=> 'Pg',
-		login		=> $config{db_user},
+		login			=> $config{db_user},
 		password	=> $config{db_pass},
 		);
 if ( ! $dbh ) {
 	die "Error opening db. $!";
 } # end if
 configuration::init( $opts );
-$_ = configuration::from_file('/etc/openprint/camera_command.conf');
+$_ = configuration::from_file("/etc/openprint/$program.conf");
 $log->error($_) if $_;
 configuration::merge($opts);
 openprint::session_init();
 $openprint::session{'Currency_id'} =1 if ! $openprint::session{'Currency_id'};
+foreach my $k ( keys %openprint::session ) {
+$log->debug("Session $k => $openprint::session{$k}");
+}
 
 
 my $Project = new openprint::Project( $$opts{project_id} );

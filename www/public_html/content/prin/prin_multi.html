@@ -41,19 +41,19 @@
 <ul>
 	<li class="Final">
 	<label>Final</label>
-	<? echo ( input( type=>'float', id=>'txtFinalWidth', name=>'txtFinalWidth', value=>$$variable{txtFinalWidth}, onkeyup=>q`remove_div('OrderButton');`); ) ?> x
-	<? echo ( input( type=>'float', id=>'txtFinalHeight', name=>'txtFinalHeight', value=>$$variable{txtFinalHeight}, onkeyup=>q`remove_div('OrderButton');`); ) ?>
+	<? echo ( input( type=>'float', id=>'txtFinalWidth', name=>'txtFinalWidth', value=>$$variable{txtFinalWidth}, oninput=>q`remove_div('OrderButton');`); ) ?> x
+	<? echo ( input( type=>'float', id=>'txtFinalHeight', name=>'txtFinalHeight', value=>$$variable{txtFinalHeight}, oninput=>q`remove_div('OrderButton');`); ) ?>
 	</li>
 	<li class="Flat">
 	<label>Flat</label>
-	<? echo ( input( type=>'float', id=>'txtWidth', name=>'txtWidth', value=>$$variable{txtWidth}, onkeyup=>q`remove_div('OrderButton');`); ) ?> x
-	<? echo ( input( type=>'float', id=>'txtHeight', name=>'txtHeight', value=>$$variable{txtHeight}, onkeyup=>q`remove_div('OrderButton');`); ) ?>
+	<? echo ( input( type=>'float', id=>'txtWidth', name=>'txtWidth', value=>$$variable{txtWidth}, oninput=>q`remove_div('OrderButton');`); ) ?> x
+	<? echo ( input( type=>'float', id=>'txtHeight', name=>'txtHeight', value=>$$variable{txtHeight}, oninput=>q`remove_div('OrderButton');`); ) ?>
 	</li>
 </ul>
 </div>
 <ul>
 				<li class="spine"><label>Spine</label>
-					<?echo(radio('spine', [ 'height', 'Height', 'width', 'Width' ], $$variable{spine}, { default=>'height', onclick=>'calc(this.form.name)' } ); ) ?>
+					<?echo(radio('spine', [ 'height', 'Height', 'width', 'Width' ], $$variable{spine}, { default=>'height', onclick=>'calc(this.form.name);' } ); ) ?>
 				</li>
 								<li class="pages">
 									<label>Pages</label>
@@ -62,7 +62,7 @@
 <? echo ( ssi::make_drop_down( [ map { $_, $_ . ' pages' } ( 12, 24, 28, 32 ) ], $$variable{txtTotalPageQuantity} ); ) ?>
 </select>
 <? else ( $$variable{ProjectType}->name() eq 'Calendars' ) ?>
-									<? echo ( input( type=>'cardinal', id=>'txtTotalPageQuantity', name=>'txtTotalPageQuantity', value=>$$variable{txtTotalPageQuantity}, onkeyup=>q`remove_div('OrderButton');` ); ) ?>
+									<? echo ( input( type=>'cardinal', id=>'txtTotalPageQuantity', name=>'txtTotalPageQuantity', value=>$$variable{txtTotalPageQuantity}, oninput=>q`remove_div('OrderButton');calc(this.form.name);` ); ) ?>
 <? endif ( $$variable{ProjectType}->name() eq 'Calendars' ) ?>
 								</li>
 								<li class="cover">

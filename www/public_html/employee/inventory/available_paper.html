@@ -174,7 +174,7 @@ Please select a Paper to view/edit.<br>
 					<label>Location</label>
 					<select id="location_id" name="location_id" multiple="multiple" onchange="calc(this.form);">
 					<? echo ( 
-						my @options =	('All','All','Unknown','Unknown', map { $_->id(), $_->name() } openprint::Location->find(type=>'place', order=>'parent_id NULLS FIRST,lower(name)') );
+						my @options =	('All','All','Unknown','Unknown', map { $_->id(), $_->name() } openprint::Location->find(company_id=>$openprint::Owner->id(), type=>'place', order=>'parent_id NULLS FIRST,lower(name)') );
 						$session{'/employee/inventory/available_paper.html?location_id'} = undef if ! sets::isin( $session{'/employee/inventory/available_paper.html?location_id'}, \@options );
 						my @selected = split(',', $session{'/employee/inventory/available_paper.html?location_id'} );
 						if ( ! @selected ) {

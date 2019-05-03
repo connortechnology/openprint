@@ -1,5 +1,6 @@
 package openprint::main_project;
 use strict;
+use warnings;
 use openprint ();
 use vars qw( $r $log $dbh %variable %param %session %config );
 *r = \$openprint::r;
@@ -35,39 +36,38 @@ sub sign_off {
 		} else {
 			$variable{Name} = $param{Name};
 			$variable{error} = 'Validation Code incorrect.	Please try again.';
-			$variable{Redirect} = '/main/project/sign_off.html';
+			$variable{ExternalRedirect} = '/main/project/sign_off.html?ProjectIndex='.$param{ProjectIndex};
 		} # end if
 	} # end if
-	openprint::main_project::view( $param{ProjectIndex} );
-	$variable{ProjectIndex} = $param{ProjectIndex};
+	$variable{ExternalRedirect} = '/main/project/view.html?ProjectIndex='.$param{ProjectIndex};
 } # end sub sign_off
 
 sub history {
 
-	if ( $param{btnFunction} eq 'Delete Project' ) {
-		if ( $param{project_id} ) {
-		foreach my $project_id ( ref $param{project_id} eq 'ARRAY' ? @{$param{project_id}} : $param{project_id} ) {
-			$variable{error} .= openprint::print_project::try_to_delete_project( $log, $dbh, \%variable, $project_id );
-		} # end foreach project_id
-		} elsif ( $param{ProjectIndex} ) {
-			$variable{error} .= openprint::print_project::try_to_delete_project( $log, $dbh, \%variable, $param{ProjectIndex} );
-		} # end if
-		$variable{ExternalRedirect} = '/main/project/history.html';
-		return;
-	} elsif ( $param{btnFunction} eq 'Reuse Project' ) {
-		foreach my $project_id ( ref $param{project_id} eq 'ARRAY' ? @{$param{project_id}} : $param{project_id} ) {
-			openprint::print_project::reuse_project( $project_id );
-		} # end if
-	} elsif ( $param{btnFunction} eq 'Reset' ) {
-$log->debug("Reset");
-		foreach my $k ( keys %session ) {
-			if ( $k =~ /^\/main\/project\/history.html/ ) {
-$log->debug("Reset $k");
-				delete $session{$k};
+	if ( $param{btnFunction} ) {
+		if ( $param{btnFunction} eq 'Delete Project' ) {
+			if ( $param{project_id} ) {
+				foreach my $project_id ( ref $param{project_id} eq 'ARRAY' ? @{$param{project_id}} : $param{project_id} ) {
+					$variable{error} .= openprint::print_project::try_to_delete_project( $log, $dbh, \%variable, $project_id );
+				} # end foreach project_id
+			} elsif ( $param{ProjectIndex} ) {
+				$variable{error} .= openprint::print_project::try_to_delete_project( $log, $dbh, \%variable, $param{ProjectIndex} );
 			} # end if
-		} # end foreach k
-		%param = ();
-	} # end if
+			$variable{ExternalRedirect} = '/main/project/history.html';
+			return;
+		} elsif ( $param{btnFunction} eq 'Reuse Project' ) {
+			foreach my $project_id ( ref $param{project_id} eq 'ARRAY' ? @{$param{project_id}} : $param{project_id} ) {
+				openprint::print_project::reuse_project( $project_id );
+			} # end if
+		} elsif ( $param{btnFunction} eq 'Reset' ) {
+			foreach my $k ( keys %session ) {
+				if ( $k =~ /^\/main\/project\/history.html/ ) {
+					delete $session{$k};
+				} # end if
+			} # end foreach k
+			%param = ();
+		} # end if
+	} # end if btnfunction
 
 	# Doing it here will set the defaults if neccessary, but then they will get overriden by the saev_params below.	This is neccessary because save_params will update lastupdated.
 	ssi::setup_date_select( '/main/project/history.html', 'created_on_start', -180 );
@@ -94,24 +94,40 @@ sub _history {
 			);
 } # end sub _history 
 
+sub _update {
+	my $project_id = $param{project_id} if $param{project_id} and ! $param{ProjectIndex};
+	my $Project = $variable{Project} = new openprint::Project( $project_id );
+	if ( $param{action} ) {
+		if ( $param{action} eq 'update' ) {
+			if ( $param{field} eq 'reference' ) {
+				if ( ! $Project->save( { reference => $param{value} } ) ) {
+					$variable{PageContent} = $Project->reference();
+				} # end if successful save
+			} #end if reference
+		} # end if update
+	} # end if action
+} # end sub _update
+
 sub view {
-	my ( $project_index ) = @_;
+	my $project_id = $param{ProjectIndex};
+	$project_id = $param{project_id} if $param{project_id} and ! $param{ProjectIndex};
 
 	if ( exists $param{ShowAllSignatures} ) {
 		$session{ShowAllSignatures} = $param{ShowAllSignatures};
 	} # end if
-	$variable{ProjectIndex} = $project_index;
-	my $Project = $variable{Project} = new openprint::Project( $project_index );
+	$variable{ProjectIndex} = $project_id;
+	my $Project = $variable{Project} = new openprint::Project( $project_id );
 	my $save = 0;
 	foreach my $qty_index ( $Project->quantity_indexes() ) {
 		if ( $$Project{'price'.$qty_index} != $Project->price($qty_index,undef) ) {
 			$save = 1;
 			last;
-		} # endif
+		} # end if
 	} # end foreach
 	if ( $save ) {
 		$Project->save();
 	} # end if
+	openprint::print::view_services();
 } # end sub view
 
 sub _copy_popup {
@@ -128,26 +144,24 @@ sub create_edit {
 		}
 	}
 
-	@{$variable{ProjectTypes}} = map { $_->name(), $_->description() } openprint::ProjectType->find( order=>'sorting, lower(name)' );
-	# Check the appropriate button for project type
-	$variable{SelectedProjectType} = $Project->Type()->name();
-
 	@variable{'txtProjectReference','ddmDesign','txtComments','txtQuantity1','txtQuantity2','txtQuantity3','rdbMode','chkPrograms','txtOtherPrograms'} = (
 		$Project->reference(), $Project->design(), $Project->comments(), $Project->quantity1(), $Project->quantity2(), $Project->quantity3(), $Project->mode(), $Project->programs(), $Project->other_programs() 
 	);
 
 	my $services = $Project->services();
 	@{$variable{SelectedServices}} = keys %{$services};
+$log->debug("Services: " . join(',',@{$variable{SelectedServices}}) );
 
 	$variable{ProjectIndex} = $$Project{id};
 } # end sub create_edit
 
 sub _calc {
-	my $Project = new openprint::Project( $param{ProjectIndex} );
-if ( $param{ProjectIndex} and ! $$Project{id} ) {
-$log->debug("No project $param{ProjectIndex} found");
-}
-    if ( $param{action} eq 'add_service' ) {
+	if ( $param{ProjectIndex} and $param{action} ) {
+		my $Project = new openprint::Project( $param{ProjectIndex} );
+		if ( $param{ProjectIndex} and ! $$Project{id} ) {
+			$log->debug("No project $param{ProjectIndex} found");
+		}
+		if ( $param{action} eq 'add_service' ) {
         my $services = $Project->services();
         foreach my $service_name ( ref $param{service_name} eq 'ARRAY' ? @{$param{service_name}} : $param{service_name} ) {
 
@@ -164,24 +178,39 @@ $log->debug("No project $param{ProjectIndex} found");
             } # end foreach service_id
         } # end foreach service_name
     } # end if
+  } # end if
 } # end sub _calc
 
 sub calc {
 	my $debug = @_ ? $_[0] : 1;
-	my $Project = new openprint::Project( $param{ProjectIndex} );
-	if ( $param{ProjectIndex} and ! $$Project{id} ) {
-		$log->error("Project specified, but not found: $param{ProjectIndex}");
-		$Project->save();
+	my $Project = undef;
+	if ( $param{ProjectIndex} ) {
+		$Project = openprint::Project->find_one( id=>$param{ProjectIndex} );
+	}
+	if ( ! $Project ) {
+		$Project = new openprint::Project();
+		#$Project->save();
 	} else {
 		$log->debug("Found proejct $$Project{id}" . $Project->to_string() );
 	}
-	my $module = 'openprint::Estimating::'.( $param{ServiceTypeType} ? $param{ServiceTypeType} : $param{ServiceType} );
-	eval "require $module";
-	$log->error("Error requiring $module: $@") if $@;
+	my $Service;
+	if ( $param{ServiceIndex} ) {
+		my $Service = $Project->Service( $param{ServiceIndex} );
+	}
+	if ( ! $Service ) {
+		$Service = new openprint::Project_Service();
+		$Service->set({ project_id=>$Project->id(), service_type=>$param{ServiceType} } );
+	}
+
+	eval {
+		require 'openprint/Estimating/'.$Service->service_type().'.pm';
+	};
+	$log->error("Error requiring $$Service{service_type}: $@") if $@;
+	my $module = 'openprint::Estimating::'.$Service->service_type();
 
 	$param{method} = 'calc' if ! $param{method};
 # Not sure this is a good idea, but its neccessary for printing... why is it neccessary?
-	$openprint::service::specs_cache{$param{ServiceIndex}} = \%param;
+	$openprint::service::specs_cache{$param{ServiceIndex}} = \%param if $param{ServiceIndex};
 	my %specs = %param;
 	if ( my $function = $module->can( $param{method} ) ) {
 		$log->debug("Can do $module -> $param{method}");
@@ -223,11 +252,14 @@ sub calc {
 			if ( (exists $param{$key}) and ($specs{$key} eq $param{$key}) ) {
 				$log->debug("Deleting $key cuz it's the same $key = $param{$key}");
 				delete $specs{$key};
-			} elsif ( ( ! exists $param{$key}) and ! $specs{$key} ) {
-				$log->debug("Deleting $key cuz it's not in params and its empty");
+# This prevents us from turning off services in create_calc
+			} elsif ( ! defined $specs{$key} ) {
+				# Send back empty strings, but not nulls
+			#} elsif ( ( ! exists $param{$key}) and ! $specs{$key} ) {
+				#$log->debug("Deleting $key cuz it's not in params and its empty");
 				delete $specs{$key};
-			} elsif ( ref $specs{$key} ) {
-				$log->error("Got a non-scalar in specs! $key => $specs{$key}");
+			#} elsif ( ref $specs{$key} ) {
+				#$log->error("Got a non-scalar in specs! $key => $specs{$key}");
 				#delete $specs{$key};
 			} # end if
 		} # end foreach
@@ -238,12 +270,20 @@ sub calc {
 		foreach my $key ( keys %specs ) {
 			next if ref $specs{$key};
 
-			if ( (exists $param{$key}) and ($specs{$key} eq $param{$key}) ) {
+			if ( (exists $param{$key}) and (exists $specs{$key}) and ( 
+						( (!$specs{$key}) and (!$param{$key}) ) # both not defined or ''
+						or ( $specs{$key} and $param{$key} and ( $specs{$key} eq $param{$key} ) )
+						) ) {
 				delete $specs{$key};
-			} elsif ( ( ! exists $param{$key}) and ! $specs{$key} ) {
+			} elsif ( ! defined $specs{$key} ) {
 				delete $specs{$key};
-			} elsif ( ref $specs{$key} ) {
-				$log->error("Got a non-scalar in specs! $key => $specs{$key}");
+				# Send back empty strings, but not nulls
+# This prevents us from turning off services in create_calc
+			#} elsif ( ( ! exists $param{$key}) and ! $specs{$key} ) {
+				#delete $specs{$key};
+
+			} else {
+				#$log->debug("Got changed $key => $param{$key} != $specs{$key}");
 				#delete $specs{$key};
 			} # end if
 		} # end foreach
@@ -253,12 +293,12 @@ sub calc {
 
 sub reuse {
 
-	$variable{Project} = new openprint::Project( $param{ProjectIndex} );
+	$variable{Project} = new openprint::Project( $param{project_id} );
 	$variable{ProjectIndex} = $variable{Project}->id();
 	if ( $variable{Project}->reference() ) {
 		$variable{Project}->reference( 'Copy of ' . $variable{Project}->reference() );
 	} else {
-		$variable{Project}->reference( 'Copy of project # ' . $param{ProjectIndex} );
+		$variable{Project}->reference( 'Copy of project # ' . $param{project_id} );
 	} # end if
 	
 } # end sub
@@ -268,6 +308,12 @@ sub docket_sheet {
 } # end sub docket_sheet
 
 sub _view_log {
+}
+sub _service_dump {
+}
+
+sub summary {
+	openprint::print_project::summary( $r, $log, $dbh, \%variable );
 }
 1;
 __END__

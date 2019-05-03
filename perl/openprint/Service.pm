@@ -1,17 +1,26 @@
 use strict;
 package openprint::Service;
 our @ISA = qw( openprint::Object );
-use vars qw($debug $table $serial %fields %find_fields %transforms %defaults %session $log $dbh $cache_field $cached );
+use vars qw($debug $table $serial %fields %find_fields %transforms %defaults %session $log $dbh $cache_field $cached %ServicePrices %Configuration );
 
 require sql;
 require openprint::Object;
 require openprint::pricing;
-require openprint::logs;
-
 use openprint ();
 *session = \%openprint::session;
 *log = \$openprint::log;
 *dbh = \$openprint::dbh;
+
+foreach my $Service ( 'UVCoating' ) {
+	eval "
+		my \@keys = keys %openprint::Estimating::${Service}::ServicePrices;
+		\@ServicePrices{\@keys} = values %openprint::Estimating::${Service}::ServicePrices if \@keys;
+	";
+}
+foreach my $service ( keys %ServicePrices) {
+$log->debug("Have a price definition for $service");
+}
+
 
 $debug = 0;
 $cached = 0;
@@ -30,6 +39,8 @@ $serial = 'services_id_seq';
 		taxexempt2		=>	'taxexempt2',
 		owner_id		=>	'owner_id',
 		activity_code	=>	'activity_code',
+		servicetype_id	=>	'servicetype_id',
+		deleted					=>	'deleted',
 	 	);	
 %find_fields = (
 		category		=> '(SELECT name FROM Service_Categories WHERE service_categories.id=category_id)',
@@ -43,12 +54,49 @@ $serial = 'services_id_seq';
 		);
 
 %defaults = (
+		servicetype_id	=>	undef,
 		supplier_id	=>	undef,
 		category_id	=>	undef,
 		taxexempt1	=>	q`'N'`,
 		taxexempt2	=>	q`'N'`,
 		owner_id	=>	q`$openprint::config{owner_id}`,
+		deleted					=>	0,
 		);
+
+%Configuration = (
+		'1ColourImpression'	=> {
+			range_units => [ 'impressions', 'total impressions' ],
+			units	=>	[ 'per 1000', 'per 1000 impressions', 'per m', 'per hour' ],
+		},
+		'2ColourImpression'	=> {
+			range_units => [ 'impressions', 'total impressions' ],
+			units	=>	[ 'per 1000', 'per 1000 impressions', 'per m', 'per hour' ],
+		},
+		'3ColourImpression'	=> {
+			range_units => [ 'impressions', 'total impressions' ],
+			units	=>	[ 'per 1000', 'per 1000 impressions', 'per m', 'per hour' ],
+		},
+		'4ColourImpression'	=> {
+			range_units => [ 'impressions', 'total impressions' ],
+			units	=>	[ 'per 1000', 'per 1000 impressions', 'per m', 'per hour' ],
+		},
+		'5ColourImpression'	=> {
+			range_units => [ 'impressions', 'total impressions' ],
+			units	=>	[ 'per 1000', 'per 1000 impressions', 'per m', 'per hour' ],
+		},
+		'6ColourImpression'	=> {
+			range_units => [ 'impressions', 'total impressions' ],
+			units	=>	[ 'per 1000', 'per 1000 impressions', 'per m', 'per hour' ],
+		},
+		'7ColourImpression'	=> {
+			range_units => [ 'impressions', 'total impressions' ],
+			units	=>	[ 'per 1000', 'per 1000 impressions', 'per m', 'per hour' ],
+		},
+		'8ColourImpression'	=> {
+			range_units => [ 'impressions', 'total impressions' ],
+			units	=>	[ 'per 1000', 'per 1000 impressions', 'per m', 'per hour' ],
+		},
+);
 
 $cache_field = 'name';
 sub cache_field {
@@ -58,7 +106,7 @@ sub cache_field {
 sub save {
 	my ( $self, $params ) = @_;
 
-	$self->set( $params );
+	$self->set( $params ) if $params;
 
 	if ( $$self{category} and ! $$self{category_id} ) {
 		my $Category = new openprint::ServiceCategory();
@@ -71,19 +119,18 @@ sub save {
 	if ( ( my $error = $self->SUPER::save( ) ) ) {
 		return $error;
 	} # end if
-	return;
+	return '';
 
 } # end sub save
 
-sub delete {
+sub destroy {
 	my $self = shift;
 
 	delete $openprint::Object::cache{'openprint::Service'}{$$self{id}} if $openprint::Object::cache{'openprint::Service'};	
-	my $ac = sql::start_transaction( $dbh );
-    sql::execute( undef, undef, q{DELETE FROM Service_Prices WHERE service_id=?}, $$self{id} );
-	$self->SUPER::delete();
-	openprint::logs::insertLogRecord('10', "Service Index: " . $$self{id},);
-	sql::end_transaction( $dbh, $ac );
+	my $ac = sql::start_transaction($dbh);
+	sql::execute(undef, undef, q{DELETE FROM Service_Prices WHERE service_id=?}, $$self{id});
+	$self->SUPER::destroy();
+	sql::end_transaction($dbh, $ac);
 	return $dbh->errstr();
 } # end sub delete
 
@@ -101,7 +148,7 @@ sub get_Price {
         } # end if
     } # end if
 
-    $Pricelist = openprint::Pricelist::get_current() if ! $Pricelist;
+    $Pricelist = $openprint::Pricelist if ! $Pricelist;
     my %price = openprint::pricing::get_best_price_object( $openprint::session{company_id}, $$self{id}, $$Pricelist{id}, 'openprint::service_priceset', $quantity, $$Equipment{id}, $period );
 
     if ( ! %price ) {
@@ -112,12 +159,13 @@ sub get_Price {
     $price{currency_id} = $Pricelist->currency_id();
     $price{ServiceName} = $$self{name};
     $price{Service} = $self;
-    openprint::Currency::convert( \%price );
+    openprint::Currency::convert( \%price ) if $$Pricelist{currency_id} != $openprint::session{Currency_id};
     return \%price;
 } # end sub get_Price
 
 sub get_price {
-    my ( $self, $quantity, $Equipment, $Pricelist, $period ) = @_;
+  my ( $self, $quantity, $Equipment, $Pricelist, $period ) = @_;
+  return if ! $$self{id};
 
 	if ( ! $period ) {
 		$period = 'NOW()';
@@ -126,19 +174,20 @@ sub get_price {
 		} # end if
 	} # end if
 
-	$Pricelist = openprint::Pricelist::get_current() if ! $Pricelist;
-    my %price = openprint::pricing::get_best_price_object( $openprint::session{company_id}, $$self{id}, $$Pricelist{id}, 'openprint::service_priceset', $quantity, $$Equipment{id}, $period );
+	$Pricelist = $openprint::Pricelist if ! $Pricelist;
+  my %price = openprint::pricing::get_best_price_object(
+			$openprint::session{company_id}, $$self{id}, $$Pricelist{id}, 'openprint::service_priceset', $quantity, $$Equipment{id}, $period );
 
 	if ( ! %price ) {
 		$log->debug("No price returned for $$self{name} $$Equipment{strid} $quantity $period") if $debug;
-		return ;
+		return;
 	} # end if
 
 	$price{currency_id} = $Pricelist->currency_id();
 	$price{ServiceName} = $$self{name};
 	$price{Service} = $self;
-	openprint::Currency::convert( \%price );
-    return %price;
+	openprint::Currency::convert( \%price ) if $$Pricelist{currency_id} != $openprint::session{Currency_id};
+	return %price;
 } # end sub get_price
 
 sub next {
@@ -192,6 +241,10 @@ sub category {
     return $$self{category};
 } # end sub category
 
+sub link_to {
+	my $self = shift;
+	return '<a href="/administrator/services/edit.html?service_id='.$$self{id}.'">'.$$self{name}.'</a>';
+}
 
 1;
 __END__

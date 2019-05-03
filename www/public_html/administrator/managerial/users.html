@@ -27,12 +27,16 @@ function load_page() {
 <hr/>
 <ul>
 		<li><label>Company Name</label>
-			<input type="text" oninput="filter_companies( f1.ddmCustomer, {name:this.value} );" 
-			   onkeydown="if(event.keyCode == 13){f1.ddmUser.selectedIndex=-1;f1.btnFunction.value='';this.form.submit();}" 
-				   class="filter" />
+			<input type="text" oninput="filter_companies( $('company_id'), {name:this.value} );" class="filter" />
 			<select name="company_id" id="company_id" onchange="load_page();">
 				<option value="">All</option>
-				<? echo ( make_drop_down( openprint::Company->dropdown(), $session{$r->uri().'?company_id'} );) ?>
+				<? echo ( 
+my $companies = openprint::Company->dropdown();
+if ( @{$companies} < 10000 ) {
+return make_drop_down( $companies, $session{$r->uri().'?company_id'} );
+}
+return '<option value="">Use the filter to populate this dropdown</option>';
+) ?>
 			</select>
 		</li>
 		<li>
@@ -50,6 +54,13 @@ function load_page() {
 				<? echo ( make_drop_down( openprint::UserGroup->dropdown(), $session{$r->uri().'?usergroup_id'} ); ) ?>
 			</select>
 		</li>
+		<li><label>Notifications</label>
+			<? echo ( ssi::select( openprint::User_Notification_Type->dropdown(), $session{$r->uri().'?notification_type_id'}, {
+						name=>'notification_type_id',
+						prepend=>['','All'],
+						onchange=>'load_page();',
+						} ); ) ?>
+		</li>
 		<li> 
 			<label>Created Date</label>
 			<? echo ( date_select_session( $r->uri(), 'created_on_start', { with_today=>1, with_clear=>1, onchange=>'load_page();' } ); ) ?>
@@ -60,12 +71,14 @@ function load_page() {
 			<label>User Type</label>
 			<? echo ( ssi::select( openprint::User_Type->dropdown(), $session{$r->uri().'?type'}, { name=>'type', prepend=>['','All'], onchange=>'load_page();' } ); ) ?>
 		</li>
+		<li><label>Company Admin?</label><? echo ( radio( 'administrator', [ 'Y','Yes', 'N', 'No', '', 'Both' ], $session{$r->uri().'?administrator'}, {onclick=>"load_page();"} ); ) ?></li>
 		<li><label>Deleted?</label><? echo ( radio( 'deleted', [ '1','Yes', '0', 'No', '', 'Both' ], $session{$r->uri().'?deleted'}, {onclick=>"load_page();"} ); ) ?></li>
 		</ul>
 		<p class="buttons">
 			<? echo ( join("\n",
 				button( 'ShowResults', { onclick=>'load_page();', text=>'Show Results' } ),
 				#button( 'DownloadCSV', { onclick=>"f1.action='users.html?Download';f1.btnFunction.value='Download in CSV format';f1.submit();", href=>'', text=>'Download in CSV Format' } ),
+				button( 'New', { href=>'/administrator/managerial/user_profiles.html' } ),
 				button( 'Reset', { onclick=>'f1.reset();', text=>'Reset' } ),
 ); ) ?>
 		</p>
