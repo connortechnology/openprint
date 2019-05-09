@@ -10,6 +10,7 @@ require openprint::Invoice_Payment;
 require openprint::Currency;
 require openprint::Company;
 require openprint::Order;
+require openprint::Expense_Account;
 
 $debug = 0;
 $table = 'payments';
@@ -188,7 +189,12 @@ sub exchange {
   return $_[0]{exchange};
 }
 
-
+sub Account {
+  if ( !$_[0]{Account} ) {
+    $_[0]{Account} = new openprint::Expense_Account( $_[0]{account_id} );
+  }
+  return $_[0]{Account};
+}
 
 1;
 __END__
