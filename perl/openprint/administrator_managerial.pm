@@ -629,31 +629,22 @@ sub company_profiles {
 				sql::execute( $log, $dbh, q{DELETE FROM Companies_in_Marketing_Categories WHERE company_Id =?}, $index );
 				if ( $param{selectCustomerCategories} ) {
 # add them back in
-<<<<<<< HEAD
-				my $sth = $dbh->prepare( q{INSERT INTO Companies_in_Marketing_Categories (Category_Id,Company_Id) VALUES ( ?, ? )} );
-				foreach my $cat ( $param{selectCustomerCategories} ) {
-					if ( $cat and sets::isin( $cat, \@customercategories ) ) {
-						$sth->execute( $cat, $index ) or $log->error( DBI->errstr );
-					} # end if
-				} # end foreach
-=======
 					my $sth = $dbh->prepare( q{INSERT INTO Companies_in_Marketing_Categories (Category_Id,Company_Id) VALUES ( ?, ? )} );
 					foreach my $cat ( $param{selectCustomerCategories} ) {
-						if ( sets::isin( $cat, \@customercategories ) ) {
-							$sth->execute( $cat, $index ) or $log->error( DBI->errstr );
+            if ( $cat and sets::isin($cat, \@customercategories) ) {
+							$sth->execute($cat, $index) or $log->error(DBI->errstr);
 						} # end if
 					} # end foreach
 					$sth->finish();
 				}
->>>>>>> master
 
 				my %params;
 				foreach my $field ( keys %shipping_fields ) {
 					$params{$shipping_fields{$field}} = $param{$field} if defined $param{$field};
 				} # end foreach
-				$Company->save_shipping( \%params );
+				$Company->save_shipping(\%params);
 
-				$Company->save_tradereferences( \%param );
+				$Company->save_tradereferences(\%param);
 
 				$dbh->do( 'LOCK TABLE Company_Credit IN ACCESS EXCLUSIVE MODE' ) or $log->error( DBI->errstr );
 
