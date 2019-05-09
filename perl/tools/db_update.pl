@@ -520,6 +520,9 @@ if ( ! sets::isin( 'invoices', \@tables ) ) {
 	if ( ! exists $$data{subtotal_override} ) {
 		$dbh->do('ALTER TABLE Invoices ADD subtotal_override BOOLEAN NOT NULL default false');
 	} # end if
+	if ( ! exists $$data{total_override} ) {
+		$dbh->do('ALTER TABLE Invoices ADD total_override BOOLEAN NOT NULL default false');
+	} # end if
 } # end if
 if ( ! sets::isin( 'invoice_interests', \@tables ) ) {
     $dbh->do( misc::load_file( $log, '../../sql/Invoice_Interests.sql' ) );
