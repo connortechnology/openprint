@@ -878,7 +878,7 @@ sub _syslog {
 }
 
 sub is_ipv4 {
-  $_[0] =~ /^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}\.$/;
+  $_[0] =~ /^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$/;
 }
 sub is_ipv6 {
   $_[0] =~ /:/;
@@ -924,7 +924,7 @@ sub _interface {
             } );
           $Interface->save({ip=>$param{ip}});
         } else {
-          $log->debug("Not updating HI from $$Interface{ip} to $param{ip}");
+          $log->debug("Not updating HI from $$Interface{ip} to $param{ip} because is_ipv($$Interface{ip})=".is_ipv4($Interface->ip())." is_ipv4($param{ip})=".is_ipv4($param{ip}));
         }
         if ( $param{hostname} and is_mac($Host->hostname()) ) {
           (new openprint::Log())->save( { Object => $Host, note=>"Name changed from $$Host{hostname} to $param{hostname}", action=>'Changed' } );
