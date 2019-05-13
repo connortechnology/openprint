@@ -875,10 +875,13 @@ sub to_svg {
 	# So we need to calculate the scale factor... in pixels.
 	#my $width_scale = ( 40/$target_width * 96 ); # 96 dots per inch?
 	#my $height_scale = ( 28/$target_height * 96 );
-	my $width_scale = ( ($target_width/40) * 96 ); # 96 dots per inch?
-	my $height_scale = ( ($target_height/28) * 96 );
+	my $width_scale = ( ($target_width/$self->sheet_width()) * 96 ); # 96 dots per inch?
+	my $height_scale = ( ($target_height/$self->sheet_height()) * 96 );
 
-	my $svg = '<svg class="Imposition">';
+	my $svg = '<svg class="Imposition" title="';
+	$svg .= sprintf( '%s x %s', @$self{'columns','rows'} );
+	$svg .= sprintf(' + %s x %s', @$self{'dutch_columns','dutch_rows'}) if $$self{dutch_columns};
+	$svg .= '">';
 	
 	$svg .= '<rect class="background" width="'.int(($self->sheet_width()+(2*$margin))*$width_scale).'" height="'.int(($self->sheet_height()+(2*$margin))*$height_scale).'" />';
 	my $sheet_width = int($self->sheet_width()*$width_scale);
