@@ -1,0 +1,19 @@
+<?include(/includes/error_reporting.html)?>
+<form name="f1" action="?" method="post">
+<input type="checkbox" onclick="select_all(this.form, 'queue_id', this.checked );"/> All<br/>
+<?echo(
+my $html;
+	my @data = qx</usr/sbin/postqueue -p>;
+	while ( @data ) {
+		my $line = shift @data;
+		my $queue_id;
+		if ( $line =~ /^(\w+)(\*|\!)?\s/ ) {
+		  $queue_id = $1;
+		  $html .= '<p>'.ssi::checkboxes('queue_id', [$queue_id], undef).$line.'<br/>'.shift(@data).'<br/>'.shift(@data).'</p>';
+		}
+	}
+	return $html;
+)?>
+<input type="hidden" name="action" value="Delete"/>
+<?echo(button('Delete', { type=>'submit', name=>'action', value=>'Delete', onclick=>'f1.submit();'} );)?>
+</form>
