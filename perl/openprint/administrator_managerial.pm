@@ -1068,6 +1068,7 @@ sub _logs {
 	ssi::save_params( '/administrator/managerial/logs.html', (
         'log_actions', 'user_id', 'company_id',
 				( map { 'date_start_' . $_ } ( 'year','month','day' ) ),
+				( map { 'date_end_' . $_ } ( 'year','month','day' ) ),
 				) );
 	if ( $param{action} eq 'delete' ) {
 		my $Log = new openprint::Log( $param{log_id} );
