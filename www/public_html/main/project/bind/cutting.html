@@ -106,7 +106,7 @@
 		} # end foreach qty_index
 		$html .= input( name=>"txtStockCalliper-$$sig_specs{SignatureIndex}", type=>'hidden', value=>$$variable{'txtStockCalliper-'.$$sig_specs{SignatureIndex}} );
 		$html .= '</li>';
-		if ( sets::isin( $$variable{ProjectTypeID}, ['PressSheetCombination','NoPrintingRequired']) or sets::isin( $session{user_type},['E','A']) ) {
+		if ( sets::isin($$variable{ProjectTypeID}, ['PressSheetCombination','NoPrintingRequired']) or sets::isin($session{user_type}, ['E','A']) ) {
 			$html .= '<li><label>Additional cuts</label>';
 			$html .= input(
 					type		=> 'integer',
