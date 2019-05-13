@@ -193,6 +193,8 @@ sub view {
 	} # end if
 	$variable{PurchaseOrder} = $PO;
 
+	return if ! $param{btnFunction};
+
 	if ( $param{btnFunction} eq 'Delete' ) {
 		$variable{error} .= $PO->delete();
 		if ( ! $variable{error} ) {
@@ -463,11 +465,11 @@ $log->debug("Creating PO $$PO{id} from label $variable{error}");
 			} # end if
 		} # end if
 		
- if ( $param{supplier_id} and ( ! $param{contact_id} ) and $param{vendor_contact} ) {
-		$param{contact_id} = save_contact( \%param );
-} else {
-$log->debug("Not saving contact ");
-}
+		if ( $param{supplier_id} and ( ! $param{contact_id} ) and $param{vendor_contact} ) {
+			$param{contact_id} = save_contact( \%param );
+		} else {
+			$log->debug("Not saving contact ");
+		}
 		my %types = save_contents( $PO, \%param );
 
 		if ( $param{delivered_on_switch} eq 'DATE' ) {
