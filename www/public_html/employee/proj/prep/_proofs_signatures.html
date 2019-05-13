@@ -124,11 +124,14 @@
 						'UsePress', $$sig_specs{'ddmPress'.$qty_index} );
 			} # end if
 			
+			my $I = new openprint::Imposition();
+			$I->load($sig_specs, $qty_index, $Project);
 
 			$html .= '<fieldset><legend>Form '. $form . ': ' . $$sig_specs{Reference} .'</legend>';
 #$html .= $$specs{txtServiceDescription} .' ' if $$specs{txtServiceDescription};
 			$html .= openprint::service::summary( $Project, $signature_service_index );
 			$html .= openprint::service::summary( $Project, $signature_service_index, $qty_index );
+			$html .= '<div id="ImpositionImage'.$qty_index.'">'.$I->to_svg().'</div>';
 			$html .= '
 		<p>
 			<label>Press</label>
