@@ -144,6 +144,8 @@ $openprint::log->debug("value in values: $value IN (@values)");
 
 	} elsif ( $Field->type() eq 'text' ) {
 		$html .= sprintf( q`<input type="text" name="field-%1$d" id="field-%1$d" value="%2$s" />`, $Field->id(), $value );
+	} elsif ( $Field->type() eq 'tel' ) {
+		$html .= sprintf( q`<input type="tel" name="field-%1$d" id="field-%1$d" value="%2$s" />`, $Field->id(), $value );
 	} elsif ( $Field->type() eq 'email' ) {
 		$html .= sprintf( q`<input type="email" name="field-%1$d" id="field-%1$d" value="%2$s" />`, $Field->id(), $value );
 	} elsif ( $Field->type() eq 'number' ) {
