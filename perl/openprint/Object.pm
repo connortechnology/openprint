@@ -976,7 +976,11 @@ sub find {
 
 	my $do_cache = $$sql{columns} ne '*' ? 0 : 1;
 	my $cache_field = ${$object_type.'::cache_field'} if $do_cache;
-	if ( $cache_field and $$params{$cache_field} and ( 1 == scalar keys %{$$sql{used_fields}} ) ) {
+	if ( ( 1 == scalar keys %{$$sql{used_fields}} ) and $$params{id} ) {
+		if ( $cache{$config{db_name}}{$object_type}{$$params{id}} ) {
+			return ( $cache{$config{db_name}}{$object_type}{$$params{id}} );
+		}
+	} elsif ( $cache_field and $$params{$cache_field} and ( 1 == scalar keys %{$$sql{used_fields}} ) ) {
 
 $log->debug("have cache field $cache_field for $$params{$cache_field}") if DEBUG_ALL;
 		if ( exists $name_cache{$object_type} and exists $name_cache{$object_type}{$$params{$cache_field}} ) {
@@ -991,14 +995,14 @@ $log->error("returning nothing for $object_type $cache_field $$params{$cache_fie
 				return ();
 			} # end if
 		} else { # not in cache
-			my $cached = eval( '$'.$object_type.'::cached' );
+			my $cached = eval('$'.$object_type.'::cached');
 			if ( $cached ) {
 				# if all items should have been loaded
 
 # Can only undef here if we know that we have already loaded them all
 				$log->debug("Undefing $object_type cached: $cached $cache_field $$params{$cache_field} cache: so that future lookups find an empty cache") if DEBUG_ALL or DEBUG_CACHE;
 	#debug();
-				#$name_cache{$object_type}{$$params{$cache_field}} = undef;
+				$name_cache{$object_type}{$$params{$cache_field}} = undef;
 	#$log->debug("ALl cached $object_type $cache_field $$params{$cache_field}") if DEBUG_ALL or DEBUG_CACHE;
 				return ();
 			} # end if Object::cached

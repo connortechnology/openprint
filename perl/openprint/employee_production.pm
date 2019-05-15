@@ -533,7 +533,7 @@ sub _project_list {
 		( map { 'due_date_start_'.$_ } ( 'year','month','day' ) ),
 		( map { 'due_date_end_'.$_ } ( 'year','month','day' ) ),
 		'ProjectStatus', 'ddmSalesRep', 'ddmEmployee', 'ddmCustomer', 'ddmPress',
-		'servicetype_id',
+		'servicetype_id','cod',
 		)  );
 }
 
@@ -969,12 +969,12 @@ $log->error("No service_id in service for project $$Project{id}, $service_id: " 
 	} # end foreach Job
 	@forms = sort sets::union( @forms );
 	
+	@operator_ids = map { $_ ? $_ : () } @operator_ids;
 	my @Users = openprint::User->find(id=>\@operator_ids) if @operator_ids;
 
-
-	$log->debug("Completing ".$Service->service_type(). " for form".(@forms==1?'':'s')." @forms by $session{user_id} for @operator_ids");
+	$log->debug("Completing ".$Service->service_type(). ' for form'.(@forms==1?'':'s')." @forms by $session{user_id} for @operator_ids");
 	$Project->add_to_log( @session{'company_id','user_id'},
-			"Form $$specs{SignatureIndex} Completed". ( ( @operator_ids and sets::isin( $session{user_id}, \@operator_ids ) ) ? '': ' for ' . join(',',map { $_->name() } @Users ) ) );
+			"Form $$specs{SignatureIndex} Completed". ( ( @operator_ids and sets::isin($session{user_id}, \@operator_ids) ) ? '': ' for ' . join(',',map { $_->name() } @Users ) ) );
 	sql::end_transaction($dbh, $ac);
 
 	if ( $Service->service_type() eq 'Printing' ) {
@@ -2003,7 +2003,7 @@ $log->debug("second job can't move");
 		# Actually this is complete Signature
 		my $Project = $Job->Project();
 		foreach my $sig_id ( @{$$Job{service_id}} ) {
-			my $sig_specs = openprint::service::get_specs_ref( $Project, $sig_id );
+			#my $sig_specs = openprint::service::get_specs_ref( $Project, $sig_id );
 			complete_service( $Project, $sig_id );
 		} # end foreach
 		$Job->Project()->update_status();

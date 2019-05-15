@@ -326,7 +326,7 @@ sub Specification {
 	my ( $self, $name, $range, $s_debug ) = @_;
 
 	my $key = join('',$$self{id},$name,$range);
-	if ( $Specification_cache{$key} ) {
+	if ( exists $Specification_cache{$key} ) {
 		return $Specification_cache{$key};
 	} # end if
 
@@ -342,8 +342,8 @@ sub Specification {
 		} # end if
 	} # end if
 
-	if ( ! $$self{Specifications}{$name} ) {
-		$openprint::log->warn("No specfications for ($name) " . $self->name() ) if $s_debug;
+	if ( ! exists $$self{Specifications}{$name} ) {
+		$openprint::log->warn("No specifications for ($name) " . $self->name() ) if $s_debug;
 		return;
 	} # end if
 	my $Spec = misc::find_entry( $range, $$self{Specifications}{$name}, $s_debug );

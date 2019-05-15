@@ -193,6 +193,8 @@ sub view {
 	} # end if
 	$variable{PurchaseOrder} = $PO;
 
+	return if ! $param{btnFunction};
+
 	if ( $param{btnFunction} eq 'Delete' ) {
 		$variable{error} .= $PO->delete();
 		if ( ! $variable{error} ) {
@@ -436,6 +438,14 @@ $log->debug("Creating PO $$PO{id} from label $variable{error}");
 	} elsif ( $param{btnFunction} eq 'Save' ) {
 		if ( ! $param{po_id} ) {
 			$variable{error} .= $PO->save( { created_by	=> $session{user_id}, company_id => $openprint::User->company_id() } );
+		} elsif ( ($PO->Creator()->type() eq 'E') and ($openprint::User->type() eq 'A') ) {
+			$variable{error} .= $PO->save( { created_by => $session{user_id} });
+			my $L = new openprint::PurchaseOrder_Log();
+			$L->save({
+					user_id	=>	$session{user_id},
+					po_id		=>	$PO->id(),
+					reason	=>	'Taking ownership',
+					});
 		} # end if
 
 		$param{supplier_id} = save_supplier( \%param ) if ( ! $param{supplier_id} ) and $param{vendor_name};
@@ -455,11 +465,11 @@ $log->debug("Creating PO $$PO{id} from label $variable{error}");
 			} # end if
 		} # end if
 		
- if ( $param{supplier_id} and ( ! $param{contact_id} ) and $param{vendor_contact} ) {
-		$param{contact_id} = save_contact( \%param );
-} else {
-$log->debug("Not saving contact ");
-}
+		if ( $param{supplier_id} and ( ! $param{contact_id} ) and $param{vendor_contact} ) {
+			$param{contact_id} = save_contact( \%param );
+		} else {
+			$log->debug("Not saving contact ");
+		}
 		my %types = save_contents( $PO, \%param );
 
 		if ( $param{delivered_on_switch} eq 'DATE' ) {

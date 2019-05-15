@@ -131,7 +131,7 @@ sub neccessary {
 
 	my $printing_service_index = $$services{''}[0] if $$services{''};
 	my $specs = openprint::service::get_specs_ref( $Project, $printing_service_index );
-	if ( sets::isin( $$specs{rdbTemplateType},[ 'SaddleStitching','LoopStitching'] ) ) {
+	if ( $$specs{rdbTemplateType} eq 'SaddleStitching' or $$specs{rdbTemplateType} eq 'LoopStitching' ) {
 		return 1;
 	} # end if
 
@@ -152,6 +152,14 @@ sub get_imposition {
 	} # end foreach Imposition
 	return $imposition;
 } # end sub get_imposition
+
+sub init {
+  my ( $Project, $calc_hash ) = @_;
+
+  #$gService = openprint::Service->find_one(name=>'Cutting');
+  #$CuttingMakeReady = openprint::Service->find_one(name=>'CuttingMakeReady');
+}
+
 
 # Calculates the cost of stitching a signature... which is not realistic, but will hopefully help when deciding between 1up or 2up stitching
 # includes the cost of folding...
@@ -516,13 +524,13 @@ EQUIPMENT:foreach my $Equipment ( @equipment ) {
 				$results{Breakdown} .= 'Not for digital.<br/>';
 				next;
 			} # end if
-			if ( $$I{Folder} and ( $$I{Folder}->id() != $$Equipment{id} ) ) {
+			if ( $$I{Folder} and ( $$I{Folder}{id} != $$Equipment{id} ) ) {
 				if ( ( $_ = $$I{Folder}->specification('Folding Capable') ) and ( $_ eq 'When Stitching' ) ) {
-					$results{Breakdown} .= $$Equipment{strid} . ' is not the folding equipment, is '.$$I{Folder}->name() . '<br/>';
+					$results{Breakdown} .= $$Equipment{strid} . ' is not the folding equipment, is '.$$I{Folder}{name} . '<br/>';
 					next;
 				}
 				if ( $capable eq 'When Folding' ) {
-					$results{Breakdown} .= 'Not being folded on ' .$$Equipment{name}. ' is on '. $$I{Folder}->name() . '<br/>';
+					$results{Breakdown} .= 'Not being folded on ' .$$Equipment{name}. ' is on '. $$I{Folder}{name} . '<br/>';
 					next;
 				} # end if
 			} # end if
@@ -744,7 +752,7 @@ $log->debug("Insert qty: $$specs{txtInsertQuantity}");
 							);
 				}
 				if ( my $servicePrice = $$pass{ServicePrice} ) {
-					$$specs{'hdnBreakdown'.$qty_index} .= sprintf('&nbsp;Service: $%.2f%s = $%.2f<br/>', @$servicePrice{'Price','units','Total'});
+					$$specs{'hdnBreakdown'.$qty_index} .= sprintf('&nbsp;%s $%.2f%s = $%.2f<br/>', @$servicePrice{'ServiceName','Price','units','Total'});
 				} # end if
 				if ( my $BoardInsertPrice = $$pass{BoardInsertPrice} ) {
 					$$specs{'hdnBreakdown'.$qty_index} .= sprintf('&nbsp;Board Insert: $%.3f%s = $%.2f<br/>', @$BoardInsertPrice{'Price','units','Total'});
@@ -883,7 +891,8 @@ sub get_price {
 			cover	=>	$plusCover,
 			);
 
-	my $BaseService = openprint::Service->find_one(name=>$$ServiceType{name});
+	my $BaseService = openprint::Service->find_one(name=>$$ServiceType{name}.$price{Imposition}.'out');
+	$BaseService = openprint::Service->find_one(name=>$$ServiceType{name}) if ! $BaseService;
 
 	my $qty = $$specs{'txtQuantity'.$qty_index} ? $$specs{'txtQuantity'.$qty_index} : $Project->quantity($qty_index);
 #$openprint::log->debug($price{Imposition} . ' on ' .$Equipment->name() . ' max imp: ' . $Equipment->specification('Maximum Imposition')) if DEBUG;
@@ -945,7 +954,7 @@ sub get_price {
 				$openprint::log->error("880: Unknown Unit Type: ($$servicePrice{units}) for service $$Service{name} on $$Equipment{strid} $$Equipment{name} maxpockets: $maxPockets");
 			} # end if
 		} else {
-			$openprint::log->warning("No service price for $$Service{name}");
+			$openprint::log->warn("No service price for $$Service{name}");
 		}
 
 		my $loopbreak_pockets = $neededPockets;
@@ -1027,11 +1036,11 @@ sub get_price {
 		$pass{RunTime} = $runtime;
 		$price{RunTime} += $runtime;
 		my $servicePrice;
-		my $Service = openprint::Service->find_one( name=>$$ServiceType{name}.$neededPockets.'Pockets' );
-		$servicePrice = $Service->get_Price( $qty, $Equipment ) if $Service;
+		my $Service = openprint::Service->find_one(name=>$$ServiceType{name}.$neededPockets.'Pockets');
+		$servicePrice = $Service->get_Price($qty, $Equipment) if $Service;
 		if ( ! $servicePrice ) {
 			$Service = $BaseService;
-			$servicePrice = $Service->get_Price( $neededPockets, $Equipment ) if $Service;
+			$servicePrice = $Service->get_Price($neededPockets, $Equipment) if $Service;
 		} # end if
 		if ( $servicePrice ) {
 			$pass{ServicePrice} = $servicePrice;
@@ -1277,7 +1286,6 @@ sub runtime {
 	my $ServiceType = $Service->ServiceType();
 	my $specs = $Service->specs();
 	if ( ! $Equipment ) {
-		$openprint::log->warn("No equipment passed to runtime");
 		if ( ! $$specs{'ddmEquipment'.$qty_index} ) {
 			$openprint::log->error("No equipment in estimate");
 			return 0;

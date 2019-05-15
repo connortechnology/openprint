@@ -455,7 +455,7 @@ sub find_entry {
 $openprint::log->debug("Found spec for $range:" . $x->min() . ' ' . $x->max() . ' : ' . $x->value() ) if $debug;
 		return if ( $$x{max} and ( $$x{max} < $range ) and ! $$x{interpolate} );
 	} else {
-$openprint::log->debug("Couldn't find monimum for $name : $range on " . ( $$array[0]->Equipment() ? $$array[0]->Equipment()->name() : '' ) ) if $debug;
+$openprint::log->debug("Couldn't find minimum for $name : $range on " . ( $$array[0]->Equipment() ? $$array[0]->Equipment()->name() : '' ) ) if $debug;
 		return;	
 	}
 	for ( ; $i < @{$array}; $i += 1 ) {
@@ -555,7 +555,7 @@ sub make_hash_from_array {
 		$results{$$object{$key}} = [] if ! $results{$$object{$key}};
 		push @{$results{$$object{$key}}}, $object;
 	}
-	return \%results;
+	return wantarray ? %results : \%results;
 }
 
 1;

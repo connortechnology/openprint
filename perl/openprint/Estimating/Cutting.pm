@@ -259,24 +259,24 @@ sub signature_calc_stock_cutting {
     my $Paper = $$Stock_Amount{Stock};
     my $paper_string = $Paper->id_string();
     if ( ! $Paper ) {
-      $results{alert} .= "Stock object not found for " . $paper_string.'<br/>';
-      $openprint::log->error("Stock object not found for " . $paper_string );
+      $results{alert} .= 'Stock object not found for ' . $paper_string.'<br/>';
+      $openprint::log->error('Stock object not found for ' . $paper_string );
       next;
     } # end if
 # Add cutting the sheet prior to printing
     if ( ! ( $$Paper{width} and $$Paper{height} ) ) {
-      $results{alert} .= "Paper does not have width and height for " . $paper_string.'<br/>';
-      $openprint::log->error("Paper does not have width and height for " . $paper_string );
+      $results{alert} .= 'Paper does not have width and height for '.$paper_string.'<br/>';
+      $openprint::log->error('Paper does not have width and height for '.$paper_string );
       next;
     } # end if
     if ( ($$Paper{width} == $$Paper{start_width}) and ($$Paper{height} == $$Paper{start_height} ) ) {
-      $results{alert} .= "Paper does not need cutting " . $paper_string.'<br/>';
-      $openprint::log->error("Paper does not need cutting for " . $paper_string );
+      $results{alert} .= 'Paper does not need cutting '.$paper_string.'<br/>';
+      $openprint::log->error('Paper does not need cutting for ' . $paper_string );
       next;
     } # end if
     my $calliper = $$Paper{calliper};
     if ( ! $calliper ) {
-      $results{alert} .= "Calliper is unknown for Stock . " . $Paper->to_string().'<br/>';
+      $results{alert} .= 'Calliper is unknown for Stock. ' . $Paper->to_string().'<br/>';
     } # end if
 
     my ( $start_width, $start_height, $width, $height );
@@ -299,10 +299,10 @@ sub signature_calc_stock_cutting {
       my $capable = $Equipment->specification( 'Cutting Capable' );
 
       if ( $capable ne 'Y' and $capable ne 'Large Format' ) {
-        $results{Breakdown} .= 'Equipment ' . $Equipment->name().': Not capable for stock cutting.' if @my_equipment == 1;
+        $results{Breakdown} .= 'Equipment ' . $$Equipment{name}.': Not capable for stock cutting.' if @my_equipment == 1;
         next;
       } 
-      $results{Breakdown} .= 'Equipment: '.$Equipment->name().':';
+      $results{Breakdown} .= 'Equipment: '.$$Equipment{name}.':';
 
       my $reason = $Equipment->fits( $start_width, $start_height );
       if ( $reason ) {
@@ -311,7 +311,7 @@ sub signature_calc_stock_cutting {
       } # end if
       $results{Breakdown} .= '<br/>';
 
-      my $liftDepth = $Equipment->specification( 'Maximum Lift Depth', $Paper->calliper() );
+      my $liftDepth = $Equipment->specification( 'Maximum Lift Depth', $$Paper{calliper} );
 # no lift depth means 1 at a time.
 
       my $width_cuts = int( $start_width / $width ) - 1;
@@ -370,7 +370,8 @@ sub signature_calc_stock_cutting {
           my $cut_price = ( $piles * $cuts * $ServicePrice{Price} );
           $cuts += 1;
           $service_price += $cut_price;
-          $results{Breakdown} .= sprintf('Cutting %d sheets into %d sheets in %d piles: %.2f<br/>', $sheets, $sheets*$cuts, $piles, $cut_price );
+          $results{Breakdown} .= sprintf('Cutting %d sheets into %d sheets in %d piles: $%.2f<br/>',
+							$sheets, $sheets*$cuts, $piles, $cut_price );
           $sheets *= $cuts;
         } # end foreach
         $price += $service_price;
@@ -378,7 +379,7 @@ sub signature_calc_stock_cutting {
       my %cleaning;
       if ( $Paper->bladecleaning() and $BladeCleaning ) {
         %cleaning = $BladeCleaning->get_price( undef, $Equipment );
-        $results{Breakdown} .= sprintf('Blade Cleaning: %.2f<br/>', $cleaning{Price} );
+        $results{Breakdown} .= sprintf('Blade Cleaning: $%.2f<br/>', $cleaning{Price} );
         $price += $cleaning{Price};
       } # end if
       if ( ( ! defined $bestPrice ) or ( $bestPrice > $price ) ) {
@@ -438,7 +439,7 @@ sub signature_calc_folding_cutting {
 
 # Grab the Calliper
   if ( $$specs{"chkOverrideCalliper-$form"} ne 'Y' ) {
-    $$specs{"txtStockCalliper-$form"} = $Paper->calliper();
+    $$specs{"txtStockCalliper-$form"} = $$Paper{calliper};
   } # end if
 
   my @my_equipment;
@@ -465,32 +466,32 @@ sub signature_calc_folding_cutting {
       next;
     } 
     next if $Equipment->specification('Type') eq 'Stitcher';
-    if ( $$services{NoOfflineBindery} and ( $$sig_specs{'ddmPress'.$qty_index} ne $Equipment->strid() ) ) {
+    if ( $$services{NoOfflineBindery} and ( $$sig_specs{'ddmPress'.$qty_index} ne $$Equipment{strid} ) ) {
       $results{Breakdown} .= "No Offline bindery and not printing on $$Equipment{name}.<br/>";
       next;
     } # end if
 
-    $results{Breakdown} .= "\tEquipment: ".$Equipment->name().':';
+    $results{Breakdown} .= 'Equipment: '.$$Equipment{name}.':';
 
     my $reason = $Equipment->fits( $Paper->width(), $Paper->height() );
     $results{Breakdown} .= $reason . '<br/>';
     next if $reason;
 
-    my $liftDepth = $Equipment->specification( 'Maximum Lift Depth', $Paper->calliper() );
+    my $liftDepth = $Equipment->specification( 'Maximum Lift Depth', $$Paper{calliper} );
     next if ! $liftDepth;
 
     my $sheets = ceil( $$sig_specs{'txtQuantity'.$qty_index} / $I->imposition() );
     my %ServicePrice = openprint::service::get_price_object( 'Cutting', $sheets, $Equipment );
     my $price = 0;
-    my $piles = ceil( $sheets*$Paper->calliper()/$liftDepth );
+    my $piles = ceil( $sheets*$$Paper{calliper}/$liftDepth );
     $price += ( $piles * $folding_cuts * $ServicePrice{Price} );
-    $results{Breakdown} .= sprintf('Cutting %d sheets in %d piles: %.2f<br/>', $sheets, $piles, $price );
+    $results{Breakdown} .= sprintf('Cutting %d sheets in %d piles: $%.2f<br/>', $sheets, $piles, $price );
     my $setupCost = openprint::service::get_price( 'CuttingMakeReady', undef, $Equipment );
-    $results{Breakdown} .= sprintf('MakeReady: %.2f<br/>', $setupCost );
+    $results{Breakdown} .= sprintf('MakeReady: $%.2f<br/>', $setupCost );
     my $totalPrice = $setupCost + $price;
     if ( $Paper->bladecleaning() ) {
       my %cleaning = openprint::service::get_price_object( 'Blade Cleaning', undef, $Equipment );
-      $results{Breakdown} .= sprintf('Blade Cleaning: %.2f<br/>', $cleaning{Price} );
+      $results{Breakdown} .= sprintf('Blade Cleaning: $%.2f<br/>', $cleaning{Price} );
       $totalPrice += $cleaning{Price};
     } # end if
     if ( ( ! defined $bestPrice ) or ( $bestPrice > $totalPrice ) ) {
@@ -609,7 +610,7 @@ sub signature_calc {
     } # end foreach fold_index
   } # end if
 
-$openprint::log->debug("Folding impos " . @folding_impositions  . ' eq ' . @my_equipment );
+#$openprint::log->debug("Folding impos " . @folding_impositions  . ' eq ' . @my_equipment );
 
   if ( $stitching_specs and $stitching_imposition ) {
 	  if ( $$Imposition{image_orientation} == openprint::Imposition::Horizontal ) {
@@ -624,7 +625,7 @@ $openprint::log->debug("Folding impos " . @folding_impositions  . ' eq ' . @my_e
 		  }
     } # end if
   } # end if
-$openprint::log->debug("Stitching imposition: $stitching_imposition");
+#$openprint::log->debug("Stitching imposition: $stitching_imposition");
 
   my $Press = $Imposition->Press();
   my $output_format = $Press->specification('OutputFormat');
@@ -959,7 +960,7 @@ $I->display( $I->page_columns() . ' x ' . $I->page_rows() );
 
 # Dutch cuts don't happen on books
       if ( ( ! $$sig_specs{txtSignatureType} ) and ! @folding_impositions ) {
-$I->display();
+#$I->display();
 # Now consider Dutch cuts
         if ( $$I{dutch_columns} and $$I{dutch_rows} ) {
           $dutch_vertical_cuts += 1 + $$I{dutch_columns};
@@ -1518,7 +1519,7 @@ sub runtime {
     my $form = $$sig_specs{SignatureIndex};
 		if ( $$specs{"ddmEquipment-$form-$qty_index"} ) {
 			my $E = $Equipment ? $Equipment : openprint::Equipment->find_one(id=>$$specs{"ddmEquipment-$form-$qty_index"});
-			if ( $E and ( $E->specification('Type') ne 'Stitcher' ) ) {
+			if ( $E and ( $E->specification('Type') ne 'Stitcher' ) and ( $E->specification('Type') ne 'Folder' ) ) {
 				my $makeready = $E->specification( 'Make Ready Time' );
 				my $runspeed = $E->specification( 'Cutting Time' );
 				$openprint::log->debug("Cutting runtime: $makeready $runspeed");
@@ -1535,7 +1536,7 @@ sub runtime {
 							));
 				my $items_per_lift = POSIX::ceil($liftDepth/$$sig_specs{txtSpecificStockCalliper});
 				if ( ! $items_per_lift ) {
-					$log->error("No items_per_lift for $liftDepth / $$sig_specs{txtSpecificStockCalliper} in form $form");
+					#$log->error("No items_per_lift for $liftDepth / $$sig_specs{txtSpecificStockCalliper} in form $form of $$Project{id} on $$E{strid}");
 					#next;
 					$items_per_lift = $impressions;
 				}

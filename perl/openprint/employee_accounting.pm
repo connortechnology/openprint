@@ -8,6 +8,7 @@ require Encode;
 require openprint::Company_Credit;
 require openprint::order;
 require openprint::Order;
+require openprint::Order_Invoice;
 require openprint::Ledger;
 require openprint::Expenditure;
 require openprint::Expense;
@@ -154,7 +155,7 @@ sub details {
 		$variable{ExternalRedirect} = '/employee/accounting/details.html?order_id='.$Order->id();
 #openprint::order::send_invoice( $r, $log, $dbh, $order_id );
 	} elsif ( $param{btnFunction} eq 'Cancel' ) {
-		openprint::order::cancel_order( $log, $dbh, $order_id );
+		$variable{error} .= $Order->cancel();
 	} # end if
 
 	openprint::order::get_invoice_to( \%variable, $Order );
@@ -184,6 +185,25 @@ sub credit {
 				$variable{error} = 'No company found with account # ' . $param{txtSearchAccountNum}.'<br/>';	
 			} # end if
 		} # end if
+
+ } elsif ( $param{btnFunction} eq 'Cancel' ) {
+    if ( ! $param{PAID} ) {
+      $variable{error} = 'Please select an order to cancel.<br/>';
+    } else {
+      my @errors;
+      foreach my $order_id ( ref $param{PAID} eq 'ARRAY' ? @{$param{PAID}} : $param{PAID} ) {
+        my $Order = new openprint::Order( $order_id );
+        if ( $Order->company_id() != $company_id ) {
+          push @errors, 'Order ' . $Order->id() . ' does not belong to ' . new openprint::Company($company_id)->name().'.';
+          next;
+        } # end if
+				$_ = $Order->cancel();
+        push @errors, $_ if $_;
+      } # end foreach
+      if ( @errors ) {
+        $variable{error} = join('<br/>', @errors );
+      } # end if
+    } # end if
 
 	} elsif ( $param{btnFunction} eq 'Pay' ) {
 		if ( ! $param{PAID} ) {
@@ -241,16 +261,16 @@ sub credit {
 				} # end if
 			} # end foreach Supplier
 			my %updates;
-			foreach my $p ( 'discount', 'salesrep_id', 'notes' ) {
-				$updates{$p} = $param{$p} if exists $param{$p} and $$Company{$p} ne $param{$p};
+			foreach my $p ( 'csr_commission','credit_card_fee', 'discount', 'salesrep_id', 'notes' ) {
+				$updates{$p} = $param{$p} if exists($param{$p}) and ($$Company{$p} ne $param{$p});
 			}
 			if ( %updates ) {
-				my $note = note=>join('<br/>', map { $_ . ' changed from ' . $$Company{$_} . ' to ' . $updates{$_} } sort keys %updates );
+				my $note = join('<br/>', map { $_ . ' changed from ' . $$Company{$_} . ' to ' . $updates{$_} } sort keys %updates );
 				if ( ! ( $_ = $Company->save(\%updates) ) ) {
-					(new openprint::Log())->save({action=>'Edit Company', Object=>$Company, note=>$note });
+					(new openprint::Log())->save({ action=>'Edit Company', Object=>$Company, note=>$note });
 				} else {
 					$variable{error} .= $_ . '<br/>';
-				} # en dif
+				} # end if
 			} 
 			sql::end_transaction( $dbh, $ac );
 		} # end if

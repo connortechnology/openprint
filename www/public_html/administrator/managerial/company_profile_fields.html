@@ -1,9 +1,8 @@
-<script type="text/javascript" src="<?hash_link(/administrator/managerial/profile.js)?>"></script>
 <div class="CompanyProfileFields">
 	<form id="f1" name="f1" action="company_profile_fields.html" method="post">
 		<input type="hidden" name="action" id="action" />
 		<p class="buttons">
-		<? echo ( button('Save',{onclick=>q`$j('#action').value='Save';$j('#f1').submit();`});) ?>
+		<? echo ( button('Save',{ type=>'submit', name=>'action', value=>'Save', onclick=>'save_all();' });) ?>
  		Use dragndrop for sorting.
 		</p>
 		<table class="List">
@@ -27,3 +26,15 @@
 		</table>
 	</form>
 </div>
+<script type="text/javascript" src="<?hash_link(/administrator/managerial/profile.js)?>"></script>
+<script type="text/javascript">
+window.addEventListener('DOMContentLoaded', function() {
+	Sortable.create( 'fields', {
+		tag: 'tr',
+		constraint: 'vertical',
+		onUpdate: function( container ) {
+				new Ajax.Updater( 'fields', '_company_fields_tbody.html', { parameters: { update: Sortable.serialize(container) }, evalScripts: true } );
+			}
+	} );
+} );
+</script>

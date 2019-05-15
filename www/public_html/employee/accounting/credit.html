@@ -1,46 +1,5 @@
 <?include(/includes/error_reporting.html)?>
-<script type="text/javascript">
-function set_credit(src_id,dst_id) {
-	var form = $('f1');
-	var fields = [ 'denydays', 'warndays','limit','hold','downpayment','cod'];
-	for ( var i= 0; i < fields.length; i += 1 ) {
-		var field = fields[i];
-		if ( ! form.elements[field+'-'+dst_id] ) {
-			alert('No element for dest ' + field);
-		} else if ( ! form.elements[field+'-'+src_id] ) {
-			alert('No element for src ' + field);
-		} // end if
-		//$(field+'-'+dst_id).value = $(field+'-'+src_id).value;
-		if ( form.elements[field+'-'+dst_id].length ) {
-			set_rdb_value( form.elements[field+'-'+dst_id], get_rdb_value( form.elements[field+'-'+src_id] ) );
-		} else {
-			form.elements[field+'-'+dst_id].value = form.elements[field+'-'+src_id].value;
-		}
-	} // end for
-} // end function set_credit
-function swap_credit(src_id,dst_id) {
-	var form = $('f1');
-	var fields = [ 'denydays', 'warndays','limit','hold','downpayment','cod'];
-	for ( var i= 0; i < fields.length; i += 1 ) {
-		var field = fields[i];
-		if ( ! form.elements[field+'-'+dst_id] ) {
-			alert('No element for dest ' + field);
-		} else if ( ! form.elements[field+'-'+src_id] ) {
-			alert('No element for src ' + field);
-		} // end if
-		//$(field+'-'+dst_id).value = $(field+'-'+src_id).value;
-		if ( form.elements[field+'-'+dst_id].length ) {
-			var value = get_rdb_value(form.elements[field+'-'+dst_id]);
-			set_rdb_value( form.elements[field+'-'+dst_id], get_rdb_value( form.elements[field+'-'+src_id] ) );
-			set_rdb_value(form.elements[field+'-'+src_id],value);
-		} else {
-			var value = form.elements[field+'-'+dst_id].value;
-			form.elements[field+'-'+dst_id].value = form.elements[field+'-'+src_id].value;
-			form.elements[field+'-'+src_id].value = value;
-		}
-	} // end for
-} // end function set_credit
-</script>
+<script type="text/javascript" src="<?hash_link('/employee/accounting/credit.js')?>"></script>
 <form id="f1" name="f1" method="post" action="credit.html" enctype="multipart/form-data">
 	<fieldset class="filters"><legend>Select Company</legend>
 		<ul>
@@ -72,7 +31,7 @@ function swap_credit(src_id,dst_id) {
 	<?include(/account/_sales_edit.html)?>
 	<?include(/includes/_credit_edit.html)?>
 	<p class="buttons">
-		<? echo ( join('',
+		<? echo ( join("\n",
 			button( 'Save', { onclick=>"if(!f1.ddmCustomer.value){alert('Please select a customer');}else{f1.btnFunction.value='Save';f1.submit();};" } ),
 			button( 'Reset', { onclick=>"f1.reset();" } ),
 			); ) ?>
@@ -88,6 +47,21 @@ function swap_credit(src_id,dst_id) {
 		order		=> $openprint::Order::fields{created_on},
 		) ];
 
+	if ( @{$$variable{UnpaidOrders}} ) {
+		my @Order_Invoices = openprint::Order_Invoice->find(order_id=>[ map { $$_{id} } @{$$variable{UnpaidOrders}} ] );
+		my %Invoices_By_OrderId = misc::make_hash_from_array( 'order_id', @Order_Invoices );
+		my @invoice_ids = map { $$_{invoice_id} } @Order_Invoices;
+
+		my %Invoices_by_id = map { $$_{id}, $_ } openprint::Invoice->find(id=>\@invoice_ids) if @invoice_ids;
+		foreach my $OI ( @Order_Invoices ) {
+			$$OI{Invoice} = $Invoices_by_id{$$OI{invoice_Id}};
+		}
+
+		my %invoice_ids = ();
+		foreach my $Order ( @{$$variable{UnpaidOrders}} ) {
+			$$Order{Invoices} = $Invoices_By_OrderId{$$Order{id}} ? $Invoices_By_OrderId{$$Order{id}} : [];
+		}
+	}
 ) ?>
 <? if ( @{$$variable{UnpaidOrders}} ) ?>
 	<table class="List">
@@ -126,7 +100,8 @@ function swap_credit(src_id,dst_id) {
 				', $rowclass, $Order->id(), $Order->docket(), 
 					format_date( $Order->created_on() ),
 					join('<br/>', map { $_->Invoice()->link_to() } $Order->Invoices() ), $Order->po(), 
-					openprint::Currency::format($Order->total()), openprint::Currency::format( $Order->owing() ),
+					openprint::Currency::format($Order->total()),
+					openprint::Currency::format( $Order->owing() ),
 					$Order->status(),
 					);
 					$rowclass = $rowclass ? '' : ' class="colRow"';
@@ -139,13 +114,18 @@ function swap_credit(src_id,dst_id) {
 				<td colspan="4">Totals</td>
 				<td class="Price">%s</td>
 				<td class="Price">%s</td>
-				<td>%s</td>
+				<td></td>
 			</tr>', scalar @{$$variable{UnpaidOrders}}, openprint::Currency::format( $total_total ), openprint::Currency::format( $balance_total ),
-			button( 'Pay', { onclick=>"f1.btnFunction.value='Pay';f1.submit();" } ),
 			);
 			return $html;
 		) ?>
 	</table>
+<p class="buttons">
+<?echo(join("\n",
+			button( 'Pay', { onclick=>'click_pay();'} ),
+			button( 'Cancel', {onclick=>'click_cancel();'} ),
+);)?>
+</p>
 <? else ( @{$$variable{UnpaidOrders}} ) ?>
 There are no unpaid orders.
 <? endif ( @{$$variable{UnpaidOrders}} ) ?>

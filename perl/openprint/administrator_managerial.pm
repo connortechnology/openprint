@@ -299,7 +299,7 @@ $log->error("PReventing customer change");
 		$User->save({});
 		$user_id = $User->id();
     } elsif ( $param{btnFunction} eq 'merge' ) {
-		if ( $$User{id} == $openprint::param{merge_user_id} ) {
+		if ( $$User{id} == $param{merge_user_id} ) {
 			$variable{error} .= 'Choose a different user to merge into.';
 		} else {
 			my $ac = sql::start_transaction( $dbh );
@@ -528,6 +528,7 @@ $log->debug("User ids not match " . $Users[0]->id()  . ' != ' . $User->id() );
 
 sub company_profiles {
 
+	ssi::save_params( '/administrator/managerial/company_profiles.html', ( 'search_salesrep_id','deleted' ) );
 # form field to db field mappings
 	my %shipping_fields = (
 			'txtShippingCompanyName'	=>	'CompanyName',
@@ -561,11 +562,11 @@ sub company_profiles {
 			( $index ) = sql::execute( $log, $dbh, 'SELECT id from Company WHERE strAccountNum=?',$param{txtSearchAccountNum});
 		} # end if
 	} elsif ( $param{btnFunction} eq 'merge' ) {
-		if ( ! $openprint::param{company_id} ) {
+		if ( ! $param{company_id} ) {
 			$variable{error} .= 'There must be a selected company to merge to.';
-		} elsif ( ! $openprint::param{merge_company_id} ) {
+		} elsif ( ! $param{merge_company_id} ) {
 			$variable{error} .= 'There must be a selected company to merge from.';
-		} elsif ( $openprint::param{company_id} == $openprint::param{merge_company_id} ) {
+		} elsif ( $param{company_id} == $param{merge_company_id} ) {
 			$variable{error} .= 'Choose a different company to merge into.';
 		} else {
 			my $ac = sql::start_transaction( $dbh );
@@ -578,18 +579,18 @@ sub company_profiles {
 			foreach my $Timetrack ( openprint::Timetrack->find('owner_id'=>$param{merge_company_id}) ) {
 				$Timetrack->save({'owner_id'=>$Company->id()});
 			} # end foreach Timetrack
-			foreach ( openprint::Invoice->find('invoicer_id'=>$param{merge_company_id}) ) {
-				$_->save({'invoicer_id'=>$Company->id()});
+			foreach ( openprint::Invoice->find(invoicer_id=>$param{merge_company_id}) ) {
+				$_->save({invoicer_id=>$Company->id()});
 			} # end foreach
-			foreach ( openprint::Invoice->find('invoicee_id'=>$param{merge_company_id}) ) {
-				$_->save({'invoicee_id'=>$Company->id()});
+			foreach ( openprint::Invoice->find(invoicee_id=>$param{merge_company_id}) ) {
+				$_->save({invoicee_id=>$Company->id()});
 			} # end foreach
-			foreach my $Payment ( openprint::Payment->find('payor_id'=>$param{merge_company_id}) ) {
-				$Payment->save({'payor_id'=>$Company->id()});
+			foreach my $Payment ( openprint::Payment->find(payor_id=>$param{merge_company_id}) ) {
+				$Payment->save({payor_id=>$Company->id()});
  #if $Payment->payor_id() == $Company->id();
 			} # end foreach  Payment
-			foreach my $Payment ( openprint::Payment->find('recipient_id'=>$param{merge_company_id}) ) {
-				$Payment->save({'recipient_id'=>$Company->id()});
+			foreach my $Payment ( openprint::Payment->find(recipient_id=>$param{merge_company_id}) ) {
+				$Payment->save({recipient_id=>$Company->id()});
 # if $Payment->recipient_id() == $Company->id();
 			} # end foreach  Payment
 			foreach my $Stock ( openprint::Paper->find(supplier_id=>$param{merge_company_id}) ) {
@@ -626,13 +627,15 @@ sub company_profiles {
 				my @customercategories = sql::execute( $log, $dbh, 'SELECT id FROM Marketing_Categories' );
 
 				sql::execute( $log, $dbh, q{DELETE FROM Companies_in_Marketing_Categories WHERE company_Id =?}, $index );
-# add them back in
-				my $sth = $dbh->prepare( q{INSERT INTO Companies_in_Marketing_Categories (Category_Id,Company_Id) VALUES ( ?, ? )} );
-				foreach my $cat ( $param{selectCustomerCategories} ) {
-					if ( $cat and sets::isin( $cat, \@customercategories ) ) {
-						$sth->execute( $cat, $index ) or $log->error( DBI->errstr );
-					} # end if
-				} # end foreach
+				if ( $param{selectCustomerCategories} ) {
+					my $sth = $dbh->prepare( q{INSERT INTO Companies_in_Marketing_Categories (Category_Id,Company_Id) VALUES ( ?, ? )} );
+					foreach my $cat ( $param{selectCustomerCategories} ) {
+						if ( $cat and sets::isin( $cat, \@customercategories ) ) {
+							$sth->execute( $cat, $index ) or $log->error( DBI->errstr );
+						} # end if
+					} # end foreach
+					$sth->finish();
+				}
 
 				my %params;
 				foreach my $field ( keys %shipping_fields ) {
@@ -1059,6 +1062,7 @@ sub _logs {
 	ssi::save_params( '/administrator/managerial/logs.html', (
         'log_actions', 'user_id', 'company_id',
 				( map { 'date_start_' . $_ } ( 'year','month','day' ) ),
+				( map { 'date_end_' . $_ } ( 'year','month','day' ) ),
 				) );
 	if ( $param{action} eq 'delete' ) {
 		my $Log = new openprint::Log( $param{log_id} );
@@ -1183,14 +1187,26 @@ sub users {
 
 }
 sub _users {
-	ssi::save_params('/administrator/managerial/users.html', (
+	my $uri = '/administrator/managerial/users.html';
+	ssi::save_params($uri,(
 				'salesrep_id', 'marketing_category_id', 'company_id','usergroup_id','deleted','email','type','administrator',
 				'notification_type_id',
 				( map { 'created_on_start_' . $_ } ( 'year','month','day' ) ),
 				( map { 'created_on_end_' . $_ } ( 'year','month','day' ) ),
 				) );
-	$session{$r->uri().'?salesrep_id_exclude'} = $param{salesrep_id_exclude};
+	$session{$uri.'?salesrep_id_exclude'} = $param{salesrep_id_exclude};
 }
+
+sub mailqueue {
+	if ( $param{action} ) {
+		if ( $param{action} eq 'Delete' ) {
+			foreach my $queue_id ( ref $param{queue_id} eq 'ARRAY' ? @{$param{queue_id}} : ( $param{queue_id} ) ) {
+$log->debug("sudo /usr/sbin/postsuper -d $queue_id");
+				$variable{information} .= `sudo /usr/sbin/postsuper -d $queue_id 2>&1`.'<br/>';
+			}
+		}
+	}
+} # end sub mailqueue
 
 1;
 __END__

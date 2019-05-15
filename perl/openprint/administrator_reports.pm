@@ -286,7 +286,7 @@ sub order_details {
 		} # end if
 		$Order->update_status();
 	} elsif ( $param{'btnFunction'} eq 'Cancel' ) {
-		openprint::order::cancel_order( $order_id );
+		$variable{error} .= $Order->cancel();
 	} elsif ( $param{'btnFunction'} eq 'Save' ) {
 		$Order->company_id( $param{company_id} );
 		$variable{error} .= $Order->save();

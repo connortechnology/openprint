@@ -200,7 +200,7 @@ sub calc {
 			if ( sets::isin( $servicePrice{units}, 'per m', 'per 1000' ) ) {
 				%servicePrice = openprint::service::get_price_object( 'Drilling', $runs * $qty, $Equipment);
 				$servicePrice{Total} = $runs * $qty * ($servicePrice{Price}/1000);
-				$$specs{'hdnBreakdown'.$qty_index} .= sprintf('ServicePrice: %d * %.3f %s = $%.2f<br/>',$qty, $servicePrice{Price}/1000, @servicePrice{'units','Total'} );
+				$$specs{'hdnBreakdown'.$qty_index} .= sprintf('ServicePrice: %d * %.3f %s = $%.2f<br/>',$qty, $servicePrice{Price}, @servicePrice{'units','Total'} );
 			} elsif ( $servicePrice{units} eq 'percent' ) {
 				$servicePrice{Total} = $$stitching_specs{"MPrice$qty_index"} * ( $qty / 1000 ) * ( $servicePrice{Price}/100 );
 				$$specs{'hdnBreakdown'.$qty_index} .= sprintf('ServicePrice: %d * %.3f per M * %s %s = $%.2f<br/>',$qty, $$stitching_specs{"MPrice$qty_index"},$servicePrice{Price}, @servicePrice{'units','Total'} );

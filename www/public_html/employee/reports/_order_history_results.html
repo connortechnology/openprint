@@ -9,24 +9,37 @@ The following had one or more signatures that ran on <? echo ( join(': ', new op
 		<th class="Docket">Docket</th>
 		<th class="invoice_id">Invoice #</th>
 		<th class="Company">Company</th>
-		<th class="DateTime">Ordered On</th>
-		<th class="DateTime">Printed On</th>
+		<th class="DateTime">Ordered</th>
+		<th class="DateTime">Printed</th>
+		<th class="DateTime">Shipped</th>
+		<th class="DateTime">Invoiced</th>
 		<th class="status">Status</th>
 		<th class="Price">Total</th>
+		<th class="Price">Commission</th>
+		<th class="Price">Credit Card</th>
 	</tr>
 	<? echo (
 		my $html = '';
 		my $rowclass;
 		my $total;
+		my $csr_commission_total;
+		my $credit_card_fee_total;
+
 		my $uri = '/employee/reports/order_history.html';
 		my @servicetype_ids = split(',',$session{$uri.'?servicetype_id'} );
 
 		foreach my $Order ( @{$$variable{Orders}} ) {
+			my $csr_commission;
+			my $credit_card_fee;
 			my $price;
 			if ( $session{$uri.'?currency_id'} ) {
 				$price = $Order->total();
+				$csr_commission = $Order->csr_commission();
+				$credit_card_fee = $Order->credit_card_fee();
 			} else {
 				$price = $Order->Currency()->convert_from($Order->total());
+				$csr_commission = $Order->Currency()->convert_from($Order->csr_commission());
+				$credit_card_fee = $Order->Currency()->convert_from($Order->credit_card_fee());
 			}
 			$html .= sprintf(q`
 				<tr%1$s>
@@ -36,14 +49,23 @@ The following had one or more signatures that ran on <? echo ( join(': ', new op
 					<td class="Company"><a href="/employee/project/view.html?order_id=%2$d">%5$s</a></td>
 					<td class="DateTime"><a href="/employee/project/view.html?order_id=%2$d">%6$s</a></td>
 					<td class="DateTime"><a href="/employee/project/view.html?order_id=%2$d">%7$s</a></td>
-					<td class="status"><a href="/employee/project/view.html?order_id=%2$d">%8$s</a></td>
-					<td class="Price"><a href="/employee/project/view.html?order_id=%2$d">%9$s</a></td>
+					<td class="DateTime"><a href="/employee/project/view.html?order_id=%2$d">%8$s</a></td>
+					<td class="DateTime"><a href="/employee/project/view.html?order_id=%2$d">%9$s</a></td>
+					<td class="status"><a href="/employee/project/view.html?order_id=%2$d">%10$s</a></td>
+					<td class="Price"><a href="/employee/project/view.html?order_id=%2$d">%11$s</a></td>
+					<td class="Price"><a href="/employee/project/view.html?order_id=%2$d">%12$s</a></td>
+					<td class="Price"><a href="/employee/project/view.html?order_id=%2$d">%13$s</a></td>
 				</tr>
 				`, $rowclass, $Order->id(), $Order->docket(), join('<br/>', map { $_->Invoice()->num() } $Order->Invoices() ),
 				htmlize($Order->company_name()),
 				format_datetime( $Order->created_on() ),
 				join( '<br/>', map { format_datetime( $_->printed_on() ) } $Order->Projects() ),
-				$Order->status(), openprint::Currency::format( $price ),
+				join( '<br/>', map { format_datetime( $_->shipped_on() ) } $Order->Projects() ),
+				format_datetime( $Order->invoiced_on() ),
+				$Order->status(),
+				openprint::Currency::format( $price ),
+				openprint::Currency::format( $csr_commission ),
+				openprint::Currency::format( $credit_card_fee ),
 			);
 			foreach my $Project ( $Order->Projects() ) {
 
@@ -56,7 +78,7 @@ The following had one or more signatures that ran on <? echo ( join(': ', new op
         <tr%1$s>
 					<td></td>
 					<td colspan="3" class="reference">%2$s</td>
-					<td colspan="4" class="services" valign="top"><table>%3$s</table></td>
+					<td colspan="8" class="services" valign="top"><table>%3$s</table></td>
 				<tr>', $rowclass, $Project->reference(),
 				( @servicetype_ids != @{$variable{ServiceTypes}} ? join('<br/>',
 						map { '<tr><td>'.$_->name().'</td><td class="Price">'.openprint::Currency::format($_->ordered_price() ).'</td></tr>' } @Services ).
@@ -65,17 +87,23 @@ The following had one or more signatures that ran on <? echo ( join(': ', new op
 			} # end foreach Project
 			$rowclass = $rowclass ? '' : ' class="colRow"';
 			$total += $price;
+			$csr_commission_total += $csr_commission;
+			$credit_card_fee_total += $credit_card_fee;
 		} # end foreach Order
 		$html .= sprintf(q`<tr class="totals">
 			<td align="right">Count</td>
 			<td>%d</td>
 			<td align="right">Average Value</td>
 			<td>%s</td>
-			<td colspan="3" align="right">Total</td>
+			<td colspan="5" align="right">Total</td>
+			<td class="Price">%s</td>
+			<td class="Price">%s</td>
 			<td class="Price">%s</td>
 		</tr>`, scalar @{$$variable{Orders}},
 		openprint::Currency::format( $total/scalar @{$$variable{Orders}} ),
 		openprint::Currency::format( $total ),
+		openprint::Currency::format( $csr_commission_total ),
+		openprint::Currency::format( $credit_card_fee_total ),
 		);
 		return $html;
 	) ?>

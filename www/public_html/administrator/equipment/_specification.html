@@ -11,7 +11,7 @@
 	<td class="value"><span id="SValue<? echo ( $$variable{Specification}->id(); ) ?>"><? echo (return
 ( defined($$variable{Specification}->value()) and ($$variable{Specification}->value() ne '') )
  ?
- HTML::Entities::encode_entities($$variable{Specification}->value())
+ HTML::Entities::encode_entities(sprintf('%s',$$variable{Specification}->value()))
 :
 '&nbsp;';
  ) ?></span></td>
