@@ -20,8 +20,12 @@
 					return $html;
 				) ?>
 				<li class="total">
-					<label>Total</label>
-					<span id="total"><? echo ( openprint::Currency::format( $$variable{Invoice}->total() ); ) ?></span>
+					<label>Total</label><?echo($$variable{CurrencySymbol})?>
+          <!--<span id="total"><? echo ( openprint::Currency::format( $$variable{Invoice}->total() ); ) ?></span>-->
+					<? echo ( join("\n",
+						input( type=>'float', name=>'total', id=>'total', value=>$$variable{Invoice}->total() ),
+						boolean_override('total_override', $$variable{Invoice}->total_override() ),
+						); ) ?>
 				</li>
 				<? if ( $$variable{Invoice}->interest() ne '' ) ?>
 				<li class="interest">

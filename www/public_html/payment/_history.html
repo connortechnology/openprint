@@ -50,6 +50,8 @@
 			<th class="Date">Received On</th>
 			<th class="TransactionID">Transaction ID</th>
 			<th class="Memo">Memo</th>
+			<th class="Invoices">Invoices</th>
+			<th class="Account">Deposited To</th>
 			<th class="Price">Amount</th>
 			<th class="Price">Value</th>
 			<th class="Price">Remaining</th>
@@ -62,6 +64,8 @@
 			<td class="Date"><a href="/payment/edit.html?payment_id=<? echo ( $$variable{Payment}->id(); ) ?>"><? echo ( Date::Format::time2str( $config{DateFormat}, Date::Parse::str2time( $$variable{Payment}->received_on() ) ); ) ?></a></td>
 			<td class="TransactionID"><a href="/payment/edit.html?payment_id=<? echo ( $$variable{Payment}->id(); ) ?>"><? hecho ( $$variable{Payment}->transaction_id(); ) ?></a></td>
 			<td class="Memo"><a href="/payment/edit.html?payment_id=<? echo ( $$variable{Payment}->id(); ) ?>"><? hecho ( $$variable{Payment}->memo(); ) ?></a></td>
+      <td class="Invoices"><?echo( join(', ', map { $$_{invoice_id} } $$variable{Payment}->Invoice_Payments() ) ) ?></td>
+      <td class="Account"><?echo( $$variable{Payment}->Account()->name() )?></td>
 			<td class="Price"><? echo ( openprint::Currency::format( $$variable{Payment}->amount() ); ) ?></td>
 			<td class="Price"><? echo ( openprint::Currency::format( $$variable{Payment}->value() ); ) ?></td>
 			<td class="Price"><? echo ( openprint::Currency::format( $$variable{Payment}->remaining() ); ) ?></td>
@@ -69,7 +73,7 @@
 		<? eval ( $$variable{rowclass} = $$variable{rowclass} ? '' : ' class="colRow"';) ?>
 		<? endwhile ( $$variable{Payment} = shift @{$$variable{Payments}}; ) ?>
 		<tr class="totals">
-			<td colspan="6">Totals</td>
+			<td colspan="8">Totals</td>
 			<td class="Price"><? echo ( openprint::Currency::format( $$variable{total} ); ) ?></td>
 			<td class="Price"><? echo ( openprint::Currency::format( $$variable{value_total} ); ) ?></td>
 			<td class="Price"><? echo ( openprint::Currency::format( $$variable{remaining_total} ); ) ?></td>

@@ -10,6 +10,7 @@ require openprint::Invoice_Payment;
 require openprint::Currency;
 require openprint::Company;
 require openprint::Order;
+require openprint::Expense_Account;
 
 $debug = 0;
 $table = 'payments';
@@ -36,6 +37,7 @@ $serial = 'payments_id_seq';
   exchange  =>  'exchange',
   value     =>  'value',
   value_locked  =>  'value_locked',
+  account_id  =>  'account_id',
 );
 
 %transforms = (
@@ -57,6 +59,7 @@ $serial = 'payments_id_seq';
   exchange  =>  1,
   value_locked  =>  0,
   amount_locked =>  0,
+  account_id    =>  undef,
 );
 
 sub save {
@@ -186,7 +189,12 @@ sub exchange {
   return $_[0]{exchange};
 }
 
-
+sub Account {
+  if ( !$_[0]{Account} ) {
+    $_[0]{Account} = new openprint::Expense_Account( $_[0]{account_id} );
+  }
+  return $_[0]{Account};
+}
 
 1;
 __END__

@@ -38,6 +38,7 @@ $serial = 'invoices_id_seq';
 	subtotal		=>	'subtotal',
 	subtotal_override		=>	'subtotal_override',
 	total			=>	'total',
+	total_override		=>	'total_override',
 	due_on			=>	'due_on',
 	posted_on		=>	'posted_on',
 	created_on		=>	'created_on',
@@ -80,6 +81,7 @@ $serial = 'invoices_id_seq';
 	num						=>	undef,
 	due_on					=>	undef,
 	subtotal_override		=>	0,
+	total_override		=>	0,
 );
 
 sub save {
@@ -91,7 +93,7 @@ sub save {
 	# none of these should be set by param ( however employee_accounting will pass in a total if specified.. FIXME
 	$$self{subtotal} = $self->subtotal( undef ) if $$self{id} and ! $$self{subtotal_override};
 	$self->Taxes( undef );
-	$$self{total} = $self->total( undef ) if $$self{id};
+	$$self{total} = $self->total( undef ) if $$self{id} and ! $$self{total_override};
 
 	$rc .= $self->SUPER::save( );
 	if ( ! $rc ) {
@@ -185,7 +187,7 @@ sub total {
 		$$self{total} = $_[1];
 	}
 
-	if ( (!$$self{posted}) or ( ! defined $$self{total} ) ) {
+	if ( ( (!$$self{posted}) or ( ! defined $$self{total} ) ) and ( ! $$self{total_override} ) ) {
 		$$self{total} = $self->subtotal();
 		foreach my $Tax ( $self->Taxes() ) {
 			$$self{total} += $Tax->amount();
@@ -292,11 +294,11 @@ sub send {
 
   my $skin_path = '';
   if ( -e ($openprint::config{SkinPath}.'/'.$self->Invoicer()->name() ) ) {
-  $skin_path = '/'.$self->Invoicer()->name();
-  $openprint::log->debug("Have skinpath at $skin_path");
-} else {
-  $openprint::log->debug("Have no skinpath at " . $openprint::config{SkinPath}.'/'.$self->Invoicer()->name() );
-}
+    $skin_path = '/'.$self->Invoicer()->name();
+    $openprint::log->debug("Have skinpath at $skin_path");
+  } else {
+    $openprint::log->debug("Have no skinpath at " . $openprint::config{SkinPath}.'/'.$self->Invoicer()->name() );
+  }
 
 	my $email_template = ssi::slurp_content($skin_path.'/email_template.html');
 	$email_template = ssi::slurp_content('/email_template.html') if ! $email_template;
@@ -309,18 +311,18 @@ sub send {
 	$data{ReplacementText} = ssi::include('/email_content/invoice_body.html', \%data) if ! $data{ReplacementText};
   $Email->html_body( ssi::variable_substitution( \$email_template, \%data ) );
 
-	$data{ReplacementText} = ssi::include( '/email_content/invoice.html', \%data );
-	my $invoice_html = Encode::encode('utf-8',ssi::variable_substitution( \$invoice_template, \%data ) );
-  $Email->add_pdf_attachment_from_html('Invoice'.$$self{id}, $invoice_html);
+	$data{ReplacementText} = ssi::include('/email_content/invoice.html', \%data);
+	my $invoice_html = Encode::encode('utf-8',ssi::variable_substitution(\$invoice_template, \%data));
+  $Email->add_pdf_attachment_from_html('Invoice'.$self->num(), $invoice_html);
 
-	$Email->add_html_attachment("Invoice$$self{id}.html", $invoice_html ) if $To and ( $To->email() =~ /^iconnor/);
+	$Email->add_html_attachment("Invoice".$self->num().'.html', $invoice_html) if $To and ($To->email() =~ /^iconnor/);
 	my $results = $Email->send(
-		BCC			=>	new openprint::User( $session{user_id} ),
+		BCC			=>	$openprint::User,
 		#TO			=>	new openprint::User( $session{user_id} ),
 		TO			=>	( $To ? $To : [$self->Invoicee()->AccountingContacts()] ),
 		FROM		=>	$config{AccountingEmail},
 		ATTACHMENTS	=>	\@attachments,
-		SUBJECT		=>	sprintf('%1$s Invoice (%2$d) is now available.', $self->Invoicer()->name(), $$self{id} ),
+		SUBJECT		=>	sprintf('%1$s Invoice (%2$s) is now available.', $self->Invoicer()->name(), $self->num()),
 	);
 	(new openprint::Log())->save({Object=>$self, action=>'Invoice Sent', note=>$results});
 	return $results;

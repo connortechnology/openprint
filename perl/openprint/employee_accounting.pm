@@ -450,6 +450,7 @@ sub expenses {
 		ssi::setup_date_select( '/employee/accounting/expenses.html', 'entered_on_end', '' );
 	} # end if
 } # end sub expenses
+
 sub _expenses {
 	ssi::save_params( '/employee/accounting/expenses.html', ( 
 				'entered_on_start_year','entered_on_start_month','entered_on_start_day',
@@ -466,13 +467,19 @@ sub _expenses {
 } # end sub _expenses
 
 sub expense {
-	my $Expense = $variable{Expense} = new openprint::Expense( $param{expense_id} );
+	my $Expense = $variable{Expense} = new openprint::Expense($param{expense_id});
 	if ( $param{btnFunction} eq 'Copy' ) {
 		$variable{information} .= $Expense->id() . ' has been copied';
 		$variable{Expense} = $Expense = $Expense->copy();
 	} elsif ( $param{btnFunction} eq 'Delete' ) {
 		if ( ! ( $variable{error} .= $Expense->delete() ) ) {
 			$variable{information} .= 'Expense ' . $Expense->id() . ' deleted successfully.';
+			$variable{ExternalRedirect} = '/employee/accounting/expenses.html';
+			return;	
+		} # end if
+	} elsif ( $param{btnFunction} eq 'Undelete' ) {
+		if ( ! ( $variable{error} .= $Expense->undelete() ) ) {
+			$variable{information} .= 'Expense ' . $Expense->id() . ' undeleted.';
 			$variable{ExternalRedirect} = '/employee/accounting/expenses.html';
 			return;	
 		} # end if

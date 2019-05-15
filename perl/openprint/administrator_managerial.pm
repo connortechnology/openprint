@@ -641,9 +641,9 @@ sub company_profiles {
 				foreach my $field ( keys %shipping_fields ) {
 					$params{$shipping_fields{$field}} = $param{$field} if defined $param{$field};
 				} # end foreach
-				$Company->save_shipping( \%params );
+				$Company->save_shipping(\%params);
 
-				$Company->save_tradereferences( \%param );
+				$Company->save_tradereferences(\%param);
 
 				$dbh->do( 'LOCK TABLE Company_Credit IN ACCESS EXCLUSIVE MODE' ) or $log->error( DBI->errstr );
 

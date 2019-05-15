@@ -26,7 +26,7 @@ sub history {
 			if ( ! $Invoice ) {
 				$variable{error} .= "Invoice $param{invoice_id} not found";
 			} elsif ( ! $Invoice->can_send() ) {
-				$variable{error} .= "You are not authorized to send this invoice.<br/>";
+				$variable{error} .= 'You are not authorized to send this invoice.<br/>';
 
 			} else {
 				$variable{error} .= $Invoice->send();
@@ -72,7 +72,24 @@ sub history {
 			_history();
 			my %data;
 
-			my $email_template = misc::load_file( $log, $config{SkinPath}.'/email_template.html' );
+      my $Invoicer = openprint::Company->find_one(id=>$session{'/invoice/history.html?invoicer_id'});
+      my $skin_path = '';
+      if ( -e ($openprint::config{SkinPath}.'/'.$Invoicer->name() ) ) {
+        $skin_path = '/'.$Invoicer->name();
+        $openprint::log->debug("Have skinpath at $skin_path");
+      } elsif ( -e ($ENV{DOCUMENT_ROOT}.'/'.$Invoicer->name()) ) {
+        $skin_path = $ENV{DOCUMENT_ROOT}.'/'.$Invoicer->name();
+        $openprint::log->debug("Have skinpath at $skin_path");
+      } else {
+        $openprint::log->debug("Have no skinpath at " . $openprint::config{SkinPath}.'/'.$Invoicer->name() );
+      }
+
+      my $email_template = ssi::slurp_content($skin_path.'/email_template.html');
+      $email_template = ssi::slurp_content('/email_template.html') if ! $email_template;
+
+      my $invoice_template = ssi::slurp_content($skin_path.'/invoice_template.html');
+      $invoice_template = ssi::slurp_content('/invoice_template.html') if ! $invoice_template;
+
 			my @attachments;
 			$data{ReplacementText} = ssi::include( '/email_content/account_statement.html', \%data );
 			push @attachments, '', MIME::QuotedPrint::encode_qp( ssi::variable_substitution( \$email_template, \%data ) ), 'text/html', 'quoted-printable';
@@ -80,8 +97,8 @@ sub history {
 			my @Invoices = openprint::Invoice->find(
 					ssi::date_filter('/invoice/history.html?created_on_start', 'created_on >=' ),
 					ssi::date_filter('/invoice/history.html?created_on_end', 'created_on >=' ),
-					invoicee_id => $session{'/invoice/history.html?company_id'},
-					invoicer_id => $session{company_id},
+					invoicee_id => $session{'/invoice/history.html?invoicee_id'},
+					invoicer_id => $session{'/invoice/history.html?invoicer_id'},
 					order       => 'id',
 					);
 			foreach my $Invoice ( @Invoices ) {
@@ -93,23 +110,23 @@ sub history {
 				$data{uri} = 'invoice';
 				$data{Invoice} = $Invoice;
 				$data{ReplacementText} = ssi::include('/email_content/invoice.html', \%data);
-				push @attachments, 'Invoice '.$$Invoice{id}.'.html', MIME::QuotedPrint::encode_qp( Encode::encode('utf-8',ssi::variable_substitution( \$email_template, \%data ) ) ), 'text/html', 'quoted-printable';
+				push @attachments, 'Invoice '.$$Invoice{id}.'.html', MIME::QuotedPrint::encode_qp( Encode::encode('utf-8',ssi::variable_substitution( \$invoice_template, \%data ) ) ), 'text/html', 'quoted-printable';
 			} # end foreach Invoice
 			if ( @attachments <= 4 ) {
 				$variable{error} .= "There were no invoices to include in this statement.";
 				if ( @Invoices ) {
-					$variable{error} .= "You may not be authorized to send them.";
+					$variable{error} .= 'You may not be authorized to send them.';
 				}
 				return;
 			}
 
-			my @Recipients = new openprint::Company($param{company_id})->AccountingContacts();
+			my @Recipients = new openprint::Company($param{invoicee_id})->AccountingContacts();
 			(new openprint::Email())->send(
 						FROM    => $config{AccountingEmail},
-						TO      =>  \@Recipients,
-						#TO      => new openprint::User( $session{user_id} ),
-						BCC     => new openprint::User( $session{user_id} ),
-						SUBJECT => 'Account Statement from ' . ( new openprint::User( $session{user_id} )->Company()->name() ),
+            TO      =>  \@Recipients,
+            #TO      => $openprint::User,
+						BCC     => $openprint::User,
+						SUBJECT => 'Account Statement from ' . ( $Invoicer->name() ),
 						ATTACHMENTS	=>	\@attachments,
 						);
 			$variable{information} .= 'Account statement sent to ' . join('<br/>', map { sprintf('&quot;%s %s&quot; &lt;%s&gt;',$_->get('firstname','lastname','email')) } @Recipients );
@@ -120,8 +137,8 @@ sub history {
 	ssi::setup_date_select('/invoice/history.html', 'due_on_start', -60);
 	ssi::setup_date_select('/invoice/history.html', 'due_on_end', '');
 
-	$session{'/invoice/history.html?paid'} = '0' if ! sets::isin( $session{'/invoice/history.html?paid'}, [ 0,1,''] );
-	$session{'/invoice/history.html?bad_debt'} = '0' if ! sets::isin( $session{'/invoice/history.html?bad_debt'}, [ 0,1,''] );
+	$session{'/invoice/history.html?paid'} = '0' if ! ( exists($session{'/invoice/history.html?paid'}) and sets::isin( $session{'/invoice/history.html?paid'}, [ 0,1,''] ) );
+	$session{'/invoice/history.html?bad_debt'} = '0' if ! (exists($session{'/invoice/history.html?bad_debt'}) and sets::isin( $session{'/invoice/history.html?bad_debt'}, [ 0,1,''] ) );
 	$session{'/invoice/history.html?employee_id'} = $session{user_id} if ! exists $session{'/invoice/history.html?employee_id'};
 
 	_history();
@@ -137,7 +154,7 @@ sub _history {
       ( map { 'due_on_end_'.$_ } ( 'year','month','day' ) ),
       ( map { 'paid_on_start_'.$_ } ( 'year','month','day' ) ),
       ( map { 'paid_on_end_'.$_ } ( 'year','month','day' ) ),
-      'paid','company_id','bad_debt','product_id', 'invoicer_id' ) );
+      'paid','invoicee_id','bad_debt','product_id', 'invoicer_id' ) );
 
   $variable{subtotal} = $variable{total} = $variable{interest_total} = $variable{owing_total} = 0;
   $variable{Taxes} = [ openprint::Tax->find(
@@ -173,8 +190,8 @@ sub _history {
         ssi::date_filter($uri.'?due_on_end', 'due_on is null or <='),
         ssi::date_filter($uri.'?due_on_start', 'due_on is null or >='),
         ( sets::isin($session{user_type}, ['E','A']) ? (
-            ( $session{$uri.'?company_id'} ? 
-              ( invoicee_id => $session{$uri.'?company_id'} ) : 
+            ( $session{$uri.'?invoicee_id'} ? 
+              ( invoicee_id => $session{$uri.'?invoicee_id'} ) : 
               ( $company_ids ? ( invoicee_id => $company_ids ) : () ) 
             ),
 

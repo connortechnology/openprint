@@ -520,6 +520,9 @@ if ( ! sets::isin( 'invoices', \@tables ) ) {
 	if ( ! exists $$data{subtotal_override} ) {
 		$dbh->do('ALTER TABLE Invoices ADD subtotal_override BOOLEAN NOT NULL default false');
 	} # end if
+	if ( ! exists $$data{total_override} ) {
+		$dbh->do('ALTER TABLE Invoices ADD total_override BOOLEAN NOT NULL default false');
+	} # end if
 } # end if
 if ( ! sets::isin( 'invoice_interests', \@tables ) ) {
     $dbh->do( misc::load_file( $log, '../../sql/Invoice_Interests.sql' ) );
@@ -529,6 +532,11 @@ if ( ! sets::isin( 'invoice_interests', \@tables ) ) {
 if ( ! sets::isin( 'invoices_id_seq', \@sequences ) ) {
 	$dbh->do('CREATE SEQUENCE invoices_id_seq');
 } # en dif
+
+if ( !sets::isin('invoices_payments', \@tables) ) {
+	load_sql('Invoices_Payments');
+}
+
 if ( ! sets::isin( 'order_statuses', \@tables ) ) {
     $dbh->do( misc::load_file( $log, '../../sql/Order_Statuses.sql' ) );
     die $dbh->errstr() if $dbh->errstr();
@@ -662,6 +670,11 @@ if ( ! sets::isin('payments', \@tables) ) {
   if ( !$$data{amount_locked} ) {
     $log->debug("Adding amount_locked to payments");
     $dbh->do('ALTER TABLE payments ADD amount_locked BOOLEAN NOT NULL DEFAULT FALSE');
+  }
+  if ( ! $$data{account_id} ) {
+    $log->debug("Adding account_id to Payment");
+    $dbh->do('ALTER TABLE Payments ADD account_id    INTEGER') or die $dbh->errstr();
+    $dbh->do('ALTER TABLE Payments ADD FOREIGN KEY (account_id) REFERENCES Expense_Accounts (id)') or die $dbh->errstr();
   }
 } # end if
 
@@ -5723,6 +5736,10 @@ if ( ! sets::isin('backups', \@tables ) ) {
   if ( ! exists $$data{deleted} ) {
     $log->debug("Adding deleted to Backups");
     $dbh->do('ALTER TABLE Backups ADD deleted BOOLEAN NOT NULL DEFAULT FALSE') or die $dbh->errstr();
+  }
+  if ( ! exists $$data{enabled} ) {
+    $log->debug("Adding enabled to Backups");
+    $dbh->do('ALTER TABLE Backups ADD enabled BOOLEAN NOT NULL DEFAULT TRUE') or die $dbh->errstr();
   }
   if ( ! exists $$data{owner_id} ) {
     $log->debug("Adding Owner_id to bakcups");

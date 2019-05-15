@@ -100,16 +100,16 @@ sub registration {
 		} # end if
 	} # end if
 	if ( $required_fields{email} ) {
-	$error .= 'Missing E-mail Address.<br/>' if ! $param{email};
-	$error .= 'Invalid E-mail Address.<br/>' if ! Email::Valid->address( $param{email} );
+    $error .= 'Missing E-mail Address.<br/>' if ! $param{email};
+    $error .= 'Invalid E-mail Address.<br/>' if ! Email::Valid->address( $param{email} );
 	}
 	if ( $required_fields{password} ) {
-	$error .= 'Empty Password.<br/>' if $param{password} eq '';
-	$error .= 'Passwords do not match.<br/>' if $param{password} ne $param{verifypassword};
-	if ( my $reason = openprint::login::check_password( $param{password} ) ) {
-		$error .= "Password not good enough.  $reason<br/>";
-	} # end if
-	} # end if
+    $error .= 'Empty Password.<br/>' if $param{password} eq '';
+    $error .= 'Passwords do not match.<br/>' if $param{password} ne $param{verifypassword};
+    if ( my $reason = openprint::login::check_password( $param{password} ) ) {
+      $error .= "Password not good enough.  $reason<br/>";
+    } # end if
+  } # end if
 	if ( ( ! $session{company_id} ) and ( $config{UseCaptchaOnRegistration} eq 'Y' ) ) {
 		if ( ! -e $config{SkinPath}.'/images/captcha' ) {
 			$log->error("Needtocreatecaptcha directory!");
@@ -142,7 +142,7 @@ sub registration {
 	} # end if
 
 	if ( $error ne '' ) {
-$log->warn("registration errors $error");
+    $log->warn("registration errors $error");
 		$variable{error} = $error;
 		return;
 	} # end if
@@ -190,14 +190,14 @@ $log->warn("registration errors $error");
 			$Company = new openprint::Company();
 			$Company->set( \%param );
 			$Company->activation( $config{NewCustomerAccountActivation} );
-			if ( sets::isin( $session{user_type}, ['E','A'] ) and ! $Company->salesrep_id() ) {
+			if ( $session{user_type} and sets::isin($session{user_type}, ['E','A']) and ! $Company->salesrep_id() ) {
 				$Company->salesrep_id( $session{user_id} );
 			} # end if
 			if ( my $error = $Company->save() ) {
 				$variable{error} .= $error;
 				return;
 			} # end if
-			my @Suppliers = openprint::Company->find('offers_credit'=>1,'order'=>'id');
+			my @Suppliers = openprint::Company->find(offers_credit=>1, order=>'id');
 			foreach my $Supplier ( @Suppliers ) {
 # Setup default Credit
 				my $Credit = new openprint::Company_Credit();
@@ -283,7 +283,7 @@ $log->warn("registration errors $error");
 						);
 			} # end if
 
-			if ( ! sets::isin( $session{user_type}, ['E','A'] ) ) {
+			if ( ! ( $session{user_type} and sets::isin($session{user_type}, ['E','A']) ) ) {
 # send notification
 				$info{ReplacementText} = ssi::include( '/email_content/first_user_login_app_notification.html', \%info );
 				foreach my $to ( split(',', $config{UserRegistrationEmail} ) ) {
@@ -360,7 +360,7 @@ $log->warn("registration errors $error");
 		} # end if Company has users or not
 	} # end if has email first or last name
 
-	if ( sets::isin( $session{user_type}, ['E','A'] ) ) {
+	if ( $session{user_type} and sets::isin($session{user_type}, ['E','A']) ) {
 		# If I'm a salesrep, then only change my company, not the user.
 		$session{company_id} = $Company->id();
 		$variable{information} .= 'You are now representing '.$Company->name().'<br/>';
