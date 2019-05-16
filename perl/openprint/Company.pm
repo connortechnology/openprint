@@ -169,7 +169,7 @@ sub destroy {
 } # end sub destroy
 
 sub save {
-    my ($self, $param, $force ) = @_;
+  my ($self, $param, $force ) = @_;
 	
 	$self->set( $param ? $param : {} );
 	require Text::Unidecode;

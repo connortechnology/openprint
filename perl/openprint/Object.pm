@@ -428,7 +428,50 @@ $log->warn('Object::changes called on an object with no fields');
 		} # end if
 	} # end foreach field
 	return @results;
-} # end sub changes
+}
+sub set_no_defaults {
+  my ( $self, $params ) = @_;
+  my @set_fields = ();
+
+  my $type = ref $self;
+  if ( ! $type ) {
+    my ( $caller, undef, $line ) = caller;
+    $log->error("No type in Object::set. self:$self from  $caller:$line");
+  }
+  my %fields = eval ('%'.$type.'::fields');
+  if ( ! %fields ) {
+    $log->warn('Object::set called on an object with no fields');
+  } # end if
+  my %defaults = eval('%'.$type.'::defaults');
+  if ( ref $params ne 'HASH' ) {
+    my ( $caller, undef, $line ) = caller;
+    $openprint::log->error("$type -> set called with non-hash params from $caller $line");
+  }
+
+  foreach my $field ( keys %fields ) {
+    $log->debug("field: $field, param: ".$$params{$field}) if $debug;
+    if ( exists $$params{$field} ) {
+      $openprint::log->debug("field: $field, $$self{$field} =? param: ".$$params{$field}) if $debug;
+      if ( ( ! defined $$self{$field} ) or (!defined($$params{$field})) or ($$self{$field} ne $params->{$field}) ) {
+        # Only make changes to fields that have changed
+        if ( defined $fields{$field} ) {
+          $$self{$field} = $$params{$field} if defined $fields{$field};
+          push @set_fields, $fields{$field}, $$params{$field};  #mark for sql updating
+        } # end if
+        $openprint::log->debug("Running $field with $$params{$field}") if $debug;
+        if ( my $func = $self->can( $field ) ) {
+          $func->( $self, $$params{$field} );
+        } # end if
+      } # end if
+    } # end if
+
+    if ( defined $fields{$field} ) {
+      if ( $$self{$field} ) {
+        $$self{$field} = transform( $type, $field, $$self{$field} );
+      } # end if $$self{field}
+    }
+  } # end foreach field# end sub changes
+}
 
 sub set {
 	my ( $self, $params ) = @_;
