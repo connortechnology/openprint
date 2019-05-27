@@ -220,7 +220,7 @@
 				} # end if
 			} # end if
 
-			my $qty = misc::sum( map { ( (!%{$$variable{types}}) or $$variable{types}{$_->type_id()} ) ? $_->qty() : 0 } $PO->Contents() );
+			my $qty = misc::sum( map { ( (!($$variable{types} and %{$$variable{types}})) or $$variable{types}{$_->type_id()} ) ? $_->qty() : 0 } $PO->Contents() );
 
 			$html .= sprintf( q`
 				<td class="po_id"><a href="/employee/purchase_order/view.html?po_id=%1$d">%1$d</a></td>
