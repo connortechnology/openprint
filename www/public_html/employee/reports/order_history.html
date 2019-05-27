@@ -29,7 +29,7 @@
 		<li>
 			<label>Company</label>
 			<input type="text" oninput="filter_companies(f1.company_id, {name:this.value,salesrep_id:<?echo(
-if ( $session{user_type} eq 'A' or openprint::usergroup::is_user_in( ['Sales Admin','Reporting','Accounting'], $session{user_id} ) {
+if ( $session{user_type} eq 'A' or openprint::usergroup::is_user_in( ['Sales Admin','Reporting','Accounting'], $session{user_id} ) ) {
 return q`get_value($('CSR'))`;
 } else {
 return $session{user_id};
