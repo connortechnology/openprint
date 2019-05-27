@@ -130,7 +130,7 @@ sub variable_substitution {
 					$log->error("Unable to find terminating if ( $command ) in $after");
 				} # end if
 			} elsif ( $command =~ /^eval\s*\(\s*(.*)\s*\)/ms ) {
-				$_ = eval $1;
+				eval $1;
 				$log->error( "Eval error of ($1), Reason: " . $@ ) if $@;
 			} elsif ( $command =~ /^echo\s*\(\s*(.*)\s*\)/ms ) {
 				$_ = eval $1;
