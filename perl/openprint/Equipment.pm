@@ -173,6 +173,7 @@ sub Fold {
 		} else {
 			$openprint::log->debug("Found fold: " . $Fold->name() . ' ... examining') if DEBUG_FOLDING;
 		} # end if
+
 		if ( $$params{gsm} and ( ( $Fold->min_gsm() and ($$params{gsm} < $Fold->min_gsm()) ) or ( $Fold->max_gsm() and ($$params{gsm} > $Fold->max_gsm()) ) ) ) {
 			$openprint::log->debug("Wanted gsm: $$params{gsm}, have ($$Fold{min_gsm}) ($$Fold{max_gsm})") if DEBUG_FOLDING;
 			next;
@@ -272,10 +273,32 @@ sub Fold {
 			$openprint::log->debug("Wanted imposition: $$params{rows}, have $$Fold{min_imposition_rows} x $$Fold{max_imposition_rows}") if DEBUG_FOLDING;
 			next;
 		} # end if
-		if ( $$Fold{spine_direction} and $$params{spine_direction} and ($$Fold{spine_direction} ne $$params{spine_direction} ) ) {
-			$openprint::log->debug("Wanted spinedirection: $$params{spine_direction}, have $$Fold{spine_direction}") if DEBUG_FOLDING;
-			next;
-		} # end if
+
+		if ( $$Fold{spine_direction} and $$params{spine_direction} ) {
+#$openprint::log->debug("spine direction:: $$Fold{spine_direction} $$params{spine_direction} $$params{grain_direction} width_folds: $$Fold{width_folds} $$Fold{height_folds}");
+			if ( $$Fold{spine_direction} eq 'With Grain' ) {
+				if ( $$Fold{folds} ) {
+					if ( ($$params{spine_direction} eq 'Vertical') and ($$params{grain_direction} eq 'width') ) {
+						$openprint::log->debug("Wanted spinedirection: $$params{spine_direction}, have $$Fold{spine_direction} grain: $$params{grain_direction}") if DEBUG_FOLDING;
+						next;
+					} elsif ( ($$params{spine_direction} eq 'Horizontal') and ($$params{grain_direction} eq 'height') ) {
+						$openprint::log->debug("Wanted spinedirection: $$params{spine_direction}, have $$Fold{spine_direction} grain: $$params{grain_direction}") if DEBUG_FOLDING;
+						next;
+					} 
+				} elsif ( $$Fold{anglea} ) {
+					if ( ($$params{spine_direction} eq 'Vertical') and ($$params{grain_direction} eq 'height') ) {
+						$openprint::log->debug("Wanted spinedirection: $$params{spine_direction}, have $$Fold{spine_direction} grain: $$params{grain_direction}") if DEBUG_FOLDING;
+						next;
+					} elsif ( ($$params{spine_direction} eq 'Horizontal') and ($$params{grain_direction} eq 'width') ) {
+						$openprint::log->debug("Wanted spinedirection: $$params{spine_direction}, have $$Fold{spine_direction} grain: $$params{grain_direction}") if DEBUG_FOLDING;
+						next;
+					} 
+				} # end fold direction
+			} elsif ( $$Fold{spine_direction} ne $$params{spine_direction} ) {
+				$openprint::log->debug("Wanted spinedirection: $$params{spine_direction}, have $$Fold{spine_direction}") if DEBUG_FOLDING;
+				next;
+			} # end if with_grain or vertical or horizontal
+		} # end if spine_direction
 
 		if ( $$Fold{orientation} ) {
 			my %orientations = map { $_, $_ } split(',', $$Fold{orientation});
