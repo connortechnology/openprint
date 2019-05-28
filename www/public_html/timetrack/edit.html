@@ -129,6 +129,10 @@
 					<? echo ( join('<br/>', map { sprintf('<a href="/paycheque/edit.html?paycheque_id=%1$d">%1$d</a>', $_ ); } $$variable{Timetrack}->Paycheques() ); ) ?>
 				</li>
 				<? endif ( $$variable{Timetrack}->Paycheques() ) ?>
+				<? if ( $$variable{Timetrack}->id() ) ?>
+        <li><label>Entered</label><?echo(format_datetime($$variable{Timetrack}->created_on()))?></li>
+        <li><label>Updated</label><?echo(format_datetime($$variable{Timetrack}->updated_on()))?></li>
+				<? endif ( $$variable{Timetrack}->id() ) ?>
 			</ul>
 		</div>
 		</div>
