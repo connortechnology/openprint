@@ -454,7 +454,11 @@ sub to_string {
 		$$self{to_string} = $_[0];
 	} # end if
 	if ( ! $$self{to_string} ) {
-		my $string = ($$self{id} ? '' : 'Custom: ').join(' ', ( $self->manufacturer(), $self->brand(), $self->finish(), $self->colour(), $self->weight() ) );
+		my $string = join(' ', (
+					($$self{supplied} ? 'Customer Supplied' : () ),
+					($$self{id} ? () : 'Custom'),
+					$self->manufacturer(), $self->brand(), $self->finish(), $self->colour(), $self->weight(),
+					) );
 		if ( $self->type() eq 'Roll' ) {
 			$string .= ' ' . $self->width.'"' if $$self{width};
 			$string .= ' Roll ';
