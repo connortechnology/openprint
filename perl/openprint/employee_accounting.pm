@@ -12,6 +12,7 @@ require openprint::Order_Invoice;
 require openprint::Ledger;
 require openprint::Expenditure;
 require openprint::Expense;
+require openprint::Expense_Rule;
 require openprint::Payment;
 require misc;
 require sql;
@@ -714,6 +715,15 @@ sub _delete_order_invoice {
 } # end sub _delete_order_invoice
 
 sub _select_category {
+}
+
+sub expense_rules {
+    
+}
+sub _expense_rules {
+}
+
+sub expense_rule {
 }
 
 1;

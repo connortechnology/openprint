@@ -1,12 +1,12 @@
-package openprint::Bank_Account_Rule;
+package openprint::Expense_Rule;
 our @ISA = qw(openprint::Object);
 
 require JSON;
 
 use vars qw( $debug $table $serial %fields %transforms %defaults );
 $debug = 0;
-$table = 'bank_account_rules';
-$serial = 'bank_account_rules_id_seq';
+$table = 'expense_rules';
+$serial = 'expense_rules_id_seq';
 %fields = (
   id          =>  'id',
   name        =>  'name',
