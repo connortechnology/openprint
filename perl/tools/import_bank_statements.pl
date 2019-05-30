@@ -110,7 +110,19 @@ while ( <FH> ) {
   delete $$Expense{id};
   my ($date, $time, $card, $amount, $desc, $debit, $credit, $balance, $paid_on, $type, $posted, $ref );
 
-  if ( $$opts{format} eq 'TD' ) {
+  if ( $$opts{format} eq 'CIBC' ) {
+    ($date, $desc, $debit, $credit, $card) = misc::trim($csv->fields());
+
+    my $paid_on = $date,
+    $amount = $debit;
+
+    $Expense->set_no_defaults({
+      description => $desc,
+      account_id  => $$Account{id},
+      total       => $debit,
+      paid_on     => $paid_on,
+    });
+} elsif ( $$opts{format} eq 'TD' ) {
     ($date, $desc, $debit, $credit, $balance) = misc::trim($csv->fields());
 
     my ($month, $day, $year) = split('/', $date);

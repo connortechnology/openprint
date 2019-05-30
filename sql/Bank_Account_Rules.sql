@@ -28,6 +28,10 @@ INSERT INTO Bank_Account_Rules (name,rules_json,action_json) VALUES
 ( 'OVERDRAFT INTEREST', '[{"desc": "/^OVERDRAFT INTEREST/"}]','{"category": "Interest", "recipient":"TD Canada Trust"}'),
 ( 'PRODUCT PROTECTOR', '[{"desc": "/^PRODUCT PROTECTOR/"}]','{"category": "Service Charge", "recipient":"Mastercard"}'),
 ( 'PURCHASE INTEREST CHARGE', '[{"desc": "/^PURCHASE INTEREST CHARGE/"}]','{"category": "Interest", "recipient":"Mastercard"}'),
+('CIBC Purchase Interest', '[{"desc":"/^PURCHASE INTEREST$/"}]', '{"category":"Interest","recipient":"CIBC"}');
+('CIBC Cash Interest', '[{"desc":"/^CASH INTEREST$/"}]', '{"category":"Interest","recipient":"CIBC"}');
+('CIBC Cash Advance', '[{"desc":"/^CASH ADV/BT/CONV CHQ FEE$/"}]', '{"category":"Service Charge","recipient":"CIBC"}');
+('Intuit', '[{"desc":"/^INTUIT CANADA/"}]', '{"category":"Business Expense","recipient":"Intuit"}');
 ( 'PURCHASE \\*FINANCE CHARGE\\*', '[{"desc": "/^PURCHASE \\*FINANCE CHARGE\\*/"}]','{"category": "Interest", "recipient":"Mastercard"}'),
 ( 'MXTOOLBOX', '[{"desc": "/^MXTOOLBOX/"}]','{"category": "Business Expense", "recipient":"MxToolBox"}'),
 ( 'PAPER STMT FEE', '[{"desc": "/^PAPER STMT FEE/"}]','{"category": "Service Charges", "recipient":"TD Canada Trust"}'),
