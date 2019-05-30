@@ -112,8 +112,10 @@ $serial= 'folds_id_seq';
 
 sub to_string {
 	if ( ! $_[0]{to_string} ) {
-		$_[0]{to_string} = sprintf('%s %dx%d=%d pages min:%d max:%d impo on %s', 
-				@{$_[0]}{'name','page_columns','page_rows','pages', 'min_imposition','max_imposition'}, $_[0]->Equipment()->name() );
+		$_[0]{to_string} = sprintf('%s %dx%d=%d pages min:%d max:%d impo on %s spine: %s', 
+				@{$_[0]}{'name','page_columns','page_rows','pages', 'min_imposition','max_imposition'},
+				$_[0]->Equipment()->name(),
+				$_[0]{spine_direction} );
 	} # end if
 	return $_[0]{to_string};
 } # end sub to_string

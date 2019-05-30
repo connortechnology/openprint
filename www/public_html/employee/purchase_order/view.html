@@ -293,14 +293,14 @@ Manifest: <a href="/employee/inventory/manifest_view.html?manifest_id=<? echo ( 
 			</table>
 		</fieldset>
 		</div>
-	</div><!--PO-->
-	<br class="spacer"/>
 <? if ( ! $$variable{PurchaseOrder}->authorized() ) ?>
 <div id="not_approved"><img src="/images/not_approved.png"/></div>
 <? endif ( ! $$variable{PurchaseOrder}->authorized() ) ?>
 <? if ( $$variable{PurchaseOrder}->do_not_pay() ) ?>
 <div id="do_not_pay"><img src="/images/do_not_pay.png"/></div>
 <? endif ( $$variable{PurchaseOrder}->do_not_pay() ) ?>
+	</div><!--PO-->
+	<br class="spacer"/>
 <? else ( $$variable{PurchaseOrder}->can_view() ) ?>
 You do not have the rights to view this PO.
 <? endif ( $$variable{PurchaseOrder}->can_view() ) ?>

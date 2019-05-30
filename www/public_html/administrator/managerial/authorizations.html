@@ -13,8 +13,9 @@
 			<li><label>Object Type</label>
 				<? echo (
 						$$variable{object_types} = openprint::Object_Type->dropdown();
-						ssi::select( $$variable{object_types}, $session{'/administrator/managerial/authorizations.html?object_type_id'}, 
-							{ name=>'object_type_id', prepend=>[ '', 'All' ], onchange=>q`load('Results','f1');` } ); ) ?>
+						ssi::select( $$variable{object_types}, $session{$r->uri().'?object_type_id'}, 
+							{ name=>'object_type_id', prepend=>[ '', 'All' ], onchange=>q`load('Results','f1');` } );
+				) ?>
 			</li>
 		</ul>
 		<p class="buttons">
