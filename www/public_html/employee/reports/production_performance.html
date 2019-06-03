@@ -87,7 +87,8 @@
 				<? echo ( 
 						my @columns = ( 'plates', 'Plate Information',
 							'production', 'Production Timeline',
-							'stock', 'Stock Information',
+							'stock', 'Stock Information '.$openprint::Owner->name().' Supplied',
+							'stock_customer_supplied', 'Stock Information Customer Supplied',
 							);
 						my %columns = @columns;
 						checkboxes( 'columns', \@columns,

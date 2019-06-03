@@ -23,14 +23,14 @@
 		<th class="Date">Shipped</th>
 		<th class="Date">Invoiced</th>
 <?endif($$variable{columns}{production})?>
-<?if($$variable{columns}{stock})?>
+<?if($$variable{columns}{stock} or $$variable{columns}{stock_customer_supplied})?>
 		<th class="Sheets">Used Stock Sheets</th>
 		<th class="Weight">Used Stock Weight</th>
 		<th class="Price StockCost">Stock Cost</th>
 		<th class="Sheets">Quoted Stock Sheets</th>
 		<th class="Weight">Quoted Stock Weight</th>
 		<th class="Price StockCharge">Quoted Stock Price</th>
-<?endif($$variable{columns}{stock})?>
+<?endif($$variable{columns}{stock} or $$variable{columns}{stock_customer_supplied})?>
 		<th class="status">Status</th>
 		<th class="Impressions">Impressions</th>
 		<th class="RunStyles">RunStyles</th>
@@ -103,7 +103,7 @@
 						);
 			}
 			
-			if ( $$variable{columns}{stock} ) {
+			if ( $$variable{columns}{stock} or $$variable{columns}{stock_customer_supplied}) {
 				my ( $sheets, $weight, $stock_cost, $stock_name, $quoted_sheets, $quoted_weight, $stock_charge ) = splice @{$$variable{Data}}, 0, 7;
 				$html .= sprintf(q`
 						<td class="Sheets">%4$s</td>
@@ -155,7 +155,7 @@
 			<td colspan="%d"></td>
 		`, $lines, $columns );
 
-		if ( $$variable{columns}{stock} ) {
+		if ( $$variable{columns}{stock} or $$variable{columns}{stock_customer_supplied} ) {
 			$html .= sprintf('
 <td class="Sheets">%s</td>
 <td class="Weight">%s</td>
@@ -171,7 +171,7 @@
 					openprint::Currency::format( $stock_quoted_total ), 
 			);
 		}
-		$html .= sprintf(q`<td class="status"></td><td class="Price">%s</td>`, openprint::Currency::format( $job_total ) );
+		$html .= sprintf(q`<td class="status"></td><td class="RunStyle"></td><td class="Price">%s</td>`, openprint::Currency::format( $job_total ) );
 		$html .= '</tr>';
 		return $html;
 	) ?>

@@ -1393,14 +1393,14 @@ sub _production_performance {
 				push @fragment, $invoiced_on;
 			}
 
-			if ( $columns{stock} ) {
+			if ( $columns{stock} or $columns{stock_customer_supplied} ) {
 				my $stock_sheets = 0;
 				my $stock_weight = 0;
 				my $stock_cost = 0;	
 				my %skids;
 				foreach my $PI ( openprint::PaperInventory->find( docket=>$Order->docket(), 'skid_id is null'=>0 ) ) {
 					$skids{$$PI{skid_id}} = 1;
-$openprint::log->debug("PI Stock for $$Order{docket} is $$PI{delta} " . $PI->Paper()->to_string() );
+#$openprint::log->debug("PI Stock for $$Order{docket} is $$PI{delta} " . $PI->Paper()->to_string() );
 					if ( $PI->Paper()->units() eq 'Roll' ) {
 						$stock_weight += -1*$$PI{delta};
 					} else {
@@ -1431,12 +1431,27 @@ $openprint::log->debug("PI Stock for $$Order{docket} is $$PI{delta} " . $PI->Pap
 					my $stock_specs = $Service->specs();
 					my @stocks_and_quantities = openprint::Estimating::Paper::get_stocks_and_quantities( $Project, $$services{Paper}[0], $stock_specs, $qty_index );
 					my $stock_index = 1;
+					my $added = 0;
 					foreach my $SQ ( @stocks_and_quantities ) {
 						my ( $Stock, $qty ) = @$SQ{'Stock','quantity'};
 						next if ! $qty;
-
-						push @Data, @fragment, $Stock->to_string(), ( $Stock->type() eq 'Sheet' ? ($qty,int($qty*$Stock->sheet_weight())) : ('', $qty) ), $$SQ{price};
+						if ( $Stock->supplied() ) {
+							next if ! $columns{stock_customer_supplied};
+						} else {
+							next if ! $columns{stock};
+						}
+						$added = 1;
+						push @Data,
+								 @fragment,
+								 $Stock->to_string(),
+								 ( $Stock->type() eq 'Sheet' ? ($qty, int($qty*$Stock->sheet_weight())) : ('', $qty) ),
+								 $$SQ{price};
 					}
+
+					#if ( ! $added ) {
+						#$log->debug("No stock data added, so adding szeros");
+						#push @Data, @fragment, ' ', 0, 0, 0;
+					#}
 
 				} else {
 					push @Data, @fragment, 0,0,0,0;
