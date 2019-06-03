@@ -89,9 +89,9 @@
 					`, $rowclass, $Expense->id(), $Expense->Recipient()->name(), 
 					$Expense->account(),
 					$Expense->category(), 
-					Date::Format::time2str( $config{DateFormat}, Date::Parse::str2time( $Expense->invoiced_on() ) ),
-					Date::Format::time2str( $config{DateFormat}, Date::Parse::str2time( $Expense->due_on() ) ),
-					( $Expense->paid_on() ? Date::Format::time2str( $config{DateFormat}, Date::Parse::str2time( $Expense->paid_on() ) ) : '' ),
+					format_date($Expense->invoiced_on()),
+					format_date($Expense->due_on()),
+					format_date($Expense->paid_on()),
 					$Expense->business_use(),
 					openprint::Currency::format( $Expense->amount() ),
 					openprint::Currency::format( $Expense->business_use_amount() ),
@@ -111,13 +111,12 @@
 			<td colspan="7">Totals (<? echo ( scalar @{$$variable{Expenses}} ) ?> rows)</td>
 			<td class="Price"><? echo ( openprint::Currency::format( $$variable{subtotal} ); ) ?><br/>
 			<? echo ( openprint::Currency::format( $$variable{business_subtotal} ); ) ?></td>	
-<? echo (
-                return join('', map { sprintf('<td class="Price">%s<br/>%s</td>', 
+      <? echo (
+            return join("\n", map { sprintf('<td class="Price">%s<br/>%s</td>', 
 						openprint::Currency::format( $$variable{tax_totals}{$_->id()}{amount} ),
 						openprint::Currency::format( $$variable{tax_totals}{$_->id()}{business} )
 						) } @{$$variable{Taxes}} );
-            ) ?>
-
+      ) ?>
 			<td class="Price"><? echo ( openprint::Currency::format( $$variable{total} ); ) ?><br/>
 			<? echo (openprint::Currency::format( $$variable{bus_total} ); ) ?></td>
 		</tr>
