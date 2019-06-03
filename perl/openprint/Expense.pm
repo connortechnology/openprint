@@ -147,11 +147,16 @@ sub category {
       return $Category->name();
     }
 	} # end if
-	return new openprint::Expense_Category( $_[0]{category_id} )->name();
+  return $self->Category()->name();
 } # end sub category
 
 sub Category {
-	return new openprint::Expense_Category( $_[0]{category_id} );
+  my $self = shift;
+  $$self{Category} = shift if @_;
+  if ( ! $$self{Category} ) {
+    $$self{Category} = new openprint::Expense_Category($$self{category_id});
+  }
+  return $$self{Category};
 } # end sub Category
 
 sub account {
