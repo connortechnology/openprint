@@ -52,7 +52,7 @@
 			`, $Paper->id(), $Paper->to_string(), $Type->supplier_invoice(), $Type->docket(), $Type->po_id() ? $Type->PurchaseOrder()->link_to() : '' );
 
 			if ( $$variable{Manifest}->can_see_pricing() ) {
-				$html .= '<li><label>Cost (/CWT)</label>'.$Type->cost();
+				$html .= '<li><label>Cost (/CWT)</label>'.$$variable{Manifest}->Currency()->format($Type->cost());
 				my $POC = $Type->PurchaseOrder_Content();
 				if ( $POC ) {
 					my $PO_Cost = $POC->Cost();
@@ -84,12 +84,16 @@
 			if ( $Type->type() ne 'Sheet' ) {
 				$table_header .= '<th class="qty_feet">Feet</th>';
 			} # end if
+			if ( $$variable{Manifest}->can_see_pricing() ) {
+				$table_header .= '<th class="Price">Value</th>';
+			}
 			$table_header .= '
 				<th class="in_stock">In Stock</th>
 				<th class="last_seen">Last Seen</th>
 				<th class="Location">Location</th>
 			</tr>';
 				my $total = 0;
+				my $value_total = 0;
 				my @Contents = $Type->Contents();
 				my %SkidContents = ();
 				my @skid_ids = map { $$_{skid_id} ? $$_{skid_id} : () } @Contents;
@@ -132,18 +136,25 @@
 						$html .= sprintf('<a href="/employee/inventory/skid_details.html?skid_id=%1$d">%2$s</a>', $C->skid_id(), $C->manufacturers_id() );
 					} # end if
 					$html .= '</td>';
+					my $lbs;
 					if ( $Type->type() eq 'Sheet' ) {
-						my $lbs = $C->quantity() * $Paper->width() * $Paper->height() * $Paper->wpsi();
+						$lbs = $C->quantity() * $Paper->width() * $Paper->height() * $Paper->wpsi();
 						$html .= '<td class="qty_lbs">'. Number::Format::format_number(Math::Round::nearest( 1,$lbs)) . '</td>';
 						$html .= '<td class="qty_kgs">'.  Number::Format::format_number(Math::Round::nearest( 1, $lbs/2.2046 )) . '</td>';
 						$html .= '<td class="qty_sheets">'.  Number::Format::format_number($$C{quantity}) . '</td>';
 					} else {
-						$html .= '<td class="qty_lbs">'. Number::Format::format_number(Math::Round::nearest( 1,$$C{quantity} )) . '</td>';
-						$html .= '<td class="qty_kgs">'. Number::Format::format_number(Math::Round::nearest( 1, $C->quantity()/2.2046 )). '</td>';
+						$lbs = $$C{quantity};
+						$html .= '<td class="qty_lbs">'. Number::Format::format_number(Math::Round::nearest( 1,$lbs )) . '</td>';
+						$html .= '<td class="qty_kgs">'. Number::Format::format_number(Math::Round::nearest( 1, $lbs/2.2046 )). '</td>';
 						$html .= '<td class="qty_feet">'.
-								( ( $Paper->width() and $Paper->wpsi() ) ? ( Number::Format::format_number( Math::Round::nearest( 1, (($C->quantity()/$Paper->wpsi())/$Paper->width())/12 ) ) ) : () )
+								( ( $Paper->width() and $Paper->wpsi() ) ? ( Number::Format::format_number( Math::Round::nearest( 1, (($lbs/$Paper->wpsi())/$Paper->width())/12 ) ) ) : () )
 								. '</td>';
 					} # end if
+					if ( $$variable{Manifest}->can_see_pricing() ) {
+						my $value = $lbs*$C->cost()/100;
+						$html .= '<td class="Price">'.$openprint::Currency->format($value).'</td>';
+						$value_total += $value;
+					}
 					if ( $SkidContents and @{$SkidContents} ) {
 						$html .= '<td class="in_stock">'. Number::Format::format_number( Math::Round::nearest( 1, $$SkidContents[0]->quantity() ) ) . ' '.$Paper->units().'</td>';
 						$html .= '<td class="last_seen">'. $$SkidContents[0]->Skid()->last_seen_days().' days</td>';
@@ -169,6 +180,9 @@
 						Number::Format::format_number( Math::Round::nearest( 1,$total/2.2046 )), 
 						( ( $Paper->wpsi() and $Paper->width() ) ? Number::Format::format_number( (($total/$Paper->wpsi())/$Paper->width())/12 ) : 0 ) );
 				} #end if
+				if ( $$variable{Manifest}->can_see_pricing() ) {
+					$html .= '<td class="Price">'.$openprint::Currency->format($value_total).'</td>';
+				}
 				$html .= '<td colspan="'.(($Type->type(), [ 'Roll', 'Sheet' ] ) ? '3' : '2' ). '">&nbsp;</td></tr>';
 				if ( scalar @Contents != $$Type{item_count} ) {
 					$html .= '<tr><td colspan="'.(($Type->type(), [ 'Roll', 'Sheet' ] ) ? '9' : '10' ). '" class="warning">Contents and expected content count do not match!</td></tr>';
