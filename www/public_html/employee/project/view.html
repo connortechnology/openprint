@@ -122,7 +122,7 @@ function send_notifications( form, project_id ) {
 		$$variable{PurchaseOrders} = [ openprint::PurchaseOrder_Content->find( docket=>$$variable{Order}->docket() ) ];
 	) ?>
 	<? if ( @{$$variable{PurchaseOrders}} ) ?>
-	<fieldset><legend>Purchase Orders:</legend>
+	<fieldset><legend>Purchase Orders</legend>
 		<table class="List">
 			<tr><th class="po_id">PO</th><th class="description">Description</th><th class="quantity">Quantity</th></tr>
 	<? echo (
@@ -143,6 +143,55 @@ function send_notifications( form, project_id ) {
 		</table>
 	</fieldset>
 	<? endif ( @{$$variable{PurchaseOrders}} ) ?>
+
+  <? echo (
+		my $html;
+    my @MCTs = openprint::Manifest_Content_Type->find( docket=>$$variable{Order}->docket() );
+		if ( @MCTs ) {
+			$html = '
+  <fieldset><legend><a href="/employee/inventory/manifests.html?docket='.$$variable{Order}->docket().'">Manifests</a></legend>
+    <table class="List">
+      <tr>
+				<th class="manifest_id">ID</th>
+				<th class="description">Description</th>
+				<th class="Quantity">Quantity</th>
+';
+  		my %manifests = map { $$_{manifest_id} => $_->Manifest() } @MCTs;
+
+      foreach my $manifest_id ( sort { $a <=> $b } keys %manifests ) {
+   			my $Manifest = $manifests{$manifest_id};
+
+        $html .= sprintf('
+<tr>
+  <td class="manifest_id"><a href="/employee/inventory/manifest_view.html?manifest_id=%1$d">%1$d</a></td>
+	<td class="description">%2$s</td>
+	<td class="Quantity">&nbsp;</td>
+</tr>
+',
+					$Manifest->id(),
+					$Manifest->Vendor()->name(),
+				);
+        foreach my $T ( $Manifest->Types() ) {
+					$html .= sprintf('
+<tr>
+  <td class="manifest_id">&nbsp;</td>
+	<td class="description">%1$s</td>
+	<td class="Quantity">%2$s</td>
+</tr>
+',
+					$T->Paper()->to_string(),
+					$T->quantity() . $T->units(),
+					);
+				} # end foreach Type
+        $html .= '
+    </table>
+  </fieldset>
+';
+	
+			} # end foreach manifest
+		} # end if MCTs
+    return $html;
+  ) ?>
 	<?include(/employee/project/_files.html)?>
 	</div>
 	<div class="rightColumn">
