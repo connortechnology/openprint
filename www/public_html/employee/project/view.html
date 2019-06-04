@@ -118,11 +118,11 @@ function send_notifications( form, project_id ) {
 		</fieldset>
 	</div>
 	<div class="leftColumn">
+	<fieldset><legend>Purchase Orders</legend>
 	<? eval (
 		$$variable{PurchaseOrders} = [ openprint::PurchaseOrder_Content->find( docket=>$$variable{Order}->docket() ) ];
 	) ?>
 	<? if ( @{$$variable{PurchaseOrders}} ) ?>
-	<fieldset><legend>Purchase Orders</legend>
 		<table class="List">
 			<tr><th class="po_id">PO</th><th class="description">Description</th><th class="quantity">Quantity</th></tr>
 	<? echo (
@@ -141,25 +141,26 @@ function send_notifications( form, project_id ) {
 		return $html;
 	) ?>
 		</table>
-	</fieldset>
 	<? endif ( @{$$variable{PurchaseOrders}} ) ?>
+	</fieldset>
 
+  <fieldset><legend><a href="/employee/inventory/manifests.html?docket=<?echo($$variable{Order}->docket())?>">Manifests</a></legend>
   <? echo (
 		my $html;
-    my @MCTs = openprint::Manifest_Content_Type->find( docket=>$$variable{Order}->docket() );
+    my @MCTs = openprint::Manifest_Content_Type->find( docket=>$$variable{Order}->docket(), order=>'manifest_id' );
 		if ( @MCTs ) {
 			$html = '
-  <fieldset><legend><a href="/employee/inventory/manifests.html?docket='.$$variable{Order}->docket().'">Manifests</a></legend>
     <table class="List">
       <tr>
 				<th class="manifest_id">ID</th>
 				<th class="description">Description</th>
 				<th class="Quantity">Quantity</th>
 ';
-  		my %manifests = map { $$_{manifest_id} => $_->Manifest() } @MCTs;
+  		my %manifests = misc::make_hash_from_array( 'manifest_id', @MCTs );
 
       foreach my $manifest_id ( sort { $a <=> $b } keys %manifests ) {
-   			my $Manifest = $manifests{$manifest_id};
+				my @Types = @{$manifests{$manifest_id}};
+   			my $Manifest = $Types[0]->Manifest();
 
         $html .= sprintf('
 <tr>
@@ -171,7 +172,7 @@ function send_notifications( form, project_id ) {
 					$Manifest->id(),
 					$Manifest->Vendor()->name(),
 				);
-        foreach my $T ( $Manifest->Types() ) {
+				foreach my $Type ( @Types ) {
 					$html .= sprintf('
 <tr>
   <td class="manifest_id">&nbsp;</td>
@@ -179,19 +180,19 @@ function send_notifications( form, project_id ) {
 	<td class="Quantity">%2$s</td>
 </tr>
 ',
-					$T->Paper()->to_string(),
-					$T->quantity() . $T->units(),
+					$Type->Paper()->to_string(),
+					$Type->quantity() . $Type->units(),
 					);
 				} # end foreach Type
         $html .= '
     </table>
-  </fieldset>
 ';
 	
 			} # end foreach manifest
 		} # end if MCTs
     return $html;
   ) ?>
+  </fieldset>
 	<?include(/employee/project/_files.html)?>
 	</div>
 	<div class="rightColumn">
