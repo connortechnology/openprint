@@ -1344,18 +1344,20 @@ sub _production_performance {
 			}
 			push @fragment, $impressions, join(',',keys %runstyles);
 	
-			my %category_totals;
-			foreach my $Category ( @ServiceType_Categories ) {
-				$category_totals{$$Category{id}} = 0;
-				foreach my $ServiceType ( @{$ServiceTypes_By_Category{$$Category{id}}} ) {
-					next if ! $$services{$$ServiceType{name}};
-					foreach my $service_id ( @{ $$services{$$ServiceType{name}} } ) {
-						my $Service = $Project->Service( $service_id );
-						$category_totals{$$Category{id}} += $Service->ordered_price();	
-					} # end foreach service_id
-				} # end foreach ServiceType
-				push @fragment, $category_totals{$$Category{id}};
-			} # end foreach category
+			if ( $columns{services} ) {
+				my %category_totals;
+				foreach my $Category ( @ServiceType_Categories ) {
+					$category_totals{$$Category{id}} = 0;
+					foreach my $ServiceType ( @{$ServiceTypes_By_Category{$$Category{id}}} ) {
+						next if ! $$services{$$ServiceType{name}};
+						foreach my $service_id ( @{ $$services{$$ServiceType{name}} } ) {
+							my $Service = $Project->Service( $service_id );
+							$category_totals{$$Category{id}} += $Service->ordered_price();	
+						} # end foreach service_id
+					} # end foreach ServiceType
+					push @fragment, $category_totals{$$Category{id}};
+				} # end foreach category
+			}
 
 			if ( $columns{plates} ) {
 				my $plate_qty = 0;
@@ -1397,9 +1399,9 @@ sub _production_performance {
 				my $stock_sheets = 0;
 				my $stock_weight = 0;
 				my $stock_cost = 0;	
-				my %skids;
+			
+				# This the used counts from inventory, theoretically each has a manifest
 				foreach my $PI ( openprint::PaperInventory->find( docket=>$Order->docket(), 'skid_id is null'=>0 ) ) {
-					$skids{$$PI{skid_id}} = 1;
 #$openprint::log->debug("PI Stock for $$Order{docket} is $$PI{delta} " . $PI->Paper()->to_string() );
 					if ( $PI->Paper()->units() eq 'Roll' ) {
 						$stock_weight += -1*$$PI{delta};
@@ -1409,29 +1411,35 @@ sub _production_performance {
 					my $Cost = $PI->Value();
 					$stock_cost += $$Cost{value};
 				}
+
+				push @fragment, $stock_sheets, int($stock_weight), $stock_cost;
+
+				$stock_sheets = $stock_weight = $stock_cost = 0;	
+				# Now do the counts from Manifests/POs
 				foreach my $MT ( openprint::Manifest_Content_Type->find( docket=>$Order->docket() ) ) {
+					my $POC = $MT->PurchaseOrder_Content();
 					foreach my $MC ( openprint::ManifestContent->find( type_id=>$$MT{id} ) ) {
-						next if $skids{$$MC{skid_id}};
 						if ( $MT->Paper()->type() eq 'Roll' ) {
 							$stock_weight += $MC->quantity();
 						} else {
 							$stock_sheets += $MC->quantity();
 							$stock_weight += $MC->quantity() * $MT->Paper()->sheet_weight();
 						}
-						$stock_cost += $MC->value();
+						if ( $MC->value() ) {
+$openprint::log->debug("Adding stock_cost from MC value $stock_weight $stock_sheets $$MC{value} = $stock_cost");
+							$stock_cost += $MT->Manifest()->Currency()->convert_from($MC->value());
+						} elsif ( $POC ) {
+							$stock_cost += $POC->PurchaseOrder()->Currency()->convert_from($POC->price() * $stock_weight / 100);
+						}
 					}
-				}
+				} # end foreach Manifest Type
 				push @fragment, $stock_sheets, int($stock_weight), $stock_cost;
 
 				if ( $$services{Paper} and @{$$services{Paper}} ) {
 					my $Service = $Project->Service( $$services{Paper}[0] );
 
-					my $stock_sheets_quoted = 0;
-					my $stock_weight_quoted = 0;
-					my $stock_specs = $Service->specs();
-					my @stocks_and_quantities = openprint::Estimating::Paper::get_stocks_and_quantities( $Project, $$services{Paper}[0], $stock_specs, $qty_index );
-					my $stock_index = 1;
-					my $added = 0;
+					$stock_sheets = $stock_weight = $stock_cost = 0;	
+					my @stocks_and_quantities = openprint::Estimating::Paper::get_stocks_and_quantities( $Project, $$services{Paper}[0], $Service->specs(), $qty_index );
 					foreach my $SQ ( @stocks_and_quantities ) {
 						my ( $Stock, $qty ) = @$SQ{'Stock','quantity'};
 						next if ! $qty;
@@ -1440,13 +1448,17 @@ sub _production_performance {
 						} else {
 							next if ! $columns{stock};
 						}
-						$added = 1;
-						push @Data,
-								 @fragment,
-								 $Stock->to_string(),
-								 ( $Stock->type() eq 'Sheet' ? ($qty, int($qty*$Stock->sheet_weight())) : ('', $qty) ),
-								 $$SQ{price};
+						if ( $Stock->type() eq 'Roll' ) {
+							$stock_weight += $qty;
+            } else {
+              $stock_sheets += $qty;
+              $stock_weight += $qty * $Stock->sheet_weight();
+            }
+            $stock_cost += $Project->Currency()->convert_from($$SQ{price});
 					}
+					push @Data, @fragment, $stock_sheets, int($stock_weight), $stock_cost if $stock_weight;
+
+					$fragment[6] = 0;
 
 					#if ( ! $added ) {
 						#$log->debug("No stock data added, so adding szeros");
@@ -1454,10 +1466,12 @@ sub _production_performance {
 					#}
 
 				} else {
-					push @Data, @fragment, 0,0,0,0;
+					push @Data, @fragment, 0, 0, 0;
+						$fragment[6] = 0;
 				}
 			} else {
 				push @Data, @fragment;
+						$fragment[6] = 0;
 			} # end if stock
 
 		} # end foreach Project
@@ -1466,10 +1480,14 @@ sub _production_performance {
 	$variable{Header} = [ 'Order ID', 'Docket', 'Project ID', 'Company',
 		'Created On', 'Status', 'Project Value',
 		'Impressions', 'Runstyles',
-		( map { $$_{name} } @ServiceType_Categories ),
+		( $columns{services} ? ( map { $$_{name} } @ServiceType_Categories ) : () ),
 		( $columns{plates} ? ( 'Plates', 'Plate Cost', 'Plate Total' ) : () ),
 		( $columns{production} ? ( 'Operator Assigned', 'Printed On', 'Completed On', 'Shipped On', 'Invoiced On' ) : () ),
-		( $columns{stock} ? ( 'Used Stock Sheets', 'Used Stock Weight', 'Stock Cost', 'Stock', 'Quoted Stock Sheets', 'Quoted Stock Weight', 'Stock Quoted Price' ) : () ),
+		( $columns{stock} ? ( 
+												 'Used Stock Sheets', 'Used Stock Weight', 'Used Stock Cost',
+												 'Received Stock Sheets', 'Received Stock Weight', 'Received Stock Cost',
+												 'Quoted Stock Sheets', 'Quoted Stock Weight', 'Quoted Stock Price'
+												) : () ),
 	];
 
 	$variable{Data} = \@Data;

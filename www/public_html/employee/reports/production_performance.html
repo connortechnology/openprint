@@ -46,9 +46,9 @@
 <!--
 		 <li>
 			 <label>Completed</label>
-			<? echo ( ssi::date_select_session('/employee/reports/production_performance.html', 'completed_on_start' ); ) ?>
+			<? echo ( date_select_session('/employee/reports/production_performance.html', 'completed_on_start' ); ) ?>
 			to 
-			<? echo ( ssi::date_select_session('/employee/reports/production_performance.html', 'completed_on_end' ); ) ?>
+			<? echo ( date_select_session('/employee/reports/production_performance.html', 'completed_on_end' ); ) ?>
 		</li>
 -->
 		<li>
@@ -70,6 +70,7 @@
 						{
 							name=>'runstyles',	
 							multiple=>'multiple',
+							size=>'5',
 							} );
 					)?>
 		</li>
@@ -87,6 +88,7 @@
 				<? echo ( 
 						my @columns = ( 'plates', 'Plate Information',
 							'production', 'Production Timeline',
+							'services', 'Service Costs',
 							'stock', 'Stock Information '.$openprint::Owner->name().' Supplied',
 							'stock_customer_supplied', 'Stock Information Customer Supplied',
 							);

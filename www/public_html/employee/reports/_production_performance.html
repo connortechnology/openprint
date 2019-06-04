@@ -10,7 +10,12 @@
 		<th class="project_id">Project</th>
 		<th class="Company">Company</th>
 		<th class="Date">Ordered</th>
-<? echo ( join("\n", map { '<th class="'.$$_{name}.'">'.$$_{name}.'</th>' } @{$$variable{ServiceType_Categories}} ); ) ?>
+<? echo ( 
+if ( $$variable{columns}{services} ) {
+  return join("\n", map { '<th class="'.$$_{name}.'">'.$$_{name}.'</th>' } @{$$variable{ServiceType_Categories}});
+}
+return;
+)?>
 <?if($$variable{columns}{plates})?>
 		<th class="plate_count">Plates</th>
 		<th class="Price plate_cost">Plate Cost</th>
@@ -26,7 +31,10 @@
 <?if($$variable{columns}{stock} or $$variable{columns}{stock_customer_supplied})?>
 		<th class="Sheets">Used Stock Sheets</th>
 		<th class="Weight">Used Stock Weight</th>
-		<th class="Price StockCost">Stock Cost</th>
+		<th class="Price StockCost">Used Stock Cost</th>
+		<th class="Sheets">Received Stock Sheets</th>
+		<th class="Weight">Received Stock Weight</th>
+		<th class="Price StockCost">Received Stock Cost</th>
 		<th class="Sheets">Quoted Stock Sheets</th>
 		<th class="Weight">Quoted Stock Weight</th>
 		<th class="Price StockCharge">Quoted Stock Price</th>
@@ -40,8 +48,11 @@
 		my $html = '';
 		my $rowclass;
 		my $job_total = 0;
-		my $stock_weight_total = 0;
-		my $stock_sheets_total = 0;
+		my $used_stock_weight_total = 0;
+		my $used_stock_sheets_total = 0;
+		my $used_stock_value_total = 0;
+		my $received_stock_weight_total = 0;
+		my $received_stock_sheets_total = 0;
 		my $stock_weight_quoted_total = 0;
 		my $stock_sheets_quoted_total = 0;
 		my $stock_used_total = 0;
@@ -66,7 +77,7 @@
 				$rowclass, $order_id, $link_to, $docket, $project_id, htmlize($company),
 				format_datetime( $ordered_on ), 
 				);
-			$html .= join("\n", map { '<td class="'.$$_{name}.'">'.openprint::Currency::format(shift @{$$variable{Data}}).'</td>' } @{$$variable{ServiceType_Categories}} );
+			$html .= join("\n", map { '<td class="'.$$_{name}.'">'.openprint::Currency::format(shift @{$$variable{Data}}).'</td>' } @{$$variable{ServiceType_Categories}} ) if $$variable{columns}{services};
 			if ( $$variable{columns}{plates} ) {
 				my ( $plates, $plate_cost, $plate_price ) = splice @{$$variable{Data}}, 0, 3;
 				$html .= sprintf(q`
@@ -104,25 +115,36 @@
 			}
 			
 			if ( $$variable{columns}{stock} or $$variable{columns}{stock_customer_supplied}) {
-				my ( $sheets, $weight, $stock_cost, $stock_name, $quoted_sheets, $quoted_weight, $stock_charge ) = splice @{$$variable{Data}}, 0, 7;
+				my ( $used_sheets, $used_weight, $used_value,
+						$received_sheets, $received_weight, $stock_cost,
+						$quoted_sheets, $quoted_weight, $stock_charge ) = splice @{$$variable{Data}}, 0, 9;
 				$html .= sprintf(q`
 						<td class="Sheets">%4$s</td>
 						<td class="Weight">%5$s</td>
-						<td class="Price StockCost"><a href="%3$s?order_id=%2$d">%6$s</a></td>
+						<td class="Price UsedValue"><a href="%3$s?order_id=%2$d">%6$s</a></td>
 						<td class="Sheets">%7$s</td>
 						<td class="Weight">%8$s</td>
-						<td class="Price StockCharge"><a href="%3$s?order_id=%2$d">%9$s</a></td>
+						<td class="Price StockCost"><a href="%3$s?order_id=%2$d">%9$s</a></td>
+						<td class="Sheets">%10$s</td>
+						<td class="Weight">%11$s</td>
+						<td class="Price StockCharge"><a href="%3$s?order_id=%2$d">%12$s</a></td>
 						`,
 						$rowclass, $order_id, $link_to,
-						Number::Format::format_number( $sheets ),
-						Number::Format::format_number( $weight ),
+						Number::Format::format_number( $used_sheets ),
+						Number::Format::format_number( $used_weight ),
+						openprint::Currency::format( $used_value ),
+						Number::Format::format_number( $received_sheets ),
+						Number::Format::format_number( $received_weight ),
 						openprint::Currency::format( $stock_cost ),
 						Number::Format::format_number( $quoted_sheets ),
 						Number::Format::format_number( $quoted_weight ),
 						openprint::Currency::format( $stock_charge ),
 				);
-				$stock_sheets_total += $sheets;
-				$stock_weight_total += $weight;
+				$used_stock_sheets_total += $used_sheets;
+				$used_stock_weight_total += $used_weight;
+				$used_stock_value_total += $used_value;
+				$received_stock_sheets_total += $received_sheets;
+				$received_stock_weight_total += $received_weight;
 				$stock_sheets_quoted_total += $quoted_sheets;
 				$stock_weight_quoted_total += $quoted_weight;
 				$stock_used_total += $stock_cost;
@@ -145,8 +167,8 @@
 			$lines += 1;
 		} # end foreach Order
 
-		my $columns = 4;
-		$columns += scalar @{$$variable{ServiceType_Categories}};
+		my $columns = 3;
+		$columns += scalar @{$$variable{ServiceType_Categories}} if $$variable{columns}{services};
 		$columns += 2 if $$variable{columns}{plates};	
 		$columns += 5 if $$variable{columns}{production};	
 		$html .= sprintf(q`<tr class="totals">
@@ -162,16 +184,22 @@
 <td class="Price">%s</td>
 <td class="Sheets">%s</td>
 <td class="Weight">%s</td>
+<td class="Price">%s</td>
+<td class="Sheets">%s</td>
+<td class="Weight">%s</td>
 <td class="Price">%s</td>', 
-						Number::Format::format_number( $stock_sheets_total ),
-						Number::Format::format_number( $stock_weight_total ),
+						Number::Format::format_number( $used_stock_sheets_total ),
+						Number::Format::format_number( $used_stock_weight_total ),
+						openprint::Currency::format( $used_stock_value_total ), 
+						Number::Format::format_number( $received_stock_sheets_total ),
+						Number::Format::format_number( $received_stock_weight_total ),
 						openprint::Currency::format( $stock_used_total ), 
 						Number::Format::format_number( $stock_sheets_quoted_total ),
 						Number::Format::format_number( $stock_weight_quoted_total ),
 					openprint::Currency::format( $stock_quoted_total ), 
 			);
 		}
-		$html .= sprintf(q`<td class="status"></td><td class="RunStyle"></td><td class="Price">%s</td>`, openprint::Currency::format( $job_total ) );
+		$html .= sprintf(q`<td class="status"></td><td class="Impressions"></td><td class="RunStyle"></td><td class="Price">%s</td>`, openprint::Currency::format( $job_total ) );
 		$html .= '</tr>';
 		return $html;
 	) ?>
