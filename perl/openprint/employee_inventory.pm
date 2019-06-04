@@ -1913,7 +1913,7 @@ sub manifest {
 	} elsif ( $param{btnFunction} eq 'Save' ) {
 		$variable{error} = save_Manifest( $Manifest );
 		if ( ! $variable{error} ) {
-			$variable{ExternalRedirect} = '/employee/inventory/manifest.html?manifest_id='.$Manifest->id();
+			$variable{ExternalRedirect} = '/employee/inventory/manifest_view.html?manifest_id='.$Manifest->id();
 		} # end if
 	} elsif ( $param{btnFunction} eq 'ChangePaper' ) {
 		foreach my $Type ( openprint::Manifest_Content_Type->find( manifest_id=>$Manifest->id()) ) {
