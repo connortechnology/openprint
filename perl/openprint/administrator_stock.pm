@@ -373,7 +373,7 @@ sub stock {
       $param{stock_id} = $Paper->id();
     } elsif ( $param{btnFunction} eq 'Next' ) {
       if ( ! $Paper ) {
-        $variable{error} .= "No stock selected for previous.<br/>";
+        $variable{error} .= 'No stock selected for next.<br/>';
         $variable{Stock} = new openprint::Paper();
         return;
       }
