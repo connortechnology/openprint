@@ -32,6 +32,9 @@ return;
 		<th class="Sheets">Used Stock Sheets</th>
 		<th class="Weight">Used Stock Weight</th>
 		<th class="Price StockCost">Used Stock Cost</th>
+		<th class="Sheets">Ordered Stock Sheets</th>
+		<th class="Weight">Ordered Stock Weight</th>
+		<th class="Price StockCost">Ordered Stock Cost</th>
 		<th class="Sheets">Received Stock Sheets</th>
 		<th class="Weight">Received Stock Weight</th>
 		<th class="Price StockCost">Received Stock Cost</th>
@@ -51,8 +54,15 @@ return;
 		my $used_stock_weight_total = 0;
 		my $used_stock_sheets_total = 0;
 		my $used_stock_value_total = 0;
+
+		my $ordered_stock_weight_total = 0;
+		my $ordered_stock_sheets_total = 0;
+		my $ordered_stock_value_total = 0;
+
+		my $stock_weight_quoted_total = 0;
 		my $received_stock_weight_total = 0;
 		my $received_stock_sheets_total = 0;
+
 		my $stock_weight_quoted_total = 0;
 		my $stock_sheets_quoted_total = 0;
 		my $stock_used_total = 0;
@@ -116,39 +126,61 @@ return;
 			
 			if ( $$variable{columns}{stock} or $$variable{columns}{stock_customer_supplied}) {
 				my ( $used_sheets, $used_weight, $used_value,
-						$received_sheets, $received_weight, $stock_cost,
-						$quoted_sheets, $quoted_weight, $stock_charge ) = splice @{$$variable{Data}}, 0, 9;
+						$ordered_sheets, $ordered_weight, $ordered_value,
+						$received_sheets, $received_weight, $received_value,
+						$quoted_sheets, $quoted_weight, $quoted_value ) = splice @{$$variable{Data}}, 0, 12;
+				my $class = '';
+				if ( 
+						( $ordered_weight*.95 > $quoted_weight*1.05 ) 
+						or 
+						( $ordered_value*.95 > $received_value*1.05 ) 
+						or 
+						( $ordered_value*.95 > $quoted_value*1.05 )
+						or 
+						( $received_weight*.95 > $quoted_weight*1.05 )
+					) {
+					$class = ' warning';
+				}
+
 				$html .= sprintf(q`
-						<td class="Sheets">%4$s</td>
-						<td class="Weight">%5$s</td>
-						<td class="Price UsedValue"><a href="%3$s?order_id=%2$d">%6$s</a></td>
-						<td class="Sheets">%7$s</td>
-						<td class="Weight">%8$s</td>
-						<td class="Price StockCost"><a href="%3$s?order_id=%2$d">%9$s</a></td>
-						<td class="Sheets">%10$s</td>
-						<td class="Weight">%11$s</td>
-						<td class="Price StockCharge"><a href="%3$s?order_id=%2$d">%12$s</a></td>
+						<td class="Sheets%16$s">%4$s</td>
+						<td class="Weight%16$s">%5$s</td>
+						<td class="Price UsedValue%16$s"><a href="%3$s?order_id=%2$d">%6$s</a></td>
+						<td class="Sheets%16$s">%7$s</td>
+						<td class="Weight%16$s">%8$s</td>
+						<td class="Price StockCost%16$s"><a href="%3$s?order_id=%2$d">%9$s</a></td>
+						<td class="Sheets%16$s">%10$s</td>
+						<td class="Weight%16$s">%11$s</td>
+						<td class="Price StockCharge%16$s"><a href="%3$s?order_id=%2$d">%12$s</a></td>
+						<td class="Sheets%16$s">%13$s</td>
+						<td class="Weight%16$s">%14$s</td>
+						<td class="Price StockCharge%16$s"><a href="%3$s?order_id=%2$d">%15$s</a></td>
 						`,
 						$rowclass, $order_id, $link_to,
 						Number::Format::format_number( $used_sheets ),
 						Number::Format::format_number( $used_weight ),
 						openprint::Currency::format( $used_value ),
+						Number::Format::format_number( $ordered_sheets ),
+						Number::Format::format_number( $ordered_weight ),
+						openprint::Currency::format( $ordered_value ),
 						Number::Format::format_number( $received_sheets ),
 						Number::Format::format_number( $received_weight ),
-						openprint::Currency::format( $stock_cost ),
+						openprint::Currency::format( $received_value ),
 						Number::Format::format_number( $quoted_sheets ),
 						Number::Format::format_number( $quoted_weight ),
-						openprint::Currency::format( $stock_charge ),
+						openprint::Currency::format( $quoted_value ),
+						$class,
 				);
 				$used_stock_sheets_total += $used_sheets;
 				$used_stock_weight_total += $used_weight;
 				$used_stock_value_total += $used_value;
+				$ordered_stock_value_total += $ordered_value;
 				$received_stock_sheets_total += $received_sheets;
 				$received_stock_weight_total += $received_weight;
 				$stock_sheets_quoted_total += $quoted_sheets;
 				$stock_weight_quoted_total += $quoted_weight;
-				$stock_used_total += $stock_cost;
-				$stock_quoted_total += $stock_charge;
+				$stock_used_total += $received_value;
+				$stock_quoted_total += $quoted_value;
 			}
 			$job_total += $job_value;
 			$html .= sprintf(q`
@@ -187,10 +219,16 @@ return;
 <td class="Price">%s</td>
 <td class="Sheets">%s</td>
 <td class="Weight">%s</td>
+<td class="Price">%s</td>
+<td class="Sheets">%s</td>
+<td class="Weight">%s</td>
 <td class="Price">%s</td>', 
 						Number::Format::format_number( $used_stock_sheets_total ),
 						Number::Format::format_number( $used_stock_weight_total ),
 						openprint::Currency::format( $used_stock_value_total ), 
+						Number::Format::format_number( $ordered_stock_sheets_total ),
+						Number::Format::format_number( $ordered_stock_weight_total ),
+						openprint::Currency::format( $ordered_stock_value_total ), 
 						Number::Format::format_number( $received_stock_sheets_total ),
 						Number::Format::format_number( $received_stock_weight_total ),
 						openprint::Currency::format( $stock_used_total ), 

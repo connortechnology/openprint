@@ -39,9 +39,14 @@
 		</li>
 		 <li>
 			 <label>Ordered</label>
-			<? echo ( date_select_session('/employee/reports/production_performance.html', 'ordered_on_start', { with_today=>1, with_clear=>1 } ); ) ?>
-			to 
-			<? echo ( date_select_session('/employee/reports/production_performance.html', 'ordered_on_end', { with_today=>1, with_clear=>1 } ); ) ?>
+			<? echo ( join(' to ',
+						date_select_session('/employee/reports/production_performance.html', 'ordered_on_start', { with_today=>1, with_clear=>1,
+							onchange	=>	q`check_time_starting($('f1'),'ordered_on_start','ordered_on_end');`,
+							} ),
+						date_select_session('/employee/reports/production_performance.html', 'ordered_on_end', { with_today=>1, with_clear=>1,
+						onchange	=>	q`check_time_starting($('f1'),'ordered_on_start','ordered_on_end');`,
+						} ),
+						); ) ?>
 		</li>
 <!--
 		 <li>
