@@ -19,14 +19,14 @@ $table = 'manifestcontents';
 $serial = 'manifestcontents_id_seq';
 
 %fields = (
-	id					=>	'id',
+	id							=>	'id',
 	manifest_id			=>	'manifest_id',
-	skid_id				=>	'skid_id',
-	Skid				=>	undef,
-	quantity			=>	'quantity',
-	type_id				=>	'type_id',
+	skid_id					=>	'skid_id',
+	Skid						=>	undef,
+	quantity				=>	'quantity',
+	type_id					=>	'type_id',
 	rfidtag_id			=>	'rfidtag_id',
-	RFIDTag				=>	undef,
+	RFIDTag					=>	undef,
 	manufacturers_id	=>	'manufacturers_id',
 	location_id			=>	'location_id',
 );
