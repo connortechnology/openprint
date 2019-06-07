@@ -1279,6 +1279,10 @@ sub _production_performance {
 				( $session{$uri.'?status_id'} ? ( status_id => [ split(',', $session{$uri.'?status_id'} ) ] ) : () ),
 				order => ($param{order} ? $param{order} : 'id'),
 				);
+	my @dockets = map { $_->docket() } @Orders;
+	my %PI_by_docket = misc::make_hash_from_array('docket', openprint::PaperInventory->find(docket=>\@dockets, 'skid_id is null'=>0)) if @dockets;
+	my %POC_by_docket = misc::make_hash_from_array( 'docket', openprint::PurchaseOrder_Content->find(docket=>\@dockets)) if @dockets;
+
 	foreach my $Order ( @Orders ) {
 		next if ! $$Order{docket};
 		if ( $session{$uri.'?reprint'} ) {
@@ -1401,7 +1405,8 @@ sub _production_performance {
 				my $stock_cost = 0;	
 			
 				# This the used counts from inventory, theoretically each has a manifest
-				foreach my $PI ( openprint::PaperInventory->find( docket=>$Order->docket(), 'skid_id is null'=>0 ) ) {
+				foreach my $PI ( $PI_by_docket{ $$Order{docket} } ? @{$PI_by_docket{ $$Order{docket} } } : () ) {
+#openprint::PaperInventory->find( docket=>$Order->docket(), 'skid_id is null'=>0 ) ) {
 #$openprint::log->debug("PI Stock for $$Order{docket} is $$PI{delta} " . $PI->Paper()->to_string() );
 					if ( $PI->Paper()->units() eq 'Roll' ) {
 						$stock_weight += -1*$$PI{delta};
@@ -1414,10 +1419,27 @@ sub _production_performance {
 
 				push @fragment, $stock_sheets, int($stock_weight), $stock_cost;
 
+				$stock_sheets = $stock_weight = $stock_cost = 0;
+        # Now do the counts from Manifests/POs
+        foreach my $POC ( $POC_by_docket{$$Order{docket}} ? @{$POC_by_docket{$$Order{docket}}} : () ) {
+						next if $POC->PurchaseOrder()->cancelled();
+#openprint::PurchaseOrder_Content->find( docket=>$Order->docket() ) ) {
+            if ( $POC->type() eq 'Roll Stock' ) {
+              $stock_weight += $POC->qty();
+            } elsif ( $POC->type() eq 'Sheet Stock' ) {
+              $stock_sheets += $POC->qty();
+              $stock_weight += $POC->weight();
+            } else {
+							next; # Not stock
+						}
+            $stock_cost += $POC->PurchaseOrder()->Currency()->convert_from($POC->total());
+        } # end foreach POC
+        push @fragment, $stock_sheets, int($stock_weight), $stock_cost;
+
 				$stock_sheets = $stock_weight = $stock_cost = 0;	
 				# Now do the counts from Manifests/POs
 				foreach my $MT ( openprint::Manifest_Content_Type->find( docket=>$Order->docket() ) ) {
-					my $POC = $MT->PurchaseOrder_Content();
+					#my $POC = $MT->PurchaseOrder_Content();
 					foreach my $MC ( openprint::ManifestContent->find( type_id=>$$MT{id} ) ) {
 						if ( $MT->Paper()->type() eq 'Roll' ) {
 							$stock_weight += $MC->quantity();
@@ -1428,8 +1450,8 @@ sub _production_performance {
 						if ( $MC->value() ) {
 $openprint::log->debug("Adding stock_cost from MC value $stock_weight $stock_sheets $$MC{value} = $stock_cost");
 							$stock_cost += $MT->Manifest()->Currency()->convert_from($MC->value());
-						} elsif ( $POC ) {
-							$stock_cost += $POC->PurchaseOrder()->Currency()->convert_from($POC->price() * $stock_weight / 100);
+						#} elsif ( $POC ) {
+							#$stock_cost += $POC->PurchaseOrder()->Currency()->convert_from($POC->price() * $MC->quantity() / 100);
 						}
 					}
 				} # end foreach Manifest Type
