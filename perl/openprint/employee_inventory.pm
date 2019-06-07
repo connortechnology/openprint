@@ -642,7 +642,12 @@ sub save_Paper {
 			$weight .= 'lb' if ! ( $param{'weight'.$id} =~ /lb/ );
 		} # end if
 	} elsif ( $param{'calliper'.$id} ) {
-		$weight = ($param{'calliper'.$id}*1000).'PT';
+		if ( $param{'calliper'.$id} > 1 ) {
+			$weight = $param{'calliper'.$id}.'PT';
+			$param{'calliper'.$id} /= 1000;
+		} else {
+			$weight = ($param{'calliper'.$id}*1000).'PT';
+		}
 	} # end if
 
 	my @Papers = openprint::Paper->find(
@@ -670,7 +675,7 @@ sub save_Paper {
 			( $param{'colour'.$id} ? ( colour	=>	$param{'colour'.$id} ) : () ),
 			( $param{'weight_id'.$id} ? ( weight_id =>	$param{'weight_id'.$id} ) : () ),
 			( $param{'Weight'.$id} ? ( 'weight_id' =>	$param{'Weight'.$id} ) : () ),
-			( $weight ? ( weight	=>	$weight ) : () ),
+			( $weight ? ( weight=>$weight ) : () ),
 # We might 
 			( $param{'material_id'.$id} ? ( material_id =>	$param{'material_id'.$id} ) : () ),
 			( $param{'material'.$id} ? ( material	=>	$param{'material'.$id} ) : () ),
@@ -729,6 +734,8 @@ sub save_Paper {
 		} # end if
 		if ( $weight =~ /^([\d\.]+)lb$/ ) {
 			$Paper->basis_mweight( $1 * 2 );
+		} else {
+			$Paper->basis_mweight( $param{'basis_weight'.$id} );
 		} # end if
 		$Paper->calliper( $param{'calliper'.$id} );
 		$Paper->mweight( $param{'mweight'.$id} );
@@ -1694,9 +1701,9 @@ sub save_Manifest {
 
 	$error .= $Manifest->save( \%param );
 	my $Log = new openprint::Log();
-	$Log->save({object_type => 'openprint::Manifest', object_id=>$$Manifest{id}, action=>'Save Manifest',user_id=>$session{user_id},company_id=>$session{company_id} });
+	$Log->save({Object=>$Manifest, action=>'Save Manifest'});
 
-	my @Types = openprint::Manifest_Content_Type->find( manifest_id=>$Manifest->id());
+	my @Types = openprint::Manifest_Content_Type->find(manifest_id=>$Manifest->id());
 	if ( ! @Types ) {
 		# It's an empty, brand new manifest
 		my $Type = new openprint::Manifest_Content_Type();
@@ -1705,7 +1712,7 @@ sub save_Manifest {
 		return $error;
 	} # end if
 
-	foreach my $Type ( openprint::Manifest_Content_Type->find( manifest_id=>$Manifest->id()) ) {
+	foreach my $Type ( @Types ) {
 		my $Paper = save_Paper('-'.$Type->id());
 		
 		my %data = (
