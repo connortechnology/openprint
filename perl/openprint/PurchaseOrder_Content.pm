@@ -181,11 +181,27 @@ sub mprice {
 	return Math::Round::nearest(0.01, $_[0]{price} * $mweight / 100 );
 } # end sub mprice
 
+sub weight {
+	return if $_[0]->type() ne 'Sheet Stock';
+	my ( $mweight, $type, $name ) = $_[0]->item() =~ /^([\d\.]+)M *([\w\/]*) *(.*)$/;
+	return Math::Round::nearest(0.01, $_[0]{qty} * $mweight / 1000);
+}
+
 sub Manifest_Content_Type {
 	if ( !  $_[0]{Manifest_Content_Type} ) {
 		$_[0]{Manifest_Content_Type} = openprint::Manifest_Content_Type->find_one( po_content_id=>$_[0]{id} );
 	} 
 	return $_[0]{Manifest_Content_Type};
+}
+sub price_units {
+	my $self = shift;
+	$$self{price_units} = shift if @_;
+	if ( ! $$self{price_units} ) {
+		if ( $self->type() eq 'Sheet Stock' or $self->type() eq 'Roll Stock' ) {
+			$$self{price_units}  = '/100lb';
+		}
+	}
+	return $$self{price_units};
 }
 
 1;
