@@ -1015,7 +1015,7 @@ order=>'brand,finish,colour,weight,width,height' );
 	for ( my $i = 0; $i < @papers-1; $i += 1 ) {
 		return $papers[$i+1] if ( $papers[$i]{id} == $$self{id} ) and ($i < @papers-1);
 	} # end if
-	my @papers = openprint::Paper->find( 
+	@papers = openprint::Paper->find( 
 			columns   =>  '*,(select name from stockbrands where id=brand_id) AS brand, (select name from stockfinishes where id=finish_id) AS finish, (select name from stockcolours where id=colour_id) AS colour, (select name from stockweights where id=weight_id) AS weight',
 order=>'brand,finish,colour,weight,width,height' );
 	for ( my $i = 0; $i < @papers-1; $i += 1 ) {
