@@ -59,7 +59,7 @@
 				if ( $POC ) {
 					my $PO_Cost = $POC->Cost();
 					$html .= '<br/>' if $Type->cost();
-					$html .= 'From PO: ' . $POC->PurchaseOrder()->Currency()->format( $$PO_Cost{cost} ) . $$PO_Cost{units};
+					$html .= 'From PO: ' . $POC->PurchaseOrder()->Currency()->format( $$PO_Cost{cost} ) . $$PO_Cost{units} . ' = ' . $POC->PurchaseOrder()->Currency()->format($POC->total());
 				}
 				$html .= '</li>';
 			} # end if
