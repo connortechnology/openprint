@@ -1008,12 +1008,20 @@ order=>'brand,finish,colour,weight,width,height' );
 sub next {
 	my $self = shift;
 	
-	my @papers = openprint::Paper->find_one( 
+	my @papers = openprint::Paper->find( 
+			columns   =>  '*,(select name from stockbrands where id=brand_id) AS brand, (select name from stockfinishes where id=finish_id) AS finish, (select name from stockcolours where id=colour_id) AS colour, (select name from stockweights where id=weight_id) AS weight',
+			brand_id=>$$self{brand_id},
+order=>'brand,finish,colour,weight,width,height' );
+	for ( my $i = 0; $i < @papers-1; $i += 1 ) {
+		return $papers[$i+1] if ( $papers[$i]{id} == $$self{id} ) and ($i < @papers-1);
+	} # end if
+	my @papers = openprint::Paper->find( 
 			columns   =>  '*,(select name from stockbrands where id=brand_id) AS brand, (select name from stockfinishes where id=finish_id) AS finish, (select name from stockcolours where id=colour_id) AS colour, (select name from stockweights where id=weight_id) AS weight',
 order=>'brand,finish,colour,weight,width,height' );
-	for ( my $i = 0; $i < @papers; $i += 1 ) {
-		return $papers[$i+1] if ($papers[$i] == $self )and ($i < @papers);
+	for ( my $i = 0; $i < @papers-1; $i += 1 ) {
+		return $papers[$i+1] if ( $papers[$i]{id} == $$self{id} ) and ($i < @papers-1);
 	} # end if
+
 	return $self;
 } # end sub next
 
@@ -1843,13 +1851,17 @@ sub check {
 	my $Paper = shift;
 	my $Copy = $Paper->clone();
 
-	my $results;
+	my @results;
   if ( abs( POSIX::ceil($Paper->gsm()) - POSIX::ceil($Copy->gsm(undef)) ) - 3 > 0 ) {
-		return "may have invalid gsm current:$$Paper{gsm} != calculated:$$Copy{gsm} ";
+		push @results, "may have invalid gsm current:$$Paper{gsm} != calculated:$$Copy{gsm}";
   }
   $Copy = $Paper->clone();
+  if ( abs( POSIX::ceil( $Paper->mweight()) - POSIX::ceil( $Copy->mweight(undef)) ) -1 > 0 ) {
+    push @results, "may have invalid mweight current:$$Paper{mweight} != calculated:$$Copy{mweight}";
+	}
+  $Copy = $Paper->clone();
   if ( abs( POSIX::ceil( $Paper->basis_mweight()) - POSIX::ceil( $Copy->basis_mweight(undef)) ) -1 > 0 ) {
-    return "may have invalid basis weight current:$$Paper{basis_mweight} != calculated:$$Copy{basis_mweight}";
+    push @results, "may have invalid basis weight current:$$Paper{basis_mweight} != calculated:$$Copy{basis_mweight}";
 	}
 	if ( 
 			($Paper->brand() =~ /cover/i
@@ -1862,13 +1874,13 @@ sub check {
 				) 
 		 ) {
 $openprint::log->debug("basis: " . $Paper->basis_width() . 'x' . $Paper->basis_height());
-		return 'may have wrong basis size. Should probably be 20x26';
+		push @results, 'may have wrong basis size. Should probably be 20x26';
 	}
   if ( ( $Paper->finish() =~ /1 side/i ) and ( $Paper->doublesided() ) ) {
-    return "appears to be C1S, but is marked double sided.";
+    push @results, 'appears to be C1S, but is marked double sided.';
   }
 
-	return;
+	return join('<br/>', @results);
 } # end sub check
 
 1;
