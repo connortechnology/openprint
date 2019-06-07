@@ -321,5 +321,24 @@ sub units {
 	return 'unknown';
 }
 
+sub value {
+	if ( ! $_[0]{value} ) {
+		$_[0]{value} = 0;
+		foreach my $C ( $_[0]->Contents() ) {
+			$_[0]{value} += $C->value();
+		}
+	}
+	return $_[0]{value};
+}
+
+sub cost_units {
+	my $self = shift;
+	$$self{cost_units} = shift if @_;
+	if ( ! $$self{cost_units} ) {
+		$$self{cost_units} = '/100lb';
+	}
+	return $$self{cost_units};
+}
+
 1;
 __END__
