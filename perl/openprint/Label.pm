@@ -184,7 +184,7 @@ $log->debug("Have $ref");
 
 			$$self{reference} = $ref;
 } else {
-$log->debug("No Have ref");
+$log->debug("No Have reference in label");
 		}
 	}
 	return $$self{reference};
