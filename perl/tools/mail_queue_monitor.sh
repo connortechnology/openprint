@@ -69,7 +69,7 @@ Q_MAILDROP=$(find ${QUEUEDIR_ROOT}/maildrop -type f | wc -l)
 if [ ${Q_ACTIVE} -gt ${MAX_QUEUE_LENGTH} -o ${Q_INCOMING} -gt ${MAX_QUEUE_LENGTH} -o ${Q_DEFERRED} -gt ${MAX_QUEUE_LENGTH} -o ${Q_MAILDROP} -gt ${MAX_QUEUE_LENGTH} ]; then
 QUEUES=$(/usr/sbin/postqueue -p)
     (
-        echo "From: ${MAILFROM} "
+        echo "From: mail_queue_monitor@${MAILFROM} "
         echo "To: ${MAILTO} "
         echo "Mime-Version: 1.0"
         echo 'Content-Type: text/plain; charset="iso-8859-1"'

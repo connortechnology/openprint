@@ -2,38 +2,6 @@
 -- PostgreSQL database dump
 --
 
--- Dumped from database version 10.5 (Ubuntu 10.5-0ubuntu0.18.04)
--- Dumped by pg_dump version 10.5 (Ubuntu 10.5-0ubuntu0.18.04)
-
-SET statement_timeout = 0;
-SET lock_timeout = 0;
-SET idle_in_transaction_session_timeout = 0;
-SET client_encoding = 'UTF8';
-SET standard_conforming_strings = on;
-SELECT pg_catalog.set_config('search_path', '', false);
-SET check_function_bodies = false;
-SET client_min_messages = warning;
-SET row_security = off;
-
---
--- Name: plpgsql; Type: EXTENSION; Schema: -; Owner: 
---
-
-CREATE EXTENSION IF NOT EXISTS plpgsql WITH SCHEMA pg_catalog;
-
-
---
--- Name: EXTENSION plpgsql; Type: COMMENT; Schema: -; Owner: 
---
-
-COMMENT ON EXTENSION plpgsql IS 'PL/pgSQL procedural language';
-
-
-SET default_tablespace = '';
-
-SET default_with_oids = false;
-
---
 -- Name: hosts; Type: TABLE; Schema: public; Owner: rsyslog
 --
 
@@ -43,12 +11,12 @@ CREATE TABLE public.hosts (
 	primary key (id)
 );
 
-CREATE UNIQUE INDEX hosts_name_idx  on hosts (name);
+CREATE UNIQUE INDEX hosts_name_idx  on public.hosts (name);
 
 CREATE TABLE public.syslogtags (
 	id serial,
-name text, 
-PRIMARY KEY (id)
+  name text, 
+  PRIMARY KEY (id)
 );
 CREATE UNIQUE INDEX syslogtags_name_idx ON syslogtags (name);
 
@@ -67,7 +35,6 @@ CREATE SEQUENCE public.hosts_id_seq
     NO MAXVALUE
     CACHE 1;
 
-
 ALTER TABLE public.hosts_id_seq OWNER TO rsyslog;
 
 --
@@ -75,7 +42,6 @@ ALTER TABLE public.hosts_id_seq OWNER TO rsyslog;
 --
 
 ALTER SEQUENCE public.hosts_id_seq OWNED BY public.hosts.id;
-
 
 --
 -- Name: systemevents; Type: TABLE; Schema: public; Owner: rsyslog
@@ -108,8 +74,7 @@ CREATE TABLE public.systemevents (
     systemid integer
 );
 
-create index systemevents_receivedat_idx on systemevents(receivedat);
-
+CREATE INDEX systemevents_receivedat_idx ON public.systemevents(receivedat);
 
 ALTER TABLE public.systemevents OWNER TO rsyslog;
 

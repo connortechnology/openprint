@@ -4668,6 +4668,8 @@ if ( ! sets::isin( 'expenses', \@tables ) ) {
 	$dbh->do( misc::load_file( $log, '../../sql/Expenses.sql' ) );
 	die $dbh->errstr() if $dbh->errstr();
 } else {
+	$dbh->do('ALTER TABLE expenses ALTER category_id DROP NOT NULL');
+
 my $data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='expenses'", 'column_name');
 if ( ! exists $$data{amount_locked} ) {
 	$dbh->do('ALTER TABLE expenses add amount_locked BOOLEAN NOT NULL default false');

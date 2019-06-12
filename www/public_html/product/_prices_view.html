@@ -1,4 +1,5 @@
 <? echo ( 
+  return if ! $$variable{Product}->id();
 	my @Pricelists;
 	my $admin = ( $session{user_type} eq 'E' or $session{user_type} eq 'A' );
 	if ( $admin ) {
