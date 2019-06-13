@@ -272,11 +272,12 @@ sub category_edit {
 		if ( @changes ) {
 			$variable{error} = $Category->save( \%param );
 		}
-
-		my @spec_changes = openprint::Object_Specification::save_changes( $Category, \%param );
-		push @changes, 'specification changes: ' . join(', ', @spec_changes ) if @spec_changes;
-		( new openprint::Log())->save({Object=>$Category, action=>'Edit', note=>join('<br/>', @changes ) } );
-		$variable{ExternalRedirect} = '/product/categories.html' if ! $variable{error};
+		if ( ! $variable{error} ) {
+			my @spec_changes = openprint::Object_Specification::save_changes( $Category, \%param );
+			push @changes, 'specification changes: ' . join(', ', @spec_changes ) if @spec_changes;
+			(new openprint::Log())->save({Object=>$Category, action=>'Edit', note=>join('<br/>', @changes) });
+			$variable{ExternalRedirect} = '/product/categories.html' if ! $variable{error};
+		}
 	} elsif ( $param{btnFunction} eq 'Copy' ) {
 		my $New = $Category->copy();
 		$New->save();

@@ -262,9 +262,9 @@ sub trial {
 	$results .= "There are ".@mail_user_ids." users that fit the campaign<br/>";
 	my %replacements;
 	my $body = $self->{email_text};
-	foreach my $user_index ( @mail_user_ids ) {
+	foreach my $user_id ( @mail_user_ids ) {
 # de we need to send this email?
-		$replacements{User} = new openprint::User( $user_index );
+		$replacements{User} = new openprint::User($user_id);
 		$replacements{ReplacementText} = ssi::variable_substitution( \$body, \%replacements );
 		if ( ! $replacements{ReplacementText} ) {
 			$results .= 'No body.  Not sending<br/>';
@@ -275,7 +275,7 @@ sub trial {
 
 # First check if a sent row exists
 		$_ = 'SELECT (NOW() - EmailSentOn) > ?, NumEmailSent FROM EmailCampaign_Sent WHERE campaign_id=? AND user_id=?';
-		if ( ( $interval_expired, $num_email_sent ) = sql::execute( undef, undef, $_, @$self{'interval','id'}, $user_index ) ) {
+		if ( ( $interval_expired, $num_email_sent ) = sql::execute( undef, undef, $_, @$self{'interval','id'}, $user_id ) ) {
 
 # Check if the duration has elapsed	
 			if ( ($interval_expired == 1) ) {

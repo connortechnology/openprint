@@ -494,7 +494,7 @@ join("\n", map {
 					input( type=>'hidden', name=>"txtImageHeight$qty_index" ),
 					);
 			} # end if
-		$html .= '<div id="ImpositionImage'.$qty_index.'"></div>' if $session{user_type} eq 'A';
+		$html .= '<div id="ImpositionImage'.$qty_index.'"></div>' if $session{user_type} eq 'A' or $session{user_type} eq 'E';
 		$html .= '</div>';
 		} # end foreach
 		return $html;
