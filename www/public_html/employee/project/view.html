@@ -124,6 +124,7 @@ function send_notifications( form, project_id ) {
 		my $html = '';
 	
 	  if ( @POCs ) {
+			my $total = 0;
   	 	my @PurchaseOrders = map { $_->PurchaseOrder() } @POCs;
 		  my @can_see_pricing = map { $_->can_see_pricing() ? 1 : () } @PurchaseOrders;
 		  $html .= '
@@ -153,11 +154,15 @@ function send_notifications( form, project_id ) {
 							$PO_Content->price_units(),
 							$PO->Currency()->format($PO_Content->total()),
 							);
+					$total += $PO_Content->total();
 				} elsif ( @can_see_pricing ) {
 					$html .= '<td class="Price Cost"></td><td class="Price"></td>';
 				}
 				$html .= '</tr>';
 			} # end foreach
+			if ( @can_see_pricing ) {
+				$html .= '<tr class="totals"><td colspan="4">Totals</td><td class="Price">'.$openprint::Currency->format($total).'</td></tr>';
+			}
 			$html .= '</table>';
 		} # end if poCS
 		return $html;
@@ -167,6 +172,7 @@ function send_notifications( form, project_id ) {
   <fieldset><legend><a href="/employee/inventory/manifests.html?docket=<?echo($$variable{Order}->docket())?>">Manifests</a></legend>
   <? echo (
 		my $html;
+		my $total = 0;
 		my $can_see_pricing = openprint::Manifest->can_see_pricing();
     my @MCTs = openprint::Manifest_Content_Type->find( docket=>$$variable{Order}->docket(), order=>'manifest_id' );
 		if ( @MCTs ) {
@@ -216,14 +222,18 @@ function send_notifications( form, project_id ) {
 						$Type->cost_units(),
 						$openprint::Currency->format( $ManifestCurrency->convert_from($Type->value()) ),
 						);
+					$total += $ManifestCurrency->convert_from($Type->value());
 				}
 				$html .= '</tr>';
 				} # end foreach Type
-        $html .= '
-    </table>
-';
 	
 			} # end foreach manifest
+			if ( $can_see_pricing ) {
+				$html .= '<tr><td colspan="4">Total</td><td class="Price">'.$openprint::Currency->format($total).'</td></tr>';
+			}
+      $html .= '
+    </table>
+';
 		} # end if MCTs
     return $html;
   ) ?>
