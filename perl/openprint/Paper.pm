@@ -1865,6 +1865,8 @@ sub check {
 	}
 	if ( 
 			($Paper->brand() =~ /cover/i
+			 or
+			$Paper->finish() =~ /cover/i
 			or 
 			$Paper->weight() =~ /cover/i)
 			and (
