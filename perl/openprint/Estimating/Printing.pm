@@ -644,7 +644,7 @@ $log->debug("Setting washed coloursL $$Colour{name}.'-'.$$sig_specs{'ddmPress'.$
 		if ( $$real_colour{type} eq 'PMS' ) {
 			# Name is supposed to be the PMS #, so strip everything out.	casual quotes will use PMS 1,2,3 which are not actual PMS numbers
 			$colour = $$real_colour{name};
-			$colour =~ s/\D//g;
+			#$colour =~ s/\D//g;
 		} elsif ( $$real_colour{name} =~ /^(\w+) Spot Colour$/ ) {
 			$colour = $1;
 		#} elsif ( $$real_colour{name} =~ /PMS/ ) {
@@ -673,7 +673,7 @@ $log->debug("Adding special colour for $colour");
 					$$Ink{material_id} = $Material->id() if $Material;
 				} # end if
 			} # end if foudn Ink
-			$special_colours{$$real_colour{name}} = [ $Ink ];
+			$special_colours{$colour} = [ $Ink ];
 		} # end if
 	} # end foreach
 	$project{special_colours} = \%special_colours;
@@ -6192,7 +6192,7 @@ $log->debug("Varnish $real_colour") if DEBUG_INKS;
 			$colour = $1;
 		} elsif ( $real_colour =~ /PMS/i ) {
 			$colour = $real_colour;
-			$colour =~ s/\D//g; # Just the PMS #
+			#$colour =~ s/\D//g; # Just the PMS #
 		} else { 
 			$colour = $real_colour;
 		} # end if
