@@ -351,7 +351,7 @@ $openprint::log->debug("Not Pretrimming on $$Press{strid}") if DEBUG;
 	$setup2->object_height( $image_height );
 	$$setup2{Press} = $Press;
 	$$setup2{printing_type} = $Press->specification('Printing Type');
-	$setup2->colour_bar_orientation( $$specs{'Colour Bar Orientation'} );
+	$$setup2{colour_bar_orientation} = $$specs{'Colour Bar Orientation'};
 	$$setup2{spine} = $$specs{ProjectSpecs}{spine};
 	$setup2->spine_direction();
 
