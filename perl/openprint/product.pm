@@ -179,6 +179,7 @@ sub categories {
 	} # end if
 	_categories();
 } # end sub categories
+
 sub _categories {
 	ssi::save_params( '/product/categories.html', ( 'category_id' ) );
 }
