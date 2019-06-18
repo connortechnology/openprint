@@ -317,5 +317,8 @@ $log->debug("specification filters: ".join(',', @{$variable{Specifications}}));
 	}
 }
 
+sub index {
+}
+
 1;
 __END__
