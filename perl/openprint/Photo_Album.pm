@@ -92,10 +92,13 @@ $openprint::log->debug("Photo no asset"  );
 } # end sub asset_html
 
 sub Photos {
-	if ( @_ > 1 or ! $_[0]{Photos} ) {
-		@{$_[0]{Photos}} = openprint::Photo_in_Album->find( album_id=>$_[0]{id}, order=>'asset_id') if $_[0]{id};
+	my $self = shift;
+	$$self{Photos} = shift if @_;
+
+	if ( $$self{id} and !$$self{Photos} ) {
+		@{$$self{Photos}} = openprint::Photo_in_Album->find( album_id=>$$self{id}, order=>'asset_id');
 	} # end if
-	return $_[0]{Photos} ? @{$_[0]{Photos}} : ();
+	return $$self{Photos} ? @{$$self{Photos}} : ();
 } # end sub Photos
 
 sub destroy {

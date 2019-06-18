@@ -119,7 +119,7 @@ function cbStockFillResults( results ) {
 } // end function Stock_Fill
 
 function calc_from_basis_weight( form, id='' ) {
-	var basis_weight = parseFloat(1*form.elements['basis_weight'+id].value);
+	var basis_weight = form.elements['basis_weight'+id] ? parseFloat(1*form.elements['basis_weight'+id].value) : parseFloat(1*form.elements['basis_mweight'+id].value);
 	var basis_width = parseFloat(1*form.elements['basis_width'+id].value);
 	var basis_height = parseFloat(1*form.elements['basis_height'+id].value);
 	var gsm = parseInt((basis_weight/1000)/(basis_width*basis_height)*7030645.0)/10;
@@ -146,4 +146,13 @@ function calc_from_gsm( form, id='' ) {
 	var basis_height = parseFloat(1*form.elements['basis_height'+id].value);
 	form.elements['mweight'+id].value = parseInt((gsm/703064.5)*(width*height)*10000)/10;
 	form.elements['basis_weight'+id].value = parseInt((gsm/703064.5)*(basis_width*basis_height)*10000)/10;
+}
+function set_basis_dimensions(width, height) {
+var basis_width = $('basis_width');
+if ( basis_width )
+	basis_width.value = width;
+var basis_height=$('basis_height');
+if ( basis_height )
+	basis_height.value = height;
+basis_weight_to_gsm($('f1'));
 }

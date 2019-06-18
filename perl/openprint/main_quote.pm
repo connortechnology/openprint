@@ -73,6 +73,7 @@ sub _history {
   ssi::save_params($uri,
       'created_on_start_year', 'created_on_start_month','created_on_start_day',
       'created_on_end_year', 'created_on_end_month','created_on_end_day',
+			'user_id',
       'QuotedFor', 'company_id','deleted','salesrep_id', 'status', 'total_start','total_end','limit','press_id','ordered',
       );
   if ( $param{QuoteID} ) {
@@ -85,8 +86,11 @@ sub _history {
     my $Press = new openprint::Equipment( $param{press_id} ) if $param{press_id};
     @{$variable{Quotes}} = ();
     foreach my $Quote ( openprint::Quote->find(
-        ( sets::isin($session{user_type}, ['E','A']) ? 
-          ( $session{$uri.'?company_id'} ? ( company_id=>$session{$uri.'?company_id'}) : () ) :
+        ( sets::isin($session{user_type}, ['E','A']) ? (
+          ( $session{$uri.'?company_id'} ? ( company_id=>$session{$uri.'?company_id'}) : () ),
+          ( $session{$uri.'?user_id'} ? ( user_id=>$session{$uri.'?user_id'}) : () ),
+)
+ :
           ( company_id =>   $session{company_id} )
         ),
         ( $session{$uri.'?QuotedFor'} ? ( 'for_name ilike' => '%'.$session{$uri.'?QuotedFor'}.'%' ) : () ),
