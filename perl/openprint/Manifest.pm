@@ -126,6 +126,7 @@ sub link_to {
 
 sub check {
 	my ( $Manifest ) = @_;
+	
 	my @Contents = $Manifest->Contents();
 	my %skid_ids;
 	foreach ( @Contents ) {
@@ -155,6 +156,9 @@ sub check {
 	foreach my $C ( @Contents ) {
 		$error .= $C->check();
 	} # end foreach C
+	foreach my $T ( $Manifest->Types() ) {
+		$error .= $T->Paper()->check();
+	}
 	return $error;
 } # end sub check
 

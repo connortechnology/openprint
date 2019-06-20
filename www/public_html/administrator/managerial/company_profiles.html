@@ -442,11 +442,7 @@ button( 'merge'.$C->id(), { href=>'/administrator/managerial/company_profiles.ht
 	</fieldset>
 </div>
 <div class="Locations">
-<fieldset><legend>Locations</legend>
-	<?echo(
-return join('<br/>', map { $_->to_string() } openprint::Location->find( company_id=>$$variable{Company}->id() ) );
-	)?>
-</fieldset>
+<?include(/location/_locations_container.html)?>
 </div>
 <div class="CreditInformation">
 <?include(/includes/_credit_edit.html)?>

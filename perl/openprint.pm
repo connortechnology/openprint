@@ -1,7 +1,7 @@
 use strict;
 use warnings;
 package openprint;
-use vars qw( $r %variable %session %param %config $log $dbh $User $Company $TZ $Owner $Pricelist $Currency $parser );
+use vars qw( $r %variable %session %param %config $log $dbh $User $Company $TZ $Owner $Pricelist $Currency $parser $Host);
 
 use constant Debug => 1;
 
@@ -149,6 +149,21 @@ $log->debug("Generating new cookie $session{_session_id}") if Debug;
 		} # end if
 	} # end if
 	$Pricelist = new openprint::Pricelist( $session{Pricelist_id} ) if $session{Pricelist_id};
+
+	if ( $ENV{REMOTE_ADDR} ) {
+		my @Interfaces = openprint::Host_Interface->find(ip=>$ENV{REMOTE_ADDR});
+		if ( ! @Interfaces ) {
+			$Host = new openprint::Host();
+			$Host->save({hostname=>$ENV{REMOTE_ADDR}});
+			my $Interface = new openprint::Host_Interface();
+			$Interface->save({host_id=>$$Host{id}, ip=>$ENV{REMOTE_ADDR} });
+		} else { 
+			if ( @Interfaces > 1 ) {
+				$log->error("More than 1 Host with ip $ENV{REMOTE_ADDR}");
+			}
+			$Host = $Interfaces[0]->Host();
+		}
+	}
 
 } # end sub session_init
 
