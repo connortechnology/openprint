@@ -43,6 +43,10 @@
 			
 			foreach my $Type ( $$variable{Manifest}->Types() ) {
 				my $Paper = $Type->Paper();
+my $columns = 9;
+$columns += 1 if $Type->type() eq 'Sheets';
+$columns += 1 if $$variable{Manifest}->can_see_pricing();
+
 				$html .= sprintf(q`
 			<fieldset>
 				<div class="leftColumn"><ul><li><label>Stock</label><a href="/employee/inventory/paper_details.html?paper_id=%1$d">%2$s</a><br/>%6$s</li></ul></div>
@@ -169,7 +173,7 @@
 					$html .= '<td class="Location">'.$C->Location()->name().'</td>';
 					$html .= '</tr>';
 					if ( $error ) {
-						$html .= '<tr id="tr-'.$$C{id}.'-error" class="error"><td colspan="'.(($Type->type(), [ 'Roll', 'Sheet' ] ) ? '9' : '10' ). '">'.$error.'</td></tr>';
+						$html .= '<tr id="tr-'.$$C{id}.'-error" class="error"><td colspan="'.$columns.'">'.$error.'</td></tr>';
 					} # end if
 					$total += $C->quantity();
 				} # end foreach C
@@ -194,10 +198,10 @@
 				}
 				$html .= '<td colspan="'.(($Type->type(), [ 'Roll', 'Sheet' ] ) ? '3' : '2' ). '">&nbsp;</td></tr>';
 				if ( scalar @Contents != $$Type{item_count} ) {
-					$html .= '<tr><td colspan="'.(($Type->type(), [ 'Roll', 'Sheet' ] ) ? '9' : '10' ). '" class="warning">Contents and expected content count do not match!</td></tr>';
+					$html .= '<tr><td colspan="'.$columns.'" class="warning">Contents and expected content count do not match!</td></tr>';
 				} # end if
 				$html .= '</table>';
-			} # end foreach
+			} # end foreach Tpe
 			return $html;
 		) ?>
 		</div><!--Type-->
