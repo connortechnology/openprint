@@ -1478,23 +1478,17 @@ $openprint::log->debug("Adding stock_cost from MC value $stock_weight $stock_she
             }
             $stock_cost += $Project->Currency()->convert_from($$SQ{price});
 					}
-					push @Data, @fragment, $stock_sheets, int($stock_weight), $stock_cost if $stock_weight;
-
-					$fragment[6] = 0;
-
-					#if ( ! $added ) {
-						#$log->debug("No stock data added, so adding szeros");
-						#push @Data, @fragment, ' ', 0, 0, 0;
-					#}
+					push @Data, @fragment, $stock_sheets, int($stock_weight), $stock_cost;
 
 				} else {
+					# No quoted stock section
 					push @Data, @fragment, 0, 0, 0;
-						$fragment[6] = 0;
 				}
 			} else {
+				# Not doing stocks
 				push @Data, @fragment;
-						$fragment[6] = 0;
 			} # end if stock
+			$fragment[6] = 0; # clear project price so that a subsequent line won't get the same value again
 
 		} # end foreach Project
 	} # end foreach Order
@@ -1507,6 +1501,7 @@ $openprint::log->debug("Adding stock_cost from MC value $stock_weight $stock_she
 		( $columns{production} ? ( 'Operator Assigned', 'Printed On', 'Completed On', 'Shipped On', 'Invoiced On' ) : () ),
 		( $columns{stock} ? ( 
 												 'Used Stock Sheets', 'Used Stock Weight', 'Used Stock Cost',
+												 'Purchased Stock Sheets', 'Purchased Stock Weight', 'Purchaseed Stock Cost',
 												 'Received Stock Sheets', 'Received Stock Weight', 'Received Stock Cost',
 												 'Quoted Stock Sheets', 'Quoted Stock Weight', 'Quoted Stock Price'
 												) : () ),

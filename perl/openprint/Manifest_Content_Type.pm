@@ -84,18 +84,29 @@ sub PurchaseOrder_Content {
 				if ( $POC->type() ne $Paper->type().' Stock' ) {
 					$openprint::log->debug("not the right type POC: $$POC{type} != $$Paper{type} Stock") if $debug;
 					next;
-				} # en dif
+				} # end if
 				if ( ! $$options{ignore_docket} ) {
 					if ( $POC->docket() and $_[0]{docket} ) {
 						$openprint::log->debug("is it the right docket POC? $$POC{docket} !=? $_[0]{docket}") if $debug;
 						next if $POC->docket() ne $_[0]{docket};
 					}
 				}
+				if ( $POC->item() =~ /Cover/i ) {
+					if ( !$Paper->is_cover() ) {
+						$openprint::log->debug("PO is cover, paper is not" ) if $debug;
+						next;
+					}
+				} else {
+					if ( $Paper->is_cover() ) {
+						$openprint::log->debug("PO is not cover, paper is" ) if $debug;
+						next;
+					}
+				}
 				my ( $weight ) = $POC->item() =~ /(\d+)\w*lb/i;
 				if ( $weight ) {
 					$weight = Math::Round::nearest(1,$weight*2);
 					#$openprint::log->debug("Looking for $weight basis_weight") if $debug;
-					if( $Paper->basis_mweight() ) {
+					if ( $Paper->basis_mweight() ) {
 						my $basis_weight = Math::Round::nearest(1,$Paper->basis_mweight());
 						if ( $weight != $basis_weight ) {
 							$openprint::log->debug("Wrong weight: 2*$weight != " . $basis_weight ) if $debug;

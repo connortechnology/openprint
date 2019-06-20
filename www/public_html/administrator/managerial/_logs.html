@@ -51,11 +51,10 @@ limit=>'1000',
 						$Log->User()->name(),
 						$Log->Company()->name(),
 						( $Object ? $Object->link_to( $Log->Object_Type()->human() . ' : ' . $Object->name() ) : '' ),
+( $session{user_type} eq 'A' ? 
 						join("\n",
-( $session{user_type} eq 'A' ? (
 							button( 'X'.$Log->id(), { onclick=>qq`jQuery.ajax('_logs.json', { data: { action: 'delete', log_id: $$Log{id} } } ).done( function(){ jQuery('#log_$$Log{id}').remove() } );`, text=>'X' } ),
-) : () )
-						),
+) : '' )
 						);
 				} # end foreach
 				return $html;

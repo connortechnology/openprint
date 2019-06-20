@@ -18,6 +18,7 @@
 </script>
 
 <?include('/includes/error_reporting.html')?>
+<?echo($$variable{Paper}->check())?>
 <form id="f1" name="f1" action="paper_details.html?paper_id=<?paper_id?>" method="post">
 	<input type="hidden" name="btnFunction" />
 	<fieldset>

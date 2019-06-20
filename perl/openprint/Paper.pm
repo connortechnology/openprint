@@ -1863,10 +1863,7 @@ sub check {
   if ( abs( POSIX::ceil( $Paper->basis_mweight()) - POSIX::ceil( $Copy->basis_mweight(undef)) ) -1 > 0 ) {
     push @results, "may have invalid basis weight current:$$Paper{basis_mweight} != calculated:$$Copy{basis_mweight}";
 	}
-	if ( 
-			($Paper->brand() =~ /cover/i
-			or 
-			$Paper->weight() =~ /cover/i)
+	if ( $Paper->is_cover()
 			and (
 				($Paper->basis_width() != 20) 
 				or 
@@ -1882,6 +1879,16 @@ $openprint::log->debug("basis: " . $Paper->basis_width() . 'x' . $Paper->basis_h
 
 	return join('<br/>', @results);
 } # end sub check
+
+sub is_cover {
+	my $Paper = shift;
+	return 
+			($Paper->brand() =~ /cover/i
+			 or
+			$Paper->finish() =~ /cover/i
+			or 
+			$Paper->weight() =~ /cover/i);
+}
 
 1;
 __END__

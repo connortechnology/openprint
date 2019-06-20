@@ -8,5 +8,6 @@ CREATE TABLE Product_Categories (
 	deleted			BOOLEAN NOT NULL default false,
 	parent_ids		INTEGER[],
 	sorting			INTEGER,
+	album_id		INTEGER, FOREIGN KEY (album_id) REFERENCES Photo_Albums (id),
 	PRIMARY KEY (id)
 );

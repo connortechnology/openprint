@@ -2294,6 +2294,11 @@ if ( ! sets::isin( 'product_categories', \@tables ) ) {
 		$log->debug("Add sorting to Product_Categories");
 		$dbh->do('ALTER TABLE Product_Categories ADD sorting INTEGER') or die $dbh->errstr();
 	}
+	if ( ! exists $$Data{album_id} ) {
+		$log->debug("Add album_id to Product Categories");
+		$dbh->do('ALTER TABLE Product_Categories ADD album_id    INTEGER');
+		$dbh->do('ALTER TABLE Product_Categories ADD FOREIGN KEY (album_id) REFERENCES Photo_Albums (id)');
+	}
 } # end if
 
 if ( ! sets::isin( 'products', \@tables ) ) {
