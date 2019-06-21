@@ -79,6 +79,7 @@ sub PurchaseOrder_Content {
 		} elsif ( $_[0]{po_id} ) {
 			my $PO = new openprint::PurchaseOrder($_[0]{po_id});
 			my $Paper = $_[0]->Paper();
+				$openprint::log->debug('Paper desc: ' . $Paper->to_string()) if $debug;
 			foreach my $POC ( $PO->Contents() ) {
 				$openprint::log->debug('POC desc: ' . $POC->item()) if $debug;
 				if ( $POC->type() ne $Paper->type().' Stock' ) {
@@ -87,8 +88,10 @@ sub PurchaseOrder_Content {
 				} # end if
 				if ( ! $$options{ignore_docket} ) {
 					if ( $POC->docket() and $_[0]{docket} ) {
-						$openprint::log->debug("is it the right docket POC? $$POC{docket} !=? $_[0]{docket}") if $debug;
-						next if $POC->docket() ne $_[0]{docket};
+						if ( $POC->docket() ne $_[0]{docket} ) {
+							$openprint::log->debug("Not the right docket POC? $$POC{docket} !=? $_[0]{docket}") if $debug;
+							next;
+						}
 					}
 				}
 				if ( $POC->item() =~ /Cover/i ) {
@@ -127,6 +130,7 @@ sub PurchaseOrder_Content {
 						$openprint::log->debug("Indeterminate weight: $weight == " . $paper_weight ) if $debug;
 					}
 				} # end if
+
 				my ( $caliper ) = $POC->item() =~ /(\d+)PT/i;
 				if ( $caliper ) {
 					if ( $Paper->weight() =~ /(\d+PT)/i ) {
@@ -139,6 +143,7 @@ sub PurchaseOrder_Content {
 						next;
 					}
 				}
+
 				my ( $width ) = $POC->item() =~ /([\.\d]+)in/i;
 				if ( $width ) {
 					if ( $Paper->width() and ( $Paper->width() != $width ) ) {
@@ -167,6 +172,7 @@ sub PurchaseOrder_Content {
 						next;
 					} # end if
 				} # end if
+				$openprint::log->debug("Matched $$POC{item} => " . $Paper->to_string()) if $debug;
 				$_[0]{PurchaseOrder_Content} = $POC;
 				last;
 			} # end foreach POC
