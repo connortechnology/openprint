@@ -133,7 +133,8 @@ $log->debug("Setting default to: " .  $$variable{"location_id-$$variable{type_id
 					) ?>
 			</p>
 		<? if ( $$variable{Type}->paper_id() ) ?>
-		<p><label>Link to stock</label><a href="/employee/inventory/paper_details.html?paper_id=<? echo ( $$variable{Type}->paper_id() ) ?>"><? echo ( $$variable{Type}->Paper()->to_string() ) ?></a>
+		<p><label>Link to stock</label><a href="/employee/inventory/paper_details.html?paper_id=<? echo ( $$variable{Type}->paper_id() ) ?>"><? echo ( $$variable{Type}->Paper()->to_string() ) ?></a><br/>
+<?echo ( $$variable{Type}->Paper()->check() ? '<span class="warning">'.$$variable{Type}->Paper()->check().'</span>' : '' ) ?>
 		</p>
 		<? endif ( $$variable{Type}->paper_id() ) ?>
 	</div>
@@ -172,10 +173,15 @@ $log->debug("Setting default to: " .  $$variable{"location_id-$$variable{type_id
 		</p>
 		<p class="docket">
 			<label>Docket</label>
-			<? echo ( input( type=>'cardinal', id=>'docket-'.$$variable{type_id}, name=>'docket-'.$$variable{type_id}, value=>$$variable{Type}->docket() ); ) ?>
-			<? echo ( button( 'LoadPos'.$$variable{Type}->id(), { 
-			onclick=>"new Ajax.Updater('PurchaseOrders$$variable{Type}{id}','_manifest_purchase_orders.html', { parameters: { supplier_id: \$('supplier_id').value, Docket: \$('docket-$$variable{Type}{id}').value} } );", text=>'Load POs' } ); ) ?>
-		</p>
+			<? echo ( join("\n",
+						input( type=>'cardinal', id=>'docket-'.$$variable{type_id}, name=>'docket-'.$$variable{type_id}, value=>$$variable{Type}->docket() ),
+( $$variable{Type}->docket() ? (button('GoDocket'.$$variable{Type}->id(), {
+href=>'/employee/project/view.html?docket='.$$variable{Type}->docket(), target=>'_blank', text=>'Go to Docket' }) ) : () ),
+						button( 'LoadPos'.$$variable{Type}->id(), { 
+							onclick=>"new Ajax.Updater('PurchaseOrders$$variable{Type}{id}','_manifest_purchase_orders.html', { parameters: { supplier_id: \$('supplier_id').value, Docket: \$('docket-$$variable{Type}{id}').value} } );", text=>'Load POs' } ),
+
+); ) ?>
+					</p>
 		<div id="PurchaseOrders<? echo ( $$variable{Type}->id() ) ?>">
 		<? if ( ! $$variable{Type}->po_id() ) ?>
 			<?include(_manifest_purchase_orders.html)?>
@@ -185,7 +191,7 @@ $log->debug("Setting default to: " .  $$variable{"location_id-$$variable{type_id
 			<label>Purchase Order</label>
 			<? echo ( join("\n", 
 				input( type=>'cardinal', id=>"po_id-$$variable{type_id}", name=>"po_id-$$variable{type_id}", value=>$$variable{Type}->po_id() ),
-				( $$variable{Type}->po_id() ? button( 'GoPO'.$$variable{Type}->id(), { href=>'/employee/purchase_order/view.html?po_id='.$$variable{Type}->po_id(), text=>'Go' } ) : '' ),
+				( $$variable{Type}->po_id() ? button( 'GoPO'.$$variable{Type}->id(), { href=>'/employee/purchase_order/view.html?po_id='.$$variable{Type}->po_id(), target=>'_blank', text=>'Go' } ) : '' ),
 			); ) ?>
 		</p>
 <div id="PO_<? echo ( $$variable{Type}->id() ) ?>">
