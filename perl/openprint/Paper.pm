@@ -1717,7 +1717,7 @@ sub units {
 } # end sub units
 sub types {
 	return ($_[0]{type} eq 'Roll' ? ' roll' : 'sheet') . ( $_[1] == 1 ? '' : 's' );
-} # end sub units
+} # end sub types
 
 sub Supplied {
 	my ( $self ) = @_;

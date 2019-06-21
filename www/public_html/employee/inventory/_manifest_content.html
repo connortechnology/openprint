@@ -9,11 +9,12 @@
 		$html .= qq`<script type="text/javascript">alert('Warning: $$variable{warning}');</script>`;
 	} 
 	if ( ( $param{action} eq 'Remove' ) and ! $variable{error} ) {
-$html .= qq`<script type="text/javascript">
-var tr = \$('tr-$param{content_id}');
-if ( tr ) tr.remove();
-tr = \$('tr-$param{content_id}-error');
-if ( tr ) tr.remove();
+		$html .= qq`
+<script type="text/javascript">
+	var tr = \$('tr-$param{content_id}');
+	if ( tr ) tr.remove();
+	tr = \$('tr-$param{content_id}-error');
+	if ( tr ) tr.remove();
 </script>
 `;
 	} elsif ( $$variable{C} ) {
