@@ -118,6 +118,7 @@
 			my @manifest_ids = map { $$_{id} } @{$$variable{Manifests}};
 	
 			my @ManifestContentTypes = openprint::Manifest_Content_Type->find( manifest_id=>\@manifest_ids );
+
 			my @po_ids = map { $_->po_id() } @ManifestContentTypes;
 			my @POs	= openprint::PurchaseOrder->find( id=>\@po_ids );
 
@@ -129,18 +130,11 @@
 				$PO->Contents( $POCs{$$PO{id}} );
 			}
 
-			my %ManifestCTs;
-			foreach my $MCT ( @ManifestContentTypes ) {
-				$ManifestCTs{$$MCT{manifest_id}} = [] if ! $ManifestCTs{$$MCT{manifest_id}};
-				push @{$ManifestCTs{$$MCT{manifest_id}}}, $MCT;
-			}
-
+			my %ManifestCTs = misc::make_hash_from_array('manifest_id', @ManifestContentTypes);
+			my %Manifest_Types = map { $$_{id} => $_ } @ManifestContentTypes;
 		
-			my @MContents = openprint::ManifestContent->find( manifest_id=>\@manifest_ids );
-			my %MContents;
-			foreach my $MC ( @MContents ) {
-				push @{$MContents{$$MC{manifest_id}}}, $MC;
-			} # end foreach MC
+			my @MContents = openprint::ManifestContent->find(manifest_id=>\@manifest_ids);
+			my %MContents = misc::make_hash_from_array('manifest_id', @MContents);
 
 			my %SkidContents = ();
 			my @skid_ids = map { $$_{skid_id} ? $$_{skid_id} : () } @MContents;
@@ -152,7 +146,14 @@
 			} # end if
 
 			foreach my $Manifest ( @{$$variable{Manifests}} ) {
-				$Manifest->Contents( $MContents{$$Manifest{id}} ? $MContents{$$Manifest{id}} : [] );
+				if ( $MContents{$$Manifest{id}} ) {
+					$Manifest->Contents( $MContents{$$Manifest{id}} );
+					foreach my $MC ( @{$MContents{$$Manifest{id}}} ) {
+						$MC->Type( $Manifest_Types{$$MC{type_id}} );
+					}
+				} else { 
+					$Manifest->Contents( [] );
+				}
 				$$Manifest{Types} = $ManifestCTs{$$Manifest{id}} if $ManifestCTs{$$Manifest{id}};
 
 				if ( $session{'/employee/inventory/manifests.html?delivery'} ) {
@@ -237,7 +238,8 @@
 					$html .= sprintf('%s : %d%s : %d %s%s', $Paper->to_string(), $manifest_weight{$paper_id}, $Paper->units(), $manifest_skids{$paper_id},
   ( $Paper->type() eq 'Roll' ? 'roll' : 'skid' ), ( $manifest_skids{$paper_id} ==1 ? '' : 's' ) );
 					if ( openprint::usergroup::is_user_in( ['Accounting','InventoryManager'], $session{user_id} ) ) {
-						my $Type = openprint::Manifest_Content_Type->find_one('manifest_id'=>$Manifest->id(), 'paper_id'=>($paper_id?$paper_id:undef));
+						my %types = map { $$_{paper_id}, $_ } @{$ManifestCTs{$$Manifest{id}}} if $ManifestCTs{$$Manifest{id}};
+						my $Type = $types{$paper_id?$paper_id:undef};
 						if ( $Type ) {
 							my $POC = $Type->PurchaseOrder_Content();
 
