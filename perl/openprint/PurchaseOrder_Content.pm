@@ -72,13 +72,16 @@ sub Type {
 
 sub type {
 	if ( @_ > 1 ) {
-		my $Type = openprint::PurchaseOrder_ContentType->find_one('name'=>$_[1]);
+		my $Type = openprint::PurchaseOrder_ContentType->find_one(name=>$_[1]);
 		if ( $Type ) {
 			$_[0]{type_id} = $Type->id();
 			return $Type->name();
 		} # end if
 	} # end if
-	return new openprint::PurchaseOrder_ContentType( $_[0]{type_id} )->name();
+	if ( ! $_[0]{type} ) {
+		$_[0]{type} = $_[0]->Type()->name();
+	}
+	return $_[0]{type};
 } # end sub type
 
 sub Department {
@@ -203,6 +206,30 @@ sub price_units {
 	}
 	return $$self{price_units};
 }
+
+sub check {
+	my ( $POC, $item ) = @_;
+	my @results;
+	if ( $POC->type() eq 'Sheet Stock' ) {
+		push @results, "Wrong stock format $$item{type} != $$POC{type}" if $$item{type} ne 'Sheet';
+		my ( $mweight, $type, $name ) = $POC->item() =~ /^([\d\.]+)M *([\w\/]*) *(.*)$/;
+		if ( $name =~ /(\d+)x(\d+)/i ) {
+			my ( $width, $height ) = ( $1, $2 );
+			push @results, "Width does not match: $$item{width} != $width" if $$item{width} != $width;
+			push @results, "Height does not match: $$item{height} != $height" if $$item{height} != $height;
+		}
+		push @results, "Wrong mweight! $$item{mweight} != $mweight" if $item->mweight() != $mweight;
+$openprint::log->debug("POC Matches $$POC{item} == " . $item->to_string() );
+	} elsif ( $POC->type() eq 'Roll Stock' ) {
+		push @results, "Wrong stock format $$item{type} != $$POC{type}" if $$item{type} ne 'Roll';
+		my ( $mweight, $type, $name ) = $POC->item() =~ /^([\d\.]+)M *([\w\/]*) *(.*)$/;
+$openprint::log->debug("POC Matches $$POC{item} == " . $item->to_string() );
+	} else {
+$openprint::log->debug("unsupported type $$POC{type}");
+	}
+	return join('<br/>', @results);
+
+} # end sub check
 
 1;
 __END__
