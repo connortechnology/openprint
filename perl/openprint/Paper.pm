@@ -1856,7 +1856,8 @@ sub check {
 		push @results, "may have invalid gsm current:$$Paper{gsm} != calculated:$$Copy{gsm}";
   }
   $Copy = $Paper->clone();
-  if ( abs( POSIX::ceil( $Paper->mweight()) - POSIX::ceil( $Copy->mweight(undef)) ) -1 > 0 ) {
+  if ( abs(POSIX::ceil($Paper->mweight()) - POSIX::ceil($Copy->mweight(undef))) > 1 ) {
+$openprint::log->debug("$$Paper{mweight} - $$Copy{mweight} = " . abs(POSIX::ceil($Paper->mweight()) - POSIX::ceil($Copy->mweight(undef))) );
     push @results, "may have invalid mweight current:$$Paper{mweight} != calculated:$$Copy{mweight}";
 	}
   $Copy = $Paper->clone();
