@@ -211,22 +211,42 @@ sub check {
 	my ( $POC, $item ) = @_;
 	my @results;
 	if ( $POC->type() eq 'Sheet Stock' ) {
-		push @results, "Wrong stock format $$item{type} != $$POC{type}" if $$item{type} ne 'Sheet';
+		push @results, "PO has wrong stock format $$item{type} != $$POC{type}" if $$item{type} ne 'Sheet';
 		my ( $mweight, $type, $name ) = $POC->item() =~ /^([\d\.]+)M *([\w\/]*) *(.*)$/;
 		if ( $name =~ /(\d+)x(\d+)/i ) {
 			my ( $width, $height ) = ( $1, $2 );
-			push @results, "Width does not match: $$item{width} != $width" if $$item{width} != $width;
-			push @results, "Height does not match: $$item{height} != $height" if $$item{height} != $height;
+			push @results, "PO width does not match: $$item{width} != $width" if $$item{width} != $width;
+			push @results, "PO height does not match: $$item{height} != $height" if $$item{height} != $height;
+		} else {
+			$openprint::log->warn("No sheet size for $$POC{item} in $name");
 		}
-		push @results, "Wrong mweight! $$item{mweight} != $mweight" if $item->mweight() != $mweight;
+		push @results, "PO has Wrong mweight! $$item{mweight} != $mweight" if abs($item->mweight() - $mweight) > 1;
 $openprint::log->debug("POC Matches $$POC{item} == " . $item->to_string() );
 	} elsif ( $POC->type() eq 'Roll Stock' ) {
-		push @results, "Wrong stock format $$item{type} != $$POC{type}" if $$item{type} ne 'Roll';
+		push @results, "PO has wrong stock format $$item{type} != $$POC{type}" if $$item{type} ne 'Roll';
 		my ( $mweight, $type, $name ) = $POC->item() =~ /^([\d\.]+)M *([\w\/]*) *(.*)$/;
 $openprint::log->debug("POC Matches $$POC{item} == " . $item->to_string() );
 	} else {
 $openprint::log->debug("unsupported type $$POC{type}");
 	}
+
+	my ( $caliper ) = $POC->item() =~ /(\d+)PT/i;
+	if ( $caliper ) {
+		if ( $item->weight() =~ /(\d+PT)/i ) {
+			if ( $1 != $caliper ) {
+				push @results, "Caliper doesn't match $caliper != $1";
+			} # end if
+		} elsif ( $item->calliper() and ( $item->calliper() != $caliper ) ) {
+			push @results, "Caliper doesn't match $caliper != $$item{calliper}";
+			next;
+		}
+	}
+
+	if ( $item->fsc_code() and ( $POC->item() !~ /FSC/ ) ) {
+		push @results, "FSC Mismatch stock is FSC but PO isn't";
+	} elsif ( (!$item->fsc_code()) and $POC->item() =~ /FSC/ ) {
+		push @results, "FSC Mismatch stock isn't FSC but PO is";
+	} # end if
 	return join('<br/>', @results);
 
 } # end sub check
