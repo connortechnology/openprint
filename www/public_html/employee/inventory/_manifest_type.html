@@ -216,6 +216,7 @@ href=>'/employee/project/view.html?docket='.$$variable{Type}->docket(), target=>
 				if ( openprint::usergroup::is_user_in( ['Accounting','InventoryManager'], $session{user_id} ) ) {
 					$html .= ' @ ' . openprint::Currency::format( $POC->price() );
 				} # end if
+				$html .= button('unconfirm'.$$POC{id}, { onclick=>qq`unconfirm_po_content($$variable{Type}{id},$$POC{id});`, text=>'Unconfirm' } ) . '</p>';
 				$html .= '</p>';
 			} elsif ( $POC and $POC->id() ) {
 				$html .= '<p><label>Guessed</label>' . ( $POC->item() ? $POC->item() : $POC->description() );
