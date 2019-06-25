@@ -295,19 +295,28 @@ sub Fold {
 					} 
 				} # end fold direction
 			} elsif ( $$Fold{spine_direction} ne $$params{spine_direction} ) {
-				$openprint::log->debug("Wanted spinedirection: $$params{spine_direction}, have $$Fold{spine_direction}") if DEBUG_FOLDING;
+				$openprint::log->debug("Wanted spinedirection: Impo $$params{spine_direction}, have Fold $$Fold{spine_direction}") if DEBUG_FOLDING;
 				next;
 			} # end if with_grain or vertical or horizontal
 		} # end if spine_direction
 
 		if ( $$Fold{orientation} ) {
 			my %orientations = map { $_, $_ } split(',', $$Fold{orientation});
-			if ( ! $$params{page_width} < $$params{page_height} ) { 
-				next if ! $orientations{portrait};
-			} elsif ( ! $$params{page_width} > $$params{page_height} ) { 
-				next if ! $orientations{landscape};
+			if ( $$params{page_width} < $$params{page_height} ) { 
+				if ( ! $orientations{Portrait} ) {
+					$openprint::log->debug("Wanted orientation portrait $$params{page_width} <=> $$params{page_height} $$Fold{orientation} $orientations{portrait}") if DEBUG_FOLDING;
+					next ;
+				}
+			} elsif ( $$params{page_width} > $$params{page_height} ) { 
+				if ( ! $orientations{Landscape} ) {
+					$openprint::log->debug("Wanted orientation landscape $$params{page_width} <=> $$params{page_height}") if DEBUG_FOLDING;
+					next;
+				}
 			} else {
-				next if ! $orientations{square};
+				if ( ! $orientations{Square} ) {
+					$openprint::log->debug("Wanted orientation square") if DEBUG_FOLDING;
+					next;
+				}
 			}
 		}
 
