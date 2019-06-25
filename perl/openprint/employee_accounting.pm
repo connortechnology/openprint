@@ -572,13 +572,16 @@ sub stock {
 	require openprint::ManifestContent;
 
 	if ( $param{btnFunction} eq 'Save' ) {
-		foreach my $Type ( openprint::Manifest_Content_Type->find('cost'=>undef) ) {
+		foreach my $Type ( openprint::Manifest_Content_Type->find(cost=>undef) ) {
 			$param{'cost-'.$Type->id()} =~ s/[^\d\.]//g;
 			if ( $param{'units-'.$Type->id()} eq '/lb' ) {
 				$param{'cost-'.$Type->id()} *= 100;
 			} # end if
 			if ( ( $param{'supplier_invoice-'.$Type->id()} ne $Type->supplier_invoice() ) or ( $param{'cost-'.$Type->id()} != $Type->cost() ) ) {
-				$variable{error} .= $Type->save({'supplier_invoice'=>$param{'supplier_invoice-'.$Type->id()}, 'cost'=>$param{'cost-'.$Type->id()} });
+				$variable{error} .= $Type->save({
+						supplier_invoice=>$param{'supplier_invoice-'.$Type->id()},
+						cost=>$param{'cost-'.$Type->id()} 
+						});
 			} # end if
 		} # end foreach
 	} else {
@@ -589,10 +592,41 @@ sub stock {
 } # end sub stock
 
 sub _stock {
-	ssi::save_params( '/employee/accounting/stock.html',
-			( map { 'received_on_start_'.$_ } ( 'year', 'month','day' ) ),
-			( map { 'received_on_end_'.$_ } ( 'year', 'month','day' ) ),
-			);
+	if ( $param{action} ) {
+		if ( $param{action} eq 'confirm_po_content' ) {
+			my $Manifest_Content_Type = openprint::Manifest_Content_Type->find_one(id=>$param{manifest_content_type_id});
+			if ( $Manifest_Content_Type ) {
+				$variable{error} .= $Manifest_Content_Type->save({po_content_id=>$param{po_content_id}});
+				my $POC = $Manifest_Content_Type->PurchaseOrder_Content();
+				(new openprint::Log())->save({
+						Object=>$Manifest_Content_Type->Manifest(),
+						action=>'Edit',
+						note=>'Confirm PO Content '.$POC->item(),
+						});
+
+			} else {
+				$variable{error} .= "Manifest Content Type not found for id=.$param{manifest_content_type_id}<br/>";
+			}
+		} elsif ( $param{action} eq 'unconfirm_po_content' ) {
+			my $Manifest_Content_Type = openprint::Manifest_Content_Type->find_one(id=>$param{manifest_content_type_id});
+			if ( $Manifest_Content_Type ) {
+				my $POC = $Manifest_Content_Type->PurchaseOrder_Content();
+				$variable{error} .= $Manifest_Content_Type->save({po_content_id=>undef});
+				(new openprint::Log())->save({
+						Object=>$Manifest_Content_Type->Manifest(),
+						action=>'Edit',
+						note=>'Unconfirm PO Content '.$POC->item(),
+						});
+			} else {
+				$variable{error} .= "Manifest Content Type not found for id=.$param{manifest_content_type_id}<br/>";
+			}
+		} # end if
+	} else {
+		ssi::save_params( '/employee/accounting/stock.html',
+				( map { 'received_on_start_'.$_ } ( 'year', 'month','day' ) ),
+				( map { 'received_on_end_'.$_ } ( 'year', 'month','day' ) ),
+				);
+	}
 } # end sub _stock
 
 sub credit_applications {
