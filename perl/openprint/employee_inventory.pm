@@ -1672,7 +1672,8 @@ sub save_Manifest {
 	my ( $Manifest ) = @_;
 
 	my $error;
-	$Manifest->received_on( join('-', @param{'received_on_year','received_on_month','received_on_day'} ) );
+	
+	$param{received_on} = join('-', @param{'received_on_year','received_on_month','received_on_day'});
 
 	my $ac = sql::start_transaction( $dbh );
 	$dbh->do( 'LOCK TABLE companies IN SHARE ROW EXCLUSIVE MODE' ) or $log->error( DBI->errstr );
@@ -1699,9 +1700,14 @@ sub save_Manifest {
 	$ac = sql::start_transaction( $dbh );
 	$dbh->do( 'LOCK TABLE Manifests IN EXCLUSIVE MODE' ) or $log->error( DBI->errstr );
 
-	$error .= $Manifest->save( \%param );
 	my $Log = new openprint::Log();
-	$Log->save({Object=>$Manifest, action=>'Save Manifest'});
+	$Log->set({Object=>$Manifest, action=>'Save Manifest'});
+
+	my @changes = $Manifest->changes(\%param);
+	if ( @changes ) {
+		$error .= $Manifest->save( \%param );
+		$Log->save({ note=>'Changes: ' . join('=>', @changes) });
+	}
 
 	my @Types = openprint::Manifest_Content_Type->find(manifest_id=>$Manifest->id());
 	if ( ! @Types ) {
@@ -1726,7 +1732,12 @@ sub save_Manifest {
 		);
 		$data{cost} = $param{'cost-'.$Type->id()} if exists $param{'cost-'.$Type->id()};
 		$data{supplier_invoice} = $param{'supplier_invoice-'.$Type->id()} if exists $param{'supplier_invoice-'.$Type->id()};
-		$variable{error} .= $Type->save(\%data);
+
+		@changes = $Type->changes(\%data);
+		if ( @changes ) {
+			$Log->save({ note=>$$Log{note} . '<br/>Type: ' . join('=>', @changes) });
+			$variable{error} .= $Type->save(\%data) if @changes;
+		}
 
 		my $NewMC = new openprint::ManifestContent();
 		$NewMC->set({manifest_id=>$$Manifest{id}, type_id=>$$Type{id}});
