@@ -76,3 +76,6 @@ datetime_select( 'nextrun', $$variable{Campaign}->nextrun() ? $$variable{Campaig
 		</p>
 	</fieldset>
 </form>
+<? if ( $$variable{Campaign}{id} ) ?>
+<? echo ( include_logs( $$variable{Campaign} ); ) ?>
+<? endif ( $$variable{Campaign}{id} ) ?>
