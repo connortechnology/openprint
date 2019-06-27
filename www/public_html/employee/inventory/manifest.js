@@ -205,9 +205,19 @@ function select_stock( type_id, stock_id ) {
 }
 
 function confirm_po_content(type_id,poc_id) {
-	new Ajax.Request('/employee/accounting/_stock.json', { 
+	new Ajax.Request('/employee/inventory/_manifest_type.json', { 
 		parameters: { 
 				action: 'confirm_po_content', 
+				manifest_content_type_id: type_id,
+				po_content_id: poc_id 
+			}
+		}
+	);
+}
+function unconfirm_po_content(type_id,poc_id) {
+	new Ajax.Request('/employee/inventory/_manifest_type.json', { 
+		parameters: { 
+				action: 'unconfirm_po_content', 
 				manifest_content_type_id: type_id,
 				po_content_id: poc_id 
 			}
