@@ -3260,5 +3260,37 @@ sub _select_stock {
 sub _check_lookup_item {
 }
 
+sub _manifest_type {
+	if ( $param{action} ) {
+		if ( $param{action} eq 'confirm_po_content' ) {
+			my $Manifest_Content_Type = openprint::Manifest_Content_Type->find_one(id=>$param{manifest_content_type_id});
+			if ( $Manifest_Content_Type ) {
+				$variable{error} .= $Manifest_Content_Type->save({po_content_id=>$param{po_content_id}});
+				my $POC = $Manifest_Content_Type->PurchaseOrder_Content();
+				(new openprint::Log())->save({
+						Object=>$Manifest_Content_Type->Manifest(),
+						action=>'Edit',
+						note=>'Confirm PO Content '.$POC->item(),
+						});
+
+			} else {
+				$variable{error} .= "Manifest Content Type not found for id=.$param{manifest_content_type_id}<br/>";
+			}
+		} elsif ( $param{action} eq 'unconfirm_po_content' ) {
+			my $Manifest_Content_Type = openprint::Manifest_Content_Type->find_one(id=>$param{manifest_content_type_id});
+			if ( $Manifest_Content_Type ) {
+				my $POC = $Manifest_Content_Type->PurchaseOrder_Content();
+				$variable{error} .= $Manifest_Content_Type->save({po_content_id=>undef});
+				(new openprint::Log())->save({
+						Object=>$Manifest_Content_Type->Manifest(),
+						action=>'Edit',
+						note=>'Unconfirm PO Content '.$POC->item(),
+						});
+			} else {
+				$variable{error} .= "Manifest Content Type not found for id=.$param{manifest_content_type_id}<br/>";
+			}
+		} # end if
+	}
+} # end sub _stock
 1;
 __END__
