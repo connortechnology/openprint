@@ -24,7 +24,7 @@ if ( $$opts{c} and ! -e $$opts{c} ) {
 
 my $path;
 if ( ! $$opts{path} ) {
-	$path = '/var/backups/postgres';
+	$path = '/var/backups/mysql';
 } else {
 	$path = $$opts{path};
 } # end if
