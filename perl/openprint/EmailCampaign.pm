@@ -154,9 +154,7 @@ sub send {
 	# this campaign
 	my @mail_user_ids = sql::execute(undef, undef, $self->{query});
 	$results .= 'There are '. scalar @mail_user_ids." users that fit the campaign<br/>\n";
-	$self->{lastrun} = 'NOW()';
 	@$self{nextrun} = sql::execute( undef, undef, 'SELECT NOW()+interval FROM emailcampaigns WHERE id=?', $$self{id} ) if $$self{interval};
-	$self->save();
 
 	#$self->{log}->info("There are ". scalar @mail_user_ids." users that fit the campaign<br/>\n");
 
@@ -217,6 +215,9 @@ sub send {
 	} # for all mail user ids
 	$$self{email_text} = $email_text;
 	$$self{email_html} = $email_html;
+
+	$self->{lastrun} = 'NOW()';
+	$self->save();
 	return $results;
 } # end sub send
 
