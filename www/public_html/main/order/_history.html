@@ -49,6 +49,8 @@
 	<? eval ( 
 			$$variable{ReportTotal} = 0;
 			$$variable{ReportBalance} = 0;
+			$$variable{CommissionTotal} = 0;
+			$$variable{CreditCardTotal} = 0;
 			) ?>
 	<div class="unprintable">
 		<br/>
@@ -67,23 +69,32 @@
 				<th class="Status">Status</th>
 				<th class="Price">Total</th>
 				<th class="Price">Balance</th>
+				<th class="Price">Commission</th>
+				<th class="Price">Credit Card</th>
 			</tr>
 		</thead>
 		<? echo (
 			my $html; my $rowclass;
 
-			foreach my $Order (  @{$$variable{Orders}} ) {
+			foreach my $Order ( @{$$variable{Orders}} ) {
+				my $Currency = $Order->Currency();
 				$$variable{total} = $Order->total();
 				$$variable{balance} = $Order->balance();
 				if ( $$variable{Currency}->id() != $Order->currency_id() ) {
-					if ( my $rate = $Order->Currency()->conversions( $session{Currency_id} ) ) {
+					if ( my $rate = $Currency->conversions( $session{Currency_id} ) ) {
 						$$variable{total} = $$variable{total} * $rate;
 						$$variable{balance} = $$variable{balance} * $rate;
 					} # end if
 				} # end if
+				my $csr_commission = $Currency->convert_from($Order->csr_commission());
+				my $credit_card_fee = $Currency->convert_from($Order->credit_card_fee());
+
 				if ( $Order->status() ne 'Cancelled' ) {
 					$$variable{ReportTotal} += $$variable{total};
 					$$variable{ReportBalance} += $$variable{balance};
+					$$variable{CreditCardTotal} += $credit_card_fee;
+					$$variable{CommissionTotal} += $csr_commission;
+		
 				} else {
 					$$variable{balance} = '0.00';
 				} # end if
@@ -99,16 +110,20 @@
 	<td class="Status"><a href="history_details.html?order_id=%2$d">%8$s</a></td>
 	<td class="Price"><a href="history_details.html?order_id=%2$d">%9$s</a></td>
 	<td class="Price"><a href="history_details.html?order_id=%2$d">%10$s</a></td>
+	<td class="Price"><a href="history_details.html?order_id=%2$d">%11$s</a></td>
+	<td class="Price"><a href="history_details.html?order_id=%2$d">%12$s</a></td>
 </tr>
 <tr%1$s>
 	<td colspan="3">&nbsp;</td>
-	<td colspan="6">%11$s</td>
+	<td colspan="8">%13$s</td>
 </tr>`, $rowclass, $Order->id(), $Order->docket(), join('<br/>', map { $_->Invoice()->num() } $Order->Invoices() ), $Order->name(), 
 format_date( $Order->created_on() ),
 join('<br/>', map { $$_{requested_for} ? format_date( $$_{requested_for} ) : () } $Order->Ordered_Projects() ),
 $Order->status(), 
 openprint::Currency::format( $$variable{total} ),
 openprint::Currency::format( $$variable{balance} ),
+openprint::Currency::format( $credit_card_fee ),
+openprint::Currency::format( $csr_commission ),
 join('<br/>', map { $_->reference() ? $_->reference() : $_->summary() } $Order->Projects() ),
 );
 		$rowclass = $rowclass ? '' : ' class="colRow"';
@@ -119,6 +134,8 @@ join('<br/>', map { $_->reference() ? $_->reference() : $_->summary() } $Order->
 			<td colspan="7" align="right"><b>Report Totals</b></td>
 			<td class="Price"><? echo ( openprint::Currency::format( $$variable{ReportTotal} ); ) ?></td>
 			<td class="Price"><? echo ( openprint::Currency::format( $$variable{ReportBalance} ); ) ?></td>
+			<td class="Price"><? echo ( openprint::Currency::format( $$variable{CreditCardTotal} ); ) ?></td>
+			<td class="Price"><? echo ( openprint::Currency::format( $$variable{Commission} ); ) ?></td>
 		</tr>
 	</table>
 	<br/>
