@@ -158,6 +158,7 @@ sub check {
 	} # end foreach C
 	foreach my $T ( $Manifest->Types() ) {
 		$error .= $T->Paper()->check();
+		$error .= $T->PurchaseOrder_Content()->check($T->Paper()) if $$T{po_content_id};
 	}
 	return $error;
 } # end sub check
