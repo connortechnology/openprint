@@ -624,6 +624,8 @@ my $add_placeholder = ( ! ( $field =~ /\?/ ) ) ?  1 : 0;
 	} elsif ( sets::isin( $operator, [ 'in', 'not in' ] ) ) {
 		if ( ref $value eq 'ARRAY' ) {
 			return ( $field.$type.' ' . $operator . ' ('. join(',', map { '?' } @{$value} ) . ')', @{$value} );
+		} elsif ( ref $value eq 'HASH' ) {
+			return ( $field.$type.' ' . $operator . ' ('.$$value{sql}.')', @{$$value{values}} );
 		} else {
 			return ( $field.$type.' ' . $operator . ' (?)', $value );
 		} # end if
