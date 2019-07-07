@@ -95,33 +95,27 @@ sub add_service {
 
 
 sub get_incomplete_services_in_category {
-	my ( $log, $dbh, $project_index, $category ) = @_;
+	my ( $Project, $category ) = @_;
 
 	if ( $category eq 'Printing' ) {
-		my $Project = new openprint::Project( $project_index );
 		my $services = $Project->services();
 
 		if ( $$services{Signature} ) {
 			foreach my $index ( @{$$services{Signature}} ) {
-				if ( openprint::service::status( $Project->id(), $index ) ne 'calculated' ) {
+				# I switched this from ne calculated to handle statuses like ordered, complete, etc.
+				if ( openprint::service::status( $Project->id(), $index ) eq 'uncalculated' ) {
 					return $index;
 				} # end if
 			} # end foreach
 		} # end if
 		return;
 	} else {
-		my @ServiceTypes = openprint::ServiceType->find('category'=>$category);
-		return map { $_->service_id() } openprint::Project_Service->find( 'servicetype_id'=>[ map { $_->id() } @ServiceTypes ], 'project_id'=>$project_index, 'status' => 'uncalculated' );
-
-
-		#$_ = "SELECT MIN(lngServiceIndex) FROM tbl_Project_Contents\n".
-			#"WHERE lngProjectIndex='$project_index'\n".
-			#"AND lngServiceIndex IN ( ".
-			#"						SELECT lngServiceIndex FROM tbl_Service_Specifications ".
-			#"						WHERE lngProjectIndex='$project_index' AND strName='ServiceType' ".
-			#"						AND strValue IN ( '".join("','", @products). "'	) ) ".
-			#"AND strStatus == 'uncalculated'";
-		#return sql::execute( $log, $dbh, $_ );
+		my @ServiceTypes = openprint::ServiceType->find(category=>$category);
+		return map { $_->service_id() } openprint::Project_Service->find(
+				servicetype_id => [ map { $_->id() } @ServiceTypes ],
+				project_id		 => $$Project{id},
+				status				 => 'uncalculated'
+				);
 	} # end if
 } # end sub get_incomplete_services_in_category
 
@@ -135,9 +129,10 @@ sub get_redirect_for_service {
 
 sub choose_service {
 	my ( $log, $dbh, $project_index ) = @_;
-	$log->debug("***************** TIME TO CHOOSE SERVICE ***********************");
 
-	my @incomplete_services = sql::execute( $log, $dbh, "SELECT lngServiceIndex FROM tbl_Project_Contents WHERE lngProjectIndex=? AND (strStatus IS NULL or strStatus ='uncalculated')", $project_index );
+	my @incomplete_services = sql::execute( $log, $dbh,
+			"SELECT lngServiceIndex FROM tbl_Project_Contents WHERE lngProjectIndex=?
+			AND (strStatus IS NULL or strStatus ='uncalculated')", $project_index );
 	if ( ! @incomplete_services ) {
 		# Quick shortcut.	If there aren't any, then stop looking.
 		$log->debug("***************** NO IMCOMPLETE SERVICES FOUND ***********************");
@@ -163,14 +158,14 @@ sub choose_service {
 				return (undef,undef);
 			} # end if
 		} else {
-			$log->debug("Printing service status $status");
+			$log->debug("Printing service status ($status)");
 		} # end if
 	} else {
 		$log->debug("No printing service?");
 	} # end if
 
 	$log->debug("****** GETTING INCOMPLETE PRINTING SERVICES ********");
-	foreach my $service_index ( get_incomplete_services_in_category( $log, $dbh, $project_index, 'Printing' ) ) {
+	foreach my $service_index ( get_incomplete_services_in_category( $Project, 'Printing' ) ) {
 		$log->debug("****** SERVICE: $service_index is incomplete ********");
 		my $url = get_redirect_for_service( $log, $dbh, $project_index, $service_index );
 		return ( $service_index, $url ) if $url ne '';

@@ -516,9 +516,9 @@ sub get_stocks {
 } # end sub get_stocks
 
 sub get_stocks_and_quantities {
-    my ( $Project, $service_id, $specs, $qty_index, @Stocks ) = @_;
+	my ( $Project, $service_id, $specs, $qty_index, @Stocks ) = @_;
 
-    $specs = openprint::service::get_specs_ref( $Project, $service_id ) if ! $specs;
+	$specs = openprint::service::get_specs_ref( $Project, $service_id ) if ! $specs;
 	@Stocks = get_stocks( $Project, $service_id, $specs ) if ! @Stocks;
 
 	foreach my $Stock ( @Stocks ) {

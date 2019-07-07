@@ -21,12 +21,13 @@
 						<li><label>Description</label><textarea name="description" id="description"><? echo ( $$variable{Album}->description() ) ?></textarea></li>
 <? if ( $session{user_type} eq 'A' ) ?>
 						<li><label>Company</label>
-							<select name="company_id" id="company_id" onchange="new Ajax.Updater('user_id', '/includes/_users.html', { parameters: { company_id: this.getValue() } } );">
+<input type="text" onkeyup="filter_companies('company_id', {name:this.value,selected_id:get_ddm_value($('company_id'))});" class="filter" />
+							<select name="company_id" id="company_id" onchange="stop_filter_companies();new Ajax.Updater('user_id', '/includes/_users.html', { parameters: { company_id: this.getValue() } } );">
 								<option value="">no one</option>
 								<? echo (
 	$$variable{company_id} = $param{company_id} ? $param{company_id} : 
 		( $$variable{Album}->id() ? $$variable{Album}->User()->company_id() : $session{company_id} );
- make_drop_down( openprint::Company->dropdown( ), $$variable{company_id} ); ) ?>
+ make_drop_down( openprint::Company->dropdown( id=>$$variable{company_id}), $$variable{company_id} ); ) ?>
 							</select>
 							
 						</li>

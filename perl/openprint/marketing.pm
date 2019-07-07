@@ -37,8 +37,10 @@ sub email_campaigns {
 	my $Campaign = new openprint::EmailCampaign( $param{campaign_id} );
 	if ( $param{btnFunction} eq 'Delete' ) {
 		$variable{error} .= $Campaign->delete();
+		(new openprint::Log())->save({Object=>$Campaign, action=>'Delete'});
 	} elsif ( $param{btnFunction} eq 'Run' ) {
 		$variable{information} = $Campaign->send();
+		(new openprint::Log())->save({Object=>$Campaign, action=>'Run', note=>$variable{information} });
 	} elsif ( $param{btnFunction} eq 'Trial' ) {
 		$variable{information} = $Campaign->trial( $openprint::User->email() );
 	} # end if
@@ -91,13 +93,19 @@ sub email_campaign {
 	if ( $param{btnFunction} eq 'Save' ) {
 		$param{nextrun} = sprintf('%.4d-%.2d-%.2d %.2d:%.2d:%.2d',
 				@param{'nextrun_year','nextrun_month','nextrun_day','nextrun_hour','nextrun_minute'}, 0 ) if $param{nextrun_year};
-		$variable{error} .= $Campaign->save( \%param );
+		my @changes = $Campaign->changes( \%param );
+		if ( @changes ) {
+			$variable{error} .= $Campaign->save( \%param );
+			(new openprint::Log())->save({Object=>$Campaign, action=>'Save', note=>'Changes: ' .join(', ', @changes) });
+		}
 		$variable{ExternalRedirect} = '/marketing/email_campaigns.html' if ! $variable{error};
 	} elsif ( $param{btnFunction} eq 'Delete' ) {
 		$variable{error} .= $Campaign->delete();
+		(new openprint::Log())->save({Object=>$Campaign, action=>'Delete' });
 		$variable{ExternalRedirect} = '/marketing/email_campaigns.html' if ! $variable{error};
 	} elsif ( $param{btnFunction} eq 'Run' ) {
 		$variable{Results} = $Campaign->send();
+		(new openprint::Log())->save({Object=>$Campaign, action=>'Run', note=>$variable{Results} });
 	} elsif ( $param{btnFunction} eq 'Copy' ) {
 		$Campaign = $Campaign->copy();
 		$variable{error} .= $Campaign->save({name=>'Copy of '.$$Campaign{name}});

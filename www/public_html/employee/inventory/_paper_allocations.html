@@ -88,6 +88,12 @@
 There are no allocations.
 <? endif ( $$variable{'Allocations'} and @{$$variable{'Allocations'}} ) ?>
 <script type="text/javascript">
-	$('Allocated').innerHTML = '<? echo ( Number::Format::format_number(int($$variable{'Paper'}->allocated())). ($$variable{'Paper'}->type() eq 'Roll' ? 'lbs' : 'sheets'); ) ?>';
-	$('Available').innerHTML = '<? echo ( Number::Format::format_number(int($$variable{'Paper'}->available())). ($$variable{'Paper'}->type() eq 'Roll' ? 'lbs' : 'sheets'); ) ?>';
+	$('Allocated').innerHTML = '<? echo ( join(' ', 
+				Number::Format::format_number(int($$variable{Paper}->allocated())).$$variable{Paper}->units(),
+				( $$variable{Paper}->type() eq 'Sheet' ? Number::Format::format_number(int($$variable{Paper}->allocated()*$$variable{Paper}->sheet_weight())).'lbs' : () ),
+); ) ?>';
+	$('Available').innerHTML = '<? echo ( join(' ',
+				Number::Format::format_number(int($$variable{Paper}->available())).$$variable{Paper}->units(),
+				( $$variable{Paper}->type() eq 'Sheet' ? Number::Format::format_number(int($$variable{Paper}->available()*$$variable{Paper}->sheet_weight())).'lbs' : () ),
+); ) ?>';
 </script>

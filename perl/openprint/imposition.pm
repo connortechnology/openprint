@@ -249,11 +249,12 @@ sub calc_setup_object {
 	} elsif ( DEBUG ) {
 		$openprint::log->debug("No grain direction. $$Paper{gsm}gsm");
 	} # end if press_grain
+
 	if ( $run_style eq 'Perfecting' ) {
 		my $press_grain = $Press->specification('Perfecting Grain', $Paper->gsm() );
 		
 #$openprint::log->debug("Grains: $grain_direction, Press: $press_grain, Paper: ". $Paper->grain_direction() . ', paper->long: ' . $Paper->long() );
-		if ( $press_grain and $press_grain ne 'Both' ) {
+		if ( $press_grain and ( $press_grain ne 'Both' ) ) {
 			if ( $press_grain eq 'Long' ) {
 				if ( $Paper->grain_direction() ne $Paper->long() ) {
 					$openprint::log->debug("Improper perfecting grain Paper(".$Paper->grain_direction().") Long (".$Paper->long().")") if DEBUG;
@@ -350,7 +351,7 @@ $openprint::log->debug("Not Pretrimming on $$Press{strid}") if DEBUG;
 	$setup2->object_height( $image_height );
 	$$setup2{Press} = $Press;
 	$$setup2{printing_type} = $Press->specification('Printing Type');
-	$setup2->colour_bar_orientation( $$specs{'Colour Bar Orientation'} );
+	$$setup2{colour_bar_orientation} = $$specs{'Colour Bar Orientation'};
 	$$setup2{spine} = $$specs{ProjectSpecs}{spine};
 	$setup2->spine_direction();
 

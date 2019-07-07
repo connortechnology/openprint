@@ -644,7 +644,7 @@ $log->debug("Setting washed coloursL $$Colour{name}.'-'.$$sig_specs{'ddmPress'.$
 		if ( $$real_colour{type} eq 'PMS' ) {
 			# Name is supposed to be the PMS #, so strip everything out.	casual quotes will use PMS 1,2,3 which are not actual PMS numbers
 			$colour = $$real_colour{name};
-			$colour =~ s/\D//g;
+			#$colour =~ s/\D//g;
 		} elsif ( $$real_colour{name} =~ /^(\w+) Spot Colour$/ ) {
 			$colour = $1;
 		#} elsif ( $$real_colour{name} =~ /PMS/ ) {
@@ -656,15 +656,15 @@ $log->debug("Setting washed coloursL $$Colour{name}.'-'.$$sig_specs{'ddmPress'.$
 		} # end if
 
 		if ( ! $special_colours{$colour} ) {
-$log->debug("Adding special colour for $colour");
 			my $Ink = openprint::Ink->find_one(name=>$colour);
+$log->debug("Adding special colour for $colour");
 
-			if ( ! $Ink ) {
+			if ( !$Ink ) {
 				# Some PMS or other ink that we don't have in the system, since CMYK are in teh system (we assume), washes can be 1
 				$Ink = new openprint::Ink();
 				$$Ink{pmsid} = $colour;
-				$$Ink{name} = $colour;
-				if ( ! sets::isin( $colour, \@process_colours ) ) {
+				$$Ink{name} = $$real_colour{name};
+				if ( !sets::isin( $colour, \@process_colours ) ) {
 					$$Ink{mix_service_id} = $PMSInkMixService->id() if $PMSInkMixService;
 					$$Ink{mix} = 1;
 					$$Ink{washups} = 1;
@@ -3267,7 +3267,7 @@ sub breakdown {
 
 	my $breakdown = '';
 	$breakdown .= openprint::Estimating::Imposition::signature_summary( $Imposition, $$price{'Imposition Price'} ) if $$price{'Imposition Price'} and $ImpositionServiceType;
-	$breakdown .= sprintf('%s Colour Bar %s %s, Bleed: %s Orientation: %s<br/>', ( $Press ? $$Press{strid} : '' ), $$Imposition{colour_bar_size}, $Imposition->colour_bar_orientation(), @$Imposition{'bleed_size'},
+	$breakdown .= sprintf('%s Colour Bar %s %s, Bleed: %s Orientation: %s<br/>', ( $Press ? $$Press{strid} : '' ), @$Imposition{'colour_bar_size','colour_bar_orientation','bleed_size'},
 		$Imposition->image_orientation_text() );
 	$breakdown .= '<b>Setups</b><br/>';
 	if ( $$price{GripperSetup} ) {
@@ -6192,7 +6192,7 @@ $log->debug("Varnish $real_colour") if DEBUG_INKS;
 			$colour = $1;
 		} elsif ( $real_colour =~ /PMS/i ) {
 			$colour = $real_colour;
-			$colour =~ s/\D//g; # Just the PMS #
+			#$colour =~ s/\D//g; # Just the PMS #
 		} else { 
 			$colour = $real_colour;
 		} # end if
@@ -6212,7 +6212,7 @@ $log->debug("Varnish $real_colour") if DEBUG_INKS;
 		my $Ink;
 
 		foreach my $C ( @{$special_colours{$colour}} ) {
-			if ( ( ! ( $C->grades() and scalar @{$C->grades()} ) ) or sets::isin( $grade, $C->grades() ) ) {
+			if ( ( ! ( $$C{grades} and scalar @{$$C{grades}} ) ) or sets::isin( $grade, $C->grades() ) ) {
 				$Ink = $C;
 				last;
 			} # end if
@@ -6220,8 +6220,10 @@ $log->debug("Varnish $real_colour") if DEBUG_INKS;
 
 		if ( ! $Ink ) {
 			$log->error("Didnt find ink real ($real_colour) ($colour) ($grade) in colours hash, must be a grade problem");
-			foreach my $C ( @{$special_colours{$colour}} ) {
-				$log->error($C->to_string() );
+			foreach my $k ( keys %special_colours ) {
+			foreach my $C ( @{$special_colours{$k}} ) {
+				$log->error($k . ' => ' . $C->to_string() );
+			} # end foreach C
 			} # end foreach C
 			next;
 		} elsif ( DEBUG_INKS ) {
