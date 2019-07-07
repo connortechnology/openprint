@@ -9,12 +9,6 @@ my ( $y, $m, $d ) = Date::Calc::Today();
 return Date::Calc::Month_to_Text($m) . ' ' . $y;
 ) ?>
 	</h2>
-<ul class="Notes">
-<li>Due to the quick turnaround on Gangrun business cards and postcards please ensure files are print ready.</li>
-<li>Proofs emailed for approval are only to check for ripping problems.</li>
-<li>Specials pricing only applies to print ready pdf files with bleed and crop marks. All other file formats will be automatically charged between $10-$30.</li>
-<li>All prices in <? echo ( $$variable{'Currency'}->name() ) ?></li>
-</ul>
 <? echo (
    
     my $Pricelist = openprint::Pricelist::get_current();

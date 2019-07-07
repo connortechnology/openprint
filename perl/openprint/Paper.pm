@@ -1872,7 +1872,9 @@ $openprint::log->debug("$$Paper{mweight} - $$Copy{mweight} = " . abs(POSIX::ceil
 				) 
 		 ) {
 $openprint::log->debug("basis: " . $Paper->basis_width() . 'x' . $Paper->basis_height());
-		push @results, 'may have wrong basis size. Should probably be 20x26';
+		push @results, 'may have wrong basis size. Should probably be 20x26' .
+ssi::button('fix'.$$Paper{id}, { onclick=>q`set_basis_dimensions('20','26');`, text=>'Fix' } );
+;
 	}
   if ( ( $Paper->finish() =~ /1 side/i ) and ( $Paper->doublesided() ) ) {
     push @results, 'appears to be C1S, but is marked double sided.';

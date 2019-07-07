@@ -6,31 +6,31 @@ package openprint::Product_Category;
 our @ISA = qw( openprint::Object );
 use vars qw( $debug $serial $table %fields %transforms %defaults );
 
-$debug = 0;
+$debug = 1;
 $serial = 'product_categories_id_seq';
 $table = 'Product_Categories';
 
 %fields = (
-	id				=>	'id',
-	name			=>	'name',
-	description		=>	'description',
-	projecttype_id	=>	'projecttype_id',
-	parent_ids		=>	'parent_ids',
-	sorting			=>	'sorting',
-	deleted			=>	'deleted',
-	album_id                                =>      'album_id',
+		id							=>	'id',
+		name						=>	'name',
+		description			=>	'description',
+		projecttype_id	=>	'projecttype_id',
+		parent_ids			=>	'parent_ids',
+		sorting					=>	'sorting',
+		deleted					=>	'deleted',
+		album_id        =>  'album_id',
 );
 
 %transforms = (
-    name => [ 's/^\s+//', 's/\s+$//', 's/\s\s+/ /g' ],
-    description => [ 's/^\s+//', 's/\s+$//', 's/\s\s+/ /g' ],
+		name => [ 's/^\s+//', 's/\s+$//', 's/\s\s+/ /g' ],
+		description => [ 's/^\s+//', 's/\s+$//', 's/\s\s+/ /g' ],
 );
 %defaults = (
-	deleted			=>	0,
-	parent_ids	=>	[],
-	projecttype_id	=>	undef,
-	sorting			=>	undef,
-	album_id=>undef,
+		deleted					=>	0,
+		parent_ids			=>	'[]',
+		projecttype_id	=>	undef,
+		sorting					=>	undef,
+		album_id				=>	undef,
 );
 
 sub destroy {
@@ -53,7 +53,7 @@ sub destroy {
 } # end sub destroy
 
 sub products {
-Carp::cluck("Deprecated call openprint::Product_Category::products");
+	Carp::cluck("Deprecated call openprint::Product_Category::products");
 	return $_[0]->Products();
 } # end sub products
 

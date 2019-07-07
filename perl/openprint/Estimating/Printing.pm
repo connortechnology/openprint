@@ -654,11 +654,15 @@ $log->debug("Setting washed coloursL $$Colour{name}.'-'.$$sig_specs{'ddmPress'.$
 		} else { 
 			$colour = $$real_colour{name};
 		} # end if
+$log->debug("Doing colour $$real_colour{type} $$real_colour{name} =>$colour") if DEBUG_INKS;
 
 		if ( ! $special_colours{$colour} ) {
 			my $Ink = openprint::Ink->find_one(name=>$colour);
-$log->debug("Adding special colour for $colour");
-
+			$log->debug("Adding special colour for $colour") if DEBUG_INKS;
+			if ( !$Ink and ($$real_colour{type} eq 'PMS') ) {
+				$Ink = openprint::Ink->find_one(name=>'PMSInk');
+					$log->debug("Adding PMS special colour for $colour have: $Ink") if DEBUG_INKS;
+			}
 			if ( !$Ink ) {
 				# Some PMS or other ink that we don't have in the system, since CMYK are in teh system (we assume), washes can be 1
 				$Ink = new openprint::Ink();
@@ -672,7 +676,7 @@ $log->debug("Adding special colour for $colour");
 					$Material = $Materials{PMSInk} if ! $Material and $$real_colour{type} eq 'PMS';
 					$$Ink{material_id} = $Material->id() if $Material;
 				} # end if
-			} # end if foudn Ink
+			} # end if found Ink
 			$special_colours{$colour} = [ $Ink ];
 		} # end if
 	} # end foreach
@@ -6230,13 +6234,13 @@ $log->debug("Varnish $real_colour") if DEBUG_INKS;
 			$log->debug("Got INK: " . $Ink->to_string() );
 		} # end if
 
-		my $InkService = $Ink->Service() ?  $Ink->Service() : $Services{$real_colour};
+		my $InkService = $Ink->Service() ? $Ink->Service() : $Services{$real_colour};
 		my %InkService;
 		if ( $InkService and %InkService = $InkService->get_price( $colour_impressions, $Press ) ) {
 			if ( $InkService{units} eq 'per m' ) {
 				$InkService{Total} = $InkService{Price} * $colour_impressions/1000;
 			} else {
-				$price{'Ink breakdown'} .= 'unknown units for '.$real_colour;
+				$price{'Ink breakdown'} .= 'unknown units for mix service for '.$real_colour.' ' . $InkService{units} .'<br/>';
 				$log->error('unknown units for ' . $real_colour );
 			} # end if
 			$ink_price{ServicePrice} = \%InkService;

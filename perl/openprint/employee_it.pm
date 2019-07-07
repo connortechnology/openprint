@@ -195,7 +195,7 @@ sub host {
       } else {
         $variable{error} .= 'Host failed to reboot. Check logs';
       }
-      $variable{ExternalRedirect} = $Host->url();
+      $variable{ExternalRedirect} = $Host->url_to();
     } elsif ( $param{action} eq 'get_config' ) {
 			my $content = $Host->get_config();
       if ( $content ) {

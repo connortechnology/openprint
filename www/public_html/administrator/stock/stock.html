@@ -1,3 +1,4 @@
+<script type="text/javascript" src="<?hash_link(/javascripts/paper.js)?>"></script>
 <script type="text/javascript" src="<?hash_link(/administrator/stock/stock.js)?>"></script>
 <script type="text/javascript" >
 	function newPrice( service, pricelist_id ) {
@@ -227,11 +228,19 @@ return '';
 				</li>
 				<li id="BasisSize">
 					<label>Basis Weight</label>
-					<? echo ( input(type=>'float', id=>'basis_mweight', name=>'basis_mweight', value=>$$variable{Stock}->basis_mweight(), onkeyup=>'basis_weight_to_gsm(this.form);', oninput=>'basis_weight_to_gsm(this.form);' ); ) ?>
+					<? echo ( input(type=>'float', id=>'basis_mweight', name=>'basis_mweight',
+								value=>$$variable{Stock}->basis_mweight(),
+								onkeyup=>'calc_from_basis_weight(this.form);',
+								oninput=>'calc_from_basis_weight(this.form);',
+								); ) ?>
 					@
 					<? echo ( join(' x ',
-								input(type=>'float', id=>'basis_width', name=>'basis_width', value=>( $$variable{Stock}->basis_width() ? $$variable{Stock}->basis_width() : 25 ),  oninput=>'basis_weight_to_gsm( this.form );' ),
-								input(type=>'float', id=>'basis_height', name=>'basis_height', value=>( $$variable{Stock}->basis_height() ? $$variable{Stock}->basis_height() : 38 ),  oninput=>'basis_weight_to_gsm( this.form );' ),
+								input(type=>'float', id=>'basis_width', name=>'basis_width',
+									value=>( $$variable{Stock}->basis_width() ? $$variable{Stock}->basis_width() : 25 ),
+									oninput=>'calc_from_basis_weight(this.form);' ),
+								input(type=>'float', id=>'basis_height', name=>'basis_height',
+									value=>( $$variable{Stock}->basis_height() ? $$variable{Stock}->basis_height() : 38 ),
+									oninput=>'calc_from_basis_weight(this.form);' ),
 						); ) ?>
 				</li>
 				<li>
