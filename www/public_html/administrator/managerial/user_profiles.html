@@ -329,12 +329,12 @@ Please select a company or user to obtain login information.<br/>
 					</li>
 					<li> 
 						<label>Password</label>
-						<input type="text" id="password" name="password" onkeyup="updateStrength(this.value);check_passwords(this.form.password, this);" value="<? echo ( ( sets::isin( $$variable{User}->type(), ['C','E'] ) and ! $config{encrypt_passwords} ) ? $$variable{User}->password() : '' ) ?>" />
+						<input type="text" id="password" name="password" onkeyup="updateStrength(this.value);check_passwords(this.form.password, this);" value="<? echo ( (($$variable{User}->type() ne 'A') and !$config{encrypt_passwords}) ? $$variable{User}->password() : '' ) ?>" />
 						<span id="psContainer"><span id="psStrength"></span></span>
 					</li>
 					<li>
 						<label for="verifypassword">Verify Password</label>
-						<input type="text" id="verifypassword" name="verifypassword" onkeyup="check_passwords(this.form.password, this);" value="<? echo ( ( sets::isin( $$variable{User}->type(), ['C','E'] ) and ! $config{encrypt_passwords} ) ? $$variable{User}->password() : '' ) ?>"/>
+						<input type="text" id="verifypassword" name="verifypassword" onkeyup="check_passwords(this.form.password, this);" value="<? echo ( (($$variable{User}->type() ne 'A') and !$config{encrypt_passwords}) ? $$variable{User}->password() : '' ) ?>"/>
 						<span id="password_alert"></span>
 					</li>
 					<li><label>Password Last Changed</label>
