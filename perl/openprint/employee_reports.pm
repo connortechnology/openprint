@@ -1905,6 +1905,19 @@ sub customer_performance {
 	#ssi::setup_date_select( $uri, 'not_ordered_on_end', 0 );
 
 	if ( exists $param{Download} ) {
+		my $sql = openprint::Company->find_sql(
+          ( $param{salesrep_id} ? ( salesrep_id=>$param{salesrep_id} ) : () ),
+          order=>'lower(name)',
+          ( $session{$uri.'?country'} ? ( country=>$session{$uri.'?country'} ) : () ),
+          );
+		$$sql{sql} =~ s/\*/id/;
+
+		my %Companies_By_CSR = misc::make_hash_from_array('salesrep_id',
+				openprint::Company->find(
+					( $param{salesrep_id} ? ( salesrep_id=>$param{salesrep_id} ) : () ),
+					order=>'lower(name)',
+					( $session{$uri.'?country'} ? ( country=>$session{$uri.'?country'} ) : () ),
+					) );
 
 		my $do_not_ordered_since = 1 if Date::Calc::check_date( @session{
 							$uri.'?not_ordered_on_start_year',
@@ -1928,30 +1941,23 @@ sub customer_performance {
 			@csr_ids = map { $_->id() } openprint::User->find( company_id=>$config{owner_id}, type=>['E','A'], 'usergroup any'=>'Sales', order=>'lower(firstname),lower(lastname)');
 		} # end if
 
-		my %orders_by_company;
-		my %quotes_by_company;
+		my @Orders = openprint::Order->find( 
+		'company_id in' => $sql,
+				ssi::date_filter( $uri.'?ordered_on_start', 'created_on >=' ),
+				ssi::date_filter( $uri.'?ordered_on_end', 'created_on <=' ),
+				status_id => \@status_ids,
+				);
+		my %orders_by_company = misc::make_hash_from_array('company_id', @Orders);
+		my @Quotes = openprint::Quote->find( 
+		'company_id in' => $sql,
+				ssi::date_filter( $uri.'?ordered_on_start', 'created_on >=' ),
+				ssi::date_filter( $uri.'?ordered_on_end', 'created_on <=' ),
+				);
+		my %quotes_by_company = misc::make_hash_from_array('company_id', @Quotes);
 
-		{
-			my @Orders = openprint::Order->find( 
-					ssi::date_filter( $uri.'?ordered_on_start', 'created_on >=' ),
-					ssi::date_filter( $uri.'?ordered_on_end', 'created_on <=' ),
-					status_id => \@status_ids,
-					);
-			foreach my $Order ( @Orders ) {
-				$orders_by_company{$$Order{company_id}} = [] if ! $orders_by_company{$$Order{company_id}};
-				push @{ $orders_by_company{$$Order{company_id}} }, $Order;
-			}
-			my @Quotes = openprint::Quote->find( 
-					ssi::date_filter( $uri.'?ordered_on_start', 'created_on >=' ),
-					ssi::date_filter( $uri.'?ordered_on_end', 'created_on <=' ),
-					);
-			foreach my $Quote ( @Quotes ) {
-				$quotes_by_company{$$Quote{company_id}} = [] if ! $quotes_by_company{$$Quote{company_id}};
-				push @{ $quotes_by_company{$$Quote{company_id}} }, $Quote;
-			}
-		}
 		my %not_ordered_since;
 		my @Orders_Since = openprint::Order->find(
+		'company_id in' => $sql,
 				ssi::date_filter( $uri.'?not_ordered_on_start', 'created_on >=' ),
 				ssi::date_filter( $uri.'?not_ordered_on_end', 'created_on <=' ),
 				status_id => \@status_ids,
@@ -1960,13 +1966,13 @@ sub customer_performance {
 			$not_ordered_since{$$Order{company_id}} = 1;
 		}
 	
+
 		foreach my $csr_id ( @csr_ids ) {
 			my $CSR = new openprint::User($csr_id);
 
-			foreach my $Company ( openprint::Company->find(
-						salesrep_id=>$csr_id, order=>'lower(name)',
-						( $session{$uri.'?country'} ? ( country=>$session{$uri.'?country'} ) : () ),
-						) ) {
+			next if ! $Companies_By_CSR{$csr_id};
+
+			foreach my $Company ( @{$Companies_By_CSR{$csr_id}} ) {
 				my $order_total;
 				my $payment_cycle;
 
