@@ -184,7 +184,7 @@ sub host {
       %param = ();
     } elsif ( $param{action} eq 'Destroy' ) {
       $variable{error} .= $Host->destroy();
-      if ( ! $variable{error} ) {
+      if ( !$variable{error} ) {
         $variable{ExternalRedirect} = '/employee/it/hosts.html';
         return;
       } # end if
