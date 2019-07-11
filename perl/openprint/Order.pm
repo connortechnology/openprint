@@ -940,7 +940,7 @@ sub Invoices {
 } # end sub Invoices
 
 sub invoiced_on {
-	my @Invoices = $_[0]->Invoices() ;
+	my @Invoices = $_[0]->Invoices();
 	if ( @Invoices ) {
 		return $Invoices[0]->Invoice()->created_on();
 	} 
