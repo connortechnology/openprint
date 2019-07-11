@@ -107,17 +107,20 @@ sub registration {
     $error .= 'Empty Password.<br/>' if $param{password} eq '';
     $error .= 'Passwords do not match.<br/>' if $param{password} ne $param{verifypassword};
     if ( my $reason = openprint::login::check_password( $param{password} ) ) {
-      $error .= "Password not good enough.  $reason<br/>";
+      $error .= "Password not good enough. $reason<br/>";
     } # end if
   } # end if
 	if ( ( ! $session{company_id} ) and ( $config{UseCaptchaOnRegistration} eq 'Y' ) ) {
 		if ( ! -e $config{SkinPath}.'/images/captcha' ) {
-			$log->error("Needtocreatecaptcha directory!");
+			$log->error('Needtocreatecaptcha directory!');
 		} elsif ( ! $param{MD5SUM} ) {
-			$log->error("No MD5SUM, there must have been a problem creating the png!");
+			$log->error('No MD5SUM, there must have been a problem creating the png!');
 		} else {
 			require Authen::Captcha;
-			my $Captcha = new Authen::Captcha( data_folder => '/tmp/'.$config{db_name}, output_folder => $config{SkinPath}.'/images/captcha');
+			my $Captcha = new Authen::Captcha(
+        data_folder => '/tmp/'.$config{db_name},
+        output_folder => $config{SkinPath}.'/images/captcha'
+      );
 			# Remove spaces, because some people want to put spaces between the characters, etc.
 			$param{Captcha} =~ s/\s//g;
 			my $rc = $Captcha->check_code( @param{'Captcha','MD5SUM'} );
@@ -125,15 +128,15 @@ sub registration {
 				# Passed
 			} elsif ( $rc == 0 ) {
 				# File error, log and carry on
-				$log->error("Captcha file error");
+				$log->error('Captcha file error');
 			} elsif ( $rc == -1 ) {
-				$log->debug("Failed: code expired");
+				$log->debug('Failed: code expired');
 				$error .= 'Captcha validation code has expired.  Please try again.';
 			} elsif ( $rc == -2 ) {
-				$log->debug("Failed: invalid code (not in db)");
+				$log->debug('Failed: invalid code (not in db)');
 				$error .= 'Captcha validation code incorrect.  Please try again.';
 			} elsif ( $rc == -3 ) {
-				$log->debug("Failed: invalid code (does not match token)");
+				$log->debug('Failed: invalid code (does not match token)');
 				$error .= 'Captcha validation code incorrect.  Please try again.';
 			} else {
 				$log->error("unknown return code $rc from Authen::Captcha");
@@ -151,7 +154,7 @@ sub registration {
 	if ( $param{email} ) {
 		# enforce unique email addresses.
 		$param{email} =~ tr/[A-Z]/[a-z]/;
-		if ( openprint::User->find_one(email=>$param{email},'company_id is null'=>0 ) ) {
+		if ( openprint::User->find_one(email=>$param{email},'company_id is null'=>0) ) {
 			$variable{error} = $param{email} .' is already a user!';
 			return;
 		} # end if
@@ -159,7 +162,7 @@ sub registration {
 			$variable{error} = $param{email} .' is already a user, but has been deleted. Please contact us to re-activate your account.';
 			return;
 		} # end if
-		$User = openprint::User->find_one(email=>$param{email},'company_id is null'=>1 );
+		$User = openprint::User->find_one(email=>$param{email},'company_id is null'=>1);
 	} # end if
 
 	my @agents = split(',', $config{UserRegistrationEmail} );
