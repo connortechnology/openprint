@@ -242,11 +242,14 @@ $openprint::log->debug("unsupported type $$POC{type}");
 		}
 	}
 
+if ( 0 ) {
+# We don't really care about the FSC
 	if ( $item->fsc_code() and ( $POC->item() !~ /FSC/ ) ) {
 		push @results, "FSC Mismatch stock is FSC but PO isn't";
 	} elsif ( (!$item->fsc_code()) and $POC->item() =~ /FSC/ ) {
 		push @results, "FSC Mismatch stock isn't FSC but PO is";
 	} # end if
+}
 	return join('<br/>', @results);
 
 } # end sub check

@@ -3,7 +3,6 @@ require openprint::Object;
 require openprint::Host;
 use Data::Dumper;
 
-
 package openprint::Host_Interface;
 our @ISA = qw( openprint::Object );
 use vars qw( $debug $table $serial %find_fields %fields %transforms %defaults );
@@ -143,6 +142,10 @@ sub vendor {
       my $oui = $_[0]{mac};
       $oui =~ s/[^A-Fa-f0-9]//g;
       $oui =~ s/^([A-Fa-f0-9]{6}).*$/${1}000000/;
+			if ( ! $oui ) {
+				$openprint::log->error("Got no oui from $oui $_[0]{mac}");
+				return;
+			}
 
       if ( my $Vendor = openprint::OUI_Vendor->find_one(oui=>$oui) ) {
         $_[0]{vendor} = $$Vendor{vendor_name};
