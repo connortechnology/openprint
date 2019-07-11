@@ -739,7 +739,7 @@ sub save_Paper {
 		} # end if
 		$Paper->calliper( $param{'calliper'.$id} );
 		$Paper->mweight( $param{'mweight'.$id} );
-		$Paper->basis_weight( $param{'basis_weight'.$id} ) if exists $param{'basis_weight'.$id};
+		$Paper->basis_mweight( $param{'basis_weight'.$id} ) if exists $param{'basis_weight'.$id};
 		$Paper->gsm( $param{'gsm'.$id} );
 		if ( my $error = $Paper->save() ) {
 			$variable{error} .= $error;
@@ -2519,7 +2519,6 @@ sub manifest_import {
 
 			while ( my $line = <$io> ) {
 				s/^\s+//, s/\s+$//, s/\s+/ /g, s/\.\s+/\./g for $line;
-				
 
 				if ( $line =~ /(.+)Page\s+(\d+) of (\d+)$/ ) {
 					# Start a new page
