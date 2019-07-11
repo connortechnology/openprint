@@ -162,16 +162,16 @@
 	<tbody>
 		<? echo (
 sub online_html {
-my ( $online, $text ) = @_;
+	my ( $online, $text ) = @_;
 
   if ( defined $online ) {
 
-  return join('',
-      '<span class="', ( $online ? 'online' : 'offline' ),'">',
-      ($text ? $text : ($online ? 'online':'offline')),
-      '</span>'
-      );
-  }
+	return join('',
+			'<span class="', ( $online ? 'online' : 'offline' ),'">',
+			($text ? $text : ($online ? 'online':'offline')),
+			'</span>'
+			);
+	}
   return $text;
 }
 			my $html;
@@ -192,7 +192,7 @@ my ( $online, $text ) = @_;
 						<td class="description"><a href="/employee/it/host.html?host_id=%1$d">%8$s</a></td>
 					</tr>
 					', $Host->id(), $Host->hostname(), $Host->type(),
-					join('<br/>', map { online_html($_->online(), $_->ip()) } $Host->Interfaces() ),
+					join('<br/>', map { online_html($_->online(), $_->ip() . ' ') } $Host->Interfaces() ),
 					join('<br/>', map { online_html($_->online(), $_->mac() ? $_->mac() : ' ') } $Host->Interfaces() ),
 					join('<br/>', map { online_html($_->online()) } $Host->Interfaces() ),
 					join(', ', (
