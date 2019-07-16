@@ -530,7 +530,6 @@ sub paper_details {
 		} # end if
 		$Paper->mweight( $param{mweight} ) if $param{mweight};
 		$Paper->basis_mweight( $param{basis_weight} ) if exists $param{basis_weight};
-$openprint::log->debug("Basis:: " . $Paper->basis_mweight() );
 		if ( exists $param{manufacturers_name} ) {
 			s/^\s+//, s/\s+$//, s/\s+/ /g for $param{manufacturers_name};
 			$Paper->manufacturers_name( $param{manufacturers_name} );
@@ -568,8 +567,10 @@ $openprint::log->debug("Basis:: " . $Paper->basis_mweight() );
 					user_id     =>  $openprint::session{user_id},
 					poindex     =>  undef,
 					instock     =>  $Paper->in_stock(),
-					comment     =>  join(', ', @changes),
 					});
+			if ( @changes ) {
+				(new openprint::Log())->save({Object=>$Paper, action=>'Edit', note=>join(', ', @changes)});
+			}
 		} # end if
 	} elsif ( $param{btnFunction} eq 'Delete' ) {
 		if ( ! ( $variable{error} .= $Paper->delete() ) ) {
@@ -2367,7 +2368,7 @@ sub _manifest_type {
 	$variable{Manifest} = new openprint::Manifest( $param{manifest_id} );
 	if ( $param{action} eq 'Add' ) {
 		$variable{Type} = new openprint::Manifest_Content_Type();
-		$variable{error} .= $variable{Type}->save({'manifest_id'=>$param{manifest_id}});
+		$variable{error} .= $variable{Type}->save({manifest_id=>$param{manifest_id}});
 		$variable{type_id} = $variable{Type}->id();
 	} # end if
 }
