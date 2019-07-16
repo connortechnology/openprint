@@ -2363,15 +2363,6 @@ sub _rfidtag_log {
 sub _rfidtag_log_entries {
 } # end sub _rfidtag_log_entries
 
-sub _manifest_type {
-	$variable{Manifest} = new openprint::Manifest( $param{manifest_id} );
-	if ( $param{action} eq 'Add' ) {
-		$variable{Type} = new openprint::Manifest_Content_Type();
-		$variable{error} .= $variable{Type}->save({'manifest_id'=>$param{manifest_id}});
-		$variable{type_id} = $variable{Type}->id();
-	} # end if
-}
-
 sub _verification_log {
 	$variable{Skid} = new openprint::Skid( $param{skid_id} );
 } # end sub _verification_log
@@ -3260,8 +3251,14 @@ sub _check_lookup_item {
 }
 
 sub _manifest_type {
+	$variable{Manifest} = new openprint::Manifest( $param{manifest_id} );
 	if ( $param{action} ) {
-		if ( $param{action} eq 'confirm_po_content' ) {
+		if ( $param{action} eq 'Add' ) {
+			$variable{Type} = new openprint::Manifest_Content_Type();
+			$variable{error} .= $variable{Type}->save({manifest_id=>$param{manifest_id}});
+			$variable{type_id} = $variable{Type}->id();
+			$log->debug("Type: :" . $variable{Type}->to_string());
+		} elsif ( $param{action} eq 'confirm_po_content' ) {
 			my $Manifest_Content_Type = openprint::Manifest_Content_Type->find_one(id=>$param{manifest_content_type_id});
 			if ( $Manifest_Content_Type ) {
 				$variable{error} .= $Manifest_Content_Type->save({po_content_id=>$param{po_content_id}});
@@ -3290,6 +3287,6 @@ sub _manifest_type {
 			}
 		} # end if
 	}
-} # end sub _stock
+} # end sub _manifest_type
 1;
 __END__
