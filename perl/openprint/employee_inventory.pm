@@ -3259,7 +3259,7 @@ sub _manifest_type {
 			$variable{error} .= $variable{Type}->save({manifest_id=>$param{manifest_id}});
 			$variable{type_id} = $variable{Type}->id();
 		} elsif ( $param{action} eq 'remove' ) {
-			$Type = openprint::Manifest_Content_Type->find(id=>$param{manifest_content_type_id});
+			my $Type = openprint::Manifest_Content_Type->find(id=>$param{manifest_content_type_id});
 			if ( $Type ) {
 				$variable{error} .= $Type->delete();
 			} else {
