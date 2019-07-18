@@ -870,6 +870,7 @@ sub spine_direction {
 
 sub to_svg {
 	my ( $self ) = @_;
+	return if ! $$self{imposition};
 
 	# So let's assume that we might want to print this on an 8.5x11 sheet of paper. The source dimensions might be 28x40"
 
