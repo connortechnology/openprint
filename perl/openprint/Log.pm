@@ -7,7 +7,7 @@ require openprint::Log_Action;
 require openprint::Host;
 
 use vars qw( $debug $table $serial %fields %find_fields %transforms %defaults %types );
-$debug = 0;
+$debug = 1;
 $table = 'logs';
 $serial = 'logs_id_seq';
 %fields = (
@@ -51,7 +51,7 @@ sub Company {
 } # end sub Company
 
 sub Action {
-	$_[0]{Action} = new openprint::Log_Action( $_[0]{action_id} ) if ! $_[0]{Action};
+	$_[0]{Action} = new openprint::Log_Action($_[0]{action_id}) if ! $_[0]{Action};
 	return $_[0]{Action};
 } # end sub Action
 
@@ -69,11 +69,12 @@ sub ip_address {
 	my $Host = $_[0]->Host();
 
 	if ( @_ > 1 ) {
-		if ( ! defined $_[1] ) {
+		if ( !defined $_[1] ) {
 			$_[1] = $ENV{REMOTE_ADDR};
 		} # end if
-		my $Interface = openprint::Host_Interface->find_one( ip=>$_[1] );
-		if ( ! $Interface ) {
+$openprint::log->debug("Getting HI for $_[1] for " . $_[0]->to_string());
+		my $Interface = openprint::Host_Interface->find_one(ip=>$_[1]);
+		if ( !$Interface ) {
 			$Host = new openprint::Host();
 			$Host->save();
 			$Interface = new openprint::Host_Interface();

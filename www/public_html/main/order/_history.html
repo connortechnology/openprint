@@ -44,14 +44,27 @@
 		);
 	} # end if
 
+	$$variable{ReportTotal} = 0;
+	$$variable{ReportBalance} = 0;
+	$$variable{CommissionTotal} = 0;
+	$$variable{CreditCardTotal} = 0;
+
+  $variable{Taxes} = [ openprint::Tax->find(
+      date_filter($uri.'?created_on_end', 'period_start null_or_<='),
+      date_filter($uri.'?created_on_start', 'period_end null_or_>='),
+      order   =>  'period_start,name',
+    ) ];
+	foreach my $Order ( @{$$variable{Orders}} ) {
+		foreach my $Tax ( @{$variable{Taxes}} ) {
+			my $OT = $Order->Tax( $Tax );
+			next if ! $$OT{tax_id};
+			$variable{tax_totals}{$Tax->id()} += $OT->amount();
+		} # end foreach Tax
+	} # end foreach Order
+
 ) ?>
+
 <? if ( @{$$variable{Orders}} ) ?>
-	<? eval ( 
-			$$variable{ReportTotal} = 0;
-			$$variable{ReportBalance} = 0;
-			$$variable{CommissionTotal} = 0;
-			$$variable{CreditCardTotal} = 0;
-			) ?>
 	<div class="unprintable">
 		<br/>
 		Please click on an <b>Order ID #</b> to view an order's details. <br/>Lines in red are waiting for customer approval.<br/>
@@ -67,6 +80,10 @@
 				<th class="Date">Created</th>
 				<th class="Date">Requested For</th>
 				<th class="Status">Status</th>
+				<th class="Price">Subtotal</th>
+				<? echo ( 
+						return join("\n", map { exists $$variable{tax_totals}{$_->id()} ? sprintf('<th class="Price">%s (%d%)</th>', $_->name(), $_->rate() ) : () } @{$$variable{Taxes}} );
+						) ?>
 				<th class="Price">Total</th>
 				<th class="Price">Balance</th>
 				<th class="Price">Commission</th>
@@ -88,8 +105,10 @@
 				} # end if
 				my $csr_commission = $Currency->convert_from($Order->csr_commission());
 				my $credit_card_fee = $Currency->convert_from($Order->credit_card_fee());
+my $subtotal = $Currency->convert_from($Order->subtotal());
 
 				if ( $Order->status() ne 'Cancelled' ) {
+					$$variable{ReportSubTotal} += $subtotal;
 					$$variable{ReportTotal} += $$variable{total};
 					$$variable{ReportBalance} += $$variable{balance};
 					$$variable{CreditCardTotal} += $credit_card_fee;
@@ -109,22 +128,27 @@
 	<td class="Date"><a href="history_details.html?order_id=%2$d">%7$s</a></td>
 	<td class="Status"><a href="history_details.html?order_id=%2$d">%8$s</a></td>
 	<td class="Price"><a href="history_details.html?order_id=%2$d">%9$s</a></td>
-	<td class="Price"><a href="history_details.html?order_id=%2$d">%10$s</a></td>
+%10$s
 	<td class="Price"><a href="history_details.html?order_id=%2$d">%11$s</a></td>
 	<td class="Price"><a href="history_details.html?order_id=%2$d">%12$s</a></td>
+	<td class="Price"><a href="history_details.html?order_id=%2$d">%13$s</a></td>
+	<td class="Price"><a href="history_details.html?order_id=%2$d">%14$s</a></td>
 </tr>
 <tr%1$s>
 	<td colspan="3">&nbsp;</td>
-	<td colspan="8">%13$s</td>
+	<td colspan="%16$d">%15$s</td>
 </tr>`, $rowclass, $Order->id(), $Order->docket(), join('<br/>', map { $_->Invoice()->num() } $Order->Invoices() ), $Order->name(), 
 format_date( $Order->created_on() ),
 join('<br/>', map { $$_{requested_for} ? format_date( $$_{requested_for} ) : () } $Order->Ordered_Projects() ),
 $Order->status(), 
+openprint::Currency::format( $subtotal ),
+join('', map { exists $$variable{tax_totals}{$_->id()} ? sprintf('<td class="Price">%s</td>', openprint::Currency::format($Order->Tax($_)->amount()) ) : () } @{$$variable{Taxes}} ),
 openprint::Currency::format( $$variable{total} ),
 openprint::Currency::format( $$variable{balance} ),
 openprint::Currency::format( $credit_card_fee ),
 openprint::Currency::format( $csr_commission ),
 join('<br/>', map { $_->reference() ? $_->reference() : $_->summary() } $Order->Projects() ),
+9+misc::sum(map { exists $$variable{tax_totals}{$_->id()} ? 1 : 0 } @{$$variable{Taxes}} ),
 );
 		$rowclass = $rowclass ? '' : ' class="colRow"';
 		} # end foreach Order
@@ -132,6 +156,11 @@ join('<br/>', map { $_->reference() ? $_->reference() : $_->summary() } $Order->
 	) ?>
 		<tr class="totals">
 			<td colspan="7" align="right"><b>Report Totals</b></td>
+			<td class="Price"><? echo ( openprint::Currency::format( $$variable{ReportSubTotal} ); ) ?></td>
+			<? echo (
+					return join('', map { exists $$variable{tax_totals}{$_->id()} ? sprintf('<td class="Price">%s</td>', openprint::Currency::format( $$variable{tax_totals}{$_->id()} ) ) : () } @{$$variable{Taxes}} );
+					) ?>
+
 			<td class="Price"><? echo ( openprint::Currency::format( $$variable{ReportTotal} ); ) ?></td>
 			<td class="Price"><? echo ( openprint::Currency::format( $$variable{ReportBalance} ); ) ?></td>
 			<td class="Price"><? echo ( openprint::Currency::format( $$variable{CreditCardTotal} ); ) ?></td>
