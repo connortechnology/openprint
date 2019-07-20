@@ -223,7 +223,8 @@ sub host {
         } else {
           $variable{error} .= "Error running wakeonlan -i $$I{ip} $$I{mac}<br/>";
         }
-      } # end foraech
+      } # end foreach
+      $variable{ExternalRedirect} = $Host->url();
     } elsif ( $param{action} eq 'GEOLookup' ) {
       foreach my $I ( $Host->Interfaces() ) {
         if ( ! $I->ip() ) {
