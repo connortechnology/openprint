@@ -268,8 +268,8 @@ while(1) {
 					$log->debug("$ip not in host_counts, adding it");
 					my $Host;
           # May return a subnet
-					my $HI = openprint::Host_Interface->find_one('ip >>'=>$ip);
-					if ( ! $HI ) {
+					my $HI = openprint::Host_Interface->find_one('ip >>='=>$ip);
+					if ( !$HI ) {
 						$HI = new openprint::Host_Interface();
 						$Host = new openprint::Host();
 						$Host->save({hostname=>$hostname});
