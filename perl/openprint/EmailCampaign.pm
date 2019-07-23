@@ -299,6 +299,10 @@ sub Template {
 	return new openprint::EmailTemplate( $_[0]->template_id() );
 } # end sub Template
 
+sub link_to {
+return sprintf('<a href="/marketing/email_campaign.html?campaign_id=%d">%s</a>', $_[0]{id}, $_[0]{name});
+}
+
 1;
 
 __END__
