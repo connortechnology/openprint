@@ -271,6 +271,7 @@ sub category_edit {
 	return if ! $param{btnFunction};
 
 	if ( $param{btnFunction} eq 'Save' ) {
+    $param{parent_ids} = $openprint::Product_Category::defaults{parent_ids} if ! exists $param{parent_ids};
 		my @changes = $Category->changes(\%param);
 		if ( @changes ) {
 			$variable{error} = $Category->save(\%param);
