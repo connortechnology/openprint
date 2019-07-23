@@ -27,7 +27,7 @@ $table = 'Product_Categories';
 );
 %defaults = (
 		deleted					=>	0,
-		parent_ids			=>	'[]',
+		parent_ids			=>	undef,
 		projecttype_id	=>	undef,
 		sorting					=>	undef,
 		album_id				=>	undef,
@@ -94,9 +94,9 @@ sub parent_ids {
   my $self = shift;
   if ( @_ ) {
     if ( ref $_[0] eq 'ARRAY' ) {
-      $$self{parent_ids} = map { $_ =~ /(\d+)/ } @{$_[0]};
+      $$self{parent_ids} = [ map { $_ =~ /(\d+)/ } @{$_[0]} ];
     } else {
-      $$self{parent_ids} = map { $_ =~ /(\d+)/ } @_;
+      $$self{parent_ids} = [ map { $_ =~ /(\d+)/ } @_ ];
     }
   }
   return $$self{parent_ids};
@@ -104,7 +104,6 @@ sub parent_ids {
 
 sub Parents {
 	if ( ! $_[0]{Parents} ) {
-    $openprint::log->debug(join(',', @{$_[0]{parent_ids}}). ' : ' . @{$_[0]{parent_ids}});
 		$_[0]{Parents} = ($_[0]{parent_ids} and @{$_[0]{parent_ids}}) ? [ openprint::Product_Category->find('id <@'=>$_[0]{parent_ids}) ] : [];
 	}
 	return @{$_[0]{Parents}};
