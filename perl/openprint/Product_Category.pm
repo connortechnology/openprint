@@ -89,9 +89,23 @@ sub url_to {
 sub link_to {
 	return sprintf('<a href="/product/category_view.html?category_id=%d">%s</a>', $_[0]{id}, @_ > 1 ? $_[1] : $_[0]{name} );
 }
+
+sub parent_ids {
+  my $self = shift;
+  if ( @_ ) {
+    if ( ref $_[0] eq 'ARRAY' ) {
+      $$self{parent_ids} = map { $_ =~ /(\d+)/ } @{$_[0]};
+    } else {
+      $$self{parent_ids} = map { $_ =~ /(\d+)/ } @_;
+    }
+  }
+  return $$self{parent_ids};
+}
+
 sub Parents {
 	if ( ! $_[0]{Parents} ) {
-		$_[0]{Parents} = ($_[0]{parent_ids} and @{$_[0]{parent_ids}} ) ? [ openprint::Product_Category->find( 'id <@'=>$_[0]{parent_ids} ) ] : [];
+    $openprint::log->debug(join(',', @{$_[0]{parent_ids}}). ' : ' . @{$_[0]{parent_ids}});
+		$_[0]{Parents} = ($_[0]{parent_ids} and @{$_[0]{parent_ids}}) ? [ openprint::Product_Category->find('id <@'=>$_[0]{parent_ids}) ] : [];
 	}
 	return @{$_[0]{Parents}};
 }
