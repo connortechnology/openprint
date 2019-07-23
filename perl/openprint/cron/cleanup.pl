@@ -195,11 +195,27 @@ $openprint::log->debug("Updating wpsi (old: $old_wpsi, new: $$Paper{wpsi}) for "
 
 if ( 1 ) {
 my $log_count = 0;
-foreach my $Log ( openprint::Log->find('date_time <='=>sprintf('%.4d-%.2d-%.2d', Date::Calc::Add_Delta_Days( Date::Calc::Today(), -2*365 ) ) ) ) {
+# Delete all logs more than 2 years
+foreach my $Log ( openprint::Log->find('date_time <='=>sprintf('%.4d-%.2d-%.2d 00:00:00',
+				Date::Calc::Add_Delta_Days( Date::Calc::Today(), -2*365 ) ) )
+		) {
 	$Log->delete();
 	$log_count += 1;
 } # end foreach Log
 $log->debug("Deleted $log_count log entries");
+
+$log_count = 0;
+# Delete all WAP connections logs more than 7days
+foreach my $Log (
+		openprint::Log->find(
+			'date_time <='=>sprintf('%.4d-%.2d-%.2d', Date::Calc::Add_Delta_Days(Date::Calc::Today(), -7)),
+			action	=>	'Update',
+			'note like'	=> 'Connection to %', )
+		) {
+	$Log->delete();
+	$log_count += 1;
+} # end foreach Log
+$log->debug("Deleted $log_count log entries for connection updates");
 }
 
 #if ( $config{AssetPath} ) {
