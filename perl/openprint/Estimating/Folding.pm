@@ -1209,7 +1209,8 @@ $openprint::log->debug("Has a fold, doing extra checks") if DEBUG;
 									$$specs{alert} .= "Warning: $failure_reason<br/>";
 								}
 
-								$Breakdown .= sprintf( '%s: %d*%dout %s layout: %sx%s StockWeight %.2fgsm calliper:%.4f<br/>', $$sig_specs{rdbTemplateType}, @$Imposition{'quantity','imposition'},
+								$Breakdown .= sprintf( '%s: %d*%dout %s layout: %sx%s StockWeight %.2fgsm calliper:%.4f<br/>',
+										$$sig_specs{rdbTemplateType}, @$Imposition{'quantity','imposition'},
 										$openprint::Imposition::Orientations{$$Imposition{image_orientation}},
 										@$Imposition{'layout_width', 'layout_height'},
 										@$Paper{'gsm', 'calliper'} );
@@ -1233,7 +1234,8 @@ $openprint::log->debug("Got Fold: " . $Fold->to_string() ) if DEBUG;
 
 					} else { # No template, might be a book
 						#$Imposition->display("Trying: $$Equipment{name}") if DEBUG;
-						$openprint::log->debug(sprintf('Trying %dx%d=%dout spreads: %dx%d=%d %sx%s',@$Imposition{'columns','rows','imposition','spread_columns','spread_rows','spreads','image_width','image_height'} ).' on ' . $$Equipment{name}) if DEBUG;
+						$openprint::log->debug(sprintf('Trying %dx%d=%dout spreads: %dx%d=%d %sx%s',
+									@$Imposition{'columns','rows','imposition','spread_columns','spread_rows','spreads','image_width','image_height'} ).' on ' . $$Equipment{name}) if DEBUG;
 
 #$Imposition->display('fitting');
 						# See if it fits

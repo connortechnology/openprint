@@ -646,9 +646,17 @@ $log->debug("Insert qty: $$specs{txtInsertQuantity}");
 		} else {
 			@$specs{'Width','Height'} = @$printing_specs{'txtFinalWidth','txtFinalHeight'};
 		} # end if
-	} elsif ( ( $$printing_specs{txtFinalWidth} == $$printing_specs{txtWidth} ) and ( $$printing_specs{txtFinalHeight} != $$printing_specs{txtHeight} ) ) {
+	} elsif (
+			( $$printing_specs{txtFinalWidth} == $$printing_specs{txtWidth} )
+			and
+			( $$printing_specs{txtFinalHeight} != $$printing_specs{txtHeight} )
+			) {
 		@$specs{'Width','Height'} = @$printing_specs{'txtFinalHeight','txtFinalWidth'};
-	} elsif ( ( $$printing_specs{txtFinalWidth} != $$printing_specs{txtWidth} ) and ( $$printing_specs{txtFinalHeight} == $$printing_specs{txtHeight} ) ) {
+	} elsif (
+			( $$printing_specs{txtFinalWidth} != $$printing_specs{txtWidth} )
+			and
+			( $$printing_specs{txtFinalHeight} == $$printing_specs{txtHeight} )
+			) {
 		@$specs{'Width','Height'} = @$printing_specs{'txtFinalWidth','txtFinalHeight'};
 	} else {
 		@$specs{'Width','Height'} = @$printing_specs{'txtFinalWidth','txtFinalHeight'};
