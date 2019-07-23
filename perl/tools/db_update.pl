@@ -2311,6 +2311,10 @@ if ( ! sets::isin( 'product_categories', \@tables ) ) {
 	if ( ! exists $$data{deleted} ) {
 		$log->debug("Add deleted to Product_Categories");
 		$dbh->do('ALTER TABLE Product_Categories ADD deleted BOOLEAN NOT NULL default false') or die $dbh->errstr();
+  } elsif ( $$data{deleted}{is_nullable} ) {
+		$log->debug("Add deleted not null to Product_Categories");
+		$dbh->do('UPDATE Product_Categories SET deleted = false') or die $dbh->errstr();
+		$dbh->do('ALTER TABLE Product_Categories ALTER deleted SET NOT NULL') or die $dbh->errstr();
 	}
 	if ( ! exists $$data{sorting} ) {
 		$log->debug("Add sorting to Product_Categories");
