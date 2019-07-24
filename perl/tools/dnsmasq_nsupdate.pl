@@ -87,6 +87,9 @@ if ( @Interfaces ) {
 				(new openprint::Log())->save( { Object=>$Host, note=>"IP Address changed from $$Interface{ip} to $ip" . $Interface->Host()->link_to(), action=>'IP Changed' } );
 				$_ = $Interface->save({ip=>$ip});
 				$log->error($_) if $_;
+# Update updated_on
+				$_ = $Host->save();
+				$log->error($_) if $_;
 			} else {
 				$log->debug("IP unchanged for $mac => $ip => $hostname");
 			} # end if
