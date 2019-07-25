@@ -37,6 +37,7 @@ $serial = 'emailcampaigns_id_seq';
 	'updated_on'	=>	'updated_on',
 	'template_id'	=>	'template_id',
 	deleted			=>	'deleted',
+user_id				=>	'user_id',
 );
 
 %defaults = (
@@ -49,6 +50,7 @@ $serial = 'emailcampaigns_id_seq';
 	'timestosend'	=>	undef,
 	'template_id'	=>	undef,
 	deleted			=>	0,
+user_id			=>	undef,
 );
 
 sub destroy {
@@ -303,6 +305,13 @@ sub link_to {
 return sprintf('<a href="/marketing/email_campaign.html?campaign_id=%d">%s</a>', $_[0]{id}, $_[0]{name});
 }
 
-1;
+sub can_view {
+	return 1 if $openprint::session{user_type} eq 'A';
+	return 1 if ! $_[0]{user_id};
+	return 1 if $openprint::session{user_id} == $_[0]{user_id};
+	return 1 if ! $_[0]{id};
+	return 0;
+}
 
+1;
 __END__

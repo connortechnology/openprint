@@ -15,6 +15,7 @@
 <?Results?><br/>
 <hr/>
 <? endif ( $$variable{Results} ) ?>
+<?if($$variable{Campaign}->can_view())?>
 <form id="f1" name="f1" action="email_campaign.html<? echo ( $$variable{Campaign}->id() ? '?campaign_id='.$$variable{Campaign}->id() : '' ) ?>" method="post">
 		<p class="buttons">
 			<? echo ( join('',
@@ -33,6 +34,10 @@
 	<fieldset>
 		<ul>
 		<li><label>ID</label><? echo ( $$variable{Campaign}->id() ) ?></li>
+		<li><label>Owner</label><?echo(
+				ssi::select(openprint::User->dropdown(company_id=>$openprint::User->company_id()), $$variable{Campaign}->user_id(), { name=>'user_id',prepend=>['','None'] } );
+) ?>
+		</li>
 		<li><label>Name</label><input type="text" name="name" value="<? echo ( $$variable{Campaign}->name() ) ?>" /></li>
 		<li><label>Query</label>
 		<textarea name="query" rows="<? echo ( ssi::count_lines($$variable{Campaign}->query()); ) ?>" onkeyup="textarea_resize(this);" ><? echo ($$variable{Campaign}->query()) ?></textarea>
@@ -79,3 +84,4 @@ datetime_select( 'nextrun', $$variable{Campaign}->nextrun() ? $$variable{Campaig
 <? if ( $$variable{Campaign}{id} ) ?>
 <? echo ( include_logs( $$variable{Campaign} ); ) ?>
 <? endif ( $$variable{Campaign}{id} ) ?>
+<?endif($$variable{Campaign}->can_view())?>

@@ -14,5 +14,6 @@ CREATE TABLE EmailCampaigns (
 	created_on	TIMESTAMP WITH TIME ZONE NOT NULL default now(),
 	updated_on	TIMESTAMP WITH TIME ZONE NOT NULL default now(),
 	nextrun		TIMESTAMP WITH TIME ZONE,
+	user_id		integer, FOREIGN KEY (user_id) REFERENCES Users (id),
 	PRIMARY KEY (id)
 );

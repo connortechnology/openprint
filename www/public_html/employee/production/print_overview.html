@@ -322,7 +322,8 @@
 			'starttime >='	=> $parser->format_datetime( $start_dt ),
 		);
 
-		my @Projects = openprint::Project->find( id=>[ sets::union( map { $$_{project_id} ? $$_{project_id} : () } @Jobs ) ] ) if @Jobs;
+		my @project_ids = sets::union( map { $$_{project_id} ? $$_{project_id} : () } @Jobs ) if @Jobs;
+		my @Projects = openprint::Project->find( id=>\@project_ids ) if @project_ids;
 		my @Companies = openprint::Company->find( id=>[ sets::union( map { $$_{company_id} ? $$_{company_id} : () } @Projects ) ] ) if @Projects;
 
 		# Why does this need to be ACCESS exclusive?  SOmething that changes it should be.... perhaps the idea is that i any canges are in progress, we want to wait for them to finish, but if changes are happening, then any lock we try to get will hol... so this just prevent concurrent views
