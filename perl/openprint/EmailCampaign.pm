@@ -306,10 +306,22 @@ return sprintf('<a href="/marketing/email_campaign.html?campaign_id=%d">%s</a>',
 }
 
 sub can_view {
-	return 1 if $openprint::session{user_type} eq 'A';
-	return 1 if ! $_[0]{user_id};
-	return 1 if $openprint::session{user_id} == $_[0]{user_id};
-	return 1 if ! $_[0]{id};
+	if ( $openprint::session{user_type} eq 'A' ) {
+		$openprint::log->debug("Can view because admin");
+		return 1 ;
+	}
+	if ( ! $_[0]{user_id} ) {
+		$openprint::log->debug("Can view because no user_Id assigned");
+		return 1;
+	}
+if ( $openprint::session{user_id} == $_[0]{user_id} ) {
+		$openprint::log->debug("Can view because user_Id matches");
+	return 1;
+}
+ if ( ! $_[0]{id} ) {
+		$openprint::log->debug("Can view because no Id");
+	return 1;
+}
 	return 0;
 }
 
