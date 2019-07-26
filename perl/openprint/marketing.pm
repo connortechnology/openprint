@@ -111,6 +111,7 @@ sub email_campaign {
 		$variable{error} .= $Campaign->save({name=>'Copy of '.$$Campaign{name}});
     } elsif ( $param{btnFunction} eq 'Test' ) {
         $variable{information} = $Campaign->test();
+				$variable{ExternalRedirect} = $Campaign->url_to();
     } elsif ( $param{btnFunction} eq 'Download Recipients' ) {
         my @header = ( 'Company','Name','Email','Phone','Last Sent On','Number of Times Sent');
         my @data;
