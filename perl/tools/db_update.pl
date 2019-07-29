@@ -5797,6 +5797,11 @@ if ( ! sets::isin('oui_vendors', \@tables ) ) {
 	$dbh->do( misc::load_file( $log, q{../../sql/OUI_Vendors.sql}) );
 	die if $dbh->errstr();
 }
+if ( ! sets::isin('expense_rules', \@tables ) ) {
+	$log->debug("Adding expense_rules");
+	$dbh->do( misc::load_file( $log, q{../../sql/Expense_Rules.sql}) );
+	die if $dbh->errstr();
+}
 
 print "done.\n";
 $dbh->disconnect();
