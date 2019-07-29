@@ -72,13 +72,16 @@ sub Type {
 
 sub type {
 	if ( @_ > 1 ) {
-		my $Type = openprint::PurchaseOrder_ContentType->find_one('name'=>$_[1]);
+		my $Type = openprint::PurchaseOrder_ContentType->find_one(name=>$_[1]);
 		if ( $Type ) {
 			$_[0]{type_id} = $Type->id();
 			return $Type->name();
 		} # end if
 	} # end if
-	return new openprint::PurchaseOrder_ContentType( $_[0]{type_id} )->name();
+	if ( ! $_[0]{type} ) {
+		$_[0]{type} = $_[0]->Type()->name();
+	}
+	return $_[0]{type};
 } # end sub type
 
 sub Department {
@@ -181,12 +184,75 @@ sub mprice {
 	return Math::Round::nearest(0.01, $_[0]{price} * $mweight / 100 );
 } # end sub mprice
 
+sub weight {
+	return if $_[0]->type() ne 'Sheet Stock';
+	my ( $mweight, $type, $name ) = $_[0]->item() =~ /^([\d\.]+)M *([\w\/]*) *(.*)$/;
+	return Math::Round::nearest(0.01, $_[0]{qty} * $mweight / 1000);
+}
+
 sub Manifest_Content_Type {
 	if ( !  $_[0]{Manifest_Content_Type} ) {
 		$_[0]{Manifest_Content_Type} = openprint::Manifest_Content_Type->find_one( po_content_id=>$_[0]{id} );
 	} 
 	return $_[0]{Manifest_Content_Type};
 }
+sub price_units {
+	my $self = shift;
+	$$self{price_units} = shift if @_;
+	if ( ! $$self{price_units} ) {
+		if ( $self->type() eq 'Sheet Stock' or $self->type() eq 'Roll Stock' ) {
+			$$self{price_units}  = '/100lb';
+		}
+	}
+	return $$self{price_units};
+}
+
+sub check {
+	my ( $POC, $item ) = @_;
+	my @results;
+	if ( $POC->type() eq 'Sheet Stock' ) {
+		push @results, "PO has wrong stock format $$item{type} != $$POC{type}" if $$item{type} ne 'Sheet';
+		my ( $mweight, $type, $name ) = $POC->item() =~ /^([\d\.]+)M *([\w\/]*) *(.*)$/;
+		if ( $name =~ /(\d+)x(\d+)/i ) {
+			my ( $width, $height ) = ( $1, $2 );
+			push @results, "PO width does not match: $$item{width} != $width" if $$item{width} != $width;
+			push @results, "PO height does not match: $$item{height} != $height" if $$item{height} != $height;
+		} else {
+			$openprint::log->warn("No sheet size for $$POC{item} in $name");
+		}
+		push @results, "PO has Wrong mweight! $$item{mweight} != $mweight" if abs($item->mweight() - $mweight) > 1;
+$openprint::log->debug("POC Matches $$POC{item} == " . $item->to_string() );
+	} elsif ( $POC->type() eq 'Roll Stock' ) {
+		push @results, "PO has wrong stock format $$item{type} != $$POC{type}" if $$item{type} ne 'Roll';
+		my ( $mweight, $type, $name ) = $POC->item() =~ /^([\d\.]+)M *([\w\/]*) *(.*)$/;
+$openprint::log->debug("POC Matches $$POC{item} == " . $item->to_string() );
+	} else {
+$openprint::log->debug("unsupported type $$POC{type}");
+	}
+
+	my ( $caliper ) = $POC->item() =~ /(\d+)PT/i;
+	if ( $caliper ) {
+		if ( $item->weight() =~ /(\d+PT)/i ) {
+			if ( $1 != $caliper ) {
+				push @results, "Caliper doesn't match $caliper != $1";
+			} # end if
+		} elsif ( $item->calliper() and ( $item->calliper() != $caliper ) ) {
+			push @results, "Caliper doesn't match $caliper != $$item{calliper}";
+			next;
+		}
+	}
+
+if ( 0 ) {
+# We don't really care about the FSC
+	if ( $item->fsc_code() and ( $POC->item() !~ /FSC/ ) ) {
+		push @results, "FSC Mismatch stock is FSC but PO isn't";
+	} elsif ( (!$item->fsc_code()) and $POC->item() =~ /FSC/ ) {
+		push @results, "FSC Mismatch stock isn't FSC but PO is";
+	} # end if
+}
+	return join('<br/>', @results);
+
+} # end sub check
 
 1;
 __END__

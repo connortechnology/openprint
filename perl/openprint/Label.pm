@@ -25,6 +25,7 @@ $serial = 'labels_id_seq';
 );
 %find_fields = (
 	company_id	=>	'(SELECT DISTINCT company_id FROM Projects WHERE Projects.lngDocketNumber=labels.docket)',
+	type				=>	'(SELECT name FROM labeltypes where labeltypes.id=type_id)',
 );
 
 %transforms = (
@@ -183,7 +184,7 @@ $log->debug("Have $ref");
 
 			$$self{reference} = $ref;
 } else {
-$log->debug("No Have ref");
+$log->debug("No Have reference in label");
 		}
 	}
 	return $$self{reference};

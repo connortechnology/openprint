@@ -530,7 +530,6 @@ sub paper_details {
 		} # end if
 		$Paper->mweight( $param{mweight} ) if $param{mweight};
 		$Paper->basis_mweight( $param{basis_weight} ) if exists $param{basis_weight};
-$openprint::log->debug("Basis:: " . $Paper->basis_mweight() );
 		if ( exists $param{manufacturers_name} ) {
 			s/^\s+//, s/\s+$//, s/\s+/ /g for $param{manufacturers_name};
 			$Paper->manufacturers_name( $param{manufacturers_name} );
@@ -568,8 +567,10 @@ $openprint::log->debug("Basis:: " . $Paper->basis_mweight() );
 					user_id     =>  $openprint::session{user_id},
 					poindex     =>  undef,
 					instock     =>  $Paper->in_stock(),
-					comment     =>  join(', ', @changes),
 					});
+			if ( @changes ) {
+				(new openprint::Log())->save({Object=>$Paper, action=>'Edit', note=>join(', ', @changes)});
+			}
 		} # end if
 	} elsif ( $param{btnFunction} eq 'Delete' ) {
 		if ( ! ( $variable{error} .= $Paper->delete() ) ) {
@@ -642,7 +643,12 @@ sub save_Paper {
 			$weight .= 'lb' if ! ( $param{'weight'.$id} =~ /lb/ );
 		} # end if
 	} elsif ( $param{'calliper'.$id} ) {
-		$weight = ($param{'calliper'.$id}*1000).'PT';
+		if ( $param{'calliper'.$id} > 1 ) {
+			$weight = $param{'calliper'.$id}.'PT';
+			$param{'calliper'.$id} /= 1000;
+		} else {
+			$weight = ($param{'calliper'.$id}*1000).'PT';
+		}
 	} # end if
 
 	my @Papers = openprint::Paper->find(
@@ -670,7 +676,7 @@ sub save_Paper {
 			( $param{'colour'.$id} ? ( colour	=>	$param{'colour'.$id} ) : () ),
 			( $param{'weight_id'.$id} ? ( weight_id =>	$param{'weight_id'.$id} ) : () ),
 			( $param{'Weight'.$id} ? ( 'weight_id' =>	$param{'Weight'.$id} ) : () ),
-			( $weight ? ( weight	=>	$weight ) : () ),
+			( $weight ? ( weight=>$weight ) : () ),
 # We might 
 			( $param{'material_id'.$id} ? ( material_id =>	$param{'material_id'.$id} ) : () ),
 			( $param{'material'.$id} ? ( material	=>	$param{'material'.$id} ) : () ),
@@ -729,10 +735,12 @@ sub save_Paper {
 		} # end if
 		if ( $weight =~ /^([\d\.]+)lb$/ ) {
 			$Paper->basis_mweight( $1 * 2 );
+		} else {
+			$Paper->basis_mweight( $param{'basis_weight'.$id} );
 		} # end if
 		$Paper->calliper( $param{'calliper'.$id} );
 		$Paper->mweight( $param{'mweight'.$id} );
-		$Paper->basis_weight( $param{'basis_weight'.$id} ) if exists $param{'basis_weight'.$id};
+		$Paper->basis_mweight( $param{'basis_weight'.$id} ) if exists $param{'basis_weight'.$id};
 		$Paper->gsm( $param{'gsm'.$id} );
 		if ( my $error = $Paper->save() ) {
 			$variable{error} .= $error;
@@ -1665,7 +1673,8 @@ sub save_Manifest {
 	my ( $Manifest ) = @_;
 
 	my $error;
-	$Manifest->received_on( join('-', @param{'received_on_year','received_on_month','received_on_day'} ) );
+	
+	$param{received_on} = join('-', @param{'received_on_year','received_on_month','received_on_day'});
 
 	my $ac = sql::start_transaction( $dbh );
 	$dbh->do( 'LOCK TABLE companies IN SHARE ROW EXCLUSIVE MODE' ) or $log->error( DBI->errstr );
@@ -1692,11 +1701,16 @@ sub save_Manifest {
 	$ac = sql::start_transaction( $dbh );
 	$dbh->do( 'LOCK TABLE Manifests IN EXCLUSIVE MODE' ) or $log->error( DBI->errstr );
 
-	$error .= $Manifest->save( \%param );
 	my $Log = new openprint::Log();
-	$Log->save({object_type => 'openprint::Manifest', object_id=>$$Manifest{id}, action=>'Save Manifest',user_id=>$session{user_id},company_id=>$session{company_id} });
+	$Log->set({Object=>$Manifest, action=>'Save Manifest'});
 
-	my @Types = openprint::Manifest_Content_Type->find( manifest_id=>$Manifest->id());
+	my @changes = $Manifest->changes(\%param);
+	if ( @changes ) {
+		$error .= $Manifest->save( \%param );
+		$Log->save({ note=>'Changes: ' . join('=>', @changes) });
+	}
+
+	my @Types = openprint::Manifest_Content_Type->find(manifest_id=>$Manifest->id());
 	if ( ! @Types ) {
 		# It's an empty, brand new manifest
 		my $Type = new openprint::Manifest_Content_Type();
@@ -1705,7 +1719,7 @@ sub save_Manifest {
 		return $error;
 	} # end if
 
-	foreach my $Type ( openprint::Manifest_Content_Type->find( manifest_id=>$Manifest->id()) ) {
+	foreach my $Type ( @Types ) {
 		my $Paper = save_Paper('-'.$Type->id());
 		
 		my %data = (
@@ -1719,7 +1733,12 @@ sub save_Manifest {
 		);
 		$data{cost} = $param{'cost-'.$Type->id()} if exists $param{'cost-'.$Type->id()};
 		$data{supplier_invoice} = $param{'supplier_invoice-'.$Type->id()} if exists $param{'supplier_invoice-'.$Type->id()};
-		$variable{error} .= $Type->save(\%data);
+
+		@changes = $Type->changes(\%data);
+		if ( @changes ) {
+			$Log->save({ note=>$$Log{note} . '<br/>Type: ' . join('=>', @changes) });
+			$variable{error} .= $Type->save(\%data) if @changes;
+		}
 
 		my $NewMC = new openprint::ManifestContent();
 		$NewMC->set({manifest_id=>$$Manifest{id}, type_id=>$$Type{id}});
@@ -1913,7 +1932,7 @@ sub manifest {
 	} elsif ( $param{btnFunction} eq 'Save' ) {
 		$variable{error} = save_Manifest( $Manifest );
 		if ( ! $variable{error} ) {
-			$variable{ExternalRedirect} = '/employee/inventory/manifest.html?manifest_id='.$Manifest->id();
+			$variable{ExternalRedirect} = '/employee/inventory/manifest_view.html?manifest_id='.$Manifest->id();
 		} # end if
 	} elsif ( $param{btnFunction} eq 'ChangePaper' ) {
 		foreach my $Type ( openprint::Manifest_Content_Type->find( manifest_id=>$Manifest->id()) ) {
@@ -2345,15 +2364,6 @@ sub _rfidtag_log {
 sub _rfidtag_log_entries {
 } # end sub _rfidtag_log_entries
 
-sub _manifest_type {
-	$variable{Manifest} = new openprint::Manifest( $param{manifest_id} );
-	if ( $param{action} eq 'Add' ) {
-		$variable{Type} = new openprint::Manifest_Content_Type();
-		$variable{error} .= $variable{Type}->save({'manifest_id'=>$param{manifest_id}});
-		$variable{type_id} = $variable{Type}->id();
-	} # end if
-}
-
 sub _verification_log {
 	$variable{Skid} = new openprint::Skid( $param{skid_id} );
 } # end sub _verification_log
@@ -2501,7 +2511,6 @@ sub manifest_import {
 
 			while ( my $line = <$io> ) {
 				s/^\s+//, s/\s+$//, s/\s+/ /g, s/\.\s+/\./g for $line;
-				
 
 				if ( $line =~ /(.+)Page\s+(\d+) of (\d+)$/ ) {
 					# Start a new page
@@ -3242,5 +3251,49 @@ sub _select_stock {
 sub _check_lookup_item {
 }
 
+sub _manifest_type {
+	$variable{Manifest} = new openprint::Manifest( $param{manifest_id} );
+	if ( $param{action} ) {
+		if ( $param{action} eq 'Add' ) {
+			$variable{Type} = new openprint::Manifest_Content_Type();
+			$variable{error} .= $variable{Type}->save({manifest_id=>$param{manifest_id}});
+			$variable{type_id} = $variable{Type}->id();
+		} elsif ( $param{action} eq 'remove' ) {
+			my $Type = openprint::Manifest_Content_Type->find(id=>$param{manifest_content_type_id});
+			if ( $Type ) {
+				$variable{error} .= $Type->delete();
+			} else {
+				$variable{error} .= 'Manifest Content not found.<br/>';
+			}
+		} elsif ( $param{action} eq 'confirm_po_content' ) {
+			my $Manifest_Content_Type = openprint::Manifest_Content_Type->find_one(id=>$param{manifest_content_type_id});
+			if ( $Manifest_Content_Type ) {
+				$variable{error} .= $Manifest_Content_Type->save({po_content_id=>$param{po_content_id}});
+				my $POC = $Manifest_Content_Type->PurchaseOrder_Content();
+				(new openprint::Log())->save({
+						Object=>$Manifest_Content_Type->Manifest(),
+						action=>'Edit',
+						note=>'Confirm PO Content '.$POC->item(),
+						});
+
+			} else {
+				$variable{error} .= "Manifest Content Type not found for id=.$param{manifest_content_type_id}<br/>";
+			}
+		} elsif ( $param{action} eq 'unconfirm_po_content' ) {
+			my $Manifest_Content_Type = openprint::Manifest_Content_Type->find_one(id=>$param{manifest_content_type_id});
+			if ( $Manifest_Content_Type ) {
+				my $POC = $Manifest_Content_Type->PurchaseOrder_Content();
+				$variable{error} .= $Manifest_Content_Type->save({po_content_id=>undef});
+				(new openprint::Log())->save({
+						Object=>$Manifest_Content_Type->Manifest(),
+						action=>'Edit',
+						note=>'Unconfirm PO Content '.$POC->item(),
+						});
+			} else {
+				$variable{error} .= "Manifest Content Type not found for id=.$param{manifest_content_type_id}<br/>";
+			}
+		} # end if
+	}
+} # end sub _manifest_type
 1;
 __END__

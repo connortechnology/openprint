@@ -348,6 +348,7 @@ $log->debug("No serial") if $debug;
 				$command =~ s/\?/\%s/g;
 				$log->debug('SQL DEBUG: ('.sprintf($command, map { defined $_ ? $_ : 'undef' } ( @sql{@keys} ) ).'):' );
 			} # end if
+			(new openprint::Log())->save({Object=>$self, action=>'Created'}) if ! $type =~ /Log/i;
 		} else {
 			delete $sql{created_on};
 			my @keys = keys %sql;
@@ -624,6 +625,8 @@ my $add_placeholder = ( ! ( $field =~ /\?/ ) ) ?  1 : 0;
 	} elsif ( sets::isin( $operator, [ 'in', 'not in' ] ) ) {
 		if ( ref $value eq 'ARRAY' ) {
 			return ( $field.$type.' ' . $operator . ' ('. join(',', map { '?' } @{$value} ) . ')', @{$value} );
+		} elsif ( ref $value eq 'HASH' ) {
+			return ( $field.$type.' ' . $operator . ' ('.$$value{sql}.')', @{$$value{values}} );
 		} else {
 			return ( $field.$type.' ' . $operator . ' (?)', $value );
 		} # end if
@@ -941,7 +944,7 @@ $openprint::log->error("Wasting time looking for objects in find $k $search{$k}"
 			( $sql{limit} ? ( 'LIMIT', $sql{limit}) : () ),
 			( $sql{offset} ? ( 'OFFSET', $sql{offset} ) : () ),
 	);	
-	#$log->debug("Loading Debug:$debug $object_type ($sql) (".join(',', map { ref $_ eq 'ARRAY' ? join(',', @{$_}) : $_ } @values).')' ) if $debug;
+	$log->debug("Loading Debug:$debug $object_type ($sql{sql}) (".join(',', map { ref $_ eq 'ARRAY' ? join(',', @{$_}) : $_ } @values).')' ) if $debug;
 	return \%sql;
 } # end sub find_sql
 
@@ -972,12 +975,14 @@ sub find {
 		$local_dbh = $openprint::dbh if ! $local_dbh;
 	} # end if
 
-	my $sql = find_sql( $object_type, $params);
+	my $sql = find_sql($object_type, $params);
 
 	my $do_cache = $$sql{columns} ne '*' ? 0 : 1;
 	my $cache_field = ${$object_type.'::cache_field'} if $do_cache;
 	if ( ( 1 == scalar keys %{$$sql{used_fields}} ) and $$params{id} ) {
 		if ( $cache{$config{db_name}}{$object_type}{$$params{id}} ) {
+	my ( $caller, undef, $line ) = caller;
+$log->debug("returning " . $name_cache{$object_type}{$$params{$cache_field}} . " to $caller:$line for $object_type $cache_field $$params{$cache_field}") if DEBUG_ALL;
 			return ( $cache{$config{db_name}}{$object_type}{$$params{id}} );
 		}
 	} elsif ( $cache_field and $$params{$cache_field} and ( 1 == scalar keys %{$$sql{used_fields}} ) ) {
@@ -1029,7 +1034,7 @@ $log->error("returning nothing for $object_type $cache_field $$params{$cache_fie
 			my @results = map { $object_type->new( $_->{$$fields{id}}, $_ ) } @$data;
 			$name_cache{$object_type} = {} if ! $name_cache{$object_type};
 			my $cache_ref = $name_cache{$object_type};
-#$log->warn("Doing find_cache for $object_type $cache_ref $name_cache{$object_type}");
+$log->debug("Doing find_cache for $object_type $cache_ref $name_cache{$object_type}") if DEBUG_ALL;
 
 			foreach my $O ( @results ) {
 				next if !$$O{$cache_field};
@@ -1057,10 +1062,10 @@ sub find_one {
 	} else {
 		%{$params} = @_;
 	} # end if
-	$$params{limit}=1;
+	$$params{limit} = 1;
 	my @Results = $object_type->find(%$params);
 	my ( $caller, undef, $line ) = caller;
-$log->debug("returning to $caller:$line from find_one") if DEBUG_ALL;
+$log->debug("returning $Results[0] to $caller:$line from $object_type find_one") if DEBUG_ALL;
 	return $Results[0] if @Results;
 } # end sub find_one
 

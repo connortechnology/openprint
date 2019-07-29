@@ -428,6 +428,7 @@ sub impositions {
 			page_width		=>	$Imposition->page_width(),
 			page_height		=>	$Imposition->page_height(),
 			spine_direction	=>	$openprint::Imposition::Orientations{$$Imposition{spine_direction}},
+			grain_direction	=>	$Imposition->grain_direction(),
 			stitching		=>	($$services{SaddleStitching} or $$services{LoopStitching}) ? 1 : 0,
 			perfectbind		=>	$$services{PerfectBound} ? 1 : 0,
 			spinepaste		=>	$$services{SpinePaste} ? 1 : 0,
@@ -1038,6 +1039,7 @@ SET:		foreach my $Set_Of_Impositions ( @All_Impositions ) {
 							page_width		=>	$$Imposition{page_width},
 							page_height		=>	$$Imposition{page_height},
 							spine_direction	=>	$openprint::Imposition::Orientations{$$Imposition{spine_direction}},
+							grain_direction	=>	$Imposition->grain_direction(),
 							stitching		=>	($$services{SaddleStitching} or $$services{LoopStitching}) ? 1 : 0,
 							perfectbind		=>	$$services{PerfectBound} ? 1 : 0,
 							spinepaste		=>	$$services{SpinePaste} ? 1 : 0,
@@ -1098,6 +1100,7 @@ $openprint::log->debug("Templatetype: $$sig_specs{rdbTemplateType}") if DEBUG;
 							rows						=>	$$Imposition{rows},
 							printing_type		=>	$ppt,
 							spine_direction	=>	$openprint::Imposition::Orientations{$$Imposition{spine_direction}},
+							grain_direction	=>	$Imposition->grain_direction(),
 							});
 
 						if ( ! $Fold ) {
@@ -1129,6 +1132,7 @@ if ( 0 ) {
 									rows						=>	$$Imposition{rows},
 									printing_type		=>	$ppt,
 									spine_direction	=>	$openprint::Imposition::Orientations{$$Imposition{spine_direction}},
+									grain_direction	=>	$Imposition->grain_direction(),
 									});
 								$$specs{alert} .= "Fold for form $form may exceed equipment specifications.<br/>" if ! $$specs{alert};
 							}
@@ -1205,7 +1209,8 @@ $openprint::log->debug("Has a fold, doing extra checks") if DEBUG;
 									$$specs{alert} .= "Warning: $failure_reason<br/>";
 								}
 
-								$Breakdown .= sprintf( '%s: %d*%dout %s layout: %sx%s StockWeight %.2fgsm calliper:%.4f<br/>', $$sig_specs{rdbTemplateType}, @$Imposition{'quantity','imposition'},
+								$Breakdown .= sprintf( '%s: %d*%dout %s layout: %sx%s StockWeight %.2fgsm calliper:%.4f<br/>',
+										$$sig_specs{rdbTemplateType}, @$Imposition{'quantity','imposition'},
 										$openprint::Imposition::Orientations{$$Imposition{image_orientation}},
 										@$Imposition{'layout_width', 'layout_height'},
 										@$Paper{'gsm', 'calliper'} );
@@ -1229,7 +1234,8 @@ $openprint::log->debug("Got Fold: " . $Fold->to_string() ) if DEBUG;
 
 					} else { # No template, might be a book
 						#$Imposition->display("Trying: $$Equipment{name}") if DEBUG;
-						$openprint::log->debug(sprintf('Trying %dx%d=%dout spreads: %dx%d=%d %sx%s',@$Imposition{'columns','rows','imposition','spread_columns','spread_rows','spreads','image_width','image_height'} ).' on ' . $$Equipment{name}) if DEBUG;
+						$openprint::log->debug(sprintf('Trying %dx%d=%dout spreads: %dx%d=%d %sx%s',
+									@$Imposition{'columns','rows','imposition','spread_columns','spread_rows','spreads','image_width','image_height'} ).' on ' . $$Equipment{name}) if DEBUG;
 
 #$Imposition->display('fitting');
 						# See if it fits

@@ -646,9 +646,17 @@ $log->debug("Insert qty: $$specs{txtInsertQuantity}");
 		} else {
 			@$specs{'Width','Height'} = @$printing_specs{'txtFinalWidth','txtFinalHeight'};
 		} # end if
-	} elsif ( ( $$printing_specs{txtFinalWidth} == $$printing_specs{txtWidth} ) and ( $$printing_specs{txtFinalHeight} != $$printing_specs{txtHeight} ) ) {
+	} elsif (
+			( $$printing_specs{txtFinalWidth} == $$printing_specs{txtWidth} )
+			and
+			( $$printing_specs{txtFinalHeight} != $$printing_specs{txtHeight} )
+			) {
 		@$specs{'Width','Height'} = @$printing_specs{'txtFinalHeight','txtFinalWidth'};
-	} elsif ( ( $$printing_specs{txtFinalWidth} != $$printing_specs{txtWidth} ) and ( $$printing_specs{txtFinalHeight} == $$printing_specs{txtHeight} ) ) {
+	} elsif (
+			( $$printing_specs{txtFinalWidth} != $$printing_specs{txtWidth} )
+			and
+			( $$printing_specs{txtFinalHeight} == $$printing_specs{txtHeight} )
+			) {
 		@$specs{'Width','Height'} = @$printing_specs{'txtFinalWidth','txtFinalHeight'};
 	} else {
 		@$specs{'Width','Height'} = @$printing_specs{'txtFinalWidth','txtFinalHeight'};
@@ -752,7 +760,7 @@ $log->debug("Insert qty: $$specs{txtInsertQuantity}");
 							);
 				}
 				if ( my $servicePrice = $$pass{ServicePrice} ) {
-					$$specs{'hdnBreakdown'.$qty_index} .= sprintf('&nbsp;Service: $%.2f%s = $%.2f<br/>', @$servicePrice{'Price','units','Total'});
+					$$specs{'hdnBreakdown'.$qty_index} .= sprintf('&nbsp;%s $%.2f%s = $%.2f<br/>', @$servicePrice{'ServiceName','Price','units','Total'});
 				} # end if
 				if ( my $BoardInsertPrice = $$pass{BoardInsertPrice} ) {
 					$$specs{'hdnBreakdown'.$qty_index} .= sprintf('&nbsp;Board Insert: $%.3f%s = $%.2f<br/>', @$BoardInsertPrice{'Price','units','Total'});
@@ -891,7 +899,8 @@ sub get_price {
 			cover	=>	$plusCover,
 			);
 
-	my $BaseService = openprint::Service->find_one(name=>$$ServiceType{name});
+	my $BaseService = openprint::Service->find_one(name=>$$ServiceType{name}.$price{Imposition}.'out');
+	$BaseService = openprint::Service->find_one(name=>$$ServiceType{name}) if ! $BaseService;
 
 	my $qty = $$specs{'txtQuantity'.$qty_index} ? $$specs{'txtQuantity'.$qty_index} : $Project->quantity($qty_index);
 #$openprint::log->debug($price{Imposition} . ' on ' .$Equipment->name() . ' max imp: ' . $Equipment->specification('Maximum Imposition')) if DEBUG;
@@ -1035,11 +1044,11 @@ sub get_price {
 		$pass{RunTime} = $runtime;
 		$price{RunTime} += $runtime;
 		my $servicePrice;
-		my $Service = openprint::Service->find_one( name=>$$ServiceType{name}.$neededPockets.'Pockets' );
-		$servicePrice = $Service->get_Price( $qty, $Equipment ) if $Service;
+		my $Service = openprint::Service->find_one(name=>$$ServiceType{name}.$neededPockets.'Pockets');
+		$servicePrice = $Service->get_Price($qty, $Equipment) if $Service;
 		if ( ! $servicePrice ) {
 			$Service = $BaseService;
-			$servicePrice = $Service->get_Price( $neededPockets, $Equipment ) if $Service;
+			$servicePrice = $Service->get_Price($neededPockets, $Equipment) if $Service;
 		} # end if
 		if ( $servicePrice ) {
 			$pass{ServicePrice} = $servicePrice;

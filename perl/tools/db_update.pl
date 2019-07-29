@@ -2294,6 +2294,11 @@ if ( ! sets::isin( 'product_categories', \@tables ) ) {
 		$log->debug("Add sorting to Product_Categories");
 		$dbh->do('ALTER TABLE Product_Categories ADD sorting INTEGER') or die $dbh->errstr();
 	}
+	if ( ! exists $$Data{album_id} ) {
+		$log->debug("Add album_id to Product Categories");
+		$dbh->do('ALTER TABLE Product_Categories ADD album_id    INTEGER');
+		$dbh->do('ALTER TABLE Product_Categories ADD FOREIGN KEY (album_id) REFERENCES Photo_Albums (id)');
+	}
 } # end if
 
 if ( ! sets::isin( 'products', \@tables ) ) {
@@ -4204,6 +4209,11 @@ if ( sets::isin( 'emailcampaigns', \@tables ) ) {
 	if ( ! exists $$data{deleted} ) {
 		print "Adding deleted to email_campaigns\n";
 		$dbh->do('ALTER TABLE emailcampaigns ADD deleted BOOLEAN NOT NULL default false');
+	} # end if
+	if ( ! exists $$data{user_id} ) {
+		print "Adding user_id to email_campaigns\n";
+		$dbh->do('ALTER TABLE emailcampaigns ADD user_id INTEGER') or die $dbh->errstr();
+		$dbh->do('ALTER TABLE emailcampaigns ADD FOREIGN KEY (user_id) REFERENCES Users (id)') or die $dbh->errstr();
 	} # end if
 } else {
 	$_ = misc::load_file( $log, q{../openprint/sql/EmailCampaigns.sql});

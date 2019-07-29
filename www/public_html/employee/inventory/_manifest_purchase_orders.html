@@ -6,7 +6,7 @@
 		$html .= '<table class="List"><tr><th class="po_id">PO ID</th><th class="description">Description</th></tr>';
 		my %filters = (
 			order			=>	'id',
-			'manifest_id is null'	=>	1,
+			#'manifest_id is null'	=>	1,
 		);
 		$filters{supplier_id} = $param{supplier_id} if $param{supplier_id};
 		$filters{'docket any'} = $param{Docket} if $param{Docket};

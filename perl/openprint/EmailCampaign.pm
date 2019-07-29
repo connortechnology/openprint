@@ -37,6 +37,7 @@ $serial = 'emailcampaigns_id_seq';
 	'updated_on'	=>	'updated_on',
 	'template_id'	=>	'template_id',
 	deleted			=>	'deleted',
+user_id				=>	'user_id',
 );
 
 %defaults = (
@@ -49,6 +50,7 @@ $serial = 'emailcampaigns_id_seq';
 	'timestosend'	=>	undef,
 	'template_id'	=>	undef,
 	deleted			=>	0,
+user_id			=>	undef,
 );
 
 sub destroy {
@@ -154,9 +156,7 @@ sub send {
 	# this campaign
 	my @mail_user_ids = sql::execute(undef, undef, $self->{query});
 	$results .= 'There are '. scalar @mail_user_ids." users that fit the campaign<br/>\n";
-	$self->{lastrun} = 'NOW()';
 	@$self{nextrun} = sql::execute( undef, undef, 'SELECT NOW()+interval FROM emailcampaigns WHERE id=?', $$self{id} ) if $$self{interval};
-	$self->save();
 
 	#$self->{log}->info("There are ". scalar @mail_user_ids." users that fit the campaign<br/>\n");
 
@@ -217,6 +217,9 @@ sub send {
 	} # for all mail user ids
 	$$self{email_text} = $email_text;
 	$$self{email_html} = $email_html;
+
+	$self->{lastrun} = 'NOW()';
+	$self->save();
 	return $results;
 } # end sub send
 
@@ -233,7 +236,8 @@ sub Recipients {
 sub test {
 	my ( $self ) = @_;
 	my %replacements;
-# de we need to send this email?
+# do we need to send this email?
+	$replacements{Campaign} = $self;
 	$replacements{User} = $openprint::User;
 	$$self{email_text} = ssi::variable_substitution( \$$self{email_text}, \%replacements ) if $$self{email_text};
 	$$self{email_html} = ssi::variable_substitution( \$$self{email_html}, \%replacements ) if $$self{email_html};
@@ -262,9 +266,9 @@ sub trial {
 	$results .= "There are ".@mail_user_ids." users that fit the campaign<br/>";
 	my %replacements;
 	my $body = $self->{email_text};
-	foreach my $user_index ( @mail_user_ids ) {
+	foreach my $user_id ( @mail_user_ids ) {
 # de we need to send this email?
-		$replacements{User} = new openprint::User( $user_index );
+		$replacements{User} = new openprint::User($user_id);
 		$replacements{ReplacementText} = ssi::variable_substitution( \$body, \%replacements );
 		if ( ! $replacements{ReplacementText} ) {
 			$results .= 'No body.  Not sending<br/>';
@@ -275,7 +279,7 @@ sub trial {
 
 # First check if a sent row exists
 		$_ = 'SELECT (NOW() - EmailSentOn) > ?, NumEmailSent FROM EmailCampaign_Sent WHERE campaign_id=? AND user_id=?';
-		if ( ( $interval_expired, $num_email_sent ) = sql::execute( undef, undef, $_, @$self{'interval','id'}, $user_index ) ) {
+		if ( ( $interval_expired, $num_email_sent ) = sql::execute( undef, undef, $_, @$self{'interval','id'}, $user_id ) ) {
 
 # Check if the duration has elapsed	
 			if ( ($interval_expired == 1) ) {
@@ -298,6 +302,32 @@ sub Template {
 	return new openprint::EmailTemplate( $_[0]->template_id() );
 } # end sub Template
 
-1;
+sub url_to {
+	return '/marketing/email_campaign.html?campaign_id='.$_[0]{id};
+}
+sub link_to {
+  return sprintf('<a href="/marketing/email_campaign.html?campaign_id=%d">%s</a>', $_[0]{id}, $_[0]{name});
+}
 
+sub can_view {
+	if ( $openprint::session{user_type} eq 'A' ) {
+		$openprint::log->debug("Can view because admin");
+		return 1 ;
+	}
+	if ( ! $_[0]{user_id} ) {
+		$openprint::log->debug("Can view because no user_Id assigned");
+		return 1;
+	}
+if ( $openprint::session{user_id} == $_[0]{user_id} ) {
+		$openprint::log->debug("Can view because user_Id matches");
+	return 1;
+}
+ if ( ! $_[0]{id} ) {
+		$openprint::log->debug("Can view because no Id");
+	return 1;
+}
+	return 0;
+}
+
+1;
 __END__

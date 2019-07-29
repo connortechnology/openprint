@@ -15,19 +15,19 @@ $table = 'order_taxes';
 $serial = 'order_taxes_id_seq';
 
 %fields = (
-	'id'			=>	'id',
-	'order_id'		=>	'order_id',
-	'tax_id'		=>	'tax_id',
-	'rate'			=>	'rate',
-	'amount'		=>	'amount',
-	'charge'		=>	'charge',
+	id				=>	'id',
+	order_id	=>	'order_id',
+	tax_id		=>	'tax_id',
+	rate			=>	'rate',
+	amount		=>	'amount',
+	charge		=>	'charge',
 );
 
 %transforms = (
 );
 %defaults = (
-	'rate'		=>	undef,
-	'amount'	=>	undef,
+	rate		=>	undef,
+	amount	=>	undef,
 );
 
 sub name {
@@ -52,7 +52,7 @@ $openprint::log->debug("Calcing tax from product ".$Product->to_string()." $$Pro
 				$$self{amount} += $tax;
 			} # end foreach Project
 		} # end if
-		$$self{amount} = Math::Round::nearest( 0.01, $$self{amount} );
+		$$self{amount} = Math::Round::nearest(0.01, $$self{amount});
 	} # end if
 	return $$self{amount};
 } # end sub amount

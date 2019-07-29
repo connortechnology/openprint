@@ -4,7 +4,7 @@ use Carp qw( cluck );
 package openprint::Imposition;
 require Math::Round;
 require Data::Dumper;
-use vars qw( $AUTOLOAD %Orientations);
+use vars qw( $AUTOLOAD %Orientations @RunStyles);
 use constant DEBUG => 0;
 use constant DEBUG_PERFORMANCE => 1;
 
@@ -14,6 +14,8 @@ use constant Horizontal => 1;
 	0	=>	'Vertical',
 	1	=>	'Horizontal',
 );
+
+@RunStyles = ( 'Sheet Work', 'Work & Turn', 'Work & Tumble', 'Perfecting', 'Web' );
 
 my @fields = (
 	'start_imposition','start_columns','start_rows',
@@ -260,44 +262,6 @@ sub Paper {
 	return $_[0]{Paper};
 } # end sub Paper
 
-sub load_used {
-	my ( $self, $specs, $qty_index ) = @_;
-
-	$$self{runstyle} = $$specs{ddmRunStyleUsed} ? $$specs{ddmRunStyleUsed} : $$specs{'ddmRunStyle'.$qty_index};
-	$$self{image_orientation} = $$specs{hdnImageOrientationUsed} ? $$specs{hdnImageOrientationUsed} : $$specs{'hdnImageOrientation'.$qty_index};
-	$$self{imposition} = $$specs{txtImpositionUsed} ? $$specs{txtImpositionUsed} : $$specs{'txtImposition'.$qty_index};
-	$$self{rows} = $$specs{hdnImpositionRowsUsed} ? $$specs{hdnImpositionRowsUsed} : $$specs{'hdnImpositionRows'.$qty_index};
-	$$self{columns} = $$specs{hdnImpositionColumnsUsed} ? $$specs{hdnImpositionColumnsUsed} : $$specs{'hdnImpositionColumns'.$qty_index};
-	$$self{dutch_rows} = $$specs{hdnImpositionDutchRowsUsed} ? $$specs{hdnImpositionDutchRowsUsed} : $$specs{'hdnImpositionDutchRows'.$qty_index};
-	$$self{dutch_columns} = $$specs{hdnImpositionDutchColumnsUsed} ? $$specs{hdnImpositionDutchColumnsUsed} : $$specs{'hdnImpositionDutchColumns'.$qty_index};
-	$$self{dutch_orientation} = $$self{image_orientation} == Vertical ? Horizontal : Vertical;
-	$$self{bleed_size} = $$specs{'ddmBleedSize'.$qty_index};
-	if ( ! $$self{Press} ) {
-		if ( $$specs{UsePress} ) {
-			$$self{Press} = openprint::Equipment->find_one( strid=>$$specs{UsePress}, deleted=>[0,1] );
-			if ( ! $$self{Press} ) {
-				# This can happen when a press is deleted
-				$openprint::log->debug("No Press found for UsePress $qty_index " . $$specs{UsePress} );
-			} # end if
-		} # end if
-		if ( ! $$self{Press} ) {
-			if ( ! $$specs{'ddmPress'.$qty_index} ) {
-				#$openprint::log->error("No ddmPress for $qty_index");
-			} else {
-				$$self{Press} = openprint::Equipment->find_one( strid=>$$specs{'ddmPress'.$qty_index}, deleted=>[0,1]);
-				if ( ! $$self{Press} ) {
-					$openprint::log->error("No Press found for ddmPress$qty_index " . $$specs{'ddmPress'.$qty_index} );
-				} # end if
-			} # end if
-		} # end if
-		if ( ! $$self{Press} ) {
-			$$self{Press} = new openprint::Equipment();
-		} # end 
-	} # end if
-	$$self{Paper} = openprint::Paper::load_from_signature( undef, $specs, $qty_index ) if ! $$self{Paper};
-} # end sub load_used
-
-
 # Passing in the Project helps us load the Paper by recommendation
 sub load {
 	my ( $self, $specs, $qty_index, $Project ) = @_;
@@ -430,8 +394,19 @@ sub load {
 	} else {
 		# It's a brochure or something, so can't be cut.
 
-		$$self{page_rows} = Math::Round::nearest(1,$$specs{txtWidth} / $$specs{txtFinalWidth}) if $$specs{txtFinalWidth};
-		$$self{page_columns} = Math::Round::nearest(1,$$specs{txtHeight} / $$specs{txtFinalHeight}) if $$specs{txtFinalHeight};
+		
+		if ( $$self{image_orientation} == Vertical ) {
+#$$self{page_rows} = POSIX::ceil($$specs{txtWidth} / $$specs{txtFinalWidth}) if $$specs{txtFinalWidth};
+			$$self{page_columns} = Math::Round::nearest(1,$$specs{txtWidth} / $$specs{txtFinalWidth}) if $$specs{txtFinalWidth};
+#$$self{page_columns} = POSIX::ceil($$specs{txtHeight} / $$specs{txtFinalHeight}) if $$specs{txtFinalHeight};
+			$$self{page_rows} = Math::Round::nearest(1,$$specs{txtHeight} / $$specs{txtFinalHeight}) if $$specs{txtFinalHeight};
+		} else {
+#$$self{page_rows} = POSIX::ceil($$specs{txtWidth} / $$specs{txtFinalWidth}) if $$specs{txtFinalWidth};
+			$$self{page_rows} = Math::Round::nearest(1,$$specs{txtWidth} / $$specs{txtFinalWidth}) if $$specs{txtFinalWidth};
+#$$self{page_columns} = POSIX::ceil($$specs{txtHeight} / $$specs{txtFinalHeight}) if $$specs{txtFinalHeight};
+			$$self{page_columns} = Math::Round::nearest(1,$$specs{txtHeight} / $$specs{txtFinalHeight}) if $$specs{txtFinalHeight};
+		}
+$openprint::log->debug("Got page layout $$self{page_columns} x $$self{page_rows}");
 
 		#if ( 1 ) {
 #20170125 have just gona back to this as it seems like the more correct thing to do
@@ -465,6 +440,42 @@ $self->display('After load') if DEBUG;
 	return $self;
 } # end sub load
 
+sub load_used {
+	my ( $self, $specs, $qty_index ) = @_;
+
+	$$self{runstyle} = $$specs{ddmRunStyleUsed} ? $$specs{ddmRunStyleUsed} : $$specs{'ddmRunStyle'.$qty_index};
+	$$self{image_orientation} = $$specs{hdnImageOrientationUsed} ? $$specs{hdnImageOrientationUsed} : $$specs{'hdnImageOrientation'.$qty_index};
+	$$self{imposition} = $$specs{txtImpositionUsed} ? $$specs{txtImpositionUsed} : $$specs{'txtImposition'.$qty_index};
+	$$self{rows} = $$specs{hdnImpositionRowsUsed} ? $$specs{hdnImpositionRowsUsed} : $$specs{'hdnImpositionRows'.$qty_index};
+	$$self{columns} = $$specs{hdnImpositionColumnsUsed} ? $$specs{hdnImpositionColumnsUsed} : $$specs{'hdnImpositionColumns'.$qty_index};
+	$$self{dutch_rows} = $$specs{hdnImpositionDutchRowsUsed} ? $$specs{hdnImpositionDutchRowsUsed} : $$specs{'hdnImpositionDutchRows'.$qty_index};
+	$$self{dutch_columns} = $$specs{hdnImpositionDutchColumnsUsed} ? $$specs{hdnImpositionDutchColumnsUsed} : $$specs{'hdnImpositionDutchColumns'.$qty_index};
+	$$self{dutch_orientation} = $$self{image_orientation} == Vertical ? Horizontal : Vertical;
+	$$self{bleed_size} = $$specs{'ddmBleedSize'.$qty_index};
+	if ( ! $$self{Press} ) {
+		if ( $$specs{UsePress} ) {
+			$$self{Press} = openprint::Equipment->find_one( strid=>$$specs{UsePress}, deleted=>[0,1] );
+			if ( ! $$self{Press} ) {
+				# This can happen when a press is deleted
+				$openprint::log->debug("No Press found for UsePress $qty_index " . $$specs{UsePress} );
+			} # end if
+		} # end if
+		if ( ! $$self{Press} ) {
+			if ( ! $$specs{'ddmPress'.$qty_index} ) {
+				#$openprint::log->error("No ddmPress for $qty_index");
+			} else {
+				$$self{Press} = openprint::Equipment->find_one( strid=>$$specs{'ddmPress'.$qty_index}, deleted=>[0,1]);
+				if ( ! $$self{Press} ) {
+					$openprint::log->error("No Press found for ddmPress$qty_index " . $$specs{'ddmPress'.$qty_index} );
+				} # end if
+			} # end if
+		} # end if
+		if ( ! $$self{Press} ) {
+			$$self{Press} = new openprint::Equipment();
+		} # end 
+	} # end if
+	$$self{Paper} = openprint::Paper::load_from_signature( undef, $specs, $qty_index ) if ! $$self{Paper};
+} # end sub load_used
 sub spread_rows {
 	( my $self ) = @_;
 
@@ -859,6 +870,7 @@ sub spine_direction {
 
 sub to_svg {
 	my ( $self ) = @_;
+	return if ! $$self{imposition};
 
 	# So let's assume that we might want to print this on an 8.5x11 sheet of paper. The source dimensions might be 28x40"
 
@@ -870,13 +882,68 @@ sub to_svg {
 	# So we need to calculate the scale factor... in pixels.
 	#my $width_scale = ( 40/$target_width * 96 ); # 96 dots per inch?
 	#my $height_scale = ( 28/$target_height * 96 );
-	my $width_scale = ( ($target_width/40) * 96 ); # 96 dots per inch?
-	my $height_scale = ( ($target_height/28) * 96 );
+	my $width_scale = ( ($target_width/$self->sheet_width()) * 96 ); # 96 dots per inch?
+	my $height_scale = ( ($target_height/$self->sheet_height()) * 96 );
 
-	my $svg = '<svg class="Imposition">';
+	my $svg = '<svg class="Imposition" title="';
+	$svg .= sprintf( '%s x %s', @$self{'columns','rows'} );
+	$svg .= sprintf(' + %s x %s', @$self{'dutch_columns','dutch_rows'}) if $$self{dutch_columns};
+	$svg .= '">';
 	
 	$svg .= '<rect class="background" width="'.int(($self->sheet_width()+(2*$margin))*$width_scale).'" height="'.int(($self->sheet_height()+(2*$margin))*$height_scale).'" />';
-	$svg .= '<rect class="sheet" x="'.int($margin*$width_scale).'" y="'.int($margin*$height_scale).'" width="'.int($self->sheet_width()*$width_scale).'" height="'.int($self->sheet_height()*$height_scale).'" style="fill:rgb(255,255,255);stroke-width:1;stroke:rgb(0,0,0);"/>';
+	my $sheet_width = int($self->sheet_width()*$width_scale);
+	my $sheet_height = int($self->sheet_height()*$height_scale);
+
+	my $sheet_x = int($margin*$width_scale);
+	my $sheet_y = int($margin*$height_scale);
+
+	$svg .= qq`<rect class="sheet" x="$sheet_x" y="$sheet_y" width="$sheet_width" height="$sheet_height" style="fill:rgb(255,255,255);stroke-width:1;stroke:rgb(0,0,0);"/>`;
+
+	my $image_width = int( ($sheet_width-4 - $$self{columns} ) / $$self{columns});
+	my $image_height = int( ($sheet_height-4 - $$self{rows} ) / $$self{rows});
+
+	foreach my $column ( 1 .. $$self{columns} ) {
+		foreach my $row ( 1 .. $$self{rows} ) {
+			my $image_x = $sheet_x + int(($column-1)*$image_width) + ($column*2);
+			my $image_y = $sheet_y + int(($row-1)*$image_height) + ($row*2);
+			$svg .= qq`<rect class="image" x="$image_x" y="$image_y" width="$image_width" height="$image_height" style="fill:rgb(255,255,255);stroke-width:1;stroke:rgb(0,0,0);"/>`;
+
+			if ( $self->page_columns() > 1 ) {
+$openprint::log->debug("Adding page_columns");
+				my $page_width = int( $image_width / $self->page_columns() );
+				my $page_height = int( $image_height / $self->page_rows() );
+					my $colour = ( $$self{spine} eq 'height' and $$self{image_orientation} == Vertical ) ? 'red' : 'black';
+
+				#if ( $$self{spine} eq 'height' and $$self{image_orientation} == Vertical ) {
+				foreach my $page_column ( 2 .. $self->page_columns() ) {
+					my $page_x1 = $image_x + ($page_column-1)*$page_width;
+					my $page_x2 = $image_x + ($page_column-1)*$page_width;
+
+					my $page_y1 = $image_y;
+# + $page_height;
+					my $page_y2 = $image_y + ($page_height * $self->page_rows());
+
+# This is the linees between pages, One of these will be the spine.
+					$svg .= qq`<line x1="$page_x1" y1="$page_y1" x2="$page_x2" y2="$page_y2" stroke="$colour" stroke-dasharray="5,5"/>`;
+				}
+			} 
+
+	  	if ( $self->page_rows() > 1 ) {
+				my $colour = ( $$self{spine} eq 'height' and $$self{image_orientation} == Horizontal ) ? 'red' : 'black';
+				my $page_width = int( $image_width / $self->page_columns() );
+				my $page_height = int( $image_height / $self->page_rows() );
+				foreach my $page_row ( 2 .. $self->page_rows() ) {
+					my $page_x1 = $image_x;
+					my $page_x2 = $image_x + ($page_width * $self->page_columns);
+
+					my $page_y1 = $image_y + ($page_row-1)*$page_height;
+					my $page_y2 = $image_y + ($page_row-1)*$page_height;
+					$svg .= qq`<line x1="$page_x1" y1="$page_y1" x2="$page_x2" y2="$page_y2" stroke="$colour" stroke-dasharray="5,5"/>`;
+				}
+			}
+			
+		} # end foreach row
+	} # end foreach column
 	$svg .= '</svg>';
 	return $svg;
 }

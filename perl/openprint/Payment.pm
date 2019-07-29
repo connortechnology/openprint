@@ -114,7 +114,7 @@ sub Invoice_Payments {
 		$_[0]{Invoice_Payments} = $_[1];
 	}
 	if ( ( ! $_[0]{Invoice_Payments} ) and ( $_[0]{id} ) ) {
-		$_[0]{Invoice_Payments} = [ openprint::Invoice_Payment->find( payment_id=>$_[0]{id} ) ];
+		$_[0]{Invoice_Payments} = [ openprint::Invoice_Payment->find( payment_id=>$_[0]{id}, order=>'invoice_id' ) ];
 	} 
 
 	return @{$_[0]{Invoice_Payments}} if $_[0]{Invoice_Payments};

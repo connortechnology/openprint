@@ -120,12 +120,15 @@ sub po_ids {
 sub dockets {
 	return sets::union( map { $_->docket() } $_[0]->Types() );
 } # end sub dockets
+
 sub link_to {
-	return '<a href="/employee/inventory/manifest_view.html?manifest_id='.$_[0]{id}.'">'.$_[0]{name}.'</a>';
+	return '<a href="/employee/inventory/manifest_view.html?manifest_id='.$_[0]{id}.'">'.$_[0]{name}.'</a>' if $_[0]{id};
+	return '';
 } # end sub link_to
 
 sub check {
 	my ( $Manifest ) = @_;
+	
 	my @Contents = $Manifest->Contents();
 	my %skid_ids;
 	foreach ( @Contents ) {
@@ -155,6 +158,10 @@ sub check {
 	foreach my $C ( @Contents ) {
 		$error .= $C->check();
 	} # end foreach C
+	foreach my $T ( $Manifest->Types() ) {
+		$error .= $T->Paper()->check();
+		$error .= $T->PurchaseOrder_Content()->check($T->Paper()) if $$T{po_content_id};
+	}
 	return $error;
 } # end sub check
 

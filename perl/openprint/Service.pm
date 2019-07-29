@@ -127,10 +127,10 @@ sub destroy {
 	my $self = shift;
 
 	delete $openprint::Object::cache{'openprint::Service'}{$$self{id}} if $openprint::Object::cache{'openprint::Service'};	
-	my $ac = sql::start_transaction( $dbh );
-    sql::execute( undef, undef, q{DELETE FROM Service_Prices WHERE service_id=?}, $$self{id} );
+	my $ac = sql::start_transaction($dbh);
+	sql::execute(undef, undef, q{DELETE FROM Service_Prices WHERE service_id=?}, $$self{id});
 	$self->SUPER::destroy();
-	sql::end_transaction( $dbh, $ac );
+	sql::end_transaction($dbh, $ac);
 	return $dbh->errstr();
 } # end sub delete
 
@@ -175,7 +175,8 @@ sub get_price {
 	} # end if
 
 	$Pricelist = $openprint::Pricelist if ! $Pricelist;
-  my %price = openprint::pricing::get_best_price_object( $openprint::session{company_id}, $$self{id}, $$Pricelist{id}, 'openprint::service_priceset', $quantity, $$Equipment{id}, $period );
+  my %price = openprint::pricing::get_best_price_object(
+			$openprint::session{company_id}, $$self{id}, $$Pricelist{id}, 'openprint::service_priceset', $quantity, $$Equipment{id}, $period );
 
 	if ( ! %price ) {
 		$log->debug("No price returned for $$self{name} $$Equipment{strid} $quantity $period") if $debug;
@@ -185,8 +186,8 @@ sub get_price {
 	$price{currency_id} = $Pricelist->currency_id();
 	$price{ServiceName} = $$self{name};
 	$price{Service} = $self;
-    openprint::Currency::convert( \%price ) if $$Pricelist{currency_id} != $openprint::session{Currency_id};
-    return %price;
+	openprint::Currency::convert( \%price ) if $$Pricelist{currency_id} != $openprint::session{Currency_id};
+	return %price;
 } # end sub get_price
 
 sub next {

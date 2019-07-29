@@ -249,11 +249,12 @@ sub calc_setup_object {
 	} elsif ( DEBUG ) {
 		$openprint::log->debug("No grain direction. $$Paper{gsm}gsm");
 	} # end if press_grain
+
 	if ( $run_style eq 'Perfecting' ) {
 		my $press_grain = $Press->specification('Perfecting Grain', $Paper->gsm() );
 		
 #$openprint::log->debug("Grains: $grain_direction, Press: $press_grain, Paper: ". $Paper->grain_direction() . ', paper->long: ' . $Paper->long() );
-		if ( $press_grain and $press_grain ne 'Both' ) {
+		if ( $press_grain and ( $press_grain ne 'Both' ) ) {
 			if ( $press_grain eq 'Long' ) {
 				if ( $Paper->grain_direction() ne $Paper->long() ) {
 					$openprint::log->debug("Improper perfecting grain Paper(".$Paper->grain_direction().") Long (".$Paper->long().")") if DEBUG;
@@ -307,6 +308,8 @@ $openprint::log->debug("Not Pretrimming on $$Press{strid}") if DEBUG;
 	$setup1->spread_rows( 1 );
 	$setup1->spread_columns( 1 );
 
+	#$setup1->page_rows( POSIX::ceil( $$specs{txtHeight}/$$specs{txtFinalHeight} ) );
+	#$setup1->page_columns( POSIX::ceil( $$specs{txtWidth}/$$specs{txtFinalWidth}) );
 	$setup1->page_rows( Math::Round::nearest( 1, $$specs{txtHeight}/$$specs{txtFinalHeight} ) );
 	$setup1->page_columns( Math::Round::nearest( 1, $$specs{txtWidth}/$$specs{txtFinalWidth}) );
 
@@ -323,7 +326,7 @@ $openprint::log->debug("Not Pretrimming on $$Press{strid}") if DEBUG;
 		$$setup1{colour_bar_size} = $$specs{colour_bar_size};
 		$$setup2{colour_bar_size} = $$specs{colour_bar_size};
 	} # end if
-	$setup1->colour_bar_orientation( $$specs{'Colour Bar Orientation'} );
+	$$setup1{colour_bar_orientation} = $$specs{'Colour Bar Orientation'};
 	$$setup1{spine} = $$specs{ProjectSpecs}{spine};
 	$setup1->spine_direction();
 
@@ -338,6 +341,8 @@ $openprint::log->debug("Not Pretrimming on $$Press{strid}") if DEBUG;
 	$$setup2{spread_size} = $$specs{txtSpreadSize};
 	$$setup2{spread_rows} = 1;
 	$$setup2{spread_columns} = 1;
+	#$$setup2{page_columns} = POSIX::ceil( $$specs{txtHeight}/$$specs{txtFinalHeight} );
+	#$$setup2{page_rows} = POSIX::ceil( $$specs{txtWidth}/$$specs{txtFinalWidth});
 	$$setup2{page_columns} = Math::Round::nearest( 1, $$specs{txtHeight}/$$specs{txtFinalHeight} );
 	$$setup2{page_rows} = Math::Round::nearest( 1, $$specs{txtWidth}/$$specs{txtFinalWidth});
 	$$setup2{page_width} = $$specs{txtFinalWidth};
@@ -346,7 +351,7 @@ $openprint::log->debug("Not Pretrimming on $$Press{strid}") if DEBUG;
 	$setup2->object_height( $image_height );
 	$$setup2{Press} = $Press;
 	$$setup2{printing_type} = $Press->specification('Printing Type');
-	$setup2->colour_bar_orientation( $$specs{'Colour Bar Orientation'} );
+	$$setup2{colour_bar_orientation} = $$specs{'Colour Bar Orientation'};
 	$$setup2{spine} = $$specs{ProjectSpecs}{spine};
 	$setup2->spine_direction();
 

@@ -39,16 +39,21 @@
 		</li>
 		 <li>
 			 <label>Ordered</label>
-			<? echo ( date_select_session('/employee/reports/production_performance.html', 'ordered_on_start', { with_today=>1, with_clear=>1 } ); ) ?>
-			to 
-			<? echo ( date_select_session('/employee/reports/production_performance.html', 'ordered_on_end', { with_today=>1, with_clear=>1 } ); ) ?>
+			<? echo ( join(' to ',
+						date_select_session('/employee/reports/production_performance.html', 'ordered_on_start', { with_today=>1, with_clear=>1,
+							onchange	=>	q`check_time_starting($('f1'),'ordered_on_start','ordered_on_end');`,
+							} ),
+						date_select_session('/employee/reports/production_performance.html', 'ordered_on_end', { with_today=>1, with_clear=>1,
+						onchange	=>	q`check_time_starting($('f1'),'ordered_on_start','ordered_on_end');`,
+						} ),
+						); ) ?>
 		</li>
 <!--
 		 <li>
 			 <label>Completed</label>
-			<? echo ( ssi::date_select_session('/employee/reports/production_performance.html', 'completed_on_start' ); ) ?>
+			<? echo ( date_select_session('/employee/reports/production_performance.html', 'completed_on_start' ); ) ?>
 			to 
-			<? echo ( ssi::date_select_session('/employee/reports/production_performance.html', 'completed_on_end' ); ) ?>
+			<? echo ( date_select_session('/employee/reports/production_performance.html', 'completed_on_end' ); ) ?>
 		</li>
 -->
 		<li>
@@ -61,6 +66,18 @@
 							[ $session{$r->uri().'?press_id'} ? split(',', $session{$r->uri().'?press_id'} ) : ( map { $$_{id} } @Equipment ) ],
 							); ) ?>
 			</select>
+		</li>
+		<li>
+			<label>Runstyle</label>
+			<?echo(ssi::select(
+						[ map { $_ => $_ } @openprint::Imposition::RunStyles],
+						[split(',', $session{$r->uri().'?runstyles'})],
+						{
+							name=>'runstyles',	
+							multiple=>'multiple',
+							size=>'5',
+							} );
+					)?>
 		</li>
 		<li>
 			<label>Reprint</label>
@@ -76,7 +93,9 @@
 				<? echo ( 
 						my @columns = ( 'plates', 'Plate Information',
 							'production', 'Production Timeline',
-							'stock', 'Stock Information',
+							'services', 'Service Costs',
+							'stock', 'Stock Information '.$openprint::Owner->name().' Supplied',
+							'stock_customer_supplied', 'Stock Information Customer Supplied',
 							);
 						my %columns = @columns;
 						checkboxes( 'columns', \@columns,

@@ -56,7 +56,7 @@ function delField( id ) {
 					alert( html );
 				} else {
 					var tr = $j('#field_'+id);
-          tr.parentNode.removeChild(tr);
+          tr.remove();
 				} // end if
 			}
 	);
@@ -65,3 +65,24 @@ function delField( id ) {
 function upField( field_id ) {
 	jQuery('#fields').load('_user_fields_tbody.html', { action: 'up', field_id: field_id } );
 } // end function upField
+
+function setup_sortable() {
+Sortable.create( 'fields', {
+    tag: 'tr',
+    constraint: 'vertical',
+    onUpdate: function( container ) {
+        new Ajax.Updater( 'fields', '_company_fields_tbody.html', { parameters: { update: Sortable.serialize(container) }, evalScripts: true } );
+      }
+  } );
+} // end function setup_sortable
+
+function save_all() {
+	var form = $j('#f1');
+	if ( !form ) {
+		console.log("No form found for f1");
+		return;
+	}
+	form = form[0];
+	form.elements['action'].value='Save';
+	form.submit();
+}

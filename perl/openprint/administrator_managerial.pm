@@ -1068,6 +1068,7 @@ sub _logs {
 	ssi::save_params( '/administrator/managerial/logs.html', (
         'log_actions', 'user_id', 'company_id',
 				( map { 'date_start_' . $_ } ( 'year','month','day' ) ),
+				( map { 'date_end_' . $_ } ( 'year','month','day' ) ),
 				) );
 	if ( $param{action} eq 'delete' ) {
 		my $Log = new openprint::Log( $param{log_id} );
@@ -1201,6 +1202,17 @@ sub _users {
 				) );
 	$session{$uri.'?salesrep_id_exclude'} = $param{salesrep_id_exclude};
 }
+
+sub mailqueue {
+	if ( $param{action} ) {
+		if ( $param{action} eq 'Delete' ) {
+			foreach my $queue_id ( ref $param{queue_id} eq 'ARRAY' ? @{$param{queue_id}} : ( $param{queue_id} ) ) {
+$log->debug("sudo /usr/sbin/postsuper -d $queue_id");
+				$variable{information} .= `sudo /usr/sbin/postsuper -d $queue_id 2>&1`.'<br/>';
+			}
+		}
+	}
+} # end sub mailqueue
 
 1;
 __END__

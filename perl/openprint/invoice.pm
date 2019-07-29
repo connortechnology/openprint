@@ -19,6 +19,7 @@ require openprint::Tax;
 require openprint::Bitcoin_Address;
 
 sub history {
+	my $uri = $r->uri();
 
 	if ( $param{btnFunction} ) {
 		if ( $param{btnFunction} eq 'Send' ) {
@@ -78,9 +79,9 @@ sub history {
 			push @attachments, '', MIME::QuotedPrint::encode_qp( ssi::variable_substitution( \$email_template, \%data ) ), 'text/html', 'quoted-printable';
 
 			my @Invoices = openprint::Invoice->find(
-					ssi::date_filter('/invoice/history.html?created_on_start', 'created_on >=' ),
-					ssi::date_filter('/invoice/history.html?created_on_end', 'created_on >=' ),
-					invoicee_id => $session{'/invoice/history.html?company_id'},
+					ssi::date_filter($uri.'?created_on_start', 'created_on >=' ),
+					ssi::date_filter($uri.'?created_on_end', 'created_on >=' ),
+					invoicee_id => $session{$uri.'?company_id'},
 					invoicer_id => $session{company_id},
 					order       => 'id',
 					);
@@ -105,24 +106,25 @@ sub history {
 
 			my @Recipients = new openprint::Company($param{company_id})->AccountingContacts();
 			(new openprint::Email())->send(
-						FROM    => $config{AccountingEmail},
-						TO      =>  \@Recipients,
+						FROM    		=> $config{AccountingEmail},
+						TO      		=> \@Recipients,
 						#TO      => new openprint::User( $session{user_id} ),
-						BCC     => new openprint::User( $session{user_id} ),
-						SUBJECT => 'Account Statement from ' . ( new openprint::User( $session{user_id} )->Company()->name() ),
-						ATTACHMENTS	=>	\@attachments,
+						BCC     		=> $openprint::User,
+						SUBJECT			=> 'Account Statement from ' . ( $openprint::User->Company()->name() ),
+						ATTACHMENTS	=> \@attachments,
 						);
-			$variable{information} .= 'Account statement sent to ' . join('<br/>', map { sprintf('&quot;%s %s&quot; &lt;%s&gt;',$_->get('firstname','lastname','email')) } @Recipients );
+			$variable{information} .= 'Account statement sent to ' . join('<br/>',
+					map { sprintf('&quot;%s %s&quot; &lt;%s&gt;',$_->get('firstname','lastname','email')) } @Recipients);
 		} # end if
 	} # end if btnFunction
-	ssi::setup_date_select('/invoice/history.html', 'created_on_start', -60);
-	ssi::setup_date_select('/invoice/history.html', 'created_on_end', '');
-	ssi::setup_date_select('/invoice/history.html', 'due_on_start', -60);
-	ssi::setup_date_select('/invoice/history.html', 'due_on_end', '');
+	ssi::setup_date_select($uri, 'created_on_start', -60);
+	ssi::setup_date_select($uri, 'created_on_end', '');
+	ssi::setup_date_select($uri, 'due_on_start', -60);
+	ssi::setup_date_select($uri, 'due_on_end', '');
 
-	$session{'/invoice/history.html?paid'} = '0' if ! sets::isin( $session{'/invoice/history.html?paid'}, [ 0,1,''] );
-	$session{'/invoice/history.html?bad_debt'} = '0' if ! sets::isin( $session{'/invoice/history.html?bad_debt'}, [ 0,1,''] );
-	$session{'/invoice/history.html?employee_id'} = $session{user_id} if ! exists $session{'/invoice/history.html?employee_id'};
+	$session{$uri.'?paid'} = '0' if (!exists($session{$uri.'?paid'}) or ! sets::isin($session{$uri.'?paid'}, [0,1,'']);
+	$session{$uri.'?bad_debt'} = '0' if (! exists $session{$uri.'?bad_debt'}) or ! sets::isin($session{$uri.'?bad_debt'}, [0,1,'']);
+	$session{$uri.'?employee_id'} = $session{user_id} if ! exists $session{$uri.'?employee_id'};
 
 	_history();
 } # end sub history

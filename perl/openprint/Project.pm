@@ -635,9 +635,9 @@ sub save {
 
 	my $rc;
 	if ( $$self{id} ) {
-		$rc  = $self->SUPER::save( $hash );
+		$rc  = $self->SUPER::save($hash);
 	} else {
-		$rc  = $self->SUPER::save( $hash );
+		$rc  = $self->SUPER::save($hash);
 		$openprint::Company->save({last_project_id=>$$self{id}}) if $openprint::Company and $openprint::Company->id() and $$self{id} and ! $rc;
 	} # end if
 
@@ -1405,6 +1405,9 @@ sub printed_on {
 	my ( $self ) = @_;
 	if ( ! exists $$self{printed_on} ) {
 		@$self{printed_on} = sql::execute( undef, undef, q`SELECT MAX(dtmtimestamp) FROM Project_Log WHERE project_id=? AND description LIKE 'Marked Printed%'`, $$self{id} );
+		if ( ! $$self{printed_on} ) {
+			@$self{printed_on} = sql::execute( undef, undef, q`SELECT MAX(dtmtimestamp) FROM Project_Log WHERE project_id=? AND description LIKE 'Form % Completed for%'`, $$self{id} );
+		}
 	} else {
 $openprint::log->debug("Printed on: $$self{printed_on}");
 	} # end if
@@ -1415,6 +1418,12 @@ sub shipped_on {
 	my ( $self ) = @_;
 	if ( ! exists $$self{shipped_on} ) {
 		@$self{shipped_on} = sql::execute( undef, undef, q`SELECT MAX(dtmtimestamp) FROM Project_Log WHERE project_id=? AND description IN ('Marked Shipped','Marked Picked Up')`, $$self{id} );
+		if ( $$self{docket} and ! $$self{shipped_on} ) {
+			my $ShippingLabel = openprint::Label->find_one( docket=>$$self{docket}, type=>'PackingSlip' );
+			if ( $ShippingLabel ) {
+				$$self{shipped_on} = $$ShippingLabel{created_on};
+			}
+		}
 	} # end if
 	return $$self{shipped_on};
 }

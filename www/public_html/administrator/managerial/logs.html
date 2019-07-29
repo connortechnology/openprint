@@ -1,4 +1,4 @@
-<form name="searchLog" action="logs.html" method="post">
+<form id="searchLog" name="searchLog" action="logs.html" method="post">
 	<fieldset class="filters"><legend>Search</legend>
 		<div class="content">
 			<ul>
@@ -41,9 +41,16 @@
 				</li>			
 				<li>
 					<label>Date</label>
-					<? echo ( date_select_session( $r->uri(), 'date_start', { with_today=>1, with_clear=>1 } ); ) ?>
-					to
-					<? echo ( date_select_session( $r->uri(), 'date_end', { with_today=>1, with_clear=>1 } ); ) ?>
+					<? echo ( join(' to ',
+								date_select_session($r->uri(), 'date_start', {
+									with_today=>1, with_clear=>1,
+									onchange	=>	q`check_time_starting($('searchLog'),'date_start','date_end');`,
+								}),
+								date_select_session($r->uri(), 'date_end', {
+									with_today=>1, with_clear=>1,
+									onchange	=>	q`check_time_starting($('searchLog'),'date_start','date_end');`,
+									} ),
+					); ) ?>
 				</li>
 			</ul>
 		</div>

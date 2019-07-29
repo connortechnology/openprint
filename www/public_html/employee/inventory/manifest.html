@@ -20,7 +20,10 @@
 							<? echo ( make_drop_down( [ map { $_->id(), $_->name() } openprint::Company->find( order=>'lower(name)', supplier=>'Y') ], $$variable{Manifest}->supplier_id() ); ) ?>
 						</select>
 					</li>
-					<li><label>Currency</label><?echo(ssi::select(openprint::Currency->dropdown(), $$variable{Manifest}->currency_id(), { name=>'currency_id', prepend=>['', 'unknown'] } );)?></li>
+					<li><label>Currency</label><?echo(ssi::select(
+								openprint::Currency->dropdown(),
+								$$variable{Manifest}->currency_id() ? $$variable{Manifest}->currency_id() : $openprint::Currency->id(),
+								{ name=>'currency_id', prepend=>['', 'unknown'] } );)?></li>
 				</ul>
 			</div>
 			<div class="rightColumn">
