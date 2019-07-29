@@ -236,7 +236,8 @@ sub Recipients {
 sub test {
 	my ( $self ) = @_;
 	my %replacements;
-# de we need to send this email?
+# do we need to send this email?
+	$replacements{Campaign} = $self;
 	$replacements{User} = $openprint::User;
 	$$self{email_text} = ssi::variable_substitution( \$$self{email_text}, \%replacements ) if $$self{email_text};
 	$$self{email_html} = ssi::variable_substitution( \$$self{email_html}, \%replacements ) if $$self{email_html};
@@ -301,8 +302,11 @@ sub Template {
 	return new openprint::EmailTemplate( $_[0]->template_id() );
 } # end sub Template
 
+sub url_to {
+	return '/marketing/email_campaign.html?campaign_id='.$_[0]{id};
+}
 sub link_to {
-return sprintf('<a href="/marketing/email_campaign.html?campaign_id=%d">%s</a>', $_[0]{id}, $_[0]{name});
+  return sprintf('<a href="/marketing/email_campaign.html?campaign_id=%d">%s</a>', $_[0]{id}, $_[0]{name});
 }
 
 sub can_view {

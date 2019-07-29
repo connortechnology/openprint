@@ -635,9 +635,9 @@ sub save {
 
 	my $rc;
 	if ( $$self{id} ) {
-		$rc  = $self->SUPER::save( $hash );
+		$rc  = $self->SUPER::save($hash);
 	} else {
-		$rc  = $self->SUPER::save( $hash );
+		$rc  = $self->SUPER::save($hash);
 		$openprint::Company->save({last_project_id=>$$self{id}}) if $openprint::Company and $openprint::Company->id() and $$self{id} and ! $rc;
 	} # end if
 
