@@ -111,7 +111,7 @@ sub Host {
 
 sub action {
 	if ( @_ > 1 ) {
-		my $Action = openprint::Log_Action->find_one( name=>$_[1] );
+		my $Action = openprint::Log_Action->find_one(name=>$_[1]);
 		if ( $_[1] and ! $Action ) {
 			$Action = new openprint::Log_Action();
 			$Action->save({name=>$_[1], description=>$_[1]});
