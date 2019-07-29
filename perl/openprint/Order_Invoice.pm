@@ -24,13 +24,13 @@ $table = 'order_invoices';
 
 sub Order {
 	if ( ! $_[0]{Order} ) {
-		$_[0]{Order} = new openprint::Order( $_[0]{order_id} );
+		$_[0]{Order} = new openprint::Order($_[0]{order_id});
 	}
 	return $_[0]{Order};
 } 
 sub Invoice {
 	if ( ! $_[0]{Invoice} ) {
-		$_[0]{Invoice} = 	new openprint::Invoice( $_[0]{invoice_id} );
+		$_[0]{Invoice} = new openprint::Invoice($_[0]{invoice_id});
 	}
 	return $_[0]{Invoice};
 } 

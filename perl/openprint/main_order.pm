@@ -171,8 +171,8 @@ $log->debug("Adding product $param{product_id}");
 			} = $User->get('email','title','firstname','lastname','salutation','phone','fax');
 
 		} # end if
-		foreach my $OP ( openprint::OrderedProject->find( order_id=>$order_id) ) {
-			if ( ! sets::isin( $OP->quantity_index(), $OP->Project->quantity_indexes() ) ) {
+		foreach my $OP ( openprint::OrderedProject->find(order_id=>$order_id) ) {
+			if ( ! ($OP->quantity_index() and sets::isin($OP->quantity_index(), $OP->Project->quantity_indexes())) ) {
 				$OP->save({quantity_index=>undef});
 			}
 		}

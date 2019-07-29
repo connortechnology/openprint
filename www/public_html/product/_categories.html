@@ -5,6 +5,7 @@
 		<th class="description">Description</th>
 		<th class="ProductCategory">Parents</th>
 		<th class="num_products"># of Products</th>
+		<th class="Photos">Photos</th>
 	</tr>
 <? echo (
 	my $html = '';
@@ -19,9 +20,13 @@
 	<td class="description"><a href="category_view.html?category_id=%2$d">%4$s</a></td>
 	<td class="ProductCategory"><a href="category_view.html?category_id=%2$d">%5$s</a></td>
 	<td class="num_products"><a href="category_view.html?category_id=%2$d">%6$d</a></td>
+	<td class="Photos"><a href="category_view.html?category_id=%2$d">%7$s</a></td>
 </tr>
 `, $rowclass, $Category->id(), $Category->name(), $Category->description(),
-join('<br/>', map { $_->name() } $Category->Parents() ), scalar $Category->Products() );
+join('<br/>', map { $_->name() } $Category->Parents() ),
+scalar $Category->Products(),
+join('', map { $_->thumbnail_img() } $Category->Photos() ),
+ );
 		$rowclass = $rowclass ? '' : ' class="colRow"';
 	} # end foreach
 

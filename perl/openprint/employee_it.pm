@@ -140,7 +140,18 @@ sub _networks {
 } # end sub _networks
 
 sub host {
+  if ( $param{host_id} ) {
+    $param{host_id} = openprint::Host->transform( id=>$param{host_id} );
+    if ( ! $param{host_id} ) {
+      $variable{error} .= 'Invalid host_id specified<br/>';
+      return;
+    }
+  }
 	my $Host = $variable{Host} = new openprint::Host( $param{host_id} );
+  if ( $param{host_id} and ! $$Host{id} ) {
+    $variable{error} .= 'Host not found for id ' . $param{host_id}.'<br/>';
+    return;
+  }
   if ( $param{action} ) {
     if ( $param{action} eq 'Resolve' ) {
       foreach my $I ( $Host->Interfaces() ) {
@@ -184,7 +195,7 @@ sub host {
       %param = ();
     } elsif ( $param{action} eq 'Destroy' ) {
       $variable{error} .= $Host->destroy();
-      if ( ! $variable{error} ) {
+      if ( !$variable{error} ) {
         $variable{ExternalRedirect} = '/employee/it/hosts.html';
         return;
       } # end if
@@ -195,7 +206,7 @@ sub host {
       } else {
         $variable{error} .= 'Host failed to reboot. Check logs';
       }
-      $variable{ExternalRedirect} = $Host->url();
+      $variable{ExternalRedirect} = $Host->url_to();
     } elsif ( $param{action} eq 'get_config' ) {
 			my $content = $Host->get_config();
       if ( $content ) {

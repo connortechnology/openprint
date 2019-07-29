@@ -18,8 +18,8 @@
 				<td class="active"><a href="email_campaign.html?campaign_id=%1$d">%5$s</a></td>
 			</tr>
 `, $Campaign->id(), $Campaign->name(),
-$Campaign->lastrun() ? Date::Format::time2str( $config{DateTimeFormat}, Date::Parse::str2time( $Campaign->lastrun() ) ) : 'never',
-$Campaign->nextrun() ? Date::Format::time2str( $config{DateTimeFormat}, Date::Parse::str2time( $Campaign->nextrun() ) ) : 'never',
+format_datetime( $Campaign->lastrun(), 'never' ),
+format_datetime( $Campaign->nextrun(), 'never' ),
 $Campaign->active(), $rowclass );
 			$rowclass = $rowclass ? '' : ' class="colRow"';
 		} # end foreach Campaign

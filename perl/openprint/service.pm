@@ -264,6 +264,18 @@ sub auto_calculate {
 		} # end while
 		delete $$services{PerfectBound};
 	} # end if
+
+	require openprint::Estimating::SpinePaste;
+	if ( openprint::Estimating::SpinePaste::neccessary( $Project ) ) {
+		if ( ! $$services{SpinePaste} ) {
+			push @{$$services{SpinePaste}}, $Project->add_service( 'SpinePaste' );
+		} # end if
+	} elsif ( $$services{SpinePaste} ) {
+		while ( my $si = shift @{$$services{SpinePaste}} ) {
+			openprint::print_project::delete_service( $Project, $si );
+		} # end while
+		delete $$services{SpinePaste};
+	} # end if
 			
 	require openprint::Estimating::Stitching;
 	if ( openprint::Estimating::Stitching::neccessary( $Project ) ) {

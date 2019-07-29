@@ -19,14 +19,14 @@ $table = 'manifestcontents';
 $serial = 'manifestcontents_id_seq';
 
 %fields = (
-	id					=>	'id',
+	id							=>	'id',
 	manifest_id			=>	'manifest_id',
-	skid_id				=>	'skid_id',
-	Skid				=>	undef,
-	quantity			=>	'quantity',
-	type_id				=>	'type_id',
+	skid_id					=>	'skid_id',
+	Skid						=>	undef,
+	quantity				=>	'quantity',
+	type_id					=>	'type_id',
 	rfidtag_id			=>	'rfidtag_id',
-	RFIDTag				=>	undef,
+	RFIDTag					=>	undef,
 	manufacturers_id	=>	'manufacturers_id',
 	location_id			=>	'location_id',
 );
@@ -111,19 +111,21 @@ sub units {
 
 sub value {
 	if ( @_ > 1 ) {
-		$_[0]{'value'} = $_[1];
+		$_[0]{value} = $_[1];
 	} # end if
-	if ( ! defined $_[0]{'value'} ) {
+	if ( ! defined $_[0]{value} ) {
 		my $Type = $_[0]->Type();
+		my $lbs = $Type->type() eq 'Roll' ? $_[0]{quantity} : $_[0]{quantity} * $Type->Paper()->sheet_weight();
 		if ( $Type->cost() ) {
-			$_[0]{'value'} = Math::Round::nearest( .01, $Type->cost() * $_[0]{'quantity'}/100 );
+			$_[0]{value} = Math::Round::nearest( .01, $Type->cost() * $lbs/100 );
+$openprint::log->debug("Setting MC value from Type->cost $$Type{cost} * $lbs/100 = $_[0]{value}"); 
 		} elsif ( my $POC = $Type->PurchaseOrder_Content() ) {
-			$_[0]{'value'} = Math::Round::nearest( .01, $POC->price() * $_[0]{'quantity'}/100 );
+			$_[0]{'value'} = Math::Round::nearest( .01, $POC->price() * $lbs/100 );
 		} else {
-			$_[0]{'value'} = 0;
+			$_[0]{value} = 0;
 		} # end if	
 	} # end if	
-	return $_[0]{'value'};
+	return $_[0]{value};
 } # end sub value
 
 sub delete {

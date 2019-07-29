@@ -14,7 +14,14 @@
 				<? echo ( make_drop_down( [ map { $_->id(), $_->name() } @{$$variable{Categories}} ], $session{$$variable{uri}.'?category_id'} ); ) ?>
 			</select>
 		</li>
-        <? endif ( @{$$variable{Categories}} = openprint::Product_Category->find( order=>'lower(name)') ) ?>
+    <?eval(
+    if ( $session{$$variable{uri}.'?category_id'} and ! sets::isin( $session{$$variable{uri}.'?category_id'}, [ map { $_->id() } @{$$variable{Categories}} ] ) ) {
+      delete $session{$$variable{uri}.'?category_id'};
+    }
+    )?>
+  <? else ( @{$$variable{Categories}} = openprint::Product_Category->find( order=>'lower(name)') ) ?>
+  <?eval( delete $session{$$variable{uri}.'?category_id'}; )?>
+  <? endif ( @{$$variable{Categories}} = openprint::Product_Category->find( order=>'lower(name)') ) ?>
 	</ul>
 </fieldset>
 </form>

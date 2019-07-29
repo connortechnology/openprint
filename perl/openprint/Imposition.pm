@@ -262,44 +262,6 @@ sub Paper {
 	return $_[0]{Paper};
 } # end sub Paper
 
-sub load_used {
-	my ( $self, $specs, $qty_index ) = @_;
-
-	$$self{runstyle} = $$specs{ddmRunStyleUsed} ? $$specs{ddmRunStyleUsed} : $$specs{'ddmRunStyle'.$qty_index};
-	$$self{image_orientation} = $$specs{hdnImageOrientationUsed} ? $$specs{hdnImageOrientationUsed} : $$specs{'hdnImageOrientation'.$qty_index};
-	$$self{imposition} = $$specs{txtImpositionUsed} ? $$specs{txtImpositionUsed} : $$specs{'txtImposition'.$qty_index};
-	$$self{rows} = $$specs{hdnImpositionRowsUsed} ? $$specs{hdnImpositionRowsUsed} : $$specs{'hdnImpositionRows'.$qty_index};
-	$$self{columns} = $$specs{hdnImpositionColumnsUsed} ? $$specs{hdnImpositionColumnsUsed} : $$specs{'hdnImpositionColumns'.$qty_index};
-	$$self{dutch_rows} = $$specs{hdnImpositionDutchRowsUsed} ? $$specs{hdnImpositionDutchRowsUsed} : $$specs{'hdnImpositionDutchRows'.$qty_index};
-	$$self{dutch_columns} = $$specs{hdnImpositionDutchColumnsUsed} ? $$specs{hdnImpositionDutchColumnsUsed} : $$specs{'hdnImpositionDutchColumns'.$qty_index};
-	$$self{dutch_orientation} = $$self{image_orientation} == Vertical ? Horizontal : Vertical;
-	$$self{bleed_size} = $$specs{'ddmBleedSize'.$qty_index};
-	if ( ! $$self{Press} ) {
-		if ( $$specs{UsePress} ) {
-			$$self{Press} = openprint::Equipment->find_one( strid=>$$specs{UsePress}, deleted=>[0,1] );
-			if ( ! $$self{Press} ) {
-				# This can happen when a press is deleted
-				$openprint::log->debug("No Press found for UsePress $qty_index " . $$specs{UsePress} );
-			} # end if
-		} # end if
-		if ( ! $$self{Press} ) {
-			if ( ! $$specs{'ddmPress'.$qty_index} ) {
-				#$openprint::log->error("No ddmPress for $qty_index");
-			} else {
-				$$self{Press} = openprint::Equipment->find_one( strid=>$$specs{'ddmPress'.$qty_index}, deleted=>[0,1]);
-				if ( ! $$self{Press} ) {
-					$openprint::log->error("No Press found for ddmPress$qty_index " . $$specs{'ddmPress'.$qty_index} );
-				} # end if
-			} # end if
-		} # end if
-		if ( ! $$self{Press} ) {
-			$$self{Press} = new openprint::Equipment();
-		} # end 
-	} # end if
-	$$self{Paper} = openprint::Paper::load_from_signature( undef, $specs, $qty_index ) if ! $$self{Paper};
-} # end sub load_used
-
-
 # Passing in the Project helps us load the Paper by recommendation
 sub load {
 	my ( $self, $specs, $qty_index, $Project ) = @_;
@@ -478,6 +440,42 @@ $self->display('After load') if DEBUG;
 	return $self;
 } # end sub load
 
+sub load_used {
+	my ( $self, $specs, $qty_index ) = @_;
+
+	$$self{runstyle} = $$specs{ddmRunStyleUsed} ? $$specs{ddmRunStyleUsed} : $$specs{'ddmRunStyle'.$qty_index};
+	$$self{image_orientation} = $$specs{hdnImageOrientationUsed} ? $$specs{hdnImageOrientationUsed} : $$specs{'hdnImageOrientation'.$qty_index};
+	$$self{imposition} = $$specs{txtImpositionUsed} ? $$specs{txtImpositionUsed} : $$specs{'txtImposition'.$qty_index};
+	$$self{rows} = $$specs{hdnImpositionRowsUsed} ? $$specs{hdnImpositionRowsUsed} : $$specs{'hdnImpositionRows'.$qty_index};
+	$$self{columns} = $$specs{hdnImpositionColumnsUsed} ? $$specs{hdnImpositionColumnsUsed} : $$specs{'hdnImpositionColumns'.$qty_index};
+	$$self{dutch_rows} = $$specs{hdnImpositionDutchRowsUsed} ? $$specs{hdnImpositionDutchRowsUsed} : $$specs{'hdnImpositionDutchRows'.$qty_index};
+	$$self{dutch_columns} = $$specs{hdnImpositionDutchColumnsUsed} ? $$specs{hdnImpositionDutchColumnsUsed} : $$specs{'hdnImpositionDutchColumns'.$qty_index};
+	$$self{dutch_orientation} = $$self{image_orientation} == Vertical ? Horizontal : Vertical;
+	$$self{bleed_size} = $$specs{'ddmBleedSize'.$qty_index};
+	if ( ! $$self{Press} ) {
+		if ( $$specs{UsePress} ) {
+			$$self{Press} = openprint::Equipment->find_one( strid=>$$specs{UsePress}, deleted=>[0,1] );
+			if ( ! $$self{Press} ) {
+				# This can happen when a press is deleted
+				$openprint::log->debug("No Press found for UsePress $qty_index " . $$specs{UsePress} );
+			} # end if
+		} # end if
+		if ( ! $$self{Press} ) {
+			if ( ! $$specs{'ddmPress'.$qty_index} ) {
+				#$openprint::log->error("No ddmPress for $qty_index");
+			} else {
+				$$self{Press} = openprint::Equipment->find_one( strid=>$$specs{'ddmPress'.$qty_index}, deleted=>[0,1]);
+				if ( ! $$self{Press} ) {
+					$openprint::log->error("No Press found for ddmPress$qty_index " . $$specs{'ddmPress'.$qty_index} );
+				} # end if
+			} # end if
+		} # end if
+		if ( ! $$self{Press} ) {
+			$$self{Press} = new openprint::Equipment();
+		} # end 
+	} # end if
+	$$self{Paper} = openprint::Paper::load_from_signature( undef, $specs, $qty_index ) if ! $$self{Paper};
+} # end sub load_used
 sub spread_rows {
 	( my $self ) = @_;
 

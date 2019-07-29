@@ -155,6 +155,9 @@ sub signature_needs_bindery_cutting {
 		$openprint::log->debug(" ** Project is marked as No bindery, Cutting not needed ! ** ") if DEBUG;
 		return 0;
 	} # end if
+
+	# Pretty much always need final trim
+	return 1;
 	if ( $$sig_specs{'txtImposition'.$qty_index} > 1 ) {
 		$openprint::log->debug("Imposition > 1, Cutting needed ! ** ") if DEBUG;
 		return 1;
@@ -1174,7 +1177,7 @@ sub calc {
 
   my @signatures = $Project->signatures({sort=>1});
   if ( ! @signatures ) {
-    $openprint::log->error('ONo signatures');
+    $openprint::log->error('No signatures');
   } # end if
 
   foreach my $qty_index ( $Project->quantity_indexes() ) {

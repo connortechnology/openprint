@@ -1254,7 +1254,8 @@ if ( ! sets::isin( 'project_log', \@tables ) ) {
 	if ( ! exists $$data{id} ) {
 		$log->debug("Adding id to project_log");
 		$dbh->do('ALTER TABLE project_log add id SERIAL') or die $dbh->errstr();
-		$dbh->do('ALTER TABLE project_log DROP CONSTRAINT project_log_pkey') or die $dbh->errstr();
+		$dbh->do('ALTER TABLE project_log DROP CONSTRAINT project_log_pkey');
+    #or die $dbh->errstr();
 		$dbh->do('ALTER TABLE project_log ADD PRIMARY KEY (id)') or die $dbh->errstr();
 		$dbh->do('CREATE INDEX project_log_project_id_timestamp_idx on project_log (project_id,dtmtimestamp)') or die $dbh->errstr();
   }
@@ -2310,10 +2311,19 @@ if ( ! sets::isin( 'product_categories', \@tables ) ) {
 	if ( ! exists $$data{deleted} ) {
 		$log->debug("Add deleted to Product_Categories");
 		$dbh->do('ALTER TABLE Product_Categories ADD deleted BOOLEAN NOT NULL default false') or die $dbh->errstr();
+  } elsif ( $$data{deleted}{is_nullable} ) {
+		$log->debug("Add deleted not null to Product_Categories");
+		$dbh->do('UPDATE Product_Categories SET deleted = false') or die $dbh->errstr();
+		$dbh->do('ALTER TABLE Product_Categories ALTER deleted SET NOT NULL') or die $dbh->errstr();
 	}
 	if ( ! exists $$data{sorting} ) {
 		$log->debug("Add sorting to Product_Categories");
 		$dbh->do('ALTER TABLE Product_Categories ADD sorting INTEGER') or die $dbh->errstr();
+	}
+	if ( ! exists $$data{album_id} ) {
+		$log->debug("Add album_id to Product Categories");
+		$dbh->do('ALTER TABLE Product_Categories ADD album_id    INTEGER');
+		$dbh->do('ALTER TABLE Product_Categories ADD FOREIGN KEY (album_id) REFERENCES Photo_Albums (id)');
 	}
 } # end if
 

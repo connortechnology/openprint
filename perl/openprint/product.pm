@@ -179,6 +179,7 @@ sub categories {
 	} # end if
 	_categories();
 } # end sub categories
+
 sub _categories {
 	ssi::save_params( '/product/categories.html', ( 'category_id' ) );
 }
@@ -266,17 +267,21 @@ sub category_view {
 	} # end if
 }
 sub category_edit {
-	my $Category = $variable{Category} = new openprint::Product_Category( $param{category_id} );
-	if ( $param{btnFunction} eq 'Save' ) {
-		my @changes = $Category->changes( \%param );
-		if ( @changes ) {
-			$variable{error} = $Category->save( \%param );
-		}
+	my $Category = $variable{Category} = new openprint::Product_Category($param{category_id});
+	return if ! $param{btnFunction};
 
-		my @spec_changes = openprint::Object_Specification::save_changes( $Category, \%param );
-		push @changes, 'specification changes: ' . join(', ', @spec_changes ) if @spec_changes;
-		( new openprint::Log())->save({Object=>$Category, action=>'Edit', note=>join('<br/>', @changes ) } );
-		$variable{ExternalRedirect} = '/product/categories.html' if ! $variable{error};
+	if ( $param{btnFunction} eq 'Save' ) {
+    $param{parent_ids} = $openprint::Product_Category::defaults{parent_ids} if ! exists $param{parent_ids};
+		my @changes = $Category->changes(\%param);
+		if ( @changes ) {
+			$variable{error} = $Category->save(\%param);
+		}
+		if ( !$variable{error} ) {
+			my @spec_changes = openprint::Object_Specification::save_changes( $Category, \%param );
+			push @changes, 'specification changes: ' . join(', ', @spec_changes ) if @spec_changes;
+			(new openprint::Log())->save({Object=>$Category, action=>'Edit', note=>join('<br/>', @changes) });
+			$variable{ExternalRedirect} = '/product/categories.html' if ! $variable{error};
+		}
 	} elsif ( $param{btnFunction} eq 'Copy' ) {
 		my $New = $Category->copy();
 		$New->save();
@@ -314,6 +319,9 @@ $log->debug("specification filters: ".join(',', @{$variable{Specifications}}));
 		my @Prices = openprint::ProductPrice->find( product_id=> \@product_ids );
 		@{$variable{Quantities}} = sort { $a <=> $b } sets::union( map { $_->min() == $_->max() ? $_->min() : () } @Prices );
 	}
+}
+
+sub index {
 }
 
 1;

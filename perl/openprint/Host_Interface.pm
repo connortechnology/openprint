@@ -3,11 +3,10 @@ require openprint::Object;
 require openprint::Host;
 use Data::Dumper;
 
-
 package openprint::Host_Interface;
 our @ISA = qw( openprint::Object );
 use vars qw( $debug $table $serial %find_fields %fields %transforms %defaults );
-$debug = 0;
+$debug = 1;
 $serial = 'host_interfaces_id_seq';
 $table = 'host_interfaces';
 
@@ -106,11 +105,11 @@ $openprint::log->debug("Having authenticate $$headers{'www-authenticate'}");
 					($password ? $password : ''),
 					);
 			$response = $browser->get($url);
-				$openprint::log->debug("Auth response for $method $url $tokens{realm}, $username, $password " . $response->is_success );
+      $openprint::log->debug("Auth response for $method $url $tokens{realm}, $username, $password ".$response->is_success);
 
 			if ( $response->is_success and ( ($method ne 'get') or $args ) ) {
-$openprint::log->debug("Sending actual url $method ");
-				$response = $browser->$method($url, $args );
+$openprint::log->debug("Sending actual url $method");
+				$response = $browser->$method($url, $args);
 			}
 		} else {
 			$openprint::log->error("No realm");
@@ -119,7 +118,19 @@ $openprint::log->debug("Sending actual url $method ");
 		foreach my $k ( keys %{$headers} ) {
 			$openprint::log->debug("No auth Header $k => $$headers{$k}");
 		}
+    my $Host = $HI->Host();
+      my $username = $Host->info('username');
+      my $password = $Host->info('password');
+      $openprint::log->debug("username: $username password: $password args: " . ($args ? join(',',map { "$_=>$$args{$_}" } keys %{$args}) :'none'));
+      $browser->credentials(
+          $HI->ip().':'.$port,
+          '',
+          ($username ? $username : ''),
+          ($password ? $password : ''),
+          );
+
 		$response = $browser->$method( $url, $args ? $args : () );
+      $openprint::log->debug("Auth response for $method $url $username, $password ".$response->is_success);
 	}
 	return $response;
 } # end sub authenticate
@@ -131,6 +142,10 @@ sub vendor {
       my $oui = $_[0]{mac};
       $oui =~ s/[^A-Fa-f0-9]//g;
       $oui =~ s/^([A-Fa-f0-9]{6}).*$/${1}000000/;
+			if ( ! $oui ) {
+				$openprint::log->error("Got no oui from $oui $_[0]{mac}");
+				return;
+			}
 
       if ( my $Vendor = openprint::OUI_Vendor->find_one(oui=>$oui) ) {
         $_[0]{vendor} = $$Vendor{vendor_name};

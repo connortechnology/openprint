@@ -454,7 +454,11 @@ sub to_string {
 		$$self{to_string} = $_[0];
 	} # end if
 	if ( ! $$self{to_string} ) {
-		my $string = ($$self{id} ? '' : 'Custom: ').join(' ', ( $self->manufacturer(), $self->brand(), $self->finish(), $self->colour(), $self->weight() ) );
+		my $string = join(' ', (
+					($$self{supplied} ? 'Customer Supplied' : () ),
+					($$self{id} ? () : 'Custom'),
+					$self->manufacturer(), $self->brand(), $self->finish(), $self->colour(), $self->weight(),
+					) );
 		if ( $self->type() eq 'Roll' ) {
 			$string .= ' ' . $self->width.'"' if $$self{width};
 			$string .= ' Roll ';
@@ -1004,12 +1008,20 @@ order=>'brand,finish,colour,weight,width,height' );
 sub next {
 	my $self = shift;
 	
-	my @papers = openprint::Paper->find_one( 
+	my @papers = openprint::Paper->find( 
+			columns   =>  '*,(select name from stockbrands where id=brand_id) AS brand, (select name from stockfinishes where id=finish_id) AS finish, (select name from stockcolours where id=colour_id) AS colour, (select name from stockweights where id=weight_id) AS weight',
+			brand_id=>$$self{brand_id},
+order=>'brand,finish,colour,weight,width,height' );
+	for ( my $i = 0; $i < @papers-1; $i += 1 ) {
+		return $papers[$i+1] if ( $papers[$i]{id} == $$self{id} ) and ($i < @papers-1);
+	} # end if
+	@papers = openprint::Paper->find( 
 			columns   =>  '*,(select name from stockbrands where id=brand_id) AS brand, (select name from stockfinishes where id=finish_id) AS finish, (select name from stockcolours where id=colour_id) AS colour, (select name from stockweights where id=weight_id) AS weight',
 order=>'brand,finish,colour,weight,width,height' );
-	for ( my $i = 0; $i < @papers; $i += 1 ) {
-		return $papers[$i+1] if ($papers[$i] == $self )and ($i < @papers);
+	for ( my $i = 0; $i < @papers-1; $i += 1 ) {
+		return $papers[$i+1] if ( $papers[$i]{id} == $$self{id} ) and ($i < @papers-1);
 	} # end if
+
 	return $self;
 } # end sub next
 
@@ -1705,7 +1717,7 @@ sub units {
 } # end sub units
 sub types {
 	return ($_[0]{type} eq 'Roll' ? ' roll' : 'sheet') . ( $_[1] == 1 ? '' : 's' );
-} # end sub units
+} # end sub types
 
 sub Supplied {
 	my ( $self ) = @_;
@@ -1839,27 +1851,47 @@ sub check {
 	my $Paper = shift;
 	my $Copy = $Paper->clone();
 
-	my $results;
+	my @results;
   if ( abs( POSIX::ceil($Paper->gsm()) - POSIX::ceil($Copy->gsm(undef)) ) - 3 > 0 ) {
-		return "may have invalid gsm current:$$Paper{gsm} != calculated:$$Copy{gsm} ";
+		push @results, "may have invalid gsm current:$$Paper{gsm} != calculated:$$Copy{gsm}";
   }
   $Copy = $Paper->clone();
+  if ( abs(POSIX::ceil($Paper->mweight()) - POSIX::ceil($Copy->mweight(undef))) > 1 ) {
+$openprint::log->debug("$$Paper{mweight} - $$Copy{mweight} = " . abs(POSIX::ceil($Paper->mweight()) - POSIX::ceil($Copy->mweight(undef))) );
+    push @results, "may have invalid mweight current:$$Paper{mweight} != calculated:$$Copy{mweight}";
+	}
+  $Copy = $Paper->clone();
   if ( abs( POSIX::ceil( $Paper->basis_mweight()) - POSIX::ceil( $Copy->basis_mweight(undef)) ) -1 > 0 ) {
-    return "may have invalid basis weight current:$$Paper{basis_mweight} != calculated:$$Copy{basis_mweight}";
-  }
-  if (
-   ( $Paper->brand() =~ /cover/i or $Paper->weight() =~ /cover/i ) 
-     and
-   ( $Paper->basis_width() != 20 or $Paper->basis_height() != 26 )
- ) {
-	  return 'may have the wrong basis size.';
-  }
+    push @results, "may have invalid basis weight current:$$Paper{basis_mweight} != calculated:$$Copy{basis_mweight}";
+	}
+	if ( $Paper->is_cover()
+			and (
+				($Paper->basis_width() != 20) 
+				or 
+				($Paper->basis_height() != 26)
+				) 
+		 ) {
+$openprint::log->debug("basis: " . $Paper->basis_width() . 'x' . $Paper->basis_height());
+		push @results, 'may have wrong basis size. Should probably be 20x26' .
+ssi::button('fix'.$$Paper{id}, { onclick=>q`set_basis_dimensions('20','26');`, text=>'Fix' } );
+;
+	}
   if ( ( $Paper->finish() =~ /1 side/i ) and ( $Paper->doublesided() ) ) {
-    return 'appears to be C1S, but is marked double sided.';
+    push @results, 'appears to be C1S, but is marked double sided.';
   }
 
-	return;
+	return join('<br/>', @results);
 } # end sub check
+
+sub is_cover {
+	my $Paper = shift;
+	return 
+			($Paper->brand() =~ /cover/i
+			 or
+			$Paper->finish() =~ /cover/i
+			or 
+			$Paper->weight() =~ /cover/i);
+}
 
 1;
 __END__

@@ -1279,6 +1279,10 @@ sub _production_performance {
 				( $session{$uri.'?status_id'} ? ( status_id => [ split(',', $session{$uri.'?status_id'} ) ] ) : () ),
 				order => ($param{order} ? $param{order} : 'id'),
 				);
+	my @dockets = map { $_->docket() } @Orders;
+	my %PI_by_docket = misc::make_hash_from_array('docket', openprint::PaperInventory->find(docket=>\@dockets, 'skid_id is null'=>0)) if @dockets;
+	my %POC_by_docket = misc::make_hash_from_array( 'docket', openprint::PurchaseOrder_Content->find(docket=>\@dockets)) if @dockets;
+
 	foreach my $Order ( @Orders ) {
 		next if ! $$Order{docket};
 		if ( $session{$uri.'?reprint'} ) {
@@ -1344,18 +1348,20 @@ sub _production_performance {
 			}
 			push @fragment, $impressions, join(',',keys %runstyles);
 	
-			my %category_totals;
-			foreach my $Category ( @ServiceType_Categories ) {
-				$category_totals{$$Category{id}} = 0;
-				foreach my $ServiceType ( @{$ServiceTypes_By_Category{$$Category{id}}} ) {
-					next if ! $$services{$$ServiceType{name}};
-					foreach my $service_id ( @{ $$services{$$ServiceType{name}} } ) {
-						my $Service = $Project->Service( $service_id );
-						$category_totals{$$Category{id}} += $Service->ordered_price();	
-					} # end foreach service_id
-				} # end foreach ServiceType
-				push @fragment, $category_totals{$$Category{id}};
-			} # end foreach category
+			if ( $columns{services} ) {
+				my %category_totals;
+				foreach my $Category ( @ServiceType_Categories ) {
+					$category_totals{$$Category{id}} = 0;
+					foreach my $ServiceType ( @{$ServiceTypes_By_Category{$$Category{id}}} ) {
+						next if ! $$services{$$ServiceType{name}};
+						foreach my $service_id ( @{ $$services{$$ServiceType{name}} } ) {
+							my $Service = $Project->Service( $service_id );
+							$category_totals{$$Category{id}} += $Service->ordered_price();	
+						} # end foreach service_id
+					} # end foreach ServiceType
+					push @fragment, $category_totals{$$Category{id}};
+				} # end foreach category
+			}
 
 			if ( $columns{plates} ) {
 				my $plate_qty = 0;
@@ -1393,14 +1399,15 @@ sub _production_performance {
 				push @fragment, $invoiced_on;
 			}
 
-			if ( $columns{stock} ) {
+			if ( $columns{stock} or $columns{stock_customer_supplied} ) {
 				my $stock_sheets = 0;
 				my $stock_weight = 0;
 				my $stock_cost = 0;	
-				my %skids;
-				foreach my $PI ( openprint::PaperInventory->find( docket=>$Order->docket(), 'skid_id is null'=>0 ) ) {
-					$skids{$$PI{skid_id}} = 1;
-$openprint::log->debug("PI Stock for $$Order{docket} is $$PI{delta} " . $PI->Paper()->to_string() );
+			
+				# This the used counts from inventory, theoretically each has a manifest
+				foreach my $PI ( $PI_by_docket{ $$Order{docket} } ? @{$PI_by_docket{ $$Order{docket} } } : () ) {
+#openprint::PaperInventory->find( docket=>$Order->docket(), 'skid_id is null'=>0 ) ) {
+#$openprint::log->debug("PI Stock for $$Order{docket} is $$PI{delta} " . $PI->Paper()->to_string() );
 					if ( $PI->Paper()->units() eq 'Roll' ) {
 						$stock_weight += -1*$$PI{delta};
 					} else {
@@ -1409,41 +1416,79 @@ $openprint::log->debug("PI Stock for $$Order{docket} is $$PI{delta} " . $PI->Pap
 					my $Cost = $PI->Value();
 					$stock_cost += $$Cost{value};
 				}
+
+				push @fragment, $stock_sheets, int($stock_weight), $stock_cost;
+
+				$stock_sheets = $stock_weight = $stock_cost = 0;
+        # Now do the counts from Manifests/POs
+        foreach my $POC ( $POC_by_docket{$$Order{docket}} ? @{$POC_by_docket{$$Order{docket}}} : () ) {
+						next if $POC->PurchaseOrder()->cancelled();
+#openprint::PurchaseOrder_Content->find( docket=>$Order->docket() ) ) {
+            if ( $POC->type() eq 'Roll Stock' ) {
+              $stock_weight += $POC->qty();
+            } elsif ( $POC->type() eq 'Sheet Stock' ) {
+              $stock_sheets += $POC->qty();
+              $stock_weight += $POC->weight();
+            } else {
+							next; # Not stock
+						}
+            $stock_cost += $POC->PurchaseOrder()->Currency()->convert_from($POC->total());
+        } # end foreach POC
+        push @fragment, $stock_sheets, int($stock_weight), $stock_cost;
+
+				$stock_sheets = $stock_weight = $stock_cost = 0;	
+				# Now do the counts from Manifests/POs
 				foreach my $MT ( openprint::Manifest_Content_Type->find( docket=>$Order->docket() ) ) {
+					#my $POC = $MT->PurchaseOrder_Content();
 					foreach my $MC ( openprint::ManifestContent->find( type_id=>$$MT{id} ) ) {
-						next if $skids{$$MC{skid_id}};
 						if ( $MT->Paper()->type() eq 'Roll' ) {
 							$stock_weight += $MC->quantity();
 						} else {
 							$stock_sheets += $MC->quantity();
 							$stock_weight += $MC->quantity() * $MT->Paper()->sheet_weight();
 						}
-						$stock_cost += $MC->value();
+						if ( $MC->value() ) {
+$openprint::log->debug("Adding stock_cost from MC value $stock_weight $stock_sheets $$MC{value} = $stock_cost");
+							$stock_cost += $MT->Manifest()->Currency()->convert_from($MC->value());
+						#} elsif ( $POC ) {
+							#$stock_cost += $POC->PurchaseOrder()->Currency()->convert_from($POC->price() * $MC->quantity() / 100);
+						}
 					}
-				}
+				} # end foreach Manifest Type
 				push @fragment, $stock_sheets, int($stock_weight), $stock_cost;
 
 				if ( $$services{Paper} and @{$$services{Paper}} ) {
 					my $Service = $Project->Service( $$services{Paper}[0] );
 
-					my $stock_sheets_quoted = 0;
-					my $stock_weight_quoted = 0;
-					my $stock_specs = $Service->specs();
-					my @stocks_and_quantities = openprint::Estimating::Paper::get_stocks_and_quantities( $Project, $$services{Paper}[0], $stock_specs, $qty_index );
-					my $stock_index = 1;
+					$stock_sheets = $stock_weight = $stock_cost = 0;	
+					my @stocks_and_quantities = openprint::Estimating::Paper::get_stocks_and_quantities( $Project, $$services{Paper}[0], $Service->specs(), $qty_index );
 					foreach my $SQ ( @stocks_and_quantities ) {
 						my ( $Stock, $qty ) = @$SQ{'Stock','quantity'};
 						next if ! $qty;
-
-						push @Data, @fragment, $Stock->to_string(), ( $Stock->type() eq 'Sheet' ? ($qty,int($qty*$Stock->sheet_weight())) : ('', $qty) ), $$SQ{price};
+						if ( $Stock->supplied() ) {
+							next if ! $columns{stock_customer_supplied};
+						} else {
+							next if ! $columns{stock};
+						}
+						if ( $Stock->type() eq 'Roll' ) {
+							$stock_weight += $qty;
+            } else {
+              $stock_sheets += $qty;
+              $stock_weight += $qty * $Stock->sheet_weight();
+            }
+            $stock_cost += $Project->Currency()->convert_from($$SQ{price});
 					}
+					push @Data, @fragment, $stock_sheets, int($stock_weight), $stock_cost;
 
 				} else {
-					push @Data, @fragment, 0,0,0,0;
+					# No quoted stock section
+					push @Data, @fragment, 0, 0, 0;
 				}
 			} else {
+				# Not doing stocks
 				push @Data, @fragment;
 			} # end if stock
+			$fragment[6] = 0; # clear project price so that a subsequent line won't get the same value again
 
 		} # end foreach Project
 	} # end foreach Order
@@ -1451,10 +1496,15 @@ $openprint::log->debug("PI Stock for $$Order{docket} is $$PI{delta} " . $PI->Pap
 	$variable{Header} = [ 'Order ID', 'Docket', 'Project ID', 'Company',
 		'Created On', 'Status', 'Project Value',
 		'Impressions', 'Runstyles',
-		( map { $$_{name} } @ServiceType_Categories ),
+		( $columns{services} ? ( map { $$_{name} } @ServiceType_Categories ) : () ),
 		( $columns{plates} ? ( 'Plates', 'Plate Cost', 'Plate Total' ) : () ),
 		( $columns{production} ? ( 'Operator Assigned', 'Printed On', 'Completed On', 'Shipped On', 'Invoiced On' ) : () ),
-		( $columns{stock} ? ( 'Used Stock Sheets', 'Used Stock Weight', 'Stock Cost', 'Stock', 'Quoted Stock Sheets', 'Quoted Stock Weight', 'Stock Quoted Price' ) : () ),
+		( $columns{stock} ? ( 
+												 'Used Stock Sheets', 'Used Stock Weight', 'Used Stock Cost',
+												 'Purchased Stock Sheets', 'Purchased Stock Weight', 'Purchaseed Stock Cost',
+												 'Received Stock Sheets', 'Received Stock Weight', 'Received Stock Cost',
+												 'Quoted Stock Sheets', 'Quoted Stock Weight', 'Quoted Stock Price'
+												) : () ),
 	];
 
 	$variable{Data} = \@Data;
@@ -1855,6 +1905,19 @@ sub customer_performance {
 	#ssi::setup_date_select( $uri, 'not_ordered_on_end', 0 );
 
 	if ( exists $param{Download} ) {
+		my $sql = openprint::Company->find_sql(
+          ( $param{salesrep_id} ? ( salesrep_id=>$param{salesrep_id} ) : () ),
+          order=>'lower(name)',
+          ( $session{$uri.'?country'} ? ( country=>$session{$uri.'?country'} ) : () ),
+          );
+		$$sql{sql} =~ s/\*/id/;
+
+		my %Companies_By_CSR = misc::make_hash_from_array('salesrep_id',
+				openprint::Company->find(
+					( $param{salesrep_id} ? ( salesrep_id=>$param{salesrep_id} ) : () ),
+					order=>'lower(name)',
+					( $session{$uri.'?country'} ? ( country=>$session{$uri.'?country'} ) : () ),
+					) );
 
 		my $do_not_ordered_since = 1 if Date::Calc::check_date( @session{
 							$uri.'?not_ordered_on_start_year',
@@ -1878,30 +1941,23 @@ sub customer_performance {
 			@csr_ids = map { $_->id() } openprint::User->find( company_id=>$config{owner_id}, type=>['E','A'], 'usergroup any'=>'Sales', order=>'lower(firstname),lower(lastname)');
 		} # end if
 
-		my %orders_by_company;
-		my %quotes_by_company;
+		my @Orders = openprint::Order->find( 
+		'company_id in' => $sql,
+				ssi::date_filter( $uri.'?ordered_on_start', 'created_on >=' ),
+				ssi::date_filter( $uri.'?ordered_on_end', 'created_on <=' ),
+				status_id => \@status_ids,
+				);
+		my %orders_by_company = misc::make_hash_from_array('company_id', @Orders);
+		my @Quotes = openprint::Quote->find( 
+		'company_id in' => $sql,
+				ssi::date_filter( $uri.'?ordered_on_start', 'created_on >=' ),
+				ssi::date_filter( $uri.'?ordered_on_end', 'created_on <=' ),
+				);
+		my %quotes_by_company = misc::make_hash_from_array('company_id', @Quotes);
 
-		{
-			my @Orders = openprint::Order->find( 
-					ssi::date_filter( $uri.'?ordered_on_start', 'created_on >=' ),
-					ssi::date_filter( $uri.'?ordered_on_end', 'created_on <=' ),
-					status_id => \@status_ids,
-					);
-			foreach my $Order ( @Orders ) {
-				$orders_by_company{$$Order{company_id}} = [] if ! $orders_by_company{$$Order{company_id}};
-				push @{ $orders_by_company{$$Order{company_id}} }, $Order;
-			}
-			my @Quotes = openprint::Quote->find( 
-					ssi::date_filter( $uri.'?ordered_on_start', 'created_on >=' ),
-					ssi::date_filter( $uri.'?ordered_on_end', 'created_on <=' ),
-					);
-			foreach my $Quote ( @Quotes ) {
-				$quotes_by_company{$$Quote{company_id}} = [] if ! $quotes_by_company{$$Quote{company_id}};
-				push @{ $quotes_by_company{$$Quote{company_id}} }, $Quote;
-			}
-		}
 		my %not_ordered_since;
 		my @Orders_Since = openprint::Order->find(
+		'company_id in' => $sql,
 				ssi::date_filter( $uri.'?not_ordered_on_start', 'created_on >=' ),
 				ssi::date_filter( $uri.'?not_ordered_on_end', 'created_on <=' ),
 				status_id => \@status_ids,
@@ -1910,13 +1966,13 @@ sub customer_performance {
 			$not_ordered_since{$$Order{company_id}} = 1;
 		}
 	
+
 		foreach my $csr_id ( @csr_ids ) {
 			my $CSR = new openprint::User($csr_id);
 
-			foreach my $Company ( openprint::Company->find(
-						salesrep_id=>$csr_id, order=>'lower(name)',
-						( $session{$uri.'?country'} ? ( country=>$session{$uri.'?country'} ) : () ),
-						) ) {
+			next if ! $Companies_By_CSR{$csr_id};
+
+			foreach my $Company ( @{$Companies_By_CSR{$csr_id}} ) {
 				my $order_total;
 				my $payment_cycle;
 

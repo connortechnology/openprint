@@ -9,11 +9,12 @@
 		$html .= qq`<script type="text/javascript">alert('Warning: $$variable{warning}');</script>`;
 	} 
 	if ( ( $param{action} eq 'Remove' ) and ! $variable{error} ) {
-$html .= qq`<script type="text/javascript">
-var tr = \$('tr-$param{content_id}');
-if ( tr ) tr.remove();
-tr = \$('tr-$param{content_id}-error');
-if ( tr ) tr.remove();
+		$html .= qq`
+<script type="text/javascript">
+	var tr = \$('tr-$param{content_id}');
+	if ( tr ) tr.remove();
+	tr = \$('tr-$param{content_id}-error');
+	if ( tr ) tr.remove();
 </script>
 `;
 	} elsif ( $$variable{C} ) {
@@ -120,7 +121,7 @@ if ( tr ) tr.remove();
 				) . '</td>';
 		$html .= '</tr>';
 		if ( $error ) {
-			$html .= '<tr id="tr-'.$$C{id}.'-error" class="error"><td colspan="'.( sets::isin( $Paper->type(), ['Roll','Sheet'] ) ? '10' : '11' ) . '">'.$error . '</td></tr>';
+			$html .= '<tr id="tr-'.$$C{id}.'-error" class="error"><td colspan="'.( ($Paper->type() and sets::isin($Paper->type(), ['Roll','Sheet'])) ? '10' : '11').'">'.$error.'</td></tr>';
 		} # end if
 	} # end if
 
