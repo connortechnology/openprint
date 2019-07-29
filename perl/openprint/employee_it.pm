@@ -234,7 +234,8 @@ sub host {
         } else {
           $variable{error} .= "Error running wakeonlan -i $$I{ip} $$I{mac}<br/>";
         }
-      } # end foraech
+      } # end foreach
+      $variable{ExternalRedirect} = $Host->url();
     } elsif ( $param{action} eq 'GEOLookup' ) {
       foreach my $I ( $Host->Interfaces() ) {
         if ( ! $I->ip() ) {
@@ -301,6 +302,7 @@ sub host {
       } else {
         $variable{information} .= 'Host did not respond to ping.';
       } # end if	
+      $variable{ExternalRedirect} = $Host->url();
     } elsif ( $param{action} eq 'Upload' ) {
       $param{mac} = [ map { split( ',', $_ ) } split("\n", $param{mac}) ];
       if ( $param{type_id} ) {

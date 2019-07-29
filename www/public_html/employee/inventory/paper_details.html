@@ -296,4 +296,5 @@ x
 	<fieldset><legend onclick="toggleContent( 'Log', '/employee/inventory/_paper_log.html', new Array('paper_id',<?paper_id?>) );">Inventory Log<span class="unprintable"> - click to hide/show</span></legend>
 		<div id="Log"><?include('/employee/inventory/_paper_log.html') ?></div>
 	</fieldset>
+	<? echo ( include_logs( $$variable{Paper} ); ) ?>
 <? endif ( $$variable{paper_id} ) ?>

@@ -270,25 +270,36 @@ sub order_history {
 	}
 
 	if ( $param{action} eq 'download' ) {
+		require Number::Format;
+		my $Formatter = new Number::Format(
+				-decimal_digits     =>  2,
+				-int_curr_symbol    =>  $openprint::Currency->symbol(),
+				-thousands_sep      =>  '',
+				);
+
 		my @servicetype_ids = split(',',$session{$r->uri().'?servicetype_id'} );
 		my %ServiceTypesById = map { $$_{id} => $_ } @{$variable{ServiceTypes}};
 
-		my @Header = ( 'OrderID', 'Docket', 'Invoice', 'Company', 'Date Ordered', 'Date Printed', 'Date Shipped', 'Date Invoiced', 'Status', 'Total',
-				'Commission',
-				'Credit Card Fee',
+		my @Header = ( 'OrderID', 'Docket', 'Invoice', 'Company',
+				'Date Ordered', 'Date Printed', 'Date Shipped', 'Date Invoiced', 'Status', 'Subtotal', 
+        ( map { (exists $variable{tax_totals}{$$_{id}}) ?
+          sprintf('%s (%d%)', $_->name(), $_->rate() ) : () } @{$variable{Taxes}} ),
+				'Total', 'Commission', 'Credit Card Fee',
 				map { $ServiceTypesById{$_}->description() } @servicetype_ids );
 		my @Data = ();
 		my %service_totals;
 		my $order_total = 0;
+		my $subtotal_total = 0;
 		my $csr_commission_total = 0;
 		my $credit_card_fee_total = 0;
 		foreach my $Order ( @{$variable{Orders}} ) {
+			my $Currency = $Order->Currency();
 			foreach my $Project ( $Order->Projects() ) {
 
 				my %totals;
 				my @Services = openprint::Project_Service->find(project_id=>$$Project{id}, servicetype_id=>\@servicetype_ids);
 				foreach my $Service ( @Services ) {
-					$totals{$$Service{servicetype_id}} += $Service->ordered_price();
+					$totals{$$Service{servicetype_id}} += $Currency->convert_from($Service->ordered_price());
 				}
 
 				push @Data, (
@@ -300,9 +311,12 @@ sub order_history {
 						ssi::format_csv_date($Project->shipped_on()),
 						ssi::format_csv_date($Order->invoiced_on()),
 						$Order->status(),
-						$openprint::Currency->format($Order->total()),
-						$openprint::Currency->format($Order->csr_commission()),
-						$openprint::Currency->format($Order->credit_card_fee()),
+						$Formatter->format_number($Currency->convert_from($Order->subtotal()), 2),
+						( map { exists $variable{tax_totals}{$_->id()} ?
+								$Formatter->format_number($Currency->convert_from($Order->Tax($_)->amount()), 2) : () } @{$variable{Taxes}} ),
+						$Formatter->format_number($Currency->convert_from($Order->total()), 2),
+						$Formatter->format_number($Currency->convert_from($Order->csr_commission()), 2),
+						$Formatter->format_number($Currency->convert_from($Order->credit_card_fee()), 2),
 				);
 				foreach my $servicetype_id ( @servicetype_ids ) {
 					my $price = $totals{$servicetype_id};
@@ -310,14 +324,19 @@ sub order_history {
 					$service_totals{$servicetype_id} += $price;
 				}
 			} # end foreach Project
-			$order_total += $Order->total();
-			$csr_commission_total += $Order->csr_commission();
-			$credit_card_fee_total += $Order->credit_card_fee();
+			$subtotal_total += $Currency->convert_from($Order->subtotal());
+			$order_total += $Currency->convert_from($Order->total());
+			$csr_commission_total += $Currency->convert_from($Order->csr_commission());
+			$credit_card_fee_total += $Currency->convert_from($Order->credit_card_fee());
 		} # end foreach Order
-		push @Data, '','','','','','','Totals',
-				 $openprint::Currency->format($order_total),
-				 $openprint::Currency->format($csr_commission_total),
-				 $openprint::Currency->format($credit_card_fee_total),
+		push @Data, '','','','','','','','','Totals',
+				 $Formatter->format_number($subtotal_total, 2),
+				 ( map { exists $variable{tax_totals}{$_->id()} ?
+							 $Formatter->format_number($variable{tax_totals}{$_->id()}, 2)
+							 : () } @{$variable{Taxes}} ),
+				 $Formatter->format_number($order_total, 2),
+				 $Formatter->format_number($csr_commission_total, 2),
+				 $Formatter->format_number($credit_card_fee_total, 2),
 				 map { $service_totals{$_} } @servicetype_ids;
 
 		misc::export_csv($r, $log, \%variable, 'order_history_report.csv', \@Header,\@Data);	
@@ -346,11 +365,12 @@ sub _order_history_results {
 		delete $session{$uri.'?servicetype_id'} if ! $param{servicetype_id};
 		delete $session{$uri.'?servicetype_category_id'} if ! $param{servicetype_category_id};
 		my %parameters;
-		if ( ( $session{user_type} ne 'A' ) and ! openprint::usergroup::is_user_in( ['Sales Admin','Reporting','Accounting'], $session{user_id} ) ) {
+		if ( ( $session{user_type} ne 'A' ) and
+				! openprint::usergroup::is_user_in( ['Sales Admin','Reporting','Accounting'], $session{user_id} ) ) {
 			$parameters{or} = {
 					company_id	=> $openprint::User->company_id(),
 					salesrep_id => $session{user_id},
-					user_id=> $session{user_id},
+					user_id			=> $session{user_id},
 			};
 		#} elsif ( $param{CSR} ) {
 			#$parameters{salesrep_id} = $session{$uri.'?CSR'};
@@ -362,7 +382,12 @@ sub _order_history_results {
 
 		$variable{Orders} = [];
 
-	# Companies should always have 1 because we include our own, so if empty, then we must be an admin.
+		$variable{Taxes} = [ openprint::Tax->find(
+				ssi::date_filter($uri.'?created_on_end', 'period_start null_or_<='),
+				ssi::date_filter($uri.'?created_on_start', 'period_end null_or_>='),
+				order   =>  'period_start,name',
+				) ];
+	  # Companies should always have 1 because we include our own, so if empty, then we must be an admin.
 
 		my @Orders = openprint::Order->find(
 				( @Companies ? (
@@ -370,7 +395,7 @@ sub _order_history_results {
 													($session{$uri.'?company_id'} and $companies{$session{$uri.'?company_id'}})
 													?
 													$session{$uri.'?company_id'} : [ keys %companies ] ) 
-			) : () ),
+											 ) : () ),
 			( $session{$uri.'?CSR'} ? ( salesrep_id	=> $session{$uri.'?CSR'} ) : () ),
 			ssi::date_filter( $uri.'?created_on_start', 'created_on >=' ),
 			ssi::date_filter( $uri.'?created_on_end', 'created_on <=' ),
@@ -386,17 +411,23 @@ sub _order_history_results {
 		}
 		my @order_ids = map { $$_{id} } @Orders;
 
-		my %Projects_By_OrderId = misc::make_hash_from_array( 'order_id', 
-				openprint::Project->find(order_id=>\@order_ids) );
+		my %Order_Taxes = misc::make_hash_from_array('order_id',
+				openprint::Order_Tax->find(order_id=>\@order_ids));
 
-		my %Invoices_By_OrderId = misc::make_hash_from_array( 'order_id',
-				openprint::Order_Invoice->find(order_id=>\@order_ids) );
+		my %Projects_By_OrderId = misc::make_hash_from_array('order_id', 
+				openprint::Project->find(order_id=>\@order_ids));
 
-		openprint::Invoice->find(id=>[ map { $$_{invoice_id} } ( map { @{$Invoices_By_OrderId{$_}} } keys %Invoices_By_OrderId ) ] );
+		my %Invoices_By_OrderId = misc::make_hash_from_array('order_id',
+				openprint::Order_Invoice->find(order_id=>\@order_ids));
+
+		my @invoice_ids = map { $$_{invoice_id} } ( map { @{$Invoices_By_OrderId{$_}} } keys %Invoices_By_OrderId );
+
+		openprint::Invoice->find(id=>\@invoice_ids) if @invoice_ids;
 
 		foreach my $Order ( @Orders ) {
 			$$Order{Projects} = $Projects_By_OrderId{$$Order{id}};
 			$$Order{Invoices} = $Invoices_By_OrderId{$$Order{id}};
+			$$Order{Taxes} = $Order_Taxes{$$Order{id}};
 			if ( $param{reprint} ) {
 				my $reprint = 0;
 				foreach my $Project ( $Order->Projects() ) {
@@ -410,8 +441,8 @@ sub _order_history_results {
 			} # end if reprint
 
 			my @printed_on_start = map{ @session{$uri.'?printed_on_start_'.$_} } ( 'year','month','day' );
-			my $printed_on_start = join('-', @printed_on_start ) if Date::Calc::check_date( @printed_on_start );
-			my $printed_on_start_seconds = Date::Parse::str2time( $printed_on_start ) if $printed_on_start;
+			my $printed_on_start = join('-', @printed_on_start) if Date::Calc::check_date(@printed_on_start);
+			my $printed_on_start_seconds = Date::Parse::str2time($printed_on_start) if $printed_on_start;
 
 			my @printed_on_end = map{ @session{$uri.'?printed_on_end_'.$_} } ( 'year','month','day' );
 			my $printed_on_end = join('-', @printed_on_end) if Date::Calc::check_date(@printed_on_end);
@@ -463,6 +494,12 @@ sub _order_history_results {
 			}
 
 			push @{$variable{Orders}}, $Order;
+
+			foreach my $Tax ( @{$variable{Taxes}} ) {
+				my $OT = $Order->Tax($Tax);
+				next if ! $$OT{tax_id};
+				$variable{tax_totals}{$$Tax{id}} += $Order->Currency()->convert_from($OT->amount());
+			} # end foreach Tax
 		} # end foreach Order
 		$variable{Companies} = \%companies;
 	} # end if param
