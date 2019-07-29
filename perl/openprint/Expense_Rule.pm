@@ -47,7 +47,7 @@ sub match {
         @matches = $$line{$key} =~ /$1/;
         $openprint::log->debug("testing $key $$line{$key} =~ $$rule{$key} @matches $?");
         if ( @matches ) {
-          $openprint::log->debug("Have matches ".%+);
+          #$openprint::log->debug("Have matches ".%+);
           foreach my $p ( keys %+ ) {
             $$self{matches}{$p} = $+{$p};
             $openprint::log->debug("Have matches $p => " . $$self{matches}{$p});
