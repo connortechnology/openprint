@@ -4210,6 +4210,11 @@ if ( sets::isin( 'emailcampaigns', \@tables ) ) {
 		print "Adding deleted to email_campaigns\n";
 		$dbh->do('ALTER TABLE emailcampaigns ADD deleted BOOLEAN NOT NULL default false');
 	} # end if
+	if ( ! exists $$data{user_id} ) {
+		print "Adding user_id to email_campaigns\n";
+		$dbh->do('ALTER TABLE emailcampaigns ADD user_id INTEGER') or die $dbh->errstr();
+		$dbh->do('ALTER TABLE emailcampaigns ADD FOREIGN KEY (user_id) REFERENCES Users (id)') or die $dbh->errstr();
+	} # end if
 } else {
 	$_ = misc::load_file( $log, q{../openprint/sql/EmailCampaigns.sql});
 	foreach my $st ( split(';', $_ ) ) {

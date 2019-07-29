@@ -19,6 +19,8 @@ package openprint::marketing;
 
 require openprint::EmailCampaign;
 require openprint::MarketingCategory;
+require openprint::Company;
+require openprint::Company_in_Marketing_Category;
 require openprint::Banner;
 require openprint::Survey;
 require openprint::account;
@@ -83,6 +85,33 @@ sub categories {
 	} elsif ( $param{btnFunction} eq 'Remove' ) {
 		$Category->remove_company( $param{chkDelete} );
 		$Category->save();
+	} elsif ( $param{btnFunction} eq 'Import' ) {
+		my $ac = sql::start_transaction($dbh);
+
+    my $upload = $r->upload('import_file');
+    my $io = $upload->io();
+    $_ = <$io>;
+
+    my $csv = Text::CSV_XS->new();
+
+    while (<$io>) {
+      my $status = $csv->parse($_);
+      my ( $name ) = misc::trim($csv->fields());
+			my @Companies = openprint::Company->find(name=>$name);
+			if ( ! @Companies ) {
+				$variable{error} .= "No company found for $name<br/>";
+				next;
+			} elsif ( @Companies > 1 ) {
+				$variable{error} .= "Multiple companies found for $name<br/>";
+			}
+			foreach my $Company ( @Companies ) {
+				my $Company_in_Category = new openprint::Company_in_Marketing_Category();
+				$variable{error} .= $Company_in_Category->save({company_id=>$$Company{id},category_id=>$$Category{id}});
+			} # end foreach Company
+
+		} # end while
+		sql::end_transaction($dbh, $ac);
+
 	} # end if
 	$variable{Category} = $Category;
 } # end sub categories
@@ -111,6 +140,7 @@ sub email_campaign {
 		$variable{error} .= $Campaign->save({name=>'Copy of '.$$Campaign{name}});
     } elsif ( $param{btnFunction} eq 'Test' ) {
         $variable{information} = $Campaign->test();
+				$variable{ExternalRedirect} = $Campaign->url_to();
     } elsif ( $param{btnFunction} eq 'Download Recipients' ) {
         my @header = ( 'Company','Name','Email','Phone','Last Sent On','Number of Times Sent');
         my @data;

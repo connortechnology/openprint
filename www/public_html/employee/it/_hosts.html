@@ -177,10 +177,9 @@ sub online_html {
 			my $html;
 			my $rowclass;
 			foreach my $Host ( @{$$variable{Hosts}} ) {
-       $rowclass = ' class="deleted"' if $Host->deleted();
 				my @Assets = $Host->Assets();
 				$html .= sprintf('
-					<tr%9$s>
+					<tr class="%9$s">
 						<td class="checkbox"><input type="checkbox" id="host_id" name="host_id" value="%1$d"/></td>
 						<td class="thumbnail">%10$s</td>
 						<td class="name"><a href="/employee/it/host.html?host_id=%1$d">%2$s</a></td>
@@ -202,10 +201,10 @@ sub online_html {
             ( $Host->monitored() ? '<span class="monitored">monitored</span>' : () ),
 					) ),
 					$Host->description(),
-					$rowclass,
+					join(' ', $rowclass, ($Host->deleted() ? 'deleted' : () ) ),
 					( @Assets ? $Assets[0]->Asset()->sized_html('small') : '' ),
 					);
-				$rowclass = $rowclass ? '' : ' class="colRow"';
+				$rowclass = $rowclass ? '' : 'colRow';
 			} # end foreach Host
 			$html .= '<tr class="totals"><td colspan="9"># of hosts: ' . @{$$variable{Hosts}} . '</td></tr>';
 			return $html;

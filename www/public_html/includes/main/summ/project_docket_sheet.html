@@ -172,19 +172,23 @@ $log->debug("No a press proof: $$variable{ProofType} ");
 				} # end if
 			} # end for
 
-			$$sig_specs{UsePress} = $$sig_specs{'ddmPress'.$qty_index} if ( ! $$sig_specs{UsePress} );
+			$$sig_specs{UsePress} = $$sig_specs{'ddmPress'.$qty_index} if ! $$sig_specs{UsePress};
 			$part += 1;
 			$html .= '<tr valign="top"><td class="docketText" align="center">';
-			if ( $$sig_specs{UsePress} eq '4C-1' ) {
-				$html .= 'GTO';
-			} elsif ( sets::isin( $$sig_specs{UsePress}, '6C-1', '6C-2', '6C-3','6C-4') ) {
-				$html .= 'H-6';
-			} elsif ( $$sig_specs{UsePress} eq '8C-1' ) {
-				$html .= 'H-8';
-			} elsif ( $$sig_specs{UsePress} eq 'Web1' ) {
-				$html .= 'Web';
+			if ( $$sig_specs{UsePress} ) {
+				if ( $$sig_specs{UsePress} eq '4C-1' ) {
+					$html .= 'GTO';
+				} elsif ( sets::isin( $$sig_specs{UsePress}, '6C-1', '6C-2', '6C-3','6C-4') ) {
+					$html .= 'H-6';
+				} elsif ( $$sig_specs{UsePress} eq '8C-1' ) {
+					$html .= 'H-8';
+				} elsif ( $$sig_specs{UsePress} eq 'Web1' ) {
+					$html .= 'Web';
+				} else {
+					$html .= $$sig_specs{UsePress};
+				}
 			} else {
-				$html .= $$sig_specs{UsePress};
+				$html .= 'Unknown';
 			} # end if
 			$html .= '<br/>'.$signatures . ' Form'. ( $signatures > 1 ? 's' : '' );
 			$html .= '</td><td class="docketText"> ';

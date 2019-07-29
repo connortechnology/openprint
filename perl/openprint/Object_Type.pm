@@ -22,10 +22,10 @@ $default_sort	=	'lower(name)';
 
 sub Object {
 	if ( $_[0]{name} ) {
-	return $_[0]{name}->new( $_[1] );
+  	return $_[0]{name}->new($_[1]);
 	}
-	my ( $caller, undef, $line ) = caller;
-	$openprint::log->error( "Unknown object from $caller:$line" );
+	my ($caller, undef, $line) = caller;
+	$openprint::log->error("Unknown object from $caller:$line");
 	return new openprint::Object();
 } # end sub Object
 
@@ -39,5 +39,6 @@ sub human {
 	}
 	return $_[0]{human};
 }
+
 1;
 __END__

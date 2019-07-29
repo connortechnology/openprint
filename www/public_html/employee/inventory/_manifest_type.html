@@ -1,3 +1,4 @@
+<?include(/includes/error_reporting.html)?>
 <fieldset>
 	<? eval (
 		$variable{location_dropdown} = openprint::Location->dropdown(company_id=>$openprint::Owner->id(), order=>'parent_id NULLS FIRST, lower(name)',type=>'place') if ! exists $variable{location_dropdown};

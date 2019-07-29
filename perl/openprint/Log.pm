@@ -72,6 +72,8 @@ sub ip_address {
 		if ( !defined $_[1] ) {
 			$_[1] = $ENV{REMOTE_ADDR};
 		} # end if
+		return if ! $_[1];
+
 $openprint::log->debug("Getting HI for $_[1] for " . $_[0]->to_string());
 		my $Interface = openprint::Host_Interface->find_one(ip=>$_[1]);
 		if ( !$Interface ) {
@@ -109,7 +111,7 @@ sub Host {
 
 sub action {
 	if ( @_ > 1 ) {
-		my $Action = openprint::Log_Action->find_one( name=>$_[1] );
+		my $Action = openprint::Log_Action->find_one(name=>$_[1]);
 		if ( $_[1] and ! $Action ) {
 			$Action = new openprint::Log_Action();
 			$Action->save({name=>$_[1], description=>$_[1]});

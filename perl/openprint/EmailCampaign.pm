@@ -37,6 +37,7 @@ $serial = 'emailcampaigns_id_seq';
 	'updated_on'	=>	'updated_on',
 	'template_id'	=>	'template_id',
 	deleted			=>	'deleted',
+user_id				=>	'user_id',
 );
 
 %defaults = (
@@ -49,6 +50,7 @@ $serial = 'emailcampaigns_id_seq';
 	'timestosend'	=>	undef,
 	'template_id'	=>	undef,
 	deleted			=>	0,
+user_id			=>	undef,
 );
 
 sub destroy {
@@ -234,7 +236,8 @@ sub Recipients {
 sub test {
 	my ( $self ) = @_;
 	my %replacements;
-# de we need to send this email?
+# do we need to send this email?
+	$replacements{Campaign} = $self;
 	$replacements{User} = $openprint::User;
 	$$self{email_text} = ssi::variable_substitution( \$$self{email_text}, \%replacements ) if $$self{email_text};
 	$$self{email_html} = ssi::variable_substitution( \$$self{email_html}, \%replacements ) if $$self{email_html};
@@ -299,10 +302,32 @@ sub Template {
 	return new openprint::EmailTemplate( $_[0]->template_id() );
 } # end sub Template
 
+sub url_to {
+	return '/marketing/email_campaign.html?campaign_id='.$_[0]{id};
+}
 sub link_to {
-return sprintf('<a href="/marketing/email_campaign.html?campaign_id=%d">%s</a>', $_[0]{id}, $_[0]{name});
+  return sprintf('<a href="/marketing/email_campaign.html?campaign_id=%d">%s</a>', $_[0]{id}, $_[0]{name});
+}
+
+sub can_view {
+	if ( $openprint::session{user_type} eq 'A' ) {
+		$openprint::log->debug("Can view because admin");
+		return 1 ;
+	}
+	if ( ! $_[0]{user_id} ) {
+		$openprint::log->debug("Can view because no user_Id assigned");
+		return 1;
+	}
+if ( $openprint::session{user_id} == $_[0]{user_id} ) {
+		$openprint::log->debug("Can view because user_Id matches");
+	return 1;
+}
+ if ( ! $_[0]{id} ) {
+		$openprint::log->debug("Can view because no Id");
+	return 1;
+}
+	return 0;
 }
 
 1;
-
 __END__
