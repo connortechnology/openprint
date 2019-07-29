@@ -72,6 +72,9 @@ sub ip_address {
 		if ( !defined $_[1] ) {
 			$_[1] = $ENV{REMOTE_ADDR};
 		} # end if
+		if ( (! $_[1]) and $openprint::config{REMOTE_ADDR} ) {
+			$_[1] = $openprint::config{REMOTE_ADDR};
+		}
 		return if ! $_[1];
 
 $openprint::log->debug("Getting HI for $_[1] for " . $_[0]->to_string());
