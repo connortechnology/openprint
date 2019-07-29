@@ -51,6 +51,7 @@ if ($config{help}) {
     exit 0;
 }
 
+$log->debug("ARGV @ARGV");
 my ( $op, $mac, $ip, $hostname ) = @ARGV;
 if ( ! $mac ) {
 	usage();
@@ -58,6 +59,11 @@ if ( ! $mac ) {
 } elsif ( ! $ip ) {
 	usage();
 	die "You must specify a ip.";
+}
+$mac =~ s/[^A-Fa-f0-9]//g;
+if ( length($mac) != 12 ) {
+	$log->error("Invalid mac $mac from $ARGV[1]");
+	die "Invalid mac $mac";
 }
 
 if ( $config{db_name} ) {
@@ -84,7 +90,7 @@ if ( @Interfaces ) {
 		if ( $Interface->dhcp() ) {
 			if ( $Interface->ip() ne $ip ) {
 				my $Host = $Interface->Host();
-				(new openprint::Log())->save( { Object=>$Host, note=>"IP Address changed from $$Interface{ip} to $ip" . $Interface->Host()->link_to(), action=>'IP Changed' } );
+				(new openprint::Log())->save( { Object=>$Host, note=>"IP Address changed from $$Interface{ip} to $ip " . $Interface->Host()->link_to(), action=>'IP Changed' } );
 				$_ = $Interface->save({ip=>$ip});
 				$log->error($_) if $_;
 # Update updated_on
