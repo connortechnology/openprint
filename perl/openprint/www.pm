@@ -134,6 +134,7 @@ utf8::decode($param{$key});
 
 		# if not logged in, determine if they are allowed to see this page or not.
 		if ( ! $PageSetting->can_view() ) {
+			openprint::login::save_destination();
 			$log->debug("No good, need login");
 			if ( $page =~ /^.*\/_/ ) {
 				$r->content_type(q{text/javascript; charset=utf-8});
