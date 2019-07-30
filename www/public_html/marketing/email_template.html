@@ -1,3 +1,4 @@
+<div class="EmailTemplate">
 <form name="f1" action="/marketing/email_templates.html" method="post">
 	<input type="hidden" name="btnFunction"/>
 	<input type="hidden" name="template_id" value="<? echo ( $$variable{Template}->id(); ) ?>"/>
@@ -5,8 +6,8 @@
 		<div class="leftColumn">
 			<fieldset><legend>Template</legend>
 				<ul>
-		<li><label>Name</label><input type="text" name="name" value="<? echo ( $$variable{Template}->name() ) ?>" /></li>
-		<li><label>Body</label><textarea name="body" rows="<? echo ( count_lines( $$variable{Template}->body() ); ) ?>" onkeyup="textarea_resize(this);$('preview').innerHTML=this.value;" ><? hecho ( $$variable{Template}->body() ) ?></textarea></li>
+				<li><label>Name</label><input type="text" name="name" value="<? echo ( $$variable{Template}->name() ) ?>" /></li>
+				<li><label>Body</label><textarea name="body" rows="<? echo ( count_lines( $$variable{Template}->body() ); ) ?>" onkeyup="textarea_resize(this);$('preview').innerHTML=this.value;" ><? hecho ( $$variable{Template}->body() ) ?></textarea></li>
 				</ul>
 			</fieldset>
 		</div>
@@ -15,6 +16,7 @@
 				<iframe id="preview" src="_email_template_body.html?template_id=<?echo($$variable{Template}->id())?>"></iframe>
 			</fieldset>
 		</div>
+<br class="spacer"/>
 		<p class="buttons">
 			<? echo ( join("\n",
 				button( 'DeleteBottom', { onclick=>"f1.btnFunction.value='Delete';fmChange=2;fmCheck(f1);", text=>'Delete' } ),
@@ -25,3 +27,4 @@
 		</p>
 	</fieldset>
 </form>
+</div>
