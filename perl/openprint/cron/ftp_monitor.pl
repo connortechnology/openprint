@@ -546,30 +546,21 @@ $log->debug("Processing upload $file");
 		$$upload{file_str} = $file_str;
 		$$upload{company_name} = $company_name;
 
+    #The purpose is to strip off the base path, leaving subdirs and actual file name
 		my $regexp = '^'.quotemeta($project_files_path).'\/'.quotemeta($company_name).'\/(.+)\$';
 $log->debug("regexp: $regexp");
 		@$upload{proper_file_path} = $file =~ /$regexp/;
 		if ( ! $$upload{proper_file_path} ) {
-			$log->debug("Trying a more generic regexp against $file");
 			$regexp = "^.*\\/\Q$company_name\E\\/(.+)\$";
+			$log->debug("Trying a more generic regexp $regexp against $file");
 			@$upload{proper_file_path} = $file =~ /$regexp/;
 		}
-		$$upload{proper_file_path} = $$upload{file_str} if ! $$upload{proper_file_path};
+    if ( ! $$upload{proper_file_path} ) {
+      $log->warning("Failed to match path. Setting to $$upload{file_str}");
+      $$upload{proper_file_path} = $$upload{file_str};
+    }
 
-		#if ( ! $company_name ) {
-			#my $new_file_path = $config{file_path};
-			#$new_file_path =~ s/ /_/g;
-			#$regexp = $new_file_path.'/(.+)/'.$file_str;
-			#( $company_name ) = $file =~ /^$regexp$/;
-			#$log->warn("Trying to match ( $regexp in $file, got $company_name");
-		#} # end if
-
-		#if ( $company_name ) {
-			#$company_name =~ s/^\/*//g;
-		   #my @parts = split('/', $company_name);
-		   #$$upload{company_name} = shift @parts if @parts;
-		#} # end if
-	   #$$upload{proper_file_path} = '/'.$$upload{company_name}.'/'.$file_str;
+    # Now that we have just the subdir and file, we should turn it into a regexp to convert _ to spaces
 	} # end foreach upload
 
 	my $subject;
