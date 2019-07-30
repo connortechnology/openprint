@@ -23,6 +23,7 @@ $serial = 'emailcampaigns_id_seq';
 	'query'	=>	'query',
 	'interval'	=>	'interval',
 	'active'	=>	'active',
+'runnable'	=>	'runnable',
 	'timestosend'	=>	'timestosend',
 	'timeofday'		=>	'timeofday',
 	'email_subject'	=>	'email_subject',
@@ -51,6 +52,7 @@ user_id				=>	'user_id',
 	'template_id'	=>	undef,
 	deleted			=>	0,
 user_id			=>	undef,
+runnable		=> 0,
 );
 
 sub destroy {
