@@ -65,6 +65,7 @@ my %codes = (
 	257	=>	'Path created',
 	331 =>	'User name ok, need password',
 	350	=>	'Requested file action pending further information.',
+	500	=>	'Syntax error, command unrecognized, command line too long',
 	530	=>	'User not logged in',
 	550	=>	'Requested action not taken. File unavailable, not found, not accessible',
 );
@@ -321,7 +322,7 @@ $log->debug("data: $client $remote_user $user_name $curr_time $xfer_type $path $
 				if ( $response_code == 331 ) {
 #Username OK, need password
 					next;
-				} elsif ( $command eq 'LIST' or $command eq 'MLSD' or $command eq 'CDUP' ) {
+				} elsif ( $command eq 'LIST' or $command eq 'MLSD' or $command eq 'CDUP' or $command eq 'RETR' ) {
 $log->debug("Command was not an upload");
 					next;
 				} elsif ( $response_code == 230 ) {
@@ -666,7 +667,7 @@ $log->debug("regexp: $regexp");
 					FROM    => ( $config{AdministratorEmail} ? $config{AdministratorEmail} : $from ),
 					'Reply-To'	=>	$from,
 					TO      => \@to,
-BCC		=>	'iconnor@connortechnology.com',
+#BCC		=>	'iconnor@connortechnology.com',
 					SUBJECT => $subject,
 					ATTACHMENTS => [ '', MIME::QuotedPrint::encode_qp(Encode::encode('utf-8',$body)), 'text/html', 'quoted-printable' ]
 				);

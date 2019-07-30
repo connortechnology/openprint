@@ -4238,6 +4238,11 @@ if ( sets::isin( 'emailcampaigns', \@tables ) ) {
 		print "Adding deleted to email_campaigns\n";
 		$dbh->do('ALTER TABLE emailcampaigns ADD deleted BOOLEAN NOT NULL default false');
 	} # end if
+	if ( ! exists $$data{user_id} ) {
+		print "Adding user_id to email_campaigns\n";
+		$dbh->do('ALTER TABLE emailcampaigns ADD user_id INTEGER') or die $dbh->errstr();
+		$dbh->do('ALTER TABLE emailcampaigns ADD FOREIGN KEY (user_id) REFERENCES Users (id)') or die $dbh->errstr();
+	} # end if
 } else {
 	$_ = misc::load_file( $log, q{../../sql/EmailCampaigns.sql});
 	foreach my $st ( split(';', $_ ) ) {
@@ -5805,6 +5810,11 @@ if ( ! sets::isin('sensor_readings', \@tables) ) {
 if ( ! sets::isin('oui_vendors', \@tables ) ) {
 	$log->debug("Adding oui_vendors");
 	$dbh->do( misc::load_file( $log, q{../../sql/OUI_Vendors.sql}) );
+	die if $dbh->errstr();
+}
+if ( ! sets::isin('expense_rules', \@tables ) ) {
+	$log->debug("Adding expense_rules");
+	$dbh->do( misc::load_file( $log, q{../../sql/Expense_Rules.sql}) );
 	die if $dbh->errstr();
 }
 

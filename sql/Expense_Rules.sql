@@ -1,14 +1,16 @@
-DROP TABLE IF EXISTS Bank_Account_Rules;
+DROP TABLE IF EXISTS Expense_Rules;
 
-CREATE TABLE Bank_Account_Rules (
+CREATE TABLE Expense_Rules (
   id serial,
   name  TEXT,
   rules_json  JSON,
   action_json JSON,
+  created_on TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
+  updated_on TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
   PRIMARY KEY (id)
 );
 
-INSERT INTO Bank_Account_Rules (name,rules_json,action_json) VALUES 
+INSERT INTO Expense_Rules (name,rules_json,action_json) VALUES 
 ( 'Certas', '[{"desc": "/^CERTAS H & A\\s+(?<transaction_id>.+)$/"}]','{
   "category":"Insurance",
   "recipient":"Certas Home and Auto Insurance",
@@ -28,10 +30,11 @@ INSERT INTO Bank_Account_Rules (name,rules_json,action_json) VALUES
 ( 'OVERDRAFT INTEREST', '[{"desc": "/^OVERDRAFT INTEREST/"}]','{"category": "Interest", "recipient":"TD Canada Trust"}'),
 ( 'PRODUCT PROTECTOR', '[{"desc": "/^PRODUCT PROTECTOR/"}]','{"category": "Service Charge", "recipient":"Mastercard"}'),
 ( 'PURCHASE INTEREST CHARGE', '[{"desc": "/^PURCHASE INTEREST CHARGE/"}]','{"category": "Interest", "recipient":"Mastercard"}'),
-('CIBC Purchase Interest', '[{"desc":"/^PURCHASE INTEREST$/"}]', '{"category":"Interest","recipient":"CIBC"}');
-('CIBC Cash Interest', '[{"desc":"/^CASH INTEREST$/"}]', '{"category":"Interest","recipient":"CIBC"}');
-('CIBC Cash Advance', '[{"desc":"/^CASH ADV/BT/CONV CHQ FEE$/"}]', '{"category":"Service Charge","recipient":"CIBC"}');
-('Intuit', '[{"desc":"/^INTUIT CANADA/"}]', '{"category":"Business Expense","recipient":"Intuit"}');
+('CIBC Purchase Interest', '[{"desc":"/^PURCHASE INTEREST$/"}]', '{"category":"Interest","recipient":"CIBC"}'),
+('CIBC Cash Interest', '[{"desc":"/^CASH INTEREST$/"}]', '{"category":"Interest","recipient":"CIBC"}'),
+('CIBC Cash Advance', '[{"desc":"/^CASH ADV/BT/CONV CHQ FEE$/"}]', '{"category":"Service Charge","recipient":"CIBC"}'),
+('Intuit', '[{"desc":"/^INTUIT CANADA/"}]', '{"category":"Business Expense","recipient":"Intuit"}'),
+('CIBC VISA Payment', '[{"desc":"/^CIBC VISA/"}]', '{"category":"Transfer","recipient":"CIBC"}'),
 ( 'PURCHASE \\*FINANCE CHARGE\\*', '[{"desc": "/^PURCHASE \\*FINANCE CHARGE\\*/"}]','{"category": "Interest", "recipient":"Mastercard"}'),
 ( 'MXTOOLBOX', '[{"desc": "/^MXTOOLBOX/"}]','{"category": "Business Expense", "recipient":"MxToolBox"}'),
 ( 'PAPER STMT FEE', '[{"desc": "/^PAPER STMT FEE/"}]','{"category": "Service Charges", "recipient":"TD Canada Trust"}'),
@@ -56,6 +59,8 @@ INSERT INTO Bank_Account_Rules (name,rules_json,action_json) VALUES
 ('DE LA MER FRESH FISH M', '[{"desc":"/^DE LA MER FRESH FISH M/"}]', '{"category":"Food","recipient":"De La Mer"}'),
 ('SKIPTHEDISHES.COM', '[{"desc":"/^SKIPTHEDISHES\\.COM/"}]', '{"category":"Food","recipient":"SkipTheDishes"}'),
 ('Burger King', '[{"desc":"/^BK #/"}]', '{"category":"Food","recipient":"Burger King"}'),
-('DAVE AND CHARLOTTE', '[{"desc":"/^DAVE AND CHARLOTTE/"}]', '{"category":"Food","recipient":"NO FRILLS"}'),
-('Revel.ca', '[{"desc":"/^REBEL\\.CA CORP/"}]', '{"category":"Business Expense","recipient":"Rebelca"}'),
+('DAVE AND CHARLOTTE', '[{"desc":"/^DAVE AND CHARLO/"}]', '{"category":"Food","recipient":"NO FRILLS"}'),
+('Rebel.ca', '[{"desc":"/^REBEL\\.CA CORP/"}]', '{"category":"Business Expense","recipient":"Rebelca"}'),
+('Queen St Dental', '[{"desc":"/^QUEEN STREET DE/"}]', '{"category":"Medical - Dentist","recipient":"Queen Street Dental"}'),
+('Postables', '[{"desc":"/^POSTABLES/"}]', '{"category":"Shipping","recipient":"Postables"}'),
 ('Toronto Parking', '[{"desc":"/^TORONTO PARKING AUTHOR/"}]', '{"category":"Parking","recipient":"Toronto Parking Authority"}');

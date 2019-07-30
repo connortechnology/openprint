@@ -16,7 +16,7 @@ require Date::Calc;
 require Text::CSV_XS;
 require openprint::Expense;
 require openprint::Expense_Account;
-require openprint::Bank_Account_Rule;
+require openprint::Expense_Rule;
 
 use openprint ();
 use vars qw($log $dbh %config %session);
@@ -87,7 +87,7 @@ my $from_id=2;
 my $to_id=1;
 
 $log->debug('Loading rules');
-my @Rules = openprint::Bank_Account_Rule->find();
+my @Rules = openprint::Expense_Rule->find();
 $log->debug(@Rules . ' loaded');
 
 # Track expenses added this run, to help with duplicates
@@ -113,7 +113,7 @@ while ( <FH> ) {
   if ( $$opts{format} eq 'CIBC' ) {
     ($date, $desc, $debit, $credit, $card) = misc::trim($csv->fields());
 
-    my $paid_on = $date,
+    $paid_on = $date,
     $amount = $debit;
 
     $Expense->set_no_defaults({
@@ -126,7 +126,8 @@ while ( <FH> ) {
     ($date, $desc, $debit, $credit, $balance) = misc::trim($csv->fields());
 
     my ($month, $day, $year) = split('/', $date);
-    my $paid_on = join('-', $year, $month, $day);
+    $paid_on = join('-', $year, $month, $day);
+    $amount = $debit;
 
     $Expense->set_no_defaults({
       description => $desc,
@@ -140,7 +141,7 @@ while ( <FH> ) {
     $debit = $amount;
 
     my ($month, $day, $year) = split('/', $date);
-    my $paid_on = join('-', $year, $month, $day);
+    $paid_on = join('-', $year, $month, $day);
     $Expense->set_no_defaults({
       description => $desc,
       account_id  => $$Account{id},
@@ -184,7 +185,7 @@ while ( <FH> ) {
     my @Expenses = openprint::Expense->find(%$Expense);
 
     if ( @Expenses ) {
-      $log->info(@Expenses . "Found an expense that looks like it matches: \n" . join("\n", map { $_->to_string() } @Expenses));
+      $log->info(@Expenses . "Found an expense @Expenses that looks like it matches: \n" . join("\n", map { $_->to_string() } @Expenses));
       @Expenses = map { $Expenses_Added{$$_{id}} ? () : $_ } @Expenses;
       if ( @Expenses ) {
         $log->info("Found an expense after filtering that looks like it matches: \n" . join("\n", map { $_->to_string() } @Expenses));
@@ -194,8 +195,10 @@ while ( <FH> ) {
       ## Look for it without the description, but with a transaction id
       delete $$Expense{description};
       @Expenses = openprint::Expense->find(%$Expense);
-      $log->info("Found an expense after filtering that looks like it matches:\n" . join("\n", map { $_->to_string() } @Expenses));
-      next;
+      if ( @Expenses ) {
+        $log->info("Found an expense after filtering that looks like it matches:\n" . join("\n", map { $_->to_string() } @Expenses));
+        next;
+      }
     } 
     $log->info("No expenses found to match $date, $desc, $debit, $credit, $balance, rules? " . @Rules . "\n" . $Expense->to_string());
 
@@ -208,6 +211,8 @@ while ( <FH> ) {
           account_id  =>  $$Account{id},
           amount      =>  $amount,
           paid_on     =>  $paid_on,
+          invoiced_on =>  $paid_on,
+          due_on      =>  $paid_on,
           description =>  $desc,
           owner_id    =>  $$openprint::Owner{id},
           currency_id =>  $$openprint::Currency{id},
@@ -246,9 +251,12 @@ Command-line options:
 
 	--db_pass	The password to use when connecting to the database.
 
-    --AssetPath    File to store the session count in.
+  --debug
+  --file =s		File to import
+  account=s
+  Currency=s
+  format=s
 	
-	--add		File to import
 
 EOH
 }

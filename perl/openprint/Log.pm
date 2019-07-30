@@ -51,7 +51,7 @@ sub Company {
 } # end sub Company
 
 sub Action {
-	$_[0]{Action} = new openprint::Log_Action( $_[0]{action_id} ) if ! $_[0]{Action};
+	$_[0]{Action} = new openprint::Log_Action($_[0]{action_id}) if ! $_[0]{Action};
 	return $_[0]{Action};
 } # end sub Action
 
@@ -69,11 +69,17 @@ sub ip_address {
 	my $Host = $_[0]->Host();
 
 	if ( @_ > 1 ) {
-		if ( ! defined $_[1] ) {
+		if ( !defined $_[1] ) {
 			$_[1] = $ENV{REMOTE_ADDR};
 		} # end if
-		my $Interface = openprint::Host_Interface->find_one( ip=>$_[1] );
-		if ( ! $Interface ) {
+		if ( (! $_[1]) and $openprint::config{REMOTE_ADDR} ) {
+			$_[1] = $openprint::config{REMOTE_ADDR};
+		}
+		return if ! $_[1];
+
+$openprint::log->debug("Getting HI for $_[1] for " . $_[0]->to_string());
+		my $Interface = openprint::Host_Interface->find_one(ip=>$_[1]);
+		if ( !$Interface ) {
 			$Host = new openprint::Host();
 			$Host->save();
 			$Interface = new openprint::Host_Interface();
@@ -108,7 +114,7 @@ sub Host {
 
 sub action {
 	if ( @_ > 1 ) {
-		my $Action = openprint::Log_Action->find_one( name=>$_[1] );
+		my $Action = openprint::Log_Action->find_one(name=>$_[1]);
 		if ( $_[1] and ! $Action ) {
 			$Action = new openprint::Log_Action();
 			$Action->save({name=>$_[1], description=>$_[1]});

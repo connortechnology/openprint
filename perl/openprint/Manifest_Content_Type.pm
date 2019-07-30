@@ -357,5 +357,13 @@ sub cost_units {
 	return $$self{cost_units};
 }
 
+sub delete {
+	my $self = shift;
+	foreach my $C ( $self->Contents() ) {
+		$C->delete();
+	}
+	$self->SUPER::delete();
+}
+
 1;
 __END__

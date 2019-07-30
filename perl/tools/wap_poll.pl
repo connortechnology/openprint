@@ -329,7 +329,7 @@ foreach my $k ( keys %OldConnections ) {
 					$log->debug("Updating connection of $$station_HI{mac} ".($station_HI->Host()->hostname() ? $station_HI->Host()->hostname() : '' ). " from ".
             ( $$station_HI{connected_to} ? $$station_HI{connected_to} : '' ). " to $$wap_HI{mac}");
 					$station_HI->save({connected_to=>$$wap_HI{mac}});
-					(new openprint::Log())->save({action=>'Update', Object=>$station_HI->Host(), note=>'Connection to ' . $wap_HI->Host()->link_to() . $$wap_HI{mac} });
+					(new openprint::Log())->save({action=>'Update', Object=>$station_HI->Host(), note=>'Connection to ' . $wap_HI->Host()->link_to() .' ' . $$wap_HI{mac} });
 					(new openprint::Log())->save({action=>'Update', Object=>$wap_HI->Host(), note=>'Connection to ' . $station_HI->Host()->link_to() });
 				}
 			} # end foreach station_HI
