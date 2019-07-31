@@ -348,7 +348,7 @@ $log->debug("No serial") if $debug;
 				$command =~ s/\?/\%s/g;
 				$log->debug('SQL DEBUG: ('.sprintf($command, map { defined $_ ? $_ : 'undef' } ( @sql{@keys} ) ).'):' );
 			} # end if
-			(new openprint::Log())->save({Object=>$self, action=>'Created'}) if ! $type =~ /Log/i;
+			(new openprint::Log())->save({Object=>$self, action=>'Created'}) if ! ( $type =~ /Log/i );
 		} else {
 			delete $sql{created_on};
 			my @keys = keys %sql;
