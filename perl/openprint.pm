@@ -152,9 +152,12 @@ $log->debug("Generating new cookie $session{_session_id}") if Debug;
 
 	if ( $ENV{REMOTE_ADDR} ) {
 		my @Interfaces = openprint::Host_Interface->find(ip=>$ENV{REMOTE_ADDR});
-		if ( ! @Interfaces ) {
-			$Host = new openprint::Host();
-			$Host->save({hostname=>$ENV{REMOTE_ADDR}});
+		if ( !@Interfaces ) {
+			$Host = openprint::Host->find_one(hostname=>$ENV{REMOTE_ADDR});
+			if ( !$Host ) {
+				$Host = new openprint::Host();
+				$Host->save({hostname=>$ENV{REMOTE_ADDR}});
+			}
 			my $Interface = new openprint::Host_Interface();
 			$Interface->save({host_id=>$$Host{id}, ip=>$ENV{REMOTE_ADDR} });
 		} else { 
