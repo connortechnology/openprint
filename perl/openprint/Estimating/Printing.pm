@@ -2406,7 +2406,7 @@ $log->debug("Using spine height");
 #$variables{txtHeight} = [ sets::exclude( ['output'], $variables{txtHeight} ) ];
 	} # end if
 
-	if ( sets::isin( $$Type{name}, [ 'Envelopes', 'NCR' ] ) ) {
+	if ( $$Type{name} and ( $$Type{name} eq 'Envelopes' or $$Type{name} eq 'NCR' ) ) {
 		if ( $$specs{rdbSpecificStock} ne 'Y' ) {
 			if ( $$specs{ddmStockSheetSize} ) {
 				@$specs{'txtWidth','txtHeight'} = $$specs{ddmStockSheetSize} =~ /^([\d\.]+)"?\s*x?\s*([\d\.]+)?"?\s*$/;
