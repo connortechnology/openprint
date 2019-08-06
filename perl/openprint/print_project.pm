@@ -561,7 +561,7 @@ sub create_edit_process {
 		$recalculate = 1;
 		$error .= $Project->change_ProjectType( $ProjectType );
 	} else {
-		$error .= $Project->save(\@changes);
+		$error .= $Project->save();
 	} # end if
 
 	# take care of the Graphic Design service
