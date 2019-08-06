@@ -98,7 +98,7 @@ sub handler {
 			#$log->debug("Parameter $key is ARRAY(" . join(',',@{$param{$key}}) . ')' );
 		} else {
 			$param{$key} = $values[0];
-utf8::decode($param{$key});
+			utf8::decode($param{$key});
 #utf8::encode($values[0]);
 			#$log->debug("Parameter $key is (" . $param{$key} . ") ref: " . ref $param{$key} );
 		} # end if
@@ -107,7 +107,7 @@ utf8::decode($param{$key});
 		if ( ref $param{$key} eq 'ARRAY' ) {
 			$log->debug("Parameter $key is ARRAY(" . join(',',@{$param{$key}}) . ')' );
 		} else {
-			$log->debug("Parameter $key is (" . $param{$key} . ")" . (utf8::is_utf8($param{$key})||0) );
+			$log->debug("Parameter $key is (" . $param{$key} . ')' . (utf8::is_utf8($param{$key})||0) );
 			#$log->debug("Parameter $key is (" . $param{$key} . ")" . (utf8::is_utf8($param{$key})||0) );
 		} # end if
 	}	# end foreach
@@ -135,7 +135,7 @@ utf8::decode($param{$key});
 		# if not logged in, determine if they are allowed to see this page or not.
 		if ( ! $PageSetting->can_view() ) {
 			openprint::login::save_destination();
-			$log->debug("No good, need login");
+			$log->debug('No good, need login');
 			if ( $page =~ /^.*\/_/ ) {
 				$r->content_type(q{text/javascript; charset=utf-8});
 				$r->print( q`window.location='/error/error_login.html';` );
@@ -156,18 +156,15 @@ utf8::decode($param{$key});
 			('openprint::'.$o)->init_cache();
 		} # end foreach
 
-		#$openprint::log->debug("Page: $page");
-
 		# Just does timeout
 		openprint::login::verify_user( $r, $log, $dbh, $session{_session_id}, \%variable );
 		$page = $variable{Redirect} if $variable{Redirect};	
-
 
 		while ( $page and $lastpage ne $page ) {
 			# This is for loop detection
 			$lastpage = $page;
 			$variable{uri} = $page;
-			parse_page( $page );
+			parse_page($page);
 			if ( (exists $variable{Redirect}) and $variable{Redirect} ) {
 				$openprint::log->debug("Reirect: $variable{Redirect}");
 				$page = $variable{Redirect};

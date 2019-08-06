@@ -36,8 +36,9 @@ sub view_services {
 			return if $variable{Redirect}; # Redirects on error
 			my $Project = new openprint::Project( $project_index );
 			my $services = $Project->services();
-			my $s = openprint::service::internal_calc( $log, $dbh, \%variable, $project_index, $$services{''}[0], $Project->Type()->type() );
-			$log->debug("*** Time to Save Project - View Services Function *** $project_index $session{project_id}");
+# We already did recalc in create_edit_process... aug 6 2019
+			#my $s = openprint::service::internal_calc( $log, $dbh, \%variable, $project_index, $$services{''}[0], $Project->Type()->type() );
+			#$log->debug("*** After Time to Save Project - View Services Function *** $project_index $session{project_id}");
 			# Display any resulting uncalculated services
 			openprint::print_project::continue_project( $log, $dbh, \%variable, $project_index );
 			return if $variable{ExternalRedirect};

@@ -15,7 +15,7 @@ sub session_init {
 	$parser = 'DateTime::Format::Pg';
  
 	if ( ! $openprint::config{Timezone} ) {
-		$log->error("You must configure a time zone.  Defaulting to America/Toronto");
+		$log->error('You must configure a time zone.  Defaulting to America/Toronto');
 		$openprint::config{Timezone} = 'America/Toronto';
 	} # end if
 	$TZ = DateTime::TimeZone->new( name => $openprint::config{Timezone} );
@@ -23,14 +23,14 @@ sub session_init {
 	my $cookies;
 	my $cookie;
 	if ( $r ) {
-		$cookies = Apache2::Cookie->fetch( $r );
+		$cookies = Apache2::Cookie->fetch($r);
 		if ( $$cookies{_session_id} ) {
 			$cookie = $$cookies{_session_id};
 			$cookie = $cookie->value if $cookie;
 $log->debug("Have session $$cookies{_session_id} $cookie") if Debug;
 		} else {
 			if ( $r->param('_session_id') ) {
-				$log->error("Since when is session_id in the params");
+				$log->error('Since when is session_id in the params');
 				$cookie = $r->param('_session_id');
 			} # end if
 		} # end if
@@ -44,7 +44,7 @@ $log->debug("Have session $$cookies{_session_id} $cookie") if Debug;
 				} # end if
 				if ( $r->param('_session_id') ) {
 					if ( $session{ip} ne $ENV{REMOTE_ADDR} ) {
-						$log->error("Change of session ip");
+						$log->error('Change of session ip');
 						untie %session;
 						%session = ();
 					} # end if
@@ -66,7 +66,7 @@ $log->debug("Generating new cookie $session{_session_id}") if Debug;
 					$Cookie->bake( $r );
 					$cookie = $Cookie->value;
 				} else {
-					$log->error("No Cookie.  Does db have a sessions table?");
+					$log->error('No Cookie.  Does db have a sessions table?');
 				} # end if
 			} # end if
 		} else {
@@ -85,9 +85,10 @@ $log->debug("Generating new cookie $session{_session_id}") if Debug;
 
 	return if ! $dbh;
 
-	$User = new openprint::User( $session{user_id} );
+	$User = new openprint::User($session{user_id});
 
-	if ( $param{btnFunction} and $session{user_type} and sets::isin( $session{user_type}, ['E','A'] ) ) {
+# This probably shouldn't be here
+	if ( $param{btnFunction} and $session{user_type} and sets::isin($session{user_type}, ['E','A']) ) {
 		if ( $param{btnFunction} eq 'SelectCompany' ) {
 			if ( $param{ddmCompany} != $session{company_id} ) {
 
