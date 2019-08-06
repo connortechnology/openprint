@@ -189,17 +189,6 @@ sub insert_service_spec {
 	$specs_cache{$service_index}{$name} = $value;
 } # end sub
 
-sub insert_service_specs {
-	my ( $log, $dbh, $project_index, $service_index, @specs ) = @_;
-
-# make this fast by doing it in one transaction
-	my $ac = sql::start_transaction( $openprint::dbh );
-	while ( @specs ) {
-		insert_service_spec( $log, $dbh, $project_index, $service_index, shift @specs, shift @specs );
-	} # end while
-	sql::end_transaction( $openprint::dbh, $ac );
-} # end sub
-
 sub auto_calculate {
 	my ( $Project, $exclude ) = @_;
 
