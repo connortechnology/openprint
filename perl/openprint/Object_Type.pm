@@ -17,7 +17,7 @@ $default_sort	=	'lower(name)';
 );
 %transforms = (
 		name  => [ 's/^\s+//', 's/\s+$//', 's/\s\s+/ /g' ],
-		human => [ 's/^\s+//', 's/\s+$//', 's/\s\s+/ /g' ],
+		human => [ 's/^\s+//', 's/\s+$//', 's/\s\s+/ /g', 's/^openprint:://' ],
 );
 
 sub Object {
