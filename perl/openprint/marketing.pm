@@ -349,8 +349,9 @@ sub get_clients {
 		$variable{ExternalRedirect} .= '/marketing/get_clients.html';
 	} # end if
 } # end sub get_clients
+
 sub _recipients {
-	$variable{Campaign} = new openprint::EmailCampaign( $param{campaign_id} );
+	$variable{Campaign} = new openprint::EmailCampaign($param{campaign_id});
 }
 
 1;

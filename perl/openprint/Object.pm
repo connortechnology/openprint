@@ -348,7 +348,6 @@ $log->debug("No serial") if $debug;
 				$command =~ s/\?/\%s/g;
 				$log->debug('SQL DEBUG: ('.sprintf($command, map { defined $_ ? $_ : 'undef' } ( @sql{@keys} ) ).'):' );
 			} # end if
-			(new openprint::Log())->save({Object=>$self, action=>'Created'}) if ! $type =~ /Log/i;
 		} else {
 			delete $sql{created_on};
 			my @keys = keys %sql;
@@ -373,10 +372,12 @@ $log->debug("No serial") if $debug;
 #$log->debug("Got here");
 	if ( $$fields{id} ) {
 		if ( ! $openprint::Object::cache{$config{db_name}}{$type}{$$self{id}} ) {
+$log->debug("Setting cached object to $self : " . $self->to_string());
 			$openprint::Object::cache{$config{db_name}}{$type}{$$self{id}} = $self;
 		} # end if
 	#delete $openprint::Object::cache{$config{db_name}}{$type}{$$self{id}};
 	} # end if
+	(new openprint::Log())->save({Object=>$self, action=>'Created'}) if $sql{id} and ! ( $type =~ /Log/i );
 #$log->debug("after delete");
 	eval 'if ( %'.$type.'::find_cache ) { %'.$type.'::find_cache = (); }';
 #$log->debug("after clear cache");

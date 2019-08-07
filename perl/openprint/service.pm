@@ -382,7 +382,6 @@ sub auto_calculate {
 	$openprint::log->error("Error in requiring $service_name $@") if $@;
 	} # end foreach service_name;
 
-
 	# Order for these is important.  Stitching must be calc'd before Folding
 	foreach my $type ( 'Folding','SaddleStitching','LoopStitching' ) {
 		next if ! $$services{$type};
@@ -519,6 +518,7 @@ sub internal_calc {
 		if ( $Service->status() ne 'uncalculated' ) {
 			$_ = $Service->save({status=>'uncalculated'});
 			if ( $_ ) {
+				$Project->unlock();
 				$log->error("Unable to update Service status for $project_index, $service_index, $service_type, $qty_index ");
 				return;
 			}
@@ -529,6 +529,15 @@ sub internal_calc {
 
 	if ( ! $service_type ) {
 		$service_type = $Service->service_type();
+		if ( ! $service_type ) {
+			if ( $$specs{ProjectType} ) {
+				$log->debug("No service_type for service " . $Service->to_string());
+			} else {
+				$log->error("No service_type for service " . $Service->to_string());
+			}
+			$Project->unlock();
+			return;
+		}
 	} # end if
 
 	my $status;
