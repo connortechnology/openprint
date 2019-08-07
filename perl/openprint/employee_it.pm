@@ -72,7 +72,23 @@ sub _hosts {
       }
 		} # end foreach host_id
 		%param = ();
-	} # end if
+	} elsif ( $param{action} eq 'wake' ) {
+		my @host_ids;
+		if ( exists $param{host_id} ) {
+			@host_ids = ref $param{host_id} eq 'ARRAY' ? @{$param{host_id}} : $param{host_id};
+		} elsif ( exists $param{'host_id[]'} ) {
+			@host_ids = ref $param{'host_id[]'} eq 'ARRAY' ? @{$param{'host_id[]'}} : $param{'host_id[]'};
+		}
+		foreach my $Host ( openprint::Host->find(id=>\@host_ids, deleted=>[0,1])) {
+			foreach my $I ( $Host->Interfaces() ) {
+				next if ! $I->mac();
+				my ( $error, $info ) = $I->wake();
+				$variable{error} .= $error;
+				$variable{information} .= $info;
+			} # end foreach Host_Interface
+		} # end foreach Host
+	} # end if action
+
 	ssi::save_params( '/employee/it/hosts.html', 
 			'created_on_start_year', 'created_on_start_month', 'created_on_start_day', 
 			'created_on_end_year', 'created_on_end_month', 'created_on_end_day', 
@@ -82,6 +98,7 @@ sub _hosts {
 			'ip','hostname','mac','type_id','network_id',
 			'radius_auth', 'order', 'deleted', 'owner_id',
 			);
+
 	if ( $config{'RADIUS_Support'} eq 'Y' ) {
 		$openprint::RADIUS_Reply::dbh = $openprint::RADIUS_Check::dbh = sql::open_sql( $log,
 				database  => $config{RADIUS_DB_Name},
@@ -93,7 +110,7 @@ sub _hosts {
 		if ( ! $openprint::RADIUS_Check::dbh ) {
 			$variable{error} .= 'Unable to connect to RADIUS DB server.';
 		} # end if
-	} # end if
+	} # end if RADIUS
 } # end sub _hosts
 
 sub networks {
@@ -209,20 +226,9 @@ sub host {
     } elsif ( $param{action} eq 'Wake' ) {
       foreach my $I ( $Host->Interfaces() ) {
         next if ! $I->mac();
-        if ( $I->ip() ) {
-          $_ = `wakeonlan -i $$I{ip} $$I{mac} 2>&1`;
-          if ( defined $_ ) {
-            $variable{information} .= "running wakeonlan -i $$I{ip} $$I{mac}<br/>Output: $_<br/>";
-          } else {
-            $variable{error} .= "Error running wakeonlan -i $$I{ip} $$I{mac}<br/>";
-          }
-        } # end if ip
-        $_ = `wakeonlan $$I{mac} 2>&1`;
-        if ( defined $_ ) {
-          $variable{information} .= "running wakeonlan -i $$I{ip} $$I{mac}<br/>Output: $_<br/>";
-        } else {
-          $variable{error} .= "Error running wakeonlan -i $$I{ip} $$I{mac}<br/>";
-        }
+		my ( $error, $info ) = $I->wake();
+		$variable{error} .= $error;
+		$variable{information} .= $info;
       } # end foreach
       $variable{ExternalRedirect} = $Host->url();
     } elsif ( $param{action} eq 'GEOLookup' ) {

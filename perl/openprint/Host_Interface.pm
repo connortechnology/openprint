@@ -163,5 +163,28 @@ sub is_subnet {
   return ( index($_[0]{ip}, '/') == -1 ) ? 0 : 1;
 }
 
+sub wake {
+	my $error;
+	my $info;
+
+	my $I = shift;
+
+	if ( $I->ip() ) {
+		$_ = `wakeonlan -i $$I{ip} $$I{mac} 2>&1`;
+		if ( defined $_ ) {
+			$info = "running wakeonlan -i $$I{ip} $$I{mac}<br/>Output: $_<br/>";
+		} else {
+			$error .= "Error running wakeonlan -i $$I{ip} $$I{mac}<br/>";
+		}
+	} # end if ip
+	$_ = `wakeonlan $$I{mac} 2>&1`;
+	if ( defined $_ ) {
+		$info .= "running wakeonlan -i $$I{ip} $$I{mac}<br/>Output: $_<br/>";
+	} else {
+		$error .= "Error running wakeonlan -i $$I{ip} $$I{mac}<br/>";
+	}
+	return ($error, $info );
+}
+
 1;
 __END__
