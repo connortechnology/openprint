@@ -83,7 +83,7 @@ if ( ! @Equipment ) {
 $dbh->disconnect();
 
 foreach my $Equipment ( @Equipment ) {
-	#$log->debug("Processing " . $Equipment->name() );
+	$log->debug("Processing " . $Equipment->name() );
 	my @filenames;
 	if ( ! open(S, "> $$Equipment{cip3_in}/.lock.lck") ) {
 		$log->error("Unable to open semaphoreat $$Equipment{cip3_in}/.lock.lck");
@@ -233,11 +233,11 @@ if ( $mangle ) {
 			} # end if
 
 $dbh = sql::open_sql( $log,
-		'host'      => $opts->{db_host},
-		'database'  => $opts->{db_name},
-		'driver'    => 'Pg',
-		'login'     => $opts->{db_user},
-		'password'  => $opts->{db_pass},
+		host      => $config{db_host},
+		database  => $config{db_name},
+		driver    => 'Pg',
+		login     => $config{db_user},
+		password  => $config{db_pass},
 		);
 die 'Error opening db' if ! $dbh;
 			my $PPF = store_PPF( $docket, $name, $sig, $side, $Equipment, $data );
@@ -274,7 +274,7 @@ $log->warn("SINGLE SIDE Parsed to $file_base, $side, $extension from $file") if 
 			next;
 		} # end if
 		if ( ! flock(IN, LOCK_EX) ) {
-			$log->error("Unable to lock CIP FILE!\n");
+			$log->error('Unable to lock CIP FILE!');
 			close(IN);
 			next;
 		} # end if
@@ -312,11 +312,11 @@ if ( $mangle ) {
 			next;
 		} # end if
 $dbh = sql::open_sql( $log,
-		'host'      => $opts->{db_host},
-		'database'  => $opts->{db_name},
-		'driver'    => 'Pg',
-		'login'     => $opts->{db_user},
-		'password'  => $opts->{db_pass},
+		host      => $config{db_host},
+		database  => $config{db_name},
+		driver    => 'Pg',
+		login     => $config{db_user},
+		password  => $config{db_pass},
 		);
 die 'Error opening db' if ! $dbh;
 		my $PPF = store_PPF( $docket, $name, $sig, $side, $Equipment, $data );
