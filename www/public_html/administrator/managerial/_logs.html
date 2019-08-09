@@ -31,6 +31,8 @@
 
 				foreach my $Log ( @{$$variable{Results}} ) {
 					my $Object = $Log->Object();
+	
+					my $link_to = ($Object and $Object->can('link_to')) ? $Object->link_to($Object->Object_Type()->human() . ' : ' . $Object->name()) : '';
 
 					$html .= sprintf('<tr id="log_%d">
 							<td class="Action">%s</td>
@@ -51,7 +53,7 @@
 						$Log->User()->link_to($Log->User()->email()),
 						$Log->User()->name(),
 						$Log->Company()->name(),
-						( $Object ? $Object->link_to( $Object->Object_Type()->human() . ' : ' . $Object->name() ) : '' ),
+						$link_to,
 ( $session{user_type} eq 'A' ? 
 						join("\n",
 							button( 'X'.$Log->id(), { onclick=>qq`jQuery.ajax('_logs.json', { data: { action: 'delete', log_id: $$Log{id} } } ).done( function(){ jQuery('#log_$$Log{id}').remove() } );`, text=>'X' } ),
