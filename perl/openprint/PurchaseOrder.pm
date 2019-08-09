@@ -691,6 +691,7 @@ sub num {
 sub can_send {
 	my $User = @_ > 1 ? $_[1] : $openprint::User;
 	return 1 if $$User{id} == $_[0]{created_by};
+	return 1 if $$User{type} eq 'A';
 	return $_[0]->can_authorize();
 } # end sub can_send
 

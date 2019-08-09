@@ -4243,6 +4243,10 @@ if ( sets::isin( 'emailcampaigns', \@tables ) ) {
 		$dbh->do('ALTER TABLE emailcampaigns ADD user_id INTEGER') or die $dbh->errstr();
 		$dbh->do('ALTER TABLE emailcampaigns ADD FOREIGN KEY (user_id) REFERENCES Users (id)') or die $dbh->errstr();
 	} # end if
+	if ( ! exists $$data{runnable} ) {
+		print "Adding runnable to EmailCampaigns\n";
+		$dbh->do('alter table emailcampaigns add runnable boolean not null default false') or die $dbh->errstr();
+	}
 } else {
 	$_ = misc::load_file( $log, q{../../sql/EmailCampaigns.sql});
 	foreach my $st ( split(';', $_ ) ) {

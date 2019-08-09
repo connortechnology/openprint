@@ -21,6 +21,7 @@
 					( $param{company_id} ? ( company_id	=>	$param{company_id} ) : () ),
 					( exists $param{company_id_is_null} ? ( 'company_id is null'	=>	$param{company_id_is_null} ) : () ),
 					( $param{user_id} ? ( user_id		=>	$param{user_id} ) : () ),
+					( $param{'user_id !='} ? ( 'user_id !='		=>	$param{'user_id !='} ) : () ),
 					( exists $param{user_id_is_null} ? ( 'user_id is null'=>$param{user_id_is_null} ) : () ),
 					( $param{object_type_id} ? ( object_type_id		=>	$param{object_type_id} ) : () ),
 					( $param{log_actions} ? ( action_id	=>	$param{log_actions} ) : () ),

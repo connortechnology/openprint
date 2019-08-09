@@ -80,10 +80,13 @@ sub ip_address {
 $openprint::log->debug("Getting HI for $_[1] for " . $_[0]->to_string());
 		my $Interface = openprint::Host_Interface->find_one(ip=>$_[1]);
 		if ( !$Interface ) {
-			$Host = new openprint::Host();
-			$Host->save();
+			$Host = openprint::Host->find_one(hostname=>$_[1]);
+			if ( ! $Host ) {
+				$Host = new openprint::Host();
+				$Host->save();
+			}
 			$Interface = new openprint::Host_Interface();
-			$Interface->save({host_id=>$$Host{id}, ip=>$_[1] });
+			$Interface->save({host_id=>$$Host{id}, ip=>$_[1]});
 		} else {
 			$Host = $Interface->Host();
 		} # end if

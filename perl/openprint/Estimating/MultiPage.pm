@@ -160,7 +160,7 @@ sub calc {
 	if ( $$specs{spine} eq 'width' ) {
 		@$specs{'txtWidth','txtHeight'} = ( $$specs{txtFinalWidth}, 2*$$specs{txtFinalHeight} );
 	} else {
-		@$specs{'txtWidth','txtHeight'} = ( 2*$$specs{txtFinalWidth},$$specs{txtFinalHeight} );
+		@$specs{'txtWidth','txtHeight'} = ( 2*$$specs{txtFinalWidth}, $$specs{txtFinalHeight} );
 	} # end if
 
 	if ( $$specs{rdbTemplateType} eq 'PerfectBound' and $$specs{rdbCover} ne 'Different' ) {
@@ -170,7 +170,7 @@ sub calc {
 		$variables{rdbCover} = [sets::union('output', @{$variables{rdbCover}})];
 		$$specs{rdbCover} = 'Self';
 	} elsif ( ! $$specs{rdbCover} ) {
-		$$specs{alert} .= "Please select self or different cover.<br/>";
+		$$specs{alert} .= 'Please select self or different cover.<br/>';
 		$$specs{Status} = 'uncalculated';
 	} # end if
 

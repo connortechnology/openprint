@@ -58,7 +58,7 @@ sub source_snapshot_url {
 sub can_view {
 	if ( $_[0]{public} ) {
 		$openprint::log->debug("Public") if $debug;
-		return 1 ;
+		return 1;
 	}
 	if ( $openprint::session{user_type} eq 'A' ) {
 		$openprint::log->debug("Admin") if $debug;

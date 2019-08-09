@@ -2410,7 +2410,7 @@ $log->debug("Using spine height");
 #$variables{txtHeight} = [ sets::exclude( ['output'], $variables{txtHeight} ) ];
 	} # end if
 
-	if ( sets::isin( $$Type{name}, [ 'Envelopes', 'NCR' ] ) ) {
+	if ( $$Type{name} and ( $$Type{name} eq 'Envelopes' or $$Type{name} eq 'NCR' ) ) {
 		if ( $$specs{rdbSpecificStock} ne 'Y' ) {
 			if ( $$specs{ddmStockSheetSize} ) {
 				@$specs{'txtWidth','txtHeight'} = $$specs{ddmStockSheetSize} =~ /^([\d\.]+)"?\s*x?\s*([\d\.]+)?"?\s*$/;
@@ -6582,8 +6582,8 @@ $log->debug("COnsidering $$Press{strid}") if DEBUG_PRESSES;
 				next;
 			} # end if
 			my $min_gsm = $Press->specification('Minimum GSM', $Paper->gsm() );
-			if ( $min_gsm and ( $$Paper{gsm} > $min_gsm ) ) {
-				$results{$press_id} = "Press $press_id Failed gsm Check.	Maximum gsm is $min_gsm";
+			if ( $min_gsm and ( $$Paper{gsm} < $min_gsm ) ) {
+				$results{$press_id} = "Press $press_id Failed gsm Check.	Minimum gsm is $min_gsm";
 				next;
 			} # end if
 			if ( ( $$Paper{type} eq 'Roll' ) and $Press->specification('Minimum Basis Weight') and $Paper->basis_mweight() < $Press->specification('Minimum Basis Weight') ) {

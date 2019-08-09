@@ -195,22 +195,30 @@ sub continue_project {
 	my ( $log, $dbh, $variable, $project_index ) = @_;
 	my $incoming_service_index = $param{ServiceIndex};
 			
-	$log->info(" ************* STARTING continue_project **************** " );
 
-	if ( $$variable{Redirect} eq '' ) {
-		$project_index = $session{project_id} if ! $project_index;
+	if ( $$variable{Redirect} ne '' ) {
+		$log->debug("END PROJECT CONTINUE REDIRECT IS ALREADY  $$variable{Redirect}");
+		return;
+	}
+	$log->debug('STARTING continue_project');
+	$project_index = $session{project_id} if ! $project_index;
 
-		my ( $service_index, $redirect ) = choose_service( $log, $dbh, $project_index );
-		# pick the next unfinished service.
+	my ( $service_index, $redirect ) = choose_service( $log, $dbh, $project_index );
+# pick the next unfinished service.
 
-		if ( ! $service_index ) {
-			my $Project = new openprint::Project( $project_index );
-			foreach my $qty_index ( $Project->quantity_indexes() ) {
-				my $module = 'openprint::Estimating::'.$Project->Type()->type();
-				if ( my $function = $module->can('status') ) {
+	if ( ! $service_index ) {
+		my $Project = new openprint::Project( $project_index );
+		my $type = $Project->Type()->type();
+		if ( ! $type ) {
+			$log->debug("No type for " . $Project->to_string());
+			return;
+		} else {
+			my $module = 'openprint::Estimating::'.$type;
+			if ( my $function = $module->can('status') ) {
+				foreach my $qty_index ( $Project->quantity_indexes() ) {
 					if ( $_ = $function->( $project_index, undef, $qty_index ) ) {
-						$log->debug($Project->Type()->type(). " status says we need another sig of type $_");
-						my @sigs = $Project->signatures({'Group'=>$_});
+						$log->debug($type. " status says we need another sig of type $_");
+						my @sigs = $Project->signatures({Group=>$_});
 						my $src_id = pop @sigs;
 						my $src_specs = openprint::service::get_specs_ref( $Project, $src_id );
 						$service_index = $Project->copy_signature( $src_specs );
@@ -219,19 +227,19 @@ sub continue_project {
 					} else {
 						$log->debug("Multpage status says we ok for qty $qty_index");
 					} # end if
-				} else {
-					$log->debug("Dont have a status function for $module");
-				} # end if
-			} # end foreach
-		} # end if
+				} # end foreach
+			} else {
+				$log->debug("Dont have a status function for $module");
+			} # end if
+		} # end if !type
+	} # end if ! $service_index
 
-		if ( $redirect ne '' and $service_index != $incoming_service_index ) {
-			#plugin new service.
-			$variable{ExternalRedirect} = $redirect . '?'.join('&','ProjectIndex='.$project_index, 'ServiceIndex='.$service_index);;
-		} # end if
+	if ( $redirect ne '' and $service_index != $incoming_service_index ) {
+#plugin new service.
+		$variable{ExternalRedirect} = $redirect . '?'.join('&','ProjectIndex='.$project_index, 'ServiceIndex='.$service_index);;
 	} # end if
 
-	$log->debug("********************* END PROJECT CONTINUE REDIRECT IS $$variable{ExternalRedirect} *************************");
+	$log->debug("END PROJECT CONTINUE REDIRECT IS $$variable{ExternalRedirect}");
 } # end sub continue_project 
 
 sub try_to_delete_project {
@@ -482,10 +490,10 @@ sub create_edit_process {
 	$param{quantity3} =~ s/\D//g;
 
 	my $error = '';
-	$error .= "No quantities specified.<br/>" if $param{quantity1} eq '' and $param{quantity2} eq '' and $param{quantity3} eq '';
-	$error .= "Invalid Quantity 1.<br/>" if $param{quantity1} and ! int $param{quantity1};
-	$error .= "Invalid Quantity 2.<br/>" if $param{quantity2} and ! int $param{quantity2};
-	$error .= "Invalid Quantity 3.<br/>" if $param{quantity3} and ! int $param{quantity3};
+	$error .= 'No quantities specified.<br/>' if $param{quantity1} eq '' and $param{quantity2} eq '' and $param{quantity3} eq '';
+	$error .= 'Invalid Quantity 1.<br/>' if $param{quantity1} and ! int $param{quantity1};
+	$error .= 'Invalid Quantity 2.<br/>' if $param{quantity2} and ! int $param{quantity2};
+	$error .= 'Invalid Quantity 3.<br/>' if $param{quantity3} and ! int $param{quantity3};
 	if ( ! $error ) {
 		$Project = new openprint::Project( int $param{ProjectIndex} );
 		$error .= $Project->save() if ! $Project->id();
@@ -503,19 +511,12 @@ sub create_edit_process {
 	my $project_index = $session{project_id} = $Project->id();
 	$Project->lock();
 	my @changes = $Project->changes( \%param );
-	$Project->quantity_indexes(undef);
 
 	my $services = $Project->services();
 	my @service_ids = sort map { $$services{$_} ? @{$$services{$_}} : () } keys %$services;
 
 	foreach my $qty_index ( 1 .. 3 ) {
-		my @other_quantities = sets::exclude( [ $qty_index ], [ $Project->quantity_indexes() ] );
-$log->debug("other quantities @other_quantities");
-		my $next_qty_index = $other_quantities[0] if @other_quantities;
-$log->debug("Next qty $next_qty_index");
-
 		if ( $param{"quantity$qty_index"} != $Project->quantity($qty_index) ) {
-$log->debug("changing new quantity $qty_index from " . $Project->quantity($qty_index) . ' to ' . $param{"quantity$qty_index"} );
 			if ( ! $param{"quantity$qty_index"} ) { # Project has a quantity, we are deleting it
 				foreach my $service_id ( @service_ids ) {
 					foreach my $spec ( map { $_.$qty_index } ( 'txtPrice','txtUnitPrice','txtQuantity' ) ) {
@@ -526,59 +527,37 @@ $log->debug("changing new quantity $qty_index from " . $Project->quantity($qty_i
 				$recalculate = 1;
 
 				foreach my $service_id ( @service_ids ) {
-if ( 0 ) {
-# Don't do this for now.  It just doesn't work.
-
-					if ( ! $Project->quantity($qty_index) ) {
-						if ( $next_qty_index ) {
-
-							my $Service = $Project->Service( $service_id );
-		
-							# Must skip the project specs, becauswe they involve signature indexes
-							next if ! $Service->service_type();
-
-							my $specs = openprint::service::get_specs_ref( $Project, $service_id );
-
-							my $module = 'openprint::Estimating::'.$Service->service_type();
-							eval ( 'require '.$module.';' );
-							my @variables = eval( $module.'::variables( $project_index, $service_id, $specs, \%openprint::param )');
-							$log->debug("variable for $module @variables $!");
-							foreach my $key ( @variables ) {
-								next if $key =~ /^txtQuantity/;
-								my $re = qr/^(.*)$next_qty_index$/;
-
-								if ( ( $key =~ m/$re/ ) and ! ( $key =~ /Special/ ) ) {
-									$log->debug("loading setting $key with re");
-									openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $service_id, $1.$qty_index, $$specs{$key} );
-								} # end if
-							} # end foreach key
-						} # end if next_qty
-					} # end if quantity
-}
-					openprint::service::insert_service_spec( $log, $dbh, $project_index, $service_id, 'txtQuantity'.$qty_index, int $param{"quantity$qty_index"} );
+					openprint::service::insert_service_spec( $log, $dbh, 
+							$project_index, $service_id, 'txtQuantity'.$qty_index, int $param{"quantity$qty_index"} );
 				} # end foreachs ervice
 			} # end if has quantity
 			$Project->quantity( $qty_index, int $param{"quantity$qty_index"} );
 		} # end if quantity change
 	} # end foreach qty_index
 
-	$Project->reference( $param{reference} );
-	$Project->comments( $param{comments} );
-	$Project->mode( $param{rdbMode} );
-	$Project->design( $param{ddmDesign} );
-	$Project->programs( $param{chkPrograms} );
-	$Project->other_programs( $param{txtOtherPrograms} );
 	$Project->currency_id( $session{Currency_id} ) if ! $Project->currency_id();
-	$Project->reprint( $param{reprint} );
-	$Project->reprint_reason( $param{reprint_reason} );
-	$Project->reprint_description( $param{reprint_description} );
+	$Project->set({
+			reference	=>$param{reference},
+			comments 	=> $param{comments},
+			mode			=>	$param{rdbMode},
+			design		=>	$param{ddmDesign},
+			programs	=>	$param{chkPrograms},
+			other_programs	=>	$param{txtOtherPrograms},
+			reprint		=>	$param{reprint},
+			reprint_reason	=>	$param{reprint_reason},
+			reprint_description	=>	$param{reprint_description},
+			});
 
 	# This will likely never happen, because the act of cilcking on the different project type changes it.
 	my $ProjectType = openprint::ProjectType->find_one( name => $param{rdbProjectType} ) if $param{rdbProjectType};
 	$ProjectType = openprint::ProjectType->find_one( id => $param{project_type_id} ) if $param{project_type_id};
+	if ( ! $ProjectType and ! $Project->type_id() ) {
+		$log->error("No Project Types for $param{rdbProjectType} $param{project_type_id}");
+	}
 	my $OldProjectType = $Project->Type();
 # Handle ProjectType
 	if ( (!$OldProjectType) or ( $ProjectType and ( $OldProjectType->id() != $ProjectType->id() ) ) ) {
+		#$log->debug("Different project type, changing $$OldProjectType{name} to $$ProjectType{name}");
 		$recalculate = 1;
 		$error .= $Project->change_ProjectType( $ProjectType );
 	} else {
@@ -590,7 +569,8 @@ if ( 0 ) {
 		push @{$$services{GraphicDesign}}, $Project->add_service('GraphicDesign') if ! $$services{GraphicDesign};
 	} # end if
 
-	my %statuses = sql::execute( $log, $dbh, 'SELECT lngserviceindex, strstatus FROM tbl_Project_Contents WHERE lngprojectindex=?', $project_index );
+	my %statuses = sql::execute( $log, $dbh,
+			'SELECT lngserviceindex, strstatus FROM tbl_Project_Contents WHERE lngprojectindex=?', $project_index);
 	foreach my $ServiceType ( openprint::ServiceType->find(create_visible=>1) ) {
 		if ( $ServiceType->type() eq 'CustomService' ) {
 			$log->error("CustomService is visible in project create.");
@@ -624,7 +604,7 @@ $log->debug("Already have $$ServiceType{name}");
 	$Project->add_to_log( @session{'company_id','user_id'}, 'Edited: ' . join('<br/>', @changes) );
 
 	if ( $ProjectType->type() eq 'MultiPage' ) {
-		my $book_type = openprint::print::get_book_type( $Project );
+		my $book_type = openprint::print::get_book_type($Project);
 		if ( $book_type ) {
 			my $project_specs = openprint::service::get_specs_ref( $Project, $$services{''}[0] );
 			if ( $book_type ne $$project_specs{rdbTemplateType} ) {
@@ -633,12 +613,16 @@ $log->debug("Already have $$ServiceType{name}");
 				$recalculate = 1;	
 			} # end if
 		} # end if
+	} else {
+		$log->debug("Not a book");
 	}
 	
+# August 6 2019: Moved the unlock above the calc.  If we die during recalc our saved info wont be committed. 
+# I think the chance of two people working on the project at the same time is unlikely enough to allow this.
+	$Project->unlock();
 	if ( $recalculate ) {
 		$Project->recalculate();
 	} # end if
-	$Project->unlock();
 
 	return $Project->id();
 } # end sub create_edit_process

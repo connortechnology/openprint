@@ -32,41 +32,49 @@ $log->{level} = 'warn';
 
 my $program = 'PPF_Monitor.pl';
 my $opts = {};
-GetOptions($opts, 'help', 'db_name=s', 'db_host=s', 'db_user=s', 'db_pass=s','equipment_name=s','skin_path=s','debug=s');
+GetOptions($opts, 'help', 'db_name=s', 'db_host=s', 'db_user=s', 'db_pass=s','equipment_name=s','skin_path=s','debug=s', 'config=s');
 
-if ($opts->{help}) {
+if ( $opts->{help} ) {
 	usage();
 	exit 0;
 }
-if ( $opts->{debug}) {
-	$$log{level} = $opts->{debug};
+$$opts{config} = "/etc/openprint/$program.conf" if !$$opts{config};
+
+configuration::init();
+configuration::from_file($$opts{config});
+configuration::merge($opts);
+
+if ( $config{debug} ) {
+	$$log{level} = $config{debug};
 }
 
-unless ($opts->{db_host}) {
-	print STDERR "$program: missing required --db_name parameter\n";
-	exit 1;
+foreach my $required ( qw( db_host db_name ) ) {
+	unless ($config{$required}) {
+		print STDERR "$program: missing required --$required parameter\n";
+		exit 1;
+	}
 }
-unless ($opts->{db_name}) {
-	print STDERR "$program: missing required --db_name parameter\n";
-	exit 1;
-}
-$opts->{db_user} = $opts->{db_name} if ! $opts->{db_user};
-$opts->{db_pass} = $opts->{db_name} if ! $opts->{db_pass};
+$config{db_user} = $config{db_name} if ! $config{db_user};
+$config{db_pass} = $config{db_name} if ! $config{db_pass};
 
 $dbh = sql::open_sql( $log,
-		host      => $opts->{db_host},
-		database  => $opts->{db_name},
+		host      => $config{db_host},
+		database  => $config{db_name},
 		driver    => 'Pg',
-		login     => $opts->{db_user},
-		password  => $opts->{db_pass},
+		login     => $config{db_user},
+		password  => $config{db_pass},
 		);
 die 'Error opening db' if ! $dbh;
+configuration::from_db( );
+configuration::from_file( $$opts{config} );
+configuration::merge( $opts );
+$config{log_level} = 'debug' if ! $config{log_level};
+$log = logger->new( {file=>$config{log_file}, level=>$config{log_level}} );
 
-configuration::init( {'SkinPath'=> $opts->{skin_path}});
-
-my @Equipment = openprint::Equipment->find('cip3_monitor'=>1,
-( exists $opts->{equipment_name} ? ( 'strid'=>$opts->{equipment_name}) : () ),
-);
+my @Equipment = openprint::Equipment->find(
+		cip3_monitor=>1,
+		( exists $opts->{equipment_name} ? ( strid=>$opts->{equipment_name}) : () ),
+		);
 if ( ! @Equipment ) {
 	die "No equipment found.\n";
 } # end if
@@ -75,7 +83,7 @@ if ( ! @Equipment ) {
 $dbh->disconnect();
 
 foreach my $Equipment ( @Equipment ) {
-	#$log->debug("Processing " . $Equipment->name() );
+	$log->debug("Processing " . $Equipment->name() );
 	my @filenames;
 	if ( ! open(S, "> $$Equipment{cip3_in}/.lock.lck") ) {
 		$log->error("Unable to open semaphoreat $$Equipment{cip3_in}/.lock.lck");
@@ -225,11 +233,11 @@ if ( $mangle ) {
 			} # end if
 
 $dbh = sql::open_sql( $log,
-		'host'      => $opts->{db_host},
-		'database'  => $opts->{db_name},
-		'driver'    => 'Pg',
-		'login'     => $opts->{db_user},
-		'password'  => $opts->{db_pass},
+		host      => $config{db_host},
+		database  => $config{db_name},
+		driver    => 'Pg',
+		login     => $config{db_user},
+		password  => $config{db_pass},
 		);
 die 'Error opening db' if ! $dbh;
 			my $PPF = store_PPF( $docket, $name, $sig, $side, $Equipment, $data );
@@ -266,7 +274,7 @@ $log->warn("SINGLE SIDE Parsed to $file_base, $side, $extension from $file") if 
 			next;
 		} # end if
 		if ( ! flock(IN, LOCK_EX) ) {
-			$log->error("Unable to lock CIP FILE!\n");
+			$log->error('Unable to lock CIP FILE!');
 			close(IN);
 			next;
 		} # end if
@@ -304,11 +312,11 @@ if ( $mangle ) {
 			next;
 		} # end if
 $dbh = sql::open_sql( $log,
-		'host'      => $opts->{db_host},
-		'database'  => $opts->{db_name},
-		'driver'    => 'Pg',
-		'login'     => $opts->{db_user},
-		'password'  => $opts->{db_pass},
+		host      => $config{db_host},
+		database  => $config{db_name},
+		driver    => 'Pg',
+		login     => $config{db_user},
+		password  => $config{db_pass},
 		);
 die 'Error opening db' if ! $dbh;
 		my $PPF = store_PPF( $docket, $name, $sig, $side, $Equipment, $data );
