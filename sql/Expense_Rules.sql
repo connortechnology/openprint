@@ -5,6 +5,7 @@ CREATE TABLE Expense_Rules (
   name  TEXT,
   rules_json  JSON,
   action_json JSON,
+  category_id INTEGER, FOREIGN KEY (category_id) REFERENCES Expense_Rule_Categories (id),
   created_on TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
   updated_on TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
   PRIMARY KEY (id)

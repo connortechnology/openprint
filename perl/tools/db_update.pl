@@ -5812,10 +5812,28 @@ if ( ! sets::isin('oui_vendors', \@tables ) ) {
 	$dbh->do( misc::load_file( $log, q{../../sql/OUI_Vendors.sql}) );
 	die if $dbh->errstr();
 }
+if ( ! sets::isin('expense_rule_Categoriess', \@tables ) ) {
+	$log->debug("Adding expense_rule_categoriess");
+	$dbh->do( misc::load_file( $log, q{../../sql/Expense_Rule_Categories.sql}) );
+	die if $dbh->errstr();
+}
 if ( ! sets::isin('expense_rules', \@tables ) ) {
 	$log->debug("Adding expense_rules");
 	$dbh->do( misc::load_file( $log, q{../../sql/Expense_Rules.sql}) );
 	die if $dbh->errstr();
+} else {
+  my $data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='expense_rules'", 'column_name');
+  if ( ! exists $$data{category_id} ) {
+    $log->debug("Adding category to expense_rules");
+    $dbh->do('ALTER TABLE expense_rules add category_id integer') or die $dbh->errstr();
+    $dbh->do('ALTER TABLE expense_rules add FOREIGN KEY (category_id) REFERENCES Expense_Rule_Categories (id)') or die $dbh->errstr();
+  } # end if
+  foreach my $f ( 'created_on', 'updated_on' ) {
+  if ( ! exists $$data{$f} ) {
+    $log->debug("Adding $f to expense_rules");
+    $dbh->do("ALTER TABLE expense_rules add $f TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()") or die $dbh->errstr();
+  }
+  }
 }
 
 print "done.\n";

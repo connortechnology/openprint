@@ -12,11 +12,17 @@ $serial = 'expense_rules_id_seq';
   name        =>  'name',
   rules_json  =>  'rules_json',
   action_json =>  'action_json',
+  created_on  =>  'created_on',
+  updated_on  =>  'updated_on',
+  category_id =>  'category_id',
 );
 %transforms = (
   name => [ 's/^\s+//', 's/\s+$//', 's/\s\s+/ /g' ],
 );
 %defaults = (
+  created_on  =>  'NOW()',
+  updated_on  =>  'NOW()',
+  category_id =>  undef,
 );
 
 sub action { 
@@ -78,6 +84,25 @@ sub apply {
     $openprint::log->debug("Applied actoin $key $action{$key} = $$Expense{$key}");
   } # end foreach key
 } # end sub apply
+
+sub category {
+  if ( @_ > 1 ) {
+    my $Category = openprint::Expense_Rule_Category->find_one('name lc'=>lc openprint::Expense_Rule_Category->transform('name',$_[1]));
+    if ( ! $Category ) {
+      $Category = new openprint::Expense_Rule_Category();
+      $Category->save({name=>$_[1]});
+    } # end if
+    $_[0]{category_id} = $Category->id();
+    $_[0]{category} = $Category->name();
+  } elsif ( ( ! defined $_[0]{category} ) and $_[0]{category_id} ) {
+    $_[0]{category} = $_[0]->Category()->name();
+  } # end if
+  return $_[0]{category};
+} # end sub category
+
+sub Category {
+  return new openprint::Expense_Rule_Category( $_[0]{category_id} );
+} # end sub Category
 
 1;
 __END__
