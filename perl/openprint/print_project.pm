@@ -720,8 +720,40 @@ sub reuse_project {
 	} # end if
 	sql::end_transaction( $dbh, $ac );
 
+	if ( $param{upgrade_ink_coverages} eq 'Y' ) {
+		
+		foreach my $sig_id ( $NewProject->signatures() ) {
+			my $Service = $NewProject->Service($sig_id);
+			my $sig_specs = $Service->specs();
+			my @colours = (
+					openprint::Estimating::Printing::get_colours($sig_specs, 'SideOne'),
+					openprint::Estimating::Printing::get_colours($sig_specs, 'SideTwo'),
+					);
+			foreach my $c ( @colours ) {
+				if ( $$c{type} eq 'CMYK' ) {
+					if (
+							($$c{coverage} == $openprint::config{OldDefaultInkCoverage})
+							and
+							($$c{coverage} != $openprint::config{DefaultInkCoverage})
+				 ) {
+						$openprint::log->debug("Update $$c{coverage_key} from $$c{coverage} to $openprint::config{DefaultInkCoverage}");
+						openprint::service::insert_service_spec( $log, $dbh, $NewProject->id(), $sig_id,
+								$$c{coverage_key}, $openprint::config{DefaultInkCoverage});
+					} else {
+						$openprint::log->debug("Not Update $$c{coverage_key} to $openprint::config{DefaultInkCoverage}");
+					}
+				} else {
+					$log->debug("Unknown type $$c{type}");
+				}
+
+			} # end foreach colour
+		} # end foreach sig
+		
+	} # end if upgrade_ink_coverages
+
 	if ( 
-			( $NewProject->currency_id() != $openprint::Currency->id() )
+			( $param{upgrade_ink_coverages} eq 'Y' ) 
+			or ( $NewProject->currency_id() != $openprint::Currency->id() )
 			or ( $NewProject->quantity1() and ( $Project->quantity1() != $NewProject->quantity1() ) )
 			or ( $NewProject->quantity2() and ( $Project->quantity2() != $NewProject->quantity2() ) )
 			or ( $NewProject->quantity3() and ( $Project->quantity3() != $NewProject->quantity3() ) )

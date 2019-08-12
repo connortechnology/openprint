@@ -141,7 +141,7 @@
 					<span id="password_alert"></span>
 				</li>
 				<li><label>Password Last Changed</label>
-					<? echo ( $$variable{User}->password_changed_on() ? Date::Format::time2str($config{DateTimeFormat}, Date::Parse::str2time( $$variable{User}->password_changed_on() ) ) : 'never' ) ?>
+					<? echo ( format_datetime( $$variable{User}->password_changed_on(), 'never'); ) ?>
 				</li>
 			</ul>
 		</fieldset>
@@ -156,11 +156,11 @@
 		require openprint::RADIUS_Check;
 		require openprint::RADIUS_Reply;
         $openprint::RADIUS_Reply::dbh = $openprint::RADIUS_Check::dbh = sql::open_sql( $log,
-            'database'  => $config{RADIUS_DB_Name},
-            'driver'    => $config{RADIUS_DB_Driver},
-            'host'      => $config{RADIUS_DB_Server},
-            'login'     => $config{RADIUS_DB_Username},
-            'password'  => $config{RADIUS_DB_Password},
+            database  => $config{RADIUS_DB_Name},
+            driver    => $config{RADIUS_DB_Driver},
+            host      => $config{RADIUS_DB_Server},
+            login     => $config{RADIUS_DB_Username},
+            password  => $config{RADIUS_DB_Password},
             );
         if ( ! $openprint::RADIUS_Check::dbh ) {
             return 'Unable to connect to RADIUS DB server.';

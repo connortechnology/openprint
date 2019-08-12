@@ -534,24 +534,24 @@ sub paper_details {
 			s/^\s+//, s/\s+$//, s/\s+/ /g for $param{manufacturers_name};
 			$Paper->manufacturers_name( $param{manufacturers_name} );
 		} # end if
-		$Paper->calliper( $param{txtCalliper} );
+		$Paper->calliper( $param{calliper} );
 		if ( ! $param{paper_id} ) {
 			my @papers = openprint::Paper->find(
-					( $param{Owner} ? ( 'owner_id'	=>	$param{Owner} ) : () ),
-					( $param{txtManufacturer} ? ( 'manufacturer'		=>	$param{txtManufacturer} ) : () ),
-					( $param{Manufacturer} ? ( 'manufacturer_id'	=>	$param{Manufacturer} ) : () ),
-					( $param{txtBrand} ? ( 'brand'		=>	$param{txtBrand} ) : () ),
-					( $param{Brand} ? ( 'brand_id'	=>	$param{Brand} ) : () ),
-					( $param{txtFinish} ? ( 'finish'	=>	$param{txtFinish} ) : () ),
-					( $param{Finish} ? ( 'finish_id' =>	$param{Finish} ) : () ),
-					( $param{txtColour} ? ( 'colour'	=>	$param{txtColour} ) : () ),
-					( $param{Colour} ? ( 'colour_id' =>	$param{Colour} ) : () ),
-					( $param{txtWeight} ? ( 'weight'	=>	$param{txtWeight} ) : () ),
-					( $param{Weight} ? ( 'weight_id' =>	$param{Weight} ) : () ),
-					( $param{txtQuality} ? ( 'quality'	=>	$param{txtQuality} ) : () ),
-					( $param{Quality} ? ( 'quality_id'=>	$param{Quality} ) : () ),
-					( $param{width} ? ( 'width'		=> $param{width} ) : () ),
-					( $param{height} ? ( 'height'	=>	$param{height} ) : () ),
+					( $param{Owner} ? ( owner_id	=>	$param{Owner} ) : () ),
+					( $param{txtManufacturer} ? ( manufacturer		=>	$param{txtManufacturer} ) : () ),
+					( $param{Manufacturer} ? ( manufacturer_id	=>	$param{Manufacturer} ) : () ),
+					( $param{txtBrand} ? ( brand		=>	$param{txtBrand} ) : () ),
+					( $param{Brand} ? ( brand_id	=>	$param{Brand} ) : () ),
+					( $param{txtFinish} ? ( finish	=>	$param{txtFinish} ) : () ),
+					( $param{Finish} ? ( finish_id =>	$param{Finish} ) : () ),
+					( $param{txtColour} ? ( colour	=>	$param{txtColour} ) : () ),
+					( $param{Colour} ? ( colour_id =>	$param{Colour} ) : () ),
+					( $param{txtWeight} ? ( weight	=>	$param{txtWeight} ) : () ),
+					( $param{Weight} ? ( weight_id =>	$param{Weight} ) : () ),
+					( $param{txtQuality} ? ( quality	=>	$param{txtQuality} ) : () ),
+					( $param{Quality} ? ( quality_id=>	$param{Quality} ) : () ),
+					( $param{width} ? ( width		=> $param{width} ) : () ),
+					( $param{height} ? ( height	=>	$param{height} ) : () ),
 					);
 			if ( @papers ) {
 				$variable{error} .= qq`A paper matching those parameters already exists. Click here to edit it: <a href="paper_details.html?paper_id=$papers[0]{id}">paper $papers[0]{id}</a>`;
@@ -603,14 +603,14 @@ sub paper_details {
 			return;
 		} # end if
 		my @Duplicates = openprint::Paper->find(
-				'manufacturer_id'	=> $Paper->manufacturer_id(),
-				'brand_id'			=> $Paper->brand_id(),
-				'finish_id'			=> $Paper->finish_id(),
-				'colour_id'			=> $Paper->colour_id(),
-				'weight_id'			=> $Paper->weight_id(),
-				'quality_id'		=> $Paper->quality_id(),
-				'width'				=> $Paper->width(),
-				'height'			=> $Paper->height(),
+				manufacturer_id	=> $Paper->manufacturer_id(),
+				brand_id			=> $Paper->brand_id(),
+				finish_id			=> $Paper->finish_id(),
+				colour_id			=> $Paper->colour_id(),
+				weight_id			=> $Paper->weight_id(),
+				quality_id		=> $Paper->quality_id(),
+				width				=> $Paper->width(),
+				height			=> $Paper->height(),
 				fsc_code			=>	$Paper->fsc_code(),
 				);
 
