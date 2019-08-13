@@ -167,6 +167,10 @@ sub convert {
 
 sub get_current {
 
+	if ( $openprint::Currency ) {
+		return $openprint::Currency;
+	}
+
 	if ( $openprint::session{Currency_id} ) {
 		return new openprint::Currency( $openprint::session{Currency_id} );
 	} # end if

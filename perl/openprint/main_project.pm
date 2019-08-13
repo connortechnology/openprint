@@ -150,7 +150,7 @@ sub create_edit {
 
 	my $services = $Project->services();
 	@{$variable{SelectedServices}} = keys %{$services};
-$log->debug("Services: " . join(',',@{$variable{SelectedServices}}) );
+#$log->debug("Services: " . join(',',@{$variable{SelectedServices}}) );
 
 	$variable{ProjectIndex} = $$Project{id};
 } # end sub create_edit

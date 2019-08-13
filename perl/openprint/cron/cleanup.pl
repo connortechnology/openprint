@@ -51,18 +51,18 @@ foreach my $default ( keys %defaults ) {
     $$opts{$default} = $defaults{$default} if ! $$opts{$default};
 } # end foreach default
 
-$log = new logger(level=>'debug',program=>$program);
+$log = new logger(level=>'debug', program=>$program);
 
 # Get our configuration information
 $$opts{config} = "/etc/openprint/$program.conf" if !$$opts{config};
 if (my $err = configuration::from_file($$opts{config})) {
-	die $err;
+	$log->error($err);
 }
 configuration::merge($opts);
 foreach my $param ( 'db_name','db_user','db_pass' ) {
-    if ( ! $config{$param} ) {
-        die "$program: missing required --$param parameter";
-    }
+	if ( ! $config{$param} ) {
+		die "$program: missing required --$param parameter";
+	}
 } # end foreach required-param
 
 my $r;

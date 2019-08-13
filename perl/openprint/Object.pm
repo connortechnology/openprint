@@ -343,6 +343,7 @@ $log->debug("No serial") if $debug;
 				$local_dbh->rollback();
 				sql::end_transaction( $local_dbh, $ac );
 				return $error;
+				(new openprint::Log())->save({Object=>$self, action=>'Created'}) if ! ( $type =~ /Log/i );
 			} # end if
 			if ( $debug or DEBUG_ALL ) {
 				$command =~ s/\?/\%s/g;
@@ -377,7 +378,6 @@ $log->debug("Setting cached object to $self : " . $self->to_string());
 		} # end if
 	#delete $openprint::Object::cache{$config{db_name}}{$type}{$$self{id}};
 	} # end if
-	(new openprint::Log())->save({Object=>$self, action=>'Created'}) if $sql{id} and ! ( $type =~ /Log/i );
 #$log->debug("after delete");
 	eval 'if ( %'.$type.'::find_cache ) { %'.$type.'::find_cache = (); }';
 #$log->debug("after clear cache");
@@ -945,7 +945,7 @@ $openprint::log->error("Wasting time looking for objects in find $k $search{$k}"
 			( $sql{limit} ? ( 'LIMIT', $sql{limit}) : () ),
 			( $sql{offset} ? ( 'OFFSET', $sql{offset} ) : () ),
 	);	
-	$log->debug("Loading Debug:$debug $object_type ($sql{sql}) (".join(',', map { ref $_ eq 'ARRAY' ? join(',', @{$_}) : $_ } @values).')' ) if $debug;
+	$log->debug("find_sql $object_type ($sql{sql}) (".join(',', map { ref $_ eq 'ARRAY' ? join(',', @{$_}) : $_ } @values).')' ) if $debug;
 	return \%sql;
 } # end sub find_sql
 
@@ -982,18 +982,18 @@ sub find {
 	my $cache_field = ${$object_type.'::cache_field'} if $do_cache;
 	if ( ( 1 == scalar keys %{$$sql{used_fields}} ) and $$params{id} ) {
 		if ( $cache{$config{db_name}}{$object_type}{$$params{id}} ) {
-	my ( $caller, undef, $line ) = caller;
-$log->debug("returning " . $name_cache{$object_type}{$$params{$cache_field}} . " to $caller:$line for $object_type $cache_field $$params{$cache_field}") if DEBUG_ALL;
+			my ( $caller, undef, $line ) = caller;
+			$log->debug("returning " . $name_cache{$object_type}{$$params{$cache_field}} . " to $caller:$line for $object_type $cache_field $$params{$cache_field}") if DEBUG_ALL;
 			return ( $cache{$config{db_name}}{$object_type}{$$params{id}} );
 		}
-	} elsif ( $cache_field and $$params{$cache_field} and ( 1 == scalar keys %{$$sql{used_fields}} ) ) {
+	} elsif ( $cache_field and $$params{$cache_field} and ( 1 == (scalar keys %{$$sql{used_fields}}) ) ) {
 
-$log->debug("have cache field $cache_field for $$params{$cache_field}") if DEBUG_ALL;
+		$log->debug("have cache field $cache_field for $$params{$cache_field}") if DEBUG_ALL;
 		if ( exists $name_cache{$object_type} and exists $name_cache{$object_type}{$$params{$cache_field}} ) {
-$log->debug("There is an object in the cache for $$params{$cache_field}") if DEBUG_ALL;
+			$log->debug("There is an object in the cache for $$params{$cache_field}") if DEBUG_ALL;
 			if ( $name_cache{$object_type}{$$params{$cache_field}} ) {
-	my ( $caller, undef, $line ) = caller;
-$log->debug("returning " . $name_cache{$object_type}{$$params{$cache_field}} . " to $caller:$line for $object_type $cache_field $$params{$cache_field}") if DEBUG_ALL;
+				my ( $caller, undef, $line ) = caller;
+				$log->debug("returning " . $name_cache{$object_type}{$$params{$cache_field}} . " to $caller:$line for $object_type $cache_field $$params{$cache_field}") if DEBUG_ALL;
 				return $name_cache{$object_type}{$$params{$cache_field}}; 
 			} else {
 				# Shouldn't have to test for cached, because the hash will not get populated.

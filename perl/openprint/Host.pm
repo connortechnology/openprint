@@ -99,7 +99,25 @@ $serial = 'hosts_id_seq';
 );
 
 sub name {
-  return $_[0]->hostname();
+	if ( ! $_[0]{name} ) {
+		$_[0]{name} = $_[0]->hostname();
+		if ( ! $_[0]{name} ) {
+			foreach my $HI ( $_[0]->Interfaces() ) {
+				if ( $$HI{ip} ) {
+					$_[0]{name} = $$HI{ip};
+					return $_[0]{name};
+				}
+			}
+			foreach my $HI ( $_[0]->Interfaces() ) {
+				if ( $$HI{mac} ) {
+					$_[0]{name} = $$HI{mac};
+					return $_[0]{name};
+				}
+			}
+		}
+		return 'unknown';			
+	}
+	return $_[0]{name};
 }
 
 sub destroy {
@@ -423,7 +441,7 @@ sub url_to {
 sub link_to {
 	return sprintf('<a href="/employee/it/host.html?host_id=%d">%s</a>',
       ( $_[0]{id} ? $_[0]{id} : 0 ),
-      ( ( @_ > 1 and $_[1] ) ? $_[1] : ( $_[0]->hostname() ? $_[0]->hostname() : '' ) )
+      ( ( @_ > 1 and $_[1] ) ? $_[1] : ( $_[0]->name() ? $_[0]->name() : '' ) )
       );
 }
 

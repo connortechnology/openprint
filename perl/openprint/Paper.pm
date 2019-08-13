@@ -1678,7 +1678,7 @@ sub basis_width {
 		$$self{basis_width} = $width;
 	} # end if
 	if ( ! $$self{basis_width} ) {
-		if ( $self->brand() =~ /cover/i ) {
+		if ( $self->is_cover() ) {
 			$$self{basis_width} = 20;
 		} else {
 			$$self{basis_width} = 25;
@@ -1694,7 +1694,7 @@ sub basis_height {
 		$$self{basis_height} = $height;
 	} # end if
 	if ( ! $$self{basis_height} ) {
-		if ( $self->brand() =~ /cover/i ) {
+		if ( $self->is_cover() ) {
 			$$self{basis_height} = 26;
 		} else {
 			$$self{basis_height} = 38;
