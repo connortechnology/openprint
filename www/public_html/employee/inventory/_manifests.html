@@ -146,6 +146,12 @@
 			} # end if
 
 			foreach my $Manifest ( @{$$variable{Manifests}} ) {
+				$r->print('');
+				if ( $r->connection()->aborted() ) {
+					$log->warn("ABORTED");
+					return;
+				} # end if
+
 				if ( $MContents{$$Manifest{id}} ) {
 					$Manifest->Contents( $MContents{$$Manifest{id}} );
 					foreach my $MC ( @{$MContents{$$Manifest{id}}} ) {
