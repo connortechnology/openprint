@@ -26,7 +26,7 @@ use vars qw( $log $dbh $AUTOLOAD %cache %name_cache %fields %transforms $no_cach
 *config = \%openprint::config;
 
 my $debug = 0;
-use constant DEBUG_ALL => 0;
+use constant DEBUG_ALL => 1;
 use constant DEBUG_CACHE => 0;
 use constant DEBUG_LOCKS => 0;
 $no_cache = 0;
@@ -236,10 +236,15 @@ sub save {
 	my $debug = eval '$'.$type.'::debug';
 	$debug = DEBUG_ALL if ! $debug;
 
+  # copy all the sql backed fields, as there might be other things in the object.
 	my %sql;
-	foreach my $k ( keys %$fields ) {
-		$sql{$$fields{$k}} = $$self{$k} if defined $$fields{$k};
-	} # end foreach
+  my @keys = map { defined $$fields{$_} ? $_ : () } keys %$fields;
+  @sql{@$fields{@keys}} = @$self{@keys};
+
+  #foreach my $k ( keys %$fields ) {
+  #$sql{$$fields{$k}} = $$self{$k} if defined $$fields{$k};
+  #} # end foreach
+  #
 	if ( ! $force_insert ) {
 		$sql{$$fields{updated_by}} = $openprint::session{user_id} if exists $$fields{updated_by};
 		$sql{$$fields{updated_on}} = 'NOW()' if exists $$fields{updated_on};
@@ -344,6 +349,12 @@ $log->debug("No serial") if $debug;
 				sql::end_transaction( $local_dbh, $ac );
 				return $error;
 			} # end if
+      if ( ! ( $type =~ /Log/i ) ) {
+        my ( $caller, undef, $line ) = caller;
+        if ( $caller ne 'openprint::Log' ) {
+          (new openprint::Log())->save({Object=>$self, action=>'Created'});
+        }
+      }
 			if ( $debug or DEBUG_ALL ) {
 				$command =~ s/\?/\%s/g;
 				$log->debug('SQL DEBUG: ('.sprintf($command, map { defined $_ ? $_ : 'undef' } ( @sql{@keys} ) ).'):' );
@@ -377,7 +388,6 @@ $log->debug("Setting cached object to $self : " . $self->to_string());
 		} # end if
 	#delete $openprint::Object::cache{$config{db_name}}{$type}{$$self{id}};
 	} # end if
-	(new openprint::Log())->save({Object=>$self, action=>'Created'}) if $sql{id} and ! ( $type =~ /Log/i );
 #$log->debug("after delete");
 	eval 'if ( %'.$type.'::find_cache ) { %'.$type.'::find_cache = (); }';
 #$log->debug("after clear cache");
