@@ -84,11 +84,11 @@ $log->info("There are ".@campaign_ids." active campaigns\n");
 # For each campaign, we need to get the associated query and interval of
 # between the last login time and now (which will be our threshold of concern)
 foreach my $Campaign (@campaign_ids) {
+	$log->info("Running campaign $$Campaign{name}");
 	$Campaign->send();
 	#print "Done campaign " . $Campaign->name() . "\n";
 } # foreach campaign_id
 openprint::EmailCampaign->unlock();
-
 
 $dbh->disconnect();
 
