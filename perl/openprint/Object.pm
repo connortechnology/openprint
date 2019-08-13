@@ -343,6 +343,7 @@ $log->debug("No serial") if $debug;
 				$local_dbh->rollback();
 				sql::end_transaction( $local_dbh, $ac );
 				return $error;
+				(new openprint::Log())->save({Object=>$self, action=>'Created'}) if ! ( $type =~ /Log/i );
 			} # end if
 			if ( $debug or DEBUG_ALL ) {
 				$command =~ s/\?/\%s/g;
@@ -377,7 +378,6 @@ $log->debug("Setting cached object to $self : " . $self->to_string());
 		} # end if
 	#delete $openprint::Object::cache{$config{db_name}}{$type}{$$self{id}};
 	} # end if
-	(new openprint::Log())->save({Object=>$self, action=>'Created'}) if $sql{id} and ! ( $type =~ /Log/i );
 #$log->debug("after delete");
 	eval 'if ( %'.$type.'::find_cache ) { %'.$type.'::find_cache = (); }';
 #$log->debug("after clear cache");
