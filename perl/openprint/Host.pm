@@ -441,7 +441,7 @@ sub url_to {
 sub link_to {
 	return sprintf('<a href="/employee/it/host.html?host_id=%d">%s</a>',
       ( $_[0]{id} ? $_[0]{id} : 0 ),
-      ( ( @_ > 1 and $_[1] ) ? $_[1] : ( $_[0]->hostname() ? $_[0]->hostname() : '' ) )
+      ( ( @_ > 1 and $_[1] ) ? $_[1] : ( $_[0]->name() ? $_[0]->name() : '' ) )
       );
 }
 
