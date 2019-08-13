@@ -721,6 +721,8 @@ sub reuse_project {
 	sql::end_transaction( $dbh, $ac );
 
 	if ( $param{upgrade_ink_coverages} eq 'Y' ) {
+		my $services = $NewProject->services();
+		my $printing_Service = $NewProject->Service($$services{''}[0]) if $$services{''} and @{$$services{''}};
 		
 		foreach my $sig_id ( $NewProject->signatures() ) {
 			my $Service = $NewProject->Service($sig_id);
@@ -739,13 +741,17 @@ sub reuse_project {
 						$openprint::log->debug("Update $$c{coverage_key} from $$c{coverage} to $openprint::config{DefaultInkCoverage}");
 						openprint::service::insert_service_spec( $log, $dbh, $NewProject->id(), $sig_id,
 								$$c{coverage_key}, $openprint::config{DefaultInkCoverage});
+						if ( $$sig_specs{Group} and $printing_Service ) {
+							openprint::service::insert_service_spec( $log, $dbh, $NewProject->id(), $printing_Service->service_id(),
+									$$c{coverage_key}.$$sig_specs{Group}, $openprint::config{DefaultInkCoverage});
+
+						}
 					} else {
 						$openprint::log->debug("Not Update $$c{coverage_key} to $openprint::config{DefaultInkCoverage}");
 					}
 				} else {
 					$log->debug("Unknown type $$c{type}");
 				}
-
 			} # end foreach colour
 		} # end foreach sig
 		
