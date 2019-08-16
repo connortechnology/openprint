@@ -211,5 +211,5 @@ my $poc_check = $Type->PurchaseOrder_Content()->check($Type->Paper()) if $Type->
 	</form>
 	<?eval($$variable{Object} = $$variable{Manifest};)?>
 	<?include(/employee/assets/_asset_upload.html)?>
-	<?include(_manifest_log.html)?>
+<? echo ( $$variable{Manifest}->id() ? include_logs($$variable{Manifest}) : '' ) ?>
 </div>
