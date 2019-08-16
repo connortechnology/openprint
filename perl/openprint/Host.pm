@@ -114,8 +114,8 @@ sub name {
 					return $_[0]{name};
 				}
 			}
+			return 'unknown';			
 		}
-		return 'unknown';			
 	}
 	return $_[0]{name};
 }
