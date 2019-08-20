@@ -132,7 +132,7 @@ sub action {
 sub note_html {
 	if ( !$_[0]{note_html} ) {
 		$_[0]{note_html} = ssi::htmlize($_[0]{note});
-		$_[0]{note_html} =~ s/&lt;a href=&quot;([^"]+)&quot;&gt;(.+)&lt;\/a&gt;/<a href=&quot;\1&quot;>\2<\/a>/ig;
+		$_[0]{note_html} =~ s/&lt;a href=&quot;([^"]+)&quot;&gt;(.+)&lt;\/a&gt;/<a href=&quot;$1&quot;>$2<\/a>/ig;
 $openprint::log->debug("Note html: ".$_[0]{note_html});
 	}
 	return $_[0]{note_html};
