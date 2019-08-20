@@ -9,6 +9,7 @@ require sql;
 require openprint::MarketingCategory;
 require Authen::Passphrase::BlowfishCrypt;
 require openprint::User_Notification;
+require openprint::Email_Account;
 
 require openprint;
 use vars qw( $r $log $dbh %variable %param %session %config);
@@ -26,7 +27,7 @@ sub profile {
 
 	my $User = $variable{User} = new openprint::User( exists $param{user_id} ? $param{user_id} : $session{user_id} );
 
-    if ( $param{btnFunction} eq 'Save' ) {
+	if ( $param{btnFunction} eq 'Save' ) {
 		if ( $param{password} ) {
 			if ( ! $param{VerifyPassword} ) {
 				$variable{warning} .= 'Verify password left blank, password not changed.<br/>';
@@ -36,8 +37,8 @@ sub profile {
 			} # end if
 			$variable{warning} .= 'New Password is the same as your current password.<br/>' if $param{password} eq $User->Password();
 		} # end if
-        $variable{error} .= 'First Name cannot be blank.<br/>' if ! $param{firstname};
-        $variable{error} .= 'Email Cannot be blank.<br/>' if ! $param{email};
+		$variable{error} .= 'First Name cannot be blank.<br/>' if ! $param{firstname};
+		$variable{error} .= 'Email Cannot be blank.<br/>' if ! $param{email};
 
 		return if $variable{error};
 
@@ -48,19 +49,19 @@ sub profile {
 			$param{csr_ids} = [ sets::intersection( $User->csr_ids(), ( ref $param{csr_ids} eq 'ARRAY' ? @{$param{csr_ids}} : ( $param{csr_ids} ) ) ) ];
 		} # end if
 		if ( ! $param{password} ) {
-            delete $param{password};
-        } elsif ( $config{encrypt_passwords} ) {
-            my $ppr = Authen::Passphrase::BlowfishCrypt->from_rfc2307($User->password());
-            if ( ! $ppr->match($param{password}) ) {
-                $param{password_changed_on} = 'NOW()';
-                my $ppr = Authen::Passphrase::BlowfishCrypt->new( cost => 8, salt_random => 1, passphrase => $param{password} );
-                $param{password} = $ppr->as_rfc2307();
-            } else {
-                delete $param{password};
-            } # end if
-        } elsif ( $param{password} ne $User->password() ) {
-            $param{password_changed_on} = 'NOW()';
-        } # end if
+			delete $param{password};
+		} elsif ( $config{encrypt_passwords} ) {
+			my $ppr = Authen::Passphrase::BlowfishCrypt->from_rfc2307($User->password());
+			if ( ! $ppr->match($param{password}) ) {
+				$param{password_changed_on} = 'NOW()';
+				my $ppr = Authen::Passphrase::BlowfishCrypt->new( cost => 8, salt_random => 1, passphrase => $param{password} );
+				$param{password} = $ppr->as_rfc2307();
+			} else {
+				delete $param{password};
+			} # end if
+		} elsif ( $param{password} ne $User->password() ) {
+			$param{password_changed_on} = 'NOW()';
+		} # end if
 
 		delete $param{VerifyPassword} if ! $param{VerifyPassword};
 		delete $param{btnFunction};
@@ -69,36 +70,13 @@ sub profile {
 		return if $variable{error};
 
 		push @changes, $User->save_notifications( \%param );
-		(new openprint::Log())->save({Object=>$User, action=>'Save User', note=>join('<br/>', @changes) }) if @changes;
 
 		if ( $config{mail_db_name} ) {
-			my @domains = email::domains();
-			my ( $user, $domain ) = $User->email() =~ /^([^\@]+)\@(.+)$/;
-			if ( sets::isin( $domain, \@domains ) ) {
-
-				if ( $param{VacationState} ) {
-					email::start_vacation( @param{'email','VacationSubject','VacationMessage','VacationSystemEmails'} );
-				} else {
-					email::stop_vacation( $param{email} );
-				} # end if
-				if ( $param{EmailPassword} ) {
-					if ( ! $param{VerifyEmailPassword} ) {
-						$variable{warning} .= 'Verify Email password left blank, password not changed.<br/>';
-					} elsif ( $param{EmailPassword} eq $param{VerifyEmailPassword} ) {
-						email::set_password( @param{'email','EmailPassword'} );
-					} else {
-						$variable{error} .= 'Email Password fields do not match.<br/>';
-					} # end if
-				} # end if
-				my @aliases = ();
-				foreach my $alias ( split "\r\n", $param{aliases} ) {
-					next if ! $alias;
-					push @aliases, $alias;
-				} # end foreach
-				push @aliases, $User->email() if ! @aliases;
-				email::aliases( $User->email(), @aliases );
-			} # end if
+			my ( $error, @c ) = email::save($User->email(), \%param);
+			$variable{error} .= $error;
+			push @changes, @c;
 		} # end if
+		(new openprint::Log())->save({Object=>$User, action=>'Save User', note=>join('<br/>', @changes) }) if @changes;
 
 		if ( ($session{user_type} eq 'A' ) or ( openprint::usergroup::is_user_in( ['UserManagement'], $session{user_id} ) ) ) {
 			my @categories = sql::execute( $log, $dbh, 'SELECT id FROM Marketing_Categories' );
@@ -131,15 +109,12 @@ sub profile {
 		$variable{ExternalRedirect} = '/employee/account/profile.html?user_id='.$User->id();
 	} # end if
 	$variable{User} = $User;
-    if ( $config{mail_db_name} ) {
-        my @domains = email::domains();
-        my ( $user, $domain ) = $User->email() =~ /^([^\@]+)\@(.+)$/;
-        if ( sets::isin( $domain, \@domains ) ) {
-            $variable{DoEmail} = 1;
-            @variable{'VacationState','VacationSubject','VacationMessage','VacationSystemEmails'} = email::get_vacation( $User->email() );
-            @{$variable{Aliases}} = email::aliases( $User->email() );
-        } # end if
-    } # end if
+	if ( $config{mail_db_name} ) {
+		email::load($User->email(), \%variable);
+		my $mail_dbh = email::db_connect();
+		$openprint::Email_Account::dbh = $mail_dbh;
+		$variable{Email} = openprint::Email_Account->find_one(username=>$User->email());
+	}
 } # end sub profile
 
 sub login {

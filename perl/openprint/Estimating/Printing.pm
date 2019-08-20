@@ -826,6 +826,7 @@ sub get_colours {
 				type	=>	'CMYK',
 				name	=>"$colour Spot Colour",
 				coverage => $$specs{$colour.'Spot'.$side.'Coverage'},
+				coverage_key	=> $colour.'Spot'.$side.'Coverage',
 			};
 		} # end if
 	} # end foreach
@@ -835,6 +836,7 @@ sub get_colours {
 			type	=>	'CMYK',
 			name => $_,
 			coverage=>$$specs{$_.$side.'Coverage'},
+			coverage_key	=> $_.$side.'Coverage',
 		} } ( 'Cyan','Magenta','Yellow','Black' );
 	} # end if
 
@@ -861,6 +863,7 @@ sub get_colours {
 				$$c{name} = $$c{type};
 			} # end if type eq PMS
 			$$c{coverage} = $$specs{'ColourCoatingCoverage'.$index.$side};
+			$$c{coverage_key} = 'ColourCoatingCoverage'.$index.$side;
 			push @colours, $c;
 	} # end foreach index
 	return @colours;
@@ -907,12 +910,12 @@ $log->debug("$key => $c and set output $DefaultInkCoverage;");
 $log->debug("$key => $c and set output");
 				} # end if
 				$inkCoverage{$colour} += $$specs{$key};
-			} # end foreach
+			} # end foreach CMYK
 		} else {
 			$log->debug("No process for $side");
 		} # end if Process
 
-	foreach my $index ( 1 .. $config{SpecialColourQuantity} ) {
+		foreach my $index ( 1 .. $config{SpecialColourQuantity} ) {
 		#foreach my $k ( keys %$specs ) {
 # checked on
 			#if ( my ( $index ) = $k =~ /^chkColourCoating(\d+)$side/ ) {
@@ -2410,7 +2413,7 @@ $log->debug("Using spine height");
 #$variables{txtHeight} = [ sets::exclude( ['output'], $variables{txtHeight} ) ];
 	} # end if
 
-	if ( sets::isin( $$Type{name}, [ 'Envelopes', 'NCR' ] ) ) {
+	if ( $$Type{name} and ( $$Type{name} eq 'Envelopes' or $$Type{name} eq 'NCR' ) ) {
 		if ( $$specs{rdbSpecificStock} ne 'Y' ) {
 			if ( $$specs{ddmStockSheetSize} ) {
 				@$specs{'txtWidth','txtHeight'} = $$specs{ddmStockSheetSize} =~ /^([\d\.]+)"?\s*x?\s*([\d\.]+)?"?\s*$/;
@@ -6582,8 +6585,8 @@ $log->debug("COnsidering $$Press{strid}") if DEBUG_PRESSES;
 				next;
 			} # end if
 			my $min_gsm = $Press->specification('Minimum GSM', $Paper->gsm() );
-			if ( $min_gsm and ( $$Paper{gsm} > $min_gsm ) ) {
-				$results{$press_id} = "Press $press_id Failed gsm Check.	Maximum gsm is $min_gsm";
+			if ( $min_gsm and ( $$Paper{gsm} < $min_gsm ) ) {
+				$results{$press_id} = "Press $press_id Failed gsm Check.	Minimum gsm is $min_gsm";
 				next;
 			} # end if
 			if ( ( $$Paper{type} eq 'Roll' ) and $Press->specification('Minimum Basis Weight') and $Paper->basis_mweight() < $Press->specification('Minimum Basis Weight') ) {

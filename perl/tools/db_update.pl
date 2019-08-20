@@ -3516,6 +3516,9 @@ if ( ! sets::isin( 'projecttemplate', \@tables ) ) {
 } # end if
 
 
+if ( ! sets::isin( 'host_config', \@tables ) ) {
+	$dbh->do( misc::load_file( $log, q{../../sql/Host_Config.sql}) );
+}
 if ( ! sets::isin( 'host_interfaces', \@tables ) ) {
 	$dbh->do( misc::load_file( $log, q{../../sql/Host_Interfaces.sql}) );
 	if ( exists $$hosts_table{mac} ) {
@@ -4243,6 +4246,10 @@ if ( sets::isin( 'emailcampaigns', \@tables ) ) {
 		$dbh->do('ALTER TABLE emailcampaigns ADD user_id INTEGER') or die $dbh->errstr();
 		$dbh->do('ALTER TABLE emailcampaigns ADD FOREIGN KEY (user_id) REFERENCES Users (id)') or die $dbh->errstr();
 	} # end if
+	if ( ! exists $$data{runnable} ) {
+		print "Adding runnable to EmailCampaigns\n";
+		$dbh->do('alter table emailcampaigns add runnable boolean not null default false') or die $dbh->errstr();
+	}
 } else {
 	$_ = misc::load_file( $log, q{../../sql/EmailCampaigns.sql});
 	foreach my $st ( split(';', $_ ) ) {
@@ -4887,7 +4894,6 @@ if ( ! sets::isin( 'par', \@tables ) ) {
     $dbh->do( misc::load_file( $log, '../../sql/PAR.sql' ) );
     die $dbh->errstr() if $dbh->errstr();
 } # end if
-
 
 if ( ! sets::isin( 'photos_in_albums', \@tables ) ) {
     $dbh->do( misc::load_file( $log, '../../sql/Photos_in_Albums.sql' ) );

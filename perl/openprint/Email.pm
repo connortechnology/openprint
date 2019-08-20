@@ -63,12 +63,12 @@ sub send {
 			BOUNDARY =>	$$self{boundary},
 			( $params{CC} ? ( CC		=>	$params{CC} ) : () ),
 			( @bcc ? ( BCC		=>	join(',', @bcc ) ) : () ),
-            smtp    => $params{SMTP} ? $params{SMTP} : $openprint::config{'Mail Server'},
+			Smtp    => $params{SMTP} ? $params{SMTP} : $openprint::config{'Mail Server'},
 			( $params{'Return-receipt-to'} ? ( 'Return-receipt-to' => $params{'Return-receipt-to'} ) : () ),
 			( $params{'Disposition-Notification-To'} ? ( 'Disposition-Notification-To' => $params{'Disposition-Notification-To'} ) : () ),
-            FROM    => ( ref $$self{from} eq 'openprint::User' ? sprintf('"%s" <%s>', $$self{from}->get('name','email') ) : $$self{from} ),
-             ( $$self{'Reply-To'} ? ( 'Reply-To'    => ( ref $$self{'Reply-To'} eq 'openprint::User' ? sprintf('"%s" <%s>', $$self{'Reply-To'}->get('name','email') ) : $$self{'Reply-To'} ) ) : () ),
-            SUBJECT => ( $params{SUBJECT} ? $params{SUBJECT} : $$self{subject} ),
+			FROM    => ( ref $$self{from} eq 'openprint::User' ? sprintf('"%s" <%s>', $$self{from}->get('name','email') ) : $$self{from} ),
+			( $$self{'Reply-To'} ? ( 'Reply-To'    => ( ref $$self{'Reply-To'} eq 'openprint::User' ? sprintf('"%s" <%s>', $$self{'Reply-To'}->get('name','email') ) : $$self{'Reply-To'} ) ) : () ),
+			SUBJECT => ( $params{SUBJECT} ? $params{SUBJECT} : $$self{subject} ),
 			BODY	=>	( exists $params{BODY} ? $params{BODY} : $$self{body} ),
 			);
 #$log->debug("SMTP: $mail{SMTP}, from: $mail{from} subject: $mail{SUBJECT}");

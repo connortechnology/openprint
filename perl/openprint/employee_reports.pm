@@ -1536,7 +1536,7 @@ $openprint::log->debug("Adding stock_cost from MC value $stock_weight $stock_she
 		( $columns{services} ? ( map { $$_{name} } @ServiceType_Categories ) : () ),
 		( $columns{plates} ? ( 'Plates', 'Plate Cost', 'Plate Total' ) : () ),
 		( $columns{production} ? ( 'Operator Assigned', 'Printed On', 'Completed On', 'Shipped On', 'Invoiced On' ) : () ),
-		( $columns{stock} ? ( 
+		( $columns{stock} or $columns{stock_customer_supplied} ? ( 
 												 'Used Stock Sheets', 'Used Stock Weight', 'Used Stock Cost',
 												 'Purchased Stock Sheets', 'Purchased Stock Weight', 'Purchaseed Stock Cost',
 												 'Received Stock Sheets', 'Received Stock Weight', 'Received Stock Cost',

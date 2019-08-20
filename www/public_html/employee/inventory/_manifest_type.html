@@ -33,7 +33,7 @@ $log->debug("Setting default to: " .  $$variable{"location_id-$$variable{type_id
 				$param{'quality_id-'.$$variable{type_id}} = $Paper->quality_id();
 				$param{'material_id-'.$$variable{type_id}} = $Paper->material_id();
 				$param{'type-'.$$variable{type_id}} = $Paper->type();
-				$param{'calliper-'.$$variable{type_id}} = $Paper->calliper();
+				$param{'calliper-'.$$variable{type_id}} = $Paper->calliper()*1000;
 				$param{'width-'.$$variable{type_id}} = $Paper->width();
 				$param{'height-'.$$variable{type_id}} = $Paper->height();
 				$param{'gsm-'.$$variable{type_id}} = $Paper->gsm();
@@ -136,12 +136,11 @@ $log->debug("Setting default to: " .  $$variable{"location_id-$$variable{type_id
 		<? if ( $$variable{Type}->paper_id() ) ?>
 		<p><label>Link to stock</label><a href="/employee/inventory/paper_details.html?paper_id=<? echo ( $$variable{Type}->paper_id() ) ?>"><? echo ( $$variable{Type}->Paper()->to_string() ) ?></a><br/>
 		<?echo (
-				my $html = $_ if ( $_ = $$variable{Type}->Paper()->check() );
+				my $html = $_.'<br/>' if ( $_ = $$variable{Type}->Paper()->check() );
 				if ( $$variable{Type}->po_content_id() ) {
-					$html .= $_ if ( $_ = $$variable{Type}->PurchaseOrder_Content()->check( $$variable{Type}->Paper() ) );
+					$html .= $_.'<br/>' if ( $_ = $$variable{Type}->PurchaseOrder_Content()->check( $$variable{Type}->Paper() ) );
 				}
 				
-				$html .= $_ if ( $_ = $$variable{Type}->Paper()->check() );
 				return  $html ? '<span class="warning">'.$html.'</span>' : '';
 				) ?>
 		</p>
@@ -150,7 +149,15 @@ $log->debug("Setting default to: " .  $$variable{"location_id-$$variable{type_id
 	<div class="rightColumn">
 		<p class="calliper">
 			<label>Calliper</label>
-			<? echo ( input( type=>'float', id=>'calliper-'.$$variable{type_id}, name=>'calliper-'.$$variable{type_id}, value=>$param{'calliper-'.$$variable{type_id}} ); )?>PT
+			<? echo ( input( type=>'float', id=>'calliper-'.$$variable{type_id}, name=>'calliper-'.$$variable{type_id}, value=>$param{'calliper-'.$$variable{type_id}},
+                oninput=>qq`\$('calliper_mm-$$variable{type_id}').value=do_decimals((this.value/1000)*25.4,3);`,
+						); )?> PT / mils
+
+          <? echo ( input(type=>'float', id=>'calliper_mm-'.$$variable{type_id}, name=>'calliper_mm-'.$$variable{type_id},
+                  value => Math::Round::nearest( .001, ($param{'calliper-'.$$variable{type_id}}/1000) * 25.4),
+                  oninput =>qq`\$('calliper-$$variable{type_id}').value=do_decimals( this.value*39.3701, 1 );`,
+                ); ) ?> mm
+
 		</p>
 		<p>
 			<label>GSM</label>

@@ -26,6 +26,7 @@ require openprint::Event;
 require openprint::User_Relationship;
 require openprint::Wall;
 require openprint::Blocklist;
+require openprint::Email_Account;
 
 use openprint ();
 use vars qw( $r $log $dbh %variable %param %session %config);
@@ -512,28 +513,14 @@ sub user_profile {
 				$param{password_changed_on} = 'NOW()';
 			} # end if
 
-			$variable{error} .= $User->save( \%param );
-			$User->Profile()->save( \%param );
+			my @changes = $User->changes(\%param);
+
+			$variable{error} .= $User->save(\%param);
+			$User->Profile()->save(\%param);
 			if ( $config{mail_db_name} ) {
-				my @domains = email::domains();
-				my ( $user, $domain ) = $User->email() =~ /^([^\@]+)\@(.+)$/;
-				if ( sets::isin( $domain, \@domains ) ) {
-					if ( $param{VacationState} ) {
-						email::start_vacation( $User->email(), @param{'VacationSubject','VacationMessage','VacationSystemEmails'} );
-					} else {
-						email::stop_vacation( $User->email() );
-					} # end if
-					if ( $param{EmailPassword} and $param{EmailPassword} eq $param{VerifyEmailPassword} ) {
-						email::set_password( @param{'email','EmailPassword'} );
-					} # end if
-					my @aliases = ();
-					foreach my $alias ( split "\r\n", $param{aliases} ) {
-						next if ! $alias;
-						push @aliases, $alias;
-					} # end foreach
-					push @aliases, $User->email() if ! @aliases;
-					email::aliases( $User->email(), @aliases );
-				} # end if
+				my ( $error, @c ) = email::save($User->email(), \%param);
+				$variable{error} .= $error;
+				push @changes, @c;
 			} # end if
 
 			$variable{ExternalRedirect} = '/account/user_profile.html?ddmUser='.$User->id();
@@ -542,18 +529,15 @@ sub user_profile {
 $log->debug("Sending password change");
 # Send password change email
 				if ( my $email_template = misc::load_file( $log, $config{SkinPath} . '/email_template.html' ) ) {
-					my %info = (
-							'User' =>$User,
-						   );
+					my %info = ( User =>$User );
 
-					$info{ReplacementText} = misc::load_file( $log, $ENV{DOCUMENT_ROOT} . '/email_content/changed_password.html' );
-					$info{ReplacementText} = ssi::variable_substitution( \$info{ReplacementText}, \%info );
+					$info{ReplacementText} = ssi::include('/email_content/changed_password.html', \%info);
 
 					(new openprint::Email())->send(
 							FROM    => $config{AdministratorEmail},
 							TO      => $User,
 							SUBJECT => 'Password Changed',
-							ATTACHMENTS	=> [ '', MIME::QuotedPrint::encode_qp( ssi::variable_substitution( \$email_template, \%info ) ), 'text/html', 'quoted-printable' ],
+							ATTACHMENTS	=> [ '', MIME::QuotedPrint::encode_qp( ssi::variable_substitution(\$email_template, \%info) ), 'text/html', 'quoted-printable' ],
 							);
 					$variable{information} = 'The user has been notified by email of the password change.';
 				} else {
@@ -572,15 +556,12 @@ $log->debug("Sending password change");
 		} # end if
 	} # end if 
 	$variable{User} = $User;
-    if ( $config{mail_db_name} ) {
-        my @domains = email::domains();
-        my ( $user, $domain ) = $User->email() =~ /^([^\@]+)\@(.+)$/;
-        if ( sets::isin( $domain, \@domains ) ) {
-            $variable{DoEmail} = 1;
-            @variable{'VacationState','VacationSubject','VacationMessage'} = email::get_vacation( $User->email() );
-            @{$variable{Aliases}} = email::aliases( $User->email() );
-        } # end if
-    } # end if
+	if ( $config{mail_db_name} ) {
+		email::load($User->email(), \%variable);
+		my $mail_dbh = email::db_connect();
+		$openprint::Email_Account::dbh = $mail_dbh;
+		$variable{Email} = openprint::Email_Account->find_one(username=>$User->email());
+	}
 } # end sub user_profile
 
 sub change_password {

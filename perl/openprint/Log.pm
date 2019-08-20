@@ -80,16 +80,19 @@ sub ip_address {
 $openprint::log->debug("Getting HI for $_[1] for " . $_[0]->to_string());
 		my $Interface = openprint::Host_Interface->find_one(ip=>$_[1]);
 		if ( !$Interface ) {
-			$Host = new openprint::Host();
-			$Host->save();
+			$Host = openprint::Host->find_one(hostname=>$_[1]);
+			if ( ! $Host ) {
+				$Host = new openprint::Host();
+				$Host->save();
+			}
 			$Interface = new openprint::Host_Interface();
-			$Interface->save({host_id=>$$Host{id}, ip=>$_[1] });
+			$Interface->save({host_id=>$$Host{id}, ip=>$_[1]});
 		} else {
 			$Host = $Interface->Host();
 		} # end if
 		$_[0]{host_id} = $Host->id();
 	} # end if
-	return join('<br/>', map { $_->ip() ? $_->ip() : () } $Host->Interfaces() );
+	return join('<br/>', map { $_->ip() ? $_->ip() : () } $Host->Interfaces());
 } # end sub ip_address
 
 sub Host {
@@ -125,6 +128,16 @@ sub action {
 	} # end if
 	return $_[0]->Action()->name();
 } # end sub action
+
+sub note_html {
+	if ( !$_[0]{note_html} ) {
+		if ( $_[0]{note} ) {
+			$_[0]{note_html} = ssi::htmlize($_[0]{note});
+			$_[0]{note_html} =~ s/&lt;a href=&quot;([^"]+)&quot;&gt;(.+)&lt;\/a&gt;/<a href=&quot;$1&quot;>$2<\/a>/ig;
+		}
+	}
+	return defined $_[0]{note_html} ? $_[0]{note_html} : '';
+}
 
 1;
 __END__
