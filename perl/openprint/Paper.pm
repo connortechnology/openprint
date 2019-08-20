@@ -1877,6 +1877,11 @@ $openprint::log->debug("basis: " . $Paper->basis_width() . 'x' . $Paper->basis_h
   if ( ( $Paper->finish() =~ /1 side/i ) and ( $Paper->doublesided() ) ) {
     push @results, 'appears to be C1S, but is marked double sided.';
   }
+	if ( $Paper->weight() =~ /(\d+) *lb/i ) {
+		if ( $Paper->basis_mweight() != 2*$1 ) {
+			push @results, 'may have wrong basis mweight.  Should probably be '.2*$1;
+		}
+	}
 
 	return join('<br/>', @results);
 } # end sub check
