@@ -92,6 +92,7 @@ $log->debug(@Rules . ' loaded');
 
 # Track expenses added this run, to help with duplicates
 my %Expenses_Added;
+my @columns;
 
 my $csv = Text::CSV_XS->new();
 open ( FH, "$$opts{file}" ) or die "Can't open $$opts{file} : $!";
@@ -99,7 +100,9 @@ open ( FH, "$$opts{file}" ) or die "Can't open $$opts{file} : $!";
     <FH>;
     <FH>;
     <FH>;
-    <FH>;
+    $_ = <FH>;
+    $csv->parse($_);
+    @columns = $csv->fields();
   }
 
 while ( <FH> ) {
@@ -152,8 +155,16 @@ while ( <FH> ) {
       paid_on     => $paid_on,
     });
   } elsif ( $$opts{format} eq 'CDNTire' ) {
-    ( $ref, $date, $posted, $type, $desc, $amount) = misc::trim($csv->fields());
+
+    if ( @columns == 6 ) {
+      ( $ref, $date, $posted, $type, $desc, $amount) = misc::trim($csv->fields());
+    } elsif ( @columns == 7 ) {
+      ( $ref, $date, $posted, $type, $desc, undef, $amount) = misc::trim($csv->fields());
+    } else {
+      die "Invalid # of columns " . scalar @columns . " @columns";
+    }
     $debit = $amount;
+    $paid_on = $date;
 
     $Expense->set_no_defaults({
       description => $desc,
@@ -204,6 +215,10 @@ while ( <FH> ) {
       $expense_find{'paid_on <='}    = join('-', Date::Calc::Add_Delta_Days(1*$year, 1*$month, 1*$day,3));
       delete $expense_find{paid_on};
     }
+    if ( $expense_find{description} ) {
+      $expense_find{'description ilike'} => $expense_find{description}.'%';
+      delete $expense_find{description};
+    }
     my @Expenses = openprint::Expense->find(\%expense_find);
 
     if ( @Expenses ) {
@@ -227,7 +242,7 @@ while ( <FH> ) {
         @Expenses = openprint::Expense->find(\%expense_find);
         if ( @Expenses ) {
           foreach my $E ( @Expenses ) {
-             print "Update record for? " . $E->to_string()." [Y|n]";
+             print "Update paid_on to $paid_on record for? " . $E->to_string()." [Y|n]";
              $response = <STDIN>;
              chomp $response;
              if ( (!$response) or ($response =~ /[Yy]/) ) {
@@ -238,7 +253,7 @@ while ( <FH> ) {
                if ( $_ ) {
                  die $_;
                }
-               $Expenses_Added{$$Expense{id}} = $Expense;
+               #$Expenses_Added{$$Expense{id}} = $Expense;
              }
           }
           next;
