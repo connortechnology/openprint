@@ -2344,7 +2344,13 @@ sub _allocate_popup {
 } # end sub _allocate_popup
 
 sub _manifest_purchase_orders {
+	$variable{Type} = new openprint::Manifest_Content_Type($param{type_id});
 } # end sub _manifest_purchase_orders
+
+sub _manifest_purchase_order_contents {
+	$variable{Type} = new openprint::Manifest_Content_Type($param{type_id});
+	$variable{Type}->po_id($param{po_id});
+} # end sub _manifest_purchase_order_contents
 
 sub _rfidtag_log {
 	if ( ! exists $param{start_year} ) {

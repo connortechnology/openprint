@@ -224,3 +224,41 @@ function unconfirm_po_content(type_id,poc_id) {
 		}
 	);
 }
+
+function select_po(type_id, po_id) {
+	var input = $j('#po_id-'+type_id);
+	if ( ! input ) {
+		console.log("No input found for #po_id-"+type_id);
+	} else {
+		input.val(po_id);
+	}
+}
+
+function load_pos(type_id) {
+	new Ajax.Updater('PurchaseOrders'+type_id, '_manifest_purchase_orders.html', {
+			parameters: {
+				supplier_id: $('supplier_id').value,
+				Docket: $('docket-'+type_id).value,
+				type_id: type_id
+				}
+				} );
+}
+
+function load_po_contents(type_id) {
+	var input = $j('#po_id-'+type_id);
+	if ( !input ) {
+		console.log("No input found for #po_id-"+type_id);
+	} else if ( !input.val() ) {
+		console.log("No po to load");
+	} else {
+		new Ajax.Updater(
+				'PO_'+type_id,
+				'/employee/inventory/_manifest_purchase_order_contents.html', { 
+			parameters: { 
+					type_id: type_id,
+					po_id: input.val()
+				}
+			}
+		);
+	}
+}
