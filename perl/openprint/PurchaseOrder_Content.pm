@@ -213,7 +213,7 @@ sub check {
 	if ( $POC->type() eq 'Sheet Stock' ) {
 		push @results, "PO has wrong stock format $$item{type} != $$POC{type}" if $$item{type} ne 'Sheet';
 		my ( $mweight, $type, $name ) = $POC->item() =~ /^([\d\.]+)M *([\w\/]*) *(.*)$/;
-		if ( $name =~ /(\d+)x(\d+)/i ) {
+		if ( $name =~ / ([\d\.]+)x([\d\.]+)/i ) {
 			my ( $width, $height ) = ( $1, $2 );
 			push @results, "PO width does not match: $$item{width} != $width" if $$item{width} != $width;
 			push @results, "PO height does not match: $$item{height} != $height" if $$item{height} != $height;
