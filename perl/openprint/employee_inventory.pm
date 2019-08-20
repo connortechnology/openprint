@@ -733,9 +733,9 @@ sub save_Paper {
 			$Paper->width( $param{'width'.$id} );
 			$Paper->height( $param{'height'.$id} );
 		} # end if
-		if ( $weight =~ /^([\d\.]+)lb$/ ) {
-			$Paper->basis_mweight( $1 * 2 );
-		} else {
+		if ( $weight =~ /^([\d\.]+)lb$/i ) {
+			$Paper->basis_mweight($1 * 2);
+		} elsif ( $param{'basis_weight'.$id} ) {
 			$Paper->basis_mweight( $param{'basis_weight'.$id} );
 		} # end if
 		$Paper->calliper( $param{'calliper'.$id} );

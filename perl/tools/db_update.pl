@@ -3516,6 +3516,9 @@ if ( ! sets::isin( 'projecttemplate', \@tables ) ) {
 } # end if
 
 
+if ( ! sets::isin( 'host_config', \@tables ) ) {
+	$dbh->do( misc::load_file( $log, q{../../sql/Host_Config.sql}) );
+}
 if ( ! sets::isin( 'host_interfaces', \@tables ) ) {
 	$dbh->do( misc::load_file( $log, q{../../sql/Host_Interfaces.sql}) );
 	if ( exists $$hosts_table{mac} ) {
@@ -4891,7 +4894,6 @@ if ( ! sets::isin( 'par', \@tables ) ) {
     $dbh->do( misc::load_file( $log, '../../sql/PAR.sql' ) );
     die $dbh->errstr() if $dbh->errstr();
 } # end if
-
 
 if ( ! sets::isin( 'photos_in_albums', \@tables ) ) {
     $dbh->do( misc::load_file( $log, '../../sql/Photos_in_Albums.sql' ) );

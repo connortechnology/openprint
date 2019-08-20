@@ -107,7 +107,7 @@
    				</li>
    				<li class="email_quotes notrequired">
    					<label>Email my quotes to myself?</label>
-            <?echo(radio('email_quotes_to_mysql', [ '1', 'Yes', '0', 'No' ], $$variable{User}->email_quotes_to_myself(), { default=>0 });)?>
+						<?echo( radio('email_quotes_to_myself', [ '1', 'Yes', '0', 'No' ], $$variable{User}->email_quotes_to_myself(), { default=>'0' }); )?>
    				</li>
 <? eval ( @{$$variable{QuoteLevels}} = sql::execute( undef, undef, 'SELECT id,name FROM QuoteLevels Order BY lower(name)' ); ) ?>
 <? if ( @{$$variable{QuoteLevels}} > 1 ) ?>

@@ -23,7 +23,7 @@ $serial = 'emailcampaigns_id_seq';
 	query     	  =>	'query',
 	interval  	  =>	'interval',
 	active    	  =>	'active',
-  runnable     	=>	'runnable',
+  runnable    	=>	'runnable',
 	timestosend	  =>	'timestosend',
 	timeofday		  =>	'timeofday',
 	email_subject	=>	'email_subject',
@@ -196,11 +196,11 @@ sub send {
 		my ( $interval_expired, $num_email_sent );
 		my $User = $replacements{User} = new openprint::User($user_id);
 
-		if ( (!$User->mailinglist()) or ($User->mailinglist() eq 'N') ) {
+		if ( (!$User->mailinglist()) or ( $User->mailinglist() eq 'N' ) ) {
 			$results .= sprintf(
-        '<span class="error">NOT Sending Email to: %s at %s : they have chosen to not receive email.</span><br/>',
-        $replacements{User}->link_to(),$replacements{User}->email()
-      );
+					'<span class="error">NOT Sending Email to: %s at %s : they have chosen to not receive email.</span><br/>',
+					$replacements{User}->link_to(),$replacements{User}->email()
+					);
 			next;
 		} # end if
 
