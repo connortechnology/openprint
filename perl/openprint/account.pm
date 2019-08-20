@@ -61,10 +61,7 @@ sub select_user {
 
 sub registration {
 	if ( $param{btnFunction} ne 'Register' ) {
-		$log->debug("Not registering");
 		return;
-	} else {
-		$log->debug("Registering");
 	} # end if
 
 	$param{business_name} = $param{company_name} if ! $param{business_name};
@@ -111,39 +108,60 @@ sub registration {
       $error .= "Password not good enough. $reason<br/>";
     } # end if
   } # end if
-	if ( ( ! $session{company_id} ) and ( $config{UseCaptchaOnRegistration} eq 'Y' ) ) {
-		if ( ! -e $config{SkinPath}.'/images/captcha' ) {
-			$log->error('Needtocreatecaptcha directory!');
-		} elsif ( ! $param{MD5SUM} ) {
-			$log->error('No MD5SUM, there must have been a problem creating the png!');
-		} else {
-			require Authen::Captcha;
-			my $Captcha = new Authen::Captcha(
-        data_folder => '/tmp/'.$config{db_name},
-        output_folder => $config{SkinPath}.'/images/captcha'
-      );
-			# Remove spaces, because some people want to put spaces between the characters, etc.
-			$param{Captcha} =~ s/\s//g;
-			my $rc = $Captcha->check_code( @param{'Captcha','MD5SUM'} );
-			if ( $rc == 1 ) {
-				# Passed
-			} elsif ( $rc == 0 ) {
-				# File error, log and carry on
-				$log->error('Captcha file error');
-			} elsif ( $rc == -1 ) {
-				$log->debug('Failed: code expired');
-				$error .= 'Captcha validation code has expired.  Please try again.';
-			} elsif ( $rc == -2 ) {
-				$log->debug('Failed: invalid code (not in db)');
-				$error .= 'Captcha validation code incorrect.  Please try again.';
-			} elsif ( $rc == -3 ) {
-				$log->debug('Failed: invalid code (does not match token)');
-				$error .= 'Captcha validation code incorrect.  Please try again.';
-			} else {
-				$log->error("unknown return code $rc from Authen::Captcha");
-			}
-		} # end if
-	} # end if
+  if ( ( ! $session{company_id} ) and ( $config{UseCaptchaOnRegistration} eq 'Y' ) ) {
+    if ( $config{reCAPTCHA_site_key} ) {
+      if ( ! $param{'g-recaptcha-response'} ) {
+        $error .= "You must check the I'm not a rebot box";
+      } else {
+        eval {
+          # Using Google recaptcha
+          require Captcha::reCAPTCHA;
+          my $c = Captcha::reCAPTCHA->new;
+          my $result = $c->check_answer_v2($config{reCAPTCHA_secret_key}, $param{'g-recaptcha-response'}, $ENV{REMOTE_ADDR});
+          if ( ! $result->{is_valid} ) {
+            $error .= 'Failed reCAPTCHA.';
+          }
+        };
+        if ( $@ ) {
+          $error .= "Failed reCAPTCHA: $@";
+          $log->error($error);
+        }
+      }
+
+    } else {
+      if ( ! -e $config{SkinPath}.'/images/captcha' ) {
+        $log->error('Needtocreatecaptcha directory!');
+      } elsif ( ! $param{MD5SUM} ) {
+        $log->error('No MD5SUM, there must have been a problem creating the png!');
+      } else {
+        require Authen::Captcha;
+        my $Captcha = new Authen::Captcha(
+          data_folder => '/tmp/'.$config{db_name},
+          output_folder => $config{SkinPath}.'/images/captcha'
+        );
+        # Remove spaces, because some people want to put spaces between the characters, etc.
+        $param{Captcha} =~ s/\s//g;
+        my $rc = $Captcha->check_code( @param{'Captcha','MD5SUM'} );
+        if ( $rc == 1 ) {
+          # Passed
+        } elsif ( $rc == 0 ) {
+          # File error, log and carry on
+          $log->error('Captcha file error');
+        } elsif ( $rc == -1 ) {
+          $log->debug('Failed: code expired');
+          $error .= 'Captcha validation code has expired.  Please try again.';
+        } elsif ( $rc == -2 ) {
+          $log->debug('Failed: invalid code (not in db)');
+          $error .= 'Captcha validation code incorrect.  Please try again.';
+        } elsif ( $rc == -3 ) {
+          $log->debug('Failed: invalid code (does not match token)');
+          $error .= 'Captcha validation code incorrect.  Please try again.';
+        } else {
+          $log->error("unknown return code $rc from Authen::Captcha");
+        }
+      } # end if captcha setup is ok
+    } # end if google recaptcha or not
+  } # end if using captcha
 
 	if ( $error ne '' ) {
     $log->warn("registration errors $error");
