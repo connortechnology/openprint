@@ -153,7 +153,7 @@ sub PurchaseOrder_Content {
 						$openprint::log->debug("Right width: $width == " . $Paper->width() ) if $debug;
 					} # end if
 				} else {
-					my ( $width, $height ) = $POC->item() =~ /(\d+)x(\d+)/i;
+					my ( $width, $height ) = $POC->item() =~ /([\d\.]+)x([\d\.]+)/i;
 					if ( $width ) {
 						if ( $Paper->width() and ( $Paper->width() != $width ) ) {
 							$openprint::log->debug("Wrong width: $width != " . $Paper->width() ) if $debug;

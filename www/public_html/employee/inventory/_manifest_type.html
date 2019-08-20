@@ -136,12 +136,11 @@ $log->debug("Setting default to: " .  $$variable{"location_id-$$variable{type_id
 		<? if ( $$variable{Type}->paper_id() ) ?>
 		<p><label>Link to stock</label><a href="/employee/inventory/paper_details.html?paper_id=<? echo ( $$variable{Type}->paper_id() ) ?>"><? echo ( $$variable{Type}->Paper()->to_string() ) ?></a><br/>
 		<?echo (
-				my $html = $_ if ( $_ = $$variable{Type}->Paper()->check() );
+				my $html = $_.'<br/>' if ( $_ = $$variable{Type}->Paper()->check() );
 				if ( $$variable{Type}->po_content_id() ) {
-					$html .= $_ if ( $_ = $$variable{Type}->PurchaseOrder_Content()->check( $$variable{Type}->Paper() ) );
+					$html .= $_.'<br/>' if ( $_ = $$variable{Type}->PurchaseOrder_Content()->check( $$variable{Type}->Paper() ) );
 				}
 				
-				$html .= $_ if ( $_ = $$variable{Type}->Paper()->check() );
 				return  $html ? '<span class="warning">'.$html.'</span>' : '';
 				) ?>
 		</p>

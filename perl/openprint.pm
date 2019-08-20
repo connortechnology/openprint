@@ -159,8 +159,6 @@ $log->debug("Generating new cookie $session{_session_id}") if Debug;
 				$Host = new openprint::Host();
 				$Host->save({hostname=>$ENV{REMOTE_ADDR}});
 			}
-			my $Interface = new openprint::Host_Interface();
-			$Interface->save({host_id=>$$Host{id}, ip=>$ENV{REMOTE_ADDR} });
 		} else { 
 			if ( @Interfaces > 1 ) {
 				$log->error("More than 1 Host with ip $ENV{REMOTE_ADDR}");
