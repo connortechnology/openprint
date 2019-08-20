@@ -63,7 +63,7 @@ sub send {
 			BOUNDARY =>	$$self{boundary},
 			( $params{CC} ? ( CC		=>	$params{CC} ) : () ),
 			( @bcc ? ( BCC		=>	join(',', @bcc ) ) : () ),
-			Smtp    => $params{SMTP} ? $params{SMTP} : $openprint::config{'Mail Server'},
+			Smtp    => $params{SMTP} ? $params{SMTP} : $openprint::config{'Mail_Server'},
 			( $params{'Return-receipt-to'} ? ( 'Return-receipt-to' => $params{'Return-receipt-to'} ) : () ),
 			( $params{'Disposition-Notification-To'} ? ( 'Disposition-Notification-To' => $params{'Disposition-Notification-To'} ) : () ),
 			FROM    => ( ref $$self{from} eq 'openprint::User' ? sprintf('"%s" <%s>', $$self{from}->get('name','email') ) : $$self{from} ),
