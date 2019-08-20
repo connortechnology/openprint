@@ -194,7 +194,7 @@ sub send {
 		# de we need to send this email?
 
 		my ( $interval_expired, $num_email_sent );
-		my $User = $replacements{User} = new openprint::User( $user_id );
+		my $User = $replacements{User} = new openprint::User($user_id);
 
 		if ( (!$User->mailinglist()) or ( $User->mailinglist() eq 'N' ) ) {
 			$results .= sprintf(

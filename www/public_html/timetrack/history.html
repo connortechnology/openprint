@@ -46,9 +46,11 @@
 <? endif ( sets::isin( $session{user_type}, ['E','A'] ) ) ?>
 			<li>
 				<label>Dates</label>
-<? echo ( date_select_session( '/timetrack/history.html', 'starting_start', {onchange=>q`load_timetracks();`, with_clear=>1, with_today=>1} ); ) ?>
+<? echo ( date_select_session( '/timetrack/history.html', 'starting_start', {
+onchange=>q`check_time_starting($('f1'),'starting_start','starting_end');load_timetracks();`, with_clear=>1, with_today=>1} ); ) ?>
 					to 
-<? echo ( date_select_session( '/timetrack/history.html', 'starting_end', {onchange=>q`load_timetracks();`, with_clear=>1, with_today=>1} ); ) ?>
+<? echo ( date_select_session( '/timetrack/history.html', 'starting_end', {
+onchange=>q`check_time_starting($('f1'),'starting_start','starting_end');load_timetracks();`, with_clear=>1, with_today=>1} ); ) ?>
 			</li>
 			<li>
 				<label>Service</label>

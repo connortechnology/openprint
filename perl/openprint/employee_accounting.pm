@@ -13,6 +13,7 @@ require openprint::Ledger;
 require openprint::Expenditure;
 require openprint::Expense;
 require openprint::Expense_Rule;
+require openprint::Expense_Rule_Category;
 require openprint::Payment;
 require misc;
 require sql;
@@ -758,6 +759,17 @@ sub _expense_rules {
 }
 
 sub expense_rule {
+    my $Rule = $variable{Rule} = new openprint::Expense_Rule($param{expense_rule_id});
+    return if ! $param{action};
+
+    if ( $param{action} eq 'Save' ) {
+      $variable{error} .= $Rule->save(\%param);
+      if ( ! $variable{error} ) {
+        $variable{ExternalRedirect} = '/employee/accounting/expense_rules.html';
+      }
+    } elsif ( $param{action} eq 'Copy' ) {
+      $Rule = $variable{Rule} = $Rule->copy();
+    }
 }
 
 1;

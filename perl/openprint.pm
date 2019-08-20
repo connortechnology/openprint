@@ -87,14 +87,8 @@ $log->debug("Generating new cookie $session{_session_id}") if Debug;
 
 	$User = new openprint::User($session{user_id});
 
-<<<<<<< HEAD
 	if ( $param{btnFunction} and $session{user_type} and sets::isin($session{user_type}, ['E','A']) ) {
 		if ( ( $param{btnFunction} eq 'SelectCompany' ) and $param{ddmCompany} ) {
-=======
-# This probably shouldn't be here
-	if ( $param{btnFunction} and $session{user_type} and sets::isin($session{user_type}, ['E','A']) ) {
-		if ( $param{btnFunction} eq 'SelectCompany' ) {
->>>>>>> master
 			if ( $param{ddmCompany} != $session{company_id} ) {
 
 				my $C = new openprint::Company( $param{ddmCompany} );
