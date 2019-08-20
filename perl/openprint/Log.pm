@@ -136,7 +136,7 @@ sub note_html {
 			$_[0]{note_html} =~ s/&lt;a href=&quot;([^"]+)&quot;&gt;(.+)&lt;\/a&gt;/<a href=&quot;$1&quot;>$2<\/a>/ig;
 		}
 	}
-	return $_[0]{note_html};
+	return defined $_[0]{note_html} ? $_[0]{note_html} : '';
 }
 
 1;
