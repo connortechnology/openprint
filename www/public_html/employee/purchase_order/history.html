@@ -31,7 +31,7 @@
 		<ul>
 			<li><label>PO #</label>
 				<? echo ( join("\n",
-							input(type=>'cardinal',id=>'po_id', name=>'po_id', onchange=>'change_handler(this);', onkeypress=>'return input_handler(this,event);', onkeydown=>q`if(event.keyCode==13){page_load('Results', $('f1') );}` ),
+							input(type=>'cardinal',id=>'po_id', name=>'po_id', onkeydown=>q`if(event.keyCode==13){page_load('Results', $('f1') );}` ),
 							button( 'Go3', { onclick=>q`page_load('Results', $('f1'));`,text=>'Go' } ),
 							); ) ?>
 			</li>
@@ -40,7 +40,7 @@
 				<? echo ( button( 'Go2', { onclick=>q`page_load('Results', $('f1'));`, text=>'Go' } ); ) ?>
 			</li>
 			<li><label>Docket</label>
-				<? echo ( input( type=>'text', id=>'docket', name=>'docket', onchange=>'change_handler(this);', onkeydown=>q`if(event.keyCode == 13){page_load('Results', $('f1') );}`, value=>$session{$r->uri().'?docket'} ); ) ?>
+				<? echo ( input( type=>'text', id=>'docket', name=>'docket', onkeydown=>q`if(event.keyCode == 13){page_load('Results', $('f1') );}`, value=>$session{$r->uri().'?docket'} ); ) ?>
 			</li>
 		</ul>
 		<hr/>
