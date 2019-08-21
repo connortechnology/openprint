@@ -40,7 +40,7 @@
 				<? echo ( button( 'Go2', { onclick=>q`page_load('Results', $('f1'));`, text=>'Go' } ); ) ?>
 			</li>
 			<li><label>Docket</label>
-				<? echo ( input( type=>'cardinal', id=>'docket', name=>'docket', onchange=>'change_handler(this);', onkeypress=>'return input_handler(this,event);', onkeydown=>q`if(event.keyCode == 13){page_load('Results', $('f1') );}`, value=>$session{'/employee/purchase_order/history.html?docket'} ); ) ?>
+				<? echo ( input( type=>'text', id=>'docket', name=>'docket', onchange=>'change_handler(this);', onkeydown=>q`if(event.keyCode == 13){page_load('Results', $('f1') );}`, value=>$session{$r->uri().'?docket'} ); ) ?>
 			</li>
 		</ul>
 		<hr/>
@@ -75,30 +75,30 @@
 			</li>
 			<li>
 				<label>Date</label>
-	<? echo ( date_select_session( '/employee/purchase_order/history.html', 'starting_start',  { 'onchange'=> "page_load('Results',\$('f1'));",'with_today'=>1 } ); ) ?>
+	<? echo ( date_select_session( $r->uri(), 'starting_start',  { onchange=> "page_load('Results',\$('f1'));", with_today=>1 } ); ) ?>
 				to
-	<? echo ( date_select_session( '/employee/purchase_order/history.html', 'starting_end', { 'onchange'=>"page_load('Results',\$('f1'));",'with_today'=>1 } ); ) ?>
+	<? echo ( date_select_session( $r->uri(), 'starting_end', { onchange=>"page_load('Results',\$('f1'));", with_today=>1 } ); ) ?>
 			</li>
 			<li>
 				<label>Authorization</label>
-				<? echo ( radio( 'authorized', [ 'Y','Authorized', 'N', 'Declined', 'U', 'Unauthorized', '', 'All' ], $session{'/employee/purchase_order/history.html?authorized'}, { onclick=>q`page_load('Results',$('f1'));`, default=>'' } ); ) ?>
+				<? echo ( radio( 'authorized', [ 'Y','Authorized', 'N', 'Declined', 'U', 'Unauthorized', '', 'All' ], $session{$r->uri().'?authorized'}, { onclick=>q`page_load('Results',$('f1'));`, default=>'' } ); ) ?>
 			</li>
 			<li>
 				<label>Deleted</label>
-				<? echo ( radio( 'deleted', [ '1','Yes','0','No' ], $session{'/employee/purchase_order/history.html?deleted'}, { onclick=>q`page_load('Results',$('f1'));`, default=>'0' } ); ) ?>
+				<? echo ( radio( 'deleted', [ '1','Yes','0','No' ], $session{$r->uri().'?deleted'}, { onclick=>q`page_load('Results',$('f1'));`, default=>'0' } ); ) ?>
 			</li>
 			<li>
 				<label>Cancelled</label>
-				<? echo ( radio( 'cancelled', [ '1','Yes','0', 'No', '', 'Both' ], $session{'/employee/purchase_order/history.html?cancelled'}, { onclick=>q`page_load('Results',$('f1'));`, default=>'' } ); ) ?>
+				<? echo ( radio( 'cancelled', [ '1','Yes','0', 'No', '', 'Both' ], $session{$r->uri().'?cancelled'}, { onclick=>q`page_load('Results',$('f1'));`, default=>'' } ); ) ?>
 			</li>
 			<li>
 				<label>Has Manifest</label>
-				<? echo ( radio( 'has_manifest', [ '1','Yes','0', 'No', '', 'Both' ], $session{'/employee/purchase_order/history.html?has_manifest'}, { onclick=>q`page_load('Results',$('f1'));`, default=>'' } ); ) ?>
+				<? echo ( radio( 'has_manifest', [ '1','Yes','0', 'No', '', 'Both' ], $session{$r->uri().'?has_manifest'}, { onclick=>q`page_load('Results',$('f1'));`, default=>'' } ); ) ?>
 			</li>
 			<li><label>Department</label>
 				<select name="department_id" onchange="page_load('Results',$('f1'));">
 					<option value="">All</option>
-					<? echo ( make_drop_down( openprint::PurchaseOrder_Department->dropdown( order=>'lower(name)'), $session{'/employee/purchase_order/history.html?department_id'} ); ) ?>
+					<? echo ( make_drop_down( openprint::PurchaseOrder_Department->dropdown( order=>'lower(name)'), $session{$r->uri().'?department_id'} ); ) ?>
 				</select>
 			</li>
 			<li>
@@ -106,10 +106,12 @@
 				<? echo (
 					my $html;
 					foreach my $Type ( openprint::PurchaseOrder_ContentType->find( order=>'name') ) {
-						$html .= sprintf(q`<input type="checkbox" id="types%1$s" name="types" value="%1$s" %3$s onclick="page_load('Results',this.form);" /><label class="radio" for="types%1$s">%2$s</label>`, $Type->id(), $Type->name(), checked( sets::isin( $Type->id(), [ split(',', $session{'/employee/purchase_order/history.html?types'} ) ] ) or ! exists $session{'/employee/purchase_order/history.html?types'} ) );
+						$html .= sprintf(q`<input type="checkbox" id="types%1$s" name="types" value="%1$s" %3$s onclick="page_load('Results',this.form);"/>
+								<label class="radio" for="types%1$s">%2$s</label>`,
+								$Type->id(), $Type->name(), checked( sets::isin( $Type->id(), [ split(',', $session{$r->uri().'?types'} ) ] ) or ! exists $session{$r->uri().'?types'} ) );
 					} # end foreach Type
 					$html .= sprintf(q`<input type="checkbox" id="types" name="types" value="%1$s" %3$s onclick="page_load('Results',this.form);" /><label class="radio" for="types">%2$s</label>`, 
-						' ', 'None', checked( sets::isin( ' ', [ split(',',$session{'/employee/purchase_order/history.html?types'} ) ] ) or ! exists $session{'/employee/purchase_order/history.html?types'} ) );
+						' ', 'None', checked( sets::isin( ' ', [ split(',',$session{$r->uri().'?types'} ) ] ) or ! exists $session{$r->uri().'?types'} ) );
 					return $html;
 				) ?>
 			</li>

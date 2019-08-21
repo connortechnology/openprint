@@ -19,11 +19,6 @@
 			manifest_id	=>	$param{manifest_id}, 
 			company_id	=>	$openprint::User->company_id(),
 			order		=>	'id desc') ];
-	} elsif ( $param{docket} ) {
-		$$variable{PurchaseOrders} = [ openprint::PurchaseOrder->find( 
-			'docket any'		=>	$param{docket},
-			company_id	=>	$openprint::User->company_id(),
-			order		=>	'id desc') ];
 	} else {
 		my %search = (
 			company_id	=>	$openprint::User->company_id(),
