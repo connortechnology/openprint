@@ -98,7 +98,7 @@ sub load {
 	if ( ! $data ) {
 		$data = $dbh->selectrow_hashref( qq{SELECT * FROM $table WHERE id=?}, {}, $$self{id} );
 	} # end if
-	my @keys = map { defined $fields{$_} } keys %fields;
+	my @keys = map { defined $fields{$_} ? $_ : () } keys %fields;
 
 	@$self{@keys} = @$data{@fields{@keys}};
 
