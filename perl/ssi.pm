@@ -1124,9 +1124,15 @@ sub hash_link {
 sub format_date {
 	return $_[0] ? Date::Format::time2str( $_[1] ? $_[1] : $config{DateFormat}, Date::Parse::str2time( $_[0] ) ) : '';
 } # end sub format_date
+
 sub format_datetime {
 	return $_[0] ? Date::Format::time2str( $config{DateTimeFormat}, Date::Parse::str2time( $_[0] ) ) : '';
 } # end sub format_datetime
+
+sub format_time {
+	return $_[0] ? Date::Format::time2str('%H:%M', Date::Parse::str2time($_[0])) : '';
+} # end sub format_time
+
 sub format_csv_datetime {
 	return $_[0] ? Date::Format::time2str( '%Y-%m-%d %H:%M:%S', Date::Parse::str2time( $_[0] ) ) : '';
 } # end sub format_datetime
