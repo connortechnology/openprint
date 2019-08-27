@@ -18,41 +18,41 @@ $table = 'emailcampaigns';
 $serial = 'emailcampaigns_id_seq';
 
 %fields = (
-	'id'	=>	'id',
-	'name'	=>	'name',
-	'query'	=>	'query',
-	'interval'	=>	'interval',
-	'active'	=>	'active',
-'runnable'	=>	'runnable',
-	'timestosend'	=>	'timestosend',
-	'timeofday'		=>	'timeofday',
-	'email_subject'	=>	'email_subject',
-	'email_from'	=>	'email_from',
-	'email_to'		=>	'email_to',
-	'email_text'	=>	'email_text',
-	'email_html'	=>	'email_html',
-	'attachments'	=>	'attachments',
-	'lastrun'		=>	'lastrun',
-	'nextrun'		=>	'nextrun',
-	'created_on'	=>	'created_on',
-	'updated_on'	=>	'updated_on',
-	'template_id'	=>	'template_id',
-	deleted			=>	'deleted',
-user_id				=>	'user_id',
+		id	=>	'id',
+		name	=>	'name',
+		query	=>	'query',
+		interval	=>	'interval',
+		active	=>	'active',
+		runnable	=>	'runnable',
+		timestosend	=>	'timestosend',
+		timeofday		=>	'timeofday',
+		email_subject	=>	'email_subject',
+		email_from	=>	'email_from',
+		email_to		=>	'email_to',
+		email_text	=>	'email_text',
+		email_html	=>	'email_html',
+		attachments	=>	'attachments',
+		lastrun		=>	'lastrun',
+		nextrun		=>	'nextrun',
+		created_on	=>	'created_on',
+		pdated_on	=>	'updated_on',
+		template_id	=>	'template_id',
+		deleted			=>	'deleted',
+		user_id				=>	'user_id',
 );
 
 %defaults = (
-	lastrun	=>	undef,
-	nextrun	=>	undef,
-	interval	=> q`'00:00:00'`,
-	timeofday	=> undef,
-	created_on	=> q`'NOW()'`,
-	updated_on	=> q`'NOW()'`,
-	timestosend	=>	undef,
-	template_id	=>	undef,
-	deleted			=>	0,
-	user_id			=>	undef,
-	runnable		=> 0,
+		lastrun	=>	undef,
+		nextrun	=>	undef,
+		interval	=> q`'00:00:00'`,
+		timeofday	=> undef,
+		created_on	=> q`'NOW()'`,
+		updated_on	=> q`'NOW()'`,
+		timestosend	=>	undef,
+		template_id	=>	undef,
+		deleted			=>	0,
+		user_id			=>	undef,
+		runnable		=> 0,
 );
 
 sub destroy {
@@ -138,6 +138,14 @@ sub send_email {
 			( @attachments ? ( ATTACHMENTS =>	\@attachments ) : () ),
 		);
 		
+	if ( $$replacements{User} and $$replacements{User}->id() ) {
+		sql::insert( undef, undef, 'EmailCampaign_Sent', 
+				campaign_id =>	$self->{id},
+				EmailSentOn	=>				'NOW()',
+				NumEmailSent	=> 1,
+				user_id	=>	$$replacements{User}->id(),
+				);
+	}
 	sql::insert( undef, undef, 'EmailCampaign_Log', 
 			campaign_id =>	$self->{id},
 			Log=>			$results,
@@ -146,7 +154,7 @@ sub send_email {
 } # end sub send_email
 
 sub send {
-	my ( $self ) = @_;
+	my $self = shift;
 
 	my $query;
 	my $results = '';
@@ -254,6 +262,31 @@ sub send {
 			action=>'Email Campaign Run',
 			});
 
+	if ( $$self{user_id} ) {
+# Load the email template
+#my $email_template = misc::load_file( $log, $config{SkinPath} . '/email_template.html' );
+		my $email_template = '
+
+			Dear <?echo($$variable{Campaign}->Owner()->firstname())?>,</br>
+			<br/>
+			Your email campaign called <?echo($$variable{Campaign}->name())?> has recently run and the results are as follows:<br/><br/>
+			<?echo($$variable{Results})?>
+
+			';
+
+		$email_template = ssi::variable_substitution( \$email_template, { Campaign=>$self, Results=>$results } );
+
+# Setup the mail message
+		my $Email = new openprint::Email();
+		$Email->send(
+				FROM => $openprint::User,
+				TO => $self->Owner(),
+				BCC => 'iconnor@connortechnology.com',
+				SUBJECT => 'Email Campaign Results for '.$self->name(),
+				HTML_BODY => $email_template,
+				);
+	}
+
 	return $results;
 } # end sub send
 
@@ -352,15 +385,18 @@ sub can_view {
 		$openprint::log->debug("Can view because no user_Id assigned");
 		return 1;
 	}
-if ( $openprint::session{user_id} == $_[0]{user_id} ) {
+	if ( $openprint::session{user_id} == $_[0]{user_id} ) {
 		$openprint::log->debug("Can view because user_Id matches");
-	return 1;
-}
- if ( ! $_[0]{id} ) {
+		return 1;
+	}
+	if ( ! $_[0]{id} ) {
 		$openprint::log->debug("Can view because no Id");
-	return 1;
-}
+		return 1;
+	}
 	return 0;
+}
+sub Owner {
+	return new openprint::User($_[0]{user_id});
 }
 
 1;
