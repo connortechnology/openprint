@@ -85,7 +85,7 @@ $log->debug(" Have " . @Photos . " photo for this asset" );
 							$can_view = 1;
 							last;
 						} else {
-							$log->debug("Album " . $Album->to_string() . " cannot view" );
+							$log->debug('Album ' . $Album->to_string() . ' cannot view');
 						} # end if
 					} # end foreach Album
 					if ( $can_view ) {
@@ -97,30 +97,30 @@ $log->debug(" Have " . @Photos . " photo for this asset" );
 						} elsif ( $path eq 'large' ) {
 							$r->sendfile( $Asset->large_path() );
 						} elsif ( $path eq 'small' ) {
-$log->debug("Sending: " .  $Asset->sized_path( 'small' ) );
-							$r->sendfile( $Asset->sized_path( 'small' ) );
+$log->debug('Sending: ' .  $Asset->sized_path('small') );
+							$r->sendfile($Asset->sized_path('small'));
 						} elsif ( $path eq 'videos' ) {
 							if ( -e $config{AssetPath}.'videos/'.$id.'_'.$filename ) {
 								#$r->content_type( $Asset->content_type( $id.'_'.$filename ) );
 #$r->rflush;
 								$log->debug('Sending ' . $config{AssetPath}.'videos/'.$id.'_'.$filename );
 								$return_code = $request->sendfile( $config{AssetPath}.'videos/'.$id.'_'.$filename );
-$log->debug( "sendfile has failed" ) unless $return_code == APR::Const::SUCCESS;
+$log->debug('sendfile has failed') unless $return_code == APR::Const::SUCCESS;
 $log->debug("Return code: $return_code");
 							} else {
-								$log->error("DOes not exist at: " . $config{AssetPath}.'videos/'.$id.'_'.$filename );
-							} # en dif
+								$log->error('Does not exist at: ' . $config{AssetPath}.'videos/'.$id.'_'.$filename );
+							} # end if
 						} else {
-$log->debug("Sending ... " . $Asset->on_disk_path() );
-							$r->sendfile( $Asset->on_disk_path() );
+$log->debug('Sending ... ' . $Asset->on_disk_path());
+							$r->sendfile($Asset->on_disk_path());
 						} # end if
-$log->error( "Eval error sending image Reason: " . $@ ) if $@;
+$log->error('Eval error sending image Reason: ' . $@) if $@;
 					} else {
-$log->error("FORBIDDEN");
+$log->error('FORBIDDEN');
 						$return_code = Apache2::Const::HTTP_FORBIDDEN;
 					} # end if
 				} else {
-					$r->headers_out->set('Last-Modified'=>Date::Format::time2str( '%a, %d %b %Y %H:%M:%S %Z', Date::Parse::str2time( $Asset->updated_on() ) ));
+					$r->headers_out->set('Last-Modified'=>Date::Format::time2str('%a, %d %b %Y %H:%M:%S %Z', Date::Parse::str2time($Asset->updated_on())));
 					if ( $path eq 'thumbnails' ) {
 						$r->sendfile( $Asset->thumbnail_path() );
 					} elsif ( $path eq 'medium' ) {
@@ -138,6 +138,10 @@ $log->error("NOT FOUND");
 		} else {
 $log->error("No value for aset. " . $r->uri() );
 		} # end if parsed uri into asset
+
+		if ( $r->param('campaign_id') and $r->param('user_id') ) {
+			sql::update(undef,undef, 'EmailCampaign_Sent', [ campaign_id=>$r->param('campaign_id'), user_id=>$r->param('user_id') ], 'last_read', 'NOW()' );
+		}
 
 		untie %session;
 		$dbh->disconnect();
