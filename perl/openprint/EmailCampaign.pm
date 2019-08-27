@@ -42,17 +42,17 @@ user_id				=>	'user_id',
 );
 
 %defaults = (
-	'lastrun'	=>	undef,
-	'nextrun'	=>	undef,
-	'interval'	=> q`'00:00:00'`,
-	'timeofday'	=> undef,
-	'created_on'	=> q`'NOW()'`,
-	'updated_on'	=> q`'NOW()'`,
-	'timestosend'	=>	undef,
-	'template_id'	=>	undef,
+	lastrun	=>	undef,
+	nextrun	=>	undef,
+	interval	=> q`'00:00:00'`,
+	timeofday	=> undef,
+	created_on	=> q`'NOW()'`,
+	updated_on	=> q`'NOW()'`,
+	timestosend	=>	undef,
+	template_id	=>	undef,
 	deleted			=>	0,
-user_id			=>	undef,
-runnable		=> 0,
+	user_id			=>	undef,
+	runnable		=> 0,
 );
 
 sub destroy {
@@ -63,7 +63,7 @@ sub destroy {
 	sql::execute( undef, undef, q{DELETE FROM EmailCampaigns WHERE id=?}, $self->{id} );
 	sql::end_transaction( $openprint::dbh, $ac );
 	
-	new openprint::Log()->save({'action'=>'Delete Email Campaign', 'note'=>"Campaign ID: " . $self->{id} . " Campaign Name: "  . $self->{name}, Object=>$self});
+	new openprint::Log()->save({action=>'Delete Email Campaign', note=>'Campaign ID: ' . $self->{id} . ' Campaign Name: '  . $self->{name}, Object=>$self});
 } # end sub delete
 
 sub send_admin_email {
@@ -191,10 +191,26 @@ sub send {
 	my $email_html = $$self{email_html};
 
 	foreach my $user_id ( @mail_user_ids ) {
-		# de we need to send this email?
-
-		my ( $interval_expired, $num_email_sent );
 		my $User = $replacements{User} = new openprint::User( $user_id );
+
+		# do we need to send this email?
+
+		my ( $interval_expired, $last_sent_on, $num_email_sent );
+# First check if a sent row exists
+    $_ = 'SELECT (NOW() - EmailSentOn) > ?, EmailSentOn, NumEmailSent FROM EmailCampaign_Sent WHERE campaign_id=? AND user_id=?';
+		if ( ( $interval_expired, $last_sent_on, $num_email_sent ) = sql::execute( undef, undef, $_, @$self{'interval','id'}, $user_id ) ) {
+
+# Check if the duration has elapsed 
+			if ( !$interval_expired ) {
+				$results .= sprintf('Not Sending Email to: %s %s at %s, already sent on %s<br/>', $replacements{User}->get('firstname','lastname','email'), $last_sent_on );
+				next;
+			}
+# Check if we have sent this too many times
+			if ( $num_email_sent >= $self->{timestosend} ) {
+				$results .= sprintf('NOt Sending Email to: %s %s at %s, have already<br/>', $replacements{User}->get('firstname','lastname','email') );
+				next;
+			} # if $num_email_sent > num_times to send
+		}
 
 		if ( $User->mailinglist() eq 'N' ) {
 			$results .= sprintf(
@@ -231,6 +247,13 @@ sub send {
 
 	$self->{lastrun} = 'NOW()';
 	$self->save();
+
+	(new openprint::Log())->save({
+			Object=>$self,
+			note=>$results,
+			action=>'Email Campaign Run',
+			});
+
 	return $results;
 } # end sub send
 
