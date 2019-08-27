@@ -18,41 +18,41 @@ $table = 'emailcampaigns';
 $serial = 'emailcampaigns_id_seq';
 
 %fields = (
-	'id'	=>	'id',
-	'name'	=>	'name',
-	'query'	=>	'query',
-	'interval'	=>	'interval',
-	'active'	=>	'active',
-'runnable'	=>	'runnable',
-	'timestosend'	=>	'timestosend',
-	'timeofday'		=>	'timeofday',
-	'email_subject'	=>	'email_subject',
-	'email_from'	=>	'email_from',
-	'email_to'		=>	'email_to',
-	'email_text'	=>	'email_text',
-	'email_html'	=>	'email_html',
-	'attachments'	=>	'attachments',
-	'lastrun'		=>	'lastrun',
-	'nextrun'		=>	'nextrun',
-	'created_on'	=>	'created_on',
-	'updated_on'	=>	'updated_on',
-	'template_id'	=>	'template_id',
-	deleted			=>	'deleted',
-user_id				=>	'user_id',
+		id	=>	'id',
+		name	=>	'name',
+		query	=>	'query',
+		interval	=>	'interval',
+		active	=>	'active',
+		runnable	=>	'runnable',
+		timestosend	=>	'timestosend',
+		timeofday		=>	'timeofday',
+		email_subject	=>	'email_subject',
+		email_from	=>	'email_from',
+		email_to		=>	'email_to',
+		email_text	=>	'email_text',
+		email_html	=>	'email_html',
+		attachments	=>	'attachments',
+		lastrun		=>	'lastrun',
+		nextrun		=>	'nextrun',
+		created_on	=>	'created_on',
+		pdated_on	=>	'updated_on',
+		template_id	=>	'template_id',
+		deleted			=>	'deleted',
+		user_id				=>	'user_id',
 );
 
 %defaults = (
-	'lastrun'	=>	undef,
-	'nextrun'	=>	undef,
-	'interval'	=> q`'00:00:00'`,
-	'timeofday'	=> undef,
-	'created_on'	=> q`'NOW()'`,
-	'updated_on'	=> q`'NOW()'`,
-	'timestosend'	=>	undef,
-	'template_id'	=>	undef,
-	deleted			=>	0,
-user_id			=>	undef,
-runnable		=> 0,
+		lastrun	=>	undef,
+		nextrun	=>	undef,
+		interval	=> q`'00:00:00'`,
+		timeofday	=> undef,
+		created_on	=> q`'NOW()'`,
+		updated_on	=> q`'NOW()'`,
+		timestosend	=>	undef,
+		template_id	=>	undef,
+		deleted			=>	0,
+		user_id			=>	undef,
+		runnable		=> 0,
 );
 
 sub destroy {
@@ -63,7 +63,7 @@ sub destroy {
 	sql::execute( undef, undef, q{DELETE FROM EmailCampaigns WHERE id=?}, $self->{id} );
 	sql::end_transaction( $openprint::dbh, $ac );
 	
-	new openprint::Log()->save({'action'=>'Delete Email Campaign', 'note'=>"Campaign ID: " . $self->{id} . " Campaign Name: "  . $self->{name}, Object=>$self});
+	new openprint::Log()->save({action=>'Delete Email Campaign', note=>'Campaign ID: ' . $self->{id} . ' Campaign Name: '  . $self->{name}, Object=>$self});
 } # end sub delete
 
 sub send_admin_email {
@@ -138,6 +138,14 @@ sub send_email {
 			( @attachments ? ( ATTACHMENTS =>	\@attachments ) : () ),
 		);
 		
+	if ( $$replacements{User} and $$replacements{User}->id() ) {
+		sql::insert( undef, undef, 'EmailCampaign_Sent', 
+				campaign_id =>	$self->{id},
+				EmailSentOn	=>				'NOW()',
+				NumEmailSent	=> 1,
+				user_id	=>	$$replacements{User}->id(),
+				);
+	}
 	sql::insert( undef, undef, 'EmailCampaign_Log', 
 			campaign_id =>	$self->{id},
 			Log=>			$results,
@@ -146,7 +154,7 @@ sub send_email {
 } # end sub send_email
 
 sub send {
-	my ( $self ) = @_;
+	my $self = shift;
 
 	my $query;
 	my $results = '';
@@ -191,10 +199,26 @@ sub send {
 	my $email_html = $$self{email_html};
 
 	foreach my $user_id ( @mail_user_ids ) {
-		# de we need to send this email?
-
-		my ( $interval_expired, $num_email_sent );
 		my $User = $replacements{User} = new openprint::User( $user_id );
+
+		# do we need to send this email?
+
+		my ( $interval_expired, $last_sent_on, $num_email_sent );
+# First check if a sent row exists
+    $_ = 'SELECT (NOW() - EmailSentOn) > ?, EmailSentOn, NumEmailSent FROM EmailCampaign_Sent WHERE campaign_id=? AND user_id=?';
+		if ( ( $interval_expired, $last_sent_on, $num_email_sent ) = sql::execute( undef, undef, $_, @$self{'interval','id'}, $user_id ) ) {
+
+# Check if the duration has elapsed 
+			if ( !$interval_expired ) {
+				$results .= sprintf('Not Sending Email to: %s %s at %s, already sent on %s<br/>', $replacements{User}->get('firstname','lastname','email'), $last_sent_on );
+				next;
+			}
+# Check if we have sent this too many times
+			if ( $num_email_sent >= $self->{timestosend} ) {
+				$results .= sprintf('NOt Sending Email to: %s %s at %s, have already<br/>', $replacements{User}->get('firstname','lastname','email') );
+				next;
+			} # if $num_email_sent > num_times to send
+		}
 
 		if ( $User->mailinglist() eq 'N' ) {
 			$results .= sprintf(
@@ -231,6 +255,38 @@ sub send {
 
 	$self->{lastrun} = 'NOW()';
 	$self->save();
+
+	(new openprint::Log())->save({
+			Object=>$self,
+			note=>$results,
+			action=>'Email Campaign Run',
+			});
+
+	if ( $$self{user_id} ) {
+# Load the email template
+#my $email_template = misc::load_file( $log, $config{SkinPath} . '/email_template.html' );
+		my $email_template = '
+
+			Dear <?echo($$variable{Campaign}->Owner()->firstname())?>,</br>
+			<br/>
+			Your email campaign called <?echo($$variable{Campaign}->name())?> has recently run and the results are as follows:<br/><br/>
+			<?echo($$variable{Results})?>
+
+			';
+
+		$email_template = ssi::variable_substitution( \$email_template, { Campaign=>$self, Results=>$results } );
+
+# Setup the mail message
+		my $Email = new openprint::Email();
+		$Email->send(
+				FROM => $openprint::User,
+				TO => $self->Owner(),
+				BCC => 'iconnor@connortechnology.com',
+				SUBJECT => 'Email Campaign Results for '.$self->name(),
+				HTML_BODY => $email_template,
+				);
+	}
+
 	return $results;
 } # end sub send
 
@@ -329,15 +385,18 @@ sub can_view {
 		$openprint::log->debug("Can view because no user_Id assigned");
 		return 1;
 	}
-if ( $openprint::session{user_id} == $_[0]{user_id} ) {
+	if ( $openprint::session{user_id} == $_[0]{user_id} ) {
 		$openprint::log->debug("Can view because user_Id matches");
-	return 1;
-}
- if ( ! $_[0]{id} ) {
+		return 1;
+	}
+	if ( ! $_[0]{id} ) {
 		$openprint::log->debug("Can view because no Id");
-	return 1;
-}
+		return 1;
+	}
 	return 0;
+}
+sub Owner {
+	return new openprint::User($_[0]{user_id});
 }
 
 1;

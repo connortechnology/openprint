@@ -299,6 +299,9 @@ Manifest: <a href="/employee/inventory/manifest_view.html?manifest_id=<? echo ( 
 <? if ( $$variable{PurchaseOrder}->do_not_pay() ) ?>
 <div id="do_not_pay"><img src="/images/do_not_pay.png"/></div>
 <? endif ( $$variable{PurchaseOrder}->do_not_pay() ) ?>
+<? if ( $$variable{PurchaseOrder}->cancelled() ) ?>
+<div id="cancelled"><img src="/images/cancelled.png"/></div>
+<? endif ( $$variable{PurchaseOrder}->cancelled() ) ?>
 	</div><!--PO-->
 	<br class="spacer"/>
 <? else ( $$variable{PurchaseOrder}->can_view() ) ?>

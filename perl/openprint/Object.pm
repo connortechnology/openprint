@@ -123,12 +123,12 @@ if ( 1 ) {
 			#my ( $caller, undef, $line ) = caller;
 			#$log->debug("loading $parent $id from $caller:$line");
 		#}
-		$self->load( $data );
+		$self->load($data);
 	} # end if
 }
 		if ( ! ( $no_cache or $dont_cache ) ) {
 			if ( $id ) {
-				# Using $id instead of $$self{od} means that we cache non existent entries
+				# Using $id instead of $$self{id} means that we cache non existent entries
 			#if ( $$self{id} ) {
 $log->debug("new id_Caching $config{db_name} $parent $id = $self") if DEBUG_CACHE or $debug;
 				
@@ -186,14 +186,14 @@ sub load {
 			#$log->debug("Got $type: " . join(',', map { $_ . '=>' . $$data{$_} } keys %$data ) ) if $debug;
 		} elsif ( exists $$fields{id} ) {
 			$log->debug("SELECT * FROM $table WHERE $$fields{id}=$$self{id}" ) if $debug;
-			$data = $d->selectrow_hashref( 'SELECT * FROM ' . $table . " WHERE $$fields{id}=?", {}, $$self{id} );
+			$data = $d->selectrow_hashref('SELECT * FROM '.$table.' WHERE '.$$fields{id}.'=?', {}, $$self{id});
 		} # end if
 		if ( ! $data ) {
 			if ( $d->errstr ) {
-				$log->error( 'Failure to load ' . $type . " $$self{id}: Reason: " . $d->errstr );
-				Carp::cluck( 'Failure to load ' . $type . " $$self{id}: Reason: " . $d->errstr );
+				$log->error("Failure to load $type $$self{id}: Reason: ".$d->errstr);
+				Carp::cluck("Failure to load $type $$self{id}: Reason: ".$d->errstr);
 			} elsif ( $debug ) {
-				$log->debug( 'Failure to load ' . $type . " $$self{id}: Reason: " );
+				$log->debug("Failure to load $type $$self{id}: Reason: ");
 			} # end if
 			delete $$self{id};
 			if ( @identified_by ) {
@@ -982,9 +982,14 @@ sub find {
 	my $cache_field = ${$object_type.'::cache_field'} if $do_cache;
 	if ( ( 1 == scalar keys %{$$sql{used_fields}} ) and $$params{id} ) {
 		if ( $cache{$config{db_name}}{$object_type}{$$params{id}} ) {
-			my ( $caller, undef, $line ) = caller;
-			$log->debug("returning " . $name_cache{$object_type}{$$params{$cache_field}} . " to $caller:$line for $object_type $cache_field $$params{$cache_field}") if DEBUG_ALL;
-			return ( $cache{$config{db_name}}{$object_type}{$$params{id}} );
+			if ( $cache{$config{db_name}}{$object_type}{$$params{id}}{id} ) {
+				my ( $caller, undef, $line ) = caller;
+				$log->debug("returning " . $name_cache{$object_type}{$$params{$cache_field}} . " to $caller:$line for $object_type $cache_field $$params{$cache_field}") if DEBUG_ALL;
+				return ( $cache{$config{db_name}}{$object_type}{$$params{id}} );
+			} else {
+				my ( $caller, undef, $line ) = caller;
+				$log->debug("Not returning " . $name_cache{$object_type}{$$params{$cache_field}} . " to $caller:$line for $object_type $cache_field $$params{$cache_field}") if DEBUG_ALL;
+			}
 		}
 	} elsif ( $cache_field and $$params{$cache_field} and ( 1 == (scalar keys %{$$sql{used_fields}}) ) ) {
 
