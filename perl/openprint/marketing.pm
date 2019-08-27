@@ -127,7 +127,7 @@ sub email_campaign {
 			$variable{error} .= $Campaign->save( \%param );
 			(new openprint::Log())->save({Object=>$Campaign, action=>'Save', note=>'Changes: ' .join(', ', @changes) });
 		}
-		$variable{ExternalRedirect} = '/marketing/email_campaigns.html' if ! $variable{error};
+		$variable{ExternalRedirect} = '/marketing/email_campaign.html?campaign_id='.$Campaign->id() if ! $variable{error};
 	} elsif ( $param{btnFunction} eq 'Delete' ) {
 		$variable{error} .= $Campaign->delete();
 		(new openprint::Log())->save({Object=>$Campaign, action=>'Delete' });
