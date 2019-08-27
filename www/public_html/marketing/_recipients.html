@@ -3,7 +3,7 @@ my @Recipients = $variable{Campaign}->Recipients();
 my $html;
 if ( ! @Recipients ) {
   $$variable{error} = $dbh->errstr();
-  $html = include(/includes/error_reporting.html);
+  $html = include('/includes/error_reporting.html');
 }
 $html .= 'There are ' . @Recipients . ' recipients.<br/><br/>';
 $html .= '
