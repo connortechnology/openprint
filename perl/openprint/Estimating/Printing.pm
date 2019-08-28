@@ -2760,7 +2760,10 @@ $log->debug("$$specs{txtFinalHeight} * $$specs{txtFinalWidth} == ( $$specs{txtHe
 	openprint::Estimating::Folding::load_equipment( $Project );
 	openprint::Estimating::Cutting::load_equipment( $Project );
 $log->debug("Before select presses: " . ( sprintf('%.4f', tv_interval( [$master_time])*1000) ) .' usecs' );
-	%Presses = map { $$_{strid}, $_ } openprint::Equipment->find( 'category any'=>'Printing', 'useinestimating is null or ='=>1 );
+	%Presses = map { $$_{strid}, $_ } openprint::Equipment->find(
+			'category any'=>'Printing',
+			'useinestimating is null or ='=>1
+			);
 	my %presses = select_presses( $Project, \@Papers, $specs, $project );
 	my @possible_presses;
 	foreach my $press_id ( keys %presses ) {
@@ -2773,11 +2776,11 @@ $log->debug("Before select presses: " . ( sprintf('%.4f', tv_interval( [$master_
 	if ( ! @possible_presses ) {
 		$$specs{alert} = 'There were no possible presses. Your project may be too large for us.<br/>';
 		foreach my $press_id ( keys %presses ) {
-			$$specs{alert} .= new openprint::Equipment( $press_id )->strid() . ' : ' . $presses{$press_id} . '</br>';
+			$$specs{alert} .= new openprint::Equipment($press_id)->strid() . ' : ' . $presses{$press_id} . '</br>';
 		} # end foreach
 		return $$specs{Status} = 'uncalculated';
 	} elsif ( DEBUG ) {
-		$log->debug( "Presses: " . join(',', map { $_->strid() } @possible_presses ) );
+		$log->debug('Presses: ' . join(',', map { $_->strid() } @possible_presses));
 	} # end if
 	@possible_presses = sort { $$a{strid} cmp $$b{strid} } @possible_presses;
 $log->debug("after sorting presses: " . ( sprintf('%.4f', tv_interval( [$master_time])*1000) ) .' usecs there are ' . @possible_presses );
@@ -3044,7 +3047,13 @@ if ( 0 ) {
 		} # end if
 		if ( $$Imposition{imposition} > $qty ) {
 			$$specs{alert} .= "It is cheaper to print " . $$Imposition{imposition}.'.	You may wish to increase your quantity.<br/>';
-		} # end nif
+		} # end if
+
+		if ( !$$Imposition{runspeed} ) {
+			$$specs{alert} .= "No runspeed for qty $qty_index.<br/>";
+			$$specs{Status} = 'uncalculated';
+			next;
+		}
 		$$specs{alert} .= $$best_price{alert} if $$best_price{alert};
 		my $Paper = $$Imposition{Paper};
 $Imposition->layout_width(undef);
