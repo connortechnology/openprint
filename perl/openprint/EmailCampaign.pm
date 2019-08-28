@@ -35,10 +35,11 @@ $serial = 'emailcampaigns_id_seq';
 		lastrun		=>	'lastrun',
 		nextrun		=>	'nextrun',
 		created_on	=>	'created_on',
-		pdated_on	=>	'updated_on',
+		updated_on	=>	'updated_on',
 		template_id	=>	'template_id',
 		deleted			=>	'deleted',
 		user_id				=>	'user_id',
+		recipients_per_run	=>	'recipients_per_run',
 );
 
 %defaults = (
@@ -53,6 +54,7 @@ $serial = 'emailcampaigns_id_seq';
 		deleted			=>	0,
 		user_id			=>	undef,
 		runnable		=> 0,
+		recipients_per_run	=>	undef,
 );
 
 sub destroy {
@@ -164,8 +166,21 @@ sub send {
 
 	# Find the email and company name for all accounts that match
 	# this campaign
-	my @mail_user_ids = sql::execute(undef, undef, $self->{query});
+	my $query = $self->{query};
+	if ( $$self{timestosend} ) {
+		$query .= " AND (
+( NOT EXISTS (SELECT NumEmailSent FROM EmailCampaign_Sent WHERE campaign_id=102 AND user_id=Users.id))
+ OR
+( (SELECT MAX(NumEmailSent) FROM EmailCampaign_Sent WHERE campaign_id=$$self{id} AND user_id=Users.id) < $$self{timestosend}) )";
+	}
+	if ( $$self{recipients_per_run} ) {
+		$query .= ' LIMIT ' . int($$self{recipients_per_run});
+	}
+	$openprint::log->debug("SQL query $query");
+	my @mail_user_ids = sql::execute(undef, undef, $query);
 	$results .= 'There are '. scalar @mail_user_ids." users that fit the campaign<br/>\n";
+return $results;
+
 	@$self{nextrun} = sql::execute( undef, undef, 'SELECT NOW()+interval FROM emailcampaigns WHERE id=?', $$self{id} ) if $$self{interval};
 
 	#$self->{log}->info("There are ". scalar @mail_user_ids." users that fit the campaign<br/>\n");
