@@ -1395,7 +1395,7 @@ sub load_from_signature {
 		$Paper->cuttable( exists $$specs{cuttable} ? $$specs{cuttable} : 1 );
 		$Paper->digital(1);
 		if ( $$specs{perfecting} eq '' ) {
-			$$Paper{perfecting} = sets::isin( $$specs{StockGrade},[4,5] ) ? 1 : 0;
+			$$Paper{perfecting} = ( $$specs{StockGrade} == 4 or $$specs{StockGrade} == 5 ) ? 1 : 0;
 		} elsif ( $$specs{perfecting} eq 'Y' ) { 
 			$$Paper{perfecting} = 1;
 		} elsif ( $$specs{perfecting} eq 'N' ) {
