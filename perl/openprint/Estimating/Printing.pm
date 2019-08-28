@@ -7367,6 +7367,9 @@ sub summary {
 		if ( (!$$specs{'MatchGrain'.$qty_index}) or ( $$specs{'MatchGrain'.$qty_index} ne 'Y') ) {
 			$html .= '<br/>Do not match grain<br/>';
 		} # end if
+		if ( ! $$specs{"Runspeed$qty_index"} ) {
+			$html .= '<span class="error"><br/>No runspeed!</span>';
+		}
 
 		return $html;
 	} else { # ! qty_index
