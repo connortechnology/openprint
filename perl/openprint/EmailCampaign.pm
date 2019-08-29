@@ -158,7 +158,6 @@ sub send_email {
 sub send {
 	my $self = shift;
 
-	my $query;
 	my $results = '';
 
 	my %replacements;
