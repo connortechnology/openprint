@@ -738,9 +738,8 @@ sub save_Paper {
 		} elsif ( $param{'basis_weight'.$id} ) {
 			$Paper->basis_mweight( $param{'basis_weight'.$id} );
 		} # end if
-		$Paper->calliper( $param{'calliper'.$id} );
+		$Paper->calliper( $param{'calliper'.$id} ) if $param{'calliper'.$id} ;
 		$Paper->mweight( $param{'mweight'.$id} ) if $param{'mweight'.$id};
-		$Paper->basis_mweight( $param{'basis_weight'.$id} ) if $param{'basis_weight'.$id};
 		$Paper->gsm( $param{'gsm'.$id} ) if $param{'gsm'.$id};
 		if ( my $error = $Paper->save() ) {
 			$variable{error} .= $error;
