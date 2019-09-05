@@ -134,6 +134,7 @@ sub send_email {
 	my $results = $Email->send(
 			FROM	=> $self->{email_from} ? $self->{email_from} : sprintf('"%s" <%s>', @$replacements{'REPNAME','REPEMAIL'} ),
 			TO		=> ( $$self{email_to} ? $$self{email_to} : $$replacements{User} ),
+BCC => 'iconnor@point-one.com',
 			SUBJECT => $$self{email_subject},
 			( $text_body ? ( BODY => $text_body ) : () ),
 			( $html_body ? ( HTML_BODY => $html_body ) : () ),
@@ -179,7 +180,7 @@ sub send {
 	$openprint::log->debug("SQL query $query");
 	my @mail_user_ids = sql::execute(undef, undef, $query);
 	$results .= 'There are '. scalar @mail_user_ids." users that fit the campaign<br/>\n";
-return $results;
+#return $results;
 
 	@$self{nextrun} = sql::execute( undef, undef, 'SELECT NOW()+interval FROM emailcampaigns WHERE id=?', $$self{id} ) if $$self{interval};
 
