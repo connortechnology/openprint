@@ -159,7 +159,6 @@ BCC => 'iconnor@point-one.com',
 sub send {
 	my $self = shift;
 
-	my $query;
 	my $results = '';
 
 	my %replacements;
