@@ -2328,8 +2328,9 @@ $log->debug("Using spine ehgiht");
 				} # end if
 				$$specs{txtFinalHeight} = $$printing_specs{txtFinalHeight} if ! $$specs{txtFinalHeight};
 
-				if ( $$specs{rdbTemplateType} and ( $$printing_specs{rdbTemplateType} eq 'PerfectBound' ) ) {
-# Perfect bound requires more width on the cover to cover the calliiper	
+				if ( $$printing_specs{rdbTemplateType} and ( $$printing_specs{rdbTemplateType} eq 'PerfectBound' ) ) {
+$openprint::log->debug("Doing Perfect bound");
+# Perfect bound requires more width on the cover to cover the caliper	 of the interior pages
 					my $finished_calliper = 0;
 					my @Groups = sql::execute( undef, undef, 'SELECT DISTINCT strvalue FROM tbl_Service_Specifications WHERE lngProjectIndex=? AND strName=?', $Project->id(), 'Group' );
 					foreach my $group_id ( @Groups ) {
@@ -2343,6 +2344,10 @@ $log->debug("Using spine ehgiht");
 							last;
 						} # end foreach signature in the group
 					} # end foreach group
+					if ( ! $finished_calliper ) {
+						$$specs{alert} .= 'No caliper found for interior pages.  Spread Width will be incorrect';
+					}
+$openprint::log->debug("Doing Perfect bound ifinished calliper is $finished_calliper");
 
 					$$specs{txtWidth} = Math::Round::nearest( 0.0001, ceil(($$specs{txtWidth} + $finished_calliper + 2*$config{PerfectBindGlueSpace})*10000)/10000);
 				} else {
