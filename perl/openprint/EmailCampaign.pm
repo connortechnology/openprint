@@ -229,7 +229,7 @@ sub send {
 				next;
 			}
 # Check if we have sent this too many times
-			if ( $num_email_sent and ( $num_email_sent >= $self->{timestosend} ) ) {
+			if ( $num_email_sent and $self->{timestosend} and ( $num_email_sent >= $self->{timestosend} ) ) {
 				$results .= sprintf('Not Sending Email to: %s %s at %s, have already<br/>', $replacements{User}->get('firstname','lastname','email') );
 				next;
 			} # if $num_email_sent > num_times to send
