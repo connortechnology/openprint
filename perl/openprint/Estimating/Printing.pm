@@ -5552,9 +5552,8 @@ $log->error("Net_sheets $net_sheets from qty $qty $imposition versions:$$Imposit
 		my $PressRunOvers = $Press->Specification('Press Run Overs', $net_sheets);
 		if ( $PressRunOvers ) {
 			if ( ( $$specs{txtSignatureType} eq 'Cover Pages' ) and ( $_ = $Press->Specification('Covers Overs Percentage') ) ) {
-$openprint::log->warn("Using Covers Overs Percentage values $$_{value} PressRunOvers is now $$PressRunOvers{value} from $net_sheets on $$Press{strid}") if DEBUG;
+				$PressRunOvers = $PressRunOvers->copy();# Need to copy otherwise value will grow
 				$$PressRunOvers{value} *= ( 1 + ($$_{value} / 100) ) if $$_{value};
-$openprint::log->warn("Using Covers Overs Percentage values $$_{value} PressRunOvers is now $$PressRunOvers{value} from $net_sheets on $$Press{strid}") if DEBUG;
 			}
 			if ( $$PressRunOvers{units} eq 'Press Sheets' ) {
 				$$PressRunOvers{total} = $$PressRunOvers{value};
