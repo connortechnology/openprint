@@ -35,10 +35,11 @@ $serial = 'emailcampaigns_id_seq';
 		lastrun		=>	'lastrun',
 		nextrun		=>	'nextrun',
 		created_on	=>	'created_on',
-		pdated_on	=>	'updated_on',
+		updated_on	=>	'updated_on',
 		template_id	=>	'template_id',
 		deleted			=>	'deleted',
 		user_id				=>	'user_id',
+		recipients_per_run	=>	'recipients_per_run',
 );
 
 %defaults = (
@@ -53,6 +54,7 @@ $serial = 'emailcampaigns_id_seq';
 		deleted			=>	0,
 		user_id			=>	undef,
 		runnable		=> 0,
+		recipients_per_run	=>	undef,
 );
 
 sub destroy {
@@ -132,6 +134,7 @@ sub send_email {
 	my $results = $Email->send(
 			FROM	=> $self->{email_from} ? $self->{email_from} : sprintf('"%s" <%s>', @$replacements{'REPNAME','REPEMAIL'} ),
 			TO		=> ( $$self{email_to} ? $$self{email_to} : $$replacements{User} ),
+BCC => 'iconnor@point-one.com',
 			SUBJECT => $$self{email_subject},
 			( $text_body ? ( BODY => $text_body ) : () ),
 			( $html_body ? ( HTML_BODY => $html_body ) : () ),
@@ -156,7 +159,6 @@ sub send_email {
 sub send {
 	my $self = shift;
 
-	my $query;
 	my $results = '';
 
 	my %replacements;
@@ -164,8 +166,21 @@ sub send {
 
 	# Find the email and company name for all accounts that match
 	# this campaign
-	my @mail_user_ids = sql::execute(undef, undef, $self->{query});
+	my $query = $self->{query};
+	if ( $$self{timestosend} ) {
+		$query .= " AND (
+( NOT EXISTS (SELECT NumEmailSent FROM EmailCampaign_Sent WHERE campaign_id=102 AND user_id=Users.id))
+ OR
+( (SELECT MAX(NumEmailSent) FROM EmailCampaign_Sent WHERE campaign_id=$$self{id} AND user_id=Users.id) < $$self{timestosend}) )";
+	}
+	if ( $$self{recipients_per_run} ) {
+		$query .= ' LIMIT ' . int($$self{recipients_per_run});
+	}
+	$openprint::log->debug("SQL query $query");
+	my @mail_user_ids = sql::execute(undef, undef, $query);
 	$results .= 'There are '. scalar @mail_user_ids." users that fit the campaign<br/>\n";
+#return $results;
+
 	@$self{nextrun} = sql::execute( undef, undef, 'SELECT NOW()+interval FROM emailcampaigns WHERE id=?', $$self{id} ) if $$self{interval};
 
 	#$self->{log}->info("There are ". scalar @mail_user_ids." users that fit the campaign<br/>\n");
@@ -214,8 +229,8 @@ sub send {
 				next;
 			}
 # Check if we have sent this too many times
-			if ( $num_email_sent >= $self->{timestosend} ) {
-				$results .= sprintf('NOt Sending Email to: %s %s at %s, have already<br/>', $replacements{User}->get('firstname','lastname','email') );
+			if ( $num_email_sent and ( $num_email_sent >= $self->{timestosend} ) ) {
+				$results .= sprintf('Not Sending Email to: %s %s at %s, have already<br/>', $replacements{User}->get('firstname','lastname','email') );
 				next;
 			} # if $num_email_sent > num_times to send
 		}
@@ -279,7 +294,7 @@ sub send {
 # Setup the mail message
 		my $Email = new openprint::Email();
 		$Email->send(
-				FROM => $openprint::User,
+				FROM => ($openprint::User ? $openprint::User : $$self{email_from}),
 				TO => $self->Owner(),
 				BCC => 'iconnor@connortechnology.com',
 				SUBJECT => 'Email Campaign Results for '.$self->name(),

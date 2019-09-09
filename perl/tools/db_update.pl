@@ -4222,6 +4222,11 @@ if ( sets::isin( 'emailcampaigns', \@tables ) ) {
 		print "Adding runnable to EmailCampaigns\n";
 		$dbh->do('alter table emailcampaigns add runnable boolean not null default false') or die $dbh->errstr();
 	}
+
+	if ( ! exists $$data{recipients_per_run} ) {
+		print "Adding recipients_per_run to EmailCampaigns\n";
+		$dbh->do('alter table emailcampaigns add recipients_per_run integer') or die $dbh->errstr();
+	}
 } else {
 	$_ = misc::load_file( $log, q{../../sql/EmailCampaigns.sql});
 	foreach my $st ( split(';', $_ ) ) {

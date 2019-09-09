@@ -798,8 +798,6 @@ push @data, '','Totals', '', '', '', '', '', $total_quantity, '', '', $total_val
 		sql::end_transaction( $dbh, $ac );
 
 		misc::export_csv( $r, $log, \%variable, 'purchase_order_history_report.csv', \@header,\@data );	
-
-
 	} # end if
 	} # end if btnFunction
 	_history();
@@ -810,7 +808,7 @@ push @data, '','Totals', '', '', '', '', '', $total_quantity, '', '', $total_val
 } # end sub history
 
 sub _history {
-	ssi::save_params( '/employee/purchase_order/history.html', ( 
+	ssi::save_params('/employee/purchase_order/history.html', ( 
 				( map { 'starting_start_'.$_ } ( 'year', 'month','day' ) ),
 				( map { 'starting_end_'.$_ } ( 'year', 'month','day' ) ),
 				'authorized', 'supplier_id','created_by','deleted','types', 'item_id', 'cancelled', 'vendor_category_id', 'department_id', 'docket',

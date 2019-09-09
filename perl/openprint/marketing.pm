@@ -18,6 +18,7 @@ use strict;
 package openprint::marketing;
 
 require openprint::EmailCampaign;
+require openprint::EmailCampaign_Sent;
 require openprint::MarketingCategory;
 require openprint::Company;
 require openprint::Company_in_Marketing_Category;
@@ -122,9 +123,9 @@ sub email_campaign {
 	if ( $param{btnFunction} eq 'Save' ) {
 		$param{nextrun} = sprintf('%.4d-%.2d-%.2d %.2d:%.2d:%.2d',
 				@param{'nextrun_year','nextrun_month','nextrun_day','nextrun_hour','nextrun_minute'}, 0 ) if $param{nextrun_year};
-		my @changes = $Campaign->changes( \%param );
+		my @changes = $Campaign->changes(\%param);
 		if ( @changes ) {
-			$variable{error} .= $Campaign->save( \%param );
+			$variable{error} .= $Campaign->save(\%param);
 			(new openprint::Log())->save({Object=>$Campaign, action=>'Save', note=>'Changes: ' .join(', ', @changes) });
 		}
 		$variable{ExternalRedirect} = '/marketing/email_campaign.html?campaign_id='.$Campaign->id() if ! $variable{error};
