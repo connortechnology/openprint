@@ -614,7 +614,7 @@ sub setup_project {
 			foreach my $Colour ( @sig_side_one_colours, @sig_side_two_colours ) {
 				$mixed_colours{$$Colour{name}} = 1;
 				foreach my $qty_index ( $Project->quantity_indexes() ) {
-$log->debug("Setting washed coloursL $$Colour{name}.'-'.$$sig_specs{'ddmPress'.$qty_index}.'-'.$qty_index} $index $$sig_specs{SignatureIndex}") if DEBUG_INKS;
+$log->debug("Setting washed colours $$Colour{name}.'-'.$$sig_specs{'ddmPress'.$qty_index}.'-'.$qty_index} $index $$sig_specs{SignatureIndex}") if DEBUG_INKS;
 					$washed_colours{$$Colour{name}.'-'.$$sig_specs{'ddmPress'.$qty_index}.'-'.$qty_index} += 1;
 				} # end foreach
 			} # end foreach
@@ -1728,7 +1728,7 @@ if ( DEBUG_INITIAL_FILTERING and $$AP{width} == 35 ) {
 						my $P2 = $$i2{Paper}->clone();
 
 						if ( ! $$P2{width} ) {
-							$log->error("Setting siwdth to ". $i2->used_width() );
+							$log->error('Setting width to '.$i2->used_width());
 							$P2->width( $i2->used_width() )
 						}
 						$Papers{$P2->id_string()} = $P2->clone() if ! $Papers{$P2->id_string()};
@@ -3273,7 +3273,7 @@ sub breakdown {
 	if ( ! $$price{Imposition} ) {
 		$log->debug("No imposition in breakdown Price:$price imposition:$$price{Imposition}");
 		foreach my $k ( keys %{$price} ) {
-			$log->debug("$k => $$price{$k}");
+			$log->debug("price key $k => $$price{$k}");
 		} # end foreach
 		return '';
 	} # end if
@@ -3866,7 +3866,7 @@ $$sig_specs{PreviousGrainDirection} and ( $imp->grain_direction() ne $$sig_specs
 					if ( DEBUG ) {
 						$log->error("No stock in papercounts for " . $Paper->id_string());
 						foreach my $k ( keys %{$PaperCounts} ) {
-							$log->debug(" $k => $$PaperCounts{$k}");
+							$log->debug("PaperCounts: $k => $$PaperCounts{$k}");
 						}
 					}
 				} else {
@@ -4628,7 +4628,7 @@ $log->debug("$k => $washed_colours");
 						my %Results = openprint::Estimating::Proofs::signature_calc( $Project, $$project{ProofsSpecs}, \%sig_specs, $qty_index, undef, undef, $Press, $imp );
 #$log->debug( 'Proofs Calc: ' . sprintf('%.4f', tv_interval( [$proofs_time])*1000) );
 						$$price{'Comparison Cost'} += $sig_count * $Results{Total};
-						$$price{'Comparison Log'} .= 'proofs for ' . $sig_count . 'sigs. '. $sig_count * $Results{Total} . 'total: ' . $$price{'Comparison Cost'} . '<br/>' if COMPARISON_LOG;
+						$$price{'Comparison Log'} .= 'proofs for ' . $sig_count . 'sigs. '. $sig_count * $Results{Total} . ' total: ' . $$price{'Comparison Cost'} . '<br/>' if COMPARISON_LOG;
 						$$price{'Proofs Breakdown'} .= $Results{Breakdown};
 					} else {
 $log->error("No proofs>!");
@@ -5088,7 +5088,7 @@ $imp->display('[warn]');
 
 			if ( $do_final_pricing ) {
 
-				if ( $calc_other_groups and $sig_specs{txtSignatureType} eq 'Cover Pages' ) {
+				if ( $calc_other_groups and ($sig_specs{txtSignatureType} eq 'Cover Pages') ) {
 					# Layout can affect stitching
 					#my $other_group_cache_key = $$Press{id}; #join(',', $$Press{id}, $$imp{imposition}, $$imp{columns} );
 					my $other_group_cache_key = join(',', $$Press{id}, @$imp{'imposition','columns'} );
@@ -5097,29 +5097,27 @@ $imp->display('[warn]');
 # Add calculations for other Groups
 						$log->debug("Calculating Additional Signatures for other group $other_group_cache_key group $sig_specs{Group}") if DEBUG;
 						if ( DEBUG ) {
-							$log->debug(" %other_group_cache ");
+							$log->debug(' %other_group_cache ');
 							foreach my $k ( keys %other_group_cache ) {
-								$log->debug("$k => ");
+								$log->debug("pressid impo columns $k => ");
 							}
 						}
 						my @sigs = sort $Project->signatures({Group=>2, sort=>1});
 						if ( @sigs ) {
 							my $Group = 2;
-							my $Setup;
 							if ( ! $Estimating_Setup{$Group} ) {
-								$Estimating_Setup{$Group} = { };
-								$Setup = $Estimating_Setup{$Group};
+								my $Setup = $Estimating_Setup{$Group} = {};
 
-								my $Service = $$Setup{Service} = $Project->Service( $sigs[0] );
+								my $Service = $$Setup{Service} = $Project->Service($sigs[0]);
 
 								%{$$Setup{specs}} = %{$Service->specs()};
 								my $subsig_specs = $$Setup{specs};
 								if ( $$subsig_specs{txtSignatureType} eq 'Cover Pages' ) {
 									$log->error("subsig type: $$subsig_specs{txtSignatureType}");
 								} else {
-									set_size( $Project, $$Setup{specs}, $printing_specs );
-									$$Setup{side_one_colours} = [ get_colours( $$Setup{specs}, 'SideOne' ) ];
-									$$Setup{side_two_colours} = [ get_colours( $$Setup{specs}, 'SideTwo' ) ];
+									set_size($Project, $$Setup{specs}, $printing_specs);
+									$$Setup{side_one_colours} = [ get_colours($$Setup{specs}, 'SideOne') ];
+									$$Setup{side_two_colours} = [ get_colours($$Setup{specs}, 'SideTwo') ];
 									$$subsig_specs{'txtUnspecifiedPageQuantity'.$qty_index} = get_unspecified_pages( $Project, $sigs[0], $subsig_specs, $qty_index );
 									$$Setup{Stocks} = [ get_Stocks( $Project, $$Setup{specs} ) ];
 									if ( @{$$Setup{Stocks}} ) {
@@ -5146,13 +5144,13 @@ $imp->display('[warn]');
 #} # end if
 #} # end foreach
 										if ( @possible_presses ) {
-											$$Setup{possible_presses} = \@possible_presses;
 											@possible_presses = sort { $$a{strid} cmp $$b{strid} } @possible_presses;
-											my @available_printingtypes = sets::union( map { $_->specification('Printing Type') } @possible_presses );
+											$$Setup{possible_presses} = \@possible_presses;
+											my @available_printingtypes = sets::union(map { $_->specification('Printing Type') } @possible_presses);
 											$$Setup{specs}{PrintingTypes} = get_printing_types( $Project, $sigs[0], $printing_specs, $$Setup{specs}, $qty_index, \@available_printingtypes, $imp );
-#$imp->display("PrintingTYpes for other group: " . join(',', @{$subsig_specs{PrintingTypes}} ) );
-											my %sub_impositions = get_impositions( $Project, $$Setup{specs}, $new_project, $qty, $qty_index, \@possible_presses, $$Setup{Stocks}, \%Overrides );
-											convert_impositions( $Project, @$Setup{'project','specs'}, $qty_index, \%sub_impositions );
+$imp->display("PrintingTYpes for other group: " . join(',', @{$$Setup{specs}{PrintingTypes}} ) );
+											my %sub_impositions = get_impositions($Project, $$Setup{specs}, $new_project, $qty, $qty_index, \@possible_presses, $$Setup{Stocks}, \%Overrides);
+											convert_impositions($Project, @$Setup{'project','specs'}, $qty_index, \%sub_impositions);
 
 #$log->debug("other groups: Unspecified [ages:".$subsig_specs{'txtUnspecifiedPageQuantity'.$qty_index} );
 											if ( %sub_impositions ) {
@@ -5168,24 +5166,25 @@ $imp->display('[warn]');
 												} # end foreach previous_imp
 												$$Setup{previous_forms_cache} = \%sub_previous_forms_cache;
 												$$Setup{other_impositions} = \@o_impositions;
+} else {
+$log->warn("No sub impositions");
 											}
 											$$Setup{impositions} = \%sub_impositions;
+} else {
+$log->warn("No possible presses");
 
 										} # end if possible_presses
 									} # end if has Stocks
-
 								} # end if inside is also cover
-
 							} # end if have Estimating_Setup
-							$Setup = $Estimating_Setup{$Group};
 
-							if ( $Setup ) {
+							my $Setup = $Estimating_Setup{$Group};
 
-								if ( ! ($$Setup{impositions} and %{$$Setup{impositions}} ) ) {
-									$$price{Breakdown} .= 'Unable to calculate impositions for additional signatures.<br/>';
-									$$price{'Comparison Log'} .= 'Additiona Sigs due to no impositions: 1000000<br/>' if COMPARISON_LOG;
-									$$price{'Comparison Cost'} += 1000000;
-								$log->warn("Unable to calculate impositions for additional signatures.<br/>");
+							if ( !($$Setup{impositions} and %{$$Setup{impositions}}) ) {
+								$$price{Breakdown} .= 'Unable to calculate impositions for additional signatures.<br/>';
+								$$price{'Comparison Log'} .= 'Additiona Sigs due to no impositions: 1000000<br/>' if COMPARISON_LOG;
+								$$price{'Comparison Cost'} += 1000000;
+								$log->warn('Unable to calculate impositions for additional signatures.<br/>');
 							} else {
 								my @Papers = @{$$Setup{Stocks}};
 								if ( @Papers ) {
@@ -5193,31 +5192,31 @@ $imp->display('[warn]');
 											$Project, $sigs[0], @$Setup{'project', 'specs'}, $qty, $qty_index,
 											$$Setup{possible_presses}, $printing_specs, $versions, \%PlateCounts,
 											\%PaperCounts, \%washed_colours, \%mixed_colours, \%aq_makereadies,
-											$$Setup{previous_forms_cache}, \@sigs, @$Setup{'impositions','other_impositions'}, {}, 0 );
+											$$Setup{previous_forms_cache}, \@sigs, @$Setup{'impositions','other_impositions'}, {}, 0);
 									$other_group_cache{$other_group_cache_key} = $sig_price;
-$log->debug(" Setting " . %other_group_cache);
-foreach my $k ( keys %other_group_cache ) {
-$log->debug("$k => ");
-}
+
+									$log->debug('Setting other group cache' . %other_group_cache);
+									foreach my $k ( keys %other_group_cache ) {
+										$log->debug("other_group_cache $k => ");
+									}
 								} else {	
 									$$price{'Comparison Log'} .= 'Additiona Sigs due to no papers: 1000000<br/>' if COMPARISON_LOG;
 									$$price{'Comparison Cost'} += 1000000;
 									$log->warn("Unable to calculate impositions for additional signatures.<br/>");
 								} # end if
 							}
-} 
 						} else {
-							$log->warn("No sigs for group 2?");
+							$log->warn('No sigs for group 2?');
 						} # end if has other sigs
 					} elsif ( DEBUG ) {
-						$log->debug("Using cached price");
+						$log->debug('Using cached price');
 					} # end if ! $other_group_cache
 					my $sig_price = $other_group_cache{$other_group_cache_key};
 					if ( $sig_price and $$sig_price{Imposition} ) {
-						#$log->debug("Calculating Additional Signatures for other group success CC: $$sig_price{'Comparison Cost'}");
-						#$log->error( breakdown( $sig_price ) );
 						$$price{'Comparison Cost'} += $$sig_price{'Comparison Cost'};
 						if ( COMPARISON_LOG ) {
+						#$log->debug("Calculating Additional Signatures for other group success CC: $$sig_price{'Comparison Cost'}");
+							$$price{'Comparison Log'} .= breakdown($sig_price) if DEBUG;
 							$$price{'Comparison Log'} .= 'Other sig: ' . $$sig_price{'Comparison Cost'} . '<br/>';
 							$$price{'Comparison Log'} .= $$sig_price{'Comparison Log'} . '<br/>';
 						}
@@ -5509,21 +5508,23 @@ sub calc_price {
 	$net_sheets = ceil($net_sheets / $imposition);
 	$net_sheets *= $$Imposition{versions} if $$Imposition{versions}; # qty is already adjusted, not sure this is valid anymore
 	$net_sheets *= $$Paper{parts} if $$Paper{parts};
+$log->error("Net_sheets $net_sheets from qty $qty $imposition versions:$$Imposition{versions} parts: $$Paper{parts}");
 
 #Initially we calculate based on colours, but really we need to calculate based on plates, which we will do once we figure out how many plates we need.
-	my $min_overs = $Press->specification( 'Overs Minimum ' . $Paper->material(), scalar @colours );
-	$min_overs = $Press->specification( 'Overs Minimum', scalar @colours ) if ! $min_overs;
+	my $num_colours = scalar @colours;
+	my $min_overs = $Press->specification('Overs Minimum '.$Paper->material(), $num_colours);
+	$min_overs = $Press->specification('Overs Minimum', $num_colours) if ! $min_overs;
 	$min_overs = 0 if ! defined $min_overs;
 	my $overs = 0;
 
 	my $setup_rate;
 	if ( $$project{print_sides} == 1 ) {
-		$setup_rate = $Press->specification( 'MakeReady Overs Rate One Side', scalar @colours );
+		$setup_rate = $Press->specification('MakeReady Overs Rate One Side', $num_colours);
 	} else {
-		$setup_rate = $Press->specification( 'MakeReady Overs Rate ' . $$Imposition{runstyle}, scalar @colours );
+		$setup_rate = $Press->specification('MakeReady Overs Rate ' . $$Imposition{runstyle}, $num_colours);
 	} # end if
-	$setup_rate = $Press->specification( 'MakeReady Overs Rate ' . $Paper->material(), scalar @colours ) if ! $setup_rate;
-	$setup_rate = $Press->specification( 'MakeReady Overs Rate', scalar @colours ) if ! $setup_rate;
+	$setup_rate = $Press->specification('MakeReady Overs Rate ' . $Paper->material(), $num_colours) if ! $setup_rate;
+	$setup_rate = $Press->specification('MakeReady Overs Rate', $num_colours) if ! $setup_rate;
 
 	my $is_Roll2Sheet = $$Imposition{is_roll2sheet} = ( ($$Paper{type} eq 'Roll') and $$Press{Feeds}{Sheet} ) ? 1 : 0;
 	my $roll2sheet_setup_overs_rate = $Press->specification('Roll2Sheet Additional Setup Overs') if $is_Roll2Sheet;
@@ -5536,10 +5537,10 @@ sub calc_price {
 	if ( $$specs{'OverrideSetup'.$qty_index} and ( $$specs{'OverrideSetup'.$qty_index} eq 'Y' ) ) {
 		$setup_overs = $$specs{'OverSetup'.$qty_index};
 	} elsif ( $setup_rate ) {
-		$setup_overs = int( $setup_rate * scalar @colours );
+		$setup_overs = int($setup_rate * $num_colours);
 	} else {
-		$setup_overs = $Press->specification( 'MakeReady Overs ' . $$Imposition{runstyle}, scalar @colours );
-		$setup_overs = $Press->specification( 'MakeReady Overs', scalar @colours ) if ! $setup_overs;
+		$setup_overs = $Press->specification('MakeReady Overs '.$$Imposition{runstyle}, $num_colours);
+		$setup_overs = $Press->specification('MakeReady Overs', $num_colours) if ! $setup_overs;
 	} # end if
 
 	#$setup_overs *= ( 1 + ( $roll2sheet_setup_overs_rate / 100 ) ) if $roll2sheet_setup_overs_rate;
@@ -5551,8 +5552,9 @@ sub calc_price {
 		my $PressRunOvers = $Press->Specification('Press Run Overs', $net_sheets);
 		if ( $PressRunOvers ) {
 			if ( ( $$specs{txtSignatureType} eq 'Cover Pages' ) and ( $_ = $Press->Specification('Covers Overs Percentage') ) ) {
-				$$PressRunOvers{value} *= ( 1 + $$_{value} / 100 ) if $$_{value};
-$openprint::log->warn("Using Covers Overs Percentage values $$_{value} PressRunOvers is now $$PressRunOvers{value}") if DEBUG;
+$openprint::log->warn("Using Covers Overs Percentage values $$_{value} PressRunOvers is now $$PressRunOvers{value} from $net_sheets on $$Press{strid}") if DEBUG;
+				$$PressRunOvers{value} *= ( 1 + ($$_{value} / 100) ) if $$_{value};
+$openprint::log->warn("Using Covers Overs Percentage values $$_{value} PressRunOvers is now $$PressRunOvers{value} from $net_sheets on $$Press{strid}") if DEBUG;
 			}
 			if ( $$PressRunOvers{units} eq 'Press Sheets' ) {
 				$$PressRunOvers{total} = $$PressRunOvers{value};
