@@ -626,52 +626,6 @@ sub display_order {
 	$variable{Order} = $Order;
 } # end sub display_order
 
-# duplicates the given order.	returns the id of the newly created order
-sub make_order_from_order {
-	my ( $src_order_id ) = @_;
-
-	my $SRC_Order = new openprint::Order( $src_order_id );
-	return 0 if check_credit( $SRC_Order->total() );
-
-	if ( $SRC_Order->status() eq '' ) {
-		misc::error( $log, $dbh, \%variable, 'Can\'t re-order.', 'Order does not exist.' );
-		return 0;
-	} elsif ( ! sets::isin( $SRC_Order->status(), 'Complete', 'Paid',	'Shipped', 'Waiting For Pickup', 'Picked Up' ) ) {
-		misc::error( $log, $dbh, \%variable, 'Can\'t re-order.', 'The given order is not complete.' );
-		return 0;
-	} else {
-
-		my $ac = sql::start_transaction( $openprint::dbh );
-		# this goes before get_order_id so that we re-use orderids
-		delete_unfinished_orders( );
-
-		# get the contents
-		my @contents = sql::execute( $log, $dbh, q{SELECT lngProjectIndex, intQuantityIndex FROM Order_Contents WHERE OrderIndex=?}, $src_order_id );
-
-		my $order_id = make_order( $log, $dbh, $session{_session_id}, \%variable );
-		while ( my ( $p_id, $qty ) = splice( @contents, 0, 2 ) ) {
-			my $Project = new openprint::Project( $p_id );
-			my $New = $Project->copy();
-			$New->save({reference=>'ReOrder of ' . $New->reference() });
-			add_to_order( $log, $dbh, $order_id, \%variable, ( $New->id(), $qty ) );
-		} # end while
-		if ( $order_id ) {
-			foreach my $Product ( $SRC_Order->Products() ) {
-				my $NewProduct = $Product->copy();
-				$NewProduct->order_id( $order_id );
-				$NewProduct->save();
-			} # end foreach
-		} # end if
-		if ( $openprint::dbh->errstr() ) {
-			$openprint::dbh->rollback();
-			sql::end_transaction( $openprint::dbh, $ac );
-			return;
-		} # end if
-		sql::end_transaction( $openprint::dbh, $ac );
-		return $order_id;
-	} # end if
-	return 0;
-} # end sub make_order_from_order
 
 sub cancel_order {
 	my ( $order_id ) = @_;

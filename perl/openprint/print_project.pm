@@ -648,7 +648,7 @@ sub delete_service {
 sub reuse_project {
 	my ( $project_index ) = @_;
 
-	my $Project = new openprint::Project( $project_index );
+	my $Project = new openprint::Project($project_index);
 	if ( ! $Project->id() ) {
 		$variable{error} .= "Source project $project_index could not be found.";
 		return;

@@ -98,7 +98,9 @@ sub load {
 	if ( ! $data ) {
 		$data = $dbh->selectrow_hashref( qq{SELECT * FROM $table WHERE id=?}, {}, $$self{id} );
 	} # end if
-	@$self{keys %fields} = @$data{@fields{keys %fields}};
+	my @keys = map { defined $fields{$_} ? $_ : () } keys %fields;
+
+	@$self{@keys} = @$data{@fields{@keys}};
 
 	$data = $dbh->selectrow_hashref( q{SELECT * FROM tbl_Quote_Users_for WHERE quote_id=?}, {}, $$self{id} );
 	@$self{qw/for_companyname for_firstname for_lastname for_title for_salutation for_address1 for_address2 for_city for_state for_country for_postalcode for_phone for_extension for_fax for_email/} = @$data{qw/strcompanyname strfirstname strlastname strtitle strsalutation straddress straddress2 strcity strstate strcountry strpostalcode strphone strextension strfax stremail/};

@@ -10,8 +10,8 @@ $debug = 0;
 $table = 'asset_types';
 $serial = 'asset_types_id_seq';
 %fields = (
-	'id'	=>	'id',
-	'name'	=>	'name',
+	id		=>	'id',
+	name	=>	'name',
 );
 
 package openprint::Asset;
@@ -42,6 +42,7 @@ $debug = 0;
 	width		=>	'width',
 	height		=>	'height',
 	source		=>	'source',
+	public		=>	'public',
 );
 %defaults = (
 	data		=>	undef,
@@ -56,6 +57,7 @@ $debug = 0;
 	layout		=>	'',
 	width		=>	undef,
 	height		=>	undef,
+	public	=>	0,
 );
 %transforms = (
 	id			=>	[ 's/\D//g', '<2147483647' ],
@@ -118,10 +120,10 @@ sub sized_url {
 	} # end if
 
 	my $src = $_[0]->on_disk_path();
-	my $path = $openprint::config{AssetPath}.'/'.$size.'/';
+	my $path = $openprint::config{AssetPath}.'/'.($size?$size.'/':'');
 	if ( $openprint::config{AssetPath} ) {
 
-		# should nt be readable by anyone else
+		# should not be readable by anyone else
 		umask 077;
 		if ( ! -e $path ) {
 			mkdir $path;
@@ -134,6 +136,9 @@ sub sized_url {
 	} # end if
 
 	my $filename = $_[0]->on_disk_filename();
+	if ( !$size ) {
+		return '/assets/'.$filename;
+	}
 #$openprint::log->debug("Asset:: on_disk_path: $src, Filename: $filename");
 
 	my ( $blah, $extension ) = $filename =~ /(.+)\.([^\.]+)$/;
@@ -417,8 +422,15 @@ sub can_edit {
 } # end sub can_edit
 
 sub can_view {
-	my @Albums = openprint::Photo_in_Album->find('asset_id'=>$_[0]{id});
-	return 1 if ! @Albums;
+	return 1 if $_[0]{public};
+
+	my @Albums = openprint::Photo_in_Album->find(asset_id=>$_[0]{id});
+	if ( ! @Albums ) {
+		if ( $_[0]{company_id} == $$openprint::User{company_id} ) {
+			return 1;
+		}
+		return 0;
+	}
 	foreach my $Album ( @Albums ) {
 		return 1 if $Album->can_view();
 	} # end foreach

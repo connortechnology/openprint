@@ -51,7 +51,14 @@ Please select a company or user to obtain login information.<br/>
 		make_drop_down( $variable{companies_ddm}, $session{$r->uri().'?company_id'} );
 		 ) ?>
 					</select>
-					<? echo ( button( 'Go1', { onclick=>"f1.ddmUser.selectedIndex=-1;f1.btnFunction.value='Go';f1.submit();", 'text'=>'Go' } ); ) ?>
+					<? echo (
+						if ( $$variable{User}->company_id() ) {
+							return button( 'CompanyInfo1', { href=>'company_profiles.html?ddmCustomer='.$$variable{User}->company_id(), text=>'Go' } );
+						} elsif ( $param{ddmCustomer} ) {
+							return button( 'CompanyInfo1', { href=>'company_profiles.html?ddmCustomer='.$param{ddmCustomer}, text=>'Go' } );
+						}
+						return;
+					) ?>
 				</li>
 				<li>
 					<label>User Type</label>
@@ -72,17 +79,6 @@ Please select a company or user to obtain login information.<br/>
 		</fieldset>
 		<fieldset>
 			<p id="ButtonsTop" class="buttons"> 
-				<label>
-					<? echo (
-						if ( $$variable{User}->company_id() ) {
-							return button( 'CompanyInfo1', { href=>'company_profiles.html?ddmCustomer='.$$variable{User}->company_id(), text=>'Company' } );
-						} elsif ( $param{ddmCustomer} ) {
-							return button( 'CompanyInfo1', { href=>'company_profiles.html?ddmCustomer='.$param{ddmCustomer}, text=>'Company' } );
-						}
-						return;
-					) ?>
-				</label>
-				
 				<? if ( $$variable{EDIT_USER_NUM} ) ?>
 				<span style="float:right;"><?EDIT_USER_NUM?> of <?NUM_USERS?></span>
 				<? endif ( $$variable{EDIT_USER_NUM} ) ?>
@@ -362,16 +358,6 @@ Please select a company or user to obtain login information.<br/>
 		<br class="spacer"/>
 		<fieldset>
 			<p id="ButtonsBottom" class="buttons">
-			<label>
-			<? echo (
-				if ( $$variable{User}->company_id() ) {
-					return button( 'CompanyInfo2', { href=>'company_profiles.html?ddmCustomer='.$$variable{User}->company_id(), text=>'Company' } );
-				} elsif ( $param{'ddmCustomer'} ) {
-					return button( 'CompanyInfo2', { href=>'company_profiles.html?ddmCustomer='.$param{'ddmCustomer'}, text=>'Company' } );
-				}
-				return;
-			) ?>
-			</label>
 			<? if ( $$variable{EDIT_USER_NUM} ) ?>
 			<span style="float:right;"><?EDIT_USER_NUM?> of <?NUM_USERS?></span>
 			<? endif ( $$variable{EDIT_USER_NUM} ) ?>

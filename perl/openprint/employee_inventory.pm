@@ -652,8 +652,8 @@ sub save_Paper {
 	} # end if
 
 	my @Papers = openprint::Paper->find(
-			( $param{'owner_id'.$id} ? ( 'owner_id'	=>	$param{'owner_id'.$id} ) : () ),
-			( $param{'Owner'.$id} ? ( 'owner_id'	=>	$param{'Owner'.$id} ) : () ),
+			( $param{'owner_id'.$id} ? ( owner_id	=>	$param{'owner_id'.$id} ) : () ),
+			( $param{'Owner'.$id} ? ( owner_id	=>	$param{'Owner'.$id} ) : () ),
 			( $param{'group_id'.$id} ? ( group_id	=>	$param{'group_id'.$id} ) : () ),
 			( $param{'Group'.$id} ? ( group_id	=>	$param{'Group'.$id} ) : () ),
 			( $param{'txtGroup'.$id} ? ( group		=>	$param{'txtGroup'.$id} ) : () ),
@@ -662,20 +662,20 @@ sub save_Paper {
 			( $param{'Manufacturer'.$id} ? ( manufacturer_id	=>	$param{'Manufacturer'.$id} ) : () ),
 			( $param{'txtManufacturer'.$id} ? ( manufacturer		=>	$param{'txtManufacturer'.$id} ) : () ),
 			( $param{'manufacturer'.$id} ? ( manufacturer		=>	$param{'manufacturer'.$id} ) : () ),
-			( $param{'brand_id'.$id} ? ( 'brand_id'	=>	$param{'brand_id'.$id} ) : () ),
-			( $param{'Brand'.$id} ? ( 'brand_id'	=>	$param{'Brand'.$id} ) : () ),
-			( $param{'txtBrand'.$id} ? ( 'brand'		=>	$param{'txtBrand'.$id} ) : () ),
+			( $param{'brand_id'.$id} ? ( brand_id	=>	$param{'brand_id'.$id} ) : () ),
+			( $param{'Brand'.$id} ? ( brand_id	=>	$param{'Brand'.$id} ) : () ),
+			( $param{'txtBrand'.$id} ? ( brand		=>	$param{'txtBrand'.$id} ) : () ),
 			( $param{'brand'.$id} ? ( brand		=>	$param{'brand'.$id} ) : () ),
-			( $param{'Finish'.$id} ? ( 'finish_id' =>	$param{'Finish'.$id} ) : () ),
+			( $param{'Finish'.$id} ? ( finish_id =>	$param{'Finish'.$id} ) : () ),
 			( $param{'finish_id'.$id} ? ( finish_id =>	$param{'finish_id'.$id} ) : () ),
-			( $param{'txtFinish'.$id} ? ( 'finish'	=>	$param{'txtFinish'.$id} ) : () ),
+			( $param{'txtFinish'.$id} ? ( finish	=>	$param{'txtFinish'.$id} ) : () ),
 			( $param{'finish'.$id} ? ( finish	=>	$param{'finish'.$id} ) : () ),
 			( $param{'colour_id'.$id} ? ( colour_id =>	$param{'colour_id'.$id} ) : () ),
-			( $param{'Colour'.$id} ? ( 'colour_id' =>	$param{'Colour'.$id} ) : () ),
-			( $param{'txtColour'.$id} ? ( 'colour'	=>	$param{'txtColour'.$id} ) : () ),
+			( $param{'Colour'.$id} ? ( colour_id =>	$param{'Colour'.$id} ) : () ),
+			( $param{'txtColour'.$id} ? ( colour	=>	$param{'txtColour'.$id} ) : () ),
 			( $param{'colour'.$id} ? ( colour	=>	$param{'colour'.$id} ) : () ),
 			( $param{'weight_id'.$id} ? ( weight_id =>	$param{'weight_id'.$id} ) : () ),
-			( $param{'Weight'.$id} ? ( 'weight_id' =>	$param{'Weight'.$id} ) : () ),
+			( $param{'Weight'.$id} ? ( weight_id =>	$param{'Weight'.$id} ) : () ),
 			( $weight ? ( weight=>$weight ) : () ),
 # We might 
 			( $param{'material_id'.$id} ? ( material_id =>	$param{'material_id'.$id} ) : () ),
@@ -686,7 +686,7 @@ sub save_Paper {
 			( $param{'height'.$id} ? ( height	=>	$param{'type'.$id} ne 'Roll' ? $param{'height'.$id} : undef ) : () ),
 			( $param{'type'.$id} ? ( type		=>	$param{'type'.$id} ) : () ),
 			( $param{'calliper'.$id} ? ( 'calliper is null or ='	=>	$param{'calliper'.$id} ) : () ),
-			( $param{'fsc_code'.$id} ? ( 'fsc_code'	=>	$param{'fsc_code'.$id} ) : ( 'fsc_code is null or =' => $param{'fsc_code'.$id} ) ),
+			( $param{'fsc_code'.$id} ? ( fsc_code	=>	$param{'fsc_code'.$id} ) : ( 'fsc_code is null or =' => $param{'fsc_code'.$id} ) ),
 			);
 	my $Paper;
 
@@ -738,10 +738,9 @@ sub save_Paper {
 		} elsif ( $param{'basis_weight'.$id} ) {
 			$Paper->basis_mweight( $param{'basis_weight'.$id} );
 		} # end if
-		$Paper->calliper( $param{'calliper'.$id} );
-		$Paper->mweight( $param{'mweight'.$id} );
-		$Paper->basis_mweight( $param{'basis_weight'.$id} ) if exists $param{'basis_weight'.$id};
-		$Paper->gsm( $param{'gsm'.$id} );
+		$Paper->calliper( $param{'calliper'.$id} ) if $param{'calliper'.$id} ;
+		$Paper->mweight( $param{'mweight'.$id} ) if $param{'mweight'.$id};
+		$Paper->gsm( $param{'gsm'.$id} ) if $param{'gsm'.$id};
 		if ( my $error = $Paper->save() ) {
 			$variable{error} .= $error;
 		} else {
@@ -2344,7 +2343,13 @@ sub _allocate_popup {
 } # end sub _allocate_popup
 
 sub _manifest_purchase_orders {
+	$variable{Type} = new openprint::Manifest_Content_Type($param{type_id});
 } # end sub _manifest_purchase_orders
+
+sub _manifest_purchase_order_contents {
+	$variable{Type} = new openprint::Manifest_Content_Type($param{type_id});
+	$variable{Type}->po_id($param{po_id});
+} # end sub _manifest_purchase_order_contents
 
 sub _rfidtag_log {
 	if ( ! exists $param{start_year} ) {

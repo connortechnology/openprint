@@ -79,7 +79,7 @@ sub PurchaseOrder_Content {
 		} elsif ( $_[0]{po_id} ) {
 			my $PO = new openprint::PurchaseOrder($_[0]{po_id});
 			my $Paper = $_[0]->Paper();
-				$openprint::log->debug('Paper desc: ' . $Paper->to_string()) if $debug;
+			$openprint::log->debug('Paper desc: ' . $Paper->to_string()) if $debug;
 			foreach my $POC ( $PO->Contents() ) {
 				$openprint::log->debug('POC desc: ' . $POC->item()) if $debug;
 				if ( $POC->type() ne $Paper->type().' Stock' ) {

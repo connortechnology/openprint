@@ -1,5 +1,3 @@
-DROP TABLE IF EXISTS EmailCampaignSent;
-
 CREATE TABLE EmailCampaign_Sent (
 	campaign_id	INTEGER NOT NULL, FOREIGN KEY (campaign_id) REFERENCES EmailCampaigns (id),
 	user_id		INTEGER NOT NULL, FOREIGN KEY (user_id) REFERENCES Users (id),

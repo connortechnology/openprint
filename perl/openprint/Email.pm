@@ -17,18 +17,18 @@ use vars qw( $debug $table $serial %fields %transforms %defaults );
 $debug = 0;
 
 %fields = (
-	from	=>	'from',
-	subject	=>	'subject',
-	ATTACHMENTS	=>	'ATTACHMENTS',
-	'Reply-To'	=>	'Reply-To',
-);
+		from	=>	'from',
+		subject	=>	'subject',
+		ATTACHMENTS	=>	'ATTACHMENTS',
+		'Reply-To'	=>	'Reply-To',
+		);
 
 sub html_body {
 	my ( $self, $html ) = @_;
 	$$self{HTML_BODY} = $html;
 } # end sub html_body
 
-# THe idea is that the params don't modify the object.
+# The idea is that the params don't modify the object.
 sub send {
 	my ( $self, %params ) = @_;
 	if ( $debug ) {
@@ -58,12 +58,12 @@ sub send {
 		} # end foreach bcc
 	} # end if
 
-    my %mail = (
+	my %mail = (
 			'content-type'	=>	$$self{'content-type'},
 			BOUNDARY =>	$$self{boundary},
 			( $params{CC} ? ( CC		=>	$params{CC} ) : () ),
 			( @bcc ? ( BCC		=>	join(',', @bcc ) ) : () ),
-			Smtp    => $params{SMTP} ? $params{SMTP} : $openprint::config{'Mail Server'},
+			Smtp    => $params{SMTP} ? $params{SMTP} : $openprint::config{'Mail_Server'},
 			( $params{'Return-receipt-to'} ? ( 'Return-receipt-to' => $params{'Return-receipt-to'} ) : () ),
 			( $params{'Disposition-Notification-To'} ? ( 'Disposition-Notification-To' => $params{'Disposition-Notification-To'} ) : () ),
 			FROM    => ( ref $$self{from} eq 'openprint::User' ? sprintf('"%s" <%s>', $$self{from}->get('name','email') ) : $$self{from} ),
@@ -75,57 +75,57 @@ sub send {
 	my @attachments = $params{ATTACHMENTS} ? @{$params{ATTACHMENTS}} : ();
 	push @attachments, ( $$self{ATTACHMENTS} ? @{$$self{ATTACHMENTS}} : () );
 
-    if ( @attachments or $params{HTML_BODY} or $$self{HTML_BODY} ) {
-        $mail{BOUNDARY} = "====" . time() . "====" if ! $mail{BOUNDARY};
+	if ( @attachments or $params{HTML_BODY} or $$self{HTML_BODY} ) {
+		$mail{BOUNDARY} = '====' . time() . '====' if ! $mail{BOUNDARY};
 		my $message = $mail{BODY};
 
-        $mail{"MIME-Version"} = "1.0";
+		$mail{'MIME-Version'} = '1.0';
 
 		$mail{BODY} = "\nThis is a message with multiple parts in MIME format.\n";
 
 # start with the current body
-        if ( $message ) {
-            $mail{BODY} .= "--$mail{BOUNDARY}\n";
-            $mail{BODY} .= 'Content-Type: ' . ($mail{'content-type'} ? $mail{'content-type'} : 'text/plain' ). '; charset="utf-8"; format="fixed"'."\n";
-            $mail{BODY} .= "Content-Transfer-Encoding: quoted-printable\n";
-            $mail{BODY} .= "\n".MIME::QuotedPrint::encode_qp( Encode::encode('utf-8', $message ) ) . "\n";
-        }
+		if ( $message ) {
+			$mail{BODY} .= "--$mail{BOUNDARY}\n";
+			$mail{BODY} .= 'Content-Type: ' . ($mail{'content-type'} ? $mail{'content-type'} : 'text/plain' ). '; charset="utf-8"; format="fixed"'."\n";
+			$mail{BODY} .= "Content-Transfer-Encoding: quoted-printable\n";
+			$mail{BODY} .= "\n".MIME::QuotedPrint::encode_qp( Encode::encode('utf-8', $message ) ) . "\n";
+		}
 
 		if ( @attachments ) {
 			$mail{'content-type'} = "multipart/mixed;\n  boundary=\"$mail{BOUNDARY}\"\n";
-        } else {
+		} else {
 			$mail{'content-type'} = "multipart/alternative;\n  boundary=\"$mail{BOUNDARY}\"\n";
-        }
+		}
 
 		if ( $params{HTML_BODY} ) {
-            $mail{BODY} .= "--$mail{BOUNDARY}\nContent-Type: text/html; charset=\"utf-8\";\n";
-            $mail{BODY} .= "Content-Transfer-Encoding: quoted-printable\n";
-            $mail{BODY} .= "\n".MIME::QuotedPrint::encode_qp( Encode::encode('utf-8',$params{HTML_BODY}) ) . "\n";
+			$mail{BODY} .= "--$mail{BOUNDARY}\nContent-Type: text/html; charset=\"utf-8\";\n";
+			$mail{BODY} .= "Content-Transfer-Encoding: quoted-printable\n";
+			$mail{BODY} .= "\n".MIME::QuotedPrint::encode_qp( Encode::encode('utf-8',$params{HTML_BODY}) ) . "\n";
 		} elsif ( $$self{HTML_BODY} ) {
-            $mail{BODY} .= "--$mail{BOUNDARY}\nContent-Type: text/html; charset=\"utf-8\";\n";
-            $mail{BODY} .= "Content-Transfer-Encoding: quoted-printable\n";
-            $mail{BODY} .= "\n".MIME::QuotedPrint::encode_qp( Encode::encode('utf-8',$$self{HTML_BODY}) ) . "\n";
+			$mail{BODY} .= "--$mail{BOUNDARY}\nContent-Type: text/html; charset=\"utf-8\";\n";
+			$mail{BODY} .= "Content-Transfer-Encoding: quoted-printable\n";
+			$mail{BODY} .= "\n".MIME::QuotedPrint::encode_qp( Encode::encode('utf-8',$$self{HTML_BODY}) ) . "\n";
 		} else {
-            my ( $name, $text, $type, $encoding ) = splice @attachments,0,4;
-            $mail{BODY} .= "--$mail{BOUNDARY}\nContent-Type: $type;\n";
-            $mail{BODY} .= "Content-Transfer-Encoding: $encoding\n";
-            $mail{BODY} .= "\n$text\n";
-        } # end if
+			my ( $name, $text, $type, $encoding ) = splice @attachments,0,4;
+			$mail{BODY} .= "--$mail{BOUNDARY}\nContent-Type: $type;\n";
+			$mail{BODY} .= "Content-Transfer-Encoding: $encoding\n";
+			$mail{BODY} .= "\n$text\n";
+		} # end if
 
-        while ( @attachments ) {
-            my ( $name, $text, $type, $encoding ) = splice ( @attachments,0,4 );
-            $mail{BODY} .= "--$mail{BOUNDARY}\nContent-Type: $type;\n";
-            $mail{BODY} .= "\tname=\"$name\"\n" if $name;
-            $mail{BODY} .= "Content-Transfer-Encoding: $encoding\n";
-            $mail{BODY} .= "Content-Disposition: attachment;\n";
-            $mail{BODY} .= "\tfilename=\"$name\"\n" if $name;
-            $mail{BODY} .= "\n$text\n";
-        } # end while
+		while ( @attachments ) {
+			my ( $name, $text, $type, $encoding ) = splice ( @attachments,0,4 );
+			$mail{BODY} .= "--$mail{BOUNDARY}\nContent-Type: $type;\n";
+			$mail{BODY} .= "\tname=\"$name\"\n" if $name;
+			$mail{BODY} .= "Content-Transfer-Encoding: $encoding\n";
+			$mail{BODY} .= "Content-Disposition: attachment;\n";
+			$mail{BODY} .= "\tfilename=\"$name\"\n" if $name;
+			$mail{BODY} .= "\n$text\n";
+		} # end while
 
-		# Signal end of attachments
-        $mail{BODY} .= "--$mail{BOUNDARY}--\n\n";
+# Signal end of attachments
+		$mail{BODY} .= "--$mail{BOUNDARY}--\n\n";
 		$openprint::log->debug($mail{BODY}) if $debug;
-    } # end if attachments or HTML BODY
+	} # end if attachments or HTML BODY
 
 	my @recipients = $self->to();
 #$openprint::log->debug("Email: Recipients @recipients");
@@ -141,13 +141,13 @@ sub send {
 #$openprint::log->debug("Email: Recipients @recipients");
 	foreach my $recipient ( @recipients ) {
 		next if ! $recipient;
-		
+
 		if ( ref $recipient eq 'openprint::User' ) {
 			if ( $params{TO_EXCLUDE} and filter_exclude( $recipient, $params{TO_EXCLUDE} ) ) {
 				$results .= 'Not sending to ' . $recipient . ' because they have been excluded.<br/>';
 				next;
 			} # end if
-			
+
 			my @to;
 			foreach my $email ( split (/,;\s/,	$recipient->email() ) ) {
 				s/^\s+//, s/\s+$// for $email;
@@ -155,7 +155,7 @@ sub send {
 				if ( my $vacation = email::get_vacation_entry( $email ) ) {
 					if ( ! $$vacation{system_emails} ) {
 						$results .= 'Not sending to ' . $email . ' because they are on vacation.<br/>';
-	#$openprint::log->debug("Email: got vacation for $email");
+#$openprint::log->debug("Email: got vacation for $email");
 						next;
 					}
 				} # end if
@@ -223,8 +223,8 @@ sub filter_exclude {
 }
 
 sub delete {
-	
-	#sql::execute( undef, $dbh, 'DELETE FROM mailbox WHERE username=?', $_[0]{id} );
+
+#sql::execute( undef, $dbh, 'DELETE FROM mailbox WHERE username=?', $_[0]{id} );
 } # end sub delete
 
 sub to {
@@ -247,21 +247,21 @@ sub add_pdf_attachment_from_html {
 	my @attachments;
 	$html = Encode::encode('utf-8',$html);
 	if ( File::Slurp::write_file('/tmp/'.$name.'.html', { atomic => 1, err_mode=>'carp' }, \$html ) ) {
-    `wkhtmltopdf -q "/tmp/$name.html" "/tmp/$name.pdf"`;
-    my $pdf = File::Slurp::read_file( "/tmp/$name.pdf", err_mode => 'carp' );
-    unlink "/tmp/$name.html";
-    unlink "/tmp/$name.pdf";
-    if ( $pdf ) {
-      push @attachments, ($name.'.pdf', MIME::Base64::encode_base64($pdf), 'application/octet-stream', 'base64');
-    } else {
-      $openprint::log->debug("Error making pdf");
-    } # end if has pdf contents
-  } # end if successfully wrote html content
-  my $results;
-  if ( ! @attachments ) {
-    $results .= 'Unable to make a pdf.  Using HTML version.<br/>';
-    push @attachments, ($name.'.html', MIME::QuotedPrint::encode_qp($html), 'text/html', 'quoted-printable');
-  } # end if
+		`wkhtmltopdf -q "/tmp/$name.html" "/tmp/$name.pdf"`;
+		my $pdf = File::Slurp::read_file( "/tmp/$name.pdf", err_mode => 'carp' );
+		unlink "/tmp/$name.html";
+		unlink "/tmp/$name.pdf";
+		if ( $pdf ) {
+			push @attachments, ($name.'.pdf', MIME::Base64::encode_base64($pdf), 'application/octet-stream', 'base64');
+		} else {
+			$openprint::log->debug("Error making pdf");
+		} # end if has pdf contents
+	} # end if successfully wrote html content
+	my $results;
+	if ( ! @attachments ) {
+		$results .= 'Unable to make a pdf.  Using HTML version.<br/>';
+		push @attachments, ($name.'.html', MIME::QuotedPrint::encode_qp($html), 'text/html', 'quoted-printable');
+	} # end if
 	$$self{ATTACHMENTS} = [] if ! $$self{ATTACHMENTS};
 	push @{$$self{ATTACHMENTS}}, @attachments;
 	return $results;

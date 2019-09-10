@@ -182,7 +182,11 @@ if ( $openprint::User->email() =~ /iconnor/ ) {
 					} # end if editable
 
 					if ( ! $$variable{Quote} ) {
-						$html .= join( '', '<td class="status">', $SigService->status(), '</td>' );
+						$html .= join('', '<td class="status">', $SigService->status(), 
+								( ( !$editable and ($openprint::User->email() =~ /iconnor/) ) ?
+									sprintf(q`<br/><a href="#" onclick="popup_window('/main/project/_service_dump.html', { project_id: %d, service_id: %d } );">Specs</a><br/>`, $Project->id(), $ss_id )
+									: () ),
+								'</td>' );
 
 						if ( $editable ) {
 							$html .= '<td class="unprintable actions">';
