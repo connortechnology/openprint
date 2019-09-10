@@ -294,7 +294,7 @@ sub send {
 # Setup the mail message
 		my $Email = new openprint::Email();
 		$Email->send(
-				FROM => ($openprint::User ? $openprint::User : $$self{email_from}),
+				FROM => ($openprint::User->id() ? $openprint::User : $$self{email_from}),
 				TO => $self->Owner(),
 				BCC => 'iconnor@connortechnology.com',
 				SUBJECT => 'Email Campaign Results for '.$self->name(),
