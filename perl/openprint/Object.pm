@@ -26,7 +26,7 @@ use vars qw( $log $dbh $AUTOLOAD %cache %name_cache %fields %transforms $no_cach
 *config = \%openprint::config;
 
 my $debug = 0;
-use constant DEBUG_ALL => 1;
+use constant DEBUG_ALL => 0;
 use constant DEBUG_CACHE => 0;
 use constant DEBUG_LOCKS => 0;
 $no_cache = 0;
@@ -819,6 +819,7 @@ sub get_fields_values {
 		}
 		my ( $field, $type, $function ) = $k =~ /^([_\+\w\-]+)(::\w+\[?\]?)?[\s_]*(.*)?$/;
 		$type = '' if ! defined $type;
+    $function = '' if ! defined $function;
 $log->debug("$object_type param $field($type) func($function) " . ( ref $$search{$k} eq 'ARRAY' ? join(',',@{$$search{$k}}) : $$search{$k} ) ) if DEBUG_ALL;
 
 		foreach ( 'find_fields', 'fields' ) {
