@@ -68,7 +68,7 @@
 				<span id="PaperAlert<?Signature?>"></span>
 			</li>
 			<li class="GSM"><label>GSM</label>
-				<? echo ( input( type=>'float', name=>'txtStockGSM'.$$variable{Signature}, value=>$$variable{'txtStockGSM'.$$variable{Signature}}, onkeyup=>"gsm_to_mweight(this.form,'$$variable{Signature}');calc(this.form.name);", onchange=>'onkeyup(this);', oninput=>'onkeyup(this);' ); ) ?>
+				<? echo ( input( type=>'float', name=>'txtStockGSM'.$$variable{Signature}, value=>$$variable{'txtStockGSM'.$$variable{Signature}}, oninput=>"gsm_to_mweight(this.form,'$$variable{Signature}');calc(this.form.name);"); ) ?>
 			</li>
 			<li><label>Double sided?</label>
 				<input id="CustomSheetDoubleSided<?Signature?>Y" name="CustomSheetDoubleSided<?Signature?>" type="radio" value="Y" onclick="calc(this.form.name);" <? echo ( checked( $$variable{'CustomSheetDoubleSided'.$$variable{Signature}} ne 'N' ); ) ?> />

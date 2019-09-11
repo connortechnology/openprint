@@ -74,6 +74,10 @@ sub history {
 			my %data;
 
       my $Invoicer = openprint::Company->find_one(id=>$session{'/invoice/history.html?invoicer_id'});
+      if ( !$Invoicer ) {
+        $variable{error} .= "Invoicer not found.";
+        return;
+      }
       my $skin_path = '';
       if ( -e ($openprint::config{SkinPath}.'/'.$Invoicer->name() ) ) {
         $skin_path = '/'.$Invoicer->name();
@@ -124,8 +128,8 @@ sub history {
 			my @Recipients = new openprint::Company($param{invoicee_id})->AccountingContacts();
 			(new openprint::Email())->send(
 						FROM    => $config{AccountingEmail},
-            TO      =>  \@Recipients,
-            #TO      => $openprint::User,
+            #TO      =>  \@Recipients,
+            TO      => $openprint::User,
 						BCC     => $openprint::User,
 						SUBJECT => 'Account Statement from ' . ( $Invoicer->name() ),
 						ATTACHMENTS	=>	\@attachments,

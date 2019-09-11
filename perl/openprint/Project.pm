@@ -1608,17 +1608,18 @@ sub recalculate {
 		if ( $status eq 'calculated' ) {
 			# Recalc signatures
 			my $module = 'openprint::Estimating::'.$$Type{type};
-			if ( my $function = $module->can( 'calculate_signatures' ) ) {
-				$status = $function->( $self );
+			if ( my $function = $module->can('calculate_signatures') ) {
+				$status = $function->($self);
 				$openprint::log->debug("$$Type{type}::Calculate_Sigs: status: $status");
-				openprint::service::status( $$self{id}, $$services{''}[0], $status );
+				openprint::service::status($$self{id}, $$services{''}[0], $status);
 			} # end if
-			openprint::service::auto_calculate( $self, $$services{''}[0] ) if $status eq 'calculated';
+			openprint::service::auto_calculate($self, $$services{''}[0]) if $status eq 'calculated';
 		} # end if
 	} # end if
-	$self->add_to_log( @openprint::session{'company_id','user_id'}, 'Recalculated. Prices: '.join(',', $self->prices() ) );
 	$self->update_status();
 	$self->summary(undef);
+	foreach ( $self->quantity_indexes() ) { $self->price($_,undef); }
+	$self->add_to_log( @openprint::session{'company_id','user_id'}, 'Recalculated. Prices: '.join(',', map { $openprint::Currency->format($_) } $self->prices() ) );
 	return $self->save({calculated_on=>'NOW()'});
 } # end sub recalculate
 

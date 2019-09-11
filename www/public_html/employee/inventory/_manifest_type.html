@@ -190,14 +190,13 @@ $log->debug("Setting default to: " .  $$variable{"location_id-$$variable{type_id
 		<p class="docket">
 			<label>Docket</label>
 			<? echo ( join("\n",
-						input( type=>'cardinal', id=>'docket-'.$$variable{type_id}, name=>'docket-'.$$variable{type_id}, value=>$$variable{Type}->docket() ),
-( $$variable{Type}->docket() ? (button('GoDocket'.$$variable{Type}->id(), {
+						input( type=>'cardinal', id=>'docket-'.$$variable{type_id}, name=>'docket-'.$$variable{type_id}, value=>$$variable{Type}->docket(), onkeydown=>"if(event.keyCode==13){load_pos($$variable{Type}{id});};" ),
+						( $$variable{Type}->docket() ? (button('GoDocket'.$$variable{Type}->id(), {
 href=>'/employee/project/view.html?docket='.$$variable{Type}->docket(), target=>'_blank', text=>'Go to Docket' }) ) : () ),
-						button( 'LoadPos'.$$variable{Type}->id(), { 
-							onclick=>"new Ajax.Updater('PurchaseOrders$$variable{Type}{id}','_manifest_purchase_orders.html', { parameters: { supplier_id: \$('supplier_id').value, Docket: \$('docket-$$variable{Type}{id}').value} } );", text=>'Load POs' } ),
+						button('LoadPos'.$$variable{Type}->id(), { onclick=>"load_pos($$variable{Type}{id});", text=>'Load POs' }),
 
 ); ) ?>
-					</p>
+		</p>
 		<div id="PurchaseOrders<? echo ( $$variable{Type}->id() ) ?>">
 		<? if ( ! $$variable{Type}->po_id() ) ?>
 			<?include(_manifest_purchase_orders.html)?>
@@ -206,51 +205,12 @@ href=>'/employee/project/view.html?docket='.$$variable{Type}->docket(), target=>
 		<p class="purchaseorder">
 			<label>Purchase Order</label>
 			<? echo ( join("\n", 
-				input( type=>'cardinal', id=>"po_id-$$variable{type_id}", name=>"po_id-$$variable{type_id}", value=>$$variable{Type}->po_id() ),
-				( $$variable{Type}->po_id() ? button( 'GoPO'.$$variable{Type}->id(), { href=>'/employee/purchase_order/view.html?po_id='.$$variable{Type}->po_id(), target=>'_blank', text=>'Go' } ) : '' ),
+				input( type=>'cardinal', id=>"po_id-$$variable{type_id}", name=>"po_id-$$variable{type_id}", value=>$$variable{Type}->po_id(), onkeydown=>"if(event.keyCode==13){load_po_contents($$variable{type_id});};" ),
+				button( 'GoPO'.$$variable{Type}->id(), {
+					onclick=>qq`window.open('/employee/purchase_order/view.html?po_id='+\$('po_id-$$variable{Type}{id}').value,'_blank');`, text=>'Go' } ),
 			); ) ?>
 		</p>
-<div id="PO_<? echo ( $$variable{Type}->id() ) ?>">
-		<? echo ( 
-			return if ! $$variable{Type}->po_id();
-			my $PO = $$variable{Type}->PurchaseOrder();
-			my $POC = $$variable{Type}->PurchaseOrder_Content();
-
-			my $html = '';
-
-			if ( $$variable{Type}->po_content_id() ) {
-				$html .= '<p><label>Confirmed</label>' . ( $POC->item() ? $POC->item() : $POC->description() );
-				$html .= ' ' . Number::Format::format_number($POC->qty()).$POC->units();
-				if ( openprint::usergroup::is_user_in( ['Accounting','InventoryManager'], $session{user_id} ) ) {
-					$html .= ' @ ' . openprint::Currency::format( $POC->price() );
-				} # end if
-				$html .= button('unconfirm'.$$POC{id}, { onclick=>qq`unconfirm_po_content($$variable{Type}{id},$$POC{id});`, text=>'Unconfirm' } ) . '</p>';
-				$html .= '</p>';
-			} elsif ( $POC and $POC->id() ) {
-				$html .= '<p><label>Guessed</label>' . ( $POC->item() ? $POC->item() : $POC->description() );
-				$html .= ' ' . ( $POC->qty() ? Number::Format::format_number($POC->qty()) : 0 ).$POC->units();
-				if ( openprint::usergroup::is_user_in( ['Accounting','InventoryManager'], $session{user_id} ) ) {
-					$html .= ' @ ' . openprint::Currency::format( $POC->price() );
-				} # end if
-				$html .= ' for docket ' . $POC->docket(). ' ';
-				$html .= button('confirm'.$$POC{id}, { onclick=>qq`confirm_po_content($$variable{Type}{id},$$POC{id});`, text=>'Confirm' } ) . '</p>';
-			} else {
-				$html .= '<p><label>Select one</label>';
-				foreach my $C ( $PO->Contents() ) {
-					$html .= $C->item() ? $C->item() : $C->description();
-					$html .= ' ' . Number::Format::format_number($C->qty()).$C->units();
-					if ( openprint::usergroup::is_user_in( ['Accounting','InventoryManager'], $session{user_id} ) ) {
-						$html .= openprint::Currency::format( $C->price() );
-					} # end if
-					$html .= ' for docket ' . $C->docket(). ' ';
-					$html .= button('confirm'.$$C{id}, { onclick=>qq`confirm_po_content($$variable{Type}{id},$$C{id});`, text=>'Select' } ) . '<br/>';
-
-				} # end foreach C
-				$html .= '</p>';
-			} # end if
-			return $html;
-		) ?>		
-</div>
+		<div id="PO_<? echo ( $$variable{Type}->id() ) ?>"><?include(_manifest_purchase_order_contents.html)?></div>
 		<? if ( openprint::usergroup::is_user_in( ['Accounting','InventoryManager'], $session{user_id} ) ) ?>
 		<p>
 			<label>Cost (/CWT)</label>

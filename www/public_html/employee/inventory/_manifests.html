@@ -117,17 +117,16 @@
 
 			my @manifest_ids = map { $$_{id} } @{$$variable{Manifests}};
 	
-			my @ManifestContentTypes = openprint::Manifest_Content_Type->find( manifest_id=>\@manifest_ids );
+			my @ManifestContentTypes = openprint::Manifest_Content_Type->find(manifest_id=>\@manifest_ids);
 
 			my @po_ids = map { $_->po_id() } @ManifestContentTypes;
-			my @POs	= openprint::PurchaseOrder->find( id=>\@po_ids );
+			my @POs	= openprint::PurchaseOrder->find(id=>\@po_ids);
 
-			my %POCs;
-			foreach my $POC ( openprint::PurchaseOrder_Content->find( id=>\@po_ids, order=>'id' ) ) {
-				push @{$POCs{$$POC{po_id}}}, $POC;
-			}
+			my %POCs = misc::make_hash_from_array( 'po_id', 
+				openprint::PurchaseOrder_Content->find(po_id=>\@po_ids, order=>'id') ) if @POs;
+
 			foreach my $PO ( @POs ) {
-				$PO->Contents( $POCs{$$PO{id}} );
+				$PO->Contents($POCs{$$PO{id}});
 			}
 
 			my %ManifestCTs = misc::make_hash_from_array('manifest_id', @ManifestContentTypes);
@@ -139,7 +138,7 @@
 			my %SkidContents = ();
 			my @skid_ids = map { $$_{skid_id} ? $$_{skid_id} : () } @MContents;
 			if ( @skid_ids ) {
-				openprint::Skid->find( id=>\@skid_ids );
+				openprint::Skid->find(id=>\@skid_ids);
 				foreach my $SC ( openprint::SkidContent->find(skid_id=>\@skid_ids) ) {
 					push @{$SkidContents{$$SC{skid_id}}}, $SC;
 				} # end foreach
@@ -153,12 +152,12 @@
 				} # end if
 
 				if ( $MContents{$$Manifest{id}} ) {
-					$Manifest->Contents( $MContents{$$Manifest{id}} );
+					$Manifest->Contents($MContents{$$Manifest{id}});
 					foreach my $MC ( @{$MContents{$$Manifest{id}}} ) {
-						$MC->Type( $Manifest_Types{$$MC{type_id}} );
+						$MC->Type($Manifest_Types{$$MC{type_id}});
 					}
 				} else { 
-					$Manifest->Contents( [] );
+					$Manifest->Contents([]);
 				}
 				$$Manifest{Types} = $ManifestCTs{$$Manifest{id}} if $ManifestCTs{$$Manifest{id}};
 
@@ -201,7 +200,7 @@
 
 				my $value = 0;
 
-
+$openprint::log->debug("checking");
 				# Why? We are counting the # of skids and weight on the manifest
 				# Supposedly to compare to the actual skid contents
 				foreach my $MC ( $Manifest->Contents() ) {
@@ -219,6 +218,7 @@
 					$value += $MC->value();	
 				} # end foreach MC
 
+$openprint::log->debug("checking");
 				my $error = $Manifest->check();
 				next if $error and $session{'/employee/inventory/manifests.html?has_errors'} eq '0';
 				next if (!$error) and $session{'/employee/inventory/manifests.html?has_errors'} eq '1';

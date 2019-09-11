@@ -1698,8 +1698,9 @@ $openprint::log->error("No makeready_time on " . $Fold->to_string() . ': ' . $? 
 			} # end if has stitching
 			$comparison_cost += $totalPrice + $stitching_part;
 # + $cutting_results{Price};
+
 			if ( ( defined $bestComparison ) and ( $comparison_cost > $bestComparison ) ) {
-				$openprint::log->debug("Bailing early because comparison $comparison_cost > best $bestComparison");
+				$openprint::log->debug("Bailing early because comparison $comparison_cost > best $bestComparison") if DEBUG;
 				next;
 			} elsif ( DEBUG ) {
 				$openprint::log->debug("Not bailing early because comparison $comparison_cost < best $bestComparison");
@@ -2324,7 +2325,7 @@ sub remove_duplicates {
 	my %Results;
 	foreach my $Set ( @_ ) {
 		my $string = join(',', map { join('-', @$_{'quantity','columns','rows','page_columns','page_rows'}) } @{$Set} );
-		$openprint::log->debug("String representing set $string results: $Results{$string}");
+		$openprint::log->debug("String representing set $string results: $Results{$string}") if DEBUG;
 		next if $Results{$string};
 		$Results{$string} = $Set;
 	}

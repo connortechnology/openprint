@@ -1,7 +1,7 @@
-<script type="text/javascript">
-	function check_inputs( form ) {
+<script>
+	function check_inputs(form) {
     if(!form.elements['name'].value){
-      alert("Please give this backup a name.");
+      alert('Please give this backup a name.');
       return false;
     }
 		return true;
@@ -16,7 +16,7 @@ theme_advanced_buttons2 : '',
 cleanup : true
   };
 
-    tinyMCE.init( tinymce_options );
+    tinyMCE.init(tinymce_options);
 </script>
 <div class="Backup"><div class="Edit">
 <?include(/includes/error_reporting.html)?>
@@ -35,7 +35,8 @@ cleanup : true
           <?echo ( join("\n",
                 ssi::select( 
                   openprint::Host->dropdown( 
-#'owner_id is null'=>0,
+                  'owner_id is null'=>0,
+                  blacklist=>0,
                     order=>'hostname' ),
             $$variable{Backup}->host_id(),
             {
