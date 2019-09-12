@@ -4262,6 +4262,10 @@ if ( sets::isin( 'emailcampaigns', \@tables ) ) {
 	} # end foreach
 } # end if
 
+if ( ! sets::isin( 'emailcampaign_sent', \@tables ) ) {
+  $dbh->do( misc::load_file( $log, q{../../sql/EmailCampaign_Sent.sql}) ) or die $dbh->errstr();
+}
+
 if ( sets::isin( 'trade_references', \@tables ) ) {
 	my $data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='trade_references'", 'column_name');
 } else {
