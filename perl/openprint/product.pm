@@ -253,19 +253,24 @@ sub _prices_table_body {
 }
 
 sub category_view {
+  $param{category_id} = openprint::Product_Category->transform(id=>$param{category_id});
+
 	my $Category = $variable{Category} = new openprint::Product_Category( $param{category_id} );
-	if ( $param{btnFunction} eq 'Destroy' ) {
-		$variable{error} .= $Category->destroy();
-		if ( ! $variable{error} ) {
-			$variable{ExternalRedirect} = '/product/categories.html';
-		}
-	} elsif ( $param{btnFunction} eq 'Delete' ) {
-		$variable{error} .= $Category->delete();
-		if ( ! $variable{error} ) {
-			$variable{ExternalRedirect} = '/product/categories.html';
-		}
-	} # end if
+  if ( $param{btnFunction} and $Category->can_edit() ) {
+    if ( $param{btnFunction} eq 'Destroy' ) {
+      $variable{error} .= $Category->destroy();
+      if ( ! $variable{error} ) {
+        $variable{ExternalRedirect} = '/product/categories.html';
+      }
+    } elsif ( $param{btnFunction} eq 'Delete' ) {
+      $variable{error} .= $Category->delete();
+      if ( ! $variable{error} ) {
+        $variable{ExternalRedirect} = '/product/categories.html';
+      }
+    } # end if
+  } # end if
 }
+
 sub category_edit {
 	my $Category = $variable{Category} = new openprint::Product_Category($param{category_id});
 	return if ! $param{btnFunction};
