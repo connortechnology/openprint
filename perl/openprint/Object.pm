@@ -1461,7 +1461,7 @@ sub can_edit {
     return 1;
 	}
 	return 0;
-} # end sub can_view
+} # end sub can_edit
 
 sub Assets {
 	return () if ! $_[0]{id};
