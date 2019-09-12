@@ -22,6 +22,7 @@ $table = 'Product_Categories';
 );
 
 %transforms = (
+  id								=>	[ 's/\D//g', '<2147483647' ],
 		name => [ 's/^\s+//', 's/\s+$//', 's/\s\s+/ /g' ],
 		description => [ 's/^\s+//', 's/\s+$//', 's/\s\s+/ /g' ],
 );
