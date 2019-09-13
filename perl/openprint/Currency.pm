@@ -22,9 +22,9 @@ $serial = 'currencies_id_seq';
 	symbol	=>	'symbol',
 );
 %transforms = (
-	id			=>	[ 's/\D//g', '<2147483647' ],
-    name => [ 's/^\s+//', 's/\s+$//', 's/\s\s+/ /g' ],
-    short => [ 's/\s+//' ],
+	id		=> [ 's/\D//g', '<2147483647' ],
+	name	=> [ 's/^\s+//', 's/\s+$//', 's/\s\s+/ /g' ],
+	short => [ 's/\s+//' ],
 );
 %defaults = (
 );
@@ -219,7 +219,7 @@ sub format {
 			-decimal_digits     =>  $precision,
 			-int_curr_symbol    =>  $symbol,
 			);
-	return $Formatter->format_price( $price, $precision );
+	return $Formatter->format_price($price, $precision);
 } # end sub format
 
 1;
