@@ -139,6 +139,9 @@ sub check {
 		push @{$manufacturer_ids{$$_{manufacturers_id}}}, $_ if $$_{manufacturers_id};
 	} # end foreach
 	my $error;
+	if ( ! $$Manifest{supplier_id} ) {
+		$error .= 'No vendor supplied.<br/>';
+	}
 	if ( keys %skid_ids != @Contents ) {
 		foreach my $id ( keys %skid_ids ) {
 			if ( @{$skid_ids{$id}} > 1 ) {
