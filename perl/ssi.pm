@@ -89,7 +89,7 @@ sub variable_substitution {
 	while ( $after ) {
 		if ( $after =~ /(.*?)<\?\s*(.*?)\s*\?>(.*)/ms ) {
 			$result .= $1;
-			(my $command, $after ) = ( $2, $3 );
+			(my $command, $after) = ( $2, $3 );
 			$after =~ s/^\s+$//m;
 
 			if ( $command =~ /^while\s*\(\s*(.*)\s*\)/ ) {
@@ -151,9 +151,16 @@ sub variable_substitution {
 			} elsif ( $command =~ /^slurp\s*\(\s*'?([^'\)]*)'?\s*\)/ms ) {
 				$result .= slurp_content( $1 );
 			} else {
-				$result .= $$variable{$command} if $$variable{$command};
+				if ( ! exists $$variable{$command} ) {
+					$log->debug("Unknown simple variable subsititution $command");
+				} elsif ( ! defined $$variable{$command} ) {
+					$log->debug("Undefined simple variable subsititution $command");
+				} else {
+					$result .= $$variable{$command} if $$variable{$command};
+				}
 			} # end if
 		} else {
+# No subsititutions found, just return
 			return $result.$after;
 		} # end if have a command
 	} # end while after
