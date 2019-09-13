@@ -134,7 +134,7 @@ sub send_email {
 	my $results = $Email->send(
 			FROM	=> $self->{email_from} ? $self->{email_from} : sprintf('"%s" <%s>', @$replacements{'REPNAME','REPEMAIL'} ),
 			TO		=> ( $$self{email_to} ? $$self{email_to} : $$replacements{User} ),
-BCC => 'iconnor@point-one.com',
+#BCC => 'iconnor@point-one.com',
 			SUBJECT => $$self{email_subject},
 			( $text_body ? ( BODY => $text_body ) : () ),
 			( $html_body ? ( HTML_BODY => $html_body ) : () ),
