@@ -123,8 +123,16 @@ $log->debug("Generating new cookie $session{_session_id}") if Debug;
 		} # end if
 	}
 	if ( ! $session{Currency_id} ) {
-		$_ = openprint::Currency->find_one( short => $config{Currency} );
-		$session{Currency_id} = $_->id() if $_;
+		if ( ! $config{Currency} ) {
+			$log->warn("Please specify a default currency!");
+		} else {
+			my $C = openprint::Currency->find_one( short => $config{Currency} );
+			if ( ! $C ) {
+				$log->error("The default currency $config{Currency} was not found in db!");
+			} else {
+				$session{Currency_id} = $C->id();
+			}
+		}
 	} # end if
 
 	$Company = new openprint::Company( $session{company_id} );
