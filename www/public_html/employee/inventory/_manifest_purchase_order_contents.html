@@ -2,6 +2,7 @@
 	return if ! $$variable{Type}->po_id();
 	my $PO = $$variable{Type}->PurchaseOrder();
 	my $POC = $$variable{Type}->PurchaseOrder_Content();
+	$POC = $$variable{Type}->PurchaseOrder_Content({ignore_fsc=>1}) if ! $POC;
 
 	my $html = '';
 
