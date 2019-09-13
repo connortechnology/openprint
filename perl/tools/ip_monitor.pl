@@ -50,7 +50,7 @@ configuration::init( );
 configuration::from_file( $$opts{config} );
 configuration::merge( $opts );
 
-foreach my $param ( 'db_name','db_user','db_pass','from','recipient','smtp-server' ) {
+foreach my $param ( 'db_name','db_user','db_pass','from','recipient','smtp_server' ) {
 	if ( ! $openprint::config{$param} ) {
 		die "$program: missing required --$param parameter";
 	}
