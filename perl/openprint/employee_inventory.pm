@@ -1694,6 +1694,13 @@ sub save_Manifest {
 			} # end if
 			$param{supplier_id} = $Companies[0]->id();
 		} # end if
+	} elsif ( ! ( $param{supplier} and $param{supplier_id} ) ) {
+# No vendor supplied, look in POs.
+			my @Types = openprint::Manifest_Content_Type->find(manifest_id=>$Manifest->id());
+			my @vendor_ids = sets::union( map { $param{"po_id-$$_{id}"} ? new openprint::PurchaseOrder($param{"po_id-$$_{id}"})->supplier_id(): () } @Types );
+			if ( @vendor_ids == 1 ) {
+			$param{supplier_id} = $vendor_ids[0];
+			}
 	} # end if supplier and ! supplier_id
 	sql::end_transaction( $dbh, $ac );
 
