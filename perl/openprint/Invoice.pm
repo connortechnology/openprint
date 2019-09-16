@@ -293,7 +293,7 @@ sub send {
 	);
 
   my $skin_path = '';
-  if ( -e ($openprint::config{SkinPath}.'/'.$self->Invoicer()->name() ) ) {
+  if ( -e ($openprint::config{SkinPath}.'/'.$self->Invoicer()->name()) ) {
     $skin_path = '/'.$self->Invoicer()->name();
     $openprint::log->debug("Have skinpath at $skin_path");
   } else {
