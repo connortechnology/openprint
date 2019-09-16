@@ -179,9 +179,8 @@ sub send {
 	$openprint::log->debug("SQL query $query");
 	my @mail_user_ids = sql::execute(undef, undef, $query);
 	$results .= 'There are '. scalar @mail_user_ids." users that fit the campaign<br/>\n";
-#return $results;
 
-	@$self{nextrun} = sql::execute( undef, undef, 'SELECT NOW()+interval FROM emailcampaigns WHERE id=?', $$self{id} ) if $$self{interval};
+	@$self{nextrun} = sql::execute(undef, undef, 'SELECT NOW()+interval FROM emailcampaigns WHERE id=?', $$self{id}) if $$self{interval};
 
 	#$self->{log}->info("There are ". scalar @mail_user_ids." users that fit the campaign<br/>\n");
 
@@ -289,14 +288,14 @@ sub send {
 
 			';
 
-		$email_template = ssi::variable_substitution( \$email_template, { Campaign=>$self, Results=>$results } );
+		$email_template = ssi::variable_substitution( \$email_template, { Campaign=>$self, Results=>($results?$results:'') } );
 
 # Setup the mail message
 		my $Email = new openprint::Email();
 		$Email->send(
 				FROM => ($openprint::User->id() ? $openprint::User : $$self{email_from}),
 				TO => $self->Owner(),
-				BCC => 'iconnor@connortechnology.com',
+				#BCC => 'iconnor@connortechnology.com',
 				SUBJECT => 'Email Campaign Results for '.$self->name(),
 				HTML_BODY => $email_template,
 				);
