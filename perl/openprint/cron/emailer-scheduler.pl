@@ -74,16 +74,21 @@ openprint::session_init();
 # The first query to execute grabs the ids of all of the email campaigns
 # that are currently set to run
 openprint::EmailCampaign->lock();
-my @campaign_ids = openprint::EmailCampaign->find(
+my @Campaigns = openprint::EmailCampaign->find(
 		$$opts{campaign_id} ?
 		( id=>$$opts{campaign_id} ) :
-		(active => 'Y', 'nextrun <' => 'NOW()', custom=>['(timeofday IS NULL) OR (timeofday <= CURRENT_TIME)'] ) );
+		(active => 'Y', 'nextrun <' => 'NOW()', custom=>['(timeofday IS NULL) OR (timeofday <= CURRENT_TIME)'])
+);
 
-$log->info("There are ".@campaign_ids." active campaigns\n");
+$log->info("There are ".@Campaigns." active campaigns\n");
 
 # For each campaign, we need to get the associated query and interval of
 # between the last login time and now (which will be our threshold of concern)
-foreach my $Campaign (@campaign_ids) {
+foreach my $Campaign ( @Campaigns ) {
+	if ( !$Campaign->runnable() ) {
+		$log->error("Campaign $$Campaign{name} is active but not runnable");
+		next;
+	}
 	$log->info("Running campaign $$Campaign{name}");
 	$Campaign->send();
 	#print "Done campaign " . $Campaign->name() . "\n";
