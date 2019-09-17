@@ -43,7 +43,7 @@ sub email_campaigns {
 		(new openprint::Log())->save({Object=>$Campaign, action=>'Delete'});
 	} elsif ( $param{btnFunction} eq 'Run' ) {
 		$variable{information} = $Campaign->send();
-		(new openprint::Log())->save({Object=>$Campaign, action=>'Run', note=>$variable{information} });
+		#(new openprint::Log())->save({Object=>$Campaign, action=>'Run', note=>$variable{information} });
 	} elsif ( $param{btnFunction} eq 'Trial' ) {
 		$variable{information} = $Campaign->trial( $openprint::User->email() );
 	} # end if
