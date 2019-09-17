@@ -264,7 +264,7 @@ sub send {
 		if ( ! ( $$self{email_text} or $$self{email_html} ) ) {
 			$results .= sprintf(
 					'<span class="error">NOT Sending Email to: %s %s at %s : No body.</span><br/>%s<br/>',
-					$replacements{User}->get('firstname','lastname','email'), $@
+					$replacements{User}->get('firstname','lastname','email'), ($@ ? $@ : '')
 					);
 			next;
 		} # end if
