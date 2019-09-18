@@ -76,14 +76,14 @@ foreach my $default ( keys %defaults ) {
     $$opts{$default} = $defaults{$default} if ! $$opts{$default};
 } # end foreach default
 
-$log = new logger(level=>'debug',program=>$program);
+$log = new logger(level=>'debug', program=>$program);
 # Get our configuration information
 if (my $err = configuration::from_file($$opts{config})) {
     die $err;
 }
 configuration::merge( $opts );
 foreach my $param ( 'db_name','db_user','db_pass','fifo','from','recipient','smtp_server' ) {
-	if ( ! $config{$param} ) {
+	if ( ! $openprint::config{$param} ) {
 		die "$program: missing required --$param parameter";
 	}
 } # end foreach required-param
@@ -108,7 +108,7 @@ if ( $config{pid_file} ) {
 	} # end if
 } # end if
 
-$log = logger->new( { file=>$config{log_file}, level=>$config{log_level}} );
+$openprint::log = logger->new( { file=>$config{log_file}, level=>$config{log_level}} );
 $log->info("Opening SQL connection $config{db_host} $config{db_name}");
 $openprint::dbh = sql::open_sql( $log,
 	port		=> $config{db_port},

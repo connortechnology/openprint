@@ -170,6 +170,7 @@
 						next if ! $Type->po_id();
 
 						my $PO_Content = $Type->PurchaseOrder_Content();
+						$PO_Content = $Type->PurchaseOrder_Content({ignore_fsc=>1}) if !$PO_Content;
 						next if ! $PO_Content;
 
 						my $quantity = 0;
@@ -200,7 +201,6 @@
 
 				my $value = 0;
 
-$openprint::log->debug("checking");
 				# Why? We are counting the # of skids and weight on the manifest
 				# Supposedly to compare to the actual skid contents
 				foreach my $MC ( $Manifest->Contents() ) {
@@ -218,12 +218,11 @@ $openprint::log->debug("checking");
 					$value += $MC->value();	
 				} # end foreach MC
 
-$openprint::log->debug("checking");
 				my $error = $Manifest->check();
 				next if $error and $session{'/employee/inventory/manifests.html?has_errors'} eq '0';
 				next if (!$error) and $session{'/employee/inventory/manifests.html?has_errors'} eq '1';
 
-				$html .= sprintf(q`<tr>
+				$html .= sprintf(q`<tr%9$s>
 				<td class="checkbox"><input type="checkbox" name="manifests" value="%1$s"/></td>
 				<td class="manifest_num"><a href="manifest_view.html?manifest_id=%1$s">%2$s</a></td>
 				<td class="po_id"><a href="manifest_view.html?manifest_id=%1$s">%3$s</a></td>
@@ -235,6 +234,7 @@ $openprint::log->debug("checking");
 					format_date( $Manifest->received_on() ),
 					format_date( $Manifest->updated_on() ),
 					format_datetime( $Manifest->updated_on() ),
+$rowclass,
 					);
 
 				$html .= '<td class="contents">';
@@ -248,6 +248,7 @@ $openprint::log->debug("checking");
 						my $Type = $types{$paper_id?$paper_id:undef};
 						if ( $Type ) {
 							my $POC = $Type->PurchaseOrder_Content();
+							$POC = $Type->PurchaseOrder_Content({ignore_fsc=>1}) if !$POC;
 
 							$html .= ' @ ' . ( $POC ? openprint::Currency::format( $POC->price() ) : '0.00' ). '/100lbs';
 						} # end if
@@ -284,7 +285,7 @@ $openprint::log->debug("checking");
 			return $html;
 		) ?>
 	</table>
-<script type="text/javascript">
+<script>
 TableKit.Sortable.init('ResultsTable');
 </script>
 	<input type="hidden" name="btnFunction"/>

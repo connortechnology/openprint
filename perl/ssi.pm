@@ -89,7 +89,7 @@ sub variable_substitution {
 	while ( $after ) {
 		if ( $after =~ /(.*?)<\?\s*(.*?)\s*\?>(.*)/ms ) {
 			$result .= $1;
-			(my $command, $after ) = ( $2, $3 );
+			(my $command, $after) = ( $2, $3 );
 			$after =~ s/^\s+$//m;
 
 			if ( $command =~ /^while\s*\(\s*(.*)\s*\)/ ) {
@@ -131,11 +131,18 @@ sub variable_substitution {
 				} # end if
 			} elsif ( $command =~ /^eval\s*\(\s*(.*)\s*\)/ms ) {
 				eval $1;
-				$log->error( "Eval error of ($1), Reason: " . $@ ) if $@;
+				$log->error("Eval error of ($1), Reason: ".$@) if $@;
 			} elsif ( $command =~ /^echo\s*\(\s*(.*)\s*\)/ms ) {
-				$_ = eval $1;
-				$result .= $_ if $_;
-				$log->error( "Eval error ($@) of ($1), Reason: " . $@ ) if $@;
+				if ( !$1 ) {	
+					Warning("No content in echo command $command");
+				} else {
+					$_ = eval $1;
+					if ( $@ ) {
+						$log->error("Eval error ($@) of ($1)")
+					} else {
+						$result .= $_ if $_;
+					}
+				}
 			} elsif ( $command =~ /^translate\s*\(\s*([\S]+)\s*\)/ms ) {
 				$result .= translate($1);
 			} elsif ( $command =~ /^hash_link\s*\(\s*'?([^\s']+)'?\s*\)/ms ) {
@@ -151,9 +158,16 @@ sub variable_substitution {
 			} elsif ( $command =~ /^slurp\s*\(\s*'?([^'\)]*)'?\s*\)/ms ) {
 				$result .= slurp_content( $1 );
 			} else {
-				$result .= $$variable{$command} if $$variable{$command};
+				if ( ! exists $$variable{$command} ) {
+					$log->debug("Unknown simple variable subsititution $command");
+				} elsif ( ! defined $$variable{$command} ) {
+					$log->debug("Undefined simple variable subsititution $command");
+				} else {
+					$result .= $$variable{$command} if $$variable{$command};
+				}
 			} # end if
 		} else {
+# No subsititutions found, just return
 			return $result.$after;
 		} # end if have a command
 	} # end while after

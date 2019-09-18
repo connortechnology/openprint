@@ -130,7 +130,10 @@ $log->debug("Setting default to: " .  $$variable{"location_id-$$variable{type_id
 			<p>
 				<label>Condition</label>
 				<? echo (
-						ssi::select( openprint::InventoryCondition->dropdown( order=>'lower(name)'), $param{'condition_id-'.$$variable{type_id}}, { name=>'condition_id-'.$$variable{type_id}, prepend=>['','select'] } );
+						ssi::select( openprint::InventoryCondition->dropdown( order=>'lower(name)'),
+							$param{'condition_id-'.$$variable{type_id}},
+							{ name=>'condition_id-'.$$variable{type_id}, prepend=>['','select'] }
+							);
 					) ?>
 			</p>
 		<? if ( $$variable{Type}->paper_id() ) ?>

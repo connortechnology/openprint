@@ -3385,16 +3385,19 @@ sub calculate_impositions {
 	if ( $Project->Type()->name() eq 'ScratchPads' ) {
 		$needed_pages = 0;
 	} elsif ( $$sig_specs{txtSignatureType} ) {
-$log->debug("Group $$sig_specs{Group} unspecd " . $$sig_specs{'txtUnspecifiedPageQuantity'.$qty_index} . " wanted: " . $$project{ProjectSpecs}{"PageQuantity-$$sig_specs{Group}"} );
+$log->debug("Group $$sig_specs{Group} unspecd " . $$sig_specs{'txtUnspecifiedPageQuantity'.$qty_index} . ' wanted: ' . $$project{ProjectSpecs}{"PageQuantity-$$sig_specs{Group}"} ) if DEBUG;
 		if ( $$sig_specs{'chkOverridePageQuantity'.$qty_index} ) {
 			$needed_pages = int( $$sig_specs{'PageQuantity'.$qty_index} );
-		} elsif ( $$project{ProjectSpecs}{"PageQuantity-$$sig_specs{Group}"} and ( $$project{ProjectSpecs}{"PageQuantity-$$sig_specs{Group}"} <= $$sig_specs{'txtUnspecifiedPageQuantity'.$qty_index} ) ) {
+$log->debug("Using overriden page quantity $needed_pages");
+		} elsif ( $$project{ProjectSpecs}{"PageQuantity-$$sig_specs{Group}"} and 
+				( $$project{ProjectSpecs}{"PageQuantity-$$sig_specs{Group}"} <= $$sig_specs{'txtUnspecifiedPageQuantity'.$qty_index} )
+				) {
 			$needed_pages = $$project{ProjectSpecs}{"PageQuantity-$$sig_specs{Group}"};
 		} else {
 			$needed_pages = $$sig_specs{'txtUnspecifiedPageQuantity'.$qty_index};
 		} # end if
-		if ( ! $needed_pages ) {
-			$log->debug("calculate_impositions with no needed_pages!!!! " . $$sig_specs{'txtUnspecifiedPageQuantity'.$qty_index} );
+		if ( !$needed_pages ) {
+			$log->debug('calculate_impositions with no needed_pages!!!! ' . $$sig_specs{'txtUnspecifiedPageQuantity'.$qty_index});
 			return ();
 		}
 		if ( $needed_pages < 2 ) {
@@ -5109,7 +5112,7 @@ $imp->display('[warn]');
 						my @sigs = sort $Project->signatures({Group=>2, sort=>1});
 						if ( @sigs ) {
 							my $Group = 2;
-							if ( ! $Estimating_Setup{$Group} ) {
+							if ( !$Estimating_Setup{$Group} ) {
 								my $Setup = $Estimating_Setup{$Group} = {};
 
 								my $Service = $$Setup{Service} = $Project->Service($sigs[0]);
@@ -5122,7 +5125,10 @@ $imp->display('[warn]');
 									set_size($Project, $$Setup{specs}, $printing_specs);
 									$$Setup{side_one_colours} = [ get_colours($$Setup{specs}, 'SideOne') ];
 									$$Setup{side_two_colours} = [ get_colours($$Setup{specs}, 'SideTwo') ];
-									$$subsig_specs{'txtUnspecifiedPageQuantity'.$qty_index} = get_unspecified_pages( $Project, $sigs[0], $subsig_specs, $qty_index );
+									foreach my $q_index ( $Project->quantity_indexes() ) {
+										$$subsig_specs{'txtUnspecifiedPageQuantity'.$q_index} = get_unspecified_pages($Project, $sigs[0], $subsig_specs, $q_index);
+										$log->error("Subsig upq " . $$subsig_specs{'txtUnspecifiedPageQuantity'.$q_index});
+									}
 									$$Setup{Stocks} = [ get_Stocks( $Project, $$Setup{specs} ) ];
 									if ( @{$$Setup{Stocks}} ) {
 
@@ -5164,7 +5170,7 @@ $imp->display("PrintingTYpes for other group: " . join(',', @{$$Setup{specs}{Pri
 													next if $$i{specs}{Group} == $Group;
 													push @o_impositions, $i;
 													my $Press = $i->Press();
-													my $hash_key = join(',', $$Press{strid}, $$i{runstyle}, $$i{pages}, $$i{imposition}, $$i{columns} );
+													my $hash_key = join(',', $$Press{strid}, $$i{runstyle}, $$i{pages}, $$i{imposition}, $$i{columns});
 													$sub_previous_forms_cache{$hash_key} += 1;
 													$log->debug("$$Press{strid}, $$i{runstyle}, $$i{pages}, $$i{imposition}, $$i{columns} = $sub_previous_forms_cache{$hash_key}" ) if DEBUG;
 												} # end foreach previous_imp
@@ -5180,6 +5186,8 @@ $log->warn("No possible presses");
 										} # end if possible_presses
 									} # end if has Stocks
 								} # end if inside is also cover
+} else {
+$log->debug("Have estimating setup");
 							} # end if have Estimating_Setup
 
 							my $Setup = $Estimating_Setup{$Group};
@@ -5204,7 +5212,7 @@ $log->warn("No possible presses");
 										$log->debug("other_group_cache $k => ");
 									}
 								} else {	
-									$$price{'Comparison Log'} .= 'Additiona Sigs due to no papers: 1000000<br/>' if COMPARISON_LOG;
+									$$price{'Comparison Log'} .= 'Additional Sigs due to no papers: 1000000<br/>' if COMPARISON_LOG;
 									$$price{'Comparison Cost'} += 1000000;
 									$log->warn("Unable to calculate impositions for additional signatures.<br/>");
 								} # end if
@@ -5226,13 +5234,13 @@ $log->warn("No possible presses");
 						}
 		#$$price{'itionalSignature Breakdown'} .= breakdown( $sig_price, $sig_specs );
 					} else {
-						$log->error("Calculating Additional Signatures for other group failure") if DEBUG;
+						$log->error('Calculating Additional Signatures for other group failure') if DEBUG;
 						$$price{Breakdown} .= 'Unable to calculate additional signatures.<br/>';
 						$$price{'Comparison Cost'} += 10000000;
-						$$price{'Comparison Log'} .= 'Additiona Sigs: 1000000<br/>' if COMPARISON_LOG;
+						$$price{'Comparison Log'} .= 'Additional Sigs: 1000000<br/>' if COMPARISON_LOG;
 					} # end if
 				} # end if Group == Cover Pages
-			} #ne if ! upq
+			} # end if ! upq
 
 			if ( $$price{'Comparison Cost'} < 0 ) {
 				$log->error("Negative price! $best_price{'Comparison Cost'} <= $$price{'Comparison Cost'}");

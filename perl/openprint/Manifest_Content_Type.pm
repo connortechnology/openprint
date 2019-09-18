@@ -88,8 +88,8 @@ sub PurchaseOrder_Content {
 				} # end if
 				if ( ! $$options{ignore_docket} ) {
 					if ( $POC->docket() and $_[0]{docket} ) {
-						if ( $POC->docket() ne $_[0]{docket} ) {
-							$openprint::log->debug("Not the right docket POC? $$POC{docket} !=? $_[0]{docket}") if $debug;
+						if ( $POC->transform(docket=>$POC->docket()) ne $_[0]{docket} ) {
+							$openprint::log->debug("Not the right docket POC? ($$POC{docket}) !=? ($_[0]{docket})") if $debug;
 							next;
 						}
 					}
@@ -138,7 +138,7 @@ sub PurchaseOrder_Content {
 							$openprint::log->debug("Caliper doesn't match $caliper != $1") if $debug;
 							next;
 						} # end if
-					} elsif ( $Paper->calliper() and ( $Paper->calliper() != $caliper ) ) {
+					} elsif ( $Paper->calliper() and ( int($Paper->calliper()*1000) != $caliper ) ) {
 						$openprint::log->debug("Caliper doesn't match $caliper != $$Paper{calliper}") if $debug;
 						next;
 					}
